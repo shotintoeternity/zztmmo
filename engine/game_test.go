@@ -67,3 +67,50 @@ func TestGameStepStopsOnExitRequest(t *testing.T) {
 		t.Errorf("exit-requested GameStep must not advance; E.CurrentTick=%d, want 10", E.CurrentTick)
 	}
 }
+
+func TestShootMaxShots(t *testing.T) {
+	e := NewEngine()
+	e.Headless = true
+	e.WorldCreate()
+	e.BoardCreate()
+
+	e.Board.Tiles[15][15] = TTile{Element: E_PLAYER, Color: 0x0F}
+	e.Board.Stats[0].X = 15
+	e.Board.Stats[0].Y = 15
+
+	e.Board.Info.MaxShots = 2
+	e.World.Info.Ammo = 10
+
+	// First shot: shoot right
+	s1 := e.BoardShoot(E_BULLET, 15, 15, 1, 0, SHOT_SOURCE_PLAYER)
+	if !s1 {
+		t.Fatalf("first shot failed")
+	}
+
+	bulletCount := int16(0)
+	for i := int16(0); i <= e.Board.StatCount; i++ {
+		if e.Board.Tiles[e.Board.Stats[i].X][e.Board.Stats[i].Y].Element == E_BULLET && e.Board.Stats[i].P1 == 0 {
+			bulletCount++
+		}
+	}
+	if bulletCount != 1 {
+		t.Errorf("expected 1 bullet, got %d", bulletCount)
+	}
+
+	// Second shot: shoot down
+	s2 := e.BoardShoot(E_BULLET, 15, 15, 0, 1, SHOT_SOURCE_PLAYER)
+	if !s2 {
+		t.Fatalf("second shot failed")
+	}
+
+	bulletCount = 0
+	for i := int16(0); i <= e.Board.StatCount; i++ {
+		if e.Board.Tiles[e.Board.Stats[i].X][e.Board.Stats[i].Y].Element == E_BULLET && e.Board.Stats[i].P1 == 0 {
+			bulletCount++
+		}
+	}
+	if bulletCount != 2 {
+		t.Errorf("expected 2 bullets, got %d", bulletCount)
+	}
+}
+
