@@ -30,7 +30,7 @@ and every run is reproducible. ANALYSIS.md §3g, §3h, §5.
   (generate the table from your implementation, then verify by hand-computing the
   first 3 values from the formula). Grep for any other `rand.` use and remove it.
 
-- [ ] **M0.2 — Screen buffer.** Rewrite `engine/video.go` so all Video* functions
+- [x] **M0.2 — Screen buffer.** Rewrite `engine/video.go` so all Video* functions
   write into `var Screen [80][25]struct{ Ch, Color byte }` plus a dirty-cell list,
   instead of tcell. Move tcell to a new `engine/present_tcell.go` that *reads*
   `Screen` and draws it (called from the main loop only, behind a
