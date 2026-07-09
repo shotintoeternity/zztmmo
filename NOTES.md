@@ -701,3 +701,24 @@ That is accepted for now as shared-room presentation. Mute remains per-player:
 the server's `HUDSnapshot.SoundEnabled` gates local playback, and the sidebar's
 clickable "B / Be quiet" line sends the same `B` command as the keyboard, so the
 server remains authoritative for the visible state.
+
+## M4.6 (2026-07-09) — TOWN protocol playthrough smoke
+
+The smoke is semi-scripted, not a full puzzle solver. It uses the real
+`fixtures/TOWN.ZZT` and the same `RoomManager`/protocol-shaped `PlayerInput`
+path the browser uses, but stages the player next to landmarks so CI can cover
+the original loop without solving every maze and timing puzzle. The user-provided
+Scott Walker walkthrough confirms the intended high-level route: stock up at
+the start/armory, collect keys, buy supplies, use torches in dark rooms, take
+damage, and reach the castle/throne-room path.
+
+Coverage added in `m4_6_test.go`: Room One gem/torch pickup, passage to Armory,
+Vendor scroll and `!ba` reply purchase, green key and green door, torch use in
+the Bank Vault, a Prison scroll tile, real enemy damage in Inside Castle, red key
+and red door on Path to castle, edge transfer to Outside of castle, passage into
+Inside castle, and south-edge transfer into the Throne Room.
+
+Transfer sounds are asserted through `RoomManager.DrainPlayerEvents`, because the
+WebSocket layer appends those per-player events to the board-change snapshot
+rather than the direct destination-room diff. Existing WebSocket tests still own
+the JSON board-change delivery shape.

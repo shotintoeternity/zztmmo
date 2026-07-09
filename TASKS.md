@@ -416,7 +416,7 @@ semantics while keeping the server authoritative.
   covers TOWN landmarks, dark rooms, torches, gems, passages, text signs, and
   player damage/respawn without stale cells or missing glyphs.
 
-- [ ] **M4.6 — Full TOWN playthrough smoke.** Add a scripted or semi-scripted
+- [x] **M4.6 — Full TOWN playthrough smoke.** Add a scripted or semi-scripted
   browser/protocol playthrough that exercises the core original game loop:
   collecting keys, buying/using items, crossing boards, opening scroll windows,
   taking damage, and reaching the Palace path. DoD: TOWN is playable end to end
