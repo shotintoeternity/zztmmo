@@ -98,3 +98,39 @@ The .HLP files are now git-tracked (`engine/*.HLP`), byte-identical to
 same provenance and precedent as the already-tracked `fixtures/TOWN.ZZT`. The
 server reads them via the new `-help` flag / `zztgo.HelpDir`; the sim never
 touches the filesystem, `HelpFileLines` runs on the protocol boundary.
+
+## M3.10 (2026-07-09) — who is a scroll for?
+
+`ScrollEvent.StatId` is the OBJECT running the ZZT-OOP code, because that is the
+target `OopSend` needs for a hyperlink reply. It is not the player. Room events
+are broadcast to everyone on the board, so without a second identity every
+player on the board would get a modal window when one of them talked to the
+vendor.
+
+The toucher is not available where the scroll is emitted: `ElementObjectTouch`
+only does `OopSend(-statId, "TOUCH")`, and the object runs that code on its own
+later tick, by which point the call stack no longer knows who knocked. So the
+touch procs now record it in `Engine.ScrollAudience[objectStatId] =
+playerStatId + 1` (0 = nobody), consumed by `OopExecute` when it emits the
+event. It is presentation routing only — never simulation state, absent from
+StateHash — but it is indexed by stat id, so `reindexScrollAudienceAfterStatRemoval`
+keeps both its keys and its values in step with the stat array on RemoveStat,
+exactly as the Follower/Leader fixup does, and `BoardOpen` clears it.
+
+`PlayerStatId = -1` means an object opened a scroll from its own code rather
+than from a touch; those are shown to everybody, as in vanilla.
+
+`PendingScrollReply`/`PendingScrollStatId` became the queue
+`PendingScrollReplies`, since several players can now close a scroll on the same
+tick. The terminal client submits through the same `SubmitScrollReply`.
+
+Known gap, deliberately left: `!-FILE;text` lines (a hyperlink that opens
+another help file rather than sending a label) are inert — `hyperlinkOf` returns
+"" and Enter just closes the window. TOWN's scrolls do not use them. Wiring
+them needs a client→server "open this help file" request; it belongs with M4.1's
+text-window system.
+
+Vendor is on TOWN board 2 ("Armory"), stat 2, at (21,9). Note that several other
+boards also have a stat 2 whose `Data` string contains the vendor's code — the
+element there is not E_OBJECT, so it is inert, but do not identify objects by
+`Data` alone.

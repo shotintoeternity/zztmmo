@@ -13,6 +13,7 @@ const (
 	MessageTypeEvent        = "event"
 	MessageTypeBoardChange  = "boardChange"
 	MessageTypeDebugCommand = "debugCommand"
+	MessageTypeScrollReply  = "scrollReply"
 )
 
 // HelpDir is where HelpFileLines looks for .HLP files. The terminal client
@@ -82,6 +83,16 @@ type DebugCommandMessage struct {
 	Type     string   `json:"type"`
 	PlayerID PlayerID `json:"playerId"`
 	Text     string   `json:"text"`
+}
+
+// ScrollReplyMessage is the client's hyperlink selection from a scroll window.
+// StatID is the object that showed the scroll, and Label is the text between
+// '!' and ';' — i.e. the ZZT-OOP label to send it.
+type ScrollReplyMessage struct {
+	Type     string   `json:"type"`
+	PlayerID PlayerID `json:"playerId"`
+	StatID   int16    `json:"statId"`
+	Label    string   `json:"label"`
 }
 
 type SnapshotMessage struct {
@@ -154,20 +165,23 @@ type HUDSnapshot struct {
 }
 
 type ProtocolEvent struct {
-	Type     string   `json:"type"`
-	StatID   int16    `json:"statId,omitempty"`
-	Title    string   `json:"title,omitempty"`
-	Lines    []string `json:"lines,omitempty"`
-	Filename string   `json:"filename,omitempty"`
-	Score    int16    `json:"score,omitempty"`
-	ListPos  int16    `json:"listPos,omitempty"`
-	Notes    string   `json:"notes,omitempty"`
-	Priority int16    `json:"priority,omitempty"`
-	X        int16    `json:"x,omitempty"`
-	Y        int16    `json:"y,omitempty"`
-	ToBoard  int16    `json:"toBoard,omitempty"`
-	EntryX   int16    `json:"entryX,omitempty"`
-	EntryY   int16    `json:"entryY,omitempty"`
+	Type   string `json:"type"`
+	StatID int16  `json:"statId,omitempty"`
+	// PlayerStatID is the player a scroll belongs to (-1 = nobody). Explicitly
+	// not omitempty: stat 0 is a real player and -1 must survive the wire.
+	PlayerStatID int16    `json:"playerStatId"`
+	Title        string   `json:"title,omitempty"`
+	Lines        []string `json:"lines,omitempty"`
+	Filename     string   `json:"filename,omitempty"`
+	Score        int16    `json:"score,omitempty"`
+	ListPos      int16    `json:"listPos,omitempty"`
+	Notes        string   `json:"notes,omitempty"`
+	Priority     int16    `json:"priority,omitempty"`
+	X            int16    `json:"x,omitempty"`
+	Y            int16    `json:"y,omitempty"`
+	ToBoard      int16    `json:"toBoard,omitempty"`
+	EntryX       int16    `json:"entryX,omitempty"`
+	EntryY       int16    `json:"entryY,omitempty"`
 }
 
 func NewSnapshotMessage(e *Engine, boardID int16, playerID PlayerID, statID int16, players []PlayerSnapshot) SnapshotMessage {
@@ -190,7 +204,7 @@ func ProtocolEvents(events []Event) []ProtocolEvent {
 	for _, event := range events {
 		switch ev := event.(type) {
 		case ScrollEvent:
-			out = append(out, ProtocolEvent{Type: "scroll", StatID: ev.StatId, Title: ev.Title, Lines: ev.Lines})
+			out = append(out, ProtocolEvent{Type: "scroll", StatID: ev.StatId, PlayerStatID: ev.PlayerStatId, Title: ev.Title, Lines: ev.Lines})
 		case QuitPromptEvent:
 			out = append(out, ProtocolEvent{Type: "quitPrompt"})
 		case HelpEvent:

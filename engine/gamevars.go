@@ -185,8 +185,17 @@ type (
 		InputLastDeltaY        int16
 		InputKeyBuffer         string
 		Events                 []Event
-		PendingScrollReply     string
-		PendingScrollStatId    int16
+		// PendingScrollReplies queues hyperlink selections from clients. Several
+		// players can close a scroll on the same tick, so this is a queue rather
+		// than a single slot: the terminal client submits through the same queue.
+		PendingScrollReplies []PendingScrollReply
+		// ScrollAudience[objectStatId] = triggering player's stat id + 1, or 0
+		// for none. An object runs its #TOUCH code on its own later tick, by
+		// which point the toucher is long gone from the call stack, so the touch
+		// procs record it here. Not simulation state: it only decides which
+		// client is shown the scroll. Kept in step with the stat array by
+		// reindexScrollAudienceAfterStatRemoval, like Follower/Leader.
+		ScrollAudience [MAX_STAT + 2]int16
 		// PendingDebugCommands holds debug-prompt text submitted by clients,
 		// applied at the top of the next GameStepWithInputs. The '?' prompt was
 		// modal (PromptString blocks on InputReadWaitKey), so like scrolls it
@@ -206,9 +215,20 @@ type (
 	}
 	Event       interface{}
 	ScrollEvent struct {
-		Title  string
-		Lines  []string
+		Title string
+		Lines []string
+		// StatId is the OBJECT running the code — the target a hyperlink reply
+		// must be sent back to, not the player who read it.
 		StatId int16
+		// PlayerStatId is the player who triggered the scroll, or -1 if unknown.
+		// Room events broadcast to the whole board; the client filters on this.
+		PlayerStatId int16
+	}
+	// PendingScrollReply is one queued hyperlink selection: send Label to the
+	// object at StatId.
+	PendingScrollReply struct {
+		StatId int16
+		Label  string
 	}
 	QuitPromptEvent struct{}
 	HelpEvent       struct {

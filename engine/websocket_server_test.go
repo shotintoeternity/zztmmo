@@ -5,6 +5,7 @@ import (
 	"encoding/json"
 	"net/http/httptest"
 	"os"
+	"path/filepath"
 	"runtime"
 	"strconv"
 	"strings"
@@ -882,5 +883,134 @@ func testEdgeWorld(t *testing.T) TWorld {
 	setup.Board.Name = "East"
 	setup.BoardClose()
 
+	return setup.World
+}
+
+// The full browser path for a scroll: touch the vendor over a real WebSocket,
+// receive the scroll event, send back a scrollReply, and watch the trade land.
+// This exercises the JSON dispatch added alongside debugCommand — a message
+// that is not an InputMessage must not be silently parsed as one.
+func TestWebSocketServerScrollReplyBuysFromVendor(t *testing.T) {
+	world := testTownWorld(t)
+	server := NewWebSocketServer(world, vendorBoard)
+	server.TickDuration = time.Hour // never auto-ticks; we drive Tick ourselves
+
+	ctx, cancel := context.WithCancel(context.Background())
+	defer cancel()
+
+	httpServer := httptest.NewServer(server)
+	defer httpServer.Close()
+
+	wsURL := "ws" + strings.TrimPrefix(httpServer.URL, "http")
+	conn, _, err := websocket.Dial(ctx, wsURL, nil)
+	if err != nil {
+		t.Fatalf("dial websocket: %v", err)
+	}
+	defer conn.Close(websocket.StatusNormalClosure, "")
+	conn.SetReadLimit(ServerReadLimit)
+
+	if err := wsjson.Write(ctx, conn, JoinMessage{Type: MessageTypeJoin, Name: "shopper", Board: vendorBoard}); err != nil {
+		t.Fatalf("write join: %v", err)
+	}
+	var snapshot SnapshotMessage
+	if err := wsjson.Read(ctx, conn, &snapshot); err != nil {
+		t.Fatalf("read snapshot: %v", err)
+	}
+	playerID := snapshot.You.ID
+
+	// Stand the player immediately west of the vendor and stock them with gems.
+	server.mu.Lock()
+	room, ok := server.RoomManager.Room(vendorBoard)
+	if !ok {
+		server.mu.Unlock()
+		t.Fatal("vendor room missing")
+	}
+	vendorStat, vx, vy := findVendor(t, room)
+	_, statID, _ := server.RoomManager.PlayerLocation(playerID)
+	movePlayerStat(room.Engine, statID, vx-1, vy)
+	state, _ := server.RoomManager.PlayerState(playerID)
+	state.Gems = 5
+	state.Ammo = 0
+	server.mu.Unlock()
+
+	if err := wsjson.Write(ctx, conn, InputMessage{
+		Type: MessageTypeInput, PlayerID: playerID, Seq: 1, Keymask: InputMaskRight,
+	}); err != nil {
+		t.Fatalf("write input: %v", err)
+	}
+
+	scroll, ok := readUntilScrollEvent(ctx, t, conn, server, 40)
+	if !ok {
+		t.Fatal("never received a scroll event from the vendor")
+	}
+	if scroll.StatID != vendorStat {
+		t.Fatalf("scroll StatID=%d, want vendor %d", scroll.StatID, vendorStat)
+	}
+	if scroll.Title != "Vendor" {
+		t.Fatalf("scroll title=%q, want Vendor", scroll.Title)
+	}
+
+	if err := wsjson.Write(ctx, conn, ScrollReplyMessage{
+		Type: MessageTypeScrollReply, PlayerID: playerID, StatID: scroll.StatID, Label: "ba",
+	}); err != nil {
+		t.Fatalf("write scrollReply: %v", err)
+	}
+
+	deadline := time.Now().Add(5 * time.Second)
+	for time.Now().Before(deadline) {
+		server.Tick(ctx)
+		server.mu.Lock()
+		ammo, gems := state.Ammo, state.Gems
+		server.mu.Unlock()
+		if ammo == 3 && gems == 4 {
+			return
+		}
+		time.Sleep(5 * time.Millisecond)
+	}
+	t.Fatalf("vendor never traded: ammo=%d gems=%d, want 3 and 4", state.Ammo, state.Gems)
+}
+
+// readUntilScrollEvent drives ticks and drains socket messages looking for a
+// scroll. The input the client sent is applied by the server's reader goroutine,
+// so ticks and reads are interleaved with a small pause.
+func readUntilScrollEvent(ctx context.Context, t *testing.T, conn *websocket.Conn, server *WebSocketServer, maxTicks int) (ProtocolEvent, bool) {
+	t.Helper()
+
+	for i := 0; i < maxTicks; i++ {
+		time.Sleep(5 * time.Millisecond)
+		server.Tick(ctx)
+
+		readCtx, cancel := context.WithTimeout(ctx, 200*time.Millisecond)
+		var raw json.RawMessage
+		err := wsjson.Read(readCtx, conn, &raw)
+		cancel()
+		if err != nil {
+			continue
+		}
+		var msg struct {
+			Events []ProtocolEvent `json:"events"`
+		}
+		if err := json.Unmarshal(raw, &msg); err != nil {
+			continue
+		}
+		for _, event := range msg.Events {
+			if event.Type == "scroll" {
+				return event, true
+			}
+		}
+	}
+	return ProtocolEvent{}, false
+}
+
+func testTownWorld(t *testing.T) TWorld {
+	t.Helper()
+
+	setup := NewEngine()
+	setup.Headless = true
+	setup.WorldCreate()
+	worldBase := filepath.Join("..", "fixtures", "TOWN")
+	if !setup.WorldLoad(worldBase, ".ZZT", false) {
+		t.Fatalf("WorldLoad(%q, %q) failed", worldBase, ".ZZT")
+	}
 	return setup.World
 }

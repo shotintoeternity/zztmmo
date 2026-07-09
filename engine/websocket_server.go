@@ -151,6 +151,12 @@ func (s *WebSocketServer) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 				continue
 			}
 			s.submitDebugCommand(playerID, cmd.Text)
+		case MessageTypeScrollReply:
+			var reply ScrollReplyMessage
+			if err := json.Unmarshal(raw, &reply); err != nil {
+				continue
+			}
+			s.submitScrollReply(playerID, reply.StatID, reply.Label)
 		default:
 			var input InputMessage
 			if err := json.Unmarshal(raw, &input); err != nil {
@@ -171,6 +177,18 @@ func (s *WebSocketServer) submitDebugCommand(playerID PlayerID, text string) {
 		return
 	}
 	s.RoomManager.SubmitDebugCommand(playerID, text)
+}
+
+// submitScrollReply routes a scroll selection to the player's room. Held under
+// s.mu because Tick mutates the same rooms.
+func (s *WebSocketServer) submitScrollReply(playerID PlayerID, objectStatID int16, label string) {
+	s.mu.Lock()
+	defer s.mu.Unlock()
+
+	if _, ok := s.clients[playerID]; !ok {
+		return
+	}
+	s.RoomManager.SubmitScrollReply(playerID, objectStatID, label)
 }
 
 func inputMessageToPlayerInput(input InputMessage) PlayerInput {

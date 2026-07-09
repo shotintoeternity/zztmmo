@@ -891,6 +891,9 @@ func (e *Engine) ElementObjectTouch(x, y int16, sourceStatId int16, deltaX, delt
 		statId int16
 	)
 	statId = e.GetStatIdAt(x, y)
+	// The object executes #TOUCH on its own later tick; remember who knocked so
+	// the resulting scroll is shown only to them.
+	e.SetScrollAudience(statId, sourceStatId)
 	e.OopSend(-statId, "TOUCH", false)
 }
 
@@ -948,6 +951,7 @@ func (e *Engine) ElementScrollTouch(x, y int16, sourceStatId int16, deltaX, delt
 	stat := &e.Board.Stats[statId]
 	e.SoundQueue(2, SoundParse("c-c+d-d+e-e+f-f+g-g"))
 	stat.DataPos = 0
+	e.SetScrollAudience(statId, sourceStatId)
 	e.OopExecute(statId, &stat.DataPos, "Scroll")
 	e.RemoveStat(e.GetStatIdAt(x, y))
 }

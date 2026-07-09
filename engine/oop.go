@@ -808,9 +808,10 @@ func (e *Engine) OopExecute(statId int16, position *int16, name string) {
 			lines[idx] = textWindow.Lines[idx]
 		}
 		e.Events = append(e.Events, ScrollEvent{
-			Title:  name,
-			Lines:  lines,
-			StatId: statId,
+			Title:        name,
+			Lines:        lines,
+			StatId:       statId,
+			PlayerStatId: e.TakeScrollAudience(statId),
 		})
 	} else if textWindow.LineCount == 1 {
 		e.DisplayMessage(200, textWindow.Lines[0])

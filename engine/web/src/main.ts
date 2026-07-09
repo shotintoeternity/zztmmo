@@ -20,6 +20,11 @@ const MessageTypeDiff = "diff";
 const MessageTypeEvent = "event";
 const MessageTypeBoardChange = "boardChange";
 const MessageTypeDebugCommand = "debugCommand";
+const MessageTypeScrollReply = "scrollReply";
+
+// TextWindowSelect's title prompts when the cursor sits on a "!label;text" line.
+const SELECT_PROMPT = "\xaePress ENTER to select this\xaf";
+const MORE_INFO_PROMPT = "\xaePress ENTER for more info\xaf";
 
 // GameDebugPrompt's PromptString(63, 5, 0x1E, 0x0F, 11, PROMPT_ANY, ...).
 const DEBUG_PROMPT_X = 63;
@@ -71,6 +76,7 @@ type HudSnapshot = {
 type ProtocolEvent = {
   type: string;
   statId?: number;
+  playerStatId?: number;
   title?: string;
   lines?: string[];
   filename?: string;
@@ -343,12 +349,6 @@ app.innerHTML = `
       </div>
       <div class="event-log" data-log></div>
     </section>
-    <aside class="side">
-      <section class="panel messages">
-        <h2>Messages</h2>
-        <div data-messages></div>
-      </section>
-    </aside>
   </main>
 `;
 
@@ -363,7 +363,6 @@ const overlayEl = query<HTMLElement>("[data-overlay]");
 const connectButton = query<HTMLButtonElement>("[data-connect]");
 const focusButton = query<HTMLButtonElement>("[data-focus]");
 const logEl = query<HTMLElement>("[data-log]");
-const messageEl = query<HTMLElement>("[data-messages]");
 
 let ws: WebSocket | null = null;
 let playerId = 0;
@@ -384,6 +383,13 @@ const pressed = new Set<string>();
 type Mode = "play" | "debug" | "window";
 let mode: Mode = "play";
 let windowState: TextWindowState | null = null;
+let windowBaseTitle = "";
+// Set for scroll windows: the object stat a "!label" selection is sent back to.
+// -1 for read-only windows such as help.
+let windowReplyStatId = -1;
+// TextWindowSelect only swaps the title to the ENTER prompt once the cursor has
+// moved, so the first frame keeps the real title even on a "!" line.
+let windowMoved = false;
 let debugBuffer = "";
 const overlay = new Map<number, { ch: number; color: number }>();
 const cells: ScreenCell[] = Array.from({ length: COLS * ROWS }, (_, i) => ({
@@ -597,15 +603,49 @@ function paintDebugPrompt() {
   writeOverlay(DEBUG_PROMPT_X, DEBUG_PROMPT_Y, DEBUG_PROMPT_COLOR, debugBuffer);
 }
 
-function openWindow(title: string, lines: string[], viewingFile: boolean) {
+function openWindow(title: string, lines: string[], viewingFile: boolean, replyStatId = -1) {
   if (lines.length === 0) {
     return;
   }
   stopHeldInput();
   mode = "window";
+  windowBaseTitle = title;
+  windowReplyStatId = replyStatId;
+  windowMoved = false;
   windowState = { title, lines, linePos: 1, viewingFile };
   paintOverlay();
   drawScreen();
+}
+
+// hyperlinkOf extracts the ZZT-OOP label from a "!label;text" line, or "" if the
+// line is not a hyperlink. "!-FILE;text" jumps to another help file — not wired
+// up yet, so it is reported as "" and ignored.
+function hyperlinkOf(line: string): string {
+  if (!line.startsWith("!")) {
+    return "";
+  }
+  let pointer = line.slice(1);
+  const semi = pointer.indexOf(";");
+  if (semi >= 0) {
+    pointer = pointer.slice(0, semi);
+  }
+  if (pointer.startsWith("-")) {
+    return "";
+  }
+  return pointer;
+}
+
+// Mirrors TextWindowSelect's title swap.
+function resolveWindowTitle() {
+  if (!windowState) {
+    return;
+  }
+  const line = windowState.lines[windowState.linePos - 1] ?? "";
+  if (windowMoved && line.startsWith("!")) {
+    windowState.title = windowReplyStatId >= 0 ? SELECT_PROMPT : MORE_INFO_PROMPT;
+  } else {
+    windowState.title = windowBaseTitle;
+  }
 }
 
 function openDebugPrompt() {
@@ -619,9 +659,18 @@ function openDebugPrompt() {
 function closeModal() {
   mode = "play";
   windowState = null;
+  windowReplyStatId = -1;
+  windowMoved = false;
   debugBuffer = "";
   overlay.clear();
   drawScreen();
+}
+
+function sendScrollReply(statId: number, label: string) {
+  if (!connected || !ws || ws.readyState !== WebSocket.OPEN || playerId === 0) {
+    return;
+  }
+  ws.send(JSON.stringify({ type: MessageTypeScrollReply, playerId, statId, label }));
 }
 
 function toGlyph(ch: number): string {
@@ -661,6 +710,13 @@ function isMine(event: ProtocolEvent): boolean {
   return myStatId < 0 || (event.statId ?? 0) === myStatId;
 }
 
+// A scroll's statId is the OBJECT; playerStatId is who touched it. -1 means the
+// scroll has no owner and everyone sees it.
+function isMyScroll(event: ProtocolEvent): boolean {
+  const owner = event.playerStatId ?? -1;
+  return owner < 0 || myStatId < 0 || owner === myStatId;
+}
+
 function handleProtocolEvent(event: ProtocolEvent) {
   switch (event.type) {
     case "help":
@@ -675,8 +731,11 @@ function handleProtocolEvent(event: ProtocolEvent) {
       }
       break;
     case "scroll":
-      stopHeldInput();
-      showMessage(event.title ?? "Message", event.lines ?? []);
+      // A scroll with no owner (an object opening one from its own code rather
+      // than a touch) is shown to everybody on the board, as in vanilla.
+      if (isMyScroll(event)) {
+        openWindow(event.title ?? "Interaction", event.lines ?? [], false, event.statId ?? -1);
+      }
       appendLogOnce(`scroll: ${event.title ?? ""}`);
       break;
     case "sound":
@@ -709,21 +768,6 @@ function stopHeldInput() {
   }
   pressed.clear();
   sendInput(0);
-}
-
-function showMessage(title: string, lines: string[]) {
-  messageEl.innerHTML = "";
-  const heading = document.createElement("p");
-  heading.className = "message-title";
-  heading.textContent = title;
-  const list = document.createElement("ul");
-  list.className = "message-lines";
-  for (const line of lines.slice(0, 8)) {
-    const item = document.createElement("li");
-    item.textContent = line;
-    list.appendChild(item);
-  }
-  messageEl.append(heading, list);
 }
 
 function appendLog(text: string) {
@@ -778,8 +822,9 @@ function handleKeyDown(event: KeyboardEvent) {
   }
 }
 
-// handleWindowKey is TextWindowSelect's navigation for a read-only view.
-// Hyperlink selection arrives with the scroll windows in M3.10.
+// handleWindowKey is TextWindowSelect's navigation. Enter on a "!label;text"
+// line selects it; anywhere else Enter closes, and Escape always closes without
+// a reply (TextWindowRejected).
 function handleWindowKey(event: KeyboardEvent) {
   if (!windowState) {
     return;
@@ -800,13 +845,25 @@ function handleWindowKey(event: KeyboardEvent) {
       next += TEXT_WINDOW_PAGE;
       break;
     case "Escape":
-    case "Enter":
       closeModal();
       return;
+    case "Enter": {
+      const label = hyperlinkOf(windowState.lines[windowState.linePos - 1] ?? "");
+      if (label && windowReplyStatId >= 0) {
+        sendScrollReply(windowReplyStatId, label);
+      }
+      closeModal();
+      return;
+    }
     default:
       return;
   }
-  windowState.linePos = clampLinePos(next, lineCount);
+  const clamped = clampLinePos(next, lineCount);
+  if (clamped !== windowState.linePos) {
+    windowState.linePos = clamped;
+    windowMoved = true;
+  }
+  resolveWindowTitle();
   paintOverlay();
   drawScreen();
 }

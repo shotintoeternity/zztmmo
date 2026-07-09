@@ -288,8 +288,7 @@ func TestScrollEventAndReply(t *testing.T) {
 	}
 
 	// Send reply
-	e.PendingScrollReply = "label"
-	e.PendingScrollStatId = statId
+	e.SubmitScrollReply(statId, "label")
 
 	// Run next step
 	e.GameStep(nil)

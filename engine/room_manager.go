@@ -445,3 +445,18 @@ func (rm *RoomManager) SubmitDebugCommand(playerID PlayerID, text string) bool {
 	room.Engine.SubmitDebugCommand(player.statID, text)
 	return true
 }
+
+// SubmitScrollReply forwards a scroll hyperlink selection to the engine that
+// owns the player. objectStatID is the object that showed the scroll.
+func (rm *RoomManager) SubmitScrollReply(playerID PlayerID, objectStatID int16, label string) bool {
+	player := rm.players[playerID]
+	if player == nil {
+		return false
+	}
+	room := rm.rooms[player.boardID]
+	if room == nil {
+		return false
+	}
+	room.Engine.SubmitScrollReply(objectStatID, label)
+	return true
+}

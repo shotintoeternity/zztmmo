@@ -130,6 +130,8 @@ func (e *Engine) BoardOpen(boardId int16) {
 		ix, iy int16
 		rle    TRleTile
 	)
+	// A new stat array means the old scroll-audience indices are meaningless.
+	e.ScrollAudience = [MAX_STAT + 2]int16{}
 	if boardId > e.World.BoardCount {
 		boardId = e.World.Info.CurrentBoard
 	}
@@ -950,11 +952,61 @@ StatDataInUse:
 			}
 		}
 	}
+	e.reindexScrollAudienceAfterStatRemoval(statId)
 	for i = statId + 1; i <= e.Board.StatCount; i++ {
 		e.Board.Stats[i-1] = e.Board.Stats[i]
 	}
 	e.Board.StatCount--
 	e.reindexPlayersAfterStatRemoval(statId)
+}
+
+// SetScrollAudience records the player whose touch will cause objectStatId to
+// show a scroll. Stored as statId+1 so the zero value means "nobody".
+func (e *Engine) SetScrollAudience(objectStatId, playerStatId int16) {
+	if objectStatId < 0 || int(objectStatId) >= len(e.ScrollAudience) {
+		return
+	}
+	if playerStatId < 0 || e.Board.Tiles[e.Board.Stats[playerStatId].X][e.Board.Stats[playerStatId].Y].Element != E_PLAYER {
+		e.ScrollAudience[objectStatId] = 0
+		return
+	}
+	e.ScrollAudience[objectStatId] = playerStatId + 1
+}
+
+// TakeScrollAudience consumes the recorded audience, returning -1 if unknown
+// (an object that opens a scroll from its own code rather than a touch).
+func (e *Engine) TakeScrollAudience(objectStatId int16) int16 {
+	if objectStatId < 0 || int(objectStatId) >= len(e.ScrollAudience) {
+		return -1
+	}
+	audience := e.ScrollAudience[objectStatId]
+	e.ScrollAudience[objectStatId] = 0
+	if audience == 0 {
+		return -1
+	}
+	return audience - 1
+}
+
+// reindexScrollAudienceAfterStatRemoval keeps ScrollAudience aligned with the
+// stat array: its keys shift down like Stats, and its values are player stat
+// ids that shift the same way (mirrors the Follower/Leader fixup above). Must
+// run before the Stats shift, while StatCount still holds the old value.
+func (e *Engine) reindexScrollAudienceAfterStatRemoval(statId int16) {
+	for i := int16(0); i <= e.Board.StatCount; i++ {
+		if e.ScrollAudience[i] == 0 {
+			continue
+		}
+		audience := e.ScrollAudience[i] - 1
+		if audience == statId {
+			e.ScrollAudience[i] = 0
+		} else if audience > statId {
+			e.ScrollAudience[i] = audience // (audience-1)+1
+		}
+	}
+	for i := statId + 1; i <= e.Board.StatCount; i++ {
+		e.ScrollAudience[i-1] = e.ScrollAudience[i]
+	}
+	e.ScrollAudience[e.Board.StatCount] = 0
 }
 
 func (e *Engine) reindexPlayersAfterStatRemoval(statId int16) {
@@ -1435,10 +1487,12 @@ func GameAboutScreen() {
 //   - e.GamePlayExitRequested stops ticking mid-cycle and suppresses the advance,
 //     mirroring the original loop's exit checks.
 func (e *Engine) GameStepWithInputs(inputs map[int16]PlayerInput) {
-	if e.PendingScrollReply != "" {
-		e.OopSend(e.PendingScrollStatId, e.PendingScrollReply, false)
-		e.PendingScrollReply = ""
+	for _, reply := range e.PendingScrollReplies {
+		if reply.Label != "" && reply.StatId >= 0 && reply.StatId <= e.Board.StatCount {
+			e.OopSend(reply.StatId, reply.Label, false)
+		}
 	}
+	e.PendingScrollReplies = e.PendingScrollReplies[:0]
 
 	for _, cmd := range e.PendingDebugCommands {
 		if cmd.StatId >= 0 && cmd.StatId <= e.Board.StatCount {
@@ -1722,8 +1776,7 @@ func (e *Engine) GamePlayLoop(boardChanged bool) {
 				TextWindowFree(&textWindow)
 
 				if Length(textWindow.Hyperlink) != 0 {
-					e.PendingScrollReply = textWindow.Hyperlink
-					e.PendingScrollStatId = ev.StatId
+					e.SubmitScrollReply(ev.StatId, textWindow.Hyperlink)
 				}
 			case QuitPromptEvent:
 				e.GamePlayExitRequested = e.SidebarPromptYesNo("End this game? ", true)
@@ -2075,4 +2128,11 @@ func WorldSave(filename, extension string) {
 
 func WorldUnload() {
 	E.WorldUnload()
+}
+
+// SubmitScrollReply queues a hyperlink selection from a scroll window. It is
+// delivered as an OopSend at the top of the next GameStepWithInputs, never
+// mid-tick.
+func (e *Engine) SubmitScrollReply(objectStatId int16, label string) {
+	e.PendingScrollReplies = append(e.PendingScrollReplies, PendingScrollReply{StatId: objectStatId, Label: label})
 }
