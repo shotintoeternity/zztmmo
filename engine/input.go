@@ -214,8 +214,9 @@ func InputKeyPoller(screen tcell.Screen, keyChan chan byte) {
 }
 
 var tcellToKey = map[tcell.Key]byte{
-	tcell.KeyBackspace: KEY_BACKSPACE,
-	tcell.KeyCtrlY:     KEY_CTRL_Y,
+	tcell.KeyBackspace:  KEY_BACKSPACE,
+	tcell.KeyBackspace2: KEY_BACKSPACE,
+	tcell.KeyCtrlY:      KEY_CTRL_Y,
 	tcell.KeyDelete:    KEY_DELETE,
 	tcell.KeyDown:      KEY_DOWN,
 	tcell.KeyEnd:       KEY_END,
