@@ -1343,16 +1343,25 @@ func (e *Engine) ElementPlayerTick(statId int16) {
 	} else if InputDeltaX != 0 || InputDeltaY != 0 {
 		pState.DirX = InputDeltaX
 		pState.DirY = InputDeltaY
-		ElementDefs[e.Board.Tiles[int16(stat.X)+InputDeltaX][int16(stat.Y)+InputDeltaY].Element].TouchProc(e, int16(stat.X)+InputDeltaX, int16(stat.Y)+InputDeltaY, statId, &InputDeltaX, &InputDeltaY)
+		targetX := int16(stat.X) + InputDeltaX
+		targetY := int16(stat.Y) + InputDeltaY
+		if targetX < 0 || targetX > BOARD_WIDTH+1 || targetY < 0 || targetY > BOARD_HEIGHT+1 {
+			InputDeltaX = 0
+			InputDeltaY = 0
+		} else {
+			ElementDefs[e.Board.Tiles[targetX][targetY].Element].TouchProc(e, targetX, targetY, statId, &InputDeltaX, &InputDeltaY)
+		}
 		if InputDeltaX != 0 || InputDeltaY != 0 {
 			if SoundEnabled && !SoundIsPlaying {
 				Sound(110)
 			}
-			if ElementDefs[e.Board.Tiles[int16(stat.X)+InputDeltaX][int16(stat.Y)+InputDeltaY].Element].Walkable {
+			targetX = int16(stat.X) + InputDeltaX
+			targetY = int16(stat.Y) + InputDeltaY
+			if targetX >= 0 && targetX <= BOARD_WIDTH+1 && targetY >= 0 && targetY <= BOARD_HEIGHT+1 && ElementDefs[e.Board.Tiles[targetX][targetY].Element].Walkable {
 				if SoundEnabled && !SoundIsPlaying {
 					NoSound()
 				}
-				e.MoveStat(statId, int16(stat.X)+InputDeltaX, int16(stat.Y)+InputDeltaY)
+				e.MoveStat(statId, targetX, targetY)
 			} else if SoundEnabled && !SoundIsPlaying {
 				NoSound()
 			}

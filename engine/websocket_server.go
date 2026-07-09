@@ -26,6 +26,7 @@ type WebSocketServer struct {
 
 type webSocketClient struct {
 	playerID PlayerID
+	boardID  int16
 	conn     *websocket.Conn
 	mu       sync.Mutex
 }
@@ -61,15 +62,32 @@ func (s *WebSocketServer) Tick(ctx context.Context) {
 	s.inputs = make(map[PlayerID]PlayerInput)
 	diffs := s.RoomManager.StepDiffs(inputs)
 	clients := make(map[PlayerID]*webSocketClient, len(s.clients))
+	messages := make(map[PlayerID]interface{}, len(diffs))
 	for playerID, client := range s.clients {
 		clients[playerID] = client
 	}
+	for playerID, diff := range diffs {
+		client := s.clients[playerID]
+		if client == nil {
+			continue
+		}
+		if client.boardID != 0 && client.boardID != diff.BoardID {
+			snapshot, ok := s.RoomManager.Snapshot(playerID)
+			if ok {
+				client.boardID = snapshot.BoardID
+				messages[playerID] = BoardChangeMessage{Type: MessageTypeBoardChange, Snapshot: snapshot}
+				continue
+			}
+		}
+		client.boardID = diff.BoardID
+		messages[playerID] = diff
+	}
 	s.mu.Unlock()
 
-	for playerID, diff := range diffs {
+	for playerID, message := range messages {
 		client := clients[playerID]
 		if client != nil {
-			_ = client.write(ctx, diff)
+			_ = client.write(ctx, message)
 		}
 	}
 }
@@ -98,6 +116,7 @@ func (s *WebSocketServer) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 	s.clients[playerID] = client
 	snapshot, ok := s.RoomManager.Snapshot(playerID)
 	if ok {
+		client.boardID = snapshot.BoardID
 		err = client.write(ctx, snapshot)
 	}
 	s.mu.Unlock()

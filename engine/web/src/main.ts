@@ -301,6 +301,8 @@ let tick = 0;
 let lastMask = 0;
 let inputTimer = 0;
 let connected = false;
+let lastMessageKey = "";
+let lastMessageAt = 0;
 const pressed = new Set<string>();
 const cells: ScreenCell[] = Array.from({ length: COLS * ROWS }, (_, i) => ({
   x: i % COLS,
@@ -387,6 +389,7 @@ function applyMessage(message: ServerMessage) {
       handleProtocolEvent(message.event);
       break;
     case MessageTypeBoardChange:
+      stopHeldInput();
       applySnapshot(message.snapshot);
       break;
   }
@@ -485,11 +488,12 @@ function handleProtocolEvent(event: ProtocolEvent) {
   switch (event.type) {
     case "scroll":
     case "help":
+      stopHeldInput();
       showMessage(event.title ?? event.filename ?? "Message", event.lines ?? []);
-      appendLog(`${event.type}: ${event.title ?? event.filename ?? ""}`);
+      appendLogOnce(`${event.type}: ${event.title ?? event.filename ?? ""}`);
       break;
     case "sound":
-      appendLog(`sound: ${event.notes ?? ""}`);
+      appendLogOnce(`sound priority ${event.priority ?? 0}`);
       break;
     case "transfer":
       appendLog(`transfer to board ${event.toBoard ?? "?"}`);
@@ -510,6 +514,14 @@ function handleProtocolEvent(event: ProtocolEvent) {
       appendLog(event.type);
       break;
   }
+}
+
+function stopHeldInput() {
+  if (pressed.size === 0) {
+    return;
+  }
+  pressed.clear();
+  sendInput(0);
 }
 
 function showMessage(title: string, lines: string[]) {
@@ -536,6 +548,16 @@ function appendLog(text: string) {
     logEl.firstElementChild?.remove();
   }
   logEl.scrollTop = logEl.scrollHeight;
+}
+
+function appendLogOnce(text: string) {
+  const now = Date.now();
+  if (text === lastMessageKey && now - lastMessageAt < 1000) {
+    return;
+  }
+  lastMessageKey = text;
+  lastMessageAt = now;
+  appendLog(text);
 }
 
 function handleKeyDown(event: KeyboardEvent) {

@@ -133,6 +133,14 @@ func (e *Engine) BoardOpen(boardId int16) {
 	if boardId > e.World.BoardCount {
 		boardId = e.World.Info.CurrentBoard
 	}
+	for ix = 0; ix <= BOARD_WIDTH+1; ix++ {
+		e.Board.Tiles[ix][0] = TileBoardEdge
+		e.Board.Tiles[ix][BOARD_HEIGHT+1] = TileBoardEdge
+	}
+	for iy = 0; iy <= BOARD_HEIGHT+1; iy++ {
+		e.Board.Tiles[0][iy] = TileBoardEdge
+		e.Board.Tiles[BOARD_WIDTH+1][iy] = TileBoardEdge
+	}
 	ptr = e.World.BoardData[boardId]
 	e.Board.Name = LoadString(ptr[:SizeOfBoardName])
 	ptr = ptr[SizeOfBoardName:]
