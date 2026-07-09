@@ -316,3 +316,44 @@ was updated to state this.
 The stale-value fallback is retained but is now a last resort. Worlds whose
 stored `StartPlayerX/Y` is a wall are common precisely because vanilla never
 reads it, so nothing ever forced authors to keep it sane.
+
+## M4.1 (2026-07-09) — one modal renderer, one input router
+
+`src/modal.ts` now owns every modal ZZT draws: read-only text, selectable
+`!label;text` links, paged help, yes/no prompts, and text entry. `main.ts` keeps
+only the wiring. The three-way `Mode = "play" | "debug" | "window"` collapsed
+into a single `modal: Modal | null`; `handleModalKey` is the sole consumer of
+keys while one is open, and it returns `close`/`redraw`/`ignore` rather than
+touching global state.
+
+Geometry is transcribed from the engine, not invented:
+`SidebarPromptYesNo` (message at 63,5 in 0x1F, 0x9E cursor), `SidebarPromptString`
+(label right-aligned to column 75 on row 3, field at 63,5 width 8 + extension),
+and `GameDebugPrompt` (the same field, width 11, no label, PROMPT_ANY).
+
+Subtlety worth remembering: a modal callback can chain straight into another
+modal (the save prompt opens its "disabled" notice). The router fires callbacks
+and *then* reports `close`, so `handleKeyDown` compares the modal identity
+before tearing down — otherwise the chained modal is destroyed on the frame it
+opens. This bit once during development.
+
+REACHABILITY, deliberate: `commandKey` still only sends `?` and `H`, so the
+yes/no and entry modes have no keystroke that reaches them from the browser
+until M4.2 lands the rest of the play-mode keys. They are implemented and
+verified, not live. `savePrompt` resolves locally with "Saving is disabled on
+this server" (M3.11's decided policy); `quitPrompt` resolves locally because
+`QuitPromptEvent` carries no StatId and there is no reply channel — both are
+M4.3.
+
+Verification: no TypeScript test runner exists in this project (M3.5-M3.10 all
+landed without one), so the router was exercised by compiling `modal.ts` with the
+project's own tsc and driving it under node: 19 checks covering text navigation,
+link selection, help-vs-scroll select behaviour, yes/no accepting only Y/N/Esc,
+entry charset (PROMPT_ALPHANUM uppercases and rejects punctuation), width clamp,
+cancel-vs-submit, and that every painted cell lands inside 80x25. Two checks
+specifically assert a gameplay key ('W') and an arrow key are *ignored* by the
+modal rather than leaked to the board — the DoD's real claim.
+
+Adding a TS test runner (vitest) so those checks live in the repo is the obvious
+next infra step. Deliberately not done here: it is a dependency decision, not
+part of M4.1.

@@ -259,7 +259,7 @@ semantics while keeping the server authoritative.
   browser visually matches the original board/sidebar split with no temporary
   web-dashboard panels.
 
-- [ ] **M4.1 — Modal text-window system.** Implement the reusable browser
+- [x] **M4.1 — Modal text-window system.** Implement the reusable browser
   CP437 text-window layer used by scrolls, help, prompts, high scores, debug
   windows, save/load confirmations, and editor dialogs. DoD: a single renderer
   and input router handles read-only text, selectable links, yes/no prompts,

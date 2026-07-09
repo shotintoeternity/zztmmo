@@ -1,6 +1,6 @@
 import "./style.css";
 import { drawSidebar as paintSidebar, updateSidebar as paintSidebarHud } from "./sidebar";
-import { renderTextWindow, clampLinePos, TEXT_WINDOW_PAGE, type TextWindowState } from "./textwindow";
+import { renderModal, handleModalKey, type Modal } from "./modal";
 
 const COLS = 80;
 // The server streams board columns 0..59 only. Columns 60..79 are the sidebar,
@@ -23,16 +23,9 @@ const MessageTypeBoardChange = "boardChange";
 const MessageTypeDebugCommand = "debugCommand";
 const MessageTypeScrollReply = "scrollReply";
 
-// TextWindowSelect's title prompts when the cursor sits on a "!label;text" line.
-const SELECT_PROMPT = "\xaePress ENTER to select this\xaf";
-const MORE_INFO_PROMPT = "\xaePress ENTER for more info\xaf";
-
 // GameDebugPrompt's PromptString(63, 5, 0x1E, 0x0F, 11, PROMPT_ANY, ...).
-const DEBUG_PROMPT_X = 63;
-const DEBUG_PROMPT_Y = 5;
+// The rest of that geometry lives in modal.ts, which owns every prompt's layout.
 const DEBUG_PROMPT_WIDTH = 11;
-const DEBUG_PROMPT_ARROW_COLOR = 0x1e;
-const DEBUG_PROMPT_COLOR = 0x0f;
 
 const InputMaskUp = 1 << 0;
 const InputMaskDown = 1 << 1;
@@ -354,20 +347,11 @@ let lastMessageKey = "";
 let lastMessageAt = 0;
 const pressed = new Set<string>();
 
-// While a modal is up, gameplay keys are swallowed. The simulation does NOT
-// pause behind it (M1.3 deviation), so the board keeps updating underneath and
-// the modal is painted as an overlay rather than by saving/restoring cells.
-type Mode = "play" | "debug" | "window";
-let mode: Mode = "play";
-let windowState: TextWindowState | null = null;
-let windowBaseTitle = "";
-// Set for scroll windows: the object stat a "!label" selection is sent back to.
-// -1 for read-only windows such as help.
-let windowReplyStatId = -1;
-// TextWindowSelect only swaps the title to the ENTER prompt once the cursor has
-// moved, so the first frame keeps the real title even on a "!" line.
-let windowMoved = false;
-let debugBuffer = "";
+// While a modal is up, gameplay keys are swallowed (M4.1: handleModalKey is the
+// only consumer). The simulation does NOT pause behind it (M1.3 deviation), so
+// the board keeps updating underneath and the modal is painted as an overlay
+// rather than by saving/restoring cells.
+let modal: Modal | null = null;
 const overlay = new Map<number, { ch: number; color: number }>();
 const cells: ScreenCell[] = Array.from({ length: COLS * ROWS }, (_, i) => ({
   x: i % COLS,
@@ -562,85 +546,50 @@ function writeOverlay(x: number, y: number, color: number, text: string) {
 // never has to restore what was underneath it.
 function paintOverlay() {
   overlay.clear();
-  if (mode === "window" && windowState) {
-    renderTextWindow(writeOverlay, windowState);
-  } else if (mode === "debug") {
-    paintDebugPrompt();
+  if (modal) {
+    renderModal(writeOverlay, modal);
   }
 }
 
-// paintDebugPrompt is PromptString's redraw, at the sidebar coordinates
-// GameDebugPrompt uses.
-function paintDebugPrompt() {
-  for (let i = 0; i <= DEBUG_PROMPT_WIDTH - 1; i += 1) {
-    writeOverlay(DEBUG_PROMPT_X + i, DEBUG_PROMPT_Y, DEBUG_PROMPT_COLOR, " ");
-    writeOverlay(DEBUG_PROMPT_X + i, DEBUG_PROMPT_Y - 1, DEBUG_PROMPT_ARROW_COLOR, " ");
-  }
-  writeOverlay(DEBUG_PROMPT_X + DEBUG_PROMPT_WIDTH, DEBUG_PROMPT_Y - 1, DEBUG_PROMPT_ARROW_COLOR, " ");
-  const cursorColor = Math.trunc(DEBUG_PROMPT_ARROW_COLOR / 0x10) * 16 + 0x0f;
-  writeOverlay(DEBUG_PROMPT_X + debugBuffer.length, DEBUG_PROMPT_Y - 1, cursorColor, "\x1f");
-  writeOverlay(DEBUG_PROMPT_X, DEBUG_PROMPT_Y, DEBUG_PROMPT_COLOR, debugBuffer);
+function openModal(next: Modal) {
+  stopHeldInput();
+  modal = next;
+  paintOverlay();
+  drawScreen();
 }
 
 function openWindow(title: string, lines: string[], viewingFile: boolean, replyStatId = -1) {
   if (lines.length === 0) {
     return;
   }
-  stopHeldInput();
-  mode = "window";
-  windowBaseTitle = title;
-  windowReplyStatId = replyStatId;
-  windowMoved = false;
-  windowState = { title, lines, linePos: 1, viewingFile };
-  paintOverlay();
-  drawScreen();
+  openModal({
+    kind: "text",
+    state: { title, lines, linePos: 1, viewingFile },
+    baseTitle: title,
+    moved: false,
+    selectable: replyStatId >= 0,
+    onSelect: (label) => sendScrollReply(replyStatId, label),
+  });
 }
 
-// hyperlinkOf extracts the ZZT-OOP label from a "!label;text" line, or "" if the
-// line is not a hyperlink. "!-FILE;text" jumps to another help file — not wired
-// up yet, so it is reported as "" and ignored.
-function hyperlinkOf(line: string): string {
-  if (!line.startsWith("!")) {
-    return "";
-  }
-  let pointer = line.slice(1);
-  const semi = pointer.indexOf(";");
-  if (semi >= 0) {
-    pointer = pointer.slice(0, semi);
-  }
-  if (pointer.startsWith("-")) {
-    return "";
-  }
-  return pointer;
+// openEntry is SidebarPromptString / GameDebugPrompt's field.
+function openEntry(
+  label: string,
+  suffix: string,
+  width: number,
+  charset: "any" | "alphanum",
+  onSubmit: (text: string | null) => void,
+) {
+  openModal({ kind: "entry", label, suffix, width, buffer: "", charset, onSubmit });
 }
 
-// Mirrors TextWindowSelect's title swap.
-function resolveWindowTitle() {
-  if (!windowState) {
-    return;
-  }
-  const line = windowState.lines[windowState.linePos - 1] ?? "";
-  if (windowMoved && line.startsWith("!")) {
-    windowState.title = windowReplyStatId >= 0 ? SELECT_PROMPT : MORE_INFO_PROMPT;
-  } else {
-    windowState.title = windowBaseTitle;
-  }
-}
-
-function openDebugPrompt() {
-  stopHeldInput();
-  mode = "debug";
-  debugBuffer = "";
-  paintOverlay();
-  drawScreen();
+// openYesNo is SidebarPromptYesNo.
+function openYesNo(message: string, onAnswer: (yes: boolean) => void) {
+  openModal({ kind: "yesno", message, onAnswer });
 }
 
 function closeModal() {
-  mode = "play";
-  windowState = null;
-  windowReplyStatId = -1;
-  windowMoved = false;
-  debugBuffer = "";
+  modal = null;
   overlay.clear();
   drawScreen();
 }
@@ -706,7 +655,22 @@ function handleProtocolEvent(event: ProtocolEvent) {
       break;
     case "debugPrompt":
       if (isMine(event)) {
-        openDebugPrompt();
+        // GameDebugPrompt: bare 11-wide field, any characters. Escape submits
+        // the empty command, because vanilla still runs the tail of the routine.
+        openEntry("", "", DEBUG_PROMPT_WIDTH, "any", (text) => sendDebugCommand(text ?? ""));
+      }
+      break;
+    case "savePrompt":
+      if (isMine(event)) {
+        // SidebarPromptString("Save game:", ".SAV", ..., PROMPT_ALPHANUM).
+        // The server refuses saves (M3.11, NOTES.md), and there is no inbound
+        // saveFilename message, so an accepted name is answered locally. M4.3a
+        // adds rejoinable snapshots and the wire format they need.
+        openEntry("Save game:", ".SAV", 8, "alphanum", (name) => {
+          if (name) {
+            openWindow("Saving", ["", "  Saving is disabled on this server.", ""], true);
+          }
+        });
       }
       break;
     case "scroll":
@@ -730,7 +694,12 @@ function handleProtocolEvent(event: ProtocolEvent) {
       appendLog(`respawn at ${event.x ?? "?"},${event.y ?? "?"}`);
       break;
     case "quitPrompt":
-      appendLog("quit prompt");
+      // SidebarPromptYesNo("Quit ZZT? "). QuitPromptEvent carries no statId, so
+      // it cannot be routed to one player and there is no reply channel back to
+      // the engine — both are M4.3. Answering resolves the modal locally.
+      openYesNo("Quit ZZT? ", (yes) => {
+        appendLog(`quit prompt answered ${yes ? "yes" : "no"} (not wired to the server yet)`);
+      });
       break;
     case "highScoreEntry":
       appendLog(`high score ${event.score ?? 0}`);
@@ -767,12 +736,23 @@ function appendLogOnce(text: string) {
 }
 
 function handleKeyDown(event: KeyboardEvent) {
-  if (mode !== "play") {
+  // A modal consumes EVERY key: even one it ignores must not reach gameplay.
+  if (modal) {
     event.preventDefault();
-    if (mode === "window") {
-      handleWindowKey(event);
-    } else {
-      handleDebugKey(event);
+    const previous = modal;
+    const result = handleModalKey(modal, event);
+    if (result === "close") {
+      // A callback may have chained straight into another modal (e.g. the save
+      // prompt opening its "disabled" notice). Only tear down if it did not.
+      if (modal === previous) {
+        closeModal();
+      } else {
+        paintOverlay();
+        drawScreen();
+      }
+    } else if (result === "redraw") {
+      paintOverlay();
+      drawScreen();
     }
     return;
   }
@@ -797,81 +777,8 @@ function handleKeyDown(event: KeyboardEvent) {
   }
 }
 
-// handleWindowKey is TextWindowSelect's navigation. Enter on a "!label;text"
-// line selects it; anywhere else Enter closes, and Escape always closes without
-// a reply (TextWindowRejected).
-function handleWindowKey(event: KeyboardEvent) {
-  if (!windowState) {
-    return;
-  }
-  const lineCount = windowState.lines.length;
-  let next = windowState.linePos;
-  switch (event.code) {
-    case "ArrowUp":
-      next -= 1;
-      break;
-    case "ArrowDown":
-      next += 1;
-      break;
-    case "PageUp":
-      next -= TEXT_WINDOW_PAGE;
-      break;
-    case "PageDown":
-      next += TEXT_WINDOW_PAGE;
-      break;
-    case "Escape":
-      closeModal();
-      return;
-    case "Enter": {
-      const label = hyperlinkOf(windowState.lines[windowState.linePos - 1] ?? "");
-      if (label && windowReplyStatId >= 0) {
-        sendScrollReply(windowReplyStatId, label);
-      }
-      closeModal();
-      return;
-    }
-    default:
-      return;
-  }
-  const clamped = clampLinePos(next, lineCount);
-  if (clamped !== windowState.linePos) {
-    windowState.linePos = clamped;
-    windowMoved = true;
-  }
-  resolveWindowTitle();
-  paintOverlay();
-  drawScreen();
-}
-
-// handleDebugKey is PromptString's editing loop for PROMPT_ANY.
-function handleDebugKey(event: KeyboardEvent) {
-  if (event.code === "Enter") {
-    sendDebugCommand(debugBuffer);
-    closeModal();
-    return;
-  }
-  if (event.code === "Escape") {
-    // Vanilla restores the old (empty) buffer and still runs the tail of
-    // GameDebugPrompt, which plays a sound. Send the empty command.
-    sendDebugCommand("");
-    closeModal();
-    return;
-  }
-  if (event.code === "Backspace" || event.code === "ArrowLeft") {
-    debugBuffer = debugBuffer.slice(0, -1);
-  } else if (event.key.length === 1 && event.key >= " " && event.key.charCodeAt(0) < 0x80) {
-    if (debugBuffer.length < DEBUG_PROMPT_WIDTH) {
-      debugBuffer += event.key;
-    }
-  } else {
-    return;
-  }
-  paintOverlay();
-  drawScreen();
-}
-
 function handleKeyUp(event: KeyboardEvent) {
-  if (mode !== "play") {
+  if (modal) {
     return;
   }
   const handled = updatePressed(event, false);
@@ -956,7 +863,7 @@ function sendInput(mask: number, key = 0) {
     return;
   }
   // A modal is open: never let held movement keys through.
-  if (mode !== "play" && mask !== 0) {
+  if (modal && mask !== 0) {
     return;
   }
   if (mask === 0 && lastMask === 0 && key === 0) {
