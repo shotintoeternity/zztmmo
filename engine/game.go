@@ -1282,15 +1282,33 @@ func (e *Engine) DamageStat(attackerStatId int16) {
 				pState.BoardTimeSec = 0
 				if e.Board.Info.ReenterWhenZapped {
 					e.SoundQueue(4, " \x01#\x01'\x010\x01\x10\x01")
-					e.Board.Tiles[stat.X][stat.Y].Element = E_EMPTY
-					e.BoardDrawTile(int16(stat.X), int16(stat.Y))
 					oldX = int16(stat.X)
 					oldY = int16(stat.Y)
+					e.Board.Tiles[oldX][oldY].Element = E_EMPTY
+					e.BoardDrawTile(oldX, oldY)
 					// Per-player entry square, not Board.Info.StartPlayerX/Y. On
 					// the server that board-global pair is the world file's stale
 					// value, because RoomManager never calls BoardEnter — and on
 					// TOWN board 19 ("The Mixer") it is (30,25), an E_NORMAL wall.
 					reX, reY := e.ReenterPoint(attackerStatId)
+					// M4.3b: another stat may be standing on that entry square — a second
+					// player who entered there, or a monster that wandered onto it.
+					// Stamping E_PLAYER over it orphans that stat: GameStepWithInputs
+					// dispatches tick procs by tile element, so the loser of the square
+					// starts ticking as a player. Push the arriving player to open ground
+					// instead; the incumbent never moves. Terrain (forest, a wall) holds
+					// no stat and is still landed on and saved into Under, as in M3.11.
+					//
+					// The old tile was cleared above, so it is itself an open square: a
+					// player with nowhere else to go re-enters in place, never overlapping.
+					if _, held := e.StatAt(reX, reY, attackerStatId); held {
+						if x, y, ok := e.FindPlacement(reX, reY, attackerStatId); ok {
+							reX, reY = x, y
+						} else {
+							reX, reY = oldX, oldY
+						}
+					}
+					moved := reX != oldX || reY != oldY
 					stat.X = byte(reX)
 					stat.Y = byte(reY)
 					// DEVIATION: vanilla (GAME.PAS:1163) leaves the destination
@@ -1307,7 +1325,13 @@ func (e *Engine) DamageStat(attackerStatId int16) {
 					// MoveStat does, so re-entering cannot permanently destroy it.
 					// MoveStat itself is wrong here: it would copy the 0x70 damage
 					// flash colour set above onto the destination tile.
-					stat.Under = e.Board.Tiles[stat.X][stat.Y]
+					//
+					// Only when the player actually moved: a player who re-entered in
+					// place is still standing on whatever Under already held, and the
+					// tile below them now reads E_EMPTY only because we cleared it.
+					if moved {
+						stat.Under = e.Board.Tiles[reX][reY]
+					}
 					e.Board.Tiles[stat.X][stat.Y].Element = E_PLAYER
 					e.Board.Tiles[stat.X][stat.Y].Color = ElementDefs[E_PLAYER].Color
 					e.BoardDrawTile(int16(stat.X), int16(stat.Y))

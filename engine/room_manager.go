@@ -288,19 +288,8 @@ func roomSpawn(room *Room, spawnX, spawnY int16) (int16, int16) {
 		return spawnX, spawnY
 	}
 
-	for radius := int16(1); radius <= BOARD_WIDTH || radius <= BOARD_HEIGHT; radius++ {
-		for dy := -radius; dy <= radius; dy++ {
-			for dx := -radius; dx <= radius; dx++ {
-				if absInt16(dx) != radius && absInt16(dy) != radius {
-					continue
-				}
-				x := spawnX + dx
-				y := spawnY + dy
-				if isSpawnOpen(room, x, y) {
-					return x, y
-				}
-			}
-		}
+	if x, y, ok := room.Engine.FindPlacement(spawnX, spawnY, -1); ok {
+		return x, y
 	}
 	return spawnX, spawnY
 }
@@ -312,15 +301,14 @@ func absInt16(v int16) int16 {
 	return v
 }
 
+// isSpawnOpen and isSpawnUnoccupied are the room-scoped spelling of the shared
+// placement policy in placement.go, which re-enter and respawn use too (M4.3b).
 func isSpawnOpen(room *Room, x, y int16) bool {
-	return isSpawnUnoccupied(room, x, y) && room.Engine.Board.Tiles[x][y].Element == E_EMPTY
+	return room.Engine.PlacementOpen(x, y, -1)
 }
 
 func isSpawnUnoccupied(room *Room, x, y int16) bool {
-	if x < 1 || x > BOARD_WIDTH || y < 1 || y > BOARD_HEIGHT {
-		return false
-	}
-	return room.Engine.Board.Tiles[x][y].Element != E_PLAYER
+	return room.Engine.PlacementUnoccupied(x, y)
 }
 
 func (rm *RoomManager) LeavePlayer(playerID PlayerID) bool {

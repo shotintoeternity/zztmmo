@@ -362,7 +362,7 @@ semantics while keeping the server authoritative.
   terminal, and the server ignores them on join — a snapshot restores the world,
   not anybody's keys.
 
-- [ ] **M4.3b — Player-on-player collision and push-out.** Two players can end up
+- [x] **M4.3b — Player-on-player collision and push-out.** Two players can end up
   on the same square, and the board holds only one tile per square: the second
   player's `E_PLAYER` tile overwrites the first's, and thereafter one stat is
   standing on a tile that does not describe it. Because `GameStepWithInputs`
@@ -380,6 +380,30 @@ semantics while keeping the server authoritative.
   keep their own tile, both keep ticking, and neither is silently deleted;
   the pushed player lands on a walkable adjacent square (or stays put if the
   board is full, never overlapping); replay green.
+
+  Landed: `engine/placement.go` — one placement policy (`StatAt`,
+  `PlacementUnoccupied`, `PlacementOpen`, `FindPlacement`) with `roomSpawn`'s ring
+  search lifted into it; `isSpawnOpen`/`isSpawnUnoccupied` became room-scoped
+  wrappers, so join, re-enter (`DamageStat`) and respawn (`ElementPlayerTick`) now
+  pick a landing square the same way. The arriving player is pushed, never the
+  incumbent. Because the arriving stat's tile is cleared before the search, its own
+  square is open ground, so "nowhere to go" means re-entering in place — never an
+  overlap.
+  DEVIATION (the push triggers on a *stat* holding the square, not on the square
+  being non-empty): the spec's "reuse `isSpawnOpen`" reads as "require `E_EMPTY`",
+  but that makes M3.11's `stat.Under` save on re-enter dead code and breaks
+  `TestReenterWhenZappedPreservesUnder` — landing on terrain and stashing the tile
+  is deliberate M3.11 behavior, and all three DoD routes involve a stat. The landing
+  square is still chosen by the shared `PlacementOpen` search. See NOTES.md.
+  DEVIATION (both are fork-only paths; vanilla has no respawn and never writes the
+  re-enter destination tile): respawn never set `stat.Under`, stamping the stale
+  pre-death tile onto the next square walked off of; re-enter set it even when the
+  player never moved, discarding their real `Under`. Both now write on an actual
+  move only.
+  `TestReenterUsesPlayerEntrySquareNotStaleBoardValue` (M3.11) had to move its entry
+  square off (5,24), where TOWN board 19's own stat 0 stands: it was manufacturing
+  the overlap this task fixes and asserting the overlapping outcome. Its stale-wall
+  assertions are unchanged.
 
 - [ ] **M4.4 — Browser sound synthesis.** Convert `SoundEvent` notes into
   WebAudio playback with priority/queue behavior close to ZZT, plus a visible

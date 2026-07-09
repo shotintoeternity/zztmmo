@@ -1296,12 +1296,31 @@ func (e *Engine) ElementPlayerTick(statId int16) {
 			spawnX, spawnY := e.ReenterPoint(statId)
 			oldX := int16(stat.X)
 			oldY := int16(stat.Y)
-			e.Board.Tiles[stat.X][stat.Y].Element = E_EMPTY
+			e.Board.Tiles[oldX][oldY].Element = E_EMPTY
 			e.BoardDrawTile(oldX, oldY)
 			e.DrawPlayerSurroundings(oldX, oldY, 0)
+			// M4.3b: the entry square may be held by another stat — a second player
+			// (two players share an entry square whenever one joins where another
+			// entered) or a monster. Overwriting it orphans that stat: because
+			// GameStepWithInputs dispatches by tile element, whoever loses the
+			// square stops ticking as itself. Push the arriving player to open
+			// ground; the incumbent never moves. With nowhere open, respawn in
+			// place — the old square was cleared above, so it is open ground too.
+			if _, held := e.StatAt(spawnX, spawnY, statId); held {
+				if x, y, ok := e.FindPlacement(spawnX, spawnY, statId); ok {
+					spawnX, spawnY = x, y
+				} else {
+					spawnX, spawnY = oldX, oldY
+				}
+			}
+			// Record what the player now stands on. Without this the stale
+			// pre-death Under is stamped onto the square they next walk off of.
+			if spawnX != oldX || spawnY != oldY {
+				stat.Under = e.Board.Tiles[spawnX][spawnY]
+			}
 			stat.X = byte(spawnX)
 			stat.Y = byte(spawnY)
-			e.Board.Tiles[stat.X][stat.Y] = TTile{Element: E_PLAYER, Color: ElementDefs[E_PLAYER].Color}
+			e.Board.Tiles[spawnX][spawnY] = TTile{Element: E_PLAYER, Color: ElementDefs[E_PLAYER].Color}
 			e.DrawPlayerSurroundings(spawnX, spawnY, 0)
 			e.BoardDrawTile(spawnX, spawnY)
 			pState.Health = 100

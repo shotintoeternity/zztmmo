@@ -597,3 +597,73 @@ board it passed against the bug, which is exactly the kind of test that proves
 nothing. Still no TS test runner (M4.1 note), so `openSelectList`'s assumption —
 that `!NAME;NAME` round-trips through `hyperlinkOf` — was driven under node,
 along with `R` mapping to the restore action.
+
+## M4.3b (2026-07-09) — one placement policy, and the test that asserted the bug
+
+PROCESS: the advisor tool was unavailable this session (`advisor tool is
+unavailable` on the one call). M4.3b is not `[ADVISOR]` and no escalation stop
+was needed, so per CLAUDE.md rule 5 this is recorded rather than blocking.
+
+The overlap is not cosmetic. `GameStepWithInputs` (game.go) picks a stat's tick
+proc by reading the element of the tile that stat stands on. Two stats sharing a
+square therefore means one of them starts ticking as whatever the winner's tile
+says: a lion re-entered upon dispatches through `ElementPlayerTick` and stops
+being a lion. Only `roomSpawn` checked its destination; `DamageStat`'s
+ReenterWhenZapped path and `ElementPlayerTick`'s respawn wrote `E_PLAYER` over
+whatever stood there. Vanilla (`GAME.PAS:1179-1193`) never writes the
+destination tile at all — it moves the stat and lets `GamePlayLoop`'s pause
+branch redraw on unpause — so the stamping is fork-introduced (it already
+carried a `DEVIATION:`), not a quirk to preserve.
+
+New `engine/placement.go` holds the single policy: `StatAt`, `PlacementUnoccupied`,
+`PlacementOpen`, `FindPlacement` (the ring search lifted verbatim out of
+`roomSpawn`). `isSpawnOpen`/`isSpawnUnoccupied` are now room-scoped wrappers, so
+join, re-enter, and respawn all choose a landing square the same way. All scans
+run in stat-index / ring order and touch no map: placement is deterministic.
+
+DECISION — what triggers a push. The spec says to reuse `roomSpawn`'s checks
+rather than invent a second policy, which reads as "relocate unless the square is
+`E_EMPTY`". That was implemented first and it broke
+`TestReenterWhenZappedPreservesUnder`: M3.11 deliberately lets a re-entering
+player land on terrain (forest, a wall) and stash the tile in `stat.Under`, and
+an `E_EMPTY` requirement makes that `Under` save dead code, since the destination
+would always be blank. Nothing in M4.3b's DoD asks for that — all three routes it
+names (two re-enterers, two respawners, re-enter onto a monster) involve a *stat*
+on the destination. So the trigger narrowed to "another stat holds the square",
+while the *landing* square is still chosen by the shared `PlacementOpen` ring
+search. Terrain behaviour is untouched; M3.11 stays green as written.
+
+DECISION — who moves. The arriving player, never the incumbent. This matches
+`roomSpawn` (search outward from the requested square) and avoids yanking a
+stationary player mid-move.
+
+DECISION — nowhere to go. The re-entering stat's own tile is cleared before the
+search runs, so its old square is itself open ground: a player with nowhere else
+to go re-enters in place. `FindPlacement`'s `ok=false` branch is therefore a
+safety net rather than a live path, and it also means "stays put" never overlaps.
+
+`TestReenterUsesPlayerEntrySquareNotStaleBoardValue` (M3.11) had to change, under
+any correct policy. It put its player at (5,24) on TOWN board 19 — which is
+exactly where that board's own stat 0 stands, tile element 4 (`E_PLAYER`). The
+test wiped that tile and `AddStat`ed a second player stat on the same square,
+manufacturing the very overlap M4.3b fixes, then asserted the overlapping
+outcome. Its entry square moved to (4,24), which no stat holds; every assertion
+it makes about the stale-wall bug is unchanged, and a `StatAt` precondition now
+documents the requirement.
+
+Two fixes to tile bookkeeping on lines already being touched, both fork-only
+paths (respawn is an M2.4 invention; vanilla has no respawn):
+  * respawn never set `stat.Under` at all, so the stale pre-death `Under` was
+    stamped onto whichever square the player next walked off of.
+  * re-enter set `Under` unconditionally, so a player whose entry square is the
+    square they already stand on had their real `Under` replaced by the blank
+    tile the code had just cleared. Both now write `Under` only on an actual move.
+
+Verification: `go test -count=1 ./...` green, replay fixture unchanged — the
+600-step TOWN replay never leaves "Room One" (`ReenterWhenZapped=false`), takes
+no damage and never respawns (`healthDrops=0 teleports=0 respawnTicks=0`), so
+both edited paths are unreachable under the fixture and the hash cannot move.
+Probed rather than assumed. New `m4_3b_test.go` covers each DoD route and shares
+an `assertNoStatOverlap` invariant; all four were mutation-checked by
+neutralizing `StatAt`, and all four went red with exactly the described failure
+(the lion "stands on element 4, want 41").

@@ -311,7 +311,16 @@ func TestReenterUsesPlayerEntrySquareNotStaleBoardValue(t *testing.T) {
 	}
 
 	// Put a player on a real, walkable square — as a transfer or join would.
-	entryX, entryY := int16(5), int16(24)
+	//
+	// M4.3b: this used to be (5,24), which is where board 19's own stat 0 stands.
+	// Dropping a second player stat there manufactured the very overlap M4.3b
+	// fixes, so re-entry now pushes the arriving player off it and the test's
+	// stale-wall assertion could never be reached. Use a square no stat holds;
+	// the assertions below are unchanged.
+	entryX, entryY := int16(4), int16(24)
+	if _, held := e.StatAt(entryX, entryY, -1); held {
+		t.Fatalf("precondition: entry square (%d,%d) must hold no stat", entryX, entryY)
+	}
 	e.Board.Tiles[entryX][entryY] = TTile{Element: E_EMPTY}
 	e.AddStat(entryX, entryY, E_PLAYER, int16(ElementDefs[E_PLAYER].Color), 1, StatTemplateDefault)
 	p := e.Board.StatCount
