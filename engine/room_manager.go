@@ -154,6 +154,26 @@ func (rm *RoomManager) FrozenWorld() TWorld {
 	return rm.world
 }
 
+func (rm *RoomManager) Snapshot(playerID PlayerID) (SnapshotMessage, bool) {
+	player := rm.players[playerID]
+	if player == nil {
+		return SnapshotMessage{}, false
+	}
+	room := rm.rooms[player.boardID]
+	if room == nil {
+		return SnapshotMessage{}, false
+	}
+
+	players := make([]PlayerSnapshot, 0, len(room.players))
+	for _, id := range rm.playerIDs() {
+		p := rm.players[id]
+		if p.boardID == room.BoardID {
+			players = append(players, playerSnapshot(room.Engine, id, p.statID))
+		}
+	}
+	return NewSnapshotMessage(room.Engine, room.BoardID, playerID, player.statID, players), true
+}
+
 func (rm *RoomManager) ensureRoom(boardID int16) *Room {
 	if room := rm.rooms[boardID]; room != nil {
 		return room
@@ -168,6 +188,8 @@ func (rm *RoomManager) ensureRoom(boardID int16) *Room {
 	engine.SetInputSource(&ScriptedInput{})
 	engine.World = rm.world
 	engine.BoardOpen(boardID)
+	engine.GenerateTransitionTable()
+	engine.TransitionDrawToBoard()
 
 	room := &Room{
 		BoardID: boardID,

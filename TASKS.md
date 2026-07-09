@@ -166,7 +166,7 @@ and every run is reproducible. ANALYSIS.md §3g, §3h, §5.
   routing, stable tick order, occupied rooms simulate, empty rooms freeze. DoD:
   integration test with two rooms and two players crossing boards.
 
-- [ ] **M3.2 — Snapshot protocol.** Define JSON protocol structs for `join`,
+- [x] **M3.2 — Snapshot protocol.** Define JSON protocol structs for `join`,
   `input`, `snapshot`, `diff`, `event`, and `boardChange`. Snapshot includes board
   ID, tick, seed/hash, 80x25 screen cells, player ID/stat ID, HUD state, and
   visible events. DoD: round-trip tests and a snapshot generated from TOWN.

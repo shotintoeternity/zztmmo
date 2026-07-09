@@ -1,0 +1,185 @@
+package zztgo
+
+const (
+	MessageTypeJoin        = "join"
+	MessageTypeInput       = "input"
+	MessageTypeSnapshot    = "snapshot"
+	MessageTypeDiff        = "diff"
+	MessageTypeEvent       = "event"
+	MessageTypeBoardChange = "boardChange"
+)
+
+type JoinMessage struct {
+	Type  string `json:"type"`
+	Name  string `json:"name"`
+	World string `json:"world,omitempty"`
+	Board int16  `json:"board,omitempty"`
+}
+
+type InputMessage struct {
+	Type     string   `json:"type"`
+	PlayerID PlayerID `json:"playerId"`
+	Seq      uint64   `json:"seq"`
+	DeltaX   int16    `json:"dx"`
+	DeltaY   int16    `json:"dy"`
+	Shift    bool     `json:"shift"`
+	Key      byte     `json:"key"`
+}
+
+type SnapshotMessage struct {
+	Type    string           `json:"type"`
+	BoardID int16            `json:"boardId"`
+	Tick    int16            `json:"tick"`
+	Seed    uint32           `json:"seed"`
+	Hash    uint64           `json:"hash"`
+	You     PlayerSnapshot   `json:"you"`
+	Players []PlayerSnapshot `json:"players"`
+	HUD     HUDSnapshot      `json:"hud"`
+	Screen  []ScreenCell     `json:"screen"`
+	Events  []ProtocolEvent  `json:"events,omitempty"`
+}
+
+type DiffMessage struct {
+	Type    string           `json:"type"`
+	BoardID int16            `json:"boardId"`
+	Tick    int16            `json:"tick"`
+	Hash    uint64           `json:"hash"`
+	Cells   []ScreenCell     `json:"cells,omitempty"`
+	Players []PlayerSnapshot `json:"players,omitempty"`
+	HUD     *HUDSnapshot     `json:"hud,omitempty"`
+	Events  []ProtocolEvent  `json:"events,omitempty"`
+}
+
+type EventMessage struct {
+	Type    string        `json:"type"`
+	Event   ProtocolEvent `json:"event"`
+	BoardID int16         `json:"boardId,omitempty"`
+	Tick    int16         `json:"tick,omitempty"`
+}
+
+type BoardChangeMessage struct {
+	Type     string          `json:"type"`
+	Snapshot SnapshotMessage `json:"snapshot"`
+}
+
+type ScreenCell struct {
+	X     int16 `json:"x"`
+	Y     int16 `json:"y"`
+	Ch    byte  `json:"ch"`
+	Color byte  `json:"color"`
+}
+
+type PlayerSnapshot struct {
+	ID     PlayerID `json:"id"`
+	StatID int16    `json:"statId"`
+	X      int16    `json:"x"`
+	Y      int16    `json:"y"`
+	Health int16    `json:"health"`
+}
+
+type HUDSnapshot struct {
+	Health         int16   `json:"health"`
+	Ammo           int16   `json:"ammo"`
+	Gems           int16   `json:"gems"`
+	Torches        int16   `json:"torches"`
+	TorchTicks     int16   `json:"torchTicks"`
+	EnergizerTicks int16   `json:"energizerTicks"`
+	Score          int16   `json:"score"`
+	Keys           [7]bool `json:"keys"`
+	BoardTimeSec   int16   `json:"boardTimeSec"`
+	BoardTimeHsec  int16   `json:"boardTimeHsec"`
+}
+
+type ProtocolEvent struct {
+	Type     string   `json:"type"`
+	StatID   int16    `json:"statId,omitempty"`
+	Title    string   `json:"title,omitempty"`
+	Lines    []string `json:"lines,omitempty"`
+	Filename string   `json:"filename,omitempty"`
+	Score    int16    `json:"score,omitempty"`
+	ListPos  int16    `json:"listPos,omitempty"`
+	Notes    string   `json:"notes,omitempty"`
+	Priority int16    `json:"priority,omitempty"`
+	X        int16    `json:"x,omitempty"`
+	Y        int16    `json:"y,omitempty"`
+	ToBoard  int16    `json:"toBoard,omitempty"`
+	EntryX   int16    `json:"entryX,omitempty"`
+	EntryY   int16    `json:"entryY,omitempty"`
+}
+
+func NewSnapshotMessage(e *Engine, boardID int16, playerID PlayerID, statID int16, players []PlayerSnapshot) SnapshotMessage {
+	return SnapshotMessage{
+		Type:    MessageTypeSnapshot,
+		BoardID: boardID,
+		Tick:    e.CurrentTick,
+		Seed:    e.RandSeed,
+		Hash:    StateHash(e),
+		You:     playerSnapshot(e, playerID, statID),
+		Players: players,
+		HUD:     hudSnapshot(e.PlayerFor(statID)),
+		Screen:  screenCells(e),
+		Events:  ProtocolEvents(e.Events),
+	}
+}
+
+func ProtocolEvents(events []Event) []ProtocolEvent {
+	var out []ProtocolEvent
+	for _, event := range events {
+		switch ev := event.(type) {
+		case ScrollEvent:
+			out = append(out, ProtocolEvent{Type: "scroll", StatID: ev.StatId, Title: ev.Title, Lines: ev.Lines})
+		case QuitPromptEvent:
+			out = append(out, ProtocolEvent{Type: "quitPrompt"})
+		case HelpEvent:
+			out = append(out, ProtocolEvent{Type: "help", Filename: ev.Filename, Title: ev.Title})
+		case HighScoreEntryEvent:
+			out = append(out, ProtocolEvent{Type: "highScoreEntry", Score: ev.Score, ListPos: ev.ListPos})
+		case SoundEvent:
+			out = append(out, ProtocolEvent{Type: "sound", Notes: ev.Notes, Priority: ev.Priority})
+		case DeathEvent:
+			out = append(out, ProtocolEvent{Type: "death", StatID: ev.StatId})
+		case RespawnEvent:
+			out = append(out, ProtocolEvent{Type: "respawn", StatID: ev.StatId, X: ev.X, Y: ev.Y})
+		case TransferEvent:
+			out = append(out, ProtocolEvent{Type: "transfer", StatID: ev.StatId, ToBoard: ev.ToBoard, EntryX: ev.EntryX, EntryY: ev.EntryY})
+		}
+	}
+	return out
+}
+
+func screenCells(e *Engine) []ScreenCell {
+	cells := make([]ScreenCell, 0, 80*25)
+	for y := int16(0); y < 25; y++ {
+		for x := int16(0); x < 80; x++ {
+			cell := e.Screen[x][y]
+			cells = append(cells, ScreenCell{X: x, Y: y, Ch: cell.Ch, Color: cell.Color})
+		}
+	}
+	return cells
+}
+
+func playerSnapshot(e *Engine, playerID PlayerID, statID int16) PlayerSnapshot {
+	stat := &e.Board.Stats[statID]
+	return PlayerSnapshot{
+		ID:     playerID,
+		StatID: statID,
+		X:      int16(stat.X),
+		Y:      int16(stat.Y),
+		Health: e.PlayerFor(statID).Health,
+	}
+}
+
+func hudSnapshot(pState *PlayerState) HUDSnapshot {
+	return HUDSnapshot{
+		Health:         pState.Health,
+		Ammo:           pState.Ammo,
+		Gems:           pState.Gems,
+		Torches:        pState.Torches,
+		TorchTicks:     pState.TorchTicks,
+		EnergizerTicks: pState.EnergizerTicks,
+		Score:          pState.Score,
+		Keys:           pState.Keys,
+		BoardTimeSec:   pState.BoardTimeSec,
+		BoardTimeHsec:  pState.BoardTimeHsec,
+	}
+}
