@@ -1348,6 +1348,11 @@ func GameAboutScreen() {
 //   - e.GamePlayExitRequested stops ticking mid-cycle and suppresses the advance,
 //     mirroring the original loop's exit checks.
 func (e *Engine) GameStep() {
+	if e.PendingScrollReply != "" {
+		e.OopSend(e.PendingScrollStatId, e.PendingScrollReply, false)
+		e.PendingScrollReply = ""
+	}
+
 	InputDeltaX = e.InputDeltaX
 	InputDeltaY = e.InputDeltaY
 	InputShiftPressed = e.InputShiftPressed
@@ -1538,6 +1543,34 @@ func (e *Engine) GamePlayLoop(boardChanged bool) {
 			e.Delay(e.TickTimeDuration * 10)
 			if SoundHasTimeElapsed(&e.TickTimeCounter, e.TickTimeDuration) {
 				e.GameStep()
+			}
+		}
+
+		// Drain and process events for interactive single-player mode
+		for len(e.Events) > 0 {
+			event := e.Events[0]
+			e.Events = e.Events[1:]
+
+			switch ev := event.(type) {
+			case ScrollEvent:
+				var textWindow TTextWindowState
+				textWindow.Title = ev.Title
+				textWindow.Selectable = true
+				textWindow.LinePos = 1
+				textWindow.LineCount = int16(len(ev.Lines))
+				for idx, line := range ev.Lines {
+					textWindow.Lines[idx] = line
+				}
+
+				TextWindowDrawOpen(&textWindow)
+				TextWindowSelect(&textWindow, true, false)
+				TextWindowDrawClose(&textWindow)
+				TextWindowFree(&textWindow)
+
+				if Length(textWindow.Hyperlink) != 0 {
+					e.PendingScrollReply = textWindow.Hyperlink
+					e.PendingScrollStatId = ev.StatId
+				}
 			}
 		}
 	}

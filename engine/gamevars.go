@@ -195,6 +195,15 @@ type (
 		InputLastDeltaX             int16
 		InputLastDeltaY             int16
 		InputKeyBuffer              string
+		Events                      []Event
+		PendingScrollReply          string
+		PendingScrollStatId         int16
+	}
+	Event interface{}
+	ScrollEvent struct {
+		Title  string
+		Lines  []string
+		StatId int16
 	}
 )
 

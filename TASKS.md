@@ -85,7 +85,7 @@ and every run is reproducible. ANALYSIS.md §3g, §3h, §5.
   interleaves 100 GameSteps each, both replay-deterministic, no cross-talk (their
   StateHashes match single-engine runs with same seeds).
 
-- [ ] **M1.3 [ADVISOR] — De-modal scrolls.** `OopExecute` displays text windows
+- [x] **M1.3 [ADVISOR] — De-modal scrolls.** `OopExecute` displays text windows
   modally (`engine/oop.go:798-800`); `ElementScrollTouch` similar (ANALYSIS.md
   §3e). Convert: engine gains `Events []Event` drained by the caller each step;
   scroll display becomes `ScrollEvent{Lines []string}` (single-player: the

@@ -347,3 +347,53 @@ func TestTwoEnginesOneProcess(t *testing.T) {
 		}
 	}
 }
+
+func TestScrollEventAndReply(t *testing.T) {
+	e := NewEngine()
+	e.Headless = true
+	e.WorldCreate()
+	e.BoardCreate()
+
+	// Add an object at (10, 10)
+	e.Board.Tiles[10][10] = TTile{Element: E_OBJECT, Color: 0x0F}
+	e.AddStat(10, 10, E_OBJECT, 0x0F, 1, StatTemplateDefault)
+	statId := e.Board.StatCount
+
+	stat := &e.Board.Stats[statId]
+	stat.Data = "@obj\r:touch\rHello!\r!label;link\r:label\r#set flag\r"
+	stat.DataLen = int16(len(stat.Data))
+	stat.DataPos = -1
+
+	// Send touch message
+	e.OopSend(statId, "touch", false)
+
+	// Run GameStep to trigger scroll display
+	e.GameStep()
+
+	// Assert ScrollEvent was emitted
+	if len(e.Events) != 1 {
+		t.Fatalf("expected 1 event, got %d", len(e.Events))
+	}
+	ev, ok := e.Events[0].(ScrollEvent)
+	if !ok {
+		t.Fatalf("expected ScrollEvent, got %T", e.Events[0])
+	}
+	if ev.Title != "obj" {
+		t.Errorf("expected ScrollEvent Title 'obj', got %q", ev.Title)
+	}
+	if len(ev.Lines) != 2 || ev.Lines[0] != "Hello!" || ev.Lines[1] != "!label;link" {
+		t.Errorf("unexpected ScrollEvent Lines: %v", ev.Lines)
+	}
+
+	// Send reply
+	e.PendingScrollReply = "label"
+	e.PendingScrollStatId = statId
+
+	// Run next step
+	e.GameStep()
+
+	// Assert flag is set (ZZT-OOP flags are stored in uppercase)
+	if e.WorldGetFlagPosition("FLAG") <= 0 {
+		t.Errorf("expected flag 'FLAG' to be set after reply send")
+	}
+}

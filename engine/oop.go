@@ -496,7 +496,6 @@ func (e *Engine) OopExecute(statId int16, position *int16, name string) {
 		argTile2          TTile
 	)
 	stat := &e.Board.Stats[statId]
-StartParsing:
 	TextWindowInitState(&textWindow)
 
 	textWindow.Selectable = false
@@ -795,15 +794,16 @@ StartParsing:
 			name = "Interaction"
 		}
 		textWindow.Title = name
-		TextWindowDrawOpen(&textWindow)
-		TextWindowSelect(&textWindow, true, false)
-		TextWindowDrawClose(&textWindow)
-		TextWindowFree(&textWindow)
-		if Length(textWindow.Hyperlink) != 0 {
-			if e.OopSend(statId, textWindow.Hyperlink, false) {
-				goto StartParsing
-			}
+
+		lines := make([]string, textWindow.LineCount)
+		for idx := int16(0); idx < textWindow.LineCount; idx++ {
+			lines[idx] = textWindow.Lines[idx]
 		}
+		e.Events = append(e.Events, ScrollEvent{
+			Title:  name,
+			Lines:  lines,
+			StatId: statId,
+		})
 	} else if textWindow.LineCount == 1 {
 		e.DisplayMessage(200, textWindow.Lines[0])
 		TextWindowFree(&textWindow)
