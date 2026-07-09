@@ -253,7 +253,7 @@ Goal: the browser client should feel like complete ZZT, not just a multiplayer
 terminal viewport. Preserve original CP437/DOS presentation and interaction
 semantics while keeping the server authoritative.
 
-- [ ] **M4.0 — ZZT screen shell parity.** Render the board and sidebar as the
+- [x] **M4.0 — ZZT screen shell parity.** Render the board and sidebar as the
   original 60x25 board plus 20x25 sidebar, using CP437 cells, DOS colors, blink
   behavior where relevant, and fixed text-mode geometry. DoD: TOWN in the
   browser visually matches the original board/sidebar split with no temporary

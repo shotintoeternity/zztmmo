@@ -7,6 +7,7 @@ const COLS = 80;
 // which this client draws itself from HUD data — see drawSidebar/updateSidebar,
 // transcribed from the engine's GameDrawSidebar/GameUpdateSidebar.
 const BOARD_COLS = 60;
+const SIDEBAR_COLS = COLS - BOARD_COLS;
 const ROWS = 25;
 const CELL_W = 10;
 const CELL_H = 18;
@@ -325,31 +326,13 @@ if (!app) {
   throw new Error("missing app root");
 }
 
+// M4.0: the page is the ZZT screen and nothing else — no topbar, no overlay, no
+// event log. Anything the player needs to see must be drawn as CP437 cells on
+// the 80x25 text-mode screen, the way the original does it.
 app.innerHTML = `
-  <main class="shell">
-    <section class="stage">
-      <div class="topbar">
-        <div class="brand">
-          <h1>ZZT MMO</h1>
-          <span class="status" data-status>disconnected</span>
-        </div>
-        <div class="actions">
-          <button class="button" data-connect>Connect</button>
-          <button class="button secondary" data-focus>Focus</button>
-        </div>
-      </div>
-      <div class="canvas-wrap">
-        <canvas data-screen width="${WIDTH}" height="${HEIGHT}" tabindex="0"></canvas>
-        <div class="overlay" data-overlay>
-          <div>
-            <p class="overlay-title">ZZT MMO</p>
-            <p class="overlay-text">Connect to the server, then use arrows or WASD. Hold Shift to shoot, Space to fire in the last direction.</p>
-          </div>
-        </div>
-      </div>
-      <div class="event-log" data-log></div>
-    </section>
-  </main>
+  <div class="canvas-wrap">
+    <canvas data-screen width="${WIDTH}" height="${HEIGHT}" tabindex="0"></canvas>
+  </div>
 `;
 
 const canvas = query<HTMLCanvasElement>("[data-screen]");
@@ -358,20 +341,14 @@ if (!ctx) {
   throw new Error("canvas context unavailable");
 }
 const screenCtx = ctx;
-const statusEl = query<HTMLElement>("[data-status]");
-const overlayEl = query<HTMLElement>("[data-overlay]");
-const connectButton = query<HTMLButtonElement>("[data-connect]");
-const focusButton = query<HTMLButtonElement>("[data-focus]");
-const logEl = query<HTMLElement>("[data-log]");
 
 let ws: WebSocket | null = null;
 let playerId = 0;
 let myStatId = -1;
 let seq = 0;
-let boardId = 0;
-let tick = 0;
 let lastMask = 0;
 let inputTimer = 0;
+let retryTimer = 0;
 let connected = false;
 let lastMessageKey = "";
 let lastMessageAt = 0;
@@ -401,8 +378,10 @@ const cells: ScreenCell[] = Array.from({ length: COLS * ROWS }, (_, i) => ({
 
 drawSidebar();
 drawScreen();
-connectButton.addEventListener("click", () => connect());
-focusButton.addEventListener("click", () => canvas.focus());
+// Vanilla ZZT has no "Connect" button: the game is just there when you start
+// it. Connect on load, refocus on click, and retry quietly if the socket drops.
+connect();
+canvas.addEventListener("mousedown", () => canvas.focus());
 canvas.addEventListener("keydown", handleKeyDown);
 canvas.addEventListener("keyup", handleKeyUp);
 window.addEventListener("blur", () => {
@@ -423,14 +402,12 @@ function connect() {
     return;
   }
 
-  setStatus("connecting");
-  connectButton.disabled = true;
+  window.clearTimeout(retryTimer);
   const socket = new WebSocket(wsURL());
   ws = socket;
 
   socket.addEventListener("open", () => {
     connected = true;
-    setStatus("joining");
     // No board: the server picks its configured default (zzt-server -board).
     socket.send(JSON.stringify({ type: MessageTypeJoin, name: "browser" }));
     canvas.focus();
@@ -442,17 +419,25 @@ function connect() {
     applyMessage(message);
   });
 
-  socket.addEventListener("close", () => disconnect("disconnected"));
-  socket.addEventListener("error", () => disconnect("connection error"));
+  socket.addEventListener("close", () => disconnect("Disconnected"));
+  socket.addEventListener("error", () => disconnect("Connection error"));
 }
 
 function disconnect(reason: string) {
   connected = false;
-  connectButton.disabled = false;
   window.clearInterval(inputTimer);
-  setStatus(reason);
-  overlayEl.hidden = false;
   ws = null;
+  drawConnectionNotice(reason);
+  retryTimer = window.setTimeout(connect, 2000);
+}
+
+// drawConnectionNotice writes the only non-vanilla text this client shows, and
+// it writes it as CP437 cells on the sidebar's bottom row rather than as an
+// HTML panel. Nothing repaints while we are disconnected, so it persists.
+function drawConnectionNotice(reason: string) {
+  const text = ` ${reason}`.slice(0, SIDEBAR_COLS).padEnd(SIDEBAR_COLS, " ");
+  writeText(BOARD_COLS, ROWS - 1, 0x1e, text);
+  drawScreen();
 }
 
 function wsURL(): string {
@@ -483,10 +468,6 @@ function applyMessage(message: ServerMessage) {
 function applySnapshot(message: SnapshotMessage) {
   playerId = message.you.id;
   myStatId = message.you.statId;
-  boardId = message.boardId;
-  tick = message.tick;
-  overlayEl.hidden = true;
-  setStatus(`board ${boardId} tick ${tick}`);
   replaceCells(message.screen);
   drawSidebar();
   updateSidebar(message.hud);
@@ -509,8 +490,6 @@ function trackMyStatId(players: PlayerSnapshot[] | undefined) {
 }
 
 function applyDiff(message: DiffMessage) {
-  boardId = message.boardId;
-  tick = message.tick;
   trackMyStatId(message.players);
   if (message.cells) {
     for (const cell of message.cells) {
@@ -521,7 +500,6 @@ function applyDiff(message: DiffMessage) {
     updateSidebar(message.hud);
   }
   renderEvents(message.events);
-  setStatus(`board ${boardId} tick ${tick}`);
   drawScreen();
 }
 
@@ -771,15 +749,11 @@ function stopHeldInput() {
   sendInput(0);
 }
 
+// M4.0 removed the on-page event log: the page is the ZZT screen only. Events
+// that have no vanilla presentation yet (transfer, death, high score) go to the
+// devtools console until M4.1's text-window system gives them a real home.
 function appendLog(text: string) {
-  const line = document.createElement("div");
-  line.className = "event-line";
-  line.textContent = text;
-  logEl.appendChild(line);
-  while (logEl.children.length > 80) {
-    logEl.firstElementChild?.remove();
-  }
-  logEl.scrollTop = logEl.scrollHeight;
+  console.debug("[zzt]", text);
 }
 
 function appendLogOnce(text: string) {
@@ -1024,6 +998,3 @@ function isHandledKey(code: string): boolean {
     code === "Enter" || code === "Escape";
 }
 
-function setStatus(text: string) {
-  statusEl.textContent = text;
-}
