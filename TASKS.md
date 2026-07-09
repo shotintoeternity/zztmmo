@@ -61,7 +61,7 @@ and every run is reproducible. ANALYSIS.md §3g, §3h, §5.
   interactively. DoD: play TOWN.ZZT manually — feels identical; headless test can
   call GameStep in a loop.
 
-- [ ] **M0.6 — Replay harness + fixtures.** New `engine/replay_test.go`:
+- [x] **M0.6 — Replay harness + fixtures.** New `engine/replay_test.go`:
   `StateHash()` = FNV-1a over Board.Tiles, all Stats fields, World.Info, and
   RandSeed. Test: `RandomSeed(42)`, load `TOWN.ZZT`, start play (GameStateElement
   = E_PLAYER, unpaused), drive 600 GameSteps with a fixed ScriptedInput sequence,
