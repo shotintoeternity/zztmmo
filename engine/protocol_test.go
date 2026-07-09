@@ -4,6 +4,7 @@ import (
 	"encoding/json"
 	"path/filepath"
 	"reflect"
+	"strings"
 	"testing"
 )
 
@@ -28,7 +29,7 @@ func TestProtocolMessageRoundTrips(t *testing.T) {
 		},
 		HUD:    hud,
 		Screen: []ScreenCell{{X: 0, Y: 0, Ch: 'Z', Color: 0x1F}},
-		Events: []ProtocolEvent{{Type: "sound", Notes: "abc", Priority: 2}},
+		Events: []ProtocolEvent{{Type: "sound", Notes: []uint16{'a', 'b', 'c'}, Priority: 2}},
 	}
 
 	roundTrip(t, JoinMessage{Type: MessageTypeJoin, Name: "tester", World: "TOWN", Board: 1}, &JoinMessage{})
@@ -74,6 +75,27 @@ func TestProtocolEvents(t *testing.T) {
 	}
 	if events[7].ToBoard != 2 || events[7].EntryX != 3 || events[7].EntryY != 4 {
 		t.Fatalf("transfer event mismatch: %+v", events[7])
+	}
+}
+
+func TestProtocolSoundNotesAreBytes(t *testing.T) {
+	events := ProtocolEvents([]Event{
+		SoundEvent{Notes: "\xf9\x01", Priority: 1},
+	})
+	if len(events) != 1 {
+		t.Fatalf("events len=%d, want 1", len(events))
+	}
+	want := []uint16{249, 1}
+	if !reflect.DeepEqual(events[0].Notes, want) {
+		t.Fatalf("sound notes=%v, want %v", events[0].Notes, want)
+	}
+
+	data, err := json.Marshal(events[0])
+	if err != nil {
+		t.Fatalf("marshal sound event: %v", err)
+	}
+	if !strings.Contains(string(data), `"notes":[249,1]`) {
+		t.Fatalf("sound notes were not encoded as numeric bytes: %s", data)
 	}
 }
 

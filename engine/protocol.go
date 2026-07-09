@@ -203,16 +203,16 @@ type ProtocolEvent struct {
 	Filename     string   `json:"filename,omitempty"`
 	// Error carries a refusal back to the client on a "saveResult" event. Empty
 	// means the save succeeded, so no extra bool rides on every other event.
-	Error    string `json:"error,omitempty"`
-	Score    int16  `json:"score,omitempty"`
-	ListPos  int16  `json:"listPos,omitempty"`
-	Notes    string `json:"notes,omitempty"`
-	Priority int16  `json:"priority,omitempty"`
-	X        int16  `json:"x,omitempty"`
-	Y        int16  `json:"y,omitempty"`
-	ToBoard  int16  `json:"toBoard,omitempty"`
-	EntryX   int16  `json:"entryX,omitempty"`
-	EntryY   int16  `json:"entryY,omitempty"`
+	Error    string   `json:"error,omitempty"`
+	Score    int16    `json:"score,omitempty"`
+	ListPos  int16    `json:"listPos,omitempty"`
+	Notes    []uint16 `json:"notes,omitempty"`
+	Priority int16    `json:"priority,omitempty"`
+	X        int16    `json:"x,omitempty"`
+	Y        int16    `json:"y,omitempty"`
+	ToBoard  int16    `json:"toBoard,omitempty"`
+	EntryX   int16    `json:"entryX,omitempty"`
+	EntryY   int16    `json:"entryY,omitempty"`
 	// Paused is the new paused state on a "pause" event. Explicitly not
 	// omitempty: false is the unpause signal and must survive the wire.
 	Paused bool `json:"paused"`
@@ -254,7 +254,7 @@ func ProtocolEvents(events []Event) []ProtocolEvent {
 		case HighScoreEntryEvent:
 			out = append(out, ProtocolEvent{Type: "highScoreEntry", StatID: ev.StatId, Score: ev.Score, ListPos: ev.ListPos})
 		case SoundEvent:
-			out = append(out, ProtocolEvent{Type: "sound", Notes: ev.Notes, Priority: ev.Priority})
+			out = append(out, ProtocolEvent{Type: "sound", Notes: soundNoteBytes(ev.Notes), Priority: ev.Priority})
 		case DeathEvent:
 			out = append(out, ProtocolEvent{Type: "death", StatID: ev.StatId})
 		case RespawnEvent:
@@ -262,6 +262,17 @@ func ProtocolEvents(events []Event) []ProtocolEvent {
 		case TransferEvent:
 			out = append(out, ProtocolEvent{Type: "transfer", StatID: ev.StatId, ToBoard: ev.ToBoard, EntryX: ev.EntryX, EntryY: ev.EntryY})
 		}
+	}
+	return out
+}
+
+func soundNoteBytes(notes string) []uint16 {
+	if notes == "" {
+		return nil
+	}
+	out := make([]uint16, len(notes))
+	for i := range notes {
+		out[i] = uint16(notes[i])
 	}
 	return out
 }

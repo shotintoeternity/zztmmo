@@ -405,7 +405,7 @@ semantics while keeping the server authoritative.
   the overlap this task fixes and asserting the overlapping outcome. Its stale-wall
   assertions are unchanged.
 
-- [ ] **M4.4 — Browser sound synthesis.** Convert `SoundEvent` notes into
+- [x] **M4.4 — Browser sound synthesis.** Convert `SoundEvent` notes into
   WebAudio playback with priority/queue behavior close to ZZT, plus a visible
   sound toggle in the authentic sidebar. DoD: pickups, shots, doors, damage,
   and object sounds are audible and can be toggled.

@@ -3,6 +3,7 @@ import { drawSidebar as paintSidebar, updateSidebar as paintSidebarHud } from ".
 import { renderModal, handleModalKey, type Modal } from "./modal";
 import { commandKey, isHandledKey, isMovementKey, movementMask, rawKey } from "./keys";
 import { drawTitleSidebar, titleCommand } from "./title";
+import { soundNotesFromProtocol, ZztSound } from "./sound";
 
 const COLS = 80;
 // The server streams board columns 0..59 only. Columns 60..79 are the sidebar,
@@ -39,6 +40,7 @@ const COLOR_PLAYER = 0x1f;
 // SoundHasTimeElapsed(TickTimeCounter, 25) in GAME.PAS:1520. A TimerTick is 6
 // hundredths of a second (SOUNDS.PAS:172), so the blink toggles every 250ms.
 const PAUSE_BLINK_MS = 250;
+const COMMAND_SOUND = "B".charCodeAt(0);
 
 type ScreenCell = {
   x: number;
@@ -81,7 +83,7 @@ type ProtocolEvent = {
   error?: string;
   score?: number;
   listPos?: number;
-  notes?: string;
+  notes?: number[];
   priority?: number;
   x?: number;
   y?: number;
@@ -352,6 +354,7 @@ let connected = false;
 let lastMessageKey = "";
 let lastMessageAt = 0;
 const pressed = new Set<string>();
+const zztSound = new ZztSound();
 
 // M4.3: the client is a two-state machine, as ZZT is. "title" is GameTitleLoop
 // — no socket, no player, the monitor sidebar over a static board 0. "playing"
@@ -395,7 +398,7 @@ drawScreen();
 // player stat on a shared board, so it waits for 'P' — which is also what
 // vanilla waits for (GAME.PAS:1644).
 void showTitle();
-canvas.addEventListener("mousedown", () => canvas.focus());
+canvas.addEventListener("mousedown", handlePointerDown);
 canvas.addEventListener("keydown", handleKeyDown);
 canvas.addEventListener("keyup", handleKeyUp);
 window.addEventListener("blur", () => {
@@ -420,6 +423,7 @@ async function showTitle() {
   modal = null;
   playerId = 0;
   myStatId = -1;
+  zztSound.setEnabled(false);
   setPaused(false);
   pressed.clear();
   lastMask = 0;
@@ -454,6 +458,8 @@ function leaveToTitle() {
 }
 
 function startPlay() {
+  zztSound.setEnabled(true);
+  zztSound.resume();
   leavingToTitle = false;
   drawSidebar();
   drawScreen();
@@ -872,6 +878,7 @@ function drawSidebar() {
 }
 
 function updateSidebar(hud: HudSnapshot) {
+  zztSound.setEnabled(hud.soundEnabled);
   paintSidebarHud(writeText, hud);
 }
 
@@ -947,7 +954,7 @@ function handleProtocolEvent(event: ProtocolEvent) {
       }
       break;
     case "sound":
-      appendLogOnce(`sound priority ${event.priority ?? 0}`);
+      zztSound.queue(event.priority ?? 0, soundNotesFromProtocol(event.notes));
       break;
     case "transfer":
       appendLog(`transfer to board ${event.toBoard ?? "?"}`);
@@ -1081,6 +1088,8 @@ function handleTitleKey(event: KeyboardEvent) {
 }
 
 function handleKeyDown(event: KeyboardEvent) {
+  zztSound.resume();
+
   if (modal) {
     routeModalKey(event);
     return;
@@ -1120,6 +1129,37 @@ function handleKeyUp(event: KeyboardEvent) {
     event.preventDefault();
     sendInput(currentMask());
   }
+}
+
+function handlePointerDown(event: MouseEvent) {
+  canvas.focus();
+  zztSound.resume();
+
+  if (mode !== "playing" || modal) {
+    return;
+  }
+  const cell = eventCell(event);
+  if (!cell) {
+    return;
+  }
+  if (cell.y === 15 && cell.x >= 62 && cell.x <= 73) {
+    event.preventDefault();
+    stopHeldInput();
+    sendKey(COMMAND_SOUND);
+  }
+}
+
+function eventCell(event: MouseEvent): { x: number; y: number } | null {
+  const rect = canvas.getBoundingClientRect();
+  if (rect.width <= 0 || rect.height <= 0) {
+    return null;
+  }
+  const x = Math.floor(((event.clientX - rect.left) / rect.width) * COLS);
+  const y = Math.floor(((event.clientY - rect.top) / rect.height) * ROWS);
+  if (x < 0 || x >= COLS || y < 0 || y >= ROWS) {
+    return null;
+  }
+  return { x, y };
 }
 
 function sendKey(key: number) {
@@ -1213,5 +1253,3 @@ function sendInput(mask: number, key = 0) {
   }
   ws.send(JSON.stringify(input));
 }
-
-

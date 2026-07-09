@@ -667,3 +667,37 @@ Probed rather than assumed. New `m4_3b_test.go` covers each DoD route and shares
 an `assertNoStatOverlap` invariant; all four were mutation-checked by
 neutralizing `StatAt`, and all four went red with exactly the described failure
 (the lion "stands on element 4, want 41").
+
+## M4.4 (2026-07-09) — browser sound synthesis
+
+Sound remains presentation only. The engine still emits `SoundEvent{Notes string,
+Priority}` and no simulation state or `StateHash` input changed. The browser now
+owns the old `SOUNDS.PAS` queue semantics: priority `>= current` interrupts,
+priority `-1` appends to the unscheduled tail, and duration units schedule at
+18.2065 Hz.
+
+Wire-format decision: `ProtocolEvent.Notes` is now `[]uint16`, not a string. Go
+strings hold parsed sound bytes, but JSON strings are UTF-8; drum note bytes
+`0xf0..0xf9` would not arrive in JavaScript as one code unit. Numeric bytes make
+the protocol lossless and are checked by `TestProtocolSoundNotesAreBytes`.
+
+Waveform decision: use one persistent WebAudio square oscillator, gated through
+a gain node. No filters, reverb, samples, envelopes, or musical smoothing are
+added; only a sub-millisecond gain ramp is used to avoid browser click artifacts.
+This is the closest practical browser match for the PC speaker's single square
+tone while still using WebAudio's scheduler.
+
+Percussion decision: ZZT drums are hardcoded rapid frequency changes on the same
+PC speaker tone path. The browser freezes the Go-initialized `SoundDrumTable` as
+a TypeScript literal and schedules each drum step 1 ms apart: drum 0 is the
+1 ms tick, drums 1..9 use the 14-step bursts (with 3 retained as the inert/N/A
+entry). `TestSoundDrumTableFrozenForBrowser` guards the literal against future
+RNG/init-order drift. Vanilla randomized some drums per run, so stability is the
+goal rather than reproducing a new random drum timbre each page load.
+
+Sound events are room-wide. With no `StatId` on `SoundEvent`, every client in a
+room hears pickups, shots, doors, damage, and object sounds from every player.
+That is accepted for now as shared-room presentation. Mute remains per-player:
+the server's `HUDSnapshot.SoundEnabled` gates local playback, and the sidebar's
+clickable "B / Be quiet" line sends the same `B` command as the keyboard, so the
+server remains authoritative for the visible state.
