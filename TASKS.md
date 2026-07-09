@@ -205,15 +205,16 @@ and every run is reproducible. ANALYSIS.md §3g, §3h, §5.
   DoD: pressing `?` in the browser opens an interactive debug/help-style window
   without disconnecting or corrupting gameplay input.
 
-- [ ] **M3.10 — ZZT scroll/vendor message windows.** Render `scroll` events as
-  in-world ZZT text windows instead of sidebar text, including selectable
-  `!label;text` choices and replies back to the engine. Cover vendor-style
-  dialogue such as:
+- [ ] **M3.10 — ZZT scroll message windows.** Render all `scroll` events from
+  object interactions and other gameplay text prompts as in-world ZZT text
+  windows instead of sidebar text, including selectable `!label;text` choices
+  and replies back to the engine. Include vendor-style dialogue as one required
+  fixture:
   `Vendor`
   `"Hello, you must be new to town! ..."`
   `!ba;Ammunition, 3 shots.........1 gem`
   `!bt;Torch.......................1 gem`
   `!bx;Advice......................Free`
-  DoD: touching the TOWN vendor opens a CP437-style modal window over the board
-  and selecting an option sends the expected reply without corrupting movement
-  input.
+  DoD: touching any object that opens a scroll produces a CP437-style modal
+  window over the board, and selecting an option sends the expected reply
+  without corrupting movement input.
