@@ -16,6 +16,7 @@ const (
 	MessageTypeScrollReply   = "scrollReply"
 	MessageTypeQuitReply     = "quitReply"
 	MessageTypeHighScoreName = "highScoreName"
+	MessageTypeSaveFilename  = "saveFilename"
 )
 
 // HelpDir is where HelpFileLines looks for .HLP files. The terminal client
@@ -114,6 +115,14 @@ type HighScoreNameMessage struct {
 	Name     string   `json:"name"`
 }
 
+// SaveFilenameMessage answers a savePrompt event with the name the player
+// typed. The server sanitizes it (SanitizeSaveName) before it reaches a path.
+type SaveFilenameMessage struct {
+	Type     string   `json:"type"`
+	PlayerID PlayerID `json:"playerId"`
+	Name     string   `json:"name"`
+}
+
 type SnapshotMessage struct {
 	Type    string           `json:"type"`
 	BoardID int16            `json:"boardId"`
@@ -192,15 +201,18 @@ type ProtocolEvent struct {
 	Title        string   `json:"title,omitempty"`
 	Lines        []string `json:"lines,omitempty"`
 	Filename     string   `json:"filename,omitempty"`
-	Score        int16    `json:"score,omitempty"`
-	ListPos      int16    `json:"listPos,omitempty"`
-	Notes        string   `json:"notes,omitempty"`
-	Priority     int16    `json:"priority,omitempty"`
-	X            int16    `json:"x,omitempty"`
-	Y            int16    `json:"y,omitempty"`
-	ToBoard      int16    `json:"toBoard,omitempty"`
-	EntryX       int16    `json:"entryX,omitempty"`
-	EntryY       int16    `json:"entryY,omitempty"`
+	// Error carries a refusal back to the client on a "saveResult" event. Empty
+	// means the save succeeded, so no extra bool rides on every other event.
+	Error    string `json:"error,omitempty"`
+	Score    int16  `json:"score,omitempty"`
+	ListPos  int16  `json:"listPos,omitempty"`
+	Notes    string `json:"notes,omitempty"`
+	Priority int16  `json:"priority,omitempty"`
+	X        int16  `json:"x,omitempty"`
+	Y        int16  `json:"y,omitempty"`
+	ToBoard  int16  `json:"toBoard,omitempty"`
+	EntryX   int16  `json:"entryX,omitempty"`
+	EntryY   int16  `json:"entryY,omitempty"`
 	// Paused is the new paused state on a "pause" event. Explicitly not
 	// omitempty: false is the unpause signal and must survive the wire.
 	Paused bool `json:"paused"`

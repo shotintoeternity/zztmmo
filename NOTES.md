@@ -488,3 +488,112 @@ were driven under node the same way — 32 checks, including that every painted
 cell lands in the sidebar and that gameplay keys are inert on the title screen.
 The HTTP surface and the full join → Q → quitReply → highScoreName chain were
 exercised against a running `zzt-server`.
+
+## M4.3a (2026-07-09) — savable, rejoinable room snapshots
+
+The three decisions TASKS.md demanded be made explicitly, made before the code
+was written.
+
+**DECISION 1: a snapshot drops every player.** `World.Info` has exactly one set
+of player stats — health, ammo, gems, keys — because ZZT had exactly one player.
+N players cannot round-trip through it, so the snapshot does not pretend to
+carry them. Every `E_PLAYER` stat is removed from every board before it is
+serialized, using the same `Engine.RemovePlayer` that `LeavePlayer` uses, so a
+saved board is byte-identical to one everybody walked out of. The alternatives
+were worse: *freezing* them leaves uncontrolled `E_PLAYER` tiles that tick,
+block squares, light dark rooms, and pull monsters through `NearestPlayer` —
+a ghost with no client; *respawning* them at `Board.Info.StartPlayerX/Y` is
+meaningless when there is no client to respawn.
+
+The saver's own inventory *is* written into `World.Info`, as vanilla writes
+player 0's (`GAME.PAS:763`), so the file stays a valid `.SAV` that real ZZT and
+our terminal client restore exactly as before. The server ignores those fields
+on join: `RoomManager.JoinPlayer` calls `ResetPlayerState`, so whoever joins a
+restored snapshot arrives with 100 health and no keys — identical to joining any
+running world mid-game. That consistency is the point. The cost, stated rather
+than inherited: doors already opened stay open, but a key still in a pocket at
+save time is gone. Flags, not inventory, are what carries puzzle progress here.
+
+**DECISION 2: flags are unioned across live rooms, not copied from one.** The
+2026-07-09 "world flags are global" entry says flags are shared; the code is
+weaker than that. Each room engine holds its *own copy* of `World.Info`, and
+`freezeRoomIfEmpty` only pushes flags into `RoomManager.world` when a room
+empties — `syncFrozenBoardToLiveRooms` then overwrites every live room's flags
+with the freezing room's. So at any instant the flag sets have diverged, and no
+single one of them is "the" world's. `snapshotFlags` therefore unions
+`rm.world` with every live room in sorted board order, first-seen wins, capped
+at `MAX_FLAG` exactly as `WorldSetFlag` caps it. Taking the saver's room's flags
+alone would silently drop a puzzle another room had solved, and the DoD says
+flags survive the round trip. This does not fix freeze's clobber — that is the
+open design question's to fix, not this task's.
+
+**DECISION 3: co-op saves freeze shared progress, and that is intended.** Since
+flags are global, a snapshot records the whole party's puzzle progress, not the
+saver's. Player A saving in room 3 also saves the door player B opened in room
+7. For a co-op world that is the only coherent reading of a save, and it falls
+out of the union above rather than being bolted on.
+
+**Restoring is refused while anyone is playing.** `RoomManager.RestoreSnapshot`
+returns `ErrWorldOccupied` unless `len(rm.players) == 0`. A restore replaces
+every board in the world; doing that under a live player would teleport them
+into a board that no longer exists. The title screen's `R` is reachable only
+before a client has joined a room (joining is what `P` does), so on a quiet
+server it works and on a busy one it reports "Someone is still playing". The
+`RoomManager` is mutated in place rather than replaced, so `nextPlayerID` keeps
+climbing and the `PlayerID` collision that blocks multi-world hosting cannot
+appear here.
+
+**The filename is a whitelist, not a blacklist.** `SanitizeSaveName` accepts
+only what vanilla's `PROMPT_ALPHANUM` prompt can even produce: 1–8 characters of
+`A-Z`, `0-9`, `-` (game.go:504, width 8 at game.go:550). `/`, `\`, `.` and
+therefore `..` and every absolute path fail the charset, so path traversal is
+rejected by construction rather than by pattern-matching. `SaveSnapshot` then
+re-checks that the joined path's directory is still the configured `-saves`
+directory, which costs one line and would catch a future loosening of the
+charset.
+
+**Two seams had to stop being interactive.** `WorldSave` and `WorldLoad` report
+failure through `DisplayIOError`, which opens a text window and calls
+`TextWindowSelect` — it waits for a keypress. On a server holding `s.mu` that is
+a permanent hang, not an error message. Both now delegate their bytes to
+`worldWriteTo` / `worldReadFrom`, which return an `error`; the terminal wrappers
+still show vanilla's window, and the snapshot paths get an error they can send
+to the client. No behavior changed for the terminal.
+
+**DEVIATION: `WorldSave` now zeroes its 512-byte header, as the Pascal does.**
+`GAME.PAS:780` is `FillChar(IoTmpBuf^, WORLD_FILE_HEADER_SIZE, 0)`. The machine
+conversion produced `for i := 0; i < 512; i++ { ptr[0] = 0 }` (game.go:705) —
+it zeroes byte 0, five hundred and twelve times. Every `.SAV` and `.ZZT` this
+fork wrote therefore carried ~230 bytes of whatever `BoardClose` had just left
+in `IoTmpBuf` into the file's header padding. Harmless to load, but it leaks
+board memory into a file players hand to each other and makes an otherwise
+deterministic write depend on history. This restores the Pascal (hard rule 1);
+it changes saved-file bytes, never simulation, and the replay fixture is
+untouched and green.
+
+**DEVIATION: `StoreWorldInfo` never wrote the world's flags.** Found by the
+round-trip test, not by reading: `LoadWorldInfo` (serialize.go) has always read
+`Flags` back from offsets `46 + 21*i`, and `StoreWorldInfo` jumped straight from
+`Name` to `BoardTimeSec` and left those 210 bytes as whatever was in the buffer.
+`GAMEVARS.PAS:120` is `Flags: array[1..MAX_FLAG] of string[20]`, and the loader's
+offsets already prove the layout, so the writer was simply missing a field. Every
+world this fork ever saved lost every flag — i.e. all ZZT-OOP puzzle progress —
+and M4.3a's DoD ("flags and puzzle progress survive the round trip") cannot be
+met without it. Simulation is untouched: nothing but a file write changes, and
+the replay fixture is green. Mutation-checked both ways.
+
+Verification: `go test ./...` green, replay fixture unchanged. New
+`m4_3a_test.go` covers the filename whitelist (including `../`, `..\`, absolute
+paths, and the DoD's own "a filename containing `../` is rejected"), the full
+save → restart → restore → join round trip, the flag union across rooms, the
+"every player is dropped" decision, the refusal to restore an occupied world,
+`PlayerID` monotonicity across a restore, and the wire path (`S` → `savePrompt`
+→ `saveFilename` → `saveResult`) plus `/api/saves` and `/api/restore`'s
+409/400/404/200. Four claims were mutation-checked — removing the flag writer,
+keeping the players on the board, serializing the live room instead of a copy,
+and restoring `ptr[0] = 0` each turn a test red. The header-padding test needed a
+board whose RLE exceeds 279 bytes before it could see the leak; with a simple
+board it passed against the bug, which is exactly the kind of test that proves
+nothing. Still no TS test runner (M4.1 note), so `openSelectList`'s assumption —
+that `!NAME;NAME` round-trips through `hyperlinkOf` — was driven under node,
+along with `R` mapping to the restore action.

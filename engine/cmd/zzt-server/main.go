@@ -17,6 +17,7 @@ func main() {
 	boardID := flag.Int("board", 1, "default board id")
 	webDir := flag.String("web", "web/dist", "built browser client directory")
 	helpDir := flag.String("help", ".", "directory holding the .HLP help files")
+	savesDir := flag.String("saves", "saves", "directory for saved-game snapshots; empty disables saving")
 	flag.Parse()
 
 	zztgo.HelpDir = *helpDir
@@ -34,9 +35,16 @@ func main() {
 	// in memory, which is what the tests want but not what a server does.
 	server.RoomManager.HighScorePath = *worldName + ".HI"
 	server.RoomManager.LoadHighScores()
+	// The only directory a client's save name can reach (M4.3a).
+	server.SavesDir = *savesDir
 	go server.Run(context.Background())
 
-	api := &zztgo.WebAPI{RoomManager: server.RoomManager, World: zztgo.E.World}
+	api := &zztgo.WebAPI{
+		RoomManager: server.RoomManager,
+		World:       zztgo.E.World,
+		SavesDir:    *savesDir,
+		Server:      server,
+	}
 
 	mux := http.NewServeMux()
 	mux.Handle("/ws", server)

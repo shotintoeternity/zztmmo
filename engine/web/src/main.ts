@@ -26,6 +26,7 @@ const MessageTypeDebugCommand = "debugCommand";
 const MessageTypeScrollReply = "scrollReply";
 const MessageTypeQuitReply = "quitReply";
 const MessageTypeHighScoreName = "highScoreName";
+const MessageTypeSaveFilename = "saveFilename";
 
 // GameDebugPrompt's PromptString(63, 5, 0x1E, 0x0F, 11, PROMPT_ANY, ...).
 // The rest of that geometry lives in modal.ts, which owns every prompt's layout.
@@ -76,6 +77,8 @@ type ProtocolEvent = {
   title?: string;
   lines?: string[];
   filename?: string;
+  /** Set on "saveResult" when the save was refused; absent means it worked. */
+  error?: string;
   score?: number;
   listPos?: number;
   notes?: string;
@@ -483,6 +486,51 @@ async function showWorlds() {
   }
 }
 
+// showSavedGames is GameWorldLoad(".SAV"): the selectable "Saved Games" window.
+// Picking one restores it server-side, which is refused while anybody is still
+// in a room — a restore rewrites every board. See NOTES.md M4.3a.
+async function showSavedGames() {
+  let saves: string[] = [];
+  try {
+    const response = await fetch("/api/saves");
+    const data = (await response.json()) as { saves?: string[] };
+    saves = data.saves ?? [];
+  } catch {
+    openWindow("Saved Games", ["", "  Not available: the server did not answer.", ""], true);
+    return;
+  }
+
+  if (saves.length === 0) {
+    openWindow("Saved Games", ["", "  There are no saved games.", ""], true);
+    return;
+  }
+
+  // "!NAME;NAME" is the text window's hyperlink form, so Enter yields the name.
+  openSelectList("Saved Games", saves, (name) => void restoreSavedGame(name));
+}
+
+async function restoreSavedGame(name: string) {
+  try {
+    const response = await fetch("/api/restore", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ name }),
+    });
+    if (!response.ok) {
+      const reason = (await response.text()).trim() || `error ${response.status}`;
+      openWindow("Restore game", ["", `  Not restored: ${reason}`, ""], true);
+      return;
+    }
+  } catch {
+    openWindow("Restore game", ["", "  Not restored: the server did not answer.", ""], true);
+    return;
+  }
+
+  // The world changed under the title screen: repaint board 0 and the name.
+  await showTitle();
+  openWindow("Restore game", ["", `  Restored ${name}.SAV. Press P to play.`, ""], true);
+}
+
 function connect() {
   if (ws && ws.readyState === WebSocket.OPEN) {
     return;
@@ -734,6 +782,23 @@ function openWindow(title: string, lines: string[], viewingFile: boolean, replyS
   });
 }
 
+// openSelectList is vanilla's selectable file window (GameWorldLoad's "Saved
+// Games"). The lines are rendered as text-window hyperlinks so that Enter yields
+// the entry itself; openWindow's own selectable path is bound to scroll replies.
+function openSelectList(title: string, entries: string[], onPick: (entry: string) => void) {
+  if (entries.length === 0) {
+    return;
+  }
+  openModal({
+    kind: "text",
+    state: { title, lines: entries.map((entry) => `!${entry};${entry}`), linePos: 1, viewingFile: false },
+    baseTitle: title,
+    moved: false,
+    selectable: true,
+    onSelect: onPick,
+  });
+}
+
 // openEntry is SidebarPromptString / GameDebugPrompt's field.
 function openEntry(
   label: string,
@@ -849,14 +914,21 @@ function handleProtocolEvent(event: ProtocolEvent) {
     case "savePrompt":
       if (isMine(event)) {
         // SidebarPromptString("Save game:", ".SAV", ..., PROMPT_ALPHANUM).
-        // The server refuses saves (M3.11, NOTES.md), and there is no inbound
-        // saveFilename message, so an accepted name is answered locally. M4.3a
-        // adds rejoinable snapshots and the wire format they need.
+        // Escape or an empty name cancels, exactly as vanilla's prompt does.
         openEntry("Save game:", ".SAV", 8, "alphanum", (name) => {
           if (name) {
-            openWindow("Saving", ["", "  Saving is disabled on this server.", ""], true);
+            sendSaveFilename(name);
           }
         });
+      }
+      break;
+    case "saveResult":
+      // Addressed to one client rather than one stat, so it is not isMine-gated:
+      // the server only sends it to the player who asked to save.
+      if (event.error) {
+        openWindow("Saving", ["", `  Not saved: ${event.error}`, ""], true);
+      } else {
+        openWindow("Saving", ["", `  Saved as ${event.filename ?? ""}.SAV`, ""], true);
       }
       break;
     case "scroll":
@@ -996,14 +1068,7 @@ function handleTitleKey(event: KeyboardEvent) {
       void fetchLines("/api/highscores", `High scores for ${worldName}`);
       break;
     case "restore":
-      // GameWorldLoad(".SAV"). Rejoinable snapshots are M4.3a; until then the
-      // server has nothing to list, and saying so beats an empty file picker.
-      openWindow("Restore game", [
-        "",
-        "  Saved games are not available on this",
-        "  server yet.",
-        "",
-      ], true);
+      void showSavedGames();
       break;
     case "quit":
       openYesNo("Quit ZZT? ", (yes) => {
@@ -1082,6 +1147,15 @@ function sendQuitReply(quit: boolean) {
     return;
   }
   ws.send(JSON.stringify({ type: MessageTypeQuitReply, playerId, quit }));
+}
+
+// sendSaveFilename answers a savePrompt. The server sanitizes the name before it
+// reaches a path, and answers with a saveResult event either way.
+function sendSaveFilename(name: string) {
+  if (!connected || !ws || ws.readyState !== WebSocket.OPEN || playerId === 0) {
+    return;
+  }
+  ws.send(JSON.stringify({ type: MessageTypeSaveFilename, playerId, name }));
 }
 
 function sendHighScoreName(name: string) {

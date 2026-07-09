@@ -2,7 +2,9 @@ package zztgo
 
 import (
 	"encoding/json"
+	"errors"
 	"net/http"
+	"os"
 	"path/filepath"
 	"strings"
 )
@@ -26,6 +28,12 @@ type WebAPI struct {
 	// World is the pristine world, used to render the title board. It is not
 	// the live one: RoomManager.FrozenWorld() mutates as boards freeze.
 	World TWorld
+	// SavesDir is the -saves directory the title screen's 'R' lists. Empty
+	// means saved games are unavailable.
+	SavesDir string
+	// Server, when set, serializes a restore against the tick loop. Without it
+	// (in tests, where nothing ticks) the RoomManager is driven directly.
+	Server *WebSocketServer
 }
 
 // Handler mounts the title-screen endpoints under /api/.
@@ -35,7 +43,57 @@ func (a *WebAPI) Handler() http.Handler {
 	mux.HandleFunc("/api/worlds", a.handleWorlds)
 	mux.HandleFunc("/api/highscores", a.handleHighScores)
 	mux.HandleFunc("/api/help", a.handleHelp)
+	mux.HandleFunc("/api/saves", a.handleSaves)
+	mux.HandleFunc("/api/restore", a.handleRestore)
 	return mux
+}
+
+// handleSaves lists the snapshots the title screen's 'R' can restore.
+func (a *WebAPI) handleSaves(w http.ResponseWriter, r *http.Request) {
+	writeJSON(w, struct {
+		Saves []string `json:"saves"`
+	}{Saves: ListSnapshots(a.SavesDir)})
+}
+
+// handleRestore swaps the hosted world for a snapshot. It is refused — 409 —
+// while anyone is in a room: a restore rewrites every board, and a live player
+// would be left standing on one that no longer exists. The title screen is the
+// only caller, and a client reaches it before it has joined anything.
+func (a *WebAPI) handleRestore(w http.ResponseWriter, r *http.Request) {
+	if r.Method != http.MethodPost {
+		http.Error(w, "use POST", http.StatusMethodNotAllowed)
+		return
+	}
+
+	var body struct {
+		Name string `json:"name"`
+	}
+	if err := json.NewDecoder(r.Body).Decode(&body); err != nil {
+		http.Error(w, "bad request body", http.StatusBadRequest)
+		return
+	}
+
+	var err error
+	if a.Server != nil {
+		err = a.Server.RestoreSnapshot(body.Name)
+	} else {
+		err = a.RoomManager.RestoreSnapshot(a.SavesDir, body.Name)
+	}
+
+	switch {
+	case err == nil:
+		writeJSON(w, struct {
+			World string `json:"world"`
+		}{World: a.RoomManager.WorldName()})
+	case errors.Is(err, ErrWorldOccupied):
+		http.Error(w, err.Error(), http.StatusConflict)
+	case errors.Is(err, ErrInvalidSaveName), errors.Is(err, ErrSavesDisabled):
+		http.Error(w, err.Error(), http.StatusBadRequest)
+	case errors.Is(err, os.ErrNotExist):
+		http.Error(w, "no such saved game", http.StatusNotFound)
+	default:
+		http.Error(w, "restore failed", http.StatusInternalServerError)
+	}
 }
 
 func writeJSON(w http.ResponseWriter, value interface{}) {

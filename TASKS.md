@@ -278,7 +278,7 @@ semantics while keeping the server authoritative.
   | `T` | light torch | done |
   | `P` | pause | done (per-player + "Pausing..." overlay) |
   | `B` | sound toggle | done (per-player) |
-  | `S` | save game | done (emits `SavePromptEvent`; server still refuses — M4.3a) |
+  | `S` | save game | done (emits `SavePromptEvent`; the server saves — M4.3a) |
   | `Q` / Esc | quit prompt | done (client answers locally; routing is M4.3) |
   | `H` | help window | done (M3.9) |
   | `?` | debug prompt | done (M3.9) |
@@ -317,7 +317,7 @@ semantics while keeping the server authoritative.
   multi-world needs server-scoped client ids, because each `RoomManager` mints
   `PlayerID`s from 1 and two would collide in `WebSocketServer.clients`).
 
-- [ ] **M4.3a — Savable, rejoinable room snapshots.** Requires M3.11 (which
+- [x] **M4.3a — Savable, rejoinable room snapshots.** Requires M3.11 (which
   builds the `SavePromptEvent`/`SubmitSaveFilename` seam but has the server
   refuse saves). Make a save snapshot the whole room and let other players load
   it and join later. `RoomManager.world` (`room_manager.go:10`) is already the
@@ -339,6 +339,28 @@ semantics while keeping the server authoritative.
   that snapshot by name and joins it; board contents, flags, and puzzle progress
   survive the round trip; a filename containing `../` is rejected with a test
   proving it; replay green.
+
+  Landed: `-saves` flag; `SanitizeSaveName` (a whitelist of vanilla's
+  PROMPT_ALPHANUM charset, so traversal fails by construction);
+  `RoomManager.SaveSnapshot` serializes every live room out of a copy, so a save
+  never disturbs the game it is a save of; `RestoreSnapshot` swaps the world in
+  place and is refused while anyone is in a room; browser `S` → `saveFilename` →
+  `saveResult`, and the title screen's `R` lists and restores snapshots.
+  The three decisions the spec demanded, all in NOTES.md: players are **dropped**
+  from a snapshot (World.Info holds one player's stats, so N cannot round-trip;
+  a joiner arrives fresh, as they already do on any running world); flags are
+  **unioned** across live rooms (each room engine holds its own `World.Info`, so
+  no single copy is authoritative); and a co-op save therefore freezes shared
+  puzzle progress, which is the only coherent reading of a shared save.
+  DEVIATION (both restore fidelity to the Pascal, neither touches simulation):
+  `StoreWorldInfo` never wrote `World.Info.Flags` at all, though `LoadWorldInfo`
+  has always read them — every world this fork saved lost its puzzle progress.
+  And `WorldSave` zeroed its 512-byte header one byte at a time (`ptr[0]` in a
+  512-iteration loop), leaking `BoardClose`'s scratch buffer into every file.
+  See NOTES.md.
+  Deferred: `WorldSave`/`WorldLoad` still write player 0's stats for the
+  terminal, and the server ignores them on join — a snapshot restores the world,
+  not anybody's keys.
 
 - [ ] **M4.3b — Player-on-player collision and push-out.** Two players can end up
   on the same square, and the board holds only one tile per square: the second

@@ -1,6 +1,8 @@
 package zztgo // unit: Game
 
 import (
+	"errors"
+	"io"
 	"os"
 	"path/filepath"
 )
@@ -589,45 +591,27 @@ func (e *Engine) WorldUnload() {
 	e.BoardClose()
 }
 
-func (e *Engine) WorldLoad(filename, extension string, titleOnly bool) (WorldLoad bool) {
-	var (
-		ptr          []byte
-		boardId      int16
-		loadProgress int16
-	)
-	SidebarAnimateLoading := func() {
-		e.VideoWriteText(69, 5, ProgressAnimColors[loadProgress], ProgressAnimStrings[loadProgress])
-		loadProgress = (loadProgress + 1) % 8
+// ErrWorldVersion is a world file this build is too old to read: its version
+// word is neither -1 nor a board count (GAME.PAS:722).
+var ErrWorldVersion = errors.New("you need a newer version of ZZT")
+
+// worldReadFrom parses a world file into e.World. It is WorldLoad's byte
+// reader, split out so that a caller which cannot show DisplayIOError's modal
+// window gets an error back instead: the window ends in TextWindowSelect, which
+// waits for a keypress, and a server goroutine holding a lock never gets one.
+// progress, when non-nil, runs once per board.
+func (e *Engine) worldReadFrom(f io.Reader, titleOnly bool, progress func()) error {
+	if _, err := io.ReadFull(f, e.IoTmpBuf[:512]); err != nil {
+		return err
 	}
 
-	WorldLoad = false
-	loadProgress = 0
-	e.SidebarClearLine(4)
-	e.SidebarClearLine(5)
-	e.SidebarClearLine(5)
-	e.VideoWriteText(62, 5, 0x1F, "Loading.....")
-
-	f, err := os.Open(filename + extension)
-	if DisplayIOError(err) {
-		return
-	}
-	defer f.Close()
-
-	e.WorldUnload()
-	_, err = f.Read(e.IoTmpBuf[:512])
-	if DisplayIOError(err) {
-		return
-	}
-
-	ptr = e.IoTmpBuf[:]
+	ptr := e.IoTmpBuf[:]
 	e.World.BoardCount = LoadInt16(ptr[:2])
 	ptr = ptr[2:]
 
 	if e.World.BoardCount < 0 {
 		if e.World.BoardCount != -1 {
-			e.VideoWriteText(63, 5, 0x1E, "You need a newer")
-			e.VideoWriteText(63, 6, 0x1E, " version of ZZT!")
-			return
+			return ErrWorldVersion
 		} else {
 			e.World.BoardCount = LoadInt16(ptr[:2])
 			ptr = ptr[2:]
@@ -635,7 +619,6 @@ func (e *Engine) WorldLoad(filename, extension string, titleOnly bool) (WorldLoa
 	}
 
 	LoadWorldInfo(ptr[:SizeOfWorldInfo], &e.World.Info)
-	ptr = ptr[SizeOfWorldInfo:]
 
 	pState := e.PlayerFor(0)
 	pState.Health = e.World.Info.Health
@@ -655,21 +638,54 @@ func (e *Engine) WorldLoad(filename, extension string, titleOnly bool) (WorldLoa
 		e.World.Info.IsSave = true
 	}
 
-	for boardId = 0; boardId <= e.World.BoardCount; boardId++ {
-		SidebarAnimateLoading()
+	for boardId := int16(0); boardId <= e.World.BoardCount; boardId++ {
+		if progress != nil {
+			progress()
+		}
 
 		lenBuf := make([]byte, 2)
-		_, err = f.Read(lenBuf)
-		if DisplayIOError(err) {
-			return
+		if _, err := io.ReadFull(f, lenBuf); err != nil {
+			return err
 		}
 		e.World.BoardLen[boardId] = LoadInt16(lenBuf)
 
 		e.World.BoardData[boardId] = make([]byte, e.World.BoardLen[boardId])
-		_, err = f.Read(e.World.BoardData[boardId])
-		if DisplayIOError(err) {
+		if _, err := io.ReadFull(f, e.World.BoardData[boardId]); err != nil {
+			return err
+		}
+	}
+	return nil
+}
+
+func (e *Engine) WorldLoad(filename, extension string, titleOnly bool) (WorldLoad bool) {
+	var loadProgress int16
+	SidebarAnimateLoading := func() {
+		e.VideoWriteText(69, 5, ProgressAnimColors[loadProgress], ProgressAnimStrings[loadProgress])
+		loadProgress = (loadProgress + 1) % 8
+	}
+
+	WorldLoad = false
+	loadProgress = 0
+	e.SidebarClearLine(4)
+	e.SidebarClearLine(5)
+	e.SidebarClearLine(5)
+	e.VideoWriteText(62, 5, 0x1F, "Loading.....")
+
+	f, err := os.Open(filename + extension)
+	if DisplayIOError(err) {
+		return
+	}
+	defer f.Close()
+
+	e.WorldUnload()
+	if err := e.worldReadFrom(f, titleOnly, SidebarAnimateLoading); err != nil {
+		if errors.Is(err, ErrWorldVersion) {
+			e.VideoWriteText(63, 5, 0x1E, "You need a newer")
+			e.VideoWriteText(63, 6, 0x1E, " version of ZZT!")
 			return
 		}
+		DisplayIOError(err)
+		return
 	}
 
 	e.BoardOpen(e.World.Info.CurrentBoard)
@@ -681,12 +697,44 @@ func (e *Engine) WorldLoad(filename, extension string, titleOnly bool) (WorldLoa
 	return
 }
 
-func (e *Engine) WorldSave(filename, extension string) {
-	var (
-		i   int16
-		ptr []byte
-	)
+// worldWriteTo writes e.World in ZZT's on-disk format (GAME.PAS:771-801). Like
+// worldReadFrom it exists so a non-interactive caller gets an error rather than
+// DisplayIOError's blocking window. It expects World.Info to already carry the
+// player stats the file should record; WorldSave copies them in below.
+func (e *Engine) worldWriteTo(f io.Writer) error {
+	ptr := e.IoTmpBuf[:]
+	// GAME.PAS:780 is FillChar(IoTmpBuf^, WORLD_FILE_HEADER_SIZE, 0). The
+	// machine conversion wrote `ptr[0] = 0` 512 times, so every file this fork
+	// saved carried the tail of BoardClose's scratch buffer in its header
+	// padding. See NOTES.md M4.3a.
+	for i := 0; i < 512; i++ {
+		ptr[i] = 0
+	}
+	StoreInt16(ptr[:2], -1)
+	ptr = ptr[2:]
+	StoreInt16(ptr[:2], e.World.BoardCount)
+	ptr = ptr[2:]
+	StoreWorldInfo(ptr[:SizeOfWorldInfo], &e.World.Info)
 
+	if _, err := f.Write(e.IoTmpBuf[:512]); err != nil {
+		return err
+	}
+
+	for i := int16(0); i <= e.World.BoardCount; i++ {
+		lenBuf := make([]byte, 2)
+		StoreInt16(lenBuf, e.World.BoardLen[i])
+		if _, err := f.Write(lenBuf); err != nil {
+			return err
+		}
+
+		if _, err := f.Write(e.World.BoardData[i]); err != nil {
+			return err
+		}
+	}
+	return nil
+}
+
+func (e *Engine) WorldSave(filename, extension string) {
 	e.BoardClose()
 	defer func() {
 		e.BoardOpen(e.World.Info.CurrentBoard)
@@ -701,14 +749,6 @@ func (e *Engine) WorldSave(filename, extension string) {
 	}
 	defer f.Close()
 
-	ptr = e.IoTmpBuf[:]
-	for i := 0; i < 512; i++ {
-		ptr[0] = 0
-	}
-	StoreInt16(ptr[:2], -1)
-	ptr = ptr[2:]
-	StoreInt16(ptr[:2], e.World.BoardCount)
-	ptr = ptr[2:]
 	pState := e.PlayerFor(0)
 	e.World.Info.Health = pState.Health
 	e.World.Info.Ammo = pState.Ammo
@@ -721,26 +761,7 @@ func (e *Engine) WorldSave(filename, extension string) {
 	e.World.Info.BoardTimeSec = pState.BoardTimeSec
 	e.World.Info.BoardTimeHsec = pState.BoardTimeHsec
 
-	StoreWorldInfo(ptr[:SizeOfWorldInfo], &e.World.Info)
-	ptr = ptr[SizeOfWorldInfo:]
-	_, err = f.Write(e.IoTmpBuf[:512])
-	if DisplayIOError(err) {
-		return
-	}
-
-	for i = 0; i <= e.World.BoardCount; i++ {
-		lenBuf := make([]byte, 2)
-		StoreInt16(lenBuf, e.World.BoardLen[i])
-		_, err = f.Write(lenBuf)
-		if DisplayIOError(err) {
-			return
-		}
-
-		_, err = f.Write(e.World.BoardData[i])
-		if DisplayIOError(err) {
-			return
-		}
-	}
+	DisplayIOError(e.worldWriteTo(f))
 }
 
 func (e *Engine) GameWorldSave(prompt string, filename *string, extension string) {
@@ -1219,9 +1240,11 @@ func (e *Engine) SubmitDebugCommand(statId int16, text string) {
 // SubmitSaveFilename answers a SavePromptEvent. An empty name cancels or
 // refuses the save. Applied at the top of the next GameStepWithInputs.
 //
-// Callers that accept a name from an untrusted client MUST sanitize it before
-// calling: this writes name+".SAV" straight to the process working directory
-// (TASKS.md M4.3a). The server refuses saves outright today.
+// This is the TERMINAL's save path: it writes name+".SAV" straight to the
+// process working directory, and it writes this engine's world — on a server
+// that is one room's board with every other room stale. The server never calls
+// it. Browser saves go through RoomManager.SaveSnapshot, which snapshots every
+// room and sanitizes the client's filename (M4.3a).
 func (e *Engine) SubmitSaveFilename(statId int16, name string) {
 	e.PendingSaveFilenames = append(e.PendingSaveFilenames, PendingSaveFilename{StatId: statId, Name: name})
 }

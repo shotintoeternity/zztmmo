@@ -146,6 +146,14 @@ func StoreWorldInfo(dest []byte, info *TWorldInfo) {
 	dest[22] = 0
 	StoreInt16(dest[23:25], info.Score)
 	StoreString(dest[25:46], info.Name)
+	// GAMEVARS.PAS:120 — Flags: array[1..MAX_FLAG] of string[20], the 210 bytes
+	// between Name and BoardTimeSec. LoadWorldInfo has always read them; the
+	// machine conversion dropped them from the writer, so every world this fork
+	// saved lost its flags. See NOTES.md M4.3a.
+	for i := range info.Flags {
+		offset := 46 + i*21
+		StoreString(dest[offset:offset+21], info.Flags[i])
+	}
 	StoreInt16(dest[256:258], info.BoardTimeSec)
 	StoreInt16(dest[258:260], info.BoardTimeHsec)
 	dest[260] = byte(BoolToInt(info.IsSave))

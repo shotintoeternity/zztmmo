@@ -4,6 +4,8 @@ import (
 	"context"
 	"encoding/json"
 	"net/http"
+	"path/filepath"
+	"strings"
 	"sync"
 	"time"
 
@@ -19,6 +21,10 @@ type WebSocketServer struct {
 	DefaultBoard int16
 	TickDuration time.Duration
 	OriginHosts  []string
+	// SavesDir is the only directory a client's save name can reach. Empty
+	// refuses every save, which is what NewWebSocketServer leaves it as: a test
+	// must never write to disk.
+	SavesDir string
 
 	mu      sync.Mutex
 	clients map[PlayerID]*webSocketClient
@@ -177,6 +183,12 @@ func (s *WebSocketServer) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 				continue
 			}
 			s.submitHighScoreName(ctx, playerID, entry.Name)
+		case MessageTypeSaveFilename:
+			var save SaveFilenameMessage
+			if err := json.Unmarshal(raw, &save); err != nil {
+				continue
+			}
+			s.submitSaveFilename(ctx, playerID, save.Name)
 		default:
 			var input InputMessage
 			if err := json.Unmarshal(raw, &input); err != nil {
@@ -235,6 +247,51 @@ func (s *WebSocketServer) submitHighScoreName(ctx context.Context, playerID Play
 	s.mu.Unlock()
 
 	_ = client.write(ctx, message)
+}
+
+// submitSaveFilename answers a savePrompt event. The name is a client's, so it
+// never reaches a path before SanitizeSaveName; the reply tells the player what
+// their snapshot is called, or why it was refused.
+//
+// The snapshot deliberately does NOT go through Engine.SubmitSaveFilename: that
+// writes one room engine's world — a single board, with the other rooms stale —
+// to the process working directory. It is the terminal's path. The server saves
+// the whole world through the RoomManager.
+//
+// The write happens under s.mu, as RecordHighScore's does: a room may not tick
+// while its boards are being serialized.
+func (s *WebSocketServer) submitSaveFilename(ctx context.Context, playerID PlayerID, name string) {
+	s.mu.Lock()
+	client := s.clients[playerID]
+	if client == nil {
+		s.mu.Unlock()
+		return
+	}
+	// An empty name is vanilla's cancelled prompt: save nothing, say nothing.
+	if name == "" {
+		s.mu.Unlock()
+		return
+	}
+	path, err := s.RoomManager.SaveSnapshot(s.SavesDir, name, playerID)
+	s.mu.Unlock()
+
+	event := ProtocolEvent{Type: "saveResult"}
+	if err != nil {
+		event.Error = err.Error()
+	} else {
+		event.Filename = strings.TrimSuffix(filepath.Base(path), ".SAV")
+	}
+	_ = client.write(ctx, EventMessage{Type: MessageTypeEvent, Event: event})
+}
+
+// RestoreSnapshot swaps the hosted world for a saved one. It is refused while
+// anyone is in a room (RoomManager.RestoreSnapshot enforces that); s.mu keeps it
+// from landing in the middle of a Tick.
+func (s *WebSocketServer) RestoreSnapshot(name string) error {
+	s.mu.Lock()
+	defer s.mu.Unlock()
+
+	return s.RoomManager.RestoreSnapshot(s.SavesDir, name)
 }
 
 // submitDebugCommand routes a client's '?' reply to the engine that owns that
