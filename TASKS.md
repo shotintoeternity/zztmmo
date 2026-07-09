@@ -218,3 +218,72 @@ and every run is reproducible. ANALYSIS.md §3g, §3h, §5.
   DoD: touching any object that opens a scroll produces a CP437-style modal
   window over the board, and selecting an option sends the expected reply
   without corrupting movement input.
+
+## M4 — Browser ZZT UI and playability parity
+
+Goal: the browser client should feel like complete ZZT, not just a multiplayer
+terminal viewport. Preserve original CP437/DOS presentation and interaction
+semantics while keeping the server authoritative.
+
+- [ ] **M4.0 — ZZT screen shell parity.** Render the board and sidebar as the
+  original 60x25 board plus 20x25 sidebar, using CP437 cells, DOS colors, blink
+  behavior where relevant, and fixed text-mode geometry. DoD: TOWN in the
+  browser visually matches the original board/sidebar split with no temporary
+  web-dashboard panels.
+
+- [ ] **M4.1 — Modal text-window system.** Implement the reusable browser
+  CP437 text-window layer used by scrolls, help, prompts, high scores, debug
+  windows, save/load confirmations, and editor dialogs. DoD: a single renderer
+  and input router handles read-only text, selectable links, yes/no prompts,
+  text entry, and paged help without gameplay input leaking through.
+
+- [ ] **M4.2 — Full keyboard/control parity.** Route all original play-mode
+  keys through the protocol: movement, shooting, torch, pause, save, quit, help,
+  debug, sound toggle, and text-window navigation. DoD: browser key behavior
+  matches the terminal client for common TOWN flows.
+
+- [ ] **M4.3 — Title, world, save, and high-score flows.** Restore the original
+  non-gameplay UI paths in the browser, including title screen/start flow,
+  save/load prompts, quit confirmation, and high-score entry/display. DoD: a
+  player can start, save, load, quit, die, enter a score, and restart without
+  falling back to terminal-only UI.
+
+- [ ] **M4.4 — Browser sound synthesis.** Convert `SoundEvent` notes into
+  WebAudio playback with priority/queue behavior close to ZZT, plus a visible
+  sound toggle in the authentic sidebar. DoD: pickups, shots, doors, damage,
+  and object sounds are audible and can be toggled.
+
+- [ ] **M4.5 — Rendering compatibility pass.** Audit CP437 glyphs, colors,
+  dark-room/torch behavior, player blinking, text elements, transition effects,
+  and dirty-cell updates against terminal output. DoD: a scripted visual smoke
+  covers TOWN landmarks, dark rooms, torches, gems, passages, text signs, and
+  player damage/respawn without stale cells or missing glyphs.
+
+- [ ] **M4.6 — Full TOWN playthrough smoke.** Add a scripted or semi-scripted
+  browser/protocol playthrough that exercises the core original game loop:
+  collecting keys, buying/using items, crossing boards, opening scroll windows,
+  taking damage, and reaching the Palace path. DoD: TOWN is playable end to end
+  in the browser without terminal UI.
+
+## M5 — Creation and full-featured ZZT tooling
+
+Goal: support the creation features that make ZZT “full ZZT,” not only runtime
+playback.
+
+- [ ] **M5.0 — Browser board editor shell.** Bring up a browser editor surface
+  using the same CP437 renderer and modal UI system, initially read-only with
+  cursor movement and tile inspection. DoD: a user can open a board in editor
+  mode and inspect tiles/stats in the browser.
+
+- [ ] **M5.1 — Editable boards and object properties.** Implement tile
+  placement, color/pattern selection, stat parameter editing, board properties,
+  and object text editing. DoD: edits round-trip through the existing ZZT board
+  serializer and reload correctly.
+
+- [ ] **M5.2 — ZZT-OOP authoring workflow.** Add browser editing for object
+  code with label navigation, validation helpers, and save/apply behavior. DoD:
+  creating or modifying an object script changes runtime behavior after reload.
+
+- [ ] **M5.3 — World persistence and publishing.** Add save/export/import paths
+  for edited worlds and multiplayer-safe persistence. DoD: a browser-created
+  world can be saved, reloaded, exported, and hosted for other clients.
