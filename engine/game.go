@@ -529,7 +529,7 @@ func (e *Engine) SidebarPromptString(prompt string, extension string, filename *
 }
 
 func (e *Engine) PauseOnError() {
-	SoundQueue(1, SoundParse("s004x114x9"))
+	e.SoundQueue(1, SoundParse("s004x114x9"))
 	e.Delay(2000)
 }
 
@@ -1108,7 +1108,7 @@ func (e *Engine) DamageStat(attackerStatId int16) {
 			if e.World.Info.Health > 0 {
 				e.World.Info.BoardTimeSec = 0
 				if e.Board.Info.ReenterWhenZapped {
-					SoundQueue(4, " \x01#\x01'\x010\x01\x10\x01")
+					e.SoundQueue(4, " \x01#\x01'\x010\x01\x10\x01")
 					e.Board.Tiles[stat.X][stat.Y].Element = E_EMPTY
 					e.BoardDrawTile(int16(stat.X), int16(stat.Y))
 					oldX = int16(stat.X)
@@ -1119,18 +1119,18 @@ func (e *Engine) DamageStat(attackerStatId int16) {
 					e.DrawPlayerSurroundings(int16(stat.X), int16(stat.Y), 0)
 					e.GamePaused = true
 				}
-				SoundQueue(4, "\x10\x01 \x01\x13\x01#\x01")
+				e.SoundQueue(4, "\x10\x01 \x01\x13\x01#\x01")
 			} else {
-				SoundQueue(5, " \x03#\x03'\x030\x03'\x03*\x032\x037\x035\x038\x03@\x03E\x03\x10\n")
+				e.SoundQueue(5, " \x03#\x03'\x030\x03'\x03*\x032\x037\x035\x038\x03@\x03E\x03\x10\n")
 			}
 		}
 	} else {
 		switch e.Board.Tiles[stat.X][stat.Y].Element {
 		case E_BULLET:
-			SoundQueue(3, " \x01")
+			e.SoundQueue(3, " \x01")
 		case E_OBJECT:
 		default:
-			SoundQueue(3, "@\x01\x10\x01P\x010\x01")
+			e.SoundQueue(3, "@\x01\x10\x01P\x010\x01")
 		}
 		e.RemoveStat(attackerStatId)
 	}
@@ -1162,7 +1162,7 @@ func (e *Engine) BoardAttack(attackerStatId int16, x, y int16) {
 		e.GameUpdateSidebar()
 	} else {
 		e.BoardDamageTile(x, y)
-		SoundQueue(2, "\x10\x01")
+		e.SoundQueue(2, "\x10\x01")
 	}
 }
 
@@ -1177,7 +1177,7 @@ func (e *Engine) BoardShoot(element byte, tx, ty, deltaX, deltaY int16, source i
 		BoardShoot = true
 	} else if e.Board.Tiles[tx+deltaX][ty+deltaY].Element == E_BREAKABLE || ElementDefs[e.Board.Tiles[tx+deltaX][ty+deltaY].Element].Destructible && e.Board.Tiles[tx+deltaX][ty+deltaY].Element == E_PLAYER == (source != 0) && e.World.Info.EnergizerTicks <= 0 {
 		e.BoardDamageTile(tx+deltaX, ty+deltaY)
-		SoundQueue(2, "\x10\x01")
+		e.SoundQueue(2, "\x10\x01")
 		BoardShoot = true
 	} else {
 		BoardShoot = false
@@ -1250,7 +1250,7 @@ func (e *Engine) BoardPassageTeleport(x, y int16) {
 		e.Board.Stats[0].Y = byte(newY)
 	}
 	e.GamePaused = true
-	SoundQueue(4, "0\x014\x017\x011\x015\x018\x012\x016\x019\x013\x017\x01:\x014\x018\x01@\x01")
+	e.SoundQueue(4, "0\x014\x017\x011\x015\x018\x012\x016\x019\x013\x017\x01:\x014\x018\x01@\x01")
 	e.TransitionDrawBoardChange()
 	e.BoardEnter()
 }
@@ -1304,7 +1304,7 @@ func (e *Engine) GameDebugPrompt() {
 		}
 	}
 
-	SoundQueue(10, "'\x04")
+	e.SoundQueue(10, "'\x04")
 	e.SidebarClearLine(4)
 	e.SidebarClearLine(5)
 	e.GameUpdateSidebar()
@@ -1606,7 +1606,7 @@ func (e *Engine) GamePlayLoop(boardChanged bool) {
 
 	e.Board.Tiles[e.Board.Stats[0].X][e.Board.Stats[0].Y].Element = E_PLAYER
 	e.Board.Tiles[e.Board.Stats[0].X][e.Board.Stats[0].Y].Color = ElementDefs[E_PLAYER].Color
-	SoundBlockQueueing = false
+	e.SoundBlockQueueing = false
 }
 
 func (e *Engine) GameTitleLoop() {

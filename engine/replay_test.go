@@ -127,7 +127,7 @@ func runTownReplay(t *testing.T) []string {
 	E.GamePaused = false
 	E.TickSpeed = 4
 	E.TickTimeDuration = int16(E.TickSpeed) * 2
-	SoundBlockQueueing = false
+	E.SoundBlockQueueing = false
 	SoundClearQueue()
 
 	worldBase := filepath.Join("..", "fixtures", "TOWN")

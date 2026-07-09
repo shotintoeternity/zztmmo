@@ -103,7 +103,7 @@ and every run is reproducible. ANALYSIS.md §3g, §3h, §5.
   interactive wrapper. Sim code must contain zero TextWindow/SidebarPrompt/
   InputReadWaitKey calls (grep proves it). DoD: grep clean + replay green.
 
-- [ ] **M1.5 — Sound to events.** Wire `sounds.go`'s queue into
+- [x] **M1.5 — Sound to events.** Wire `sounds.go`'s queue into
   `SoundEvent{Notes string, Priority int16}` emitted per step instead of the
   stubbed `Sound()/NoSound()` (ANALYSIS.md §3j). DoD: headless test sees the
   gem-pickup sound event when the player steps on a gem.

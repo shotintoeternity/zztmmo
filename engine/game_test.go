@@ -114,3 +114,53 @@ func TestShootMaxShots(t *testing.T) {
 	}
 }
 
+func TestGemPickupSoundEvent(t *testing.T) {
+	e := NewEngine()
+	e.Headless = true
+	e.WorldCreate()
+	e.BoardCreate()
+
+	// Place player at (15, 15)
+	e.Board.Tiles[15][15] = TTile{Element: E_PLAYER, Color: 0x0F}
+	e.Board.Stats[0].X = 15
+	e.Board.Stats[0].Y = 15
+
+	// Place gem at (16, 15)
+	e.Board.Tiles[16][15] = TTile{Element: E_GEM, Color: 0x0B}
+
+	// Move player right onto the gem
+	e.SetInputSource(&ScriptedInput{Ticks: []ScriptedTick{
+		{DeltaX: 1, DeltaY: 0},
+	}})
+	e.InputUpdate()
+
+	// Run step
+	e.GameStep()
+
+	// Verify player moved and collected gem
+	if e.Board.Stats[0].X != 16 || e.Board.Stats[0].Y != 15 {
+		t.Errorf("expected player at (16, 15), got (%d, %d)", e.Board.Stats[0].X, e.Board.Stats[0].Y)
+	}
+	if e.World.Info.Gems != 1 {
+		t.Errorf("expected 1 gem, got %d", e.World.Info.Gems)
+	}
+
+	// Verify SoundEvent was emitted
+	var soundEv *SoundEvent
+	for _, ev := range e.Events {
+		if s, ok := ev.(SoundEvent); ok {
+			soundEv = &s
+			break
+		}
+	}
+	if soundEv == nil {
+		t.Fatalf("expected SoundEvent to be emitted, got none in %v", e.Events)
+	}
+	if soundEv.Priority != 2 {
+		t.Errorf("expected SoundEvent priority 2, got %d", soundEv.Priority)
+	}
+	if soundEv.Notes != "@\x017\x014\x010\x01" {
+		t.Errorf("expected SoundEvent notes %q, got %q", "@\x017\x014\x010\x01", soundEv.Notes)
+	}
+}
+

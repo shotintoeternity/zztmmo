@@ -198,6 +198,7 @@ type (
 		Events                      []Event
 		PendingScrollReply          string
 		PendingScrollStatId         int16
+		SoundBlockQueueing          bool
 	}
 	Event interface{}
 	ScrollEvent struct {
@@ -213,6 +214,10 @@ type (
 	HighScoreEntryEvent struct {
 		Score   int16
 		ListPos int16
+	}
+	SoundEvent struct {
+		Notes    string
+		Priority int16
 	}
 )
 

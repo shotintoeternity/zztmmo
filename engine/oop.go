@@ -7,7 +7,7 @@ package main // unit: Oop
 func (e *Engine) OopError(statId int16, message string) {
 	stat := &e.Board.Stats[statId]
 	e.DisplayMessage(200, "ERR: "+message)
-	SoundQueue(5, "P\n")
+	e.SoundQueue(5, "P\n")
 	stat.DataPos = -1
 }
 
@@ -600,7 +600,7 @@ func (e *Engine) OopExecute(statId int16, position *int16, name string) {
 				} else if e.OopWord == "SHOOT" {
 					e.OopReadDirection(statId, position, &deltaX, &deltaY)
 					if e.BoardShoot(E_BULLET, int16(stat.X), int16(stat.Y), deltaX, deltaY, SHOT_SOURCE_ENEMY) {
-						SoundQueue(2, "0\x01&\x01")
+						e.SoundQueue(2, "0\x01&\x01")
 					}
 					stopRunning = true
 				} else if e.OopWord == "THROWSTAR" {
@@ -721,7 +721,7 @@ func (e *Engine) OopExecute(statId int16, position *int16, name string) {
 				} else if e.OopWord == "PLAY" {
 					textLine = SoundParse(e.OopReadLineToEnd(statId, position))
 					if Length(textLine) != 0 {
-						SoundQueue(-1, textLine)
+						e.SoundQueue(-1, textLine)
 					}
 					lineFinished = false
 				} else if e.OopWord == "CYCLE" {

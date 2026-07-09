@@ -265,7 +265,7 @@ TryMove:
 	if iElem == E_RICOCHET && firstTry {
 		stat.StepX = -stat.StepX
 		stat.StepY = -stat.StepY
-		SoundQueue(1, "\xf9\x01")
+		e.SoundQueue(1, "\xf9\x01")
 		firstTry = false
 		goto TryMove
 		return
@@ -282,7 +282,7 @@ TryMove:
 		ix = stat.StepX
 		stat.StepX = -stat.StepY
 		stat.StepY = -ix
-		SoundQueue(1, "\xf9\x01")
+		e.SoundQueue(1, "\xf9\x01")
 		firstTry = false
 		goto TryMove
 		return
@@ -291,7 +291,7 @@ TryMove:
 		ix = stat.StepX
 		stat.StepX = stat.StepY
 		stat.StepY = ix
-		SoundQueue(1, "\xf9\x01")
+		e.SoundQueue(1, "\xf9\x01")
 		firstTry = false
 		goto TryMove
 		return
@@ -488,7 +488,7 @@ func (e *Engine) ElementBombTick(statId int16) {
 		stat.P1--
 		e.BoardDrawTile(int16(stat.X), int16(stat.Y))
 		if stat.P1 == 1 {
-			SoundQueue(1, "`\x01P\x01@\x010\x01 \x01\x10\x01")
+			e.SoundQueue(1, "`\x01P\x01@\x010\x01 \x01\x10\x01")
 			e.DrawPlayerSurroundings(int16(stat.X), int16(stat.Y), 1)
 		} else if stat.P1 == 0 {
 			oldX = int16(stat.X)
@@ -497,9 +497,9 @@ func (e *Engine) ElementBombTick(statId int16) {
 			e.DrawPlayerSurroundings(oldX, oldY, 2)
 		} else {
 			if int16(stat.P1)%2 == 0 {
-				SoundQueue(1, "\xf8\x01")
+				e.SoundQueue(1, "\xf8\x01")
 			} else {
-				SoundQueue(1, "\xf5\x01")
+				e.SoundQueue(1, "\xf5\x01")
 			}
 		}
 
@@ -512,7 +512,7 @@ func (e *Engine) ElementBombTouch(x, y int16, sourceStatId int16, deltaX, deltaY
 		stat.P1 = 9
 		e.BoardDrawTile(int16(stat.X), int16(stat.Y))
 		e.DisplayMessage(200, "Bomb activated!")
-		SoundQueue(4, "0\x015\x01@\x01E\x01P\x01")
+		e.SoundQueue(4, "0\x015\x01@\x01E\x01P\x01")
 	} else {
 		e.ElementPushablePush(int16(stat.X), int16(stat.Y), *deltaX, *deltaY)
 	}
@@ -565,7 +565,7 @@ func (e *Engine) ElementTransporterMove(x, y, deltaX, deltaY int16) {
 		}
 		if newX != -1 {
 			e.ElementMove(int16(stat.X)-deltaX, int16(stat.Y)-deltaY, newX, newY)
-			SoundQueue(3, "0\x01B\x014\x01F\x018\x01J\x01@\x01R\x01")
+			e.SoundQueue(3, "0\x01B\x014\x01F\x018\x01J\x01@\x01R\x01")
 		}
 	}
 }
@@ -623,7 +623,7 @@ func (e *Engine) ElementStarTick(statId int16) {
 }
 
 func (e *Engine) ElementEnergizerTouch(x, y int16, sourceStatId int16, deltaX, deltaY *int16) {
-	SoundQueue(9, " \x03#\x03$\x03%\x035\x03%\x03#\x03 \x03"+"0\x03#\x03$\x03%\x035\x03%\x03#\x03 \x03"+"0\x03#\x03$\x03%\x035\x03%\x03#\x03 \x03"+"0\x03#\x03$\x03%\x035\x03%\x03#\x03 \x03"+"0\x03#\x03$\x03%\x035\x03%\x03#\x03 \x03"+"0\x03#\x03$\x03%\x035\x03%\x03#\x03 \x03"+"0\x03#\x03$\x03%\x035\x03%\x03#\x03 \x03")
+	e.SoundQueue(9, " \x03#\x03$\x03%\x035\x03%\x03#\x03 \x03"+"0\x03#\x03$\x03%\x035\x03%\x03#\x03 \x03"+"0\x03#\x03$\x03%\x035\x03%\x03#\x03 \x03"+"0\x03#\x03$\x03%\x035\x03%\x03#\x03 \x03"+"0\x03#\x03$\x03%\x035\x03%\x03#\x03 \x03"+"0\x03#\x03$\x03%\x035\x03%\x03#\x03 \x03"+"0\x03#\x03$\x03%\x035\x03%\x03#\x03 \x03")
 	e.Board.Tiles[x][y].Element = E_EMPTY
 	e.BoardDrawTile(x, y)
 	e.World.Info.EnergizerTicks = 75
@@ -680,7 +680,7 @@ func (e *Engine) ElementSlimeTouch(x, y int16, sourceStatId int16, deltaX, delta
 	e.Board.Tiles[x][y].Element = E_BREAKABLE
 	e.Board.Tiles[x][y].Color = byte(color)
 	e.BoardDrawTile(x, y)
-	SoundQueue(2, " \x01#\x01")
+	e.SoundQueue(2, " \x01#\x01")
 }
 
 func (e *Engine) ElementSharkTick(statId int16) {
@@ -880,9 +880,9 @@ func (e *Engine) ElementDuplicatorTick(statId int16) {
 					e.BoardDrawTile(int16(stat.X)-stat.StepX, int16(stat.Y)-stat.StepY)
 				}
 
-				SoundQueue(3, "0\x022\x024\x025\x027\x02")
+				e.SoundQueue(3, "0\x022\x024\x025\x027\x02")
 			} else {
-				SoundQueue(3, "\x18\x01\x16\x01")
+				e.SoundQueue(3, "\x18\x01\x16\x01")
 			}
 		}
 		stat.P1 = 0
@@ -906,7 +906,7 @@ func (e *Engine) ElementScrollTouch(x, y int16, sourceStatId int16, deltaX, delt
 	)
 	statId = e.GetStatIdAt(x, y)
 	stat := &e.Board.Stats[statId]
-	SoundQueue(2, SoundParse("c-c+d-d+e-e+f-f+g-g"))
+	e.SoundQueue(2, SoundParse("c-c+d-d+e-e+f-f+g-g"))
 	stat.DataPos = 0
 	e.OopExecute(statId, &stat.DataPos, "Scroll")
 	e.RemoveStat(e.GetStatIdAt(x, y))
@@ -917,13 +917,13 @@ func (e *Engine) ElementKeyTouch(x, y int16, sourceStatId int16, deltaX, deltaY 
 	key = int16(e.Board.Tiles[x][y].Color) % 8
 	if e.World.Info.Keys[key-1] {
 		e.DisplayMessage(200, "You already have a "+ColorNames[key-1]+" key!")
-		SoundQueue(2, "0\x02 \x02")
+		e.SoundQueue(2, "0\x02 \x02")
 	} else {
 		e.World.Info.Keys[key-1] = true
 		e.Board.Tiles[x][y].Element = E_EMPTY
 		e.GameUpdateSidebar()
 		e.DisplayMessage(200, "You now have the "+ColorNames[key-1]+" key.")
-		SoundQueue(2, "@\x01D\x01G\x01@\x01D\x01G\x01@\x01D\x01G\x01P\x02")
+		e.SoundQueue(2, "@\x01D\x01G\x01@\x01D\x01G\x01@\x01D\x01G\x01P\x02")
 	}
 }
 
@@ -931,7 +931,7 @@ func (e *Engine) ElementAmmoTouch(x, y int16, sourceStatId int16, deltaX, deltaY
 	e.World.Info.Ammo += 5
 	e.Board.Tiles[x][y].Element = E_EMPTY
 	e.GameUpdateSidebar()
-	SoundQueue(2, "0\x011\x012\x01")
+	e.SoundQueue(2, "0\x011\x012\x01")
 	if e.MessageAmmoNotShown {
 		e.MessageAmmoNotShown = false
 		e.DisplayMessage(200, "Ammunition - 5 shots per container.")
@@ -944,7 +944,7 @@ func (e *Engine) ElementGemTouch(x, y int16, sourceStatId int16, deltaX, deltaY 
 	e.World.Info.Score += 10
 	e.Board.Tiles[x][y].Element = E_EMPTY
 	e.GameUpdateSidebar()
-	SoundQueue(2, "@\x017\x014\x010\x01")
+	e.SoundQueue(2, "@\x017\x014\x010\x01")
 	if e.MessageGemNotShown {
 		e.MessageGemNotShown = false
 		e.DisplayMessage(200, "Gems give you Health!")
@@ -966,16 +966,16 @@ func (e *Engine) ElementDoorTouch(x, y int16, sourceStatId int16, deltaX, deltaY
 		e.World.Info.Keys[key-1] = false
 		e.GameUpdateSidebar()
 		e.DisplayMessage(200, "The "+ColorNames[key-1]+" door is now open.")
-		SoundQueue(3, "0\x017\x01;\x010\x017\x01;\x01@\x04")
+		e.SoundQueue(3, "0\x017\x01;\x010\x017\x01;\x01@\x04")
 	} else {
 		e.DisplayMessage(200, "The "+ColorNames[key-1]+" door is locked!")
-		SoundQueue(3, "\x17\x01\x10\x01")
+		e.SoundQueue(3, "\x17\x01\x10\x01")
 	}
 }
 
 func (e *Engine) ElementPushableTouch(x, y int16, sourceStatId int16, deltaX, deltaY *int16) {
 	e.ElementPushablePush(x, y, *deltaX, *deltaY)
-	SoundQueue(2, "\x15\x01")
+	e.SoundQueue(2, "\x15\x01")
 }
 
 func (e *Engine) ElementPusherDraw(x, y int16, ch *byte) {
@@ -1004,7 +1004,7 @@ func (e *Engine) ElementPusherTick(statId int16) {
 	stat2 := &e.Board.Stats[statId]
 	if ElementDefs[e.Board.Tiles[int16(stat2.X)+stat2.StepX][int16(stat2.Y)+stat2.StepY].Element].Walkable {
 		e.MoveStat(statId, int16(stat2.X)+stat2.StepX, int16(stat2.Y)+stat2.StepY)
-		SoundQueue(2, "\x15\x01")
+		e.SoundQueue(2, "\x15\x01")
 		if e.Board.Tiles[int16(stat2.X)-stat2.StepX*2][int16(stat2.Y)-stat2.StepY*2].Element == E_PUSHER {
 			i = e.GetStatIdAt(int16(stat2.X)-stat2.StepX*2, int16(stat2.Y)-stat2.StepY*2)
 			if e.Board.Stats[i].StepX == stat2.StepX && e.Board.Stats[i].StepY == stat2.StepY {
@@ -1023,21 +1023,21 @@ func (e *Engine) ElementTorchTouch(x, y int16, sourceStatId int16, deltaX, delta
 		e.DisplayMessage(200, "Torch - used for lighting in the underground.")
 	}
 	e.MessageTorchNotShown = false
-	SoundQueue(3, "0\x019\x014\x02")
+	e.SoundQueue(3, "0\x019\x014\x02")
 }
 
 func (e *Engine) ElementInvisibleTouch(x, y int16, sourceStatId int16, deltaX, deltaY *int16) {
 	tile := &e.Board.Tiles[x][y]
 	tile.Element = E_NORMAL
 	e.BoardDrawTile(x, y)
-	SoundQueue(3, "\x12\x01\x10\x01")
+	e.SoundQueue(3, "\x12\x01\x10\x01")
 	e.DisplayMessage(100, "You are blocked by an invisible wall.")
 }
 
 func (e *Engine) ElementForestTouch(x, y int16, sourceStatId int16, deltaX, deltaY *int16) {
 	e.Board.Tiles[x][y].Element = E_EMPTY
 	e.BoardDrawTile(x, y)
-	SoundQueue(3, "9\x01")
+	e.SoundQueue(3, "9\x01")
 	if e.MessageForestNotShown {
 		e.DisplayMessage(200, "A path is cleared through the forest.")
 	}
@@ -1094,7 +1094,7 @@ func (e *Engine) ElementBoardEdgeTouch(x, y int16, sourceStatId int16, deltaX, d
 }
 
 func (e *Engine) ElementWaterTouch(x, y int16, sourceStatId int16, deltaX, deltaY *int16) {
-	SoundQueue(3, "@\x01P\x01")
+	e.SoundQueue(3, "@\x01P\x01")
 	e.DisplayMessage(100, "Your way is blocked by water.")
 }
 
@@ -1179,7 +1179,7 @@ func (e *Engine) ElementPlayerTick(statId int16) {
 			e.DisplayMessage(32000, " Game over  -  Press ESCAPE")
 		}
 		e.TickTimeDuration = 0
-		SoundBlockQueueing = true
+		e.SoundBlockQueueing = true
 	}
 	if InputShiftPressed || InputKeyPressed == ' ' {
 		if InputShiftPressed && (InputDeltaX != 0 || InputDeltaY != 0) {
@@ -1208,7 +1208,7 @@ func (e *Engine) ElementPlayerTick(statId int16) {
 					if e.BoardShoot(E_BULLET, int16(stat.X), int16(stat.Y), e.PlayerDirX, e.PlayerDirY, SHOT_SOURCE_PLAYER) {
 						e.World.Info.Ammo--
 						e.GameUpdateSidebar()
-						SoundQueue(2, "@\x010\x01 \x01")
+						e.SoundQueue(2, "@\x010\x01 \x01")
 						InputDeltaX = 0
 						InputDeltaY = 0
 					}
@@ -1284,7 +1284,7 @@ func (e *Engine) ElementPlayerTick(statId int16) {
 		e.World.Info.TorchTicks--
 		if e.World.Info.TorchTicks <= 0 {
 			e.DrawPlayerSurroundings(int16(stat.X), int16(stat.Y), 0)
-			SoundQueue(3, "0\x01 \x01\x10\x01")
+			e.SoundQueue(3, "0\x01 \x01\x10\x01")
 		}
 		if e.World.Info.TorchTicks%40 == 0 {
 			e.GameUpdateSidebar()
@@ -1293,7 +1293,7 @@ func (e *Engine) ElementPlayerTick(statId int16) {
 	if e.World.Info.EnergizerTicks > 0 {
 		e.World.Info.EnergizerTicks--
 		if e.World.Info.EnergizerTicks == 10 {
-			SoundQueue(9, " \x03\x1a\x03\x17\x03\x16\x03\x15\x03\x13\x03\x10\x03")
+			e.SoundQueue(9, " \x03\x1a\x03\x17\x03\x16\x03\x15\x03\x13\x03\x10\x03")
 		} else if e.World.Info.EnergizerTicks <= 0 {
 			e.Board.Tiles[stat.X][stat.Y].Color = ElementDefs[E_PLAYER].Color
 			e.BoardDrawTile(int16(stat.X), int16(stat.Y))
@@ -1305,7 +1305,7 @@ func (e *Engine) ElementPlayerTick(statId int16) {
 			e.World.Info.BoardTimeSec++
 			if e.Board.Info.TimeLimitSec-10 == e.World.Info.BoardTimeSec {
 				e.DisplayMessage(200, "Running out of time!")
-				SoundQueue(3, "@\x06E\x06@\x065\x06@\x06E\x06@\n")
+				e.SoundQueue(3, "@\x06E\x06@\x065\x06@\x06E\x06@\n")
 			} else if e.World.Info.BoardTimeSec > e.Board.Info.TimeLimitSec {
 				e.DamageStat(0)
 			}

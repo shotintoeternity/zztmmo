@@ -7,7 +7,6 @@ type TDrumData struct {
 
 var (
 	SoundEnabled            bool
-	SoundBlockQueueing      bool
 	SoundCurrentPriority    int16
 	SoundFreqTable          [255]uint16
 	SoundDurationMultiplier byte
@@ -26,22 +25,13 @@ var (
 
 // implementation uses: Crt, Dos
 
-func SoundQueue(priority int16, pattern string) {
-	// if !SoundBlockQueueing && (!SoundIsPlaying || (priority >= SoundCurrentPriority && SoundCurrentPriority != -1 || priority == -1)) {
-	// 	if priority >= 0 || !SoundIsPlaying {
-	// 		SoundCurrentPriority = priority
-	// 		SoundBuffer = pattern
-	// 		SoundBufferPos = 1
-	// 		SoundDurationCounter = 1
-	// 	} else {
-	// 		SoundBuffer = Copy(SoundBuffer, SoundBufferPos, Length(SoundBuffer)-SoundBufferPos+1)
-	// 		SoundBufferPos = 1
-	// 		if Length(SoundBuffer)+Length(pattern) < 255 {
-	// 			SoundBuffer += pattern
-	// 		}
-	// 	}
-	// 	SoundIsPlaying = true
-	// }
+func (e *Engine) SoundQueue(priority int16, pattern string) {
+	if !e.SoundBlockQueueing {
+		e.Events = append(e.Events, SoundEvent{
+			Notes:    pattern,
+			Priority: priority,
+		})
+	}
 }
 
 func SoundClearQueue() {
@@ -295,7 +285,6 @@ func init() {
 	TimerTicks = 0
 	SoundTimeCheckHsec = 0
 	SoundEnabled = true
-	SoundBlockQueueing = false
 	SoundClearQueue()
 	SoundDurationMultiplier = 1
 	SoundIsPlaying = false
@@ -303,4 +292,10 @@ func init() {
 	// SoundNewVector = &SoundTimerHandler
 	// GetIntVec(0x1C, SoundOldVector)
 	// SetIntVec(0x1C, SoundNewVector)
+}
+
+// --- Global Wrappers ---
+
+func SoundQueue(priority int16, pattern string) {
+	E.SoundQueue(priority, pattern)
 }
