@@ -2,6 +2,7 @@ package main
 
 import (
 	"testing"
+	"time"
 )
 
 func TestUpCase(t *testing.T) {
@@ -209,6 +210,34 @@ func TestRandom(t *testing.T) {
 		if got := Random(100); got != w {
 			t.Errorf("Random(100) after reseed, call %d: expected %d, got %d", i+1, w, got)
 		}
+	}
+}
+
+// TestDelayHeadlessNoOp is the M0.4 definition of done: with Headless set, the
+// per-cycle pace from GamePlayLoop must not sleep, so 1000 tick-paces finish
+// well under a second (they take microseconds).
+func TestDelayHeadlessNoOp(t *testing.T) {
+	Headless = true
+	defer func() { Headless = false }()
+	TickTimeDuration = 8 // default game speed (TickSpeed 4 => TickSpeed*2)
+
+	start := time.Now()
+	for i := 0; i < 1000; i++ {
+		Delay(TickTimeDuration * 10) // the exact call GamePlayLoop makes per cycle
+	}
+	if elapsed := time.Since(start); elapsed > time.Second {
+		t.Errorf("1000 headless tick-paces took %v; want <1s", elapsed)
+	}
+}
+
+// TestDelaySleepsWhenInteractive guards the other half of the DoD: interactive
+// pacing is unchanged, i.e. Delay still sleeps when not headless.
+func TestDelaySleepsWhenInteractive(t *testing.T) {
+	Headless = false
+	start := time.Now()
+	Delay(50)
+	if elapsed := time.Since(start); elapsed < 40*time.Millisecond {
+		t.Errorf("interactive Delay(50) returned after %v; expected it to sleep ~50ms", elapsed)
 	}
 }
 

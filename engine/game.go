@@ -3,7 +3,6 @@ package main // unit: Game
 import (
 	"os"
 	"path/filepath"
-	"time"
 )
 
 // interface uses: GameVars, TxtWind
@@ -1486,8 +1485,11 @@ func GamePlayLoop(boardChanged bool) {
 		if CurrentStatTicked > Board.StatCount && !GamePlayExitRequested {
 			// all stats ticked
 
-			// TODO: should wait till next TickTimeCounter/TickTimeDuration up
-			time.Sleep(time.Duration(TickTimeDuration) * 10 * time.Millisecond)
+			// Pace the cycle through Delay, which is a no-op when Headless so
+			// the server / replay harness runs flat out (M0.4). SoundHasTimeElapsed
+			// is currently stubbed to true, so this Delay is what actually paces
+			// interactive play — see NOTES.md 2026-07-09.
+			Delay(TickTimeDuration * 10)
 
 			if SoundHasTimeElapsed(&TickTimeCounter, TickTimeDuration) {
 				// next cycle

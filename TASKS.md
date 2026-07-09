@@ -46,7 +46,7 @@ and every run is reproducible. ANALYSIS.md §3g, §3h, §5.
   globals. Do NOT rename `InputDeltaX/Y` (CLAUDE.md rule 6). DoD: a test drives 20
   scripted ticks without a terminal.
 
-- [ ] **M0.4 — No sleeps in sim.** Remove `time.Sleep` from `GamePlayLoop`
+- [x] **M0.4 — No sleeps in sim.** Remove `time.Sleep` from `GamePlayLoop`
   (`engine/game.go:1490`) and make `Delay()` (`engine/lib.go`) a no-op when
   `Headless`. Pacing belongs to the caller. DoD: interactive game speed unchanged
   (the `SoundHasTimeElapsed` check still paces interactive mode); headless test

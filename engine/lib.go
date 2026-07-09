@@ -112,6 +112,12 @@ func Replace(s string, index int16, b byte) string {
 // Misc functions
 
 func Delay(milliseconds int16) {
+	// Pacing belongs to the caller: headless runs (server, replay harness) must
+	// never sleep in simulation code (M0.4). Interactive play still delays, so
+	// game speed and the scroll/sound animation timings are unchanged.
+	if Headless {
+		return
+	}
 	time.Sleep(time.Duration(milliseconds) * time.Millisecond)
 }
 
