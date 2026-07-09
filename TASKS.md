@@ -204,3 +204,16 @@ and every run is reproducible. ANALYSIS.md §3g, §3h, §5.
   text-window prompts through protocol events and client-side CP437 windows.
   DoD: pressing `?` in the browser opens an interactive debug/help-style window
   without disconnecting or corrupting gameplay input.
+
+- [ ] **M3.10 — ZZT scroll/vendor message windows.** Render `scroll` events as
+  in-world ZZT text windows instead of sidebar text, including selectable
+  `!label;text` choices and replies back to the engine. Cover vendor-style
+  dialogue such as:
+  `Vendor`
+  `"Hello, you must be new to town! ..."`
+  `!ba;Ammunition, 3 shots.........1 gem`
+  `!bt;Torch.......................1 gem`
+  `!bx;Advice......................Free`
+  DoD: touching the TOWN vendor opens a CP437-style modal window over the board
+  and selecting an option sends the expected reply without corrupting movement
+  input.
