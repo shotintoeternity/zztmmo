@@ -14,35 +14,35 @@ TODO:
 package main
 
 func main() {
-	WorldFileDescCount = 7
-	WorldFileDescKeys[0] = "TOWN"
-	WorldFileDescValues[0] = "TOWN       The Town of ZZT"
-	WorldFileDescKeys[1] = "DEMO"
-	WorldFileDescValues[1] = "DEMO       Demo of the ZZT World Editor"
-	WorldFileDescKeys[2] = "CAVES"
-	WorldFileDescValues[2] = "CAVES      The Caves of ZZT"
-	WorldFileDescKeys[3] = "DUNGEONS"
-	WorldFileDescValues[3] = "DUNGEONS   The Dungeons of ZZT"
-	WorldFileDescKeys[4] = "CITY"
-	WorldFileDescValues[4] = "CITY       Underground City of ZZT"
-	WorldFileDescKeys[5] = "BEST"
-	WorldFileDescValues[5] = "BEST       The Best of ZZT"
-	WorldFileDescKeys[6] = "TOUR"
-	WorldFileDescValues[6] = "TOUR       Guided Tour ZZT's Other Worlds"
+	E.WorldFileDescCount = 7
+	E.WorldFileDescKeys[0] = "TOWN"
+	E.WorldFileDescValues[0] = "TOWN       The Town of ZZT"
+	E.WorldFileDescKeys[1] = "DEMO"
+	E.WorldFileDescValues[1] = "DEMO       Demo of the ZZT World Editor"
+	E.WorldFileDescKeys[2] = "CAVES"
+	E.WorldFileDescValues[2] = "CAVES      The Caves of ZZT"
+	E.WorldFileDescKeys[3] = "DUNGEONS"
+	E.WorldFileDescValues[3] = "DUNGEONS   The Dungeons of ZZT"
+	E.WorldFileDescKeys[4] = "CITY"
+	E.WorldFileDescValues[4] = "CITY       Underground City of ZZT"
+	E.WorldFileDescKeys[5] = "BEST"
+	E.WorldFileDescValues[5] = "BEST       The Best of ZZT"
+	E.WorldFileDescKeys[6] = "TOUR"
+	E.WorldFileDescValues[6] = "TOUR       Guided Tour ZZT's Other Worlds"
 
-	StartupWorldFileName = "TOWN"
+	E.StartupWorldFileName = "TOWN"
 	ResourceDataFileName = "ZZT.DAT"
-	GameTitleExitRequested = false
-	EditorEnabled = true
+	E.GameTitleExitRequested = false
+	E.EditorEnabled = true
 
 	VideoInstall()
 	TextWindowInit(5, 3, 50, 18)
 	VideoHideCursor()
 	VideoClrScr()
-	TickSpeed = 4
-	DebugEnabled = false
-	SavedGameFileName = "SAVED"
-	SavedBoardFileName = "TEMP"
+	E.TickSpeed = 4
+	E.DebugEnabled = false
+	E.SavedGameFileName = "SAVED"
+	E.SavedBoardFileName = "TEMP"
 	GenerateTransitionTable()
 	WorldCreate()
 

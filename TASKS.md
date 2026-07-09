@@ -71,7 +71,7 @@ and every run is reproducible. ANALYSIS.md §3g, §3h, §5.
 
 ## M1 — Instance & de-modal
 
-- [ ] **M1.1 — Globals → Engine struct, part 1 (state).** Move `Board`, `World`,
+- [x] **M1.1 — Globals → Engine struct, part 1 (state).** Move `Board`, `World`,
   and the ~50 mutable globals in `engine/gamevars.go:137-189` into
   `type Engine struct`, with a package-level `var E *Engine` and mechanical
   `Board.` → `E.Board.` rewrites (ANALYSIS.md §3a). ElementDefs (immutable after

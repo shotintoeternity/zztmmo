@@ -5,36 +5,36 @@ package main // unit: Oop
 // implementation uses: Sounds, TxtWind, Game, Elements
 
 func OopError(statId int16, message string) {
-	stat := &Board.Stats[statId]
+	stat := &E.Board.Stats[statId]
 	DisplayMessage(200, "ERR: "+message)
 	SoundQueue(5, "P\n")
 	stat.DataPos = -1
 }
 
 func OopReadChar(statId int16, position *int16) {
-	stat := &Board.Stats[statId]
+	stat := &E.Board.Stats[statId]
 	if *position >= 0 && *position < stat.DataLen {
-		OopChar = stat.Data[*position]
+		E.OopChar = stat.Data[*position]
 		*position++
 	} else {
-		OopChar = '\x00'
+		E.OopChar = '\x00'
 	}
 }
 
 func OopReadWord(statId int16, position *int16) {
-	OopWord = ""
+	E.OopWord = ""
 	for {
 		OopReadChar(statId, position)
-		if OopChar != ' ' {
+		if E.OopChar != ' ' {
 			break
 		}
 	}
-	OopChar = UpCase(OopChar)
-	if OopChar < '0' || OopChar > '9' {
-		for OopChar >= 'A' && OopChar <= 'Z' || OopChar == ':' || OopChar >= '0' && OopChar <= '9' || OopChar == '_' {
-			OopWord += string([]byte{OopChar})
+	E.OopChar = UpCase(E.OopChar)
+	if E.OopChar < '0' || E.OopChar > '9' {
+		for E.OopChar >= 'A' && E.OopChar <= 'Z' || E.OopChar == ':' || E.OopChar >= '0' && E.OopChar <= '9' || E.OopChar == '_' {
+			E.OopWord += string([]byte{E.OopChar})
 			OopReadChar(statId, position)
-			OopChar = UpCase(OopChar)
+			E.OopChar = UpCase(E.OopChar)
 		}
 	}
 	if *position > 0 {
@@ -50,79 +50,79 @@ func OopReadValue(statId int16, position *int16) {
 	s = ""
 	for {
 		OopReadChar(statId, position)
-		if OopChar != ' ' {
+		if E.OopChar != ' ' {
 			break
 		}
 	}
-	OopChar = UpCase(OopChar)
-	for OopChar >= '0' && OopChar <= '9' {
-		s += string([]byte{OopChar})
+	E.OopChar = UpCase(E.OopChar)
+	for E.OopChar >= '0' && E.OopChar <= '9' {
+		s += string([]byte{E.OopChar})
 		OopReadChar(statId, position)
-		OopChar = UpCase(OopChar)
+		E.OopChar = UpCase(E.OopChar)
 	}
 	if *position > 0 {
 		*position--
 	}
 	if Length(s) != 0 {
-		OopValue = Val(s, &code)
+		E.OopValue = Val(s, &code)
 	} else {
-		OopValue = -1
+		E.OopValue = -1
 	}
 }
 
 func OopSkipLine(statId int16, position *int16) {
 	for {
 		OopReadChar(statId, position)
-		if OopChar == '\x00' || OopChar == '\r' {
+		if E.OopChar == '\x00' || E.OopChar == '\r' {
 			break
 		}
 	}
 }
 
 func OopParseDirection(statId int16, position *int16, dx, dy *int16) (OopParseDirection_ bool) {
-	stat := &Board.Stats[statId]
+	stat := &E.Board.Stats[statId]
 	OopParseDirection_ = true
-	if OopWord == "N" || OopWord == "NORTH" {
+	if E.OopWord == "N" || E.OopWord == "NORTH" {
 		*dx = 0
 		*dy = -1
-	} else if OopWord == "S" || OopWord == "SOUTH" {
+	} else if E.OopWord == "S" || E.OopWord == "SOUTH" {
 		*dx = 0
 		*dy = 1
-	} else if OopWord == "E" || OopWord == "EAST" {
+	} else if E.OopWord == "E" || E.OopWord == "EAST" {
 		*dx = 1
 		*dy = 0
-	} else if OopWord == "W" || OopWord == "WEST" {
+	} else if E.OopWord == "W" || E.OopWord == "WEST" {
 		*dx = -1
 		*dy = 0
-	} else if OopWord == "I" || OopWord == "IDLE" {
+	} else if E.OopWord == "I" || E.OopWord == "IDLE" {
 		*dx = 0
 		*dy = 0
-	} else if OopWord == "SEEK" {
+	} else if E.OopWord == "SEEK" {
 		CalcDirectionSeek(int16(stat.X), int16(stat.Y), dx, dy)
-	} else if OopWord == "FLOW" {
+	} else if E.OopWord == "FLOW" {
 		*dx = stat.StepX
 		*dy = stat.StepY
-	} else if OopWord == "RND" {
+	} else if E.OopWord == "RND" {
 		CalcDirectionRnd(dx, dy)
-	} else if OopWord == "RNDNS" {
+	} else if E.OopWord == "RNDNS" {
 		*dx = 0
 		*dy = Random(2)*2 - 1
-	} else if OopWord == "RNDNE" {
+	} else if E.OopWord == "RNDNE" {
 		*dx = Random(2)
 		if *dx == 0 {
 			*dy = -1
 		} else {
 			*dy = 0
 		}
-	} else if OopWord == "CW" {
+	} else if E.OopWord == "CW" {
 		OopReadWord(statId, position)
 		OopParseDirection_ = OopParseDirection(statId, position, dy, dx)
 		*dx = -*dx
-	} else if OopWord == "CCW" {
+	} else if E.OopWord == "CCW" {
 		OopReadWord(statId, position)
 		OopParseDirection_ = OopParseDirection(statId, position, dy, dx)
 		*dy = -*dy
-	} else if OopWord == "RNDP" {
+	} else if E.OopWord == "RNDP" {
 		OopReadWord(statId, position)
 		OopParseDirection_ = OopParseDirection(statId, position, dy, dx)
 		if Random(2) == 0 {
@@ -130,7 +130,7 @@ func OopParseDirection(statId int16, position *int16, dx, dy *int16) (OopParseDi
 		} else {
 			*dy = -*dy
 		}
-	} else if OopWord == "OPP" {
+	} else if E.OopWord == "OPP" {
 		OopReadWord(statId, position)
 		OopParseDirection_ = OopParseDirection(statId, position, dx, dy)
 		*dx = -*dx
@@ -153,14 +153,14 @@ func OopReadDirection(statId int16, position *int16, dx, dy *int16) {
 
 func OopFindString(statId int16, s string) (OopFindString int16) {
 	var pos, wordPos, cmpPos int16
-	stat := &Board.Stats[statId]
+	stat := &E.Board.Stats[statId]
 	pos = 0
 	for pos <= stat.DataLen {
 		wordPos = 1
 		cmpPos = pos
 		for {
 			OopReadChar(statId, &cmpPos)
-			if UpCase(s[wordPos-1]) != UpCase(OopChar) {
+			if UpCase(s[wordPos-1]) != UpCase(E.OopChar) {
 				goto NoMatch
 			}
 			wordPos++
@@ -169,8 +169,8 @@ func OopFindString(statId int16, s string) (OopFindString int16) {
 			}
 		}
 		OopReadChar(statId, &cmpPos)
-		OopChar = UpCase(OopChar)
-		if OopChar >= 'A' && OopChar <= 'Z' || OopChar == '_' {
+		E.OopChar = UpCase(E.OopChar)
+		if E.OopChar >= 'A' && E.OopChar <= 'Z' || E.OopChar == '_' {
 		} else {
 			OopFindString = pos
 			return
@@ -191,16 +191,16 @@ func OopIterateStat(statId int16, iStat *int16, lookup string) (OopIterateStat b
 	*iStat++
 	found = false
 	if lookup == "ALL" {
-		if *iStat <= Board.StatCount {
+		if *iStat <= E.Board.StatCount {
 			found = true
 		}
 	} else if lookup == "OTHERS" {
-		if *iStat <= Board.StatCount {
+		if *iStat <= E.Board.StatCount {
 			if *iStat != statId {
 				found = true
 			} else {
 				*iStat++
-				found = *iStat <= Board.StatCount
+				found = *iStat <= E.Board.StatCount
 			}
 		}
 	} else if lookup == "SELF" {
@@ -209,13 +209,13 @@ func OopIterateStat(statId int16, iStat *int16, lookup string) (OopIterateStat b
 			found = true
 		}
 	} else {
-		for *iStat <= Board.StatCount && !found {
-			if Board.Stats[*iStat].Data != "" {
+		for *iStat <= E.Board.StatCount && !found {
+			if E.Board.Stats[*iStat].Data != "" {
 				pos = 0
 				OopReadChar(*iStat, &pos)
-				if OopChar == '@' {
+				if E.OopChar == '@' {
 					OopReadWord(*iStat, &pos)
-					if OopWord == lookup {
+					if E.OopWord == lookup {
 						found = true
 					}
 				}
@@ -272,7 +272,7 @@ func WorldGetFlagPosition(name string) (WorldGetFlagPosition int16) {
 	var i int16
 	WorldGetFlagPosition = -1
 	for i = 1; i <= 10; i++ {
-		if World.Info.Flags[i-1] == name {
+		if E.World.Info.Flags[i-1] == name {
 			WorldGetFlagPosition = i
 		}
 	}
@@ -283,16 +283,16 @@ func WorldSetFlag(name string) {
 	var i int16
 	if WorldGetFlagPosition(name) < 0 {
 		i = 1
-		for i < MAX_FLAG && Length(World.Info.Flags[i-1]) != 0 {
+		for i < MAX_FLAG && Length(E.World.Info.Flags[i-1]) != 0 {
 			i++
 		}
-		World.Info.Flags[i-1] = name
+		E.World.Info.Flags[i-1] = name
 	}
 }
 
 func WorldClearFlag(name string) {
 	if WorldGetFlagPosition(name) >= 0 {
-		World.Info.Flags[WorldGetFlagPosition(name)-1] = ""
+		E.World.Info.Flags[WorldGetFlagPosition(name)-1] = ""
 	}
 }
 
@@ -320,7 +320,7 @@ func OopParseTile(statId, position *int16, tile *TTile) (OopParseTile bool) {
 	tile.Color = 0
 	OopReadWord(*statId, position)
 	for i = 1; i <= 7; i++ {
-		if OopWord == OopStringToWord(ColorNames[i-1]) {
+		if E.OopWord == OopStringToWord(ColorNames[i-1]) {
 			tile.Color = byte(i + 0x08)
 			OopReadWord(*statId, position)
 			goto ColorFound
@@ -328,7 +328,7 @@ func OopParseTile(statId, position *int16, tile *TTile) (OopParseTile bool) {
 	}
 ColorFound:
 	for i = 0; i <= MAX_ELEMENT; i++ {
-		if OopWord == OopStringToWord(ElementDefs[i].Name) {
+		if E.OopWord == OopStringToWord(ElementDefs[i].Name) {
 			OopParseTile = true
 			tile.Element = byte(i)
 			return
@@ -361,8 +361,8 @@ func FindTileOnBoard(x, y *int16, tile TTile) (FindTileOnBoard bool) {
 				return
 			}
 		}
-		if Board.Tiles[*x][*y].Element == tile.Element {
-			if tile.Color == 0 || GetColorForTileMatch(&Board.Tiles[*x][*y]) == tile.Color {
+		if E.Board.Tiles[*x][*y].Element == tile.Element {
+			if tile.Color == 0 || GetColorForTileMatch(&E.Board.Tiles[*x][*y]) == tile.Color {
 				FindTileOnBoard = true
 				return
 			}
@@ -373,13 +373,13 @@ func FindTileOnBoard(x, y *int16, tile TTile) (FindTileOnBoard bool) {
 
 func OopPlaceTile(x, y int16, tile *TTile) {
 	var color byte
-	if Board.Tiles[x][y].Element != 4 {
+	if E.Board.Tiles[x][y].Element != 4 {
 		color = tile.Color
 		if ElementDefs[tile.Element].Color < COLOR_SPECIAL_MIN {
 			color = ElementDefs[tile.Element].Color
 		} else {
 			if color == 0 {
-				color = Board.Tiles[x][y].Color
+				color = E.Board.Tiles[x][y].Color
 			}
 			if color == 0 {
 				color = 0x0F
@@ -388,15 +388,15 @@ func OopPlaceTile(x, y int16, tile *TTile) {
 				color = byte((int16(color)-8)*0x10 + 0x0F)
 			}
 		}
-		if Board.Tiles[x][y].Element == tile.Element {
-			Board.Tiles[x][y].Color = color
+		if E.Board.Tiles[x][y].Element == tile.Element {
+			E.Board.Tiles[x][y].Color = color
 		} else {
 			BoardDamageTile(x, y)
 			if ElementDefs[tile.Element].Cycle >= 0 {
 				AddStat(x, y, tile.Element, int16(color), ElementDefs[tile.Element].Cycle, StatTemplateDefault)
 			} else {
-				Board.Tiles[x][y].Element = tile.Element
-				Board.Tiles[x][y].Color = color
+				E.Board.Tiles[x][y].Element = tile.Element
+				E.Board.Tiles[x][y].Color = color
 			}
 		}
 		BoardDrawTile(x, y)
@@ -409,20 +409,20 @@ func OopCheckCondition(statId int16, position *int16) (OopCheckCondition_ bool) 
 		tile           TTile
 		ix, iy         int16
 	)
-	stat := &Board.Stats[statId]
-	if OopWord == "NOT" {
+	stat := &E.Board.Stats[statId]
+	if E.OopWord == "NOT" {
 		OopReadWord(statId, position)
 		OopCheckCondition_ = !OopCheckCondition(statId, position)
-	} else if OopWord == "ALLIGNED" {
-		OopCheckCondition_ = stat.X == Board.Stats[0].X || stat.Y == Board.Stats[0].Y
-	} else if OopWord == "CONTACT" {
-		OopCheckCondition_ = Sqr(int16(stat.X)-int16(Board.Stats[0].X))+Sqr(int16(stat.Y)-int16(Board.Stats[0].Y)) == 1
-	} else if OopWord == "BLOCKED" {
+	} else if E.OopWord == "ALLIGNED" {
+		OopCheckCondition_ = stat.X == E.Board.Stats[0].X || stat.Y == E.Board.Stats[0].Y
+	} else if E.OopWord == "CONTACT" {
+		OopCheckCondition_ = Sqr(int16(stat.X)-int16(E.Board.Stats[0].X))+Sqr(int16(stat.Y)-int16(E.Board.Stats[0].Y)) == 1
+	} else if E.OopWord == "BLOCKED" {
 		OopReadDirection(statId, position, &deltaX, &deltaY)
-		OopCheckCondition_ = !ElementDefs[Board.Tiles[int16(stat.X)+deltaX][int16(stat.Y)+deltaY].Element].Walkable
-	} else if OopWord == "ENERGIZED" {
-		OopCheckCondition_ = World.Info.EnergizerTicks > 0
-	} else if OopWord == "ANY" {
+		OopCheckCondition_ = !ElementDefs[E.Board.Tiles[int16(stat.X)+deltaX][int16(stat.Y)+deltaY].Element].Walkable
+	} else if E.OopWord == "ENERGIZED" {
+		OopCheckCondition_ = E.World.Info.EnergizerTicks > 0
+	} else if E.OopWord == "ANY" {
 		if !OopParseTile(&statId, position, &tile) {
 			OopError(statId, "Bad object kind")
 		}
@@ -430,7 +430,7 @@ func OopCheckCondition(statId int16, position *int16) (OopCheckCondition_ bool) 
 		iy = 1
 		OopCheckCondition_ = FindTileOnBoard(&ix, &iy, tile)
 	} else {
-		OopCheckCondition_ = WorldGetFlagPosition(OopWord) >= 0
+		OopCheckCondition_ = WorldGetFlagPosition(E.OopWord) >= 0
 	}
 
 	return
@@ -440,8 +440,8 @@ func OopReadLineToEnd(statId int16, position *int16) (OopReadLineToEnd string) {
 	var s string
 	s = ""
 	OopReadChar(statId, position)
-	for OopChar != '\x00' && OopChar != '\r' {
-		s += string([]byte{OopChar})
+	for E.OopChar != '\x00' && E.OopChar != '\r' {
+		s += string([]byte{E.OopChar})
 		OopReadChar(statId, position)
 	}
 	OopReadLineToEnd = s
@@ -462,11 +462,11 @@ func OopSend(statId int16, sendLabel string, ignoreLock bool) (OopSend bool) {
 	OopSend = false
 	iStat = 0
 	for OopFindLabel(statId, sendLabel, &iStat, &iDataPos, "\r:") {
-		if Board.Stats[iStat].P2 == 0 || ignoreLock || statId == iStat && !ignoreSelfLock {
+		if E.Board.Stats[iStat].P2 == 0 || ignoreLock || statId == iStat && !ignoreSelfLock {
 			if iStat == statId {
 				OopSend = true
 			}
-			Board.Stats[iStat].DataPos = iDataPos
+			E.Board.Stats[iStat].DataPos = iDataPos
 		}
 	}
 	return
@@ -495,7 +495,7 @@ func OopExecute(statId int16, position *int16, name string) {
 		argTile           TTile
 		argTile2          TTile
 	)
-	stat := &Board.Stats[statId]
+	stat := &E.Board.Stats[statId]
 StartParsing:
 	TextWindowInitState(&textWindow)
 
@@ -511,30 +511,30 @@ StartParsing:
 
 		lastPosition = *position
 		OopReadChar(statId, position)
-		for OopChar == ':' {
+		for E.OopChar == ':' {
 			for {
 				OopReadChar(statId, position)
-				if OopChar == '\x00' || OopChar == '\r' {
+				if E.OopChar == '\x00' || E.OopChar == '\r' {
 					break
 				}
 			}
 			OopReadChar(statId, position)
 		}
-		if OopChar == '\'' {
+		if E.OopChar == '\'' {
 			OopSkipLine(statId, position)
-		} else if OopChar == '@' {
+		} else if E.OopChar == '@' {
 			OopSkipLine(statId, position)
-		} else if OopChar == '/' || OopChar == '?' {
-			if OopChar == '/' {
+		} else if E.OopChar == '/' || E.OopChar == '?' {
+			if E.OopChar == '/' {
 				repeatInsNextTick = true
 			}
 			OopReadWord(statId, position)
 			if OopParseDirection(statId, position, &deltaX, &deltaY) {
 				if deltaX != 0 || deltaY != 0 {
-					if !ElementDefs[Board.Tiles[int16(stat.X)+deltaX][int16(stat.Y)+deltaY].Element].Walkable {
+					if !ElementDefs[E.Board.Tiles[int16(stat.X)+deltaX][int16(stat.Y)+deltaY].Element].Walkable {
 						ElementPushablePush(int16(stat.X)+deltaX, int16(stat.Y)+deltaY, deltaX, deltaY)
 					}
-					if ElementDefs[Board.Tiles[int16(stat.X)+deltaX][int16(stat.Y)+deltaY].Element].Walkable {
+					if ElementDefs[E.Board.Tiles[int16(stat.X)+deltaX][int16(stat.Y)+deltaY].Element].Walkable {
 						MoveStat(statId, int16(stat.X)+deltaX, int16(stat.Y)+deltaY)
 						repeatInsNextTick = false
 					}
@@ -542,148 +542,148 @@ StartParsing:
 					repeatInsNextTick = false
 				}
 				OopReadChar(statId, position)
-				if OopChar != '\r' {
+				if E.OopChar != '\r' {
 					*position--
 				}
 				stopRunning = true
 			} else {
 				OopError(statId, "Bad direction")
 			}
-		} else if OopChar == '#' {
+		} else if E.OopChar == '#' {
 		ReadCommand:
 			OopReadWord(statId, position)
 
-			if OopWord == "THEN" {
+			if E.OopWord == "THEN" {
 				OopReadWord(statId, position)
 			}
-			if Length(OopWord) == 0 {
+			if Length(E.OopWord) == 0 {
 				goto ReadInstruction
 			}
 			insCount++
-			if Length(OopWord) != 0 {
-				if OopWord == "GO" {
+			if Length(E.OopWord) != 0 {
+				if E.OopWord == "GO" {
 					OopReadDirection(statId, position, &deltaX, &deltaY)
-					if !ElementDefs[Board.Tiles[int16(stat.X)+deltaX][int16(stat.Y)+deltaY].Element].Walkable {
+					if !ElementDefs[E.Board.Tiles[int16(stat.X)+deltaX][int16(stat.Y)+deltaY].Element].Walkable {
 						ElementPushablePush(int16(stat.X)+deltaX, int16(stat.Y)+deltaY, deltaX, deltaY)
 					}
-					if ElementDefs[Board.Tiles[int16(stat.X)+deltaX][int16(stat.Y)+deltaY].Element].Walkable {
+					if ElementDefs[E.Board.Tiles[int16(stat.X)+deltaX][int16(stat.Y)+deltaY].Element].Walkable {
 						MoveStat(statId, int16(stat.X)+deltaX, int16(stat.Y)+deltaY)
 					} else {
 						repeatInsNextTick = true
 					}
 					stopRunning = true
-				} else if OopWord == "TRY" {
+				} else if E.OopWord == "TRY" {
 					OopReadDirection(statId, position, &deltaX, &deltaY)
-					if !ElementDefs[Board.Tiles[int16(stat.X)+deltaX][int16(stat.Y)+deltaY].Element].Walkable {
+					if !ElementDefs[E.Board.Tiles[int16(stat.X)+deltaX][int16(stat.Y)+deltaY].Element].Walkable {
 						ElementPushablePush(int16(stat.X)+deltaX, int16(stat.Y)+deltaY, deltaX, deltaY)
 					}
-					if ElementDefs[Board.Tiles[int16(stat.X)+deltaX][int16(stat.Y)+deltaY].Element].Walkable {
+					if ElementDefs[E.Board.Tiles[int16(stat.X)+deltaX][int16(stat.Y)+deltaY].Element].Walkable {
 						MoveStat(statId, int16(stat.X)+deltaX, int16(stat.Y)+deltaY)
 						stopRunning = true
 					} else {
 						goto ReadCommand
 					}
-				} else if OopWord == "WALK" {
+				} else if E.OopWord == "WALK" {
 					OopReadDirection(statId, position, &deltaX, &deltaY)
 					stat.StepX = deltaX
 					stat.StepY = deltaY
-				} else if OopWord == "SET" {
+				} else if E.OopWord == "SET" {
 					OopReadWord(statId, position)
-					WorldSetFlag(OopWord)
-				} else if OopWord == "CLEAR" {
+					WorldSetFlag(E.OopWord)
+				} else if E.OopWord == "CLEAR" {
 					OopReadWord(statId, position)
-					WorldClearFlag(OopWord)
-				} else if OopWord == "IF" {
+					WorldClearFlag(E.OopWord)
+				} else if E.OopWord == "IF" {
 					OopReadWord(statId, position)
 					if OopCheckCondition(statId, position) {
 						goto ReadCommand
 					}
-				} else if OopWord == "SHOOT" {
+				} else if E.OopWord == "SHOOT" {
 					OopReadDirection(statId, position, &deltaX, &deltaY)
 					if BoardShoot(E_BULLET, int16(stat.X), int16(stat.Y), deltaX, deltaY, SHOT_SOURCE_ENEMY) {
 						SoundQueue(2, "0\x01&\x01")
 					}
 					stopRunning = true
-				} else if OopWord == "THROWSTAR" {
+				} else if E.OopWord == "THROWSTAR" {
 					OopReadDirection(statId, position, &deltaX, &deltaY)
 					if BoardShoot(E_STAR, int16(stat.X), int16(stat.Y), deltaX, deltaY, SHOT_SOURCE_ENEMY) {
 					}
 					stopRunning = true
-				} else if OopWord == "GIVE" || OopWord == "TAKE" {
-					if OopWord == "TAKE" {
+				} else if E.OopWord == "GIVE" || E.OopWord == "TAKE" {
+					if E.OopWord == "TAKE" {
 						counterSubtract = true
 					} else {
 						counterSubtract = false
 					}
 					OopReadWord(statId, position)
-					if OopWord == "HEALTH" {
-						counterPtr = &World.Info.Health
-					} else if OopWord == "AMMO" {
-						counterPtr = &World.Info.Ammo
-					} else if OopWord == "GEMS" {
-						counterPtr = &World.Info.Gems
-					} else if OopWord == "TORCHES" {
-						counterPtr = &World.Info.Torches
-					} else if OopWord == "SCORE" {
-						counterPtr = &World.Info.Score
-					} else if OopWord == "TIME" {
-						counterPtr = &World.Info.BoardTimeSec
+					if E.OopWord == "HEALTH" {
+						counterPtr = &E.World.Info.Health
+					} else if E.OopWord == "AMMO" {
+						counterPtr = &E.World.Info.Ammo
+					} else if E.OopWord == "GEMS" {
+						counterPtr = &E.World.Info.Gems
+					} else if E.OopWord == "TORCHES" {
+						counterPtr = &E.World.Info.Torches
+					} else if E.OopWord == "SCORE" {
+						counterPtr = &E.World.Info.Score
+					} else if E.OopWord == "TIME" {
+						counterPtr = &E.World.Info.BoardTimeSec
 					} else {
 						counterPtr = nil
 					}
 
 					if counterPtr != nil {
 						OopReadValue(statId, position)
-						if OopValue > 0 {
+						if E.OopValue > 0 {
 							if counterSubtract {
-								OopValue = -OopValue
+								E.OopValue = -E.OopValue
 							}
-							if *counterPtr+OopValue >= 0 {
-								*counterPtr += OopValue
+							if *counterPtr+E.OopValue >= 0 {
+								*counterPtr += E.OopValue
 							} else {
 								goto ReadCommand
 							}
 						}
 					}
 					GameUpdateSidebar()
-				} else if OopWord == "END" {
+				} else if E.OopWord == "END" {
 					*position = -1
-					OopChar = '\x00'
-				} else if OopWord == "ENDGAME" {
-					World.Info.Health = 0
-				} else if OopWord == "IDLE" {
+					E.OopChar = '\x00'
+				} else if E.OopWord == "ENDGAME" {
+					E.World.Info.Health = 0
+				} else if E.OopWord == "IDLE" {
 					stopRunning = true
-				} else if OopWord == "RESTART" {
+				} else if E.OopWord == "RESTART" {
 					*position = 0
 					lineFinished = false
-				} else if OopWord == "ZAP" {
+				} else if E.OopWord == "ZAP" {
 					OopReadWord(statId, position)
 					labelStatId = 0
-					for OopFindLabel(statId, OopWord, &labelStatId, &labelDataPos, "\r:") {
-						Board.Stats[labelStatId].Data = Replace(Board.Stats[labelStatId].Data, labelDataPos+1, '\'')
+					for OopFindLabel(statId, E.OopWord, &labelStatId, &labelDataPos, "\r:") {
+						E.Board.Stats[labelStatId].Data = Replace(E.Board.Stats[labelStatId].Data, labelDataPos+1, '\'')
 					}
-				} else if OopWord == "RESTORE" {
+				} else if E.OopWord == "RESTORE" {
 					OopReadWord(statId, position)
 					labelStatId = 0
-					for OopFindLabel(statId, OopWord, &labelStatId, &labelDataPos, "\r'") {
+					for OopFindLabel(statId, E.OopWord, &labelStatId, &labelDataPos, "\r'") {
 						for {
-							Board.Stats[labelStatId].Data = Replace(Board.Stats[labelStatId].Data, labelDataPos+1, ':')
-							labelDataPos = OopFindString(labelStatId, "\r'"+OopWord+"\r")
+							E.Board.Stats[labelStatId].Data = Replace(E.Board.Stats[labelStatId].Data, labelDataPos+1, ':')
+							labelDataPos = OopFindString(labelStatId, "\r'"+E.OopWord+"\r")
 							if labelDataPos <= 0 {
 								break
 							}
 						}
 					}
-				} else if OopWord == "LOCK" {
+				} else if E.OopWord == "LOCK" {
 					stat.P2 = 1
-				} else if OopWord == "UNLOCK" {
+				} else if E.OopWord == "UNLOCK" {
 					stat.P2 = 0
-				} else if OopWord == "SEND" {
+				} else if E.OopWord == "SEND" {
 					OopReadWord(statId, position)
-					if OopSend(statId, OopWord, false) {
+					if OopSend(statId, E.OopWord, false) {
 						lineFinished = false
 					}
-				} else if OopWord == "BECOME" {
+				} else if E.OopWord == "BECOME" {
 					if OopParseTile(&statId, position, &argTile) {
 						replaceStat = true
 						replaceTile.Element = argTile.Element
@@ -691,20 +691,20 @@ StartParsing:
 					} else {
 						OopError(statId, "Bad #BECOME")
 					}
-				} else if OopWord == "PUT" {
+				} else if E.OopWord == "PUT" {
 					OopReadDirection(statId, position, &deltaX, &deltaY)
 					if deltaX == 0 && deltaY == 0 {
 						OopError(statId, "Bad #PUT")
 					} else if !OopParseTile(&statId, position, &argTile) {
 						OopError(statId, "Bad #PUT")
 					} else if int16(stat.X)+deltaX > 0 && int16(stat.X)+deltaX <= BOARD_WIDTH && int16(stat.Y)+deltaY > 0 && int16(stat.Y)+deltaY < BOARD_HEIGHT {
-						if !ElementDefs[Board.Tiles[int16(stat.X)+deltaX][int16(stat.Y)+deltaY].Element].Walkable {
+						if !ElementDefs[E.Board.Tiles[int16(stat.X)+deltaX][int16(stat.Y)+deltaY].Element].Walkable {
 							ElementPushablePush(int16(stat.X)+deltaX, int16(stat.Y)+deltaY, deltaX, deltaY)
 						}
 						OopPlaceTile(int16(stat.X)+deltaX, int16(stat.Y)+deltaY, &argTile)
 					}
 
-				} else if OopWord == "CHANGE" {
+				} else if E.OopWord == "CHANGE" {
 					if !OopParseTile(&statId, position, &argTile) {
 						OopError(statId, "Bad #CHANGE")
 					}
@@ -719,38 +719,38 @@ StartParsing:
 					for FindTileOnBoard(&ix, &iy, argTile) {
 						OopPlaceTile(ix, iy, &argTile2)
 					}
-				} else if OopWord == "PLAY" {
+				} else if E.OopWord == "PLAY" {
 					textLine = SoundParse(OopReadLineToEnd(statId, position))
 					if Length(textLine) != 0 {
 						SoundQueue(-1, textLine)
 					}
 					lineFinished = false
-				} else if OopWord == "CYCLE" {
+				} else if E.OopWord == "CYCLE" {
 					OopReadValue(statId, position)
-					if OopValue > 0 {
-						stat.Cycle = OopValue
+					if E.OopValue > 0 {
+						stat.Cycle = E.OopValue
 					}
-				} else if OopWord == "CHAR" {
+				} else if E.OopWord == "CHAR" {
 					OopReadValue(statId, position)
-					if OopValue > 0 && OopValue <= 255 {
-						stat.P1 = byte(OopValue)
+					if E.OopValue > 0 && E.OopValue <= 255 {
+						stat.P1 = byte(E.OopValue)
 						BoardDrawTile(int16(stat.X), int16(stat.Y))
 					}
-				} else if OopWord == "DIE" {
+				} else if E.OopWord == "DIE" {
 					replaceStat = true
 					replaceTile.Element = E_EMPTY
 					replaceTile.Color = 0x0F
-				} else if OopWord == "BIND" {
+				} else if E.OopWord == "BIND" {
 					OopReadWord(statId, position)
 					bindStatId = 0
-					if OopIterateStat(statId, &bindStatId, OopWord) {
-						stat.Data = Board.Stats[bindStatId].Data
-						stat.DataLen = Board.Stats[bindStatId].DataLen
+					if OopIterateStat(statId, &bindStatId, E.OopWord) {
+						stat.Data = E.Board.Stats[bindStatId].Data
+						stat.DataLen = E.Board.Stats[bindStatId].DataLen
 						*position = 0
 					}
 				} else {
-					textLine = OopWord
-					if OopSend(statId, OopWord, false) {
+					textLine = E.OopWord
+					if OopSend(statId, E.OopWord, false) {
 						lineFinished = false
 					} else {
 						if Pos(':', textLine) <= 0 {
@@ -763,14 +763,14 @@ StartParsing:
 			if lineFinished {
 				OopSkipLine(statId, position)
 			}
-		} else if OopChar == '\r' {
+		} else if E.OopChar == '\r' {
 			if textWindow.LineCount > 0 {
 				TextWindowAppend(&textWindow, "")
 			}
-		} else if OopChar == '\x00' {
+		} else if E.OopChar == '\x00' {
 			endOfProgram = true
 		} else {
-			textLine = string([]byte{OopChar})
+			textLine = string([]byte{E.OopChar})
 			textLine += OopReadLineToEnd(statId, position)
 			TextWindowAppend(&textWindow, textLine)
 		}
@@ -782,13 +782,13 @@ StartParsing:
 	if repeatInsNextTick {
 		*position = lastPosition
 	}
-	if OopChar == '\x00' {
+	if E.OopChar == '\x00' {
 		*position = -1
 	}
 	if textWindow.LineCount > 1 {
 		namePosition = 0
 		OopReadChar(statId, &namePosition)
-		if OopChar == '@' {
+		if E.OopChar == '@' {
 			name = OopReadLineToEnd(statId, &namePosition)
 		}
 		if Length(name) == 0 {

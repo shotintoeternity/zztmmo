@@ -35,14 +35,14 @@ func StateHash() uint64 {
 
 	for x := 0; x <= BOARD_WIDTH+1; x++ {
 		for y := 0; y <= BOARD_HEIGHT+1; y++ {
-			hashByte(h, Board.Tiles[x][y].Element)
-			hashByte(h, Board.Tiles[x][y].Color)
+			hashByte(h, E.Board.Tiles[x][y].Element)
+			hashByte(h, E.Board.Tiles[x][y].Color)
 		}
 	}
 
-	hashInt16(h, Board.StatCount)
-	for i := int16(0); i <= Board.StatCount; i++ {
-		stat := &Board.Stats[i]
+	hashInt16(h, E.Board.StatCount)
+	for i := int16(0); i <= E.Board.StatCount; i++ {
+		stat := &E.Board.Stats[i]
 		hashByte(h, stat.X)
 		hashByte(h, stat.Y)
 		hashInt16(h, stat.StepX)
@@ -60,8 +60,8 @@ func StateHash() uint64 {
 		hashInt16(h, stat.DataLen)
 	}
 
-	hashWorldInfo(h, &World.Info)
-	hashUint32(h, RandSeed)
+	hashWorldInfo(h, &E.World.Info)
+	hashUint32(h, E.RandSeed)
 
 	return h.Sum64()
 }
@@ -103,14 +103,14 @@ func TestTownReplayDeterminism(t *testing.T) {
 func runTownReplay(t *testing.T) []string {
 	t.Helper()
 
-	prevHeadless := Headless
-	prevInput := activeInput
+	prevHeadless := E.Headless
+	prevInput := E.ActiveInput
 	defer func() {
-		Headless = prevHeadless
+		E.Headless = prevHeadless
 		SetInputSource(prevInput)
 	}()
 
-	Headless = true
+	E.Headless = true
 	VideoInstall()
 	TextWindowInit(5, 3, 50, 18)
 
@@ -121,12 +121,12 @@ func runTownReplay(t *testing.T) []string {
 	InputLastDeltaX = 0
 	InputLastDeltaY = 0
 	InputKeyBuffer = ""
-	PlayerDirX = 0
-	PlayerDirY = 0
-	GamePlayExitRequested = false
-	GamePaused = false
-	TickSpeed = 4
-	TickTimeDuration = int16(TickSpeed) * 2
+	E.PlayerDirX = 0
+	E.PlayerDirY = 0
+	E.GamePlayExitRequested = false
+	E.GamePaused = false
+	E.TickSpeed = 4
+	E.TickTimeDuration = int16(E.TickSpeed) * 2
 	SoundBlockQueueing = false
 	SoundClearQueue()
 
@@ -141,20 +141,20 @@ func runTownReplay(t *testing.T) []string {
 		t.Fatalf("WorldLoad(%q, %q) failed", worldBase, ".ZZT")
 	}
 
-	GameStateElement = E_PLAYER
-	GamePaused = false
-	GamePlayExitRequested = false
-	Board.Tiles[Board.Stats[0].X][Board.Stats[0].Y].Element = E_PLAYER
-	Board.Tiles[Board.Stats[0].X][Board.Stats[0].Y].Color = ElementDefs[E_PLAYER].Color
+	E.GameStateElement = E_PLAYER
+	E.GamePaused = false
+	E.GamePlayExitRequested = false
+	E.Board.Tiles[E.Board.Stats[0].X][E.Board.Stats[0].Y].Element = E_PLAYER
+	E.Board.Tiles[E.Board.Stats[0].X][E.Board.Stats[0].Y].Color = ElementDefs[E_PLAYER].Color
 	BoardEnter()
-	CurrentTick = Random(100)
-	CurrentStatTicked = Board.StatCount + 1
+	E.CurrentTick = Random(100)
+	E.CurrentStatTicked = E.Board.StatCount + 1
 	SetInputSource(&ScriptedInput{Ticks: townReplayScript()})
 
 	hashes := make([]string, 0, townReplaySteps/townReplayInterval)
 	for step := 1; step <= townReplaySteps; step++ {
 		GameStep()
-		if GamePlayExitRequested {
+		if E.GamePlayExitRequested {
 			t.Fatalf("replay requested exit at step %d", step)
 		}
 		if step%townReplayInterval == 0 {

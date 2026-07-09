@@ -45,19 +45,19 @@ func GenerateTransitionTable() {
 		ix, iy int16
 		t      TCoord
 	)
-	TransitionTableSize = 0
+	E.TransitionTableSize = 0
 	for iy = 1; iy <= BOARD_HEIGHT; iy++ {
 		for ix = 1; ix <= BOARD_WIDTH; ix++ {
-			TransitionTableSize++
-			TransitionTable[TransitionTableSize-1].X = ix
-			TransitionTable[TransitionTableSize-1].Y = iy
+			E.TransitionTableSize++
+			E.TransitionTable[E.TransitionTableSize-1].X = ix
+			E.TransitionTable[E.TransitionTableSize-1].Y = iy
 		}
 	}
-	for ix = 1; ix <= TransitionTableSize; ix++ {
-		iy = Random(TransitionTableSize) + 1
-		t = TransitionTable[iy-1]
-		TransitionTable[iy-1] = TransitionTable[ix-1]
-		TransitionTable[ix-1] = t
+	for ix = 1; ix <= E.TransitionTableSize; ix++ {
+		iy = Random(E.TransitionTableSize) + 1
+		t = E.TransitionTable[iy-1]
+		E.TransitionTable[iy-1] = E.TransitionTable[ix-1]
+		E.TransitionTable[ix-1] = t
 	}
 }
 
@@ -67,26 +67,26 @@ func BoardClose() {
 		ptr    []byte
 		rle    TRleTile
 	)
-	ptr = IoTmpBuf[:]
-	StoreString(ptr[:SizeOfBoardName], Board.Name)
+	ptr = E.IoTmpBuf[:]
+	StoreString(ptr[:SizeOfBoardName], E.Board.Name)
 	ptr = ptr[SizeOfBoardName:]
 
 	ix = 1
 	iy = 1
 	rle.Count = 1
-	rle.Tile = Board.Tiles[ix][iy]
+	rle.Tile = E.Board.Tiles[ix][iy]
 	for {
 		ix++
 		if ix > BOARD_WIDTH {
 			ix = 1
 			iy++
 		}
-		if Board.Tiles[ix][iy].Color == rle.Tile.Color && Board.Tiles[ix][iy].Element == rle.Tile.Element && rle.Count < 255 && iy <= BOARD_HEIGHT {
+		if E.Board.Tiles[ix][iy].Color == rle.Tile.Color && E.Board.Tiles[ix][iy].Element == rle.Tile.Element && rle.Count < 255 && iy <= BOARD_HEIGHT {
 			rle.Count++
 		} else {
 			StoreRleTile(ptr[:SizeOfRleTile], rle)
 			ptr = ptr[SizeOfRleTile:]
-			rle.Tile = Board.Tiles[ix][iy]
+			rle.Tile = E.Board.Tiles[ix][iy]
 			rle.Count = 1
 		}
 		if iy > BOARD_HEIGHT {
@@ -94,22 +94,22 @@ func BoardClose() {
 		}
 	}
 
-	StoreBoardInfo(ptr[:SizeOfBoardInfo], &Board.Info)
+	StoreBoardInfo(ptr[:SizeOfBoardInfo], &E.Board.Info)
 	ptr = ptr[SizeOfBoardInfo:]
 
-	StoreInt16(ptr[:2], Board.StatCount)
+	StoreInt16(ptr[:2], E.Board.StatCount)
 	ptr = ptr[2:]
 
-	for ix = 0; ix <= Board.StatCount; ix++ {
-		stat := &Board.Stats[ix]
+	for ix = 0; ix <= E.Board.StatCount; ix++ {
+		stat := &E.Board.Stats[ix]
 		if stat.DataLen > 0 {
 			for iy = 1; iy <= ix-1; iy++ {
-				if Board.Stats[iy].Data == stat.Data {
+				if E.Board.Stats[iy].Data == stat.Data {
 					stat.DataLen = -iy
 				}
 			}
 		}
-		StoreStat(ptr[:SizeOfStat], &Board.Stats[ix])
+		StoreStat(ptr[:SizeOfStat], &E.Board.Stats[ix])
 		ptr = ptr[SizeOfStat:]
 
 		if stat.DataLen > 0 {
@@ -118,10 +118,10 @@ func BoardClose() {
 		}
 	}
 
-	boardData := IoTmpBuf[:len(IoTmpBuf)-len(ptr)]
-	World.BoardLen[World.Info.CurrentBoard] = int16(len(boardData))
-	World.BoardData[World.Info.CurrentBoard] = make([]byte, len(boardData))
-	copy(World.BoardData[World.Info.CurrentBoard], boardData)
+	boardData := E.IoTmpBuf[:len(E.IoTmpBuf)-len(ptr)]
+	E.World.BoardLen[E.World.Info.CurrentBoard] = int16(len(boardData))
+	E.World.BoardData[E.World.Info.CurrentBoard] = make([]byte, len(boardData))
+	copy(E.World.BoardData[E.World.Info.CurrentBoard], boardData)
 }
 
 func BoardOpen(boardId int16) {
@@ -130,11 +130,11 @@ func BoardOpen(boardId int16) {
 		ix, iy int16
 		rle    TRleTile
 	)
-	if boardId > World.BoardCount {
-		boardId = World.Info.CurrentBoard
+	if boardId > E.World.BoardCount {
+		boardId = E.World.Info.CurrentBoard
 	}
-	ptr = World.BoardData[boardId]
-	Board.Name = LoadString(ptr[:SizeOfBoardName])
+	ptr = E.World.BoardData[boardId]
+	E.Board.Name = LoadString(ptr[:SizeOfBoardName])
 	ptr = ptr[SizeOfBoardName:]
 
 	ix = 1
@@ -145,7 +145,7 @@ func BoardOpen(boardId int16) {
 			rle = LoadRleTile(ptr[:SizeOfRleTile])
 			ptr = ptr[SizeOfRleTile:]
 		}
-		Board.Tiles[ix][iy] = rle.Tile
+		E.Board.Tiles[ix][iy] = rle.Tile
 		ix++
 		if ix > BOARD_WIDTH {
 			ix = 1
@@ -157,124 +157,124 @@ func BoardOpen(boardId int16) {
 		}
 	}
 
-	LoadBoardInfo(ptr[:SizeOfBoardInfo], &Board.Info)
+	LoadBoardInfo(ptr[:SizeOfBoardInfo], &E.Board.Info)
 	ptr = ptr[SizeOfBoardInfo:]
 
-	Board.StatCount = LoadInt16(ptr[:2])
+	E.Board.StatCount = LoadInt16(ptr[:2])
 	ptr = ptr[2:]
 
-	for ix = 0; ix <= Board.StatCount; ix++ {
-		stat := &Board.Stats[ix]
-		LoadStat(ptr[:SizeOfStat], &Board.Stats[ix])
+	for ix = 0; ix <= E.Board.StatCount; ix++ {
+		stat := &E.Board.Stats[ix]
+		LoadStat(ptr[:SizeOfStat], &E.Board.Stats[ix])
 		ptr = ptr[SizeOfStat:]
 
 		if stat.DataLen > 0 {
 			stat.Data = string(ptr[:stat.DataLen])
 			ptr = ptr[stat.DataLen:]
 		} else if stat.DataLen < 0 {
-			stat.Data = Board.Stats[-stat.DataLen].Data
-			stat.DataLen = Board.Stats[-stat.DataLen].DataLen
+			stat.Data = E.Board.Stats[-stat.DataLen].Data
+			stat.DataLen = E.Board.Stats[-stat.DataLen].DataLen
 		}
 
 	}
 
-	World.Info.CurrentBoard = boardId
+	E.World.Info.CurrentBoard = boardId
 }
 
 func BoardChange(boardId int16) {
-	Board.Tiles[Board.Stats[0].X][Board.Stats[0].Y].Element = E_PLAYER
-	Board.Tiles[Board.Stats[0].X][Board.Stats[0].Y].Color = ElementDefs[E_PLAYER].Color
+	E.Board.Tiles[E.Board.Stats[0].X][E.Board.Stats[0].Y].Element = E_PLAYER
+	E.Board.Tiles[E.Board.Stats[0].X][E.Board.Stats[0].Y].Color = ElementDefs[E_PLAYER].Color
 	BoardClose()
 	BoardOpen(boardId)
 }
 
 func BoardCreate() {
 	var ix, iy, i int16
-	Board.Name = ""
-	Board.Info.Message = ""
-	Board.Info.MaxShots = 255
-	Board.Info.IsDark = false
-	Board.Info.ReenterWhenZapped = false
-	Board.Info.TimeLimitSec = 0
+	E.Board.Name = ""
+	E.Board.Info.Message = ""
+	E.Board.Info.MaxShots = 255
+	E.Board.Info.IsDark = false
+	E.Board.Info.ReenterWhenZapped = false
+	E.Board.Info.TimeLimitSec = 0
 	for i = 0; i <= 3; i++ {
-		Board.Info.NeighborBoards[i] = 0
+		E.Board.Info.NeighborBoards[i] = 0
 	}
 	for ix = 0; ix <= BOARD_WIDTH+1; ix++ {
-		Board.Tiles[ix][0] = TileBoardEdge
-		Board.Tiles[ix][BOARD_HEIGHT+1] = TileBoardEdge
+		E.Board.Tiles[ix][0] = TileBoardEdge
+		E.Board.Tiles[ix][BOARD_HEIGHT+1] = TileBoardEdge
 	}
 	for iy = 0; iy <= BOARD_HEIGHT+1; iy++ {
-		Board.Tiles[0][iy] = TileBoardEdge
-		Board.Tiles[BOARD_WIDTH+1][iy] = TileBoardEdge
+		E.Board.Tiles[0][iy] = TileBoardEdge
+		E.Board.Tiles[BOARD_WIDTH+1][iy] = TileBoardEdge
 	}
 	for ix = 1; ix <= BOARD_WIDTH; ix++ {
 		for iy = 1; iy <= BOARD_HEIGHT; iy++ {
-			Board.Tiles[ix][iy].Element = E_EMPTY
-			Board.Tiles[ix][iy].Color = 0
+			E.Board.Tiles[ix][iy].Element = E_EMPTY
+			E.Board.Tiles[ix][iy].Color = 0
 		}
 	}
 	for ix = 1; ix <= BOARD_WIDTH; ix++ {
-		Board.Tiles[ix][1] = TileBorder
-		Board.Tiles[ix][BOARD_HEIGHT] = TileBorder
+		E.Board.Tiles[ix][1] = TileBorder
+		E.Board.Tiles[ix][BOARD_HEIGHT] = TileBorder
 	}
 	for iy = 1; iy <= BOARD_HEIGHT; iy++ {
-		Board.Tiles[1][iy] = TileBorder
-		Board.Tiles[BOARD_WIDTH][iy] = TileBorder
+		E.Board.Tiles[1][iy] = TileBorder
+		E.Board.Tiles[BOARD_WIDTH][iy] = TileBorder
 	}
-	Board.Tiles[BOARD_WIDTH/2][BOARD_HEIGHT/2].Element = E_PLAYER
-	Board.Tiles[BOARD_WIDTH/2][BOARD_HEIGHT/2].Color = ElementDefs[E_PLAYER].Color
-	Board.StatCount = 0
-	Board.Stats[0].X = BOARD_WIDTH / 2
-	Board.Stats[0].Y = BOARD_HEIGHT / 2
-	Board.Stats[0].Cycle = 1
-	Board.Stats[0].Under.Element = E_EMPTY
-	Board.Stats[0].Under.Color = 0
-	Board.Stats[0].Data = ""
-	Board.Stats[0].DataLen = 0
+	E.Board.Tiles[BOARD_WIDTH/2][BOARD_HEIGHT/2].Element = E_PLAYER
+	E.Board.Tiles[BOARD_WIDTH/2][BOARD_HEIGHT/2].Color = ElementDefs[E_PLAYER].Color
+	E.Board.StatCount = 0
+	E.Board.Stats[0].X = BOARD_WIDTH / 2
+	E.Board.Stats[0].Y = BOARD_HEIGHT / 2
+	E.Board.Stats[0].Cycle = 1
+	E.Board.Stats[0].Under.Element = E_EMPTY
+	E.Board.Stats[0].Under.Color = 0
+	E.Board.Stats[0].Data = ""
+	E.Board.Stats[0].DataLen = 0
 }
 
 func WorldCreate() {
 	var i int16
 	InitElementsGame()
-	World.BoardCount = 0
-	World.BoardLen[0] = 0
+	E.World.BoardCount = 0
+	E.World.BoardLen[0] = 0
 	InitEditorStatSettings()
 	ResetMessageNotShownFlags()
 	BoardCreate()
-	World.Info.IsSave = false
-	World.Info.CurrentBoard = 0
-	World.Info.Ammo = 0
-	World.Info.Gems = 0
-	World.Info.Health = 100
-	World.Info.EnergizerTicks = 0
-	World.Info.Torches = 0
-	World.Info.TorchTicks = 0
-	World.Info.Score = 0
-	World.Info.BoardTimeSec = 0
-	World.Info.BoardTimeHsec = 0
+	E.World.Info.IsSave = false
+	E.World.Info.CurrentBoard = 0
+	E.World.Info.Ammo = 0
+	E.World.Info.Gems = 0
+	E.World.Info.Health = 100
+	E.World.Info.EnergizerTicks = 0
+	E.World.Info.Torches = 0
+	E.World.Info.TorchTicks = 0
+	E.World.Info.Score = 0
+	E.World.Info.BoardTimeSec = 0
+	E.World.Info.BoardTimeHsec = 0
 	for i = 1; i <= 7; i++ {
-		World.Info.Keys[i-1] = false
+		E.World.Info.Keys[i-1] = false
 	}
 	for i = 1; i <= 10; i++ {
-		World.Info.Flags[i-1] = ""
+		E.World.Info.Flags[i-1] = ""
 	}
 	BoardChange(0)
-	Board.Name = "Title screen"
-	LoadedGameFileName = ""
-	World.Info.Name = ""
+	E.Board.Name = "Title screen"
+	E.LoadedGameFileName = ""
+	E.World.Info.Name = ""
 }
 
 func TransitionDrawToFill(chr byte, color int16) {
 	var i int16
-	for i = 1; i <= TransitionTableSize; i++ {
-		VideoWriteText(TransitionTable[i-1].X-1, TransitionTable[i-1].Y-1, byte(color), string([]byte{chr}))
+	for i = 1; i <= E.TransitionTableSize; i++ {
+		VideoWriteText(E.TransitionTable[i-1].X-1, E.TransitionTable[i-1].Y-1, byte(color), string([]byte{chr}))
 	}
 }
 
 func TileToColorAndChar(x, y int16) (color, char byte) {
 	var ch byte
-	tile := &Board.Tiles[x][y]
-	if !Board.Info.IsDark || ElementDefs[Board.Tiles[x][y].Element].VisibleInDark || World.Info.TorchTicks > 0 && Sqr(int16(Board.Stats[0].X)-x)+Sqr(int16(Board.Stats[0].Y)-y)*2 < TORCH_DIST_SQR || ForceDarknessOff {
+	tile := &E.Board.Tiles[x][y]
+	if !E.Board.Info.IsDark || ElementDefs[E.Board.Tiles[x][y].Element].VisibleInDark || E.World.Info.TorchTicks > 0 && Sqr(int16(E.Board.Stats[0].X)-x)+Sqr(int16(E.Board.Stats[0].Y)-y)*2 < TORCH_DIST_SQR || E.ForceDarknessOff {
 		if tile.Element == E_EMPTY {
 			return 0x0F, ' '
 		} else if ElementDefs[tile.Element].HasDrawProc {
@@ -284,9 +284,9 @@ func TileToColorAndChar(x, y int16) (color, char byte) {
 			return tile.Color, ElementDefs[tile.Element].Character
 		} else {
 			if tile.Element == E_TEXT_WHITE {
-				return 0x0F, Board.Tiles[x][y].Color
+				return 0x0F, E.Board.Tiles[x][y].Color
 			} else {
-				return byte((int16(tile.Element-E_TEXT_MIN)+1)*16 + 0x0F), Board.Tiles[x][y].Color
+				return byte((int16(tile.Element-E_TEXT_MIN)+1)*16 + 0x0F), E.Board.Tiles[x][y].Color
 			}
 		}
 	} else {
@@ -314,8 +314,8 @@ func BoardDrawBorder() {
 func TransitionDrawToBoard() {
 	var i int16
 	BoardDrawBorder()
-	for i = 1; i <= TransitionTableSize; i++ {
-		table := &TransitionTable[i-1]
+	for i = 1; i <= E.TransitionTableSize; i++ {
+		table := &E.TransitionTable[i-1]
 		BoardDrawTile(table.X, table.Y)
 	}
 }
@@ -589,36 +589,36 @@ func WorldLoad(filename, extension string, titleOnly bool) (WorldLoad bool) {
 	defer f.Close()
 
 	WorldUnload()
-	_, err = f.Read(IoTmpBuf[:512])
+	_, err = f.Read(E.IoTmpBuf[:512])
 	if DisplayIOError(err) {
 		return
 	}
 
-	ptr = IoTmpBuf[:]
-	World.BoardCount = LoadInt16(ptr[:2])
+	ptr = E.IoTmpBuf[:]
+	E.World.BoardCount = LoadInt16(ptr[:2])
 	ptr = ptr[2:]
 
-	if World.BoardCount < 0 {
-		if World.BoardCount != -1 {
+	if E.World.BoardCount < 0 {
+		if E.World.BoardCount != -1 {
 			VideoWriteText(63, 5, 0x1E, "You need a newer")
 			VideoWriteText(63, 6, 0x1E, " version of ZZT!")
 			return
 		} else {
-			World.BoardCount = LoadInt16(ptr[:2])
+			E.World.BoardCount = LoadInt16(ptr[:2])
 			ptr = ptr[2:]
 		}
 	}
 
-	LoadWorldInfo(ptr[:SizeOfWorldInfo], &World.Info)
+	LoadWorldInfo(ptr[:SizeOfWorldInfo], &E.World.Info)
 	ptr = ptr[SizeOfWorldInfo:]
 
 	if titleOnly {
-		World.BoardCount = 0
-		World.Info.CurrentBoard = 0
-		World.Info.IsSave = true
+		E.World.BoardCount = 0
+		E.World.Info.CurrentBoard = 0
+		E.World.Info.IsSave = true
 	}
 
-	for boardId = 0; boardId <= World.BoardCount; boardId++ {
+	for boardId = 0; boardId <= E.World.BoardCount; boardId++ {
 		SidebarAnimateLoading()
 
 		lenBuf := make([]byte, 2)
@@ -626,17 +626,17 @@ func WorldLoad(filename, extension string, titleOnly bool) (WorldLoad bool) {
 		if DisplayIOError(err) {
 			return
 		}
-		World.BoardLen[boardId] = LoadInt16(lenBuf)
+		E.World.BoardLen[boardId] = LoadInt16(lenBuf)
 
-		World.BoardData[boardId] = make([]byte, World.BoardLen[boardId])
-		_, err = f.Read(World.BoardData[boardId])
+		E.World.BoardData[boardId] = make([]byte, E.World.BoardLen[boardId])
+		_, err = f.Read(E.World.BoardData[boardId])
 		if DisplayIOError(err) {
 			return
 		}
 	}
 
-	BoardOpen(World.Info.CurrentBoard)
-	LoadedGameFileName = filename
+	BoardOpen(E.World.Info.CurrentBoard)
+	E.LoadedGameFileName = filename
 	WorldLoad = true
 	HighScoresLoad()
 	SidebarClearLine(5)
@@ -652,7 +652,7 @@ func WorldSave(filename, extension string) {
 
 	BoardClose()
 	defer func() {
-		BoardOpen(World.Info.CurrentBoard)
+		BoardOpen(E.World.Info.CurrentBoard)
 		SidebarClearLine(5)
 	}()
 
@@ -664,30 +664,30 @@ func WorldSave(filename, extension string) {
 	}
 	defer f.Close()
 
-	ptr = IoTmpBuf[:]
+	ptr = E.IoTmpBuf[:]
 	for i := 0; i < 512; i++ {
 		ptr[0] = 0
 	}
 	StoreInt16(ptr[:2], -1)
 	ptr = ptr[2:]
-	StoreInt16(ptr[:2], World.BoardCount)
+	StoreInt16(ptr[:2], E.World.BoardCount)
 	ptr = ptr[2:]
-	StoreWorldInfo(ptr[:SizeOfWorldInfo], &World.Info)
+	StoreWorldInfo(ptr[:SizeOfWorldInfo], &E.World.Info)
 	ptr = ptr[SizeOfWorldInfo:]
-	_, err = f.Write(IoTmpBuf[:512])
+	_, err = f.Write(E.IoTmpBuf[:512])
 	if DisplayIOError(err) {
 		return
 	}
 
-	for i = 0; i <= World.BoardCount; i++ {
+	for i = 0; i <= E.World.BoardCount; i++ {
 		lenBuf := make([]byte, 2)
-		StoreInt16(lenBuf, World.BoardLen[i])
+		StoreInt16(lenBuf, E.World.BoardLen[i])
 		_, err = f.Write(lenBuf)
 		if DisplayIOError(err) {
 			return
 		}
 
-		_, err = f.Write(World.BoardData[i])
+		_, err = f.Write(E.World.BoardData[i])
 		if DisplayIOError(err) {
 			return
 		}
@@ -701,7 +701,7 @@ func GameWorldSave(prompt string, filename *string, extension string) {
 	if InputKeyPressed != KEY_ESCAPE && Length(newFilename) != 0 {
 		*filename = newFilename
 		if extension == ".ZZT" {
-			World.Info.Name = *filename
+			E.World.Info.Name = *filename
 		}
 		WorldSave(*filename, extension)
 	}
@@ -727,9 +727,9 @@ func GameWorldLoad(extension string) (GameWorldLoad bool) {
 	if err == nil {
 		for _, match := range matches {
 			entryName = match[:len(match)-4]
-			for i = 1; i <= WorldFileDescCount; i++ {
-				if entryName == WorldFileDescKeys[i-1] {
-					entryName = WorldFileDescValues[i-1]
+			for i = 1; i <= E.WorldFileDescCount; i++ {
+				if entryName == E.WorldFileDescKeys[i-1] {
+					entryName = E.WorldFileDescValues[i-1]
 				}
 			}
 			TextWindowAppend(&textWindow, entryName)
@@ -760,23 +760,23 @@ func HighScoresAdd(score int16) {
 		i, listPos int16
 	)
 	listPos = 1
-	for listPos <= 30 && score < HighScoreList[listPos-1].Score {
+	for listPos <= 30 && score < E.HighScoreList[listPos-1].Score {
 		listPos++
 	}
 	if listPos <= 30 && score > 0 {
 		for i = 29; i >= listPos; i-- {
-			HighScoreList[i+1-1] = HighScoreList[i-1]
+			E.HighScoreList[i+1-1] = E.HighScoreList[i-1]
 		}
-		HighScoreList[listPos-1].Score = score
-		HighScoreList[listPos-1].Name = "-- You! --"
+		E.HighScoreList[listPos-1].Score = score
+		E.HighScoreList[listPos-1].Name = "-- You! --"
 		HighScoresInitTextWindow(&textWindow)
 		textWindow.LinePos = listPos
-		textWindow.Title = "New high score for " + World.Info.Name
+		textWindow.Title = "New high score for " + E.World.Info.Name
 		TextWindowDrawOpen(&textWindow)
 		TextWindowDraw(&textWindow, false, false)
 		name = ""
 		PopupPromptString("Congratulations!  Enter your name:", &name)
-		HighScoreList[listPos-1].Name = name
+		E.HighScoreList[listPos-1].Name = name
 		HighScoresSave()
 		TextWindowDrawClose(&textWindow)
 		TransitionDrawToBoard()
@@ -785,31 +785,31 @@ func HighScoresAdd(score int16) {
 }
 
 func HighScoresLoad() {
-	f, err := os.Open(World.Info.Name + ".HI")
+	f, err := os.Open(E.World.Info.Name + ".HI")
 	if err == nil {
 		buf := make([]byte, SizeOfHighScoreList)
 		_, err = f.Read(buf)
 		if err == nil {
-			LoadHighScoreList(buf, HighScoreList[:])
+			LoadHighScoreList(buf, E.HighScoreList[:])
 		}
 		f.Close()
 	}
 	if err != nil {
 		for i := 0; i < HIGH_SCORE_COUNT; i++ {
-			HighScoreList[i].Name = ""
-			HighScoreList[i].Score = -1
+			E.HighScoreList[i].Name = ""
+			E.HighScoreList[i].Score = -1
 		}
 	}
 }
 
 func HighScoresSave() {
-	f, err := os.Create(World.Info.Name + ".HI")
+	f, err := os.Create(E.World.Info.Name + ".HI")
 	if err != nil {
 		DisplayIOError(err)
 		return
 	}
 	buf := make([]byte, SizeOfHighScoreList)
-	StoreHighScoreList(buf, HighScoreList[:])
+	StoreHighScoreList(buf, E.HighScoreList[:])
 	_, err = f.Write(buf)
 	if err != nil {
 		DisplayIOError(err)
@@ -823,9 +823,9 @@ func HighScoresInitTextWindow(state *TTextWindowState) {
 	TextWindowAppend(state, "Score  Name")
 	TextWindowAppend(state, "-----  ----------------------------------")
 	for i := 0; i < HIGH_SCORE_COUNT; i++ {
-		if Length(HighScoreList[i].Name) != 0 {
-			scoreStr := StrWidth(HighScoreList[i].Score, 5)
-			TextWindowAppend(state, scoreStr+"  "+HighScoreList[i].Name)
+		if Length(E.HighScoreList[i].Name) != 0 {
+			scoreStr := StrWidth(E.HighScoreList[i].Score, 5)
+			TextWindowAppend(state, scoreStr+"  "+E.HighScoreList[i].Name)
 		}
 	}
 }
@@ -835,7 +835,7 @@ func HighScoresDisplay(linePos int16) {
 	state.LinePos = linePos
 	HighScoresInitTextWindow(&state)
 	if state.LineCount > 2 {
-		state.Title = "High scores for " + World.Info.Name
+		state.Title = "High scores for " + E.World.Info.Name
 		TextWindowDrawOpen(&state)
 		TextWindowSelect(&state, false, true)
 		TextWindowDrawClose(&state)
@@ -844,7 +844,7 @@ func HighScoresDisplay(linePos int16) {
 }
 
 func CopyStatDataToTextWindow(statId int16, state *TTextWindowState) {
-	stat := &Board.Stats[statId]
+	stat := &E.Board.Stats[statId]
 	TextWindowInitState(state)
 
 	var dataBuf []byte
@@ -860,24 +860,24 @@ func CopyStatDataToTextWindow(statId int16, state *TTextWindowState) {
 }
 
 func AddStat(tx, ty int16, element byte, color, tcycle int16, template TStat) {
-	if Board.StatCount < MAX_STAT {
-		Board.StatCount++
-		Board.Stats[Board.StatCount] = template
-		stat := &Board.Stats[Board.StatCount]
+	if E.Board.StatCount < MAX_STAT {
+		E.Board.StatCount++
+		E.Board.Stats[E.Board.StatCount] = template
+		stat := &E.Board.Stats[E.Board.StatCount]
 		stat.X = byte(tx)
 		stat.Y = byte(ty)
 		stat.Cycle = tcycle
-		stat.Under = Board.Tiles[tx][ty]
+		stat.Under = E.Board.Tiles[tx][ty]
 		stat.DataPos = 0
 		if template.Data != "" {
-			Board.Stats[Board.StatCount].Data = template.Data
+			E.Board.Stats[E.Board.StatCount].Data = template.Data
 		}
-		if ElementDefs[Board.Tiles[tx][ty].Element].PlaceableOnTop {
-			Board.Tiles[tx][ty].Color = byte(color&0x0F + int16(Board.Tiles[tx][ty].Color)&0x70)
+		if ElementDefs[E.Board.Tiles[tx][ty].Element].PlaceableOnTop {
+			E.Board.Tiles[tx][ty].Color = byte(color&0x0F + int16(E.Board.Tiles[tx][ty].Color)&0x70)
 		} else {
-			Board.Tiles[tx][ty].Color = byte(color)
+			E.Board.Tiles[tx][ty].Color = byte(color)
 		}
-		Board.Tiles[tx][ty].Element = element
+		E.Board.Tiles[tx][ty].Element = element
 		if ty > 0 {
 			BoardDrawTile(tx, ty)
 		}
@@ -886,44 +886,44 @@ func AddStat(tx, ty int16, element byte, color, tcycle int16, template TStat) {
 
 func RemoveStat(statId int16) {
 	var i int16
-	stat := &Board.Stats[statId]
+	stat := &E.Board.Stats[statId]
 	if stat.DataLen != 0 {
-		for i = 1; i <= Board.StatCount; i++ {
-			if Board.Stats[i].Data == stat.Data && i != statId {
+		for i = 1; i <= E.Board.StatCount; i++ {
+			if E.Board.Stats[i].Data == stat.Data && i != statId {
 				goto StatDataInUse
 			}
 		}
 		stat.Data = ""
 	}
 StatDataInUse:
-	if statId < CurrentStatTicked {
-		CurrentStatTicked--
+	if statId < E.CurrentStatTicked {
+		E.CurrentStatTicked--
 	}
 
-	Board.Tiles[stat.X][stat.Y] = stat.Under
+	E.Board.Tiles[stat.X][stat.Y] = stat.Under
 	if stat.Y > 0 {
 		BoardDrawTile(int16(stat.X), int16(stat.Y))
 	}
-	for i = 1; i <= Board.StatCount; i++ {
-		if Board.Stats[i].Follower >= statId {
-			if Board.Stats[i].Follower == statId {
-				Board.Stats[i].Follower = -1
+	for i = 1; i <= E.Board.StatCount; i++ {
+		if E.Board.Stats[i].Follower >= statId {
+			if E.Board.Stats[i].Follower == statId {
+				E.Board.Stats[i].Follower = -1
 			} else {
-				Board.Stats[i].Follower--
+				E.Board.Stats[i].Follower--
 			}
 		}
-		if Board.Stats[i].Leader >= statId {
-			if Board.Stats[i].Leader == statId {
-				Board.Stats[i].Leader = -1
+		if E.Board.Stats[i].Leader >= statId {
+			if E.Board.Stats[i].Leader == statId {
+				E.Board.Stats[i].Leader = -1
 			} else {
-				Board.Stats[i].Leader--
+				E.Board.Stats[i].Leader--
 			}
 		}
 	}
-	for i = statId + 1; i <= Board.StatCount; i++ {
-		Board.Stats[i-1] = Board.Stats[i]
+	for i = statId + 1; i <= E.Board.StatCount; i++ {
+		E.Board.Stats[i-1] = E.Board.Stats[i]
 	}
-	Board.StatCount--
+	E.Board.StatCount--
 }
 
 func GetStatIdAt(x, y int16) (GetStatIdAt int16) {
@@ -931,11 +931,11 @@ func GetStatIdAt(x, y int16) (GetStatIdAt int16) {
 	i = -1
 	for {
 		i++
-		if int16(Board.Stats[i].X) == x && int16(Board.Stats[i].Y) == y || i > Board.StatCount {
+		if int16(E.Board.Stats[i].X) == x && int16(E.Board.Stats[i].Y) == y || i > E.Board.StatCount {
 			break
 		}
 	}
-	if i > Board.StatCount {
+	if i > E.Board.StatCount {
 		GetStatIdAt = -1
 	} else {
 		GetStatIdAt = i
@@ -953,8 +953,8 @@ func BoardPrepareTileForPlacement(x, y int16) (BoardPrepareTileForPlacement bool
 		RemoveStat(statId)
 		result = true
 	} else if statId < 0 {
-		if !ElementDefs[Board.Tiles[x][y].Element].PlaceableOnTop {
-			Board.Tiles[x][y].Element = E_EMPTY
+		if !ElementDefs[E.Board.Tiles[x][y].Element].PlaceableOnTop {
+			E.Board.Tiles[x][y].Element = E_EMPTY
 		}
 		result = true
 	} else {
@@ -972,26 +972,26 @@ func MoveStat(statId int16, newX, newY int16) {
 		ix, iy     int16
 		oldX, oldY int16
 	)
-	stat := &Board.Stats[statId]
-	iUnder = Board.Stats[statId].Under
-	Board.Stats[statId].Under = Board.Tiles[newX][newY]
-	if Board.Tiles[stat.X][stat.Y].Element == E_PLAYER {
-		Board.Tiles[newX][newY].Color = Board.Tiles[stat.X][stat.Y].Color
-	} else if Board.Tiles[newX][newY].Element == E_EMPTY {
-		Board.Tiles[newX][newY].Color = byte(int16(Board.Tiles[stat.X][stat.Y].Color) & 0x0F)
+	stat := &E.Board.Stats[statId]
+	iUnder = E.Board.Stats[statId].Under
+	E.Board.Stats[statId].Under = E.Board.Tiles[newX][newY]
+	if E.Board.Tiles[stat.X][stat.Y].Element == E_PLAYER {
+		E.Board.Tiles[newX][newY].Color = E.Board.Tiles[stat.X][stat.Y].Color
+	} else if E.Board.Tiles[newX][newY].Element == E_EMPTY {
+		E.Board.Tiles[newX][newY].Color = byte(int16(E.Board.Tiles[stat.X][stat.Y].Color) & 0x0F)
 	} else {
-		Board.Tiles[newX][newY].Color = byte(int16(Board.Tiles[stat.X][stat.Y].Color)&0x0F + int16(Board.Tiles[newX][newY].Color)&0x70)
+		E.Board.Tiles[newX][newY].Color = byte(int16(E.Board.Tiles[stat.X][stat.Y].Color)&0x0F + int16(E.Board.Tiles[newX][newY].Color)&0x70)
 	}
 
-	Board.Tiles[newX][newY].Element = Board.Tiles[stat.X][stat.Y].Element
-	Board.Tiles[stat.X][stat.Y] = iUnder
+	E.Board.Tiles[newX][newY].Element = E.Board.Tiles[stat.X][stat.Y].Element
+	E.Board.Tiles[stat.X][stat.Y] = iUnder
 	oldX = int16(stat.X)
 	oldY = int16(stat.Y)
 	stat.X = byte(newX)
 	stat.Y = byte(newY)
 	BoardDrawTile(int16(stat.X), int16(stat.Y))
 	BoardDrawTile(oldX, oldY)
-	if statId == 0 && Board.Info.IsDark && World.Info.TorchTicks > 0 {
+	if statId == 0 && E.Board.Info.IsDark && E.World.Info.TorchTicks > 0 {
 		if Sqr(oldX-int16(stat.X))+Sqr(oldY-int16(stat.Y)) == 1 {
 			for ix = int16(stat.X) - TORCH_DX - 3; ix <= int16(stat.X)+TORCH_DX+3; ix++ {
 				if ix >= 1 && ix <= BOARD_WIDTH {
@@ -1054,32 +1054,32 @@ func GameUpdateSidebar() {
 		numStr string
 		i      int16
 	)
-	if GameStateElement == E_PLAYER {
-		if Board.Info.TimeLimitSec > 0 {
+	if E.GameStateElement == E_PLAYER {
+		if E.Board.Info.TimeLimitSec > 0 {
 			VideoWriteText(64, 6, 0x1E, "   Time:")
-			numStr = Str(Board.Info.TimeLimitSec - World.Info.BoardTimeSec)
+			numStr = Str(E.Board.Info.TimeLimitSec - E.World.Info.BoardTimeSec)
 			VideoWriteText(72, 6, 0x1E, numStr+" ")
 		} else {
 			SidebarClearLine(6)
 		}
-		if World.Info.Health < 0 {
-			World.Info.Health = 0
+		if E.World.Info.Health < 0 {
+			E.World.Info.Health = 0
 		}
-		numStr = Str(World.Info.Health)
+		numStr = Str(E.World.Info.Health)
 		VideoWriteText(72, 7, 0x1E, numStr+" ")
-		numStr = Str(World.Info.Ammo)
+		numStr = Str(E.World.Info.Ammo)
 		VideoWriteText(72, 8, 0x1E, numStr+"  ")
-		numStr = Str(World.Info.Torches)
+		numStr = Str(E.World.Info.Torches)
 		VideoWriteText(72, 9, 0x1E, numStr+" ")
-		numStr = Str(World.Info.Gems)
+		numStr = Str(E.World.Info.Gems)
 		VideoWriteText(72, 10, 0x1E, numStr+" ")
-		numStr = Str(World.Info.Score)
+		numStr = Str(E.World.Info.Score)
 		VideoWriteText(72, 11, 0x1E, numStr+" ")
-		if World.Info.TorchTicks == 0 {
+		if E.World.Info.TorchTicks == 0 {
 			VideoWriteText(75, 9, 0x16, "    ")
 		} else {
 			for i = 2; i <= 5; i++ {
-				if i <= World.Info.TorchTicks*5/TORCH_DURATION {
+				if i <= E.World.Info.TorchTicks*5/TORCH_DURATION {
 					VideoWriteText(73+i, 9, 0x16, "\xb1")
 				} else {
 					VideoWriteText(73+i, 9, 0x16, "\xb0")
@@ -1087,7 +1087,7 @@ func GameUpdateSidebar() {
 			}
 		}
 		for i = 1; i <= 7; i++ {
-			if World.Info.Keys[i-1] {
+			if E.World.Info.Keys[i-1] {
 				VideoWriteText(71+i, 12, byte(0x18+i), string([]byte{ElementDefs[E_KEY].Character}))
 			} else {
 				VideoWriteText(71+i, 12, 0x1F, " ")
@@ -1108,33 +1108,33 @@ func DisplayMessage(time int16, message string) {
 	}
 	if Length(message) != 0 {
 		AddStat(0, 0, E_MESSAGE_TIMER, 0, 1, StatTemplateDefault)
-		Board.Stats[Board.StatCount].P2 = byte(time / (TickTimeDuration + 1))
-		Board.Info.Message = message
+		E.Board.Stats[E.Board.StatCount].P2 = byte(time / (E.TickTimeDuration + 1))
+		E.Board.Info.Message = message
 	}
 }
 
 func DamageStat(attackerStatId int16) {
 	var oldX, oldY int16
-	stat := &Board.Stats[attackerStatId]
+	stat := &E.Board.Stats[attackerStatId]
 	if attackerStatId == 0 {
-		if World.Info.Health > 0 {
-			World.Info.Health -= 10
+		if E.World.Info.Health > 0 {
+			E.World.Info.Health -= 10
 			GameUpdateSidebar()
 			DisplayMessage(100, "Ouch!")
-			Board.Tiles[stat.X][stat.Y].Color = byte(0x70 + int16(ElementDefs[E_PLAYER].Color)%0x10)
-			if World.Info.Health > 0 {
-				World.Info.BoardTimeSec = 0
-				if Board.Info.ReenterWhenZapped {
+			E.Board.Tiles[stat.X][stat.Y].Color = byte(0x70 + int16(ElementDefs[E_PLAYER].Color)%0x10)
+			if E.World.Info.Health > 0 {
+				E.World.Info.BoardTimeSec = 0
+				if E.Board.Info.ReenterWhenZapped {
 					SoundQueue(4, " \x01#\x01'\x010\x01\x10\x01")
-					Board.Tiles[stat.X][stat.Y].Element = E_EMPTY
+					E.Board.Tiles[stat.X][stat.Y].Element = E_EMPTY
 					BoardDrawTile(int16(stat.X), int16(stat.Y))
 					oldX = int16(stat.X)
 					oldY = int16(stat.Y)
-					stat.X = Board.Info.StartPlayerX
-					stat.Y = Board.Info.StartPlayerY
+					stat.X = E.Board.Info.StartPlayerX
+					stat.Y = E.Board.Info.StartPlayerY
 					DrawPlayerSurroundings(oldX, oldY, 0)
 					DrawPlayerSurroundings(int16(stat.X), int16(stat.Y), 0)
-					GamePaused = true
+					E.GamePaused = true
 				}
 				SoundQueue(4, "\x10\x01 \x01\x13\x01#\x01")
 			} else {
@@ -1142,7 +1142,7 @@ func DamageStat(attackerStatId int16) {
 			}
 		}
 	} else {
-		switch Board.Tiles[stat.X][stat.Y].Element {
+		switch E.Board.Tiles[stat.X][stat.Y].Element {
 		case E_BULLET:
 			SoundQueue(3, " \x01")
 		case E_OBJECT:
@@ -1159,23 +1159,23 @@ func BoardDamageTile(x, y int16) {
 	if statId != -1 {
 		DamageStat(statId)
 	} else {
-		Board.Tiles[x][y].Element = E_EMPTY
+		E.Board.Tiles[x][y].Element = E_EMPTY
 		BoardDrawTile(x, y)
 	}
 }
 
 func BoardAttack(attackerStatId int16, x, y int16) {
-	if attackerStatId == 0 && World.Info.EnergizerTicks > 0 {
-		World.Info.Score = ElementDefs[Board.Tiles[x][y].Element].ScoreValue + World.Info.Score
+	if attackerStatId == 0 && E.World.Info.EnergizerTicks > 0 {
+		E.World.Info.Score = ElementDefs[E.Board.Tiles[x][y].Element].ScoreValue + E.World.Info.Score
 		GameUpdateSidebar()
 	} else {
 		DamageStat(attackerStatId)
 	}
-	if attackerStatId > 0 && attackerStatId <= CurrentStatTicked {
-		CurrentStatTicked--
+	if attackerStatId > 0 && attackerStatId <= E.CurrentStatTicked {
+		E.CurrentStatTicked--
 	}
-	if Board.Tiles[x][y].Element == E_PLAYER && World.Info.EnergizerTicks > 0 {
-		World.Info.Score = ElementDefs[Board.Tiles[Board.Stats[attackerStatId].X][Board.Stats[attackerStatId].Y].Element].ScoreValue + World.Info.Score
+	if E.Board.Tiles[x][y].Element == E_PLAYER && E.World.Info.EnergizerTicks > 0 {
+		E.World.Info.Score = ElementDefs[E.Board.Tiles[E.Board.Stats[attackerStatId].X][E.Board.Stats[attackerStatId].Y].Element].ScoreValue + E.World.Info.Score
 		GameUpdateSidebar()
 	} else {
 		BoardDamageTile(x, y)
@@ -1184,15 +1184,15 @@ func BoardAttack(attackerStatId int16, x, y int16) {
 }
 
 func BoardShoot(element byte, tx, ty, deltaX, deltaY int16, source int16) (BoardShoot bool) {
-	if ElementDefs[Board.Tiles[tx+deltaX][ty+deltaY].Element].Walkable || Board.Tiles[tx+deltaX][ty+deltaY].Element == E_WATER {
+	if ElementDefs[E.Board.Tiles[tx+deltaX][ty+deltaY].Element].Walkable || E.Board.Tiles[tx+deltaX][ty+deltaY].Element == E_WATER {
 		AddStat(tx+deltaX, ty+deltaY, element, int16(ElementDefs[element].Color), 1, StatTemplateDefault)
-		stat := &Board.Stats[Board.StatCount]
+		stat := &E.Board.Stats[E.Board.StatCount]
 		stat.P1 = byte(source)
 		stat.StepX = deltaX
 		stat.StepY = deltaY
 		stat.P2 = 100
 		BoardShoot = true
-	} else if Board.Tiles[tx+deltaX][ty+deltaY].Element == E_BREAKABLE || ElementDefs[Board.Tiles[tx+deltaX][ty+deltaY].Element].Destructible && Board.Tiles[tx+deltaX][ty+deltaY].Element == E_PLAYER == (source != 0) && World.Info.EnergizerTicks <= 0 {
+	} else if E.Board.Tiles[tx+deltaX][ty+deltaY].Element == E_BREAKABLE || ElementDefs[E.Board.Tiles[tx+deltaX][ty+deltaY].Element].Destructible && E.Board.Tiles[tx+deltaX][ty+deltaY].Element == E_PLAYER == (source != 0) && E.World.Info.EnergizerTicks <= 0 {
 		BoardDamageTile(tx+deltaX, ty+deltaY)
 		SoundQueue(2, "\x10\x01")
 		BoardShoot = true
@@ -1215,13 +1215,13 @@ func CalcDirectionRnd(deltaX, deltaY *int16) {
 func CalcDirectionSeek(x, y int16, deltaX, deltaY *int16) {
 	*deltaX = 0
 	*deltaY = 0
-	if Random(2) < 1 || int16(Board.Stats[0].Y) == y {
-		*deltaX = Signum(int16(Board.Stats[0].X) - x)
+	if Random(2) < 1 || int16(E.Board.Stats[0].Y) == y {
+		*deltaX = Signum(int16(E.Board.Stats[0].X) - x)
 	}
 	if *deltaX == 0 {
-		*deltaY = Signum(int16(Board.Stats[0].Y) - y)
+		*deltaY = Signum(int16(E.Board.Stats[0].Y) - y)
 	}
-	if World.Info.EnergizerTicks > 0 {
+	if E.World.Info.EnergizerTicks > 0 {
 		*deltaX = -*deltaX
 		*deltaY = -*deltaY
 	}
@@ -1233,13 +1233,13 @@ func TransitionDrawBoardChange() {
 }
 
 func BoardEnter() {
-	Board.Info.StartPlayerX = Board.Stats[0].X
-	Board.Info.StartPlayerY = Board.Stats[0].Y
-	if Board.Info.IsDark && MessageHintTorchNotShown {
+	E.Board.Info.StartPlayerX = E.Board.Stats[0].X
+	E.Board.Info.StartPlayerY = E.Board.Stats[0].Y
+	if E.Board.Info.IsDark && E.MessageHintTorchNotShown {
 		DisplayMessage(200, "Room is dark - you need to light a torch!")
-		MessageHintTorchNotShown = false
+		E.MessageHintTorchNotShown = false
 	}
-	World.Info.BoardTimeSec = 0
+	E.World.Info.BoardTimeSec = 0
 	GameUpdateSidebar()
 }
 
@@ -1249,24 +1249,24 @@ func BoardPassageTeleport(x, y int16) {
 		ix, iy     int16
 		newX, newY int16
 	)
-	col = Board.Tiles[x][y].Color
-	BoardChange(int16(Board.Stats[GetStatIdAt(x, y)].P3))
+	col = E.Board.Tiles[x][y].Color
+	BoardChange(int16(E.Board.Stats[GetStatIdAt(x, y)].P3))
 	newX = 0
 	for ix = 1; ix <= BOARD_WIDTH; ix++ {
 		for iy = 1; iy <= BOARD_HEIGHT; iy++ {
-			if Board.Tiles[ix][iy].Element == E_PASSAGE && Board.Tiles[ix][iy].Color == col {
+			if E.Board.Tiles[ix][iy].Element == E_PASSAGE && E.Board.Tiles[ix][iy].Color == col {
 				newX = ix
 				newY = iy
 			}
 		}
 	}
-	Board.Tiles[Board.Stats[0].X][Board.Stats[0].Y].Element = E_EMPTY
-	Board.Tiles[Board.Stats[0].X][Board.Stats[0].Y].Color = 0
+	E.Board.Tiles[E.Board.Stats[0].X][E.Board.Stats[0].Y].Element = E_EMPTY
+	E.Board.Tiles[E.Board.Stats[0].X][E.Board.Stats[0].Y].Color = 0
 	if newX != 0 {
-		Board.Stats[0].X = byte(newX)
-		Board.Stats[0].Y = byte(newY)
+		E.Board.Stats[0].X = byte(newX)
+		E.Board.Stats[0].Y = byte(newY)
 	}
-	GamePaused = true
+	E.GamePaused = true
 	SoundQueue(4, "0\x014\x017\x011\x015\x018\x012\x016\x019\x013\x017\x01:\x014\x018\x01@\x01")
 	TransitionDrawBoardChange()
 	BoardEnter()
@@ -1295,29 +1295,29 @@ func GameDebugPrompt() {
 			WorldClearFlag(input)
 		}
 	}
-	DebugEnabled = WorldGetFlagPosition("DEBUG") >= 0
+	E.DebugEnabled = WorldGetFlagPosition("DEBUG") >= 0
 	if input == "HEALTH" {
-		World.Info.Health += 50
+		E.World.Info.Health += 50
 	} else if input == "AMMO" {
-		World.Info.Ammo += 5
+		E.World.Info.Ammo += 5
 	} else if input == "KEYS" {
 		for i = 1; i <= 7; i++ {
-			World.Info.Keys[i-1] = true
+			E.World.Info.Keys[i-1] = true
 		}
 	} else if input == "TORCHES" {
-		World.Info.Torches += 3
+		E.World.Info.Torches += 3
 	} else if input == "TIME" {
-		World.Info.BoardTimeSec -= 30
+		E.World.Info.BoardTimeSec -= 30
 	} else if input == "GEMS" {
-		World.Info.Gems += 5
+		E.World.Info.Gems += 5
 	} else if input == "DARK" {
-		Board.Info.IsDark = toggle
+		E.Board.Info.IsDark = toggle
 		TransitionDrawToBoard()
 	} else if input == "ZAP" {
 		for i = 0; i <= 3; i++ {
-			BoardDamageTile(int16(Board.Stats[0].X)+NeighborDeltaX[i], int16(Board.Stats[0].Y)+NeighborDeltaY[i])
-			Board.Tiles[int16(Board.Stats[0].X)+NeighborDeltaX[i]][int16(Board.Stats[0].Y)+NeighborDeltaY[i]].Element = E_EMPTY
-			BoardDrawTile(int16(Board.Stats[0].X)+NeighborDeltaX[i], int16(Board.Stats[0].Y)+NeighborDeltaY[i])
+			BoardDamageTile(int16(E.Board.Stats[0].X)+NeighborDeltaX[i], int16(E.Board.Stats[0].Y)+NeighborDeltaY[i])
+			E.Board.Tiles[int16(E.Board.Stats[0].X)+NeighborDeltaX[i]][int16(E.Board.Stats[0].Y)+NeighborDeltaY[i]].Element = E_EMPTY
+			BoardDrawTile(int16(E.Board.Stats[0].X)+NeighborDeltaX[i], int16(E.Board.Stats[0].Y)+NeighborDeltaY[i])
 		}
 	}
 
@@ -1336,33 +1336,33 @@ func GameAboutScreen() {
 // from GamePlayLoop (M0.5) — pacing and the pause branch stay in the caller.
 //
 // Faithfulness notes (this must not change behavior — ANALYSIS.md §3g):
-//   - It iterates the GLOBAL CurrentStatTicked, not a fresh loop variable,
-//     because RemoveStat/DamageStat decrement CurrentStatTicked when they
+//   - It iterates the GLOBAL E.CurrentStatTicked, not a fresh loop variable,
+//     because RemoveStat/DamageStat decrement E.CurrentStatTicked when they
 //     remove a stat mid-tick (GAME.PAS 942-943, 1233-1234); a local index
 //     would desync the stat iteration order.
-//   - Board.StatCount is re-read each iteration so stats added/removed during
+//   - E.Board.StatCount is re-read each iteration so stats added/removed during
 //     the cycle are handled exactly as the original per-iteration loop did.
-//   - With the caller's setup leaving CurrentStatTicked = StatCount+1, the
+//   - With the caller's setup leaving E.CurrentStatTicked = StatCount+1, the
 //     first GameStep ticks nothing and only advances (matching the original's
 //     first loop iteration); every later call ticks a full cycle then advances.
-//   - GamePlayExitRequested stops ticking mid-cycle and suppresses the advance,
+//   - E.GamePlayExitRequested stops ticking mid-cycle and suppresses the advance,
 //     mirroring the original loop's exit checks.
 func GameStep() {
-	for CurrentStatTicked <= Board.StatCount && !GamePlayExitRequested {
-		stat := &Board.Stats[CurrentStatTicked]
-		if stat.Cycle != 0 && CurrentTick%stat.Cycle == CurrentStatTicked%stat.Cycle {
-			ElementDefs[Board.Tiles[stat.X][stat.Y].Element].TickProc(CurrentStatTicked)
+	for E.CurrentStatTicked <= E.Board.StatCount && !E.GamePlayExitRequested {
+		stat := &E.Board.Stats[E.CurrentStatTicked]
+		if stat.Cycle != 0 && E.CurrentTick%stat.Cycle == E.CurrentStatTicked%stat.Cycle {
+			ElementDefs[E.Board.Tiles[stat.X][stat.Y].Element].TickProc(E.CurrentStatTicked)
 		}
-		CurrentStatTicked++
+		E.CurrentStatTicked++
 	}
 
-	if CurrentStatTicked > Board.StatCount && !GamePlayExitRequested {
+	if E.CurrentStatTicked > E.Board.StatCount && !E.GamePlayExitRequested {
 		// next cycle
-		CurrentTick++
-		if CurrentTick > 420 {
-			CurrentTick = 1
+		E.CurrentTick++
+		if E.CurrentTick > 420 {
+			E.CurrentTick = 1
 		}
-		CurrentStatTicked = 0
+		E.CurrentStatTicked = 0
 		InputUpdate()
 	}
 }
@@ -1378,7 +1378,7 @@ func GamePlayLoop(boardChanged bool) {
 		VideoWriteText(61, 0, 0x1F, "    - - - - -      ")
 		VideoWriteText(62, 1, 0x70, "      ZZT      ")
 		VideoWriteText(61, 2, 0x1F, "    - - - - -      ")
-		if GameStateElement == E_PLAYER {
+		if E.GameStateElement == E_PLAYER {
 			VideoWriteText(64, 7, 0x1E, " Health:")
 			VideoWriteText(64, 8, 0x1E, "   Ammo:")
 			VideoWriteText(64, 9, 0x1E, "Torches:")
@@ -1405,13 +1405,13 @@ func GamePlayLoop(boardChanged bool) {
 			VideoWriteText(65, 22, 0x1F, " Pause")
 			VideoWriteText(62, 23, 0x70, " Q ")
 			VideoWriteText(65, 23, 0x1F, " Quit")
-		} else if GameStateElement == E_MONITOR {
-			SidebarPromptSlider(false, 66, 21, "Game speed:;FS", &TickSpeed)
+		} else if E.GameStateElement == E_MONITOR {
+			SidebarPromptSlider(false, 66, 21, "Game speed:;FS", &E.TickSpeed)
 			VideoWriteText(62, 21, 0x70, " S ")
 			VideoWriteText(62, 7, 0x30, " W ")
 			VideoWriteText(65, 7, 0x1E, " World:")
-			if Length(World.Info.Name) != 0 {
-				VideoWriteText(69, 8, 0x1F, World.Info.Name)
+			if Length(E.World.Info.Name) != 0 {
+				VideoWriteText(69, 8, 0x1F, E.World.Info.Name)
 			} else {
 				VideoWriteText(69, 8, 0x1F, "Untitled")
 			}
@@ -1425,7 +1425,7 @@ func GamePlayLoop(boardChanged bool) {
 			VideoWriteText(65, 16, 0x1F, " About ZZT!")
 			VideoWriteText(62, 17, 0x70, " H ")
 			VideoWriteText(65, 17, 0x1E, " High Scores")
-			if EditorEnabled {
+			if E.EditorEnabled {
 				VideoWriteText(62, 18, 0x30, " E ")
 				VideoWriteText(65, 18, 0x1E, " Board Editor")
 			}
@@ -1435,46 +1435,46 @@ func GamePlayLoop(boardChanged bool) {
 	GameDrawSidebar()
 	GameUpdateSidebar()
 
-	if JustStarted {
+	if E.JustStarted {
 		// TODO: GameAboutScreen()
-		if Length(StartupWorldFileName) != 0 {
+		if Length(E.StartupWorldFileName) != 0 {
 			SidebarClearLine(8)
-			VideoWriteText(69, 8, 0x1F, StartupWorldFileName)
-			if !WorldLoad(StartupWorldFileName, ".ZZT", true) {
+			VideoWriteText(69, 8, 0x1F, E.StartupWorldFileName)
+			if !WorldLoad(E.StartupWorldFileName, ".ZZT", true) {
 				WorldCreate()
 			}
 		}
-		ReturnBoardId = World.Info.CurrentBoard
+		E.ReturnBoardId = E.World.Info.CurrentBoard
 		BoardChange(0)
-		JustStarted = false
+		E.JustStarted = false
 	}
 
-	Board.Tiles[Board.Stats[0].X][Board.Stats[0].Y].Element = byte(GameStateElement)
-	Board.Tiles[Board.Stats[0].X][Board.Stats[0].Y].Color = ElementDefs[GameStateElement].Color
-	if GameStateElement == E_MONITOR {
+	E.Board.Tiles[E.Board.Stats[0].X][E.Board.Stats[0].Y].Element = byte(E.GameStateElement)
+	E.Board.Tiles[E.Board.Stats[0].X][E.Board.Stats[0].Y].Color = ElementDefs[E.GameStateElement].Color
+	if E.GameStateElement == E_MONITOR {
 		DisplayMessage(0, "")
 		VideoWriteText(62, 5, 0x1B, "Pick a command:")
 	}
 	if boardChanged {
 		TransitionDrawBoardChange()
 	}
-	TickTimeDuration = int16(TickSpeed) * 2
-	GamePlayExitRequested = false
-	CurrentTick = Random(100)
-	CurrentStatTicked = Board.StatCount + 1
+	E.TickTimeDuration = int16(E.TickSpeed) * 2
+	E.GamePlayExitRequested = false
+	E.CurrentTick = Random(100)
+	E.CurrentStatTicked = E.Board.StatCount + 1
 
-	for !GamePlayExitRequested {
-		if GamePaused {
-			if SoundHasTimeElapsed(&TickTimeCounter, 25) {
+	for !E.GamePlayExitRequested {
+		if E.GamePaused {
+			if SoundHasTimeElapsed(&E.TickTimeCounter, 25) {
 				pauseBlink = !pauseBlink
 			}
 			if pauseBlink {
-				VideoWriteText(int16(Board.Stats[0].X)-1, int16(Board.Stats[0].Y)-1, ElementDefs[E_PLAYER].Color, string([]byte{ElementDefs[E_PLAYER].Character}))
+				VideoWriteText(int16(E.Board.Stats[0].X)-1, int16(E.Board.Stats[0].Y)-1, ElementDefs[E_PLAYER].Color, string([]byte{ElementDefs[E_PLAYER].Character}))
 			} else {
-				if Board.Tiles[Board.Stats[0].X][Board.Stats[0].Y].Element == E_PLAYER {
-					VideoWriteText(int16(Board.Stats[0].X)-1, int16(Board.Stats[0].Y)-1, 0x0F, " ")
+				if E.Board.Tiles[E.Board.Stats[0].X][E.Board.Stats[0].Y].Element == E_PLAYER {
+					VideoWriteText(int16(E.Board.Stats[0].X)-1, int16(E.Board.Stats[0].Y)-1, 0x0F, " ")
 				} else {
-					BoardDrawTile(int16(Board.Stats[0].X), int16(Board.Stats[0].Y))
+					BoardDrawTile(int16(E.Board.Stats[0].X), int16(E.Board.Stats[0].Y))
 				}
 			}
 			VideoWriteText(64, 5, 0x1F, "Pausing...")
@@ -1484,57 +1484,57 @@ func GamePlayLoop(boardChanged bool) {
 				GamePromptEndPlay()
 			}
 			if InputDeltaX != 0 || InputDeltaY != 0 {
-				ElementDefs[Board.Tiles[int16(Board.Stats[0].X)+InputDeltaX][int16(Board.Stats[0].Y)+InputDeltaY].Element].TouchProc(int16(Board.Stats[0].X)+InputDeltaX, int16(Board.Stats[0].Y)+InputDeltaY, 0, &InputDeltaX, &InputDeltaY)
+				ElementDefs[E.Board.Tiles[int16(E.Board.Stats[0].X)+InputDeltaX][int16(E.Board.Stats[0].Y)+InputDeltaY].Element].TouchProc(int16(E.Board.Stats[0].X)+InputDeltaX, int16(E.Board.Stats[0].Y)+InputDeltaY, 0, &InputDeltaX, &InputDeltaY)
 			}
-			if (InputDeltaX != 0 || InputDeltaY != 0) && ElementDefs[Board.Tiles[int16(Board.Stats[0].X)+InputDeltaX][int16(Board.Stats[0].Y)+InputDeltaY].Element].Walkable {
+			if (InputDeltaX != 0 || InputDeltaY != 0) && ElementDefs[E.Board.Tiles[int16(E.Board.Stats[0].X)+InputDeltaX][int16(E.Board.Stats[0].Y)+InputDeltaY].Element].Walkable {
 				// Move player
-				if Board.Tiles[Board.Stats[0].X][Board.Stats[0].Y].Element == E_PLAYER {
-					MoveStat(0, int16(Board.Stats[0].X)+InputDeltaX, int16(Board.Stats[0].Y)+InputDeltaY)
+				if E.Board.Tiles[E.Board.Stats[0].X][E.Board.Stats[0].Y].Element == E_PLAYER {
+					MoveStat(0, int16(E.Board.Stats[0].X)+InputDeltaX, int16(E.Board.Stats[0].Y)+InputDeltaY)
 				} else {
-					BoardDrawTile(int16(Board.Stats[0].X), int16(Board.Stats[0].Y))
-					Board.Stats[0].X += byte(InputDeltaX)
-					Board.Stats[0].Y += byte(InputDeltaY)
-					Board.Tiles[Board.Stats[0].X][Board.Stats[0].Y].Element = E_PLAYER
-					Board.Tiles[Board.Stats[0].X][Board.Stats[0].Y].Color = ElementDefs[E_PLAYER].Color
-					BoardDrawTile(int16(Board.Stats[0].X), int16(Board.Stats[0].Y))
-					DrawPlayerSurroundings(int16(Board.Stats[0].X), int16(Board.Stats[0].Y), 0)
-					DrawPlayerSurroundings(int16(Board.Stats[0].X)-InputDeltaX, int16(Board.Stats[0].Y)-InputDeltaY, 0)
+					BoardDrawTile(int16(E.Board.Stats[0].X), int16(E.Board.Stats[0].Y))
+					E.Board.Stats[0].X += byte(InputDeltaX)
+					E.Board.Stats[0].Y += byte(InputDeltaY)
+					E.Board.Tiles[E.Board.Stats[0].X][E.Board.Stats[0].Y].Element = E_PLAYER
+					E.Board.Tiles[E.Board.Stats[0].X][E.Board.Stats[0].Y].Color = ElementDefs[E_PLAYER].Color
+					BoardDrawTile(int16(E.Board.Stats[0].X), int16(E.Board.Stats[0].Y))
+					DrawPlayerSurroundings(int16(E.Board.Stats[0].X), int16(E.Board.Stats[0].Y), 0)
+					DrawPlayerSurroundings(int16(E.Board.Stats[0].X)-InputDeltaX, int16(E.Board.Stats[0].Y)-InputDeltaY, 0)
 				}
 
 				// Unpause
-				GamePaused = false
+				E.GamePaused = false
 				SidebarClearLine(5)
-				CurrentTick = Random(100)
-				CurrentStatTicked = Board.StatCount + 1
-				World.Info.IsSave = true
+				E.CurrentTick = Random(100)
+				E.CurrentStatTicked = E.Board.StatCount + 1
+				E.World.Info.IsSave = true
 			}
-		} else { // not GamePaused
+		} else { // not E.GamePaused
 			// Pace, then run one full game step (M0.5). Delay is a no-op when
-			// Headless (M0.4); SoundHasTimeElapsed still gates the step so it
+			// E.Headless (M0.4); SoundHasTimeElapsed still gates the step so it
 			// keeps pacing interactive play (currently stubbed to true — see
 			// NOTES.md 2026-07-09). The per-cycle advance and input read now live
 			// in GameStep. The pause branch keeps its own input handling and sets
-			// CurrentTick on unpause, which the next GameStep's advance picks up,
+			// E.CurrentTick on unpause, which the next GameStep's advance picks up,
 			// so behavior is unchanged (the shared "all stats ticked" block that
 			// used to follow both branches folded into GameStep).
-			Delay(TickTimeDuration * 10)
-			if SoundHasTimeElapsed(&TickTimeCounter, TickTimeDuration) {
+			Delay(E.TickTimeDuration * 10)
+			if SoundHasTimeElapsed(&E.TickTimeCounter, E.TickTimeDuration) {
 				GameStep()
 			}
 		}
 	}
 
 	SoundClearQueue()
-	if GameStateElement == E_PLAYER {
-		if World.Info.Health <= 0 {
-			HighScoresAdd(World.Info.Score)
+	if E.GameStateElement == E_PLAYER {
+		if E.World.Info.Health <= 0 {
+			HighScoresAdd(E.World.Info.Score)
 		}
-	} else if GameStateElement == E_MONITOR {
+	} else if E.GameStateElement == E_MONITOR {
 		SidebarClearLine(5)
 	}
 
-	Board.Tiles[Board.Stats[0].X][Board.Stats[0].Y].Element = E_PLAYER
-	Board.Tiles[Board.Stats[0].X][Board.Stats[0].Y].Color = ElementDefs[E_PLAYER].Color
+	E.Board.Tiles[E.Board.Stats[0].X][E.Board.Stats[0].Y].Element = E_PLAYER
+	E.Board.Tiles[E.Board.Stats[0].X][E.Board.Stats[0].Y].Color = ElementDefs[E_PLAYER].Color
 	SoundBlockQueueing = false
 }
 
@@ -1543,50 +1543,50 @@ func GameTitleLoop() {
 		boardChanged bool
 		startPlay    bool
 	)
-	GameTitleExitRequested = false
-	JustStarted = true
-	ReturnBoardId = 0
+	E.GameTitleExitRequested = false
+	E.JustStarted = true
+	E.ReturnBoardId = 0
 	boardChanged = true
 	for {
 		BoardChange(0)
 		for {
-			GameStateElement = E_MONITOR
+			E.GameStateElement = E_MONITOR
 			startPlay = false
-			GamePaused = false
+			E.GamePaused = false
 			GamePlayLoop(boardChanged)
 			boardChanged = false
 			switch UpCase(InputKeyPressed) {
 			case 'W':
 				if GameWorldLoad(".ZZT") {
-					ReturnBoardId = World.Info.CurrentBoard
+					E.ReturnBoardId = E.World.Info.CurrentBoard
 					boardChanged = true
 				}
 			case 'P':
-				if World.Info.IsSave && !DebugEnabled {
-					startPlay = WorldLoad(World.Info.Name, ".ZZT", false)
-					ReturnBoardId = World.Info.CurrentBoard
+				if E.World.Info.IsSave && !E.DebugEnabled {
+					startPlay = WorldLoad(E.World.Info.Name, ".ZZT", false)
+					E.ReturnBoardId = E.World.Info.CurrentBoard
 				} else {
 					startPlay = true
 				}
 				if startPlay {
-					BoardChange(ReturnBoardId)
+					BoardChange(E.ReturnBoardId)
 					BoardEnter()
 				}
 			case 'A':
 				GameAboutScreen()
 			case 'E':
-				if EditorEnabled {
+				if E.EditorEnabled {
 					EditorLoop()
-					ReturnBoardId = World.Info.CurrentBoard
+					E.ReturnBoardId = E.World.Info.CurrentBoard
 					boardChanged = true
 				}
 			case 'S':
-				SidebarPromptSlider(true, 66, 21, "Game speed:;FS", &TickSpeed)
+				SidebarPromptSlider(true, 66, 21, "Game speed:;FS", &E.TickSpeed)
 				InputKeyPressed = '\x00'
 			case 'R':
 				if GameWorldLoad(".SAV") {
-					ReturnBoardId = World.Info.CurrentBoard
-					BoardChange(ReturnBoardId)
+					E.ReturnBoardId = E.World.Info.CurrentBoard
+					BoardChange(E.ReturnBoardId)
 					startPlay = true
 				}
 			case 'H':
@@ -1595,19 +1595,19 @@ func GameTitleLoop() {
 			case '|':
 				GameDebugPrompt()
 			case KEY_ESCAPE, 'Q':
-				GameTitleExitRequested = SidebarPromptYesNo("Quit ZZT? ", true)
+				E.GameTitleExitRequested = SidebarPromptYesNo("Quit ZZT? ", true)
 			}
 			if startPlay {
-				GameStateElement = E_PLAYER
-				GamePaused = true
+				E.GameStateElement = E_PLAYER
+				E.GamePaused = true
 				GamePlayLoop(true)
 				boardChanged = true
 			}
-			if boardChanged || GameTitleExitRequested {
+			if boardChanged || E.GameTitleExitRequested {
 				break
 			}
 		}
-		if GameTitleExitRequested {
+		if E.GameTitleExitRequested {
 			break
 		}
 	}

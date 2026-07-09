@@ -187,13 +187,13 @@ func TestDelete(t *testing.T) {
 
 // TestRandom pins the Turbo Pascal generator: the first 10 values of
 // Random(100) from seed 1. Hand-derivation of the first three, straight from
-// the formula (advance RandSeed = RandSeed*0x08088405+1, then
-// Random(end) = ((RandSeed>>16)*end)>>16):
+// the formula (advance E.RandSeed = E.RandSeed*0x08088405+1, then
+// Random(end) = ((E.RandSeed>>16)*end)>>16):
 //
-//	v1: RandSeed = 1*0x08088405+1 = 0x08088406; >>16 = 0x0808 = 2056;
+//	v1: E.RandSeed = 1*0x08088405+1 = 0x08088406; >>16 = 0x0808 = 2056;
 //	    2056*100 = 205600; >>16 = 3
-//	v2: RandSeed = 0xDC6DAC1F; >>16 = 56429; 56429*100 = 5642900; >>16 = 86
-//	v3: RandSeed = 0x33DC589C; >>16 = 13276; 13276*100 = 1327600; >>16 = 20
+//	v2: E.RandSeed = 0xDC6DAC1F; >>16 = 56429; 56429*100 = 5642900; >>16 = 86
+//	v3: E.RandSeed = 0x33DC589C; >>16 = 13276; 13276*100 = 1327600; >>16 = 20
 func TestRandom(t *testing.T) {
 	want := []int16{3, 86, 20, 27, 67, 31, 16, 37, 42, 8}
 	RandomSeed(1)
@@ -213,17 +213,17 @@ func TestRandom(t *testing.T) {
 	}
 }
 
-// TestDelayHeadlessNoOp is the M0.4 definition of done: with Headless set, the
+// TestDelayHeadlessNoOp is the M0.4 definition of done: with E.Headless set, the
 // per-cycle pace from GamePlayLoop must not sleep, so 1000 tick-paces finish
 // well under a second (they take microseconds).
 func TestDelayHeadlessNoOp(t *testing.T) {
-	Headless = true
-	defer func() { Headless = false }()
-	TickTimeDuration = 8 // default game speed (TickSpeed 4 => TickSpeed*2)
+	E.Headless = true
+	defer func() { E.Headless = false }()
+	E.TickTimeDuration = 8 // default game speed (E.TickSpeed 4 => E.TickSpeed*2)
 
 	start := time.Now()
 	for i := 0; i < 1000; i++ {
-		Delay(TickTimeDuration * 10) // the exact call GamePlayLoop makes per cycle
+		Delay(E.TickTimeDuration * 10) // the exact call GamePlayLoop makes per cycle
 	}
 	if elapsed := time.Since(start); elapsed > time.Second {
 		t.Errorf("1000 headless tick-paces took %v; want <1s", elapsed)
@@ -233,7 +233,7 @@ func TestDelayHeadlessNoOp(t *testing.T) {
 // TestDelaySleepsWhenInteractive guards the other half of the DoD: interactive
 // pacing is unchanged, i.e. Delay still sleeps when not headless.
 func TestDelaySleepsWhenInteractive(t *testing.T) {
-	Headless = false
+	E.Headless = false
 	start := time.Now()
 	Delay(50)
 	if elapsed := time.Since(start); elapsed < 40*time.Millisecond {

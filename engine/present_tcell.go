@@ -1,8 +1,8 @@
 package main
 
 // present_tcell.go is the ONLY file in the engine that touches a terminal. It
-// reads the Screen buffer (video.go) and draws it with tcell. Every entry
-// point here is invoked from video.go behind the Headless guard, so the
+// reads the E.Screen buffer (video.go) and draws it with tcell. Every entry
+// point here is invoked from video.go behind the E.Headless guard, so the
 // simulation can run with no terminal at all — tests and the future server
 // (ANALYSIS.md §1, the "luckiest structural break": the sim writes a buffer,
 // never the display). M0.2.
@@ -50,10 +50,10 @@ func presentClrScr() {
 	screen.Clear()
 }
 
-// presentCell draws a single Screen cell to tcell, translating the DOS
+// presentCell draws a single E.Screen cell to tcell, translating the DOS
 // character/attribute byte pair into a rune and a tcell style.
 func presentCell(x, y int16) {
-	cell := Screen[x][y]
+	cell := E.Screen[x][y]
 	fg := cell.Color & 0x0F
 	bg := cell.Color >> 4
 	style := tcell.StyleDefault.
@@ -65,10 +65,10 @@ func presentCell(x, y int16) {
 // presentFlush redraws the cells that changed since the last flush and shows
 // the frame. Called from VideoShow when not headless.
 func presentFlush() {
-	for _, c := range videoDirty {
+	for _, c := range E.videoDirty {
 		presentCell(c.x, c.y)
 	}
-	videoDirty = videoDirty[:0]
+	E.videoDirty = E.videoDirty[:0]
 	screen.Show()
 }
 

@@ -14,7 +14,7 @@ func TestScriptedInput20Ticks(t *testing.T) {
 	ticks[5] = ScriptedTick{DeltaX: 0, DeltaY: -1, Shift: true, Key: KEY_UP}
 	ticks[12] = ScriptedTick{DeltaX: 0, DeltaY: 0, Key: ' '}
 
-	prev := activeInput
+	prev := E.ActiveInput
 	SetInputSource(&ScriptedInput{Ticks: ticks})
 	defer SetInputSource(prev)
 

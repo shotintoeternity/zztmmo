@@ -44,7 +44,7 @@ var (
 )
 
 func InputUpdate() {
-	InputDeltaX, InputDeltaY, InputShiftPressed, InputKeyPressed = activeInput.Poll()
+	InputDeltaX, InputDeltaY, InputShiftPressed, InputKeyPressed = E.ActiveInput.Poll()
 	if InputDeltaX != 0 || InputDeltaY != 0 {
 		InputLastDeltaX = InputDeltaX
 		InputLastDeltaY = InputDeltaY
@@ -119,14 +119,13 @@ type InputSource interface {
 	Poll() (dx, dy int16, shift bool, key byte)
 }
 
-// activeInput is where InputUpdate reads from. It defaults to the live tcell
+// E.ActiveInput is where InputUpdate reads from. It defaults to the live tcell
 // keyboard so interactive play is byte-for-byte unchanged; tests and the
 // future server swap in a ScriptedInput via SetInputSource.
-var activeInput InputSource = TcellInput{}
 
 // SetInputSource selects where InputUpdate reads its input from.
 func SetInputSource(s InputSource) {
-	activeInput = s
+	E.ActiveInput = s
 }
 
 // TcellInput is the live-keyboard source. It runs the original keyboard

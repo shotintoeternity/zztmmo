@@ -132,61 +132,75 @@ type (
 	}
 	THighScoreList [HIGH_SCORE_COUNT]THighScoreEntry
 	TIoTmpBuf      [20000]byte
+	Engine         struct {
+		PlayerDirX                  int16
+		PlayerDirY                  int16
+		unkVar_0476                 int16
+		unkVar_0478                 int16
+		TransitionTable             [80 * 25]TCoord
+		LoadedGameFileName          string
+		SavedGameFileName           string
+		SavedBoardFileName          string
+		StartupWorldFileName        string
+		Board                       TBoard
+		World                       TWorld
+		MessageAmmoNotShown         bool
+		MessageOutOfAmmoNotShown    bool
+		MessageNoShootingNotShown   bool
+		MessageTorchNotShown        bool
+		MessageOutOfTorchesNotShown bool
+		MessageRoomNotDarkNotShown  bool
+		MessageHintTorchNotShown    bool
+		MessageForestNotShown       bool
+		MessageFakeNotShown         bool
+		MessageGemNotShown          bool
+		MessageEnergizerNotShown    bool
+		unkVar_4ABA                 [15]byte
+		GameTitleExitRequested      bool
+		GamePlayExitRequested       bool
+		GameStateElement            int16
+		ReturnBoardId               int16
+		TransitionTableSize         int16
+		TickSpeed                   byte
+		IoTmpBuf                    TIoTmpBuf
+		EditorPatternCount          int16
+		EditorPatterns              [10]byte
+		TickTimeDuration            int16
+		CurrentTick                 int16
+		CurrentStatTicked           int16
+		GamePaused                  bool
+		TickTimeCounter             int16
+		ForceDarknessOff            bool
+		OopChar                     byte
+		OopWord                     string
+		OopValue                    int16
+		DebugEnabled                bool
+		HighScoreList               THighScoreList
+		ConfigRegistration          string
+		ConfigWorldFile             string
+		EditorEnabled               bool
+		JustStarted                 bool
+		WorldFileDescCount          int16
+		WorldFileDescKeys           [10]string
+		WorldFileDescValues         [10]string
+		Screen                      [80][25]struct{ Ch, Color byte }
+		Headless                    bool
+		videoDirty                  []dirtyCell
+		ActiveInput                 InputSource
+		RandSeed                    uint32
+	}
 )
 
 var (
-	PlayerDirX                  int16
-	PlayerDirY                  int16
-	unkVar_0476                 int16
-	unkVar_0478                 int16
-	TransitionTable             [80 * 25]TCoord
-	LoadedGameFileName          string
-	SavedGameFileName           string
-	SavedBoardFileName          string
-	StartupWorldFileName        string
-	Board                       TBoard
-	World                       TWorld
-	MessageAmmoNotShown         bool
-	MessageOutOfAmmoNotShown    bool
-	MessageNoShootingNotShown   bool
-	MessageTorchNotShown        bool
-	MessageOutOfTorchesNotShown bool
-	MessageRoomNotDarkNotShown  bool
-	MessageHintTorchNotShown    bool
-	MessageForestNotShown       bool
-	MessageFakeNotShown         bool
-	MessageGemNotShown          bool
-	MessageEnergizerNotShown    bool
-	unkVar_4ABA                 [15]byte
-	GameTitleExitRequested      bool
-	GamePlayExitRequested       bool
-	GameStateElement            int16
-	ReturnBoardId               int16
-	TransitionTableSize         int16
-	TickSpeed                   byte
-	IoTmpBuf                    TIoTmpBuf
-	ElementDefs                 [MAX_ELEMENT + 1]TElementDef
-	EditorPatternCount          int16
-	EditorPatterns              [10]byte
-	TickTimeDuration            int16
-	CurrentTick                 int16
-	CurrentStatTicked           int16
-	GamePaused                  bool
-	TickTimeCounter             int16
-	ForceDarknessOff            bool
-	OopChar                     byte
-	OopWord                     string
-	OopValue                    int16
-	DebugEnabled                bool
-	HighScoreList               THighScoreList
-	ConfigRegistration          string
-	ConfigWorldFile             string
-	EditorEnabled               bool
-	JustStarted                 bool
-	WorldFileDescCount          int16
-	WorldFileDescKeys           [10]string
-	WorldFileDescValues         [10]string
+	E           = NewEngine()
+	ElementDefs [MAX_ELEMENT + 1]TElementDef
 )
+
+func NewEngine() *Engine {
+	return &Engine{
+		ActiveInput: TcellInput{},
+	}
+}
 
 const (
 	E_EMPTY                = 0
