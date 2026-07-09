@@ -33,3 +33,33 @@
   transition is unchanged. NOT hash-verified yet — the M0.6 replay fixture
   (next task) is what locks this pure; a manual TOWN.ZZT playtest is the interim
   DoD check. If M0.6's fixture reveals drift here, revisit GameStep.
+
+- 2026-07-09 (M0.5 verification): Manual A/B playtest done — M0.4 binary vs
+  M0.5 binary on TOWN.ZZT, side by side. Movement speed, monster behavior,
+  the start-of-board pause/blink, and scroll open/close all feel identical.
+  M0.5's interactive DoD ("feels identical") is MET. Still to be hash-locked by
+  M0.6.
+
+- 2026-07-09 (HANDOFF — read before continuing M0): M0.1–M0.5 are complete,
+  committed, and green (`cd engine && go build ./... && go test ./...`). Next
+  unchecked task is M0.6 (replay harness + fixtures). Seams now in place for
+  M0.6 to build on:
+    * `Headless bool` (video.go) — true = no terminal, no sleeps.
+    * `Screen [80][25]{Ch,Color}` buffer + present_tcell.go presenter (M0.2).
+    * `InputSource` interface + `ScriptedInput{Ticks,Pos}` + `SetInputSource`
+      (input.go, M0.3) — drive input with no keyboard.
+    * `RandSeed uint32` + `RandomSeed(s)` (lib.go, M0.1) — seed determinism.
+    * `GameStep()` (game.go, M0.5) — one cycle, headless-callable in a loop.
+    * `Delay()` is a no-op when Headless (M0.4).
+  M0.6 recipe (from TASKS.md): new engine/replay_test.go with StateHash() =
+  FNV-1a over Board.Tiles + all Stats fields + World.Info + RandSeed; then
+  RandomSeed(42), load TOWN.ZZT, start play (GameStateElement=E_PLAYER,
+  unpaused), drive 600 GameSteps with a fixed ScriptedInput, record StateHash
+  every 100 steps into fixtures/town.replay.json (write if absent, compare if
+  present); run twice to prove determinism. From then on it gates every commit.
+  Note: TOWN.ZZT is present in engine/ but is NOT git-tracked (untracked working
+  file) — the test loads it from the engine working dir.
+  PROCESS: the advisor tool was unavailable for this entire session (infra
+  error on every call). M0.6 is not [ADVISOR], but M1.3 and M2.2 are — try the
+  advisor first, and if it is still down, escalate per CLAUDE.md rule 5 or get
+  explicit user pre-authorization before editing (as was done for M0.5).
