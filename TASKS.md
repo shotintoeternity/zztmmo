@@ -219,6 +219,34 @@ and every run is reproducible. ANALYSIS.md §3g, §3h, §5.
   window over the board, and selecting an option sends the expected reply
   without corrupting movement input.
 
+- [ ] **M3.11 — De-modal save; per-player pause and sound.** Three play-mode
+  keys are unsafe or wrong on a server. All three block M4.2. Verified against
+  the code 2026-07-09:
+  * **`S` (save) would hang the whole server.** `ElementPlayerTick` case 'S'
+    (`elements.go:1401`) calls `GameWorldSave` → `SidebarPromptString` →
+    `PromptString` → `InputReadWaitKey`, which blocks on a key channel nothing
+    feeds when headless — identical to the `?` bug fixed in M3.9, and dormant
+    only because the client does not send 'S' yet. Fix it the same way: the sim
+    emits `SavePromptEvent{StatId}` and returns; the caller replies via
+    `Engine.SubmitSaveFilename(statId, name)`, applied at the top of the next
+    step; the terminal keeps its modal prompt in the GamePlayLoop event drain.
+    Decide and write down the multiplayer policy for saving a *shared* world.
+  * **`P` (pause) is a silent no-op headless.** `GamePaused` is set
+    (`elements.go:1404`, and `game.go:1243` on ReenterWhenZapped damage) but
+    `GameStepWithInputs` never reads it. Do NOT pause the room — that freezes
+    every other player (no global pause, ANALYSIS.md §3i). Make it per-player: a
+    `PlayerState.Paused` flag that skips only that player's stat tick and input,
+    plus a `PauseEvent` so the client can draw vanilla's blinking "Pausing..."
+    at (64,5) (`game.go:1701`, `GAME.PAS:1533`).
+  * **`B` (sound toggle) is process-global.** `SoundEnabled` (`sounds.go:9`) is
+    a package var, so one player muting silences everyone in every room, and it
+    feeds `HUDSnapshot.SoundEnabled` for all of them. Move it onto
+    `PlayerState` (or make it purely client-side) so the sidebar's "Be
+    quiet"/"Be noisy" line tracks only the acting player.
+  DoD: a grep proves no `PromptString` / `SidebarPrompt*` / `InputReadWaitKey`
+  is reachable from simulation code; a headless test has one of two players
+  press 'S', 'P' and 'B' while the other keeps stepping normally; replay green.
+
 ## M4 — Browser ZZT UI and playability parity
 
 Goal: the browser client should feel like complete ZZT, not just a multiplayer
@@ -237,16 +265,38 @@ semantics while keeping the server authoritative.
   and input router handles read-only text, selectable links, yes/no prompts,
   text entry, and paged help without gameplay input leaking through.
 
-- [ ] **M4.2 — Full keyboard/control parity.** Route all original play-mode
-  keys through the protocol: movement, shooting, torch, pause, save, quit, help,
-  debug, sound toggle, and text-window navigation. DoD: browser key behavior
-  matches the terminal client for common TOWN flows.
+- [ ] **M4.2 — Full keyboard/control parity.** Requires M3.11. Today the browser
+  sends only movement, Shift/Space, Enter, Escape, `?` and `H`; everything else
+  in `ElementPlayerTick`'s key switch (`elements.go:1376-1419`) is unreachable
+  from a browser. Route the rest through the protocol:
+
+  | Key | Effect | Status |
+  |---|---|---|
+  | arrows / WASD | move (keymask) | done |
+  | Shift+dir | shoot | done |
+  | Space | shoot last direction | done |
+  | `T` | light torch | engine ready, client never sends it |
+  | `P` | pause | needs M3.11 (per-player) |
+  | `B` | sound toggle | needs M3.11 (per-player) |
+  | `S` | save game | needs M3.11 (hangs the server today) |
+  | `Q` / Esc | quit prompt | event exists, client only logs it |
+  | `H` | help window | done (M3.9) |
+  | `?` | debug prompt | done (M3.9) |
+  | ↑↓ PgUp PgDn Enter Esc | text-window navigation | done (M3.9/M3.10) |
+
+  DoD: browser key behavior matches the terminal client for common TOWN flows,
+  and each row above has a protocol-level test.
 
 - [ ] **M4.3 — Title, world, save, and high-score flows.** Restore the original
   non-gameplay UI paths in the browser, including title screen/start flow,
-  save/load prompts, quit confirmation, and high-score entry/display. DoD: a
-  player can start, save, load, quit, die, enter a score, and restart without
-  falling back to terminal-only UI.
+  save/load prompts, quit confirmation, and high-score entry/display. Note
+  `QuitPromptEvent` carries no `StatId` and `GamePromptEndPlay`
+  (`elements.go:1239`) still reads `PlayerFor(0)`, so a quit prompt currently
+  belongs to nobody and reads the wrong player's health — fix both here, the way
+  M3.9 did for `HelpEvent`. `HighScoreEntryEvent` and `HighScoresAdd`
+  (`game.go:1803` passes `PlayerFor(0).Score`) likewise assume a single player. DoD: a player can start, save,
+  load, quit, die, enter a score, and restart without falling back to
+  terminal-only UI, and one player quitting does not disturb the others.
 
 - [ ] **M4.4 — Browser sound synthesis.** Convert `SoundEvent` notes into
   WebAudio playback with priority/queue behavior close to ZZT, plus a visible
