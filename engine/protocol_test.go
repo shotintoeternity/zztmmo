@@ -32,7 +32,7 @@ func TestProtocolMessageRoundTrips(t *testing.T) {
 	}
 
 	roundTrip(t, JoinMessage{Type: MessageTypeJoin, Name: "tester", World: "TOWN", Board: 1}, &JoinMessage{})
-	roundTrip(t, InputMessage{Type: MessageTypeInput, PlayerID: 7, Seq: 9, DeltaX: 1, Shift: true, Key: KEY_RIGHT}, &InputMessage{})
+	roundTrip(t, InputMessage{Type: MessageTypeInput, PlayerID: 7, Seq: 9, DeltaX: 1, Shift: true, Key: KEY_RIGHT, Keymask: InputMaskRight | InputMaskShoot}, &InputMessage{})
 	roundTrip(t, snapshot, &SnapshotMessage{})
 	roundTrip(t, DiffMessage{
 		Type:    MessageTypeDiff,

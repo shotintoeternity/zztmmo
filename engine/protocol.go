@@ -9,6 +9,15 @@ const (
 	MessageTypeBoardChange = "boardChange"
 )
 
+const (
+	InputMaskUp uint16 = 1 << iota
+	InputMaskDown
+	InputMaskLeft
+	InputMaskRight
+	InputMaskShift
+	InputMaskShoot
+)
+
 type JoinMessage struct {
 	Type  string `json:"type"`
 	Name  string `json:"name"`
@@ -24,6 +33,7 @@ type InputMessage struct {
 	DeltaY   int16    `json:"dy"`
 	Shift    bool     `json:"shift"`
 	Key      byte     `json:"key"`
+	Keymask  uint16   `json:"keymask,omitempty"`
 }
 
 type SnapshotMessage struct {

@@ -175,7 +175,7 @@ and every run is reproducible. ANALYSIS.md §3g, §3h, §5.
   from the engine/room boundary. DoD: one tick produces only changed cells plus
   events, with full snapshot fallback.
 
-- [ ] **M3.4 — WebSocket server.** Add a fixed-110ms tick server that accepts
+- [x] **M3.4 — WebSocket server.** Add a fixed-110ms tick server that accepts
   browser clients, maps incoming keymasks to `PlayerInput`, and broadcasts
   snapshots/diffs over JSON WebSockets. DoD: a test WebSocket client can join,
   move, and receive deterministic diffs.
