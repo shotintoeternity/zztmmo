@@ -119,6 +119,18 @@ func (e *Engine) VideoUninstall() {
 	}
 }
 
+// netScreenWidth is how many screen columns leave the engine over the network.
+// Columns 0..59 are the board; 60..79 are the legacy sidebar, which
+// GameUpdateSidebar always draws from stat 0's PlayerState. In a multi-player
+// room that sidebar belongs to nobody, so it is not transmitted: each client
+// draws its own from the per-player HUDSnapshot.
+func (e *Engine) netScreenWidth() int16 {
+	if e.MultiRoom {
+		return BOARD_WIDTH
+	}
+	return 80
+}
+
 func (e *Engine) DrainScreenDirty() []ScreenCell {
 	if len(e.screenDirty) == 0 {
 		return nil
@@ -132,9 +144,10 @@ func (e *Engine) DrainScreenDirty() []ScreenCell {
 	}
 	e.screenDirty = e.screenDirty[:0]
 
+	width := e.netScreenWidth()
 	cells := make([]ScreenCell, 0)
 	for y := int16(0); y < 25; y++ {
-		for x := int16(0); x < 80; x++ {
+		for x := int16(0); x < width; x++ {
 			if dirty[x][y] {
 				screenCell := e.Screen[x][y]
 				cells = append(cells, ScreenCell{X: x, Y: y, Ch: screenCell.Ch, Color: screenCell.Color})

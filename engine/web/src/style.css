@@ -108,7 +108,9 @@ input {
 .canvas-wrap {
   position: relative;
   width: 100%;
-  aspect-ratio: 4 / 3;
+  /* 80 cols x 10px, 25 rows x 18px — must match the canvas backing store or
+     the CP437 glyphs stretch. */
+  aspect-ratio: 16 / 9;
   min-height: 260px;
   border: 1px solid #59655f;
   background: #000;
@@ -182,49 +184,6 @@ canvas {
   line-height: 1.2;
   letter-spacing: 0;
   text-transform: uppercase;
-}
-
-.stats {
-  display: grid;
-  grid-template-columns: repeat(2, minmax(0, 1fr));
-  gap: 6px;
-}
-
-.stat {
-  min-height: 44px;
-  padding: 7px 8px;
-  border: 1px solid #35413c;
-  background: #171c1a;
-}
-
-.stat-label {
-  display: block;
-  color: #8fa49a;
-  font-size: 11px;
-}
-
-.stat-value {
-  display: block;
-  color: #f5f0cd;
-  font-family: "SFMono-Regular", Consolas, "Liberation Mono", monospace;
-  font-size: 18px;
-}
-
-.keys {
-  display: grid;
-  grid-template-columns: repeat(7, 1fr);
-  gap: 4px;
-}
-
-.key {
-  height: 20px;
-  border: 1px solid #35413c;
-  background: #141817;
-}
-
-.key.on {
-  background: #d1b350;
-  border-color: #efd466;
 }
 
 .messages {

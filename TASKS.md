@@ -192,7 +192,7 @@ and every run is reproducible. ANALYSIS.md §3g, §3h, §5.
   first, then the 1-hour target manually/nightly. DoD: no drift, no panic, no
   runaway memory.
 
-- [ ] **M3.8 — Authentic ZZT sidebar.** Replace the temporary web HUD with a
+- [x] **M3.8 — Authentic ZZT sidebar.** Replace the temporary web HUD with a
   ZZT-styled 20x25 sidebar rendered from protocol HUD data, using CP437 glyphs,
   DOS colors, key slots, torch meter, and sound toggle styling without letting
   legacy engine sidebar writes corrupt the playable board. DoD: browser layout
@@ -287,3 +287,4 @@ playback.
 - [ ] **M5.3 — World persistence and publishing.** Add save/export/import paths
   for edited worlds and multiplayer-safe persistence. DoD: a browser-created
   world can be saved, reloaded, exported, and hosted for other clients.
+

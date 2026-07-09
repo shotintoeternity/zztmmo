@@ -87,6 +87,9 @@ type PlayerSnapshot struct {
 	Health int16    `json:"health"`
 }
 
+// HUDSnapshot carries everything the client needs to draw the 20x25 ZZT
+// sidebar itself. TimeLimitSec and SoundEnabled are board/engine state rather
+// than player state, but the sidebar reads them, so they ride along here.
 type HUDSnapshot struct {
 	Health         int16   `json:"health"`
 	Ammo           int16   `json:"ammo"`
@@ -98,6 +101,8 @@ type HUDSnapshot struct {
 	Keys           [7]bool `json:"keys"`
 	BoardTimeSec   int16   `json:"boardTimeSec"`
 	BoardTimeHsec  int16   `json:"boardTimeHsec"`
+	TimeLimitSec   int16   `json:"timeLimitSec"`
+	SoundEnabled   bool    `json:"soundEnabled"`
 }
 
 type ProtocolEvent struct {
@@ -126,7 +131,7 @@ func NewSnapshotMessage(e *Engine, boardID int16, playerID PlayerID, statID int1
 		Hash:    StateHash(e),
 		You:     playerSnapshot(e, playerID, statID),
 		Players: players,
-		HUD:     hudSnapshot(e.PlayerFor(statID)),
+		HUD:     hudSnapshot(e, statID),
 		Screen:  screenCells(e),
 		Events:  ProtocolEvents(e.Events),
 	}
@@ -158,9 +163,10 @@ func ProtocolEvents(events []Event) []ProtocolEvent {
 }
 
 func screenCells(e *Engine) []ScreenCell {
-	cells := make([]ScreenCell, 0, 80*25)
+	width := e.netScreenWidth()
+	cells := make([]ScreenCell, 0, int(width)*25)
 	for y := int16(0); y < 25; y++ {
-		for x := int16(0); x < 80; x++ {
+		for x := int16(0); x < width; x++ {
 			cell := e.Screen[x][y]
 			cells = append(cells, ScreenCell{X: x, Y: y, Ch: cell.Ch, Color: cell.Color})
 		}
@@ -179,8 +185,11 @@ func playerSnapshot(e *Engine, playerID PlayerID, statID int16) PlayerSnapshot {
 	}
 }
 
-func hudSnapshot(pState *PlayerState) HUDSnapshot {
+func hudSnapshot(e *Engine, statID int16) HUDSnapshot {
+	pState := e.PlayerFor(statID)
 	return HUDSnapshot{
+		TimeLimitSec:   e.Board.Info.TimeLimitSec,
+		SoundEnabled:   SoundEnabled,
 		Health:         pState.Health,
 		Ammo:           pState.Ammo,
 		Gems:           pState.Gems,

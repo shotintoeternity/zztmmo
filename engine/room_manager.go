@@ -238,7 +238,7 @@ func (rm *RoomManager) StepDiffs(inputs map[PlayerID]PlayerInput) map[PlayerID]D
 			if player.boardID != room.BoardID {
 				continue
 			}
-			hud := hudSnapshot(room.Engine.PlayerFor(player.statID))
+			hud := hudSnapshot(room.Engine, player.statID)
 			diffs[playerID] = DiffMessage{
 				Type:    MessageTypeDiff,
 				BoardID: room.BoardID,

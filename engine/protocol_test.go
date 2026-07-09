@@ -115,8 +115,15 @@ func TestRoomManagerSnapshotFromTown(t *testing.T) {
 	if snapshot.HUD.Ammo != 5 || snapshot.HUD.Score != 25 {
 		t.Fatalf("HUD mismatch: %+v", snapshot.HUD)
 	}
-	if len(snapshot.Screen) != 80*25 {
-		t.Fatalf("screen cells=%d, want %d", len(snapshot.Screen), 80*25)
+	// Room engines transmit the 60-column board only; the sidebar columns
+	// (60..79) are the legacy stat-0 sidebar and are replaced by HUDSnapshot.
+	if len(snapshot.Screen) != BOARD_WIDTH*25 {
+		t.Fatalf("screen cells=%d, want %d", len(snapshot.Screen), BOARD_WIDTH*25)
+	}
+	for _, cell := range snapshot.Screen {
+		if cell.X >= BOARD_WIDTH {
+			t.Fatalf("snapshot leaked sidebar cell at x=%d", cell.X)
+		}
 	}
 	if snapshot.Hash == 0 {
 		t.Fatal("snapshot hash is zero")
@@ -199,8 +206,13 @@ func TestRoomManagerStepDiffFromTown(t *testing.T) {
 	if len(diff.Cells) == 0 {
 		t.Fatal("diff has no dirty cells")
 	}
-	if len(diff.Cells) >= 80*25 {
+	if len(diff.Cells) >= BOARD_WIDTH*25 {
 		t.Fatalf("diff sent %d cells, want less than full snapshot", len(diff.Cells))
+	}
+	for _, cell := range diff.Cells {
+		if cell.X >= BOARD_WIDTH {
+			t.Fatalf("diff leaked sidebar cell at x=%d", cell.X)
+		}
 	}
 	if len(diff.Players) != 1 || diff.Players[0].ID != playerID {
 		t.Fatalf("diff players mismatch: %+v", diff.Players)
@@ -220,5 +232,56 @@ func TestRoomManagerStepDiffFromTown(t *testing.T) {
 	}
 	if events := room.Engine.DrainEvents(); len(events) != 0 {
 		t.Fatalf("room still has %d events after diff drain", len(events))
+	}
+}
+
+// The engine keeps drawing the vanilla single-player sidebar into screen
+// columns 60..79 from stat 0's PlayerState. In a room those columns belong to
+// nobody, so they must never reach a client: each client draws its own sidebar
+// from HUDSnapshot. Board columns 0..59 must still stream normally.
+func TestRoomEngineDoesNotTransmitLegacySidebar(t *testing.T) {
+	setup := NewEngine()
+	setup.Headless = true
+	setup.WorldCreate()
+	worldBase := filepath.Join("..", "fixtures", "TOWN")
+	if !setup.WorldLoad(worldBase, ".ZZT", false) {
+		t.Fatalf("WorldLoad(%q, %q) failed", worldBase, ".ZZT")
+	}
+
+	rm := NewRoomManager(setup.World)
+	playerID := rm.JoinPlayer(1, 30, 12)
+	if _, ok := rm.Snapshot(playerID); !ok {
+		t.Fatal("snapshot failed")
+	}
+	room, ok := rm.Room(1)
+	if !ok {
+		t.Fatal("room 1 missing")
+	}
+
+	// GameUpdateSidebar is the legacy writer; run it directly so the sidebar
+	// columns are unambiguously dirty this tick.
+	room.Engine.GameUpdateSidebar()
+	if room.Engine.Screen[72][7].Ch == 0 {
+		t.Fatal("GameUpdateSidebar did not write the health cell; test no longer proves anything")
+	}
+
+	diffs := rm.StepDiffs(map[PlayerID]PlayerInput{})
+	diff, ok := diffs[playerID]
+	if !ok {
+		t.Fatal("missing diff for player")
+	}
+	for _, cell := range diff.Cells {
+		if cell.X >= BOARD_WIDTH {
+			t.Fatalf("diff leaked sidebar cell at (%d,%d)", cell.X, cell.Y)
+		}
+	}
+	if diff.HUD == nil {
+		t.Fatal("diff HUD missing")
+	}
+	if diff.HUD.TimeLimitSec != room.Engine.Board.Info.TimeLimitSec {
+		t.Fatalf("HUD.TimeLimitSec=%d, want %d", diff.HUD.TimeLimitSec, room.Engine.Board.Info.TimeLimitSec)
+	}
+	if diff.HUD.SoundEnabled != SoundEnabled {
+		t.Fatalf("HUD.SoundEnabled=%v, want %v", diff.HUD.SoundEnabled, SoundEnabled)
 	}
 }

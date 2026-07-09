@@ -1,6 +1,11 @@
 import "./style.css";
+import { drawSidebar as paintSidebar, updateSidebar as paintSidebarHud } from "./sidebar";
 
-const COLS = 60;
+const COLS = 80;
+// The server streams board columns 0..59 only. Columns 60..79 are the sidebar,
+// which this client draws itself from HUD data — see drawSidebar/updateSidebar,
+// transcribed from the engine's GameDrawSidebar/GameUpdateSidebar.
+const BOARD_COLS = 60;
 const ROWS = 25;
 const CELL_W = 10;
 const CELL_H = 18;
@@ -50,6 +55,8 @@ type HudSnapshot = {
   keys: boolean[];
   boardTimeSec: number;
   boardTimeHsec: number;
+  timeLimitSec: number;
+  soundEnabled: boolean;
 };
 
 type ProtocolEvent = {
@@ -328,21 +335,6 @@ app.innerHTML = `
       <div class="event-log" data-log></div>
     </section>
     <aside class="side">
-      <section class="panel">
-        <h2>Player</h2>
-        <div class="stats">
-          <div class="stat"><span class="stat-label">Health</span><span class="stat-value" data-health>--</span></div>
-          <div class="stat"><span class="stat-label">Ammo</span><span class="stat-value" data-ammo>--</span></div>
-          <div class="stat"><span class="stat-label">Gems</span><span class="stat-value" data-gems>--</span></div>
-          <div class="stat"><span class="stat-label">Score</span><span class="stat-value" data-score>--</span></div>
-          <div class="stat"><span class="stat-label">Board</span><span class="stat-value" data-board>--</span></div>
-          <div class="stat"><span class="stat-label">Tick</span><span class="stat-value" data-tick>--</span></div>
-        </div>
-      </section>
-      <section class="panel">
-        <h2>Keys</h2>
-        <div class="keys" data-keys></div>
-      </section>
       <section class="panel messages">
         <h2>Messages</h2>
         <div data-messages></div>
@@ -363,15 +355,6 @@ const connectButton = query<HTMLButtonElement>("[data-connect]");
 const focusButton = query<HTMLButtonElement>("[data-focus]");
 const logEl = query<HTMLElement>("[data-log]");
 const messageEl = query<HTMLElement>("[data-messages]");
-const keyRackEl = query<HTMLElement>("[data-keys]");
-const statEls = {
-  health: query<HTMLElement>("[data-health]"),
-  ammo: query<HTMLElement>("[data-ammo]"),
-  gems: query<HTMLElement>("[data-gems]"),
-  score: query<HTMLElement>("[data-score]"),
-  board: query<HTMLElement>("[data-board]"),
-  tick: query<HTMLElement>("[data-tick]"),
-};
 
 let ws: WebSocket | null = null;
 let playerId = 0;
@@ -391,12 +374,7 @@ const cells: ScreenCell[] = Array.from({ length: COLS * ROWS }, (_, i) => ({
   color: 0x1f,
 }));
 
-for (let i = 0; i < 7; i += 1) {
-  const key = document.createElement("div");
-  key.className = "key";
-  keyRackEl.appendChild(key);
-}
-
+drawSidebar();
 drawScreen();
 connectButton.addEventListener("click", () => connect());
 focusButton.addEventListener("click", () => canvas.focus());
@@ -482,7 +460,8 @@ function applySnapshot(message: SnapshotMessage) {
   overlayEl.hidden = true;
   setStatus(`board ${boardId} tick ${tick}`);
   replaceCells(message.screen);
-  updateHud(message.hud);
+  drawSidebar();
+  updateSidebar(message.hud);
   renderEvents(message.events);
   drawScreen();
 }
@@ -492,11 +471,11 @@ function applyDiff(message: DiffMessage) {
   tick = message.tick;
   if (message.cells) {
     for (const cell of message.cells) {
-      setCell(cell);
+      setBoardCell(cell);
     }
   }
   if (message.hud) {
-    updateHud(message.hud);
+    updateSidebar(message.hud);
   }
   renderEvents(message.events);
   setStatus(`board ${boardId} tick ${tick}`);
@@ -509,8 +488,17 @@ function replaceCells(nextCells: ScreenCell[]) {
     cell.color = 0x1f;
   }
   for (const cell of nextCells) {
-    setCell(cell);
+    setBoardCell(cell);
   }
+}
+
+// setBoardCell accepts cells from the server. The sidebar columns are drawn
+// locally from HUD data, so a stray legacy sidebar write can never land there.
+function setBoardCell(cell: ScreenCell) {
+  if (cell.x >= BOARD_COLS) {
+    return;
+  }
+  setCell(cell);
 }
 
 function setCell(cell: ScreenCell) {
@@ -542,17 +530,20 @@ function toGlyph(ch: number): string {
   return cp437[ch] ?? " ";
 }
 
-function updateHud(hud: HudSnapshot) {
-  statEls.health.textContent = String(hud.health);
-  statEls.ammo.textContent = String(hud.ammo);
-  statEls.gems.textContent = String(hud.gems);
-  statEls.score.textContent = String(hud.score);
-  statEls.board.textContent = String(boardId);
-  statEls.tick.textContent = String(tick);
+// writeText mirrors the engine's VideoWriteText: each code unit of `text` is a
+// CP437 byte, written left to right with a single DOS attribute byte.
+function writeText(x: number, y: number, color: number, text: string) {
+  for (let i = 0; i < text.length; i += 1) {
+    setCell({ x: x + i, y, ch: text.charCodeAt(i) & 0xff, color });
+  }
+}
 
-  [...keyRackEl.children].forEach((child, index) => {
-    child.classList.toggle("on", Boolean(hud.keys[index]));
-  });
+function drawSidebar() {
+  paintSidebar(writeText);
+}
+
+function updateSidebar(hud: HudSnapshot) {
+  paintSidebarHud(writeText, hud);
 }
 
 function renderEvents(events: ProtocolEvent[] | undefined) {
