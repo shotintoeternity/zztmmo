@@ -44,7 +44,11 @@ var (
 )
 
 func InputUpdate() {
-	InputUpdateWithKey(0)
+	InputDeltaX, InputDeltaY, InputShiftPressed, InputKeyPressed = activeInput.Poll()
+	if InputDeltaX != 0 || InputDeltaY != 0 {
+		InputLastDeltaX = InputDeltaX
+		InputLastDeltaY = InputDeltaY
+	}
 }
 
 func InputUpdateWithKey(keyRead byte) {
@@ -104,6 +108,61 @@ func InputUpdateWithKey(keyRead byte) {
 func InputReadWaitKey() {
 	key := <-keyChan
 	InputUpdateWithKey(key)
+}
+
+// InputSource is the M0.3 seam that lets InputUpdate take a tick's input from
+// something other than a live keyboard. Poll returns the same shape the input
+// globals hold — movement delta, shift, and the raw key — and InputUpdate
+// copies it into InputDeltaX/InputDeltaY/InputShiftPressed/InputKeyPressed,
+// which the simulation reads unchanged (do NOT rename those globals — rule 6).
+type InputSource interface {
+	Poll() (dx, dy int16, shift bool, key byte)
+}
+
+// activeInput is where InputUpdate reads from. It defaults to the live tcell
+// keyboard so interactive play is byte-for-byte unchanged; tests and the
+// future server swap in a ScriptedInput via SetInputSource.
+var activeInput InputSource = TcellInput{}
+
+// SetInputSource selects where InputUpdate reads its input from.
+func SetInputSource(s InputSource) {
+	activeInput = s
+}
+
+// TcellInput is the live-keyboard source. It runs the original keyboard
+// processing (drain the poller channel, buffer keys, map arrows to deltas) and
+// reports the resulting globals, so InputUpdate behaves exactly as it did
+// before M0.3. With no poller running (headless) the channel drain hits the
+// select's default branch, so this is safe to call without a terminal too.
+type TcellInput struct{}
+
+func (TcellInput) Poll() (dx, dy int16, shift bool, key byte) {
+	InputUpdateWithKey(0)
+	return InputDeltaX, InputDeltaY, InputShiftPressed, InputKeyPressed
+}
+
+// ScriptedTick is one tick of pre-recorded input.
+type ScriptedTick struct {
+	DeltaX, DeltaY int16
+	Shift          bool
+	Key            byte
+}
+
+// ScriptedInput replays a fixed slice of ticks with no terminal — the basis of
+// the deterministic replay harness (M0.6). Once the script is exhausted it
+// reports idle input (no movement, no key) rather than blocking.
+type ScriptedInput struct {
+	Ticks []ScriptedTick
+	Pos   int
+}
+
+func (s *ScriptedInput) Poll() (dx, dy int16, shift bool, key byte) {
+	if s.Pos >= len(s.Ticks) {
+		return 0, 0, false, 0
+	}
+	t := s.Ticks[s.Pos]
+	s.Pos++
+	return t.DeltaX, t.DeltaY, t.Shift, t.Key
 }
 
 func InputStartPoller(screen tcell.Screen) {

@@ -39,7 +39,7 @@ and every run is reproducible. ANALYSIS.md §3g, §3h, §5.
   DoD: game still playable via `go run .`; with `Headless = true` nothing
   touches tcell (unit test: run `BoardDrawTile` headless, assert Screen contents).
 
-- [ ] **M0.3 — Injected input.** In `engine/input.go`, put keyboard polling behind
+- [x] **M0.3 — Injected input.** In `engine/input.go`, put keyboard polling behind
   `type InputSource interface { Poll() (dx, dy int16, shift bool, key byte) }`
   with two impls: the existing tcell keyboard, and `ScriptedInput` (a slice of
   per-tick inputs). `InputUpdate()` reads from the active source into the existing
