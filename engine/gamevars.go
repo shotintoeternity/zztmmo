@@ -324,6 +324,12 @@ func (e *Engine) SpawnPlayer() int16 {
 	e.Board.Tiles[spawnX][spawnY].Element = E_PLAYER
 	e.Board.Tiles[spawnX][spawnY].Color = ElementDefs[E_PLAYER].Color
 
+	e.ResetPlayerState(statId)
+	e.BoardDrawTile(spawnX, spawnY)
+	return statId
+}
+
+func (e *Engine) ResetPlayerState(statId int16) {
 	pState := e.PlayerFor(statId)
 	pState.Health = 100
 	pState.Ammo = 0
@@ -348,9 +354,6 @@ func (e *Engine) SpawnPlayer() int16 {
 	for i := 1; i <= 7; i++ {
 		pState.Keys[i-1] = false
 	}
-
-	e.BoardDrawTile(spawnX, spawnY)
-	return statId
 }
 
 func (e *Engine) RemovePlayer(statId int16) {

@@ -41,15 +41,8 @@ func NewRoomManager(world TWorld) *RoomManager {
 
 func (rm *RoomManager) JoinPlayer(boardID, spawnX, spawnY int16) PlayerID {
 	room := rm.ensureRoom(boardID)
-	spawnX, spawnY = roomSpawn(room, spawnX, spawnY)
-	originalSpawnX := room.Engine.Board.Info.StartPlayerX
-	originalSpawnY := room.Engine.Board.Info.StartPlayerY
-	room.Engine.Board.Info.StartPlayerX = byte(spawnX)
-	room.Engine.Board.Info.StartPlayerY = byte(spawnY)
-
-	statID := room.Engine.SpawnPlayer()
-	room.Engine.Board.Info.StartPlayerX = originalSpawnX
-	room.Engine.Board.Info.StartPlayerY = originalSpawnY
+	statID := rm.spawnPlayerInRoom(room, spawnX, spawnY)
+	room.Engine.ResetPlayerState(statID)
 	rm.nextPlayerID++
 	playerID := rm.nextPlayerID
 	player := &roomPlayer{
@@ -63,8 +56,60 @@ func (rm *RoomManager) JoinPlayer(boardID, spawnX, spawnY int16) PlayerID {
 	return playerID
 }
 
+func (rm *RoomManager) spawnPlayerInRoom(room *Room, spawnX, spawnY int16) int16 {
+	spawnX, spawnY = roomSpawn(room, spawnX, spawnY)
+	if len(room.players) == 0 {
+		if statID, ok := claimablePlayerStat(room); ok {
+			movePlayerStat(room.Engine, statID, spawnX, spawnY)
+			return statID
+		}
+	}
+
+	originalSpawnX := room.Engine.Board.Info.StartPlayerX
+	originalSpawnY := room.Engine.Board.Info.StartPlayerY
+	room.Engine.Board.Info.StartPlayerX = byte(spawnX)
+	room.Engine.Board.Info.StartPlayerY = byte(spawnY)
+	statID := room.Engine.SpawnPlayer()
+	room.Engine.Board.Info.StartPlayerX = originalSpawnX
+	room.Engine.Board.Info.StartPlayerY = originalSpawnY
+	return statID
+}
+
+func claimablePlayerStat(room *Room) (int16, bool) {
+	if room.Engine.Board.StatCount < 0 {
+		return 0, false
+	}
+	stat := room.Engine.Board.Stats[0]
+	if room.Engine.Board.Tiles[stat.X][stat.Y].Element == E_PLAYER {
+		return 0, true
+	}
+	for statID := int16(1); statID <= room.Engine.Board.StatCount; statID++ {
+		stat = room.Engine.Board.Stats[statID]
+		if room.Engine.Board.Tiles[stat.X][stat.Y].Element == E_PLAYER {
+			return statID, true
+		}
+	}
+	return 0, false
+}
+
+func movePlayerStat(engine *Engine, statID, x, y int16) {
+	stat := &engine.Board.Stats[statID]
+	if int16(stat.X) != x || int16(stat.Y) != y {
+		engine.MoveStat(statID, x, y)
+	}
+	engine.Board.Tiles[x][y].Element = E_PLAYER
+	engine.Board.Tiles[x][y].Color = ElementDefs[E_PLAYER].Color
+	engine.BoardDrawTile(x, y)
+}
+
 func roomSpawn(room *Room, spawnX, spawnY int16) (int16, int16) {
 	requested := spawnX != 0 && spawnY != 0
+	if !requested && len(room.players) == 0 {
+		if statID, ok := claimablePlayerStat(room); ok {
+			stat := room.Engine.Board.Stats[statID]
+			return int16(stat.X), int16(stat.Y)
+		}
+	}
 	if spawnX == 0 || spawnY == 0 {
 		spawnX = int16(room.Engine.Board.Info.StartPlayerX)
 		spawnY = int16(room.Engine.Board.Info.StartPlayerY)
@@ -338,14 +383,7 @@ func (rm *RoomManager) transferPlayer(playerID PlayerID, transfer TransferEvent)
 	delete(srcRoom.players, playerID)
 	rm.reindexRoomPlayers(srcRoom.BoardID, removedStatID)
 
-	spawnX, spawnY := roomSpawn(dstRoom, transfer.EntryX, transfer.EntryY)
-	originalSpawnX := dstRoom.Engine.Board.Info.StartPlayerX
-	originalSpawnY := dstRoom.Engine.Board.Info.StartPlayerY
-	dstRoom.Engine.Board.Info.StartPlayerX = byte(spawnX)
-	dstRoom.Engine.Board.Info.StartPlayerY = byte(spawnY)
-	newStatID := dstRoom.Engine.SpawnPlayer()
-	dstRoom.Engine.Board.Info.StartPlayerX = originalSpawnX
-	dstRoom.Engine.Board.Info.StartPlayerY = originalSpawnY
+	newStatID := rm.spawnPlayerInRoom(dstRoom, transfer.EntryX, transfer.EntryY)
 	*dstRoom.Engine.PlayerFor(newStatID) = stateCopy
 	dstRoom.players[playerID] = struct{}{}
 

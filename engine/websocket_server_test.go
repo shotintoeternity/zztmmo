@@ -206,6 +206,84 @@ func TestWebSocketServerTwoClientsSeeAndFight(t *testing.T) {
 	waitForPlayerHealth(t, ctx, conn2, snap2.You.ID, 90)
 }
 
+func TestWebSocketServerMultiplayerSmokePickupTransferHUD(t *testing.T) {
+	world := testMultiplayerSmokeWorld(t)
+	server := NewWebSocketServer(world, 1)
+	server.TickDuration = 10 * time.Millisecond
+
+	ctx, cancel := context.WithCancel(context.Background())
+	defer cancel()
+	go server.Run(ctx)
+
+	httpServer := httptest.NewServer(server)
+	defer httpServer.Close()
+
+	conn1, snap1 := joinTestClient(t, ctx, httpServer.URL, "p1")
+	defer conn1.Close(websocket.StatusNormalClosure, "")
+	conn2, snap2 := joinTestClient(t, ctx, httpServer.URL, "p2")
+	defer conn2.Close(websocket.StatusNormalClosure, "")
+
+	if snap1.You.StatID != 0 {
+		t.Fatalf("p1 stat=%d, want claimed original stat 0", snap1.You.StatID)
+	}
+	if snap1.You.X != 10 || snap1.You.Y != 12 {
+		t.Fatalf("p1 spawned at (%d,%d), want original spawn (10,12)", snap1.You.X, snap1.You.Y)
+	}
+	if snap2.You.X != 10 || snap2.You.Y != 13 {
+		t.Fatalf("p2 spawned at (%d,%d), want adjacent slot (10,13)", snap2.You.X, snap2.You.Y)
+	}
+
+	waitForPlayers(t, ctx, conn1, 2)
+	waitForPlayers(t, ctx, conn2, 2)
+
+	if err := wsjson.Write(ctx, conn2, InputMessage{
+		Type:     MessageTypeInput,
+		PlayerID: snap2.You.ID,
+		Seq:      1,
+		Keymask:  InputMaskDown,
+	}); err != nil {
+		t.Fatalf("p2 move input: %v", err)
+	}
+	waitForDiff(t, ctx, conn1, func(diff DiffMessage) bool {
+		return playerAt(diff, snap1.You.ID, 10, 12) && playerAt(diff, snap2.You.ID, 10, 14)
+	})
+
+	if err := wsjson.Write(ctx, conn1, InputMessage{
+		Type:     MessageTypeInput,
+		PlayerID: snap1.You.ID,
+		Seq:      1,
+		Keymask:  InputMaskRight,
+	}); err != nil {
+		t.Fatalf("p1 gem input: %v", err)
+	}
+	waitForDiff(t, ctx, conn1, func(diff DiffMessage) bool {
+		return diff.HUD != nil && diff.HUD.Gems == 1 && diff.HUD.Score == 10 && playerAt(diff, snap1.You.ID, 11, 12)
+	})
+	waitForDiff(t, ctx, conn2, func(diff DiffMessage) bool {
+		return diff.HUD != nil && diff.HUD.Gems == 0 && diff.HUD.Score == 0 && playerAt(diff, snap1.You.ID, 11, 12)
+	})
+
+	if err := wsjson.Write(ctx, conn1, InputMessage{
+		Type:     MessageTypeInput,
+		PlayerID: snap1.You.ID,
+		Seq:      2,
+		Keymask:  InputMaskRight,
+	}); err != nil {
+		t.Fatalf("p1 passage input: %v", err)
+	}
+	boardChange := waitForBoardChange(t, ctx, conn1, 2)
+	if boardChange.Snapshot.You.X != 5 || boardChange.Snapshot.You.Y != 5 {
+		t.Fatalf("p1 transferred to (%d,%d), want passage entry (5,5)", boardChange.Snapshot.You.X, boardChange.Snapshot.You.Y)
+	}
+	if boardChange.Snapshot.HUD.Gems != 1 || boardChange.Snapshot.HUD.Score != 10 {
+		t.Fatalf("p1 HUD after transfer gems=%d score=%d, want 1/10", boardChange.Snapshot.HUD.Gems, boardChange.Snapshot.HUD.Score)
+	}
+
+	waitForDiff(t, ctx, conn2, func(diff DiffMessage) bool {
+		return diff.BoardID == 1 && len(diff.Players) == 1 && diff.Players[0].ID == snap2.You.ID
+	})
+}
+
 func TestInputMessageToPlayerInput(t *testing.T) {
 	tests := []struct {
 		name  string
@@ -305,6 +383,50 @@ func waitForPlayerHealth(t *testing.T, ctx context.Context, conn *websocket.Conn
 	})
 }
 
+func waitForBoardChange(t *testing.T, ctx context.Context, conn *websocket.Conn, boardID int16) BoardChangeMessage {
+	t.Helper()
+
+	deadline := time.After(2 * time.Second)
+	for {
+		select {
+		case <-deadline:
+			t.Fatal("timed out waiting for board change")
+		default:
+		}
+
+		var raw json.RawMessage
+		if err := wsjson.Read(ctx, conn, &raw); err != nil {
+			t.Fatalf("read message: %v", err)
+		}
+		var envelope struct {
+			Type string `json:"type"`
+		}
+		if err := json.Unmarshal(raw, &envelope); err != nil {
+			t.Fatalf("decode envelope: %v", err)
+		}
+		if envelope.Type != MessageTypeBoardChange {
+			continue
+		}
+
+		var boardChange BoardChangeMessage
+		if err := json.Unmarshal(raw, &boardChange); err != nil {
+			t.Fatalf("decode board change: %v", err)
+		}
+		if boardChange.Snapshot.BoardID == boardID {
+			return boardChange
+		}
+	}
+}
+
+func playerAt(diff DiffMessage, playerID PlayerID, x, y int16) bool {
+	for _, player := range diff.Players {
+		if player.ID == playerID && player.X == x && player.Y == y {
+			return true
+		}
+	}
+	return false
+}
+
 func waitForDiff(t *testing.T, ctx context.Context, conn *websocket.Conn, match func(DiffMessage) bool) DiffMessage {
 	t.Helper()
 
@@ -383,6 +505,59 @@ func testFightWorld(t *testing.T) TWorld {
 	setup.Board.Info.StartPlayerY = 12
 	setup.Board.Info.MaxShots = 255
 	setup.BoardClose()
+	return setup.World
+}
+
+func testMultiplayerSmokeWorld(t *testing.T) TWorld {
+	t.Helper()
+
+	setup := NewEngine()
+	setup.Headless = true
+	setup.WorldCreate()
+	setup.World.BoardCount = 2
+
+	const passageColor = 0x0E
+
+	setup.World.Info.CurrentBoard = 1
+	setup.BoardCreate()
+	for ix := int16(1); ix <= BOARD_WIDTH; ix++ {
+		for iy := int16(1); iy <= BOARD_HEIGHT; iy++ {
+			setup.Board.Tiles[ix][iy] = TTile{Element: E_NORMAL, Color: 0x07}
+		}
+	}
+	setup.Board.Tiles[10][12] = TTile{Element: E_PLAYER, Color: ElementDefs[E_PLAYER].Color}
+	setup.Board.Stats[0].X = 10
+	setup.Board.Stats[0].Y = 12
+	setup.Board.Stats[0].Under = TTile{Element: E_EMPTY}
+	setup.Board.Tiles[10][13] = TTile{Element: E_EMPTY}
+	setup.Board.Tiles[10][14] = TTile{Element: E_EMPTY}
+	setup.Board.Tiles[11][12] = TTile{Element: E_GEM, Color: ElementDefs[E_GEM].Color}
+	setup.Board.Tiles[12][12] = TTile{Element: E_PASSAGE, Color: passageColor}
+	setup.AddStat(12, 12, E_PASSAGE, passageColor, 0, StatTemplateDefault)
+	setup.Board.Stats[setup.Board.StatCount].P3 = 2
+	setup.Board.Info.StartPlayerX = 10
+	setup.Board.Info.StartPlayerY = 12
+	setup.Board.Info.MaxShots = 255
+	setup.Board.Name = "Smoke A"
+	setup.BoardClose()
+
+	setup.World.Info.CurrentBoard = 2
+	setup.BoardCreate()
+	for ix := int16(1); ix <= BOARD_WIDTH; ix++ {
+		for iy := int16(1); iy <= BOARD_HEIGHT; iy++ {
+			setup.Board.Tiles[ix][iy] = TTile{Element: E_EMPTY}
+		}
+	}
+	setup.Board.Tiles[setup.Board.Stats[0].X][setup.Board.Stats[0].Y] = TTile{Element: E_EMPTY}
+	setup.Board.StatCount = -1
+	setup.Board.Tiles[5][5] = TTile{Element: E_PASSAGE, Color: passageColor}
+	setup.AddStat(5, 5, E_PASSAGE, passageColor, 0, StatTemplateDefault)
+	setup.Board.Stats[setup.Board.StatCount].P3 = 1
+	setup.Board.Info.StartPlayerX = 5
+	setup.Board.Info.StartPlayerY = 5
+	setup.Board.Name = "Smoke B"
+	setup.BoardClose()
+
 	return setup.World
 }
 

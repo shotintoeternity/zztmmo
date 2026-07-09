@@ -184,7 +184,7 @@ and every run is reproducible. ANALYSIS.md §3g, §3h, §5.
   CP437-style 80x25 cells on canvas, sends inputs, and handles snapshots, diffs,
   scroll/sound/message events. DoD: one browser can play against the server.
 
-- [ ] **M3.6 — Multiplayer browser smoke.** Two browsers or bot clients on one
+- [x] **M3.6 — Multiplayer browser smoke.** Two browsers or bot clients on one
   board move independently, pick up items, transfer rooms, and receive
   per-player events/HUD. DoD: scripted multi-client test passes.
 
