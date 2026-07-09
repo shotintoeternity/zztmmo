@@ -97,7 +97,7 @@ and every run is reproducible. ANALYSIS.md §3g, §3h, §5.
   DEVIATION allowed: the sim no longer freezes while a scroll is open — replay
   fixture will change; regenerate it and say so in the commit.
 
-- [ ] **M1.4 — De-modal remaining prompts.** Quit confirm inside player tick
+- [x] **M1.4 — De-modal remaining prompts.** Quit confirm inside player tick
   (`engine/elements.go:1148`), help viewer (`elements.go:1281`), high-score entry
   (`game.go:1505-1511`), `GamePromptEndPlay` — all become events or move to the
   interactive wrapper. Sim code must contain zero TextWindow/SidebarPrompt/

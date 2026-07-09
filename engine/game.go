@@ -754,33 +754,16 @@ func (e *Engine) GameWorldLoad(extension string) (GameWorldLoad bool) {
 }
 
 func (e *Engine) HighScoresAdd(score int16) {
-	var (
-		textWindow TTextWindowState
-		name       string
-		i, listPos int16
-	)
+	var listPos int16
 	listPos = 1
 	for listPos <= 30 && score < e.HighScoreList[listPos-1].Score {
 		listPos++
 	}
 	if listPos <= 30 && score > 0 {
-		for i = 29; i >= listPos; i-- {
-			e.HighScoreList[i+1-1] = e.HighScoreList[i-1]
-		}
-		e.HighScoreList[listPos-1].Score = score
-		e.HighScoreList[listPos-1].Name = "-- You! --"
-		e.HighScoresInitTextWindow(&textWindow)
-		textWindow.LinePos = listPos
-		textWindow.Title = "New high score for " + e.World.Info.Name
-		TextWindowDrawOpen(&textWindow)
-		TextWindowDraw(&textWindow, false, false)
-		name = ""
-		e.PopupPromptString("Congratulations!  Enter your name:", &name)
-		e.HighScoreList[listPos-1].Name = name
-		e.HighScoresSave()
-		TextWindowDrawClose(&textWindow)
-		e.TransitionDrawToBoard()
-		TextWindowFree(&textWindow)
+		e.Events = append(e.Events, HighScoreEntryEvent{
+			Score:   score,
+			ListPos: listPos,
+		})
 	}
 }
 
@@ -1571,6 +1554,13 @@ func (e *Engine) GamePlayLoop(boardChanged bool) {
 					e.PendingScrollReply = textWindow.Hyperlink
 					e.PendingScrollStatId = ev.StatId
 				}
+			case QuitPromptEvent:
+				e.GamePlayExitRequested = e.SidebarPromptYesNo("End this game? ", true)
+				if InputKeyPressed == '\x1b' {
+					e.GamePlayExitRequested = false
+				}
+			case HelpEvent:
+				TextWindowDisplayFile(ev.Filename, ev.Title)
 			}
 		}
 	}
@@ -1582,6 +1572,36 @@ func (e *Engine) GamePlayLoop(boardChanged bool) {
 		}
 	} else if e.GameStateElement == E_MONITOR {
 		e.SidebarClearLine(5)
+	}
+
+	// Drain final events (such as HighScoreEntryEvent)
+	for len(e.Events) > 0 {
+		event := e.Events[0]
+		e.Events = e.Events[1:]
+
+		switch ev := event.(type) {
+		case HighScoreEntryEvent:
+			var textWindow TTextWindowState
+			for i := int16(29); i >= ev.ListPos; i-- {
+				e.HighScoreList[i+1-1] = e.HighScoreList[i-1]
+			}
+			e.HighScoreList[ev.ListPos-1].Score = ev.Score
+			e.HighScoreList[ev.ListPos-1].Name = "-- You! --"
+
+			e.HighScoresInitTextWindow(&textWindow)
+			textWindow.LinePos = ev.ListPos
+			textWindow.Title = "New high score for " + e.World.Info.Name
+
+			TextWindowDrawOpen(&textWindow)
+			TextWindowDraw(&textWindow, false, false)
+			name := ""
+			e.PopupPromptString("Congratulations!  Enter your name:", &name)
+			e.HighScoreList[ev.ListPos-1].Name = name
+			e.HighScoresSave()
+			TextWindowDrawClose(&textWindow)
+			e.TransitionDrawToBoard()
+			TextWindowFree(&textWindow)
+		}
 	}
 
 	e.Board.Tiles[e.Board.Stats[0].X][e.Board.Stats[0].Y].Element = E_PLAYER

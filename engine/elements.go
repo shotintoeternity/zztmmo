@@ -902,13 +902,10 @@ func (e *Engine) ElementScrollTick(statId int16) {
 
 func (e *Engine) ElementScrollTouch(x, y int16, sourceStatId int16, deltaX, deltaY *int16) {
 	var (
-		textWindow TTextWindowState
 		statId     int16
 	)
 	statId = e.GetStatIdAt(x, y)
 	stat := &e.Board.Stats[statId]
-	textWindow.Selectable = false
-	textWindow.LinePos = 1
 	SoundQueue(2, SoundParse("c-c+d-d+e-e+f-f+g-g"))
 	stat.DataPos = 0
 	e.OopExecute(statId, &stat.DataPos, "Scroll")
@@ -1145,10 +1142,7 @@ func (e *Engine) GamePromptEndPlay() {
 		e.GamePlayExitRequested = true
 		e.BoardDrawBorder()
 	} else {
-		e.GamePlayExitRequested = e.SidebarPromptYesNo("End this game? ", true)
-		if InputKeyPressed == '\x1b' {
-			e.GamePlayExitRequested = false
-		}
+		e.Events = append(e.Events, QuitPromptEvent{})
 	}
 	InputKeyPressed = '\x00'
 }
@@ -1278,7 +1272,10 @@ func (e *Engine) ElementPlayerTick(statId int16) {
 		e.GameUpdateSidebar()
 		InputKeyPressed = ' '
 	case 'H':
-		TextWindowDisplayFile("GAME.HLP", "Playing ZZT")
+		e.Events = append(e.Events, HelpEvent{
+			Filename: "GAME.HLP",
+			Title:    "Playing ZZT",
+		})
 	case '?':
 		e.GameDebugPrompt()
 		InputKeyPressed = '\x00'

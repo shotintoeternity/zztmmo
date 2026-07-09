@@ -205,6 +205,15 @@ type (
 		Lines  []string
 		StatId int16
 	}
+	QuitPromptEvent struct{}
+	HelpEvent       struct {
+		Filename string
+		Title    string
+	}
+	HighScoreEntryEvent struct {
+		Score   int16
+		ListPos int16
+	}
 )
 
 var (
