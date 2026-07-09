@@ -1139,8 +1139,8 @@ func (e *Engine) DisplayMessage(time int16, message string) {
 func (e *Engine) DamageStat(attackerStatId int16) {
 	var oldX, oldY int16
 	stat := &e.Board.Stats[attackerStatId]
-	pState := e.PlayerFor(attackerStatId)
-	if attackerStatId == 0 {
+	if e.Board.Tiles[stat.X][stat.Y].Element == E_PLAYER {
+		pState := e.PlayerFor(attackerStatId)
 		if pState.Health > 0 {
 			pState.Health -= 10
 			e.GameUpdateSidebar()
@@ -1162,7 +1162,15 @@ func (e *Engine) DamageStat(attackerStatId int16) {
 				}
 				e.SoundQueue(4, "\x10\x01 \x01\x13\x01#\x01")
 			} else {
+				// Health reached 0: start respawn countdown instead of game-over.
 				e.SoundQueue(5, " \x03#\x03'\x030\x03'\x03*\x032\x037\x035\x038\x03@\x03E\x03\x10\n")
+				if pState.Score >= RESPAWN_SCORE_PENALTY {
+					pState.Score -= RESPAWN_SCORE_PENALTY
+				} else {
+					pState.Score = 0
+				}
+				pState.RespawnTicks = RESPAWN_TICKS
+				e.Events = append(e.Events, DeathEvent{StatId: attackerStatId})
 			}
 		}
 	} else {
@@ -1189,8 +1197,10 @@ func (e *Engine) BoardDamageTile(x, y int16) {
 }
 
 func (e *Engine) BoardAttack(attackerStatId int16, x, y int16) {
+	attackerStat := &e.Board.Stats[attackerStatId]
+	isPlayerAttacker := e.Board.Tiles[attackerStat.X][attackerStat.Y].Element == E_PLAYER
 	pState := e.PlayerFor(attackerStatId)
-	if attackerStatId == 0 && pState.EnergizerTicks > 0 {
+	if isPlayerAttacker && pState.EnergizerTicks > 0 {
 		pState.Score = ElementDefs[e.Board.Tiles[x][y].Element].ScoreValue + pState.Score
 		e.GameUpdateSidebar()
 	} else {
@@ -1218,7 +1228,7 @@ func (e *Engine) BoardShoot(element byte, tx, ty, deltaX, deltaY int16, source i
 		stat.StepY = deltaY
 		stat.P2 = 100
 		BoardShoot = true
-	} else if e.Board.Tiles[tx+deltaX][ty+deltaY].Element == E_BREAKABLE || ElementDefs[e.Board.Tiles[tx+deltaX][ty+deltaY].Element].Destructible && e.Board.Tiles[tx+deltaX][ty+deltaY].Element == E_PLAYER == (source != 0) && e.PlayerFor(0).EnergizerTicks <= 0 {
+	} else if e.Board.Tiles[tx+deltaX][ty+deltaY].Element == E_BREAKABLE || ElementDefs[e.Board.Tiles[tx+deltaX][ty+deltaY].Element].Destructible && e.Board.Tiles[tx+deltaX][ty+deltaY].Element == E_PLAYER == (source >= SHOT_SOURCE_PLAYER_BASE) && e.PlayerFor(0).EnergizerTicks <= 0 {
 		e.BoardDamageTile(tx+deltaX, ty+deltaY)
 		e.SoundQueue(2, "\x10\x01")
 		BoardShoot = true

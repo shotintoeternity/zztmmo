@@ -499,7 +499,11 @@ func (e *Engine) OopExecute(statId int16, position *int16, name string) {
 		argTile2          TTile
 	)
 	stat := &e.Board.Stats[statId]
-	activePlayer := e.PlayerFor(0)
+	// activePlayer is the PlayerState that #give/#take/#endgame etc. act on.
+	// Use the nearest player to the triggering stat so that in multiplayer,
+	// the player who walked into the object gets the inventory change — not
+	// always stat 0. In single-player this resolves to stat 0 as before.
+	activePlayer := e.PlayerFor(e.NearestPlayer(int16(stat.X), int16(stat.Y)))
 	TextWindowInitState(&textWindow)
 
 	textWindow.Selectable = false

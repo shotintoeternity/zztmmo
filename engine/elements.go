@@ -278,9 +278,38 @@ TryMove:
 		goto TryMove
 		return
 	}
-	if iElem == E_BREAKABLE || ElementDefs[iElem].Destructible && (iElem == E_PLAYER || stat.P1 == 0) {
+	if iElem == E_BREAKABLE || ElementDefs[iElem].Destructible && (iElem == E_PLAYER || int16(stat.P1) >= SHOT_SOURCE_PLAYER_BASE) {
+		// For player-owned bullets hitting a player tile: check FriendlyFire
+		// and self-shot rules before allowing damage.
+		if iElem == E_PLAYER {
+			targetStatId := e.GetStatIdAt(ix, iy)
+			ownerStatId := int16(stat.P1) - SHOT_SOURCE_PLAYER_BASE // valid when P1 >= base
+			if int16(stat.P1) >= SHOT_SOURCE_PLAYER_BASE {
+				// Player-owned bullet hitting a player.
+				if !e.FriendlyFire {
+					// Friendly fire off: player bullets never damage players.
+					e.RemoveStat(statId)
+					e.CurrentStatTicked--
+					return
+				}
+				if targetStatId == ownerStatId {
+					// A player's bullet never damages themselves.
+					e.RemoveStat(statId)
+					e.CurrentStatTicked--
+					return
+				}
+			}
+		}
+		// Credit score to the bullet's owner (player bullet: owner statId;
+		// enemy bullet: stat 0 as fallback, matching vanilla behavior).
 		if ElementDefs[iElem].ScoreValue != 0 {
-			e.PlayerFor(0).Score += ElementDefs[iElem].ScoreValue
+			var ownerStatId int16
+			if int16(stat.P1) >= SHOT_SOURCE_PLAYER_BASE {
+				ownerStatId = int16(stat.P1) - SHOT_SOURCE_PLAYER_BASE
+			} else {
+				ownerStatId = 0 // ZZT-QUIRK: enemy kill score goes to player 0
+			}
+			e.PlayerFor(ownerStatId).Score += ElementDefs[iElem].ScoreValue
 			e.GameUpdateSidebar()
 		}
 		e.BoardAttack(statId, ix, iy)
@@ -1190,22 +1219,50 @@ func (e *Engine) ElementPlayerTick(statId int16) {
 		e.BoardDrawTile(int16(stat.X), int16(stat.Y))
 	}
 
+	// Respawn countdown: when RespawnTicks > 0 the player is dead and waiting
+	// to reappear. Decrement each tick; at 0 place them back at the entry point
+	// with invulnerability and emit RespawnEvent. Skip all input handling while dead.
+	if pState.RespawnTicks > 0 {
+		pState.RespawnTicks--
+		if pState.RespawnTicks == 0 {
+			// Place player at board entry point.
+			spawnX := int16(e.Board.Info.StartPlayerX)
+			spawnY := int16(e.Board.Info.StartPlayerY)
+			if spawnX == 0 || spawnY == 0 {
+				spawnX = BOARD_WIDTH / 2
+				spawnY = BOARD_HEIGHT / 2
+			}
+			oldX := int16(stat.X)
+			oldY := int16(stat.Y)
+			e.Board.Tiles[stat.X][stat.Y].Element = E_EMPTY
+			e.BoardDrawTile(oldX, oldY)
+			e.DrawPlayerSurroundings(oldX, oldY, 0)
+			stat.X = byte(spawnX)
+			stat.Y = byte(spawnY)
+			e.Board.Tiles[stat.X][stat.Y] = TTile{Element: E_PLAYER, Color: ElementDefs[E_PLAYER].Color}
+			e.DrawPlayerSurroundings(spawnX, spawnY, 0)
+			e.BoardDrawTile(spawnX, spawnY)
+			pState.Health = 100
+			pState.EnergizerTicks = RESPAWN_INVULN_TICKS
+			e.GameUpdateSidebar()
+			e.Events = append(e.Events, RespawnEvent{StatId: statId, X: spawnX, Y: spawnY})
+		}
+		return
+	}
 	if pState.Health <= 0 {
+		// Health is 0 but RespawnTicks hasn't been set yet (e.g. very first tick
+		// after DamageStat ran this same cycle). Zero input and wait.
 		InputDeltaX = 0
 		InputDeltaY = 0
 		InputShiftPressed = false
-		if e.GetStatIdAt(0, 0) == -1 {
-			e.DisplayMessage(32000, " Game over  -  Press ESCAPE")
-		}
-		e.TickTimeDuration = 0
-		e.SoundBlockQueueing = true
+		return
 	}
 	if InputShiftPressed || InputKeyPressed == ' ' {
 		if InputShiftPressed && (InputDeltaX != 0 || InputDeltaY != 0) {
-			e.PlayerDirX = InputDeltaX
-			e.PlayerDirY = InputDeltaY
+			pState.DirX = InputDeltaX
+			pState.DirY = InputDeltaY
 		}
-		if e.PlayerDirX != 0 || e.PlayerDirY != 0 {
+		if pState.DirX != 0 || pState.DirY != 0 {
 			if e.Board.Info.MaxShots == 0 {
 				if pState.MessageNoShootingNotShown {
 					e.DisplayMessage(200, "Can't shoot in this place!")
@@ -1224,7 +1281,7 @@ func (e *Engine) ElementPlayerTick(statId int16) {
 					}
 				}
 				if bulletCount < int16(e.Board.Info.MaxShots) {
-					if e.BoardShoot(E_BULLET, int16(stat.X), int16(stat.Y), e.PlayerDirX, e.PlayerDirY, SHOT_SOURCE_PLAYER) {
+					if e.BoardShoot(E_BULLET, int16(stat.X), int16(stat.Y), pState.DirX, pState.DirY, statId+SHOT_SOURCE_PLAYER_BASE) {
 						pState.Ammo--
 						e.GameUpdateSidebar()
 						e.SoundQueue(2, "@\x010\x01 \x01")
@@ -1236,8 +1293,8 @@ func (e *Engine) ElementPlayerTick(statId int16) {
 
 		}
 	} else if InputDeltaX != 0 || InputDeltaY != 0 {
-		e.PlayerDirX = InputDeltaX
-		e.PlayerDirY = InputDeltaY
+		pState.DirX = InputDeltaX
+		pState.DirY = InputDeltaY
 		ElementDefs[e.Board.Tiles[int16(stat.X)+InputDeltaX][int16(stat.Y)+InputDeltaY].Element].TouchProc(e, int16(stat.X)+InputDeltaX, int16(stat.Y)+InputDeltaY, statId, &InputDeltaX, &InputDeltaY)
 		if InputDeltaX != 0 || InputDeltaY != 0 {
 			if SoundEnabled && !SoundIsPlaying {
@@ -1755,8 +1812,6 @@ func (e *Engine) InitElementsGame() {
 
 func (e *Engine) InitEditorStatSettings() {
 	var i int16
-	e.PlayerDirX = 0
-	e.PlayerDirY = 0
 	for i = 0; i <= MAX_ELEMENT; i++ {
 		setting := &e.World.EditorStatSettings[i]
 		setting.P1 = 4

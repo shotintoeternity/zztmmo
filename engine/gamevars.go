@@ -133,8 +133,6 @@ type (
 	THighScoreList [HIGH_SCORE_COUNT]THighScoreEntry
 	TIoTmpBuf      [20000]byte
 	Engine         struct {
-		PlayerDirX                  int16
-		PlayerDirY                  int16
 		unkVar_0476                 int16
 		unkVar_0478                 int16
 		TransitionTable             [80 * 25]TCoord
@@ -189,6 +187,11 @@ type (
 		PendingScrollReply          string
 		PendingScrollStatId         int16
 		SoundBlockQueueing          bool
+		// FriendlyFire controls whether player-owned bullets can damage other
+		// players. True (default) = players can damage each other; false = player
+		// bullets pass through other player stats without effect. This is a
+		// server/engine configuration flag and is not accessible from ZZT-OOP.
+		FriendlyFire                bool
 	}
 	Event interface{}
 	ScrollEvent struct {
@@ -209,6 +212,18 @@ type (
 		Notes    string
 		Priority int16
 	}
+	// DeathEvent is emitted when a player's health reaches 0. The engine will
+	// respawn the player automatically after RESPAWN_TICKS; this event lets the
+	// server notify the client (show death screen, etc.).
+	DeathEvent struct {
+		StatId int16
+	}
+	// RespawnEvent is emitted when the respawn countdown expires and the player
+	// is placed back on the board at StartPlayerX/Y.
+	RespawnEvent struct {
+		StatId int16
+		X, Y   int16
+	}
 	PlayerState struct {
 		Health                      int16
 		Ammo                        int16
@@ -220,6 +235,14 @@ type (
 		Keys                        [7]bool
 		BoardTimeSec                int16
 		BoardTimeHsec               int16
+		// DirX/DirY is the player's last shoot direction (formerly Engine.PlayerDirX/Y).
+		// Stored per-player so each player retains their own aim independently.
+		DirX                        int16
+		DirY                        int16
+		// RespawnTicks counts down after death. When it reaches 0 the player
+		// is placed back at Board.Info.StartPlayerX/Y with RESPAWN_INVULN_TICKS
+		// of invulnerability. Zero means the player is alive (not waiting to respawn).
+		RespawnTicks                int16
 		MessageAmmoNotShown         bool
 		MessageOutOfAmmoNotShown    bool
 		MessageNoShootingNotShown   bool
@@ -232,6 +255,15 @@ type (
 		MessageGemNotShown          bool
 		MessageEnergizerNotShown    bool
 	}
+	// PlayerInput holds one tick of input for a single player.
+	// DirX/DirY are the player's aimed shoot direction from the previous tick
+	// (the player fires in the last direction moved while shooting).
+	PlayerInput struct {
+		DeltaX int16
+		DeltaY int16
+		Shift  bool
+		Key    byte
+	}
 )
 
 var (
@@ -241,8 +273,9 @@ var (
 
 func NewEngine() *Engine {
 	return &Engine{
-		ActiveInput: TcellInput{},
-		Players:     make(map[int16]*PlayerState),
+		ActiveInput:  TcellInput{},
+		Players:      make(map[int16]*PlayerState),
+		FriendlyFire: true,
 	}
 }
 
@@ -258,6 +291,81 @@ func (e *Engine) PlayerFor(statId int16) *PlayerState {
 		e.Players[statId] = ps
 	}
 	return ps
+}
+
+func (e *Engine) SpawnPlayer() int16 {
+	spawnX := int16(e.Board.Info.StartPlayerX)
+	spawnY := int16(e.Board.Info.StartPlayerY)
+	if spawnX == 0 || spawnY == 0 {
+		spawnX = BOARD_WIDTH / 2
+		spawnY = BOARD_HEIGHT / 2
+	}
+
+	e.AddStat(spawnX, spawnY, E_PLAYER, int16(ElementDefs[E_PLAYER].Color), 1, StatTemplateDefault)
+	statId := e.Board.StatCount
+
+	e.Board.Tiles[spawnX][spawnY].Element = E_PLAYER
+	e.Board.Tiles[spawnX][spawnY].Color = ElementDefs[E_PLAYER].Color
+
+	pState := e.PlayerFor(statId)
+	pState.Health = 100
+	pState.Ammo = 0
+	pState.Gems = 0
+	pState.Torches = 0
+	pState.TorchTicks = 0
+	pState.EnergizerTicks = 0
+	pState.Score = 0
+	pState.BoardTimeSec = 0
+	pState.BoardTimeHsec = 0
+	pState.MessageAmmoNotShown = true
+	pState.MessageOutOfAmmoNotShown = true
+	pState.MessageNoShootingNotShown = true
+	pState.MessageTorchNotShown = true
+	pState.MessageOutOfTorchesNotShown = true
+	pState.MessageRoomNotDarkNotShown = true
+	pState.MessageHintTorchNotShown = true
+	pState.MessageForestNotShown = true
+	pState.MessageFakeNotShown = true
+	pState.MessageGemNotShown = true
+	pState.MessageEnergizerNotShown = true
+	for i := 1; i <= 7; i++ {
+		pState.Keys[i-1] = false
+	}
+
+	e.BoardDrawTile(spawnX, spawnY)
+	return statId
+}
+
+func (e *Engine) RemovePlayer(statId int16) {
+	if statId < 0 || statId > e.Board.StatCount {
+		return
+	}
+	stat := &e.Board.Stats[statId]
+	if e.Board.Tiles[stat.X][stat.Y].Element == E_PLAYER {
+		e.Board.Tiles[stat.X][stat.Y].Element = E_EMPTY
+		e.Board.Tiles[stat.X][stat.Y].Color = 0
+		e.BoardDrawTile(int16(stat.X), int16(stat.Y))
+	}
+	e.RemoveStat(statId)
+	delete(e.Players, statId)
+}
+
+func (e *Engine) NearestPlayer(x, y int16) int16 {
+	var (
+		bestId   int16 = 0
+		bestDist int32 = 999999
+	)
+	for i := int16(0); i <= e.Board.StatCount; i++ {
+		stat := &e.Board.Stats[i]
+		if e.Board.Tiles[stat.X][stat.Y].Element == E_PLAYER {
+			dist := int32(Sqr(int16(stat.X)-x)) + int32(Sqr(int16(stat.Y)-y))
+			if dist < bestDist {
+				bestDist = dist
+				bestId = i
+			}
+		}
+	}
+	return bestId
 }
 
 const (
@@ -324,4 +432,15 @@ const (
 	COLOR_CHOICE_ON_CHOICE = 0xFD
 	SHOT_SOURCE_PLAYER     = 0
 	SHOT_SOURCE_ENEMY      = 1
+	// SHOT_SOURCE_PLAYER_BASE is added to a player's statId to form the P1
+	// value stored in a bullet/star stat, encoding the owning player.
+	// Values 0 and 1 are reserved for SHOT_SOURCE_PLAYER and SHOT_SOURCE_ENEMY
+	// respectively; player statIds start at 0 so we offset by 2.
+	// Owner statId = stat.P1 - SHOT_SOURCE_PLAYER_BASE, valid when stat.P1 >= SHOT_SOURCE_PLAYER_BASE.
+	SHOT_SOURCE_PLAYER_BASE = 2
+
+	// Respawn timing and penalty constants (M2.4).
+	RESPAWN_TICKS        = 30  // ticks before a dead player reappears (~3.3s at 110ms/tick)
+	RESPAWN_INVULN_TICKS = 50  // post-respawn invulnerability ticks (reuses EnergizerTicks)
+	RESPAWN_SCORE_PENALTY = 100 // score lost on death (floored at 0)
 )

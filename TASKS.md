@@ -137,7 +137,7 @@ and every run is reproducible. ANALYSIS.md §3g, §3h, §5.
   PlayerDirX/Y become PlayerState fields. DoD: test moves two players
   independently in one step.
 
-- [ ] **M2.4 — Ownership, death, respawn.** Bullets/stars carry owner statId
+- [x] **M2.4 — Ownership, death, respawn.** Bullets/stars carry owner statId
   (extend SHOT_SOURCE, gamevars.go:253) — player bullets don't damage players;
   DamageStat on a player emits `DeathEvent`, respawns at entry point after N
   ticks with score penalty + 50-tick invulnerability (reuse EnergizerTicks

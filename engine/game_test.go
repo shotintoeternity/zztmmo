@@ -306,3 +306,135 @@ func TestGemPickupSoundEvent(t *testing.T) {
 	}
 }
 
+
+// TestDeathRespawnInventoryIsolation is the M2.4 definition of done:
+// one player dies (health reaches 0), a DeathEvent is emitted, a RespawnEvent
+// follows after RESPAWN_TICKS, the dying player comes back at StartPlayerX/Y
+// with full health and invulnerability — and the other player's inventory is
+// completely untouched throughout.
+func TestDeathRespawnInventoryIsolation(t *testing.T) {
+	e := NewEngine()
+	e.Headless = true
+	e.WorldCreate()
+	e.BoardCreate()
+	e.SetInputSource(&ScriptedInput{})
+
+	// Clear interior tiles.
+	for ix := int16(2); ix < BOARD_WIDTH; ix++ {
+		for iy := int16(2); iy < BOARD_HEIGHT; iy++ {
+			e.Board.Tiles[ix][iy] = TTile{Element: E_EMPTY}
+		}
+	}
+
+	// Remove the default stat 0 player placed by BoardCreate.
+	e.Board.Tiles[e.Board.Stats[0].X][e.Board.Stats[0].Y] = TTile{Element: E_EMPTY}
+	e.Board.StatCount = -1
+
+	// Spawn P1 at (10, 12). Respawn point for the board is (5, 5).
+	e.Board.Info.StartPlayerX = 10
+	e.Board.Info.StartPlayerY = 12
+	p1 := e.SpawnPlayer()
+
+	// Spawn P2 at (40, 12).
+	e.Board.Info.StartPlayerX = 40
+	e.Board.Info.StartPlayerY = 12
+	p2 := e.SpawnPlayer()
+
+	// Reset board start point to (5,5) — the intended respawn location for P1.
+	// In real use the map designer sets this once; here we set it after spawning
+	// so both players can be placed at different positions in the test.
+	e.Board.Info.StartPlayerX = 5
+	e.Board.Info.StartPlayerY = 5
+	e.Board.Tiles[5][5] = TTile{Element: E_EMPTY} // ensure spawn point is clear
+
+	// Give P2 some inventory that must not change when P1 dies.
+	e.PlayerFor(p2).Ammo = 7
+	e.PlayerFor(p2).Gems = 3
+	e.PlayerFor(p2).Score = 500
+	e.PlayerFor(p2).Health = 100
+
+	// Set P1 health to 10 (one hit from death) and give them a score.
+	e.PlayerFor(p1).Health = 10
+	e.PlayerFor(p1).Score = 200
+
+	// --- Kill P1 ---
+	e.DamageStat(p1)
+
+	// Health should now be 0.
+	if e.PlayerFor(p1).Health != 0 {
+		t.Errorf("after damage P1.Health=%d, want 0", e.PlayerFor(p1).Health)
+	}
+	// Score should have the penalty applied (200 - 100 = 100).
+	if e.PlayerFor(p1).Score != 100 {
+		t.Errorf("P1.Score=%d after death, want 100", e.PlayerFor(p1).Score)
+	}
+	// RespawnTicks should be set.
+	if e.PlayerFor(p1).RespawnTicks != RESPAWN_TICKS {
+		t.Errorf("P1.RespawnTicks=%d, want %d", e.PlayerFor(p1).RespawnTicks, RESPAWN_TICKS)
+	}
+
+	// A DeathEvent should have been emitted.
+	var deathEv *DeathEvent
+	for _, ev := range e.Events {
+		if d, ok := ev.(DeathEvent); ok {
+			deathEv = &d
+			break
+		}
+	}
+	if deathEv == nil {
+		t.Fatal("expected DeathEvent, got none")
+	}
+	if deathEv.StatId != p1 {
+		t.Errorf("DeathEvent.StatId=%d, want p1=%d", deathEv.StatId, p1)
+	}
+	e.Events = nil
+
+	// P2 inventory must be completely unchanged.
+	if e.PlayerFor(p2).Ammo != 7 || e.PlayerFor(p2).Gems != 3 || e.PlayerFor(p2).Score != 500 || e.PlayerFor(p2).Health != 100 {
+		t.Errorf("P2 inventory changed: ammo=%d gems=%d score=%d health=%d",
+			e.PlayerFor(p2).Ammo, e.PlayerFor(p2).Gems, e.PlayerFor(p2).Score, e.PlayerFor(p2).Health)
+	}
+
+	// --- Tick through RESPAWN_TICKS cycles and collect a RespawnEvent ---
+	e.CurrentTick = 1
+	e.CurrentStatTicked = 0
+	e.GamePlayExitRequested = false
+
+	var respawnEv *RespawnEvent
+	for step := 0; step < RESPAWN_TICKS+5; step++ {
+		e.GameStepWithInputs(map[int16]PlayerInput{})
+		for _, ev := range e.Events {
+			if r, ok := ev.(RespawnEvent); ok {
+				respawnEv = &r
+			}
+		}
+		e.Events = nil
+		if respawnEv != nil {
+			break
+		}
+	}
+
+	if respawnEv == nil {
+		t.Fatal("expected RespawnEvent after RESPAWN_TICKS, got none")
+	}
+	if respawnEv.StatId != p1 {
+		t.Errorf("RespawnEvent.StatId=%d, want p1=%d", respawnEv.StatId, p1)
+	}
+
+	// P1 should be back at StartPlayerX/Y (5,5) with full health and invulnerability.
+	if int16(e.Board.Stats[p1].X) != 5 || int16(e.Board.Stats[p1].Y) != 5 {
+		t.Errorf("P1 respawned at (%d,%d), want (5,5)", e.Board.Stats[p1].X, e.Board.Stats[p1].Y)
+	}
+	if e.PlayerFor(p1).Health != 100 {
+		t.Errorf("P1.Health=%d after respawn, want 100", e.PlayerFor(p1).Health)
+	}
+	if e.PlayerFor(p1).EnergizerTicks != RESPAWN_INVULN_TICKS {
+		t.Errorf("P1.EnergizerTicks=%d after respawn, want %d", e.PlayerFor(p1).EnergizerTicks, RESPAWN_INVULN_TICKS)
+	}
+
+	// P2 inventory still untouched after all those ticks.
+	if e.PlayerFor(p2).Ammo != 7 || e.PlayerFor(p2).Gems != 3 || e.PlayerFor(p2).Score != 500 || e.PlayerFor(p2).Health != 100 {
+		t.Errorf("P2 inventory changed after respawn ticks: ammo=%d gems=%d score=%d health=%d",
+			e.PlayerFor(p2).Ammo, e.PlayerFor(p2).Gems, e.PlayerFor(p2).Score, e.PlayerFor(p2).Health)
+	}
+}
