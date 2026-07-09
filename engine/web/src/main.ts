@@ -540,6 +540,7 @@ async function loadWorld(name: string) {
   }
 
   // The world changed under the title screen: repaint board 0 and the name.
+  worldName = name;
   await showTitle();
   openWindow("Select World", ["", `  Loaded ${name}.ZZT. Press P to play.`, ""], true);
 }
