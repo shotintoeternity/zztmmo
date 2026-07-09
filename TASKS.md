@@ -191,3 +191,16 @@ and every run is reproducible. ANALYSIS.md §3g, §3h, §5.
 - [ ] **M3.7 — Soak/drift test.** Run 20 bot clients for a shorter CI duration
   first, then the 1-hour target manually/nightly. DoD: no drift, no panic, no
   runaway memory.
+
+- [ ] **M3.8 — Authentic ZZT sidebar.** Replace the temporary web HUD with a
+  ZZT-styled 20x25 sidebar rendered from protocol HUD data, using CP437 glyphs,
+  DOS colors, key slots, torch meter, and sound toggle styling without letting
+  legacy engine sidebar writes corrupt the playable board. DoD: browser layout
+  visually matches the original board+sidebar split while remaining protocol
+  driven.
+
+- [ ] **M3.9 — Browser debug/help windows.** Restore browser access to modal
+  keyboard flows such as the `?` debug window, help screens, and other legacy
+  text-window prompts through protocol events and client-side CP437 windows.
+  DoD: pressing `?` in the browser opens an interactive debug/help-style window
+  without disconnecting or corrupting gameplay input.

@@ -160,6 +160,52 @@ func TestWebSocketServerBoardEdgeSendsBoardChange(t *testing.T) {
 	}
 }
 
+func TestWebSocketServerTwoClientsSeeAndFight(t *testing.T) {
+	world := testFightWorld(t)
+	server := NewWebSocketServer(world, 1)
+	server.TickDuration = 10 * time.Millisecond
+
+	ctx, cancel := context.WithCancel(context.Background())
+	defer cancel()
+	go server.Run(ctx)
+
+	httpServer := httptest.NewServer(server)
+	defer httpServer.Close()
+
+	conn1, snap1 := joinTestClient(t, ctx, httpServer.URL, "p1")
+	defer conn1.Close(websocket.StatusNormalClosure, "")
+	conn2, snap2 := joinTestClient(t, ctx, httpServer.URL, "p2")
+	defer conn2.Close(websocket.StatusNormalClosure, "")
+
+	if snap1.You.X != 10 || snap1.You.Y != 12 {
+		t.Fatalf("p1 spawned at (%d,%d), want (10,12)", snap1.You.X, snap1.You.Y)
+	}
+	if snap2.You.X != 11 || snap2.You.Y != 12 {
+		t.Fatalf("p2 spawned at (%d,%d), want (11,12)", snap2.You.X, snap2.You.Y)
+	}
+
+	waitForPlayers(t, ctx, conn1, 2)
+	waitForPlayers(t, ctx, conn2, 2)
+
+	p1State, ok := server.RoomManager.PlayerState(snap1.You.ID)
+	if !ok {
+		t.Fatal("missing p1 state")
+	}
+	p1State.Ammo = 5
+
+	if err := wsjson.Write(ctx, conn1, InputMessage{
+		Type:     MessageTypeInput,
+		PlayerID: snap1.You.ID,
+		Seq:      1,
+		Keymask:  InputMaskShoot | InputMaskRight,
+	}); err != nil {
+		t.Fatalf("p1 shoot input: %v", err)
+	}
+
+	waitForPlayerHealth(t, ctx, conn1, snap2.You.ID, 90)
+	waitForPlayerHealth(t, ctx, conn2, snap2.You.ID, 90)
+}
+
 func TestInputMessageToPlayerInput(t *testing.T) {
 	tests := []struct {
 		name  string
@@ -215,6 +261,85 @@ func TestPlayerInputPastBoardSentinelDoesNotPanic(t *testing.T) {
 	})
 }
 
+func joinTestClient(t *testing.T, ctx context.Context, serverURL, name string) (*websocket.Conn, SnapshotMessage) {
+	t.Helper()
+
+	wsURL := "ws" + strings.TrimPrefix(serverURL, "http")
+	conn, _, err := websocket.Dial(ctx, wsURL, nil)
+	if err != nil {
+		t.Fatalf("dial websocket: %v", err)
+	}
+	conn.SetReadLimit(ServerReadLimit)
+
+	if err := wsjson.Write(ctx, conn, JoinMessage{Type: MessageTypeJoin, Name: name, Board: 1}); err != nil {
+		_ = conn.Close(websocket.StatusInternalError, "")
+		t.Fatalf("write join: %v", err)
+	}
+
+	var snapshot SnapshotMessage
+	if err := wsjson.Read(ctx, conn, &snapshot); err != nil {
+		_ = conn.Close(websocket.StatusInternalError, "")
+		t.Fatalf("read snapshot: %v", err)
+	}
+	return conn, snapshot
+}
+
+func waitForPlayers(t *testing.T, ctx context.Context, conn *websocket.Conn, count int) DiffMessage {
+	t.Helper()
+
+	return waitForDiff(t, ctx, conn, func(diff DiffMessage) bool {
+		return len(diff.Players) == count
+	})
+}
+
+func waitForPlayerHealth(t *testing.T, ctx context.Context, conn *websocket.Conn, playerID PlayerID, health int16) DiffMessage {
+	t.Helper()
+
+	return waitForDiff(t, ctx, conn, func(diff DiffMessage) bool {
+		for _, player := range diff.Players {
+			if player.ID == playerID && player.Health == health {
+				return true
+			}
+		}
+		return false
+	})
+}
+
+func waitForDiff(t *testing.T, ctx context.Context, conn *websocket.Conn, match func(DiffMessage) bool) DiffMessage {
+	t.Helper()
+
+	deadline := time.After(2 * time.Second)
+	for {
+		select {
+		case <-deadline:
+			t.Fatal("timed out waiting for matching diff")
+		default:
+		}
+
+		var raw json.RawMessage
+		if err := wsjson.Read(ctx, conn, &raw); err != nil {
+			t.Fatalf("read message: %v", err)
+		}
+		var envelope struct {
+			Type string `json:"type"`
+		}
+		if err := json.Unmarshal(raw, &envelope); err != nil {
+			t.Fatalf("decode envelope: %v", err)
+		}
+		if envelope.Type != MessageTypeDiff {
+			continue
+		}
+
+		var diff DiffMessage
+		if err := json.Unmarshal(raw, &diff); err != nil {
+			t.Fatalf("decode diff: %v", err)
+		}
+		if match(diff) {
+			return diff
+		}
+	}
+}
+
 func testEmptyWorld(t *testing.T) TWorld {
 	t.Helper()
 
@@ -233,6 +358,30 @@ func testEmptyWorld(t *testing.T) TWorld {
 	setup.Board.StatCount = -1
 	setup.Board.Info.StartPlayerX = 10
 	setup.Board.Info.StartPlayerY = 12
+	setup.BoardClose()
+	return setup.World
+}
+
+func testFightWorld(t *testing.T) TWorld {
+	t.Helper()
+
+	setup := NewEngine()
+	setup.Headless = true
+	setup.WorldCreate()
+	setup.World.Info.CurrentBoard = 1
+	setup.World.BoardCount = 1
+	setup.BoardCreate()
+	for ix := int16(1); ix <= BOARD_WIDTH; ix++ {
+		for iy := int16(1); iy <= BOARD_HEIGHT; iy++ {
+			setup.Board.Tiles[ix][iy] = TTile{Element: E_NORMAL, Color: 0x07}
+		}
+	}
+	setup.Board.Tiles[10][12] = TTile{Element: E_EMPTY}
+	setup.Board.Tiles[11][12] = TTile{Element: E_EMPTY}
+	setup.Board.StatCount = -1
+	setup.Board.Info.StartPlayerX = 10
+	setup.Board.Info.StartPlayerY = 12
+	setup.Board.Info.MaxShots = 255
 	setup.BoardClose()
 	return setup.World
 }

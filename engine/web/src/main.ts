@@ -1,6 +1,6 @@
 import "./style.css";
 
-const COLS = 80;
+const COLS = 60;
 const ROWS = 25;
 const CELL_W = 10;
 const CELL_H = 18;

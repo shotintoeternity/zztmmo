@@ -41,12 +41,15 @@ func NewRoomManager(world TWorld) *RoomManager {
 
 func (rm *RoomManager) JoinPlayer(boardID, spawnX, spawnY int16) PlayerID {
 	room := rm.ensureRoom(boardID)
-	if spawnX != 0 && spawnY != 0 {
-		room.Engine.Board.Info.StartPlayerX = byte(spawnX)
-		room.Engine.Board.Info.StartPlayerY = byte(spawnY)
-	}
+	spawnX, spawnY = roomSpawn(room, spawnX, spawnY)
+	originalSpawnX := room.Engine.Board.Info.StartPlayerX
+	originalSpawnY := room.Engine.Board.Info.StartPlayerY
+	room.Engine.Board.Info.StartPlayerX = byte(spawnX)
+	room.Engine.Board.Info.StartPlayerY = byte(spawnY)
 
 	statID := room.Engine.SpawnPlayer()
+	room.Engine.Board.Info.StartPlayerX = originalSpawnX
+	room.Engine.Board.Info.StartPlayerY = originalSpawnY
 	rm.nextPlayerID++
 	playerID := rm.nextPlayerID
 	player := &roomPlayer{
@@ -58,6 +61,55 @@ func (rm *RoomManager) JoinPlayer(boardID, spawnX, spawnY int16) PlayerID {
 	rm.players[playerID] = player
 	room.players[playerID] = struct{}{}
 	return playerID
+}
+
+func roomSpawn(room *Room, spawnX, spawnY int16) (int16, int16) {
+	requested := spawnX != 0 && spawnY != 0
+	if spawnX == 0 || spawnY == 0 {
+		spawnX = int16(room.Engine.Board.Info.StartPlayerX)
+		spawnY = int16(room.Engine.Board.Info.StartPlayerY)
+	}
+	if spawnX == 0 || spawnY == 0 {
+		spawnX = BOARD_WIDTH / 2
+		spawnY = BOARD_HEIGHT / 2
+	}
+	if isSpawnOpen(room, spawnX, spawnY) || requested && isSpawnUnoccupied(room, spawnX, spawnY) {
+		return spawnX, spawnY
+	}
+
+	for radius := int16(1); radius <= BOARD_WIDTH || radius <= BOARD_HEIGHT; radius++ {
+		for dy := -radius; dy <= radius; dy++ {
+			for dx := -radius; dx <= radius; dx++ {
+				if absInt16(dx) != radius && absInt16(dy) != radius {
+					continue
+				}
+				x := spawnX + dx
+				y := spawnY + dy
+				if isSpawnOpen(room, x, y) {
+					return x, y
+				}
+			}
+		}
+	}
+	return spawnX, spawnY
+}
+
+func absInt16(v int16) int16 {
+	if v < 0 {
+		return -v
+	}
+	return v
+}
+
+func isSpawnOpen(room *Room, x, y int16) bool {
+	return isSpawnUnoccupied(room, x, y) && room.Engine.Board.Tiles[x][y].Element == E_EMPTY
+}
+
+func isSpawnUnoccupied(room *Room, x, y int16) bool {
+	if x < 1 || x > BOARD_WIDTH || y < 1 || y > BOARD_HEIGHT {
+		return false
+	}
+	return room.Engine.Board.Tiles[x][y].Element != E_PLAYER
 }
 
 func (rm *RoomManager) LeavePlayer(playerID PlayerID) bool {
@@ -286,9 +338,14 @@ func (rm *RoomManager) transferPlayer(playerID PlayerID, transfer TransferEvent)
 	delete(srcRoom.players, playerID)
 	rm.reindexRoomPlayers(srcRoom.BoardID, removedStatID)
 
-	dstRoom.Engine.Board.Info.StartPlayerX = byte(transfer.EntryX)
-	dstRoom.Engine.Board.Info.StartPlayerY = byte(transfer.EntryY)
+	spawnX, spawnY := roomSpawn(dstRoom, transfer.EntryX, transfer.EntryY)
+	originalSpawnX := dstRoom.Engine.Board.Info.StartPlayerX
+	originalSpawnY := dstRoom.Engine.Board.Info.StartPlayerY
+	dstRoom.Engine.Board.Info.StartPlayerX = byte(spawnX)
+	dstRoom.Engine.Board.Info.StartPlayerY = byte(spawnY)
 	newStatID := dstRoom.Engine.SpawnPlayer()
+	dstRoom.Engine.Board.Info.StartPlayerX = originalSpawnX
+	dstRoom.Engine.Board.Info.StartPlayerY = originalSpawnY
 	*dstRoom.Engine.PlayerFor(newStatID) = stateCopy
 	dstRoom.players[playerID] = struct{}{}
 
