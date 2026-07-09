@@ -225,6 +225,10 @@ func (a *WebAPI) handleLoadWorld(w http.ResponseWriter, r *http.Request) {
 			return
 		}
 		rm = inst.RoomManager
+		writeJSON(w, struct {
+			World string `json:"world"`
+		}{World: rm.WorldName()})
+		return
 	} else {
 		rm = a.RoomManager
 	}
