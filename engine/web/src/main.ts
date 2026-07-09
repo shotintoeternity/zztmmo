@@ -431,7 +431,8 @@ function connect() {
   socket.addEventListener("open", () => {
     connected = true;
     setStatus("joining");
-    socket.send(JSON.stringify({ type: MessageTypeJoin, name: "browser", board: 1 }));
+    // No board: the server picks its configured default (zzt-server -board).
+    socket.send(JSON.stringify({ type: MessageTypeJoin, name: "browser" }));
     canvas.focus();
     inputTimer = window.setInterval(() => sendInput(currentMask()), 55);
   });
