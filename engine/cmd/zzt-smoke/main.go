@@ -19,7 +19,7 @@ func main() {
 	zztgo.E.TickSpeed = 4
 	zztgo.E.TickTimeDuration = int16(zztgo.E.TickSpeed) * 2
 	zztgo.E.GameStateElement = zztgo.E_PLAYER
-	zztgo.E.GamePaused = false
+	zztgo.E.PlayerFor(0).Paused = false
 	zztgo.E.GamePlayExitRequested = false
 	zztgo.E.SetInputSource(&zztgo.ScriptedInput{})
 

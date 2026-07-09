@@ -1356,17 +1356,17 @@ func (e *Engine) ElementPlayerTick(statId int16) {
 			ElementDefs[e.Board.Tiles[targetX][targetY].Element].TouchProc(e, targetX, targetY, statId, &InputDeltaX, &InputDeltaY)
 		}
 		if InputDeltaX != 0 || InputDeltaY != 0 {
-			if SoundEnabled && !SoundIsPlaying {
+			if pState.SoundEnabled && !SoundIsPlaying {
 				Sound(110)
 			}
 			targetX = int16(stat.X) + InputDeltaX
 			targetY = int16(stat.Y) + InputDeltaY
 			if targetX >= 0 && targetX <= BOARD_WIDTH+1 && targetY >= 0 && targetY <= BOARD_HEIGHT+1 && ElementDefs[e.Board.Tiles[targetX][targetY].Element].Walkable {
-				if SoundEnabled && !SoundIsPlaying {
+				if pState.SoundEnabled && !SoundIsPlaying {
 					NoSound()
 				}
 				e.MoveStat(statId, targetX, targetY)
-			} else if SoundEnabled && !SoundIsPlaying {
+			} else if pState.SoundEnabled && !SoundIsPlaying {
 				NoSound()
 			}
 
@@ -1398,13 +1398,24 @@ func (e *Engine) ElementPlayerTick(statId int16) {
 	case '\x1b', 'Q':
 		e.GamePromptEndPlay()
 	case 'S':
-		e.GameWorldSave("Save game:", &e.SavedGameFileName, ".SAV")
+		// Never call GameWorldSave here: it prompts via InputReadWaitKey, which
+		// blocks forever headless (the M3.9 '?' bug). Emit and return.
+		e.Events = append(e.Events, SavePromptEvent{StatId: statId})
+		InputKeyPressed = '\x00'
 	case 'P':
 		if pState.Health > 0 {
-			e.GamePaused = true
+			pState.Paused = true
+			e.Events = append(e.Events, PauseEvent{StatId: statId, Paused: true})
 		}
 	case 'B':
-		SoundEnabled = !SoundEnabled
+		pState.SoundEnabled = !pState.SoundEnabled
+		// The package-global SoundEnabled gates SoundTimerHandler, i.e. whether
+		// this *process* makes noise. That is a terminal concept: mirror player
+		// 0's flag into it only when not headless, so that on a server one
+		// player pressing 'B' can never silence anybody else.
+		if !e.Headless {
+			SoundEnabled = pState.SoundEnabled
+		}
 		SoundClearQueue()
 		e.GameUpdateSidebar()
 		InputKeyPressed = ' '

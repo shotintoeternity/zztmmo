@@ -219,7 +219,7 @@ and every run is reproducible. ANALYSIS.md §3g, §3h, §5.
   window over the board, and selecting an option sends the expected reply
   without corrupting movement input.
 
-- [ ] **M3.11 — De-modal save; per-player pause and sound.** Three play-mode
+- [x] **M3.11 — De-modal save; per-player pause and sound.** Three play-mode
   keys are unsafe or wrong on a server. All three block M4.2. Verified against
   the code 2026-07-09:
   * **`S` (save) would hang the whole server.** `ElementPlayerTick` case 'S'

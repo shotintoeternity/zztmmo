@@ -1192,7 +1192,7 @@ func (e *Engine) GameUpdateSidebar() {
 				e.VideoWriteText(71+i, 12, 0x1F, " ")
 			}
 		}
-		if SoundEnabled {
+		if e.PlayerFor(0).SoundEnabled {
 			e.VideoWriteText(65, 15, 0x1F, " Be quiet")
 		} else {
 			e.VideoWriteText(65, 15, 0x1F, " Be noisy")
@@ -1204,6 +1204,16 @@ func (e *Engine) GameUpdateSidebar() {
 // top of the next GameStepWithInputs, never mid-tick.
 func (e *Engine) SubmitDebugCommand(statId int16, text string) {
 	e.PendingDebugCommands = append(e.PendingDebugCommands, PendingDebugCommand{StatId: statId, Text: text})
+}
+
+// SubmitSaveFilename answers a SavePromptEvent. An empty name cancels or
+// refuses the save. Applied at the top of the next GameStepWithInputs.
+//
+// Callers that accept a name from an untrusted client MUST sanitize it before
+// calling: this writes name+".SAV" straight to the process working directory
+// (TASKS.md M4.3a). The server refuses saves outright today.
+func (e *Engine) SubmitSaveFilename(statId int16, name string) {
+	e.PendingSaveFilenames = append(e.PendingSaveFilenames, PendingSaveFilename{StatId: statId, Name: name})
 }
 
 func (e *Engine) DisplayMessage(time int16, message string) {
@@ -1240,7 +1250,8 @@ func (e *Engine) DamageStat(attackerStatId int16) {
 					stat.Y = e.Board.Info.StartPlayerY
 					e.DrawPlayerSurroundings(oldX, oldY, 0)
 					e.DrawPlayerSurroundings(int16(stat.X), int16(stat.Y), 0)
-					e.GamePaused = true
+					pState.Paused = true
+					e.Events = append(e.Events, PauseEvent{StatId: attackerStatId, Paused: true})
 				}
 				e.SoundQueue(4, "\x10\x01 \x01\x13\x01#\x01")
 			} else {
@@ -1388,7 +1399,8 @@ func (e *Engine) BoardPassageTeleport(x, y int16, sourceStatId int16) {
 		e.Board.Stats[sourceStatId].X = byte(newX)
 		e.Board.Stats[sourceStatId].Y = byte(newY)
 	}
-	e.GamePaused = true
+	e.PlayerFor(sourceStatId).Paused = true
+	e.Events = append(e.Events, PauseEvent{StatId: sourceStatId, Paused: true})
 	e.SoundQueue(4, "0\x014\x017\x011\x015\x018\x012\x016\x019\x013\x017\x01:\x014\x018\x01@\x01")
 	e.TransitionDrawBoardChange()
 	e.BoardEnter(sourceStatId)
@@ -1501,6 +1513,17 @@ func (e *Engine) GameStepWithInputs(inputs map[int16]PlayerInput) {
 	}
 	e.PendingDebugCommands = e.PendingDebugCommands[:0]
 
+	for _, save := range e.PendingSaveFilenames {
+		// An empty Name means cancelled or refused (the server refuses all
+		// saves today — see NOTES.md 2026-07-09). WorldSave is a plain file
+		// write with no prompt, so it cannot block the sim.
+		if save.Name != "" && save.StatId >= 0 && save.StatId <= e.Board.StatCount {
+			e.SavedGameFileName = save.Name
+			e.WorldSave(save.Name, ".SAV")
+		}
+	}
+	e.PendingSaveFilenames = e.PendingSaveFilenames[:0]
+
 	// Snapshot engine-level input fields into globals for the tick loop.
 	// Individual player inputs from the inputs map will override these for
 	// E_PLAYER stats mid-loop; the defer restores the final globals back.
@@ -1528,6 +1551,24 @@ func (e *Engine) GameStepWithInputs(inputs map[int16]PlayerInput) {
 			// Per-player input injection: load this player's input before tick,
 			// zero movement globals for non-player stats.
 			if e.Board.Tiles[stat.X][stat.Y].Element == E_PLAYER {
+				// Per-player pause (M3.11): a paused player's tick and input are
+				// skipped, but the room keeps running for everyone else. As in
+				// vanilla, movement input resumes play — and we fall through so
+				// the resuming move happens on this tick rather than being
+				// swallowed. The room's CurrentTick is deliberately NOT reset the
+				// way vanilla's global unpause does: that would perturb every
+				// other player's stat scheduling.
+				pState := e.PlayerFor(e.CurrentStatTicked)
+				if pState.Paused {
+					inp, ok := inputs[e.CurrentStatTicked]
+					if ok && (inp.DeltaX != 0 || inp.DeltaY != 0) {
+						pState.Paused = false
+						e.Events = append(e.Events, PauseEvent{StatId: e.CurrentStatTicked, Paused: false})
+					} else {
+						e.CurrentStatTicked++
+						continue
+					}
+				}
 				if inp, ok := inputs[e.CurrentStatTicked]; ok {
 					InputDeltaX = inp.DeltaX
 					InputDeltaY = inp.DeltaY
@@ -1685,7 +1726,7 @@ func (e *Engine) GamePlayLoop(boardChanged bool) {
 	e.CurrentStatTicked = e.Board.StatCount + 1
 
 	for !e.GamePlayExitRequested {
-		if e.GamePaused {
+		if e.PlayerFor(0).Paused {
 			if SoundHasTimeElapsed(&e.TickTimeCounter, 25) {
 				pauseBlink = !pauseBlink
 			}
@@ -1723,13 +1764,14 @@ func (e *Engine) GamePlayLoop(boardChanged bool) {
 				}
 
 				// Unpause
-				e.GamePaused = false
+				e.PlayerFor(0).Paused = false
+				e.Events = append(e.Events, PauseEvent{StatId: 0, Paused: false})
 				e.SidebarClearLine(5)
 				e.CurrentTick = e.Random(100)
 				e.CurrentStatTicked = e.Board.StatCount + 1
 				e.World.Info.IsSave = true
 			}
-		} else { // not e.GamePaused
+		} else { // not paused
 			// Pace, then run one full game step (M0.5). Delay is a no-op when
 			// e.Headless (M0.4); SoundHasTimeElapsed still gates the step so it
 			// keeps pacing interactive play (currently stubbed to true — see
@@ -1793,6 +1835,15 @@ func (e *Engine) GamePlayLoop(boardChanged bool) {
 				e.PromptString(63, 5, 0x1E, 0x0F, 11, PROMPT_ANY, &input)
 				e.GameApplyDebugCommand(ev.StatId, input)
 				InputKeyPressed = '\x00'
+			case SavePromptEvent:
+				// The terminal keeps vanilla's modal save prompt: it is the one
+				// caller allowed to block, because it owns the keyboard.
+				newFilename := e.SavedGameFileName
+				e.SidebarPromptString("Save game:", ".SAV", &newFilename, PROMPT_ALPHANUM)
+				if InputKeyPressed != KEY_ESCAPE && Length(newFilename) != 0 {
+					e.SubmitSaveFilename(ev.StatId, newFilename)
+				}
+				InputKeyPressed = '\x00'
 			}
 		}
 	}
@@ -1855,7 +1906,7 @@ func (e *Engine) GameTitleLoop() {
 		for {
 			e.GameStateElement = E_MONITOR
 			startPlay = false
-			e.GamePaused = false
+			e.PlayerFor(0).Paused = false
 			e.GamePlayLoop(boardChanged)
 			boardChanged = false
 			switch UpCase(InputKeyPressed) {
@@ -1902,7 +1953,7 @@ func (e *Engine) GameTitleLoop() {
 			}
 			if startPlay {
 				e.GameStateElement = E_PLAYER
-				e.GamePaused = true
+				e.PlayerFor(0).Paused = true
 				e.GamePlayLoop(true)
 				boardChanged = true
 			}

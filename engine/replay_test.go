@@ -80,7 +80,7 @@ func runTownReplay(t *testing.T) []string {
 	InputLastDeltaY = 0
 	InputKeyBuffer = ""
 	E.GamePlayExitRequested = false
-	E.GamePaused = false
+	E.PlayerFor(0).Paused = false
 	E.TickSpeed = 4
 	E.TickTimeDuration = int16(E.TickSpeed) * 2
 	E.SoundBlockQueueing = false
@@ -98,7 +98,7 @@ func runTownReplay(t *testing.T) []string {
 	}
 
 	E.GameStateElement = E_PLAYER
-	E.GamePaused = false
+	E.PlayerFor(0).Paused = false
 	E.GamePlayExitRequested = false
 	E.Board.Tiles[E.Board.Stats[0].X][E.Board.Stats[0].Y].Element = E_PLAYER
 	E.Board.Tiles[E.Board.Stats[0].X][E.Board.Stats[0].Y].Color = ElementDefs[E_PLAYER].Color

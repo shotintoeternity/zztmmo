@@ -182,6 +182,9 @@ type ProtocolEvent struct {
 	ToBoard      int16    `json:"toBoard,omitempty"`
 	EntryX       int16    `json:"entryX,omitempty"`
 	EntryY       int16    `json:"entryY,omitempty"`
+	// Paused is the new paused state on a "pause" event. Explicitly not
+	// omitempty: false is the unpause signal and must survive the wire.
+	Paused bool `json:"paused"`
 }
 
 func NewSnapshotMessage(e *Engine, boardID int16, playerID PlayerID, statID int16, players []PlayerSnapshot) SnapshotMessage {
@@ -211,6 +214,10 @@ func ProtocolEvents(events []Event) []ProtocolEvent {
 			out = append(out, ProtocolEvent{Type: "help", StatID: ev.StatId, Filename: ev.Filename, Title: ev.Title, Lines: HelpFileLines(ev.Filename)})
 		case DebugPromptEvent:
 			out = append(out, ProtocolEvent{Type: "debugPrompt", StatID: ev.StatId})
+		case SavePromptEvent:
+			out = append(out, ProtocolEvent{Type: "savePrompt", StatID: ev.StatId})
+		case PauseEvent:
+			out = append(out, ProtocolEvent{Type: "pause", StatID: ev.StatId, Paused: ev.Paused})
 		case HighScoreEntryEvent:
 			out = append(out, ProtocolEvent{Type: "highScoreEntry", Score: ev.Score, ListPos: ev.ListPos})
 		case SoundEvent:
@@ -253,7 +260,7 @@ func hudSnapshot(e *Engine, statID int16) HUDSnapshot {
 	pState := e.PlayerFor(statID)
 	return HUDSnapshot{
 		TimeLimitSec:   e.Board.Info.TimeLimitSec,
-		SoundEnabled:   SoundEnabled,
+		SoundEnabled:   pState.SoundEnabled,
 		Health:         pState.Health,
 		Ammo:           pState.Ammo,
 		Gems:           pState.Gems,

@@ -156,7 +156,6 @@ type (
 		TickTimeDuration       int16
 		CurrentTick            int16
 		CurrentStatTicked      int16
-		GamePaused             bool
 		TickTimeCounter        int16
 		ForceDarknessOff       bool
 		OopChar                byte
@@ -201,6 +200,10 @@ type (
 		// modal (PromptString blocks on InputReadWaitKey), so like scrolls it
 		// becomes an event out plus a reply in.
 		PendingDebugCommands []PendingDebugCommand
+		// PendingSaveFilenames holds save-prompt replies submitted by callers,
+		// applied at the top of the next GameStepWithInputs, exactly as
+		// PendingDebugCommands are.
+		PendingSaveFilenames []PendingSaveFilename
 		SoundBlockQueueing   bool
 		// FriendlyFire controls whether player-owned bullets can damage other
 		// players. True (default) = players can damage each other; false = player
@@ -248,6 +251,27 @@ type (
 	PendingDebugCommand struct {
 		StatId int16
 		Text   string
+	}
+	// SavePromptEvent is emitted when a player presses 'S'. The sim never
+	// blocks: it emits and returns. The caller shows the save prompt and feeds
+	// the filename back via Engine.SubmitSaveFilename. The terminal answers
+	// with a real modal prompt; the server currently refuses (empty name), see
+	// NOTES.md 2026-07-09 "save policy for a shared world" and TASKS.md M4.3a.
+	SavePromptEvent struct {
+		StatId int16
+	}
+	// PendingSaveFilename is one queued reply to a SavePromptEvent. An empty
+	// Name means the prompt was cancelled or refused: save nothing.
+	PendingSaveFilename struct {
+		StatId int16
+		Name   string
+	}
+	// PauseEvent reports a change to one player's paused state, so the client
+	// can draw (or clear) vanilla's blinking "Pausing..." at 64,5. Pausing is
+	// per-player: the room keeps running for everyone else.
+	PauseEvent struct {
+		StatId int16
+		Paused bool
 	}
 	HighScoreEntryEvent struct {
 		Score   int16
@@ -310,6 +334,15 @@ type (
 		MessageFakeNotShown         bool
 		MessageGemNotShown          bool
 		MessageEnergizerNotShown    bool
+		// Paused replaces vanilla's Engine-wide GamePaused. Pausing must never
+		// freeze the room: a paused player's stat tick and input are skipped
+		// while everyone else keeps running (ANALYSIS.md §3i).
+		Paused bool
+		// SoundEnabled replaces the process-global sounds.go SoundEnabled, so
+		// one player muting does not silence every player in every room.
+		// Defaults to true in PlayerFor; deliberately NOT reset by
+		// ResetPlayerState, since dying should not un-mute you.
+		SoundEnabled bool
 	}
 	// PlayerInput holds one tick of input for a single player.
 	// DirX/DirY are the player's aimed shoot direction from the previous tick
@@ -342,7 +375,8 @@ func (e *Engine) PlayerFor(statId int16) *PlayerState {
 			e.Players = make(map[int16]*PlayerState)
 		}
 		ps = &PlayerState{
-			Health: 15,
+			Health:       15,
+			SoundEnabled: true,
 		}
 		e.Players[statId] = ps
 	}
@@ -390,6 +424,7 @@ func (e *Engine) ResetPlayerState(statId int16) {
 	pState.MessageFakeNotShown = true
 	pState.MessageGemNotShown = true
 	pState.MessageEnergizerNotShown = true
+	pState.Paused = false
 	for i := 1; i <= 7; i++ {
 		pState.Keys[i-1] = false
 	}
