@@ -53,6 +53,7 @@ type roomPlayer struct {
 	boardID int16
 	statID  int16
 	state   *PlayerState
+	name    string
 }
 
 type roomTransfer struct {
@@ -227,6 +228,13 @@ func (rm *RoomManager) JoinPlayer(boardID, spawnX, spawnY int16) PlayerID {
 	rm.players[playerID] = player
 	room.players[playerID] = struct{}{}
 	return playerID
+}
+
+func (rm *RoomManager) SetPlayerName(playerID PlayerID, name string) {
+	player := rm.players[playerID]
+	if player != nil {
+		player.name = name
+	}
 }
 
 func (rm *RoomManager) spawnPlayerInRoom(room *Room, spawnX, spawnY int16) int16 {
@@ -406,6 +414,8 @@ func (rm *RoomManager) StepDiffs(inputs map[PlayerID]PlayerInput) map[PlayerID]D
 	for _, playerID := range quitters {
 		rm.quitPlayer(playerID)
 	}
+
+	rm.syncPlayerStatIDs()
 
 	diffs := make(map[PlayerID]DiffMessage)
 	for _, boardID := range rm.roomIDs() {
@@ -594,6 +604,24 @@ func (rm *RoomManager) reindexRoomPlayers(boardID, removedStatID int16) {
 			room := rm.rooms[boardID]
 			if room != nil {
 				player.state = room.Engine.PlayerFor(player.statID)
+			}
+		}
+	}
+}
+
+func (rm *RoomManager) syncPlayerStatIDs() {
+	for _, playerID := range rm.playerIDs() {
+		player := rm.players[playerID]
+		room := rm.rooms[player.boardID]
+		if room == nil {
+			continue
+		}
+		for statID, state := range room.Engine.Players {
+			if state == player.state {
+				if player.statID != statID {
+					player.statID = statID
+				}
+				break
 			}
 		}
 	}

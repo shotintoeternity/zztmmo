@@ -6,6 +6,8 @@ import (
 	"net/http"
 	"os"
 	"path/filepath"
+	"sort"
+	"strconv"
 	"strings"
 )
 
@@ -45,6 +47,7 @@ func (a *WebAPI) Handler() http.Handler {
 	mux.HandleFunc("/api/help", a.handleHelp)
 	mux.HandleFunc("/api/saves", a.handleSaves)
 	mux.HandleFunc("/api/restore", a.handleRestore)
+	mux.HandleFunc("/api/loadworld", a.handleLoadWorld)
 	return mux
 }
 
@@ -55,10 +58,7 @@ func (a *WebAPI) handleSaves(w http.ResponseWriter, r *http.Request) {
 	}{Saves: ListSnapshots(a.SavesDir)})
 }
 
-// handleRestore swaps the hosted world for a snapshot. It is refused — 409 —
-// while anyone is in a room: a restore rewrites every board, and a live player
-// would be left standing on one that no longer exists. The title screen is the
-// only caller, and a client reaches it before it has joined anything.
+// handleRestore swaps the hosted world for a snapshot.
 func (a *WebAPI) handleRestore(w http.ResponseWriter, r *http.Request) {
 	if r.Method != http.MethodPost {
 		http.Error(w, "use POST", http.StatusMethodNotAllowed)
@@ -66,25 +66,43 @@ func (a *WebAPI) handleRestore(w http.ResponseWriter, r *http.Request) {
 	}
 
 	var body struct {
-		Name string `json:"name"`
+		World string `json:"world"`
+		Name  string `json:"name"`
 	}
 	if err := json.NewDecoder(r.Body).Decode(&body); err != nil {
 		http.Error(w, "bad request body", http.StatusBadRequest)
 		return
 	}
 
-	var err error
-	if a.Server != nil {
-		err = a.Server.RestoreSnapshot(body.Name)
-	} else {
-		err = a.RoomManager.RestoreSnapshot(a.SavesDir, body.Name)
+	worldName := body.World
+	if worldName == "" {
+		worldName = "TOWN"
 	}
+	safeWorld, err := SanitizeSaveName(worldName)
+	if err != nil {
+		http.Error(w, "invalid world name", http.StatusBadRequest)
+		return
+	}
+
+	var rm *RoomManager
+	if a.Server != nil {
+		inst, err := a.Server.GetOrCreateInstance(safeWorld)
+		if err != nil {
+			http.Error(w, "failed to load world: "+err.Error(), http.StatusInternalServerError)
+			return
+		}
+		rm = inst.RoomManager
+	} else {
+		rm = a.RoomManager
+	}
+
+	err = rm.RestoreSnapshot(a.SavesDir, body.Name)
 
 	switch {
 	case err == nil:
 		writeJSON(w, struct {
 			World string `json:"world"`
-		}{World: a.RoomManager.WorldName()})
+		}{World: rm.WorldName()})
 	case errors.Is(err, ErrWorldOccupied):
 		http.Error(w, err.Error(), http.StatusConflict)
 	case errors.Is(err, ErrInvalidSaveName), errors.Is(err, ErrSavesDisabled):
@@ -103,33 +121,187 @@ func writeJSON(w http.ResponseWriter, value interface{}) {
 
 // handleTitle renders board 0 the way ZZT's title screen shows it.
 func (a *WebAPI) handleTitle(w http.ResponseWriter, r *http.Request) {
+	worldName := r.URL.Query().Get("world")
+	if worldName == "" {
+		worldName = "TOWN"
+	}
+	safeWorld, err := SanitizeSaveName(worldName)
+	if err != nil {
+		http.Error(w, "invalid world name", http.StatusBadRequest)
+		return
+	}
+
+	var rm *RoomManager
+	var pristineWorld TWorld
+	if a.Server != nil {
+		inst, err := a.Server.GetOrCreateInstance(safeWorld)
+		if err != nil {
+			http.Error(w, "failed to load world: "+err.Error(), http.StatusInternalServerError)
+			return
+		}
+		rm = inst.RoomManager
+		pristineWorld = inst.RoomManager.FrozenWorld()
+	} else {
+		rm = a.RoomManager
+		pristineWorld = a.World
+	}
+
 	writeJSON(w, struct {
-		World  string       `json:"world"`
-		Screen []ScreenCell `json:"screen"`
+		World    string       `json:"world"`
+		Filename string       `json:"filename"`
+		Screen   []ScreenCell `json:"screen"`
 	}{
-		World:  a.RoomManager.WorldName(),
-		Screen: TitleScreenCells(a.World),
+		World:    rm.WorldName(),
+		Filename: safeWorld,
+		Screen:   TitleScreenCells(pristineWorld),
 	})
 }
 
-// handleWorlds lists the worlds a client may join. This server hosts exactly
-// one (zzt-server -world), so the title screen's 'W' shows a single entry
-// rather than a directory: switching worlds would mean switching RoomManagers,
-// and RoomManager mints PlayerIDs from 1, so two of them would collide on the
-// wire. Multi-world hosting is its own task.
+// handleWorlds lists the worlds a client may join.
 func (a *WebAPI) handleWorlds(w http.ResponseWriter, r *http.Request) {
+	dir := "."
+	if E != nil && E.LoadedGameFileName != "" {
+		dir = filepath.Dir(E.LoadedGameFileName)
+	}
+	worlds := ListWorlds(dir)
+	if len(worlds) == 0 {
+		worlds = []string{a.RoomManager.WorldName()}
+	}
+
+	formatted := make([]string, len(worlds))
+	for i, name := range worlds {
+		count := 0
+		if a.Server != nil {
+			a.Server.mu.Lock()
+			inst := a.Server.Instances[name]
+			if inst != nil {
+				inst.mu.Lock()
+				count = len(inst.Clients)
+				inst.mu.Unlock()
+			}
+			a.Server.mu.Unlock()
+		}
+		if count > 0 {
+			if count == 1 {
+				formatted[i] = name + " (1 player)"
+			} else {
+				formatted[i] = name + " (" + strconv.Itoa(count) + " players)"
+			}
+		} else {
+			formatted[i] = name
+		}
+	}
+
 	writeJSON(w, struct {
 		Worlds []string `json:"worlds"`
-	}{Worlds: []string{a.RoomManager.WorldName()}})
+	}{Worlds: formatted})
+}
+
+func (a *WebAPI) handleLoadWorld(w http.ResponseWriter, r *http.Request) {
+	if r.Method != http.MethodPost {
+		http.Error(w, "use POST", http.StatusMethodNotAllowed)
+		return
+	}
+
+	var body struct {
+		Name string `json:"name"`
+	}
+	if err := json.NewDecoder(r.Body).Decode(&body); err != nil {
+		http.Error(w, "bad request body", http.StatusBadRequest)
+		return
+	}
+
+	safeName, err := SanitizeSaveName(body.Name)
+	if err != nil {
+		http.Error(w, err.Error(), http.StatusBadRequest)
+		return
+	}
+
+	var rm *RoomManager
+	if a.Server != nil {
+		inst, err := a.Server.GetOrCreateInstance(safeName)
+		if err != nil {
+			http.Error(w, err.Error(), http.StatusInternalServerError)
+			return
+		}
+		rm = inst.RoomManager
+	} else {
+		rm = a.RoomManager
+	}
+
+	dir := "."
+	if E != nil && E.LoadedGameFileName != "" {
+		dir = filepath.Dir(E.LoadedGameFileName)
+	}
+	err = rm.LoadWorld(dir, safeName)
+
+	switch {
+	case err == nil:
+		writeJSON(w, struct {
+			World string `json:"world"`
+		}{World: rm.WorldName()})
+	case errors.Is(err, ErrWorldOccupied):
+		http.Error(w, err.Error(), http.StatusConflict)
+	case errors.Is(err, ErrInvalidSaveName):
+		http.Error(w, err.Error(), http.StatusBadRequest)
+	case errors.Is(err, os.ErrNotExist):
+		http.Error(w, "no such world file", http.StatusNotFound)
+	default:
+		http.Error(w, "load world failed", http.StatusInternalServerError)
+	}
+}
+
+func ListWorlds(dir string) []string {
+	if dir == "" {
+		dir = "."
+	}
+	entries, err := os.ReadDir(dir)
+	if err != nil {
+		return nil
+	}
+	var worlds []string
+	for _, entry := range entries {
+		if entry.IsDir() {
+			continue
+		}
+		name := entry.Name()
+		if strings.HasSuffix(strings.ToUpper(name), ".ZZT") {
+			worlds = append(worlds, strings.TrimSuffix(name, filepath.Ext(name)))
+		}
+	}
+	sort.Strings(worlds)
+	return worlds
 }
 
 func (a *WebAPI) handleHighScores(w http.ResponseWriter, r *http.Request) {
+	worldName := r.URL.Query().Get("world")
+	if worldName == "" {
+		worldName = "TOWN"
+	}
+	safeWorld, err := SanitizeSaveName(worldName)
+	if err != nil {
+		http.Error(w, "invalid world name", http.StatusBadRequest)
+		return
+	}
+
+	var rm *RoomManager
+	if a.Server != nil {
+		inst, err := a.Server.GetOrCreateInstance(safeWorld)
+		if err != nil {
+			http.Error(w, "failed to load world: "+err.Error(), http.StatusInternalServerError)
+			return
+		}
+		rm = inst.RoomManager
+	} else {
+		rm = a.RoomManager
+	}
+
 	writeJSON(w, struct {
 		Title string   `json:"title"`
 		Lines []string `json:"lines"`
 	}{
-		Title: "High scores for " + a.RoomManager.WorldName(),
-		Lines: a.RoomManager.HighScoreLines(0),
+		Title: "High scores for " + rm.WorldName(),
+		Lines: rm.HighScoreLines(0),
 	})
 }
 

@@ -28,6 +28,7 @@ const MessageTypeScrollReply = "scrollReply";
 const MessageTypeQuitReply = "quitReply";
 const MessageTypeHighScoreName = "highScoreName";
 const MessageTypeSaveFilename = "saveFilename";
+const MessageTypeChat = "chat";
 
 // GameDebugPrompt's PromptString(63, 5, 0x1E, 0x0F, 11, PROMPT_ANY, ...).
 // The rest of that geometry lives in modal.ts, which owns every prompt's layout.
@@ -129,7 +130,13 @@ type BoardChangeMessage = {
   snapshot: SnapshotMessage;
 };
 
-type ServerMessage = SnapshotMessage | DiffMessage | EventMessage | BoardChangeMessage;
+type ChatMessage = {
+  type: typeof MessageTypeChat;
+  from: string;
+  text: string;
+};
+
+type ServerMessage = SnapshotMessage | DiffMessage | EventMessage | BoardChangeMessage | ChatMessage;
 
 type InputMessage = {
   type: typeof MessageTypeInput;
@@ -363,6 +370,7 @@ const zztSound = new ZztSound();
 type Mode = "title" | "playing";
 let mode: Mode = "title";
 let worldName = "Untitled";
+let nickname = "browser";
 // leavingToTitle suppresses the reconnect that a dropped socket normally
 // triggers: a socket we closed on purpose must not come back.
 let leavingToTitle = false;
@@ -428,16 +436,19 @@ async function showTitle() {
   pressed.clear();
   lastMask = 0;
 
+  let friendlyName = worldName;
   try {
-    const response = await fetch("/api/title");
-    const title = (await response.json()) as { world: string; screen: ScreenCell[] };
-    worldName = title.world;
+    const url = worldName === "Untitled" ? "/api/title" : "/api/title?world=" + encodeURIComponent(worldName);
+    const response = await fetch(url);
+    const title = (await response.json()) as { world: string; filename?: string; screen: ScreenCell[] };
+    worldName = title.filename || title.world;
+    friendlyName = title.world;
     replaceCells(title.screen);
   } catch {
     // Offline: keep whatever board is on screen and still draw the menu, so
     // the player can retry with 'P'.
   }
-  drawTitleSidebar(writeText, worldName);
+  drawTitleSidebar(writeText, friendlyName);
   paintOverlay();
   drawScreen();
   canvas.focus();
@@ -450,6 +461,7 @@ function leaveToTitle() {
   window.clearInterval(inputTimer);
   window.clearTimeout(retryTimer);
   connected = false;
+  chatMessages = [];
   if (ws) {
     ws.close();
     ws = null;
@@ -458,12 +470,19 @@ function leaveToTitle() {
 }
 
 function startPlay() {
-  zztSound.setEnabled(true);
-  zztSound.resume();
-  leavingToTitle = false;
-  drawSidebar();
-  drawScreen();
-  connect();
+  openEntry("Enter name:", "", 15, "alphanum", (name) => {
+    if (name && name.trim()) {
+      nickname = name.trim();
+    } else {
+      nickname = "player" + Math.floor(Math.random() * 1000);
+    }
+    zztSound.setEnabled(true);
+    zztSound.resume();
+    leavingToTitle = false;
+    drawSidebar();
+    drawScreen();
+    connect();
+  });
 }
 
 // fetchLines backs the title screen's read-only windows (About, High Scores,
@@ -482,14 +501,47 @@ async function fetchLines(url: string, fallbackTitle: string) {
 }
 
 async function showWorlds() {
+  let worlds: string[] = [];
   try {
     const response = await fetch("/api/worlds");
     const data = (await response.json()) as { worlds?: string[] };
-    const worlds = data.worlds ?? [];
-    openWindow("ZZT Worlds", worlds.length > 0 ? worlds : ["Untitled"], true);
+    worlds = data.worlds ?? [];
   } catch {
     openWindow("ZZT Worlds", ["", "  Not available: the server did not answer.", ""], true);
+    return;
   }
+
+  if (worlds.length === 0) {
+    openWindow("ZZT Worlds", ["", "  There are no ZZT worlds.", ""], true);
+    return;
+  }
+
+  openSelectList("ZZT Worlds", worlds, (selected) => {
+    const name = selected.split(" (")[0];
+    void loadWorld(name);
+  });
+}
+
+async function loadWorld(name: string) {
+  try {
+    const response = await fetch("/api/loadworld", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ name }),
+    });
+    if (!response.ok) {
+      const reason = (await response.text()).trim() || `error ${response.status}`;
+      openWindow("Select World", ["", `  Not loaded: ${reason}`, ""], true);
+      return;
+    }
+  } catch {
+    openWindow("Select World", ["", "  Not loaded: the server did not answer.", ""], true);
+    return;
+  }
+
+  // The world changed under the title screen: repaint board 0 and the name.
+  await showTitle();
+  openWindow("Select World", ["", `  Loaded ${name}.ZZT. Press P to play.`, ""], true);
 }
 
 // showSavedGames is GameWorldLoad(".SAV"): the selectable "Saved Games" window.
@@ -498,7 +550,7 @@ async function showWorlds() {
 async function showSavedGames() {
   let saves: string[] = [];
   try {
-    const response = await fetch("/api/saves");
+    const response = await fetch("/api/saves?world=" + encodeURIComponent(worldName));
     const data = (await response.json()) as { saves?: string[] };
     saves = data.saves ?? [];
   } catch {
@@ -520,7 +572,7 @@ async function restoreSavedGame(name: string) {
     const response = await fetch("/api/restore", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ name }),
+      body: JSON.stringify({ world: worldName, name }),
     });
     if (!response.ok) {
       const reason = (await response.text()).trim() || `error ${response.status}`;
@@ -549,7 +601,7 @@ function connect() {
   socket.addEventListener("open", () => {
     connected = true;
     // No board: the server picks its configured default (zzt-server -board).
-    socket.send(JSON.stringify({ type: MessageTypeJoin, name: "browser" }));
+    socket.send(JSON.stringify({ type: MessageTypeJoin, name: nickname }));
     canvas.focus();
     inputTimer = window.setInterval(() => sendInput(currentMask()), 55);
   });
@@ -590,6 +642,7 @@ function drawConnectionNotice(reason: string) {
 function wsURL(): string {
   const url = new URL("/ws", window.location.href);
   url.protocol = url.protocol === "https:" ? "wss:" : "ws:";
+  url.searchParams.set("world", worldName);
   return url.toString();
 }
 
@@ -615,6 +668,9 @@ function applyMessage(message: ServerMessage) {
       stopHeldInput();
       closeModal();
       applySnapshot(message.snapshot);
+      break;
+    case MessageTypeChat:
+      handleChatMessage(message);
       break;
   }
 }
@@ -720,11 +776,47 @@ function writeOverlay(x: number, y: number, color: number, text: string) {
   }
 }
 
+let chatMessages: { from: string; text: string }[] = [];
+
+function handleChatMessage(message: { from: string; text: string }) {
+  chatMessages.push({ from: message.from, text: message.text });
+  if (chatMessages.length > 3) {
+    chatMessages.shift();
+  }
+  paintOverlay();
+  drawScreen();
+}
+
+function paintChat() {
+  for (let i = 0; i < 3; i++) {
+    const y = 3 + i;
+    writeOverlay(61, y, 0x1f, "                  ");
+    if (i < chatMessages.length) {
+      const msg = chatMessages[i];
+      const nick = `<${msg.from}>`;
+      const text = msg.text;
+      
+      const nickLen = Math.min(nick.length, 18);
+      writeOverlay(61, y, 0x1b, nick.slice(0, nickLen));
+      
+      if (nickLen < 18) {
+        const textLen = 18 - nickLen - 1;
+        if (textLen > 0) {
+          writeOverlay(61 + nickLen + 1, y, 0x1f, text.slice(0, textLen));
+        }
+      }
+    }
+  }
+}
+
 // paintOverlay rebuilds the modal layer from scratch each frame, so a modal
 // never has to restore what was underneath it. The pause layer goes underneath
 // the modal: a paused player can still have a scroll open over the board.
 function paintOverlay() {
   overlay.clear();
+  if (mode === "playing") {
+    paintChat();
+  }
   if (paused) {
     paintPause();
   }
@@ -1072,7 +1164,7 @@ function handleTitleKey(event: KeyboardEvent) {
       void fetchLines("/api/help?file=ABOUT.HLP&title=About+ZZT...", "About ZZT...");
       break;
     case "highScores":
-      void fetchLines("/api/highscores", `High scores for ${worldName}`);
+      void fetchLines("/api/highscores?world=" + encodeURIComponent(worldName), `High scores for ${worldName}`);
       break;
     case "restore":
       void showSavedGames();
@@ -1097,6 +1189,17 @@ function handleKeyDown(event: KeyboardEvent) {
 
   if (mode === "title") {
     handleTitleKey(event);
+    return;
+  }
+
+  if (event.code === "KeyC") {
+    event.preventDefault();
+    stopHeldInput();
+    openEntry("Chat:", "", 30, "any", (text) => {
+      if (text && text.trim() && ws && ws.readyState === WebSocket.OPEN) {
+        ws.send(JSON.stringify({ type: "chat", text: text.trim() }));
+      }
+    });
     return;
   }
 

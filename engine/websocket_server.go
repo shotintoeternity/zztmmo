@@ -4,6 +4,7 @@ import (
 	"context"
 	"encoding/json"
 	"net/http"
+	"os"
 	"path/filepath"
 	"strings"
 	"sync"
@@ -26,27 +27,53 @@ type WebSocketServer struct {
 	// must never write to disk.
 	SavesDir string
 
-	mu      sync.Mutex
-	clients map[PlayerID]*webSocketClient
-	inputs  map[PlayerID]PlayerInput
+	mu              sync.Mutex
+	clients         map[PlayerID]*webSocketClient
+	inputs          map[PlayerID]PlayerInput
+	Instances       map[string]*WorldInstance
+	DefaultInstance *WorldInstance
+}
+
+type WorldInstance struct {
+	Name        string
+	RoomManager *RoomManager
+	Clients     map[PlayerID]*webSocketClient
+	Inputs      map[PlayerID]PlayerInput
+	mu          sync.Mutex
 }
 
 type webSocketClient struct {
-	playerID PlayerID
-	boardID  int16
-	conn     *websocket.Conn
-	mu       sync.Mutex
+	playerID  PlayerID
+	boardID   int16
+	conn      *websocket.Conn
+	mu        sync.Mutex
+	worldName string
 }
 
 func NewWebSocketServer(world TWorld, defaultBoard int16) *WebSocketServer {
-	return &WebSocketServer{
-		RoomManager:  NewRoomManager(world),
+	rm := NewRoomManager(world)
+	name := rm.WorldName()
+	if name == "Untitled" || name == "" {
+		name = "TOWN"
+	}
+	inst := &WorldInstance{
+		Name:        name,
+		RoomManager: rm,
+		Clients:     make(map[PlayerID]*webSocketClient),
+		Inputs:      make(map[PlayerID]PlayerInput),
+	}
+	s := &WebSocketServer{
+		RoomManager:  rm,
 		DefaultBoard: defaultBoard,
 		TickDuration: ServerTickDuration,
 		OriginHosts:  []string{"localhost:*", "127.0.0.1:*"},
 		clients:      make(map[PlayerID]*webSocketClient),
 		inputs:       make(map[PlayerID]PlayerInput),
+		Instances:    make(map[string]*WorldInstance),
 	}
+	s.DefaultInstance = inst
+	s.Instances[name] = inst
+	return s
 }
 
 func (s *WebSocketServer) Run(ctx context.Context) {
@@ -65,40 +92,101 @@ func (s *WebSocketServer) Run(ctx context.Context) {
 
 func (s *WebSocketServer) Tick(ctx context.Context) {
 	s.mu.Lock()
-	inputs := s.inputs
-	s.inputs = make(map[PlayerID]PlayerInput)
-	diffs := s.RoomManager.StepDiffs(inputs)
-	clients := make(map[PlayerID]*webSocketClient, len(s.clients))
+	// Legacy tick for compatibility
+	if len(s.clients) > 0 {
+		inputs := s.inputs
+		s.inputs = make(map[PlayerID]PlayerInput)
+		diffs := s.RoomManager.StepDiffs(inputs)
+		clients := make(map[PlayerID]*webSocketClient, len(s.clients))
+		messages := make(map[PlayerID]interface{}, len(diffs))
+		for playerID, client := range s.clients {
+			clients[playerID] = client
+		}
+		for playerID, diff := range diffs {
+			client := s.clients[playerID]
+			if client == nil {
+				continue
+			}
+			if client.boardID != 0 && client.boardID != diff.BoardID {
+				snapshot, ok := s.RoomManager.Snapshot(playerID)
+				if ok {
+					client.boardID = snapshot.BoardID
+					snapshot.Events = append(snapshot.Events, ProtocolEvents(s.RoomManager.DrainPlayerEvents(playerID))...)
+					messages[playerID] = BoardChangeMessage{Type: MessageTypeBoardChange, Snapshot: snapshot}
+					continue
+				}
+			}
+			client.boardID = diff.BoardID
+			diff.Events = append(diff.Events, ProtocolEvents(s.RoomManager.DrainPlayerEvents(playerID))...)
+			messages[playerID] = diff
+		}
+		for _, quit := range s.RoomManager.DrainQuits() {
+			if s.clients[quit.PlayerID] == nil {
+				continue
+			}
+			messages[quit.PlayerID] = s.quitOutcome(s.RoomManager, quit)
+		}
+		s.mu.Unlock()
+
+		for playerID, message := range messages {
+			client := clients[playerID]
+			if client != nil {
+				_ = client.write(ctx, message)
+			}
+		}
+		s.mu.Lock()
+	}
+
+	// Dynamic instances tick
+	var instances []*WorldInstance
+	for _, inst := range s.Instances {
+		if len(s.clients) > 0 && inst.RoomManager == s.RoomManager {
+			continue
+		}
+		instances = append(instances, inst)
+	}
+	s.mu.Unlock()
+
+	for _, inst := range instances {
+		inst.Tick(ctx, s)
+	}
+}
+
+func (inst *WorldInstance) Tick(ctx context.Context, s *WebSocketServer) {
+	inst.mu.Lock()
+	inputs := inst.Inputs
+	inst.Inputs = make(map[PlayerID]PlayerInput)
+	diffs := inst.RoomManager.StepDiffs(inputs)
+	clients := make(map[PlayerID]*webSocketClient, len(inst.Clients))
 	messages := make(map[PlayerID]interface{}, len(diffs))
-	for playerID, client := range s.clients {
+	for playerID, client := range inst.Clients {
 		clients[playerID] = client
 	}
 	for playerID, diff := range diffs {
-		client := s.clients[playerID]
+		client := inst.Clients[playerID]
 		if client == nil {
 			continue
 		}
 		if client.boardID != 0 && client.boardID != diff.BoardID {
-			snapshot, ok := s.RoomManager.Snapshot(playerID)
+			snapshot, ok := inst.RoomManager.Snapshot(playerID)
 			if ok {
 				client.boardID = snapshot.BoardID
-				snapshot.Events = append(snapshot.Events, ProtocolEvents(s.RoomManager.DrainPlayerEvents(playerID))...)
+				snapshot.Events = append(snapshot.Events, ProtocolEvents(inst.RoomManager.DrainPlayerEvents(playerID))...)
 				messages[playerID] = BoardChangeMessage{Type: MessageTypeBoardChange, Snapshot: snapshot}
 				continue
 			}
 		}
 		client.boardID = diff.BoardID
+		diff.Events = append(diff.Events, ProtocolEvents(inst.RoomManager.DrainPlayerEvents(playerID))...)
 		messages[playerID] = diff
 	}
-	// A quitter has already left their room, so they are absent from diffs.
-	// Their outcome is delivered here, and it replaces any diff they had.
-	for _, quit := range s.RoomManager.DrainQuits() {
-		if s.clients[quit.PlayerID] == nil {
+	for _, quit := range inst.RoomManager.DrainQuits() {
+		if inst.Clients[quit.PlayerID] == nil {
 			continue
 		}
-		messages[quit.PlayerID] = s.quitOutcome(quit)
+		messages[quit.PlayerID] = s.quitOutcome(inst.RoomManager, quit)
 	}
-	s.mu.Unlock()
+	inst.mu.Unlock()
 
 	for playerID, message := range messages {
 		client := clients[playerID]
@@ -109,6 +197,26 @@ func (s *WebSocketServer) Tick(ctx context.Context) {
 }
 
 func (s *WebSocketServer) ServeHTTP(w http.ResponseWriter, r *http.Request) {
+	worldName := r.URL.Query().Get("world")
+	var inst *WorldInstance
+	var safeWorld string
+	if worldName == "" {
+		inst = s.DefaultInstance
+		safeWorld = inst.Name
+	} else {
+		var err error
+		safeWorld, err = SanitizeSaveName(worldName)
+		if err != nil {
+			http.Error(w, "invalid world name", http.StatusBadRequest)
+			return
+		}
+		inst, err = s.GetOrCreateInstance(safeWorld)
+		if err != nil {
+			http.Error(w, "failed to load world: "+err.Error(), http.StatusInternalServerError)
+			return
+		}
+	}
+
 	conn, err := websocket.Accept(w, r, &websocket.AcceptOptions{OriginPatterns: s.OriginHosts})
 	if err != nil {
 		return
@@ -125,31 +233,37 @@ func (s *WebSocketServer) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 		join.Board = s.DefaultBoard
 	}
 
-	client := &webSocketClient{conn: conn}
-	s.mu.Lock()
-	playerID := s.RoomManager.JoinPlayer(join.Board, 0, 0)
+	client := &webSocketClient{conn: conn, worldName: safeWorld}
+	inst.mu.Lock()
+	playerID := inst.RoomManager.JoinPlayer(join.Board, 0, 0)
+	inst.RoomManager.SetPlayerName(playerID, join.Name)
 	client.playerID = playerID
-	s.clients[playerID] = client
-	snapshot, ok := s.RoomManager.Snapshot(playerID)
+	inst.Clients[playerID] = client
+	if inst.RoomManager == s.RoomManager {
+		s.mu.Lock()
+		s.clients[playerID] = client
+		s.mu.Unlock()
+	}
+	snapshot, ok := inst.RoomManager.Snapshot(playerID)
 	if ok {
 		client.boardID = snapshot.BoardID
 		err = client.write(ctx, snapshot)
 	}
-	s.mu.Unlock()
+	inst.mu.Unlock()
+
 	if !ok {
-		s.removeClient(playerID)
+		s.removeClientFromInstance(inst, playerID)
 		return
 	}
 	if err != nil {
-		s.removeClient(playerID)
+		s.removeClientFromInstance(inst, playerID)
 		return
 	}
 
 	for {
 		var raw json.RawMessage
 		if err := wsjson.Read(ctx, conn, &raw); err != nil {
-			s.removeClient(playerID)
-			return
+			break
 		}
 
 		var envelope struct {
@@ -165,53 +279,72 @@ func (s *WebSocketServer) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 			if err := json.Unmarshal(raw, &cmd); err != nil {
 				continue
 			}
-			s.submitDebugCommand(playerID, cmd.Text)
+			s.submitDebugCommandInInstance(inst, playerID, cmd.Text)
 		case MessageTypeScrollReply:
 			var reply ScrollReplyMessage
 			if err := json.Unmarshal(raw, &reply); err != nil {
 				continue
 			}
-			s.submitScrollReply(playerID, reply.StatID, reply.Label)
+			s.submitScrollReplyInInstance(inst, playerID, reply.StatID, reply.Label)
 		case MessageTypeQuitReply:
 			var reply QuitReplyMessage
 			if err := json.Unmarshal(raw, &reply); err != nil {
 				continue
 			}
-			s.submitQuitReply(playerID, reply.Quit)
+			s.submitQuitReplyInInstance(inst, playerID, reply.Quit)
 		case MessageTypeHighScoreName:
 			var entry HighScoreNameMessage
 			if err := json.Unmarshal(raw, &entry); err != nil {
 				continue
 			}
-			s.submitHighScoreName(ctx, playerID, entry.Name)
+			s.submitHighScoreNameInInstance(ctx, inst, playerID, entry.Name)
 		case MessageTypeSaveFilename:
 			var save SaveFilenameMessage
 			if err := json.Unmarshal(raw, &save); err != nil {
 				continue
 			}
-			s.submitSaveFilename(ctx, playerID, save.Name)
+			s.submitSaveFilenameInInstance(ctx, inst, playerID, save.Name)
+		case "chat":
+			var chat struct {
+				Text string `json:"text"`
+			}
+			if err := json.Unmarshal(raw, &chat); err != nil {
+				continue
+			}
+			if strings.TrimSpace(chat.Text) == "" {
+				continue
+			}
+			inst.mu.Lock()
+			name := "browser"
+			player := inst.RoomManager.players[playerID]
+			if player != nil && player.name != "" {
+				name = player.name
+			}
+			inst.mu.Unlock()
+			inst.BroadcastChat(ctx, name, chat.Text)
 		default:
 			var input InputMessage
 			if err := json.Unmarshal(raw, &input); err != nil {
 				continue
 			}
-			s.setInput(playerID, inputMessageToPlayerInput(input))
+			inst.setInput(s, playerID, inputMessageToPlayerInput(input))
 		}
 	}
+	s.removeClientFromInstance(inst, playerID)
 }
 
 // quitOutcome is what a player sees after confirming the quit prompt: either
 // vanilla's "New high score" window, or a bare quit so the client can return to
-// the title screen. Callers hold s.mu.
-func (s *WebSocketServer) quitOutcome(quit QuitResult) EventMessage {
+// the title screen. Callers hold s.mu or inst.mu.
+func (s *WebSocketServer) quitOutcome(rm *RoomManager, quit QuitResult) EventMessage {
 	event := ProtocolEvent{Type: "quit", Score: quit.Score}
 	if quit.ListPos > 0 {
 		event = ProtocolEvent{
 			Type:    "highScoreEntry",
 			Score:   quit.Score,
 			ListPos: quit.ListPos,
-			Title:   "New high score for " + s.RoomManager.WorldName(),
-			Lines:   s.RoomManager.HighScoreLines(quit.ListPos),
+			Title:   "New high score for " + rm.WorldName(),
+			Lines:   rm.HighScoreLines(quit.ListPos),
 		}
 	}
 	return EventMessage{Type: MessageTypeEvent, Event: event}
@@ -230,6 +363,16 @@ func (s *WebSocketServer) submitQuitReply(playerID PlayerID, quit bool) {
 	s.RoomManager.SubmitQuitReply(playerID, quit)
 }
 
+func (s *WebSocketServer) submitQuitReplyInInstance(inst *WorldInstance, playerID PlayerID, quit bool) {
+	inst.mu.Lock()
+	defer inst.mu.Unlock()
+
+	if _, ok := inst.Clients[playerID]; !ok {
+		return
+	}
+	inst.RoomManager.SubmitQuitReply(playerID, quit)
+}
+
 // submitHighScoreName writes the name a quitter typed into the slot their score
 // earned, then sends the finished list back for display. A client that was
 // never offered a slot gets nothing: RecordHighScore refuses it.
@@ -246,6 +389,23 @@ func (s *WebSocketServer) submitHighScoreName(ctx context.Context, playerID Play
 		Lines: s.RoomManager.HighScoreLines(0),
 	}}
 	s.mu.Unlock()
+
+	_ = client.write(ctx, message)
+}
+
+func (s *WebSocketServer) submitHighScoreNameInInstance(ctx context.Context, inst *WorldInstance, playerID PlayerID, name string) {
+	inst.mu.Lock()
+	client := inst.Clients[playerID]
+	if client == nil || !inst.RoomManager.RecordHighScore(playerID, name) {
+		inst.mu.Unlock()
+		return
+	}
+	message := EventMessage{Type: MessageTypeEvent, Event: ProtocolEvent{
+		Type:  "highScores",
+		Title: "High scores for " + inst.RoomManager.WorldName(),
+		Lines: inst.RoomManager.HighScoreLines(0),
+	}}
+	inst.mu.Unlock()
 
 	_ = client.write(ctx, message)
 }
@@ -285,38 +445,102 @@ func (s *WebSocketServer) submitSaveFilename(ctx context.Context, playerID Playe
 	_ = client.write(ctx, EventMessage{Type: MessageTypeEvent, Event: event})
 }
 
-// RestoreSnapshot swaps the hosted world for a saved one. It is refused while
-// anyone is in a room (RoomManager.RestoreSnapshot enforces that); s.mu keeps it
-// from landing in the middle of a Tick.
-func (s *WebSocketServer) RestoreSnapshot(name string) error {
-	s.mu.Lock()
-	defer s.mu.Unlock()
-
-	return s.RoomManager.RestoreSnapshot(s.SavesDir, name)
-}
-
-// submitDebugCommand routes a client's '?' reply to the engine that owns that
-// player. Held under s.mu because Tick mutates the same rooms.
-func (s *WebSocketServer) submitDebugCommand(playerID PlayerID, text string) {
-	s.mu.Lock()
-	defer s.mu.Unlock()
-
-	if _, ok := s.clients[playerID]; !ok {
+func (s *WebSocketServer) submitSaveFilenameInInstance(ctx context.Context, inst *WorldInstance, playerID PlayerID, name string) {
+	inst.mu.Lock()
+	client := inst.Clients[playerID]
+	if client == nil {
+		inst.mu.Unlock()
 		return
 	}
-	s.RoomManager.SubmitDebugCommand(playerID, text)
+	if name == "" {
+		inst.mu.Unlock()
+		return
+	}
+	path, err := inst.RoomManager.SaveSnapshot(s.SavesDir, name, playerID)
+	inst.mu.Unlock()
+
+	event := ProtocolEvent{Type: "saveResult"}
+	if err != nil {
+		event.Error = err.Error()
+	} else {
+		event.Filename = strings.TrimSuffix(filepath.Base(path), ".SAV")
+	}
+	_ = client.write(ctx, EventMessage{Type: MessageTypeEvent, Event: event})
 }
 
-// submitScrollReply routes a scroll selection to the player's room. Held under
-// s.mu because Tick mutates the same rooms.
-func (s *WebSocketServer) submitScrollReply(playerID PlayerID, objectStatID int16, label string) {
+func (s *WebSocketServer) GetOrCreateInstance(worldName string) (*WorldInstance, error) {
 	s.mu.Lock()
 	defer s.mu.Unlock()
 
-	if _, ok := s.clients[playerID]; !ok {
+	if s.Instances == nil {
+		s.Instances = make(map[string]*WorldInstance)
+	}
+
+	inst := s.Instances[worldName]
+	if inst != nil {
+		return inst, nil
+	}
+
+	dir := "."
+	if E != nil && E.LoadedGameFileName != "" {
+		dir = filepath.Dir(E.LoadedGameFileName)
+	}
+	world, err := LoadPristineWorld(dir, worldName)
+	if err != nil {
+		return nil, err
+	}
+
+	rm := NewRoomManager(world)
+	rm.HighScorePath = filepath.Join(dir, worldName+".HI")
+	rm.LoadHighScores()
+
+	inst = &WorldInstance{
+		Name:        worldName,
+		RoomManager: rm,
+		Clients:     make(map[PlayerID]*webSocketClient),
+		Inputs:      make(map[PlayerID]PlayerInput),
+	}
+	s.Instances[worldName] = inst
+	return inst, nil
+}
+
+func LoadPristineWorld(dir, name string) (TWorld, error) {
+	safe, err := SanitizeSaveName(name)
+	if err != nil {
+		return TWorld{}, err
+	}
+	path := filepath.Join(dir, safe+".ZZT")
+	f, err := os.Open(path)
+	if err != nil {
+		return TWorld{}, err
+	}
+	defer f.Close()
+
+	scratch := newSnapshotEngine()
+	if err := scratch.worldReadFrom(f, false, nil); err != nil {
+		return TWorld{}, err
+	}
+	return scratch.World, nil
+}
+
+func (s *WebSocketServer) submitDebugCommandInInstance(inst *WorldInstance, playerID PlayerID, text string) {
+	inst.mu.Lock()
+	defer inst.mu.Unlock()
+
+	if _, ok := inst.Clients[playerID]; !ok {
 		return
 	}
-	s.RoomManager.SubmitScrollReply(playerID, objectStatID, label)
+	inst.RoomManager.SubmitDebugCommand(playerID, text)
+}
+
+func (s *WebSocketServer) submitScrollReplyInInstance(inst *WorldInstance, playerID PlayerID, objectStatID int16, label string) {
+	inst.mu.Lock()
+	defer inst.mu.Unlock()
+
+	if _, ok := inst.Clients[playerID]; !ok {
+		return
+	}
+	inst.RoomManager.SubmitScrollReply(playerID, objectStatID, label)
 }
 
 func inputMessageToPlayerInput(input InputMessage) PlayerInput {
@@ -360,6 +584,22 @@ func (s *WebSocketServer) setInput(playerID PlayerID, input PlayerInput) {
 	}
 }
 
+func (inst *WorldInstance) setInput(s *WebSocketServer, playerID PlayerID, input PlayerInput) {
+	inst.mu.Lock()
+	if _, ok := inst.Clients[playerID]; ok {
+		inst.Inputs[playerID] = input
+	}
+	inst.mu.Unlock()
+
+	if inst.RoomManager == s.RoomManager {
+		s.mu.Lock()
+		if _, ok := s.clients[playerID]; ok {
+			s.inputs[playerID] = input
+		}
+		s.mu.Unlock()
+	}
+}
+
 func (s *WebSocketServer) removeClient(playerID PlayerID) {
 	s.mu.Lock()
 	defer s.mu.Unlock()
@@ -371,6 +611,22 @@ func (s *WebSocketServer) removeClient(playerID PlayerID) {
 	s.RoomManager.DiscardPendingScore(playerID)
 }
 
+func (s *WebSocketServer) removeClientFromInstance(inst *WorldInstance, playerID PlayerID) {
+	inst.mu.Lock()
+	delete(inst.Clients, playerID)
+	delete(inst.Inputs, playerID)
+	inst.RoomManager.LeavePlayer(playerID)
+	inst.RoomManager.DiscardPendingScore(playerID)
+	inst.mu.Unlock()
+
+	if inst.RoomManager == s.RoomManager {
+		s.mu.Lock()
+		delete(s.clients, playerID)
+		delete(s.inputs, playerID)
+		s.mu.Unlock()
+	}
+}
+
 func (c *webSocketClient) write(ctx context.Context, message interface{}) error {
 	c.mu.Lock()
 	defer c.mu.Unlock()
@@ -378,4 +634,45 @@ func (c *webSocketClient) write(ctx context.Context, message interface{}) error 
 	writeCtx, cancel := context.WithTimeout(ctx, time.Second)
 	defer cancel()
 	return wsjson.Write(writeCtx, c.conn, message)
+}
+
+func (s *WebSocketServer) RestoreSnapshot(name string) error {
+	s.mu.Lock()
+	defer s.mu.Unlock()
+
+	return s.RoomManager.RestoreSnapshot(s.SavesDir, name)
+}
+
+func (s *WebSocketServer) LoadWorld(name string) error {
+	s.mu.Lock()
+	defer s.mu.Unlock()
+
+	dir := "."
+	if E != nil && E.LoadedGameFileName != "" {
+		dir = filepath.Dir(E.LoadedGameFileName)
+	}
+	return s.RoomManager.LoadWorld(dir, name)
+}
+
+func (inst *WorldInstance) BroadcastChat(ctx context.Context, from, text string) {
+	inst.mu.Lock()
+	clients := make([]*webSocketClient, 0, len(inst.Clients))
+	for _, client := range inst.Clients {
+		clients = append(clients, client)
+	}
+	inst.mu.Unlock()
+
+	msg := struct {
+		Type string `json:"type"`
+		From string `json:"from"`
+		Text string `json:"text"`
+	}{
+		Type: "chat",
+		From: from,
+		Text: text,
+	}
+
+	for _, client := range clients {
+		_ = client.write(ctx, msg)
+	}
 }

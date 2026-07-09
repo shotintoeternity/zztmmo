@@ -160,6 +160,44 @@ func (rm *RoomManager) RestoreSnapshot(dir, name string) error {
 	return nil
 }
 
+// LoadWorld replaces the world with dir/<NAME>.ZZT. It refuses while any player
+// is in a room.
+func (rm *RoomManager) LoadWorld(dir, name string) error {
+	if len(rm.players) != 0 {
+		return ErrWorldOccupied
+	}
+	safe, err := SanitizeSaveName(name)
+	if err != nil {
+		return err
+	}
+	path := filepath.Join(dir, safe+".ZZT")
+	if filepath.Dir(path) != filepath.Clean(dir) {
+		return ErrInvalidSaveName
+	}
+
+	f, err := os.Open(path)
+	if err != nil {
+		return err
+	}
+	defer f.Close()
+
+	scratch := newSnapshotEngine()
+	if err := scratch.worldReadFrom(f, false, nil); err != nil {
+		return err
+	}
+
+	rm.world = scratch.World
+	rm.rooms = make(map[int16]*Room)
+	rm.HighScorePath = filepath.Join(dir, safe+".HI")
+	rm.LoadHighScores()
+
+	if E != nil {
+		E.LoadedGameFileName = filepath.Join(dir, safe)
+	}
+
+	return nil
+}
+
 // snapshotWorld is the world as it stands right now: frozen boards from
 // rm.world, live boards re-serialized from their engines with the players taken
 // off them, and the union of everybody's flags.

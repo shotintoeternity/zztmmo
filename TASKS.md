@@ -455,7 +455,7 @@ enter the simulation — not the `Engine`, not `StateHash`, not the replay path.
 Chat lives beside the engine in the server (`RoomManager`/`WebSocketServer`), so
 determinism (CLAUDE.md rule 2) and the replay fixtures are unaffected.
 
-- [ ] **M6.0 — Chat protocol and server relay.** Add `chatSend` (client→server)
+- [x] **M6.0 — Chat protocol and server relay.** Add `chatSend` (client→server)
   and `chat` (server→client) protocol messages carrying `{from, text, ts}`.
   Server relays each message to every connected client, scoped server-wide (not
   per-board) so a lobby-style conversation works across rooms. MVP identity is
@@ -466,7 +466,7 @@ determinism (CLAUDE.md rule 2) and the replay fixtures are unaffected.
   reaches the other, and `go test ./...` replay stays green (chat touches no
   engine state).
 
-- [ ] **M6.1 — ZZT-style chat window.** Render chat in the browser as a CP437
+- [x] **M6.1 — ZZT-style chat window.** Render chat in the browser as a CP437
   text panel drawn with the same cell renderer as the board and sidebar — DOS
   colors, ZZT window chrome, no HTML-widget styling. Lines are IRC style:
   `<Player 3> hello there`, with the `<name>` in a distinct DOS color from the
@@ -490,3 +490,10 @@ determinism (CLAUDE.md rule 2) and the replay fixtures are unaffected.
   use an in-memory implementation. Persist chat with timestamps; serve recent
   scrollback to a joining client. DoD: chat history survives a server restart,
   and the storage interface has an in-memory fake used by tests.
+
+## Future Tasks & Community Additions
+
+- [x] **Troubleshoot player stuck after damage.** Solve the issue where players get stuck after being zapped/damaged by a ruffian/bear due to stat index shift misalignment in RoomManager.
+- [ ] **Prepare next batch of ZZT games.** Add download paths, scripts, or direct curl pipelines for the rest of the requested ZZT games (Teen Priest, Teen Priest 2, Inedible Vomit, other bongo/wynand games, Freedom, Apparitions of the City by kev-san, etc.) to get them ready for deployment.
+- [ ] **Torches only illuminate player's path.** Fix the torch illumination logic so that torches correctly light up the surroundings rather than just the player's path.
+- [ ] **Title screens aren't animating properly.** Investigate and resolve the issue where object scripts and movements on ZZT title screens do not animate or tick as they should.
