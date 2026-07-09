@@ -86,6 +86,13 @@ git clone https://github.com/asiekierka/reconstruction-of-zzt reference/reconstr
 - `NOTES.md` — running log of decisions and escalations
 - `PLAN.md` — original background and rationale (its language choice is superseded)
 
+## Built with
+
+Written largely by AI coding agents under close human review — Claude Code,
+Codex, Antigravity, and Kiro CLI. The replay harness exists in no small part
+because agents are excellent at faithfully porting 1991 Pascal quirks and
+terrible at noticing when they have quietly improved one.
+
 ## Credits and license
 
 The code is MIT licensed — see [LICENSE](LICENSE). ZZT itself is Tim Sweeney's,
