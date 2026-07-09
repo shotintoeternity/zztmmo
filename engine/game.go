@@ -29,64 +29,64 @@ var (
 
 // implementation uses: Dos, Crt, Video, Sounds, Input, Elements, Editor, Oop
 
-func SidebarClearLine(y int16) {
-	VideoWriteText(60, y, 0x11, "\xb3                   ")
+func (e *Engine) SidebarClearLine(y int16) {
+	e.VideoWriteText(60, y, 0x11, "\xb3                   ")
 }
 
-func SidebarClear() {
+func (e *Engine) SidebarClear() {
 	var i int16
 	for i = 3; i <= 24; i++ {
-		SidebarClearLine(i)
+		e.SidebarClearLine(i)
 	}
 }
 
-func GenerateTransitionTable() {
+func (e *Engine) GenerateTransitionTable() {
 	var (
 		ix, iy int16
 		t      TCoord
 	)
-	E.TransitionTableSize = 0
+	e.TransitionTableSize = 0
 	for iy = 1; iy <= BOARD_HEIGHT; iy++ {
 		for ix = 1; ix <= BOARD_WIDTH; ix++ {
-			E.TransitionTableSize++
-			E.TransitionTable[E.TransitionTableSize-1].X = ix
-			E.TransitionTable[E.TransitionTableSize-1].Y = iy
+			e.TransitionTableSize++
+			e.TransitionTable[e.TransitionTableSize-1].X = ix
+			e.TransitionTable[e.TransitionTableSize-1].Y = iy
 		}
 	}
-	for ix = 1; ix <= E.TransitionTableSize; ix++ {
-		iy = Random(E.TransitionTableSize) + 1
-		t = E.TransitionTable[iy-1]
-		E.TransitionTable[iy-1] = E.TransitionTable[ix-1]
-		E.TransitionTable[ix-1] = t
+	for ix = 1; ix <= e.TransitionTableSize; ix++ {
+		iy = e.Random(e.TransitionTableSize) + 1
+		t = e.TransitionTable[iy-1]
+		e.TransitionTable[iy-1] = e.TransitionTable[ix-1]
+		e.TransitionTable[ix-1] = t
 	}
 }
 
-func BoardClose() {
+func (e *Engine) BoardClose() {
 	var (
 		ix, iy int16
 		ptr    []byte
 		rle    TRleTile
 	)
-	ptr = E.IoTmpBuf[:]
-	StoreString(ptr[:SizeOfBoardName], E.Board.Name)
+	ptr = e.IoTmpBuf[:]
+	StoreString(ptr[:SizeOfBoardName], e.Board.Name)
 	ptr = ptr[SizeOfBoardName:]
 
 	ix = 1
 	iy = 1
 	rle.Count = 1
-	rle.Tile = E.Board.Tiles[ix][iy]
+	rle.Tile = e.Board.Tiles[ix][iy]
 	for {
 		ix++
 		if ix > BOARD_WIDTH {
 			ix = 1
 			iy++
 		}
-		if E.Board.Tiles[ix][iy].Color == rle.Tile.Color && E.Board.Tiles[ix][iy].Element == rle.Tile.Element && rle.Count < 255 && iy <= BOARD_HEIGHT {
+		if e.Board.Tiles[ix][iy].Color == rle.Tile.Color && e.Board.Tiles[ix][iy].Element == rle.Tile.Element && rle.Count < 255 && iy <= BOARD_HEIGHT {
 			rle.Count++
 		} else {
 			StoreRleTile(ptr[:SizeOfRleTile], rle)
 			ptr = ptr[SizeOfRleTile:]
-			rle.Tile = E.Board.Tiles[ix][iy]
+			rle.Tile = e.Board.Tiles[ix][iy]
 			rle.Count = 1
 		}
 		if iy > BOARD_HEIGHT {
@@ -94,22 +94,22 @@ func BoardClose() {
 		}
 	}
 
-	StoreBoardInfo(ptr[:SizeOfBoardInfo], &E.Board.Info)
+	StoreBoardInfo(ptr[:SizeOfBoardInfo], &e.Board.Info)
 	ptr = ptr[SizeOfBoardInfo:]
 
-	StoreInt16(ptr[:2], E.Board.StatCount)
+	StoreInt16(ptr[:2], e.Board.StatCount)
 	ptr = ptr[2:]
 
-	for ix = 0; ix <= E.Board.StatCount; ix++ {
-		stat := &E.Board.Stats[ix]
+	for ix = 0; ix <= e.Board.StatCount; ix++ {
+		stat := &e.Board.Stats[ix]
 		if stat.DataLen > 0 {
 			for iy = 1; iy <= ix-1; iy++ {
-				if E.Board.Stats[iy].Data == stat.Data {
+				if e.Board.Stats[iy].Data == stat.Data {
 					stat.DataLen = -iy
 				}
 			}
 		}
-		StoreStat(ptr[:SizeOfStat], &E.Board.Stats[ix])
+		StoreStat(ptr[:SizeOfStat], &e.Board.Stats[ix])
 		ptr = ptr[SizeOfStat:]
 
 		if stat.DataLen > 0 {
@@ -118,23 +118,23 @@ func BoardClose() {
 		}
 	}
 
-	boardData := E.IoTmpBuf[:len(E.IoTmpBuf)-len(ptr)]
-	E.World.BoardLen[E.World.Info.CurrentBoard] = int16(len(boardData))
-	E.World.BoardData[E.World.Info.CurrentBoard] = make([]byte, len(boardData))
-	copy(E.World.BoardData[E.World.Info.CurrentBoard], boardData)
+	boardData := e.IoTmpBuf[:len(e.IoTmpBuf)-len(ptr)]
+	e.World.BoardLen[e.World.Info.CurrentBoard] = int16(len(boardData))
+	e.World.BoardData[e.World.Info.CurrentBoard] = make([]byte, len(boardData))
+	copy(e.World.BoardData[e.World.Info.CurrentBoard], boardData)
 }
 
-func BoardOpen(boardId int16) {
+func (e *Engine) BoardOpen(boardId int16) {
 	var (
 		ptr    []byte
 		ix, iy int16
 		rle    TRleTile
 	)
-	if boardId > E.World.BoardCount {
-		boardId = E.World.Info.CurrentBoard
+	if boardId > e.World.BoardCount {
+		boardId = e.World.Info.CurrentBoard
 	}
-	ptr = E.World.BoardData[boardId]
-	E.Board.Name = LoadString(ptr[:SizeOfBoardName])
+	ptr = e.World.BoardData[boardId]
+	e.Board.Name = LoadString(ptr[:SizeOfBoardName])
 	ptr = ptr[SizeOfBoardName:]
 
 	ix = 1
@@ -145,7 +145,7 @@ func BoardOpen(boardId int16) {
 			rle = LoadRleTile(ptr[:SizeOfRleTile])
 			ptr = ptr[SizeOfRleTile:]
 		}
-		E.Board.Tiles[ix][iy] = rle.Tile
+		e.Board.Tiles[ix][iy] = rle.Tile
 		ix++
 		if ix > BOARD_WIDTH {
 			ix = 1
@@ -157,136 +157,136 @@ func BoardOpen(boardId int16) {
 		}
 	}
 
-	LoadBoardInfo(ptr[:SizeOfBoardInfo], &E.Board.Info)
+	LoadBoardInfo(ptr[:SizeOfBoardInfo], &e.Board.Info)
 	ptr = ptr[SizeOfBoardInfo:]
 
-	E.Board.StatCount = LoadInt16(ptr[:2])
+	e.Board.StatCount = LoadInt16(ptr[:2])
 	ptr = ptr[2:]
 
-	for ix = 0; ix <= E.Board.StatCount; ix++ {
-		stat := &E.Board.Stats[ix]
-		LoadStat(ptr[:SizeOfStat], &E.Board.Stats[ix])
+	for ix = 0; ix <= e.Board.StatCount; ix++ {
+		stat := &e.Board.Stats[ix]
+		LoadStat(ptr[:SizeOfStat], &e.Board.Stats[ix])
 		ptr = ptr[SizeOfStat:]
 
 		if stat.DataLen > 0 {
 			stat.Data = string(ptr[:stat.DataLen])
 			ptr = ptr[stat.DataLen:]
 		} else if stat.DataLen < 0 {
-			stat.Data = E.Board.Stats[-stat.DataLen].Data
-			stat.DataLen = E.Board.Stats[-stat.DataLen].DataLen
+			stat.Data = e.Board.Stats[-stat.DataLen].Data
+			stat.DataLen = e.Board.Stats[-stat.DataLen].DataLen
 		}
 
 	}
 
-	E.World.Info.CurrentBoard = boardId
+	e.World.Info.CurrentBoard = boardId
 }
 
-func BoardChange(boardId int16) {
-	E.Board.Tiles[E.Board.Stats[0].X][E.Board.Stats[0].Y].Element = E_PLAYER
-	E.Board.Tiles[E.Board.Stats[0].X][E.Board.Stats[0].Y].Color = ElementDefs[E_PLAYER].Color
-	BoardClose()
-	BoardOpen(boardId)
+func (e *Engine) BoardChange(boardId int16) {
+	e.Board.Tiles[e.Board.Stats[0].X][e.Board.Stats[0].Y].Element = E_PLAYER
+	e.Board.Tiles[e.Board.Stats[0].X][e.Board.Stats[0].Y].Color = ElementDefs[E_PLAYER].Color
+	e.BoardClose()
+	e.BoardOpen(boardId)
 }
 
-func BoardCreate() {
+func (e *Engine) BoardCreate() {
 	var ix, iy, i int16
-	E.Board.Name = ""
-	E.Board.Info.Message = ""
-	E.Board.Info.MaxShots = 255
-	E.Board.Info.IsDark = false
-	E.Board.Info.ReenterWhenZapped = false
-	E.Board.Info.TimeLimitSec = 0
+	e.Board.Name = ""
+	e.Board.Info.Message = ""
+	e.Board.Info.MaxShots = 255
+	e.Board.Info.IsDark = false
+	e.Board.Info.ReenterWhenZapped = false
+	e.Board.Info.TimeLimitSec = 0
 	for i = 0; i <= 3; i++ {
-		E.Board.Info.NeighborBoards[i] = 0
+		e.Board.Info.NeighborBoards[i] = 0
 	}
 	for ix = 0; ix <= BOARD_WIDTH+1; ix++ {
-		E.Board.Tiles[ix][0] = TileBoardEdge
-		E.Board.Tiles[ix][BOARD_HEIGHT+1] = TileBoardEdge
+		e.Board.Tiles[ix][0] = TileBoardEdge
+		e.Board.Tiles[ix][BOARD_HEIGHT+1] = TileBoardEdge
 	}
 	for iy = 0; iy <= BOARD_HEIGHT+1; iy++ {
-		E.Board.Tiles[0][iy] = TileBoardEdge
-		E.Board.Tiles[BOARD_WIDTH+1][iy] = TileBoardEdge
+		e.Board.Tiles[0][iy] = TileBoardEdge
+		e.Board.Tiles[BOARD_WIDTH+1][iy] = TileBoardEdge
 	}
 	for ix = 1; ix <= BOARD_WIDTH; ix++ {
 		for iy = 1; iy <= BOARD_HEIGHT; iy++ {
-			E.Board.Tiles[ix][iy].Element = E_EMPTY
-			E.Board.Tiles[ix][iy].Color = 0
+			e.Board.Tiles[ix][iy].Element = E_EMPTY
+			e.Board.Tiles[ix][iy].Color = 0
 		}
 	}
 	for ix = 1; ix <= BOARD_WIDTH; ix++ {
-		E.Board.Tiles[ix][1] = TileBorder
-		E.Board.Tiles[ix][BOARD_HEIGHT] = TileBorder
+		e.Board.Tiles[ix][1] = TileBorder
+		e.Board.Tiles[ix][BOARD_HEIGHT] = TileBorder
 	}
 	for iy = 1; iy <= BOARD_HEIGHT; iy++ {
-		E.Board.Tiles[1][iy] = TileBorder
-		E.Board.Tiles[BOARD_WIDTH][iy] = TileBorder
+		e.Board.Tiles[1][iy] = TileBorder
+		e.Board.Tiles[BOARD_WIDTH][iy] = TileBorder
 	}
-	E.Board.Tiles[BOARD_WIDTH/2][BOARD_HEIGHT/2].Element = E_PLAYER
-	E.Board.Tiles[BOARD_WIDTH/2][BOARD_HEIGHT/2].Color = ElementDefs[E_PLAYER].Color
-	E.Board.StatCount = 0
-	E.Board.Stats[0].X = BOARD_WIDTH / 2
-	E.Board.Stats[0].Y = BOARD_HEIGHT / 2
-	E.Board.Stats[0].Cycle = 1
-	E.Board.Stats[0].Under.Element = E_EMPTY
-	E.Board.Stats[0].Under.Color = 0
-	E.Board.Stats[0].Data = ""
-	E.Board.Stats[0].DataLen = 0
+	e.Board.Tiles[BOARD_WIDTH/2][BOARD_HEIGHT/2].Element = E_PLAYER
+	e.Board.Tiles[BOARD_WIDTH/2][BOARD_HEIGHT/2].Color = ElementDefs[E_PLAYER].Color
+	e.Board.StatCount = 0
+	e.Board.Stats[0].X = BOARD_WIDTH / 2
+	e.Board.Stats[0].Y = BOARD_HEIGHT / 2
+	e.Board.Stats[0].Cycle = 1
+	e.Board.Stats[0].Under.Element = E_EMPTY
+	e.Board.Stats[0].Under.Color = 0
+	e.Board.Stats[0].Data = ""
+	e.Board.Stats[0].DataLen = 0
 }
 
-func WorldCreate() {
+func (e *Engine) WorldCreate() {
 	var i int16
-	InitElementsGame()
-	E.World.BoardCount = 0
-	E.World.BoardLen[0] = 0
-	InitEditorStatSettings()
-	ResetMessageNotShownFlags()
-	BoardCreate()
-	E.World.Info.IsSave = false
-	E.World.Info.CurrentBoard = 0
-	E.World.Info.Ammo = 0
-	E.World.Info.Gems = 0
-	E.World.Info.Health = 100
-	E.World.Info.EnergizerTicks = 0
-	E.World.Info.Torches = 0
-	E.World.Info.TorchTicks = 0
-	E.World.Info.Score = 0
-	E.World.Info.BoardTimeSec = 0
-	E.World.Info.BoardTimeHsec = 0
+	e.InitElementsGame()
+	e.World.BoardCount = 0
+	e.World.BoardLen[0] = 0
+	e.InitEditorStatSettings()
+	e.ResetMessageNotShownFlags()
+	e.BoardCreate()
+	e.World.Info.IsSave = false
+	e.World.Info.CurrentBoard = 0
+	e.World.Info.Ammo = 0
+	e.World.Info.Gems = 0
+	e.World.Info.Health = 100
+	e.World.Info.EnergizerTicks = 0
+	e.World.Info.Torches = 0
+	e.World.Info.TorchTicks = 0
+	e.World.Info.Score = 0
+	e.World.Info.BoardTimeSec = 0
+	e.World.Info.BoardTimeHsec = 0
 	for i = 1; i <= 7; i++ {
-		E.World.Info.Keys[i-1] = false
+		e.World.Info.Keys[i-1] = false
 	}
 	for i = 1; i <= 10; i++ {
-		E.World.Info.Flags[i-1] = ""
+		e.World.Info.Flags[i-1] = ""
 	}
-	BoardChange(0)
-	E.Board.Name = "Title screen"
-	E.LoadedGameFileName = ""
-	E.World.Info.Name = ""
+	e.BoardChange(0)
+	e.Board.Name = "Title screen"
+	e.LoadedGameFileName = ""
+	e.World.Info.Name = ""
 }
 
-func TransitionDrawToFill(chr byte, color int16) {
+func (e *Engine) TransitionDrawToFill(chr byte, color int16) {
 	var i int16
-	for i = 1; i <= E.TransitionTableSize; i++ {
-		VideoWriteText(E.TransitionTable[i-1].X-1, E.TransitionTable[i-1].Y-1, byte(color), string([]byte{chr}))
+	for i = 1; i <= e.TransitionTableSize; i++ {
+		e.VideoWriteText(e.TransitionTable[i-1].X-1, e.TransitionTable[i-1].Y-1, byte(color), string([]byte{chr}))
 	}
 }
 
-func TileToColorAndChar(x, y int16) (color, char byte) {
+func (e *Engine) TileToColorAndChar(x, y int16) (color, char byte) {
 	var ch byte
-	tile := &E.Board.Tiles[x][y]
-	if !E.Board.Info.IsDark || ElementDefs[E.Board.Tiles[x][y].Element].VisibleInDark || E.World.Info.TorchTicks > 0 && Sqr(int16(E.Board.Stats[0].X)-x)+Sqr(int16(E.Board.Stats[0].Y)-y)*2 < TORCH_DIST_SQR || E.ForceDarknessOff {
+	tile := &e.Board.Tiles[x][y]
+	if !e.Board.Info.IsDark || ElementDefs[e.Board.Tiles[x][y].Element].VisibleInDark || e.World.Info.TorchTicks > 0 && Sqr(int16(e.Board.Stats[0].X)-x)+Sqr(int16(e.Board.Stats[0].Y)-y)*2 < TORCH_DIST_SQR || e.ForceDarknessOff {
 		if tile.Element == E_EMPTY {
 			return 0x0F, ' '
 		} else if ElementDefs[tile.Element].HasDrawProc {
-			ElementDefs[tile.Element].DrawProc(x, y, &ch)
+			ElementDefs[tile.Element].DrawProc(e, x, y, &ch)
 			return tile.Color, ch
 		} else if tile.Element < E_TEXT_MIN {
 			return tile.Color, ElementDefs[tile.Element].Character
 		} else {
 			if tile.Element == E_TEXT_WHITE {
-				return 0x0F, E.Board.Tiles[x][y].Color
+				return 0x0F, e.Board.Tiles[x][y].Color
 			} else {
-				return byte((int16(tile.Element-E_TEXT_MIN)+1)*16 + 0x0F), E.Board.Tiles[x][y].Color
+				return byte((int16(tile.Element-E_TEXT_MIN)+1)*16 + 0x0F), e.Board.Tiles[x][y].Color
 			}
 		}
 	} else {
@@ -294,42 +294,42 @@ func TileToColorAndChar(x, y int16) (color, char byte) {
 	}
 }
 
-func BoardDrawTile(x, y int16) {
-	color, char := TileToColorAndChar(x, y)
-	VideoWriteText(x-1, y-1, color, string([]byte{char}))
+func (e *Engine) BoardDrawTile(x, y int16) {
+	color, char := e.TileToColorAndChar(x, y)
+	e.VideoWriteText(x-1, y-1, color, string([]byte{char}))
 }
 
-func BoardDrawBorder() {
+func (e *Engine) BoardDrawBorder() {
 	var ix, iy int16
 	for ix = 1; ix <= BOARD_WIDTH; ix++ {
-		BoardDrawTile(ix, 1)
-		BoardDrawTile(ix, BOARD_HEIGHT)
+		e.BoardDrawTile(ix, 1)
+		e.BoardDrawTile(ix, BOARD_HEIGHT)
 	}
 	for iy = 1; iy <= BOARD_HEIGHT; iy++ {
-		BoardDrawTile(1, iy)
-		BoardDrawTile(BOARD_WIDTH, iy)
+		e.BoardDrawTile(1, iy)
+		e.BoardDrawTile(BOARD_WIDTH, iy)
 	}
 }
 
-func TransitionDrawToBoard() {
+func (e *Engine) TransitionDrawToBoard() {
 	var i int16
-	BoardDrawBorder()
-	for i = 1; i <= E.TransitionTableSize; i++ {
-		table := &E.TransitionTable[i-1]
-		BoardDrawTile(table.X, table.Y)
+	e.BoardDrawBorder()
+	for i = 1; i <= e.TransitionTableSize; i++ {
+		table := &e.TransitionTable[i-1]
+		e.BoardDrawTile(table.X, table.Y)
 	}
 }
 
-func SidebarPromptCharacter(editable bool, x, y int16, prompt string, value *byte) {
+func (e *Engine) SidebarPromptCharacter(editable bool, x, y int16, prompt string, value *byte) {
 	var i, newValue int16
-	SidebarClearLine(y)
-	VideoWriteText(x, y, byte(BoolToInt(editable)+0x1E), prompt)
-	SidebarClearLine(y + 1)
-	VideoWriteText(x+5, y+1, 0x9F, "\x1f")
-	SidebarClearLine(y + 2)
+	e.SidebarClearLine(y)
+	e.VideoWriteText(x, y, byte(BoolToInt(editable)+0x1E), prompt)
+	e.SidebarClearLine(y + 1)
+	e.VideoWriteText(x+5, y+1, 0x9F, "\x1f")
+	e.SidebarClearLine(y + 2)
 	for {
 		for i = int16(*value) - 4; i <= int16(*value)+4; i++ {
-			VideoWriteText(x+i-int16(*value)+5, y+2, 0x1E, Chr(byte((i+0x100)%0x100)))
+			e.VideoWriteText(x+i-int16(*value)+5, y+2, 0x1E, Chr(byte((i+0x100)%0x100)))
 		}
 		if editable {
 			InputReadWaitKey()
@@ -339,17 +339,17 @@ func SidebarPromptCharacter(editable bool, x, y int16, prompt string, value *byt
 			newValue = int16(*value) + InputDeltaX
 			if int16(*value) != newValue {
 				*value = byte((newValue + 0x100) % 0x100)
-				SidebarClearLine(y + 2)
+				e.SidebarClearLine(y + 2)
 			}
 		}
 		if InputKeyPressed == KEY_ENTER || InputKeyPressed == KEY_ESCAPE || !editable || InputShiftPressed {
 			break
 		}
 	}
-	VideoWriteText(x+5, y+1, 0x1F, "\x1f")
+	e.VideoWriteText(x+5, y+1, 0x1F, "\x1f")
 }
 
-func SidebarPromptSlider(editable bool, x, y int16, prompt string, value *byte) {
+func (e *Engine) SidebarPromptSlider(editable bool, x, y int16, prompt string, value *byte) {
 	var (
 		newValue           int16
 		startChar, endChar byte
@@ -362,23 +362,23 @@ func SidebarPromptSlider(editable bool, x, y int16, prompt string, value *byte) 
 		startChar = '1'
 		endChar = '9'
 	}
-	SidebarClearLine(y)
-	VideoWriteText(x, y, byte(BoolToInt(editable)+0x1E), prompt)
-	SidebarClearLine(y + 1)
-	SidebarClearLine(y + 2)
-	VideoWriteText(x, y+2, 0x1E, string([]byte{startChar})+"....:...."+string([]byte{endChar}))
+	e.SidebarClearLine(y)
+	e.VideoWriteText(x, y, byte(BoolToInt(editable)+0x1E), prompt)
+	e.SidebarClearLine(y + 1)
+	e.SidebarClearLine(y + 2)
+	e.VideoWriteText(x, y+2, 0x1E, string([]byte{startChar})+"....:...."+string([]byte{endChar}))
 	for {
 		if editable {
-			VideoWriteText(x+int16(*value)+1, y+1, 0x9F, "\x1f")
+			e.VideoWriteText(x+int16(*value)+1, y+1, 0x9F, "\x1f")
 			InputReadWaitKey()
 			if InputKeyPressed >= '1' && InputKeyPressed <= '9' {
 				*value = Ord(InputKeyPressed) - 49
-				SidebarClearLine(y + 1)
+				e.SidebarClearLine(y + 1)
 			} else {
 				newValue = int16(*value) + InputDeltaX
 				if int16(*value) != newValue && newValue >= 0 && newValue <= 8 {
 					*value = byte(newValue)
-					SidebarClearLine(y + 1)
+					e.SidebarClearLine(y + 1)
 				}
 			}
 		}
@@ -386,19 +386,19 @@ func SidebarPromptSlider(editable bool, x, y int16, prompt string, value *byte) 
 			break
 		}
 	}
-	VideoWriteText(x+int16(*value)+1, y+1, 0x1F, "\x1f")
+	e.VideoWriteText(x+int16(*value)+1, y+1, 0x1F, "\x1f")
 }
 
-func SidebarPromptChoice(editable bool, y int16, prompt, choiceStr string, result *byte) {
+func (e *Engine) SidebarPromptChoice(editable bool, y int16, prompt, choiceStr string, result *byte) {
 	var (
 		i, j, choiceCount int16
 		newResult         int16
 	)
-	SidebarClearLine(y)
-	SidebarClearLine(y + 1)
-	SidebarClearLine(y + 2)
-	VideoWriteText(63, y, byte(BoolToInt(editable)+0x1E), prompt)
-	VideoWriteText(63, y+2, 0x1E, choiceStr)
+	e.SidebarClearLine(y)
+	e.SidebarClearLine(y + 1)
+	e.SidebarClearLine(y + 2)
+	e.VideoWriteText(63, y, byte(BoolToInt(editable)+0x1E), prompt)
+	e.VideoWriteText(63, y+2, 0x1E, choiceStr)
 	choiceCount = 1
 	for i = 1; i <= Length(choiceStr); i++ {
 		if choiceStr[i-1] == ' ' {
@@ -415,22 +415,22 @@ func SidebarPromptChoice(editable bool, y int16, prompt, choiceStr string, resul
 			i++
 		}
 		if editable {
-			VideoWriteText(62+i, y+1, 0x9F, "\x1f")
+			e.VideoWriteText(62+i, y+1, 0x9F, "\x1f")
 			InputReadWaitKey()
 			newResult = int16(*result) + InputDeltaX
 			if int16(*result) != newResult && newResult >= 0 && newResult <= choiceCount-1 {
 				*result = byte(newResult)
-				SidebarClearLine(y + 1)
+				e.SidebarClearLine(y + 1)
 			}
 		}
 		if InputKeyPressed == KEY_ENTER || InputKeyPressed == KEY_ESCAPE || !editable || InputShiftPressed {
 			break
 		}
 	}
-	VideoWriteText(62+i, y+1, 0x1F, "\x1f")
+	e.VideoWriteText(62+i, y+1, 0x1F, "\x1f")
 }
 
-func SidebarPromptDirection(editable bool, y int16, prompt string, deltaX, deltaY *int16) {
+func (e *Engine) SidebarPromptDirection(editable bool, y int16, prompt string, deltaX, deltaY *int16) {
 	var choice byte
 	if *deltaY == -1 {
 		choice = 0
@@ -442,12 +442,12 @@ func SidebarPromptDirection(editable bool, y int16, prompt string, deltaX, delta
 		choice = 3
 	}
 
-	SidebarPromptChoice(editable, y, prompt, "\x18 \x19 \x1b \x1a", &choice)
+	e.SidebarPromptChoice(editable, y, prompt, "\x18 \x19 \x1b \x1a", &choice)
 	*deltaX = NeighborDeltaX[choice]
 	*deltaY = NeighborDeltaY[choice]
 }
 
-func PromptString(x, y, arrowColor, color, width int16, mode byte, buffer *string) {
+func (e *Engine) PromptString(x, y, arrowColor, color, width int16, mode byte, buffer *string) {
 	var (
 		i             int16
 		oldBuffer     string
@@ -457,12 +457,12 @@ func PromptString(x, y, arrowColor, color, width int16, mode byte, buffer *strin
 	firstKeyPress = true
 	for {
 		for i = 0; i <= width-1; i++ {
-			VideoWriteText(x+i, y, byte(color), " ")
-			VideoWriteText(x+i, y-1, byte(arrowColor), " ")
+			e.VideoWriteText(x+i, y, byte(color), " ")
+			e.VideoWriteText(x+i, y-1, byte(arrowColor), " ")
 		}
-		VideoWriteText(x+width, y-1, byte(arrowColor), " ")
-		VideoWriteText(x+Length(*buffer), y-1, byte(arrowColor/0x10*16+0x0F), "\x1f")
-		VideoWriteText(x, y, byte(color), *buffer)
+		e.VideoWriteText(x+width, y-1, byte(arrowColor), " ")
+		e.VideoWriteText(x+Length(*buffer), y-1, byte(arrowColor/0x10*16+0x0F), "\x1f")
+		e.VideoWriteText(x, y, byte(color), *buffer)
 		InputReadWaitKey()
 		if Length(*buffer) < width && InputKeyPressed >= ' ' && InputKeyPressed < '\x80' {
 			if firstKeyPress {
@@ -494,12 +494,12 @@ func PromptString(x, y, arrowColor, color, width int16, mode byte, buffer *strin
 	}
 }
 
-func SidebarPromptYesNo(message string, defaultReturn bool) (SidebarPromptYesNo bool) {
-	SidebarClearLine(3)
-	SidebarClearLine(4)
-	SidebarClearLine(5)
-	VideoWriteText(63, 5, 0x1F, message)
-	VideoWriteText(63+Length(message), 5, 0x9E, "_")
+func (e *Engine) SidebarPromptYesNo(message string, defaultReturn bool) (SidebarPromptYesNo bool) {
+	e.SidebarClearLine(3)
+	e.SidebarClearLine(4)
+	e.SidebarClearLine(5)
+	e.VideoWriteText(63, 5, 0x1F, message)
+	e.VideoWriteText(63+Length(message), 5, 0x9E, "_")
 	for {
 		InputReadWaitKey()
 		if UpCase(InputKeyPressed) == KEY_ESCAPE || UpCase(InputKeyPressed) == 'N' || UpCase(InputKeyPressed) == 'Y' {
@@ -511,26 +511,26 @@ func SidebarPromptYesNo(message string, defaultReturn bool) (SidebarPromptYesNo 
 	} else {
 		defaultReturn = false
 	}
-	SidebarClearLine(5)
+	e.SidebarClearLine(5)
 	SidebarPromptYesNo = defaultReturn
 	return
 }
 
-func SidebarPromptString(prompt string, extension string, filename *string, promptMode byte) {
-	SidebarClearLine(3)
-	SidebarClearLine(4)
-	SidebarClearLine(5)
-	VideoWriteText(75-Length(prompt), 3, 0x1F, prompt)
-	VideoWriteText(63, 5, 0x0F, "        "+extension)
-	PromptString(63, 5, 0x1E, 0x0F, 8, promptMode, filename)
-	SidebarClearLine(3)
-	SidebarClearLine(4)
-	SidebarClearLine(5)
+func (e *Engine) SidebarPromptString(prompt string, extension string, filename *string, promptMode byte) {
+	e.SidebarClearLine(3)
+	e.SidebarClearLine(4)
+	e.SidebarClearLine(5)
+	e.VideoWriteText(75-Length(prompt), 3, 0x1F, prompt)
+	e.VideoWriteText(63, 5, 0x0F, "        "+extension)
+	e.PromptString(63, 5, 0x1E, 0x0F, 8, promptMode, filename)
+	e.SidebarClearLine(3)
+	e.SidebarClearLine(4)
+	e.SidebarClearLine(5)
 }
 
-func PauseOnError() {
+func (e *Engine) PauseOnError() {
 	SoundQueue(1, SoundParse("s004x114x9"))
-	Delay(2000)
+	e.Delay(2000)
 }
 
 func DisplayIOError(err error) (DisplayIOError bool) {
@@ -560,27 +560,27 @@ func DisplayIOError(err error) (DisplayIOError bool) {
 	return
 }
 
-func WorldUnload() {
-	BoardClose()
+func (e *Engine) WorldUnload() {
+	e.BoardClose()
 }
 
-func WorldLoad(filename, extension string, titleOnly bool) (WorldLoad bool) {
+func (e *Engine) WorldLoad(filename, extension string, titleOnly bool) (WorldLoad bool) {
 	var (
 		ptr          []byte
 		boardId      int16
 		loadProgress int16
 	)
 	SidebarAnimateLoading := func() {
-		VideoWriteText(69, 5, ProgressAnimColors[loadProgress], ProgressAnimStrings[loadProgress])
+		e.VideoWriteText(69, 5, ProgressAnimColors[loadProgress], ProgressAnimStrings[loadProgress])
 		loadProgress = (loadProgress + 1) % 8
 	}
 
 	WorldLoad = false
 	loadProgress = 0
-	SidebarClearLine(4)
-	SidebarClearLine(5)
-	SidebarClearLine(5)
-	VideoWriteText(62, 5, 0x1F, "Loading.....")
+	e.SidebarClearLine(4)
+	e.SidebarClearLine(5)
+	e.SidebarClearLine(5)
+	e.VideoWriteText(62, 5, 0x1F, "Loading.....")
 
 	f, err := os.Open(filename + extension)
 	if DisplayIOError(err) {
@@ -588,37 +588,37 @@ func WorldLoad(filename, extension string, titleOnly bool) (WorldLoad bool) {
 	}
 	defer f.Close()
 
-	WorldUnload()
-	_, err = f.Read(E.IoTmpBuf[:512])
+	e.WorldUnload()
+	_, err = f.Read(e.IoTmpBuf[:512])
 	if DisplayIOError(err) {
 		return
 	}
 
-	ptr = E.IoTmpBuf[:]
-	E.World.BoardCount = LoadInt16(ptr[:2])
+	ptr = e.IoTmpBuf[:]
+	e.World.BoardCount = LoadInt16(ptr[:2])
 	ptr = ptr[2:]
 
-	if E.World.BoardCount < 0 {
-		if E.World.BoardCount != -1 {
-			VideoWriteText(63, 5, 0x1E, "You need a newer")
-			VideoWriteText(63, 6, 0x1E, " version of ZZT!")
+	if e.World.BoardCount < 0 {
+		if e.World.BoardCount != -1 {
+			e.VideoWriteText(63, 5, 0x1E, "You need a newer")
+			e.VideoWriteText(63, 6, 0x1E, " version of ZZT!")
 			return
 		} else {
-			E.World.BoardCount = LoadInt16(ptr[:2])
+			e.World.BoardCount = LoadInt16(ptr[:2])
 			ptr = ptr[2:]
 		}
 	}
 
-	LoadWorldInfo(ptr[:SizeOfWorldInfo], &E.World.Info)
+	LoadWorldInfo(ptr[:SizeOfWorldInfo], &e.World.Info)
 	ptr = ptr[SizeOfWorldInfo:]
 
 	if titleOnly {
-		E.World.BoardCount = 0
-		E.World.Info.CurrentBoard = 0
-		E.World.Info.IsSave = true
+		e.World.BoardCount = 0
+		e.World.Info.CurrentBoard = 0
+		e.World.Info.IsSave = true
 	}
 
-	for boardId = 0; boardId <= E.World.BoardCount; boardId++ {
+	for boardId = 0; boardId <= e.World.BoardCount; boardId++ {
 		SidebarAnimateLoading()
 
 		lenBuf := make([]byte, 2)
@@ -626,37 +626,37 @@ func WorldLoad(filename, extension string, titleOnly bool) (WorldLoad bool) {
 		if DisplayIOError(err) {
 			return
 		}
-		E.World.BoardLen[boardId] = LoadInt16(lenBuf)
+		e.World.BoardLen[boardId] = LoadInt16(lenBuf)
 
-		E.World.BoardData[boardId] = make([]byte, E.World.BoardLen[boardId])
-		_, err = f.Read(E.World.BoardData[boardId])
+		e.World.BoardData[boardId] = make([]byte, e.World.BoardLen[boardId])
+		_, err = f.Read(e.World.BoardData[boardId])
 		if DisplayIOError(err) {
 			return
 		}
 	}
 
-	BoardOpen(E.World.Info.CurrentBoard)
-	E.LoadedGameFileName = filename
+	e.BoardOpen(e.World.Info.CurrentBoard)
+	e.LoadedGameFileName = filename
 	WorldLoad = true
-	HighScoresLoad()
-	SidebarClearLine(5)
+	e.HighScoresLoad()
+	e.SidebarClearLine(5)
 
 	return
 }
 
-func WorldSave(filename, extension string) {
+func (e *Engine) WorldSave(filename, extension string) {
 	var (
 		i   int16
 		ptr []byte
 	)
 
-	BoardClose()
+	e.BoardClose()
 	defer func() {
-		BoardOpen(E.World.Info.CurrentBoard)
-		SidebarClearLine(5)
+		e.BoardOpen(e.World.Info.CurrentBoard)
+		e.SidebarClearLine(5)
 	}()
 
-	VideoWriteText(63, 5, 0x1F, "Saving...")
+	e.VideoWriteText(63, 5, 0x1F, "Saving...")
 
 	f, err := os.Create(filename + extension)
 	if DisplayIOError(err) {
@@ -664,50 +664,50 @@ func WorldSave(filename, extension string) {
 	}
 	defer f.Close()
 
-	ptr = E.IoTmpBuf[:]
+	ptr = e.IoTmpBuf[:]
 	for i := 0; i < 512; i++ {
 		ptr[0] = 0
 	}
 	StoreInt16(ptr[:2], -1)
 	ptr = ptr[2:]
-	StoreInt16(ptr[:2], E.World.BoardCount)
+	StoreInt16(ptr[:2], e.World.BoardCount)
 	ptr = ptr[2:]
-	StoreWorldInfo(ptr[:SizeOfWorldInfo], &E.World.Info)
+	StoreWorldInfo(ptr[:SizeOfWorldInfo], &e.World.Info)
 	ptr = ptr[SizeOfWorldInfo:]
-	_, err = f.Write(E.IoTmpBuf[:512])
+	_, err = f.Write(e.IoTmpBuf[:512])
 	if DisplayIOError(err) {
 		return
 	}
 
-	for i = 0; i <= E.World.BoardCount; i++ {
+	for i = 0; i <= e.World.BoardCount; i++ {
 		lenBuf := make([]byte, 2)
-		StoreInt16(lenBuf, E.World.BoardLen[i])
+		StoreInt16(lenBuf, e.World.BoardLen[i])
 		_, err = f.Write(lenBuf)
 		if DisplayIOError(err) {
 			return
 		}
 
-		_, err = f.Write(E.World.BoardData[i])
+		_, err = f.Write(e.World.BoardData[i])
 		if DisplayIOError(err) {
 			return
 		}
 	}
 }
 
-func GameWorldSave(prompt string, filename *string, extension string) {
+func (e *Engine) GameWorldSave(prompt string, filename *string, extension string) {
 	var newFilename string
 	newFilename = *filename
-	SidebarPromptString(prompt, extension, &newFilename, PROMPT_ALPHANUM)
+	e.SidebarPromptString(prompt, extension, &newFilename, PROMPT_ALPHANUM)
 	if InputKeyPressed != KEY_ESCAPE && Length(newFilename) != 0 {
 		*filename = newFilename
 		if extension == ".ZZT" {
-			E.World.Info.Name = *filename
+			e.World.Info.Name = *filename
 		}
-		WorldSave(*filename, extension)
+		e.WorldSave(*filename, extension)
 	}
 }
 
-func GameWorldLoad(extension string) (GameWorldLoad bool) {
+func (e *Engine) GameWorldLoad(extension string) (GameWorldLoad bool) {
 	var (
 		textWindow TTextWindowState
 		entryName  string
@@ -727,9 +727,9 @@ func GameWorldLoad(extension string) (GameWorldLoad bool) {
 	if err == nil {
 		for _, match := range matches {
 			entryName = match[:len(match)-4]
-			for i = 1; i <= E.WorldFileDescCount; i++ {
-				if entryName == E.WorldFileDescKeys[i-1] {
-					entryName = E.WorldFileDescValues[i-1]
+			for i = 1; i <= e.WorldFileDescCount; i++ {
+				if entryName == e.WorldFileDescKeys[i-1] {
+					entryName = e.WorldFileDescValues[i-1]
 				}
 			}
 			TextWindowAppend(&textWindow, entryName)
@@ -746,70 +746,70 @@ func GameWorldLoad(extension string) (GameWorldLoad bool) {
 		if Pos(' ', entryName) != 0 {
 			entryName = Copy(entryName, 1, Pos(' ', entryName)-1)
 		}
-		GameWorldLoad = WorldLoad(entryName, extension, false)
-		TransitionDrawToFill('\xdb', 0x44)
+		GameWorldLoad = e.WorldLoad(entryName, extension, false)
+		e.TransitionDrawToFill('\xdb', 0x44)
 	}
 
 	return
 }
 
-func HighScoresAdd(score int16) {
+func (e *Engine) HighScoresAdd(score int16) {
 	var (
 		textWindow TTextWindowState
 		name       string
 		i, listPos int16
 	)
 	listPos = 1
-	for listPos <= 30 && score < E.HighScoreList[listPos-1].Score {
+	for listPos <= 30 && score < e.HighScoreList[listPos-1].Score {
 		listPos++
 	}
 	if listPos <= 30 && score > 0 {
 		for i = 29; i >= listPos; i-- {
-			E.HighScoreList[i+1-1] = E.HighScoreList[i-1]
+			e.HighScoreList[i+1-1] = e.HighScoreList[i-1]
 		}
-		E.HighScoreList[listPos-1].Score = score
-		E.HighScoreList[listPos-1].Name = "-- You! --"
-		HighScoresInitTextWindow(&textWindow)
+		e.HighScoreList[listPos-1].Score = score
+		e.HighScoreList[listPos-1].Name = "-- You! --"
+		e.HighScoresInitTextWindow(&textWindow)
 		textWindow.LinePos = listPos
-		textWindow.Title = "New high score for " + E.World.Info.Name
+		textWindow.Title = "New high score for " + e.World.Info.Name
 		TextWindowDrawOpen(&textWindow)
 		TextWindowDraw(&textWindow, false, false)
 		name = ""
-		PopupPromptString("Congratulations!  Enter your name:", &name)
-		E.HighScoreList[listPos-1].Name = name
-		HighScoresSave()
+		e.PopupPromptString("Congratulations!  Enter your name:", &name)
+		e.HighScoreList[listPos-1].Name = name
+		e.HighScoresSave()
 		TextWindowDrawClose(&textWindow)
-		TransitionDrawToBoard()
+		e.TransitionDrawToBoard()
 		TextWindowFree(&textWindow)
 	}
 }
 
-func HighScoresLoad() {
-	f, err := os.Open(E.World.Info.Name + ".HI")
+func (e *Engine) HighScoresLoad() {
+	f, err := os.Open(e.World.Info.Name + ".HI")
 	if err == nil {
 		buf := make([]byte, SizeOfHighScoreList)
 		_, err = f.Read(buf)
 		if err == nil {
-			LoadHighScoreList(buf, E.HighScoreList[:])
+			LoadHighScoreList(buf, e.HighScoreList[:])
 		}
 		f.Close()
 	}
 	if err != nil {
 		for i := 0; i < HIGH_SCORE_COUNT; i++ {
-			E.HighScoreList[i].Name = ""
-			E.HighScoreList[i].Score = -1
+			e.HighScoreList[i].Name = ""
+			e.HighScoreList[i].Score = -1
 		}
 	}
 }
 
-func HighScoresSave() {
-	f, err := os.Create(E.World.Info.Name + ".HI")
+func (e *Engine) HighScoresSave() {
+	f, err := os.Create(e.World.Info.Name + ".HI")
 	if err != nil {
 		DisplayIOError(err)
 		return
 	}
 	buf := make([]byte, SizeOfHighScoreList)
-	StoreHighScoreList(buf, E.HighScoreList[:])
+	StoreHighScoreList(buf, e.HighScoreList[:])
 	_, err = f.Write(buf)
 	if err != nil {
 		DisplayIOError(err)
@@ -818,24 +818,24 @@ func HighScoresSave() {
 	f.Close()
 }
 
-func HighScoresInitTextWindow(state *TTextWindowState) {
+func (e *Engine) HighScoresInitTextWindow(state *TTextWindowState) {
 	TextWindowInitState(state)
 	TextWindowAppend(state, "Score  Name")
 	TextWindowAppend(state, "-----  ----------------------------------")
 	for i := 0; i < HIGH_SCORE_COUNT; i++ {
-		if Length(E.HighScoreList[i].Name) != 0 {
-			scoreStr := StrWidth(E.HighScoreList[i].Score, 5)
-			TextWindowAppend(state, scoreStr+"  "+E.HighScoreList[i].Name)
+		if Length(e.HighScoreList[i].Name) != 0 {
+			scoreStr := StrWidth(e.HighScoreList[i].Score, 5)
+			TextWindowAppend(state, scoreStr+"  "+e.HighScoreList[i].Name)
 		}
 	}
 }
 
-func HighScoresDisplay(linePos int16) {
+func (e *Engine) HighScoresDisplay(linePos int16) {
 	var state TTextWindowState
 	state.LinePos = linePos
-	HighScoresInitTextWindow(&state)
+	e.HighScoresInitTextWindow(&state)
 	if state.LineCount > 2 {
-		state.Title = "High scores for " + E.World.Info.Name
+		state.Title = "High scores for " + e.World.Info.Name
 		TextWindowDrawOpen(&state)
 		TextWindowSelect(&state, false, true)
 		TextWindowDrawClose(&state)
@@ -843,8 +843,8 @@ func HighScoresDisplay(linePos int16) {
 	TextWindowFree(&state)
 }
 
-func CopyStatDataToTextWindow(statId int16, state *TTextWindowState) {
-	stat := &E.Board.Stats[statId]
+func (e *Engine) CopyStatDataToTextWindow(statId int16, state *TTextWindowState) {
+	stat := &e.Board.Stats[statId]
 	TextWindowInitState(state)
 
 	var dataBuf []byte
@@ -859,83 +859,83 @@ func CopyStatDataToTextWindow(statId int16, state *TTextWindowState) {
 	}
 }
 
-func AddStat(tx, ty int16, element byte, color, tcycle int16, template TStat) {
-	if E.Board.StatCount < MAX_STAT {
-		E.Board.StatCount++
-		E.Board.Stats[E.Board.StatCount] = template
-		stat := &E.Board.Stats[E.Board.StatCount]
+func (e *Engine) AddStat(tx, ty int16, element byte, color, tcycle int16, template TStat) {
+	if e.Board.StatCount < MAX_STAT {
+		e.Board.StatCount++
+		e.Board.Stats[e.Board.StatCount] = template
+		stat := &e.Board.Stats[e.Board.StatCount]
 		stat.X = byte(tx)
 		stat.Y = byte(ty)
 		stat.Cycle = tcycle
-		stat.Under = E.Board.Tiles[tx][ty]
+		stat.Under = e.Board.Tiles[tx][ty]
 		stat.DataPos = 0
 		if template.Data != "" {
-			E.Board.Stats[E.Board.StatCount].Data = template.Data
+			e.Board.Stats[e.Board.StatCount].Data = template.Data
 		}
-		if ElementDefs[E.Board.Tiles[tx][ty].Element].PlaceableOnTop {
-			E.Board.Tiles[tx][ty].Color = byte(color&0x0F + int16(E.Board.Tiles[tx][ty].Color)&0x70)
+		if ElementDefs[e.Board.Tiles[tx][ty].Element].PlaceableOnTop {
+			e.Board.Tiles[tx][ty].Color = byte(color&0x0F + int16(e.Board.Tiles[tx][ty].Color)&0x70)
 		} else {
-			E.Board.Tiles[tx][ty].Color = byte(color)
+			e.Board.Tiles[tx][ty].Color = byte(color)
 		}
-		E.Board.Tiles[tx][ty].Element = element
+		e.Board.Tiles[tx][ty].Element = element
 		if ty > 0 {
-			BoardDrawTile(tx, ty)
+			e.BoardDrawTile(tx, ty)
 		}
 	}
 }
 
-func RemoveStat(statId int16) {
+func (e *Engine) RemoveStat(statId int16) {
 	var i int16
-	stat := &E.Board.Stats[statId]
+	stat := &e.Board.Stats[statId]
 	if stat.DataLen != 0 {
-		for i = 1; i <= E.Board.StatCount; i++ {
-			if E.Board.Stats[i].Data == stat.Data && i != statId {
+		for i = 1; i <= e.Board.StatCount; i++ {
+			if e.Board.Stats[i].Data == stat.Data && i != statId {
 				goto StatDataInUse
 			}
 		}
 		stat.Data = ""
 	}
 StatDataInUse:
-	if statId < E.CurrentStatTicked {
-		E.CurrentStatTicked--
+	if statId < e.CurrentStatTicked {
+		e.CurrentStatTicked--
 	}
 
-	E.Board.Tiles[stat.X][stat.Y] = stat.Under
+	e.Board.Tiles[stat.X][stat.Y] = stat.Under
 	if stat.Y > 0 {
-		BoardDrawTile(int16(stat.X), int16(stat.Y))
+		e.BoardDrawTile(int16(stat.X), int16(stat.Y))
 	}
-	for i = 1; i <= E.Board.StatCount; i++ {
-		if E.Board.Stats[i].Follower >= statId {
-			if E.Board.Stats[i].Follower == statId {
-				E.Board.Stats[i].Follower = -1
+	for i = 1; i <= e.Board.StatCount; i++ {
+		if e.Board.Stats[i].Follower >= statId {
+			if e.Board.Stats[i].Follower == statId {
+				e.Board.Stats[i].Follower = -1
 			} else {
-				E.Board.Stats[i].Follower--
+				e.Board.Stats[i].Follower--
 			}
 		}
-		if E.Board.Stats[i].Leader >= statId {
-			if E.Board.Stats[i].Leader == statId {
-				E.Board.Stats[i].Leader = -1
+		if e.Board.Stats[i].Leader >= statId {
+			if e.Board.Stats[i].Leader == statId {
+				e.Board.Stats[i].Leader = -1
 			} else {
-				E.Board.Stats[i].Leader--
+				e.Board.Stats[i].Leader--
 			}
 		}
 	}
-	for i = statId + 1; i <= E.Board.StatCount; i++ {
-		E.Board.Stats[i-1] = E.Board.Stats[i]
+	for i = statId + 1; i <= e.Board.StatCount; i++ {
+		e.Board.Stats[i-1] = e.Board.Stats[i]
 	}
-	E.Board.StatCount--
+	e.Board.StatCount--
 }
 
-func GetStatIdAt(x, y int16) (GetStatIdAt int16) {
+func (e *Engine) GetStatIdAt(x, y int16) (GetStatIdAt int16) {
 	var i int16
 	i = -1
 	for {
 		i++
-		if int16(E.Board.Stats[i].X) == x && int16(E.Board.Stats[i].Y) == y || i > E.Board.StatCount {
+		if int16(e.Board.Stats[i].X) == x && int16(e.Board.Stats[i].Y) == y || i > e.Board.StatCount {
 			break
 		}
 	}
-	if i > E.Board.StatCount {
+	if i > e.Board.StatCount {
 		GetStatIdAt = -1
 	} else {
 		GetStatIdAt = i
@@ -943,88 +943,88 @@ func GetStatIdAt(x, y int16) (GetStatIdAt int16) {
 	return
 }
 
-func BoardPrepareTileForPlacement(x, y int16) (BoardPrepareTileForPlacement bool) {
+func (e *Engine) BoardPrepareTileForPlacement(x, y int16) (BoardPrepareTileForPlacement bool) {
 	var (
 		statId int16
 		result bool
 	)
-	statId = GetStatIdAt(x, y)
+	statId = e.GetStatIdAt(x, y)
 	if statId > 0 {
-		RemoveStat(statId)
+		e.RemoveStat(statId)
 		result = true
 	} else if statId < 0 {
-		if !ElementDefs[E.Board.Tiles[x][y].Element].PlaceableOnTop {
-			E.Board.Tiles[x][y].Element = E_EMPTY
+		if !ElementDefs[e.Board.Tiles[x][y].Element].PlaceableOnTop {
+			e.Board.Tiles[x][y].Element = E_EMPTY
 		}
 		result = true
 	} else {
 		result = false
 	}
 
-	BoardDrawTile(x, y)
+	e.BoardDrawTile(x, y)
 	BoardPrepareTileForPlacement = result
 	return
 }
 
-func MoveStat(statId int16, newX, newY int16) {
+func (e *Engine) MoveStat(statId int16, newX, newY int16) {
 	var (
 		iUnder     TTile
 		ix, iy     int16
 		oldX, oldY int16
 	)
-	stat := &E.Board.Stats[statId]
-	iUnder = E.Board.Stats[statId].Under
-	E.Board.Stats[statId].Under = E.Board.Tiles[newX][newY]
-	if E.Board.Tiles[stat.X][stat.Y].Element == E_PLAYER {
-		E.Board.Tiles[newX][newY].Color = E.Board.Tiles[stat.X][stat.Y].Color
-	} else if E.Board.Tiles[newX][newY].Element == E_EMPTY {
-		E.Board.Tiles[newX][newY].Color = byte(int16(E.Board.Tiles[stat.X][stat.Y].Color) & 0x0F)
+	stat := &e.Board.Stats[statId]
+	iUnder = e.Board.Stats[statId].Under
+	e.Board.Stats[statId].Under = e.Board.Tiles[newX][newY]
+	if e.Board.Tiles[stat.X][stat.Y].Element == E_PLAYER {
+		e.Board.Tiles[newX][newY].Color = e.Board.Tiles[stat.X][stat.Y].Color
+	} else if e.Board.Tiles[newX][newY].Element == E_EMPTY {
+		e.Board.Tiles[newX][newY].Color = byte(int16(e.Board.Tiles[stat.X][stat.Y].Color) & 0x0F)
 	} else {
-		E.Board.Tiles[newX][newY].Color = byte(int16(E.Board.Tiles[stat.X][stat.Y].Color)&0x0F + int16(E.Board.Tiles[newX][newY].Color)&0x70)
+		e.Board.Tiles[newX][newY].Color = byte(int16(e.Board.Tiles[stat.X][stat.Y].Color)&0x0F + int16(e.Board.Tiles[newX][newY].Color)&0x70)
 	}
 
-	E.Board.Tiles[newX][newY].Element = E.Board.Tiles[stat.X][stat.Y].Element
-	E.Board.Tiles[stat.X][stat.Y] = iUnder
+	e.Board.Tiles[newX][newY].Element = e.Board.Tiles[stat.X][stat.Y].Element
+	e.Board.Tiles[stat.X][stat.Y] = iUnder
 	oldX = int16(stat.X)
 	oldY = int16(stat.Y)
 	stat.X = byte(newX)
 	stat.Y = byte(newY)
-	BoardDrawTile(int16(stat.X), int16(stat.Y))
-	BoardDrawTile(oldX, oldY)
-	if statId == 0 && E.Board.Info.IsDark && E.World.Info.TorchTicks > 0 {
+	e.BoardDrawTile(int16(stat.X), int16(stat.Y))
+	e.BoardDrawTile(oldX, oldY)
+	if statId == 0 && e.Board.Info.IsDark && e.World.Info.TorchTicks > 0 {
 		if Sqr(oldX-int16(stat.X))+Sqr(oldY-int16(stat.Y)) == 1 {
 			for ix = int16(stat.X) - TORCH_DX - 3; ix <= int16(stat.X)+TORCH_DX+3; ix++ {
 				if ix >= 1 && ix <= BOARD_WIDTH {
 					for iy = int16(stat.Y) - TORCH_DY - 3; iy <= int16(stat.Y)+TORCH_DY+3; iy++ {
 						if iy >= 1 && iy <= BOARD_HEIGHT {
 							if Sqr(ix-oldX)+Sqr(iy-oldY)*2 < TORCH_DIST_SQR != (Sqr(ix-newX)+Sqr(iy-newY)*2 < TORCH_DIST_SQR) {
-								BoardDrawTile(ix, iy)
+								e.BoardDrawTile(ix, iy)
 							}
 						}
 					}
 				}
 			}
 		} else {
-			DrawPlayerSurroundings(oldX, oldY, 0)
-			DrawPlayerSurroundings(int16(stat.X), int16(stat.Y), 0)
+			e.DrawPlayerSurroundings(oldX, oldY, 0)
+			e.DrawPlayerSurroundings(int16(stat.X), int16(stat.Y), 0)
 		}
 	}
 }
 
-func PopupPromptString(question string, buffer *string) {
+func (e *Engine) PopupPromptString(question string, buffer *string) {
 	var x, y int16
-	VideoWriteText(3, 18, 0x4F, TextWindowStrTop)
-	VideoWriteText(3, 19, 0x4F, TextWindowStrText)
-	VideoWriteText(3, 20, 0x4F, TextWindowStrSep)
-	VideoWriteText(3, 21, 0x4F, TextWindowStrText)
-	VideoWriteText(3, 22, 0x4F, TextWindowStrText)
-	VideoWriteText(3, 23, 0x4F, TextWindowStrBottom)
-	VideoWriteText(4+(TextWindowWidth-Length(question))/2, 19, 0x4F, question)
+	e.VideoWriteText(3, 18, 0x4F, TextWindowStrTop)
+	e.VideoWriteText(3, 19, 0x4F, TextWindowStrText)
+	e.VideoWriteText(3, 20, 0x4F, TextWindowStrSep)
+	e.VideoWriteText(3, 21, 0x4F, TextWindowStrText)
+	e.VideoWriteText(3, 22, 0x4F, TextWindowStrText)
+	e.VideoWriteText(3, 23, 0x4F, TextWindowStrBottom)
+	e.VideoWriteText(4+(TextWindowWidth-Length(question))/2, 19, 0x4F, question)
 	*buffer = ""
-	PromptString(10, 22, 0x4F, 0x4E, TextWindowWidth-16, PROMPT_ANY, buffer)
+	e.PromptString(10, 22, 0x4F, 0x4E, TextWindowWidth-16, PROMPT_ANY, buffer)
 	for y = 18; y <= 23; y++ {
 		for x = 3; x <= TextWindowWidth+3; x++ {
-			BoardDrawTile(x+1, y+1)
+			e.BoardDrawTile(x+1, y+1)
 		}
 	}
 }
@@ -1049,92 +1049,92 @@ func Difference(a, b int16) (Difference int16) {
 	return
 }
 
-func GameUpdateSidebar() {
+func (e *Engine) GameUpdateSidebar() {
 	var (
 		numStr string
 		i      int16
 	)
-	if E.GameStateElement == E_PLAYER {
-		if E.Board.Info.TimeLimitSec > 0 {
-			VideoWriteText(64, 6, 0x1E, "   Time:")
-			numStr = Str(E.Board.Info.TimeLimitSec - E.World.Info.BoardTimeSec)
-			VideoWriteText(72, 6, 0x1E, numStr+" ")
+	if e.GameStateElement == E_PLAYER {
+		if e.Board.Info.TimeLimitSec > 0 {
+			e.VideoWriteText(64, 6, 0x1E, "   Time:")
+			numStr = Str(e.Board.Info.TimeLimitSec - e.World.Info.BoardTimeSec)
+			e.VideoWriteText(72, 6, 0x1E, numStr+" ")
 		} else {
-			SidebarClearLine(6)
+			e.SidebarClearLine(6)
 		}
-		if E.World.Info.Health < 0 {
-			E.World.Info.Health = 0
+		if e.World.Info.Health < 0 {
+			e.World.Info.Health = 0
 		}
-		numStr = Str(E.World.Info.Health)
-		VideoWriteText(72, 7, 0x1E, numStr+" ")
-		numStr = Str(E.World.Info.Ammo)
-		VideoWriteText(72, 8, 0x1E, numStr+"  ")
-		numStr = Str(E.World.Info.Torches)
-		VideoWriteText(72, 9, 0x1E, numStr+" ")
-		numStr = Str(E.World.Info.Gems)
-		VideoWriteText(72, 10, 0x1E, numStr+" ")
-		numStr = Str(E.World.Info.Score)
-		VideoWriteText(72, 11, 0x1E, numStr+" ")
-		if E.World.Info.TorchTicks == 0 {
-			VideoWriteText(75, 9, 0x16, "    ")
+		numStr = Str(e.World.Info.Health)
+		e.VideoWriteText(72, 7, 0x1E, numStr+" ")
+		numStr = Str(e.World.Info.Ammo)
+		e.VideoWriteText(72, 8, 0x1E, numStr+"  ")
+		numStr = Str(e.World.Info.Torches)
+		e.VideoWriteText(72, 9, 0x1E, numStr+" ")
+		numStr = Str(e.World.Info.Gems)
+		e.VideoWriteText(72, 10, 0x1E, numStr+" ")
+		numStr = Str(e.World.Info.Score)
+		e.VideoWriteText(72, 11, 0x1E, numStr+" ")
+		if e.World.Info.TorchTicks == 0 {
+			e.VideoWriteText(75, 9, 0x16, "    ")
 		} else {
 			for i = 2; i <= 5; i++ {
-				if i <= E.World.Info.TorchTicks*5/TORCH_DURATION {
-					VideoWriteText(73+i, 9, 0x16, "\xb1")
+				if i <= e.World.Info.TorchTicks*5/TORCH_DURATION {
+					e.VideoWriteText(73+i, 9, 0x16, "\xb1")
 				} else {
-					VideoWriteText(73+i, 9, 0x16, "\xb0")
+					e.VideoWriteText(73+i, 9, 0x16, "\xb0")
 				}
 			}
 		}
 		for i = 1; i <= 7; i++ {
-			if E.World.Info.Keys[i-1] {
-				VideoWriteText(71+i, 12, byte(0x18+i), string([]byte{ElementDefs[E_KEY].Character}))
+			if e.World.Info.Keys[i-1] {
+				e.VideoWriteText(71+i, 12, byte(0x18+i), string([]byte{ElementDefs[E_KEY].Character}))
 			} else {
-				VideoWriteText(71+i, 12, 0x1F, " ")
+				e.VideoWriteText(71+i, 12, 0x1F, " ")
 			}
 		}
 		if SoundEnabled {
-			VideoWriteText(65, 15, 0x1F, " Be quiet")
+			e.VideoWriteText(65, 15, 0x1F, " Be quiet")
 		} else {
-			VideoWriteText(65, 15, 0x1F, " Be noisy")
+			e.VideoWriteText(65, 15, 0x1F, " Be noisy")
 		}
 	}
 }
 
-func DisplayMessage(time int16, message string) {
-	if GetStatIdAt(0, 0) != -1 {
-		RemoveStat(GetStatIdAt(0, 0))
-		BoardDrawBorder()
+func (e *Engine) DisplayMessage(time int16, message string) {
+	if e.GetStatIdAt(0, 0) != -1 {
+		e.RemoveStat(e.GetStatIdAt(0, 0))
+		e.BoardDrawBorder()
 	}
 	if Length(message) != 0 {
-		AddStat(0, 0, E_MESSAGE_TIMER, 0, 1, StatTemplateDefault)
-		E.Board.Stats[E.Board.StatCount].P2 = byte(time / (E.TickTimeDuration + 1))
-		E.Board.Info.Message = message
+		e.AddStat(0, 0, E_MESSAGE_TIMER, 0, 1, StatTemplateDefault)
+		e.Board.Stats[e.Board.StatCount].P2 = byte(time / (e.TickTimeDuration + 1))
+		e.Board.Info.Message = message
 	}
 }
 
-func DamageStat(attackerStatId int16) {
+func (e *Engine) DamageStat(attackerStatId int16) {
 	var oldX, oldY int16
-	stat := &E.Board.Stats[attackerStatId]
+	stat := &e.Board.Stats[attackerStatId]
 	if attackerStatId == 0 {
-		if E.World.Info.Health > 0 {
-			E.World.Info.Health -= 10
-			GameUpdateSidebar()
-			DisplayMessage(100, "Ouch!")
-			E.Board.Tiles[stat.X][stat.Y].Color = byte(0x70 + int16(ElementDefs[E_PLAYER].Color)%0x10)
-			if E.World.Info.Health > 0 {
-				E.World.Info.BoardTimeSec = 0
-				if E.Board.Info.ReenterWhenZapped {
+		if e.World.Info.Health > 0 {
+			e.World.Info.Health -= 10
+			e.GameUpdateSidebar()
+			e.DisplayMessage(100, "Ouch!")
+			e.Board.Tiles[stat.X][stat.Y].Color = byte(0x70 + int16(ElementDefs[E_PLAYER].Color)%0x10)
+			if e.World.Info.Health > 0 {
+				e.World.Info.BoardTimeSec = 0
+				if e.Board.Info.ReenterWhenZapped {
 					SoundQueue(4, " \x01#\x01'\x010\x01\x10\x01")
-					E.Board.Tiles[stat.X][stat.Y].Element = E_EMPTY
-					BoardDrawTile(int16(stat.X), int16(stat.Y))
+					e.Board.Tiles[stat.X][stat.Y].Element = E_EMPTY
+					e.BoardDrawTile(int16(stat.X), int16(stat.Y))
 					oldX = int16(stat.X)
 					oldY = int16(stat.Y)
-					stat.X = E.Board.Info.StartPlayerX
-					stat.Y = E.Board.Info.StartPlayerY
-					DrawPlayerSurroundings(oldX, oldY, 0)
-					DrawPlayerSurroundings(int16(stat.X), int16(stat.Y), 0)
-					E.GamePaused = true
+					stat.X = e.Board.Info.StartPlayerX
+					stat.Y = e.Board.Info.StartPlayerY
+					e.DrawPlayerSurroundings(oldX, oldY, 0)
+					e.DrawPlayerSurroundings(int16(stat.X), int16(stat.Y), 0)
+					e.GamePaused = true
 				}
 				SoundQueue(4, "\x10\x01 \x01\x13\x01#\x01")
 			} else {
@@ -1142,58 +1142,58 @@ func DamageStat(attackerStatId int16) {
 			}
 		}
 	} else {
-		switch E.Board.Tiles[stat.X][stat.Y].Element {
+		switch e.Board.Tiles[stat.X][stat.Y].Element {
 		case E_BULLET:
 			SoundQueue(3, " \x01")
 		case E_OBJECT:
 		default:
 			SoundQueue(3, "@\x01\x10\x01P\x010\x01")
 		}
-		RemoveStat(attackerStatId)
+		e.RemoveStat(attackerStatId)
 	}
 }
 
-func BoardDamageTile(x, y int16) {
+func (e *Engine) BoardDamageTile(x, y int16) {
 	var statId int16
-	statId = GetStatIdAt(x, y)
+	statId = e.GetStatIdAt(x, y)
 	if statId != -1 {
-		DamageStat(statId)
+		e.DamageStat(statId)
 	} else {
-		E.Board.Tiles[x][y].Element = E_EMPTY
-		BoardDrawTile(x, y)
+		e.Board.Tiles[x][y].Element = E_EMPTY
+		e.BoardDrawTile(x, y)
 	}
 }
 
-func BoardAttack(attackerStatId int16, x, y int16) {
-	if attackerStatId == 0 && E.World.Info.EnergizerTicks > 0 {
-		E.World.Info.Score = ElementDefs[E.Board.Tiles[x][y].Element].ScoreValue + E.World.Info.Score
-		GameUpdateSidebar()
+func (e *Engine) BoardAttack(attackerStatId int16, x, y int16) {
+	if attackerStatId == 0 && e.World.Info.EnergizerTicks > 0 {
+		e.World.Info.Score = ElementDefs[e.Board.Tiles[x][y].Element].ScoreValue + e.World.Info.Score
+		e.GameUpdateSidebar()
 	} else {
-		DamageStat(attackerStatId)
+		e.DamageStat(attackerStatId)
 	}
-	if attackerStatId > 0 && attackerStatId <= E.CurrentStatTicked {
-		E.CurrentStatTicked--
+	if attackerStatId > 0 && attackerStatId <= e.CurrentStatTicked {
+		e.CurrentStatTicked--
 	}
-	if E.Board.Tiles[x][y].Element == E_PLAYER && E.World.Info.EnergizerTicks > 0 {
-		E.World.Info.Score = ElementDefs[E.Board.Tiles[E.Board.Stats[attackerStatId].X][E.Board.Stats[attackerStatId].Y].Element].ScoreValue + E.World.Info.Score
-		GameUpdateSidebar()
+	if e.Board.Tiles[x][y].Element == E_PLAYER && e.World.Info.EnergizerTicks > 0 {
+		e.World.Info.Score = ElementDefs[e.Board.Tiles[e.Board.Stats[attackerStatId].X][e.Board.Stats[attackerStatId].Y].Element].ScoreValue + e.World.Info.Score
+		e.GameUpdateSidebar()
 	} else {
-		BoardDamageTile(x, y)
+		e.BoardDamageTile(x, y)
 		SoundQueue(2, "\x10\x01")
 	}
 }
 
-func BoardShoot(element byte, tx, ty, deltaX, deltaY int16, source int16) (BoardShoot bool) {
-	if ElementDefs[E.Board.Tiles[tx+deltaX][ty+deltaY].Element].Walkable || E.Board.Tiles[tx+deltaX][ty+deltaY].Element == E_WATER {
-		AddStat(tx+deltaX, ty+deltaY, element, int16(ElementDefs[element].Color), 1, StatTemplateDefault)
-		stat := &E.Board.Stats[E.Board.StatCount]
+func (e *Engine) BoardShoot(element byte, tx, ty, deltaX, deltaY int16, source int16) (BoardShoot bool) {
+	if ElementDefs[e.Board.Tiles[tx+deltaX][ty+deltaY].Element].Walkable || e.Board.Tiles[tx+deltaX][ty+deltaY].Element == E_WATER {
+		e.AddStat(tx+deltaX, ty+deltaY, element, int16(ElementDefs[element].Color), 1, StatTemplateDefault)
+		stat := &e.Board.Stats[e.Board.StatCount]
 		stat.P1 = byte(source)
 		stat.StepX = deltaX
 		stat.StepY = deltaY
 		stat.P2 = 100
 		BoardShoot = true
-	} else if E.Board.Tiles[tx+deltaX][ty+deltaY].Element == E_BREAKABLE || ElementDefs[E.Board.Tiles[tx+deltaX][ty+deltaY].Element].Destructible && E.Board.Tiles[tx+deltaX][ty+deltaY].Element == E_PLAYER == (source != 0) && E.World.Info.EnergizerTicks <= 0 {
-		BoardDamageTile(tx+deltaX, ty+deltaY)
+	} else if e.Board.Tiles[tx+deltaX][ty+deltaY].Element == E_BREAKABLE || ElementDefs[e.Board.Tiles[tx+deltaX][ty+deltaY].Element].Destructible && e.Board.Tiles[tx+deltaX][ty+deltaY].Element == E_PLAYER == (source != 0) && e.World.Info.EnergizerTicks <= 0 {
+		e.BoardDamageTile(tx+deltaX, ty+deltaY)
 		SoundQueue(2, "\x10\x01")
 		BoardShoot = true
 	} else {
@@ -1203,85 +1203,85 @@ func BoardShoot(element byte, tx, ty, deltaX, deltaY int16, source int16) (Board
 	return
 }
 
-func CalcDirectionRnd(deltaX, deltaY *int16) {
-	*deltaX = Random(3) - 1
+func (e *Engine) CalcDirectionRnd(deltaX, deltaY *int16) {
+	*deltaX = e.Random(3) - 1
 	if *deltaX == 0 {
-		*deltaY = Random(2)*2 - 1
+		*deltaY = e.Random(2)*2 - 1
 	} else {
 		*deltaY = 0
 	}
 }
 
-func CalcDirectionSeek(x, y int16, deltaX, deltaY *int16) {
+func (e *Engine) CalcDirectionSeek(x, y int16, deltaX, deltaY *int16) {
 	*deltaX = 0
 	*deltaY = 0
-	if Random(2) < 1 || int16(E.Board.Stats[0].Y) == y {
-		*deltaX = Signum(int16(E.Board.Stats[0].X) - x)
+	if e.Random(2) < 1 || int16(e.Board.Stats[0].Y) == y {
+		*deltaX = Signum(int16(e.Board.Stats[0].X) - x)
 	}
 	if *deltaX == 0 {
-		*deltaY = Signum(int16(E.Board.Stats[0].Y) - y)
+		*deltaY = Signum(int16(e.Board.Stats[0].Y) - y)
 	}
-	if E.World.Info.EnergizerTicks > 0 {
+	if e.World.Info.EnergizerTicks > 0 {
 		*deltaX = -*deltaX
 		*deltaY = -*deltaY
 	}
 }
 
-func TransitionDrawBoardChange() {
-	TransitionDrawToFill('\xdb', 0x05)
-	TransitionDrawToBoard()
+func (e *Engine) TransitionDrawBoardChange() {
+	e.TransitionDrawToFill('\xdb', 0x05)
+	e.TransitionDrawToBoard()
 }
 
-func BoardEnter() {
-	E.Board.Info.StartPlayerX = E.Board.Stats[0].X
-	E.Board.Info.StartPlayerY = E.Board.Stats[0].Y
-	if E.Board.Info.IsDark && E.MessageHintTorchNotShown {
-		DisplayMessage(200, "Room is dark - you need to light a torch!")
-		E.MessageHintTorchNotShown = false
+func (e *Engine) BoardEnter() {
+	e.Board.Info.StartPlayerX = e.Board.Stats[0].X
+	e.Board.Info.StartPlayerY = e.Board.Stats[0].Y
+	if e.Board.Info.IsDark && e.MessageHintTorchNotShown {
+		e.DisplayMessage(200, "Room is dark - you need to light a torch!")
+		e.MessageHintTorchNotShown = false
 	}
-	E.World.Info.BoardTimeSec = 0
-	GameUpdateSidebar()
+	e.World.Info.BoardTimeSec = 0
+	e.GameUpdateSidebar()
 }
 
-func BoardPassageTeleport(x, y int16) {
+func (e *Engine) BoardPassageTeleport(x, y int16) {
 	var (
 		col        byte
 		ix, iy     int16
 		newX, newY int16
 	)
-	col = E.Board.Tiles[x][y].Color
-	BoardChange(int16(E.Board.Stats[GetStatIdAt(x, y)].P3))
+	col = e.Board.Tiles[x][y].Color
+	e.BoardChange(int16(e.Board.Stats[e.GetStatIdAt(x, y)].P3))
 	newX = 0
 	for ix = 1; ix <= BOARD_WIDTH; ix++ {
 		for iy = 1; iy <= BOARD_HEIGHT; iy++ {
-			if E.Board.Tiles[ix][iy].Element == E_PASSAGE && E.Board.Tiles[ix][iy].Color == col {
+			if e.Board.Tiles[ix][iy].Element == E_PASSAGE && e.Board.Tiles[ix][iy].Color == col {
 				newX = ix
 				newY = iy
 			}
 		}
 	}
-	E.Board.Tiles[E.Board.Stats[0].X][E.Board.Stats[0].Y].Element = E_EMPTY
-	E.Board.Tiles[E.Board.Stats[0].X][E.Board.Stats[0].Y].Color = 0
+	e.Board.Tiles[e.Board.Stats[0].X][e.Board.Stats[0].Y].Element = E_EMPTY
+	e.Board.Tiles[e.Board.Stats[0].X][e.Board.Stats[0].Y].Color = 0
 	if newX != 0 {
-		E.Board.Stats[0].X = byte(newX)
-		E.Board.Stats[0].Y = byte(newY)
+		e.Board.Stats[0].X = byte(newX)
+		e.Board.Stats[0].Y = byte(newY)
 	}
-	E.GamePaused = true
+	e.GamePaused = true
 	SoundQueue(4, "0\x014\x017\x011\x015\x018\x012\x016\x019\x013\x017\x01:\x014\x018\x01@\x01")
-	TransitionDrawBoardChange()
-	BoardEnter()
+	e.TransitionDrawBoardChange()
+	e.BoardEnter()
 }
 
-func GameDebugPrompt() {
+func (e *Engine) GameDebugPrompt() {
 	var (
 		input  string
 		i      int16
 		toggle bool
 	)
 	input = ""
-	SidebarClearLine(4)
-	SidebarClearLine(5)
-	PromptString(63, 5, 0x1E, 0x0F, 11, PROMPT_ANY, &input)
+	e.SidebarClearLine(4)
+	e.SidebarClearLine(5)
+	e.PromptString(63, 5, 0x1E, 0x0F, 11, PROMPT_ANY, &input)
 	input = UpCaseString(input)
 	toggle = true
 	if input[0] == '+' || input[0] == '-' {
@@ -1290,41 +1290,41 @@ func GameDebugPrompt() {
 		}
 		input = Copy(input, 2, Length(input)-1)
 		if toggle == true {
-			WorldSetFlag(input)
+			e.WorldSetFlag(input)
 		} else {
-			WorldClearFlag(input)
+			e.WorldClearFlag(input)
 		}
 	}
-	E.DebugEnabled = WorldGetFlagPosition("DEBUG") >= 0
+	e.DebugEnabled = e.WorldGetFlagPosition("DEBUG") >= 0
 	if input == "HEALTH" {
-		E.World.Info.Health += 50
+		e.World.Info.Health += 50
 	} else if input == "AMMO" {
-		E.World.Info.Ammo += 5
+		e.World.Info.Ammo += 5
 	} else if input == "KEYS" {
 		for i = 1; i <= 7; i++ {
-			E.World.Info.Keys[i-1] = true
+			e.World.Info.Keys[i-1] = true
 		}
 	} else if input == "TORCHES" {
-		E.World.Info.Torches += 3
+		e.World.Info.Torches += 3
 	} else if input == "TIME" {
-		E.World.Info.BoardTimeSec -= 30
+		e.World.Info.BoardTimeSec -= 30
 	} else if input == "GEMS" {
-		E.World.Info.Gems += 5
+		e.World.Info.Gems += 5
 	} else if input == "DARK" {
-		E.Board.Info.IsDark = toggle
-		TransitionDrawToBoard()
+		e.Board.Info.IsDark = toggle
+		e.TransitionDrawToBoard()
 	} else if input == "ZAP" {
 		for i = 0; i <= 3; i++ {
-			BoardDamageTile(int16(E.Board.Stats[0].X)+NeighborDeltaX[i], int16(E.Board.Stats[0].Y)+NeighborDeltaY[i])
-			E.Board.Tiles[int16(E.Board.Stats[0].X)+NeighborDeltaX[i]][int16(E.Board.Stats[0].Y)+NeighborDeltaY[i]].Element = E_EMPTY
-			BoardDrawTile(int16(E.Board.Stats[0].X)+NeighborDeltaX[i], int16(E.Board.Stats[0].Y)+NeighborDeltaY[i])
+			e.BoardDamageTile(int16(e.Board.Stats[0].X)+NeighborDeltaX[i], int16(e.Board.Stats[0].Y)+NeighborDeltaY[i])
+			e.Board.Tiles[int16(e.Board.Stats[0].X)+NeighborDeltaX[i]][int16(e.Board.Stats[0].Y)+NeighborDeltaY[i]].Element = E_EMPTY
+			e.BoardDrawTile(int16(e.Board.Stats[0].X)+NeighborDeltaX[i], int16(e.Board.Stats[0].Y)+NeighborDeltaY[i])
 		}
 	}
 
 	SoundQueue(10, "'\x04")
-	SidebarClearLine(4)
-	SidebarClearLine(5)
-	GameUpdateSidebar()
+	e.SidebarClearLine(4)
+	e.SidebarClearLine(5)
+	e.GameUpdateSidebar()
 }
 
 func GameAboutScreen() {
@@ -1336,279 +1336,511 @@ func GameAboutScreen() {
 // from GamePlayLoop (M0.5) — pacing and the pause branch stay in the caller.
 //
 // Faithfulness notes (this must not change behavior — ANALYSIS.md §3g):
-//   - It iterates the GLOBAL E.CurrentStatTicked, not a fresh loop variable,
-//     because RemoveStat/DamageStat decrement E.CurrentStatTicked when they
+//   - It iterates the GLOBAL e.CurrentStatTicked, not a fresh loop variable,
+//     because RemoveStat/DamageStat decrement e.CurrentStatTicked when they
 //     remove a stat mid-tick (GAME.PAS 942-943, 1233-1234); a local index
 //     would desync the stat iteration order.
-//   - E.Board.StatCount is re-read each iteration so stats added/removed during
+//   - e.Board.StatCount is re-read each iteration so stats added/removed during
 //     the cycle are handled exactly as the original per-iteration loop did.
-//   - With the caller's setup leaving E.CurrentStatTicked = StatCount+1, the
+//   - With the caller's setup leaving e.CurrentStatTicked = StatCount+1, the
 //     first GameStep ticks nothing and only advances (matching the original's
 //     first loop iteration); every later call ticks a full cycle then advances.
-//   - E.GamePlayExitRequested stops ticking mid-cycle and suppresses the advance,
+//   - e.GamePlayExitRequested stops ticking mid-cycle and suppresses the advance,
 //     mirroring the original loop's exit checks.
-func GameStep() {
-	for E.CurrentStatTicked <= E.Board.StatCount && !E.GamePlayExitRequested {
-		stat := &E.Board.Stats[E.CurrentStatTicked]
-		if stat.Cycle != 0 && E.CurrentTick%stat.Cycle == E.CurrentStatTicked%stat.Cycle {
-			ElementDefs[E.Board.Tiles[stat.X][stat.Y].Element].TickProc(E.CurrentStatTicked)
+func (e *Engine) GameStep() {
+	InputDeltaX = e.InputDeltaX
+	InputDeltaY = e.InputDeltaY
+	InputShiftPressed = e.InputShiftPressed
+	InputKeyPressed = e.InputKeyPressed
+	InputLastDeltaX = e.InputLastDeltaX
+	InputLastDeltaY = e.InputLastDeltaY
+	InputKeyBuffer = e.InputKeyBuffer
+
+	defer func() {
+		e.InputDeltaX = InputDeltaX
+		e.InputDeltaY = InputDeltaY
+		e.InputShiftPressed = InputShiftPressed
+		e.InputKeyPressed = InputKeyPressed
+		e.InputLastDeltaX = InputLastDeltaX
+		e.InputLastDeltaY = InputLastDeltaY
+		e.InputKeyBuffer = InputKeyBuffer
+	}()
+
+	for e.CurrentStatTicked <= e.Board.StatCount && !e.GamePlayExitRequested {
+		stat := &e.Board.Stats[e.CurrentStatTicked]
+		if stat.Cycle != 0 && e.CurrentTick%stat.Cycle == e.CurrentStatTicked%stat.Cycle {
+			ElementDefs[e.Board.Tiles[stat.X][stat.Y].Element].TickProc(e, e.CurrentStatTicked)
 		}
-		E.CurrentStatTicked++
+		e.CurrentStatTicked++
 	}
 
-	if E.CurrentStatTicked > E.Board.StatCount && !E.GamePlayExitRequested {
+	if e.CurrentStatTicked > e.Board.StatCount && !e.GamePlayExitRequested {
 		// next cycle
-		E.CurrentTick++
-		if E.CurrentTick > 420 {
-			E.CurrentTick = 1
+		e.CurrentTick++
+		if e.CurrentTick > 420 {
+			e.CurrentTick = 1
 		}
-		E.CurrentStatTicked = 0
-		InputUpdate()
+		e.CurrentStatTicked = 0
+		e.InputUpdate()
 	}
 }
 
-func GamePlayLoop(boardChanged bool) {
+func (e *Engine) GamePlayLoop(boardChanged bool) {
 	var pauseBlink bool
 
 	GameDrawSidebar := func() {
-		SidebarClear()
-		SidebarClearLine(0)
-		SidebarClearLine(1)
-		SidebarClearLine(2)
-		VideoWriteText(61, 0, 0x1F, "    - - - - -      ")
-		VideoWriteText(62, 1, 0x70, "      ZZT      ")
-		VideoWriteText(61, 2, 0x1F, "    - - - - -      ")
-		if E.GameStateElement == E_PLAYER {
-			VideoWriteText(64, 7, 0x1E, " Health:")
-			VideoWriteText(64, 8, 0x1E, "   Ammo:")
-			VideoWriteText(64, 9, 0x1E, "Torches:")
-			VideoWriteText(64, 10, 0x1E, "   Gems:")
-			VideoWriteText(64, 11, 0x1E, "  Score:")
-			VideoWriteText(64, 12, 0x1E, "   Keys:")
-			VideoWriteText(62, 7, 0x1F, string([]byte{ElementDefs[E_PLAYER].Character}))
-			VideoWriteText(62, 8, 0x1B, string([]byte{ElementDefs[E_AMMO].Character}))
-			VideoWriteText(62, 9, 0x16, string([]byte{ElementDefs[E_TORCH].Character}))
-			VideoWriteText(62, 10, 0x1B, string([]byte{ElementDefs[E_GEM].Character}))
-			VideoWriteText(62, 12, 0x1F, string([]byte{ElementDefs[E_KEY].Character}))
-			VideoWriteText(62, 14, 0x70, " T ")
-			VideoWriteText(65, 14, 0x1F, " Torch")
-			VideoWriteText(62, 15, 0x30, " B ")
-			VideoWriteText(62, 16, 0x70, " H ")
-			VideoWriteText(65, 16, 0x1F, " Help")
-			VideoWriteText(67, 18, 0x30, " \x18\x19\x1a\x1b ")
-			VideoWriteText(72, 18, 0x1F, " Move")
-			VideoWriteText(61, 19, 0x70, " Shift \x18\x19\x1a\x1b ")
-			VideoWriteText(72, 19, 0x1F, " Shoot")
-			VideoWriteText(62, 21, 0x70, " S ")
-			VideoWriteText(65, 21, 0x1F, " Save game")
-			VideoWriteText(62, 22, 0x30, " P ")
-			VideoWriteText(65, 22, 0x1F, " Pause")
-			VideoWriteText(62, 23, 0x70, " Q ")
-			VideoWriteText(65, 23, 0x1F, " Quit")
-		} else if E.GameStateElement == E_MONITOR {
-			SidebarPromptSlider(false, 66, 21, "Game speed:;FS", &E.TickSpeed)
-			VideoWriteText(62, 21, 0x70, " S ")
-			VideoWriteText(62, 7, 0x30, " W ")
-			VideoWriteText(65, 7, 0x1E, " World:")
-			if Length(E.World.Info.Name) != 0 {
-				VideoWriteText(69, 8, 0x1F, E.World.Info.Name)
+		e.SidebarClear()
+		e.SidebarClearLine(0)
+		e.SidebarClearLine(1)
+		e.SidebarClearLine(2)
+		e.VideoWriteText(61, 0, 0x1F, "    - - - - -      ")
+		e.VideoWriteText(62, 1, 0x70, "      ZZT      ")
+		e.VideoWriteText(61, 2, 0x1F, "    - - - - -      ")
+		if e.GameStateElement == E_PLAYER {
+			e.VideoWriteText(64, 7, 0x1E, " Health:")
+			e.VideoWriteText(64, 8, 0x1E, "   Ammo:")
+			e.VideoWriteText(64, 9, 0x1E, "Torches:")
+			e.VideoWriteText(64, 10, 0x1E, "   Gems:")
+			e.VideoWriteText(64, 11, 0x1E, "  Score:")
+			e.VideoWriteText(64, 12, 0x1E, "   Keys:")
+			e.VideoWriteText(62, 7, 0x1F, string([]byte{ElementDefs[E_PLAYER].Character}))
+			e.VideoWriteText(62, 8, 0x1B, string([]byte{ElementDefs[E_AMMO].Character}))
+			e.VideoWriteText(62, 9, 0x16, string([]byte{ElementDefs[E_TORCH].Character}))
+			e.VideoWriteText(62, 10, 0x1B, string([]byte{ElementDefs[E_GEM].Character}))
+			e.VideoWriteText(62, 12, 0x1F, string([]byte{ElementDefs[E_KEY].Character}))
+			e.VideoWriteText(62, 14, 0x70, " T ")
+			e.VideoWriteText(65, 14, 0x1F, " Torch")
+			e.VideoWriteText(62, 15, 0x30, " B ")
+			e.VideoWriteText(62, 16, 0x70, " H ")
+			e.VideoWriteText(65, 16, 0x1F, " Help")
+			e.VideoWriteText(67, 18, 0x30, " \x18\x19\x1a\x1b ")
+			e.VideoWriteText(72, 18, 0x1F, " Move")
+			e.VideoWriteText(61, 19, 0x70, " Shift \x18\x19\x1a\x1b ")
+			e.VideoWriteText(72, 19, 0x1F, " Shoot")
+			e.VideoWriteText(62, 21, 0x70, " S ")
+			e.VideoWriteText(65, 21, 0x1F, " Save game")
+			e.VideoWriteText(62, 22, 0x30, " P ")
+			e.VideoWriteText(65, 22, 0x1F, " Pause")
+			e.VideoWriteText(62, 23, 0x70, " Q ")
+			e.VideoWriteText(65, 23, 0x1F, " Quit")
+		} else if e.GameStateElement == E_MONITOR {
+			e.SidebarPromptSlider(false, 66, 21, "Game speed:;FS", &e.TickSpeed)
+			e.VideoWriteText(62, 21, 0x70, " S ")
+			e.VideoWriteText(62, 7, 0x30, " W ")
+			e.VideoWriteText(65, 7, 0x1E, " World:")
+			if Length(e.World.Info.Name) != 0 {
+				e.VideoWriteText(69, 8, 0x1F, e.World.Info.Name)
 			} else {
-				VideoWriteText(69, 8, 0x1F, "Untitled")
+				e.VideoWriteText(69, 8, 0x1F, "Untitled")
 			}
-			VideoWriteText(62, 11, 0x70, " P ")
-			VideoWriteText(65, 11, 0x1F, " Play")
-			VideoWriteText(62, 12, 0x30, " R ")
-			VideoWriteText(65, 12, 0x1E, " Restore game")
-			VideoWriteText(62, 13, 0x70, " Q ")
-			VideoWriteText(65, 13, 0x1E, " Quit")
-			VideoWriteText(62, 16, 0x30, " A ")
-			VideoWriteText(65, 16, 0x1F, " About ZZT!")
-			VideoWriteText(62, 17, 0x70, " H ")
-			VideoWriteText(65, 17, 0x1E, " High Scores")
-			if E.EditorEnabled {
-				VideoWriteText(62, 18, 0x30, " E ")
-				VideoWriteText(65, 18, 0x1E, " Board Editor")
+			e.VideoWriteText(62, 11, 0x70, " P ")
+			e.VideoWriteText(65, 11, 0x1F, " Play")
+			e.VideoWriteText(62, 12, 0x30, " R ")
+			e.VideoWriteText(65, 12, 0x1E, " Restore game")
+			e.VideoWriteText(62, 13, 0x70, " Q ")
+			e.VideoWriteText(65, 13, 0x1E, " Quit")
+			e.VideoWriteText(62, 16, 0x30, " A ")
+			e.VideoWriteText(65, 16, 0x1F, " About ZZT!")
+			e.VideoWriteText(62, 17, 0x70, " H ")
+			e.VideoWriteText(65, 17, 0x1E, " High Scores")
+			if e.EditorEnabled {
+				e.VideoWriteText(62, 18, 0x30, " E ")
+				e.VideoWriteText(65, 18, 0x1E, " Board Editor")
 			}
 		}
 	}
 
 	GameDrawSidebar()
-	GameUpdateSidebar()
+	e.GameUpdateSidebar()
 
-	if E.JustStarted {
+	if e.JustStarted {
 		// TODO: GameAboutScreen()
-		if Length(E.StartupWorldFileName) != 0 {
-			SidebarClearLine(8)
-			VideoWriteText(69, 8, 0x1F, E.StartupWorldFileName)
-			if !WorldLoad(E.StartupWorldFileName, ".ZZT", true) {
-				WorldCreate()
+		if Length(e.StartupWorldFileName) != 0 {
+			e.SidebarClearLine(8)
+			e.VideoWriteText(69, 8, 0x1F, e.StartupWorldFileName)
+			if !e.WorldLoad(e.StartupWorldFileName, ".ZZT", true) {
+				e.WorldCreate()
 			}
 		}
-		E.ReturnBoardId = E.World.Info.CurrentBoard
-		BoardChange(0)
-		E.JustStarted = false
+		e.ReturnBoardId = e.World.Info.CurrentBoard
+		e.BoardChange(0)
+		e.JustStarted = false
 	}
 
-	E.Board.Tiles[E.Board.Stats[0].X][E.Board.Stats[0].Y].Element = byte(E.GameStateElement)
-	E.Board.Tiles[E.Board.Stats[0].X][E.Board.Stats[0].Y].Color = ElementDefs[E.GameStateElement].Color
-	if E.GameStateElement == E_MONITOR {
-		DisplayMessage(0, "")
-		VideoWriteText(62, 5, 0x1B, "Pick a command:")
+	e.Board.Tiles[e.Board.Stats[0].X][e.Board.Stats[0].Y].Element = byte(e.GameStateElement)
+	e.Board.Tiles[e.Board.Stats[0].X][e.Board.Stats[0].Y].Color = ElementDefs[e.GameStateElement].Color
+	if e.GameStateElement == E_MONITOR {
+		e.DisplayMessage(0, "")
+		e.VideoWriteText(62, 5, 0x1B, "Pick a command:")
 	}
 	if boardChanged {
-		TransitionDrawBoardChange()
+		e.TransitionDrawBoardChange()
 	}
-	E.TickTimeDuration = int16(E.TickSpeed) * 2
-	E.GamePlayExitRequested = false
-	E.CurrentTick = Random(100)
-	E.CurrentStatTicked = E.Board.StatCount + 1
+	e.TickTimeDuration = int16(e.TickSpeed) * 2
+	e.GamePlayExitRequested = false
+	e.CurrentTick = e.Random(100)
+	e.CurrentStatTicked = e.Board.StatCount + 1
 
-	for !E.GamePlayExitRequested {
-		if E.GamePaused {
-			if SoundHasTimeElapsed(&E.TickTimeCounter, 25) {
+	for !e.GamePlayExitRequested {
+		if e.GamePaused {
+			if SoundHasTimeElapsed(&e.TickTimeCounter, 25) {
 				pauseBlink = !pauseBlink
 			}
 			if pauseBlink {
-				VideoWriteText(int16(E.Board.Stats[0].X)-1, int16(E.Board.Stats[0].Y)-1, ElementDefs[E_PLAYER].Color, string([]byte{ElementDefs[E_PLAYER].Character}))
+				e.VideoWriteText(int16(e.Board.Stats[0].X)-1, int16(e.Board.Stats[0].Y)-1, ElementDefs[E_PLAYER].Color, string([]byte{ElementDefs[E_PLAYER].Character}))
 			} else {
-				if E.Board.Tiles[E.Board.Stats[0].X][E.Board.Stats[0].Y].Element == E_PLAYER {
-					VideoWriteText(int16(E.Board.Stats[0].X)-1, int16(E.Board.Stats[0].Y)-1, 0x0F, " ")
+				if e.Board.Tiles[e.Board.Stats[0].X][e.Board.Stats[0].Y].Element == E_PLAYER {
+					e.VideoWriteText(int16(e.Board.Stats[0].X)-1, int16(e.Board.Stats[0].Y)-1, 0x0F, " ")
 				} else {
-					BoardDrawTile(int16(E.Board.Stats[0].X), int16(E.Board.Stats[0].Y))
+					e.BoardDrawTile(int16(e.Board.Stats[0].X), int16(e.Board.Stats[0].Y))
 				}
 			}
-			VideoWriteText(64, 5, 0x1F, "Pausing...")
+			e.VideoWriteText(64, 5, 0x1F, "Pausing...")
 
-			InputUpdate()
+			e.InputUpdate()
 			if InputKeyPressed == KEY_ESCAPE {
-				GamePromptEndPlay()
+				e.GamePromptEndPlay()
 			}
 			if InputDeltaX != 0 || InputDeltaY != 0 {
-				ElementDefs[E.Board.Tiles[int16(E.Board.Stats[0].X)+InputDeltaX][int16(E.Board.Stats[0].Y)+InputDeltaY].Element].TouchProc(int16(E.Board.Stats[0].X)+InputDeltaX, int16(E.Board.Stats[0].Y)+InputDeltaY, 0, &InputDeltaX, &InputDeltaY)
+				ElementDefs[e.Board.Tiles[int16(e.Board.Stats[0].X)+InputDeltaX][int16(e.Board.Stats[0].Y)+InputDeltaY].Element].TouchProc(e, int16(e.Board.Stats[0].X)+InputDeltaX, int16(e.Board.Stats[0].Y)+InputDeltaY, 0, &InputDeltaX, &InputDeltaY)
 			}
-			if (InputDeltaX != 0 || InputDeltaY != 0) && ElementDefs[E.Board.Tiles[int16(E.Board.Stats[0].X)+InputDeltaX][int16(E.Board.Stats[0].Y)+InputDeltaY].Element].Walkable {
+			if (InputDeltaX != 0 || InputDeltaY != 0) && ElementDefs[e.Board.Tiles[int16(e.Board.Stats[0].X)+InputDeltaX][int16(e.Board.Stats[0].Y)+InputDeltaY].Element].Walkable {
 				// Move player
-				if E.Board.Tiles[E.Board.Stats[0].X][E.Board.Stats[0].Y].Element == E_PLAYER {
-					MoveStat(0, int16(E.Board.Stats[0].X)+InputDeltaX, int16(E.Board.Stats[0].Y)+InputDeltaY)
+				if e.Board.Tiles[e.Board.Stats[0].X][e.Board.Stats[0].Y].Element == E_PLAYER {
+					e.MoveStat(0, int16(e.Board.Stats[0].X)+InputDeltaX, int16(e.Board.Stats[0].Y)+InputDeltaY)
 				} else {
-					BoardDrawTile(int16(E.Board.Stats[0].X), int16(E.Board.Stats[0].Y))
-					E.Board.Stats[0].X += byte(InputDeltaX)
-					E.Board.Stats[0].Y += byte(InputDeltaY)
-					E.Board.Tiles[E.Board.Stats[0].X][E.Board.Stats[0].Y].Element = E_PLAYER
-					E.Board.Tiles[E.Board.Stats[0].X][E.Board.Stats[0].Y].Color = ElementDefs[E_PLAYER].Color
-					BoardDrawTile(int16(E.Board.Stats[0].X), int16(E.Board.Stats[0].Y))
-					DrawPlayerSurroundings(int16(E.Board.Stats[0].X), int16(E.Board.Stats[0].Y), 0)
-					DrawPlayerSurroundings(int16(E.Board.Stats[0].X)-InputDeltaX, int16(E.Board.Stats[0].Y)-InputDeltaY, 0)
+					e.BoardDrawTile(int16(e.Board.Stats[0].X), int16(e.Board.Stats[0].Y))
+					e.Board.Stats[0].X += byte(InputDeltaX)
+					e.Board.Stats[0].Y += byte(InputDeltaY)
+					e.Board.Tiles[e.Board.Stats[0].X][e.Board.Stats[0].Y].Element = E_PLAYER
+					e.Board.Tiles[e.Board.Stats[0].X][e.Board.Stats[0].Y].Color = ElementDefs[E_PLAYER].Color
+					e.BoardDrawTile(int16(e.Board.Stats[0].X), int16(e.Board.Stats[0].Y))
+					e.DrawPlayerSurroundings(int16(e.Board.Stats[0].X), int16(e.Board.Stats[0].Y), 0)
+					e.DrawPlayerSurroundings(int16(e.Board.Stats[0].X)-InputDeltaX, int16(e.Board.Stats[0].Y)-InputDeltaY, 0)
 				}
 
 				// Unpause
-				E.GamePaused = false
-				SidebarClearLine(5)
-				E.CurrentTick = Random(100)
-				E.CurrentStatTicked = E.Board.StatCount + 1
-				E.World.Info.IsSave = true
+				e.GamePaused = false
+				e.SidebarClearLine(5)
+				e.CurrentTick = e.Random(100)
+				e.CurrentStatTicked = e.Board.StatCount + 1
+				e.World.Info.IsSave = true
 			}
-		} else { // not E.GamePaused
+		} else { // not e.GamePaused
 			// Pace, then run one full game step (M0.5). Delay is a no-op when
-			// E.Headless (M0.4); SoundHasTimeElapsed still gates the step so it
+			// e.Headless (M0.4); SoundHasTimeElapsed still gates the step so it
 			// keeps pacing interactive play (currently stubbed to true — see
 			// NOTES.md 2026-07-09). The per-cycle advance and input read now live
 			// in GameStep. The pause branch keeps its own input handling and sets
-			// E.CurrentTick on unpause, which the next GameStep's advance picks up,
+			// e.CurrentTick on unpause, which the next GameStep's advance picks up,
 			// so behavior is unchanged (the shared "all stats ticked" block that
 			// used to follow both branches folded into GameStep).
-			Delay(E.TickTimeDuration * 10)
-			if SoundHasTimeElapsed(&E.TickTimeCounter, E.TickTimeDuration) {
-				GameStep()
+			e.Delay(e.TickTimeDuration * 10)
+			if SoundHasTimeElapsed(&e.TickTimeCounter, e.TickTimeDuration) {
+				e.GameStep()
 			}
 		}
 	}
 
 	SoundClearQueue()
-	if E.GameStateElement == E_PLAYER {
-		if E.World.Info.Health <= 0 {
-			HighScoresAdd(E.World.Info.Score)
+	if e.GameStateElement == E_PLAYER {
+		if e.World.Info.Health <= 0 {
+			e.HighScoresAdd(e.World.Info.Score)
 		}
-	} else if E.GameStateElement == E_MONITOR {
-		SidebarClearLine(5)
+	} else if e.GameStateElement == E_MONITOR {
+		e.SidebarClearLine(5)
 	}
 
-	E.Board.Tiles[E.Board.Stats[0].X][E.Board.Stats[0].Y].Element = E_PLAYER
-	E.Board.Tiles[E.Board.Stats[0].X][E.Board.Stats[0].Y].Color = ElementDefs[E_PLAYER].Color
+	e.Board.Tiles[e.Board.Stats[0].X][e.Board.Stats[0].Y].Element = E_PLAYER
+	e.Board.Tiles[e.Board.Stats[0].X][e.Board.Stats[0].Y].Color = ElementDefs[E_PLAYER].Color
 	SoundBlockQueueing = false
 }
 
-func GameTitleLoop() {
+func (e *Engine) GameTitleLoop() {
 	var (
 		boardChanged bool
 		startPlay    bool
 	)
-	E.GameTitleExitRequested = false
-	E.JustStarted = true
-	E.ReturnBoardId = 0
+	e.GameTitleExitRequested = false
+	e.JustStarted = true
+	e.ReturnBoardId = 0
 	boardChanged = true
 	for {
-		BoardChange(0)
+		e.BoardChange(0)
 		for {
-			E.GameStateElement = E_MONITOR
+			e.GameStateElement = E_MONITOR
 			startPlay = false
-			E.GamePaused = false
-			GamePlayLoop(boardChanged)
+			e.GamePaused = false
+			e.GamePlayLoop(boardChanged)
 			boardChanged = false
 			switch UpCase(InputKeyPressed) {
 			case 'W':
-				if GameWorldLoad(".ZZT") {
-					E.ReturnBoardId = E.World.Info.CurrentBoard
+				if e.GameWorldLoad(".ZZT") {
+					e.ReturnBoardId = e.World.Info.CurrentBoard
 					boardChanged = true
 				}
 			case 'P':
-				if E.World.Info.IsSave && !E.DebugEnabled {
-					startPlay = WorldLoad(E.World.Info.Name, ".ZZT", false)
-					E.ReturnBoardId = E.World.Info.CurrentBoard
+				if e.World.Info.IsSave && !e.DebugEnabled {
+					startPlay = e.WorldLoad(e.World.Info.Name, ".ZZT", false)
+					e.ReturnBoardId = e.World.Info.CurrentBoard
 				} else {
 					startPlay = true
 				}
 				if startPlay {
-					BoardChange(E.ReturnBoardId)
-					BoardEnter()
+					e.BoardChange(e.ReturnBoardId)
+					e.BoardEnter()
 				}
 			case 'A':
 				GameAboutScreen()
 			case 'E':
-				if E.EditorEnabled {
+				if e.EditorEnabled {
 					EditorLoop()
-					E.ReturnBoardId = E.World.Info.CurrentBoard
+					e.ReturnBoardId = e.World.Info.CurrentBoard
 					boardChanged = true
 				}
 			case 'S':
-				SidebarPromptSlider(true, 66, 21, "Game speed:;FS", &E.TickSpeed)
+				e.SidebarPromptSlider(true, 66, 21, "Game speed:;FS", &e.TickSpeed)
 				InputKeyPressed = '\x00'
 			case 'R':
-				if GameWorldLoad(".SAV") {
-					E.ReturnBoardId = E.World.Info.CurrentBoard
-					BoardChange(E.ReturnBoardId)
+				if e.GameWorldLoad(".SAV") {
+					e.ReturnBoardId = e.World.Info.CurrentBoard
+					e.BoardChange(e.ReturnBoardId)
 					startPlay = true
 				}
 			case 'H':
-				HighScoresLoad()
-				HighScoresDisplay(1)
+				e.HighScoresLoad()
+				e.HighScoresDisplay(1)
 			case '|':
-				GameDebugPrompt()
+				e.GameDebugPrompt()
 			case KEY_ESCAPE, 'Q':
-				E.GameTitleExitRequested = SidebarPromptYesNo("Quit ZZT? ", true)
+				e.GameTitleExitRequested = e.SidebarPromptYesNo("Quit ZZT? ", true)
 			}
 			if startPlay {
-				E.GameStateElement = E_PLAYER
-				E.GamePaused = true
-				GamePlayLoop(true)
+				e.GameStateElement = E_PLAYER
+				e.GamePaused = true
+				e.GamePlayLoop(true)
 				boardChanged = true
 			}
-			if boardChanged || E.GameTitleExitRequested {
+			if boardChanged || e.GameTitleExitRequested {
 				break
 			}
 		}
-		if E.GameTitleExitRequested {
+		if e.GameTitleExitRequested {
 			break
 		}
 	}
+}
+
+// --- Global Wrappers ---
+
+func AddStat(tx, ty int16, element byte, color, tcycle int16, template TStat)  {
+	E.AddStat(tx, ty, element, color, tcycle, template)
+}
+
+func BoardAttack(attackerStatId int16, x, y int16)  {
+	E.BoardAttack(attackerStatId, x, y)
+}
+
+func BoardChange(boardId int16)  {
+	E.BoardChange(boardId)
+}
+
+func BoardClose()  {
+	E.BoardClose()
+}
+
+func BoardCreate()  {
+	E.BoardCreate()
+}
+
+func BoardDamageTile(x, y int16)  {
+	E.BoardDamageTile(x, y)
+}
+
+func BoardDrawBorder()  {
+	E.BoardDrawBorder()
+}
+
+func BoardDrawTile(x, y int16)  {
+	E.BoardDrawTile(x, y)
+}
+
+func BoardEnter()  {
+	E.BoardEnter()
+}
+
+func BoardOpen(boardId int16)  {
+	E.BoardOpen(boardId)
+}
+
+func BoardPassageTeleport(x, y int16)  {
+	E.BoardPassageTeleport(x, y)
+}
+
+func BoardPrepareTileForPlacement(x, y int16) (BoardPrepareTileForPlacement bool) {
+	return E.BoardPrepareTileForPlacement(x, y)
+}
+
+func BoardShoot(element byte, tx, ty, deltaX, deltaY int16, source int16) (BoardShoot bool) {
+	return E.BoardShoot(element, tx, ty, deltaX, deltaY, source)
+}
+
+func CalcDirectionRnd(deltaX, deltaY *int16)  {
+	E.CalcDirectionRnd(deltaX, deltaY)
+}
+
+func CalcDirectionSeek(x, y int16, deltaX, deltaY *int16)  {
+	E.CalcDirectionSeek(x, y, deltaX, deltaY)
+}
+
+func CopyStatDataToTextWindow(statId int16, state *TTextWindowState)  {
+	E.CopyStatDataToTextWindow(statId, state)
+}
+
+func DamageStat(attackerStatId int16)  {
+	E.DamageStat(attackerStatId)
+}
+
+func DisplayMessage(time int16, message string)  {
+	E.DisplayMessage(time, message)
+}
+
+func GameDebugPrompt()  {
+	E.GameDebugPrompt()
+}
+
+func GamePlayLoop(boardChanged bool)  {
+	E.GamePlayLoop(boardChanged)
+}
+
+func GameStep()  {
+	E.GameStep()
+}
+
+func GameTitleLoop()  {
+	E.GameTitleLoop()
+}
+
+func GameUpdateSidebar()  {
+	E.GameUpdateSidebar()
+}
+
+func GameWorldLoad(extension string) (GameWorldLoad bool) {
+	return E.GameWorldLoad(extension)
+}
+
+func GameWorldSave(prompt string, filename *string, extension string)  {
+	E.GameWorldSave(prompt, filename, extension)
+}
+
+func GenerateTransitionTable()  {
+	E.GenerateTransitionTable()
+}
+
+func GetStatIdAt(x, y int16) (GetStatIdAt int16) {
+	return E.GetStatIdAt(x, y)
+}
+
+func HighScoresAdd(score int16)  {
+	E.HighScoresAdd(score)
+}
+
+func HighScoresDisplay(linePos int16)  {
+	E.HighScoresDisplay(linePos)
+}
+
+func HighScoresInitTextWindow(state *TTextWindowState)  {
+	E.HighScoresInitTextWindow(state)
+}
+
+func HighScoresLoad()  {
+	E.HighScoresLoad()
+}
+
+func HighScoresSave()  {
+	E.HighScoresSave()
+}
+
+func MoveStat(statId int16, newX, newY int16)  {
+	E.MoveStat(statId, newX, newY)
+}
+
+func PauseOnError()  {
+	E.PauseOnError()
+}
+
+func PopupPromptString(question string, buffer *string)  {
+	E.PopupPromptString(question, buffer)
+}
+
+func PromptString(x, y, arrowColor, color, width int16, mode byte, buffer *string)  {
+	E.PromptString(x, y, arrowColor, color, width, mode, buffer)
+}
+
+func RemoveStat(statId int16)  {
+	E.RemoveStat(statId)
+}
+
+func SidebarClear()  {
+	E.SidebarClear()
+}
+
+func SidebarClearLine(y int16)  {
+	E.SidebarClearLine(y)
+}
+
+func SidebarPromptCharacter(editable bool, x, y int16, prompt string, value *byte)  {
+	E.SidebarPromptCharacter(editable, x, y, prompt, value)
+}
+
+func SidebarPromptChoice(editable bool, y int16, prompt, choiceStr string, result *byte)  {
+	E.SidebarPromptChoice(editable, y, prompt, choiceStr, result)
+}
+
+func SidebarPromptDirection(editable bool, y int16, prompt string, deltaX, deltaY *int16)  {
+	E.SidebarPromptDirection(editable, y, prompt, deltaX, deltaY)
+}
+
+func SidebarPromptSlider(editable bool, x, y int16, prompt string, value *byte)  {
+	E.SidebarPromptSlider(editable, x, y, prompt, value)
+}
+
+func SidebarPromptString(prompt string, extension string, filename *string, promptMode byte)  {
+	E.SidebarPromptString(prompt, extension, filename, promptMode)
+}
+
+func SidebarPromptYesNo(message string, defaultReturn bool) (SidebarPromptYesNo bool) {
+	return E.SidebarPromptYesNo(message, defaultReturn)
+}
+
+func TileToColorAndChar(x, y int16) (color, char byte) {
+	return E.TileToColorAndChar(x, y)
+}
+
+func TransitionDrawBoardChange()  {
+	E.TransitionDrawBoardChange()
+}
+
+func TransitionDrawToBoard()  {
+	E.TransitionDrawToBoard()
+}
+
+func TransitionDrawToFill(chr byte, color int16)  {
+	E.TransitionDrawToFill(chr, color)
+}
+
+func WorldCreate()  {
+	E.WorldCreate()
+}
+
+func WorldLoad(filename, extension string, titleOnly bool) (WorldLoad bool) {
+	return E.WorldLoad(filename, extension, titleOnly)
+}
+
+func WorldSave(filename, extension string)  {
+	E.WorldSave(filename, extension)
+}
+
+func WorldUnload()  {
+	E.WorldUnload()
 }

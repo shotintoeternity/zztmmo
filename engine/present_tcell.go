@@ -52,8 +52,8 @@ func presentClrScr() {
 
 // presentCell draws a single E.Screen cell to tcell, translating the DOS
 // character/attribute byte pair into a rune and a tcell style.
-func presentCell(x, y int16) {
-	cell := E.Screen[x][y]
+func presentCell(e *Engine, x, y int16) {
+	cell := e.Screen[x][y]
 	fg := cell.Color & 0x0F
 	bg := cell.Color >> 4
 	style := tcell.StyleDefault.
@@ -64,11 +64,11 @@ func presentCell(x, y int16) {
 
 // presentFlush redraws the cells that changed since the last flush and shows
 // the frame. Called from VideoShow when not headless.
-func presentFlush() {
-	for _, c := range E.videoDirty {
-		presentCell(c.x, c.y)
+func presentFlush(e *Engine) {
+	for _, c := range e.videoDirty {
+		presentCell(e, c.x, c.y)
 	}
-	E.videoDirty = E.videoDirty[:0]
+	e.videoDirty = e.videoDirty[:0]
 	screen.Show()
 }
 

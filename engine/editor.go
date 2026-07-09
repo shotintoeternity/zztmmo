@@ -98,7 +98,7 @@ func EditorLoop() {
 			VideoWriteText(61+i, 22, 0x0F, string([]byte{ElementDefs[E.EditorPatterns[i-1]].Character}))
 		}
 		if ElementDefs[copiedTile.Element].HasDrawProc {
-			ElementDefs[copiedTile.Element].DrawProc(copiedX, copiedY, &copiedChr)
+			ElementDefs[copiedTile.Element].DrawProc(E, copiedX, copiedY, &copiedChr)
 		} else {
 			copiedChr = Ord(ElementDefs[copiedTile.Element].Character)
 		}

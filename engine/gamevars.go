@@ -34,9 +34,9 @@ type (
 		Element byte
 		Color   byte
 	}
-	TElementDrawProc  func(x, y int16, ch *byte)
-	TElementTickProc  func(statId int16)
-	TElementTouchProc func(x, y int16, sourceStatId int16, deltaX, deltaY *int16)
+	TElementDrawProc  func(e *Engine, x, y int16, ch *byte)
+	TElementTickProc  func(e *Engine, statId int16)
+	TElementTouchProc func(e *Engine, x, y int16, sourceStatId int16, deltaX, deltaY *int16)
 	TElementDef       struct {
 		Character           byte
 		Color               byte
@@ -188,6 +188,13 @@ type (
 		videoDirty                  []dirtyCell
 		ActiveInput                 InputSource
 		RandSeed                    uint32
+		InputDeltaX                 int16
+		InputDeltaY                 int16
+		InputShiftPressed           bool
+		InputKeyPressed             byte
+		InputLastDeltaX             int16
+		InputLastDeltaY             int16
+		InputKeyBuffer              string
 	}
 )
 

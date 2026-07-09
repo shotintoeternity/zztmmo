@@ -43,8 +43,26 @@ var (
 	InputKeyBuffer                   string
 )
 
-func InputUpdate() {
-	InputDeltaX, InputDeltaY, InputShiftPressed, InputKeyPressed = E.ActiveInput.Poll()
+func (e *Engine) InputUpdate() {
+	InputDeltaX = e.InputDeltaX
+	InputDeltaY = e.InputDeltaY
+	InputShiftPressed = e.InputShiftPressed
+	InputKeyPressed = e.InputKeyPressed
+	InputLastDeltaX = e.InputLastDeltaX
+	InputLastDeltaY = e.InputLastDeltaY
+	InputKeyBuffer = e.InputKeyBuffer
+
+	defer func() {
+		e.InputDeltaX = InputDeltaX
+		e.InputDeltaY = InputDeltaY
+		e.InputShiftPressed = InputShiftPressed
+		e.InputKeyPressed = InputKeyPressed
+		e.InputLastDeltaX = InputLastDeltaX
+		e.InputLastDeltaY = InputLastDeltaY
+		e.InputKeyBuffer = InputKeyBuffer
+	}()
+
+	InputDeltaX, InputDeltaY, InputShiftPressed, InputKeyPressed = e.ActiveInput.Poll()
 	if InputDeltaX != 0 || InputDeltaY != 0 {
 		InputLastDeltaX = InputDeltaX
 		InputLastDeltaY = InputDeltaY
@@ -119,13 +137,13 @@ type InputSource interface {
 	Poll() (dx, dy int16, shift bool, key byte)
 }
 
-// E.ActiveInput is where InputUpdate reads from. It defaults to the live tcell
+// e.ActiveInput is where InputUpdate reads from. It defaults to the live tcell
 // keyboard so interactive play is byte-for-byte unchanged; tests and the
 // future server swap in a ScriptedInput via SetInputSource.
 
 // SetInputSource selects where InputUpdate reads its input from.
-func SetInputSource(s InputSource) {
-	E.ActiveInput = s
+func (e *Engine) SetInputSource(s InputSource) {
+	e.ActiveInput = s
 }
 
 // TcellInput is the live-keyboard source. It runs the original keyboard
@@ -224,4 +242,14 @@ func init() {
 	InputDeltaY = 0
 	InputShiftPressed = false
 	InputKeyBuffer = ""
+}
+
+// --- Global Wrappers ---
+
+func InputUpdate()  {
+	E.InputUpdate()
+}
+
+func SetInputSource(s InputSource)  {
+	E.SetInputSource(s)
 }

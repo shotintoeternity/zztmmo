@@ -111,11 +111,11 @@ func Replace(s string, index int16, b byte) string {
 
 // Misc functions
 
-func Delay(milliseconds int16) {
+func (e *Engine) Delay(milliseconds int16) {
 	// Pacing belongs to the caller: headless runs (server, replay harness) must
 	// never sleep in simulation code (M0.4). Interactive play still delays, so
 	// game speed and the scroll/sound animation timings are unchanged.
-	if E.Headless {
+	if e.Headless {
 		return
 	}
 	time.Sleep(time.Duration(milliseconds) * time.Millisecond)
@@ -131,22 +131,22 @@ func NoSound() {
 
 // Math functions
 
-// E.RandSeed is the engine's random-number state. It replaces Go's global
+// e.RandSeed is the engine's random-number state. It replaces Go's global
 // math/rand so simulation is deterministic and seedable (CLAUDE.md rule 2).
 // The generator is Turbo Pascal's: the same LCG and Word-argument reduction
-// the original ZZT relied on, so Random() reproduces vanilla sequences.
-// ZZT-QUIRK: TP's Random(Range: Word) is (hi16(E.RandSeed) * Range) >> 16 with
-// the seed advanced by E.RandSeed*$08088405+1 (mod 2^32) beforehand.
+// the original ZZT relied on, so e.Random() reproduces vanilla sequences.
+// ZZT-QUIRK: TP's e.Random(Range: Word) is (hi16(e.RandSeed) * Range) >> 16 with
+// the seed advanced by e.RandSeed*$08088405+1 (mod 2^32) beforehand.
 
 // RandomSeed sets the generator state (the deterministic replacement for TP's
 // Randomize, which vanilla seeded from the system timer).
-func RandomSeed(s uint32) {
-	E.RandSeed = s
+func (e *Engine) RandomSeed(s uint32) {
+	e.RandSeed = s
 }
 
-func Random(end int16) int16 {
-	E.RandSeed = E.RandSeed*0x08088405 + 1
-	return int16((uint32(E.RandSeed>>16) * uint32(end)) >> 16)
+func (e *Engine) Random(end int16) int16 {
+	e.RandSeed = e.RandSeed*0x08088405 + 1
+	return int16((uint32(e.RandSeed>>16) * uint32(end)) >> 16)
 }
 
 func Sqr(n int16) int16 {
@@ -170,4 +170,18 @@ func BoolToInt(b bool) int16 {
 		return 1
 	}
 	return 0
+}
+
+// --- Global Wrappers ---
+
+func Delay(milliseconds int16)  {
+	E.Delay(milliseconds)
+}
+
+func Random(end int16) int16 {
+	return E.Random(end)
+}
+
+func RandomSeed(s uint32)  {
+	E.RandomSeed(s)
 }

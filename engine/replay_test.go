@@ -30,19 +30,19 @@ type replayFixture struct {
 // simulation state M0 has made headless. TStat's unknown pointer fields are
 // deliberately excluded because pointer addresses are runtime artifacts, not
 // serialized game state.
-func StateHash() uint64 {
+func StateHash(e *Engine) uint64 {
 	h := fnv.New64a()
 
 	for x := 0; x <= BOARD_WIDTH+1; x++ {
 		for y := 0; y <= BOARD_HEIGHT+1; y++ {
-			hashByte(h, E.Board.Tiles[x][y].Element)
-			hashByte(h, E.Board.Tiles[x][y].Color)
+			hashByte(h, e.Board.Tiles[x][y].Element)
+			hashByte(h, e.Board.Tiles[x][y].Color)
 		}
 	}
 
-	hashInt16(h, E.Board.StatCount)
-	for i := int16(0); i <= E.Board.StatCount; i++ {
-		stat := &E.Board.Stats[i]
+	hashInt16(h, e.Board.StatCount)
+	for i := int16(0); i <= e.Board.StatCount; i++ {
+		stat := &e.Board.Stats[i]
 		hashByte(h, stat.X)
 		hashByte(h, stat.Y)
 		hashInt16(h, stat.StepX)
@@ -60,8 +60,8 @@ func StateHash() uint64 {
 		hashInt16(h, stat.DataLen)
 	}
 
-	hashWorldInfo(h, &E.World.Info)
-	hashUint32(h, E.RandSeed)
+	hashWorldInfo(h, &e.World.Info)
+	hashUint32(h, e.RandSeed)
 
 	return h.Sum64()
 }
@@ -158,7 +158,7 @@ func runTownReplay(t *testing.T) []string {
 			t.Fatalf("replay requested exit at step %d", step)
 		}
 		if step%townReplayInterval == 0 {
-			hashes = append(hashes, fmt.Sprintf("%016x", StateHash()))
+			hashes = append(hashes, fmt.Sprintf("%016x", StateHash(E)))
 		}
 	}
 	return hashes
@@ -254,4 +254,96 @@ func hashUint32(h hash.Hash64, n uint32) {
 	var buf [4]byte
 	binary.LittleEndian.PutUint32(buf[:], n)
 	_, _ = h.Write(buf[:])
+}
+
+func TestTwoEnginesOneProcess(t *testing.T) {
+	worldBase := filepath.Join("..", "fixtures", "TOWN")
+
+	// 1. Run single engine on board 1, collect hashes
+	eSingle1 := NewEngine()
+	eSingle1.Headless = true
+	eSingle1.WorldCreate()
+	if !eSingle1.WorldLoad(worldBase, ".ZZT", false) {
+		t.Fatalf("failed to load world for eSingle1")
+	}
+	eSingle1.RandomSeed(42)
+	eSingle1.BoardOpen(1)
+	eSingle1.GameStateElement = E_PLAYER
+	eSingle1.BoardEnter()
+	eSingle1.CurrentTick = eSingle1.Random(100)
+	eSingle1.CurrentStatTicked = eSingle1.Board.StatCount + 1
+	eSingle1.SetInputSource(&ScriptedInput{Ticks: townReplayScript()})
+
+	single1Hashes := make([]uint64, 100)
+	for i := 0; i < 100; i++ {
+		eSingle1.GameStep()
+		single1Hashes[i] = StateHash(eSingle1)
+	}
+
+	// 2. Run single engine on board 2, collect hashes
+	eSingle2 := NewEngine()
+	eSingle2.Headless = true
+	eSingle2.WorldCreate()
+	if !eSingle2.WorldLoad(worldBase, ".ZZT", false) {
+		t.Fatalf("failed to load world for eSingle2")
+	}
+	eSingle2.RandomSeed(100) // use a different seed to test independence
+	eSingle2.BoardOpen(2)
+	eSingle2.GameStateElement = E_PLAYER
+	eSingle2.BoardEnter()
+	eSingle2.CurrentTick = eSingle2.Random(100)
+	eSingle2.CurrentStatTicked = eSingle2.Board.StatCount + 1
+	eSingle2.SetInputSource(&ScriptedInput{Ticks: townReplayScript()})
+
+	single2Hashes := make([]uint64, 100)
+	for i := 0; i < 100; i++ {
+		eSingle2.GameStep()
+		single2Hashes[i] = StateHash(eSingle2)
+	}
+
+	// 3. Now run two engines concurrently (interleaved steps) and check hashes
+	e1 := NewEngine()
+	e1.Headless = true
+	e1.WorldCreate()
+	if !e1.WorldLoad(worldBase, ".ZZT", false) {
+		t.Fatalf("failed to load world for e1")
+	}
+	e1.RandomSeed(42)
+	e1.BoardOpen(1)
+	e1.GameStateElement = E_PLAYER
+	e1.BoardEnter()
+	e1.CurrentTick = e1.Random(100)
+	e1.CurrentStatTicked = e1.Board.StatCount + 1
+	e1.SetInputSource(&ScriptedInput{Ticks: townReplayScript()})
+
+	e2 := NewEngine()
+	e2.Headless = true
+	e2.WorldCreate()
+	if !e2.WorldLoad(worldBase, ".ZZT", false) {
+		t.Fatalf("failed to load world for e2")
+	}
+	e2.RandomSeed(100)
+	e2.BoardOpen(2)
+	e2.GameStateElement = E_PLAYER
+	e2.BoardEnter()
+	e2.CurrentTick = e2.Random(100)
+	e2.CurrentStatTicked = e2.Board.StatCount + 1
+	e2.SetInputSource(&ScriptedInput{Ticks: townReplayScript()})
+
+	for i := 0; i < 100; i++ {
+		// Interleave steps
+		e1.GameStep()
+		e2.GameStep()
+
+		// Verify no cross-talk and exact matching
+		h1 := StateHash(e1)
+		h2 := StateHash(e2)
+
+		if h1 != single1Hashes[i] {
+			t.Fatalf("Step %d: e1 StateHash mismatch: got %016x, want %016x", i+1, h1, single1Hashes[i])
+		}
+		if h2 != single2Hashes[i] {
+			t.Fatalf("Step %d: e2 StateHash mismatch: got %016x, want %016x", i+1, h2, single2Hashes[i])
+		}
+	}
 }

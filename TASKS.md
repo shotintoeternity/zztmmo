@@ -79,7 +79,7 @@ and every run is reproducible. ANALYSIS.md §3g, §3h, §5.
   `package main` working via `E = NewEngine()` at startup. DoD: builds, replay
   fixture hash UNCHANGED (this proves the refactor was pure).
 
-- [ ] **M1.2 — Two engines, one process.** Replace remaining direct uses of `E`
+- [x] **M1.2 — Two engines, one process.** Replace remaining direct uses of `E`
   inside sim functions with methods on `*Engine` (mechanical; editor.go may keep
   using `E`). DoD: test constructs two Engines on different boards of TOWN.ZZT,
   interleaves 100 GameSteps each, both replay-deterministic, no cross-talk (their
