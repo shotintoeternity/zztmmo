@@ -1,0 +1,2424 @@
+<!DOCTYPE html>
+<!-- saved from url=(0041)https://wiki.zzt.org/wiki/ZZT_file_format -->
+<html class="client-js ve-available" lang="en" dir="ltr"><head><meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
+
+<title>ZZT file format - Wiki of ZZT</title>
+<script>(function(){var className="client-js";var cookie=document.cookie.match(/(?:^|; )zztwikimwclientpreferences=([^;]+)/);if(cookie){cookie[1].split('%2C').forEach(function(pref){className=className.replace(new RegExp('(^| )'+pref.replace(/-clientpref-\w+$|[^\w-]+/g,'')+'-clientpref-\\w+( |$)'),'$1'+pref+'$2');});}document.documentElement.className=className;}());RLCONF={"wgBreakFrames":false,"wgSeparatorTransformTable":["",""],"wgDigitTransformTable":["",""],"wgDefaultDateFormat":"dmy","wgMonthNames":["","January","February","March","April","May","June","July","August","September","October","November","December"],"wgRequestId":"1b738cd93650f67cefe728b8","wgCanonicalNamespace":"","wgCanonicalSpecialPageName":false,"wgNamespaceNumber":0,"wgPageName":"ZZT_file_format","wgTitle":"ZZT file format","wgCurRevisionId":778,"wgRevisionId":778,"wgArticleId":158,"wgIsArticle":true,"wgIsRedirect":false,"wgAction":"view","wgUserName":null,"wgUserGroups":["*"],"wgCategories":["File formats"],"wgPageViewLanguage":"en","wgPageContentLanguage":"en","wgPageContentModel":"wikitext","wgRelevantPageName":"ZZT_file_format","wgRelevantArticleId":158,"wgIsProbablyEditable":false,"wgRelevantPageIsProbablyEditable":false,"wgRestrictionEdit":[],"wgRestrictionMove":[],"wgCiteReferencePreviewsActive":true,"wgVisualEditor":{"pageLanguageCode":"en","pageLanguageDir":"ltr","pageVariantFallbacks":"en"},"wgEditSubmitButtonLabelPublish":false};
+RLSTATE={"site.styles":"ready","user.styles":"ready","user":"ready","user.options":"loading","skins.vector.styles.legacy":"ready","ext.visualEditor.desktopArticleTarget.noscript":"ready"};RLPAGEMODULES=["site","mediawiki.page.ready","mediawiki.toc","skins.vector.legacy.js","ext.visualEditor.desktopArticleTarget.init","ext.visualEditor.targetLoader"];</script>
+<script>(RLQ=window.RLQ||[]).push(function(){mw.loader.impl(function(){return["user.options@12s5i",function($,jQuery,require,module){mw.user.tokens.set({"patrolToken":"+\\","watchToken":"+\\","csrfToken":"+\\"});
+}];});});</script>
+<link rel="stylesheet" href="./fileformat_files/load.php">
+<script async="" src="./fileformat_files/load(1).php"></script>
+<style>
+.mw-editfont-monospace{font-family:monospace,monospace}.mw-editfont-sans-serif{font-family:sans-serif}.mw-editfont-serif{font-family:serif} .mw-editfont-monospace,.mw-editfont-sans-serif,.mw-editfont-serif{  font-size:13px; -moz-tab-size:4;tab-size:4; }.mw-editfont-monospace.oo-ui-textInputWidget,.mw-editfont-sans-serif.oo-ui-textInputWidget,.mw-editfont-serif.oo-ui-textInputWidget{font-size:inherit}.mw-editfont-monospace.oo-ui-textInputWidget > .oo-ui-inputWidget-input,.mw-editfont-sans-serif.oo-ui-textInputWidget > .oo-ui-inputWidget-input,.mw-editfont-serif.oo-ui-textInputWidget > .oo-ui-inputWidget-input{  font-size:13px}.mw-editfont-monospace.oo-ui-textInputWidget > input.oo-ui-inputWidget-input,.mw-editfont-sans-serif.oo-ui-textInputWidget > input.oo-ui-inputWidget-input,.mw-editfont-serif.oo-ui-textInputWidget > input.oo-ui-inputWidget-input{min-height:32px}
+.ve-init-mw-progressBarWidget{height:1em;overflow:hidden;margin:0 25%}.ve-init-mw-progressBarWidget-bar{height:1em;width:0} .ve-init-mw-progressBarWidget{background-color:#fff;box-sizing:border-box;height:0.875em;border:1px solid #36c;border-radius:0.875em;box-shadow:0 1px 1px rgba(0,0,0,0.15)}.ve-init-mw-progressBarWidget-bar{background-color:#36c;height:0.875em}
+@media screen {
+	.toctoggle{-webkit-user-select:none;-moz-user-select:none;user-select:none;font-size:94%}}
+#mw-teleport-target{position:absolute;z-index:450}</style><style>
+.ve-init-mw-tempWikitextEditorWidget{border:0;padding:0;color:inherit;line-height:1.5em;width:100%;-moz-tab-size:4;tab-size:4;  }.ve-init-mw-tempWikitextEditorWidget:focus{outline:0;padding:0}.ve-init-mw-tempWikitextEditorWidget::selection{background:rgba(109,169,247,0.5); }</style><style>
+.ve-active .ve-init-mw-desktopArticleTarget-targetContainer #siteNotice,.ve-active .mw-indicators,.ve-active #t-print,.ve-active #t-permalink,.ve-active #p-coll-print_export,.ve-active #t-cite,.ve-active .ve-init-mw-desktopArticleTarget-editableContent,.ve-active .ve-init-mw-tempWikitextEditorWidget{display:none}.ve-deactivating .ve-ui-surface{display:none}.ve-activating{ }.ve-activating .ve-ui-surface{height:0;padding:0 !important; overflow:hidden} .ve-loading .ve-init-mw-desktopArticleTarget-targetContainer > :not(.ve-init-mw-desktopArticleTarget-toolbarPlaceholder):not(.ve-init-mw-desktopArticleTarget),.ve-loading .ve-init-mw-desktopArticleTarget-originalContent,.ve-activated:not(.ve-loading) .ve-init-mw-desktopArticleTarget-uneditableContent{pointer-events:none;-webkit-user-select:none;-moz-user-select:none;-ms-user-select:none;user-select:none;opacity:0.5}.ve-activated .ve-init-mw-desktopArticleTarget-targetContainer #firstHeading{ -webkit-user-select:text;-moz-user-select:text;-ms-user-select:text;user-select:text;pointer-events:auto;cursor:text}.ve-activated .ve-init-mw-desktopArticleTarget-targetContainer #firstHeading a{ pointer-events:none}.ve-activated .ve-init-mw-desktopArticleTarget-originalContent #catlinks{cursor:pointer}.ve-activated .ve-init-mw-desktopArticleTarget-originalContent #catlinks:hover{ background:#e9f2fd}.ve-activated .ve-init-mw-desktopArticleTarget-originalContent #catlinks a{opacity:1} .ve-init-mw-desktopArticleTarget-loading-overlay{z-index:2;position:absolute;width:100%;top:1em}.ve-init-mw-desktopArticleTarget-toolbarPlaceholder{overflow:hidden;transition:height 250ms ease;height:0;padding-bottom:2px; }.ve-init-mw-desktopArticleTarget-toolbarPlaceholder-bar{transform:translateY(-100%);transition:transform 250ms ease}.ve-init-mw-desktopArticleTarget-toolbarPlaceholder-open .ve-init-mw-desktopArticleTarget-toolbarPlaceholder-bar{transform:translateY(0)}.ve-init-mw-desktopArticleTarget-toolbarPlaceholder-floating{transition:none}.ve-init-mw-desktopArticleTarget-toolbarPlaceholder-floating .ve-init-mw-desktopArticleTarget-toolbarPlaceholder-bar{position:fixed;top:0;z-index:1;background:var(--background-color-base,#fff)} .oo-ui-element-hidden{display:none !important; } .mw-editsection::before{content:'\200B'}.mw-editsection a{white-space:nowrap} .ve-init-mw-desktopArticleTarget-toolbarPlaceholder-bar{height:42px;border-bottom:1px solid #c8ccd1;box-shadow:0 1px 1px 0 rgba(0,0,0,0.1)}.ve-init-mw-desktopArticleTarget-toolbarPlaceholder-floating,.ve-init-mw-desktopArticleTarget-toolbarPlaceholder-open{height:42px} .ve-init-mw-desktopArticleTarget-toolbar,.ve-init-mw-desktopArticleTarget-toolbarPlaceholder{font-size:0.875em; margin:-1.14em -1.14em 1.14em -1.14em; }@media screen and (min-width:982px){.ve-init-mw-desktopArticleTarget-toolbar,.ve-init-mw-desktopArticleTarget-toolbarPlaceholder{ margin:-1.43em -1.71em 1.43em -1.71em}}.ve-init-mw-desktopArticleTarget-toolbarPlaceholder-floating{margin-top:0;margin-bottom:0} .ve-activated .vector-menu-tabs .selected{box-shadow:inset 0 -1px 0 #e1f1fc}</style><meta name="ResourceLoaderDynamicStyles" content="">
+<link rel="stylesheet" href="./fileformat_files/load(2).php">
+<meta name="generator" content="MediaWiki 1.43.9">
+<meta name="robots" content="max-image-preview:standard">
+<meta name="format-detection" content="telephone=no">
+<meta name="viewport" content="width=1120">
+<link rel="search" type="application/opensearchdescription+xml" href="https://wiki.zzt.org/w/rest.php/v1/search" title="Wiki of ZZT (en)">
+<link rel="EditURI" type="application/rsd+xml" href="https://wiki.zzt.org/w/api.php?action=rsd">
+<link rel="license" href="https://creativecommons.org/licenses/by-sa/4.0/">
+<link rel="alternate" type="application/atom+xml" title="Wiki of ZZT Atom feed" href="https://wiki.zzt.org/w/index.php?title=Special:RecentChanges&amp;feed=atom">
+</head>
+<body class="skin-vector-legacy mediawiki ltr sitedir-ltr mw-hide-empty-elt ns-0 ns-subject page-ZZT_file_format rootpage-ZZT_file_format skin-vector action-view"><div id="mw-page-base" class="noprint"></div>
+<div id="mw-head-base" class="noprint"></div>
+<div id="content" class="mw-body ve-init-mw-desktopArticleTarget-targetContainer" role="main">
+	<a id="top"></a>
+	<div id="siteNotice"></div>
+	<div class="mw-indicators">
+	</div>
+	<h1 id="firstHeading" class="firstHeading mw-first-heading"><span class="mw-page-title-main">ZZT file format</span></h1>
+	<div id="bodyContent" class="vector-body">
+		<div id="siteSub" class="noprint">From Wiki of ZZT</div>
+		<div id="contentSub"><div id="mw-content-subtitle"></div></div>
+		<div id="contentSub2"></div>
+		
+		<div id="jump-to-nav"></div>
+		<a class="mw-jump-link" href="https://wiki.zzt.org/wiki/ZZT_file_format#mw-head">Jump to navigation</a>
+		<a class="mw-jump-link" href="https://wiki.zzt.org/wiki/ZZT_file_format#searchInput">Jump to search</a>
+		<div id="mw-content-text" class="mw-body-content"><div class="mw-content-ltr mw-parser-output" lang="en" dir="ltr"><div id="toc" class="toc" role="navigation" aria-labelledby="mw-toc-heading"><input type="checkbox" role="button" id="toctogglecheckbox" class="toctogglecheckbox" style="display:none" aria-label="Hide the table of contents"><div class="toctitle" lang="en" dir="ltr"><h2 id="mw-toc-heading">Contents</h2><span class="toctogglespan"><label class="toctogglelabel" for="toctogglecheckbox"></label></span></div>
+<ul>
+<li class="toclevel-1 tocsection-1"><a href="https://wiki.zzt.org/wiki/ZZT_file_format#General_Info"><span class="tocnumber">1</span> <span class="toctext">General Info</span></a>
+<ul>
+<li class="toclevel-2 tocsection-2"><a href="https://wiki.zzt.org/wiki/ZZT_file_format#World_Header"><span class="tocnumber">1.1</span> <span class="toctext">World Header</span></a></li>
+<li class="toclevel-2 tocsection-3"><a href="https://wiki.zzt.org/wiki/ZZT_file_format#Board_header"><span class="tocnumber">1.2</span> <span class="toctext">Board header</span></a></li>
+<li class="toclevel-2 tocsection-4"><a href="https://wiki.zzt.org/wiki/ZZT_file_format#Run-length_encoded_tile_data"><span class="tocnumber">1.3</span> <span class="toctext">Run-length encoded tile data</span></a></li>
+<li class="toclevel-2 tocsection-5"><a href="https://wiki.zzt.org/wiki/ZZT_file_format#Board_properties"><span class="tocnumber">1.4</span> <span class="toctext">Board properties</span></a></li>
+<li class="toclevel-2 tocsection-6"><a href="https://wiki.zzt.org/wiki/ZZT_file_format#Status_Elements"><span class="tocnumber">1.5</span> <span class="toctext">Status Elements</span></a></li>
+<li class="toclevel-2 tocsection-7"><a href="https://wiki.zzt.org/wiki/ZZT_file_format#Element_properties"><span class="tocnumber">1.6</span> <span class="toctext">Element properties</span></a></li>
+<li class="toclevel-2 tocsection-8"><a href="https://wiki.zzt.org/wiki/ZZT_file_format#ZZT_elements"><span class="tocnumber">1.7</span> <span class="toctext">ZZT elements</span></a></li>
+</ul>
+</li>
+<li class="toclevel-1 tocsection-9"><a href="https://wiki.zzt.org/wiki/ZZT_file_format#Credits"><span class="tocnumber">2</span> <span class="toctext">Credits</span></a></li>
+</ul>
+</div>
+
+<h2><span class="mw-headline" id="General_Info">General Info</span></h2>
+<p>All 8-bit (byte) values are unsigned. All 16-bit (short) values are signed. Boolean values (such as a player's keys) are represented with 0 for false and 1 for true.
+</p><p>World Name is used by the game both on the title screen to display the game name as well as determine which file to load after the player quits and restarts the game. Therefore if a world contains a world name that is actually the filename of another world, after the player quits and restarts the game, the world with the matching filename will be loaded.
+</p><p>There are some unused bytes after the world information that are ignored by the game. While it is safe to put any data whatsoever into this unused space, it is not saved back to disk by the ZZT and will be converted to empty padding. 
+</p>
+<h3><span class="mw-headline" id="World_Header">World Header</span></h3>
+<p>This header is found at the head of all ZZT files. After this information, storage of the boards starts at byte offset 512 (hex 0x200).
+</p><p>Unused values are preserved. Data not listed here is overwritten with zeroes when saving worlds.
+</p>
+<table class="wikitable">
+<tbody><tr>
+<th>Offset</th>
+<th>Hex</th>
+<th>Data type</th>
+<th>Description
+</th></tr>
+<tr>
+<td>0</td>
+<td>0x000</td>
+<td><a href="https://wiki.zzt.org/w/index.php?title=INT16LE&amp;action=edit&amp;redlink=1" class="new" title="INT16LE (page does not exist)">INT16LE</a></td>
+<td><i>WorldType</i><br>Used to identify the world's format. ZZT uses -1 (FF FF).
+</td></tr>
+<tr>
+<td>2</td>
+<td>0x002</td>
+<td><a href="https://wiki.zzt.org/w/index.php?title=INT16LE&amp;action=edit&amp;redlink=1" class="new" title="INT16LE (page does not exist)">INT16LE</a></td>
+<td><i>NumBoards</i><br>Number of boards in the world, not including the title screen. Increment by 1 for the real number of stored boards. A value of 0 means only the title screen exists.
+</td></tr>
+<tr>
+<td>4</td>
+<td>0x004</td>
+<td><a href="https://wiki.zzt.org/w/index.php?title=INT16LE&amp;action=edit&amp;redlink=1" class="new" title="INT16LE (page does not exist)">INT16LE</a></td>
+<td><i>PlayerAmmo</i><br>Player's ammunition.
+</td></tr>
+<tr>
+<td>6</td>
+<td>0x006</td>
+<td><a href="https://wiki.zzt.org/w/index.php?title=INT16LE&amp;action=edit&amp;redlink=1" class="new" title="INT16LE (page does not exist)">INT16LE</a></td>
+<td><i>PlayerGems</i><br>Player's gems.
+</td></tr>
+<tr>
+<td>8</td>
+<td>0x008</td>
+<td><a href="https://wiki.zzt.org/wiki/Char" title="Char">char</a>[7]</td>
+<td><i>PlayerKeys</i><br>Player's keys. A nonzero value means the player has the specified key. The keys are in this order: Blue, Green, Cyan, Red, Purple, Yellow, White.
+</td></tr>
+<tr>
+<td>15</td>
+<td>0x00F</td>
+<td><a href="https://wiki.zzt.org/w/index.php?title=INT16LE&amp;action=edit&amp;redlink=1" class="new" title="INT16LE (page does not exist)">INT16LE</a></td>
+<td><i>PlayerHealth</i><br>Player's health.
+</td></tr>
+<tr>
+<td>17</td>
+<td>0x011</td>
+<td><a href="https://wiki.zzt.org/w/index.php?title=INT16LE&amp;action=edit&amp;redlink=1" class="new" title="INT16LE (page does not exist)">INT16LE</a></td>
+<td><i>PlayerBoard</i><br>In a world file, this will be the starting board for the player (the title screen, board 0, is always shown first). In a saved game, this will be the board that the player is currently on.
+</td></tr>
+</tbody></table>
+<table class="wikitable">
+<tbody><tr>
+<th>Offset</th>
+<th>Hex</th>
+<th>Data type</th>
+<th>Description
+</th></tr>
+<tr>
+<td>19</td>
+<td>0x013</td>
+<td><a href="https://wiki.zzt.org/w/index.php?title=INT16LE&amp;action=edit&amp;redlink=1" class="new" title="INT16LE (page does not exist)">INT16LE</a></td>
+<td><i>PlayerTorches</i><br>Player's torches.
+</td></tr>
+<tr>
+<td>21</td>
+<td>0x015</td>
+<td><a href="https://wiki.zzt.org/w/index.php?title=INT16LE&amp;action=edit&amp;redlink=1" class="new" title="INT16LE (page does not exist)">INT16LE</a></td>
+<td><i>TorchCycles</i><br>Game cycles left for a torch to remain lit.
+</td></tr>
+<tr>
+<td>23</td>
+<td>0x017</td>
+<td><a href="https://wiki.zzt.org/w/index.php?title=INT16LE&amp;action=edit&amp;redlink=1" class="new" title="INT16LE (page does not exist)">INT16LE</a></td>
+<td><i>EnergyCycles</i><br>Game cycles left for an energizer to be effective.
+</td></tr>
+<tr>
+<td>25</td>
+<td>0x019</td>
+<td><a href="https://wiki.zzt.org/w/index.php?title=INT16LE&amp;action=edit&amp;redlink=1" class="new" title="INT16LE (page does not exist)">INT16LE</a></td>
+<td><i>(unused)</i>
+</td></tr>
+<tr>
+<td>27</td>
+<td>0x01B</td>
+<td><a href="https://wiki.zzt.org/w/index.php?title=INT16LE&amp;action=edit&amp;redlink=1" class="new" title="INT16LE (page does not exist)">INT16LE</a></td>
+<td><i>PlayerScore</i><br>Player's score.
+</td></tr>
+<tr>
+<td>29</td>
+<td>0x01D</td>
+<td><a href="https://wiki.zzt.org/w/index.php?title=UINT8&amp;action=edit&amp;redlink=1" class="new" title="UINT8 (page does not exist)">UINT8</a></td>
+<td><i>WorldNameLength</i><br>Length of the internal name of the world.
+</td></tr>
+<tr>
+<td>30</td>
+<td>0x01E</td>
+<td><a href="https://wiki.zzt.org/wiki/Char" title="Char">char</a>[20]</td>
+<td><i>WorldName</i><br>Internal name of the world. For regular worlds, this usually matches the stem of the filename ("TOWN" for TOWN.ZZT); for save files, this is how ZZT knows which world the save came from.
+</td></tr>
+<tr>
+<td>50</td>
+<td>0x032</td>
+<td><a href="https://wiki.zzt.org/w/index.php?title=UINT8&amp;action=edit&amp;redlink=1" class="new" title="UINT8 (page does not exist)">UINT8</a></td>
+<td><i>Flag0Length</i><br>Length of the name of Flag 0.
+</td></tr>
+<tr>
+<td>51</td>
+<td>0x033</td>
+<td><a href="https://wiki.zzt.org/wiki/Char" title="Char">char</a>[20]</td>
+<td><i>Flag0</i><br>Name of Flag 0. (An empty string indicates an unused flag slot.)
+</td></tr>
+<tr>
+<td>71</td>
+<td>0x047</td>
+<td><a href="https://wiki.zzt.org/w/index.php?title=UINT8&amp;action=edit&amp;redlink=1" class="new" title="UINT8 (page does not exist)">UINT8</a></td>
+<td><i>Flag1Length</i><br>Length of the name of Flag 1.
+</td></tr>
+<tr>
+<td>72</td>
+<td>0x048</td>
+<td><a href="https://wiki.zzt.org/wiki/Char" title="Char">char</a>[20]</td>
+<td><i>Flag1</i><br>Name of Flag 1.
+</td></tr>
+<tr>
+<td>92</td>
+<td>0x05C</td>
+<td><a href="https://wiki.zzt.org/w/index.php?title=UINT8&amp;action=edit&amp;redlink=1" class="new" title="UINT8 (page does not exist)">UINT8</a></td>
+<td><i>Flag2Length</i><br>Length of the name of Flag 2.
+</td></tr>
+<tr>
+<td>93</td>
+<td>0x05D</td>
+<td><a href="https://wiki.zzt.org/wiki/Char" title="Char">char</a>[20]</td>
+<td><i>Flag2</i><br>Name of Flag 2.
+</td></tr>
+<tr>
+<td>113</td>
+<td>0x071</td>
+<td><a href="https://wiki.zzt.org/w/index.php?title=UINT8&amp;action=edit&amp;redlink=1" class="new" title="UINT8 (page does not exist)">UINT8</a></td>
+<td><i>Flag3Length</i><br>Length of the name of Flag 3.
+</td></tr>
+<tr>
+<td>114</td>
+<td>0x072</td>
+<td><a href="https://wiki.zzt.org/wiki/Char" title="Char">char</a>[20]</td>
+<td><i>Flag3</i><br>Name of Flag 3.
+</td></tr>
+<tr>
+<td>134</td>
+<td>0x086</td>
+<td><a href="https://wiki.zzt.org/w/index.php?title=UINT8&amp;action=edit&amp;redlink=1" class="new" title="UINT8 (page does not exist)">UINT8</a></td>
+<td><i>Flag4Length</i><br>Length of the name of Flag 4.
+</td></tr>
+<tr>
+<td>135</td>
+<td>0x087</td>
+<td><a href="https://wiki.zzt.org/wiki/Char" title="Char">char</a>[20]</td>
+<td><i>Flag4</i><br>Name of Flag 4.
+</td></tr>
+<tr>
+<td>155</td>
+<td>0x09B</td>
+<td><a href="https://wiki.zzt.org/w/index.php?title=UINT8&amp;action=edit&amp;redlink=1" class="new" title="UINT8 (page does not exist)">UINT8</a></td>
+<td><i>Flag5Length</i><br>Length of the name of Flag 5.
+</td></tr>
+<tr>
+<td>156</td>
+<td>0x09C</td>
+<td><a href="https://wiki.zzt.org/wiki/Char" title="Char">char</a>[20]</td>
+<td><i>Flag5</i><br>Name of Flag 5.
+</td></tr>
+<tr>
+<td>176</td>
+<td>0x0B0</td>
+<td><a href="https://wiki.zzt.org/w/index.php?title=UINT8&amp;action=edit&amp;redlink=1" class="new" title="UINT8 (page does not exist)">UINT8</a></td>
+<td><i>Flag6Length</i><br>Length of the name of Flag 6.
+</td></tr>
+<tr>
+<td>177</td>
+<td>0x0B1</td>
+<td><a href="https://wiki.zzt.org/wiki/Char" title="Char">char</a>[20]</td>
+<td><i>Flag6</i><br>Name of Flag 6.
+</td></tr>
+<tr>
+<td>197</td>
+<td>0x0C5</td>
+<td><a href="https://wiki.zzt.org/w/index.php?title=UINT8&amp;action=edit&amp;redlink=1" class="new" title="UINT8 (page does not exist)">UINT8</a></td>
+<td><i>Flag7Length</i><br>Length of the name of Flag 7.
+</td></tr>
+<tr>
+<td>198</td>
+<td>0x0C6</td>
+<td><a href="https://wiki.zzt.org/wiki/Char" title="Char">char</a>[20]</td>
+<td><i>Flag7</i><br>Name of Flag 7.
+</td></tr>
+<tr>
+<td>218</td>
+<td>0x0DA</td>
+<td><a href="https://wiki.zzt.org/w/index.php?title=UINT8&amp;action=edit&amp;redlink=1" class="new" title="UINT8 (page does not exist)">UINT8</a></td>
+<td><i>Flag8Length</i><br>Length of the name of Flag 8.
+</td></tr>
+<tr>
+<td>219</td>
+<td>0x0DB</td>
+<td><a href="https://wiki.zzt.org/wiki/Char" title="Char">char</a>[20]</td>
+<td><i>Flag8</i><br>Name of Flag 8.
+</td></tr>
+<tr>
+<td>239</td>
+<td>0x0EF</td>
+<td><a href="https://wiki.zzt.org/w/index.php?title=UINT8&amp;action=edit&amp;redlink=1" class="new" title="UINT8 (page does not exist)">UINT8</a></td>
+<td><i>Flag9Length</i><br>Length of the name of Flag 9.
+</td></tr>
+<tr>
+<td>240</td>
+<td>0x0F0</td>
+<td><a href="https://wiki.zzt.org/wiki/Char" title="Char">char</a>[20]</td>
+<td><i>Flag9</i><br>Name of Flag 9.
+</td></tr>
+<tr>
+<td>260</td>
+<td>0x104</td>
+<td><a href="https://wiki.zzt.org/w/index.php?title=INT16LE&amp;action=edit&amp;redlink=1" class="new" title="INT16LE (page does not exist)">INT16LE</a></td>
+<td><i>TimePassed</i><br>Amount of time in seconds that has passed on the current board. Only applicable if the board the player is on has a time limit.
+</td></tr>
+<tr>
+<td>262</td>
+<td>0x106</td>
+<td><a href="https://wiki.zzt.org/w/index.php?title=INT16LE&amp;action=edit&amp;redlink=1" class="new" title="INT16LE (page does not exist)">INT16LE</a></td>
+<td><i>TimePassedTicks</i><br>This contains information about sub-seconds on time limited boards.
+</td></tr>
+<tr>
+<td>264</td>
+<td>0x108</td>
+<td><a href="https://wiki.zzt.org/w/index.php?title=UINT8&amp;action=edit&amp;redlink=1" class="new" title="UINT8 (page does not exist)">UINT8</a></td>
+<td><i>Locked</i><br>A nonzero value indicates the world is actually a saved game. Additionally, worlds with a nonzero Locked byte can't be edited using the built-in editor.
+</td></tr>
+<tr>
+<td>265</td>
+<td>0x109</td>
+<td><a href="https://wiki.zzt.org/w/index.php?title=UINT8&amp;action=edit&amp;redlink=1" class="new" title="UINT8 (page does not exist)">UINT8</a>[14]</td>
+<td><i>(unused)</i>
+</td></tr></tbody></table>
+<p>After this follows the boards. Boards consist of 4 parts: Board Header, RLE Tiles, Board Properties, and Status Element Properties. Status Elements are elements on the board that the game actively processes - these include the player, enemies, any animating blocks, and Scrolls and Objects which can contain ZZT-OOP code.
+</p>
+<h3><span class="mw-headline" id="Board_header">Board header</span></h3>
+<p>ZZT boards are 60x25 tiles.
+</p>
+<table class="wikitable">
+<tbody><tr>
+<th>Offset</th>
+<th>Hex</th>
+<th>Data type</th>
+<th>Description
+</th></tr>
+<tr>
+<td>0</td>
+<td>0x000</td>
+<td><a href="https://wiki.zzt.org/w/index.php?title=INT16LE&amp;action=edit&amp;redlink=1" class="new" title="INT16LE (page does not exist)">INT16LE</a></td>
+<td><i>BoardSize</i><br>Size of the board, in bytes (excluding the two bytes from this value). Even if the board was corrupted by the built-in editor (which happens sometimes) this value will be correct; the rest of the boards remain intact and in place.
+</td></tr>
+<tr>
+<td>2</td>
+<td>0x002</td>
+<td><a href="https://wiki.zzt.org/w/index.php?title=UINT8&amp;action=edit&amp;redlink=1" class="new" title="UINT8 (page does not exist)">UINT8</a></td>
+<td><i>BoardNameLength</i><br>Length of the board's name.
+</td></tr>
+<tr>
+<td>3</td>
+<td>0x003</td>
+<td><a href="https://wiki.zzt.org/wiki/Char" title="Char">char</a>[50]</td>
+<td><i>BoardName</i><br>Board's name.
+</td></tr>
+<tr>
+<td>53</td>
+<td>0x035</td>
+<td><a href="https://wiki.zzt.org/wiki/ZZT_file_format#Run-length_encoded_tile_data">ZZT_RLE</a></td>
+<td><i>Tiles</i><br>Start of the RLE tile data.
+</td></tr>
+</tbody></table>
+<h3><span class="mw-headline" id="Run-length_encoded_tile_data">Run-length encoded tile data</span></h3>
+<p>Tile data is represented as sets of 3 bytes. These sets are repeated until the board is completely filled. For ZZT, this will be 60*25=<b>1500</b> tiles. The tiles are unpacked from left to right, top to bottom. 
+</p>
+<table class="wikitable">
+<tbody><tr>
+<th>Data type</th>
+<th>Description
+</th></tr>
+<tr>
+<td><a href="https://wiki.zzt.org/w/index.php?title=UINT8&amp;action=edit&amp;redlink=1" class="new" title="UINT8 (page does not exist)">UINT8</a></td>
+<td><i>Count</i><br>Number of tiles.
+</td></tr>
+<tr>
+<td><a href="https://wiki.zzt.org/w/index.php?title=UINT8&amp;action=edit&amp;redlink=1" class="new" title="UINT8 (page does not exist)">UINT8</a></td>
+<td><i>Element</i><br>Element of the tiles.
+</td></tr>
+<tr>
+<td><a href="https://wiki.zzt.org/w/index.php?title=UINT8&amp;action=edit&amp;redlink=1" class="new" title="UINT8 (page does not exist)">UINT8</a></td>
+<td><i>Color</i><br>Color of the tiles.
+</td></tr>
+</tbody></table>
+<p>A small quirk of this RLE format is when the number of tiles is set to zero. Due to the way the decoder is set up, a Count of 0 means there are actually 256 tiles encoded. The built-in editor does not encode tiles using this value despite being decoded correctly in the game, and it will probably crash some older external editors.
+</p>
+<h3><span class="mw-headline" id="Board_properties">Board properties</span></h3>
+<p>This information follows directly after the tile RLE data.
+</p>
+<table class="wikitable">
+<tbody><tr>
+<th>Offset</th>
+<th>Hex</th>
+<th>Data type</th>
+<th>Description
+</th></tr>
+<tr>
+<td>0</td>
+<td>0x000</td>
+<td><a href="https://wiki.zzt.org/w/index.php?title=UINT8&amp;action=edit&amp;redlink=1" class="new" title="UINT8 (page does not exist)">UINT8</a></td>
+<td><i>MaxPlayerShots</i><br>Maximum number of player-owned projectiles allowed at once.
+</td></tr>
+<tr>
+<td>1</td>
+<td>0x001</td>
+<td><a href="https://wiki.zzt.org/w/index.php?title=UINT8&amp;action=edit&amp;redlink=1" class="new" title="UINT8 (page does not exist)">UINT8</a></td>
+<td><i>IsDark</i><br>When set to 1, the board is covered in darkness which can only be revealed by using a torch.
+</td></tr>
+<tr>
+<td>2</td>
+<td>0x002</td>
+<td><a href="https://wiki.zzt.org/w/index.php?title=UINT8&amp;action=edit&amp;redlink=1" class="new" title="UINT8 (page does not exist)">UINT8</a></td>
+<td><i>ExitNorth</i><br>Board # that is traveled to when moving off the North side of the board. 0 means no board connects there.
+</td></tr>
+<tr>
+<td>3</td>
+<td>0x003</td>
+<td><a href="https://wiki.zzt.org/w/index.php?title=UINT8&amp;action=edit&amp;redlink=1" class="new" title="UINT8 (page does not exist)">UINT8</a></td>
+<td><i>ExitSouth</i><br>Board # that is traveled to when moving off the South side of the board. 0 means no board connects there.
+</td></tr>
+<tr>
+<td>4</td>
+<td>0x004</td>
+<td><a href="https://wiki.zzt.org/w/index.php?title=UINT8&amp;action=edit&amp;redlink=1" class="new" title="UINT8 (page does not exist)">UINT8</a></td>
+<td><i>ExitWest</i><br>Board # that is traveled to when moving off the West side of the board. 0 means no board connects there.
+</td></tr>
+<tr>
+<td>5</td>
+<td>0x005</td>
+<td><a href="https://wiki.zzt.org/w/index.php?title=UINT8&amp;action=edit&amp;redlink=1" class="new" title="UINT8 (page does not exist)">UINT8</a></td>
+<td><i>ExitEast</i><br>Board # that is traveled to when moving off the East side of the board. 0 means no board connects there.
+</td></tr>
+<tr>
+<td>6</td>
+<td>0x006</td>
+<td><a href="https://wiki.zzt.org/w/index.php?title=UINT8&amp;action=edit&amp;redlink=1" class="new" title="UINT8 (page does not exist)">UINT8</a></td>
+<td><i>RestartOnZap</i><br>When set to 1, the player will teleport to the location where they entered the board whenever they are hurt.
+</td></tr>
+<tr>
+<td>7</td>
+<td>0x007</td>
+<td><a href="https://wiki.zzt.org/w/index.php?title=UINT8&amp;action=edit&amp;redlink=1" class="new" title="UINT8 (page does not exist)">UINT8</a></td>
+<td><i>MessageLength</i><br>Length of the on-screen message.
+</td></tr>
+<tr>
+<td>8</td>
+<td>0x008</td>
+<td><a href="https://wiki.zzt.org/wiki/Char" title="Char">char</a>[58]</td>
+<td><i>Message</i><br>On-screen message. This is loaded by ZZT but is usually ignored; it will only be displayed if ZZT's in-memory play state from the last game played <i>also</i> had an on-screen message at the time the user quit that game.
+</td></tr>
+<tr>
+<td>66</td>
+<td>0x042</td>
+<td><a href="https://wiki.zzt.org/w/index.php?title=UINT8&amp;action=edit&amp;redlink=1" class="new" title="UINT8 (page does not exist)">UINT8</a></td>
+<td><i>PlayerEnterX</i><br>X-coordinate of the tile where the player entered the board. These coordinates only matter when restoring a saved game. When playing a regular world, ZZT ignores the coordinates from the file and uses the player's actual entry coordinates.
+</td></tr>
+<tr>
+<td>67</td>
+<td>0x043</td>
+<td><a href="https://wiki.zzt.org/w/index.php?title=UINT8&amp;action=edit&amp;redlink=1" class="new" title="UINT8 (page does not exist)">UINT8</a></td>
+<td><i>PlayerEnterY</i><br>Y-coordinate of the tile where the player entered the board.
+</td></tr>
+<tr>
+<td>68</td>
+<td>0x044</td>
+<td><a href="https://wiki.zzt.org/w/index.php?title=INT16LE&amp;action=edit&amp;redlink=1" class="new" title="INT16LE (page does not exist)">INT16LE</a></td>
+<td><i>TimeLimit</i><br>Time limit of the board, in seconds. The player is hurt when time runs out.
+</td></tr>
+<tr>
+<td>70</td>
+<td>0x046</td>
+<td><a href="https://wiki.zzt.org/w/index.php?title=UINT8&amp;action=edit&amp;redlink=1" class="new" title="UINT8 (page does not exist)">UINT8</a>[16]</td>
+<td><i>(unused)</i>
+</td></tr>
+<tr>
+<td>86</td>
+<td>0x056</td>
+<td><a href="https://wiki.zzt.org/w/index.php?title=INT16LE&amp;action=edit&amp;redlink=1" class="new" title="INT16LE (page does not exist)">INT16LE</a></td>
+<td><i>StatElementCount</i><br>Number of Status Elements on the board, not including the player. Increment by 1 to get the real stored number of status elements.
+</td></tr>
+</tbody></table>
+<p>Note that zero is used to indicate that there is no board exit in the given direction. This means it is impossible for a board edge to lead to the <a href="https://wiki.zzt.org/wiki/Title_screen" title="Title screen">title screen</a>, because the title screen always has board index zero.
+</p>
+<h3><span class="mw-headline" id="Status_Elements">Status Elements</span></h3>
+<p>This follows directly after board properties. It is repeated for each Status Element. The first element stored is always the player-controlled element. This element may contain strange values for Step, Leader, Follower, and Parameter information, especially in older worlds / the commercial+shareware worlds.
+</p>
+<table class="wikitable">
+<tbody><tr>
+<th>Offset</th>
+<th>Hex</th>
+<th>Data type</th>
+<th>Description
+</th></tr>
+<tr>
+<td>0</td>
+<td>0x000</td>
+<td><a href="https://wiki.zzt.org/w/index.php?title=UINT8&amp;action=edit&amp;redlink=1" class="new" title="UINT8 (page does not exist)">UINT8</a></td>
+<td><i>LocationX</i><br>X-coordinate. Location coordinates are 1-based, unlike any other coordinates in the file.
+</td></tr>
+<tr>
+<td>1</td>
+<td>0x001</td>
+<td><a href="https://wiki.zzt.org/w/index.php?title=UINT8&amp;action=edit&amp;redlink=1" class="new" title="UINT8 (page does not exist)">UINT8</a></td>
+<td><i>LocationY</i><br>Y-coordinate.
+</td></tr>
+<tr>
+<td>2</td>
+<td>0x002</td>
+<td><a href="https://wiki.zzt.org/w/index.php?title=INT16LE&amp;action=edit&amp;redlink=1" class="new" title="INT16LE (page does not exist)">INT16LE</a></td>
+<td><i>StepX</i><br>X-step value. This pair of values represents a vector that typically points in one of the four cardinal directions, or (0, 0) for no direction. Its use differs for each type of element.
+</td></tr>
+<tr>
+<td>4</td>
+<td>0x004</td>
+<td><a href="https://wiki.zzt.org/w/index.php?title=INT16LE&amp;action=edit&amp;redlink=1" class="new" title="INT16LE (page does not exist)">INT16LE</a></td>
+<td><i>StepY</i><br>Y-step value.
+</td></tr>
+<tr>
+<td>6</td>
+<td>0x006</td>
+<td><a href="https://wiki.zzt.org/w/index.php?title=INT16LE&amp;action=edit&amp;redlink=1" class="new" title="INT16LE (page does not exist)">INT16LE</a></td>
+<td><i>Cycle</i><br>Cycle. This represents the frequency, in ticks, at which the game will process this status element.
+</td></tr>
+<tr>
+<td>8</td>
+<td>0x008</td>
+<td><a href="https://wiki.zzt.org/w/index.php?title=UINT8&amp;action=edit&amp;redlink=1" class="new" title="UINT8 (page does not exist)">UINT8</a></td>
+<td><i>P1</i><br>Parameter 1. Its use will differ depending on the type of element.
+</td></tr>
+<tr>
+<td>9</td>
+<td>0x009</td>
+<td><a href="https://wiki.zzt.org/w/index.php?title=UINT8&amp;action=edit&amp;redlink=1" class="new" title="UINT8 (page does not exist)">UINT8</a></td>
+<td><i>P2</i><br>Parameter 2. Its use will differ depending on the type of element.
+</td></tr>
+<tr>
+<td>10</td>
+<td>0x00A</td>
+<td><a href="https://wiki.zzt.org/w/index.php?title=UINT8&amp;action=edit&amp;redlink=1" class="new" title="UINT8 (page does not exist)">UINT8</a></td>
+<td><i>P3</i><br>Parameter 3. Its use will differ depending on the type of element.
+</td></tr>
+<tr>
+<td>11</td>
+<td>0x00B</td>
+<td><a href="https://wiki.zzt.org/w/index.php?title=INT16LE&amp;action=edit&amp;redlink=1" class="new" title="INT16LE (page does not exist)">INT16LE</a></td>
+<td><i>Follower</i><br>Follower status element. Its value determines if another status element is linked behind this one. Used for linking centipedes. Editors typically set both indexes to -1, which causes ZZT to link the centipede itself and fill in the correct values.
+</td></tr>
+<tr>
+<td>13</td>
+<td>0x00D</td>
+<td><a href="https://wiki.zzt.org/w/index.php?title=INT16LE&amp;action=edit&amp;redlink=1" class="new" title="INT16LE (page does not exist)">INT16LE</a></td>
+<td><i>Leader</i><br>Leader status element. Its value determines if another status element is linked in front of this one. Used for linking centipedes.
+</td></tr>
+<tr>
+<td>15</td>
+<td>0x00F</td>
+<td><a href="https://wiki.zzt.org/w/index.php?title=UINT8&amp;action=edit&amp;redlink=1" class="new" title="UINT8 (page does not exist)">UINT8</a></td>
+<td><i>UnderID</i><br>Element of the tile under this status element.
+</td></tr>
+<tr>
+<td>16</td>
+<td>0x010</td>
+<td><a href="https://wiki.zzt.org/w/index.php?title=UINT8&amp;action=edit&amp;redlink=1" class="new" title="UINT8 (page does not exist)">UINT8</a></td>
+<td><i>UnderColor</i><br>Color of the tile under this status element.
+</td></tr>
+<tr>
+<td>17</td>
+<td>0x011</td>
+<td><a href="https://wiki.zzt.org/w/index.php?title=INT32LE&amp;action=edit&amp;redlink=1" class="new" title="INT32LE (page does not exist)">INT32LE</a></td>
+<td><i>Pointer</i><br>Stores the location in memory of the code that this status element is using. Status elements typically point to their own code until they #BIND the code of another - in which case this memory location value is replaced with the new one. ZZT does not use this value when loading worlds, and always sets it to 0 when saving worlds.
+</td></tr>
+<tr>
+<td>21</td>
+<td>0x015</td>
+<td><a href="https://wiki.zzt.org/w/index.php?title=INT16LE&amp;action=edit&amp;redlink=1" class="new" title="INT16LE (page does not exist)">INT16LE</a></td>
+<td><i>CurrentInstruction</i><br>The offset in bytes of the code block to execute ZZT-OOP from. Only Objects and Scrolls can execute ZZT-OOP. This is typically 0 (object starts at the top of its program), though objects can be pre-<a href="https://wiki.zzt.org/wiki/End" title="End">#ended</a> by setting this to -1.
+</td></tr>
+<tr>
+<td>23</td>
+<td>0x017</td>
+<td><a href="https://wiki.zzt.org/w/index.php?title=INT16LE&amp;action=edit&amp;redlink=1" class="new" title="INT16LE (page does not exist)">INT16LE</a></td>
+<td><i>Length</i><br>There are two uses for this value: If Length is positive, it represents the number of bytes that are in the code block. If Length is negative, the absolute value of Length represents the index of the Status Element the current stat is <a href="https://wiki.zzt.org/wiki/Bind" title="Bind">bound</a> to, meaning the two stats share the same code block. (Zero simply means the stat's code block is empty; it is impossible to be bound to the stat at index 0.)
+</td></tr>
+</tbody></table>
+<p>After this follows 8 bytes of padding (2 unused pointers).  If "Length" is positive, the code is stored after the padding.
+</p>
+<h3><span class="mw-headline" id="Element_properties">Element properties</span></h3>
+<p>These are all possible internal properties for each element.  They are initialized on startup and used both in-game and in the editor.
+</p>
+<table class="wikitable">
+<tbody><tr>
+<th>Property</th>
+<th>Description
+</th></tr>
+<tr>
+<td>Id</td>
+<td>Id number of the element
+</td></tr>
+<tr>
+<td>Hex</td>
+<td>Hexidecimal representation of the Id number
+</td></tr>
+<tr>
+<td>Name</td>
+<td>Known name of the element, which may not be present internally
+</td></tr>
+<tr>
+<td>Character</td>
+<td>ASCII character for the default draw code, which may be ignored if special draw code is enabled
+</td></tr>
+<tr>
+<td>Color</td>
+<td>Default color. If the color is 0xFE, then new tiles will be created with the primary color as the background and a white foreground. If the color is &gt;= 0xF0, any primary color is allowed, but in the editor you can't choose the color unless the default color is 0xFF
+</td></tr>
+<tr>
+<td>Destructible</td>
+<td>Element can be destroyed by bullets and by being crushed by puzzle pieces
+</td></tr>
+<tr>
+<td>Pushable</td>
+<td>Element can be pushed. The NS/EW sliders are a special case in the code, so they will not be marked with this flag
+</td></tr>
+<tr>
+<td>Editor Floor</td>
+<td>When using the editor, actors such as enemies can be placed on top of elements marked with this flag. Has no effect during gameplay.
+</td></tr>
+<tr>
+<td>Floor</td>
+<td>Elements with this flag can freely be moved upon by actors
+</td></tr>
+<tr>
+<td>Shown</td>
+<td>ZZT only. Elements marked with this flag will always be shown, even on dark boards
+</td></tr>
+<tr>
+<td>Special Draw</td>
+<td>If this flag is set, the default draw code is bypassed with different draw code
+</td></tr>
+<tr>
+<td>Draw Code</td>
+<td>Offset of the routine that performs the drawing, if Special Draw is set
+</td></tr>
+<tr>
+<td>Cycle</td>
+<td>Default cycle. If this is -1, the element is not generated as an actor. Creatures will have cycles above zero
+</td></tr>
+<tr>
+<td>Act Code</td>
+<td>Offset of the routine that performs standard behavior. For example: creature movement, bomb countdown
+</td></tr>
+<tr>
+<td>Interact Code</td>
+<td>Offset of the routine that handles when a player touches the element. For example: item pickups, entering a passage
+</td></tr>
+<tr>
+<td>Menu#</td>
+<td>Number of the editor menu where this element can be found
+</td></tr>
+<tr>
+<td>Key</td>
+<td>Key press which is mapped to this element in the editor
+</td></tr>
+<tr>
+<td>Internal Name</td>
+<td>Name of the element used in the editor. It is also used by OOP- the parser will remove all symbols and spaces and compare that
+</td></tr>
+<tr>
+<td>Category</td>
+<td>When it comes time to display this element in the editor, if present, the category will be drawn in yellow first.
+</td></tr>
+<tr>
+<td>Edit P1</td>
+<td>Text to show when editing the P1 of an actor that uses this element
+</td></tr>
+<tr>
+<td>Edit P2</td>
+<td>Text to show when editing the P2 of an actor that uses this element
+</td></tr>
+<tr>
+<td>Edit P3</td>
+<td>Text to show when editing the P3 of an actor that uses this element
+</td></tr>
+<tr>
+<td>Edit Board</td>
+<td>Text to show when selecting the target board
+</td></tr>
+<tr>
+<td>Edit Step</td>
+<td>Text to show when selecting the target direction
+</td></tr>
+<tr>
+<td>Edit Code</td>
+<td>Text to show when editing an actor's code (scroll or object OOP)
+</td></tr>
+<tr>
+<td>Points</td>
+<td>When an actor using this element is killed by the player, it's worth this much score
+</td></tr>
+</tbody></table>
+<h3><span class="mw-headline" id="ZZT_elements">ZZT elements</span></h3>
+<table class="wikitable">
+<tbody><tr>
+<th>Id</th>
+<th>Hex</th>
+<th>Name</th>
+<th>Character</th>
+<th>Color</th>
+<th>Destructible</th>
+<th>Pushable</th>
+<th>Editor Floor</th>
+<th>Floor</th>
+<th>Shown</th>
+<th>Special Draw</th>
+<th>Draw Code</th>
+<th>Cycle</th>
+<th>Act Code</th>
+<th>Interact Code</th>
+<th>Menu#</th>
+<th>Key</th>
+<th>Internal Name</th>
+<th>Category</th>
+<th>Edit P1</th>
+<th>Edit P2</th>
+<th>Edit P3</th>
+<th>Edit Board</th>
+<th>Edit Step</th>
+<th>Edit Code</th>
+<th>Points
+</th></tr>
+<tr>
+<td>0</td>
+<td>0x00</td>
+<td>Empty</td>
+<td>0x20</td>
+<td>0x70</td>
+<td></td>
+<td>Yes</td>
+<td></td>
+<td>Yes</td>
+<td></td>
+<td></td>
+<td>0x0020</td>
+<td>-1</td>
+<td>0x0000</td>
+<td>0x0010</td>
+<td>0</td>
+<td></td>
+<td>Empty</td>
+<td></td>
+<td></td>
+<td></td>
+<td></td>
+<td></td>
+<td></td>
+<td></td>
+<td>0
+</td></tr>
+<tr>
+<td>1</td>
+<td>0x01</td>
+<td>Board Edge</td>
+<td>0x20</td>
+<td>Any (0xFF)</td>
+<td></td>
+<td></td>
+<td></td>
+<td></td>
+<td></td>
+<td></td>
+<td>0x0020</td>
+<td>-1</td>
+<td>0x0000</td>
+<td>0x3973</td>
+<td>0</td>
+<td></td>
+<td></td>
+<td></td>
+<td></td>
+<td></td>
+<td></td>
+<td></td>
+<td></td>
+<td></td>
+<td>0
+</td></tr>
+<tr>
+<td>2</td>
+<td>0x02</td>
+<td>Messenger</td>
+<td>0x20</td>
+<td>Any (0xFF)</td>
+<td></td>
+<td></td>
+<td></td>
+<td></td>
+<td></td>
+<td></td>
+<td>0x0020</td>
+<td>-1</td>
+<td>0x0039</td>
+<td>0x0010</td>
+<td>0</td>
+<td></td>
+<td></td>
+<td></td>
+<td></td>
+<td></td>
+<td></td>
+<td></td>
+<td></td>
+<td></td>
+<td>0
+</td></tr>
+<tr>
+<td>3</td>
+<td>0x03</td>
+<td>Monitor</td>
+<td>0x20</td>
+<td>0x07</td>
+<td></td>
+<td></td>
+<td></td>
+<td></td>
+<td></td>
+<td></td>
+<td>0x0020</td>
+<td>1</td>
+<td>0x4481</td>
+<td>0x0010</td>
+<td>0</td>
+<td></td>
+<td>Monitor</td>
+<td></td>
+<td></td>
+<td></td>
+<td></td>
+<td></td>
+<td></td>
+<td></td>
+<td>0
+</td></tr>
+<tr>
+<td>4</td>
+<td>0x04</td>
+<td>Player</td>
+<td>0x02</td>
+<td>0x1F</td>
+<td>Yes</td>
+<td>Yes</td>
+<td></td>
+<td></td>
+<td>Yes</td>
+<td></td>
+<td>0x0020</td>
+<td>1</td>
+<td>0x3E2F</td>
+<td>0x0010</td>
+<td>1</td>
+<td>Z</td>
+<td>Player</td>
+<td>Items:</td>
+<td></td>
+<td></td>
+<td></td>
+<td></td>
+<td></td>
+<td></td>
+<td>0
+</td></tr>
+<tr>
+<td>5</td>
+<td>0x05</td>
+<td>Ammo</td>
+<td>0x84</td>
+<td>0x03</td>
+<td></td>
+<td>Yes</td>
+<td></td>
+<td></td>
+<td></td>
+<td></td>
+<td>0x0020</td>
+<td>-1</td>
+<td>0x0000</td>
+<td>0x3289</td>
+<td>1</td>
+<td>A</td>
+<td>Ammo</td>
+<td></td>
+<td></td>
+<td></td>
+<td></td>
+<td></td>
+<td></td>
+<td></td>
+<td>0
+</td></tr>
+<tr>
+<td>6</td>
+<td>0x06</td>
+<td>Torch</td>
+<td>0x9D</td>
+<td>0x06</td>
+<td></td>
+<td></td>
+<td></td>
+<td></td>
+<td>Yes</td>
+<td></td>
+<td>0x0020</td>
+<td>-1</td>
+<td>0x0000</td>
+<td>0x37B6</td>
+<td>1</td>
+<td>T</td>
+<td>Torch</td>
+<td></td>
+<td></td>
+<td></td>
+<td></td>
+<td></td>
+<td></td>
+<td></td>
+<td>0
+</td></tr>
+<tr>
+<td>7</td>
+<td>0x07</td>
+<td>Gem</td>
+<td>0x04</td>
+<td>Any (0xFF)</td>
+<td>Yes</td>
+<td>Yes</td>
+<td></td>
+<td></td>
+<td></td>
+<td></td>
+<td>0x0020</td>
+<td>-1</td>
+<td>0x0000</td>
+<td>0x3306</td>
+<td>1</td>
+<td>G</td>
+<td>Gem</td>
+<td></td>
+<td></td>
+<td></td>
+<td></td>
+<td></td>
+<td></td>
+<td></td>
+<td>0
+</td></tr>
+<tr>
+<td>8</td>
+<td>0x08</td>
+<td>Key</td>
+<td>0x0C</td>
+<td>Any (0xFF)</td>
+<td></td>
+<td>Yes</td>
+<td></td>
+<td></td>
+<td></td>
+<td></td>
+<td>0x0020</td>
+<td>-1</td>
+<td>0x0000</td>
+<td>0x3169</td>
+<td>1</td>
+<td>K</td>
+<td>Key</td>
+<td></td>
+<td></td>
+<td></td>
+<td></td>
+<td></td>
+<td></td>
+<td></td>
+<td>0
+</td></tr>
+<tr>
+<td>9</td>
+<td>0x09</td>
+<td>Door</td>
+<td>0x0A</td>
+<td>Any BG (0xFE)</td>
+<td></td>
+<td></td>
+<td></td>
+<td></td>
+<td></td>
+<td></td>
+<td>0x0020</td>
+<td>-1</td>
+<td>0x0000</td>
+<td>0x33DA</td>
+<td>1</td>
+<td>D</td>
+<td>Door</td>
+<td></td>
+<td></td>
+<td></td>
+<td></td>
+<td></td>
+<td></td>
+<td></td>
+<td>0
+</td></tr>
+<tr>
+<td>10</td>
+<td>0x0A</td>
+<td>Scroll</td>
+<td>0xE8</td>
+<td>0x0F</td>
+<td></td>
+<td>Yes</td>
+<td></td>
+<td></td>
+<td></td>
+<td></td>
+<td>0x0020</td>
+<td>1</td>
+<td>0x2F9F</td>
+<td>0x308B</td>
+<td>1</td>
+<td>S</td>
+<td>Scroll</td>
+<td></td>
+<td></td>
+<td></td>
+<td></td>
+<td></td>
+<td></td>
+<td>Edit text of scroll</td>
+<td>0
+</td></tr>
+<tr>
+<td>11</td>
+<td>0x0B</td>
+<td>Passage</td>
+<td>0xF0</td>
+<td>Any BG (0xFE)</td>
+<td></td>
+<td></td>
+<td></td>
+<td></td>
+<td>Yes</td>
+<td></td>
+<td>0x0020</td>
+<td>0</td>
+<td>0x0000</td>
+<td>0x3372</td>
+<td>1</td>
+<td>P</td>
+<td>Passage</td>
+<td></td>
+<td></td>
+<td></td>
+<td></td>
+<td>Room thru passage?</td>
+<td></td>
+<td></td>
+<td>0
+</td></tr>
+<tr>
+<td>12</td>
+<td>0x0C</td>
+<td>Duplicator</td>
+<td>0xFA</td>
+<td>0x0F</td>
+<td></td>
+<td></td>
+<td></td>
+<td></td>
+<td></td>
+<td>Yes</td>
+<td>0x2A15</td>
+<td>2</td>
+<td>0x2BFF</td>
+<td>0x0010</td>
+<td>1</td>
+<td>U</td>
+<td>Duplicator</td>
+<td></td>
+<td></td>
+<td>Duplication rate?;SF</td>
+<td></td>
+<td></td>
+<td>Source direction?</td>
+<td></td>
+<td>0
+</td></tr>
+<tr>
+<td>13</td>
+<td>0x0D</td>
+<td>Bomb</td>
+<td>0x0B</td>
+<td>Any (0xFF)</td>
+<td></td>
+<td>Yes</td>
+<td></td>
+<td></td>
+<td></td>
+<td>Yes</td>
+<td>0x1872</td>
+<td>6</td>
+<td>0x18DA</td>
+<td>0x19F3</td>
+<td>1</td>
+<td>B</td>
+<td>Bomb</td>
+<td></td>
+<td></td>
+<td></td>
+<td></td>
+<td></td>
+<td></td>
+<td></td>
+<td>0
+</td></tr>
+<tr>
+<td>14</td>
+<td>0x0E</td>
+<td>Energizer</td>
+<td>0x7F</td>
+<td>0x05</td>
+<td></td>
+<td></td>
+<td></td>
+<td></td>
+<td></td>
+<td></td>
+<td>0x0020</td>
+<td>-1</td>
+<td>0x0000</td>
+<td>0x2034</td>
+<td>1</td>
+<td>E</td>
+<td>Energizer</td>
+<td></td>
+<td></td>
+<td></td>
+<td></td>
+<td></td>
+<td></td>
+<td></td>
+<td>0
+</td></tr>
+<tr>
+<td>15</td>
+<td>0x0F</td>
+<td>Star</td>
+<td>0x53</td>
+<td>0x0F</td>
+<td></td>
+<td></td>
+<td></td>
+<td></td>
+<td></td>
+<td>Yes</td>
+<td>0x1D5D</td>
+<td>1</td>
+<td>0x1DE9</td>
+<td>0x00F5</td>
+<td>0</td>
+<td></td>
+<td>Star</td>
+<td></td>
+<td></td>
+<td></td>
+<td></td>
+<td></td>
+<td></td>
+<td></td>
+<td>0
+</td></tr>
+<tr>
+<td>16</td>
+<td>0x10</td>
+<td>Clockwise</td>
+<td>0x2F</td>
+<td>Any (0xFF)</td>
+<td></td>
+<td></td>
+<td></td>
+<td></td>
+<td></td>
+<td>Yes</td>
+<td>0x171C</td>
+<td>3</td>
+<td>0x176C</td>
+<td>0x0010</td>
+<td>1</td>
+<td>1</td>
+<td>Clockwise</td>
+<td>Conveyors:</td>
+<td></td>
+<td></td>
+<td></td>
+<td></td>
+<td></td>
+<td></td>
+<td>0
+</td></tr>
+<tr>
+<td>17</td>
+<td>0x11</td>
+<td>Counter</td>
+<td>0x5C</td>
+<td>Any (0xFF)</td>
+<td></td>
+<td></td>
+<td></td>
+<td></td>
+<td></td>
+<td>Yes</td>
+<td>0x17C7</td>
+<td>2</td>
+<td>0x1817</td>
+<td>0x0010</td>
+<td>1</td>
+<td>2</td>
+<td>Counter</td>
+<td></td>
+<td></td>
+<td></td>
+<td></td>
+<td></td>
+<td></td>
+<td></td>
+<td>0
+</td></tr>
+<tr>
+<td>18</td>
+<td>0x12</td>
+<td>Bullet</td>
+<td>0xF8</td>
+<td>0x0F</td>
+<td>Yes</td>
+<td></td>
+<td></td>
+<td></td>
+<td></td>
+<td></td>
+<td>0x0020</td>
+<td>1</td>
+<td>0x0F65</td>
+<td>0x00F5</td>
+<td>0</td>
+<td></td>
+<td>Bullet</td>
+<td></td>
+<td></td>
+<td></td>
+<td></td>
+<td></td>
+<td></td>
+<td></td>
+<td>0
+</td></tr>
+<tr>
+<td>19</td>
+<td>0x13</td>
+<td>Water</td>
+<td>0xB0</td>
+<td>0xF9</td>
+<td></td>
+<td></td>
+<td>Yes</td>
+<td></td>
+<td></td>
+<td></td>
+<td>0x0020</td>
+<td>-1</td>
+<td>0x0000</td>
+<td>0x3B03</td>
+<td>3</td>
+<td>W</td>
+<td>Water</td>
+<td>Terrains:</td>
+<td></td>
+<td></td>
+<td></td>
+<td></td>
+<td></td>
+<td></td>
+<td>0
+</td></tr>
+<tr>
+<td>20</td>
+<td>0x14</td>
+<td>Forest</td>
+<td>0xB0</td>
+<td>0x20</td>
+<td></td>
+<td></td>
+<td></td>
+<td></td>
+<td></td>
+<td></td>
+<td>0x0020</td>
+<td>-1</td>
+<td>0x0000</td>
+<td>0x38D0</td>
+<td>3</td>
+<td>F</td>
+<td>Forest</td>
+<td></td>
+<td></td>
+<td></td>
+<td></td>
+<td></td>
+<td></td>
+<td></td>
+<td>0
+</td></tr>
+<tr>
+<td>21</td>
+<td>0x15</td>
+<td>Solid</td>
+<td>0xDB</td>
+<td>Any (0xFF)</td>
+<td></td>
+<td></td>
+<td></td>
+<td></td>
+<td></td>
+<td></td>
+<td>0x0020</td>
+<td>-1</td>
+<td>0x0000</td>
+<td>0x0010</td>
+<td>3</td>
+<td>S</td>
+<td>Solid</td>
+<td>Walls:</td>
+<td></td>
+<td></td>
+<td></td>
+<td></td>
+<td></td>
+<td></td>
+<td>0
+</td></tr>
+<tr>
+<td>22</td>
+<td>0x16</td>
+<td>Normal</td>
+<td>0xB2</td>
+<td>Any (0xFF)</td>
+<td></td>
+<td></td>
+<td></td>
+<td></td>
+<td></td>
+<td></td>
+<td>0x0020</td>
+<td>-1</td>
+<td>0x0000</td>
+<td>0x0010</td>
+<td>3</td>
+<td>N</td>
+<td>Normal</td>
+<td></td>
+<td></td>
+<td></td>
+<td></td>
+<td></td>
+<td></td>
+<td></td>
+<td>0
+</td></tr>
+<tr>
+<td>23</td>
+<td>0x17</td>
+<td>Breakable</td>
+<td>0xB1</td>
+<td>Any (0xFF)</td>
+<td></td>
+<td></td>
+<td></td>
+<td></td>
+<td></td>
+<td></td>
+<td>0x0020</td>
+<td>-1</td>
+<td>0x0000</td>
+<td>0x0010</td>
+<td>3</td>
+<td>B</td>
+<td>Breakable</td>
+<td></td>
+<td></td>
+<td></td>
+<td></td>
+<td></td>
+<td></td>
+<td></td>
+<td>0
+</td></tr>
+<tr>
+<td>24</td>
+<td>0x18</td>
+<td>Boulder</td>
+<td>0xFE</td>
+<td>Any (0xFF)</td>
+<td></td>
+<td>Yes</td>
+<td></td>
+<td></td>
+<td></td>
+<td></td>
+<td>0x0020</td>
+<td>-1</td>
+<td>0x0000</td>
+<td>0x34E3</td>
+<td>3</td>
+<td>O</td>
+<td>Boulder</td>
+<td></td>
+<td></td>
+<td></td>
+<td></td>
+<td></td>
+<td></td>
+<td></td>
+<td>0
+</td></tr>
+<tr>
+<td>25</td>
+<td>0x19</td>
+<td>Slider (NS)</td>
+<td>0x12</td>
+<td>Any (0xFF)</td>
+<td></td>
+<td></td>
+<td></td>
+<td></td>
+<td></td>
+<td></td>
+<td>0x0020</td>
+<td>-1</td>
+<td>0x0000</td>
+<td>0x34E3</td>
+<td>3</td>
+<td>1</td>
+<td>Slider (NS)</td>
+<td></td>
+<td></td>
+<td></td>
+<td></td>
+<td></td>
+<td></td>
+<td></td>
+<td>0
+</td></tr>
+<tr>
+<td>26</td>
+<td>0x1A</td>
+<td>Slider (EW)</td>
+<td>0x1D</td>
+<td>Any (0xFF)</td>
+<td></td>
+<td></td>
+<td></td>
+<td></td>
+<td></td>
+<td></td>
+<td>0x0020</td>
+<td>-1</td>
+<td>0x0000</td>
+<td>0x34E3</td>
+<td>3</td>
+<td>2</td>
+<td>Slider (EW)</td>
+<td></td>
+<td></td>
+<td></td>
+<td></td>
+<td></td>
+<td></td>
+<td></td>
+<td>0
+</td></tr>
+<tr>
+<td>27</td>
+<td>0x1B</td>
+<td>Fake</td>
+<td>0xB2</td>
+<td>Any (0xFF)</td>
+<td></td>
+<td></td>
+<td>Yes</td>
+<td>Yes</td>
+<td></td>
+<td></td>
+<td>0x0020</td>
+<td>-1</td>
+<td>0x0000</td>
+<td>0x3949</td>
+<td>3</td>
+<td>A</td>
+<td>Fake</td>
+<td></td>
+<td></td>
+<td></td>
+<td></td>
+<td></td>
+<td></td>
+<td></td>
+<td>0
+</td></tr>
+<tr>
+<td>28</td>
+<td>0x1C</td>
+<td>Invisible</td>
+<td>0xB0</td>
+<td>Any (0xFF)</td>
+<td></td>
+<td></td>
+<td></td>
+<td></td>
+<td></td>
+<td></td>
+<td>0x0020</td>
+<td>-1</td>
+<td>0x0000</td>
+<td>0x3848</td>
+<td>3</td>
+<td>I</td>
+<td>Invisible</td>
+<td></td>
+<td></td>
+<td></td>
+<td></td>
+<td></td>
+<td></td>
+<td></td>
+<td>0
+</td></tr>
+<tr>
+<td>29</td>
+<td>0x1D</td>
+<td>Blink wall</td>
+<td>0xCE</td>
+<td>Any (0xFF)</td>
+<td></td>
+<td></td>
+<td></td>
+<td></td>
+<td></td>
+<td>Yes</td>
+<td>0x242E</td>
+<td>1</td>
+<td>0x2445</td>
+<td>0x0010</td>
+<td>3</td>
+<td>L</td>
+<td>Blink wall</td>
+<td></td>
+<td>Starting time</td>
+<td>Period</td>
+<td></td>
+<td></td>
+<td>Wall direction</td>
+<td></td>
+<td>0
+</td></tr>
+<tr>
+<td>30</td>
+<td>0x1E</td>
+<td>Transporter</td>
+<td>0xC5</td>
+<td>Any (0xFF)</td>
+<td></td>
+<td></td>
+<td></td>
+<td></td>
+<td></td>
+<td>Yes</td>
+<td>0x1CC5</td>
+<td>2</td>
+<td>0x1C85</td>
+<td>0x1C41</td>
+<td>3</td>
+<td>T</td>
+<td>Transporter</td>
+<td></td>
+<td></td>
+<td></td>
+<td></td>
+<td></td>
+<td>Direction?</td>
+<td></td>
+<td>0
+</td></tr>
+<tr>
+<td>31</td>
+<td>0x1F</td>
+<td>Line</td>
+<td>0xCE</td>
+<td>Any (0xFF)</td>
+<td></td>
+<td></td>
+<td></td>
+<td></td>
+<td></td>
+<td>Yes</td>
+<td>0x122A</td>
+<td>-1</td>
+<td>0x0000</td>
+<td>0x0010</td>
+<td>0</td>
+<td></td>
+<td>Line</td>
+<td></td>
+<td></td>
+<td></td>
+<td></td>
+<td></td>
+<td></td>
+<td></td>
+<td>0
+</td></tr>
+<tr>
+<td>32</td>
+<td>0x20</td>
+<td>Ricochet</td>
+<td>0x2A</td>
+<td>0x0A</td>
+<td></td>
+<td></td>
+<td></td>
+<td></td>
+<td></td>
+<td></td>
+<td>0x0020</td>
+<td>-1</td>
+<td>0x0000</td>
+<td>0x0010</td>
+<td>3</td>
+<td>R</td>
+<td>Ricochet</td>
+<td></td>
+<td></td>
+<td></td>
+<td></td>
+<td></td>
+<td></td>
+<td></td>
+<td>0
+</td></tr>
+<tr>
+<td>33</td>
+<td>0x21</td>
+<td>Blink Ray (Horizontal)</td>
+<td>0xCD</td>
+<td>Any (0xFF)</td>
+<td></td>
+<td></td>
+<td></td>
+<td></td>
+<td></td>
+<td></td>
+<td>0x0020</td>
+<td>-1</td>
+<td>0x0000</td>
+<td>0x0010</td>
+<td>0</td>
+<td></td>
+<td></td>
+<td></td>
+<td></td>
+<td></td>
+<td></td>
+<td></td>
+<td></td>
+<td></td>
+<td>0
+</td></tr>
+<tr>
+<td>34</td>
+<td>0x22</td>
+<td>Bear</td>
+<td>0x99</td>
+<td>0x06</td>
+<td>Yes</td>
+<td>Yes</td>
+<td></td>
+<td></td>
+<td></td>
+<td></td>
+<td>0x0020</td>
+<td>3</td>
+<td>0x054F</td>
+<td>0x00F5</td>
+<td>2</td>
+<td>B</td>
+<td>Bear</td>
+<td>Creatures:</td>
+<td>Sensitivity?</td>
+<td></td>
+<td></td>
+<td></td>
+<td></td>
+<td></td>
+<td>1
+</td></tr>
+<tr>
+<td>35</td>
+<td>0x23</td>
+<td>Ruffian</td>
+<td>0x05</td>
+<td>0x0D</td>
+<td>Yes</td>
+<td>Yes</td>
+<td></td>
+<td></td>
+<td></td>
+<td></td>
+<td>0x0020</td>
+<td>1</td>
+<td>0x0351</td>
+<td>0x00F5</td>
+<td>2</td>
+<td>R</td>
+<td>Ruffian</td>
+<td></td>
+<td>Intelligence?</td>
+<td>Resting time?</td>
+<td></td>
+<td></td>
+<td></td>
+<td></td>
+<td>2
+</td></tr>
+<tr>
+<td>36</td>
+<td>0x24</td>
+<td>Object</td>
+<td>0x02</td>
+<td>Any (0xFF)</td>
+<td></td>
+<td></td>
+<td></td>
+<td></td>
+<td></td>
+<td>Yes</td>
+<td>0x2B85</td>
+<td>3</td>
+<td>0x2AA5</td>
+<td>0x2BB7</td>
+<td>2</td>
+<td>O</td>
+<td>Object</td>
+<td></td>
+<td>Character?</td>
+<td></td>
+<td></td>
+<td></td>
+<td></td>
+<td>Edit Program</td>
+<td>0
+</td></tr>
+<tr>
+<td>37</td>
+<td>0x25</td>
+<td>Slime</td>
+<td>0x2A</td>
+<td>Any (0xFF)</td>
+<td></td>
+<td></td>
+<td></td>
+<td></td>
+<td></td>
+<td></td>
+<td>0x0020</td>
+<td>3</td>
+<td>0x20AE</td>
+<td>0x2295</td>
+<td>2</td>
+<td>V</td>
+<td>Slime</td>
+<td></td>
+<td></td>
+<td>Movement speed?;FS</td>
+<td></td>
+<td></td>
+<td></td>
+<td></td>
+<td>0
+</td></tr>
+<tr>
+<td>38</td>
+<td>0x26</td>
+<td>Shark</td>
+<td>0x5E</td>
+<td>0x07</td>
+<td></td>
+<td></td>
+<td></td>
+<td></td>
+<td></td>
+<td></td>
+<td>0x0020</td>
+<td>3</td>
+<td>0x2321</td>
+<td>0x0010</td>
+<td>2</td>
+<td>Y</td>
+<td>Shark</td>
+<td></td>
+<td>Intelligence?</td>
+<td></td>
+<td></td>
+<td></td>
+<td></td>
+<td></td>
+<td>0
+</td></tr>
+<tr>
+<td>39</td>
+<td>0x27</td>
+<td>Spinning gun</td>
+<td>0x18</td>
+<td>Any (0xFF)</td>
+<td></td>
+<td></td>
+<td></td>
+<td></td>
+<td></td>
+<td>Yes</td>
+<td>0x11D0</td>
+<td>2</td>
+<td>0x12A7</td>
+<td>0x0010</td>
+<td>2</td>
+<td>G</td>
+<td>Spinning gun</td>
+<td></td>
+<td>Intelligence?</td>
+<td>Firing rate?</td>
+<td>Firing type?</td>
+<td></td>
+<td></td>
+<td></td>
+<td>0
+</td></tr>
+<tr>
+<td>40</td>
+<td>0x28</td>
+<td>Pusher</td>
+<td>0x10</td>
+<td>Any (0xFF)</td>
+<td></td>
+<td></td>
+<td></td>
+<td></td>
+<td></td>
+<td>Yes</td>
+<td>0x3517</td>
+<td>4</td>
+<td>0x358A</td>
+<td>0x0010</td>
+<td>2</td>
+<td>P</td>
+<td>Pusher</td>
+<td></td>
+<td></td>
+<td></td>
+<td></td>
+<td></td>
+<td>Push direction?</td>
+<td></td>
+<td>0
+</td></tr>
+<tr>
+<td>41</td>
+<td>0x29</td>
+<td>Lion</td>
+<td>0xEA</td>
+<td>0x0C</td>
+<td>Yes</td>
+<td>Yes</td>
+<td></td>
+<td></td>
+<td></td>
+<td></td>
+<td>0x0020</td>
+<td>2</td>
+<td>0x0113</td>
+<td>0x00F5</td>
+<td>2</td>
+<td>L</td>
+<td>Lion</td>
+<td>Beasts:</td>
+<td>Intelligence?</td>
+<td></td>
+<td></td>
+<td></td>
+<td></td>
+<td></td>
+<td>1
+</td></tr>
+<tr>
+<td>42</td>
+<td>0x2A</td>
+<td>Tiger</td>
+<td>0xE3</td>
+<td>0x0B</td>
+<td>Yes</td>
+<td>Yes</td>
+<td></td>
+<td></td>
+<td></td>
+<td></td>
+<td>0x0020</td>
+<td>2</td>
+<td>0x022D</td>
+<td>0x00F5</td>
+<td>2</td>
+<td>T</td>
+<td>Tiger</td>
+<td></td>
+<td>Intelligence?</td>
+<td>Firing rate?</td>
+<td>Firing type?</td>
+<td></td>
+<td></td>
+<td></td>
+<td>2
+</td></tr>
+<tr>
+<td>43</td>
+<td>0x2B</td>
+<td>Blink Ray (Vertical)</td>
+<td>0xBA</td>
+<td>Any (0xFF)</td>
+<td></td>
+<td></td>
+<td></td>
+<td></td>
+<td></td>
+<td></td>
+<td>0x0020</td>
+<td>-1</td>
+<td>0x0000</td>
+<td>0x0010</td>
+<td>0</td>
+<td></td>
+<td></td>
+<td></td>
+<td></td>
+<td></td>
+<td></td>
+<td></td>
+<td></td>
+<td></td>
+<td>0
+</td></tr>
+<tr>
+<td>44</td>
+<td>0x2C</td>
+<td>Head</td>
+<td>0xE9</td>
+<td>Any (0xFF)</td>
+<td>Yes</td>
+<td></td>
+<td></td>
+<td></td>
+<td></td>
+<td></td>
+<td>0x0020</td>
+<td>2</td>
+<td>0x06BF</td>
+<td>0x00F5</td>
+<td>2</td>
+<td>H</td>
+<td>Head</td>
+<td>Centipedes</td>
+<td>Intelligence?</td>
+<td>Deviance?</td>
+<td></td>
+<td></td>
+<td></td>
+<td></td>
+<td>1
+</td></tr>
+<tr>
+<td>45</td>
+<td>0x2D</td>
+<td>Segment</td>
+<td>0x4F</td>
+<td>Any (0xFF)</td>
+<td>Yes</td>
+<td></td>
+<td></td>
+<td></td>
+<td></td>
+<td></td>
+<td>0x0020</td>
+<td>2</td>
+<td>0x0EED</td>
+<td>0x00F5</td>
+<td>2</td>
+<td>S</td>
+<td>Segment</td>
+<td></td>
+<td></td>
+<td></td>
+<td></td>
+<td></td>
+<td></td>
+<td></td>
+<td>3
+</td></tr>
+<tr>
+<td>46</td>
+<td>0x2E</td>
+<td></td>
+<td>0x20</td>
+<td>Any (0xFF)</td>
+<td></td>
+<td></td>
+<td></td>
+<td></td>
+<td></td>
+<td></td>
+<td>0x0020</td>
+<td>-1</td>
+<td>0x0000</td>
+<td>0x0010</td>
+<td>0</td>
+<td></td>
+<td></td>
+<td></td>
+<td></td>
+<td></td>
+<td></td>
+<td></td>
+<td></td>
+<td></td>
+<td>0
+</td></tr>
+<tr>
+<td>47</td>
+<td>0x2F</td>
+<td>Text (Blue)</td>
+<td>0x20</td>
+<td>Any (0xFF)</td>
+<td></td>
+<td></td>
+<td></td>
+<td></td>
+<td></td>
+<td></td>
+<td>0x0020</td>
+<td>-1</td>
+<td>0x0000</td>
+<td>0x0010</td>
+<td>0</td>
+<td></td>
+<td></td>
+<td></td>
+<td></td>
+<td></td>
+<td></td>
+<td></td>
+<td></td>
+<td></td>
+<td>0
+</td></tr>
+<tr>
+<td>48</td>
+<td>0x30</td>
+<td>Text (Green)</td>
+<td>0x20</td>
+<td>Any (0xFF)</td>
+<td></td>
+<td></td>
+<td></td>
+<td></td>
+<td></td>
+<td></td>
+<td>0x0020</td>
+<td>-1</td>
+<td>0x0000</td>
+<td>0x0010</td>
+<td>0</td>
+<td></td>
+<td></td>
+<td></td>
+<td></td>
+<td></td>
+<td></td>
+<td></td>
+<td></td>
+<td></td>
+<td>0
+</td></tr>
+<tr>
+<td>49</td>
+<td>0x31</td>
+<td>Text (Cyan)</td>
+<td>0x20</td>
+<td>Any (0xFF)</td>
+<td></td>
+<td></td>
+<td></td>
+<td></td>
+<td></td>
+<td></td>
+<td>0x0020</td>
+<td>-1</td>
+<td>0x0000</td>
+<td>0x0010</td>
+<td>0</td>
+<td></td>
+<td></td>
+<td></td>
+<td></td>
+<td></td>
+<td></td>
+<td></td>
+<td></td>
+<td></td>
+<td>0
+</td></tr>
+<tr>
+<td>50</td>
+<td>0x32</td>
+<td>Text (Red)</td>
+<td>0x20</td>
+<td>Any (0xFF)</td>
+<td></td>
+<td></td>
+<td></td>
+<td></td>
+<td></td>
+<td></td>
+<td>0x0020</td>
+<td>-1</td>
+<td>0x0000</td>
+<td>0x0010</td>
+<td>0</td>
+<td></td>
+<td></td>
+<td></td>
+<td></td>
+<td></td>
+<td></td>
+<td></td>
+<td></td>
+<td></td>
+<td>0
+</td></tr>
+<tr>
+<td>51</td>
+<td>0x33</td>
+<td>Text (Purple)</td>
+<td>0x20</td>
+<td>Any (0xFF)</td>
+<td></td>
+<td></td>
+<td></td>
+<td></td>
+<td></td>
+<td></td>
+<td>0x0020</td>
+<td>-1</td>
+<td>0x0000</td>
+<td>0x0010</td>
+<td>0</td>
+<td></td>
+<td></td>
+<td></td>
+<td></td>
+<td></td>
+<td></td>
+<td></td>
+<td></td>
+<td></td>
+<td>0
+</td></tr>
+<tr>
+<td>52</td>
+<td>0x34</td>
+<td>Text (Brown)</td>
+<td>0x20</td>
+<td>Any (0xFF)</td>
+<td></td>
+<td></td>
+<td></td>
+<td></td>
+<td></td>
+<td></td>
+<td>0x0020</td>
+<td>-1</td>
+<td>0x0000</td>
+<td>0x0010</td>
+<td>0</td>
+<td></td>
+<td></td>
+<td></td>
+<td></td>
+<td></td>
+<td></td>
+<td></td>
+<td></td>
+<td></td>
+<td>0
+</td></tr>
+<tr>
+<td>53</td>
+<td>0x35</td>
+<td>Text (Black)</td>
+<td>0x20</td>
+<td>Any (0xFF)</td>
+<td></td>
+<td></td>
+<td></td>
+<td></td>
+<td></td>
+<td></td>
+<td>0x0020</td>
+<td>-1</td>
+<td>0x0000</td>
+<td>0x0010</td>
+<td>0</td>
+<td></td>
+<td></td>
+<td></td>
+<td></td>
+<td></td>
+<td></td>
+<td></td>
+<td></td>
+<td></td>
+<td>0
+</td></tr>
+</tbody></table>
+<h2><span class="mw-headline" id="Credits">Credits</span></h2>
+<p>The ZZT file format was reverse engineered by SaxxonPike, Kev Vance and David Hammond.
+</p><p>This article is based on content written by SaxxonPike as part of <a rel="nofollow" class="external text" href="https://moddingwiki.shikadi.net/wiki/ZZT_Format">a corresponding article on the ModdingWiki</a>. Saxxon has given permission to license their edits to that article under CC BY-SA 4.0.
+</p>
+<!-- 
+NewPP limit report
+Cached time: 20260709011651
+Cache expiry: 86400
+Reduced expiry: false
+Complications: [show‐toc]
+CPU time usage: 0.086 seconds
+Real time usage: 0.088 seconds
+Preprocessor visited node count: 103/1000000
+Post‐expand include size: 0/2097152 bytes
+Template argument size: 0/2097152 bytes
+Highest expansion depth: 2/100
+Expensive parser function count: 0/100
+Unstrip recursion depth: 0/20
+Unstrip post‐expand size: 0/5000000 bytes
+-->
+<!--
+Transclusion expansion time report (%,ms,calls,template)
+100.00%    0.000      1 -total
+-->
+
+<!-- Saved in parser cache with key zztwiki:pcache:idhash:158-0!canonical and timestamp 20260709011651 and revision id 778. Rendering was triggered because: page-view
+ -->
+</div>
+<div class="printfooter" data-nosnippet="">Retrieved from "<a dir="ltr" href="https://wiki.zzt.org/w/index.php?title=ZZT_file_format&amp;oldid=778">https://wiki.zzt.org/w/index.php?title=ZZT_file_format&amp;oldid=778</a>"</div></div>
+		<div id="catlinks" class="catlinks" data-mw="interface"><div id="mw-normal-catlinks" class="mw-normal-catlinks"><a href="https://wiki.zzt.org/wiki/Special:Categories" title="Special:Categories">Category</a>: <ul><li><a href="https://wiki.zzt.org/w/index.php?title=Category:File_formats&amp;action=edit&amp;redlink=1" class="new" title="Category:File formats (page does not exist)">File formats</a></li></ul></div></div>
+	</div>
+</div>
+
+<div id="mw-navigation">
+	<h2>Navigation menu</h2>
+	<div id="mw-head">
+		
+<nav id="p-personal" class="mw-portlet mw-portlet-personal vector-user-menu-legacy vector-menu" aria-labelledby="p-personal-label">
+	<h3 id="p-personal-label" class="vector-menu-heading ">
+		<span class="vector-menu-heading-label">Personal tools</span>
+	</h3>
+	<div class="vector-menu-content">
+		
+		<ul class="vector-menu-content-list">
+			
+			<li id="pt-createaccount" class="mw-list-item"><a href="https://wiki.zzt.org/w/index.php?title=Special:CreateAccount&amp;returnto=ZZT+file+format" title="You are encouraged to create an account and log in; however, it is not mandatory"><span>Create account</span></a></li><li id="pt-login" class="mw-list-item"><a href="https://wiki.zzt.org/w/index.php?title=Special:UserLogin&amp;returnto=ZZT+file+format" title="You are encouraged to log in; however, it is not mandatory [ctrl-option-o]" accesskey="o"><span>Log in</span></a></li>
+		</ul>
+		
+	</div>
+</nav>
+
+		<div id="left-navigation">
+			
+<nav id="p-namespaces" class="mw-portlet mw-portlet-namespaces vector-menu-tabs vector-menu-tabs-legacy vector-menu" aria-labelledby="p-namespaces-label">
+	<h3 id="p-namespaces-label" class="vector-menu-heading ">
+		<span class="vector-menu-heading-label">Namespaces</span>
+	</h3>
+	<div class="vector-menu-content">
+		
+		<ul class="vector-menu-content-list">
+			
+			<li id="ca-nstab-main" class="selected mw-list-item"><a href="https://wiki.zzt.org/wiki/ZZT_file_format" title="View the content page [ctrl-option-c]" accesskey="c"><span>Page</span></a></li><li id="ca-talk" class="new mw-list-item"><a href="https://wiki.zzt.org/w/index.php?title=Talk:ZZT_file_format&amp;action=edit&amp;redlink=1" rel="discussion" class="new" title="Discussion about the content page (page does not exist) [ctrl-option-t]" accesskey="t"><span>Discussion</span></a></li>
+		</ul>
+		
+	</div>
+</nav>
+
+			
+<nav id="p-variants" class="mw-portlet mw-portlet-variants emptyPortlet vector-menu-dropdown vector-menu" aria-labelledby="p-variants-label">
+	<input type="checkbox" id="p-variants-checkbox" role="button" aria-haspopup="true" data-event-name="ui.dropdown-p-variants" class="vector-menu-checkbox" aria-labelledby="p-variants-label">
+	<label id="p-variants-label" class="vector-menu-heading ">
+		<span class="vector-menu-heading-label">English</span>
+	</label>
+	<div class="vector-menu-content">
+		
+		<ul class="vector-menu-content-list">
+			
+			
+		</ul>
+		
+	</div>
+</nav>
+
+		</div>
+		<div id="right-navigation">
+			
+<nav id="p-views" class="mw-portlet mw-portlet-views vector-menu-tabs vector-menu-tabs-legacy vector-menu" aria-labelledby="p-views-label">
+	<h3 id="p-views-label" class="vector-menu-heading ">
+		<span class="vector-menu-heading-label">Views</span>
+	</h3>
+	<div class="vector-menu-content">
+		
+		<ul class="vector-menu-content-list">
+			
+			<li id="ca-view" class="selected mw-list-item collapsible"><a href="https://wiki.zzt.org/wiki/ZZT_file_format"><span>Read</span></a></li><li id="ca-viewsource" class="mw-list-item collapsible"><a href="https://wiki.zzt.org/w/index.php?title=ZZT_file_format&amp;action=edit" title="This page is protected.
+You can view its source [ctrl-option-e]" accesskey="e"><span>View source</span></a></li><li id="ca-history" class="mw-list-item collapsible"><a href="https://wiki.zzt.org/w/index.php?title=ZZT_file_format&amp;action=history" title="Past revisions of this page [ctrl-option-h]" accesskey="h"><span>View history</span></a></li>
+		</ul>
+		
+	</div>
+</nav>
+
+			
+<nav id="p-cactions" class="mw-portlet mw-portlet-cactions emptyPortlet vector-menu-dropdown vector-menu" aria-labelledby="p-cactions-label" title="More options">
+	<input type="checkbox" id="p-cactions-checkbox" role="button" aria-haspopup="true" data-event-name="ui.dropdown-p-cactions" class="vector-menu-checkbox" aria-labelledby="p-cactions-label">
+	<label id="p-cactions-label" class="vector-menu-heading ">
+		<span class="vector-menu-heading-label">More</span>
+	</label>
+	<div class="vector-menu-content">
+		
+		<ul class="vector-menu-content-list">
+			
+			
+		</ul>
+		
+	</div>
+</nav>
+
+			
+<div id="p-search" role="search" class="vector-search-box-vue  vector-search-box-show-thumbnail vector-search-box-auto-expand-width vector-search-box">
+	<h3>Search</h3>
+	<form action="https://wiki.zzt.org/w/index.php" id="searchform" class="vector-search-box-form">
+		<div id="simpleSearch" class="vector-search-box-inner" data-search-loc="header-navigation">
+			<input class="vector-search-box-input" type="search" name="search" placeholder="Search Wiki of ZZT" aria-label="Search Wiki of ZZT" autocapitalize="sentences" title="Search Wiki of ZZT [ctrl-option-f]" accesskey="f" id="searchInput">
+			<input type="hidden" name="title" value="Special:Search">
+			<input id="mw-searchButton" class="searchButton mw-fallbackSearchButton" type="submit" name="fulltext" title="Search the pages for this text" value="Search">
+			<input id="searchButton" class="searchButton" type="submit" name="go" title="Go to a page with this exact name if it exists" value="Go">
+		</div>
+	</form>
+</div>
+
+		</div>
+	</div>
+	
+<div id="mw-panel" class="vector-legacy-sidebar">
+	<div id="p-logo" role="banner">
+		<a class="mw-wiki-logo" href="https://wiki.zzt.org/wiki/Main_Page" title="Visit the main page"></a>
+	</div>
+	
+<nav id="p-navigation" class="mw-portlet mw-portlet-navigation vector-menu-portal portal vector-menu" aria-labelledby="p-navigation-label">
+	<h3 id="p-navigation-label" class="vector-menu-heading ">
+		<span class="vector-menu-heading-label">Navigation</span>
+	</h3>
+	<div class="vector-menu-content">
+		
+		<ul class="vector-menu-content-list">
+			
+			<li id="n-mainpage-description" class="mw-list-item"><a href="https://wiki.zzt.org/wiki/Main_Page" title="Visit the main page [ctrl-option-z]" accesskey="z"><span>Main page</span></a></li><li id="n-recentchanges" class="mw-list-item"><a href="https://wiki.zzt.org/wiki/Special:RecentChanges" title="A list of recent changes in the wiki [ctrl-option-r]" accesskey="r"><span>Recent changes</span></a></li><li id="n-randompage" class="mw-list-item"><a href="https://wiki.zzt.org/wiki/Special:Random" title="Load a random page [ctrl-option-x]" accesskey="x"><span>Random page</span></a></li><li id="n-help-mediawiki" class="mw-list-item"><a href="https://www.mediawiki.org/wiki/Special:MyLanguage/Help:Contents"><span>Help about MediaWiki</span></a></li>
+		</ul>
+		
+	</div>
+</nav>
+
+	
+<nav id="p-tb" class="mw-portlet mw-portlet-tb vector-menu-portal portal vector-menu" aria-labelledby="p-tb-label">
+	<h3 id="p-tb-label" class="vector-menu-heading ">
+		<span class="vector-menu-heading-label">Tools</span>
+	</h3>
+	<div class="vector-menu-content">
+		
+		<ul class="vector-menu-content-list">
+			
+			<li id="t-whatlinkshere" class="mw-list-item"><a href="https://wiki.zzt.org/wiki/Special:WhatLinksHere/ZZT_file_format" title="A list of all wiki pages that link here [ctrl-option-j]" accesskey="j"><span>What links here</span></a></li><li id="t-recentchangeslinked" class="mw-list-item"><a href="https://wiki.zzt.org/wiki/Special:RecentChangesLinked/ZZT_file_format" rel="nofollow" title="Recent changes in pages linked from this page [ctrl-option-k]" accesskey="k"><span>Related changes</span></a></li><li id="t-specialpages" class="mw-list-item"><a href="https://wiki.zzt.org/wiki/Special:SpecialPages" title="A list of all special pages [ctrl-option-q]" accesskey="q"><span>Special pages</span></a></li><li id="t-print" class="mw-list-item"><a href="javascript:print();" rel="alternate" title="Printable version of this page [ctrl-option-p]" accesskey="p"><span>Printable version</span></a></li><li id="t-permalink" class="mw-list-item"><a href="https://wiki.zzt.org/w/index.php?title=ZZT_file_format&amp;oldid=778" title="Permanent link to this revision of this page"><span>Permanent link</span></a></li><li id="t-info" class="mw-list-item"><a href="https://wiki.zzt.org/w/index.php?title=ZZT_file_format&amp;action=info" title="More information about this page"><span>Page information</span></a></li>
+		</ul>
+		
+	</div>
+</nav>
+
+	
+</div>
+
+</div>
+
+<footer id="footer" class="mw-footer">
+	<ul id="footer-info">
+	<li id="footer-info-lastmod"> This page was last edited on 19 March 2026, at 05:47.</li>
+	<li id="footer-info-copyright">Content is available under <a class="external" rel="nofollow" href="https://creativecommons.org/licenses/by-sa/4.0/">Creative Commons Attribution-ShareAlike</a> unless otherwise noted.</li>
+</ul>
+
+	<ul id="footer-places">
+	<li id="footer-places-privacy"><a href="https://wiki.zzt.org/wiki/Wiki:Privacy_policy">Privacy policy</a></li>
+	<li id="footer-places-about"><a href="https://wiki.zzt.org/wiki/Wiki:About">About Wiki of ZZT</a></li>
+	<li id="footer-places-disclaimers"><a href="https://wiki.zzt.org/wiki/Wiki:General_disclaimer">Disclaimers</a></li>
+</ul>
+
+	<ul id="footer-icons" class="noprint">
+	<li id="footer-copyrightico"><a href="https://creativecommons.org/licenses/by-sa/4.0/" class="cdx-button cdx-button--fake-button cdx-button--size-large cdx-button--fake-button--enabled"><img src="./fileformat_files/cc-by-sa.png" alt="Creative Commons Attribution-ShareAlike" width="88" height="31" loading="lazy"></a></li>
+	<li id="footer-poweredbyico"><a href="https://www.mediawiki.org/" class="cdx-button cdx-button--fake-button cdx-button--size-large cdx-button--fake-button--enabled"><img src="./fileformat_files/poweredby_mediawiki.svg" alt="Powered by MediaWiki" width="88" height="31" loading="lazy"></a></li>
+</ul>
+
+</footer>
+
+<script>(RLQ=window.RLQ||[]).push(function(){mw.config.set({"wgBackendResponseTime":121,"wgPageParseReport":{"limitreport":{"cputime":"0.086","walltime":"0.088","ppvisitednodes":{"value":103,"limit":1000000},"postexpandincludesize":{"value":0,"limit":2097152},"templateargumentsize":{"value":0,"limit":2097152},"expansiondepth":{"value":2,"limit":100},"expensivefunctioncount":{"value":0,"limit":100},"unstrip-depth":{"value":0,"limit":20},"unstrip-size":{"value":0,"limit":5000000},"timingprofile":["100.00%    0.000      1 -total"]},"cachereport":{"timestamp":"20260709011651","ttl":86400,"transientcontent":false}}});});</script>
+
+<div id="mw-teleport-target" class="vector-body"></div></body></html>

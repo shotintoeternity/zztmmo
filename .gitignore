@@ -1,0 +1,6 @@
+reference/
+engine/zztgo
+*.SAV
+node_modules/
+dist/
+.DS_Store
