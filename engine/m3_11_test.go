@@ -211,3 +211,77 @@ func TestM311DeathDoesNotUnmute(t *testing.T) {
 		t.Errorf("ResetPlayerState must not un-mute the player")
 	}
 }
+
+// TestReenterWhenZappedKeepsPlayerOnBoard reproduces a live bug report: on a
+// board with ReenterWhenZapped, taking a hit made the player's sprite vanish
+// and the player became uncontrollable.
+//
+// Cause: DamageStat clears the old tile to E_EMPTY, moves stat.X/Y to the start
+// position, and never sets the destination tile to E_PLAYER — faithful to
+// GAME.PAS:1163, which relies on GamePlayLoop's terminal-only pause branch to
+// redraw and restore E_PLAYER on unpause. Headless, nothing restores it, and
+// GameStepWithInputs dispatches tick procs BY TILE ELEMENT, so the player stat
+// never runs its tick again.
+//
+// This predates M3.11 (the old code set the no-op e.GamePaused there).
+func TestReenterWhenZappedKeepsPlayerOnBoard(t *testing.T) {
+	e, p1, _ := twoPlayerBoard(t)
+
+	e.Board.Info.ReenterWhenZapped = true
+	e.Board.Info.StartPlayerX = 5
+	e.Board.Info.StartPlayerY = 5
+
+	e.DamageStat(p1)
+
+	// The player must still exist on the board, at the start position.
+	if got := e.Board.Tiles[5][5].Element; got != E_PLAYER {
+		t.Errorf("tile at start (5,5) is element %d, want E_PLAYER (%d): the sprite vanished",
+			got, E_PLAYER)
+	}
+	if int16(e.Board.Stats[p1].X) != 5 || int16(e.Board.Stats[p1].Y) != 5 {
+		t.Fatalf("player stat at (%d,%d), want (5,5)", e.Board.Stats[p1].X, e.Board.Stats[p1].Y)
+	}
+
+	// Vanilla pauses after a re-enter, so movement is what resumes play. The
+	// player must be controllable again: one movement input moves them.
+	if !e.PlayerFor(p1).Paused {
+		t.Errorf("player should be paused after re-enter, as in vanilla")
+	}
+	step(e, map[int16]PlayerInput{p1: {DeltaX: 1}})
+
+	if int16(e.Board.Stats[p1].X) != 6 {
+		t.Errorf("player at x=%d, want 6: the player is uncontrollable after re-enter",
+			e.Board.Stats[p1].X)
+	}
+}
+
+// TestReenterWhenZappedPreservesUnder: placing the player back on the start
+// square must not permanently destroy whatever was standing there. The tile is
+// saved into stat.Under and restored when the player steps off, as MoveStat does.
+func TestReenterWhenZappedPreservesUnder(t *testing.T) {
+	e, p1, _ := twoPlayerBoard(t)
+
+	e.Board.Info.ReenterWhenZapped = true
+	e.Board.Info.StartPlayerX = 5
+	e.Board.Info.StartPlayerY = 5
+	// Something the player will land on top of.
+	e.Board.Tiles[5][5] = TTile{Element: E_FOREST, Color: ElementDefs[E_FOREST].Color}
+
+	e.DamageStat(p1)
+
+	if e.Board.Stats[p1].Under.Element != E_FOREST {
+		t.Errorf("stat.Under.Element = %d, want E_FOREST (%d): the start tile was clobbered",
+			e.Board.Stats[p1].Under.Element, E_FOREST)
+	}
+	if e.Board.Tiles[5][5].Element != E_PLAYER {
+		t.Fatalf("player not placed on the start tile")
+	}
+
+	// Step off; the forest must come back.
+	step(e, map[int16]PlayerInput{p1: {DeltaX: 1}})
+
+	if got := e.Board.Tiles[5][5].Element; got != E_FOREST {
+		t.Errorf("tile at (5,5) is %d after stepping off, want E_FOREST (%d) restored",
+			got, E_FOREST)
+	}
+}

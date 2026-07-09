@@ -243,3 +243,42 @@ the loader (reject `BoardCount > MAX_BOARD`, short files, negative `BoardLen`)
 on the untrusted-upload path only, leaving the faithful loader untouched for
 worlds the operator supplies. Fold this into M4.3a / M5.3 rather than the
 engine. A `// ZZT-QUIRK:` marker on the loop would be appropriate.
+
+## Bug (2026-07-09) — ReenterWhenZapped left the player off the board
+
+Reported from live play: on a board with `ReenterWhenZapped`, taking a bullet
+made the player's sprite vanish and the player became uncontrollable.
+
+Cause. `DamageStat` (game.go) clears the player's old tile to `E_EMPTY`, moves
+`stat.X/Y` to `Board.Info.StartPlayerX/Y`, and never writes `E_PLAYER` at the
+destination. This is faithful — `GAME.PAS:1163` does exactly the same — because
+vanilla sets `GamePaused` and lets `GamePlayLoop`'s pause branch draw the player
+each frame, restoring `E_PLAYER` on unpause. That branch is terminal-only.
+Headless, nothing ever restores the tile, and `GameStepWithInputs` dispatches
+tick procs **by tile element**, so the player stat stopped ticking entirely.
+
+This **predates M3.11**. Before it the line was `e.GamePaused = true`, a headless
+no-op; the tile was left `E_EMPTY` just the same. M3.11 only made the pause real.
+
+Fix, marked `DEVIATION:` in the commit: place the player on the start tile
+immediately rather than on unpause, saving the previous tile into `stat.Under`
+the way `MoveStat` does so re-entering cannot permanently destroy what was
+there. `MoveStat` itself is wrong here — it would copy the `0x70` damage-flash
+colour onto the destination and leave the player highlighted red forever. The
+room keeps running for other players, so a re-entering player has to be solid
+again at once; deferring to unpause is not available to us.
+
+Do NOT apply the same fix to `BoardPassageTeleport`. A player paused on a
+passage keeps `E_PASSAGE` underneath and is merely drawn over it; forcing
+`E_PLAYER` there would destroy the passage tile (vanilla's unpause writes
+`E_PLAYER` at the square the player moves *to*, not the one it is standing on).
+In any case `RoomManager` sets `MultiRoom = true` on every engine it creates
+(room_manager.go:311), so on the server passages always take the
+`TransferEvent` path and `BoardPassageTeleport` is unreachable. It stays live
+for the terminal and `cmd/zzt-smoke`, where the pause branch does restore.
+
+Residual, not fixed: if a monster or another player occupies `StartPlayerX/Y`,
+the re-entering player's tile overwrites theirs, and that stat will dispatch a
+player tick until the square is vacated. Vanilla cannot hit this (one player,
+and start squares are empty by construction). Worth revisiting when boards get
+authored in-browser (M5.1).

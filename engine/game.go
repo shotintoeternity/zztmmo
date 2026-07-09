@@ -1248,6 +1248,24 @@ func (e *Engine) DamageStat(attackerStatId int16) {
 					oldY = int16(stat.Y)
 					stat.X = e.Board.Info.StartPlayerX
 					stat.Y = e.Board.Info.StartPlayerY
+					// DEVIATION: vanilla (GAME.PAS:1163) leaves the destination
+					// tile as-is here and lets GamePlayLoop's pause branch redraw
+					// the player, restoring E_PLAYER only on unpause. That branch
+					// is terminal-only, so headless the player's tile stayed
+					// E_EMPTY forever — and because GameStepWithInputs dispatches
+					// tick procs by tile element, the player stopped ticking:
+					// invisible and uncontrollable. Restore the tile immediately.
+					// The room keeps running for other players, so a re-entering
+					// player must be solid again at once, not on unpause.
+					//
+					// Save what was at the start square into Under, the way
+					// MoveStat does, so re-entering cannot permanently destroy it.
+					// MoveStat itself is wrong here: it would copy the 0x70 damage
+					// flash colour set above onto the destination tile.
+					stat.Under = e.Board.Tiles[stat.X][stat.Y]
+					e.Board.Tiles[stat.X][stat.Y].Element = E_PLAYER
+					e.Board.Tiles[stat.X][stat.Y].Color = ElementDefs[E_PLAYER].Color
+					e.BoardDrawTile(int16(stat.X), int16(stat.Y))
 					e.DrawPlayerSurroundings(oldX, oldY, 0)
 					e.DrawPlayerSurroundings(int16(stat.X), int16(stat.Y), 0)
 					pState.Paused = true
