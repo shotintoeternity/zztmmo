@@ -1246,8 +1246,13 @@ func (e *Engine) DamageStat(attackerStatId int16) {
 					e.BoardDrawTile(int16(stat.X), int16(stat.Y))
 					oldX = int16(stat.X)
 					oldY = int16(stat.Y)
-					stat.X = e.Board.Info.StartPlayerX
-					stat.Y = e.Board.Info.StartPlayerY
+					// Per-player entry square, not Board.Info.StartPlayerX/Y. On
+					// the server that board-global pair is the world file's stale
+					// value, because RoomManager never calls BoardEnter — and on
+					// TOWN board 19 ("The Mixer") it is (30,25), an E_NORMAL wall.
+					reX, reY := e.ReenterPoint(attackerStatId)
+					stat.X = byte(reX)
+					stat.Y = byte(reY)
 					// DEVIATION: vanilla (GAME.PAS:1163) leaves the destination
 					// tile as-is here and lets GamePlayLoop's pause branch redraw
 					// the player, restoring E_PLAYER only on unpause. That branch
@@ -1385,6 +1390,9 @@ func (e *Engine) BoardEnter(statId int16) {
 	stat := &e.Board.Stats[statId]
 	e.Board.Info.StartPlayerX = stat.X
 	e.Board.Info.StartPlayerY = stat.Y
+	// Vanilla only has the board-global pair above. Record it per-player too, so
+	// re-entering works on the server, where RoomManager never calls BoardEnter.
+	e.SetReenterPoint(statId, int16(stat.X), int16(stat.Y))
 	pState := e.PlayerFor(statId)
 	if e.Board.Info.IsDark && pState.MessageHintTorchNotShown {
 		e.DisplayMessage(200, "Room is dark - you need to light a torch!")

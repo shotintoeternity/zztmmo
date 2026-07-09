@@ -228,8 +228,9 @@ func TestReenterWhenZappedKeepsPlayerOnBoard(t *testing.T) {
 	e, p1, _ := twoPlayerBoard(t)
 
 	e.Board.Info.ReenterWhenZapped = true
-	e.Board.Info.StartPlayerX = 5
-	e.Board.Info.StartPlayerY = 5
+	// The player entered this board at (5,5): that, not the board's stored
+	// StartPlayerX/Y, is where a zap returns them. See Engine.ReenterPoint.
+	e.SetReenterPoint(p1, 5, 5)
 
 	e.DamageStat(p1)
 
@@ -262,8 +263,7 @@ func TestReenterWhenZappedPreservesUnder(t *testing.T) {
 	e, p1, _ := twoPlayerBoard(t)
 
 	e.Board.Info.ReenterWhenZapped = true
-	e.Board.Info.StartPlayerX = 5
-	e.Board.Info.StartPlayerY = 5
+	e.SetReenterPoint(p1, 5, 5)
 	// Something the player will land on top of.
 	e.Board.Tiles[5][5] = TTile{Element: E_FOREST, Color: ElementDefs[E_FOREST].Color}
 
@@ -283,5 +283,52 @@ func TestReenterWhenZappedPreservesUnder(t *testing.T) {
 	if got := e.Board.Tiles[5][5].Element; got != E_FOREST {
 		t.Errorf("tile at (5,5) is %d after stepping off, want E_FOREST (%d) restored",
 			got, E_FOREST)
+	}
+}
+
+// TestReenterUsesPlayerEntrySquareNotStaleBoardValue guards a live bug: on TOWN
+// board 19 ("The Mixer") the world file stores StartPlayerX/Y = (30,25), which
+// is an E_NORMAL wall tile. Vanilla never reads that value because BoardEnter
+// overwrites it on entry; RoomManager never calls BoardEnter, so the server used
+// the stale wall coordinate and a zapped player was teleported inside the wall.
+//
+// Re-entry must use the square the player actually entered on.
+func TestReenterUsesPlayerEntrySquareNotStaleBoardValue(t *testing.T) {
+	e := NewEngine()
+	e.Headless = true
+	if !e.WorldLoad("../fixtures/TOWN", ".ZZT", false) {
+		t.Skip("fixtures/TOWN.ZZT unavailable")
+	}
+	e.BoardOpen(19)
+
+	if !e.Board.Info.ReenterWhenZapped {
+		t.Fatalf("precondition: board 19 %q should have ReenterWhenZapped", e.Board.Name)
+	}
+	staleX, staleY := int16(e.Board.Info.StartPlayerX), int16(e.Board.Info.StartPlayerY)
+	if got := e.Board.Tiles[staleX][staleY].Element; got != E_NORMAL {
+		t.Fatalf("precondition: stored start (%d,%d) should be E_NORMAL (%d), got %d",
+			staleX, staleY, E_NORMAL, got)
+	}
+
+	// Put a player on a real, walkable square — as a transfer or join would.
+	entryX, entryY := int16(5), int16(24)
+	e.Board.Tiles[entryX][entryY] = TTile{Element: E_EMPTY}
+	e.AddStat(entryX, entryY, E_PLAYER, int16(ElementDefs[E_PLAYER].Color), 1, StatTemplateDefault)
+	p := e.Board.StatCount
+	e.Board.Tiles[entryX][entryY] = TTile{Element: E_PLAYER, Color: ElementDefs[E_PLAYER].Color}
+	e.ResetPlayerState(p)
+	e.SetReenterPoint(p, entryX, entryY)
+
+	e.DamageStat(p)
+
+	if int16(e.Board.Stats[p].X) == staleX && int16(e.Board.Stats[p].Y) == staleY {
+		t.Fatalf("player was teleported into the stale wall square (%d,%d)", staleX, staleY)
+	}
+	if int16(e.Board.Stats[p].X) != entryX || int16(e.Board.Stats[p].Y) != entryY {
+		t.Errorf("player at (%d,%d), want their entry square (%d,%d)",
+			e.Board.Stats[p].X, e.Board.Stats[p].Y, entryX, entryY)
+	}
+	if e.Board.Tiles[entryX][entryY].Element != E_PLAYER {
+		t.Errorf("player tile not restored at the entry square")
 	}
 }

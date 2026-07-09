@@ -340,11 +340,14 @@ func TestDeathRespawnInventoryIsolation(t *testing.T) {
 	e.Board.Info.StartPlayerY = 12
 	p2 := e.SpawnPlayer()
 
-	// Reset board start point to (5,5) — the intended respawn location for P1.
-	// In real use the map designer sets this once; here we set it after spawning
-	// so both players can be placed at different positions in the test.
+	// P1's respawn point is (5,5). Respawn follows the PLAYER's entry square
+	// (Engine.ReenterPoint), not Board.Info.StartPlayerX/Y: the board-global pair
+	// is the world file's stale value on the server and can be a wall — TOWN
+	// board 19 stores (30,25), an E_NORMAL tile. Set both so the test states the
+	// intent and would still pass if only the board value were consulted.
 	e.Board.Info.StartPlayerX = 5
 	e.Board.Info.StartPlayerY = 5
+	e.SetReenterPoint(p1, 5, 5)
 	e.Board.Tiles[5][5] = TTile{Element: E_EMPTY} // ensure spawn point is clear
 
 	// Give P2 some inventory that must not change when P1 dies.

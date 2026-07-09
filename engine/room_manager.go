@@ -100,6 +100,9 @@ func movePlayerStat(engine *Engine, statID, x, y int16) {
 	engine.Board.Tiles[x][y].Element = E_PLAYER
 	engine.Board.Tiles[x][y].Color = ElementDefs[E_PLAYER].Color
 	engine.BoardDrawTile(x, y)
+	// This is the server's BoardEnter: the square a player arrives on is where
+	// they re-enter after a ReenterWhenZapped hit or a death respawn.
+	engine.SetReenterPoint(statID, x, y)
 }
 
 func roomSpawn(room *Room, spawnX, spawnY int16) (int16, int16) {

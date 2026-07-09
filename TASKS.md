@@ -321,6 +321,25 @@ semantics while keeping the server authoritative.
   survive the round trip; a filename containing `../` is rejected with a test
   proving it; replay green.
 
+- [ ] **M4.3b — Player-on-player collision and push-out.** Two players can end up
+  on the same square, and the board holds only one tile per square: the second
+  player's `E_PLAYER` tile overwrites the first's, and thereafter one stat is
+  standing on a tile that does not describe it. Because `GameStepWithInputs`
+  dispatches tick procs **by tile element**, whichever stat loses the square can
+  stop ticking entirely — the same class of failure as the ReenterWhenZapped bug
+  (NOTES.md 2026-07-09). Detect the overlap and push one player to a free
+  adjacent square. Known ways to produce it today:
+  * Two players re-entering or respawning onto the same entry square.
+  * A re-entering player landing on a square a monster or player already holds:
+    `DamageStat` writes `E_PLAYER` over it, saving only the *tile* in `stat.Under`,
+    so the displaced stat's element is lost.
+  * `roomSpawn` has `isSpawnOpen`/`isSpawnUnoccupied` checks; re-enter and
+    respawn have none. Reuse that logic rather than inventing a second policy.
+  DoD: a headless test puts two players on one square by each route above; both
+  keep their own tile, both keep ticking, and neither is silently deleted;
+  the pushed player lands on a walkable adjacent square (or stays put if the
+  board is full, never overlapping); replay green.
+
 - [ ] **M4.4 — Browser sound synthesis.** Convert `SoundEvent` notes into
   WebAudio playback with priority/queue behavior close to ZZT, plus a visible
   sound toggle in the authentic sidebar. DoD: pickups, shots, doors, damage,

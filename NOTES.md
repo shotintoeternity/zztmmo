@@ -282,3 +282,37 @@ the re-entering player's tile overwrites theirs, and that stat will dispatch a
 player tick until the square is vacated. Vanilla cannot hit this (one player,
 and start squares are empty by construction). Worth revisiting when boards get
 authored in-browser (M5.1).
+
+## Bug (2026-07-09) — re-enter/respawn used a stale board value, which can be a wall
+
+Follow-up to the ReenterWhenZapped fix above. Placing the player back at
+`Board.Info.StartPlayerX/Y` dropped them **inside a wall** on TOWN board 19
+("The Mixer"): the world file stores `StartPlayer = (30,25)` and the tile there
+is `E_NORMAL` (element 22), with `E_BOARD_EDGE` below it.
+
+Why vanilla never notices: `BoardEnter` (game.go) overwrites
+`Board.Info.StartPlayerX/Y` with the player's own position every time its single
+player enters a board, so the value stored in the world file is never read.
+`RoomManager` never calls `BoardEnter` — `spawnPlayerInRoom` even saves and
+restores the pair around its spawn — so on the server the stale file value
+survived and got used.
+
+Fix: a re-enter point is per-player state, not board state. `PlayerState.ReenterX/Y`
+records the square a player entered the board on; `Engine.ReenterPoint(statId)`
+resolves it, falling back to `Board.Info.StartPlayerX/Y` and then the board
+centre. Set from `SpawnPlayer`, `BoardEnter` (terminal parity), and
+`movePlayerStat` (the server's de-facto BoardEnter, room_manager.go).
+
+Consumers changed: `DamageStat`'s ReenterWhenZapped branch, and the death-respawn
+branch in `ElementPlayerTick`, which had the identical flaw — dying on board 19
+would also have respawned the player inside the wall. Nobody hit that yet.
+
+BEHAVIOR CHANGE, deliberate: death respawn now returns a player to the square
+*they* entered the board on, not to the board's designer-set start. M2.4 chose
+the latter; with several players entering a room from different passages, the
+board-global value is both wrong and unreliable. `TestDeathRespawnInventoryIsolation`
+was updated to state this.
+
+The stale-value fallback is retained but is now a last resort. Worlds whose
+stored `StartPlayerX/Y` is a wall are common precisely because vanilla never
+reads it, so nothing ever forced authors to keep it sane.

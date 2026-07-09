@@ -343,6 +343,19 @@ type (
 		// Defaults to true in PlayerFor; deliberately NOT reset by
 		// ResetPlayerState, since dying should not un-mute you.
 		SoundEnabled bool
+		// ReenterX/Y is where THIS player returns to on a ReenterWhenZapped hit
+		// or a death respawn: the square they entered the board on.
+		//
+		// Vanilla keeps one Board.Info.StartPlayerX/Y and rewrites it in
+		// BoardEnter every time its single player enters a board, so the value
+		// stored in the world file is never used. RoomManager never calls
+		// BoardEnter, so on the server that stale file value survived — and on
+		// TOWN board 19 ("The Mixer") it is (30,25), an E_NORMAL wall tile.
+		// Re-entering teleported the player inside the wall.
+		//
+		// Zero means unset; callers fall back to Board.Info.StartPlayerX/Y.
+		ReenterX byte
+		ReenterY byte
 	}
 	// PlayerInput holds one tick of input for a single player.
 	// DirX/DirY are the player's aimed shoot direction from the previous tick
@@ -383,6 +396,36 @@ func (e *Engine) PlayerFor(statId int16) *PlayerState {
 	return ps
 }
 
+// ReenterPoint is where statId returns to on a ReenterWhenZapped hit or a death
+// respawn. Prefers the player's own entry square (set wherever a player is
+// placed on a board), falling back to the board's stored start and then the
+// board centre.
+//
+// The fallback is a last resort: a world file's stored StartPlayerX/Y can be a
+// wall, because vanilla overwrites it in BoardEnter before ever reading it.
+func (e *Engine) ReenterPoint(statId int16) (int16, int16) {
+	pState := e.PlayerFor(statId)
+	x, y := int16(pState.ReenterX), int16(pState.ReenterY)
+	if x == 0 || y == 0 {
+		x = int16(e.Board.Info.StartPlayerX)
+		y = int16(e.Board.Info.StartPlayerY)
+	}
+	if x == 0 || y == 0 {
+		x = BOARD_WIDTH / 2
+		y = BOARD_HEIGHT / 2
+	}
+	return x, y
+}
+
+// SetReenterPoint records where a player entered the board. Called from every
+// place a player is put on a board, so ReenterPoint never has to trust the
+// world file's stale StartPlayerX/Y.
+func (e *Engine) SetReenterPoint(statId int16, x, y int16) {
+	pState := e.PlayerFor(statId)
+	pState.ReenterX = byte(x)
+	pState.ReenterY = byte(y)
+}
+
 func (e *Engine) SpawnPlayer() int16 {
 	spawnX := int16(e.Board.Info.StartPlayerX)
 	spawnY := int16(e.Board.Info.StartPlayerY)
@@ -398,6 +441,7 @@ func (e *Engine) SpawnPlayer() int16 {
 	e.Board.Tiles[spawnX][spawnY].Color = ElementDefs[E_PLAYER].Color
 
 	e.ResetPlayerState(statId)
+	e.SetReenterPoint(statId, spawnX, spawnY)
 	e.BoardDrawTile(spawnX, spawnY)
 	return statId
 }

@@ -1277,13 +1277,11 @@ func (e *Engine) ElementPlayerTick(statId int16) {
 	if pState.RespawnTicks > 0 {
 		pState.RespawnTicks--
 		if pState.RespawnTicks == 0 {
-			// Place player at board entry point.
-			spawnX := int16(e.Board.Info.StartPlayerX)
-			spawnY := int16(e.Board.Info.StartPlayerY)
-			if spawnX == 0 || spawnY == 0 {
-				spawnX = BOARD_WIDTH / 2
-				spawnY = BOARD_HEIGHT / 2
-			}
+			// Place player at their own board entry point. Board.Info.StartPlayerX/Y
+			// is the world file's stale value on the server (RoomManager never
+			// calls BoardEnter) and can be a wall — TOWN board 19 stores (30,25),
+			// an E_NORMAL tile. See Engine.ReenterPoint.
+			spawnX, spawnY := e.ReenterPoint(statId)
 			oldX := int16(stat.X)
 			oldY := int16(stat.Y)
 			e.Board.Tiles[stat.X][stat.Y].Element = E_EMPTY
