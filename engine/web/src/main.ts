@@ -1,6 +1,7 @@
 import "./style.css";
 import { drawSidebar as paintSidebar, updateSidebar as paintSidebarHud } from "./sidebar";
 import { renderModal, handleModalKey, type Modal } from "./modal";
+import { commandKey, isHandledKey, isMovementKey, movementMask, rawKey } from "./keys";
 
 const COLS = 80;
 // The server streams board columns 0..59 only. Columns 60..79 are the sidebar,
@@ -27,15 +28,13 @@ const MessageTypeScrollReply = "scrollReply";
 // The rest of that geometry lives in modal.ts, which owns every prompt's layout.
 const DEBUG_PROMPT_WIDTH = 11;
 
-const InputMaskUp = 1 << 0;
-const InputMaskDown = 1 << 1;
-const InputMaskLeft = 1 << 2;
-const InputMaskRight = 1 << 3;
-const InputMaskShift = 1 << 4;
-const InputMaskShoot = 1 << 5;
-
-const KeyEnter = 13;
-const KeyEscape = 27;
+// ElementDefs[E_PLAYER].Character / .Color (elements.go:1268-1269), used by the
+// pause blink.
+const CHAR_PLAYER = 0x02;
+const COLOR_PLAYER = 0x1f;
+// SoundHasTimeElapsed(TickTimeCounter, 25) in GAME.PAS:1520. A TimerTick is 6
+// hundredths of a second (SOUNDS.PAS:172), so the blink toggles every 250ms.
+const PAUSE_BLINK_MS = 250;
 
 type ScreenCell = {
   x: number;
@@ -83,6 +82,7 @@ type ProtocolEvent = {
   toBoard?: number;
   entryX?: number;
   entryY?: number;
+  paused?: boolean;
 };
 
 type SnapshotMessage = {
@@ -352,6 +352,14 @@ const pressed = new Set<string>();
 // the board keeps updating underneath and the modal is painted as an overlay
 // rather than by saving/restoring cells.
 let modal: Modal | null = null;
+// Per-player pause (M3.11): the server tells us via PauseEvent whether OUR stat
+// is paused. The room keeps running for everyone else, so this is presentation
+// only — we draw what vanilla's GamePlayLoop pause branch drew.
+let paused = false;
+let pauseBlink = false;
+let pauseTimer = 0;
+let myX = 0;
+let myY = 0;
 const overlay = new Map<number, { ch: number; color: number }>();
 const cells: ScreenCell[] = Array.from({ length: COLS * ROWS }, (_, i) => ({
   x: i % COLS,
@@ -410,6 +418,8 @@ function connect() {
 function disconnect(reason: string) {
   connected = false;
   window.clearInterval(inputTimer);
+  // Otherwise the blink timer keeps repainting the board over the notice below.
+  setPaused(false);
   ws = null;
   drawConnectionNotice(reason);
   retryTimer = window.setTimeout(connect, 2000);
@@ -452,15 +462,19 @@ function applyMessage(message: ServerMessage) {
 function applySnapshot(message: SnapshotMessage) {
   playerId = message.you.id;
   myStatId = message.you.statId;
+  myX = message.you.x;
+  myY = message.you.y;
   replaceCells(message.screen);
   drawSidebar();
   updateSidebar(message.hud);
   renderEvents(message.events);
+  paintOverlay();
   drawScreen();
 }
 
-// Stat ids shift when other players leave the board, so track ours from every
-// message that carries the roster.
+// Stat ids shift when other players leave the board, so track ours — and our
+// position, which the pause blink draws over — from every message that carries
+// the roster.
 function trackMyStatId(players: PlayerSnapshot[] | undefined) {
   if (!players) {
     return;
@@ -468,6 +482,8 @@ function trackMyStatId(players: PlayerSnapshot[] | undefined) {
   for (const player of players) {
     if (player.id === playerId) {
       myStatId = player.statId;
+      myX = player.x;
+      myY = player.y;
       return;
     }
   }
@@ -484,6 +500,7 @@ function applyDiff(message: DiffMessage) {
     updateSidebar(message.hud);
   }
   renderEvents(message.events);
+  paintOverlay();
   drawScreen();
 }
 
@@ -543,12 +560,50 @@ function writeOverlay(x: number, y: number, color: number, text: string) {
 }
 
 // paintOverlay rebuilds the modal layer from scratch each frame, so a modal
-// never has to restore what was underneath it.
+// never has to restore what was underneath it. The pause layer goes underneath
+// the modal: a paused player can still have a scroll open over the board.
 function paintOverlay() {
   overlay.clear();
+  if (paused) {
+    paintPause();
+  }
   if (modal) {
     renderModal(writeOverlay, modal);
   }
+}
+
+// paintPause is GAME.PAS:1518-1533. Note what actually blinks: the "Pausing..."
+// label is written unconditionally every frame, and it is the PLAYER GLYPH that
+// alternates with a blank. Board column x maps to screen column x-1.
+function paintPause() {
+  writeOverlay(64, 5, 0x1f, "Pausing...");
+  if (myX <= 0 || myY <= 0) {
+    return;
+  }
+  if (pauseBlink) {
+    writeOverlay(myX - 1, myY - 1, COLOR_PLAYER, String.fromCharCode(CHAR_PLAYER));
+  } else {
+    writeOverlay(myX - 1, myY - 1, 0x0f, " ");
+  }
+}
+
+function setPaused(next: boolean) {
+  if (paused === next) {
+    return;
+  }
+  paused = next;
+  window.clearInterval(pauseTimer);
+  pauseTimer = 0;
+  if (paused) {
+    pauseBlink = true;
+    pauseTimer = window.setInterval(() => {
+      pauseBlink = !pauseBlink;
+      paintOverlay();
+      drawScreen();
+    }, PAUSE_BLINK_MS);
+  }
+  paintOverlay();
+  drawScreen();
 }
 
 function openModal(next: Modal) {
@@ -590,7 +645,8 @@ function openYesNo(message: string, onAnswer: (yes: boolean) => void) {
 
 function closeModal() {
   modal = null;
-  overlay.clear();
+  // Repaint rather than clear: the pause layer may still be underneath.
+  paintOverlay();
   drawScreen();
 }
 
@@ -680,6 +736,13 @@ function handleProtocolEvent(event: ProtocolEvent) {
         openWindow(event.title ?? "Interaction", event.lines ?? [], false, event.statId ?? -1);
       }
       appendLogOnce(`scroll: ${event.title ?? ""}`);
+      break;
+    case "pause":
+      // Pause is per-player: a PauseEvent for somebody else's stat must not
+      // draw "Pausing..." on our screen.
+      if (isMine(event)) {
+        setPaused(event.paused ?? false);
+      }
       break;
     case "sound":
       appendLogOnce(`sound priority ${event.priority ?? 0}`);
@@ -773,7 +836,7 @@ function handleKeyDown(event: KeyboardEvent) {
   const handled = updatePressed(event, true);
   if (handled) {
     event.preventDefault();
-    sendInput(currentMask(), rawKey(event));
+    sendInput(currentMask(), rawKey(event.code));
   }
 }
 
@@ -786,21 +849,6 @@ function handleKeyUp(event: KeyboardEvent) {
     event.preventDefault();
     sendInput(currentMask());
   }
-}
-
-// commandKey maps the play-mode command keys the engine reads out of
-// InputKeyPressed. Movement stays on the keymask. Full parity is M4.2.
-function commandKey(event: KeyboardEvent): number {
-  if (event.ctrlKey || event.metaKey || event.altKey) {
-    return 0;
-  }
-  if (event.key === "?") {
-    return "?".charCodeAt(0);
-  }
-  if (event.code === "KeyH") {
-    return "H".charCodeAt(0);
-  }
-  return 0;
 }
 
 function sendKey(key: number) {
@@ -836,26 +884,7 @@ function updatePressed(event: KeyboardEvent, down: boolean): boolean {
 }
 
 function currentMask(): number {
-  let mask = 0;
-  if (pressed.has("ArrowUp") || pressed.has("KeyW")) {
-    mask |= InputMaskUp;
-  }
-  if (pressed.has("ArrowDown") || pressed.has("KeyS")) {
-    mask |= InputMaskDown;
-  }
-  if (pressed.has("ArrowLeft") || pressed.has("KeyA")) {
-    mask |= InputMaskLeft;
-  }
-  if (pressed.has("ArrowRight") || pressed.has("KeyD")) {
-    mask |= InputMaskRight;
-  }
-  if (pressed.has("ShiftLeft") || pressed.has("ShiftRight")) {
-    mask |= InputMaskShift;
-  }
-  if (pressed.has("Space")) {
-    mask |= InputMaskShoot;
-  }
-  return mask;
+  return movementMask(pressed);
 }
 
 function sendInput(mask: number, key = 0) {
@@ -885,23 +914,4 @@ function sendInput(mask: number, key = 0) {
   ws.send(JSON.stringify(input));
 }
 
-function rawKey(event: KeyboardEvent): number {
-  if (event.code === "Enter") {
-    return KeyEnter;
-  }
-  if (event.code === "Escape") {
-    return KeyEscape;
-  }
-  return 0;
-}
-
-function isMovementKey(code: string): boolean {
-  return code === "ArrowUp" || code === "ArrowDown" || code === "ArrowLeft" || code === "ArrowRight" ||
-    code === "KeyW" || code === "KeyA" || code === "KeyS" || code === "KeyD";
-}
-
-function isHandledKey(code: string): boolean {
-  return isMovementKey(code) || code === "ShiftLeft" || code === "ShiftRight" || code === "Space" ||
-    code === "Enter" || code === "Escape";
-}
 

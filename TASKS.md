@@ -265,27 +265,31 @@ semantics while keeping the server authoritative.
   and input router handles read-only text, selectable links, yes/no prompts,
   text entry, and paged help without gameplay input leaking through.
 
-- [ ] **M4.2 — Full keyboard/control parity.** Requires M3.11. Today the browser
+- [x] **M4.2 — Full keyboard/control parity.** Requires M3.11. Today the browser
   sends only movement, Shift/Space, Enter, Escape, `?` and `H`; everything else
   in `ElementPlayerTick`'s key switch (`elements.go:1376-1419`) is unreachable
   from a browser. Route the rest through the protocol:
 
   | Key | Effect | Status |
   |---|---|---|
-  | arrows / WASD | move (keymask) | done |
+  | arrows / numpad 8·4·6·2 | move (keymask) | done |
   | Shift+dir | shoot | done |
   | Space | shoot last direction | done |
-  | `T` | light torch | engine ready, client never sends it |
-  | `P` | pause | needs M3.11 (per-player) |
-  | `B` | sound toggle | needs M3.11 (per-player) |
-  | `S` | save game | needs M3.11 (hangs the server today) |
-  | `Q` / Esc | quit prompt | event exists, client only logs it |
+  | `T` | light torch | done |
+  | `P` | pause | done (per-player + "Pausing..." overlay) |
+  | `B` | sound toggle | done (per-player) |
+  | `S` | save game | done (emits `SavePromptEvent`; server still refuses — M4.3a) |
+  | `Q` / Esc | quit prompt | done (client answers locally; routing is M4.3) |
   | `H` | help window | done (M3.9) |
   | `?` | debug prompt | done (M3.9) |
   | ↑↓ PgUp PgDn Enter Esc | text-window navigation | done (M3.9/M3.10) |
 
   DoD: browser key behavior matches the terminal client for common TOWN flows,
   and each row above has a protocol-level test.
+  DEVIATION: WASD movement (a M3.5 client invention) was removed — it made `S`
+  ambiguous between "move down" and ZZT's save key, which arrive as the same
+  `InputKeyPressed` byte. The client now sends the original's vocabulary only:
+  arrows plus numpad `8/4/6/2` (`INPUT.PAS:217-234`). See NOTES.md.
 
 - [ ] **M4.3 — Title, world, save, and high-score flows.** Restore the original
   non-gameplay UI paths in the browser, including title screen/start flow,

@@ -357,3 +357,51 @@ modal rather than leaked to the board — the DoD's real claim.
 Adding a TS test runner (vitest) so those checks live in the repo is the obvious
 next infra step. Deliberately not done here: it is a dependency decision, not
 part of M4.1.
+
+## M4.2 (2026-07-09) — full keyboard/control parity
+
+The browser now sends every key `ElementPlayerTick`'s `switch UpCase(InputKeyPressed)`
+reads (`elements.go:1374-1429`): `T` torch, `P` pause, `B` sound, `S` save,
+`Q` quit, plus the already-live `H` and `?`. Commands ride the `key` byte;
+movement rides the `keymask`. Neither populates the other's field, so a command
+can never be read as a step or the reverse — `TestM42MovementCarriesNoCommandKey`
+pins that.
+
+DECISION, and the reason this task needed one: **WASD movement is gone.**
+It was a M3.5 client invention, and it collided head-on with `S` = save game —
+both arrive as the same `InputKeyPressed` byte, so the engine cannot tell them
+apart. Checked against the source rather than guessed: `INPUT.PAS:217-234` is
+the original's entire movement vocabulary —
+
+    KEY_UP, '8' | KEY_LEFT, '4' | KEY_RIGHT, '6' | KEY_DOWN, '2'
+
+arrow keys and the numeric keypad, ported faithfully at `engine/input.go:101-110`
+(plus joystick and mouse, `INPUT.PAS:243-321`). So the client now sends arrows
+and `Numpad8/4/6/2` and nothing else, which both frees every command letter and
+is strictly *more* faithful than what it replaced.
+
+`main.ts` grew a pause layer. Worth recording, because TASKS.md M3.11 and M4.2
+both describe it backwards: vanilla does **not** blink "Pausing...".
+`GAME.PAS:1518-1533` writes that label unconditionally at (64,5) every frame and
+blinks the **player glyph**, alternating `ElementDefs[E_PLAYER].Character` with a
+blank. Blink period is `SoundHasTimeElapsed(TickTimeCounter, 25)`; a TimerTick is
+6 hundredths of a second (`SOUNDS.PAS:172`), so 250ms. Implemented as an overlay
+layer painted *under* any modal, since a paused player can still have a scroll open.
+
+Key routing moved out of `main.ts` into `src/keys.ts`, for the same reason M4.1
+split out `modal.ts`: it is pure, and the failure mode is silent. A mistyped
+`KeyboardEvent.code` such as `"NumPad8"` typechecks perfectly and simply never
+moves the player. Driven under node the way M4.1 drove the modal router —
+65 checks: every command byte, modifier suppression (Ctrl+S must stay the
+browser's save dialog), each numpad digit mapping to its arrow, and the
+`S`-is-save-not-move-down contract from both sides.
+
+STILL DEFERRED, unchanged by this task: `QuitPromptEvent` carries no `StatId` and
+`GamePromptEndPlay` (`elements.go:1240`) reads `PlayerFor(0).Health`, so `Q` from
+player 2 prompts nobody and reads player 1's health. The client answers the quit
+modal locally. That is M4.3, which names both bugs explicitly. `S` emits
+`SavePromptEvent` and the server still refuses it (M3.11 policy); rejoinable
+snapshots are M4.3a.
+
+Replay fixture unchanged — no simulation code was touched, only the client and
+the tests.
