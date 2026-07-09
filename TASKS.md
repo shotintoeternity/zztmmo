@@ -298,6 +298,29 @@ semantics while keeping the server authoritative.
   load, quit, die, enter a score, and restart without falling back to
   terminal-only UI, and one player quitting does not disturb the others.
 
+- [ ] **M4.3a — Savable, rejoinable room snapshots.** Requires M3.11 (which
+  builds the `SavePromptEvent`/`SubmitSaveFilename` seam but has the server
+  refuse saves). Make a save snapshot the whole room and let other players load
+  it and join later. `RoomManager.world` (`room_manager.go:10`) is already the
+  authoritative `TWorld`, synced at `room_manager.go:417-419`, and `WorldSave`
+  (`game.go:684`) already writes the vanilla format; loading one back is
+  `NewRoomManager(loadedWorld)`. Three things this task must not hand-wave:
+  * **The filename comes from the client.** Sanitize it — reject path
+    separators, `..`, absolute paths, and anything outside a configured
+    snapshot directory. A `-saves` flag like `-web`/`-help`. This is the reason
+    the work is not folded into M3.11.
+  * **A snapshot captures other players**, whose stats live in `World.Info` and
+    whose stat entries sit on the board. Decide explicitly whether a reloaded
+    snapshot respawns them at `Board.Info.StartPlayerX/Y`, drops them, or
+    freezes them; write the choice in NOTES.md before implementing.
+  * **World flags are global** (see the 2026-07-09 NOTES entry), so a snapshot
+    also freezes shared puzzle progress. That is probably correct for a co-op
+    save, but state it rather than inherit it by accident.
+  DoD: player A saves a room under a name; the process restarts; player B loads
+  that snapshot by name and joins it; board contents, flags, and puzzle progress
+  survive the round trip; a filename containing `../` is rejected with a test
+  proving it; replay green.
+
 - [ ] **M4.4 — Browser sound synthesis.** Convert `SoundEvent` notes into
   WebAudio playback with priority/queue behavior close to ZZT, plus a visible
   sound toggle in the authentic sidebar. DoD: pickups, shots, doors, damage,

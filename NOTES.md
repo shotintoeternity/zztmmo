@@ -134,3 +134,79 @@ Vendor is on TOWN board 2 ("Armory"), stat 2, at (21,9). Note that several other
 boards also have a stat 2 whose `Data` string contains the vendor's code — the
 element there is not E_OBJECT, so it is inert, but do not identify objects by
 `Data` alone.
+
+## Third-party world compatibility (2026-07-09) — verified, plus a loader crash
+
+Prompted by "will this run other ZZT games?". Answer: yes for real `.ZZT`
+worlds, and it is now checked rather than assumed. *Burger Joint* (1998, Museum
+of ZZT, 23 boards, 57 stats) loads and runs 3000 headless steps via
+`cmd/zzt-smoke`, no panic. Same seed twice → identical end state; a different
+seed diverges, so the sim is genuinely seeded and not accidentally frozen. The
+M0–M3 surgery did not bake in TOWN-specific assumptions.
+
+Format gate is vanilla: `WorldLoad` (game.go:626) requires the leading `int16`
+to be `-1`. A forged `-2` header (Super ZZT) is rejected through ZZT's own "You
+need a newer version of ZZT!" path. That is faithful — real ZZT refuses Super
+ZZT worlds too — not a gap to close.
+
+FINDING (unfixed): a **malformed world panics the loader** rather than failing
+cleanly. A hand-forged header declaring 200 boards produced
+`panic: slice bounds out of range [:0] with length 3`. There is no bounds check
+on `World.BoardCount` before the `boardId <= BoardCount` load loop at
+game.go:658, and `BoardData` holds only `MAX_BOARD+1` = 101 slots. Being
+precise about what was proven: the forged file was malformed in more than one
+way, so what is demonstrated is *a malformed world panics*, not specifically
+that the `MAX_BOARD` overflow is the trigger. Not compared against the Pascal —
+`reference/` is gitignored and was not cloned.
+
+Not exploitable today: `cmd/zzt-server` loads its world once from the `-world`
+flag and ignores `JoinMessage.World`, so a client cannot make the server open an
+arbitrary file. It becomes a crash vector the moment users can upload worlds,
+which is M5.3 territory. Harden the loader before then.
+
+## Open design question (2026-07-09) — world flags are global, players are not
+
+`MAX_FLAG = 10` flags live once in `World.Info.Flags` (gamevars.go:105) and are
+read/written by `WorldGetFlagPosition`/`WorldSetFlag` (oop.go:271,282). They are
+therefore shared by every player in a room: a puzzle one player solves is solved
+for all of them, and `#if flag` means "has anyone done this yet".
+
+This is not a bug — nothing decided otherwise — but it is an unmade decision
+that single-player worlds will expose immediately. ZZT-OOP was written assuming
+exactly one player. Related: `?`/seek now resolves through `NearestPlayer`
+(game.go:300,1336), which is identical to vanilla for one player and a design
+choice for N.
+
+Needs a policy before M5 (authoring) and arguably before M4.6 (full TOWN
+playthrough). Candidates: keep flags global (co-op semantics, current
+behavior); per-player flags (each player runs their own story, breaks shared
+puzzles); or a per-flag declaration in the world. Deliberately not resolved here.
+
+## M3.11 (2026-07-09) — save policy for a shared world
+
+DECISION. The sim must never block, so `S` emits `SavePromptEvent{StatId}` and
+returns; the caller answers via `Engine.SubmitSaveFilename(statId, name)`,
+applied at the top of the next step. That seam is required regardless of policy,
+because the terminal client keeps vanilla's modal save prompt.
+
+What the *server* does with the reply is the policy question. Interim answer for
+M3.11: **refuse**. The sim shows "Saving is disabled" and moves on. This commits
+to no semantics that later work would have to undo.
+
+TARGET (decided, not built here): a save should snapshot the whole room, and
+other players should be able to load that snapshot and join it later. This is
+already close — `RoomManager.world` (room_manager.go:10) is the authoritative
+`TWorld`, kept in sync at room_manager.go:417-419, and `WorldSave`
+(game.go:684) already writes the vanilla format. Loading one back is
+`NewRoomManager(loadedWorld)`.
+
+Why it is NOT in M3.11: the filename comes from the client. Writing a
+client-supplied name to server disk is a path-traversal hole (`../../`), and it
+needs its own sanitizing, storage location, snapshot listing, and join-by-name
+flow. Bundling that into the change that restructures the player tick is how a
+green replay test goes red for unrelated reasons. Tracked as M4.3a.
+
+Note that a room snapshot necessarily captures *other players* — their stats are
+in `World.Info` and their stat entries are on the board. Deciding whether a
+reloaded snapshot respawns them, drops them, or freezes them is part of M4.3a,
+not a detail to improvise.
