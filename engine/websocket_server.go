@@ -230,7 +230,13 @@ func (s *WebSocketServer) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	if join.Board == 0 {
-		join.Board = s.DefaultBoard
+		join.Board = inst.RoomManager.FrozenWorld().Info.CurrentBoard
+		if join.Board == 0 {
+			join.Board = s.DefaultBoard
+		}
+		if join.Board == 0 {
+			join.Board = 1
+		}
 	}
 
 	client := &webSocketClient{conn: conn, worldName: safeWorld}
