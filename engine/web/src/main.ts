@@ -749,7 +749,7 @@ function setCell(cell: ScreenCell) {
 
 function drawScreen() {
   screenCtx.textBaseline = "top";
-  screenCtx.font = "16px 'IBM Plex Mono', 'Cascadia Mono', 'SFMono-Regular', Consolas, monospace";
+  screenCtx.font = "18px 'Perfect DOS VGA 437', monospace";
   for (let i = 0; i < cells.length; i += 1) {
     const base = cells[i];
     const over = overlay.get(i);
@@ -762,7 +762,7 @@ function drawScreen() {
     screenCtx.fillStyle = ega[bg] ?? "#000000";
     screenCtx.fillRect(x, y, CELL_W, CELL_H);
     screenCtx.fillStyle = ega[fg] ?? "#ffffff";
-    screenCtx.fillText(toGlyph(ch), x, y + 1);
+    screenCtx.fillText(toGlyph(ch), x, y);
   }
 }
 

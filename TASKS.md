@@ -497,3 +497,4 @@ determinism (CLAUDE.md rule 2) and the replay fixtures are unaffected.
 - [ ] **Prepare next batch of ZZT games.** Add download paths, scripts, or direct curl pipelines for the rest of the requested ZZT games (Teen Priest, Teen Priest 2, Inedible Vomit, other bongo/wynand games, Freedom, Apparitions of the City by kev-san, etc.) to get them ready for deployment.
 - [ ] **Torches only illuminate player's path.** Fix the torch illumination logic so that torches correctly light up the surroundings rather than just the player's path.
 - [ ] **Title screens aren't animating properly.** Investigate and resolve the issue where object scripts and movements on ZZT title screens do not animate or tick as they should.
+- [ ] **Sound broadcast bug.** Fix the issue where sound events (like gem pickups) are triggering and heard by all players rather than only the player who triggered them.
