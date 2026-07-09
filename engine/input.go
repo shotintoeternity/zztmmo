@@ -1,4 +1,4 @@
-package main // unit: Input
+package zztgo // unit: Input
 
 import (
 	"github.com/gdamore/tcell"
@@ -217,23 +217,23 @@ var tcellToKey = map[tcell.Key]byte{
 	tcell.KeyBackspace:  KEY_BACKSPACE,
 	tcell.KeyBackspace2: KEY_BACKSPACE,
 	tcell.KeyCtrlY:      KEY_CTRL_Y,
-	tcell.KeyDelete:    KEY_DELETE,
-	tcell.KeyDown:      KEY_DOWN,
-	tcell.KeyEnd:       KEY_END,
-	tcell.KeyEnter:     KEY_ENTER,
-	tcell.KeyEscape:    KEY_ESCAPE,
-	tcell.KeyF1:        KEY_F1,
-	tcell.KeyF2:        KEY_F2,
-	tcell.KeyF3:        KEY_F3,
-	tcell.KeyF4:        KEY_F4,
-	tcell.KeyHome:      KEY_HOME,
-	tcell.KeyInsert:    KEY_INSERT,
-	tcell.KeyLeft:      KEY_LEFT,
-	tcell.KeyPgDn:      KEY_PAGE_DOWN,
-	tcell.KeyPgUp:      KEY_PAGE_UP,
-	tcell.KeyRight:     KEY_RIGHT,
-	tcell.KeyTab:       KEY_TAB,
-	tcell.KeyUp:        KEY_UP,
+	tcell.KeyDelete:     KEY_DELETE,
+	tcell.KeyDown:       KEY_DOWN,
+	tcell.KeyEnd:        KEY_END,
+	tcell.KeyEnter:      KEY_ENTER,
+	tcell.KeyEscape:     KEY_ESCAPE,
+	tcell.KeyF1:         KEY_F1,
+	tcell.KeyF2:         KEY_F2,
+	tcell.KeyF3:         KEY_F3,
+	tcell.KeyF4:         KEY_F4,
+	tcell.KeyHome:       KEY_HOME,
+	tcell.KeyInsert:     KEY_INSERT,
+	tcell.KeyLeft:       KEY_LEFT,
+	tcell.KeyPgDn:       KEY_PAGE_DOWN,
+	tcell.KeyPgUp:       KEY_PAGE_UP,
+	tcell.KeyRight:      KEY_RIGHT,
+	tcell.KeyTab:        KEY_TAB,
+	tcell.KeyUp:         KEY_UP,
 }
 
 func init() {
@@ -247,10 +247,10 @@ func init() {
 
 // --- Global Wrappers ---
 
-func InputUpdate()  {
+func InputUpdate() {
 	E.InputUpdate()
 }
 
-func SetInputSource(s InputSource)  {
+func SetInputSource(s InputSource) {
 	E.SetInputSource(s)
 }

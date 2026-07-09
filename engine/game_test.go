@@ -1,4 +1,4 @@
-package main
+package zztgo
 
 import "testing"
 
@@ -118,10 +118,11 @@ func TestShootMaxShots(t *testing.T) {
 // on a board, a tiger always chases the nearest one via NearestPlayer.
 //
 // Layout:
-//   P1 at (30,13) — nearest to the tiger
-//   P2 at (30,25) — far away vertically (dist=169)
-//   P3 at (58,13) — far away horizontally (dist=529)
-//   Tiger at (35,13), P1=10 (max aggression, always seek), P2=0 (no shooting), Cycle=1
+//
+//	P1 at (30,13) — nearest to the tiger
+//	P2 at (30,25) — far away vertically (dist=169)
+//	P3 at (58,13) — far away horizontally (dist=529)
+//	Tiger at (35,13), P1=10 (max aggression, always seek), P2=0 (no shooting), Cycle=1
 //
 // With P1=10, the condition int16(stat.P1) < e.Random(10) is 10 < (0..9), always
 // false, so the lion always calls CalcDirectionSeek → NearestPlayer.
@@ -305,7 +306,6 @@ func TestGemPickupSoundEvent(t *testing.T) {
 		t.Errorf("expected SoundEvent notes %q, got %q", "@\x017\x014\x010\x01", soundEv.Notes)
 	}
 }
-
 
 // TestDeathRespawnInventoryIsolation is the M2.4 definition of done:
 // one player dies (health reaches 0), a DeathEvent is emitted, a RespawnEvent

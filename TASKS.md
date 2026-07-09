@@ -153,10 +153,41 @@ and every run is reproducible. ANALYSIS.md §3g, §3h, §5.
   player between them. DoD: player walks through a passage from board A to
   board B while another player keeps playing board A undisturbed.
 
-## M3 — Network (sketch; break down when M2 lands)
+## M3 — Network
 
-Server: `server/` Go module — RoomManager over WebSockets (nhooyr/websocket),
-110ms tick, snapshot-on-join + dirty-cell diffs from the M0.2 Screen/dirty-list,
-per-player HUD + Scroll/Sound events. Client: `client/` Vite TS dumb terminal —
-CP437 canvas, keymask sender, WebAudio square-wave for SoundEvents. Bot soak
-test: 20 bots, 1 hour, server StateHash vs client-applied state, zero drift.
+- [x] **M3.0 — Importable engine package.** Convert `engine/` from terminal-only
+  `package main` into an importable engine package. Move the terminal runner under
+  `cmd/zztgo`, and add a headless smoke command that can be run locally without
+  opening tcell. DoD: `go build ./...`, `go test ./...`, replay green, and
+  `go run ./cmd/zzt-smoke` loads TOWN and steps the sim.
+
+- [ ] **M3.1 — Production RoomManager.** Lift the M2.5 test RoomManager into real
+  server-side code: one room per board, join/leave, spawn/despawn, transfer
+  routing, stable tick order, occupied rooms simulate, empty rooms freeze. DoD:
+  integration test with two rooms and two players crossing boards.
+
+- [ ] **M3.2 — Snapshot protocol.** Define JSON protocol structs for `join`,
+  `input`, `snapshot`, `diff`, `event`, and `boardChange`. Snapshot includes board
+  ID, tick, seed/hash, 80x25 screen cells, player ID/stat ID, HUD state, and
+  visible events. DoD: round-trip tests and a snapshot generated from TOWN.
+
+- [ ] **M3.3 — Dirty diffs.** Expose screen dirty cells and event drains cleanly
+  from the engine/room boundary. DoD: one tick produces only changed cells plus
+  events, with full snapshot fallback.
+
+- [ ] **M3.4 — WebSocket server.** Add a fixed-110ms tick server that accepts
+  browser clients, maps incoming keymasks to `PlayerInput`, and broadcasts
+  snapshots/diffs over JSON WebSockets. DoD: a test WebSocket client can join,
+  move, and receive deterministic diffs.
+
+- [ ] **M3.5 — Browser terminal client.** Add a Vite/TS client that renders
+  CP437-style 80x25 cells on canvas, sends inputs, and handles snapshots, diffs,
+  scroll/sound/message events. DoD: one browser can play against the server.
+
+- [ ] **M3.6 — Multiplayer browser smoke.** Two browsers or bot clients on one
+  board move independently, pick up items, transfer rooms, and receive
+  per-player events/HUD. DoD: scripted multi-client test passes.
+
+- [ ] **M3.7 — Soak/drift test.** Run 20 bot clients for a shorter CI duration
+  first, then the 1-hour target manually/nightly. DoD: no drift, no panic, no
+  runaway memory.

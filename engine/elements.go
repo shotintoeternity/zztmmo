@@ -1,4 +1,4 @@
-package main // unit: Elements
+package zztgo // unit: Elements
 
 // interface uses: GameVars
 

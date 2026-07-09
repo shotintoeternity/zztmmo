@@ -1,4 +1,4 @@
-package main // unit: Oop
+package zztgo // unit: Oop
 
 // interface uses: GameVars
 
@@ -835,11 +835,11 @@ func OopCheckCondition(statId int16, position *int16) (OopCheckCondition_ bool) 
 	return E.OopCheckCondition(statId, position)
 }
 
-func OopError(statId int16, message string)  {
+func OopError(statId int16, message string) {
 	E.OopError(statId, message)
 }
 
-func OopExecute(statId int16, position *int16, name string)  {
+func OopExecute(statId int16, position *int16, name string) {
 	E.OopExecute(statId, position, name)
 }
 
@@ -863,15 +863,15 @@ func OopParseTile(statId, position *int16, tile *TTile) (OopParseTile bool) {
 	return E.OopParseTile(statId, position, tile)
 }
 
-func OopPlaceTile(x, y int16, tile *TTile)  {
+func OopPlaceTile(x, y int16, tile *TTile) {
 	E.OopPlaceTile(x, y, tile)
 }
 
-func OopReadChar(statId int16, position *int16)  {
+func OopReadChar(statId int16, position *int16) {
 	E.OopReadChar(statId, position)
 }
 
-func OopReadDirection(statId int16, position *int16, dx, dy *int16)  {
+func OopReadDirection(statId int16, position *int16, dx, dy *int16) {
 	E.OopReadDirection(statId, position, dx, dy)
 }
 
@@ -879,11 +879,11 @@ func OopReadLineToEnd(statId int16, position *int16) (OopReadLineToEnd string) {
 	return E.OopReadLineToEnd(statId, position)
 }
 
-func OopReadValue(statId int16, position *int16)  {
+func OopReadValue(statId int16, position *int16) {
 	E.OopReadValue(statId, position)
 }
 
-func OopReadWord(statId int16, position *int16)  {
+func OopReadWord(statId int16, position *int16) {
 	E.OopReadWord(statId, position)
 }
 
@@ -891,11 +891,11 @@ func OopSend(statId int16, sendLabel string, ignoreLock bool) (OopSend bool) {
 	return E.OopSend(statId, sendLabel, ignoreLock)
 }
 
-func OopSkipLine(statId int16, position *int16)  {
+func OopSkipLine(statId int16, position *int16) {
 	E.OopSkipLine(statId, position)
 }
 
-func WorldClearFlag(name string)  {
+func WorldClearFlag(name string) {
 	E.WorldClearFlag(name)
 }
 
@@ -903,6 +903,6 @@ func WorldGetFlagPosition(name string) (WorldGetFlagPosition int16) {
 	return E.WorldGetFlagPosition(name)
 }
 
-func WorldSetFlag(name string)  {
+func WorldSetFlag(name string) {
 	E.WorldSetFlag(name)
 }

@@ -1,4 +1,6 @@
 zztgo
+!cmd/zztgo/
+!cmd/zztgo/main.go
 .idea/
 *.ZZT
 *.hex

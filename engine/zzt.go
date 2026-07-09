@@ -11,9 +11,10 @@ TODO:
   + stat.Data should probably be []byte instead of string
 */
 
-package main
+package zztgo
 
-func main() {
+// Run starts the classic terminal UI.
+func Run() {
 	E.WorldFileDescCount = 7
 	E.WorldFileDescKeys[0] = "TOWN"
 	E.WorldFileDescValues[0] = "TOWN       The Town of ZZT"

@@ -1,4 +1,4 @@
-package main // unit: Game
+package zztgo // unit: Game
 
 import (
 	"os"

@@ -1,4 +1,4 @@
-package main
+package zztgo
 
 import (
 	"fmt"
@@ -174,7 +174,7 @@ func BoolToInt(b bool) int16 {
 
 // --- Global Wrappers ---
 
-func Delay(milliseconds int16)  {
+func Delay(milliseconds int16) {
 	E.Delay(milliseconds)
 }
 
@@ -182,6 +182,6 @@ func Random(end int16) int16 {
 	return E.Random(end)
 }
 
-func RandomSeed(s uint32)  {
+func RandomSeed(s uint32) {
 	E.RandomSeed(s)
 }

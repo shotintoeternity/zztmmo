@@ -1,4 +1,4 @@
-package main // unit: GameVars
+package zztgo // unit: GameVars
 
 const (
 	MAX_STAT         = 150

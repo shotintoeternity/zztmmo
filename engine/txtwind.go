@@ -1,4 +1,4 @@
-package main // unit: TxtWind
+package zztgo // unit: TxtWind
 
 import (
 	"bufio"

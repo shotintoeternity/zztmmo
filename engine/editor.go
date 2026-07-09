@@ -1,4 +1,4 @@
-package main // unit: Editor
+package zztgo // unit: Editor
 
 import (
 	"time"

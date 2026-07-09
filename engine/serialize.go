@@ -1,6 +1,6 @@
 // Serialization functions
 
-package main
+package zztgo
 
 // Serialize string to dest as Pascal string, padding up to len(dest) with zeros (TODO: or space?)
 func StoreString(dest []byte, src string) {

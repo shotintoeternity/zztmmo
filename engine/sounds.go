@@ -1,4 +1,4 @@
-package main // unit: Sounds
+package zztgo // unit: Sounds
 
 type TDrumData struct {
 	Len  int16

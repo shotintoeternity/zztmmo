@@ -1,4 +1,4 @@
-package main
+package zztgo
 
 // video.go is the headless screen buffer. Every Video* call the simulation
 // makes lands here — in the 80x25 e.Screen array, never in a terminal. The
@@ -113,42 +113,42 @@ func (e *Engine) VideoUninstall() {
 
 // --- Global Wrappers ---
 
-func VideoClrScr()  {
+func VideoClrScr() {
 	E.VideoClrScr()
 }
 
-func VideoHideCursor()  {
+func VideoHideCursor() {
 	E.VideoHideCursor()
 }
 
-func VideoInstall()  {
+func VideoInstall() {
 	E.VideoInstall()
 }
 
-func VideoMoveToBuffer(x, y, width int16, cells []VideoCell)  {
+func VideoMoveToBuffer(x, y, width int16, cells []VideoCell) {
 	E.VideoMoveToBuffer(x, y, width, cells)
 }
 
-func VideoMoveToVideo(x, y, width int16, cells []VideoCell)  {
+func VideoMoveToVideo(x, y, width int16, cells []VideoCell) {
 	E.VideoMoveToVideo(x, y, width, cells)
 }
 
-func VideoShow()  {
+func VideoShow() {
 	E.VideoShow()
 }
 
-func VideoUninstall()  {
+func VideoUninstall() {
 	E.VideoUninstall()
 }
 
-func VideoWriteText(x, y int16, color byte, text string)  {
+func VideoWriteText(x, y int16, color byte, text string) {
 	E.VideoWriteText(x, y, color, text)
 }
 
-func videoClear()  {
+func videoClear() {
 	E.videoClear()
 }
 
-func videoPut(x, y int16, ch, color byte)  {
+func videoPut(x, y int16, ch, color byte) {
 	E.videoPut(x, y, ch, color)
 }

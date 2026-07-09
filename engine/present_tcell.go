@@ -1,4 +1,4 @@
-package main
+package zztgo
 
 // present_tcell.go is the ONLY file in the engine that touches a terminal. It
 // reads the E.Screen buffer (video.go) and draws it with tcell. Every entry
