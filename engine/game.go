@@ -287,7 +287,9 @@ func (e *Engine) TransitionDrawToFill(chr byte, color int16) {
 func (e *Engine) TileToColorAndChar(x, y int16) (color, char byte) {
 	var ch byte
 	tile := &e.Board.Tiles[x][y]
-	if !e.Board.Info.IsDark || ElementDefs[e.Board.Tiles[x][y].Element].VisibleInDark || e.PlayerFor(0).TorchTicks > 0 && Sqr(int16(e.Board.Stats[0].X)-x)+Sqr(int16(e.Board.Stats[0].Y)-y)*2 < TORCH_DIST_SQR || e.ForceDarknessOff {
+	pId := e.NearestPlayer(x, y)
+	pStat := &e.Board.Stats[pId]
+	if !e.Board.Info.IsDark || ElementDefs[e.Board.Tiles[x][y].Element].VisibleInDark || e.PlayerFor(pId).TorchTicks > 0 && Sqr(int16(pStat.X)-x)+Sqr(int16(pStat.Y)-y)*2 < TORCH_DIST_SQR || e.ForceDarknessOff {
 		if tile.Element == E_EMPTY {
 			return 0x0F, ' '
 		} else if ElementDefs[tile.Element].HasDrawProc {
@@ -1239,13 +1241,15 @@ func (e *Engine) CalcDirectionRnd(deltaX, deltaY *int16) {
 func (e *Engine) CalcDirectionSeek(x, y int16, deltaX, deltaY *int16) {
 	*deltaX = 0
 	*deltaY = 0
-	if e.Random(2) < 1 || int16(e.Board.Stats[0].Y) == y {
-		*deltaX = Signum(int16(e.Board.Stats[0].X) - x)
+	pId := e.NearestPlayer(x, y)
+	target := &e.Board.Stats[pId]
+	if e.Random(2) < 1 || int16(target.Y) == y {
+		*deltaX = Signum(int16(target.X) - x)
 	}
 	if *deltaX == 0 {
-		*deltaY = Signum(int16(e.Board.Stats[0].Y) - y)
+		*deltaY = Signum(int16(target.Y) - y)
 	}
-	if e.World.Info.EnergizerTicks > 0 {
+	if e.PlayerFor(pId).EnergizerTicks > 0 {
 		*deltaX = -*deltaX
 		*deltaY = -*deltaY
 	}

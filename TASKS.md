@@ -120,7 +120,7 @@ and every run is reproducible. ANALYSIS.md §3g, §3h, §5.
   player's health. World.Info.Flags stay SHARED (ANALYSIS.md §4.1). DoD: replay
   fixture unchanged (single player, same numbers, same order).
 
-- [ ] **M2.2 [ADVISOR] — N player stats.** `SpawnPlayer() int16` /
+- [x] **M2.2 [ADVISOR] — N player stats.** `SpawnPlayer() int16` /
   `RemovePlayer(statId)`: spawn adds an E_PLAYER stat (AddStat) at
   Board.Info.StartPlayerX/Y, despawn removes it. Replace hardcoded `Stats[0]` /
   `MoveStat(0,…)` in player paths with the ticked statId

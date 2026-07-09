@@ -65,15 +65,17 @@ func (e *Engine) ElementTigerTick(statId int16) {
 	if stat.P2 >= 0x80 {
 		element = E_STAR
 	}
+	pId := e.NearestPlayer(int16(stat.X), int16(stat.Y))
+	target := &e.Board.Stats[pId]
 	if e.Random(10)*3 <= int16(stat.P2)%0x80 {
-		if Difference(int16(stat.X), int16(e.Board.Stats[0].X)) <= 2 {
-			shot = e.BoardShoot(element, int16(stat.X), int16(stat.Y), 0, Signum(int16(e.Board.Stats[0].Y)-int16(stat.Y)), SHOT_SOURCE_ENEMY)
+		if Difference(int16(stat.X), int16(target.X)) <= 2 {
+			shot = e.BoardShoot(element, int16(stat.X), int16(stat.Y), 0, Signum(int16(target.Y)-int16(stat.Y)), SHOT_SOURCE_ENEMY)
 		} else {
 			shot = false
 		}
 		if !shot {
-			if Difference(int16(stat.Y), int16(e.Board.Stats[0].Y)) <= 2 {
-				shot = e.BoardShoot(element, int16(stat.X), int16(stat.Y), Signum(int16(e.Board.Stats[0].X)-int16(stat.X)), 0, SHOT_SOURCE_ENEMY)
+			if Difference(int16(stat.Y), int16(target.Y)) <= 2 {
+				shot = e.BoardShoot(element, int16(stat.X), int16(stat.Y), Signum(int16(target.X)-int16(stat.X)), 0, SHOT_SOURCE_ENEMY)
 			}
 		}
 	}
@@ -91,7 +93,9 @@ func (e *Engine) ElementRuffianTick(statId int16) {
 			}
 		}
 	} else {
-		if (stat.Y == e.Board.Stats[0].Y || stat.X == e.Board.Stats[0].X) && e.Random(9) <= int16(stat.P1) {
+		pId := e.NearestPlayer(int16(stat.X), int16(stat.Y))
+		target := &e.Board.Stats[pId]
+		if (stat.Y == target.Y || stat.X == target.X) && e.Random(9) <= int16(stat.P1) {
 			e.CalcDirectionSeek(int16(stat.X), int16(stat.Y), &stat.StepX, &stat.StepY)
 		}
 		tile := &e.Board.Tiles[int16(stat.X)+stat.StepX][int16(stat.Y)+stat.StepY]
@@ -114,15 +118,17 @@ func (e *Engine) ElementRuffianTick(statId int16) {
 func (e *Engine) ElementBearTick(statId int16) {
 	var deltaX, deltaY int16
 	stat := &e.Board.Stats[statId]
-	if stat.X != e.Board.Stats[0].X {
-		if Difference(int16(stat.Y), int16(e.Board.Stats[0].Y)) <= 8-int16(stat.P1) {
-			deltaX = Signum(int16(e.Board.Stats[0].X) - int16(stat.X))
+	pId := e.NearestPlayer(int16(stat.X), int16(stat.Y))
+	target := &e.Board.Stats[pId]
+	if stat.X != target.X {
+		if Difference(int16(stat.Y), int16(target.Y)) <= 8-int16(stat.P1) {
+			deltaX = Signum(int16(target.X) - int16(stat.X))
 			deltaY = 0
 			goto Movement
 		}
 	}
-	if Difference(int16(stat.X), int16(e.Board.Stats[0].X)) <= 8-int16(stat.P1) {
-		deltaY = Signum(int16(e.Board.Stats[0].Y) - int16(stat.Y))
+	if Difference(int16(stat.X), int16(target.X)) <= 8-int16(stat.P1) {
+		deltaY = Signum(int16(target.Y) - int16(stat.Y))
 		deltaX = 0
 	} else {
 		deltaX = 0
@@ -145,11 +151,13 @@ func (e *Engine) ElementCentipedeHeadTick(statId int16) {
 		tmp    int16
 	)
 	stat := &e.Board.Stats[statId]
-	if stat.X == e.Board.Stats[0].X && e.Random(10) < int16(stat.P1) {
-		stat.StepY = Signum(int16(e.Board.Stats[0].Y) - int16(stat.Y))
+	pId := e.NearestPlayer(int16(stat.X), int16(stat.Y))
+	target := &e.Board.Stats[pId]
+	if stat.X == target.X && e.Random(10) < int16(stat.P1) {
+		stat.StepY = Signum(int16(target.Y) - int16(stat.Y))
 		stat.StepX = 0
-	} else if stat.Y == e.Board.Stats[0].Y && e.Random(10) < int16(stat.P1) {
-		stat.StepX = Signum(int16(e.Board.Stats[0].X) - int16(stat.X))
+	} else if stat.Y == target.Y && e.Random(10) < int16(stat.P1) {
+		stat.StepX = Signum(int16(target.X) - int16(stat.X))
 		stat.StepY = 0
 	} else if e.Random(10)*4 < int16(stat.P2) || stat.StepX == 0 && stat.StepY == 0 {
 		e.CalcDirectionRnd(&stat.StepX, &stat.StepY)
@@ -346,14 +354,16 @@ func (e *Engine) ElementSpinningGunTick(statId int16) {
 	}
 	if e.Random(9) < int16(stat.P2)%0x80 {
 		if e.Random(9) <= int16(stat.P1) {
-			if Difference(int16(stat.X), int16(e.Board.Stats[0].X)) <= 2 {
-				shot = e.BoardShoot(element, int16(stat.X), int16(stat.Y), 0, Signum(int16(e.Board.Stats[0].Y)-int16(stat.Y)), SHOT_SOURCE_ENEMY)
+			pId := e.NearestPlayer(int16(stat.X), int16(stat.Y))
+			target := &e.Board.Stats[pId]
+			if Difference(int16(stat.X), int16(target.X)) <= 2 {
+				shot = e.BoardShoot(element, int16(stat.X), int16(stat.Y), 0, Signum(int16(target.Y)-int16(stat.Y)), SHOT_SOURCE_ENEMY)
 			} else {
 				shot = false
 			}
 			if !shot {
-				if Difference(int16(stat.Y), int16(e.Board.Stats[0].Y)) <= 2 {
-					shot = e.BoardShoot(element, int16(stat.X), int16(stat.Y), Signum(int16(e.Board.Stats[0].X)-int16(stat.X)), 0, SHOT_SOURCE_ENEMY)
+				if Difference(int16(stat.Y), int16(target.Y)) <= 2 {
+					shot = e.BoardShoot(element, int16(stat.X), int16(stat.Y), Signum(int16(target.X)-int16(stat.X)), 0, SHOT_SOURCE_ENEMY)
 				}
 			}
 		} else {
@@ -1065,8 +1075,8 @@ func (e *Engine) ElementBoardEdgeTouch(x, y int16, sourceStatId int16, deltaX, d
 		boardId        int16
 		entryX, entryY int16
 	)
-	entryX = int16(e.Board.Stats[0].X)
-	entryY = int16(e.Board.Stats[0].Y)
+	entryX = int16(e.Board.Stats[sourceStatId].X)
+	entryY = int16(e.Board.Stats[sourceStatId].Y)
 	if *deltaY == -1 {
 		neighborId = 0
 		entryY = BOARD_HEIGHT
@@ -1089,7 +1099,7 @@ func (e *Engine) ElementBoardEdgeTouch(x, y int16, sourceStatId int16, deltaX, d
 		}
 		if ElementDefs[e.Board.Tiles[entryX][entryY].Element].Walkable || e.Board.Tiles[entryX][entryY].Element == E_PLAYER {
 			if e.Board.Tiles[entryX][entryY].Element != E_PLAYER {
-				e.MoveStat(0, entryX, entryY)
+				e.MoveStat(sourceStatId, entryX, entryY)
 			}
 			e.TransitionDrawBoardChange()
 			*deltaX = 0
@@ -1228,7 +1238,7 @@ func (e *Engine) ElementPlayerTick(statId int16) {
 	} else if InputDeltaX != 0 || InputDeltaY != 0 {
 		e.PlayerDirX = InputDeltaX
 		e.PlayerDirY = InputDeltaY
-		ElementDefs[e.Board.Tiles[int16(stat.X)+InputDeltaX][int16(stat.Y)+InputDeltaY].Element].TouchProc(e, int16(stat.X)+InputDeltaX, int16(stat.Y)+InputDeltaY, 0, &InputDeltaX, &InputDeltaY)
+		ElementDefs[e.Board.Tiles[int16(stat.X)+InputDeltaX][int16(stat.Y)+InputDeltaY].Element].TouchProc(e, int16(stat.X)+InputDeltaX, int16(stat.Y)+InputDeltaY, statId, &InputDeltaX, &InputDeltaY)
 		if InputDeltaX != 0 || InputDeltaY != 0 {
 			if SoundEnabled && !SoundIsPlaying {
 				Sound(110)
@@ -1237,7 +1247,7 @@ func (e *Engine) ElementPlayerTick(statId int16) {
 				if SoundEnabled && !SoundIsPlaying {
 					NoSound()
 				}
-				e.MoveStat(0, int16(stat.X)+InputDeltaX, int16(stat.Y)+InputDeltaY)
+				e.MoveStat(statId, int16(stat.X)+InputDeltaX, int16(stat.Y)+InputDeltaY)
 			} else if SoundEnabled && !SoundIsPlaying {
 				NoSound()
 			}

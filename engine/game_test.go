@@ -114,6 +114,90 @@ func TestShootMaxShots(t *testing.T) {
 	}
 }
 
+// TestTigerChasesNearestPlayer is the M2.2 definition of done: with 3 players
+// on a board, a tiger always chases the nearest one via NearestPlayer.
+//
+// Layout:
+//   P1 at (30,13) — nearest to the tiger
+//   P2 at (30,25) — far away vertically (dist=169)
+//   P3 at (58,13) — far away horizontally (dist=529)
+//   Tiger at (35,13), P1=10 (max aggression, always seek), P2=0 (no shooting), Cycle=1
+//
+// With P1=10, the condition int16(stat.P1) < e.Random(10) is 10 < (0..9), always
+// false, so the lion always calls CalcDirectionSeek → NearestPlayer.
+// Nearest to (35,13) is P1 at (30,13); tiger must step left (decreasing X).
+func TestTigerChasesNearestPlayer(t *testing.T) {
+	e := NewEngine()
+	e.Headless = true
+	e.WorldCreate()
+	e.BoardCreate()
+	e.SetInputSource(&ScriptedInput{})
+
+	// Clear all board interior tiles.
+	for ix := int16(2); ix < BOARD_WIDTH; ix++ {
+		for iy := int16(2); iy < BOARD_HEIGHT; iy++ {
+			e.Board.Tiles[ix][iy] = TTile{Element: E_EMPTY}
+		}
+	}
+
+	// BoardCreate places a player at Stats[0] (BOARD_WIDTH/2, BOARD_HEIGHT/2).
+	// Clear that tile and reset stat count so SpawnPlayer starts clean.
+	e.Board.Tiles[e.Board.Stats[0].X][e.Board.Stats[0].Y] = TTile{Element: E_EMPTY}
+	e.Board.StatCount = -1
+
+	// Spawn player 1 at (30,13) — nearest to tiger.
+	e.Board.Info.StartPlayerX = 30
+	e.Board.Info.StartPlayerY = 13
+	p1 := e.SpawnPlayer() // stat 0
+
+	// Spawn player 2 at (30,25) — far vertically.
+	e.Board.Info.StartPlayerX = 30
+	e.Board.Info.StartPlayerY = 25
+	_ = e.SpawnPlayer() // stat 1
+
+	// Spawn player 3 at (58,13) — far horizontally.
+	e.Board.Info.StartPlayerX = 58
+	e.Board.Info.StartPlayerY = 13
+	_ = e.SpawnPlayer() // stat 2
+
+	// Add tiger at (35,13): max aggression, no shooting, cycle=1 so it ticks every step.
+	e.AddStat(35, 13, E_TIGER, int16(ElementDefs[E_TIGER].Color), 1, StatTemplateDefault)
+	tigerStatId := e.Board.StatCount
+	e.Board.Stats[tigerStatId].P1 = 10 // always seek (10 < Random(0..9) is never true)
+	e.Board.Stats[tigerStatId].P2 = 0  // no shooting
+	e.Board.Tiles[35][13] = TTile{Element: E_TIGER, Color: ElementDefs[E_TIGER].Color}
+
+	// Sanity-check nearest player from tiger position.
+	nearest := e.NearestPlayer(35, 13)
+	if nearest != p1 {
+		t.Fatalf("NearestPlayer(35,13)=%d, want p1=%d (player at (30,13))", nearest, p1)
+	}
+
+	startX := int16(e.Board.Stats[tigerStatId].X) // 35
+
+	// Tick the tiger directly for 3 cycles.
+	// With cycle=1, the stagger condition (currentTick % 1 == tigerStatId % 1) is
+	// always 0 == 0, so the tiger ticks on every CurrentTick value.
+	for step := int16(0); step < 3; step++ {
+		e.CurrentTick = step
+		for e.CurrentStatTicked = 0; e.CurrentStatTicked <= e.Board.StatCount; e.CurrentStatTicked++ {
+			stat := &e.Board.Stats[e.CurrentStatTicked]
+			if stat.Cycle != 0 && e.CurrentTick%stat.Cycle == e.CurrentStatTicked%stat.Cycle {
+				ElementDefs[e.Board.Tiles[stat.X][stat.Y].Element].TickProc(e, e.CurrentStatTicked)
+			}
+		}
+	}
+
+	endX := int16(e.Board.Stats[tigerStatId].X)
+	if endX >= startX {
+		t.Errorf("tiger x=%d after 3 ticks (started at %d); expected to move left toward P1 at x=30",
+			endX, startX)
+	}
+	if int16(e.Board.Stats[tigerStatId].Y) != 13 {
+		t.Errorf("tiger y=%d, expected 13 (same row as nearest player)", e.Board.Stats[tigerStatId].Y)
+	}
+}
+
 func TestGemPickupSoundEvent(t *testing.T) {
 	e := NewEngine()
 	e.Headless = true

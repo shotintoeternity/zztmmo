@@ -410,14 +410,16 @@ func (e *Engine) OopCheckCondition(statId int16, position *int16) (OopCheckCondi
 		ix, iy         int16
 	)
 	stat := &e.Board.Stats[statId]
-	activePlayer := e.PlayerFor(0)
+	pId := e.NearestPlayer(int16(stat.X), int16(stat.Y))
+	activePlayer := e.PlayerFor(pId)
+	nearestStat := &e.Board.Stats[pId]
 	if e.OopWord == "NOT" {
 		e.OopReadWord(statId, position)
 		OopCheckCondition_ = !e.OopCheckCondition(statId, position)
 	} else if e.OopWord == "ALLIGNED" {
-		OopCheckCondition_ = stat.X == e.Board.Stats[0].X || stat.Y == e.Board.Stats[0].Y
+		OopCheckCondition_ = stat.X == nearestStat.X || stat.Y == nearestStat.Y
 	} else if e.OopWord == "CONTACT" {
-		OopCheckCondition_ = Sqr(int16(stat.X)-int16(e.Board.Stats[0].X))+Sqr(int16(stat.Y)-int16(e.Board.Stats[0].Y)) == 1
+		OopCheckCondition_ = Sqr(int16(stat.X)-int16(nearestStat.X))+Sqr(int16(stat.Y)-int16(nearestStat.Y)) == 1
 	} else if e.OopWord == "BLOCKED" {
 		e.OopReadDirection(statId, position, &deltaX, &deltaY)
 		OopCheckCondition_ = !ElementDefs[e.Board.Tiles[int16(stat.X)+deltaX][int16(stat.Y)+deltaY].Element].Walkable
