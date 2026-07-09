@@ -17,3 +17,19 @@
   flat out. Fully moving the pace out to an interactive wrapper (so GameStep
   never paces) lands in M0.5. If/when `SoundHasTimeElapsed` gets real timing,
   revisit whether the Delay-based pace is still needed.
+
+- 2026-07-09 (M0.5, [ADVISOR]): The advisor tool was unavailable this session
+  (infra error on every call), so the required pre-edit advisor consult could
+  NOT be done. Proceeded with user pre-authorization ("proceed with extra
+  care"). Mitigation: cross-checked the extraction against GAME.PAS (1518-1590)
+  before writing. Design: GameStep iterates the GLOBAL CurrentStatTicked
+  (RemoveStat/DamageStat decrement it — GAME.PAS 942-943, 1233-1234), ticks the
+  pending stats for the cycle, then advances CurrentTick (wrap >420->1), resets
+  CurrentStatTicked, and calls InputUpdate. The wrapper is "pace (Delay), then
+  if SoundHasTimeElapsed: GameStep()". The pause branch stays verbatim in the
+  wrapper; the shared "all stats ticked" block folded into GameStep. The
+  one-time advance the pause path used to get is reproduced by the next
+  GameStep, and CurrentTick is re-randomized on unpause anyway, so the
+  transition is unchanged. NOT hash-verified yet — the M0.6 replay fixture
+  (next task) is what locks this pure; a manual TOWN.ZZT playtest is the interim
+  DoD check. If M0.6's fixture reveals drift here, revisit GameStep.

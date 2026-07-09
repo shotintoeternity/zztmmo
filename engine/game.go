@@ -1331,6 +1331,42 @@ func GameAboutScreen() {
 	TextWindowDisplayFile("ABOUT.HLP", "About ZZT...")
 }
 
+// GameStep runs one game cycle: it ticks the stats pending for this cycle and
+// then advances to the next one. It is the headless-callable core extracted
+// from GamePlayLoop (M0.5) — pacing and the pause branch stay in the caller.
+//
+// Faithfulness notes (this must not change behavior — ANALYSIS.md §3g):
+//   - It iterates the GLOBAL CurrentStatTicked, not a fresh loop variable,
+//     because RemoveStat/DamageStat decrement CurrentStatTicked when they
+//     remove a stat mid-tick (GAME.PAS 942-943, 1233-1234); a local index
+//     would desync the stat iteration order.
+//   - Board.StatCount is re-read each iteration so stats added/removed during
+//     the cycle are handled exactly as the original per-iteration loop did.
+//   - With the caller's setup leaving CurrentStatTicked = StatCount+1, the
+//     first GameStep ticks nothing and only advances (matching the original's
+//     first loop iteration); every later call ticks a full cycle then advances.
+//   - GamePlayExitRequested stops ticking mid-cycle and suppresses the advance,
+//     mirroring the original loop's exit checks.
+func GameStep() {
+	for CurrentStatTicked <= Board.StatCount && !GamePlayExitRequested {
+		stat := &Board.Stats[CurrentStatTicked]
+		if stat.Cycle != 0 && CurrentTick%stat.Cycle == CurrentStatTicked%stat.Cycle {
+			ElementDefs[Board.Tiles[stat.X][stat.Y].Element].TickProc(CurrentStatTicked)
+		}
+		CurrentStatTicked++
+	}
+
+	if CurrentStatTicked > Board.StatCount && !GamePlayExitRequested {
+		// next cycle
+		CurrentTick++
+		if CurrentTick > 420 {
+			CurrentTick = 1
+		}
+		CurrentStatTicked = 0
+		InputUpdate()
+	}
+}
+
 func GamePlayLoop(boardChanged bool) {
 	var pauseBlink bool
 
@@ -1473,32 +1509,17 @@ func GamePlayLoop(boardChanged bool) {
 				World.Info.IsSave = true
 			}
 		} else { // not GamePaused
-			if CurrentStatTicked <= Board.StatCount {
-				stat := &Board.Stats[CurrentStatTicked]
-				if stat.Cycle != 0 && CurrentTick%stat.Cycle == CurrentStatTicked%stat.Cycle {
-					ElementDefs[Board.Tiles[stat.X][stat.Y].Element].TickProc(CurrentStatTicked)
-				}
-				CurrentStatTicked++
-			}
-		}
-
-		if CurrentStatTicked > Board.StatCount && !GamePlayExitRequested {
-			// all stats ticked
-
-			// Pace the cycle through Delay, which is a no-op when Headless so
-			// the server / replay harness runs flat out (M0.4). SoundHasTimeElapsed
-			// is currently stubbed to true, so this Delay is what actually paces
-			// interactive play — see NOTES.md 2026-07-09.
+			// Pace, then run one full game step (M0.5). Delay is a no-op when
+			// Headless (M0.4); SoundHasTimeElapsed still gates the step so it
+			// keeps pacing interactive play (currently stubbed to true — see
+			// NOTES.md 2026-07-09). The per-cycle advance and input read now live
+			// in GameStep. The pause branch keeps its own input handling and sets
+			// CurrentTick on unpause, which the next GameStep's advance picks up,
+			// so behavior is unchanged (the shared "all stats ticked" block that
+			// used to follow both branches folded into GameStep).
 			Delay(TickTimeDuration * 10)
-
 			if SoundHasTimeElapsed(&TickTimeCounter, TickTimeDuration) {
-				// next cycle
-				CurrentTick++
-				if CurrentTick > 420 {
-					CurrentTick = 1
-				}
-				CurrentStatTicked = 0
-				InputUpdate()
+				GameStep()
 			}
 		}
 	}

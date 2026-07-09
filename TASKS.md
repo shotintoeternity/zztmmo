@@ -52,7 +52,7 @@ and every run is reproducible. ANALYSIS.md §3g, §3h, §5.
   (the `SoundHasTimeElapsed` check still paces interactive mode); headless test
   runs 1000 ticks in <1s.
 
-- [ ] **M0.5 [ADVISOR] — Extract Step().** Restructure `GamePlayLoop`
+- [x] **M0.5 [ADVISOR] — Extract Step().** Restructure `GamePlayLoop`
   (`engine/game.go:1431-1502`) so its body calls a new
   `func GameStep()` = "tick stats 0..StatCount with the cycle stagger at
   game.go:1479, advance CurrentTick (wrap >420 → 1), call InputUpdate". The
