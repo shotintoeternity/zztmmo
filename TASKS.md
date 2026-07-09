@@ -161,7 +161,7 @@ and every run is reproducible. ANALYSIS.md §3g, §3h, §5.
   opening tcell. DoD: `go build ./...`, `go test ./...`, replay green, and
   `go run ./cmd/zzt-smoke` loads TOWN and steps the sim.
 
-- [ ] **M3.1 — Production RoomManager.** Lift the M2.5 test RoomManager into real
+- [x] **M3.1 — Production RoomManager.** Lift the M2.5 test RoomManager into real
   server-side code: one room per board, join/leave, spawn/despawn, transfer
   routing, stable tick order, occupied rooms simulate, empty rooms freeze. DoD:
   integration test with two rooms and two players crossing boards.

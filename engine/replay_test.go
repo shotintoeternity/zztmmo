@@ -10,7 +10,6 @@ import (
 	"os"
 	"path/filepath"
 	"reflect"
-	"sort"
 	"testing"
 )
 
@@ -411,110 +410,7 @@ func TestScrollEventAndReply(t *testing.T) {
 	}
 }
 
-// RoomManager is a minimal test helper that owns two Engine instances (one per
-// board) and routes TransferEvents between them. It mirrors what the M3 server
-// will do: when a player crosses a passage or board edge, the RoomManager
-// despawns them from the source engine and spawns them on the destination engine
-// at the entry coordinates carried by the TransferEvent.
-type RoomManager struct {
-	engines      map[int16]*Engine
-	playerBoard  map[*PlayerState]int16
-	playerStatId map[*PlayerState]int16
-}
-
-func newRoomManager() *RoomManager {
-	return &RoomManager{
-		engines:      make(map[int16]*Engine),
-		playerBoard:  make(map[*PlayerState]int16),
-		playerStatId: make(map[*PlayerState]int16),
-	}
-}
-
-func (rm *RoomManager) addEngine(boardId int16, e *Engine) {
-	rm.engines[boardId] = e
-}
-
-func (rm *RoomManager) spawnPlayer(boardId int16) *PlayerState {
-	e := rm.engines[boardId]
-	statId := e.SpawnPlayer()
-	ps := e.PlayerFor(statId)
-	rm.playerBoard[ps] = boardId
-	rm.playerStatId[ps] = statId
-	return ps
-}
-
-func (rm *RoomManager) step(inputs map[*PlayerState]PlayerInput) {
-	engineInputs := make(map[int16]map[int16]PlayerInput)
-	for ps, inp := range inputs {
-		boardId := rm.playerBoard[ps]
-		statId := rm.playerStatId[ps]
-		if _, ok := engineInputs[boardId]; !ok {
-			engineInputs[boardId] = make(map[int16]PlayerInput)
-		}
-		engineInputs[boardId][statId] = inp
-	}
-	for _, boardId := range rm.boardIds() {
-		e := rm.engines[boardId]
-		m := engineInputs[boardId]
-		if m == nil {
-			m = map[int16]PlayerInput{}
-		}
-		e.GameStepWithInputs(m)
-	}
-	for _, boardId := range rm.boardIds() {
-		e := rm.engines[boardId]
-		remaining := e.Events[:0]
-		for _, ev := range e.Events {
-			if te, ok := ev.(TransferEvent); ok {
-				rm.transfer(boardId, te)
-			} else {
-				remaining = append(remaining, ev)
-			}
-		}
-		e.Events = remaining
-	}
-}
-
-func (rm *RoomManager) boardIds() []int16 {
-	ids := make([]int16, 0, len(rm.engines))
-	for boardId := range rm.engines {
-		ids = append(ids, boardId)
-	}
-	sort.Slice(ids, func(i, j int) bool { return ids[i] < ids[j] })
-	return ids
-}
-
-func (rm *RoomManager) transfer(srcBoardId int16, te TransferEvent) {
-	srcEngine := rm.engines[srcBoardId]
-	dstEngine := rm.engines[te.ToBoard]
-	if dstEngine == nil {
-		return
-	}
-	psCopy := *srcEngine.PlayerFor(te.StatId)
-	var ps *PlayerState
-	for p, bid := range rm.playerBoard {
-		if bid == srcBoardId && rm.playerStatId[p] == te.StatId {
-			ps = p
-			break
-		}
-	}
-	srcEngine.RemovePlayer(te.StatId)
-	for p, bid := range rm.playerBoard {
-		if bid == srcBoardId && rm.playerStatId[p] > te.StatId {
-			rm.playerStatId[p]--
-		}
-	}
-	dstEngine.Board.Info.StartPlayerX = byte(te.EntryX)
-	dstEngine.Board.Info.StartPlayerY = byte(te.EntryY)
-	newStatId := dstEngine.SpawnPlayer()
-	*dstEngine.PlayerFor(newStatId) = psCopy
-	if ps != nil {
-		rm.playerBoard[ps] = te.ToBoard
-		rm.playerStatId[ps] = newStatId
-	}
-}
-
-// TestRoomManagerPassageTransfer is the M2.5 definition of done:
+// TestRoomManagerPassageTransfer is the M2.5/M3.1 definition of done:
 // P1 walks through a passage from board A to board B while P2 keeps playing
 // board A undisturbed.
 //
@@ -565,82 +461,97 @@ func TestRoomManagerPassageTransfer(t *testing.T) {
 	copy(setup.World.BoardData[boardB], setup.IoTmpBuf[:])
 	setup.World.BoardCount = 2
 
-	// Spin up engine A: shares the world, opens board A.
-	eA := NewEngine()
-	eA.Headless = true
-	eA.MultiRoom = true
-	eA.SetInputSource(&ScriptedInput{})
-	eA.World = setup.World
-	eA.BoardOpen(boardA)
-
-	// Spin up engine B: shares the same world, opens board B.
-	eB := NewEngine()
-	eB.Headless = true
-	eB.MultiRoom = true
-	eB.SetInputSource(&ScriptedInput{})
-	eB.World = setup.World
-	eB.BoardOpen(boardB)
-
-	rm := newRoomManager()
-	rm.addEngine(boardA, eA)
-	rm.addEngine(boardB, eB)
+	rm := NewRoomManager(setup.World)
 
 	// Spawn P1 at (9,12) on board A.
-	eA.Board.Info.StartPlayerX = 9
-	eA.Board.Info.StartPlayerY = 12
-	p1 := rm.spawnPlayer(boardA)
-	p1.Health = 100
+	p1 := rm.JoinPlayer(boardA, 9, 12)
+	p1State, ok := rm.PlayerState(p1)
+	if !ok {
+		t.Fatal("P1 missing after join")
+	}
+	p1State.Health = 100
 
 	// Spawn P2 at (30,12) on board A.
-	eA.Board.Info.StartPlayerX = 30
-	eA.Board.Info.StartPlayerY = 12
-	p2 := rm.spawnPlayer(boardA)
-	p2.Health = 100
-	p2.Ammo = 5
-	p2.Score = 200
+	p2 := rm.JoinPlayer(boardA, 30, 12)
+	p2State, ok := rm.PlayerState(p2)
+	if !ok {
+		t.Fatal("P2 missing after join")
+	}
+	p2State.Health = 100
+	p2State.Ammo = 5
+	p2State.Score = 200
 
-	boardADataBefore := append([]byte(nil), eA.World.BoardData[boardA]...)
-	boardBDataBefore := append([]byte(nil), eA.World.BoardData[boardB]...)
+	frozenWorld := rm.FrozenWorld()
+	boardADataBefore := append([]byte(nil), frozenWorld.BoardData[boardA]...)
+	boardBDataBefore := append([]byte(nil), frozenWorld.BoardData[boardB]...)
 
 	// Tick: P1 moves right onto the passage at (10,12).
-	rm.step(map[*PlayerState]PlayerInput{
+	rm.Step(map[PlayerID]PlayerInput{
 		p1: {DeltaX: 1, DeltaY: 0},
 		p2: {DeltaX: 0, DeltaY: 0},
 	})
 
 	// P1 should now be on board B.
-	if rm.playerBoard[p1] != boardB {
-		t.Errorf("P1 board = %d, want %d (boardB)", rm.playerBoard[p1], boardB)
+	p1Board, p1Stat, ok := rm.PlayerLocation(p1)
+	if !ok {
+		t.Fatal("P1 missing after transfer")
+	}
+	if p1Board != boardB {
+		t.Errorf("P1 board = %d, want %d (boardB)", p1Board, boardB)
 	}
 
 	// P1 should be at (5,5) on board B.
-	p1Stat := rm.playerStatId[p1]
-	p1X := int16(eB.Board.Stats[p1Stat].X)
-	p1Y := int16(eB.Board.Stats[p1Stat].Y)
+	roomB, ok := rm.Room(boardB)
+	if !ok {
+		t.Fatal("board B room missing after transfer")
+	}
+	p1X := int16(roomB.Engine.Board.Stats[p1Stat].X)
+	p1Y := int16(roomB.Engine.Board.Stats[p1Stat].Y)
 	if p1X != 5 || p1Y != 5 {
 		t.Errorf("P1 on board B at (%d,%d), want (5,5)", p1X, p1Y)
 	}
 
 	// Board A should have exactly one E_PLAYER left (P2).
-	playerCount := int16(0)
-	for i := int16(0); i <= eA.Board.StatCount; i++ {
-		if eA.Board.Tiles[eA.Board.Stats[i].X][eA.Board.Stats[i].Y].Element == E_PLAYER {
-			playerCount++
-		}
+	roomA, ok := rm.Room(boardA)
+	if !ok {
+		t.Fatal("board A room missing while P2 remains")
 	}
-	if playerCount != 1 {
+	if playerCount := roomA.Engine.PlayerCount(); playerCount != 1 {
 		t.Errorf("board A has %d E_PLAYER stats, want 1 (P2 only)", playerCount)
 	}
 
 	// P2 stays on board A with inventory intact.
-	if rm.playerBoard[p2] != boardA {
-		t.Errorf("P2 board = %d, want %d (boardA)", rm.playerBoard[p2], boardA)
+	p2Board, _, ok := rm.PlayerLocation(p2)
+	if !ok {
+		t.Fatal("P2 missing after P1 transfer")
 	}
-	if p2.Ammo != 5 || p2.Score != 200 || p2.Health != 100 {
-		t.Errorf("P2 inventory changed: ammo=%d score=%d health=%d", p2.Ammo, p2.Score, p2.Health)
+	if p2Board != boardA {
+		t.Errorf("P2 board = %d, want %d (boardA)", p2Board, boardA)
+	}
+	if p2State.Ammo != 5 || p2State.Score != 200 || p2State.Health != 100 {
+		t.Errorf("P2 inventory changed: ammo=%d score=%d health=%d", p2State.Ammo, p2State.Score, p2State.Health)
 	}
 
-	if !bytes.Equal(eA.World.BoardData[boardA], boardADataBefore) || !bytes.Equal(eA.World.BoardData[boardB], boardBDataBefore) {
+	frozenWorld = rm.FrozenWorld()
+	if !bytes.Equal(frozenWorld.BoardData[boardA], boardADataBefore) || !bytes.Equal(frozenWorld.BoardData[boardB], boardBDataBefore) {
 		t.Error("passage transfer mutated serialized world board data")
+	}
+
+	if !rm.LeavePlayer(p2) {
+		t.Fatal("LeavePlayer(P2) failed")
+	}
+	if _, ok := rm.Room(boardA); ok {
+		t.Fatal("board A room still active after last player left")
+	}
+	if rm.ActiveRoomCount() != 1 {
+		t.Errorf("active rooms = %d, want 1", rm.ActiveRoomCount())
+	}
+
+	frozen := NewEngine()
+	frozen.Headless = true
+	frozen.World = rm.FrozenWorld()
+	frozen.BoardOpen(boardA)
+	if playerCount := frozen.PlayerCount(); playerCount != 0 {
+		t.Errorf("frozen board A has %d players, want 0", playerCount)
 	}
 }

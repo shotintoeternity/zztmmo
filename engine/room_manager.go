@@ -1,0 +1,273 @@
+package zztgo
+
+import "sort"
+
+// PlayerID is the RoomManager-level stable player identity. Engine stat ids can
+// shift when stats are removed; PlayerID does not.
+type PlayerID int64
+
+type RoomManager struct {
+	world        TWorld
+	rooms        map[int16]*Room
+	players      map[PlayerID]*roomPlayer
+	nextPlayerID PlayerID
+}
+
+type Room struct {
+	BoardID int16
+	Engine  *Engine
+	players map[PlayerID]struct{}
+}
+
+type roomPlayer struct {
+	id      PlayerID
+	boardID int16
+	statID  int16
+	state   *PlayerState
+}
+
+type roomTransfer struct {
+	playerID PlayerID
+	event    TransferEvent
+}
+
+func NewRoomManager(world TWorld) *RoomManager {
+	return &RoomManager{
+		world:   world,
+		rooms:   make(map[int16]*Room),
+		players: make(map[PlayerID]*roomPlayer),
+	}
+}
+
+func (rm *RoomManager) JoinPlayer(boardID, spawnX, spawnY int16) PlayerID {
+	room := rm.ensureRoom(boardID)
+	if spawnX != 0 && spawnY != 0 {
+		room.Engine.Board.Info.StartPlayerX = byte(spawnX)
+		room.Engine.Board.Info.StartPlayerY = byte(spawnY)
+	}
+
+	statID := room.Engine.SpawnPlayer()
+	rm.nextPlayerID++
+	playerID := rm.nextPlayerID
+	player := &roomPlayer{
+		id:      playerID,
+		boardID: room.BoardID,
+		statID:  statID,
+		state:   room.Engine.PlayerFor(statID),
+	}
+	rm.players[playerID] = player
+	room.players[playerID] = struct{}{}
+	return playerID
+}
+
+func (rm *RoomManager) LeavePlayer(playerID PlayerID) bool {
+	player := rm.players[playerID]
+	if player == nil {
+		return false
+	}
+	room := rm.rooms[player.boardID]
+	if room == nil {
+		delete(rm.players, playerID)
+		return true
+	}
+
+	removedStatID := player.statID
+	room.Engine.RemovePlayer(removedStatID)
+	delete(room.players, playerID)
+	delete(rm.players, playerID)
+	rm.reindexRoomPlayers(room.BoardID, removedStatID)
+	rm.freezeRoomIfEmpty(room.BoardID)
+	return true
+}
+
+func (rm *RoomManager) Step(inputs map[PlayerID]PlayerInput) {
+	engineInputs := make(map[int16]map[int16]PlayerInput)
+	for playerID, input := range inputs {
+		player := rm.players[playerID]
+		if player == nil {
+			continue
+		}
+		if _, ok := engineInputs[player.boardID]; !ok {
+			engineInputs[player.boardID] = make(map[int16]PlayerInput)
+		}
+		engineInputs[player.boardID][player.statID] = input
+	}
+
+	transfers := make([]roomTransfer, 0)
+	for _, boardID := range rm.roomIDs() {
+		room := rm.rooms[boardID]
+		if room == nil || len(room.players) == 0 {
+			continue
+		}
+		inputsForRoom := engineInputs[boardID]
+		if inputsForRoom == nil {
+			inputsForRoom = map[int16]PlayerInput{}
+		}
+		room.Engine.GameStepWithInputs(inputsForRoom)
+
+		remaining := room.Engine.Events[:0]
+		for _, event := range room.Engine.Events {
+			transfer, ok := event.(TransferEvent)
+			if !ok {
+				remaining = append(remaining, event)
+				continue
+			}
+			playerID, found := rm.playerIDForStat(boardID, transfer.StatId)
+			if found {
+				transfers = append(transfers, roomTransfer{playerID: playerID, event: transfer})
+			}
+		}
+		room.Engine.Events = remaining
+	}
+
+	for _, transfer := range transfers {
+		rm.transferPlayer(transfer.playerID, transfer.event)
+	}
+}
+
+func (rm *RoomManager) PlayerState(playerID PlayerID) (*PlayerState, bool) {
+	player := rm.players[playerID]
+	if player == nil {
+		return nil, false
+	}
+	return player.state, true
+}
+
+func (rm *RoomManager) PlayerLocation(playerID PlayerID) (boardID, statID int16, ok bool) {
+	player := rm.players[playerID]
+	if player == nil {
+		return 0, 0, false
+	}
+	return player.boardID, player.statID, true
+}
+
+func (rm *RoomManager) Room(boardID int16) (*Room, bool) {
+	room := rm.rooms[boardID]
+	return room, room != nil
+}
+
+func (rm *RoomManager) ActiveRoomCount() int {
+	return len(rm.rooms)
+}
+
+func (rm *RoomManager) FrozenWorld() TWorld {
+	return rm.world
+}
+
+func (rm *RoomManager) ensureRoom(boardID int16) *Room {
+	if room := rm.rooms[boardID]; room != nil {
+		return room
+	}
+
+	engine := NewEngine()
+	engine.Headless = true
+	engine.MultiRoom = true
+	engine.TickSpeed = 4
+	engine.TickTimeDuration = int16(engine.TickSpeed) * 2
+	engine.GameStateElement = E_PLAYER
+	engine.SetInputSource(&ScriptedInput{})
+	engine.World = rm.world
+	engine.BoardOpen(boardID)
+
+	room := &Room{
+		BoardID: boardID,
+		Engine:  engine,
+		players: make(map[PlayerID]struct{}),
+	}
+	rm.rooms[boardID] = room
+	return room
+}
+
+func (rm *RoomManager) roomIDs() []int16 {
+	ids := make([]int16, 0, len(rm.rooms))
+	for boardID := range rm.rooms {
+		ids = append(ids, boardID)
+	}
+	sort.Slice(ids, func(i, j int) bool { return ids[i] < ids[j] })
+	return ids
+}
+
+func (rm *RoomManager) playerIDs() []PlayerID {
+	ids := make([]PlayerID, 0, len(rm.players))
+	for playerID := range rm.players {
+		ids = append(ids, playerID)
+	}
+	sort.Slice(ids, func(i, j int) bool { return ids[i] < ids[j] })
+	return ids
+}
+
+func (rm *RoomManager) playerIDForStat(boardID, statID int16) (PlayerID, bool) {
+	for _, playerID := range rm.playerIDs() {
+		player := rm.players[playerID]
+		if player.boardID == boardID && player.statID == statID {
+			return playerID, true
+		}
+	}
+	return 0, false
+}
+
+func (rm *RoomManager) transferPlayer(playerID PlayerID, transfer TransferEvent) {
+	player := rm.players[playerID]
+	if player == nil {
+		return
+	}
+	srcRoom := rm.rooms[player.boardID]
+	if srcRoom == nil {
+		return
+	}
+	dstRoom := rm.ensureRoom(transfer.ToBoard)
+
+	stateCopy := *srcRoom.Engine.PlayerFor(player.statID)
+	removedStatID := player.statID
+	srcRoom.Engine.RemovePlayer(removedStatID)
+	delete(srcRoom.players, playerID)
+	rm.reindexRoomPlayers(srcRoom.BoardID, removedStatID)
+
+	dstRoom.Engine.Board.Info.StartPlayerX = byte(transfer.EntryX)
+	dstRoom.Engine.Board.Info.StartPlayerY = byte(transfer.EntryY)
+	newStatID := dstRoom.Engine.SpawnPlayer()
+	*dstRoom.Engine.PlayerFor(newStatID) = stateCopy
+	dstRoom.players[playerID] = struct{}{}
+
+	player.boardID = dstRoom.BoardID
+	player.statID = newStatID
+	player.state = dstRoom.Engine.PlayerFor(newStatID)
+
+	rm.freezeRoomIfEmpty(srcRoom.BoardID)
+}
+
+func (rm *RoomManager) reindexRoomPlayers(boardID, removedStatID int16) {
+	for _, playerID := range rm.playerIDs() {
+		player := rm.players[playerID]
+		if player.boardID == boardID && player.statID > removedStatID {
+			player.statID--
+			room := rm.rooms[boardID]
+			if room != nil {
+				player.state = room.Engine.PlayerFor(player.statID)
+			}
+		}
+	}
+}
+
+func (rm *RoomManager) freezeRoomIfEmpty(boardID int16) {
+	room := rm.rooms[boardID]
+	if room == nil || len(room.players) != 0 {
+		return
+	}
+
+	room.Engine.BoardClose()
+	rm.world.BoardData[boardID] = append([]byte(nil), room.Engine.World.BoardData[boardID]...)
+	rm.world.BoardLen[boardID] = room.Engine.World.BoardLen[boardID]
+	rm.world.Info.Flags = room.Engine.World.Info.Flags
+	delete(rm.rooms, boardID)
+	rm.syncFrozenBoardToLiveRooms(boardID)
+}
+
+func (rm *RoomManager) syncFrozenBoardToLiveRooms(boardID int16) {
+	for _, roomID := range rm.roomIDs() {
+		room := rm.rooms[roomID]
+		room.Engine.World.BoardData[boardID] = append([]byte(nil), rm.world.BoardData[boardID]...)
+		room.Engine.World.BoardLen[boardID] = rm.world.BoardLen[boardID]
+		room.Engine.World.Info.Flags = rm.world.Info.Flags
+	}
+}
