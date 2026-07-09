@@ -1361,9 +1361,13 @@ func GameAboutScreen() {
 	TextWindowDisplayFile("ABOUT.HLP", "About ZZT...")
 }
 
-// GameStep runs one game cycle: it ticks the stats pending for this cycle and
-// then advances to the next one. It is the headless-callable core extracted
-// from GamePlayLoop (M0.5) — pacing and the pause branch stay in the caller.
+// GameStepWithInputs runs one game cycle with per-player input injection.
+// Before ticking each E_PLAYER stat, the matching PlayerInput from inputs is
+// loaded into the global input variables; for non-player stats those globals
+// are zeroed so no player's movement leaks into another element's tick
+// (ANALYSIS.md §3d — the scratch-var trap: InputDeltaX/Y are also used as
+// dummy pointer params in TouchProc calls, so we must only zero them between
+// player ticks, never mid-tick).
 //
 // Faithfulness notes (this must not change behavior — ANALYSIS.md §3g):
 //   - It iterates the GLOBAL e.CurrentStatTicked, not a fresh loop variable,
@@ -1377,12 +1381,15 @@ func GameAboutScreen() {
 //     first loop iteration); every later call ticks a full cycle then advances.
 //   - e.GamePlayExitRequested stops ticking mid-cycle and suppresses the advance,
 //     mirroring the original loop's exit checks.
-func (e *Engine) GameStep() {
+func (e *Engine) GameStepWithInputs(inputs map[int16]PlayerInput) {
 	if e.PendingScrollReply != "" {
 		e.OopSend(e.PendingScrollStatId, e.PendingScrollReply, false)
 		e.PendingScrollReply = ""
 	}
 
+	// Snapshot engine-level input fields into globals for the tick loop.
+	// Individual player inputs from the inputs map will override these for
+	// E_PLAYER stats mid-loop; the defer restores the final globals back.
 	InputDeltaX = e.InputDeltaX
 	InputDeltaY = e.InputDeltaY
 	InputShiftPressed = e.InputShiftPressed
@@ -1404,6 +1411,31 @@ func (e *Engine) GameStep() {
 	for e.CurrentStatTicked <= e.Board.StatCount && !e.GamePlayExitRequested {
 		stat := &e.Board.Stats[e.CurrentStatTicked]
 		if stat.Cycle != 0 && e.CurrentTick%stat.Cycle == e.CurrentStatTicked%stat.Cycle {
+			// Per-player input injection: load this player's input before tick,
+			// zero movement globals for non-player stats.
+			if e.Board.Tiles[stat.X][stat.Y].Element == E_PLAYER {
+				if inp, ok := inputs[e.CurrentStatTicked]; ok {
+					InputDeltaX = inp.DeltaX
+					InputDeltaY = inp.DeltaY
+					InputShiftPressed = inp.Shift
+					InputKeyPressed = inp.Key
+				} else {
+					InputDeltaX = 0
+					InputDeltaY = 0
+					InputShiftPressed = false
+					InputKeyPressed = 0
+				}
+				if InputDeltaX != 0 || InputDeltaY != 0 {
+					InputLastDeltaX = InputDeltaX
+					InputLastDeltaY = InputDeltaY
+				}
+			} else {
+				InputDeltaX = 0
+				InputDeltaY = 0
+				InputShiftPressed = false
+				// InputKeyPressed is intentionally NOT zeroed here: non-player
+				// elements like E_MONITOR read it in their own tick procs.
+			}
 			ElementDefs[e.Board.Tiles[stat.X][stat.Y].Element].TickProc(e, e.CurrentStatTicked)
 		}
 		e.CurrentStatTicked++
@@ -1418,6 +1450,28 @@ func (e *Engine) GameStep() {
 		e.CurrentStatTicked = 0
 		e.InputUpdate()
 	}
+}
+
+// GameStep runs one game cycle with per-player input.
+//
+// inputs maps statId → PlayerInput for each player stat that should receive
+// input this tick. Pass nil to fall back to the engine's single active
+// InputSource (backward-compatible single-player path: reads e.InputDeltaX/Y
+// etc., which InputUpdate populated from ActiveInput at the end of the
+// previous step). Multiplayer callers should construct the map explicitly so
+// each player's input is independent.
+func (e *Engine) GameStep(inputs map[int16]PlayerInput) {
+	if inputs == nil {
+		inputs = map[int16]PlayerInput{
+			0: {
+				DeltaX: e.InputDeltaX,
+				DeltaY: e.InputDeltaY,
+				Shift:  e.InputShiftPressed,
+				Key:    e.InputKeyPressed,
+			},
+		}
+	}
+	e.GameStepWithInputs(inputs)
 }
 
 func (e *Engine) GamePlayLoop(boardChanged bool) {
@@ -1572,7 +1626,17 @@ func (e *Engine) GamePlayLoop(boardChanged bool) {
 			// used to follow both branches folded into GameStep).
 			e.Delay(e.TickTimeDuration * 10)
 			if SoundHasTimeElapsed(&e.TickTimeCounter, e.TickTimeDuration) {
-				e.GameStep()
+				// Construct the single-player input map for the interactive loop.
+				// The engine's cached InputDeltaX/Y etc. were filled by InputUpdate
+				// at the end of the previous GameStep cycle.
+				e.GameStep(map[int16]PlayerInput{
+					0: {
+						DeltaX: e.InputDeltaX,
+						DeltaY: e.InputDeltaY,
+						Shift:  e.InputShiftPressed,
+						Key:    e.InputKeyPressed,
+					},
+				})
 			}
 		}
 
@@ -1813,8 +1877,8 @@ func GamePlayLoop(boardChanged bool)  {
 	E.GamePlayLoop(boardChanged)
 }
 
-func GameStep()  {
-	E.GameStep()
+func GameStep(inputs map[int16]PlayerInput) {
+	E.GameStep(inputs)
 }
 
 func GameTitleLoop()  {

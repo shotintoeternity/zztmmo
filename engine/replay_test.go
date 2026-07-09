@@ -134,8 +134,6 @@ func runTownReplay(t *testing.T) []string {
 	InputLastDeltaX = 0
 	InputLastDeltaY = 0
 	InputKeyBuffer = ""
-	E.PlayerDirX = 0
-	E.PlayerDirY = 0
 	E.GamePlayExitRequested = false
 	E.GamePaused = false
 	E.TickSpeed = 4
@@ -166,7 +164,7 @@ func runTownReplay(t *testing.T) []string {
 
 	hashes := make([]string, 0, townReplaySteps/townReplayInterval)
 	for step := 1; step <= townReplaySteps; step++ {
-		GameStep()
+		GameStep(nil)
 		if E.GamePlayExitRequested {
 			t.Fatalf("replay requested exit at step %d", step)
 		}
@@ -289,7 +287,7 @@ func TestTwoEnginesOneProcess(t *testing.T) {
 
 	single1Hashes := make([]uint64, 100)
 	for i := 0; i < 100; i++ {
-		eSingle1.GameStep()
+		eSingle1.GameStep(nil)
 		single1Hashes[i] = StateHash(eSingle1)
 	}
 
@@ -310,7 +308,7 @@ func TestTwoEnginesOneProcess(t *testing.T) {
 
 	single2Hashes := make([]uint64, 100)
 	for i := 0; i < 100; i++ {
-		eSingle2.GameStep()
+		eSingle2.GameStep(nil)
 		single2Hashes[i] = StateHash(eSingle2)
 	}
 
@@ -345,8 +343,8 @@ func TestTwoEnginesOneProcess(t *testing.T) {
 
 	for i := 0; i < 100; i++ {
 		// Interleave steps
-		e1.GameStep()
-		e2.GameStep()
+		e1.GameStep(nil)
+		e2.GameStep(nil)
 
 		// Verify no cross-talk and exact matching
 		h1 := StateHash(e1)
@@ -381,7 +379,7 @@ func TestScrollEventAndReply(t *testing.T) {
 	e.OopSend(statId, "touch", false)
 
 	// Run GameStep to trigger scroll display
-	e.GameStep()
+	e.GameStep(nil)
 
 	// Assert ScrollEvent was emitted
 	if len(e.Events) != 1 {
@@ -403,7 +401,7 @@ func TestScrollEventAndReply(t *testing.T) {
 	e.PendingScrollStatId = statId
 
 	// Run next step
-	e.GameStep()
+	e.GameStep(nil)
 
 	// Assert flag is set (ZZT-OOP flags are stored in uppercase)
 	if e.WorldGetFlagPosition("FLAG") <= 0 {

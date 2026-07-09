@@ -131,7 +131,7 @@ and every run is reproducible. ANALYSIS.md §3g, §3h, §5.
   DoD: single-player replay unchanged; test with 3 spawned players shows a tiger
   chasing the nearest one.
 
-- [ ] **M2.3 — Per-player input.** `Step(inputs map[int16]PlayerInput)`:
+- [x] **M2.3 — Per-player input.** `Step(inputs map[int16]PlayerInput)`:
   before ticking a player stat, load that player's input into the existing
   globals; zero them otherwise (ANALYSIS.md §3d — remember the scratch-var trap).
   PlayerDirX/Y become PlayerState fields. DoD: test moves two players

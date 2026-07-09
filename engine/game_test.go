@@ -26,14 +26,14 @@ func TestGameStepHeadlessLoop(t *testing.T) {
 	E.CurrentTick = 1
 	E.CurrentStatTicked = E.Board.StatCount + 1 // first step ticks nothing, just advances
 	for i := 0; i < 419; i++ {
-		GameStep()
+		GameStep(nil)
 	}
 	if E.CurrentTick != 420 {
 		t.Errorf("after 419 advances from 1, E.CurrentTick=%d, want 420", E.CurrentTick)
 	}
 
 	// One more advance wraps 420 -> 1.
-	GameStep()
+	GameStep(nil)
 	if E.CurrentTick != 1 {
 		t.Errorf("advance past 420 should wrap to 1, got E.CurrentTick=%d", E.CurrentTick)
 	}
@@ -42,7 +42,7 @@ func TestGameStepHeadlessLoop(t *testing.T) {
 	E.CurrentTick = 1
 	E.CurrentStatTicked = E.Board.StatCount + 1
 	for i := 0; i < 419; i++ {
-		GameStep()
+		GameStep(nil)
 	}
 	if E.CurrentTick != 420 {
 		t.Errorf("second run diverged: E.CurrentTick=%d, want 420", E.CurrentTick)
@@ -62,7 +62,7 @@ func TestGameStepStopsOnExitRequest(t *testing.T) {
 	E.GamePlayExitRequested = true
 	defer func() { E.GamePlayExitRequested = false }()
 
-	GameStep()
+	GameStep(nil)
 	if E.CurrentTick != 10 {
 		t.Errorf("exit-requested GameStep must not advance; E.CurrentTick=%d, want 10", E.CurrentTick)
 	}
@@ -126,6 +126,64 @@ func TestShootMaxShots(t *testing.T) {
 // With P1=10, the condition int16(stat.P1) < e.Random(10) is 10 < (0..9), always
 // false, so the lion always calls CalcDirectionSeek → NearestPlayer.
 // Nearest to (35,13) is P1 at (30,13); tiger must step left (decreasing X).
+// TestTwoPlayersIndependentInput is the M2.3 definition of done: two players
+// on one board receive different inputs via GameStepWithInputs and each moves
+// to its own destination independently in one step.
+//
+// Layout: P1 at (10,12), P2 at (40,12).
+// Input:  P1 moves right (+1,0), P2 moves left (-1,0).
+// After one step: P1 should be at (11,12), P2 at (39,12).
+func TestTwoPlayersIndependentInput(t *testing.T) {
+	e := NewEngine()
+	e.Headless = true
+	e.WorldCreate()
+	e.BoardCreate()
+	e.SetInputSource(&ScriptedInput{})
+
+	// Clear interior tiles.
+	for ix := int16(2); ix < BOARD_WIDTH; ix++ {
+		for iy := int16(2); iy < BOARD_HEIGHT; iy++ {
+			e.Board.Tiles[ix][iy] = TTile{Element: E_EMPTY}
+		}
+	}
+
+	// Remove the default stat 0 player placed by BoardCreate.
+	e.Board.Tiles[e.Board.Stats[0].X][e.Board.Stats[0].Y] = TTile{Element: E_EMPTY}
+	e.Board.StatCount = -1
+
+	// Spawn P1 at (10,12).
+	e.Board.Info.StartPlayerX = 10
+	e.Board.Info.StartPlayerY = 12
+	p1 := e.SpawnPlayer()
+
+	// Spawn P2 at (40,12).
+	e.Board.Info.StartPlayerX = 40
+	e.Board.Info.StartPlayerY = 12
+	p2 := e.SpawnPlayer()
+
+	// Give both players health so the death-zero-input branch doesn't fire.
+	e.PlayerFor(p1).Health = 100
+	e.PlayerFor(p2).Health = 100
+
+	// Run one full cycle: P1 moves right, P2 moves left.
+	e.CurrentTick = 0
+	e.CurrentStatTicked = 0
+	e.GamePlayExitRequested = false
+
+	e.GameStepWithInputs(map[int16]PlayerInput{
+		p1: {DeltaX: 1, DeltaY: 0},
+		p2: {DeltaX: -1, DeltaY: 0},
+	})
+
+	// Both players have cycle=1, so they both tick on currentTick=0.
+	if int16(e.Board.Stats[p1].X) != 11 || int16(e.Board.Stats[p1].Y) != 12 {
+		t.Errorf("P1 at (%d,%d), want (11,12)", e.Board.Stats[p1].X, e.Board.Stats[p1].Y)
+	}
+	if int16(e.Board.Stats[p2].X) != 39 || int16(e.Board.Stats[p2].Y) != 12 {
+		t.Errorf("P2 at (%d,%d), want (39,12)", e.Board.Stats[p2].X, e.Board.Stats[p2].Y)
+	}
+}
+
 func TestTigerChasesNearestPlayer(t *testing.T) {
 	e := NewEngine()
 	e.Headless = true
@@ -219,7 +277,7 @@ func TestGemPickupSoundEvent(t *testing.T) {
 	e.InputUpdate()
 
 	// Run step
-	e.GameStep()
+	e.GameStep(nil)
 
 	// Verify player moved and collected gem
 	if e.Board.Stats[0].X != 16 || e.Board.Stats[0].Y != 15 {
