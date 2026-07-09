@@ -410,7 +410,7 @@ semantics while keeping the server authoritative.
   sound toggle in the authentic sidebar. DoD: pickups, shots, doors, damage,
   and object sounds are audible and can be toggled.
 
-- [ ] **M4.5 — Rendering compatibility pass.** Audit CP437 glyphs, colors,
+- [x] **M4.5 — Rendering compatibility pass.** Audit CP437 glyphs, colors,
   dark-room/torch behavior, player blinking, text elements, transition effects,
   and dirty-cell updates against terminal output. DoD: a scripted visual smoke
   covers TOWN landmarks, dark rooms, torches, gems, passages, text signs, and

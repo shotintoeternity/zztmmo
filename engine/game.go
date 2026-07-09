@@ -1120,7 +1120,7 @@ func (e *Engine) MoveStat(statId int16, newX, newY int16) {
 	stat.Y = byte(newY)
 	e.BoardDrawTile(int16(stat.X), int16(stat.Y))
 	e.BoardDrawTile(oldX, oldY)
-	if statId == 0 && e.Board.Info.IsDark && e.PlayerFor(statId).TorchTicks > 0 {
+	if e.Board.Info.IsDark && e.Board.Tiles[stat.X][stat.Y].Element == E_PLAYER && e.PlayerFor(statId).TorchTicks > 0 {
 		if Sqr(oldX-int16(stat.X))+Sqr(oldY-int16(stat.Y)) == 1 {
 			for ix = int16(stat.X) - TORCH_DX - 3; ix <= int16(stat.X)+TORCH_DX+3; ix++ {
 				if ix >= 1 && ix <= BOARD_WIDTH {
