@@ -210,3 +210,36 @@ Note that a room snapshot necessarily captures *other players* — their stats a
 in `World.Info` and their stat entries are on the board. Deciding whether a
 reloaded snapshot respawns them, drops them, or freezes them is part of M4.3a,
 not a detail to improvise.
+
+## Correction (2026-07-09) — reference/ WAS cloned; the loader crash is faithful
+
+The earlier entry today ("Third-party world compatibility") claims `reference/`
+is "gitignored and was not cloned". **That is wrong.** Both
+`reference/reconstruction-of-zzt` (11 `.PAS` files) and `reference/zztgo` are
+present. The claim came from a shell `grep ... || echo "not cloned"` where the
+grep searched `GAME.PAS` for `MAX_BOARD`, which actually lives in
+`GAMEVARS.PAS`; grep exited 1 and the `||` fallback printed a false conclusion.
+Lesson, since this will recur: never let an `||` fallback narrate a conclusion
+it did not test.
+
+With the Pascal actually consulted, the malformed-world panic is resolved:
+`GAME.PAS:743-748` reads
+
+    for boardId := 0 to World.BoardCount do begin
+        BlockRead(f, World.BoardLen[boardId], 2);
+        GetMem(World.BoardData[boardId], World.BoardLen[boardId]);
+        BlockRead(f, World.BoardData[boardId]^, World.BoardLen[boardId]);
+    end;
+
+over `BoardData: array[0 .. MAX_BOARD]` (`GAMEVARS.PAS:139`, `MAX_BOARD = 100`).
+There is no bounds check on `BoardCount` in the original either. So the Go
+`WorldLoad` is a **faithful** port of an original ZZT bug, not a fork
+regression. Vanilla would scribble past the array; Go panics instead, which is
+strictly better behavior for the same broken input.
+
+Consequences: do NOT "fix" `WorldLoad` — bounding the loop there is a behavior
+change and would need a `DEVIATION:` line. The right shape is validation *before*
+the loader (reject `BoardCount > MAX_BOARD`, short files, negative `BoardLen`)
+on the untrusted-upload path only, leaving the faithful loader untouched for
+worlds the operator supplies. Fold this into M4.3a / M5.3 rather than the
+engine. A `// ZZT-QUIRK:` marker on the loop would be appropriate.
