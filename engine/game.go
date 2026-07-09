@@ -1267,7 +1267,7 @@ func (e *Engine) GameDebugPrompt() {
 	e.PromptString(63, 5, 0x1E, 0x0F, 11, PROMPT_ANY, &input)
 	input = UpCaseString(input)
 	toggle = true
-	if input[0] == '+' || input[0] == '-' {
+	if len(input) > 0 && (input[0] == '+' || input[0] == '-') {
 		if input[0] == '-' {
 			toggle = false
 		}
