@@ -5,6 +5,8 @@ import (
 	"flag"
 	"log"
 	"net/http"
+	"os"
+	"path/filepath"
 
 	"github.com/benhoyt/zztgo"
 )
@@ -13,6 +15,7 @@ func main() {
 	addr := flag.String("addr", ":8080", "listen address")
 	worldName := flag.String("world", "TOWN", "world basename to load")
 	boardID := flag.Int("board", 1, "default board id")
+	webDir := flag.String("web", "web/dist", "built browser client directory")
 	flag.Parse()
 
 	e := zztgo.NewEngine()
@@ -26,6 +29,39 @@ func main() {
 	server := zztgo.NewWebSocketServer(zztgo.E.World, int16(*boardID))
 	go server.Run(context.Background())
 
+	mux := http.NewServeMux()
+	mux.Handle("/ws", server)
+	if _, err := os.Stat(*webDir); err == nil {
+		mux.Handle("/", spaFileServer(http.Dir(*webDir)))
+		log.Printf("serving browser client from %s", *webDir)
+	} else {
+		mux.HandleFunc("/", func(w http.ResponseWriter, r *http.Request) {
+			http.Error(w, "build the browser client with: npm --prefix web run build", http.StatusNotFound)
+		})
+		log.Printf("browser client directory %s not found", *webDir)
+	}
+
 	log.Printf("listening on %s", *addr)
-	log.Fatal(http.ListenAndServe(*addr, server))
+	log.Fatal(http.ListenAndServe(*addr, mux))
+}
+
+func spaFileServer(root http.FileSystem) http.Handler {
+	files := http.FileServer(root)
+	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		path := filepath.Clean(r.URL.Path)
+		if path == "." || path == string(filepath.Separator) {
+			files.ServeHTTP(w, r)
+			return
+		}
+
+		file, err := root.Open(path)
+		if err == nil {
+			_ = file.Close()
+			files.ServeHTTP(w, r)
+			return
+		}
+
+		r.URL.Path = "/"
+		files.ServeHTTP(w, r)
+	})
 }

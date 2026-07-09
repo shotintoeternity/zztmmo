@@ -180,7 +180,7 @@ and every run is reproducible. ANALYSIS.md §3g, §3h, §5.
   snapshots/diffs over JSON WebSockets. DoD: a test WebSocket client can join,
   move, and receive deterministic diffs.
 
-- [ ] **M3.5 — Browser terminal client.** Add a Vite/TS client that renders
+- [x] **M3.5 — Browser terminal client.** Add a Vite/TS client that renders
   CP437-style 80x25 cells on canvas, sends inputs, and handles snapshots, diffs,
   scroll/sound/message events. DoD: one browser can play against the server.
 

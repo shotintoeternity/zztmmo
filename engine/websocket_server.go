@@ -17,6 +17,7 @@ type WebSocketServer struct {
 	RoomManager  *RoomManager
 	DefaultBoard int16
 	TickDuration time.Duration
+	OriginHosts  []string
 
 	mu      sync.Mutex
 	clients map[PlayerID]*webSocketClient
@@ -34,6 +35,7 @@ func NewWebSocketServer(world TWorld, defaultBoard int16) *WebSocketServer {
 		RoomManager:  NewRoomManager(world),
 		DefaultBoard: defaultBoard,
 		TickDuration: ServerTickDuration,
+		OriginHosts:  []string{"localhost:*", "127.0.0.1:*"},
 		clients:      make(map[PlayerID]*webSocketClient),
 		inputs:       make(map[PlayerID]PlayerInput),
 	}
@@ -73,7 +75,7 @@ func (s *WebSocketServer) Tick(ctx context.Context) {
 }
 
 func (s *WebSocketServer) ServeHTTP(w http.ResponseWriter, r *http.Request) {
-	conn, err := websocket.Accept(w, r, nil)
+	conn, err := websocket.Accept(w, r, &websocket.AcceptOptions{OriginPatterns: s.OriginHosts})
 	if err != nil {
 		return
 	}

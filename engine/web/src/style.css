@@ -1,0 +1,285 @@
+:root {
+  color-scheme: dark;
+  font-family: Inter, ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+  background: #101211;
+  color: #e7eadf;
+}
+
+* {
+  box-sizing: border-box;
+}
+
+body {
+  margin: 0;
+  min-width: 320px;
+  min-height: 100vh;
+  background: linear-gradient(180deg, #1b221f, #0c0d0e);
+}
+
+button,
+input {
+  font: inherit;
+}
+
+#app {
+  min-height: 100vh;
+}
+
+.shell {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) 300px;
+  gap: 16px;
+  width: min(1280px, calc(100vw - 24px));
+  margin: 0 auto;
+  padding: 12px 0;
+}
+
+.stage {
+  display: grid;
+  gap: 8px;
+  align-content: start;
+  min-width: 0;
+}
+
+.topbar,
+.side,
+.event-log {
+  border: 1px solid #3c4843;
+  background: rgba(18, 22, 20, 0.88);
+}
+
+.topbar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  min-height: 44px;
+  padding: 8px 10px;
+}
+
+.brand {
+  display: flex;
+  align-items: baseline;
+  gap: 10px;
+  min-width: 0;
+}
+
+.brand h1 {
+  margin: 0;
+  color: #f3e7a1;
+  font-size: 18px;
+  line-height: 1;
+  letter-spacing: 0;
+}
+
+.status {
+  color: #9fcdb9;
+  font-family: "SFMono-Regular", Consolas, "Liberation Mono", monospace;
+  font-size: 12px;
+  white-space: nowrap;
+}
+
+.actions {
+  display: flex;
+  gap: 8px;
+  align-items: center;
+}
+
+.button {
+  height: 30px;
+  padding: 0 11px;
+  border: 1px solid #607166;
+  border-radius: 4px;
+  background: #d1b350;
+  color: #16180f;
+  cursor: pointer;
+}
+
+.button.secondary {
+  background: #28302d;
+  color: #e7eadf;
+}
+
+.button:disabled {
+  opacity: 0.55;
+  cursor: default;
+}
+
+.canvas-wrap {
+  position: relative;
+  width: 100%;
+  aspect-ratio: 16 / 9;
+  min-height: 260px;
+  border: 1px solid #59655f;
+  background: #000;
+  overflow: hidden;
+}
+
+canvas {
+  display: block;
+  width: 100%;
+  height: 100%;
+  image-rendering: pixelated;
+}
+
+.overlay {
+  position: absolute;
+  inset: 0;
+  display: grid;
+  place-items: center;
+  padding: 24px;
+  background: rgba(0, 0, 0, 0.72);
+  text-align: center;
+}
+
+.overlay[hidden] {
+  display: none;
+}
+
+.overlay-title {
+  margin: 0 0 8px;
+  color: #f3e7a1;
+  font-size: 22px;
+  letter-spacing: 0;
+}
+
+.overlay-text {
+  margin: 0;
+  color: #c5d3cb;
+  line-height: 1.45;
+}
+
+.event-log {
+  min-height: 112px;
+  max-height: 168px;
+  overflow: auto;
+  padding: 8px;
+  font-family: "SFMono-Regular", Consolas, "Liberation Mono", monospace;
+  font-size: 12px;
+  line-height: 1.45;
+}
+
+.event-line {
+  color: #d9dfd8;
+}
+
+.side {
+  display: grid;
+  gap: 14px;
+  align-content: start;
+  padding: 12px;
+}
+
+.panel {
+  display: grid;
+  gap: 8px;
+}
+
+.panel h2 {
+  margin: 0;
+  color: #f3e7a1;
+  font-size: 13px;
+  line-height: 1.2;
+  letter-spacing: 0;
+  text-transform: uppercase;
+}
+
+.stats {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 6px;
+}
+
+.stat {
+  min-height: 44px;
+  padding: 7px 8px;
+  border: 1px solid #35413c;
+  background: #171c1a;
+}
+
+.stat-label {
+  display: block;
+  color: #8fa49a;
+  font-size: 11px;
+}
+
+.stat-value {
+  display: block;
+  color: #f5f0cd;
+  font-family: "SFMono-Regular", Consolas, "Liberation Mono", monospace;
+  font-size: 18px;
+}
+
+.keys {
+  display: grid;
+  grid-template-columns: repeat(7, 1fr);
+  gap: 4px;
+}
+
+.key {
+  height: 20px;
+  border: 1px solid #35413c;
+  background: #141817;
+}
+
+.key.on {
+  background: #d1b350;
+  border-color: #efd466;
+}
+
+.messages {
+  display: grid;
+  gap: 8px;
+}
+
+.message-title {
+  margin: 0;
+  color: #d1b350;
+  font-size: 13px;
+}
+
+.message-lines {
+  margin: 0;
+  padding-left: 16px;
+  color: #d9dfd8;
+  font-size: 13px;
+  line-height: 1.35;
+}
+
+@media (max-width: 900px) {
+  .shell {
+    grid-template-columns: 1fr;
+  }
+
+  .side {
+    grid-template-columns: 1fr 1fr;
+  }
+}
+
+@media (max-width: 620px) {
+  .shell {
+    width: calc(100vw - 12px);
+    padding: 6px 0;
+  }
+
+  .topbar {
+    align-items: stretch;
+    flex-direction: column;
+  }
+
+  .actions {
+    justify-content: stretch;
+  }
+
+  .button {
+    flex: 1;
+  }
+
+  .canvas-wrap {
+    min-height: 210px;
+  }
+
+  .side {
+    grid-template-columns: 1fr;
+  }
+}
