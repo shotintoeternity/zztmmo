@@ -946,6 +946,22 @@ StatDataInUse:
 		e.Board.Stats[i-1] = e.Board.Stats[i]
 	}
 	e.Board.StatCount--
+	e.reindexPlayersAfterStatRemoval(statId)
+}
+
+func (e *Engine) reindexPlayersAfterStatRemoval(statId int16) {
+	if len(e.Players) == 0 {
+		return
+	}
+	players := make(map[int16]*PlayerState, len(e.Players))
+	for playerStatId, pState := range e.Players {
+		if playerStatId < statId {
+			players[playerStatId] = pState
+		} else if playerStatId > statId {
+			players[playerStatId-1] = pState
+		}
+	}
+	e.Players = players
 }
 
 func (e *Engine) GetStatIdAt(x, y int16) (GetStatIdAt int16) {
@@ -1270,10 +1286,11 @@ func (e *Engine) TransitionDrawBoardChange() {
 	e.TransitionDrawToBoard()
 }
 
-func (e *Engine) BoardEnter() {
-	e.Board.Info.StartPlayerX = e.Board.Stats[0].X
-	e.Board.Info.StartPlayerY = e.Board.Stats[0].Y
-	pState := e.PlayerFor(0)
+func (e *Engine) BoardEnter(statId int16) {
+	stat := &e.Board.Stats[statId]
+	e.Board.Info.StartPlayerX = stat.X
+	e.Board.Info.StartPlayerY = stat.Y
+	pState := e.PlayerFor(statId)
 	if e.Board.Info.IsDark && pState.MessageHintTorchNotShown {
 		e.DisplayMessage(200, "Room is dark - you need to light a torch!")
 		pState.MessageHintTorchNotShown = false
@@ -1282,7 +1299,7 @@ func (e *Engine) BoardEnter() {
 	e.GameUpdateSidebar()
 }
 
-func (e *Engine) BoardPassageTeleport(x, y int16) {
+func (e *Engine) BoardPassageTeleport(x, y int16, sourceStatId int16) {
 	var (
 		col        byte
 		ix, iy     int16
@@ -1299,16 +1316,16 @@ func (e *Engine) BoardPassageTeleport(x, y int16) {
 			}
 		}
 	}
-	e.Board.Tiles[e.Board.Stats[0].X][e.Board.Stats[0].Y].Element = E_EMPTY
-	e.Board.Tiles[e.Board.Stats[0].X][e.Board.Stats[0].Y].Color = 0
+	e.Board.Tiles[e.Board.Stats[sourceStatId].X][e.Board.Stats[sourceStatId].Y].Element = E_EMPTY
+	e.Board.Tiles[e.Board.Stats[sourceStatId].X][e.Board.Stats[sourceStatId].Y].Color = 0
 	if newX != 0 {
-		e.Board.Stats[0].X = byte(newX)
-		e.Board.Stats[0].Y = byte(newY)
+		e.Board.Stats[sourceStatId].X = byte(newX)
+		e.Board.Stats[sourceStatId].Y = byte(newY)
 	}
 	e.GamePaused = true
 	e.SoundQueue(4, "0\x014\x017\x011\x015\x018\x012\x016\x019\x013\x017\x01:\x014\x018\x01@\x01")
 	e.TransitionDrawBoardChange()
-	e.BoardEnter()
+	e.BoardEnter(sourceStatId)
 }
 
 func (e *Engine) GameDebugPrompt() {
@@ -1762,7 +1779,7 @@ func (e *Engine) GameTitleLoop() {
 				}
 				if startPlay {
 					e.BoardChange(e.ReturnBoardId)
-					e.BoardEnter()
+					e.BoardEnter(0)
 				}
 			case 'A':
 				GameAboutScreen()
@@ -1807,48 +1824,48 @@ func (e *Engine) GameTitleLoop() {
 
 // --- Global Wrappers ---
 
-func AddStat(tx, ty int16, element byte, color, tcycle int16, template TStat)  {
+func AddStat(tx, ty int16, element byte, color, tcycle int16, template TStat) {
 	E.AddStat(tx, ty, element, color, tcycle, template)
 }
 
-func BoardAttack(attackerStatId int16, x, y int16)  {
+func BoardAttack(attackerStatId int16, x, y int16) {
 	E.BoardAttack(attackerStatId, x, y)
 }
 
-func BoardChange(boardId int16)  {
+func BoardChange(boardId int16) {
 	E.BoardChange(boardId)
 }
 
-func BoardClose()  {
+func BoardClose() {
 	E.BoardClose()
 }
 
-func BoardCreate()  {
+func BoardCreate() {
 	E.BoardCreate()
 }
 
-func BoardDamageTile(x, y int16)  {
+func BoardDamageTile(x, y int16) {
 	E.BoardDamageTile(x, y)
 }
 
-func BoardDrawBorder()  {
+func BoardDrawBorder() {
 	E.BoardDrawBorder()
 }
 
-func BoardDrawTile(x, y int16)  {
+func BoardDrawTile(x, y int16) {
 	E.BoardDrawTile(x, y)
 }
 
-func BoardEnter()  {
-	E.BoardEnter()
+func BoardEnter(statId int16) {
+	E.BoardEnter(statId)
 }
 
-func BoardOpen(boardId int16)  {
+func BoardOpen(boardId int16) {
 	E.BoardOpen(boardId)
 }
 
-func BoardPassageTeleport(x, y int16)  {
-	E.BoardPassageTeleport(x, y)
+func BoardPassageTeleport(x, y int16, sourceStatId int16) {
+	E.BoardPassageTeleport(x, y, sourceStatId)
 }
 
 func BoardPrepareTileForPlacement(x, y int16) (BoardPrepareTileForPlacement bool) {
@@ -1859,31 +1876,31 @@ func BoardShoot(element byte, tx, ty, deltaX, deltaY int16, source int16) (Board
 	return E.BoardShoot(element, tx, ty, deltaX, deltaY, source)
 }
 
-func CalcDirectionRnd(deltaX, deltaY *int16)  {
+func CalcDirectionRnd(deltaX, deltaY *int16) {
 	E.CalcDirectionRnd(deltaX, deltaY)
 }
 
-func CalcDirectionSeek(x, y int16, deltaX, deltaY *int16)  {
+func CalcDirectionSeek(x, y int16, deltaX, deltaY *int16) {
 	E.CalcDirectionSeek(x, y, deltaX, deltaY)
 }
 
-func CopyStatDataToTextWindow(statId int16, state *TTextWindowState)  {
+func CopyStatDataToTextWindow(statId int16, state *TTextWindowState) {
 	E.CopyStatDataToTextWindow(statId, state)
 }
 
-func DamageStat(attackerStatId int16)  {
+func DamageStat(attackerStatId int16) {
 	E.DamageStat(attackerStatId)
 }
 
-func DisplayMessage(time int16, message string)  {
+func DisplayMessage(time int16, message string) {
 	E.DisplayMessage(time, message)
 }
 
-func GameDebugPrompt()  {
+func GameDebugPrompt() {
 	E.GameDebugPrompt()
 }
 
-func GamePlayLoop(boardChanged bool)  {
+func GamePlayLoop(boardChanged bool) {
 	E.GamePlayLoop(boardChanged)
 }
 
@@ -1891,11 +1908,11 @@ func GameStep(inputs map[int16]PlayerInput) {
 	E.GameStep(inputs)
 }
 
-func GameTitleLoop()  {
+func GameTitleLoop() {
 	E.GameTitleLoop()
 }
 
-func GameUpdateSidebar()  {
+func GameUpdateSidebar() {
 	E.GameUpdateSidebar()
 }
 
@@ -1903,11 +1920,11 @@ func GameWorldLoad(extension string) (GameWorldLoad bool) {
 	return E.GameWorldLoad(extension)
 }
 
-func GameWorldSave(prompt string, filename *string, extension string)  {
+func GameWorldSave(prompt string, filename *string, extension string) {
 	E.GameWorldSave(prompt, filename, extension)
 }
 
-func GenerateTransitionTable()  {
+func GenerateTransitionTable() {
 	E.GenerateTransitionTable()
 }
 
@@ -1915,71 +1932,71 @@ func GetStatIdAt(x, y int16) (GetStatIdAt int16) {
 	return E.GetStatIdAt(x, y)
 }
 
-func HighScoresAdd(score int16)  {
+func HighScoresAdd(score int16) {
 	E.HighScoresAdd(score)
 }
 
-func HighScoresDisplay(linePos int16)  {
+func HighScoresDisplay(linePos int16) {
 	E.HighScoresDisplay(linePos)
 }
 
-func HighScoresInitTextWindow(state *TTextWindowState)  {
+func HighScoresInitTextWindow(state *TTextWindowState) {
 	E.HighScoresInitTextWindow(state)
 }
 
-func HighScoresLoad()  {
+func HighScoresLoad() {
 	E.HighScoresLoad()
 }
 
-func HighScoresSave()  {
+func HighScoresSave() {
 	E.HighScoresSave()
 }
 
-func MoveStat(statId int16, newX, newY int16)  {
+func MoveStat(statId int16, newX, newY int16) {
 	E.MoveStat(statId, newX, newY)
 }
 
-func PauseOnError()  {
+func PauseOnError() {
 	E.PauseOnError()
 }
 
-func PopupPromptString(question string, buffer *string)  {
+func PopupPromptString(question string, buffer *string) {
 	E.PopupPromptString(question, buffer)
 }
 
-func PromptString(x, y, arrowColor, color, width int16, mode byte, buffer *string)  {
+func PromptString(x, y, arrowColor, color, width int16, mode byte, buffer *string) {
 	E.PromptString(x, y, arrowColor, color, width, mode, buffer)
 }
 
-func RemoveStat(statId int16)  {
+func RemoveStat(statId int16) {
 	E.RemoveStat(statId)
 }
 
-func SidebarClear()  {
+func SidebarClear() {
 	E.SidebarClear()
 }
 
-func SidebarClearLine(y int16)  {
+func SidebarClearLine(y int16) {
 	E.SidebarClearLine(y)
 }
 
-func SidebarPromptCharacter(editable bool, x, y int16, prompt string, value *byte)  {
+func SidebarPromptCharacter(editable bool, x, y int16, prompt string, value *byte) {
 	E.SidebarPromptCharacter(editable, x, y, prompt, value)
 }
 
-func SidebarPromptChoice(editable bool, y int16, prompt, choiceStr string, result *byte)  {
+func SidebarPromptChoice(editable bool, y int16, prompt, choiceStr string, result *byte) {
 	E.SidebarPromptChoice(editable, y, prompt, choiceStr, result)
 }
 
-func SidebarPromptDirection(editable bool, y int16, prompt string, deltaX, deltaY *int16)  {
+func SidebarPromptDirection(editable bool, y int16, prompt string, deltaX, deltaY *int16) {
 	E.SidebarPromptDirection(editable, y, prompt, deltaX, deltaY)
 }
 
-func SidebarPromptSlider(editable bool, x, y int16, prompt string, value *byte)  {
+func SidebarPromptSlider(editable bool, x, y int16, prompt string, value *byte) {
 	E.SidebarPromptSlider(editable, x, y, prompt, value)
 }
 
-func SidebarPromptString(prompt string, extension string, filename *string, promptMode byte)  {
+func SidebarPromptString(prompt string, extension string, filename *string, promptMode byte) {
 	E.SidebarPromptString(prompt, extension, filename, promptMode)
 }
 
@@ -1991,19 +2008,19 @@ func TileToColorAndChar(x, y int16) (color, char byte) {
 	return E.TileToColorAndChar(x, y)
 }
 
-func TransitionDrawBoardChange()  {
+func TransitionDrawBoardChange() {
 	E.TransitionDrawBoardChange()
 }
 
-func TransitionDrawToBoard()  {
+func TransitionDrawToBoard() {
 	E.TransitionDrawToBoard()
 }
 
-func TransitionDrawToFill(chr byte, color int16)  {
+func TransitionDrawToFill(chr byte, color int16) {
 	E.TransitionDrawToFill(chr, color)
 }
 
-func WorldCreate()  {
+func WorldCreate() {
 	E.WorldCreate()
 }
 
@@ -2011,10 +2028,10 @@ func WorldLoad(filename, extension string, titleOnly bool) (WorldLoad bool) {
 	return E.WorldLoad(filename, extension, titleOnly)
 }
 
-func WorldSave(filename, extension string)  {
+func WorldSave(filename, extension string) {
 	E.WorldSave(filename, extension)
 }
 
-func WorldUnload()  {
+func WorldUnload() {
 	E.WorldUnload()
 }

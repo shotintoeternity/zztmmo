@@ -133,67 +133,72 @@ type (
 	THighScoreList [HIGH_SCORE_COUNT]THighScoreEntry
 	TIoTmpBuf      [20000]byte
 	Engine         struct {
-		unkVar_0476                 int16
-		unkVar_0478                 int16
-		TransitionTable             [80 * 25]TCoord
-		LoadedGameFileName          string
-		SavedGameFileName           string
-		SavedBoardFileName          string
-		StartupWorldFileName        string
-		Board                       TBoard
-		World                       TWorld
-		Players                     map[int16]*PlayerState
-		unkVar_4ABA                 [15]byte
-		GameTitleExitRequested      bool
-		GamePlayExitRequested       bool
-		GameStateElement            int16
-		ReturnBoardId               int16
-		TransitionTableSize         int16
-		TickSpeed                   byte
-		IoTmpBuf                    TIoTmpBuf
-		EditorPatternCount          int16
-		EditorPatterns              [10]byte
-		TickTimeDuration            int16
-		CurrentTick                 int16
-		CurrentStatTicked           int16
-		GamePaused                  bool
-		TickTimeCounter             int16
-		ForceDarknessOff            bool
-		OopChar                     byte
-		OopWord                     string
-		OopValue                    int16
-		DebugEnabled                bool
-		HighScoreList               THighScoreList
-		ConfigRegistration          string
-		ConfigWorldFile             string
-		EditorEnabled               bool
-		JustStarted                 bool
-		WorldFileDescCount          int16
-		WorldFileDescKeys           [10]string
-		WorldFileDescValues         [10]string
-		Screen                      [80][25]struct{ Ch, Color byte }
-		Headless                    bool
-		videoDirty                  []dirtyCell
-		ActiveInput                 InputSource
-		RandSeed                    uint32
-		InputDeltaX                 int16
-		InputDeltaY                 int16
-		InputShiftPressed           bool
-		InputKeyPressed             byte
-		InputLastDeltaX             int16
-		InputLastDeltaY             int16
-		InputKeyBuffer              string
-		Events                      []Event
-		PendingScrollReply          string
-		PendingScrollStatId         int16
-		SoundBlockQueueing          bool
+		unkVar_0476            int16
+		unkVar_0478            int16
+		TransitionTable        [80 * 25]TCoord
+		LoadedGameFileName     string
+		SavedGameFileName      string
+		SavedBoardFileName     string
+		StartupWorldFileName   string
+		Board                  TBoard
+		World                  TWorld
+		Players                map[int16]*PlayerState
+		unkVar_4ABA            [15]byte
+		GameTitleExitRequested bool
+		GamePlayExitRequested  bool
+		GameStateElement       int16
+		ReturnBoardId          int16
+		TransitionTableSize    int16
+		TickSpeed              byte
+		IoTmpBuf               TIoTmpBuf
+		EditorPatternCount     int16
+		EditorPatterns         [10]byte
+		TickTimeDuration       int16
+		CurrentTick            int16
+		CurrentStatTicked      int16
+		GamePaused             bool
+		TickTimeCounter        int16
+		ForceDarknessOff       bool
+		OopChar                byte
+		OopWord                string
+		OopValue               int16
+		DebugEnabled           bool
+		HighScoreList          THighScoreList
+		ConfigRegistration     string
+		ConfigWorldFile        string
+		EditorEnabled          bool
+		JustStarted            bool
+		WorldFileDescCount     int16
+		WorldFileDescKeys      [10]string
+		WorldFileDescValues    [10]string
+		Screen                 [80][25]struct{ Ch, Color byte }
+		Headless               bool
+		videoDirty             []dirtyCell
+		ActiveInput            InputSource
+		RandSeed               uint32
+		InputDeltaX            int16
+		InputDeltaY            int16
+		InputShiftPressed      bool
+		InputKeyPressed        byte
+		InputLastDeltaX        int16
+		InputLastDeltaY        int16
+		InputKeyBuffer         string
+		Events                 []Event
+		PendingScrollReply     string
+		PendingScrollStatId    int16
+		SoundBlockQueueing     bool
 		// FriendlyFire controls whether player-owned bullets can damage other
 		// players. True (default) = players can damage each other; false = player
 		// bullets pass through other player stats without effect. This is a
 		// server/engine configuration flag and is not accessible from ZZT-OOP.
-		FriendlyFire                bool
+		FriendlyFire bool
+		// MultiRoom, when true, causes passage and board-edge touches to emit
+		// TransferEvent instead of swapping the board in-place. The caller
+		// (RoomManager / server) handles the actual player transfer between engines.
+		// When false (default, single-player), the engine swaps the board as usual.
+		MultiRoom bool
 	}
-	Event interface{}
+	Event       interface{}
 	ScrollEvent struct {
 		Title  string
 		Lines  []string
@@ -224,21 +229,32 @@ type (
 		StatId int16
 		X, Y   int16
 	}
+	// TransferEvent is emitted when a player touches a passage or board edge and
+	// the engine is in MultiRoom mode (Engine.MultiRoom=true) or more than one
+	// player is present on the board. The engine does NOT swap the board; the
+	// caller (RoomManager / server) is responsible for despawning the player from
+	// this engine and spawning them on the destination engine at (EntryX, EntryY).
+	TransferEvent struct {
+		StatId  int16 // the player stat being transferred
+		ToBoard int16 // destination board index (into World.BoardData)
+		EntryX  int16 // entry tile X on the destination board
+		EntryY  int16 // entry tile Y on the destination board
+	}
 	PlayerState struct {
-		Health                      int16
-		Ammo                        int16
-		Gems                        int16
-		Torches                     int16
-		TorchTicks                  int16
-		EnergizerTicks              int16
-		Score                       int16
-		Keys                        [7]bool
-		BoardTimeSec                int16
-		BoardTimeHsec               int16
+		Health         int16
+		Ammo           int16
+		Gems           int16
+		Torches        int16
+		TorchTicks     int16
+		EnergizerTicks int16
+		Score          int16
+		Keys           [7]bool
+		BoardTimeSec   int16
+		BoardTimeHsec  int16
 		// DirX/DirY is the player's last shoot direction (formerly Engine.PlayerDirX/Y).
 		// Stored per-player so each player retains their own aim independently.
-		DirX                        int16
-		DirY                        int16
+		DirX int16
+		DirY int16
 		// RespawnTicks counts down after death. When it reaches 0 the player
 		// is placed back at Board.Info.StartPlayerX/Y with RESPAWN_INVULN_TICKS
 		// of invulnerability. Zero means the player is alive (not waiting to respawn).
@@ -347,7 +363,6 @@ func (e *Engine) RemovePlayer(statId int16) {
 		e.BoardDrawTile(int16(stat.X), int16(stat.Y))
 	}
 	e.RemoveStat(statId)
-	delete(e.Players, statId)
 }
 
 func (e *Engine) NearestPlayer(x, y int16) int16 {
@@ -366,6 +381,18 @@ func (e *Engine) NearestPlayer(x, y int16) int16 {
 		}
 	}
 	return bestId
+}
+
+// PlayerCount returns the number of E_PLAYER stats currently on the board.
+func (e *Engine) PlayerCount() int16 {
+	var count int16
+	for i := int16(0); i <= e.Board.StatCount; i++ {
+		stat := &e.Board.Stats[i]
+		if e.Board.Tiles[stat.X][stat.Y].Element == E_PLAYER {
+			count++
+		}
+	}
+	return count
 }
 
 const (
@@ -440,7 +467,7 @@ const (
 	SHOT_SOURCE_PLAYER_BASE = 2
 
 	// Respawn timing and penalty constants (M2.4).
-	RESPAWN_TICKS        = 30  // ticks before a dead player reappears (~3.3s at 110ms/tick)
-	RESPAWN_INVULN_TICKS = 50  // post-respawn invulnerability ticks (reuses EnergizerTicks)
+	RESPAWN_TICKS         = 30  // ticks before a dead player reappears (~3.3s at 110ms/tick)
+	RESPAWN_INVULN_TICKS  = 50  // post-respawn invulnerability ticks (reuses EnergizerTicks)
 	RESPAWN_SCORE_PENALTY = 100 // score lost on death (floored at 0)
 )

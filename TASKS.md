@@ -146,7 +146,7 @@ and every run is reproducible. ANALYSIS.md §3g, §3h, §5.
   uses sourceStatId, not stat 0). DoD: two-player test — one dies, respawns;
   the other's inventory untouched.
 
-- [ ] **M2.5 — Transfer events.** Passage/edge touches (`elements.go:957,1057`,
+- [x] **M2.5 — Transfer events.** Passage/edge touches (`elements.go:957,1057`,
   `game.go:1237-1268`) emit `TransferEvent{statId, toBoard, entry}` instead of
   swapping the global board when >1 player present, or when Engine.MultiRoom is
   set (ANALYSIS.md §3f). A `RoomManager` test type owns two Engines and moves a

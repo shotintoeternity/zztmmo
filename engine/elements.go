@@ -942,7 +942,7 @@ func (e *Engine) ElementScrollTick(statId int16) {
 
 func (e *Engine) ElementScrollTouch(x, y int16, sourceStatId int16, deltaX, deltaY *int16) {
 	var (
-		statId     int16
+		statId int16
 	)
 	statId = e.GetStatIdAt(x, y)
 	stat := &e.Board.Stats[statId]
@@ -995,7 +995,40 @@ func (e *Engine) ElementGemTouch(x, y int16, sourceStatId int16, deltaX, deltaY 
 }
 
 func (e *Engine) ElementPassageTouch(x, y int16, sourceStatId int16, deltaX, deltaY *int16) {
-	e.BoardPassageTeleport(x, y)
+	if e.MultiRoom || e.PlayerCount() > 1 {
+		// MultiRoom / multi-player: emit a TransferEvent instead of swapping the
+		// board in-place. Find the destination board and matching entry tile by
+		// decoding the destination board into a temporary engine. BoardChange
+		// would serialize this live board back into World.BoardData, including
+		// players, which is not a neutral read in multi-room mode.
+		passageStatId := e.GetStatIdAt(x, y)
+		destBoard := int16(e.Board.Stats[passageStatId].P3)
+		col := e.Board.Tiles[x][y].Color
+		var entryX, entryY int16
+		destEngine := NewEngine()
+		destEngine.Headless = true
+		destEngine.World = e.World
+		destEngine.BoardOpen(destBoard)
+		for ix := int16(1); ix <= BOARD_WIDTH; ix++ {
+			for iy := int16(1); iy <= BOARD_HEIGHT; iy++ {
+				if destEngine.Board.Tiles[ix][iy].Element == E_PASSAGE && destEngine.Board.Tiles[ix][iy].Color == col {
+					entryX = ix
+					entryY = iy
+				}
+			}
+		}
+		e.Events = append(e.Events, TransferEvent{
+			StatId:  sourceStatId,
+			ToBoard: destBoard,
+			EntryX:  entryX,
+			EntryY:  entryY,
+		})
+		*deltaX = 0
+		*deltaY = 0
+		return
+	}
+	// Single-player / single-board: keep vanilla behavior.
+	e.BoardPassageTeleport(x, y, sourceStatId)
 	*deltaX = 0
 	*deltaY = 0
 }
@@ -1121,6 +1154,21 @@ func (e *Engine) ElementBoardEdgeTouch(x, y int16, sourceStatId int16, deltaX, d
 	}
 
 	if e.Board.Info.NeighborBoards[neighborId] != 0 {
+		if e.MultiRoom || e.PlayerCount() > 1 {
+			// MultiRoom / multi-player: emit TransferEvent with destination board
+			// and entry tile at the edge. The caller (RoomManager) handles the
+			// actual stat transfer. No board swap occurs.
+			e.Events = append(e.Events, TransferEvent{
+				StatId:  sourceStatId,
+				ToBoard: int16(e.Board.Info.NeighborBoards[neighborId]),
+				EntryX:  entryX,
+				EntryY:  entryY,
+			})
+			*deltaX = 0
+			*deltaY = 0
+			return
+		}
+		// Single-player / single-board: keep vanilla behavior.
 		boardId = e.World.Info.CurrentBoard
 		e.BoardChange(int16(e.Board.Info.NeighborBoards[neighborId]))
 		if e.Board.Tiles[entryX][entryY].Element != E_PLAYER {
@@ -1133,7 +1181,7 @@ func (e *Engine) ElementBoardEdgeTouch(x, y int16, sourceStatId int16, deltaX, d
 			e.TransitionDrawBoardChange()
 			*deltaX = 0
 			*deltaY = 0
-			e.BoardEnter()
+			e.BoardEnter(sourceStatId)
 		} else {
 			e.BoardChange(boardId)
 		}
@@ -1826,270 +1874,270 @@ func (e *Engine) InitEditorStatSettings() {
 
 // --- Global Wrappers ---
 
-func DrawPlayerSurroundings(x, y int16, bombPhase int16)  {
+func DrawPlayerSurroundings(x, y int16, bombPhase int16) {
 	E.DrawPlayerSurroundings(x, y, bombPhase)
 }
 
-func ElementAmmoTouch(x, y int16, sourceStatId int16, deltaX, deltaY *int16)  {
+func ElementAmmoTouch(x, y int16, sourceStatId int16, deltaX, deltaY *int16) {
 	E.ElementAmmoTouch(x, y, sourceStatId, deltaX, deltaY)
 }
 
-func ElementBearTick(statId int16)  {
+func ElementBearTick(statId int16) {
 	E.ElementBearTick(statId)
 }
 
-func ElementBlinkWallDraw(x, y int16, ch *byte)  {
+func ElementBlinkWallDraw(x, y int16, ch *byte) {
 	E.ElementBlinkWallDraw(x, y, ch)
 }
 
-func ElementBlinkWallTick(statId int16)  {
+func ElementBlinkWallTick(statId int16) {
 	E.ElementBlinkWallTick(statId)
 }
 
-func ElementBoardEdgeTouch(x, y int16, sourceStatId int16, deltaX, deltaY *int16)  {
+func ElementBoardEdgeTouch(x, y int16, sourceStatId int16, deltaX, deltaY *int16) {
 	E.ElementBoardEdgeTouch(x, y, sourceStatId, deltaX, deltaY)
 }
 
-func ElementBombDraw(x, y int16, ch *byte)  {
+func ElementBombDraw(x, y int16, ch *byte) {
 	E.ElementBombDraw(x, y, ch)
 }
 
-func ElementBombTick(statId int16)  {
+func ElementBombTick(statId int16) {
 	E.ElementBombTick(statId)
 }
 
-func ElementBombTouch(x, y int16, sourceStatId int16, deltaX, deltaY *int16)  {
+func ElementBombTouch(x, y int16, sourceStatId int16, deltaX, deltaY *int16) {
 	E.ElementBombTouch(x, y, sourceStatId, deltaX, deltaY)
 }
 
-func ElementBulletTick(statId int16)  {
+func ElementBulletTick(statId int16) {
 	E.ElementBulletTick(statId)
 }
 
-func ElementCentipedeHeadTick(statId int16)  {
+func ElementCentipedeHeadTick(statId int16) {
 	E.ElementCentipedeHeadTick(statId)
 }
 
-func ElementCentipedeSegmentTick(statId int16)  {
+func ElementCentipedeSegmentTick(statId int16) {
 	E.ElementCentipedeSegmentTick(statId)
 }
 
-func ElementConveyorCCWDraw(x, y int16, ch *byte)  {
+func ElementConveyorCCWDraw(x, y int16, ch *byte) {
 	E.ElementConveyorCCWDraw(x, y, ch)
 }
 
-func ElementConveyorCCWTick(statId int16)  {
+func ElementConveyorCCWTick(statId int16) {
 	E.ElementConveyorCCWTick(statId)
 }
 
-func ElementConveyorCWDraw(x, y int16, ch *byte)  {
+func ElementConveyorCWDraw(x, y int16, ch *byte) {
 	E.ElementConveyorCWDraw(x, y, ch)
 }
 
-func ElementConveyorCWTick(statId int16)  {
+func ElementConveyorCWTick(statId int16) {
 	E.ElementConveyorCWTick(statId)
 }
 
-func ElementConveyorTick(x, y int16, direction int16)  {
+func ElementConveyorTick(x, y int16, direction int16) {
 	E.ElementConveyorTick(x, y, direction)
 }
 
-func ElementDamagingTouch(x, y int16, sourceStatId int16, deltaX, deltaY *int16)  {
+func ElementDamagingTouch(x, y int16, sourceStatId int16, deltaX, deltaY *int16) {
 	E.ElementDamagingTouch(x, y, sourceStatId, deltaX, deltaY)
 }
 
-func ElementDefaultDraw(x, y int16, ch *byte)  {
+func ElementDefaultDraw(x, y int16, ch *byte) {
 	E.ElementDefaultDraw(x, y, ch)
 }
 
-func ElementDefaultTick(statId int16)  {
+func ElementDefaultTick(statId int16) {
 	E.ElementDefaultTick(statId)
 }
 
-func ElementDefaultTouch(x, y int16, sourceStatId int16, deltaX, deltaY *int16)  {
+func ElementDefaultTouch(x, y int16, sourceStatId int16, deltaX, deltaY *int16) {
 	E.ElementDefaultTouch(x, y, sourceStatId, deltaX, deltaY)
 }
 
-func ElementDoorTouch(x, y int16, sourceStatId int16, deltaX, deltaY *int16)  {
+func ElementDoorTouch(x, y int16, sourceStatId int16, deltaX, deltaY *int16) {
 	E.ElementDoorTouch(x, y, sourceStatId, deltaX, deltaY)
 }
 
-func ElementDuplicatorDraw(x, y int16, ch *byte)  {
+func ElementDuplicatorDraw(x, y int16, ch *byte) {
 	E.ElementDuplicatorDraw(x, y, ch)
 }
 
-func ElementDuplicatorTick(statId int16)  {
+func ElementDuplicatorTick(statId int16) {
 	E.ElementDuplicatorTick(statId)
 }
 
-func ElementEnergizerTouch(x, y int16, sourceStatId int16, deltaX, deltaY *int16)  {
+func ElementEnergizerTouch(x, y int16, sourceStatId int16, deltaX, deltaY *int16) {
 	E.ElementEnergizerTouch(x, y, sourceStatId, deltaX, deltaY)
 }
 
-func ElementFakeTouch(x, y int16, sourceStatId int16, deltaX, deltaY *int16)  {
+func ElementFakeTouch(x, y int16, sourceStatId int16, deltaX, deltaY *int16) {
 	E.ElementFakeTouch(x, y, sourceStatId, deltaX, deltaY)
 }
 
-func ElementForestTouch(x, y int16, sourceStatId int16, deltaX, deltaY *int16)  {
+func ElementForestTouch(x, y int16, sourceStatId int16, deltaX, deltaY *int16) {
 	E.ElementForestTouch(x, y, sourceStatId, deltaX, deltaY)
 }
 
-func ElementGemTouch(x, y int16, sourceStatId int16, deltaX, deltaY *int16)  {
+func ElementGemTouch(x, y int16, sourceStatId int16, deltaX, deltaY *int16) {
 	E.ElementGemTouch(x, y, sourceStatId, deltaX, deltaY)
 }
 
-func ElementInvisibleTouch(x, y int16, sourceStatId int16, deltaX, deltaY *int16)  {
+func ElementInvisibleTouch(x, y int16, sourceStatId int16, deltaX, deltaY *int16) {
 	E.ElementInvisibleTouch(x, y, sourceStatId, deltaX, deltaY)
 }
 
-func ElementKeyTouch(x, y int16, sourceStatId int16, deltaX, deltaY *int16)  {
+func ElementKeyTouch(x, y int16, sourceStatId int16, deltaX, deltaY *int16) {
 	E.ElementKeyTouch(x, y, sourceStatId, deltaX, deltaY)
 }
 
-func ElementLineDraw(x, y int16, ch *byte)  {
+func ElementLineDraw(x, y int16, ch *byte) {
 	E.ElementLineDraw(x, y, ch)
 }
 
-func ElementLionTick(statId int16)  {
+func ElementLionTick(statId int16) {
 	E.ElementLionTick(statId)
 }
 
-func ElementMessageTimerTick(statId int16)  {
+func ElementMessageTimerTick(statId int16) {
 	E.ElementMessageTimerTick(statId)
 }
 
-func ElementMonitorTick(statId int16)  {
+func ElementMonitorTick(statId int16) {
 	E.ElementMonitorTick(statId)
 }
 
-func ElementMove(oldX, oldY, newX, newY int16)  {
+func ElementMove(oldX, oldY, newX, newY int16) {
 	E.ElementMove(oldX, oldY, newX, newY)
 }
 
-func ElementObjectDraw(x, y int16, ch *byte)  {
+func ElementObjectDraw(x, y int16, ch *byte) {
 	E.ElementObjectDraw(x, y, ch)
 }
 
-func ElementObjectTick(statId int16)  {
+func ElementObjectTick(statId int16) {
 	E.ElementObjectTick(statId)
 }
 
-func ElementObjectTouch(x, y int16, sourceStatId int16, deltaX, deltaY *int16)  {
+func ElementObjectTouch(x, y int16, sourceStatId int16, deltaX, deltaY *int16) {
 	E.ElementObjectTouch(x, y, sourceStatId, deltaX, deltaY)
 }
 
-func ElementPassageTouch(x, y int16, sourceStatId int16, deltaX, deltaY *int16)  {
+func ElementPassageTouch(x, y int16, sourceStatId int16, deltaX, deltaY *int16) {
 	E.ElementPassageTouch(x, y, sourceStatId, deltaX, deltaY)
 }
 
-func ElementPlayerTick(statId int16)  {
+func ElementPlayerTick(statId int16) {
 	E.ElementPlayerTick(statId)
 }
 
-func ElementPushablePush(x, y int16, deltaX, deltaY int16)  {
+func ElementPushablePush(x, y int16, deltaX, deltaY int16) {
 	E.ElementPushablePush(x, y, deltaX, deltaY)
 }
 
-func ElementPushableTouch(x, y int16, sourceStatId int16, deltaX, deltaY *int16)  {
+func ElementPushableTouch(x, y int16, sourceStatId int16, deltaX, deltaY *int16) {
 	E.ElementPushableTouch(x, y, sourceStatId, deltaX, deltaY)
 }
 
-func ElementPusherDraw(x, y int16, ch *byte)  {
+func ElementPusherDraw(x, y int16, ch *byte) {
 	E.ElementPusherDraw(x, y, ch)
 }
 
-func ElementPusherTick(statId int16)  {
+func ElementPusherTick(statId int16) {
 	E.ElementPusherTick(statId)
 }
 
-func ElementRuffianTick(statId int16)  {
+func ElementRuffianTick(statId int16) {
 	E.ElementRuffianTick(statId)
 }
 
-func ElementScrollTick(statId int16)  {
+func ElementScrollTick(statId int16) {
 	E.ElementScrollTick(statId)
 }
 
-func ElementScrollTouch(x, y int16, sourceStatId int16, deltaX, deltaY *int16)  {
+func ElementScrollTouch(x, y int16, sourceStatId int16, deltaX, deltaY *int16) {
 	E.ElementScrollTouch(x, y, sourceStatId, deltaX, deltaY)
 }
 
-func ElementSharkTick(statId int16)  {
+func ElementSharkTick(statId int16) {
 	E.ElementSharkTick(statId)
 }
 
-func ElementSlimeTick(statId int16)  {
+func ElementSlimeTick(statId int16) {
 	E.ElementSlimeTick(statId)
 }
 
-func ElementSlimeTouch(x, y int16, sourceStatId int16, deltaX, deltaY *int16)  {
+func ElementSlimeTouch(x, y int16, sourceStatId int16, deltaX, deltaY *int16) {
 	E.ElementSlimeTouch(x, y, sourceStatId, deltaX, deltaY)
 }
 
-func ElementSpinningGunDraw(x, y int16, ch *byte)  {
+func ElementSpinningGunDraw(x, y int16, ch *byte) {
 	E.ElementSpinningGunDraw(x, y, ch)
 }
 
-func ElementSpinningGunTick(statId int16)  {
+func ElementSpinningGunTick(statId int16) {
 	E.ElementSpinningGunTick(statId)
 }
 
-func ElementStarDraw(x, y int16, ch *byte)  {
+func ElementStarDraw(x, y int16, ch *byte) {
 	E.ElementStarDraw(x, y, ch)
 }
 
-func ElementStarTick(statId int16)  {
+func ElementStarTick(statId int16) {
 	E.ElementStarTick(statId)
 }
 
-func ElementTigerTick(statId int16)  {
+func ElementTigerTick(statId int16) {
 	E.ElementTigerTick(statId)
 }
 
-func ElementTorchTouch(x, y int16, sourceStatId int16, deltaX, deltaY *int16)  {
+func ElementTorchTouch(x, y int16, sourceStatId int16, deltaX, deltaY *int16) {
 	E.ElementTorchTouch(x, y, sourceStatId, deltaX, deltaY)
 }
 
-func ElementTransporterDraw(x, y int16, ch *byte)  {
+func ElementTransporterDraw(x, y int16, ch *byte) {
 	E.ElementTransporterDraw(x, y, ch)
 }
 
-func ElementTransporterMove(x, y, deltaX, deltaY int16)  {
+func ElementTransporterMove(x, y, deltaX, deltaY int16) {
 	E.ElementTransporterMove(x, y, deltaX, deltaY)
 }
 
-func ElementTransporterTick(statId int16)  {
+func ElementTransporterTick(statId int16) {
 	E.ElementTransporterTick(statId)
 }
 
-func ElementTransporterTouch(x, y int16, sourceStatId int16, deltaX, deltaY *int16)  {
+func ElementTransporterTouch(x, y int16, sourceStatId int16, deltaX, deltaY *int16) {
 	E.ElementTransporterTouch(x, y, sourceStatId, deltaX, deltaY)
 }
 
-func ElementWaterTouch(x, y int16, sourceStatId int16, deltaX, deltaY *int16)  {
+func ElementWaterTouch(x, y int16, sourceStatId int16, deltaX, deltaY *int16) {
 	E.ElementWaterTouch(x, y, sourceStatId, deltaX, deltaY)
 }
 
-func GamePromptEndPlay()  {
+func GamePromptEndPlay() {
 	E.GamePromptEndPlay()
 }
 
-func InitEditorStatSettings()  {
+func InitEditorStatSettings() {
 	E.InitEditorStatSettings()
 }
 
-func InitElementDefs()  {
+func InitElementDefs() {
 	E.InitElementDefs()
 }
 
-func InitElementsEditor()  {
+func InitElementsEditor() {
 	E.InitElementsEditor()
 }
 
-func InitElementsGame()  {
+func InitElementsGame() {
 	E.InitElementsGame()
 }
 
-func ResetMessageNotShownFlags()  {
+func ResetMessageNotShownFlags() {
 	E.ResetMessageNotShownFlags()
 }
