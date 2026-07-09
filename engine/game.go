@@ -1148,6 +1148,12 @@ func (e *Engine) GameUpdateSidebar() {
 	}
 }
 
+// SubmitDebugCommand queues a reply to a DebugPromptEvent. It is applied at the
+// top of the next GameStepWithInputs, never mid-tick.
+func (e *Engine) SubmitDebugCommand(statId int16, text string) {
+	e.PendingDebugCommands = append(e.PendingDebugCommands, PendingDebugCommand{StatId: statId, Text: text})
+}
+
 func (e *Engine) DisplayMessage(time int16, message string) {
 	if e.GetStatIdAt(0, 0) != -1 {
 		e.RemoveStat(e.GetStatIdAt(0, 0))
@@ -1336,16 +1342,27 @@ func (e *Engine) BoardPassageTeleport(x, y int16, sourceStatId int16) {
 	e.BoardEnter(sourceStatId)
 }
 
+// GameDebugPrompt is the interactive '?' flow: it blocks on PromptString for
+// the typed command, then applies it. Terminal and editor callers only — the
+// simulation emits DebugPromptEvent instead (PromptString waits on a key
+// channel that nothing feeds when headless, which would hang the server tick).
 func (e *Engine) GameDebugPrompt() {
-	var (
-		input  string
-		i      int16
-		toggle bool
-	)
-	input = ""
+	var input string
 	e.SidebarClearLine(4)
 	e.SidebarClearLine(5)
 	e.PromptString(63, 5, 0x1E, 0x0F, 11, PROMPT_ANY, &input)
+	e.GameApplyDebugCommand(0, input)
+}
+
+// GameApplyDebugCommand is everything GameDebugPrompt does once it has the
+// text. Split out so a networked client can supply the text without the modal
+// wait. statId identifies the player who typed it — vanilla ZZT always meant
+// stat 0, but a debug cheat must credit the player who asked for it.
+func (e *Engine) GameApplyDebugCommand(statId int16, input string) {
+	var (
+		i      int16
+		toggle bool
+	)
 	input = UpCaseString(input)
 	toggle = true
 	if len(input) > 0 && (input[0] == '+' || input[0] == '-') {
@@ -1360,7 +1377,7 @@ func (e *Engine) GameDebugPrompt() {
 		}
 	}
 	e.DebugEnabled = e.WorldGetFlagPosition("DEBUG") >= 0
-	pState := e.PlayerFor(0)
+	pState := e.PlayerFor(statId)
 	if input == "HEALTH" {
 		pState.Health += 50
 	} else if input == "AMMO" {
@@ -1379,10 +1396,11 @@ func (e *Engine) GameDebugPrompt() {
 		e.Board.Info.IsDark = toggle
 		e.TransitionDrawToBoard()
 	} else if input == "ZAP" {
+		stat := &e.Board.Stats[statId]
 		for i = 0; i <= 3; i++ {
-			e.BoardDamageTile(int16(e.Board.Stats[0].X)+NeighborDeltaX[i], int16(e.Board.Stats[0].Y)+NeighborDeltaY[i])
-			e.Board.Tiles[int16(e.Board.Stats[0].X)+NeighborDeltaX[i]][int16(e.Board.Stats[0].Y)+NeighborDeltaY[i]].Element = E_EMPTY
-			e.BoardDrawTile(int16(e.Board.Stats[0].X)+NeighborDeltaX[i], int16(e.Board.Stats[0].Y)+NeighborDeltaY[i])
+			e.BoardDamageTile(int16(stat.X)+NeighborDeltaX[i], int16(stat.Y)+NeighborDeltaY[i])
+			e.Board.Tiles[int16(stat.X)+NeighborDeltaX[i]][int16(stat.Y)+NeighborDeltaY[i]].Element = E_EMPTY
+			e.BoardDrawTile(int16(stat.X)+NeighborDeltaX[i], int16(stat.Y)+NeighborDeltaY[i])
 		}
 	}
 
@@ -1421,6 +1439,13 @@ func (e *Engine) GameStepWithInputs(inputs map[int16]PlayerInput) {
 		e.OopSend(e.PendingScrollStatId, e.PendingScrollReply, false)
 		e.PendingScrollReply = ""
 	}
+
+	for _, cmd := range e.PendingDebugCommands {
+		if cmd.StatId >= 0 && cmd.StatId <= e.Board.StatCount {
+			e.GameApplyDebugCommand(cmd.StatId, cmd.Text)
+		}
+	}
+	e.PendingDebugCommands = e.PendingDebugCommands[:0]
 
 	// Snapshot engine-level input fields into globals for the tick loop.
 	// Individual player inputs from the inputs map will override these for
@@ -1707,6 +1732,14 @@ func (e *Engine) GamePlayLoop(boardChanged bool) {
 				}
 			case HelpEvent:
 				TextWindowDisplayFile(ev.Filename, ev.Title)
+			case DebugPromptEvent:
+				// The terminal client can still block on the real prompt.
+				var input string
+				e.SidebarClearLine(4)
+				e.SidebarClearLine(5)
+				e.PromptString(63, 5, 0x1E, 0x0F, 11, PROMPT_ANY, &input)
+				e.GameApplyDebugCommand(ev.StatId, input)
+				InputKeyPressed = '\x00'
 			}
 		}
 	}

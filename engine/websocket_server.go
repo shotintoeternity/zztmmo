@@ -2,6 +2,7 @@ package zztgo
 
 import (
 	"context"
+	"encoding/json"
 	"net/http"
 	"sync"
 	"time"
@@ -130,13 +131,46 @@ func (s *WebSocketServer) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 	}
 
 	for {
-		var input InputMessage
-		if err := wsjson.Read(ctx, conn, &input); err != nil {
+		var raw json.RawMessage
+		if err := wsjson.Read(ctx, conn, &raw); err != nil {
 			s.removeClient(playerID)
 			return
 		}
-		s.setInput(playerID, inputMessageToPlayerInput(input))
+
+		var envelope struct {
+			Type string `json:"type"`
+		}
+		if err := json.Unmarshal(raw, &envelope); err != nil {
+			continue
+		}
+
+		switch envelope.Type {
+		case MessageTypeDebugCommand:
+			var cmd DebugCommandMessage
+			if err := json.Unmarshal(raw, &cmd); err != nil {
+				continue
+			}
+			s.submitDebugCommand(playerID, cmd.Text)
+		default:
+			var input InputMessage
+			if err := json.Unmarshal(raw, &input); err != nil {
+				continue
+			}
+			s.setInput(playerID, inputMessageToPlayerInput(input))
+		}
 	}
+}
+
+// submitDebugCommand routes a client's '?' reply to the engine that owns that
+// player. Held under s.mu because Tick mutates the same rooms.
+func (s *WebSocketServer) submitDebugCommand(playerID PlayerID, text string) {
+	s.mu.Lock()
+	defer s.mu.Unlock()
+
+	if _, ok := s.clients[playerID]; !ok {
+		return
+	}
+	s.RoomManager.SubmitDebugCommand(playerID, text)
 }
 
 func inputMessageToPlayerInput(input InputMessage) PlayerInput {

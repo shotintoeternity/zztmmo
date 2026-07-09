@@ -1,5 +1,6 @@
 import "./style.css";
 import { drawSidebar as paintSidebar, updateSidebar as paintSidebarHud } from "./sidebar";
+import { renderTextWindow, clampLinePos, TEXT_WINDOW_PAGE, type TextWindowState } from "./textwindow";
 
 const COLS = 80;
 // The server streams board columns 0..59 only. Columns 60..79 are the sidebar,
@@ -18,6 +19,14 @@ const MessageTypeSnapshot = "snapshot";
 const MessageTypeDiff = "diff";
 const MessageTypeEvent = "event";
 const MessageTypeBoardChange = "boardChange";
+const MessageTypeDebugCommand = "debugCommand";
+
+// GameDebugPrompt's PromptString(63, 5, 0x1E, 0x0F, 11, PROMPT_ANY, ...).
+const DEBUG_PROMPT_X = 63;
+const DEBUG_PROMPT_Y = 5;
+const DEBUG_PROMPT_WIDTH = 11;
+const DEBUG_PROMPT_ARROW_COLOR = 0x1e;
+const DEBUG_PROMPT_COLOR = 0x0f;
 
 const InputMaskUp = 1 << 0;
 const InputMaskDown = 1 << 1;
@@ -358,6 +367,7 @@ const messageEl = query<HTMLElement>("[data-messages]");
 
 let ws: WebSocket | null = null;
 let playerId = 0;
+let myStatId = -1;
 let seq = 0;
 let boardId = 0;
 let tick = 0;
@@ -367,6 +377,15 @@ let connected = false;
 let lastMessageKey = "";
 let lastMessageAt = 0;
 const pressed = new Set<string>();
+
+// While a modal is up, gameplay keys are swallowed. The simulation does NOT
+// pause behind it (M1.3 deviation), so the board keeps updating underneath and
+// the modal is painted as an overlay rather than by saving/restoring cells.
+type Mode = "play" | "debug" | "window";
+let mode: Mode = "play";
+let windowState: TextWindowState | null = null;
+let debugBuffer = "";
+const overlay = new Map<number, { ch: number; color: number }>();
 const cells: ScreenCell[] = Array.from({ length: COLS * ROWS }, (_, i) => ({
   x: i % COLS,
   y: Math.floor(i / COLS),
@@ -448,6 +467,7 @@ function applyMessage(message: ServerMessage) {
       break;
     case MessageTypeBoardChange:
       stopHeldInput();
+      closeModal();
       applySnapshot(message.snapshot);
       break;
   }
@@ -455,6 +475,7 @@ function applyMessage(message: ServerMessage) {
 
 function applySnapshot(message: SnapshotMessage) {
   playerId = message.you.id;
+  myStatId = message.you.statId;
   boardId = message.boardId;
   tick = message.tick;
   overlayEl.hidden = true;
@@ -466,9 +487,24 @@ function applySnapshot(message: SnapshotMessage) {
   drawScreen();
 }
 
+// Stat ids shift when other players leave the board, so track ours from every
+// message that carries the roster.
+function trackMyStatId(players: PlayerSnapshot[] | undefined) {
+  if (!players) {
+    return;
+  }
+  for (const player of players) {
+    if (player.id === playerId) {
+      myStatId = player.statId;
+      return;
+    }
+  }
+}
+
 function applyDiff(message: DiffMessage) {
   boardId = message.boardId;
   tick = message.tick;
+  trackMyStatId(message.players);
   if (message.cells) {
     for (const cell of message.cells) {
       setBoardCell(cell);
@@ -511,16 +547,81 @@ function setCell(cell: ScreenCell) {
 function drawScreen() {
   screenCtx.textBaseline = "top";
   screenCtx.font = "16px 'IBM Plex Mono', 'Cascadia Mono', 'SFMono-Regular', Consolas, monospace";
-  for (const cell of cells) {
-    const fg = cell.color & 0x0f;
-    const bg = (cell.color >> 4) & 0x0f;
-    const x = cell.x * CELL_W;
-    const y = cell.y * CELL_H;
+  for (let i = 0; i < cells.length; i += 1) {
+    const base = cells[i];
+    const over = overlay.get(i);
+    const ch = over ? over.ch : base.ch;
+    const color = over ? over.color : base.color;
+    const fg = color & 0x0f;
+    const bg = (color >> 4) & 0x0f;
+    const x = base.x * CELL_W;
+    const y = base.y * CELL_H;
     screenCtx.fillStyle = ega[bg] ?? "#000000";
     screenCtx.fillRect(x, y, CELL_W, CELL_H);
     screenCtx.fillStyle = ega[fg] ?? "#ffffff";
-    screenCtx.fillText(toGlyph(cell.ch), x, y + 1);
+    screenCtx.fillText(toGlyph(ch), x, y + 1);
   }
+}
+
+function writeOverlay(x: number, y: number, color: number, text: string) {
+  for (let i = 0; i < text.length; i += 1) {
+    const cx = x + i;
+    if (cx < 0 || cx >= COLS || y < 0 || y >= ROWS) {
+      continue;
+    }
+    overlay.set(y * COLS + cx, { ch: text.charCodeAt(i) & 0xff, color });
+  }
+}
+
+// paintOverlay rebuilds the modal layer from scratch each frame, so a modal
+// never has to restore what was underneath it.
+function paintOverlay() {
+  overlay.clear();
+  if (mode === "window" && windowState) {
+    renderTextWindow(writeOverlay, windowState);
+  } else if (mode === "debug") {
+    paintDebugPrompt();
+  }
+}
+
+// paintDebugPrompt is PromptString's redraw, at the sidebar coordinates
+// GameDebugPrompt uses.
+function paintDebugPrompt() {
+  for (let i = 0; i <= DEBUG_PROMPT_WIDTH - 1; i += 1) {
+    writeOverlay(DEBUG_PROMPT_X + i, DEBUG_PROMPT_Y, DEBUG_PROMPT_COLOR, " ");
+    writeOverlay(DEBUG_PROMPT_X + i, DEBUG_PROMPT_Y - 1, DEBUG_PROMPT_ARROW_COLOR, " ");
+  }
+  writeOverlay(DEBUG_PROMPT_X + DEBUG_PROMPT_WIDTH, DEBUG_PROMPT_Y - 1, DEBUG_PROMPT_ARROW_COLOR, " ");
+  const cursorColor = Math.trunc(DEBUG_PROMPT_ARROW_COLOR / 0x10) * 16 + 0x0f;
+  writeOverlay(DEBUG_PROMPT_X + debugBuffer.length, DEBUG_PROMPT_Y - 1, cursorColor, "\x1f");
+  writeOverlay(DEBUG_PROMPT_X, DEBUG_PROMPT_Y, DEBUG_PROMPT_COLOR, debugBuffer);
+}
+
+function openWindow(title: string, lines: string[], viewingFile: boolean) {
+  if (lines.length === 0) {
+    return;
+  }
+  stopHeldInput();
+  mode = "window";
+  windowState = { title, lines, linePos: 1, viewingFile };
+  paintOverlay();
+  drawScreen();
+}
+
+function openDebugPrompt() {
+  stopHeldInput();
+  mode = "debug";
+  debugBuffer = "";
+  paintOverlay();
+  drawScreen();
+}
+
+function closeModal() {
+  mode = "play";
+  windowState = null;
+  debugBuffer = "";
+  overlay.clear();
+  drawScreen();
 }
 
 function toGlyph(ch: number): string {
@@ -555,13 +656,28 @@ function renderEvents(events: ProtocolEvent[] | undefined) {
   }
 }
 
+// isMine filters room-wide event broadcasts down to this player's own modals.
+function isMine(event: ProtocolEvent): boolean {
+  return myStatId < 0 || (event.statId ?? 0) === myStatId;
+}
+
 function handleProtocolEvent(event: ProtocolEvent) {
   switch (event.type) {
-    case "scroll":
     case "help":
+      if (isMine(event)) {
+        openWindow(event.title ?? event.filename ?? "Help", event.lines ?? [], true);
+      }
+      appendLogOnce(`help: ${event.title ?? event.filename ?? ""}`);
+      break;
+    case "debugPrompt":
+      if (isMine(event)) {
+        openDebugPrompt();
+      }
+      break;
+    case "scroll":
       stopHeldInput();
-      showMessage(event.title ?? event.filename ?? "Message", event.lines ?? []);
-      appendLogOnce(`${event.type}: ${event.title ?? event.filename ?? ""}`);
+      showMessage(event.title ?? "Message", event.lines ?? []);
+      appendLogOnce(`scroll: ${event.title ?? ""}`);
       break;
     case "sound":
       appendLogOnce(`sound priority ${event.priority ?? 0}`);
@@ -632,9 +748,29 @@ function appendLogOnce(text: string) {
 }
 
 function handleKeyDown(event: KeyboardEvent) {
+  if (mode !== "play") {
+    event.preventDefault();
+    if (mode === "window") {
+      handleWindowKey(event);
+    } else {
+      handleDebugKey(event);
+    }
+    return;
+  }
+
   if (event.repeat && !isMovementKey(event.code)) {
     return;
   }
+
+  // Command keys travel as a raw key byte, not a movement mask.
+  const command = commandKey(event);
+  if (command !== 0) {
+    event.preventDefault();
+    stopHeldInput();
+    sendKey(command);
+    return;
+  }
+
   const handled = updatePressed(event, true);
   if (handled) {
     event.preventDefault();
@@ -642,12 +778,110 @@ function handleKeyDown(event: KeyboardEvent) {
   }
 }
 
+// handleWindowKey is TextWindowSelect's navigation for a read-only view.
+// Hyperlink selection arrives with the scroll windows in M3.10.
+function handleWindowKey(event: KeyboardEvent) {
+  if (!windowState) {
+    return;
+  }
+  const lineCount = windowState.lines.length;
+  let next = windowState.linePos;
+  switch (event.code) {
+    case "ArrowUp":
+      next -= 1;
+      break;
+    case "ArrowDown":
+      next += 1;
+      break;
+    case "PageUp":
+      next -= TEXT_WINDOW_PAGE;
+      break;
+    case "PageDown":
+      next += TEXT_WINDOW_PAGE;
+      break;
+    case "Escape":
+    case "Enter":
+      closeModal();
+      return;
+    default:
+      return;
+  }
+  windowState.linePos = clampLinePos(next, lineCount);
+  paintOverlay();
+  drawScreen();
+}
+
+// handleDebugKey is PromptString's editing loop for PROMPT_ANY.
+function handleDebugKey(event: KeyboardEvent) {
+  if (event.code === "Enter") {
+    sendDebugCommand(debugBuffer);
+    closeModal();
+    return;
+  }
+  if (event.code === "Escape") {
+    // Vanilla restores the old (empty) buffer and still runs the tail of
+    // GameDebugPrompt, which plays a sound. Send the empty command.
+    sendDebugCommand("");
+    closeModal();
+    return;
+  }
+  if (event.code === "Backspace" || event.code === "ArrowLeft") {
+    debugBuffer = debugBuffer.slice(0, -1);
+  } else if (event.key.length === 1 && event.key >= " " && event.key.charCodeAt(0) < 0x80) {
+    if (debugBuffer.length < DEBUG_PROMPT_WIDTH) {
+      debugBuffer += event.key;
+    }
+  } else {
+    return;
+  }
+  paintOverlay();
+  drawScreen();
+}
+
 function handleKeyUp(event: KeyboardEvent) {
+  if (mode !== "play") {
+    return;
+  }
   const handled = updatePressed(event, false);
   if (handled) {
     event.preventDefault();
     sendInput(currentMask());
   }
+}
+
+// commandKey maps the play-mode command keys the engine reads out of
+// InputKeyPressed. Movement stays on the keymask. Full parity is M4.2.
+function commandKey(event: KeyboardEvent): number {
+  if (event.ctrlKey || event.metaKey || event.altKey) {
+    return 0;
+  }
+  if (event.key === "?") {
+    return "?".charCodeAt(0);
+  }
+  if (event.code === "KeyH") {
+    return "H".charCodeAt(0);
+  }
+  return 0;
+}
+
+function sendKey(key: number) {
+  if (!connected || !ws || ws.readyState !== WebSocket.OPEN || playerId === 0) {
+    return;
+  }
+  const input: InputMessage = {
+    type: MessageTypeInput,
+    playerId,
+    seq: ++seq,
+    key,
+  };
+  ws.send(JSON.stringify(input));
+}
+
+function sendDebugCommand(text: string) {
+  if (!connected || !ws || ws.readyState !== WebSocket.OPEN || playerId === 0) {
+    return;
+  }
+  ws.send(JSON.stringify({ type: MessageTypeDebugCommand, playerId, text }));
 }
 
 function updatePressed(event: KeyboardEvent, down: boolean): boolean {
@@ -687,6 +921,10 @@ function currentMask(): number {
 
 function sendInput(mask: number, key = 0) {
   if (!connected || !ws || ws.readyState !== WebSocket.OPEN || playerId === 0) {
+    return;
+  }
+  // A modal is open: never let held movement keys through.
+  if (mode !== "play" && mask !== 0) {
     return;
   }
   if (mask === 0 && lastMask === 0 && key === 0) {

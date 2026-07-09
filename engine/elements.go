@@ -1408,9 +1408,10 @@ func (e *Engine) ElementPlayerTick(statId int16) {
 		e.Events = append(e.Events, HelpEvent{
 			Filename: "GAME.HLP",
 			Title:    "Playing ZZT",
+			StatId:   statId,
 		})
 	case '?':
-		e.GameDebugPrompt()
+		e.Events = append(e.Events, DebugPromptEvent{StatId: statId})
 		InputKeyPressed = '\x00'
 	}
 	if pState.TorchTicks > 0 {

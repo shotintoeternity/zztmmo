@@ -187,7 +187,12 @@ type (
 		Events                 []Event
 		PendingScrollReply     string
 		PendingScrollStatId    int16
-		SoundBlockQueueing     bool
+		// PendingDebugCommands holds debug-prompt text submitted by clients,
+		// applied at the top of the next GameStepWithInputs. The '?' prompt was
+		// modal (PromptString blocks on InputReadWaitKey), so like scrolls it
+		// becomes an event out plus a reply in.
+		PendingDebugCommands []PendingDebugCommand
+		SoundBlockQueueing   bool
 		// FriendlyFire controls whether player-owned bullets can damage other
 		// players. True (default) = players can damage each other; false = player
 		// bullets pass through other player stats without effect. This is a
@@ -209,6 +214,20 @@ type (
 	HelpEvent       struct {
 		Filename string
 		Title    string
+		// StatId is the player who asked for help. Room events are broadcast to
+		// everyone on the board, so the client filters on this.
+		StatId int16
+	}
+	// DebugPromptEvent is emitted when a player presses '?'. The caller shows
+	// the 11-character sidebar prompt (PromptString at 63,5 in vanilla ZZT) and
+	// feeds the typed text back via Engine.SubmitDebugCommand.
+	DebugPromptEvent struct {
+		StatId int16
+	}
+	// PendingDebugCommand is one queued reply to a DebugPromptEvent.
+	PendingDebugCommand struct {
+		StatId int16
+		Text   string
 	}
 	HighScoreEntryEvent struct {
 		Score   int16

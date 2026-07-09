@@ -429,3 +429,19 @@ func (rm *RoomManager) syncFrozenBoardToLiveRooms(boardID int16) {
 		room.Engine.World.Info.Flags = rm.world.Info.Flags
 	}
 }
+
+// SubmitDebugCommand forwards a player's debug-prompt text to the engine that
+// currently owns them, tagged with their stat id so the cheat credits the
+// player who typed it rather than stat 0.
+func (rm *RoomManager) SubmitDebugCommand(playerID PlayerID, text string) bool {
+	player := rm.players[playerID]
+	if player == nil {
+		return false
+	}
+	room := rm.rooms[player.boardID]
+	if room == nil {
+		return false
+	}
+	room.Engine.SubmitDebugCommand(player.statID, text)
+	return true
+}

@@ -1,13 +1,52 @@
 package zztgo
 
-const (
-	MessageTypeJoin        = "join"
-	MessageTypeInput       = "input"
-	MessageTypeSnapshot    = "snapshot"
-	MessageTypeDiff        = "diff"
-	MessageTypeEvent       = "event"
-	MessageTypeBoardChange = "boardChange"
+import (
+	"path/filepath"
+	"sync"
 )
+
+const (
+	MessageTypeJoin         = "join"
+	MessageTypeInput        = "input"
+	MessageTypeSnapshot     = "snapshot"
+	MessageTypeDiff         = "diff"
+	MessageTypeEvent        = "event"
+	MessageTypeBoardChange  = "boardChange"
+	MessageTypeDebugCommand = "debugCommand"
+)
+
+// HelpDir is where HelpFileLines looks for .HLP files. The terminal client
+// resolves them relative to the working directory; the server may run from
+// elsewhere.
+var HelpDir = "."
+
+var (
+	helpCacheMu sync.Mutex
+	helpCache   = map[string][]string{}
+)
+
+// HelpFileLines reads a .HLP file into text-window lines. It runs on the
+// protocol boundary, never in the simulation: the sim only emits the filename.
+func HelpFileLines(filename string) []string {
+	if filename == "" {
+		return nil
+	}
+
+	helpCacheMu.Lock()
+	defer helpCacheMu.Unlock()
+	if lines, ok := helpCache[filename]; ok {
+		return lines
+	}
+
+	var state TTextWindowState
+	TextWindowOpenFile(filepath.Join(HelpDir, filename), &state)
+	lines := make([]string, 0, state.LineCount)
+	for i := int16(0); i < state.LineCount; i++ {
+		lines = append(lines, state.Lines[i])
+	}
+	helpCache[filename] = lines
+	return lines
+}
 
 const (
 	InputMaskUp uint16 = 1 << iota
@@ -34,6 +73,15 @@ type InputMessage struct {
 	Shift    bool     `json:"shift"`
 	Key      byte     `json:"key"`
 	Keymask  uint16   `json:"keymask,omitempty"`
+}
+
+// DebugCommandMessage is the client's reply to a debugPrompt event: the text
+// typed into the sidebar prompt. Empty text (a cancelled prompt) is a no-op
+// that still matches vanilla behavior, where Escape restores the old buffer.
+type DebugCommandMessage struct {
+	Type     string   `json:"type"`
+	PlayerID PlayerID `json:"playerId"`
+	Text     string   `json:"text"`
 }
 
 type SnapshotMessage struct {
@@ -146,7 +194,9 @@ func ProtocolEvents(events []Event) []ProtocolEvent {
 		case QuitPromptEvent:
 			out = append(out, ProtocolEvent{Type: "quitPrompt"})
 		case HelpEvent:
-			out = append(out, ProtocolEvent{Type: "help", Filename: ev.Filename, Title: ev.Title})
+			out = append(out, ProtocolEvent{Type: "help", StatID: ev.StatId, Filename: ev.Filename, Title: ev.Title, Lines: HelpFileLines(ev.Filename)})
+		case DebugPromptEvent:
+			out = append(out, ProtocolEvent{Type: "debugPrompt", StatID: ev.StatId})
 		case HighScoreEntryEvent:
 			out = append(out, ProtocolEvent{Type: "highScoreEntry", Score: ev.Score, ListPos: ev.ListPos})
 		case SoundEvent:

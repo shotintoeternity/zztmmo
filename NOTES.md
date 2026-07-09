@@ -63,3 +63,38 @@
   error on every call). M0.6 is not [ADVISOR], but M1.3 and M2.2 are — try the
   advisor first, and if it is still down, escalate per CLAUDE.md rule 5 or get
   explicit user pre-authorization before editing (as was done for M0.5).
+
+## M3.9 (2026-07-09) — the '?' key could hang the whole server
+
+Found while starting M3.9: `ElementPlayerTick` case '?' called
+`GameDebugPrompt`, which calls `PromptString`, which loops on
+`InputReadWaitKey()`. That blocks on the package-global `keyChan`, fed only by
+the tcell keyboard. In a headless room engine nothing ever feeds it, so a single
+browser client pressing '?' would have blocked `RoomManager.StepDiffs` forever —
+freezing every room and every player, not just the sender. M1.4's grep for
+"zero TextWindow/SidebarPrompt/InputReadWaitKey calls in sim code" missed it
+because the call site says `GameDebugPrompt`, not `PromptString`.
+
+Fix follows the M1.3 scroll pattern: the sim emits `DebugPromptEvent{StatId}`
+and returns; the caller collects the typed text and replies via
+`Engine.SubmitDebugCommand(statId, text)`, applied at the top of the next
+`GameStepWithInputs`. `GameDebugPrompt` (terminal/editor) keeps the modal
+`PromptString` and now delegates to the new `GameApplyDebugCommand(statId,
+input)`, which is the old body with `PlayerFor(0)`/`Stats[0]` replaced by the
+triggering player — vanilla always meant stat 0, but a cheat must credit
+whoever typed it.
+
+Timing deviation: '?' now applies on the NEXT step rather than mid-tick. Same
+class as the M1.3 scroll deviation. Replay fixture unchanged (the scripted
+replay input never presses '?' or 'H'), so no `DEVIATION:` tag was required.
+
+Also: `HelpEvent` gained `StatId`. Room events are broadcast to everyone on the
+board, so without it player A pressing 'H' opened a help window on player B's
+screen. `QuitPromptEvent` still has no StatId and still reads `PlayerFor(0)` —
+left alone, it belongs to M4.3's quit/save/high-score pass.
+
+The .HLP files are now git-tracked (`engine/*.HLP`), byte-identical to
+`reference/reconstruction-of-zzt/DOC/*.HLP` (MIT, Epic's permission included) —
+same provenance and precedent as the already-tracked `fixtures/TOWN.ZZT`. The
+server reads them via the new `-help` flag / `zztgo.HelpDir`; the sim never
+touches the filesystem, `HelpFileLines` runs on the protocol boundary.

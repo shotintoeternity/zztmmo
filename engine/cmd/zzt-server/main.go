@@ -16,7 +16,10 @@ func main() {
 	worldName := flag.String("world", "TOWN", "world basename to load")
 	boardID := flag.Int("board", 1, "default board id")
 	webDir := flag.String("web", "web/dist", "built browser client directory")
+	helpDir := flag.String("help", ".", "directory holding the .HLP help files")
 	flag.Parse()
+
+	zztgo.HelpDir = *helpDir
 
 	e := zztgo.NewEngine()
 	e.Headless = true

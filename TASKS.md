@@ -199,7 +199,7 @@ and every run is reproducible. ANALYSIS.md §3g, §3h, §5.
   visually matches the original board+sidebar split while remaining protocol
   driven.
 
-- [ ] **M3.9 — Browser debug/help windows.** Restore browser access to modal
+- [x] **M3.9 — Browser debug/help windows.** Restore browser access to modal
   keyboard flows such as the `?` debug window, help screens, and other legacy
   text-window prompts through protocol events and client-side CP437 windows.
   DoD: pressing `?` in the browser opens an interactive debug/help-style window
