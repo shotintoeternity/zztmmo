@@ -188,7 +188,7 @@ and every run is reproducible. ANALYSIS.md §3g, §3h, §5.
   board move independently, pick up items, transfer rooms, and receive
   per-player events/HUD. DoD: scripted multi-client test passes.
 
-- [ ] **M3.7 — Soak/drift test.** Run 20 bot clients for a shorter CI duration
+- [x] **M3.7 — Soak/drift test.** Run 20 bot clients for a shorter CI duration
   first, then the 1-hour target manually/nightly. DoD: no drift, no panic, no
   runaway memory.
 

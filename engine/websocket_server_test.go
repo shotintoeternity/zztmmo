@@ -4,7 +4,12 @@ import (
 	"context"
 	"encoding/json"
 	"net/http/httptest"
+	"os"
+	"runtime"
+	"strconv"
 	"strings"
+	"sync"
+	"sync/atomic"
 	"testing"
 	"time"
 
@@ -284,6 +289,115 @@ func TestWebSocketServerMultiplayerSmokePickupTransferHUD(t *testing.T) {
 	})
 }
 
+func TestWebSocketServerTwentyBotSoak(t *testing.T) {
+	botCount, soakTicks, maxAllocGrowth := soakTestConfig(t)
+
+	world := testSoakWorld(t)
+	server := NewWebSocketServer(world, 1)
+
+	ctx, cancel := context.WithCancel(context.Background())
+	defer cancel()
+
+	httpServer := httptest.NewServer(server)
+	defer httpServer.Close()
+
+	bots := make([]*soakBot, 0, botCount)
+	var wg sync.WaitGroup
+	for i := 0; i < botCount; i++ {
+		conn, snapshot := joinTestClient(t, ctx, httpServer.URL, "bot")
+		bot := &soakBot{conn: conn, id: snapshot.You.ID}
+		bot.board.Store(int64(snapshot.BoardID))
+		bot.tick.Store(int64(snapshot.Tick))
+		bot.hash.Store(snapshot.Hash)
+		bots = append(bots, bot)
+		wg.Add(1)
+		go bot.readLoop(ctx, &wg)
+	}
+	defer func() {
+		cancel()
+		for _, bot := range bots {
+			_ = bot.conn.Close(websocket.StatusNormalClosure, "")
+		}
+		wg.Wait()
+	}()
+
+	runtime.GC()
+	var before runtime.MemStats
+	runtime.ReadMemStats(&before)
+
+	for tick := 0; tick < soakTicks; tick++ {
+		for i, bot := range bots {
+			if err := bot.writeInput(ctx, soakInputMask(i, tick), uint64(tick+1)); err != nil {
+				t.Fatalf("bot %d write input at tick %d: %v", i, tick, err)
+			}
+		}
+		server.Tick(ctx)
+	}
+
+	deadline := time.After(5 * time.Second)
+	for {
+		allCaughtUp := true
+		for _, bot := range bots {
+			if bot.messageCount() < int64(soakTicks) {
+				allCaughtUp = false
+				break
+			}
+		}
+		if allCaughtUp {
+			break
+		}
+		select {
+		case <-deadline:
+			for i, bot := range bots {
+				t.Logf("bot %d messages=%d diffs=%d boardChanges=%d err=%q", i, bot.messageCount(), bot.diffs.Load(), bot.boardChanges.Load(), bot.errText())
+			}
+			t.Fatal("timed out waiting for bot readers to catch up")
+		case <-time.After(time.Millisecond):
+		}
+	}
+
+	for i, bot := range bots {
+		if errText := bot.errText(); errText != "" {
+			t.Fatalf("bot %d read error: %s", i, errText)
+		}
+		if bot.diffs.Load() == 0 {
+			t.Fatalf("bot %d read no diffs", i)
+		}
+	}
+
+	server.mu.Lock()
+	if got := len(server.clients); got != botCount {
+		server.mu.Unlock()
+		t.Fatalf("active clients=%d, want %d", got, botCount)
+	}
+	roomHashes := make(map[int16]uint64)
+	for _, boardID := range server.RoomManager.roomIDs() {
+		room, ok := server.RoomManager.Room(boardID)
+		if ok {
+			roomHashes[boardID] = StateHash(room.Engine)
+		}
+	}
+	server.mu.Unlock()
+
+	for i, bot := range bots {
+		boardID := int16(bot.board.Load())
+		wantHash, ok := roomHashes[boardID]
+		if !ok {
+			t.Fatalf("bot %d is on inactive board %d", i, boardID)
+		}
+		if gotHash := bot.hash.Load(); gotHash != wantHash {
+			t.Fatalf("bot %d hash drift on board %d: got %d want %d", i, boardID, gotHash, wantHash)
+		}
+	}
+
+	runtime.GC()
+	var after runtime.MemStats
+	runtime.ReadMemStats(&after)
+	if after.Alloc > before.Alloc+maxAllocGrowth {
+		t.Fatalf("heap allocation grew by %d bytes, limit %d", after.Alloc-before.Alloc, maxAllocGrowth)
+	}
+}
+
 func TestInputMessageToPlayerInput(t *testing.T) {
 	tests := []struct {
 		name  string
@@ -427,6 +541,128 @@ func playerAt(diff DiffMessage, playerID PlayerID, x, y int16) bool {
 	return false
 }
 
+type soakBot struct {
+	conn         *websocket.Conn
+	id           PlayerID
+	messages     atomic.Int64
+	diffs        atomic.Int64
+	boardChanges atomic.Int64
+	board        atomic.Int64
+	tick         atomic.Int64
+	hash         atomic.Uint64
+	err          atomic.Value
+}
+
+func (bot *soakBot) readLoop(ctx context.Context, wg *sync.WaitGroup) {
+	defer wg.Done()
+
+	for {
+		var raw json.RawMessage
+		if err := wsjson.Read(ctx, bot.conn, &raw); err != nil {
+			if ctx.Err() == nil && websocket.CloseStatus(err) != websocket.StatusNormalClosure {
+				bot.err.Store(err.Error())
+			}
+			return
+		}
+
+		var envelope struct {
+			Type string `json:"type"`
+		}
+		if err := json.Unmarshal(raw, &envelope); err != nil {
+			bot.err.Store(err.Error())
+			return
+		}
+
+		switch envelope.Type {
+		case MessageTypeDiff:
+			var diff DiffMessage
+			if err := json.Unmarshal(raw, &diff); err != nil {
+				bot.err.Store(err.Error())
+				return
+			}
+			bot.messages.Add(1)
+			bot.diffs.Add(1)
+			bot.board.Store(int64(diff.BoardID))
+			bot.tick.Store(int64(diff.Tick))
+			bot.hash.Store(diff.Hash)
+		case MessageTypeBoardChange:
+			var boardChange BoardChangeMessage
+			if err := json.Unmarshal(raw, &boardChange); err != nil {
+				bot.err.Store(err.Error())
+				return
+			}
+			bot.messages.Add(1)
+			bot.boardChanges.Add(1)
+			bot.board.Store(int64(boardChange.Snapshot.BoardID))
+			bot.tick.Store(int64(boardChange.Snapshot.Tick))
+			bot.hash.Store(boardChange.Snapshot.Hash)
+		default:
+			bot.err.Store("unexpected message type: " + envelope.Type)
+			return
+		}
+	}
+}
+
+func (bot *soakBot) writeInput(ctx context.Context, keymask uint16, seq uint64) error {
+	writeCtx, cancel := context.WithTimeout(ctx, time.Second)
+	defer cancel()
+	return wsjson.Write(writeCtx, bot.conn, InputMessage{
+		Type:     MessageTypeInput,
+		PlayerID: bot.id,
+		Seq:      seq,
+		Keymask:  keymask,
+	})
+}
+
+func (bot *soakBot) messageCount() int64 {
+	return bot.messages.Load()
+}
+
+func (bot *soakBot) errText() string {
+	err, _ := bot.err.Load().(string)
+	return err
+}
+
+func soakInputMask(botIndex, tick int) uint16 {
+	switch (tick/8 + botIndex) % 6 {
+	case 0:
+		return InputMaskRight
+	case 1:
+		return InputMaskDown
+	case 2:
+		return InputMaskLeft
+	case 3:
+		return InputMaskUp
+	case 4:
+		return InputMaskShoot | InputMaskRight
+	default:
+		return 0
+	}
+}
+
+func soakTestConfig(t *testing.T) (botCount, soakTicks int, maxAllocGrowth uint64) {
+	t.Helper()
+
+	botCount = envPositiveInt(t, "ZZT_SOAK_BOTS", 20)
+	soakTicks = envPositiveInt(t, "ZZT_SOAK_TICKS", 240)
+	maxAllocGrowthMB := envPositiveInt(t, "ZZT_SOAK_MAX_ALLOC_MB", 32)
+	return botCount, soakTicks, uint64(maxAllocGrowthMB) << 20
+}
+
+func envPositiveInt(t *testing.T, name string, fallback int) int {
+	t.Helper()
+
+	value := os.Getenv(name)
+	if value == "" {
+		return fallback
+	}
+	parsed, err := strconv.Atoi(value)
+	if err != nil || parsed <= 0 {
+		t.Fatalf("%s=%q, want positive integer", name, value)
+	}
+	return parsed
+}
+
 func waitForDiff(t *testing.T, ctx context.Context, conn *websocket.Conn, match func(DiffMessage) bool) DiffMessage {
 	t.Helper()
 
@@ -559,6 +795,53 @@ func testMultiplayerSmokeWorld(t *testing.T) TWorld {
 	setup.BoardClose()
 
 	return setup.World
+}
+
+func testSoakWorld(t *testing.T) TWorld {
+	t.Helper()
+
+	setup := NewEngine()
+	setup.Headless = true
+	setup.WorldCreate()
+	setup.World.BoardCount = 2
+
+	setup.World.Info.CurrentBoard = 1
+	setup.BoardCreate()
+	fillBoard(setup, TTile{Element: E_EMPTY})
+	setup.Board.Tiles[30][13] = TTile{Element: E_PLAYER, Color: ElementDefs[E_PLAYER].Color}
+	setup.Board.Stats[0].X = 30
+	setup.Board.Stats[0].Y = 13
+	setup.Board.Stats[0].Under = TTile{Element: E_EMPTY}
+	setup.Board.Info.StartPlayerX = 30
+	setup.Board.Info.StartPlayerY = 13
+	setup.Board.Info.NeighborBoards[3] = 2
+	setup.Board.Info.MaxShots = 255
+	setup.Board.Name = "Soak A"
+	setup.BoardClose()
+
+	setup.World.Info.CurrentBoard = 2
+	setup.BoardCreate()
+	fillBoard(setup, TTile{Element: E_EMPTY})
+	setup.Board.Tiles[30][13] = TTile{Element: E_PLAYER, Color: ElementDefs[E_PLAYER].Color}
+	setup.Board.Stats[0].X = 30
+	setup.Board.Stats[0].Y = 13
+	setup.Board.Stats[0].Under = TTile{Element: E_EMPTY}
+	setup.Board.Info.StartPlayerX = 30
+	setup.Board.Info.StartPlayerY = 13
+	setup.Board.Info.NeighborBoards[2] = 1
+	setup.Board.Info.MaxShots = 255
+	setup.Board.Name = "Soak B"
+	setup.BoardClose()
+
+	return setup.World
+}
+
+func fillBoard(engine *Engine, tile TTile) {
+	for ix := int16(1); ix <= BOARD_WIDTH; ix++ {
+		for iy := int16(1); iy <= BOARD_HEIGHT; iy++ {
+			engine.Board.Tiles[ix][iy] = tile
+		}
+	}
 }
 
 func testEdgeWorld(t *testing.T) TWorld {
