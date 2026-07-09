@@ -82,6 +82,7 @@ func (s *WebSocketServer) Tick(ctx context.Context) {
 			snapshot, ok := s.RoomManager.Snapshot(playerID)
 			if ok {
 				client.boardID = snapshot.BoardID
+				snapshot.Events = append(snapshot.Events, ProtocolEvents(s.RoomManager.DrainPlayerEvents(playerID))...)
 				messages[playerID] = BoardChangeMessage{Type: MessageTypeBoardChange, Snapshot: snapshot}
 				continue
 			}

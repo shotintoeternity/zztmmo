@@ -6,6 +6,7 @@ import (
 	"net/http/httptest"
 	"os"
 	"path/filepath"
+	"reflect"
 	"runtime"
 	"strconv"
 	"strings"
@@ -284,10 +285,22 @@ func TestWebSocketServerMultiplayerSmokePickupTransferHUD(t *testing.T) {
 	if boardChange.Snapshot.HUD.Gems != 1 || boardChange.Snapshot.HUD.Score != 10 {
 		t.Fatalf("p1 HUD after transfer gems=%d score=%d, want 1/10", boardChange.Snapshot.HUD.Gems, boardChange.Snapshot.HUD.Score)
 	}
+	if !hasSoundEvent(boardChange.Snapshot.Events, passageSoundPriority, soundNoteBytes(passageSoundPattern)) {
+		t.Fatalf("boardChange events missing passage sound: %+v", boardChange.Snapshot.Events)
+	}
 
 	waitForDiff(t, ctx, conn2, func(diff DiffMessage) bool {
 		return diff.BoardID == 1 && len(diff.Players) == 1 && diff.Players[0].ID == snap2.You.ID
 	})
+}
+
+func hasSoundEvent(events []ProtocolEvent, priority int16, notes []uint16) bool {
+	for _, event := range events {
+		if event.Type == "sound" && event.Priority == priority && reflect.DeepEqual(event.Notes, notes) {
+			return true
+		}
+	}
+	return false
 }
 
 func TestWebSocketServerTwentyBotSoak(t *testing.T) {

@@ -327,10 +327,12 @@ type (
 	// caller (RoomManager / server) is responsible for despawning the player from
 	// this engine and spawning them on the destination engine at (EntryX, EntryY).
 	TransferEvent struct {
-		StatId  int16 // the player stat being transferred
-		ToBoard int16 // destination board index (into World.BoardData)
-		EntryX  int16 // entry tile X on the destination board
-		EntryY  int16 // entry tile Y on the destination board
+		StatId        int16  // the player stat being transferred
+		ToBoard       int16  // destination board index (into World.BoardData)
+		EntryX        int16  // entry tile X on the destination board
+		EntryY        int16  // entry tile Y on the destination board
+		SoundNotes    string // presentation-only sound that follows the mover
+		SoundPriority int16
 	}
 	PlayerState struct {
 		Health         int16

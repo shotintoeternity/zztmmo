@@ -1022,10 +1022,12 @@ func (e *Engine) ElementPassageTouch(x, y int16, sourceStatId int16, deltaX, del
 			}
 		}
 		e.Events = append(e.Events, TransferEvent{
-			StatId:  sourceStatId,
-			ToBoard: destBoard,
-			EntryX:  entryX,
-			EntryY:  entryY,
+			StatId:        sourceStatId,
+			ToBoard:       destBoard,
+			EntryX:        entryX,
+			EntryY:        entryY,
+			SoundNotes:    passageSoundPattern,
+			SoundPriority: passageSoundPriority,
 		})
 		*deltaX = 0
 		*deltaY = 0

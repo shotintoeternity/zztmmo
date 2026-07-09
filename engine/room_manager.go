@@ -28,8 +28,9 @@ type RoomManager struct {
 	// quits and pendingScores carry a confirmed quit out of StepDiffs. The
 	// player is gone from their room by then, so they get no diff and the
 	// server must deliver the outcome to them directly.
-	quits         []QuitResult
-	pendingScores map[PlayerID]QuitResult
+	quits               []QuitResult
+	pendingScores       map[PlayerID]QuitResult
+	pendingPlayerEvents map[PlayerID][]Event
 }
 
 // QuitResult is one player's confirmed quit, drained by the server after a step.
@@ -61,10 +62,11 @@ type roomTransfer struct {
 
 func NewRoomManager(world TWorld) *RoomManager {
 	rm := &RoomManager{
-		world:         world,
-		rooms:         make(map[int16]*Room),
-		players:       make(map[PlayerID]*roomPlayer),
-		pendingScores: make(map[PlayerID]QuitResult),
+		world:               world,
+		rooms:               make(map[int16]*Room),
+		players:             make(map[PlayerID]*roomPlayer),
+		pendingScores:       make(map[PlayerID]QuitResult),
+		pendingPlayerEvents: make(map[PlayerID][]Event),
 	}
 	// HighScoresLoad's failure path (game.go): an unset list is all -1, so any
 	// positive score outranks it.
@@ -185,6 +187,14 @@ func (rm *RoomManager) DrainQuits() []QuitResult {
 	quits := rm.quits
 	rm.quits = nil
 	return quits
+}
+
+// DrainPlayerEvents returns presentation events that must be delivered directly
+// to one player rather than through their room diff.
+func (rm *RoomManager) DrainPlayerEvents(playerID PlayerID) []Event {
+	events := rm.pendingPlayerEvents[playerID]
+	delete(rm.pendingPlayerEvents, playerID)
+	return events
 }
 
 // quitPlayer ranks a departing player's score and removes them from their room.
@@ -326,6 +336,7 @@ func (rm *RoomManager) LeavePlayer(playerID PlayerID) bool {
 	room.Engine.RemovePlayer(removedStatID)
 	delete(room.players, playerID)
 	delete(rm.players, playerID)
+	delete(rm.pendingPlayerEvents, playerID)
 	rm.reindexRoomPlayers(room.BoardID, removedStatID)
 	rm.freezeRoomIfEmpty(room.BoardID)
 	return true
@@ -369,6 +380,11 @@ func (rm *RoomManager) StepDiffs(inputs map[PlayerID]PlayerInput) map[PlayerID]D
 			switch ev := event.(type) {
 			case TransferEvent:
 				if playerID, found := rm.playerIDForStat(boardID, ev.StatId); found {
+					if ev.SoundNotes != "" {
+						sound := SoundEvent{Notes: ev.SoundNotes, Priority: ev.SoundPriority}
+						roomEvents[boardID] = append(roomEvents[boardID], sound)
+						rm.pendingPlayerEvents[playerID] = append(rm.pendingPlayerEvents[playerID], sound)
+					}
 					transfers = append(transfers, roomTransfer{playerID: playerID, event: ev})
 				}
 			case QuitEvent:

@@ -1466,6 +1466,11 @@ func (e *Engine) BoardEnter(statId int16) {
 	e.GameUpdateSidebar()
 }
 
+const (
+	passageSoundPriority int16 = 4
+	passageSoundPattern        = "0\x014\x017\x011\x015\x018\x012\x016\x019\x013\x017\x01:\x014\x018\x01@\x01"
+)
+
 func (e *Engine) BoardPassageTeleport(x, y int16, sourceStatId int16) {
 	var (
 		col        byte
@@ -1491,7 +1496,7 @@ func (e *Engine) BoardPassageTeleport(x, y int16, sourceStatId int16) {
 	}
 	e.PlayerFor(sourceStatId).Paused = true
 	e.Events = append(e.Events, PauseEvent{StatId: sourceStatId, Paused: true})
-	e.SoundQueue(4, "0\x014\x017\x011\x015\x018\x012\x016\x019\x013\x017\x01:\x014\x018\x01@\x01")
+	e.SoundQueue(passageSoundPriority, passageSoundPattern)
 	e.TransitionDrawBoardChange()
 	e.BoardEnter(sourceStatId)
 }
