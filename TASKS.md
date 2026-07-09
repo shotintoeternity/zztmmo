@@ -291,7 +291,7 @@ semantics while keeping the server authoritative.
   `InputKeyPressed` byte. The client now sends the original's vocabulary only:
   arrows plus numpad `8/4/6/2` (`INPUT.PAS:217-234`). See NOTES.md.
 
-- [ ] **M4.3 — Title, world, save, and high-score flows.** Restore the original
+- [x] **M4.3 — Title, world, save, and high-score flows.** Restore the original
   non-gameplay UI paths in the browser, including title screen/start flow,
   save/load prompts, quit confirmation, and high-score entry/display. Note
   `QuitPromptEvent` carries no `StatId` and `GamePromptEndPlay`
@@ -301,6 +301,21 @@ semantics while keeping the server authoritative.
   (`game.go:1803` passes `PlayerFor(0).Score`) likewise assume a single player. DoD: a player can start, save,
   load, quit, die, enter a score, and restart without falling back to
   terminal-only UI, and one player quitting does not disturb the others.
+
+  Landed: all three ownership fixes; `SubmitQuitReply` → `QuitEvent` →
+  `RoomManager` removes only that player; the high-score list moved off `Engine`
+  (one per board) onto `RoomManager` (one per world); browser title screen with
+  start/restart, quit confirmation, and high-score entry + display.
+  DEVIATION: a score is entered on **quit**, not on death — M2.4 already made
+  death a respawn, so death is no longer an ending. The title board is a static
+  render, and the monitor menu omits `S` (game speed: the server owns the tick)
+  and `E` (editor: M5). See NOTES.md.
+  Deferred by design to **M4.3a**, which owns them: `R` Restore game and save
+  persistence — "player B loads that snapshot by name and joins it" is M4.3a's
+  own DoD, and needs its sanitized `-saves` directory.
+  Deferred to a future task: real world select (`W` lists the one hosted world;
+  multi-world needs server-scoped client ids, because each `RoomManager` mints
+  `PlayerID`s from 1 and two would collide in `WebSocketServer.clients`).
 
 - [ ] **M4.3a — Savable, rejoinable room snapshots.** Requires M3.11 (which
   builds the `SavePromptEvent`/`SubmitSaveFilename` seam but has the server

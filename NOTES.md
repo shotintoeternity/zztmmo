@@ -405,3 +405,86 @@ snapshots are M4.3a.
 
 Replay fixture unchanged — no simulation code was touched, only the client and
 the tests.
+
+## M4.3 (2026-07-09) — title, world, quit, and high-score flows
+
+The three bugs TASKS.md named are all the same shape: a non-gameplay flow that
+vanilla could hard-code to "the player" because there was only ever one.
+`QuitPromptEvent` carried no `StatId`, `GamePromptEndPlay` read
+`PlayerFor(0).Health`, and `HighScoresAdd` took a bare score read from
+`PlayerFor(0)`. All three now name a player.
+
+**The dead branch of `GamePromptEndPlay` is single-player only.**
+`ELEMENTS.PAS:1302-1306`: when the player is dead, Escape skips the prompt and
+sets `GamePlayExitRequested`. Nothing ever *resets* that flag, and
+`GameStepWithInputs` guards its stat loop on it, so a dead player pressing Q in
+a room would have frozen that board for everyone, permanently. Guarded with
+`&& !e.MultiRoom`.
+
+Worth writing down precisely, because it is easy to overstate: the branch is
+**latent, not live**. `ElementPlayerTick` returns before its key switch while
+`Health <= 0` (elements.go, M2.4's respawn countdown), so a dead player cannot
+currently press anything. Vanilla instead *falls through* — that is exactly how
+"Game over - Press ESCAPE" works (`ELEMENTS.PAS:1340-1350`). The guard exists so
+that restoring vanilla's fall-through later cannot resurrect the freeze.
+
+**DEVIATION: a high score is entered on QUIT, not on death.** Vanilla calls
+`HighScoresAdd` when `GamePlayLoop` exits with `Health <= 0` (`GAME.PAS:1598`).
+M2.4 already replaced game-over with respawn, so death is no longer an ending
+and there is nothing to record. Quitting is the multiplayer ending: confirm the
+prompt, your score is offered to the list, you leave the room, everyone else
+keeps playing.
+
+**The high-score list moved off `Engine` and onto `RoomManager`.** `RoomManager`
+runs one `Engine` per *board* and there is one list per *world*. A room engine's
+`HighScoreList` is all zeros, so `Engine.HighScoresAdd` would have ranked every
+score first. `Engine.HighScoresAdd(statId)` stays for the terminal; the server
+never calls it. `RoomManager.HighScorePath` is empty by default so that
+`NewRoomManager` never touches the filesystem in a test.
+
+Quit rides the same seam as `TransferEvent`, for the same reason: the engine
+cannot remove a player (RoomManager owns the roster), so it announces the
+decision. `SubmitQuitReply` → `QuitEvent` → `RoomManager` resolves the stat id
+to a stable `PlayerID` *during* the event drain (stat ids shift when anyone
+leaves), then removes the player before diffs are built, so the quitter gets no
+diff and the survivors' ids are already reindexed.
+
+**DEVIATION: the browser title screen does not animate.** In ZZT the title
+screen is `GamePlayLoop` on board 0 with `GameStateElement = E_MONITOR`
+(`GAME.PAS:1610-1622`), so its objects move. Here the world is shared: a title
+room that ticked would run board 0's objects — and any `#set` they perform
+touches `World.Info.Flags`, which every room shares — for as long as *any*
+browser anywhere sat on the title screen. A per-client screen in vanilla is
+server-wide state here. So `/api/title` serves a static render (`web_api.go`).
+
+Two rows of vanilla's monitor menu are deliberately absent: `' S '` Game speed,
+because the server owns the tick rate for every player in a room and a slider
+that moved nothing would be a lie; and `' E '` Board Editor, which is M5.
+
+`' R '` Restore game reports that saved games are unavailable. That is not a
+gap in this task — loading a snapshot by name *is* M4.3a's DoD, and it needs
+the sanitized `-saves` directory M4.3a specifies.
+
+`' W '` World select lists the one hosted world. Multi-world hosting needs
+server-scoped client ids first: each `RoomManager` mints `PlayerID`s from 1, so
+two of them collide in `WebSocketServer.clients`.
+
+Fixed in passing, because the client was showing the wrong string: the in-game
+quit prompt is `"End this game? "` (`ELEMENTS.PAS:1308`). `"Quit ZZT? "` is the
+*title screen's* prompt (`GAME.PAS:1978`) and is now used only there.
+
+ZZT-QUIRK ported to the client: Escape at "Congratulations! Enter your name:"
+records an *empty* name, because `PopupPromptString` blanks the buffer before
+`PromptString` and Escape restores that blank. The entry keeps its slot and
+`HighScoresInitTextWindow` then skips it for having no name.
+
+Verification: `go test ./...` green, replay fixture unchanged (no simulation
+behavior changed for a single player). New `m4_3_test.go` drives the wire format
+— both quit outcomes, the ownership of every event, and the "one player quits,
+the other keeps ticking" claim. Both engine fixes were mutation-checked: undoing
+the `!e.MultiRoom` guard and the `StatId` field each turn tests red. Still no TS
+test runner (see the M4.1 note), so `title.ts` and the new `popupEntry` modal
+were driven under node the same way — 32 checks, including that every painted
+cell lands in the sidebar and that gameplay keys are inert on the title screen.
+The HTTP surface and the full join → Q → quitReply → highScoreName chain were
+exercised against a running `zzt-server`.

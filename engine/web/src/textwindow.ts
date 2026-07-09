@@ -29,10 +29,12 @@ const repeat = (s: string, n: number) => (n > 0 ? s.repeat(n) : "");
 // TextWindowInit's derived strings.
 const innerEmpty = repeat(" ", TEXT_WINDOW_WIDTH - 5);
 const innerLine = repeat("\xcd", TEXT_WINDOW_WIDTH - 5);
-const strTop = `\xc6\xd1${innerLine}\xd1\xb5`;
-const strBottom = `\xc6\xcf${innerLine}\xcf\xb5`;
-const strSep = ` \xc6${innerLine}\xb5 `;
-const strText = ` \xb3${innerEmpty}\xb3 `;
+// Exported for PopupPromptString (game.go:1122), which draws its own six-row
+// box out of the same chrome rather than opening a TextWindow.
+export const strTop = `\xc6\xd1${innerLine}\xd1\xb5`;
+export const strBottom = `\xc6\xcf${innerLine}\xcf\xb5`;
+export const strSep = ` \xc6${innerLine}\xb5 `;
+export const strText = ` \xb3${innerEmpty}\xb3 `;
 const strInnerArrows = `\xaf${innerEmpty.slice(1, innerEmpty.length - 1)}\xae`;
 const strInnerSep = buildInnerSep();
 

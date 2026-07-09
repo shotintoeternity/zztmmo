@@ -6,14 +6,16 @@ import (
 )
 
 const (
-	MessageTypeJoin         = "join"
-	MessageTypeInput        = "input"
-	MessageTypeSnapshot     = "snapshot"
-	MessageTypeDiff         = "diff"
-	MessageTypeEvent        = "event"
-	MessageTypeBoardChange  = "boardChange"
-	MessageTypeDebugCommand = "debugCommand"
-	MessageTypeScrollReply  = "scrollReply"
+	MessageTypeJoin          = "join"
+	MessageTypeInput         = "input"
+	MessageTypeSnapshot      = "snapshot"
+	MessageTypeDiff          = "diff"
+	MessageTypeEvent         = "event"
+	MessageTypeBoardChange   = "boardChange"
+	MessageTypeDebugCommand  = "debugCommand"
+	MessageTypeScrollReply   = "scrollReply"
+	MessageTypeQuitReply     = "quitReply"
+	MessageTypeHighScoreName = "highScoreName"
 )
 
 // HelpDir is where HelpFileLines looks for .HLP files. The terminal client
@@ -93,6 +95,23 @@ type ScrollReplyMessage struct {
 	PlayerID PlayerID `json:"playerId"`
 	StatID   int16    `json:"statId"`
 	Label    string   `json:"label"`
+}
+
+// QuitReplyMessage is the client's answer to a quitPrompt event. Quit=false
+// (the player said no, or pressed Escape) is a no-op the engine still drains.
+type QuitReplyMessage struct {
+	Type     string   `json:"type"`
+	PlayerID PlayerID `json:"playerId"`
+	Quit     bool     `json:"quit"`
+}
+
+// HighScoreNameMessage carries the name typed into the "Congratulations!" entry
+// that follows a qualifying highScoreEntry event. The server, not the sim, owns
+// the list: see RoomManager.RecordHighScore.
+type HighScoreNameMessage struct {
+	Type     string   `json:"type"`
+	PlayerID PlayerID `json:"playerId"`
+	Name     string   `json:"name"`
 }
 
 type SnapshotMessage struct {
@@ -209,7 +228,9 @@ func ProtocolEvents(events []Event) []ProtocolEvent {
 		case ScrollEvent:
 			out = append(out, ProtocolEvent{Type: "scroll", StatID: ev.StatId, PlayerStatID: ev.PlayerStatId, Title: ev.Title, Lines: ev.Lines})
 		case QuitPromptEvent:
-			out = append(out, ProtocolEvent{Type: "quitPrompt"})
+			out = append(out, ProtocolEvent{Type: "quitPrompt", StatID: ev.StatId})
+		case QuitEvent:
+			out = append(out, ProtocolEvent{Type: "quit", StatID: ev.StatId})
 		case HelpEvent:
 			out = append(out, ProtocolEvent{Type: "help", StatID: ev.StatId, Filename: ev.Filename, Title: ev.Title, Lines: HelpFileLines(ev.Filename)})
 		case DebugPromptEvent:
@@ -219,7 +240,7 @@ func ProtocolEvents(events []Event) []ProtocolEvent {
 		case PauseEvent:
 			out = append(out, ProtocolEvent{Type: "pause", StatID: ev.StatId, Paused: ev.Paused})
 		case HighScoreEntryEvent:
-			out = append(out, ProtocolEvent{Type: "highScoreEntry", Score: ev.Score, ListPos: ev.ListPos})
+			out = append(out, ProtocolEvent{Type: "highScoreEntry", StatID: ev.StatId, Score: ev.Score, ListPos: ev.ListPos})
 		case SoundEvent:
 			out = append(out, ProtocolEvent{Type: "sound", Notes: ev.Notes, Priority: ev.Priority})
 		case DeathEvent:

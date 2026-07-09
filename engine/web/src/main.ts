@@ -2,6 +2,7 @@ import "./style.css";
 import { drawSidebar as paintSidebar, updateSidebar as paintSidebarHud } from "./sidebar";
 import { renderModal, handleModalKey, type Modal } from "./modal";
 import { commandKey, isHandledKey, isMovementKey, movementMask, rawKey } from "./keys";
+import { drawTitleSidebar, titleCommand } from "./title";
 
 const COLS = 80;
 // The server streams board columns 0..59 only. Columns 60..79 are the sidebar,
@@ -23,6 +24,8 @@ const MessageTypeEvent = "event";
 const MessageTypeBoardChange = "boardChange";
 const MessageTypeDebugCommand = "debugCommand";
 const MessageTypeScrollReply = "scrollReply";
+const MessageTypeQuitReply = "quitReply";
+const MessageTypeHighScoreName = "highScoreName";
 
 // GameDebugPrompt's PromptString(63, 5, 0x1E, 0x0F, 11, PROMPT_ANY, ...).
 // The rest of that geometry lives in modal.ts, which owns every prompt's layout.
@@ -347,6 +350,17 @@ let lastMessageKey = "";
 let lastMessageAt = 0;
 const pressed = new Set<string>();
 
+// M4.3: the client is a two-state machine, as ZZT is. "title" is GameTitleLoop
+// — no socket, no player, the monitor sidebar over a static board 0. "playing"
+// is GamePlayLoop: joined to a room, streaming diffs. 'P' enters, quitting
+// leaves.
+type Mode = "title" | "playing";
+let mode: Mode = "title";
+let worldName = "Untitled";
+// leavingToTitle suppresses the reconnect that a dropped socket normally
+// triggers: a socket we closed on purpose must not come back.
+let leavingToTitle = false;
+
 // While a modal is up, gameplay keys are swallowed (M4.1: handleModalKey is the
 // only consumer). The simulation does NOT pause behind it (M1.3 deviation), so
 // the board keeps updating underneath and the modal is painted as an overlay
@@ -358,6 +372,11 @@ let modal: Modal | null = null;
 let paused = false;
 let pauseBlink = false;
 let pauseTimer = 0;
+// The high-score chain is three modals deep: the list with "-- You! --", the
+// name popup, then the finished list. Each opens as the previous one closes.
+let pendingHighScore = false;
+let returnToTitleOnClose = false;
+let highScoreTimer = 0;
 let myX = 0;
 let myY = 0;
 const overlay = new Map<number, { ch: number; color: number }>();
@@ -368,11 +387,11 @@ const cells: ScreenCell[] = Array.from({ length: COLS * ROWS }, (_, i) => ({
   color: 0x1f,
 }));
 
-drawSidebar();
 drawScreen();
-// Vanilla ZZT has no "Connect" button: the game is just there when you start
-// it. Connect on load, refocus on click, and retry quietly if the socket drops.
-connect();
+// ZZT opens on its title screen, not in a room. Joining costs the server a
+// player stat on a shared board, so it waits for 'P' — which is also what
+// vanilla waits for (GAME.PAS:1644).
+void showTitle();
 canvas.addEventListener("mousedown", () => canvas.focus());
 canvas.addEventListener("keydown", handleKeyDown);
 canvas.addEventListener("keyup", handleKeyUp);
@@ -387,6 +406,81 @@ function query<T extends Element>(selector: string): T {
     throw new Error(`missing ${selector}`);
   }
   return element;
+}
+
+// showTitle paints GameTitleLoop's screen: board 0 behind the monitor sidebar.
+// The board comes from /api/title rather than the snapshot stream because we
+// have no socket yet — and, unlike vanilla's, it does not animate. See the
+// DEVIATION note in engine/web_api.go.
+async function showTitle() {
+  mode = "title";
+  modal = null;
+  playerId = 0;
+  myStatId = -1;
+  setPaused(false);
+  pressed.clear();
+  lastMask = 0;
+
+  try {
+    const response = await fetch("/api/title");
+    const title = (await response.json()) as { world: string; screen: ScreenCell[] };
+    worldName = title.world;
+    replaceCells(title.screen);
+  } catch {
+    // Offline: keep whatever board is on screen and still draw the menu, so
+    // the player can retry with 'P'.
+  }
+  drawTitleSidebar(writeText, worldName);
+  paintOverlay();
+  drawScreen();
+  canvas.focus();
+}
+
+// leaveToTitle ends this player's game: the room already dropped them, so all
+// that remains is to close the socket without tripping the reconnect.
+function leaveToTitle() {
+  leavingToTitle = true;
+  window.clearInterval(inputTimer);
+  window.clearTimeout(retryTimer);
+  connected = false;
+  if (ws) {
+    ws.close();
+    ws = null;
+  }
+  void showTitle();
+}
+
+function startPlay() {
+  leavingToTitle = false;
+  drawSidebar();
+  drawScreen();
+  connect();
+}
+
+// fetchLines backs the title screen's read-only windows (About, High Scores,
+// World). A failure shows the reason rather than nothing at all.
+async function fetchLines(url: string, fallbackTitle: string) {
+  try {
+    const response = await fetch(url);
+    if (!response.ok) {
+      throw new Error(String(response.status));
+    }
+    const data = (await response.json()) as { title?: string; lines?: string[] };
+    openWindow(data.title || fallbackTitle, data.lines ?? [], true);
+  } catch {
+    openWindow(fallbackTitle, ["", "  Not available: the server did not answer.", ""], true);
+  }
+}
+
+async function showWorlds() {
+  try {
+    const response = await fetch("/api/worlds");
+    const data = (await response.json()) as { worlds?: string[] };
+    const worlds = data.worlds ?? [];
+    openWindow("ZZT Worlds", worlds.length > 0 ? worlds : ["Untitled"], true);
+  } catch {
+    openWindow("ZZT Worlds", ["", "  Not available: the server did not answer.", ""], true);
+  }
 }
 
 function connect() {
@@ -416,6 +510,11 @@ function connect() {
 }
 
 function disconnect(reason: string) {
+  // A socket we closed ourselves (quit) is not a lost connection: showTitle has
+  // already taken the screen, and reconnecting would silently rejoin the room.
+  if (leavingToTitle) {
+    return;
+  }
   connected = false;
   window.clearInterval(inputTimer);
   // Otherwise the blink timer keeps repainting the board over the notice below.
@@ -441,6 +540,13 @@ function wsURL(): string {
 }
 
 function applyMessage(message: ServerMessage) {
+  // A snapshot is what takes us out of title mode; anything else arriving while
+  // we are on (or on our way to) the title screen is in flight from a room we
+  // have already left, and must not repaint over the menu.
+  if (message.type !== MessageTypeSnapshot && (leavingToTitle || mode === "title")) {
+    return;
+  }
+
   switch (message.type) {
     case MessageTypeSnapshot:
       applySnapshot(message);
@@ -460,6 +566,7 @@ function applyMessage(message: ServerMessage) {
 }
 
 function applySnapshot(message: SnapshotMessage) {
+  mode = "playing";
   playerId = message.you.id;
   myStatId = message.you.statId;
   myX = message.you.x;
@@ -645,9 +752,32 @@ function openYesNo(message: string, onAnswer: (yes: boolean) => void) {
 
 function closeModal() {
   modal = null;
+  if (pendingHighScore) {
+    pendingHighScore = false;
+    openHighScoreName();
+    return;
+  }
+  if (returnToTitleOnClose) {
+    returnToTitleOnClose = false;
+    leaveToTitle();
+    return;
+  }
   // Repaint rather than clear: the pause layer may still be underneath.
   paintOverlay();
   drawScreen();
+}
+
+// openHighScoreName is PopupPromptString("Congratulations!  Enter your name:").
+function openHighScoreName() {
+  openModal({
+    kind: "popupEntry",
+    question: "Congratulations!  Enter your name:",
+    buffer: "",
+    // ZZT-QUIRK: Escape leaves the name empty and the entry is still recorded,
+    // occupying a slot that HighScoresInitTextWindow then skips because its
+    // name is blank (GAME.PAS PopupPromptString clears the buffer up front).
+    onSubmit: (name) => sendHighScoreName(name ?? ""),
+  });
 }
 
 function sendScrollReply(statId: number, label: string) {
@@ -757,15 +887,40 @@ function handleProtocolEvent(event: ProtocolEvent) {
       appendLog(`respawn at ${event.x ?? "?"},${event.y ?? "?"}`);
       break;
     case "quitPrompt":
-      // SidebarPromptYesNo("Quit ZZT? "). QuitPromptEvent carries no statId, so
-      // it cannot be routed to one player and there is no reply channel back to
-      // the engine — both are M4.3. Answering resolves the modal locally.
-      openYesNo("Quit ZZT? ", (yes) => {
-        appendLog(`quit prompt answered ${yes ? "yes" : "no"} (not wired to the server yet)`);
-      });
+      // GamePromptEndPlay's SidebarPromptYesNo("End this game? ")
+      // (ELEMENTS.PAS:1308) — not the title screen's "Quit ZZT? ". The event
+      // now names the player who asked, so it opens on their screen only.
+      if (isMine(event)) {
+        openYesNo("End this game? ", (yes) => sendQuitReply(yes));
+      }
+      break;
+    case "quit":
+      // The room has already dropped us. Score did not place: straight back to
+      // the title screen, as GameTitleLoop does when GamePlayLoop returns.
+      leaveToTitle();
       break;
     case "highScoreEntry":
-      appendLog(`high score ${event.score ?? 0}`);
+      // The score placed. Vanilla shows the list with "-- You! --" in the new
+      // slot, then PopupPromptString asks for a name (game.go:1892-1908).
+      // openWindow no-ops on an empty list, so ask for the name directly rather
+      // than leaving the player on a board they have already left.
+      openWindow(event.title ?? "New high score", event.lines ?? [], true);
+      if (modal) {
+        pendingHighScore = true;
+      } else {
+        openHighScoreName();
+      }
+      break;
+    case "highScores":
+      // The finished list, after the name was recorded. Closing it ends the game.
+      window.clearTimeout(highScoreTimer);
+      pendingHighScore = false;
+      openWindow(event.title ?? "High scores", event.lines ?? [], true);
+      if (modal) {
+        returnToTitleOnClose = true;
+      } else {
+        leaveToTitle();
+      }
       break;
     default:
       appendLog(event.type);
@@ -798,25 +953,76 @@ function appendLogOnce(text: string) {
   appendLog(text);
 }
 
-function handleKeyDown(event: KeyboardEvent) {
-  // A modal consumes EVERY key: even one it ignores must not reach gameplay.
-  if (modal) {
-    event.preventDefault();
-    const previous = modal;
-    const result = handleModalKey(modal, event);
-    if (result === "close") {
-      // A callback may have chained straight into another modal (e.g. the save
-      // prompt opening its "disabled" notice). Only tear down if it did not.
-      if (modal === previous) {
-        closeModal();
-      } else {
-        paintOverlay();
-        drawScreen();
-      }
-    } else if (result === "redraw") {
+// routeModalKey consumes a key on behalf of the open modal. A modal swallows
+// EVERY key: even one it ignores must not reach gameplay or the title menu.
+function routeModalKey(event: KeyboardEvent) {
+  event.preventDefault();
+  const previous = modal;
+  const result = handleModalKey(previous!, event);
+  if (result === "close") {
+    // A callback may have chained straight into another modal (e.g. the score
+    // list opening the name popup). Only tear down if it did not.
+    if (modal === previous) {
+      closeModal();
+    } else {
       paintOverlay();
       drawScreen();
     }
+  } else if (result === "redraw") {
+    paintOverlay();
+    drawScreen();
+  }
+}
+
+// handleTitleKey is GameTitleLoop's `case UpCase(InputKeyPressed)` menu.
+function handleTitleKey(event: KeyboardEvent) {
+  const action = titleCommand(event);
+  if (action === "none") {
+    return;
+  }
+  event.preventDefault();
+
+  switch (action) {
+    case "play":
+      startPlay();
+      break;
+    case "world":
+      void showWorlds();
+      break;
+    case "about":
+      void fetchLines("/api/help?file=ABOUT.HLP&title=About+ZZT...", "About ZZT...");
+      break;
+    case "highScores":
+      void fetchLines("/api/highscores", `High scores for ${worldName}`);
+      break;
+    case "restore":
+      // GameWorldLoad(".SAV"). Rejoinable snapshots are M4.3a; until then the
+      // server has nothing to list, and saying so beats an empty file picker.
+      openWindow("Restore game", [
+        "",
+        "  Saved games are not available on this",
+        "  server yet.",
+        "",
+      ], true);
+      break;
+    case "quit":
+      openYesNo("Quit ZZT? ", (yes) => {
+        if (yes) {
+          drawConnectionNotice("Thanks for playing ZZT!");
+        }
+      });
+      break;
+  }
+}
+
+function handleKeyDown(event: KeyboardEvent) {
+  if (modal) {
+    routeModalKey(event);
+    return;
+  }
+
+  if (mode === "title") {
+    handleTitleKey(event);
     return;
   }
 
@@ -841,7 +1047,7 @@ function handleKeyDown(event: KeyboardEvent) {
 }
 
 function handleKeyUp(event: KeyboardEvent) {
-  if (modal) {
+  if (modal || mode === "title") {
     return;
   }
   const handled = updatePressed(event, false);
@@ -869,6 +1075,26 @@ function sendDebugCommand(text: string) {
     return;
   }
   ws.send(JSON.stringify({ type: MessageTypeDebugCommand, playerId, text }));
+}
+
+function sendQuitReply(quit: boolean) {
+  if (!connected || !ws || ws.readyState !== WebSocket.OPEN || playerId === 0) {
+    return;
+  }
+  ws.send(JSON.stringify({ type: MessageTypeQuitReply, playerId, quit }));
+}
+
+function sendHighScoreName(name: string) {
+  if (!connected || !ws || ws.readyState !== WebSocket.OPEN || playerId === 0) {
+    leaveToTitle();
+    return;
+  }
+  ws.send(JSON.stringify({ type: MessageTypeHighScoreName, playerId, name }));
+  // We have already left the room, so no diff will ever repaint this screen.
+  // If the server does not send the finished list, do not strand the player on
+  // a frozen board with no way out.
+  window.clearTimeout(highScoreTimer);
+  highScoreTimer = window.setTimeout(leaveToTitle, 3000);
 }
 
 function updatePressed(event: KeyboardEvent, down: boolean): boolean {

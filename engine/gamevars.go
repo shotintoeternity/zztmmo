@@ -204,7 +204,10 @@ type (
 		// applied at the top of the next GameStepWithInputs, exactly as
 		// PendingDebugCommands are.
 		PendingSaveFilenames []PendingSaveFilename
-		SoundBlockQueueing   bool
+		// PendingQuitReplies holds quit-prompt answers submitted by callers,
+		// applied at the top of the next GameStepWithInputs like the others.
+		PendingQuitReplies []PendingQuitReply
+		SoundBlockQueueing bool
 		// FriendlyFire controls whether player-owned bullets can damage other
 		// players. True (default) = players can damage each other; false = player
 		// bullets pass through other player stats without effect. This is a
@@ -233,8 +236,29 @@ type (
 		StatId int16
 		Label  string
 	}
-	QuitPromptEvent struct{}
-	HelpEvent       struct {
+	// QuitPromptEvent is emitted when a player presses 'Q' or Escape. The caller
+	// shows "End this game? " and answers via Engine.SubmitQuitReply.
+	//
+	// StatId is the player who asked. Room events are broadcast to everyone on
+	// the board, so without it a quit prompt belongs to nobody: the client
+	// cannot tell whose modal to open (TASKS.md M4.3).
+	QuitPromptEvent struct {
+		StatId int16
+	}
+	// PendingQuitReply is one queued answer to a QuitPromptEvent.
+	PendingQuitReply struct {
+		StatId int16
+		Quit   bool
+	}
+	// QuitEvent reports that a player CONFIRMED the quit prompt. Only the
+	// multi-room caller sees it: single-player sets GamePlayExitRequested and
+	// falls out of GamePlayLoop instead, exactly as vanilla does. The engine
+	// cannot remove the player itself — RoomManager owns the roster — so it
+	// announces the decision the same way TransferEvent announces a passage.
+	QuitEvent struct {
+		StatId int16
+	}
+	HelpEvent struct {
 		Filename string
 		Title    string
 		// StatId is the player who asked for help. Room events are broadcast to
@@ -273,7 +297,11 @@ type (
 		StatId int16
 		Paused bool
 	}
+	// HighScoreEntryEvent offers one player's score to the high-score list.
+	// StatId is whose score it is: on a server the list is shared by every
+	// player in the world, so the entry must say who earned it.
 	HighScoreEntryEvent struct {
+		StatId  int16
 		Score   int16
 		ListPos int16
 	}

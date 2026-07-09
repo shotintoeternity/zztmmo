@@ -83,6 +83,14 @@ func (s *WebSocketServer) Tick(ctx context.Context) {
 		client.boardID = diff.BoardID
 		messages[playerID] = diff
 	}
+	// A quitter has already left their room, so they are absent from diffs.
+	// Their outcome is delivered here, and it replaces any diff they had.
+	for _, quit := range s.RoomManager.DrainQuits() {
+		if s.clients[quit.PlayerID] == nil {
+			continue
+		}
+		messages[quit.PlayerID] = s.quitOutcome(quit)
+	}
 	s.mu.Unlock()
 
 	for playerID, message := range messages {
@@ -157,6 +165,18 @@ func (s *WebSocketServer) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 				continue
 			}
 			s.submitScrollReply(playerID, reply.StatID, reply.Label)
+		case MessageTypeQuitReply:
+			var reply QuitReplyMessage
+			if err := json.Unmarshal(raw, &reply); err != nil {
+				continue
+			}
+			s.submitQuitReply(playerID, reply.Quit)
+		case MessageTypeHighScoreName:
+			var entry HighScoreNameMessage
+			if err := json.Unmarshal(raw, &entry); err != nil {
+				continue
+			}
+			s.submitHighScoreName(ctx, playerID, entry.Name)
 		default:
 			var input InputMessage
 			if err := json.Unmarshal(raw, &input); err != nil {
@@ -165,6 +185,56 @@ func (s *WebSocketServer) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 			s.setInput(playerID, inputMessageToPlayerInput(input))
 		}
 	}
+}
+
+// quitOutcome is what a player sees after confirming the quit prompt: either
+// vanilla's "New high score" window, or a bare quit so the client can return to
+// the title screen. Callers hold s.mu.
+func (s *WebSocketServer) quitOutcome(quit QuitResult) EventMessage {
+	event := ProtocolEvent{Type: "quit", Score: quit.Score}
+	if quit.ListPos > 0 {
+		event = ProtocolEvent{
+			Type:    "highScoreEntry",
+			Score:   quit.Score,
+			ListPos: quit.ListPos,
+			Title:   "New high score for " + s.RoomManager.WorldName(),
+			Lines:   s.RoomManager.HighScoreLines(quit.ListPos),
+		}
+	}
+	return EventMessage{Type: MessageTypeEvent, Event: event}
+}
+
+// submitQuitReply routes a client's answer to the quit prompt. A confirmed quit
+// becomes a QuitEvent on the next step, which RoomManager turns into a
+// DrainQuits entry — the player is never removed from a room mid-tick.
+func (s *WebSocketServer) submitQuitReply(playerID PlayerID, quit bool) {
+	s.mu.Lock()
+	defer s.mu.Unlock()
+
+	if _, ok := s.clients[playerID]; !ok {
+		return
+	}
+	s.RoomManager.SubmitQuitReply(playerID, quit)
+}
+
+// submitHighScoreName writes the name a quitter typed into the slot their score
+// earned, then sends the finished list back for display. A client that was
+// never offered a slot gets nothing: RecordHighScore refuses it.
+func (s *WebSocketServer) submitHighScoreName(ctx context.Context, playerID PlayerID, name string) {
+	s.mu.Lock()
+	client := s.clients[playerID]
+	if client == nil || !s.RoomManager.RecordHighScore(playerID, name) {
+		s.mu.Unlock()
+		return
+	}
+	message := EventMessage{Type: MessageTypeEvent, Event: ProtocolEvent{
+		Type:  "highScores",
+		Title: "High scores for " + s.RoomManager.WorldName(),
+		Lines: s.RoomManager.HighScoreLines(0),
+	}}
+	s.mu.Unlock()
+
+	_ = client.write(ctx, message)
 }
 
 // submitDebugCommand routes a client's '?' reply to the engine that owns that
@@ -239,6 +309,8 @@ func (s *WebSocketServer) removeClient(playerID PlayerID) {
 	delete(s.clients, playerID)
 	delete(s.inputs, playerID)
 	s.RoomManager.LeavePlayer(playerID)
+	// They may have quit and closed the tab before typing a name.
+	s.RoomManager.DiscardPendingScore(playerID)
 }
 
 func (c *webSocketClient) write(ctx context.Context, message interface{}) error {

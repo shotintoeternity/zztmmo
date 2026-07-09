@@ -802,7 +802,16 @@ func (e *Engine) GameWorldLoad(extension string) (GameWorldLoad bool) {
 	return
 }
 
-func (e *Engine) HighScoresAdd(score int16) {
+// HighScoresAdd offers statId's score to this engine's list. GAME.PAS:1598
+// passes World.Info.Score, the single player's; the score now belongs to a
+// player, so the caller names one.
+//
+// Note the list itself is per-Engine, and RoomManager runs one Engine per
+// board. A room engine's list is therefore empty, and this would rank every
+// score first. The server keeps the real, world-wide list on the RoomManager
+// and never calls this; it is the terminal's path.
+func (e *Engine) HighScoresAdd(statId int16) {
+	score := e.PlayerFor(statId).Score
 	var listPos int16
 	listPos = 1
 	for listPos <= 30 && score < e.HighScoreList[listPos-1].Score {
@@ -810,6 +819,7 @@ func (e *Engine) HighScoresAdd(score int16) {
 	}
 	if listPos <= 30 && score > 0 {
 		e.Events = append(e.Events, HighScoreEntryEvent{
+			StatId:  statId,
 			Score:   score,
 			ListPos: listPos,
 		})
@@ -1216,6 +1226,13 @@ func (e *Engine) SubmitSaveFilename(statId int16, name string) {
 	e.PendingSaveFilenames = append(e.PendingSaveFilenames, PendingSaveFilename{StatId: statId, Name: name})
 }
 
+// SubmitQuitReply answers a QuitPromptEvent for one player. Applied at the top
+// of the next GameStepWithInputs. A false reply is a no-op, as declining the
+// prompt is in vanilla.
+func (e *Engine) SubmitQuitReply(statId int16, quit bool) {
+	e.PendingQuitReplies = append(e.PendingQuitReplies, PendingQuitReply{StatId: statId, Quit: quit})
+}
+
 func (e *Engine) DisplayMessage(time int16, message string) {
 	if e.GetStatIdAt(0, 0) != -1 {
 		e.RemoveStat(e.GetStatIdAt(0, 0))
@@ -1550,6 +1567,19 @@ func (e *Engine) GameStepWithInputs(inputs map[int16]PlayerInput) {
 	}
 	e.PendingSaveFilenames = e.PendingSaveFilenames[:0]
 
+	for _, reply := range e.PendingQuitReplies {
+		if !reply.Quit || reply.StatId < 0 || reply.StatId > e.Board.StatCount {
+			continue
+		}
+		if e.MultiRoom {
+			// The room's owner removes the player; see RoomManager.StepDiffs.
+			e.Events = append(e.Events, QuitEvent{StatId: reply.StatId})
+		} else {
+			e.GamePlayExitRequested = true
+		}
+	}
+	e.PendingQuitReplies = e.PendingQuitReplies[:0]
+
 	// Snapshot engine-level input fields into globals for the tick loop.
 	// Individual player inputs from the inputs map will override these for
 	// E_PLAYER stats mid-loop; the defer restores the final globals back.
@@ -1769,7 +1799,7 @@ func (e *Engine) GamePlayLoop(boardChanged bool) {
 
 			e.InputUpdate()
 			if InputKeyPressed == KEY_ESCAPE {
-				e.GamePromptEndPlay()
+				e.GamePromptEndPlay(0)
 			}
 			if InputDeltaX != 0 || InputDeltaY != 0 {
 				ElementDefs[e.Board.Tiles[int16(e.Board.Stats[0].X)+InputDeltaX][int16(e.Board.Stats[0].Y)+InputDeltaY].Element].TouchProc(e, int16(e.Board.Stats[0].X)+InputDeltaX, int16(e.Board.Stats[0].Y)+InputDeltaY, 0, &InputDeltaX, &InputDeltaY)
@@ -1877,7 +1907,7 @@ func (e *Engine) GamePlayLoop(boardChanged bool) {
 	SoundClearQueue()
 	if e.GameStateElement == E_PLAYER {
 		if e.PlayerFor(0).Health <= 0 {
-			e.HighScoresAdd(e.PlayerFor(0).Score)
+			e.HighScoresAdd(0)
 		}
 	} else if e.GameStateElement == E_MONITOR {
 		e.SidebarClearLine(5)
@@ -2103,8 +2133,8 @@ func GetStatIdAt(x, y int16) (GetStatIdAt int16) {
 	return E.GetStatIdAt(x, y)
 }
 
-func HighScoresAdd(score int16) {
-	E.HighScoresAdd(score)
+func HighScoresAdd(statId int16) {
+	E.HighScoresAdd(statId)
 }
 
 func HighScoresDisplay(linePos int16) {

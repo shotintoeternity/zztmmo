@@ -1236,12 +1236,24 @@ func (e *Engine) DrawPlayerSurroundings(x, y int16, bombPhase int16) {
 	}
 }
 
-func (e *Engine) GamePromptEndPlay() {
-	if e.PlayerFor(0).Health <= 0 {
+// GamePromptEndPlay asks statId's player whether to end their game.
+//
+// ELEMENTS.PAS:1302 reads World.Info.Health, i.e. the one player's, and when
+// that player is dead it skips the prompt and exits play at once — vanilla's
+// "Game over - Press ESCAPE". Reading PlayerFor(statId) instead is the direct
+// per-player generalization.
+//
+// The dead branch stays single-player-only. GamePlayExitRequested halts
+// GameStepWithInputs' stat loop and nothing ever resets it, so setting it in a
+// room engine would freeze that board for every other player. Multi-room
+// callers get the prompt and decide for themselves; a confirmed quit comes
+// back through SubmitQuitReply as a QuitEvent.
+func (e *Engine) GamePromptEndPlay(statId int16) {
+	if e.PlayerFor(statId).Health <= 0 && !e.MultiRoom {
 		e.GamePlayExitRequested = true
 		e.BoardDrawBorder()
 	} else {
-		e.Events = append(e.Events, QuitPromptEvent{})
+		e.Events = append(e.Events, QuitPromptEvent{StatId: statId})
 	}
 	InputKeyPressed = '\x00'
 }
@@ -1394,7 +1406,7 @@ func (e *Engine) ElementPlayerTick(statId int16) {
 			}
 		}
 	case '\x1b', 'Q':
-		e.GamePromptEndPlay()
+		e.GamePromptEndPlay(statId)
 	case 'S':
 		// Never call GameWorldSave here: it prompts via InputReadWaitKey, which
 		// blocks forever headless (the M3.9 '?' bug). Emit and return.
@@ -2141,8 +2153,8 @@ func ElementWaterTouch(x, y int16, sourceStatId int16, deltaX, deltaY *int16) {
 	E.ElementWaterTouch(x, y, sourceStatId, deltaX, deltaY)
 }
 
-func GamePromptEndPlay() {
-	E.GamePromptEndPlay()
+func GamePromptEndPlay(statId int16) {
+	E.GamePromptEndPlay(statId)
 }
 
 func InitEditorStatSettings() {

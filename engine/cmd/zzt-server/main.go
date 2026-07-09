@@ -30,10 +30,17 @@ func main() {
 	}
 
 	server := zztgo.NewWebSocketServer(zztgo.E.World, int16(*boardID))
+	// Vanilla keeps <world>.HI beside the world file. Empty would keep the list
+	// in memory, which is what the tests want but not what a server does.
+	server.RoomManager.HighScorePath = *worldName + ".HI"
+	server.RoomManager.LoadHighScores()
 	go server.Run(context.Background())
+
+	api := &zztgo.WebAPI{RoomManager: server.RoomManager, World: zztgo.E.World}
 
 	mux := http.NewServeMux()
 	mux.Handle("/ws", server)
+	mux.Handle("/api/", api.Handler())
 	if _, err := os.Stat(*webDir); err == nil {
 		mux.Handle("/", spaFileServer(http.Dir(*webDir)))
 		log.Printf("serving browser client from %s", *webDir)

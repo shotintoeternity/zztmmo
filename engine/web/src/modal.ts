@@ -15,7 +15,12 @@
 import {
   renderTextWindow,
   clampLinePos,
+  strBottom,
+  strSep,
+  strText,
+  strTop,
   TEXT_WINDOW_PAGE,
+  TEXT_WINDOW_WIDTH,
   type TextWindowState,
 } from "./textwindow";
 
@@ -33,6 +38,16 @@ const LABEL_RIGHT_EDGE = 75;
 const LABEL_Y = 3;
 const YESNO_COLOR = 0x1f;
 const YESNO_CURSOR_COLOR = 0x9e;
+
+// PopupPromptString (game.go:1122): a six-row box on rows 18..23 at column 3,
+// the question centered on row 19, and the field on row 22.
+const POPUP_X = 3;
+const POPUP_Y = 18;
+const POPUP_COLOR = 0x4f;
+const POPUP_FIELD_X = 10;
+const POPUP_FIELD_Y = 22;
+const POPUP_FIELD_COLOR = 0x4e;
+const POPUP_FIELD_WIDTH = TEXT_WINDOW_WIDTH - 16;
 
 /** Read-only text, selectable links, and paged help all share this shape. */
 export type TextModal = {
@@ -66,7 +81,20 @@ export type EntryModal = {
   onSubmit: (text: string | null) => void;
 };
 
-export type Modal = TextModal | YesNoModal | EntryModal;
+/**
+ * PopupEntryModal is PopupPromptString: the centered box ZZT uses for the one
+ * question it asks outside the sidebar — "Congratulations!  Enter your name:"
+ * after a qualifying score. Editing behaves exactly like EntryModal (the box is
+ * drawn around an ordinary PromptString), so the two share entryKey.
+ */
+export type PopupEntryModal = {
+  kind: "popupEntry";
+  question: string;
+  buffer: string;
+  onSubmit: (text: string | null) => void;
+};
+
+export type Modal = TextModal | YesNoModal | EntryModal | PopupEntryModal;
 
 /** What the caller should do after routing a key. */
 export type KeyResult = "close" | "redraw" | "ignore";
@@ -115,25 +143,62 @@ export function renderModal(write: WriteText, m: Modal) {
     case "entry":
       renderEntry(write, m);
       return;
+    case "popupEntry":
+      renderPopupEntry(write, m);
+      return;
   }
 }
 
-// renderEntry is PromptString's redraw. The arrow row is PROMPT_Y - 1.
+// promptField is PromptString's redraw: a `width`-wide field at (x, y) with the
+// cursor on the arrow row above it.
+function promptField(
+  write: WriteText,
+  x: number,
+  y: number,
+  arrowColor: number,
+  textColor: number,
+  width: number,
+  buffer: string,
+) {
+  for (let i = 0; i <= width - 1; i += 1) {
+    write(x + i, y, textColor, " ");
+    write(x + i, y - 1, arrowColor, " ");
+  }
+  write(x + width, y - 1, arrowColor, " ");
+  const cursorColor = Math.trunc(arrowColor / 0x10) * 16 + 0x0f;
+  write(x + buffer.length, y - 1, cursorColor, "\x1f");
+  write(x, y, textColor, buffer);
+}
+
+// renderEntry is SidebarPromptString: label right-aligned on row 3, field at
+// PROMPT_X/PROMPT_Y, optional suffix such as ".SAV" drawn past its end.
 function renderEntry(write: WriteText, m: EntryModal) {
   if (m.label) {
     write(LABEL_RIGHT_EDGE - m.label.length, LABEL_Y, YESNO_COLOR, m.label);
   }
-  for (let i = 0; i <= m.width - 1; i += 1) {
-    write(PROMPT_X + i, PROMPT_Y, PROMPT_TEXT_COLOR, " ");
-    write(PROMPT_X + i, PROMPT_Y - 1, PROMPT_ARROW_COLOR, " ");
-  }
-  write(PROMPT_X + m.width, PROMPT_Y - 1, PROMPT_ARROW_COLOR, " ");
+  promptField(write, PROMPT_X, PROMPT_Y, PROMPT_ARROW_COLOR, PROMPT_TEXT_COLOR, m.width, m.buffer);
   if (m.suffix) {
     write(PROMPT_X + m.width, PROMPT_Y, PROMPT_TEXT_COLOR, m.suffix);
   }
-  const cursorColor = Math.trunc(PROMPT_ARROW_COLOR / 0x10) * 16 + 0x0f;
-  write(PROMPT_X + m.buffer.length, PROMPT_Y - 1, cursorColor, "\x1f");
-  write(PROMPT_X, PROMPT_Y, PROMPT_TEXT_COLOR, m.buffer);
+}
+
+// renderPopupEntry is PopupPromptString: the box, then the same field inside it.
+function renderPopupEntry(write: WriteText, m: PopupEntryModal) {
+  const rows = [strTop, strText, strSep, strText, strText, strBottom];
+  for (let i = 0; i < rows.length; i += 1) {
+    write(POPUP_X, POPUP_Y + i, POPUP_COLOR, rows[i]);
+  }
+  const centered = POPUP_X + 1 + Math.floor((TEXT_WINDOW_WIDTH - m.question.length) / 2);
+  write(centered, POPUP_Y + 1, POPUP_COLOR, m.question);
+  promptField(
+    write,
+    POPUP_FIELD_X,
+    POPUP_FIELD_Y,
+    POPUP_COLOR,
+    POPUP_FIELD_COLOR,
+    POPUP_FIELD_WIDTH,
+    m.buffer,
+  );
 }
 
 /**
@@ -151,7 +216,10 @@ export function handleModalKey(m: Modal, event: KeyboardEvent): KeyResult {
     case "yesno":
       return yesNoKey(m, event);
     case "entry":
-      return entryKey(m, event);
+      return entryKey(m, m.width, m.charset, event);
+    case "popupEntry":
+      // PROMPT_ANY: PopupPromptString takes any printable character.
+      return entryKey(m, POPUP_FIELD_WIDTH, "any", event);
   }
 }
 
@@ -204,8 +272,14 @@ function yesNoKey(m: YesNoModal, event: KeyboardEvent): KeyResult {
   return "ignore";
 }
 
-// entryKey is PromptString's editing loop.
-function entryKey(m: EntryModal, event: KeyboardEvent): KeyResult {
+// entryKey is PromptString's editing loop, shared by the sidebar field and the
+// popup box: the box is only chrome drawn around the same field.
+function entryKey(
+  m: EntryModal | PopupEntryModal,
+  width: number,
+  charset: "any" | "alphanum",
+  event: KeyboardEvent,
+): KeyResult {
   if (event.code === "Enter") {
     m.onSubmit(m.buffer);
     return "close";
@@ -224,11 +298,11 @@ function entryKey(m: EntryModal, event: KeyboardEvent): KeyResult {
   if (event.key.length !== 1 || event.key < " " || event.key.charCodeAt(0) >= 0x80) {
     return "ignore";
   }
-  if (m.buffer.length >= m.width) {
+  if (m.buffer.length >= width) {
     return "ignore";
   }
-  const ch = m.charset === "alphanum" ? event.key.toUpperCase() : event.key;
-  if (m.charset === "alphanum" && !/[A-Z0-9]/.test(ch)) {
+  const ch = charset === "alphanum" ? event.key.toUpperCase() : event.key;
+  if (charset === "alphanum" && !/[A-Z0-9]/.test(ch)) {
     return "ignore";
   }
   m.buffer += ch;

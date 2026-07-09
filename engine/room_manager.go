@@ -1,6 +1,9 @@
 package zztgo
 
-import "sort"
+import (
+	"os"
+	"sort"
+)
 
 // PlayerID is the RoomManager-level stable player identity. Engine stat ids can
 // shift when stats are removed; PlayerID does not.
@@ -11,6 +14,31 @@ type RoomManager struct {
 	rooms        map[int16]*Room
 	players      map[PlayerID]*roomPlayer
 	nextPlayerID PlayerID
+
+	// HighScorePath, when non-empty, is the file the world's high-score list is
+	// read from and written to. Empty keeps the list in memory only, which is
+	// what tests want: NewRoomManager must not touch the filesystem.
+	//
+	// The list lives here rather than on Engine because there is one Engine per
+	// BOARD and one high-score list per WORLD (Engine.HighScoresAdd documents
+	// the same split from the other side).
+	HighScorePath string
+	highScores    THighScoreList
+
+	// quits and pendingScores carry a confirmed quit out of StepDiffs. The
+	// player is gone from their room by then, so they get no diff and the
+	// server must deliver the outcome to them directly.
+	quits         []QuitResult
+	pendingScores map[PlayerID]QuitResult
+}
+
+// QuitResult is one player's confirmed quit, drained by the server after a step.
+type QuitResult struct {
+	PlayerID PlayerID
+	Score    int16
+	// ListPos is the 1-based high-score position the score earned, or 0 when it
+	// did not qualify (vanilla: a score of 0, or a full list of better scores).
+	ListPos int16
 }
 
 type Room struct {
@@ -32,11 +60,146 @@ type roomTransfer struct {
 }
 
 func NewRoomManager(world TWorld) *RoomManager {
-	return &RoomManager{
-		world:   world,
-		rooms:   make(map[int16]*Room),
-		players: make(map[PlayerID]*roomPlayer),
+	rm := &RoomManager{
+		world:         world,
+		rooms:         make(map[int16]*Room),
+		players:       make(map[PlayerID]*roomPlayer),
+		pendingScores: make(map[PlayerID]QuitResult),
 	}
+	// HighScoresLoad's failure path (game.go): an unset list is all -1, so any
+	// positive score outranks it.
+	for i := 0; i < HIGH_SCORE_COUNT; i++ {
+		rm.highScores[i].Name = ""
+		rm.highScores[i].Score = -1
+	}
+	return rm
+}
+
+// LoadHighScores reads HighScorePath, if set. A missing file leaves the empty
+// list in place, exactly as Engine.HighScoresLoad does.
+func (rm *RoomManager) LoadHighScores() {
+	if rm.HighScorePath == "" {
+		return
+	}
+	f, err := os.Open(rm.HighScorePath)
+	if err != nil {
+		return
+	}
+	defer f.Close()
+
+	buf := make([]byte, SizeOfHighScoreList)
+	if _, err := f.Read(buf); err != nil {
+		return
+	}
+	LoadHighScoreList(buf, rm.highScores[:])
+}
+
+func (rm *RoomManager) saveHighScores() {
+	if rm.HighScorePath == "" {
+		return
+	}
+	buf := make([]byte, SizeOfHighScoreList)
+	StoreHighScoreList(buf, rm.highScores[:])
+	// Best effort: a server that cannot persist scores must still keep playing.
+	_ = os.WriteFile(rm.HighScorePath, buf, 0o644)
+}
+
+// HighScores returns a copy of the world's list.
+func (rm *RoomManager) HighScores() THighScoreList {
+	return rm.highScores
+}
+
+// HighScoreLines renders the list the way HighScoresInitTextWindow does, for a
+// client text window. highlightPos, when 1-based and in range, names the entry
+// the caller is about to write — it is shown as vanilla's "-- You! --".
+func (rm *RoomManager) HighScoreLines(highlightPos int16) []string {
+	lines := []string{"Score  Name", "-----  ----------------------------------"}
+	for i := 0; i < HIGH_SCORE_COUNT; i++ {
+		name := rm.highScores[i].Name
+		if int16(i)+1 == highlightPos {
+			name = "-- You! --"
+		}
+		if Length(name) == 0 {
+			continue
+		}
+		lines = append(lines, StrWidth(rm.highScores[i].Score, 5)+"  "+name)
+	}
+	return lines
+}
+
+// rankScore is HighScoresAdd's search: the 1-based slot this score earns, or 0.
+func (rm *RoomManager) rankScore(score int16) int16 {
+	listPos := int16(1)
+	for listPos <= HIGH_SCORE_COUNT && score < rm.highScores[listPos-1].Score {
+		listPos++
+	}
+	if listPos <= HIGH_SCORE_COUNT && score > 0 {
+		return listPos
+	}
+	return 0
+}
+
+// RecordHighScore writes the name a quitting player typed into the slot their
+// score earned, then persists the list. Returns false if that player has no
+// pending entry — a client cannot claim a slot it was never offered.
+func (rm *RoomManager) RecordHighScore(playerID PlayerID, name string) bool {
+	pending, ok := rm.pendingScores[playerID]
+	if !ok || pending.ListPos < 1 || pending.ListPos > HIGH_SCORE_COUNT {
+		return false
+	}
+	delete(rm.pendingScores, playerID)
+
+	for i := int16(HIGH_SCORE_COUNT - 1); i >= pending.ListPos; i-- {
+		rm.highScores[i] = rm.highScores[i-1]
+	}
+	rm.highScores[pending.ListPos-1] = THighScoreEntry{Name: name, Score: pending.Score}
+	rm.saveHighScores()
+	return true
+}
+
+// DiscardPendingScore forgets a high-score slot offered to a player who left
+// before naming it. Without this a client that quits and closes its socket
+// leaves an entry behind for the life of the process.
+func (rm *RoomManager) DiscardPendingScore(playerID PlayerID) {
+	delete(rm.pendingScores, playerID)
+}
+
+// SubmitQuitReply routes a quit-prompt answer to the engine that owns the
+// player. The engine turns a confirmed quit into a QuitEvent on the next step.
+func (rm *RoomManager) SubmitQuitReply(playerID PlayerID, quit bool) bool {
+	player := rm.players[playerID]
+	if player == nil {
+		return false
+	}
+	room := rm.rooms[player.boardID]
+	if room == nil {
+		return false
+	}
+	room.Engine.SubmitQuitReply(player.statID, quit)
+	return true
+}
+
+// DrainQuits returns the players who quit during the last step and clears the
+// list. They have already left their rooms.
+func (rm *RoomManager) DrainQuits() []QuitResult {
+	quits := rm.quits
+	rm.quits = nil
+	return quits
+}
+
+// quitPlayer ranks a departing player's score and removes them from their room.
+func (rm *RoomManager) quitPlayer(playerID PlayerID) {
+	state, ok := rm.PlayerState(playerID)
+	if !ok {
+		return
+	}
+	result := QuitResult{PlayerID: playerID, Score: state.Score}
+	result.ListPos = rm.rankScore(state.Score)
+	if result.ListPos > 0 {
+		rm.pendingScores[playerID] = result
+	}
+	rm.quits = append(rm.quits, result)
+	rm.LeavePlayer(playerID)
 }
 
 func (rm *RoomManager) JoinPlayer(boardID, spawnX, spawnY int16) PlayerID {
@@ -198,6 +361,7 @@ func (rm *RoomManager) StepDiffs(inputs map[PlayerID]PlayerInput) map[PlayerID]D
 	}
 
 	transfers := make([]roomTransfer, 0)
+	quitters := make([]PlayerID, 0)
 	roomEvents := make(map[int16][]Event)
 	for _, boardID := range rm.roomIDs() {
 		room := rm.rooms[boardID]
@@ -210,21 +374,33 @@ func (rm *RoomManager) StepDiffs(inputs map[PlayerID]PlayerInput) map[PlayerID]D
 		}
 		room.Engine.GameStepWithInputs(inputsForRoom)
 
+		// Transfers and quits both name a stat id, and both reindex stat ids
+		// when they are applied. Resolve them to stable PlayerIDs here, while
+		// the ids still mean what the engine meant by them, and act below.
 		for _, event := range room.Engine.DrainEvents() {
-			transfer, ok := event.(TransferEvent)
-			if !ok {
+			switch ev := event.(type) {
+			case TransferEvent:
+				if playerID, found := rm.playerIDForStat(boardID, ev.StatId); found {
+					transfers = append(transfers, roomTransfer{playerID: playerID, event: ev})
+				}
+			case QuitEvent:
+				if playerID, found := rm.playerIDForStat(boardID, ev.StatId); found {
+					quitters = append(quitters, playerID)
+				}
+			default:
 				roomEvents[boardID] = append(roomEvents[boardID], event)
-				continue
-			}
-			playerID, found := rm.playerIDForStat(boardID, transfer.StatId)
-			if found {
-				transfers = append(transfers, roomTransfer{playerID: playerID, event: transfer})
 			}
 		}
 	}
 
 	for _, transfer := range transfers {
 		rm.transferPlayer(transfer.playerID, transfer.event)
+	}
+
+	// Quitters leave before the diffs are built, so they receive none and the
+	// remaining players' stat ids are already reindexed.
+	for _, playerID := range quitters {
+		rm.quitPlayer(playerID)
 	}
 
 	diffs := make(map[PlayerID]DiffMessage)
@@ -284,6 +460,15 @@ func (rm *RoomManager) ActiveRoomCount() int {
 
 func (rm *RoomManager) FrozenWorld() TWorld {
 	return rm.world
+}
+
+// WorldName is the title the sidebar and high-score windows show. Vanilla falls
+// back to "Untitled" (GAME.PAS:1462-1465).
+func (rm *RoomManager) WorldName() string {
+	if Length(rm.world.Info.Name) == 0 {
+		return "Untitled"
+	}
+	return rm.world.Info.Name
 }
 
 func (rm *RoomManager) Snapshot(playerID PlayerID) (SnapshotMessage, bool) {
