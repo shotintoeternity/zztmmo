@@ -1321,20 +1321,21 @@ func (e *Engine) GameDebugPrompt() {
 		}
 	}
 	e.DebugEnabled = e.WorldGetFlagPosition("DEBUG") >= 0
+	pState := e.PlayerFor(0)
 	if input == "HEALTH" {
-		e.World.Info.Health += 50
+		pState.Health += 50
 	} else if input == "AMMO" {
-		e.World.Info.Ammo += 5
+		pState.Ammo += 5
 	} else if input == "KEYS" {
 		for i = 1; i <= 7; i++ {
-			e.World.Info.Keys[i-1] = true
+			pState.Keys[i-1] = true
 		}
 	} else if input == "TORCHES" {
-		e.World.Info.Torches += 3
+		pState.Torches += 3
 	} else if input == "TIME" {
-		e.World.Info.BoardTimeSec -= 30
+		pState.BoardTimeSec -= 30
 	} else if input == "GEMS" {
-		e.World.Info.Gems += 5
+		pState.Gems += 5
 	} else if input == "DARK" {
 		e.Board.Info.IsDark = toggle
 		e.TransitionDrawToBoard()
