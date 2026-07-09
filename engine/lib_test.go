@@ -184,6 +184,34 @@ func TestDelete(t *testing.T) {
 	}
 }
 
+// TestRandom pins the Turbo Pascal generator: the first 10 values of
+// Random(100) from seed 1. Hand-derivation of the first three, straight from
+// the formula (advance RandSeed = RandSeed*0x08088405+1, then
+// Random(end) = ((RandSeed>>16)*end)>>16):
+//
+//	v1: RandSeed = 1*0x08088405+1 = 0x08088406; >>16 = 0x0808 = 2056;
+//	    2056*100 = 205600; >>16 = 3
+//	v2: RandSeed = 0xDC6DAC1F; >>16 = 56429; 56429*100 = 5642900; >>16 = 86
+//	v3: RandSeed = 0x33DC589C; >>16 = 13276; 13276*100 = 1327600; >>16 = 20
+func TestRandom(t *testing.T) {
+	want := []int16{3, 86, 20, 27, 67, 31, 16, 37, 42, 8}
+	RandomSeed(1)
+	for i, w := range want {
+		if got := Random(100); got != w {
+			t.Errorf("Random(100) call %d: expected %d, got %d", i+1, w, got)
+		}
+	}
+
+	// Reseeding reproduces the sequence exactly — determinism is the point
+	// of the seeded generator (CLAUDE.md rule 2).
+	RandomSeed(1)
+	for i, w := range want {
+		if got := Random(100); got != w {
+			t.Errorf("Random(100) after reseed, call %d: expected %d, got %d", i+1, w, got)
+		}
+	}
+}
+
 func TestReplace(t *testing.T) {
 	tests := []struct {
 		s     string

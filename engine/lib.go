@@ -3,7 +3,6 @@ package main
 import (
 	"fmt"
 	"math"
-	"math/rand"
 	"strconv"
 	"strings"
 	"time"
@@ -126,8 +125,23 @@ func NoSound() {
 
 // Math functions
 
+// RandSeed is the engine's random-number state. It replaces Go's global
+// math/rand so simulation is deterministic and seedable (CLAUDE.md rule 2).
+// The generator is Turbo Pascal's: the same LCG and Word-argument reduction
+// the original ZZT relied on, so Random() reproduces vanilla sequences.
+// ZZT-QUIRK: TP's Random(Range: Word) is (hi16(RandSeed) * Range) >> 16 with
+// the seed advanced by RandSeed*$08088405+1 (mod 2^32) beforehand.
+var RandSeed uint32
+
+// RandomSeed sets the generator state (the deterministic replacement for TP's
+// Randomize, which vanilla seeded from the system timer).
+func RandomSeed(s uint32) {
+	RandSeed = s
+}
+
 func Random(end int16) int16 {
-	return int16(rand.Intn(int(end)))
+	RandSeed = RandSeed*0x08088405 + 1
+	return int16((uint32(RandSeed>>16) * uint32(end)) >> 16)
 }
 
 func Sqr(n int16) int16 {

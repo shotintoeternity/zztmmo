@@ -20,7 +20,7 @@ Baseline verified 2026-07-09: `engine/` builds and its tests pass on go1.26.5.
 Goal: the game simulates identically, but all I/O goes through replaceable seams
 and every run is reproducible. ANALYSIS.md §3g, §3h, §5.
 
-- [ ] **M0.1 — Seeded RNG.** In `engine/lib.go`, replace `Random(end)`
+- [x] **M0.1 — Seeded RNG.** In `engine/lib.go`, replace `Random(end)`
   (currently Go's global `math/rand`, line ~129) with the Turbo Pascal generator:
   package-level `var RandSeed uint32`; `RandSeed = RandSeed*0x08088405 + 1`;
   `Random(end) = int16((uint32(RandSeed>>16) * uint32(end)) >> 16)`. Add
