@@ -1,5 +1,6 @@
 reference/
 engine/zztgo
+engine/zzt
 *.SAV
 node_modules/
 dist/
