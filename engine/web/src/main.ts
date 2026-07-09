@@ -402,10 +402,13 @@ const cells: ScreenCell[] = Array.from({ length: COLS * ROWS }, (_, i) => ({
 }));
 
 drawScreen();
-// ZZT opens on its title screen, not in a room. Joining costs the server a
-// player stat on a shared board, so it waits for 'P' — which is also what
-// vanilla waits for (GAME.PAS:1644).
-void showTitle();
+if ("fonts" in document) {
+  document.fonts.ready.then(() => {
+    void showTitle();
+  });
+} else {
+  void showTitle();
+}
 canvas.addEventListener("mousedown", handlePointerDown);
 canvas.addEventListener("keydown", handleKeyDown);
 canvas.addEventListener("keyup", handleKeyUp);
