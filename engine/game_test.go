@@ -79,7 +79,7 @@ func TestShootMaxShots(t *testing.T) {
 	e.Board.Stats[0].Y = 15
 
 	e.Board.Info.MaxShots = 2
-	e.World.Info.Ammo = 10
+	e.PlayerFor(0).Ammo = 10
 
 	// First shot: shoot right
 	s1 := e.BoardShoot(E_BULLET, 15, 15, 1, 0, SHOT_SOURCE_PLAYER)
@@ -141,8 +141,8 @@ func TestGemPickupSoundEvent(t *testing.T) {
 	if e.Board.Stats[0].X != 16 || e.Board.Stats[0].Y != 15 {
 		t.Errorf("expected player at (16, 15), got (%d, %d)", e.Board.Stats[0].X, e.Board.Stats[0].Y)
 	}
-	if e.World.Info.Gems != 1 {
-		t.Errorf("expected 1 gem, got %d", e.World.Info.Gems)
+	if e.PlayerFor(0).Gems != 1 {
+		t.Errorf("expected 1 gem, got %d", e.PlayerFor(0).Gems)
 	}
 
 	// Verify SoundEvent was emitted

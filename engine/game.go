@@ -255,6 +255,19 @@ func (e *Engine) WorldCreate() {
 	for i = 1; i <= 7; i++ {
 		e.World.Info.Keys[i-1] = false
 	}
+	pState := e.PlayerFor(0)
+	pState.Health = 100
+	pState.Ammo = 0
+	pState.Gems = 0
+	pState.Torches = 0
+	pState.TorchTicks = 0
+	pState.EnergizerTicks = 0
+	pState.Score = 0
+	pState.BoardTimeSec = 0
+	pState.BoardTimeHsec = 0
+	for i = 1; i <= 7; i++ {
+		pState.Keys[i-1] = false
+	}
 	for i = 1; i <= 10; i++ {
 		e.World.Info.Flags[i-1] = ""
 	}
@@ -274,7 +287,7 @@ func (e *Engine) TransitionDrawToFill(chr byte, color int16) {
 func (e *Engine) TileToColorAndChar(x, y int16) (color, char byte) {
 	var ch byte
 	tile := &e.Board.Tiles[x][y]
-	if !e.Board.Info.IsDark || ElementDefs[e.Board.Tiles[x][y].Element].VisibleInDark || e.World.Info.TorchTicks > 0 && Sqr(int16(e.Board.Stats[0].X)-x)+Sqr(int16(e.Board.Stats[0].Y)-y)*2 < TORCH_DIST_SQR || e.ForceDarknessOff {
+	if !e.Board.Info.IsDark || ElementDefs[e.Board.Tiles[x][y].Element].VisibleInDark || e.PlayerFor(0).TorchTicks > 0 && Sqr(int16(e.Board.Stats[0].X)-x)+Sqr(int16(e.Board.Stats[0].Y)-y)*2 < TORCH_DIST_SQR || e.ForceDarknessOff {
 		if tile.Element == E_EMPTY {
 			return 0x0F, ' '
 		} else if ElementDefs[tile.Element].HasDrawProc {
@@ -612,6 +625,18 @@ func (e *Engine) WorldLoad(filename, extension string, titleOnly bool) (WorldLoa
 	LoadWorldInfo(ptr[:SizeOfWorldInfo], &e.World.Info)
 	ptr = ptr[SizeOfWorldInfo:]
 
+	pState := e.PlayerFor(0)
+	pState.Health = e.World.Info.Health
+	pState.Ammo = e.World.Info.Ammo
+	pState.Gems = e.World.Info.Gems
+	pState.Torches = e.World.Info.Torches
+	pState.TorchTicks = e.World.Info.TorchTicks
+	pState.EnergizerTicks = e.World.Info.EnergizerTicks
+	pState.Score = e.World.Info.Score
+	pState.Keys = e.World.Info.Keys
+	pState.BoardTimeSec = e.World.Info.BoardTimeSec
+	pState.BoardTimeHsec = e.World.Info.BoardTimeHsec
+
 	if titleOnly {
 		e.World.BoardCount = 0
 		e.World.Info.CurrentBoard = 0
@@ -672,6 +697,18 @@ func (e *Engine) WorldSave(filename, extension string) {
 	ptr = ptr[2:]
 	StoreInt16(ptr[:2], e.World.BoardCount)
 	ptr = ptr[2:]
+	pState := e.PlayerFor(0)
+	e.World.Info.Health = pState.Health
+	e.World.Info.Ammo = pState.Ammo
+	e.World.Info.Gems = pState.Gems
+	e.World.Info.Torches = pState.Torches
+	e.World.Info.TorchTicks = pState.TorchTicks
+	e.World.Info.EnergizerTicks = pState.EnergizerTicks
+	e.World.Info.Score = pState.Score
+	e.World.Info.Keys = pState.Keys
+	e.World.Info.BoardTimeSec = pState.BoardTimeSec
+	e.World.Info.BoardTimeHsec = pState.BoardTimeHsec
+
 	StoreWorldInfo(ptr[:SizeOfWorldInfo], &e.World.Info)
 	ptr = ptr[SizeOfWorldInfo:]
 	_, err = f.Write(e.IoTmpBuf[:512])
@@ -974,7 +1011,7 @@ func (e *Engine) MoveStat(statId int16, newX, newY int16) {
 	stat.Y = byte(newY)
 	e.BoardDrawTile(int16(stat.X), int16(stat.Y))
 	e.BoardDrawTile(oldX, oldY)
-	if statId == 0 && e.Board.Info.IsDark && e.World.Info.TorchTicks > 0 {
+	if statId == 0 && e.Board.Info.IsDark && e.PlayerFor(statId).TorchTicks > 0 {
 		if Sqr(oldX-int16(stat.X))+Sqr(oldY-int16(stat.Y)) == 1 {
 			for ix = int16(stat.X) - TORCH_DX - 3; ix <= int16(stat.X)+TORCH_DX+3; ix++ {
 				if ix >= 1 && ix <= BOARD_WIDTH {
@@ -1038,31 +1075,32 @@ func (e *Engine) GameUpdateSidebar() {
 		i      int16
 	)
 	if e.GameStateElement == E_PLAYER {
+		pState := e.PlayerFor(0)
 		if e.Board.Info.TimeLimitSec > 0 {
 			e.VideoWriteText(64, 6, 0x1E, "   Time:")
-			numStr = Str(e.Board.Info.TimeLimitSec - e.World.Info.BoardTimeSec)
+			numStr = Str(e.Board.Info.TimeLimitSec - pState.BoardTimeSec)
 			e.VideoWriteText(72, 6, 0x1E, numStr+" ")
 		} else {
 			e.SidebarClearLine(6)
 		}
-		if e.World.Info.Health < 0 {
-			e.World.Info.Health = 0
+		if pState.Health < 0 {
+			pState.Health = 0
 		}
-		numStr = Str(e.World.Info.Health)
+		numStr = Str(pState.Health)
 		e.VideoWriteText(72, 7, 0x1E, numStr+" ")
-		numStr = Str(e.World.Info.Ammo)
+		numStr = Str(pState.Ammo)
 		e.VideoWriteText(72, 8, 0x1E, numStr+"  ")
-		numStr = Str(e.World.Info.Torches)
+		numStr = Str(pState.Torches)
 		e.VideoWriteText(72, 9, 0x1E, numStr+" ")
-		numStr = Str(e.World.Info.Gems)
+		numStr = Str(pState.Gems)
 		e.VideoWriteText(72, 10, 0x1E, numStr+" ")
-		numStr = Str(e.World.Info.Score)
+		numStr = Str(pState.Score)
 		e.VideoWriteText(72, 11, 0x1E, numStr+" ")
-		if e.World.Info.TorchTicks == 0 {
+		if pState.TorchTicks == 0 {
 			e.VideoWriteText(75, 9, 0x16, "    ")
 		} else {
 			for i = 2; i <= 5; i++ {
-				if i <= e.World.Info.TorchTicks*5/TORCH_DURATION {
+				if i <= pState.TorchTicks*5/TORCH_DURATION {
 					e.VideoWriteText(73+i, 9, 0x16, "\xb1")
 				} else {
 					e.VideoWriteText(73+i, 9, 0x16, "\xb0")
@@ -1070,7 +1108,7 @@ func (e *Engine) GameUpdateSidebar() {
 			}
 		}
 		for i = 1; i <= 7; i++ {
-			if e.World.Info.Keys[i-1] {
+			if pState.Keys[i-1] {
 				e.VideoWriteText(71+i, 12, byte(0x18+i), string([]byte{ElementDefs[E_KEY].Character}))
 			} else {
 				e.VideoWriteText(71+i, 12, 0x1F, " ")
@@ -1099,14 +1137,15 @@ func (e *Engine) DisplayMessage(time int16, message string) {
 func (e *Engine) DamageStat(attackerStatId int16) {
 	var oldX, oldY int16
 	stat := &e.Board.Stats[attackerStatId]
+	pState := e.PlayerFor(attackerStatId)
 	if attackerStatId == 0 {
-		if e.World.Info.Health > 0 {
-			e.World.Info.Health -= 10
+		if pState.Health > 0 {
+			pState.Health -= 10
 			e.GameUpdateSidebar()
 			e.DisplayMessage(100, "Ouch!")
 			e.Board.Tiles[stat.X][stat.Y].Color = byte(0x70 + int16(ElementDefs[E_PLAYER].Color)%0x10)
-			if e.World.Info.Health > 0 {
-				e.World.Info.BoardTimeSec = 0
+			if pState.Health > 0 {
+				pState.BoardTimeSec = 0
 				if e.Board.Info.ReenterWhenZapped {
 					e.SoundQueue(4, " \x01#\x01'\x010\x01\x10\x01")
 					e.Board.Tiles[stat.X][stat.Y].Element = E_EMPTY
@@ -1148,8 +1187,9 @@ func (e *Engine) BoardDamageTile(x, y int16) {
 }
 
 func (e *Engine) BoardAttack(attackerStatId int16, x, y int16) {
-	if attackerStatId == 0 && e.World.Info.EnergizerTicks > 0 {
-		e.World.Info.Score = ElementDefs[e.Board.Tiles[x][y].Element].ScoreValue + e.World.Info.Score
+	pState := e.PlayerFor(attackerStatId)
+	if attackerStatId == 0 && pState.EnergizerTicks > 0 {
+		pState.Score = ElementDefs[e.Board.Tiles[x][y].Element].ScoreValue + pState.Score
 		e.GameUpdateSidebar()
 	} else {
 		e.DamageStat(attackerStatId)
@@ -1157,8 +1197,9 @@ func (e *Engine) BoardAttack(attackerStatId int16, x, y int16) {
 	if attackerStatId > 0 && attackerStatId <= e.CurrentStatTicked {
 		e.CurrentStatTicked--
 	}
-	if e.Board.Tiles[x][y].Element == E_PLAYER && e.World.Info.EnergizerTicks > 0 {
-		e.World.Info.Score = ElementDefs[e.Board.Tiles[e.Board.Stats[attackerStatId].X][e.Board.Stats[attackerStatId].Y].Element].ScoreValue + e.World.Info.Score
+	defenderStatId := e.GetStatIdAt(x, y)
+	if e.Board.Tiles[x][y].Element == E_PLAYER && defenderStatId != -1 && e.PlayerFor(defenderStatId).EnergizerTicks > 0 {
+		e.PlayerFor(defenderStatId).Score = ElementDefs[e.Board.Tiles[e.Board.Stats[attackerStatId].X][e.Board.Stats[attackerStatId].Y].Element].ScoreValue + e.PlayerFor(defenderStatId).Score
 		e.GameUpdateSidebar()
 	} else {
 		e.BoardDamageTile(x, y)
@@ -1175,7 +1216,7 @@ func (e *Engine) BoardShoot(element byte, tx, ty, deltaX, deltaY int16, source i
 		stat.StepY = deltaY
 		stat.P2 = 100
 		BoardShoot = true
-	} else if e.Board.Tiles[tx+deltaX][ty+deltaY].Element == E_BREAKABLE || ElementDefs[e.Board.Tiles[tx+deltaX][ty+deltaY].Element].Destructible && e.Board.Tiles[tx+deltaX][ty+deltaY].Element == E_PLAYER == (source != 0) && e.World.Info.EnergizerTicks <= 0 {
+	} else if e.Board.Tiles[tx+deltaX][ty+deltaY].Element == E_BREAKABLE || ElementDefs[e.Board.Tiles[tx+deltaX][ty+deltaY].Element].Destructible && e.Board.Tiles[tx+deltaX][ty+deltaY].Element == E_PLAYER == (source != 0) && e.PlayerFor(0).EnergizerTicks <= 0 {
 		e.BoardDamageTile(tx+deltaX, ty+deltaY)
 		e.SoundQueue(2, "\x10\x01")
 		BoardShoot = true
@@ -1218,11 +1259,12 @@ func (e *Engine) TransitionDrawBoardChange() {
 func (e *Engine) BoardEnter() {
 	e.Board.Info.StartPlayerX = e.Board.Stats[0].X
 	e.Board.Info.StartPlayerY = e.Board.Stats[0].Y
-	if e.Board.Info.IsDark && e.MessageHintTorchNotShown {
+	pState := e.PlayerFor(0)
+	if e.Board.Info.IsDark && pState.MessageHintTorchNotShown {
 		e.DisplayMessage(200, "Room is dark - you need to light a torch!")
-		e.MessageHintTorchNotShown = false
+		pState.MessageHintTorchNotShown = false
 	}
-	e.World.Info.BoardTimeSec = 0
+	pState.BoardTimeSec = 0
 	e.GameUpdateSidebar()
 }
 
@@ -1567,8 +1609,8 @@ func (e *Engine) GamePlayLoop(boardChanged bool) {
 
 	SoundClearQueue()
 	if e.GameStateElement == E_PLAYER {
-		if e.World.Info.Health <= 0 {
-			e.HighScoresAdd(e.World.Info.Score)
+		if e.PlayerFor(0).Health <= 0 {
+			e.HighScoresAdd(e.PlayerFor(0).Score)
 		}
 	} else if e.GameStateElement == E_MONITOR {
 		e.SidebarClearLine(5)

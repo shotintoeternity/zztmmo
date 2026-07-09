@@ -272,7 +272,7 @@ TryMove:
 	}
 	if iElem == E_BREAKABLE || ElementDefs[iElem].Destructible && (iElem == E_PLAYER || stat.P1 == 0) {
 		if ElementDefs[iElem].ScoreValue != 0 {
-			e.World.Info.Score += ElementDefs[iElem].ScoreValue
+			e.PlayerFor(0).Score += ElementDefs[iElem].ScoreValue
 			e.GameUpdateSidebar()
 		}
 		e.BoardAttack(statId, ix, iy)
@@ -626,11 +626,12 @@ func (e *Engine) ElementEnergizerTouch(x, y int16, sourceStatId int16, deltaX, d
 	e.SoundQueue(9, " \x03#\x03$\x03%\x035\x03%\x03#\x03 \x03"+"0\x03#\x03$\x03%\x035\x03%\x03#\x03 \x03"+"0\x03#\x03$\x03%\x035\x03%\x03#\x03 \x03"+"0\x03#\x03$\x03%\x035\x03%\x03#\x03 \x03"+"0\x03#\x03$\x03%\x035\x03%\x03#\x03 \x03"+"0\x03#\x03$\x03%\x035\x03%\x03#\x03 \x03"+"0\x03#\x03$\x03%\x035\x03%\x03#\x03 \x03")
 	e.Board.Tiles[x][y].Element = E_EMPTY
 	e.BoardDrawTile(x, y)
-	e.World.Info.EnergizerTicks = 75
+	pState := e.PlayerFor(sourceStatId)
+	pState.EnergizerTicks = 75
 	e.GameUpdateSidebar()
-	if e.MessageEnergizerNotShown {
+	if pState.MessageEnergizerNotShown {
 		e.DisplayMessage(200, "Energizer - You are invincible")
-		e.MessageEnergizerNotShown = false
+		pState.MessageEnergizerNotShown = false
 	}
 	if e.OopSend(0, "ALL:ENERGIZE", false) {
 	}
@@ -753,7 +754,7 @@ func (e *Engine) ElementBlinkWallTick(statId int16) {
 
 					}
 					if e.Board.Tiles[ix][iy].Element == E_PLAYER {
-						for e.World.Info.Health > 0 {
+						for e.PlayerFor(playerStatId).Health > 0 {
 							e.DamageStat(playerStatId)
 						}
 						hitBoundary = true
@@ -915,11 +916,12 @@ func (e *Engine) ElementScrollTouch(x, y int16, sourceStatId int16, deltaX, delt
 func (e *Engine) ElementKeyTouch(x, y int16, sourceStatId int16, deltaX, deltaY *int16) {
 	var key int16
 	key = int16(e.Board.Tiles[x][y].Color) % 8
-	if e.World.Info.Keys[key-1] {
+	pState := e.PlayerFor(sourceStatId)
+	if pState.Keys[key-1] {
 		e.DisplayMessage(200, "You already have a "+ColorNames[key-1]+" key!")
 		e.SoundQueue(2, "0\x02 \x02")
 	} else {
-		e.World.Info.Keys[key-1] = true
+		pState.Keys[key-1] = true
 		e.Board.Tiles[x][y].Element = E_EMPTY
 		e.GameUpdateSidebar()
 		e.DisplayMessage(200, "You now have the "+ColorNames[key-1]+" key.")
@@ -928,25 +930,27 @@ func (e *Engine) ElementKeyTouch(x, y int16, sourceStatId int16, deltaX, deltaY 
 }
 
 func (e *Engine) ElementAmmoTouch(x, y int16, sourceStatId int16, deltaX, deltaY *int16) {
-	e.World.Info.Ammo += 5
+	pState := e.PlayerFor(sourceStatId)
+	pState.Ammo += 5
 	e.Board.Tiles[x][y].Element = E_EMPTY
 	e.GameUpdateSidebar()
 	e.SoundQueue(2, "0\x011\x012\x01")
-	if e.MessageAmmoNotShown {
-		e.MessageAmmoNotShown = false
+	if pState.MessageAmmoNotShown {
 		e.DisplayMessage(200, "Ammunition - 5 shots per container.")
+		pState.MessageAmmoNotShown = false
 	}
 }
 
 func (e *Engine) ElementGemTouch(x, y int16, sourceStatId int16, deltaX, deltaY *int16) {
-	e.World.Info.Gems++
-	e.World.Info.Health++
-	e.World.Info.Score += 10
+	pState := e.PlayerFor(sourceStatId)
+	pState.Gems++
+	pState.Health++
+	pState.Score += 10
 	e.Board.Tiles[x][y].Element = E_EMPTY
 	e.GameUpdateSidebar()
 	e.SoundQueue(2, "@\x017\x014\x010\x01")
-	if e.MessageGemNotShown {
-		e.MessageGemNotShown = false
+	if pState.MessageGemNotShown {
+		pState.MessageGemNotShown = false
 		e.DisplayMessage(200, "Gems give you Health!")
 	}
 }
@@ -960,10 +964,11 @@ func (e *Engine) ElementPassageTouch(x, y int16, sourceStatId int16, deltaX, del
 func (e *Engine) ElementDoorTouch(x, y int16, sourceStatId int16, deltaX, deltaY *int16) {
 	var key int16
 	key = int16(e.Board.Tiles[x][y].Color) / 16 % 8
-	if e.World.Info.Keys[key-1] {
+	pState := e.PlayerFor(sourceStatId)
+	if pState.Keys[key-1] {
 		e.Board.Tiles[x][y].Element = E_EMPTY
 		e.BoardDrawTile(x, y)
-		e.World.Info.Keys[key-1] = false
+		pState.Keys[key-1] = false
 		e.GameUpdateSidebar()
 		e.DisplayMessage(200, "The "+ColorNames[key-1]+" door is now open.")
 		e.SoundQueue(3, "0\x017\x01;\x010\x017\x01;\x01@\x04")
@@ -1015,14 +1020,15 @@ func (e *Engine) ElementPusherTick(statId int16) {
 }
 
 func (e *Engine) ElementTorchTouch(x, y int16, sourceStatId int16, deltaX, deltaY *int16) {
-	e.World.Info.Torches++
+	pState := e.PlayerFor(sourceStatId)
+	pState.Torches++
 	e.Board.Tiles[x][y].Element = E_EMPTY
 	e.BoardDrawTile(x, y)
 	e.GameUpdateSidebar()
-	if e.MessageTorchNotShown {
+	if pState.MessageTorchNotShown {
 		e.DisplayMessage(200, "Torch - used for lighting in the underground.")
+		pState.MessageTorchNotShown = false
 	}
-	e.MessageTorchNotShown = false
 	e.SoundQueue(3, "0\x019\x014\x02")
 }
 
@@ -1035,20 +1041,22 @@ func (e *Engine) ElementInvisibleTouch(x, y int16, sourceStatId int16, deltaX, d
 }
 
 func (e *Engine) ElementForestTouch(x, y int16, sourceStatId int16, deltaX, deltaY *int16) {
+	pState := e.PlayerFor(sourceStatId)
 	e.Board.Tiles[x][y].Element = E_EMPTY
 	e.BoardDrawTile(x, y)
 	e.SoundQueue(3, "9\x01")
-	if e.MessageForestNotShown {
+	if pState.MessageForestNotShown {
 		e.DisplayMessage(200, "A path is cleared through the forest.")
+		pState.MessageForestNotShown = false
 	}
-	e.MessageForestNotShown = false
 }
 
 func (e *Engine) ElementFakeTouch(x, y int16, sourceStatId int16, deltaX, deltaY *int16) {
-	if e.MessageFakeNotShown {
+	pState := e.PlayerFor(sourceStatId)
+	if pState.MessageFakeNotShown {
 		e.DisplayMessage(150, "A fake wall - secret passage!")
+		pState.MessageFakeNotShown = false
 	}
-	e.MessageFakeNotShown = false
 }
 
 func (e *Engine) ElementBoardEdgeTouch(x, y int16, sourceStatId int16, deltaX, deltaY *int16) {
@@ -1138,7 +1146,7 @@ func (e *Engine) DrawPlayerSurroundings(x, y int16, bombPhase int16) {
 }
 
 func (e *Engine) GamePromptEndPlay() {
-	if e.World.Info.Health <= 0 {
+	if e.PlayerFor(0).Health <= 0 {
 		e.GamePlayExitRequested = true
 		e.BoardDrawBorder()
 	} else {
@@ -1153,7 +1161,8 @@ func (e *Engine) ElementPlayerTick(statId int16) {
 		bulletCount int16
 	)
 	stat := &e.Board.Stats[statId]
-	if e.World.Info.EnergizerTicks > 0 {
+	pState := e.PlayerFor(statId)
+	if pState.EnergizerTicks > 0 {
 		if ElementDefs[E_PLAYER].Character == '\x02' {
 			ElementDefs[E_PLAYER].Character = '\x01'
 		} else {
@@ -1171,7 +1180,7 @@ func (e *Engine) ElementPlayerTick(statId int16) {
 		e.BoardDrawTile(int16(stat.X), int16(stat.Y))
 	}
 
-	if e.World.Info.Health <= 0 {
+	if pState.Health <= 0 {
 		InputDeltaX = 0
 		InputDeltaY = 0
 		InputShiftPressed = false
@@ -1188,15 +1197,15 @@ func (e *Engine) ElementPlayerTick(statId int16) {
 		}
 		if e.PlayerDirX != 0 || e.PlayerDirY != 0 {
 			if e.Board.Info.MaxShots == 0 {
-				if e.MessageNoShootingNotShown {
+				if pState.MessageNoShootingNotShown {
 					e.DisplayMessage(200, "Can't shoot in this place!")
 				}
-				e.MessageNoShootingNotShown = false
-			} else if e.World.Info.Ammo == 0 {
-				if e.MessageOutOfAmmoNotShown {
+				pState.MessageNoShootingNotShown = false
+			} else if pState.Ammo == 0 {
+				if pState.MessageOutOfAmmoNotShown {
 					e.DisplayMessage(200, "You don't have any ammo!")
 				}
-				e.MessageOutOfAmmoNotShown = false
+				pState.MessageOutOfAmmoNotShown = false
 			} else {
 				bulletCount = 0
 				for i = 0; i <= e.Board.StatCount; i++ {
@@ -1206,7 +1215,7 @@ func (e *Engine) ElementPlayerTick(statId int16) {
 				}
 				if bulletCount < int16(e.Board.Info.MaxShots) {
 					if e.BoardShoot(E_BULLET, int16(stat.X), int16(stat.Y), e.PlayerDirX, e.PlayerDirY, SHOT_SOURCE_PLAYER) {
-						e.World.Info.Ammo--
+						pState.Ammo--
 						e.GameUpdateSidebar()
 						e.SoundQueue(2, "@\x010\x01 \x01")
 						InputDeltaX = 0
@@ -1238,23 +1247,23 @@ func (e *Engine) ElementPlayerTick(statId int16) {
 
 	switch UpCase(InputKeyPressed) {
 	case 'T':
-		if e.World.Info.TorchTicks <= 0 {
-			if e.World.Info.Torches > 0 {
+		if pState.TorchTicks <= 0 {
+			if pState.Torches > 0 {
 				if e.Board.Info.IsDark {
-					e.World.Info.Torches--
-					e.World.Info.TorchTicks = TORCH_DURATION
+					pState.Torches--
+					pState.TorchTicks = TORCH_DURATION
 					e.DrawPlayerSurroundings(int16(stat.X), int16(stat.Y), 0)
 					e.GameUpdateSidebar()
 				} else {
-					if e.MessageRoomNotDarkNotShown {
+					if pState.MessageRoomNotDarkNotShown {
 						e.DisplayMessage(200, "Don't need torch - room is not dark!")
-						e.MessageRoomNotDarkNotShown = false
+						pState.MessageRoomNotDarkNotShown = false
 					}
 				}
 			} else {
-				if e.MessageOutOfTorchesNotShown {
+				if pState.MessageOutOfTorchesNotShown {
 					e.DisplayMessage(200, "You don't have any torches!")
-					e.MessageOutOfTorchesNotShown = false
+					pState.MessageOutOfTorchesNotShown = false
 				}
 			}
 		}
@@ -1263,7 +1272,7 @@ func (e *Engine) ElementPlayerTick(statId int16) {
 	case 'S':
 		e.GameWorldSave("Save game:", &e.SavedGameFileName, ".SAV")
 	case 'P':
-		if e.World.Info.Health > 0 {
+		if pState.Health > 0 {
 			e.GamePaused = true
 		}
 	case 'B':
@@ -1280,34 +1289,34 @@ func (e *Engine) ElementPlayerTick(statId int16) {
 		e.GameDebugPrompt()
 		InputKeyPressed = '\x00'
 	}
-	if e.World.Info.TorchTicks > 0 {
-		e.World.Info.TorchTicks--
-		if e.World.Info.TorchTicks <= 0 {
+	if pState.TorchTicks > 0 {
+		pState.TorchTicks--
+		if pState.TorchTicks <= 0 {
 			e.DrawPlayerSurroundings(int16(stat.X), int16(stat.Y), 0)
 			e.SoundQueue(3, "0\x01 \x01\x10\x01")
 		}
-		if e.World.Info.TorchTicks%40 == 0 {
+		if pState.TorchTicks%40 == 0 {
 			e.GameUpdateSidebar()
 		}
 	}
-	if e.World.Info.EnergizerTicks > 0 {
-		e.World.Info.EnergizerTicks--
-		if e.World.Info.EnergizerTicks == 10 {
+	if pState.EnergizerTicks > 0 {
+		pState.EnergizerTicks--
+		if pState.EnergizerTicks == 10 {
 			e.SoundQueue(9, " \x03\x1a\x03\x17\x03\x16\x03\x15\x03\x13\x03\x10\x03")
-		} else if e.World.Info.EnergizerTicks <= 0 {
+		} else if pState.EnergizerTicks <= 0 {
 			e.Board.Tiles[stat.X][stat.Y].Color = ElementDefs[E_PLAYER].Color
 			e.BoardDrawTile(int16(stat.X), int16(stat.Y))
 		}
 
 	}
-	if e.Board.Info.TimeLimitSec > 0 && e.World.Info.Health > 0 {
-		if SoundHasTimeElapsed(&e.World.Info.BoardTimeHsec, 100) {
-			e.World.Info.BoardTimeSec++
-			if e.Board.Info.TimeLimitSec-10 == e.World.Info.BoardTimeSec {
+	if e.Board.Info.TimeLimitSec > 0 && pState.Health > 0 {
+		if SoundHasTimeElapsed(&pState.BoardTimeHsec, 100) {
+			pState.BoardTimeSec++
+			if e.Board.Info.TimeLimitSec-10 == pState.BoardTimeSec {
 				e.DisplayMessage(200, "Running out of time!")
 				e.SoundQueue(3, "@\x06E\x06@\x065\x06@\x06E\x06@\n")
-			} else if e.World.Info.BoardTimeSec > e.Board.Info.TimeLimitSec {
-				e.DamageStat(0)
+			} else if pState.BoardTimeSec > e.Board.Info.TimeLimitSec {
+				e.DamageStat(statId)
 			}
 
 			e.GameUpdateSidebar()
@@ -1323,17 +1332,18 @@ func (e *Engine) ElementMonitorTick(statId int16) {
 }
 
 func (e *Engine) ResetMessageNotShownFlags() {
-	e.MessageAmmoNotShown = true
-	e.MessageOutOfAmmoNotShown = true
-	e.MessageNoShootingNotShown = true
-	e.MessageTorchNotShown = true
-	e.MessageOutOfTorchesNotShown = true
-	e.MessageRoomNotDarkNotShown = true
-	e.MessageHintTorchNotShown = true
-	e.MessageForestNotShown = true
-	e.MessageFakeNotShown = true
-	e.MessageGemNotShown = true
-	e.MessageEnergizerNotShown = true
+	pState := e.PlayerFor(0)
+	pState.MessageAmmoNotShown = true
+	pState.MessageOutOfAmmoNotShown = true
+	pState.MessageNoShootingNotShown = true
+	pState.MessageTorchNotShown = true
+	pState.MessageOutOfTorchesNotShown = true
+	pState.MessageRoomNotDarkNotShown = true
+	pState.MessageHintTorchNotShown = true
+	pState.MessageForestNotShown = true
+	pState.MessageFakeNotShown = true
+	pState.MessageGemNotShown = true
+	pState.MessageEnergizerNotShown = true
 }
 
 func (e *Engine) InitElementDefs() {

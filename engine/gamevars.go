@@ -144,17 +144,7 @@ type (
 		StartupWorldFileName        string
 		Board                       TBoard
 		World                       TWorld
-		MessageAmmoNotShown         bool
-		MessageOutOfAmmoNotShown    bool
-		MessageNoShootingNotShown   bool
-		MessageTorchNotShown        bool
-		MessageOutOfTorchesNotShown bool
-		MessageRoomNotDarkNotShown  bool
-		MessageHintTorchNotShown    bool
-		MessageForestNotShown       bool
-		MessageFakeNotShown         bool
-		MessageGemNotShown          bool
-		MessageEnergizerNotShown    bool
+		Players                     map[int16]*PlayerState
 		unkVar_4ABA                 [15]byte
 		GameTitleExitRequested      bool
 		GamePlayExitRequested       bool
@@ -219,6 +209,29 @@ type (
 		Notes    string
 		Priority int16
 	}
+	PlayerState struct {
+		Health                      int16
+		Ammo                        int16
+		Gems                        int16
+		Torches                     int16
+		TorchTicks                  int16
+		EnergizerTicks              int16
+		Score                       int16
+		Keys                        [7]bool
+		BoardTimeSec                int16
+		BoardTimeHsec               int16
+		MessageAmmoNotShown         bool
+		MessageOutOfAmmoNotShown    bool
+		MessageNoShootingNotShown   bool
+		MessageTorchNotShown        bool
+		MessageOutOfTorchesNotShown bool
+		MessageRoomNotDarkNotShown  bool
+		MessageHintTorchNotShown    bool
+		MessageForestNotShown       bool
+		MessageFakeNotShown         bool
+		MessageGemNotShown          bool
+		MessageEnergizerNotShown    bool
+	}
 )
 
 var (
@@ -229,7 +242,22 @@ var (
 func NewEngine() *Engine {
 	return &Engine{
 		ActiveInput: TcellInput{},
+		Players:     make(map[int16]*PlayerState),
 	}
+}
+
+func (e *Engine) PlayerFor(statId int16) *PlayerState {
+	ps := e.Players[statId]
+	if ps == nil {
+		if e.Players == nil {
+			e.Players = make(map[int16]*PlayerState)
+		}
+		ps = &PlayerState{
+			Health: 15,
+		}
+		e.Players[statId] = ps
+	}
+	return ps
 }
 
 const (

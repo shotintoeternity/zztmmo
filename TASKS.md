@@ -110,7 +110,7 @@ and every run is reproducible. ANALYSIS.md §3g, §3h, §5.
 
 ## M2 — Multiple players
 
-- [ ] **M2.1 — PlayerState split.** New `type PlayerState struct` holding Health,
+- [x] **M2.1 — PlayerState split.** New `type PlayerState struct` holding Health,
   Ammo, Gems, Torches, TorchTicks, EnergizerTicks, Score, Keys[7], and the
   MessageXxxNotShown hint flags (ANALYSIS.md §3b, §4.2). Engine gets
   `Players map[int16]*PlayerState` (key = stat index) + `PlayerFor(statId)`.

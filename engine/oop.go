@@ -410,6 +410,7 @@ func (e *Engine) OopCheckCondition(statId int16, position *int16) (OopCheckCondi
 		ix, iy         int16
 	)
 	stat := &e.Board.Stats[statId]
+	activePlayer := e.PlayerFor(0)
 	if e.OopWord == "NOT" {
 		e.OopReadWord(statId, position)
 		OopCheckCondition_ = !e.OopCheckCondition(statId, position)
@@ -421,7 +422,7 @@ func (e *Engine) OopCheckCondition(statId int16, position *int16) (OopCheckCondi
 		e.OopReadDirection(statId, position, &deltaX, &deltaY)
 		OopCheckCondition_ = !ElementDefs[e.Board.Tiles[int16(stat.X)+deltaX][int16(stat.Y)+deltaY].Element].Walkable
 	} else if e.OopWord == "ENERGIZED" {
-		OopCheckCondition_ = e.World.Info.EnergizerTicks > 0
+		OopCheckCondition_ = activePlayer.EnergizerTicks > 0
 	} else if e.OopWord == "ANY" {
 		if !e.OopParseTile(&statId, position, &tile) {
 			e.OopError(statId, "Bad object kind")
@@ -496,6 +497,7 @@ func (e *Engine) OopExecute(statId int16, position *int16, name string) {
 		argTile2          TTile
 	)
 	stat := &e.Board.Stats[statId]
+	activePlayer := e.PlayerFor(0)
 	TextWindowInitState(&textWindow)
 
 	textWindow.Selectable = false
@@ -616,17 +618,17 @@ func (e *Engine) OopExecute(statId int16, position *int16, name string) {
 					}
 					e.OopReadWord(statId, position)
 					if e.OopWord == "HEALTH" {
-						counterPtr = &e.World.Info.Health
+						counterPtr = &activePlayer.Health
 					} else if e.OopWord == "AMMO" {
-						counterPtr = &e.World.Info.Ammo
+						counterPtr = &activePlayer.Ammo
 					} else if e.OopWord == "GEMS" {
-						counterPtr = &e.World.Info.Gems
+						counterPtr = &activePlayer.Gems
 					} else if e.OopWord == "TORCHES" {
-						counterPtr = &e.World.Info.Torches
+						counterPtr = &activePlayer.Torches
 					} else if e.OopWord == "SCORE" {
-						counterPtr = &e.World.Info.Score
+						counterPtr = &activePlayer.Score
 					} else if e.OopWord == "TIME" {
-						counterPtr = &e.World.Info.BoardTimeSec
+						counterPtr = &activePlayer.BoardTimeSec
 					} else {
 						counterPtr = nil
 					}
@@ -649,7 +651,7 @@ func (e *Engine) OopExecute(statId int16, position *int16, name string) {
 					*position = -1
 					e.OopChar = '\x00'
 				} else if e.OopWord == "ENDGAME" {
-					e.World.Info.Health = 0
+					activePlayer.Health = 0
 				} else if e.OopWord == "IDLE" {
 					stopRunning = true
 				} else if e.OopWord == "RESTART" {

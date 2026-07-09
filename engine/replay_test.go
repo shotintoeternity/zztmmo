@@ -33,6 +33,19 @@ type replayFixture struct {
 func StateHash(e *Engine) uint64 {
 	h := fnv.New64a()
 
+	if pState, exists := e.Players[0]; exists {
+		e.World.Info.Health = pState.Health
+		e.World.Info.Ammo = pState.Ammo
+		e.World.Info.Gems = pState.Gems
+		e.World.Info.Torches = pState.Torches
+		e.World.Info.TorchTicks = pState.TorchTicks
+		e.World.Info.EnergizerTicks = pState.EnergizerTicks
+		e.World.Info.Score = pState.Score
+		e.World.Info.Keys = pState.Keys
+		e.World.Info.BoardTimeSec = pState.BoardTimeSec
+		e.World.Info.BoardTimeHsec = pState.BoardTimeHsec
+	}
+
 	for x := 0; x <= BOARD_WIDTH+1; x++ {
 		for y := 0; y <= BOARD_HEIGHT+1; y++ {
 			hashByte(h, e.Board.Tiles[x][y].Element)
