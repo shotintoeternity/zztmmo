@@ -11,7 +11,8 @@ package zztgo
 // DOS attribute byte for column x (0..79), row y (0..24).
 
 // e.Headless disables the presenter. When true, no Video* call touches tcell:
-// installs/uninstalls are skipped and VideoShow just drops the dirty list.
+// installs/uninstalls are skipped and VideoShow just drops the presenter dirty
+// list. Network diff dirties are drained explicitly via DrainScreenDirty.
 // The simulation runs identically either way.
 
 // dirtyCell records a e.Screen coordinate changed since the last present, so the
@@ -27,13 +28,20 @@ func (e *Engine) videoPut(x, y int16, ch, color byte) {
 	}
 	e.Screen[x][y] = struct{ Ch, Color byte }{ch, color}
 	e.videoDirty = append(e.videoDirty, dirtyCell{x, y})
+	if e.Headless {
+		e.screenDirty = append(e.screenDirty, dirtyCell{x, y})
+	}
 }
 
 // videoClear blanks the whole buffer (space on black) without presenting.
 func (e *Engine) videoClear() {
+	e.screenDirty = e.screenDirty[:0]
 	for x := int16(0); x < 80; x++ {
 		for y := int16(0); y < 25; y++ {
 			e.Screen[x][y] = struct{ Ch, Color byte }{' ', 0x00}
+			if e.Headless {
+				e.screenDirty = append(e.screenDirty, dirtyCell{x, y})
+			}
 		}
 	}
 	e.videoDirty = e.videoDirty[:0]
@@ -109,6 +117,40 @@ func (e *Engine) VideoUninstall() {
 	if !e.Headless {
 		presentUninstall()
 	}
+}
+
+func (e *Engine) DrainScreenDirty() []ScreenCell {
+	if len(e.screenDirty) == 0 {
+		return nil
+	}
+
+	var dirty [80][25]bool
+	for _, cell := range e.screenDirty {
+		if cell.x >= 0 && cell.x < 80 && cell.y >= 0 && cell.y < 25 {
+			dirty[cell.x][cell.y] = true
+		}
+	}
+	e.screenDirty = e.screenDirty[:0]
+
+	cells := make([]ScreenCell, 0)
+	for y := int16(0); y < 25; y++ {
+		for x := int16(0); x < 80; x++ {
+			if dirty[x][y] {
+				screenCell := e.Screen[x][y]
+				cells = append(cells, ScreenCell{X: x, Y: y, Ch: screenCell.Ch, Color: screenCell.Color})
+			}
+		}
+	}
+	return cells
+}
+
+func (e *Engine) DrainEvents() []Event {
+	if len(e.Events) == 0 {
+		return nil
+	}
+	events := append([]Event(nil), e.Events...)
+	e.Events = e.Events[:0]
+	return events
 }
 
 // --- Global Wrappers ---

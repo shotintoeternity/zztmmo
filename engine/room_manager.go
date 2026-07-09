@@ -81,6 +81,10 @@ func (rm *RoomManager) LeavePlayer(playerID PlayerID) bool {
 }
 
 func (rm *RoomManager) Step(inputs map[PlayerID]PlayerInput) {
+	rm.StepDiffs(inputs)
+}
+
+func (rm *RoomManager) StepDiffs(inputs map[PlayerID]PlayerInput) map[PlayerID]DiffMessage {
 	engineInputs := make(map[int16]map[int16]PlayerInput)
 	for playerID, input := range inputs {
 		player := rm.players[playerID]
@@ -94,6 +98,7 @@ func (rm *RoomManager) Step(inputs map[PlayerID]PlayerInput) {
 	}
 
 	transfers := make([]roomTransfer, 0)
+	roomEvents := make(map[int16][]Event)
 	for _, boardID := range rm.roomIDs() {
 		room := rm.rooms[boardID]
 		if room == nil || len(room.players) == 0 {
@@ -105,11 +110,10 @@ func (rm *RoomManager) Step(inputs map[PlayerID]PlayerInput) {
 		}
 		room.Engine.GameStepWithInputs(inputsForRoom)
 
-		remaining := room.Engine.Events[:0]
-		for _, event := range room.Engine.Events {
+		for _, event := range room.Engine.DrainEvents() {
 			transfer, ok := event.(TransferEvent)
 			if !ok {
-				remaining = append(remaining, event)
+				roomEvents[boardID] = append(roomEvents[boardID], event)
 				continue
 			}
 			playerID, found := rm.playerIDForStat(boardID, transfer.StatId)
@@ -117,12 +121,40 @@ func (rm *RoomManager) Step(inputs map[PlayerID]PlayerInput) {
 				transfers = append(transfers, roomTransfer{playerID: playerID, event: transfer})
 			}
 		}
-		room.Engine.Events = remaining
 	}
 
 	for _, transfer := range transfers {
 		rm.transferPlayer(transfer.playerID, transfer.event)
 	}
+
+	diffs := make(map[PlayerID]DiffMessage)
+	for _, boardID := range rm.roomIDs() {
+		room := rm.rooms[boardID]
+		if room == nil || len(room.players) == 0 {
+			continue
+		}
+		cells := room.Engine.DrainScreenDirty()
+		events := ProtocolEvents(roomEvents[boardID])
+		players := rm.playerSnapshotsForRoom(room)
+		for _, playerID := range rm.playerIDs() {
+			player := rm.players[playerID]
+			if player.boardID != room.BoardID {
+				continue
+			}
+			hud := hudSnapshot(room.Engine.PlayerFor(player.statID))
+			diffs[playerID] = DiffMessage{
+				Type:    MessageTypeDiff,
+				BoardID: room.BoardID,
+				Tick:    room.Engine.CurrentTick,
+				Hash:    StateHash(room.Engine),
+				Cells:   cells,
+				Players: players,
+				HUD:     &hud,
+				Events:  events,
+			}
+		}
+	}
+	return diffs
 }
 
 func (rm *RoomManager) PlayerState(playerID PlayerID) (*PlayerState, bool) {
@@ -165,13 +197,11 @@ func (rm *RoomManager) Snapshot(playerID PlayerID) (SnapshotMessage, bool) {
 	}
 
 	players := make([]PlayerSnapshot, 0, len(room.players))
-	for _, id := range rm.playerIDs() {
-		p := rm.players[id]
-		if p.boardID == room.BoardID {
-			players = append(players, playerSnapshot(room.Engine, id, p.statID))
-		}
-	}
-	return NewSnapshotMessage(room.Engine, room.BoardID, playerID, player.statID, players), true
+	players = append(players, rm.playerSnapshotsForRoom(room)...)
+	snapshot := NewSnapshotMessage(room.Engine, room.BoardID, playerID, player.statID, players)
+	room.Engine.DrainScreenDirty()
+	room.Engine.DrainEvents()
+	return snapshot, true
 }
 
 func (rm *RoomManager) ensureRoom(boardID int16) *Room {
@@ -226,6 +256,17 @@ func (rm *RoomManager) playerIDForStat(boardID, statID int16) (PlayerID, bool) {
 		}
 	}
 	return 0, false
+}
+
+func (rm *RoomManager) playerSnapshotsForRoom(room *Room) []PlayerSnapshot {
+	players := make([]PlayerSnapshot, 0, len(room.players))
+	for _, id := range rm.playerIDs() {
+		p := rm.players[id]
+		if p.boardID == room.BoardID {
+			players = append(players, playerSnapshot(room.Engine, id, p.statID))
+		}
+	}
+	return players
 }
 
 func (rm *RoomManager) transferPlayer(playerID PlayerID, transfer TransferEvent) {

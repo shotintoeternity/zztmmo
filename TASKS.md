@@ -171,7 +171,7 @@ and every run is reproducible. ANALYSIS.md §3g, §3h, §5.
   ID, tick, seed/hash, 80x25 screen cells, player ID/stat ID, HUD state, and
   visible events. DoD: round-trip tests and a snapshot generated from TOWN.
 
-- [ ] **M3.3 — Dirty diffs.** Expose screen dirty cells and event drains cleanly
+- [x] **M3.3 — Dirty diffs.** Expose screen dirty cells and event drains cleanly
   from the engine/room boundary. DoD: one tick produces only changed cells plus
   events, with full snapshot fallback.
 

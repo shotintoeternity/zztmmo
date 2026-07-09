@@ -143,7 +143,7 @@ func roundTrip(t *testing.T, message interface{}, decoded interface{}) {
 	if err != nil {
 		t.Fatalf("marshal %T: %v", message, err)
 	}
-	if err := json.Unmarshal(data, &decoded); err != nil {
+	if err := json.Unmarshal(data, decoded); err != nil {
 		t.Fatalf("unmarshal %T: %v", message, err)
 	}
 	got := reflect.ValueOf(decoded).Elem().Interface()
@@ -161,4 +161,64 @@ func assertSnapshotHasNonBlankCell(t *testing.T, snapshot SnapshotMessage) {
 		}
 	}
 	t.Fatal("snapshot screen has no non-blank cells")
+}
+
+func TestRoomManagerStepDiffFromTown(t *testing.T) {
+	setup := NewEngine()
+	setup.Headless = true
+	setup.WorldCreate()
+	worldBase := filepath.Join("..", "fixtures", "TOWN")
+	if !setup.WorldLoad(worldBase, ".ZZT", false) {
+		t.Fatalf("WorldLoad(%q, %q) failed", worldBase, ".ZZT")
+	}
+
+	rm := NewRoomManager(setup.World)
+	playerID := rm.JoinPlayer(1, 30, 12)
+	if _, ok := rm.Snapshot(playerID); !ok {
+		t.Fatal("snapshot failed")
+	}
+
+	room, ok := rm.Room(1)
+	if !ok {
+		t.Fatal("room 1 missing")
+	}
+	room.Engine.DisplayMessage(100, "HELLO")
+	room.Engine.Events = append(room.Engine.Events, SoundEvent{Notes: "abc", Priority: 2})
+	diffs := rm.StepDiffs(map[PlayerID]PlayerInput{})
+
+	diff, ok := diffs[playerID]
+	if !ok {
+		t.Fatal("missing diff for player")
+	}
+	if diff.Type != MessageTypeDiff {
+		t.Fatalf("diff.Type=%q, want %q", diff.Type, MessageTypeDiff)
+	}
+	if diff.BoardID != 1 {
+		t.Fatalf("diff.BoardID=%d, want 1", diff.BoardID)
+	}
+	if len(diff.Cells) == 0 {
+		t.Fatal("diff has no dirty cells")
+	}
+	if len(diff.Cells) >= 80*25 {
+		t.Fatalf("diff sent %d cells, want less than full snapshot", len(diff.Cells))
+	}
+	if len(diff.Players) != 1 || diff.Players[0].ID != playerID {
+		t.Fatalf("diff players mismatch: %+v", diff.Players)
+	}
+	if diff.HUD == nil || diff.HUD.Health == 0 {
+		t.Fatalf("diff HUD missing: %+v", diff.HUD)
+	}
+	if diff.Hash == 0 {
+		t.Fatal("diff hash is zero")
+	}
+	if len(diff.Events) != 1 || diff.Events[0].Type != "sound" {
+		t.Fatalf("diff events mismatch: %+v", diff.Events)
+	}
+
+	if cells := room.Engine.DrainScreenDirty(); len(cells) != 0 {
+		t.Fatalf("room still has %d dirty cells after diff drain", len(cells))
+	}
+	if events := room.Engine.DrainEvents(); len(events) != 0 {
+		t.Fatalf("room still has %d events after diff drain", len(events))
+	}
 }

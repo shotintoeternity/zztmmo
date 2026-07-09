@@ -174,6 +174,7 @@ type (
 		Screen                 [80][25]struct{ Ch, Color byte }
 		Headless               bool
 		videoDirty             []dirtyCell
+		screenDirty            []dirtyCell
 		ActiveInput            InputSource
 		RandSeed               uint32
 		InputDeltaX            int16

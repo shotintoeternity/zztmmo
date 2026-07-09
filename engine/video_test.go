@@ -25,10 +25,27 @@ func TestBoardDrawTileHeadless(t *testing.T) {
 			got.Ch, got.Color)
 	}
 
-	// VideoShow ran headless above; confirm it drained the dirty list rather
-	// than leaving work for a presenter that will never run.
+	// VideoShow ran headless above; confirm it drained the presenter dirty list
+	// rather than leaving work for a presenter that will never run.
 	if len(E.videoDirty) != 0 {
 		t.Errorf("E.videoDirty not drained headless: len=%d", len(E.videoDirty))
+	}
+
+	cells := E.DrainScreenDirty()
+	if len(cells) == 0 {
+		t.Fatal("DrainScreenDirty returned no cells")
+	}
+	var found bool
+	for _, cell := range cells {
+		if cell.X == 4 && cell.Y == 6 && cell.Ch == 'Q' && cell.Color == 0x0F {
+			found = true
+		}
+	}
+	if !found {
+		t.Fatalf("DrainScreenDirty missing drawn tile; cells=%v", cells)
+	}
+	if cells := E.DrainScreenDirty(); len(cells) != 0 {
+		t.Fatalf("DrainScreenDirty second call len=%d, want 0", len(cells))
 	}
 }
 
