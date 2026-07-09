@@ -288,3 +288,48 @@ playback.
   for edited worlds and multiplayer-safe persistence. DoD: a browser-created
   world can be saved, reloaded, exported, and hosted for other clients.
 
+## M6 — Chat and identity
+
+Goal: players in a server can talk to each other in a ZZT-styled chat box, and
+eventually do so under a real account name.
+
+**Hard constraint:** chat is presentation and networking only. No chat state may
+enter the simulation — not the `Engine`, not `StateHash`, not the replay path.
+Chat lives beside the engine in the server (`RoomManager`/`WebSocketServer`), so
+determinism (CLAUDE.md rule 2) and the replay fixtures are unaffected.
+
+- [ ] **M6.0 — Chat protocol and server relay.** Add `chatSend` (client→server)
+  and `chat` (server→client) protocol messages carrying `{from, text, ts}`.
+  Server relays each message to every connected client, scoped server-wide (not
+  per-board) so a lobby-style conversation works across rooms. MVP identity is
+  the existing `PlayerID` rendered as `Player 3`; the `JoinMessage.Name` field
+  already exists and may override it. Enforce a max length, strip control bytes
+  and any codepoint with no CP437 mapping, and rate-limit per player. DoD:
+  protocol round-trip test plus a two-client test where one client's message
+  reaches the other, and `go test ./...` replay stays green (chat touches no
+  engine state).
+
+- [ ] **M6.1 — ZZT-style chat window.** Render chat in the browser as a CP437
+  text panel drawn with the same cell renderer as the board and sidebar — DOS
+  colors, ZZT window chrome, no HTML-widget styling. Lines are IRC style:
+  `<Player 3> hello there`, with the `<name>` in a distinct DOS color from the
+  message body. Include a scrollback buffer, a typing line, and an input mode
+  that captures keys so typing never leaks into movement (reuse the M4.1 text
+  window input router once it exists; before that, a local mode flag). DoD: two
+  browsers on one server exchange visible messages; pressing the chat key opens
+  the input line and the player does not move while typing.
+
+- [ ] **M6.2 — Google OAuth authentication.** Replace MVP player numbers with
+  real accounts via Google OAuth 2.0 (Authorization Code + PKCE). Server
+  verifies the ID token, derives a stable account id, and maps it to a display
+  name used by chat and any future roster UI. Sessions ride a signed cookie or
+  token presented at WebSocket join; unauthenticated players may still play as
+  `Player N` guests. Keep secrets out of the repo (env vars). DoD: a user signs
+  in with Google, their display name appears in chat instead of `Player N`, and
+  a guest can still join.
+
+- [ ] **M6.3 — Chat and account persistence.** Add a backend database (accounts,
+  display names, chat history) behind a narrow storage interface so tests can
+  use an in-memory implementation. Persist chat with timestamps; serve recent
+  scrollback to a joining client. DoD: chat history survives a server restart,
+  and the storage interface has an in-memory fake used by tests.
