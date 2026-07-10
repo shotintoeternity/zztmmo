@@ -715,9 +715,18 @@ func (g *GenerationService) paintBoardsBatch(ctx context.Context, planText strin
 				if parseErr != nil {
 					allOk = false
 					diag := generatedGridDiagnostics(section)
-					batchErrors = append(batchErrors, fmt.Sprintf("board %q: %v%s", board.Name, translateZWDError(parseErr, plan, map[string]string{board.Name: section}), diag))
+					var localErr error = parseErr
+					if zErr, ok := parseErr.(*zwdError); ok {
+						localLine := zErr.line
+						if !strings.HasPrefix(strings.TrimSpace(section), "zwd 1") {
+							localLine -= 3
+						}
+						localErr = fmt.Errorf("in board %q, line %d, col %d: %s", board.Name, localLine, zErr.col, zErr.msg)
+					}
+					batchErrors = append(batchErrors, fmt.Sprintf("board %q: %v%s", board.Name, localErr, diag))
 					continue
 				}
+
 				if len(doc.boards) != 1 {
 					allOk = false
 					batchErrors = append(batchErrors, fmt.Sprintf("board %q: section contains %d boards; expected 1", board.Name, len(doc.boards)))
