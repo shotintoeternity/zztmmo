@@ -911,12 +911,23 @@ first, then features that exploit what this codebase is uniquely good at.
   (`websocket_server.go:655,664`) — a browser refresh or Wi-Fi blip deletes
   the run. Hold the stat for ~60s under a resume token; rejoin reclaims it.
   Guests need this as much as accounts do.
-* **Tell players apart.** Every player is the identical white-on-blue ☻
+* **Tell players apart — RGB smiley backgrounds (owner-designed
+  2026-07-10).** Every player is the identical white-on-blue ☻
   (`gamevars.go:467-471`); in a busy room nobody knows which one they are,
   let alone who's who. Presentation-only fix: snapshots gain a players list
-  (statId, x, y, name, color index); the client overlays per-player color
-  and a hover/adjacent nameplate. Sim tiles untouched — StateHash must not
-  move.
+  (statId, x, y, name, color); the client overlays it. Design decided with
+  the owner: the glyph is **always char 2** — the ☻ is what everyone knows
+  as the ZZT player/object and never changes — but each player picks an
+  **arbitrary 24-bit RGB background** at join (later stored on their M6.2
+  account). This is possible precisely because the color lives in the
+  protocol + canvas, never in the sim: the tile stays byte-for-byte vanilla
+  (char 2, 0x1F), so StateHash, replay fixtures, and exported `.ZZT` files
+  are untouched. Rendering rules: foreground auto-contrasts white/black by
+  background luminance; the overlay obeys visibility (dark rooms hide the
+  color exactly as they hide the player; energizer blink wins while
+  flashing). Picker UI is a CP437 window (M4.1) — an RGB slider/hex entry
+  rendered ZZT-style, with the 16 DOS colors offered as quick picks for
+  purists.
 * **CI.** No workflows exist. GitHub Actions: `go build`, `go vet`,
   `go test ./...`, plus `go test -race` once M7.3 lands, and the node-driven
   TS checks. The replay fixture only protects commits that run it.
@@ -952,3 +963,23 @@ first, then features that exploit what this codebase is uniquely good at.
   glue for a small MMO.
 * **Achievements (post-M6.2).** Account-keyed firsts (beat TOWN, first
   purple key, 100 gems) surfaced in chat, stored via M6.3's interface.
+
+**First-party worlds (owner 2026-07-10 — "later on in the roadmap"):**
+* **A purpose-built PvP arena world.** A ZZT world designed for
+  player-vs-player: arena boards, ammo/energizer spawns via ZZT-OOP
+  restore/duplicator tricks, spawn points spread apart, score kept in
+  flags. Needs one engine decision first: M2.4/M8.1 make player bullets
+  harmless to players *by design*, so PvP requires an explicit opt-in —
+  a per-world server flag (set at load, deterministic, part of the room
+  config not the world file) that re-enables player↔player bullet damage
+  and point-blank shots on that world only. Death already respawns (M2.4),
+  which is exactly right for an arena. Build the world itself in the M5
+  editor once it exists — first-party dogfooding.
+* **A purpose-built lobby world to replace TOWN as the default hangout.**
+  A social hub designed for loitering: a plaza sized for crowds, signs
+  (scrolls) teaching controls and chat, high-score hall, and — the
+  interesting mechanic — **cross-world passages**: passage tiles the
+  *server* interprets as "transfer to hosted world X" (vanilla passages
+  are intra-world only, so this is a room-manager feature keyed off
+  designated passages, not a sim change). The lobby becomes a physical
+  world picker you walk through; TOWN goes back to being a game you beat.

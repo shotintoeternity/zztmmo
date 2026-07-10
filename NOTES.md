@@ -894,3 +894,17 @@ instances, Discord, achievements) are recorded in TASKS.md's Future Tasks
 as plain bullets — deliberately not checkboxes, so the positional executor
 protocol cannot pick up an unspecced idea. Each gets an M7-style spec only
 after the owner promotes it.
+
+Addendum, same day — owner design input on three backlog ideas:
+* Player identity: glyph fixed at char 2 (☻) forever; background is an
+  arbitrary 24-bit RGB picked by the player. Feasible without touching the
+  sim because the color rides the protocol/canvas overlay, never the tile
+  byte — StateHash, replays, and .ZZT exports stay vanilla. Contrast and
+  dark-room visibility rules recorded in the backlog entry.
+* A first-party PvP arena world, gated on an explicit per-world opt-in flag
+  that re-enables player↔player bullet damage (M2.4/M8.1 disable it by
+  design); to be built in the M5 editor as dogfooding.
+* A first-party lobby world to replace TOWN as the hangout, with
+  server-interpreted cross-world passages acting as a walkable world picker.
+Both worlds are owner-flagged "later on in the roadmap"; all three remain
+idea-backlog bullets, not tasks.
