@@ -843,3 +843,18 @@ time. M5.0 gained a forward-compatibility clause: a member *list* capped at
 one, so M10.1 raises a cap instead of rewriting the model. M10 tasks are
 deliberately coarse until M5.5 lands — detailed specs written against code
 that does not exist yet would rot.
+
+## 2026-07-10 — Owner reprioritization: editor pulled forward; gitignore
+
+The owner wants creation tools early: M5 moved from last to directly after
+M7, giving M7 → M5 → M8 → M9 → M6 → M10. M7 stays first — it is five small
+fixes to the game people already play, and M5.6 consumes M7.5's world
+validation gate. Nothing in M5.0–M5.5 depends on M8/M9/M6 (only M6.4 and
+M10.3 need M6.2 identity), so the pull-forward breaks no dependency. The M6
+"moved ahead of M5" note from earlier today is superseded and updated in
+place.
+
+Also gitignored the local strays: `engine/zzt-server` (cross-compiled Linux
+binary), `engine/deploy.tar.gz`, `engine/saves/` (runtime snapshots +
+chat.jsonl), and the root `test.txt` (an old M0.5 manual-test note).
+`engine/.gitignore` already covered `*.HI`, `*.ZZT`, and the local binaries.

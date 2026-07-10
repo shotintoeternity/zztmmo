@@ -537,148 +537,6 @@ remaining feature milestones on purpose. Ranked by player impact
   DoD: the script fetches whichever named titles the Museum actually hosts,
   validation passes for each, and the world picker lists them.
 
-## M8 — Vanilla parity: simulation fidelity
-
-Goal: close the gaps where the multiplayer generalization (M2.x) drifted from
-vanilla per-player semantics. Parity audit 2026-07-10 (see NOTES.md): the
-element tick/touch surface, the full ZZT-OOP command set, per-player time
-limits, flash messages, passage-arrival pause, energizer, cheats, and high
-scores are all complete and replay-guarded; the tasks below are the remainder.
-
-- [ ] **M8.1 — Point-blank shots must respect the *target* player's
-  energizer.** `BoardShoot` (`game.go:1402-1420`) guards its damage branch
-  with `e.PlayerFor(0).EnergizerTicks <= 0` (`game.go:1411`): whichever player
-  stands in front of the shooter, the check reads player 0's energizer.
-  Vanilla (`GAME.PAS` BoardShoot) reads `World.Info.EnergizerTicks` — the one
-  player's — so the correct M2.1-style generalization is the player *on the
-  target square*. Fix: when the target tile is `E_PLAYER`, resolve the stat
-  via `StatAt` (`placement.go`) and use that player's `EnergizerTicks`; leave
-  the rest of the condition byte-for-byte (its `A || B && C` precedence is
-  original — do not "fix" it). While here, reconcile with M2.4's "player
-  bullets don't damage players": the branch fires when
-  `(Element == E_PLAYER) == (source >= SHOT_SOURCE_PLAYER_BASE)`, which reads
-  as *a player point-blanking a player CAN hurt them*, contradicting
-  BulletTick's ownership rule. Decide (recommended: point-blank follows the
-  same no-PvP rule) and record the decision in NOTES.md.
-  DoD: headless test — A shoots point-blank at energized B (no damage), at
-  un-energized C (outcome per the PvP decision), and a creature shoots an
-  energized nonzero-stat player (no damage); `go test ./...` green; replay
-  fixture unchanged (single player: PlayerFor(0) *is* the target).
-
-- [ ] **M8.2 — Sweep the remaining single-player assumptions.** M8.1's bug was
-  found by grep, not luck; finish the sweep. For every `PlayerFor(0)`,
-  `Stats[0]`, and `PlayerDir` read in sim files (`elements.go`, `game.go`,
-  `oop.go`), classify it: (a) terminal-wrapper or title-screen only
-  (`GamePlayLoop`, `GameTitleLoop`, sidebar draw — fine), (b) world-create or
-  init before any join (fine), or (c) reachable from `GameStepWithInputs` in
-  a multi-room engine (fix it, following M4.3's HelpEvent precedent). One
-  known (c): `ResetMessageNotShownFlags` (`elements.go:1505-1518`) resets hint
-  flags for player 0 only — make it cover every entry in `e.Players`
-  (spawning players are already handled by `ResetPlayerState`,
-  `gamevars.go:479`). Deliverable: the fixes plus a classification table
-  appended to NOTES.md so the next audit starts from evidence.
-  DoD: the table covers every grep hit; a test per (c) fix;
-  `go test ./...` green; replay fixture unchanged.
-
-## M9 — Vanilla parity: presentation
-
-Goal: the browser should look like ZZT even between boards. Client-side only —
-no protocol message changes, no simulation changes.
-
-- [ ] **M9.1 — Board-change transition fade.** Vanilla covers every board
-  change with `TransitionDrawBoardChange` (`game.go:1448-1456`): fill the
-  60x25 viewport with purple `'\xdb'` cells in `TransitionTable` random order,
-  then reveal the new board in the same order. The terminal path still does
-  this; the browser cuts instantly on a `boardChange` snapshot. Implement it
-  client-side in `web/src/main.ts`: on `boardChange`, overlay the board area,
-  fill cells in a locally shuffled order, then reveal the freshly applied
-  snapshot in that order over roughly vanilla's duration. Presentation only:
-  local `Math.random` is fine (CLAUDE.md rule 2 governs simulation, not the
-  client); diffs arriving during the animation must not be lost or painted
-  over its final state.
-  DoD: passage and edge transfers show fill-then-reveal in the browser; a
-  node-driven TS test (the M4.3a pattern) covers the order and
-  complete-reveal logic; `go test ./...` untouched and green.
-
-- [ ] **M9.2 — Title-screen About and menu completeness.** Vanilla's title
-  monitor accepts `A` to show ABOUT.HLP through the help viewer; the browser
-  title (M4.3) has start/restart, `W`, `R`, quit, and high scores, but no `A`.
-  Wire it through the existing `HelpEvent`/help-window path (M3.9) — the file
-  already ships (`engine/ABOUT.HLP`). While there, compare the browser title
-  key set against `ElementMonitorTick`'s vocabulary (`elements.go:1498-1503`)
-  and vanilla's title loop in `GAME.PAS`; the deliberate omissions stay (`S`
-  game speed — the server owns the tick; `E` editor — M5), and every other
-  missing key is either wired or recorded in NOTES.md as omitted on purpose.
-  DoD: `A` on the browser title opens the About window, with a protocol-level
-  test; `go test ./...` green.
-
-## M6 — Chat and identity
-
-Goal: players in a server can talk to each other in a ZZT-styled chat box, and
-eventually do so under a real account name.
-
-**Hard constraint:** chat is presentation and networking only. No chat state may
-enter the simulation — not the `Engine`, not `StateHash`, not the replay path.
-Chat lives beside the engine in the server (`RoomManager`/`WebSocketServer`), so
-determinism (CLAUDE.md rule 2) and the replay fixtures are unaffected.
-
-(2026-07-10: this section moved ahead of M5 — only M6.2 is open here, and
-stable identity outranks creation tooling for an MMO. See NOTES.md.)
-
-- [x] **M6.0 — Chat protocol and server relay.** Add `chatSend` (client→server)
-  and `chat` (server→client) protocol messages carrying `{from, text, ts}`.
-  Server relays each message to every connected client, scoped server-wide (not
-  per-board) so a lobby-style conversation works across rooms. MVP identity is
-  the existing `PlayerID` rendered as `Player 3`; the `JoinMessage.Name` field
-  already exists and may override it. Enforce a max length, strip control bytes
-  and any codepoint with no CP437 mapping, and rate-limit per player. DoD:
-  protocol round-trip test plus a two-client test where one client's message
-  reaches the other, and `go test ./...` replay stays green (chat touches no
-  engine state).
-
-- [x] **M6.1 — ZZT-style chat window.** Render chat in the browser as a CP437
-  text panel drawn with the same cell renderer as the board and sidebar — DOS
-  colors, ZZT window chrome, no HTML-widget styling. Lines are IRC style:
-  `<Player 3> hello there`, with the `<name>` in a distinct DOS color from the
-  message body. Include a scrollback buffer, a typing line, and an input mode
-  that captures keys so typing never leaks into movement (reuse the M4.1 text
-  window input router once it exists; before that, a local mode flag). DoD: two
-  browsers on one server exchange visible messages; pressing the chat key opens
-  the input line and the player does not move while typing.
-
-- [ ] **M6.2 — Google OAuth authentication.** Replace MVP player numbers with
-  real accounts via Google OAuth 2.0 (Authorization Code + PKCE). Server
-  verifies the ID token, derives a stable account id, and maps it to a display
-  name used by chat and any future roster UI. Sessions ride a signed cookie or
-  token presented at WebSocket join; unauthenticated players may still play as
-  `Player N` guests. Keep secrets out of the repo (env vars). DoD: a user signs
-  in with Google, their display name appears in chat instead of `Player N`, and
-  a guest can still join.
-
-- [x] **M6.3 — Chat and account persistence.** Add a backend database (accounts,
-  display names, chat history) behind a narrow storage interface so tests can
-  use an in-memory implementation. Persist chat with timestamps; serve recent
-  scrollback to a joining client. DoD: chat history survives a server restart,
-  and the storage interface has an in-memory fake used by tests.
-
-- [ ] **M6.4 — Account-keyed player-state persistence.** Requires M6.2.
-  Vanilla parity gap deferred by M4.3a: restoring a save returns *your*
-  health/ammo/keys, but fork snapshots drop players — `World.Info` can hold
-  only one player's counters, so N players cannot round-trip through the
-  vanilla file format. Once accounts exist, persist each player's
-  `PlayerState` keyed by account id in the M6.3 storage interface: write it
-  on disconnect and alongside `SaveSnapshot` (a sidecar JSON next to the
-  `.SAV` — never change the vanilla file format), and restore it when that
-  account joins the world (set the fields on the freshly spawned
-  `PlayerState` before its first tick, the way `ResetPlayerState`,
-  `gamevars.go:479`, does). Guests keep joining fresh. Decisions to record in
-  NOTES.md: state is scoped per-(account, world) vs per-(account, snapshot),
-  and what happens when one account has two concurrent sessions.
-  DoD: a signed-in player collects keys, disconnects, the server restarts,
-  they rejoin with the keys intact; a guest joins fresh; `go test ./...`
-  green; replay fixture unchanged (restore happens outside the sim, before
-  the first tick).
-
 ## M5 — Creation and full-featured ZZT tooling
 
 Goal: support the creation features that make ZZT “full ZZT,” not only runtime
@@ -690,7 +548,9 @@ protocol surface over a server-side, never-ticked session world (M5.0 decides
 the model). CLAUDE.md rules apply unchanged: port semantics faithfully, keep
 the sim untouched, replay green.
 
-(2026-07-10: broken down from four coarse tasks into M5.0–M5.7; see NOTES.md.)
+(2026-07-10: broken down from four coarse tasks into M5.0–M5.7, then pulled
+forward ahead of M8/M9/M6 by owner priority — creation tools should be up
+and running early. See NOTES.md.)
 
 - [ ] **M5.0 [ADVISOR] — Editor session model and read-only shell.** Decide
   and build the session model before any editing lands: an editor session is
@@ -783,6 +643,149 @@ the sim untouched, replay green.
   anything and worlds rely on that.
   DoD: the label list and warnings render for the vendor object; a send to a
   missing label warns; saving an "invalid" script still succeeds.
+
+## M8 — Vanilla parity: simulation fidelity
+
+Goal: close the gaps where the multiplayer generalization (M2.x) drifted from
+vanilla per-player semantics. Parity audit 2026-07-10 (see NOTES.md): the
+element tick/touch surface, the full ZZT-OOP command set, per-player time
+limits, flash messages, passage-arrival pause, energizer, cheats, and high
+scores are all complete and replay-guarded; the tasks below are the remainder.
+
+- [ ] **M8.1 — Point-blank shots must respect the *target* player's
+  energizer.** `BoardShoot` (`game.go:1402-1420`) guards its damage branch
+  with `e.PlayerFor(0).EnergizerTicks <= 0` (`game.go:1411`): whichever player
+  stands in front of the shooter, the check reads player 0's energizer.
+  Vanilla (`GAME.PAS` BoardShoot) reads `World.Info.EnergizerTicks` — the one
+  player's — so the correct M2.1-style generalization is the player *on the
+  target square*. Fix: when the target tile is `E_PLAYER`, resolve the stat
+  via `StatAt` (`placement.go`) and use that player's `EnergizerTicks`; leave
+  the rest of the condition byte-for-byte (its `A || B && C` precedence is
+  original — do not "fix" it). While here, reconcile with M2.4's "player
+  bullets don't damage players": the branch fires when
+  `(Element == E_PLAYER) == (source >= SHOT_SOURCE_PLAYER_BASE)`, which reads
+  as *a player point-blanking a player CAN hurt them*, contradicting
+  BulletTick's ownership rule. Decide (recommended: point-blank follows the
+  same no-PvP rule) and record the decision in NOTES.md.
+  DoD: headless test — A shoots point-blank at energized B (no damage), at
+  un-energized C (outcome per the PvP decision), and a creature shoots an
+  energized nonzero-stat player (no damage); `go test ./...` green; replay
+  fixture unchanged (single player: PlayerFor(0) *is* the target).
+
+- [ ] **M8.2 — Sweep the remaining single-player assumptions.** M8.1's bug was
+  found by grep, not luck; finish the sweep. For every `PlayerFor(0)`,
+  `Stats[0]`, and `PlayerDir` read in sim files (`elements.go`, `game.go`,
+  `oop.go`), classify it: (a) terminal-wrapper or title-screen only
+  (`GamePlayLoop`, `GameTitleLoop`, sidebar draw — fine), (b) world-create or
+  init before any join (fine), or (c) reachable from `GameStepWithInputs` in
+  a multi-room engine (fix it, following M4.3's HelpEvent precedent). One
+  known (c): `ResetMessageNotShownFlags` (`elements.go:1505-1518`) resets hint
+  flags for player 0 only — make it cover every entry in `e.Players`
+  (spawning players are already handled by `ResetPlayerState`,
+  `gamevars.go:479`). Deliverable: the fixes plus a classification table
+  appended to NOTES.md so the next audit starts from evidence.
+  DoD: the table covers every grep hit; a test per (c) fix;
+  `go test ./...` green; replay fixture unchanged.
+
+## M9 — Vanilla parity: presentation
+
+Goal: the browser should look like ZZT even between boards. Client-side only —
+no protocol message changes, no simulation changes.
+
+- [ ] **M9.1 — Board-change transition fade.** Vanilla covers every board
+  change with `TransitionDrawBoardChange` (`game.go:1448-1456`): fill the
+  60x25 viewport with purple `'\xdb'` cells in `TransitionTable` random order,
+  then reveal the new board in the same order. The terminal path still does
+  this; the browser cuts instantly on a `boardChange` snapshot. Implement it
+  client-side in `web/src/main.ts`: on `boardChange`, overlay the board area,
+  fill cells in a locally shuffled order, then reveal the freshly applied
+  snapshot in that order over roughly vanilla's duration. Presentation only:
+  local `Math.random` is fine (CLAUDE.md rule 2 governs simulation, not the
+  client); diffs arriving during the animation must not be lost or painted
+  over its final state.
+  DoD: passage and edge transfers show fill-then-reveal in the browser; a
+  node-driven TS test (the M4.3a pattern) covers the order and
+  complete-reveal logic; `go test ./...` untouched and green.
+
+- [ ] **M9.2 — Title-screen About and menu completeness.** Vanilla's title
+  monitor accepts `A` to show ABOUT.HLP through the help viewer; the browser
+  title (M4.3) has start/restart, `W`, `R`, quit, and high scores, but no `A`.
+  Wire it through the existing `HelpEvent`/help-window path (M3.9) — the file
+  already ships (`engine/ABOUT.HLP`). While there, compare the browser title
+  key set against `ElementMonitorTick`'s vocabulary (`elements.go:1498-1503`)
+  and vanilla's title loop in `GAME.PAS`; the deliberate omissions stay (`S`
+  game speed — the server owns the tick; `E` editor — M5), and every other
+  missing key is either wired or recorded in NOTES.md as omitted on purpose.
+  DoD: `A` on the browser title opens the About window, with a protocol-level
+  test; `go test ./...` green.
+
+## M6 — Chat and identity
+
+Goal: players in a server can talk to each other in a ZZT-styled chat box, and
+eventually do so under a real account name.
+
+**Hard constraint:** chat is presentation and networking only. No chat state may
+enter the simulation — not the `Engine`, not `StateHash`, not the replay path.
+Chat lives beside the engine in the server (`RoomManager`/`WebSocketServer`), so
+determinism (CLAUDE.md rule 2) and the replay fixtures are unaffected.
+
+(2026-07-10, later same day: M5 moved back ahead of this section by owner
+priority — the editor comes early after the M7 fixes. M6.2 is still the
+gate for M6.4 and M10.3. See NOTES.md.)
+
+- [x] **M6.0 — Chat protocol and server relay.** Add `chatSend` (client→server)
+  and `chat` (server→client) protocol messages carrying `{from, text, ts}`.
+  Server relays each message to every connected client, scoped server-wide (not
+  per-board) so a lobby-style conversation works across rooms. MVP identity is
+  the existing `PlayerID` rendered as `Player 3`; the `JoinMessage.Name` field
+  already exists and may override it. Enforce a max length, strip control bytes
+  and any codepoint with no CP437 mapping, and rate-limit per player. DoD:
+  protocol round-trip test plus a two-client test where one client's message
+  reaches the other, and `go test ./...` replay stays green (chat touches no
+  engine state).
+
+- [x] **M6.1 — ZZT-style chat window.** Render chat in the browser as a CP437
+  text panel drawn with the same cell renderer as the board and sidebar — DOS
+  colors, ZZT window chrome, no HTML-widget styling. Lines are IRC style:
+  `<Player 3> hello there`, with the `<name>` in a distinct DOS color from the
+  message body. Include a scrollback buffer, a typing line, and an input mode
+  that captures keys so typing never leaks into movement (reuse the M4.1 text
+  window input router once it exists; before that, a local mode flag). DoD: two
+  browsers on one server exchange visible messages; pressing the chat key opens
+  the input line and the player does not move while typing.
+
+- [ ] **M6.2 — Google OAuth authentication.** Replace MVP player numbers with
+  real accounts via Google OAuth 2.0 (Authorization Code + PKCE). Server
+  verifies the ID token, derives a stable account id, and maps it to a display
+  name used by chat and any future roster UI. Sessions ride a signed cookie or
+  token presented at WebSocket join; unauthenticated players may still play as
+  `Player N` guests. Keep secrets out of the repo (env vars). DoD: a user signs
+  in with Google, their display name appears in chat instead of `Player N`, and
+  a guest can still join.
+
+- [x] **M6.3 — Chat and account persistence.** Add a backend database (accounts,
+  display names, chat history) behind a narrow storage interface so tests can
+  use an in-memory implementation. Persist chat with timestamps; serve recent
+  scrollback to a joining client. DoD: chat history survives a server restart,
+  and the storage interface has an in-memory fake used by tests.
+
+- [ ] **M6.4 — Account-keyed player-state persistence.** Requires M6.2.
+  Vanilla parity gap deferred by M4.3a: restoring a save returns *your*
+  health/ammo/keys, but fork snapshots drop players — `World.Info` can hold
+  only one player's counters, so N players cannot round-trip through the
+  vanilla file format. Once accounts exist, persist each player's
+  `PlayerState` keyed by account id in the M6.3 storage interface: write it
+  on disconnect and alongside `SaveSnapshot` (a sidecar JSON next to the
+  `.SAV` — never change the vanilla file format), and restore it when that
+  account joins the world (set the fields on the freshly spawned
+  `PlayerState` before its first tick, the way `ResetPlayerState`,
+  `gamevars.go:479`, does). Guests keep joining fresh. Decisions to record in
+  NOTES.md: state is scoped per-(account, world) vs per-(account, snapshot),
+  and what happens when one account has two concurrent sessions.
+  DoD: a signed-in player collects keys, disconnects, the server restarts,
+  they rejoin with the keys intact; a guest joins fresh; `go test ./...`
+  green; replay fixture unchanged (restore happens outside the sim, before
+  the first tick).
 
 ## M10 — Collaborative world editing (horizon: spec in detail after M5.5)
 

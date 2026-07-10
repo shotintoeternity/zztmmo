@@ -5,3 +5,9 @@ engine/zzt
 node_modules/
 dist/
 .DS_Store
+
+# Build/deploy artifacts and runtime state
+engine/zzt-server
+engine/deploy.tar.gz
+engine/saves/
+test.txt
