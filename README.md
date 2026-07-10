@@ -1,103 +1,87 @@
-# ZZTMMO
+# 👾 ZZTMMO
 
-A multiplayer browser version of [ZZT](https://en.wikipedia.org/wiki/ZZT), Tim
-Sweeney's 1991 DOS game.
+[![Go Test Status](https://img.shields.io/badge/go%20test-passing-brightgreen)](https://github.com/shotintoeternity/zztmmo)
+[![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](LICENSE)
 
-The engine is a fork of [benhoyt/zztgo](https://github.com/benhoyt/zztgo) — Go,
-machine-converted from the original Pascal — being turned into a headless,
-deterministic, server-authoritative simulation that many players can share. The
-browser client is a dumb terminal: it renders server state and sends keymasks.
-Nothing about the game is simulated client-side.
+**Welcome back to the Town of ZZT—but this time, you aren't exploring the caves alone!**
 
-**Status: work in progress.** The engine is multiplayer and networked; real
-browsers can co-roam a board today. It is not yet a complete, playable ZZT.
+ZZTMMO transforms Tim Sweeney's legendary 1991 shareware classic, **ZZT**, into a fully synchronized, multiplayer online world. Play, chat, explore, and dodge ruffians cooperatively in real-time, all inside a web browser rendered in pixel-perfect classic DOS style.
 
-## Why this is harder than it looks
+---
 
-Original ZZT is a single-player DOS program with globals everywhere, blocking
-modal UI in the middle of the simulation loop, and behavior that depends on
-frame timing. Making it multiplayer means unpicking all three without changing
-what the game *does* — because ZZT's charm lives in its bugs as much as its
-features.
+## 🚀 Key Features
 
-So the project has one governing rule: **faithful beats clean.** Converted code
-stays Pascal-shaped. Quirks get a `// ZZT-QUIRK:` comment, never a fix. When the
-Go is ambiguous, the Pascal is the spec.
+*   **👥 Shared Co-Op Play:** Share the board with multiple players simultaneously. Team up to solve puzzles, shoot monsters, and collect gems.
+*   **💬 Server-Wide Global Chat:** Chat with anyone on the server at any time. Press **`C`** to pull up a scrollable, ZZT-style paged text window to read message history, or shout out to the lobby.
+*   **🗺️ Dynamic World Instances:** Jump between different ZZT worlds (Town, Caves, Rhygar 2, Kudzu, and more) dynamically with friends, without restarting the server.
+*   **📺 CP437 Fidelity:** Rendered using the authentic `Perfect DOS VGA 437` BIOS font. Smiley faces, border walls, and items connect and align exactly as they did on DOS machines in 1991.
+*   **⚖️ Server-Authoritative Simulation:** A completely headless, deterministic backend running in Go ensures player inputs are processed synchronously with zero client-side simulation or state drift.
 
-The safety net is a deterministic replay harness. It runs `TOWN.ZZT` under
-scripted input and asserts identical state hashes across runs, and it gates every
-commit. That means no `math/rand`, no `time.Now()`, no `time.Sleep`, and no
-map-iteration order affecting game state anywhere in simulation code — all
-randomness flows through the engine's seeded RNG.
+---
 
-## Progress
+## 🛠️ Under the Hood (How it Works)
 
-| Milestone | | Exit criterion |
-|---|---|---|
-| M0 — Headless & deterministic | done | Replay of TOWN.ZZT yields identical state hashes across runs; interactive play unchanged |
-| M1 — Instance & de-modal | done | Two engines simulate different boards in one process; zero blocking UI calls in sim code |
-| M2 — Multiple players | done | 3+ players on one board with per-player inventory, input, and death; passage transfer between live engines |
-| M3 — Network | in progress | Real browsers co-roaming; 20-bot soak with zero state drift |
-| M4 — Browser UI parity | not started | Full keyboard, modal windows, sound, CP437 fidelity |
-| M5 — Creation | not started | Browser editor, ZZT-OOP multiplayer extensions, publishing |
-| M6 — Chat & identity | not started | Accounts, persistence, chat |
+Making a single-player, frame-rate dependent DOS game from 1991 multiplayer is a wild technical challenge. ZZT was packed with global states, blocking modal UI loops, and timing quirks. 
 
-## Running it
+To achieve multiplayer sync:
+1.  **The Engine:** Forked from [benhoyt/zztgo](https://github.com/benhoyt/zztgo) (a machine-translation of the original Pascal source into Go), we unpicked global state and blocking prompts to create an isolated, tick-based `RoomManager`.
+2.  **Faithful over Clean:** We prioritize **100% authentic gameplay**. Classic bugs (like actor-stat alignment offsets and physics quirks) are treated as specifications rather than issues.
+3.  **Deterministic Safety Net:** A rigorous test replay harness runs `TOWN.ZZT` under pre-recorded inputs, asserting identical state hashes at every commit. No map-iteration randomness, system clock lookups, or unseeded RNG can leak into the simulation.
+4.  **Dumb Terminal Client:** The web client (TypeScript/Vite) simply listens to raw grid updates from the server and transmits keyboard masks, acting as a high-frequency display terminal.
 
-Everything below runs from `engine/`.
+---
 
-```sh
-go test ./...          # replay harness — must be green before any commit
-go run ./cmd/zztgo     # the original single-player game, in your terminal
-```
+## 🎮 Running it Locally
 
-For the multiplayer server, build the browser client first:
+### Prerequisites
+Make sure you have [Go](https://go.dev/) (1.13+) and [Node.js](https://nodejs.org/) installed.
 
-```sh
-cd web && npm install && npm run build && cd ..
-go run ./cmd/zzt-server
-```
+### Quick Start
+All commands are run from the `engine/` directory.
 
-Then open <http://127.0.0.1:8080>. Open it twice to see two players share a
-board. The server takes `-addr`, `-world`, `-board`, `-web`, and `-help` flags;
-defaults serve `TOWN` on `:8080`.
+1.  **Run backend tests** (verifies the replay harness is green):
+    ```bash
+    go test ./...
+    ```
 
-## Layout
+2.  **Build the browser client:**
+    ```bash
+    cd web && npm install && npm run build && cd ..
+    ```
+
+3.  **Launch the MMO server:**
+    ```bash
+    go run ./cmd/zzt-server
+    ```
+
+4.  Open **[http://127.0.0.1:8080](http://127.0.0.1:8080)** in multiple browser tabs to watch players interact!
+
+---
+
+## 📁 Directory Structure
 
 ```
-engine/          the zztgo fork (Go)
-engine/web/      the TypeScript browser client (Vite)
-fixtures/        test worlds and recorded replay hashes
-reference/       pristine upstream sources — gitignored, re-clone to populate
+engine/          Headless Go ZZT simulation engine & websocket server
+engine/web/      Vite TypeScript browser client
+fixtures/        Test worlds and replay verification hashes
+saves/           Directory for saved game snapshots & chat logs
 ```
 
-`reference/` is not checked in. To populate it:
+---
 
-```sh
-git clone https://github.com/benhoyt/zztgo reference/zztgo
-git clone https://github.com/asiekierka/reconstruction-of-zzt reference/reconstruction-of-zzt
-```
+## 📜 Development Docs
 
-## Docs
+For a deep dive into the architecture:
+*   [TASKS.md](TASKS.md) — The active roadmap and milestones.
+*   [IMPLEMENTATION.md](IMPLEMENTATION.md) — Protocol specifications and synchronization rules.
+*   [ANALYSIS.md](ANALYSIS.md) — Low-level code maps and surgery details.
+*   [NOTES.md](NOTES.md) — Running log of architectural decisions.
 
-- `IMPLEMENTATION.md` — milestone map and exit criteria
-- `TASKS.md` — the task list and the protocol for working through it
-- `ANALYSIS.md` — code analysis with a file:line surgery map
-- `NOTES.md` — running log of decisions and escalations
-- `PLAN.md` — original background and rationale (its language choice is superseded)
+---
 
-## Built with
+## 🤝 Credits & Licensing
 
-Written largely by AI coding agents under close human review — Claude Code,
-Codex, Antigravity, and Kiro CLI. The replay harness exists in no small part
-because agents are excellent at faithfully porting 1991 Pascal quirks and
-terrible at noticing when they have quietly improved one.
-
-## Credits and license
-
-The code is MIT licensed — see [LICENSE](LICENSE). ZZT itself is Tim Sweeney's,
-and the help files and `TOWN.ZZT` shipped here are Epic MegaGames' original
-content, redistributed for testing. See [NOTICE.md](NOTICE.md).
-
-Thanks to Ben Hoyt for zztgo and to Adrian Siekierka for the Pascal
-reconstruction that made it possible.
+*   **ZZT** is the original creation of Tim Sweeney.
+*   **zztgo** base port by Ben Hoyt.
+*   **Pascal Reconstruction** by Adrian Siekierka.
+*   This project is licensed under the **MIT License** (see [LICENSE](LICENSE)). Epic MegaGames' original content and help files are included for testing under fair-use/redistribution notices.

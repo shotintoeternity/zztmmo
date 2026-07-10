@@ -1746,7 +1746,7 @@ func (e *Engine) GamePlayLoop(boardChanged bool) {
 		e.SidebarClearLine(1)
 		e.SidebarClearLine(2)
 		e.VideoWriteText(61, 0, 0x1F, "    - - - - -      ")
-		e.VideoWriteText(62, 1, 0x70, "      ZZT      ")
+		e.VideoWriteText(62, 1, 0x70, "    ZZTMMO     ")
 		e.VideoWriteText(61, 2, 0x1F, "    - - - - -      ")
 		if e.GameStateElement == E_PLAYER {
 			e.VideoWriteText(64, 7, 0x1E, " Health:")
@@ -1765,6 +1765,8 @@ func (e *Engine) GamePlayLoop(boardChanged bool) {
 			e.VideoWriteText(62, 15, 0x30, " B ")
 			e.VideoWriteText(62, 16, 0x70, " H ")
 			e.VideoWriteText(65, 16, 0x1F, " Help")
+			e.VideoWriteText(62, 17, 0x70, " C ")
+			e.VideoWriteText(65, 17, 0x1F, " Chat")
 			e.VideoWriteText(67, 18, 0x30, " \x18\x19\x1a\x1b ")
 			e.VideoWriteText(72, 18, 0x1F, " Move")
 			e.VideoWriteText(61, 19, 0x70, " Shift \x18\x19\x1a\x1b ")

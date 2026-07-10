@@ -32,6 +32,7 @@ type WebSocketServer struct {
 	inputs          map[PlayerID]PlayerInput
 	Instances       map[string]*WorldInstance
 	DefaultInstance *WorldInstance
+	ChatDB          ChatDatabase
 }
 
 type WorldInstance struct {
@@ -70,6 +71,7 @@ func NewWebSocketServer(world TWorld, defaultBoard int16) *WebSocketServer {
 		clients:      make(map[PlayerID]*webSocketClient),
 		inputs:       make(map[PlayerID]PlayerInput),
 		Instances:    make(map[string]*WorldInstance),
+		ChatDB:       NewMemChatDatabase(),
 	}
 	s.DefaultInstance = inst
 	s.Instances[name] = inst
@@ -266,6 +268,26 @@ func (s *WebSocketServer) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
+	if s.ChatDB != nil {
+		recs, dbErr := s.ChatDB.GetRecentMessages(50)
+		if dbErr == nil {
+			for _, rec := range recs {
+				msg := struct {
+					Type    string `json:"type"`
+					From    string `json:"from"`
+					Text    string `json:"text"`
+					History bool   `json:"history"`
+				}{
+					Type:    "chat",
+					From:    rec.From,
+					Text:    rec.Text,
+					History: true,
+				}
+				_ = client.write(ctx, msg)
+			}
+		}
+	}
+
 	for {
 		var raw json.RawMessage
 		if err := wsjson.Read(ctx, conn, &raw); err != nil {
@@ -327,6 +349,9 @@ func (s *WebSocketServer) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 				name = player.name
 			}
 			inst.mu.Unlock()
+			if s.ChatDB != nil {
+				_, _ = s.ChatDB.AddMessage(name, chat.Text)
+			}
 			s.BroadcastGlobalChat(ctx, name, chat.Text)
 		default:
 			var input InputMessage

@@ -485,7 +485,7 @@ determinism (CLAUDE.md rule 2) and the replay fixtures are unaffected.
   in with Google, their display name appears in chat instead of `Player N`, and
   a guest can still join.
 
-- [ ] **M6.3 — Chat and account persistence.** Add a backend database (accounts,
+- [x] **M6.3 — Chat and account persistence.** Add a backend database (accounts,
   display names, chat history) behind a narrow storage interface so tests can
   use an in-memory implementation. Persist chat with timestamps; serve recent
   scrollback to a joining client. DoD: chat history survives a server restart,

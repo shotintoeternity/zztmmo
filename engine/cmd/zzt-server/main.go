@@ -37,6 +37,15 @@ func main() {
 	server.RoomManager.LoadHighScores()
 	// The only directory a client's save name can reach (M4.3a).
 	server.SavesDir = *savesDir
+	if *savesDir != "" {
+		_ = os.MkdirAll(*savesDir, 0755)
+		chatDB, err := zztgo.NewFileChatDatabase(filepath.Join(*savesDir, "chat.jsonl"))
+		if err != nil {
+			log.Printf("failed to initialize chat database: %v", err)
+		} else {
+			server.ChatDB = chatDB
+		}
+	}
 	go server.Run(context.Background())
 
 	api := &zztgo.WebAPI{
