@@ -1,0 +1,105 @@
+zwd 1
+world "MOSSGATE"
+
+board "The Moss Gate"
+  start player at 5,13
+  max-shots 3
+  dark false
+  reenter false
+  time-limit 0
+  exits north none south none west none east none
+
+  grid
+############################################################
+#......................1233.4567...........................#
+#........................~~~~..............................#
+#..FFF...................~~~~..............................#
+#.FFFF..A................~~~~....NNNNNNNNNNNNNNNNNNNNNNNN..#
+#FFFF.L..................~~~~....NffffffffffffffffffffffN..#
+#FFF.....................~~~~....NffffffffffffffffffffffN..#
+#........................~~~~....NfffffffffffBBBBBBBBBBfN..#
+#....g...................~~~~....NfffffffffffB.g.GIg..BfN..#
+#........................~~~~....NfffffffffffB..g..G.gBfN..#
+#..............A.........~~~~....NfffffffffffB.G..g...BfN..#
+#........................~~~~....NfffffffffffBBBBfBBBBBfN..#
+#...@..............R.....====....+fOffffffffffffffffffffN..#
+#......L.................~~~~....NffffffffffffffffffffffN..#
+#FF......................~~~~....NffffffGfffffffffffffffN..#
+#FFFkL...................~~~~....NffffffffffffffffffffffN..#
+#FFFF....................~~~~....NfffffffffffffffGffffffN..#
+#FF......................~~~~....NffffffffffffffffffffffN..#
+#........................~~~~....NffffffffffffffffffffffN..#
+#.........g..............~~~~....NffffffffffffffffffffffN..#
+#........................~~~~....NNNNNNNNNNNNNNNNNNNNNNNN..#
+#........................~~~~..............................#
+#........................~~~~..............................#
+#..........................................................#
+############################################################
+  end
+
+  legend
+    . = Empty color 0x0F
+    # = Solid color 0x08
+    N = Normal color 0x06
+    B = Breakable color 0x78
+    f = Fake color 0x70
+    F = Forest color 0x20
+    ~ = Water color 0x1F
+    = = Fake color 0x06
+    + = Door color 0x3F
+    k = Key color 0x0B
+    g = Gem color 0x0B
+    G = Gem color 0x0A
+    A = Ammo color 0x03
+    L = Lion color 0x0C
+    R = Ruffian color 0x0D
+    O = Object color 0x0A
+    I = Object color 0x0E
+    @ = Player color 0x1F under Empty color 0x0F
+    1 = Text-Blue color 0x4D
+    2 = Text-Blue color 0x4F
+    3 = Text-Blue color 0x53
+    4 = Text-Blue color 0x47
+    5 = Text-Blue color 0x41
+    6 = Text-Blue color 0x54
+    7 = Text-Blue color 0x45
+  end
+
+  stats
+    stat at 7,6 element Lion p1 4 p2 0 step idle under Empty color 0x0F
+    stat at 8,14 element Lion p1 4 p2 0 step idle under Empty color 0x0F
+    stat at 6,16 element Lion p1 6 p2 0 step idle under Empty color 0x0F
+    stat at 20,13 element Ruffian step idle under Empty color 0x0F
+    stat at 36,13 element Object cycle 1 p1 cp437:0xEA under Fake color 0x70
+    oop
+@Gatekeeper
+#end
+:touch
+#play tcegeg
+Halt! The vault of the Moss Gate
+is sealed tight.
+The cyan key lies in the forest,
+past the lion. Good luck with that.
+#zap touch
+#end
+:touch
+(Still sealed. Still a lion.
+Get moving!)
+#end
+
+    end
+    stat at 51,9 element Object cycle 1 p1 cp437:0x0F under Empty color 0x0F
+    oop
+@Mossheart Idol
+#end
+:touch
+#lock
+#play +++dxxdxxf#
+You lift the Mossheart!
+The keep is yours.
+#give score 500
+#die
+
+    end
+  end
+end
