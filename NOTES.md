@@ -916,3 +916,24 @@ idea backlog (possession mode, living worlds, the ZZT Continent,
 player-authored scrolls, live DM console, crowd-controlled runs,
 prompt-to-world, tournament nights), each annotated with the existing
 architectural property that makes it feasible. Backlog bullets, not tasks.
+
+## 2026-07-10 — M12 LLM world creator designed; next feature after M7
+
+Owner promoted the prompt-to-world moonshot to the first feature slot after
+the M7 bug batch. Order is now M7 → M12 → M5 → M11 → M8 → M9 → M6 → M10.
+Core design decisions:
+* The LLM writes text, never binary: ZWD, an ASCII-art-grid + legend +
+  stats + inline-OOP format compiled to real worlds through the existing
+  serializer (worldWriteTo). The compiler is also the security boundary —
+  LLM output is compiled, never executed, and bad output is a precise
+  compile error, which is exactly what the repair loop feeds back.
+* A decompiler is specced alongside the compiler: it turns TOWN/CAVES/CITY
+  boards into ZWD, giving in-style few-shot examples, round-trip tests, and
+  living documentation for free.
+* Style is a curated corpus, not vibes: a system prompt distilling the
+  design idioms of the games in this repo (composed scenes, wall outlines
+  with color schemes, forest/water texture, key/door/passage gating, terse
+  playful scroll writing) plus decompiled real boards as few-shots.
+* Generation is entirely outside the sim (server endpoint, env-var API key,
+  rate limits, M7.5 validation gate before hosting), so determinism, replay
+  fixtures, and the .ZZT format are untouched.

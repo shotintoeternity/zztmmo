@@ -537,6 +537,82 @@ remaining feature milestones on purpose. Ranked by player impact
   DoD: the script fetches whichever named titles the Museum actually hosts,
   validation passes for each, and the world picker lists them.
 
+## M12 — LLM world creator (owner priority 2026-07-10: first feature after M7)
+
+Goal: type a prompt, get a playable, *good-looking* ZZT world. Architecture
+decision (see NOTES.md): the LLM never emits `.ZZT` binary. It writes **ZWD**
+("ZZT World Description") — a textual format with per-board ASCII-art grids,
+a legend, board/world properties, and stats with inline ZZT-OOP — and a Go
+compiler produces the real world through the existing structs and
+`worldWriteTo`. A matching decompiler turns existing worlds INTO ZWD, which
+yields few-shot style examples from real games, round-trip tests, and repair
+context. Generation is server-side (Claude API, key via env — never in the
+repo), fully outside the sim: the output is just world bytes, so determinism
+and replay are untouched.
+
+- [ ] **M12.0 [ADVISOR] — Design the ZWD format.** A spec document
+  (`ZWD.md`, repo root) defining: world header (name, flags off-limits);
+  per-board sections — name, properties (dark, exits by board name, time
+  limit, max shots, reenter), a 60x25 grid of legend characters, a legend
+  mapping char → element + fg/bg DOS color, and a stats list (`at X,Y`,
+  element, cycle, P1-P3/step by *name* per `ElementDefs`, `Under`, and
+  fenced ZZT-OOP code blocks). Ground every field in `fileformat.html` and
+  the structs in `gamevars.go:60-135`; write the limits table (≤150 stats,
+  board RLE ≤~20000 bytes, OOP length, 16 colors, one player start) — the
+  compiler will enforce it, the generation prompt will quote it. Include
+  two hand-written example boards in the doc. DoD: the doc; a reviewer can
+  hand-write a board from it; no code yet.
+
+- [ ] **M12.1 — ZWD compiler.** `zwd.go` (+`zwd_test.go`): parse ZWD →
+  populate `TWorld`/`TBoard`/`TStat` exactly as `serialize.go` expects →
+  bytes via `worldWriteTo` (`game.go`, the M4.3a seam). Errors carry
+  line/column and say what's legal ("board 2, row 7, col 61: grid row wider
+  than 60") — they are the repair-loop's food, so precision is the feature.
+  Enforce every M12.0 limit; reject unknown elements/params rather than
+  guessing. DoD: both M12.0 example boards compile; the compiled world
+  passes the M7.5 gate (headless `WorldLoad` + 200 steps); property-based
+  test: no ZWD input may panic the compiler.
+
+- [ ] **M12.2 — ZWD decompiler + round-trip.** `TWorld` → ZWD text, picking
+  legend chars sensibly (element defaults first, then digits). DoD:
+  TOWN/CAVES/CITY decompile → recompile → reload, and board tiles, stats,
+  properties, and OOP survive semantically (StateHash of a fresh load
+  matches after 0 steps); the decompiled TOWN board 1 is committed as a
+  fixture and doubles as documentation.
+
+- [ ] **M12.3 — Style corpus and prompt kit.** `llmworld/` text assets: a
+  system prompt encoding ZZT design idioms distilled from the games in this
+  repo — rooms outlined in line/solid walls with deliberate color schemes,
+  forest and water as texture, fake-wall floors, key/door + passage gating,
+  scrolls and named objects doing terse playful storytelling (read TOWN's
+  vendor and signs for the register), boards that read as *composed scenes*
+  — plus 3-5 few-shot examples produced by M12.2's decompiler from boards
+  chosen for visual variety, and the M12.0 limits table verbatim. DoD: the
+  assets exist, load from Go, and a documented manual run of prompt+corpus
+  against a real LLM produced at least one compiling world (record the
+  transcript path in NOTES.md).
+
+- [ ] **M12.4 — Generation service with repair loop.** Server endpoint
+  `/api/generate` (pattern of `web_api.go`): prompt in → Claude API call
+  (model/key/max-tokens via env; refuse politely if unset) → extract ZWD →
+  M12.1 compile → M7.5 validate → on failure, feed the precise errors back
+  for up to K repair attempts (K=3 default) → name via `SanitizeSaveName`,
+  host as an instance like M11.1 does, return the world name. Rate-limit
+  per client and cap concurrent generations; persist accepted worlds plus
+  their prompt+ZWD sidecar. Tests use a faked LLM (httptest): success,
+  repair-then-success, exhausted-repairs, and injection resistance (a
+  prompt that tries to escape ZWD is just bad ZWD — the compiler is the
+  security boundary; nothing from the LLM is ever executed, only compiled).
+  DoD: all four paths tested; `go test ./...` green; replay unchanged.
+
+- [ ] **M12.5 — Browser "Dream a world" flow.** A CP437 window (M4.1 style)
+  from the title/world-picker: multi-line prompt entry (M6.1 input capture),
+  a progress state that shows generation/repair attempts ZZT-style
+  ("Imagining... attempt 2 of 3"), failure window on give-up, and on
+  success the standard join flow into the new world, which also appears in
+  the picker for everyone. DoD: scripted client against the faked LLM goes
+  prompt → playing; failure path renders its window; node-driven TS tests.
+
 ## M5 — Creation and full-featured ZZT tooling
 
 Goal: support the creation features that make ZZT “full ZZT,” not only runtime
