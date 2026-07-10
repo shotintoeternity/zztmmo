@@ -493,8 +493,31 @@ determinism (CLAUDE.md rule 2) and the replay fixtures are unaffected.
 
 ## Future Tasks & Community Additions
 
+- [ ] **[URGENT] Spawn at the vanilla start point, not the nearest blank square.**
+  A player joining a board whose floor is carpeted in fake walls spawns in
+  whatever stray empty square the search finds, far from where the world author
+  put them. `roomSpawn` (`engine/room_manager.go:296-326`) resolves the vanilla
+  point (`Board.Info.StartPlayerX/Y`, or the claimable player stat), then gates
+  it on `isSpawnOpen` → `PlacementOpen` (`engine/placement.go:47-53`), which
+  demands `Element == E_EMPTY`. `E_FAKE` is not `E_EMPTY`, so the gate fails and
+  the code falls through to `FindPlacement`, which walks outward to the nearest
+  truly empty tile. Every walkable non-empty tile (fake wall, floor art,
+  invisible wall) has the same effect.
+  **Wanted:** the vanilla spawn point is used unconditionally *unless another
+  player already stands there* — the tile's element is irrelevant, since ZZT
+  simply writes the player over whatever was on the start square. Fall back to
+  `FindPlacement` only on player-occupied. Note `PlacementUnoccupied`
+  (`placement.go:34-39`) tests only `Element != E_PLAYER`; a square can read
+  empty and still be held by a stat whose tile was clobbered, so the occupancy
+  test must also consult `StatAt` (see `PlacementOpen`'s own comment).
+  Watch the `requested` branch: transfers/passages pass an explicit spawn and
+  must keep their current meaning.
+  DoD: a test board with `E_FAKE` on the start square spawns the player on the
+  start square; a second player joining the same square still gets displaced;
+  `go test ./...` green, replay fixture unchanged.
+
 - [x] **Troubleshoot player stuck after damage.** Solve the issue where players get stuck after being zapped/damaged by a ruffian/bear due to stat index shift misalignment in RoomManager.
 - [ ] **Prepare next batch of ZZT games.** Add download paths, scripts, or direct curl pipelines for the rest of the requested ZZT games (Teen Priest, Teen Priest 2, Inedible Vomit, other bongo/wynand games, Freedom, Apparitions of the City by kev-san, etc.) to get them ready for deployment.
 - [ ] **Torches only illuminate player's path.** Fix the torch illumination logic so that torches correctly light up the surroundings rather than just the player's path.
-- [ ] **Title screens aren't animating properly.** Investigate and resolve the issue where object scripts and movements on ZZT title screens do not animate or tick as they should.
+- [x] **Title screens aren't animating properly.** Investigate and resolve the issue where object scripts and movements on ZZT title screens do not animate or tick as they should. *(Done: `engine/title_sim.go` runs board 0 on an isolated engine — its own copied world, never written back — ticked from the server loop only while a browser is watching, with changed cells pushed over `/api/title/stream` as SSE.)*
 - [ ] **Sound broadcast bug.** Fix the issue where sound events (like gem pickups) are triggering and heard by all players rather than only the player who triggered them.
