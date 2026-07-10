@@ -881,3 +881,16 @@ Two more owner requests folded in the same day:
   read the Museum's current API docs at build time instead of trusting
   model memory of the endpoints. Execution order is now:
   M7 → M5 → M11 → M8 → M9 → M6 → M10.
+
+## 2026-07-10 — Idea backlog added (not tasks)
+
+Gap sweep + brainstorm at the owner's request. Verified against code before
+writing: no autosave/restore-on-boot exists; disconnect = immediate
+LeavePlayer (websocket_server.go:655) so a refresh kills the run; all
+players render as the same white-on-blue smiley; no CI workflows. These plus
+the determinism-dividend features (replays, daily challenge, verified
+leaderboards, ghosts) and vibe/reach items (CRT shader, touch, party
+instances, Discord, achievements) are recorded in TASKS.md's Future Tasks
+as plain bullets — deliberately not checkboxes, so the positional executor
+protocol cannot pick up an unspecced idea. Each gets an M7-style spec only
+after the owner promotes it.

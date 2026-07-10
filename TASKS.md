@@ -896,3 +896,59 @@ into a milestone.)
 
 - [x] **Troubleshoot player stuck after damage.** Solve the issue where players get stuck after being zapped/damaged by a ruffian/bear due to stat index shift misalignment in RoomManager.
 - [x] **Title screens aren't animating properly.** Investigate and resolve the issue where object scripts and movements on ZZT title screens do not animate or tick as they should. *(Done: `engine/title_sim.go` runs board 0 on an isolated engine — its own copied world, never written back — ticked from the server loop only while a browser is watching, with changed cells pushed over `/api/title/stream` as SSE.)*
+
+### Idea backlog (2026-07-10 — NOT tasks; owner picks, then each gets an M7-style spec)
+
+Plain bullets on purpose: executors must not pick these up. Verified gaps
+first, then features that exploit what this codebase is uniquely good at.
+
+**Verified gaps (checked against the code 2026-07-10):**
+* **Autosave and crash recovery.** A server crash or restart loses every live
+  room — nothing snapshots automatically (`SaveSnapshot` is manual, M4.3a).
+  Periodic background snapshot of occupied worlds + restore-on-boot. The
+  single worst UX event the service can produce is currently unguarded.
+* **Reconnect grace.** A dropped WebSocket calls `LeavePlayer` immediately
+  (`websocket_server.go:655,664`) — a browser refresh or Wi-Fi blip deletes
+  the run. Hold the stat for ~60s under a resume token; rejoin reclaims it.
+  Guests need this as much as accounts do.
+* **Tell players apart.** Every player is the identical white-on-blue ☻
+  (`gamevars.go:467-471`); in a busy room nobody knows which one they are,
+  let alone who's who. Presentation-only fix: snapshots gain a players list
+  (statId, x, y, name, color index); the client overlays per-player color
+  and a hover/adjacent nameplate. Sim tiles untouched — StateHash must not
+  move.
+* **CI.** No workflows exist. GitHub Actions: `go build`, `go vet`,
+  `go test ./...`, plus `go test -race` once M7.3 lands, and the node-driven
+  TS checks. The replay fixture only protects commits that run it.
+* **Deep links.** `/play/TOWN` style URLs that land a visitor in a world
+  (and `/watch/TOWN` read-only spectator links). Sharing is the growth loop
+  and today there is nothing to share.
+
+**The determinism dividend (features the M0 work already paid for):**
+* **Replay recording and playback.** Seeded RNG + input-driven steps means a
+  complete session is just `{world hash, seed, per-tick inputs, submits}` —
+  kilobytes. Record always; play back server-side into the normal snapshot
+  stream (a replay is a room nobody controls). Shareable replay URLs.
+  Synergy: M7.3's lock centralizes every submit path, which is exactly the
+  event log a recorder needs.
+* **Daily challenge.** Same world + same seed for everyone each day,
+  server-verified completion time, one leaderboard. Determinism makes it
+  trivial and it is the strongest known retention mechanic in its class.
+* **Speedrun leaderboards.** Per-world verified times — the server is
+  authoritative, so runs are cheat-proof by construction, something even
+  dedicated speedrun sites cannot offer. Pairs with M11: any Museum world
+  becomes a race.
+* **Ghost racing.** Render a prior run's player positions as a translucent
+  ghost cursor while you play the same world+seed. Replays make it free.
+
+**Vibe and reach:**
+* **CRT shader toggle.** Scanlines/phosphor/curvature over the canvas —
+  cheap, optional, and the single biggest "feels like 1991" multiplier.
+* **Touch controls.** A D-pad + shoot overlay for phones/tablets; the whole
+  client is one canvas, so reach is currently keyboard-only.
+* **Party instances.** Private copies of a world for a group ("play TOWN
+  with just us") — `Instances` already keys by name; key by name+party.
+* **Discord presence bridge.** "3 players in TOWN" + chat relay; community
+  glue for a small MMO.
+* **Achievements (post-M6.2).** Account-keyed firsts (beat TOWN, first
+  purple key, 100 gems) surfaced in chat, stored via M6.3's interface.
