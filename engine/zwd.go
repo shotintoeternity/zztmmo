@@ -62,19 +62,22 @@ type zwdDocument struct {
 }
 
 type zwdBoard struct {
-	name      string
-	line      int
-	startX    int16
-	startY    int16
-	maxShots  byte
-	dark      bool
-	reenter   bool
-	timeLimit int16
-	message   string
-	exits     [4]string
-	grid      []zwdGridLine
-	legend    map[byte]zwdLegendEntry
-	stats     []zwdStat
+	name       string
+	line       int
+	startX     int16
+	startY     int16
+	hasRespawn bool
+	respawnX   int16
+	respawnY   int16
+	maxShots   byte
+	dark       bool
+	reenter    bool
+	timeLimit  int16
+	message    string
+	exits      [4]string
+	grid       []zwdGridLine
+	legend     map[byte]zwdLegendEntry
+	stats      []zwdStat
 }
 
 type zwdGridLine struct {
@@ -223,6 +226,16 @@ func (p *zwdParser) parseBoard(name string, line int) (zwdBoard, error) {
 				return board, zerr(line, 18, "start coordinate must be X,Y within 1..60 and 1..25")
 			}
 			board.startX, board.startY = x, y
+		case "respawn":
+			if len(toks) != 3 || toks[1] != "at" {
+				return board, zerr(line, 1, "expected respawn at X,Y")
+			}
+			x, y, err := parseCoordToken(toks[2])
+			if err != nil {
+				return board, zerr(line, 12, "respawn coordinate must be X,Y within 1..60 and 1..25")
+			}
+			board.respawnX, board.respawnY = x, y
+			board.hasRespawn = true
 		case "max-shots":
 			n, err := parseIntField(toks, line, 0, 255)
 			if err != nil {
@@ -633,6 +646,11 @@ func compileZWDBoard(e *Engine, boardID int16, src zwdBoard, boardIDs map[string
 	e.Board.Name = src.name
 	e.Board.Info.StartPlayerX = byte(src.startX)
 	e.Board.Info.StartPlayerY = byte(src.startY)
+	// respawn at overrides the default (which equals start player at).
+	if src.hasRespawn {
+		e.Board.Info.StartPlayerX = byte(src.respawnX)
+		e.Board.Info.StartPlayerY = byte(src.respawnY)
+	}
 	e.Board.Info.MaxShots = src.maxShots
 	e.Board.Info.IsDark = src.dark
 	e.Board.Info.ReenterWhenZapped = src.reenter
@@ -838,14 +856,33 @@ func parseElementName(toks []string, start int) (byte, int, error) {
 	return 0, start, fmt.Errorf("unknown element name")
 }
 
+// textZWDNames maps normalized ZWD name → element id for Text-Blue..Text-White.
+// Text elements have no Name in ElementDefs, so they need special handling.
+var textZWDNames = map[string]byte{
+	"TEXTBLUE":   E_TEXT_BLUE,
+	"TEXTGREEN":  E_TEXT_GREEN,
+	"TEXTCYAN":   E_TEXT_CYAN,
+	"TEXTRED":    E_TEXT_RED,
+	"TEXTPURPLE": E_TEXT_PURPLE,
+	"TEXTYELLOW": E_TEXT_YELLOW,
+	"TEXTWHITE":  E_TEXT_WHITE,
+}
+
 func elementByZWDName(name string) (byte, bool) {
 	if strings.HasPrefix(name, "element ") {
 		n, err := strconv.Atoi(strings.TrimSpace(strings.TrimPrefix(name, "element ")))
 		if err == nil && n >= 0 && n <= MAX_ELEMENT {
-			return byte(n), ElementDefs[n].Name != ""
+			// element N form is valid for any defined element OR for text elements.
+			if ElementDefs[n].Name != "" || (n >= E_TEXT_MIN && n <= E_TEXT_WHITE) {
+				return byte(n), true
+			}
 		}
 	}
 	normalized := normalizeZWDName(name)
+	// Check text elements first (they have no Name in ElementDefs).
+	if elem, ok := textZWDNames[normalized]; ok {
+		return elem, true
+	}
 	for i := 0; i <= MAX_ELEMENT; i++ {
 		if ElementDefs[i].Name == "" {
 			continue
