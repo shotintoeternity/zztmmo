@@ -30,6 +30,7 @@ func (e *Engine) SoundQueue(priority int16, pattern string) {
 		e.Events = append(e.Events, SoundEvent{
 			Notes:    pattern,
 			Priority: priority,
+			StatId:   e.ActingPlayerStatId,
 		})
 	}
 }

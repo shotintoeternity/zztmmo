@@ -215,6 +215,10 @@ type (
 		// applied at the top of the next GameStepWithInputs like the others.
 		PendingQuitReplies []PendingQuitReply
 		SoundBlockQueueing bool
+		// ActingPlayerStatId is presentation-only sound attribution. -1 means
+		// room-wide; player tick procs and player damage set it briefly while
+		// queuing sounds caused by that player.
+		ActingPlayerStatId int16
 		// FriendlyFire controls whether player-owned bullets can damage other
 		// players. True (default) = players can damage each other; false = player
 		// bullets pass through other player stats without effect. This is a
@@ -315,6 +319,7 @@ type (
 	SoundEvent struct {
 		Notes    string
 		Priority int16
+		StatId   int16
 	}
 	// DeathEvent is emitted when a player's health reaches 0. The engine will
 	// respawn the player automatically after RESPAWN_TICKS; this event lets the
@@ -412,9 +417,10 @@ var (
 
 func NewEngine() *Engine {
 	return &Engine{
-		ActiveInput:  TcellInput{},
-		Players:      make(map[int16]*PlayerState),
-		FriendlyFire: true,
+		ActiveInput:        TcellInput{},
+		Players:            make(map[int16]*PlayerState),
+		ActingPlayerStatId: -1,
+		FriendlyFire:       true,
 	}
 }
 

@@ -254,7 +254,11 @@ func ProtocolEvents(events []Event) []ProtocolEvent {
 		case HighScoreEntryEvent:
 			out = append(out, ProtocolEvent{Type: "highScoreEntry", StatID: ev.StatId, Score: ev.Score, ListPos: ev.ListPos})
 		case SoundEvent:
-			out = append(out, ProtocolEvent{Type: "sound", Notes: soundNoteBytes(ev.Notes), Priority: ev.Priority})
+			event := ProtocolEvent{Type: "sound", Notes: soundNoteBytes(ev.Notes), Priority: ev.Priority}
+			if ev.StatId >= 0 {
+				event.StatID = ev.StatId
+			}
+			out = append(out, event)
 		case DeathEvent:
 			out = append(out, ProtocolEvent{Type: "death", StatID: ev.StatId})
 		case RespawnEvent:

@@ -433,11 +433,18 @@ func (rm *RoomManager) StepDiffs(inputs map[PlayerID]PlayerInput) map[PlayerID]D
 			case TransferEvent:
 				if playerID, found := rm.playerIDForStat(boardID, ev.StatId); found {
 					if ev.SoundNotes != "" {
-						sound := SoundEvent{Notes: ev.SoundNotes, Priority: ev.SoundPriority}
-						roomEvents[boardID] = append(roomEvents[boardID], sound)
+						sound := SoundEvent{Notes: ev.SoundNotes, Priority: ev.SoundPriority, StatId: ev.StatId}
 						rm.pendingPlayerEvents[playerID] = append(rm.pendingPlayerEvents[playerID], sound)
 					}
 					transfers = append(transfers, roomTransfer{playerID: playerID, event: ev})
+				}
+			case SoundEvent:
+				if ev.StatId >= 0 {
+					if playerID, found := rm.playerIDForStat(boardID, ev.StatId); found {
+						rm.pendingPlayerEvents[playerID] = append(rm.pendingPlayerEvents[playerID], ev)
+					}
+				} else {
+					roomEvents[boardID] = append(roomEvents[boardID], event)
 				}
 			case QuitEvent:
 				if playerID, found := rm.playerIDForStat(boardID, ev.StatId); found {

@@ -212,7 +212,7 @@ func TestRoomManagerStepDiffFromTown(t *testing.T) {
 		t.Fatal("room 1 missing")
 	}
 	room.Engine.DisplayMessage(100, "HELLO")
-	room.Engine.Events = append(room.Engine.Events, SoundEvent{Notes: "abc", Priority: 2})
+	room.Engine.Events = append(room.Engine.Events, SoundEvent{Notes: "abc", Priority: 2, StatId: -1})
 	diffs := rm.StepDiffs(map[PlayerID]PlayerInput{})
 
 	diff, ok := diffs[playerID]

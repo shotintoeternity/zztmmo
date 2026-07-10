@@ -1278,6 +1278,10 @@ func (e *Engine) DamageStat(attackerStatId int16) {
 	var oldX, oldY int16
 	stat := &e.Board.Stats[attackerStatId]
 	if e.Board.Tiles[stat.X][stat.Y].Element == E_PLAYER {
+		prevActingPlayerStatId := e.ActingPlayerStatId
+		e.ActingPlayerStatId = attackerStatId
+		defer func() { e.ActingPlayerStatId = prevActingPlayerStatId }()
+
 		pState := e.PlayerFor(attackerStatId)
 		if pState.Health > 0 {
 			pState.Health -= 10
@@ -1712,7 +1716,14 @@ func (e *Engine) GameStepWithInputs(inputs map[int16]PlayerInput) {
 				// InputKeyPressed is intentionally NOT zeroed here: non-player
 				// elements like E_MONITOR read it in their own tick procs.
 			}
-			ElementDefs[e.Board.Tiles[stat.X][stat.Y].Element].TickProc(e, e.CurrentStatTicked)
+			if e.Board.Tiles[stat.X][stat.Y].Element == E_PLAYER {
+				prevActingPlayerStatId := e.ActingPlayerStatId
+				e.ActingPlayerStatId = e.CurrentStatTicked
+				ElementDefs[e.Board.Tiles[stat.X][stat.Y].Element].TickProc(e, e.CurrentStatTicked)
+				e.ActingPlayerStatId = prevActingPlayerStatId
+			} else {
+				ElementDefs[e.Board.Tiles[stat.X][stat.Y].Element].TickProc(e, e.CurrentStatTicked)
+			}
 		}
 		e.CurrentStatTicked++
 	}
