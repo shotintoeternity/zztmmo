@@ -853,7 +853,7 @@ func parseElementName(toks []string, start int) (byte, int, error) {
 			return elem, i + 1, nil
 		}
 	}
-	return 0, start, fmt.Errorf("unknown element name")
+	return 0, start, fmt.Errorf("unknown element name %q", strings.Join(parts, " "))
 }
 
 // textZWDNames maps normalized ZWD name → element id for Text-Blue..Text-White.
