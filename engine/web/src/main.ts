@@ -12,8 +12,12 @@ const COLS = 80;
 const BOARD_COLS = 60;
 const SIDEBAR_COLS = COLS - BOARD_COLS;
 const ROWS = 25;
-const CELL_W = 10;
-const CELL_H = 18;
+// One cell is one glyph of the 8x14 EGA font, blitted 1:1. The backing store is
+// therefore the EGA text-mode framebuffer exactly: 640x350, square pixels, as
+// Zeta renders it. Any other CELL_W/CELL_H resamples the glyph and the atlas
+// bleeds neighbouring characters into the cell; CSS does the upscale instead.
+const CELL_W = 8;
+const CELL_H = 14;
 const WIDTH = COLS * CELL_W;
 const HEIGHT = ROWS * CELL_H;
 
@@ -165,10 +169,15 @@ const ega = [
   "#ffffff",
 ];
 
-import pcCgaUrl from "./pc_cga.png";
+// Zeta's 8x14 EGA font (fonts/pc_ega.png upstream): 256 glyphs as 32 columns by
+// 8 rows, CP437 order, so glyph N sits at (N%32, N/32). Character codes go to
+// the sheet directly — there is no Unicode round trip.
+import pcEgaUrl from "./pc_ega.png";
+
+const GLYPH_COLS = 32;
 
 const fontImg = new Image();
-fontImg.src = pcCgaUrl;
+fontImg.src = pcEgaUrl;
 const fontCanvases: HTMLCanvasElement[] = [];
 
 fontImg.onload = () => {
@@ -182,12 +191,11 @@ fontImg.onload = () => {
   const imgData = tempCtx.getImageData(0, 0, tempCanvas.width, tempCanvas.height);
   const data = imgData.data;
 
-  // Make black/dark pixels transparent and normalize glyphs to pure white
+  // The sheet is black-on-white 1-bit. Punch the background out so the tint
+  // below only lands on the glyph, and force the ink to pure white so
+  // "source-in" yields the palette colour undarkened.
   for (let i = 0; i < data.length; i += 4) {
-    const r = data[i];
-    const g = data[i + 1];
-    const b = data[i + 2];
-    if (r + g + b < 50) {
+    if (data[i] + data[i + 1] + data[i + 2] < 50) {
       data[i + 3] = 0;
     } else {
       data[i] = 255;
@@ -198,12 +206,15 @@ fontImg.onload = () => {
   }
   tempCtx.putImageData(imgData, 0, 0);
 
+  // One pre-tinted sheet per EGA foreground colour, so drawing a cell is a
+  // single blit with no per-frame compositing.
   for (let i = 0; i < 16; i++) {
     const canvas = document.createElement("canvas");
     canvas.width = tempCanvas.width;
     canvas.height = tempCanvas.height;
     const ctx = canvas.getContext("2d");
     if (ctx) {
+      ctx.imageSmoothingEnabled = false;
       ctx.drawImage(tempCanvas, 0, 0);
       ctx.globalCompositeOperation = "source-in";
       ctx.fillStyle = ega[i];
@@ -231,6 +242,9 @@ if (!ctx) {
   throw new Error("canvas context unavailable");
 }
 const screenCtx = ctx;
+// Glyphs blit 1:1, so this changes nothing today — but it is the guard that
+// keeps a future scale change from silently reintroducing atlas bleed.
+screenCtx.imageSmoothingEnabled = false;
 
 let ws: WebSocket | null = null;
 let playerId = 0;
@@ -661,19 +675,17 @@ function drawScreen() {
     const x = base.x * CELL_W;
     const y = base.y * CELL_H;
     
-    // Draw background
     screenCtx.fillStyle = ega[bg] ?? "#000000";
     screenCtx.fillRect(x, y, CELL_W, CELL_H);
-    
-    // Draw character glyph (spritesheet is 32 columns x 8 rows of 8x8 cells)
-    const col = ch % 32;
-    const row = Math.floor(ch / 32);
+
+    const col = ch % GLYPH_COLS;
+    const row = Math.floor(ch / GLYPH_COLS);
     screenCtx.drawImage(
       fontCanvases[fg],
-      col * 8,
-      row * 8,
-      8,
-      8,
+      col * CELL_W,
+      row * CELL_H,
+      CELL_W,
+      CELL_H,
       x,
       y,
       CELL_W,

@@ -4,9 +4,10 @@
  * overlay, no event log. Anything the player must see is drawn as CP437 cells
  * by the client (see main.ts drawConnectionNotice), never as HTML chrome.
  *
- * The canvas backing store is 800x450 — 80 cols x CELL_W(10) by 25 rows x
- * CELL_H(18). The wrapper's aspect-ratio must stay pinned to that, or the
- * glyphs stretch and the DOS geometry is lost. */
+ * The canvas backing store is 640x350 — 80 cols x CELL_W(8) by 25 rows x
+ * CELL_H(14), the EGA text-mode framebuffer at 1:1 with the 8x14 font. The
+ * canvas rule's aspect-ratio must stay pinned to that, or the glyphs stretch
+ * and the DOS geometry is lost. */
 
 /* Centered pixelated canvas representation */
 
@@ -43,10 +44,10 @@ body {
 
 canvas {
   display: block;
-  /* Widest the screen can be while its 16:9 height still fits the viewport.
+  /* Widest the screen can be while its 64:35 height still fits the viewport.
      Deterministic, unlike auto sizing under aspect-ratio + max-*. */
-  width: min(100vw, calc(100vh * 800 / 450));
-  aspect-ratio: 800 / 450;
+  width: min(100vw, calc(100vh * 640 / 350));
+  aspect-ratio: 640 / 350;
   /* Nearest-neighbour: CP437 glyphs must stay crisp, never resampled. */
   image-rendering: pixelated;
   outline: none;

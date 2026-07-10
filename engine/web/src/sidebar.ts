@@ -51,7 +51,9 @@ export function drawSidebar(write: WriteText) {
   sidebarClearLine(write, 1);
   sidebarClearLine(write, 2);
   write(61, 0, 0x1f, "    - - - - -      ");
-  write(62, 1, 0x70, "      ZZT      ");
+  // DEVIATION: vanilla's banner reads "ZZT". Both strings are the same 15 cells
+  // wide, so the box the banner sits in is unchanged.
+  write(62, 1, 0x70, "    ZZTMMO     ");
   write(61, 2, 0x1f, "    - - - - -      ");
   write(64, 7, 0x1e, " Health:");
   write(64, 8, 0x1e, "   Ammo:");
@@ -69,6 +71,10 @@ export function drawSidebar(write: WriteText) {
   write(62, 15, 0x30, " B ");
   write(62, 16, 0x70, " H ");
   write(65, 16, 0x1f, " Help");
+  // Row 17 is blank in vanilla; the multiplayer chat window (main.ts, 'C')
+  // claims it. Handled client-side, so it never reaches the engine's key switch.
+  write(62, 17, 0x30, " C ");
+  write(65, 17, 0x1f, " Chat");
   write(67, 18, 0x30, " \x18\x19\x1a\x1b ");
   write(72, 18, 0x1f, " Move");
   write(61, 19, 0x70, " Shift \x18\x19\x1a\x1b ");
