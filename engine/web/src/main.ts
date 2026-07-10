@@ -387,6 +387,7 @@ async function showTitle() {
   setPaused(false);
   pressed.clear();
   lastMask = 0;
+  clearScrolls();
   closeTitleStream();
 
   let friendlyName = worldName;
@@ -429,6 +430,7 @@ function leaveToTitle() {
 
 function startPlay() {
   closeTitleStream();
+  clearScrolls();
   zztSound.setEnabled(true);
   zztSound.resume();
   leavingToTitle = false;
@@ -922,8 +924,53 @@ function openYesNo(message: string, onAnswer: (yes: boolean) => void) {
   openModal({ kind: "yesno", message, onAnswer });
 }
 
+// Scrolls arrive as events and must never overwrite one another: a second
+// scroll opening on top of the first is text the player never got to read.
+// They queue instead, and the server freezes the reader until each is answered.
+type PendingScroll = { title: string; lines: string[]; statId: number };
+let scrollQueue: PendingScroll[] = [];
+// The object stat of the scroll currently on screen, or -1. Its reply, sent on
+// dismiss, is what unfreezes this player server-side.
+let openScrollStatId = -1;
+
+function enqueueScroll(scroll: PendingScroll) {
+  if (scroll.lines.length === 0) {
+    return;
+  }
+  if (openScrollStatId >= 0) {
+    scrollQueue.push(scroll);
+    return;
+  }
+  showScroll(scroll);
+}
+
+function showScroll(scroll: PendingScroll) {
+  openScrollStatId = scroll.statId;
+  openWindow(scroll.title, scroll.lines, false, scroll.statId);
+}
+
+function clearScrolls() {
+  scrollQueue = [];
+  openScrollStatId = -1;
+}
+
 function closeModal() {
+  const scrollStatId = openScrollStatId;
+  openScrollStatId = -1;
   modal = null;
+
+  if (scrollStatId >= 0) {
+    // An empty label is "dismissed, no hyperlink". The engine ignores it; the
+    // RoomManager reads it as this player having finished reading, and lets
+    // them move again. A hyperlink pick already sent its own reply.
+    sendScrollReply(scrollStatId, "");
+    const next = scrollQueue.shift();
+    if (next) {
+      showScroll(next);
+      return;
+    }
+  }
+
   if (pendingHighScore) {
     pendingHighScore = false;
     openHighScoreName();
@@ -1036,7 +1083,11 @@ function handleProtocolEvent(event: ProtocolEvent) {
       // A scroll with no owner (an object opening one from its own code rather
       // than a touch) is shown to everybody on the board, as in vanilla.
       if (isMyScroll(event)) {
-        openWindow(event.title ?? "Interaction", event.lines ?? [], false, event.statId ?? -1);
+        enqueueScroll({
+          title: event.title ?? "Interaction",
+          lines: event.lines ?? [],
+          statId: event.statId ?? -1,
+        });
       }
       appendLogOnce(`scroll: ${event.title ?? ""}`);
       break;

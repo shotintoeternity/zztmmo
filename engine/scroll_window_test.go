@@ -162,3 +162,77 @@ func TestVendorScrollTargetsOnlyToucher(t *testing.T) {
 			event.PlayerStatID, toucherStat, bystanderStat)
 	}
 }
+
+// statPos reads a player's tile straight out of the room engine.
+func statPos(t *testing.T, rm *RoomManager, playerID PlayerID) (int16, int16) {
+	t.Helper()
+
+	boardID, statID, ok := rm.PlayerLocation(playerID)
+	if !ok {
+		t.Fatal("player has no location")
+	}
+	room, ok := rm.Room(boardID)
+	if !ok {
+		t.Fatal("player has no room")
+	}
+	stat := room.Engine.Board.Stats[statID]
+	return int16(stat.X), int16(stat.Y)
+}
+
+// freeStep finds a direction from x,y into empty floor, so a test can tell
+// "the player was frozen" apart from "the player was walled in".
+func freeStep(t *testing.T, room *Room, x, y int16) (int16, int16) {
+	t.Helper()
+
+	for _, d := range [][2]int16{{0, 1}, {0, -1}, {-1, 0}, {1, 0}} {
+		if room.Engine.Board.Tiles[x+d[0]][y+d[1]].Element == E_EMPTY {
+			return d[0], d[1]
+		}
+	}
+	t.Fatalf("no empty tile beside %d,%d", x, y)
+	return 0, 0
+}
+
+// Vanilla's text window blocks the game loop, so a player reading a scroll
+// cannot walk. Here only the reader freezes: the room plays on for everybody
+// else. Without the freeze the reader keeps moving for the tick or two it takes
+// their "stop" to reach the server, steps onto the next scroll, and that second
+// scroll overwrites the first before it can be read.
+func TestScrollFreezesReaderUntilDismissed(t *testing.T) {
+	rm, room, _, standX, standY, stepX, stepY := vendorRoom(t)
+	toucher := rm.JoinPlayer(vendorBoard, standX, standY)
+	rm.Snapshot(toucher)
+
+	event := stepUntilScroll(t, rm, toucher, map[PlayerID]PlayerInput{
+		toucher: {DeltaX: stepX, DeltaY: stepY},
+	}, 12)
+
+	// The toucher never moved: they walked into the vendor. Escaping needs a
+	// direction that is actually open, or "did not move" would prove nothing.
+	frozenX, frozenY := statPos(t, rm, toucher)
+	awayX, awayY := freeStep(t, room, frozenX, frozenY)
+	tickBefore := room.Engine.CurrentTick
+
+	for i := 0; i < 8; i++ {
+		rm.StepDiffs(map[PlayerID]PlayerInput{toucher: {DeltaX: awayX, DeltaY: awayY}})
+	}
+
+	if x, y := statPos(t, rm, toucher); x != frozenX || y != frozenY {
+		t.Errorf("reader walked to %d,%d with a scroll open; want frozen at %d,%d", x, y, frozenX, frozenY)
+	}
+	if room.Engine.CurrentTick == tickBefore {
+		t.Error("room stopped ticking behind the scroll; only the reader should freeze")
+	}
+
+	// An empty label is the client's "I closed it": no hyperlink, but the
+	// reader is released.
+	if !rm.SubmitScrollReply(toucher, event.StatID, "") {
+		t.Fatal("SubmitScrollReply failed")
+	}
+	for i := 0; i < 4; i++ {
+		rm.StepDiffs(map[PlayerID]PlayerInput{toucher: {DeltaX: awayX, DeltaY: awayY}})
+	}
+	if x, y := statPos(t, rm, toucher); x == frozenX && y == frozenY {
+		t.Errorf("reader still frozen at %d,%d after dismissing the scroll", x, y)
+	}
+}

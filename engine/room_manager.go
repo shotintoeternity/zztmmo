@@ -54,6 +54,13 @@ type roomPlayer struct {
 	statID  int16
 	state   *PlayerState
 	name    string
+	// scrollOpen freezes this player while they read a scroll. Vanilla's text
+	// window blocks the whole game loop (TextWindowDrawOpen); here only the
+	// reader stops, so the rest of the room plays on. Without it the player
+	// keeps walking for the tick or two it takes their "stop" to reach us, and
+	// a second scroll fires and overwrites the first before they can read it.
+	// Cleared by SubmitScrollReply, which the client sends on dismiss.
+	scrollOpen bool
 }
 
 type roomTransfer struct {
@@ -368,6 +375,12 @@ func (rm *RoomManager) StepDiffs(inputs map[PlayerID]PlayerInput) map[PlayerID]D
 		if player == nil {
 			continue
 		}
+		// A player reading a scroll is frozen. Omitting the entry is how that is
+		// said to the engine: GameStepWithInputs zeroes the movement globals for
+		// any player stat it finds no input for.
+		if player.scrollOpen {
+			continue
+		}
 		if _, ok := engineInputs[player.boardID]; !ok {
 			engineInputs[player.boardID] = make(map[int16]PlayerInput)
 		}
@@ -406,6 +419,15 @@ func (rm *RoomManager) StepDiffs(inputs map[PlayerID]PlayerInput) map[PlayerID]D
 				if playerID, found := rm.playerIDForStat(boardID, ev.StatId); found {
 					quitters = append(quitters, playerID)
 				}
+			case ScrollEvent:
+				// PlayerStatId < 0 is an object talking to the whole board, not a
+				// touch: nobody is reading it, so nobody freezes.
+				if ev.PlayerStatId >= 0 {
+					if playerID, found := rm.playerIDForStat(boardID, ev.PlayerStatId); found {
+						rm.players[playerID].scrollOpen = true
+					}
+				}
+				roomEvents[boardID] = append(roomEvents[boardID], event)
 			default:
 				roomEvents[boardID] = append(roomEvents[boardID], event)
 			}
@@ -580,6 +602,9 @@ func (rm *RoomManager) transferPlayer(playerID PlayerID, transfer TransferEvent)
 	if player == nil {
 		return
 	}
+	// A scroll cannot survive the board it was read on, and a gate that did
+	// would freeze the player on the far side forever.
+	player.scrollOpen = false
 	srcRoom := rm.rooms[player.boardID]
 	if srcRoom == nil {
 		return
@@ -675,11 +700,16 @@ func (rm *RoomManager) SubmitDebugCommand(playerID PlayerID, text string) bool {
 
 // SubmitScrollReply forwards a scroll hyperlink selection to the engine that
 // owns the player. objectStatID is the object that showed the scroll.
+//
+// It is also how the client says "I have closed the scroll": an empty label is
+// no hyperlink (the engine ignores it) but still unfreezes the reader. Every
+// scroll the client opens is answered exactly once, on dismiss.
 func (rm *RoomManager) SubmitScrollReply(playerID PlayerID, objectStatID int16, label string) bool {
 	player := rm.players[playerID]
 	if player == nil {
 		return false
 	}
+	player.scrollOpen = false
 	room := rm.rooms[player.boardID]
 	if room == nil {
 		return false
