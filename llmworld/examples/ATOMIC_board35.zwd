@@ -1,0 +1,976 @@
+board "Inside the Capsule"
+  start player at 34,13
+  max-shots 255
+  dark false
+  reenter false
+  time-limit 0
+  exits north none south none west none east none
+
+  grid
+FFFFFFFFFFFFFFFFF#aoOAAAAAAAAAAbAAAAAAAAAAA#FFFFFFFFFFFFFFFF
+FFFFFFFFFFFFFFFFF#aaaAAAAAAAAbAAAAAAAAcdddd#FFFFFFFFFFFFFFFF
+FFFFFFFFFFFFFFFFF#NNNNNNNNNcccccccNNNNNNNNN#FFFFFFFFFFFFFFFF
+FFFFFFFFFFFFFFFFF#AABeeeBAAAAbbbAAAAAAAAAAd#FFFFFFFFFFFFFFFF
+FFFFFFFFFFFFFFFFF#AAeAAAeAAAAbbAAAAAAAAAAAd#FFFFFFFFFFFFFFFF
+FFFFFFFFFFFFFFFFF#AAeAAAeAAAAbbAAAAAAAAAAAd#FFFFFFFFFFFFFFFF
+FFFFFFFFFFFFFFFFF#AABeeeBAAAAbbbAAAAeeeeeAd#FFFFFFFFFFFFFFFF
+FFFFFFFFFFFFFFFFF#AAAAAAAAAAAbbbAABoBSSSBoB#FFFFFFFFFFFFFFFF
+FFFFFFFFFFFFFFFFF#ff~~~~~~~AAbbbAABoBSgSBoB#FFFFFFFFFFFFFFFF
+FFFFFFFFFFFFFFFFF#hAAAAAAhbAAAbbAABoBeeeBoB#FFFFFFFFFFFFFFFF
+FFFFFFFFFFFFFFFFF#NNNNNNNNNcccccccNNNNNNNNN#FFFFFFFFFFFFFFFF
+FFFFFFFFFFFFFFFFF#iAjAAAkAAAAbbbAAAjggiijki#FFFFFFFFFFFFFFFF
+FFFFFFFFFFFFFFFFF#llllllllAAAAbbA@lllllllll#FFFFFFFFFFFFFFFF
+FFFFFFFFFFFFFFFFF#AkgijAAAAAAAAbAAAAkAAAAgi#FFFFFFFFFFFFFFFF
+FFFFFFFFFFFFFFFFF#llllllllAAAAAbAAllllAAApl#FFFFFFFFFFFFFFFF
+FFFFFFFFFFFFFFFFF#jiAAeAAAAAAAAbAAAAAAijeee#FFFFFFFFFFFFFFFF
+FFFFFFFFFFFFFFFFF#llAeeeAAAAAAAbAAAAAllleBB#mFFFFFFFFFFFFFFF
+FFFFFFFFFFFFFFFFF#AAeeBeeAAAAAbbAAAAAAeeeBn#mmmmFFFFFFFFFFFF
+FFFFFFFFFFFFFFFmm#eeeBBBeeeAAbbAAAleeeeBBBn#qqqmmFFFFFFFFFFF
+FFFFFFFFFFFFFFmmq#BBBBnBBBeeAbAAAbeeBBBBnnn#WWqqmmmFFFFFFmmm
+mFFFFFFFFFFFFFmqq#NNNNNNNNNcccccccNNNNNNNNN#WWWqqqmmmmmFmmqq
+mmmmFFFmFFFFmmmqW#AAAAAAAAAAAAAAAAAAAAAAAAA#WWWWWqqqqqmmmqqW
+qqqmmmmmmmmmmqqq#rAAAAAAAAAAAAAAAAAAAAAAAAA##WWWWWWWWqqqqqWW
+WWqqqqqqqqqqqqWW#rAAAAAAAAAAAAAAAAAAAAAAAAArr#WWWWWWWWWWWWWW
+WWWWWWWWWWWWWWW#rrgggggggggggggggggggggggggrr#WWWWWWWWWWWWWW
+  end
+
+  legend
+    F = Fake color 0x30
+    # = Solid color 0x0F
+    a = Text-Yellow color 0x20
+    o = Object color 0x6E
+    O = Object color 0x76
+    A = Fake color 0x70
+    b = Object color 0x78
+    c = Object color 0x7F
+    d = Object color 0x71
+    N = Normal color 0x7F
+    B = Breakable color 0x68
+    e = Breakable color 0x60
+    S = Solid color 0x03
+    f = Normal color 0x3B
+    ~ = Water color 0x19
+    g = Object color 0x73
+    h = Object color 0x6F
+    i = Object color 0x74
+    j = Object color 0x72
+    k = Object color 0x7E
+    l = Breakable color 0x76
+    @ = Player color 0x1F under Fake color 0x70
+    p = Passage color 0x76 to "Underwater2"
+    m = Normal color 0x0E
+    n = Breakable color 0x74
+    q = Breakable color 0x0E
+    W = Water color 0x0E
+    r = Fake color 0x09
+  end
+
+  stats
+    stat at 33,21 element Object p1 cp437:0xCD p2 0 step idle under Fake color 0x77
+    stat at 32,21 element Object p1 cp437:0xCD p2 0 step idle under Fake color 0x77
+    stat at 30,21 element Object p1 cp437:0xCD p2 0 step idle under Fake color 0x77
+    stat at 29,21 element Object p1 cp437:0xCD p2 0 step idle under Fake color 0x77
+    stat at 30,11 element Object p1 cp437:0xCD p2 0 step idle under Empty color 0x7F
+    oop
+#bind door
+
+    end
+    stat at 32,11 element Object p1 cp437:0xCD p2 0 step idle under Empty color 0x7F
+    oop
+#bind door
+
+    end
+    stat at 34,11 element Object p1 cp437:0xBE p2 0 step idle under Empty color 0x7F
+    oop
+#bind door
+
+    end
+    stat at 28,11 element Object p1 cp437:0xD4 p2 0 step idle under Empty color 0x7F
+    oop
+#bind door
+
+    end
+    stat at 29,11 element Object p1 cp437:0xCD p2 0 step idle under Empty color 0x7F
+    oop
+#bind door
+
+    end
+    stat at 31,11 element Object p1 cp437:0xCB p2 0 step idle under Empty color 0x7F
+    oop
+#bind door
+
+    end
+    stat at 31,3 element Object p1 cp437:0xCB p2 0 step idle under Empty color 0x7F
+    oop
+#bind nextdoor
+
+    end
+    stat at 32,3 element Object p1 cp437:0xCD p2 0 step idle under Empty color 0x7F
+    oop
+#bind nextdoor
+
+    end
+    stat at 34,3 element Object p1 cp437:0xBE p2 0 step idle under Empty color 0x7F
+    oop
+#bind nextdoor
+
+    end
+    stat at 28,3 element Object p1 cp437:0xD4 p2 0 step idle under Empty color 0x7F
+    oop
+#bind nextdoor
+
+    end
+    stat at 28,21 element Object p1 cp437:0xD4 p2 0 step idle under Empty color 0x77
+    stat at 34,21 element Object p1 cp437:0xBE p2 0 step idle under Empty color 0x77
+    stat at 31,21 element Object p1 cp437:0xCB p2 0 step idle under Empty color 0x77
+    stat at 30,9 element Object p1 cp437:0xC7 p2 0 step idle under Empty color 0x08
+    stat at 30,8 element Object p1 cp437:0xC7 p2 0 step idle under Empty color 0x08
+    stat at 30,7 element Object p1 cp437:0xC7 p2 0 step idle under Empty color 0x08
+    stat at 30,6 element Object p1 cp437:0xC7 p2 0 step idle under Empty color 0x08
+    stat at 30,5 element Object p1 cp437:0xC7 p2 0 step idle under Empty color 0x08
+    stat at 30,4 element Object p1 cp437:0xC7 p2 0 step idle under Empty color 0x08
+    stat at 30,2 element Object p1 cp437:0xC7 p2 0 step idle under Empty color 0x0F
+    stat at 30,20 element Object p1 cp437:0xC7 p2 0 step idle under Empty color 0x0F
+    stat at 30,19 element Object p1 cp437:0xC7 p2 0 step idle under Empty color 0x0F
+    stat at 30,12 element Object p1 cp437:0xC7 p2 0 step idle under Empty color 0x0F
+    stat at 32,4 element Object p1 cp437:0xB6 p2 0 step idle under Empty color 0x0F
+    stat at 32,7 element Object p1 cp437:0xB6 p2 0 step idle under Empty color 0x0F
+    stat at 32,8 element Object p1 cp437:0xB6 p2 0 step idle under Empty color 0x0F
+    stat at 32,9 element Object p1 cp437:0xB6 p2 0 step idle under Empty color 0x0F
+    stat at 32,10 element Object p1 cp437:0xB6 p2 0 step idle under Empty color 0x0F
+    stat at 32,1 element Object p1 cp437:0xB6 p2 0 step idle under Empty color 0x0F
+    stat at 32,18 element Object p1 cp437:0xB6 p2 0 step idle under Empty color 0x0F
+    stat at 32,17 element Object p1 cp437:0xB6 p2 0 step idle under Empty color 0x0F
+    stat at 32,16 element Object p1 cp437:0xB6 p2 0 step idle under Empty color 0x0F
+    stat at 32,15 element Object p1 cp437:0xB6 p2 0 step idle under Empty color 0x0F
+    stat at 32,14 element Object p1 cp437:0xB6 p2 0 step idle under Empty color 0x0F
+    stat at 32,13 element Object p1 cp437:0xB6 p2 0 step idle under Empty color 0x0F
+    stat at 32,12 element Object p1 cp437:0xB6 p2 0 step idle under Empty color 0x0F
+    stat at 31,19 element Object p1 cp437:0xC4 p2 0 step idle under Empty color 0x0F
+    stat at 31,18 element Object p1 cp437:0xC4 p2 0 step idle under Empty color 0x0F
+    stat at 31,13 element Object p1 cp437:0xC4 p2 0 step idle under Empty color 0x0F
+    stat at 31,12 element Object p1 cp437:0xC4 p2 0 step idle under Empty color 0x0F
+    stat at 31,10 element Object p1 cp437:0xC4 p2 0 step idle under Empty color 0x0F
+    stat at 31,9 element Object p1 cp437:0xC4 p2 0 step idle under Empty color 0x0F
+    stat at 31,6 element Object p1 cp437:0xC4 p2 0 step idle under Empty color 0x0F
+    stat at 31,5 element Object p1 cp437:0xC4 p2 0 step idle under Empty color 0x0F
+    stat at 21,1 element Object p1 cp437:0xDD p2 0 step idle under Empty color 0x70
+    oop
+@Generator
+#end
+:touch
+Do you wish to activate the Power 
+generator?
+
+!a;Yes
+!b;No
+#end
+:a
+/i/i/i
+#power:which
+#end
+:b
+#end
+
+    end
+    stat at 19,10 element Object p1 cp437:0xDE p2 0 step idle under Empty color 0x70
+    stat at 26,10 element Object p1 cp437:0xDE p2 0 step idle under Empty color 0x70
+    stat at 36,9 element Object p1 cp437:0x09 p2 0 step idle under Empty color 0x20
+    oop
+@Data
+#end
+:view
+$Some Files have been corrupted. All files
+$which have been retrieved will have some
+$character corruption.
+
+!a;View details of Revival Project
+!b;View details of Forces Project
+!c;®˜Ÿ¤ £¤®¯¦¦® of £ ¥¤Ÿ-˜—•¡Ÿ Project
+#end
+:a
+To date, all work has been successfully
+completed. We now await developement of
+Nemesis project. Corrior of key project
+details has been intercepted. 
+
+Date of completion:
+
+20/06/45
+
+Corrier removal date:
+
+15/06/45
+#view
+#end
+:b
+Rejuvination of armed forces in running at
+a lower rate than expected. Correction of
+date follows.
+
+Initial Finishing Date:
+
+01/01/46
+
+Revised Date:
+
+01/03/46
+#view
+#end
+:c
+˜—Ÿ  ¤ ­¥¤ ¤ ®™ ™ ¤®­¥ k ¤¦¥¤™ ¥¤™¥¤± ¤¦
+£˜— ± —˜Ÿ£ £—˜£˜—£˜£  Reich  Ÿ‚oj
+
+£˜®˜± £˜—™Ÿ ˜£­ ¤:
+
+25/07/45
+
+#view
+#end
+
+    end
+    stat at 42,8 element Object p1 cp437:0x09 p2 0 step idle under Empty color 0x20
+    oop
+@Handle
+#end
+:touch
+#if ok then button
+This is a handle
+#end
+:button
+#cycle 1
+/i
+n
+/i
+unc
+/i
+funct
+/i
+lfuncti
+/i
+alfunctio
+/i
+Malfuntion
+/i
+.Malfuntion.
+/i
+..Malfunction..
+/i
+...Malfunction...
+/i
+..Malfunction..
+/i
+.Malfunction.
+/i
+Malfunction
+/i
+alfunctio
+/i
+lfuncti
+/i
+funct
+/i
+unc
+/i
+n
+#end
+
+    end
+    stat at 42,9 element Object p1 cp437:0x09 p2 0 step idle under Empty color 0x20
+    stat at 36,8 element Object p1 cp437:0x09 p2 0 step idle under Empty color 0x20
+    oop
+@Handle
+#end
+:touch
+#if ok then button
+This is a handle
+#end
+:button
+You have selected English
+/i/i/i
+...searching...
+/i/i/i
+$°°°±±±²²²Welcome to TRSIC²²²±±±°°°
+
+$Third-Reich Super Initiation Computer
+
+Please choose a function:
+
+!a;Access Data Files
+!b;Review Mission Logs
+!c;View Crew Rosta
+#end
+:a
+$WARNING-CORRUPTION OF FILES HAS OCCURED
+$°±²ATTEMPTING TO CORRECT FILE²±°
+/I/I/I
+#DATA:VIEW
+#END
+:c
+Crew is as follows:
+Enginner - Hans Harol Frinz
+Pilot    - Michael Rippen
+
+Officals - Adolf Hitler
+         - Albert Spear
+         - Josef Goebbles
+         - Hermann Goering
+#set read
+#end
+:b
+05/06/45
+
+A smooth flight was made from Dortmund. No
+problems were encounterd. The Fuhrer seems
+most pleased.
+
+06/06/45
+
+We have entered orbit over the Earths
+ionsphere. Our collection point has been
+finalised, and splashdown will commence
+tommorrow
+
+07/06/45
+
+We made a rough landing in the vicinity
+of Gibralter rock. We expect collection in
+roughly one hour. Glory to the New Reich!
+#end
+
+    end
+    stat at 36,10 element Object p1 cp437:0x09 p2 0 step idle under Empty color 0x20
+    stat at 42,10 element Object p1 cp437:0x09 p2 0 step idle under Empty color 0x20
+    stat at 39,2 element Object p1 cp437:0x08 p2 0 step idle under Fake color 0x70
+    oop
+@Plug
+#end
+:touch
+It's a plug
+#end
+:on
+#put e red object
+/i
+#put e blue object
+#computer:change
+#end
+
+    end
+    stat at 43,2 element Object p1 cp437:0xBB p2 0 step idle under Fake color 0x70
+    oop
+@Cable1
+#end
+:touch
+It's a cable
+#end
+:change
+#cable3:change
+#end
+
+    end
+    stat at 40,2 element Object p1 cp437:0xCD p2 0 step idle under Fake color 0x70
+    oop
+@computer
+#end
+:on
+#put w red object
+/i
+#plug:on
+#put w white object
+#end
+:change
+#put e red object
+#put e blue object
+#broken:change
+#end
+
+    end
+    stat at 41,2 element Object p1 cp437:0xBE p2 0 step idle under Fake color 0x70
+    oop
+@Broken
+#end
+:touch
+#if tape then fix
+The cable is broken, and needs to be fixed
+if it is to work.
+#end
+:fix
+You use some Heavy Duty tape to fix it...
+#Cable:fixed
+#char 205
+#set connect
+#clear tape
+#zap touch
+#end
+:fixed
+#char 205
+#end
+:change
+#put e red object
+#put e blue object
+#cable:change
+#end
+
+    end
+    stat at 42,2 element Object p1 cp437:0xD4 p2 0 step idle under Empty color 0x70
+    oop
+@Cable
+#end
+:touch
+#if tape then fix
+The cable is broken, and needs to be fixed
+if it is to work.
+#end
+:fix
+You use some Heavy Duty tape to fix it...
+#Broken:fixed
+#char 205
+#set connect
+#clear tape
+#zap touch
+#end
+:fixed
+#char 205
+#end
+:change
+#put e red object
+#put e blue object
+#cable1:change
+#end
+
+    end
+    stat at 37,12 element Object p1 cp437:0x15 p2 0 step idle under Fake color 0x70
+    oop
+@Wrench
+#end
+:touch
+#if wrench then no
+It's a wrench
+#set wrench
+#die
+#end
+:no
+You already have a wrench
+#end
+
+    end
+    stat at 38,12 element Object p1 cp437:0x15 p2 0 step idle under Empty color 0x70
+    stat at 43,14 element Object p1 cp437:0x0F p2 0 step idle under Fake color 0x70
+    oop
+#bind ammo
+
+    end
+    stat at 39,16 element Object p1 cp437:0x0F p2 0 step idle under Fake color 0x70
+    oop
+@Ammo
+#end
+:touch
+It's ammo, but not for your gun.
+#end
+
+    end
+    stat at 37,14 element Object p1 cp437:0x14 p2 0 step idle under Fake color 0x70
+    oop
+@Tape
+#end
+:touch
+#if tape then no
+It's some heavy duty tape. Do you want it?
+
+!a;Yes
+!b;No
+#end
+:a
+You have the tape
+#set tape
+#die
+#end
+:b
+#end
+:no
+You already have some tape
+#end
+
+    end
+    stat at 25,12 element Object p1 cp437:0x14 p2 0 step idle under Empty color 0x70
+    oop
+#bind tape
+
+    end
+    stat at 21,12 element Object p1 cp437:0x13 p2 0 step idle under Empty color 0x70
+    oop
+#bind food
+
+    end
+    stat at 36,12 element Object p1 cp437:0x13 p2 0 step idle under Empty color 0x70
+    oop
+@Food
+#end
+:touch
+It's a dried food package
+#give health 10
+#die
+#end
+
+    end
+    stat at 20,14 element Object p1 cp437:0x14 p2 0 step idle under Empty color 0x70
+    oop
+#bind tape
+
+    end
+    stat at 42,12 element Object p1 cp437:0x14 p2 0 step idle under Empty color 0x70
+    oop
+#bind tape
+
+    end
+    stat at 23,14 element Object p1 cp437:0x13 p2 0 step idle under Empty color 0x70
+    oop
+#bind food
+
+    end
+    stat at 19,16 element Object p1 cp437:0x13 p2 0 step idle under Empty color 0x70
+    oop
+#bind food
+
+    end
+    stat at 40,16 element Object p1 cp437:0x13 p2 0 step idle under Empty color 0x70
+    oop
+#bind food
+
+    end
+    stat at 41,12 element Object p1 cp437:0x13 p2 0 step idle under Empty color 0x70
+    oop
+#bind food
+
+    end
+    stat at 43,12 element Object p1 cp437:0x0F p2 0 step idle under Empty color 0x70
+    oop
+#bind ammo
+
+    end
+    stat at 40,12 element Object p1 cp437:0x0F p2 0 step idle under Fake color 0x70
+    stat at 39,12 element Object p1 cp437:0x0F p2 0 step idle under Fake color 0x70
+    oop
+#bind ammo
+
+    end
+    stat at 19,12 element Object p1 cp437:0x0F p2 0 step idle under Empty color 0x70
+    oop
+#bind ammo
+
+    end
+    stat at 20,16 element Object p1 cp437:0x0F p2 0 step idle under Empty color 0x70
+    oop
+#bind ammo
+
+    end
+    stat at 22,14 element Object p1 cp437:0x0F p2 0 step idle under Empty color 0x70
+    oop
+#bind ammo
+
+    end
+    stat at 43,4 element Object p1 cp437:0xBA p2 0 step idle under Empty color 0x70
+    oop
+@Cable2
+#end
+:touch
+It's a cable
+#end
+:change
+#put s red object
+#put s blue object
+#cable3:change2
+#end
+
+    end
+    stat at 43,5 element Object p1 cp437:0xBA p2 0 step idle under Empty color 0x70
+    oop
+@Cable3
+#end
+:touch
+It's a cable
+#end
+:change
+#put n red object
+#put n blue object
+#cable2:change
+#end
+:change2
+#put s red object
+#put s blue object
+#cable4:change
+#end
+
+    end
+    stat at 43,6 element Object p1 cp437:0xBA p2 0 step idle under Empty color 0x70
+    oop
+@Cable4
+#end
+:touch
+It's a cable
+#end
+:change
+#put s red object
+#put s blue object
+#cable5:change
+#end
+
+    end
+    stat at 43,7 element Object p1 cp437:0xBA p2 0 step idle under Empty color 0x70
+    oop
+@Cable5
+#end
+:touch
+It's a cable
+#end
+:change
+#cabinet:on
+#clear tape
+#set ok
+#end
+
+    end
+    stat at 39,9 element Object p1 cp437:0xDB p2 0 step idle under Empty color 0x03
+    oop
+@Cabinet
+#end
+:on
+#char 1
+#put n blue fake
+#put w blue fake
+#put e blue fake
+Please choose a language:
+/i/i/i
+Touch the left button for English...
+/i/i/i
+...or the right button for German.
+#end
+
+    end
+    stat at 33,11 element Object p1 cp437:0xCD p2 0 step idle under Empty color 0x0E
+    oop
+@Door
+#end
+:touch
+It's a sealed door. To open it you will 
+need to guage it correctly. If you use
+the right ammount of health, you will 
+regain it otherwise it is lost or some-
+other calamity occurs. How much health?
+
+!5;Five Health
+!10;Ten Health
+!15;Fifteen Health
+!20;Twenty Health
+#end
+:5
+Not nearly enough!
+#take health 5
+#end
+:10
+Nearly, but not quite
+#take health 10
+#end
+:15
+Well done! That's just right!
+/i
+#door:open
+#end
+:20
+Far too much! The handle breaks!
+/i/i/i
+You will need to find a wrench!
+#take health 20
+#zap touch
+#end
+:open
+#become white fake
+#end
+:touch
+#if wrench then ok
+You will now need a wrench to open it.
+#end
+:ok
+How much health?
+!5;Five health
+!10;Ten health
+!15;Fifteen health
+!20;Twenty health
+#end
+
+    end
+    stat at 33,3 element Object p1 cp437:0xCD p2 0 step idle under Empty color 0x0E
+    oop
+@NextDoor
+#end
+:touch
+It's a sealed door, but it looks a little
+tougher then the others. How much health? 
+
+!5;Five Health
+!10;Ten Health
+!15;Fifteen Health
+!20;Twenty Health
+!25;Twenty Five Health
+#end
+:5
+Far too little!
+#take health 5
+#end
+:10
+Not nearly enough
+#take health 10
+#end
+:15
+Well done! That's just right!
+/i
+#nextdoor:open
+#clear wrench
+#end
+:20
+Far too much! The handle breaks!
+#take health 20
+#zap touch
+#end
+:open
+#become white fake
+#end
+:25
+Nearly, but not quite
+#take health 25
+#end
+:touch
+#if wrench then ok
+You now need a wrench to open this
+#end
+:ok
+!5;Five Health
+!10;Ten Health
+!15;Fifteen Health
+!20;Twenty Health
+!25;Twenty Five Health
+#end
+
+    end
+    stat at 30,3 element Object p1 cp437:0xCD p2 0 step idle under Empty color 0x0E
+    oop
+#bind nextdoor
+
+    end
+    stat at 29,3 element Object p1 cp437:0xCD p2 0 step idle under Empty color 0x0E
+    oop
+#bind nextdoor
+
+    end
+    stat at 42,14 element Object p1 cp437:0x15 p2 0 step idle under Empty color 0x70
+    oop
+#bind wrench
+
+    end
+    stat at 21,14 element Object p1 cp437:0x15 p2 0 step idle under Empty color 0x70
+    oop
+#bind wrench
+
+    end
+    stat at 34,20 element Object p1 cp437:0xFB p2 0 step idle under Empty color 0x0E
+    oop
+@Pump
+#end
+:touch
+It appears to be a pump
+#end
+:pump
+#flood:stop
+#end
+
+    end
+    stat at 31,25 element Object p1 cp437:0xB0 p2 0 step idle under Fake color 0x70
+    oop
+@Flood
+#cycle 15
+#if contact then bye
+#put n empty
+/i/i/i
+/n
+#put s blue fake
+#restart
+#end
+:bye
+As you fall in the water, you are unable 
+to find your oxygen tank in the darkness
+of the capsule. Sadly, you drown.
+#endgame
+#end
+:stop
+#end
+
+    end
+    stat at 30,25 element Object p1 cp437:0xB0 p2 0 step idle under Fake color 0x70
+    oop
+#bind flood
+
+    end
+    stat at 28,25 element Object p1 cp437:0xB0 p2 0 step idle under Empty color 0x0E
+    oop
+#bind flood
+
+    end
+    stat at 27,25 element Object p1 cp437:0xB0 p2 0 step idle under Empty color 0x0E
+    oop
+#bind flood
+
+    end
+    stat at 26,25 element Object p1 cp437:0xB0 p2 0 step idle under Empty color 0x0E
+    oop
+#bind flood
+
+    end
+    stat at 25,25 element Object p1 cp437:0xB0 p2 0 step idle under Empty color 0x0E
+    oop
+#bind flood
+
+    end
+    stat at 24,25 element Object p1 cp437:0xB0 p2 0 step idle under Empty color 0x0E
+    oop
+#bind flood
+
+    end
+    stat at 23,25 element Object p1 cp437:0xB0 p2 0 step idle under Empty color 0x0E
+    oop
+#bind flood
+
+    end
+    stat at 22,25 element Object p1 cp437:0xB0 p2 0 step idle under Empty color 0x0E
+    oop
+#bind flood
+
+    end
+    stat at 21,25 element Object p1 cp437:0xB0 p2 0 step idle under Empty color 0x0E
+    oop
+#bind flood
+
+    end
+    stat at 20,25 element Object p1 cp437:0xB0 p2 0 step idle under Empty color 0x0E
+    oop
+#bind flood
+
+    end
+    stat at 19,25 element Object p1 cp437:0xB0 p2 0 step idle under Empty color 0x0E
+    oop
+#bind flood
+
+    end
+    stat at 29,25 element Object p1 cp437:0xB0 p2 0 step idle under Empty color 0x70
+    oop
+#bind flood
+
+    end
+    stat at 32,25 element Object p1 cp437:0xB0 p2 0 step idle under Fake color 0x70
+    oop
+#bind flood
+
+    end
+    stat at 33,25 element Object p1 cp437:0xB0 p2 0 step idle under Fake color 0x70
+    oop
+#bind flood
+
+    end
+    stat at 34,25 element Object p1 cp437:0xB0 p2 0 step idle under Fake color 0x70
+    oop
+#bind flood
+
+    end
+    stat at 35,25 element Object p1 cp437:0xB0 p2 0 step idle under Fake color 0x70
+    oop
+#bind flood
+
+    end
+    stat at 36,25 element Object p1 cp437:0xB0 p2 0 step idle under Fake color 0x70
+    oop
+#bind flood
+
+    end
+    stat at 37,25 element Object p1 cp437:0xB0 p2 0 step idle under Fake color 0x70
+    oop
+#bind flood
+
+    end
+    stat at 38,25 element Object p1 cp437:0xB0 p2 0 step idle under Fake color 0x70
+    oop
+#bind flood
+
+    end
+    stat at 39,25 element Object p1 cp437:0xB0 p2 0 step idle under Fake color 0x70
+    oop
+#bind flood
+
+    end
+    stat at 40,25 element Object p1 cp437:0xB0 p2 0 step idle under Fake color 0x70
+    oop
+#bind flood
+
+    end
+    stat at 41,25 element Object p1 cp437:0xB0 p2 0 step idle under Fake color 0x70
+    oop
+#bind flood
+
+    end
+    stat at 42,25 element Object p1 cp437:0xB0 p2 0 step idle under Fake color 0x70
+    oop
+#bind flood
+
+    end
+    stat at 43,25 element Object p1 cp437:0xB0 p2 0 step idle under Fake color 0x70
+    oop
+#bind flood
+
+    end
+    stat at 31,4 element Object p1 cp437:0xC4 p2 0 step idle under Empty color 0x0F
+    oop
+@Power
+#end
+:which
+$°°°°°±±±±²²²²POWER GENERATED²²²²±±±±°°°°°
+
+Working at Minimum power. Please choose
+a function to power:
+
+!a; Pump
+!b; Computer
+!c; Warm-up Engines
+#end
+:a
+Pump is now in full operation.
+#pump:pump
+#end
+:b
+#if connect then ok
+The Electrical Connection is broken.
+#end
+:ok
+Starting Computer systems...
+#computer:on
+#end
+:c
+There is not enough power to do this.
+#end
+
+    end
+    stat at 31,7 element Object p1 cp437:0xC4 p2 0 step idle under Empty color 0x0F
+    stat at 31,8 element Object p1 cp437:0xC4 p2 0 step idle under Empty color 0x0F
+    stat at 20,1 element Object p1 cp437:0x09 p2 0 step idle under Empty color 0x20
+    stat at 27,10 element Object p1 cp437:0xFB p2 0 step idle under Empty color 0x70
+    oop
+@Pump
+#end
+:touch
+It appears to be a pump
+#end
+:pump
+#flood:stop
+#end
+
+    end
+    stat at 42,15 element Passage p1 0 p2 0 p3 board "Underwater2" step idle under Empty color 0x76
+  end
+end

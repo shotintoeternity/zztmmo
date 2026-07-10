@@ -1,0 +1,1998 @@
+board "Elevator 6 (Rabbit Boots and Zephyr)"
+  start player at 39,24
+  respawn at 1,1
+  max-shots 0
+  dark false
+  reenter false
+  time-limit 0
+  exits north none south none west none east none
+
+  grid
+o~BBBBBBBBBBBBBB~~~~~~~~~~~~~~~~~~~~~~#####################o
+##~~BBBBBBBBBBBBBBBBB~~~~~~~~SSSSSSSSSSSSSSSSSSSSNa########o
+#~~~~~~~~~~BBBBBBBBBBBBBBSSSSNNNbNNNNNNNNNNNNNNNNNNSS#######
+###~~~~~~~~~~~~~~~~~~BBBSSNNNNNbc...............NNNNNSa#####
+##########~~~~~~~~~~~~~~NNNNNNbc.NNNNNNNNNNNNNNc.NNNNNS~~###
+############~~~~~~~~~~~~dNNbbbc.NNNNNNNNNNNNNNNbc....NNS~~~~
+#################~~~~~~~d.efff.NdddWWWggggWWWWddbNNN.NNS~~~~
+#########aF##############WdbbNNdWg~~~~~~~~~~~~BBWNNN.NNSBB~~
+############aFFFFFa#######lFFl#~~~~~~~~~~~~~~~~~~SNN.NNS~BBB
+####hhhhhi#hhhhhh#####FF##lFFl####~~~~~######~~~~NNN.NNS~~~~
+##########################lFFl###################SNN.NNN~~~~
+##########################lFFl##################aSNN.NNd~~~~
+####hh#####hhhhhh#########lFFl######bbbbb####aSSSNNN.NNW~~~~
+###########hhhhhhhh#######lFFl####NSSbSbSSSSSSSN.g...Ndg~~~~
+###########hhhhhhihhhhhF##lFFl####N..jgj.NSNNNNN.NNNbdW#~~~~
+###########hhhhhhhhhFFFFFFlFFl####S..jgj.NbbNNNN.Ndddg##~~~~
+###########hhhhhihhhhhhFFFlFFlF###S..jgj...c....gNWg######~~
+###########hhhhhhh########lFFl####S..jgj..NNNNNNbN#######kkk
+kk#########hhhhhhhih######lFFl####S..jgj..NWg#######mmmm#nOO
+nkmmm######F###########kkkpFFlmmkkS..jgj..Skk#kkkmm#mmkkknOO
+nnOkk####mmm#####mm#kk#gOOpFFpkmOnSggjgjggSOO#Onnkk#mmnOknnn
+nnnnO##kkkmmkkm#kkm#ngmgggqFFpnnOnSjgggggjSOOkOnnkknkmOnnnnn
+nnnnnkkOOnmkkkkkOOkknOmgOOpFFpnnnnSjgbbbrjSnnknnnnnnnknnnnnn
+nnnnnnnOOnkknOnnnnnnngknnnqggqnnnnSjbs@rbjSnngnnnnnnnknnnnnn
+nnnnnnnnnnnknnnnnnnnnOknnnqttqnnnnNjbbbbbjNnnnnnnnnnnnnnnnnn
+  end
+
+  legend
+    o = Object color 0x91
+    ~ = Water color 0x18
+    B = Breakable color 0x18
+    # = Solid color 0x11
+    S = Solid color 0x08
+    N = Normal color 0x08
+    a = Object color 0x18
+    b = Object color 0x08
+    c = Object color 0x80
+    . = Empty color 0x00
+    d = Breakable color 0x08
+    e = Object color 0x0E
+    f = Empty color 0x1F
+    W = Water color 0x08
+    g = Empty color 0x0F
+    F = Fake color 0x11
+    l = Line color 0x91
+    h = Object color 0x1F
+    i = Text-Blue color 0x20
+    j = Object color 0x07
+    k = Water color 0x01
+    m = Normal color 0x01
+    n = Empty color 0x01
+    O = Boulder color 0x01
+    p = Object color 0x01
+    q = Line color 0x80
+    r = Empty color 0x07
+    s = Object color 0x0A
+    @ = Player color 0x1F under Empty color 0x07
+    t = Empty color 0x91
+  end
+
+  stats
+    stat at 1,1 element Object p2 0 step idle
+    oop
+@linemanager
+' Should be first in stat list
+
+:trigger
+#all:m
+#end
+:m
+#all:liftup
+#l2:move
+#play 7
+/i
+#all:liftup
+#l3:move
+#play 7
+/i
+#all:liftup
+#l4:move
+#play 7
+/i
+#all:liftup
+#l5:move
+#play 7
+/i
+#all:liftup
+#l6:move
+#play 7
+/i
+#all:liftup
+#l7:move
+#play 7
+/i
+#all:liftup
+#play 7
+/i
+#all:done
+#turner:slow
+/i/i/i
+#turner:slow
+
+    end
+    stat at 38,15 element Object cycle 1 p1 cp437:0xB3 p2 0 step idle under Empty color 0x0F
+    oop
+@l8
+#end
+:move
+#char 32
+/w/w#die
+#end
+:crash
+?s?rndp rndns
+?s?rndp rndns
+?s?rndp rndns
+?s?rndp rndns
+#if blocked s die
+#crash
+
+    end
+    stat at 40,15 element Object cycle 1 p1 cp437:0xB3 p2 0 step idle under Empty color 0x0F
+    oop
+@l8
+#end
+:move
+#char 32
+/e/e#die
+#end
+:crash
+?s?rndp rndns
+?s?rndp rndns
+?s?rndp rndns
+?s?rndp rndns
+#if blocked s die
+#crash
+
+    end
+    stat at 38,16 element Object cycle 1 p1 cp437:0xB3 p2 0 step idle under Empty color 0x0F
+    oop
+@l7
+#end
+:move
+#char 32
+/w/w#die
+
+    end
+    stat at 40,16 element Object cycle 1 p1 cp437:0xB3 p2 0 step idle under Empty color 0x0F
+    oop
+@l7
+#end
+:move
+#char 32
+/e/e#die
+
+    end
+    stat at 38,17 element Object cycle 1 p1 cp437:0xB3 p2 0 step idle under Empty color 0x0F
+    oop
+@l6
+#end
+:move
+#char 32
+/w/w#die
+
+    end
+    stat at 40,17 element Object cycle 1 p1 cp437:0xB3 p2 0 step idle under Empty color 0x0F
+    oop
+@l6
+#end
+:move
+#char 32
+/e/e#die
+
+    end
+    stat at 38,18 element Object cycle 1 p1 cp437:0xB3 p2 0 step idle under Empty color 0x0F
+    oop
+@l5
+#end
+:move
+#char 32
+/w/w#die
+
+    end
+    stat at 40,18 element Object cycle 1 p1 cp437:0xB3 p2 0 step idle under Empty color 0x0F
+    oop
+@l5
+#end
+:move
+#char 32
+/e/e#die
+
+    end
+    stat at 38,19 element Object cycle 1 p1 cp437:0xB3 p2 0 step idle under Empty color 0x0F
+    oop
+@l4
+#end
+:move
+#char 32
+/w/w#die
+
+    end
+    stat at 40,19 element Object cycle 1 p1 cp437:0xB3 p2 0 step idle under Empty color 0x0F
+    oop
+@l4
+#end
+:move
+#char 32
+/e/e#die
+
+    end
+    stat at 38,20 element Object cycle 1 p1 cp437:0xB3 p2 0 step idle under Empty color 0x0F
+    oop
+@l3
+#end
+:move
+#char 32
+/w/w
+/i/i/i/i/i/i/i/i/i/i/i
+/e/e
+#char 179
+#end
+:crash
+?s?rndp rndns
+?s?rndp rndns
+?s?rndp rndns
+?s?rndp rndns
+#if blocked s die
+#crash
+
+    end
+    stat at 40,20 element Object cycle 1 p1 cp437:0xB3 p2 0 step idle under Empty color 0x0F
+    oop
+@l3
+#end
+:move
+#char 32
+/e/e
+/i/i/i/i/i/i/i/i/i/i/i
+/w/w
+#char 179
+#end
+:crash
+?s?rndp rndns
+?s?rndp rndns
+?s?rndp rndns
+?s?rndp rndns
+#if blocked s die
+#crash
+
+    end
+    stat at 38,21 element Object cycle 1 p1 cp437:0xB3 p2 0 step idle under Empty color 0x0F
+    oop
+@l2
+#end
+:move
+#char 32
+/w/w
+/i/i/i/i/i/i/i/i/i/i/i
+/e/e
+#char 179
+#end
+:crash
+?s?rndp rndns
+?s?rndp rndns
+?s?rndp rndns
+?s?rndp rndns
+#if blocked s die
+#crash
+
+    end
+    stat at 40,21 element Object cycle 1 p1 cp437:0xB3 p2 0 step idle under Empty color 0x0F
+    oop
+@l2
+#end
+:move
+#char 32
+/e/e
+/i/i/i/i/i/i/i/i/i/i/i
+/w/w
+#char 179
+#end
+:crash
+?s?rndp rndns
+?s?rndp rndns
+?s?rndp rndns
+?s?rndp rndns
+#if blocked s die
+#crash
+
+    end
+    stat at 36,22 element Object cycle 1 p1 cp437:0x00 p2 0 step idle under Empty color 0x0F
+    oop
+@lx
+/i/i/i/i/i/i/i/i/i/i/i
+/e/e
+#char 179
+#end
+:crash
+?s?rndp rndns
+?s?rndp rndns
+?s?rndp rndns
+?s?rndp rndns
+#if blocked s die
+#crash
+
+    end
+    stat at 42,22 element Object cycle 1 p1 cp437:0x00 p2 0 step idle under Empty color 0x0F
+    oop
+@lx
+/i/i/i/i/i/i/i/i/i/i/i
+/w/w
+#char 179
+#end
+:crash
+?s?rndp rndns
+?s?rndp rndns
+?s?rndp rndns
+?s?rndp rndns
+#if blocked s die
+#crash
+
+    end
+    stat at 36,23 element Object cycle 1 p1 cp437:0x00 p2 0 step idle under Empty color 0x0F
+    oop
+@lx
+/i/i/i/i/i
+/e
+/i
+/e
+#char 179
+#end
+:crash
+?s?rndp rndns
+?s?rndp rndns
+?s?rndp rndns
+?s?rndp rndns
+#if blocked s die
+#crash
+
+    end
+    stat at 38,23 element Object cycle 1 p1 cp437:0xDC p2 0 step idle under Empty color 0x07
+    oop
+@e1l
+#end
+:liftup
+/n
+#end
+:sr
+/e
+#end
+:crash
+?s?rndp rndns
+?s?rndp rndns
+?s?rndp rndns
+?s?rndp rndns
+#if blocked s die
+#crash
+
+    end
+    stat at 39,23 element Object cycle 1 p1 cp437:0xDC p2 0 step idle under Empty color 0x07
+    oop
+@e1r
+#end
+:liftup
+/n
+#end
+:sr
+/e
+#end
+:crash
+?s?rndp rndns
+?s?rndp rndns
+?s?rndp rndns
+?s?rndp rndns
+#if blocked s die
+#crash
+
+    end
+    stat at 40,23 element Object cycle 1 p1 cp437:0xDC p2 0 step idle under Empty color 0x07
+    oop
+@e1r
+#end
+:liftup
+/n
+#end
+:sr
+/e
+#end
+:crash
+?s?rndp rndns
+?s?rndp rndns
+?s?rndp rndns
+?s?rndp rndns
+#if blocked s die
+#crash
+
+    end
+    stat at 42,23 element Object cycle 1 p1 cp437:0x00 p2 0 step idle under Empty color 0x0F
+    oop
+@lx
+/i/i/i/i/i/i
+/w
+/i
+/w
+#char 179
+#end
+:crash
+?s?rndp rndns
+?s?rndp rndns
+?s?rndp rndns
+?s?rndp rndns
+#if blocked s die
+#crash
+
+    end
+    stat at 36,24 element Object cycle 1 p1 cp437:0x00 p2 0 step idle under Empty color 0x0F
+    oop
+@lx
+/i/i
+/e
+/i
+/e
+#char 179
+#end
+:crash
+?s?rndp rndns
+?s?rndp rndns
+?s?rndp rndns
+?s?rndp rndns
+#if blocked s die
+#crash
+
+    end
+    stat at 37,24 element Object cycle 1 p1 cp437:0xDE p2 0 step idle under Empty color 0x07
+    oop
+@e2l
+#end
+:liftup
+/n
+#end
+:sr
+/e
+#end
+:crash
+?s?rndp rndns
+?s?rndp rndns
+?s?rndp rndns
+?s?rndp rndns
+#if blocked s die
+#crash
+
+    end
+    stat at 38,24 element Object cycle 1 p1 cp437:0x07 p2 0 step idle under Empty color 0x07
+    oop
+@b
+#end
+'touch
+#zap touch
+#char 7
+#change red object green object
+#all:unseal
+#end
+:liftup
+/n
+#end
+:sr
+/e
+#end
+:done
+#restore touch
+#change green object red object
+#char 9
+/i#char 7
+/i#char 9
+/i#char 7
+#end
+:crash
+?s?rndp rndns
+?s?rndp rndns
+?s?rndp rndns
+#if blocked s die
+#crash
+
+    end
+    stat at 41,24 element Object cycle 1 p1 cp437:0xDD p2 0 step idle under Empty color 0x07
+    oop
+@e2r
+#end
+:liftup
+/n
+#end
+:unseal
+/i
+#char 222
+/e
+#char 220
+/s
+#end
+:crash
+?s?rndp rndns
+?s?rndp rndns
+?s?rndp rndns
+?s?rndp rndns
+#if blocked s die
+#crash
+
+    end
+    stat at 42,24 element Object cycle 1 p1 cp437:0x00 p2 0 step idle under Empty color 0x0F
+    oop
+@lx
+/i/i/i
+/w
+/i
+/w
+#char 179
+#end
+:crash
+?s?rndp rndns
+?s?rndp rndns
+?s?rndp rndns
+?s?rndp rndns
+#if blocked s die
+#crash
+
+    end
+    stat at 36,25 element Object cycle 1 p1 cp437:0x00 p2 0 step idle under Empty color 0x0F
+    oop
+@lx
+/e
+/e
+#char 179
+#end
+:crash
+?s?rndp rndns
+?s?rndp rndns
+?s?rndp rndns
+?s?rndp rndns
+#if blocked s die
+#crash
+
+    end
+    stat at 37,25 element Object cycle 1 p1 cp437:0xDE p2 0 step idle under Empty color 0x07
+    oop
+@e31
+#end
+:liftup
+/n
+#end
+:sr
+/e
+#end
+:crash
+?s?rndp rndns
+?s?rndp rndns
+?s?rndp rndns
+?s?rndp rndns
+#if blocked s die
+#crash
+
+    end
+    stat at 38,25 element Object cycle 1 p1 cp437:0xDC p2 0 step idle under Empty color 0x07
+    oop
+@e32
+#end
+:liftup
+/n
+#end
+:sr
+/e
+#end
+:crash
+?s?rndp rndns
+?s?rndp rndns
+?s?rndp rndns
+?s?rndp rndns
+#if blocked s die
+#crash
+
+    end
+    stat at 39,25 element Object cycle 1 p1 cp437:0xDC p2 0 step idle under Empty color 0x07
+    oop
+@e33
+#end
+:liftup
+/n
+#end
+:sr
+/e
+#end
+:crash
+?s?rndp rndns
+?s?rndp rndns
+?s?rndp rndns
+?s?rndp rndns
+#if blocked s die
+#crash
+
+    end
+    stat at 40,25 element Object cycle 1 p1 cp437:0xDC p2 0 step idle under Empty color 0x07
+    oop
+@e33
+#end
+:liftup
+/n
+#end
+:sr
+/e
+#end
+:crash
+?s?rndp rndns
+?s?rndp rndns
+?s?rndp rndns
+?s?rndp rndns
+#if blocked s die
+#crash
+
+    end
+    stat at 41,25 element Object cycle 1 p1 cp437:0xDD p2 0 step idle under Empty color 0x07
+    oop
+@e34
+#end
+:liftup
+/n
+#end
+:sr
+/e
+#end
+:crash
+?s?rndp rndns
+?s?rndp rndns
+?s?rndp rndns
+?s?rndp rndns
+#if blocked s die
+#crash
+
+    end
+    stat at 42,25 element Object cycle 1 p1 cp437:0x00 p2 0 step idle under Empty color 0x0F
+    oop
+@lx
+/w
+/w
+#char 179
+#end
+:crash
+?s?rndp rndns
+?s?rndp rndns
+?s?rndp rndns
+?s?rndp rndns
+#if blocked s die
+#crash
+
+    end
+    stat at 44,16 element Object cycle 1 p1 cp437:0xB2 p2 0 step idle under Empty color 0x0F
+    oop
+
+:a
+/i#if not contact a
+#gate:a
+
+    end
+    stat at 49,18 element Object cycle 1 p1 cp437:0xDC p2 0 step idle under Empty color 0x0F
+    oop
+
+:a
+/i#if not contact a
+#put n white sliderns
+/i#put n white sliderns
+/i#put n white sliderns
+/i/i/i/i/i/i/i/i/i/i/i/i/i/i
+#all:crash
+
+    end
+    stat at 53,15 element Object cycle 1 p1 cp437:0xDC p2 0 step idle under Empty color 0x0F
+    oop
+
+:a
+/i#if not contact a
+#put n white sliderns
+/i#put n white sliderns
+/i#put n white sliderns
+/i#put n white sliderns
+/i#put n white sliderns
+/i#put n white sliderns
+/i#put n white sliderns
+/i#put n white sliderns
+
+    end
+    stat at 38,13 element Object cycle 1 p1 cp437:0xDF p2 0 step idle under Empty color 0x0F
+    oop
+@turner
+:a
+/i#char 222
+#zap a
+#a
+:a
+/i#char 220
+#zap a
+#a
+:a
+/i#char 221
+#zap a
+#a
+:a
+/i#char 223
+#restore a
+#a
+:slow
+#zap slow
+#cycle 2
+#a
+:slow
+
+    end
+    stat at 40,13 element Object cycle 1 p1 cp437:0xDF p2 0 step idle under Empty color 0x0F
+    oop
+@turner
+:a
+/i#char 221
+#zap a
+#a
+:a
+/i#char 223
+#zap a
+#a
+:a
+/i#char 222
+#zap a
+#a
+:a
+/i#char 220
+#restore a
+#a
+:slow
+#zap slow
+#cycle 2
+#a
+:slow
+
+    end
+    stat at 39,13 element Object p1 cp437:0xCB p2 0 step idle under Empty color 0x0F
+    stat at 37,13 element Object p1 cp437:0xD6 p2 0 step idle under Empty color 0x0F
+    stat at 41,13 element Object p1 cp437:0xB7 p2 0 step idle under Empty color 0x0F
+    stat at 38,14 element Object p1 cp437:0xDE p2 0 step idle under Empty color 0x0F
+    stat at 40,14 element Object p1 cp437:0xDD p2 0 step idle under Empty color 0x0F
+    stat at 55,4 element Object p1 cp437:0xB7 p2 0 step idle under Empty color 0x0F
+    stat at 51,2 element Object p1 cp437:0xB7 p2 0 step idle under Empty color 0x0F
+    stat at 49,12 element Object p1 cp437:0xD6 p2 0 step idle under Empty color 0x0F
+    stat at 46,13 element Object p1 cp437:0xD6 p2 0 step idle under Empty color 0x0F
+    stat at 49,7 element Object cycle 1 p1 cp437:0xB2 p2 0 step idle under Empty color 0x0F
+    oop
+
+:a
+/i#if not contact a
+#put n empty
+#a
+
+    end
+    stat at 48,6 element Object cycle 1 p1 cp437:0xB2 p2 0 step idle under Empty color 0x0F
+    oop
+
+:a
+/i#if not contact a
+#put n empty
+#a
+
+    end
+    stat at 33,3 element Object cycle 1 p1 cp437:0xB2 p2 0 step idle under Empty color 0x0F
+    oop
+
+:a
+/i#if not contact a
+#put s empty
+#a
+
+    end
+    stat at 32,4 element Object cycle 1 p1 cp437:0xB2 p2 0 step idle under Empty color 0x0F
+    oop
+
+:a
+/i#if not contact a
+#put s empty
+#a
+
+    end
+    stat at 31,5 element Object cycle 1 p1 cp437:0xB2 p2 0 step idle under Empty color 0x0F
+    oop
+
+:a
+/i#if not contact a
+#put s empty
+#a
+
+    end
+    stat at 33,4 element Object cycle 1 p1 cp437:0x18 p2 0 step idle
+    oop
+#die
+
+    end
+    stat at 32,5 element Object cycle 1 p1 cp437:0x18 p2 0 step idle
+    oop
+#die
+
+    end
+    stat at 31,6 element Object cycle 1 p1 cp437:0x18 p2 0 step idle
+    oop
+#die
+
+    end
+    stat at 48,5 element Object cycle 1 p1 cp437:0x19 p2 0 step idle
+    oop
+#die
+
+    end
+    stat at 49,6 element Object cycle 1 p1 cp437:0x19 p2 0 step idle
+    oop
+#die
+
+    end
+    stat at 27,7 element Object cycle 1 p1 cp437:0x02 p2 0 step idle
+    oop
+@ 
+#end
+:crash
+/i/i/i/i/i/i/i/i/i/i/i
+Excellent, excellent. Right on schedule.
+/i
+#end
+:touch
+#lock
+#noexit:a
+/i
+Okay then, let's take a look...
+/i/i/i/i/i/i/i/i/i/i/i/i/i/i/i/i/i/i
+/i/i/i/i/i/i/i/i/i/i/i/i/i/i/i/i/i/i
+Some slight contusions and lacerations,
+but it looks like the recharge stations
+have done their work.
+/i/i/i/i/i/i/i
+A broken station, you say?! Hmm, I'll send
+a crew down immediately.
+/i/i/i/i/i/i/i
+Okay, just a few questions...
+/i/i/i/i/i/i/i/i/i/i/i
+/i/i/i/i/i/i/i/i/i/i/i
+/i/i/i/i/i/i/i/i/i/i/i
+:l
+How do you feel about heights?
+
+!aa;heights don't bother me
+!ab;i'm terrified
+/i
+#l
+
+:aa
+/i
+Excellent. Very good.
+/i
+#yellow
+
+:ab
+#if not bad set bad
+/i
+Hmmm, that is unfortunate.
+/i
+#yellow
+
+:yellow
+/i/i/i/i/i/i/i/i/i/i/i/i/i/i
+:lyellow
+ 
+And the color yellow?
+
+!ba;i love it
+!bb;i hate it
+/i
+#lyellow
+
+
+:ba
+/i
+Excellent, excellent. Just so.
+/i
+#smsp
+
+:bb
+#if not bad set bad
+/i
+Okay, hmmm.. This is not good. 
+/i
+#smsp
+
+:smsp
+/i/i/i/i/i/i/i/i/i/i/i/i/i/i
+:lsmall
+How do you feel about small spaces?
+
+!cb;they make me feel safe
+!ca;they make me feel like i'm dying
+/i
+#lsmall
+
+:ca
+#if not bad set bad
+/i
+Really?! Still??
+/i
+#who
+
+:cb
+/i
+Incredible! What a transformation!
+/i
+#who
+
+:who
+/i/i/i/i/i/i/i/i/i/i/i/i/i/i
+One more question...
+/i/i/i/i/i/i/i/i/i/i/i
+/i/i/i/i/i/i/i/i/i/i/i
+:lc
+Do you remember who you are?
+
+!da;yes
+!db;no
+/i
+#lc
+
+:da
+/i/i/i/i/i/i/i/i/i/i/i
+/i/i/i/i/i/i/i/i/i/i/i
+/i/i/i/i/i/i/i/i/i/i/i
+Hmmm... 
+/i/i/i/i/i/i/i/i/i/i/i
+/i/i/i/i/i/i/i/i/i/i/i
+Well,
+/i/i/i/i/i/i/i/i/i/i/i
+/i/i/i/i/i/i/i/i/i/i/i
+/i/i/i/i/i/i/i/i/i/i/i
+Maybe next time you'll make more progress
+/i/i/i/i/i/i/i/i/i/i/i
+/i/i/i/i/i/i/i/i/i/i/i
+/i/i/i/i/i/i/i/i/i/i/i
+#z
+
+:db
+#if bad da
+/i/i/i/i/i
+Wow! Excellent! 
+/w/e/w/e/w/e
+/i/i/i/i/i/i/i/i/i/i/i
+/i/i/i/i/i/i/i/i/i/i/i
+/i/i/i/i/i/i/i/i/i/i/i
+But...
+/i/i/i/i/i/i/i/i/i/i/i
+/i/i/i/i/i/i/i/i/i/i/i
+/i/i/i/i/i/i/i/i/i/i/i
+I think one more time, just to be sure.
+/i/i/i/i/i/i/i/i/i/i/i
+/i/i/i/i/i/i/i/i/i/i/i
+/i/i/i/i/i/i/i/i/i/i/i
+#z
+
+:z
+#door:a
+/i/i/i/i/i/i
+#fall:a
+#cycle 4
+/i/i/i/i
+/i/i/i/i
+/i/i/i/i
+/i/i/i/i
+#all:small
+/i/i/i/i
+#all:spaces
+/i/i/i/i
+#all:by
+/i/i/i/i
+#all:zephyr
+/i/i/i/i
+#all:lancer
+/i/i/i/i
+#all:rboots
+/i/i/i/i
+#all:zinf
+/i/i/i/i
+#all:ao
+/i/i/i/i
+#all:kk
+/i/i/i/i
+#all:qp
+/i/i/i/i
+/i/i/i/i
+#all:x
+/i/i/i/i
+/i/i/i/i
+/i/i/i/i
+/i/i/i/i
+/i/i
+#endgame
+
+    end
+    stat at 43,16 element Object cycle 1 p1 cp437:0xDB p2 0 step idle under Solid color 0x08
+    oop
+@gate
+#end
+:a
+#char 219
+/s
+
+    end
+    stat at 44,17 element Object cycle 1 p1 cp437:0x18 p2 0 step idle
+    oop
+#die
+
+    end
+    stat at 28,6 element Object cycle 1 p1 cp437:0xB2 p2 0 step idle under Normal color 0x08
+    oop
+@fall
+#end
+:a
+#put s sliderns
+#put s sliderns
+#change sliderns empty
+#char 32
+/s/s/s/s
+/s/s/s/s
+/s/s/s/s
+/s/s/s/s
+/s/s
+#all:playit
+
+    end
+    stat at 29,6 element Object cycle 1 p1 cp437:0xB2 p2 0 step idle under Normal color 0x08
+    oop
+#bind fall
+
+    end
+    stat at 28,8 element Object cycle 1 p1 cp437:0xB2 p2 0 step idle under Empty color 0x0F
+    oop
+@door
+#end
+:a
+#char 219
+/i#char 220
+/i#char 95
+/i
+#die
+
+    end
+    stat at 29,8 element Object cycle 1 p1 cp437:0xB2 p2 0 step idle under Empty color 0x0F
+    oop
+#bind door
+
+    end
+    stat at 27,21 element Object p1 cp437:0xFE p2 0 step idle under Empty color 0x0F
+    stat at 27,23 element Object p1 cp437:0xFE p2 0 step idle under Empty color 0x0F
+    stat at 27,20 element Object p1 cp437:0xB0 p2 0 step idle under Water color 0x01
+    stat at 30,6 element Object cycle 1 p1 cp437:0xB2 p2 0 step idle under Normal color 0x08
+    oop
+@noexit
+#end
+:a
+#char 32
+/s
+
+    end
+    stat at 30,21 element Object p1 cp437:0xB0 p2 0 step idle under Water color 0x01
+    stat at 30,22 element Object p1 cp437:0xB0 p2 0 step idle under Water color 0x01
+    stat at 30,23 element Object p1 cp437:0xB0 p2 0 step idle under Water color 0x01
+    stat at 60,1 element Object cycle 2 p1 cp437:0x45 p2 0 step idle under Empty color 0x0F data-pos -1
+    oop
+
+:playit
+#play --a++ea9
+/i#play --a++ea9
+/i#play --a++ea9
+/i#play --a++ea9
+/i#play --a++ea9
+/i#play --a++ea9
+/i#play --a++ea9
+/i#play --a++ea9
+#play -c+fa!9
+/i#play -c+fa!9
+/i#play -c+fa!9
+/i#play -c+fa!9
+/i#play -c+fa!9
+/i#play -c+fa!9
+/i#play -c+fa!9
+/i#play -c+fa!9
+
+#play --a++ea9
+/i#play --a++ea9
+/i#play --a++ea9
+/i#play --a++ea9
+/i#play --a++ea9
+/i#play --a++ea9
+/i#play --a++ea9
+/i#play --a++ea9
+/i#play -c+fa!9
+/i#play -c+fa!9
+/i#play -c+fa!9
+/i#play -c+fa!9
+/i#play -c+fa!9
+/i#play -c+fa!9
+/i#play -c+fa!9
+/i#play -c+fa!9
+
+/i#play -c+eg9
+/i#play -c+eg9
+/i#play -c+eg9
+/i#play -c+eg9
+/i#play -c+eg9
+/i#play -c+eg9
+/i#play -c+eg9
+/i#play -c+eg9
+/i#play --b++eg#9
+/i#play --b++eg#9
+/i#play --b++eg#9
+/i#play --b++eg#9
+/i#play --b++eg#9
+/i#play --b++eg#9
+/i#play --b++eg#9
+/i#play --b++eg#9
+
+/i#play --a++da9
+/i#play --a++da9
+/i#play --a++da9
+/i#play --a++da9
+/i#play --a++da9
+/i#play --a++da9
+/i#play --a++da9
+/i#play --a++da9
+
+/i#play --a++ca9
+/i#play --a++ca9
+/i#play --a++ca9
+/i#play --a++ca9
+/i#play --a++ca9
+/i#play --a++ca9
+/i#play --a++ca9
+/i#play --a++ca9
+
+/i#play --a++ea9
+/i#play --a++ea9
+/i#play --a++ea9
+/i#play --a++ea9
+/i#play --a++ea9
+/i#play --a++ea9
+/i#play --a++ea9
+/i#play --a++ea9
+/i#play -c+fa!9
+/i#play -c+fa!9
+/i#play -c+fa!9
+/i#play -c+fa!9
+/i#play -c+fa!9
+/i#play -c+fa!9
+/i#play -c+fa!9
+/i#play -c+fa!9
+
+/i#play --a++ea9
+/i#play --a++ea9
+/i#play --a++ea9
+/i#play --a++ea9
+/i#play --a++ea9
+/i#play --a++ea9
+/i#play --a++ea9
+/i#play --a++ea9
+/i#play -c+fa!9
+/i#play -c+fa!9
+/i#play -c+fa!9
+/i#play -c+fa!9
+/i#play -c+fa!9
+/i#play -c+fa!9
+/i#play -c+fa!9
+/i#play -c+fa!9
+
+/i#play -c+eg9
+/i#play -c+eg9
+/i#play -c+eg9
+/i#play -c+eg9
+/i#play -c+eg9
+/i#play -c+eg9
+/i#play -c+eg9
+/i#play -c+eg9
+/i#play --b++eg#9
+/i#play --b++eg#9
+/i#play --b++eg#9
+/i#play --b++eg#9
+/i#play --b++eg#9
+/i#play --b++eg#9
+/i#play --b++eg#9
+/i#play --b++eg#9
+
+/i#play --a++da9
+/i#play --a++da9
+/i#play --a++da9
+/i#play --a++da9
+/i#play --a++da9
+/i#play --a++da9
+/i#play --a++da9
+/i#play --a++da9
+
+/i#play --a++ca9
+/i#play --a++ca9
+/i#play --a++ca9
+/i#play --a++ca9
+/i#play --a++ca9
+/i#play S--a++ca9
+/i#play S--a++ca9
+/i/i#play I--a++ca9
+/i/i/i#play --Wa.
+
+    end
+    stat at 60,2 element Object cycle 1 p2 0 step idle under Empty color 0x0F data-pos -1
+    oop
+
+:playit
+/i
+                                         
+/i
+#playit
+
+    end
+    stat at 10,8 element Object p1 cp437:0x7E p2 0 step idle under Fake color 0x11
+    oop
+#bind brd
+
+    end
+    stat at 13,9 element Object p1 cp437:0x7E p2 0 step idle under Fake color 0x11
+    oop
+@brd
+:a
+#char 94
+/i
+#char 126
+/i#a
+:x
+#char 32
+
+    end
+    stat at 19,9 element Object p1 cp437:0x7E p2 0 step idle under Fake color 0x11
+    oop
+#bind brd
+
+    end
+    stat at 5,10 element Object cycle 1 p1 cp437:0x20 p2 0 step idle under Empty color 0x0F data-pos -1
+    oop
+
+:small
+#char 115
+#end
+:x
+#char 32
+
+    end
+    stat at 6,10 element Object cycle 1 p1 cp437:0x20 p2 0 step idle under Empty color 0x0F data-pos -1
+    oop
+
+:small
+#char 109
+#end
+:x
+#char 32
+
+    end
+    stat at 7,10 element Object cycle 1 p1 cp437:0x20 p2 0 step idle under Empty color 0x0F data-pos -1
+    oop
+
+:small
+#char 97
+#end
+:x
+#char 32
+/i/i/i/i/i/i/i/i/i/i
+#char 116
+
+    end
+    stat at 8,10 element Object cycle 1 p1 cp437:0x20 p2 0 step idle under Empty color 0x0F data-pos -1
+    oop
+
+:small
+#char 108
+#end
+:x
+#char 32
+/i/i/i/i/i/i/i/i/i/i
+#char 104
+
+    end
+    stat at 9,10 element Object cycle 1 p1 cp437:0x20 p2 0 step idle under Empty color 0x0F data-pos -1
+    oop
+
+:small
+#char 108
+#end
+:x
+#char 32
+/i/i/i/i/i/i/i/i/i/i
+#char 101
+
+    end
+    stat at 12,10 element Object cycle 1 p1 cp437:0x20 p2 0 step idle under Empty color 0x0F data-pos -1
+    oop
+
+:spaces
+#char 115
+#end
+:x
+#char 32
+/i/i/i/i/i/i/i/i/i/i
+#char 101
+
+    end
+    stat at 13,10 element Object cycle 1 p1 cp437:0x20 p2 0 step idle under Empty color 0x0F data-pos -1
+    oop
+
+:spaces
+#char 112
+#end
+:x
+#char 32
+/i/i/i/i/i/i/i/i/i/i
+#char 110
+
+    end
+    stat at 14,10 element Object cycle 1 p1 cp437:0x20 p2 0 step idle under Empty color 0x0F data-pos -1
+    oop
+
+:spaces
+#char 97
+#end
+:x
+#char 32
+/i/i/i/i/i/i/i/i/i/i
+#char 100
+
+    end
+    stat at 15,10 element Object cycle 1 p1 cp437:0x20 p2 0 step idle under Empty color 0x0F data-pos -1
+    oop
+
+:spaces
+#char 99
+#end
+:x
+#char 32
+
+    end
+    stat at 16,10 element Object cycle 1 p1 cp437:0x20 p2 0 step idle under Empty color 0x0F data-pos -1
+    oop
+
+:spaces
+#char 101
+#end
+:x
+#char 32
+
+    end
+    stat at 17,10 element Object cycle 1 p1 cp437:0x20 p2 0 step idle under Empty color 0x0F data-pos -1
+    oop
+
+:spaces
+#char 115
+#end
+:x
+#char 32
+
+    end
+    stat at 5,13 element Object cycle 1 p1 cp437:0x20 p2 0 step idle under Empty color 0x0F data-pos -1
+    oop
+
+:by
+#char 98
+#end
+:x
+#char 32
+
+    end
+    stat at 6,13 element Object cycle 1 p1 cp437:0x20 p2 0 step idle under Empty color 0x0F data-pos -1
+    oop
+
+:by
+#char 121
+#end
+:x
+#char 32
+
+    end
+    stat at 12,13 element Object cycle 1 p1 cp437:0x20 p2 0 step idle under Empty color 0x0F data-pos -1
+    oop
+
+:zephyr
+#char 122
+#end
+:x
+#char 32
+
+    end
+    stat at 13,13 element Object cycle 1 p1 cp437:0x20 p2 0 step idle under Empty color 0x0F data-pos -1
+    oop
+
+:zephyr
+#char 101
+#end
+:x
+#char 32
+
+    end
+    stat at 14,13 element Object cycle 1 p1 cp437:0x20 p2 0 step idle under Empty color 0x0F data-pos -1
+    oop
+
+:zephyr
+#char 112
+#end
+:x
+#char 32
+
+    end
+    stat at 15,13 element Object cycle 1 p1 cp437:0x20 p2 0 step idle under Empty color 0x0F data-pos -1
+    oop
+
+:zephyr
+#char 104
+#end
+:x
+#char 32
+
+    end
+    stat at 16,13 element Object cycle 1 p1 cp437:0x20 p2 0 step idle under Empty color 0x0F data-pos -1
+    oop
+
+:zephyr
+#char 121
+#end
+:x
+#char 32
+
+    end
+    stat at 17,13 element Object cycle 1 p1 cp437:0x20 p2 0 step idle under Empty color 0x0F data-pos -1
+    oop
+
+:zephyr
+#char 114
+#end
+:x
+#char 32
+
+    end
+    stat at 12,14 element Object cycle 1 p1 cp437:0x20 p2 0 step idle under Empty color 0x0F data-pos -1
+    oop
+
+:lancer
+#char 108
+#end
+:x
+#char 32
+
+    end
+    stat at 13,14 element Object cycle 1 p1 cp437:0x20 p2 0 step idle under Empty color 0x0F data-pos -1
+    oop
+
+:lancer
+#char 97
+#end
+:x
+#char 32
+
+    end
+    stat at 14,14 element Object cycle 1 p1 cp437:0x20 p2 0 step idle under Empty color 0x0F data-pos -1
+    oop
+
+:lancer
+#char 110
+#end
+:x
+#char 32
+
+    end
+    stat at 15,14 element Object cycle 1 p1 cp437:0x20 p2 0 step idle under Empty color 0x0F data-pos -1
+    oop
+
+:lancer
+#char 99
+#end
+:x
+#char 32
+
+    end
+    stat at 16,14 element Object cycle 1 p1 cp437:0x20 p2 0 step idle under Empty color 0x0F data-pos -1
+    oop
+
+:lancer
+#char 101
+#end
+:x
+#char 32
+
+    end
+    stat at 17,14 element Object cycle 1 p1 cp437:0x20 p2 0 step idle under Empty color 0x0F data-pos -1
+    oop
+
+:lancer
+#char 114
+#end
+:x
+#char 32
+
+    end
+    stat at 18,14 element Object cycle 1 p1 cp437:0x20 p2 0 step idle under Empty color 0x0F data-pos -1
+    oop
+
+:lancer
+#char 45
+#end
+:x
+#char 32
+
+    end
+    stat at 19,14 element Object cycle 1 p1 cp437:0x20 p2 0 step idle under Empty color 0x0F data-pos -1
+    oop
+
+:lancer
+#char 120
+#end
+:x
+#char 32
+
+    end
+    stat at 12,15 element Object cycle 1 p1 cp437:0x20 p2 0 step idle under Empty color 0x0F data-pos -1
+    oop
+
+:rboots
+#char 114
+#end
+:x
+#char 32
+
+    end
+    stat at 13,15 element Object cycle 1 p1 cp437:0x20 p2 0 step idle under Empty color 0x0F data-pos -1
+    oop
+
+:rboots
+#char 97
+#end
+:x
+#char 32
+
+    end
+    stat at 14,15 element Object cycle 1 p1 cp437:0x20 p2 0 step idle under Empty color 0x0F data-pos -1
+    oop
+
+:rboots
+#char 98
+#end
+:x
+#char 32
+
+    end
+    stat at 15,15 element Object cycle 1 p1 cp437:0x20 p2 0 step idle under Empty color 0x0F data-pos -1
+    oop
+
+:rboots
+#char 98
+#end
+:x
+#char 32
+
+    end
+    stat at 16,15 element Object cycle 1 p1 cp437:0x20 p2 0 step idle under Empty color 0x0F data-pos -1
+    oop
+
+:rboots
+#char 105
+#end
+:x
+#char 32
+
+    end
+    stat at 17,15 element Object cycle 1 p1 cp437:0x20 p2 0 step idle under Empty color 0x0F data-pos -1
+    oop
+
+:rboots
+#char 116
+#end
+:x
+#char 32
+
+    end
+    stat at 19,15 element Object cycle 1 p1 cp437:0x20 p2 0 step idle under Empty color 0x0F data-pos -1
+    oop
+
+:rboots
+#char 98
+#end
+:x
+#char 32
+
+    end
+    stat at 20,15 element Object cycle 1 p1 cp437:0x20 p2 0 step idle under Empty color 0x0F data-pos -1
+    oop
+
+:rboots
+#char 111
+#end
+:x
+#char 32
+
+    end
+    stat at 21,15 element Object cycle 1 p1 cp437:0x20 p2 0 step idle under Empty color 0x0F data-pos -1
+    oop
+
+:rboots
+#char 111
+#end
+:x
+#char 32
+
+    end
+    stat at 22,15 element Object cycle 1 p1 cp437:0x20 p2 0 step idle under Empty color 0x0F data-pos -1
+    oop
+
+:rboots
+#char 116
+#end
+:x
+#char 32
+
+    end
+    stat at 23,15 element Object cycle 1 p1 cp437:0x20 p2 0 step idle under Empty color 0x0F data-pos -1
+    oop
+
+:rboots
+#char 115
+#end
+:x
+#char 32
+
+    end
+    stat at 12,16 element Object cycle 1 p1 cp437:0x20 p2 0 step idle under Empty color 0x0F data-pos -1
+    oop
+
+:zinf
+#char 122
+#end
+:x
+#char 32
+
+    end
+    stat at 13,16 element Object cycle 1 p1 cp437:0x20 p2 0 step idle under Empty color 0x0F data-pos -1
+    oop
+
+:zinf
+#char 105
+#end
+:x
+#char 32
+
+    end
+    stat at 14,16 element Object cycle 1 p1 cp437:0x20 p2 0 step idle under Empty color 0x0F data-pos -1
+    oop
+
+:zinf
+#char 110
+#end
+:x
+#char 32
+
+    end
+    stat at 15,16 element Object cycle 1 p1 cp437:0x20 p2 0 step idle under Empty color 0x0F data-pos -1
+    oop
+
+:zinf
+#char 102
+#end
+:x
+#char 32
+
+    end
+    stat at 16,16 element Object cycle 1 p1 cp437:0x20 p2 0 step idle under Empty color 0x0F data-pos -1
+    oop
+
+:zinf
+#char 97
+#end
+:x
+#char 32
+
+    end
+    stat at 17,16 element Object cycle 1 p1 cp437:0x20 p2 0 step idle under Empty color 0x0F data-pos -1
+    oop
+
+:zinf
+#char 110
+#end
+:x
+#char 32
+
+    end
+    stat at 18,16 element Object cycle 1 p1 cp437:0x20 p2 0 step idle under Empty color 0x0F data-pos -1
+    oop
+
+:zinf
+#char 100
+#end
+:x
+#char 32
+
+    end
+    stat at 19,16 element Object cycle 1 p1 cp437:0x20 p2 0 step idle under Empty color 0x0F data-pos -1
+    oop
+
+:zinf
+#char 101
+#end
+:x
+#char 32
+
+    end
+    stat at 20,16 element Object cycle 1 p1 cp437:0x20 p2 0 step idle under Empty color 0x0F data-pos -1
+    oop
+
+:zinf
+#char 108
+#end
+:x
+#char 32
+
+    end
+    stat at 12,17 element Object cycle 1 p1 cp437:0x20 p2 0 step idle under Empty color 0x0F data-pos -1
+    oop
+
+:ao
+#char 97
+#end
+:x
+#char 32
+
+    end
+    stat at 13,17 element Object cycle 1 p1 cp437:0x20 p2 0 step idle under Empty color 0x0F data-pos -1
+    oop
+
+:ao
+#char 103
+#end
+:x
+#char 32
+
+    end
+    stat at 14,17 element Object cycle 1 p1 cp437:0x20 p2 0 step idle under Empty color 0x0F data-pos -1
+    oop
+
+:ao
+#char 101
+#end
+:x
+#char 32
+
+    end
+    stat at 15,17 element Object cycle 1 p1 cp437:0x20 p2 0 step idle under Empty color 0x0F data-pos -1
+    oop
+
+:ao
+#char 110
+#end
+:x
+#char 32
+
+    end
+    stat at 16,17 element Object cycle 1 p1 cp437:0x20 p2 0 step idle under Empty color 0x0F data-pos -1
+    oop
+
+:ao
+#char 116
+#end
+:x
+#char 32
+
+    end
+    stat at 18,17 element Object cycle 1 p1 cp437:0x20 p2 0 step idle under Empty color 0x0F data-pos -1
+    oop
+
+:ao
+#char 111
+#end
+:x
+#char 32
+
+    end
+    stat at 19,17 element Object cycle 1 p1 cp437:0x20 p2 0 step idle under Empty color 0x0F data-pos -1
+    oop
+
+:ao
+#char 114
+#end
+:x
+#char 32
+
+    end
+    stat at 20,17 element Object cycle 1 p1 cp437:0x20 p2 0 step idle under Empty color 0x0F data-pos -1
+    oop
+
+:ao
+#char 97
+#end
+:x
+#char 32
+
+    end
+    stat at 21,17 element Object cycle 1 p1 cp437:0x20 p2 0 step idle under Empty color 0x0F data-pos -1
+    oop
+
+:ao
+#char 110
+#end
+:x
+#char 32
+
+    end
+    stat at 22,17 element Object cycle 1 p1 cp437:0x20 p2 0 step idle under Empty color 0x0F data-pos -1
+    oop
+
+:ao
+#char 103
+#end
+:x
+#char 32
+
+    end
+    stat at 23,17 element Object cycle 1 p1 cp437:0x20 p2 0 step idle under Empty color 0x0F data-pos -1
+    oop
+
+:ao
+#char 101
+#end
+:x
+#char 32
+
+    end
+    stat at 12,18 element Object cycle 1 p1 cp437:0x20 p2 0 step idle under Empty color 0x0F data-pos -1
+    oop
+
+:kk
+#char 107
+#end
+:x
+#char 32
+
+    end
+    stat at 13,18 element Object cycle 1 p1 cp437:0x20 p2 0 step idle under Empty color 0x0F data-pos -1
+    oop
+
+:kk
+#char 107
+#end
+:x
+#char 32
+
+    end
+    stat at 14,18 element Object cycle 1 p1 cp437:0x20 p2 0 step idle under Empty color 0x0F data-pos -1
+    oop
+
+:kk
+#char 97
+#end
+:x
+#char 32
+
+    end
+    stat at 15,18 element Object cycle 1 p1 cp437:0x20 p2 0 step idle under Empty color 0x0F data-pos -1
+    oop
+
+:kk
+#char 105
+#end
+:x
+#char 32
+
+    end
+    stat at 16,18 element Object cycle 1 p1 cp437:0x20 p2 0 step idle under Empty color 0x0F data-pos -1
+    oop
+
+:kk
+#char 114
+#end
+:x
+#char 32
+
+    end
+    stat at 17,18 element Object cycle 1 p1 cp437:0x20 p2 0 step idle under Empty color 0x0F data-pos -1
+    oop
+
+:kk
+#char 111
+#end
+:x
+#char 32
+
+    end
+    stat at 18,18 element Object cycle 1 p1 cp437:0x20 p2 0 step idle under Empty color 0x0F data-pos -1
+    oop
+
+:kk
+#char 115
+#end
+:x
+#char 32
+
+    end
+    stat at 12,19 element Object cycle 1 p1 cp437:0x20 p2 0 step idle under Empty color 0x0F data-pos -1
+    oop
+
+:qp
+#char 113
+#end
+:x
+#char 32
+
+    end
+    stat at 13,19 element Object cycle 1 p1 cp437:0x20 p2 0 step idle under Empty color 0x0F data-pos -1
+    oop
+
+:qp
+#char 117
+#end
+:x
+#char 32
+
+    end
+    stat at 14,19 element Object cycle 1 p1 cp437:0x20 p2 0 step idle under Empty color 0x0F data-pos -1
+    oop
+
+:qp
+#char 97
+#end
+:x
+#char 32
+
+    end
+    stat at 15,19 element Object cycle 1 p1 cp437:0x20 p2 0 step idle under Empty color 0x0F data-pos -1
+    oop
+
+:qp
+#char 110
+#end
+:x
+#char 32
+
+    end
+    stat at 16,19 element Object cycle 1 p1 cp437:0x20 p2 0 step idle under Empty color 0x0F data-pos -1
+    oop
+
+:qp
+#char 116
+#end
+:x
+#char 32
+
+    end
+    stat at 17,19 element Object cycle 1 p1 cp437:0x20 p2 0 step idle under Empty color 0x0F data-pos -1
+    oop
+
+:qp
+#char 117
+#end
+:x
+#char 32
+
+    end
+    stat at 18,19 element Object cycle 1 p1 cp437:0x20 p2 0 step idle under Empty color 0x0F data-pos -1
+    oop
+
+:qp
+#char 109
+#end
+:x
+#char 32
+
+    end
+    stat at 20,19 element Object cycle 1 p1 cp437:0x20 p2 0 step idle under Empty color 0x0F data-pos -1
+    oop
+
+:qp
+#char 112
+#end
+:x
+#char 32
+
+    end
+  end
+end

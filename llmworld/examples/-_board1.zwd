@@ -1,0 +1,418 @@
+board "-"
+  start player at 31,25
+  respawn at 1,1
+  max-shots 255
+  dark false
+  reenter false
+  time-limit 0
+  exits north none south none west none east none
+
+  grid
+............................................................
+iiiiiiiiiiIIIIIIIIIIaaaaaaaaaabbbbbbbbbbccccccccccdddddddddd
+iiiiiiiiiiIIIIIIIIIIaaaaaaaaaabbbbbbbbbbccccccccccdddddddddd
+iiiiiiiiiiIIIIIIIIIIaaaaaaaaa..bbbbbbbbbccccccccccdddddddddd
+iiiiiiiiiiIIIIIIIIIIaaaaaaaaa..bbbbbbbbbccccccccccdddddddddd
+iiiiiiiiiiIIIIIIII........................ccccccccdddddddddd
+iiiiiiiiiiIIIIIII..........................cccccccdddddddddd
+iiiiiiiiiiIIIIIII..........................cccccccdddddddddd
+iiiiiiiiiiIIIIIII..........................cccccccdddddddddd
+iiiiiiiiiiIIIIIII..........................cccccccdddddddddd
+iiiiiiiiiiIIII......eoooe..........eoooe......ccccdddddddddd
+iiiiiiiiiiIIII......oFBFoOOOgOgOOOOoFBFo......ccccdddddddddd
+iiiiiiiiiiIIIII.....oBfBo..........oBfBo.....cccccdddddddddd
+iiiiiiiiiiIIIII..............................cccccdddddddddd
+iiiiiiiiiiIIIII..............................cccccdddddddddd
+iiiiiiiiiiIIIII..............................cccccdddddddddd
+iiiiiiiiiiIIIII.....e..................e.....cccccdddddddddd
+iiiiiiiiiiIIIIII............................ccccccdddddddddd
+iiiiiiiiiiIIIIIII..........................cccccccdddddddddd
+iiiiiiiiiiIIIIIIIII......................cccccccccdddddddddd
+iiiiiiiiiiIIIIIIIIIIaaaaaa........bbbbbbccccccccccdddddddddd
+iiiiiiiiiiIIIIIIIIIIaaaaaaaaaabbbbbbbbbbccccccccccdddddddddd
+iiiiiiiiiiIIIIIIIIIIaaaaaaaaaabbbbbbbbbbccccccccccdddddddddd
+............................lllll...........................
+...........................hl.@.lhhhh.......................
+  end
+
+  legend
+    . = Empty color 0x08
+    i = Invisible color 0x09
+    I = Invisible color 0x0A
+    a = Invisible color 0x0B
+    b = Invisible color 0x0C
+    c = Invisible color 0x0D
+    d = Invisible color 0x0E
+    e = Empty color 0x0F
+    o = Object color 0x0E
+    F = Fake color 0x80
+    B = Breakable color 0x80
+    O = Object color 0x0F
+    g = Text-White color 0x20
+    f = Forest color 0x80
+    l = Line color 0x80
+    h = Object color 0x80
+    @ = Player color 0x1F under Empty color 0x08
+  end
+
+  stats
+    stat at 22,11 element Object cycle 1 p1 cp437:0xFF p2 0 step idle under Empty color 0x0F data-pos -1
+    oop
+@eye
+:g
+#char 220
+
+    end
+    stat at 23,11 element Object cycle 1 p1 cp437:0xFF p2 0 step idle under Empty color 0x0F data-pos -1
+    oop
+@eye
+:g
+#char 220
+
+    end
+    stat at 24,11 element Object cycle 1 p1 cp437:0xFF p2 0 step idle under Empty color 0x0F data-pos -1
+    oop
+@eye
+:g
+#char 220
+
+    end
+    stat at 37,11 element Object cycle 1 p1 cp437:0xFF p2 0 step idle under Empty color 0x0F data-pos -1
+    oop
+@eye
+:g
+#char 220
+
+    end
+    stat at 38,11 element Object cycle 1 p1 cp437:0xFF p2 0 step idle under Empty color 0x0F data-pos -1
+    oop
+@eye
+:g
+#char 220
+
+    end
+    stat at 39,11 element Object cycle 1 p1 cp437:0xFF p2 0 step idle under Empty color 0x0F data-pos -1
+    oop
+@eye
+:g
+#char 220
+
+    end
+    stat at 21,12 element Object cycle 1 p1 cp437:0x20 p2 0 step idle under Empty color 0x0F data-pos -1
+    oop
+@eye
+:g
+#char 222
+
+    end
+    stat at 25,12 element Object cycle 1 p1 cp437:0x20 p2 0 step idle under Empty color 0x0F data-pos -1
+    oop
+@eye
+:g
+#char 221
+
+    end
+    stat at 36,12 element Object cycle 1 p1 cp437:0xFF p2 0 step idle under Empty color 0x0F data-pos -1
+    oop
+@eye
+:g
+#char 222
+
+    end
+    stat at 40,12 element Object cycle 1 p1 cp437:0xFF p2 0 step idle under Empty color 0x0F data-pos -1
+    oop
+@eye
+:g
+#char 221
+
+    end
+    stat at 21,13 element Object cycle 1 p1 cp437:0x20 p2 0 step idle under Empty color 0x0F data-pos -1
+    oop
+@eye
+:g
+#char 222
+
+    end
+    stat at 25,13 element Object cycle 1 p1 cp437:0x20 p2 0 step idle under Empty color 0x0F data-pos -1
+    oop
+@eye
+:g
+#char 221
+
+    end
+    stat at 36,13 element Object cycle 1 p1 cp437:0xFF p2 0 step idle under Empty color 0x0F data-pos -1
+    oop
+@eye
+:g
+#char 222
+
+    end
+    stat at 40,13 element Object cycle 1 p1 cp437:0xFF p2 0 step idle under Empty color 0x0F data-pos -1
+    oop
+@eye
+:g
+#char 221
+
+    end
+    stat at 28,25 element Object cycle 1 p2 0 step idle under Empty color 0x08
+    oop
+ 
+/i/i/i/i/i/i/i/i/i/i
+ 
+/i/i/i/i/i/i/i/i/i/i
+#shimmer:g
+#play 011
+ 
+/i/i/i/i/i/i/i/i/i/i
+ 
+/i/i/i/i/i/i/i/i/i/i
+#voice:g
+HELlo human.
+/i/i/i/i
+helLO human.
+/i/i/i/i
+hello HUman.
+/i/i
+hello huMAN.
+/i/i/i/i/i/i/i/i
+WELcome to my moon.
+/i/i
+welCOME to my moon.
+/i/i
+welcome TO my moon.
+/i/i
+welcome to MY moon.
+/i/i
+welcome to my MOON.
+/i/i/i/i/i/i/i/i/i/i
+I'VE been waiting to meet you
+/i/i/i/i
+i've BEEN waiting to meet you
+/i/i/i/i
+i've been WAITing to meet you
+/i/i/i
+i've been waitING to meet you
+/i/i/i/i
+i've been waiting TO meet you
+/i/i
+i've been waiting to MEET you
+/i/i
+i've been waiting to meet YOU
+/i/i/i/i
+FOR a long
+/i/i
+for A long
+/i/i
+for a LONG
+/i/i/i
+for a LO-O-NG
+/i/i/i/i
+for a LO-O-O-NG
+/i/i/i/i
+for a LO-O-O-O-NG
+/i/i/i/i/i/i
+TIME.
+/i/i/i/i/i/i/i/i/i/i/i
+SEE you soon.
+/i/i/i
+see YOU soon.
+/i/i/i/i
+see you SOON.
+#all:fall
+/i/i/i/i/i/i/i/i/i/i/i/i/i/i/i/i/i/i/i/i/i
+#play --c++++c----c++++c
+#play --c++++c----c++++c
+#play --c++++c----c++++c
+#play --c++++c----c++++c
+#play --c++++c----c++++c
+#play --c++++c----c++++c
+#play --c++++c----c++++c
+#play --c++++c----c++++c
+#play --e!++++e!----e!++++e! 
+#play --e!++++e!----e!++++e!
+#play --e!++++e!----e!++++e! 
+#play --e!++++e!----e!++++e!
+#play --e!++++e!----e!++++e! 
+#play --e!++++e!----e!++++e!
+#play --e!++++e!----e!++++e! 
+#play --e!++++e!----e!++++e!
+#play --f++++f----f++++f 
+#play --f++++f----f++++f
+#play --f++++f----f++++f 
+#play --f++++f----f++++f
+#play --f++++f----f++++f 
+#play --f++++f----f++++f
+#play --f++++f----f++++f 
+#play --f++++f----f++++f
+#play --g++++g----g++++g 
+#play --g++++g----g++++g
+#play --g++++g----g++++g 
+/i/i#play --g++++g----g++++g
+/i/i#play --g++++g----g++++g 
+/i/i#play --g++++g----g++++g
+/i/i#play --g++++g----g++++g 
+/i/i#play --g++++g----g++++g
+/i/i#play -c++++c----c++++c 
+/i/i#play -c++++c----c++++c
+/i/i#play -c++++c----c++++c 
+/i/i#play -c++++c----c++++c
+/i/i#play -c++++c----c++++c 
+/i/i#play -c++++c----c++++c
+/i/i#play -c++++c----c++++c 
+/i/i#play -c++++c----c++++c
+/i/i#play --c+c-c+c-c+c-c+c
+/i/i#play --c+c-c+c-c+c-c+c
+/i/i#play --c+c-c+c-c+c-c+c
+/i/i#play --c+c-c+c-c+c-c+c
+/i/i#play --wc
+
+    end
+    stat at 34,25 element Object cycle 1 p1 cp437:0x0D p2 0 step idle under Empty color 0x08 data-pos -1
+    oop
+@voice
+:g
+#play 55555555
+/i/i#play 999999xx
+/i/i#play 77776666
+/i/i#play sxxxxxx
+/i/i#play 5555999x
+/i/i#play 444x666x
+/i/i#play 7777777x
+/i/i#play sxxxxxx
+
+/i/i#play 6666666x
+/i/i#play 4444444x
+/i/i#play 1111112222xxxx
+/i/i#play 777x222x
+/i/i#play 7777xxxx
+/i/i#play 999x
+/i/i#play 888x1111
+/i/i#play 11111111
+/i/i#play 11111111
+/i/i#play 11111111xxxx
+/i/i#play 66666666xx
+/i/i#play Sxxxxxx
+
+/i/i#play 22222x
+/i/i#play 5555555x
+/i/i#play 7777777x
+
+    end
+    stat at 35,25 element Object cycle 1 p1 cp437:0xDC p2 0 step idle under Empty color 0x08 data-pos -1
+    oop
+
+:fall
+/i/i/i/i/i/i/i/i/i/i/i/i/i/i/i/i/i/i/i/i
+/i/i/i/i/i/i/i/i/i/i/i/i/i/i/i/i/i/i/i/i
+/i/i/i/i/i/i/i/i/i/i/i/i/i/i/i/i/i/i/i/i
+/i/i/i/i/i/i/i/i/i/i/i/i/i/i/i/i/i/i/i/i
+/i/i/i/i/i/i
+#change fake yellow normal
+#change breakable yellow breakable
+#change forest yellow water
+/i/i/i/i/i/i/i/i/i/i/i/i/i/i/i/i
+#change normal empty
+#change breakable empty
+#change water empty
+#all:z
+
+    end
+    stat at 36,25 element Object cycle 1 p1 cp437:0xDC p2 0 step idle under Empty color 0x08 data-pos -1
+    oop
+
+:fall
+/i
+ 
+/i/i/i/i/i/i/i/i/i/i/i/i/i/i/i/i/i/i/i/i
+#fall
+:z
+#endgame
+ARE YOU READY?
+/i#z
+
+    end
+    stat at 37,25 element Object cycle 1 p2 0 step idle under Empty color 0x08 data-pos -1
+    oop
+@shimmer
+:g
+#change white water yellow invisible
+#change blue invisible white water
+/i/i
+#change white water blue invisible
+#change green invisible white water
+/i/i
+#change white water green invisible
+#change cyan invisible white water
+/i/i
+#change white water cyan invisible
+#change red invisible white water
+/i/i
+#change white water red invisible
+#change purple invisible white water
+/i/i
+#change white water purple invisible
+#change yellow invisible white water
+/i/i
+#g
+:z
+#change white water empty
+
+    end
+    stat at 26,12 element Object cycle 1 p1 cp437:0x20 p2 0 step idle under Text-White color 0x4F data-pos -1
+    oop
+
+:z
+/n
+
+    end
+    stat at 27,12 element Object cycle 1 p1 cp437:0x20 p2 0 step idle under Text-White color 0x43 data-pos -1
+    oop
+
+:z
+/n
+
+    end
+    stat at 28,12 element Object cycle 1 p1 cp437:0x20 p2 0 step idle under Text-White color 0x54 data-pos -1
+    oop
+
+:z
+/n
+
+    end
+    stat at 30,12 element Object cycle 1 p1 cp437:0x20 p2 0 step idle under Text-White color 0x39 data-pos -1
+    oop
+
+:z
+/n
+
+    end
+    stat at 32,12 element Object cycle 1 p1 cp437:0x20 p2 0 step idle under Text-White color 0x32 data-pos -1
+    oop
+
+:z
+/n
+
+    end
+    stat at 33,12 element Object cycle 1 p1 cp437:0x20 p2 0 step idle under Text-White color 0x30 data-pos -1
+    oop
+
+:z
+/n
+
+    end
+    stat at 34,12 element Object cycle 1 p1 cp437:0x20 p2 0 step idle under Text-White color 0x32 data-pos -1
+    oop
+
+:z
+/n
+
+    end
+    stat at 35,12 element Object cycle 1 p1 cp437:0x20 p2 0 step idle under Text-White color 0x30 data-pos -1
+    oop
+
+:z
+/n
+
+    end
+  end
+end

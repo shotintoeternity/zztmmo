@@ -1,0 +1,198 @@
+board "Assassi Village - Center"
+  start player at 32,16
+  respawn at 32,32
+  max-shots 255
+  dark false
+  reenter false
+  time-limit 0
+  exits north none south "Assassi Village - Gate" west "Assassi Village - Center West" east "Assassi Village - Center East"
+
+  grid
+FFFFFFFF####NNBBNNBBNNBBNNBBNNBBNNBBNNBBNNBBNNBBNNBB####FFFF
+FFFFFF####NNBBNNBBNNBBNNBBNNBBNNBBNNBBNNBBNNBBNNBBNNBB####FA
+FFFF####NNBBFFFFFFFFFFFFFFFFFoSOOSoFFFFFFFFFFFFFFFBBNNBB####
+FF####NNBBFFFFFFFFFFFFFFFFFFSSOOOOSSFFFFFFFFFFFFFFFFBBNNBB##
+FF##NNBBFFFFFFFFFFFFFFFFFFF~abSOOSba~FFFFFFFFFFFFFFAFFBBNNBB
+FF##BBFFFFFFFFFFFFFFFWWWWWW~abaaaaba~WWWWWWFFFAFFFFFFAFABBNN
+FF##FFFFFFFFFFFFFFFFFWWWWWW~cdbaabce~WWWWWWAFFFFFAFAAAAAAABB
+FF##FFFFFFFFFFFFAFFFAWWWWWW~~~cdce~~~WWWWWWFFAFFAFAAAFAAAAAA
+FF##FFFFFAFFFFAFFFAFFffggffhhiihhiihhffggffFAAAFAAAFAAAAjAjA
+FF##FFFFFFFAFFFFFFFAFggffggiihhiihhiiggffggAAFAAAAjAAAjAAAjj
+FF##FFFFAFFFFAAAAFAAAffkgffhhiihhiihhffgkffAAjAAAAAAAjAjjjAj
+FF##FAFFFFAFAAFAAAAFAgk.kggiihhiihhiiggklkgAAAAAjAjjjjjAjjjj
+AA##FFFAFAAAAAjAFAjAAffggffhhiilliihhffggffAjAjjAjjjmjjjjjjj
+AA##AFAAAAFjAAAAjjAAAAjAjjjiihhnnhhiijjjjjAjjjjjjjpjjjjjjjpj
+AA##AAAFjAAAAAjjjjAjjjjjjjjjjjjjjjjjjjjjjjjjjAjpjjjjpjjjpjjj
+p###AjAAAjjjAjpjAjjpjjjjpjjjjjj@jjjpjjjjjjpjjpjjjppjjjpjjjpp
+####AAAjjjAjpjjjpjjjjpjjjjjjpjjjjpjjjjjjpjjjpppppjpppppjpppj
+##NNjjjjAjjjjjjpppjpjjjjjpjjjjjpjjjjjpjppjppppjpppppjppppjpp
+NNBBjAjjpjjpjjppjpppFpppjjjpjjpppjpppppjpppjpppppjpppppppppp
+BBNNjpjjjjjpppppppppppjppjpppppqppFpjppppppFppkppFpppFpppppF
+NNpjjjjpjjpppjFppppFpppFpppjFpppFppppFpppFpppFpppppFpppppFpp
+jppppjppjppjpppppFpppFpppppppppFFFFFFppFpppppppFpFFpFppFpppF
+ppjpppppppppFpppFFFpFFFppFpFpFFFFFFpFFFFFpFpFpFFFpFFFFpFFpFp
+ppppppjppFppppFFFpFFFFFpFFFFFFFFpFFFFFFpFFFFFFFpFFFFpFFFpFFF
+ppppppFpppFFpFpFFFFFpFFFFFpFFpFFFFFFFFFFFFpFFFFFFFFFFFFFFFpF
+  end
+
+  legend
+    F = Fake color 0x2E
+    # = Solid color 0x06
+    N = Normal color 0x06
+    B = Breakable color 0x06
+    A = Fake color 0x4E
+    o = Object color 0x2E
+    S = Solid color 0x7E
+    O = Object color 0x0E
+    ~ = Water color 0x0F
+    a = Solid color 0x07
+    b = Object color 0x7E
+    W = Water color 0x07
+    c = Normal color 0x08
+    d = Breakable color 0x08
+    e = Water color 0x08
+    f = Normal color 0x07
+    g = Breakable color 0x07
+    h = Breakable color 0x0F
+    i = Normal color 0x0F
+    j = Fake color 0x6E
+    k = Object color 0x07
+    . = Empty color 0x0F
+    l = Empty color 0x00
+    m = Object color 0x09
+    n = Object color 0x08
+    p = Fake color 0x7E
+    @ = Player color 0x1F under Fake color 0x6E
+    q = Object color 0x0D
+  end
+
+  stats
+    stat at 23,12 element Object cycle 1 p1 cp437:0xDF p2 0 step idle follower 0 leader 0
+    stat at 24,11 element Object cycle 1 p1 cp437:0xDF p2 0 step idle follower 0 leader 0
+    stat at 25,12 element Object cycle 1 p1 cp437:0xDF p2 0 step idle follower 0 leader 0
+    stat at 40,12 element Object cycle 1 p1 cp437:0xDF p2 0 step idle follower 0 leader 0
+    stat at 41,11 element Object cycle 1 p1 cp437:0xDF p2 0 step idle follower 0 leader 0
+    stat at 42,12 element Object cycle 1 p1 cp437:0xDF p2 0 step idle follower 0 leader 0
+    stat at 30,5 element Object cycle 1 p1 cp437:0xDF p2 0 step idle follower 0 leader 0
+    stat at 35,6 element Object cycle 1 p1 cp437:0xDF p2 0 step idle follower 0 leader 0
+    stat at 30,6 element Object cycle 1 p1 cp437:0xDF p2 0 step idle follower 0 leader 0
+    stat at 31,7 element Object cycle 1 p1 cp437:0xDF p2 0 step idle follower 0 leader 0
+    stat at 34,7 element Object cycle 1 p1 cp437:0xDF p2 0 step idle follower 0 leader 0
+    stat at 35,5 element Object cycle 1 p1 cp437:0xDF p2 0 step idle follower 0 leader 0
+    stat at 35,3 element Object cycle 1 p1 cp437:0xDC p2 0 step idle follower 0 leader 0
+    stat at 30,3 element Object cycle 1 p1 cp437:0xDC p2 0 step idle follower 0 leader 0
+    stat at 32,14 element Object cycle 1 p1 cp437:0x00 p2 0 step idle follower 0 leader 0
+    oop
+@Hotel
+#end
+:touch
+Proprieter
+$Ain't got no customers to stay in our
+$hotel. The Klispins have stationed
+$themselves all around town.
+#end
+
+    end
+    stat at 33,14 element Object cycle 1 p1 cp437:0x00 p2 0 step idle follower 0 leader 0
+    oop
+#bind Hotel
+
+    end
+    stat at 32,4 element Object cycle 1 p1 cp437:0xDE p2 0 step idle follower 0 leader 0
+    stat at 33,4 element Object cycle 1 p1 cp437:0xDD p2 0 step idle follower 0 leader 0
+    stat at 31,4 element Object cycle 1 p1 cp437:0xDD p2 0 step idle follower 0 leader 0
+    stat at 34,4 element Object cycle 1 p1 cp437:0xDE p2 0 step idle follower 0 leader 0
+    stat at 33,3 element Object cycle 1 p1 cp437:0xDF p2 0 step idle follower 0 leader 0
+    stat at 32,3 element Object cycle 1 p1 cp437:0xDF p2 0 step idle follower 0 leader 0
+    stat at 32,5 element Object cycle 1 p1 cp437:0xDC p2 0 step idle follower 0 leader 0
+    stat at 33,5 element Object cycle 1 p1 cp437:0xDC p2 0 step idle follower 0 leader 0
+    stat at 32,20 element Object cycle 1 p1 cp437:0x02 p2 0 step idle under Fake color 0x7E follower 0 leader 0
+    oop
+@Rumi
+#play e#e#exggggxbbbbx+ddddxxxccccxxx-bbb
+#play bxxxx
+#play eeexggggxbbbbx+ddddxxxccccxxx-bbb
+#play bx
+#play bbbbbbxxaaaaaaxxbbbbbbxx+cccccx-gggg
+#play gggggxxxxxxfffffffff
+#give score 500
+$
+$Assassi Village
+$The village of assassins, hidden amongst
+$the dunes...
+$
+/n/n
+/i
+Rumi:
+$Sadler, where've you been?
+$I've been looking all over town for you!!
+
+Sadler:
+$Rumi, you seem as if something's worrying
+$you.
+
+Rumi:
+$There's been a report that someone
+$noticed a suspicious man in this
+$neighborhood. We'd better check this out.
+
+Sadler resumed the investigation with Rumi
+#become fake
+
+    end
+    stat at 53,13 element Object p1 cp437:0x02 p2 0 step idle under Fake color 0x6E follower 0 leader 0
+    oop
+@Fakhyle
+#end
+:touch
+#if invest then ok
+Fakhyle:
+$Oh, Sadler, Rumi...I'm a bit busy at the
+$moment, so could we meet up later?
+/i
+#end
+:ok
+Rumi:
+$We're going to cross the desert, to
+$check if the rumor about the suspicious
+$man is true.
+
+Fakhyle:
+$Ah, I get the idea. Allow me to join you!
+
+Fakhyle joins the entourage
+#set fakhyle
+#become fake
+#end
+
+    end
+    stat at 47,20 element Object p1 cp437:0x02 p2 0 step idle under Fake color 0x7E follower 0 leader 0
+    oop
+@Boy
+#ds
+#end
+:ds
+#go rndns
+/i/i
+#go opp seek
+/i/i
+#go opp seek
+/i/i
+#go rndns
+/i/i
+#go seek
+/i/i
+#ds
+#end
+:touch
+Boy:
+$Sadler! With you here, our village will
+$be well-protected if the crusaders
+$attack it!
+/i
+#ds
+#end
+
+    end
+  end
+end

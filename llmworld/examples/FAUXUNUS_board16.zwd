@@ -1,0 +1,1662 @@
+board "It Takes A Village (Shape Puzzle v1)"
+  start player at 55,3
+  respawn at 1,1
+  max-shots 1
+  dark false
+  reenter false
+  time-limit 0
+  exits north none south none west none east none
+
+  grid
+NNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNN......NN
+N..................................................N......NN
+N........................X.........................N..@...NN
+N...TTTTTTTTTTTTTTTTTTTTTXTTTTTTTTTTTTTTTTTTTTTT...N......NN
+N..TF.F.F.F.F.F.F....................F.F.F.F.F.FT..N......NN
+N..TF.F.F.F..............................F.F.F.FT..N......NN
+N..TF.F.F..................................F.F.FT..N......NN
+N..TF.F......................................F.FT..N.....oNN
+N..TF.F......................................F.FT..N......NN
+N..TF...................a.b....................FT..N......NN
+N..TF.F..............c.......d...............F.FT..N......NN
+N..TF..........................................FT........Oef
+N.XX................f.........c.................XX.......NNN
+N..TF..........................................FT........ghc
+N..TF.F..............i.......j...............F.FT..N.....NNN
+N..TF..................k.f.d...................FT..N......NN
+N..TF.F......................................F.FT..N.....jNN
+N..TF.F......................................F.FT..N.....jNN
+N..TF.F.F..................................F.F.FT..N.....jNN
+N..TF.F.F.F..............................F.F.F.FT..N......NN
+N..TF.F.F.F.F.F......................F.F.F.F.F.FT..N......NN
+N...TTTTTTTTTTTTTTTTTTTTTXTTTTTTTTTTTTTTTTTTTTTT...N......NN
+N........................X.........................jNNNNjNNN
+N..................................................NN....NNN
+NNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNN
+  end
+
+  legend
+    N = Normal color 0x07
+    . = Empty color 0x0F
+    X = Transporter color 0x0F
+    @ = Player color 0x1F under Empty color 0x0F
+    T = Transporter color 0x78
+    F = Fake color 0x08
+    o = Object color 0x80
+    a = Object color 0x0E
+    b = Object color 0x0D
+    c = Object color 0x0B
+    d = Object color 0x09
+    O = Boulder color 0x0A
+    e = Object color 0xAA
+    f = Object color 0x0A
+    g = Boulder color 0x0B
+    h = Object color 0xBB
+    i = Object color 0x0C
+    j = Object color 0x0F
+    k = Object color 0x19
+  end
+
+  stats
+    stat at 3,13 element Transporter cycle 255 p1 0 p2 0 step east under Empty color 0x0F
+    stat at 4,13 element Transporter cycle 255 p1 0 p2 0 step west under Empty color 0x0F
+    stat at 59,12 element Object cycle 1 p1 cp437:0x46 p2 0 step idle under Empty color 0x0F
+    oop
+@foreststart
+#end
+:touch
+#if any forest askres
+#lock
+Go!
+/i#Forest:act
+#zap touch
+#unlock
+#end
+:touch
+#if any forest askres
+#zap touch
+#change green slime empty
+#change green breakable forest
+Job's done.
+#end
+:touch
+:askres
+#forestres:a
+
+    end
+    stat at 49,13 element Transporter cycle 255 p1 0 p2 0 step east under Empty color 0x0F
+    stat at 50,13 element Transporter cycle 255 p1 0 p2 0 step west under Empty color 0x0F
+    stat at 59,14 element Object cycle 1 p1 cp437:0x4C p2 0 step idle under Empty color 0x0F
+    oop
+@lakestart
+#end
+:touch
+#if any cyan water askres
+#lock
+Go!
+/i
+#Lake:act
+#zap touch
+#unlock
+#end
+:touch
+#if any cyan water askres
+#zap touch
+#change cyan slime empty
+#change cyan breakable cyan water
+Job's done.
+#end
+:touch
+:askres
+#lakeres:a
+
+    end
+    stat at 26,3 element Transporter cycle 255 p1 0 p2 0 step south under Empty color 0x0F
+    stat at 26,4 element Transporter cycle 255 p1 0 p2 0 step north under Empty color 0x0F
+    stat at 26,22 element Transporter cycle 255 p1 0 p2 0 step south under Empty color 0x0F
+    stat at 26,23 element Transporter cycle 255 p1 0 p2 0 step north under Empty color 0x0F
+    stat at 58,8 element Object cycle 1 p1 cp437:0xF7 p2 0 step idle under Empty color 0x0F
+    oop
+
+:l
+/i#if not any bullet l
+/i/i/i#change bullet empty
+#l
+
+
+    end
+    stat at 58,18 element Object cycle 1 p1 cp437:0x6D p2 0 step idle under Empty color 0x0F
+    oop
+@m
+#end
+:b
+Look like something's in the way, boss.
+#end
+:c
+Job's done.
+#end
+:d
+You're the boss, boss. Shoot me when done.
+
+    end
+    stat at 58,19 element Object cycle 1 p1 cp437:0x52 p2 0 step idle under Empty color 0x0F
+    oop
+@res
+#set noreset
+:a
+/i#if noreset a
+:touch
+:do
+#set noreset
+Reset everything?
+
+!y;Yes
+/i#a
+:y
+#lock
+/i#c:b
+/i#c:g
+/i#c:r
+/i#c:y
+/i#c:c
+/i#c:p
+/i#c:w
+/i#c:ri
+/i#c:l
+/i#c:f
+#end
+
+    end
+    stat at 58,17 element Object cycle 1 p1 cp437:0x78 p2 0 step idle under Empty color 0x0F
+    oop
+@c
+#end
+:r
+#change red solid empty
+#x
+:g
+#change green solid empty
+#x
+:b
+#change blue solid empty
+#x
+:c
+#change cyan solid empty
+#x
+:p
+#change purple solid empty
+#x
+:w
+#change white solid empty
+#x
+:y
+#change yellow solid empty
+#x
+:x
+#end
+:f
+#change forest empty
+#change green slime empty
+#change green breakable empty
+#end
+:l
+#change cyan water empty
+#change cyan slime empty
+#change cyan breakable empty
+#end
+:ri
+#change blue water empty
+#end
+
+    end
+    stat at 60,14 element Object cycle 1 p1 cp437:0x72 p2 0 step idle under Empty color 0x0F
+    oop
+@lakeres
+#end
+:a
+Do you want to reset the lake?
+
+!res;Reset
+!nop;No worries, I'm good.
+#end
+:b
+#change cyan breakable water
+#a
+:nop
+Okay.
+#end
+:res
+#restore lakestart:touch
+#restore lakestart:touch
+#change cyan water empty
+#change cyan breakable empty
+#change cyan slime empty
+
+    end
+    stat at 60,12 element Object cycle 1 p1 cp437:0x72 p2 0 step idle under Empty color 0x0F
+    oop
+@forestres
+#end
+:a
+Do you want to reset the forest?
+
+!res;Reset
+!nop;No worries, I'm good.
+#end
+:b
+#change green breakable forest
+#a
+:nop
+Okay.
+#end
+:res
+#restore foreststart:touch
+#restore foreststart:touch
+#change forest empty
+#change green breakable empty
+#change green slime empty
+
+    end
+    stat at 57,23 element Object cycle 1 p1 cp437:0x02 p2 0 step idle under Empty color 0x0F
+    oop
+#end
+:touch
+#if not any blue solid b
+#if not any red solid b
+#if not any green solid b
+#if not any yellow solid b
+#if not any white solid b
+#if not any purple solid b
+#if not any cyan solid b
+#if not any blue water b
+#if not any forest b
+#lock
+/i
+Ah! A most excellent village! I shall now
+move.
+?s?w?w?w
+#end
+:b
+I'm shan't budge until I see before my
+eyes a perfect village.
+
+A perfect village requires:
+
+A lake
+A river
+A house
+A tower
+A mill
+Stables
+A market
+A well
+A big tree
+
+    end
+    stat at 25,10 element Object cycle 1 p1 cp437:0x7C p2 0 step idle under Empty color 0x0F
+    oop
+@Tower
+#end
+:touch
+I build a tower. You're going to love
+your new tower.
+
+#if any yellow solid !re;Tear it down!
+#if not any yellow solid !act;Build here
+!fp;Floor plan
+#if not any yellow solid !mov;Reposition
+#end
+:fp
+$5x15
+$²²²²²
+$²...²
+$²...²
+$²².²²
+$.².².
+$²².²²
+$²...²
+$²...²
+$²...²
+$²...²
+$²...²
+$²...²
+$²...²
+$²...²
+$²²<²²
+#end
+:mov
+#char 58
+#zap touch
+#zap shot
+#m:d
+#end
+:touch
+#if blocked opp seek ?seek#end
+#if not blocked opp seek ?opp seek#end
+:shot
+#end
+:shot
+#lock
+#restore shot
+#restore touch
+/i#char 219
+/i#char 124
+#unlock
+#end
+:act
+#lock
+#restore c
+#if blocked w x
+?w
+:c
+#zap c
+#ww
+:c
+:c
+:c
+:c
+:c
+:c
+:c
+:c
+:c
+#zap c
+#wn
+:c
+#zap c
+#we
+:c
+:c
+#zap c
+#wn
+:c
+#zap c
+#ww
+:c
+#zap c
+:c
+:c
+:c
+#zap c
+#wn
+:c
+:c
+:c
+:c
+#zap c
+#we
+:c
+:c
+:c
+#zap c
+#ws
+:c
+#zap c
+#ww
+:c
+:c
+#zap c
+#ws
+:c
+#zap c
+#we
+:c
+:c
+:c
+:c
+:c
+:c
+:c
+:c
+:c
+#zap c
+#ws
+:c
+:c
+#zap c
+#ww
+:c
+#m:c
+#unlock
+#end
+:we
+#if blocked e x
+?e
+#put w yellow solid
+#c
+:ww
+#if blocked w x
+?w
+#put e yellow solid
+#c
+:wn
+#if blocked n x
+?n
+#put s yellow solid
+#c
+:ws
+#if blocked s x
+?s
+#put n yellow solid
+#c
+:x
+#m:b
+:re
+#c:y
+#unlock
+
+    end
+    stat at 27,10 element Object cycle 1 p1 cp437:0x24 p2 0 step idle under Empty color 0x0F
+    oop
+@Market
+#end
+:touch
+I build a market. You gotta have trade of
+some kind.
+
+#if any purple solid !re;Tear it down!
+#if not any purple solid !act;Build here
+!fp;Floor plan
+#if not any purple solid !mov;Reposition
+#end
+:fp
+$7x7
+$.²².²².
+$²²²²²²²
+$²²...²²
+$.v...².
+$²²...²²
+$²²²²²²²
+$.²².²².
+#end
+:mov
+#char 155
+#zap touch
+#zap shot
+#m:d
+#end
+:touch
+#if blocked opp seek ?seek#end
+#if not blocked opp seek ?opp seek#end
+:shot
+#end
+:shot
+#lock
+#restore shot
+#restore touch
+/i#char 219
+/i#char 36
+#unlock
+#end
+:act
+#lock
+#restore c
+#if blocked s x
+?s
+:c
+#zap c
+#ww
+:c
+#zap c
+#ws
+:c
+#zap c
+#we
+:c
+#zap c
+#ws
+:c
+#zap c
+#we
+:c
+#zap c
+#wn
+:c
+:c
+#zap c
+#we
+:c
+#zap c
+#ws
+:c
+#zap c
+#we
+:c
+#zap c
+#wn
+:c
+#zap c
+#we
+:c
+#zap c
+#wn
+:c
+#zap c
+#ww
+:c
+:c
+#zap c
+#wn
+:c
+#zap c
+#we
+:c
+#zap c
+#wn
+:c
+#zap c
+#ww
+:c
+#zap c
+#wn
+:c
+#zap c
+#ww
+:c
+#zap c
+#ws
+:c
+:c
+#zap c
+#ww
+:c
+#zap c
+#wn
+:c
+#zap c
+#ww
+:c
+#zap c
+#ws
+:c
+#zap c
+#ww
+:c
+#zap c
+#ws
+:c
+#zap c
+#we
+:c
+#zap c
+#ws
+:c
+#m:c
+#unlock
+#end
+:we
+#if blocked e x
+?e
+#put w purple solid
+#c
+:ww
+#if blocked w x
+?w
+#put e purple solid
+#c
+:wn
+#if blocked n x
+?n
+#put s purple solid
+#c
+:ws
+#if blocked s x
+?s
+#put n purple solid
+#c
+:x
+#m:b
+:re
+#c:p
+#unlock
+
+    end
+    stat at 22,11 element Object cycle 1 p1 cp437:0x4D p2 0 step idle under Empty color 0x0F
+    oop
+@Mill
+#end
+:touch
+I build a mill. You gotta have someplace
+to work.
+
+#if any cyan solid !re;Tear it down!
+#if not any cyan solid !act;Build here
+!fp;Floor plan
+#if not any cyan solid !mov;Reposition
+#end
+:fp
+$17x8
+$..............²²²
+$............²²².²
+$..........²²²...²
+$........²²².....^
+$......²²².......²
+$....²²².........²
+$²²²²²...........²
+$²²²²²²²²²²²²²²²²²
+#end
+:mov
+#char 109
+#zap touch
+#zap shot
+#m:d
+#end
+:touch
+#if blocked opp seek ?seek#end
+#if not blocked opp seek ?opp seek#end
+:shot
+#end
+:shot
+#lock
+#restore shot
+#restore touch
+/i#char 219
+/i#char 77
+#unlock
+#end
+:act
+#lock
+#restore c
+#if blocked n x
+?n
+:c
+:c
+#zap c
+#wn
+:c
+:c
+#zap c
+#ww
+:c
+#zap c
+#ws
+:c
+:c
+#zap c
+#ww
+:c
+#zap c
+#ws
+:c
+:c
+#zap c
+#ww
+:c
+#zap c
+#ws
+:c
+:c
+#zap c
+#ww
+:c
+#zap c
+#ws
+:c
+:c
+#zap c
+#ww
+:c
+#zap c
+#ws
+:c
+:c
+:c
+:c
+#zap c
+#ww
+:c
+#zap c
+#ws
+:c
+:c
+:c
+:c
+:c
+:c
+:c
+:c
+:c
+:c
+:c
+:c
+:c
+:c
+#zap c
+#we
+:c
+:c
+:c
+#zap c
+#wn
+:c
+#m:c
+#unlock
+#end
+:we
+#if blocked e x
+?e
+#put w cyan solid
+#c
+:ww
+#if blocked w x
+?w
+#put e cyan solid
+#c
+:wn
+#if blocked n x
+?n
+#put s cyan solid
+#c
+:ws
+#if blocked s x
+?s
+#put n cyan solid
+#c
+:x
+#m:b
+:re
+#c:c
+#unlock
+
+    end
+    stat at 30,11 element Object cycle 1 p1 cp437:0x57 p2 0 step idle under Empty color 0x0F
+    oop
+@Well
+#end
+:touch
+I build a well. Wells are a great source
+of water. Sometimes they grant wishes,
+and sometimes they contain arsenic.
+
+#if any blue solid !re;Tear it down!
+#if not any blue solid !act;Build here
+!fp;Floor plan
+#if not any blue solid !mov;Reposition
+#end
+:fp
+$9x5
+$²²²²>²²²²
+$².......²
+$²².....²²
+$.²²...²².
+$..²²²²²..
+#end
+:mov
+#zap touch
+#zap shot
+#char 119
+#m:d
+#end
+:touch
+#if blocked opp seek ?seek#end
+#if not blocked opp seek ?opp seek#end
+:shot
+#end
+:shot
+#lock
+#restore shot
+#restore touch
+/i#char 219
+/i#char 87
+#unlock
+#end
+:act
+#lock
+#restore c
+#if blocked e x
+?e
+:c
+:c
+:c
+#zap c
+#we
+:c
+:c
+#zap c
+#ws
+:c
+#zap c
+#ww
+:c
+#zap c
+#ws
+:c
+#zap c
+#ww
+:c
+#zap c
+#ws
+:c
+:c
+:c
+:c
+#zap c
+#ww
+:c
+#zap c
+#wn
+:c
+#zap c
+#ww
+:c
+#zap c
+#wn
+:c
+#zap c
+#ww
+:c
+:c
+#zap c
+#wn
+:c
+:c
+:c
+:c
+#zap c
+#we
+:c
+#m:c
+#unlock
+#end
+:we
+#if blocked e x
+?e
+#put w blue solid
+#c
+:ww
+#if blocked w x
+?w
+#put e blue solid
+#c
+:wn
+#if blocked n x
+?n
+#put s blue solid
+#c
+:ws
+#if blocked s x
+?s
+#put n blue solid
+#c
+:x
+#m:b
+:re
+#c:b
+#unlock
+
+    end
+    stat at 21,13 element Object cycle 1 p1 cp437:0x46 p2 0 step idle under Empty color 0x0F
+    oop
+@Forest
+#end
+:touch
+#if any forest askres
+#zap touch
+#change green boulder empty
+I add a forest to the area.
+
+Poke me to reposition. I need at least
+one nearby cell to be empty.
+
+Use the green "F" object to the East to
+start the process. Be ready to press it
+again to stop, as it may grow out rather
+quickly.
+#end
+:touch
+#if blocked opp seek ?seek#end
+#if not blocked opp seek ?opp seek#end
+:act
+#lock
+#zap touch
+#if blocked n if blocked s if blocked e u
+#a
+:u
+#if blocked w x
+:a
+/i#if not blocked n put n green slime
+/i#if not blocked s put s green slime
+/i#if not blocked e put e green slime
+/i#if not blocked w put w green slime
+#restore touch
+#unlock
+#end
+:x 
+I'll need to have one empty neighbouring
+cell to start the forest, boss.
+#restore touch
+#unlock
+#end
+:askres
+#forestres:a
+
+    end
+    stat at 31,13 element Object cycle 1 p1 cp437:0x4C p2 0 step idle under Empty color 0x0F
+    oop
+@Lake
+#end
+:touch
+#if any cyan water askres
+#zap touch
+#change cyan boulder empty
+I add a lake to the area.
+
+Poke me to reposition. I need one nearby
+cell to be empty.
+
+Use the Cyan "L" object to the East to
+start the process. Be ready to press it
+again to stop, as it may flood out rather
+quickly.
+
+Press "L" again to reset the lake.
+#end
+:touch
+#if blocked opp seek ?seek#end
+#if not blocked opp seek ?opp seek#end
+:act
+#lock
+#zap touch
+#if blocked n if blocked s if blocked e u
+#a
+:u
+#if blocked w x
+:a
+/i#if not blocked n put n cyan slime
+/i#if not blocked s put s cyan slime
+/i#if not blocked e put e cyan slime
+/i#if not blocked w put w cyan slime
+#restore touch
+#unlock
+#end
+:x 
+I'll need to have empty neighbouring cells
+to start the lake, boss.
+#restore touch
+#unlock
+#end
+:askres
+#lakeres:a
+
+    end
+    stat at 22,15 element Object cycle 1 p1 cp437:0x48 p2 0 step idle under Empty color 0x0F
+    oop
+@House
+#end
+:touch
+I build a house. You gotta have a house.
+
+#if any red solid !re;Tear it down!
+#if not any red solid !act;Build here
+!fp;Floor plan
+#if not any red solid !mov;Reposition
+#end
+:fp
+$13x9
+$.....²²².....
+$...²²².²²²...
+$.²²².....²²².
+$²².........²²
+$²...........²
+$²...........²
+$²...........²
+$²...........²
+$²²²²²²>²²²²²²
+#end
+:mov
+#char 104
+#zap touch
+#zap shot
+#m:d
+#end
+:touch
+#if blocked opp seek ?seek#end
+#if not blocked opp seek ?opp seek#end
+:shot
+#end
+:shot
+#lock
+#char 72
+#restore shot
+#restore touch
+/i#char 219
+/i#char 72
+#unlock
+#end
+:act
+#lock
+'restore labels in case of previous
+'failed build attempt
+#restore c
+'First step - no #put solid
+#if blocked e x
+?e
+:c
+:c
+:c
+:c
+:c
+#zap c
+#we
+:c
+:c
+:c
+:c
+:c
+#zap c
+#wn
+:c
+#zap c
+#ww
+:c
+#zap c
+#wn
+:c
+:c
+#zap c
+#ww
+:c
+#zap c
+#wn
+:c
+:c
+#zap c
+#ww
+:c
+#zap c
+#wn
+:c
+:c
+#zap c
+#ww
+:c
+#zap c
+#ws
+:c
+:c
+#zap c
+#ww
+:c
+#zap c
+#ws
+:c
+:c
+#zap c
+#ww
+:c
+#zap c
+#ws
+:c
+#zap c
+#ww
+:c
+:c
+:c
+:c
+:c
+#zap c
+#ws
+:c
+:c
+:c
+:c
+:c
+:c
+#zap c
+#we
+:c
+#m:c
+#unlock
+#end
+:we
+#if blocked e x
+?e
+#put w red solid
+#c
+:ww
+#if blocked w x
+?w
+#put e red solid
+#c
+:wn
+#if blocked n x
+?n
+#put s red solid
+#c
+:ws
+#if blocked s x
+?s
+#put n red solid
+#c
+:x
+#m:b
+:re
+#c:r
+#unlock
+
+    end
+    stat at 30,15 element Object cycle 1 p1 cp437:0xA5 p2 0 step idle under Empty color 0x0F
+    oop
+@Stables
+#end
+:touch
+I build stables. Stables contain horses,
+and horses are just fine, in my opinion.
+
+#if any white solid !re;Tear it down!
+#if not any white solid !act;Build here
+!fp;Floor plan
+#if not any white solid !mov;Reposition
+#end
+:fp
+$13x8
+$²...........v
+$²...........²
+$²...........²
+$²².........²²
+$.².........².
+$.²².......²².
+$..²²²...²²²..
+$....²²²²²....
+#end
+:mov
+#char 164
+#zap touch
+#zap shot
+#m:d
+#end
+:touch
+#if blocked opp seek ?seek#end
+#if not blocked opp seek ?opp seek#end
+:shot
+#end
+:shot
+#lock
+#restore shot
+#restore touch
+/i#char 219
+/i#char 165
+#unlock
+#end
+:act
+#lock
+#restore c
+'Exception: do put a solid on first step.
+:c
+:c
+:c
+#zap c
+#ws
+:c
+#zap c
+#ww
+:c
+:c
+#zap c
+#ws
+:c
+#zap c
+#ww
+:c
+#zap c
+#ws
+:c
+:c
+#zap c
+#ww
+:c
+#zap c
+#ws
+:c
+:c
+:c
+:c
+#zap c
+#ww
+:c
+#zap c
+#wn
+:c
+:c
+#zap c
+#ww
+:c
+#zap c
+#wn
+:c
+#zap c
+#ww
+:c
+:c
+#zap c
+#wn
+:c
+#zap c
+#ww
+:c
+:c
+:c
+#zap c
+#wn
+
+:c
+#m:c
+#unlock
+#end
+:we
+#if blocked e x
+?e
+#put w white solid
+#c
+:ww
+#if blocked w x
+?w
+#put e white solid
+#c
+:wn
+#if blocked n x
+?n
+#put s white solid
+#c
+:ws
+#if blocked s x
+?s
+#put n white solid
+#c
+:x
+#m:b
+:re
+#c:w
+#unlock
+
+    end
+    stat at 24,16 element Object cycle 1 p1 cp437:0xF8 p2 0 step idle under Empty color 0x0F
+    oop
+@Bridge
+#end
+:touch
+#lock
+If you find yourself unable to get past a
+body of water, shoot over it to make a
+crossing.
+
+#if not any water x
+/i#xx
+:x
+You'll need some water to be present on
+the board first though, boss.
+:xx
+/i/i/i#char 219
+/i#char 178
+/i#char 177
+/i#char 176
+/i#die
+
+    end
+    stat at 26,16 element Object cycle 1 p1 cp437:0x54 p2 0 step idle under Empty color 0x0F
+    oop
+@Tree
+#end
+:touch
+I build a big tree. Big trees are neat.
+
+#if any green solid !re;Tear it down!
+#if not any green solid !act;Build here
+!fp;Floor plan
+#if not any green solid !mov;Reposition
+#end
+:fp
+$13x10
+$...²²²²²²²...
+$.²²².....²²².
+$²².........²²
+$²...........²
+$²².........²²
+$.²²².....²²².
+$...²²².²²²...
+$.....².².....
+$.....².².....
+$.....²<².....
+#end
+:mov
+#char 116
+#zap touch
+#zap shot
+#m:d
+#end
+:touch
+#if blocked opp seek ?seek#end
+#if not blocked opp seek ?opp seek#end
+:shot
+#end
+:shot
+#lock
+#restore shot
+#restore touch
+/i#char 219
+/i#char 84
+#unlock
+#end
+:act
+#lock
+#restore c
+#if blocked w x
+?w
+:c
+:c
+:c
+#zap c
+#wn
+:c
+:c
+#zap c
+#ww
+:c
+#zap c
+#wn
+:c
+:c
+#zap c
+#ww
+:c
+#zap c
+#wn
+:c
+#zap c
+#ww
+:c
+:c
+#zap c
+#wn
+:c
+#zap c
+#we
+:c
+#zap c
+#wn
+:c
+:c
+#zap c
+#we
+:c
+#zap c
+#wn
+:c
+:c
+:c
+:c
+:c
+:c
+#zap c
+#we
+:c
+#zap c
+#ws
+:c
+:c
+#zap c
+#we
+:c
+#zap c
+#ws
+:c
+#zap c
+#we
+:c
+:c
+#zap c
+#ws
+:c
+#zap c
+#ww
+:c
+#zap c
+#ws
+:c
+:c
+#zap c
+#ww
+:c
+#zap c
+#ws
+:c
+:c
+#zap c
+#ww
+:c
+:c
+:c
+#zap c
+#ws
+:c
+#zap c
+#ww
+
+:c
+#m:c
+#unlock
+#end
+:we
+#if blocked e x
+?e
+#put w green solid
+#c
+:ww
+#if blocked w x
+?w
+#put e green solid
+#c
+:wn
+#if blocked n x
+?n
+#put s green solid
+#c
+:ws
+#if blocked s x
+?s
+#put n green solid
+#c
+:x
+#m:b
+:re
+#c:g
+#unlock
+
+    end
+    stat at 28,16 element Object cycle 1 p1 cp437:0x52 p2 0 step idle under Empty color 0x0F
+    oop
+@River
+#end
+:touch
+#zap touch
+I build a river, or part of one.
+
+Please shoot me while perpendicular to the
+direction that you would like me to work
+in.
+
+Poke me again to reposition.
+#end
+:touch
+#if blocked opp seek ?seek#end
+#if not blocked opp seek ?opp seek#end
+:shot
+#if any blue water resriv
+#lock
+#walk cw seek
+#if blocked flow if blocked opp flow pinch
+:a
+/i#if not blocked flow a
+#walk opp flow
+'idle to not destroy playfield border
+/i
+:b
+#put opp flow blue water
+#if blocked flow if not contact c
+#if contact x
+/i#b
+:c
+#walk i
+#zap touch
+#unlock
+Job's done.
+#end
+:touch
+:shot
+:resriv
+Reset the river?
+
+!y;Yes
+#end
+:x 
+I'll need you to step out of the way for
+me to complete this, boss.
+:y
+#c:ri
+#restore touch
+#restore shot
+#walk i
+#unlock
+#end
+:pinch
+Looks like there's no room to place a
+river here, boss.
+#y
+
+    end
+    stat at 48,22 element Transporter cycle 255 p1 0 p2 0 step south under Empty color 0x0F
+    stat at 47,22 element Transporter cycle 255 p1 0 p2 0 step south under Empty color 0x0F
+    stat at 46,22 element Transporter cycle 255 p1 0 p2 0 step south under Empty color 0x0F
+    stat at 45,22 element Transporter cycle 255 p1 0 p2 0 step south under Empty color 0x0F
+    stat at 44,22 element Transporter cycle 255 p1 0 p2 0 step south under Empty color 0x0F
+    stat at 43,22 element Transporter cycle 255 p1 0 p2 0 step south under Empty color 0x0F
+    stat at 42,22 element Transporter cycle 255 p1 0 p2 0 step south under Empty color 0x0F
+    stat at 41,22 element Transporter cycle 255 p1 0 p2 0 step south under Empty color 0x0F
+    stat at 40,22 element Transporter cycle 255 p1 0 p2 0 step south under Empty color 0x0F
+    stat at 39,22 element Transporter cycle 255 p1 0 p2 0 step south under Empty color 0x0F
+    stat at 38,22 element Transporter cycle 255 p1 0 p2 0 step south under Empty color 0x0F
+    stat at 37,22 element Transporter cycle 255 p1 0 p2 0 step south under Empty color 0x0F
+    stat at 36,22 element Transporter cycle 255 p1 0 p2 0 step south under Empty color 0x0F
+    stat at 35,22 element Transporter cycle 255 p1 0 p2 0 step south under Empty color 0x0F
+    stat at 34,22 element Transporter cycle 255 p1 0 p2 0 step south under Empty color 0x0F
+    stat at 33,22 element Transporter cycle 255 p1 0 p2 0 step south under Empty color 0x0F
+    stat at 32,22 element Transporter cycle 255 p1 0 p2 0 step south under Empty color 0x0F
+    stat at 31,22 element Transporter cycle 255 p1 0 p2 0 step south under Empty color 0x0F
+    stat at 30,22 element Transporter cycle 255 p1 0 p2 0 step south under Empty color 0x0F
+    stat at 29,22 element Transporter cycle 255 p1 0 p2 0 step south under Empty color 0x0F
+    stat at 28,22 element Transporter cycle 255 p1 0 p2 0 step south under Empty color 0x0F
+    stat at 27,22 element Transporter cycle 255 p1 0 p2 0 step south under Empty color 0x0F
+    stat at 49,21 element Transporter cycle 255 p1 0 p2 0 step east under Empty color 0x0F
+    stat at 49,20 element Transporter cycle 255 p1 0 p2 0 step east under Empty color 0x0F
+    stat at 49,19 element Transporter cycle 255 p1 0 p2 0 step east under Empty color 0x0F
+    stat at 49,18 element Transporter cycle 255 p1 0 p2 0 step east under Empty color 0x0F
+    stat at 49,17 element Transporter cycle 255 p1 0 p2 0 step east under Empty color 0x0F
+    stat at 49,16 element Transporter cycle 255 p1 0 p2 0 step east under Empty color 0x0F
+    stat at 49,15 element Transporter cycle 255 p1 0 p2 0 step east under Empty color 0x0F
+    stat at 49,14 element Transporter cycle 255 p1 0 p2 0 step east under Empty color 0x0F
+    stat at 49,12 element Transporter cycle 255 p1 0 p2 0 step east under Empty color 0x0F
+    stat at 49,11 element Transporter cycle 255 p1 0 p2 0 step east under Empty color 0x0F
+    stat at 49,10 element Transporter cycle 255 p1 0 p2 0 step east under Empty color 0x0F
+    stat at 49,9 element Transporter cycle 255 p1 0 p2 0 step east under Empty color 0x0F
+    stat at 49,8 element Transporter cycle 255 p1 0 p2 0 step east under Empty color 0x0F
+    stat at 49,7 element Transporter cycle 255 p1 0 p2 0 step east under Empty color 0x0F
+    stat at 49,6 element Transporter cycle 255 p1 0 p2 0 step east under Empty color 0x0F
+    stat at 49,5 element Transporter cycle 255 p1 0 p2 0 step east under Empty color 0x0F
+    stat at 48,4 element Transporter cycle 255 p1 0 p2 0 step north under Empty color 0x0F
+    stat at 47,4 element Transporter cycle 255 p1 0 p2 0 step north under Empty color 0x0F
+    stat at 46,4 element Transporter cycle 255 p1 0 p2 0 step north under Empty color 0x0F
+    stat at 45,4 element Transporter cycle 255 p1 0 p2 0 step north under Empty color 0x0F
+    stat at 44,4 element Transporter cycle 255 p1 0 p2 0 step north under Empty color 0x0F
+    stat at 43,4 element Transporter cycle 255 p1 0 p2 0 step north under Empty color 0x0F
+    stat at 42,4 element Transporter cycle 255 p1 0 p2 0 step north under Empty color 0x0F
+    stat at 41,4 element Transporter cycle 255 p1 0 p2 0 step north under Empty color 0x0F
+    stat at 40,4 element Transporter cycle 255 p1 0 p2 0 step north under Empty color 0x0F
+    stat at 39,4 element Transporter cycle 255 p1 0 p2 0 step north under Empty color 0x0F
+    stat at 38,4 element Transporter cycle 255 p1 0 p2 0 step north under Empty color 0x0F
+    stat at 37,4 element Transporter cycle 255 p1 0 p2 0 step north under Empty color 0x0F
+    stat at 36,4 element Transporter cycle 255 p1 0 p2 0 step north under Empty color 0x0F
+    stat at 35,4 element Transporter cycle 255 p1 0 p2 0 step north under Empty color 0x0F
+    stat at 34,4 element Transporter cycle 255 p1 0 p2 0 step north under Empty color 0x0F
+    stat at 33,4 element Transporter cycle 255 p1 0 p2 0 step north under Empty color 0x0F
+    stat at 32,4 element Transporter cycle 255 p1 0 p2 0 step north under Empty color 0x0F
+    stat at 31,4 element Transporter cycle 255 p1 0 p2 0 step north under Empty color 0x0F
+    stat at 30,4 element Transporter cycle 255 p1 0 p2 0 step north under Empty color 0x0F
+    stat at 29,4 element Transporter cycle 255 p1 0 p2 0 step north under Empty color 0x0F
+    stat at 28,4 element Transporter cycle 255 p1 0 p2 0 step north under Empty color 0x0F
+    stat at 27,4 element Transporter cycle 255 p1 0 p2 0 step north under Empty color 0x0F
+    stat at 25,4 element Transporter cycle 255 p1 0 p2 0 step north under Empty color 0x0F
+    stat at 24,4 element Transporter cycle 255 p1 0 p2 0 step north under Empty color 0x0F
+    stat at 23,4 element Transporter cycle 255 p1 0 p2 0 step north under Empty color 0x0F
+    stat at 22,4 element Transporter cycle 255 p1 0 p2 0 step north under Empty color 0x0F
+    stat at 21,4 element Transporter cycle 255 p1 0 p2 0 step north under Empty color 0x0F
+    stat at 20,4 element Transporter cycle 255 p1 0 p2 0 step north under Empty color 0x0F
+    stat at 19,4 element Transporter cycle 255 p1 0 p2 0 step north under Empty color 0x0F
+    stat at 18,4 element Transporter cycle 255 p1 0 p2 0 step north under Empty color 0x0F
+    stat at 17,4 element Transporter cycle 255 p1 0 p2 0 step north under Empty color 0x0F
+    stat at 16,4 element Transporter cycle 255 p1 0 p2 0 step north under Empty color 0x0F
+    stat at 15,4 element Transporter cycle 255 p1 0 p2 0 step north under Empty color 0x0F
+    stat at 14,4 element Transporter cycle 255 p1 0 p2 0 step north under Empty color 0x0F
+    stat at 13,4 element Transporter cycle 255 p1 0 p2 0 step north under Empty color 0x0F
+    stat at 12,4 element Transporter cycle 255 p1 0 p2 0 step north under Empty color 0x0F
+    stat at 11,4 element Transporter cycle 255 p1 0 p2 0 step north under Empty color 0x0F
+    stat at 10,4 element Transporter cycle 255 p1 0 p2 0 step north under Empty color 0x0F
+    stat at 9,4 element Transporter cycle 255 p1 0 p2 0 step north under Empty color 0x0F
+    stat at 8,4 element Transporter cycle 255 p1 0 p2 0 step north under Empty color 0x0F
+    stat at 7,4 element Transporter cycle 255 p1 0 p2 0 step north under Empty color 0x0F
+    stat at 6,4 element Transporter cycle 255 p1 0 p2 0 step north under Empty color 0x0F
+    stat at 5,4 element Transporter cycle 255 p1 0 p2 0 step north under Empty color 0x0F
+    stat at 4,5 element Transporter cycle 255 p1 0 p2 0 step west under Empty color 0x0F
+    stat at 4,6 element Transporter cycle 255 p1 0 p2 0 step west under Empty color 0x0F
+    stat at 4,7 element Transporter cycle 255 p1 0 p2 0 step west under Empty color 0x0F
+    stat at 4,8 element Transporter cycle 255 p1 0 p2 0 step west under Empty color 0x0F
+    stat at 4,9 element Transporter cycle 255 p1 0 p2 0 step west under Empty color 0x0F
+    stat at 4,10 element Transporter cycle 255 p1 0 p2 0 step west under Empty color 0x0F
+    stat at 4,11 element Transporter cycle 255 p1 0 p2 0 step west under Empty color 0x0F
+    stat at 4,12 element Transporter cycle 255 p1 0 p2 0 step west under Empty color 0x0F
+    stat at 4,14 element Transporter cycle 255 p1 0 p2 0 step west under Empty color 0x0F
+    stat at 4,15 element Transporter cycle 255 p1 0 p2 0 step west under Empty color 0x0F
+    stat at 4,16 element Transporter cycle 255 p1 0 p2 0 step west under Empty color 0x0F
+    stat at 4,17 element Transporter cycle 255 p1 0 p2 0 step west under Empty color 0x0F
+    stat at 4,18 element Transporter cycle 255 p1 0 p2 0 step west under Empty color 0x0F
+    stat at 4,19 element Transporter cycle 255 p1 0 p2 0 step west under Empty color 0x0F
+    stat at 4,20 element Transporter cycle 255 p1 0 p2 0 step west under Empty color 0x0F
+    stat at 4,21 element Transporter cycle 255 p1 0 p2 0 step west under Empty color 0x0F
+    stat at 25,22 element Transporter cycle 255 p1 0 p2 0 step south under Empty color 0x0F
+    stat at 24,22 element Transporter cycle 255 p1 0 p2 0 step south under Empty color 0x0F
+    stat at 23,22 element Transporter cycle 255 p1 0 p2 0 step south under Empty color 0x0F
+    stat at 22,22 element Transporter cycle 255 p1 0 p2 0 step south under Empty color 0x0F
+    stat at 21,22 element Transporter cycle 255 p1 0 p2 0 step south under Empty color 0x0F
+    stat at 20,22 element Transporter cycle 255 p1 0 p2 0 step south under Empty color 0x0F
+    stat at 19,22 element Transporter cycle 255 p1 0 p2 0 step south under Empty color 0x0F
+    stat at 18,22 element Transporter cycle 255 p1 0 p2 0 step south under Empty color 0x0F
+    stat at 17,22 element Transporter cycle 255 p1 0 p2 0 step south under Empty color 0x0F
+    stat at 16,22 element Transporter cycle 255 p1 0 p2 0 step south under Empty color 0x0F
+    stat at 15,22 element Transporter cycle 255 p1 0 p2 0 step south under Empty color 0x0F
+    stat at 14,22 element Transporter cycle 255 p1 0 p2 0 step south under Empty color 0x0F
+    stat at 13,22 element Transporter cycle 255 p1 0 p2 0 step south under Empty color 0x0F
+    stat at 12,22 element Transporter cycle 255 p1 0 p2 0 step south under Empty color 0x0F
+    stat at 11,22 element Transporter cycle 255 p1 0 p2 0 step south under Empty color 0x0F
+    stat at 10,22 element Transporter cycle 255 p1 0 p2 0 step south under Empty color 0x0F
+    stat at 9,22 element Transporter cycle 255 p1 0 p2 0 step south under Empty color 0x0F
+    stat at 8,22 element Transporter cycle 255 p1 0 p2 0 step south under Empty color 0x0F
+    stat at 7,22 element Transporter cycle 255 p1 0 p2 0 step south under Empty color 0x0F
+    stat at 6,22 element Transporter cycle 255 p1 0 p2 0 step south under Empty color 0x0F
+    stat at 5,22 element Transporter cycle 255 p1 0 p2 0 step south under Empty color 0x0F
+    stat at 52,23 element Object cycle 1 p1 cp437:0x21 p2 0 step idle under Empty color 0x0F
+    oop
+
+'DEBUG
+#give ammo 10000
+
+:a
+/i#if not alligned a
+#change fake white solid
+/i#change white solid normal
+/i#change white normal breakable
+/i#change white breakable water
+/i#change white water empty
+#die
+
+    end
+  end
+end

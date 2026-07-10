@@ -1,0 +1,100 @@
+board "Board w/passage"
+  start player at 32,24
+  respawn at 1,25
+  max-shots 255
+  dark false
+  reenter false
+  time-limit 0
+  exits north none south none west none east none
+
+  grid
+aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa
+aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa
+aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa
+aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa
+aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa
+aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa
+aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa
+aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa
+aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa
+aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa
+aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa
+aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa
+aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa
+aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa
+aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa
+aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa
+aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa
+aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa
+aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa
+aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa
+aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa
+aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa
+aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa
+aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa@aaaaaaaaaaaaaaaaaaaaaaaaaaaa
+aaappppppppppppppppppppppppppppppppppppppppppppppppppppppaaa
+  end
+
+  legend
+    a = Text-Blue color 0x20
+    @ = Player color 0x1F under Empty color 0x00
+    p = Passage color 0x1F to "Passage lead-in (illusion)"
+  end
+
+  stats
+    stat at 57,25 element Passage p1 0 p2 0 p3 board "Passage lead-in (illusion)" step idle under Empty color 0x20
+    stat at 56,25 element Passage p1 0 p2 0 p3 board "Passage lead-in (illusion)" step idle under Empty color 0x20
+    stat at 55,25 element Passage p1 0 p2 0 p3 board "Passage lead-in (illusion)" step idle under Empty color 0x20
+    stat at 54,25 element Passage p1 0 p2 0 p3 board "Passage lead-in (illusion)" step idle under Empty color 0x20
+    stat at 53,25 element Passage p1 0 p2 0 p3 board "Passage lead-in (illusion)" step idle under Empty color 0x20
+    stat at 52,25 element Passage p1 0 p2 0 p3 board "Passage lead-in (illusion)" step idle under Empty color 0x20
+    stat at 51,25 element Passage p1 0 p2 0 p3 board "Passage lead-in (illusion)" step idle under Empty color 0x20
+    stat at 50,25 element Passage p1 0 p2 0 p3 board "Passage lead-in (illusion)" step idle under Empty color 0x20
+    stat at 49,25 element Passage p1 0 p2 0 p3 board "Passage lead-in (illusion)" step idle under Empty color 0x20
+    stat at 48,25 element Passage p1 0 p2 0 p3 board "Passage lead-in (illusion)" step idle under Empty color 0x20
+    stat at 47,25 element Passage p1 0 p2 0 p3 board "Passage lead-in (illusion)" step idle under Empty color 0x20
+    stat at 46,25 element Passage p1 0 p2 0 p3 board "Passage lead-in (illusion)" step idle under Empty color 0x20
+    stat at 45,25 element Passage p1 0 p2 0 p3 board "Passage lead-in (illusion)" step idle under Empty color 0x20
+    stat at 44,25 element Passage p1 0 p2 0 p3 board "Passage lead-in (illusion)" step idle under Empty color 0x20
+    stat at 43,25 element Passage p1 0 p2 0 p3 board "Passage lead-in (illusion)" step idle under Empty color 0x20
+    stat at 42,25 element Passage p1 0 p2 0 p3 board "Passage lead-in (illusion)" step idle under Empty color 0x20
+    stat at 41,25 element Passage p1 0 p2 0 p3 board "Passage lead-in (illusion)" step idle under Empty color 0x20
+    stat at 40,25 element Passage p1 0 p2 0 p3 board "Passage lead-in (illusion)" step idle under Empty color 0x20
+    stat at 39,25 element Passage p1 0 p2 0 p3 board "Passage lead-in (illusion)" step idle under Empty color 0x20
+    stat at 38,25 element Passage p1 0 p2 0 p3 board "Passage lead-in (illusion)" step idle under Empty color 0x20
+    stat at 37,25 element Passage p1 0 p2 0 p3 board "Passage lead-in (illusion)" step idle under Empty color 0x20
+    stat at 36,25 element Passage p1 0 p2 0 p3 board "Passage lead-in (illusion)" step idle under Empty color 0x20
+    stat at 35,25 element Passage p1 0 p2 0 p3 board "Passage lead-in (illusion)" step idle under Empty color 0x20
+    stat at 34,25 element Passage p1 0 p2 0 p3 board "Passage lead-in (illusion)" step idle under Empty color 0x20
+    stat at 33,25 element Passage p1 0 p2 0 p3 board "Passage lead-in (illusion)" step idle under Empty color 0x20
+    stat at 32,25 element Passage p1 0 p2 0 p3 board "Passage lead-in (illusion)" step idle under Empty color 0x20
+    stat at 31,25 element Passage p1 0 p2 0 p3 board "Passage lead-in (illusion)" step idle under Empty color 0x20
+    stat at 30,25 element Passage p1 0 p2 0 p3 board "Passage lead-in (illusion)" step idle under Empty color 0x0E
+    stat at 29,25 element Passage p1 0 p2 0 p3 board "Passage lead-in (illusion)" step idle under Empty color 0x20
+    stat at 28,25 element Passage p1 0 p2 0 p3 board "Passage lead-in (illusion)" step idle under Empty color 0x20
+    stat at 27,25 element Passage p1 0 p2 0 p3 board "Passage lead-in (illusion)" step idle under Empty color 0x20
+    stat at 26,25 element Passage p1 0 p2 0 p3 board "Passage lead-in (illusion)" step idle under Empty color 0x20
+    stat at 25,25 element Passage p1 0 p2 0 p3 board "Passage lead-in (illusion)" step idle under Empty color 0x20
+    stat at 24,25 element Passage p1 0 p2 0 p3 board "Passage lead-in (illusion)" step idle under Empty color 0x20
+    stat at 23,25 element Passage p1 0 p2 0 p3 board "Passage lead-in (illusion)" step idle under Empty color 0x20
+    stat at 22,25 element Passage p1 0 p2 0 p3 board "Passage lead-in (illusion)" step idle under Empty color 0x20
+    stat at 21,25 element Passage p1 0 p2 0 p3 board "Passage lead-in (illusion)" step idle under Empty color 0x20
+    stat at 20,25 element Passage p1 0 p2 0 p3 board "Passage lead-in (illusion)" step idle under Empty color 0x20
+    stat at 19,25 element Passage p1 0 p2 0 p3 board "Passage lead-in (illusion)" step idle under Empty color 0x20
+    stat at 18,25 element Passage p1 0 p2 0 p3 board "Passage lead-in (illusion)" step idle under Empty color 0x20
+    stat at 17,25 element Passage p1 0 p2 0 p3 board "Passage lead-in (illusion)" step idle under Empty color 0x20
+    stat at 16,25 element Passage p1 0 p2 0 p3 board "Passage lead-in (illusion)" step idle under Empty color 0x20
+    stat at 15,25 element Passage p1 0 p2 0 p3 board "Passage lead-in (illusion)" step idle under Empty color 0x20
+    stat at 14,25 element Passage p1 0 p2 0 p3 board "Passage lead-in (illusion)" step idle under Empty color 0x20
+    stat at 13,25 element Passage p1 0 p2 0 p3 board "Passage lead-in (illusion)" step idle under Empty color 0x20
+    stat at 12,25 element Passage p1 0 p2 0 p3 board "Passage lead-in (illusion)" step idle under Empty color 0x20
+    stat at 11,25 element Passage p1 0 p2 0 p3 board "Passage lead-in (illusion)" step idle under Empty color 0x20
+    stat at 10,25 element Passage p1 0 p2 0 p3 board "Passage lead-in (illusion)" step idle under Empty color 0x20
+    stat at 9,25 element Passage p1 0 p2 0 p3 board "Passage lead-in (illusion)" step idle under Empty color 0x20
+    stat at 8,25 element Passage p1 0 p2 0 p3 board "Passage lead-in (illusion)" step idle under Empty color 0x20
+    stat at 7,25 element Passage p1 0 p2 0 p3 board "Passage lead-in (illusion)" step idle under Empty color 0x20
+    stat at 6,25 element Passage p1 0 p2 0 p3 board "Passage lead-in (illusion)" step idle under Empty color 0x20
+    stat at 5,25 element Passage p1 0 p2 0 p3 board "Passage lead-in (illusion)" step idle under Empty color 0x20
+    stat at 4,25 element Passage p1 0 p2 0 p3 board "Passage lead-in (illusion)" step idle under Empty color 0x20
+  end
+end

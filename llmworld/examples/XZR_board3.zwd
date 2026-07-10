@@ -1,0 +1,355 @@
+board "XZR II: A FUCKSHIT MASTERPIECE"
+  start player at 36,5
+  respawn at 32,32
+  max-shots 255
+  dark false
+  reenter false
+  time-limit 0
+  exits north none south none west none east none
+
+  grid
+..........................l.................l...............
+.........o..O..b..........g.................g...............
+.hhh.hhh.hhhhhhh.hhhhh....l.....pjkPajy.....l...............
+..##.##..hh...##.##..##...g.................g...............
+..#~.#~......~#~.#~..#~...l........@........l...............
+...B~B.....B~B...~B~B~....g.................g...............
+..BN.N~..BN~.....BN..NB...l.................l...............
+..NS.SN..NS...mm.NS..SN...g..lglglqqqlglgl..g...............
+.mmm.mmm.mmmmmmm.mm..mm...l.................l...............
+..........................g.................g...............
+.....mmmmmmmmmmmmmm.......l.................l...............
+........NS....SN..........g.....ijnofjs.....g...............
+........B~....~B..........l.................l...............
+........~B....B~..........g.................g...............
+........#~....~#..........l.................l...............
+.....hhhhhhhhhhhhhh.......g.................g...............
+..........................l..glglgqqqglglg..l...............
+.....m..m..m..m..m........g.................g...............
+..........................l.................l...............
+..........................g.................g...............
+..........................l.................l...............
+..........................g.....cjroejd.....g...............
+..........................l.................l...............
+..........................g.................g...............
+..........................l.................l...............
+  end
+
+  legend
+    . = Empty color 0x00
+    l = Line color 0x07
+    o = Object color 0x04
+    O = Object color 0x01
+    b = Object color 0x02
+    g = Line color 0x08
+    h = Object color 0x07
+    p = Text-White color 0x70
+    j = Text-White color 0x20
+    k = Text-White color 0x6C
+    P = Passage color 0x04 to "Opening 1"
+    a = Text-White color 0x61
+    y = Text-White color 0x79
+    # = Solid color 0x07
+    ~ = Water color 0x78
+    @ = Player color 0x1F under Empty color 0x00
+    B = Breakable color 0x78
+    N = Normal color 0x78
+    S = Solid color 0x08
+    m = Object color 0x08
+    q = Empty color 0x0F
+    i = Text-White color 0x69
+    n = Text-White color 0x6E
+    f = Text-White color 0x66
+    s = Text-White color 0x6F
+    c = Text-White color 0x63
+    r = Text-White color 0x72
+    e = Text-White color 0x65
+    d = Text-White color 0x64
+  end
+
+  stats
+    stat at 6,11 element Object cycle 1 p1 cp437:0xDC p2 0 step idle follower 0 leader 0
+    stat at 7,11 element Object cycle 1 p1 cp437:0xDC p2 0 step idle follower 0 leader 0
+    stat at 8,11 element Object cycle 1 p1 cp437:0xDC p2 0 step idle follower 0 leader 0
+    stat at 9,11 element Object cycle 1 p1 cp437:0xDC p2 0 step idle follower 0 leader 0
+    stat at 10,11 element Object cycle 1 p1 cp437:0xDC p2 0 step idle follower 0 leader 0
+    stat at 11,11 element Object cycle 1 p1 cp437:0xDC p2 0 step idle follower 0 leader 0
+    stat at 12,11 element Object cycle 1 p1 cp437:0xDC p2 0 step idle follower 0 leader 0
+    stat at 13,11 element Object cycle 1 p1 cp437:0xDC p2 0 step idle follower 0 leader 0
+    stat at 14,11 element Object cycle 1 p1 cp437:0xDC p2 0 step idle follower 0 leader 0
+    stat at 15,11 element Object cycle 1 p1 cp437:0xDC p2 0 step idle follower 0 leader 0
+    stat at 16,11 element Object cycle 1 p1 cp437:0xDC p2 0 step idle follower 0 leader 0
+    stat at 17,11 element Object cycle 1 p1 cp437:0xDC p2 0 step idle follower 0 leader 0
+    stat at 18,11 element Object cycle 1 p1 cp437:0xDC p2 0 step idle follower 0 leader 0
+    stat at 19,11 element Object cycle 1 p1 cp437:0xDC p2 0 step idle follower 0 leader 0
+    stat at 19,16 element Object cycle 1 p1 cp437:0xDF p2 0 step idle follower 0 leader 0
+    stat at 18,16 element Object cycle 1 p1 cp437:0xDF p2 0 step idle follower 0 leader 0
+    stat at 17,16 element Object cycle 1 p1 cp437:0xDF p2 0 step idle follower 0 leader 0
+    stat at 16,16 element Object cycle 1 p1 cp437:0xDF p2 0 step idle follower 0 leader 0
+    stat at 15,16 element Object cycle 1 p1 cp437:0xDF p2 0 step idle follower 0 leader 0
+    stat at 14,16 element Object cycle 1 p1 cp437:0xDF p2 0 step idle follower 0 leader 0
+    stat at 13,16 element Object cycle 1 p1 cp437:0xDF p2 0 step idle follower 0 leader 0
+    stat at 12,16 element Object cycle 1 p1 cp437:0xDF p2 0 step idle follower 0 leader 0
+    stat at 11,16 element Object cycle 1 p1 cp437:0xDF p2 0 step idle follower 0 leader 0
+    stat at 10,16 element Object cycle 1 p1 cp437:0xDF p2 0 step idle follower 0 leader 0
+    stat at 9,16 element Object cycle 1 p1 cp437:0xDF p2 0 step idle follower 0 leader 0
+    stat at 8,16 element Object cycle 1 p1 cp437:0xDF p2 0 step idle follower 0 leader 0
+    stat at 7,16 element Object cycle 1 p1 cp437:0xDF p2 0 step idle follower 0 leader 0
+    stat at 6,16 element Object cycle 1 p1 cp437:0xDF p2 0 step idle follower 0 leader 0
+    stat at 7,9 element Object cycle 1 p1 cp437:0xDF p2 0 step idle follower 0 leader 0
+    stat at 6,9 element Object cycle 1 p1 cp437:0xDF p2 0 step idle follower 0 leader 0
+    stat at 8,9 element Object cycle 1 p1 cp437:0xDF p2 0 step idle follower 0 leader 0
+    stat at 4,9 element Object cycle 1 p1 cp437:0xDF p2 0 step idle follower 0 leader 0
+    stat at 3,9 element Object cycle 1 p1 cp437:0xDF p2 0 step idle follower 0 leader 0
+    stat at 2,9 element Object cycle 1 p1 cp437:0xDF p2 0 step idle follower 0 leader 0
+    stat at 10,9 element Object cycle 1 p1 cp437:0xDF p2 0 step idle follower 0 leader 0
+    stat at 11,9 element Object cycle 1 p1 cp437:0xDF p2 0 step idle follower 0 leader 0
+    stat at 12,9 element Object cycle 1 p1 cp437:0xDF p2 0 step idle follower 0 leader 0
+    stat at 13,9 element Object cycle 1 p1 cp437:0xDF p2 0 step idle follower 0 leader 0
+    stat at 14,9 element Object cycle 1 p1 cp437:0xDF p2 0 step idle follower 0 leader 0
+    stat at 15,9 element Object cycle 1 p1 cp437:0xDF p2 0 step idle follower 0 leader 0
+    stat at 16,9 element Object cycle 1 p1 cp437:0xDF p2 0 step idle follower 0 leader 0
+    stat at 6,3 element Object cycle 1 p1 cp437:0xDC p2 0 step idle follower 0 leader 0
+    stat at 7,3 element Object cycle 1 p1 cp437:0xDC p2 0 step idle follower 0 leader 0
+    stat at 8,3 element Object cycle 1 p1 cp437:0xDC p2 0 step idle follower 0 leader 0
+    stat at 4,3 element Object cycle 1 p1 cp437:0xDC p2 0 step idle follower 0 leader 0
+    stat at 3,3 element Object cycle 1 p1 cp437:0xDC p2 0 step idle follower 0 leader 0
+    stat at 2,3 element Object cycle 1 p1 cp437:0xDC p2 0 step idle follower 0 leader 0
+    stat at 10,3 element Object cycle 1 p1 cp437:0xDC p2 0 step idle follower 0 leader 0
+    stat at 11,3 element Object cycle 1 p1 cp437:0xDC p2 0 step idle follower 0 leader 0
+    stat at 12,3 element Object cycle 1 p1 cp437:0xDC p2 0 step idle follower 0 leader 0
+    stat at 13,3 element Object cycle 1 p1 cp437:0xDC p2 0 step idle follower 0 leader 0
+    stat at 14,3 element Object cycle 1 p1 cp437:0xDC p2 0 step idle follower 0 leader 0
+    stat at 15,3 element Object cycle 1 p1 cp437:0xDC p2 0 step idle follower 0 leader 0
+    stat at 16,3 element Object cycle 1 p1 cp437:0xDC p2 0 step idle follower 0 leader 0
+    stat at 18,3 element Object cycle 1 p1 cp437:0xDC p2 0 step idle follower 0 leader 0
+    stat at 19,3 element Object cycle 1 p1 cp437:0xDC p2 0 step idle follower 0 leader 0
+    stat at 20,3 element Object cycle 1 p1 cp437:0xDC p2 0 step idle follower 0 leader 0
+    stat at 21,3 element Object cycle 1 p1 cp437:0xDC p2 0 step idle follower 0 leader 0
+    stat at 22,3 element Object cycle 1 p1 cp437:0xDC p2 0 step idle follower 0 leader 0
+    stat at 22,9 element Object cycle 1 p1 cp437:0xDF p2 0 step idle follower 0 leader 0
+    stat at 23,9 element Object cycle 1 p1 cp437:0xDF p2 0 step idle follower 0 leader 0
+    stat at 19,9 element Object cycle 1 p1 cp437:0xDF p2 0 step idle follower 0 leader 0
+    stat at 18,9 element Object cycle 1 p1 cp437:0xDF p2 0 step idle follower 0 leader 0
+    stat at 16,8 element Object cycle 1 p1 cp437:0xDC p2 0 step idle follower 0 leader 0
+    stat at 15,8 element Object cycle 1 p1 cp437:0xDC p2 0 step idle follower 0 leader 0
+    stat at 10,4 element Object cycle 1 p1 cp437:0xDF p2 0 step idle follower 0 leader 0
+    stat at 11,4 element Object cycle 1 p1 cp437:0xDF p2 0 step idle follower 0 leader 0
+    stat at 6,18 element Object cycle 1 p1 cp437:0x65 p2 0 step idle follower 0 leader 0
+    stat at 15,18 element Object cycle 1 p1 cp437:0x6C p2 0 step idle follower 0 leader 0
+    stat at 18,18 element Object cycle 1 p1 cp437:0x65 p2 0 step idle follower 0 leader 0
+    stat at 12,18 element Object cycle 1 p1 cp437:0x69 p2 0 step idle follower 0 leader 0
+    stat at 9,18 element Object cycle 1 p1 cp437:0x78 p2 0 step idle follower 0 leader 0
+    stat at 36,22 element Object cycle 1 p1 cp437:0xF0 p2 0 step idle follower 0 leader 0
+    oop
+@Credits
+#end
+:touch
+Original Script
+$Hiroshi Akahori
+$
+Programming, Art, Script Touch-Ups
+$_ry0suke_ of ÄäÄ
+$
+SHIZZOUT OUTS 2 MY SO SOLID CREW
+$wildkarrdex
+$funk
+$fishfood
+$IGGL
+$drac0
+$benco
+$kracken
+$nadir
+$zamros
+$dexter
+$goldenhog
+$scribbit
+$lord twisted
+$lemmer
+$skullie
+$dave2
+$vgamet
+$madtom
+$terryn
+$ome-chan
+$TOGEPY <3
+$mr atomic death
+$tyrone
+$maxim
+$chicken head
+$cal adams
+$hercules
+$rob_p
+$mighty trust krusher
+$wayward
+$tseng
+$breakout
+$micr0wave
+$buraktehbest
+$melek
+$the frontier man
+$and anybody else who i forgot
+$
+Original Game: 1989 Telenet Japan / RiOT
+$
+
+    end
+    stat at 36,3 element Passage p1 0 p2 0 p3 board "Opening 1" step idle follower 0 leader 0
+    stat at 36,12 element Object cycle 1 p1 cp437:0xF0 p2 0 step idle follower 0 leader 0
+    oop
+@I N F O
+#end
+:touch
+$
+$Information
+$
+!c;How To Play
+!a;History of XZR
+!b;Characters
+#end
+:a
+XZR/Exile was a brilliant action-rpg
+series by Telenet, which began on MSX, and
+was ported to PC Engine, and the Sega
+Megadrive. Sporting great gameplay and a
+controversial storyline, XZR is one of my
+favorite RPG series. Here's a brief
+description of each game.
+
+XZR - MSX - Japan Only
+The original XZR...seems decent, yet
+excruciatingly hard. I'm not sure about
+all the details of the storyline, as it's
+all in Japanese, and very hard to find
+info on it on the web. All I know about
+it is that it features Sadler during his
+work as an assassin, and later on, he
+travels to the future for some...
+assassinations of political figures (and
+dictators) we all know quite well. Also,
+IT HAS ZOMBIES AARHGHRGH
+
+XZR II/Exile - MSX, PC Engine, Megadrive
+The sequel to XZR, and apparently best
+game in the series. Coincidentally, this
+is the game you're playing right now. The
+Megadrive translation is pretty bad, and
+completely eradicates the entire
+religious warfare plot. The MSX version
+had horribly designed dungeons that would
+sometimes literally loop, and with
+absence of the escape spell in this
+version, makes leaving a dungeon
+impossible at times, though I have
+managed to beat it. It has a different
+ending than the other two versions, with
+a confrontation in modern-day New York.
+I'd love to see it in English.
+
+Exile 2: Wicked Phenomenon - PC Engine
+I recently picked this up, and I was
+surprised when i saw that the storyline
+wasn't half as good as this game's. Dark
+forces have taken over the land and are
+driving people crazy, etc etc. Nice
+cutscenes, however. And the difficulty
+level is ridiculously hard.
+#end
+:b
+$
+$Characters
+$
+$
+Sadler
+$A former assassin. A man with a free
+$mind, he has led the most famous recent
+$revolts against various corrupt powers in
+$the Chaltar world. He is staying in the
+$village of assassins at the beginning of
+$this story.
+$
+Rumi
+$Rumi is Sadler's closest friend. She
+$seems to be his love interest, as well.
+$She's very skilled in acrobatics, and has
+$mastered 8 languages. At the beginning of
+$the story, she hears that a member of
+$Dunes Cavalry has been spotted in the
+$surrounding area, and sets off to find
+$Sadler, to help her continue the
+$investigation.
+$
+Fakhyle
+$An old wizard friend of Sadler's,
+$Fakhyle has accompanied him on many a
+$trip. A skilled magician, he has
+$mastered the mystic stone of Kamiri, no
+$longer needing it to cast spells.
+$
+Kindi
+$Fakhyle's mute companion, and friend of
+$the group. Though he cannot speak much,
+$he has the strength of ten.
+$
+Yuug D'Payne
+$Yuug is the commander of the Dunes
+$Cavalry, a branch of the French foreign
+$leigon. He disapproves with the measures
+$taken by the Klispin Crusaders. In
+$attempts to convert the land to their
+$religion, they slaughter innocent people,
+$and burn entire cities to the ground. To
+$stop this horrifying crusade, Yuug needs
+$the power of the Holimax, an ancient
+$mystic artifact that will unite the world
+$under one god. To obtain this elusive
+$item, he enlists the help of Sadler.
+$
+Sadler will meet many more people on his
+quest. But as to not spoil the game, they
+are not listed here.
+#end
+:c
+How To Play
+$
+!hc;Buying and Using "Tonics"
+!ha;RPG Mode
+!hb;Action Mode
+#end
+:ha
+$
+$R P G    M O D E
+In RPG Mode, you spend your time walking
+around various areas, collecting
+information, conversing with various
+characters, and buying tonics. Be sure to
+talk to everybody, to get the full story.
+#end
+:hb
+$A C T I O N    M O D E
+Action mode is your typical ZZT Action-RPG
+dungeon, where you run into your enemy to
+damage them. Later on, you'll earn magic,
+meanning you'll be able to shoot at your
+enemy, in the typical ZZT style. Also, in
+action mode, you can see a description of
+your enemies in the area by pressing ? +m
+You're also able to use tonics you've
+purchased in town by pressing ? +tonic
+#end
+:hc
+$B U Y I N G / U S I N G    T O N I C S
+In town, you're able to buy tonics at the
+pharmacy. You're only able to carry one
+of each tonic at a time, and you may use
+them in dungeon sequences by prssing ?
++tonic . Tonics are used to heal HP, and
+later on, heal MP.
+#end
+
+    end
+    stat at 10,2 element Object cycle 1 p1 cp437:0xE4 p2 0 step idle follower 0 leader 0
+    stat at 16,2 element Object cycle 1 p1 cp437:0xA8 p2 0 step idle follower 0 leader 0
+    stat at 13,2 element Object cycle 1 p1 cp437:0xE2 p2 0 step idle follower 0 leader 0
+  end
+end

@@ -1,0 +1,73 @@
+board "Wee"
+  start player at 54,18
+  max-shots 255
+  dark false
+  reenter false
+  time-limit 0
+  exits north none south "END" west none east "f"
+
+  grid
+vbhawzlscfumjoqepdupgmrfpzfyupkyuheojltzvqlnyykdpsxburwuhyhn
+xkeaaplihsskhkyelsnszeniuhgoayreoiouvesoqmuxhdxxzlprlabmjdtw
+rxzjcrkcyuiojhlshjnajegzsgettdnpicoixeortooqoxqeoodmohrbhuje
+gszdasruqqgiryakvhjjdpuinogdmlvfuegbceudugehhirlqcjqkbngcpou
+jjbjhihdynthrwvcprrtbyawyvrprvascrvljpjclbipcvbvtvrsqtarclrw
+fykuqpfplakgtmxdzyhjvfupjrnxgiilqdeqjbkxqhdwyiyylxxdjrnftjrc
+otvhqtwjqqsbfqdojrkklpfllkdjbxtifuttosaneegxecxzlfydxftbs...
+kdvrkkihuqvudhbnxhihfcdqkglbmrvuqgaiydwidorulheldnvwgrbae.NN
+vjmwlyrdzjkqwqvfjbxtvbvfgsrkpzqxowqtqwgpqcqanrroodqqqqh...NN
+tsjxpttwaivrgapherwbtrwvvjpkxzzpavsnrmgsiwbqereigelkaxc.NNNN
+mymggupjcbyxwqjgeeglbebzvanbxixhjihzlictnijhljvawjrzfze.NBBN
+pbhwpgvxxhpuomnhjobjlywrajfmgebudvdmxowltikxgapxtmetkae.NBNN
+uxhgpzaoiilzyryxtclssbrlpkalaavmvbtbhpddigoezccqqauhzyf.NNNB
+gwtocjqvzybvlgilsszigiarkmnkyvghvgfxbpvealzwrpfdqhnvlwf..NNB
+rkhsvawjzbbqdwjxdlzizojhgolqwderqedktbocprjjujdzovszp...NNNN
+sghnweeaughzfhtjpkaaeuotjjshycfiysyggjzcrnhmwpgbbozgq.NNNNNN
+kaxbjidisxbgxlsadqpejoagfrjgjpjdnwruhbwxpmkwmxplbtgyx.NNNNBB
+okjelcqeixqaiboicysoplzllipgpcgnszwauqgsmyewptjrkcfkj@NNNBBB
+llvozpvzwzueiujixmxjhpjuhtxddfbwtwtuibwquqjdrhzgmcft..NNNBBB
+rpxjqncsrfrdwfpekefjfarsdkgqatmdswatctdkotrdxkvcwhjm.NNNNNBB
+jcrdxuyjwgyrwzouvidzinptdslsjzxugpjncamfpxnptffytgcg.NNNNNBB
+vabmdgglegpvibfcvgkduwnmhtrzqkcjotgxosfommzrzuitthyw..NNBBBB
+akumdkynvadvavlqwwmutafyxquojjxlqucwtrbprzgrsxgbejosb..NNBBB
+otbzphsgrtdvrbkcewjiqiestyiptxugffvpxsgdawpfwlemvsqizy..NBBB
+avfhewitzxiauqcljxqjrrdoemcsbdsulaayzaghqmqmpjrdovumpplANBBB
+  end
+
+  legend
+    v = Text-Blue color 0x76
+    b = Text-Blue color 0x62
+    h = Text-Blue color 0x68
+    a = Text-Blue color 0x61
+    w = Text-Blue color 0x77
+    z = Text-Blue color 0x7A
+    l = Text-Blue color 0x6C
+    s = Text-Blue color 0x73
+    c = Text-Blue color 0x63
+    f = Text-Blue color 0x66
+    u = Text-Blue color 0x75
+    m = Text-Blue color 0x6D
+    j = Text-Blue color 0x6A
+    o = Text-Blue color 0x6F
+    q = Text-Blue color 0x71
+    e = Text-Blue color 0x65
+    p = Text-Blue color 0x70
+    d = Text-Blue color 0x64
+    g = Text-Blue color 0x67
+    r = Text-Blue color 0x72
+    y = Text-Blue color 0x79
+    k = Text-Blue color 0x6B
+    t = Text-Blue color 0x74
+    n = Text-Blue color 0x6E
+    x = Text-Blue color 0x78
+    i = Text-Blue color 0x69
+    . = Empty color 0x6F
+    N = Normal color 0x09
+    B = Breakable color 0x0B
+    @ = Player color 0x1F under Empty color 0x6F
+    A = Empty color 0x6B
+  end
+
+  stats
+  end
+end

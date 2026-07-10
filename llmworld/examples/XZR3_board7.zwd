@@ -1,0 +1,295 @@
+board "Chernobyl - Center South"
+  start player at 32,23
+  respawn at 32,32
+  max-shots 0
+  dark false
+  reenter false
+  time-limit 0
+  exits north "Chernobyl - Center North" south none west "Chernobyl - Southwest" east "Chernobyl - Southeast"
+
+  grid
+FFFFAFFFFFFFFAFFFFFFFFFFFFFFFaabbaaFFFFAFFFFFFFFFFAFFFFFFFFF
+FFAFFFFFFFAFFFFFFFFAFFFFFFAFFbbaabbFFFFFFFFFFFAFFFFFFFAFFFFF
+AFFFFAFFFFFFFFFAFFFFFFFFAFFFFbbaabbFAFFFFFFAFFFFFFFFFFFFFAFF
+FFFFFFFFAFFFAFFFFFFFFAFFFFFFAaabbaaFFFAFFAFFFAFFFAFFFAFAAFFF
+AAFFFAFo#oFAAAFFFFAFFFFAFAFFFaabbaaFAFFFAFFAAAAFFFFAAo#oAAFA
+AAAFo###N###oAAAFFFFAAAAAAAAFbbaabbFAAFAAAFAAFAAFAo#N##N##oA
+FAA##N#####N##AFAAFAAFAAAAFAAbbaabbAFAFAFAAAAAAAA##N#####N##
+AAAAocccccccoAAAAFAAAAAAFAAAAaabbaaAAAAAAAAFAAFAAAocccccccoF
+AAFAocccccccoFAAAAAFAAAAAAAAFaabbaaFAAFAAAAAAAAAAdocccccccoA
+AAAAFdAAAAAAAAAAAdo#oAAdAAAAAbbaabbAAdAAAFAo#oAdAAAAAdAAAAAA
+AAdAAAAdAAAdAAAo###N###oAAAdAbbaabbdAAAAo###N###oAAAAAAAAAdA
+dAAAdAAAAdAAAA###N####N##dAAAaabbaOAAAd##N####N###AdAAAdAAAd
+AAddddddAAAAdAAocccccccoAAAAdaebbaadAAAAocccccccoAddddAAAddA
+ddddAdddddAdAAdocccccccoddAAAbbaabbAdAddocccccccodddAddAdddd
+dAddfdddddddddddddddddddddddAbbaabbdAddddAdddddddAdddddddAdd
+dfddddAdddAdfdAdddo#odddfAdddaabbaafdddAfddo#oddddddddAddfdd
+dddfdddfAddddddo####N##odddfdaabbaaAddfdo##N####odfdAdfddddf
+dffdddddddfdAd###N####N##dddAbbaabbdddd##N###N##N#ddddddfddd
+ffdfddfddfdfdddocccccccoddfddbbOabbdfdfdocccccccofdddfdddfdf
+fffffddffffffffocccccccoffddfaabbaadffffocccccccofffddfdffff
+fdfffffffdfffdffffffdffffffffaabbaaffdffdfffffdffffdfffffdff
+ffffdffdfffdffffdffffffffdffdbbaabbffffffffdffffdffffffdfffd
+fdffffffffffffffffdfffdffffffbb@abbdfffffdffffffffffdfffffff
+lflflflflflflflflflflflflfldlgggggglfldlflflflflflflflflflfl
+lllllllllllllllllllllllllllllppPPpplllllllllllllllllllllllll
+  end
+
+  legend
+    F = Fake color 0x62
+    A = Fake color 0x42
+    a = Fake color 0x77
+    b = Fake color 0x07
+    o = Object color 0x26
+    # = Solid color 0x06
+    N = Normal color 0x06
+    c = Normal color 0x26
+    d = Fake color 0x02
+    O = Object color 0x7A
+    e = Object color 0x7D
+    f = Fake color 0x22
+    @ = Player color 0x1F under Fake color 0x77
+    l = Line color 0x26
+    g = Object color 0x07
+    p = Passage color 0x7F to "Hideout - Caira - 3"
+    P = Passage color 0x07 to "Hideout - Caira - 3"
+  end
+
+  stats
+    stat at 24,17 element Object cycle 1 p1 cp437:0xDC p2 0 step idle follower 0 leader 0
+    stat at 24,14 element Object cycle 1 p1 cp437:0xB3 p2 0 step idle follower 0 leader 0
+    stat at 24,13 element Object cycle 1 p1 cp437:0xB3 p2 0 step idle follower 0 leader 0
+    stat at 16,13 element Object cycle 1 p1 cp437:0xB3 p2 0 step idle follower 0 leader 0
+    stat at 16,14 element Object cycle 1 p1 cp437:0xB3 p2 0 step idle follower 0 leader 0
+    stat at 16,17 element Object cycle 1 p1 cp437:0xDC p2 0 step idle follower 0 leader 0
+    stat at 16,11 element Object cycle 1 p1 cp437:0xDC p2 0 step idle follower 0 leader 0
+    stat at 24,11 element Object cycle 1 p1 cp437:0xDC p2 0 step idle follower 0 leader 0
+    stat at 19,10 element Object cycle 1 p1 cp437:0xDC p2 0 step idle follower 0 leader 0
+    stat at 21,10 element Object cycle 1 p1 cp437:0xDC p2 0 step idle follower 0 leader 0
+    stat at 21,16 element Object cycle 1 p1 cp437:0xDC p2 0 step idle follower 0 leader 0
+    stat at 19,16 element Object cycle 1 p1 cp437:0xDC p2 0 step idle follower 0 leader 0
+    stat at 16,19 element Object cycle 1 p1 cp437:0xB3 p2 0 step idle follower 0 leader 0
+    stat at 16,20 element Object cycle 1 p1 cp437:0xB3 p2 0 step idle follower 0 leader 0
+    stat at 24,19 element Object cycle 1 p1 cp437:0xB3 p2 0 step idle follower 0 leader 0
+    oop
+@X Z R
+$
+$Chernobyl
+$A capitol city with an elusive prince...
+$
+
+    end
+    stat at 24,20 element Object cycle 1 p1 cp437:0xB3 p2 0 step idle follower 0 leader 0
+    stat at 13,9 element Object cycle 1 p1 cp437:0xB3 p2 0 step idle follower 0 leader 0
+    stat at 13,8 element Object cycle 1 p1 cp437:0xB3 p2 0 step idle follower 0 leader 0
+    stat at 13,6 element Object cycle 1 p1 cp437:0xDC p2 0 step idle follower 0 leader 0
+    stat at 10,5 element Object cycle 1 p1 cp437:0xDC p2 0 step idle follower 0 leader 0
+    stat at 8,5 element Object cycle 1 p1 cp437:0xDC p2 0 step idle follower 0 leader 0
+    stat at 5,6 element Object cycle 1 p1 cp437:0xDC p2 0 step idle follower 0 leader 0
+    stat at 5,8 element Object cycle 1 p1 cp437:0xB3 p2 0 step idle follower 0 leader 0
+    stat at 5,9 element Object cycle 1 p1 cp437:0xB3 p2 0 step idle follower 0 leader 0
+    stat at 41,17 element Object cycle 1 p1 cp437:0xDC p2 0 step idle follower 0 leader 0
+    stat at 46,16 element Object cycle 1 p1 cp437:0xDC p2 0 step idle follower 0 leader 0
+    stat at 44,16 element Object cycle 1 p1 cp437:0xDC p2 0 step idle follower 0 leader 0
+    stat at 49,17 element Object cycle 1 p1 cp437:0xDC p2 0 step idle follower 0 leader 0
+    stat at 41,19 element Object cycle 1 p1 cp437:0xB3 p2 0 step idle follower 0 leader 0
+    stat at 41,20 element Object cycle 1 p1 cp437:0xB3 p2 0 step idle follower 0 leader 0
+    stat at 49,20 element Object cycle 1 p1 cp437:0xB3 p2 0 step idle follower 0 leader 0
+    stat at 49,19 element Object cycle 1 p1 cp437:0xB3 p2 0 step idle follower 0 leader 0
+    stat at 41,14 element Object cycle 1 p1 cp437:0xB3 p2 0 step idle follower 0 leader 0
+    stat at 41,13 element Object cycle 1 p1 cp437:0xB3 p2 0 step idle follower 0 leader 0
+    stat at 49,13 element Object cycle 1 p1 cp437:0xB3 p2 0 step idle follower 0 leader 0
+    stat at 49,14 element Object cycle 1 p1 cp437:0xB3 p2 0 step idle follower 0 leader 0
+    stat at 49,11 element Object cycle 1 p1 cp437:0xDC p2 0 step idle follower 0 leader 0
+    stat at 41,11 element Object cycle 1 p1 cp437:0xDC p2 0 step idle follower 0 leader 0
+    stat at 44,10 element Object cycle 1 p1 cp437:0xDC p2 0 step idle follower 0 leader 0
+    stat at 46,10 element Object cycle 1 p1 cp437:0xDC p2 0 step idle follower 0 leader 0
+    stat at 51,6 element Object cycle 1 p1 cp437:0xDC p2 0 step idle follower 0 leader 0
+    stat at 56,5 element Object cycle 1 p1 cp437:0xDC p2 0 step idle follower 0 leader 0
+    stat at 59,8 element Object cycle 1 p1 cp437:0xB3 p2 0 step idle follower 0 leader 0
+    stat at 59,9 element Object cycle 1 p1 cp437:0xB3 p2 0 step idle follower 0 leader 0
+    stat at 54,5 element Object cycle 1 p1 cp437:0xDC p2 0 step idle follower 0 leader 0
+    stat at 59,6 element Object cycle 1 p1 cp437:0xDC p2 0 step idle follower 0 leader 0
+    stat at 51,8 element Object cycle 1 p1 cp437:0xB3 p2 0 step idle follower 0 leader 0
+    stat at 35,25 element Passage p1 0 p2 0 p3 board "Hideout - Caira - 3" step idle follower 0 leader 0
+    stat at 34,25 element Passage p1 0 p2 0 p3 board "Hideout - Caira - 3" step idle follower 0 leader 0
+    stat at 51,9 element Object cycle 1 p1 cp437:0xB3 p2 0 step idle follower 0 leader 0
+    stat at 33,25 element Passage p1 0 p2 0 p3 board "Hideout - Caira - 3" step idle follower 0 leader 0
+    stat at 32,25 element Passage p1 0 p2 0 p3 board "Hideout - Caira - 3" step idle follower 0 leader 0
+    stat at 31,25 element Passage p1 0 p2 0 p3 board "Hideout - Caira - 3" step idle follower 0 leader 0
+    stat at 30,25 element Passage p1 0 p2 0 p3 board "Hideout - Caira - 3" step idle follower 0 leader 0
+    stat at 30,24 element Object cycle 1 p1 cp437:0xDB p2 0 step idle under Fake color 0x77 follower 0 leader 0
+    oop
+@door
+#ds
+#end
+:ds
+#if fiend then floop
+/i
+#ds
+#end
+:floop
+#become fake
+#end
+
+    end
+    stat at 31,24 element Object cycle 1 p1 cp437:0xDB p2 0 step idle under Fake color 0x77 follower 0 leader 0
+    oop
+@door
+#ds
+#end
+:ds
+#if fiend then floop
+/i
+#ds
+#end
+:floop
+#become fake
+#end
+
+    end
+    stat at 34,24 element Object cycle 1 p1 cp437:0xDB p2 0 step idle under Fake color 0x77 follower 0 leader 0
+    oop
+@door
+#ds
+#end
+:ds
+#if fiend then floop
+/i
+#ds
+#end
+:floop
+#become fake
+#end
+
+    end
+    stat at 35,24 element Object cycle 1 p1 cp437:0xDB p2 0 step idle under Fake color 0x77 follower 0 leader 0
+    oop
+@door
+#ds
+#end
+:ds
+#if fiend then floop
+/i
+#ds
+#end
+:floop
+#become fake
+#end
+
+    end
+    stat at 33,24 element Object cycle 1 p1 cp437:0xB2 p2 0 step idle under Fake color 0x77 follower 0 leader 0
+    oop
+@door
+#ds
+#end
+:ds
+#if fiend then floop
+/i
+#ds
+#end
+:floop
+#become fake
+#end
+
+    end
+    stat at 32,24 element Object cycle 1 p1 cp437:0xB2 p2 0 step idle under Fake color 0x77 follower 0 leader 0
+    oop
+@door
+#ds
+#end
+:ds
+#if fiend then floop
+/i
+#ds
+#end
+:floop
+#become fake
+#end
+
+    end
+    stat at 31,13 element Object p1 cp437:0x02 p2 0 step idle under Fake color 0x77 follower 0 leader 0
+    oop
+@Woman
+#ds
+#end
+:ds
+#go rndns
+/i/i
+#go opp seek
+/i/i
+#go opp seek
+/i/i
+#go rndns
+/i/i
+#go seek
+/i/i
+#ds
+#end
+:touch
+Woman:
+$Because of that Katari Sect, Prince
+$Larma has gotten into big trouble... Ohh
+$dear.
+/i
+#ds
+#end
+
+    end
+    stat at 32,19 element Object p1 cp437:0x02 p2 0 step idle under Fake color 0x77 follower 0 leader 0
+    oop
+@Man
+#ds
+#end
+:ds
+#go rndns
+/i/i
+#go opp seek
+/i/i
+#go opp seek
+/i/i
+#go rndns
+/i/i
+#go seek
+/i/i
+#ds
+#end
+:touch
+Man:
+$Welcome! This is Chenobora,
+$located midstream along the
+$river Garadarill.
+/i
+#ds
+#end
+
+    end
+    stat at 35,12 element Object p1 cp437:0x02 p2 0 step idle under Fake color 0x77 follower 0 leader 0
+    oop
+@Man
+#ds
+#end
+:ds
+#go rndns
+/i/i
+#go opp seek
+/i/i
+#go opp seek
+/i/i
+#go rndns
+/i/i
+#go seek
+/i/i
+#ds
+#end
+:touch
+Man:
+$Eh? You've seen Prince Larma? That's good
+$news.
+/i
+#ds
+#end
+
+    end
+  end
+end

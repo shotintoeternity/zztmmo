@@ -1,0 +1,290 @@
+board "DOG!"
+  start player at 17,2
+  max-shots 255
+  dark false
+  reenter false
+  time-limit 0
+  exits north none south none west none east none
+
+  grid
+FFAFFFFFAAFAAAAAAAAAdggggAdggggAAiiiiAiiAAAAAFAAdFdAAiiijipi
+FFFFFFFFFFggAAAA@BooflarflbarklhecklwoofiiiAiiAFFAAAiiijjiii
+FAAAFFAFFFgAAAAAAAAAAAAAAAAAiAFFFFFiiiiAAAAFiiAAAAAAAAAFAiii
+AAAAAAAAAAFAAAAddddAAAAAmmmFFnnnqiiiiAAAAiiiiiAiAAAFFAFAAiKi
+dgAAFFFAF########NggqFstnquvvttFFFFFFFFFFAAAAAAAAAAxAAAAFAAA
+gggygggg##zCCDEE##ggmtxxxtqttnmgggggggggggggggggggxvgggggggg
+ggggggggg#######G###smxxxxxtnnvHsgggggggggssssgggvvggggggggg
+ggggggggggggGgGgGGGGGGgFmmmxxxvvvvHHHHHvvvvvvvvvvvGGGGGggggg
+GGGGGGGGGGGGGGgGGGGGGGGgsmtxxvvvvvvvvvvvvvvvvvvvvHgggggggggg
+GGGGGGGGGGGGGGGGGGGGGGGGGgItxvvvvvvvvvvvvvvvxxxxxvHgGGGGGJGG
+GGGGGOggggggggggggggGGGGgggsxvvvvxtxxxvxxxxxtIItxxvsgggggggg
+gGGGgGGGGGGGGGGGGOGGGGGGGGggxtvvxtmtttttttImFuummItxggggGGGG
+GGGGGGGGGGGGGGGGgGggggggggggxvxxtmtttImmmFFAAAdgFmmtLgGggggg
+ggggggggggggMggggggggggGGGGgLvxtmFmFmmmFgFAqFgGgggmttgggGGGg
+gGGGGGGGGOGGGGgGGGGGGPgggggsvvxsgFFFggggggmnsGGGGGgFmtggGgGG
+GGGgGgGGGGGGGgggggggggggggHvvmgGggmFgGGgggsttgggGGGGgmsGGGGG
+gggggggggggggggGggggGggggvvxggggggsnggGGGgsxFQGGQGGGGgtsGGGG
+gggggggOgggggGGOGgggGggsvvFgQgggggFxFgggFssFgggggggggggggggg
+ggggggggggggGGGGGgGGGgtxsgggggggggggggggggggggggRggggggggggg
+ggggggggSgGGGggGGGGGGGGggGGGgggggggggggggggggggggggggggggggg
+ggggggggggGGGGGGGGGGGggggggggggggggggGgggGGGGGGGgGgGgggGgggg
+WTTUVXXYZ00123345667899!$%%&*++-WTTUVXXYZ00123345667899!$%%&
+*++-WTTUVXXYZ00123345667899!$%%&*++-WTTUVXXYZ00123345667899!
+$%%&*++-WTTUVXXYZ00123345667899!$%%&*++-WTTUVXXYZ00123345667
+899!$%%&*++-WTTUVXXYZ00123345667899!$%%&*++-WTTUVXXYZ0012334
+  end
+
+  legend
+    F = Fake color 0x28
+    A = Fake color 0x20
+    d = Fake color 0x12
+    g = Fake color 0x52
+    i = Fake color 0x00
+    j = Fake color 0x60
+    p = Passage color 0x0D
+    @ = Player color 0x00 under Fake color 0x00
+    B = Text-White color 0x42
+    o = Text-White color 0x6F
+    f = Text-White color 0x66
+    l = Text-White color 0x20
+    a = Text-White color 0x61
+    r = Text-White color 0x72
+    b = Text-White color 0x62
+    k = Text-White color 0x6B
+    h = Text-White color 0x68
+    e = Text-White color 0x65
+    c = Text-White color 0x63
+    w = Text-White color 0x77
+    m = Fake color 0x43
+    n = Fake color 0x07
+    q = Fake color 0x08
+    K = Key color 0x0D
+    # = Solid color 0x20
+    N = Normal color 0x20
+    s = Fake color 0x27
+    t = Fake color 0x77
+    u = Fake color 0x78
+    v = Fake color 0x7F
+    x = Fake color 0x0F
+    y = Object color 0x74
+    z = element 61 color 0x57
+    C = element 61 color 0x99
+    D = element 61 color 0x46
+    E = element 61 color 0x21
+    G = Fake color 0x42
+    H = Fake color 0x2F
+    I = Fake color 0x37
+    J = Object color 0x47
+    O = Boulder color 0x2F
+    L = Fake color 0x4B
+    M = Object color 0x60
+    P = Object color 0x07
+    Q = Fake color 0x02
+    R = Object color 0x1C
+    S = Object color 0x57
+    W = Text-Red color 0x57
+    T = Text-Red color 0x4F
+    U = Text-Red color 0x46
+    V = Text-Purple color 0x77
+    X = Text-Purple color 0x6F
+    Y = Text-Purple color 0x66
+    Z = Text-Yellow color 0x57
+    0 = Text-Yellow color 0x4F
+    1 = Text-Yellow color 0x46
+    2 = element 69 color 0x77
+    3 = element 69 color 0x6F
+    4 = element 69 color 0x66
+    5 = Text-White color 0x57
+    6 = Text-White color 0x4F
+    7 = Text-White color 0x46
+    8 = Text-Blue color 0x77
+    9 = Text-Blue color 0x6F
+    ! = Text-Blue color 0x66
+    $ = Text-Green color 0x57
+    % = Text-Green color 0x4F
+    & = Text-Green color 0x46
+    * = Text-Cyan color 0x77
+    + = Text-Cyan color 0x6F
+    - = Text-Cyan color 0x66
+  end
+
+  stats
+    stat at 59,1 element Passage p1 0 p2 0 step idle under Fake color 0x00
+    stat at 8,18 element Boulder cycle 1 p1 0 p2 0 step idle under Fake color 0x2D
+    stat at 16,18 element Boulder cycle 1 p1 0 p2 0 step idle under Fake color 0x42
+    stat at 18,12 element Boulder cycle 1 p1 0 p2 0 step idle under Fake color 0x42
+    stat at 6,11 element Boulder cycle 1 p1 0 p2 0 step idle under Fake color 0x52
+    stat at 22,15 element Object cycle 1 p1 cp437:0xEB p2 0 step idle under Fake color 0x42
+    oop
+?RNDNS 
+?RNDP n
+#send loopwow
+#end
+
+:touch
+#lock
+Bark Bark! (you pet the dog)
+#play TC td tc tb sx TC td tc tb q3 1 2 4 5 6 7 8 9 1 2 4 5 6 7 8 9
+?n?e?s?w?n?e?s?w
+?opp seek?opp seek?opp seek
+?opp seek?opp seek?opp seek/seek/seek/seek/seek/seek/seek/seek/seek/seek/seek
+#unlock
+#send loopwow
+#end
+
+
+:loopwow
+?RNDNS 
+?RNDP n
+#play T-g
+?i?i?i?i?i?i?i?i?i?i?i?i?i?i?i?i?RNDNS?RNDP n
+#send loopwow
+#end
+
+    end
+    stat at 10,15 element Boulder cycle 1 p1 0 p2 0 step idle under Fake color 0x2D
+    stat at 4,6 element Object cycle 1 p1 cp437:0xEB p2 0 step idle under Fake color 0x52
+    oop
+?RNDNS 
+?RNDP n
+#send loopwow
+#end
+
+:touch
+#lock
+Bark Bark! (you pet the dog)
+#play TC td tc tb sx TC td tc tb q3 1 2 4 5 6 7 8 9 1 2 4 5 6 7 8 9
+?n?e?s?w?n?e?s?w
+?opp seek?opp seek?opp seek
+?opp seek?opp seek?opp seek/seek/seek/seek/seek/seek/seek/seek/seek/seek/seek
+#unlock
+#send loopwow
+#end
+
+
+:loopwow
+?RNDNS?i?i?i
+?RNDP n?i?i?i
+#send loopwow
+#end
+
+    end
+    stat at 9,20 element Object cycle 1 p1 cp437:0xEB p2 0 step idle under Fake color 0x52
+    oop
+?RNDNS 
+?RNDP n
+#send loopwow
+#end
+
+:touch
+#lock
+Bark Bark! (you pet the dog)
+#play TC td tc tb sx TC td tc tb q3 1 2 4 5 6 7 8 9 1 2 4 5 6 7 8 9
+?n?e?s?w?n?e?s?w
+?opp seek?opp seek?opp seek
+?opp seek?opp seek?opp seek/seek/seek/seek/seek/seek/seek/seek/seek/seek/seek
+#unlock
+#send loopwow
+#end
+
+
+:loopwow
+?RNDNS 
+?RNDP n
+#send loopwow
+#end
+
+    end
+    stat at 13,14 element Object cycle 1 p1 cp437:0xEB p2 0 step idle under Fake color 0x52
+    oop
+?RNDNS 
+?RNDP n
+#send loopwow
+#end
+
+:touch
+#lock
+Bark Bark! (you pet the dog)
+#play TC td tc tb sx TC td tc tb q3 1 2 4 5 6 7 8 9 1 2 4 5 6 7 8 9
+?n?e?s?w?n?e?s?w
+?opp seek?opp seek?opp seek
+?opp seek?opp seek?opp seek/seek/seek/seek/seek/seek/seek/seek/seek/seek/seek
+#unlock
+#send loopwow
+#end
+
+
+:loopwow
+?RNDNS 
+?RNDP n
+?i?i?i?i?i?i
+#send loopwow
+#end
+
+    end
+    stat at 58,10 element Object cycle 1 p1 cp437:0xEB p2 0 step idle under Fake color 0x42
+    oop
+?RNDNS 
+?RNDP n
+#send loopwow
+#end
+
+:touch
+#lock
+Bark Bark! (you pet the dog)
+#play TC td tc tb sx TC td tc tb q3 1 2 4 5 6 7 8 9 1 2 4 5 6 7 8 9
+?n?e?s?w?n?e?s?w
+?opp seek?opp seek?opp seek
+?opp seek?opp seek?opp seek/seek/seek/seek/seek/seek/seek/seek/seek/seek/seek
+#unlock
+#send loopwow
+#end
+
+
+:loopwow
+?RNDNS 
+?RNDP n
+?i?i?i?i?i?i?i?i?i?i?i?i?RNDNS?RNDP n
+?RNDNS 
+?RNDP n
+?i?i?i?i?i?i?i?i?i?i?i?i?RNDNS?RNDP n
+?RNDNS 
+?RNDP n
+?i?i?i?i?i?i?i?i?i?i?i?i?RNDNS?RNDP n
+#play Tc
+#send loopwow
+#end
+
+    end
+    stat at 49,19 element Object cycle 1 p1 cp437:0xEB p2 0 step idle under Fake color 0x52
+    oop
+?RNDNS 
+?RNDP n
+#send loopwow
+#end
+
+:touch
+#lock
+Bark Bark! (you pet the dog)
+#play TC td tc tb sx TC td tc tb q3 1 2 4 5 6 7 8 9 1 2 4 5 6 7 8 9
+?n?e?s?w?n?e?s?w
+?opp seek?opp seek?opp seek
+?opp seek?opp seek?opp seek/seek/seek/seek/seek/seek/seek/seek/seek/seek/seek
+#unlock
+#send loopwow
+#end
+
+
+:loopwow
+?RNDNS 
+?RNDP n?i?i?i?i?i?i?i?i?i?i?i?i?i?i?i?i?i?i?i?i?i?i?i?i?i?i?i?i?i?i?i?i?n?i?i?i?i?i?i?i?i?i?i?i?i?i?i?i?i?i?i?i?i?i?i?i?i?i?i?i?i?i?i?i?i?RNDNS?RNDP n
+?RNDNS?RNDP n
+?RNDNS?RNDP n
+?RNDNS?RNDP n
+#play T-a
+#send loopwow
+#end
+
+    end
+  end
+end

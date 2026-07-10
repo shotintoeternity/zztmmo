@@ -1,0 +1,1238 @@
+board "Inside City Hall"
+  start player at 31,24
+  respawn at 32,32
+  max-shots 0
+  dark false
+  reenter false
+  time-limit 0
+  exits north none south none west none east none
+
+  grid
+##oa##FFFFFFFFFFFFFFFFFFF#################b#################
+#FFFF#pFFFFFFFFFFFFFFFFFp#FFFFFFFFaFFFFFFF#FFFFFFFFFaFFFFFFP
+#FAAF#pFpFFFpFpFpFFFFFFFp#cFFFddddeddddFFa#FAAAAAAAFo#######
+#FAAF#####FF######pFFFFFp#FFFddfgNgNNdddFa#FAAAAAAAF#pFFpFp#
+#FAAF#pFpFFFpFFFp#########FFFdddddddddddFa#FAAAAAAAF#pFFFFF#
+#FAAF#pFpFpFpFpFp#FfFFFRFaFFFFdddddddddFFa#FAAAAAAAF#pFFFpp#
+#eFFe#pFFFpFFFpFp#hFFFiFF#FFFFFFFFFjFFFFFF#FAAAAAAAF#pFFFFF#
+##FF########ao####################a########FAAAAAAAF##FFFF##
+#eFFeFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFAAAAAAAF#pFFFFp#
+#FkkkkkkkkkkkkkkkkkkkF######ao##########FAAAAAAAAAAFoFFFFFF#
+#FkkkkkkkkkkkkkkkkkkkFlFFFFFFFFFFFFpppplFAAAAAAAAAAFaFFFFFF#
+#FFFFFFFFFFFFFFFFFFFFe#aFNFBBBBBBBBFFFF#FFFFFFFFFFFF#FFpppp#
+##a####################mnNBqqqqqqqqBFFF######ao#############
+#FFF#FFooooFFFrFFFFFFF#gNNBqqqqqqqqBFFF#FFFFFFFFFFFFFFFFFFF#
+#FkF#jFFFFFFFFFFFFfFFF#FFFFBBBBBBBBFmFs#FFFFFFFFFFFFFFFFFFF#
+#FkFaFtttttttttttFNFFF#eFFFFFFFFFFFFFFo#FSSSSnFSSSSnFSSSSnF#
+#FkFoFtttttttttttFguaF######a###########cSOsSFFSsFSFFSsOSFv#
+#FkF#FtttttttttttFNFFF#FFFFFFFFFcFFFFFF#FSFFSFFSOFSFFSFFSFF#
+#FkF#FFFFFFFFFFFFFFFFF#NNNNNNNNgagNNNNN#FSSSSFFSSSSFFSSSSFF#
+#FkF#uFFFFFFFooooFFFFF#eFFFFFFFFFFFFFFFaFFFFFFFFFFFFFFFFFFF#
+#FkF###################FFkkkkkkkkkkkkFw#cFnSSSSFnSSSSFnSSSS#
+#FkFFFFFFFFFFFFFFFFFFFoFFkkkkkkkkkkkkFw#FFFSOFSFFSFFSFFSFOS#
+#FkkkkkkkkkkkkkkkkkkFFaFFkkkkkkkkkkkkFw#FFFSsFSFFSOsSFFSFsS#
+#eFFFFFFFFFFFFFFFFFFFF#eFFFFFF@FFFFFaFF#sFFSSSSFFSSSSFFSSSS#
+##############################xx############################
+  end
+
+  legend
+    # = Solid color 0x07
+    o = Object color 0x7F
+    a = Object color 0x06
+    F = Fake color 0x70
+    b = Object color 0x07
+    p = Passage color 0x7F to "$Chapter One"
+    P = Passage color 0x78 to "The Furnace Room"
+    A = Fake color 0x0B
+    c = Object color 0x0E
+    d = Fake color 0x4C
+    e = Object color 0x0A
+    f = Object color 0x48
+    g = Object color 0x6F
+    N = Normal color 0x06
+    R = Bear color 0x06
+    h = Object color 0x38
+    i = Normal color 0x0A
+    j = Object color 0x70
+    k = Fake color 0x7B
+    l = Object color 0x0B
+    B = Breakable color 0x19
+    m = Object color 0x7E
+    n = Object color 0x08
+    q = Normal color 0x19
+    r = Object color 0x3B
+    s = Object color 0x09
+    t = Fake color 0x30
+    S = Solid color 0x66
+    u = Object color 0x7B
+    O = Boulder color 0x0F
+    v = Object color 0x0F
+    w = Object color 0x5D
+    @ = Player color 0x1F under Fake color 0x70
+    x = Passage color 0x6F to "City Hall"
+  end
+
+  stats
+    stat at 60,2 element Passage p1 0 p2 0 p3 board "The Furnace Room" step idle under Empty color 0x07
+    stat at 4,1 element Object p1 cp437:0x2D p2 0 step idle under Empty color 0x0F
+    oop
+#bind offlimits
+
+    end
+    stat at 3,1 element Object p1 cp437:0xDC p2 0 step idle under Empty color 0x07
+    oop
+@Sign
+#end
+:touch
+RECORDS
+#end
+
+    end
+    stat at 29,17 element Object p1 cp437:0x2D p2 0 step idle under Empty color 0x07
+    stat at 29,10 element Object p1 cp437:0x2D p2 0 step idle under Empty color 0x07
+    oop
+@offlimits
+#cycle 1
+#end
+:touch
+Cleatle: There's nothing I need in there.
+
+    end
+    stat at 46,13 element Object p1 cp437:0x2D p2 0 step idle under Empty color 0x07
+    oop
+@accdoor
+#cycle 1
+#end
+:touch
+Cleatle: I'd get caught if I went in
+there.
+#end
+
+    end
+    stat at 13,8 element Object p1 cp437:0x2D p2 0 step idle under Empty color 0x07
+    oop
+#bind offlimits
+
+    end
+    stat at 3,13 element Object p1 cp437:0x2D p2 0 step idle under Empty color 0x07
+    oop
+@locked
+#cycle 1
+#end
+:touch
+#if blocked n opener
+Cleatle: It's locked. If I want to go back
+there, I'll have to go around somehow.
+#end
+:opener
+Cleatle: Hmm. The lock is on this side. I
+can unlock it...
+
+(Cleatle unlocks the door, which slides
+into the wall.)
+#die
+
+    end
+    stat at 49,17 element Object p1 cp437:0x02 p2 0 step idle under Empty color 0x07
+    stat at 44,17 element Object p1 cp437:0x02 p2 0 step idle under Empty color 0x07
+    stat at 45,23 element Object p1 cp437:0x02 p2 0 step idle
+    stat at 52,23 element Object p1 cp437:0x02 p2 0 step idle under Empty color 0x07
+    stat at 58,23 element Object p1 cp437:0x02 p2 0 step idle under Empty color 0x07
+    stat at 55,17 element Object p1 cp437:0x02 p2 0 step idle
+    stat at 24,20 element Object p1 cp437:0x9D p2 0 step idle under Empty color 0x07
+    oop
+@plant
+#end
+:pipe
+#if not contact nm
+#send invobj:okay
+Cleatle: What am I, a herbicidal maniac?
+#end
+:nm
+#end
+:touch
+(The obligatory potted plants.)
+#end
+
+    end
+    stat at 24,24 element Object p1 cp437:0x9D p2 0 step idle under Empty color 0x07
+    oop
+#bind plant
+
+    end
+    stat at 17,3 element Passage p1 0 p2 0 p3 board "$Chapter One" step idle follower 0 leader 0
+    stat at 33,18 element Object p1 cp437:0x02 p2 0 step idle
+    stat at 33,19 element Object p1 cp437:0xB2 p2 0 step idle under Empty color 0x06
+    oop
+@Phoebe
+#cycle 1
+#end
+:pipe
+#if not contact nm
+#send invobj:okay
+Cleatle: I can't bring myself to hit her.
+For one thing, I feel too drowsy.
+#end
+:keys
+#if not contact nm
+#send invobj:okay
+Cleatle: Did you lose your car keys?
+
+Phoebe: No, I take the bus.
+#end
+:zapper
+#zap touch
+#end
+:touch
+(The receptionist is a cheerful woman in
+her mid-thirties. She wears a smile that
+seems to shout, "I paid plenty of money
+for orthodontic work, so I'd better get
+as much out of it as possible!")
+#zap touch
+#end
+:nm
+#end
+:napkin
+#if not contact nm
+#send invobj:okay
+Phoebe: Just looks like scribbling to me.
+
+Cleatle: You catch on quickly.
+#end
+:touch
+Phoebe: Hello, may I help you?
+
+Cleatle: I would like to register a
+ballot design.
+
+Phoebe: Oh, see Mr. Edwards about that.
+He's in the first office down the hall.
+I'll call ahead.
+
+(Phoebe makes a brief phone call.)
+
+Phoebe: Okay, go ahead.
+#send eddoor:called
+#zap touch
+#end
+:touch
+Phoebe: Yes?
+
+Cleatle: Oh, nothing.
+#end
+:touch
+Phoebe: Yes?
+
+Cleatle: Would you mind giving me Mr.
+Shapiro's phone number?
+
+Phoebe: That's a confidential number.
+
+Cleatle: So?
+
+Phoebe: Good point... he hasn't given me
+any raises lately. And he's been having
+me do too much stapling. I don't like
+stapling.
+
+Cleatle: Stapling is bad! Mr. Shapiro
+cares not for your rights as an employee!
+
+Phoebe: I will rebel! (suddenly calm)
+Here's his number.
+
+Cleatle: Thanks.
+
+(Phoebe hands Cleatle a slip of paper.)
+#give ammo 1
+#zap touch
+#end
+:touch
+Cleatle: I have nothing more to say.
+#end
+
+    end
+    stat at 39,22 element Object p1 cp437:0xDE p2 0 step idle
+    oop
+@couch
+#cycle 1
+#end
+:touch
+Cleatle: I never saw a purple couch,
+I never hope to see one...
+#end
+
+    end
+    stat at 39,21 element Object p1 cp437:0xDE p2 0 step idle
+    oop
+#bind couch
+
+    end
+    stat at 39,23 element Object p1 cp437:0xDE p2 0 step idle
+    oop
+#bind couch
+
+    end
+    stat at 53,11 element Object p1 cp437:0xB3 p2 0 step idle under Empty color 0x07
+    oop
+#bind offlimits
+
+    end
+    stat at 26,6 element Object p1 cp437:0xB3 p2 0 step idle under Empty color 0x07
+    oop
+@closet
+#end
+:touch
+Cleatle: It's a closet door. And, unless
+that faint growling I hear coming from the
+closet stops, it's staying closed.
+#end
+
+    end
+    stat at 53,2 element Object p1 cp437:0xB3 p2 0 step idle under Empty color 0x0E
+    oop
+'Doors courtesy of ZZT Encyclopedia
+@doorws
+#cycle 1
+#end
+:touch
+#lock
+#play 5xxx8
+#char 92
+/w
+#char 196
+/s/i/i/i/i/i/i
+#play 8xxx5
+#char 92
+/n
+#char 179
+/e
+#unlock
+#end
+
+    end
+    stat at 23,23 element Object p1 cp437:0xB3 p2 0 step idle under Empty color 0x07
+    oop
+@eddoor
+#cycle 1
+#end
+:touch
+Phoebe: Excuse me, sir, do you need
+something?
+#end
+:called
+#zap touch
+#end
+:touch
+#lock
+#play 5xxx8
+#char 92
+/w
+#char 196
+/s/i/i/i/i/i/i
+#play 8xxx5
+#char 92
+/n
+#char 179
+/e
+#unlock
+#end
+
+    end
+    stat at 59,17 element Object p1 cp437:0x28 p2 0 step idle under Empty color 0x07
+    stat at 41,24 element Object p1 cp437:0xE8 p2 0 step idle
+    stat at 47,13 element Object p1 cp437:0xDF p2 0 step idle under Empty color 0x0E
+    oop
+@Sign
+#end
+:touch
+ACCOUNTING
+#end
+
+    end
+    stat at 30,10 element Object p1 cp437:0xDF p2 0 step idle under Empty color 0x0F
+    oop
+@Sign
+#end
+:touch
+RECEPTION
+#end
+
+    end
+    stat at 37,24 element Object p1 cp437:0xFE p2 0 step idle
+    oop
+@mags
+#cycle 1
+#end
+:touch
+(There are some magazines sitting on the
+table.)
+
+Cleatle: Let's see... Platypus Fancy,
+Popular Hypnosis, Sri Lanka Today... Nope,
+nothing interesting.
+#zap touch
+#end
+:touch
+Cleatle: If I buy that cute platypus I saw
+the other day in a store window, I'll have
+some use for these. Otherwise, I have
+better things to do.
+#end
+
+    end
+    stat at 41,21 element Object p1 cp437:0xDD p2 0 step idle under Empty color 0x0A
+    stat at 27,3 element Object p1 cp437:0xDD p2 0 step idle
+    oop
+@plaque
+#cycle 1
+#end
+:touch
+(A degree from a cheap leadership
+correspondence course.)
+#end
+
+    end
+    stat at 46,16 element Object p1 cp437:0x55 p2 0 step idle under Empty color 0x0C
+    stat at 52,16 element Object p1 cp437:0x55 p2 0 step idle under Empty color 0x0A
+    stat at 58,16 element Object p1 cp437:0x55 p2 0 step idle under Empty color 0x0A
+    stat at 55,21 element Object p1 cp437:0x55 p2 0 step idle under Empty color 0x0A
+    stat at 49,21 element Object p1 cp437:0x55 p2 0 step idle under Empty color 0x0A
+    stat at 43,21 element Object p1 cp437:0x55 p2 0 step idle under Empty color 0x0A
+    stat at 42,3 element Object p1 cp437:0xD2 p2 0 step idle
+    oop
+@bookshelf
+#cycle 1
+#end
+:touch
+Cleatle: This bookshelf is stuffed with
+books on effective management. They show
+no signs of use.
+#end
+
+    end
+    stat at 42,4 element Object p1 cp437:0xBA p2 0 step idle under Empty color 0x06
+    oop
+#bind bookshelf
+
+    end
+    stat at 42,5 element Object p1 cp437:0xBA p2 0 step idle under Empty color 0x06
+    oop
+#bind bookshelf
+
+    end
+    stat at 42,6 element Object p1 cp437:0xD0 p2 0 step idle under Empty color 0x06
+    oop
+#bind bookshelf
+
+    end
+    stat at 24,6 element Bear p1 0 p2 0 step idle under Empty color 0x09
+    stat at 25,4 element Passage p1 0 p2 0 p3 board "$Chapter One" step idle follower 0 leader 0
+    stat at 25,3 element Passage p1 0 p2 0 p3 board "$Chapter One" step idle follower 0 leader 0
+    stat at 25,2 element Passage p1 0 p2 0 p3 board "$Chapter One" step idle follower 0 leader 0
+    stat at 56,12 element Passage p1 0 p2 0 p3 board "$Chapter One" step idle follower 0 leader 0
+    stat at 57,12 element Passage p1 0 p2 0 p3 board "$Chapter One" step idle follower 0 leader 0
+    stat at 19,4 element Passage p1 0 p2 0 p3 board "$Chapter One" step idle follower 0 leader 0
+    stat at 58,12 element Passage p1 0 p2 0 p3 board "$Chapter One" step idle follower 0 leader 0
+    stat at 13,3 element Passage p1 0 p2 0 p3 board "$Chapter One" step idle follower 0 leader 0
+    stat at 7,3 element Passage p1 0 p2 0 p3 board "$Chapter One" step idle follower 0 leader 0
+    stat at 7,5 element Passage p1 0 p2 0 p3 board "$Chapter One" step idle follower 0 leader 0
+    stat at 7,6 element Passage p1 0 p2 0 p3 board "$Chapter One" step idle follower 0 leader 0
+    stat at 7,7 element Passage p1 0 p2 0 p3 board "$Chapter One" step idle follower 0 leader 0
+    stat at 9,5 element Passage p1 0 p2 0 p3 board "$Chapter One" step idle follower 0 leader 0
+    stat at 9,6 element Passage p1 0 p2 0 p3 board "$Chapter One" step idle follower 0 leader 0
+    stat at 11,6 element Passage p1 0 p2 0 p3 board "$Chapter One" step idle follower 0 leader 0
+    stat at 11,7 element Passage p1 0 p2 0 p3 board "$Chapter One" step idle follower 0 leader 0
+    stat at 13,5 element Passage p1 0 p2 0 p3 board "$Chapter One" step idle follower 0 leader 0
+    stat at 13,6 element Passage p1 0 p2 0 p3 board "$Chapter One" step idle follower 0 leader 0
+    stat at 15,6 element Passage p1 0 p2 0 p3 board "$Chapter One" step idle follower 0 leader 0
+    stat at 15,7 element Passage p1 0 p2 0 p3 board "$Chapter One" step idle follower 0 leader 0
+    stat at 17,5 element Passage p1 0 p2 0 p3 board "$Chapter One" step idle follower 0 leader 0
+    stat at 17,6 element Passage p1 0 p2 0 p3 board "$Chapter One" step idle follower 0 leader 0
+    stat at 17,7 element Passage p1 0 p2 0 p3 board "$Chapter One" step idle follower 0 leader 0
+    stat at 14,8 element Object p1 cp437:0xDC p2 0 step idle under Empty color 0x0F
+    oop
+@Sign
+#end
+:touch
+FILING ROOM A
+#end
+
+    end
+    stat at 53,3 element Object p1 cp437:0xDD p2 0 step idle under Empty color 0x0F
+    oop
+@Sign
+#end
+:touch
+STAFF ONLY BEYOND THIS POINT
+#end
+
+    end
+    stat at 5,17 element Object p1 cp437:0xDD p2 0 step idle under Empty color 0x0F
+    oop
+@Sign
+#end
+:touch
+#if not blocked w poo
+MR. EDWARDS
+#end
+:poo
+The sign is on the other side of the 
+wall, knucklehead.
+#end
+
+    end
+    stat at 23,22 element Object p1 cp437:0xDE p2 0 step idle under Empty color 0x0F
+    oop
+@Sign
+#end
+:touch
+#if not blocked e poo
+OFFICES
+#end
+:poo
+Cleatle: I'm having a bit of trouble
+reading it, mainly because it's on the
+other side of the wall.
+#end
+
+    end
+    stat at 53,10 element Object p1 cp437:0xDD p2 0 step idle under Empty color 0x0F
+    oop
+@Sign
+#end
+:touch
+FILING ROOM B
+#end
+
+    end
+    stat at 54,9 element Passage p1 0 p2 0 p3 board "$Chapter One" step idle follower 0 leader 0
+    stat at 57,4 element Passage p1 0 p2 0 p3 board "$Chapter One" step idle follower 0 leader 0
+    stat at 43,1 element Object p1 cp437:0xDB p2 0 step idle
+    oop
+@invobj
+#cycle 1
+(The tourist guides describe Rederring's
+City Hall as a "masterpiece of functional
+architecture, with a crisp, efficient
+interior."
+
+In other words, it's utterly sterile.
+
+The potted plants do nothing to
+relieve the monotony of the interior
+design, and the grey/cyan carpeting makes
+Cleatle feel drowsy the moment he steps in
+the door.
+
+To the planners, this is the ideal
+reaction. Citizens who enter angry, ready
+to disembowel a clerk, are incapable
+of mustering the energy needed to glare
+at the receptionist.
+
+The City Hall officials are happy with
+this state of things, despite the
+soporific nature of the furnishings, as
+training new clerks is very expensive.
+
+The clerks express the greatest approval.)
+/i
+:start
+#if i begin
+#send start
+:begin
+#clear i
+Choose an object. It will be used on
+everything next to you.
+
+!nap;Napkin
+#if keys !ke;Keys
+#if pipe !pi;Pipe
+#if coin !co;Coin
+#if sand !sa;Sandwich
+#if ladder !la;Ladder
+/i
+#send start
+:la
+#send all:ladder
+/i/i/i/i
+(A sturdy ladder.)
+/i
+#send start
+:sa
+#send all:sand
+/i/i/i/i
+(The sandwich appears to be in pretty good
+shape.)
+/i
+#send start
+:co
+#send all:coin
+/i/i/i/i
+(Cleatle tosses the coin in his hand.)
+/i
+#send start
+:nap
+#send all:napkin
+/i/i/i/i
+(The plan for the hairball ballot is
+written on this wrinkled cocktail napkin.)
+/i
+#send start
+:ke
+#send all:keys
+/i/i/i/i
+(Cleatle jingles the car keys.)
+/i
+#send start
+:pi
+#send all:pipe
+/i/i/i/i
+(The pipe is, like most pipes, a long,
+hollow tube.)
+/i
+#send start
+:okay
+#send start
+
+    end
+    stat at 59,4 element Passage p1 0 p2 0 p3 board "$Chapter One" step idle follower 0 leader 0
+    stat at 59,6 element Passage p1 0 p2 0 p3 board "$Chapter One" step idle follower 0 leader 0
+    stat at 59,9 element Passage p1 0 p2 0 p3 board "$Chapter One" step idle follower 0 leader 0
+    stat at 59,12 element Passage p1 0 p2 0 p3 board "$Chapter One" step idle follower 0 leader 0
+    stat at 7,2 element Passage p1 0 p2 0 p3 board "$Chapter One" step idle follower 0 leader 0
+    stat at 15,3 element Passage p1 0 p2 0 p3 board "$Chapter One" step idle follower 0 leader 0
+    stat at 9,3 element Passage p1 0 p2 0 p3 board "$Chapter One" step idle follower 0 leader 0
+    stat at 35,8 element Object p1 cp437:0xC4 p2 0 step idle under Empty color 0x70
+    oop
+@Door
+#cycle 1
+#end
+:touch
+Cleatle: No, I don't want to go in there
+yet. I'd get caught. I can see the
+nameplate on the door though:
+
+"MR. SHAPIRO"
+/i
+#send phoebe:zapper
+#zap touch
+#end
+:touch
+Cleatle: No, I'd better not.
+#end
+:allclear
+#zap touch
+#end
+:touch
+#lock
+#play 5xxx8
+#char 47
+/n
+#char 179
+/w/i/i/i/i/i/i
+#play 8xxx5
+#char 47
+/e
+#char 196
+/s
+#unlock
+#end
+
+    end
+    stat at 41,17 element Object p1 cp437:0xDD p2 0 step idle under Empty color 0x0A
+    stat at 20,6 element Object p1 cp437:0xDF p2 0 step idle under Empty color 0x09
+    stat at 19,7 element Object p1 cp437:0xDF p2 0 step idle under Empty color 0x09
+    stat at 32,4 element Object p1 cp437:0x55 p2 0 step idle under Empty color 0x0C
+    oop
+@shaptrash
+#cycle 1
+#end
+:touch
+Cleatle: The wastebasket is empty.
+#end
+
+    end
+    stat at 37,15 element Object p1 cp437:0x02 p2 0 step idle under Fake color 0x70
+    stat at 39,15 element Object p1 cp437:0xE8 p2 0 step idle under Empty color 0x70
+    stat at 39,16 element Object p1 cp437:0x07 p2 0 step idle under Fake color 0x70
+    stat at 34,19 element Object p1 cp437:0xFE p2 0 step idle under Empty color 0x06
+    oop
+@lobbycomp
+#cycle 1
+#end
+:touch
+(The computer's screen is crowded with
+tables of names, phone numbers, and
+addresses.)
+
+Cleatle: How do I know that? I can't see
+them from here.
+#end
+
+    end
+    stat at 32,19 element Object p1 cp437:0xE8 p2 0 step idle under Empty color 0x06
+    oop
+@lobbyphone
+#cycle 1
+#end
+:touch
+Phoebe: That phone is for employee use
+only.
+#end
+
+    end
+    stat at 40,20 element Object p1 cp437:0xB3 p2 0 step idle under Empty color 0x0F
+    oop
+@notopen
+#cycle 1
+#end
+:touch
+Cleatle: The door is locked.
+#end
+
+    end
+    stat at 24,14 element Object p1 cp437:0xFE p2 0 step idle under Empty color 0x0E
+    stat at 24,13 element Object p1 cp437:0x02 p2 0 step idle under Fake color 0x70
+    stat at 39,11 element Passage p1 0 p2 0 p3 board "$Chapter One" step idle follower 0 leader 0
+    stat at 38,11 element Passage p1 0 p2 0 p3 board "$Chapter One" step idle follower 0 leader 0
+    stat at 37,11 element Passage p1 0 p2 0 p3 board "$Chapter One" step idle follower 0 leader 0
+    stat at 36,11 element Passage p1 0 p2 0 p3 board "$Chapter One" step idle follower 0 leader 0
+    stat at 25,13 element Object p1 cp437:0x55 p2 0 step idle under Empty color 0x70
+    stat at 24,12 element Object p1 cp437:0x16 p2 0 step idle under Empty color 0x70
+    stat at 35,2 element Object p1 cp437:0x16 p2 0 step idle under Empty color 0x70
+    oop
+@offchair
+#cycle 1
+#end
+:touch
+Ode to an Office Chair
+
+(With all due apology to Edwin Arlington
+Robinson)
+
+You think the chair is rather low,
+ And thus try to adjust it.
+Attempts to turn the handle show
+ That time and damp can rust it.
+You strain, and fractures start to show.
+The base snaps, and the bearings go!
+And, at this point, it's clear, you know,
+ That you managed to bust it.
+#end
+
+    end
+    stat at 33,4 element Object p1 cp437:0xE8 p2 0 step idle under Empty color 0x06
+    oop
+@offphone
+#cycle 1
+#end
+:touch
+Cleatle: I think I've made enough in the
+way of phone calls.
+#end
+
+    end
+    stat at 35,4 element Object p1 cp437:0xFE p2 0 step idle under Empty color 0x0E
+    oop
+@shapcomp
+#cycle 1
+#end
+:touch
+Cleatle: Hmm. I think I can get Edwards
+out of his office...
+
+(Cleatle opens an e-mail utility, and
+begins typing.)
+
+TO: J. Edwards
+RE: Update
+
+Disregard my previous message. We might
+still have a chance. Meet me at Roddy's
+Bar immediately.
+
+Cleatle: That should do it...
+#zap touch
+#send edwards:mailed
+#end
+:touch
+Cleatle: As much as I'd like to, I have no
+time to play Solitaire.
+#end
+
+    end
+    stat at 19,15 element Object p1 cp437:0x55 p2 0 step idle under Empty color 0x70
+    oop
+@edtrash
+#cycle 1
+#end
+:touch
+Cleatle: Empty out his wastebasket? What,
+do you think I have no dignity whatsoever?
+
+(A pause.)
+
+Cleatle: It's empty, anyway.
+#zap touch
+#end
+:touch
+(The wastebasket is empty.)
+#end
+:nm
+#end
+:napkin
+#if not contact nm
+#send invobj:okay
+Cleatle: It probably would be a bad idea
+to throw out the hairball ballot design.
+#end
+
+    end
+    stat at 19,17 element Object p1 cp437:0xFE p2 0 step idle under Empty color 0x06
+    oop
+@edcomp
+#cycle 1
+#end
+:nm
+#end
+:edgone
+#zap touch
+#end
+:touch
+Edwards: Don't touch my computer.
+#end
+:touch
+Cleatle: A computer with a scanner bay...
+Let's take a look...
+
+ENTER PASSWORD:
+
+CLUE: EPITAPH
+
+Cleatle: Hmmm...
+
+!tf;T
+!af;A
+!pf;P
+#idle
+#send touch
+#end
+:tf
+#zap checker
+:af
+:pf
+!ss;S
+!is;I
+!rs;R
+#idle
+#send pf
+:is
+#zap checker
+:ss
+:rs
+!mt;M
+!at;A
+!nt;N
+#idle
+#send rs
+:mt
+#zap checker
+:at
+:nt
+!pfo;P
+!efo;E
+!gfo;G
+#idle
+#send nt
+:efo
+#zap checker
+:pfo
+:gfo
+#send checker
+:checker
+:checker
+:checker
+:checker
+Cleatle: No, that wasn't it.
+#restore checker
+#restore checker
+#restore checker
+#end
+:checker
+
+LOGGED ON.... DESIGN TOOL OPENED...
+SCANNER READY.
+
+Cleatle: Now I just need to scan the
+ballot.
+#zap napkin
+#zap touch
+#end
+:touch
+Cleatle: It's logged on to the network.
+#end
+:napkin
+#if not contact nm
+#send invobj:okay
+Cleatle: Well, that's an idea, but the
+appropriate program isn't loaded.
+#end
+:napkin
+#if not contact nm
+#send invobj:okay
+#give torches 1
+#zap napkin
+Cleatle: There! The ballot is submitted.
+#end
+:napkin
+#if not contact nm
+#send invobj:okay
+Cleatle: I don't need to rescan it.
+#end
+:pipe
+#if not contact nm
+#send invobj:okay
+Cleatle: It's certainly tempting, but that
+might be a bit conspicuous.
+#end
+
+    end
+    stat at 21,17 element Object p1 cp437:0xDE p2 0 step idle under Empty color 0x0E
+    oop
+@edchair
+#cycle 1
+#end
+:touch
+(An office chair. See Mr. Shapiro's for
+details.)
+#end
+
+    end
+    stat at 24,16 element Object p1 cp437:0x9D p2 0 step idle under Empty color 0x0E
+    stat at 2,24 element Object p1 cp437:0x9D p2 0 step idle under Empty color 0x0A
+    oop
+#bind plant
+
+    end
+    stat at 2,9 element Object p1 cp437:0x9D p2 0 step idle under Empty color 0x70
+    oop
+#bind plant
+
+    end
+    stat at 5,9 element Object p1 cp437:0x9D p2 0 step idle under Empty color 0x70
+    oop
+#bind plant
+
+    end
+    stat at 5,7 element Object p1 cp437:0x9D p2 0 step idle under Empty color 0x70
+    oop
+#bind plant
+
+    end
+    stat at 2,7 element Object p1 cp437:0x9D p2 0 step idle under Empty color 0x70
+    oop
+#bind plant
+
+    end
+    stat at 22,12 element Object p1 cp437:0x9D p2 0 step idle under Empty color 0x70
+    oop
+#bind plant
+
+    end
+    stat at 23,11 element Object p1 cp437:0xDB p2 0 step idle under Empty color 0x0F
+    stat at 40,11 element Object p1 cp437:0xDB p2 0 step idle under Empty color 0x0F
+    oop
+@secondwindow
+#cycle 1
+#end
+:touch
+(The view through this window is blocked.)
+#end
+
+    end
+    stat at 6,15 element Object p1 cp437:0xB2 p2 0 step idle under Empty color 0x70
+    oop
+@Office
+#cycle 1
+:starter
+#if contact mess
+#send starter
+:mess
+(The only signs of decoration in this
+office are the dark carpet and the dolphin
+figurine in the corner. An ungainly man
+sits behind a computer on the far side of
+the room; Cleatle will probably have to go
+around the desk to get his attention, as
+he is riveted to the monitor.)
+#become fake
+
+    end
+    stat at 35,3 element Object p1 cp437:0x02 p2 0 step idle under Empty color 0x4C
+    oop
+@shapiro
+#cycle 1
+#end
+:allclear
+#become red fake
+
+    end
+    stat at 20,17 element Object p1 cp437:0x02 p2 0 step idle under Fake color 0x70
+    oop
+@edwards
+#cycle 1
+#end
+:touch
+(There's something about Mr. Edwards that
+reminds one of a dolphin. Perhaps it's his
+long, projecting nose, or maybe the way
+his hair is parted in such a manner as
+to create the appearance of a hole in his
+scalp. Of course, it could just be his
+fondness for whistling at the most
+inappropriate times.
+
+In any case, whatever similarities Mr.
+Edwards bears to a bottle-nosed dolphin,
+it is quite clear that he is not one. 
+Most dolphins do not wear a perpetual
+expression of annoyance, and very few have
+such a thick accent.)
+
+Edwards: Yes?
+
+Cleatle: I would like to submit a ballot
+design.
+
+Edwards: Well then, I guess you're out
+of luck.
+
+Cleatle: What?
+
+Edwards: The deadline passed two hours
+ago, so you can't scan yours in. A
+committee will receive these ballots
+tomorrow and decide which one to use then.
+
+Cleatle: Can't you just let me scan this
+in? It couldn't hurt you, could it?
+
+Edwards: Rules are rules.
+
+Cleatle: (Aside) I guess I'll just have
+to find a way to get him out of his
+office so I can scan in the hairball
+ballot.
+
+Cleatle: (Aloud) Mind if I use your phone?
+
+Edwards: It doesn't work. Here's my e-mail
+address, though, if you need to talk to
+me. (Hands Cleatle business card.)
+
+Cleatle: (reads) tuna@freemail.com.
+
+Edwards: Yes. Now, if you have no further
+business, I would appreciate it if you
+left.
+#give health 10
+#zap touch
+#end
+:touch
+Edwards: ...
+
+Cleatle: Oh, never mind.
+#end
+:mailed
+Ed's computer: You've got mail!
+
+Edwards: Let's see... Uh, oh. I'd better
+get down there right away.
+
+(Mr. Edwards walks out of his office and
+leaves. Of course, Cleatle can't see this,
+as he is in a different room, so, for
+all intents and purposes, Edwards has
+disappeared, without leaving so much as
+a red fake.)
+#send all:edgone
+#die
+:nm
+#end
+:keys
+#if not contact nm
+#send invobj:okay
+Cleatle: Did you lose these?
+
+Edwards: What? Oh - no, I didn't.
+#end
+:pipe
+#if not contact nm
+#send invobj:okay
+(The pipe blow knocks Edwards unconscious,
+and Cleatle can now search his office.)
+
+Edwards: What are you staring at me for?
+
+Cleatle: Just daydreaming.
+#end
+
+    end
+    stat at 15,14 element Object p1 cp437:0x5C p2 0 step idle under Fake color 0x70
+    oop
+@Bookshelf
+#cycle 1
+#end
+:touch
+Edwards: Don't touch my books.
+#end
+:edgone
+#zap touch
+#end
+:touch
+(This bookshelf is covered with a glass
+panel, presumably to keep dust off the
+dust jackets. Cleatle opens it and takes a
+quick glance inside. Inside are several
+books on management, programming, and
+marine biology.
+
+One book doesn't seem to quite fit in: a
+book of riddles. Cleatle takes it out to
+examine, and clumsily drops it. It falls
+open to page 32, which is dog-eared and
+clearly well-read.
+
+The riddle on the page reads:
+
+"Here lies a conductor
+In reverie grim.
+Long time he beat me,
+In the end, I beat him.
+
+What am I?"
+
+Sadly, the answer is covered by a coffee
+spill.)
+#zap touch
+#end
+:touch
+"Here lies a conductor
+In reverie grim.
+Long time he beat me,
+In the end, I beat him.
+
+What am I?"
+#end 
+
+    end
+    stat at 6,20 element Object p1 cp437:0xE0 p2 0 step idle under Fake color 0x70
+    oop
+@dolph
+#cycle 1
+#end
+:touch
+(A small crystal statue of a dolphin sits
+on a stand in the corner.)
+#end
+
+    end
+    stat at 10,14 element Object p1 cp437:0xF0 p2 0 step idle under Fake color 0x70
+    oop
+@filingc
+#cycle 1
+#end
+:touch
+(The filing cabinets are locked.)
+#end
+
+    end
+    stat at 11,14 element Object p1 cp437:0xF0 p2 0 step idle under Fake color 0x70
+    oop
+#bind filingc
+
+    end
+    stat at 9,14 element Object p1 cp437:0xF0 p2 0 step idle under Fake color 0x70
+    oop
+#bind filingc
+
+    end
+    stat at 8,14 element Object p1 cp437:0xF0 p2 0 step idle under Fake color 0x70
+    oop
+#bind filingc
+
+    end
+    stat at 17,20 element Object p1 cp437:0xF0 p2 0 step idle under Fake color 0x70
+    oop
+#bind filingc
+
+    end
+    stat at 16,20 element Object p1 cp437:0xF0 p2 0 step idle under Fake color 0x70
+    oop
+#bind filingc
+
+    end
+    stat at 15,20 element Object p1 cp437:0xF0 p2 0 step idle under Fake color 0x70
+    oop
+#bind filingc
+
+    end
+    stat at 14,20 element Object p1 cp437:0xF0 p2 0 step idle under Fake color 0x70
+    oop
+#bind filingc
+
+    end
+    stat at 5,16 element Object p1 cp437:0xB3 p2 0 step idle under Empty color 0x0E
+    oop
+'Doors courtesy of ZZT Encyclopedia
+@doorws
+#cycle 1
+#end
+:touch
+#lock
+#play 5xxx8
+#char 92
+/w
+#char 196
+/s/i/i/i/i/i/i
+#play 8xxx5
+#char 92
+/n
+#char 179
+/e
+#unlock
+#end
+
+    end
+    stat at 31,25 element Passage p1 0 p2 0 p3 board "City Hall" step idle follower 0 leader 0
+    stat at 54,7 element Passage p1 0 p2 0 p3 board "$Chapter One" step idle follower 0 leader 0
+    stat at 54,6 element Passage p1 0 p2 0 p3 board "$Chapter One" step idle follower 0 leader 0
+    stat at 54,5 element Passage p1 0 p2 0 p3 board "$Chapter One" step idle follower 0 leader 0
+    stat at 58,6 element Passage p1 0 p2 0 p3 board "$Chapter One" step idle follower 0 leader 0
+    stat at 54,4 element Passage p1 0 p2 0 p3 board "$Chapter One" step idle follower 0 leader 0
+    stat at 36,7 element Object p1 cp437:0xB2 p2 0 step idle under Empty color 0x70
+    oop
+@blockobj
+#cycle 1
+:checking
+#if blocked w hello
+#take score 10 notyet
+#send all:allclear
+#send hello
+:notyet
+#send checking
+
+:hello
+#if blocked w ooh
+#send hello
+:ooh
+(Cleatle enters Shapiro's office.)
+#become fake
+
+    end
+    stat at 32,25 element Passage p1 0 p2 0 p3 board "City Hall" step idle follower 0 leader 0
+  end
+end

@@ -1,0 +1,365 @@
+board "*NEW STK--Centip. Heads, Blinking"
+  start player at 14,7
+  respawn at 1,25
+  max-shots 255
+  dark false
+  reenter false
+  time-limit 0
+  exits north none south none west none east none
+
+  grid
+............................................................
+.............f*NEWfSTK--CentiphfHeads,fBlinkingfj...........
+......................mmmqqqq.q...............j.............
+mqq...q..rq.......m..m.qmqqqq.qqqqqqqqqqqqqm.q.qqqqqqqqqq..m
+mqq.qqqqqqq.......m..m.qm...............qqumjq............qm
+mqq.qqqqqqqqqq.................................vwxy.........
+.............@.z.A.D.F.G.I.J.L.M.O.P.Q.R.U.V.X<YZ0c12o32Y425
+mqq.6666666666................................2(bZ731738)22.
+............##.9.!.$.%.&.+.=.~.^._.:.;./.\.|.>..............
+mqq66666666622.?.`.'.[.].{.}.Ä.Å.Ç.É.Ñ.Ö.Ü.á.à.q............
+mq...6...6..ââ.ä.ã.å.ç.é.è.ê.ë.í.ì.î.ï.ñ.ó.ò.ô.q............
+mq.q.6...6.6öö.õ.ú.ù.û.ü.†.°.¢.£.§.•.¶.ß.®.©.™.q............
+mq.q...6...6ff.´.¨.≠.Æ.Ø.∞.±.≤.≥.¥.µ.∂.∑.∏.π.∫.q............
+m..qqq666666ªª.º.Ω.æ.ø.¿.¡.¬.√.ƒ.≈.∆.«.».…. .À.q............
+............ÃÃ.Õ.Œ.œ.–.—.“.”.‘.’.÷.◊.ÿ.Ÿ.⁄.€.‹.q............
+m.qqqqqqqqqq.q.................................q............
+m..........q.q›ﬁ..m.xmﬂ......................q..............
+mqqqqqqqqq.q.qqqq.mmmmj...................q5.‡..............
+mq...q.....q.qqqq...qqq.....................................
+mq.q.q.q...q.qqqqqqqqqq..................qqm.qqqqqqqqqqqqqqm
+mq.q...q...q.qqqqqqqqqq.....................................
+..............................q.............................
+..............................q.............................
+............................................................
+..m.........................................................
+  end
+
+  legend
+    . = Empty color 0x0E
+    f = Text-Red color 0x20
+    * = Text-Red color 0x2A
+    N = Text-Red color 0x4E
+    E = Text-Red color 0x45
+    W = Text-Red color 0x57
+    S = Text-Red color 0x53
+    T = Text-Red color 0x54
+    K = Text-Red color 0x4B
+    - = Text-Red color 0x2D
+    C = Text-Red color 0x43
+    e = Text-Red color 0x65
+    n = Text-Red color 0x6E
+    t = Text-Red color 0x74
+    i = Text-Red color 0x69
+    p = Text-Red color 0x70
+    h = Text-Red color 0x2E
+    H = Text-Red color 0x48
+    a = Text-Red color 0x61
+    d = Text-Red color 0x64
+    s = Text-Red color 0x73
+    , = Text-Red color 0x2C
+    B = Text-Red color 0x42
+    l = Text-Red color 0x6C
+    k = Text-Red color 0x6B
+    g = Text-Red color 0x67
+    j = Empty color 0x70
+    m = Empty color 0x0F
+    q = Empty color 0x00
+    r = Empty color 0xF9
+    u = Empty color 0x06
+    v = Empty color 0x42
+    w = Empty color 0x6C
+    x = Empty color 0x69
+    y = Empty color 0x6E
+    @ = Player color 0x1F under Empty color 0x0E
+    z = Head color 0x8F
+    A = Head color 0x89
+    D = Head color 0x8A
+    F = Head color 0x8B
+    G = Head color 0x8C
+    I = Head color 0x8D
+    J = Head color 0x8E
+    L = Head color 0x88
+    M = Head color 0x87
+    O = Head color 0x81
+    P = Head color 0x82
+    Q = Head color 0x83
+    R = Head color 0x84
+    U = Head color 0x85
+    V = Head color 0x86
+    X = Head color 0x80
+    < = Text-Blue color 0x3C
+    Y = Text-Blue color 0x42
+    Z = Text-Blue color 0x6C
+    0 = Text-Blue color 0x61
+    c = Text-Blue color 0x63
+    1 = Text-Blue color 0x6B
+    2 = Text-Blue color 0x20
+    o = Text-Blue color 0x6F
+    3 = Text-Blue color 0x6E
+    4 = Text-Blue color 0x2E
+    5 = Empty color 0x20
+    6 = Empty color 0x09
+    ( = Text-Blue color 0x28
+    b = Text-Blue color 0x62
+    7 = Text-Blue color 0x69
+    8 = Text-Blue color 0x67
+    ) = Text-Blue color 0x29
+    # = Solid color 0x07
+    9 = Head color 0xFF
+    ! = Head color 0xF9
+    $ = Head color 0xFA
+    % = Head color 0xFB
+    & = Head color 0xFC
+    + = Head color 0xFD
+    = = Head color 0xFE
+    ~ = Head color 0xF8
+    ^ = Head color 0xF7
+    _ = Head color 0xF1
+    : = Head color 0xF2
+    ; = Head color 0xF3
+    / = Head color 0xF4
+    \ = Head color 0xF5
+    | = Head color 0xF6
+    > = Head color 0xF0
+    ? = Head color 0x9F
+    ` = Head color 0x99
+    ' = Head color 0x9A
+    [ = Head color 0x9B
+    ] = Head color 0x9C
+    { = Head color 0x9D
+    } = Head color 0x9E
+    cp437:0x80 = Head color 0x98
+    cp437:0x81 = Head color 0x97
+    cp437:0x82 = Head color 0x91
+    cp437:0x83 = Head color 0x92
+    cp437:0x84 = Head color 0x93
+    cp437:0x85 = Head color 0x94
+    cp437:0x86 = Head color 0x95
+    cp437:0x87 = Head color 0x96
+    cp437:0x88 = Head color 0x90
+    cp437:0x89 = Text-Green color 0x20
+    cp437:0x8A = Head color 0xAF
+    cp437:0x8B = Head color 0xA9
+    cp437:0x8C = Head color 0xAA
+    cp437:0x8D = Head color 0xAB
+    cp437:0x8E = Head color 0xAC
+    cp437:0x8F = Head color 0xAD
+    cp437:0x90 = Head color 0xAE
+    cp437:0x91 = Head color 0xA8
+    cp437:0x92 = Head color 0xA7
+    cp437:0x93 = Head color 0xA1
+    cp437:0x94 = Head color 0xA2
+    cp437:0x95 = Head color 0xA3
+    cp437:0x96 = Head color 0xA4
+    cp437:0x97 = Head color 0xA5
+    cp437:0x98 = Head color 0xA6
+    cp437:0x99 = Head color 0xA0
+    cp437:0x9A = Text-Cyan color 0x20
+    cp437:0x9B = Head color 0xBF
+    cp437:0x9C = Head color 0xB9
+    cp437:0x9D = Head color 0xBA
+    cp437:0x9E = Head color 0xBB
+    cp437:0x9F = Head color 0xBC
+    cp437:0xA0 = Head color 0xBD
+    cp437:0xA1 = Head color 0xBE
+    cp437:0xA2 = Head color 0xB8
+    cp437:0xA3 = Head color 0xB7
+    cp437:0xA4 = Head color 0xB1
+    cp437:0xA5 = Head color 0xB2
+    cp437:0xA6 = Head color 0xB3
+    cp437:0xA7 = Head color 0xB4
+    cp437:0xA8 = Head color 0xB5
+    cp437:0xA9 = Head color 0xB6
+    cp437:0xAA = Head color 0xB0
+    cp437:0xAB = Head color 0xCF
+    cp437:0xAC = Head color 0xC9
+    cp437:0xAD = Head color 0xCA
+    cp437:0xAE = Head color 0xCB
+    cp437:0xAF = Head color 0xCC
+    cp437:0xB0 = Head color 0xCD
+    cp437:0xB1 = Head color 0xCE
+    cp437:0xB2 = Head color 0xC8
+    cp437:0xB3 = Head color 0xC7
+    cp437:0xB4 = Head color 0xC1
+    cp437:0xB5 = Head color 0xC2
+    cp437:0xB6 = Head color 0xC3
+    cp437:0xB7 = Head color 0xC4
+    cp437:0xB8 = Head color 0xC5
+    cp437:0xB9 = Head color 0xC6
+    cp437:0xBA = Head color 0xC0
+    cp437:0xBB = Text-Purple color 0x20
+    cp437:0xBC = Head color 0xDF
+    cp437:0xBD = Head color 0xD9
+    cp437:0xBE = Head color 0xDA
+    cp437:0xBF = Head color 0xDB
+    cp437:0xC0 = Head color 0xDC
+    cp437:0xC1 = Head color 0xDD
+    cp437:0xC2 = Head color 0xDE
+    cp437:0xC3 = Head color 0xD8
+    cp437:0xC4 = Head color 0xD7
+    cp437:0xC5 = Head color 0xD1
+    cp437:0xC6 = Head color 0xD2
+    cp437:0xC7 = Head color 0xD3
+    cp437:0xC8 = Head color 0xD4
+    cp437:0xC9 = Head color 0xD5
+    cp437:0xCA = Head color 0xD6
+    cp437:0xCB = Head color 0xD0
+    cp437:0xCC = Text-Yellow color 0x20
+    cp437:0xCD = Head color 0xEF
+    cp437:0xCE = Head color 0xE9
+    cp437:0xCF = Head color 0xEA
+    cp437:0xD0 = Head color 0xEB
+    cp437:0xD1 = Head color 0xEC
+    cp437:0xD2 = Head color 0xED
+    cp437:0xD3 = Head color 0xEE
+    cp437:0xD4 = Head color 0xE8
+    cp437:0xD5 = Head color 0xE7
+    cp437:0xD6 = Head color 0xE1
+    cp437:0xD7 = Head color 0xE2
+    cp437:0xD8 = Head color 0xE3
+    cp437:0xD9 = Head color 0xE4
+    cp437:0xDA = Head color 0xE5
+    cp437:0xDB = Head color 0xE6
+    cp437:0xDC = Head color 0xE0
+    cp437:0xDD = Empty color 0x4C
+    cp437:0xDE = Empty color 0x61
+    cp437:0xDF = Empty color 0x65
+    cp437:0xE0 = Empty color 0x05
+  end
+
+  stats
+    stat at 14,8 element Empty cycle 0 p1 0 p2 0 p3 1 step idle under Passage color 0x1F
+    stat at 13,8 element Empty cycle 0 p1 0 p2 0 p3 1 step idle under Passage color 0x1F
+    stat at 12,8 element Empty cycle 0 p1 0 p2 0 p3 1 step idle under Passage color 0x1F
+    stat at 11,8 element Empty cycle 0 p1 0 p2 0 p3 1 step idle under Passage color 0x1F
+    stat at 16,7 element Head p1 0 p2 0 step idle under Empty color 0x0E
+    stat at 18,7 element Head p1 0 p2 0 step idle under Empty color 0x0E
+    stat at 20,7 element Head p1 0 p2 0 step idle under Empty color 0x0E
+    stat at 22,7 element Head p1 0 p2 0 step idle under Empty color 0x0F
+    stat at 24,7 element Head p1 0 p2 0 step idle under Empty color 0x0E
+    stat at 26,7 element Head p1 0 p2 0 step idle under Empty color 0x0E
+    stat at 28,7 element Head p1 0 p2 0 step idle under Empty color 0x0E
+    stat at 30,7 element Head p1 0 p2 0 step idle under Empty color 0x0E
+    stat at 32,7 element Head p1 0 p2 0 step idle under Empty color 0x0E
+    stat at 34,7 element Head p1 0 p2 0 step idle under Empty color 0x0E
+    stat at 36,7 element Head p1 0 p2 0 step idle under Empty color 0x0E
+    stat at 38,7 element Head p1 0 p2 0 step idle under Empty color 0x0E
+    stat at 40,7 element Head p1 0 p2 0 step idle under Empty color 0x0E
+    stat at 42,7 element Head p1 0 p2 0 step idle under Empty color 0x0E
+    stat at 44,7 element Head p1 0 p2 0 step idle under Empty color 0x0E
+    stat at 46,7 element Head p1 0 p2 0 step idle
+    stat at 16,9 element Head p1 0 p2 0 step idle under Empty color 0x0E
+    stat at 18,9 element Head p1 0 p2 0 step idle under Empty color 0x0E
+    stat at 20,9 element Head p1 0 p2 0 step idle under Empty color 0x0E
+    stat at 22,9 element Head p1 0 p2 0 step idle under Empty color 0x0F
+    stat at 24,9 element Head p1 0 p2 0 step idle under Empty color 0x0E
+    stat at 26,9 element Head p1 0 p2 0 step idle under Empty color 0x0E
+    stat at 28,9 element Head p1 0 p2 0 step idle under Empty color 0x0E
+    stat at 30,9 element Head p1 0 p2 0 step idle under Empty color 0x0E
+    stat at 32,9 element Head p1 0 p2 0 step idle under Empty color 0x0E
+    stat at 34,9 element Head p1 0 p2 0 step idle under Empty color 0x0E
+    stat at 36,9 element Head p1 0 p2 0 step idle under Empty color 0x0E
+    stat at 38,9 element Head p1 0 p2 0 step idle under Empty color 0x0E
+    stat at 40,9 element Head p1 0 p2 0 step idle under Empty color 0x0E
+    stat at 42,9 element Head p1 0 p2 0 step idle under Empty color 0x0E
+    stat at 44,9 element Head p1 0 p2 0 step idle under Empty color 0x0E
+    stat at 46,9 element Head p1 0 p2 0 step idle
+    stat at 16,10 element Head p1 0 p2 0 step idle under Empty color 0x0E
+    stat at 18,10 element Head p1 0 p2 0 step idle under Empty color 0x0E
+    stat at 20,10 element Head p1 0 p2 0 step idle under Empty color 0x0E
+    stat at 22,10 element Head p1 0 p2 0 step idle under Empty color 0x0F
+    stat at 24,10 element Head p1 0 p2 0 step idle under Empty color 0x0E
+    stat at 26,10 element Head p1 0 p2 0 step idle under Empty color 0x0E
+    stat at 28,10 element Head p1 0 p2 0 step idle under Empty color 0x0E
+    stat at 30,10 element Head p1 0 p2 0 step idle under Empty color 0x0E
+    stat at 32,10 element Head p1 0 p2 0 step idle under Empty color 0x0E
+    stat at 34,10 element Head p1 0 p2 0 step idle under Empty color 0x0E
+    stat at 36,10 element Head p1 0 p2 0 step idle under Empty color 0x0E
+    stat at 38,10 element Head p1 0 p2 0 step idle under Empty color 0x0E
+    stat at 40,10 element Head p1 0 p2 0 step idle under Empty color 0x0E
+    stat at 42,10 element Head p1 0 p2 0 step idle under Empty color 0x0E
+    stat at 44,10 element Head p1 0 p2 0 step idle under Empty color 0x0E
+    stat at 46,10 element Head p1 0 p2 0 step idle
+    stat at 16,11 element Head p1 0 p2 0 step idle under Empty color 0x0E
+    stat at 18,11 element Head p1 0 p2 0 step idle under Empty color 0x0E
+    stat at 20,11 element Head p1 0 p2 0 step idle under Empty color 0x0E
+    stat at 22,11 element Head p1 0 p2 0 step idle under Empty color 0x0F
+    stat at 24,11 element Head p1 0 p2 0 step idle under Empty color 0x0E
+    stat at 26,11 element Head p1 0 p2 0 step idle under Empty color 0x0E
+    stat at 28,11 element Head p1 0 p2 0 step idle under Empty color 0x0E
+    stat at 30,11 element Head p1 0 p2 0 step idle under Empty color 0x0E
+    stat at 32,11 element Head p1 0 p2 0 step idle under Empty color 0x0E
+    stat at 34,11 element Head p1 0 p2 0 step idle under Empty color 0x0E
+    stat at 36,11 element Head p1 0 p2 0 step idle under Empty color 0x0E
+    stat at 38,11 element Head p1 0 p2 0 step idle under Empty color 0x0E
+    stat at 40,11 element Head p1 0 p2 0 step idle under Empty color 0x0E
+    stat at 42,11 element Head p1 0 p2 0 step idle under Empty color 0x0E
+    stat at 44,11 element Head p1 0 p2 0 step idle under Empty color 0x0E
+    stat at 46,11 element Head p1 0 p2 0 step idle
+    stat at 16,12 element Head p1 0 p2 0 step idle under Empty color 0x09
+    stat at 18,12 element Head p1 0 p2 0 step idle under Empty color 0x0E
+    stat at 20,12 element Head p1 0 p2 0 step idle under Empty color 0x0E
+    stat at 22,12 element Head p1 0 p2 0 step idle under Empty color 0x0F
+    stat at 24,12 element Head p1 0 p2 0 step idle under Empty color 0x0E
+    stat at 26,12 element Head p1 0 p2 0 step idle under Empty color 0x0E
+    stat at 28,12 element Head p1 0 p2 0 step idle under Empty color 0x0E
+    stat at 30,12 element Head p1 0 p2 0 step idle under Empty color 0x0E
+    stat at 32,12 element Head p1 0 p2 0 step idle under Empty color 0x0E
+    stat at 34,12 element Head p1 0 p2 0 step idle under Empty color 0x0E
+    stat at 36,12 element Head p1 0 p2 0 step idle under Empty color 0x0E
+    stat at 38,12 element Head p1 0 p2 0 step idle under Empty color 0x0E
+    stat at 40,12 element Head p1 0 p2 0 step idle
+    stat at 42,12 element Head p1 0 p2 0 step idle
+    stat at 44,12 element Head p1 0 p2 0 step idle under Empty color 0x30
+    stat at 46,12 element Head p1 0 p2 0 step idle under Empty color 0x30
+    stat at 16,13 element Head p1 0 p2 0 step idle under Empty color 0x09
+    stat at 18,13 element Head p1 0 p2 0 step idle under Empty color 0x0E
+    stat at 20,13 element Head p1 0 p2 0 step idle under Empty color 0x0E
+    stat at 22,13 element Head p1 0 p2 0 step idle under Empty color 0x0F
+    stat at 24,13 element Head p1 0 p2 0 step idle under Empty color 0x0E
+    stat at 26,13 element Head p1 0 p2 0 step idle under Empty color 0x0E
+    stat at 28,13 element Head p1 0 p2 0 step idle under Empty color 0x0E
+    stat at 30,13 element Head p1 0 p2 0 step idle under Empty color 0x0E
+    stat at 32,13 element Head p1 0 p2 0 step idle under Empty color 0x0E
+    stat at 34,13 element Head p1 0 p2 0 step idle under Empty color 0x0E
+    stat at 36,13 element Head p1 0 p2 0 step idle under Empty color 0x0E
+    stat at 38,13 element Head p1 0 p2 0 step idle under Empty color 0x0E
+    stat at 40,13 element Head p1 0 p2 0 step idle under Empty color 0x0E
+    stat at 42,13 element Head p1 0 p2 0 step idle under Empty color 0x0E
+    stat at 44,13 element Head p1 0 p2 0 step idle under Empty color 0x0E
+    stat at 46,13 element Head p1 0 p2 0 step idle
+    stat at 16,14 element Head p1 0 p2 0 step idle under Empty color 0x09
+    stat at 18,14 element Head p1 0 p2 0 step idle under Empty color 0x0E
+    stat at 20,14 element Head p1 0 p2 0 step idle under Empty color 0x0E
+    stat at 22,14 element Head p1 0 p2 0 step idle under Empty color 0x0F
+    stat at 24,14 element Head p1 0 p2 0 step idle under Empty color 0x0E
+    stat at 26,14 element Head p1 0 p2 0 step idle under Empty color 0x0E
+    stat at 28,14 element Head p1 0 p2 0 step idle under Empty color 0x0E
+    stat at 30,14 element Head p1 0 p2 0 step idle under Empty color 0x0E
+    stat at 32,14 element Head p1 0 p2 0 step idle under Empty color 0x0E
+    stat at 34,14 element Head p1 0 p2 0 step idle under Empty color 0x0E
+    stat at 36,14 element Head p1 0 p2 0 step idle under Empty color 0x0E
+    stat at 38,14 element Head p1 0 p2 0 step idle under Empty color 0x0E
+    stat at 40,14 element Head p1 0 p2 0 step idle under Empty color 0x0E
+    stat at 42,14 element Head p1 0 p2 0 step idle under Empty color 0x0E
+    stat at 44,14 element Head p1 0 p2 0 step idle under Empty color 0x0E
+    stat at 46,14 element Head p1 0 p2 0 step idle
+    stat at 16,15 element Head p1 0 p2 0 step idle under Empty color 0x0E
+    stat at 18,15 element Head p1 0 p2 0 step idle under Empty color 0x0E
+    stat at 20,15 element Head p1 0 p2 0 step idle under Empty color 0x0E
+    stat at 22,15 element Head p1 0 p2 0 step idle under Empty color 0x0F
+    stat at 24,15 element Head p1 0 p2 0 step idle under Empty color 0x0E
+    stat at 26,15 element Head p1 0 p2 0 step idle under Empty color 0x0E
+    stat at 28,15 element Head p1 0 p2 0 step idle under Empty color 0x0E
+    stat at 30,15 element Head p1 0 p2 0 step idle under Empty color 0x0E
+    stat at 32,15 element Head p1 0 p2 0 step idle under Empty color 0x0E
+    stat at 34,15 element Head p1 0 p2 0 step idle under Empty color 0x0E
+    stat at 36,15 element Head p1 0 p2 0 step idle under Empty color 0x0E
+    stat at 38,15 element Head p1 0 p2 0 step idle under Empty color 0x0E
+    stat at 40,15 element Head p1 0 p2 0 step idle under Empty color 0x0E
+    stat at 42,15 element Head p1 0 p2 0 step idle under Empty color 0x0E
+    stat at 44,15 element Head p1 0 p2 0 step idle under Empty color 0x0E
+    stat at 46,15 element Head p1 0 p2 0 step idle data-pos -1
+  end
+end

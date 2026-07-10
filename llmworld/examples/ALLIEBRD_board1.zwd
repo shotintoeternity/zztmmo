@@ -1,0 +1,378 @@
+board "Bank 2 of ZZT"
+  start player at 10,3
+  respawn at 1,1
+  max-shots 255
+  dark true
+  reenter false
+  time-limit 0
+  exits north none south none west none east none
+
+  grid
+NNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNN
+NNBankc2cofcZZTNNNNNNNNNdNNNNNNNNNNNNNNNNdNNNNNNNNNNNNNNNNNN
+NNNNNtttp@ttNNNNNNNNNNCembijlqiejNNNNNNNNNNNNNNNNNNNNNNNNNNN
+NNNNNtttttttNNNNNNNNNN...........NNNNNNNNNNNNNNNNNNNNNNNNNNN
+NNNNNPushtttNNNNNNNNNN...........NNNNNNNNNNNNNNNNNNNNNNNNNNN
+NNNNN.......NNNNNNNNNNr..........FFFFFFFF......NNNNNNNNNNNNN
+NNNNNNNNONNNNNNNNNNNNNN0O0O0O0O0ONNNNNNNN......NNNNNNNNNNNNN
+NNNNNNNNvNNNNNNNNNNNNNN1v1v1v1v1vNNNNNNNN......NNNNNNNNNNNNN
+NNNNNNNNvNNNNNNNNNNNNNNxvxvxvxvxvNNNNNNNN......NNNNNNNNNNNNN
+NNNNNNNNvNNNNNNNNNNNNNN3v3O3v3v3vNNNNNNNN......NNNNNNNNNNNNN
+NNNNNNNNvNNNNNNNNNNNNNN4v4v4v4v4vNNNNNNNN......NNNNNNNNNNNNN
+NNNNNNNN.NNNNNNNNNNNNNNNONvNvNvNONNNNNNNN......NNNNNNNNNNNNN
+NNNNNNNNyNNNNNNNNNNNNNNNvNvNONvNvNNNNNNNN......dNNNNNNNNNNNN
+wwwwwwwwwwwwwwwwwwwwwwwwvwvwvwOwvwwOOOOOOwwwzww......NNNNNNN
+NNNNNNNNNNNNNNNNNNNNNNNN.N.N.N.N.NNNNNNNN......NNNNNNNNNNNNN
+NNNNNNNNNNNNNNNNNNNNNNNN.N.N.N.N.NNNNNNNNg....gNNNNNNNNNNNNN
+NNNNNNNNNNNNNNNNNNNNNNNN.N.N.N.N.NNNNNNNNgg..ggNNNNNNNNNNNNN
+NNNNNNNNNNNNNNNNNNNNNNNN.N.N.N.N.NNNNNNNNggg.ggNNNNNNNNNNNNN
+NNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNgggyggNNNNNNNNNNNNN
+NNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNN........A...NNNNNNNNNN
+NNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNND.d...G.....NNNNNNNNNN
+NNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNND....GKG....NNNNNNNNNN
+NNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNND.....G.....NNNNNNNNNN
+NNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNND...D...r..ANNNNNNNNNN
+NNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNN
+  end
+
+  legend
+    N = Normal color 0x0C
+    B = Text-Blue color 0x42
+    a = Text-Blue color 0x61
+    n = Text-Blue color 0x6E
+    k = Text-Blue color 0x6B
+    c = Text-Blue color 0x20
+    2 = Text-Blue color 0x32
+    o = Text-Blue color 0x6F
+    f = Text-Blue color 0x66
+    Z = Text-Blue color 0x5A
+    T = Text-Blue color 0x54
+    d = Object color 0x0C
+    t = Torch color 0x06
+    p = Passage color 0x1F to "Bank 2 of ZZT"
+    @ = Player color 0x1F under Empty color 0x0F
+    C = Text-Cyan color 0x43
+    e = Text-Cyan color 0x6F
+    m = Text-Cyan color 0x6D
+    b = Text-Cyan color 0x62
+    i = Text-Cyan color 0x69
+    j = Text-Cyan color 0x6E
+    l = Text-Cyan color 0x61
+    q = Text-Cyan color 0x74
+    . = Empty color 0x0F
+    P = Text-Cyan color 0x50
+    u = Text-Cyan color 0x75
+    s = Text-Cyan color 0x73
+    h = Text-Cyan color 0x68
+    r = Object color 0x0A
+    F = Fake color 0x0A
+    O = Boulder color 0x0F
+    0 = Text-Red color 0x30
+    v = Slider (NS) color 0x0B
+    1 = Text-Red color 0x31
+    x = Text-Red color 0x32
+    3 = Text-Red color 0x33
+    4 = Text-Red color 0x34
+    y = Object color 0x0B
+    w = Slider (EW) color 0x0D
+    z = Object color 0x0D
+    g = Gem color 0x09
+    A = Object color 0x0E
+    D = Object color 0x0F
+    G = Gem color 0x0D
+    K = Key color 0x0D
+  end
+
+  stats
+    stat at 9,13 element Object cycle 2 p2 0 step idle under Empty color 0x0F
+    oop
+@SlideChecker
+#if blocked north aaaaaa
+/i
+#restart
+:aaaaaa
+/i/i/i/i
+Ah, shit.
+/i/i/i/i/i/i/i/i/i/i/i/i
+Now you've fucked it.
+/i/i/i/i/i/i/i/i/i/i/i/i
+Pushing that just broke the puzzle!
+/i/i/i/i/i/i/i/i/i/i/i/i
+I spent so much time making this...
+/i/i/i/i/i/i/i/i/i/i/i/i
+Just for you to mess it up!
+/i/i/i/i/i/i/i/i/i/i/i/i
+You were SUPPOSED to find this fake wall..
+#send Waller:dowall
+
+    end
+    stat at 23,6 element Object p1 cp437:0xB2 p2 0 step idle under Empty color 0x0F
+    oop
+@Waller
+#end
+:dowall
+#put w green fake
+/w
+#if contact done
+#if blocked w dowall
+:done
+Ugh. Maybe we can salvage this. Go right.
+#become green fake
+
+    end
+    stat at 25,2 element Object cycle 1 p1 cp437:0xB1 p2 0 step idle under Empty color 0x0F
+    oop
+@Combination
+#char 178
+#if alligned speak
+/i
+#restart
+:speak
+Don't bother with this stuff, it's broken.
+
+    end
+    stat at 42,2 element Object cycle 1 p1 cp437:0xB1 p2 0 step idle under Empty color 0x0F
+    oop
+@The Person in the Vault
+#char 178
+#if alligned speak
+/i
+#restart
+:speak
+$Sigh...
+
+There's a great treasure in this vault,
+to the south. I know, because I'm waiting
+in it. But it's blocked for you. How are
+we going to get you in here?
+
+Maybe... No, it's too silly.
+
+Unless... Please go down to the vault
+entrance. I have an idea.
+
+    end
+    stat at 45,19 element Object cycle 1 p2 0 step idle under Empty color 0x0F
+    oop
+@Person
+#end
+:act
+#lock
+Alright!
+/n/n/n/n/i/i/i/i/i/i/i/i/i/i/i
+Hey!
+/i/i/i/i/i/i/i/i/i/i/i/i/i/i/i
+I've never tried this before, but...
+/i/i/i/i/i/i/i/i/i/i/i/i/i/i/i
+I'm gonna try pushing this.
+/i/i/i/i/i/i/i/i/i/i/i/i/i/i/i
+I know, I know...
+/i/i/i/i/i/i/i/i/i/i/i/i/i/i/i
+That's not supposed to be possible.
+/i/i/i/i/i/i/i/i/i/i/i/i/i/i/i
+But we're out of other options here...
+/i/i/i/i/i/i/i/i/i/i/i/i/i/i/i
+And I've been working out lately.
+/i/i/i/i/i/i/i/i/i/i/i/i/i/i/i
+Here goes nothing...
+/i/i/i/i/i/i/i/i/i/i/i/i/i/i/i
+Ngh... Rrrrrgggghhhh.....
+/i/i/i/i/i/i/i/i/i/i/i/i/i/i/i
+Ggggggrrrrrrrrffffmmmmmm.......
+/i/i/i/i/i/i/i/i/i/i/i/i/i/i/i
+#send FakeSlider:moveup
+#play 7
+/n
+WOAH!
+/i/i/i/i/i/i/i/i/i/i/i/i/i/i/i
+I... I did it!
+/i/i/i/i/i/i/i/i/i/i/i/i/i/i/i
+This is incredible!
+/i/i/i/i/i/i/i/i/i/i/i/i/i/i/i
+Just push it aside, and you're in!
+/s/w
+#unlock
+#end
+:touch
+The treasure is yours!
+#zap touch
+#end
+:touch
+I'm sorry for being rude before.
+#zap touch
+#end
+:touch
+I shouldn't have been so controlling.
+#zap touch
+#end
+:touch
+*cough* Anyway, thanks for stopping by.
+#zap touch
+#end
+:touch
+*cough cough*
+#zap touch
+#end
+:touch
+...
+
+    end
+    stat at 48,13 element Object cycle 1 p1 cp437:0xB1 p2 0 step idle under Empty color 0x0F
+    oop
+@Me
+#char 178
+#if alligned speak
+/i
+#restart
+:speak
+#send Person:act
+
+    end
+    stat at 45,14 element Object p1 cp437:0x21 p2 0 step idle under Empty color 0x0F
+    oop
+@FakeSlider
+#char 29
+#end
+:moveup
+/n
+#become purple sliderew
+
+    end
+    stat at 39,22 element Object p1 cp437:0x09 p2 0 step idle under Empty color 0x0F
+    oop
+@Toilet
+#end
+:touch
+It's a ZZT toilet!
+
+Flush it?
+
+!flush;Yes
+!noflush;No
+#end
+:flush
+#play t1111
+You flush the toilet! What a viscerally
+exciting experience this is!
+#end
+:noflush
+Inexplicably, you decide not to flush the
+toilet.
+
+    end
+    stat at 39,21 element Object p1 cp437:0x16 p2 0 step idle under Empty color 0x0F
+    stat at 39,23 element Object p1 cp437:0x16 p2 0 step idle under Empty color 0x0F
+    stat at 39,24 element Object p1 cp437:0x09 p2 0 step idle under Empty color 0x0F
+    oop
+@Another Toilet
+#end
+:touch
+It's another ZZT toilet!
+
+Flush it?
+
+!flush;Yes
+!noflush;No
+#end
+:flush
+You try to flush the toilet.
+
+It's out of order.
+You feel strangely dissatisfied.
+#end
+:noflush
+You are a modern stoic, and so choose to
+abstain from the hedonistic pleasures of
+needless toilet-flushing.
+
+    end
+    stat at 47,24 element Object p1 cp437:0xF2 p2 0 step idle under Empty color 0x0F
+    oop
+#end
+:touch
+#give score 1
+#play tcdef+cdef+cdef
+You have obtained a ò!
+#die
+
+    end
+    stat at 50,24 element Object p1 cp437:0xE8 p2 0 step idle under Empty color 0x0F
+    oop
+@Scroll of Wisdom
+#end
+:touch
+#play c-c+d-d+e-e+f-f+g-g+a-a+b-b++c-c
+#play +d-d+c-cb-b+a-a+g-g+f-f+e-e+d-d+c-c
+$Could it be? It is!
+$The legendary Scroll of Wisdom!
+
+Read it?
+
+!read;Yes
+!noread;No
+#end
+:read
+It says:
+
+$"Now it's lunchtime, and I'm hungry again
+$I don't know where I should begin
+$Maybe I'll get some super salmon
+$Mmm-mmm, that's good!
+$I don't want no chicken,
+$it tastes like wood"
+$                               -Biz Markie
+
+You feel spiritually enlightened.
+#end
+:noread
+You have heard stories tell that the
+Scroll destroys the sanity of anyone who
+reads it, so you choose not to open it.
+
+    end
+    stat at 43,24 element Object p1 cp437:0xD1 p2 0 step idle under Empty color 0x0F
+    oop
+@Keyboard.
+#end
+:touch
+It's a keyboard (for music, not typing).
+Looks pretty fancy.
+
+Play it?
+
+!tunes;Yes
+!notunes;No
+#end
+:tunes
+#play sdefgexcqd
+You play an old favorite.
+It echoes throughout the vault.
+#end
+:notunes
+You aren't very confident in your playing,
+so you leave the keyboard alone.
+
+    end
+    stat at 41,21 element Object p1 cp437:0x26 p2 0 step idle under Empty color 0x0F
+    oop
+#end
+:touch
+#play t+c-b+cdc-c-cx1245
+#give score 1
+You have obtained an ampersand!
+#die
+
+    end
+    stat at 47,20 element Object p1 cp437:0x13 p2 0 step idle under Empty color 0x0F
+    oop
+#end
+:touch
+#play t+c+c+c
+#give score 1
+You have obtained various riches!
+#die
+
+    end
+    stat at 9,3 element Passage p1 0 p2 0 p3 board "Bank 2 of ZZT" step idle under Empty color 0x0F
+  end
+end

@@ -1,0 +1,450 @@
+board "Greenhouse"
+  start player at 29,2
+  respawn at 1,1
+  max-shots 1
+  dark false
+  reenter false
+  time-limit 0
+  exits north "Ruins Hub" south "Ruins Hub" west none east none
+
+  grid
+oBbFlfwersbarebpretty...bjjjjjjjbmutbdfn'tbpickbrfses!bqOvNN
+BBBBNNxjjjjjj~~jgggjjjNNjjjj@jjNNjjjRjjjNNjggggjj~~xjjjjjgNN
+BBBNNjjjjjjj~~jjjjjjjNNjjjjjjjNNjzjjjjj~~jjjjjjj~~jjjjjjjNNN
+BBNNjjjjjRj~~jzjjjjjNNjjjjjjjNNjjjjjjj~~jjjRjjj~~jjjjRjjNNgN
+BNNKjRjjjj~~jjjjRjjNNjjjjjjjNNjjjjjjj~~jzjjjjj~~jjjjjjjNNjgN
+NNjjjjjAAAAAAjjjjjNNjjjjjjxNNjjjjjjj~~jjjjjAAAAAAjjjjjNNjjgN
+NjjjjjAAAAAAjjjjj~~jjjjjjjNNjjjjjAAAAAAjjjAAAAAAjjjjj~~jjjgN
+Ngjjjjj~~xjjjRjj~~jjjjjjjNNjjRjjAAAAAAjjjjx~~jjjjzjj~~jjjRgN
+Ngjjjj~~jjjjjjj~~jjjjjjjNNjjjjjjj~~xjjjjjj~~jjjjjjj~~jjjjjgN
+Ngjjj~~jjjjjjj~~jjjjjjjNNjjjjjzj~~jjjjjjj~~jjjRjjj~~jjjzjjgN
+Njjx~~jjjjjAAAAAAjjjjjNNjjjjjjj~~jjjjjjj~~jjjjjAAAAAAjjjjjgN
+NjzNNjjjjjAAAAAAjjjjjNNjjjjjjj~~zjjjjjjNNjjjjjAAAAAAjjjRjjgN
+NjNNjjjjjjj~~jjjjjjzNNjjjjjAAAAAAjRjjjNNjjjjjjj~~jjjjzjjjjgN
+NNNjjRjjjj~~jRjjjjjNNjjjjjAAAAAAjjjjjNNjjjjjRj~~jjjjjjjjzjgN
+NNjjjjjjj~~jjjjjjj~~#jRjjjj~~zjjjjjjNNjjjjjjj~~jjjRjjjjjjjgN
+Njjzjjjx~~jjjjjjj~~x#jjjjj~~jjjjjjjNNjjjjjjj~~jjjjjjjjjRjjgN
+NgjjjjjNNjjjjjjj~~jjCjjjj~~jjjjjjjNNjjjjjjj/jj\jjjjjjzjjjjgN
+NgjjjjNNjjRjjjj~~jjR+jjj~~jjjjjjjNNjjjjzjj/jDSSSDjjjjjjjxjgN
+NgjjjNNjjjjjAAAAAAjjCjjNNjjjjjjjNNjjjjjjj/jDEESESDjjjjjjjjgN
+NjjjNNjjjjjAAAAAAjjj#jNNjjjjjjjNNjzjjjjj/jjjHIIIH\jjjjjjjjNN
+NjjNNjjjjjjj~~jzjjjj#NNjjjjRjjNNjjjRjjjJjjjjjIIIjj\jjjjjjNNB
+NjNNjjjjjjj~~jjjjjjjNNjjjjjjxNNjjjjjjj/jjjjjjIPIjjj\jjjjNNBB
+NNNjjjjjjj~~jjjjjjjNNjjjjjjjNNjjggjjx/jjjjjjjjjjjjjj\jjNNBBB
+Njxjgggjj~~jjgggggNNjzggggjNNjjjggjj/jjjjjjjjjjjjjjjj\NNBBBB
+L-LThMLGQMMUhVWXML-LNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNBBBBB
+  end
+
+  legend
+    o = Object color 0x08
+    B = Breakable color 0x0A
+    b = Text-Purple color 0x20
+    F = Text-Purple color 0x46
+    l = Text-Purple color 0x6C
+    f = Text-Purple color 0x6F
+    w = Text-Purple color 0x77
+    e = Text-Purple color 0x65
+    r = Text-Purple color 0x72
+    s = Text-Purple color 0x73
+    a = Text-Purple color 0x61
+    p = Text-Purple color 0x70
+    t = Text-Purple color 0x74
+    y = Text-Purple color 0x79
+    . = Text-Purple color 0x2E
+    j = Empty color 0x0F
+    m = Text-Purple color 0x42
+    u = Text-Purple color 0x75
+    d = Text-Purple color 0x64
+    n = Text-Purple color 0x6E
+    ' = Text-Purple color 0x27
+    i = Text-Purple color 0x69
+    c = Text-Purple color 0x63
+    k = Text-Purple color 0x6B
+    ! = Text-Purple color 0x21
+    q = Text-Purple color 0x1A
+    O = Object color 0x5C
+    v = Text-Purple color 0x1B
+    N = Normal color 0x0A
+    x = Object color 0x0D
+    ~ = Water color 0x19
+    g = Gem color 0x0D
+    @ = Player color 0x1F under Empty color 0x0F
+    R = Ruffian color 0x02
+    z = Object color 0x0C
+    K = Key color 0x09
+    A = Fake color 0x06
+    # = Solid color 0x09
+    C = Normal color 0x09
+    / = Text-White color 0x2F
+    \ = Text-White color 0x5C
+    + = Door color 0x1F
+    D = Object color 0x02
+    S = Solid color 0x02
+    E = Object color 0x2C
+    H = Solid color 0x22
+    I = Solid color 0x06
+    J = Object color 0x0E
+    P = Passage color 0x6E to "The Great Oak"
+    L = Text-Red color 0x20
+    - = Text-Red color 0x2D
+    T = Text-Red color 0x54
+    h = Text-Red color 0x68
+    M = Text-Red color 0x65
+    G = Text-Red color 0x47
+    Q = Text-Red color 0x72
+    U = Text-Red color 0x6E
+    V = Text-Red color 0x6F
+    W = Text-Red color 0x75
+    X = Text-Red color 0x73
+  end
+
+  stats
+    stat at 1,1 element Object cycle 1 p1 cp437:0x21 p2 0 step idle
+    oop
+@sword
+:x
+#if any bullet y
+/i#x
+:y
+/i/i/i#change bullet empty
+#give ammo 1
+#x
+
+    end
+    stat at 6,5 element Ruffian p1 2 p2 2 step idle under Empty color 0x0F
+    stat at 10,4 element Ruffian p1 2 p2 2 step idle under Empty color 0x0F
+    stat at 6,14 element Ruffian p1 2 p2 2 step idle under Empty color 0x0F
+    stat at 14,8 element Ruffian p1 2 p2 2 step idle under Empty color 0x0F
+    stat at 17,5 element Ruffian p1 2 p2 2 step idle under Empty color 0x0F
+    stat at 14,14 element Ruffian p1 2 p2 2 step idle under Empty color 0x0F
+    stat at 11,18 element Ruffian p1 2 p2 2 step idle under Empty color 0x0F
+    stat at 23,15 element Ruffian p1 2 p2 2 step idle under Empty color 0x0F
+    stat at 30,8 element Ruffian p1 2 p2 2 step idle under Empty color 0x0F
+    stat at 37,2 element Ruffian p1 2 p2 2 step idle under Empty color 0x0F
+    stat at 35,13 element Ruffian p1 2 p2 2 step idle under Empty color 0x0F
+    stat at 28,21 element Ruffian p1 2 p2 2 step idle under Empty color 0x0F
+    stat at 36,21 element Ruffian p1 2 p2 2 step idle under Empty color 0x0F
+    stat at 45,14 element Ruffian p1 2 p2 2 step idle under Empty color 0x0F
+    stat at 47,10 element Ruffian p1 2 p2 2 step idle under Empty color 0x0F
+    stat at 54,4 element Ruffian p1 2 p2 2 step idle under Empty color 0x0F
+    stat at 58,8 element Ruffian p1 2 p2 2 step idle under Empty color 0x0F
+    stat at 51,15 element Ruffian p1 6 p2 2 step idle under Empty color 0x0F
+    stat at 57,1 element Object p1 cp437:0x0F p2 0 step idle under Empty color 0x0F
+    stat at 20,13 element Object cycle 1 p1 cp437:0x0F p2 0 step idle under Empty color 0x0F
+    oop
+@rose
+#end
+:touch
+Yowch!
+/i
+#take health 1
+:shot
+#die
+
+    end
+    stat at 15,4 element Object cycle 1 p1 cp437:0x0F p2 0 step idle under Empty color 0x0F
+    oop
+@rose
+#end
+:touch
+Yowch!
+/i
+#take health 1
+:shot
+#die
+
+    end
+    stat at 3,12 element Object cycle 1 p1 cp437:0x0F p2 0 step idle under Empty color 0x0F
+    oop
+@rose
+#end
+:touch
+Yowch!
+/i
+#take health 1
+:shot
+#die
+
+    end
+    stat at 4,16 element Object cycle 1 p1 cp437:0x0F p2 0 step idle under Empty color 0x0F
+    oop
+@rose
+#end
+:touch
+Yowch!
+/i
+#take health 1
+:shot
+#die
+
+    end
+    stat at 16,21 element Object cycle 1 p1 cp437:0x0F p2 0 step idle under Empty color 0x0F
+    oop
+@rose
+#end
+:touch
+Yowch!
+/i
+#take health 1
+:shot
+#die
+
+    end
+    stat at 31,10 element Object cycle 1 p1 cp437:0x0F p2 0 step idle under Empty color 0x0F
+    oop
+@rose
+#end
+:touch
+Yowch!
+/i
+#take health 1
+:shot
+#die
+
+    end
+    stat at 34,3 element Object cycle 1 p1 cp437:0x0F p2 0 step idle under Empty color 0x0F
+    oop
+@rose
+#end
+:touch
+Yowch!
+/i
+#take health 1
+:shot
+#die
+
+    end
+    stat at 30,15 element Object cycle 1 p1 cp437:0x0F p2 0 step idle under Empty color 0x0F
+    oop
+@rose
+#end
+:touch
+Yowch!
+/i
+#take health 1
+:shot
+#die
+
+    end
+    stat at 33,12 element Object cycle 1 p1 cp437:0x0F p2 0 step idle under Empty color 0x0F
+    oop
+@rose
+#end
+:touch
+Yowch!
+/i
+#take health 1
+:shot
+#die
+
+    end
+    stat at 22,24 element Object cycle 1 p1 cp437:0x0F p2 0 step idle under Empty color 0x0F
+    oop
+@rose
+#end
+:touch
+Yowch!
+/i
+#take health 1
+:shot
+#die
+
+    end
+    stat at 35,20 element Object cycle 1 p1 cp437:0x0F p2 0 step idle under Empty color 0x0F
+    oop
+@rose
+#end
+:touch
+Yowch!
+/i
+#take health 1
+:shot
+#die
+
+    end
+    stat at 40,18 element Object cycle 1 p1 cp437:0x0F p2 0 step idle under Empty color 0x0F
+    oop
+@rose
+#end
+:touch
+Yowch!
+/i
+#take health 1
+:shot
+#die
+
+    end
+    stat at 50,8 element Object cycle 1 p1 cp437:0x0F p2 0 step idle under Empty color 0x0F
+    oop
+@rose
+#end
+:touch
+Yowch!
+/i
+#take health 1
+:shot
+#die
+
+    end
+    stat at 41,5 element Object cycle 1 p1 cp437:0x0F p2 0 step idle under Empty color 0x0F
+    oop
+@rose
+#end
+:touch
+Yowch!
+/i
+#take health 1
+:shot
+#die
+
+    end
+    stat at 20,16 element Object p1 cp437:0x2A p2 0 step idle under Empty color 0x0F
+    stat at 3,24 element Object p1 cp437:0x2A p2 0 step idle under Empty color 0x0F
+    stat at 8,16 element Object p1 cp437:0x2A p2 0 step idle under Empty color 0x0F
+    stat at 10,8 element Object p1 cp437:0x2A p2 0 step idle under Empty color 0x0F
+    stat at 4,11 element Object p1 cp437:0x2A p2 0 step idle under Empty color 0x0F
+    stat at 7,2 element Object p1 cp437:0x2A p2 0 step idle under Empty color 0x0F
+    stat at 27,6 element Object p1 cp437:0x2A p2 0 step idle under Empty color 0x0F
+    stat at 29,22 element Object p1 cp437:0x2A p2 0 step idle under Empty color 0x0F
+    stat at 37,23 element Object p1 cp437:0x2A p2 0 step idle under Empty color 0x0F
+    stat at 43,8 element Object p1 cp437:0x2A p2 0 step idle under Empty color 0x0F
+    stat at 36,9 element Object p1 cp437:0x2A p2 0 step idle under Empty color 0x0F
+    stat at 52,2 element Object p1 cp437:0x2A p2 0 step idle under Empty color 0x0F
+    stat at 20,18 element Ruffian p1 2 p2 2 step idle under Empty color 0x0F
+    stat at 40,21 element Object p2 0 step idle under Empty color 0x0F
+    oop
+@Gardener
+#end
+:touch
+The gardener speaks:
+
+"If you want to enter the mighty oak,
+you'll have to pay me 15 gems!"
+
+!1;Pay the toll
+!tp;Don't pay
+#end
+:tp
+"Your loss!"
+#end
+:1
+#take gems 15 tp
+#lock
+/e/e/e/s/s/s
+#zap touch
+#unlock
+#bcheck
+#end
+:touch
+"Enjoy your stay! Heh heh heh..."
+#bcheck
+#end
+:bcheck
+#if bonked bonk
+/i#bcheck
+#end
+:bonk
+#zap touch
+#char 220
+#clear bonked
+#end
+:touch
+The gardener is unconscious.
+#end
+
+    end
+    stat at 45,18 element Object p1 cp437:0xDC p2 0 step idle under Empty color 0x0F
+    stat at 44,19 element Object p1 cp437:0xDE p2 0 step idle under Empty color 0x0F
+    stat at 49,18 element Object p1 cp437:0xDC p2 0 step idle under Empty color 0x0F
+    stat at 50,19 element Object p1 cp437:0xDD p2 0 step idle under Empty color 0x0F
+    stat at 44,4 element Ruffian p1 2 p2 2 step idle under Empty color 0x0F
+    stat at 47,22 element Passage p1 0 p2 0 p3 board "The Great Oak" step idle under Empty color 0x0F
+    stat at 45,19 element Object p1 cp437:0x0B p2 0 step idle under Empty color 0x0F
+    oop
+@apple
+:loop
+#if apple3 dropped
+/i#loop
+#end
+:dropped
+#clear apple3
+#become fake
+
+    end
+    stat at 48,19 element Object p1 cp437:0x0B p2 0 step idle under Empty color 0x0F
+    oop
+@apple
+:loop
+#if apple1 dropped
+/i#loop
+#end
+:dropped
+#clear apple1
+#become fake
+
+    end
+    stat at 46,19 element Object p1 cp437:0x0B p2 0 step idle under Empty color 0x0F
+    oop
+@apple
+:loop
+#if apple2 dropped
+/i#loop
+#end
+:dropped
+#clear apple2
+#become fake
+
+    end
+    stat at 54,13 element Object cycle 1 p1 cp437:0x0F p2 0 step idle under Empty color 0x0F
+    oop
+@rose
+#end
+:touch
+Yowch!
+/i
+#take health 1
+:shot
+#die
+
+    end
+    stat at 56,10 element Object cycle 1 p1 cp437:0x0F p2 0 step idle under Empty color 0x0F
+    oop
+@rose
+#end
+:touch
+Yowch!
+/i
+#take health 1
+:shot
+#die
+
+    end
+    stat at 57,14 element Object cycle 1 p1 cp437:0x0F p2 0 step idle under Empty color 0x0F
+    oop
+@rose
+#end
+:touch
+Yowch!
+/i
+#take health 1
+:shot
+#die
+
+    end
+    stat at 54,17 element Object cycle 1 p1 cp437:0x0F p2 0 step idle under Empty color 0x0F
+    oop
+@rose
+#end
+:touch
+Yowch!
+/i
+#take health 1
+:shot
+#die
+
+    end
+    stat at 57,18 element Object p1 cp437:0x2A p2 0 step idle under Empty color 0x0F
+    stat at 56,16 element Ruffian p1 6 p2 2 step idle under Empty color 0x0F
+    stat at 56,12 element Ruffian p1 6 p2 2 step idle under Empty color 0x0F
+  end
+end

@@ -1,0 +1,90 @@
+board "Beginning"
+  start player at 30,12
+  respawn at 27,7
+  max-shots 255
+  dark false
+  reenter false
+  time-limit 0
+  exits north "1-1 from beginning" south none west none east none
+
+  grid
+l.llllllllllllllllllllllllllllllllllllllllllllllllllllllllll
+l.llllllllllllllllllllllllllllllllllllllllllllllllllllllllll
+l.lllllllllllllllllllllllllllllThejyearjisjAzDzj5728zjjYoull
+l.llarejinjyourjintergaBacticjshuttBejonjyourjwayjtojearthll
+l.llwhenjajgiantjtimejhoBejsuddenByjappearsjonjthejviewerzll
+l.llllllllllllllllllllllllAsjitjsucksjyourjshipjin,jevery-ll
+l........................lthingjfadesjoutjforjyouzllllllllll
+llllllllllllllllllllllll.lllllllllllllllllllllllllllllllllll
+llllllllllllllllllllllll.lllllllllllllllllllllllllllllllllll
+llllllllllllllllllllllll.lllllYoujwakejupjBaterjtojfindjllll
+llllllllllllllllllllllll.llllllllllllyourseBfjonjajstrangell
+llllllllllllllllllllllll.....@......lpBanetjthat,jyoujjjjjll
+lllllllllllllllllllllllllllllllllllllbeBieve,jisjABphajC4,ll
+latjBeastjfromjoBdjphotojrecordsjyou'vejseenzjjThejpeopBejll
+lreBocatedjtherej1000sjofjyearsjagojtojescapejthejpBague,jll
+lasjweBBjasjaBienjinvaderszjjHowever,jmostjofjthejhumanjjjll
+lpopuBationjthatjwasjstiBBjaBivejwasjkiBBedjoffjbyjfurtherjl
+laBienjinvasionszjjThejpBanetjwasjBaterjobBiteratedjbyjthemz
+ljjjYoujstartjtojrememberjanjoBdjfabBejaboutjajtimejportaBll
+lthatjsupposedByjexistedjsomewherejonjABphajCzjjThatjtimejll
+lportaB,jyoujdecide,jisjyourjonByjchancejofjreturningjtojjll
+lyourjownjtimejandjspacezjllllllllllllllllllllllllllllllllll
+ljjjEYoujseejnojhumansjaround;jyoujarejworriedjthatjperhapsl
+lthejtimejhoBejsentjyoujbackjtojajtimejwhenjthejaBiensjruBed
+lthejpBanetzjYoujshiver,jandjthenjbeginjonjyourjquestzzzzzzz
+  end
+
+  legend
+    l = Line color 0x09
+    . = Empty color 0x0A
+    T = Text-White color 0x54
+    h = Text-White color 0x68
+    e = Text-White color 0x65
+    j = Text-White color 0x20
+    y = Text-White color 0x79
+    a = Text-White color 0x61
+    r = Text-White color 0x72
+    i = Text-White color 0x69
+    s = Text-White color 0x73
+    A = Text-White color 0x41
+    z = Text-White color 0x2E
+    D = Text-White color 0x44
+    5 = Text-White color 0x35
+    7 = Text-White color 0x37
+    2 = Text-White color 0x32
+    8 = Text-White color 0x38
+    Y = Text-White color 0x59
+    o = Text-White color 0x6F
+    u = Text-White color 0x75
+    n = Text-White color 0x6E
+    t = Text-White color 0x74
+    g = Text-White color 0x67
+    B = Text-White color 0x6C
+    c = Text-White color 0x63
+    w = Text-White color 0x77
+    m = Text-White color 0x6D
+    d = Text-White color 0x64
+    p = Text-White color 0x70
+    v = Text-White color 0x76
+    k = Text-White color 0x6B
+    , = Text-White color 0x2C
+    - = Text-White color 0x2D
+    f = Text-White color 0x66
+    @ = Player color 0x1F under Empty color 0x00
+    b = Text-White color 0x62
+    C = Text-White color 0x43
+    4 = Text-White color 0x34
+    ' = Text-White color 0x27
+    1 = Text-White color 0x31
+    0 = Text-White color 0x30
+    H = Text-White color 0x48
+    x = Text-White color 0x78
+    E = Empty color 0x20
+    ; = Text-White color 0x3B
+    q = Text-White color 0x71
+  end
+
+  stats
+  end
+end

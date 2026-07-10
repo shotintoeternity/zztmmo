@@ -1,0 +1,142 @@
+board "$--{ Background Story }--"
+  start player at 28,21
+  respawn at 27,7
+  max-shots 255
+  dark false
+  reenter false
+  time-limit 0
+  exits north none south none west none east none
+
+  grid
+OzOzOzOzOzOzOzOzOzOzOzOzOzOzOzOzOzOzOzOzOzOzOzOzOzOzOzOzOzOz
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+FNBIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIII
+FNBI.oQUXZValeniceZandZR0sellaZcameZbackZt0ZCastleZZZ112IBNF
+FNBI.DaventryZaZbigZfestivalZwasZheld4ZEvery0neZwasZZZZZIBNF
+FNBI.happyZuntilZaZmessengerZcameZwithZbadZnews4ZZZZ5678IBNF
+FNBI.TheZevilZc0usinZ0fZManannanZ(KqZ3)ZhadZalreadyZZZ11IBNF
+FNBI.takenZ0verZtheZislandZ0fZLlewd0r4ZHeZisZlikelyZt0Z1IBNF
+FNBI.invadeZDaventryZt004ZWhenZKingZGrahamZheardZ0fZZZZ1IBNF
+FNBI.thisZbadZnewsZheZwasZfuri0us,ZheZdidn'tZwant9t0Z!77IBNF
+FNBI.fightZan0therZ0neZ0fZtheZdamnedZs0rcer0r'sZfamily$7IBNF
+FNBI.again,Zs0ZheZaskedZy0u,ZhisZs0n,ZPrinceZAlexanderZZIBNF
+FNBI.t0ZtakeZcareZ0fZthisZj0bZf0rZhim4ZJustZwhenZy0u're%IBNF
+FNBI.ab0utZt0ZsayZy0uZreallyZd0n'tZwantZt0Zd0Zthat,ZZZZZIBNF
+FNBI.GrahamZfallsZunc0nsci0us4ZY0uZcallZy0urZm0ther,ZZZZIBNF
+FNBI.Valenice,Zshe'llZl00kZafterZGraham4ZThisZnasty758ZZIBNF
+FNBI.0ccurenceZhasZchangedZy0urZmindZandZy0uZdecideZt0ZZIBNF
+FNBI.g0ZandZsearchZf0rZManannan'sZc0usinXUQoZZZZZZZZZZZZIBNF
+IIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIII
+~~~~~~~~~~~~~~~~~~~&*#+-=SSSSSSSSSS=-+#*&~~~~~~~~~~~~~~~~~~~
+OzOzOzOz~&*#+-=SzO~&*#+-=S^@_____:S=-+#*&~OzS=-+#*&~OzOzOzOz
+zOzOzOzO~&*#+-=SSS~&*#+-=SSSSSSSSSS=-+#*&~SSS=-+#*&~zOzOzOzO
+OzOzOzOz~&*#+-====~&*#+-============-+#*&~====-+#*&~OzOzOzOz
+zOzOzOzO~&*#+-----~&*#+--------------+#*&~-----+#*&~zOzOzOzO
+OzOzOzOz~&*#++++++~&*#++++++++++++++++#*&~++++++#*&~OzOzOzOz
+  end
+
+  legend
+    O = Boulder color 0x04
+    z = Boulder color 0x40
+    ~ = Water color 0x04
+    F = Text-Blue color 0x20
+    N = Normal color 0x01
+    B = Breakable color 0x01
+    I = Water color 0x01
+    . = Empty color 0x01
+    o = Object color 0x01
+    Q = Object color 0x09
+    U = Object color 0x03
+    X = Object color 0x0B
+    Z = Text-White color 0x20
+    V = Text-White color 0x56
+    a = Text-White color 0x61
+    l = Text-White color 0x6C
+    e = Text-White color 0x65
+    n = Text-White color 0x6E
+    i = Text-White color 0x69
+    c = Text-White color 0x63
+    d = Text-White color 0x64
+    R = Text-White color 0x52
+    0 = Text-White color 0x6F
+    s = Text-White color 0x73
+    m = Text-White color 0x6D
+    b = Text-White color 0x62
+    k = Text-White color 0x6B
+    t = Text-White color 0x74
+    C = Text-White color 0x43
+    1 = Empty color 0x0A
+    2 = Object color 0x0F
+    D = Text-White color 0x44
+    v = Text-White color 0x76
+    r = Text-White color 0x72
+    y = Text-White color 0x79
+    g = Text-White color 0x67
+    f = Text-White color 0x66
+    w = Text-White color 0x77
+    h = Text-White color 0x68
+    4 = Text-White color 0x2E
+    E = Text-White color 0x45
+    p = Text-White color 0x70
+    u = Text-White color 0x75
+    5 = Empty color 0x6E
+    6 = Empty color 0x69
+    7 = Empty color 0x65
+    8 = Empty color 0x74
+    T = Text-White color 0x54
+    M = Text-White color 0x4D
+    ( = Text-White color 0x28
+    K = Text-White color 0x4B
+    q = Text-White color 0x71
+    3 = Text-White color 0x33
+    ) = Text-White color 0x29
+    L = Text-White color 0x4C
+    H = Text-White color 0x48
+    W = Text-White color 0x57
+    G = Text-White color 0x47
+    , = Text-White color 0x2C
+    ' = Text-White color 0x27
+    9 = Empty color 0x20
+    ! = Empty color 0x67
+    $ = Empty color 0x76
+    P = Text-White color 0x50
+    A = Text-White color 0x41
+    x = Text-White color 0x78
+    j = Text-White color 0x6A
+    J = Text-White color 0x4A
+    % = Empty color 0x6B
+    Y = Text-White color 0x59
+    & = Breakable color 0x04
+    * = Normal color 0x04
+    # = Solid color 0x04
+    + = Water color 0x4C
+    - = Breakable color 0x4C
+    = = Normal color 0x4C
+    S = Solid color 0x0C
+    ^ = Empty color 0x0C
+    @ = Player color 0x1F under Empty color 0x4C
+    _ = Empty color 0x04
+    : = Passage color 0x7F to "[Castle - Throne Room]"
+  end
+
+  stats
+    stat at 56,4 element Object p1 cp437:0x00 p2 0 step idle under Empty color 0x0A
+    oop
+@Music
+#Play icqd#ifqgi!g#gqfid-q!b+icdq!d
+#Play icqc-ib+cqdi-bqgixg+qcidqeifeqd
+#Play i-bqgiab+qc-iaq!g#iaha
+#End
+
+    end
+    stat at 34,21 element Passage p1 0 p2 0 p3 board "[Castle - Throne Room]" step idle under Empty color 0x40
+    stat at 6,4 element Object p1 cp437:0x57 p2 0 step idle under Empty color 0x57
+    stat at 7,4 element Object p1 cp437:0x68 p2 0 step idle under Empty color 0x68
+    stat at 8,4 element Object p1 cp437:0x65 p2 0 step idle under Empty color 0x65
+    stat at 9,4 element Object p1 cp437:0x6E p2 0 step idle under Empty color 0x6E
+    stat at 41,18 element Object p1 cp437:0x2E p2 0 step idle under Empty color 0x6E
+    stat at 43,18 element Object p1 cp437:0x2E p2 0 step idle under Empty color 0x2E
+    stat at 42,18 element Object p1 cp437:0x2E p2 0 step idle under Empty color 0x2E
+    stat at 44,18 element Object p1 cp437:0x2E p2 0 step idle under Empty color 0x2E
+  end
+end

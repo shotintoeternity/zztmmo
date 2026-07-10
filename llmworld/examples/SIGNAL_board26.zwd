@@ -1,0 +1,76 @@
+board "Space Center outside"
+  start player at 31,22
+  respawn at 1,25
+  max-shots 255
+  dark false
+  reenter false
+  time-limit 0
+  exits north none south none west none east none
+
+  grid
+bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb
+bbbbbbbbbbbbbbbbbbbbbbbb###########bbbbbbbbbbbbbbbbbbbbbbbbb
+bbbbbbbbbbbbbbbbbbbbbb###~~~~~~~~~###bbbbbbbbbbbbbbbbbbbbbbb
+bbbbbbbbbbbbbbbbbbbb###~~~~~~~~~~~~~###bbbbbbbbbbbbbbbbbbbbb
+bbbbbbbbbbbbbbbbbbbbBB###~~~~~~~~~###BBbbbbbbbbbbbbbbbbbbbbb
+bbbbbbbbbbbbbbbbbbbbBBBB###########BBBBbbbbbbbbbbbbbbbbbbbbb
+bbbbbbbbbbbbbbbbbbbbBBBBBBBBBBBBBBBBBBBbbbbbbbbbbbbbbbbbbbbb
+bbbbbbbbbbbbbbbbbbNNNNBBBBBBBBBBBBBBB#####bbbbbbbbbbbbbbbbbb
+bbbbbbbbbbbbbbbbbNNNNNNNBBBBBBBBBBB########bbbbbbbbbbbbbbbbb
+bbbbbbbbbbbbbbbbNNNdfNdfNdffNNdff#dff##(R)##bbbbbbbbbbbbbbbb
+bbbbbbbbbbbbbbbNNNNdffdfdfNdfdff#df#df#######bbbbbbbbbbbbbbb
+bbbbbbbbbbbbbbNNNNNdfdffdffffN#dfdffff########bbbbbbbbbbbbbb
+bbbbbbbbbbbbbNNNNNNdf#dfdfNdfdfffdf#df#########bbbbbbbbbbbbb
+bbbbbbbbbbbbNNNNNNN~~~~~~~~~~~~~~~~~~~~~~~~~####bbbbbbbbbbbb
+FFFFFFFFFFFNNNNNNNN~Jim~Lovell~Space~Center~#####FFFFFFFFFFF
+FFFFFFFFFFNNNNNNNNN~~~~~~~~~~~~~~~~~~~~~~~~~######FFFFFFFFFF
+FFFFFFFFFNNNNNNNNNNNNNNNNNNNNN#####################FFFFFFFFF
+FFFFFFFFNNNNNNNNNNNNNNNNNNNNNN######################FFFFFFFF
+FFFFFFFNNNNNNNNNNNNNNNNNNNNNNN#######################FFFFFFF
+FFFFFFNNNNNNNNNNNNNNNNNNNNNNNNP#######################FFFFFF
+FFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFF
+FFFFFFFFFFFFFFFFFFFFFFFFFFFFFF@FFFFFFFFFFFFFFFFFFFFFFFFFFFFF
+FFFFFFFFFFFFFFFFFFFFFFFFFgggghggggggggggFFFFFFFFFFFFFFFFFFFF
+FFFFFFFFFFFFFFFFFFFFFFFFF~~g~g~g~g~g~g~gFFFFFFFFFFFFFFFFFFFF
+FFFFFFFFFFFFFFFFFFFFFFggggggggggggggggggFFFFFFFFFFFFFFFFFFFF
+  end
+
+  legend
+    b = Text-Cyan color 0x20
+    # = Solid color 0x0F
+    ~ = Water color 0xF9
+    B = Breakable color 0x0F
+    N = Normal color 0x7F
+    d = Text-Red color 0x20
+    f = Solid color 0x0C
+    ( = Text-Red color 0x28
+    R = Text-Red color 0x52
+    ) = Text-Red color 0x29
+    F = Fake color 0x07
+    J = Text-White color 0x4A
+    i = Text-White color 0x69
+    m = Text-White color 0x6D
+    L = Text-White color 0x4C
+    o = Text-White color 0x6F
+    v = Text-White color 0x76
+    e = Text-White color 0x65
+    l = Text-White color 0x6C
+    S = Text-White color 0x53
+    p = Text-White color 0x70
+    a = Text-White color 0x61
+    c = Text-White color 0x63
+    C = Text-White color 0x43
+    n = Text-White color 0x6E
+    t = Text-White color 0x74
+    r = Text-White color 0x72
+    P = Passage color 0x7F to "Space Center"
+    @ = Player color 0x1F under Fake color 0x07
+    g = Solid color 0x0E
+    h = Passage color 0x4F to "And another gets on"
+  end
+
+  stats
+    stat at 30,23 element Passage p1 0 p2 0 p3 board "And another gets on" step idle under Empty color 0x0E
+    stat at 31,20 element Passage p1 0 p2 0 p3 board "Space Center" step idle under Empty color 0x0F
+  end
+end

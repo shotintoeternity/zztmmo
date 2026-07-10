@@ -1,0 +1,170 @@
+board "Mount Koya - Northwest"
+  start player at 13,3
+  respawn at 32,32
+  max-shots 255
+  dark false
+  reenter false
+  time-limit 0
+  exits north none south none west none east none
+
+  grid
+FFFFFB~ppppppppppooNBFooFFFFFFFFFFFFFoFFFFFFFFFoo~BN~~~~FFFF
+FFNFFo~AAAAAAAAAAAA~~FFFFFFFFFFFFFFFFFFFFFFFFFFFFoooooBN~~~F
+FFFF~~~AAAAA@AAAAAABNFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFaaaaa~
+FFFFo~BAAAAAAAAAAAA~~~FFFFFFFFFFFaaaaaaaaaaaaaaaaaaaaaabbbaa
+FFFF~~NAAAAAAAAAAAAoB~aaaaaaaaaaaabbbWWWbbbWWWbbbWWWbbbWWWbb
+FFF~~B~AAAAAAAAAAAAA~NBWWbbbWWWbbbWWWbbbWWWbbbWWWbbbWWWbbbWW
+FFFo~~oAAAAAAAAAAAAAo~~~bWWWbbbWWWbFFFFFFFFFFFFFFFFFFFFFFFbb
+FFF~N~AAAAAAAAAAAAAAAoN~NFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFF
+FFN~~~AAAAAAAAAAAAAAAAoB~FFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFF
+FFF~B~AAAAAAAAAAAAAAAAAN~FFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFA
+FFF~~oAAAAAAAAAAAAAAAAA~~BFFFFFFFFFFFAFFFFFFFFFFFFFFFFFAFFFF
+FFF~~BFAAAAFAAAAOAAAAAAo~~FFFFFAF#####FFAFFFFAFFFFFFFFFFFAFF
+FFFB~~AAAFAAAAAAAAAAAAAABNFFFFFFcccccccFFFAFFFFFFFFFAFFFFFAA
+FFFoo~AFFAAAAFAAAAAAAAAA~~BFFAFAFc...cFAFAAFFFAFFFAFF###AAAF
+FFFF~~FFFFFAAAAAAAAFAAAAo~~FAFF#########AAAAAFFFAFFFcccccAAA
+FFFFBoFAFAFFAAAAFAAAAAAFA~N~FFAAAc...cAFAAFAAAFAAFFAFcdcAFAA
+FFFF~~FFFFFFFAFAAAAAAFAAAoB~AF###########AAAFAAAAAF#######AA
+FFF~N~FFFFFAFFFFAFAFAAFFAF~~AAAA##cec##AAAAAAAAAFAAAcdddcAAA
+FFFo~BFFFFFFFFAFFFFAFAFFFF~NBAFAcc...ccAAAAAAAAAA###########
+FFF~~~FFFFFFFFFFFAFFFFFFAFo~~AAAAAAAAAAAAAAAAAAAAAA##cdc##AA
+FFFo~NFFFFFFFFFFFFFFFAFFFFFB~AAAAAAAAAAAAAAAAAAAAAAccdddccAA
+FFFN~BNFFFFFFFFFFFFFFFFFFFF~~BAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA
+FFF~~~~BFFFFFFFFFFFFFFFFFFFoN~~AAAAAAAAAAAAAAAAAAAAAAAAAAAAA
+FFFo~N~N~FFFFFFFFFFFFFFFFFFFoB~NAAAAAAAAAAAAAAAAAAAAAAAAAAAA
+FFNF~NooNFFFFFFFFFFFFFFFFFFFFo~BAAAAAAAAAAAAAAAAAAAAAAAAAAAA
+  end
+
+  legend
+    F = Fake color 0x3F
+    B = Breakable color 0x2F
+    ~ = Water color 0x2F
+    p = Passage color 0x7F to "Hideout - Japan - 4"
+    o = Object color 0x76
+    N = Normal color 0x2F
+    A = Fake color 0x7F
+    @ = Player color 0x1F under Fake color 0x7F
+    a = Normal color 0x78
+    b = Breakable color 0x78
+    W = Water color 0x78
+    O = Object color 0x38
+    # = Solid color 0x08
+    c = Normal color 0x08
+    . = Empty color 0x08
+    d = Empty color 0x00
+    e = Text-White color 0x20
+  end
+
+  stats
+    stat at 24,12 element Object cycle 1 p1 cp437:0xBA p2 0 step idle follower 0 leader 0
+    stat at 23,9 element Object cycle 1 p1 cp437:0xBA p2 0 step idle follower 0 leader 0
+    stat at 22,8 element Object cycle 1 p1 cp437:0xBA p2 0 step idle follower 0 leader 0
+    stat at 21,7 element Object cycle 1 p1 cp437:0xBA p2 0 step idle follower 0 leader 0
+    stat at 25,15 element Object cycle 1 p1 cp437:0xBA p2 0 step idle follower 0 leader 0
+    stat at 20,5 element Object cycle 1 p1 cp437:0xBA p2 0 step idle follower 0 leader 0
+    stat at 26,17 element Object cycle 1 p1 cp437:0xBA p2 0 step idle follower 0 leader 0
+    stat at 27,20 element Object cycle 1 p1 cp437:0xBA p2 0 step idle follower 0 leader 0
+    stat at 28,23 element Object cycle 1 p1 cp437:0xBA p2 0 step idle follower 0 leader 0
+    stat at 29,24 element Object cycle 1 p1 cp437:0xBA p2 0 step idle follower 0 leader 0
+    stat at 30,25 element Object cycle 1 p1 cp437:0xBA p2 0 step idle follower 0 leader 0
+    stat at 7,7 element Object cycle 1 p1 cp437:0xBA p2 0 step idle follower 0 leader 0
+    stat at 5,14 element Object cycle 1 p1 cp437:0xBA p2 0 step idle follower 0 leader 0
+    stat at 18,1 element Object cycle 1 p1 cp437:0xBA p2 0 step idle follower 0 leader 0
+    stat at 19,1 element Object cycle 1 p1 cp437:0xBA p2 0 step idle follower 0 leader 0
+    stat at 8,25 element Object cycle 1 p1 cp437:0xBA p2 0 step idle follower 0 leader 0
+    stat at 7,25 element Object cycle 1 p1 cp437:0xBA p2 0 step idle follower 0 leader 0
+    stat at 4,14 element Object cycle 1 p1 cp437:0xBA p2 0 step idle follower 0 leader 0
+    stat at 4,21 element Object cycle 1 p1 cp437:0xBA p2 0 step idle follower 0 leader 0
+    stat at 4,24 element Object cycle 1 p1 cp437:0xBA p2 0 step idle follower 0 leader 0
+    stat at 4,7 element Object cycle 1 p1 cp437:0xBA p2 0 step idle follower 0 leader 0
+    stat at 5,4 element Object cycle 1 p1 cp437:0xBA p2 0 step idle follower 0 leader 0
+    stat at 6,2 element Object cycle 1 p1 cp437:0xBA p2 0 step idle follower 0 leader 0
+    stat at 4,19 element Object cycle 1 p1 cp437:0xBA p2 0 step idle follower 0 leader 0
+    stat at 6,11 element Object cycle 1 p1 cp437:0xBA p2 0 step idle follower 0 leader 0
+    stat at 6,16 element Object cycle 1 p1 cp437:0xBA p2 0 step idle follower 0 leader 0
+    stat at 50,2 element Object cycle 1 p1 cp437:0xBA p2 0 step idle follower 0 leader 0
+    stat at 51,2 element Object cycle 1 p1 cp437:0xBA p2 0 step idle follower 0 leader 0
+    stat at 52,2 element Object cycle 1 p1 cp437:0xBA p2 0 step idle follower 0 leader 0
+    stat at 53,2 element Object cycle 1 p1 cp437:0xBA p2 0 step idle follower 0 leader 0
+    stat at 54,2 element Object cycle 1 p1 cp437:0xBA p2 0 step idle follower 0 leader 0
+    stat at 49,1 element Object cycle 1 p1 cp437:0xBA p2 0 step idle follower 0 leader 0
+    stat at 48,1 element Object cycle 1 p1 cp437:0xBA p2 0 step idle follower 0 leader 0
+    stat at 38,1 element Object cycle 1 p1 cp437:0xBA p2 0 step idle follower 0 leader 0
+    stat at 24,1 element Object cycle 1 p1 cp437:0xBA p2 0 step idle follower 0 leader 0
+    stat at 23,1 element Object cycle 1 p1 cp437:0xBA p2 0 step idle follower 0 leader 0
+    stat at 8,1 element Passage p1 0 p2 0 p3 board "Hideout - Japan - 4" step idle follower 0 leader 0
+    stat at 9,1 element Passage p1 0 p2 0 p3 board "Hideout - Japan - 4" step idle follower 0 leader 0
+    stat at 10,1 element Passage p1 0 p2 0 p3 board "Hideout - Japan - 4" step idle follower 0 leader 0
+    stat at 11,1 element Passage p1 0 p2 0 p3 board "Hideout - Japan - 4" step idle follower 0 leader 0
+    stat at 12,1 element Passage p1 0 p2 0 p3 board "Hideout - Japan - 4" step idle follower 0 leader 0
+    stat at 13,1 element Passage p1 0 p2 0 p3 board "Hideout - Japan - 4" step idle follower 0 leader 0
+    stat at 14,1 element Passage p1 0 p2 0 p3 board "Hideout - Japan - 4" step idle follower 0 leader 0
+    stat at 15,1 element Passage p1 0 p2 0 p3 board "Hideout - Japan - 4" step idle follower 0 leader 0
+    stat at 16,1 element Passage p1 0 p2 0 p3 board "Hideout - Japan - 4" step idle follower 0 leader 0
+    stat at 17,1 element Passage p1 0 p2 0 p3 board "Hideout - Japan - 4" step idle follower 0 leader 0
+    stat at 17,12 element Object p1 cp437:0x02 p2 0 step idle under Fake color 0x7F follower 0 leader 0
+    oop
+@Monk
+$
+$Well, here it is. The last board I've
+$made in this confusing adventure. I
+$probably won't finish it, because
+$frankly, getting this far was goddamned
+$draining, and there's four more dungeons,
+$as well as five more bosses. I'm afraid
+$I'm just a lazy gent, and there's the
+$matter of Crankgod RPG, which Crank
+$expects me to actually work on. So here
+$it is, guys. That's all she wrote.
+$
+/i
+$
+$Oh, and since I probably won't finish
+$this, shall I spoil the ending for you?
+$
+!a;Yes
+/i
+#b
+#end
+:a
+$
+$Yuug is alive and well, and reveals his
+$true colours as a megalomaniacal, insane
+$killer. The Holimax, and "God", never
+$existed, nor will they ever. Blhelhlehl
+$blasphemy belhleh.
+$
+/i
+#b
+#end
+:b
+$
+$Feel free to look at this board! Hoho!
+$
+/i
+#ds
+#end
+:ds
+#go rndns
+/i/i
+#go opp seek
+/i/i
+#go opp seek
+/i/i
+#go rndns
+/i/i
+#go seek
+/i/i
+#ds
+#end
+:touch
+Monk:
+$This is Mount Koya, home of the shrine of
+$Imo Deva.
+/i
+#ds
+#end
+
+    end
+  end
+end

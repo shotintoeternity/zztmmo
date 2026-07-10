@@ -1,0 +1,213 @@
+board "!QuitSnooping; The End"
+  start player at 31,24
+  respawn at 27,7
+  max-shots 255
+  dark false
+  reenter false
+  time-limit 0
+  exits north none south none west none east none
+
+  grid
+lllll\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\llll
+l....\.................................................\...l
+l....\....NNNNNNNNNNN...aaaaa..........................\...l
+l....\.........N..b...b.a..............................\...l
+l....\.........N..bbbbb.aa.............................\...l
+l....\.........N..b...b.a..............................\...l
+l....\.........N..b...b.aaaaa..........................\...l
+l....\.................................................\...l
+l....\.........cccccc.........dddde....................\...l
+l....\.........c.......ff...f.d..dd....................\...l
+l....\.........c.......fff..f.d...d....................\...l
+l....\.........cccc....f.ff.f.d...d....................\...l
+l....\.........c.......f..fff.d...d....................\...l
+l....\.........c.......f...ff.d..dd....................\...l
+l....\.........ccccccc.f....f.dddd.....................\...l
+l....\........................................o........\...l
+l....\\\\\\\\\\\\\\\\\\\\\\\\\.........................\...l
+l............................\...\\\\\\\\\\\\\\\\\\\\\\\...l
+l............................\...\.........................l
+l............................\...\.........................l
+l............................\...\.........................l
+l............................\...\.........................l
+l............................\...\.........................l
+l............................\@..\.........................l
+lllllllllllllllllllllllllllll\\\\\llllllllllllllllllllllllll
+  end
+
+  legend
+    l = Line color 0x0A
+    \ = Counter color 0x09
+    . = Empty color 0x00
+    N = Normal color 0x09
+    a = Normal color 0x0B
+    b = Normal color 0x0A
+    c = Normal color 0x0C
+    d = Normal color 0x0E
+    e = Empty color 0x0E
+    f = Normal color 0x0D
+    o = Object color 0x0F
+    @ = Player color 0x1F under Empty color 0x00
+  end
+
+  stats
+    stat at 30,25 element Counter p1 0 p2 0 step idle under Empty color 0x0E
+    stat at 30,24 element Counter p1 0 p2 0 step idle
+    stat at 30,23 element Counter p1 0 p2 0 step idle
+    stat at 30,22 element Counter p1 0 p2 0 step idle
+    stat at 30,21 element Counter p1 0 p2 0 step idle
+    stat at 30,20 element Counter p1 0 p2 0 step idle
+    stat at 30,19 element Counter p1 0 p2 0 step idle
+    stat at 30,18 element Counter p1 0 p2 0 step idle
+    stat at 30,17 element Counter p1 0 p2 0 step idle
+    stat at 29,17 element Counter p1 0 p2 0 step idle
+    stat at 28,17 element Counter p1 0 p2 0 step idle
+    stat at 27,17 element Counter p1 0 p2 0 step idle
+    stat at 26,17 element Counter p1 0 p2 0 step idle
+    stat at 25,17 element Counter p1 0 p2 0 step idle
+    stat at 24,17 element Counter p1 0 p2 0 step idle
+    stat at 23,17 element Counter p1 0 p2 0 step idle
+    stat at 22,17 element Counter p1 0 p2 0 step idle
+    stat at 21,17 element Counter p1 0 p2 0 step idle
+    stat at 20,17 element Counter p1 0 p2 0 step idle
+    stat at 19,17 element Counter p1 0 p2 0 step idle
+    stat at 18,17 element Counter p1 0 p2 0 step idle
+    stat at 17,17 element Counter p1 0 p2 0 step idle
+    stat at 16,17 element Counter p1 0 p2 0 step idle
+    stat at 15,17 element Counter p1 0 p2 0 step idle
+    stat at 14,17 element Counter p1 0 p2 0 step idle
+    stat at 13,17 element Counter p1 0 p2 0 step idle
+    stat at 12,17 element Counter p1 0 p2 0 step idle
+    stat at 11,17 element Counter p1 0 p2 0 step idle
+    stat at 10,17 element Counter p1 0 p2 0 step idle
+    stat at 9,17 element Counter p1 0 p2 0 step idle
+    stat at 8,17 element Counter p1 0 p2 0 step idle
+    stat at 7,17 element Counter p1 0 p2 0 step idle
+    stat at 6,17 element Counter p1 0 p2 0 step idle
+    stat at 6,16 element Counter p1 0 p2 0 step idle
+    stat at 6,15 element Counter p1 0 p2 0 step idle
+    stat at 6,14 element Counter p1 0 p2 0 step idle
+    stat at 6,13 element Counter p1 0 p2 0 step idle
+    stat at 6,12 element Counter p1 0 p2 0 step idle
+    stat at 6,11 element Counter p1 0 p2 0 step idle
+    stat at 6,10 element Counter p1 0 p2 0 step idle
+    stat at 6,9 element Counter p1 0 p2 0 step idle
+    stat at 6,8 element Counter p1 0 p2 0 step idle
+    stat at 6,7 element Counter p1 0 p2 0 step idle
+    stat at 6,6 element Counter p1 0 p2 0 step idle
+    stat at 6,5 element Counter p1 0 p2 0 step idle
+    stat at 6,4 element Counter p1 0 p2 0 step idle
+    stat at 6,3 element Counter p1 0 p2 0 step idle
+    stat at 6,2 element Counter p1 0 p2 0 step idle
+    stat at 6,1 element Counter p1 0 p2 0 step idle under Empty color 0x0E
+    stat at 7,1 element Counter p1 0 p2 0 step idle under Empty color 0x0E
+    stat at 8,1 element Counter p1 0 p2 0 step idle under Empty color 0x0E
+    stat at 9,1 element Counter p1 0 p2 0 step idle under Empty color 0x0E
+    stat at 10,1 element Counter p1 0 p2 0 step idle under Empty color 0x0E
+    stat at 11,1 element Counter p1 0 p2 0 step idle under Empty color 0x0E
+    stat at 12,1 element Counter p1 0 p2 0 step idle under Empty color 0x0E
+    stat at 13,1 element Counter p1 0 p2 0 step idle under Empty color 0x0E
+    stat at 14,1 element Counter p1 0 p2 0 step idle under Empty color 0x0E
+    stat at 15,1 element Counter p1 0 p2 0 step idle under Empty color 0x0E
+    stat at 16,1 element Counter p1 0 p2 0 step idle under Empty color 0x0E
+    stat at 17,1 element Counter p1 0 p2 0 step idle under Empty color 0x0E
+    stat at 18,1 element Counter p1 0 p2 0 step idle under Empty color 0x0E
+    stat at 19,1 element Counter p1 0 p2 0 step idle under Empty color 0x0E
+    stat at 20,1 element Counter p1 0 p2 0 step idle under Empty color 0x0E
+    stat at 21,1 element Counter p1 0 p2 0 step idle under Empty color 0x0E
+    stat at 22,1 element Counter p1 0 p2 0 step idle under Empty color 0x0E
+    stat at 23,1 element Counter p1 0 p2 0 step idle under Empty color 0x0E
+    stat at 24,1 element Counter p1 0 p2 0 step idle under Empty color 0x0E
+    stat at 25,1 element Counter p1 0 p2 0 step idle under Empty color 0x0E
+    stat at 26,1 element Counter p1 0 p2 0 step idle under Empty color 0x0E
+    stat at 27,1 element Counter p1 0 p2 0 step idle under Empty color 0x0E
+    stat at 28,1 element Counter p1 0 p2 0 step idle under Empty color 0x0E
+    stat at 29,1 element Counter p1 0 p2 0 step idle under Empty color 0x0E
+    stat at 30,1 element Counter p1 0 p2 0 step idle under Empty color 0x0E
+    stat at 31,1 element Counter p1 0 p2 0 step idle under Empty color 0x0E
+    stat at 32,1 element Counter p1 0 p2 0 step idle under Empty color 0x0E
+    stat at 33,1 element Counter p1 0 p2 0 step idle under Empty color 0x0E
+    stat at 34,1 element Counter p1 0 p2 0 step idle under Empty color 0x0E
+    stat at 35,1 element Counter p1 0 p2 0 step idle under Empty color 0x0E
+    stat at 36,1 element Counter p1 0 p2 0 step idle under Empty color 0x0E
+    stat at 37,1 element Counter p1 0 p2 0 step idle under Empty color 0x0E
+    stat at 38,1 element Counter p1 0 p2 0 step idle under Empty color 0x0E
+    stat at 39,1 element Counter p1 0 p2 0 step idle under Empty color 0x0E
+    stat at 40,1 element Counter p1 0 p2 0 step idle under Empty color 0x0E
+    stat at 41,1 element Counter p1 0 p2 0 step idle under Empty color 0x0E
+    stat at 42,1 element Counter p1 0 p2 0 step idle under Empty color 0x0E
+    stat at 43,1 element Counter p1 0 p2 0 step idle under Empty color 0x0E
+    stat at 44,1 element Counter p1 0 p2 0 step idle under Empty color 0x0E
+    stat at 45,1 element Counter p1 0 p2 0 step idle under Empty color 0x0E
+    stat at 46,1 element Counter p1 0 p2 0 step idle under Empty color 0x0E
+    stat at 47,1 element Counter p1 0 p2 0 step idle under Empty color 0x0E
+    stat at 48,1 element Counter p1 0 p2 0 step idle under Empty color 0x0E
+    stat at 49,1 element Counter p1 0 p2 0 step idle under Empty color 0x0E
+    stat at 50,1 element Counter p1 0 p2 0 step idle under Empty color 0x0E
+    stat at 51,1 element Counter p1 0 p2 0 step idle under Empty color 0x0E
+    stat at 52,1 element Counter p1 0 p2 0 step idle under Empty color 0x0E
+    stat at 53,1 element Counter p1 0 p2 0 step idle under Empty color 0x0E
+    stat at 54,1 element Counter p1 0 p2 0 step idle under Empty color 0x0E
+    stat at 55,1 element Counter p1 0 p2 0 step idle under Empty color 0x0E
+    stat at 56,1 element Counter p1 0 p2 0 step idle under Empty color 0x0E
+    stat at 56,2 element Counter p1 0 p2 0 step idle
+    stat at 56,3 element Counter p1 0 p2 0 step idle
+    stat at 56,4 element Counter p1 0 p2 0 step idle
+    stat at 56,5 element Counter p1 0 p2 0 step idle
+    stat at 56,6 element Counter p1 0 p2 0 step idle
+    stat at 56,7 element Counter p1 0 p2 0 step idle
+    stat at 56,8 element Counter p1 0 p2 0 step idle
+    stat at 56,9 element Counter p1 0 p2 0 step idle
+    stat at 56,10 element Counter p1 0 p2 0 step idle
+    stat at 56,11 element Counter p1 0 p2 0 step idle
+    stat at 56,12 element Counter p1 0 p2 0 step idle
+    stat at 56,13 element Counter p1 0 p2 0 step idle
+    stat at 56,14 element Counter p1 0 p2 0 step idle
+    stat at 56,15 element Counter p1 0 p2 0 step idle
+    stat at 56,16 element Counter p1 0 p2 0 step idle
+    stat at 56,17 element Counter p1 0 p2 0 step idle
+    stat at 56,18 element Counter p1 0 p2 0 step idle
+    stat at 55,18 element Counter p1 0 p2 0 step idle
+    stat at 54,18 element Counter p1 0 p2 0 step idle
+    stat at 53,18 element Counter p1 0 p2 0 step idle
+    stat at 52,18 element Counter p1 0 p2 0 step idle
+    stat at 51,18 element Counter p1 0 p2 0 step idle
+    stat at 50,18 element Counter p1 0 p2 0 step idle
+    stat at 49,18 element Counter p1 0 p2 0 step idle
+    stat at 48,18 element Counter p1 0 p2 0 step idle
+    stat at 47,18 element Counter p1 0 p2 0 step idle
+    stat at 46,18 element Counter p1 0 p2 0 step idle
+    stat at 45,18 element Counter p1 0 p2 0 step idle
+    stat at 44,18 element Counter p1 0 p2 0 step idle
+    stat at 43,18 element Counter p1 0 p2 0 step idle
+    stat at 42,18 element Counter p1 0 p2 0 step idle
+    stat at 41,18 element Counter p1 0 p2 0 step idle
+    stat at 40,18 element Counter p1 0 p2 0 step idle
+    stat at 39,18 element Counter p1 0 p2 0 step idle
+    stat at 38,18 element Counter p1 0 p2 0 step idle
+    stat at 37,18 element Counter p1 0 p2 0 step idle
+    stat at 36,18 element Counter p1 0 p2 0 step idle
+    stat at 35,18 element Counter p1 0 p2 0 step idle
+    stat at 34,18 element Counter p1 0 p2 0 step idle
+    stat at 34,19 element Counter p1 0 p2 0 step idle
+    stat at 34,20 element Counter p1 0 p2 0 step idle
+    stat at 34,21 element Counter p1 0 p2 0 step idle
+    stat at 34,22 element Counter p1 0 p2 0 step idle
+    stat at 34,23 element Counter p1 0 p2 0 step idle
+    stat at 34,24 element Counter p1 0 p2 0 step idle
+    stat at 34,25 element Counter p1 0 p2 0 step idle under Empty color 0x0E
+    stat at 33,25 element Counter p1 0 p2 0 step idle under Empty color 0x0E
+    stat at 32,25 element Counter p1 0 p2 0 step idle under Empty color 0x0E
+    stat at 31,25 element Counter p1 0 p2 0 step idle under Empty color 0x0E
+    stat at 47,16 element Object p1 cp437:0x0F p2 0 step idle
+    oop
+@Goodbye!
+#end
+:touch
+Thanks for playing Llama Masters!
+E-mail SHammack@AOL.COM with comments.
+#endgame
+
+    end
+  end
+end

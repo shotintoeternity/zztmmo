@@ -1,0 +1,579 @@
+board "Warania Temple"
+  start player at 30,5
+  respawn at 32,3
+  max-shots 255
+  dark false
+  reenter false
+  time-limit 0
+  exits north "Dungeon" south "Vault" west none east none
+
+  grid
+aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaoaaaaaaa
+aaaaaaaaaaaaaaa.............lll............aaaaaaaaabaaaaaaa
+aaaaaaaaaaaaaa..............lOl^.........WARaaaaaaabbbaaaaaa
+aaaaaaaaaaaaa..............^ccc|Odccccccceee.aaaaabbbbbaaaaa
+aaaaaaaaaaaaa..............|O@...........Ope.aaaabbbbbbbaaaa
+aaaaaaaaaaaaa...............ccccccccccccceee.aaaaabbbbbaaaaa
+aaaaaaaaaaaaaa...........................DPTaaaaaaabbfaaaaaa
+aaaaaaaaaaaaaaa............................aaaaaaaaahaaaaaaa
+aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa
+ajjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjaggggggggggaka
+aiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiagggggggggma.a
+a.............................................agggggggggga.a
+a.............................................agggggggggga.a
+a.............................................aggggga!agga.a
+a............................................maaaaaaaOaaaa.a
+a...................................................m......a
+a.............................................aaaaaaaOaaaaaa
+a.............................................aggggga.aggggn
+a.............................................aggggga.agggga
+a.............................................aggggga.agggga
+a.............................................aggggga.agggga
+a.............................................aggggga.agggga
+q.............................................aggggg!+!gggga
+a!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!aggggga.agggga
+aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaraaaaaa
+  end
+
+  legend
+    a = Text-Yellow color 0x20
+    o = Object color 0x06
+    . = Empty color 0x00
+    l = Line color 0x0C
+    b = Empty color 0x0E
+    O = Object color 0x0C
+    ^ = Text-White color 0x5E
+    W = Text-White color 0x57
+    A = Text-White color 0x41
+    R = Text-White color 0x52
+    c = Text-White color 0x20
+    | = Text-White color 0x7C
+    d = Empty color 0x2D
+    e = Line color 0x0F
+    @ = Player color 0x1F under Empty color 0x00
+    p = Passage color 0x4F to "War Department"
+    D = Text-White color 0x44
+    P = Text-White color 0x50
+    T = Text-White color 0x54
+    f = Object color 0x0E
+    h = Passage color 0x2F to "Secret passage"
+    j = Pusher color 0x0E
+    g = Gem color 0x09
+    k = Passage color 0x7F to "War Department"
+    i = Invisible color 0x0E
+    m = Object color 0x0F
+    ! = Scroll color 0x0F
+    n = Passage color 0x3F to "Basement"
+    q = Passage color 0x1F to "Secret passage"
+    + = Door color 0x7F
+    r = Empty color 0x20
+  end
+
+  stats
+    stat at 30,3 element Object p1 cp437:0x02 p2 0 step idle under Empty color 0x20
+    oop
+@King
+#end
+:what
+KING: What!? A prisoner has escaped!
+/i/i/i/i/i
+Guards!
+#send Guard:go
+#end
+:what2
+KING: My guards! This is an outrage!
+#send Door:close
+/i/i/i/i/i
+KING: Ha! See if you can get through THAT!
+#end
+:what3
+[Dang]... Well, no matter. You'll just die
+/i/i/i/i/i
+in there anyway. Ha ha ha ha ha!
+#end
+:well
+KING: Well, well, well. Look who's decided
+/i/i/i/i/i
+to grace us with his presence. Don't get
+/i/i/i/i/i
+cocky, boy. This is your last hour on our
+/i/i/i/i/i
+planet... or anyone else's for that matter
+/i/i/i/i/i
+(I'm implying that I'm going to kill you).
+/i/i/i/i/i
+YOU: What do you mean... OUR planet?
+/i/i/i/i/i
+KING: Didn't you realize? This isn't like
+/i/i/i/i/i
+Earth, you know. People are actually smart
+/i/i/i/i/i
+here.
+/i/i/i
+YOU: You mean...
+/i/i/i/i
+KING: Yes! This is the planet Warania!
+/i/i/i/i/i
+I am lord of all you see. And now, I
+/i/i/i/i/i
+sentence you to death!
+/i/i/i/i/i
+YOU: Wait! You can't do that!
+/i/i/i/i/i
+KING: Watch me!
+#send Doorp:open
+#die
+
+    end
+    stat at 29,5 element Object p1 cp437:0x02 p2 0 step idle
+    oop
+@Native
+/i/i/i/i
+KING: Who is this?
+/i/i/i/i
+NATIVE: We found him near the shore,
+/i/i/i/i
+snooping around. What should we do with
+/i/i/i/i
+him?
+/i/i/i
+KING: Hmm... 
+/i/i/i/i
+KING: Aha!
+/i/i/i
+KING: Put him to work in the
+/i/i/i/i
+war department.
+/i/i/i/i
+NATIVE: A novel idea, sir.
+/i/i/i/i
+#cycle 1
+/e/e/e/e/e/e/e/e/e/e/e
+#send door:open
+/e/e
+#die
+
+    end
+    stat at 42,5 element Object p1 cp437:0xDB p2 0 step idle
+    oop
+@door
+#cycle 1
+#end
+:open
+#play sx-7x6
+#char 223
+/i
+#char 22
+#put s empty
+/s
+#char 220
+#end
+
+    end
+    stat at 43,5 element Passage p1 0 p2 0 p3 board "War Department" step idle
+    stat at 54,15 element Object p1 cp437:0x02 p2 0 step idle
+    oop
+@Guard
+#end
+:go
+/s
+#end
+:touch
+GUARD: So you think you can escape! 
+/i/i/i/i/i
+Well, you're wrong!
+/i/i/i/i
+#endgame
+:shot
+GUARD: Agghh!
+#cycle 1
+#char 249
+/i
+#char 250
+/i
+#char 42
+/i
+#char 15
+/i
+#send Guard:surrender
+#die
+
+    end
+    stat at 54,17 element Object p1 cp437:0x02 p2 0 step idle
+    oop
+@Guard
+#end
+:surrender
+GUARD 2: I surrender!
+#cycle 1
+/s/s/s/s/s
+#put s empty
+#play sx-7x6
+/s
+#send King:what2
+/s
+#put n white door
+/s
+#die
+
+    end
+    stat at 57,11 element Object p1 cp437:0xFF p2 0 step idle
+    oop
+#if not alligned #restart
+#send King:what
+#become blue gem
+
+    end
+    stat at 59,10 element Passage p1 0 p2 0 p3 board "War Department" step idle
+    stat at 53,16 element Object p1 cp437:0xFF p2 0 step idle under Empty color 0x0E
+    oop
+@Door
+#cycle 1
+#end
+:close
+#char 22
+/i
+#char 223
+/i
+#char 219
+#play 888
+#end
+:touch
+$€€ENTER PASSWORD
+!no;Huggashugga
+!no;Password
+!yes;Joe wuz here
+!no;The duck flies at midnight
+#end
+:no
+INCORRECT PASSWORD. TERMINATE PLAYER.
+/i/i/i/i/i
+#endgame
+:yes
+#send King:what3
+#die
+
+    end
+    stat at 54,14 element Scroll p1 0 p2 0 step idle under Empty color 0x20
+    oop
+AUTHORIZED PERSONNEL ONLY
+
+    end
+    stat at 53,23 element Scroll p1 0 p2 0 step idle under Empty color 0x20
+    oop
+AUTHORIZED PERSONNEL ONLY
+
+    end
+    stat at 55,23 element Scroll p1 0 p2 0 step idle under Empty color 0x20
+    oop
+AUTHORIZED PERSONNEL ONLY
+
+    end
+    stat at 46,15 element Object p1 cp437:0xFF p2 0 step idle
+    oop
+#if not blocked s #restart
+#change yellow invisible empty
+
+    end
+    stat at 2,10 element Pusher p1 0 p2 0 step south
+    stat at 3,10 element Pusher p1 0 p2 0 step south
+    stat at 4,10 element Pusher p1 0 p2 0 step south
+    stat at 5,10 element Pusher p1 0 p2 0 step south
+    stat at 6,10 element Pusher p1 0 p2 0 step south
+    stat at 7,10 element Pusher p1 0 p2 0 step south
+    stat at 8,10 element Pusher p1 0 p2 0 step south
+    stat at 9,10 element Pusher p1 0 p2 0 step south
+    stat at 10,10 element Pusher p1 0 p2 0 step south
+    stat at 11,10 element Pusher p1 0 p2 0 step south
+    stat at 12,10 element Pusher p1 0 p2 0 step south
+    stat at 13,10 element Pusher p1 0 p2 0 step south
+    stat at 14,10 element Pusher p1 0 p2 0 step south
+    stat at 15,10 element Pusher p1 0 p2 0 step south
+    stat at 16,10 element Pusher p1 0 p2 0 step south
+    stat at 17,10 element Pusher p1 0 p2 0 step south
+    stat at 18,10 element Pusher p1 0 p2 0 step south
+    stat at 19,10 element Pusher p1 0 p2 0 step south
+    stat at 20,10 element Pusher p1 0 p2 0 step south
+    stat at 21,10 element Pusher p1 0 p2 0 step south
+    stat at 22,10 element Pusher p1 0 p2 0 step south
+    stat at 23,10 element Pusher p1 0 p2 0 step south
+    stat at 24,10 element Pusher p1 0 p2 0 step south
+    stat at 25,10 element Pusher p1 0 p2 0 step south
+    stat at 26,10 element Pusher p1 0 p2 0 step south
+    stat at 27,10 element Pusher p1 0 p2 0 step south
+    stat at 28,10 element Pusher p1 0 p2 0 step south
+    stat at 29,10 element Pusher p1 0 p2 0 step south
+    stat at 30,10 element Pusher p1 0 p2 0 step south
+    stat at 31,10 element Pusher p1 0 p2 0 step south
+    stat at 32,10 element Pusher p1 0 p2 0 step south
+    stat at 33,10 element Pusher p1 0 p2 0 step south
+    stat at 34,10 element Pusher p1 0 p2 0 step south
+    stat at 35,10 element Pusher p1 0 p2 0 step south
+    stat at 36,10 element Pusher p1 0 p2 0 step south
+    stat at 37,10 element Pusher p1 0 p2 0 step south
+    stat at 38,10 element Pusher p1 0 p2 0 step south
+    stat at 39,10 element Pusher p1 0 p2 0 step south
+    stat at 40,10 element Pusher p1 0 p2 0 step south
+    stat at 41,10 element Pusher p1 0 p2 0 step south
+    stat at 42,10 element Pusher p1 0 p2 0 step south
+    stat at 43,10 element Pusher p1 0 p2 0 step south
+    stat at 44,10 element Pusher p1 0 p2 0 step south
+    stat at 45,10 element Pusher p1 0 p2 0 step south
+    stat at 46,10 element Pusher p1 0 p2 0 step south
+    stat at 46,24 element Scroll p1 0 p2 0 step idle
+    oop
+#endgame
+
+    end
+    stat at 45,24 element Scroll p1 0 p2 0 step idle
+    oop
+#endgame
+
+    end
+    stat at 44,24 element Scroll p1 0 p2 0 step idle
+    oop
+#endgame
+
+    end
+    stat at 43,24 element Scroll p1 0 p2 0 step idle
+    oop
+#endgame
+
+    end
+    stat at 42,24 element Scroll p1 0 p2 0 step idle
+    oop
+#endgame
+
+    end
+    stat at 41,24 element Scroll p1 0 p2 0 step idle
+    oop
+#endgame
+
+    end
+    stat at 40,24 element Scroll p1 0 p2 0 step idle
+    oop
+#endgame
+
+    end
+    stat at 39,24 element Scroll p1 0 p2 0 step idle
+    oop
+#endgame
+
+    end
+    stat at 38,24 element Scroll p1 0 p2 0 step idle
+    oop
+#endgame
+
+    end
+    stat at 37,24 element Scroll p1 0 p2 0 step idle
+    oop
+#endgame
+
+    end
+    stat at 36,24 element Scroll p1 0 p2 0 step idle
+    oop
+#endgame
+
+    end
+    stat at 35,24 element Scroll p1 0 p2 0 step idle
+    oop
+#endgame
+
+    end
+    stat at 34,24 element Scroll p1 0 p2 0 step idle
+    oop
+#endgame
+
+    end
+    stat at 33,24 element Scroll p1 0 p2 0 step idle
+    oop
+#endgame
+
+    end
+    stat at 32,24 element Scroll p1 0 p2 0 step idle
+    oop
+#endgame
+
+    end
+    stat at 31,24 element Scroll p1 0 p2 0 step idle
+    oop
+#endgame
+
+    end
+    stat at 30,24 element Scroll p1 0 p2 0 step idle
+    oop
+#endgame
+
+    end
+    stat at 29,24 element Scroll p1 0 p2 0 step idle
+    oop
+#endgame
+
+    end
+    stat at 28,24 element Scroll p1 0 p2 0 step idle
+    oop
+#endgame
+
+    end
+    stat at 27,24 element Scroll p1 0 p2 0 step idle
+    oop
+#endgame
+
+    end
+    stat at 26,24 element Scroll p1 0 p2 0 step idle
+    oop
+#endgame
+
+    end
+    stat at 25,24 element Scroll p1 0 p2 0 step idle
+    oop
+#endgame
+
+    end
+    stat at 24,24 element Scroll p1 0 p2 0 step idle
+    oop
+#endgame
+
+    end
+    stat at 23,24 element Scroll p1 0 p2 0 step idle
+    oop
+#endgame
+
+    end
+    stat at 22,24 element Scroll p1 0 p2 0 step idle
+    oop
+#endgame
+
+    end
+    stat at 21,24 element Scroll p1 0 p2 0 step idle
+    oop
+#endgame
+
+    end
+    stat at 20,24 element Scroll p1 0 p2 0 step idle
+    oop
+#endgame
+
+    end
+    stat at 19,24 element Scroll p1 0 p2 0 step idle
+    oop
+#endgame
+
+    end
+    stat at 18,24 element Scroll p1 0 p2 0 step idle
+    oop
+#endgame
+
+    end
+    stat at 17,24 element Scroll p1 0 p2 0 step idle
+    oop
+#endgame
+
+    end
+    stat at 16,24 element Scroll p1 0 p2 0 step idle
+    oop
+#endgame
+
+    end
+    stat at 15,24 element Scroll p1 0 p2 0 step idle
+    oop
+#endgame
+
+    end
+    stat at 14,24 element Scroll p1 0 p2 0 step idle
+    oop
+#endgame
+
+    end
+    stat at 13,24 element Scroll p1 0 p2 0 step idle
+    oop
+#endgame
+
+    end
+    stat at 12,24 element Scroll p1 0 p2 0 step idle
+    oop
+#endgame
+
+    end
+    stat at 11,24 element Scroll p1 0 p2 0 step idle
+    oop
+#endgame
+
+    end
+    stat at 10,24 element Scroll p1 0 p2 0 step idle
+    oop
+#endgame
+
+    end
+    stat at 9,24 element Scroll p1 0 p2 0 step idle
+    oop
+#endgame
+
+    end
+    stat at 8,24 element Scroll p1 0 p2 0 step idle
+    oop
+#endgame
+
+    end
+    stat at 7,24 element Scroll p1 0 p2 0 step idle
+    oop
+#endgame
+
+    end
+    stat at 6,24 element Scroll p1 0 p2 0 step idle
+    oop
+#endgame
+
+    end
+    stat at 5,24 element Scroll p1 0 p2 0 step idle
+    oop
+#endgame
+
+    end
+    stat at 4,24 element Scroll p1 0 p2 0 step idle
+    oop
+#endgame
+
+    end
+    stat at 3,24 element Scroll p1 0 p2 0 step idle
+    oop
+#endgame
+
+    end
+    stat at 2,24 element Scroll p1 0 p2 0 step idle
+    oop
+#endgame
+
+    end
+    stat at 33,4 element Object p1 cp437:0x02 p2 0 step idle under Empty color 0x2D
+    oop
+@Guard
+#end
+:touch
+GUARD: Don't give me any trouble.
+#end
+
+    end
+    stat at 1,23 element Passage p1 0 p2 0 p3 board "Secret passage" step idle under Empty color 0x20
+    stat at 53,8 element Passage p1 0 p2 0 p3 board "Secret passage" step idle under Empty color 0x20
+    stat at 54,7 element Object p1 cp437:0xFF p2 0 step idle under Empty color 0x0E
+    oop
+#if not blocked w #restart
+#send King:well
+#die
+
+    end
+    stat at 53,1 element Object p1 cp437:0xDB p2 0 step idle under Empty color 0x20
+    oop
+@Doorp
+#cycle 1
+#end
+:open
+#put w empty
+/w
+#end
+
+    end
+    stat at 60,18 element Passage p1 0 p2 0 p3 board "Basement" step idle under Empty color 0x20
+  end
+end

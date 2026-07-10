@@ -1,0 +1,165 @@
+board "BSing"
+  start player at 16,23
+  max-shots 255
+  dark true
+  reenter false
+  time-limit 0
+  exits north none south "Processing Department" west "Elevator" east none
+
+  grid
+BBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBB
+llllllllllllllllllllllllllllllllllllllllllllllllllllllllll.B
+llllllllllllllllllllllllllllllllllllllllllllllllllllllllll.B
+b.........O....O....L...O....L....O..L.........##.~...~.ll.B
+b..O..O.............LO.....O.LO......LO....O...###~...~.ll.B
+b.......O....O...O..L....O...L....O..L.........Xd...k.~.ll.B
+b...O..............OL..O....OLO..ddddLdOddddOdd###~...~Tll.B
+b..........O...O....L........L......OL....O....##.~...~.ll.B
+lllllllllllllllllllllllllllllllllllllllLLLLLLLL##.~...~.ll.B
+lllllllllllllllllllllllllllllllllllllll...O....##T~...~.ll.B
+BBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBll......O.##.~...~#ll.B
+BBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBll.O......##.~...~.ll.B
+BBBB###########################BBBBBBll....O...##.~...~Tll.B
+BBBB##hKeyhtohMayor'shjfficeh##BBBBBBllO.......##.~...~.ll.B
+BBBB##...RRRRRR.....RRRRRR...##BBBBBBll.....O..##.~...~.ll.B
+BBBB##...RRRIRR.mk..RRIRRRn..##BBBBBBllLLLLLLLL##.~...~.ll.B
+BBBB##...RRRIRR.....RRIRRR...##BBBBBBll........##.~...~.ll.B
+BBBB##...RRRIIIIIIIIIIIRRR...##BBBBBBll........##.~...~.ll.B
+BBBB##...RRR...........RRR...##BBBBBBllNNNNXNNNNNNNNXNNNll.B
+BBBB###########...#############BBBBBBll.................ll.B
+BBBBBBBBBBBBB##...##BBBBBBBBBBBBBBBBBll.ng.g.g.gmg.g.g..ll.B
+BBBBBBBBBBBBB##...##BBBBBBBBBBBBBBBBBll.gng.g.g.g.g.g.g.ll.B
+BBBBBBBBBBBBB##@..##BBBBBBBBBBBBBBBBBlllllllllllllllllllll.B
+BBBBBBBBBBBBB##...##BBBBBBBBBBBBBBBBBlllllllllllllllllllll.B
+BBBBBBBBBBBBB##bbb##BBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBB
+  end
+
+  legend
+    B = Breakable color 0x09
+    l = Line color 0x09
+    . = Empty color 0x00
+    b = Empty color 0x0E
+    O = Boulder color 0x0A
+    L = Lion color 0x0C
+    # = Solid color 0x0D
+    ~ = Water color 0xF9
+    X = Transporter color 0x0D
+    d = Empty color 0x0D
+    k = Key color 0x0B
+    T = Tiger color 0x0B
+    h = Text-Blue color 0x20
+    K = Text-Blue color 0x4B
+    e = Text-Blue color 0x65
+    y = Text-Blue color 0x79
+    t = Text-Blue color 0x74
+    o = Text-Blue color 0x6F
+    M = Text-Blue color 0x4D
+    a = Text-Blue color 0x61
+    r = Text-Blue color 0x72
+    ' = Text-Blue color 0x27
+    s = Text-Blue color 0x73
+    j = Text-Blue color 0x4F
+    f = Text-Blue color 0x66
+    i = Text-Blue color 0x69
+    c = Text-Blue color 0x63
+    R = Bear color 0x06
+    I = Invisible color 0x0D
+    m = Empty color 0x0B
+    n = Empty color 0x0C
+    N = Normal color 0x0D
+    g = Gem color 0x0C
+    @ = Player color 0x1F under Empty color 0x00
+  end
+
+  stats
+    stat at 10,16 element Bear p1 4 p2 0 step idle
+    stat at 10,15 element Bear p1 4 p2 0 step idle
+    stat at 10,17 element Bear p1 4 p2 0 step idle
+    stat at 10,19 element Bear p1 4 p2 0 step idle
+    stat at 10,18 element Bear p1 4 p2 0 step idle
+    stat at 26,19 element Bear p1 4 p2 0 step idle
+    stat at 26,18 element Bear p1 4 p2 0 step idle
+    stat at 26,17 element Bear p1 4 p2 0 step idle
+    stat at 26,16 element Bear p1 4 p2 0 step idle
+    stat at 26,15 element Bear p1 4 p2 0 step idle
+    stat at 25,15 element Bear p1 4 p2 0 step idle
+    stat at 25,16 element Bear p1 4 p2 0 step idle
+    stat at 25,17 element Bear p1 4 p2 0 step idle
+    stat at 25,18 element Bear p1 4 p2 0 step idle
+    stat at 25,19 element Bear p1 4 p2 0 step idle
+    stat at 11,19 element Bear p1 4 p2 0 step idle
+    stat at 11,18 element Bear p1 4 p2 0 step idle
+    stat at 11,17 element Bear p1 4 p2 0 step idle
+    stat at 11,16 element Bear p1 4 p2 0 step idle
+    stat at 11,15 element Bear p1 4 p2 0 step idle
+    stat at 24,15 element Bear p1 4 p2 0 step idle
+    stat at 24,16 element Bear p1 4 p2 0 step idle
+    stat at 24,17 element Bear p1 4 p2 0 step idle
+    stat at 24,18 element Bear p1 4 p2 0 step idle
+    stat at 24,19 element Bear p1 4 p2 0 step idle
+    stat at 12,19 element Bear p1 4 p2 0 step idle
+    stat at 12,18 element Bear p1 4 p2 0 step idle
+    stat at 12,17 element Bear p1 4 p2 0 step idle
+    stat at 12,16 element Bear p1 4 p2 0 step idle under Empty color 0x0C
+    stat at 12,15 element Bear p1 4 p2 0 step idle
+    stat at 14,17 element Bear p1 4 p2 0 step idle
+    stat at 14,16 element Bear p1 4 p2 0 step idle
+    stat at 14,15 element Bear p1 4 p2 0 step idle
+    stat at 13,15 element Bear p1 4 p2 0 step idle
+    stat at 15,15 element Bear p1 4 p2 0 step idle
+    stat at 15,16 element Bear p1 4 p2 0 step idle
+    stat at 15,17 element Bear p1 4 p2 0 step idle
+    stat at 22,17 element Bear p1 4 p2 0 step idle
+    stat at 22,16 element Bear p1 4 p2 0 step idle
+    stat at 22,15 element Bear p1 4 p2 0 step idle
+    stat at 21,15 element Bear p1 4 p2 0 step idle
+    stat at 21,16 element Bear p1 4 p2 0 step idle
+    stat at 21,17 element Bear p1 4 p2 0 step idle
+    stat at 23,15 element Bear p1 4 p2 0 step idle
+    stat at 48,6 element Transporter p1 0 p2 0 step west under Empty color 0x0D
+    stat at 44,19 element Transporter p1 0 p2 0 step south under Empty color 0x0A
+    stat at 53,19 element Transporter p1 0 p2 0 step north under Empty color 0x0D
+    stat at 30,8 element Lion cycle 3 p1 1 p2 0 step idle
+    stat at 30,7 element Lion cycle 3 p1 1 p2 0 step idle
+    stat at 30,6 element Lion cycle 3 p1 1 p2 0 step idle
+    stat at 30,5 element Lion cycle 3 p1 1 p2 0 step idle
+    stat at 38,4 element Lion cycle 3 p1 1 p2 0 step idle
+    stat at 38,6 element Lion cycle 3 p1 1 p2 0 step idle
+    stat at 38,7 element Lion cycle 3 p1 1 p2 0 step idle under Empty color 0x0D
+    stat at 38,8 element Lion cycle 3 p1 1 p2 0 step idle
+    stat at 50,10 element Tiger p1 8 p2 6 step idle
+    stat at 56,13 element Tiger p1 8 p2 6 step idle
+    stat at 56,7 element Tiger p1 8 p2 6 step idle
+    stat at 21,8 element Lion p1 2 p2 0 step idle
+    stat at 21,7 element Lion p1 2 p2 0 step idle
+    stat at 21,6 element Lion p1 2 p2 0 step idle
+    stat at 21,5 element Lion p1 2 p2 0 step idle
+    stat at 21,4 element Lion p1 2 p2 0 step idle
+    stat at 30,5 element Lion p1 2 p2 0 step idle under Bear color 0x06
+    stat at 30,6 element Lion p1 2 p2 0 step idle under Bear color 0x06
+    stat at 30,7 element Lion p1 2 p2 0 step idle under Bear color 0x06
+    stat at 30,8 element Lion p1 2 p2 0 step idle under Bear color 0x06
+    stat at 30,4 element Lion p1 2 p2 0 step idle
+    stat at 38,4 element Lion p1 2 p2 0 step idle under Bear color 0x06
+    stat at 38,6 element Lion p1 2 p2 0 step idle under Bear color 0x06
+    stat at 38,7 element Lion p1 2 p2 0 step idle under Bear color 0x06
+    stat at 38,8 element Lion p1 2 p2 0 step idle under Bear color 0x06
+    stat at 38,5 element Lion p1 2 p2 0 step idle
+    stat at 40,9 element Lion p1 2 p2 0 step idle
+    stat at 41,9 element Lion p1 2 p2 0 step idle
+    stat at 42,9 element Lion p1 2 p2 0 step idle
+    stat at 43,9 element Lion p1 2 p2 0 step idle
+    stat at 44,9 element Lion p1 2 p2 0 step idle
+    stat at 45,9 element Lion p1 2 p2 0 step idle
+    stat at 46,9 element Lion p1 2 p2 0 step idle under Empty color 0x0A
+    stat at 47,9 element Lion p1 2 p2 0 step idle
+    stat at 47,16 element Lion p1 2 p2 0 step idle
+    stat at 46,16 element Lion p1 2 p2 0 step idle
+    stat at 45,16 element Lion p1 2 p2 0 step idle
+    stat at 44,16 element Lion p1 2 p2 0 step idle
+    stat at 43,16 element Lion p1 2 p2 0 step idle
+    stat at 42,16 element Lion p1 2 p2 0 step idle under Empty color 0x0A
+    stat at 41,16 element Lion p1 2 p2 0 step idle
+    stat at 40,16 element Lion p1 2 p2 0 step idle
+  end
+end

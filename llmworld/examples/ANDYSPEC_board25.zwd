@@ -1,0 +1,1158 @@
+board "Bob Evans"
+  start player at 30,24
+  respawn at 27,7
+  max-shots 255
+  dark false
+  reenter false
+  time-limit 0
+  exits north none south none west none east none
+
+  grid
+FFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFF
+FFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFF
+FFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFF
+FFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFF
+FFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFF
+FFFFFFFBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBFFFFFFF
+FFFFFFBBNNNNNoNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNoNNNNNBBFFFFFF
+FFFFFBBNN####p############THEaWAbKERS!!!######P####NNBBFFFFF
+FFFFBBNN##......c..d.d.d................e..ce...O.##NNBBFFFF
+FFFBBNN##.......c..dddddddd..fgff.......e..ce......##NNBBFFF
+FFBBNN##........c...ghd.dd....f.....io..e..ce.O.....##NNBBFF
+FBBNN##.........c....f.......O.......f..e..ce.....O..##NNBBF
+BBNN##..........c............f..........e..ce..O......##NNBB
+BNN##...........ccccccccccccccgccccccccccccce.......O..##NNB
+NN##....O..O....eeeeeeeeeeeeeeeeeeeeeeOeeeeeeO...O......##NN
+N##.............e..O..O...O....O..O....O....O......O.....##N
+##....O...O....................O....O.....O....O.O........##
+#....O.............O.O..O..O.O........O...O..O......O.O....#
+#........................O......O.O....O..O....O.........O.#
+#.O....O..O..........O......O......O..............O...O....#
+#.O..O...O........O.....O..O..O..........O..O...O..O..O..O.#
+#..O.......O..O...O..O.......O...O..O..O....O.O.....O......#
+#...O..O..O.....O.....O..O......O.........O......O.....O...#
+#.O..........O..O..O.....O...@....O....O..O...O.....O.O....#
+#############################j##############################
+  end
+
+  legend
+    F = Fake color 0x0A
+    B = Breakable color 0x0C
+    N = Normal color 0x0C
+    o = Object color 0x0C
+    # = Solid color 0x0C
+    p = Passage color 0x5F to "Women's Bathroom"
+    T = Text-Green color 0x54
+    H = Text-Green color 0x48
+    E = Text-Green color 0x45
+    a = Text-Green color 0x20
+    W = Text-Green color 0x57
+    A = Text-Green color 0x41
+    b = Text-Green color 0x4E
+    K = Text-Green color 0x4B
+    R = Text-Green color 0x52
+    S = Text-Green color 0x53
+    ! = Text-Green color 0x21
+    P = Passage color 0x1F to "Men's Bathroom"
+    . = Empty color 0x00
+    c = Solid color 0x0E
+    d = Empty color 0x0A
+    e = Empty color 0x0E
+    O = Object color 0x0F
+    f = Object color 0x0A
+    g = Object color 0x0E
+    h = Object color 0x0D
+    i = Object color 0x0B
+    @ = Player color 0x1F under Empty color 0x00
+    j = Passage color 0x4F to "Dildoberg 1"
+  end
+
+  stats
+    stat at 30,25 element Passage p1 0 p2 0 p3 board "Dildoberg 1" step idle under Empty color 0x0E
+    stat at 33,19 element Object p1 cp437:0x02 p2 0 step idle
+    oop
+@Mosher
+#cycle 1
+:fart
+#go cw rndns 
+#go rndp west
+#send fart
+
+    end
+    stat at 36,20 element Object p1 cp437:0x02 p2 0 step idle
+    oop
+@Mosher
+#cycle 1
+:fart
+#go cw rndns 
+#go rndp west
+#send fart
+
+    end
+    stat at 39,18 element Object p1 cp437:0x02 p2 0 step idle
+    oop
+@Mosher
+#cycle 1
+:fart
+#go cw rndns 
+#go rndp west
+#send fart
+
+    end
+    stat at 35,16 element Object p1 cp437:0x02 p2 0 step idle
+    oop
+@Mosher
+#cycle 1
+:fart
+#go cw rndns 
+#go rndp west
+#send fart
+
+    end
+    stat at 28,18 element Object p1 cp437:0x02 p2 0 step idle
+    oop
+@Mosher
+#cycle 1
+:fart
+#go cw rndns 
+#go rndp west
+#send fart
+
+    end
+    stat at 25,21 element Object p1 cp437:0x02 p2 0 step idle
+    oop
+@Mosher
+#cycle 1
+:fart
+#go cw rndns 
+#go rndp west
+#send fart
+
+    end
+    stat at 22,18 element Object p1 cp437:0x02 p2 0 step idle
+    oop
+@Mosher
+#cycle 1
+:fart
+#go cw rndns 
+#go rndp west
+#send fart
+
+    end
+    stat at 19,21 element Object p1 cp437:0x02 p2 0 step idle
+    oop
+@Mosher
+#cycle 1
+:fart
+#go cw rndns 
+#go rndp west
+#send fart
+
+    end
+    stat at 20,16 element Object p1 cp437:0x02 p2 0 step idle
+    oop
+@Mosher
+#cycle 1
+:fart
+#go cw rndns 
+#go rndp west
+#send fart
+
+    end
+    stat at 23,16 element Object p1 cp437:0x02 p2 0 step idle
+    oop
+@Mosher
+#cycle 1
+:fart
+#go cw rndns 
+#go rndp west
+#send fart
+
+    end
+    stat at 11,23 element Object p1 cp437:0x02 p2 0 step idle
+    oop
+@Mosher
+#cycle 1
+:fart
+#go cw rndns 
+#go rndp west
+#send fart
+
+    end
+    stat at 8,20 element Object p1 cp437:0x02 p2 0 step idle
+    oop
+@Mosher
+#cycle 1
+:fart
+#go cw rndns 
+#go rndp west
+#send fart
+
+    end
+    stat at 11,17 element Object p1 cp437:0x02 p2 0 step idle
+    oop
+@Mosher
+#cycle 1
+:fart
+#go cw rndns 
+#go rndp west
+#send fart
+
+    end
+    stat at 12,15 element Object p1 cp437:0x02 p2 0 step idle
+    oop
+@Mosher
+#cycle 1
+:fart
+#go cw rndns 
+#go rndp west
+#send fart
+
+    end
+    stat at 7,17 element Object p1 cp437:0x02 p2 0 step idle
+    oop
+@Mosher
+#cycle 1
+:fart
+#go cw rndns 
+#go rndp west
+#send fart
+
+    end
+    stat at 11,20 element Object p1 cp437:0x02 p2 0 step idle
+    oop
+@Mosher
+#cycle 1
+:fart
+#go cw rndns 
+#go rndp west
+#send fart
+
+    end
+    stat at 15,22 element Object p1 cp437:0x02 p2 0 step idle
+    oop
+@Mosher
+#cycle 1
+:fart
+#go cw rndns 
+#go rndp west
+#send fart
+
+    end
+    stat at 20,18 element Object p1 cp437:0x02 p2 0 step idle
+    oop
+@Mosher
+#cycle 1
+:fart
+#go cw rndns 
+#go rndp west
+#send fart
+
+    end
+    stat at 22,22 element Object p1 cp437:0x02 p2 0 step idle
+    oop
+@Mosher
+#cycle 1
+:fart
+#go cw rndns 
+#go rndp west
+#send fart
+
+    end
+    stat at 20,24 element Object p1 cp437:0x02 p2 0 step idle
+    oop
+@Mosher
+#cycle 1
+:fart
+#go cw rndns 
+#go rndp west
+#send fart
+
+    end
+    stat at 19,22 element Object p1 cp437:0x02 p2 0 step idle
+    oop
+@Mosher
+#cycle 1
+:fart
+#go cw rndns 
+#go rndp west
+#send fart
+
+    end
+    stat at 17,23 element Object p1 cp437:0x02 p2 0 step idle
+    oop
+@Mosher
+#cycle 1
+:fart
+#go cw rndns 
+#go rndp west
+#send fart
+
+    end
+    stat at 22,20 element Object p1 cp437:0x02 p2 0 step idle
+    oop
+@Mosher
+#cycle 1
+:fart
+#go cw rndns 
+#go rndp west
+#send fart
+
+    end
+    stat at 26,19 element Object p1 cp437:0x02 p2 0 step idle
+    oop
+@Mosher
+#cycle 1
+:fart
+#go cw rndns 
+#go rndp west
+#send fart
+
+    end
+    stat at 26,23 element Object p1 cp437:0x02 p2 0 step idle
+    oop
+@Mosher
+#cycle 1
+:fart
+#go cw rndns 
+#go rndp west
+#send fart
+
+    end
+    stat at 28,21 element Object p1 cp437:0x02 p2 0 step idle
+    oop
+@Mosher
+#cycle 1
+:fart
+#go cw rndns 
+#go rndp west
+#send fart
+
+    end
+    stat at 31,21 element Object p1 cp437:0x02 p2 0 step idle
+    oop
+@Mosher
+#cycle 1
+:fart
+#go cw rndns 
+#go rndp west
+#send fart
+
+    end
+    stat at 35,24 element Object p1 cp437:0x02 p2 0 step idle
+    oop
+@Mosher
+#cycle 1
+:fart
+#go cw rndns 
+#go rndp west
+#send fart
+
+    end
+    stat at 37,22 element Object p1 cp437:0x02 p2 0 step idle
+    oop
+@Mosher
+#cycle 1
+:fart
+#go cw rndns 
+#go rndp west
+#send fart
+
+    end
+    stat at 40,19 element Object p1 cp437:0x02 p2 0 step idle
+    oop
+@Mosher
+#cycle 1
+:fart
+#go cw rndns 
+#go rndp west
+#send fart
+
+    end
+    stat at 40,16 element Object p1 cp437:0x02 p2 0 step idle
+    oop
+@Mosher
+#cycle 1
+:fart
+#go cw rndns 
+#go rndp west
+#send fart
+
+    end
+    stat at 43,18 element Object p1 cp437:0x02 p2 0 step idle
+    oop
+@Mosher
+#cycle 1
+:fart
+#go cw rndns 
+#go rndp west
+#send fart
+
+    end
+    stat at 45,16 element Object p1 cp437:0x02 p2 0 step idle
+    oop
+@Mosher
+#cycle 1
+:fart
+#go cw rndns 
+#go rndp west
+#send fart
+
+    end
+    stat at 48,19 element Object p1 cp437:0x02 p2 0 step idle
+    oop
+@Mosher
+#cycle 1
+:fart
+#go cw rndns 
+#go rndp west
+#send fart
+
+    end
+    stat at 45,22 element Object p1 cp437:0x02 p2 0 step idle
+    oop
+@Mosher
+#cycle 1
+:fart
+#go cw rndns 
+#go rndp west
+#send fart
+
+    end
+    stat at 43,19 element Object p1 cp437:0x02 p2 0 step idle
+    oop
+@Mosher
+#cycle 1
+:fart
+#go cw rndns 
+#go rndp west
+#send fart
+
+    end
+    stat at 40,22 element Object p1 cp437:0x02 p2 0 step idle
+    oop
+@Mosher
+#cycle 1
+:fart
+#go cw rndns 
+#go rndp west
+#send fart
+
+    end
+    stat at 45,21 element Object p1 cp437:0x02 p2 0 step idle
+    oop
+@Mosher
+#cycle 1
+:fart
+#go cw rndns 
+#go rndp west
+#send fart
+
+    end
+    stat at 49,21 element Object p1 cp437:0x02 p2 0 step idle
+    oop
+@Mosher
+#cycle 1
+:fart
+#go cw rndns 
+#go rndp west
+#send fart
+
+    end
+    stat at 55,18 element Object p1 cp437:0x02 p2 0 step idle
+    oop
+@Mosher
+#cycle 1
+:fart
+#go cw rndns 
+#go rndp west
+#send fart
+
+    end
+    stat at 58,21 element Object p1 cp437:0x02 p2 0 step idle
+    oop
+@Mosher
+#cycle 1
+:fart
+#go cw rndns 
+#go rndp west
+#send fart
+
+    end
+    stat at 55,24 element Object p1 cp437:0x02 p2 0 step idle
+    oop
+@Mosher
+#cycle 1
+:fart
+#go cw rndns 
+#go rndp west
+#send fart
+
+    end
+    stat at 52,21 element Object p1 cp437:0x02 p2 0 step idle
+    oop
+@Mosher
+#cycle 1
+:fart
+#go cw rndns 
+#go rndp west
+#send fart
+
+    end
+    stat at 50,23 element Object p1 cp437:0x02 p2 0 step idle
+    oop
+@Mosher
+#cycle 1
+:fart
+#go cw rndns 
+#go rndp west
+#send fart
+
+    end
+    stat at 47,24 element Object p1 cp437:0x02 p2 0 step idle
+    oop
+@Mosher
+#cycle 1
+:fart
+#go cw rndns 
+#go rndp west
+#send fart
+
+    end
+    stat at 43,24 element Object p1 cp437:0x02 p2 0 step idle
+    oop
+@Mosher
+#cycle 1
+:fart
+#go cw rndns 
+#go rndp west
+#send fart
+
+    end
+    stat at 42,21 element Object p1 cp437:0x02 p2 0 step idle
+    oop
+@Mosher
+#cycle 1
+:fart
+#go cw rndns 
+#go rndp west
+#send fart
+
+    end
+    stat at 30,18 element Object p1 cp437:0x02 p2 0 step idle
+    oop
+@Mosher
+#cycle 1
+:fart
+#go cw rndns 
+#go rndp west
+#send fart
+
+    end
+    stat at 32,16 element Object p1 cp437:0x02 p2 0 step idle
+    oop
+@Mosher
+#cycle 1
+:fart
+#go cw rndns 
+#go rndp west
+#send fart
+
+    end
+    stat at 27,16 element Object p1 cp437:0x02 p2 0 step idle
+    oop
+@Mosher
+#cycle 1
+:fart
+#go cw rndns 
+#go rndp west
+#send fart
+
+    end
+    stat at 25,18 element Object p1 cp437:0x02 p2 0 step idle
+    oop
+@Mosher
+#cycle 1
+:fart
+#go cw rndns 
+#go rndp west
+#send fart
+
+    end
+    stat at 29,20 element Object p1 cp437:0x02 p2 0 step idle
+    oop
+@Mosher
+#cycle 1
+:fart
+#go cw rndns 
+#go rndp west
+#send fart
+
+    end
+    stat at 32,17 element Object p1 cp437:0x02 p2 0 step idle
+    oop
+@Mosher
+#cycle 1
+:fart
+#go cw rndns 
+#go rndp west
+#send fart
+
+    end
+    stat at 35,19 element Object p1 cp437:0x02 p2 0 step idle
+    oop
+@Mosher
+#cycle 1
+:fart
+#go cw rndns 
+#go rndp west
+#send fart
+
+    end
+    stat at 37,17 element Object p1 cp437:0x02 p2 0 step idle
+    oop
+@Mosher
+#cycle 1
+:fart
+#go cw rndns 
+#go rndp west
+#send fart
+
+    end
+    stat at 39,15 element Object p1 cp437:0x02 p2 0 step idle under Empty color 0x0E
+    oop
+@Mosher
+#cycle 1
+:fart
+#go cw rndns 
+#go rndp west
+#send fart
+
+    end
+    stat at 43,17 element Object p1 cp437:0x02 p2 0 step idle
+    oop
+@Mosher
+#cycle 1
+:fart
+#go cw rndns 
+#go rndp west
+#send fart
+
+    end
+    stat at 46,15 element Object p1 cp437:0x02 p2 0 step idle
+    oop
+@Mosher
+#cycle 1
+:fart
+#go cw rndns 
+#go rndp west
+#send fart
+
+    end
+    stat at 48,13 element Object p1 cp437:0x02 p2 0 step idle
+    oop
+@Mosher
+#cycle 1
+:fart
+#go cw rndns 
+#go rndp west
+#send fart
+
+    end
+    stat at 47,11 element Object p1 cp437:0x02 p2 0 step idle
+    oop
+@Mosher
+#cycle 1
+:fart
+#go cw rndns 
+#go rndp west
+#send fart
+
+    end
+    stat at 49,9 element Object p1 cp437:0x02 p2 0 step idle
+    oop
+@Mosher
+#cycle 1
+:fart
+#go cw rndns 
+#go rndp west
+#send fart
+
+    end
+    stat at 51,12 element Object p1 cp437:0x02 p2 0 step idle
+    oop
+@Mosher
+#cycle 1
+:fart
+#go cw rndns 
+#go rndp west
+#send fart
+
+    end
+    stat at 53,14 element Object p1 cp437:0x02 p2 0 step idle
+    oop
+@Mosher
+#cycle 1
+:fart
+#go cw rndns 
+#go rndp west
+#send fart
+
+    end
+    stat at 50,17 element Object p1 cp437:0x02 p2 0 step idle
+    oop
+@Mosher
+#cycle 1
+:fart
+#go cw rndns 
+#go rndp west
+#send fart
+
+    end
+    stat at 52,16 element Object p1 cp437:0x02 p2 0 step idle
+    oop
+@Mosher
+#cycle 1
+:fart
+#go cw rndns 
+#go rndp west
+#send fart
+
+    end
+    stat at 50,15 element Object p1 cp437:0x02 p2 0 step idle
+    oop
+@Mosher
+#cycle 1
+:fart
+#go cw rndns 
+#go rndp west
+#send fart
+
+    end
+    stat at 48,17 element Object p1 cp437:0x02 p2 0 step idle
+    oop
+@Mosher
+#cycle 1
+:fart
+#go cw rndns 
+#go rndp west
+#send fart
+
+    end
+    stat at 46,18 element Object p1 cp437:0x02 p2 0 step idle
+    oop
+@Mosher
+#cycle 1
+:fart
+#go cw rndns 
+#go rndp west
+#send fart
+
+    end
+    stat at 51,20 element Object p1 cp437:0x02 p2 0 step idle
+    oop
+@Mosher
+#cycle 1
+:fart
+#go cw rndns 
+#go rndp west
+#send fart
+
+    end
+    stat at 53,18 element Object p1 cp437:0x02 p2 0 step idle
+    oop
+@Mosher
+#cycle 1
+:fart
+#go cw rndns 
+#go rndp west
+#send fart
+
+    end
+    stat at 55,20 element Object p1 cp437:0x02 p2 0 step idle
+    oop
+@Mosher
+#cycle 1
+:fart
+#go cw rndns 
+#go rndp west
+#send fart
+
+    end
+    stat at 53,22 element Object p1 cp437:0x02 p2 0 step idle
+    oop
+@Mosher
+#cycle 1
+:fart
+#go cw rndns 
+#go rndp west
+#send fart
+
+    end
+    stat at 56,23 element Object p1 cp437:0x02 p2 0 step idle
+    oop
+@Mosher
+#cycle 1
+:fart
+#go cw rndns 
+#go rndp west
+#send fart
+
+    end
+    stat at 55,21 element Object p1 cp437:0x02 p2 0 step idle
+    oop
+@Mosher
+#cycle 1
+:fart
+#go cw rndns 
+#go rndp west
+#send fart
+
+    end
+    stat at 58,19 element Object p1 cp437:0x02 p2 0 step idle
+    oop
+@Mosher
+#cycle 1
+:fart
+#go cw rndns 
+#go rndp west
+#send fart
+
+    end
+    stat at 53,24 element Object p1 cp437:0x02 p2 0 step idle
+    oop
+@Mosher
+#cycle 1
+:fart
+#go cw rndns 
+#go rndp west
+#send fart
+
+    end
+    stat at 47,22 element Object p1 cp437:0x02 p2 0 step idle
+    oop
+@Mosher
+#cycle 1
+:fart
+#go cw rndns 
+#go rndp west
+#send fart
+
+    end
+    stat at 43,23 element Object p1 cp437:0x02 p2 0 step idle
+    oop
+@Mosher
+#cycle 1
+:fart
+#go cw rndns 
+#go rndp west
+#send fart
+
+    end
+    stat at 40,24 element Object p1 cp437:0x02 p2 0 step idle
+    oop
+@Mosher
+#cycle 1
+:fart
+#go cw rndns 
+#go rndp west
+#send fart
+
+    end
+    stat at 34,22 element Object p1 cp437:0x02 p2 0 step idle
+    oop
+@Mosher
+#cycle 1
+:fart
+#go cw rndns 
+#go rndp west
+#send fart
+
+    end
+    stat at 33,23 element Object p1 cp437:0x02 p2 0 step idle
+    oop
+@Mosher
+#cycle 1
+:fart
+#go cw rndns 
+#go rndp west
+#send fart
+
+    end
+    stat at 30,22 element Object p1 cp437:0x02 p2 0 step idle
+    oop
+@Mosher
+#cycle 1
+:fart
+#go cw rndns 
+#go rndp west
+#send fart
+
+    end
+    stat at 26,24 element Object p1 cp437:0x02 p2 0 step idle
+    oop
+@Mosher
+#cycle 1
+:fart
+#go cw rndns 
+#go rndp west
+#send fart
+
+    end
+    stat at 23,23 element Object p1 cp437:0x02 p2 0 step idle
+    oop
+@Mosher
+#cycle 1
+:fart
+#go cw rndns 
+#go rndp west
+#send fart
+
+    end
+    stat at 17,24 element Object p1 cp437:0x02 p2 0 step idle
+    oop
+@Mosher
+#cycle 1
+:fart
+#go cw rndns 
+#go rndp west
+#send fart
+
+    end
+    stat at 14,24 element Object p1 cp437:0x02 p2 0 step idle
+    oop
+@Mosher
+#cycle 1
+:fart
+#go cw rndns 
+#go rndp west
+#send fart
+
+    end
+    stat at 12,22 element Object p1 cp437:0x02 p2 0 step idle
+    oop
+@Mosher
+#cycle 1
+:fart
+#go cw rndns 
+#go rndp west
+#send fart
+
+    end
+    stat at 10,21 element Object p1 cp437:0x02 p2 0 step idle
+    oop
+@Mosher
+#cycle 1
+:fart
+#go cw rndns 
+#go rndp west
+#send fart
+
+    end
+    stat at 8,23 element Object p1 cp437:0x02 p2 0 step idle
+    oop
+@Mosher
+#cycle 1
+:fart
+#go cw rndns 
+#go rndp west
+#send fart
+
+    end
+    stat at 6,21 element Object p1 cp437:0x02 p2 0 step idle
+    oop
+@Mosher
+#cycle 1
+:fart
+#go cw rndns 
+#go rndp west
+#send fart
+
+    end
+    stat at 3,24 element Object p1 cp437:0x02 p2 0 step idle
+    oop
+@Mosher
+#cycle 1
+:fart
+#go cw rndns 
+#go rndp west
+#send fart
+
+    end
+    stat at 5,23 element Object p1 cp437:0x02 p2 0 step idle
+    oop
+@Mosher
+#cycle 1
+:fart
+#go cw rndns 
+#go rndp west
+#send fart
+
+    end
+    stat at 4,22 element Object p1 cp437:0x02 p2 0 step idle
+    oop
+@Mosher
+#cycle 1
+:fart
+#go cw rndns 
+#go rndp west
+#send fart
+
+    end
+    stat at 3,21 element Object p1 cp437:0x02 p2 0 step idle
+    oop
+@Mosher
+#cycle 1
+:fart
+#go cw rndns 
+#go rndp west
+#send fart
+
+    end
+    stat at 3,20 element Object p1 cp437:0x02 p2 0 step idle
+    oop
+@Mosher
+#cycle 1
+:fart
+#go cw rndns 
+#go rndp west
+#send fart
+
+    end
+    stat at 6,18 element Object p1 cp437:0x02 p2 0 step idle
+    oop
+@Mosher
+#cycle 1
+:fart
+#go cw rndns 
+#go rndp west
+#send fart
+
+    end
+    stat at 9,15 element Object p1 cp437:0x02 p2 0 step idle
+    oop
+@Mosher
+#cycle 1
+:fart
+#go cw rndns 
+#go rndp west
+#send fart
+
+    end
+    stat at 30,13 element Object p1 cp437:0xF4 p2 0 step idle
+    stat at 22,12 element Object p1 cp437:0xF4 p2 0 step idle
+    stat at 38,12 element Object p1 cp437:0xF4 p2 0 step idle
+    stat at 30,10 element Object p1 cp437:0xF8 p2 0 step idle
+    stat at 33,10 element Object p1 cp437:0xF8 p2 0 step idle
+    stat at 31,11 element Object p1 cp437:0x4F p2 0 step idle
+    stat at 32,10 element Object p1 cp437:0x40 p2 0 step idle
+    stat at 30,12 element Object p1 cp437:0x02 p2 0 step idle
+    oop
+@Sam Bair
+Sam:This next song is dedicated to our 
+/i/i/i/i/i/i/i
+Sam:good friend, Andy.
+/i/i/i/i/i/i/i
+<<Acoustic Guitar Riff>>
+/i/i/i/i/i/i/i
+J:Andy has sex with bagels
+/i/i/i/i/i
+Andy has sex with drum heads
+/i/i/i/i/i
+Andy has sex with phone books
+/i/i/i/i/i
+and Andy has sex with his uncle Ted
+/i/i/i/i/i
+Andy has sex with baseball mitts
+/i/i/i/i/i
+Andy has sex with chain links
+/i/i/i/i/i
+Andy has sex with pop cans
+/i/i/i/i/i
+and Andy has sex with kitchen sinks
+/i/i/i/i/i
+Andy has sex with plastic sheets
+/i/i/i/i/i
+Andy has sex with compact cars
+/i/i/i/i/i
+Andy has sex with vacuum tubes
+/i/i/i/i/i
+and Andy has sex with VCRs
+/i/i/i/i/i
+Ok, children, now let's hear about
+/i/i/i/i/i/i/i
+what enters Andy.
+/i/i/i/i/i
+Here we go!
+/i/i/i
+Andy has sex with light bulbs
+/i/i/i/i/i
+Andy has sex with bars of soap
+/i/i/i/i/i
+Andy has sex with gavels
+/i/i/i/i/i
+and Andy has sex with knotted rope
+/i/i/i/i/i
+Andy has sex with scissors
+/i/i/i/i/i
+Andy has sex with 8-balls
+/i/i/i/i/i
+Andy has sex with remote controls
+/i/i/i/i/i
+and Andy has sex with duck calls
+/i/i/i/i/i
+Andy has sex with computer mice
+/i/i/i/i/i
+Andy has sex with microphones
+/i/i/i/i/i
+Andy has sex with guitar heads
+/i/i/i/i/i
+and Andy has sex with ceramic gnomes.
+/i/i/i/i/i
+Andy's had sex with lots of things
+/i/i/i/i/i/i/i
+now his dick is sore.
+/i/i/i/i/i/i/i
+The only thing Andy couldn't get
+/i/i/i/i/i/i/i
+was a little bit more.
+/i/i/i/i/i/i/i
+Andy had sex with lots of things
+/i/i/i/i/i/i/i
+just to get a kick.
+/i/i/i/i/i/i/i
+Now he know the pain and suffering
+/i/i/i/i/i/i/i
+of being dildonic.
+#send andy:yoyoyo
+#end
+
+    end
+    stat at 31,14 element Object p1 cp437:0xDB p2 0 step idle under Empty color 0x0E
+    oop
+@andy
+#end
+:yoyoyo
+/i/i/i/i/i/i/i/i/i
+Andy(to self):I never heard about Andy
+Richter doing any of that. Ohhh, he must
+mean Andy Kauffman!
+#end
+
+    end
+    stat at 37,11 element Object p1 cp437:0xF2 p2 0 step idle
+    stat at 38,11 element Object p1 cp437:0x02 p2 0 step idle
+    stat at 22,11 element Object p1 cp437:0x02 p2 0 step idle
+    stat at 21,11 element Object p1 cp437:0xEB p2 0 step idle under Empty color 0x0A
+    stat at 31,10 element Object p1 cp437:0x02 p2 0 step idle
+    oop
+@Alex Barnes
+#end
+
+    end
+    stat at 14,7 element Object p1 cp437:0x0C p2 0 step idle under Empty color 0x0C
+    stat at 47,7 element Object p1 cp437:0x0B p2 0 step idle under Empty color 0x0C
+    stat at 47,8 element Passage p1 0 p2 0 p3 board "Men's Bathroom" step idle under Empty color 0x0C
+    stat at 14,8 element Passage p1 0 p2 0 p3 board "Women's Bathroom" step idle under Empty color 0x0C
+  end
+end

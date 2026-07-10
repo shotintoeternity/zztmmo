@@ -1,0 +1,314 @@
+board "Meet the staff!"
+  start player at 30,24
+  respawn at 27,7
+  max-shots 255
+  dark false
+  reenter false
+  time-limit 0
+  exits north "Us!" south none west none east none
+
+  grid
+aaaaaaaaaaaaaaaaaaaaaaaaaaaaaoaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa
+a..........................................................a
+a..........................................................a
+a..........................................................a
+a...........................................O..............a
+a.......................................aaaaaaaaa..........a
+a.......................................aaaaaaaaa..........a
+a..........................................................a
+a..........................................................a
+a..........................................................a
+aaaaaaaaaaaaaaaaaaaaaaaaaa.......aaaaaaaaaaaaaaaaaaaaaaaaaaa
+a.....oooooooooooooooooooa.......aoooooooooooooooooooo.....a
+a.b.c.o..................a.......a...................o.d...a
+a.aeffo..................a.......a...................offea.a
+a........................a.......a.........................a
+a........................a.......a.........................a
+a........................!.......!.........................a
+aaaaaaaaaaaaaaaaaaaaaaaaaa.......aaaaaaaaaaaaaaaaaaaaaaaaaaa
+a.....oooooooooooooooooooa.......aoooooooooooooooooooo.....a
+a...o.o..................a.......a...................o.g...a
+a.aeffo..................a.......a...................offea.a
+a........................a.......a.........................a
+a........................a.......a.........................a
+a........................!...@...!.........................a
+aaaaaaaaaaaaaaaaaaaaaaaaaaaaahaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa
+  end
+
+  legend
+    a = Text-Yellow color 0x20
+    o = Object color 0x0F
+    . = Empty color 0x00
+    O = Object color 0x0D
+    b = Empty color 0x20
+    c = Object color 0x09
+    d = Object color 0x0E
+    e = Object color 0x6E
+    f = Object color 0x6F
+    ! = Scroll color 0x0F
+    g = Object color 0x0B
+    @ = Player color 0x1F under Empty color 0x00
+    h = Empty color 0x0E
+  end
+
+  stats
+    stat at 26,24 element Scroll p1 0 p2 0 step idle
+    oop
+$Keith Burrows
+
+$∞±≤€Eddie Works Software€≤±∞
+$Designer/Programmer
+
+    end
+    stat at 25,19 element Object p1 cp437:0xDB p2 0 step idle
+    oop
+#end
+:touch
+A printer!
+#end
+
+    end
+    stat at 25,12 element Object p1 cp437:0xDB p2 0 step idle
+    oop
+#end
+:touch
+A printer!
+#end
+
+    end
+    stat at 35,12 element Object p1 cp437:0xDB p2 0 step idle
+    oop
+#end
+:touch
+A printer!
+#end
+
+    end
+    stat at 35,19 element Object p1 cp437:0xDB p2 0 step idle
+    oop
+#end
+:touch
+A printer!
+#end
+
+    end
+    stat at 24,19 element Object p1 cp437:0xC4 p2 0 step idle
+    stat at 23,19 element Object p1 cp437:0xC4 p2 0 step idle
+    stat at 22,19 element Object p1 cp437:0xC4 p2 0 step idle
+    stat at 21,19 element Object p1 cp437:0xC4 p2 0 step idle
+    stat at 20,19 element Object p1 cp437:0xC4 p2 0 step idle
+    stat at 19,19 element Object p1 cp437:0xC4 p2 0 step idle
+    stat at 18,19 element Object p1 cp437:0xC4 p2 0 step idle
+    stat at 17,19 element Object p1 cp437:0xC4 p2 0 step idle
+    stat at 16,19 element Object p1 cp437:0xC4 p2 0 step idle
+    stat at 15,19 element Object p1 cp437:0xC4 p2 0 step idle
+    stat at 14,19 element Object p1 cp437:0xC4 p2 0 step idle
+    stat at 13,19 element Object p1 cp437:0xC4 p2 0 step idle
+    stat at 12,19 element Object p1 cp437:0xC4 p2 0 step idle
+    stat at 11,19 element Object p1 cp437:0xC4 p2 0 step idle
+    stat at 10,19 element Object p1 cp437:0xC4 p2 0 step idle
+    stat at 9,19 element Object p1 cp437:0xC4 p2 0 step idle
+    stat at 8,19 element Object p1 cp437:0xC4 p2 0 step idle
+    stat at 7,19 element Object p1 cp437:0xDA p2 0 step idle
+    stat at 7,20 element Object p1 cp437:0xB3 p2 0 step idle
+    stat at 7,21 element Object p1 cp437:0xD9 p2 0 step idle
+    stat at 6,21 element Object p1 cp437:0xC4 p2 0 step idle
+    stat at 5,21 element Object p1 cp437:0xFE p2 0 step idle under Empty color 0x20
+    stat at 4,21 element Object p1 cp437:0x16 p2 0 step idle under Empty color 0x20
+    oop
+@Sign thing
+#end
+:touch
+$Keith Burrows
+ 
+#end
+
+    end
+    stat at 26,17 element Scroll p1 0 p2 0 step idle
+    oop
+$J.J. Sylvia IV
+
+$∞±≤€MAJJSoft€≤±∞
+$Creator/World Peace Guy
+
+    end
+    stat at 6,14 element Object p1 cp437:0xC4 p2 0 step idle
+    stat at 5,14 element Object p1 cp437:0xFE p2 0 step idle
+    stat at 7,14 element Object p1 cp437:0xD9 p2 0 step idle
+    stat at 7,13 element Object p1 cp437:0xB3 p2 0 step idle
+    stat at 7,12 element Object p1 cp437:0xDA p2 0 step idle
+    stat at 8,12 element Object p1 cp437:0xC4 p2 0 step idle
+    stat at 9,12 element Object p1 cp437:0xC4 p2 0 step idle
+    stat at 10,12 element Object p1 cp437:0xC4 p2 0 step idle
+    stat at 11,12 element Object p1 cp437:0xC4 p2 0 step idle
+    stat at 12,12 element Object p1 cp437:0xC4 p2 0 step idle
+    stat at 13,12 element Object p1 cp437:0xC4 p2 0 step idle
+    stat at 14,12 element Object p1 cp437:0xC4 p2 0 step idle
+    stat at 15,12 element Object p1 cp437:0xC4 p2 0 step idle
+    stat at 16,12 element Object p1 cp437:0xC4 p2 0 step idle
+    stat at 17,12 element Object p1 cp437:0xC4 p2 0 step idle
+    stat at 18,12 element Object p1 cp437:0xC4 p2 0 step idle
+    stat at 19,12 element Object p1 cp437:0xC4 p2 0 step idle
+    stat at 20,12 element Object p1 cp437:0xC4 p2 0 step idle
+    stat at 21,12 element Object p1 cp437:0xC4 p2 0 step idle
+    stat at 22,12 element Object p1 cp437:0xC4 p2 0 step idle
+    stat at 23,12 element Object p1 cp437:0xC4 p2 0 step idle
+    stat at 24,12 element Object p1 cp437:0xC4 p2 0 step idle
+    stat at 36,12 element Object p1 cp437:0xC4 p2 0 step idle
+    stat at 37,12 element Object p1 cp437:0xC4 p2 0 step idle
+    stat at 38,12 element Object p1 cp437:0xC4 p2 0 step idle
+    stat at 39,12 element Object p1 cp437:0xC4 p2 0 step idle
+    stat at 40,12 element Object p1 cp437:0xC4 p2 0 step idle
+    stat at 41,12 element Object p1 cp437:0xC4 p2 0 step idle
+    stat at 42,12 element Object p1 cp437:0xC4 p2 0 step idle
+    stat at 43,12 element Object p1 cp437:0xC4 p2 0 step idle
+    stat at 44,12 element Object p1 cp437:0xC4 p2 0 step idle
+    stat at 45,12 element Object p1 cp437:0xC4 p2 0 step idle
+    stat at 46,12 element Object p1 cp437:0xC4 p2 0 step idle
+    stat at 47,12 element Object p1 cp437:0xC4 p2 0 step idle
+    stat at 48,12 element Object p1 cp437:0xC4 p2 0 step idle
+    stat at 49,12 element Object p1 cp437:0xC4 p2 0 step idle
+    stat at 50,12 element Object p1 cp437:0xC4 p2 0 step idle
+    stat at 51,12 element Object p1 cp437:0xC4 p2 0 step idle
+    stat at 52,12 element Object p1 cp437:0xC4 p2 0 step idle
+    stat at 53,12 element Object p1 cp437:0xC4 p2 0 step idle
+    stat at 56,14 element Object p1 cp437:0xFE p2 0 step idle
+    stat at 55,14 element Object p1 cp437:0xC4 p2 0 step idle
+    stat at 54,13 element Object p1 cp437:0xB3 p2 0 step idle
+    stat at 54,14 element Object p1 cp437:0xC0 p2 0 step idle
+    stat at 54,12 element Object p1 cp437:0xBF p2 0 step idle
+    stat at 54,19 element Object p1 cp437:0xBF p2 0 step idle
+    stat at 54,20 element Object p1 cp437:0xB3 p2 0 step idle
+    stat at 54,21 element Object p1 cp437:0xC0 p2 0 step idle
+    stat at 55,21 element Object p1 cp437:0xC4 p2 0 step idle
+    stat at 56,21 element Object p1 cp437:0xFE p2 0 step idle
+    stat at 53,19 element Object p1 cp437:0xC4 p2 0 step idle
+    stat at 52,19 element Object p1 cp437:0xC4 p2 0 step idle
+    stat at 51,19 element Object p1 cp437:0xC4 p2 0 step idle
+    stat at 50,19 element Object p1 cp437:0xC4 p2 0 step idle
+    stat at 49,19 element Object p1 cp437:0xC4 p2 0 step idle
+    stat at 48,19 element Object p1 cp437:0xC4 p2 0 step idle
+    stat at 47,19 element Object p1 cp437:0xC4 p2 0 step idle
+    stat at 46,19 element Object p1 cp437:0xC4 p2 0 step idle
+    stat at 45,19 element Object p1 cp437:0xC4 p2 0 step idle
+    stat at 44,19 element Object p1 cp437:0xC4 p2 0 step idle
+    stat at 43,19 element Object p1 cp437:0xC4 p2 0 step idle
+    stat at 42,19 element Object p1 cp437:0xC4 p2 0 step idle
+    stat at 41,19 element Object p1 cp437:0xC4 p2 0 step idle
+    stat at 40,19 element Object p1 cp437:0xC4 p2 0 step idle
+    stat at 39,19 element Object p1 cp437:0xC4 p2 0 step idle
+    stat at 38,19 element Object p1 cp437:0xC4 p2 0 step idle
+    stat at 37,19 element Object p1 cp437:0xC4 p2 0 step idle
+    stat at 36,19 element Object p1 cp437:0xC4 p2 0 step idle
+    stat at 5,20 element Object p2 0 step idle
+    oop
+@Keith Burrows
+#end
+:touch
+Hi. I'm Keith. Welcome. Right now I'm
+working on  a neat MegaZeux adventure
+game. I do design and programming for
+Eddie Works.
+#end
+
+    end
+    stat at 5,13 element Object p1 cp437:0x02 p2 0 step idle
+    oop
+@J.J. Sylvia IV
+#end
+:touch
+Hello. I am sooooo lucky! I get a IV
+after my  name.  Some people call me
+"Moon Unit". I want world peace.
+#end 
+
+    end
+    stat at 34,17 element Scroll p1 0 p2 0 step idle
+    oop
+$Brandon Poor
+
+$∞±≤€MAJJSoft€≤±∞
+$Designer
+
+    end
+    stat at 56,13 element Object p1 cp437:0x02 p2 0 step idle
+    oop
+@Brandon Poor
+#end
+:touch
+Hello. I'm Brandon. I did some of the
+programming for the incredible  game,
+Warania! Pleased to meet you.
+#end 
+
+    end
+    stat at 57,14 element Object p1 cp437:0x16 p2 0 step idle
+    oop
+@Sign thing
+#end
+:touch
+$Brandon Poor
+ 
+#end
+
+    end
+    stat at 4,14 element Object p1 cp437:0x16 p2 0 step idle
+    oop
+@Sign thing
+#end
+:touch
+$J.J. Sylvia IV
+ 
+#end
+
+    end
+    stat at 34,24 element Scroll p1 0 p2 0 step idle
+    oop
+$Ryan Beets
+
+$∞±≤€MAJJSoft€≤±∞
+$Just another MAJJSoft guy
+
+    end
+    stat at 57,21 element Object p1 cp437:0x16 p2 0 step idle
+    oop
+@Sign thing
+#end
+:touch
+$Ryan Beets
+ 
+#end
+
+    end
+    stat at 56,20 element Object p1 cp437:0x02 p2 0 step idle
+    oop
+@Ryan Beets
+#end
+:touch
+Hi. I'm Ryan. Welcome to my office. It's
+cool that if you work with us you  get a
+personal ZZT office! Neato!
+#end
+
+    end
+    stat at 45,5 element Object p2 0 step idle
+    oop
+@Secretary
+#end
+:touch
+Go on in. The big guys are waiting for
+you. Go on!
+#end
+
+    end
+    stat at 30,1 element Object p1 cp437:0x0A p2 0 step idle under Empty color 0x20
+    oop
+#end
+:touch
+#zap touch
+/s/w
+#end
+
+    end
+  end
+end

@@ -1,0 +1,141 @@
+board "$The Next Room"
+  start player at 30,13
+  respawn at 27,7
+  max-shots 255
+  dark false
+  reenter false
+  time-limit 0
+  exits north "$Dark Hall" south none west none east none
+
+  grid
+#############################.##############################
+#FFFFFFF#FFFFFFFFFFFFFFFFFFFF+FFFFFFFFFFFFFFFFFF#FFFFFFFFFF#
+#FFFFFFF#FFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFF#FFFFFFFFFF#
+#FFFkFFF#FFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFF#FOFFFFFFFF#
+#FFFFFFF#FFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFF#FFFFFFFFFF#
+#FFFFFFFoFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFF#FFFFFFFFFF#
+#########FFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFoFFFFFFFFFF#
+#aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaW#FFFFFbFFFF#
+#aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaW#FFFFFbFFFF#
+#aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaW#FFFFbSbFFF#
+#aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaW#FFFSSSSSFF#
+#FFFFFFFFFFFFFFFFFFFFFFFFFFFF!FFFFFFFFFFFFFFFFFF#FFFSSSbSFF#
+#FFFFFFFFFFFFFFFFFFFFFFFFFFFF@FFFFFFFFFFFFFFFFFF#FFFSSSbSFF#
+#FFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFF#FFFSSSbSFF#
+#FFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFF#FFFSSSbSFF#
+#FFFFFFFFFFFFFFFFFFFOFOFOFOFFFFFFFFFFFFFFFFFFFFF#FFFSSSbSFF#
+#FFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFF#FFFSSSbSFF#
+#FFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFF#FFFSSSbSFF#
+#FFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFF#FFFSSSSSFF#
+#FFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFF#FFbSSSSSbF#
+#FFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFF#W........o#
+#FFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFF#FFFFFbFFFF#
+#FFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFF#FFFFFFFFFF#
+#FFFFFFFFFFFFFFFFFFFFFFFFFFFFAFFFFFcFFFFFFFFFFFF#FFFFFFFFFF#
+#############################p##############################
+  end
+
+  legend
+    # = Solid color 0x0D
+    . = Empty color 0x0D
+    F = Fake color 0x0D
+    + = Door color 0x5F
+    k = Key color 0x0D
+    O = Boulder color 0x0D
+    o = Object color 0x0D
+    a = Empty color 0x0E
+    W = Blink wall color 0x0D
+    b = Object color 0x0F
+    S = Solid color 0x0F
+    ! = Scroll color 0x0F
+    @ = Player color 0x1F under Fake color 0x0D
+    A = Fake color 0x0E
+    c = Object color 0x0E
+    p = Passage color 0x5F to "$Office"
+  end
+
+  stats
+    stat at 52,20 element Object p1 cp437:0xDE p2 0 step idle under Fake color 0x0D
+    stat at 58,20 element Object p1 cp437:0xDD p2 0 step idle under Fake color 0x0D
+    stat at 55,9 element Object p1 cp437:0xB3 p2 0 step idle under Fake color 0x0D
+    stat at 55,8 element Object p1 cp437:0xB3 p2 0 step idle under Fake color 0x0D
+    stat at 54,10 element Object p1 cp437:0xDE p2 0 step idle under Fake color 0x0D
+    stat at 56,10 element Object p1 cp437:0xDD p2 0 step idle under Fake color 0x0D
+    stat at 56,12 element Object p1 cp437:0xB3 p2 0 step idle under Empty color 0x0F
+    stat at 56,13 element Object p1 cp437:0xB3 p2 0 step idle under Empty color 0x0F
+    stat at 56,14 element Object p1 cp437:0xB3 p2 0 step idle under Empty color 0x0F
+    stat at 56,15 element Object p1 cp437:0xB3 p2 0 step idle under Empty color 0x0F
+    stat at 56,16 element Object p1 cp437:0xB3 p2 0 step idle under Empty color 0x0F
+    stat at 56,17 element Object p1 cp437:0xB3 p2 0 step idle under Empty color 0x0F
+    stat at 56,18 element Object p1 cp437:0xB3 p2 0 step idle under Empty color 0x0F
+    stat at 55,22 element Object p1 cp437:0xE0 p2 0 step idle under Fake color 0x0D
+    oop
+@Thing
+#end
+:touch
+SNAP!
+/n
+#put s red fake 
+#put e red fake
+#put w red fake
+#change white solid purple fake
+#change purple solid red solid
+#change white object purple fake
+#die
+
+    end
+    stat at 30,25 element Passage p1 0 p2 0 p3 board "$Office" step idle under Empty color 0x0D
+    stat at 36,24 element Object p1 cp437:0xB2 p2 0 step idle under Fake color 0x0D
+    oop
+GO
+/i/i/i
+#change yellow fake purple solid
+#become purple fake
+
+    end
+    stat at 49,7 element Object p1 cp437:0xE3 p2 0 step idle under Fake color 0x0D
+    oop
+@Tiger (yeah right)
+#cycle 1
+#end
+:touch
+/e/n
+#zap touch
+#end
+:touch
+/s/w
+#restore touch
+#end
+
+    end
+    stat at 9,6 element Object p1 cp437:0xDB p2 0 step idle under Empty color 0x0D
+    oop
+#if not any red solid then #restart
+#become purple fake
+#end
+
+    end
+    stat at 48,11 element Blink wall p1 3 step west under Fake color 0x0D
+    stat at 48,10 element Blink wall p1 2 step west under Fake color 0x0D
+    stat at 48,9 element Blink wall p1 1 step west under Fake color 0x0D
+    stat at 48,8 element Blink wall p1 0 step west under Fake color 0x0D
+    stat at 50,21 element Blink wall p1 0 p2 8 step east under Fake color 0x0D
+    stat at 59,21 element Object p1 cp437:0xFF p2 0 step idle under Empty color 0x0D
+    oop
+@Invisible Wall
+#end
+:touch
+Yeah right. I'm not that stupid!
+#play +t+c+t
+#become purple normal
+
+    end
+    stat at 30,12 element Scroll p1 0 p2 0 step idle under Fake color 0x0D
+    oop
+Dance to the beat of a different drummer
+boy!
+(Translation: Do something WEIRD)
+
+    end
+  end
+end

@@ -1,0 +1,361 @@
+board "---"
+  start player at 31,25
+  respawn at 1,1
+  max-shots 255
+  dark false
+  reenter false
+  time-limit 0
+  exits north none south none west none east none
+
+  grid
+.aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaoaaaaaaaaaaaaaaaaaaaaaaa
+aaaalaaaaaaaaaaaaaaaaaaalaaaaooooaaaaaaaaaaaaaaaaaaaaaaaaaaa
+aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaOaaaaaaaaaaaaaaaa
+aaaaaaaaaaaaaaaaaaaaaaaaaaaaabN#baaaaaaaaaaaaaaaaaaaaaaaaaaa
+aaaaaaaaaaaaaaaaaOaaaaaaaaaabN##cbaaaaaaaaaaaaaalaaaaaaaaaaa
+aaaaaaaaaaaaaaaaaaaaaaaaaaaaab#cbaaaaoaaaaaaaaaaaaaaaaaaaaaa
+aaaaaaaaaaaaalaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa
+aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa
+aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaOaaaaaaaaaaaaaaaaaaaaaaaaaaaaa
+aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa
+aaaaaaaaaaaabbbaaaaaaaaaaaaalaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa
+aaaaaaaaOaabNNN#baaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa
+aaaaaaaaaaa#NN##cbaaaaaaaaaaaaaaaaaaaaaaaaabbbaaaaaaaaaaaaaa
+aaaaaaaaaaabN##cbaaaaaaaaaaaaaaaaaaaaaaaaabNNN#baaaaaaaaaaaa
+aaaaaaaaaaaabbbbaaaaaaaaaaaaaaaaaaaaaaaaabNN###cbaaaaaaaaaaa
+aaaaaaaaaaaaaaaaaaaaaaaaaaaaaadaaaaaaaaaeNN###ccbaaalaaaaaaa
+aaaaalaaaaaaaaaaaaaaaaaaaaaaaadaaaaaaaaabN###cc#baaaaaaaaaaa
+aaaaaaaaaaaaaaaaaaaaaaaaaaaaaafaaaaaaaaaabb##c#baaaaaaaaaaaa
+aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaabbbaaaaaaaaaaaaa
+aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaOaaaaaaaaaaaaaaaaaa
+aaaaaaaaaaaaaaaaaaalaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa
+aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa
+gggggggggggggggggggggggggggggggggggggggggggggggggggggggggggg
+aaaaaaaaaaaaaaaaaaaaaaaaaaaabaaabaaaaaaaaaaaaaaaaaaaaaaaaaaa
+hhhhhhhhhhhhhhhhhhhhhhhhhhhhii@ihhhhhhhhhhhhhhhhhhhhhhhhhhhh
+  end
+
+  legend
+    . = Empty color 0x00
+    a = Empty color 0x0F
+    o = Object color 0x0F
+    l = Line color 0x0F
+    O = Object color 0x0A
+    b = Object color 0x08
+    N = Normal color 0x08
+    # = Solid color 0x08
+    c = Normal color 0x78
+    d = Empty color 0x04
+    e = Object color 0x02
+    f = Object color 0x04
+    g = Line color 0x08
+    h = element 33 color 0x08
+    i = Object color 0x80
+    @ = Player color 0x1F under Empty color 0x0F
+  end
+
+  stats
+    stat at 29,24 element Object cycle 1 p1 cp437:0x11 p2 0 step idle under Empty color 0x0F
+    oop
+
+:l
+/i#if not contact l
+#all:left
+#put e empty
+#l
+
+    end
+    stat at 33,24 element Object cycle 1 p1 cp437:0x10 p2 0 step idle under Empty color 0x0F
+    oop
+
+:l
+/i#if not contact l
+#all:right
+#put w empty
+#l
+
+    end
+    stat at 32,25 element Object cycle 1 p2 0 step idle under Empty color 0x0F
+    oop
+
+:l
+#change red water empty
+#change yellow breakable red water
+#change yellow normal yellow breakable
+#change yellow solid yellow normal
+#change yellow fake yellow solid
+/i#l
+
+    end
+    stat at 17,12 element Object p1 cp437:0xDC p2 0 step idle under Empty color 0x07
+    stat at 18,13 element Object p1 cp437:0xDD p2 0 step idle under Empty color 0x0F
+    stat at 17,14 element Object p1 cp437:0xDF p2 0 step idle under Empty color 0x0F
+    stat at 43,18 element Object p1 cp437:0xDF p2 0 step idle under Empty color 0x0F
+    stat at 48,14 element Object p1 cp437:0xDC p2 0 step idle under Empty color 0x07
+    stat at 49,15 element Object p1 cp437:0xDD p2 0 step idle under Empty color 0x0F
+    stat at 41,17 element Object p1 cp437:0xDE p2 0 step idle under Empty color 0x0F
+    stat at 42,15 element Object p1 cp437:0xDE p2 0 step idle under Empty color 0x0F
+    stat at 41,16 element Object p1 cp437:0x11 p2 0 step idle under Empty color 0x0F
+    oop
+
+:l
+#play sx
+#shoot w
+/i/i/i/i/i
+#l
+
+    end
+    stat at 43,14 element Object p1 cp437:0xDE p2 0 step idle under Empty color 0x0F
+    stat at 44,13 element Object p1 cp437:0xDC p2 0 step idle under Empty color 0x0F
+    stat at 45,13 element Object p1 cp437:0xDC p2 0 step idle under Empty color 0x0F
+    stat at 46,13 element Object p1 cp437:0xDC p2 0 step idle under Empty color 0x0F
+    stat at 49,16 element Object p1 cp437:0xDD p2 0 step idle under Empty color 0x0F
+    stat at 49,17 element Object p1 cp437:0xDD p2 0 step idle under Empty color 0x0F
+    stat at 48,18 element Object p1 cp437:0xDD p2 0 step idle under Empty color 0x0F
+    stat at 47,19 element Object p1 cp437:0xDF p2 0 step idle under Empty color 0x0F
+    stat at 46,19 element Object p1 cp437:0xDF p2 0 step idle under Empty color 0x0F
+    stat at 45,19 element Object p1 cp437:0xDF p2 0 step idle under Empty color 0x0F
+    stat at 42,18 element Object p1 cp437:0xDF p2 0 step idle under Empty color 0x0F
+    stat at 14,11 element Object p1 cp437:0xDC p2 0 step idle under Empty color 0x0F
+    stat at 15,11 element Object p1 cp437:0xDC p2 0 step idle under Empty color 0x0F
+    stat at 12,12 element Object p1 cp437:0xDE p2 0 step idle under Empty color 0x0F
+    stat at 13,11 element Object p1 cp437:0xDC p2 0 step idle under Empty color 0x0F
+    stat at 12,14 element Object p1 cp437:0xDE p2 0 step idle under Empty color 0x0F
+    stat at 13,15 element Object p1 cp437:0xDF p2 0 step idle under Empty color 0x0F
+    stat at 14,15 element Object p1 cp437:0xDF p2 0 step idle under Empty color 0x0F
+    stat at 15,15 element Object p1 cp437:0xDF p2 0 step idle under Empty color 0x0F
+    stat at 16,15 element Object p1 cp437:0xDF p2 0 step idle under Empty color 0x0F
+    stat at 42,20 element Object cycle 1 p1 cp437:0x04 p2 0 step idle under Empty color 0x0F
+    oop
+@gem
+:l
+#if blocked n if south hype
+#if blocked s if north hype
+#if blocked e if west hype
+#if blocked w if east hype
+#l
+:hype
+#all:add
+#die
+
+    end
+    stat at 9,12 element Object cycle 1 p1 cp437:0x04 p2 0 step idle under Empty color 0x0F
+    oop
+@gem
+:l
+#if blocked n if south hype
+#if blocked s if north hype
+#if blocked e if west hype
+#if blocked w if east hype
+#l
+:hype
+#all:add
+#die
+
+    end
+    stat at 44,3 element Object cycle 1 p1 cp437:0x04 p2 0 step idle under Empty color 0x0F
+    oop
+@gem
+:l
+#if blocked n if south hype
+#if blocked s if north hype
+#if blocked e if west hype
+#if blocked w if east hype
+#l
+:hype
+#all:add
+#die
+
+    end
+    stat at 37,1 element Object p1 cp437:0xF9 p2 0 step idle under Empty color 0x0F
+    stat at 30,4 element Object p1 cp437:0xDC p2 0 step idle under Empty color 0x0F
+    stat at 33,4 element Object p1 cp437:0xDC p2 0 step idle under Empty color 0x07
+    stat at 29,5 element Object p1 cp437:0xDE p2 0 step idle under Empty color 0x0F
+    stat at 34,5 element Object p1 cp437:0xDD p2 0 step idle under Empty color 0x0F
+    stat at 30,6 element Object p1 cp437:0xDF p2 0 step idle under Empty color 0x0F
+    stat at 33,6 element Object p1 cp437:0xDF p2 0 step idle under Empty color 0x0F
+    stat at 30,2 element Object cycle 1 p1 cp437:0x20 p2 0 step idle under Empty color 0x0F data-pos -1
+    oop
+
+:add
+#char 72
+
+    end
+    stat at 31,2 element Object cycle 1 p1 cp437:0x20 p2 0 step idle under Empty color 0x0F data-pos -1
+    oop
+
+:add
+#zap add
+#end
+:add
+#char 89
+
+    end
+    stat at 32,2 element Object cycle 1 p1 cp437:0x20 p2 0 step idle under Empty color 0x0F data-pos -1
+    oop
+
+:add
+:add
+#zap add
+#end
+:add
+#char 80
+
+    end
+    stat at 33,2 element Object cycle 1 p1 cp437:0x20 p2 0 step idle under Empty color 0x0F data-pos -1
+    oop
+
+:add
+:add
+:add
+#zap add
+#end
+:add
+#char 69
+
+    end
+    stat at 31,18 element Object cycle 1 p1 cp437:0x1E p2 0 step idle under Empty color 0x0F
+    oop
+@ship
+#set north
+#n
+:left
+#if north w
+#if west s
+#if south e
+#if east n
+#end
+:right
+#if north e
+#if west n
+#if south w
+#if east s
+#end
+:n
+#char 30
+#set north
+#clear south
+#clear east
+#clear west
+#if not blocked n put n yellow fake
+#try n splode
+#n
+
+:e
+#char 16
+#set east
+#clear south
+#clear north
+#clear west
+#if not blocked e put e yellow fake
+#try e splode
+#e
+
+:w
+#char 17
+#set west
+#clear south
+#clear east
+#clear north
+#if not blocked w put w yellow fake
+#try w splode
+#w
+
+:s
+#char 31
+#set south
+#clear north
+#clear east
+#clear west
+#if not blocked s put s yellow fake
+#try s splode
+#s
+:splode
+#lock
+#if north put north boulder
+#if south put south boulder
+#if east put east boulder
+#if west put west boulder
+#if any blue boulder h
+#if any yellow boulder h
+#if any green boulder h
+#if any red boulder h
+#if any purple boulder h
+#change boulder empty
+:shot
+#endgame
+#become slime
+#end
+:h
+#change boulder empty
+#all:add
+#unlock
+#if north n
+#if east e
+#if west w
+#if south s
+
+    end
+    stat at 30,25 element Object cycle 1 p2 0 step idle under Empty color 0x0F
+    oop
+
+:l
+#change green object purple object
+/i
+#change purple object yellow object
+/i
+#change yellow object red object
+/i
+#change red object blue object
+/i
+#change blue object green object
+/i#l
+
+    end
+    stat at 18,5 element Object cycle 1 p1 cp437:0x04 p2 0 step idle under Empty color 0x0F
+    oop
+@gem
+:l
+#if blocked n if south hype
+#if blocked s if north hype
+#if blocked e if west hype
+#if blocked w if east hype
+#l
+:hype
+#all:add
+#die
+
+    end
+    stat at 38,6 element Object cycle 2 p1 cp437:0xD8 p2 0 step idle under Empty color 0x0F
+    oop
+
+:l
+/s/s/s/s/s/s/n/n/n/n/n/n#l
+
+    end
+    stat at 29,25 element Object cycle 1 p2 0 step idle under Empty color 0x0F
+    oop
+
+:l
+#change green gem purple gem
+/i
+#change purple gem yellow gem
+/i
+#change yellow gem red gem
+/i
+#change red gem blue gem
+/i
+#change blue gem green gem
+/i#l
+
+    end
+    stat at 31,9 element Object cycle 6 p1 cp437:0x04 p2 0 step idle under Empty color 0x0F
+    oop
+
+:l
+?rndne
+#l
+
+    end
+  end
+end

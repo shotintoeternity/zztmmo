@@ -1,0 +1,101 @@
+board "Joe"
+  start player at 9,12
+  respawn at 30,12
+  max-shots 255
+  dark false
+  reenter false
+  time-limit 0
+  exits north none south none west none east none
+
+  grid
+aaaaaaaaaaaaaaaaaaaaaaa#####################################
+aaaaaaaaaaaaaaaaaaaaaa######################################
+aaaaaaaaaaaaaaaaaaaaa#######################################
+aaaaaaaaaaaaaaaaaaaallllllllllllllllllllllllllllllllllllllll
+aaaaaaaaaaaaaaaaaaa#########################################
+aaaaaaaaaaaaaaaaaaa#N#b#c#d#e#f#g#N#b#c#d#e#f#g#N#b#c#d#e#f#
+aaaaaaaaaaaaaaaaaaa#########################################
+aaaaaaaaaaaaaaaaaaaallllllllllllllllllllllllllllllllllllllll
+aaaaaaaaaaaaaaaaaaaaa#######################################
+aaaaaaaaaaaaaaaaaaaaaa##########W#I#h#Y#E#R#P#R#I#Z#E#######
+aaaaaaaFFaaaaaaaaaaaaaa#####################################
+aaaaaaFF@Fo..............iiiiiiiiip####aaaaaaaaaaaaaaaaaaaaa
+aaaaa######aaaaaaaaaaaaaaaaaaaaaaaa#####aaaaaaaaaaaaaaaaaaaa
+aaaaaa####aaaaaaaaaaaaaaaaaaaaaaaaaa######aaaaaaaaaaaaaaaaaa
+aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa##########aaaaaaaaaaaaa
+aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa##############aaaaaaaa
+aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa##################aaa
+aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa####################
+aaaaaaaaaaaaaaaaaaaaaaaaaaaaa###############################
+aaaaaaaaaaaaaaaaaaaaaaaaagggg###############################
+aaaaaaaaaaaaaaaaaaaaaaaaagggg###############################
+aaaaaaaaaaaaaaaaaaaaaaaaagggg###############################
+aaaaaaaaaaaaaaaaaaaaaaaaagggg###############################
+aaaaaaaaaaaaaaaaaaaaaaaaaaaaa###############################
+oaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaO
+  end
+
+  legend
+    a = Text-White color 0x20
+    # = Solid color 0x0F
+    l = Line color 0x0F
+    N = Normal color 0x0A
+    b = Normal color 0x0B
+    c = Normal color 0x0C
+    d = Normal color 0x0D
+    e = Normal color 0x0E
+    f = Normal color 0x0F
+    g = Normal color 0x09
+    W = Text-White color 0x57
+    I = Text-White color 0x49
+    h = Text-White color 0x4E
+    Y = Text-White color 0x59
+    E = Text-White color 0x45
+    R = Text-White color 0x52
+    P = Text-White color 0x50
+    Z = Text-White color 0x5A
+    F = Fake color 0x09
+    @ = Player color 0x1F under Fake color 0x09
+    o = Object color 0x0F
+    . = Empty color 0x0F
+    i = Empty color 0x0A
+    p = Passage color 0x5F to "Winyerprize"
+    O = Object color 0x09
+  end
+
+  stats
+    stat at 60,25 element Object p1 cp437:0xFF p2 0 step idle under Empty color 0x20
+    oop
+#cycle 1
+/i
+#change normal breakable
+/i
+#change breakable water
+/i
+#change water breakable
+/i
+#change breakable normal
+#restart
+
+    end
+    stat at 11,12 element Object p1 cp437:0xB2 p2 0 step idle under Empty color 0x0F
+    oop
+#cycle 1
+/e/e/e/e/e/e/e/e/e/e/e/e/e/e/e/e/e/e/e/e/e
+/e/e
+#change empty white fake
+#become white fake
+
+    end
+    stat at 1,25 element Object p1 cp437:0xFF p2 0 step idle under Empty color 0x20
+    oop
+@You
+/i/i/i/i/i/i/i/i/i/i/i/i/i/i/i/i/i
+Finally, the Winyerprize! Don't just stand
+there, go in!
+#die
+
+    end
+    stat at 35,12 element Passage p1 0 p2 0 p3 board "Winyerprize" step idle under Empty color 0x0F
+  end
+end

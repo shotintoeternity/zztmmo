@@ -1,0 +1,239 @@
+board "Fog Roll Town More"
+  start player at 55,21
+  respawn at 1,1
+  max-shots 255
+  dark false
+  reenter false
+  time-limit 0
+  exits north none south none west none east none
+
+  grid
+BBBBBBBBB~~~~~~BBBBBBB~~~~~~~~~~~BBBBB~~~~~~~~~~~~~BBBBB~~~~
+BBBBBBBB~~~~~~~~BBB~BB~~~~~~~~~~~~BB~~~~~~~~~~~~~~~~~~BB~~##
+~~~BB~~~~~~~~~~~~B~~~~~~~~~~~~~~~~BB~~######~#######~~~B~###
+###~~~~~~####~~~~~~#############~~~~~~#################~~###
+####~~###########~################~~####################~###
+############################################################
+####################WWWWW#################WW################
+#######WaWW########WaaaaWWWWW############aaWWWW#aa##########
+#######WWaaW########aaNaaWWWW###########aaaWaWWW############
+#########WWW#########aaaa###############aaaaaW############bb
+############b#############################aaaW#######bb##bcc
+bbbb##b####bdb#############b##eef###eee######b######bcbbbcoo
+ddOdbbaNbbbdgdWbgba##b#abNbdb#ef##ef#e######bdbbb##bcccdNaSh
+ijNkdlSNlmWWn~~~nnnnWWmlNSlcd####bbbpqbr###bdoossbbsssssWWss
+jtguvlhSlmjW~hnhhnhnaWmlShlccd~wk#xayadzr##ddACDWEEWDDFjGGjF
+sWgassssssjHIyAJKJJnLfLfLMJJKJBBdxPaaaEQRTUVCAyACyACAyACyAXY
+ZngnZ01102Hjsss333345464743633ssssaCaaCasssssssssssss88888ss
+ahaha9!$!%&*+++JJKJ4444644JKJ-++=^_*&a:;,./+\|<|<|>%:?h?h?:H
+`'(gggg((&%*W:W333365)`(5436(`:[]H_{&&`)H}/(H:WÄ888888888888
+()((``l(((Åg(Ç(g`gg)(É'((g`g(É)(H`^ÑÖÖ`Ü(Há:(H)àÄâââââââââââ
+(`'((```Å(`(É(()`(äÇ(='`()`(((Ç((`)ãll`'Ü'ggH((ààÄââââ@âââââ
+(`2HH2':=H`Ç(É'`((('(((='`(((2`((Ç`å((ÅÇ((.``(ÇàààÄâââââââââ
+((((}H(':}2}((`(((H`çyyyyyyyyyyyyyyyyyyyyyyyyyyàéààÄââââââââ
+mèêêmHmmmmmmHmmmmm2}BçëëëëëëëëëëëëëëëëëëëëíííííàìîààÄÄÄÄÄÄÄÄ
+mmmmmmmmmmmmmmmmmmmHBBçíííííííííííííííííííííëëëàìîéàxxxxxxxx
+  end
+
+  legend
+    B = Breakable color 0x7F
+    ~ = Water color 0x7F
+    # = Solid color 0x07
+    W = Water color 0x78
+    a = Breakable color 0x78
+    N = Normal color 0x78
+    b = Water color 0x79
+    c = Normal color 0x79
+    d = Breakable color 0x79
+    e = Water color 0x7C
+    f = Breakable color 0x7C
+    o = Object color 0x69
+    O = Object color 0x98
+    g = Object color 0x78
+    S = Solid color 0x08
+    h = Object color 0x08
+    i = Normal color 0x72
+    j = Water color 0x02
+    k = Breakable color 0x02
+    l = Breakable color 0x08
+    m = Water color 0x08
+    n = Solid color 0x77
+    p = Breakable color 0x76
+    q = Normal color 0x76
+    r = Normal color 0x07
+    s = element 33 color 0x78
+    t = Object color 0x07
+    u = Object color 0x27
+    v = Water color 0x26
+    w = Normal color 0x7F
+    x = Breakable color 0x7E
+    y = Text-White color 0xDF
+    z = Breakable color 0x07
+    A = Solid color 0x9F
+    C = Text-White color 0xDE
+    D = Object color 0x68
+    E = Object color 0x47
+    F = Object color 0x67
+    G = Object color 0x42
+    H = Water color 0x06
+    I = Solid color 0x9A
+    J = Breakable color 0x8C
+    K = Object color 0x0C
+    L = Breakable color 0x6C
+    M = Normal color 0x08
+    P = Object color 0x4E
+    Q = Object color 0x48
+    R = Solid color 0x78
+    T = Object color 0x0E
+    U = Object color 0x6E
+    V = Solid color 0x0E
+    X = Object color 0x9A
+    Y = Solid color 0x1A
+    Z = Object color 0x76
+    0 = Object color 0x6C
+    1 = Solid color 0x9C
+    2 = Normal color 0x26
+    3 = Water color 0x8C
+    4 = Breakable color 0x0C
+    5 = Object color 0x04
+    6 = Normal color 0x48
+    7 = element 43 color 0x60
+    8 = Object color 0x7E
+    9 = Object color 0x9F
+    ! = Solid color 0x0F
+    $ = Text-White color 0xFE
+    % = Breakable color 0x26
+    & = Breakable color 0x24
+    * = Water color 0x24
+    + = Water color 0x8F
+    - = Breakable color 0x48
+    = = Normal color 0x42
+    ^ = Water color 0x62
+    _ = Normal color 0x62
+    : = Normal color 0x20
+    ; = Breakable color 0x25
+    , = Water color 0x25
+    . = Water color 0x2C
+    / = Breakable color 0x46
+    \ = Text-White color 0xC9
+    | = Text-White color 0xC4
+    < = Text-White color 0xD1
+    > = Text-White color 0xBB
+    ? = Object color 0x8E
+    ` = Breakable color 0x20
+    ' = Breakable color 0x42
+    ( = Water color 0x0A
+    ) = Water color 0x20
+    [ = Water color 0x42
+    ] = Water color 0x4A
+    { = Water color 0x04
+    } = Breakable color 0x06
+    cp437:0x80 = Normal color 0x7E
+    cp437:0x81 = Breakable color 0x2C
+    cp437:0x82 = Breakable color 0x2E
+    cp437:0x83 = Breakable color 0x0A
+    cp437:0x84 = Water color 0x64
+    cp437:0x85 = Normal color 0x28
+    cp437:0x86 = Solid color 0x28
+    cp437:0x87 = Water color 0x6C
+    cp437:0x88 = Water color 0x7E
+    cp437:0x89 = Normal color 0x70
+    cp437:0x8A = Breakable color 0x28
+    cp437:0x8B = Breakable color 0x6A
+    @ = Player color 0x1F under Empty color 0x0F
+    cp437:0x8C = Water color 0x6A
+    cp437:0x8D = Solid color 0x7F
+    cp437:0x8E = Water color 0x3F
+    cp437:0x8F = element 43 color 0x6E
+    cp437:0x90 = element 43 color 0x2A
+    cp437:0x91 = Normal color 0x68
+    cp437:0x92 = Breakable color 0x68
+    cp437:0x93 = Solid color 0x03
+    cp437:0x94 = element 43 color 0x30
+  end
+
+  stats
+    stat at 3,13 element Object p1 cp437:0xC5 p2 0 step idle under Empty color 0x0F
+    stat at 46,14 element Object p1 cp437:0xDF p2 0 step idle under Empty color 0x0F
+    stat at 47,14 element Object p1 cp437:0xDF p2 0 step idle under Empty color 0x0F
+    stat at 2,15 element Object p1 cp437:0xDE p2 0 step idle under Empty color 0x0F
+    stat at 3,15 element Object p1 cp437:0xDD p2 0 step idle under Empty color 0x0F
+    stat at 4,15 element Object p1 cp437:0xDD p2 0 step idle under Empty color 0x0F
+    stat at 48,15 element Object p1 cp437:0xDF p2 0 step idle under Empty color 0x0F
+    stat at 50,15 element Object p1 cp437:0xDF p2 0 step idle under Empty color 0x0F
+    stat at 51,15 element Object p1 cp437:0xDF p2 0 step idle under Empty color 0x0F
+    stat at 53,15 element Object p1 cp437:0xDF p2 0 step idle under Empty color 0x0F
+    stat at 54,15 element Object p1 cp437:0xDF p2 0 step idle under Empty color 0x0F
+    stat at 55,15 element Object p1 cp437:0xDF p2 0 step idle under Empty color 0x0F
+    stat at 57,15 element Object p1 cp437:0xDF p2 0 step idle under Empty color 0x0F
+    stat at 58,15 element Object p1 cp437:0xDF p2 0 step idle under Empty color 0x0F
+    stat at 3,16 element Object p1 cp437:0xDD p2 0 step idle under Empty color 0x0F
+    stat at 17,16 element Object p1 cp437:0xDF p2 0 step idle under Empty color 0x0F
+    stat at 29,16 element Object p1 cp437:0xDF p2 0 step idle under Empty color 0x0F
+    stat at 35,16 element Object p1 cp437:0xDF p2 0 step idle under Empty color 0x0F
+    stat at 39,16 element Object p1 cp437:0xDF p2 0 step idle under Empty color 0x0F
+    stat at 40,16 element Object p1 cp437:0xDF p2 0 step idle under Empty color 0x0F
+    stat at 42,16 element Object p1 cp437:0xDE p2 0 step idle under Empty color 0x0F
+    stat at 43,16 element Object p1 cp437:0xDF p2 0 step idle under Empty color 0x0F
+    stat at 1,17 element Object p1 cp437:0xDF p2 0 step idle under Empty color 0x0F
+    stat at 3,17 element Object p1 cp437:0xDD p2 0 step idle under Empty color 0x0F
+    stat at 5,17 element Object p1 cp437:0xDF p2 0 step idle under Empty color 0x0F
+    stat at 6,17 element Object p1 cp437:0xDC p2 0 step idle under Empty color 0x0F
+    stat at 9,17 element Object p1 cp437:0xDC p2 0 step idle under Empty color 0x0F
+    stat at 21,17 element Object p1 cp437:0xDF p2 0 step idle under Empty color 0x0F
+    stat at 2,18 element Object p1 cp437:0xC5 p2 0 step idle under Empty color 0x0F
+    stat at 4,18 element Object p1 cp437:0xC5 p2 0 step idle under Empty color 0x0F
+    stat at 6,18 element Object p1 cp437:0xDE p2 0 step idle under Empty color 0x0F
+    stat at 18,18 element Object p1 cp437:0xDF p2 0 step idle under Empty color 0x0F
+    stat at 28,18 element Object p1 cp437:0xDF p2 0 step idle under Empty color 0x0F
+    stat at 4,19 element Object p1 cp437:0xDF p2 0 step idle under Empty color 0x0F
+    stat at 5,19 element Object p1 cp437:0xDF p2 0 step idle under Empty color 0x0F
+    stat at 6,19 element Object p1 cp437:0xDF p2 0 step idle under Empty color 0x0F
+    stat at 7,19 element Object p1 cp437:0xDF p2 0 step idle under Empty color 0x0F
+    stat at 21,19 element Object p1 cp437:0xDF p2 0 step idle under Empty color 0x0F
+    stat at 25,19 element Object p1 cp437:0xDF p2 0 step idle under Empty color 0x0F
+    stat at 49,19 element Object p1 cp437:0xDF p2 0 step idle under Empty color 0x0F
+    stat at 50,19 element Object p1 cp437:0xDF p2 0 step idle under Empty color 0x0F
+    stat at 51,19 element Object p1 cp437:0xDF p2 0 step idle under Empty color 0x0F
+    stat at 52,19 element Object p1 cp437:0xDF p2 0 step idle under Empty color 0x0F
+    stat at 53,19 element Object p1 cp437:0xDF p2 0 step idle under Empty color 0x0F
+    stat at 54,19 element Object p1 cp437:0xDF p2 0 step idle under Empty color 0x0F
+    stat at 55,19 element Object p1 cp437:0xDF p2 0 step idle under Empty color 0x0F
+    stat at 56,19 element Object p1 cp437:0xDF p2 0 step idle under Empty color 0x0F
+    stat at 57,19 element Object p1 cp437:0xDF p2 0 step idle under Empty color 0x0F
+    stat at 58,19 element Object p1 cp437:0xDF p2 0 step idle under Empty color 0x0F
+    stat at 59,19 element Object p1 cp437:0xDF p2 0 step idle under Empty color 0x0F
+    stat at 60,19 element Object p1 cp437:0xDF p2 0 step idle under Empty color 0x0F
+    stat at 12,20 element Object p1 cp437:0xDF p2 0 step idle under Empty color 0x0F
+    stat at 16,20 element Object p1 cp437:0xDF p2 0 step idle under Empty color 0x0F
+    stat at 18,20 element Object p1 cp437:0xDF p2 0 step idle under Empty color 0x0F
+    stat at 19,20 element Object p1 cp437:0xDF p2 0 step idle under Empty color 0x0F
+    stat at 26,20 element Object p1 cp437:0xDF p2 0 step idle under Empty color 0x0F
+    stat at 28,20 element Object p1 cp437:0xDF p2 0 step idle under Empty color 0x0F
+    stat at 43,21 element Object p1 cp437:0xDF p2 0 step idle under Empty color 0x0F
+    stat at 44,21 element Object p1 cp437:0xDF p2 0 step idle under Empty color 0x0F
+    stat at 7,15 element Object p1 cp437:0xDE p2 0 step idle under Empty color 0x0F
+    stat at 26,15 element Object p1 cp437:0xDE p2 0 step idle under Empty color 0x0F
+    stat at 14,15 element Object p1 cp437:0xC5 p2 0 step idle under Empty color 0x0F
+    stat at 19,15 element Object p1 cp437:0xC5 p2 0 step idle under Empty color 0x0F
+    stat at 17,15 element Object p1 cp437:0xC5 p2 0 step idle under Empty color 0x0F
+    stat at 16,15 element Object p1 cp437:0xC5 p2 0 step idle under Empty color 0x0F
+    stat at 13,13 element Object p1 cp437:0xDF p2 0 step idle under Empty color 0x0F
+    stat at 17,13 element Object p1 cp437:0xDF p2 0 step idle under Water color 0x79
+    stat at 59,16 element Object p1 cp437:0xDE p2 0 step idle under Empty color 0x0F
+    stat at 60,15 element Object p1 cp437:0xDF p2 0 step idle under Empty color 0x0F
+    stat at 54,18 element Object p1 cp437:0xDD p2 0 step idle under Water color 0x8F
+    stat at 54,17 element Object p1 cp437:0xDC p2 0 step idle under Empty color 0x0F
+    stat at 55,17 element Object p1 cp437:0xDC p2 0 step idle under Empty color 0x0F
+    stat at 56,17 element Object p1 cp437:0xDC p2 0 step idle under Empty color 0x0F
+    stat at 57,17 element Object p1 cp437:0xDC p2 0 step idle under Empty color 0x0F
+    stat at 58,17 element Object p1 cp437:0xDC p2 0 step idle under Empty color 0x0F
+    stat at 58,18 element Object p1 cp437:0xDE p2 0 step idle under Water color 0x8F
+    stat at 56,18 element Object p1 cp437:0xDE p2 0 step idle under Water color 0x20
+    stat at 55,18 element Object p1 cp437:0xDF p2 0 step idle under Water color 0x8F
+    stat at 57,18 element Object p1 cp437:0xDF p2 0 step idle under Water color 0x8F
+    stat at 59,12 element Object p1 cp437:0xDF p2 0 step idle under Empty color 0x0F
+    stat at 60,12 element Object p1 cp437:0xDF p2 0 step idle under Empty color 0x0F
+    stat at 60,13 element Object p1 cp437:0xDE p2 0 step idle under Empty color 0x0F
+  end
+end

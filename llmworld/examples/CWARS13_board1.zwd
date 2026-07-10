@@ -1,0 +1,353 @@
+board "*NEW STK--Objects"
+  start player at 14,7
+  respawn at 1,25
+  max-shots 255
+  dark false
+  reenter false
+  time-limit 0
+  exits north none south none west none east none
+
+  grid
+...dd......dddddddddddddddddddddddddddddddddddddd...........
+.ffddddddddddddddddddg*NEWgSTK--Objectsgdddddddddddddddddddd
+.ffdddfddffddddddddddddffffffdfddddddddddddddddddddddddddddd
+.ffdddfddhfddddddddddddffffffdfffffffffffff.dfdffffffffffdd.
+.ffdfffffffdddddddddddddddddddddddddddddffi.dfddddddddddddf.
+.ffdfffffffffffffffffdffdffffdddddddddddffm.dfdddddddddddddd
+ddddddddddddd@dodpdqdrdudvdwdxdydzdAdCdDdFdGdH<BlaIkJLnJBMJd
+.ffdPPPPPPPPPPPmQPPPPdPddddddddddddddddddddddfdddddddddddddd
+dddddddddddd##dRdUdVdXdYdZQ0d1d2d3d4d5d6d7d8d9dddddddddddddd
+.ffPPPPPPPPPJJP!P$d%d&d+d=d~d^d_d:d;d,d/d\d|d>dfdddddddddddd
+.fdddPdddPdd??d`d'd(d)d[d]d{d}dÄdÅdÇdÉdÑdÖdÜdádfdddddddddddd
+.fdfdPdddPdPààdâdädãdådçdédèdêdëdídìdîfïfñfóòôdfdddddddddddd
+.fdfdddPdddPggdödõdúdùdûdüd†d°d¢d£d§d•d¶dßd®d©dfdddddddddddd
+.ddfffPPPPPP™™P´P¨d≠dÆdØd∞d±d≤d≥d¥dµd∂d∑d∏dπd∫dfdddddddddddd
+ddddddddddddªªdºdΩdædød¿d¡d¬d√dƒd≈d∆d«d»d…d dÀdfdddddddddddd
+.dffffffffffdfffdÃdddddddddddddddddddddddddddfdfdddddddddddd
+.ddddddddddfdfÕŒddddœ–—ddddddddddddddddddddddfdddddddddddddd
+.fffffffffdfdffffdddffQdddddddddddddddddddf“d”dddddddddddddd
+.fdddfdddddfdffffdddfffddddddddddddddddddddddddddddddddddddd
+.fdfdfdfdddfdffffffffffddddddddddddddddddff.dffffffffffffff.
+.fdfdddfdddfdffffffffffddddddddddddddddddddddddddddddddddddd
+ddddddddddddddddddddddddddddddfddddddddddddddddddddddddddddd
+ddddddddddddddddddddddddddddddfddddddddddddddddddddddddddddd
+dddddddddddddddddddddddddddddddddddddddddddddddddddddddddddd
+dd.ddddddddddddddddddddddddddddddddddddddddddddddddddddddddd
+  end
+
+  legend
+    . = Empty color 0x0F
+    d = Empty color 0x0E
+    f = Empty color 0x00
+    g = Text-Red color 0x20
+    * = Text-Red color 0x2A
+    N = Text-Red color 0x4E
+    E = Text-Red color 0x45
+    W = Text-Red color 0x57
+    S = Text-Red color 0x53
+    T = Text-Red color 0x54
+    K = Text-Red color 0x4B
+    - = Text-Red color 0x2D
+    O = Text-Red color 0x4F
+    b = Text-Red color 0x62
+    j = Text-Red color 0x6A
+    e = Text-Red color 0x65
+    c = Text-Red color 0x63
+    t = Text-Red color 0x74
+    s = Text-Red color 0x73
+    h = Empty color 0xF9
+    i = Empty color 0x06
+    m = Empty color 0x1F
+    @ = Player color 0x1F under Empty color 0x0E
+    o = Object color 0x0F
+    p = Object color 0x09
+    q = Object color 0x0A
+    r = Object color 0x0B
+    u = Object color 0x0C
+    v = Object color 0x0D
+    w = Object color 0x0E
+    x = Object color 0x08
+    y = Object color 0x07
+    z = Object color 0x01
+    A = Object color 0x02
+    C = Object color 0x03
+    D = Object color 0x04
+    F = Object color 0x06
+    G = Object color 0x05
+    H = Object color 0x00
+    < = Text-Blue color 0x3C
+    B = Text-Blue color 0x42
+    l = Text-Blue color 0x6C
+    a = Text-Blue color 0x61
+    I = Text-Blue color 0x63
+    k = Text-Blue color 0x6B
+    J = Text-Blue color 0x20
+    L = Text-Blue color 0x6F
+    n = Text-Blue color 0x6E
+    M = Text-Blue color 0x2E
+    P = Empty color 0x09
+    Q = Empty color 0x70
+    # = Solid color 0x07
+    R = Object color 0x7F
+    U = Object color 0x79
+    V = Object color 0x7A
+    X = Object color 0x7B
+    Y = Object color 0x7C
+    Z = Object color 0x7D
+    0 = Object color 0x7E
+    1 = Object color 0x78
+    2 = Object color 0x77
+    3 = Object color 0x71
+    4 = Object color 0x72
+    5 = Object color 0x73
+    6 = Object color 0x74
+    7 = Object color 0x76
+    8 = Object color 0x75
+    9 = Object color 0x70
+    ! = Object color 0x1F
+    $ = Object color 0x19
+    % = Object color 0x1A
+    & = Object color 0x1B
+    + = Object color 0x1C
+    = = Object color 0x1D
+    ~ = Object color 0x1E
+    ^ = Object color 0x18
+    _ = Object color 0x17
+    : = Object color 0x11
+    ; = Object color 0x12
+    , = Object color 0x13
+    / = Object color 0x14
+    \ = Object color 0x16
+    | = Object color 0x15
+    > = Object color 0x10
+    ? = Text-Green color 0x20
+    ` = Object color 0x2F
+    ' = Object color 0x29
+    ( = Object color 0x2A
+    ) = Object color 0x2B
+    [ = Object color 0x2C
+    ] = Object color 0x2D
+    { = Object color 0x2E
+    } = Object color 0x28
+    cp437:0x80 = Object color 0x27
+    cp437:0x81 = Object color 0x21
+    cp437:0x82 = Object color 0x22
+    cp437:0x83 = Object color 0x23
+    cp437:0x84 = Object color 0x24
+    cp437:0x85 = Object color 0x26
+    cp437:0x86 = Object color 0x25
+    cp437:0x87 = Object color 0x20
+    cp437:0x88 = Text-Cyan color 0x20
+    cp437:0x89 = Object color 0x3F
+    cp437:0x8A = Object color 0x39
+    cp437:0x8B = Object color 0x3A
+    cp437:0x8C = Object color 0x3B
+    cp437:0x8D = Object color 0x3C
+    cp437:0x8E = Object color 0x3D
+    cp437:0x8F = Object color 0x3E
+    cp437:0x90 = Object color 0x38
+    cp437:0x91 = Object color 0x37
+    cp437:0x92 = Object color 0x31
+    cp437:0x93 = Object color 0x32
+    cp437:0x94 = Object color 0x33
+    cp437:0x95 = Object color 0x34
+    cp437:0x96 = Object color 0x36
+    cp437:0x97 = Object color 0x35
+    cp437:0x98 = Empty color 0x30
+    cp437:0x99 = Object color 0x30
+    cp437:0x9A = Object color 0x4F
+    cp437:0x9B = Object color 0x49
+    cp437:0x9C = Object color 0x4A
+    cp437:0x9D = Object color 0x4B
+    cp437:0x9E = Object color 0x4C
+    cp437:0x9F = Object color 0x4D
+    cp437:0xA0 = Object color 0x4E
+    cp437:0xA1 = Object color 0x48
+    cp437:0xA2 = Object color 0x47
+    cp437:0xA3 = Object color 0x41
+    cp437:0xA4 = Object color 0x42
+    cp437:0xA5 = Object color 0x43
+    cp437:0xA6 = Object color 0x44
+    cp437:0xA7 = Object color 0x46
+    cp437:0xA8 = Object color 0x45
+    cp437:0xA9 = Object color 0x40
+    cp437:0xAA = Text-Purple color 0x20
+    cp437:0xAB = Object color 0x5F
+    cp437:0xAC = Object color 0x59
+    cp437:0xAD = Object color 0x5A
+    cp437:0xAE = Object color 0x5B
+    cp437:0xAF = Object color 0x5C
+    cp437:0xB0 = Object color 0x5D
+    cp437:0xB1 = Object color 0x5E
+    cp437:0xB2 = Object color 0x58
+    cp437:0xB3 = Object color 0x57
+    cp437:0xB4 = Object color 0x51
+    cp437:0xB5 = Object color 0x52
+    cp437:0xB6 = Object color 0x53
+    cp437:0xB7 = Object color 0x54
+    cp437:0xB8 = Object color 0x56
+    cp437:0xB9 = Object color 0x55
+    cp437:0xBA = Object color 0x50
+    cp437:0xBB = Text-Yellow color 0x20
+    cp437:0xBC = Object color 0x6F
+    cp437:0xBD = Object color 0x69
+    cp437:0xBE = Object color 0x6A
+    cp437:0xBF = Object color 0x6B
+    cp437:0xC0 = Object color 0x6C
+    cp437:0xC1 = Object color 0x6D
+    cp437:0xC2 = Object color 0x6E
+    cp437:0xC3 = Object color 0x68
+    cp437:0xC4 = Object color 0x67
+    cp437:0xC5 = Object color 0x61
+    cp437:0xC6 = Object color 0x62
+    cp437:0xC7 = Object color 0x63
+    cp437:0xC8 = Object color 0x64
+    cp437:0xC9 = Object color 0x66
+    cp437:0xCA = Object color 0x65
+    cp437:0xCB = Object color 0x60
+    cp437:0xCC = Empty color 0x60
+    cp437:0xCD = Empty color 0x4C
+    cp437:0xCE = Empty color 0x61
+    cp437:0xCF = Empty color 0x69
+    cp437:0xD0 = Empty color 0x6E
+    cp437:0xD1 = Empty color 0x65
+    cp437:0xD2 = Empty color 0x20
+    cp437:0xD3 = Empty color 0x05
+  end
+
+  stats
+    stat at 14,8 element Empty cycle 0 p1 0 p2 0 p3 1 step idle under Passage color 0x1F
+    stat at 13,8 element Empty cycle 0 p1 0 p2 0 p3 1 step idle under Passage color 0x1F
+    stat at 12,8 element Empty cycle 0 p1 0 p2 0 p3 1 step idle under Passage color 0x1F
+    stat at 17,14 element Empty cycle 0 p1 0 p2 0 p3 1 step idle under Passage color 0x1F
+    stat at 11,8 element Empty cycle 0 p1 0 p2 0 p3 1 step idle under Passage color 0x1F
+    stat at 16,9 element Object p1 cp437:0x02 p2 0 step idle under Empty color 0x0E
+    stat at 16,10 element Object p1 cp437:0x02 p2 0 step idle under Empty color 0x1F
+    stat at 16,11 element Object p1 cp437:0x02 p2 0 step idle under Empty color 0x0E
+    stat at 16,12 element Object p1 cp437:0x02 p2 0 step idle under Empty color 0x09
+    stat at 16,13 element Object p1 cp437:0x02 p2 0 step idle under Empty color 0x09
+    stat at 16,14 element Object p1 cp437:0x02 p2 0 step idle under Empty color 0x09
+    stat at 16,15 element Object p1 cp437:0x02 p2 0 step idle under Empty color 0x0E
+    stat at 16,7 element Object p1 cp437:0x02 p2 0 step idle under Empty color 0x0E
+    stat at 18,7 element Object p1 cp437:0x02 p2 0 step idle under Empty color 0x0E
+    stat at 20,7 element Object p1 cp437:0x02 p2 0 step idle under Empty color 0x0E
+    stat at 22,7 element Object p1 cp437:0x02 p2 0 step idle under Empty color 0x0E
+    stat at 24,7 element Object p1 cp437:0x02 p2 0 step idle under Empty color 0x0E
+    stat at 26,7 element Object p1 cp437:0x02 p2 0 step idle under Empty color 0x0E
+    stat at 28,7 element Object p1 cp437:0x02 p2 0 step idle under Empty color 0x0E
+    stat at 30,7 element Object p1 cp437:0x02 p2 0 step idle under Empty color 0x0E
+    stat at 32,7 element Object p1 cp437:0x02 p2 0 step idle under Empty color 0x0E
+    stat at 34,7 element Object p1 cp437:0x02 p2 0 step idle under Empty color 0x0E
+    stat at 36,7 element Object p1 cp437:0x02 p2 0 step idle under Empty color 0x0E
+    stat at 38,7 element Object p1 cp437:0x02 p2 0 step idle under Empty color 0x0E
+    stat at 40,7 element Object p1 cp437:0x02 p2 0 step idle under Empty color 0x0E
+    stat at 42,7 element Object p1 cp437:0x02 p2 0 step idle under Empty color 0x0E
+    stat at 44,7 element Object p1 cp437:0x02 p2 0 step idle under Empty color 0x0E
+    stat at 46,7 element Object p1 cp437:0x02 p2 0 step idle
+    stat at 18,9 element Object p1 cp437:0x02 p2 0 step idle under Fake color 0x70
+    stat at 18,11 element Object p1 cp437:0x02 p2 0 step idle under Fake color 0x20
+    stat at 18,10 element Object p1 cp437:0x02 p2 0 step idle under Fake color 0x10
+    stat at 18,12 element Object p1 cp437:0x02 p2 0 step idle under Fake color 0x30
+    stat at 18,13 element Object p1 cp437:0x02 p2 0 step idle under Fake color 0x40
+    stat at 18,14 element Object p1 cp437:0x02 p2 0 step idle under Fake color 0x50
+    stat at 18,15 element Object p1 cp437:0x02 p2 0 step idle under Fake color 0x60
+    stat at 20,9 element Object p1 cp437:0x02 p2 0 step idle under Fake color 0x70
+    stat at 20,10 element Object p1 cp437:0x02 p2 0 step idle under Fake color 0x10
+    stat at 20,11 element Object p1 cp437:0x02 p2 0 step idle under Fake color 0x20
+    stat at 20,12 element Object p1 cp437:0x02 p2 0 step idle under Fake color 0x30
+    stat at 20,13 element Object p1 cp437:0x02 p2 0 step idle under Fake color 0x40
+    stat at 20,14 element Object p1 cp437:0x02 p2 0 step idle under Fake color 0x50
+    stat at 20,15 element Object p1 cp437:0x02 p2 0 step idle under Fake color 0x60
+    stat at 22,9 element Object p1 cp437:0x02 p2 0 step idle under Fake color 0x70
+    stat at 22,10 element Object p1 cp437:0x02 p2 0 step idle under Fake color 0x10
+    stat at 22,11 element Object p1 cp437:0x02 p2 0 step idle under Fake color 0x20
+    stat at 22,12 element Object p1 cp437:0x02 p2 0 step idle under Fake color 0x30
+    stat at 22,13 element Object p1 cp437:0x02 p2 0 step idle under Fake color 0x40
+    stat at 22,14 element Object p1 cp437:0x02 p2 0 step idle under Fake color 0x50
+    stat at 22,15 element Object p1 cp437:0x02 p2 0 step idle under Empty color 0x60
+    stat at 24,9 element Object p1 cp437:0x02 p2 0 step idle under Fake color 0x70
+    stat at 24,10 element Object p1 cp437:0x02 p2 0 step idle under Fake color 0x10
+    stat at 24,11 element Object p1 cp437:0x02 p2 0 step idle under Fake color 0x20
+    stat at 24,12 element Object p1 cp437:0x02 p2 0 step idle under Fake color 0x30
+    stat at 24,13 element Object p1 cp437:0x02 p2 0 step idle under Fake color 0x40
+    stat at 24,14 element Object p1 cp437:0x02 p2 0 step idle under Fake color 0x50
+    stat at 24,15 element Object p1 cp437:0x02 p2 0 step idle under Fake color 0x60
+    stat at 26,9 element Object p1 cp437:0x02 p2 0 step idle under Fake color 0x70
+    stat at 26,10 element Object p1 cp437:0x02 p2 0 step idle under Fake color 0x10
+    stat at 26,11 element Object p1 cp437:0x02 p2 0 step idle under Fake color 0x20
+    stat at 26,12 element Object p1 cp437:0x02 p2 0 step idle under Fake color 0x30
+    stat at 26,13 element Object p1 cp437:0x02 p2 0 step idle under Fake color 0x40
+    stat at 26,14 element Object p1 cp437:0x02 p2 0 step idle under Fake color 0x50
+    stat at 26,15 element Object p1 cp437:0x02 p2 0 step idle under Fake color 0x60
+    stat at 28,9 element Object p1 cp437:0x02 p2 0 step idle under Fake color 0x70
+    stat at 28,10 element Object p1 cp437:0x02 p2 0 step idle under Fake color 0x10
+    stat at 28,11 element Object p1 cp437:0x02 p2 0 step idle under Fake color 0x20
+    stat at 28,12 element Object p1 cp437:0x02 p2 0 step idle under Fake color 0x30
+    stat at 28,13 element Object p1 cp437:0x02 p2 0 step idle under Fake color 0x40
+    stat at 28,14 element Object p1 cp437:0x02 p2 0 step idle under Fake color 0x50
+    stat at 28,15 element Object p1 cp437:0x02 p2 0 step idle under Fake color 0x60
+    stat at 30,9 element Object p1 cp437:0xF0 p2 0 step idle under Fake color 0x70
+    stat at 30,10 element Object p1 cp437:0x02 p2 0 step idle under Fake color 0x10
+    stat at 30,11 element Object p1 cp437:0x02 p2 0 step idle under Fake color 0x20
+    stat at 30,12 element Object p1 cp437:0x02 p2 0 step idle under Fake color 0x30
+    stat at 30,13 element Object p1 cp437:0x02 p2 0 step idle under Fake color 0x40
+    stat at 30,14 element Object p1 cp437:0x02 p2 0 step idle under Fake color 0x50
+    stat at 30,15 element Object p1 cp437:0x02 p2 0 step idle under Fake color 0x60
+    stat at 32,9 element Object p1 cp437:0x02 p2 0 step idle under Fake color 0x70
+    stat at 32,10 element Object p1 cp437:0x02 p2 0 step idle under Fake color 0x10
+    stat at 32,11 element Object p1 cp437:0x02 p2 0 step idle under Fake color 0x20
+    stat at 32,12 element Object p1 cp437:0x02 p2 0 step idle under Fake color 0x30
+    stat at 32,13 element Object p1 cp437:0x02 p2 0 step idle under Fake color 0x40
+    stat at 32,14 element Object p1 cp437:0x02 p2 0 step idle under Fake color 0x50
+    stat at 32,15 element Object p1 cp437:0x02 p2 0 step idle under Fake color 0x60
+    stat at 34,9 element Object p1 cp437:0x02 p2 0 step idle under Fake color 0x70
+    stat at 34,10 element Object p1 cp437:0x02 p2 0 step idle under Fake color 0x10
+    stat at 34,11 element Object p1 cp437:0x02 p2 0 step idle under Fake color 0x20
+    stat at 34,12 element Object p1 cp437:0x02 p2 0 step idle under Fake color 0x30
+    stat at 34,13 element Object p1 cp437:0x02 p2 0 step idle under Fake color 0x40
+    stat at 34,14 element Object p1 cp437:0x02 p2 0 step idle under Fake color 0x50
+    stat at 34,15 element Object p1 cp437:0x02 p2 0 step idle under Fake color 0x60
+    stat at 36,9 element Object p1 cp437:0x02 p2 0 step idle under Fake color 0x70
+    stat at 36,10 element Object p1 cp437:0x02 p2 0 step idle under Fake color 0x10
+    stat at 36,11 element Object p1 cp437:0x02 p2 0 step idle under Fake color 0x20
+    stat at 36,12 element Object p1 cp437:0x02 p2 0 step idle under Fake color 0x30
+    stat at 36,13 element Object p1 cp437:0x02 p2 0 step idle under Fake color 0x40
+    stat at 36,14 element Object p1 cp437:0x02 p2 0 step idle under Fake color 0x50
+    stat at 36,15 element Object p1 cp437:0x02 p2 0 step idle under Fake color 0x60
+    stat at 38,9 element Object p1 cp437:0x02 p2 0 step idle under Fake color 0x70
+    stat at 38,10 element Object p1 cp437:0x02 p2 0 step idle under Fake color 0x10
+    stat at 38,11 element Object p1 cp437:0x02 p2 0 step idle under Fake color 0x20
+    stat at 38,12 element Object p1 cp437:0x02 p2 0 step idle under Fake color 0x30
+    stat at 38,13 element Object p1 cp437:0x02 p2 0 step idle under Fake color 0x40
+    stat at 38,14 element Object p1 cp437:0x02 p2 0 step idle under Fake color 0x50
+    stat at 38,15 element Object p1 cp437:0x02 p2 0 step idle under Fake color 0x60
+    stat at 40,9 element Object p1 cp437:0x02 p2 0 step idle under Fake color 0x70
+    stat at 40,10 element Object p1 cp437:0x02 p2 0 step idle under Fake color 0x10
+    stat at 40,11 element Object p1 cp437:0x02 p2 0 step idle under Fake color 0x20
+    stat at 40,12 element Object p1 cp437:0x02 p2 0 step idle under Fake color 0x30
+    stat at 40,13 element Object p1 cp437:0x02 p2 0 step idle under Fake color 0x40
+    stat at 40,14 element Object p1 cp437:0x02 p2 0 step idle under Fake color 0x50
+    stat at 40,15 element Object p1 cp437:0x02 p2 0 step idle under Fake color 0x60
+    stat at 42,9 element Object p1 cp437:0x02 p2 0 step idle under Fake color 0x70
+    stat at 42,10 element Object p1 cp437:0x02 p2 0 step idle under Fake color 0x10
+    stat at 42,11 element Object p1 cp437:0x02 p2 0 step idle under Fake color 0x20
+    stat at 42,12 element Object p1 cp437:0x02 p2 0 step idle under Fake color 0x30
+    stat at 42,13 element Object p1 cp437:0x02 p2 0 step idle under Fake color 0x40
+    stat at 42,14 element Object p1 cp437:0x02 p2 0 step idle under Fake color 0x50
+    stat at 42,15 element Object p1 cp437:0x02 p2 0 step idle under Fake color 0x60
+    stat at 44,9 element Object p1 cp437:0x02 p2 0 step idle under Fake color 0x70
+    stat at 44,10 element Object p1 cp437:0x02 p2 0 step idle under Fake color 0x10
+    stat at 44,11 element Object p1 cp437:0x02 p2 0 step idle under Fake color 0x20
+    stat at 44,12 element Object p1 cp437:0x02 p2 0 step idle under Fake color 0x30
+    stat at 44,13 element Object p1 cp437:0x02 p2 0 step idle under Fake color 0x40
+    stat at 44,14 element Object p1 cp437:0x02 p2 0 step idle under Fake color 0x50
+    stat at 44,15 element Object p1 cp437:0x02 p2 0 step idle under Fake color 0x60
+    stat at 46,9 element Object p1 cp437:0x02 p2 0 step idle under Fake color 0x70
+    stat at 46,10 element Object p1 cp437:0x02 p2 0 step idle under Fake color 0x10
+    stat at 46,11 element Object p1 cp437:0x02 p2 0 step idle under Fake color 0x20
+    stat at 46,12 element Object p1 cp437:0x02 p2 0 step idle under Fake color 0x30
+    stat at 46,13 element Object p1 cp437:0x02 p2 0 step idle under Fake color 0x40
+    stat at 46,14 element Object p1 cp437:0x02 p2 0 step idle under Fake color 0x50
+    stat at 46,15 element Object p1 cp437:0x02 p2 0 step idle under Fake color 0x60
+  end
+end

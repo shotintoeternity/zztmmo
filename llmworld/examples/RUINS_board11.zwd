@@ -1,0 +1,366 @@
+board "Underground Storage"
+  start player at 14,19
+  respawn at 1,1
+  max-shots 0
+  dark false
+  reenter false
+  time-limit 0
+  exits north none south none west none east none
+
+  grid
+OOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOO
+OOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOO
+OOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOO
+OOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOO
+OOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOO
+OOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOO
+OOOOOOOOOddMaybedsavedwithdadnewdfilename?ddOOOOOOOOOOOOOOOO
+OOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOO
+OOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOO
+OOOOOOOOOOOgggggggggggggggggggggggggggggggOOOOOOOOOOOOOOOOOO
+OOOOOOOOOOOg........gj...2.2.g...........gOOOOOOOOOOOOOOOOOO
+OOOOOOOOOOOg.......1...22qk1.go...o...gFFgOOOOOOOOOOOOOOOOOO
+OOOOOOOOOOOg.q.2....g.q22..q.g.o.o.o.ogAAgOOOOOOOOOOOOOOOOOO
+OOOOOOOOOOOgggggggg!goo1oo1o.g........gFFgOOOOOOOOOOOOOOOOOO
+OOOOOOOOOOOg........gooqoo1o.go.o.o.o.gppgOOOOOOOOOOOOOOOOOO
+OOOOOOOOOOOg...q.o..goo.oo1o.g.o...o..ggggOOOOOOOOOOOOOOOOOO
+OOOOOOOOOOOg.q1.....g.q...2..g1q1q1q1qggggOOOOOOOOOOOOOOOOOO
+OOOOOOOOOOOgqq..2...g2..2.1..+........ggggOOOOOOOOOOOOOOOOOO
+OOOOOOOOOOOgP@qq.1..g.....q.og........ggggOOOOOOOOOOOOOOOOOO
+OOOOOOOOOOOgggggggggggggggggggggggggggggggOOOOOOOOOOOOOOOOOO
+OOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOO
+OOOOOOOOOOOOOOOOOOOxxNzBxCDxDcCrExCDxEzuxBGHIJxHBxHDxxOOOOOO
+OOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOO
+OOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOO
+OOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOK
+  end
+
+  legend
+    O = Boulder color 0x08
+    d = Text-Yellow color 0x20
+    M = Text-Yellow color 0x4D
+    a = Text-Yellow color 0x61
+    y = Text-Yellow color 0x79
+    b = Text-Yellow color 0x62
+    e = Text-Yellow color 0x65
+    s = Text-Yellow color 0x73
+    v = Text-Yellow color 0x76
+    w = Text-Yellow color 0x77
+    i = Text-Yellow color 0x69
+    t = Text-Yellow color 0x74
+    h = Text-Yellow color 0x68
+    n = Text-Yellow color 0x6E
+    f = Text-Yellow color 0x66
+    l = Text-Yellow color 0x6C
+    m = Text-Yellow color 0x6D
+    ? = Text-Yellow color 0x3F
+    g = Line color 0x08
+    . = Empty color 0x0F
+    j = Empty color 0x07
+    2 = Slider (EW) color 0x0A
+    1 = Slider (NS) color 0x0E
+    q = Boulder color 0x0B
+    k = Key color 0x0B
+    o = Object color 0x06
+    F = Fake color 0x07
+    A = Fake color 0x77
+    ! = Scroll color 0x0B
+    p = Passage color 0x7F to "Alone in the Dark"
+    + = Door color 0x3F
+    P = Passage color 0x6F to "Don't Be Greedy!"
+    @ = Player color 0x1F under Empty color 0x0F
+    x = Text-Blue color 0x20
+    N = Text-Blue color 0x4E
+    z = Text-Blue color 0x6F
+    B = Text-Blue color 0x74
+    C = Text-Blue color 0x61
+    D = Text-Blue color 0x73
+    c = Text-Blue color 0x63
+    r = Text-Blue color 0x72
+    E = Text-Blue color 0x79
+    u = Text-Blue color 0x75
+    G = Text-Blue color 0x68
+    H = Text-Blue color 0x69
+    I = Text-Blue color 0x6E
+    J = Text-Blue color 0x6B
+    K = Object color 0x08
+  end
+
+  stats
+    stat at 18,16 element Object p1 cp437:0xFE p2 0 step idle under Empty color 0x0F
+    oop
+@box
+#end
+:touch
+The box is too heavy to push
+#end
+
+    end
+    stat at 25,15 element Object p1 cp437:0xFE p2 0 step idle under Empty color 0x0F
+    oop
+@box
+#end
+:touch
+The box is too heavy to push
+#end
+
+    end
+    stat at 25,14 element Object p1 cp437:0xFE p2 0 step idle under Empty color 0x0F
+    oop
+@box
+#end
+:touch
+The box is too heavy to push
+#end
+
+    end
+    stat at 26,14 element Object p1 cp437:0xFE p2 0 step idle under Empty color 0x0F
+    oop
+@box
+#end
+:touch
+The box is too heavy to push
+#end
+
+    end
+    stat at 26,15 element Object p1 cp437:0xFE p2 0 step idle under Empty color 0x0F
+    oop
+@box
+#end
+:touch
+The box is too heavy to push
+#end
+
+    end
+    stat at 22,14 element Object p1 cp437:0xFE p2 0 step idle under Empty color 0x0F
+    oop
+@box
+#end
+:touch
+The box is too heavy to push
+#end
+
+    end
+    stat at 23,14 element Object p1 cp437:0xFE p2 0 step idle under Empty color 0x0F
+    oop
+@box
+#end
+:touch
+The box is too heavy to push
+#end
+
+    end
+    stat at 23,15 element Object p1 cp437:0xFE p2 0 step idle under Empty color 0x07
+    oop
+@box
+#end
+:touch
+The box is too heavy to push
+#end
+
+    end
+    stat at 22,15 element Object p1 cp437:0xFE p2 0 step idle under Empty color 0x0F
+    oop
+@box
+#end
+:touch
+The box is too heavy to push
+#end
+
+    end
+    stat at 28,15 element Object p1 cp437:0xFE p2 0 step idle under Empty color 0x0F
+    oop
+@box
+#end
+:touch
+The box is too heavy to push
+#end
+
+    end
+    stat at 28,14 element Object p1 cp437:0xFE p2 0 step idle under Empty color 0x0F
+    oop
+@box
+#end
+:touch
+The box is too heavy to push
+#end
+
+    end
+    stat at 28,16 element Object p1 cp437:0xFE p2 0 step idle under Empty color 0x0F
+    oop
+@box
+#end
+:touch
+The box is too heavy to push
+#end
+
+    end
+    stat at 26,16 element Object p1 cp437:0xFE p2 0 step idle under Empty color 0x0F
+    oop
+@box
+#end
+:touch
+The box is too heavy to push
+#end
+
+    end
+    stat at 25,16 element Object p1 cp437:0xFE p2 0 step idle under Empty color 0x0F
+    oop
+@box
+#end
+:touch
+The box is too heavy to push
+#end
+
+    end
+    stat at 23,16 element Object p1 cp437:0xFE p2 0 step idle under Empty color 0x0F
+    oop
+@box
+#end
+:touch
+The box is too heavy to push
+#end
+
+    end
+    stat at 22,16 element Object p1 cp437:0xFE p2 0 step idle under Empty color 0x0F
+    oop
+@box
+#end
+:touch
+The box is too heavy to push
+#end
+
+    end
+    stat at 29,19 element Object p1 cp437:0xFE p2 0 step idle under Empty color 0x0F
+    oop
+@box
+#end
+:touch
+The box is too heavy to push
+#end
+
+    end
+    stat at 20,14 element Scroll p1 0 p2 0 step idle under Empty color 0x0F
+    oop
+It's important that you're able to return
+as well...
+
+    end
+    stat at 31,15 element Object p1 cp437:0xFE p2 0 step idle under Empty color 0x0F
+    oop
+@box
+#end
+:touch
+The box is too heavy to push
+#end
+
+    end
+    stat at 33,15 element Object p1 cp437:0xFE p2 0 step idle under Empty color 0x0F
+    oop
+@box
+#end
+:touch
+The box is too heavy to push
+#end
+
+    end
+    stat at 35,15 element Object p1 cp437:0xFE p2 0 step idle under Empty color 0x0F
+    oop
+@box
+#end
+:touch
+The box is too heavy to push
+#end
+
+    end
+    stat at 37,15 element Object p1 cp437:0xFE p2 0 step idle under Empty color 0x0F
+    oop
+@box
+#end
+:touch
+The box is too heavy to push
+#end
+
+    end
+    stat at 38,13 element Object p1 cp437:0xFE p2 0 step idle under Empty color 0x0F
+    oop
+@box
+#end
+:touch
+The box is too heavy to push
+#end
+
+    end
+    stat at 36,13 element Object p1 cp437:0xFE p2 0 step idle under Empty color 0x0F
+    oop
+@box
+#end
+:touch
+The box is too heavy to push
+#end
+
+    end
+    stat at 34,13 element Object p1 cp437:0xFE p2 0 step idle under Empty color 0x0F
+    oop
+@box
+#end
+:touch
+The box is too heavy to push
+#end
+
+    end
+    stat at 32,13 element Object p1 cp437:0xFE p2 0 step idle under Empty color 0x0F
+    oop
+@box
+#end
+:touch
+The box is too heavy to push
+#end
+
+    end
+    stat at 13,19 element Passage p1 0 p2 0 p3 board "Don't Be Greedy!" step idle under Empty color 0x0F
+    stat at 32,16 element Object p1 cp437:0xFE p2 0 step idle under Empty color 0x0F
+    oop
+@box
+#end
+:touch
+The box is too heavy to push
+#end
+
+    end
+    stat at 36,16 element Object p1 cp437:0xFE p2 0 step idle under Empty color 0x0F
+    oop
+@box
+#end
+:touch
+The box is too heavy to push
+#end
+
+    end
+    stat at 35,12 element Object p1 cp437:0xFE p2 0 step idle under Empty color 0x0F
+    oop
+@box
+#end
+:touch
+The box is too heavy to push
+#end
+
+    end
+    stat at 31,12 element Object p1 cp437:0xFE p2 0 step idle under Empty color 0x0F
+    oop
+@box
+#end
+:touch
+The box is too heavy to push
+#end
+
+    end
+    stat at 41,15 element Passage p1 0 p2 0 p3 board "Alone in the Dark" step idle under Empty color 0x0F
+    stat at 40,15 element Passage p1 0 p2 0 p3 board "Alone in the Dark" step idle under Empty color 0x0F
+    stat at 60,25 element Object p1 cp437:0xFE p2 0 step idle under Empty color 0x0F
+    oop
+#set dark
+
+    end
+  end
+end

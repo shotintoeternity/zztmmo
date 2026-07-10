@@ -1,0 +1,129 @@
+board "!;Led Zeppelin!"
+  start player at 31,23
+  respawn at 32,32
+  max-shots 0
+  dark false
+  reenter false
+  time-limit 0
+  exits north none south none west none east none
+
+  grid
+there'saldaywho'ssureallthatglittersisgoldandshe'sbuyingasta
+irwaytoheavenandwhenshegetstheresheknowsifthestoresareallclo
+sedwithawordshecangetwhatshecameforthere'sasignonthewallbuts
+hewantstobesurecauseyouknowsometimeswordshavetwomeaningsinat
+reebythebrookthere'sasongbirdwhosingssometimesallofourthough
+tsaremisgiventhere'safeelingIgetwhenIlooktothewestandmyspiri
+tiscryingforleavinginmythoughtsIhaveseenringsofsmokethrought
+hetreesandthevoicesofthosewhostandlookingandit'swhisperedtha
+tsoonifweallcallthetunethenthepiperwillleadustoreasonandanew
+daywilldawnforthosewhostandlongandtheforestswillechowithlaug
+hterifthere'sabustleinyourhedgerowdon'tbealarmednowit'sjusta
+springcleanforthemayqueenyestherearetwopathsyoucangobybutint
+helongrunthere'sstilltimetochangetheroadyou'reonyourheadishu
+mminganditwon'tgoincaseyoudon'tknowthepiper'scallingyoutojoi
+nhimdearladycanyouhearthewindblowanddidyouknowyourstairwayli
+esonthewhisperingwindandaswewindondowntheroadourshadowstalle
+rthanoursoulstherewalksaladyweallknowwhoshineswhitelightandw
+antstoshowhoweverythingstillturnstogoldandifyoulistenveryhar
+dthetunewillcometoyouatlastwhenallareoneandoneisalltobearock
+andnottorollandshe'sbuyingastairwaytoheaven.................
+................................/.........xxxx.xx.xzz.xx....
+....OOO.OOOOOOOO.....#ABA###############...xz.CDEGEzxCEHG...
+....OOOOOOOOOOOO.....##J######@A########..zx...zz.zz..zz....
+-=-=-=-=-=-=-=-=-=-=.#####JA######KL####....zx.x..zSz...xxNN
+.MadTomPN23/02/2002..FFFFFFFFFFFFFFFFFFF......zxzzzzzzzz....
+  end
+
+  legend
+    t = Text-White color 0x74
+    h = Text-White color 0x68
+    e = Text-White color 0x65
+    r = Text-White color 0x72
+    ' = Text-White color 0x27
+    s = Text-White color 0x73
+    a = Text-White color 0x61
+    l = Text-White color 0x6C
+    d = Text-White color 0x64
+    y = Text-White color 0x79
+    w = Text-White color 0x77
+    o = Text-White color 0x6F
+    u = Text-White color 0x75
+    g = Text-White color 0x67
+    i = Text-White color 0x69
+    n = Text-White color 0x6E
+    b = Text-White color 0x62
+    v = Text-White color 0x76
+    k = Text-White color 0x6B
+    f = Text-White color 0x66
+    c = Text-White color 0x63
+    m = Text-White color 0x6D
+    I = Text-White color 0x49
+    p = Text-White color 0x70
+    j = Text-White color 0x6A
+    q = Text-White color 0x71
+    . = Empty color 0x00
+    / = Text-White color 0x2F
+    x = Text-White color 0xDC
+    z = Text-White color 0xDF
+    O = Object color 0x04
+    # = Solid color 0x66
+    A = Object color 0x67
+    B = Object color 0x64
+    C = Text-White color 0xDE
+    D = Text-White color 0xC6
+    E = Text-White color 0xCD
+    G = Text-White color 0xDD
+    H = Text-White color 0xB5
+    J = Object color 0x68
+    @ = Player color 0x1F under Empty color 0x0F
+    - = Text-White color 0x2D
+    = = Text-White color 0x3D
+    K = Object color 0x65
+    L = Object color 0x6E
+    S = Solid color 0x0F
+    N = Text-White color 0x00
+    M = Text-White color 0x4D
+    T = Text-White color 0x54
+    P = Text-White color 0x20
+    2 = Text-White color 0x32
+    3 = Text-White color 0x33
+    0 = Text-White color 0x30
+    F = Fake color 0x06
+  end
+
+  stats
+    stat at 12,22 element Object cycle 1 p1 cp437:0x50 p2 0 step idle follower 0 leader 0
+    stat at 13,22 element Object cycle 1 p1 cp437:0x45 p2 0 step idle follower 0 leader 0
+    stat at 14,22 element Object cycle 1 p1 cp437:0x4C p2 0 step idle follower 0 leader 0
+    stat at 5,22 element Object cycle 1 p1 cp437:0x4C p2 0 step idle follower 0 leader 0
+    stat at 6,22 element Object cycle 1 p1 cp437:0x45 p2 0 step idle follower 0 leader 0
+    stat at 7,22 element Object cycle 1 p1 cp437:0x44 p2 0 step idle follower 0 leader 0
+    stat at 9,22 element Object cycle 1 p1 cp437:0x5A p2 0 step idle follower 0 leader 0
+    stat at 10,22 element Object cycle 1 p1 cp437:0x45 p2 0 step idle follower 0 leader 0
+    stat at 11,22 element Object cycle 1 p1 cp437:0x50 p2 0 step idle follower 0 leader 0
+    stat at 15,22 element Object cycle 1 p1 cp437:0x49 p2 0 step idle follower 0 leader 0
+    stat at 16,22 element Object cycle 1 p1 cp437:0x4E p2 0 step idle follower 0 leader 0
+    stat at 5,23 element Object cycle 1 p1 cp437:0x7E p2 0 step idle follower 0 leader 0
+    stat at 6,23 element Object cycle 1 p1 cp437:0x7E p2 0 step idle follower 0 leader 0
+    stat at 7,23 element Object cycle 1 p1 cp437:0x7E p2 0 step idle follower 0 leader 0
+    stat at 8,23 element Object cycle 1 p1 cp437:0x7E p2 0 step idle follower 0 leader 0
+    stat at 9,23 element Object cycle 1 p1 cp437:0x7E p2 0 step idle follower 0 leader 0
+    stat at 10,23 element Object cycle 1 p1 cp437:0x7E p2 0 step idle follower 0 leader 0
+    stat at 11,23 element Object cycle 1 p1 cp437:0x7E p2 0 step idle follower 0 leader 0
+    stat at 12,23 element Object cycle 1 p1 cp437:0x7E p2 0 step idle follower 0 leader 0
+    stat at 13,23 element Object cycle 1 p1 cp437:0x7E p2 0 step idle follower 0 leader 0
+    stat at 14,23 element Object cycle 1 p1 cp437:0x7E p2 0 step idle follower 0 leader 0
+    stat at 15,23 element Object cycle 1 p1 cp437:0x7E p2 0 step idle follower 0 leader 0
+    stat at 16,23 element Object cycle 1 p1 cp437:0x7E p2 0 step idle follower 0 leader 0
+    stat at 27,24 element Object cycle 1 p1 cp437:0x02 p2 0 step idle follower 0 leader 0
+    stat at 35,24 element Object cycle 1 p1 cp437:0x02 p2 0 step idle follower 0 leader 0
+    stat at 24,23 element Object cycle 1 p1 cp437:0x09 p2 0 step idle follower 0 leader 0
+    stat at 25,22 element Object cycle 1 p1 cp437:0x07 p2 0 step idle follower 0 leader 0
+    stat at 23,22 element Object cycle 1 p1 cp437:0xED p2 0 step idle follower 0 leader 0
+    stat at 24,22 element Object cycle 1 p1 cp437:0x02 p2 0 step idle follower 0 leader 0
+    stat at 28,24 element Object cycle 1 p1 cp437:0x2F p2 0 step idle follower 0 leader 0
+    stat at 32,23 element Object cycle 1 p1 cp437:0x2F p2 0 step idle follower 0 leader 0
+    stat at 36,24 element Object cycle 1 p1 cp437:0xF0 p2 0 step idle follower 0 leader 0
+  end
+end

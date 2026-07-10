@@ -1,0 +1,104 @@
+board "ggggggggggggggggaMe"
+  start player at 5,16
+  respawn at 32,3
+  max-shots 255
+  dark false
+  reenter false
+  time-limit 0
+  exits north none south none west none east none
+
+  grid
+.llllllllllllllllllllllllllllllllllllllllllllllllllllllllll.
+.l########################################################l.
+.l#lllllllllllllllllllllllllllllllllllllllllllllllllllll##l.
+.l#lLives=1bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbl##l.
+.l#lScore=0bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbl##l.
+.l#lStage=489234613284681261512942394718523481264914912l##l.
+.l#lbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbl##l.
+.l#lbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbl##l.
+.l#lbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbl##l.
+.l#lbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbl##l.
+.l#lbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbl##l.
+.l#lbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbl##l.
+.l#lFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFl##l.
+.l#lFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFl##l.
+.l#lFFFFFFFFFFFFFFFFFFFFFFFFFFFFFdddddddddFFFFFFFFFFFFFl##l.
+.l#l@FFFFFFFFFFGFFFFFfFFFFFFFFFFFHddddddddFFFFFFFFFFFFpl##l.
+.l#lNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNl##l.
+.l#lNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNl##l.
+.l#lllllllllllllllllllllllllllllllllllllllllllllllllllll##l.
+.l########hhhh##########################hhhh##############l.
+.lllllllllhjjjlllllllllllllllllllllllllljjjhlllllllllllllll.
+.lllllllllhhjlllllllllllllllllllllllllllljhhlllllllllllllll.
+.llllllllllh|llllllllllllllllllllllllllll|hllllllllllllllll.
+.llllllllllhlllllllllllllkkkklllllllllllllhllllllllllllllll.
+.llllllllllhlllllllllllllkkmklllllllllllllhllllllllllllllll.
+  end
+
+  legend
+    . = Empty color 0x0F
+    l = Line color 0x0F
+    # = Solid color 0x09
+    L = Text-Cyan color 0x4C
+    i = Text-Cyan color 0x69
+    v = Text-Cyan color 0x76
+    e = Text-Cyan color 0x65
+    s = Text-Cyan color 0x73
+    = = Text-Cyan color 0x3D
+    1 = Text-Cyan color 0x31
+    b = Solid color 0x0B
+    S = Text-Cyan color 0x53
+    c = Text-Cyan color 0x63
+    o = Text-Cyan color 0x6F
+    r = Text-Cyan color 0x72
+    0 = Text-Cyan color 0x30
+    t = Text-Cyan color 0x74
+    a = Text-Cyan color 0x61
+    g = Text-Cyan color 0x67
+    4 = Text-Cyan color 0x34
+    8 = Text-Cyan color 0x38
+    9 = Text-Cyan color 0x39
+    2 = Text-Cyan color 0x32
+    3 = Text-Cyan color 0x33
+    6 = Text-Cyan color 0x36
+    5 = Text-Cyan color 0x35
+    7 = Text-Cyan color 0x37
+    F = Fake color 0x0B
+    d = Segment color 0x09
+    @ = Player color 0x1F under Empty color 0x00
+    G = Spinning gun color 0x09
+    f = Lion color 0x0C
+    H = Head color 0x09
+    p = Passage color 0x4F to "that was fun"
+    N = Normal color 0x0A
+    h = Solid color 0x0E
+    j = Solid color 0x0C
+    | = Text-White color 0x7C
+    k = Text-Red color 0x20
+    m = Empty color 0x7C
+  end
+
+  stats
+    stat at 16,16 element Spinning gun p1 0 p2 0 step idle under Fake color 0x0B
+    stat at 22,16 element Lion p1 0 p2 0 step idle under Fake color 0x0B
+    stat at 34,16 element Head p1 0 p2 0 step idle under Fake color 0x0B
+    stat at 35,16 element Segment p1 0 p2 0 step idle under Fake color 0x0B
+    stat at 36,16 element Segment p1 0 p2 0 step idle under Fake color 0x0B
+    stat at 37,16 element Segment p1 0 p2 0 step idle under Fake color 0x0B
+    stat at 38,16 element Segment p1 0 p2 0 step idle under Fake color 0x0B
+    stat at 39,16 element Segment p1 0 p2 0 step idle under Fake color 0x0B
+    stat at 40,16 element Segment p1 0 p2 0 step idle under Fake color 0x0B
+    stat at 41,16 element Segment p1 0 p2 0 step idle under Fake color 0x0B
+    stat at 42,16 element Segment p1 0 p2 0 step idle under Fake color 0x0B
+    stat at 42,15 element Segment p1 0 p2 0 step idle under Fake color 0x0B
+    stat at 41,15 element Segment p1 0 p2 0 step idle under Fake color 0x0B
+    stat at 40,15 element Segment p1 0 p2 0 step idle under Fake color 0x0B
+    stat at 39,15 element Segment p1 0 p2 0 step idle under Fake color 0x0B
+    stat at 38,15 element Segment p1 0 p2 0 step idle under Fake color 0x0B
+    stat at 37,15 element Segment p1 0 p2 0 step idle under Fake color 0x0B
+    stat at 36,15 element Segment p1 0 p2 0 step idle under Fake color 0x0B
+    stat at 35,15 element Segment p1 0 p2 0 step idle under Fake color 0x0B
+    stat at 34,15 element Segment p1 0 p2 0 step idle under Fake color 0x0B
+    stat at 55,16 element Passage p1 0 p2 0 p3 board "that was fun" step idle under Empty color 0x0B
+  end
+end

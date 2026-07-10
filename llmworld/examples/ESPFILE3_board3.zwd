@@ -1,0 +1,786 @@
+board "Bowling II"
+  start player at 2,24
+  max-shots 1
+  dark false
+  reenter false
+  time-limit 0
+  exits north none south none west none east none
+
+  grid
+oooo.~NNBB...o..bdBNN~~~~~~NNd#...o...ddNN~....fffffffffffff
+....NBgNdBjjojojbddNg~~B~~BgN#djjojojj#dNg~N...fffSCORES:fff
+.....~NNddjojojoj#dNN~~~~B~NN##jojojojd#NNB....fffffffffffff
+...N~BNN#do.o.o.od#NNB~B~BBNN##o.o.o.o##NN~~N..fkurns:fff2q0
+....BBNgd#FFFFFFF##gN~BBBB~Ngv#FFFFFFF##gN~B...fffffffffffff
+...NB~NN##FFFFwFw##NNBBBBBBNN#vFwwFFFF#vNNB~N..fOctinar:f171
+...NBBgN##FFwwFww#vNNBBBBBBNNvvwFwFwFFv#NgBBN..fffffffffffff
+..NBBBNg#vFwFwwwFv#NgBBdBBBgNv#FwwwFwFvvgNBBBN.fffffffffffff
+..gdBBgNv#FwwwwwwvvNNBBBBBdNNvvwwFwwwF#vNgBBdg.fTxtal:fffqq1
+..NBdBggvvwFwwwww#vgNdBBddBNgvvwwwwwFFvvggdBBN.fffffffffffff
+..NdddNg#vwwwwwwwvvNgBddBddgNyvFwwwwwFvvgNBBdN.fffffffffffff
+.gddBdggvvFwwwwwwvvggddddddggvvwwwwwwwvyggdddBgfffffffffffff
+.N#dddggvvwwwwwwwvygNddd#ddNgvywwwwwwFvvggddddNfWatt-san:140
+.gddddgNvywwwwwwwvvgg#dddd#ggyvwwwwwwwyvNgdd#dgfffffffffffff
+.N#d#dggvvwwwwwwwyvggd#d##dggyywwwwwwwvyggddd#NfOhms:ffff260
+.g##d#ggyvwwwwwwwvyNg######gNyywwwwwwwyyggd###gfffffffffffff
+...............................................fffffffffffff
+.......N....................................N..fTxtal:fff400
+.....N................................N......Ngfffffffffffff
+zAIMfkARz...............................N......fffffffffffff
+gobbbbbbzN...............................NN....fffffffffffff
+zzzfbfzzg....qD.....N.............GH......NgNg.fffffffffffff
+gzfzozzgz.....D....N.........N...............Ngfffffffffffff
+z@jjjopzg.....D...Ng..........NJ.....N.........fKrame:fff10f
+gzzfzgzgg........gN.....N.....gN......Ng.......fffffffffffff
+  end
+
+  legend
+    o = Object color 0x0F
+    . = Empty color 0x0E
+    ~ = Water color 0x08
+    N = Normal color 0x10
+    B = Breakable color 0x08
+    b = Empty color 0x20
+    d = Normal color 0x08
+    # = Solid color 0x08
+    f = Text-Blue color 0x20
+    g = Breakable color 0x01
+    j = Empty color 0x00
+    S = Text-Blue color 0x53
+    C = Text-Blue color 0x43
+    O = Text-Blue color 0x4F
+    R = Text-Blue color 0x52
+    E = Text-Blue color 0x45
+    : = Text-Blue color 0x3A
+    k = Text-Blue color 0x42
+    u = Text-Blue color 0x75
+    r = Text-Blue color 0x72
+    n = Text-Blue color 0x6E
+    s = Text-Blue color 0x73
+    2 = Text-Blue color 0x32
+    q = Object color 0x1F
+    0 = Text-Blue color 0x30
+    F = Fake color 0x06
+    v = Normal color 0x78
+    w = Fake color 0x66
+    c = Text-Blue color 0x63
+    t = Text-Blue color 0x74
+    i = Text-Blue color 0x69
+    a = Text-Blue color 0x61
+    1 = Text-Blue color 0x31
+    7 = Text-Blue color 0x37
+    T = Text-Blue color 0x54
+    x = Text-Blue color 0x6F
+    l = Text-Blue color 0x6C
+    y = Breakable color 0x78
+    W = Text-Blue color 0x57
+    - = Text-Blue color 0x2D
+    4 = Text-Blue color 0x34
+    h = Text-Blue color 0x68
+    m = Text-Blue color 0x6D
+    6 = Text-Blue color 0x36
+    z = Normal color 0x01
+    A = Text-Blue color 0x41
+    I = Text-Blue color 0x49
+    M = Text-Blue color 0x4D
+    D = Object color 0x01
+    G = Object color 0x02
+    H = Object color 0x0C
+    @ = Player color 0x1F under Empty color 0x00
+    p = Passage color 0x3F to "Eavesdrop"
+    J = Empty color 0x10
+    K = Text-Blue color 0x46
+    e = Text-Blue color 0x65
+  end
+
+  stats
+    stat at 6,24 element Object p1 cp437:0xFE p2 0 step idle under Empty color 0x08
+    oop
+@blockobj
+#cycle 1
+/i
+[Bowling: Instructions
+
+Playing as Burns, you must score three
+strikes in order to win. Furthermore, Ohms
+must not hit a single pin.
+
+To bowl, push the arrow button in the
+control area in the lower left. This will
+fire a bullet upwards from the button. If
+the bullet hits the aiming bar, Burns
+scores a strike. Otherwise, Burns loses.
+
+SAVE NOW.]
+/i
+(Burns picks up a ball.)
+
+Burns: Here goes...
+/i
+#end
+:allover
+#die
+
+    end
+    stat at 2,21 element Object p1 cp437:0xB3 p2 0 step idle under Empty color 0x20
+    oop
+@aim
+#char 179
+#cycle 1
+:movecyc
+/e/i/e/i/e/i/e/i/e/i/e/i
+/w/i/w/i/w/i/w/i/w/i/w/i
+#send movecyc
+:shot
+#char 178
+#send burns:strike
+#send throw:okay
+#walk w
+#end
+:thud
+#walk i
+#char 179
+#send movecyc
+:nocont
+#die
+
+    end
+    stat at 5,23 element Object p1 cp437:0x18 p2 0 step idle under Empty color 0x20
+    oop
+@throw
+#cycle 1
+#end
+:touch
+#zap touch
+#shoot n
+/i/i/i/i/i
+#send burns:miss
+#end
+:okay
+#end
+:nocont
+#die
+:ready
+#restore touch
+
+    end
+    stat at 3,1 element Object p1 cp437:0x20 p2 0 step idle under Empty color 0x0E
+    oop
+@nowin1
+#cycle 1
+#end
+:oops
+/i/i/i/i/i/i
+(The ball smashes into the pins, dropping
+nine of them immediately. The last pin
+spins about on its base like a top.)
+
+Burns: Come on, come on...
+/i
+(It stops wobbling.)
+
+Burns: Oh, dear.
+
+(Victory is impossible. The field of force
+that separates Ohms and Watt-san from
+Burns and Octinar drops.)
+/i
+:besttwo
+Burns: Best two out of three?
+
+Ohms: Rules are rules. You must submit to
+our will, or face the penalty. (producing
+a notebooks and a pen) First, I command
+you to write the details of all major
+Protest Party operations in this notebook.
+
+Burns: Forget it.
+
+Octinar: No, do it -
+
+(He is cut off as spheres of energy
+envelop him and Burns. The fields shrink
+to marbles, and the two are trapped in
+tiny prison spheres.)
+/i
+Ohms: And this, sir and madam, is what
+happens when you fail to fulfill the
+obligations of a Duel.
+
+First marble: I don't suppose you could
+let us out of these things?
+
+Ohms: That is quite impossible.
+
+Second marble: Botheration. I have a
+crick in my neck.
+
+   - At least the property tax is low. -
+/i
+#endgame
+#end
+
+    end
+    stat at 4,1 element Object p1 cp437:0x20 p2 0 step idle under Empty color 0x0E
+    oop
+@nowin2
+#cycle 1
+#end
+:oops
+(All ten pins clatter to the ground. A
+strike.)
+
+Ohms: Technically, I am allowed to take an
+additional turn, but that is irrelevant,
+is it not?
+
+(Burns glares.)
+
+Ohms: Fair is fair. The victory goes to
+myself and Watt-san.
+/i
+#send nowin1:besttwo
+
+    end
+    stat at 59,4 element Object p1 cp437:0x30 p2 0 step idle under Empty color 0x09
+    oop
+@ct1
+#cycle 1
+#end
+:good
+#zap good
+#char 49
+#end
+:good
+#zap good
+#char 50
+Burns: Two strikes - I get an extra shot.
+#end
+:good
+#char 51
+#send all:nocont
+Octinar: Impressive.
+
+Watt-san: Lucky.
+
+(Ohms extinguishes his pipe and gestures
+with it toward the scoreboard - and the
+numbers 401-400.)
+
+Ohms: Futile. I need only hit two pins,
+and the victory is ours.
+
+(Ohms forms a fireball in his hands.)
+/i
+Ohms: Observe.
+
+(He flings the fireball into the gutter.)
+
+Burns: Why?
+
+Ohms: I do not need two shots to hit two
+pins. I see no reason to lose any time
+aiming the first.
+
+(Ohms forms a ball of fire in his hands
+and strides forward, preparing his final
+shot.)
+
+Burns: I'd better do something fast!
+/i
+#send all:fling
+#end
+
+    end
+    stat at 58,9 element Object p1 cp437:0x33 p2 0 step idle under Empty color 0x20
+    oop
+@ct2
+#cycle 1
+#end
+:third
+#char 52
+
+    end
+    stat at 59,9 element Object p1 cp437:0x37 p2 0 step idle under Empty color 0x20
+    oop
+@ct3
+#cycle 1
+#end
+:good
+#zap good
+#char 56
+#end
+:good
+#zap good
+#char 57
+#end
+:good
+#send ct2:third
+#char 48
+
+    end
+    stat at 14,1 element Object p1 cp437:0x19 p2 0 step idle under Empty color 0x0E
+    oop
+@pin
+#cycle 1
+#end
+:hit
+#char 26
+/i/i/i
+#char 32
+/i/i/i/i/i/i/i
+#char 25
+
+    end
+    stat at 15,2 element Object p1 cp437:0x19 p2 0 step idle under Empty color 0x0F
+    oop
+#bind pin
+
+    end
+    stat at 13,2 element Object p1 cp437:0x19 p2 0 step idle
+    oop
+#bind pin
+
+    end
+    stat at 12,3 element Object p1 cp437:0x19 p2 0 step idle
+    oop
+@pin2
+#cycle 1
+#end
+:hit
+#char 26
+/i/i/i
+#char 32
+/i/i/i/i/i/i/i
+#char 25
+#end
+
+    end
+    stat at 14,3 element Object p1 cp437:0x19 p2 0 step idle
+    oop
+#bind pin
+
+    end
+    stat at 16,3 element Object p1 cp437:0x19 p2 0 step idle
+    oop
+#bind pin
+
+    end
+    stat at 17,4 element Object p1 cp437:0x19 p2 0 step idle
+    oop
+#bind pin
+
+    end
+    stat at 15,4 element Object p1 cp437:0x19 p2 0 step idle
+    oop
+#bind pin
+
+    end
+    stat at 13,4 element Object p1 cp437:0x19 p2 0 step idle
+    oop
+#bind pin
+
+    end
+    stat at 11,4 element Object p1 cp437:0x19 p2 0 step idle
+    oop
+#bind pin
+
+    end
+    stat at 35,1 element Object p1 cp437:0x19 p2 0 step idle under Empty color 0x0E
+    oop
+#bind pin3
+
+    end
+    stat at 36,2 element Object p1 cp437:0x19 p2 0 step idle
+    oop
+#bind pin3
+
+    end
+    stat at 34,2 element Object p1 cp437:0x19 p2 0 step idle
+    oop
+#bind pin3
+
+    end
+    stat at 33,3 element Object p1 cp437:0x19 p2 0 step idle
+    oop
+#bind pin3
+
+    end
+    stat at 35,3 element Object p1 cp437:0x19 p2 0 step idle
+    oop
+#bind pin3
+
+    end
+    stat at 37,3 element Object p1 cp437:0x19 p2 0 step idle
+    oop
+#bind pin3
+
+    end
+    stat at 38,4 element Object p1 cp437:0x19 p2 0 step idle
+    oop
+#bind pin3
+
+    end
+    stat at 36,4 element Object p1 cp437:0x19 p2 0 step idle
+    oop
+#bind pin3
+
+    end
+    stat at 32,4 element Object p1 cp437:0x19 p2 0 step idle
+    oop
+#bind pin3
+
+    end
+    stat at 34,4 element Object p1 cp437:0x19 p2 0 step idle
+    oop
+@pin3
+#cycle 1
+#end
+:hit
+#char 26
+/i/i/i
+#char 32
+/i/i/i/i/i/i/i
+#char 35
+
+    end
+    stat at 2,1 element Object p1 cp437:0x20 p2 0 step idle under Empty color 0x0E
+    oop
+@invobj
+#cycle 1
+:clrammo
+#take ammo 1 rdy
+#send clrammo
+:rdy
+#give ammo 1
+:start
+#if i begin
+/i
+#send start
+:fling
+#zap begin
+#send start
+:toolate
+#zap begin
+#send start
+:begin
+#clear i
+Burns: No, not yet... be patient...
+/i
+#send start
+:begin
+#clear i
+(Burns fumbles in her purse, pulls out
+the flat rock, and flings it to the
+ground with a clatter.)
+
+Ohms: (tripping) What was _that_?
+
+(He slips, and the bowling ball thuds
+neatly into the gutter.)
+
+Burns: Dropped my rock. How clumsy of me.
+/i
+#send ball4:won
+#end
+:begin
+#clear i
+[Too late! It's time to restore...]
+#end
+
+    end
+    stat at 1,1 element Object p1 cp437:0x20 p2 0 step idle under Empty color 0x0E
+    oop
+@detect
+#cycle 1
+/i/i/i
+:check
+#take ammo 1 begin
+#give ammo 1
+#send check
+:begin
+#send rdychk
+#end
+:fling
+#zap rdychk
+#take ammo 1
+#give ammo 1
+#send check
+:toolate
+#zap rdychk
+#take ammo 1
+#give ammo 1
+#send check
+:rdychk
+[You probably shouldn't fire the laser
+until you need the distraction! I'll
+pretend that didn't happen.]
+/i
+#give ammo 1
+/i
+#send check
+:rdychk
+(Burns fires the laser just as Octinar
+takes aim. The beam bounces harmlessly off
+the forcefield separating the players,
+but the loud ZAP distracts the sorcerer.
+The throw thuds neatly into the gutter.)
+
+Burns: Oh, _deary me_, I am VERY sorry.
+They should put a safety on this thing.
+/i
+#send ball4:won
+#end
+:rdychk
+[Too late! It's time to restore...]
+/i
+#end
+
+    end
+    stat at 14,22 element Object p1 cp437:0x02 p2 0 step idle
+    oop
+@burns
+#cycle 1
+#end
+:strike
+#zap stchk
+:miss
+(Burns picks up a ball from the return,
+and takes a shot.)
+/i
+#send apbit
+#end
+:apbit
+#send ball1:appear
+#zap apbit
+#send postap
+:apbit
+#send ball2:appear
+#zap apbit
+#send postap
+:apbit
+#send ball3:appear
+:postap
+/n/i/n/i/n/i/n/n
+#send stchk
+#end
+:stchk
+#send all:mb
+#end
+:stchk
+#restore stchk
+#send all:sb
+#end
+:gotit
+(All ten pins clatter to the floor.)
+
+Burns: Strike!
+#send all:advance
+#send all:good
+/s/s/s/s/s
+#send throw:ready
+#end
+:allover
+#die
+
+    end
+    stat at 15,22 element Object p1 cp437:0x20 p2 0 step idle
+    oop
+@ball1
+#cycle 1
+#end
+:appear
+#char 7
+/n/i/n/i/n/i/n/n
+#end
+:sb
+#zap thud
+:mb
+#walk n
+#end
+:thud
+#walk i
+#send pin:hit
+#send nowin1:oops
+#die
+:thud
+#walk i
+#send pin:hit
+#send pin2:hit
+#send burns:gotit
+#die
+
+    end
+    stat at 15,23 element Object p1 cp437:0x20 p2 0 step idle
+    oop
+@ball2
+#cycle 1
+#end
+:advance
+/n
+#end
+:nm
+#end
+:appear
+#restore mb
+#restore sb
+#restore thud
+#char 7
+/n/i/n/i/n/i/n/n
+#end
+'sb
+#zap thud
+'mb
+#walk n
+#end
+'thud
+#walk i
+#send pin:hit
+#send nowin1:oops
+#die
+'thud
+#walk i
+#send pin:hit
+#send pin2:hit
+#send burns:gotit
+#die
+
+    end
+    stat at 15,24 element Object p1 cp437:0x20 p2 0 step idle
+    oop
+@ball3
+'Don't try binding this to ball2. It ruins
+'the zaps and restores.
+#cycle 1
+#end
+:advance
+/n
+#end
+:nm
+#end
+:appear
+#restore mb
+#restore sb
+#restore thud
+#char 7
+/n/i/n/i/n/i/n/n
+#end
+'sb
+#zap thud
+'mb
+#walk n
+#end
+'thud
+#walk i
+#send pin:hit
+#send nowin1:oops
+#die
+'thud
+#walk i
+#send pin:hit
+#send pin2:hit
+#send burns:gotit
+#die
+
+    end
+    stat at 35,22 element Object p1 cp437:0x02 p2 0 step idle under Empty color 0x0E
+    oop
+@ohms
+#cycle 1
+#end
+:fling
+#send ball4:appear
+/i/i/i/i
+/n/i/n/i/n/i/n/n
+#end
+:ball
+#char 7
+#send burns:allover
+
+    end
+    stat at 36,22 element Object p1 cp437:0x20 p2 0 step idle
+    oop
+@ball4
+#cycle 1
+#end
+:appear
+#char 7
+/i/i/i/i
+/n/i/n/i/n/i/n/n/n/n
+#zap thud
+#walk n
+#send all:toolate
+#end
+:won
+#walk n
+/e/e/e
+#end
+:thud
+#walk i
+(Ohms wheels about and faces Burns.)
+
+Ohms: You have cheated, and broken the
+geas. You distracted a player.
+
+Burns: As Watt-san did on Octinar's turn.
+Turnabout is fair play.
+
+Watt-san: Ohms, look at the scores!
+
+Ohms: I am aware, Watt-san.
+/i
+Octinar: You must submit to our will, or
+face the penalty.
+
+Ohms: Hardly. It was not a fair match.
+
+Octinar: True. And you broke the rules
+first. Obey the geas, and tell me: Where
+is Sartorio?
+
+Watt-san: Ohms, tell him. It will do him
+no good.
+
+Ohms: The geas does not -
+/i
+(Green spheres of energy form in the void
+and envelop Ohms and Watt-san. They shrink
+to the size of marbles, trapping the two
+sorcerers in globes of force.)
+
+First sphere: - bind... us.
+
+Octinar: Containment spheres. You knew the
+penalty, Ohms. Let us return now, Miss
+Burns. We have won the duel.
+
+(Octinar and Burns fade away in a shimmer
+of blue light.)
+/i
+First sphere: Here's a state of things.
+
+Second sphere: There must be a way out!
+Every curse has a countercurse! Deduce the
+way out! Use those powers for which you
+have become so -
+
+First sphere: Watt-san.
+
+Second sphere: Yes, yes?
+
+First sphere: I am a marble. Don't expect
+much.
+#send blockobj:allover
+#send ohms:ball
+#die
+:thud
+#walk i
+#send pin3:hit
+/i/i/i/i
+#send nowin2:oops
+#die
+
+    end
+    stat at 7,24 element Passage p1 0 p2 0 p3 board "Eavesdrop" step idle under Empty color 0x08
+  end
+end

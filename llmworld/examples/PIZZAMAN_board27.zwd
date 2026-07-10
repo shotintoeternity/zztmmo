@@ -1,0 +1,95 @@
+board "End"
+  start player at 32,23
+  respawn at 27,7
+  max-shots 255
+  dark false
+  reenter false
+  time-limit 0
+  exits north none south none west none east none
+
+  grid
+Jodyqgrewqupqandqbecameqanqactressqandqhasqstarredqinq"Women
+WithqGuns"qandq"AmmoqforqDinner."qSamqbecameqaqmechanic,qqqq
+andqbecameqaqmillionaireqmakingqhisqownqcars.qYouqgotqaqnewq
+jobqasqaqChineseqfoodqdeliveryqguy.qLookqforqPizzaqManq2qqqq
+forqmoreqaboutqthis!qTheqBuy-A-Wreckqguyqisqstillqworkingqqq
+atqBuy-A-Wreckqsellingqpeopleqdarkqblueqcars.qTheqguyqwhoqqq
+wouldn'tqpayqyouqisqinqjailqforqtheft.qTheqchefqnowqrunsqhis
+ownqsausageqrestaurant,qbutqnobodyqcanqfigureqoutqwhereqheqq
+getsqhisqwonderfulqsausage.qTheqaliensqhaveqmovedqtoqTlltz.q
+Theqthreeqregularqcustomersqareqtravelingqtheqworldqsampling
+restaurants.qIqdoubtqthatqtheyqwillqcomeqbackqtoqSlothqPizza
+anyqtimeqsoon.qTheqHappyqGuy'sqaccomplicesqhaveqformedqaqqqq
+gangqcalledqtheqSloths,qandqareqgoingqaroundqterrorizingqthe
+city.qTheqBoss'sqwifeqisqcryingqtoqthisqday.qAsqforqReginald
+Snickey,qtheqdepressedqguy,qtheqHappyqGuyqandqtheqPreacher,q
+theyqwereqneverqheardqfromqagain.qqqqqqqqqqqqqqqqqqqqqqqqqqq
+qqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqq
+qqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqq
+qqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqq
+qqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqq
+qqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqq
+xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxExxxxxxxxxxxxxxxxxxxxxxxxxxxx
+xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx@xxxxxxxxxxxxxxxxxxxxxxxxxxxx
+xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx
+xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx
+  end
+
+  legend
+    J = Text-Red color 0x4A
+    o = Text-Red color 0x6F
+    d = Text-Red color 0x64
+    y = Text-Red color 0x79
+    q = Text-Red color 0x20
+    g = Text-Red color 0x67
+    r = Text-Red color 0x72
+    e = Text-Red color 0x65
+    w = Text-Red color 0x77
+    u = Text-Red color 0x75
+    p = Text-Red color 0x70
+    a = Text-Red color 0x61
+    n = Text-Red color 0x6E
+    b = Text-Red color 0x62
+    c = Text-Red color 0x63
+    m = Text-Red color 0x6D
+    t = Text-Red color 0x74
+    s = Text-Red color 0x73
+    h = Text-Red color 0x68
+    i = Text-Red color 0x69
+    " = Text-Red color 0x22
+    W = Text-Red color 0x57
+    G = Text-Red color 0x47
+    A = Text-Red color 0x41
+    f = Text-Red color 0x66
+    D = Text-Red color 0x44
+    . = Text-Red color 0x2E
+    S = Text-Red color 0x53
+    , = Text-Red color 0x2C
+    l = Text-Red color 0x6C
+    k = Text-Red color 0x6B
+    Y = Text-Red color 0x59
+    j = Text-Red color 0x6A
+    C = Text-Red color 0x43
+    v = Text-Red color 0x76
+    L = Text-Red color 0x4C
+    P = Text-Red color 0x50
+    z = Text-Red color 0x7A
+    M = Text-Red color 0x4D
+    2 = Text-Red color 0x32
+    ! = Text-Red color 0x21
+    T = Text-Red color 0x54
+    B = Text-Red color 0x42
+    - = Text-Red color 0x2D
+    ' = Text-Red color 0x27
+    I = Text-Red color 0x49
+    H = Text-Red color 0x48
+    R = Text-Red color 0x52
+    x = Empty color 0x0C
+    E = Passage color 0x4F to "Credits"
+    @ = Player color 0x1F under Empty color 0x0C
+  end
+
+  stats
+    stat at 32,22 element Passage p1 0 p2 0 p3 board "Credits" step idle under Empty color 0x0C
+  end
+end

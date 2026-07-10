@@ -1,0 +1,4184 @@
+board "Gem Shooby 6000"
+  start player at 15,8
+  max-shots 1
+  dark false
+  reenter false
+  time-limit 0
+  exits north none south none west none east none
+
+  grid
+ooo.........ccccffjfjjGEMjSHOOBYj6000.........Upgrades:jwmki
+nqtuvxzCDIJKLNQRnqtuvxzCDIJKLNQRnqtuvxzCDIJKLNQRnqtuvxzCDIJK
+RnqtuvxzCDIJKLNQRnqtuvxzCDIJKLNQRnqtuvxzCDIJKLNQRnqtuvxzCDIJ
+QRnqtuvxzCDIJKLNQRnqtuvxzCDIJKLNQRnqtuvxzCDIJKLNQRnqtuvxzCDI
+NQRnqtuvxzCDIJlllllllllllllllllllllllllllllllJKLNQRnqtuvxzCD
+LNQRnqtuvxzllllTTTTTTVVVVVVVVVVVVVVVVVTTTTTTllllLNQRnqtuvxzC
+KLNQRnqtuvllTTTTWTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTllLNQRnqtuvxz
+JKLNQRnqtllTTT@TTTTTTTTTTTTTTTTTTTTXTTTTTTTTTTTTllLNQRnqtuvx
+IJKLNQRnqlTTZT1111111TTTFFFFFFFFFTXXXXXXXXTTTTTTTlKLNQRnqtuv
+DIJKLNQRnlTTT11AAAAA111F2F2F2F2F2FXXX3333333TTTTTlJKLNQRnqtu
+CDIJKLNQRlTTT1AA4A4AA11FFFFFFFFFFFXX335555533TTTTlIJKLNQRnqt
+zCDIJKLNQlTTT1AAAAAAA11F2F2F2F2F2FXX355757553TTTTlDIJKLNQRnq
+xzCDIJKLNlTTTT1A4A4A1TTFFFFFFFFFFFXX355555553TTTTlCDIJKLNQRn
+vxzCDIJKLlTTTTAAAAAAATTF2F2F2F2F2FXX355757553TTTTlzCDIJKLNQR
+uvxzCDIJKlTTTTAA4A4AATTFFFFFFFFFFFXX335555533TTTTlxzCDIJKLNQ
+tuvxzCDIJlTTTTTAAAAATTTF2F2F2F2F2FXXX3333333TTTTTl888CDIJKLN
+qtuvxzCDIlTTTTTTTTTTTTTTFFFFFFFFFTXXXXXXXXTTTTTTTT+P8zCDIJKL
+nqtuvxzCDllTTTTTTTTTTTTTXXXXXXXXXXXXXXXXXXXXXXTTll888xzCDIJK
+RnqtuvxzCDllTTT9h!!byTTTXXXXXXXXXXXXXX#$%%&*XXTllnqtuvxzCDIJ
+QRnqtuvxzCDllllTTTTTTTTTTf-=~~^_TTTTTTTTTTTTllllQRnqtuvxzCDI
+NQRnqtuvxzCDIJlllllllllllllllllllllllllllllllJKLNQRnqtuvxzCD
+LNQRnqtuvxzCDIJKLNQRnqtuvxzCDIJKLNQRnqtuvxzCDIJKLNQRnqtuvxzC
+KLNQRnqtuvxzCDIJKLNQRnqtuvxzCDIJKLNQRnqtuvxzCDIJKLNQRnqtuvxz
+JKLNQRnqtuvxzCDIJKLNQ;,/\oj|<j>?eo`j';,qtuvxzCDIJKLNQRnqtuvx
+ZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZ
+  end
+
+  legend
+    o = Object color 0x08
+    . = Empty color 0x09
+    c = Empty color 0x0A
+    f = Empty color 0x0F
+    j = Text-White color 0x20
+    G = Text-White color 0x47
+    E = Text-White color 0x45
+    M = Text-White color 0x4D
+    S = Text-White color 0x53
+    H = Text-White color 0x48
+    O = Text-White color 0x4F
+    B = Text-White color 0x42
+    Y = Text-White color 0x59
+    6 = Text-White color 0x36
+    0 = Text-White color 0x30
+    U = Text-White color 0x55
+    p = Text-White color 0x70
+    g = Text-White color 0x67
+    r = Text-White color 0x72
+    a = Text-White color 0x61
+    d = Text-White color 0x64
+    e = Text-White color 0x65
+    s = Text-White color 0x73
+    : = Text-White color 0x3A
+    w = Slider (EW) color 0x0F
+    m = Boulder color 0x0F
+    k = Key color 0x0F
+    i = Invisible color 0x0F
+    n = Gem color 0x05
+    q = Gem color 0x06
+    t = Gem color 0x07
+    u = Gem color 0x08
+    v = Gem color 0x09
+    x = Gem color 0x0A
+    z = Gem color 0x0B
+    C = Gem color 0x0C
+    D = Gem color 0x0D
+    I = Gem color 0x0E
+    J = Gem color 0x0F
+    K = Empty color 0x10
+    L = Gem color 0x01
+    N = Gem color 0x02
+    Q = Gem color 0x03
+    R = Gem color 0x04
+    l = Line color 0x08
+    T = Empty color 0x00
+    V = Empty color 0x07
+    W = Object color 0x0F
+    @ = Player color 0x1F under Empty color 0x00
+    X = Empty color 0x2A
+    Z = Empty color 0x08
+    1 = Empty color 0x11
+    F = Fake color 0x22
+    A = Fake color 0x11
+    2 = Object color 0x2A
+    3 = Line color 0x3B
+    4 = Object color 0x19
+    5 = Fake color 0x33
+    7 = Object color 0x3B
+    8 = Line color 0x5D
+    + = Door color 0x5D
+    P = Passage color 0x5D to "END"
+    9 = Text-Blue color 0x53
+    h = Text-Blue color 0x68
+    ! = Text-Blue color 0x6F
+    b = Text-Blue color 0x62
+    y = Text-Blue color 0x79
+    # = Text-Cyan color 0x53
+    $ = Text-Cyan color 0x68
+    % = Text-Cyan color 0x6F
+    & = Text-Cyan color 0x62
+    * = Text-Cyan color 0x79
+    - = Text-Green color 0x53
+    = = Text-Green color 0x68
+    ~ = Text-Green color 0x6F
+    ^ = Text-Green color 0x62
+    _ = Text-Green color 0x79
+    ; = Object color 0x04
+    , = Object color 0x05
+    / = Object color 0x06
+    \ = Object color 0x07
+    | = Object color 0x0A
+    < = Object color 0x0B
+    > = Object color 0x0D
+    ? = Object color 0x0E
+    ` = Object color 0x01
+    ' = Object color 0x03
+  end
+
+  stats
+    stat at 1,1 element Object cycle 0 p1 cp437:0x57 p2 0 step idle under Empty color 0x09
+    oop
+@a
+:z
+#char 249
+#cycle 1
+#unlock
+#end
+:touch
+#lock
+#char 4
+#play 1
+#if any purple sliderew give gems 20
+#if any red sliderew give gems 12
+#if any yellow sliderew give gems 7
+#if any green sliderew give gems 4
+#if any blue sliderew give gems 2
+#if any white sliderew give gems 1
+#cycle 9
+#if any blue boulder cycle 8
+#if any green boulder cycle 7
+#if any yellow boulder cycle 6
+#if any red boulder cycle 5
+#if any red key bd
+#if any yellow key bc
+#if any green key bb
+#if any blue key ba
+/i#char 57
+/i#char 56
+:ba
+/i#char 55
+/i#char 54
+:bb
+/i#char 53
+:bc
+/i#char 52
+:bd
+/i#char 51
+/i#char 50
+/i#char 49
+/i#play 2
+#z
+
+    end
+    stat at 2,1 element Object cycle 0 p1 cp437:0x69 p2 0 step idle under Empty color 0x09
+    oop
+@s h o o b y
+:z
+#char 9
+#unlock
+#end
+:a
+#play --bfxa#exad#
+Can't afford it!
+#end
+:touch
+Place something on this shooby:
+#take health 101 i
+#give health 101
+#if any red sliderew !ee;Boost (1064)
+#if any yellow sliderew !ed;Boost (416)
+#if any green sliderew !ec;Boost (163)
+#if any blue sliderew !eb;Boost (40)
+#if any white sliderew !ea;Boost (10)
+#if any yellow boulder !fd;Speed IV (900)
+#if any green boulder !fc;Speed III (600)
+#if any blue boulder !fb;Speed II (300)
+#if any white boulder !fa;Speed I (100)
+#take ammo 25 b
+#give ammo 25
+!he;Shooter RND (40Ñ)
+!hf;Shooter Repeater (100Ñ)
+!b;More ...
+#z
+:b
+#if da !da;Autoshooby (33)
+#if db !db;Autoshooby (46)
+#if dc !dc;Autoshooby (64)
+#if dd !dd;Autoshooby (89)
+#if de !de;Autoshooby (124)
+#if df !df;Autoshooby (173)
+#if dg !dg;Autoshooby (242)
+#if dh !dh;Autoshooby (338)
+#if di !di;Autoshooby (473)
+#if dj !dj;Autoshooby (662)
+#if dk !dk;Autoshooby (926)
+#if dl !dl;Autoshooby (1296)
+#if dm !dm;Autoshooby (1814)
+#if dn !dn;Autoshooby (2539)
+#if do !do;Autoshooby (3554)
+#take health 2001 i
+#give health 2001
+#j
+:i
+!g;Shooby Shop (1000)
+:j
+!;Cancel
+#z
+:da
+#take gems 33 a
+:dz
+#bind b
+:db
+#take gems 46 a
+#dz
+:dc
+#take gems 64 a
+#dz
+:dd
+#take gems 89 a
+#dz
+:de
+#take gems 124 a
+#dz
+:df
+#take gems 173 a
+#dz
+:dg
+#take gems 242 a
+#dz
+:dh
+#take gems 338 a
+#dz
+:di
+#take gems 473 a
+#dz
+:dj
+#take gems 662 a
+#dz
+:dk
+#take gems 926 a
+#dz
+:dl
+#take gems 1296 a
+#dz
+:dm
+#take gems 1814 a
+#dz
+:dn
+#take gems 2539 a
+#dz
+:do
+#take gems 3554 a
+#dz
+:ea
+#take gems 10 a
+:ez
+#bind c
+:eb
+#take gems 40 a
+#ez
+:ec
+#take gems 163 a
+#ez
+:ed
+#take gems 416 a
+#ez
+:ee
+#take gems 1064 a
+#ez
+:fa
+#take gems 100 a
+:fz
+#bind d
+:fb
+#take gems 300 a
+#fz
+:fc
+#take gems 600 a
+#fz
+:fd
+#take gems 900 a
+#fz
+:g
+#take gems 1000 a
+#bind e
+:he
+#take ammo 40 a
+#bind j
+:hf
+#take ammo 100 a
+#bind k
+:shot
+#if any purple sliderew give ammo 25
+#if any red sliderew give ammo 5
+#if any yellow sliderew give ammo 4
+#if any green sliderew give ammo 3
+#if any blue sliderew give ammo 2
+#if any white sliderew give ammo 1
+
+    end
+    stat at 3,1 element Object cycle 0 p1 cp437:0x4C p2 0 step idle under Empty color 0x0F
+    oop
+@o
+:z
+#char 7
+#cycle 1
+#unlock
+#end
+:touch
+#lock
+#char 4
+#play 1
+#if any purple sliderew give ammo 20
+#if any red sliderew give ammo 12
+#if any yellow sliderew give ammo 7
+#if any green sliderew give ammo 4
+#if any blue sliderew give ammo 2
+#if any white sliderew give ammo 1
+#cycle 9
+#if any blue boulder cycle 8
+#if any green boulder cycle 7
+#if any yellow boulder cycle 6
+#if any red boulder cycle 5
+#if any red key bd
+#if any yellow key bc
+#if any green key bb
+#if any blue key ba
+/i#char 57
+/i#char 56
+:ba
+/i#char 55
+/i#char 54
+:bb
+/i#char 53
+:bc
+/i#char 52
+:bd
+/i#char 51
+/i#char 50
+/i#char 49
+/i#play 2
+#z
+
+    end
+    stat at 17,7 element Object cycle 1 p1 cp437:0xE8 p2 0 step idle
+    oop
+@Welcome to Gem Shooby
+this is GEM SHOOBY 6000
+
+$IMPORTANT NOTE
+On some systems this is very unstable on
+zzt 3.2 - use ClassicZoo instead.  You
+can get the latest ClassicZoo here:
+$https://zeta.asie.pl/wiki/
+
+!y;I'm not on ClassicZoo.
+:q
+#endgame
+#give health 2000
+#clear db
+#clear dc
+#clear dd
+#clear de
+#clear df
+#clear dg
+#clear dh
+#clear di
+#clear dj
+#clear dk
+#clear dl
+#clear dm
+#clear dn
+#clear do
+#set da
+:z
+#end
+:touch
+Welcome to Gem Shooby
+home of the gem shooby
+
+!b;Instructions
+#z
+:b
+Gem shooby how to play
+
+Touch a shooby to get a gem.
+
+Touch a shooby to turn the shooby into a
+shooby for more gems.
+
+Touch an ammo shooby for ammo.
+
+Shoot a shooby with ammo for more ammo.
+
+Buy a Shooby Shop to progress.
+
+Buy Autoshooby for more shooby per shooby.
+
+Buy Boost for more gems per shooby.
+
+Buy Speed # for faster global cooldown.
+
+Get the purple key.
+!;Thank you I've seen enough bye
+#end
+:y
+Would you like a failsafe set up in case
+the object memory corrupts?
+
+!x;Yes
+!q;No need
+#end
+:x
+$FAILSAFE ACTIVATED
+
+If the board corrupts, just grab the key
+and leave.  (And if you want to try it
+later using ClassicZoo, that would be
+awesome.)
+!;k
+#change purple door key
+#q
+
+    end
+    stat at 25,10 element Object cycle 1 p1 cp437:0x09 p2 0 step idle under Fake color 0x22
+    oop
+@s h o o b y
+:z
+#char 9
+#unlock
+#end
+:a
+#play --bfxa#exad#
+Can't afford it!
+#end
+:touch
+Place something on this shooby:
+#take health 101 i
+#give health 101
+#if any red sliderew !ee;Boost (1064)
+#if any yellow sliderew !ed;Boost (416)
+#if any green sliderew !ec;Boost (163)
+#if any blue sliderew !eb;Boost (40)
+#if any white sliderew !ea;Boost (10)
+#if any yellow boulder !fd;Speed IV (900)
+#if any green boulder !fc;Speed III (600)
+#if any blue boulder !fb;Speed II (300)
+#if any white boulder !fa;Speed I (100)
+#take ammo 25 b
+#give ammo 25
+!he;Shooter RND (40Ñ)
+!hf;Shooter Repeater (100Ñ)
+!b;More ...
+#z
+:b
+#if da !da;Autoshooby (33)
+#if db !db;Autoshooby (46)
+#if dc !dc;Autoshooby (64)
+#if dd !dd;Autoshooby (89)
+#if de !de;Autoshooby (124)
+#if df !df;Autoshooby (173)
+#if dg !dg;Autoshooby (242)
+#if dh !dh;Autoshooby (338)
+#if di !di;Autoshooby (473)
+#if dj !dj;Autoshooby (662)
+#if dk !dk;Autoshooby (926)
+#if dl !dl;Autoshooby (1296)
+#if dm !dm;Autoshooby (1814)
+#if dn !dn;Autoshooby (2539)
+#if do !do;Autoshooby (3554)
+#take health 2001 i
+#give health 2001
+#j
+:i
+!g;Shooby Shop (1000)
+:j
+!;Cancel
+#z
+:da
+#take gems 33 a
+:dz
+#bind b
+:db
+#take gems 46 a
+#dz
+:dc
+#take gems 64 a
+#dz
+:dd
+#take gems 89 a
+#dz
+:de
+#take gems 124 a
+#dz
+:df
+#take gems 173 a
+#dz
+:dg
+#take gems 242 a
+#dz
+:dh
+#take gems 338 a
+#dz
+:di
+#take gems 473 a
+#dz
+:dj
+#take gems 662 a
+#dz
+:dk
+#take gems 926 a
+#dz
+:dl
+#take gems 1296 a
+#dz
+:dm
+#take gems 1814 a
+#dz
+:dn
+#take gems 2539 a
+#dz
+:do
+#take gems 3554 a
+#dz
+:ea
+#take gems 10 a
+:ez
+#bind c
+:eb
+#take gems 40 a
+#ez
+:ec
+#take gems 163 a
+#ez
+:ed
+#take gems 416 a
+#ez
+:ee
+#take gems 1064 a
+#ez
+:fa
+#take gems 100 a
+:fz
+#bind d
+:fb
+#take gems 300 a
+#fz
+:fc
+#take gems 600 a
+#fz
+:fd
+#take gems 900 a
+#fz
+:g
+#take gems 1000 a
+#bind e
+:he
+#take ammo 40 a
+#bind j
+:hf
+#take ammo 100 a
+#bind k
+:shot
+#if any purple sliderew give ammo 25
+#if any red sliderew give ammo 5
+#if any yellow sliderew give ammo 4
+#if any green sliderew give ammo 3
+#if any blue sliderew give ammo 2
+#if any white sliderew give ammo 1
+
+    end
+    stat at 27,10 element Object cycle 1 p1 cp437:0x09 p2 0 step idle under Fake color 0x22
+    oop
+@s h o o b y
+:z
+#char 9
+#unlock
+#end
+:a
+#play --bfxa#exad#
+Can't afford it!
+#end
+:touch
+Place something on this shooby:
+#take health 101 i
+#give health 101
+#if any red sliderew !ee;Boost (1064)
+#if any yellow sliderew !ed;Boost (416)
+#if any green sliderew !ec;Boost (163)
+#if any blue sliderew !eb;Boost (40)
+#if any white sliderew !ea;Boost (10)
+#if any yellow boulder !fd;Speed IV (900)
+#if any green boulder !fc;Speed III (600)
+#if any blue boulder !fb;Speed II (300)
+#if any white boulder !fa;Speed I (100)
+#take ammo 25 b
+#give ammo 25
+!he;Shooter RND (40Ñ)
+!hf;Shooter Repeater (100Ñ)
+!b;More ...
+#z
+:b
+#if da !da;Autoshooby (33)
+#if db !db;Autoshooby (46)
+#if dc !dc;Autoshooby (64)
+#if dd !dd;Autoshooby (89)
+#if de !de;Autoshooby (124)
+#if df !df;Autoshooby (173)
+#if dg !dg;Autoshooby (242)
+#if dh !dh;Autoshooby (338)
+#if di !di;Autoshooby (473)
+#if dj !dj;Autoshooby (662)
+#if dk !dk;Autoshooby (926)
+#if dl !dl;Autoshooby (1296)
+#if dm !dm;Autoshooby (1814)
+#if dn !dn;Autoshooby (2539)
+#if do !do;Autoshooby (3554)
+#take health 2001 i
+#give health 2001
+#j
+:i
+!g;Shooby Shop (1000)
+:j
+!;Cancel
+#z
+:da
+#take gems 33 a
+:dz
+#bind b
+:db
+#take gems 46 a
+#dz
+:dc
+#take gems 64 a
+#dz
+:dd
+#take gems 89 a
+#dz
+:de
+#take gems 124 a
+#dz
+:df
+#take gems 173 a
+#dz
+:dg
+#take gems 242 a
+#dz
+:dh
+#take gems 338 a
+#dz
+:di
+#take gems 473 a
+#dz
+:dj
+#take gems 662 a
+#dz
+:dk
+#take gems 926 a
+#dz
+:dl
+#take gems 1296 a
+#dz
+:dm
+#take gems 1814 a
+#dz
+:dn
+#take gems 2539 a
+#dz
+:do
+#take gems 3554 a
+#dz
+:ea
+#take gems 10 a
+:ez
+#bind c
+:eb
+#take gems 40 a
+#ez
+:ec
+#take gems 163 a
+#ez
+:ed
+#take gems 416 a
+#ez
+:ee
+#take gems 1064 a
+#ez
+:fa
+#take gems 100 a
+:fz
+#bind d
+:fb
+#take gems 300 a
+#fz
+:fc
+#take gems 600 a
+#fz
+:fd
+#take gems 900 a
+#fz
+:g
+#take gems 1000 a
+#bind e
+:he
+#take ammo 40 a
+#bind j
+:hf
+#take ammo 100 a
+#bind k
+:shot
+#if any purple sliderew give ammo 25
+#if any red sliderew give ammo 5
+#if any yellow sliderew give ammo 4
+#if any green sliderew give ammo 3
+#if any blue sliderew give ammo 2
+#if any white sliderew give ammo 1
+
+    end
+    stat at 29,10 element Object cycle 1 p1 cp437:0x09 p2 0 step idle under Fake color 0x22
+    oop
+@s h o o b y
+:z
+#char 9
+#unlock
+#end
+:a
+#play --bfxa#exad#
+Can't afford it!
+#end
+:touch
+Place something on this shooby:
+#take health 101 i
+#give health 101
+#if any red sliderew !ee;Boost (1064)
+#if any yellow sliderew !ed;Boost (416)
+#if any green sliderew !ec;Boost (163)
+#if any blue sliderew !eb;Boost (40)
+#if any white sliderew !ea;Boost (10)
+#if any yellow boulder !fd;Speed IV (900)
+#if any green boulder !fc;Speed III (600)
+#if any blue boulder !fb;Speed II (300)
+#if any white boulder !fa;Speed I (100)
+#take ammo 25 b
+#give ammo 25
+!he;Shooter RND (40Ñ)
+!hf;Shooter Repeater (100Ñ)
+!b;More ...
+#z
+:b
+#if da !da;Autoshooby (33)
+#if db !db;Autoshooby (46)
+#if dc !dc;Autoshooby (64)
+#if dd !dd;Autoshooby (89)
+#if de !de;Autoshooby (124)
+#if df !df;Autoshooby (173)
+#if dg !dg;Autoshooby (242)
+#if dh !dh;Autoshooby (338)
+#if di !di;Autoshooby (473)
+#if dj !dj;Autoshooby (662)
+#if dk !dk;Autoshooby (926)
+#if dl !dl;Autoshooby (1296)
+#if dm !dm;Autoshooby (1814)
+#if dn !dn;Autoshooby (2539)
+#if do !do;Autoshooby (3554)
+#take health 2001 i
+#give health 2001
+#j
+:i
+!g;Shooby Shop (1000)
+:j
+!;Cancel
+#z
+:da
+#take gems 33 a
+:dz
+#bind b
+:db
+#take gems 46 a
+#dz
+:dc
+#take gems 64 a
+#dz
+:dd
+#take gems 89 a
+#dz
+:de
+#take gems 124 a
+#dz
+:df
+#take gems 173 a
+#dz
+:dg
+#take gems 242 a
+#dz
+:dh
+#take gems 338 a
+#dz
+:di
+#take gems 473 a
+#dz
+:dj
+#take gems 662 a
+#dz
+:dk
+#take gems 926 a
+#dz
+:dl
+#take gems 1296 a
+#dz
+:dm
+#take gems 1814 a
+#dz
+:dn
+#take gems 2539 a
+#dz
+:do
+#take gems 3554 a
+#dz
+:ea
+#take gems 10 a
+:ez
+#bind c
+:eb
+#take gems 40 a
+#ez
+:ec
+#take gems 163 a
+#ez
+:ed
+#take gems 416 a
+#ez
+:ee
+#take gems 1064 a
+#ez
+:fa
+#take gems 100 a
+:fz
+#bind d
+:fb
+#take gems 300 a
+#fz
+:fc
+#take gems 600 a
+#fz
+:fd
+#take gems 900 a
+#fz
+:g
+#take gems 1000 a
+#bind e
+:he
+#take ammo 40 a
+#bind j
+:hf
+#take ammo 100 a
+#bind k
+:shot
+#if any purple sliderew give ammo 25
+#if any red sliderew give ammo 5
+#if any yellow sliderew give ammo 4
+#if any green sliderew give ammo 3
+#if any blue sliderew give ammo 2
+#if any white sliderew give ammo 1
+
+    end
+    stat at 31,10 element Object cycle 1 p1 cp437:0x09 p2 0 step idle under Fake color 0x22
+    oop
+@s h o o b y
+:z
+#char 9
+#unlock
+#end
+:a
+#play --bfxa#exad#
+Can't afford it!
+#end
+:touch
+Place something on this shooby:
+#take health 101 i
+#give health 101
+#if any red sliderew !ee;Boost (1064)
+#if any yellow sliderew !ed;Boost (416)
+#if any green sliderew !ec;Boost (163)
+#if any blue sliderew !eb;Boost (40)
+#if any white sliderew !ea;Boost (10)
+#if any yellow boulder !fd;Speed IV (900)
+#if any green boulder !fc;Speed III (600)
+#if any blue boulder !fb;Speed II (300)
+#if any white boulder !fa;Speed I (100)
+#take ammo 25 b
+#give ammo 25
+!he;Shooter RND (40Ñ)
+!hf;Shooter Repeater (100Ñ)
+!b;More ...
+#z
+:b
+#if da !da;Autoshooby (33)
+#if db !db;Autoshooby (46)
+#if dc !dc;Autoshooby (64)
+#if dd !dd;Autoshooby (89)
+#if de !de;Autoshooby (124)
+#if df !df;Autoshooby (173)
+#if dg !dg;Autoshooby (242)
+#if dh !dh;Autoshooby (338)
+#if di !di;Autoshooby (473)
+#if dj !dj;Autoshooby (662)
+#if dk !dk;Autoshooby (926)
+#if dl !dl;Autoshooby (1296)
+#if dm !dm;Autoshooby (1814)
+#if dn !dn;Autoshooby (2539)
+#if do !do;Autoshooby (3554)
+#take health 2001 i
+#give health 2001
+#j
+:i
+!g;Shooby Shop (1000)
+:j
+!;Cancel
+#z
+:da
+#take gems 33 a
+:dz
+#bind b
+:db
+#take gems 46 a
+#dz
+:dc
+#take gems 64 a
+#dz
+:dd
+#take gems 89 a
+#dz
+:de
+#take gems 124 a
+#dz
+:df
+#take gems 173 a
+#dz
+:dg
+#take gems 242 a
+#dz
+:dh
+#take gems 338 a
+#dz
+:di
+#take gems 473 a
+#dz
+:dj
+#take gems 662 a
+#dz
+:dk
+#take gems 926 a
+#dz
+:dl
+#take gems 1296 a
+#dz
+:dm
+#take gems 1814 a
+#dz
+:dn
+#take gems 2539 a
+#dz
+:do
+#take gems 3554 a
+#dz
+:ea
+#take gems 10 a
+:ez
+#bind c
+:eb
+#take gems 40 a
+#ez
+:ec
+#take gems 163 a
+#ez
+:ed
+#take gems 416 a
+#ez
+:ee
+#take gems 1064 a
+#ez
+:fa
+#take gems 100 a
+:fz
+#bind d
+:fb
+#take gems 300 a
+#fz
+:fc
+#take gems 600 a
+#fz
+:fd
+#take gems 900 a
+#fz
+:g
+#take gems 1000 a
+#bind e
+:he
+#take ammo 40 a
+#bind j
+:hf
+#take ammo 100 a
+#bind k
+:shot
+#if any purple sliderew give ammo 25
+#if any red sliderew give ammo 5
+#if any yellow sliderew give ammo 4
+#if any green sliderew give ammo 3
+#if any blue sliderew give ammo 2
+#if any white sliderew give ammo 1
+
+    end
+    stat at 33,10 element Object cycle 1 p1 cp437:0x09 p2 0 step idle under Fake color 0x22
+    oop
+@s h o o b y
+:z
+#char 9
+#unlock
+#end
+:a
+#play --bfxa#exad#
+Can't afford it!
+#end
+:touch
+Place something on this shooby:
+#take health 101 i
+#give health 101
+#if any red sliderew !ee;Boost (1064)
+#if any yellow sliderew !ed;Boost (416)
+#if any green sliderew !ec;Boost (163)
+#if any blue sliderew !eb;Boost (40)
+#if any white sliderew !ea;Boost (10)
+#if any yellow boulder !fd;Speed IV (900)
+#if any green boulder !fc;Speed III (600)
+#if any blue boulder !fb;Speed II (300)
+#if any white boulder !fa;Speed I (100)
+#take ammo 25 b
+#give ammo 25
+!he;Shooter RND (40Ñ)
+!hf;Shooter Repeater (100Ñ)
+!b;More ...
+#z
+:b
+#if da !da;Autoshooby (33)
+#if db !db;Autoshooby (46)
+#if dc !dc;Autoshooby (64)
+#if dd !dd;Autoshooby (89)
+#if de !de;Autoshooby (124)
+#if df !df;Autoshooby (173)
+#if dg !dg;Autoshooby (242)
+#if dh !dh;Autoshooby (338)
+#if di !di;Autoshooby (473)
+#if dj !dj;Autoshooby (662)
+#if dk !dk;Autoshooby (926)
+#if dl !dl;Autoshooby (1296)
+#if dm !dm;Autoshooby (1814)
+#if dn !dn;Autoshooby (2539)
+#if do !do;Autoshooby (3554)
+#take health 2001 i
+#give health 2001
+#j
+:i
+!g;Shooby Shop (1000)
+:j
+!;Cancel
+#z
+:da
+#take gems 33 a
+:dz
+#bind b
+:db
+#take gems 46 a
+#dz
+:dc
+#take gems 64 a
+#dz
+:dd
+#take gems 89 a
+#dz
+:de
+#take gems 124 a
+#dz
+:df
+#take gems 173 a
+#dz
+:dg
+#take gems 242 a
+#dz
+:dh
+#take gems 338 a
+#dz
+:di
+#take gems 473 a
+#dz
+:dj
+#take gems 662 a
+#dz
+:dk
+#take gems 926 a
+#dz
+:dl
+#take gems 1296 a
+#dz
+:dm
+#take gems 1814 a
+#dz
+:dn
+#take gems 2539 a
+#dz
+:do
+#take gems 3554 a
+#dz
+:ea
+#take gems 10 a
+:ez
+#bind c
+:eb
+#take gems 40 a
+#ez
+:ec
+#take gems 163 a
+#ez
+:ed
+#take gems 416 a
+#ez
+:ee
+#take gems 1064 a
+#ez
+:fa
+#take gems 100 a
+:fz
+#bind d
+:fb
+#take gems 300 a
+#fz
+:fc
+#take gems 600 a
+#fz
+:fd
+#take gems 900 a
+#fz
+:g
+#take gems 1000 a
+#bind e
+:he
+#take ammo 40 a
+#bind j
+:hf
+#take ammo 100 a
+#bind k
+:shot
+#if any purple sliderew give ammo 25
+#if any red sliderew give ammo 5
+#if any yellow sliderew give ammo 4
+#if any green sliderew give ammo 3
+#if any blue sliderew give ammo 2
+#if any white sliderew give ammo 1
+
+    end
+    stat at 17,11 element Object cycle 1 p1 cp437:0xF9 p2 0 step idle
+    oop
+@a
+:z
+#char 249
+#cycle 1
+#unlock
+#end
+:touch
+#lock
+#char 4
+#play 1
+#if any purple sliderew give gems 20
+#if any red sliderew give gems 12
+#if any yellow sliderew give gems 7
+#if any green sliderew give gems 4
+#if any blue sliderew give gems 2
+#if any white sliderew give gems 1
+#cycle 9
+#if any blue boulder cycle 8
+#if any green boulder cycle 7
+#if any yellow boulder cycle 6
+#if any red boulder cycle 5
+#if any red key bd
+#if any yellow key bc
+#if any green key bb
+#if any blue key ba
+/i#char 57
+/i#char 56
+:ba
+/i#char 55
+/i#char 54
+:bb
+/i#char 53
+:bc
+/i#char 52
+:bd
+/i#char 51
+/i#char 50
+/i#char 49
+/i#play 2
+#z
+
+    end
+    stat at 19,11 element Object cycle 1 p1 cp437:0xF9 p2 0 step idle
+    oop
+@a
+:z
+#char 249
+#cycle 1
+#unlock
+#end
+:touch
+#lock
+#char 4
+#play 1
+#if any purple sliderew give gems 20
+#if any red sliderew give gems 12
+#if any yellow sliderew give gems 7
+#if any green sliderew give gems 4
+#if any blue sliderew give gems 2
+#if any white sliderew give gems 1
+#cycle 9
+#if any blue boulder cycle 8
+#if any green boulder cycle 7
+#if any yellow boulder cycle 6
+#if any red boulder cycle 5
+#if any red key bd
+#if any yellow key bc
+#if any green key bb
+#if any blue key ba
+/i#char 57
+/i#char 56
+:ba
+/i#char 55
+/i#char 54
+:bb
+/i#char 53
+:bc
+/i#char 52
+:bd
+/i#char 51
+/i#char 50
+/i#char 49
+/i#play 2
+#z
+
+    end
+    stat at 25,12 element Object cycle 1 p1 cp437:0x09 p2 0 step idle under Fake color 0x22
+    oop
+@s h o o b y
+:z
+#char 9
+#unlock
+#end
+:a
+#play --bfxa#exad#
+Can't afford it!
+#end
+:touch
+Place something on this shooby:
+#take health 101 i
+#give health 101
+#if any red sliderew !ee;Boost (1064)
+#if any yellow sliderew !ed;Boost (416)
+#if any green sliderew !ec;Boost (163)
+#if any blue sliderew !eb;Boost (40)
+#if any white sliderew !ea;Boost (10)
+#if any yellow boulder !fd;Speed IV (900)
+#if any green boulder !fc;Speed III (600)
+#if any blue boulder !fb;Speed II (300)
+#if any white boulder !fa;Speed I (100)
+#take ammo 25 b
+#give ammo 25
+!he;Shooter RND (40Ñ)
+!hf;Shooter Repeater (100Ñ)
+!b;More ...
+#z
+:b
+#if da !da;Autoshooby (33)
+#if db !db;Autoshooby (46)
+#if dc !dc;Autoshooby (64)
+#if dd !dd;Autoshooby (89)
+#if de !de;Autoshooby (124)
+#if df !df;Autoshooby (173)
+#if dg !dg;Autoshooby (242)
+#if dh !dh;Autoshooby (338)
+#if di !di;Autoshooby (473)
+#if dj !dj;Autoshooby (662)
+#if dk !dk;Autoshooby (926)
+#if dl !dl;Autoshooby (1296)
+#if dm !dm;Autoshooby (1814)
+#if dn !dn;Autoshooby (2539)
+#if do !do;Autoshooby (3554)
+#take health 2001 i
+#give health 2001
+#j
+:i
+!g;Shooby Shop (1000)
+:j
+!;Cancel
+#z
+:da
+#take gems 33 a
+:dz
+#bind b
+:db
+#take gems 46 a
+#dz
+:dc
+#take gems 64 a
+#dz
+:dd
+#take gems 89 a
+#dz
+:de
+#take gems 124 a
+#dz
+:df
+#take gems 173 a
+#dz
+:dg
+#take gems 242 a
+#dz
+:dh
+#take gems 338 a
+#dz
+:di
+#take gems 473 a
+#dz
+:dj
+#take gems 662 a
+#dz
+:dk
+#take gems 926 a
+#dz
+:dl
+#take gems 1296 a
+#dz
+:dm
+#take gems 1814 a
+#dz
+:dn
+#take gems 2539 a
+#dz
+:do
+#take gems 3554 a
+#dz
+:ea
+#take gems 10 a
+:ez
+#bind c
+:eb
+#take gems 40 a
+#ez
+:ec
+#take gems 163 a
+#ez
+:ed
+#take gems 416 a
+#ez
+:ee
+#take gems 1064 a
+#ez
+:fa
+#take gems 100 a
+:fz
+#bind d
+:fb
+#take gems 300 a
+#fz
+:fc
+#take gems 600 a
+#fz
+:fd
+#take gems 900 a
+#fz
+:g
+#take gems 1000 a
+#bind e
+:he
+#take ammo 40 a
+#bind j
+:hf
+#take ammo 100 a
+#bind k
+:shot
+#if any purple sliderew give ammo 25
+#if any red sliderew give ammo 5
+#if any yellow sliderew give ammo 4
+#if any green sliderew give ammo 3
+#if any blue sliderew give ammo 2
+#if any white sliderew give ammo 1
+
+    end
+    stat at 27,12 element Object cycle 1 p1 cp437:0x09 p2 0 step idle under Fake color 0x22
+    oop
+@s h o o b y
+:z
+#char 9
+#unlock
+#end
+:a
+#play --bfxa#exad#
+Can't afford it!
+#end
+:touch
+Place something on this shooby:
+#take health 101 i
+#give health 101
+#if any red sliderew !ee;Boost (1064)
+#if any yellow sliderew !ed;Boost (416)
+#if any green sliderew !ec;Boost (163)
+#if any blue sliderew !eb;Boost (40)
+#if any white sliderew !ea;Boost (10)
+#if any yellow boulder !fd;Speed IV (900)
+#if any green boulder !fc;Speed III (600)
+#if any blue boulder !fb;Speed II (300)
+#if any white boulder !fa;Speed I (100)
+#take ammo 25 b
+#give ammo 25
+!he;Shooter RND (40Ñ)
+!hf;Shooter Repeater (100Ñ)
+!b;More ...
+#z
+:b
+#if da !da;Autoshooby (33)
+#if db !db;Autoshooby (46)
+#if dc !dc;Autoshooby (64)
+#if dd !dd;Autoshooby (89)
+#if de !de;Autoshooby (124)
+#if df !df;Autoshooby (173)
+#if dg !dg;Autoshooby (242)
+#if dh !dh;Autoshooby (338)
+#if di !di;Autoshooby (473)
+#if dj !dj;Autoshooby (662)
+#if dk !dk;Autoshooby (926)
+#if dl !dl;Autoshooby (1296)
+#if dm !dm;Autoshooby (1814)
+#if dn !dn;Autoshooby (2539)
+#if do !do;Autoshooby (3554)
+#take health 2001 i
+#give health 2001
+#j
+:i
+!g;Shooby Shop (1000)
+:j
+!;Cancel
+#z
+:da
+#take gems 33 a
+:dz
+#bind b
+:db
+#take gems 46 a
+#dz
+:dc
+#take gems 64 a
+#dz
+:dd
+#take gems 89 a
+#dz
+:de
+#take gems 124 a
+#dz
+:df
+#take gems 173 a
+#dz
+:dg
+#take gems 242 a
+#dz
+:dh
+#take gems 338 a
+#dz
+:di
+#take gems 473 a
+#dz
+:dj
+#take gems 662 a
+#dz
+:dk
+#take gems 926 a
+#dz
+:dl
+#take gems 1296 a
+#dz
+:dm
+#take gems 1814 a
+#dz
+:dn
+#take gems 2539 a
+#dz
+:do
+#take gems 3554 a
+#dz
+:ea
+#take gems 10 a
+:ez
+#bind c
+:eb
+#take gems 40 a
+#ez
+:ec
+#take gems 163 a
+#ez
+:ed
+#take gems 416 a
+#ez
+:ee
+#take gems 1064 a
+#ez
+:fa
+#take gems 100 a
+:fz
+#bind d
+:fb
+#take gems 300 a
+#fz
+:fc
+#take gems 600 a
+#fz
+:fd
+#take gems 900 a
+#fz
+:g
+#take gems 1000 a
+#bind e
+:he
+#take ammo 40 a
+#bind j
+:hf
+#take ammo 100 a
+#bind k
+:shot
+#if any purple sliderew give ammo 25
+#if any red sliderew give ammo 5
+#if any yellow sliderew give ammo 4
+#if any green sliderew give ammo 3
+#if any blue sliderew give ammo 2
+#if any white sliderew give ammo 1
+
+    end
+    stat at 29,12 element Object cycle 1 p1 cp437:0x09 p2 0 step idle under Fake color 0x22
+    oop
+@s h o o b y
+:z
+#char 9
+#unlock
+#end
+:a
+#play --bfxa#exad#
+Can't afford it!
+#end
+:touch
+Place something on this shooby:
+#take health 101 i
+#give health 101
+#if any red sliderew !ee;Boost (1064)
+#if any yellow sliderew !ed;Boost (416)
+#if any green sliderew !ec;Boost (163)
+#if any blue sliderew !eb;Boost (40)
+#if any white sliderew !ea;Boost (10)
+#if any yellow boulder !fd;Speed IV (900)
+#if any green boulder !fc;Speed III (600)
+#if any blue boulder !fb;Speed II (300)
+#if any white boulder !fa;Speed I (100)
+#take ammo 25 b
+#give ammo 25
+!he;Shooter RND (40Ñ)
+!hf;Shooter Repeater (100Ñ)
+!b;More ...
+#z
+:b
+#if da !da;Autoshooby (33)
+#if db !db;Autoshooby (46)
+#if dc !dc;Autoshooby (64)
+#if dd !dd;Autoshooby (89)
+#if de !de;Autoshooby (124)
+#if df !df;Autoshooby (173)
+#if dg !dg;Autoshooby (242)
+#if dh !dh;Autoshooby (338)
+#if di !di;Autoshooby (473)
+#if dj !dj;Autoshooby (662)
+#if dk !dk;Autoshooby (926)
+#if dl !dl;Autoshooby (1296)
+#if dm !dm;Autoshooby (1814)
+#if dn !dn;Autoshooby (2539)
+#if do !do;Autoshooby (3554)
+#take health 2001 i
+#give health 2001
+#j
+:i
+!g;Shooby Shop (1000)
+:j
+!;Cancel
+#z
+:da
+#take gems 33 a
+:dz
+#bind b
+:db
+#take gems 46 a
+#dz
+:dc
+#take gems 64 a
+#dz
+:dd
+#take gems 89 a
+#dz
+:de
+#take gems 124 a
+#dz
+:df
+#take gems 173 a
+#dz
+:dg
+#take gems 242 a
+#dz
+:dh
+#take gems 338 a
+#dz
+:di
+#take gems 473 a
+#dz
+:dj
+#take gems 662 a
+#dz
+:dk
+#take gems 926 a
+#dz
+:dl
+#take gems 1296 a
+#dz
+:dm
+#take gems 1814 a
+#dz
+:dn
+#take gems 2539 a
+#dz
+:do
+#take gems 3554 a
+#dz
+:ea
+#take gems 10 a
+:ez
+#bind c
+:eb
+#take gems 40 a
+#ez
+:ec
+#take gems 163 a
+#ez
+:ed
+#take gems 416 a
+#ez
+:ee
+#take gems 1064 a
+#ez
+:fa
+#take gems 100 a
+:fz
+#bind d
+:fb
+#take gems 300 a
+#fz
+:fc
+#take gems 600 a
+#fz
+:fd
+#take gems 900 a
+#fz
+:g
+#take gems 1000 a
+#bind e
+:he
+#take ammo 40 a
+#bind j
+:hf
+#take ammo 100 a
+#bind k
+:shot
+#if any purple sliderew give ammo 25
+#if any red sliderew give ammo 5
+#if any yellow sliderew give ammo 4
+#if any green sliderew give ammo 3
+#if any blue sliderew give ammo 2
+#if any white sliderew give ammo 1
+
+    end
+    stat at 31,12 element Object cycle 1 p1 cp437:0x09 p2 0 step idle under Fake color 0x22
+    oop
+@s h o o b y
+:z
+#char 9
+#unlock
+#end
+:a
+#play --bfxa#exad#
+Can't afford it!
+#end
+:touch
+Place something on this shooby:
+#take health 101 i
+#give health 101
+#if any red sliderew !ee;Boost (1064)
+#if any yellow sliderew !ed;Boost (416)
+#if any green sliderew !ec;Boost (163)
+#if any blue sliderew !eb;Boost (40)
+#if any white sliderew !ea;Boost (10)
+#if any yellow boulder !fd;Speed IV (900)
+#if any green boulder !fc;Speed III (600)
+#if any blue boulder !fb;Speed II (300)
+#if any white boulder !fa;Speed I (100)
+#take ammo 25 b
+#give ammo 25
+!he;Shooter RND (40Ñ)
+!hf;Shooter Repeater (100Ñ)
+!b;More ...
+#z
+:b
+#if da !da;Autoshooby (33)
+#if db !db;Autoshooby (46)
+#if dc !dc;Autoshooby (64)
+#if dd !dd;Autoshooby (89)
+#if de !de;Autoshooby (124)
+#if df !df;Autoshooby (173)
+#if dg !dg;Autoshooby (242)
+#if dh !dh;Autoshooby (338)
+#if di !di;Autoshooby (473)
+#if dj !dj;Autoshooby (662)
+#if dk !dk;Autoshooby (926)
+#if dl !dl;Autoshooby (1296)
+#if dm !dm;Autoshooby (1814)
+#if dn !dn;Autoshooby (2539)
+#if do !do;Autoshooby (3554)
+#take health 2001 i
+#give health 2001
+#j
+:i
+!g;Shooby Shop (1000)
+:j
+!;Cancel
+#z
+:da
+#take gems 33 a
+:dz
+#bind b
+:db
+#take gems 46 a
+#dz
+:dc
+#take gems 64 a
+#dz
+:dd
+#take gems 89 a
+#dz
+:de
+#take gems 124 a
+#dz
+:df
+#take gems 173 a
+#dz
+:dg
+#take gems 242 a
+#dz
+:dh
+#take gems 338 a
+#dz
+:di
+#take gems 473 a
+#dz
+:dj
+#take gems 662 a
+#dz
+:dk
+#take gems 926 a
+#dz
+:dl
+#take gems 1296 a
+#dz
+:dm
+#take gems 1814 a
+#dz
+:dn
+#take gems 2539 a
+#dz
+:do
+#take gems 3554 a
+#dz
+:ea
+#take gems 10 a
+:ez
+#bind c
+:eb
+#take gems 40 a
+#ez
+:ec
+#take gems 163 a
+#ez
+:ed
+#take gems 416 a
+#ez
+:ee
+#take gems 1064 a
+#ez
+:fa
+#take gems 100 a
+:fz
+#bind d
+:fb
+#take gems 300 a
+#fz
+:fc
+#take gems 600 a
+#fz
+:fd
+#take gems 900 a
+#fz
+:g
+#take gems 1000 a
+#bind e
+:he
+#take ammo 40 a
+#bind j
+:hf
+#take ammo 100 a
+#bind k
+:shot
+#if any purple sliderew give ammo 25
+#if any red sliderew give ammo 5
+#if any yellow sliderew give ammo 4
+#if any green sliderew give ammo 3
+#if any blue sliderew give ammo 2
+#if any white sliderew give ammo 1
+
+    end
+    stat at 33,12 element Object cycle 1 p1 cp437:0x09 p2 0 step idle under Fake color 0x22
+    oop
+@s h o o b y
+:z
+#char 9
+#unlock
+#end
+:a
+#play --bfxa#exad#
+Can't afford it!
+#end
+:touch
+Place something on this shooby:
+#take health 101 i
+#give health 101
+#if any red sliderew !ee;Boost (1064)
+#if any yellow sliderew !ed;Boost (416)
+#if any green sliderew !ec;Boost (163)
+#if any blue sliderew !eb;Boost (40)
+#if any white sliderew !ea;Boost (10)
+#if any yellow boulder !fd;Speed IV (900)
+#if any green boulder !fc;Speed III (600)
+#if any blue boulder !fb;Speed II (300)
+#if any white boulder !fa;Speed I (100)
+#take ammo 25 b
+#give ammo 25
+!he;Shooter RND (40Ñ)
+!hf;Shooter Repeater (100Ñ)
+!b;More ...
+#z
+:b
+#if da !da;Autoshooby (33)
+#if db !db;Autoshooby (46)
+#if dc !dc;Autoshooby (64)
+#if dd !dd;Autoshooby (89)
+#if de !de;Autoshooby (124)
+#if df !df;Autoshooby (173)
+#if dg !dg;Autoshooby (242)
+#if dh !dh;Autoshooby (338)
+#if di !di;Autoshooby (473)
+#if dj !dj;Autoshooby (662)
+#if dk !dk;Autoshooby (926)
+#if dl !dl;Autoshooby (1296)
+#if dm !dm;Autoshooby (1814)
+#if dn !dn;Autoshooby (2539)
+#if do !do;Autoshooby (3554)
+#take health 2001 i
+#give health 2001
+#j
+:i
+!g;Shooby Shop (1000)
+:j
+!;Cancel
+#z
+:da
+#take gems 33 a
+:dz
+#bind b
+:db
+#take gems 46 a
+#dz
+:dc
+#take gems 64 a
+#dz
+:dd
+#take gems 89 a
+#dz
+:de
+#take gems 124 a
+#dz
+:df
+#take gems 173 a
+#dz
+:dg
+#take gems 242 a
+#dz
+:dh
+#take gems 338 a
+#dz
+:di
+#take gems 473 a
+#dz
+:dj
+#take gems 662 a
+#dz
+:dk
+#take gems 926 a
+#dz
+:dl
+#take gems 1296 a
+#dz
+:dm
+#take gems 1814 a
+#dz
+:dn
+#take gems 2539 a
+#dz
+:do
+#take gems 3554 a
+#dz
+:ea
+#take gems 10 a
+:ez
+#bind c
+:eb
+#take gems 40 a
+#ez
+:ec
+#take gems 163 a
+#ez
+:ed
+#take gems 416 a
+#ez
+:ee
+#take gems 1064 a
+#ez
+:fa
+#take gems 100 a
+:fz
+#bind d
+:fb
+#take gems 300 a
+#fz
+:fc
+#take gems 600 a
+#fz
+:fd
+#take gems 900 a
+#fz
+:g
+#take gems 1000 a
+#bind e
+:he
+#take ammo 40 a
+#bind j
+:hf
+#take ammo 100 a
+#bind k
+:shot
+#if any purple sliderew give ammo 25
+#if any red sliderew give ammo 5
+#if any yellow sliderew give ammo 4
+#if any green sliderew give ammo 3
+#if any blue sliderew give ammo 2
+#if any white sliderew give ammo 1
+
+    end
+    stat at 40,12 element Object cycle 1 p1 cp437:0x07 p2 0 step idle
+    oop
+@o
+:z
+#char 7
+#cycle 1
+#unlock
+#end
+:touch
+#lock
+#char 4
+#play 1
+#if any purple sliderew give ammo 20
+#if any red sliderew give ammo 12
+#if any yellow sliderew give ammo 7
+#if any green sliderew give ammo 4
+#if any blue sliderew give ammo 2
+#if any white sliderew give ammo 1
+#cycle 9
+#if any blue boulder cycle 8
+#if any green boulder cycle 7
+#if any yellow boulder cycle 6
+#if any red boulder cycle 5
+#if any red key bd
+#if any yellow key bc
+#if any green key bb
+#if any blue key ba
+/i#char 57
+/i#char 56
+:ba
+/i#char 55
+/i#char 54
+:bb
+/i#char 53
+:bc
+/i#char 52
+:bd
+/i#char 51
+/i#char 50
+/i#char 49
+/i#play 2
+#z
+
+    end
+    stat at 42,12 element Object cycle 1 p1 cp437:0x07 p2 0 step idle
+    oop
+@o
+:z
+#char 7
+#cycle 1
+#unlock
+#end
+:touch
+#lock
+#char 4
+#play 1
+#if any purple sliderew give ammo 20
+#if any red sliderew give ammo 12
+#if any yellow sliderew give ammo 7
+#if any green sliderew give ammo 4
+#if any blue sliderew give ammo 2
+#if any white sliderew give ammo 1
+#cycle 9
+#if any blue boulder cycle 8
+#if any green boulder cycle 7
+#if any yellow boulder cycle 6
+#if any red boulder cycle 5
+#if any red key bd
+#if any yellow key bc
+#if any green key bb
+#if any blue key ba
+/i#char 57
+/i#char 56
+:ba
+/i#char 55
+/i#char 54
+:bb
+/i#char 53
+:bc
+/i#char 52
+:bd
+/i#char 51
+/i#char 50
+/i#char 49
+/i#play 2
+#z
+
+    end
+    stat at 17,13 element Object cycle 1 p1 cp437:0xF9 p2 0 step idle
+    oop
+@a
+:z
+#char 249
+#cycle 1
+#unlock
+#end
+:touch
+#lock
+#char 4
+#play 1
+#if any purple sliderew give gems 20
+#if any red sliderew give gems 12
+#if any yellow sliderew give gems 7
+#if any green sliderew give gems 4
+#if any blue sliderew give gems 2
+#if any white sliderew give gems 1
+#cycle 9
+#if any blue boulder cycle 8
+#if any green boulder cycle 7
+#if any yellow boulder cycle 6
+#if any red boulder cycle 5
+#if any red key bd
+#if any yellow key bc
+#if any green key bb
+#if any blue key ba
+/i#char 57
+/i#char 56
+:ba
+/i#char 55
+/i#char 54
+:bb
+/i#char 53
+:bc
+/i#char 52
+:bd
+/i#char 51
+/i#char 50
+/i#char 49
+/i#play 2
+#z
+
+    end
+    stat at 19,13 element Object cycle 1 p1 cp437:0xF9 p2 0 step idle
+    oop
+@a
+:z
+#char 249
+#cycle 1
+#unlock
+#end
+:touch
+#lock
+#char 4
+#play 1
+#if any purple sliderew give gems 20
+#if any red sliderew give gems 12
+#if any yellow sliderew give gems 7
+#if any green sliderew give gems 4
+#if any blue sliderew give gems 2
+#if any white sliderew give gems 1
+#cycle 9
+#if any blue boulder cycle 8
+#if any green boulder cycle 7
+#if any yellow boulder cycle 6
+#if any red boulder cycle 5
+#if any red key bd
+#if any yellow key bc
+#if any green key bb
+#if any blue key ba
+/i#char 57
+/i#char 56
+:ba
+/i#char 55
+/i#char 54
+:bb
+/i#char 53
+:bc
+/i#char 52
+:bd
+/i#char 51
+/i#char 50
+/i#char 49
+/i#play 2
+#z
+
+    end
+    stat at 25,14 element Object cycle 1 p1 cp437:0x09 p2 0 step idle under Fake color 0x22
+    oop
+@s h o o b y
+:z
+#char 9
+#unlock
+#end
+:a
+#play --bfxa#exad#
+Can't afford it!
+#end
+:touch
+Place something on this shooby:
+#take health 101 i
+#give health 101
+#if any red sliderew !ee;Boost (1064)
+#if any yellow sliderew !ed;Boost (416)
+#if any green sliderew !ec;Boost (163)
+#if any blue sliderew !eb;Boost (40)
+#if any white sliderew !ea;Boost (10)
+#if any yellow boulder !fd;Speed IV (900)
+#if any green boulder !fc;Speed III (600)
+#if any blue boulder !fb;Speed II (300)
+#if any white boulder !fa;Speed I (100)
+#take ammo 25 b
+#give ammo 25
+!he;Shooter RND (40Ñ)
+!hf;Shooter Repeater (100Ñ)
+!b;More ...
+#z
+:b
+#if da !da;Autoshooby (33)
+#if db !db;Autoshooby (46)
+#if dc !dc;Autoshooby (64)
+#if dd !dd;Autoshooby (89)
+#if de !de;Autoshooby (124)
+#if df !df;Autoshooby (173)
+#if dg !dg;Autoshooby (242)
+#if dh !dh;Autoshooby (338)
+#if di !di;Autoshooby (473)
+#if dj !dj;Autoshooby (662)
+#if dk !dk;Autoshooby (926)
+#if dl !dl;Autoshooby (1296)
+#if dm !dm;Autoshooby (1814)
+#if dn !dn;Autoshooby (2539)
+#if do !do;Autoshooby (3554)
+#take health 2001 i
+#give health 2001
+#j
+:i
+!g;Shooby Shop (1000)
+:j
+!;Cancel
+#z
+:da
+#take gems 33 a
+:dz
+#bind b
+:db
+#take gems 46 a
+#dz
+:dc
+#take gems 64 a
+#dz
+:dd
+#take gems 89 a
+#dz
+:de
+#take gems 124 a
+#dz
+:df
+#take gems 173 a
+#dz
+:dg
+#take gems 242 a
+#dz
+:dh
+#take gems 338 a
+#dz
+:di
+#take gems 473 a
+#dz
+:dj
+#take gems 662 a
+#dz
+:dk
+#take gems 926 a
+#dz
+:dl
+#take gems 1296 a
+#dz
+:dm
+#take gems 1814 a
+#dz
+:dn
+#take gems 2539 a
+#dz
+:do
+#take gems 3554 a
+#dz
+:ea
+#take gems 10 a
+:ez
+#bind c
+:eb
+#take gems 40 a
+#ez
+:ec
+#take gems 163 a
+#ez
+:ed
+#take gems 416 a
+#ez
+:ee
+#take gems 1064 a
+#ez
+:fa
+#take gems 100 a
+:fz
+#bind d
+:fb
+#take gems 300 a
+#fz
+:fc
+#take gems 600 a
+#fz
+:fd
+#take gems 900 a
+#fz
+:g
+#take gems 1000 a
+#bind e
+:he
+#take ammo 40 a
+#bind j
+:hf
+#take ammo 100 a
+#bind k
+:shot
+#if any purple sliderew give ammo 25
+#if any red sliderew give ammo 5
+#if any yellow sliderew give ammo 4
+#if any green sliderew give ammo 3
+#if any blue sliderew give ammo 2
+#if any white sliderew give ammo 1
+
+    end
+    stat at 27,14 element Object cycle 1 p1 cp437:0x09 p2 0 step idle under Fake color 0x22
+    oop
+@s h o o b y
+:z
+#char 9
+#unlock
+#end
+:a
+#play --bfxa#exad#
+Can't afford it!
+#end
+:touch
+Place something on this shooby:
+#take health 101 i
+#give health 101
+#if any red sliderew !ee;Boost (1064)
+#if any yellow sliderew !ed;Boost (416)
+#if any green sliderew !ec;Boost (163)
+#if any blue sliderew !eb;Boost (40)
+#if any white sliderew !ea;Boost (10)
+#if any yellow boulder !fd;Speed IV (900)
+#if any green boulder !fc;Speed III (600)
+#if any blue boulder !fb;Speed II (300)
+#if any white boulder !fa;Speed I (100)
+#take ammo 25 b
+#give ammo 25
+!he;Shooter RND (40Ñ)
+!hf;Shooter Repeater (100Ñ)
+!b;More ...
+#z
+:b
+#if da !da;Autoshooby (33)
+#if db !db;Autoshooby (46)
+#if dc !dc;Autoshooby (64)
+#if dd !dd;Autoshooby (89)
+#if de !de;Autoshooby (124)
+#if df !df;Autoshooby (173)
+#if dg !dg;Autoshooby (242)
+#if dh !dh;Autoshooby (338)
+#if di !di;Autoshooby (473)
+#if dj !dj;Autoshooby (662)
+#if dk !dk;Autoshooby (926)
+#if dl !dl;Autoshooby (1296)
+#if dm !dm;Autoshooby (1814)
+#if dn !dn;Autoshooby (2539)
+#if do !do;Autoshooby (3554)
+#take health 2001 i
+#give health 2001
+#j
+:i
+!g;Shooby Shop (1000)
+:j
+!;Cancel
+#z
+:da
+#take gems 33 a
+:dz
+#bind b
+:db
+#take gems 46 a
+#dz
+:dc
+#take gems 64 a
+#dz
+:dd
+#take gems 89 a
+#dz
+:de
+#take gems 124 a
+#dz
+:df
+#take gems 173 a
+#dz
+:dg
+#take gems 242 a
+#dz
+:dh
+#take gems 338 a
+#dz
+:di
+#take gems 473 a
+#dz
+:dj
+#take gems 662 a
+#dz
+:dk
+#take gems 926 a
+#dz
+:dl
+#take gems 1296 a
+#dz
+:dm
+#take gems 1814 a
+#dz
+:dn
+#take gems 2539 a
+#dz
+:do
+#take gems 3554 a
+#dz
+:ea
+#take gems 10 a
+:ez
+#bind c
+:eb
+#take gems 40 a
+#ez
+:ec
+#take gems 163 a
+#ez
+:ed
+#take gems 416 a
+#ez
+:ee
+#take gems 1064 a
+#ez
+:fa
+#take gems 100 a
+:fz
+#bind d
+:fb
+#take gems 300 a
+#fz
+:fc
+#take gems 600 a
+#fz
+:fd
+#take gems 900 a
+#fz
+:g
+#take gems 1000 a
+#bind e
+:he
+#take ammo 40 a
+#bind j
+:hf
+#take ammo 100 a
+#bind k
+:shot
+#if any purple sliderew give ammo 25
+#if any red sliderew give ammo 5
+#if any yellow sliderew give ammo 4
+#if any green sliderew give ammo 3
+#if any blue sliderew give ammo 2
+#if any white sliderew give ammo 1
+
+    end
+    stat at 29,14 element Object cycle 1 p1 cp437:0x09 p2 0 step idle under Fake color 0x22
+    oop
+@s h o o b y
+:z
+#char 9
+#unlock
+#end
+:a
+#play --bfxa#exad#
+Can't afford it!
+#end
+:touch
+Place something on this shooby:
+#take health 101 i
+#give health 101
+#if any red sliderew !ee;Boost (1064)
+#if any yellow sliderew !ed;Boost (416)
+#if any green sliderew !ec;Boost (163)
+#if any blue sliderew !eb;Boost (40)
+#if any white sliderew !ea;Boost (10)
+#if any yellow boulder !fd;Speed IV (900)
+#if any green boulder !fc;Speed III (600)
+#if any blue boulder !fb;Speed II (300)
+#if any white boulder !fa;Speed I (100)
+#take ammo 25 b
+#give ammo 25
+!he;Shooter RND (40Ñ)
+!hf;Shooter Repeater (100Ñ)
+!b;More ...
+#z
+:b
+#if da !da;Autoshooby (33)
+#if db !db;Autoshooby (46)
+#if dc !dc;Autoshooby (64)
+#if dd !dd;Autoshooby (89)
+#if de !de;Autoshooby (124)
+#if df !df;Autoshooby (173)
+#if dg !dg;Autoshooby (242)
+#if dh !dh;Autoshooby (338)
+#if di !di;Autoshooby (473)
+#if dj !dj;Autoshooby (662)
+#if dk !dk;Autoshooby (926)
+#if dl !dl;Autoshooby (1296)
+#if dm !dm;Autoshooby (1814)
+#if dn !dn;Autoshooby (2539)
+#if do !do;Autoshooby (3554)
+#take health 2001 i
+#give health 2001
+#j
+:i
+!g;Shooby Shop (1000)
+:j
+!;Cancel
+#z
+:da
+#take gems 33 a
+:dz
+#bind b
+:db
+#take gems 46 a
+#dz
+:dc
+#take gems 64 a
+#dz
+:dd
+#take gems 89 a
+#dz
+:de
+#take gems 124 a
+#dz
+:df
+#take gems 173 a
+#dz
+:dg
+#take gems 242 a
+#dz
+:dh
+#take gems 338 a
+#dz
+:di
+#take gems 473 a
+#dz
+:dj
+#take gems 662 a
+#dz
+:dk
+#take gems 926 a
+#dz
+:dl
+#take gems 1296 a
+#dz
+:dm
+#take gems 1814 a
+#dz
+:dn
+#take gems 2539 a
+#dz
+:do
+#take gems 3554 a
+#dz
+:ea
+#take gems 10 a
+:ez
+#bind c
+:eb
+#take gems 40 a
+#ez
+:ec
+#take gems 163 a
+#ez
+:ed
+#take gems 416 a
+#ez
+:ee
+#take gems 1064 a
+#ez
+:fa
+#take gems 100 a
+:fz
+#bind d
+:fb
+#take gems 300 a
+#fz
+:fc
+#take gems 600 a
+#fz
+:fd
+#take gems 900 a
+#fz
+:g
+#take gems 1000 a
+#bind e
+:he
+#take ammo 40 a
+#bind j
+:hf
+#take ammo 100 a
+#bind k
+:shot
+#if any purple sliderew give ammo 25
+#if any red sliderew give ammo 5
+#if any yellow sliderew give ammo 4
+#if any green sliderew give ammo 3
+#if any blue sliderew give ammo 2
+#if any white sliderew give ammo 1
+
+    end
+    stat at 31,14 element Object cycle 1 p1 cp437:0x09 p2 0 step idle under Fake color 0x22
+    oop
+@s h o o b y
+:z
+#char 9
+#unlock
+#end
+:a
+#play --bfxa#exad#
+Can't afford it!
+#end
+:touch
+Place something on this shooby:
+#take health 101 i
+#give health 101
+#if any red sliderew !ee;Boost (1064)
+#if any yellow sliderew !ed;Boost (416)
+#if any green sliderew !ec;Boost (163)
+#if any blue sliderew !eb;Boost (40)
+#if any white sliderew !ea;Boost (10)
+#if any yellow boulder !fd;Speed IV (900)
+#if any green boulder !fc;Speed III (600)
+#if any blue boulder !fb;Speed II (300)
+#if any white boulder !fa;Speed I (100)
+#take ammo 25 b
+#give ammo 25
+!he;Shooter RND (40Ñ)
+!hf;Shooter Repeater (100Ñ)
+!b;More ...
+#z
+:b
+#if da !da;Autoshooby (33)
+#if db !db;Autoshooby (46)
+#if dc !dc;Autoshooby (64)
+#if dd !dd;Autoshooby (89)
+#if de !de;Autoshooby (124)
+#if df !df;Autoshooby (173)
+#if dg !dg;Autoshooby (242)
+#if dh !dh;Autoshooby (338)
+#if di !di;Autoshooby (473)
+#if dj !dj;Autoshooby (662)
+#if dk !dk;Autoshooby (926)
+#if dl !dl;Autoshooby (1296)
+#if dm !dm;Autoshooby (1814)
+#if dn !dn;Autoshooby (2539)
+#if do !do;Autoshooby (3554)
+#take health 2001 i
+#give health 2001
+#j
+:i
+!g;Shooby Shop (1000)
+:j
+!;Cancel
+#z
+:da
+#take gems 33 a
+:dz
+#bind b
+:db
+#take gems 46 a
+#dz
+:dc
+#take gems 64 a
+#dz
+:dd
+#take gems 89 a
+#dz
+:de
+#take gems 124 a
+#dz
+:df
+#take gems 173 a
+#dz
+:dg
+#take gems 242 a
+#dz
+:dh
+#take gems 338 a
+#dz
+:di
+#take gems 473 a
+#dz
+:dj
+#take gems 662 a
+#dz
+:dk
+#take gems 926 a
+#dz
+:dl
+#take gems 1296 a
+#dz
+:dm
+#take gems 1814 a
+#dz
+:dn
+#take gems 2539 a
+#dz
+:do
+#take gems 3554 a
+#dz
+:ea
+#take gems 10 a
+:ez
+#bind c
+:eb
+#take gems 40 a
+#ez
+:ec
+#take gems 163 a
+#ez
+:ed
+#take gems 416 a
+#ez
+:ee
+#take gems 1064 a
+#ez
+:fa
+#take gems 100 a
+:fz
+#bind d
+:fb
+#take gems 300 a
+#fz
+:fc
+#take gems 600 a
+#fz
+:fd
+#take gems 900 a
+#fz
+:g
+#take gems 1000 a
+#bind e
+:he
+#take ammo 40 a
+#bind j
+:hf
+#take ammo 100 a
+#bind k
+:shot
+#if any purple sliderew give ammo 25
+#if any red sliderew give ammo 5
+#if any yellow sliderew give ammo 4
+#if any green sliderew give ammo 3
+#if any blue sliderew give ammo 2
+#if any white sliderew give ammo 1
+
+    end
+    stat at 33,14 element Object cycle 1 p1 cp437:0x09 p2 0 step idle under Fake color 0x22
+    oop
+@s h o o b y
+:z
+#char 9
+#unlock
+#end
+:a
+#play --bfxa#exad#
+Can't afford it!
+#end
+:touch
+Place something on this shooby:
+#take health 101 i
+#give health 101
+#if any red sliderew !ee;Boost (1064)
+#if any yellow sliderew !ed;Boost (416)
+#if any green sliderew !ec;Boost (163)
+#if any blue sliderew !eb;Boost (40)
+#if any white sliderew !ea;Boost (10)
+#if any yellow boulder !fd;Speed IV (900)
+#if any green boulder !fc;Speed III (600)
+#if any blue boulder !fb;Speed II (300)
+#if any white boulder !fa;Speed I (100)
+#take ammo 25 b
+#give ammo 25
+!he;Shooter RND (40Ñ)
+!hf;Shooter Repeater (100Ñ)
+!b;More ...
+#z
+:b
+#if da !da;Autoshooby (33)
+#if db !db;Autoshooby (46)
+#if dc !dc;Autoshooby (64)
+#if dd !dd;Autoshooby (89)
+#if de !de;Autoshooby (124)
+#if df !df;Autoshooby (173)
+#if dg !dg;Autoshooby (242)
+#if dh !dh;Autoshooby (338)
+#if di !di;Autoshooby (473)
+#if dj !dj;Autoshooby (662)
+#if dk !dk;Autoshooby (926)
+#if dl !dl;Autoshooby (1296)
+#if dm !dm;Autoshooby (1814)
+#if dn !dn;Autoshooby (2539)
+#if do !do;Autoshooby (3554)
+#take health 2001 i
+#give health 2001
+#j
+:i
+!g;Shooby Shop (1000)
+:j
+!;Cancel
+#z
+:da
+#take gems 33 a
+:dz
+#bind b
+:db
+#take gems 46 a
+#dz
+:dc
+#take gems 64 a
+#dz
+:dd
+#take gems 89 a
+#dz
+:de
+#take gems 124 a
+#dz
+:df
+#take gems 173 a
+#dz
+:dg
+#take gems 242 a
+#dz
+:dh
+#take gems 338 a
+#dz
+:di
+#take gems 473 a
+#dz
+:dj
+#take gems 662 a
+#dz
+:dk
+#take gems 926 a
+#dz
+:dl
+#take gems 1296 a
+#dz
+:dm
+#take gems 1814 a
+#dz
+:dn
+#take gems 2539 a
+#dz
+:do
+#take gems 3554 a
+#dz
+:ea
+#take gems 10 a
+:ez
+#bind c
+:eb
+#take gems 40 a
+#ez
+:ec
+#take gems 163 a
+#ez
+:ed
+#take gems 416 a
+#ez
+:ee
+#take gems 1064 a
+#ez
+:fa
+#take gems 100 a
+:fz
+#bind d
+:fb
+#take gems 300 a
+#fz
+:fc
+#take gems 600 a
+#fz
+:fd
+#take gems 900 a
+#fz
+:g
+#take gems 1000 a
+#bind e
+:he
+#take ammo 40 a
+#bind j
+:hf
+#take ammo 100 a
+#bind k
+:shot
+#if any purple sliderew give ammo 25
+#if any red sliderew give ammo 5
+#if any yellow sliderew give ammo 4
+#if any green sliderew give ammo 3
+#if any blue sliderew give ammo 2
+#if any white sliderew give ammo 1
+
+    end
+    stat at 40,14 element Object cycle 1 p1 cp437:0x07 p2 0 step idle
+    oop
+@o
+:z
+#char 7
+#cycle 1
+#unlock
+#end
+:touch
+#lock
+#char 4
+#play 1
+#if any purple sliderew give ammo 20
+#if any red sliderew give ammo 12
+#if any yellow sliderew give ammo 7
+#if any green sliderew give ammo 4
+#if any blue sliderew give ammo 2
+#if any white sliderew give ammo 1
+#cycle 9
+#if any blue boulder cycle 8
+#if any green boulder cycle 7
+#if any yellow boulder cycle 6
+#if any red boulder cycle 5
+#if any red key bd
+#if any yellow key bc
+#if any green key bb
+#if any blue key ba
+/i#char 57
+/i#char 56
+:ba
+/i#char 55
+/i#char 54
+:bb
+/i#char 53
+:bc
+/i#char 52
+:bd
+/i#char 51
+/i#char 50
+/i#char 49
+/i#play 2
+#z
+
+    end
+    stat at 42,14 element Object cycle 1 p1 cp437:0x07 p2 0 step idle
+    oop
+@o
+:z
+#char 7
+#cycle 1
+#unlock
+#end
+:touch
+#lock
+#char 4
+#play 1
+#if any purple sliderew give ammo 20
+#if any red sliderew give ammo 12
+#if any yellow sliderew give ammo 7
+#if any green sliderew give ammo 4
+#if any blue sliderew give ammo 2
+#if any white sliderew give ammo 1
+#cycle 9
+#if any blue boulder cycle 8
+#if any green boulder cycle 7
+#if any yellow boulder cycle 6
+#if any red boulder cycle 5
+#if any red key bd
+#if any yellow key bc
+#if any green key bb
+#if any blue key ba
+/i#char 57
+/i#char 56
+:ba
+/i#char 55
+/i#char 54
+:bb
+/i#char 53
+:bc
+/i#char 52
+:bd
+/i#char 51
+/i#char 50
+/i#char 49
+/i#play 2
+#z
+
+    end
+    stat at 17,15 element Object cycle 1 p1 cp437:0xF9 p2 0 step idle
+    oop
+@a
+:z
+#char 249
+#cycle 1
+#unlock
+#end
+:touch
+#lock
+#char 4
+#play 1
+#if any purple sliderew give gems 20
+#if any red sliderew give gems 12
+#if any yellow sliderew give gems 7
+#if any green sliderew give gems 4
+#if any blue sliderew give gems 2
+#if any white sliderew give gems 1
+#cycle 9
+#if any blue boulder cycle 8
+#if any green boulder cycle 7
+#if any yellow boulder cycle 6
+#if any red boulder cycle 5
+#if any red key bd
+#if any yellow key bc
+#if any green key bb
+#if any blue key ba
+/i#char 57
+/i#char 56
+:ba
+/i#char 55
+/i#char 54
+:bb
+/i#char 53
+:bc
+/i#char 52
+:bd
+/i#char 51
+/i#char 50
+/i#char 49
+/i#play 2
+#z
+
+    end
+    stat at 19,15 element Object cycle 1 p1 cp437:0xF9 p2 0 step idle
+    oop
+@a
+:z
+#char 249
+#cycle 1
+#unlock
+#end
+:touch
+#lock
+#char 4
+#play 1
+#if any purple sliderew give gems 20
+#if any red sliderew give gems 12
+#if any yellow sliderew give gems 7
+#if any green sliderew give gems 4
+#if any blue sliderew give gems 2
+#if any white sliderew give gems 1
+#cycle 9
+#if any blue boulder cycle 8
+#if any green boulder cycle 7
+#if any yellow boulder cycle 6
+#if any red boulder cycle 5
+#if any red key bd
+#if any yellow key bc
+#if any green key bb
+#if any blue key ba
+/i#char 57
+/i#char 56
+:ba
+/i#char 55
+/i#char 54
+:bb
+/i#char 53
+:bc
+/i#char 52
+:bd
+/i#char 51
+/i#char 50
+/i#char 49
+/i#play 2
+#z
+
+    end
+    stat at 25,16 element Object cycle 1 p1 cp437:0x09 p2 0 step idle under Fake color 0x22
+    oop
+@s h o o b y
+:z
+#char 9
+#unlock
+#end
+:a
+#play --bfxa#exad#
+Can't afford it!
+#end
+:touch
+Place something on this shooby:
+#take health 101 i
+#give health 101
+#if any red sliderew !ee;Boost (1064)
+#if any yellow sliderew !ed;Boost (416)
+#if any green sliderew !ec;Boost (163)
+#if any blue sliderew !eb;Boost (40)
+#if any white sliderew !ea;Boost (10)
+#if any yellow boulder !fd;Speed IV (900)
+#if any green boulder !fc;Speed III (600)
+#if any blue boulder !fb;Speed II (300)
+#if any white boulder !fa;Speed I (100)
+#take ammo 25 b
+#give ammo 25
+!he;Shooter RND (40Ñ)
+!hf;Shooter Repeater (100Ñ)
+!b;More ...
+#z
+:b
+#if da !da;Autoshooby (33)
+#if db !db;Autoshooby (46)
+#if dc !dc;Autoshooby (64)
+#if dd !dd;Autoshooby (89)
+#if de !de;Autoshooby (124)
+#if df !df;Autoshooby (173)
+#if dg !dg;Autoshooby (242)
+#if dh !dh;Autoshooby (338)
+#if di !di;Autoshooby (473)
+#if dj !dj;Autoshooby (662)
+#if dk !dk;Autoshooby (926)
+#if dl !dl;Autoshooby (1296)
+#if dm !dm;Autoshooby (1814)
+#if dn !dn;Autoshooby (2539)
+#if do !do;Autoshooby (3554)
+#take health 2001 i
+#give health 2001
+#j
+:i
+!g;Shooby Shop (1000)
+:j
+!;Cancel
+#z
+:da
+#take gems 33 a
+:dz
+#bind b
+:db
+#take gems 46 a
+#dz
+:dc
+#take gems 64 a
+#dz
+:dd
+#take gems 89 a
+#dz
+:de
+#take gems 124 a
+#dz
+:df
+#take gems 173 a
+#dz
+:dg
+#take gems 242 a
+#dz
+:dh
+#take gems 338 a
+#dz
+:di
+#take gems 473 a
+#dz
+:dj
+#take gems 662 a
+#dz
+:dk
+#take gems 926 a
+#dz
+:dl
+#take gems 1296 a
+#dz
+:dm
+#take gems 1814 a
+#dz
+:dn
+#take gems 2539 a
+#dz
+:do
+#take gems 3554 a
+#dz
+:ea
+#take gems 10 a
+:ez
+#bind c
+:eb
+#take gems 40 a
+#ez
+:ec
+#take gems 163 a
+#ez
+:ed
+#take gems 416 a
+#ez
+:ee
+#take gems 1064 a
+#ez
+:fa
+#take gems 100 a
+:fz
+#bind d
+:fb
+#take gems 300 a
+#fz
+:fc
+#take gems 600 a
+#fz
+:fd
+#take gems 900 a
+#fz
+:g
+#take gems 1000 a
+#bind e
+:he
+#take ammo 40 a
+#bind j
+:hf
+#take ammo 100 a
+#bind k
+:shot
+#if any purple sliderew give ammo 25
+#if any red sliderew give ammo 5
+#if any yellow sliderew give ammo 4
+#if any green sliderew give ammo 3
+#if any blue sliderew give ammo 2
+#if any white sliderew give ammo 1
+
+    end
+    stat at 27,16 element Object cycle 1 p1 cp437:0x09 p2 0 step idle under Fake color 0x22
+    oop
+@s h o o b y
+:z
+#char 9
+#unlock
+#end
+:a
+#play --bfxa#exad#
+Can't afford it!
+#end
+:touch
+Place something on this shooby:
+#take health 101 i
+#give health 101
+#if any red sliderew !ee;Boost (1064)
+#if any yellow sliderew !ed;Boost (416)
+#if any green sliderew !ec;Boost (163)
+#if any blue sliderew !eb;Boost (40)
+#if any white sliderew !ea;Boost (10)
+#if any yellow boulder !fd;Speed IV (900)
+#if any green boulder !fc;Speed III (600)
+#if any blue boulder !fb;Speed II (300)
+#if any white boulder !fa;Speed I (100)
+#take ammo 25 b
+#give ammo 25
+!he;Shooter RND (40Ñ)
+!hf;Shooter Repeater (100Ñ)
+!b;More ...
+#z
+:b
+#if da !da;Autoshooby (33)
+#if db !db;Autoshooby (46)
+#if dc !dc;Autoshooby (64)
+#if dd !dd;Autoshooby (89)
+#if de !de;Autoshooby (124)
+#if df !df;Autoshooby (173)
+#if dg !dg;Autoshooby (242)
+#if dh !dh;Autoshooby (338)
+#if di !di;Autoshooby (473)
+#if dj !dj;Autoshooby (662)
+#if dk !dk;Autoshooby (926)
+#if dl !dl;Autoshooby (1296)
+#if dm !dm;Autoshooby (1814)
+#if dn !dn;Autoshooby (2539)
+#if do !do;Autoshooby (3554)
+#take health 2001 i
+#give health 2001
+#j
+:i
+!g;Shooby Shop (1000)
+:j
+!;Cancel
+#z
+:da
+#take gems 33 a
+:dz
+#bind b
+:db
+#take gems 46 a
+#dz
+:dc
+#take gems 64 a
+#dz
+:dd
+#take gems 89 a
+#dz
+:de
+#take gems 124 a
+#dz
+:df
+#take gems 173 a
+#dz
+:dg
+#take gems 242 a
+#dz
+:dh
+#take gems 338 a
+#dz
+:di
+#take gems 473 a
+#dz
+:dj
+#take gems 662 a
+#dz
+:dk
+#take gems 926 a
+#dz
+:dl
+#take gems 1296 a
+#dz
+:dm
+#take gems 1814 a
+#dz
+:dn
+#take gems 2539 a
+#dz
+:do
+#take gems 3554 a
+#dz
+:ea
+#take gems 10 a
+:ez
+#bind c
+:eb
+#take gems 40 a
+#ez
+:ec
+#take gems 163 a
+#ez
+:ed
+#take gems 416 a
+#ez
+:ee
+#take gems 1064 a
+#ez
+:fa
+#take gems 100 a
+:fz
+#bind d
+:fb
+#take gems 300 a
+#fz
+:fc
+#take gems 600 a
+#fz
+:fd
+#take gems 900 a
+#fz
+:g
+#take gems 1000 a
+#bind e
+:he
+#take ammo 40 a
+#bind j
+:hf
+#take ammo 100 a
+#bind k
+:shot
+#if any purple sliderew give ammo 25
+#if any red sliderew give ammo 5
+#if any yellow sliderew give ammo 4
+#if any green sliderew give ammo 3
+#if any blue sliderew give ammo 2
+#if any white sliderew give ammo 1
+
+    end
+    stat at 29,16 element Object cycle 1 p1 cp437:0x09 p2 0 step idle under Fake color 0x22
+    oop
+@s h o o b y
+:z
+#char 9
+#unlock
+#end
+:a
+#play --bfxa#exad#
+Can't afford it!
+#end
+:touch
+Place something on this shooby:
+#take health 101 i
+#give health 101
+#if any red sliderew !ee;Boost (1064)
+#if any yellow sliderew !ed;Boost (416)
+#if any green sliderew !ec;Boost (163)
+#if any blue sliderew !eb;Boost (40)
+#if any white sliderew !ea;Boost (10)
+#if any yellow boulder !fd;Speed IV (900)
+#if any green boulder !fc;Speed III (600)
+#if any blue boulder !fb;Speed II (300)
+#if any white boulder !fa;Speed I (100)
+#take ammo 25 b
+#give ammo 25
+!he;Shooter RND (40Ñ)
+!hf;Shooter Repeater (100Ñ)
+!b;More ...
+#z
+:b
+#if da !da;Autoshooby (33)
+#if db !db;Autoshooby (46)
+#if dc !dc;Autoshooby (64)
+#if dd !dd;Autoshooby (89)
+#if de !de;Autoshooby (124)
+#if df !df;Autoshooby (173)
+#if dg !dg;Autoshooby (242)
+#if dh !dh;Autoshooby (338)
+#if di !di;Autoshooby (473)
+#if dj !dj;Autoshooby (662)
+#if dk !dk;Autoshooby (926)
+#if dl !dl;Autoshooby (1296)
+#if dm !dm;Autoshooby (1814)
+#if dn !dn;Autoshooby (2539)
+#if do !do;Autoshooby (3554)
+#take health 2001 i
+#give health 2001
+#j
+:i
+!g;Shooby Shop (1000)
+:j
+!;Cancel
+#z
+:da
+#take gems 33 a
+:dz
+#bind b
+:db
+#take gems 46 a
+#dz
+:dc
+#take gems 64 a
+#dz
+:dd
+#take gems 89 a
+#dz
+:de
+#take gems 124 a
+#dz
+:df
+#take gems 173 a
+#dz
+:dg
+#take gems 242 a
+#dz
+:dh
+#take gems 338 a
+#dz
+:di
+#take gems 473 a
+#dz
+:dj
+#take gems 662 a
+#dz
+:dk
+#take gems 926 a
+#dz
+:dl
+#take gems 1296 a
+#dz
+:dm
+#take gems 1814 a
+#dz
+:dn
+#take gems 2539 a
+#dz
+:do
+#take gems 3554 a
+#dz
+:ea
+#take gems 10 a
+:ez
+#bind c
+:eb
+#take gems 40 a
+#ez
+:ec
+#take gems 163 a
+#ez
+:ed
+#take gems 416 a
+#ez
+:ee
+#take gems 1064 a
+#ez
+:fa
+#take gems 100 a
+:fz
+#bind d
+:fb
+#take gems 300 a
+#fz
+:fc
+#take gems 600 a
+#fz
+:fd
+#take gems 900 a
+#fz
+:g
+#take gems 1000 a
+#bind e
+:he
+#take ammo 40 a
+#bind j
+:hf
+#take ammo 100 a
+#bind k
+:shot
+#if any purple sliderew give ammo 25
+#if any red sliderew give ammo 5
+#if any yellow sliderew give ammo 4
+#if any green sliderew give ammo 3
+#if any blue sliderew give ammo 2
+#if any white sliderew give ammo 1
+
+    end
+    stat at 31,16 element Object cycle 1 p1 cp437:0x09 p2 0 step idle under Fake color 0x22
+    oop
+@s h o o b y
+:z
+#char 9
+#unlock
+#end
+:a
+#play --bfxa#exad#
+Can't afford it!
+#end
+:touch
+Place something on this shooby:
+#take health 101 i
+#give health 101
+#if any red sliderew !ee;Boost (1064)
+#if any yellow sliderew !ed;Boost (416)
+#if any green sliderew !ec;Boost (163)
+#if any blue sliderew !eb;Boost (40)
+#if any white sliderew !ea;Boost (10)
+#if any yellow boulder !fd;Speed IV (900)
+#if any green boulder !fc;Speed III (600)
+#if any blue boulder !fb;Speed II (300)
+#if any white boulder !fa;Speed I (100)
+#take ammo 25 b
+#give ammo 25
+!he;Shooter RND (40Ñ)
+!hf;Shooter Repeater (100Ñ)
+!b;More ...
+#z
+:b
+#if da !da;Autoshooby (33)
+#if db !db;Autoshooby (46)
+#if dc !dc;Autoshooby (64)
+#if dd !dd;Autoshooby (89)
+#if de !de;Autoshooby (124)
+#if df !df;Autoshooby (173)
+#if dg !dg;Autoshooby (242)
+#if dh !dh;Autoshooby (338)
+#if di !di;Autoshooby (473)
+#if dj !dj;Autoshooby (662)
+#if dk !dk;Autoshooby (926)
+#if dl !dl;Autoshooby (1296)
+#if dm !dm;Autoshooby (1814)
+#if dn !dn;Autoshooby (2539)
+#if do !do;Autoshooby (3554)
+#take health 2001 i
+#give health 2001
+#j
+:i
+!g;Shooby Shop (1000)
+:j
+!;Cancel
+#z
+:da
+#take gems 33 a
+:dz
+#bind b
+:db
+#take gems 46 a
+#dz
+:dc
+#take gems 64 a
+#dz
+:dd
+#take gems 89 a
+#dz
+:de
+#take gems 124 a
+#dz
+:df
+#take gems 173 a
+#dz
+:dg
+#take gems 242 a
+#dz
+:dh
+#take gems 338 a
+#dz
+:di
+#take gems 473 a
+#dz
+:dj
+#take gems 662 a
+#dz
+:dk
+#take gems 926 a
+#dz
+:dl
+#take gems 1296 a
+#dz
+:dm
+#take gems 1814 a
+#dz
+:dn
+#take gems 2539 a
+#dz
+:do
+#take gems 3554 a
+#dz
+:ea
+#take gems 10 a
+:ez
+#bind c
+:eb
+#take gems 40 a
+#ez
+:ec
+#take gems 163 a
+#ez
+:ed
+#take gems 416 a
+#ez
+:ee
+#take gems 1064 a
+#ez
+:fa
+#take gems 100 a
+:fz
+#bind d
+:fb
+#take gems 300 a
+#fz
+:fc
+#take gems 600 a
+#fz
+:fd
+#take gems 900 a
+#fz
+:g
+#take gems 1000 a
+#bind e
+:he
+#take ammo 40 a
+#bind j
+:hf
+#take ammo 100 a
+#bind k
+:shot
+#if any purple sliderew give ammo 25
+#if any red sliderew give ammo 5
+#if any yellow sliderew give ammo 4
+#if any green sliderew give ammo 3
+#if any blue sliderew give ammo 2
+#if any white sliderew give ammo 1
+
+    end
+    stat at 33,16 element Object cycle 1 p1 cp437:0x09 p2 0 step idle under Fake color 0x22
+    oop
+@s h o o b y
+:z
+#char 9
+#unlock
+#end
+:a
+#play --bfxa#exad#
+Can't afford it!
+#end
+:touch
+Place something on this shooby:
+#take health 101 i
+#give health 101
+#if any red sliderew !ee;Boost (1064)
+#if any yellow sliderew !ed;Boost (416)
+#if any green sliderew !ec;Boost (163)
+#if any blue sliderew !eb;Boost (40)
+#if any white sliderew !ea;Boost (10)
+#if any yellow boulder !fd;Speed IV (900)
+#if any green boulder !fc;Speed III (600)
+#if any blue boulder !fb;Speed II (300)
+#if any white boulder !fa;Speed I (100)
+#take ammo 25 b
+#give ammo 25
+!he;Shooter RND (40Ñ)
+!hf;Shooter Repeater (100Ñ)
+!b;More ...
+#z
+:b
+#if da !da;Autoshooby (33)
+#if db !db;Autoshooby (46)
+#if dc !dc;Autoshooby (64)
+#if dd !dd;Autoshooby (89)
+#if de !de;Autoshooby (124)
+#if df !df;Autoshooby (173)
+#if dg !dg;Autoshooby (242)
+#if dh !dh;Autoshooby (338)
+#if di !di;Autoshooby (473)
+#if dj !dj;Autoshooby (662)
+#if dk !dk;Autoshooby (926)
+#if dl !dl;Autoshooby (1296)
+#if dm !dm;Autoshooby (1814)
+#if dn !dn;Autoshooby (2539)
+#if do !do;Autoshooby (3554)
+#take health 2001 i
+#give health 2001
+#j
+:i
+!g;Shooby Shop (1000)
+:j
+!;Cancel
+#z
+:da
+#take gems 33 a
+:dz
+#bind b
+:db
+#take gems 46 a
+#dz
+:dc
+#take gems 64 a
+#dz
+:dd
+#take gems 89 a
+#dz
+:de
+#take gems 124 a
+#dz
+:df
+#take gems 173 a
+#dz
+:dg
+#take gems 242 a
+#dz
+:dh
+#take gems 338 a
+#dz
+:di
+#take gems 473 a
+#dz
+:dj
+#take gems 662 a
+#dz
+:dk
+#take gems 926 a
+#dz
+:dl
+#take gems 1296 a
+#dz
+:dm
+#take gems 1814 a
+#dz
+:dn
+#take gems 2539 a
+#dz
+:do
+#take gems 3554 a
+#dz
+:ea
+#take gems 10 a
+:ez
+#bind c
+:eb
+#take gems 40 a
+#ez
+:ec
+#take gems 163 a
+#ez
+:ed
+#take gems 416 a
+#ez
+:ee
+#take gems 1064 a
+#ez
+:fa
+#take gems 100 a
+:fz
+#bind d
+:fb
+#take gems 300 a
+#fz
+:fc
+#take gems 600 a
+#fz
+:fd
+#take gems 900 a
+#fz
+:g
+#take gems 1000 a
+#bind e
+:he
+#take ammo 40 a
+#bind j
+:hf
+#take ammo 100 a
+#bind k
+:shot
+#if any purple sliderew give ammo 25
+#if any red sliderew give ammo 5
+#if any yellow sliderew give ammo 4
+#if any green sliderew give ammo 3
+#if any blue sliderew give ammo 2
+#if any white sliderew give ammo 1
+
+    end
+    stat at 52,17 element Passage p1 0 p2 0 p3 board "END" step idle
+    stat at 22,24 element Object cycle 0 p1 cp437:0x28 p2 0 step idle under Empty color 0x0F
+    oop
+@d
+#char 19
+#change yellow boulder red boulder
+#change green boulder yellow boulder
+#change blue boulder green boulder
+#change white boulder blue boulder
+#bind q
+
+    end
+    stat at 23,24 element Object cycle 0 p1 cp437:0x70 p2 0 step idle under Empty color 0x0F
+    oop
+@e - s h o p
+#give health 2000
+#char 36
+#end
+:z
+#play --bfxa#exad#
+Can't afford it!
+#end
+:touch
+Buy something from the e-shop?
+#if any cyan line !a;Unlock Ammo (2500)
+#if any white sliderew !bb;Boost (2000)
+#if any blue sliderew !bc;Boost (3000)
+#if any green sliderew !bd;Boost (4000)
+#if any yellow sliderew !be;Boost (5000)
+#if any red sliderew !bf;Boost (6000)
+#if any white boulder !bg;Speed (3000)
+#if any blue boulder !bh;Speed (4000)
+#if any green boulder !bi;Speed (5000)
+#if any yellow boulder !bj;Speed (6000)
+!ba;Buy 1 Ascention Torch (40Ñ)
+!c;Buy 10 Ascention Torches (270Ñ)
+!d;Buy 100 Ascention Torches (1600Ñ)
+!e;Buy 1000 Ascention Torches (7000Ñ)
+!f;Ascend
+#end
+:bb
+#take gems 2000 z
+#change sliderew blue sliderew
+:bz
+#play e+ef#-f#+f#g#
+   Upgraded!   
+#end
+:bc
+#take gems 3000 z
+#change sliderew green sliderew
+#bz
+:bd
+#take gems 4000 z
+#change sliderew yellow sliderew
+#bz
+:be
+#take gems 5000 z
+#change sliderew red sliderew
+#bz
+:bf
+#take gems 6000 z
+#change sliderew purple sliderew
+#bz
+:bg
+#take gems 3000 z
+#change boulder blue boulder
+#bz
+:bh
+#take gems 4000 z
+#change boulder green boulder
+#bz
+:bi
+#take gems 5000 z
+#change boulder yellow boulder
+#bz
+:bj
+#take gems 6000 z
+#change boulder red boulder
+#bz
+:ba
+#take ammo 40 z
+#give torches 1
+:y
+#play +eb+eb+eb
+ù ù ù Purchased! ù ù ù
+#end
+:c
+#take ammo 270 z
+#give torches 10
+#y
+:d
+#take ammo 1600 z
+#give torches 100
+#y
+:e
+#take ammo 7000 z
+#give torches 1000
+#y
+:f
+#play -c+cx-c#+d#x-d+f#x
+#if any red key g
+When you ascend, you lose all upgrades,
+shoobies, gems and ammo.  You retain all
+unspent Ascention Torches (ù).  Each
+Ascention greatly reduces the global
+cooldown timer.
+#if any white key !h;Ascend (1ù)
+#if any blue key !i;Ascend (90ù)
+#if any green key !j;Ascend (405ù)
+#if any yellow key !k;Ascend (1130ù)
+#l
+:i
+#take torches 90 z
+#w
+:j
+#take torches 405 z
+#w
+:k
+#take torches 1130 z
+#w
+:h
+#take torches 1 z
+:w
+#lock
+#if any red key v
+#char 21
+#play ++dd#eff#gg#
+#all:q
+#change cyan fake line
+#change line line
+#change sliderew white sliderew
+#change boulder white boulder
+#change yellow key red key
+#change green key yellow key
+#change blue key green key
+#change white key blue key
+:m
+#take ammo 2048 n
+#m
+:n
+#take ammo 128 o
+#n
+:o
+#take ammo 8 p
+#o
+:p
+#take ammo 4
+#take ammo 2
+#take ammo 1
+:x
+#take gems 2048 r
+#x
+:r
+#take gems 128 s
+#r
+:s
+#take gems 8 t
+#s
+:t
+#take gems 4
+#take gems 2
+#take gems 1
+Welcome to the new Ascention!
+#bind s
+:g
+#play -c+c+c--c#+d+d#--d+e+f#
+#take torches 3333 z
+#give torches 3333
+$FINAL ASCENTION
+Upon ascending, the game will end.
+
+Ascend to purple key? (3333ù)
+!u;Yes
+:l
+!;Don't Ascend yet.
+#end
+:u
+#take torches 3333 z
+#w
+:v
+#change purple door key
+YOU WIN
+#change object empty
+:a
+#take gems 2500 z
+#play +ebxf+cx-f#+c#
+#change cyan line fake
+Ñ Ñ Ñ Ammo Unlocked! Ñ Ñ Ñ
+
+    end
+    stat at 24,24 element Object cycle 0 p1 cp437:0x6C p2 0 step idle under Empty color 0x0F
+    stat at 25,24 element Object cycle 0 p1 cp437:0x61 p2 0 step idle under Empty color 0x0F
+    oop
+@b
+#take health 100
+#if dn set do
+#clear dn
+#if dm set dn
+#clear dm
+#if dl set dm
+#clear dl
+#if dk set dl
+#clear dk
+#if dj set dk
+#clear dj
+#if di set dj
+#clear di
+#if dh set di
+#clear dh
+#if dg set dh
+#clear dg
+#if df set dg
+#clear df
+#if de set df
+#clear de
+#if dd set de
+#clear dd
+#if dc set dd
+#clear dc
+#if db set dc
+#clear db
+#if da set db
+#clear da
+:z
+#char 65
+#cycle 1
+#play 0
+#if any purple sliderew give gems 20
+#if any red sliderew give gems 12
+#if any yellow sliderew give gems 7
+#if any green sliderew give gems 4
+#if any blue sliderew give gems 2
+#if any white sliderew give gems 1
+#cycle 9
+#if any blue boulder cycle 8
+#if any green boulder cycle 7
+#if any yellow boulder cycle 6
+#if any red boulder cycle 5
+#if any red key bd
+#if any yellow key bc
+#if any green key bb
+#if any blue key ba
+/i#char 57
+/i#char 56
+:ba
+/i#char 55
+/i#char 54
+:bb
+/i#char 53
+:bc
+/i#char 52
+:bd
+/i#char 51
+/i#char 50
+/i#char 49
+/i#z
+:shot
+#if any purple sliderew give ammo 25
+#if any red sliderew give ammo 5
+#if any yellow sliderew give ammo 4
+#if any green sliderew give ammo 3
+#if any blue sliderew give ammo 2
+#if any white sliderew give ammo 1
+#if not any red invisible z
+:q
+#bind s
+
+    end
+    stat at 26,24 element Object cycle 0 p1 cp437:0x79 p2 0 step idle under Empty color 0x0F
+    oop
+@c
+#char 66
+#change red sliderew purple sliderew
+#change yellow sliderew red sliderew
+#change green sliderew yellow sliderew
+#change blue sliderew green sliderew
+#change white sliderew blue sliderew
+#bind q
+
+    end
+    stat at 28,24 element Object cycle 0 p1 cp437:0x6F p2 0 step idle under Empty color 0x0F
+    stat at 29,24 element Object cycle 0 p1 cp437:0x6E p2 0 step idle under Empty color 0x0F
+    stat at 31,24 element Object cycle 0 p1 cp437:0x73 p2 0 step idle under Empty color 0x0F
+    stat at 32,24 element Object cycle 0 p1 cp437:0x70 p2 0 step idle under Empty color 0x0F
+    oop
+@j
+:z
+#char 63
+#shoot rndp rndne
+#cycle 9
+#if any blue boulder cycle 8
+#if any green boulder cycle 7
+#if any yellow boulder cycle 6
+#if any red boulder cycle 5
+#if any red key bd
+#if any yellow key bc
+#if any green key bb
+#if any blue key ba
+/i#char 57
+/i#char 56
+:ba
+/i#char 55
+/i#char 54
+:bb
+/i#char 53
+:bc
+/i#char 52
+:bd
+/i#char 51
+/i#char 50
+/i#char 49
+/i#z
+:q
+#bind s
+
+    end
+    stat at 34,24 element Object cycle 1 p1 cp437:0x65 p2 0 step idle under Empty color 0x0F
+    stat at 35,24 element Object cycle 0 p1 cp437:0x64 p2 0 step idle under Empty color 0x0F
+    oop
+@k
+:z
+#char 15
+#end
+:shot
+#char 253
+#shoot rndp rndne
+#shoot rndp rndne
+#shoot rndp rndne
+#shoot rndp rndne
+/i#if not any red invisible z
+:q
+#bind s
+
+    end
+    stat at 37,24 element Object cycle 0 p1 cp437:0x37 p2 0 step idle under Empty color 0x0F
+    oop
+@q
+#take health 100
+#end
+:q
+#bind s
+:shot
+#if any purple sliderew give ammo 10
+#if any red sliderew give ammo 5
+#if any yellow sliderew give ammo 4
+#if any green sliderew give ammo 3
+#if any blue sliderew give ammo 2
+#if any white sliderew give ammo 1
+
+    end
+    stat at 38,24 element Object cycle 1 p1 cp437:0x21 p2 0 step idle under Empty color 0x0F
+    oop
+@maestro
+#end
+:q
+#change invisible red invisible
+/i/i/i/i/i#change invisible blue invisible
+
+    end
+    stat at 39,24 element Object cycle 1 p1 cp437:0x29 p2 0 step idle under Empty color 0x0F
+  end
+end

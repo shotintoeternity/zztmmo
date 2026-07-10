@@ -1,0 +1,1157 @@
+board "Town: East"
+  start player at 3,18
+  respawn at 1,1
+  max-shots 0
+  dark false
+  reenter false
+  time-limit 0
+  exits north none south none west none east none
+
+  grid
+NNb#bNN~~b#b~~NNb#bNN~~b##b~~NNb#bNN~~b#b~~NNb#bNNhoooooohho
+~~BWB~~NNBWBNN~~BWB~~NNBWWBNN~~BWB~~NNBWBNN~~BWB~~hiTjwnijfi
+NNb#bNN~~b#b~~NNb#bNN~~b##b~~NNb#bNN~~b#b~~NNb#bNNhKeeper'si
+mqmmFFFFFFFFFFFAAAAAAAAAAAAAAAAAAAAAAAAAqqqmmmmmqmhiiEdgeiii
+mqqqFFFFFFFvFFFAAAAAAAAAxy##zxAAAAAAAAAACmmmmmmqmmh---------
+mqmmFFFFFFFFFFFAAAAAAAAAy#DD#zAAAAAAAAAAAGCGCmmqmqhiiSewerii
+mmqCFFFvFFFFFFAAHAAAAAAAy#DD#zAAAAAAIHAAAAAFFGCmqmhEntrancei
+mqmFFFFFFFFFFFAAHIAAAIAAyxxxxzAIAAAAAHAIAAAFFFFCqqhhhhhhhhhh
+mqmFFFFFFFFFFAAAJAAAHAAALLLLLLLAAHAIAHAAAAFFFFFFqmhRuMQ:UUUU
+mmmFFFFFFvFFFAAAAAAAHIALLLLLLLLAAJAAAAAAAAFFFFFmmmhhhhhhhhhh
+qmqFFFFFFFFFAAAAAAIAJAALLLLLLLAAIJAAAAAAAFFFFFqqqqhVXYXuZ:hh
+mmmFFFFFFFFFAAAAAAAAAAAALLLLLAAAAAAAAAAAFFFFFFqmmqhUUUUUUUUh
+mmGFFvFFFFFAAAAAAAAAAAAAAAAAAAAAAAAAAAAAFFFFFFmqqmhhhhhhhhhh
+mmFFFFFFFFFAAAAAAAAAAAAAAAAAAAAAAAAAAAAFFFFFFFmmmqh0lYZkZ:hU
+qmFFFFFFFAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAFFFFFGmqqhhhhhhhhhh
+qqFFFFFAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAFFFmqmhiiiiiiiii
+mmAAAAAAAAAAAAAAAAAAAAAAAAAAAAbbbbbbbbbbbbbAAFFCmmhiiii1iiii
+mP@AAAAAAAAAAAAAFFAAAAAAAAAAAAb2b3b4b5b6b7bAAFFFqmhiO89!9$%i
+mmAAAAAAAAAFFFFFFFFFFFAAAAAAAAbAbAbAbAbAbAbAAFFFmqhii&/&\&ii
+mmAAAAFFFFFFFFFFvFFFFFFFFAAAAAN*N*N*NAN*N*NAAFFmqmh+=99^99_;
+mqFFFFFFFFFFFFFFFFFFFFFFFFAAAAAAAAAAAAAAAAAAFFFqqqhii&\&/&ii
+mmqFFFFFFvFFFFFFFmqmmqmmmFFFAAAAAAAAAAAAAAAFFFqmqqhi,.9|9<>i
+mmmqmmFFFFFFFmqmmmqqmqmmqqqmmmFFFFFFFFFFFFFFmmmmqmhiiii?iiii
+qmqmmqmmqmqmmqqmqqmqmqmqqmmqqqmmmmqqFFFFmmqmqqqqmqhiiiiiiiii
+mmmmmmqmmmmmqqqmmqmmmmmmmmqmmqmmqqmqmqmmqqmqmmmmqmhhhhhhhhhh
+  end
+
+  legend
+    N = Normal color 0x08
+    b = Normal color 0x07
+    # = Solid color 0x07
+    ~ = Water color 0x08
+    h = Solid color 0x01
+    o = Object color 0x11
+    B = Breakable color 0x78
+    W = Water color 0x78
+    i = Text-White color 0x20
+    T = Text-White color 0x54
+    j = Text-White color 0x6F
+    w = Text-White color 0x77
+    n = Text-White color 0x6E
+    f = Text-White color 0x66
+    K = Text-White color 0x4B
+    e = Text-White color 0x65
+    p = Text-White color 0x70
+    r = Text-White color 0x72
+    ' = Text-White color 0x27
+    s = Text-White color 0x73
+    m = Normal color 0x27
+    q = Breakable color 0x27
+    F = Fake color 0x20
+    A = Fake color 0x60
+    E = Text-White color 0x45
+    d = Text-White color 0x64
+    g = Text-White color 0x67
+    v = Object color 0x0A
+    x = Object color 0x07
+    y = Object color 0x78
+    z = Object color 0x7F
+    C = Normal color 0x28
+    - = Text-White color 0x2D
+    D = Water color 0x7F
+    G = Breakable color 0x28
+    S = Text-White color 0x53
+    H = Object color 0x04
+    I = Object color 0x00
+    t = Text-White color 0x74
+    a = Text-White color 0x61
+    c = Text-White color 0x63
+    J = Object color 0x06
+    L = Fake color 0x12
+    R = Text-Blue color 0x52
+    u = Text-Blue color 0x75
+    M = Text-Blue color 0x6E
+    Q = Text-Blue color 0x65
+    : = Text-Blue color 0x3A
+    U = Object color 0x1F
+    V = Text-Blue color 0x53
+    X = Text-Blue color 0x74
+    Y = Text-Blue color 0x61
+    Z = Text-Blue color 0x73
+    0 = Text-Blue color 0x46
+    l = Text-Blue color 0x6C
+    k = Text-Blue color 0x6B
+    1 = Text-White color 0xFE
+    P = Passage color 0x11 to "Town: Center"
+    @ = Player color 0x1F under Fake color 0x60
+    2 = Passage color 0x2F to "Town: East"
+    3 = Passage color 0x3F to "Town: East"
+    4 = Passage color 0x4F to "Town: East"
+    5 = Passage color 0x5F to "Ice City: Eastern Slums"
+    6 = Passage color 0x6F to "Lava Cave: Flame Chasm"
+    7 = Passage color 0x7F to "End of World 3"
+    O = Boulder color 0x0C
+    8 = Text-White color 0xDA
+    9 = Text-White color 0xC4
+    ! = Text-White color 0x1E
+    $ = Text-White color 0xBF
+    % = Boulder color 0x0E
+    & = Text-White color 0xB3
+    / = Text-White color 0x2F
+    \ = Text-White color 0x5C
+    * = Object color 0x0F
+    + = Boulder color 0x0D
+    = = Text-White color 0x11
+    ^ = Boulder color 0x07
+    _ = Text-White color 0x10
+    ; = Boulder color 0x04
+    , = Boulder color 0x02
+    . = Text-White color 0xC0
+    | = Text-White color 0x1F
+    < = Text-White color 0xD9
+    > = Boulder color 0x09
+    ? = Boulder color 0x08
+  end
+
+  stats
+    stat at 52,1 element Object cycle 1 p2 0 step idle under Empty color 0x0F
+    oop
+@statuschecker
+:b
+#if para para
+#take torches 1 noma
+#give ammo 1
+:noma
+#take ammo 2 pado
+#give ammo 1
+#give torches 1
+:pado
+#if pois pois
+:podo
+/i/i/i/i
+#b
+:para
+:para
+:para
+:para
+:para
+#zap para
+#take ammo 1 pado
+#give torches 1
+#pado
+:para
+#restore para
+#restore para
+#restore para
+#restore para
+#restore para
+#restore para
+#restore para
+#restore para
+#restore para
+#restore para
+#clear para
+#pado
+:pois
+:pois
+:pois
+:pois
+:pois
+:pois
+:pois
+:pois
+:pois
+:pois
+#zap pois
+#take health 5 noli
+#podo
+:pois
+#restore pois
+#restore pois
+#restore pois
+#restore pois
+#restore pois
+#restore pois
+#restore pois
+#restore pois
+#restore pois
+#restore pois
+#clear pois
+#send podo
+:noli
+#endgame
+#podo
+
+
+    end
+    stat at 53,1 element Object cycle 1 p2 0 step idle under Empty color 0x0F
+    oop
+@Tome
+:b
+#if r if etome runea
+#if r if stome runeb
+#if s if etome spella
+#if s if stome spellb
+#if f f
+#change blue breakable empty
+#change cyan breakable blue breakable
+#change white breakable cyan breakable
+/i
+#b
+:runea
+#clear r
+#clear firu
+#clear icru
+#clear boru
+#clear acru
+#clear horu
+#clear daru
+#clear miru
+#clear roru
+#clear nuru
+!nuru;Null Rune - 1 Mana per shot.
+!firu;Fire Rune - 2 Mana per shot.
+!icru;Ice Rune - 2 Mana per shot.
+!boru;Bolt Rune - 2 Mana per shot.
+!acru;Acid Rune - 2 Mana per shot.
+/i
+#runea
+:spella
+#clear s
+!fist;Fire Storm - 100 Mana.
+!icst;Ice Storm - 100 Mana.
+!bost;Bolt Storm - 100 Mana.
+!acst;Acid Storm - 100 Mana.
+/i
+#b
+:runeb
+#clear r
+#clear firu
+#clear icru
+#clear boru
+#clear acru
+#clear horu
+#clear daru
+#clear miru
+#clear roru
+#clear nuru
+!nuru;Null Rune - 1 Mana per shot.
+!horu;Holy Rune - 2 Mana per shot.
+!daru;Dark Rune - 2 Mana per shot.
+!miru;Mind Rune - 2 Mana per shot.
+!roru;Rot Rune - 2 Mana per shot.
+/i
+#runeb
+:spellb
+#clear s
+!host;Holy Storm - 50 Mana.
+!dast;Dark Storm - 50 Mana.
+!mist;Mind Storm - 50 Mana.
+!rost;Rot Storm - 50 Mana.
+/i
+#b
+:nuru
+#set nuru
+#b
+:firu
+#set firu
+#b
+:icru
+#set icru
+#b
+:boru
+#set boru
+#b
+:acru
+#set acru
+#b
+:horu
+#set horu
+#b
+:daru
+#set daru
+#b
+:miru
+#set miru
+#b
+:roru
+#set roru
+#b
+:fist
+#take torches 100 noma
+#send OTHERS:fist
+#b
+:icst
+#take torches 100 noma
+#send OTHERS:icst
+#b
+:bost
+#take torches 100 noma
+#send OTHERS:bost
+#b
+:acst
+#take torches 100 noma
+#send OTHERS:acst
+#b
+:host
+#take torches 100 noma
+#send OTHERS:host
+#b
+:dast
+#take torches 100 noma
+#send OTHERS:dast
+#b
+:mist
+#take torches 100 noma
+#send OTHERS:mist
+#b
+:rost
+#take torches 100 noma
+#send OTHERS:rost
+#b
+:noma
+You don't have enough mana for that!
+/i
+#b
+:f
+#clear f
+#if flaska fla
+#if flaskb flb
+#if flaskc flc
+#if flaskd fld
+You don't have a flask.
+/i
+#b
+:fld
+#clear flaskd
+#set flaskc
+:flhl
+#clear para
+#clear pois
+#give health 1000
+#send hl:b
+#b
+:fla 
+#clear flaska
+#flhl
+:flb
+#clear flaskb
+#set flaska
+#flhl
+:flc
+#clear flaskc
+#set flaskb
+#flhl
+
+    end
+    stat at 54,1 element Object cycle 1 p2 0 step idle under Empty color 0x0F
+    oop
+@StarCatcher
+:b
+#if any star stca
+/i
+#b
+:stca
+/i/i
+#change star white breakable
+#b
+
+    end
+    stat at 57,9 element Object cycle 1 p1 cp437:0x4E p2 0 step idle under Empty color 0x0F
+    oop
+@RuneMarker
+:b
+#if firu firu
+#if icru icru
+#if boru boru
+#if acru acru
+#if horu horu
+#if daru daru
+#if miru miru
+#if roru roru
+#char 78
+:rdone
+/i
+#b
+:firu
+#char 70
+#rdone
+:icru
+#char 73
+#rdone
+:boru
+#char 66
+#rdone
+:acru
+#char 65
+#rdone
+:horu
+#char 72
+#rdone
+:daru
+#char 68
+#rdone
+:miru
+#char 77
+#rdone
+:roru
+#char 82
+#rdone
+
+    end
+    stat at 58,9 element Object cycle 1 p1 cp437:0x75 p2 0 step idle under Empty color 0x0F
+    oop
+@RuneMarker
+:b
+#if firu firu
+#if icru icru
+#if boru boru
+#if acru acru
+#if horu horu
+#if daru daru
+#if miru miru
+#if roru roru
+#char 117
+:rdone
+/i
+#b
+:firu
+#char 105
+#rdone
+:icru
+#char 99
+#rdone
+:boru
+#char 111
+#rdone
+:acru
+#char 99
+#rdone
+:horu
+#char 111
+#rdone
+:daru
+#char 97
+#rdone
+:miru
+#char 105
+#rdone
+:roru
+#char 111
+#rdone
+
+    end
+    stat at 59,9 element Object cycle 1 p1 cp437:0x6C p2 0 step idle under Empty color 0x0F
+    oop
+@RuneMarker
+:b
+#if firu firu
+#if icru icru
+#if boru boru
+#if acru acru
+#if horu horu
+#if daru daru
+#if miru miru
+#if roru roru
+#char 108
+:rdone
+/i
+#b
+:firu
+#char 114
+#rdone
+:icru
+#char 101
+#rdone
+:boru
+#char 108
+#rdone
+:acru
+#char 105
+#rdone
+:horu
+#char 108
+#rdone
+:daru
+#char 114
+#rdone
+:miru
+#char 110
+#rdone
+:roru
+#char 116
+#rdone
+
+    end
+    stat at 60,9 element Object cycle 1 p1 cp437:0x6C p2 0 step idle under Empty color 0x0F
+    oop
+@RuneMarker
+:b
+#if firu firu
+#if icru icru
+#if boru boru
+#if acru acru
+#if horu horu
+#if daru daru
+#if miru miru
+#if roru roru
+#char 108
+:rdone
+/i
+#b
+:firu
+#char 101
+#rdone
+:icru
+#char 32
+#rdone
+:boru
+#char 116
+#rdone
+:acru
+#char 100
+#rdone
+:horu
+#char 121
+#rdone
+:daru
+#char 107
+#rdone
+:miru
+#char 100
+#rdone
+:roru
+#char 32
+#rdone
+
+    end
+    stat at 52,12 element Object cycle 1 p1 cp437:0x4E p2 0 step idle under Empty color 0x0F
+    oop
+@RuneMarker
+:b
+#if para para
+#if pois pois
+#char 78
+:sdone
+/i
+#b
+:para
+:pois
+#char 80
+#sdone
+
+    end
+    stat at 53,12 element Object cycle 1 p1 cp437:0x6F p2 0 step idle under Empty color 0x0F
+    oop
+@RuneMarker
+:b
+#if para para
+#if pois pois
+#char 111
+:sdone
+/i
+#b
+:para
+#char 97
+#sdone
+:pois
+#char 111
+#sdone
+
+    end
+    stat at 54,12 element Object cycle 1 p1 cp437:0x72 p2 0 step idle under Empty color 0x0F
+    oop
+@RuneMarker
+:b
+#if para para
+#if pois pois
+#char 114
+:sdone
+/i
+#b
+:para
+#char 114
+#sdone
+:pois
+#char 105
+#sdone
+
+    end
+    stat at 55,12 element Object cycle 1 p1 cp437:0x6D p2 0 step idle under Empty color 0x0F
+    oop
+@RuneMarker
+:b
+#if para para
+#if pois pois
+#char 109
+:sdone
+/i
+#b
+:para
+#char 97
+#sdone
+:pois
+#char 115
+#sdone
+
+    end
+    stat at 56,12 element Object cycle 1 p1 cp437:0x61 p2 0 step idle under Empty color 0x0F
+    oop
+@RuneMarker
+:b
+#if para para
+#if pois pois
+#char 97
+:sdone
+/i
+#b
+:para
+#char 108
+#sdone
+:pois
+#char 111
+#sdone
+
+    end
+    stat at 57,12 element Object cycle 1 p1 cp437:0x6C p2 0 step idle under Empty color 0x0F
+    oop
+@RuneMarker
+:b
+#if para para
+#if pois pois
+#char 108
+:sdone
+/i
+#b
+:para
+#char 121
+#sdone
+:pois
+#char 110
+#sdone
+
+    end
+    stat at 58,12 element Object cycle 1 p1 cp437:0x20 p2 0 step idle under Empty color 0x0F
+    oop
+@RuneMarker
+:b
+#if para para
+#if pois pois
+#char 32
+:sdone
+/i
+#b
+:para
+#char 122
+#sdone
+:pois
+#char 32
+#sdone
+
+    end
+    stat at 59,12 element Object cycle 1 p1 cp437:0x20 p2 0 step idle under Empty color 0x0F
+    oop
+@RuneMarker
+:b
+#if para para
+#if pois pois
+#char 32
+:sdone
+/i
+#b
+:para
+#char 101
+#sdone
+:pois
+#char 32
+#sdone
+
+    end
+    stat at 55,1 element Object cycle 1 p2 0 step idle under Empty color 0x0F
+    oop
+@hl
+#end
+:b
+#if leva if armrb levarb
+#if leva if armrc levarc
+#if levb if armrb levbrb
+#if levb if armrc levbrc
+#if levc if armrb levcrb
+#if levc if armrc levcrc
+#if levd if armrb levdrb
+#if levd if armrc levdrc
+#if leve if armrb leverb
+#if leve if armrc leverc
+#if levf if armrb levfrb
+#if levf if armrc levfrc
+#if leva leva
+#if levb levb
+#if levc levc
+#if levd levd
+#if leve leve
+#if levf levf
+:leva
+#take health 100 m
+#endgame
+#give health 100
+#m
+:levarb
+#take health 150 m
+#endgame
+#give health 150
+#m
+:levarc
+#take health 200 m
+#endgame
+#give health 200
+#m
+:levb
+#take health 110 m
+#endgame
+#give health 110
+#m
+:levbrb
+#take health 165 m
+#endgame
+#give health 165
+#m
+:levbrc
+#take health 220 m
+#endgame
+#give health 220
+#m
+:levc
+#take health 120 m
+#endgame
+#give health 120
+#m
+:levcrb
+#take health 180 m
+#endgame
+#give health 180
+#m
+:levcrc
+#take health 240 m
+#endgame
+#give health 240
+#m
+:levd
+#take health 130 m
+#endgame
+#give health 130
+#m
+:levdrb
+#take health 195 m
+#endgame
+#give health 195
+#m
+:levdrc
+#take health 260 m
+#endgame
+#give health 260
+#m
+:leve
+#take health 140 m
+#endgame
+#give health 140
+#m
+:leverb
+#take health 210 m
+#endgame
+#give health 210
+#m
+:leverc
+#take health 280 m
+#endgame
+#give health 280
+#m
+:levf
+#take health 150 m
+#endgame
+#give health 150
+#m
+:levfrb
+#take health 225 m
+#endgame
+#give health 225
+#m
+:levfrc
+#take health 300 m
+#endgame
+#give health 300
+#m
+:m
+#give torches 1
+/i
+#if leva if amub manamb
+#if leva if amuc manamc
+#if levb if amub manbmb
+#if levb if amuc manbmc
+#if levc if amub mancmb
+#if levc if amuc mancmc
+#if levd if amub mandmb
+#if levd if amuc mandmc
+#if leve if amub manemb
+#if leve if amuc manemc
+#if levf if amub manfmb
+#if levf if amuc manfmc
+#if leva mana
+#if levb manb
+#if levc manc
+#if levd mand
+#if leve mane
+#if levf manf
+:mana
+#take torches 101 m
+#give torches 100
+#end
+:manamb
+#take torches 151 m
+#give torches 150
+#end
+:manamc
+#take torches 201 m
+#give torches 200
+#end
+:manb
+#take torches 111 m
+#give torches 110
+#end
+:manbmb
+#take torches 166 m
+#give torches 165
+#end
+:manbmc
+#take torches 221 m
+#give torches 220
+#end
+:manc
+#take torches 121 m
+#give torches 120
+#end
+:mancmb
+#take torches 181 m
+#give torches 180
+#end
+:mancmc
+#take torches 241 m
+#give torches 240
+#end
+:mand
+#take torches 131 m
+#give torches 130
+#end
+:mandmb
+#take torches 196 m
+#give torches 195
+#end
+:mandmc
+#take torches 261 m
+#give torches 260
+#end
+:mane
+#take torches 141 m
+#give torches 140
+#end
+:manemb
+#take torches 211 m
+#give torches 210
+#end
+:manemc
+#take torches 281 m
+#give torches 280
+#end
+:manf
+#take torches 151 m
+#give torches 150
+#end
+:manfmb
+#take torches 226 m
+#give torches 225
+#end
+:manfmc
+#take torches 301 m
+#give torches 300
+#end
+
+    end
+    stat at 56,1 element Object cycle 1 p1 cp437:0xAD p2 0 step idle under Empty color 0x0F
+    oop
+@Flask
+#end
+:touch
+#if flaska fla
+#if flaskb flb
+#if flaskc flc
+#if flaskd fld
+#set flaska
+:fldone
+#lock
+You pick up the flask.
+/i
+#die
+:fla
+#clear flaska
+#set flaskb
+#fldone
+:flb
+#clear flaskb
+#set flaskc
+#fldone
+:flc
+#clear flaskc
+#set flaskd
+#fldone
+:fld
+You cannot pick up any more flasks.
+/i
+#end
+
+
+    end
+    stat at 60,14 element Object cycle 1 p1 cp437:0x30 p2 0 step idle under Empty color 0x0F
+    oop
+@FMark
+:b
+#if flaska fla
+#if flaskb flb
+#if flaskc flc
+#if flaskd fld
+#char 48
+:fdone
+/i
+#b
+:fla
+#char 49
+#fdone
+:flb
+#char 50
+#fdone
+:flc
+#char 51
+#fdone
+:fld
+#char 52
+#fdone
+
+    end
+    stat at 57,1 element Object cycle 1 p1 cp437:0x08 p2 0 step idle under Empty color 0x0F
+    oop
+@Door
+:b
+/i
+#if blocked n open
+#b
+:open
+#lock
+#char 222
+/i/i
+#become fake
+
+    end
+    stat at 2,18 element Passage p1 0 p2 0 p3 board "Town: Center" step idle under Empty color 0x0F
+    stat at 25,6 element Object p1 cp437:0xB3 p2 0 step idle under Fake color 0x20
+    stat at 25,7 element Object p1 cp437:0xB3 p2 0 step idle under Fake color 0x20
+    stat at 25,5 element Object p1 cp437:0xDC p2 0 step idle under Fake color 0x20
+    stat at 30,6 element Object p1 cp437:0xB3 p2 0 step idle under Fake color 0x20
+    stat at 30,7 element Object p1 cp437:0xB3 p2 0 step idle under Fake color 0x20
+    stat at 30,5 element Object p1 cp437:0xDC p2 0 step idle under Fake color 0x20
+    stat at 29,5 element Object p1 cp437:0xB3 p2 0 step idle under Empty color 0x0F
+    stat at 26,5 element Object p1 cp437:0xB3 p2 0 step idle under Empty color 0x0F
+    stat at 25,8 element Object p1 cp437:0x28 p2 0 step idle under Fake color 0x20
+    stat at 30,8 element Object cycle 1 p1 cp437:0x29 p2 0 step idle under Fake color 0x20
+    stat at 26,8 element Object p1 cp437:0x23 p2 0 step idle under Fake color 0x20
+    stat at 28,8 element Object p1 cp437:0x23 p2 0 step idle under Fake color 0x20
+    stat at 29,8 element Object p1 cp437:0x23 p2 0 step idle under Fake color 0x20
+    stat at 6,13 element Object p1 cp437:0x06 p2 0 step idle under Fake color 0x20
+    stat at 10,10 element Object p1 cp437:0x06 p2 0 step idle under Fake color 0x20
+    stat at 8,7 element Object p1 cp437:0x06 p2 0 step idle under Fake color 0x20
+    stat at 12,5 element Object p1 cp437:0x06 p2 0 step idle under Fake color 0x20
+    stat at 10,22 element Object p1 cp437:0x06 p2 0 step idle under Fake color 0x20
+    stat at 17,20 element Object p1 cp437:0x06 p2 0 step idle under Fake color 0x20
+    stat at 17,9 element Object cycle 1 p1 cp437:0xB3 p2 0 step idle under Fake color 0x60
+    oop
+@Impale
+#end
+:touch
+An impaled corpse set as a warning
+against those that would enter the
+Citadel without invitation.
+#end
+
+    end
+    stat at 17,8 element Object cycle 1 p2 0 step idle under Fake color 0x60
+    oop
+#bind Impale
+
+    end
+    stat at 17,7 element Object cycle 1 p1 cp437:0xB3 p2 0 step idle under Fake color 0x60
+    oop
+#bind Impale
+
+    end
+    stat at 21,11 element Object cycle 1 p1 cp437:0xB3 p2 0 step idle under Fake color 0x60
+    oop
+#bind Impale
+
+    end
+    stat at 21,9 element Object cycle 1 p2 0 step idle under Fake color 0x60
+    oop
+#bind Impale
+
+    end
+    stat at 21,10 element Object cycle 1 p1 cp437:0xB3 p2 0 step idle under Fake color 0x60
+    oop
+#bind Impale
+
+    end
+    stat at 34,11 element Object cycle 1 p1 cp437:0xB3 p2 0 step idle under Fake color 0x60
+    oop
+#bind Impale
+
+    end
+    stat at 34,10 element Object cycle 1 p1 cp437:0xB3 p2 0 step idle under Fake color 0x60
+    oop
+#bind Impale
+
+    end
+    stat at 34,9 element Object cycle 1 p2 0 step idle under Fake color 0x60
+    oop
+#bind Impale
+
+    end
+    stat at 38,9 element Object cycle 1 p2 0 step idle under Fake color 0x60
+    oop
+#bind Impale
+
+    end
+    stat at 38,8 element Object cycle 1 p1 cp437:0xB3 p2 0 step idle under Fake color 0x60
+    oop
+#bind Impale
+
+    end
+    stat at 38,7 element Object cycle 1 p1 cp437:0xB3 p2 0 step idle under Fake color 0x60
+    oop
+#bind Impale
+
+    end
+    stat at 18,8 element Object cycle 1 p1 cp437:0x76 p2 0 step idle under Fake color 0x60
+    oop
+@crow
+:b
+#char 118
+#if blocked n done
+/n
+#if blocked n done
+#char 94
+#if blocked n done
+#go rndp n
+#if blocked n done
+#b
+:done
+#become fake
+
+
+    end
+    stat at 19,11 element Object cycle 1 p1 cp437:0x76 p2 0 step idle under Fake color 0x60
+    oop
+#bind Crow
+
+    end
+    stat at 22,10 element Object cycle 1 p1 cp437:0x76 p2 0 step idle under Fake color 0x60
+    oop
+#bind Crow
+
+    end
+    stat at 33,11 element Object cycle 1 p1 cp437:0x76 p2 0 step idle under Fake color 0x60
+    oop
+#bind Crow
+
+    end
+    stat at 36,9 element Object cycle 1 p1 cp437:0x76 p2 0 step idle under Fake color 0x60
+    oop
+#bind Crow
+
+    end
+    stat at 37,7 element Object cycle 1 p1 cp437:0x76 p2 0 step idle under Fake color 0x60
+    oop
+#bind Crow
+
+    end
+    stat at 40,8 element Object cycle 1 p1 cp437:0x76 p2 0 step idle under Fake color 0x60
+    oop
+#bind Crow
+
+    end
+    stat at 32,8 element Object cycle 1 p1 cp437:0x76 p2 0 step idle under Fake color 0x60
+    oop
+#bind Crow
+
+    end
+    stat at 22,8 element Object cycle 1 p1 cp437:0x76 p2 0 step idle under Fake color 0x60
+    oop
+#bind Crow
+
+    end
+    stat at 32,18 element Passage p1 0 p2 0 p3 board "Town: East" step idle under Fake color 0x20
+    stat at 34,18 element Passage p1 0 p2 0 p3 board "Town: East" step idle under Fake color 0x20
+    stat at 36,18 element Passage p1 0 p2 0 p3 board "Town: East" step idle under Fake color 0x20
+    stat at 38,18 element Passage p1 0 p2 0 p3 board "Ice City: Eastern Slums" step idle under Fake color 0x20
+    stat at 40,18 element Passage p1 0 p2 0 p3 board "Lava Cave: Flame Chasm" step idle under Fake color 0x20
+    stat at 42,18 element Passage p1 0 p2 0 p3 board "End of World 3" step idle under Fake color 0x20
+    stat at 32,20 element Object cycle 1 p1 cp437:0x08 p2 0 step idle under Fake color 0x60
+    oop
+#bind Door
+
+    end
+    stat at 36,20 element Object cycle 1 p1 cp437:0x08 p2 0 step idle under Fake color 0x60
+    oop
+#bind Door
+
+    end
+    stat at 40,20 element Object cycle 1 p1 cp437:0x08 p2 0 step idle under Fake color 0x60
+    oop
+#bind Door
+
+    end
+    stat at 42,20 element Object cycle 1 p1 cp437:0x08 p2 0 step idle under Fake color 0x60
+    oop
+#bind Door
+
+    end
+    stat at 60,1 element Object cycle 1 p1 cp437:0x48 p2 0 step idle under Empty color 0x0F
+    oop
+@Help
+:l
+/i
+#if not h l
+#clear h
+Choose a topic for information:
+!-dc_game;Gameplay information
+!-dc_spell;Spell descriptions
+!-dc_monst;Monster descriptions
+!-dc_cred;Credits
+/i
+#l
+
+
+    end
+    stat at 27,8 element Object p1 cp437:0x23 p2 0 step idle under Empty color 0x0F
+    stat at 34,20 element Object cycle 1 p1 cp437:0x08 p2 0 step idle under Fake color 0x60
+    oop
+#bind Door
+
+    end
+  end
+end

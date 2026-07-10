@@ -1,0 +1,1848 @@
+board "ZASA / Shape Puzzle v2"
+  start player at 34,21
+  respawn at 1,1
+  max-shots 1
+  dark false
+  reenter false
+  time-limit 0
+  exits north none south none west none east "3, 0 - West: ZASA, South: ZASB"
+
+  grid
+BN###########################NBBBBB~.~...................~..
+B#aba1aoN##N..WWWWW..N#N.....####NBBBBB~~~~~~....~~~~~~~BB~.
+B#N....c....d.WWWWW..............#BBBBBBBBB~~~~~~~~~BBBBN##N
+B##.....N##N..WWWWW..N#N.....N#N.###NNNNN#####NN#########.O#
+BN###.##########################.N#########N##...........eX#
+BB##.c...SSSSSSSSSSSSSSS.....###.NNN#####NNN##.NNN####NNN.#N
+BB##.....SfSgShSdSeSeSiS.c..eT##............#T.N########N...
+BB##.....SfSgShSdSeSjSiS.....#########kk###.N######NN######N
+~B##........................c#########mGW.W...............##
+~B##.........................#####NNN#kk..#######NNNNNN##T##
+~B##.........................###NNNNNNN#..#N..TT...TT.NNNT##
+~B##........TTTTTTTTT........###N......#..#N............N..#
+~B##........TTTTTTTTT........###e..i.N.#..NN.....l.......i.#
+~B##......TT.........TT.....c###.##.#..#c......lllll.......#
+~~##......TTcg....ch.TT......###T#NN#.TT...................#
+~~##......TT..cecj...TT......###T####p######################
+~~##......TT...cf....TT......###hwwwwhgh....fg22222222g...X#
+~~##......TTcd....ci.TT......###fqqqqfnr....s..........d#.O#
+~~##......TT.........TT......###ittttinh....s..........u#.##
+~~##........TTTTTTTTT........###..i...g.....f..........d....
+~~##........TTTTTTTTT........###N@v.dxxxdN#N.N########N.N###
+~~##N.......................N###..i......###N##########.###B
+.~B##N....yyyyyyyy.........N##B#.........##BB~~~~~~~BB#.##B.
+.~~B#####Nyyyyyyyy.....N#####B~##N.N#N.N###~~~~~.~~~~~#N#B.c
+..~~~B#####################B~~.~B###B###B~~~.........~~~~~.c
+  end
+
+  legend
+    B = Breakable color 0x08
+    N = Normal color 0x08
+    # = Solid color 0x08
+    ~ = Water color 0x08
+    . = Empty color 0x0F
+    a = Text-Red color 0x20
+    b = Text-Red color 0xF8
+    1 = Text-Red color 0x31
+    o = Object color 0x04
+    W = Water color 0x09
+    c = Object color 0x80
+    d = Object color 0x0B
+    O = Boulder color 0x07
+    e = Object color 0x0F
+    X = Transporter color 0x07
+    S = Shark color 0x80
+    f = Object color 0x0C
+    g = Object color 0x0A
+    h = Object color 0x09
+    i = Object color 0x0E
+    T = Transporter color 0x78
+    j = Object color 0x0D
+    k = Solid color 0x77
+    m = Object color 0x70
+    G = Spinning gun color 0x70
+    l = Line color 0x0F
+    p = Object color 0x08
+    w = Slider (EW) color 0x09
+    2 = Slider (EW) color 0x0A
+    q = Slider (EW) color 0x0C
+    n = Slider (NS) color 0x0A
+    r = Slider (NS) color 0x09
+    s = Slider (NS) color 0x0C
+    t = Slider (EW) color 0x0E
+    u = Slider (NS) color 0x0B
+    @ = Player color 0x1F under Empty color 0x0F
+    v = Slider (NS) color 0x0E
+    x = Slider (EW) color 0x0B
+    y = Empty color 0x00
+  end
+
+  stats
+    stat at 13,3 element Object cycle 1 p1 cp437:0x43 p2 0 step idle under Empty color 0x0F
+    oop
+#end
+:shot
+#lock
+:a
+:a
+:a
+:a
+:a
+:a
+#zap a
+?e/i#put e empty
+#a
+:a
+/i/i/i/i
+/i#char 219
+/i#char 178
+/i#char 177
+/i#char 176
+/i#cya:show
+#die
+
+    end
+    stat at 60,25 element Object cycle 1 p1 cp437:0x78 p2 0 step idle under Empty color 0x0F
+    oop
+@c
+#end
+:r
+#change red solid empty
+#change red normal empty
+#x
+:g
+#change green solid empty
+#change green normal empty
+#x
+:b
+#change blue solid empty
+#change blue normal empty
+#x
+:c
+#change cyan solid empty
+#change cyan normal empty
+#x
+:p
+#change purple solid empty
+#change purple normal empty
+#x
+:w
+#change white solid empty
+#change white normal empty
+#x
+:y
+#change yellow solid empty
+#change yellow normal empty
+#x
+:s
+#play 444
+:x
+
+    end
+    stat at 29,7 element Object cycle 1 p1 cp437:0x23 p2 0 step idle under Empty color 0x0F
+    oop
+@gat
+:b
+/i
+#if not any blue normal b
+#if not any red normal b
+#if not any green normal b
+#if not any yellow normal b
+#if not any white normal b
+#if not any purple normal b
+#if not any cyan normal b
+#char 251
+/i/i/i/i/i/i/i/i?s?s?s
+
+    end
+    stat at 58,13 element Object cycle 1 p1 cp437:0xC0 p2 0 step idle under Empty color 0x0F
+    oop
+@L
+:p
+#put n yellow solid
+#put e yellow solid
+#x
+:p
+#put e yellow solid
+#put s yellow solid
+#x
+:p
+#put s yellow solid
+#put w yellow solid
+#x
+:p
+#put w yellow solid
+#put n yellow solid
+#x
+:x
+/i#restore touch
+#unlock
+#end
+:touch
+#lock
+#zap touch
+#m
+:m
+#put n empty
+#put e empty
+#walk opp seek
+/i#if blocked n backout
+#if blocked e backout
+#walk i
+#p
+:m
+#put e empty
+#put s empty
+#walk opp seek
+/i#if blocked e backout
+#if blocked s backout
+#walk i
+#p
+:m
+#put s empty
+#put w empty
+#walk opp seek
+/i#if blocked s backout
+#if blocked w backout
+#walk i
+#p
+:m
+#put w empty
+#put n empty
+#walk opp seek
+/i#if blocked w backout
+#if blocked n backout
+#walk i
+#p
+:backout
+#if contact put seek empty
+#change bullet empty
+#walk opp flow
+/i#walk i
+#p
+:shot
+#lock
+#if blocked s xt
+#zap shot
+#zap p
+#zap m
+#put n empty
+#put s yellow solid
+#char 218
+#xt
+:shot
+#lock
+#if blocked w xt
+#zap shot
+#zap p
+#zap m
+#put e empty
+#put w yellow solid
+#char 191
+#xt
+:shot
+#lock
+#if blocked n xt
+#zap shot
+#zap p
+#zap m
+#put s empty
+#put n yellow solid
+#char 217
+#xt
+:shot
+#lock
+#if blocked e xt
+#restore shot
+#restore p
+#restore m
+#put w empty
+#put e yellow solid
+#char 192
+#xt
+:xt
+#unlock
+#play 4
+#end
+:done
+/i/i/i/i#char 7
+/i#char 249
+/i#char 250
+#wf:a
+/i#die
+:res
+#change yellow solid empty
+#change white line fake
+#walk s
+?e?e?e?e?e?e?e?e?e?e?e?e?e?e?e?e?e?e?e?e?e
+#walk i
+?n?n?w#gate:of
+#change white fake line
+#change line line
+#p
+
+    end
+    stat at 29,9 element Object cycle 1 p1 cp437:0x1A p2 0 step idle under Empty color 0x0F
+    oop
+#die
+
+    end
+    stat at 11,8 element Object cycle 1 p1 cp437:0xFF p2 0 step idle under Empty color 0x0F
+    oop
+#end
+:gshow
+#char 237
+#end
+:touch
+#red:x
+#lock
+#char 236
+/i/i/i/i
+#char 237
+#unlock
+
+    end
+    stat at 13,8 element Object cycle 1 p1 cp437:0xFF p2 0 step idle under Empty color 0x0F
+    oop
+#end
+:gshow
+#char 237
+#end
+:touch
+#gre:x
+#lock
+#char 236
+/i/i/i/i
+#char 237
+#unlock
+
+    end
+    stat at 15,8 element Object cycle 1 p1 cp437:0xFF p2 0 step idle under Empty color 0x0F
+    oop
+#end
+:gshow
+#char 237
+#end
+:touch
+#blu:x
+#lock
+#char 236
+/i/i/i/i
+#char 237
+#unlock
+
+    end
+    stat at 17,8 element Object cycle 1 p1 cp437:0xFF p2 0 step idle under Empty color 0x0F
+    oop
+#end
+:gshow
+#char 237
+#end
+:touch
+#cya:x
+#lock
+#char 236
+/i/i/i/i
+#char 237
+#unlock
+
+    end
+    stat at 19,8 element Object cycle 1 p1 cp437:0xFF p2 0 step idle under Empty color 0x0F
+    oop
+#end
+:gshow
+#char 237
+#end
+:touch
+#whi:x
+#lock
+#char 236
+/i/i/i/i
+#char 237
+#unlock
+
+    end
+    stat at 21,8 element Object cycle 1 p1 cp437:0xFF p2 0 step idle under Empty color 0x0F
+    oop
+#end
+:gshow
+#char 237
+#end
+:touch
+#pur:x
+#lock
+#char 236
+/i/i/i/i
+#char 237
+#unlock
+/i/i/i/i/i/i#put n purple object
+
+    end
+    stat at 23,8 element Object cycle 1 p1 cp437:0xFF p2 0 step idle under Empty color 0x0F
+    oop
+#end
+:gshow
+#char 237
+#end
+:touch
+#yel:x
+#lock
+#char 236
+/i/i/i/i
+#char 237
+#unlock
+
+    end
+    stat at 13,12 element Transporter cycle 255 p1 0 p2 0 step south under Empty color 0x0F
+    stat at 14,12 element Transporter cycle 255 p1 0 p2 0 step south under Empty color 0x0F
+    stat at 15,12 element Transporter cycle 255 p1 0 p2 0 step south under Empty color 0x0F
+    stat at 16,12 element Transporter cycle 255 p1 0 p2 0 step south under Empty color 0x0F
+    stat at 17,12 element Transporter cycle 255 p1 0 p2 0 step south under Empty color 0x0F
+    stat at 18,12 element Transporter cycle 255 p1 0 p2 0 step south under Empty color 0x0F
+    stat at 19,12 element Transporter cycle 255 p1 0 p2 0 step south under Empty color 0x0F
+    stat at 20,12 element Transporter cycle 255 p1 0 p2 0 step south under Empty color 0x0F
+    stat at 21,12 element Transporter cycle 255 p1 0 p2 0 step south under Empty color 0x0F
+    stat at 13,13 element Transporter cycle 255 p1 0 p2 0 step north under Empty color 0x0F
+    stat at 14,13 element Transporter cycle 255 p1 0 p2 0 step north under Empty color 0x0F
+    stat at 15,13 element Transporter cycle 255 p1 0 p2 0 step north under Empty color 0x0F
+    stat at 16,13 element Transporter cycle 255 p1 0 p2 0 step north under Empty color 0x0F
+    stat at 17,13 element Transporter cycle 255 p1 0 p2 0 step north under Empty color 0x0F
+    stat at 18,13 element Transporter cycle 255 p1 0 p2 0 step north under Empty color 0x0F
+    stat at 19,13 element Transporter cycle 255 p1 0 p2 0 step north under Empty color 0x0F
+    stat at 20,13 element Transporter cycle 255 p1 0 p2 0 step north under Empty color 0x0F
+    stat at 21,13 element Transporter cycle 255 p1 0 p2 0 step north under Empty color 0x0F
+    stat at 11,14 element Transporter cycle 255 p1 0 p2 0 step east under Empty color 0x0F
+    stat at 12,14 element Transporter cycle 255 p1 0 p2 0 step west under Empty color 0x0F
+    stat at 22,14 element Transporter cycle 255 p1 0 p2 0 step east under Empty color 0x0F
+    stat at 23,14 element Transporter cycle 255 p1 0 p2 0 step west under Empty color 0x0F
+    stat at 11,15 element Transporter cycle 255 p1 0 p2 0 step east under Empty color 0x0F
+    stat at 12,15 element Transporter cycle 255 p1 0 p2 0 step west under Empty color 0x0F
+    stat at 13,15 element Object cycle 1 p1 cp437:0x1A p2 0 step idle under Empty color 0x0F
+    oop
+#die
+
+    end
+    stat at 14,15 element Object cycle 1 p1 cp437:0x20 p2 0 step idle under Empty color 0x0F
+    oop
+@gre
+#z
+:show
+/i#zap show
+/i#char 176
+/i#char 177
+/i#char 178
+/i#char 219
+/i#char 71
+#z
+:touch
+#if blocked opp seek ?seek#end
+#if not blocked opp seek ?opp seek#end
+:shot
+#lock
+#zap touch
+#zap shot
+#restore c
+'First step/no #put solid
+#if blocked s x
+?s
+:c
+:c
+#zap c
+#we
+:c
+#zap c
+#wn
+:c
+:c
+#zap c
+#ww
+:c
+#unlock
+#char 251
+#change green solid normal
+#end
+:touch
+:shot
+#x
+:we
+#if blocked e x
+?e#put w green solid
+#c
+:ww
+#if blocked w x
+?w#put e green solid
+#c
+:wn
+#if blocked n x
+?n#put s green solid
+#c
+:ws
+#if blocked s x
+?s#put n green solid
+#c
+:x
+#lock
+#restore touch
+#restore shot
+#char 88
+/i/i/i/i/i/i/i/i#char 71
+:re
+#c:g
+#unlock
+:z
+
+    end
+    stat at 19,15 element Object cycle 1 p1 cp437:0x1A p2 0 step idle under Empty color 0x0F
+    oop
+#die
+
+    end
+    stat at 20,15 element Object cycle 1 p1 cp437:0x20 p2 0 step idle under Empty color 0x0F
+    oop
+@blu
+#z
+:show
+/i/i/i/i/i#zap show
+/i#char 176
+/i#char 177
+/i#char 178
+/i#char 219
+/i#char 66
+#z
+:touch
+#if blocked opp seek ?seek#end
+#if not blocked opp seek ?opp seek#end
+:shot
+#lock
+#zap touch
+#zap shot
+#restore c
+'FirstStep/No#PutSolid
+#if blocked w x
+?w
+:c
+:c
+:c
+:c
+#zap c
+#ww
+:c
+#zap c
+#wn
+:c
+:c
+:c
+:c
+:c
+#zap c
+#we
+:c
+#zap c
+#ws
+:c
+#unlock
+#char 251
+#change blue solid normal
+#z
+:touch
+:shot
+#x
+:we
+#if blocked e x
+?e#put w blue solid
+#c
+:ww
+#if blocked w x
+?w#put e blue solid
+#c
+:wn
+#if blocked n x
+?n#put s blue solid
+#c
+:ws
+#if blocked s x
+?s#put n blue solid
+#c
+:x
+#lock
+#restore touch
+#restore shot
+#char 88
+/i/i/i/i/i/i/i/i#char 66
+:re
+#c:b
+#unlock
+:z
+
+    end
+    stat at 22,15 element Transporter cycle 255 p1 0 p2 0 step east under Empty color 0x0F
+    stat at 23,15 element Transporter cycle 255 p1 0 p2 0 step west under Empty color 0x0F
+    stat at 11,16 element Transporter cycle 255 p1 0 p2 0 step east under Empty color 0x0F
+    stat at 12,16 element Transporter cycle 255 p1 0 p2 0 step west under Empty color 0x0F
+    stat at 15,16 element Object cycle 1 p1 cp437:0x1A p2 0 step idle under Empty color 0x0F
+    oop
+#die
+
+    end
+    stat at 16,16 element Object cycle 1 p1 cp437:0x20 p2 0 step idle under Empty color 0x0F
+    oop
+@whi
+#z
+:show
+/i/i#zap show
+/i#char 176
+/i#char 177
+/i#char 178
+/i#char 219
+/i#char 87
+#z
+:touch
+#if blocked opp seek ?seek#end
+#if not blocked opp seek ?opp seek#end
+:shot
+#lock
+#zap touch
+#zap shot
+#restore c
+'FirstStep/No#PutSolid
+#if blocked s x
+?s
+:c
+:c
+:c
+#zap c
+#ww
+:c
+#zap c
+#wn
+:c
+:c
+:c
+#zap c
+#we
+:c
+#unlock
+#char 251
+#change white solid normal
+#z
+:touch
+:shot
+#x
+:we
+#if blocked e x
+?e#put w white solid
+#c
+:ww
+#if blocked w x
+?w#put e white solid
+#c
+:wn
+#if blocked n x
+?n#put s white solid
+#c
+:ws
+#if blocked s x
+?s#put n white solid
+#c
+:x
+#lock
+#restore touch
+#restore shot
+#char 88
+/i/i/i/i/i/i/i/i#char 87
+:re
+#c:w
+#unlock
+:z
+
+    end
+    stat at 17,16 element Object cycle 1 p1 cp437:0x1A p2 0 step idle under Empty color 0x0F
+    oop
+#die
+
+    end
+    stat at 18,16 element Object cycle 1 p1 cp437:0x20 p2 0 step idle under Empty color 0x0F
+    oop
+@pur
+#z
+:show
+/i/i/i/i#zap show
+/i#char 176
+/i#char 177
+/i#char 178
+/i#char 219
+/i#char 80
+#z
+:touch
+#if blocked opp seek ?seek#end
+#if not blocked opp seek ?opp seek#end
+:shot
+#lock
+#zap touch
+#zap shot
+#restore c
+'FirstStep/No#PutSolid
+#if blocked e x
+?e
+:c
+:c
+:c
+#zap c
+#we
+:c
+#zap c
+#ws
+:c
+:c
+:c
+:c
+#zap c
+#ww
+:c
+#zap c
+#wn
+:c
+#unlock
+#char 251
+#change purple solid normal
+#z
+:touch
+:shot
+#x
+:we
+#if blocked e x
+?e#put w purple solid
+#c
+:ww
+#if blocked w x
+?w#put e purple solid
+#c
+:wn
+#if blocked n x
+?n#put s purple solid
+#c
+:ws
+#if blocked s x
+?s#put n purple solid
+#c
+:x
+#lock
+#restore touch
+#restore shot
+#char 88
+/i/i/i/i/i/i/i/i#char 80
+:re
+#c:p
+#unlock
+:z
+
+    end
+    stat at 22,16 element Transporter cycle 255 p1 0 p2 0 step east under Empty color 0x0F
+    stat at 23,16 element Transporter cycle 255 p1 0 p2 0 step west under Empty color 0x0F
+    stat at 11,17 element Transporter cycle 255 p1 0 p2 0 step east under Empty color 0x0F
+    stat at 12,17 element Transporter cycle 255 p1 0 p2 0 step west under Empty color 0x0F
+    stat at 16,17 element Object cycle 1 p1 cp437:0x1A p2 0 step idle under Empty color 0x0F
+    oop
+#die
+
+    end
+    stat at 17,17 element Object cycle 1 p1 cp437:0x20 p2 0 step idle under Empty color 0x0F
+    oop
+@red
+#z
+:show
+/i/i/i#zap show
+/i#char 176
+/i#char 177
+/i#char 178
+/i#char 219
+/i#char 82
+#z
+:touch
+#if blocked opp seek ?seek#end
+#if not blocked opp seek ?opp seek#end
+:shot
+#lock
+#zap touch
+#zap shot
+#restore c
+'FirstStep/No#PutSolid
+#if blocked n x
+?n
+:c
+:c
+:c
+:c
+#zap c
+#wn
+:c
+#zap c
+#ww
+:c
+:c
+:c
+:c
+:c
+#zap c
+#ws
+:c
+#zap c
+#we
+:c
+#unlock
+#char 251
+#change red solid normal
+#z
+:touch
+:shot
+#x
+:we
+#if blocked e x
+?e#put w red solid
+#c
+:ww
+#if blocked w x
+?w#put e red solid
+#c
+:wn
+#if blocked n x
+?n#put s red solid
+#c
+:ws
+#if blocked s x
+?s#put n red solid
+#c
+:x
+#lock
+#restore touch
+#restore shot
+#char 88
+/i/i/i/i/i/i/i/i#char 82
+:re
+#c:r
+#unlock
+:z
+
+    end
+    stat at 22,17 element Transporter cycle 255 p1 0 p2 0 step east under Empty color 0x0F
+    stat at 23,17 element Transporter cycle 255 p1 0 p2 0 step west under Empty color 0x0F
+    stat at 11,18 element Transporter cycle 255 p1 0 p2 0 step east under Empty color 0x0F
+    stat at 12,18 element Transporter cycle 255 p1 0 p2 0 step west under Empty color 0x0F
+    stat at 13,18 element Object cycle 1 p1 cp437:0x1A p2 0 step idle under Empty color 0x0F
+    oop
+#die
+
+    end
+    stat at 14,18 element Object cycle 1 p1 cp437:0x20 p2 0 step idle under Empty color 0x0F
+    oop
+@cya
+#z
+:show
+#zap show
+/i#char 176
+/i#char 177
+/i#char 178
+/i#char 219
+/i#char 67
+#z
+:touch
+#if blocked opp seek ?seek#end
+#if not blocked opp seek ?opp seek#end
+:shot
+#lock
+#zap touch
+#zap shot
+'Restore in case of prior failed attempt
+#restore c
+'Exception, since this is a one-step obj
+#if blocked s x
+?s#if blocked n x
+?n#if blocked s x
+#put s cyan solid
+:c
+#unlock
+#char 251
+#change cyan solid normal
+#z
+:touch
+:shot
+#x
+:we
+#if blocked e x
+?e#put w blue solid
+#c
+:ww
+#if blocked w x
+?w#put e blue solid
+#c
+:wn
+#if blocked n x
+?n#put s blue solid
+#c
+:ws
+#if blocked s x
+?s#put n blue solid
+#c
+:x
+#lock
+#restore touch
+#restore shot
+#char 88
+/i/i/i/i/i/i/i/i#char 67
+:re
+#c:c
+#unlock
+:z
+
+    end
+    stat at 19,18 element Object cycle 1 p1 cp437:0x1A p2 0 step idle under Empty color 0x0F
+    oop
+#die
+
+    end
+    stat at 20,18 element Object cycle 1 p1 cp437:0x20 p2 0 step idle under Empty color 0x0F
+    oop
+@yel
+#z
+:show
+/i/i/i/i/i/i#zap show
+/i#char 176
+/i#char 177
+/i#char 178
+/i#char 219
+/i#char 89
+#z
+:touch
+#if blocked opp seek ?seek#end
+#if not blocked opp seek ?opp seek#end
+:shot
+#lock
+#zap touch
+#zap shot
+#restore c
+'First step - no #put solid
+#if blocked n x
+?n
+:c
+#zap c
+#ww
+:c
+#zap c
+#ws
+:c
+#zap c
+#we
+:c
+#unlock
+#char 251
+#change yellow solid normal
+#z
+:touch
+:shot
+#x
+:we
+#if blocked e x
+?e#put w yellow solid
+#c
+:ww
+#if blocked w x
+?w#put e yellow solid
+#c
+:wn
+#if blocked n x
+?n#put s yellow solid
+#c
+:ws
+#if blocked s x
+?s#put n yellow solid
+#c
+:x
+#lock
+#restore touch
+#restore shot
+#char 88
+/i/i/i/i/i/i/i/i#char 89
+:re
+#c:y
+#unlock
+:z
+
+    end
+    stat at 22,18 element Transporter cycle 255 p1 0 p2 0 step east under Empty color 0x0F
+    stat at 23,18 element Transporter cycle 255 p1 0 p2 0 step west under Empty color 0x0F
+    stat at 11,19 element Transporter cycle 255 p1 0 p2 0 step east under Empty color 0x0F
+    stat at 12,19 element Transporter cycle 255 p1 0 p2 0 step west under Empty color 0x0F
+    stat at 22,19 element Transporter cycle 255 p1 0 p2 0 step east under Empty color 0x0F
+    stat at 23,19 element Transporter cycle 255 p1 0 p2 0 step west under Empty color 0x0F
+    stat at 13,20 element Transporter cycle 255 p1 0 p2 0 step south under Empty color 0x0F
+    stat at 14,20 element Transporter cycle 255 p1 0 p2 0 step south under Empty color 0x0F
+    stat at 15,20 element Transporter cycle 255 p1 0 p2 0 step south under Empty color 0x0F
+    stat at 16,20 element Transporter cycle 255 p1 0 p2 0 step south under Empty color 0x0F
+    stat at 17,20 element Transporter cycle 255 p1 0 p2 0 step south under Empty color 0x0F
+    stat at 18,20 element Transporter cycle 255 p1 0 p2 0 step south under Empty color 0x0F
+    stat at 19,20 element Transporter cycle 255 p1 0 p2 0 step south under Empty color 0x0F
+    stat at 20,20 element Transporter cycle 255 p1 0 p2 0 step south under Empty color 0x0F
+    stat at 21,20 element Transporter cycle 255 p1 0 p2 0 step south under Empty color 0x0F
+    stat at 13,21 element Transporter cycle 255 p1 0 p2 0 step north under Empty color 0x0F
+    stat at 14,21 element Transporter cycle 255 p1 0 p2 0 step north under Empty color 0x0F
+    stat at 15,21 element Transporter cycle 255 p1 0 p2 0 step north under Empty color 0x0F
+    stat at 16,21 element Transporter cycle 255 p1 0 p2 0 step north under Empty color 0x0F
+    stat at 17,21 element Transporter cycle 255 p1 0 p2 0 step north under Empty color 0x0F
+    stat at 18,21 element Transporter cycle 255 p1 0 p2 0 step north under Empty color 0x0F
+    stat at 19,21 element Transporter cycle 255 p1 0 p2 0 step north under Empty color 0x0F
+    stat at 20,21 element Transporter cycle 255 p1 0 p2 0 step north under Empty color 0x0F
+    stat at 21,21 element Transporter cycle 255 p1 0 p2 0 step north under Empty color 0x0F
+    stat at 36,13 element Object cycle 1 p1 cp437:0xC0 p2 0 step idle under Empty color 0x0F
+    oop
+@L
+:p
+#put n yellow solid
+#put e yellow solid
+#x
+:p
+#put e yellow solid
+#put s yellow solid
+#x
+:p
+#put s yellow solid
+#put w yellow solid
+#x
+:x
+/i#restore touch
+#unlock
+#end
+:touch
+#if any red invisible resl
+#lock
+#zap touch
+#m
+:m
+#put n empty
+#put e empty
+#walk opp seek
+/i#if blocked n backout
+#if blocked e backout
+#walk i
+#p
+:m
+#put e empty
+#put s empty
+#walk opp seek
+/i#if blocked e backout
+#if blocked s backout
+#walk i
+#p
+:m
+#put s empty
+#put w empty
+#walk opp seek
+/i#if blocked s backout
+#if blocked w backout
+#walk i
+#p
+:backout
+#if contact put seek empty
+#change bullet empty
+#walk opp flow
+/i#walk i
+#p
+:shot
+#lock
+#if blocked s xt
+#zap shot
+#zap p
+#zap m
+#put n empty
+#put s yellow solid
+#char 218
+#xt
+:shot
+#if any red invisible end
+#lock
+#if blocked w xt
+#zap shot
+#zap p
+#zap m
+#put e empty
+#put w yellow solid
+#char 191
+#xt
+:xt
+#unlock
+#play 4
+#end
+:done
+#lock
+/i/i/i/i#char 7
+/i#char 249
+/i#char 250
+#wf:a
+#change red invisible empty
+/i#die
+:becres
+#char 237
+#put n empty
+#put s empty
+#put e empty
+#put w empty
+#put s red invisible
+#end
+:resl
+#lock
+#gate:on
+#char 236
+/i/i/i/i
+#L:res
+/i/i/i/i
+#char 237
+#unlock
+
+    end
+    stat at 46,7 element Transporter cycle 255 p1 0 p2 0 step west under Empty color 0x0F
+    stat at 38,17 element Object cycle 1 p1 cp437:0xF3 p2 0 step idle under Empty color 0x0F
+    oop
+@hd
+#end
+:touch
+#zap touch
+#hc:w
+/i?w#r
+:e
+#if blocked e noe
+/e#r
+:noe
+#hc:r
+#r
+:r
+#restore touch
+#end
+:slidone
+#lock
+/i#char 43
+/i#char 249
+/i#char 250
+/i#die
+
+    end
+    stat at 33,15 element Transporter cycle 255 p1 0 p2 0 step south under Empty color 0x0F
+    stat at 33,16 element Transporter cycle 255 p1 0 p2 0 step north under Empty color 0x0F
+    stat at 39,15 element Transporter cycle 255 p1 0 p2 0 step east under Empty color 0x0F
+    stat at 40,15 element Transporter cycle 255 p1 0 p2 0 step west under Empty color 0x0F
+    stat at 47,11 element Transporter cycle 255 p1 0 p2 0 step east under Empty color 0x0F
+    stat at 48,11 element Transporter cycle 255 p1 0 p2 0 step west under Empty color 0x0F
+    stat at 52,11 element Transporter cycle 255 p1 0 p2 0 step east under Empty color 0x0F
+    stat at 53,11 element Transporter cycle 255 p1 0 p2 0 step west under Empty color 0x0F
+    stat at 60,24 element Object cycle 1 p1 cp437:0x77 p2 0 step idle under Empty color 0x0F
+    oop
+@wf
+#end
+:a
+#lock
+/i#change yellow solid normal
+/i#change yellow normal breakable
+/i#change yellow breakable water
+/i#change yellow water empty
+
+    end
+    stat at 6,6 element Object cycle 1 p1 cp437:0x22 p2 0 step idle under Empty color 0x0F
+    oop
+
+:a
+/i#if not contact a
+#all:show
+#all:gshow
+#change shark shark
+#change shark line
+#change line line
+#die
+
+    end
+    stat at 33,17 element Object cycle 1 p1 cp437:0xF2 p2 0 step idle under Empty color 0x0F
+    oop
+@hc
+#end
+:touch
+#zap touch
+#hd:e
+/i?e#r
+:w
+#if blocked w now
+/w#r
+:now
+#hd:r
+#r
+:r
+#restore touch
+#end
+:slidone
+#lock
+/i#char 43
+/i#char 249
+/i#char 250
+/i#change blue sliderew empty
+#die
+
+    end
+    stat at 33,18 element Object cycle 1 p1 cp437:0xF2 p2 0 step idle under Empty color 0x0F
+    oop
+@hi
+#end
+:touch
+#zap touch
+#hj:e
+/i?e#r
+:w
+#if blocked w now
+/w#r
+:now
+#hj:r
+#r
+:r
+#restore touch
+#end
+:slidone
+#lock
+/i#char 43
+/i#char 249
+/i#char 250
+/i#change red sliderew empty
+#die
+
+    end
+    stat at 38,18 element Object cycle 1 p1 cp437:0xF3 p2 0 step idle under Empty color 0x0F
+    oop
+@hj
+#end
+:touch
+#zap touch
+#hi:w
+/i?w#r
+:e
+#if blocked e noe
+/e#r
+:noe
+#hi:r
+#r
+:r
+#restore touch
+#end
+:slidone
+#lock
+/i#char 43
+/i#char 249
+/i#char 250
+/i#die
+
+    end
+    stat at 33,19 element Object cycle 1 p1 cp437:0xF2 p2 0 step idle under Empty color 0x0F
+    oop
+@ha
+#end
+:touch
+#zap touch
+#hb:e
+/i?e#r
+:w
+#if blocked w now
+/w#r
+:now
+#hb:r
+#r
+:r
+#restore touch
+#end
+:slidone
+#lock
+/i#char 43
+/i#char 249
+/i#char 250
+/i#change yellow sliderew empty
+#die
+
+    end
+    stat at 38,19 element Object cycle 1 p1 cp437:0xF3 p2 0 step idle under Empty color 0x0F
+    oop
+@hb
+#end
+:touch
+#zap touch
+#ha:w
+/i?w#r
+:e
+#if blocked e noe
+/e#r
+:noe
+#ha:r
+#r
+:r
+#restore touch
+#end
+:slidone
+#lock
+/i#char 43
+/i#char 249
+/i#char 250
+/i#die
+
+    end
+    stat at 39,17 element Object cycle 1 p1 cp437:0x76 p2 0 step idle under Empty color 0x0F
+    oop
+@ie
+#end
+:touch
+#zap touch
+#iff:s
+/i?s#r
+:n
+#if blocked n non
+/n#r
+:non
+#iff:r
+#r
+:r
+#restore touch
+#end
+:slidone
+#lock
+/i#char 43
+/i#char 249
+/i#char 250
+/i#change green sliderns empty
+#die
+
+    end
+    stat at 39,20 element Object cycle 1 p1 cp437:0x5E p2 0 step idle under Empty color 0x0F
+    oop
+@iff
+#end
+:touch
+#zap touch
+#ie:n
+/i?n#r
+:s
+#if blocked s noe
+/s#r
+:noe
+#ie:r
+#r
+:r
+#restore touch
+#end
+:slidone
+#lock
+/i#char 43
+/i#char 249
+/i#char 250
+/i#die
+
+    end
+    stat at 40,17 element Object cycle 1 p1 cp437:0x76 p2 0 step idle under Empty color 0x0F
+    oop
+@ic
+#end
+:touch
+#zap touch
+#id:s
+/i?s#r
+:n
+#if blocked n non
+/n#r
+:non
+#id:r
+#r
+:r
+#restore touch
+#end
+:slidone
+#lock
+/i#char 43
+/i#char 249
+/i#char 250
+/i#change blue sliderns empty
+#die
+
+    end
+    stat at 40,19 element Object cycle 1 p1 cp437:0x5E p2 0 step idle under Empty color 0x0F
+    oop
+@id
+#end
+:touch
+#zap touch
+#ic:n
+/i?n#r
+:s
+#if blocked s noe
+/s#r
+:noe
+#ic:r
+#r
+:r
+#restore touch
+#end
+:slidone
+#lock
+/i#char 43
+/i#char 249
+/i#char 250
+/i#die
+
+    end
+    stat at 37,21 element Object cycle 1 p1 cp437:0xF2 p2 0 step idle under Empty color 0x0F
+    oop
+@hg
+#end
+:touch
+#zap touch
+#hh:e
+/i?e#r
+:w
+#if blocked w now
+/w#r
+:now
+#hh:r
+#r
+:r
+#restore touch
+#end
+:slidone
+#lock
+/i#char 43
+/i#char 249
+/i#char 250
+/i#change cyan sliderew empty
+#die
+
+    end
+    stat at 41,21 element Object cycle 1 p1 cp437:0xF3 p2 0 step idle under Empty color 0x0F
+    oop
+@hh
+#end
+:touch
+#zap touch
+#hg:w
+/i?w#r
+:e
+#if blocked e noe
+/e#r
+:noe
+#hg:r
+#r
+:r
+#restore touch
+#end
+:slidone
+#lock
+/i#char 43
+/i#char 249
+/i#char 250
+/i#die
+
+    end
+    stat at 35,20 element Object cycle 1 p1 cp437:0x76 p2 0 step idle under Empty color 0x0F
+    oop
+@ia
+#end
+:touch
+#zap touch
+#ib:s
+/i?s#r
+:n
+#if blocked n non
+/n#r
+:non
+#ib:r
+#r
+:r
+#restore touch
+#end
+:slidone
+#lock
+/i#char 43
+/i#char 249
+/i#char 250
+/i#change yellow sliderns empty
+#die
+
+    end
+    stat at 35,22 element Object cycle 1 p1 cp437:0x5E p2 0 step idle under Empty color 0x0F
+    oop
+@ib
+#end
+:touch
+#zap touch
+#ia:n
+/i?n#r
+:s
+#if blocked s noe
+/s#r
+:noe
+#ia:r
+#r
+:r
+#restore touch
+#end
+:slidone
+#lock
+/i#char 43
+/i#char 249
+/i#char 250
+/i#die
+
+    end
+    stat at 56,18 element Object cycle 1 p1 cp437:0x76 p2 0 step idle under Empty color 0x0F
+    oop
+@ig
+#end
+:touch
+#zap touch
+#ih:s
+/i?s#r
+:n
+#if blocked n non
+/n#r
+:non
+#ih:r
+#r
+:r
+#restore touch
+#end
+:slidone
+#lock
+/i#char 43
+/i#char 249
+/i#char 250
+/i#change cyan sliderns empty
+#die
+
+    end
+    stat at 56,20 element Object cycle 1 p1 cp437:0x5E p2 0 step idle under Empty color 0x0F
+    oop
+@ih
+#end
+:touch
+#zap touch
+#ig:n
+/i?n#r
+:s
+#if blocked s noe
+/s#r
+:noe
+#ig:r
+#r
+:r
+#restore touch
+#end
+:slidone
+#lock
+/i#char 43
+/i#char 249
+/i#char 250
+/i#die
+
+    end
+    stat at 55,17 element Object cycle 1 p1 cp437:0xF3 p2 0 step idle under Empty color 0x0F
+    oop
+@hf
+#end
+:touch
+#zap touch
+#he:w
+/i?w#r
+:e
+#if blocked e noe
+/e#r
+:noe
+#he:r
+#r
+:r
+#restore touch
+#end
+:slidone
+#lock
+/i#char 43
+/i#char 249
+/i#char 250
+/i#die
+
+    end
+    stat at 46,17 element Object cycle 1 p1 cp437:0xF2 p2 0 step idle under Empty color 0x0F
+    oop
+@he
+#end
+:touch
+#zap touch
+#hf:e
+/i?e#r
+:w
+#if blocked w now
+/w#r
+:now
+#hf:r
+#r
+:r
+#restore touch
+#end
+:slidone
+#lock
+/i#char 43
+/i#char 249
+/i#char 250
+/i#change green sliderew empty
+#die
+
+    end
+    stat at 45,20 element Object cycle 1 p1 cp437:0x5E p2 0 step idle under Empty color 0x0F
+    oop
+@ij
+#end
+:touch
+#zap touch
+#ii:n
+/i?n#r
+:s
+#if blocked s noe
+/s#r
+:noe
+#ii:r
+#r
+:r
+#restore touch
+#end
+:slidone
+#lock
+/i#char 43
+/i#char 249
+/i#char 250
+/i#die
+
+    end
+    stat at 45,17 element Object cycle 1 p1 cp437:0x76 p2 0 step idle under Empty color 0x0F
+    oop
+@ii
+#end
+:touch
+#zap touch
+#ij:s
+/i?s#r
+:n
+#if blocked n non
+/n#r
+:non
+#ij:r
+#r
+:r
+#restore touch
+#end
+:slidone
+#lock
+/i#char 43
+/i#char 249
+/i#char 250
+/i#change red sliderns empty
+#die
+
+    end
+    stat at 29,14 element Object cycle 1 p1 cp437:0x10 p2 0 step idle under Empty color 0x0F
+    oop
+
+:a
+/i#if not alligned a
+/i/i/i/i/i/i/i/i/i/i/i/i/i/i/i/i/i/i/i/i/i
+#all:slidone
+#die
+
+    end
+    stat at 59,17 element Transporter p1 0 p2 0 step north under Empty color 0x0F
+    stat at 59,5 element Transporter p1 0 p2 0 step south under Empty color 0x0F
+    stat at 58,5 element Object cycle 1 p1 cp437:0x2F p2 0 step idle under Empty color 0x0F
+    oop
+#end
+:touch
+#lock
+#c:s
+#char 179
+/i/i/i#char 92
+/i/i/i#char 179
+/i/i/i#char 47
+#c:s
+/i/i#char 179
+/i/i#char 92
+/i/i#char 179
+/i/i#char 47
+#c:s
+/i#char 179
+/i#char 92
+/i#char 179
+/i#char 47
+/i#c:s
+#change boulder empty
+#die
+
+    end
+    stat at 26,7 element Object cycle 1 p1 cp437:0x10 p2 0 step idle under Empty color 0x0F
+    oop
+
+:a
+/i#if not alligned a
+/i/i/i/i/i/i/i/i/i/i/i/i/i/i/i/i/i/i/i/i/i
+#gun:done
+#die
+
+    end
+    stat at 11,7 element Object cycle 1 p1 cp437:0x20 p2 0 step idle under Empty color 0x0F
+    oop
+@ga
+#end
+:gshow
+/i#char 22
+/i#char 114
+/i#char 82
+
+    end
+    stat at 13,7 element Object cycle 1 p1 cp437:0x20 p2 0 step idle under Empty color 0x0F
+    oop
+@gg
+#end
+:gshow
+/i#char 22
+/i
+#char 103
+/i
+#char 71
+
+    end
+    stat at 15,7 element Object cycle 1 p1 cp437:0x20 p2 0 step idle under Empty color 0x0F
+    oop
+@gb
+#end
+:gshow
+/i#char 22
+/i
+#char 98
+/i
+#char 66
+
+    end
+    stat at 17,7 element Object cycle 1 p1 cp437:0x20 p2 0 step idle under Empty color 0x0F
+    oop
+@gc
+#end
+:gshow
+/i#char 22
+/i
+#char 99
+/i
+#char 67
+
+    end
+    stat at 19,7 element Object cycle 1 p1 cp437:0x20 p2 0 step idle under Empty color 0x0F
+    oop
+@gw
+#end
+:gshow
+/i#char 22
+/i
+#char 119
+/i
+#char 87
+
+    end
+    stat at 21,7 element Object cycle 1 p1 cp437:0x20 p2 0 step idle under Empty color 0x0F
+    oop
+@gp
+#end
+:gshow
+/i#char 22
+/i
+#char 112
+/i
+#char 80
+
+    end
+    stat at 23,7 element Object cycle 1 p1 cp437:0x20 p2 0 step idle under Empty color 0x0F
+    oop
+@gy
+#end
+:gshow
+/i#char 22
+/i
+#char 121
+/i
+#char 89
+
+    end
+    stat at 30,7 element Transporter cycle 255 p1 0 p2 0 step east under Empty color 0x0F
+    stat at 39,9 element Object cycle 1 p1 cp437:0xFF p2 0 step idle under Fake color 0x77
+    oop
+@gun
+#end
+:done
+#lock
+#play x
+#put e fake
+#char 26
+/e/i/i/i/i/i/i/i/i/i#char 24
+/i/i/i#char 27
+/i/i#char 25
+/i#char 26
+/i#char 24
+/i#char 27
+/i#char 25
+/i#char 26
+/i#char 7
+/i#char 249
+/i#char 250
+/i#char 32
+#L:done
+
+    end
+    stat at 40,9 element Spinning gun cycle 1 p1 8 p2 9 step idle under Fake color 0x71
+    stat at 58,10 element Transporter cycle 255 p1 0 p2 0 step south under Empty color 0x0F
+    stat at 58,11 element Transporter cycle 255 p1 0 p2 0 step north under Empty color 0x0F
+    stat at 8,2 element Object cycle 1 p1 cp437:0x20 p2 0 step idle under Solid color 0x0F
+    oop
+#end
+:touch
+#lock
+'[ Slide Whistle Sound ]
+/i/i
+/i#char 221
+/i#char 219
+
+    end
+    stat at 8,3 element Object cycle 1 p1 cp437:0x18 p2 0 step idle under Empty color 0x0F
+    oop
+#die
+
+    end
+    stat at 33,13 element Object cycle 1 p1 cp437:0xF8 p2 0 step idle under Empty color 0x0F
+    oop
+#end
+:touch
+#lock
+#shoot e
+#die
+
+    end
+    stat at 41,14 element Object cycle 1 p2 0 step idle under Empty color 0x0F
+    oop
+
+:a
+/i#if not contact a
+#L:becres
+#die
+
+    end
+    stat at 38,16 element Object p1 cp437:0xDB p2 0 step idle under Empty color 0x0F
+    oop
+@gate
+#end
+:on
+#put n white sliderew
+#end
+:of
+#put n empty
+
+    end
+  end
+end

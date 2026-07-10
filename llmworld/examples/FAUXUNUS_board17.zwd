@@ -1,0 +1,1049 @@
+board "Can't Stop The Hop v1"
+  start player at 29,25
+  respawn at 1,1
+  max-shots 255
+  dark false
+  reenter false
+  time-limit 0
+  exits north none south none west none east none
+
+  grid
+N#########################l.......l######################o..
+N#......................................................#o..
+N#......................................................#o..
+N#......................................................#o..
+N#......................................................#o..
+N#......................................................#o..
+N#...........................................OOOOOOOOOOO#o..
+N#......................................................#o..
+N#......................................................#o..
+N#......................................................#o..
+N#OOOOOOOOOOOOOOOO....O.................................#o..
+N#......................................................#o..
+N#......................O..........O....................#o..
+N#......................................................#o..
+N#......................................................#o..
+N#.........................................O............#o..
+N#......................................................#o..
+N#......................................................#o..
+N#.........................o.........O.O...........O....#o..
+N########################################################o.a
+bobccccccccccccccccccccccccbobcccccccccccccccccccccccbJumpbc
+...........................o.o..1-Time.Bddsts.........Pdwer.
+...................o..o...o...o.fffff.......................
+.................o........o...o.ggggg.......................
+............................@.....................oo........
+  end
+
+  legend
+    N = Normal color 0x19
+    # = Solid color 0x09
+    l = Line color 0x08
+    . = Empty color 0x0F
+    o = Object color 0x0F
+    O = Object color 0x06
+    a = Object color 0x0A
+    b = Line color 0x11
+    c = Line color 0x19
+    J = Text-White color 0x4A
+    u = Text-White color 0x75
+    m = Text-White color 0x6D
+    p = Text-White color 0x70
+    1 = Text-White color 0x31
+    - = Text-White color 0x2D
+    T = Text-White color 0x54
+    i = Text-White color 0x69
+    e = Text-White color 0x65
+    B = Text-White color 0x42
+    d = Text-White color 0x6F
+    s = Text-White color 0x73
+    t = Text-White color 0x74
+    P = Text-White color 0x50
+    w = Text-White color 0x77
+    r = Text-White color 0x72
+    f = Object color 0x1E
+    g = Torch color 0x06
+    @ = Player color 0x1F under Empty color 0x0F
+  end
+
+  stats
+    stat at 58,20 element Object cycle 1 p1 cp437:0x9D p2 0 step idle under Empty color 0x0F
+    oop
+@retorch
+#end
+:do
+#if blocked e give torches 1
+#end
+
+    end
+    stat at 58,19 element Object cycle 1 p1 cp437:0x9D p2 0 step idle under Empty color 0x0F
+    oop
+#bind retorch
+
+    end
+    stat at 58,18 element Object cycle 1 p1 cp437:0x9D p2 0 step idle under Empty color 0x0F
+    oop
+#bind retorch
+
+    end
+    stat at 58,17 element Object cycle 1 p1 cp437:0x9D p2 0 step idle under Empty color 0x0F
+    oop
+#bind retorch
+
+    end
+    stat at 58,16 element Object cycle 1 p1 cp437:0x9D p2 0 step idle under Empty color 0x0F
+    oop
+#bind retorch
+
+    end
+    stat at 58,15 element Object cycle 1 p1 cp437:0x9D p2 0 step idle under Empty color 0x0F
+    oop
+#bind retorch
+
+    end
+    stat at 58,14 element Object cycle 1 p1 cp437:0x9D p2 0 step idle under Empty color 0x0F
+    oop
+#bind retorch
+
+    end
+    stat at 58,13 element Object cycle 1 p1 cp437:0x9D p2 0 step idle under Empty color 0x0F
+    oop
+#bind retorch
+
+    end
+    stat at 58,12 element Object cycle 1 p1 cp437:0x9D p2 0 step idle under Empty color 0x0F
+    oop
+#bind retorch
+
+    end
+    stat at 58,11 element Object cycle 1 p1 cp437:0x9D p2 0 step idle under Empty color 0x0F
+    oop
+#bind retorch
+
+    end
+    stat at 58,10 element Object cycle 1 p1 cp437:0x9D p2 0 step idle under Empty color 0x0F
+    oop
+#bind retorch
+
+    end
+    stat at 58,9 element Object cycle 1 p1 cp437:0x9D p2 0 step idle under Empty color 0x0F
+    oop
+#bind retorch
+
+    end
+    stat at 58,8 element Object cycle 1 p1 cp437:0x9D p2 0 step idle under Empty color 0x0F
+    oop
+#bind retorch
+
+    end
+    stat at 58,7 element Object cycle 1 p1 cp437:0x9D p2 0 step idle under Empty color 0x0F
+    oop
+#bind retorch
+
+    end
+    stat at 58,6 element Object cycle 1 p1 cp437:0x9D p2 0 step idle under Empty color 0x0F
+    oop
+#bind retorch
+
+    end
+    stat at 58,5 element Object cycle 1 p1 cp437:0x9D p2 0 step idle under Empty color 0x0F
+    oop
+#bind retorch
+
+    end
+    stat at 58,4 element Object cycle 1 p1 cp437:0x9D p2 0 step idle under Empty color 0x0F
+    oop
+#bind retorch
+
+    end
+    stat at 58,3 element Object cycle 1 p1 cp437:0x9D p2 0 step idle under Empty color 0x0F
+    oop
+#bind retorch
+
+    end
+    stat at 58,2 element Object cycle 1 p1 cp437:0x9D p2 0 step idle under Empty color 0x0F
+    oop
+#bind retorch
+
+    end
+    stat at 58,1 element Object cycle 1 p1 cp437:0x9D p2 0 step idle under Empty color 0x0F
+    oop
+#bind retorch
+
+    end
+    stat at 38,19 element Object cycle 1 p1 cp437:0x9D p2 0 step idle under Empty color 0x0F
+    oop
+@objtorch
+:revert
+:a
+#char 157
+/i#if not blocked n if not contact a
+#char 89
+/i#if not blocked n if not contact a
+#char 121
+/i#if not blocked n if not contact a
+#char 22
+/i/i#if not blocked n if not contact a
+#torchadd:do
+#give torches 1
+#char 34
+#end
+
+    end
+    stat at 40,19 element Object cycle 1 p1 cp437:0x9D p2 0 step idle under Empty color 0x0F
+    oop
+#bind objtorch
+
+    end
+    stat at 52,19 element Object cycle 1 p1 cp437:0x9D p2 0 step idle under Empty color 0x0F
+    oop
+#bind objtorch
+
+    end
+    stat at 44,16 element Object cycle 1 p1 cp437:0x9D p2 0 step idle under Empty color 0x0F
+    oop
+#bind objtorch
+
+    end
+    stat at 23,11 element Object cycle 1 p1 cp437:0x9D p2 0 step idle under Empty color 0x0F
+    oop
+#bind objtorch
+
+    end
+    stat at 2,21 element Object cycle 1 p1 cp437:0x52 p2 0 step idle under Empty color 0x0F
+    oop
+@resetter
+'initialize
+#torchadd:setdef
+/i/i/i/i
+#retorch:do
+#end
+:do
+#lock
+#char 114
+:t
+#take torches 1 tt
+/i#t
+:tt
+#change blue solid blue fake
+#change torch empty
+#all:revert
+:a
+/i#if not blocked n a
+:b
+/i#if blocked n b
+/i/i/i/i#change blue fake blue solid
+#all:donerevert
+#retorch:do
+#char 82
+#unlock
+
+    end
+    stat at 33,23 element Object cycle 1 p1 cp437:0x23 p2 0 step idle under Empty color 0x0F
+    oop
+@boostmaker
+#end
+:revert
+/i/i/i/i
+#put s torch
+#end
+
+    end
+    stat at 34,23 element Object cycle 1 p1 cp437:0x23 p2 0 step idle under Empty color 0x0F
+    oop
+#bind boostmaker
+
+    end
+    stat at 35,23 element Object cycle 1 p1 cp437:0x23 p2 0 step idle under Empty color 0x0F
+    oop
+#bind boostmaker
+
+    end
+    stat at 36,23 element Object cycle 1 p1 cp437:0x23 p2 0 step idle under Empty color 0x0F
+    oop
+#bind boostmaker
+
+    end
+    stat at 37,23 element Object cycle 1 p1 cp437:0x23 p2 0 step idle under Empty color 0x0F
+    oop
+#bind boostmaker
+
+    end
+    stat at 60,20 element Object cycle 1 p1 cp437:0x11 p2 0 step idle under Empty color 0x0F
+    oop
+@torchadd
+#end
+:do
+?n#put w green solid
+#end
+:revert
+#lock
+?n?n?n?n?n?n?n?n?n?n?n?n?n?n?n?n?n?n?n?n
+#put w empty
+?s#put w empty
+?s#put w empty
+?s#put w empty
+?s#put w empty
+?s#put w empty
+?s#put w empty
+?s#put w empty
+?s#put w empty
+?s#put w empty
+?s#put w empty
+?s#put w empty
+?s#put w empty
+?s#put w empty
+?s#put w empty
+?s#put w empty
+?s#put w empty
+?s#put w empty
+?s#put w empty
+?s#put w empty
+?s
+:setdef
+#put w green solid
+?n#put w green solid
+#unlock
+
+    end
+    stat at 3,11 element Object cycle 1 p1 cp437:0x9D p2 0 step idle under Empty color 0x0F
+    oop
+#bind objtorch
+
+    end
+    stat at 4,11 element Object cycle 1 p1 cp437:0x9D p2 0 step idle under Empty color 0x0F
+    oop
+#bind objtorch
+
+    end
+    stat at 5,11 element Object cycle 1 p1 cp437:0x9D p2 0 step idle under Empty color 0x0F
+    oop
+#bind objtorch
+
+    end
+    stat at 6,11 element Object cycle 1 p1 cp437:0x9D p2 0 step idle under Empty color 0x0F
+    oop
+#bind objtorch
+
+    end
+    stat at 7,11 element Object cycle 1 p1 cp437:0x9D p2 0 step idle under Empty color 0x0F
+    oop
+#bind objtorch
+
+    end
+    stat at 8,11 element Object cycle 1 p1 cp437:0x9D p2 0 step idle under Empty color 0x0F
+    oop
+#bind objtorch
+
+    end
+    stat at 9,11 element Object cycle 1 p1 cp437:0x9D p2 0 step idle under Empty color 0x0F
+    oop
+#bind objtorch
+
+    end
+    stat at 10,11 element Object cycle 1 p1 cp437:0x9D p2 0 step idle under Empty color 0x0F
+    oop
+#bind objtorch
+
+    end
+    stat at 11,11 element Object cycle 1 p1 cp437:0x9D p2 0 step idle under Empty color 0x0F
+    oop
+#bind objtorch
+
+    end
+    stat at 12,11 element Object cycle 1 p1 cp437:0x9D p2 0 step idle under Empty color 0x0F
+    oop
+#bind objtorch
+
+    end
+    stat at 13,11 element Object cycle 1 p1 cp437:0x9D p2 0 step idle under Empty color 0x0F
+    oop
+#bind objtorch
+
+    end
+    stat at 14,11 element Object cycle 1 p1 cp437:0x9D p2 0 step idle under Empty color 0x0F
+    oop
+#bind objtorch
+
+    end
+    stat at 15,11 element Object cycle 1 p1 cp437:0x9D p2 0 step idle under Empty color 0x0F
+    oop
+#bind objtorch
+
+    end
+    stat at 16,11 element Object cycle 1 p1 cp437:0x9D p2 0 step idle under Empty color 0x0F
+    oop
+#bind objtorch
+
+    end
+    stat at 17,11 element Object cycle 1 p1 cp437:0x9D p2 0 step idle under Empty color 0x0F
+    oop
+#bind objtorch
+
+    end
+    stat at 18,11 element Object cycle 1 p1 cp437:0x9D p2 0 step idle under Empty color 0x0F
+    oop
+#bind objtorch
+
+    end
+    stat at 36,13 element Object cycle 1 p1 cp437:0x9D p2 0 step idle under Empty color 0x0F
+    oop
+#bind objtorch
+
+    end
+    stat at 23,23 element Object cycle 1 p1 cp437:0x7F p2 0 step idle under Empty color 0x0F
+    oop
+@ResetButton
+#end
+:touch
+#touchb
+:touchb
+#HowTo:a
+#char 82
+"Reset Board."
+#if blocked opp seek ?seek#end
+?opp seek
+#end
+:shot
+#lock
+#char 176
+/i#char 177
+/i#char 178
+/i#char 219
+/i#char 82
+#zap shot
+#zap touchb
+Reset Board Installed.
+#unlock
+#end
+:shot
+#lock
+#char 219
+/i#char 178
+/i#char 177
+/i#char 176
+/i#char 127
+#restore shot
+#restore touchb
+Reset Board uninstalled.
+#unlock
+#end
+:touchb
+Reset the board?
+
+!y;Yes
+!n;No
+#end
+:y
+#resetter:do
+#zap touch
+#end
+:donerevert
+/i/i/i#char 82
+#restore touch
+
+    end
+    stat at 29,21 element Object cycle 1 p1 cp437:0x7F p2 0 step idle under Empty color 0x0F
+    oop
+@js
+#end
+:touch
+#touchb
+:touchb
+#HowTo:a
+#char 24
+"Straight Jump."
+#if blocked opp seek ?seek#end
+?opp seek
+#end
+:shot
+#lock
+#char 176
+/i#char 177
+/i#char 178
+/i#char 219
+/i#char 24
+#zap shot
+#zap touchb
+Straight Jump installed.
+#unlock
+#end
+:shot
+#lock
+#char 219
+/i#char 178
+/i#char 177
+/i#char 176
+/i#char 127
+#restore shot
+#restore touchb
+Straight Jump uninstalled.
+#unlock
+#end
+:touchb
+#set js
+#end
+:revert
+#char 120
+#zap touch
+#end
+:donerevert
+#restore touch
+#char 24
+
+    end
+    stat at 28,22 element Object cycle 1 p1 cp437:0x7F p2 0 step idle under Empty color 0x0F
+    oop
+@jtw
+#end
+:touch
+#touchb
+:touchb
+#HowTo:a
+#char 191
+"Tall Jump West."
+#if blocked opp seek ?seek#end
+?opp seek
+#end
+:shot
+#lock
+#char 176
+/i#char 177
+/i#char 178
+/i#char 219
+/i#char 191
+#zap shot
+#zap touchb
+Tall Jump West installed.
+#unlock
+#end
+:shot
+#lock
+#char 219
+/i#char 178
+/i#char 177
+/i#char 176
+/i#char 127
+#restore shot
+#restore touchb
+Tall Jump West uninstalled.
+#unlock
+#end
+:touchb
+#set jtw
+#end
+:revert
+#char 120
+#zap touch
+#end
+:donerevert
+#restore touch
+#char 191
+
+    end
+    stat at 30,22 element Object cycle 1 p1 cp437:0x7F p2 0 step idle under Empty color 0x0F
+    oop
+@jte
+#end
+:touch
+#touchb
+:touchb
+#HowTo:a
+#char 218
+"Tall Jump East."
+#if blocked opp seek ?seek#end
+?opp seek
+#end
+:shot
+#lock
+#char 176
+/i#char 177
+/i#char 178
+/i#char 219
+/i#char 218
+#zap shot
+#zap touchb
+Tall Jump East installed.
+#unlock
+#end
+:shot
+#lock
+#char 219
+/i#char 178
+/i#char 177
+/i#char 176
+/i#char 127
+#restore shot
+#restore touchb
+Tall Jump East uninstalled.
+#unlock
+#end
+:touchb
+#set jte
+#end
+:revert
+#char 120
+#zap touch
+#end
+:donerevert
+#restore touch
+#char 218
+
+    end
+    stat at 27,23 element Object cycle 1 p1 cp437:0x7F p2 0 step idle under Empty color 0x0F
+    oop
+@jlw
+#end
+:touch
+#touchb
+:touchb
+#HowTo:a
+#char 170
+"Long Jump West."
+#if blocked opp seek ?seek#end
+?opp seek
+#end
+:shot
+#lock
+#char 176
+/i#char 177
+/i#char 178
+/i#char 219
+/i#char 170
+#zap shot
+#zap touchb
+Long Jump West installed.
+#unlock
+#end
+:shot
+#lock
+#char 219
+/i#char 178
+/i#char 177
+/i#char 176
+/i#char 127
+#restore shot
+#restore touchb
+Long Jump West uninstalled.
+#unlock
+#end
+:touchb
+#set jlw
+#end
+:revert
+#char 120
+#zap touch
+#end
+:donerevert
+#restore touch
+#char 170
+
+    end
+    stat at 31,23 element Object cycle 1 p1 cp437:0x7F p2 0 step idle under Empty color 0x0F
+    oop
+@jle
+#end
+:touch
+#touchb
+:touchb
+#HowTo:a
+#char 169
+"Long Jump East."
+#if blocked opp seek ?seek#end
+?opp seek
+#end
+:shot
+#lock
+#char 176
+/i#char 177
+/i#char 178
+/i#char 219
+/i#char 169
+#zap shot
+#zap touchb
+Long Jump East installed.
+#unlock
+#end
+:shot
+#lock
+#char 219
+/i#char 178
+/i#char 177
+/i#char 176
+/i#char 127
+#restore shot
+#restore touchb
+Long Jump East uninstalled.
+#unlock
+#end
+:touchb
+#set jle
+#end
+:revert
+#char 120
+#zap touch
+#end
+:donerevert
+#restore touch
+#char 169
+
+    end
+    stat at 27,24 element Object cycle 1 p1 cp437:0x7F p2 0 step idle under Empty color 0x0F
+    oop
+@ww
+#end
+:touch
+#touchb
+:touchb
+#HowTo:a
+#char 27
+"Walk West."
+#if blocked opp seek ?seek#end
+?opp seek
+#end
+:shot
+#lock
+#char 176
+/i#char 177
+/i#char 178
+/i#char 219
+/i#char 27
+#zap shot
+#zap touchb
+Walk West installed.
+#unlock
+#end
+:shot
+#lock
+#char 219
+/i#char 178
+/i#char 177
+/i#char 176
+/i#char 127
+#restore shot
+#restore touchb
+Walk West uninstalled.
+#unlock
+#end
+:touchb
+#set ww
+#end
+:revert
+#char 120
+#zap touch
+#end
+:donerevert
+#restore touch
+#char 27
+
+    end
+    stat at 31,24 element Object cycle 1 p1 cp437:0x7F p2 0 step idle under Empty color 0x0F
+    oop
+@we
+#end
+:touch
+#touchb
+:touchb
+#HowTo:a
+#char 26
+"Walk East."
+#if blocked opp seek ?seek#end
+?opp seek
+#end
+:shot
+#lock
+#char 176
+/i#char 177
+/i#char 178
+/i#char 219
+/i#char 26
+#zap shot
+#zap touchb
+Walk East installed.
+#unlock
+#end
+:shot
+#lock
+#char 219
+/i#char 178
+/i#char 177
+/i#char 176
+/i#char 127
+#restore shot
+#restore touchb
+Walk East uninstalled.
+#unlock
+#end
+:touchb
+#set we
+#end
+:revert
+#char 120
+#zap touch
+#end
+:donerevert
+#restore touch
+#char 26
+
+    end
+    stat at 28,19 element Object cycle 1 p1 cp437:0x02 p2 0 step idle under Empty color 0x0F
+    oop
+@avatar
+:a
+#char 2
+#if not blocked s ?s#a
+#if ww ww
+#if we we
+#if js js
+#if jtw jtw
+#if jte jte
+#if jlw jlw
+#if jle jle
+/i#a
+:xx ' do not replenish torches (walk w/e)
+#if not blocked s ?s#xx
+#flagclear
+:x ' replenish torches (after jump)
+#if not blocked s ?s#x
+#retorch:do
+#flagclear
+:js
+#char 1
+#take torches 1 jsx
+?n#js
+:jsx
+#if blocked s x
+?s#jsx
+:jtw
+#char 1
+#take torches 1 jtwx
+?n#jtw
+:jtwx
+?w?w#jsx
+:jte
+#char 1
+#take torches 1 jtex
+?n#jte
+:jtex
+?e?e#jsx
+:jlw
+#char 1
+?n#jlwb
+:jlwb
+#take torches 1 jsx
+?w#jlwb
+:jle
+#char 1
+?n#jleb
+:jleb
+#take torches 1 jsx
+?e#jleb
+:ww
+#char 1
+?w
+#clear ww
+#if blocked s a
+#xx
+:we
+#char 1
+?e
+#clear we
+#if blocked s a
+#xx
+:revert
+#lock
+#char 37
+?n?n?n?n?n?n?n?n
+?n?n?n?n?n?n?n?n
+?n?n?n?n?n?n?n?n
+?n
+?w?w?w?w?w?w?w?w
+?w?w?w?w?w?w?w?w
+?w?w?w?w?w?w?w?w
+?w?w?w?w?w?w?w?w
+?w?w?w?w?w?w?w?w
+?w?w?w?w?w?w?w?w
+?w?w?w?w?w?w?w?w
+?w?w?w?w
+?s?s?s?s?s?s?s?s
+?s?s?s?s?s?s?s?s
+?s?s?s?s?s?s?s?s
+?s
+?e?n
+/i/i
+:revwait
+/i#if not blocked s revwait
+#char 2
+#unlock
+:flagclear
+#clear js
+#clear jtw
+#clear jte
+#clear jlw
+#clear jle
+#clear ww
+#clear we
+#a
+
+    end
+    stat at 25,13 element Object cycle 1 p1 cp437:0x9D p2 0 step idle under Empty color 0x0F
+    oop
+#bind objtorch
+
+    end
+    stat at 56,7 element Object cycle 1 p1 cp437:0x9D p2 0 step idle under Empty color 0x0F
+    oop
+#bind objtorch
+
+    end
+    stat at 55,7 element Object cycle 1 p1 cp437:0x9D p2 0 step idle under Empty color 0x0F
+    oop
+#bind objtorch
+
+    end
+    stat at 54,7 element Object cycle 1 p1 cp437:0x9D p2 0 step idle under Empty color 0x0F
+    oop
+#bind objtorch
+
+    end
+    stat at 53,7 element Object cycle 1 p1 cp437:0x9D p2 0 step idle under Empty color 0x0F
+    oop
+#bind objtorch
+
+    end
+    stat at 52,7 element Object cycle 1 p1 cp437:0x9D p2 0 step idle under Empty color 0x0F
+    oop
+#bind objtorch
+
+    end
+    stat at 51,7 element Object cycle 1 p1 cp437:0x9D p2 0 step idle under Empty color 0x0F
+    oop
+#bind objtorch
+
+    end
+    stat at 50,7 element Object cycle 1 p1 cp437:0x9D p2 0 step idle under Empty color 0x0F
+    oop
+#bind objtorch
+
+    end
+    stat at 49,7 element Object cycle 1 p1 cp437:0x9D p2 0 step idle under Empty color 0x0F
+    oop
+#bind objtorch
+
+    end
+    stat at 48,7 element Object cycle 1 p1 cp437:0x9D p2 0 step idle under Empty color 0x0F
+    oop
+#bind objtorch
+
+    end
+    stat at 47,7 element Object cycle 1 p1 cp437:0x9D p2 0 step idle under Empty color 0x0F
+    oop
+#bind objtorch
+
+    end
+    stat at 46,7 element Object cycle 1 p1 cp437:0x9D p2 0 step idle under Empty color 0x0F
+    oop
+#bind objtorch
+
+    end
+    stat at 51,25 element Object cycle 1 p1 cp437:0xE8 p2 0 step idle under Empty color 0x0F
+    oop
+@Robot
+#end
+:touch
+#zap touch
+Robot: Can you please find some way to
+get me out of here? My controls were
+packed away in those storage bins to the
+West.
+
+I would be forever grateful.
+#end
+:touch
+Robot: Oh thank heavens! I am free! You
+have no idea how much this means to me.
+Thank you so very much.
+/i
+Robot: If you would be so kind as to
+direct me out of this complex, purchase
+a water vessal, sail the seas as free as
+can be, settle down on the mainland,
+start a beautiful robot family, and
+initiate a successful business in
+automating people out of work, I would
+appreciate it a lot.
+/i/i/i/i/i/i/i
+:touch
+Robot: ...Why are you frowning?
+
+    end
+    stat at 52,25 element Object cycle 1 p1 cp437:0x6D p2 0 step idle under Empty color 0x0F
+    oop
+@HowTo
+#end
+:a
+#lock
+Unpack and arrange the old controls from
+the containers. When you are happy with
+the position of a control, shoot it with
+a bullet to activate it. Shoot it again
+to deactivate and move it around some
+more.
+
+(Warning: Some effort has been made in
+preventing the objects or player from
+becoming boxed in, however it could still
+potentially happen.
+
+    end
+    stat at 18,24 element Object p2 0 step idle under Empty color 0x0F
+    oop
+#give ammo 1000
+#die
+
+    end
+    stat at 20,23 element Object cycle 1 p1 cp437:0x7F p2 0 step idle under Empty color 0x0F
+    oop
+@Fart
+#end
+:touch
+#touchb
+:touchb
+#HowTo:a
+#char 247
+"Fart."
+#if blocked opp seek ?seek#end
+?opp seek
+#end
+:shot
+#lock
+#char 176
+/i#char 177
+/i#char 178
+/i#char 219
+/i#char 247
+#zap shot
+#zap touchb
+Fart installed.
+#unlock
+#end
+:shot
+#lock
+#char 219
+/i#char 178
+/i#char 177
+/i#char 176
+/i#char 127
+#restore shot
+#restore touchb
+Fart uninstalled.
+#unlock
+#end
+:touchb
+* Toot *
+#play 11xxxxx1111111xx11x111x11x1x1x1xxx1
+#end
+
+    end
+  end
+end

@@ -1,0 +1,690 @@
+board "4) cliches board = ^v^"
+  start player at 25,17
+  respawn at 1,25
+  max-shots 0
+  dark false
+  reenter false
+  time-limit 0
+  exits north none south none west none east none
+
+  grid
+............................................................
+.llllllllllllllllllllllllllllllllllllllllllllllllllllllllll.
+.l##NNBB~~aa~~BBNN##NNBB~~aa~~BBNN##NNBB~~aa~~BBNN##NNBB~~l.
+.lNNllllllllllllllllllllllllllllllllllllllllllllllllllllaal.
+.lBBlSSSSSoSSSSSSSSSSSSSSSoSbbSSSSSSSSSSSSSoSSSSSSSSSSol~~l.
+.l~~lWcWWWWWWWWWWWWcWWWWWcWdeffWcWWWWWWcWWWWWWcWWWWWWWWlBBl.
+.laalgOOOgOOOOOOOghhhhhhhhhfdbfhhhhciihhhhhhhjjiikiijjhlNNl.
+.l~~lmgOOOgOOOOOOOOOOgmcnqmmmmiimqrsrqmmmciimmmtkiktmiil##l.
+.lBBlin#in#in##c##ii#ni#in#ii#iquvkwxv#ai#yi#iiiikii#qilNNl.
+.lNNliqNiinzCDDEEEGHNinnIinyyNJJJJrvraaJJNiqJJJkiiKkNJJlBBl.
+.l##l###LLDDD.EME.GGGQRRRTTTTTTTTTTUTTTTRRRVVQXYkYKYYZ#l~~l.
+.lNNl....zCDC0EEG0GG1O....FFAA22!A2UAA22AA22AU333U333v2laal.
+.lBBl....zDDEMEGGGG11O.r..F422AA22A522AA26AA67UU333UUUAl~~l.
+.l~~l....HDEEj.r.8111O......4422AA22AA22AA26A622A626AA6lBBl.
+.laal....HECE.....119O...$....44444FFFFFF444446464444F4lNNl.
+.l~~l..%..EEG.zzz.199...$&$..................6....6....l##l.
+.lBBl.%*%..HGGG+++9O...$@p&$........H-.................lNNl.
+.lNNl%*P*%..............$&$...RRR............==RRR..RRRlBBl.
+.l##l.%*%................$.RRR^^^RR....RRR...RR^^^RR^^^l~~l.
+.lNNl..%....._..........RR^^^^:::^^RR.R^^^R.R^^:::^^:::laal.
+.lBBl................RRR^^::::;;;::^^R^:::^R^::;;;::;;;l~~l.
+.l~~llllllllllllllllllllllllllllllllllllllllllllllllllllBBl.
+.laa~~BBNN##NNBB~~BBNN##NNBB~~aa~~BBNN##NNBB~~aa~~BBNN##NNl.
+.llllllllllllllllllllllllllllllllllllllllllllllllllllllllll.
+............................................................
+  end
+
+  legend
+    . = Empty color 0x0F
+    l = Line color 0x08
+    # = Solid color 0x08
+    N = Normal color 0x08
+    B = Breakable color 0x08
+    ~ = Water color 0x08
+    a = Empty color 0x08
+    S = Solid color 0x01
+    o = Object color 0x1E
+    b = Text-Blue color 0xDC
+    W = Water color 0x18
+    c = Line color 0x1E
+    d = Normal color 0x3F
+    e = Text-Blue color 0xDD
+    f = Text-Blue color 0xDF
+    g = Empty color 0x18
+    O = Object color 0x05
+    h = Breakable color 0x18
+    i = Object color 0x0E
+    j = Object color 0x08
+    k = Solid color 0x0E
+    m = Normal color 0x18
+    n = Text-White color 0x20
+    q = Line color 0x0E
+    r = Object color 0x07
+    s = Object color 0x78
+    t = Object color 0x4E
+    u = Empty color 0x07
+    v = Water color 0x78
+    w = Normal color 0x2E
+    x = Breakable color 0x2E
+    y = Empty color 0x0E
+    z = Object color 0x04
+    C = Water color 0x48
+    D = Solid color 0x04
+    E = Normal color 0x5C
+    G = Breakable color 0x5C
+    H = Object color 0x0C
+    I = Empty color 0x20
+    J = Empty color 0x09
+    K = Object color 0x7E
+    L = Normal color 0x28
+    M = Text-Red color 0x20
+    Q = Water color 0x28
+    R = Solid color 0x02
+    T = Object color 0x2A
+    U = Solid color 0x07
+    V = Object color 0x28
+    X = Breakable color 0x28
+    Y = Object color 0x2E
+    Z = Object color 0x68
+    0 = Empty color 0x5C
+    1 = Water color 0x5C
+    F = Fake color 0x70
+    A = Fake color 0x07
+    2 = Fake color 0x67
+    ! = Scroll color 0x0F
+    3 = Object color 0x70
+    4 = Fake color 0x78
+    5 = Object color 0x7F
+    6 = Object color 0x6E
+    7 = Water color 0x7F
+    8 = Text-White color 0xDF
+    9 = Solid color 0x05
+    $ = Fake color 0x20
+    % = Fake color 0x40
+    & = Fake color 0x02
+    * = Fake color 0x04
+    + = Object color 0x5C
+    @ = Player color 0x1F under Fake color 0x02
+    p = Passage color 0x2A to "3) 1 d0n'7 91v3 4 d4mn."
+    - = Object color 0x0B
+    P = Passage color 0x40 to "5) Sinus Liver Lung"
+    = = Empty color 0x02
+    ^ = Normal color 0x02
+    _ = Object color 0x0A
+    : = Breakable color 0x02
+    ; = Normal color 0x20
+  end
+
+  stats
+    stat at 47,12 element Object p1 cp437:0x4F p2 0 step idle under Empty color 0x07
+    stat at 48,12 element Object p1 cp437:0x55 p2 0 step idle under Empty color 0x07
+    stat at 49,12 element Object p1 cp437:0x52 p2 0 step idle under Empty color 0x07
+    stat at 51,12 element Object p1 cp437:0x4E p2 0 step idle under Empty color 0x07
+    stat at 52,12 element Object p1 cp437:0x45 p2 0 step idle under Empty color 0x07
+    stat at 53,12 element Object p1 cp437:0x57 p2 0 step idle under Empty color 0x07
+    stat at 49,13 element Object p1 cp437:0x47 p2 0 step idle under Empty color 0x07
+    stat at 50,13 element Object p1 cp437:0x4F p2 0 step idle under Empty color 0x07
+    stat at 51,13 element Object p1 cp437:0x44 p2 0 step idle under Empty color 0x07
+    stat at 53,11 element Object p1 cp437:0xDF p2 0 step idle under Empty color 0x28
+    stat at 48,11 element Object p1 cp437:0xDE p2 0 step idle under Empty color 0x28
+    stat at 52,11 element Object p1 cp437:0xDD p2 0 step idle under Empty color 0x28
+    stat at 50,11 element Object p1 cp437:0xDF p2 0 step idle under Water color 0x28
+    stat at 44,14 element Object p2 0 step idle under Fake color 0x67
+    oop
+@dude
+#cycle 1
+#end
+:touch
+All these guys are wearing Pokemon
+T-Shirts.
+#zap touch
+:touch
+POKEFREAK: MUST...WORSHIP...PIKACHU...ARRH
+#end
+
+    end
+    stat at 45,13 element Object p1 cp437:0x02 p2 0 step idle under Fake color 0x67
+    oop
+#bind dude
+
+    end
+    stat at 42,13 element Object p1 cp437:0x02 p2 0 step idle under Empty color 0x67
+    oop
+#bind dude
+
+    end
+    stat at 47,15 element Object p1 cp437:0x02 p2 0 step idle under Empty color 0x78
+    oop
+#bind dude
+
+    end
+    stat at 46,16 element Object p2 0 step idle
+    oop
+#bind dude
+
+    end
+    stat at 51,16 element Object p1 cp437:0x02 p2 0 step idle
+    oop
+#bind dude
+
+    end
+    stat at 50,14 element Object p2 0 step idle under Empty color 0x07
+    oop
+#bind dude
+
+    end
+    stat at 52,14 element Object p1 cp437:0x02 p2 0 step idle under Empty color 0x67
+    oop
+#bind dude
+
+    end
+    stat at 55,14 element Object p1 cp437:0x02 p2 0 step idle under Empty color 0x67
+    oop
+#bind dude
+
+    end
+    stat at 46,14 element Object p2 0 step idle under Empty color 0x07
+    oop
+#bind dude
+
+    end
+    stat at 49,15 element Object p1 cp437:0x02 p2 0 step idle under Empty color 0x78
+    oop
+#bind dude
+
+    end
+    stat at 51,9 element Object p1 cp437:0xDF p2 0 step idle under Empty color 0x0E
+    stat at 50,10 element Object p1 cp437:0xDD p2 0 step idle under Empty color 0x0E
+    stat at 49,9 element Object p1 cp437:0xDF p2 0 step idle under Empty color 0x2E
+    stat at 49,10 element Object p1 cp437:0xDD p2 0 step idle under Empty color 0x2E
+    stat at 52,8 element Object p1 cp437:0xDC p2 0 step idle under Empty color 0x0E
+    stat at 48,8 element Object p1 cp437:0xDC p2 0 step idle under Empty color 0x0E
+    stat at 51,7 element Object p1 cp437:0x08 p2 0 step idle under Empty color 0x2E
+    stat at 49,7 element Object p1 cp437:0x08 p2 0 step idle under Empty color 0x0E
+    stat at 32,8 element Object p1 cp437:0x3A p2 0 step idle under Empty color 0x19
+    stat at 31,9 element Object p1 cp437:0x3A p2 0 step idle under Empty color 0x09
+    stat at 38,7 element Object p1 cp437:0x3A p2 0 step idle under Empty color 0x19
+    stat at 37,7 element Object p1 cp437:0x3A p2 0 step idle under Empty color 0x19
+    stat at 41,9 element Object p1 cp437:0x3A p2 0 step idle under Empty color 0x09
+    stat at 44,9 element Object p1 cp437:0x3A p2 0 step idle under Empty color 0x09
+    stat at 43,8 element Object p1 cp437:0x3A p2 0 step idle under Empty color 0x19
+    stat at 46,9 element Object p1 cp437:0x3A p2 0 step idle under Empty color 0x09
+    stat at 47,9 element Object p1 cp437:0x3A p2 0 step idle under Empty color 0x09
+    stat at 54,8 element Object p1 cp437:0x3A p2 0 step idle under Empty color 0x19
+    stat at 55,8 element Object p1 cp437:0x3A p2 0 step idle under Empty color 0x19
+    stat at 28,9 element Object p1 cp437:0x3A p2 0 step idle under Empty color 0x09
+    stat at 52,9 element Object p1 cp437:0xDD p2 0 step idle under Empty color 0x08
+    stat at 48,9 element Object p1 cp437:0xDE p2 0 step idle under Empty color 0x0E
+    stat at 46,7 element Object p1 cp437:0xDC p2 0 step idle under Empty color 0x19
+    stat at 47,7 element Object p1 cp437:0xDC p2 0 step idle under Empty color 0x19
+    stat at 53,7 element Object p1 cp437:0xDC p2 0 step idle under Empty color 0x19
+    stat at 54,7 element Object p1 cp437:0xDC p2 0 step idle under Empty color 0x19
+    stat at 48,7 element Object p1 cp437:0xDC p2 0 step idle under Empty color 0x19
+    stat at 52,7 element Object p1 cp437:0xDC p2 0 step idle under Empty color 0x19
+    stat at 44,8 element Object p1 cp437:0x2E p2 0 step idle under Empty color 0x19
+    stat at 54,11 element Object p1 cp437:0xDC p2 0 step idle under Water color 0x68
+    stat at 44,5 element Object p1 cp437:0xF9 p2 0 step idle under Fake color 0x11
+    stat at 55,5 element Object p1 cp437:0xF9 p2 0 step idle under Empty color 0x1E
+    stat at 27,5 element Object p1 cp437:0xF9 p2 0 step idle under Empty color 0x1E
+    stat at 50,8 element Object p1 cp437:0xDF p2 0 step idle under Empty color 0x0E
+    stat at 36,8 element Object p1 cp437:0xDF p2 0 step idle under Water color 0x7F
+    stat at 35,10 element Object p1 cp437:0xDF p2 0 step idle under Empty color 0x09
+    stat at 37,10 element Object p1 cp437:0xDF p2 0 step idle under Empty color 0x09
+    stat at 37,8 element Object p1 cp437:0xDC p2 0 step idle under Empty color 0x19
+    stat at 35,8 element Object p1 cp437:0xDC p2 0 step idle under Empty color 0x19
+    stat at 51,10 element Object p1 cp437:0xB2 p2 0 step idle under Water color 0x7F
+    stat at 51,11 element Object p1 cp437:0xB2 p2 0 step idle under Water color 0x7F
+    stat at 20,17 element Object p1 cp437:0xDF p2 0 step idle under Empty color 0x0F
+    stat at 12,17 element Object p1 cp437:0xDF p2 0 step idle under Empty color 0x0F
+    stat at 22,15 element Object p1 cp437:0xDD p2 0 step idle under Empty color 0x0F
+    stat at 22,14 element Object p1 cp437:0xDD p2 0 step idle under Empty color 0x0F
+    stat at 22,13 element Object p1 cp437:0xDD p2 0 step idle under Empty color 0x0F
+    stat at 22,12 element Object p1 cp437:0xDD p2 0 step idle under Empty color 0x0F
+    stat at 17,16 element Object p1 cp437:0xDC p2 0 step idle under Empty color 0x0F
+    stat at 16,16 element Object p1 cp437:0xDC p2 0 step idle under Empty color 0x0F
+    stat at 15,16 element Object p1 cp437:0xDC p2 0 step idle under Empty color 0x0F
+    stat at 10,15 element Object p1 cp437:0xDE p2 0 step idle under Empty color 0x0C
+    stat at 10,14 element Object p1 cp437:0xDE p2 0 step idle under Empty color 0x0C
+    stat at 14,14 element Object p1 cp437:0xDF p2 0 step idle under Empty color 0x0F
+    stat at 16,14 element Object p1 cp437:0xDF p2 0 step idle under Empty color 0x0F
+    stat at 31,8 element Object p1 cp437:0x3A p2 0 step idle under Empty color 0x19
+    stat at 10,12 element Object p1 cp437:0xDE p2 0 step idle under Empty color 0x0F
+    oop
+#play gieadeeadeteicfd#ccfd#ctgiegf#fegf#f
+#play eicd#ff#cff#gwcicccc-c+cd#d#d#d#-d#
+#play id#ccc-c+cd#-d#+d#d#ff#cd#fcgf#cd#d#
+#play iccgcccgf#fd#d#d#cccd#d#d#fff#fffd#
+#play id#d#cd#ff#fd#cd#ff#fd#cd#ff#fd#ccwc
+
+    end
+    stat at 10,13 element Object p1 cp437:0xDE p2 0 step idle under Empty color 0x0C
+    stat at 12,10 element Object p1 cp437:0xDC p2 0 step idle under Empty color 0x0F
+    stat at 33,12 element Scroll p1 0 p2 0 step idle under Fake color 0x07
+    oop
+Oh, and in case you're wondering, that IS
+a canvas backdrop.
+
+    end
+    stat at 24,13 element Object p1 cp437:0x08 p2 0 step idle under Empty color 0x0F
+    oop
+@i  lake tahoe
+#cycle 1
+#end
+:touch
+$
+HORRIFIED DOOD: AUGH! THE HORROR! THE
+_HORROR!_
+
+$YOU: Yeah, we've all seen the flashing   
+$words that look really impressive but, in
+$actuality, only took Zenith 5 minutes to 
+$make at 11:00pm some night or other.     
+
+DOOD: Oh.
+
+$YOU: So, what's so totally hideous as to 
+$make a piece of art such as yourself     
+$horrified?                               
+
+DOOD: The cliches! They're everywhere!
+
+$YOU: Cliches of whut?                    
+
+DOOD: The ZZT cliches have returned!!
+
+$YOU: ...no they've not. QUIT LIVING IN   
+$THE PAST Zen only kept you because he    
+$doesn't want to kill the text. WORSHIP   
+$THE PURPLENESS                           
+
+DOOD: I want my mummy.
+$
+#zap touch
+#End
+:touch
+DOOD: Ararararararararararararararararar!!
+
+    end
+    stat at 26,17 element Passage p1 0 p2 0 p3 board "3) 1 d0n'7 91v3 4 d4mn." step idle under Empty color 0x20
+    stat at 8,18 element Passage p1 0 p2 0 p3 board "5) Sinus Liver Lung" step idle under Empty color 0x04
+    stat at 20,10 element Object p1 cp437:0xDC p2 0 step idle under Empty color 0x0F
+    oop
+@Horrified
+#cycle 5
+/i/i/i/i
+#row1:show
+/i/i/i/i/i/i
+#row2:show
+/i/i/i/i/i/i/i/i/i
+#row1:hide
+/i/i/i/i/i/i
+#row2:hide
+#restart
+
+    end
+    stat at 7,7 element Object p1 cp437:0xFF p2 0 step idle under Empty color 0x54
+    oop
+@Row1
+#cycle 1
+#end
+:show
+#char 84
+#end
+:hide
+#char 32
+
+    end
+    stat at 8,8 element Object p1 cp437:0xFF p2 0 step idle under Empty color 0x54
+    oop
+@Row2
+#cycle 1
+#end
+:show
+#char 84
+#end
+:hide
+#char 32
+
+    end
+    stat at 8,7 element Object p1 cp437:0xFF p2 0 step idle under Empty color 0x68
+    oop
+@Row1
+#cycle 1
+#end
+:show
+#char 104
+#end
+:hide
+#char 32
+
+    end
+    stat at 9,7 element Object p1 cp437:0xFF p2 0 step idle under Empty color 0x65
+    oop
+@Row1
+#cycle 1
+#end
+:show
+#char 101
+#end
+:hide
+#char 32
+
+    end
+    stat at 11,7 element Object p1 cp437:0xFF p2 0 step idle under Empty color 0x68
+    oop
+@Row1
+#cycle 1
+#end
+:show
+#char 104
+#end
+:hide
+#char 32
+
+    end
+    stat at 12,7 element Object p1 cp437:0xFF p2 0 step idle under Empty color 0x6F
+    oop
+@Row1
+#cycle 1
+#end
+:show
+#char 111
+#end
+:hide
+#char 32
+
+    end
+    stat at 13,7 element Object p1 cp437:0xFF p2 0 step idle under Empty color 0x72
+    oop
+@Row1
+#cycle 1
+#end
+:show
+#char 114
+#end
+:hide
+#char 32
+
+    end
+    stat at 14,7 element Object p1 cp437:0xFF p2 0 step idle under Empty color 0x72
+    oop
+@Row1
+#cycle 1
+#end
+:show
+#char 114
+#end
+:hide
+#char 32
+
+    end
+    stat at 15,7 element Object p1 cp437:0xFF p2 0 step idle under Empty color 0x6F
+    oop
+@Row1
+#cycle 1
+#end
+:show
+#char 111
+#end
+:hide
+#char 32
+
+    end
+    stat at 16,7 element Object p1 cp437:0xFF p2 0 step idle under Empty color 0x72
+    oop
+@Row1
+#cycle 1
+#end
+:show
+#char 114
+#end
+:hide
+#char 32
+
+    end
+    stat at 17,7 element Object p1 cp437:0xFF p2 0 step idle under Empty color 0x21
+    oop
+@Row1
+#cycle 1
+#end
+:show
+#char 33
+#end
+:hide
+#char 32
+
+    end
+    stat at 9,8 element Object p1 cp437:0xFF p2 0 step idle under Empty color 0x48
+    oop
+@Row2
+#cycle 1
+#end
+:show
+#char 72
+#end
+:hide
+#char 32
+
+    end
+    stat at 12,8 element Object p1 cp437:0xFF p2 0 step idle under Empty color 0x48
+    oop
+@Row2
+#cycle 1
+#end
+:show
+#char 72
+#end
+:hide
+#char 32
+
+    end
+    stat at 13,8 element Object p1 cp437:0xFF p2 0 step idle under Empty color 0x4F
+    oop
+@Row2
+#cycle 1
+#end
+:show
+#char 79
+#end
+:hide
+#char 32
+
+    end
+    stat at 14,8 element Object p1 cp437:0xFF p2 0 step idle under Empty color 0x52
+    oop
+@Row2
+#cycle 1
+#end
+:show
+#char 82
+#end
+:hide
+#char 32
+
+    end
+    stat at 15,8 element Object p1 cp437:0xFF p2 0 step idle under Empty color 0x52
+    oop
+@Row2
+#cycle 1
+#end
+:show
+#char 82
+#end
+:hide
+#char 32
+
+    end
+    stat at 16,8 element Object p1 cp437:0xFF p2 0 step idle under Empty color 0x4F
+    oop
+@Row2
+#cycle 1
+#end
+:show
+#char 79
+#end
+:hide
+#char 32
+
+    end
+    stat at 17,8 element Object p1 cp437:0xFF p2 0 step idle under Empty color 0x52
+    oop
+@Row2
+#cycle 1
+#end
+:show
+#char 82
+#end
+:hide
+#char 32
+
+    end
+    stat at 18,8 element Object p1 cp437:0xFF p2 0 step idle under Empty color 0x21
+    oop
+@Row2
+#cycle 1
+#end
+:show
+#char 33
+#end
+:hide
+#char 32
+
+    end
+    stat at 19,8 element Object p1 cp437:0xFF p2 0 step idle under Empty color 0x21
+    oop
+@Row2
+#cycle 1
+#end
+:show
+#char 33
+#end
+:hide
+#char 32
+
+    end
+    stat at 20,8 element Object p1 cp437:0xFF p2 0 step idle under Empty color 0x21
+    oop
+@Row2
+#cycle 1
+#end
+:show
+#char 33
+#end
+:hide
+#char 32
+
+    end
+    stat at 21,8 element Object p1 cp437:0xFF p2 0 step idle under Empty color 0x21
+    oop
+@Row2
+#cycle 1
+#end
+:show
+#char 33
+#end
+:hide
+#char 32
+
+    end
+    stat at 14,20 element Object p1 cp437:0x02 p2 0 step idle under Empty color 0x0F
+    oop
+@hii
+#cycle 1
+#end
+:touch
+$
+HII: hii look at the big bloody chicken
+over there
+
+$YOU: Wha..? You mean the big red scared  
+$guy?                                     
+
+HII: hii yes he is a chicken
+
+$YOU: No he's not.                        
+
+HII: hii does he have a beak
+
+$YOU: YES                                 
+
+HII: hii THEN HE IS A CHICKEN GOD DAMNIT
+
+$YOU: Impeccable logic.                   
+$
+#zap touch
+#end
+:touch
+HII: hii everyone i love is dead
+
+$YOU: NECROPHILE                          
+
+    end
+    stat at 38,17 element Object p1 cp437:0xFB p2 0 step idle under Empty color 0x0E
+    oop
+@THE TICK
+#cycle 1
+#end
+:touch
+TICK: YOU ARE CORRECT
+
+    end
+    stat at 37,17 element Object p1 cp437:0x78 p2 0 step idle under Empty color 0x0E
+    oop
+@ANGRY AND CROSS
+#cycle 1
+#end
+:touch
+CROSS: WRONG WRONG WRONG
+
+    end
+    stat at 10,8 element Object p1 cp437:0xFF p2 0 step idle under Empty color 0x18
+    oop
+@Row2
+#cycle 1
+#end
+:show
+#char 69 'ahahahaha
+#end
+:hide
+#char 32
+
+    end
+    stat at 25,9 element Object p1 cp437:0x3A p2 0 step idle under Empty color 0x20
+    stat at 26,10 element Object p1 cp437:0x3A p2 0 step idle under Empty color 0x20
+    stat at 20,9 element Object p1 cp437:0x2E p2 0 step idle under Empty color 0x20
+    stat at 22,10 element Object p1 cp437:0x2E p2 0 step idle under Empty color 0x20
+    stat at 29,9 element Object p1 cp437:0x2E p2 0 step idle under Empty color 0x0E
+    stat at 23,9 element Object p1 cp437:0x3A p2 0 step idle under Empty color 0x20
+    stat at 19,9 element Object p1 cp437:0x3A p2 0 step idle under Empty color 0x20
+    stat at 12,9 element Object p1 cp437:0x3A p2 0 step idle under Empty color 0x20
+    stat at 9,10 element Object p1 cp437:0x3A p2 0 step idle under Empty color 0x20
+    stat at 6,9 element Object p1 cp437:0x3A p2 0 step idle under Empty color 0x20
+    stat at 9,9 element Object p1 cp437:0x2E p2 0 step idle under Empty color 0x20
+    stat at 10,10 element Object p1 cp437:0x3A p2 0 step idle under Empty color 0x20
+    stat at 11,5 element Object p1 cp437:0xF9 p2 0 step idle under Empty color 0x01
+    stat at 43,10 element Object p1 cp437:0x2E p2 0 step idle under Empty color 0x0E
+    stat at 26,11 element Object p1 cp437:0xB0 p2 0 step idle under Water color 0x2A
+    stat at 27,11 element Object p1 cp437:0xB0 p2 0 step idle under Water color 0x2A
+    stat at 28,11 element Object p1 cp437:0xB0 p2 0 step idle under Water color 0x2A
+    stat at 29,11 element Object p1 cp437:0xB0 p2 0 step idle under Water color 0x2A
+    stat at 30,11 element Object p1 cp437:0xB0 p2 0 step idle under Water color 0x2A
+    stat at 31,11 element Object p1 cp437:0xB0 p2 0 step idle under Water color 0x2A
+    stat at 32,11 element Object p1 cp437:0xB0 p2 0 step idle under Water color 0x2A
+    stat at 33,11 element Object p1 cp437:0xB0 p2 0 step idle under Water color 0x2A
+    stat at 34,11 element Object p1 cp437:0xB0 p2 0 step idle under Water color 0x2A
+    stat at 35,11 element Object p1 cp437:0xB0 p2 0 step idle under Water color 0x2A
+    stat at 37,11 element Object p1 cp437:0xB0 p2 0 step idle under Water color 0x2A
+    stat at 38,11 element Object p1 cp437:0xB0 p2 0 step idle under Water color 0x2A
+    stat at 39,11 element Object p1 cp437:0xB0 p2 0 step idle under Water color 0x2A
+    stat at 40,11 element Object p1 cp437:0xB0 p2 0 step idle under Water color 0x2A
+    stat at 36,13 element Object p1 cp437:0xB0 p2 0 step idle under Water color 0x7F
+    stat at 6,10 element Object p1 cp437:0x3A p2 0 step idle under Empty color 0x0E
+    stat at 44,11 element Object p1 cp437:0xB0 p2 0 step idle under Water color 0x28
+    stat at 45,11 element Object p1 cp437:0xB0 p2 0 step idle under Water color 0x28
+    stat at 18,17 element Object p1 cp437:0xB0 p2 0 step idle under Water color 0x5C
+    stat at 55,9 element Object p1 cp437:0x3A p2 0 step idle under Empty color 0x0E
+    stat at 17,17 element Object p1 cp437:0xB0 p2 0 step idle under Water color 0x5C
+    stat at 16,17 element Object p1 cp437:0xB0 p2 0 step idle under Water color 0x5C
+  end
+end

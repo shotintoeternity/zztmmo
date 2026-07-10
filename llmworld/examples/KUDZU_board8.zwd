@@ -1,0 +1,920 @@
+board "ground right"
+  start player at 52,11
+  respawn at 27,7
+  max-shots 255
+  dark false
+  reenter false
+  time-limit 0
+  exits north none south "outside right" west "ground left" east "the bridge"
+
+  grid
+##SSSSoooSSSS###############################################
+##SSSSoooSSSS##NNNNNNNNNNNNNFFFFFFONNNFFFFFFONNNFFFFFFONNN##
+##SSSSoooSSSS##NNNNNNNNNNNNNbbbbbbbNNNbbbbbbbNNNbbbbbbbNcN##
+##SSSSoooSSSS##AAAAAAAAAAAAANNNNNNNAAANNNNNNNAAANNNNNNNAAA##
+######ooo######AAdAdAdAdAdAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA##
+NNNNNNoooNNNNNNAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA##
+NNNNNNpppNNNNNNAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA##
+AAAAA.....AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA##
+AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAeeXXXXXXXXXXee
+#####AAA########AAA########AAA#####NAAAAAAAN##eehihhhhhhhhhh
+##NNNAAANNN##NNNAAANNN##NNNAAANNN##NAAAAAAAN##eehjh@hhhhhhhh
+##NNNNkNNNN##NNNNkNNNN##NNNNkNNNN##lAAAAAAAl##eehhhhhhhhhhhh
+##mmmmmmmmm##mmmmmmmmm##hhhhhhmmm##lAAAAAAAl##eehhhhhhhhhhhh
+##mmamamamm##mmmmmnnnm##hhggGggmm##NAAAAAAAN##eehhqhhhhhhhhh
+##mmmmmm.mm##mrrrrrrrm##hmggGggmm##lAAAAAAAl##eehhhhhhhhhhhh
+##mmamamamm##mrrrrrrrm##hmGgGgGmm##lAAAAAAAl##eehhhhhhhhhhhh
+##mmsssssmm##mrrrrrrrr##mhgGGGgmm##NAAAAAAAN##eehhhhhhhhhhhh
+##mmasasamm##mrtrrrtrr##mmggGggmm##lAAAAAAAl##eeeeeeeehhhhee
+##mmmmmmmmm##rrrmmmmmr##mmmmmmmmm##lAAAAAAAl##uuuuuuvvhhhhvv
+######w##########w##########w######NAAAAAAAN##uuuuuueehhhhee
+SSSSSSxSSSSSSSSSSxxxxxxxxxxxxSSSS##lAAAAAAAl##uuuuuuvvhhhhvv
+SSSSSSxSSSSSSSSSSSSSSSSSSSSSSSSSS##lAAAAAAAl##uuuuuueehhhhee
+SSSSSSxSSSSSSyyzzzzzzyySSSSSSSSSS##NAAAAAAAN##ffffffvvhhhhvv
+SSSSSSxSSSSSSBBzzzzzzBBSSSSSSSSSS##NAAAAAAAN##ffCCCCvvhhhhvv
+SSSSSSxSSSSSSyyzzzzzzyySSSSSSSSSS######P######ffCCCCvvrrrrvv
+  end
+
+  legend
+    # = Solid color 0x74
+    S = Solid color 0x06
+    o = Object color 0x78
+    N = Normal color 0x04
+    F = Fake color 0x11
+    O = Object color 0x1E
+    b = Object color 0x14
+    c = Object color 0x47
+    A = Fake color 0x40
+    d = Object color 0x46
+    p = Passage color 0x77 to "roof right"
+    . = Empty color 0x40
+    e = Solid color 0x07
+    X = Transporter color 0x77
+    h = Empty color 0x00
+    i = Object color 0x0F
+    j = Object color 0x07
+    @ = Player color 0x1F under Empty color 0x00
+    k = Object color 0x7F
+    l = Object color 0x12
+    m = Empty color 0x0E
+    a = Ammo color 0x08
+    n = Empty color 0x09
+    g = Gem color 0x07
+    G = Gem color 0x08
+    q = Empty color 0x0F
+    r = Empty color 0x74
+    s = Empty color 0x08
+    t = Object color 0x4C
+    u = Normal color 0x08
+    v = Solid color 0x78
+    w = Fake color 0x44
+    x = Fake color 0x66
+    y = Fake color 0x7F
+    z = Solid color 0x0F
+    f = Forest color 0x20
+    B = Solid color 0x09
+    C = Empty color 0x20
+    P = Passage color 0x4F to "outside right"
+  end
+
+  stats
+    stat at 40,25 element Passage p1 0 p2 0 p3 board "outside right" step idle under Empty color 0x74
+    stat at 36,15 element Object p1 cp437:0xDE p2 0 step idle under Empty color 0x74
+    oop
+@picture
+#end
+:touch
+#if painting repeat
+rocks and hills and a peaceful sky.
+#set painting
+#end
+:repeat
+these paintings are all very similar.
+#clear painting
+#end
+
+    end
+    stat at 36,18 element Object p1 cp437:0xDE p2 0 step idle under Empty color 0x74
+    oop
+@fine art
+#cycle 1
+#end
+:touch
+#if painting repeat
+rocks on hills and...?
+#set painting
+#end
+:repeat
+this one looks strange for some reason.
+
+!z1;pull on it.
+!z2;push on it.
+!z3;critique it.
+!z4;leave it alone.
+#end
+:z3
+you say, "I don't know much about art,
+          but I know what I like."
+
+the painting hits you.
+/i/i/i
+/e
+#take health 2
+/w
+#end
+:z4
+#end
+:z1
+you can't seem to get a good grip.
+#end
+:z2
+the painting sinks into the wall.
+/i
+#send all:goaway
+#end
+:goaway
+#put w empty
+/w
+#put w empty
+/w
+#clear painting
+#die
+#end
+
+    end
+    stat at 36,19 element Object p1 cp437:0xDE p2 0 step idle under Empty color 0x74
+    oop
+@left
+#bind fine art
+#end
+
+    end
+    stat at 44,15 element Object p1 cp437:0xDD p2 0 step idle under Empty color 0x74
+    oop
+@picture
+#end
+:touch
+#if painting repeat
+a blue sky over rock-laden hills.
+#set painting
+#end
+:repeat
+these paintings are all very similar.
+#clear painting
+#end
+
+    end
+    stat at 44,16 element Object p1 cp437:0xDD p2 0 step idle under Empty color 0x74
+    oop
+@picture
+#end
+:touch
+#if painting repeat
+a blue sky over rock-laden hills.
+#set painting
+#end
+:repeat
+these paintings are all very similar.
+#clear painting
+#end
+
+    end
+    stat at 44,19 element Object p1 cp437:0xDD p2 0 step idle under Empty color 0x74
+    oop
+@picture
+#end
+:touch
+#if painting repeat
+rocky green hills.
+#set painting
+#end
+:repeat
+these paintings are all very similar.
+#clear painting
+#end
+
+    end
+    stat at 44,21 element Object p1 cp437:0xDD p2 0 step idle under Empty color 0x74
+    oop
+@picture
+#end
+:touch
+#if painting repeat
+a daytime scene featuring rocks on hills.
+#set painting
+#end
+:repeat
+these paintings are all very similar.
+#clear painting
+#end
+
+    end
+    stat at 44,22 element Object p1 cp437:0xDD p2 0 step idle under Empty color 0x74
+    oop
+@picture
+#end
+:touch
+#if painting repeat
+a daytime scene featuring rocks on hills.
+#set painting
+#end
+:repeat
+these paintings are all very similar.
+#clear painting
+#end
+
+    end
+    stat at 44,12 element Object p1 cp437:0xDD p2 0 step idle under Empty color 0x74
+    oop
+@picture
+#end
+:touch
+#if painting repeat
+more hills with rocks on them.
+#set painting
+#end
+:repeat
+these paintings are all very similar.
+#clear painting
+#end
+
+    end
+    stat at 44,13 element Object p1 cp437:0xDD p2 0 step idle under Empty color 0x74
+    oop
+@picture
+#end
+:touch
+#if painting repeat
+more hills with rocks on them.
+#set painting
+#end
+:repeat
+these paintings are all very similar.
+#clear painting
+#end
+
+    end
+    stat at 44,18 element Object p1 cp437:0xDD p2 0 step idle under Empty color 0x74
+    oop
+@picture
+#end
+:touch
+#if painting repeat
+rocky green hills.
+#set painting
+#end
+:repeat
+these paintings are all very similar.
+#clear painting
+#end
+
+    end
+    stat at 36,12 element Object p1 cp437:0xDE p2 0 step idle under Empty color 0x74
+    oop
+@picture
+#end
+:touch
+#if painting repeat
+a hilly rocky blue sky-ee landscape.
+#set painting
+#end
+:repeat
+these paintings are all very similar.
+#clear painting
+#end
+
+    end
+    stat at 36,13 element Object p1 cp437:0xDE p2 0 step idle under Empty color 0x74
+    oop
+@picture
+#end
+:touch
+#if painting repeat
+a hilly rocky blue sky-ee landscape.
+#set painting
+#end
+:repeat
+these paintings are all very similar.
+#clear painting
+#end
+
+    end
+    stat at 36,16 element Object p1 cp437:0xDE p2 0 step idle under Empty color 0x0E
+    oop
+@picture
+#end
+:touch
+#if painting repeat
+rocks and hills and a peaceful sky.
+#set painting
+#end
+:repeat
+these paintings are all very similar.
+#clear painting
+#end
+
+    end
+    stat at 36,22 element Object p1 cp437:0xDE p2 0 step idle under Empty color 0x74
+    oop
+@picture
+#end
+:touch
+#if painting repeat
+a grassy hillside covered with rocks.
+#set painting
+#end
+:repeat
+these paintings are all very similar.
+#clear painting
+#end
+
+    end
+    stat at 36,21 element Object p1 cp437:0xDE p2 0 step idle under Empty color 0x74
+    oop
+@picture
+#end
+:touch
+#if painting repeat
+a grassy hillside covered with rocks.
+#set painting
+#end
+:repeat
+these paintings are all very similar.
+#clear painting
+#end
+
+    end
+    stat at 18,12 element Object p1 cp437:0xFE p2 0 step idle under Empty color 0x04
+    oop
+@doorse
+#cycle 1
+#end
+:touch
+this door is locked and chained.
+#end
+:shot
+*ping*
+#end
+
+    end
+    stat at 7,12 element Object p1 cp437:0xFE p2 0 step idle under Empty color 0x04
+    oop
+@doorse
+#cycle 1
+#end
+:touch
+this door is locked and chained.
+#end
+:shot
+*ping*
+#end
+
+    end
+    stat at 49,9 element Transporter p1 0 p2 0 step north under Empty color 0x40
+    stat at 50,9 element Transporter p1 0 p2 0 step north
+    stat at 51,9 element Transporter p1 0 p2 0 step north
+    stat at 52,9 element Transporter p1 0 p2 0 step north
+    stat at 53,9 element Transporter p1 0 p2 0 step north
+    stat at 54,9 element Transporter p1 0 p2 0 step north
+    stat at 55,9 element Transporter p1 0 p2 0 step north
+    stat at 56,9 element Transporter p1 0 p2 0 step north
+    stat at 57,9 element Transporter p1 0 p2 0 step north
+    stat at 58,9 element Transporter p1 0 p2 0 step north
+    stat at 29,12 element Object p1 cp437:0xFE p2 0 step idle under Empty color 0x04
+    oop
+@doorse
+#cycle 1
+#end
+:touch
+this door is locked and chained.
+#end
+:shot
+*ping*
+#end
+
+    end
+    stat at 50,10 element Object p1 cp437:0xDC p2 0 step idle
+    oop
+@sign
+#end
+:touch
+the sign says, 'stay away from the edge.'
+#end
+:move
+/s
+#end
+
+    end
+    stat at 50,11 element Object p1 cp437:0xB3 p2 0 step idle
+    oop
+@post
+#cycle 1
+#end
+:touch
+this post supports the sign.
+
+!x1;so what?
+!x2;rip it out.
+#end
+:x1
+the signpost doesn't answer.
+#end
+:x2
+/e
+/e
+#char 47
+#send sign:move
+#zap touch
+#give score 8
+#end
+:touch
+it's the post you ripped out.
+#end
+
+    end
+    stat at 20,18 element Object p1 cp437:0x1F p2 0 step idle under Empty color 0x74
+    oop
+@vase
+#cycle 1
+#end
+:touch
+it looks like a priceless ming vase.
+
+!x1;smash it.
+!x2;examine it.
+#end
+:x2
+on it are crude paintings depicting,
+from left to right, someone smashing a
+vase, an equals sign, and a skull and
+crossbones. what could it mean?
+/i
+#give score 10
+#end
+:shot
+#end
+:x1
+*crash*
+#zap shot
+#char 15
+/i/i/i/i/i/i
+you reduce it to shards.
+#zap attack
+#zap touch
+#send vase:attack
+#end
+:touch
+now it's really priceless. ha ha.
+#end
+:attack
+#zap touch
+#zap touch
+/i/i/i/i/i/i/i/i/i/i/i/i/i/i/i
+#char 1
+#follow
+#end
+:follow
+?seek
+#if contact hurt
+#follow
+:hurt
+#take health 1
+#follow
+#end
+
+    end
+    stat at 8,7 element Passage p1 0 p2 0 p3 board "roof right" step idle under Empty color 0x40
+    stat at 7,7 element Passage p1 0 p2 0 p3 board "roof right" step idle under Empty color 0x40
+    stat at 9,7 element Passage p1 0 p2 0 p3 board "roof right" step idle under Empty color 0x40
+    stat at 9,1 element Object p1 cp437:0xDC p2 0 step idle under Empty color 0x74
+    stat at 9,2 element Object p1 cp437:0xDC p2 0 step idle under Empty color 0x04
+    stat at 9,3 element Object p1 cp437:0xDC p2 0 step idle under Empty color 0x04
+    stat at 9,6 element Object p1 cp437:0xDC p2 0 step idle under Empty color 0x40
+    stat at 9,5 element Object p1 cp437:0xDC p2 0 step idle under Empty color 0x40
+    stat at 9,4 element Object p1 cp437:0xDC p2 0 step idle under Empty color 0x40
+    stat at 7,3 element Object p1 cp437:0xDC p2 0 step idle under Empty color 0x04
+    stat at 7,2 element Object p1 cp437:0xDC p2 0 step idle under Empty color 0x04
+    stat at 7,1 element Object p1 cp437:0xDC p2 0 step idle under Empty color 0x74
+    stat at 8,1 element Object p1 cp437:0xDC p2 0 step idle under Empty color 0x74
+    stat at 8,3 element Object p1 cp437:0xDC p2 0 step idle under Normal color 0x04
+    stat at 8,2 element Object p1 cp437:0xDC p2 0 step idle under Empty color 0x04
+    stat at 8,5 element Object p1 cp437:0xDC p2 0 step idle under Empty color 0x40
+    stat at 7,6 element Object p1 cp437:0xDC p2 0 step idle under Empty color 0x40
+    stat at 8,6 element Object p1 cp437:0xDC p2 0 step idle under Empty color 0x40
+    stat at 7,5 element Object p1 cp437:0xDC p2 0 step idle under Empty color 0x40
+    stat at 7,4 element Object p1 cp437:0xDC p2 0 step idle under Empty color 0x40
+    stat at 8,4 element Object p1 cp437:0xDC p2 0 step idle under Empty color 0x40
+    stat at 55,3 element Object p1 cp437:0xDC p2 0 step idle under Empty color 0x04
+    stat at 54,3 element Object p1 cp437:0xDC p2 0 step idle under Empty color 0x04
+    stat at 53,3 element Object p1 cp437:0xDC p2 0 step idle under Empty color 0x04
+    stat at 52,3 element Object p1 cp437:0xDC p2 0 step idle under Empty color 0x04
+    stat at 45,3 element Object p1 cp437:0xDC p2 0 step idle under Empty color 0x04
+    stat at 44,3 element Object p1 cp437:0xDC p2 0 step idle under Empty color 0x04
+    stat at 43,3 element Object p1 cp437:0xDC p2 0 step idle under Empty color 0x04
+    stat at 42,3 element Object p1 cp437:0xDC p2 0 step idle under Empty color 0x04
+    stat at 41,3 element Object p1 cp437:0xDC p2 0 step idle under Empty color 0x04
+    stat at 35,3 element Object p1 cp437:0xDC p2 0 step idle under Empty color 0x04
+    stat at 34,3 element Object p1 cp437:0xDC p2 0 step idle under Empty color 0x04
+    stat at 33,3 element Object p1 cp437:0xDC p2 0 step idle under Empty color 0x04
+    stat at 32,3 element Object p1 cp437:0xDC p2 0 step idle under Empty color 0x04
+    stat at 31,3 element Object p1 cp437:0xDC p2 0 step idle under Empty color 0x04
+    stat at 30,3 element Object p1 cp437:0xDC p2 0 step idle under Empty color 0x04
+    stat at 29,3 element Object p1 cp437:0xDC p2 0 step idle under Empty color 0x04
+    stat at 35,2 element Object p1 cp437:0xFF p2 0 step idle under Fake color 0x11
+    oop
+@phish3
+#cycle 1
+#end
+:left
+#char 174
+/w/w/w/w/w/w
+#char 43
+/i/i
+#char 175
+/e/e/e/e/e/e
+#char 255
+/i/i/i
+#send phish2:right
+#end
+
+    end
+    stat at 40,3 element Object p1 cp437:0xDC p2 0 step idle under Empty color 0x04
+    stat at 39,3 element Object p1 cp437:0xDC p2 0 step idle under Empty color 0x04
+    stat at 45,2 element Object p1 cp437:0xFF p2 0 step idle under Fake color 0x11
+    oop
+@phish2
+#cycle 1
+#end
+:left
+#char 174
+/w/w/w/w/w/w
+#char 255
+/i/i/i
+#send phish3:left
+#end
+:right
+#char 175
+/e/e/e/e/e/e
+#char 255
+/i/i/i
+#send phish1:right
+#end
+
+    end
+    stat at 51,3 element Object p1 cp437:0xDC p2 0 step idle under Empty color 0x04
+    stat at 50,3 element Object p1 cp437:0xDC p2 0 step idle under Empty color 0x04
+    stat at 49,3 element Object p1 cp437:0xDC p2 0 step idle under Empty color 0x04
+    stat at 55,2 element Object p1 cp437:0xAE p2 0 step idle under Fake color 0x11
+    oop
+@phish1
+#cycle 1
+#left
+#end
+:left
+#char 174
+/w/w/w/w/w/w
+#char 255
+/i/i/i
+#send phish2:left
+#end
+:right
+#char 175
+/e/e/e/e/e/e
+#char 43
+/i/i
+#left
+#end
+
+    end
+    stat at 18,5 element Object p1 cp437:0xDB p2 0 step idle under Fake color 0x40
+    oop
+@barrel
+#cycle 1
+#end
+:touch
+!x2;push it.
+!draggin;pull it.
+!x1;tip it over.
+!x3;leave it alone.
+#end
+:x1
+#if blocked opp seek x4
+/opp seek
+#zap touch
+#if blocked opp seek x3
+#put opp seek blue water
+#end
+:x2
+#if blocked opp seek x4
+/opp seek
+#end
+:x3
+#end
+:draggin
+/seek
+#end
+:x4
+the way is blocked.
+#end
+:touch
+!x5;roll it.
+!x6;smash it.
+!x3;leave it alone.
+#end
+:x5
+?seek
+?opp seek
+?opp seek
+?opp seek
+?opp seek
+?opp seek
+?opp seek
+?opp seek
+#end
+:x6
+*crash*
+#become fake
+#end
+
+    end
+    stat at 20,5 element Object p1 cp437:0xDB p2 0 step idle under Fake color 0x40
+    oop
+@barrel
+#cycle 1
+#end
+:touch
+!x2;push it.
+!draggin;pull it.
+!x1;tip it over.
+!x3;leave it alone.
+#end
+:x1
+#if blocked opp seek x4
+/opp seek
+#zap touch
+#if blocked opp seek x3
+#put opp seek blue water
+#end
+:x2
+#if blocked opp seek x4
+/opp seek
+#end
+:x3
+#end
+:draggin
+/seek
+#end
+:x4
+the way is blocked.
+#end
+:touch
+!x5;roll it.
+!x6;smash it.
+!x3;leave it alone.
+#end
+:x5
+?seek
+?opp seek
+?opp seek
+?opp seek
+?opp seek
+?opp seek
+?opp seek
+?opp seek
+#end
+:x6
+*crash*
+#become yellow key
+#end
+
+    end
+    stat at 22,5 element Object p1 cp437:0xDB p2 0 step idle under Fake color 0x40
+    oop
+@barrel
+#cycle 1
+#end
+:touch
+!x2;push it.
+!draggin;pull it.
+!x1;tip it over.
+!x3;leave it alone.
+#end
+:x1
+#if blocked opp seek x4
+/opp seek
+#zap touch
+#if blocked opp seek x3
+#put opp seek blue water
+#end
+:x2
+#if blocked opp seek x4
+/opp seek
+#end
+:x3
+#end
+:draggin
+/seek
+#end
+:x4
+the way is blocked.
+#end
+:touch
+!x5;roll it.
+!x6;smash it.
+!x3;leave it alone.
+#end
+:x5
+?seek
+?opp seek
+?opp seek
+?opp seek
+?opp seek
+?opp seek
+?opp seek
+?opp seek
+#end
+:x6
+*crash*
+#become fake
+#end
+
+    end
+    stat at 24,5 element Object p1 cp437:0xDB p2 0 step idle under Fake color 0x40
+    oop
+@barrel
+#cycle 1
+#end
+:touch
+!x2;push it.
+!draggin;pull it.
+!x1;tip it over.
+!x3;leave it alone.
+#end
+:x1
+#if blocked opp seek x4
+/opp seek
+#zap touch
+#if blocked opp seek x3
+#put opp seek blue water
+#end
+:x2
+#if blocked opp seek x4
+/opp seek
+#end
+:x3
+#end
+:draggin
+/seek
+#end
+:x4
+the way is blocked.
+#end
+:touch
+!x5;roll it.
+!x6;smash it.
+!x3;leave it alone.
+#end
+:x5
+?seek
+?opp seek
+?opp seek
+?opp seek
+?opp seek
+?opp seek
+?opp seek
+?opp seek
+#end
+:x6
+*crash*
+#become fake
+#end
+
+    end
+    stat at 26,5 element Object p1 cp437:0xDB p2 0 step idle under Fake color 0x40
+    oop
+@barrel
+#cycle 1
+#end
+:touch
+!x2;push it.
+!draggin;pull it.
+!x1;tip it over.
+!x3;leave it alone.
+#end
+:x1
+#if blocked opp seek x4
+/opp seek
+#zap touch
+#if blocked opp seek x3
+#put opp seek blue water
+#end
+:x2
+#if blocked opp seek x4
+/opp seek
+#end
+:x3
+#end
+:draggin
+/seek
+#end
+:x4
+the way is blocked.
+#end
+:touch
+!x5;roll it.
+!x6;smash it.
+!x3;leave it alone.
+#end
+:x5
+?seek
+?opp seek
+?opp seek
+?opp seek
+?opp seek
+?opp seek
+?opp seek
+?opp seek
+#end
+:x6
+*crash*
+#become fake
+#end
+
+    end
+    stat at 57,3 element Object p1 cp437:0x07 p2 0 step idle under Empty color 0x04
+    oop
+@lock
+#cycle 1
+#end
+:touch
+a water lock, as used on submarines.
+
+!x1;open it with all speed.
+!x2;I don't feel like drowning today.
+#end
+:x2
+#end
+:x1
+#zap touch
+#give score 6
+#put s blue slime
+/i/i/i/i/i/i/i/i/i/i/i/i/i/i/i/i/i/i
+hey, this isn't water!
+/i/i/i/i/i/i/i/i/i/i/i
+#change slime breakable
+#end
+
+    end
+    stat at 16,18 element Object p1 cp437:0x1F p2 0 step idle under Empty color 0x0E
+    oop
+@vase
+#cycle 1
+#end
+:touch
+it looks like a priceless ming vase.
+
+!x1;smash it.
+!x2;examine it.
+#end
+:x2
+on it are crude paintings depicting,
+from left to right, someone smashing a
+vase, an equals sign, and a skull and
+crossbones. what could it mean?
+/i
+#give score 10
+#end
+:shot
+#end
+:x1
+*crash*
+#zap shot
+#char 15
+/i/i/i/i/i/i
+you reduce it to shards.
+#zap attack
+#zap touch
+#send vase:attack
+#end
+:touch
+now it's really priceless. ha ha.
+#end
+:attack
+#zap touch
+#zap touch
+/i/i/i/i/i/i/i/i/i/i/i/i/i/i/i
+#char 1
+#follow
+#end
+:follow
+?seek
+#if contact hurt
+#follow
+:hurt
+#take health 1
+#follow
+#end
+
+    end
+  end
+end

@@ -1,0 +1,98 @@
+board ":QuitSnooping"
+  start player at 28,13
+  respawn at 27,7
+  max-shots 255
+  dark false
+  reenter false
+  time-limit 0
+  exits north none south none west none east none
+
+  grid
+llllllllllllllllllllllllllllllllllllllllllllllllllllllllllll
+lHey!xDon'txzookxaroundxinxmyxgame!xIxcreated,xdesignedxandl
+lprogrammedxLzamaxMasters,xandxIxdidn'txdoxitxtoxhavexyou..l
+lpeekingxatxit!xReazzy,xwhyxdon'txyouxtakexyourxnosextoxB..l
+lsomexotherxgame?xIfxyouxhavexaxprogrammingxquestionxor....l
+lsomething,xe-maizxus!xMAJJSoftxcanxbexcontactedxat:.......l
+l....................TheWeird@aozCcom......................l
+lbutxifxyou'rexjustxsnoopingxforxthexsakexofxsnoopingxyou'dl
+lbetterxquitxorxitxcouzdxgetxyouxinxbigxtroubze!...........l
+llllllllllllllllllllllllll.lllllllllllllllllllllllllllllllll
+l........................lllE..............................l
+l.........................ElE..............................l
+l..........................Z...........JoexDoexwasxhere!!..l
+l..........................................................l
+l..........................................................l
+lllllllllllllllllllllllllllllllllll........................l
+l#.....#...F.......GGGGG...KKKKK.El........................l
+l.##...##...FFF...G.~G~~G.K.~K~~KEl........................l
+l.#~#.#N#~..F~.FF..~.G~..~.~.K~..~l........................l
+l.#~.#..#~..F~..F~...G~......K~..Ellll.....................l
+l.#~.#~.#~..FFFFF~...G~......K~..Softl.....................l
+l.#~.#~.#~..F~~~F~...G~......K~..Ellll.....................l
+l.#~#.~.#~..F~..F~G..G~...K..K~..El........................l
+l#.~.~.#.~.F.~.F.~.GG.~....KK.~..El........................l
+llllllllllllllllllllllllllllllllllllllllllllllllllllllllllll
+  end
+
+  legend
+    l = Line color 0x0F
+    H = Text-White color 0x48
+    e = Text-White color 0x65
+    y = Text-White color 0x79
+    ! = Text-White color 0x21
+    x = Text-White color 0x20
+    D = Text-White color 0x44
+    o = Text-White color 0x6F
+    n = Text-White color 0x6E
+    ' = Text-White color 0x27
+    t = Text-White color 0x74
+    z = Text-White color 0x6C
+    k = Text-White color 0x6B
+    a = Text-White color 0x61
+    r = Text-White color 0x72
+    u = Text-White color 0x75
+    d = Text-White color 0x64
+    i = Text-White color 0x69
+    m = Text-White color 0x6D
+    g = Text-White color 0x67
+    I = Text-White color 0x49
+    c = Text-White color 0x63
+    , = Text-White color 0x2C
+    s = Text-White color 0x73
+    p = Text-White color 0x70
+    L = Text-White color 0x4C
+    M = Text-White color 0x4D
+    h = Text-White color 0x68
+    v = Text-White color 0x76
+    . = Empty color 0x00
+    R = Text-White color 0x52
+    w = Text-White color 0x77
+    B = Empty color 0x65
+    ? = Text-White color 0x3F
+    f = Text-White color 0x66
+    q = Text-White color 0x71
+    - = Text-White color 0x2D
+    A = Text-White color 0x41
+    J = Text-White color 0x4A
+    S = Text-White color 0x53
+    b = Text-White color 0x62
+    : = Text-White color 0x3A
+    T = Text-White color 0x54
+    W = Text-White color 0x57
+    @ = Text-White color 0x40
+    C = Text-White color 0x2E
+    j = Text-White color 0x6A
+    E = Empty color 0x0F
+    Z = Player color 0x1F under Empty color 0x00
+    # = Solid color 0x0A
+    F = Solid color 0x0C
+    G = Solid color 0x09
+    K = Solid color 0x0D
+    ~ = Water color 0xF9
+    N = Empty color 0x0A
+  end
+
+  stats
+  end
+end

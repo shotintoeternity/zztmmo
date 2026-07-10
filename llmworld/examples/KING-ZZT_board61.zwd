@@ -1,0 +1,452 @@
+board "[Ogre Village #1]"
+  start player at 15,22
+  respawn at 27,7
+  max-shots 255
+  dark false
+  reenter false
+  time-limit 0
+  exits north none south none west none east none
+
+  grid
+~N##aBWSFFFFFFbbbbcccccddddedeeeddddcccbcbbbbFFFFFFFfffggghh
+~N##aBWSFFFFFbbbbcbcccddcdeeeeededdcdcccccbbbbFFFFFFfffggghh
+~N##aBWSFFFFFFffffgfggghghhAhAhAhhghgggfgffffFFFFFFFFFFFFFFF
+~N##aBWSSSFFFFffffggggghhghAoooAhhhhgggggffffFFFFFFFFFFFFFFF
+~N##aBWWWSFFFFffffggfgghhhhofffohhghggfggffffFFFFFFFFFFFFFFF
+~N##aBBBWSFFFFffffgfggghghhofffohhhhgggfgffffFFFFFFFFFFFSSSS
+~NN#aaaBWSSFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFSSSSSSWWW
+~~N###aBWWSSFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFSSSSWWWWWWBB
+~~NN##aBBWWSSOFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFSSSWWWWBBBBBBa
+~~iNN#aaBBWWWSFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFSSWWWBBBBaaaaaa
+~~iiN##aaBBBWSoooooooooooooFFFFFoooooooooooooSWWBBBaaaaaa###
+~~iiNN##aaaBWSfoofoofoofoofFoooFfoofoofoofoofSWBBaaaa#####NN
+~~iiNNN##aaBWSfoofoofoofoofofffofoofoofoofoofSWBaaa####NNNNi
+~~iiNN###aaBWSfoofoofoofoofofpfofoofoofoofoofSWBaa###NNNiiii
+~~iiNN##aaaBWSoooooooooooooooooooooooooooooooSWBaaa##NNiii~~
+~~iiNN##aaaBWSjkjljlmmjmkjjkjmkjljjmmjkkjkjkjSWBaaa##NNiii~~
+~~iiNN##aaBBWSjljkjkjknjkmljmjljjmjkjkmlkjmlkSWBBaa##NNii~~~
+~~iiNN##aaBWWSkjmjjmjljkjmjkjmjmkjlmjkjmmljkjSWWBaa##NNii~~~
+~~iiNN##aaBWSSjnmlkjljmmlnjmjjljjkjlkjjljkjmlSSWBaa##NNii~~~
+~~iiNN##aaBWSjlljlnjlnjjmjkjkljmlmkmjmkljmlkjkSWBaa##NNii~~~
+~~iiNN##aaBWSjkjkjjljkljjmjlkjkjkkjjkljkjmjjmjSWBaa##NNii~~~
+~~iiNN##aaBWSk@llkjmkjmnljkjjmjmkjlmjmjlmjlmjmSWBaa##NNii~~~
+~~iiNN##aaBWSjjjljkjjlnjmjjkljkjklkjkjkmjkmkjmSWBaa##NNii~~~
+~~iiNN##aaBWSmnkjjmnjjmmjkjmjmjklkjjmmjkjljjkjSWBaa##NNii~~~
+~~iiNN##aaBWSjjmkjlljmjkkjljjkjljjmkjmllmjkmjlSWBaa##NNii~~~
+  end
+
+  legend
+    ~ = Water color 0x08
+    N = Normal color 0x08
+    # = Solid color 0x08
+    a = Normal color 0x78
+    B = Breakable color 0x78
+    W = Water color 0x78
+    S = Solid color 0x07
+    F = Fake color 0x20
+    b = Solid color 0x0E
+    c = Normal color 0x6E
+    d = Breakable color 0x6E
+    e = Water color 0x6E
+    f = Text-Yellow color 0x20
+    g = Normal color 0x06
+    h = Breakable color 0x06
+    A = Fake color 0x60
+    o = Object color 0x06
+    O = Object color 0x7F
+    i = Breakable color 0x08
+    p = Passage color 0x66 to "[Ogre Village #2]"
+    j = Fake color 0x02
+    k = Fake color 0x62
+    l = Fake color 0x32
+    m = Fake color 0x22
+    n = Fake color 0x72
+    @ = Player color 0x1F under Fake color 0x22
+  end
+
+  stats
+    stat at 20,12 element Object p1 cp437:0xDD p2 0 step idle
+    stat at 20,13 element Object p1 cp437:0xDD p2 0 step idle
+    stat at 20,14 element Object p1 cp437:0xDD p2 0 step idle
+    stat at 19,14 element Object p1 cp437:0xDE p2 0 step idle
+    stat at 19,13 element Object p1 cp437:0xDE p2 0 step idle
+    stat at 19,12 element Object p1 cp437:0xDE p2 0 step idle
+    stat at 16,12 element Object p1 cp437:0xDE p2 0 step idle
+    stat at 16,13 element Object p1 cp437:0xDE p2 0 step idle
+    stat at 16,14 element Object p1 cp437:0xDE p2 0 step idle
+    stat at 17,14 element Object p1 cp437:0xDD p2 0 step idle
+    stat at 17,13 element Object p1 cp437:0xDD p2 0 step idle
+    stat at 17,12 element Object p1 cp437:0xDD p2 0 step idle
+    stat at 22,12 element Object p1 cp437:0xDE p2 0 step idle
+    stat at 22,13 element Object p1 cp437:0xDE p2 0 step idle
+    stat at 22,14 element Object p1 cp437:0xDE p2 0 step idle
+    stat at 23,14 element Object p1 cp437:0xDD p2 0 step idle
+    stat at 23,13 element Object p1 cp437:0xDD p2 0 step idle
+    stat at 23,12 element Object p1 cp437:0xDD p2 0 step idle
+    stat at 23,11 element Object p1 cp437:0x1E p2 0 step idle
+    stat at 22,11 element Object p1 cp437:0x1E p2 0 step idle
+    stat at 21,11 element Object p1 cp437:0x1E p2 0 step idle
+    stat at 20,11 element Object p1 cp437:0x1E p2 0 step idle
+    stat at 19,11 element Object p1 cp437:0x1E p2 0 step idle
+    stat at 18,11 element Object p1 cp437:0x1E p2 0 step idle
+    stat at 17,11 element Object p1 cp437:0x1E p2 0 step idle
+    stat at 16,11 element Object p1 cp437:0x1E p2 0 step idle
+    stat at 15,11 element Object p1 cp437:0x1E p2 0 step idle
+    stat at 24,11 element Object p1 cp437:0x1E p2 0 step idle
+    stat at 34,14 element Object p1 cp437:0xDE p2 0 step idle
+    stat at 34,13 element Object p1 cp437:0xDE p2 0 step idle
+    stat at 34,12 element Object p1 cp437:0xDE p2 0 step idle
+    stat at 37,12 element Object p1 cp437:0xDE p2 0 step idle
+    stat at 37,13 element Object p1 cp437:0xDE p2 0 step idle
+    stat at 37,14 element Object p1 cp437:0xDE p2 0 step idle
+    stat at 40,14 element Object p1 cp437:0xDE p2 0 step idle
+    stat at 40,13 element Object p1 cp437:0xDE p2 0 step idle
+    stat at 40,12 element Object p1 cp437:0xDE p2 0 step idle
+    stat at 41,12 element Object p1 cp437:0xDD p2 0 step idle
+    stat at 41,13 element Object p1 cp437:0xDD p2 0 step idle
+    stat at 41,14 element Object p1 cp437:0xDD p2 0 step idle
+    stat at 38,14 element Object p1 cp437:0xDD p2 0 step idle
+    stat at 38,13 element Object p1 cp437:0xDD p2 0 step idle
+    stat at 38,12 element Object p1 cp437:0xDD p2 0 step idle
+    stat at 35,12 element Object p1 cp437:0xDD p2 0 step idle
+    stat at 35,13 element Object p1 cp437:0xDD p2 0 step idle
+    stat at 35,14 element Object p1 cp437:0xDD p2 0 step idle
+    stat at 33,11 element Object p1 cp437:0x1E p2 0 step idle
+    stat at 34,11 element Object p1 cp437:0x1E p2 0 step idle
+    stat at 35,11 element Object p1 cp437:0x1E p2 0 step idle
+    stat at 36,11 element Object p1 cp437:0x1E p2 0 step idle
+    stat at 37,11 element Object p1 cp437:0x1E p2 0 step idle
+    stat at 38,11 element Object p1 cp437:0x1E p2 0 step idle
+    stat at 39,11 element Object p1 cp437:0x1E p2 0 step idle
+    stat at 40,11 element Object p1 cp437:0x1E p2 0 step idle
+    stat at 41,11 element Object p1 cp437:0x1E p2 0 step idle
+    stat at 42,11 element Object p1 cp437:0x1E p2 0 step idle
+    stat at 28,14 element Object p1 cp437:0xDE p2 0 step idle
+    stat at 28,13 element Object p1 cp437:0xDE p2 0 step idle
+    stat at 29,12 element Object p1 cp437:0xDC p2 0 step idle
+    stat at 30,12 element Object p1 cp437:0xDC p2 0 step idle
+    stat at 31,12 element Object p1 cp437:0xDC p2 0 step idle
+    stat at 32,13 element Object p1 cp437:0xDD p2 0 step idle
+    stat at 29,15 element Object p1 cp437:0xDB p2 0 step idle under Empty color 0x20
+    oop
+@Gate
+#end
+:touch
+It's the main gate.
+
+$What do you do?
+
+!1;Knock on it.
+!2;Try to batter it.
+#End
+
+:2
+You batter the gate.
+#Gate2:do
+#Change passage yellow passage
+#End
+
+:1
+You knock on the door. Suddenly a
+group of angry Ogres comes out and they
+start to attack you. That wasn't
+a smart move...
+
+$-=< GAME OVER - Try it again! >=-
+#Endgame
+#End
+
+    end
+    stat at 29,4 element Object p1 cp437:0xDC p2 0 step idle under Empty color 0x60
+    stat at 30,14 element Passage p1 0 p2 0 p3 board "[Ogre Village #2]" step idle under Empty color 0x20
+    stat at 15,15 element Object p1 cp437:0xDB p2 0 step idle under Empty color 0x20
+    oop
+@Fence
+#end
+:touch
+It's the fence. It's too high to
+climb over it.
+#end
+
+    end
+    stat at 25,12 element Object p1 cp437:0xDE p2 0 step idle under Empty color 0x20
+    stat at 25,13 element Object p1 cp437:0xDE p2 0 step idle
+    stat at 25,14 element Object p1 cp437:0xDE p2 0 step idle
+    stat at 26,12 element Object p1 cp437:0xDD p2 0 step idle under Empty color 0x20
+    stat at 26,13 element Object p1 cp437:0xDD p2 0 step idle under Empty color 0x20
+    stat at 26,14 element Object p1 cp437:0xDD p2 0 step idle
+    stat at 25,11 element Object p1 cp437:0x1E p2 0 step idle
+    stat at 26,11 element Object p1 cp437:0x1E p2 0 step idle
+    stat at 27,11 element Object p1 cp437:0x1E p2 0 step idle
+    stat at 43,14 element Object p1 cp437:0xDE p2 0 step idle under Empty color 0x07
+    oop
+@Wand
+#end
+:touch
+Klim niet over een wand met punten erop
+van 5 meter hoog!
+#end
+
+    end
+    stat at 43,13 element Object p1 cp437:0xDE p2 0 step idle under Empty color 0x07
+    oop
+@Wand
+#end
+:touch
+Klim niet over een wand met punten erop
+van 5 meter hoog!
+#end
+
+    end
+    stat at 43,12 element Object p1 cp437:0xDE p2 0 step idle under Empty color 0x07
+    oop
+@Wand
+#end
+:touch
+Klim niet over een wand met punten erop
+van 5 meter hoog!
+#end
+
+    end
+    stat at 44,12 element Object p1 cp437:0xDD p2 0 step idle under Empty color 0x20
+    oop
+@Wand
+#end
+:touch
+Klim niet over een wand met punten erop
+van 5 meter hoog!
+#end
+
+    end
+    stat at 44,13 element Object p1 cp437:0xDD p2 0 step idle under Empty color 0x20
+    oop
+@Wand
+#end
+:touch
+Klim niet over een wand met punten erop
+van 5 meter hoog!
+#end
+
+    end
+    stat at 44,14 element Object p1 cp437:0xDD p2 0 step idle under Empty color 0x20
+    oop
+@Wand
+#end
+:touch
+Klim niet over een wand met punten erop
+van 5 meter hoog!
+#end
+
+    end
+    stat at 43,11 element Object p1 cp437:0x1E p2 0 step idle under Empty color 0x07
+    stat at 45,11 element Object p1 cp437:0x1E p2 0 step idle under Empty color 0x78
+    stat at 44,11 element Object p1 cp437:0x1E p2 0 step idle under Empty color 0x78
+    stat at 32,6 element Object p1 cp437:0xDD p2 0 step idle under Empty color 0x06
+    stat at 32,5 element Object p1 cp437:0xDD p2 0 step idle under Empty color 0x06
+    stat at 31,4 element Object p1 cp437:0xDC p2 0 step idle under Empty color 0x06
+    stat at 30,4 element Object p1 cp437:0xDC p2 0 step idle under Empty color 0x60
+    stat at 28,5 element Object p1 cp437:0xDE p2 0 step idle under Empty color 0x20
+    stat at 28,6 element Object p1 cp437:0xDE p2 0 step idle under Empty color 0x20
+    stat at 16,15 element Object p1 cp437:0xDE p2 0 step idle
+    oop
+#Bind fence
+
+    end
+    stat at 17,15 element Object p1 cp437:0xDD p2 0 step idle
+    oop
+#Bind fence
+
+    end
+    stat at 20,15 element Object p1 cp437:0xDD p2 0 step idle
+    oop
+#Bind fence
+
+    end
+    stat at 23,15 element Object p1 cp437:0xDD p2 0 step idle
+    oop
+#Bind fence
+
+    end
+    stat at 26,15 element Object p1 cp437:0xDD p2 0 step idle
+    oop
+#Bind fence
+
+    end
+    stat at 35,15 element Object p1 cp437:0xDD p2 0 step idle
+    oop
+#Bind fence
+
+    end
+    stat at 38,15 element Object p1 cp437:0xDD p2 0 step idle
+    oop
+#Bind fence
+
+    end
+    stat at 41,15 element Object p1 cp437:0xDD p2 0 step idle
+    oop
+#Bind fence
+
+    end
+    stat at 44,15 element Object p1 cp437:0xDD p2 0 step idle under Empty color 0x20
+    oop
+#Bind fence
+
+    end
+    stat at 19,15 element Object p1 cp437:0xDE p2 0 step idle
+    oop
+#Bind fence
+
+    end
+    stat at 22,15 element Object p1 cp437:0xDE p2 0 step idle
+    oop
+#Bind fence
+
+    end
+    stat at 25,15 element Object p1 cp437:0xDE p2 0 step idle
+    oop
+#Bind fence
+
+    end
+    stat at 34,15 element Object p1 cp437:0xDE p2 0 step idle
+    oop
+#Bind fence
+
+    end
+    stat at 37,15 element Object p1 cp437:0xDE p2 0 step idle
+    oop
+#Bind fence
+
+    end
+    stat at 40,15 element Object p1 cp437:0xDE p2 0 step idle
+    oop
+#Bind fence
+
+    end
+    stat at 43,15 element Object p1 cp437:0xDE p2 0 step idle under Empty color 0x07
+    oop
+#Bind fence
+
+    end
+    stat at 18,15 element Object p1 cp437:0xDB p2 0 step idle under Empty color 0x20
+    oop
+#Bind fence
+
+    end
+    stat at 21,15 element Object p1 cp437:0xDB p2 0 step idle under Empty color 0x20
+    oop
+#Bind fence
+
+    end
+    stat at 24,15 element Object p1 cp437:0xDB p2 0 step idle under Empty color 0x20
+    oop
+#Bind fence
+
+    end
+    stat at 27,15 element Object p1 cp437:0xDB p2 0 step idle under Empty color 0x20
+    oop
+#Bind fence
+
+    end
+    stat at 33,15 element Object p1 cp437:0xDB p2 0 step idle under Empty color 0x20
+    oop
+#Bind fence
+
+    end
+    stat at 36,15 element Object p1 cp437:0xDB p2 0 step idle under Empty color 0x20
+    oop
+#Bind fence
+
+    end
+    stat at 39,15 element Object p1 cp437:0xDB p2 0 step idle under Empty color 0x20
+    oop
+#Bind fence
+
+    end
+    stat at 42,15 element Object p1 cp437:0xDB p2 0 step idle under Empty color 0x20
+    oop
+#Bind fence
+
+    end
+    stat at 45,15 element Object p1 cp437:0xDB p2 0 step idle under Empty color 0x20
+    oop
+#Bind fence
+
+    end
+    stat at 31,15 element Object p1 cp437:0xDB p2 0 step idle under Empty color 0x20
+    oop
+@Gate
+#end
+:touch
+It's the main gate.
+
+$What do you do?
+
+!1;Knock on it.
+!2;Try to batter it.
+#End
+
+:2
+You batter the gate.
+#Gate2:do
+#Change passage yellow passage
+#End
+
+:1
+You knock on the door. Suddenly a
+group of angry Ogres comes out and they
+start to attack you. That wasn't
+a smart move...
+
+$-=< GAME OVER - Try it again! >=-
+#Endgame
+#End
+
+    end
+    stat at 30,15 element Object p1 cp437:0xDB p2 0 step idle under Empty color 0x20
+    oop
+@Gate2
+#end
+:touch
+It's the main gate.
+
+$What do you do?
+
+!1;Knock on it.
+!2;Try to batter it.
+#End
+
+:2
+You batter the gate.
+#Change passage yellow passage
+#Die
+#End
+
+:do
+#Die
+#End
+
+:1
+You knock on the door. Suddenly a
+group of angry Ogres comes out and they
+start to attack you. That wasn't
+a smart move...
+
+$-=< GAME OVER - Try it again! >=-
+#Endgame
+#End
+
+    end
+    stat at 14,9 element Object p1 cp437:0x00 p2 0 step idle under Fake color 0x77
+    oop
+@Information
+#Clear Climb
+Look! it must be the village of
+the Ogres!
+#Play iae#a-sq+#feiageb
+
+    end
+    stat at 32,14 element Object p1 cp437:0xDD p2 0 step idle
+    stat at 32,15 element Object p1 cp437:0xDD p2 0 step idle
+    stat at 28,15 element Object p1 cp437:0xDE p2 0 step idle
+  end
+end

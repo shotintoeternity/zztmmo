@@ -1,31 +1,8 @@
 package zztgo
 
 import (
-	"path/filepath"
 	"testing"
 )
-
-func townRoomManager(t *testing.T) *RoomManager {
-	t.Helper()
-
-	setup := NewEngine()
-	setup.Headless = true
-	setup.WorldCreate()
-	worldBase := filepath.Join("..", "fixtures", "TOWN")
-	if !setup.WorldLoad(worldBase, ".ZZT", false) {
-		t.Fatalf("WorldLoad(%q, %q) failed", worldBase, ".ZZT")
-	}
-	return NewRoomManager(setup.World)
-}
-
-func findEvent(events []ProtocolEvent, eventType string) (ProtocolEvent, bool) {
-	for _, event := range events {
-		if event.Type == eventType {
-			return event, true
-		}
-	}
-	return ProtocolEvent{}, false
-}
 
 // Pressing '?' used to call GameDebugPrompt, whose PromptString blocks forever
 // on InputReadWaitKey when headless — one browser client could wedge the whole

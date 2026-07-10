@@ -1,0 +1,69 @@
+board "Secret passage"
+  start player at 58,12
+  respawn at 32,3
+  max-shots 255
+  dark false
+  reenter false
+  time-limit 0
+  exits north "Dungeon" south none west none east none
+
+  grid
+bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbblplbbbbbbbbbbbbbbbbbbbbbbbbbb
+bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbl.lbbbbbbbbbbbbbbbbbbbbbbbbbb
+bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbl.lbbbbbbbbbbbbbbbbbbbbbbbbbb
+bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbl.lbbbbbbbbbbbbbbbbbbbbbbbbbb
+bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbl.lbbbbbbbbbbbbbbbbbbbbbbbbbb
+bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbl.lbbbbbbbbbbbbbbbbbbbbbbbbbb
+bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbl.lbbbbbbbbbbbbbbbbbbbbbbbbbb
+bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbl.lbbbbbbbbbbbbbbbbbbbbbbbbbb
+bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbl.lbbbbbbbbbbbbbbbbbbbbbbbbbb
+bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbblXlbbbbbbbbbbbbbbbbbbbbbbbbbb
+llllllllllllllllllllllllllllllllllllllllllllllllllllllllllll
+lccaaaaaaaaaaaaaaaaaaaaaaaaaaaXlblXc.....................@co
+l.llllllllllllllllllllllllllllllllllllllllllllllllllllllllll
+l.lbbbbbbbbbbbbbbbbbbbbbbbbbbbblXlbbbbbbbbbbbbbbbbbbbbbbbbbb
+l.lbbbbbbbbbbbbbbbbbbbbbbbbbbbbl.lbbbbbbbbbbbbbbbbbbbbbbbbbb
+l.lbbbbbbbbbbbbbbbbbbbbbbbbbbbbl.lbbbbbbbbbbbbbbbbbbbbbbbbbb
+l.lbbbbbbbbbbbbbbbbbbbbbbbbbbbbl.lbbbbbbbbbbbbbbbbbbbbbbbbbb
+l.lbbbbbbbbbbbbbbbbbbbbbbbbbbbbl.lbbbbbbbbbbbbbbbbbbbbbbbbbb
+l.llllllllllllllllllllllllllllll.lbbbbbbbbbbbbbbbbbbbbbbbbbb
+l................................lbbbbbbbbbbbbbbbbbbbbbbbbbb
+llllllllllllllllllllllllllllllllllbbbbbbbbbbbbbbbbbbbbbbbbbb
+bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb
+bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb
+bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb
+bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb
+  end
+
+  legend
+    b = Text-Blue color 0x20
+    l = Line color 0x0C
+    p = Passage color 0x2F to "Warania Temple"
+    . = Empty color 0x0C
+    X = Transporter color 0x0C
+    c = Empty color 0x00
+    a = Ammo color 0x03
+    @ = Player color 0x1F under Empty color 0x0C
+    o = Object color 0x0C
+  end
+
+  stats
+    stat at 60,12 element Object p1 cp437:0x02 p2 0 step idle under Empty color 0x0E
+    oop
+@Guard
+/seek
+#if contact then touch
+#restart
+#end
+:touch
+Gotcha!
+#endgame
+
+    end
+    stat at 33,14 element Transporter p1 0 p2 0 step north under Empty color 0x0C
+    stat at 33,10 element Transporter p1 0 p2 0 step south under Empty color 0x20
+    stat at 35,12 element Transporter p1 0 p2 0 step west
+    stat at 31,12 element Transporter p1 0 p2 0 step east
+    stat at 33,1 element Passage p1 0 p2 0 p3 board "Warania Temple" step idle under Empty color 0x0C
+  end
+end

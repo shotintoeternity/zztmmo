@@ -1,0 +1,975 @@
+board "Moonbase SE (Training Facility)"
+  start player at 9,10
+  respawn at 1,1
+  max-shots 255
+  dark false
+  reenter false
+  time-limit 0
+  exits north "Moonbase NE (Ricochet Machine)" south "South of Training Facility (Weird Machine)" west "Moonbase S (Bear Trap and Machine)" east none
+
+  grid
+.a#F#aaaaaaaaaaaaaab#S~SSAcSS~B~BNBdNNNddN~NdBBNB~S~SScScScS
+aa#F#aaaaaaaaaaaaaab#SSSSaAS~S~BBdNBNBdNB~B~BNBB~~~SScAScSAS
+aX#F#Xaaaaaaaaaaaaab#SSSSASSS~B~NBBNBN~BBBSB~BB~B~SScASAcSAS
+aafF#aaaaaaagoaaaaab#SS~SccSSS~NBN~S~~B~SB~SB~NB~SSrcSSARSaS
+aafF#aaaaaaaoOoaaaab#~SSSSASSSBS~S~B~SB~S~SSS~S~NSAaAShaSrcS
+i##F#jaaaaaaklkaaaab#SSSSAcSSS~NS~S~SSSSSSSSSS~SSBSAcrSSSASS
+FFFF#jaaaaaaaaaaaaab#S~SSaSSSSB~S~SSS~SSSSSSSSSSS~SScAacrcS~
+m###maaaaaaaalgglaob#SSSAccSSS~SSSSSSSSnnnmmmnnnSSSSSSAASSSB
+aaaaaaaaaaaiiiiiaamb#SSTa*ASSNB~SSSnnmmaaaaoaaaammnnSSSSSB~N
+aaaaaaaa@a#mpppm#####SSSASacSSSSSnmaaaaaaaaaaaaaaaaamnSS~SBN
+aaaaaaaaaaoaaaaaoaaa#SSScTASSSSnmaaaaoooooaaooooooaaaamnSS~B
+aaaaaaaaaa#qsssq#aoo#~ScAcSSSS#aaaaattiiiiittiiiitiaoaaa#SS~
+##########tnnnnntiiu#SSScASSSnaaaaaljaaaaaaaaaaaaabaoaaaanSS
+N~NBB~BSvwwwwwwwwwwvSSScASSSSjaaoaaajasasasasasasabaoaaaabSS
+~B~~B~SSxSyzuuuzzzyS~SSSaTSSnaaoCoaataaaaaaaaaaaaataoaaaaanS
+B~~S~SS~vwzzzzzzzzzSSSScASSS#aaklkaaaasasaaeaasasaaaoaaaaa#S
+~SSSSSSSSSyzzzzzzzySScAccSSSnaaaaaaajaaaaaaaaaaaaabaoaaaaanS
+SSSShcAAtTSSSSSSSSAaaAcSSS~SSjaaaaaajasasasasasasabaoaaaabS~
+cAaTcaS*acAaAaAAcAcaASSS~SSSSnaaaaaajaaaaaaaaaaaaabaoaaaanSS
+SSSSSAccASSScSSSSSSAcSSSBS~SSS#aaaaamtmmmmmtmmmmmtmaoaaa#SSB
+~S~~SSSSSS~SS~S~SSSSDS~~BB~SSSSniaaaaaaaltttttaaaaaaaainSSSN
+B~SB~B~~SNNBNBSB~~B~~B~B~NB~S~SSSniaaaaaaaataaaaaaaainSS~S~~
+BBB~NBBdBd~B~BNBd~BNBNNBN~B~B~~SSSSnniiaaaaaaaaaiinnSSSSS~SB
+dBdNNddNddNNd~dd~NdNNddNBNBNBNB~S~SSS~SnnniiinnnSSSSSS~B~NBN
+NdddNddNddddddNddNNdNdNdNdNNNNBNBN~S~SS~~SSSSS~SSS~B~BdNBdNd
+  end
+
+  legend
+    . = Empty color 0x00
+    a = Empty color 0x0F
+    # = Solid color 0x0F
+    F = Fake color 0xFF
+    b = Text-White color 0xDE
+    S = Solid color 0x07
+    ~ = Water color 0x78
+    A = Fake color 0x70
+    c = Fake color 0x07
+    B = Breakable color 0x78
+    N = Normal color 0x78
+    d = Solid color 0x78
+    X = Transporter color 0x02
+    f = Solid color 0x7F
+    g = Empty color 0x4A
+    o = Object color 0x02
+    r = Ruffian color 0x0A
+    R = Bear color 0x0A
+    O = Object color 0xCE
+    h = Object color 0x7C
+    i = Text-White color 0xDC
+    j = Text-White color 0xDD
+    k = Fake color 0x20
+    l = Empty color 0x02
+    m = Text-White color 0xDF
+    n = Object color 0x7F
+    T = Tiger color 0x0A
+    * = Ricochet color 0x78
+    @ = Player color 0x1F under Empty color 0x0F
+    p = Object color 0x1F
+    q = Object color 0x08
+    s = Object color 0x07
+    t = Object color 0x0F
+    u = Object color 0x2F
+    v = Object color 0x78
+    w = element 33 color 0x78
+    x = element 43 color 0x78
+    y = Object color 0x72
+    z = Solid color 0x02
+    C = Object color 0xCA
+    e = Energizer color 0x05
+    D = Bear color 0x77
+  end
+
+  stats
+    stat at 29,17 element Object p1 cp437:0xDE p2 0 step idle under Empty color 0x0F
+    stat at 59,17 element Object p1 cp437:0xDD p2 0 step idle under Empty color 0x0F
+    stat at 30,19 element Object p1 cp437:0xDE p2 0 step idle under Empty color 0x0F
+    stat at 58,19 element Object p1 cp437:0xDD p2 0 step idle under Empty color 0x0F
+    stat at 32,21 element Object p1 cp437:0xDF p2 0 step idle under Empty color 0x0F
+    stat at 56,21 element Object p1 cp437:0xDF p2 0 step idle under Empty color 0x0F
+    stat at 34,22 element Object p1 cp437:0xDF p2 0 step idle under Empty color 0x0F
+    stat at 54,22 element Object p1 cp437:0xDF p2 0 step idle under Empty color 0x0F
+    stat at 36,23 element Object p1 cp437:0xDF p2 0 step idle under Empty color 0x0F
+    stat at 37,23 element Object p1 cp437:0xDF p2 0 step idle under Empty color 0x0F
+    stat at 51,23 element Object p1 cp437:0xDF p2 0 step idle under Empty color 0x0F
+    stat at 52,23 element Object p1 cp437:0xDF p2 0 step idle under Empty color 0x0F
+    stat at 40,24 element Object p1 cp437:0xDF p2 0 step idle under Empty color 0x0F
+    stat at 41,24 element Object p1 cp437:0xDF p2 0 step idle under Empty color 0x0F
+    stat at 42,24 element Object p1 cp437:0xDF p2 0 step idle under Empty color 0x0F
+    stat at 46,24 element Object p1 cp437:0xDF p2 0 step idle under Empty color 0x0F
+    stat at 47,24 element Object p1 cp437:0xDF p2 0 step idle under Empty color 0x0F
+    stat at 48,24 element Object p1 cp437:0xDF p2 0 step idle under Empty color 0x0F
+    stat at 37,12 element Object cycle 1 p1 cp437:0xDC p2 0 step idle under Empty color 0x0F data-pos -1
+    oop
+@rnder
+:gena
+#if blocked rndne a
+:b
+#if blocked rndne bb
+:ba
+#ne:go
+#z
+:bb
+#nw:go
+#z
+:a
+#if blocked rndne ab
+:aa
+#se:go
+#z
+:ab
+#sw:go
+#z
+:genb
+#if blocked rndne c
+:d
+#sw:go
+#genbb
+:c
+#se:go
+:genbb
+#if blocked rndne e
+:f
+#ne:go
+#z
+:e
+#nw:go
+#z
+:genc
+#if blocked rndne h
+:g
+#if blocked rndne ga
+#nw:go
+#ne:go
+#sw:go
+#z
+:ga
+#nw:go
+#ne:go
+#se:go
+#z
+:h
+#if blocked rndne ha
+#nw:go
+#sw:go
+#se:go
+#z
+:ha
+#ne:go
+#sw:go
+#se:go
+#z
+:gend
+#ne:go
+#se:go
+#sw:go
+#nw:go
+#z
+:gene
+#ne:go
+#se:go
+#sw:go
+#nw:go
+#nn:go
+:z  
+
+    end
+    stat at 38,12 element Object cycle 1 p1 cp437:0xDC p2 0 step idle under Empty color 0x0F data-pos -1
+    oop
+@nw
+:go
+#put s green head
+#end
+
+    end
+    stat at 44,12 element Object cycle 1 p1 cp437:0xDC p2 0 step idle under Empty color 0x0F data-pos -1
+    oop
+@nn
+:go
+#put s green head
+#end
+
+    end
+    stat at 45,12 element Object cycle 1 p1 cp437:0xDC p2 0 step idle under Empty color 0x0F data-pos -1
+    oop
+@lvlchk
+:gen
+'/i#if any lion gen
+/i#if any head gen
+#lvl:next
+:stop  
+
+    end
+    stat at 50,12 element Object cycle 1 p1 cp437:0xDC p2 0 step idle under Empty color 0x0F data-pos -1
+    oop
+@ne
+:go
+#put s green head
+#end
+
+    end
+    stat at 39,14 element Object cycle 1 p1 cp437:0xB1 p2 0 step idle under Empty color 0x0F data-pos -1
+    oop
+@maze
+:gen
+#put rndp rndne white normal
+#end
+:done
+#die
+
+    end
+    stat at 43,14 element Object cycle 1 p1 cp437:0xB1 p2 0 step idle under Empty color 0x0F data-pos -1
+    oop
+@maze
+:gen
+#put rndp rndne white normal
+#end
+:done
+#die
+
+    end
+    stat at 45,14 element Object cycle 1 p1 cp437:0xB1 p2 0 step idle under Empty color 0x0F data-pos -1
+    oop
+@maze
+:gen
+#put rndp rndne white normal
+#end
+:done
+#die
+
+    end
+    stat at 47,14 element Object cycle 1 p1 cp437:0xB1 p2 0 step idle under Empty color 0x0F data-pos -1
+    oop
+@maze
+:gen
+#put rndp rndne white normal
+#end
+:done
+#die
+
+    end
+    stat at 49,14 element Object cycle 1 p1 cp437:0xB1 p2 0 step idle under Empty color 0x0F data-pos -1
+    oop
+@maze
+:gen
+#put rndp rndne white normal
+#end
+:done
+#die
+
+    end
+    stat at 37,15 element Object cycle 1 p1 cp437:0xDD p2 0 step idle under Empty color 0x0F data-pos -1
+    oop
+
+:energize
+#put s shark
+#put s sliderns
+#end
+:done
+#zap energize
+
+    end
+    stat at 51,15 element Object cycle 1 p1 cp437:0xDE p2 0 step idle under Empty color 0x0F data-pos -1
+    oop
+
+:energize
+#put s shark
+#put s sliderns
+#end
+:done
+#zap energize
+
+    end
+    stat at 39,16 element Object cycle 1 p1 cp437:0xB1 p2 0 step idle under Empty color 0x0F data-pos -1
+    oop
+@maze
+:gen
+#put rndp rndne white normal
+#end
+:done
+#die
+
+    end
+    stat at 41,16 element Object cycle 1 p1 cp437:0xB1 p2 0 step idle under Empty color 0x0F data-pos -1
+    oop
+@maze
+:gen
+#put rndp rndne white normal
+#end
+:done
+#die
+
+    end
+    stat at 47,16 element Object cycle 1 p1 cp437:0xB1 p2 0 step idle under Empty color 0x0F data-pos -1
+    oop
+@maze
+:gen
+#put rndp rndne white normal
+#end
+:done
+#die
+
+    end
+    stat at 49,16 element Object cycle 1 p1 cp437:0xB1 p2 0 step idle under Empty color 0x0F data-pos -1
+    oop
+@maze
+:gen
+#put rndp rndne white normal
+#end
+:done
+#die
+
+    end
+    stat at 39,18 element Object cycle 1 p1 cp437:0xB1 p2 0 step idle under Empty color 0x0F data-pos -1
+    oop
+@maze
+:gen
+#put rndp rndne white normal
+#end
+:done
+#die
+
+    end
+    stat at 41,18 element Object cycle 1 p1 cp437:0xB1 p2 0 step idle under Empty color 0x0F data-pos -1
+    oop
+@maze
+:gen
+#put rndp rndne white normal
+#end
+:done
+#die
+
+    end
+    stat at 43,18 element Object cycle 1 p1 cp437:0xB1 p2 0 step idle under Empty color 0x0F data-pos -1
+    oop
+@maze
+:gen
+#put rndp rndne white normal
+#end
+:done
+#die
+
+    end
+    stat at 45,18 element Object cycle 1 p1 cp437:0xB1 p2 0 step idle under Empty color 0x0F data-pos -1
+    oop
+@maze
+:gen
+#put rndp rndne white normal
+#end
+:done
+#die
+
+    end
+    stat at 47,18 element Object cycle 1 p1 cp437:0xB1 p2 0 step idle under Empty color 0x0F data-pos -1
+    oop
+@maze
+:gen
+#put rndp rndne white normal
+#end
+:done
+#die
+
+    end
+    stat at 49,18 element Object cycle 1 p1 cp437:0xB1 p2 0 step idle under Empty color 0x0F data-pos -1
+    oop
+@maze
+:gen
+#put rndp rndne white normal
+#end
+:done
+#die
+
+    end
+    stat at 38,20 element Object cycle 1 p1 cp437:0xDF p2 0 step idle under Empty color 0x0F data-pos -1
+    oop
+@sw
+:go
+#put n green head
+#end
+
+    end
+    stat at 44,20 element Object cycle 1 p1 cp437:0xDF p2 0 step 4,0 under Empty color 0x0F
+    oop
+@energ
+#end
+:g
+/i#if blocked ccw flow g 
+#put ccw flow energizer
+#end
+:done
+#zap g
+'#put ccw flow green key
+
+    end
+    stat at 50,20 element Object cycle 1 p1 cp437:0xDF p2 0 step idle under Empty color 0x0F data-pos -1
+    oop
+@se
+:go
+#put n green head
+#end
+
+    end
+    stat at 44,22 element Object cycle 1 p1 cp437:0x20 p2 0 step idle under Empty color 0x0F data-pos -1
+    oop
+@lvl
+:gena
+#char 49
+#z 
+:next
+#char 50
+#energ:g
+#zap next
+#z
+:next
+#char 51
+#energ:g
+#zap next
+#z
+:next
+#char 52
+#energ:g
+#zap next
+#z
+:next
+#char 53
+#energ:g
+#zap next
+#z
+:next
+#all:done
+#die
+:reset
+#restore next
+#char 32
+:z
+
+    end
+    stat at 42,21 element Object cycle 1 p1 cp437:0x20 p2 0 step idle under Empty color 0x0F
+    oop
+#end
+:gena
+#char 108 
+#end
+:reset
+#char 32
+#end
+:done
+#die
+
+    end
+    stat at 43,21 element Object cycle 1 p1 cp437:0x20 p2 0 step idle under Empty color 0x0F
+    oop
+#end
+:gena
+#char 101
+#end
+:reset
+#char 32
+#end
+:done
+#die
+
+    end
+    stat at 44,21 element Object cycle 1 p1 cp437:0x20 p2 0 step idle under Empty color 0x0F
+    oop
+#end
+:gena
+#char 118 
+#end
+:reset
+#char 32
+#end
+:done
+#die
+
+    end
+    stat at 45,21 element Object cycle 1 p1 cp437:0x20 p2 0 step idle under Empty color 0x0F
+    oop
+#end
+:gena
+#char 101 
+#end
+:reset
+#char 32
+#end
+:done
+#die
+
+    end
+    stat at 46,21 element Object cycle 1 p1 cp437:0x20 p2 0 step idle under Empty color 0x0F
+    oop
+#end
+:gena
+#char 108 
+#end
+:reset
+#char 32
+#end
+:done
+#die
+
+    end
+    stat at 41,14 element Object cycle 1 p1 cp437:0xB1 p2 0 step idle under Empty color 0x0F data-pos -1
+    oop
+@maze
+:gen
+#put rndp rndne white normal
+#end
+:done
+#die
+
+    end
+    stat at 29,15 element Object p1 cp437:0xDE p2 0 step idle under Empty color 0x0F
+    stat at 30,13 element Object p1 cp437:0xDE p2 0 step idle under Empty color 0x0F
+    stat at 58,13 element Object p1 cp437:0xDD p2 0 step idle under Empty color 0x0F
+    stat at 59,15 element Object p1 cp437:0xDD p2 0 step idle under Empty color 0x0F
+    stat at 32,11 element Object p1 cp437:0xDC p2 0 step idle under Empty color 0x0F
+    stat at 34,10 element Object p1 cp437:0xDC p2 0 step idle under Empty color 0x0F
+    stat at 36,9 element Object p1 cp437:0xDC p2 0 step idle under Empty color 0x0F
+    stat at 37,9 element Object p1 cp437:0xDC p2 0 step idle under Empty color 0x0F
+    stat at 40,8 element Object p1 cp437:0xDC p2 0 step idle under Empty color 0x0F
+    stat at 41,8 element Object p1 cp437:0xDC p2 0 step idle under Empty color 0x0F
+    stat at 42,8 element Object p1 cp437:0xDC p2 0 step idle under Empty color 0x0F
+    stat at 46,8 element Object p1 cp437:0xDC p2 0 step idle under Empty color 0x0F
+    stat at 47,8 element Object p1 cp437:0xDC p2 0 step idle under Empty color 0x0F
+    stat at 48,8 element Object p1 cp437:0xDC p2 0 step idle under Empty color 0x0F
+    stat at 51,9 element Object p1 cp437:0xDC p2 0 step idle under Empty color 0x0F
+    stat at 52,9 element Object p1 cp437:0xDC p2 0 step idle under Empty color 0x0F
+    stat at 54,10 element Object p1 cp437:0xDC p2 0 step idle under Empty color 0x0F
+    stat at 56,11 element Object p1 cp437:0xDC p2 0 step idle under Empty color 0x0F
+    stat at 32,15 element Object p1 cp437:0xDA p2 0 step idle under Empty color 0x0F
+    stat at 33,15 element Object cycle 1 p1 cp437:0xF9 p2 0 step idle under Empty color 0x0F data-pos -1
+    oop
+@tb
+:do
+#char 173
+#put s player
+#end
+:fin
+/i#shoot s
+#char 249
+#l
+#end
+:l
+#if not blocked s l 
+#play ---c+c+c+c-b+c-b+c-b+c-b+c-b+c
+#char 33
+#ta:do
+:ll
+#if blocked s ll
+#ta:fin
+#char 249
+
+    end
+    stat at 34,15 element Object p1 cp437:0xBF p2 0 step idle under Empty color 0x0F
+    stat at 33,14 element Object p1 cp437:0x5F p2 0 step idle under Empty color 0x0F
+    stat at 53,20 element Object p1 cp437:0x52 p2 0 step idle under Empty color 0x0F
+    stat at 53,19 element Object p1 cp437:0x4F p2 0 step idle under Empty color 0x0F
+    stat at 53,18 element Object p1 cp437:0x54 p2 0 step idle under Empty color 0x0F
+    stat at 53,17 element Object p1 cp437:0x41 p2 0 step idle under Empty color 0x0F
+    stat at 53,16 element Object p1 cp437:0x4C p2 0 step idle under Empty color 0x0F
+    stat at 53,15 element Object p1 cp437:0x55 p2 0 step idle under Empty color 0x0F
+    stat at 53,14 element Object p1 cp437:0x4D p2 0 step idle under Empty color 0x0F
+    stat at 53,13 element Object p1 cp437:0x49 p2 0 step idle under Empty color 0x0F
+    stat at 53,12 element Object p1 cp437:0x53 p2 0 step idle under Empty color 0x0F
+    stat at 45,11 element Object p1 cp437:0x43 p2 0 step idle under Empty color 0x0F
+    stat at 46,11 element Object p1 cp437:0x4F p2 0 step idle under Empty color 0x0F
+    stat at 47,11 element Object p1 cp437:0x4D p2 0 step idle under Empty color 0x0F
+    stat at 48,11 element Object p1 cp437:0x42 p2 0 step idle under Empty color 0x0F
+    stat at 49,11 element Object p1 cp437:0x41 p2 0 step idle under Empty color 0x0F
+    stat at 50,11 element Object p1 cp437:0x54 p2 0 step idle under Empty color 0x0F
+    stat at 38,11 element Object cycle 1 p1 cp437:0x4C p2 0 step idle under Empty color 0x0F data-pos -1
+    oop
+@a
+#end
+:energize
+#zap energize
+#all:gena
+:g
+#all:gen
+#change white normal empty
+/i#change shark normal
+/i/i/i/i/i/i/i/i/i/i/i/i/i/i/i
+/i/i/i/i/i/i/i/i/i/i/i/i/i/i/i
+/i/i/i/i/i/i/i/i/i/i/i/i/i/i/i
+/i/i/i/i/i/i/i/i/i/i/i/i/i/i/i
+/i/i/i/i/i/i/i/i/i/i/i/i/i/i/i
+:clear
+#change white normal empty
+#change sliderns empty
+#change energizer empty
+'#change lion empty
+#change head empty
+#lvlchk:stop
+#all:reset
+#energ:g
+#restore energize
+#end
+:done
+#change white normal empty
+#change sliderns empty
+'#change lion empty
+#change head empty
+#change energizer empty
+#end
+:energize
+#zap energize
+#rnder:genb
+#g
+#end
+:energize
+#zap energize
+#rnder:genc
+#g
+:energize
+#zap energize
+#rnder:gend
+#g
+:energize
+#zap energize
+#rnder:gene
+#g
+
+    end
+    stat at 39,11 element Object p1 cp437:0x55 p2 0 step idle under Empty color 0x0F
+    stat at 40,11 element Object p1 cp437:0x4E p2 0 step idle under Empty color 0x0F
+    stat at 41,11 element Object p1 cp437:0x41 p2 0 step idle under Empty color 0x0F
+    stat at 42,11 element Object p1 cp437:0x52 p2 0 step idle under Empty color 0x0F
+    stat at 44,9 element Object cycle 1 p1 cp437:0x20 p2 0 step 0,-7 under Empty color 0x0F
+    oop
+#end
+:done
+/i#if blocked opp flow done
+#walk opp flow
+/i#walk idle
+#char 22
+#restore touch
+#end
+'touch
+It's a keycard. It reads:
+
+
+$∞±≤€€LUNAR COMBAT PREPAREDNESS CARD€€≤±∞
+The holder of this card has cleared all
+levels of the Lunar Combat Simulator and
+is qualified to travel outside the  lunar
+research station. 
+
+!a;Take the card.
+#end
+:a
+You take the card.
+#set id
+#play -e+++e
+#die
+
+    end
+    stat at 6,3 element Transporter p1 0 p2 0 step west under Empty color 0x0F
+    stat at 2,3 element Transporter p1 0 p2 0 step east under Empty color 0x0F
+    stat at 57,4 element Bear p2 0 step idle under Fake color 0x07
+    stat at 55,5 element Object cycle 1 p1 cp437:0x2B p2 0 step idle under Fake color 0x07
+    oop
+#end
+:touch
+#give health 50
+#play egb+d
+#all:fill
+#become fake
+
+    end
+    stat at 54,6 element Ruffian step idle under Fake color 0x07
+    stat at 58,5 element Ruffian step idle under Fake color 0x07
+    stat at 52,4 element Ruffian step idle under Fake color 0x07
+    stat at 57,7 element Ruffian step idle under Fake color 0x07
+    stat at 11,15 element Object p1 cp437:0xDC p2 0 step idle under Empty color 0x0F
+    stat at 11,17 element Object p1 cp437:0xDF p2 0 step idle under Empty color 0x0F
+    stat at 19,17 element Object p1 cp437:0xDF p2 0 step idle under Empty color 0x0F
+    stat at 19,15 element Object p1 cp437:0xDC p2 0 step idle under Empty color 0x0F
+    stat at 9,16 element Object p1 cp437:0xC8 p2 0 step idle under Empty color 0x0F
+    stat at 9,14 element Object p1 cp437:0xC9 p2 0 step idle under Empty color 0x0F
+    stat at 19,12 element Object cycle 1 p1 cp437:0x07 p2 0 step idle under Empty color 0x0F
+    oop
+#end
+:touch
+It's a space toilet.
+
+!a; Try your luck
+#end
+:a
+#lock
+#play 111111111111111111111
+#play 111111111111111111111
+AGH!
+/i#char 7
+/i#char 9
+/i#char 79
+/i#char 7
+/i#char 9
+/i#char 79
+ARG!
+/i#char 9
+/i#char 7
+/i#char 9
+/i#char 9
+/i#char 7
+/i#char 9
+Please, No!
+/i#char 79
+/i#char 9
+/i#char 7
+/i#char 79
+/i#char 9
+/i#char 7
+#take health 1
+#play --c+c-c+d#
+Ouch!
+/i#zap touch
+#unlock
+#end
+:touch
+It's a space toilet.
+
+!b; Try it again
+#end
+:b
+No.
+
+    end
+    stat at 20,12 element Object p1 cp437:0xBB p2 0 step idle under Empty color 0x02
+    stat at 20,13 element Object p1 cp437:0xDC p2 0 step idle under Empty color 0x0F
+    stat at 20,14 element Object p1 cp437:0xBC p2 0 step idle under Empty color 0x0F
+    stat at 13,10 element Object cycle 1 p1 cp437:0xFF p2 0 step idle under Empty color 0x0F
+    oop
+
+:l
+#if blocked s char 2
+#if not blocked s char 255
+#l
+:touch
+#play 00
+It's a space mirror.
+/i#l
+
+    end
+    stat at 14,10 element Object cycle 1 p1 cp437:0xFF p2 0 step idle under Empty color 0x0F
+    oop
+
+:l
+#if blocked s char 2
+#if not blocked s char 255
+#l
+:touch
+#play 00
+It's a space mirror.
+/i#l
+
+    end
+    stat at 15,10 element Object cycle 1 p1 cp437:0xFF p2 0 step idle under Empty color 0x0F
+    oop
+
+:l
+#if blocked s char 2
+#if not blocked s char 255
+#l
+:touch
+#play 00
+It's a space mirror.
+/i#l
+
+    end
+    stat at 13,13 element Object p1 cp437:0xDC p2 0 step idle under Empty color 0x0F
+    stat at 14,13 element Object p1 cp437:0xDC p2 0 step idle under Empty color 0x0F
+    stat at 15,13 element Object p1 cp437:0xDC p2 0 step idle under Empty color 0x0F
+    stat at 12,12 element Object p1 cp437:0xC9 p2 0 step idle under Empty color 0x0F
+    oop
+#end
+:touch
+#play 00
+It's a space pipe.
+
+    end
+    stat at 12,13 element Object p1 cp437:0xDC p2 0 step idle under Empty color 0x0F
+    stat at 16,12 element Object p1 cp437:0xB8 p2 0 step idle under Empty color 0x0F
+    oop
+#end
+:touch
+#play 00
+It's a space pipe. It looks slightly
+damaged.
+
+!a; Pull on it
+#end
+:a
+#play 9999
+#zap touch
+#char 92
+The space pipe breaks off!
+#end
+:touch
+It's a broken space pipe.
+
+!b;Take it 
+#end
+:b
+#play -e++e
+You take the space pipe.
+#set sp
+#become blue water
+
+    end
+    stat at 16,13 element Object p1 cp437:0xDC p2 0 step idle under Empty color 0x0F
+    stat at 13,12 element Object p1 cp437:0x6F p2 0 step idle under Empty color 0x0F
+    oop
+#end
+:touch
+#play 00
+It's a space sink.
+
+    end
+    stat at 26,11 element Tiger p1 0 step idle under Fake color 0x07
+    stat at 26,15 element Tiger p1 0 step idle under Fake color 0x07
+    stat at 24,9 element Tiger p1 0 step idle under Fake color 0x07
+    stat at 10,18 element Tiger p1 2 step idle under Fake color 0x07
+    stat at 4,19 element Tiger p1 2 step idle under Fake color 0x07
+    stat at 13,15 element Object cycle 1 p1 cp437:0xC4 p2 0 step idle under Empty color 0x0F
+    oop
+@GM
+:g1
+#take ammo 1
+#give ammo 1
+/i#g1
+
+    end
+    stat at 11,11 element Object cycle 1 p1 cp437:0xB3 p2 0 step idle under Empty color 0x0F
+    oop
+#end
+:touch 
+#play 11
+#lock
+#put s fake
+/s/i/i/i/i/i/i
+/i/i/i/i/i/i/i
+/n#unlock
+#end
+
+    end
+    stat at 17,11 element Object cycle 1 p1 cp437:0xB3 p2 0 step idle under Empty color 0x0F
+    oop
+#end
+:touch 
+#play 11
+#lock
+#put s fake
+/s/i/i/i/i/i/i
+/i/i/i/i/i/i/i
+/n#unlock
+#end
+
+    end
+    stat at 14,15 element Object cycle 1 p1 cp437:0xC4 p2 0 step idle under Empty color 0x0F
+    stat at 15,15 element Object cycle 1 p1 cp437:0xC4 p2 0 step idle under Empty color 0x0F
+    stat at 19,8 element Object p1 cp437:0x9D p2 0 step idle under Empty color 0x0F
+    oop
+#end
+:touch
+#lock
+The plant speaks:
+/i/i
+Wherever life plants you, bloom with grace
+/i/i/i/i/i
+#give health 10
+#play Sgx+dx-bx+fxdxaxxxgfg
+∞±≤€ You feel a little better! €≤±∞
+#zap touch
+#unlock
+#end
+:touch
+Just a plant.
+
+    end
+    stat at 14,4 element Object p1 cp437:0x5F p2 0 step idle under Empty color 0x0F
+    stat at 13,5 element Object p1 cp437:0xDA p2 0 step idle under Empty color 0x02
+    stat at 14,5 element Object cycle 1 p1 cp437:0xF9 p2 0 step idle under Empty color 0x0F
+    oop
+@ta
+:l
+#if not blocked s l
+#tb:do
+#play ---c+c+c+c-b+c-b+c-b+c-b+c-b+c
+#char 33
+:ll
+#if blocked s ll
+#tb:fin
+#char 249
+#end
+:do
+#char 173
+#put s player
+#end
+:fin
+/i#shoot s
+#char 249
+#l
+
+    end
+    stat at 15,5 element Object p1 cp437:0xBF p2 0 step idle under Empty color 0x0F
+    stat at 14,12 element Object p1 cp437:0x6F p2 0 step idle under Empty color 0x0F
+    oop
+#end
+:touch
+#play 00
+It's a space sink.
+
+    end
+    stat at 15,12 element Object p1 cp437:0x6F p2 0 step idle under Empty color 0x0F
+    oop
+#end
+:touch
+#play 00
+It's a space sink.
+
+    end
+    stat at 21,21 element Bear cycle 2 p2 0 step idle under Fake color 0x07
+    stat at 9,18 element Object cycle 1 p1 cp437:0x7E p2 0 step idle under Empty color 0x0F
+    oop
+@page
+#end
+:touch
+Dear diary,
+
+Today I discovered something wonderful
+called SINGING. I found some SINGING on
+Barry's computer. I learned how to sing.
+Barry said I sound like a high-pitched
+Louis Armstrong. I think it means I
+sound good. 
+#die
+
+    end
+    stat at 5,18 element Object cycle 1 p1 cp437:0x2B p2 0 step idle under Fake color 0x70 data-pos -1
+    oop
+
+:touch
+#give health 50
+#play egb+d
+#become fake
+
+    end
+    stat at 17,13 element Object cycle 1 p1 cp437:0xDB p2 0 step idle under Empty color 0x0F
+    oop
+@sp
+:a
+#if not blocked n put n white solid
+/i#a
+
+    end
+    stat at 11,13 element Object cycle 1 p1 cp437:0xDB p2 0 step idle under Empty color 0x0F
+    oop
+@sp
+:a
+#if not blocked n put n white solid
+/i#a
+
+    end
+  end
+end

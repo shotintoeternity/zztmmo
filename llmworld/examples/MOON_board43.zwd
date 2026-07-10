@@ -1,0 +1,561 @@
+board "Poles Apart Level 1"
+  start player at 6,23
+  respawn at 27,7
+  max-shots 255
+  dark false
+  reenter false
+  time-limit 0
+  exits north none south none west none east none
+
+  grid
+dddddddddddddddddddddddddddddddddddddddddddddd-d-d-d-ddddddd
+ddddFFFFFFFFFoFFFFFFFFFFFFFFFFFFFFoFFOddddjjqqqqqjqqqqqjjddd
+ddddFFFFFFFFFFFFFFFFFFFFFFFFF#########dddddddd-d-d-d-ddddddd
+ddddFwFFFFFFFFFFFFFFFFFFF######xxxxxxxdddddddddddddddddddddd
+dddd#######FFF#########FFxxxxxxFFFFFFFdddjqjdJumpddddddddddd
+ddddxxxxxxxFF###xxxxx##FFFFFFFFFFFFFFFdddyzydWalkdLeftdddddd
+ddddFFFFFFFFFxxxFFFFF###FFFFFFFFFFFFFFdddjqjdWalkdRightddddd
+ddddFFFFFFFFFFFFFFF####xFFFFFF#######odddyzydDuckddddddddddd
+dddd########FFFF##FxxxxFFFFFFFxxxxxxxxdddddddddddddddddddddd
+ddddxxxxxxx##FF##xFFFFFFFFFFFFFFFFFFFFdddjqqqqqjqqqjddSpeard
+ddddFFFFFFFxxFFxxFFFFFFFFx####FFFFFFFFddddddddddddCCCCCCCCdd
+ddddFFFFFFFFFFFFFFFFFFFx#######FFFFFFFddddHealth-dCBBEEGGCdd
+ddddKFFFFFFF#####oFFFx#########FFFFFFFddddddddddddCCCCCCCCdd
+dddd##########xxxxFFx##########oFFx###dddddddddddddddddddddd
+dddd~~~~~~~~~~~~~~~~~~x###~~x#~~~~~~~~dddddddddddddddddddddd
+dddd~~~~~~~~~~~~~~~~~~~~x#~~~~~~~~~~~~dddddNMQyyzzzyyQMNdddd
+dddd~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~dddddddddddddddddddddd
+dddddddddddddddddddddddddddddddddddddddddddTd-dUrXstbitedddd
+dddddddddddddddddddddddddddddddddddddddddddCd-dPenguindddddd
+dddddOddddddLeveld1-dIcedUlXesdddddddddddddOd-dPXlardYearddd
+dddd/.\ddddddZZZZZdZZdZZZdZZZZZdddddddddddd0d-dWalrusddddddd
+dddO...OdddddddddddddddddddddddddddddddddddVd-dAlbatrXssdddd
+dddd\@/dddddddddddddddddddddddddddddddddddd+d-dDXXrddddddddd
+dddddOddddddddddddddddddddddddddddddddddddd2d-dPassagedddddd
+ddddd3dddddddddddddddddddddddddddddddddddddddddddddddddddddd
+  end
+
+  legend
+    d = Text-Blue color 0x20
+    - = Text-Blue color 0x2D
+    F = Fake color 0x09
+    o = Object color 0x0F
+    O = Object color 0x1F
+    j = Fake color 0x77
+    q = Object color 0x70
+    # = Solid color 0x0F
+    w = Object color 0x08
+    x = Object color 0x78
+    J = Text-Blue color 0x4A
+    u = Text-Blue color 0x75
+    m = Text-Blue color 0x6D
+    p = Text-Blue color 0x70
+    y = Fake color 0x33
+    z = Object color 0x30
+    W = Text-Blue color 0x57
+    a = Text-Blue color 0x61
+    l = Text-Blue color 0x6C
+    k = Text-Blue color 0x6B
+    L = Text-Blue color 0x4C
+    e = Text-Blue color 0x65
+    f = Text-Blue color 0x66
+    t = Text-Blue color 0x74
+    R = Text-Blue color 0x52
+    i = Text-Blue color 0x69
+    g = Text-Blue color 0x67
+    h = Text-Blue color 0x68
+    D = Text-Blue color 0x44
+    c = Text-Blue color 0x63
+    S = Text-Blue color 0x53
+    r = Text-Blue color 0x72
+    C = Object color 0x18
+    H = Text-Blue color 0x48
+    B = Breakable color 0x2A
+    E = Breakable color 0x6E
+    G = Breakable color 0x4C
+    K = Object color 0x0B
+    ~ = Water color 0x99
+    N = Normal color 0x30
+    M = Breakable color 0x03
+    Q = Normal color 0x03
+    T = Object color 0x1B
+    U = Text-Blue color 0x46
+    X = Text-Blue color 0x6F
+    s = Text-Blue color 0x73
+    b = Text-Blue color 0x62
+    P = Text-Blue color 0x50
+    n = Text-Blue color 0x6E
+    v = Text-Blue color 0x76
+    1 = Text-Blue color 0x31
+    I = Text-Blue color 0x49
+    Y = Text-Blue color 0x42
+    / = Text-Blue color 0x2F
+    . = Empty color 0x11
+    \ = Text-Blue color 0x5C
+    Z = Object color 0x10
+    0 = Object color 0x16
+    V = Text-Blue color 0x56
+    A = Text-Blue color 0x41
+    @ = Player color 0x1F under Empty color 0x11
+    + = Door color 0x1F
+    2 = Passage color 0x1F to "$-=FutureWare Color Kit=-"
+    3 = Passage color 0x11 to "Poles Apart Level 2"
+  end
+
+  stats
+    stat at 45,2 element Object p1 cp437:0x50 p2 0 step idle under Fake color 0x77
+    stat at 46,2 element Object p1 cp437:0x6F p2 0 step idle under Empty color 0x77
+    stat at 47,2 element Object p1 cp437:0x6C p2 0 step idle under Empty color 0x77
+    stat at 48,2 element Object p1 cp437:0x65 p2 0 step idle under Empty color 0x77
+    stat at 49,2 element Object p1 cp437:0x73 p2 0 step idle under Empty color 0x77
+    stat at 51,2 element Object p1 cp437:0x41 p2 0 step idle under Empty color 0x77
+    stat at 52,2 element Object p1 cp437:0x70 p2 0 step idle under Empty color 0x77
+    stat at 53,2 element Object p1 cp437:0x61 p2 0 step idle under Empty color 0x77
+    stat at 54,2 element Object p1 cp437:0x72 p2 0 step idle under Empty color 0x77
+    stat at 55,2 element Object p1 cp437:0x74 p2 0 step idle under Empty color 0x77
+    stat at 43,5 element Object p1 cp437:0x1E p2 0 step idle under Fake color 0x77
+    stat at 43,6 element Object p1 cp437:0x11 p2 0 step idle under Fake color 0x33
+    stat at 43,7 element Object p1 cp437:0x10 p2 0 step idle under Fake color 0x77
+    stat at 43,8 element Object p1 cp437:0x1F p2 0 step idle under Fake color 0x33
+    stat at 43,10 element Object p1 cp437:0x53 p2 0 step idle under Fake color 0x77
+    stat at 44,10 element Object p1 cp437:0x68 p2 0 step idle under Empty color 0x77
+    stat at 45,10 element Object p1 cp437:0x69 p2 0 step idle under Fake color 0x77
+    stat at 46,10 element Object p1 cp437:0x66 p2 0 step idle under Fake color 0x77
+    stat at 47,10 element Object p1 cp437:0x74 p2 0 step idle under Fake color 0x77
+    stat at 49,10 element Object p1 cp437:0x18 p2 0 step idle under Empty color 0x20
+    stat at 50,10 element Object p1 cp437:0x1B p2 0 step idle under Empty color 0x77
+    stat at 51,10 element Object p1 cp437:0x1A p2 0 step idle under Empty color 0x20
+    stat at 44,18 element Object p1 cp437:0x02 p2 0 step idle under Empty color 0x20
+    stat at 50,16 element Object p1 cp437:0x65 p2 0 step idle under Fake color 0x33
+    stat at 49,16 element Object p1 cp437:0x4B p2 0 step idle under Fake color 0x33
+    stat at 51,16 element Object p1 cp437:0x79 p2 0 step idle under Fake color 0x33
+    stat at 44,19 element Object p1 cp437:0x05 p2 0 step idle under Fake color 0x11
+    stat at 44,20 element Object p1 cp437:0x99 p2 0 step idle under Fake color 0x11
+    oop
+#take ammo 1 done
+#restart
+:done
+#give ammo 10
+
+    end
+    stat at 44,21 element Object p1 cp437:0x06 p2 0 step idle under Empty color 0x20
+    stat at 14,21 element Object p1 cp437:0x4C p2 0 step idle under Empty color 0x20
+    stat at 15,21 element Object p1 cp437:0x65 p2 0 step idle under Empty color 0x20
+    stat at 16,21 element Object p1 cp437:0x76 p2 0 step idle under Empty color 0x20
+    stat at 17,21 element Object p1 cp437:0x65 p2 0 step idle under Empty color 0x20
+    stat at 18,21 element Object p1 cp437:0x6C p2 0 step idle under Empty color 0x20
+    stat at 20,21 element Object p1 cp437:0x31 p2 0 step idle under Empty color 0x20
+    stat at 21,21 element Object p1 cp437:0x2D p2 0 step idle under Empty color 0x20
+    stat at 23,21 element Object p1 cp437:0x49 p2 0 step idle under Empty color 0x20
+    stat at 24,21 element Object p1 cp437:0x63 p2 0 step idle under Empty color 0x20
+    stat at 25,21 element Object p1 cp437:0x65 p2 0 step idle under Empty color 0x20
+    stat at 27,21 element Object p1 cp437:0x46 p2 0 step idle under Empty color 0x20
+    stat at 28,21 element Object p1 cp437:0x6C p2 0 step idle under Empty color 0x20
+    stat at 29,21 element Object p1 cp437:0x6F p2 0 step idle under Empty color 0x20
+    stat at 30,21 element Object p1 cp437:0x65 p2 0 step idle under Empty color 0x20
+    stat at 31,21 element Object p1 cp437:0x73 p2 0 step idle under Empty color 0x20
+    stat at 5,13 element Object p1 cp437:0x02 p2 0 step idle under Fake color 0x09
+    oop
+@Frostbite
+#cycle 1
+#if not blocked s #fall
+#restore jump
+/i
+#restart
+:left
+?w
+#if not blocked s #fall
+#restart
+:spearleft
+#shoot w
+#restart
+:duck
+#lock
+#char 95
+/i/i/i/i/i/i/i/i/i
+#unlock
+#char 2
+#restart
+:right
+?e
+#if not blocked s #fall
+#restart
+:spearright
+#shoot e
+#restart
+:airspear
+#shoot n
+#restart
+:jump
+#zap jump
+?n?n?n?n
+#if blocked s #restart
+?s
+#if blocked s #restart
+?s
+#if blocked s #restart
+?s
+#if blocked s #restart
+?s
+#restore jump
+:fall
+?s
+#restart
+:shot
+#lock
+FROSTBITE: Yeow!!
+#play --c+cd#
+#char 1
+/i
+#char 2
+#ow:septober
+#unlock
+#restart
+
+    end
+    stat at 15,14 element Object p1 cp437:0xDC p2 0 step idle under Fake color 0x77
+    stat at 16,14 element Object p1 cp437:0xDC p2 0 step idle under Empty color 0x09
+    stat at 17,14 element Object p1 cp437:0xDC p2 0 step idle under Empty color 0x09
+    stat at 18,14 element Object p1 cp437:0xDC p2 0 step idle under Empty color 0x09
+    oop
+@Argh1
+#cycle 1
+#if blocked e #kill
+#restart
+:kill
+/i
+FROSTBITE: ARGH! COLD!!!
+#put e blue fake
+#endgame
+
+    end
+    stat at 13,11 element Object p1 cp437:0xDC p2 0 step idle under Empty color 0x09
+    stat at 12,11 element Object p1 cp437:0xDC p2 0 step idle under Empty color 0x09
+    stat at 11,10 element Object p1 cp437:0xDC p2 0 step idle under Empty color 0x0F
+    stat at 10,10 element Object p1 cp437:0xDC p2 0 step idle under Empty color 0x0F
+    stat at 9,10 element Object p1 cp437:0xDC p2 0 step idle under Empty color 0x0F
+    stat at 8,10 element Object p1 cp437:0xDC p2 0 step idle under Empty color 0x0F
+    stat at 7,10 element Object p1 cp437:0xDC p2 0 step idle under Empty color 0x0F
+    stat at 6,10 element Object p1 cp437:0xDC p2 0 step idle under Empty color 0x0F
+    stat at 5,10 element Object p1 cp437:0xDC p2 0 step idle under Empty color 0x0F
+    stat at 5,6 element Object p1 cp437:0xDC p2 0 step idle under Empty color 0x0E
+    stat at 6,6 element Object p1 cp437:0xDC p2 0 step idle under Empty color 0x0E
+    stat at 7,6 element Object p1 cp437:0xDC p2 0 step idle under Empty color 0x0E
+    stat at 8,6 element Object p1 cp437:0xDC p2 0 step idle under Empty color 0x0E
+    stat at 9,6 element Object p1 cp437:0xDC p2 0 step idle under Empty color 0x0E
+    stat at 10,6 element Object p1 cp437:0xDC p2 0 step idle under Empty color 0x0E
+    stat at 11,6 element Object p1 cp437:0xDC p2 0 step idle under Empty color 0x0E
+    stat at 38,4 element Object p1 cp437:0xDC p2 0 step idle under Empty color 0x09
+    stat at 37,4 element Object p1 cp437:0xDC p2 0 step idle under Empty color 0x09
+    stat at 36,4 element Object p1 cp437:0xDC p2 0 step idle under Empty color 0x09
+    stat at 35,4 element Object p1 cp437:0xDC p2 0 step idle under Empty color 0x09
+    stat at 34,4 element Object p1 cp437:0xDC p2 0 step idle under Empty color 0x09
+    stat at 33,4 element Object p1 cp437:0xDC p2 0 step idle under Empty color 0x09
+    stat at 32,4 element Object p1 cp437:0xDC p2 0 step idle under Empty color 0x09
+    stat at 17,11 element Object p1 cp437:0xDC p2 0 step idle under Empty color 0x0F
+    stat at 22,9 element Object p1 cp437:0xDC p2 0 step idle under Empty color 0x09
+    stat at 21,9 element Object p1 cp437:0xDC p2 0 step idle under Empty color 0x09
+    stat at 22,13 element Object p1 cp437:0xDD p2 0 step idle under Empty color 0x09
+    stat at 24,12 element Object p1 cp437:0xDD p2 0 step idle under Empty color 0x09
+    stat at 26,11 element Object p1 cp437:0xDD p2 0 step idle under Empty color 0x09
+    oop
+@POLES APART
+$
+REMEMBER:
+
+1. Yoy _can_ save at any time during the
+level, not just at the end.
+
+2. I do not recommend shooting off more
+than 1 bullet at a time, as Frostbite will
+not register it. Also, don't shoot
+directly at a wall, as he WILL register it
+and a spear will be wasted.
+
+3. Walruses require shooting 3 times, and
+they can destroy you with one hit.
+
+4. Kill all the enemies before you can
+progress to the next level.
+
+         That's all! Enjoy!
+$
+
+    end
+    stat at 31,9 element Object p1 cp437:0xDC p2 0 step idle under Empty color 0x0F
+    stat at 32,9 element Object p1 cp437:0xDC p2 0 step idle under Empty color 0x0F
+    stat at 33,9 element Object p1 cp437:0xDC p2 0 step idle under Empty color 0x0F
+    stat at 34,9 element Object p1 cp437:0xDC p2 0 step idle under Empty color 0x0F
+    stat at 35,9 element Object p1 cp437:0xDC p2 0 step idle under Empty color 0x0F
+    stat at 36,9 element Object p1 cp437:0xDC p2 0 step idle under Empty color 0x0F
+    stat at 37,9 element Object p1 cp437:0xDC p2 0 step idle under Empty color 0x0F
+    stat at 38,9 element Object p1 cp437:0xDC p2 0 step idle under Empty color 0x0F
+    stat at 21,6 element Object p1 cp437:0xDC p2 0 step idle under Fake color 0x09
+    stat at 21,6 element Object p1 cp437:0xDC p2 0 step idle under Object color 0x08
+    stat at 21,6 element Object p1 cp437:0xDC p2 0 step idle under Object color 0x78
+    stat at 20,6 element Object p1 cp437:0xDC p2 0 step idle under Empty color 0x09
+    stat at 19,6 element Object p1 cp437:0xDC p2 0 step idle under Empty color 0x09
+    stat at 17,6 element Object p1 cp437:0xDC p2 0 step idle under Empty color 0x09
+    stat at 18,6 element Object p1 cp437:0xDC p2 0 step idle under Empty color 0x09
+    stat at 23,9 element Object p1 cp437:0xDC p2 0 step idle under Empty color 0x09
+    stat at 20,9 element Object p1 cp437:0xDC p2 0 step idle under Empty color 0x09
+    stat at 26,5 element Object p1 cp437:0xDC p2 0 step idle under Empty color 0x09
+    stat at 27,5 element Object p1 cp437:0xDC p2 0 step idle under Empty color 0x09
+    stat at 28,5 element Object p1 cp437:0xDC p2 0 step idle under Empty color 0x09
+    stat at 31,5 element Object p1 cp437:0xDC p2 0 step idle under Empty color 0x09
+    stat at 30,5 element Object p1 cp437:0xDC p2 0 step idle under Empty color 0x09
+    stat at 29,5 element Object p1 cp437:0xDC p2 0 step idle under Empty color 0x09
+    stat at 38,2 element Object p1 cp437:0xF0 p2 0 step idle under Empty color 0x09
+    oop
+@Passage
+#cycle 1
+#if blocked w #lev2
+#restart
+:lev2
+#play faiffteedgea!
+Onto Level II!
+#put w blue fake
+#duck:dongydoos
+#end
+
+    end
+    stat at 18,10 element Object p1 cp437:0xDC p2 0 step idle under Empty color 0x09
+    stat at 16,11 element Object p1 cp437:0xDC p2 0 step idle under Empty color 0x09
+    stat at 8,22 element Object p1 cp437:0x10 p2 0 step idle under Fake color 0x11
+    oop
+@Right
+#cycle 1
+#if contact #right
+#restart
+:right
+#frostbite:right
+/w/e
+#restart
+:shot
+#frostbite:spearright
+#restart
+
+    end
+    stat at 6,20 element Object p1 cp437:0x1E p2 0 step idle under Fake color 0x11
+    oop
+@Jump
+#cycle 1
+#if contact #jump
+#restart
+:jump
+#frostbite:jump
+/s/n
+#restart
+:shot
+#frostbite:airspear
+#restart
+
+    end
+    stat at 4,22 element Object p1 cp437:0x11 p2 0 step idle under Fake color 0x11
+    oop
+@Left
+#cycle 1
+#if contact #left
+#restart
+:left
+#frostbite:left
+/e/w
+#restart
+:shot
+#frostbite:spearleft
+#restart
+
+    end
+    stat at 6,24 element Object p1 cp437:0x1F p2 0 step idle under Fake color 0x11
+    oop
+@Duck
+#cycle 1
+#if contact #duck
+#restart
+:duck
+#frostbite:duck
+/n/s
+#restart
+:dongydoos
+#put s blue passage
+#become fake
+
+    end
+    stat at 21,14 element Object p1 cp437:0xDD p2 0 step idle under Empty color 0x0F
+    oop
+@Argh
+#cycle 1
+#if blocked w #kill
+#restart
+:kill
+/i
+FROSTBITE: ARGH! COLD!!!
+#put w blue fake
+#endgame
+
+    end
+    stat at 24,8 element Object p1 cp437:0xDC p2 0 step idle under Empty color 0x09
+    stat at 35,14 element Object p1 cp437:0xDD p2 0 step idle under Empty color 0x0F
+    stat at 32,14 element Object p1 cp437:0xDB p2 0 step idle under Empty color 0x0F
+    oop
+#bind argh1
+
+    end
+    stat at 15,7 element Object p1 cp437:0xDC p2 0 step idle under Empty color 0x0F
+    stat at 14,7 element Object p1 cp437:0xDC p2 0 step idle under Empty color 0x09
+    stat at 16,7 element Object p1 cp437:0xDC p2 0 step idle under Empty color 0x09
+    stat at 35,2 element Object p1 cp437:0x0A p2 0 step idle under Fake color 0x09
+    oop
+@Door
+#end
+:killed
+:killed
+:killed
+#zap killed
+#end
+:killed
+#become blue fake
+
+    end
+    stat at 51,12 element Object p1 cp437:0xDB p2 0 step idle under Empty color 0x20
+    oop
+@ow
+#end
+:septober
+#shoot e
+#end
+:lock
+#lock
+
+    end
+    stat at 58,12 element Object p1 cp437:0xDB p2 0 step idle under Empty color 0x20
+    oop
+@death
+#end
+:shot
+#endgame
+#ow:lock
+#end
+
+    end
+    stat at 51,13 element Object p1 cp437:0xDF p2 0 step idle under Empty color 0x20
+    stat at 52,13 element Object p1 cp437:0xDF p2 0 step idle under Empty color 0x20
+    stat at 53,13 element Object p1 cp437:0xDF p2 0 step idle under Empty color 0x20
+    stat at 54,13 element Object p1 cp437:0xDF p2 0 step idle under Empty color 0x20
+    stat at 55,13 element Object p1 cp437:0xDF p2 0 step idle under Empty color 0x20
+    stat at 56,13 element Object p1 cp437:0xDF p2 0 step idle under Empty color 0x20
+    stat at 57,13 element Object p1 cp437:0xDF p2 0 step idle under Empty color 0x20
+    stat at 58,13 element Object p1 cp437:0xDF p2 0 step idle under Empty color 0x20
+    stat at 58,11 element Object p1 cp437:0xDC p2 0 step idle under Empty color 0x20
+    stat at 57,11 element Object p1 cp437:0xDC p2 0 step idle under Empty color 0x20
+    stat at 56,11 element Object p1 cp437:0xDC p2 0 step idle under Empty color 0x20
+    stat at 55,11 element Object p1 cp437:0xDC p2 0 step idle under Empty color 0x20
+    stat at 54,11 element Object p1 cp437:0xDC p2 0 step idle under Empty color 0x20
+    stat at 53,11 element Object p1 cp437:0xDC p2 0 step idle under Empty color 0x20
+    stat at 52,11 element Object p1 cp437:0xDC p2 0 step idle under Empty color 0x20
+    stat at 51,11 element Object p1 cp437:0xDC p2 0 step idle under Empty color 0x20
+    stat at 18,13 element Object p1 cp437:0xDB p2 0 step idle under Empty color 0x0F
+    oop
+@PolarBear
+#cycle 1
+/i/i/i/i/i/i/i/i/n#char 153
+#put s white solid
+#shoot w
+#shoot e
+/i/i/i
+#put s empty
+/s
+#char 219
+#restart
+:shot
+#door:killed
+#play +cx+c--c
+You killed a polar bear! YUM!
+#put s white solid
+#become blue fake
+
+    end
+    stat at 38,8 element Object p1 cp437:0xDB p2 0 step idle under Empty color 0x0F
+    oop
+@PolarBear
+#cycle 1
+/i/i/i/i/i/i/i/i/n#char 153
+#put s white solid
+#shoot w
+/i/i/i
+#put s empty
+/s
+#char 219
+#restart
+:shot
+#door:killed
+#play +cx+c--c
+You killed a polar bear! YUM!
+#put s white solid
+#become blue fake
+
+    end
+    stat at 6,4 element Object p1 cp437:0x05 p2 0 step idle under Fake color 0x09
+    oop
+@Penguin
+#cycle 2
+?e
+#if blocked e #bite
+#if blocked w #bite
+?e
+#if blocked e #bite
+#if blocked w #bite
+?e
+#if blocked e #bite
+#if blocked w #bite
+?e
+#if blocked e #bite
+#if blocked w #bite
+/i?w
+#if blocked e #bite
+#if blocked w #bite
+?w
+#if blocked e #bite
+#if blocked w #bite
+?w
+#if blocked e #bite
+#if blocked w #bite
+?w/i
+#restart
+:bite
+#frostbite:shot
+?w?w?w?w?w?w?w?w
+#restart
+:shot
+You killed a penguin! Great eats!
+#play +cx+c--c
+#door:killed
+#become blue fake
+
+    end
+    stat at 44,24 element Passage p1 0 p2 0 p3 board "$-=FutureWare Color Kit=-" step idle under Empty color 0x20
+    stat at 14,2 element Object p1 cp437:0x56 p2 0 step idle under Fake color 0x09
+    oop
+@Albatross
+#cycle 2
+?e?e?e
+#shoot s
+?e?e?e
+#shoot s
+?w?w?w
+#shoot s
+?w?w?w
+#restart
+:shot
+#play +cx+c--c
+Albatross for dinner! So cool it's cold.
+#door:killed
+#become blue fake
+
+    end
+    stat at 6,25 element Passage p1 0 p2 0 p3 board "Poles Apart Level 2" step idle under Empty color 0x20
+    stat at 29,15 element Object p1 cp437:0xDD p2 0 step idle under Empty color 0x99
+    stat at 25,16 element Object p1 cp437:0xDD p2 0 step idle under Empty color 0x99
+    stat at 23,15 element Object p1 cp437:0xDD p2 0 step idle under Empty color 0x99
+  end
+end

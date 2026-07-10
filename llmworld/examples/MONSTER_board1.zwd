@@ -1,0 +1,188 @@
+board "CITY OF DEATH"
+  start player at 30,12
+  max-shots 255
+  dark false
+  reenter false
+  time-limit 0
+  exits north none south none west none east none
+
+  grid
+###################lll######################################
+##################lllll#####################################
+#################lllllll####################################
+################lllllllll###################################
+###############lllllllllll##################################
+##############lllllllllllll#################################
+#############lllllllllllllll################################
+############lllllllllllllllll###############################
+###########lllllllllllllllllll##############################
+###########lllllllllpllllllllll.############################
+###########lllllllll+llllllllll.############################
+Paaaaaaaaaaaaaaaaaaaaaaaaaaaa@aaaaaaaaaaaaaaaaaaaaaaaaaaaaaa
+bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbabbbbbbbbbbbbbbbbbbbbbbbbbbbb
+bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbabbbbbbbbbbbbbbbbbbbbbbbbbbbb
+bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbabbbbbbbbbbbbbbbbbbbbbbbbbbbb
+bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbabbbbbbbbbbbbbbbbbbbbbbbbbbbb
+bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbabbbbbbbbbbbbbbbbbbbbbbbbbbbb
+bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbabbbbbbbbbbbbbbbbbbbbbbbbbbbb
+bbbbbbbbbDOcNOTcENTER!!!bbbbbbbabbbbDEATHcRIVER!!!bbbbbbbbbb
+SSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSdSSSSSSSSSSSSSSSSSSSSSSSSSSSS
+SSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSeSSSSSSSSSSSSSSSSSSSSSSSSSSSS
+bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbabbbbbbbbbbbbbbbbbbbbbbbbbbbb
+bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbabbbbbbbbbbbbbbbbbbbbbbbbbbbb
+bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbabbbbbbbbbbbbbbbbbbbbbbbbbbbb
+bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbfbbbbbbbbbbbbbbbbbbbbbbbbbbbb
+  end
+
+  legend
+    # = Solid color 0x0B
+    l = Line color 0x0C
+    p = Passage color 0x5F to "MONSTER ALLEY #1"
+    . = Empty color 0x0C
+    + = Door color 0x5F
+    P = Passage color 0x5F to "SOMETHING WEIRD!"
+    a = Ammo color 0x03
+    @ = Player color 0x1F under Empty color 0x00
+    b = Solid color 0x0A
+    D = Text-Cyan color 0x44
+    O = Text-Cyan color 0x4F
+    c = Text-Cyan color 0x20
+    N = Text-Cyan color 0x4E
+    T = Text-Cyan color 0x54
+    E = Text-Cyan color 0x45
+    R = Text-Cyan color 0x52
+    ! = Text-Cyan color 0x21
+    A = Text-Cyan color 0x41
+    H = Text-Cyan color 0x48
+    I = Text-Cyan color 0x49
+    V = Text-Cyan color 0x56
+    S = Shark color 0x77
+    d = Door color 0x2F
+    e = Door color 0x3F
+    f = Passage color 0x3F to "MONSTER ALLEY #1"
+  end
+
+  stats
+    stat at 32,25 element Passage p1 0 p2 0 p3 board "MONSTER ALLEY #1" step idle under Empty color 0x0A
+    stat at 29,20 element Shark p1 8 p2 0 step idle under Water color 0xF9
+    stat at 28,20 element Shark p1 8 p2 0 step idle under Water color 0xF9
+    stat at 27,20 element Shark p1 8 p2 0 step idle under Water color 0xF9
+    stat at 26,20 element Shark p1 8 p2 0 step idle under Water color 0xF9
+    stat at 25,20 element Shark p1 8 p2 0 step idle under Water color 0xF9
+    stat at 24,20 element Shark p1 8 p2 0 step idle under Water color 0xF9
+    stat at 23,20 element Shark p1 8 p2 0 step idle under Water color 0xF9
+    stat at 22,20 element Shark p1 8 p2 0 step idle under Water color 0xF9
+    stat at 21,20 element Shark p1 8 p2 0 step idle under Water color 0xF9
+    stat at 20,20 element Shark p1 8 p2 0 step idle under Water color 0xF9
+    stat at 19,20 element Shark p1 8 p2 0 step idle under Water color 0xF9
+    stat at 18,20 element Shark p1 8 p2 0 step idle under Water color 0xF9
+    stat at 17,20 element Shark p1 8 p2 0 step idle under Water color 0xF9
+    stat at 16,20 element Shark p1 8 p2 0 step idle under Water color 0xF9
+    stat at 15,20 element Shark p1 8 p2 0 step idle under Water color 0xF9
+    stat at 14,20 element Shark p1 8 p2 0 step idle under Water color 0xF9
+    stat at 13,20 element Shark p1 8 p2 0 step idle under Water color 0xF9
+    stat at 12,20 element Shark p1 8 p2 0 step idle under Water color 0xF9
+    stat at 11,20 element Shark p1 8 p2 0 step idle under Water color 0xF9
+    stat at 10,20 element Shark p1 8 p2 0 step idle under Water color 0xF9
+    stat at 9,20 element Shark p1 8 p2 0 step idle under Water color 0xF9
+    stat at 8,20 element Shark p1 8 p2 0 step idle under Water color 0xF9
+    stat at 7,20 element Shark p1 8 p2 0 step idle under Water color 0xF9
+    stat at 6,20 element Shark p1 8 p2 0 step idle under Water color 0xF9
+    stat at 5,20 element Shark p1 8 p2 0 step idle under Water color 0xF9
+    stat at 4,20 element Shark p1 8 p2 0 step idle under Water color 0xF9
+    stat at 3,20 element Shark p1 8 p2 0 step idle under Water color 0xF9
+    stat at 2,20 element Shark p1 8 p2 0 step idle under Water color 0xF9
+    stat at 1,20 element Shark p1 8 p2 0 step idle under Water color 0xF9
+    stat at 1,21 element Shark p1 8 p2 0 step idle under Water color 0xF9
+    stat at 2,21 element Shark p1 8 p2 0 step idle under Water color 0xF9
+    stat at 3,21 element Shark p1 8 p2 0 step idle under Water color 0xF9
+    stat at 4,21 element Shark p1 8 p2 0 step idle under Water color 0xF9
+    stat at 5,21 element Shark p1 8 p2 0 step idle under Water color 0xF9
+    stat at 6,21 element Shark p1 8 p2 0 step idle under Water color 0xF9
+    stat at 7,21 element Shark p1 8 p2 0 step idle under Water color 0xF9
+    stat at 8,21 element Shark p1 8 p2 0 step idle under Water color 0xF9
+    stat at 9,21 element Shark p1 8 p2 0 step idle under Water color 0xF9
+    stat at 10,21 element Shark p1 8 p2 0 step idle under Water color 0xF9
+    stat at 11,21 element Shark p1 8 p2 0 step idle under Water color 0xF9
+    stat at 12,21 element Shark p1 8 p2 0 step idle under Water color 0xF9
+    stat at 13,21 element Shark p1 8 p2 0 step idle under Water color 0xF9
+    stat at 14,21 element Shark p1 8 p2 0 step idle under Water color 0xF9
+    stat at 15,21 element Shark p1 8 p2 0 step idle under Water color 0xF9
+    stat at 16,21 element Shark p1 8 p2 0 step idle under Water color 0xF9
+    stat at 17,21 element Shark p1 8 p2 0 step idle under Water color 0xF9
+    stat at 18,21 element Shark p1 8 p2 0 step idle under Water color 0xF9
+    stat at 19,21 element Shark p1 8 p2 0 step idle under Water color 0xF9
+    stat at 20,21 element Shark p1 8 p2 0 step idle under Water color 0xF9
+    stat at 21,21 element Shark p1 8 p2 0 step idle under Water color 0xF9
+    stat at 22,21 element Shark p1 8 p2 0 step idle under Water color 0xF9
+    stat at 23,21 element Shark p1 8 p2 0 step idle under Water color 0xF9
+    stat at 24,21 element Shark p1 8 p2 0 step idle under Water color 0xF9
+    stat at 25,21 element Shark p1 8 p2 0 step idle under Water color 0xF9
+    stat at 26,21 element Shark p1 8 p2 0 step idle under Water color 0xF9
+    stat at 27,21 element Shark p1 8 p2 0 step idle under Water color 0xF9
+    stat at 28,21 element Shark p1 8 p2 0 step idle under Water color 0xF9
+    stat at 29,21 element Shark p1 8 p2 0 step idle under Water color 0xF9
+    stat at 30,21 element Shark p1 8 p2 0 step idle under Water color 0xF9
+    stat at 31,21 element Shark p1 8 p2 0 step idle under Water color 0xF9
+    stat at 31,20 element Shark p1 8 p2 0 step idle under Water color 0xF9
+    stat at 30,20 element Shark p1 8 p2 0 step idle under Water color 0xF9
+    stat at 33,20 element Shark p1 8 p2 0 step idle under Water color 0xF9
+    stat at 34,20 element Shark p1 8 p2 0 step idle under Water color 0xF9
+    stat at 35,20 element Shark p1 8 p2 0 step idle under Water color 0xF9
+    stat at 36,20 element Shark p1 8 p2 0 step idle under Water color 0xF9
+    stat at 37,20 element Shark p1 8 p2 0 step idle under Water color 0xF9
+    stat at 38,20 element Shark p1 8 p2 0 step idle under Water color 0xF9
+    stat at 39,20 element Shark p1 8 p2 0 step idle under Water color 0xF9
+    stat at 40,20 element Shark p1 8 p2 0 step idle under Water color 0xF9
+    stat at 41,20 element Shark p1 8 p2 0 step idle under Water color 0xF9
+    stat at 42,20 element Shark p1 8 p2 0 step idle under Water color 0xF9
+    stat at 43,20 element Shark p1 8 p2 0 step idle under Water color 0xF9
+    stat at 44,20 element Shark p1 8 p2 0 step idle under Water color 0xF9
+    stat at 45,20 element Shark p1 8 p2 0 step idle under Water color 0xF9
+    stat at 46,20 element Shark p1 8 p2 0 step idle under Water color 0xF9
+    stat at 47,20 element Shark p1 8 p2 0 step idle under Water color 0xF9
+    stat at 48,20 element Shark p1 8 p2 0 step idle under Water color 0xF9
+    stat at 49,20 element Shark p1 8 p2 0 step idle under Water color 0xF9
+    stat at 50,20 element Shark p1 8 p2 0 step idle under Water color 0xF9
+    stat at 51,20 element Shark p1 8 p2 0 step idle under Water color 0xF9
+    stat at 52,20 element Shark p1 8 p2 0 step idle under Water color 0xF9
+    stat at 53,20 element Shark p1 8 p2 0 step idle under Water color 0xF9
+    stat at 54,20 element Shark p1 8 p2 0 step idle under Water color 0xF9
+    stat at 55,20 element Shark p1 8 p2 0 step idle under Water color 0xF9
+    stat at 56,20 element Shark p1 8 p2 0 step idle under Water color 0xF9
+    stat at 57,20 element Shark p1 8 p2 0 step idle under Water color 0xF9
+    stat at 58,20 element Shark p1 8 p2 0 step idle under Water color 0xF9
+    stat at 59,20 element Shark p1 8 p2 0 step idle under Water color 0xF9
+    stat at 60,20 element Shark p1 8 p2 0 step idle under Water color 0xF9
+    stat at 60,21 element Shark p1 8 p2 0 step idle under Water color 0xF9
+    stat at 59,21 element Shark p1 8 p2 0 step idle under Water color 0xF9
+    stat at 58,21 element Shark p1 8 p2 0 step idle under Water color 0xF9
+    stat at 57,21 element Shark p1 8 p2 0 step idle under Water color 0xF9
+    stat at 56,21 element Shark p1 8 p2 0 step idle under Water color 0xF9
+    stat at 55,21 element Shark p1 8 p2 0 step idle under Water color 0xF9
+    stat at 54,21 element Shark p1 8 p2 0 step idle under Water color 0xF9
+    stat at 53,21 element Shark p1 8 p2 0 step idle under Water color 0xF9
+    stat at 52,21 element Shark p1 8 p2 0 step idle under Water color 0xF9
+    stat at 51,21 element Shark p1 8 p2 0 step idle under Water color 0xF9
+    stat at 50,21 element Shark p1 8 p2 0 step idle under Water color 0xF9
+    stat at 49,21 element Shark p1 8 p2 0 step idle under Water color 0xF9
+    stat at 48,21 element Shark p1 8 p2 0 step idle under Water color 0xF9
+    stat at 47,21 element Shark p1 8 p2 0 step idle under Water color 0xF9
+    stat at 46,21 element Shark p1 8 p2 0 step idle under Water color 0xF9
+    stat at 45,21 element Shark p1 8 p2 0 step idle under Water color 0xF9
+    stat at 44,21 element Shark p1 8 p2 0 step idle under Water color 0xF9
+    stat at 43,21 element Shark p1 8 p2 0 step idle under Water color 0xF9
+    stat at 42,21 element Shark p1 8 p2 0 step idle under Water color 0xF9
+    stat at 41,21 element Shark p1 8 p2 0 step idle under Water color 0xF9
+    stat at 40,21 element Shark p1 8 p2 0 step idle under Water color 0xF9
+    stat at 39,21 element Shark p1 8 p2 0 step idle under Water color 0xF9
+    stat at 38,21 element Shark p1 8 p2 0 step idle under Water color 0xF9
+    stat at 37,21 element Shark p1 8 p2 0 step idle under Water color 0xF9
+    stat at 36,21 element Shark p1 8 p2 0 step idle under Water color 0xF9
+    stat at 35,21 element Shark p1 8 p2 0 step idle under Water color 0xF9
+    stat at 34,21 element Shark p1 8 p2 0 step idle under Water color 0xF9
+    stat at 33,21 element Shark p1 8 p2 0 step idle under Water color 0xF9
+    stat at 21,10 element Passage p1 0 p2 0 p3 board "MONSTER ALLEY #1" step idle under Empty color 0x0C
+    stat at 1,12 element Passage p1 0 p2 0 p3 board "SOMETHING WEIRD!" step idle under Empty color 0x0A
+  end
+end

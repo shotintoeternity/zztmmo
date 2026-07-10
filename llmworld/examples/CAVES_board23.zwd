@@ -1,0 +1,258 @@
+board "Devil's Quarters"
+  start player at 23,19
+  max-shots 255
+  dark false
+  reenter false
+  time-limit 0
+  exits north none south none west none east none
+
+  grid
+BNNNNNNNNNNNNNNNNNNNNNNNNNNNNNBBBNNNNNNNNNBBBBBBBBBBBBBBBBBB
+BNHHHHHHN.N..................NNBNN.......NNBBBBBBBBBBBBBBBBB
+BNbbbbbbbo....................NNN.........NNBBBBBBBBBBBBBBBB
+BNccccccNNN....................N..........dNNBBBBBBBBBBBBBBB
+BNffffffNBNXNNNNNNNNNNNNNNNNdjdO....ddddddddNNBBBBBBBBBBBBBB
+BNmmmmmmNBN.NqqqqqqqqqqqqqqNdjdNNNNNNNNNNNdddNNBBBBBBBBBBBBB
+BNxxxxxxNBN.NqTheqDevil'sqqNdjdNBBBBBBBBBNddddNNBBBBBBBBBBBB
+BNyyyyyyNBN.NqqqQuartersqqqNdjdNBBNNNNNNBNdddddNNBBBBBBBBBBB
+BNNNNNNNNNN.NqqqqqqqqqqqqqqNdjdNBBNggggNBNdddddNNBBBBBBBBBBB
+BN..........NNNNNNNNNNNNNNNNdjdNBBNggggNNNdddddNNNNNNNNBBBBB
+BN.................N....XNBNdjdNBBNggggN.NdddddNXdddddNBBBBB
+BN...NNNNNNNN..k...z....XNBNdjdNBBNgggggo.dddddNX.....NBBBBB
+BN...NBBBBBBN.....dNddddXNBNdjdNBBNggggNNNdddddNX.....NBBBBB
+BN...NBBBBBBNNNNNNNNNNNNNNBNAAANBBNggggNBNdddddNNNNNddNBBBBB
+BN...NBBBBBBBBBBBBBBBBBBBBBNAAANBBNNNNNNBNdddddNBBBNddNBBBBB
+BN...NBBBqGuessqBBBBBBBBBBBNAAANBBBBBBBBBNdddddNBBBNddNBBBBB
+BN...NNBBNqWhCqNNBBNqqInqqNNAAANBBBNNNNNNNdddddNBBBNddNBBBBB
+BN...XNBBN...d.NNNBNAAAAANNNAAANBBBNXddddddddddNBBBNddNBBBBB
+BN...XNBBN..E..NpNBNAA@AAFFFdddNBBBNX..........NBBBNddNBBBBB
+BN...XNBBN.....NNNBNAAAAANNNJJJNBBBNXddddddddddNBBBNddNBBBBB
+BNNNNNNBBNN...NNBBBNNNNNNNNNKKKNNNNNNNNNNNNNNNNNNNNN..NBBBBB
+BBBBBBBBBBN.!.NBBBBBN..LLLLMwwwMLLL...................NBBBBB
+BBBBBBBBBBN...NNNNNNNNNN..NNNNNNNNNNNNNNNNNNNNNNNNNNNNNBBBBB
+BBBBBBBBBBN...............NBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBB
+BBBBBBBBBBNNNNNNNNNNNNNNNNNBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBB
+  end
+
+  legend
+    B = Breakable color 0x0C
+    N = Normal color 0x0C
+    H = Head color 0x09
+    . = Empty color 0x0C
+    b = Head color 0x0A
+    o = Object color 0x0D
+    c = Head color 0x0B
+    d = Empty color 0x00
+    f = Head color 0x0C
+    X = Transporter color 0x0C
+    j = Empty color 0x03
+    O = Object color 0x0B
+    m = Head color 0x0D
+    q = Text-Red color 0x20
+    x = Head color 0x0E
+    T = Text-Red color 0x54
+    h = Text-Red color 0x68
+    e = Text-Red color 0x65
+    D = Text-Red color 0x44
+    v = Text-Red color 0x76
+    i = Text-Red color 0x69
+    l = Text-Red color 0x6C
+    ' = Text-Red color 0x27
+    s = Text-Red color 0x73
+    y = Head color 0x0F
+    Q = Text-Red color 0x51
+    u = Text-Red color 0x75
+    a = Text-Red color 0x61
+    r = Text-Red color 0x72
+    t = Text-Red color 0x74
+    g = Gem color 0x09
+    k = Key color 0x0D
+    z = Object color 0x0E
+    A = Ammo color 0x03
+    G = Text-Red color 0x47
+    W = Text-Red color 0x57
+    C = Text-Red color 0x6F
+    I = Text-Red color 0x49
+    n = Text-Red color 0x6E
+    E = Object color 0x0C
+    p = Passage color 0x1F to "Crossover Cave"
+    @ = Player color 0x1F under Empty color 0x03
+    F = Empty color 0x0D
+    J = Breakable color 0x0A
+    K = Breakable color 0x09
+    ! = Scroll color 0x0F
+    L = Empty color 0x0E
+    M = Empty color 0x0F
+    w = Slider (EW) color 0x0E
+  end
+
+  stats
+    stat at 49,13 element Transporter p1 0 p2 0 step west under Empty color 0x0C
+    stat at 25,13 element Transporter p1 0 p2 0 step east
+    stat at 12,5 element Transporter p1 0 p2 0 step north under Empty color 0x0C
+    stat at 25,11 element Transporter p1 0 p2 0 step east under Empty color 0x0C
+    stat at 25,12 element Transporter p1 0 p2 0 step east under Empty color 0x0C
+    stat at 37,18 element Transporter p1 0 p2 0 step west
+    stat at 49,12 element Transporter p1 0 p2 0 step west under Empty color 0x0C
+    stat at 49,11 element Transporter p1 0 p2 0 step west
+    stat at 6,19 element Transporter p1 0 p2 0 step east under Empty color 0x0C
+    stat at 6,18 element Transporter p1 0 p2 0 step east
+    stat at 6,20 element Transporter p1 0 p2 0 step east under Empty color 0x0C
+    stat at 37,20 element Transporter p1 0 p2 0 step west under Empty color 0x0C
+    stat at 37,19 element Transporter p1 0 p2 0 step west under Empty color 0x0C
+    stat at 3,2 element Head step idle under Empty color 0x0C
+    stat at 4,2 element Head step idle under Empty color 0x0C
+    stat at 5,2 element Head step idle under Empty color 0x0C
+    stat at 6,2 element Head step idle under Empty color 0x0C
+    stat at 7,2 element Head step idle under Empty color 0x0C
+    stat at 8,2 element Head step idle under Empty color 0x0C
+    stat at 8,3 element Head step idle under Empty color 0x0C
+    stat at 7,3 element Head step idle under Empty color 0x0C
+    stat at 6,3 element Head step idle under Empty color 0x0C
+    stat at 5,3 element Head step idle under Empty color 0x0C
+    stat at 4,3 element Head step idle under Empty color 0x0C
+    stat at 3,3 element Head step idle under Empty color 0x0C
+    stat at 3,4 element Head step idle under Empty color 0x0C
+    stat at 4,4 element Head step idle under Empty color 0x0C
+    stat at 5,4 element Head step idle under Empty color 0x0C
+    stat at 6,4 element Head step idle under Empty color 0x0C
+    stat at 7,4 element Head step idle under Empty color 0x0C
+    stat at 8,4 element Head step idle under Empty color 0x0C
+    stat at 8,5 element Head step idle under Empty color 0x0C
+    stat at 7,5 element Head step idle under Empty color 0x0C
+    stat at 5,5 element Head step idle under Empty color 0x0C
+    stat at 4,5 element Head step idle under Empty color 0x0C
+    stat at 3,5 element Head step idle under Empty color 0x0C
+    stat at 3,6 element Head step idle under Empty color 0x0C
+    stat at 4,6 element Head step idle under Empty color 0x0C
+    stat at 5,6 element Head step idle under Empty color 0x0C
+    stat at 6,6 element Head step idle under Empty color 0x0C
+    stat at 7,6 element Head step idle under Empty color 0x0C
+    stat at 8,6 element Head step idle under Empty color 0x0C
+    stat at 8,7 element Head step idle under Empty color 0x0C
+    stat at 7,7 element Head step idle under Empty color 0x0C
+    stat at 6,7 element Head step idle under Empty color 0x0C
+    stat at 5,7 element Head step idle under Empty color 0x0C
+    stat at 4,7 element Head step idle under Empty color 0x0C
+    stat at 3,7 element Head step idle under Empty color 0x0C
+    stat at 3,8 element Head step idle under Empty color 0x0C
+    stat at 4,8 element Head step idle under Empty color 0x0C
+    stat at 5,8 element Head step idle under Empty color 0x0C
+    stat at 6,8 element Head step idle under Empty color 0x0C
+    stat at 7,8 element Head step idle under Empty color 0x0C
+    stat at 8,8 element Head step idle under Empty color 0x0C
+    stat at 10,3 element Object p1 cp437:0xEF p2 0 step idle under Empty color 0x0C
+    oop
+@gate1
+#cycle 4
+/i/i/i/n/s
+#restart
+
+    end
+    stat at 9,3 element Head p1 8 p2 0 step idle under Empty color 0x0C
+    stat at 32,5 element Object p1 cp437:0x08 p2 0 step idle
+    oop
+#end
+:touch
+#change blue gem tiger
+#play cedfegfagba+c-b+dsc
+#send gate2:do
+#die
+
+    end
+    stat at 41,12 element Object p1 cp437:0xEF p2 0 step idle under Empty color 0x0C
+    oop
+@gate2
+#cycle 4
+/i/i/i/n/s
+#restart
+
+    end
+    stat at 13,19 element Object p1 cp437:0x81 p2 0 step idle under Empty color 0x0C
+    oop
+@The Devil
+#end
+:touch
+#lock
+#cycle 8
+A crack of thunder roars through the air
+/i/i/i/i
+#play c-c-c++d-d-d++d#-d#-d#++f-f-f
+#play g-g-g++g#-g#-g#++a#-a#-a#+++c-c-sc
+/i/i/i/i
+A bolt of lightning flashes around you
+/i/i/i/i
+#play +egbegbegbegbdf#adf#adf#adf#a
+#play cegcegcegcegbd#f#bd#f#bd#f#
+#play sbd#f#ibd#f#qbd#f#b
+#change normal cyan normal
+#change breakable cyan breakable
+/i/i/i/i/i/i
+Lots of other scary things happen
+#play 01928471254784961728490948746525174
+/i/i/i/i
+And finally...
+/i/i/i/i
+The Devil speaks...
+/i/i/i/i
+    You have invaded the forsaken halls
+of Lucifer the great evil,  master of
+the dungeons,  ruler of blah blah blah
+blah,  blah blah,  etc,  etc,  etc...
+/i/i/i/i
+Sounds pretty scarry to me...
+/i/i/i/i
+The devil finally speaks again...
+/i/i/i/i
+#zap touch
+#unlock
+:touch
+    Do you,  a mere mortal,  challenge the
+omniscent powers of evil that lurk in the
+dungeons of Hell?
+
+!doyes;Yes
+!dono;No
+#end
+:doyes
+#lock
+Ok,  you win.
+/e/e
+#play 0xxxx0xxx0xx0x09
+/i
+#put e empty
+#die
+:dono
+#cycle 4
+Then die, cowardly adventurer!
+:noloop
+#lock
+/i
+#take health 1
+#play 9
+#send noloop
+
+    end
+    stat at 6,5 element Head step idle under Empty color 0x09
+    stat at 20,12 element Object p2 0 step idle under Empty color 0x0C
+    oop
+@blok
+#end
+:touch
+#if any head xhead
+Good job...  So far!
+#play cdcdecdefcdefgcdefgacdefgabcdefgab+c
+#die
+:xhead
+#play dfgfdfgfagfgagfgageageageage
+You must destroy the creatures.
+
+    end
+    stat at 17,19 element Passage p1 0 p2 0 p3 board "Crossover Cave" step idle under Empty color 0x0C
+    stat at 13,22 element Scroll p1 0 p2 0 step idle under Empty color 0x0C
+    oop
+Almost there...
+
+    end
+  end
+end

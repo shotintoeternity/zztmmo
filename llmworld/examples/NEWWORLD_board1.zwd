@@ -1,0 +1,113 @@
+board "d"
+  start player at 27,23
+  respawn at 1,25
+  max-shots 255
+  dark false
+  reenter false
+  time-limit 0
+  exits north none south none west none east none
+
+  grid
+bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb
+bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb
+bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb
+bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb
+bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbTbbbbbbbbbbbbbbbbbbbbbbbbbb
+bbbbbbbHbbbbbbbbbbbbbbbbbbbbbbbbbbhbbbbbbbbbbbbbbbbbbbbbbbbb
+bbbbbbbbebbbbbbbbbbbbbblllllllbbbbbibbbbbbbbbbbbbbbbbbbbbbbb
+bbbbbbbbbybbbbbbbbbbbbbl.....lbbbbbbsbbbbbbbbbbbbbbbbbbbbbbb
+bbbbbbbbbbbbbbbbbbbbbbbl..o..lbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb
+bbbbbbbbbbWbbbbbbbbbbbbl.....lbbbbbbbbibbbbbbbbbbbbbbbbbbbbb
+bbbbbbbbbbbabbbbbbbbbbblll.lllbbbbbbbbbsbbbbbbbbbbbbbbbbbbbb
+bbbbbbbbbbbbibbbbbbbbbbbbl.lbbbbbbbbbbbbnbbbbbbbbbbbbbbbbbbb
+bbbbbbbbbbbbbtbbbbbbbbbbbl.lbbbEbbbbbbbbb'bbbbbbbbbbbbbbbbbb
+bbbbbbbbbbbbbb!bbbbbbbbbbl.lbbbbnbbbbbbbbbtbbbbbbbbbbbbbbbbb
+bbbbbbbbbbbbbbbbbbbbbbbbbl.lbbbbbcbbbbbbbbbbbbbbbbbbbbbbbbbb
+bbbbbbbbbbbbbbbbbbbbbbbbbl.lbbbbbbybbbbbbbbbtbbbbbbbbbbbbbbb
+bbbbbbbbbbbbbbbbbbbbbbbbbl.lbbbbbbbcbbbbbbbbbhbbbbbbbbbbbbbb
+bbbbbbbbbbbbbbbbbbbbbbbbbl.lbbbbbbbbfbbbbbbbbbebbbbbbbbbbbbb
+bbbbbbbbbbbbbbbbbbbbbbbbbl.lbbbbbbbbbgbbbbbbbbbbbbbbbbbbbbbb
+bbbbbbbbbbbbbbbbbbbbbbbbbl.lbbbbbbbbbbpbbbbbbbbbbbbbbbbbbbbb
+bbbbbbbbbbbbbbbbbbbbbbblll.lllbbbbbbbbbebbbbbbbbbbbbbbbbbbbb
+bbbbbbbbbbbbbbbbbbbbbbblj....lbbbbbbbbbbdbbbbbbbbbbbbbbbbbbb
+bbbbbbbbbbbbbbbbbbbbbbblj.@..lbbbbbbbbbbbibbbbbbbbbbbbbbbbbb
+bbbbbbbbbbbbbbbbbbbbbbblllllllbbbbbbbbbbbbabbbbbbbbbbbbbbbbb
+bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb!bbbbbbbbbbbbbbbb
+  end
+
+  legend
+    b = Text-Cyan color 0x20
+    T = Text-Cyan color 0x54
+    H = Text-Cyan color 0x48
+    h = Text-Cyan color 0x68
+    e = Text-Cyan color 0x65
+    l = Line color 0x0B
+    i = Text-Cyan color 0x69
+    y = Text-Cyan color 0x79
+    . = Empty color 0x00
+    s = Text-Cyan color 0x73
+    o = Object color 0x0B
+    W = Text-Cyan color 0x57
+    a = Text-Cyan color 0x61
+    n = Text-Cyan color 0x6E
+    t = Text-Cyan color 0x74
+    E = Text-Cyan color 0x45
+    ' = Text-Cyan color 0x27
+    ! = Text-Cyan color 0x21
+    c = Text-Cyan color 0x63
+    f = Text-Cyan color 0x6C
+    g = Text-Cyan color 0x6F
+    p = Text-Cyan color 0x70
+    j = Empty color 0x0B
+    d = Text-Cyan color 0x64
+    @ = Player color 0x1F under Empty color 0x00
+  end
+
+  stats
+    stat at 27,9 element Object p1 cp437:0x48 p2 0 step idle
+    oop
+#end
+:touch
+$
+$Pretty kewl, eh?
+$
+  When you immediately exit a game, and
+try to play it again, ZZT will load up
+a game with the same FILENAME as the NAME
+of the game you just played.  A FILENAME
+and a NAME are not the same thing.  The
+NAME of a ZZT game is stored into the 
+game's data, near the beginning, and
+appears at the upper-right when you
+load up a world. Though the second half
+of the Encyclopedia has a certain 
+filename, its NAME is NEWWORLD.  So when
+you exit, it actually loaded up the game 
+NEWWORLD.ZZT.  To set up this engine,
+do the following steps:
+$
+$1) Make a world.
+$2) Make another world.
+$3) Make sure the name of the first world
+$   is the filename of the other.  There
+$   are 2 ways to do this:                
+$
+  a) Save the game again as the name you
+     want.  Delete the original copy.
+     Rename it back to the old filename.
+     It will have a different name, but
+     keep the filename.
+  b) Open the world in a text file and
+     rename it, keeping sure it is opened
+     as binary and the length of the name
+     is stored as the first byte in that
+     string.
+$
+  I hope this wasn't too confusing... it's
+really cool if you get it.
+$
+#end
+
+    end
+  end
+end

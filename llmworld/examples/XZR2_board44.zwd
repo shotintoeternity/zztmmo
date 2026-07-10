@@ -1,0 +1,74 @@
+board "Baiguria Forest - Treetops West"
+  start player at 60,15
+  respawn at 32,32
+  max-shots 255
+  dark false
+  reenter false
+  time-limit 0
+  exits north none south none west none east "Baiguria Forest - Treetops East"
+
+  grid
+aaNBNNNNNNNNNNNNaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa~~~~~
+BNNNNNNNNNBNNNNNNNNaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa~a~
+NNNNNNNNNNNNNNNNNNBNNaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa
+NNNNNNaaaaNNNBNNNNNNNaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa
+BNNaaaaaaaaaaaNNNNBNNNaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa
+NNaaaaaaaaaaaaaaaNNNN.aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa
+NNaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa
+Naaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa
+Baaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa
+Naaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa
+Naaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa
+Naaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa
+Baaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa
+Npo.......aaaaaaaaaaaaaaaaaaaaaaaaaaabbbbbbaaaaaaaaaaaaaaaaa
+NNBNNNNNNbbbbbbbbbaaaaaaaabbbbbbbbbbbbcW##bbbbbbbbbbbbbbbbb@
+NNNNNNNNNNNNNNNNNbbbbbbbbbbcW#c##d#Wc##d##cd#W###d#cW#cWd#cW
+BNNNNNNNNNNNNNNNNNNNNNNNNNNbbbbbbbbbbb###Wbbbbbbbbbbbbbbbbbb
+NNNNNNNNNBNNNNNNNNNNNNNNNNNbbbbbbbbbbb#c##bbbbbbbbbbbbbbbbbb
+NBNNNBNNNNNNNNNNNNNNNNNNNNNNbbbbbbbbbbd###bbbbbbbbbbbbbbbbbb
+BNNNNNNBNNNNNBNNNNNNNNNNNNNNbbbbbbbbbb#Wd#bbbbbbbbbbbbbbbbbb
+BBBNBNNNNBNNNNNNNNNNNNNNNNNNbbbbbbbbbbd#c#bbbbbbbbbbbbbbbbbb
+BBBBBBBNNNNNBNNNNNNNNNNNNNNNbbbbbbbbbbW##Wbbbbbbbbbbbbbbbbbb
+BBBBBBBBNNBNNNBNNNNNNNNNNNNbbbbbbbbbbbc##dbbbbbbbbbbbbbbbbbb
+BBBBBBBBBBNNBNNNNNNNNNNNNNNbbbbbbbbbbb#d#Wbbbbbbbbbbbbebbbbb
+BBBBBBBBBBBBBNNBNNNNNNNNNNNbbbbbbbbbbb#W#cbbbebbbbbbbbbbbbeb
+  end
+
+  legend
+    a = Text-White color 0x20
+    N = Normal color 0x16
+    B = Breakable color 0x16
+    ~ = Water color 0x08
+    . = Empty color 0x00
+    p = Passage color 0x08 to "Baiguria Forest - Garuda Wing"
+    o = Object color 0x08
+    b = Empty color 0x0F
+    c = Normal color 0x06
+    W = Water color 0x06
+    # = Solid color 0x06
+    @ = Player color 0x1F under Empty color 0x60
+    d = Breakable color 0x06
+    e = Water color 0x01
+  end
+
+  stats
+    stat at 2,14 element Passage p1 0 p2 0 p3 board "Baiguria Forest - Garuda Wing" step idle follower 0 leader 0
+    stat at 3,14 element Object cycle 1 p1 cp437:0x00 p2 0 step idle follower 0 leader 0
+    oop
+@Barrier
+#end
+:touch
+#if bar then ok
+$
+$A barrier spell prevents you from going
+$any further.
+$
+#end
+:ok
+#die
+#end
+
+    end
+  end
+end

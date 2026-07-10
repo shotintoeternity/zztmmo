@@ -1,0 +1,55 @@
+board "Baiguria Forest - Treetops East"
+  start player at 16,25
+  respawn at 32,32
+  max-shots 255
+  dark false
+  reenter false
+  time-limit 0
+  exits north none south none west "Baiguria Forest - Treetops West" east none
+
+  grid
+~~~aaaa~aaaa~aaa~aaaaaaaaaaaaaaaaaaaaaaaa~aaaaaaaaaaaaaaaa~a
+~aaaa~aaaaaaaaaaaaaaaaaaaa~aaaaaaaaa~aaaaaaaaaaaaaaaaaaaaaaa
+aaaaaaaaaaaaa~aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa~aaaaaaaaaaaaa
+aaaaaaaaaaaaaaaaaaaaaa~aaaaaaaa~aaaaaaaaaaaaaaaaaaaaaaaaaaaa
+aaaaaaaaa~aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa
+aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa
+aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa
+aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa
+aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa
+aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa
+aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa
+aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa
+aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa
+..........aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa
+N##WB##N#....................aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa
+#.......BW#N#llFll#W##BN##W#.......aaaaaaaaaaaaaaaaaaaaaaaaa
+.............WlAl#aaaaaaaaa##W#BW#Naaaaaaaaaaaaaaaaaaaaaaaaa
+.............#lFlBaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa
+.............NlAl#aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa
+.............#lFl#aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa
+.............BlAlNaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa
+.............#lFlWaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa
+.............NlAl#aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa
+b............WlFl#aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaabaaaaa
+bbbbbbbb.....Bl@lNaaaaaaabaaaaaaaaaaaaaaaaaaabaaaaaaaaaaaaba
+  end
+
+  legend
+    ~ = Water color 0x08
+    a = Text-White color 0x20
+    . = Empty color 0x00
+    N = Normal color 0x06
+    # = Solid color 0x06
+    W = Water color 0x06
+    B = Breakable color 0x06
+    l = Line color 0x60
+    F = Fake color 0x06
+    A = Fake color 0x60
+    b = Water color 0x01
+    @ = Player color 0x1F under Fake color 0x60
+  end
+
+  stats
+  end
+end

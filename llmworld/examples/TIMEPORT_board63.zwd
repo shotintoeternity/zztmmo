@@ -1,0 +1,195 @@
+board "Final Room!!!!!"
+  start player at 10,18
+  respawn at 27,7
+  max-shots 255
+  dark false
+  reenter false
+  time-limit 0
+  exits north none south none west none east none
+
+  grid
+############################################################
+############################################################
+############################################################
+############################################################
+###############.................pppp########################
+##############..................pppp########################
+#############..................pppppp#######################
+#############.................pppppppp######################
+############..................pppppppp######################
+###########...................pppppppp~#####################
+#########......................ppppppp~~~~~#################
+#########.......................pppppp~~~~~~################
+#########.......................ppppppp~~~~~~~~~############
+#########.......................ppppppp~~~~~~~~~~~##########
+#########......................pppppppp~~~~~~~~~~~~~########
+#########.###.................pppppppp~~~~~~~~~~~~~~~#######
+#########.#####...............ppppp~~~~~~~~~~~~~~~~~~#######
+#########@######.............ppppp~~~~~~~~~~~~~~~~##########
+#################...........pppppp~~~~~~~~~~~~~~~~##########
+##################..........ppppp~~~~~~~~~~~~~~~############
+##################..........ppppp~~~~~~~~~~~################
+############################################################
+############################################################
+############################################################
+############################################################
+  end
+
+  legend
+    # = Solid color 0x09
+    . = Empty color 0x00
+    p = Passage color 0x1F to "Final Room  2"
+    ~ = Water color 0xF9
+    @ = Player color 0x1F under Empty color 0x00
+  end
+
+  stats
+    stat at 31,9 element Passage p1 0 p2 0 p3 board "Final Room  2" step idle
+    stat at 31,10 element Passage p1 0 p2 0 p3 board "Final Room  2" step idle
+    stat at 32,11 element Passage p1 0 p2 0 p3 board "Final Room  2" step idle
+    stat at 33,12 element Passage p1 0 p2 0 p3 board "Final Room  2" step idle
+    stat at 33,13 element Passage p1 0 p2 0 p3 board "Final Room  2" step idle
+    stat at 33,14 element Passage p1 0 p2 0 p3 board "Final Room  2" step idle
+    stat at 32,15 element Passage p1 0 p2 0 p3 board "Final Room  2" step idle
+    stat at 31,16 element Passage p1 0 p2 0 p3 board "Final Room  2" step idle
+    stat at 31,17 element Passage p1 0 p2 0 p3 board "Final Room  2" step idle
+    stat at 31,18 element Passage p1 0 p2 0 p3 board "Final Room  2" step idle
+    stat at 30,18 element Passage p1 0 p2 0 p3 board "Final Room  2" step idle
+    stat at 30,20 element Passage p1 0 p2 0 p3 board "Final Room  2" step idle
+    stat at 29,19 element Passage p1 0 p2 0 p3 board "Final Room  2" step idle
+    stat at 29,20 element Passage p1 0 p2 0 p3 board "Final Room  2" step idle
+    stat at 29,21 element Passage p1 0 p2 0 p3 board "Final Room  2" step idle
+    stat at 31,8 element Passage p1 0 p2 0 p3 board "Final Room  2" step idle
+    stat at 32,8 element Passage p1 0 p2 0 p3 board "Final Room  2" step idle
+    stat at 32,7 element Passage p1 0 p2 0 p3 board "Final Room  2" step idle
+    stat at 33,7 element Passage p1 0 p2 0 p3 board "Final Room  2" step idle
+    stat at 33,6 element Passage p1 0 p2 0 p3 board "Final Room  2" step idle
+    stat at 33,5 element Passage p1 0 p2 0 p3 board "Final Room  2" step idle
+    stat at 38,9 element Passage p1 0 p2 0 p3 board "Final Room  2" step idle
+    stat at 38,10 element Passage p1 0 p2 0 p3 board "Final Room  2" step idle
+    stat at 38,11 element Passage p1 0 p2 0 p3 board "Final Room  2" step idle
+    stat at 38,12 element Passage p1 0 p2 0 p3 board "Final Room  2" step idle
+    stat at 38,13 element Passage p1 0 p2 0 p3 board "Final Room  2" step idle
+    stat at 39,13 element Passage p1 0 p2 0 p3 board "Final Room  2" step idle
+    stat at 39,14 element Passage p1 0 p2 0 p3 board "Final Room  2" step idle
+    stat at 39,15 element Passage p1 0 p2 0 p3 board "Final Room  2" step idle
+    stat at 38,16 element Passage p1 0 p2 0 p3 board "Final Room  2" step idle
+    stat at 37,16 element Passage p1 0 p2 0 p3 board "Final Room  2" step idle
+    stat at 35,17 element Passage p1 0 p2 0 p3 board "Final Room  2" step idle
+    stat at 34,17 element Passage p1 0 p2 0 p3 board "Final Room  2" step idle
+    stat at 34,18 element Passage p1 0 p2 0 p3 board "Final Room  2" step idle
+    stat at 34,19 element Passage p1 0 p2 0 p3 board "Final Room  2" step idle
+    stat at 33,20 element Passage p1 0 p2 0 p3 board "Final Room  2" step idle
+    stat at 33,21 element Passage p1 0 p2 0 p3 board "Final Room  2" step idle
+    stat at 36,16 element Passage p1 0 p2 0 p3 board "Final Room  2" step idle
+    stat at 36,14 element Passage p1 0 p2 0 p3 board "Final Room  2" step idle
+    stat at 35,15 element Passage p1 0 p2 0 p3 board "Final Room  2" step idle
+    stat at 37,15 element Passage p1 0 p2 0 p3 board "Final Room  2" step idle
+    stat at 36,13 element Passage p1 0 p2 0 p3 board "Final Room  2" step idle
+    stat at 35,14 element Passage p1 0 p2 0 p3 board "Final Room  2" step idle
+    stat at 37,14 element Passage p1 0 p2 0 p3 board "Final Room  2" step idle
+    stat at 35,14 element Passage p1 0 p2 0 p3 board "Final Room  2" step idle under Passage color 0x1F
+    stat at 35,16 element Passage p1 0 p2 0 p3 board "Final Room  2" step idle
+    stat at 34,15 element Passage p1 0 p2 0 p3 board "Final Room  2" step idle
+    stat at 37,14 element Passage p1 0 p2 0 p3 board "Final Room  2" step idle under Passage color 0x1F
+    stat at 38,15 element Passage p1 0 p2 0 p3 board "Final Room  2" step idle
+    stat at 36,12 element Passage p1 0 p2 0 p3 board "Final Room  2" step idle
+    stat at 35,13 element Passage p1 0 p2 0 p3 board "Final Room  2" step idle
+    stat at 37,13 element Passage p1 0 p2 0 p3 board "Final Room  2" step idle
+    stat at 35,13 element Passage p1 0 p2 0 p3 board "Final Room  2" step idle under Passage color 0x1F
+    stat at 34,14 element Passage p1 0 p2 0 p3 board "Final Room  2" step idle
+    stat at 37,13 element Passage p1 0 p2 0 p3 board "Final Room  2" step idle under Passage color 0x1F
+    stat at 38,14 element Passage p1 0 p2 0 p3 board "Final Room  2" step idle
+    stat at 34,16 element Passage p1 0 p2 0 p3 board "Final Room  2" step idle
+    stat at 34,14 element Passage p1 0 p2 0 p3 board "Final Room  2" step idle under Passage color 0x1F
+    stat at 34,16 element Passage p1 0 p2 0 p3 board "Final Room  2" step idle under Passage color 0x1F
+    stat at 33,15 element Passage p1 0 p2 0 p3 board "Final Room  2" step idle
+    stat at 38,14 element Passage p1 0 p2 0 p3 board "Final Room  2" step idle under Passage color 0x1F
+    stat at 36,11 element Passage p1 0 p2 0 p3 board "Final Room  2" step idle
+    stat at 35,12 element Passage p1 0 p2 0 p3 board "Final Room  2" step idle
+    stat at 37,12 element Passage p1 0 p2 0 p3 board "Final Room  2" step idle
+    stat at 35,12 element Passage p1 0 p2 0 p3 board "Final Room  2" step idle under Passage color 0x1F
+    stat at 34,13 element Passage p1 0 p2 0 p3 board "Final Room  2" step idle
+    stat at 37,12 element Passage p1 0 p2 0 p3 board "Final Room  2" step idle under Passage color 0x1F
+    stat at 34,13 element Passage p1 0 p2 0 p3 board "Final Room  2" step idle under Passage color 0x1F
+    stat at 33,16 element Passage p1 0 p2 0 p3 board "Final Room  2" step idle
+    stat at 33,16 element Passage p1 0 p2 0 p3 board "Final Room  2" step idle under Passage color 0x1F
+    stat at 36,10 element Passage p1 0 p2 0 p3 board "Final Room  2" step idle
+    stat at 35,11 element Passage p1 0 p2 0 p3 board "Final Room  2" step idle
+    stat at 37,11 element Passage p1 0 p2 0 p3 board "Final Room  2" step idle
+    stat at 35,11 element Passage p1 0 p2 0 p3 board "Final Room  2" step idle under Passage color 0x1F
+    stat at 34,12 element Passage p1 0 p2 0 p3 board "Final Room  2" step idle
+    stat at 37,11 element Passage p1 0 p2 0 p3 board "Final Room  2" step idle under Passage color 0x1F
+    stat at 34,12 element Passage p1 0 p2 0 p3 board "Final Room  2" step idle under Passage color 0x1F
+    stat at 33,17 element Passage p1 0 p2 0 p3 board "Final Room  2" step idle
+    stat at 32,16 element Passage p1 0 p2 0 p3 board "Final Room  2" step idle
+    stat at 36,9 element Passage p1 0 p2 0 p3 board "Final Room  2" step idle
+    stat at 35,10 element Passage p1 0 p2 0 p3 board "Final Room  2" step idle
+    stat at 37,10 element Passage p1 0 p2 0 p3 board "Final Room  2" step idle
+    stat at 35,10 element Passage p1 0 p2 0 p3 board "Final Room  2" step idle under Passage color 0x1F
+    stat at 34,11 element Passage p1 0 p2 0 p3 board "Final Room  2" step idle
+    stat at 37,10 element Passage p1 0 p2 0 p3 board "Final Room  2" step idle under Passage color 0x1F
+    stat at 34,11 element Passage p1 0 p2 0 p3 board "Final Room  2" step idle under Passage color 0x1F
+    stat at 33,18 element Passage p1 0 p2 0 p3 board "Final Room  2" step idle
+    stat at 32,17 element Passage p1 0 p2 0 p3 board "Final Room  2" step idle
+    stat at 32,17 element Passage p1 0 p2 0 p3 board "Final Room  2" step idle under Passage color 0x1F
+    stat at 36,8 element Passage p1 0 p2 0 p3 board "Final Room  2" step idle
+    stat at 35,9 element Passage p1 0 p2 0 p3 board "Final Room  2" step idle
+    stat at 37,9 element Passage p1 0 p2 0 p3 board "Final Room  2" step idle
+    stat at 35,9 element Passage p1 0 p2 0 p3 board "Final Room  2" step idle under Passage color 0x1F
+    stat at 34,10 element Passage p1 0 p2 0 p3 board "Final Room  2" step idle
+    stat at 37,9 element Passage p1 0 p2 0 p3 board "Final Room  2" step idle under Passage color 0x1F
+    stat at 34,10 element Passage p1 0 p2 0 p3 board "Final Room  2" step idle under Passage color 0x1F
+    stat at 33,11 element Passage p1 0 p2 0 p3 board "Final Room  2" step idle
+    stat at 33,19 element Passage p1 0 p2 0 p3 board "Final Room  2" step idle
+    stat at 32,18 element Passage p1 0 p2 0 p3 board "Final Room  2" step idle
+    stat at 32,18 element Passage p1 0 p2 0 p3 board "Final Room  2" step idle under Passage color 0x1F
+    stat at 36,7 element Passage p1 0 p2 0 p3 board "Final Room  2" step idle
+    stat at 35,8 element Passage p1 0 p2 0 p3 board "Final Room  2" step idle
+    stat at 37,8 element Passage p1 0 p2 0 p3 board "Final Room  2" step idle
+    stat at 35,8 element Passage p1 0 p2 0 p3 board "Final Room  2" step idle under Passage color 0x1F
+    stat at 34,9 element Passage p1 0 p2 0 p3 board "Final Room  2" step idle
+    stat at 37,8 element Passage p1 0 p2 0 p3 board "Final Room  2" step idle under Passage color 0x1F
+    stat at 34,9 element Passage p1 0 p2 0 p3 board "Final Room  2" step idle under Passage color 0x1F
+    stat at 33,10 element Passage p1 0 p2 0 p3 board "Final Room  2" step idle
+    stat at 33,10 element Passage p1 0 p2 0 p3 board "Final Room  2" step idle under Passage color 0x1F
+    stat at 32,19 element Passage p1 0 p2 0 p3 board "Final Room  2" step idle
+    stat at 32,19 element Passage p1 0 p2 0 p3 board "Final Room  2" step idle under Passage color 0x1F
+    stat at 36,6 element Passage p1 0 p2 0 p3 board "Final Room  2" step idle
+    stat at 35,7 element Passage p1 0 p2 0 p3 board "Final Room  2" step idle
+    stat at 37,7 element Passage p1 0 p2 0 p3 board "Final Room  2" step idle
+    stat at 35,7 element Passage p1 0 p2 0 p3 board "Final Room  2" step idle under Passage color 0x1F
+    stat at 34,8 element Passage p1 0 p2 0 p3 board "Final Room  2" step idle
+    stat at 37,7 element Passage p1 0 p2 0 p3 board "Final Room  2" step idle under Passage color 0x1F
+    stat at 38,8 element Passage p1 0 p2 0 p3 board "Final Room  2" step idle
+    stat at 34,8 element Passage p1 0 p2 0 p3 board "Final Room  2" step idle under Passage color 0x1F
+    stat at 33,9 element Passage p1 0 p2 0 p3 board "Final Room  2" step idle
+    stat at 33,9 element Passage p1 0 p2 0 p3 board "Final Room  2" step idle under Passage color 0x1F
+    stat at 32,10 element Passage p1 0 p2 0 p3 board "Final Room  2" step idle
+    stat at 32,20 element Passage p1 0 p2 0 p3 board "Final Room  2" step idle
+    stat at 31,19 element Passage p1 0 p2 0 p3 board "Final Room  2" step idle
+    stat at 36,5 element Passage p1 0 p2 0 p3 board "Final Room  2" step idle
+    stat at 35,6 element Passage p1 0 p2 0 p3 board "Final Room  2" step idle
+    stat at 35,6 element Passage p1 0 p2 0 p3 board "Final Room  2" step idle under Passage color 0x1F
+    stat at 34,7 element Passage p1 0 p2 0 p3 board "Final Room  2" step idle
+    stat at 34,7 element Passage p1 0 p2 0 p3 board "Final Room  2" step idle under Passage color 0x1F
+    stat at 33,8 element Passage p1 0 p2 0 p3 board "Final Room  2" step idle
+    stat at 33,8 element Passage p1 0 p2 0 p3 board "Final Room  2" step idle under Passage color 0x1F
+    stat at 32,9 element Passage p1 0 p2 0 p3 board "Final Room  2" step idle
+    stat at 32,9 element Passage p1 0 p2 0 p3 board "Final Room  2" step idle under Passage color 0x1F
+    stat at 32,21 element Passage p1 0 p2 0 p3 board "Final Room  2" step idle
+    stat at 31,20 element Passage p1 0 p2 0 p3 board "Final Room  2" step idle
+    stat at 31,20 element Passage p1 0 p2 0 p3 board "Final Room  2" step idle under Passage color 0x1F
+    stat at 30,19 element Passage p1 0 p2 0 p3 board "Final Room  2" step idle
+    stat at 35,5 element Passage p1 0 p2 0 p3 board "Final Room  2" step idle
+    stat at 35,5 element Passage p1 0 p2 0 p3 board "Final Room  2" step idle under Passage color 0x1F
+    stat at 34,6 element Passage p1 0 p2 0 p3 board "Final Room  2" step idle
+    stat at 34,6 element Passage p1 0 p2 0 p3 board "Final Room  2" step idle under Passage color 0x1F
+    stat at 31,21 element Passage p1 0 p2 0 p3 board "Final Room  2" step idle
+    stat at 31,21 element Passage p1 0 p2 0 p3 board "Final Room  2" step idle under Passage color 0x1F
+    stat at 34,5 element Passage p1 0 p2 0 p3 board "Final Room  2" step idle
+    stat at 34,5 element Passage p1 0 p2 0 p3 board "Final Room  2" step idle under Passage color 0x1F
+    stat at 30,21 element Passage p1 0 p2 0 p3 board "Final Room  2" step idle
+    stat at 36,15 element Passage p1 0 p2 0 p3 board "Final Room  2" step idle
+  end
+end

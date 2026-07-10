@@ -1,0 +1,101 @@
+board "later, later"
+  start player at 17,8
+  respawn at 1,1
+  max-shots 255
+  dark false
+  reenter false
+  time-limit 0
+  exits north "Leftover" south "I forgot my line" west none east none
+
+  grid
+bbbbbbbbbbbbNNNN........NNNNbbLo,bthebship,batbthisbopportun
+ity,bslippedNNNN.jxzxzC.NNNNbbMakingbcunningbnoiselessbtrave
+lbdownbthebwNNNNDzjO.EE.NNNNbbSobthat,bforeverbrudderless,bi
+tbwentbuponbNNNNHIJKjJDjNNNNbbGoingbridiculousbvoyages,bbbbb
+bbbbbbbbbbbbNNNN........NNNNbbMakingbquaintbprogress,bbbbbbb
+bbbbbbbbbbbbNNNN........NNNNbbTurningbasbwithbseriousbpurpos
+ebbbbbbbbbbbNNNN.EEEEEE.NNNNbbBeforebstupidbwindsPbbbbbbbbbb
+bbbbbbbbbbbbNNNN@.......NNNNbbAndbtherebwerebmanybinbthebsky
+bbbbbbbbbbbbNNNN........NNNNbbWhoblaughedbatbthisbthingPbbbb
+QQQQQQQQQQQQQQQQFFFFFFFFQQQQQQQQQQQQQQQQQQQQQQQQQQQQQQQQQQQQ
+QQQQQQQQQQQQQQQQFFFFFFFFQQQQQQQQQQQQQQQQQQQQQQQQQQQQQQQQQQQQ
+QQQQQQQQQQQQQQQQFFFFFFFFQQQQQQQQQQQQQQQQQQQQQQQQQQQQQQQQQQQQ
+QQQQQQQQQQQQQQQQFFFFFFFFQQQQQQQQQQQQQQQQQQQQQQQQQQQQQQQQQQQQ
+QQQQQQQQQQQQQQQQFFFFFFFFQQQQQQQQQQQQQQQQQQQQQQQQQQQQQQQQQQQQ
+QQQQQQQQQQQQQQQQFFFFFFFFQQQQQQQQQQQQQQQQQQQQQQQQQQQQQQQQQQQQ
+QQQQQQQQQQQQQQQQFFFFFFFFQQQQQQQQQQQQQQQQQQQQQQQQQQQQQQQQQQQQ
+QQQQQQQQQQQQQQQQFFFFFFFFQQQQQQQQQQQQQQQQQQQQQQQQQQQQQQQQQQQQ
+QQQQQQQQQQQQQQQQFFFFFFFFQQQQQQQQQQQQQQQQQQQQQQQQQQQQQQQQQQQQ
+QQQQQQQQQQQQQQQQFFFFFFFFQQQQQQQQQQQQQQQQQQQQQQQQQQQQQQQQQQQQ
+QQQQQQQQQQQQQQQQFFFFFFFFQQQQQQQQQQQQQQQQQQQQQQQQQQQQQQQQQQQQ
+QQQQQQQQQQQQQQQQFFFFFFFFQQQQQQQQQQQQQQQQQQQQQQQQQQQQQQQQQQQQ
+QQQQQQQQQQQQQQQQFFFFFFFFQQQQQQQQQQQQQQQQQQQQQQQQQQQQQQQQQQQQ
+QQQQQQQQQQQQQQQQFFFFFFFFQQQQQQQQQQQQQQQQQQQQQQQQQQQQQQQQQQQQ
+QQQQQQQQQQQQQQQQFFFFFFFFQQQQQQQQQQQQQQQQQQQQQQQQQQQQQQQQQQQQ
+QQQQQQQQQQQQQQQQFFFFFFFFQQQQQQQQQQQQQQQQQQQQQQQQQQQQQQQQQQQQ
+  end
+
+  legend
+    b = Text-Blue color 0x20
+    N = Normal color 0x09
+    . = Empty color 0x0F
+    L = Text-Blue color 0x4C
+    o = Text-Blue color 0x6F
+    , = Text-Blue color 0x2C
+    t = Text-Blue color 0x74
+    h = Text-Blue color 0x68
+    e = Text-Blue color 0x65
+    s = Text-Blue color 0x73
+    i = Text-Blue color 0x69
+    p = Text-Blue color 0x70
+    a = Text-Blue color 0x61
+    r = Text-Blue color 0x72
+    u = Text-Blue color 0x75
+    n = Text-Blue color 0x6E
+    y = Text-Blue color 0x79
+    l = Text-Blue color 0x6C
+    d = Text-Blue color 0x64
+    j = Text-White color 0x73
+    x = Text-White color 0x6C
+    z = Text-White color 0x79
+    C = Text-White color 0x2C
+    M = Text-Blue color 0x4D
+    k = Text-Blue color 0x6B
+    g = Text-Blue color 0x67
+    c = Text-Blue color 0x63
+    v = Text-Blue color 0x76
+    w = Text-Blue color 0x77
+    D = Text-White color 0x61
+    O = Object color 0x0F
+    E = Empty color 0x0B
+    S = Text-Blue color 0x53
+    f = Text-Blue color 0x66
+    H = Text-White color 0x74
+    I = Text-White color 0x68
+    J = Text-White color 0x65
+    K = Empty color 0x07
+    G = Text-Blue color 0x47
+    q = Text-Blue color 0x71
+    T = Text-Blue color 0x54
+    B = Text-Blue color 0x42
+    P = Text-Blue color 0x2E
+    @ = Player color 0x1F under Empty color 0x0F
+    A = Text-Blue color 0x41
+    m = Text-Blue color 0x6D
+    W = Text-Blue color 0x57
+    Q = Text-Red color 0x20
+    F = Fake color 0x44
+  end
+
+  stats
+    stat at 20,3 element Object p1 cp437:0x2E p2 0 step idle under Empty color 0x0F
+    oop
+#cycle 1
+#end
+:touch
+You now have the grain of salt.
+#become empty
+
+    end
+  end
+end

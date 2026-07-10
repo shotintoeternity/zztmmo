@@ -1,0 +1,149 @@
+board "z"
+  start player at 30,13
+  respawn at 1,1
+  max-shots 255
+  dark false
+  reenter false
+  time-limit 0
+  exits north none south none west none east none
+
+  grid
+FNBBBBBBBBbbPPbBBBBBBddddl..o.o..lddddffffffhhhhhhhhhhhhhhhh
+FNBBBBBBBBbPPbbBBBBBdddddl.o.p.o.ldddddfffffffffffffffffffff
+FNBBBBBBBbbPPbBBBBBddddddl..o.o..lddddddffffffffffffffffffff
+NNBBBBBBBbPPbbBBBBdddddddll.....lldddddddffffffffffffffffffP
+BBBBBBBBBbPPbBBBBdddddddddlll.llldddddddddfffffffffffffffffP
+BBBBBBBBbbPPbBBBddddddddddddl.lddddddddddddffffffffffffffffP
+bbBBBBBbbPPbbBBdddddddddddddl.ldddddddddddddfffffffffffffffP
+jbbBBBbbPPbbBBddddddddddddddl.lddddddddddddddffffffffffffffP
+jjbbbbbPPbbBBdddddddddlllllll.llllllldddddddddffffffffffffff
+jjiPPPPPPbBBddddddddddlAAAAAAAAAAAAAlddddddddddfffffffffffff
+j!jbbbbbbbBdkLevemk2kdlAAnnnnnnnnnAAldqrstsuq4qdffffffffffff
+jjjb...bBBBllllllllllllAAnnwwwwwnnAAllllllllllllBBBBBBBBBBBB
+bbbb..abBBllAAAAAAA+AAAAAnnww@wwnnAAAAADAAAAAAAllBBBBBBBBBBB
+.....bbbBBlAAAxAAAlllllAAnnwwwwwnnAAlllllAAAyAAAlBBBBzzzzzzz
+bbbbbbBBBBllAAAAAllBBBlAAnnnnnnnnnAAlBBBllAAAAAllBBBBzzzzzzz
+BBBBBBBBBBBlllllllBBBBlAAAAAAAAAAAAAlBBBBlllllllBBBBBzzCCCzC
+bbbBBBBBBBBBBBBBBBBBBBlllllllAlllllllBBBBBBBBBBBBBBBBzzCCCEC
+..bbbBBBBBBBBBBBBBBBBBBBBBBBlAlBBBBBBBBBBBBBBBBBBBzzzzzOCCzC
+....bBBBBBBBBBBBBBBBBBBBBBBBlAlBBBBBBBBBBBBBBBBBBBzzzzzCCzzC
+H.I.bBBBBBBBzzzzzzzzzzBBBBBBlAlBBBBBBBzzzzzzzzzzzzzzCOCCCzzC
+c.S.bbbBBBBBzzzzzzzzzzBBlllllJlllllBBBzzzzzzzzzzzzzzCCzzzzzC
+c.S...bBBzzzzzCCCCCCzzBBlgAAAAAAAglBBBzzCCCCCCCCCCOCCCzzzzzC
+c.S...bBBzzzzzCCCKCCzzBBlAAGAMAGAAlBBBzzCCQCCCzzzzzzzzzzCCCC
+c.S...bBBzzCCCCCCCCCzzBBlgAAAAAAAglBBBzzCCCCCCzzzzzzzzzzCCOC
+c.SbbbbBBzzCCCCCzzzzzzBBlllllllllllBBBzzzzCCCCzzCCOCCCCCCzzz
+  end
+
+  legend
+    F = Fake color 0x50
+    N = Normal color 0x15
+    B = Breakable color 0x03
+    b = Normal color 0x03
+    P = Pusher color 0x19
+    d = Normal color 0x02
+    l = Line color 0x5C
+    . = Empty color 0x0F
+    o = Object color 0x0E
+    f = Text-Cyan color 0x2E
+    h = Line color 0x1A
+    p = Passage color 0x7F to "y"
+    j = Empty color 0x00
+    i = Invisible color 0x09
+    A = Fake color 0x19
+    ! = Scroll color 0x0F
+    k = Text-Blue color 0x20
+    L = Text-Blue color 0x4C
+    e = Text-Blue color 0x65
+    v = Text-Blue color 0x76
+    m = Text-Blue color 0x6C
+    2 = Text-Blue color 0x32
+    n = Fake color 0x0C
+    q = Text-Red color 0x20
+    r = Text-Red color 0x4C
+    s = Text-Red color 0x65
+    t = Text-Red color 0x76
+    u = Text-Red color 0x6C
+    4 = Text-Red color 0x34
+    w = Fake color 0x0E
+    a = Ammo color 0x03
+    + = Door color 0x1F
+    @ = Player color 0x1F under Fake color 0x0E
+    D = Door color 0x4F
+    x = Text-Blue color 0xF0
+    y = Text-Red color 0xF0
+    z = Line color 0x6E
+    C = Fake color 0x6C
+    E = Door color 0x6F
+    O = Object color 0x62
+    H = Head color 0x0F
+    I = Head color 0x0E
+    c = Segment color 0x07
+    S = Segment color 0x06
+    J = Door color 0x3F
+    g = Gem color 0x1C
+    K = Object color 0x6E
+    G = Gem color 0x1E
+    M = Text-Cyan color 0xF0
+    Q = Object color 0x6D
+  end
+
+  stats
+    stat at 2,11 element Scroll p1 0 p2 0 step idle under Empty color 0x0F
+    stat at 1,25 element Segment p1 0 p2 0 step idle under Empty color 0x0F
+    stat at 1,24 element Segment p1 0 p2 0 step idle under Empty color 0x0F
+    stat at 1,23 element Segment p1 0 p2 0 step idle under Empty color 0x0F
+    stat at 1,22 element Segment p1 0 p2 0 step idle under Empty color 0x0F
+    stat at 1,21 element Segment p1 0 p2 0 step idle under Empty color 0x0F
+    stat at 1,20 element Head step idle under Empty color 0x0F
+    stat at 3,20 element Head step idle under Empty color 0x0F
+    stat at 3,21 element Segment p1 0 p2 0 step idle under Empty color 0x0F
+    stat at 3,22 element Segment p1 0 p2 0 step idle under Empty color 0x0F
+    stat at 3,23 element Segment p1 0 p2 0 step idle under Empty color 0x0F
+    stat at 3,24 element Segment p1 0 p2 0 step idle under Empty color 0x0F
+    stat at 3,25 element Segment p1 0 p2 0 step idle under Empty color 0x0F
+    stat at 29,3 element Object p1 cp437:0xEF p2 0 step idle under Empty color 0x0F
+    stat at 31,3 element Object p1 cp437:0xEF p2 0 step idle under Empty color 0x0F
+    stat at 32,2 element Object p1 cp437:0xEF p2 0 step idle under Empty color 0x0F
+    stat at 31,1 element Object p1 cp437:0xEF p2 0 step idle under Empty color 0x0F
+    stat at 29,1 element Object p1 cp437:0xEF p2 0 step idle under Empty color 0x0F
+    stat at 28,2 element Object p1 cp437:0xEF p2 0 step idle under Empty color 0x0F
+    stat at 18,23 element Object p1 cp437:0x3F p2 0 step idle under Empty color 0x0F
+    stat at 43,23 element Object p1 cp437:0x94 p2 0 step idle under Fake color 0x6C
+    stat at 51,25 element Object p1 cp437:0xEB p2 0 step idle under Fake color 0x6C
+    stat at 59,24 element Object p1 cp437:0xEB p2 0 step idle under Fake color 0x6C
+    stat at 54,20 element Object p1 cp437:0xEB p2 0 step idle under Fake color 0x6C
+    stat at 56,18 element Object p1 cp437:0xEB p2 0 step idle under Fake color 0x6C
+    stat at 51,22 element Object p1 cp437:0xEB p2 0 step idle under Fake color 0x6C
+    stat at 60,8 element Pusher p1 0 p2 0 step north under Empty color 0x0F
+    stat at 60,7 element Pusher p1 0 p2 0 step north under Empty color 0x0F
+    stat at 60,6 element Pusher p1 0 p2 0 step north under Empty color 0x0F
+    stat at 60,5 element Pusher p1 0 p2 0 step north under Empty color 0x0F
+    stat at 60,4 element Pusher p1 0 p2 0 step east under Empty color 0x0F
+    stat at 4,10 element Pusher p1 0 p2 0 step west
+    stat at 5,10 element Pusher p1 0 p2 0 step west
+    stat at 6,10 element Pusher p1 0 p2 0 step west
+    stat at 7,10 element Pusher p1 0 p2 0 step west
+    stat at 8,10 element Pusher p1 0 p2 0 step west
+    stat at 9,10 element Pusher p1 0 p2 0 step west
+    stat at 8,9 element Pusher p1 0 p2 0 step south
+    stat at 9,9 element Pusher p1 0 p2 0 step south under Empty color 0x0F
+    stat at 9,8 element Pusher p1 0 p2 0 step south
+    stat at 10,7 element Pusher p1 0 p2 0 step south
+    stat at 11,6 element Pusher p1 0 p2 0 step south
+    stat at 11,5 element Pusher p1 0 p2 0 step south
+    stat at 11,4 element Pusher p1 0 p2 0 step south
+    stat at 12,3 element Pusher p1 0 p2 0 step south
+    stat at 12,2 element Pusher p1 0 p2 0 step south
+    stat at 10,8 element Pusher p1 0 p2 0 step west
+    stat at 11,7 element Pusher p1 0 p2 0 step west
+    stat at 12,6 element Pusher p1 0 p2 0 step west
+    stat at 12,5 element Pusher p1 0 p2 0 step south
+    stat at 12,4 element Pusher p1 0 p2 0 step south
+    stat at 13,3 element Pusher p1 0 p2 0 step west
+    stat at 13,2 element Pusher p1 0 p2 0 step south
+    stat at 13,1 element Pusher p1 0 p2 0 step south
+    stat at 14,1 element Pusher p1 0 p2 0 step west
+    stat at 30,2 element Passage p1 0 p2 0 p3 board "y" step idle under Empty color 0x0F
+  end
+end

@@ -1,0 +1,259 @@
+board ":; 3 Captain N: The Game Master"
+  start player at 1,1
+  respawn at 28,28
+  max-shots 0
+  dark false
+  reenter false
+  time-limit 0
+  exits north none south none west none east none
+
+  grid
+@..pl................................oooooo.OOO.jjjj........
+lllll...................Whenqtheqgrimqreauer................
+...........vvvvvvvvvvv..cxmes,qwhatqtheqhezzAAA.............
+.....vvvvv~~BBBNN#CCCCNv..yaqgxnnaqdx?......................
+....EEEEESFFFFFFSSFFFFFFS./.................................
+........SSSFvvFSSSSFvvFSS.....Damnqitqfeezsqgxxd............
+.......SSSG#HI#GSJG#KH#GSS..txqbeqaqgansta...LLLLLLL........
+.......SSMJJJSS.JM.SSJMMJS.............\....PQQRRRRQP.......
+.......SSJMUMJ.SMUS.JMUMJS.................LLLLLLLLLLL......
+.......SSSJMMSSFSSFSSJMJSS..GGGFFF........VVVVVVVVVVVVV.....
+........SSSJJSXvXvXv.SJSS..YZZJJSSG000...1jjjjjj1jjjjjj1....
+.........SSSSSFFFFFFFSSS.....GGMJSG......1IA2v2.1.2v2.K1....
+..........FFSSJJJJJJSSF.......MJJSG......1jjjjjj1jjjjjj1....
+...FSJJ.#.PXvX33333XvXPP.#.FJMJSSS.......Ajjj.v.v.v.jjjA....
+..FSJJ.v2.PX#vXFFFXv2XPPXV#.JJSSS........A111jjjjjjj111A....
+..SJJM.2.LQPXVVVVVVVXPQQPXV.FFG........./..jjjjjjjjjjj......
+..SJM...LPQQQPPPPPPPPPQRQP....Theqbastard....01111110.......
+..JJM...QQRRRQQQQQQQQQRRQQ...txxkqmyqarms4.vvvvvvvvvvvvGGG..
+..JMM...QQR5RRRRRRRRRR55RQ..AAAAAAAA..GGGZG#111111111106ZGGG
+..vvv...PQQRRR555555555RQP...........GGGK1G#11111111110G1IGG
+..FFF...PPQQQQRRRRRRRRRQPP...........GGGGVG#11111111110GVGGG
+..SJM...PPPPQQQQQRRQQQQPPP...........GGGGGG#11111111110GGGGG
+.......v.PPPPPPPPQQPPPPPP.v................#11111111110.....
+.......VvvvvvvvvvvvvvvvvvvV................#11111111110.....
+......7OOOOOOOOOOOOOOOOOOOO7...............#11111111110.....
+  end
+
+  legend
+    @ = Player color 0x1F under Empty color 0x00
+    . = Empty color 0x00
+    p = Passage color 0x00 to "$I) /\\ I< - I3 0 I) /\\ I<"
+    l = Line color 0x00
+    o = Object color 0x05
+    O = Object color 0x02
+    j = Object color 0x07
+    W = Text-White color 0x57
+    h = Text-White color 0x68
+    e = Text-White color 0x65
+    n = Text-White color 0x6E
+    q = Text-White color 0x20
+    t = Text-White color 0x74
+    g = Text-White color 0x67
+    r = Text-White color 0x72
+    i = Text-White color 0x69
+    m = Text-White color 0x6D
+    a = Text-White color 0x61
+    u = Text-White color 0x70
+    v = Text-White color 0xDC
+    c = Text-White color 0x63
+    x = Text-White color 0x6F
+    s = Text-White color 0x73
+    , = Text-White color 0x2C
+    w = Text-White color 0x77
+    z = Text-White color 0x6C
+    A = Empty color 0x07
+    ~ = Water color 0x7F
+    B = Breakable color 0x7F
+    N = Normal color 0x7F
+    # = Solid color 0x0F
+    C = Text-Red color 0xDC
+    y = Text-White color 0x79
+    d = Text-White color 0x64
+    ? = Text-White color 0x3F
+    E = Empty color 0x02
+    S = Solid color 0x04
+    F = Object color 0x04
+    / = Text-White color 0x2F
+    D = Text-White color 0x44
+    f = Text-White color 0x66
+    G = Empty color 0x04
+    H = Text-White color 0xFF
+    I = Text-White color 0xDE
+    J = Water color 0x4C
+    K = Text-White color 0xDD
+    b = Text-White color 0x62
+    L = Object color 0x01
+    M = Breakable color 0x4C
+    \ = Text-White color 0x5C
+    P = Solid color 0x01
+    Q = Water color 0x19
+    R = Breakable color 0x19
+    U = Normal color 0x4C
+    V = Text-White color 0xDF
+    X = Empty color 0x0F
+    Y = Normal color 0x78
+    Z = Object color 0x08
+    0 = Solid color 0x08
+    1 = Solid color 0x07
+    2 = Text-White color 0xDB
+    3 = Normal color 0x04
+    T = Text-White color 0x54
+    k = Text-White color 0x6B
+    4 = Text-White color 0x2E
+    5 = Normal color 0x19
+    6 = Empty color 0x08
+    7 = Solid color 0x02
+  end
+
+  stats
+    stat at 4,1 element Passage p1 0 p2 0 p3 board "$I) /\\ I< - I3 0 I) /\\ I<" step idle under Empty color 0x07
+    stat at 38,1 element Object p1 cp437:0x52 p2 0 step idle under Empty color 0x0F
+    stat at 39,1 element Object p1 cp437:0x61 p2 0 step idle under Empty color 0x0F
+    stat at 40,1 element Object p1 cp437:0x73 p2 0 step idle under Empty color 0x0F
+    stat at 41,1 element Object p1 cp437:0x74 p2 0 step idle under Empty color 0x0F
+    stat at 42,1 element Object p1 cp437:0x61 p2 0 step idle under Empty color 0x0F
+    stat at 43,1 element Object p1 cp437:0x6C p2 0 step idle under Empty color 0x0F
+    stat at 45,1 element Object p1 cp437:0x61 p2 0 step idle under Empty color 0x0F
+    stat at 46,1 element Object p1 cp437:0x6E p2 0 step idle under Empty color 0x0F
+    stat at 47,1 element Object p1 cp437:0x64 p2 0 step idle under Empty color 0x0F
+    stat at 49,1 element Object p1 cp437:0x53 p2 0 step idle under Empty color 0x0F
+    stat at 50,1 element Object p1 cp437:0x49 p2 0 step idle under Empty color 0x0F
+    stat at 51,1 element Object p1 cp437:0x46 p2 0 step idle under Empty color 0x0F
+    stat at 52,1 element Object p1 cp437:0x46 p2 0 step idle under Empty color 0x0F
+    stat at 11,5 element Object p1 cp437:0xDF p2 0 step idle under Empty color 0x04
+    stat at 12,5 element Object p1 cp437:0xDC p2 0 step idle under Empty color 0x04
+    stat at 13,5 element Object p1 cp437:0xDC p2 0 step idle under Empty color 0x04
+    stat at 14,5 element Object p1 cp437:0xDC p2 0 step idle under Empty color 0x04
+    stat at 15,5 element Object p1 cp437:0xDC p2 0 step idle under Empty color 0x04
+    stat at 16,5 element Object p1 cp437:0xDF p2 0 step idle under Empty color 0x04
+    stat at 19,5 element Object p1 cp437:0xDF p2 0 step idle under Empty color 0x04
+    stat at 20,5 element Object p1 cp437:0xDC p2 0 step idle under Empty color 0x04
+    stat at 21,5 element Object p1 cp437:0xDC p2 0 step idle under Empty color 0x04
+    stat at 22,5 element Object p1 cp437:0xDC p2 0 step idle under Empty color 0x04
+    stat at 23,5 element Object p1 cp437:0xDC p2 0 step idle under Empty color 0x04
+    stat at 24,5 element Object p1 cp437:0xDF p2 0 step idle under Empty color 0x04
+    stat at 12,6 element Object p1 cp437:0xDF p2 0 step idle under Empty color 0x04
+    stat at 15,6 element Object p1 cp437:0xDF p2 0 step idle under Empty color 0x04
+    stat at 20,6 element Object p1 cp437:0xDF p2 0 step idle under Empty color 0x04
+    stat at 23,6 element Object p1 cp437:0xDF p2 0 step idle under Empty color 0x04
+    stat at 46,7 element Object p1 cp437:0xDC p2 0 step idle
+    stat at 47,7 element Object p1 cp437:0xDC p2 0 step idle
+    stat at 48,7 element Object p1 cp437:0xDC p2 0 step idle
+    stat at 49,7 element Object p1 cp437:0xDC p2 0 step idle
+    stat at 50,7 element Object p1 cp437:0xDC p2 0 step idle
+    stat at 51,7 element Object p1 cp437:0xDC p2 0 step idle
+    stat at 52,7 element Object p1 cp437:0xDC p2 0 step idle
+    stat at 44,9 element Object p1 cp437:0xDF p2 0 step idle
+    stat at 45,9 element Object p1 cp437:0xDF p2 0 step idle
+    stat at 46,9 element Object p1 cp437:0xDF p2 0 step idle
+    stat at 47,9 element Object p1 cp437:0xDF p2 0 step idle
+    stat at 48,9 element Object p1 cp437:0xDF p2 0 step idle
+    stat at 49,9 element Object p1 cp437:0xDF p2 0 step idle
+    stat at 50,9 element Object p1 cp437:0xDF p2 0 step idle
+    stat at 51,9 element Object p1 cp437:0xDF p2 0 step idle
+    stat at 52,9 element Object p1 cp437:0xDF p2 0 step idle
+    stat at 53,9 element Object p1 cp437:0xDF p2 0 step idle
+    stat at 54,9 element Object p1 cp437:0xDF p2 0 step idle
+    stat at 16,10 element Object p1 cp437:0xDC p2 0 step idle under Empty color 0x04
+    stat at 19,10 element Object p1 cp437:0xDC p2 0 step idle under Empty color 0x04
+    stat at 32,10 element Object p1 cp437:0xDC p2 0 step idle
+    stat at 33,10 element Object p1 cp437:0xDC p2 0 step idle
+    stat at 34,10 element Object p1 cp437:0xDC p2 0 step idle
+    stat at 29,11 element Object p1 cp437:0xDE p2 0 step idle under Empty color 0x78
+    stat at 30,11 element Object p1 cp437:0xDD p2 0 step idle under Empty color 0x04
+    stat at 43,11 element Object p1 cp437:0xDF p2 0 step idle
+    stat at 44,11 element Object p1 cp437:0xDF p2 0 step idle
+    stat at 45,11 element Object p1 cp437:0xDF p2 0 step idle
+    stat at 46,11 element Object p1 cp437:0xDF p2 0 step idle
+    stat at 47,11 element Object p1 cp437:0xDF p2 0 step idle
+    stat at 48,11 element Object p1 cp437:0xDF p2 0 step idle
+    stat at 50,11 element Object p1 cp437:0xDF p2 0 step idle
+    stat at 51,11 element Object p1 cp437:0xDF p2 0 step idle
+    stat at 52,11 element Object p1 cp437:0xDF p2 0 step idle
+    stat at 53,11 element Object p1 cp437:0xDF p2 0 step idle
+    stat at 54,11 element Object p1 cp437:0xDF p2 0 step idle
+    stat at 55,11 element Object p1 cp437:0xDF p2 0 step idle
+    stat at 15,12 element Object p1 cp437:0xDC p2 0 step idle under Empty color 0x04
+    stat at 16,12 element Object p1 cp437:0xDC p2 0 step idle under Empty color 0x04
+    stat at 17,12 element Object p1 cp437:0xDC p2 0 step idle under Empty color 0x04
+    stat at 18,12 element Object p1 cp437:0xDC p2 0 step idle under Empty color 0x04
+    stat at 19,12 element Object p1 cp437:0xDC p2 0 step idle under Empty color 0x04
+    stat at 20,12 element Object p1 cp437:0xDC p2 0 step idle under Empty color 0x04
+    stat at 21,12 element Object p1 cp437:0xDC p2 0 step idle under Empty color 0x04
+    stat at 11,13 element Object p1 cp437:0xDF p2 0 step idle under Empty color 0x04
+    stat at 12,13 element Object p1 cp437:0xDF p2 0 step idle under Empty color 0x04
+    stat at 23,13 element Object p1 cp437:0xDF p2 0 step idle under Empty color 0x04
+    stat at 43,13 element Object p1 cp437:0xDC p2 0 step idle
+    stat at 44,13 element Object p1 cp437:0xDC p2 0 step idle
+    stat at 45,13 element Object p1 cp437:0xDC p2 0 step idle
+    stat at 46,13 element Object p1 cp437:0xDC p2 0 step idle
+    stat at 47,13 element Object p1 cp437:0xDC p2 0 step idle
+    stat at 48,13 element Object p1 cp437:0xDC p2 0 step idle
+    stat at 50,13 element Object p1 cp437:0xDC p2 0 step idle
+    stat at 51,13 element Object p1 cp437:0xDC p2 0 step idle
+    stat at 52,13 element Object p1 cp437:0xDC p2 0 step idle
+    stat at 53,13 element Object p1 cp437:0xDC p2 0 step idle
+    stat at 54,13 element Object p1 cp437:0xDC p2 0 step idle
+    stat at 55,13 element Object p1 cp437:0xDC p2 0 step idle
+    stat at 4,14 element Object p1 cp437:0xDC p2 0 step idle
+    stat at 28,14 element Object p1 cp437:0xDF p2 0 step idle under Empty color 0x04
+    stat at 43,14 element Object p1 cp437:0xDC p2 0 step idle
+    stat at 44,14 element Object p1 cp437:0xDC p2 0 step idle
+    stat at 45,14 element Object p1 cp437:0xDC p2 0 step idle
+    stat at 53,14 element Object p1 cp437:0xDC p2 0 step idle
+    stat at 54,14 element Object p1 cp437:0xDC p2 0 step idle
+    stat at 55,14 element Object p1 cp437:0xDC p2 0 step idle
+    stat at 3,15 element Object p1 cp437:0xDE p2 0 step idle
+    stat at 16,15 element Object p1 cp437:0xDF p2 0 step idle under Empty color 0x04
+    stat at 17,15 element Object p1 cp437:0xDF p2 0 step idle under Empty color 0x04
+    stat at 18,15 element Object p1 cp437:0xDF p2 0 step idle under Empty color 0x04
+    stat at 46,15 element Object p1 cp437:0xDC p2 0 step idle
+    stat at 47,15 element Object p1 cp437:0xDC p2 0 step idle
+    stat at 48,15 element Object p1 cp437:0xDC p2 0 step idle
+    stat at 49,15 element Object p1 cp437:0xDC p2 0 step idle
+    stat at 50,15 element Object p1 cp437:0xDC p2 0 step idle
+    stat at 51,15 element Object p1 cp437:0xDC p2 0 step idle
+    stat at 52,15 element Object p1 cp437:0xDC p2 0 step idle
+    stat at 10,16 element Object p1 cp437:0xDC p2 0 step idle under Empty color 0x01
+    stat at 29,16 element Object p1 cp437:0xDF p2 0 step idle under Empty color 0x04
+    stat at 30,16 element Object p1 cp437:0xDF p2 0 step idle under Empty color 0x04
+    stat at 44,16 element Object p1 cp437:0xDF p2 0 step idle
+    stat at 45,16 element Object p1 cp437:0xDF p2 0 step idle
+    stat at 46,16 element Object p1 cp437:0xDF p2 0 step idle
+    stat at 47,16 element Object p1 cp437:0xDF p2 0 step idle
+    stat at 48,16 element Object p1 cp437:0xDF p2 0 step idle
+    stat at 49,16 element Object p1 cp437:0xDF p2 0 step idle
+    stat at 50,16 element Object p1 cp437:0xDF p2 0 step idle
+    stat at 51,16 element Object p1 cp437:0xDF p2 0 step idle
+    stat at 52,16 element Object p1 cp437:0xDF p2 0 step idle
+    stat at 53,16 element Object p1 cp437:0xDF p2 0 step idle
+    stat at 54,16 element Object p1 cp437:0xDF p2 0 step idle
+    stat at 9,17 element Object p1 cp437:0xDC p2 0 step idle under Empty color 0x01
+    stat at 42,19 element Object p1 cp437:0xDC p2 0 step idle under Empty color 0x07
+    stat at 57,19 element Object p1 cp437:0xDC p2 0 step idle under Empty color 0x07
+    stat at 3,21 element Object p1 cp437:0xDC p2 0 step idle
+    stat at 4,21 element Object p1 cp437:0xDC p2 0 step idle
+    stat at 5,21 element Object p1 cp437:0xDC p2 0 step idle
+    stat at 8,25 element Object p1 cp437:0xDC p2 0 step idle
+    stat at 9,25 element Object p1 cp437:0xDC p2 0 step idle
+    stat at 10,25 element Object p1 cp437:0xDC p2 0 step idle
+    stat at 11,25 element Object p1 cp437:0xDC p2 0 step idle
+    stat at 12,25 element Object p1 cp437:0xDC p2 0 step idle
+    stat at 13,25 element Object p1 cp437:0xDC p2 0 step idle
+    stat at 14,25 element Object p1 cp437:0xDC p2 0 step idle
+    stat at 15,25 element Object p1 cp437:0xDC p2 0 step idle
+    stat at 16,25 element Object p1 cp437:0xDC p2 0 step idle
+    stat at 17,25 element Object p1 cp437:0xDC p2 0 step idle
+    stat at 18,25 element Object p1 cp437:0xDC p2 0 step idle
+    stat at 19,25 element Object p1 cp437:0xDC p2 0 step idle
+    stat at 20,25 element Object p1 cp437:0xDC p2 0 step idle
+    stat at 21,25 element Object p1 cp437:0xDC p2 0 step idle
+    stat at 22,25 element Object p1 cp437:0xDC p2 0 step idle
+    stat at 23,25 element Object p1 cp437:0xDC p2 0 step idle
+    stat at 24,25 element Object p1 cp437:0xDC p2 0 step idle
+    stat at 25,25 element Object p1 cp437:0xDC p2 0 step idle
+    stat at 26,25 element Object p1 cp437:0xDC p2 0 step idle
+    stat at 27,25 element Object p1 cp437:0xDC p2 0 step idle
+  end
+end

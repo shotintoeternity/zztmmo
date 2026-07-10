@@ -1,0 +1,168 @@
+board "The Mixer"
+  start player at 5,24
+  respawn at 30,25
+  max-shots 1
+  dark false
+  reenter true
+  time-limit 0
+  exits north none south none west "House of Blues" east none
+
+  grid
+NNNNNNNbbbThebMixer!bbNNNNNNNNNNdddddddddddddddddddddddddddd
+NNN..XNbbbbbNNNNNbbbbbNX.ffffN.XdgggggdgggggdddddddXggggggdd
+NNN+NNNbbbNNNjjjNNNbbbNNNNNNXN.Ndgggggdggdggdddddddddddddgdd
+NNN+NbbbNNNlff/fffNNNbbbNNNNNN.XdHgdggdXgdggdBBBBBBBBBBBdgdd
+NNN+NbNNNmml/fff/fffNNNbNmm..NNNdcgdggddddggdBBBBBBBBBBBdgdd
+NNN+NNN.ll/lm./mmm/kmmNNNm.....mdcgdggggggggdBBBBBBBBBBBdSdd
+NNN+Nmkm/llL/mmm/Lmm/mmmN.NNNNNmdggddddddddddddddddddBBBdSdd
+NNNll./.ll/lmm/mmm/mmm/mmmNNXNNmdgggggggggggddggggggdBBBdSdd
+NNNm/mm./mmm/mmm/mmm/.mm/mNN.NNmddddddddddXdddgddddgdBBBdndd
+NNNmmm/mmk/mmmmmmm/mmm/mmmNNoNNoddddddddddddddgdBBdgdBBBdgdd
+NNNm/mmm/mm./..m/mmk/.mm/mNN.NNmdpppppppgpplpgpdBBd.ddddd.dd
+NNNmmm/m.m/mm./.../mmm/mm.NN.NNodplplpppgggggggdBBd.XdddX.dd
+NNNNNmmm/mLm/mkm/Lmm/mmmNNNNoNNmdppgdddddddddddddddddddddddd
+NNNNNNN.mm/m.m/mm./mmmNNNNNNoNNodpppppppppp..q.s<-stuvsKvysd
+NNNNNNNNNmmm/mmm/.mmNNNwNNNN.NNmdddddddddddddXdddddddddddddd
+NNNN..XNNNNmmm/m.mNNNwwwNX...NNmdBBBBBBBBdXdggggggggomoofmdd
+NNN...NNwwNNNmmmNNNwwwwwNNNNNNNmddddddddddgdgggggggggmoofmdd
+NN...NNwwwwwNNNNNwwwwwwwNN..XNNmdXgggccHgggdggggggggmmmffmdd
+N...NNwwwwwwwwwwwwwwwwwNN..NNNNmddddddddddddddddddddoooffmdd
+NN...NNwwwwwwwwwwwwwwwNN..NN...mdBBBBBBBBBBBBBBBBBddoooffmdd
+NNN...NNNNNNNNNNNNNNNNN..NN.pppmddddddddddddddddddddgmmffmdd
+NNNN......ccH...........NN.ppaaf.ffffffffffffffffffffffffmdd
+NNNNNNNNNNNNNNNNNNNNNNNNN.ppaaa............mmmmmmmmmmmm..fdd
+.zzA@CfDzAz.ffffffffffffffffffffffffffffffffffffffffffffffdd
+dddddddddddddddddddddddddddddddddddddddddddddddddddddddddddd
+  end
+
+  legend
+    N = Normal color 0x09
+    b = Text-Purple color 0x20
+    T = Text-Purple color 0x54
+    h = Text-Purple color 0x68
+    e = Text-Purple color 0x65
+    M = Text-Purple color 0x4D
+    i = Text-Purple color 0x69
+    x = Text-Purple color 0x78
+    r = Text-Purple color 0x72
+    ! = Text-Purple color 0x21
+    d = Normal color 0x0A
+    . = Empty color 0x09
+    X = Transporter color 0x0A
+    f = Empty color 0x0F
+    g = Empty color 0x0A
+    + = Door color 0x1F
+    j = Empty color 0x0B
+    l = Empty color 0x0D
+    / = Clockwise color 0x0C
+    H = Head color 0x0C
+    B = Breakable color 0x0A
+    m = Empty color 0x00
+    c = Segment color 0x0C
+    k = Key color 0x09
+    S = Segment color 0x09
+    L = Lion color 0x0C
+    n = Head color 0x09
+    o = Empty color 0x0C
+    p = Empty color 0x0E
+    q = Key color 0x0D
+    s = Text-Green color 0x20
+    < = Text-Green color 0x3C
+    - = Text-Green color 0x2D
+    t = Text-Green color 0x54
+    u = Text-Green color 0x68
+    v = Text-Green color 0x65
+    K = Text-Green color 0x4B
+    y = Text-Green color 0x79
+    w = Breakable color 0x09
+    a = Ammo color 0x03
+    z = Empty color 0x20
+    A = Empty color 0x2D
+    @ = Player color 0x1F under Empty color 0x20
+    C = Empty color 0x4F
+    D = Empty color 0x74
+  end
+
+  stats
+    stat at 15,12 element Clockwise p1 0 p2 0 step idle under Empty color 0x09
+    stat at 15,8 element Clockwise p1 0 p2 0 step idle
+    stat at 13,9 element Clockwise p1 0 p2 0 step idle
+    stat at 13,11 element Clockwise p1 0 p2 0 step idle under Empty color 0x09
+    stat at 11,10 element Clockwise p1 0 p2 0 step idle
+    stat at 17,9 element Clockwise p1 0 p2 0 step idle
+    stat at 17,11 element Clockwise p1 0 p2 0 step idle
+    stat at 19,10 element Clockwise p1 0 p2 0 step idle
+    stat at 21,9 element Clockwise p1 0 p2 0 step idle
+    stat at 23,8 element Clockwise p1 0 p2 0 step idle
+    stat at 23,10 element Clockwise p1 0 p2 0 step idle
+    stat at 21,11 element Clockwise p1 0 p2 0 step idle
+    stat at 19,12 element Clockwise p1 0 p2 0 step idle
+    stat at 17,13 element Clockwise p1 0 p2 0 step idle under Empty color 0x09
+    stat at 21,13 element Clockwise p1 0 p2 0 step idle
+    stat at 13,13 element Clockwise p1 0 p2 0 step idle
+    stat at 11,12 element Clockwise p1 0 p2 0 step idle
+    stat at 13,7 element Clockwise p1 0 p2 0 step idle
+    stat at 17,7 element Clockwise p1 0 p2 0 step idle
+    stat at 21,7 element Clockwise p1 0 p2 0 step idle
+    stat at 19,6 element Clockwise p1 0 p2 0 step idle
+    stat at 15,6 element Clockwise p1 0 p2 0 step idle
+    stat at 17,5 element Clockwise p1 0 p2 0 step idle under Empty color 0x0F
+    stat at 19,14 element Clockwise p1 0 p2 0 step idle
+    stat at 17,15 element Clockwise p1 0 p2 0 step idle under Empty color 0x09
+    stat at 9,11 element Clockwise p1 0 p2 0 step idle
+    stat at 9,9 element Clockwise p1 0 p2 0 step idle
+    stat at 7,10 element Clockwise p1 0 p2 0 step idle
+    stat at 25,9 element Clockwise p1 0 p2 0 step idle
+    stat at 5,9 element Clockwise p1 0 p2 0 step idle
+    stat at 9,13 element Clockwise p1 0 p2 0 step idle
+    stat at 11,14 element Clockwise p1 0 p2 0 step idle
+    stat at 13,15 element Clockwise p1 0 p2 0 step idle
+    stat at 15,16 element Clockwise p1 0 p2 0 step idle
+    stat at 7,8 element Clockwise p1 0 p2 0 step idle
+    stat at 9,7 element Clockwise p1 0 p2 0 step idle under Empty color 0x0D
+    stat at 11,6 element Clockwise p1 0 p2 0 step idle under Empty color 0x0D
+    stat at 13,5 element Clockwise p1 0 p2 0 step idle
+    stat at 15,4 element Clockwise p1 0 p2 0 step idle under Empty color 0x0F
+    stat at 5,11 element Clockwise p1 0 p2 0 step idle
+    stat at 25,11 element Clockwise p1 0 p2 0 step idle
+    stat at 23,12 element Clockwise p1 0 p2 0 step idle
+    stat at 19,8 element Clockwise p1 0 p2 0 step idle
+    stat at 11,8 element Clockwise p1 0 p2 0 step idle under Empty color 0x0D
+    stat at 7,12 element Clockwise p1 0 p2 0 step idle
+    stat at 15,14 element Clockwise p1 0 p2 0 step idle
+    stat at 34,18 element Transporter p1 0 p2 0 step west under Empty color 0x0A
+    stat at 29,18 element Transporter p1 0 p2 0 step east under Empty color 0x09
+    stat at 43,16 element Transporter p1 0 p2 0 step north under Empty color 0x0A
+    stat at 6,2 element Transporter p1 0 p2 0 step east under Empty color 0x09
+    stat at 29,3 element Transporter p1 0 p2 0 step south under Empty color 0x09
+    stat at 24,2 element Transporter p1 0 p2 0 step west under Empty color 0x09
+    stat at 26,16 element Transporter p1 0 p2 0 step west under Empty color 0x09
+    stat at 7,16 element Transporter p1 0 p2 0 step east under Empty color 0x09
+    stat at 32,2 element Transporter p1 0 p2 0 step east under Empty color 0x09
+    stat at 52,2 element Transporter p1 0 p2 0 step west under Empty color 0x0A
+    stat at 13,22 element Head step idle under Empty color 0x09
+    stat at 12,22 element Segment p1 0 p2 0 step idle under Empty color 0x09
+    stat at 11,22 element Segment p1 0 p2 0 step idle under Empty color 0x09
+    stat at 40,18 element Head step idle under Empty color 0x0A
+    stat at 39,18 element Segment p1 0 p2 0 step idle under Empty color 0x0A
+    stat at 38,18 element Segment p1 0 p2 0 step idle under Empty color 0x0A
+    stat at 34,4 element Head step idle under Empty color 0x0A
+    stat at 34,5 element Segment p1 0 p2 0 step idle under Empty color 0x0A
+    stat at 34,6 element Segment p1 0 p2 0 step idle under Empty color 0x0A
+    stat at 43,9 element Transporter p1 0 p2 0 step south under Empty color 0x0A
+    stat at 40,4 element Transporter p1 0 p2 0 step west under Empty color 0x0A
+    stat at 32,4 element Transporter p1 0 p2 0 step east under Empty color 0x09
+    stat at 29,8 element Transporter p1 0 p2 0 step north under Empty color 0x09
+    stat at 12,7 element Lion p2 0 step idle under Empty color 0x0D
+    stat at 18,7 element Lion p2 0 step idle under Empty color 0x09
+    stat at 18,13 element Lion p2 0 step idle under Empty color 0x09
+    stat at 11,13 element Lion p2 0 step idle
+    stat at 57,12 element Transporter p1 0 p2 0 step west under Empty color 0x09
+    stat at 53,12 element Transporter p1 0 p2 0 step east under Empty color 0x09
+    stat at 58,9 element Head step idle under Empty color 0x0A
+    stat at 58,8 element Segment p1 0 p2 0 step idle under Empty color 0x0A
+    stat at 58,7 element Segment p1 0 p2 0 step idle under Empty color 0x0A
+    stat at 58,6 element Segment p1 0 p2 0 step idle under Empty color 0x0A
+    stat at 46,15 element Transporter p1 0 p2 0 step south under Empty color 0x0A
+  end
+end

@@ -1,0 +1,457 @@
+board "$Bar"
+  start player at 4,24
+  respawn at 27,7
+  max-shots 0
+  dark false
+  reenter false
+  time-limit 0
+  exits north none south none west none east none
+
+  grid
+NNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNN
+NoOooOooOogggggabO...................bocoocoodoodoodoodoodoN
+NoOooOooOogggggab....................bocoodoodoodoodoodoodoN
+NoOooOooOogggggab..............O....ObodoodoodoodoodoodoodoN
+NNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNbNNNNNNNNNNNNNNNNNNNNNNNNNNNN
+N..........................................................N
+N..........................................................N
+N..........................................................N
+N........e.................................................N
+N....[.FFA.]..[.FFA.]..[OFFA.].[.FFA.].[.FFA.].[.FFAO].....N
+N....[.FAAO]..[.FAA.]..[.FAA.].[OFAA.].[.FAA.].[.FAA.].....N
+N.................................................f........N
+N..........................................................N
+N................................................f.........N
+N....[OFFA.]..[.FFA.]..[OFFA.].[OFFA.].[.FFA.].[.FFAO].....N
+N....[.FAA.]..[OFAA.]..[.FAA.].[.FAA.].[.FAAO].[OFAA.].....N
+N..........................................................N
+N..........................................................N
+N..........................................................N
+N....[.FFA.]..[.FFA.]..[OFFA.].[.FFA.].[OFFA.].[OFFA.].....N
+N....[.FAAO]..[.FAA.]..[fFAA.].[.FAA.].[.FAAO].[.FAA.].....N
+N..........................................................N
+NO.........................................................N
+p..@.......................................................N
+NNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNN
+  end
+
+  legend
+    N = Normal color 0x66
+    o = Object color 0x09
+    O = Object color 0x0F
+    g = Gem color 0x0E
+    a = Object color 0x0A
+    b = Object color 0x06
+    . = Empty color 0x00
+    c = Object color 0x0B
+    d = Object color 0x0C
+    e = Empty color 0x06
+    [ = Text-White color 0x5B
+    F = Fake color 0x66
+    A = Fake color 0x06
+    ] = Text-White color 0x5D
+    f = Empty color 0x66
+    p = Passage color 0x3F to "$Back Door"
+    @ = Player color 0x1F under Empty color 0x00
+  end
+
+  stats
+    stat at 1,24 element Passage p1 0 p2 0 p3 board "$Back Door" step idle under Empty color 0x66
+    stat at 2,23 element Object p2 0 step idle
+    oop
+@Thug
+/s
+#end
+:ok
+/n
+#end
+
+    end
+    stat at 32,5 element Object p1 cp437:0xDB p2 0 step idle under Empty color 0x66
+    oop
+@BarKeep
+#end
+:touch
+ Hey, you're a merc ain't cha? Listen bud,
+I got a job for you. I need you to smuggle
+some weapons to the planet Ekul, where
+there's a civil war going on between the
+Ekul Rebels, and the Government. It'll be
+a dangerous job, and you'll be stopped
+along the way. But I'll pay you a lot. All
+told you'll get 5000 credits, and a heavy
+chain cannon. What do you say?
+!2;Okay.
+!1;No.
+#end
+:1
+Fine. But remember, there ain't that much
+work around for mercenaries these days. 
+I doubt you'll be able to find another
+customer all too soon.
+#end
+:2
+#zap touch
+Great! You'll get 2000 credits in advance,
+the rest you'll get after you deliver the
+goods. When you reach Ekul find the Rebel
+known as the Skorpian, and give him the
+stuff. If you want you can work for him
+too you know. Just remember one thing,
+$Any and all
+$who dare to cross
+$Skorpian's lot
+$shall feel his bite
+#give score 2000
+#send Thug:ok
+#end
+
+    end
+    stat at 59,2 element Object p1 cp437:0xB9 p2 0 step idle
+    stat at 59,3 element Object p1 cp437:0xB9 p2 0 step idle under Empty color 0x09
+    stat at 59,4 element Object p1 cp437:0xB9 p2 0 step idle
+    stat at 57,2 element Object p1 cp437:0xCC p2 0 step idle
+    stat at 57,3 element Object p1 cp437:0xCC p2 0 step idle
+    stat at 57,4 element Object p1 cp437:0xCC p2 0 step idle
+    stat at 56,2 element Object p1 cp437:0xB9 p2 0 step idle
+    stat at 56,3 element Object p1 cp437:0xB9 p2 0 step idle
+    stat at 56,4 element Object p1 cp437:0xB9 p2 0 step idle
+    stat at 54,2 element Object p1 cp437:0xCC p2 0 step idle
+    stat at 54,4 element Object p1 cp437:0xCC p2 0 step idle
+    stat at 54,3 element Object p1 cp437:0xCC p2 0 step idle
+    stat at 53,4 element Object p1 cp437:0xB9 p2 0 step idle
+    stat at 53,3 element Object p1 cp437:0xB9 p2 0 step idle
+    stat at 53,2 element Object p1 cp437:0xB9 p2 0 step idle
+    stat at 51,2 element Object p1 cp437:0xCC p2 0 step idle
+    stat at 51,3 element Object p1 cp437:0xCC p2 0 step idle
+    stat at 51,4 element Object p1 cp437:0xCC p2 0 step idle
+    stat at 50,4 element Object p1 cp437:0xB9 p2 0 step idle
+    stat at 50,3 element Object p1 cp437:0xB9 p2 0 step idle
+    stat at 50,2 element Object p1 cp437:0xB9 p2 0 step idle
+    stat at 48,2 element Object p1 cp437:0xCC p2 0 step idle
+    stat at 48,3 element Object p1 cp437:0xCC p2 0 step idle
+    stat at 48,4 element Object p1 cp437:0xCC p2 0 step idle
+    stat at 47,4 element Object p1 cp437:0xB9 p2 0 step idle
+    stat at 47,3 element Object p1 cp437:0xB9 p2 0 step idle
+    stat at 47,2 element Object p1 cp437:0xB9 p2 0 step idle
+    stat at 45,2 element Object p1 cp437:0xCC p2 0 step idle
+    stat at 45,3 element Object p1 cp437:0xCC p2 0 step idle
+    stat at 45,4 element Object p1 cp437:0xCC p2 0 step idle
+    stat at 44,4 element Object p1 cp437:0xB9 p2 0 step idle
+    stat at 44,3 element Object p1 cp437:0xB9 p2 0 step idle
+    stat at 44,2 element Object p1 cp437:0xB9 p2 0 step idle
+    stat at 42,2 element Object p1 cp437:0xCC p2 0 step idle
+    stat at 42,4 element Object p1 cp437:0xCC p2 0 step idle
+    stat at 42,3 element Object p1 cp437:0xCC p2 0 step idle
+    stat at 41,3 element Object p1 cp437:0xB9 p2 0 step idle
+    stat at 41,2 element Object p1 cp437:0xB9 p2 0 step idle
+    stat at 41,4 element Object p1 cp437:0xB9 p2 0 step idle
+    stat at 39,4 element Object p1 cp437:0xCC p2 0 step idle
+    stat at 39,3 element Object p1 cp437:0xCC p2 0 step idle
+    stat at 39,2 element Object p1 cp437:0xCC p2 0 step idle
+    stat at 40,4 element Object p1 cp437:0xAD p2 0 step idle
+    stat at 43,4 element Object p1 cp437:0xAD p2 0 step idle
+    stat at 43,3 element Object p1 cp437:0xAD p2 0 step idle
+    stat at 46,2 element Object p1 cp437:0xAD p2 0 step idle
+    stat at 46,3 element Object p1 cp437:0xAD p2 0 step idle
+    stat at 46,4 element Object p1 cp437:0xAD p2 0 step idle
+    stat at 49,4 element Object p1 cp437:0xAD p2 0 step idle
+    stat at 49,3 element Object p1 cp437:0xAD p2 0 step idle
+    stat at 49,2 element Object p1 cp437:0xAD p2 0 step idle
+    stat at 52,2 element Object p1 cp437:0xAD p2 0 step idle
+    stat at 52,3 element Object p1 cp437:0xAD p2 0 step idle
+    stat at 52,4 element Object p1 cp437:0xAD p2 0 step idle
+    stat at 55,4 element Object p1 cp437:0xAD p2 0 step idle
+    stat at 55,3 element Object p1 cp437:0xAD p2 0 step idle
+    stat at 55,2 element Object p1 cp437:0xAD p2 0 step idle
+    stat at 58,2 element Object p1 cp437:0xAD p2 0 step idle
+    stat at 58,3 element Object p1 cp437:0xAD p2 0 step idle
+    stat at 58,4 element Object p1 cp437:0xAD p2 0 step idle
+    stat at 40,2 element Object p1 cp437:0xAD p2 0 step idle
+    stat at 40,3 element Object p1 cp437:0xAD p2 0 step idle
+    stat at 43,2 element Object p1 cp437:0xAD p2 0 step idle
+    stat at 2,4 element Object p1 cp437:0xAE p2 0 step idle
+    stat at 2,3 element Object p1 cp437:0xAE p2 0 step idle
+    stat at 2,2 element Object p1 cp437:0xAE p2 0 step idle
+    stat at 4,2 element Object p1 cp437:0xAF p2 0 step idle
+    stat at 4,3 element Object p1 cp437:0xAF p2 0 step idle
+    stat at 4,4 element Object p1 cp437:0xAF p2 0 step idle
+    stat at 5,4 element Object p1 cp437:0xAE p2 0 step idle
+    stat at 5,3 element Object p1 cp437:0xAE p2 0 step idle
+    stat at 5,2 element Object p1 cp437:0xAE p2 0 step idle
+    stat at 7,2 element Object p1 cp437:0xAF p2 0 step idle
+    stat at 7,3 element Object p1 cp437:0xAF p2 0 step idle
+    stat at 7,4 element Object p1 cp437:0xAF p2 0 step idle
+    stat at 10,4 element Object p1 cp437:0xAF p2 0 step idle
+    stat at 10,3 element Object p1 cp437:0xAF p2 0 step idle
+    stat at 10,2 element Object p1 cp437:0xAF p2 0 step idle
+    stat at 8,2 element Object p1 cp437:0xAE p2 0 step idle
+    stat at 8,3 element Object p1 cp437:0xAE p2 0 step idle
+    stat at 8,4 element Object p1 cp437:0xAE p2 0 step idle
+    stat at 3,4 element Object p1 cp437:0xE8 p2 0 step idle
+    stat at 3,3 element Object p1 cp437:0xE8 p2 0 step idle
+    stat at 3,2 element Object p1 cp437:0xE8 p2 0 step idle
+    stat at 6,2 element Object p1 cp437:0xE8 p2 0 step idle
+    stat at 6,3 element Object p1 cp437:0xE8 p2 0 step idle
+    stat at 6,4 element Object p1 cp437:0xE8 p2 0 step idle
+    stat at 9,4 element Object p1 cp437:0xE8 p2 0 step idle
+    stat at 9,3 element Object p1 cp437:0xE8 p2 0 step idle
+    stat at 9,2 element Object p1 cp437:0xE8 p2 0 step idle
+    stat at 16,4 element Object p1 cp437:0xE4 p2 0 step idle
+    stat at 16,3 element Object p1 cp437:0xE4 p2 0 step idle
+    stat at 16,2 element Object p1 cp437:0xE4 p2 0 step idle
+    stat at 17,4 element Object p1 cp437:0xDD p2 0 step idle
+    stat at 17,3 element Object p1 cp437:0xDD p2 0 step idle
+    stat at 17,2 element Object p1 cp437:0xDD p2 0 step idle
+    stat at 38,4 element Object p1 cp437:0xDE p2 0 step idle
+    stat at 38,3 element Object p1 cp437:0xDE p2 0 step idle
+    stat at 38,2 element Object p1 cp437:0xDE p2 0 step idle
+    stat at 18,2 element Object p1 cp437:0x02 p2 0 step idle
+    oop
+@Bar assistant
+#cycle 2
+/i/i/i/i
+/s
+/i/i/i/i
+/s
+/i/i/i/i
+/n
+/i/i/i/i
+/n
+#restart
+:touch
+now jerry dig, i got a gig, with funky 
+frank and dino..  yeah, babe, yes do it to
+me george
+/i/i
+#say
+#endgame
+#end
+:say
+You lost!!! 
+/i
+#say
+#end
+
+    end
+    stat at 37,4 element Object p1 cp437:0x02 p2 0 step idle
+    oop
+@bar assistant 2
+#cycle 2
+/i/i/i
+/n
+/i/i/i/i/i
+/n
+/i/i/i/i
+/w/w/w
+/i/i/i/i
+/e
+/i/i/i/i
+/e
+/i/i/i/i
+/e/i/i/i
+/s/s
+/i/i/i/i
+#restart
+
+    end
+    stat at 32,4 element Object p1 cp437:0x02 p2 0 step idle
+    oop
+@Barkeep
+#end
+
+    end
+    stat at 41,20 element Object p1 cp437:0x02 p2 0 step idle
+    stat at 49,20 element Object p2 0 step idle
+    stat at 45,21 element Object p1 cp437:0x02 p2 0 step idle
+    stat at 45,16 element Object p1 cp437:0x02 p2 0 step idle
+    oop
+@Grim Reaper
+#end
+:touch
+Hey man, get me a cold one.. uh, cold beer
+I mean
+#end
+
+    end
+    stat at 49,16 element Object p2 0 step idle
+    oop
+@Manson
+#end
+:touch
+$God why are you doing this to me?
+$Am I not living up to what I'm 
+$supposed to be?
+
+.. oh sorry, I was listening to 
+$±±±±±±±±±±±±±±±±±±±±±±±
+$±²°°°±²°°±²°°±²°°±²°°°±
+$±²°°°°²°°±²°°±²°°²°°°°±
+$±²°°²°°°°±²°°±²°°°°²°°±
+$±²°°±²°°°±²°°±²°°°±²°°±
+$±±±±±±±±±±±±±±±±±±±±±±±
+ on my walkman here.
+It's pretty cool!
+#end
+
+    end
+    stat at 53,15 element Object p2 0 step idle
+    oop
+@Reznor
+#end
+:touch
+Waiter? Yes, get me a severed head.. 
+.. please?
+#zap touch
+#end
+
+    end
+    stat at 53,10 element Object p2 0 step idle
+    oop
+@DIE
+#end
+:touch
+$_ ________________ _
+$....................
+$_ ________________ _
+$....................
+$_ ________________ _
+#END
+
+    end
+    stat at 33,11 element Object p2 0 step idle
+    oop
+@Monty
+#end
+:touch
+#zap touch
+Hello. Would you like me to sing?
+!1; Yeah, sure.
+!2; No way!
+#end
+:2
+Fine.. get outta here!
+#end
+:1
+Here goes.. 1 and a 2 and a 3 and a 4!
+
+$Some men hunt for sport, others hunt for
+$food.. the only thing I'm hunting for
+$is an outfit that looks good..
+
+$See my vest! See my vest! Made from real
+$gorilla chest, see my sweater there's no
+$better than authentic Irish setter.
+$See this hat? Twas my cat! My evening 
+$wear- vampire bat! These white slippers
+$are albino African endangered rhino!
+$Grizzly bear underwear, turtles necks-
+$I've had my share, beret of poodle on
+$my noodle it shall rest.. try my red 
+$robin suit, comes in one breast of two
+$so see my vest, see my vest, see my vest
+
+uh.. that's like all I know
+#end 
+
+    end
+    stat at 25,10 element Object p2 0 step idle
+    oop
+@boozer
+#end
+:touch
+Poor me anudder >hic!< drink, charlie..
+BUUUUURP!
+#end
+
+    end
+    stat at 25,20 element Object p2 0 step idle under Empty color 0x66
+    stat at 16,16 element Object p2 0 step idle
+    oop
+@Nivek
+#end
+:touch
+#cycle 1
+Tis I, Nivek! Why am I not red? Well, I'm
+wearing a disguise. Anyway.. if you find
+DarkMage, don't listen to him! He'll 
+give you some stupid speech about our
+other games.. ok.. gotta go.. see ya!
+#idle
+#char 21
+/i
+#char 64
+/i
+#char 15
+/i
+#char 42
+/i
+#char 43
+/i
+#char 46
+/i
+#die 
+
+    end
+    stat at 11,21 element Object p1 cp437:0x02 p2 0 step idle
+    stat at 7,15 element Object p1 cp437:0x02 p2 0 step idle
+    stat at 11,11 element Object p1 cp437:0x02 p2 0 step idle
+    oop
+@Funky Frank
+#end
+:touch
+One time, I was in Vegas, and I saw 
+this guy who won 1.2 million in slots.
+I said, "that can't be possible!" And as
+it turns out.. it was counterfeit money.
+He made all that damned money just to look
+cool. How'd ya like my story?
+
+!1; I hated it!
+!2; I loved it!
+#end
+
+:1
+Yeah, well.. well.. you're mean!
+#zap touch
+#end
+
+:2
+Yay! Well.. I only got one story..
+#zap touch 
+#end
+
+    end
+    stat at 25,15 element Object p1 cp437:0x02 p2 0 step idle
+    oop
+@DarkMage
+#end
+:touch
+Hi, It's me, DarkMage. Thanks for playing 
+this game! Hey, and don't forget to see
+some of our other games, too.. like..
+$Super Mario ZZT 1 & 2
+$Legacies
+$KevQuest 1 & 2
+$The Morphos
+$Attack of the Smilies
+ and a whole lotta others! 
+Visit us on the web at:
+$http://members.aol.com/darkmage90/
+Enjoy the rest of the game!
+#end  
+
+    end
+    stat at 33,15 element Object p1 cp437:0x02 p2 0 step idle
+    oop
+@Twiggy
+#end
+:touch
+Hi, I'd like some scabs, guns, and peanut
+butter, please. Waiter? You're not my 
+waiter? Oh, sorry.
+#end
+
+    end
+  end
+end

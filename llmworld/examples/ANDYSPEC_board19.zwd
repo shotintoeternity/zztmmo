@@ -1,0 +1,140 @@
+board "To Auto Shop"
+  start player at 1,12
+  respawn at 27,7
+  max-shots 5
+  dark false
+  reenter false
+  time-limit 0
+  exits north "Auto Mechanic" south none west "Palace Hall" east none
+
+  grid
+~WWWaaaaaaaaaaaaaaaaWWWaaaabcBN#.........#NNNNNNNNNNNNNNNNBB
+WWaaabbbbbbbbbbbbbbaaaaabbbbcBN###ddLdddd################NNB
+WaabbbccccccccccccbbaabbbccccBNNN##ddLdLLdLdLdLdLdLdddLd##NN
+aabbcccBBBBBBBBBBccbaabcccBBBBBBNN####################LLd##N
+abbccBBBNNNNNNNNBBcbbbbcBBBNNNNNBNNNNNNNNNNNNNNNNNNNN##dLd##
+bbccBBNNN######NNBccbbccBNNN###NNNBBBBBBBBBNNNBBBBBBNN###Ld#
+cccBBNN###dddd##NBBccccBBN###G###NNNBBcccBNN#NNBcccBBNNN#dd#
+BBBBNN##ddddddd#NNBBBcBBNN#ddLLd###NNBBBBBN###NBBcccBBN##LL#
+NNNNN##dddddLdd##NNNBBBNN##ddddddd##NNNBBNN#G#NNBBcBBNN#dLd#
+######ddddddLddd###NBBNN##dLddLdddd###NNNN##L##NNBBBNN##dLL#
+.dddddddddddddLddd#NNNN##ddddddddLddd##NN##LdL##NNBNN##dLdd#
+@ddddddddd##ddLdLd##NN##dddLLdddLddLdd####dLddd##NNN##ddLd##
+.ddddddddd####dLdLd####ddddLdddd##dddddddddddLdd#####dLLd##N
+######ddd##NN#ddLddLddLddLddLddd###dLLLdLdL###ddLd##ddLdd#NN
+NNNNN#####NNN##o##dLdddLdddddLd##N##ddddddd#N#dLddLddLdd##NB
+BBBBNNNNNNNBNNNNN###dddddddddd##NNN##ddLd###N#####ddLdd##NNB
+cccBBBBBBBBBBBBBNNN##dddLdddd##NNBNN#ddLd#NNNNNNN##dLd##NNBB
+bbcccccccccccccBBBNN#dLdddd###NNBBBN###G##NBBBBBNN#####NNBBc
+abbbbbbbbbbbbbcccBBN#ddddd##NNNBBcBNNN###NNBcccBBNNNNNNNBBcc
+aaaaaaaaaaaaabbbccBN####d##NNBBBccBBBNN#NNBBcbccBBBBBBBBBccb
+WWWWWWWWWWWWaaabbcBNNNN#G#NNBBccccccBBNNNBBccbbcccccccccccbb
+~~~~~~~~~~~WWWaabcBBBBN###NBBccbbbbccBBBBBccbbbbbbbbbbbbbbba
+eeeeeeeeee~~~WWabccccBNNNNNBccbbaabbcccccccbbaaaaaaaaaaaaaaa
+fffffffffeee~~WabbbbcBBBBBBBcbbaaaabbbbbbbbbaaWWWWWWWWWWWWWW
+ggggggggfffee~WaaaabcccccccccbaaWWaaaaaaaaaaaWW~~~~~~~~~~~~~
+  end
+
+  legend
+    ~ = Water color 0xF0
+    W = Water color 0xBE
+    a = Water color 0xA6
+    b = Water color 0xD3
+    c = Water color 0xCA
+    B = Breakable color 0x0E
+    N = Normal color 0x09
+    # = Solid color 0x0A
+    . = Empty color 0x0E
+    d = Empty color 0x00
+    L = Lion color 0x0C
+    G = Spinning gun color 0x0D
+    @ = Player color 0x1F under Empty color 0x0E
+    o = Object color 0x0A
+    e = Water color 0x92
+    f = Water color 0xCF
+    g = Water color 0xD4
+  end
+
+  stats
+    stat at 16,15 element Object p1 cp437:0xDB p2 0 step idle under Empty color 0x0A
+    oop
+@Gay
+Uh oh, Omega pledgees
+#end
+
+    end
+    stat at 24,15 element Lion p2 0 step idle
+    stat at 29,12 element Lion p2 0 step idle
+    stat at 31,10 element Lion p2 0 step idle
+    stat at 37,14 element Lion p2 0 step idle
+    stat at 39,14 element Lion p2 0 step idle
+    stat at 41,14 element Lion p2 0 step idle
+    stat at 44,12 element Lion p2 0 step idle
+    stat at 49,14 element Lion p2 0 step idle
+    stat at 56,13 element Lion p2 0 step idle
+    stat at 59,10 element Lion p2 0 step idle
+    stat at 58,8 element Lion p2 0 step idle
+    stat at 55,3 element Lion p2 0 step idle
+    stat at 47,3 element Lion p2 0 step idle
+    stat at 34,11 element Lion p2 0 step idle
+    stat at 30,15 element Lion p2 0 step idle
+    stat at 25,17 element Lion p2 0 step idle
+    stat at 23,18 element Lion p2 0 step idle
+    stat at 20,15 element Lion p2 0 step idle
+    stat at 18,13 element Lion p2 0 step idle
+    stat at 16,13 element Lion p2 0 step idle
+    stat at 15,11 element Lion p2 0 step idle
+    stat at 13,9 element Lion p2 0 step idle
+    stat at 13,10 element Lion p1 8 p2 0 step idle
+    stat at 15,12 element Lion p1 8 p2 0 step idle
+    stat at 17,12 element Lion p1 8 p2 0 step idle
+    stat at 17,14 element Lion p1 8 p2 0 step idle
+    stat at 20,14 element Lion p1 8 p2 0 step idle
+    stat at 23,14 element Lion p1 8 p2 0 step idle
+    stat at 26,14 element Lion p1 8 p2 0 step idle
+    stat at 28,13 element Lion p1 8 p2 0 step idle
+    stat at 28,12 element Lion p1 8 p2 0 step idle
+    stat at 28,10 element Lion p1 8 p2 0 step idle
+    stat at 30,8 element Lion p1 8 p2 0 step idle
+    stat at 31,8 element Lion p1 8 p2 0 step idle
+    stat at 29,14 element Lion p1 8 p2 0 step idle
+    stat at 33,12 element Lion p1 8 p2 0 step idle
+    stat at 36,12 element Lion p1 8 p2 0 step idle
+    stat at 38,14 element Lion p1 8 p2 0 step idle
+    stat at 40,16 element Lion p1 8 p2 0 step idle
+    stat at 40,17 element Lion p1 8 p2 0 step idle
+    stat at 43,14 element Lion p1 8 p2 0 step idle
+    stat at 46,11 element Lion p1 8 p2 0 step idle
+    stat at 44,11 element Lion p1 8 p2 0 step idle
+    stat at 45,10 element Lion p1 8 p2 0 step idle
+    stat at 46,13 element Lion p1 8 p2 0 step idle
+    stat at 48,15 element Lion p1 8 p2 0 step idle
+    stat at 51,15 element Lion p1 8 p2 0 step idle
+    stat at 53,16 element Lion p1 8 p2 0 step idle
+    stat at 53,17 element Lion p1 8 p2 0 step idle
+    stat at 54,15 element Lion p1 8 p2 0 step idle
+    stat at 55,14 element Lion p1 8 p2 0 step idle
+    stat at 55,13 element Lion p1 8 p2 0 step idle
+    stat at 57,12 element Lion p1 8 p2 0 step idle
+    stat at 57,11 element Lion p1 8 p2 0 step idle
+    stat at 58,10 element Lion p1 8 p2 0 step idle
+    stat at 58,9 element Lion p1 8 p2 0 step idle
+    stat at 59,8 element Lion p1 8 p2 0 step idle
+    stat at 58,6 element Lion p1 8 p2 0 step idle
+    stat at 57,5 element Lion p1 8 p2 0 step idle
+    stat at 56,4 element Lion p1 8 p2 0 step idle
+    stat at 55,4 element Lion p1 8 p2 0 step idle
+    stat at 51,3 element Lion p1 8 p2 0 step idle
+    stat at 49,3 element Lion p1 8 p2 0 step idle
+    stat at 45,3 element Lion p1 8 p2 0 step idle
+    stat at 43,3 element Lion p1 8 p2 0 step idle
+    stat at 41,3 element Lion p1 8 p2 0 step idle
+    stat at 40,3 element Lion p1 8 p2 0 step idle
+    stat at 38,3 element Lion p1 8 p2 0 step idle
+    stat at 37,2 element Lion p1 8 p2 0 step idle
+    stat at 25,21 element Spinning gun p1 8 p2 8 step idle
+    stat at 40,18 element Spinning gun p1 8 p2 8 step idle
+    stat at 45,9 element Spinning gun p1 8 p2 8 step idle
+    stat at 30,7 element Spinning gun p1 8 p2 8 step idle
+  end
+end

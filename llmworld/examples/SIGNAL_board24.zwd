@@ -1,0 +1,125 @@
+board "Another street"
+  start player at 29,20
+  respawn at 1,25
+  max-shots 255
+  dark false
+  reenter false
+  time-limit 0
+  exits north none south none west none east none
+
+  grid
+ffffffffffffffff#########################fffffffffffffffffff
+ffffffffffffffff#########################fffffffffffffffffff
+ffffffffffffffff###MIXED#NUTS#AgYLUM#####fffffffffffffffffff
+ffffffffffffffff#########################fffffffffffffffffff
+ffffffffffffffff####-=Crazies#welcome=-##fffffffffffffffffff
+ffffffffffffffff#########################fffffffffffffffffff
+ffffffffffffffff#########(Rjnqqu#########fffffffffffffffffff
+ffffffffffffffff##########CRnZu##########f##################
+ffffffffffffffff##########PjOPqj#########f##"qordvhelpvme,##
+ffffffffffffffff#########xOy'B#GjB#######f##H'mvwacko!"#####
+FFFFFFFFFFFFFFFF##########WHyxOWJ)#######F##################
+FFFFFFFFFFFFFFFF#########################F#######-Jimka#####
+FFFFFFFFFFFFFFFF#########################F#########xoblets##
+FFFFFFFFFFFFFFFF#########################F##################
+FFFFFFFFFFFFFFFF#~#~#~#~#~#~#~#~#~#~#~#~#F##\____________/##
+FFFFFFFFFFFFFFFF#########################F##################
+KKKKKKKKKKKKKKKK#~#~#~#~#~#~#~#~#~#~#~#~#KKKK#KKKKKKKKKK#KKK
+KKKKKKKKKKKKKKKK#########################KKKK#KKKKKKKKKK#KKK
+KKKKKKKKKKKKKKKK############Q############KKKK#KKKKKKKKKK#KKK
+KKKKKKKKKKKKKKKKKKKKKKKKKKKK@KKVKKKKKKKKKKKKKKKKKKKKKKKKKKKK
+KKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKK
+KKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKK
+KKKKKKKKKKKKKKKKKKKKKKKKKKKKK0100000000000000000KKKKKKKKKKKK
+KKKKKKKKKKKKKKKKKKKKKKKKKKKK2220~0~0~0~0~0~0~0~00KKKKKKKKKKK
+KKKKKKKKKKKKKKKKKKKKKKKKK000000000000000000000000KKKKKKKKKKK
+  end
+
+  legend
+    f = Text-Cyan color 0x20
+    # = Solid color 0x0F
+    M = Text-Blue color 0x4D
+    I = Text-Green color 0x49
+    X = Text-Cyan color 0x58
+    E = Text-Red color 0x45
+    D = Text-Purple color 0x44
+    N = Text-Yellow color 0x4E
+    U = Text-White color 0x55
+    T = Text-Blue color 0x54
+    S = Text-Green color 0x53
+    A = Text-Cyan color 0x41
+    g = Text-Red color 0x53
+    Y = Text-Purple color 0x59
+    L = Text-Yellow color 0x4C
+    - = Text-White color 0x2D
+    = = Text-White color 0x3D
+    C = Text-White color 0x43
+    r = Text-White color 0x72
+    a = Text-White color 0x61
+    z = Text-White color 0x7A
+    i = Text-White color 0x69
+    e = Text-White color 0x65
+    s = Text-White color 0x73
+    w = Text-White color 0x77
+    l = Text-White color 0x6C
+    c = Text-White color 0x63
+    o = Text-White color 0x6F
+    m = Text-White color 0x6D
+    ( = Text-White color 0x28
+    R = Text-White color 0x52
+    j = Text-White color 0x45
+    n = Text-White color 0x41
+    q = Text-White color 0x4C
+    u = Text-White color 0x59
+    Z = Text-White color 0x5A
+    P = Text-White color 0x50
+    O = Text-White color 0x4F
+    " = Text-White color 0x22
+    d = Text-White color 0x64
+    v = Text-White color 0x20
+    h = Text-White color 0x68
+    p = Text-White color 0x70
+    , = Text-White color 0x2C
+    x = Text-White color 0x44
+    y = Text-White color 0x4E
+    ' = Text-White color 0x27
+    B = Text-White color 0x54
+    G = Text-White color 0x47
+    H = Text-White color 0x49
+    k = Text-White color 0x6B
+    ! = Text-White color 0x21
+    F = Fake color 0x02
+    W = Text-White color 0x57
+    J = Text-White color 0x53
+    ) = Text-White color 0x29
+    b = Text-White color 0x62
+    t = Text-White color 0x74
+    ~ = Water color 0xF9
+    \ = Text-White color 0x5C
+    _ = Text-White color 0x5F
+    / = Text-White color 0x2F
+    K = Fake color 0x07
+    Q = Passage color 0x7F to "Funny farm"
+    @ = Player color 0x1F under Fake color 0x07
+    V = Object color 0x0A
+    0 = Solid color 0x0E
+    1 = Passage color 0x6F to "And another gets on"
+    2 = Solid color 0x0B
+  end
+
+  stats
+    stat at 29,19 element Passage p1 0 p2 0 p3 board "Funny farm" step idle under Empty color 0x0F
+    stat at 32,20 element Object p1 cp437:0x02 p2 0 step idle under Fake color 0x07
+    oop
+@John Dime
+#clear saved
+/i/i/i
+Okay, let's take the bus.
+$Where?                                   
+I don't know, anywhere but here!
+#die
+
+    end
+    stat at 31,23 element Passage p1 0 p2 0 p3 board "And another gets on" step idle under Empty color 0x0E
+  end
+end

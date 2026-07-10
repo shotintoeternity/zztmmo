@@ -1,0 +1,836 @@
+board "Outro8 (Four board pics)"
+  start player at 1,25
+  respawn at 190,190
+  max-shots 255
+  dark false
+  reenter false
+  time-limit 0
+  exits north none south none west none east none
+
+  grid
+##~##~#~##~#~B~~~~B~BB~BBBBBBBBBNNBNNNjNNNjjNNjjNjNjjjNjjjjj
+~llllllllllllllllllllllllllllllllllllllllllllllllllllllllllj
+#lokkkkkkkFFOOOmqqOmWOmumqWOFFlkFFFvAAAAAAAAwAAAAAAxyFFFFFlj
+#lvvvvvvvvvvFOWmumWzWmqWquOqFFlFvFFxAA^A^A^A^A^A^AAxyFFFFFlj
+#lvzvvvvvzvCFqOuWDuDzuuDzzmFFFlFFFFvAAAAAAAAAAAAAAAvyAFFFAlj
+#lzvvzvzzvzvCFmDkvvvDvvvGzHFFFlkyFFvvIxJvKvJxKvJvIxvyAFFFFlj
+#lvzvvvvzzvzvFkvvvvzvzvvzGGFFFlyAAAFxvxvxxxvxxxvxxvyFMAFFFlj
+~lzzGzzGGzGzzAkvkvvvzvvvzGHCFFlAAAAAJJJJJJJJJJJJJJJAFQAAFFlj
+~lFCAACCAUACAAFvkvvvvzvvzHCFCFlFFFAAVX0rest1222222VAFAAAFFlj
+~lFAAIAAIAAUAFCFkvzvpzzvGCACAFl34FFAJJJJJJJJJJJJJJJAFAAAFFlj
+~lFFAAAAAAAFFFFCFFFAAACAAAAAFFl445FFFFFFFFFAAAFFFFFFAAFFFFlj
+#llllllllllllllllllllllllllllllllllllllllllllllllllllllllllj
+~lAFFFFFFFFFFFFFFFFFFFFFFFFFFFlFFFFFFAAAAAFFFFFAAAFF3546FAlj
+~lAAFFFFFFAAAAAAAAFFAAAAFFFFFFl6F7F8AAA7AAFFFFAAAAAFF9!FAAlj
+~lAAF$La%&$chanc*$PRETZELS$FFFl7677777AA7AAFFFFAAAAF9!99yFlj
+~lAFF$$b*f+-*$indig*%&i+n$$===l______77777:IF6FyFFFFFFFFFFlj
+#lAFFIFFFAAAA;AA,,A,AFFFFFIFFFl________/\7AAyFFFF6FyFFFFFAlj
+~lAAF|GHvkkkkHkkk<k>?`kvzG|yyFl________/';77777F7AyFF7y7FAlj
+~lAAFFFFAAAAAyAFFyFyyyFFFFFFFFl___Y____'_______67767777777lj
+BlFAFFAAQ,(AAAyA,FyFFFFFFFFFFFl________________________77_lj
+~lFFFFAAAAAAAyAIAFFFFFFFFFFFFFl_______________Y___________lj
+~lFFFAAAAAAAAIAFFFFFFFFFFFFFFFl___________________________lj
+~llllllllllllllllllllllllllllllllllllllllllllllllllllllllllj
+))))))BBBBBBBBBNNBNNNNNNjNNjNNNNjjNjjjjjjjjjNjjjjjjjjjjjjjjj
+@.).[)BBBBBBNBBNBNBBNBNNjNjjNNNjjNjNjjjNjjNjjjjjjjjjjjjjjjjj
+  end
+
+  legend
+    # = Solid color 0x31
+    ~ = Water color 0x13
+    B = Breakable color 0x13
+    N = Normal color 0x13
+    j = Solid color 0x13
+    l = Line color 0x00
+    o = Object color 0x07
+    k = Solid color 0x77
+    F = Fake color 0x02
+    O = Object color 0x28
+    m = Breakable color 0x0C
+    q = Normal color 0x0C
+    W = Water color 0x0C
+    u = Solid color 0x0C
+    v = Water color 0x78
+    A = Fake color 0x22
+    w = Object color 0x2E
+    x = Solid color 0x67
+    y = Fake color 0x20
+    z = Breakable color 0x78
+    ^ = Text-Green color 0x5E
+    C = Water color 0x27
+    D = Water color 0x7C
+    G = Normal color 0x78
+    H = Object color 0x78
+    I = Object color 0x2F
+    J = Object color 0x2B
+    K = Object color 0x20
+    M = Object color 0x2C
+    Q = Object color 0x4F
+    U = Breakable color 0x27
+    V = Object color 0x0B
+    X = Text-White color 0x46
+    0 = Text-White color 0x6F
+    r = Text-White color 0x72
+    e = Text-White color 0x65
+    s = Text-White color 0x73
+    t = Text-White color 0x74
+    1 = Text-White color 0x20
+    2 = Object color 0x0F
+    p = Passage color 0x07 to "ObeliskF1"
+    3 = Solid color 0x2A
+    4 = Normal color 0x2A
+    5 = Breakable color 0x2A
+    6 = Object color 0x2A
+    7 = Fake color 0x12
+    8 = Object color 0x1F
+    9 = Solid color 0x06
+    ! = Normal color 0x06
+    $ = Text-Blue color 0x20
+    L = Text-Blue color 0x4C
+    a = Text-Blue color 0x61
+    % = Text-Blue color 0x73
+    & = Text-Blue color 0x74
+    c = Text-Blue color 0x63
+    h = Text-Blue color 0x68
+    n = Text-Blue color 0x6E
+    * = Text-Blue color 0x65
+    P = Text-Blue color 0x50
+    R = Text-Blue color 0x52
+    E = Text-Blue color 0x45
+    T = Text-Blue color 0x54
+    Z = Text-Blue color 0x5A
+    S = Text-Blue color 0x53
+    b = Text-Blue color 0x62
+    f = Text-Blue color 0x66
+    + = Text-Blue color 0x6F
+    - = Text-Blue color 0x72
+    i = Text-Blue color 0x69
+    d = Text-Blue color 0x64
+    g = Text-Blue color 0x67
+    = = Object color 0xAE
+    _ = Water color 0x19
+    : = Object color 0x24
+    ; = Object color 0x5F
+    , = Object color 0x26
+    / = Object color 0x17
+    \ = Object color 0x16
+    | = Solid color 0x78
+    < = Object color 0x7F
+    > = Object color 0x72
+    ? = Object color 0x7E
+    ` = Object color 0x74
+    ' = Object color 0x19
+    Y = Shark color 0x19
+    ( = Object color 0x3F
+    ) = Object color 0x08
+    @ = Player color 0x1F under Empty color 0x0F
+    . = Empty color 0x0F
+    [ = Passage color 0x0F to "The End"
+  end
+
+  stats
+    stat at 1,24 element Object p1 cp437:0xC4 p2 0 step idle under Empty color 0x0F
+    stat at 2,24 element Object p1 cp437:0xC4 p2 0 step idle under Empty color 0x0F
+    stat at 3,24 element Object p1 cp437:0xC4 p2 0 step idle under Empty color 0x0F
+    stat at 4,24 element Object p1 cp437:0xC4 p2 0 step idle under Empty color 0x0F
+    stat at 5,24 element Object p1 cp437:0xC4 p2 0 step idle under Empty color 0x0F
+    stat at 6,24 element Object p1 cp437:0xBF p2 0 step idle under Empty color 0x0F
+    oop
+@ColorCycle
+#cycle 2
+#end
+:fast
+#cycle 1
+:do
+#change BLUE INVISIBLE BLUE SOLID
+/i
+#change BLUE SOLID BLUE INVISIBLE
+#change GREEN INVISIBLE BLUE NORMAL
+/i
+#change BLUE NORMAL GREEN INVISIBLE
+#change CYAN INVISIBLE BLUE BREAKABLE
+/i
+#change BLUE BREAKABLE CYAN INVISIBLE
+#change RED INVISIBLE BLUE WATER
+/i
+#change BLUE WATER RED INVISIBLE
+#do
+:stop
+#change BLUE SOLID BLUE INVISIBLE
+#change BLUE NORMAL GREEN INVISIBLE
+#change BLUE BREAKABLE CYAN INVISIBLE
+#change BLUE WATER RED INVISIBLE
+
+    end
+    stat at 3,25 element Object p1 cp437:0xB3 p2 0 step idle under Empty color 0x0F
+    oop
+@Daedalus' Obelisk
+/i/i/i
+And so, peace was restored to the land!
+Eric returned home to his normal life,
+although things never looked quite the
+same again!
+
+Is Daedalus truly defeated? Will Eric ever
+be called to heroism again in the land of
+Dagda?
+
+Only time will tell!
+#die
+
+    end
+    stat at 5,25 element Passage p1 0 p2 0 p3 board "The End" step idle under Empty color 0x0F
+    stat at 6,25 element Object p1 cp437:0xB3 p2 0 step idle under Empty color 0x0F
+    stat at 42,18 element Object p1 cp437:0x02 p2 0 step idle under Fake color 0x16
+    stat at 46,10 element Object p1 cp437:0xDF p2 0 step idle under Fake color 0x46
+    oop
+@Colorman2
+#cycle 1
+#end
+
+:do
+#put N YELLOW OBJECT
+/i/i
+#put N WHITE OBJECT
+/i/i
+#send Colorman3:do
+#end
+
+    end
+    stat at 45,3 element Object p1 cp437:0x20 p2 0 step idle under Fake color 0x22
+    oop
+@Plinko
+#cycle 1
+:do
+/i/i/i/i/i/i/i/i/i
+/i/i/i/i/i/i/i/i/i
+/i/i/i/i/i/i/i/i/i
+#char 254
+/i/i/i/i/i/i/i/i/i/i/i/i/i/i/i/i/i/i/i/i/i
+/w
+/i/i/i/i/i/s/i/s
+/i/i/i/i/i/i/i
+#send Argh:s
+#back4
+
+:back1
+/n/n/e
+#char 32
+/e/e/e/e/e/e
+#do
+
+:back2
+/w/w
+#back1
+
+:back3
+/w/w
+#back2
+
+:back4
+/w/w
+#back3
+
+:back5
+/w/w
+#back4
+
+:back6
+/w/w
+#back5
+
+:back7
+/w/w
+#back6
+
+    end
+    stat at 38,6 element Object p1 cp437:0x04 p2 0 step idle under Fake color 0x46
+    stat at 40,6 element Object p1 cp437:0x84 p2 0 step idle under Fake color 0x46
+    stat at 42,6 element Object p1 cp437:0x58 p2 0 step idle under Fake color 0x46
+    stat at 44,6 element Object p1 cp437:0x04 p2 0 step idle under Fake color 0x46
+    stat at 46,6 element Object p1 cp437:0x58 p2 0 step idle under Fake color 0x46
+    stat at 48,6 element Object p1 cp437:0x84 p2 0 step idle under Fake color 0x46
+    stat at 50,6 element Object p1 cp437:0x04 p2 0 step idle under Empty color 0x0F
+    stat at 37,8 element Object p1 cp437:0xDC p2 0 step idle under Empty color 0x0F
+    stat at 38,8 element Object p1 cp437:0xDC p2 0 step idle under Empty color 0x0F
+    stat at 39,8 element Object p1 cp437:0xDC p2 0 step idle under Empty color 0x0F
+    stat at 40,8 element Object p1 cp437:0xDC p2 0 step idle under Empty color 0x0F
+    stat at 41,8 element Object p1 cp437:0xDC p2 0 step idle under Empty color 0x0F
+    stat at 42,8 element Object p1 cp437:0xDC p2 0 step idle under Empty color 0x0F
+    stat at 43,8 element Object p1 cp437:0xDC p2 0 step idle under Empty color 0x0F
+    stat at 44,8 element Object p1 cp437:0xDC p2 0 step idle under Empty color 0x0F
+    stat at 45,8 element Object p1 cp437:0xDC p2 0 step idle under Empty color 0x0F
+    stat at 46,8 element Object p1 cp437:0xDC p2 0 step idle under Empty color 0x0F
+    stat at 47,8 element Object p1 cp437:0xDC p2 0 step idle under Empty color 0x0F
+    stat at 48,8 element Object p1 cp437:0xDC p2 0 step idle under Fake color 0x20
+    stat at 49,8 element Object p1 cp437:0xDC p2 0 step idle under Fake color 0x20
+    stat at 50,8 element Object p1 cp437:0xDC p2 0 step idle under Fake color 0x20
+    stat at 51,8 element Object p1 cp437:0xDC p2 0 step idle under Empty color 0x0F
+    stat at 45,9 element Object p1 cp437:0x50 p2 0 step idle under Empty color 0x0F
+    stat at 46,9 element Object p1 cp437:0x4C p2 0 step idle under Empty color 0x0F
+    stat at 47,9 element Object p1 cp437:0x49 p2 0 step idle under Empty color 0x0F
+    stat at 48,9 element Object p1 cp437:0x4E p2 0 step idle under Empty color 0x0F
+    stat at 49,9 element Object p1 cp437:0x4B p2 0 step idle under Empty color 0x0F
+    stat at 50,9 element Object p1 cp437:0x4F p2 0 step idle under Empty color 0x0F
+    stat at 37,10 element Object p1 cp437:0xDF p2 0 step idle under Fake color 0x46
+    stat at 38,10 element Object p1 cp437:0xDF p2 0 step idle under Fake color 0x46
+    stat at 39,10 element Object p1 cp437:0xDF p2 0 step idle under Fake color 0x46
+    stat at 40,10 element Object p1 cp437:0xDF p2 0 step idle under Fake color 0x46
+    stat at 45,10 element Object p1 cp437:0xDF p2 0 step idle under Fake color 0x46
+    oop
+@Colorman
+#cycle 1
+
+:do
+/i/i/i/i/i/i/i
+#put N GREEN OBJECT
+/i/i
+#put N WHITE OBJECT
+/i/i
+#send Colorman2:do
+#end
+
+    end
+    stat at 47,10 element Object p1 cp437:0xDF p2 0 step idle under Fake color 0x46
+    oop
+@Colorman3
+#cycle 1
+#end
+
+:do
+#put N GREEN OBJECT
+/i/i
+#put N WHITE OBJECT
+/i/i
+#send Colorman4:do
+#end
+
+    end
+    stat at 48,10 element Object p1 cp437:0xDF p2 0 step idle under Fake color 0x46
+    oop
+@Colorman4
+#cycle 1
+#end
+
+:do
+#put N YELLOW OBJECT
+/i/i
+#put N WHITE OBJECT
+/i/i
+#send Colorman5:do
+#end
+
+    end
+    stat at 49,10 element Object p1 cp437:0xDF p2 0 step idle under Fake color 0x46
+    oop
+@Colorman5
+#cycle 1
+#end
+
+:do
+#put N GREEN OBJECT
+/i/i
+#put N WHITE OBJECT
+/i/i
+#send Colorman6:do
+#end
+
+    end
+    stat at 50,10 element Object p1 cp437:0xDF p2 0 step idle under Fake color 0x46
+    oop
+@Colorman6
+#cycle 1
+#end
+
+:do
+#put N YELLOW OBJECT
+/i/i
+#put N WHITE OBJECT
+/i/i
+#send Colorman:do
+#end
+
+    end
+    stat at 51,10 element Object p1 cp437:0xDF p2 0 step idle under Fake color 0x46
+    stat at 28,16 element Object p1 cp437:0xDF p2 0 step idle under Fake color 0x46
+    stat at 29,16 element Object p1 cp437:0xDF p2 0 step idle under Fake color 0x46
+    stat at 30,16 element Object p1 cp437:0xDF p2 0 step idle under Fake color 0x46
+    stat at 6,17 element Object p1 cp437:0xB3 p2 0 step idle under Fake color 0x46
+    stat at 14,17 element Object p1 cp437:0x02 p2 0 step idle under Fake color 0x46
+    stat at 17,17 element Object p1 cp437:0xEC p2 0 step idle under Fake color 0x22
+    stat at 18,17 element Object p1 cp437:0xEC p2 0 step idle under Fake color 0x22
+    stat at 20,17 element Object p1 cp437:0xEC p2 0 step idle under Fake color 0x22
+    stat at 27,17 element Object p1 cp437:0xB3 p2 0 step idle under Water color 0x78
+    stat at 8,18 element Object p1 cp437:0xB1 p2 0 step idle under Fake color 0x46
+    stat at 14,18 element Object p1 cp437:0x23 p2 0 step idle under Empty color 0x0F
+    stat at 18,18 element Object p1 cp437:0xF7 p2 0 step idle under Empty color 0x0F
+    oop
+@Napkins
+#cycle 1
+#end
+:touch
+Napkins.
+
+    end
+    stat at 20,18 element Object p1 cp437:0xAD p2 0 step idle under Empty color 0x0F
+    oop
+@Relish
+#cycle 1
+#end
+:touch
+Relish.
+
+    end
+    stat at 21,18 element Object p1 cp437:0xAD p2 0 step idle under Empty color 0x0F
+    oop
+@Mustard
+#cycle 1
+#end
+:touch
+Mustard.
+
+    end
+    stat at 22,18 element Object p1 cp437:0xAD p2 0 step idle under Empty color 0x0F
+    oop
+@Ketchup
+#cycle 1
+#end
+:touch
+Ketchup.
+
+    end
+    stat at 9,20 element Object p1 cp437:0x02 p2 0 step idle under Fake color 0x22
+    stat at 10,20 element Object p1 cp437:0xEC p2 0 step idle under Fake color 0x22
+    stat at 11,20 element Object p1 cp437:0x02 p2 0 step idle under Fake color 0x22
+    stat at 17,20 element Object p1 cp437:0xEC p2 0 step idle under Fake color 0x22
+    oop
+@Pretz
+#cycle 1
+#end
+:bye
+#become FAKE
+
+    end
+    stat at 16,21 element Object p1 cp437:0xE7 p2 0 step idle under Fake color 0x66
+    stat at 14,22 element Object p1 cp437:0x20 p2 0 step idle under Fake color 0x22
+    oop
+@Bobo II
+/i/i/i/i/i
+#char 2
+/n/n/n
+/i/i/i/i/i/i/i/i/i/i
+/e/e/e/e
+/i/i/i/i/i
+/e/e/e
+/i/i/i/i/i
+/w/s/s
+/i/i/i
+/n/w
+/i/i/i/i/i
+#cycle 1
+/w
+#send Pretz:bye
+/i/e
+/s/s
+#become FAKE
+
+    end
+    stat at 56,13 element Object p1 cp437:0xB1 p2 0 step idle under Empty color 0x0F
+    stat at 32,14 element Object p1 cp437:0xF7 p2 0 step idle under Fake color 0x46
+    stat at 36,14 element Object p1 cp437:0x02 p2 0 step idle under Fake color 0x46
+    stat at 33,15 element Object p1 cp437:0xF7 p2 0 step idle under Fake color 0x46
+    stat at 44,16 element Object p1 cp437:0x02 p2 0 step idle under Fake color 0x22
+    oop
+@Line
+#cycle 1
+#end
+:waver
+/i/i/i/i/i/i/i/i/s/w
+#end
+
+    end
+    stat at 46,16 element Object p1 cp437:0xF7 p2 0 step idle under Fake color 0x46
+    stat at 40,17 element Object p1 cp437:0xB3 p2 0 step idle under Water color 0x19
+    oop
+@Line
+#end
+:waver
+#char 40
+/i
+#char 41
+/i
+#waver
+:fish
+#char 179
+#end
+
+    end
+    stat at 50,17 element Object p1 cp437:0xF7 p2 0 step idle under Fake color 0x46
+    stat at 35,19 element Shark p2 0 step idle under Water color 0x19
+    stat at 48,19 element Object p1 cp437:0xF7 p2 0 step idle under Fake color 0x46
+    stat at 51,19 element Object p1 cp437:0xF7 p2 0 step idle under Fake color 0x46
+    stat at 47,21 element Shark p2 0 step idle under Water color 0x19
+    stat at 27,6 element Object p1 cp437:0xB1 p2 0 step idle under Water color 0x78
+    stat at 27,8 element Object p1 cp437:0xB1 p2 0 step idle under Water color 0x78
+    stat at 26,9 element Object p1 cp437:0xB1 p2 0 step idle under Water color 0x78
+    stat at 21,10 element Passage p1 0 p2 0 p3 board "ObeliskF1" step idle under Empty color 0x0F
+    stat at 6,10 element Object p1 cp437:0x02 p2 0 step idle under Fake color 0x22
+    oop
+@Dancer
+:do
+/e/w/n/s
+#do
+
+    end
+    stat at 9,10 element Object p1 cp437:0x02 p2 0 step idle under Fake color 0x22
+    oop
+@Dancer
+:do
+/s/n/e/w
+#do
+
+    end
+    stat at 15,5 element Object p1 cp437:0xB1 p2 0 step idle under Fake color 0x02
+    oop
+@Smoke
+#cycle 1
+:do
+#char 177
+/i/i/i
+#char 178
+/i
+#char 176
+/i/i/i/i/i
+#char 177
+/i
+#char 178
+/i/i/i/i
+#char 176
+/i/i
+#do
+
+    end
+    stat at 14,4 element Object p1 cp437:0xB1 p2 0 step idle under Fake color 0x02
+    oop
+@Smoke
+#cycle 1
+/i/i/i
+:do
+#char 177
+/i
+#char 178
+/i/i/i/i
+#char 176
+/i/i
+#char 177
+/i/i/i
+#char 178
+/i
+#char 176
+/i/i/i/i/i
+#do
+
+    end
+    stat at 15,3 element Object p1 cp437:0xB1 p2 0 step idle under Fake color 0x02
+    oop
+@Smoke
+#cycle 1
+/i
+:do
+#char 177
+/i
+#char 178
+/i/i/i/i
+#char 176
+/i/i
+#char 177
+/i/i/i
+#char 178
+/i
+#char 176
+/i/i/i/i/i
+#do
+
+    end
+    stat at 13,3 element Object p1 cp437:0xB1 p2 0 step idle under Fake color 0x02
+    oop
+@Smoke
+#cycle 1
+/i/i/i/i/i
+:do
+#char 177
+/i/i
+#char 178
+/i/i/i
+#char 176
+/i
+#char 177
+/i/i/i/i
+#char 178
+/i/i
+#char 176
+/i/i/i/i
+#do
+
+    end
+    stat at 14,3 element Object p1 cp437:0xB1 p2 0 step idle under Fake color 0x02
+    oop
+@Smoke
+#cycle 1
+/i/i/i/i
+:do
+#char 177
+/i/i
+#char 178
+/i/i/i
+#char 176
+/i
+#char 177
+/i/i/i/i
+#char 178
+/i/i
+#char 176
+/i/i/i/i
+#do
+
+    end
+    stat at 19,3 element Object p1 cp437:0xB1 p2 0 step idle under Fake color 0x02
+    oop
+@Smoke
+#cycle 1
+/i/i/i
+:do
+#char 177
+/i
+#char 178
+/i/i/i/i
+#char 176
+/i/i
+#char 177
+/i/i/i
+#char 178
+/i
+#char 176
+/i/i/i/i/i
+#do
+
+    end
+    stat at 22,3 element Object p1 cp437:0xB1 p2 0 step idle under Fake color 0x02
+    oop
+@Smoke
+#cycle 1
+:do
+#char 177
+/i/i/i
+#char 178
+/i
+#char 176
+/i/i/i/i/i
+#char 177
+/i
+#char 178
+/i/i/i/i
+#char 176
+/i/i
+#do
+
+    end
+    stat at 27,4 element Object p1 cp437:0xB1 p2 0 step idle under Fake color 0x02
+    oop
+@Smoke
+#cycle 1
+/i/i/i/i/i
+:do
+#char 177
+/i/i
+#char 178
+/i/i/i
+#char 176
+/i
+#char 177
+/i/i/i/i
+#char 178
+/i/i
+#char 176
+/i/i/i/i
+#do
+
+    end
+    stat at 28,3 element Object p1 cp437:0xB1 p2 0 step idle under Fake color 0x02
+    oop
+@Smoke
+#cycle 1
+/i/i/i/i/i/i
+:do
+#char 176
+/i
+#char 177
+/i/i/i/i
+#char 178
+/i/i
+#char 176
+/i/i/i/i
+#char 177
+/i/i
+#char 178
+/i/i/i
+#do
+
+    end
+    stat at 3,3 element Object p1 cp437:0xDB p2 0 step idle under Empty color 0x0F
+    oop
+@Fire
+#cycle 1
+/i
+#change red normal red fake
+#change red water normal
+#change red solid water
+/i
+#change red breakable red solid
+#change red fake red breakable
+#restart
+
+    end
+    stat at 41,17 element Object p1 cp437:0x5C p2 0 step idle under Fake color 0x12
+    stat at 40,18 element Object p1 cp437:0xB3 p2 0 step idle under Water color 0x19
+    oop
+@Line
+#end
+:waver
+#char 41
+/i
+#char 40
+/i
+#waver
+:fish
+#char 224
+#end
+
+    end
+    stat at 40,19 element Object p1 cp437:0x07 p2 0 step idle under Water color 0x19
+    oop
+@Water2
+
+:w
+:w
+:w
+:w
+:w
+:w
+:w
+:w
+:w
+:w
+:w
+:w
+:w
+:w
+/i/i
+#char 9
+/i/i
+#char 7
+#zap w
+#w
+
+:w
+#send Line:waver
+#cycle 1
+
+:s
+:s
+:s
+:s
+:s
+:s
+:s
+:s
+:s
+:s
+:s
+:s
+:s
+:s
+:s
+:s
+:s
+/i
+#char 9
+/i
+#char 7
+#zap s
+#s
+
+:s
+#send Line:fish
+#char 176
+#send QMark:do
+
+    end
+    stat at 41,18 element Object p1 cp437:0xB0 p2 0 step idle under Water color 0x19
+    oop
+@Line
+#end
+:fish
+#put W RED OBJECT
+#end
+
+    end
+    stat at 43,16 element Object p1 cp437:0x20 p2 0 step idle under Fake color 0x22
+    oop
+@QMark
+#cycle 1
+#end
+:do
+/i/i/i
+#char 33
+/i/i/i/i/i/i/i/i/i/i/i/i/i/i
+#char 32
+#end
+
+    end
+    stat at 54,8 element Object p1 cp437:0x02 p2 0 step idle under Fake color 0x22
+    stat at 54,7 element Object p1 cp437:0x20 p2 0 step idle under Fake color 0x22
+    oop
+@Argh
+#cycle 1
+#end
+
+:s
+:s
+:s
+#char 36
+/i
+#char 42
+/i
+#char 35
+/i
+#char 38
+/i
+#char 33
+/i
+#char 37
+/i
+#char 63
+/i
+#char 64
+/i
+#zap s
+#s
+:s
+#char 32
+#restore s
+#restore s
+#restore s
+#restore s
+#restore s
+#end
+
+    end
+    stat at 44,10 element Object p1 cp437:0xDF p2 0 step idle under Empty color 0x0F
+    stat at 43,10 element Object p1 cp437:0xDF p2 0 step idle under Empty color 0x0F
+    stat at 42,10 element Object p1 cp437:0xDF p2 0 step idle under Empty color 0x0F
+    stat at 41,10 element Object p1 cp437:0xDF p2 0 step idle under Empty color 0x0F
+    stat at 37,9 element Object p1 cp437:0xDD p2 0 step idle under Empty color 0x0F
+    stat at 51,9 element Object p1 cp437:0xDE p2 0 step idle under Empty color 0x0F
+  end
+end

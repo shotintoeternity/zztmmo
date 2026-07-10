@@ -1,0 +1,89 @@
+board "Ending - 3"
+  start player at 3,3
+  respawn at 30,12
+  max-shots 255
+  dark false
+  reenter false
+  time-limit 0
+  exits north none south none west none east none
+
+  grid
+NNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNaaNNNNNNNNNNNNNNNNNN
+albceecNNNNNaaNNNNNaaNNaaNNNNNNNNNaaNNNNNNNNNNNNaaNNNNNNNNNa
+Nb@...bNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNaaNNN
+NceecblaaNNNaaNNNaaNNNNNNNNNaaNNNNNNNNNNNaaNNNNNNNNNaaNNNNNN
+NNNNNNNNNNNNNNNNNNNNNNaaNNNNNNNNNNNaaNNNNNNNNNaaNNNNNNNNNNaa
+NNNNNNNNNoFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFNNNNNNNN
+aaaaaaaaaFFFFFFFFFFF#####################FFFFFFFFFFFaaaaaaaa
+aaaaBBaaaFFFFFF###############################FFFFFFaaaNNaBB
+NNaaaaaNNFF#######################################FFBBaaaaaa
+aaaaaaaaaFF##########FFFFF#########FFFFF##########FFaaaBBaNN
+BBaaNNaBBFF##########FFFFF#########FFFFF##########FFNNaaaaaa
+aaaaaaaaaFF#######################################FFaaaaaaaa
+BBBBBBBBBFF#######################################FFBBBBBBBB
+BBBaaBBBBFF#######################################FFBBB~~BBB
+~~BBBBBaaFF#######################################FFaaBBBBaa
+BBB~~BBBBFF#######################################FFBBBBBBBB
+aaBBBBB~~FF#####FFFFFFFFFFFFFFFFFFFFFFFFFFFFF#####FF~~BaaB~~
+BBBBBBBBBFF#####FFFFFFFFFFFFFFFFFFFFFFFFFFFFF#####FFBBBBBBBB
+~~~~~~~~~FF#########FFFFFFFFFFFFFFFFFFFFF#########FF~~~~~~~~
+~~~~~BB~~FF##############FFFFFFFFFFF##############FF~~~BB~~~
+BB~~~~~~~FFFFFF###############################FFFFFFBB~~~~BB
+~~~~~~~~~FFFFFFFFFFF#####################FFFFFFFFFFF~~~~~~~~
+~~~BB~~~~FFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFF~~~~~~~~
+~~~~~~~~~BB~~~~~~~~~~~~~BB~~~~~~~~~~~~~~BB~~~~~~~~~~~~~BB~~~
+Endingf-f3~~~~~~BB~~~~~~~~~~~~~~BB~~~~~~~~~~~~~~BB~~~~~~~~~~
+  end
+
+  legend
+    N = Normal color 0x22
+    a = Normal color 0x02
+    l = Line color 0x7F
+    b = Line color 0x77
+    c = Line color 0x78
+    e = Line color 0x70
+    @ = Player color 0x1F under Empty color 0x00
+    . = Empty color 0x00
+    o = Object color 0x1F
+    F = Fake color 0x11
+    # = Solid color 0x0F
+    B = Breakable color 0x02
+    ~ = Water color 0x02
+    E = Text-White color 0x45
+    n = Text-White color 0x6E
+    d = Text-White color 0x64
+    i = Text-White color 0x69
+    g = Text-White color 0x67
+    f = Text-White color 0x20
+    - = Text-White color 0x2D
+    3 = Text-White color 0x33
+  end
+
+  stats
+    stat at 10,6 element Object p1 cp437:0x00 p2 0 step idle under Fake color 0x11
+    oop
+@Fin
+/i/i/i
+My quest is complete. The color revival
+/i/i/i/i/i/i
+has been achived... yet I still have
+/i/i/i/i/i/i
+questions. Where is the nowhere that 
+/i/i/i/i/i/i
+selected me to revive the colors? What in-
+/i/i/i/i/i/i
+teligence is behind it? Will I ever find
+/i/i/i/i/i/i
+out? ...
+/i/i/i/i/i/i
+... perhaps I shall know this...
+/i/i/i/i/i/i
+:loop
+#endgame
+... Someday ...
+/i
+#loop
+
+    end
+  end
+end

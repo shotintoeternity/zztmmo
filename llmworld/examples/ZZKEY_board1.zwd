@@ -1,0 +1,707 @@
+board "JUNK'S BOARD SUBMISSION: ZZKey Machine"
+  start player at 3,20
+  respawn at 1,1
+  max-shots 255
+  dark false
+  reenter false
+  time-limit 0
+  exits north none south none west none east none
+
+  grid
+OOOOOOOOlllolllOOOOOOOOObOOOOOOOOOOOOOOOOOOOOOOOOdOOOOOOOOOO
+OOOOObOOlflolflOOOgOdOOOOOOOOOObOdOOOOOOOOOOObOOOOdOOOgOOOOO
+OOOOOOOOlfljlflOOOOOOOOOOOOObOOOOOOOkOkOOOObO#######OOOOOOdO
+OOOgOOOOlflklflOOOOOkkkkkkkkkkkkkkkkkkkkkkkO##GGGGG##OOOOOOO
+OOOOOdOOlfl.lflOOOON~SSSSSSSSSSSSSSSSSSS~Nm##qqsssss##OOOOOO
+OOgOOO##lfl.lfl####tvxZZKeyxzrexMachinexvtmqqqswsssss#####OO
+OOOOO##qlllslllsqqqN~SSSSSSSSSSSSSSSSSSS~Nmqsswbb1sssssss##O
+OOOO##sqssssssssssstvxPurpBexzreCFFFFFFDvtmEsw1gg1sssssssH#O
+OOOO#GssssbwwssssssN~SSSSSSSSSSSSIIIIIIS~NJEssbbbwsssssss##O
+OOOO#GsssswgbssssssN~SSSWSSSSSWSSSSSWSSS~NJEsssswssss#####OO
+OOOb#Gssssb1dssssssN~SSSsSSSSSsSSSSSsSSS~NJsssssssss##OOOOOO
+OOOO##sssssssssssLLLQfSsskkkkkskkkkksssSQLLLssssssss##OOOdOO
+OOOOO##sRsRRRRRRRRRRsskssssssssssssss/sksssssssssssss##OOOOO
+ObOOOO#ssssssssssLLLQfSTTTTTTTTTTTTTTTTSQLLLsssqssssss#ObOOO
+OOOOdO##sssssssssssN~SSSSSSSSSSSSSSSSSSS~Nksssq###ssss#OOOOO
+OOOgOO##ssssssssssssssssssssssssssssssssssssss###sssss#OdObO
+OOOO###sssssdw1sssssssssssssssssssssssssssqqqqqsssww1s##OOOO
+OO###sssssss1gb##sssssssssssbwssssssssssssssssssssbgdss#OOOO
+O##ssssqAAAsb1g###sssssEEwbdbgb1sslllElllsssss!ssssbwws#OOOO
+O#@ss!sqAAAssssssssssqqE#GGG#ssssslflElflssss#####ssss##OOOO
+O###ssssAAAssssssqqqqq#########ssslflElfl#####OOO######OOObO
+OOO########sqfffqqq####ObObOOO####lflklfl#OOOOOOOOOOOOOOOdOO
+ObOOOOOOOO##########OOOOOOOOOOOOOOlfljlflOOdObOOgOObOOOOOOOO
+OOgOOOOOOOObdOObOOOOOOOOdOOgObOOOOlflolflOOOOOOOOOOObOOdOOgO
+OOOOgOOOOOOOObOOOOOOOOOOOOOOOOObOOlllolllOOOOOOOOOOOOOOOOOOO
+  end
+
+  legend
+    O = Boulder color 0x09
+    l = Line color 0x78
+    o = Object color 0x09
+    b = Boulder color 0x0E
+    d = Boulder color 0x0C
+    f = Object color 0x78
+    g = Boulder color 0x0D
+    j = Object color 0x0A
+    k = Object color 0x08
+    # = Solid color 0x09
+    G = Spinning gun color 0x09
+    . = Empty color 0x78
+    N = Normal color 0x7F
+    ~ = Water color 0x7F
+    S = Solid color 0x07
+    m = Object color 0x58
+    q = Empty color 0x1B
+    s = Empty color 0x0F
+    t = Normal color 0x5D
+    v = Water color 0x5D
+    x = Text-Purple color 0x20
+    Z = Text-Purple color 0x5A
+    K = Text-Purple color 0x4B
+    e = Text-Purple color 0x65
+    y = Text-Purple color 0x79
+    z = Text-Purple color 0x4F
+    r = Text-Purple color 0x72
+    M = Text-Purple color 0x4D
+    a = Text-Purple color 0x61
+    c = Text-Purple color 0x63
+    h = Text-Purple color 0x68
+    i = Text-Purple color 0x69
+    n = Text-Purple color 0x6E
+    w = Slider (EW) color 0x0A
+    1 = Slider (NS) color 0x0B
+    P = Text-Purple color 0x50
+    u = Text-Purple color 0x75
+    p = Text-Purple color 0x70
+    B = Text-Purple color 0x6C
+    C = Object color 0x5F
+    F = Fake color 0x05
+    D = Object color 0x05
+    E = Empty color 0x0A
+    H = Passage color 0x3F
+    I = Object color 0x07
+    J = Solid color 0x08
+    W = Blink wall color 0x78
+    L = Line color 0x08
+    Q = Line color 0x77
+    R = Empty color 0x3B
+    / = Clockwise color 0x00
+    T = Clockwise color 0x08
+    A = Ammo color 0x03
+    ! = Scroll color 0x0F
+    @ = Player color 0x1F under Empty color 0x0F
+  end
+
+  stats
+    stat at 22,12 element Object cycle 1 p1 cp437:0x23 p2 0 step idle under Empty color 0x0F
+    oop
+@checker
+:loop
+#if blocked s if not contact checkinp
+/i
+#send loop
+:checkinp
+#put s solid
+#if any purple solid purpleboulder
+#if any yellow solid whiteboulder
+#if any red solid redboulder
+#put s empty
+#send loop
+:whiteboulder
+You push a boulder into the machine!
+#put s empty
+#char 207
+/s
+#put n white door
+#put n fake
+/i/i/i/n
+#char 35
+#send hopper:whiteboulder
+#send loop
+:purpleboulder
+You push a boulder into the machine!
+#put s empty
+#char 207
+/s
+#put n white door
+#put n fake
+/i/i/i/n
+#char 35
+#send hopper:purpleboulder
+#send loop
+:redboulder
+You push a boulder into the machine!
+#put s empty
+#char 207
+/s
+#put n white door
+#put n fake
+/i/i/i/n
+#char 35
+#send hopper:redboulder
+#send loop
+:youtrickster
+PLEASE DO NOT SHOOT THE ZZKEY MACHINE!
+#put s empty
+/s
+#put n white door
+#put n fake
+#shoot w
+/n
+#send loop
+
+    end
+    stat at 22,14 element Object p1 cp437:0x23 p2 0 step idle under Empty color 0x0F
+    stat at 23,13 element Object cycle 1 p1 cp437:0x10 p2 0 step idle under Empty color 0x0F
+    oop
+@hopper
+#end
+:whiteboulder
+#put e yellow boulder
+#end
+:purpleboulder
+#put e purple boulder
+#end
+:redboulder
+#put e red boulder
+
+    end
+    stat at 24,14 element Clockwise p1 0 p2 0 step idle under Empty color 0x0F
+    stat at 25,14 element Clockwise p1 0 p2 0 step idle under Empty color 0x0F
+    stat at 26,14 element Clockwise p1 0 p2 0 step idle under Empty color 0x0F
+    stat at 27,14 element Clockwise p1 0 p2 0 step idle under Empty color 0x0F
+    stat at 28,14 element Clockwise p1 0 p2 0 step idle under Empty color 0x0F
+    stat at 29,14 element Clockwise p1 0 p2 0 step idle under Empty color 0x0F
+    stat at 30,14 element Clockwise p1 0 p2 0 step idle under Empty color 0x0F
+    stat at 31,14 element Clockwise p1 0 p2 0 step idle under Empty color 0x0F
+    stat at 32,14 element Clockwise p1 0 p2 0 step idle under Empty color 0x0F
+    stat at 33,14 element Clockwise p1 0 p2 0 step idle under Empty color 0x0F
+    stat at 34,14 element Clockwise p1 0 p2 0 step idle under Empty color 0x0F
+    stat at 35,14 element Clockwise p1 0 p2 0 step idle under Empty color 0x0F
+    stat at 36,14 element Clockwise p1 0 p2 0 step idle under Empty color 0x0F
+    stat at 37,14 element Clockwise p1 0 p2 0 step idle under Empty color 0x0F
+    stat at 38,14 element Clockwise p1 0 p2 0 step idle under Empty color 0x0F
+    stat at 39,14 element Clockwise p1 0 p2 0 step idle under Empty color 0x0F
+    stat at 33,8 element Object cycle 1 p1 cp437:0x3A p2 0 step idle under Empty color 0x0F
+    oop
+@kmeter
+#end
+:dothething
+#put e purple door
+#put e gem
+
+    end
+    stat at 40,8 element Object cycle 1 p1 cp437:0xDB p2 0 step idle under Empty color 0x0F
+    oop
+#if blocked w dispense
+/i
+#restart
+:dispense
+#send chute:dispense
+#restart
+
+    end
+    stat at 37,4 element Object p1 cp437:0xBA p2 0 step idle under Empty color 0x0F
+    stat at 37,3 element Object cycle 1 p1 cp437:0xBA p2 0 step idle under Empty color 0x0F
+    oop
+@smokestack
+/i/i/i/i/i/i
+#put north white door
+#put north normal
+/i/i
+#put north breakable
+/i/i
+#put north water
+/i/i
+#put north blue boulder
+/i/i
+#restart
+
+    end
+    stat at 39,3 element Object cycle 1 p1 cp437:0xBA p2 0 step idle under Empty color 0x0F
+    oop
+@smokestack
+/i/i/i/i/i/i/i/i
+#put north white door
+#put north normal
+/i/i
+#put north breakable
+/i/i
+#put north water
+/i/i
+#put north blue boulder
+#restart
+
+    end
+    stat at 39,4 element Object p1 cp437:0xBA p2 0 step idle under Empty color 0x0F
+    stat at 21,4 element Object p1 cp437:0xDC p2 0 step idle under Empty color 0x0F
+    stat at 22,4 element Object p1 cp437:0xDC p2 0 step idle under Empty color 0x0F
+    stat at 23,4 element Object p1 cp437:0xDC p2 0 step idle under Empty color 0x0F
+    stat at 24,4 element Object p1 cp437:0xDC p2 0 step idle under Empty color 0x0F
+    stat at 25,4 element Object p1 cp437:0xDC p2 0 step idle under Empty color 0x0F
+    stat at 26,4 element Object p1 cp437:0xDC p2 0 step idle under Empty color 0x0F
+    stat at 27,4 element Object p1 cp437:0xDC p2 0 step idle under Empty color 0x0F
+    stat at 28,4 element Object p1 cp437:0xDC p2 0 step idle under Empty color 0x0F
+    stat at 29,4 element Object p1 cp437:0xDC p2 0 step idle under Empty color 0x0F
+    stat at 30,4 element Object p1 cp437:0xDC p2 0 step idle under Empty color 0x0F
+    stat at 31,4 element Object p1 cp437:0xDC p2 0 step idle under Empty color 0x0F
+    stat at 32,4 element Object p1 cp437:0xDC p2 0 step idle under Empty color 0x0F
+    stat at 33,4 element Object p1 cp437:0xDC p2 0 step idle under Empty color 0x0F
+    stat at 34,4 element Object p1 cp437:0xDC p2 0 step idle under Empty color 0x0F
+    stat at 35,4 element Object p1 cp437:0xDC p2 0 step idle under Empty color 0x0F
+    stat at 36,4 element Object p1 cp437:0xDC p2 0 step idle under Empty color 0x0F
+    stat at 38,4 element Object p1 cp437:0xDC p2 0 step idle under Empty color 0x0F
+    stat at 40,4 element Object p1 cp437:0xDC p2 0 step idle under Empty color 0x0F
+    stat at 41,4 element Object p1 cp437:0xDC p2 0 step idle under Empty color 0x0F
+    stat at 42,4 element Object p1 cp437:0xDC p2 0 step idle under Empty color 0x0F
+    stat at 43,4 element Object p1 cp437:0xDC p2 0 step idle under Empty color 0x0F
+    stat at 43,15 element Object p1 cp437:0xDF p2 0 step idle under Empty color 0x0F
+    stat at 43,6 element Object p1 cp437:0xDC p2 0 step idle under Empty color 0x0F
+    stat at 43,5 element Object p1 cp437:0xDF p2 0 step idle under Empty color 0x0F
+    stat at 43,7 element Object p1 cp437:0xDF p2 0 step idle under Empty color 0x0F
+    stat at 43,8 element Object p1 cp437:0xDC p2 0 step idle under Empty color 0x0F
+    stat at 25,10 element Blink wall p1 1 p2 1 step south under Empty color 0x0F
+    stat at 31,10 element Blink wall p1 3 p2 1 step south under Empty color 0x0F
+    stat at 37,10 element Blink wall p1 5 p2 1 step south under Empty color 0x0F
+    stat at 38,13 element Clockwise p1 0 p2 0 step idle under Empty color 0x0F
+    stat at 40,13 element Object cycle 1 p1 cp437:0x11 p2 0 step idle under Empty color 0x0F
+    oop
+@chute
+#if blocked w bouldercheck
+/i
+#restart
+:bouldercheck
+#put w fake
+#if any yellow fake whiteboulder
+#if any purple fake purpleboulder
+#if any red fake redboulder
+#restart
+:whiteboulder
+#put w empty
+#put e yellow gem
+#restart
+:purpleboulder
+#send kmeter:dothething
+#put w empty
+#restart
+:redboulder
+#put w empty
+#put e energizer
+#restart
+:dispense
+#send resetter:resetmeter
+$The ZZKey machine converts the purple ore
+$into a purple key!
+/i
+#put e purple key
+#restart
+
+    end
+    stat at 26,12 element Object cycle 1 p1 cp437:0x1F p2 0 step idle under Empty color 0x0F
+    oop
+@tooth1
+?s/i/i/i?n/i/i/i
+#restart
+
+    end
+    stat at 27,12 element Object cycle 1 p1 cp437:0x1F p2 0 step idle under Empty color 0x0F
+    oop
+@tooth2
+/i/i/i?s/i/i/i?n
+#restart
+
+    end
+    stat at 28,12 element Object cycle 1 p1 cp437:0x1F p2 0 step idle under Empty color 0x0F
+    oop
+#bind tooth1
+
+    end
+    stat at 29,12 element Object cycle 1 p1 cp437:0x1F p2 0 step idle under Empty color 0x0F
+    oop
+#bind tooth2
+
+    end
+    stat at 30,12 element Object cycle 1 p1 cp437:0x1F p2 0 step idle under Empty color 0x0F
+    oop
+#bind tooth1
+
+    end
+    stat at 32,12 element Object cycle 1 p1 cp437:0x1F p2 0 step idle under Empty color 0x0F
+    oop
+#bind tooth1
+
+    end
+    stat at 33,12 element Object cycle 1 p1 cp437:0x1F p2 0 step idle under Empty color 0x0F
+    oop
+#bind tooth2
+
+    end
+    stat at 34,12 element Object cycle 1 p1 cp437:0x1F p2 0 step idle under Empty color 0x0F
+    oop
+#bind tooth1
+
+    end
+    stat at 35,12 element Object cycle 1 p1 cp437:0x1F p2 0 step idle under Empty color 0x0F
+    oop
+#bind tooth2
+
+    end
+    stat at 36,12 element Object cycle 1 p1 cp437:0x1F p2 0 step idle under Empty color 0x0F
+    oop
+#bind tooth1
+
+    end
+    stat at 34,9 element Object cycle 1 p1 cp437:0xDB p2 0 step idle under Empty color 0x0F
+    oop
+@resetter
+#end
+:resetmeter
+#put n energizer
+#put n fake
+
+    end
+    stat at 35,9 element Object cycle 1 p1 cp437:0xDB p2 0 step idle under Empty color 0x0F
+    oop
+#bind resetter
+
+    end
+    stat at 36,9 element Object cycle 1 p1 cp437:0xDB p2 0 step idle under Empty color 0x0F
+    oop
+#bind resetter
+
+    end
+    stat at 37,9 element Object cycle 1 p1 cp437:0xDB p2 0 step idle under Empty color 0x0F
+    oop
+#bind resetter
+
+    end
+    stat at 38,9 element Object cycle 1 p1 cp437:0xDB p2 0 step idle under Empty color 0x0F
+    oop
+#bind resetter
+
+    end
+    stat at 39,9 element Object cycle 1 p1 cp437:0xDB p2 0 step idle under Empty color 0x0F
+    oop
+#bind resetter
+
+    end
+    stat at 58,8 element Passage p1 0 p2 0 step idle under Empty color 0x0F
+    stat at 10,2 element Object p1 cp437:0x43 p2 0 step idle under Empty color 0x78
+    stat at 10,3 element Object p1 cp437:0x45 p2 0 step idle under Empty color 0x78
+    stat at 10,4 element Object p1 cp437:0x4E p2 0 step idle under Empty color 0x78
+    stat at 10,5 element Object p1 cp437:0x54 p2 0 step idle under Empty color 0x78
+    stat at 10,6 element Object p1 cp437:0x49 p2 0 step idle under Empty color 0x78
+    stat at 14,2 element Object p1 cp437:0x4D p2 0 step idle under Empty color 0x78
+    stat at 14,3 element Object p1 cp437:0x41 p2 0 step idle under Empty color 0x78
+    stat at 14,4 element Object p1 cp437:0x54 p2 0 step idle under Empty color 0x78
+    stat at 14,5 element Object p1 cp437:0x49 p2 0 step idle under Empty color 0x78
+    stat at 14,6 element Object p1 cp437:0x43 p2 0 step idle under Empty color 0x0F
+    stat at 12,4 element Object cycle 1 p1 cp437:0x1F p2 0 step idle under Empty color 0x78
+    oop
+@centichute1
+#end
+:release
+#play 114
+#put s green sliderns
+#put s blue sliderns
+#put s blue sliderns
+#change green sliderns head
+#change blue sliderns segment
+#restart
+
+    end
+    stat at 12,3 element Object cycle 1 p1 cp437:0xFF p2 0 step idle under Empty color 0x78
+    oop
+/i/i/i/i/i/i/i/i/i
+/i/i/i/i/i/i/i/i/i
+/i/i/i/i/i/i/i/i/i
+/i/i/i/i/i/i/i/i/i
+/i/i/i/i/i/i/i/i/i
+/i/i/i/i/i/i/i/i/i
+/i/i/i/i/i/i/i/i/i
+/i/i/i/i/i/i/i/i/i
+/i/i/i/i/i/i/i/i/i
+/i/i/i/i/i/i/i/i/i
+/i/i/i/i/i/i/i/i/i
+/i/i/i/i/i/i/i/i/i
+/i/i/i/i/i/i/i/i/i
+/i/i/i/i/i/i/i/i/i
+/i/i/i/i/i/i/i/i/i
+/i/i/i/i/i/i/i/i/i
+/i/i/i/i/i/i/i/i/i
+#char 250
+/i/i
+#char 249
+/i/i
+#char 248
+/i/i
+#char 111
+/i/i
+#char 233
+/i/i/i/i
+#send centichute1:release
+#char 255
+#restart
+
+    end
+    stat at 12,2 element Object cycle 1 p1 cp437:0xFF p2 0 step idle under Empty color 0x78
+    oop
+/i/i/i/i/i/i/i/i/i
+/i/i/i/i/i/i/i/i/i
+/i/i/i/i/i/i/i/i/i
+/i/i/i/i/i/i/i/i/i
+/i/i/i/i/i/i/i/i/i
+/i/i/i/i/i/i/i/i/i
+/i/i/i/i/i/i/i/i/i
+/i/i/i/i/i/i/i/i/i
+/i/i/i/i/i/i/i/i/i
+/i/i/i/i/i/i/i/i/i
+/i/i/i/i/i/i/i/i/i
+/i/i/i/i/i/i/i/i/i
+/i/i/i/i/i/i/i/i/i
+/i/i/i/i/i/i/i/i/i
+/i/i/i/i/i/i/i/i/i
+/i/i/i/i/i/i/i/i/i
+/i/i/i/i/i/i/i/i/i
+#char 250
+/i/i
+#char 249
+/i/i
+#char 248
+/i/i
+#char 111
+/i/i
+#char 79
+/i/i/i/i
+#char 255
+#restart
+
+    end
+    stat at 12,1 element Object cycle 1 p1 cp437:0xFF p2 0 step idle under Empty color 0x78
+    oop
+/i/i/i/i/i/i/i/i/i
+/i/i/i/i/i/i/i/i/i
+/i/i/i/i/i/i/i/i/i
+/i/i/i/i/i/i/i/i/i
+/i/i/i/i/i/i/i/i/i
+/i/i/i/i/i/i/i/i/i
+/i/i/i/i/i/i/i/i/i
+/i/i/i/i/i/i/i/i/i
+/i/i/i/i/i/i/i/i/i
+/i/i/i/i/i/i/i/i/i
+/i/i/i/i/i/i/i/i/i
+/i/i/i/i/i/i/i/i/i
+/i/i/i/i/i/i/i/i/i
+/i/i/i/i/i/i/i/i/i
+/i/i/i/i/i/i/i/i/i
+/i/i/i/i/i/i/i/i/i
+/i/i/i/i/i/i/i/i/i
+#char 250
+/i/i
+#char 249
+/i/i
+#char 248
+/i/i
+#char 111
+/i/i
+#char 79
+/i/i/i/i
+#char 255
+#restart
+
+    end
+    stat at 36,20 element Object p1 cp437:0x43 p2 0 step idle under Empty color 0x78
+    stat at 40,20 element Object p1 cp437:0x4D p2 0 step idle under Empty color 0x78
+    stat at 36,21 element Object p1 cp437:0x45 p2 0 step idle under Empty color 0x78
+    stat at 40,21 element Object p1 cp437:0x41 p2 0 step idle under Empty color 0x78
+    stat at 36,22 element Object p1 cp437:0x4E p2 0 step idle under Empty color 0x78
+    stat at 38,22 element Object cycle 1 p1 cp437:0x1E p2 0 step idle under Empty color 0x78
+    oop
+@centichute2
+#end
+:release
+#play 114
+#put n green sliderns
+#put n blue sliderns
+#put n blue sliderns
+#change green sliderns head
+#change blue sliderns segment
+#restart
+
+    end
+    stat at 40,22 element Object p1 cp437:0x54 p2 0 step idle under Empty color 0x78
+    stat at 36,23 element Object p1 cp437:0x54 p2 0 step idle under Empty color 0x78
+    stat at 40,23 element Object p1 cp437:0x49 p2 0 step idle under Empty color 0x78
+    stat at 36,24 element Object p1 cp437:0x49 p2 0 step idle under Empty color 0x78
+    stat at 40,24 element Object p1 cp437:0x43 p2 0 step idle under Empty color 0x0F
+    stat at 38,23 element Object cycle 1 p1 cp437:0xFF p2 0 step idle under Empty color 0x78
+    oop
+/i/i/i/i/i/i/i/i/i
+/i/i/i/i/i/i/i/i/i
+/i/i/i/i/i/i/i/i/i
+/i/i/i/i/i/i/i/i/i
+/i/i/i/i/i/i/i/i/i
+/i/i/i/i/i/i/i/i/i
+/i/i/i/i/i/i/i/i/i
+/i/i/i/i/i/i/i/i/i
+/i/i/i/i/i/i/i/i/i
+/i/i/i/i/i/i/i/i/i
+/i/i/i/i/i/i/i/i/i
+#char 250
+/i/i
+#char 249
+/i/i
+#char 248
+/i/i
+#char 111
+/i/i
+#char 233
+/i/i/i/i
+#send centichute2:release
+#char 255
+/i/i/i/i/i/i/i/i/i
+/i/i/i/i/i/i/i/i/i
+/i/i/i/i/i/i/i/i/i
+/i/i/i/i/i/i/i/i/i
+/i/i/i/i/i/i/i/i/i
+/i/i/i/i/i/i/i/i/i
+#restart
+
+    end
+    stat at 38,24 element Object cycle 1 p1 cp437:0xFF p2 0 step idle under Empty color 0x78
+    oop
+/i/i/i/i/i/i/i/i/i
+/i/i/i/i/i/i/i/i/i
+/i/i/i/i/i/i/i/i/i
+/i/i/i/i/i/i/i/i/i
+/i/i/i/i/i/i/i/i/i
+/i/i/i/i/i/i/i/i/i
+/i/i/i/i/i/i/i/i/i
+/i/i/i/i/i/i/i/i/i
+/i/i/i/i/i/i/i/i/i
+/i/i/i/i/i/i/i/i/i
+/i/i/i/i/i/i/i/i/i
+#char 250
+/i/i
+#char 249
+/i/i
+#char 248
+/i/i
+#char 111
+/i/i
+#char 79
+/i/i/i/i
+#char 255
+/i/i/i/i/i/i/i/i/i
+/i/i/i/i/i/i/i/i/i
+/i/i/i/i/i/i/i/i/i
+/i/i/i/i/i/i/i/i/i
+/i/i/i/i/i/i/i/i/i
+/i/i/i/i/i/i/i/i/i
+#restart
+
+    end
+    stat at 38,25 element Object cycle 1 p1 cp437:0xFF p2 0 step idle under Empty color 0x0F
+    oop
+/i/i/i/i/i/i/i/i/i
+/i/i/i/i/i/i/i/i/i
+/i/i/i/i/i/i/i/i/i
+/i/i/i/i/i/i/i/i/i
+/i/i/i/i/i/i/i/i/i
+/i/i/i/i/i/i/i/i/i
+/i/i/i/i/i/i/i/i/i
+/i/i/i/i/i/i/i/i/i
+/i/i/i/i/i/i/i/i/i
+/i/i/i/i/i/i/i/i/i
+/i/i/i/i/i/i/i/i/i
+#char 250
+/i/i
+#char 249
+/i/i
+#char 248
+/i/i
+#char 111
+/i/i
+#char 79
+/i/i/i/i
+#char 255
+/i/i/i/i/i/i/i/i/i
+/i/i/i/i/i/i/i/i/i
+/i/i/i/i/i/i/i/i/i
+/i/i/i/i/i/i/i/i/i
+/i/i/i/i/i/i/i/i/i
+/i/i/i/i/i/i/i/i/i
+#restart
+
+    end
+    stat at 47,19 element Scroll p1 0 p2 0 step idle under Empty color 0x0F
+    oop
+$
+To all employees:
+
+    Quit leaving boulders in front of the
+CENTIMATIC dispenser chutes! It keeps
+the centipedes from getting out!
+
+                Thanks for your
+                compliance,
+
+                The Foreman
+
+
+    end
+    stat at 6,9 element Spinning gun cycle 1 p1 6 step idle under Empty color 0x0F
+    stat at 6,10 element Spinning gun cycle 1 p1 6 step idle under Empty color 0x0F
+    stat at 6,11 element Spinning gun cycle 1 p1 6 step idle under Empty color 0x0F
+    stat at 47,4 element Spinning gun cycle 1 p1 6 step idle under Empty color 0x0F
+    stat at 48,4 element Spinning gun cycle 1 p1 6 step idle under Empty color 0x0F
+    stat at 49,4 element Spinning gun cycle 1 p1 6 step idle under Empty color 0x0F
+    stat at 50,4 element Spinning gun cycle 1 p1 6 step idle under Empty color 0x0F
+    stat at 51,4 element Spinning gun cycle 1 p1 6 step idle under Empty color 0x0F
+    stat at 28,20 element Spinning gun cycle 1 p1 6 step idle under Empty color 0x0F
+    stat at 27,20 element Spinning gun cycle 1 p1 6 step idle under Empty color 0x0F
+    stat at 26,20 element Spinning gun cycle 1 p1 6 step idle under Empty color 0x0F
+    stat at 6,20 element Scroll p1 0 p2 0 step idle under Empty color 0x0F
+    oop
+$
+$Welcome to the
+$ZZKEY ORE MACHINE
+$By junk
+
+The ZZKey Ore Machine is a marvelous new
+innovation that refines the ore from
+boulders to create purple keys, gems, and
+other useful things.
+
+Try it out! Push a boulder into the hopper
+on the left and watch the ZZKey work its
+magic!
+
+$ORE CONVERSION CHART
+   1 yellow boulder......1 yellow gem
+   1 red boulder..................???
+   6 purple boulders.....1 purple key
+
+Oh, and watch out for the CENTIMATICs....
+$
+
+    end
+    stat at 15,22 element Object cycle 1 p1 cp437:0x84 p2 0 step idle under Empty color 0x0F
+    oop
+@ammodispenser
+'thanks to @stale_meme_emporium, who i
+'stole this code from verbatim.
+:a
+/i#take ammo 1 b
+#give ammo 1
+#a
+:b
+#if not any ammo put n ammo
+#a
+
+    end
+    stat at 14,22 element Object p1 cp437:0x5B p2 0 step idle under Empty color 0x0F
+    stat at 16,22 element Object p1 cp437:0x5D p2 0 step idle under Empty color 0x0F
+  end
+end

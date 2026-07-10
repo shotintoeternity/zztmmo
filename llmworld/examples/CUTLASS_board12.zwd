@@ -1,0 +1,332 @@
+board "Cave"
+  start player at 13,21
+  respawn at 1,1
+  max-shots 0
+  dark true
+  reenter true
+  time-limit 0
+  exits north none south none west "[PK2] The Tomb of Captain Cutlass" east none
+
+  grid
+NNNNNNNNNNNNNNNNNNNNNN/N/N/N/N/N/N/NNNNaaaaaaaaaaaaaaaaaaaNN
+NNkogc.+defh.........Xt............../Najjjjjjjjjjjjjjj*jjNN
+NNNNNNNNNNNN........tNNlllllllllllN\.NNaj*........uu....jjNN
+NN..................tNNllWW..t.WllNN.NNajj.nwnw.wnwnwnw.X..\
+NN..EmNNNNNNNNNNNNNNNNNll.......llN\.NNajjuwntnwnwncKcn.jj.N
+NN..qr................tX........llNN.NNajju.........uu..*j.\
+.s..Iv.//N/N/N/N/N/N/N/ll.......llN\.NNajj*jjjjXjjjjjjjjjj.N
+NNyyTm.Nzzzzzzzzzaaaaaall.......ll\N.NNaaaaaaNNt/NaaaaaaNN.\
+NNXXNN./zzgi.igzzaaaaaallC..WW..X..../NaaaaaaNN.NNaaaaaaNN.N
+NNNNNN.Nzz.....zzNNNNNNlllllllllllN/NNNNNNNNNNN./NaaNNNNNN.\
+NNaaNN./zz.ii.izzN..............................NNaaNN.....N
+NNaaNN.Nzz.i..izzN.//N/N/N/N/N/N/N/N/N/N/N/N/N/N/NaaNNt\N\N\
+NNaaNN./zz.ii...XN./Xt......................NNHHHHHHHHXHHHHH
+NNaaNN.Nzz...i.zzN.NNNNNNNNNNNJJJJJJJJJJJN\.NNHHybyB.bybybHH
+NNNNNN./zzLi.itzzN./NNNNNNNNNNJJGGGGGJ.JJNN./NHHb.gyBybyByHH
+NN......zzzzXzzzz.......\N\N\NJJ2....21PJNN.NNHHybyB.byb.yHH
+NNXX...................yyyyyytXy.....JOJJNN./NHHByyybybMByHH
+NN......................NNNNNNJJ.....JOJJNN.NNHHyb.Bybyb.bHH
+NN...NQ.UN.....NY.ZN..X.NNaaaaJJt..3......../NX.yyb.ByBybyHH
+NNNNNN./.N4.t.4Ny\yNNNNNNNaaaaJJJJJJJJJJJ/N/NNHHHHHHHHHHHBHH
+aaaaNNU.QNNN@NNNZyYNNaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaFaa
+aaaaNNNNNNNNpNNNNNNNNaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaFaa
+aaaa5-5-5DA678R!5-5-99999aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaFaa
+aaaa##$%&=~=^#0x#_##99999999999999999999aaaaaaaaaaaa:.:.:.:a
+aaaa;;,|,;S<V>;,|,;;999999999999999999999999999aaaaaaaaaa?aa
+  end
+
+  legend
+    N = Normal color 0x0F
+    / = Clockwise color 0x0F
+    a = Normal color 0x0D
+    k = Key color 0x0F
+    o = Object color 0x04
+    g = Gem color 0x0A
+    c = Object color 0x0C
+    . = Empty color 0x0F
+    + = Door color 0x6E
+    d = Door color 0x4C
+    e = Door color 0x3B
+    f = Door color 0x2A
+    h = Door color 0x19
+    X = Transporter color 0x0E
+    t = Torch color 0x06
+    j = Normal color 0x0B
+    * = Ricochet color 0x0A
+    l = Normal color 0x09
+    \ = Counter color 0x0F
+    u = Bullet color 0x0F
+    W = Blink wall color 0x0B
+    n = Slider (NS) color 0x0B
+    w = Slider (EW) color 0x0B
+    E = Text-Blue color 0x45
+    m = Text-Blue color 0x20
+    K = Key color 0x0B
+    q = Text-Blue color 0x58
+    r = Text-Blue color 0xB3
+    s = Door color 0x7F
+    I = Text-Blue color 0x49
+    v = Text-Blue color 0x1F
+    y = Empty color 0x07
+    T = Text-Blue color 0x54
+    z = Normal color 0x0E
+    i = Invisible color 0x0E
+    C = Key color 0x09
+    H = Normal color 0x0C
+    J = Normal color 0x0A
+    b = Bomb color 0x0B
+    B = Breakable color 0x0C
+    L = Key color 0x0E
+    G = Spinning gun color 0x0C
+    2 = Slider (EW) color 0x0A
+    1 = Slider (NS) color 0x0A
+    P = Pusher color 0x0A
+    O = Boulder color 0x0A
+    M = Key color 0x0C
+    Q = Gem color 0x0B
+    U = Gem color 0x09
+    Y = Gem color 0x0D
+    Z = Gem color 0x0C
+    3 = Key color 0x0A
+    4 = Gem color 0x0E
+    @ = Player color 0x1F under Empty color 0x0F
+    F = Fake color 0x0D
+    p = Passage color 0x4F to "Starting Coast"
+    5 = Text-Red color 0x20
+    - = Text-Red color 0x2D
+    D = Text-Red color 0x44
+    A = Text-Red color 0x41
+    6 = Text-Red color 0x4E
+    7 = Text-Red color 0x47
+    8 = Text-Red color 0x45
+    R = Text-Red color 0x52
+    ! = Text-Red color 0x21
+    9 = Normal color 0x05
+    # = Text-Cyan color 0x20
+    $ = Text-Cyan color 0x57
+    % = Text-Cyan color 0x41
+    & = Text-Cyan color 0x52
+    = = Text-Cyan color 0x4E
+    ~ = Text-Cyan color 0x49
+    ^ = Text-Cyan color 0x47
+    0 = Text-Cyan color 0x30
+    x = Text-Cyan color 0x78
+    _ = Text-Cyan color 0x84
+    : = Object color 0x0A
+    ; = Text-Yellow color 0x20
+    , = Text-Yellow color 0x09
+    | = Text-Yellow color 0x07
+    S = Text-Yellow color 0x53
+    < = Text-Yellow color 0x41
+    V = Text-Yellow color 0x56
+    > = Text-Yellow color 0x45
+    ? = Object color 0x0D
+  end
+
+  stats
+    stat at 13,22 element Passage p1 0 p2 0 p3 board "Starting Coast" step idle under Empty color 0x0F
+    stat at 8,15 element Clockwise p1 0 p2 0 step idle under Empty color 0x0F
+    stat at 8,13 element Clockwise p1 0 p2 0 step idle under Empty color 0x0F
+    stat at 8,11 element Clockwise p1 0 p2 0 step idle under Empty color 0x0F
+    stat at 8,9 element Clockwise p1 0 p2 0 step idle under Empty color 0x0F
+    stat at 8,7 element Clockwise p1 0 p2 0 step idle under Empty color 0x0F
+    stat at 20,15 element Clockwise p1 0 p2 0 step idle under Empty color 0x0F
+    stat at 20,13 element Clockwise p1 0 p2 0 step idle under Empty color 0x0F
+    stat at 20,12 element Clockwise p1 0 p2 0 step idle under Empty color 0x0F
+    stat at 21,12 element Clockwise p1 0 p2 0 step idle under Empty color 0x0F
+    stat at 23,12 element Clockwise p1 0 p2 0 step idle under Empty color 0x0F
+    stat at 25,12 element Clockwise p1 0 p2 0 step idle under Empty color 0x0F
+    stat at 27,12 element Clockwise p1 0 p2 0 step idle under Empty color 0x0F
+    stat at 29,12 element Clockwise p1 0 p2 0 step idle under Empty color 0x0F
+    stat at 31,12 element Clockwise p1 0 p2 0 step idle under Empty color 0x0F
+    stat at 33,12 element Clockwise p1 0 p2 0 step idle under Empty color 0x0F
+    stat at 35,12 element Clockwise p1 0 p2 0 step idle under Empty color 0x0F
+    stat at 37,12 element Clockwise p1 0 p2 0 step idle under Empty color 0x0F
+    stat at 39,12 element Clockwise p1 0 p2 0 step idle under Empty color 0x0F
+    stat at 41,12 element Clockwise p1 0 p2 0 step idle under Empty color 0x0F
+    stat at 43,12 element Clockwise p1 0 p2 0 step idle under Empty color 0x0F
+    stat at 45,12 element Clockwise p1 0 p2 0 step idle under Empty color 0x0F
+    stat at 47,12 element Clockwise p1 0 p2 0 step idle under Empty color 0x0F
+    stat at 49,12 element Clockwise p1 0 p2 0 step idle under Empty color 0x0F
+    stat at 49,10 element Clockwise p1 0 p2 0 step idle under Empty color 0x0F
+    stat at 49,8 element Clockwise p1 0 p2 0 step idle under Empty color 0x0F
+    stat at 60,4 element Counter p1 0 p2 0 step idle under Empty color 0x0F
+    stat at 60,6 element Counter p1 0 p2 0 step idle under Empty color 0x0F
+    stat at 60,8 element Counter p1 0 p2 0 step idle under Empty color 0x0F
+    stat at 60,10 element Counter p1 0 p2 0 step idle under Empty color 0x0F
+    stat at 60,12 element Counter p1 0 p2 0 step idle under Empty color 0x0F
+    stat at 58,12 element Counter p1 0 p2 0 step idle under Empty color 0x0F
+    stat at 56,12 element Counter p1 0 p2 0 step idle under Empty color 0x0F
+    stat at 25,16 element Counter p1 0 p2 0 step idle under Empty color 0x0F
+    stat at 27,16 element Counter p1 0 p2 0 step idle under Empty color 0x0F
+    stat at 29,16 element Counter p1 0 p2 0 step idle under Empty color 0x0F
+    stat at 18,20 element Counter p1 0 p2 0 step idle under Empty color 0x07
+    stat at 8,20 element Clockwise p1 0 p2 0 step idle under Empty color 0x0F
+    stat at 21,13 element Transporter p1 0 p2 0 step west under Empty color 0x0F
+    stat at 17,13 element Transporter p1 0 p2 0 step east under Empty color 0x0F
+    stat at 42,20 element Clockwise p1 0 p2 0 step idle under Empty color 0x0F
+    stat at 44,20 element Clockwise p1 0 p2 0 step idle under Empty color 0x0F
+    stat at 45,19 element Clockwise p1 0 p2 0 step idle under Empty color 0x0F
+    stat at 45,17 element Clockwise p1 0 p2 0 step idle under Empty color 0x0F
+    stat at 45,15 element Clockwise p1 0 p2 0 step idle under Empty color 0x0F
+    stat at 43,14 element Counter p1 0 p2 0 step idle under Empty color 0x0F
+    stat at 3,17 element Transporter p1 0 p2 0 step north under Empty color 0x0F
+    stat at 4,17 element Transporter p1 0 p2 0 step north under Empty color 0x0F
+    stat at 23,19 element Transporter p1 0 p2 0 step east under Empty color 0x0F
+    stat at 13,16 element Transporter p1 0 p2 0 step south under Empty color 0x0F
+    stat at 57,4 element Transporter p1 0 p2 0 step east under Empty color 0x0F
+    stat at 33,9 element Transporter p1 0 p2 0 step east under Empty color 0x0F
+    stat at 48,7 element Transporter p1 0 p2 0 step north under Empty color 0x0F
+    stat at 55,13 element Transporter p1 0 p2 0 step south under Empty color 0x0F
+    stat at 35,15 element Spinning gun cycle 3 p1 6 step idle under Empty color 0x0F
+    stat at 36,15 element Spinning gun cycle 3 p1 6 step idle under Empty color 0x0F
+    stat at 37,15 element Spinning gun cycle 3 p1 6 step idle under Empty color 0x0F
+    stat at 26,4 element Blink wall p2 6 step south under Empty color 0x0F
+    stat at 27,4 element Blink wall p2 6 step south under Empty color 0x0F
+    stat at 29,9 element Blink wall step north under Empty color 0x0F
+    stat at 30,9 element Blink wall step north under Empty color 0x0F
+    stat at 32,4 element Blink wall p1 2 p2 2 step south under Empty color 0x0F
+    stat at 35,8 element Counter p1 0 p2 0 step idle under Empty color 0x0F
+    stat at 36,7 element Counter p1 0 p2 0 step idle under Empty color 0x0F
+    stat at 36,5 element Counter p1 0 p2 0 step idle under Empty color 0x0F
+    stat at 36,3 element Counter p1 0 p2 0 step idle under Empty color 0x0F
+    stat at 38,9 element Clockwise p1 0 p2 0 step idle under Empty color 0x0F
+    stat at 38,2 element Clockwise p1 0 p2 0 step idle under Empty color 0x0F
+    stat at 35,1 element Clockwise p1 0 p2 0 step idle under Empty color 0x0F
+    stat at 33,1 element Clockwise p1 0 p2 0 step idle under Empty color 0x0F
+    stat at 31,1 element Clockwise p1 0 p2 0 step idle under Empty color 0x0F
+    stat at 29,1 element Clockwise p1 0 p2 0 step idle under Empty color 0x0F
+    stat at 27,1 element Clockwise p1 0 p2 0 step idle under Empty color 0x0F
+    stat at 25,1 element Clockwise p1 0 p2 0 step idle under Empty color 0x0F
+    stat at 23,1 element Clockwise p1 0 p2 0 step idle under Empty color 0x0F
+    stat at 22,2 element Transporter p1 0 p2 0 step west under Empty color 0x0F
+    stat at 9,7 element Clockwise p1 0 p2 0 step idle under Empty color 0x0F
+    stat at 11,7 element Clockwise p1 0 p2 0 step idle under Empty color 0x0F
+    stat at 13,7 element Clockwise p1 0 p2 0 step idle under Empty color 0x0F
+    stat at 15,7 element Clockwise p1 0 p2 0 step idle under Empty color 0x0F
+    stat at 17,7 element Clockwise p1 0 p2 0 step idle under Empty color 0x0F
+    stat at 19,7 element Clockwise p1 0 p2 0 step idle under Empty color 0x0F
+    stat at 21,7 element Clockwise p1 0 p2 0 step idle under Empty color 0x0F
+    stat at 23,7 element Clockwise p1 0 p2 0 step idle under Empty color 0x0F
+    stat at 24,6 element Transporter p1 0 p2 0 step east under Empty color 0x0F
+    stat at 43,5 element Bullet p1 1 p2 0 step north under Empty color 0x0F
+    stat at 43,6 element Bullet p1 1 p2 0 step north under Empty color 0x0F
+    stat at 52,3 element Bullet p1 1 p2 0 step east under Empty color 0x0F
+    stat at 51,3 element Bullet p1 1 p2 0 step east under Empty color 0x0F
+    stat at 53,6 element Bullet p1 1 p2 0 step west under Empty color 0x0F
+    stat at 54,6 element Bullet p1 1 p2 0 step west under Empty color 0x0F
+    stat at 47,19 element Transporter p1 0 p2 0 step west under Empty color 0x0F
+    stat at 55,15 element Bomb p1 0 p2 0 step idle under Empty color 0x07
+    stat at 56,14 element Bomb p1 0 p2 0 step idle under Empty color 0x07
+    stat at 54,14 element Bomb p1 0 p2 0 step idle under Empty color 0x07
+    stat at 56,16 element Bomb p1 0 p2 0 step idle under Empty color 0x07
+    stat at 58,14 element Bomb p1 0 p2 0 step idle under Empty color 0x07
+    stat at 55,17 element Bomb p1 0 p2 0 step idle under Empty color 0x07
+    stat at 54,18 element Bomb p1 0 p2 0 step idle under Empty color 0x07
+    stat at 56,18 element Bomb p1 0 p2 0 step idle under Empty color 0x07
+    stat at 58,18 element Bomb p1 0 p2 0 step idle under Empty color 0x07
+    stat at 57,19 element Bomb p1 0 p2 0 step idle under Empty color 0x07
+    stat at 51,19 element Bomb p1 0 p2 0 step idle under Empty color 0x07
+    stat at 50,18 element Bomb p1 0 p2 0 step idle under Empty color 0x07
+    stat at 50,16 element Bomb p1 0 p2 0 step idle under Empty color 0x07
+    stat at 50,14 element Bomb p1 0 p2 0 step idle under Empty color 0x07
+    stat at 49,15 element Bomb p1 0 p2 0 step idle under Empty color 0x07
+    stat at 53,17 element Bomb p1 0 p2 0 step idle under Empty color 0x0F
+    stat at 54,16 element Bomb p1 0 p2 0 step idle under Empty color 0x07
+    stat at 53,24 element Object cycle 1 p1 cp437:0x24 p2 0 step idle under Empty color 0x0F
+    oop
+@Money Bag
+#end
+:touch
+#play -tfb+sd
+Treasure - 200 points
+#give score 200
+#die
+
+    end
+    stat at 55,24 element Object cycle 1 p1 cp437:0x24 p2 0 step idle under Empty color 0x0F
+    oop
+@Money Bag
+#end
+:touch
+#play -tfb+sd
+Treasure - 200 points
+#give score 200
+#die
+
+    end
+    stat at 57,24 element Object cycle 1 p1 cp437:0x24 p2 0 step idle under Empty color 0x0F
+    oop
+@Money Bag
+#end
+:touch
+#play -tfb+sd
+Treasure - 200 points
+#give score 200
+#die
+
+    end
+    stat at 59,24 element Object cycle 1 p1 cp437:0x24 p2 0 step idle under Empty color 0x0F
+    oop
+@Money Bag
+#end
+:touch
+#play -tfb+sd
+Treasure - 200 points
+#give score 200
+#die
+
+    end
+    stat at 36,10 element Clockwise p1 0 p2 0 step idle under Empty color 0x0F
+    stat at 3,9 element Transporter p1 0 p2 0 step south under Empty color 0x0F
+    stat at 4,9 element Transporter p1 0 p2 0 step south under Empty color 0x0F
+    stat at 52,5 element Object p1 cp437:0x5B p2 0 step idle under Empty color 0x0F
+    stat at 54,5 element Object p1 cp437:0x5D p2 0 step idle under Empty color 0x0F
+    stat at 33,15 element Spinning gun cycle 3 p1 6 step idle under Empty color 0x0F
+    stat at 34,15 element Spinning gun cycle 3 p1 6 step idle under Empty color 0x0F
+    stat at 31,17 element Transporter p1 0 p2 0 step east under Empty color 0x07
+    stat at 40,16 element Pusher p1 0 p2 0 step west under Empty color 0x0F
+    stat at 6,2 element Object cycle 1 p1 cp437:0x03 p2 0 step idle under Empty color 0x0F
+    oop
+@Heart
+#end
+:touch
+#lock
+#play tb+be++#d
+Red Heart - You feel invigorated!
+#give health 25
+#die
+
+    end
+    stat at 4,2 element Object cycle 1 p1 cp437:0x04 p2 0 step idle under Empty color 0x0F
+    oop
+@Save Gem
+#end
+:touch
+#lock
+#play +++dxxdxxf#
+#give gems 1
+#give health 1
+#give score 10
+Don't lose progress! Remember to save.
+#die
+#end
+
+    end
+    stat at 58,25 element Object cycle 1 p1 cp437:0xB2 p2 0 step idle under Empty color 0x0F
+    oop
+@Bonus Room
+:loop
+#if contact y
+/i#loop
+#end
+:y
+#play saxabxbxbb+#cxxxx
+#play +++ixtcxxcc
+#set secB
+ÄÄ Secret discovered! ÄÄ
+#end
+
+    end
+  end
+end

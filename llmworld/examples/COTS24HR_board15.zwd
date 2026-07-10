@@ -1,0 +1,471 @@
+board "Groceries"
+  start player at 30,15
+  respawn at 1,25
+  max-shots 0
+  dark false
+  reenter false
+  time-limit 0
+  exits north none south none west none east none
+
+  grid
+aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa
+aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa
+aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa
+aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa
+aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa
+aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa
+aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa
+aaaaaaaaaaaaaaaaaooooobbooooooooooobboooooaaaaaaaaaaaaaaaaaa
+aaaaaaaaaaaaaaaaaO.c..bb.....d....cbb.....aaaaaaaaaaaaaaaaaa
+aaaaaaaaaaaaaaaaa.....eeeeeeeeeeeeeee.....aaaaaaaaaaaaaaaaaa
+aaaaaaaaaaaaaaaaa.........................aaaaaaaaaaaaaaaaaa
+aaaaaaaaaaaaaaaaaaaaaaaaaaa.....aaaaaaaaaaaaaaaaaaaaaaaaaaaa
+aaaaaaaaaaaaaaaaaoofoOogoco.....ocodooofooaaaaaaaaaaaaaaaaaa
+aaaaaaaaaaaaaaaaa.........................aaaaaaaaaaaaaaaaaa
+aaaaaaaaaaaaaaaaaaaaaBhhksa..@..aaaaaaaaaaaaaaaaaaaaaaaaaaaa
+aaaaaaaaaaaaaaaaaoOfogggggo.....ogoOoiocooaaaaaaaaaaaaaaaaaa
+aaaaaaaaaaaaaaaaa.........................aaaaaaaaaaaaaaaaaa
+aaaaaaaaaaaaaaaaaaaaaaaaaaaaapaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa
+aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa
+aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa
+aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa
+aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa
+aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa
+aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa
+aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa
+  end
+
+  legend
+    a = Text-Red color 0x20
+    o = Object color 0x0C
+    b = Text-Yellow color 0x20
+    O = Object color 0x0E
+    . = Empty color 0x00
+    c = Object color 0x0F
+    d = Object color 0x0D
+    e = Object color 0x68
+    f = Object color 0x0B
+    g = Object color 0x0A
+    B = Text-Red color 0x42
+    h = Text-Red color 0x6F
+    k = Text-Red color 0x6B
+    s = Text-Red color 0x73
+    @ = Player color 0x1F under Empty color 0x00
+    i = Object color 0x09
+    p = Passage color 0x4F to "Outside"
+  end
+
+  stats
+    stat at 18,8 element Object p1 cp437:0xDF p2 0 step idle
+    stat at 19,8 element Object p1 cp437:0xDF p2 0 step idle
+    stat at 20,8 element Object p1 cp437:0xDF p2 0 step idle
+    stat at 21,8 element Object p1 cp437:0xDF p2 0 step idle
+    stat at 22,8 element Object p1 cp437:0xDF p2 0 step idle
+    stat at 25,8 element Object p1 cp437:0xDF p2 0 step idle
+    stat at 26,8 element Object p1 cp437:0xDF p2 0 step idle
+    stat at 27,8 element Object p1 cp437:0xDF p2 0 step idle
+    stat at 28,8 element Object p1 cp437:0xDF p2 0 step idle
+    stat at 29,8 element Object p1 cp437:0xDF p2 0 step idle
+    stat at 30,8 element Object p1 cp437:0xDF p2 0 step idle
+    stat at 31,8 element Object p1 cp437:0xDF p2 0 step idle
+    stat at 32,8 element Object p1 cp437:0xDF p2 0 step idle
+    stat at 33,8 element Object p1 cp437:0xDF p2 0 step idle
+    stat at 34,8 element Object p1 cp437:0xDF p2 0 step idle
+    stat at 35,8 element Object p1 cp437:0xDF p2 0 step idle
+    stat at 38,8 element Object p1 cp437:0xDF p2 0 step idle
+    stat at 39,8 element Object p1 cp437:0xDF p2 0 step idle
+    stat at 40,8 element Object p1 cp437:0xDF p2 0 step idle
+    stat at 41,8 element Object p1 cp437:0xDF p2 0 step idle
+    stat at 42,8 element Object p1 cp437:0xDF p2 0 step idle
+    stat at 27,13 element Object p1 cp437:0xDF p2 0 step idle
+    stat at 25,13 element Object p1 cp437:0xDF p2 0 step idle
+    stat at 23,13 element Object p1 cp437:0xDF p2 0 step idle
+    stat at 21,13 element Object p1 cp437:0xDF p2 0 step idle
+    stat at 19,13 element Object p1 cp437:0xDF p2 0 step idle
+    stat at 18,13 element Object p1 cp437:0xDF p2 0 step idle
+    stat at 18,16 element Object p1 cp437:0xDF p2 0 step idle
+    stat at 21,16 element Object p1 cp437:0xDF p2 0 step idle
+    stat at 27,16 element Object p1 cp437:0xDF p2 0 step idle
+    stat at 33,16 element Object p1 cp437:0xDF p2 0 step idle
+    stat at 35,16 element Object p1 cp437:0xDF p2 0 step idle
+    stat at 37,16 element Object p1 cp437:0xDF p2 0 step idle
+    stat at 39,16 element Object p1 cp437:0xDF p2 0 step idle
+    stat at 41,16 element Object p1 cp437:0xDF p2 0 step idle
+    stat at 42,16 element Object p1 cp437:0xDF p2 0 step idle
+    stat at 42,13 element Object p1 cp437:0xDF p2 0 step idle
+    stat at 41,13 element Object p1 cp437:0xDF p2 0 step idle
+    stat at 39,13 element Object p1 cp437:0xDF p2 0 step idle
+    stat at 37,13 element Object p1 cp437:0xDF p2 0 step idle
+    stat at 35,13 element Object p1 cp437:0xDF p2 0 step idle
+    stat at 33,13 element Object p1 cp437:0xDF p2 0 step idle
+    stat at 37,10 element Object p1 cp437:0xDC p2 0 step idle
+    oop
+@timesucker
+#cycle 10
+:sap
+#take ammo 1 tp
+/i
+#sap
+:tp
+#take torches 1 gameover
+#give ammo 59
+/i
+#sap
+:gameover
+#endgame
+
+    end
+    stat at 36,10 element Object p1 cp437:0xDC p2 0 step idle
+    stat at 35,10 element Object p1 cp437:0xDC p2 0 step idle
+    stat at 34,10 element Object p1 cp437:0xDC p2 0 step idle
+    stat at 33,10 element Object p1 cp437:0xDC p2 0 step idle
+    stat at 32,10 element Object p1 cp437:0xDC p2 0 step idle
+    stat at 31,10 element Object p1 cp437:0xDC p2 0 step idle
+    stat at 30,10 element Object p1 cp437:0xDC p2 0 step idle
+    oop
+@Clerk
+#end
+:touch
+#if fuel then hey
+$
+$Hey, pal.
+$
+... I'm not your pal.
+$
+$... huh?
+$
+I'm not your pal. You're a stupid dorky
+customer with some Gen-X wannabe goatee,
+stupid flannel and apparently wanting
+to whine to me about some idiot problem
+or another. I'm busy here.
+$
+$... with what?
+$
+Donkey Kong.
+$
+$You're playing Donkey Kong while you
+$should be helping customers?
+$
+Where the hell does it say that I have
+to help customers?
+$
+$Right in the store policy guide!!
+$
+This one?
+$
+#guy:burn
+#end
+:yeah
+$
+$... yeah... that one.
+$
+Look, I have a lot of Donkey Kong to play.
+$
+#zap touch
+#end
+:touch
+#if fuel then hey
+/i
+:bach
+CLERK: Beat it!
+#end
+:hey
+$
+$Hey, is there any chance that you would
+$sell marajuana?
+$
+WHAT?!?$!?!$?!?!?!#$?@^%!^!&)(*!^)(
+$
+$Never mind.
+$
+#zap hey
+#end
+:hey
+#bach
+
+    end
+    stat at 29,10 element Object p1 cp437:0xDC p2 0 step idle
+    stat at 28,10 element Object p1 cp437:0xDC p2 0 step idle
+    stat at 27,10 element Object p1 cp437:0xDC p2 0 step idle
+    stat at 26,10 element Object p1 cp437:0xDC p2 0 step idle
+    stat at 25,10 element Object p1 cp437:0xDC p2 0 step idle
+    stat at 24,10 element Object p1 cp437:0xDC p2 0 step idle
+    stat at 23,10 element Object p1 cp437:0xDC p2 0 step idle
+    stat at 30,9 element Object p1 cp437:0x02 p2 0 step idle
+    oop
+@guy
+#end
+:burn
+/e/e/e/e
+#cycle 1
+#put e red solid
+/i
+#put e red fake
+/i
+#put e red breakable
+/i
+#put e red water
+/i
+#put e yellow water
+/i
+#put e shark
+#put e water
+/i/i
+#cycle 3
+/w/w/w/w
+#Clerk:yeah
+#end
+
+    end
+    stat at 30,18 element Passage p1 0 p2 0 p3 board "Outside" step idle under Empty color 0x20
+    stat at 18,9 element Object p1 cp437:0x29 p2 0 step idle
+    oop
+@Help Phone
+#end
+:touch
+#take torches 1 tp
+/i
+#if vamp then hint
+$
+Hi, this is Help Phone! Did you know that
+the bouncer with the coat hanger from the
+Broken Aorta has a super-sensitive nose?
+It's true! Anything that smells, well,
+sour or just generally funky will probably
+do weird stuff to him... nice talking to
+you!
+$
+#end
+:hint
+$
+Hi, this is Help Phone! It's sort of
+interesting... did you know that a vacuum
+tube, one of the major ingredients in
+Dr. Hudson's revolutionary supergas, is
+commonly used in TV sets?
+Nice talking to you...
+$
+#end
+:tp
+$
+Sorry, it looks like you won't have enough
+time to act on our advice anyway...
+$
+#end
+
+    end
+    stat at 20,9 element Object p2 0 step idle
+    oop
+@Helpful Man
+#end
+:touch
+#zap touch
+$
+Hey kid, check this phone out!
+$
+$... wow. It's got buttons and everything.
+$
+No no! This is the Help Phone! Just dial
+it up and you'll get a clue about the
+current level!
+$
+$Well, that's got to be handy.
+$
+Yeah... only there's a hitch. Every time
+you call, you'll eat up one minute of the
+time you have left. So only call if you're
+sure you need the help!
+$
+$I'll be careful.
+$
+You'll be dead!
+$
+$Huh?
+$
+Sorry. Don't know what came over me...
+$
+#end
+:touch
+MAN: Don't talk to me! The phone!
+#end
+
+    end
+    stat at 34,13 element Object p1 cp437:0xFB p2 0 step idle
+    oop
+#bind crap
+
+    end
+    stat at 40,16 element Object p1 cp437:0xFE p2 0 step idle
+    oop
+@Milk
+#end
+:touch
+Hm. Fresh Farms Milk. Keep Refridgerated.
+
+!x1;Buy it
+!x2;Leave it
+#end
+:x1
+$
+$Hey clerk-boy! How much is the milk?
+$
+*sigh*... check the price, dingus.
+$
+$... wow, that's expensive. Can I just
+$steal it?
+$
+What? Why should I let you...
+$
+$Well, if you don't, this game won't 
+$really get much farther than where it is
+$right now.
+$
+Yeah, well, T.S. I'm only a minor role in
+this thing.
+$
+$Can you say "drummed out of the Objects
+$union"?
+$
+... sure, steal the milk. See if I care.
+$
+$Thanks.
+$
+Shut up.
+/i
+#set milk
+#die
+#end
+
+    end
+    stat at 35,9 element Object p1 cp437:0xE8 p2 0 step idle
+    stat at 26,16 element Object p1 cp437:0xDD p2 0 step idle
+    oop
+@Bestsellers
+#end
+:touch
+... these really, really suck. More proof
+that people are stupid. Especially my
+roomates.
+#end
+
+    end
+    stat at 25,16 element Object p1 cp437:0xDD p2 0 step idle
+    oop
+#bind Bestsellers
+
+    end
+    stat at 24,16 element Object p1 cp437:0xDD p2 0 step idle
+    oop
+#bind Bestsellers
+
+    end
+    stat at 23,16 element Object p1 cp437:0xDD p2 0 step idle
+    oop
+#bind Bestsellers
+
+    end
+    stat at 22,16 element Object p1 cp437:0xDD p2 0 step idle
+    oop
+#bind Bestsellers
+
+    end
+    stat at 36,13 element Object p1 cp437:0x26 p2 0 step idle
+    oop
+@Syrup
+#end
+:touch
+Mmm, Aunt Jemima.
+#end
+
+    end
+    stat at 38,13 element Object p1 cp437:0xDF p2 0 step idle
+    stat at 20,13 element Object p1 cp437:0xE0 p2 0 step idle
+    oop
+@crap
+#end
+:touch
+Some useless crap or other.
+#end
+
+    end
+    stat at 22,13 element Object p1 cp437:0xE4 p2 0 step idle
+    oop
+#bind crap
+
+    end
+    stat at 26,13 element Object p1 cp437:0x02 p2 0 step idle
+    oop
+@Head
+#end
+:touch
+Gasp! It's a human head!
+$
+.... no wait, it's a Halloween mask.
+#zap touch
+#end
+:touch
+Wait a second... a Halloween mask in
+July??
+#zap touch
+#end
+:touch
+Oh, enough of this. There's nothing more
+to the damn head.
+#end
+
+    end
+    stat at 24,13 element Object p1 cp437:0x05 p2 0 step idle
+    oop
+#bind crap
+
+    end
+    stat at 20,16 element Object p1 cp437:0xDD p2 0 step idle
+    oop
+@comics
+#end
+:touch
+Yes! Bone #33!
+#end
+
+    end
+    stat at 19,16 element Object p1 cp437:0xDD p2 0 step idle
+    oop
+#end
+:touch
+$All right! It's the comic of Clerks!
+$
+CLERK: What?
+$
+$Nothing. I don't want you getting ideas.
+$
+CLERK: Hey, that Randal guy's my hero.
+#end
+
+    end
+    stat at 38,16 element Object p1 cp437:0xF6 p2 0 step idle
+    oop
+#bind crap
+
+    end
+    stat at 36,16 element Object p1 cp437:0xF4 p2 0 step idle
+    oop
+@crowbar
+#end
+:touch
+... a crowbar???
+#end
+
+    end
+    stat at 34,16 element Object p1 cp437:0xEA p2 0 step idle
+    oop
+#bind crap
+
+    end
+    stat at 40,13 element Object p1 cp437:0xE1 p2 0 step idle
+    oop
+#bind crap
+
+    end
+  end
+end

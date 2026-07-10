@@ -1,0 +1,808 @@
+board "Outro6 (Town top)"
+  start player at 60,18
+  respawn at 98,98
+  max-shots 255
+  dark false
+  reenter false
+  time-limit 0
+  exits north none south "Outro7 (Town bottom)" west none east none
+
+  grid
+FFFAAoAAaAAAAAAAAAAAAAAAAAFFFFAAAAAAAAAAAAAAAAAAAAbAAAAAAAAA
+FFAAAcAdcAAAAFFFFAAAAAAAAAFFFFFAAAAAAAAAAAAAAAAAAAceAaAoAAAA
+FAAAeAfcAAAFFFFFFAA~g~AhAAAAFFFAAAAAAAAAAAAAAAAAAAAcfcAcAAAA
+FAbAcAcAAAFiFFjFFA~WWW~kAAAAAFFFFFAAA##########NAAAAcAdAAAAA
+AAcoAAAAAAFmFFFFAAn~~~nkAAAAAFFFFfFAA#NNNNNB~pqrAAkkkkskkkkA
+AdAcAAAAAAAAAAAAAAAnnnkAAAiAAAFFtuFAA#NNNNBBBBBrAkkkkvkkkkAA
+AcfAwwwwwwwwwwxAAAAAAAAAAAmAAAFFFFFFANrrrrrrrrrrkkkkkskkkAAA
+AAcAwxxxxxy~pzCkkkkkAAAAAAAAAAAAAAFFFDGHHHHHHHGDkkikkkIkdAAA
+AeAAwxxxxyyyyyCkkkkAJJJJJJJJJJKAAAAAAGHLMLHLMLHGkksksksAcFFb
+FcAAxCCCCCCCCCCkkkAAJKKKKKQ~pVXkkkkkAHHHHHHHHHHHkkkkkkAaAYFc
+aFAYDGHHHHHHHGDkkAAAJKKKKQQQQQXkkkkAAHHLMLHLMLHHkkkkkAAcFcfA
+cFFZGHjMjHjMjHGkAAAAKXXXXXXXXXXkkkAiAHHHHHHHHHHHkkkkAAAFFFcF
+FAfADGHHH0HHHGDA0F1ADGHHHHHHHGDkkAAmAHHLMLHLMLHHkkkAAAAFFFFo
+AocAAAAAkAFFkkFFFFFFGHjMjHjMjHGkAAAAAHHHHHHHHHHHkkAAAAAFFFFc
+bZkAAkkAAAFFFFFFkFFFDGHHHhHHHGDAAA0AAGHLMLHLMLHGkAAAAAAFFkFF
+cAAAAAAAAAAFFFFFFFAkAkAkAkAAAAAAAAAAADGHHH0HHHGDAAAAbAkAFFFF
+AAAAAAAwwwwwwwwwwxAAAAAAAAAkAAAAAAAAAAAAkAkdAAkkAAk1uAAAFFkF
+AAAAAiAwxxxxxy~pzCkkkkkAAAAAkAAkkAAkAkAkAkAkkAAAAAAAAAAAAFF@
+AAAAAmAwxxxxyyyyyCkkkkAAtAAkAA1AAAAAAAAAAAkAAAA2STORE2AAAAFF
+AAAAAAAxCCCCCCCCCCkkkAAAAAAAAAAl345l6378AAAkhAAdAAAAAdAAAAAF
+AAAAAAF9922PU!2299kkAAtAAAkiAAA7k$k%k$klFFAAAAAn&~&~&&AAmAAF
+AAFFFFFGHjMjHjMjHGkAAAAAAkAmAAA64*783l53FFAkAiAAAAkAAAAAAAAF
+AAAAFFFDGHHHgHHHGDAAAAAkAAAAAAAAAAAAAAFFFFFAkmkkAkAAAAAAAAAF
+AAAAAAAAAAAAAkkAAkAAkkAAAAAAAAAAAAAAAAAFFFAAAAAAAAAAAAAAAAFF
+AAAAAAAAAAAAAAAAAAAAAAkAAAAAAAAAAAAFFFFFFFFFAAAAAAAAAAAAAFFF
+  end
+
+  legend
+    F = Fake color 0x22
+    A = Fake color 0x02
+    o = Object color 0x2E
+    a = Object color 0x21
+    b = Object color 0x2B
+    c = Text-Green color 0xB3
+    d = Object color 0x26
+    e = Object color 0x29
+    f = Object color 0x24
+    ~ = Water color 0x78
+    g = Object color 0x7F
+    h = Object color 0x4F
+    i = Object color 0x0F
+    j = Object color 0x3F
+    W = Water color 0x19
+    k = Fake color 0x20
+    # = Solid color 0x2A
+    N = Normal color 0x2A
+    m = Object color 0x2F
+    n = Normal color 0x78
+    B = Breakable color 0x2A
+    p = Breakable color 0x78
+    q = Normal color 0x02
+    r = Water color 0x2A
+    s = Object color 0x07
+    t = Object color 0x5F
+    u = Text-Green color 0xF5
+    v = Object color 0x05
+    w = Solid color 0x7C
+    x = Normal color 0x4C
+    y = Breakable color 0x4C
+    z = Normal color 0x04
+    C = Water color 0x4C
+    D = Solid color 0x07
+    G = Water color 0x7F
+    H = Normal color 0x7F
+    I = Object color 0x01
+    J = Solid color 0x5D
+    K = Normal color 0x5D
+    L = Object color 0x79
+    M = Object color 0x17
+    Q = Breakable color 0x5D
+    V = Normal color 0x05
+    X = Water color 0x5D
+    Y = Object color 0x2D
+    Z = Text-White color 0xB3
+    0 = Object color 0x1F
+    1 = Object color 0x6F
+    @ = Player color 0x1F under Fake color 0x22
+    2 = Text-Yellow color 0x20
+    S = Text-Yellow color 0x53
+    T = Text-Yellow color 0x54
+    O = Text-Yellow color 0x4F
+    R = Text-Yellow color 0x52
+    E = Text-Yellow color 0x45
+    l = Line color 0x2B
+    3 = Line color 0x2C
+    4 = Line color 0x24
+    5 = Line color 0x2D
+    6 = Line color 0x25
+    7 = Line color 0x2E
+    8 = Line color 0x29
+    9 = Object color 0x67
+    P = Text-Yellow color 0x50
+    U = Text-Yellow color 0x55
+    ! = Text-Yellow color 0x42
+    $ = Object color 0x02
+    % = Object color 0x0A
+    & = Object color 0x78
+    * = Line color 0x26
+  end
+
+  stats
+    stat at 41,15 element Object p1 cp437:0xC5 p2 0 step idle under Empty color 0x0F
+    stat at 42,15 element Object p1 cp437:0xDD p2 0 step idle under Water color 0x78
+    stat at 45,15 element Object p1 cp437:0xC5 p2 0 step idle under Empty color 0x0F
+    stat at 46,15 element Object p1 cp437:0xDD p2 0 step idle under Water color 0x78
+    stat at 41,13 element Object p1 cp437:0xC5 p2 0 step idle under Empty color 0x0F
+    stat at 42,13 element Object p1 cp437:0xDD p2 0 step idle under Water color 0x78
+    stat at 45,13 element Object p1 cp437:0xC5 p2 0 step idle under Empty color 0x0F
+    stat at 46,13 element Object p1 cp437:0xDD p2 0 step idle under Water color 0x78
+    stat at 41,11 element Object p1 cp437:0xC5 p2 0 step idle under Empty color 0x0F
+    stat at 42,11 element Object p1 cp437:0xDD p2 0 step idle under Water color 0x78
+    stat at 45,11 element Object p1 cp437:0xC5 p2 0 step idle under Empty color 0x0F
+    stat at 46,11 element Object p1 cp437:0xDD p2 0 step idle under Water color 0x78
+    stat at 41,9 element Object p1 cp437:0xC5 p2 0 step idle under Empty color 0x0F
+    stat at 42,9 element Object p1 cp437:0xDD p2 0 step idle under Water color 0x78
+    stat at 45,9 element Object p1 cp437:0xC5 p2 0 step idle under Empty color 0x0F
+    stat at 46,9 element Object p1 cp437:0xDD p2 0 step idle under Water color 0x78
+    stat at 40,9 element Object p1 cp437:0xDE p2 0 step idle under Water color 0x78
+    stat at 44,9 element Object p1 cp437:0xDE p2 0 step idle under Water color 0x78
+    stat at 40,11 element Object p1 cp437:0xDE p2 0 step idle under Water color 0x78
+    stat at 44,11 element Object p1 cp437:0xDE p2 0 step idle under Water color 0x78
+    stat at 40,13 element Object p1 cp437:0xDE p2 0 step idle under Water color 0x78
+    stat at 44,13 element Object p1 cp437:0xDE p2 0 step idle under Water color 0x78
+    stat at 40,15 element Object p1 cp437:0xDE p2 0 step idle under Water color 0x78
+    stat at 44,15 element Object p1 cp437:0xDE p2 0 step idle under Water color 0x78
+    stat at 43,16 element Object p1 cp437:0xF0 p2 0 step idle under Fake color 0x46
+    oop
+@Door2
+#cycle 1
+#end
+
+:touch
+Still can't get in without the key!
+#zap touch
+#end
+
+:touch
+(No, there's STILL no key!!)
+#end
+
+    end
+    stat at 44,17 element Object p1 cp437:0xE7 p2 0 step idle under Fake color 0x46
+    oop
+@Signpost
+#cycle 1
+#end
+:touch
+-=ð Le Security Apartment ð=-
+#end
+
+    end
+    stat at 21,3 element Object p1 cp437:0xED p2 0 step idle under Water color 0x78
+    oop
+@Bucket
+#cycle 1
+#end
+:touch
+A bucket.
+#end
+
+    end
+    stat at 7,12 element Object p1 cp437:0xDD p2 0 step idle under Water color 0x78
+    stat at 8,12 element Object p1 cp437:0xC5 p2 0 step idle under Empty color 0x0F
+    stat at 9,12 element Object p1 cp437:0xDE p2 0 step idle under Water color 0x78
+    stat at 12,12 element Object p1 cp437:0xC5 p2 0 step idle under Empty color 0x0F
+    stat at 13,12 element Object p1 cp437:0xDE p2 0 step idle under Water color 0x78
+    stat at 10,13 element Object p1 cp437:0xF0 p2 0 step idle under Fake color 0x46
+    oop
+@Door
+#cycle 1
+#end
+
+:touch
+#lock
+#play 8xxxxx8xxxxx8
+/i/i/i/i/i/i/i/i/i/i
+/i/i/i/i/i/i/i/i/i/i
+No answer!
+#unlock
+#end
+
+    end
+    stat at 23,14 element Object p1 cp437:0xDD p2 0 step idle under Water color 0x78
+    stat at 24,14 element Object p1 cp437:0xC5 p2 0 step idle under Empty color 0x0F
+    stat at 25,14 element Object p1 cp437:0xDE p2 0 step idle under Water color 0x78
+    stat at 27,14 element Object p1 cp437:0xDD p2 0 step idle under Water color 0x78
+    stat at 28,14 element Object p1 cp437:0xC5 p2 0 step idle under Empty color 0x0F
+    stat at 29,14 element Object p1 cp437:0xDE p2 0 step idle under Water color 0x78
+    stat at 26,15 element Object p1 cp437:0x02 p2 0 step idle under Fake color 0x46
+    oop
+@Healer
+#cycle 1
+#end
+
+:touch
+Hopefully you took advantage of the free
+heals while you could!
+#end
+
+:shot
+"Physician, heal thyself!"
+#end 
+
+    end
+    stat at 10,22 element Object p1 cp437:0xDD p2 0 step idle under Water color 0x78
+    stat at 11,22 element Object p1 cp437:0xC5 p2 0 step idle under Empty color 0x0F
+    stat at 12,22 element Object p1 cp437:0xDE p2 0 step idle under Water color 0x78
+    stat at 14,22 element Object p1 cp437:0xDD p2 0 step idle under Empty color 0x0F
+    stat at 15,22 element Object p1 cp437:0xC5 p2 0 step idle under Empty color 0x0F
+    stat at 16,22 element Object p1 cp437:0xDE p2 0 step idle under Water color 0x78
+    stat at 34,21 element Object p1 cp437:0x06 p2 0 step idle under Fake color 0x60
+    stat at 36,21 element Object p1 cp437:0x06 p2 0 step idle under Fake color 0x60
+    stat at 38,21 element Object p1 cp437:0x06 p2 0 step idle under Fake color 0x60
+    stat at 48,20 element Object p1 cp437:0xB3 p2 0 step idle under Fake color 0x46
+    stat at 54,20 element Object p1 cp437:0xB3 p2 0 step idle under Fake color 0x46
+    stat at 51,21 element Object p1 cp437:0x23 p2 0 step idle under Empty color 0x0F
+    oop
+@Shopkeeper
+#cycle 1
+#end
+
+:touch
+$ WELCOME TO JOEY'S GENERAL STORE! 
+
+We are currently closed for restocking.
+Specifically, we need to get some new
+inventory, since no one is buying our
+ammunition anymore! We're also fresh out
+of our stockpile of strangely square
+balloons!
+#end
+
+    end
+    stat at 13,23 element Object p1 cp437:0xF0 p2 0 step idle under Fake color 0x46
+    oop
+@Pub
+#cycle 1
+#end
+:touch
+                NOTICE:
+              PUB CLOSED
+
+We are assiduously working to bring you
+more booze, however such things take time
+so we appreciate your patience!
+#end 
+
+    end
+    stat at 33,6 element Object p1 cp437:0x02 p2 0 step idle under Fake color 0x66
+    oop
+@Boy
+#cycle 1
+#end
+:touch
+I'm enjoying my square balloon!
+#end
+:shot
+STOP SHOOTING ME, JERK!
+#end
+
+    end
+    stat at 17,13 element Object p1 cp437:0x02 p2 0 step idle under Fake color 0x66
+    oop
+@Woman
+#cycle 1
+#end
+:touch
+I'm so glad that Ronny is okay now,
+thanks to you reversing the magical curse!
+#zap touch
+#end
+:touch
+Yeah it doesn't totally make sense, but
+hey, this is a feel-good ending!
+#end
+
+:shot
+AAAAAAAHHHH, Ronny! HELP!!!!!!!!!!
+#end
+
+    end
+    stat at 11,12 element Object p1 cp437:0xDD p2 0 step idle under Empty color 0x0F
+    stat at 19,13 element Object p1 cp437:0x02 p2 0 step idle under Fake color 0x02
+    oop
+@Ronny
+#cycle 1
+#end
+:touch
+Hey, I made it after all! Thanks for
+saving the world, you'll have to teach me
+your techniques sometime so that next
+time, I can be the hero!
+#end
+:shot
+WHY WOULD YOU TRY TO KILL ME >_<'
+#end
+
+    end
+    stat at 31,19 element Object p1 cp437:0x02 p2 0 step idle under Fake color 0x02
+    oop
+@Man
+#cycle 1
+#end
+:touch
+Things are so much better now, thank you!
+#end
+
+:shot
+DAMMIT NOT AGAIN!!!
+#end
+
+    end
+    stat at 55,4 element Object p1 cp437:0xFE p2 0 step idle under Fake color 0x22
+    oop
+#bind Balloon
+
+    end
+    stat at 60,13 element Object p1 cp437:0xFE p2 0 step idle under Fake color 0x22
+    oop
+#bind Balloon
+
+    end
+    stat at 59,11 element Object p1 cp437:0xFE p2 0 step idle under Fake color 0x22
+    oop
+#bind Balloon
+
+    end
+    stat at 60,9 element Object p1 cp437:0xFE p2 0 step idle under Fake color 0x22
+    oop
+#bind Balloon
+
+    end
+    stat at 58,10 element Object p1 cp437:0xFE p2 0 step idle under Fake color 0x22
+    oop
+#bind Balloon
+
+    end
+    stat at 57,8 element Object p1 cp437:0xFE p2 0 step idle under Fake color 0x22
+    oop
+#bind Balloon
+
+    end
+    stat at 54,6 element Object p1 cp437:0xFE p2 0 step idle under Fake color 0x22
+    oop
+#bind Balloon
+
+    end
+    stat at 55,8 element Object p1 cp437:0xFE p2 0 step idle under Fake color 0x22
+    oop
+#bind Balloon
+
+    end
+    stat at 56,10 element Object p1 cp437:0xFE p2 0 step idle under Fake color 0x22
+    oop
+#bind Balloon
+
+    end
+    stat at 52,2 element Object p1 cp437:0xFE p2 0 step idle under Fake color 0x22
+    oop
+#bind Balloon
+
+    end
+    stat at 53,3 element Object p1 cp437:0xFE p2 0 step idle under Fake color 0x22
+    oop
+#bind Balloon
+
+    end
+    stat at 51,1 element Object p1 cp437:0xFE p2 0 step idle under Fake color 0x22
+    oop
+#bind Balloon
+
+    end
+    stat at 56,2 element Object p1 cp437:0xFE p2 0 step idle under Fake color 0x22
+    oop
+#bind Balloon
+
+    end
+    stat at 54,2 element Object p1 cp437:0xFE p2 0 step idle under Fake color 0x22
+    oop
+#bind Balloon
+
+    end
+    stat at 3,4 element Object p1 cp437:0xFE p2 0 step idle under Fake color 0x22
+    oop
+#bind Balloon
+
+    end
+    stat at 2,6 element Object p1 cp437:0xFE p2 0 step idle under Fake color 0x22
+    oop
+#bind Balloon
+
+    end
+    stat at 3,7 element Object p1 cp437:0xFE p2 0 step idle under Fake color 0x22
+    oop
+#bind Balloon
+
+    end
+    stat at 2,9 element Object p1 cp437:0xFE p2 0 step idle under Fake color 0x22
+    oop
+#bind Balloon
+
+    end
+    stat at 1,11 element Object p1 cp437:0xFE p2 0 step idle under Fake color 0x22
+    oop
+#bind Balloon
+
+    end
+    stat at 3,13 element Object p1 cp437:0xFE p2 0 step idle under Fake color 0x22
+    oop
+#bind Balloon
+
+    end
+    stat at 2,14 element Object p1 cp437:0xFE p2 0 step idle under Fake color 0x22
+    oop
+#bind Balloon
+
+    end
+    stat at 1,15 element Object p1 cp437:0xFE p2 0 step idle under Fake color 0x22
+    oop
+#bind Balloon
+
+    end
+    stat at 4,11 element Object p1 cp437:0xFE p2 0 step idle under Fake color 0x22
+    oop
+#bind Balloon
+
+    end
+    stat at 4,5 element Object p1 cp437:0xFE p2 0 step idle under Fake color 0x22
+    oop
+#bind Balloon
+
+    end
+    stat at 5,3 element Object p1 cp437:0xFE p2 0 step idle under Fake color 0x22
+    oop
+#bind Balloon
+
+    end
+    stat at 6,1 element Object p1 cp437:0xFE p2 0 step idle under Fake color 0x22
+    oop
+@Balloon
+#cycle 1
+#end
+:touch
+It's a strangely square balloon!
+#end
+:shot
+One of the strange properties of these
+square balloons is that they are
+resistent to bullets!
+#end
+
+    end
+    stat at 7,3 element Object p1 cp437:0xFE p2 0 step idle under Fake color 0x22
+    oop
+#bind Balloon
+
+    end
+    stat at 8,2 element Object p1 cp437:0xFE p2 0 step idle under Fake color 0x22
+    oop
+#bind Balloon
+
+    end
+    stat at 9,1 element Object p1 cp437:0xFE p2 0 step idle under Fake color 0x22
+    oop
+#bind Balloon
+
+    end
+    stat at 54,21 element Object p1 cp437:0xB2 p2 0 step idle under Empty color 0x0F
+    stat at 53,21 element Object p1 cp437:0xB1 p2 0 step idle under Empty color 0x0F
+    stat at 49,21 element Object p1 cp437:0xB1 p2 0 step idle under Empty color 0x0F
+    stat at 8,21 element Object p1 cp437:0xB1 p2 0 step idle under Empty color 0x0F
+    stat at 9,21 element Object p1 cp437:0xB0 p2 0 step idle under Empty color 0x0F
+    stat at 17,21 element Object p1 cp437:0xB0 p2 0 step idle under Empty color 0x0F
+    stat at 18,21 element Object p1 cp437:0xB1 p2 0 step idle under Empty color 0x0F
+    stat at 24,3 element Object p1 cp437:0x02 p2 0 step idle under Fake color 0x02
+    oop
+@Man
+#cycle 1
+#end
+:touch
+The well is full of water again! Now we
+can FINALLY have a water balloon fight!
+#zap touch
+#end
+:touch
+Alternate responses include:
+I can FINALLY ...
+... make Jell-O!
+... go bobbing for apples!
+... overwater my lawn!
+... use my Slip-and-Slide!
+... stop using castor oil to clean my
+face!
+#end
+:shot
+#lock
+OH YEAH?! TAKE THIS!!
+#shoot N
+#shoot E
+#shoot S
+#shoot W
+#shoot N
+#shoot E
+#shoot S
+#shoot W
+/i/i/i/i/i
+#unlock
+#end
+
+    end
+    stat at 25,19 element Object p1 cp437:0x02 p2 0 step idle under Fake color 0x02
+    oop
+@Guy
+:do
+/w
+#put E FAKE
+/e
+#put W FAKE
+#do
+:touch
+DANCING FROM HAPPINESS! OH YEAH!
+/i
+#do
+:shot
+OW, my foot!
+#zap shot
+#zap touch
+#end
+:touch
+No more dancing for me ...
+#end
+
+    end
+    stat at 23,21 element Object p1 cp437:0x02 p2 0 step idle under Fake color 0x02
+    oop
+@Guy
+:do
+/e
+#put E FAKE
+/w
+#put W FAKE
+#do
+:touch
+Dance! There is much to celebrate!
+/i
+#do
+:shot
+ARGH, a bullet to the knee!
+#zap touch
+#zap shot
+#end
+:touch
+I used to dance, then I took a bullet
+to the knee ...
+#end
+
+    end
+    stat at 35,15 element Object p1 cp437:0x02 p2 0 step idle under Fake color 0x02
+    oop
+@Boy
+#cycle 1
+#end
+:touch
+I may LOOK like I'm smiling, but I'm
+actually quite upset since my balloon
+floated away!!!
+#end
+:shot
+Oh sure, shoot me when I'm down!
+#end
+
+    end
+    stat at 45,20 element Object p1 cp437:0x02 p2 0 step idle under Fake color 0x02
+    oop
+@Virgil
+#cycle 1
+#end
+:touch
+Eric! So good to see you.
+
+$Virgil! I can hardly believe all that's
+$happened.
+
+Yep, looks like I shouldn't have been so
+skeptical. You really did it! I rarely
+come to town anymore but I wanted to make
+sure to be here for your celebration.
+#zap touch
+#end
+
+:touch
+Don't be a stranger 'round here, ya hear?
+#end
+
+:shot
+I'm still wearing my bullet-proof vest!
+#end
+
+    end
+    stat at 15,4 element Object p1 cp437:0x02 p2 0 step idle under Fake color 0x02
+    oop
+@Gem Lady
+#cycle 1
+#end
+:touch
+OH! You're the guy! What's-his-name!
+
+$Eric.
+
+YES! That guy! You saved us all!
+
+$Um, yeah, that was me!
+
+Since I'm so FABULOUSLY wealthy, I'd like
+you to have some of my MANY gems as a
+reward!
+
+$That's okay, I don't really ...
+
+NONSENSE! I have so MANY GEMS that I
+won't even miss them!
+
+$I ...
+
+YOU'RE WELCOME!
+
+$(Dunno what I can use these for now ...
+$maybe I can pawn them off back home ...)
+#give GEMS 1000
+#play t+c-gec
+#play t+c-gec
+#play t+c-gec
+#play t+c-gec
+#play t+c-gec
+#zap touch
+#end
+:touch
+Oops, you dropped one!
+#give GEMS 1
+#play t+c-gec
+#zap touch
+#end
+:touch
+Enjoy your MANY GEMS! Wahahahaha!
+#end
+
+    end
+    stat at 57,21 element Object p1 cp437:0xE8 p2 0 step idle under Fake color 0x02
+    oop
+@Scroll
+#cycle 1
+#end
+:touch
+The party continues to the south!
+#play tc-c+d-d+e-e+f-f+g-g
+#zap touch
+#end
+:touch
+The party continues to the south!
+#end
+
+    end
+    stat at 6,19 element Object p1 cp437:0xDF p2 0 step idle under Fake color 0x02
+    oop
+@ColorChanger
+#cycle 1
+:do
+#put N BLUE OBJECT
+/i
+#put N GREEN OBJECT
+/i
+#put N CYAN OBJECT
+/i
+#put N RED OBJECT
+/i
+#put N PURPLE OBJECT
+/i
+#put N YELLOW OBJECT
+/i
+#do
+
+    end
+    stat at 6,18 element Object p1 cp437:0x7F p2 0 step idle under Fake color 0x02
+    oop
+@Thing
+#cycle 1
+#end
+:touch
+Looks like the council used some magic to
+make some glowing decorations for the
+celebration!
+#end
+
+    end
+    stat at 27,6 element Object p1 cp437:0x7F p2 0 step idle under Fake color 0x02
+    oop
+#bind Thing
+
+    end
+    stat at 27,7 element Object p1 cp437:0xDF p2 0 step idle under Fake color 0x02
+    oop
+#bind ColorChanger
+
+    end
+    stat at 51,8 element Object p1 cp437:0x7F p2 0 step idle under Fake color 0x02
+    oop
+#bind Thing
+
+    end
+    stat at 51,9 element Object p1 cp437:0xDF p2 0 step idle under Fake color 0x02
+    oop
+#bind ColorChanger
+
+    end
+    stat at 28,21 element Object p1 cp437:0x7F p2 0 step idle under Fake color 0x02
+    oop
+#bind Thing
+
+    end
+    stat at 28,22 element Object p1 cp437:0xDF p2 0 step idle under Fake color 0x02
+    oop
+#bind ColorChanger
+
+    end
+    stat at 12,4 element Object p1 cp437:0x7F p2 0 step idle under Fake color 0x02
+    oop
+#bind Thing
+
+    end
+    stat at 12,5 element Object p1 cp437:0xDF p2 0 step idle under Fake color 0x02
+    oop
+#bind ColorChanger
+
+    end
+    stat at 36,12 element Object p1 cp437:0x7F p2 0 step idle under Fake color 0x02
+    oop
+#bind Thing
+
+    end
+    stat at 36,13 element Object p1 cp437:0xDF p2 0 step idle under Fake color 0x02
+    oop
+#bind ColorChanger
+
+    end
+    stat at 46,22 element Object p1 cp437:0x7F p2 0 step idle under Fake color 0x02
+    oop
+#bind Thing
+
+    end
+    stat at 46,23 element Object p1 cp437:0xDF p2 0 step idle under Fake color 0x02
+    oop
+#bind ColorChanger
+
+    end
+    stat at 54,7 element Object p1 cp437:0xB3 p2 0 step idle under Empty color 0x0F
+    stat at 55,9 element Object p1 cp437:0xB3 p2 0 step idle under Empty color 0x0F
+    stat at 53,9 element Object p1 cp437:0x02 p2 0 step idle under Fake color 0x20
+    oop
+@Guy
+#cycle 1
+#end
+:touch
+Are they balloons, or huge-ass lollipops?
+#end
+:shot
+Why I outta #endgame you for that!!!
+#end
+
+    end
+    stat at 55,5 element Object p1 cp437:0xB3 p2 0 step idle under Empty color 0x0F
+    stat at 34,5 element Object p1 cp437:0xFE p2 0 step idle under Empty color 0x0F
+    oop
+#bind Balloon
+
+    end
+    stat at 52,17 element Object p1 cp437:0x02 p2 0 step idle under Fake color 0x02
+    oop
+@Woman
+#cycle 1
+#end
+:touch
+Welcome back to town! Everything is so
+green and lush now! We're so appreciative
+of what you've done for us.
+#end
+
+:shot
+Please, we're trying to celebrate, here!
+#end
+
+    end
+    stat at 53,16 element Object p1 cp437:0xFE p2 0 step idle under Empty color 0x0F
+    oop
+#bind Balloon
+
+    end
+  end
+end

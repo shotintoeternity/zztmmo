@@ -1,0 +1,166 @@
+board "Forest 1"
+  start player at 54,21
+  max-shots 1
+  dark false
+  reenter true
+  time-limit 0
+  exits north none south "Forest 2" west "Path by cave" east none
+
+  grid
+#################NNNNbThebForestbNNNNN######################
+####NNNNNNNNNNNNNNfcSSdH.....ffffffffNNNNNNN##NNNNNNN#######
+NNNNNfffffffffjffffcffffffff.ffffffffffffffN#NN.lSSSNNNN####
+ffffffffffffff.ffffmffffffffSffgfgfffffffffN#N..fffSSSSN####
+ffffffffffffffj....mppqquuddSfffffffffffffNN#N.fffffffSNN###
+ffffffvfffffff.fffffffffffffffffPfffvfffffN##N..ffffffSSN###
+ffffffffffPfffjffff.ffffffffffffffffffffffN##NN.fffffffSNN##
+ffffffffffffff.ffffjffffffffffffffffPfffffN###N.qffkfffS.NN#
+ffffffffffPfffjffff.fffffffwwwwwffffffffffNN##NNqfffffff..N#
+ffffffffffffff..j.j..j..wwww...wwffffffffffNNN#Nqffffffff.N#
+ffffffffffPffffffffffffww.....aawffffffffffffNNNqqqqfff...N#
+fffffffffffffffffffffff+....K.aawwfffffffffffffffffqqx..fNN#
+ffffffffffPffffffffffffwwww...aaawffPffffffPfffffffffffffN##
+ffffffffffffffffffffffffffwww.awwwfffffgfffffffgffffffffNN##
+ffffffffffPfffffffffffffffffwwwwffffffffffffffffffffffffN###
+fffffffffffffffffffffffffffffRfffffffffffffffffffffPffPfNN##
+ffffffffffPfPfPffffffffffgfff.ffffffPfffffgffffffffffffffN##
+fffffffffffffffffffff........RfffffffffffffffffffffffffffNN#
+ffffffffffffffffffffPffffffff.fffffffffvffffffffffyLyyyLffN#
+fffffffffffffffffffffffffffffRfffffffffffffffffyLyyAyyyyyfNN
+ffffffffffffffffffffffffffffNNNNNNNNNNfffffffyLyyyyyy@yyyffN
+ffffffffffffffffffffffNNNNNNN########NNNNNNfyLy.L....L.yyLfN
+ffffffffffffffffNNNNNNN###################NN...........L..NN
+NNNNNNNNNNNNNNNNN##########################NNBBBBBDBBBBBNNN#
+##AvCEnGIJizGIC#############################N...........N###
+  end
+
+  legend
+    # = Solid color 0x0D
+    N = Normal color 0x0C
+    b = Text-Red color 0x20
+    T = Text-Red color 0x54
+    h = Text-Red color 0x68
+    e = Text-Red color 0x65
+    F = Text-Red color 0x46
+    o = Text-Red color 0x6F
+    r = Text-Red color 0x72
+    s = Text-Red color 0x73
+    t = Text-Red color 0x74
+    f = Forest color 0x20
+    c = Segment color 0x0C
+    S = Segment color 0x0B
+    d = Segment color 0x0A
+    H = Head color 0x0A
+    . = Empty color 0x20
+    j = Tiger color 0x0B
+    l = Head color 0x0B
+    m = Segment color 0x0D
+    g = Gem color 0x09
+    p = Segment color 0x0E
+    q = Segment color 0x0F
+    u = Segment color 0x09
+    v = Energizer color 0x05
+    P = Pusher color 0x0F
+    k = Key color 0x0B
+    w = Normal color 0x0B
+    a = Ammo color 0x03
+    + = Door color 0x3F
+    K = Key color 0x0E
+    x = Head color 0x0F
+    R = Ruffian color 0x0D
+    y = Empty color 0x0F
+    L = Lion color 0x0C
+    A = Empty color 0x05
+    @ = Player color 0x1F under Empty color 0x0F
+    B = Normal color 0x0E
+    D = Door color 0x6F
+    C = Text-White color 0x20
+    E = Text-White color 0x45
+    n = Text-White color 0x6E
+    G = Text-White color 0x65
+    I = Text-White color 0x72
+    J = Text-White color 0x67
+    i = Text-White color 0x69
+    z = Text-White color 0x7A
+  end
+
+  stats
+    stat at 54,12 element Head p1 8 p2 0 step idle under Empty color 0x20
+    stat at 53,12 element Segment p1 0 p2 0 step idle under Empty color 0x20
+    stat at 52,12 element Segment p1 0 p2 0 step idle under Empty color 0x20
+    stat at 52,11 element Segment p1 0 p2 0 step idle under Empty color 0x20
+    stat at 51,11 element Segment p1 0 p2 0 step idle under Empty color 0x20
+    stat at 50,11 element Segment p1 0 p2 0 step idle under Empty color 0x20
+    stat at 49,11 element Segment p1 0 p2 0 step idle under Empty color 0x20
+    stat at 49,10 element Segment p1 0 p2 0 step idle under Empty color 0x20
+    stat at 49,9 element Segment p1 0 p2 0 step idle under Empty color 0x20
+    stat at 49,3 element Head p1 8 p2 0 step idle under Empty color 0x20
+    stat at 50,3 element Segment p1 0 p2 0 step idle under Empty color 0x20
+    stat at 51,3 element Segment p1 0 p2 0 step idle under Empty color 0x20
+    stat at 52,3 element Segment p1 0 p2 0 step idle under Empty color 0x20
+    stat at 52,4 element Segment p1 0 p2 0 step idle under Empty color 0x20
+    stat at 53,4 element Segment p1 0 p2 0 step idle under Empty color 0x20
+    stat at 54,4 element Segment p1 0 p2 0 step idle under Empty color 0x20
+    stat at 55,4 element Segment p1 0 p2 0 step idle under Empty color 0x20
+    stat at 55,5 element Segment p1 0 p2 0 step idle under Empty color 0x20
+    stat at 55,6 element Segment p1 0 p2 0 step idle under Empty color 0x20
+    stat at 56,6 element Segment p1 0 p2 0 step idle under Empty color 0x20
+    stat at 56,7 element Segment p1 0 p2 0 step idle under Empty color 0x20
+    stat at 56,8 element Segment p1 0 p2 0 step idle under Empty color 0x20
+    stat at 49,8 element Segment p1 0 p2 0 step idle under Empty color 0x20
+    stat at 52,19 element Lion p2 0 step idle under Empty color 0x0F
+    stat at 49,20 element Lion p2 0 step idle under Empty color 0x0F
+    stat at 47,21 element Lion p2 0 step idle under Empty color 0x0F
+    stat at 49,22 element Lion p2 0 step idle under Empty color 0x20
+    stat at 54,22 element Lion p2 0 step idle under Empty color 0x20
+    stat at 56,23 element Lion p2 0 step idle under Empty color 0x20
+    stat at 56,19 element Lion p2 0 step idle under Empty color 0x0F
+    stat at 46,22 element Lion p2 0 step idle under Empty color 0x0F
+    stat at 58,22 element Lion p2 0 step idle under Empty color 0x0F
+    stat at 15,3 element Tiger step idle under Empty color 0x20
+    stat at 15,5 element Tiger step idle under Empty color 0x20
+    stat at 15,7 element Tiger step idle under Empty color 0x20
+    stat at 15,9 element Tiger step idle under Empty color 0x20
+    stat at 17,10 element Tiger step idle under Empty color 0x20
+    stat at 19,10 element Tiger step idle under Empty color 0x20
+    stat at 22,10 element Tiger step idle under Empty color 0x20
+    stat at 20,8 element Tiger step idle under Empty color 0x20
+    stat at 30,20 element Ruffian p1 8 step idle under Empty color 0x20
+    stat at 30,18 element Ruffian p1 8 step idle under Empty color 0x20
+    stat at 30,16 element Ruffian p1 8 step idle under Empty color 0x20
+    stat at 37,8 element Pusher p1 0 p2 0 step south under Empty color 0x20
+    stat at 33,6 element Pusher p1 0 p2 0 step south under Empty color 0x20
+    stat at 37,17 element Pusher p1 0 p2 0 step south under Empty color 0x20
+    stat at 15,17 element Pusher p1 0 p2 0 step south under Empty color 0x20
+    stat at 13,17 element Pusher p1 0 p2 0 step south under Empty color 0x20
+    stat at 11,17 element Pusher p1 0 p2 0 step south under Empty color 0x20
+    stat at 11,15 element Pusher p1 0 p2 0 step south under Empty color 0x20
+    stat at 11,13 element Pusher p1 0 p2 0 step south under Empty color 0x20
+    stat at 11,11 element Pusher p1 0 p2 0 step south under Empty color 0x20
+    stat at 11,9 element Pusher p1 0 p2 0 step south under Empty color 0x20
+    stat at 11,7 element Pusher p1 0 p2 0 step south under Empty color 0x20
+    stat at 52,16 element Pusher p1 0 p2 0 step south under Empty color 0x20
+    stat at 55,16 element Pusher p1 0 p2 0 step south under Empty color 0x20
+    stat at 44,13 element Pusher p1 0 p2 0 step south under Empty color 0x20
+    stat at 37,13 element Pusher p1 0 p2 0 step south under Empty color 0x20
+    stat at 21,19 element Pusher p1 0 p2 0 step south under Empty color 0x20
+    stat at 24,2 element Head p1 8 p2 0 step idle under Empty color 0x20
+    stat at 23,2 element Segment p1 0 p2 0 step idle under Empty color 0x20
+    stat at 22,2 element Segment p1 0 p2 0 step idle under Empty color 0x20
+    stat at 21,2 element Segment p1 0 p2 0 step idle under Empty color 0x20
+    stat at 20,2 element Segment p1 0 p2 0 step idle under Empty color 0x20
+    stat at 20,3 element Segment p1 0 p2 0 step idle under Empty color 0x20
+    stat at 20,4 element Segment p1 0 p2 0 step idle under Empty color 0x20
+    stat at 20,5 element Segment p1 0 p2 0 step idle under Empty color 0x20
+    stat at 21,5 element Segment p1 0 p2 0 step idle under Empty color 0x20
+    stat at 22,5 element Segment p1 0 p2 0 step idle under Empty color 0x20
+    stat at 23,5 element Segment p1 0 p2 0 step idle under Empty color 0x20
+    stat at 24,5 element Segment p1 0 p2 0 step idle under Empty color 0x20
+    stat at 25,5 element Segment p1 0 p2 0 step idle under Empty color 0x20
+    stat at 26,5 element Segment p1 0 p2 0 step idle under Empty color 0x20
+    stat at 27,5 element Segment p1 0 p2 0 step idle under Empty color 0x20
+    stat at 28,5 element Segment p1 0 p2 0 step idle under Empty color 0x20
+    stat at 29,5 element Segment p1 0 p2 0 step idle under Empty color 0x20
+    stat at 29,4 element Segment p1 0 p2 0 step idle under Empty color 0x20
+  end
+end

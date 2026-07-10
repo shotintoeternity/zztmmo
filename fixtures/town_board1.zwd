@@ -1,0 +1,172 @@
+board "Room One"
+  start player at 27,19
+  max-shots 1
+  dark false
+  reenter false
+  time-limit 0
+  exits north "Path to castle" south "Bug Maze" west "Waterboard" east "Path by cave"
+
+  grid
+BBBBBBBBBBBBBBBBBBBBBBN..........bdddddddddddddddddddddddddd
+BBBBBBBBBBBBBBBBBBBBBBN..........bdddddddddddddddddddddddddd
+BBBBBBBBBBBBBBBBBBBBBBN..........bdddddddddddddddddddddddddd
+BBBjjjjjjjjjjjjjjjjjjBN..........bdkkkkkkkkkkkkkdddddddddddd
+BBBjqqqqqqqqqqqqqqqqqqN..........buuuuuuuuuuuuukdddddddddddd
+BBBjq##################..........SSSSSSSSSSSSSukdddddddddddd
+BBBjq##jjjvArmoryvjjj##..........SxzxSxOxSxZxSukdddddddddddd
+BBBjq##################..........SxDxSxFxSxZxSukdddddddddddd
+BBBjq##HHHHHHHHHHHHHH##..........SxIxSSSSSxTxSuddddddddddddd
+BBBjq##HHHHHHHpHHHHHH##..........SxKxSJLJSx!xSdddddddddddddd
+BBBjq##HHHHHHHHHHHHHH##..........SSSSSJJJSSSSSbbbbbbbbbbbbbb
+BBBjq########HHH#######.....................................
+BBBjq##jjjjj#HHH#jjjj##................tQ..........g........
+BBBjq##jjjjj#HHH#jjjj##...............tQtQ........R.U.......
+BBBBq##jjjjj#HHH#jjjj##......V.........WWWWWWWWWWWWWWWWWWWWW
+NNNNN########HXH#######..............WWYYYYYYYYYYYYYYYYYYYYY
+...................................WWYYY00000000000000000000
+.................................WWYYY0000000000000000000000
+..........................@......YYY000000000000000000000000
+NNNNNNNNNNNNNNNNNNNNNNN..........YYYYYYYYYY22222222222222222
+BBBBBBBBBBBBBBBBBBBBBBN..........+W3333333333333333333333333
+BB45he456wn46f47754BBBN..........YYYYYYYYYY22338Palac$8->333
+BB44C6%&*i=h~419914BBBN..........YY0000000022333333333333333
+BB44E%i^4Me=_G_:es4BBBN..........YY0000000022222222222222222
+BBBBBBBBBBBBBBBBBBBBBBN..........YY0000000000000000000000000
+  end
+
+  legend
+    B = Breakable color 0x0E
+    N = Normal color 0x0E
+    . = Empty color 0x0A
+    b = Normal color 0x09
+    d = Breakable color 0x09
+    j = Breakable color 0x0C
+    k = Breakable color 0x0F
+    q = Normal color 0x0C
+    u = Normal color 0x0F
+    # = Solid color 0x0C
+    S = Solid color 0x0F
+    v = Text-Red color 0x20
+    A = Text-Red color 0x41
+    r = Text-Red color 0x72
+    m = Text-Red color 0x6D
+    o = Text-Red color 0x6F
+    y = Text-Red color 0x79
+    x = Text-Green color 0x20
+    z = Text-Green color 0x42
+    O = Text-Green color 0x4F
+    Z = Text-Green color 0x5A
+    D = Text-Green color 0x41
+    F = Text-Green color 0x46
+    H = Empty color 0x0C
+    I = Text-Green color 0x4E
+    T = Text-Green color 0x54
+    p = Passage color 0x4F to "Armory"
+    K = Text-Green color 0x4B
+    J = Empty color 0x0F
+    L = Passage color 0x2F to "Bank Vault"
+    ! = Text-Green color 0x21
+    t = Torch color 0x06
+    Q = Empty color 0x06
+    g = Gem color 0x0C
+    R = Gem color 0x0D
+    U = Gem color 0x0B
+    V = Object color 0x0F
+    W = Empty color 0x0B
+    X = Empty color 0x4F
+    Y = Normal color 0x0B
+    0 = Breakable color 0x0B
+    @ = Player color 0x1F under Empty color 0x0A
+    2 = Solid color 0x0B
+    + = Door color 0x5F
+    3 = Empty color 0x09
+    4 = Text-Yellow color 0x20
+    5 = Text-Yellow color 0x54
+    h = Text-Yellow color 0x68
+    e = Text-Yellow color 0x65
+    6 = Text-Yellow color 0x6F
+    w = Text-Yellow color 0x77
+    n = Text-Yellow color 0x6E
+    f = Text-Yellow color 0x66
+    7 = Text-Yellow color 0x5A
+    8 = Text-Blue color 0x20
+    P = Text-Blue color 0x50
+    a = Text-Blue color 0x61
+    l = Text-Blue color 0x6C
+    c = Text-Blue color 0x63
+    $ = Text-Blue color 0x65
+    - = Text-Blue color 0x2D
+    > = Text-Blue color 0x3E
+    C = Text-Yellow color 0x43
+    % = Text-Yellow color 0x70
+    & = Text-Yellow color 0x79
+    * = Text-Yellow color 0x72
+    i = Text-Yellow color 0x69
+    = = Text-Yellow color 0x67
+    ~ = Text-Yellow color 0x74
+    1 = Text-Yellow color 0x31
+    9 = Text-Yellow color 0x39
+    E = Text-Yellow color 0x45
+    ^ = Text-Yellow color 0x63
+    M = Text-Yellow color 0x4D
+    _ = Text-Yellow color 0x61
+    G = Text-Yellow color 0x47
+    : = Text-Yellow color 0x6D
+    s = Text-Yellow color 0x73
+  end
+
+  stats
+    stat at 15,10 element Passage p1 0 p2 0 p3 board "Armory" step idle under Empty color 0x0C
+    stat at 40,10 element Passage p1 0 p2 0 p3 board "Bank Vault" step idle under Empty color 0x0F
+    stat at 30,15 element Object p1 cp437:0xE8 p2 0 step idle under Empty color 0x0A
+    oop
+@Town of ZZT
+#end
+:touch
+#play   gfdg#f#d#agea#g#f
+#play  -gfdg#f#d#agea#g#f
+#play --gfdg#f#d#agea#g#f
+$Welcome to the Town of ZZT!
+
+    Your task is to find the five purple
+keys that are hidden throughout the Town.
+These keys unlock the doors leading into
+the Palace,  your destination.
+
+    Your search for the keys will lead you
+through the town in all four directions.
+On the way,  you will battle ferrocious
+creatures and solve intricate puzzles.
+
+$Health points
+
+    You start out with 100 health points
+and lose 10 when a creature or bullet hits
+you.  You can gain health by collecting
+gems (1 point each.)
+
+$Saving the game
+
+    You should frequently use the Save
+command (press "S") to save the game in
+progress.  That way if you are hit or you
+get stuck in a room,  you can go back and
+try again.  This is very important! Nobody
+wins ZZT without doing a zillion saves.
+
+$The Purple Keys
+
+    The five keys are kept in various
+parts of the Town.  Each time you find a
+new one,  you must bring it to the Palace
+and unlock another door.  Once you get
+into the Palace...  You're almost done!
+
+$More help...
+
+    You can bring up a detailed help file
+by pressing "H" during the game.
+
+    end
+  end
+end

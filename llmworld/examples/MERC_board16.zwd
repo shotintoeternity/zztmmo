@@ -1,0 +1,1504 @@
+board "Magma Lake 3.3 (N of 3.2)"
+  start player at 15,19
+  respawn at 32,32
+  max-shots 255
+  dark false
+  reenter false
+  time-limit 0
+  exits north none south none west none east none
+
+  grid
+o.b~BNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNB~cccdOOO
+o.~BNN###NNNNNNNN########NNNNNNNNN#####NNNNN######NNB~ccdSLO
+c~BNN##NNFFFFFFalNNNNNNNNgGeeGggGeNNNNNfffFFNN#####NNB~cdSVS
+~BNN#NNFFFFFFFFFlFFFFFFFFFFFFFFFFFFFFFFFFFFFFFNN####NNB~dS-S
+BNN#NFFFFFFFFFFhlhFFFFFFFFiFFFFFFFFFFFFFFFFFFFFpN####NNBdSjS
+NN##NFFFFFFFFiFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFN####NNdS-S
+NN##NFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFkm###NNdSRS
+NN##NFFFFiFFFFFhlhFFkkkkkkFFFFnFFFFFFFFFFFFFFFFFkkqm##NNdSES
+NN##NFFFFFFFFFFFlFkkkqqqqkkkkkFFFFFFFFFFFFFFFFFkkqrqm#NNdSLS
+NN##NFFFFFFFFFFFlkkqqrrrrqqqqkkkkkkkkkFFFFfFkkkkqrrrqmNNdSIS
+NN##NFFFFFFFFFFFkkqrrrrrrrrrrqqqqqqqqkkkkkkkkqqqrrrqm#NNdSCS
+NN#NaFFFFFFFFFFFkqrrrrrrrrrrrrrrrrrrrqqqqqqqqrrrrrrqm#NNdS-S
+NN#NaFFFhFFFhFFFkqrrrrrrrrrrqqqqqqqrrrrrrrrrrrrrrrqm##NNdSsS
+NN##NllllFFFllllkqrrrrrrrrqqkkkkkkkqqrrrrqqqqqqqrrqm##NNdStS
+NN##NFFFhFFFhFFFkqrrrrrrrqkkkFFFFFkkkqqqqkkkkkkkqqqm##NNdSuS
+NN##NFFFFFFFFFiFkkqrrrrrqkkFFFFFFFFFkkkkkkFFFFFkkkkN##NNdSvS
+NN##NFFFFFFFFFFFFkkqrrrrqkFFFFFFnFFFFhFFFFFFFFFFFFFFN#NNdS-O
+NN#NFFFFFFFFFFFFFFkqrrrrqkFFFwFFFFFFFFFFFFFFFFFFFFFN##NNdSWS
+NN##NFFFFFFFFF@FFFkqrrrrqkkkFFFfFFFFFFFFiFFFFFFFFFN###NNdSES
+NN###NFfFFFFFFFFFFFkqrrrrqqkkkFFFFFFFFFFFFFFFFxNNN####NNdSAS
+BNN###NNNFFFFFFFFfFkqrrrrrrqqkkkFFnFFhFFFFFFFFN######NNBdSPS
+~BNN#####NyNNNNNNFFkqqqqqqqqrqqkkkkNNNNNNNFfFFN#####NNB~dS-S
+c~BNN#####N######NNmmmmmmmmmqqqqmmm#######NNNN#####NNB~cdSjS
+cc~BNN######################mmmm##################NNB~ccdS-S
+ccc~BNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNB~cccdSSS
+  end
+
+  legend
+    o = Object color 0x00
+    . = Empty color 0x0B
+    b = Empty color 0x00
+    ~ = Water color 0x78
+    B = Breakable color 0x78
+    N = Normal color 0x78
+    c = Empty color 0x0F
+    d = Water color 0x11
+    O = Object color 0x01
+    # = Solid color 0x78
+    S = Solid color 0x11
+    L = Text-Blue color 0x4C
+    F = Fake color 0x08
+    a = Ammo color 0x04
+    l = Line color 0x7E
+    g = Gem color 0x04
+    G = Gem color 0x0C
+    e = Gem color 0x0F
+    f = Object color 0x04
+    V = Text-Blue color 0x56
+    - = Text-Blue color 0x2D
+    h = Object color 0x4E
+    i = Object color 0x0E
+    p = Passage color 0x0F to "Magma Lake 3.5"
+    j = Object color 0x1F
+    k = Water color 0x7C
+    m = Water color 0x48
+    R = Text-Blue color 0x52
+    n = Object color 0x0C
+    q = Solid color 0x04
+    E = Text-Blue color 0x45
+    r = Water color 0x4C
+    I = Text-Blue color 0x49
+    C = Text-Blue color 0x43
+    s = Object color 0x14
+    t = Object color 0x17
+    u = Object color 0x16
+    v = Object color 0x19
+    w = Object color 0x06
+    W = Text-Blue color 0x57
+    @ = Player color 0x1F under Fake color 0x08
+    x = Passage color 0x7F to "Magma Lake 3.1"
+    A = Text-Blue color 0x41
+    P = Text-Blue color 0x50
+    y = Passage color 0x1F to "Magma Lake 3.2"
+  end
+
+  stats
+    stat at 60,1 element Object p1 cp437:0xDB p2 0 step idle under Empty color 0x20
+    oop
+@Healthcheck
+#cycle 1
+:loop
+#if lv1 then lv1
+#if lv2 then lv2
+#if lv3 then lv3
+#if lv4 then lv4
+#if lv5 then lv5
+#if lv6 then lv6
+#if lv7 then lv7
+#if lv8 then lv8
+#if lv9 then lv9
+#if lv0 then lv0
+/i
+#loop
+:lv1
+#take health 101 #loop
+#endgame
+#give health 100
+#loop
+:lv2
+#take health 201 #loop
+#endgame
+#give health 200
+#loop
+:lv3
+#take health 301 #loop
+#endgame
+#give health 300
+#loop
+:lv4
+#take health 401 #loop
+#endgame
+#give health 400
+#loop
+:lv5
+#take health 501 #loop
+#endgame
+#give health 500
+#loop
+:lv6
+#take health 601 #loop
+#endgame
+#give health 600
+#loop
+:lv7
+#take health 701 #loop
+#endgame
+#give health 700
+#loop
+:lv8
+#take health 801 #loop
+#endgame
+#give health 800
+#loop
+:lv9
+#take health 901 #loop
+#endgame
+#give health 900
+#loop
+:lv0
+#take health 1001 #loop
+#endgame
+#give health 1000
+#loop 
+
+    end
+    stat at 60,17 element Object p1 cp437:0xDB p2 0 step idle under Empty color 0x09
+    oop
+@Changer
+:loop
+#if skill4 then do
+/i
+#loop
+:do
+#change blue water fake
+#end
+
+    end
+    stat at 59,1 element Object p1 cp437:0xDB p2 0 step idle under Empty color 0x11
+    oop
+@Ammocheck
+#cycle 1
+:loop
+#if lv1 then lv1
+#if lv2 then lv2
+#if lv3 then lv3
+#if lv4 then lv4
+#if lv5 then lv5
+#if lv6 then lv6
+#if lv7 then lv7
+#if lv8 then lv8
+#if lv9 then lv9
+#if lv0 then lv0
+/i
+#loop
+:lv1
+#take ammo 21 #loop
+You have reached your Ammo limit.
+/i
+#give ammo 20
+#loop
+:lv2
+#take ammo 41 #loop
+You have reached your Ammo limit.
+/i
+#give ammo 40
+#loop
+:lv3
+#take ammo 61 #loop
+You have reached your Ammo limit.
+/i
+#give ammo 60
+#loop
+:lv4
+#take ammo 81 #loop
+You have reached your Ammo limit.
+/i
+#give ammo 80
+#loop
+:lv5
+#take ammo 101 #loop
+You have reached your Ammo limit.
+/i
+#give ammo 100
+#loop
+:lv6
+#take ammo 121 #loop
+You have reached your Ammo limit.
+/i
+#give ammo 120
+#loop
+:lv7
+#take ammo 141 #loop
+You have reached your Ammo limit.
+/i
+#give ammo 140
+#loop
+:lv8
+#take ammo 161 #loop
+You have reached your Ammo limit.
+/i
+#give ammo 160
+#loop
+:lv9
+#take ammo 181 #loop
+You have reached your Ammo limit.
+/i
+#give ammo 180
+#loop
+:lv0
+#take ammo 201 #loop
+You have reached your Ammo limit.
+/i
+#give ammo 200
+#loop 
+
+    end
+    stat at 58,1 element Object p1 cp437:0xDB p2 0 step idle under Empty color 0x0E
+    oop
+@Torchcheck
+#cycle 1
+:loop
+#if lv1 then lv1
+#if lv2 then lv2
+#if lv3 then lv3
+#if lv4 then lv4
+#if lv5 then lv5
+#if lv6 then lv6
+#if lv7 then lv7
+#if lv8 then lv8
+#if lv9 then lv9
+#if lv0 then lv0
+/i
+#loop
+:lv1
+#take torches 6 #loop
+You have reached your Torches limit.
+/i
+#give torches 5
+#loop
+:lv2
+#take torches 11 #loop
+You have reached your Torches limit.
+/i
+#give torches 10
+#loop
+:lv3
+#take torches 16 #loop
+You have reached your Torches limit.
+/i
+#give torches 15
+#loop
+:lv4
+#take torches 21 #loop
+You have reached your Torches limit.
+/i
+#give torches 20
+#loop
+:lv5
+#take torches 26 #loop
+You have reached your Torches limit.
+/i
+#give torches 25
+#loop
+:lv6
+#take torches 31 #loop
+You have reached your Torches limit.
+/i
+#give torches 30
+#loop
+:lv7
+#take torches 36 #loop
+You have reached your Torches limit.
+/i
+#give torches 35
+#loop
+:lv8
+#take torches 41 #loop
+You have reached your Torches limit.
+/i
+#give torches 40
+#loop
+:lv9
+#take torches 46 #loop
+You have reached your Torches limit.
+/i
+#give torches 47
+#loop
+:lv0
+#take torches 51 #loop
+You have reached your Torches limit.
+/i
+#give torches 50
+#loop 
+
+    end
+    stat at 60,2 element Object p1 cp437:0xDB p2 0 step idle under Empty color 0x11
+    oop
+@Scorecheck
+#cycle 1
+:loop
+/i
+#if lv1 then lv1
+#if lv2 then lv2
+#if lv3 then lv3
+#if lv4 then lv4
+#if lv5 then lv5
+#if lv6 then lv6
+#if lv7 then lv7
+#if lv8 then lv8
+#if lv9 then lv9
+#if lv0 then lv0
+/i
+#loop
+:lv1
+#take score 1000 #loop
+YOU ARE NOW LEVEL 2
+#play -c+c-c#+c#-d+d-d#+d#-e+e
+#clear lv1
+#set lv2
+#loop
+:lv2
+#take score 2000 #loop
+YOU ARE NOW LEVEL 3
+#play -c+c-c#+c#-d+d-d#+d#-e+e
+#clear lv2
+#set lv3
+#loop
+:lv3
+#take score 3000 #loop
+YOU ARE NOW LEVEL 4
+#play -c+c-c#+c#-d+d-d#+d#-e+e
+#clear lv3
+#set lv4
+#loop
+:lv4
+#take score 4000 #loop
+YOU ARE NOW LEVEL 5
+#play -c+c-c#+c#-d+d-d#+d#-e+e
+#clear lv4
+#set lv5
+#loop
+:lv5
+#take score 5000 #loop
+YOU ARE NOW LEVEL 6
+#play -c+c-c#+c#-d+d-d#+d#-e+e
+#clear lv5
+#set lv6
+#loop
+:lv6
+#take score 6000 #loop
+YOU ARE NOW LEVEL 7
+#play -c+c-c#+c#-d+d-d#+d#-e+e
+#clear lv6
+#set lv7
+#loop
+:lv7
+#take score 7000 #loop
+YOU ARE NOW LEVEL 8
+#play -c+c-c#+c#-d+d-d#+d#-e+e
+#clear lv7
+#set lv8
+#loop
+:lv8
+#take score 8000 #loop
+YOU ARE NOW LEVEL 9
+#play -c+c-c#+c#-d+d-d#+d#-e+e
+#clear lv8
+#set lv9
+#loop
+:lv9
+#take score 9000 #loop
+YOU ARE NOW LEVEL A
+#play -c+c-c#+c#-d+d-d#+d#-e+e
+#clear lv9
+#set lv0
+#loop
+:lv0
+#loop 
+
+    end
+    stat at 59,13 element Object p1 cp437:0xFF p2 0 step idle under Empty color 0x2D
+    oop
+@Lockpicks
+:loop
+#if skill1 then show
+/i
+#loop
+:show
+#char 251
+#end 
+
+    end
+    stat at 59,14 element Object p1 cp437:0xFF p2 0 step idle under Empty color 0x20
+    oop
+@Gauntlet
+:loop
+#if skill2 then show
+/i
+#loop
+:show
+#char 155
+#end
+
+    end
+    stat at 59,15 element Object p1 cp437:0xFF p2 0 step idle under Empty color 0x20
+    oop
+@Rope
+:loop
+#if skill3 then show
+/i
+#loop
+:show
+#char 064
+#end
+
+    end
+    stat at 59,16 element Object p1 cp437:0xFF p2 0 step idle under Empty color 0x20
+    oop
+@Aqualung
+:loop
+#if skill4 then show
+/i
+#loop
+:show
+#char 225
+#end
+
+    end
+    stat at 59,23 element Object p1 cp437:0x31 p2 0 step idle under Empty color 0x11
+    oop
+@Weapon
+#cycle 3
+:loop
+#if wp3 then wp3
+#if wp4 then wp4
+#if wp5 then wp5
+#if wp6 then wp6
+/i
+#loop
+:wp3
+#char 051
+/i
+#loop
+:wp4
+#char 052
+/i
+#loop
+:wp5
+#char 053
+/i
+#loop
+:wp6
+#char 054
+/i
+#loop
+
+    end
+    stat at 59,5 element Object p1 cp437:0x31 p2 0 step idle under Empty color 0x2D
+    oop
+@Level
+#cycle 3
+:loop
+#if lv1 then lv1
+#if lv2 then lv2
+#if lv3 then lv3
+#if lv4 then lv4
+#if lv5 then lv5
+#if lv6 then lv6
+#if lv7 then lv7
+#if lv8 then lv8
+#if lv9 then lv9
+#if lv0 then lv0
+/i
+#loop
+:lv1
+#char 049
+/i
+#loop
+:lv2
+#char 050
+/i
+#loop
+:lv3
+#char 051
+/i
+#loop
+:lv4
+#char 052
+/i
+#loop
+:lv5
+#char 053
+/i
+#loop
+:lv6
+#char 054
+/i
+#loop
+:lv7
+#char 055
+/i
+#loop
+:lv8
+#char 056
+/i
+#loop
+:lv9
+#char 057
+/i
+#loop
+:lv0
+#char 065
+/i
+#loop
+
+    end
+    stat at 1,1 element Object p1 cp437:0x02 p2 0 step idle under Empty color 0x0E
+    oop
+@Randomiser
+#cycle 2
+#put e yellow invisible
+/i
+#put e empty
+/i
+#restart
+
+    end
+    stat at 1,2 element Object p2 0 step idle under Empty color 0x0E
+    oop
+@Randomiser
+#if blocked rndns then do
+#if not blocked rndns then cancel
+/i
+#restart
+:do
+#put e blue invisible
+#restart
+:cancel
+#put e empty
+#restart
+
+    end
+    stat at 11,22 element Passage p1 0 p2 0 p3 board "Magma Lake 3.2" step idle follower 0 leader 0
+    stat at 18,21 element Object cycle 1 p1 cp437:0x06 p2 0 step idle under Fake color 0x08 follower 0 leader 0
+    oop
+@Magmyte
+#cycle 2
+:watch
+#walk idle
+#if alligned then charge
+/i
+#watch
+
+:charge
+#play +C-C+C-C
+#cycle 1
+#char 005
+#walk seek
+#check
+
+:check
+#if contact then explo
+/i
+#check
+
+:thud
+#play 18
+#walk idle
+#try opp flow
+/i/i/i
+#char 006
+#cycle 2
+#watch
+
+:explo
+The Magmyte explodes! -10 HP!
+#take health 10 #endgame
+#die
+
+:shot
+The Magmyte melts! +20 EXP!
+#become fake
+
+:touch
+#explo
+
+    end
+    stat at 8,20 element Object cycle 1 p1 cp437:0x06 p2 0 step idle under Fake color 0x08 follower 0 leader 0
+    oop
+@Magmyte
+#cycle 2
+:watch
+#walk idle
+#if alligned then charge
+/i
+#watch
+
+:charge
+#play +C-C+C-C
+#cycle 1
+#char 005
+#walk seek
+#check
+
+:check
+#if contact then explo
+/i
+#check
+
+:thud
+#play 18
+#walk idle
+#try opp flow
+/i/i/i
+#char 006
+#cycle 2
+#watch
+
+:explo
+The Magmyte explodes! -10 HP!
+#take health 10 #endgame
+#die
+
+:shot
+The Magmyte melts! +20 EXP!
+#become fake
+
+:touch
+#explo
+
+    end
+    stat at 31,8 element Object cycle 1 p1 cp437:0x94 p2 0 step idle under Fake color 0x08 follower 0 leader 0
+    oop
+@Fireball
+#cycle 1
+#walk seek
+:stt
+#try rndp rndne
+#if contact then touch
+/i
+#if alligned then restart
+#stt
+
+:touch
+#lock
+The fireball explodes! -5 HP
+#take health 5 #endgame
+#explo
+
+:shot
+#lock
+The fireball explodes!
+#explo
+
+:explo
+#if blocked w then no1
+#put w red gem
+:no1
+#if blocked e then no2
+#put e red gem
+:no2
+#if blocked n no3
+#put n red gem
+:no3
+#if blocked s no4
+#put s red gem
+:no4
+#become red fake
+#end
+
+    end
+    stat at 32,19 element Object cycle 1 p1 cp437:0x06 p2 0 step idle under Fake color 0x08 follower 0 leader 0
+    oop
+@Magmyte
+#cycle 2
+:watch
+#walk idle
+#if alligned then charge
+/i
+#watch
+
+:charge
+#play +C-C+C-C
+#cycle 1
+#char 005
+#walk seek
+#check
+
+:check
+#if contact then explo
+/i
+#check
+
+:thud
+#play 18
+#walk idle
+#try opp flow
+/i/i/i
+#char 006
+#cycle 2
+#watch
+
+:explo
+The Magmyte explodes! -10 HP!
+#take health 10 #endgame
+#die
+
+:shot
+The Magmyte melts! +20 EXP!
+#become fake
+
+:touch
+#explo
+
+    end
+    stat at 13,15 element Object p1 cp437:0xA1 p2 0 step idle under Empty color 0x0C
+    oop
+@Candle
+#cycle 1
+:loop
+#char 141
+/i
+#char 105
+/i
+#char 161
+/i
+#loop
+:touch
+A candle.
+/i
+#loop
+:activate
+#shoot seek
+#loop
+
+    end
+    stat at 9,15 element Object p1 cp437:0xA1 p2 0 step idle under Empty color 0x0C
+    oop
+@Candle
+#cycle 1
+:loop
+#char 141
+/i
+#char 105
+/i
+#char 161
+/i
+#loop
+:touch
+A candle.
+/i
+#loop
+:activate
+#shoot seek
+#loop
+
+    end
+    stat at 9,13 element Object p1 cp437:0xA1 p2 0 step idle under Empty color 0x0C
+    oop
+@Candle
+#cycle 1
+:loop
+#char 141
+/i
+#char 105
+/i
+#char 161
+/i
+#loop
+:touch
+A candle.
+/i
+#loop
+:activate
+#shoot seek
+#loop
+
+    end
+    stat at 13,13 element Object p1 cp437:0xA1 p2 0 step idle under Empty color 0x0C
+    oop
+@Candle
+#cycle 1
+:loop
+#char 141
+/i
+#char 105
+/i
+#char 161
+/i
+#loop
+:touch
+A candle.
+/i
+#loop
+:activate
+#shoot seek
+#loop
+
+    end
+    stat at 16,8 element Object p1 cp437:0xA1 p2 0 step idle under Empty color 0x0C
+    oop
+@Candle
+#cycle 1
+:loop
+#char 141
+/i
+#char 105
+/i
+#char 161
+/i
+#loop
+:touch
+A candle.
+/i
+#loop
+:activate
+#shoot seek
+#loop
+
+    end
+    stat at 16,5 element Object p1 cp437:0xA1 p2 0 step idle under Empty color 0x0C
+    oop
+@Candle
+#cycle 1
+:loop
+#char 141
+/i
+#char 105
+/i
+#char 161
+/i
+#loop
+:touch
+A candle.
+/i
+#loop
+:activate
+#shoot seek
+#loop
+
+    end
+    stat at 18,5 element Object p1 cp437:0xA1 p2 0 step idle under Empty color 0x0C
+    oop
+@Candle
+#cycle 1
+:loop
+#char 141
+/i
+#char 105
+/i
+#char 161
+/i
+#loop
+:touch
+A candle.
+/i
+#loop
+:activate
+#shoot seek
+#loop
+
+    end
+    stat at 18,8 element Object p1 cp437:0xA1 p2 0 step idle under Empty color 0x0C
+    oop
+@Candle
+#cycle 1
+:loop
+#char 141
+/i
+#char 105
+/i
+#char 161
+/i
+#loop
+:touch
+A candle.
+/i
+#loop
+:activate
+#shoot seek
+#loop
+
+    end
+    stat at 10,8 element Object cycle 1 p1 cp437:0x9C p2 0 step idle follower 0 leader 0
+    oop
+@Pyromaniac
+#cycle 1
+:loop1
+#try opp seek #try seek
+:loop2
+#if any blue invisible then wong
+#try flow
+#loop1
+:wong
+#if any yellow invisible then final
+/i/i
+#loop1
+:final
+#if blocked rndp rndne then #loop1
+:activate
+#lock
+/i/i/i/i
+#char 001
+/i
+#char 002
+/i
+#char 003
+/i
+#char 004
+/i
+#char 005
+/i
+#char 006
+/i
+#char 007
+/i
+#play t++cde!ge!dfd!c
+#Candle:activate
+#unlock
+#char 156
+/i/i/i/i/i/i
+#loop1
+
+:shot
+#if wp4 then #zap shot
+#if wp5 then insta
+#if wp6 then insta
+:shot
+#zap shot
+#if not blocked s then #put s red fake
+The bullet hits the Pyromaniac.
+/i
+#loop1
+
+:insta
+:shot
+You shoot the Pyromaniac - +100EXP!
+#give score 100
+#die
+#end
+
+:touch
+The Pyromaniac burns you! -10HP
+#take health 10 #endgame
+#loop1
+
+    end
+    stat at 38,17 element Object p1 cp437:0xA1 p2 0 step idle under Empty color 0x0C
+    oop
+@Candle
+#cycle 1
+:loop
+#char 141
+/i
+#char 105
+/i
+#char 161
+/i
+#loop
+:touch
+A candle.
+/i
+#loop
+:activate
+#shoot seek
+#loop
+
+    end
+    stat at 38,21 element Object p1 cp437:0xA1 p2 0 step idle under Empty color 0x0C
+    oop
+@Candle
+#cycle 1
+:loop
+#char 141
+/i
+#char 105
+/i
+#char 161
+/i
+#loop
+:touch
+A candle.
+/i
+#loop
+:activate
+#shoot seek
+#loop
+
+    end
+    stat at 44,22 element Object cycle 1 p1 cp437:0x06 p2 0 step idle under Fake color 0x08 follower 0 leader 0
+    oop
+@Magmyte
+#cycle 2
+:watch
+#walk idle
+#if alligned then charge
+/i
+#watch
+
+:charge
+#play +C-C+C-C
+#cycle 1
+#char 005
+#walk seek
+#check
+
+:check
+#if contact then explo
+/i
+#check
+
+:thud
+#play 18
+#walk idle
+#try opp flow
+/i/i/i
+#char 006
+#cycle 2
+#watch
+
+:explo
+The Magmyte explodes! -10 HP!
+#take health 10 #endgame
+#die
+
+:shot
+The Magmyte melts! +20 EXP!
+#become fake
+
+:touch
+#explo
+
+    end
+    stat at 43,10 element Object cycle 1 p1 cp437:0x06 p2 0 step idle under Fake color 0x08 follower 0 leader 0
+    oop
+@Magmyte
+#cycle 2
+:watch
+#walk idle
+#if alligned then charge
+/i
+#watch
+
+:charge
+#play +C-C+C-C
+#cycle 1
+#char 005
+#walk seek
+#check
+
+:check
+#if contact then explo
+/i
+#check
+
+:thud
+#play 18
+#walk idle
+#try opp flow
+/i/i/i
+#char 006
+#cycle 2
+#watch
+
+:explo
+The Magmyte explodes! -10 HP!
+#take health 10 #endgame
+#die
+
+:shot
+The Magmyte melts! +20 EXP!
+#become fake
+
+:touch
+#explo
+
+    end
+    stat at 42,3 element Object cycle 1 p1 cp437:0x06 p2 0 step idle under Fake color 0x08 follower 0 leader 0
+    oop
+@Magmyte
+#cycle 2
+:watch
+#walk idle
+#if alligned then charge
+/i
+#watch
+
+:charge
+#play +C-C+C-C
+#cycle 1
+#char 005
+#walk seek
+#check
+
+:check
+#if contact then explo
+/i
+#check
+
+:thud
+#play 18
+#walk idle
+#try opp flow
+/i/i/i
+#char 006
+#cycle 2
+#watch
+
+:explo
+The Magmyte explodes! -10 HP!
+#take health 10 #endgame
+#die
+
+:shot
+The Magmyte melts! +20 EXP!
+#become fake
+
+:touch
+#explo
+
+    end
+    stat at 41,3 element Object cycle 1 p1 cp437:0x06 p2 0 step idle under Fake color 0x08 follower 0 leader 0
+    oop
+@Magmyte
+#cycle 2
+:watch
+#walk idle
+#if alligned then charge
+/i
+#watch
+
+:charge
+#play +C-C+C-C
+#cycle 1
+#char 005
+#walk seek
+#check
+
+:check
+#if contact then explo
+/i
+#check
+
+:thud
+#play 18
+#walk idle
+#try opp flow
+/i/i/i
+#char 006
+#cycle 2
+#watch
+
+:explo
+The Magmyte explodes! -10 HP!
+#take health 10 #endgame
+#die
+
+:shot
+The Magmyte melts! +20 EXP!
+#become fake
+
+:touch
+#explo
+
+    end
+    stat at 40,3 element Object cycle 1 p1 cp437:0x06 p2 0 step idle under Fake color 0x08 follower 0 leader 0
+    oop
+@Magmyte
+#cycle 2
+:watch
+#walk idle
+#if alligned then charge
+/i
+#watch
+
+:charge
+#play +C-C+C-C
+#cycle 1
+#char 005
+#walk seek
+#check
+
+:check
+#if contact then explo
+/i
+#check
+
+:thud
+#play 18
+#walk idle
+#try opp flow
+/i/i/i
+#char 006
+#cycle 2
+#watch
+
+:explo
+The Magmyte explodes! -10 HP!
+#take health 10 #endgame
+#die
+
+:shot
+The Magmyte melts! +20 EXP!
+#become fake
+
+:touch
+#explo
+
+    end
+    stat at 30,18 element Object cycle 1 p1 cp437:0xA5 p2 0 step idle follower 0 leader 0
+    oop
+@Chest
+#end
+:touch
+#zap touch
+You found a treasure chest with 50 gems!
+#give gems 50
+#give score 100
+#char 078
+#end
+
+    end
+    stat at 33,17 element Object cycle 1 p1 cp437:0xA8 p2 0 step idle follower 0 leader 0
+    oop
+@HighPotion
+#end
+:touch
+#zap touch
+You found a High Potion : +20 HP!
+#give health 20
+#die
+#end
+
+    end
+    stat at 35,21 element Object cycle 1 p1 cp437:0xA8 p2 0 step idle follower 0 leader 0
+    oop
+@HighPotion
+#end
+:touch
+#zap touch
+You found a High Potion : +20 HP!
+#give health 20
+#die
+#end
+
+    end
+    stat at 15,16 element Object p1 cp437:0x93 p2 0 step idle under Fake color 0x08
+    oop
+@FlameGoblin
+#try rndp rndne
+#try rndp rndne
+#try seek
+#try seek
+#restart
+
+:touch
+#if blocked rndp rndne then hurt
+#if wp1 if blocked rndp rndne then hurt
+#hit
+
+:hit
+#lock
+You hit the Flame Goblin.
+/i
+#play +c
+#zap hit
+#unlock
+#restart
+
+:hit
+:shot
+#zap hit
+#zap touch
+#zap shot
+You kill the Flame Goblin: +40 EXP!
+/i
+#play ceg+c
+#give score 40
+#if any yellow invisible then drop
+#if any yellow invisible then drop
+#if any yellow invisible then drop
+#die
+
+:hurt
+#if not blocked rndp rndne then #restart
+#lock
+The Flame Goblin hits you! -4 HP
+/i
+#take health 4 #endgame
+#play -c
+#unlock
+#restart
+
+:drop
+#if any blue invisible then altdrop
+#if any blue invisible then altdrop
+#become ammo
+
+:altdrop
+#become yellow gem
+
+    end
+    stat at 14,6 element Object p1 cp437:0x93 p2 0 step idle under Fake color 0x08
+    oop
+@FlameGoblin
+#try rndp rndne
+#try rndp rndne
+#try seek
+#try seek
+#restart
+
+:touch
+#if blocked rndp rndne then hurt
+#if wp1 if blocked rndp rndne then hurt
+#hit
+
+:hit
+#lock
+You hit the Flame Goblin.
+/i
+#play +c
+#zap hit
+#unlock
+#restart
+
+:hit
+:shot
+#zap hit
+#zap touch
+#zap shot
+You kill the Flame Goblin: +40 EXP!
+/i
+#play ceg+c
+#give score 40
+#if any yellow invisible then drop
+#if any yellow invisible then drop
+#if any yellow invisible then drop
+#die
+
+:hurt
+#if not blocked rndp rndne then #restart
+#lock
+The Flame Goblin hits you! -4 HP
+/i
+#take health 4 #endgame
+#play -c
+#unlock
+#restart
+
+:drop
+#if any blue invisible then altdrop
+#if any blue invisible then altdrop
+#become ammo
+
+:altdrop
+#become yellow gem
+
+    end
+    stat at 27,5 element Object p1 cp437:0x93 p2 0 step idle under Fake color 0x08
+    oop
+@FlameGoblin
+#try rndp rndne
+#try rndp rndne
+#try seek
+#try seek
+#restart
+
+:touch
+#if blocked rndp rndne then hurt
+#if wp1 if blocked rndp rndne then hurt
+#hit
+
+:hit
+#lock
+You hit the Flame Goblin.
+/i
+#play +c
+#zap hit
+#unlock
+#restart
+
+:hit
+:shot
+#zap hit
+#zap touch
+#zap shot
+You kill the Flame Goblin: +40 EXP!
+/i
+#play ceg+c
+#give score 40
+#if any yellow invisible then drop
+#if any yellow invisible then drop
+#if any yellow invisible then drop
+#die
+
+:hurt
+#if not blocked rndp rndne then #restart
+#lock
+The Flame Goblin hits you! -4 HP
+/i
+#take health 4 #endgame
+#play -c
+#unlock
+#restart
+
+:drop
+#if any blue invisible then altdrop
+#if any blue invisible then altdrop
+#become ammo
+
+:altdrop
+#become yellow gem
+
+    end
+    stat at 41,19 element Object p1 cp437:0x93 p2 0 step idle under Fake color 0x08
+    oop
+@FlameGoblin
+#try rndp rndne
+#try rndp rndne
+#try seek
+#try seek
+#restart
+
+:touch
+#if blocked rndp rndne then hurt
+#if wp1 if blocked rndp rndne then hurt
+#hit
+
+:hit
+#lock
+You hit the Flame Goblin.
+/i
+#play +c
+#zap hit
+#unlock
+#restart
+
+:hit
+:shot
+#zap hit
+#zap touch
+#zap shot
+You kill the Flame Goblin: +40 EXP!
+/i
+#play ceg+c
+#give score 40
+#if any yellow invisible then drop
+#if any yellow invisible then drop
+#if any yellow invisible then drop
+#die
+
+:hurt
+#if not blocked rndp rndne then #restart
+#lock
+The Flame Goblin hits you! -4 HP
+/i
+#take health 4 #endgame
+#play -c
+#unlock
+#restart
+
+:drop
+#if any blue invisible then altdrop
+#if any blue invisible then altdrop
+#become ammo
+
+:altdrop
+#become yellow gem
+
+    end
+    stat at 48,5 element Passage p1 0 p2 0 p3 board "Magma Lake 3.5" step idle follower 0 leader 0
+    stat at 47,20 element Passage p1 0 p2 0 p3 board "Magma Lake 3.1" step idle follower 0 leader 0
+  end
+end

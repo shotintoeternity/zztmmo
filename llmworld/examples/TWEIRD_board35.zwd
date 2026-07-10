@@ -1,0 +1,87 @@
+board "Streets"
+  start player at 30,12
+  respawn at 27,7
+  max-shots 255
+  dark false
+  reenter false
+  time-limit 0
+  exits north none south none west none east none
+
+  grid
+BBBBBBBBBBBFFFFFFFFFFFFb.....d.....bFFFFFFFFFFFFFFFFFFFFFFFF
+B###########FFFFFFFFFFFbfffffffffffbFFFFFFgggggggggggFFFFFFF
+B##Palace###FFFFFFFFFFFbfffffdfffffbFFFFFhhhhhhhhhhhgFFFFFFF
+B##Eats#####FFFFFFFFFFFbfffffffffffbFFFFFhhhhhhhhhhhgFFFFFFF
+B###########FFFFFFFFFFFbfffffdfffffbFFFFFhhhhhhhhhhhgFFFFFFF
+p###########FFFFFFFFFFFbfffffffffffbFFFFFhhhhhhhhhhhgFFFFFFF
+B###########FFFFFFFFFFFbfffffdfffffbFFFFFhhhhhhhhhhhgFFFFFFF
+B###########FFFFFFFFFFFbfffffffffffbFFFFFhhhhhhhhhhhgFFFFFFF
+B###########FFFFFFFFFFFbfffffdfffffbFFFFFhhhhhihhhhhFFFFFFFF
+F#####o#####FFFFFFFFFFFbfffffffffffbFFFFFFFFFFFFFFFFFFFFFFFF
+FFFFFFFFFFFFFFFFFFFFFFFbfffffdfffffbFFFFFFFFFFFFFFFFFFFFFFFF
+FFFFFFFFFFFFFFFFFFFFFFFbfffff@fffffbFFFFFFFFFFFFFFFFFFFFFFFF
+FFFFFFFFFFFFFFFFFFFFFFFbfffffdfffffbFFFFFFjjjjjjjjjjjFFFFFFF
+FFFFFFFFFFFFFFFFFFFFFFFbfffffffffffbFFFFFkkkkkkkkkkkjFFFFFFF
+FFFFFnnnnnnnnnnnnnFFFFFbfffffdfffffbFFFFFkkkkkkkkkkkjFFFFFFF
+FFFFFnSSSSSAmmqSSSSFFFFbfffffffffffbFFFFFkkkkkkkkkkkjFFFFFFF
+FFFFFFSSSSSSSrSSSSSFFFFbfffffdfffffbFFFFFkkkkkkkkkkkjFFFFFFF
+FFFFFFFFFFFFFFFFFFFFFFFbfffffffffffbFFFFFkkkkkkkkkkkjFFFFFFF
+FFFFFFFFFFFFFFFFFFFFFFFbfffffdfffffbFFFFFkkkkkkkkkkkjFFFFFFF
+FFFFFFFFFFFFFFFFFFFFFFFbfffffffffffbFFFFFkkkkkkkkkkkjFFFFFFF
+FFFFFFFFFFFFFFFFFFFFFFFbfffffdfffffbFFFFFkkkkkukkkkkFFFFFFFF
+FFFFFFFFFFFFFFFFFFFFFFFbfffffffffffbFFFFFFFFFFFFFFFFFFFFFFFF
+FFFFFFFFFFFFFFFFFFFFFFFbfffffdfffffbFFFFFFFFFFFFFFFFFFFFFFFF
+FFFFFFFFFFFFFFFFFFFFFFFbfffffffffffbFFFFFFFFFFFFFFFFFFFFFFFF
+FFFFFFFFFFFFFFFFFFFFFFFb.....d.....bFFFFFFFFFFFFFFFFFFFFFFFF
+  end
+
+  legend
+    B = Breakable color 0x0F
+    F = Fake color 0x0A
+    b = Fake color 0x0F
+    . = Empty color 0x0A
+    d = Fake color 0x0E
+    # = Solid color 0x0F
+    f = Empty color 0x00
+    g = Breakable color 0x03
+    P = Text-White color 0x50
+    a = Text-White color 0x61
+    l = Text-White color 0x6C
+    c = Text-White color 0x63
+    e = Text-White color 0x65
+    h = Text-Cyan color 0x20
+    E = Text-White color 0x45
+    t = Text-White color 0x74
+    s = Text-White color 0x73
+    p = Passage color 0x7F to "Palace Restarautnjflsdjfsdfj"
+    i = Passage color 0x3F to "Painting place"
+    o = Object color 0x7F
+    @ = Player color 0x1F under Empty color 0x00
+    j = Breakable color 0x04
+    k = Text-Red color 0x20
+    n = Breakable color 0x0E
+    S = Solid color 0x0E
+    A = Text-Yellow color 0x41
+    m = Text-Yellow color 0x6D
+    q = Text-Yellow color 0x6F
+    r = Passage color 0x6F to "Ammo shop"
+    u = Passage color 0x5F to "Eddie!"
+  end
+
+  stats
+    stat at 7,10 element Object p1 cp437:0xF0 p2 0 step idle under Empty color 0x0F
+    oop
+@"Passage"
+#end
+:touch
+You've already been here stupid! I'm not
+letting you back in.
+#end
+
+    end
+    stat at 14,17 element Passage p1 0 p2 0 p3 board "Ammo shop" step idle under Empty color 0x0E
+    stat at 47,9 element Passage p1 0 p2 0 p3 board "Painting place" step idle under Empty color 0x0B
+    stat at 1,6 element Passage p1 0 p2 0 p3 board "Palace Restarautnjflsdjfsdfj" step idle under Empty color 0x0F
+    stat at 47,21 element Passage p1 0 p2 0 p3 board "Eddie!" step idle under Empty color 0x20
+  end
+end

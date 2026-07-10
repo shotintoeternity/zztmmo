@@ -1,0 +1,330 @@
+board "$TADA!"
+  start player at 24,20
+  respawn at 27,7
+  max-shots 255
+  dark false
+  reenter false
+  time-limit 0
+  exits north none south none west none east none
+
+  grid
+############################################################
+SSSSS###bbbbbbbbbbb###ccccccccccc####dddddddddddd###eeeeeeee
+SSSSS###bbbbbbbbbbb###ccccccccccc####dddddddddddd###eeeeeeee
+SSSSS###bbbbbbbbbbb###ccccccccccc####dddddddddddd###eeeeeeee
+SSSSS###bbbbbbbbbbb###ccccccccccc####dddddddddddd###eeeeeeee
+SSSSS###bbbbbbbbbbb###ccccccccccc####dddddddddddd###eeeeeeee
+SSSSS###bbbbbbbbbbb###ccccccccccc####dddddddddddd###eeeeeeee
+SSSSS###bbbbbbbbbbb###ccccccccccc####dddddddddddd###eeeeeeee
+SSSSS###bbbbbbbbbbb###ccccccccccc####dddddddddddd###eeeeeeee
+SSSSS###bbbbbbbbbbb###ccccccccccc####dddddddddddd###eeeeeeee
+SSSSS###bbbbbbbbbbb###ccccccccccc####dddddddddddd###eeeeeeee
+SSSSS###bbbbbbbbbbb###ccccccccccc####dddddddddddd###eeeeeeee
+oSSSS###bbbbbbbbbbb###ccccccccccc####dddddddddddd###eeeeeeee
+FFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFF
+.ffffffffffffffffffffffffffffffffffffffffffffffffffffffffff.
+.ffffffffffffffffffffffffffffOOgfffffffffffffffffffffffffff.
+.fffffffffffffffffffffff###hhhhhhhhhfffffffffffffffffffffff.
+.fffffffffffffffffffffff###phhiunnyhfffffffffffffffffffffff.
+.ffffffffffffffffffffhhhfffjhhiarm!hfffffffffffffffffffffff.
+.ffffffffffffffffffffhj@ffkfhhhhhhhhfffffffffffffffffffffff.
+.ffffffffffffffffffffhhhhhhhhhhhhhhOfffffffffffffffffffffff.
+.ffffffffffffffffffffffffjfffffjfffffffffffffffffffffffffff.
+lflflflflflflflflflflflflflflflflflflflflflflflflflffffffff.
+.ffffffffffffffffffffffffffffffffffffffffffffffffffffffffff.
+............................................................
+  end
+
+  legend
+    # = Solid color 0x0B
+    S = Solid color 0x0C
+    b = Solid color 0x0D
+    c = Solid color 0x0E
+    d = Solid color 0x09
+    e = Solid color 0x0A
+    o = Object color 0x14
+    F = Fake color 0x0F
+    . = Empty color 0x0F
+    f = Empty color 0x00
+    O = Object color 0x0C
+    g = Object color 0x09
+    h = Solid color 0x0F
+    p = Passage color 0x7F to "$The back of the bus"
+    i = Text-Red color 0x46
+    u = Text-Red color 0x75
+    n = Text-Red color 0x6E
+    y = Text-Red color 0x79
+    j = Object color 0x0F
+    a = Text-Red color 0x61
+    r = Text-Red color 0x72
+    m = Text-Red color 0x6D
+    ! = Text-Red color 0x21
+    @ = Player color 0x1F under Empty color 0x00
+    k = Scroll color 0x0F
+    l = Object color 0x0E
+  end
+
+  stats
+    stat at 23,20 element Object p1 cp437:0x09 p2 0 step idle
+    oop
+@Steering Wheel
+#end
+:touch
+SCREECH!
+#Thing:getkilled
+#Line:stop
+#end
+
+    end
+    stat at 28,19 element Object p1 cp437:0x08 p2 0 step idle
+    oop
+@Thing
+#end
+:getkilled
+#die
+#end
+
+    end
+    stat at 26,22 element Object p1 cp437:0x07 p2 0 step idle
+    stat at 32,22 element Object p1 cp437:0x07 p2 0 step idle
+    stat at 1,23 element Object p1 cp437:0xFF p2 0 step idle under Empty color 0x0F
+    oop
+@Line
+#char 45
+/i
+#char 255
+/i
+#restart
+#end
+:stop
+#end
+
+    end
+    stat at 3,23 element Object p1 cp437:0xFF p2 0 step idle
+    oop
+#bind Line
+
+    end
+    stat at 5,23 element Object p1 cp437:0xFF p2 0 step idle
+    oop
+#bind Line
+
+    end
+    stat at 7,23 element Object p1 cp437:0xFF p2 0 step idle
+    oop
+#bind Line
+
+    end
+    stat at 9,23 element Object p1 cp437:0xFF p2 0 step idle
+    oop
+#bind Line
+
+    end
+    stat at 11,23 element Object p1 cp437:0xFF p2 0 step idle
+    oop
+#bind Line
+
+    end
+    stat at 13,23 element Object p1 cp437:0xFF p2 0 step idle
+    oop
+#bind Line
+
+    end
+    stat at 15,23 element Object p1 cp437:0xFF p2 0 step idle
+    oop
+#bind Line
+
+    end
+    stat at 17,23 element Object p1 cp437:0xFF p2 0 step idle
+    oop
+#bind Line
+
+    end
+    stat at 19,23 element Object p1 cp437:0xFF p2 0 step idle
+    oop
+#bind Line
+
+    end
+    stat at 21,23 element Object p1 cp437:0xFF p2 0 step idle
+    oop
+#bind Line
+
+    end
+    stat at 23,23 element Object p1 cp437:0xFF p2 0 step idle
+    oop
+#bind Line
+
+    end
+    stat at 25,23 element Object p1 cp437:0xFF p2 0 step idle
+    oop
+#bind Line
+
+    end
+    stat at 27,23 element Object p1 cp437:0xFF p2 0 step idle
+    oop
+#bind Line
+
+    end
+    stat at 29,23 element Object p1 cp437:0xFF p2 0 step idle
+    oop
+#bind Line
+
+    end
+    stat at 31,23 element Object p1 cp437:0xFF p2 0 step idle
+    oop
+#bind Line
+
+    end
+    stat at 33,23 element Object p1 cp437:0xFF p2 0 step idle
+    oop
+#bind Line
+
+    end
+    stat at 35,23 element Object p1 cp437:0xFF p2 0 step idle
+    oop
+#bind Line
+
+    end
+    stat at 37,23 element Object p1 cp437:0xFF p2 0 step idle
+    oop
+#bind Line
+
+    end
+    stat at 39,23 element Object p1 cp437:0xFF p2 0 step idle
+    oop
+#bind Line
+
+    end
+    stat at 41,23 element Object p1 cp437:0xFF p2 0 step idle
+    oop
+#bind Line
+
+    end
+    stat at 43,23 element Object p1 cp437:0xFF p2 0 step idle
+    oop
+#bind Line
+
+    end
+    stat at 45,23 element Object p1 cp437:0xFF p2 0 step idle
+    oop
+#bind Line
+
+    end
+    stat at 47,23 element Object p1 cp437:0xFF p2 0 step idle
+    oop
+#bind Line
+
+    end
+    stat at 49,23 element Object p1 cp437:0xFF p2 0 step idle
+    oop
+#bind Line
+
+    end
+    stat at 51,23 element Object p1 cp437:0xFF p2 0 step idle
+    oop
+#bind Line
+
+    end
+    stat at 36,21 element Object p1 cp437:0x07 p2 0 step idle under Empty color 0x0F
+    oop
+/i
+#char 42
+/i
+#char 145
+#restart
+
+    end
+    stat at 28,18 element Passage p1 0 p2 0 p3 board "$The back of the bus" step idle
+    stat at 31,16 element Object p1 cp437:0x2B p2 0 step idle
+    oop
+@Object1
+/i
+#Object2:blue
+/i
+#Object3:red
+#restart
+
+    end
+    stat at 32,16 element Object p1 cp437:0xFF p2 0 step idle
+    oop
+@Object2
+#end
+:blue
+#put w blue object
+#end
+
+    end
+    stat at 30,16 element Object p1 cp437:0xFF p2 0 step idle
+    oop
+@Object3
+#end
+:red
+#put e red object
+#end
+
+    end
+    stat at 27,20 element Scroll p1 0 p2 0 step idle
+    oop
+NOTE: This game is incredibly stupid. Be
+forewarned. There is absolutely no point
+of this. It's just a stupid game.
+
+    end
+    stat at 1,13 element Object p1 cp437:0xDB p2 0 step idle under Empty color 0x0C
+    oop
+@Music
+#cycle 1
+:play
+#zap play
+/i
+#play -qgixqgix
+#play -qb!
+#play qc-qgsxqgsxqf
+#play -qf#
+#play -qg
+#play -ixqgix
+#play -qb!
+#play qc-qgix
+#play -qgixqf
+#play -qf#
+#play +ib!
+#play +ig
+#play +h.d
+#play -qb!
+#play qc
+#play +ib!
+#play +ig
+#play +h.d!
+#play qf
+#play qf#
+#play +ib!
+#play +igh.c
+#play qb!
+#play +qc
+#play +ib!
+#play ++icqxxq--f
+#play qf#
+#play +qgixqg
+#play +qb!
+#play ++qc
+#play +qgixqgixqf
+#play +qf#
+#play +qg
+#play +ib!
+#play +ig
+#play ++q.f#
+#play +qb!
+#play ++qc-g
+#play ++ib!
+#play ++ig+q.f
+#play +++tfd-b!g
+#play ++tfd-b!g
+#play +tfd-b!g
+/i/i/i/i/i/i/i/i/i/i/i/i/i/i/i/i/i/i/i/i/i
+/i/i/i/i/i/i/i/i/i/i/i/i/i/i
+#restore play
+#end
+
+    end
+  end
+end

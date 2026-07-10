@@ -1,0 +1,1213 @@
+board "Plaza"
+  start player at 29,16
+  respawn at 1,1
+  max-shots 255
+  dark false
+  reenter false
+  time-limit 0
+  exits north none south "Field - Centre" west "West Coast" east "East Coast (Start)"
+
+  grid
+FFFFFFFo~BBAAAAAaaaaaaaaaaaaaaaabccFlFFFlFFFccbaaaAAAAAAAAaa
+~FFFFFFFFF~~oFFFFFoAAAAAaaaaaAAAAAAaFFFFaaaaaaAAAAAAAOOAAAAA
+BBBBB~~~~~aaaaaaaaaaadaAAAAAAAAAAAAaaaAAAAAAAAAAAAAAOOOOAABo
+aaaaaaaaaaaaaaaaaaaadd#aaaaaaaaAAAAAAAAAFFFFFFFAAAAAAOOAAAAA
+aaaaaaaaaaaaaaaaaaaddd#aaaAAAAAAAAAAccccdccFFFFlccccAAAAAAAA
+BB~~~oSSo~BBaaaaAAeddd##AAAAAAAAAAAAAABd#ddB~oFFFFFFFFFFo~BB
+~~~BAAAAAAAAAAAAAeeSSSd#aaAAAfAAAAAAAAdd####ddBBB~oFFFFFFFFo
+aaaAAAAAAAAANAAAAAgSShSd#AANfifNAAaaaAddggg###ddAAAAAAAABB~~
+aAAAAAAAAAANfNAAAAghSSSSdfNi....NfNAAddg.ggggg##ddAAAAAAAAAA
+AAAAAfAANNffifNNAAgSSShSNi...jj....fNdggggggg.ggg#ddaaaaAAAA
+AfAANNfNiii...iNNNghSoooi...kmmk....dSg.ggg.gggggggSddAAfAAa
+NfNfNiiiiii.......gqSrpr....jstj.....Sggooogggg.gggSNNffNfNN
+ciiiiccccccciiii...uOr.r....jsvj.....SggrPrggggggggS.....iii
+cccccciii......iiii..nwn....kjjk.......Or.r............iiiic
+ciiiii......ud....iiiii.................121iiiiiiicccccccicc
+N.fN..f....exddd......iii...@......iiiiiiiii.d.....iiiiccccc
+NffN.ffN.eedSSSdd.......ii......iiii.........d#dd....iiiiccc
+fNNNfNNeedgSSSSSdd......ii.....ii............d####dd....iicc
+NNNNNeedggSS.SSSSdd.....ii......iiiiii......dd#######dd...ic
+NNNedggg.gSSSSS.SS.......ii..........ii.....dd#SSggg####dd.i
+NNNNNg.gggSSSSSSSS........iii........ii...O.ddSSSgggggg###dd
+gNNNNggg.gSS.SS.SSO.........iiiiiiiiii..wwwddSSSSggg.ggggNfN
+gNNNNgggggSSSSSSoy......O...............z.zddSS.SggggggggfNN
+ggNNNgggggSSSSSSSS......NwwwwwwwwwwwwwwNzCzdgSSSSgggg.gggNNg
+DDDgNNNNNNNNfffNNNNNfffNh..............NzozggSSS.ggggggggNgg
+  end
+
+  legend
+    F = Fake color 0x77
+    o = Object color 0x78
+    ~ = Water color 0x78
+    B = Breakable color 0x78
+    A = Fake color 0x19
+    a = Fake color 0x09
+    b = Fake color 0x78
+    c = Fake color 0x07
+    l = Line color 0xF7
+    O = Object color 0x0E
+    d = Object color 0x4C
+    # = Solid color 0x0C
+    S = Solid color 0x07
+    e = Solid color 0x04
+    f = Solid color 0x0F
+    N = Normal color 0x0F
+    g = Normal color 0x07
+    h = Object color 0x0F
+    i = Fake color 0x08
+    . = Empty color 0x0F
+    j = Object color 0x06
+    k = Object color 0x60
+    m = Object color 0x7E
+    q = Object color 0x7F
+    r = Object color 0x08
+    p = Passage color 0x70 to "Plaza Internal"
+    s = Fake color 0x11
+    t = Object color 0x18
+    u = Object color 0x80
+    v = Object color 0x1E
+    P = Passage color 0x08 to "Plaza Internal"
+    n = Slider (NS) color 0x0F
+    w = Slider (EW) color 0x0F
+    1 = Slider (NS) color 0x07
+    2 = Slider (EW) color 0x07
+    x = Object color 0x4F
+    @ = Player color 0x1F under Empty color 0x0F
+    y = Passage color 0x0F to "Plaza Internal"
+    z = Solid color 0x08
+    C = Passage color 0x07 to "Plaza Internal"
+    D = Object color 0x07
+  end
+
+  stats
+    stat at 42,24 element Passage p1 0 p2 0 p3 board "Plaza Internal" step idle under Empty color 0x0F
+    stat at 54,2 element Object cycle 1 p1 cp437:0xDB p2 0 step idle under Fake color 0x19
+    oop
+@suntop
+#end
+:sm
+#lock
+#if not blocked n mov
+#mov2
+:mov
+/w
+#unlock
+#end
+:mov2
+#char 32
+#zap mov2
+/w
+#unlock
+#end
+:mov2
+#restore mov2
+#char 219
+/w
+#unlock
+#end
+
+    end
+    stat at 55,2 element Object cycle 1 p1 cp437:0xDB p2 0 step idle under Fake color 0x19
+    oop
+@suntop
+#end
+:sm
+#lock
+#if not blocked n mov
+#mov2
+:mov
+/w
+#unlock
+#end
+:mov2
+#char 32
+#zap mov2
+/w
+#unlock
+#end
+:mov2
+#restore mov2
+#char 219
+/w
+#unlock
+#end
+
+    end
+    stat at 53,3 element Object cycle 1 p1 cp437:0xDB p2 0 step idle under Fake color 0x19
+    oop
+@sun
+#end
+:sm
+#lock
+/w/i#unlock
+
+    end
+    stat at 54,3 element Object cycle 1 p1 cp437:0xDB p2 0 step idle under Fake color 0x19
+    oop
+#bind sun
+
+    end
+    stat at 55,3 element Object cycle 1 p1 cp437:0xDB p2 0 step idle under Fake color 0x19
+    oop
+#bind sun
+
+    end
+    stat at 56,3 element Object cycle 1 p1 cp437:0xDB p2 0 step idle under Fake color 0x19
+    oop
+#bind sun
+
+    end
+    stat at 54,4 element Object cycle 1 p1 cp437:0xDB p2 0 step idle under Fake color 0x19
+    oop
+@sunbot
+#end
+:sm
+#lock
+#if not blocked s mov
+#mov2
+:mov
+/w
+#unlock
+#end
+:mov2
+#char 32
+#zap mov2
+/w
+#unlock
+#end
+:mov2
+#restore mov2
+#char 219
+/w
+#unlock
+#end
+
+    end
+    stat at 55,4 element Object cycle 1 p1 cp437:0xDB p2 0 step idle under Fake color 0x19
+    oop
+@sunbot
+#end
+:sm
+#lock
+#if not blocked s mov
+#mov2
+:mov
+/w
+#unlock
+#end
+:mov2
+#char 32
+#zap mov2
+/w
+#unlock
+#end
+:mov2
+#restore mov2
+#char 219
+/w
+#unlock
+#end
+
+    end
+    stat at 18,23 element Passage p1 0 p2 0 p3 board "Plaza Internal" step idle under Empty color 0x0F
+    stat at 22,3 element Object cycle 1 p1 cp437:0xFF p2 0 step idle under Empty color 0x0F
+    oop
+@le
+#end
+:a
+#char 222
+#end
+:b
+#char 219
+
+    end
+    stat at 21,4 element Object cycle 1 p1 cp437:0xFF p2 0 step idle under Water color 0x4C
+    oop
+@lf
+#end
+:a
+#char 222
+#end
+:b
+#char 219
+
+    end
+    stat at 22,4 element Object cycle 1 p1 cp437:0xFF p2 0 step idle under Empty color 0x0F
+    oop
+#bind le
+
+    end
+    stat at 20,5 element Object cycle 1 p1 cp437:0xFF p2 0 step idle under Empty color 0x0F
+    oop
+@lg
+#end
+:a
+#char 222
+#end
+:b
+#char 219
+
+    end
+    stat at 21,5 element Object cycle 1 p1 cp437:0xFF p2 0 step idle under Empty color 0x0F
+    oop
+#bind lf
+
+    end
+    stat at 22,5 element Object cycle 1 p1 cp437:0xFF p2 0 step idle under Empty color 0x0F
+    oop
+#bind le
+
+    end
+    stat at 41,5 element Object cycle 1 p1 cp437:0x20 p2 0 step idle under Fake color 0x78
+    oop
+#bind la
+
+    end
+    stat at 20,6 element Object cycle 1 p1 cp437:0xFF p2 0 step idle under Empty color 0x0F
+    oop
+#bind lg
+
+    end
+    stat at 21,6 element Object cycle 1 p1 cp437:0xFF p2 0 step idle under Empty color 0x0F
+    oop
+#bind lf
+
+    end
+    stat at 22,6 element Object cycle 1 p1 cp437:0xFF p2 0 step idle under Empty color 0x0F
+    oop
+#bind le
+
+    end
+    stat at 40,6 element Object cycle 1 p1 cp437:0x20 p2 0 step idle under Empty color 0x0F
+    oop
+@la
+#end
+:a
+#char 222
+#end
+:b
+#char 219
+
+    end
+    stat at 42,6 element Object cycle 1 p1 cp437:0xDB p2 0 step idle under Empty color 0x0F
+    oop
+@ld
+#end
+:a
+#char 221
+#end
+:b
+#char 255
+
+    end
+    stat at 43,6 element Object cycle 1 p1 cp437:0xDB p2 0 step idle under Empty color 0x0F
+    oop
+@lc
+#end
+:a
+#char 221
+#end
+:b
+#char 255
+
+    end
+    stat at 23,7 element Object cycle 1 p1 cp437:0xFF p2 0 step idle under Empty color 0x0F
+    oop
+#bind le
+
+    end
+    stat at 39,7 element Object cycle 1 p1 cp437:0x20 p2 0 step idle under Empty color 0x0F
+    oop
+#bind la
+
+    end
+    stat at 40,7 element Object cycle 1 p1 cp437:0x20 p2 0 step idle under Empty color 0x0F
+    oop
+#bind lb
+
+    end
+    stat at 45,7 element Object cycle 1 p1 cp437:0xDB p2 0 step idle under Empty color 0x0F
+    oop
+#bind ld
+
+    end
+    stat at 46,7 element Object cycle 1 p1 cp437:0xDB p2 0 step idle under Empty color 0x0F
+    oop
+#bind lc
+
+    end
+    stat at 24,8 element Object cycle 1 p1 cp437:0xFF p2 0 step idle under Empty color 0x0F
+    oop
+#bind le
+
+    end
+    stat at 39,8 element Object cycle 1 p1 cp437:0x20 p2 0 step idle under Empty color 0x0F
+    oop
+#bind la
+
+    end
+    stat at 40,8 element Object cycle 1 p1 cp437:0x20 p2 0 step idle under Empty color 0x0F
+    oop
+@lb
+#end
+:a
+#char 222
+#end
+:b
+#char 219
+
+    end
+    stat at 47,8 element Object cycle 1 p1 cp437:0xDB p2 0 step idle under Empty color 0x0F
+    oop
+#bind ld
+
+    end
+    stat at 48,8 element Object cycle 1 p1 cp437:0xDB p2 0 step idle under Empty color 0x0F
+    oop
+#bind lc
+
+    end
+    stat at 25,9 element Object cycle 1 p1 cp437:0xFF p2 0 step idle under Empty color 0x0F
+    oop
+#bind le
+
+    end
+    stat at 38,9 element Object cycle 1 p1 cp437:0x20 p2 0 step idle under Empty color 0x0F
+    oop
+#bind la
+
+    end
+    stat at 39,9 element Object cycle 1 p1 cp437:0x20 p2 0 step idle under Empty color 0x0F
+    oop
+#bind lb
+
+    end
+    stat at 49,9 element Object cycle 1 p1 cp437:0xDB p2 0 step idle under Empty color 0x0F
+    oop
+#bind ld
+
+    end
+    stat at 50,9 element Object cycle 1 p1 cp437:0xDB p2 0 step idle under Empty color 0x0F
+    oop
+#bind lc
+
+    end
+    stat at 38,10 element Object cycle 1 p1 cp437:0x20 p2 0 step idle under Empty color 0x0F
+    oop
+#bind la
+
+    end
+    stat at 51,10 element Object cycle 1 p1 cp437:0xDB p2 0 step idle under Empty color 0x0F
+    oop
+#bind ld
+
+    end
+    stat at 52,10 element Object cycle 1 p1 cp437:0xDB p2 0 step idle under Empty color 0x0F
+    oop
+#bind lc
+
+    end
+    stat at 37,11 element Object cycle 1 p1 cp437:0x20 p2 0 step idle under Empty color 0x0F
+    oop
+#bind la
+
+    end
+    stat at 53,11 element Object cycle 1 p1 cp437:0xDB p2 0 step idle under Empty color 0x0F
+    oop
+#bind ld
+
+    end
+    stat at 54,11 element Object cycle 1 p1 cp437:0xDB p2 0 step idle under Empty color 0x0F
+    oop
+#bind lc
+
+    end
+    stat at 14,15 element Object cycle 1 p1 cp437:0xFF p2 0 step idle under Empty color 0x0F
+    oop
+#bind le
+
+    end
+    stat at 14,16 element Object cycle 1 p1 cp437:0xFF p2 0 step idle under Empty color 0x0F
+    oop
+#bind lg
+
+    end
+    stat at 15,16 element Object cycle 1 p1 cp437:0xFF p2 0 step idle under Empty color 0x0F
+    oop
+#bind lf
+
+    end
+    stat at 16,16 element Object cycle 1 p1 cp437:0xFF p2 0 step idle under Empty color 0x0F
+    oop
+#bind le
+
+    end
+    stat at 46,16 element Object cycle 1 p1 cp437:0x20 p2 0 step idle under Water color 0x4C
+    oop
+#bind la
+
+    end
+    stat at 12,17 element Object cycle 1 p1 cp437:0xFF p2 0 step idle under Empty color 0x0F
+    oop
+#bind lg
+
+    end
+    stat at 16,17 element Object cycle 1 p1 cp437:0xFF p2 0 step idle under Empty color 0x0F
+    oop
+#bind lf
+
+    end
+    stat at 17,17 element Object cycle 1 p1 cp437:0xFF p2 0 step idle under Empty color 0x0F
+    oop
+#bind le
+
+    end
+    stat at 46,17 element Object cycle 1 p1 cp437:0x20 p2 0 step idle under Water color 0x4C
+    oop
+#bind la
+
+    end
+    stat at 48,17 element Object cycle 1 p1 cp437:0xDB p2 0 step idle under Empty color 0x0F
+    oop
+#bind ld
+
+    end
+    stat at 49,17 element Object cycle 1 p1 cp437:0xDB p2 0 step idle under Empty color 0x0F
+    oop
+#bind lc
+
+    end
+    stat at 10,18 element Object cycle 1 p1 cp437:0xFF p2 0 step idle under Empty color 0x0F
+    oop
+#bind lg
+
+    end
+    stat at 17,18 element Object cycle 1 p1 cp437:0xFF p2 0 step idle under Empty color 0x0F
+    oop
+#bind lf
+
+    end
+    stat at 18,18 element Object cycle 1 p1 cp437:0xFF p2 0 step idle under Empty color 0x0F
+    oop
+#bind le
+
+    end
+    stat at 46,18 element Object cycle 1 p1 cp437:0x20 p2 0 step idle under Water color 0x4C
+    oop
+#bind la
+
+    end
+    stat at 51,18 element Object cycle 1 p1 cp437:0xDB p2 0 step idle under Empty color 0x0F
+    oop
+#bind ld
+
+    end
+    stat at 52,18 element Object cycle 1 p1 cp437:0xDB p2 0 step idle under Empty color 0x0F
+    oop
+#bind lc
+
+    end
+    stat at 8,19 element Object cycle 1 p1 cp437:0xFF p2 0 step idle under Empty color 0x0F
+    oop
+#bind lg
+
+    end
+    stat at 18,19 element Object cycle 1 p1 cp437:0xFF p2 0 step idle under Empty color 0x0F
+    oop
+#bind lf
+
+    end
+    stat at 19,19 element Object cycle 1 p1 cp437:0xFF p2 0 step idle under Empty color 0x0F
+    oop
+#bind le
+
+    end
+    stat at 45,19 element Object cycle 1 p1 cp437:0x20 p2 0 step idle under Empty color 0x0F
+    oop
+#bind la
+
+    end
+    stat at 46,19 element Object cycle 1 p1 cp437:0x20 p2 0 step idle under Empty color 0x0F
+    oop
+#bind lb
+
+    end
+    stat at 54,19 element Object cycle 1 p1 cp437:0xDB p2 0 step idle under Empty color 0x0F
+    oop
+#bind ld
+
+    end
+    stat at 5,20 element Object cycle 1 p1 cp437:0xFF p2 0 step idle under Empty color 0x0F
+    oop
+#bind lg
+
+    end
+    stat at 45,20 element Object cycle 1 p1 cp437:0x20 p2 0 step idle under Empty color 0x0F
+    oop
+#bind la
+
+    end
+    stat at 46,20 element Object cycle 1 p1 cp437:0x20 p2 0 step idle under Empty color 0x0F
+    oop
+#bind lb
+
+    end
+    stat at 57,20 element Object cycle 1 p1 cp437:0xDB p2 0 step idle under Empty color 0x0F
+    oop
+#bind ld
+
+    end
+    stat at 58,20 element Object cycle 1 p1 cp437:0xDB p2 0 step idle under Empty color 0x0F
+    oop
+#bind lc
+
+    end
+    stat at 45,21 element Object cycle 1 p1 cp437:0x20 p2 0 step idle under Empty color 0x0F
+    oop
+#bind la
+
+    end
+    stat at 46,21 element Object cycle 1 p1 cp437:0x20 p2 0 step idle under Empty color 0x0F
+    oop
+#bind lb
+
+    end
+    stat at 59,21 element Object cycle 1 p1 cp437:0xDB p2 0 step idle under Empty color 0x0F
+    oop
+#bind ld
+
+    end
+    stat at 60,21 element Object cycle 1 p1 cp437:0xDB p2 0 step idle under Empty color 0x0F
+    oop
+#bind lc
+
+    end
+    stat at 44,22 element Object cycle 1 p1 cp437:0x20 p2 0 step idle under Empty color 0x0F
+    oop
+#bind la
+
+    end
+    stat at 45,22 element Object cycle 1 p1 cp437:0x20 p2 0 step idle under Empty color 0x0F
+    oop
+#bind lb
+
+    end
+    stat at 44,23 element Object cycle 1 p1 cp437:0x20 p2 0 step idle under Empty color 0x0F
+    oop
+#bind la
+
+    end
+    stat at 45,23 element Object cycle 1 p1 cp437:0x20 p2 0 step idle under Empty color 0x0F
+    oop
+#bind lb
+
+    end
+    stat at 44,24 element Object cycle 1 p1 cp437:0x20 p2 0 step idle under Water color 0x4C
+    oop
+#bind la
+
+    end
+    stat at 55,19 element Object cycle 1 p1 cp437:0xDB p2 0 step idle under Empty color 0x0F
+    oop
+#bind lc
+
+    end
+    stat at 19,22 element Object cycle 1 p1 cp437:0xE2 p2 0 step idle under Empty color 0x0F
+    oop
+#end
+:touch
+$Amy's Fowe Ferry Service
+
+$ù ù ù
+
+$OPENS 6 AM -- CLOSES 1 PM
+
+    end
+    stat at 19,2 element Object p1 cp437:0xB0 p2 0 step idle under Fake color 0x77
+    oop
+@c
+#cycle 32
+:a
+/i#char 32
+/i#char 176
+#a
+
+    end
+    stat at 13,2 element Object p1 cp437:0xB0 p2 0 step idle under Water color 0x78
+    oop
+#bind c
+
+    end
+    stat at 8,1 element Object p1 cp437:0xB0 p2 0 step idle under Water color 0x78
+    oop
+#bind c
+
+    end
+    stat at 9,6 element Object p1 cp437:0xB0 p2 0 step idle under Water color 0x78
+    oop
+#bind c
+
+    end
+    stat at 6,6 element Object p1 cp437:0xB0 p2 0 step idle under Water color 0x78
+    oop
+#bind c
+
+    end
+    stat at 1,25 element Object cycle 1 p1 cp437:0xB2 p2 0 step idle under Empty color 0x0F
+    oop
+@suncontrol
+:t
+#if not tsix /i#a
+/i#t
+:t
+#if not tsev /i#a
+/i#t
+:t
+#if not teig /i#a
+/i#t
+:t
+#if not tnin /i#a
+/i#t
+:t
+#if not tten /i#a
+/i#t
+:t
+#if not tele /i#a
+/i#t
+:a
+#zap t
+'Four steps for six intervals
+#all:sm
+/i/i/i/i/i/i
+#all:sm
+/i/i/i
+#rf:a
+#cda:a
+#cdb:a
+#zap d:a
+/i/i/i
+#all:sm
+/i/i/i/i/i/i
+#all:sm
+/i/i/i/i/i/i
+#t
+:t
+
+    end
+    stat at 3,25 element Object cycle 1 p1 cp437:0xB2 p2 0 step idle under Empty color 0x0F
+    oop
+@rf
+#end
+:x
+#zap a
+#end
+'7
+:a
+#lb:a
+#le:a
+#x
+'8
+:a
+#lb:b
+#le:b
+#x
+'9
+:a
+#la:a
+#lc:a
+#lf:a
+#x
+'0
+:a
+#la:b
+#lc:b
+#lf:b
+#x
+'1
+:a
+#ld:a
+#lg:a
+#x
+'2
+:a
+#ld:b
+#lg:b
+:a
+
+    end
+    stat at 2,25 element Object cycle 1 p1 cp437:0xB2 p2 0 step idle under Empty color 0x0F
+    oop
+@hours
+#end
+:inc
+#if tsix six
+#if tsev sev
+#if teig eig
+#if tnin nin
+#if tten ten
+#if tele ele
+#end
+:six
+#clear tsix
+#set tsev
+#end
+:sev
+#clear tsev
+#set teig
+#end
+:eig
+#clear teig
+#set tnin
+#end
+:nin
+#clear tnin
+#set tten
+#end
+:ten
+#clear tten
+#set tele
+#end
+:ele
+#clear tele
+#set ttwe
+#end
+
+    end
+    stat at 25,25 element Object cycle 1 p1 cp437:0xB2 p2 0 step idle under Empty color 0x0F
+    oop
+@sgat
+:a
+'break if player behind gate
+/i#if alligned if not blocked seek b
+#if not tsev a
+#lock
+/i/i/i/i/i/i/i/i/i/i/i/i/i/i/i/i/i/i/i/i
+:b
+:b
+:b
+#zap b
+#change white sliderew sliderns
+/i#change white sliderns sliderew
+/i#b
+:b
+#change white sliderew empty
+
+    end
+    stat at 25,23 element Object cycle 1 p1 cp437:0xE2 p2 0 step idle under Empty color 0x0F
+    oop
+#end
+:touch
+$Farmer Amy In-The-Fields
+
+$ù ù ù
+
+$OPENS 7 AM -- CLOSES 7 PM
+
+    end
+    stat at 17,23 element Object cycle 1 p1 cp437:0xDE p2 0 step idle under Empty color 0x0F
+    stat at 22,11 element Object cycle 1 p1 cp437:0xDC p2 0 step idle under Empty color 0x0F
+    stat at 23,11 element Object cycle 1 p1 cp437:0xDC p2 0 step idle under Empty color 0x0F
+    oop
+@tclos
+#end
+:a
+#put s boulder
+
+    end
+    stat at 24,11 element Object cycle 1 p1 cp437:0xDC p2 0 step idle under Empty color 0x0F
+    stat at 22,12 element Object cycle 1 p1 cp437:0xDD p2 0 step idle under Empty color 0x0F
+    stat at 23,12 element Passage p1 0 p2 0 p3 board "Plaza Internal" step idle under Empty color 0x0F
+    stat at 24,12 element Object cycle 1 p1 cp437:0xDE p2 0 step idle under Empty color 0x0F
+    stat at 43,21 element Object cycle 1 p1 cp437:0xE2 p2 0 step idle under Empty color 0x0F
+    oop
+@Sign
+#end
+:touch
+$Amy's Shop of Island Necessities
+
+$ù ù ù
+
+$OPENS 7 AM -- CLOSES 12 PM
+
+    end
+    stat at 42,25 element Object cycle 1 p1 cp437:0xDC p2 0 step idle under Empty color 0x0F
+    oop
+
+:a
+/i#if not ttwe a
+#put n boulder
+
+    end
+    stat at 60,3 element Object p1 cp437:0xB0 p2 0 step idle under Fake color 0x07
+    oop
+#bind c
+
+    end
+    stat at 57,6 element Object p1 cp437:0xB0 p2 0 step idle under Water color 0x78
+    oop
+#bind c
+
+    end
+    stat at 60,7 element Object p1 cp437:0xB0 p2 0 step idle under Water color 0x78
+    oop
+#bind c
+
+    end
+    stat at 41,12 element Object cycle 1 p1 cp437:0xDC p2 0 step idle under Empty color 0x0F
+    stat at 42,12 element Object cycle 1 p1 cp437:0xDC p2 0 step idle under Empty color 0x0F
+    stat at 43,12 element Object cycle 1 p1 cp437:0xDC p2 0 step idle under Empty color 0x0F
+    stat at 41,13 element Object cycle 1 p1 cp437:0xDD p2 0 step idle under Empty color 0x0F
+    stat at 42,13 element Passage p1 0 p2 0 p3 board "Plaza Internal" step idle under Empty color 0x0F
+    stat at 43,13 element Object cycle 1 p1 cp437:0xDE p2 0 step idle under Empty color 0x0F
+    oop
+@It's About Time
+:a
+/i#if not ttwe a
+#take gems 200 uhoh
+#give gems 200
+$
+$You have enough for the ferry ride --
+$It's almost noontime already!
+$
+#end
+:uhoh
+#give gems 200
+$
+$Game Error: The clock flag is set to
+$twelve right now, but you don't yet have
+$at least 200 gems. This shouldn't happen.
+$
+$If it did happen without using exploits
+$or debug cheats, please report it to
+$contact@rabbitboots.com!
+$
+$Adding 200 gems so you can reach the
+$final act.
+$
+
+    end
+    stat at 40,14 element Object cycle 1 p1 cp437:0xE2 p2 0 step idle under Empty color 0x0F
+    oop
+@Sign
+#end
+:touch
+$* Amy's Pawn Shoppe *
+
+$ù ù ù
+
+$OPENS 12 PM -- CLOSES 5 PM
+
+    end
+    stat at 41,14 element Object cycle 1 p1 cp437:0xDD p2 0 step idle under Empty color 0x0F
+    oop
+@pgat
+:a
+'break if player behind gate
+/i#if contact if blocked e b
+#if not ttwe a
+#lock
+:b
+'all other sliders should have been
+'removed by the time this is invoked.
+#change sliderns sliderew
+#change sliderew empty
+
+    end
+    stat at 43,14 element Object cycle 1 p1 cp437:0xDE p2 0 step idle under Empty color 0x0F
+    stat at 22,8 element Object p1 cp437:0x20 p2 0 step idle under Empty color 0x0F
+    oop
+@wd
+#end
+:a
+/i/i/i/i/i#char 1
+/i/i/i/i/i#die
+
+    end
+    stat at 20,11 element Object cycle 1 p1 cp437:0x20 p2 0 step idle under Empty color 0x0F
+    oop
+@wa
+#end
+:a
+:b
+#zap b
+#w
+:b
+#zap b
+#char 1
+#w
+:b
+#wb:a
+#die
+:w
+/i/i/i/i/i/i/i/i/i/i/i/i/i/i/i#b
+
+    end
+    stat at 23,10 element Object p1 cp437:0x20 p2 0 step idle under Empty color 0x0F
+    oop
+@wb
+#end
+:a
+/i/i/i/i/i#char 1
+/i/i/i/i/i#char 32
+#wc:a
+
+    end
+    stat at 20,9 element Object p1 cp437:0x20 p2 0 step idle under Empty color 0x0F
+    oop
+@wc
+#end
+:a
+/i/i/i/i/i#char 1
+/i/i/i/i/i#wd:a
+#die
+
+    end
+    stat at 29,12 element Object p1 cp437:0xDE p2 0 step idle under Empty color 0x0F
+    oop
+#bind d
+
+    end
+    stat at 31,12 element Object cycle 1 p1 cp437:0xDD p2 0 step idle under Fake color 0x11
+    oop
+@cb
+/i
+:a
+/i/i/i/i/i/i#char 222
+?w/i/i/i/i/i/i#char 221
+?e#a
+
+    end
+    stat at 32,12 element Object p1 cp437:0xDD p2 0 step idle under Empty color 0x0F
+    oop
+#bind d
+
+    end
+    stat at 29,13 element Object p1 cp437:0xDE p2 0 step idle under Empty color 0x0F
+    oop
+#bind d
+
+    end
+    stat at 31,13 element Object cycle 1 p1 cp437:0xFE p2 0 step idle under Fake color 0x11
+    oop
+@cc
+/i/i
+:a
+/i/i/i/i/i/i?w/i/i/i/i/i/i?e#a
+
+    end
+    stat at 32,13 element Object p1 cp437:0xDD p2 0 step idle under Empty color 0x0F
+    oop
+#bind d
+
+    end
+    stat at 30,14 element Object p1 cp437:0xDF p2 0 step idle under Empty color 0x0F
+    oop
+#bind d
+
+    end
+    stat at 31,14 element Object p1 cp437:0xDF p2 0 step idle under Empty color 0x0F
+    oop
+#bind d
+
+    end
+    stat at 30,11 element Object cycle 1 p1 cp437:0x30 p2 0 step idle under Empty color 0x0F
+    oop
+@cdb
+:x
+#end
+:a
+:a
+:a
+#zap a
+#x
+:a
+#zap a
+#char 49
+#x
+:a
+:a
+#zap a
+#x
+:a
+#cdx:a
+
+    end
+    stat at 31,11 element Object cycle 1 p1 cp437:0x36 p2 0 step idle under Empty color 0x0F
+    oop
+@cda
+:x
+#end
+:a
+#zap a
+#char 55
+#x
+:a
+#zap a
+#char 56
+#x
+:a
+#zap a
+#char 57
+#x
+:a
+#zap a
+#char 48
+#x
+:a
+#zap a
+#char 49
+#x
+:a
+#cdx:a
+#char 50
+#x
+
+    end
+    stat at 30,10 element Object cycle 1 p1 cp437:0xDC p2 0 step idle under Empty color 0x0F
+    oop
+@cdx
+#x
+:a
+#put s red object
+#x
+:touch
+#d:a
+:x
+
+    end
+    stat at 31,10 element Object cycle 1 p1 cp437:0xDC p2 0 step idle under Empty color 0x0F
+    oop
+#bind cdx
+
+    end
+    stat at 46,6 element Object p1 cp437:0xB0 p2 0 step idle under Water color 0x78
+    oop
+#bind c
+
+    end
+    stat at 51,7 element Object p1 cp437:0xB0 p2 0 step idle under Fake color 0x77
+    oop
+#bind c
+
+    end
+    stat at 21,13 element Object cycle 1 p1 cp437:0xE2 p2 0 step idle under Empty color 0x0F
+    oop
+@Sign
+#end
+:touch
+$Dr. Amy, MD
+
+$Dentist
+$Anesthesiologist
+$Nephrologist
+$Gastroenterologist
+$Endocrinologist
+$Rheumatologist
+
+$ù ù ù
+
+$OPENS 7 AM -- CLOSES 11 AM
+
+    end
+    stat at 20,12 element Object cycle 1 p1 cp437:0x00 p2 0 step idle under Solid color 0x07
+    oop
+@tela
+:a
+#if c__c b
+#if cm_c b
+#if c_sc b
+#if cmsc b
+/i#a
+:b
+#char 1
+#walk s
+/s#walk w
+#end
+:thud
+#become fake
+
+    end
+    stat at 20,13 element Object cycle 1 p1 cp437:0x18 p2 0 step idle under Empty color 0x0F
+    oop
+#die
+
+    end
+    stat at 13,16 element Object cycle 1 p1 cp437:0x20 p2 0 step idle under Solid color 0x04
+    oop
+@telb
+:a
+/i#if not tele a
+'it's possible to guess the code, so
+'verify that the subquest was completed
+'before running the animation.
+#if c__c b
+#if cm_c b
+#if c_sc b
+#if cmsc b
+'It's 11AM, and the code subquest wasn't
+'technically completed. Close the building
+'without showing the return animations.
+#tclos:a
+#lock
+#end
+:b
+#char 1
+#walk n
+/n#walk i
+?e?e?e?e?e?e?e?e?e?e?n#tclos:a
+#wa:a
+#die
+
+    end
+    stat at 13,15 element Object cycle 1 p1 cp437:0x19 p2 0 step idle under Empty color 0x0F
+    oop
+#die
+
+    end
+    stat at 22,13 element Object cycle 1 p1 cp437:0xDD p2 0 step idle under Empty color 0x0F
+    stat at 24,13 element Object cycle 1 p1 cp437:0xDE p2 0 step idle under Empty color 0x0F
+    stat at 32,14 element Object p1 cp437:0x5F p2 0 step idle under Empty color 0x0F
+    oop
+@d
+#end
+:touch
+#a
+:a
+It's Six O'Clock.
+#end
+:a
+It's Seven O'Clock! Five hours left!
+#end
+:a
+It's Eight O'Clock. Four hours left!
+#end
+:a
+It's Nine O'Clock. Only three hours left!
+#end
+:a
+It's Ten O'Clock. Only two hours left!
+#end
+:a
+It's Eleven O'Clock. Only one more hour!
+#end
+:a
+It's Noontime!
+
+    end
+    stat at 29,14 element Object p1 cp437:0x5F p2 0 step idle under Empty color 0x0F
+    oop
+#bind d
+
+    end
+    stat at 29,11 element Object p1 cp437:0xFA p2 0 step idle under Empty color 0x0F
+    oop
+#bind d
+
+    end
+    stat at 32,11 element Object p1 cp437:0xFA p2 0 step idle under Empty color 0x0F
+    oop
+#bind d
+
+    end
+  end
+end
