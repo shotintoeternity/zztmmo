@@ -138,9 +138,15 @@ const promptOutputContract = `# Output contract
 - A complete world starts with a ` + "`zwd 1`" + ` line and a ` + "`world \"NAME\"`" + ` line,
   then one or more ` + "`board`" + ` sections. When you are asked to paint one board,
   emit just that board section.
-- Every grid row is exactly 60 one-byte ASCII legend keys; never put literal
-  Unicode/CP437 artwork in a grid row. Every board has exactly one
-  ` + "`start player`" + `. Board 0 is the title screen.
+
+- Grid Alignment Protocol: To ensure every grid row is exactly 60 characters and prevent column shifting, you MUST wrap your grid rows with leading and trailing pipe characters ('|') at columns 1 and 62, and prepend/append a 60-character numbered ruler at the top and bottom of the grid. Every row must align perfectly with the ruler. Example:
+  grid
+  |123456789012345678901234567890123456789012345678901234567890|
+  |############################################################|
+  |#..........................................................#|
+  |123456789012345678901234567890123456789012345678901234567890|
+  end
+- Every board has exactly one ` + "`start player`" + `. Board 0 is the title screen.
 - Exit targets and passage ` + "`board`" + ` fields name other boards by their exact
   ` + "`board \"NAME\"`" + ` string. Do not reference a board you have not defined
   (in a full-world emission).

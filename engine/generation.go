@@ -467,7 +467,7 @@ func planRequest(premise, repair string) string {
 
 func boardRequest(planText string, plan Plan, board PlanBoard, sections map[string]string, feedback, previous string, attempt, maxAttempts int) string {
 	var b strings.Builder
-	fmt.Fprintf(&b, "Paint exactly one board for this authoritative world plan. Board id=%q, required board name=%q, concept=%q, dark=%t. Output exactly one fenced zwd block containing only that board section. It must contain its own start player and use exact board names in exits and passages. Grid rows are byte-oriented: use only one-byte ASCII legend keys in every raw grid row, never literal Unicode or CP437 artwork. Count every raw row before responding; it must be exactly 60 bytes.\n\n# World plan\n%s\n\n# Already-painted adjacent board edges\n%s", board.ID, board.Name, board.Concept, board.Dark, planText, generatedEdgeContext(plan, board, sections))
+	fmt.Fprintf(&b, "Paint exactly one board for this authoritative world plan. Board id=%q, required board name=%q, concept=%q, dark=%t. Output exactly one fenced zwd block containing only that board section. It must contain its own start player and use exact board names in exits and passages. Grid rows are byte-oriented: use only one-byte ASCII legend keys in every raw grid row, never literal Unicode or CP437 artwork. Use the Grid Alignment Protocol (wrapping grid rows in '|' characters and using 60-character numbered rulers above and below the grid) to ensure every grid row is exactly 60 bytes.\n\n# World plan\n%s\n\n# Already-painted adjacent board edges\n%s", board.ID, board.Name, board.Concept, board.Dark, planText, generatedEdgeContext(plan, board, sections))
 	if feedback != "" {
 		fmt.Fprintf(&b, "\n\n# Repair required (attempt %d of %d)\n%s", attempt, maxAttempts, feedback)
 		if previous != "" {
@@ -494,6 +494,7 @@ func extractGeneratedBoard(text, wantName string) (string, zwdBoard, error) {
 		return "", zwdBoard{}, fmt.Errorf("model response must be exactly one fenced zwd block")
 	}
 	section := strings.TrimSpace(m[1]) + "\n"
+	section = preprocessZWDGrid(section)
 	src := "zwd 1\nworld \"CHECK\"\n" + section
 	if strings.HasPrefix(strings.TrimSpace(section), "zwd 1") {
 		src = section
@@ -617,6 +618,7 @@ func extractMultipleBoardsSplit(text string) map[string]string {
 	
 	result := make(map[string]string)
 	for _, sec := range sections {
+		sec = preprocessZWDGrid(sec)
 		lines := strings.Split(sec, "\n")
 		var currentBoardName string
 		var currentBoardLines []string
@@ -656,7 +658,7 @@ func batchBoardRequest(planText string, plan Plan, boards []PlanBoard, sections 
 	for _, board := range boards {
 		fmt.Fprintf(&b, "- Board id=%q, required board name=%q, concept=%q, dark=%t\n", board.ID, board.Name, board.Concept, board.Dark)
 	}
-	b.WriteString("\nOutput a fenced zwd block for EACH board. Each board section must be complete, contain its own start player (if applicable), and use exact board names in exits and passages. Grid rows are byte-oriented: use only one-byte ASCII legend keys in every raw grid row, never literal Unicode or CP437 artwork. Count every raw row before responding; it must be exactly 60 bytes.\n")
+	b.WriteString("\nOutput a fenced zwd block for EACH board. Each board section must be complete, contain its own start player (if applicable), and use exact board names in exits and passages. Grid rows are byte-oriented: use only one-byte ASCII legend keys in every raw grid row, never literal Unicode or CP437 artwork. Use the Grid Alignment Protocol (wrapping grid rows in '|' characters and using 60-character numbered rulers above and below the grid) to ensure every grid row is exactly 60 bytes.\n")
 	fmt.Fprintf(&b, "\n# World plan\n%s", planText)
 	b.WriteString("\n\n# Already-painted adjacent board edges\n")
 	for _, board := range boards {
@@ -773,6 +775,48 @@ func (g *GenerationService) paintBoardsBatch(ctx context.Context, planText strin
 		})
 	}
 	return fmt.Errorf("batch %v exhausted %d generation attempts: %s", boards, g.maxAttempts, lastFeedback)
+}
+
+func preprocessZWDGrid(zwdText string) string {
+	lines := strings.Split(zwdText, "\n")
+	inGrid := false
+	var out []string
+	for _, line := range lines {
+		trimmed := strings.TrimSpace(line)
+		if trimmed == "grid" {
+			inGrid = true
+			out = append(out, line)
+			continue
+		}
+		if inGrid {
+			if trimmed == "end" {
+				inGrid = false
+				out = append(out, line)
+				continue
+			}
+			if strings.Contains(trimmed, "1234567890") {
+				continue
+			}
+			row := line
+			indent := ""
+			for _, r := range row {
+				if r == ' ' || r == '\t' {
+					indent += string(r)
+				} else {
+					break
+				}
+			}
+			content := strings.TrimSpace(row)
+			if strings.HasPrefix(content, "|") && strings.HasSuffix(content, "|") && len(content) >= 2 {
+				gridContent := content[1 : len(content)-1]
+				row = indent + gridContent
+			}
+			out = append(out, row)
+			continue
+		}
+		out = append(out, line)
+	}
+	return strings.Join(out, "\n")
 }
 
 func assembleGeneratedZWD(worldName string, plan Plan, sections map[string]string) string {
