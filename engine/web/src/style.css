@@ -70,10 +70,12 @@ canvas {
 
 .dos-modal-content {
   background: #0000a8;
-  border: 4px double #ffffff;
+  border: 12px solid #00a800;
+  outline: 4px double #ffffff;
+  outline-offset: -8px;
   padding: 30px;
   width: 90%;
-  max-width: 450px;
+  max-width: 480px;
   text-align: center;
   color: #ffffff;
   font-family: 'Perfect DOS VGA 437', monospace;
