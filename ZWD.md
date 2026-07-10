@@ -336,7 +336,7 @@ zwd 1
 world "TWOROOMS"
 
 board "Title screen"
-  start player at 30,20
+  start player at 30,19
   max-shots 4
   dark false
   reenter false
@@ -384,7 +384,7 @@ board "Title screen"
 end
 
 board "Vault"
-  start player at 30,20
+  start player at 30,19
   max-shots 4
   dark true
   reenter true
