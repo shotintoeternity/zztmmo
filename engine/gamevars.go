@@ -1,5 +1,7 @@
 package zztgo // unit: GameVars
 
+import "sync"
+
 const (
 	MAX_STAT         = 150
 	MAX_ELEMENT      = 53
@@ -184,6 +186,11 @@ type (
 		InputLastDeltaY        int16
 		InputKeyBuffer         string
 		Events                 []Event
+		// pendingInputMu guards only the presentation/network reply queues
+		// below. GameStepWithInputs swaps them out under this mutex, then
+		// processes them unlocked so simulation state is never mutated while
+		// holding it.
+		pendingInputMu sync.Mutex
 		// PendingScrollReplies queues hyperlink selections from clients. Several
 		// players can close a scroll on the same tick, so this is a queue rather
 		// than a single slot: the terminal client submits through the same queue.

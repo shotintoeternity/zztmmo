@@ -1234,6 +1234,8 @@ func (e *Engine) GameUpdateSidebar() {
 // SubmitDebugCommand queues a reply to a DebugPromptEvent. It is applied at the
 // top of the next GameStepWithInputs, never mid-tick.
 func (e *Engine) SubmitDebugCommand(statId int16, text string) {
+	e.pendingInputMu.Lock()
+	defer e.pendingInputMu.Unlock()
 	e.PendingDebugCommands = append(e.PendingDebugCommands, PendingDebugCommand{StatId: statId, Text: text})
 }
 
@@ -1246,6 +1248,8 @@ func (e *Engine) SubmitDebugCommand(statId int16, text string) {
 // it. Browser saves go through RoomManager.SaveSnapshot, which snapshots every
 // room and sanitizes the client's filename (M4.3a).
 func (e *Engine) SubmitSaveFilename(statId int16, name string) {
+	e.pendingInputMu.Lock()
+	defer e.pendingInputMu.Unlock()
 	e.PendingSaveFilenames = append(e.PendingSaveFilenames, PendingSaveFilename{StatId: statId, Name: name})
 }
 
@@ -1253,6 +1257,8 @@ func (e *Engine) SubmitSaveFilename(statId int16, name string) {
 // of the next GameStepWithInputs. A false reply is a no-op, as declining the
 // prompt is in vanilla.
 func (e *Engine) SubmitQuitReply(statId int16, quit bool) {
+	e.pendingInputMu.Lock()
+	defer e.pendingInputMu.Unlock()
 	e.PendingQuitReplies = append(e.PendingQuitReplies, PendingQuitReply{StatId: statId, Quit: quit})
 }
 
@@ -1594,21 +1600,30 @@ func GameAboutScreen() {
 //   - e.GamePlayExitRequested stops ticking mid-cycle and suppresses the advance,
 //     mirroring the original loop's exit checks.
 func (e *Engine) GameStepWithInputs(inputs map[int16]PlayerInput) {
-	for _, reply := range e.PendingScrollReplies {
+	e.pendingInputMu.Lock()
+	scrollReplies := e.PendingScrollReplies
+	debugCommands := e.PendingDebugCommands
+	saveFilenames := e.PendingSaveFilenames
+	quitReplies := e.PendingQuitReplies
+	e.PendingScrollReplies = nil
+	e.PendingDebugCommands = nil
+	e.PendingSaveFilenames = nil
+	e.PendingQuitReplies = nil
+	e.pendingInputMu.Unlock()
+
+	for _, reply := range scrollReplies {
 		if reply.Label != "" && reply.StatId >= 0 && reply.StatId <= e.Board.StatCount {
 			e.OopSend(reply.StatId, reply.Label, false)
 		}
 	}
-	e.PendingScrollReplies = e.PendingScrollReplies[:0]
 
-	for _, cmd := range e.PendingDebugCommands {
+	for _, cmd := range debugCommands {
 		if cmd.StatId >= 0 && cmd.StatId <= e.Board.StatCount {
 			e.GameApplyDebugCommand(cmd.StatId, cmd.Text)
 		}
 	}
-	e.PendingDebugCommands = e.PendingDebugCommands[:0]
 
-	for _, save := range e.PendingSaveFilenames {
+	for _, save := range saveFilenames {
 		// An empty Name means cancelled or refused (the server refuses all
 		// saves today — see NOTES.md 2026-07-09). WorldSave is a plain file
 		// write with no prompt, so it cannot block the sim.
@@ -1617,9 +1632,8 @@ func (e *Engine) GameStepWithInputs(inputs map[int16]PlayerInput) {
 			e.WorldSave(save.Name, ".SAV")
 		}
 	}
-	e.PendingSaveFilenames = e.PendingSaveFilenames[:0]
 
-	for _, reply := range e.PendingQuitReplies {
+	for _, reply := range quitReplies {
 		if !reply.Quit || reply.StatId < 0 || reply.StatId > e.Board.StatCount {
 			continue
 		}
@@ -1630,7 +1644,6 @@ func (e *Engine) GameStepWithInputs(inputs map[int16]PlayerInput) {
 			e.GamePlayExitRequested = true
 		}
 	}
-	e.PendingQuitReplies = e.PendingQuitReplies[:0]
 
 	// Snapshot engine-level input fields into globals for the tick loop.
 	// Individual player inputs from the inputs map will override these for
@@ -2295,5 +2308,7 @@ func WorldUnload() {
 // delivered as an OopSend at the top of the next GameStepWithInputs, never
 // mid-tick.
 func (e *Engine) SubmitScrollReply(objectStatId int16, label string) {
+	e.pendingInputMu.Lock()
+	defer e.pendingInputMu.Unlock()
 	e.PendingScrollReplies = append(e.PendingScrollReplies, PendingScrollReply{StatId: objectStatId, Label: label})
 }

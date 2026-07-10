@@ -276,7 +276,6 @@ TryMove:
 		e.SoundQueue(1, "\xf9\x01")
 		firstTry = false
 		goto TryMove
-		return
 	}
 	if iElem == E_BREAKABLE || ElementDefs[iElem].Destructible && (iElem == E_PLAYER || int16(stat.P1) >= SHOT_SOURCE_PLAYER_BASE) {
 		// For player-owned bullets hitting a player tile: check FriendlyFire
@@ -322,7 +321,6 @@ TryMove:
 		e.SoundQueue(1, "\xf9\x01")
 		firstTry = false
 		goto TryMove
-		return
 	}
 	if e.Board.Tiles[int16(stat.X)-stat.StepY][int16(stat.Y)-stat.StepX].Element == E_RICOCHET && firstTry {
 		ix = stat.StepX
@@ -331,7 +329,6 @@ TryMove:
 		e.SoundQueue(1, "\xf9\x01")
 		firstTry = false
 		goto TryMove
-		return
 	}
 	e.RemoveStat(statId)
 	e.CurrentStatTicked--
