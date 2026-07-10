@@ -295,6 +295,13 @@ func roomSpawn(room *Room, spawnX, spawnY int16) (int16, int16) {
 		}
 	}
 	if spawnX == 0 || spawnY == 0 {
+		if statID, ok := claimablePlayerStat(room); ok {
+			stat := room.Engine.Board.Stats[statID]
+			spawnX = int16(stat.X)
+			spawnY = int16(stat.Y)
+		}
+	}
+	if spawnX == 0 || spawnY == 0 {
 		spawnX = int16(room.Engine.Board.Info.StartPlayerX)
 		spawnY = int16(room.Engine.Board.Info.StartPlayerY)
 	}
