@@ -40,7 +40,10 @@ type WorldInstance struct {
 	RoomManager *RoomManager
 	Clients     map[PlayerID]*webSocketClient
 	Inputs      map[PlayerID]PlayerInput
-	mu          sync.Mutex
+	// Title animates board 0 for browsers sitting on the title screen. It owns
+	// its own Engine and shares no state with RoomManager — see TitleSim.
+	Title *TitleSim
+	mu    sync.Mutex
 }
 
 type webSocketClient struct {
@@ -62,6 +65,7 @@ func NewWebSocketServer(world TWorld, defaultBoard int16) *WebSocketServer {
 		RoomManager: rm,
 		Clients:     make(map[PlayerID]*webSocketClient),
 		Inputs:      make(map[PlayerID]PlayerInput),
+		Title:       NewTitleSim(world),
 	}
 	s := &WebSocketServer{
 		RoomManager:  rm,
@@ -141,7 +145,14 @@ func (s *WebSocketServer) Tick(ctx context.Context) {
 
 	// Dynamic instances tick
 	var instances []*WorldInstance
+	var titles []*TitleSim
 	for _, inst := range s.Instances {
+		// Every world's title board advances, including the default instance's,
+		// which the room loop above may already have stepped. They are separate
+		// engines; the title sim is nobody's room.
+		if inst.Title != nil {
+			titles = append(titles, inst.Title)
+		}
 		if len(s.clients) > 0 && inst.RoomManager == s.RoomManager {
 			continue
 		}
@@ -151,6 +162,9 @@ func (s *WebSocketServer) Tick(ctx context.Context) {
 
 	for _, inst := range instances {
 		inst.Tick(ctx, s)
+	}
+	for _, title := range titles {
+		title.Tick()
 	}
 }
 
@@ -530,6 +544,7 @@ func (s *WebSocketServer) GetOrCreateInstance(worldName string) (*WorldInstance,
 		RoomManager: rm,
 		Clients:     make(map[PlayerID]*webSocketClient),
 		Inputs:      make(map[PlayerID]PlayerInput),
+		Title:       NewTitleSim(world),
 	}
 	s.Instances[worldName] = inst
 	return inst, nil

@@ -16,13 +16,11 @@ import (
 // draws — the title board, the world name, the high-score list, About ZZT —
 // arrives over plain HTTP instead of the snapshot stream.
 //
-// DEVIATION from vanilla: the title board is a STATIC render. In ZZT the title
-// screen is GamePlayLoop running board 0 with GameStateElement = E_MONITOR
-// (GAME.PAS:1610-1622), so its objects animate. Here the world is shared: a
-// title room that ticked would run board 0's objects — and any `#set` its
-// objects perform touches World.Info.Flags, which every room shares — for as
-// long as any browser anywhere sat on the title screen. A per-client screen in
-// vanilla is server-wide state here, so it does not tick.
+// The board itself animates, as vanilla's does (GAME.PAS:1610-1622). It is not
+// a room: it is WorldInstance.Title, an isolated engine over a copied world, so
+// nothing board 0's objects do can reach a player. /api/title paints the first
+// frame; /api/title/stream pushes changed cells after that. A server without a
+// TitleSim (the tests, which never tick) still gets the static render.
 
 // WebAPI serves the title screen's read-only data for one hosted world.
 type WebAPI struct {
@@ -42,6 +40,7 @@ type WebAPI struct {
 func (a *WebAPI) Handler() http.Handler {
 	mux := http.NewServeMux()
 	mux.HandleFunc("/api/title", a.handleTitle)
+	mux.HandleFunc("/api/title/stream", a.handleTitleStream)
 	mux.HandleFunc("/api/worlds", a.handleWorlds)
 	mux.HandleFunc("/api/highscores", a.handleHighScores)
 	mux.HandleFunc("/api/help", a.handleHelp)
@@ -133,6 +132,7 @@ func (a *WebAPI) handleTitle(w http.ResponseWriter, r *http.Request) {
 
 	var rm *RoomManager
 	var pristineWorld TWorld
+	var title *TitleSim
 	if a.Server != nil {
 		inst, err := a.Server.GetOrCreateInstance(safeWorld)
 		if err != nil {
@@ -141,9 +141,17 @@ func (a *WebAPI) handleTitle(w http.ResponseWriter, r *http.Request) {
 		}
 		rm = inst.RoomManager
 		pristineWorld = inst.RoomManager.FrozenWorld()
+		title = inst.Title
 	} else {
 		rm = a.RoomManager
 		pristineWorld = a.World
+	}
+
+	// The live sim's frame, so the first paint and the stream that follows
+	// agree. Without one (tests), fall back to the static render.
+	screen := TitleScreenCells(pristineWorld)
+	if title != nil {
+		screen = title.Screen()
 	}
 
 	writeJSON(w, struct {
@@ -153,8 +161,74 @@ func (a *WebAPI) handleTitle(w http.ResponseWriter, r *http.Request) {
 	}{
 		World:    rm.WorldName(),
 		Filename: safeWorld,
-		Screen:   TitleScreenCells(pristineWorld),
+		Screen:   screen,
 	})
+}
+
+// handleTitleStream pushes the title board's changed cells as Server-Sent
+// Events. SSE rather than a WebSocket because the title screen deliberately has
+// no socket (that is what 'P' is for), and the traffic is one-way.
+func (a *WebAPI) handleTitleStream(w http.ResponseWriter, r *http.Request) {
+	if a.Server == nil {
+		http.Error(w, "title stream unavailable", http.StatusNotFound)
+		return
+	}
+	worldName := r.URL.Query().Get("world")
+	if worldName == "" {
+		worldName = "TOWN"
+	}
+	safeWorld, err := SanitizeSaveName(worldName)
+	if err != nil {
+		http.Error(w, "invalid world name", http.StatusBadRequest)
+		return
+	}
+	inst, err := a.Server.GetOrCreateInstance(safeWorld)
+	if err != nil {
+		http.Error(w, "failed to load world: "+err.Error(), http.StatusInternalServerError)
+		return
+	}
+	if inst.Title == nil {
+		http.Error(w, "title stream unavailable", http.StatusNotFound)
+		return
+	}
+	flusher, ok := w.(http.Flusher)
+	if !ok {
+		http.Error(w, "streaming unsupported", http.StatusInternalServerError)
+		return
+	}
+
+	w.Header().Set("Content-Type", "text/event-stream")
+	w.Header().Set("Cache-Control", "no-cache")
+	w.Header().Set("Connection", "keep-alive")
+	// Defeats proxy buffering, which would hold frames until the stream ended.
+	w.Header().Set("X-Accel-Buffering", "no")
+	w.WriteHeader(http.StatusOK)
+	flusher.Flush()
+
+	// Subscribing is also what starts the sim ticking: it idles with no watchers.
+	sub, cancel := inst.Title.Subscribe()
+	defer cancel()
+
+	ctx := r.Context()
+	for {
+		select {
+		case <-ctx.Done():
+			return
+		case <-sub.Signal():
+			cells := sub.Drain()
+			if len(cells) == 0 {
+				continue
+			}
+			payload, err := json.Marshal(cells)
+			if err != nil {
+				return
+			}
+			if _, err := w.Write([]byte("data: " + string(payload) + "\n\n")); err != nil {
+				return
+			}
+			flusher.Flush()
+		}
+	}
 }
 
 // handleWorlds lists the worlds a client may join.

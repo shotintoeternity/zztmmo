@@ -342,10 +342,42 @@ function query<T extends Element>(selector: string): T {
   return element;
 }
 
+// titleStream carries the animated title board (engine/title_sim.go). It is an
+// EventSource, not a WebSocket: the title screen has no socket by design, and
+// the traffic is one-way. Only board columns 0..59 arrive, so it can never
+// tread on the sidebar this client draws itself.
+let titleStream: EventSource | null = null;
+
+function closeTitleStream() {
+  if (titleStream) {
+    titleStream.close();
+    titleStream = null;
+  }
+}
+
+function openTitleStream(filename: string) {
+  closeTitleStream();
+  const source = new EventSource("/api/title/stream?world=" + encodeURIComponent(filename));
+  titleStream = source;
+  source.onmessage = (event) => {
+    // A stream we have replaced, or one that outlived the title screen, must
+    // not paint over a live board.
+    if (titleStream !== source || mode !== "title") {
+      return;
+    }
+    for (const cell of JSON.parse(event.data) as ScreenCell[]) {
+      setCell(cell);
+    }
+    drawScreen();
+  };
+  // An old server has no /api/title/stream: the board simply stays static, and
+  // EventSource retries on its own. Nothing to do.
+  source.onerror = () => {};
+}
+
 // showTitle paints GameTitleLoop's screen: board 0 behind the monitor sidebar.
 // The board comes from /api/title rather than the snapshot stream because we
-// have no socket yet — and, unlike vanilla's, it does not animate. See the
-// DEVIATION note in engine/web_api.go.
+// have no socket yet; the stream then animates it, as vanilla's does.
 async function showTitle() {
   mode = "title";
   modal = null;
@@ -355,8 +387,10 @@ async function showTitle() {
   setPaused(false);
   pressed.clear();
   lastMask = 0;
+  closeTitleStream();
 
   let friendlyName = worldName;
+  let streaming = false;
   try {
     const url = worldName === "Untitled" ? "/api/title" : "/api/title?world=" + encodeURIComponent(worldName);
     const response = await fetch(url);
@@ -364,6 +398,7 @@ async function showTitle() {
     worldName = title.filename || title.world;
     friendlyName = title.world;
     replaceCells(title.screen);
+    streaming = true;
   } catch {
     // Offline: keep whatever board is on screen and still draw the menu, so
     // the player can retry with 'P'.
@@ -372,6 +407,9 @@ async function showTitle() {
   paintOverlay();
   drawScreen();
   canvas.focus();
+  if (streaming) {
+    openTitleStream(worldName);
+  }
 }
 
 // leaveToTitle ends this player's game: the room already dropped them, so all
@@ -390,6 +428,7 @@ function leaveToTitle() {
 }
 
 function startPlay() {
+  closeTitleStream();
   zztSound.setEnabled(true);
   zztSound.resume();
   leavingToTitle = false;
