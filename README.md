@@ -12,7 +12,7 @@ ZZTMMO transforms Tim Sweeney's legendary 1991 shareware classic, **ZZT**, into 
 *   **👥 Shared Co-Op Play:** Share the board with multiple players simultaneously. Team up to solve puzzles, shoot monsters, and collect gems.
 *   **💬 Server-Wide Global Chat:** Chat with anyone on the server at any time. Press **`C`** to pull up a scrollable, ZZT-style paged text window to read message history, or shout out to the lobby.
 *   **🗺️ Dynamic World Instances:** Jump between different ZZT worlds (Town, Caves, Rhygar 2, Kudzu, and more) dynamically with friends, without restarting the server.
-*   **📺 CP437 Fidelity:** Rendered using the authentic `Perfect DOS VGA 437` BIOS font. Smiley faces, border walls, and items connect and align exactly as they did on DOS machines in 1991.
+*   **📺 Spritesheet-Based CP437 Fidelity:** Rendered using the official pixel-perfect PNG font sheets from Adrian Siekierka's [Zeta](https://github.com/asiekierka/zeta) emulator. Smiley faces, border walls, and items connect and align exactly as they did on DOS machines in 1991, with zero subpixel font gaps or rendering artifacts.
 *   **⚖️ Server-Authoritative Simulation:** A completely headless, deterministic backend running in Go ensures player inputs are processed synchronously with zero client-side simulation or state drift.
 
 ---
@@ -77,9 +77,12 @@ For a deep dive into the architecture:
 
 ---
 
-## 🤝 Credits & Licensing
+## 🤝 Credits & Special Appreciation
 
-*   **ZZT** is the original creation of Tim Sweeney.
-*   **zztgo** base port by Ben Hoyt.
-*   **Pascal Reconstruction** by Adrian Siekierka.
-*   This project is licensed under the **MIT License** (see [LICENSE](LICENSE)). Epic MegaGames' original content and help files are included for testing under fair-use/redistribution notices.
+This project would not exist without the dedication of the ZZT preservation community and the creators who came before us:
+
+*   **Tim Sweeney** (Creator of ZZT / Epic Games): His game and the vibrant community surrounding it have changed my life.
+*   **Adrian Siekierka** ([@asiekierka](https://github.com/asiekierka)): Immense thanks for his project to reconstruct the original Turbo Pascal code of ZZT ([reconstruction-of-zzt](https://github.com/asiekierka/reconstruction-of-zzt)), and for his excellent ZZT emulator, [Zeta](https://github.com/asiekierka/zeta), whose official pixel-perfect font sheets power ZZTMMO's canvas renderer.
+*   **Ben Hoyt** ([@benhoyt](https://github.com/benhoyt)): The author of the Go port ([zztgo](https://github.com/benhoyt/zztgo)) who made it possible to build on top of a modern codebase to create ZZTMMO.
+
+This project is licensed under the **MIT License** (see [LICENSE](LICENSE)). Epic MegaGames' original content and help files are included for testing under fair-use/redistribution notices.

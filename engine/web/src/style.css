@@ -8,10 +8,7 @@
  * CELL_H(18). The wrapper's aspect-ratio must stay pinned to that, or the
  * glyphs stretch and the DOS geometry is lost. */
 
-@font-face {
-  font-family: 'IBM VGA 8x8';
-  src: url('./IBM-VGA-8x8.ttf') format('truetype');
-}
+/* Centered pixelated canvas representation */
 
 :root {
   color-scheme: dark;
