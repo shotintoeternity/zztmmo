@@ -722,3 +722,28 @@ Transfer sounds are asserted through `RoomManager.DrainPlayerEvents`, because th
 WebSocket layer appends those per-player events to the board-change snapshot
 rather than the direct destination-room diff. Existing WebSocket tests still own
 the JSON board-change delivery shape.
+
+## 2026-07-10 — Pre-existing data race between HTTP handlers and the tick loop
+
+Found while adding `-race` coverage for `TitleSim`, and **not caused by it**:
+`go test -race -run TestWebSocketServerScrollReplyBuysFromVendor` fails on a
+clean tree at `7d1ebd1`, before any of today's commits.
+
+`Engine.SubmitScrollReply` (`game.go:2298`) appends to `Engine.PendingScrollReplies`
+from the WebSocket goroutine (`websocket_server.go:330` → `submitScrollReplyInInstance`),
+while `Engine.GameStepWithInputs` (`game.go:1602`) reads and truncates that same
+slice from the tick goroutine. `WorldInstance.mu` is held by the submitter and
+`s.mu` by the ticker, so the two never exclude each other. The same shape almost
+certainly applies to `PendingDebugCommands` and `PendingSaveFilenames`, which are
+drained beside it.
+
+It has not been observed to corrupt a game — the window is one slice append
+against one truncate — but it is a genuine race and `-race` will keep failing.
+The fix is a lock (or a channel) shared by the submit path and the step path,
+which is a change to the room/tick ownership model and therefore its own task,
+not a drive-by.
+
+Left unfixed and unfiled; today's scroll work (freezing a reader until they
+dismiss) touches `RoomManager.SubmitScrollReply` but neither widens nor narrows
+this race: `roomPlayer.scrollOpen` is written under the same goroutines as the
+slice it sits beside.
