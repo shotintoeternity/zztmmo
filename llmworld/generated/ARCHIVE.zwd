@@ -1,0 +1,100 @@
+zwd 1
+world "ARCHIVE"
+
+board "The Drowned Archive"
+  start player at 5,20
+  max-shots 5
+  dark false
+  reenter false
+  time-limit 0
+  exits north none south none west none east none
+
+  grid
+############################################################
+#ffffffffffffffffffffffffffffffffffffffffffffffffffffffffff#
+#fffffffffffffffffffffffff1234567ffffffffffffffffffffffffff#
+#fffffffffffffffffffffffffffffffffffffffffffffff##########f#
+#fffffffffffffffffffffffffffffffffffffffffffffff#fffLffff#f#
+#ffBBBBBBBffBBBBBBBffBBBBBBBfffffffffff~~~~~~~~~#ffffffff#f#
+#ffBfffffBffBfffffBffBfffffBfffffffffff~~~~~~~~~#fffffkff#f#
+#ffBfffffBffBfffffBffBfffffBfffffffffff~~~~~~~~~f<fffffff#f#
+#ffBBBBBBBffBBBBBBBffBBBBBBBfffffffffff~~~~~~~~~#ffffffff#f#
+#fffffffffgffffffffffffffffffffffffffff~~~~~~~~~##########f#
+#ffffffffffffffffffffffffffffffffffffff~~~~~~~~~~~~~~~~~~~f#
+#ffBBBBBBBffBBBBBBBffBBBBBBBfffffffffffffffff~~~~~~~~~~~~~f#
+#ffBfffffBffBfffffBffBfffffBfffffffffffffffff~~~~~~~~~~~~~f#
+#ffBfffffBffBfffffBffBfffffBfffffffffffffffff~~~~~~~~~~~~~f#
+#ffBBBBBBBffBBBBBBBffBBBBBBBfffffffffff~~~~~~~~~~~~~~~~~~~f#
+#ffffffffffffffffffgfffffffffffffffffff~~~~~~~~~~~~~~~~~~~f#
+#ffffffffffffffffffffffffffffffffffffff~~~~~~~~~~~~~~~~~~~f#
+#ffffAffgfffffffffffffffgffffffffffffff~~~~~~~~~~#########f#
+#ffffffffffffffffffffffffffffffffffffff~~~~~~~~~~#fffffff#f#
+#fff@fffOfffffffgffffffffffffffffffffff~~~~~~~~~f+fffffff#f#
+#fffffffffffffffffffffffffffffffgffffff~~~~~~~~~~#fffIfff#f#
+#ffffffffffffffffffffffffffffffffffffff~~~~~~~~~~#fffffff#f#
+#ffffffffffffffffffffffffffffffffffffffffffffffff#########f#
+#ffffffffffffffffffffffffffffffffffffffffffffffffffffffffff#
+############################################################
+  end
+
+  legend
+    . = Empty color 0x07
+    f = Fake color 0x70
+    # = Solid color 0x07
+    B = Breakable color 0x78
+    ~ = Water color 0x1F
+    < = Empty color 0x07
+    + = Door color 0x5F
+    k = Key color 0x0D
+    L = Lion color 0x0C
+    A = Ammo color 0x03
+    g = Gem color 0x0B
+    O = Object color 0x0F
+    I = Object color 0x0E
+    @ = Player color 0x1F under Empty color 0x07
+    1 = Text-Yellow color 0x41
+    2 = Text-Yellow color 0x52
+    3 = Text-Yellow color 0x43
+    4 = Text-Yellow color 0x48
+    5 = Text-Yellow color 0x49
+    6 = Text-Yellow color 0x56
+    7 = Text-Yellow color 0x45
+  end
+
+  stats
+    stat at 53,5 element Lion p1 6 p2 0 step idle under Fake color 0x70
+    stat at 9,20 element Object cycle 3 p1 cp437:0x02 under Fake color 0x70
+    oop
+@Archivist
+#end
+:touch
+#play tcfc
+Shh. This is a library. Was.
+The tide took the east wing, and the
+Codex with it -- locked behind the
+violet door. The key? A lion has it.
+I did say "was" a library.
+#zap touch
+#end
+:touch
+(Still shushing. Still no key.
+The lion is not much of a reader.)
+#end
+
+    end
+    stat at 54,21 element Object cycle 1 p1 cp437:0x0F under Fake color 0x70
+    oop
+@Codex
+#end
+:touch
+#lock
+#play +c-e+g+c-e+g#
+You lift the Sunken Codex.
+Its pages are dry. Impossible.
+#give score 500
+#play s.-c-a-g
+#die
+
+    end
+  end
+end

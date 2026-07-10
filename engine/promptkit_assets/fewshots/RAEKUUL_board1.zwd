@@ -1,0 +1,126 @@
+board "But is it neat?"
+  start player at 2,25
+  max-shots 255
+  dark false
+  reenter true
+  time-limit 0
+  exits north none south none west none east none
+
+  grid
+############################################################
+#aggggggggggggggggggggggggggggggggggggggggggggggggggggggggg#
+#a####################butfisfitfneht?#####################g#
+#a#......................................................#g#
+#a#.ggggg.ggggg.BBgBB.BgBBB..............................#g#
+#a#.BBBBg.BBBBB.BBgBB.BgBBB..............................#g#
+#a#.BBBBg.ggggg.BBBBB.BBgBB..............................#g#
+#a#.BBBBB.BBgBB.BBgBB.BBgBB..............................#g#
+#a#.BBBBg.BBgBB.BBgBB.BBgBB..............................#g#
+#a#.........j............................................#g#
+#a#.............BBgBB.BgBBB.......gBBgg.gBBBg.BBBgB.ggggg#g#
+#a#.............BBgBB.BgBBB.......gBBgg.gBBBB.BBgBg.BBBBg#g#
+#a#.............BBBBB.BBgBB.......BBBgB.gBBBB.BgBBB.BBBBg#g#
+#a#.............BBgBB.BBgBB.......BBgBB.gBBBB.BgBBB.BBBBB#g#
+#a#.............BBgBB.BBgBB.......ggBBB.ggggg.ggBBB.BBBBg#g#
+#a#..........................................#lllllmlllll#g#
+#a#ooooooqqooooooooooolloooqoooooooooo.......#llllllllllk#g#
+#a#ooooooqqqqqqqqqqqqqqqqooqooooooqooo....l..#VvwxyzAVvwx#g#
+#a#oooooooooooooooooooooqqqqooooooooooo......#lllllllcSCD#g#
+#a#oooooooooooooooooooooooooooooooooooo......#RoroLoToHEF#g#
+#a#+####ooooooooooooooooooooooooooooooo......#d#d#d#d#d#d#g#
+#a#K.oo#ooooooooooooooooooooooooooooooo......#R#r#L#T#G#I#g#
+#a####J#ooooooooooooooooooooooooooooooo......#############g#
+#aJJJ#J#ooooooooooooooooooooooooooooooo.....ggggggggggggggg#
+#@JMM#p#####################################################
+  end
+
+  legend
+    # = Solid color 0x0C
+    a = Ammo color 0x03
+    g = Gem color 0x09
+    b = Text-Red color 0x62
+    u = Text-Red color 0x75
+    t = Text-Red color 0x74
+    f = Text-Red color 0x20
+    i = Text-Red color 0x69
+    s = Text-Red color 0x73
+    n = Text-Red color 0x6E
+    e = Text-Red color 0x65
+    h = Text-Red color 0x61
+    ? = Text-Red color 0x3F
+    . = Empty color 0x0C
+    B = Breakable color 0x0C
+    j = Empty color 0x09
+    l = Empty color 0x0E
+    m = Bomb color 0x09
+    o = Empty color 0x00
+    q = Empty color 0x0B
+    k = Key color 0x0B
+    V = Slime color 0x0E
+    v = Slime color 0x0F
+    w = Slime color 0x09
+    x = Slime color 0x0A
+    y = Slime color 0x0B
+    z = Slime color 0x0C
+    A = Slime color 0x0D
+    c = Segment color 0x0D
+    S = Segment color 0x0C
+    C = Segment color 0x0B
+    D = Segment color 0x0A
+    R = Bear color 0x06
+    r = Ruffian color 0x0D
+    L = Lion color 0x0C
+    T = Tiger color 0x0B
+    H = Head color 0x0E
+    E = Segment color 0x0F
+    F = Segment color 0x09
+    + = Door color 0x3F
+    d = Duplicator color 0x0F
+    K = Key color 0x0D
+    G = Head color 0x0B
+    I = Segment color 0x0E
+    J = Empty color 0x0D
+    @ = Player color 0x1F under Empty color 0x0B
+    M = Empty color 0x0F
+    p = Passage color 0x5F to "But is it neat?"
+  end
+
+  stats
+    stat at 47,21 element Duplicator p1 0 p2 3 step south
+    stat at 49,21 element Duplicator p1 0 step south
+    stat at 53,21 element Duplicator p1 0 p2 6 step south
+    stat at 51,21 element Duplicator p1 0 p2 5 step south under Empty color 0x0B
+    stat at 55,21 element Duplicator p1 0 p2 7 step south
+    stat at 57,21 element Duplicator p1 0 p2 8 step south
+    stat at 55,22 element Head p1 8 p2 8 step idle
+    stat at 52,16 element Bomb p1 0 p2 0 step idle under Empty color 0x0C
+    stat at 57,22 element Segment p1 0 p2 0 step idle
+    stat at 47,18 element Slime p1 0 p2 0 step idle under Empty color 0x0E
+    stat at 48,18 element Slime p1 0 p2 0 step idle under Empty color 0x0E
+    stat at 49,18 element Slime p1 0 p2 0 step idle under Empty color 0x0E
+    stat at 50,18 element Slime p1 0 p2 0 step idle under Empty color 0x0E
+    stat at 51,18 element Slime p1 0 p2 0 step idle under Empty color 0x0E
+    stat at 52,18 element Slime p1 0 p2 0 step idle under Empty color 0x0E
+    stat at 53,18 element Slime p1 0 p2 0 step idle under Empty color 0x0E
+    stat at 54,18 element Slime p1 0 p2 0 step idle under Empty color 0x0E
+    stat at 55,18 element Slime p1 0 p2 0 step idle under Empty color 0x0E
+    stat at 56,18 element Slime p1 0 p2 0 step idle under Empty color 0x0E
+    stat at 57,18 element Slime p1 0 p2 0 step idle under Empty color 0x0E
+    stat at 47,20 element Bear p1 0 p2 0 step idle
+    stat at 47,22 element Bear p1 0 p2 0 step idle
+    stat at 49,20 element Ruffian p1 8 p2 0 step idle
+    stat at 49,22 element Ruffian p1 8 p2 0 step idle
+    stat at 51,20 element Lion p1 8 p2 0 step idle
+    stat at 51,22 element Lion p1 8 p2 0 step idle
+    stat at 53,20 element Tiger p1 8 p2 8 step idle
+    stat at 53,22 element Tiger p1 8 p2 8 step idle
+    stat at 55,20 element Head p1 8 p2 0 step idle
+    stat at 56,20 element Segment p1 0 p2 0 step idle
+    stat at 57,20 element Segment p1 0 p2 0 step idle
+    stat at 57,19 element Segment p1 0 p2 0 step idle under Empty color 0x0E
+    stat at 56,19 element Segment p1 0 p2 0 step idle under Empty color 0x0E
+    stat at 55,19 element Segment p1 0 p2 0 step idle under Empty color 0x0E
+    stat at 54,19 element Segment p1 0 p2 0 step idle under Empty color 0x0E
+    stat at 7,25 element Passage p1 0 p2 0 p3 board "But is it neat?" step idle under Empty color 0x0F
+  end
+end

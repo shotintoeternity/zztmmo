@@ -1,0 +1,312 @@
+board "$SCRAPPED - Netting"
+  start player at 1,12
+  respawn at 1,1
+  max-shots 255
+  dark false
+  reenter false
+  time-limit 0
+  exits north none south none west "Path to center" east none
+
+  grid
+BBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBB
+BBBBBBBBBBBBBNNNNNNBBBBBBBNNNNNNNBBNNNNNNBBBBBBNNNNNNBBBBBBB
+bbWARdIdGb1xbebb..NNNNNNNNN..af.NNNN.r..NNNNNNNN.hfhNBBBBBBB
+BBBBNBBBBBNNfff.....XffffX..cH.ffff.....gffffi..LhhfNBBBBBBB
+NNNNNNBBBNNa...fX.r.f.oiTf...Xf....f....fX..XfX..hfjNNBBBBBB
+.....NNBBNf...Xf...gf....f....fX..kfX.X.f.L..fX..hfjjNBBBBBB
+.....aNBBNN..L..ffff......ffff.....XffffX....lffffjjjNNNBBBB
+.....aNNBBN.X..f.mh.f.X..fn...f.XT.f....f..X.f...hfjj..NNNBB
+......aNBBNffffpHmh.XffffX..L.Xffff..L..pffffX..Thhfj.h..NNN
+......ajjjNkX.Ofcmq.f.Xk.f....f.n..f....fg...f...hfjj.hh.hhh
+........jjf....f.mh.f..Hcf.XX.f..L.fX.o.f.r..fX..nfjj.hhhhhh
+@........+.....Xffff.....Xffff......ffffX..q..ffffjjj.hhhhhh
+........jjf..X.fX..Xf..X.f....f.XX.fX...fX...f...hfj..hhhhhh
+..ss..ajjj.ffff..T..lffff..r..Xffff..T..XffffX...ho...hhhhhh
+ssssssajjjf..Xnf....f...XfX...f.X.af....f..Xaf.T.hfj..hhhsss
+sssssssjjjf....f...Xf.c..fi..Xf..q.fX..pfhh..fO..Xfjjsssssss
+~~~~sssjjf.r...Xffff..Ha..ffffX....XffffX.Hc..ffffjjjsssssss
+~~~~~~NjNjf.X..fXg..f....f.X.lf..T.fX...f.h..fX..hfjjsss~~~~
+~~~~~~NNN~~ffff.....XffffX.....ffff..T...ffff..L.hhfs~~~~~~~
+~~~~~NNNN~f.X..f..T.f.pX.f.r..f..X.f....fph.Xf..Xhf~~~N~~N~~
+~~~~~~~~~~f...Xf.X..f....fo.X.f....fX..kf.h..f..lXf~~NNN~NN~
+~~N~NN~~~fi..X..ffffX....Xffff.cH...ffffX.hrhhffff~~~NNNNNNN
+~~NNNN~N~~f.r..f.Xa.f..L.f..X.f...nf...lf....f.HhXf~~~~~~~~~
+~~NNNNNN~~~ffff......ffffi....XffffX.....ffffX.chhgf~~~~~~~~
+~~~~~~~~~~fhhhhfhhrhfhhhhfhHchfhhhhfhhLhfhhhhfhhhhf~~~~~~~~~
+  end
+
+  legend
+    B = Breakable color 0x0C
+    N = Normal color 0x0C
+    b = Text-Cyan color 0x20
+    W = Text-Cyan color 0x57
+    A = Text-Cyan color 0x41
+    R = Text-Cyan color 0x52
+    d = Text-Cyan color 0x4E
+    I = Text-Cyan color 0x49
+    G = Text-Cyan color 0x47
+    1 = Text-Cyan color 0x31
+    x = Text-Cyan color 0x78
+    e = Text-Cyan color 0x84
+    . = Empty color 0x0F
+    a = Ammo color 0x03
+    f = Normal color 0x0F
+    r = Ruffian color 0x0D
+    h = Empty color 0x07
+    X = Transporter color 0x0F
+    c = Segment color 0x0A
+    H = Head color 0x0A
+    g = Gem color 0x0D
+    i = Gem color 0x09
+    L = Lion color 0x0C
+    o = Object color 0x0A
+    T = Tiger color 0x0B
+    j = Normal color 0x0D
+    k = Gem color 0x0B
+    l = Gem color 0x0F
+    m = Empty color 0x0B
+    n = Gem color 0x0A
+    p = Gem color 0x0E
+    O = Object color 0x0C
+    q = Object color 0x0E
+    @ = Player color 0x1F under Empty color 0x0F
+    + = Door color 0x4D
+    s = Breakable color 0x0E
+    ~ = Water color 0x1F
+  end
+
+  stats
+    stat at 13,10 element Transporter p1 0 p2 0 step north under Empty color 0x0F
+    stat at 15,6 element Transporter p1 0 p2 0 step east under Empty color 0x0F
+    stat at 32,6 element Transporter p1 0 p2 0 step west under Empty color 0x0F
+    stat at 13,8 element Transporter p1 0 p2 0 step south under Empty color 0x0F
+    stat at 33,8 element Transporter p1 0 p2 0 step south under Empty color 0x0F
+    stat at 33,15 element Transporter p1 0 p2 0 step north under Empty color 0x0F
+    stat at 31,17 element Transporter p1 0 p2 0 step west under Empty color 0x0F
+    stat at 13,18 element Transporter p1 0 p2 0 step south under Empty color 0x0F
+    stat at 13,20 element Transporter p1 0 p2 0 step north under Empty color 0x0F
+    stat at 16,17 element Transporter p1 0 p2 0 step east under Empty color 0x0F
+    stat at 16,12 element Transporter p1 0 p2 0 step east under Empty color 0x0F
+    stat at 41,12 element Transporter p1 0 p2 0 step west under Empty color 0x0F
+    stat at 26,12 element Transporter p1 0 p2 0 step east under Empty color 0x0F
+    stat at 23,10 element Transporter p1 0 p2 0 step north under Empty color 0x0F
+    stat at 24,13 element Transporter p1 0 p2 0 step south under Empty color 0x0F
+    stat at 14,22 element Transporter p1 0 p2 0 step east under Empty color 0x0F
+    stat at 21,22 element Transporter p1 0 p2 0 step west under Empty color 0x0F
+    stat at 24,20 element Transporter p1 0 p2 0 step north under Empty color 0x0F
+    stat at 23,8 element Transporter p1 0 p2 0 step south under Empty color 0x0F
+    stat at 36,7 element Transporter p1 0 p2 0 step east under Empty color 0x0F
+    stat at 41,7 element Transporter p1 0 p2 0 step west under Empty color 0x0F
+    stat at 42,5 element Transporter p1 0 p2 0 step west under Empty color 0x0F
+    stat at 30,5 element Transporter p1 0 p2 0 step east under Empty color 0x0F
+    stat at 26,4 element Transporter p1 0 p2 0 step west under Empty color 0x0F
+    stat at 21,4 element Transporter p1 0 p2 0 step east under Empty color 0x0F
+    stat at 45,5 element Transporter p1 0 p2 0 step east under Empty color 0x0F
+    stat at 47,5 element Transporter p1 0 p2 0 step west under Empty color 0x0F
+    stat at 47,6 element Transporter p1 0 p2 0 step west under Empty color 0x0F
+    stat at 39,6 element Transporter p1 0 p2 0 step east under Empty color 0x0F
+    stat at 37,6 element Transporter p1 0 p2 0 step south under Empty color 0x0F
+    stat at 37,18 element Transporter p1 0 p2 0 step north under Empty color 0x0F
+    stat at 37,11 element Transporter p1 0 p2 0 step south under Empty color 0x0F
+    stat at 37,13 element Transporter p1 0 p2 0 step north under Empty color 0x0F
+    stat at 37,16 element Transporter p1 0 p2 0 step west under Empty color 0x0F
+    stat at 20,16 element Transporter p1 0 p2 0 step east under Empty color 0x0F
+    stat at 17,13 element Transporter p1 0 p2 0 step north under Empty color 0x0F
+    stat at 17,5 element Transporter p1 0 p2 0 step south under Empty color 0x0F
+    stat at 26,22 element Transporter p1 0 p2 0 step east under Empty color 0x0F
+    stat at 41,22 element Transporter p1 0 p2 0 step west under Empty color 0x0F
+    stat at 45,20 element Transporter p1 0 p2 0 step east under Empty color 0x0F
+    stat at 49,20 element Transporter p1 0 p2 0 step west under Empty color 0x0F
+    stat at 50,21 element Transporter p1 0 p2 0 step south under Empty color 0x07
+    stat at 46,24 element Transporter p1 0 p2 0 step west under Empty color 0x0F
+    stat at 31,24 element Transporter p1 0 p2 0 step east under Empty color 0x0F
+    stat at 36,24 element Transporter p1 0 p2 0 step west under Empty color 0x0F
+    stat at 29,23 element Transporter p1 0 p2 0 step north under Empty color 0x0F
+    stat at 29,21 element Transporter p1 0 p2 0 step south under Empty color 0x0F
+    stat at 26,19 element Transporter p1 0 p2 0 step west under Empty color 0x0F
+    stat at 21,19 element Transporter p1 0 p2 0 step east under Empty color 0x0F
+    stat at 18,21 element Transporter p1 0 p2 0 step south under Empty color 0x0F
+    stat at 18,23 element Transporter p1 0 p2 0 step north under Empty color 0x0F
+    stat at 50,23 element Transporter p1 0 p2 0 step north under Empty color 0x07
+    stat at 34,20 element Transporter p1 0 p2 0 step north under Empty color 0x0F
+    stat at 34,13 element Transporter p1 0 p2 0 step south under Empty color 0x0F
+    stat at 33,13 element Transporter p1 0 p2 0 step south under Empty color 0x0F
+    stat at 47,18 element Transporter p1 0 p2 0 step north under Empty color 0x0F
+    stat at 47,11 element Transporter p1 0 p2 0 step south under Empty color 0x0F
+    stat at 46,9 element Transporter p1 0 p2 0 step west under Empty color 0x0F
+    stat at 31,9 element Transporter p1 0 p2 0 step east under Empty color 0x0F
+    stat at 26,9 element Transporter p1 0 p2 0 step west under Empty color 0x0F
+    stat at 21,9 element Transporter p1 0 p2 0 step east under Empty color 0x0F
+    stat at 29,11 element Transporter p1 0 p2 0 step south under Empty color 0x0F
+    stat at 28,11 element Transporter p1 0 p2 0 step south under Empty color 0x0F
+    stat at 31,14 element Transporter p1 0 p2 0 step east under Empty color 0x0F
+    stat at 25,15 element Transporter p1 0 p2 0 step east under Empty color 0x0F
+    stat at 27,15 element Transporter p1 0 p2 0 step west under Empty color 0x0F
+    stat at 30,16 element Transporter p1 0 p2 0 step east under Empty color 0x0F
+    stat at 41,14 element Transporter p1 0 p2 0 step east under Empty color 0x0F
+    stat at 46,14 element Transporter p1 0 p2 0 step west under Empty color 0x0F
+    stat at 44,8 element Transporter p1 0 p2 0 step south under Empty color 0x0F
+    stat at 44,15 element Transporter p1 0 p2 0 step north under Empty color 0x0F
+    stat at 36,17 element Transporter p1 0 p2 0 step east under Empty color 0x0F
+    stat at 41,17 element Transporter p1 0 p2 0 step west under Empty color 0x0F
+    stat at 14,13 element Transporter p1 0 p2 0 step south under Empty color 0x0F
+    stat at 14,15 element Transporter p1 0 p2 0 step north under Empty color 0x0F
+    stat at 50,16 element Transporter p1 0 p2 0 step south under Empty color 0x07
+    stat at 17,18 element Transporter p1 0 p2 0 step north under Empty color 0x0F
+    stat at 20,13 element Transporter p1 0 p2 0 step east under Empty color 0x0F
+    stat at 42,13 element Transporter p1 0 p2 0 step west under Empty color 0x0F
+    stat at 28,18 element Transporter p1 0 p2 0 step north under Empty color 0x0F
+    stat at 37,21 element Transporter p1 0 p2 0 step west under Empty color 0x0F
+    stat at 15,21 element Transporter p1 0 p2 0 step east under Empty color 0x0F
+    stat at 51,14 element Object p1 cp437:0x08 p2 0 step idle under Empty color 0x07
+    oop
+#end
+:touch
+#lock
+#if any gem no
+#play saxabxbxbb+#cxxxx
+#play +++ixtcxxcc
+/e/s
+#end
+:no
+#play -i.d-qe
+"You want the treasure? Collect the gems!"
+#unlock
+#end
+
+    end
+    stat at 14,7 element Lion p1 0 p2 0 step idle under Empty color 0x0F
+    stat at 17,9 element Head step idle under Empty color 0x0F
+    stat at 17,10 element Segment p1 0 p2 0 step idle under Empty color 0x0F
+    stat at 28,14 element Ruffian step idle under Empty color 0x0F
+    stat at 38,14 element Tiger p1 2 p2 2 step idle under Empty color 0x0F
+    stat at 12,17 element Ruffian step idle under Empty color 0x0F
+    stat at 43,17 element Head step idle under Empty color 0x07
+    stat at 44,17 element Segment p1 0 p2 0 step idle under Empty color 0x0F
+    stat at 34,11 element Lion p1 0 p2 0 step idle under Empty color 0x0F
+    stat at 34,18 element Tiger p1 2 p2 2 step idle under Empty color 0x0F
+    stat at 44,22 element Ruffian step idle under Empty color 0x07
+    stat at 48,23 element Head step idle under Empty color 0x0F
+    stat at 48,24 element Segment p1 0 p2 0 step idle under Empty color 0x0F
+    stat at 48,19 element Lion p1 0 p2 0 step idle under Empty color 0x0F
+    stat at 19,20 element Tiger p1 2 p2 2 step idle under Empty color 0x0F
+    stat at 38,3 element Ruffian step idle under Empty color 0x0F
+    stat at 28,25 element Head step idle under Empty color 0x07
+    stat at 29,25 element Segment p1 0 p2 0 step idle under Empty color 0x07
+    stat at 49,4 element Lion p1 0 p2 0 step idle under Empty color 0x0F
+    stat at 25,5 element Tiger p1 2 p2 2 step idle under Empty color 0x0F
+    stat at 19,5 element Ruffian step idle under Empty color 0x07
+    stat at 33,22 element Head step idle under Empty color 0x0F
+    stat at 32,22 element Segment p1 0 p2 0 step idle under Empty color 0x0F
+    stat at 39,25 element Lion p1 0 p2 0 step idle under Empty color 0x07
+    stat at 38,19 element Tiger p1 2 p2 2 step idle under Empty color 0x0F
+    stat at 19,25 element Ruffian step idle under Empty color 0x07
+    stat at 23,17 element Head step idle under Empty color 0x0F
+    stat at 23,16 element Segment p1 0 p2 0 step idle under Empty color 0x0F
+    stat at 24,23 element Lion p1 0 p2 0 step idle under Empty color 0x0F
+    stat at 18,14 element Tiger p1 2 p2 2 step idle under Empty color 0x0F
+    stat at 13,23 element Ruffian step idle under Empty color 0x0F
+    stat at 24,11 element Head step idle under Empty color 0x0F
+    stat at 25,11 element Segment p1 0 p2 0 step idle under Empty color 0x0F
+    stat at 38,9 element Lion p1 0 p2 0 step idle under Empty color 0x0F
+    stat at 49,9 element Tiger p1 2 p2 2 step idle under Empty color 0x0F
+    stat at 28,20 element Ruffian step idle under Empty color 0x0F
+    stat at 30,4 element Head step idle under Empty color 0x0F
+    stat at 29,4 element Segment p1 0 p2 0 step idle under Empty color 0x0F
+    stat at 29,9 element Lion p1 0 p2 0 step idle under Empty color 0x0F
+    stat at 34,8 element Tiger p1 2 p2 2 step idle under Empty color 0x0F
+    stat at 43,11 element Ruffian step idle under Empty color 0x0F
+    stat at 43,6 element Lion p1 0 p2 0 step idle under Empty color 0x0F
+    stat at 48,15 element Tiger p1 2 p2 2 step idle under Empty color 0x0F
+    stat at 47,16 element Object cycle 1 p1 cp437:0x03 p2 0 step idle under Empty color 0x0F
+    oop
+@Heart
+#end
+:touch
+#lock
+#play tb+be++#d
+Red Heart - You feel invigorated!
+#give health 25
+#die
+
+    end
+    stat at 15,10 element Object cycle 1 p1 cp437:0x03 p2 0 step idle under Empty color 0x0F
+    oop
+@Heart
+#end
+:touch
+#lock
+#play tb+be++#d
+Red Heart - You feel invigorated!
+#give health 25
+#die
+
+    end
+    stat at 19,10 element Object cycle 1 p1 cp437:0x9B p2 0 step idle under Empty color 0x07
+    oop
+@Coin Purse
+#end
+:touch
+#play ++sfb
+Bag of coins - 50 points
+#give score 50
+#die
+
+    end
+    stat at 34,16 element Object cycle 1 p1 cp437:0x9B p2 0 step idle under Empty color 0x0F
+    oop
+@Coin Purse
+#end
+:touch
+#play ++sfb
+Bag of coins - 50 points
+#give score 50
+#die
+
+    end
+    stat at 44,12 element Object cycle 1 p1 cp437:0x9B p2 0 step idle under Empty color 0x07
+    oop
+@Coin Purse
+#end
+:touch
+#play ++sfb
+Bag of coins - 50 points
+#give score 50
+#die
+
+    end
+    stat at 39,11 element Object cycle 1 p1 cp437:0x24 p2 0 step idle under Empty color 0x0F
+    oop
+@Money Bag
+#end
+:touch
+#play -tfb+sd
+Treasure - 200 points
+#give score 200
+#die
+
+    end
+    stat at 27,21 element Object cycle 1 p1 cp437:0x24 p2 0 step idle under Empty color 0x0F
+    oop
+@Money Bag
+#end
+:touch
+#play -tfb+sd
+Treasure - 200 points
+#give score 200
+#die
+
+    end
+    stat at 23,5 element Object cycle 1 p1 cp437:0x24 p2 0 step idle under Empty color 0x0F
+    oop
+@Money Bag
+#end
+:touch
+#play -tfb+sd
+Treasure - 200 points
+#give score 200
+#die
+
+    end
+  end
+end
