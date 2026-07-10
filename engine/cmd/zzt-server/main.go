@@ -54,6 +54,15 @@ func main() {
 		SavesDir:    *savesDir,
 		Server:      server,
 	}
+	if generator, err := zztgo.GenerationServiceFromEnv(); err != nil {
+		log.Printf("world generation unavailable: %v", err)
+	} else {
+		generator.SetProgressReporter(func(progress zztgo.GenerationProgress) {
+			log.Printf("generation stage=%s board=%q index=%d total=%d attempt=%d detail=%s",
+				progress.Stage, progress.Board, progress.Index, progress.Total, progress.Attempt, progress.Detail)
+		})
+		api.Generator = generator
+	}
 
 	mux := http.NewServeMux()
 	mux.Handle("/ws", server)

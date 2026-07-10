@@ -174,6 +174,33 @@ func TestValidatePlanReciprocity(t *testing.T) {
 	}
 }
 
+func TestParsePlanNormalizesPlannerStyleLinks(t *testing.T) {
+	src := `# World Plan: SPACED
+
+## Board graph
+
+| # | id | name | concept | dark | exits/links |
+|---|----|------|---------|------|-------------|
+| 0 | title | Title Screen | title | no | — |
+| 1 | shopfront | Shop Front | START. opening | no | E → Kitchen Floor |
+| 2 | kitchen | Kitchen Floor | ovens | no | W → Shop Front |
+
+## Progression spine
+
+1. shopfront → kitchen. #endgame
+`
+	plan, err := ParsePlan(src)
+	if err != nil {
+		t.Fatal(err)
+	}
+	if err := plan.Validate(); err != nil {
+		t.Fatalf("planner-style links should normalize, got %v", err)
+	}
+	if got := plan.Boards[1].Links[0].Target; got != "kitchen" {
+		t.Fatalf("east target = %q, want kitchen", got)
+	}
+}
+
 func readLASTLITE(t *testing.T) string {
 	t.Helper()
 	path := filepath.Join("..", "llmworld", "plans", "LASTLITE.md")

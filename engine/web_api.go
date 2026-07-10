@@ -1,14 +1,19 @@
 package zztgo
 
 import (
+	"context"
 	"encoding/json"
 	"errors"
+	"fmt"
+	"net"
 	"net/http"
 	"os"
 	"path/filepath"
 	"sort"
 	"strconv"
 	"strings"
+	"sync"
+	"sync/atomic"
 )
 
 // The title screen (M4.3) exists before the player has a WebSocket: they have
@@ -34,6 +39,21 @@ type WebAPI struct {
 	// Server, when set, serializes a restore against the tick loop. Without it
 	// (in tests, where nothing ticks) the RoomManager is driven directly.
 	Server *WebSocketServer
+	// Generator is optional so servers without Anthropic credentials keep all
+	// existing API endpoints available. A nil generator is initialized lazily
+	// from the environment by /api/generate.
+	Generator *GenerationService
+
+	generationMu   sync.Mutex
+	generationJobs map[string]*generationJob
+	generationSeq  uint64
+}
+
+type generationJob struct {
+	Status   string               `json:"status"`
+	World    string               `json:"world,omitempty"`
+	Error    string               `json:"error,omitempty"`
+	Progress []GenerationProgress `json:"progress"`
 }
 
 // Handler mounts the title-screen endpoints under /api/.
@@ -47,7 +67,119 @@ func (a *WebAPI) Handler() http.Handler {
 	mux.HandleFunc("/api/saves", a.handleSaves)
 	mux.HandleFunc("/api/restore", a.handleRestore)
 	mux.HandleFunc("/api/loadworld", a.handleLoadWorld)
+	mux.HandleFunc("/api/generate", a.handleGenerate)
 	return mux
+}
+
+// handleGenerate starts the M12.4 plan-then-paint pipeline. The browser only
+// supplies a premise and optional save-safe name; the result is a hosted world
+// name, never unvalidated model text.
+func (a *WebAPI) handleGenerate(w http.ResponseWriter, r *http.Request) {
+	defer func() {
+		if recovered := recover(); recovered != nil {
+			http.Error(w, fmt.Sprintf("generation internal failure: %v", recovered), http.StatusInternalServerError)
+		}
+	}()
+	if r.Method == http.MethodGet {
+		a.handleGenerationStatus(w, r)
+		return
+	}
+	if r.Method != http.MethodPost {
+		http.Error(w, "use POST", http.StatusMethodNotAllowed)
+		return
+	}
+	var body struct {
+		Prompt string `json:"prompt"`
+		Name   string `json:"name"`
+		Async  bool   `json:"async"`
+	}
+	if err := json.NewDecoder(http.MaxBytesReader(w, r.Body, 16<<10)).Decode(&body); err != nil {
+		http.Error(w, "bad request body", http.StatusBadRequest)
+		return
+	}
+	generator := a.Generator
+	if generator == nil {
+		var err error
+		generator, err = GenerationServiceFromEnv()
+		if err != nil {
+			http.Error(w, err.Error(), http.StatusServiceUnavailable)
+			return
+		}
+		a.Generator = generator
+	}
+	client, _, err := net.SplitHostPort(r.RemoteAddr)
+	if err != nil {
+		client = r.RemoteAddr
+	}
+	if body.Async {
+		jobID := fmt.Sprintf("gen-%d", atomic.AddUint64(&a.generationSeq, 1))
+		a.generationMu.Lock()
+		if a.generationJobs == nil {
+			a.generationJobs = make(map[string]*generationJob)
+		}
+		a.generationJobs[jobID] = &generationJob{Status: "running"}
+		a.generationMu.Unlock()
+		go a.runGenerationJob(jobID, generator, client, body.Prompt, body.Name)
+		w.WriteHeader(http.StatusAccepted)
+		writeJSON(w, struct {
+			ID string `json:"id"`
+		}{ID: jobID})
+		return
+	}
+	result, err := generator.Generate(r.Context(), client, body.Prompt, body.Name, a.Server)
+	if err != nil {
+		switch {
+		case strings.Contains(err.Error(), "rate limit"):
+			http.Error(w, err.Error(), http.StatusTooManyRequests)
+		case errors.Is(err, ErrGenerationUnavailable):
+			http.Error(w, err.Error(), http.StatusServiceUnavailable)
+		default:
+			http.Error(w, "generation failed: "+err.Error(), http.StatusUnprocessableEntity)
+		}
+		return
+	}
+	writeJSON(w, struct {
+		World string `json:"world"`
+	}{World: result.Name})
+}
+
+func (a *WebAPI) runGenerationJob(id string, generator *GenerationService, client, prompt, name string) {
+	progress := func(event GenerationProgress) {
+		a.generationMu.Lock()
+		if job := a.generationJobs[id]; job != nil {
+			job.Progress = append(job.Progress, event)
+		}
+		a.generationMu.Unlock()
+	}
+	result, err := generator.GenerateWithProgress(context.Background(), client, prompt, name, a.Server, progress)
+	a.generationMu.Lock()
+	defer a.generationMu.Unlock()
+	job := a.generationJobs[id]
+	if job == nil {
+		return
+	}
+	if err != nil {
+		job.Status = "failed"
+		job.Error = err.Error()
+		return
+	}
+	job.Status = "complete"
+	job.World = result.Name
+}
+
+func (a *WebAPI) handleGenerationStatus(w http.ResponseWriter, r *http.Request) {
+	id := r.URL.Query().Get("id")
+	a.generationMu.Lock()
+	job := a.generationJobs[id]
+	if job == nil {
+		a.generationMu.Unlock()
+		http.Error(w, "no such generation job", http.StatusNotFound)
+		return
+	}
+	copy := *job
+	copy.Progress = append([]GenerationProgress(nil), job.Progress...)
+	a.generationMu.Unlock()
+	writeJSON(w, copy)
 }
 
 // handleSaves lists the snapshots the title screen's 'R' can restore.

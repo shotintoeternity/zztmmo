@@ -138,7 +138,8 @@ const promptOutputContract = `# Output contract
 - A complete world starts with a ` + "`zwd 1`" + ` line and a ` + "`world \"NAME\"`" + ` line,
   then one or more ` + "`board`" + ` sections. When you are asked to paint one board,
   emit just that board section.
-- Every grid row is exactly 60 characters; every board has exactly one
+- Every grid row is exactly 60 one-byte ASCII legend keys; never put literal
+  Unicode/CP437 artwork in a grid row. Every board has exactly one
   ` + "`start player`" + `. Board 0 is the title screen.
 - Exit targets and passage ` + "`board`" + ` fields name other boards by their exact
   ` + "`board \"NAME\"`" + ` string. Do not reference a board you have not defined

@@ -3,6 +3,7 @@ package zztgo
 import (
 	"context"
 	"encoding/json"
+	"fmt"
 	"net/http"
 	"os"
 	"path/filepath"
@@ -548,6 +549,38 @@ func (s *WebSocketServer) GetOrCreateInstance(worldName string) (*WorldInstance,
 	}
 	s.Instances[worldName] = inst
 	return inst, nil
+}
+
+// HostGeneratedWorld installs an already-compiled, persisted world directly
+// into the instance table. Generation uses this instead of reloading its file:
+// the hosted bytes are exactly the ones that passed the compiler and M7.5 gate.
+func (s *WebSocketServer) HostGeneratedWorld(name string, world TWorld) error {
+	safe, err := SanitizeSaveName(name)
+	if err != nil {
+		return err
+	}
+	s.mu.Lock()
+	defer s.mu.Unlock()
+	if s.Instances == nil {
+		s.Instances = make(map[string]*WorldInstance)
+	}
+	if existing := s.Instances[safe]; existing != nil {
+		existing.mu.Lock()
+		occupied := len(existing.Clients) != 0
+		existing.mu.Unlock()
+		if occupied {
+			return fmt.Errorf("generated world %q is already occupied", safe)
+		}
+	}
+	rm := NewRoomManager(world)
+	s.Instances[safe] = &WorldInstance{
+		Name:        safe,
+		RoomManager: rm,
+		Clients:     make(map[PlayerID]*webSocketClient),
+		Inputs:      make(map[PlayerID]PlayerInput),
+		Title:       NewTitleSim(world),
+	}
+	return nil
 }
 
 func LoadPristineWorld(dir, name string) (TWorld, error) {

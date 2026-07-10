@@ -3,6 +3,7 @@ package zztgo
 import (
 	"fmt"
 	"regexp"
+	"sort"
 	"strconv"
 	"strings"
 )
@@ -72,9 +73,10 @@ type SpineStep struct {
 
 // Plan is a parsed world plan.
 type Plan struct {
-	WorldName string
-	Boards    []PlanBoard
-	Spine     []SpineStep
+	WorldName       string
+	Boards          []PlanBoard
+	Spine           []SpineStep
+	GenerationOrder []string // board ids, in the planner's requested paint order
 }
 
 // planMaxBoards is the ZWD/vanilla limit: MAX_BOARD = 100 non-title boards
@@ -82,11 +84,12 @@ type Plan struct {
 const planMaxBoards = 100
 
 var (
-	planTokenRe  = regexp.MustCompile(`\*\*([^*]+)\*\*`)
-	planIfRe     = regexp.MustCompile(`#if\s+(?:not\s+)?([A-Za-z_][A-Za-z0-9_]*)`)
-	planParenRe  = regexp.MustCompile(`\([^)]*\)`)
-	planStepRe   = regexp.MustCompile(`^\s*(\d+)\.\s+(.*)$`)
-	planHeadingRe = regexp.MustCompile(`^\s*#{1,6}\s+(.*)$`)
+	planTokenRe    = regexp.MustCompile(`\*\*([^*]+)\*\*`)
+	planIfRe       = regexp.MustCompile(`#if\s+(?:not\s+)?([A-Za-z_][A-Za-z0-9_]*)`)
+	planParenRe    = regexp.MustCompile(`\([^)]*\)`)
+	planLinkHeadRe = regexp.MustCompile(`(?i)(passage|north|south|east|west|n|s|e|w)\s*(↔|<->|→|->)\s*`)
+	planStepRe     = regexp.MustCompile(`^\s*(\d+)\.\s+(.*)$`)
+	planHeadingRe  = regexp.MustCompile(`^\s*#{1,6}\s+(.*)$`)
 )
 
 // ValidatePlan parses a world plan and returns nil if it is coherent, or an
@@ -110,9 +113,44 @@ func ParsePlan(src string) (Plan, error) {
 	if err != nil {
 		return Plan{}, err
 	}
+	normalizePlanLinkTargets(boards)
 	plan.Boards = boards
 	plan.Spine = parsePlanSpine(lines)
+	plan.GenerationOrder = parsePlanGenerationOrder(lines, boards)
 	return plan, nil
+}
+
+// parsePlanGenerationOrder reads the free-form "## Generation order" line
+// from the plan exemplar. It recognizes board ids, preserves their first
+// appearance, and appends omitted boards by numeric index so a malformed but
+// otherwise valid plan still has a deterministic, repairable paint order.
+func parsePlanGenerationOrder(lines []string, boards []PlanBoard) []string {
+	sec, _ := sectionLines(lines, "generation order")
+	byID := make(map[string]bool, len(boards))
+	for _, b := range boards {
+		byID[strings.ToLower(b.ID)] = true
+	}
+	var order []string
+	seen := make(map[string]bool, len(boards))
+	for _, raw := range sec {
+		for _, token := range strings.FieldsFunc(strings.ToLower(raw), func(r rune) bool {
+			return !(r >= 'a' && r <= 'z') && !(r >= '0' && r <= '9') && r != '_' && r != '-'
+		}) {
+			if byID[token] && !seen[token] {
+				order = append(order, token)
+				seen[token] = true
+			}
+		}
+	}
+	sorted := append([]PlanBoard(nil), boards...)
+	sort.Slice(sorted, func(i, j int) bool { return sorted[i].Index < sorted[j].Index })
+	for _, b := range sorted {
+		id := strings.ToLower(b.ID)
+		if !seen[id] {
+			order = append(order, id)
+		}
+	}
+	return order
 }
 
 func parsePlanWorldName(lines []string) string {
@@ -261,22 +299,20 @@ func parsePlanLinks(cell string, line int) ([]PlanLink, error) {
 	if cell == "" || cell == "—" || cell == "-" {
 		return nil, nil
 	}
-	// Split on commas and whitespace; keep only tokens that carry an arrow.
-	fields := strings.FieldsFunc(cell, func(r rune) bool {
-		return r == ',' || r == ' ' || r == '\t'
-	})
+	matches := planLinkHeadRe.FindAllStringSubmatchIndex(cell, -1)
 	var links []PlanLink
-	for _, f := range fields {
-		bidir, arrow := planArrowKind(f)
-		if arrow < 0 {
-			continue // annotation word without an arrow (e.g. leftover "via")
+	for i, m := range matches {
+		end := len(cell)
+		if i+1 < len(matches) {
+			end = matches[i+1][0]
 		}
-		left := strings.TrimSpace(f[:arrow])
-		right := strings.TrimSpace(f[arrow+arrowRuneLen(f, arrow):])
+		left := cell[m[2]:m[3]]
+		arrow := cell[m[4]:m[5]]
+		right := strings.Trim(cell[m[1]:end], " \t,;")
 		if right == "" {
-			return nil, fmt.Errorf("plan line %d: exit %q has no target board", line, f)
+			return nil, fmt.Errorf("plan line %d: exit %q has no target board", line, strings.TrimSpace(cell[m[0]:m[1]]))
 		}
-		lk := PlanLink{Bidir: bidir, Target: right}
+		lk := PlanLink{Bidir: arrow == "↔" || arrow == "<->", Target: right}
 		switch strings.ToUpper(left) {
 		case "PASSAGE":
 			lk.Kind = "passage"
@@ -294,6 +330,30 @@ func parsePlanLinks(cell string, line int) ([]PlanLink, error) {
 		links = append(links, lk)
 	}
 	return links, nil
+}
+
+// normalizePlanLinkTargets lets a planner use a display name in a readable
+// graph cell while keeping the internal graph keyed by stable board ids.
+func normalizePlanLinkTargets(boards []PlanBoard) {
+	byID := make(map[string]string, len(boards))
+	byName := make(map[string]string, len(boards))
+	for _, board := range boards {
+		byID[strings.ToLower(board.ID)] = board.ID
+		name := strings.ToLower(board.Name)
+		if _, duplicate := byName[name]; !duplicate {
+			byName[name] = board.ID
+		}
+	}
+	for i := range boards {
+		for j := range boards[i].Links {
+			target := strings.ToLower(strings.TrimSpace(boards[i].Links[j].Target))
+			if id, ok := byID[target]; ok {
+				boards[i].Links[j].Target = id
+			} else if id, ok := byName[target]; ok {
+				boards[i].Links[j].Target = id
+			}
+		}
+	}
 }
 
 // planArrowKind reports whether token f contains a link arrow and where. It

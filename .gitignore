@@ -5,6 +5,7 @@ engine/zzt
 node_modules/
 dist/
 .DS_Store
+.env
 
 # Build/deploy artifacts and runtime state
 engine/zzt-server
