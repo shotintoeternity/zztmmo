@@ -188,7 +188,11 @@ func TestM124BoardRepairThenSuccess(t *testing.T) {
 	fake, claude := newFakeClaude(t, plan, "not fenced ZWD", generatedBoard("Start", false), generatedBoard("Title", false))
 	defer claude.Close()
 	service := newGenerationTestService(t, claude.URL, 3)
-	if _, err := service.Generate(context.Background(), "test", "repair a board", "BOARDOK", nil); err != nil {
+	_, err := service.Generate(context.Background(), "test", "repair a board", "BOARDOK", nil)
+	for i, req := range fake.requests {
+		t.Logf("Request %d content:\n%s\n", i+1, req.Messages[0].Content)
+	}
+	if err != nil {
 		t.Fatal(err)
 	}
 	if len(fake.requests) != 4 || !strings.Contains(fake.requests[2].Messages[0].Content, "Attempt 1 failed") {
@@ -390,7 +394,7 @@ func TestM124BatchSuccessAndRepair(t *testing.T) {
 	
 	// Let's assert the repair request contains the validation failure
 	repairReq := fake.requests[2].Messages[0].Content
-	if !strings.Contains(repairReq, "grid has 26 rows; expected 25") {
+	if !strings.Contains(repairReq, "board must contain exactly one player tile, found 0") {
 		t.Fatalf("expected repair request to show validation failure, got: %s", repairReq)
 	}
 }
@@ -409,7 +413,7 @@ end`
   grid
   ############################################################
   #..........................................................#
-  end
+` + strings.Repeat("  ............................................................\n", 23) + `  end
 end`
 
 	got := preprocessZWDGrid(input)
@@ -441,7 +445,7 @@ end`
   ############################################################
   #..........................................................#
   #..........g...............................................#
-  end
+` + strings.Repeat("  ............................................................\n", 22) + `  end
 end`
 
 	got := preprocessZWDGrid(input)
@@ -462,7 +466,7 @@ end`
   grid
   bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb
   b...........................................................
-  end
+` + strings.Repeat("  ............................................................\n", 23) + `  end
 end`
 
 	got := preprocessZWDGrid(input)

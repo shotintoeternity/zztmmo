@@ -798,32 +798,79 @@ func preprocessZWDGrid(zwdText string) string {
 	lines := strings.Split(zwdText, "\n")
 	inGrid := false
 	var out []string
+
+	type gridRow struct {
+		indent  string
+		content string
+	}
+	var gridRows []gridRow
+	var gridIndent string
+	var firstRowIndent string
+	var hasFirstRowIndent bool
+
 	for _, line := range lines {
 		trimmed := strings.TrimSpace(line)
 		if trimmed == "grid" {
 			inGrid = true
 			out = append(out, line)
+			gridRows = nil
+			gridIndent = ""
+			firstRowIndent = ""
+			hasFirstRowIndent = false
+			for _, r := range line {
+				if r == ' ' || r == '\t' {
+					gridIndent += string(r)
+				} else {
+					break
+				}
+			}
 			continue
 		}
 		if inGrid {
 			if trimmed == "end" {
 				inGrid = false
+				// Normalize gridRows to exactly 25 rows
+				if len(gridRows) > 25 {
+					gridRows = gridRows[:25]
+				} else {
+					padIndent := firstRowIndent
+					if !hasFirstRowIndent {
+						if gridIndent == "" {
+							padIndent = "  "
+						} else {
+							padIndent = gridIndent + "  "
+						}
+					}
+					for len(gridRows) < 25 {
+						gridRows = append(gridRows, gridRow{
+							indent:  padIndent,
+							content: strings.Repeat(".", 60),
+						})
+					}
+				}
+				// Append the normalized rows to out using appropriate indentation
+				for _, row := range gridRows {
+					out = append(out, row.indent+row.content)
+				}
 				out = append(out, line)
 				continue
 			}
 			if strings.Contains(trimmed, "1234567890") {
 				continue
 			}
-			row := line
 			indent := ""
-			for _, r := range row {
+			for _, r := range line {
 				if r == ' ' || r == '\t' {
 					indent += string(r)
 				} else {
 					break
 				}
 			}
-			content := strings.TrimSpace(row)
+			if !hasFirstRowIndent {
+				firstRowIndent = indent
+				hasFirstRowIndent = true
+			}
+			content := strings.TrimSpace(line)
 			if strings.HasPrefix(content, "|") && strings.HasSuffix(content, "|") && len(content) >= 2 {
 				content = content[1 : len(content)-1]
 			}
@@ -833,8 +880,7 @@ func preprocessZWDGrid(zwdText string) string {
 			} else if len(content) < 60 {
 				content = content + strings.Repeat(".", 60-len(content))
 			}
-			row = indent + content
-			out = append(out, row)
+			gridRows = append(gridRows, gridRow{indent: indent, content: content})
 			continue
 		}
 		out = append(out, line)
