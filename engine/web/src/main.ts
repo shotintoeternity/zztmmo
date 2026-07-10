@@ -1,6 +1,6 @@
 import "./style.css";
 import { drawSidebar as paintSidebar, updateSidebar as paintSidebarHud } from "./sidebar";
-import { renderModal, handleModalKey, type Modal } from "./modal";
+import { renderModal, handleModalKey, POPUP_Y_CENTERED, type Modal } from "./modal";
 import { commandKey, isHandledKey, isMovementKey, movementMask, rawKey } from "./keys";
 import { drawTitleSidebar, titleCommand } from "./title";
 import { soundNotesFromProtocol, ZztSound } from "./sound";
@@ -299,20 +299,21 @@ const cells: ScreenCell[] = Array.from({ length: COLS * ROWS }, (_, i) => ({
 
 let hasPromptedNameOnLaunch = false;
 
+// The launch sequence: name, then world, then play. Nothing joins a room until
+// a world is chosen, so the animated title board keeps running underneath.
 function promptNicknameOnLaunch() {
   if (hasPromptedNameOnLaunch) {
     return;
   }
   hasPromptedNameOnLaunch = true;
-  openPopupEntry("Welcome to ZZTMMO! Enter name to start:", (name) => {
-    if (name && name.trim()) {
-      nickname = name.trim();
-    } else {
-      nickname = "player" + Math.floor(Math.random() * 1000);
-    }
-    worldName = "TOWN";
-    startPlay();
-  });
+  openPopupEntry(
+    "Welcome to ZZTMMO!  Enter your name:",
+    (name) => {
+      nickname = name && name.trim() ? name.trim() : "player" + Math.floor(Math.random() * 1000);
+      void showWorlds();
+    },
+    POPUP_Y_CENTERED,
+  );
 }
 
 drawScreen();
@@ -454,6 +455,31 @@ async function fetchLines(url: string, fallbackTitle: string) {
   }
 }
 
+// LOBBY_WORLD is the world everyone lands in by default and nobody has to
+// finish: the hangout. Every other world is a game you bring people to.
+const LOBBY_WORLD = "TOWN";
+
+// The blurb sits above the list as ordinary text-window lines: only "!label;"
+// lines are selectable, so none of it can be picked by accident. Keep it short.
+// The text window shows 15 lines centered on the cursor, and the cursor opens on
+// the first world — so a blurb longer than this scrolls its own first lines off
+// the top before the player has read them.
+const WORLD_SELECT_BLURB = [
+  "",
+  "  Each world runs on its own. Bring your",
+  "  friends into one and it is yours alone.",
+  "",
+  `  ${LOBBY_WORLD} is the ZZTMMO lobby: no quest, just`,
+  "  people. Drop in and hang out.",
+  "",
+  "$Pick a world",
+];
+
+/** worldLabel marks the lobby in the list, e.g. "TOWN (ZZTMMO Lobby)". */
+function worldLabel(name: string): string {
+  return name === LOBBY_WORLD ? `${name} (ZZTMMO Lobby)` : name;
+}
+
 async function showWorlds() {
   let worlds: string[] = [];
   try {
@@ -470,34 +496,38 @@ async function showWorlds() {
     return;
   }
 
-  openSelectList("ZZT Worlds", worlds, (selected) => {
-    const name = selected.split(" (")[0];
-    void loadWorld(name);
-  });
+  // The lobby leads, then everything else in the order the server listed it.
+  const ordered = [
+    ...worlds.filter((w) => w === LOBBY_WORLD),
+    ...worlds.filter((w) => w !== LOBBY_WORLD),
+  ];
+
+  openSelectList(
+    "Select a World",
+    ordered.map(worldLabel),
+    (selected) => {
+      const name = selected.split(" (")[0];
+      void enterWorld(name);
+    },
+    WORLD_SELECT_BLURB,
+  );
 }
 
-async function loadWorld(name: string) {
-  try {
-    const response = await fetch("/api/loadworld", {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ name }),
-    });
-    if (!response.ok) {
-      const reason = (await response.text()).trim() || `error ${response.status}`;
-      openWindow("Select World", ["", `  Not loaded: ${reason}`, ""], true);
-      return;
-    }
-  } catch {
-    openWindow("Select World", ["", "  Not loaded: the server did not answer.", ""], true);
-    return;
-  }
-
-  // The world changed under the title screen: repaint board 0 and the name.
+// enterWorld joins the chosen world's own instance. It does NOT call
+// /api/loadworld: that swaps the server's single default world for everybody
+// and is refused while anyone is playing. Each world already has its own
+// RoomManager server-side (WebSocketServer.GetOrCreateInstance), reached by the
+// ?world= parameter wsURL sends — which is what makes worlds independent.
+async function enterWorld(name: string) {
   worldName = name;
   await showTitle();
-  openWindow("Select World", ["", `  Loaded ${name}.ZZT. Press P to play.`, ""], true);
+  startPlay();
 }
+
+// The old loadWorld POSTed /api/loadworld, swapping the server's single default
+// world for everybody — which the server rightly refused while anyone was in a
+// room. enterWorld replaces it: worlds are instances, so picking one is a local
+// choice and needs no server-wide reload. The endpoint remains for other callers.
 
 // showSavedGames is GameWorldLoad(".SAV"): the selectable "Saved Games" window.
 // Picking one restores it server-side, which is refused while anybody is still
@@ -888,16 +918,25 @@ function openWindow(title: string, lines: string[], viewingFile: boolean, replyS
 // openSelectList is vanilla's selectable file window (GameWorldLoad's "Saved
 // Games"). The lines are rendered as text-window hyperlinks so that Enter yields
 // the entry itself; openWindow's own selectable path is bound to scroll replies.
-function openSelectList(title: string, entries: string[], onPick: (entry: string) => void) {
+function openSelectList(
+  title: string,
+  entries: string[],
+  onPick: (entry: string) => void,
+  header: string[] = [],
+) {
   if (entries.length === 0) {
     return;
   }
+  const lines = [...header, ...entries.map((entry) => `!${entry};${entry}`)];
   openModal({
     kind: "text",
-    state: { title, lines: entries.map((entry) => `!${entry};${entry}`), linePos: 1, viewingFile: false },
+    // The cursor starts on the first entry, not on the prose above it.
+    state: { title, lines, linePos: header.length + 1, viewingFile: false },
     baseTitle: title,
     moved: false,
     selectable: true,
+    // Enter on a blurb line must not dismiss a picker the player has to answer.
+    requireSelection: header.length > 0,
     onSelect: onPick,
   });
 }
@@ -915,8 +954,9 @@ function openEntry(
 function openPopupEntry(
   question: string,
   onSubmit: (text: string | null) => void,
+  y?: number,
 ) {
-  openModal({ kind: "popupEntry", question, buffer: "", onSubmit });
+  openModal({ kind: "popupEntry", question, buffer: "", onSubmit, y });
 }
 
 // openYesNo is SidebarPromptYesNo.

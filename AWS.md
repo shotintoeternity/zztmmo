@@ -38,7 +38,11 @@ It starts the Go server with:
 /opt/zztmmo/zzt-server -addr :8080 -world TOWN -web web/dist -help . -saves saves
 ```
 
-Pressing **'W'** on the title screen allows players to select and load other ZZT worlds dynamically (supported only when no players are active in rooms).
+On launch the browser asks for a name, then shows the world picker; pressing
+**'W'** on the title screen reopens it. Each world is its own server-side
+instance (`WebSocketServer.GetOrCreateInstance`, joined via `/ws?world=NAME`), so
+players in different worlds never share rooms and picking one no longer reloads
+the server's default world. `TOWN` is the ZZTMMO lobby.
 
 Installed files live under:
 

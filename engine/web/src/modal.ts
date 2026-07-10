@@ -59,6 +59,10 @@ export type TextModal = {
   /** True for scrolls: Enter on a "!label" line sends a reply. */
   selectable: boolean;
   onSelect: (label: string) => void;
+  /** Pickers whose lines include prose: Enter on a non-link line does nothing
+   *  rather than dismissing the window. Escape still closes. Scrolls leave this
+   *  unset, because there Enter on any line is how you close them. */
+  requireSelection?: boolean;
 };
 
 export type YesNoModal = {
@@ -92,7 +96,13 @@ export type PopupEntryModal = {
   question: string;
   buffer: string;
   onSubmit: (text: string | null) => void;
+  /** Top row of the box. Defaults to vanilla's POPUP_Y; the launch name prompt
+   *  centers itself instead, having no board it must avoid covering. */
+  y?: number;
 };
+
+/** POPUP_ROWS tall, centered in the 25-row screen. */
+export const POPUP_Y_CENTERED = Math.floor((25 - 6) / 2);
 
 export type Modal = TextModal | YesNoModal | EntryModal | PopupEntryModal;
 
@@ -184,16 +194,17 @@ function renderEntry(write: WriteText, m: EntryModal) {
 
 // renderPopupEntry is PopupPromptString: the box, then the same field inside it.
 function renderPopupEntry(write: WriteText, m: PopupEntryModal) {
+  const top = m.y ?? POPUP_Y;
   const rows = [strTop, strText, strSep, strText, strText, strBottom];
   for (let i = 0; i < rows.length; i += 1) {
-    write(POPUP_X, POPUP_Y + i, POPUP_COLOR, rows[i]);
+    write(POPUP_X, top + i, POPUP_COLOR, rows[i]);
   }
   const centered = POPUP_X + 1 + Math.floor((TEXT_WINDOW_WIDTH - m.question.length) / 2);
-  write(centered, POPUP_Y + 1, POPUP_COLOR, m.question);
+  write(centered, top + 1, POPUP_COLOR, m.question);
   promptField(
     write,
     POPUP_FIELD_X,
-    POPUP_FIELD_Y,
+    top + (POPUP_FIELD_Y - POPUP_Y),
     POPUP_COLOR,
     POPUP_FIELD_COLOR,
     POPUP_FIELD_WIDTH,
@@ -244,6 +255,10 @@ function textKey(m: TextModal, event: KeyboardEvent): KeyResult {
       const label = hyperlinkOf(m.state.lines[m.state.linePos - 1] ?? "");
       if (label && m.selectable) {
         m.onSelect(label);
+        return "close";
+      }
+      if (m.requireSelection) {
+        return "ignore";
       }
       return "close";
     }
