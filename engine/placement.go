@@ -29,13 +29,17 @@ func (e *Engine) StatAt(x, y int16, exceptStatId int16) (int16, bool) {
 	return 0, false
 }
 
-// PlacementUnoccupied reports whether (x, y) is on the board and does not
-// already show a player.
-func (e *Engine) PlacementUnoccupied(x, y int16) bool {
+// PlacementUnoccupied reports whether (x, y) is on the board, does not already
+// show a player, and is not held by any stat.
+func (e *Engine) PlacementUnoccupied(x, y int16, exceptStatId int16) bool {
 	if x < 1 || x > BOARD_WIDTH || y < 1 || y > BOARD_HEIGHT {
 		return false
 	}
-	return e.Board.Tiles[x][y].Element != E_PLAYER
+	if e.Board.Tiles[x][y].Element == E_PLAYER {
+		return false
+	}
+	_, held := e.StatAt(x, y, exceptStatId)
+	return !held
 }
 
 // PlacementOpen reports whether a player may be placed on (x, y) outright: on
@@ -45,7 +49,10 @@ func (e *Engine) PlacementUnoccupied(x, y int16) bool {
 //
 // The cheap tile tests run first so a full board costs no stat scans.
 func (e *Engine) PlacementOpen(x, y int16, exceptStatId int16) bool {
-	if !e.PlacementUnoccupied(x, y) || e.Board.Tiles[x][y].Element != E_EMPTY {
+	if x < 1 || x > BOARD_WIDTH || y < 1 || y > BOARD_HEIGHT {
+		return false
+	}
+	if e.Board.Tiles[x][y].Element != E_EMPTY {
 		return false
 	}
 	_, held := e.StatAt(x, y, exceptStatId)

@@ -430,7 +430,7 @@ before building new feature surface. The executor protocol is positional —
 remaining feature milestones on purpose. Ranked by player impact
 (2026-07-10 planning session; see NOTES.md).
 
-- [ ] **M7.1 [URGENT] — Spawn at the vanilla start point, not the nearest blank
+- [x] **M7.1 [URGENT] — Spawn at the vanilla start point, not the nearest blank
   square.**
   A player joining a board whose floor is carpeted in fake walls spawns in
   whatever stray empty square the search finds, far from where the world author

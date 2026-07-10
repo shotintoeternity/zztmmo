@@ -316,7 +316,11 @@ func roomSpawn(room *Room, spawnX, spawnY int16) (int16, int16) {
 		spawnX = BOARD_WIDTH / 2
 		spawnY = BOARD_HEIGHT / 2
 	}
-	if isSpawnOpen(room, spawnX, spawnY) || requested && isSpawnUnoccupied(room, spawnX, spawnY) {
+	if requested {
+		if isSpawnOpen(room, spawnX, spawnY) || isRequestedSpawnUnoccupied(room, spawnX, spawnY) {
+			return spawnX, spawnY
+		}
+	} else if isSpawnUnoccupied(room, spawnX, spawnY) {
 		return spawnX, spawnY
 	}
 
@@ -340,7 +344,14 @@ func isSpawnOpen(room *Room, x, y int16) bool {
 }
 
 func isSpawnUnoccupied(room *Room, x, y int16) bool {
-	return room.Engine.PlacementUnoccupied(x, y)
+	return room.Engine.PlacementUnoccupied(x, y, -1)
+}
+
+func isRequestedSpawnUnoccupied(room *Room, x, y int16) bool {
+	if x < 1 || x > BOARD_WIDTH || y < 1 || y > BOARD_HEIGHT {
+		return false
+	}
+	return room.Engine.Board.Tiles[x][y].Element != E_PLAYER
 }
 
 func (rm *RoomManager) LeavePlayer(playerID PlayerID) bool {
