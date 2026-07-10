@@ -50,8 +50,9 @@ func main() {
 
 	fmt.Printf("Starting live generation for prompt: %q\n", prompt)
 
-	// Ensure batch size is set. Let's try BatchSize = 2 to demo the new batch painting!
-	os.Setenv("ZZT_GENERATION_BATCH_SIZE", "2")
+
+	os.Setenv("ZZT_GENERATION_BATCH_SIZE", "1")
+	os.Setenv("ZZT_GENERATION_ATTEMPTS", "5")
 
 	service, err := zztgo.GenerationServiceFromEnv()
 	if err != nil {
@@ -60,7 +61,7 @@ func main() {
 
 	service.SetProgressReporter(func(p zztgo.GenerationProgress) {
 		if p.Board != "" {
-			fmt.Printf("[%s] (Board: %s, Attempt %d/%d): %s\n", p.Stage, p.Board, p.Attempt, 3, p.Detail)
+			fmt.Printf("[%s] (Board: %s, Attempt %d/5): %s\n", p.Stage, p.Board, p.Attempt, p.Detail)
 		} else {
 			fmt.Printf("[%s]: %s\n", p.Stage, p.Detail)
 		}
