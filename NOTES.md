@@ -784,3 +784,47 @@ today. Decisions, in the order the tasks now appear:
   superseded by M7.4. The TransferEvent sound double-path
   (room_manager.go:411-415, room-wide *and* per-player) gets resolved to
   traveller-only in the same task.
+
+## 2026-07-10 — Vanilla parity audit; M8/M9 added, M6.4 added, M5 broken down
+
+PROCESS: the advisor tool was unavailable this session (recorded as before,
+per rule 5).
+
+Audited the fork against `reference/reconstruction-of-zzt/SRC/*.PAS` and the
+Go port, feature by feature. Found COMPLETE and replay-guarded: the full
+element tick/touch surface; the entire ZZT-OOP command set (grep of oop.go's
+command strings against OOP.PAS — all present, including flags, counters,
+directions, and per-player `#endgame`); per-player board time limits
+(elements.go:1483-1495) with the TIME cheat and HUD fields; vanilla
+message-timer flash messages (game.go:1259 — the real E_MESSAGE_TIMER stat,
+so messages reach the browser as board cells); passage-arrival pause per
+player (elements.go:1438, matching ELEMENTS.PAS:1439's `GamePaused := true`);
+energizer including the 10-tick warning jingle; debug cheats; high scores;
+world select; room snapshots (M4.3a); sound (M4.4); CP437/EGA rendering;
+keyboard vocabulary (M4.2). The terminal editor survived conversion whole —
+`EditorFloodFill` included (editor.go:480) — except `EditorTransferBoard`
+(TODO stub, editor.go:422).
+
+Gaps found → tasks:
+* `BoardShoot`'s point-blank damage guard reads `PlayerFor(0).EnergizerTicks`
+  (game.go:1411) — the wrong player whenever the target isn't stat 0 → M8.1.
+  The same branch lets a player point-blank another player for damage, which
+  contradicts M2.4's no-PvP bullet rule; M8.1 reconciles and records it.
+* `ResetMessageNotShownFlags` resets only player 0 (elements.go:1505) → the
+  known instance inside M8.2, which sweeps the whole `PlayerFor(0)`/`Stats[0]`
+  class and leaves a classification table here.
+* Browser board changes cut instantly; vanilla fades via
+  `TransitionDrawBoardChange` (game.go:1448) → M9.1, client-side only.
+* No `A` About screen on the browser title → M9.2.
+* Saves drop per-player inventory (M4.3a's documented decision) → M6.4,
+  gated on M6.2 identity, stored as a sidecar so the vanilla file format is
+  never touched.
+* M5 was four coarse tasks; now M5.0–M5.7, each mapped to specific
+  EDITOR.PAS/editor.go procedures with line cites so a single-session agent
+  can execute one without re-deriving the map.
+
+Deliberate non-goals — vanilla behaviors we intentionally do not restore,
+so future audits don't re-flag them: game-over ending the run (death
+respawns instead, M2.4/M4.3 DEVIATIONs), `S` game speed (the server owns the
+110ms tick), global pause (per-player instead, M3.11), and the modal
+terminal editor as the browser path (M5 replaces it; the terminal keeps it).

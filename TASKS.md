@@ -537,6 +537,81 @@ remaining feature milestones on purpose. Ranked by player impact
   DoD: the script fetches whichever named titles the Museum actually hosts,
   validation passes for each, and the world picker lists them.
 
+## M8 — Vanilla parity: simulation fidelity
+
+Goal: close the gaps where the multiplayer generalization (M2.x) drifted from
+vanilla per-player semantics. Parity audit 2026-07-10 (see NOTES.md): the
+element tick/touch surface, the full ZZT-OOP command set, per-player time
+limits, flash messages, passage-arrival pause, energizer, cheats, and high
+scores are all complete and replay-guarded; the tasks below are the remainder.
+
+- [ ] **M8.1 — Point-blank shots must respect the *target* player's
+  energizer.** `BoardShoot` (`game.go:1402-1420`) guards its damage branch
+  with `e.PlayerFor(0).EnergizerTicks <= 0` (`game.go:1411`): whichever player
+  stands in front of the shooter, the check reads player 0's energizer.
+  Vanilla (`GAME.PAS` BoardShoot) reads `World.Info.EnergizerTicks` — the one
+  player's — so the correct M2.1-style generalization is the player *on the
+  target square*. Fix: when the target tile is `E_PLAYER`, resolve the stat
+  via `StatAt` (`placement.go`) and use that player's `EnergizerTicks`; leave
+  the rest of the condition byte-for-byte (its `A || B && C` precedence is
+  original — do not "fix" it). While here, reconcile with M2.4's "player
+  bullets don't damage players": the branch fires when
+  `(Element == E_PLAYER) == (source >= SHOT_SOURCE_PLAYER_BASE)`, which reads
+  as *a player point-blanking a player CAN hurt them*, contradicting
+  BulletTick's ownership rule. Decide (recommended: point-blank follows the
+  same no-PvP rule) and record the decision in NOTES.md.
+  DoD: headless test — A shoots point-blank at energized B (no damage), at
+  un-energized C (outcome per the PvP decision), and a creature shoots an
+  energized nonzero-stat player (no damage); `go test ./...` green; replay
+  fixture unchanged (single player: PlayerFor(0) *is* the target).
+
+- [ ] **M8.2 — Sweep the remaining single-player assumptions.** M8.1's bug was
+  found by grep, not luck; finish the sweep. For every `PlayerFor(0)`,
+  `Stats[0]`, and `PlayerDir` read in sim files (`elements.go`, `game.go`,
+  `oop.go`), classify it: (a) terminal-wrapper or title-screen only
+  (`GamePlayLoop`, `GameTitleLoop`, sidebar draw — fine), (b) world-create or
+  init before any join (fine), or (c) reachable from `GameStepWithInputs` in
+  a multi-room engine (fix it, following M4.3's HelpEvent precedent). One
+  known (c): `ResetMessageNotShownFlags` (`elements.go:1505-1518`) resets hint
+  flags for player 0 only — make it cover every entry in `e.Players`
+  (spawning players are already handled by `ResetPlayerState`,
+  `gamevars.go:479`). Deliverable: the fixes plus a classification table
+  appended to NOTES.md so the next audit starts from evidence.
+  DoD: the table covers every grep hit; a test per (c) fix;
+  `go test ./...` green; replay fixture unchanged.
+
+## M9 — Vanilla parity: presentation
+
+Goal: the browser should look like ZZT even between boards. Client-side only —
+no protocol message changes, no simulation changes.
+
+- [ ] **M9.1 — Board-change transition fade.** Vanilla covers every board
+  change with `TransitionDrawBoardChange` (`game.go:1448-1456`): fill the
+  60x25 viewport with purple `'\xdb'` cells in `TransitionTable` random order,
+  then reveal the new board in the same order. The terminal path still does
+  this; the browser cuts instantly on a `boardChange` snapshot. Implement it
+  client-side in `web/src/main.ts`: on `boardChange`, overlay the board area,
+  fill cells in a locally shuffled order, then reveal the freshly applied
+  snapshot in that order over roughly vanilla's duration. Presentation only:
+  local `Math.random` is fine (CLAUDE.md rule 2 governs simulation, not the
+  client); diffs arriving during the animation must not be lost or painted
+  over its final state.
+  DoD: passage and edge transfers show fill-then-reveal in the browser; a
+  node-driven TS test (the M4.3a pattern) covers the order and
+  complete-reveal logic; `go test ./...` untouched and green.
+
+- [ ] **M9.2 — Title-screen About and menu completeness.** Vanilla's title
+  monitor accepts `A` to show ABOUT.HLP through the help viewer; the browser
+  title (M4.3) has start/restart, `W`, `R`, quit, and high scores, but no `A`.
+  Wire it through the existing `HelpEvent`/help-window path (M3.9) — the file
+  already ships (`engine/ABOUT.HLP`). While there, compare the browser title
+  key set against `ElementMonitorTick`'s vocabulary (`elements.go:1498-1503`)
+  and vanilla's title loop in `GAME.PAS`; the deliberate omissions stay (`S`
+  game speed — the server owns the tick; `E` editor — M5), and every other
+  missing key is either wired or recorded in NOTES.md as omitted on purpose.
+  DoD: `A` on the browser title opens the About window, with a protocol-level
+  test; `go test ./...` green.
+
 ## M6 — Chat and identity
 
 Goal: players in a server can talk to each other in a ZZT-styled chat box, and
@@ -586,28 +661,122 @@ stable identity outranks creation tooling for an MMO. See NOTES.md.)
   scrollback to a joining client. DoD: chat history survives a server restart,
   and the storage interface has an in-memory fake used by tests.
 
+- [ ] **M6.4 — Account-keyed player-state persistence.** Requires M6.2.
+  Vanilla parity gap deferred by M4.3a: restoring a save returns *your*
+  health/ammo/keys, but fork snapshots drop players — `World.Info` can hold
+  only one player's counters, so N players cannot round-trip through the
+  vanilla file format. Once accounts exist, persist each player's
+  `PlayerState` keyed by account id in the M6.3 storage interface: write it
+  on disconnect and alongside `SaveSnapshot` (a sidecar JSON next to the
+  `.SAV` — never change the vanilla file format), and restore it when that
+  account joins the world (set the fields on the freshly spawned
+  `PlayerState` before its first tick, the way `ResetPlayerState`,
+  `gamevars.go:479`, does). Guests keep joining fresh. Decisions to record in
+  NOTES.md: state is scoped per-(account, world) vs per-(account, snapshot),
+  and what happens when one account has two concurrent sessions.
+  DoD: a signed-in player collects keys, disconnects, the server restarts,
+  they rejoin with the keys intact; a guest joins fresh; `go test ./...`
+  green; replay fixture unchanged (restore happens outside the sim, before
+  the first tick).
+
 ## M5 — Creation and full-featured ZZT tooling
 
 Goal: support the creation features that make ZZT “full ZZT,” not only runtime
-playback.
+playback. The machine conversion kept the whole modal terminal editor
+(`EditorLoop`, `editor.go:39-818`) except `EditorTransferBoard` (a TODO stub,
+`editor.go:422`); it and `reference/reconstruction-of-zzt/SRC/EDITOR.PAS` are
+the semantic reference for every task below. The browser editor is a new
+protocol surface over a server-side, never-ticked session world (M5.0 decides
+the model). CLAUDE.md rules apply unchanged: port semantics faithfully, keep
+the sim untouched, replay green.
 
-- [ ] **M5.0 — Browser board editor shell.** Bring up a browser editor surface
-  using the same CP437 renderer and modal UI system, initially read-only with
-  cursor movement and tile inspection. DoD: a user can open a board in editor
-  mode and inspect tiles/stats in the browser.
+(2026-07-10: broken down from four coarse tasks into M5.0–M5.7; see NOTES.md.)
 
-- [ ] **M5.1 — Editable boards and object properties.** Implement tile
-  placement, color/pattern selection, stat parameter editing, board properties,
-  and object text editing. DoD: edits round-trip through the existing ZZT board
-  serializer and reload correctly.
+- [ ] **M5.0 [ADVISOR] — Editor session model and read-only shell.** Decide
+  and build the session model before any editing lands: an editor session is
+  a server-side copy of a world (a fresh `WorldCreate` or a loaded `.ZZT`),
+  owned by exactly one client, never ticked, and invisible to live rooms —
+  the `TitleSim` precedent (`title_sim.go` runs an isolated engine on a
+  copied world) is the shape to follow. Protocol: `editorEnter{world}` /
+  `editorExit`; reuse the existing snapshot/diff shape for the board render;
+  the cursor is client-local. Read-only v1: cursor movement plus a
+  tile-inspect readout matching `EditorDrawSidebar`/`EditorUpdateSidebar`
+  (`editor.go:56-145`, `EDITOR.PAS:89-186`) — element name, color,
+  coordinates, and P1/P2/P3 for a stat under the cursor.
+  DoD: a browser opens a world in editor mode, moves the cursor, and reads
+  tile info; live games are unaffected; protocol tests; `go test ./...` and
+  replay green.
 
-- [ ] **M5.2 — ZZT-OOP authoring workflow.** Add browser editing for object
-  code with label navigation, validation helpers, and save/apply behavior. DoD:
-  creating or modifying an object script changes runtime behavior after reload.
+- [ ] **M5.1 — Tile placement, patterns, colors, drawing, flood fill.** Port
+  the interaction semantics of `EditorPlaceTile` / `EditorSetAndCopyTile` /
+  `EditorPrepareModifyTile` (`editor.go:146-203`, `EDITOR.PAS:187-246`): the
+  pattern row and color selector as `EditorDrawSidebar` presents them,
+  draw-mode toggle, copy-tile pickup (Enter grabs the tile under the cursor
+  into the pattern slot), and `EditorFloodFill` (`editor.go:480`,
+  `EDITOR.PAS:588`). Edits travel client → protocol → session world on the
+  server; the render returns through the normal diff path. Preserve vanilla's
+  rules for which elements take the selected color versus their fixed color,
+  and what placing over an existing stat does.
+  DoD: place, erase, draw-drag, and flood fill work in the browser; edits
+  round-trip through `BoardClose`/`BoardOpen` (save the session, reload it);
+  protocol-level tests.
 
-- [ ] **M5.3 — World persistence and publishing.** Add save/export/import paths
-  for edited worlds and multiplayer-safe persistence. DoD: a browser-created
-  world can be saved, reloaded, exported, and hosted for other clients.
+- [ ] **M5.2 — Board and world property dialogs.** `EditorEditBoardInfo`
+  (`editor.go:204-288`, `EDITOR.PAS:247-351`): board title, max player shots,
+  dark, the four exits (targets picked via `EditorSelectBoard`,
+  `editor.go:866`), reenter-when-zapped, time limit; plus the world name.
+  Build the dialogs on the M4.1 window system.
+  DoD: set dark, a time limit, and an exit in the browser editor; save; play
+  the world in a live room — all three take effect.
+
+- [ ] **M5.3 — Stat parameter editing.** `EditorEditStat` /
+  `EditorEditStatSettings` (`editor.go:315-417`, `EDITOR.PAS:396-527`):
+  per-element parameter dialogs — P1/P2/P3 with their
+  `ParamTextName`/`Param1Name`/`Param2Name`/`ParamDirName`/`ParamBoardName`
+  meanings from `ElementDefs`, step/direction pickers, cycle, and vanilla's
+  bind behavior for objects. Centipede Follower/Leader stay untouched by the
+  dialog, as in vanilla.
+  DoD: edit a spinning gun's firing rate, a passage's destination board, and
+  an object's cycle in the browser; each behaves accordingly in play.
+
+- [ ] **M5.4 — Object code editor.** `EditorEditStatText` /
+  `EditorOpenEditTextWindow` (`editor.go:289-314,819-835`,
+  `EDITOR.PAS:352-395`): a CP437 multi-line text editor in the browser (build
+  on the M4.1 window layer and the M6.1 input-capture mode) for object and
+  scroll text, preserving vanilla's line/`@name`/`#`/`:label` conventions and
+  the `DataLen` bookkeeping on save.
+  DoD: rewrite the TOWN vendor's script in the browser, save, play — the new
+  dialogue runs; the text round-trips through the serializer.
+
+- [ ] **M5.5 — Board management and transfer.** `EditorAppendBoard` /
+  `EditorSelectBoard` (`editor.go:21-38,866-889`, `EDITOR.PAS:51-70`) for
+  adding, switching, and naming boards — and port the one dropped procedure:
+  `EditorTransferBoard` (TODO stub at `editor.go:422-479`,
+  `EDITOR.PAS:528-587`) as browser import/export of a single board (file
+  download/upload of the vanilla board format; names through
+  `SanitizeSaveName`).
+  DoD: create a second board, link exits both ways, walk between them in
+  play; export a board and re-import it into another world.
+
+- [ ] **M5.6 — Save, host, and publish edited worlds.** Save the session
+  world under a new name (`SanitizeSaveName`, bytes via `worldWriteTo`) into
+  the hosted worlds directory so `ListWorlds` (`web_api.go:340-351`) and the
+  world picker see it, with a collision policy — no silent overwrite of a
+  world anyone is playing (follow `RestoreSnapshot`'s occupancy refusal,
+  M4.3a). Include `.ZZT` download (export) and upload, gated by the M7.5
+  validation (headless load + 200 steps, no panic).
+  DoD: a world built in the browser editor saves, appears in the picker, and
+  a second client joins and plays it; uploading a hand-made `.ZZT` works; a
+  traversal filename is rejected, with a test.
+
+- [ ] **M5.7 — ZZT-OOP authoring aids.** Label navigation and validation in
+  the code editor: use the real tokenizer semantics (`OopParseWord` and
+  friends in `oop.go` — do not write a second parser) to list `:labels`,
+  flag `#send`s to labels that don't exist in the target object, and warn on
+  unknown `#commands`. Purely advisory — never block a save; vanilla accepts
+  anything and worlds rely on that.
+  DoD: the label list and warnings render for the vendor object; a send to a
+  missing label warns; saving an "invalid" script still succeeds.
 
 ## Future Tasks & Community Additions
 
