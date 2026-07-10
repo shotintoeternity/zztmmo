@@ -41,6 +41,7 @@ body {
   justify-content: center;
   height: 100%;
   background: #000;
+  position: relative;
 }
 
 canvas {
@@ -52,4 +53,77 @@ canvas {
   /* Nearest-neighbour: CP437 glyphs must stay crisp, never resampled. */
   image-rendering: pixelated;
   outline: none;
+}
+
+.dos-modal {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background: rgba(0, 0, 0, 0.7);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 100;
+}
+
+.dos-modal-content {
+  background: #0000a8;
+  border: 4px double #ffffff;
+  padding: 30px;
+  width: 90%;
+  max-width: 450px;
+  text-align: center;
+  color: #ffffff;
+  font-family: 'Perfect DOS VGA 437', monospace;
+  box-shadow: 10px 10px 0px rgba(0, 0, 0, 0.5);
+}
+
+.dos-modal-content h2 {
+  color: #ffff55;
+  margin-top: 0;
+  font-size: 24px;
+  letter-spacing: 1px;
+}
+
+.dos-modal-content p {
+  font-size: 16px;
+  margin-bottom: 20px;
+  color: #55ffff;
+}
+
+.dos-modal-content input {
+  width: 100%;
+  padding: 10px;
+  background: #000000;
+  border: 2px solid #ffffff;
+  color: #ffffff;
+  font-family: 'Perfect DOS VGA 437', monospace;
+  font-size: 18px;
+  text-transform: uppercase;
+  outline: none;
+  text-align: center;
+  margin-bottom: 20px;
+}
+
+.dos-modal-content input:focus {
+  border-color: #ffff55;
+}
+
+.dos-modal-content button {
+  background: #00a8a8;
+  color: #ffffff;
+  border: 2px solid #ffffff;
+  padding: 8px 25px;
+  font-family: 'Perfect DOS VGA 437', monospace;
+  font-size: 18px;
+  cursor: pointer;
+  outline: none;
+}
+
+.dos-modal-content button:hover {
+  background: #55ffff;
+  color: #000000;
+  border-color: #ffffff;
 }

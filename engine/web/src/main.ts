@@ -334,12 +334,17 @@ if (!app) {
   throw new Error("missing app root");
 }
 
-// M4.0: the page is the ZZT screen and nothing else — no topbar, no overlay, no
-// event log. Anything the player needs to see must be drawn as CP437 cells on
-// the 80x25 text-mode screen, the way the original does it.
 app.innerHTML = `
   <div class="canvas-wrap">
     <canvas data-screen width="${WIDTH}" height="${HEIGHT}" tabindex="0"></canvas>
+    <div id="name-modal" class="dos-modal">
+      <div class="dos-modal-content">
+        <h2>Welcome to ZZTMMO!</h2>
+        <p>Please type in your name to start.</p>
+        <input type="text" id="nickname-input" autofocus maxlength="15" placeholder="PLAYER NAME" />
+        <button id="start-button">Enter</button>
+      </div>
+    </div>
   </div>
 `;
 
@@ -349,6 +354,32 @@ if (!ctx) {
   throw new Error("canvas context unavailable");
 }
 const screenCtx = ctx;
+
+const nameModal = document.getElementById("name-modal");
+const nicknameInput = document.getElementById("nickname-input") as HTMLInputElement;
+const startButton = document.getElementById("start-button");
+
+if (nameModal && nicknameInput && startButton) {
+  const submitName = () => {
+    const val = nicknameInput.value.trim();
+    if (val) {
+      nickname = val;
+    } else {
+      nickname = "player" + Math.floor(Math.random() * 1000);
+    }
+    nameModal.style.display = "none";
+    canvas.focus();
+    worldName = "TOWN";
+    startPlay();
+  };
+
+  startButton.addEventListener("click", submitName);
+  nicknameInput.addEventListener("keydown", (e) => {
+    if (e.key === "Enter") {
+      submitName();
+    }
+  });
+}
 
 let ws: WebSocket | null = null;
 let playerId = 0;
@@ -473,19 +504,12 @@ function leaveToTitle() {
 }
 
 function startPlay() {
-  openEntry("Enter name:", "", 15, "alphanum", (name) => {
-    if (name && name.trim()) {
-      nickname = name.trim();
-    } else {
-      nickname = "player" + Math.floor(Math.random() * 1000);
-    }
-    zztSound.setEnabled(true);
-    zztSound.resume();
-    leavingToTitle = false;
-    drawSidebar();
-    drawScreen();
-    connect();
-  });
+  zztSound.setEnabled(true);
+  zztSound.resume();
+  leavingToTitle = false;
+  drawSidebar();
+  drawScreen();
+  connect();
 }
 
 // fetchLines backs the title screen's read-only windows (About, High Scores,
