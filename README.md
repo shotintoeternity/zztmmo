@@ -7,9 +7,7 @@
 
 ZZTMMO transforms Tim Sweeney's legendary 1991 shareware classic, **ZZT**, into a fully synchronized, multiplayer online world. Play, chat, explore, and dodge ruffians cooperatively or PvP in real-time, all inside a web browser rendered in pixel-perfect classic DOS style.
 
----
-
-## 🚀 Key Features
+##  Key Features
 
 *   **👥 Shared Co-Op Play:** Share the board with multiple players simultaneously. Team up to solve puzzles, shoot monsters, and collect gems.
 *   **💬 Server-Wide Global Chat:** Chat with anyone on the server at any time. Press **`C`** to pull up a scrollable, ZZT-style paged text window to read message history, or shout out to the lobby.
