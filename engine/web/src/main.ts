@@ -172,13 +172,39 @@ fontImg.src = pcCgaUrl;
 const fontCanvases: HTMLCanvasElement[] = [];
 
 fontImg.onload = () => {
+  const tempCanvas = document.createElement("canvas");
+  tempCanvas.width = fontImg.width;
+  tempCanvas.height = fontImg.height;
+  const tempCtx = tempCanvas.getContext("2d");
+  if (!tempCtx) return;
+
+  tempCtx.drawImage(fontImg, 0, 0);
+  const imgData = tempCtx.getImageData(0, 0, tempCanvas.width, tempCanvas.height);
+  const data = imgData.data;
+
+  // Make black/dark pixels transparent and normalize glyphs to pure white
+  for (let i = 0; i < data.length; i += 4) {
+    const r = data[i];
+    const g = data[i + 1];
+    const b = data[i + 2];
+    if (r + g + b < 50) {
+      data[i + 3] = 0;
+    } else {
+      data[i] = 255;
+      data[i + 1] = 255;
+      data[i + 2] = 255;
+      data[i + 3] = 255;
+    }
+  }
+  tempCtx.putImageData(imgData, 0, 0);
+
   for (let i = 0; i < 16; i++) {
     const canvas = document.createElement("canvas");
-    canvas.width = fontImg.width;
-    canvas.height = fontImg.height;
+    canvas.width = tempCanvas.width;
+    canvas.height = tempCanvas.height;
     const ctx = canvas.getContext("2d");
     if (ctx) {
-      ctx.drawImage(fontImg, 0, 0);
+      ctx.drawImage(tempCanvas, 0, 0);
       ctx.globalCompositeOperation = "source-in";
       ctx.fillStyle = ega[i];
       ctx.fillRect(0, 0, canvas.width, canvas.height);
