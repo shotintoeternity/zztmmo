@@ -864,3 +864,20 @@ tandem editing, multiple cursors each in their own color — is now explicit in
 M10.1: simultaneous canvas drawing with no turn-taking (leases never apply to
 the board surface, only to modal dialogs), continuously streamed cursor
 presence in per-member DOS colors, and local-echo for one's own cursor.
+
+## 2026-07-10 — Owner additions: editor .ZZT download hardened; M11 Museum of ZZT
+
+Two more owner requests folded in the same day:
+* M5.6's `.ZZT` **download** is now a first-class DoD item, not a side
+  mention: the exported bytes come from `worldWriteTo` (vanilla format, so
+  the file loads in DOS ZZT/zeta as well as here) and must survive a
+  `WorldLoad` round-trip test. Creators own their work as a portable file.
+* New **M11 — Museum of ZZT search-and-play**, positioned directly after M5
+  (owner: "further on, but not too much further"). M11.1 is the server-side
+  client — search proxy, on-demand zip fetch, extraction, SanitizeSaveName
+  mapping, the M7.5 validation gate, disk caching, outbound rate limiting,
+  identifying User-Agent, fetched worlds never committed. M11.2 is the CP437
+  search window on the title screen. The spec directs the implementer to
+  read the Museum's current API docs at build time instead of trusting
+  model memory of the endpoints. Execution order is now:
+  M7 → M5 → M11 → M8 → M9 → M6 → M10.

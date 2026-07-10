@@ -629,11 +629,16 @@ and running early. See NOTES.md.)
   the hosted worlds directory so `ListWorlds` (`web_api.go:340-351`) and the
   world picker see it, with a collision policy — no silent overwrite of a
   world anyone is playing (follow `RestoreSnapshot`'s occupancy refusal,
-  M4.3a). Include `.ZZT` download (export) and upload, gated by the M7.5
-  validation (headless load + 200 steps, no panic).
+  M4.3a). Include both directions of file transfer: **download** — a browser
+  button that serves the session world as a real `.ZZT` (bytes from
+  `worldWriteTo`, so the file is vanilla-format and loads in DOS ZZT/zeta and
+  in this engine alike; creators own their work as a portable file) — and
+  **upload**, gated by the M7.5 validation (headless load + 200 steps, no
+  panic).
   DoD: a world built in the browser editor saves, appears in the picker, and
-  a second client joins and plays it; uploading a hand-made `.ZZT` works; a
-  traversal filename is rejected, with a test.
+  a second client joins and plays it; the downloaded `.ZZT`'s bytes reload
+  through `WorldLoad` with board contents intact (round-trip test); uploading
+  a hand-made `.ZZT` works; a traversal filename is rejected, with a test.
 
 - [ ] **M5.7 — ZZT-OOP authoring aids.** Label navigation and validation in
   the code editor: use the real tokenizer semantics (`OopParseWord` and
@@ -643,6 +648,48 @@ and running early. See NOTES.md.)
   anything and worlds rely on that.
   DoD: the label list and warnings render for the vendor object; a send to a
   missing label warns; saving an "invalid" script still succeeds.
+
+## M11 — Museum of ZZT: search and play anything
+
+Goal: from the browser, search the Museum of ZZT's archive of community
+worlds, pick one, and be playing it moments later — the server fetches,
+validates, and hosts on demand. Composes M7.5's fetch/validate pipeline with
+M5.6's hosting path. Positioned right after M5 by owner priority.
+
+- [ ] **M11.1 — Server-side Museum client: search, fetch, validate, host.**
+  A Go client for the Museum of ZZT's public JSON API (museumofzzt.com — read
+  the current API docs at implementation time rather than trusting memory;
+  they document search and file endpoints). Server endpoints:
+  `/api/museum/search?q=` proxying title/author/genre search (the browser
+  must not call the Museum directly — CORS, and we want one polite,
+  cached consumer), and `/api/museum/play` which downloads the selected
+  release zip, extracts its `.ZZT` file(s), maps names through
+  `SanitizeSaveName` (Museum filenames exceed vanilla's charset), runs the
+  M7.5 validation gate (headless `WorldLoad` + 200 steps, no panic), and
+  registers the world for hosting exactly as `ListWorlds`/`Instances` worlds
+  are. Courtesy constraints are part of the task: cache downloads on disk
+  (re-plays must not re-fetch), rate-limit outbound Museum calls, send an
+  identifying User-Agent, and never commit fetched worlds to the repo
+  (gitignored like other `.ZZT`s). Multi-`.ZZT` zips: list the contained
+  worlds and let the client pick. Zeta-only or Super ZZT files are rejected
+  with a clear error, not a panic.
+  DoD: an httptest-faked Museum API drives search → fetch → validate → host
+  in a Go test; a corrupt zip and a traversal filename are rejected with
+  tests; a second play of the same world hits the cache; `go test ./...`
+  green; replay fixture unchanged (nothing touches the sim).
+
+- [ ] **M11.2 — Browser Museum search window.** A CP437 search UI on the
+  title screen (a new key in the monitor menu, e.g. `M`), built from the
+  M4.1 window system: a text-entry line (the M6.1 input-capture mode), a
+  scrollable result list (title, author, year — whatever the search proxy
+  returns), and selection → `/api/museum/play` → a "fetching…" state → join
+  the newly hosted world through the existing world-picker flow. Failures
+  (Museum down, validation rejected) render as a ZZT-style message window,
+  never a dead client.
+  DoD: with the Go test's faked Museum, a scripted client searches, picks a
+  result, and ends up joined to the fetched world; the not-found and
+  validation-failure paths render their windows; node-driven TS tests for
+  the window logic; `go test ./...` green.
 
 ## M8 — Vanilla parity: simulation fidelity
 
