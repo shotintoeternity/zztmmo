@@ -454,7 +454,7 @@ remaining feature milestones on purpose. Ranked by player impact
   start square; a second player joining the same square still gets displaced;
   `go test ./...` green, replay fixture unchanged.
 
-- [ ] **M7.2 — Torch light must arrive with the player in dark rooms.**
+- [x] **M7.2 — Torch light must arrive with the player in dark rooms.**
   Reported as "torches only illuminate the player's path". The full lit circle
   is painted only by `DrawPlayerSurroundings` (`engine/elements.go:1202`),
   which runs when a torch is lit (`elements.go:1409-1414`), when it expires

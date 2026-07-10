@@ -937,3 +937,15 @@ Core design decisions:
 * Generation is entirely outside the sim (server endpoint, env-var API key,
   rate limits, M7.5 validation gate before hosting), so determinism, replay
   fixtures, and the .ZZT format are untouched.
+
+## 2026-07-10 — M7.2 torch-light arrival fix
+
+Room arrival now redraws a lit player's torch circle when entering a dark
+board, so a torch carried through a passage or onto a newly joined dark board
+does not leave the full circle stale until the next non-adjacent movement.
+
+Known wrinkle, deliberately not fixed in M7.2: `TileToColorAndChar` still
+chooses the single nearest player for dark-room lighting. With two players in
+one dark room, only the nearer player's torch state controls a tile, so an
+active torch held by the farther player may not light that tile. That belongs
+in a later multiplayer-darkness pass.

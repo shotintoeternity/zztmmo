@@ -224,6 +224,7 @@ func (rm *RoomManager) JoinPlayer(boardID, spawnX, spawnY int16) PlayerID {
 	room := rm.ensureRoom(boardID)
 	statID := rm.spawnPlayerInRoom(room, spawnX, spawnY)
 	room.Engine.ResetPlayerState(statID)
+	drawPlayerArrivalSurroundings(room.Engine, statID)
 	rm.nextPlayerID++
 	playerID := rm.nextPlayerID
 	player := &roomPlayer{
@@ -249,6 +250,7 @@ func (rm *RoomManager) spawnPlayerInRoom(room *Room, spawnX, spawnY int16) int16
 	if len(room.players) == 0 {
 		if statID, ok := claimablePlayerStat(room); ok {
 			movePlayerStat(room.Engine, statID, spawnX, spawnY)
+			drawPlayerArrivalSurroundings(room.Engine, statID)
 			return statID
 		}
 	}
@@ -260,7 +262,18 @@ func (rm *RoomManager) spawnPlayerInRoom(room *Room, spawnX, spawnY int16) int16
 	statID := room.Engine.SpawnPlayer()
 	room.Engine.Board.Info.StartPlayerX = originalSpawnX
 	room.Engine.Board.Info.StartPlayerY = originalSpawnY
+	drawPlayerArrivalSurroundings(room.Engine, statID)
 	return statID
+}
+
+func drawPlayerArrivalSurroundings(engine *Engine, statID int16) {
+	if !engine.Board.Info.IsDark || statID < 0 || statID > engine.Board.StatCount || engine.PlayerFor(statID).TorchTicks <= 0 {
+		return
+	}
+	stat := engine.Board.Stats[statID]
+	if engine.Board.Tiles[stat.X][stat.Y].Element == E_PLAYER {
+		engine.DrawPlayerSurroundings(int16(stat.X), int16(stat.Y), 0)
+	}
 }
 
 func claimablePlayerStat(room *Room) (int16, bool) {
@@ -630,6 +643,7 @@ func (rm *RoomManager) transferPlayer(playerID PlayerID, transfer TransferEvent)
 
 	newStatID := rm.spawnPlayerInRoom(dstRoom, transfer.EntryX, transfer.EntryY)
 	*dstRoom.Engine.PlayerFor(newStatID) = stateCopy
+	drawPlayerArrivalSurroundings(dstRoom.Engine, newStatID)
 	dstRoom.players[playerID] = struct{}{}
 
 	player.boardID = dstRoom.BoardID
