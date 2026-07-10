@@ -9,8 +9,8 @@
  * glyphs stretch and the DOS geometry is lost. */
 
 @font-face {
-  font-family: 'Perfect DOS VGA 437';
-  src: url('./Perfect-DOS-VGA-437.ttf') format('truetype');
+  font-family: 'IBM VGA 8x8';
+  src: url('./IBM-VGA-8x8.ttf') format('truetype');
 }
 
 :root {
