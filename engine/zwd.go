@@ -113,6 +113,8 @@ type zwdStat struct {
 }
 
 func newZWDParser(src string) *zwdParser {
+	init := NewEngine()
+	init.InitElementsGame()
 	src = strings.ReplaceAll(src, "\r\n", "\n")
 	src = strings.ReplaceAll(src, "\r", "\n")
 	return &zwdParser{lines: strings.Split(src, "\n")}

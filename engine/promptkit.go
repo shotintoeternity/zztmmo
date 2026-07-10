@@ -146,6 +146,13 @@ const promptOutputContract = `# Output contract
   |#..........................................................#|
   |123456789012345678901234567890123456789012345678901234567890|
   end
+- Grid Run-Length Encoding (RLE) Support: To ensure mathematical certainty of your grid row lengths, you can use RLE syntax: ` + "`char*count`" + ` (for example, ` + "`.*58`" + ` expands to 58 empty dots, and ` + "`#*60`" + ` expands to 60 solid walls). This is highly recommended to prevent column shifting. Example:
+  grid
+  |123456789012345678901234567890123456789012345678901234567890|
+  |#*60|
+  |#.*58#|
+  |123456789012345678901234567890123456789012345678901234567890|
+  end
 - Every board has exactly one ` + "`start player`" + `. Board 0 is the title screen.
 - Exit targets and passage ` + "`board`" + ` fields name other boards by their exact
   ` + "`board \"NAME\"`" + ` string. Do not reference a board you have not defined

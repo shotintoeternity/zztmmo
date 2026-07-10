@@ -388,10 +388,10 @@ func TestM124BatchSuccessAndRepair(t *testing.T) {
 		t.Fatalf("expected 3 Claude requests, got %d", len(fake.requests))
 	}
 	
-	// Let's assert the repair request contains the visual ruler showing the length failure
+	// Let's assert the repair request contains the validation failure
 	repairReq := fake.requests[2].Messages[0].Content
-	if !strings.Contains(repairReq, "every raw grid row must be exactly 60 bytes") || !strings.Contains(repairReq, "1234567890") {
-		t.Fatalf("expected repair request to show visual ruler with grid diagnostics, got: %s", repairReq)
+	if !strings.Contains(repairReq, "grid has 26 rows; expected 25") {
+		t.Fatalf("expected repair request to show validation failure, got: %s", repairReq)
 	}
 }
 
@@ -418,3 +418,110 @@ end`
 	}
 }
 
+func TestM124DiagnosticPipes(t *testing.T) {
+	input := "board \"Title Screen\"\n  grid\n  wwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwww\n  end\nend"
+	diag := generatedGridDiagnostics(input)
+	if !strings.Contains(diag, "grid row 1 is 62 bytes") {
+		t.Fatalf("diagnostics = %q", diag)
+	}
+}
+func TestM124RLEExpansion(t *testing.T) {
+	input := `board "Test"
+  grid
+  |123456789012345678901234567890123456789012345678901234567890|
+  |#*60|
+  |#.*58#|
+  |#.*10g.*47#|
+  |123456789012345678901234567890123456789012345678901234567890|
+  end
+end`
+
+	expected := `board "Test"
+  grid
+  ############################################################
+  #..........................................................#
+  #..........g...............................................#
+  end
+end`
+
+	got := preprocessZWDGrid(input)
+	if got != expected {
+		t.Fatalf("expected:\n%s\n\ngot:\n%s", expected, got)
+	}
+}
+
+func TestM124PreprocessNormalization(t *testing.T) {
+	input := `board "Test"
+  grid
+  |b*62|
+  |b.*50|
+  end
+end`
+
+	expected := `board "Test"
+  grid
+  bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb
+  b...........................................................
+  end
+end`
+
+	got := preprocessZWDGrid(input)
+	if got != expected {
+		t.Fatalf("expected:\n%s\n\ngot:\n%s", expected, got)
+	}
+}
+
+func TestM124ElementByZWDNameFake(t *testing.T) {
+	init := NewEngine()
+	init.InitElementsGame()
+	elem, ok := elementByZWDName("Fake")
+	if !ok || elem != 27 {
+		t.Fatalf("expected Fake to map to 27, got elem=%d, ok=%t", elem, ok)
+	}
+}
+
+func TestM124LegendFake(t *testing.T) {
+	init := NewEngine()
+	init.InitElementsGame()
+	input := `zwd 1
+world "CHECK"
+
+board "Title Screen"
+  start player at 1,1
+  grid
+  |@b*59|
+  |b*60|
+  |b*60|
+  |b*60|
+  |b*60|
+  |b*60|
+  |b*60|
+  |b*60|
+  |b*60|
+  |b*60|
+  |b*60|
+  |b*60|
+  |b*60|
+  |b*60|
+  |b*60|
+  |b*60|
+  |b*60|
+  |b*60|
+  |b*60|
+  |b*60|
+  |b*60|
+  |b*60|
+  |b*60|
+  |b*60|
+  |b*60|
+  end
+  legend
+    @ = Player color 0x1F under Empty color 0x00
+    b = Fake color 0x66
+  end
+end`
+	_, err := CompileZWDWorld(preprocessZWDGrid(input))
+	if err != nil {
+		t.Fatalf("expected compile success, got: %v", err)
+	}
+}

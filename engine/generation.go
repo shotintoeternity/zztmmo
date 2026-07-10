@@ -777,6 +777,23 @@ func (g *GenerationService) paintBoardsBatch(ctx context.Context, planText strin
 	return fmt.Errorf("batch %v exhausted %d generation attempts: %s", boards, g.maxAttempts, lastFeedback)
 }
 
+var rleRe = regexp.MustCompile(`(.)\*([0-9]+)`)
+
+func expandRLE(line string) string {
+	for {
+		loc := rleRe.FindStringSubmatchIndex(line)
+		if loc == nil {
+			break
+		}
+		char := line[loc[2]:loc[3]]
+		countStr := line[loc[4]:loc[5]]
+		count, _ := strconv.Atoi(countStr)
+		expanded := strings.Repeat(char, count)
+		line = line[:loc[0]] + expanded + line[loc[1]:]
+	}
+	return line
+}
+
 func preprocessZWDGrid(zwdText string) string {
 	lines := strings.Split(zwdText, "\n")
 	inGrid := false
@@ -808,9 +825,15 @@ func preprocessZWDGrid(zwdText string) string {
 			}
 			content := strings.TrimSpace(row)
 			if strings.HasPrefix(content, "|") && strings.HasSuffix(content, "|") && len(content) >= 2 {
-				gridContent := content[1 : len(content)-1]
-				row = indent + gridContent
+				content = content[1 : len(content)-1]
 			}
+			content = expandRLE(content)
+			if len(content) > 60 {
+				content = content[:60]
+			} else if len(content) < 60 {
+				content = content + strings.Repeat(".", 60-len(content))
+			}
+			row = indent + content
 			out = append(out, row)
 			continue
 		}
