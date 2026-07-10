@@ -3,9 +3,9 @@
 [![Go Test Status](https://img.shields.io/badge/go%20test-passing-brightgreen)](https://github.com/shotintoeternity/zztmmo)
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](LICENSE)
 
-**Welcome back to the Town of ZZT—but this time, you aren't exploring the caves alone!**
+**Welcome back to the ZZT! But this time, it's multiplayer!**
 
-ZZTMMO transforms Tim Sweeney's legendary 1991 shareware classic, **ZZT**, into a fully synchronized, multiplayer online world. Play, chat, explore, and dodge ruffians cooperatively in real-time, all inside a web browser rendered in pixel-perfect classic DOS style.
+ZZTMMO transforms Tim Sweeney's legendary 1991 shareware classic, **ZZT**, into a fully synchronized, multiplayer online world. Play, chat, explore, and dodge ruffians cooperatively or PvP in real-time, all inside a web browser rendered in pixel-perfect classic DOS style.
 
 ---
 
