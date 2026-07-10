@@ -51,8 +51,10 @@ func main() {
 	fmt.Printf("Starting live generation for prompt: %q\n", prompt)
 
 
+
 	os.Setenv("ZZT_GENERATION_BATCH_SIZE", "1")
 	os.Setenv("ZZT_GENERATION_ATTEMPTS", "5")
+	os.Setenv("ZZT_GENERATION_DEBUG", "1")
 
 	service, err := zztgo.GenerationServiceFromEnv()
 	if err != nil {

@@ -418,7 +418,11 @@ func (g *GenerationService) call(ctx context.Context, system, user string) (stri
 	if text.Len() == 0 {
 		return "", fmt.Errorf("Claude API response contained no text")
 	}
-	return text.String(), nil
+	resultText := text.String()
+	if os.Getenv("ZZT_GENERATION_DEBUG") == "1" {
+		log.Printf("[DEBUG CLAUDE PROMPT]\n%s\n[DEBUG CLAUDE RESPONSE]\n%s\n", user, resultText)
+	}
+	return resultText, nil
 }
 
 const plannerSystemPrompt = `You design compact, mechanically checkable ZZT world plans.
