@@ -337,14 +337,6 @@ if (!app) {
 app.innerHTML = `
   <div class="canvas-wrap">
     <canvas data-screen width="${WIDTH}" height="${HEIGHT}" tabindex="0"></canvas>
-    <div id="name-modal" class="dos-modal">
-      <div class="dos-modal-content">
-        <h2>Welcome to ZZTMMO!</h2>
-        <p>Please type in your name to start.</p>
-        <input type="text" id="nickname-input" autofocus maxlength="15" placeholder="PLAYER NAME" />
-        <button id="start-button">Enter</button>
-      </div>
-    </div>
   </div>
 `;
 
@@ -354,32 +346,6 @@ if (!ctx) {
   throw new Error("canvas context unavailable");
 }
 const screenCtx = ctx;
-
-const nameModal = document.getElementById("name-modal");
-const nicknameInput = document.getElementById("nickname-input") as HTMLInputElement;
-const startButton = document.getElementById("start-button");
-
-if (nameModal && nicknameInput && startButton) {
-  const submitName = () => {
-    const val = nicknameInput.value.trim();
-    if (val) {
-      nickname = val;
-    } else {
-      nickname = "player" + Math.floor(Math.random() * 1000);
-    }
-    nameModal.style.display = "none";
-    canvas.focus();
-    worldName = "TOWN";
-    startPlay();
-  };
-
-  startButton.addEventListener("click", submitName);
-  nicknameInput.addEventListener("keydown", (e) => {
-    if (e.key === "Enter") {
-      submitName();
-    }
-  });
-}
 
 let ws: WebSocket | null = null;
 let playerId = 0;
@@ -432,13 +398,34 @@ const cells: ScreenCell[] = Array.from({ length: COLS * ROWS }, (_, i) => ({
   color: 0x1f,
 }));
 
+let hasPromptedNameOnLaunch = false;
+
+function promptNicknameOnLaunch() {
+  if (hasPromptedNameOnLaunch) {
+    return;
+  }
+  hasPromptedNameOnLaunch = true;
+  openPopupEntry("Welcome to ZZTMMO! Enter name to start:", (name) => {
+    if (name && name.trim()) {
+      nickname = name.trim();
+    } else {
+      nickname = "player" + Math.floor(Math.random() * 1000);
+    }
+    worldName = "TOWN";
+    startPlay();
+  });
+}
+
 drawScreen();
 if ("fonts" in document) {
-  document.fonts.ready.then(() => {
-    void showTitle();
+  document.fonts.ready.then(async () => {
+    await showTitle();
+    promptNicknameOnLaunch();
   });
 } else {
-  void showTitle();
+  showTitle().then(() => {
+    promptNicknameOnLaunch();
+  });
 }
 canvas.addEventListener("mousedown", handlePointerDown);
 canvas.addEventListener("keydown", handleKeyDown);
@@ -961,7 +948,6 @@ function openSelectList(title: string, entries: string[], onPick: (entry: string
   });
 }
 
-// openEntry is SidebarPromptString / GameDebugPrompt's field.
 function openEntry(
   label: string,
   suffix: string,
@@ -970,6 +956,13 @@ function openEntry(
   onSubmit: (text: string | null) => void,
 ) {
   openModal({ kind: "entry", label, suffix, width, buffer: "", charset, onSubmit });
+}
+
+function openPopupEntry(
+  question: string,
+  onSubmit: (text: string | null) => void,
+) {
+  openModal({ kind: "popupEntry", question, buffer: "", onSubmit });
 }
 
 // openYesNo is SidebarPromptYesNo.
