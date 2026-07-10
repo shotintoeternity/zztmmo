@@ -15,8 +15,6 @@ ZZTMMO transforms Tim Sweeney's legendary 1991 shareware classic, **ZZT**, into 
 *   **📺 Spritesheet-Based CP437 Fidelity:** Rendered using the official pixel-perfect PNG font sheets from Adrian Siekierka's [Zeta](https://github.com/asiekierka/zeta) emulator. Smiley faces, border walls, and items connect and align exactly as they did on DOS machines in 1991, with zero subpixel font gaps or rendering artifacts.
 *   **⚖️ Server-Authoritative Simulation:** A completely headless, deterministic backend running in Go ensures player inputs are processed synchronously with zero client-side simulation or state drift.
 
----
-
 ## 🛠️ Under the Hood (How it Works)
 
 Making a single-player, frame-rate dependent DOS game from 1991 multiplayer is a wild technical challenge. ZZT was packed with global states, blocking modal UI loops, and timing quirks. 
@@ -26,8 +24,6 @@ To achieve multiplayer sync:
 2.  **Faithful over Clean:** We prioritize **100% authentic gameplay**. Classic bugs (like actor-stat alignment offsets and physics quirks) are treated as specifications rather than issues.
 3.  **Deterministic Safety Net:** A rigorous test replay harness runs `TOWN.ZZT` under pre-recorded inputs, asserting identical state hashes at every commit. No map-iteration randomness, system clock lookups, or unseeded RNG can leak into the simulation.
 4.  **Dumb Terminal Client:** The web client (TypeScript/Vite) simply listens to raw grid updates from the server and transmits keyboard masks, acting as a high-frequency display terminal.
-
----
 
 ## 🎮 Running it Locally
 
@@ -54,8 +50,6 @@ All commands are run from the `engine/` directory.
 
 4.  Open **[http://127.0.0.1:8080](http://127.0.0.1:8080)** in multiple browser tabs to watch players interact!
 
----
-
 ## 📁 Directory Structure
 
 ```
@@ -64,8 +58,6 @@ engine/web/      Vite TypeScript browser client
 fixtures/        Test worlds and replay verification hashes
 saves/           Directory for saved game snapshots & chat logs
 ```
-
----
 
 ## 📜 Development Docs
 
