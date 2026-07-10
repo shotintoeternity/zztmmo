@@ -703,6 +703,12 @@ the sim untouched, replay green.
   tile-inspect readout matching `EditorDrawSidebar`/`EditorUpdateSidebar`
   (`editor.go:56-145`, `EDITOR.PAS:89-186`) — element name, color,
   coordinates, and P1/P2/P3 for a stat under the cursor.
+  **Forward-compatibility (M10):** even though v1 is single-editor, give the
+  session a *member list* (capped at one for now) rather than a single owner
+  field, and route every future mutation through one serialized apply path on
+  the session — collaborative editing (M10) must be "raise the cap and fan
+  out diffs", never a rewrite of the session model. The advisor consult for
+  this task must cover that shape.
   DoD: a browser opens a world in editor mode, moves the cursor, and reads
   tile info; live games are unaffected; protocol tests; `go test ./...` and
   replay green.
@@ -777,6 +783,52 @@ the sim untouched, replay green.
   anything and worlds rely on that.
   DoD: the label list and warnings render for the vendor object; a send to a
   missing label warns; saving an "invalid" script still succeeds.
+
+## M10 — Collaborative world editing (horizon: spec in detail after M5.5)
+
+Goal: several builders in one editor session, co-building a world live — the
+editor equivalent of what M2/M3 did for play. These tasks are deliberately
+coarse; they get M7-style specs (file:line cites, DoD) once M5's session
+model exists in code. Design pillars, decided 2026-07-10 (NOTES.md) so M5
+builds toward them instead of away:
+
+* **Same authority model as play.** The server owns the session world;
+  clients send edit *operations*; the session applies them in arrival order
+  through M5.0's single serialized apply path and fans out cell diffs to all
+  members. Tile edits are last-write-wins per cell. No CRDTs/OT — ZZT boards
+  are 60x25 and objects are tiny; arrival order plus leases is enough.
+* **Leases for non-commutative surfaces.** A stat dialog, object-code
+  editor, or board-info dialog takes an exclusive per-stat/per-board lease
+  for its duration; a second member gets "being edited by <name>". The
+  `scrollOpen` freeze (M6.1, `room_manager.go`) is the existing pattern.
+* **Sessions still never tick, and publishing (M5.6) stays the only bridge
+  to hosted play.** Live-editing a world people are playing in is out of
+  scope at this horizon — stat reindexing under a running sim is exactly the
+  bug class M2/M4.3b spent tasks killing.
+* **Undo is per-user over their own ops, or absent (vanilla has none).**
+  Global undo with N editors is incoherent; decide at spec time, record in
+  NOTES.md.
+
+- [ ] **M10.1 — Multi-member sessions.** Requires M5.0-M5.1. Raise the member
+  cap; broadcast session diffs to all members; presence — each member's
+  cursor rendered in a distinct DOS color with their name (M6.2 accounts, or
+  `Player N` for guests). DoD: two browsers place tiles in one session and
+  each sees the other's edits and cursor.
+- [ ] **M10.2 — Edit leases.** Requires M5.3-M5.4. Exclusive per-stat and
+  per-board leases around dialogs and the code editor, released on close or
+  disconnect, with the "being edited by" refusal surfaced in the client.
+  DoD: two members racing for one object — one edits, the other is refused
+  and sees who holds it; a disconnect releases the lease.
+- [ ] **M10.3 — Ownership and invites.** Requires M6.2 and M5.6. Worlds have
+  an owning account; the owner invites collaborator accounts; everyone else
+  is read-only in that session. DoD: an invited account edits, an uninvited
+  one can look but not touch.
+- [ ] **M10.4 — Co-op test play.** A session member starts a test run: the
+  server spins a private, ticking room from a *copy* of the session world
+  (the `TitleSim` isolation pattern) that any member may join, leaving the
+  session itself untouched and un-ticked. DoD: two members test-play their
+  edit together, exit, and the session world is byte-identical to before the
+  run.
 
 ## Future Tasks & Community Additions
 

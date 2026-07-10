@@ -828,3 +828,18 @@ so future audits don't re-flag them: game-over ending the run (death
 respawns instead, M2.4/M4.3 DEVIATIONs), `S` game speed (the server owns the
 110ms tick), global pause (per-player instead, M3.11), and the modal
 terminal editor as the browser path (M5 replaces it; the terminal keeps it).
+
+## 2026-07-10 — Design horizon: collaborative editing (M10)
+
+Decided the design pillars for multiplayer editing now, because M5.0 is about
+to fix the editor session model and could otherwise preclude it. The pillars:
+server-authoritative edit ops through one serialized apply path with
+last-write-wins per cell (no CRDTs/OT at ZZT scale); exclusive per-stat and
+per-board leases for dialogs and code editing (the `scrollOpen` freeze is the
+in-repo pattern); sessions never tick, publishing stays the only bridge to
+hosted play (live-editing a running room re-opens the stat-reindexing bug
+class M4.3b closed); undo is per-user-own-ops or absent, decided at spec
+time. M5.0 gained a forward-compatibility clause: a member *list* capped at
+one, so M10.1 raises a cap instead of rewriting the model. M10 tasks are
+deliberately coarse until M5.5 lands — detailed specs written against code
+that does not exist yet would rot.
