@@ -747,3 +747,40 @@ Left unfixed and unfiled; today's scroll work (freezing a reader until they
 dismiss) touches `RoomManager.SubmitScrollReply` but neither widens nor narrows
 this race: `roomPlayer.scrollOpen` is written under the same goroutines as the
 slice it sits beside.
+
+## 2026-07-10 — Planning: M7 "Live-game quality" batch; M6 moved ahead of M5
+
+PROCESS: the advisor tool was unavailable this session (one call — "advisor
+tool is unavailable"), as on 2026-07-09. This was a planning session, not an
+`[ADVISOR]` task; recorded per rule 5 rather than blocking.
+
+A survey of all open work (M5, M6.2, the four unchecked backlog bugs, and the
+2026-07-10 race note) ranked what most improves the game as it is played
+today. Decisions, in the order the tasks now appear:
+
+* **New M7 section, placed between M4 and the feature milestones.** The
+  executor protocol is positional ("first unchecked task below"), so priority
+  had to be expressed by file order, not by a note. Order inside M7: spawn
+  point (M7.1 — the former `[URGENT]` backlog item, spec moved verbatim),
+  torch light on arrival (M7.2), the pending-input data race (M7.3),
+  per-player sound (M7.4), the new-worlds batch (M7.5, gated on M7.1 because
+  those worlds are exactly the fake-wall-floor kind the spawn bug ruins).
+  Bugs in the game people can already play outrank all new feature surface.
+* **M6 moved ahead of M5 in file order.** Only M6.2 (Google OAuth) is open in
+  M6, and stable identity outranks creation tooling for an MMO; M5's editor
+  is the largest and least urgent remaining block. No task text changed.
+* **Torch root cause is arrival, not lighting.** `DrawPlayerSurroundings`
+  runs on torch light, expiry, respawn/re-enter, and non-adjacent moves, and
+  the two M4.5 torch tests pass — but neither `roomSpawn` nor
+  `transferPlayer` draws surroundings, and `MoveStat`'s adjacent-move repaint
+  (game.go:1123-1135) only redraws the delta ring, which assumes the circle
+  is already painted. A torch-lit player entering a dark room therefore shows
+  only the moving-ring trail — exactly the reported "only the player's path".
+  M7.2 requires the failing test first, since this diagnosis is from reading,
+  not from a repro.
+* **Sound attribution is presentation-only.** An owner `StatId` on
+  `SoundEvent` plus routing in `RoomManager` — nothing enters `StateHash` or
+  the replay path. M4.4's recorded "sound events are room-wide" acceptance is
+  superseded by M7.4. The TransferEvent sound double-path
+  (room_manager.go:411-415, room-wide *and* per-player) gets resolved to
+  traveller-only in the same task.

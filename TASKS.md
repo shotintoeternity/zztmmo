@@ -422,28 +422,120 @@ semantics while keeping the server authoritative.
   taking damage, and reaching the Palace path. DoD: TOWN is playable end to end
   in the browser without terminal UI.
 
-## M5 — Creation and full-featured ZZT tooling
+## M7 — Live-game quality (deliberately placed before M5/M6)
 
-Goal: support the creation features that make ZZT “full ZZT,” not only runtime
-playback.
+Goal: fix everything that makes the *current* multiplayer game feel broken
+before building new feature surface. The executor protocol is positional —
+"first unchecked task below" — so this section sits between M4 and the
+remaining feature milestones on purpose. Ranked by player impact
+(2026-07-10 planning session; see NOTES.md).
 
-- [ ] **M5.0 — Browser board editor shell.** Bring up a browser editor surface
-  using the same CP437 renderer and modal UI system, initially read-only with
-  cursor movement and tile inspection. DoD: a user can open a board in editor
-  mode and inspect tiles/stats in the browser.
+- [ ] **M7.1 [URGENT] — Spawn at the vanilla start point, not the nearest blank
+  square.**
+  A player joining a board whose floor is carpeted in fake walls spawns in
+  whatever stray empty square the search finds, far from where the world author
+  put them. `roomSpawn` (`engine/room_manager.go:296-326`) resolves the vanilla
+  point (`Board.Info.StartPlayerX/Y`, or the claimable player stat), then gates
+  it on `isSpawnOpen` → `PlacementOpen` (`engine/placement.go:47-53`), which
+  demands `Element == E_EMPTY`. `E_FAKE` is not `E_EMPTY`, so the gate fails and
+  the code falls through to `FindPlacement`, which walks outward to the nearest
+  truly empty tile. Every walkable non-empty tile (fake wall, floor art,
+  invisible wall) has the same effect.
+  **Wanted:** the vanilla spawn point is used unconditionally *unless another
+  player already stands there* — the tile's element is irrelevant, since ZZT
+  simply writes the player over whatever was on the start square. Fall back to
+  `FindPlacement` only on player-occupied. Note `PlacementUnoccupied`
+  (`placement.go:34-39`) tests only `Element != E_PLAYER`; a square can read
+  empty and still be held by a stat whose tile was clobbered, so the occupancy
+  test must also consult `StatAt` (see `PlacementOpen`'s own comment).
+  Watch the `requested` branch: transfers/passages pass an explicit spawn and
+  must keep their current meaning.
+  DoD: a test board with `E_FAKE` on the start square spawns the player on the
+  start square; a second player joining the same square still gets displaced;
+  `go test ./...` green, replay fixture unchanged.
 
-- [ ] **M5.1 — Editable boards and object properties.** Implement tile
-  placement, color/pattern selection, stat parameter editing, board properties,
-  and object text editing. DoD: edits round-trip through the existing ZZT board
-  serializer and reload correctly.
+- [ ] **M7.2 — Torch light must arrive with the player in dark rooms.**
+  Reported as "torches only illuminate the player's path". The full lit circle
+  is painted only by `DrawPlayerSurroundings` (`engine/elements.go:1202`),
+  which runs when a torch is lit (`elements.go:1409-1414`), when it expires
+  (`elements.go:1463-1466`), on respawn/re-enter (`elements.go:1303,1326`),
+  and on a *non-adjacent* move (`game.go:1136-1139`). An adjacent move
+  repaints only the ring whose lit-state changed (`game.go:1123-1135`) —
+  correct in vanilla only because the full circle is already on screen. Both
+  M4.5 torch tests pass (`m4_5_test.go:142,189`), so lighting-in-place works;
+  the unpainted-circle paths are the *arrival* ones: `roomSpawn`
+  (`room_manager.go:296`) and `transferPlayer` (`room_manager.go:600`) put a
+  stat on a board with no surroundings draw. So a player who lights a torch
+  and then takes the passage into a dark room (the normal TOWN vault flow)
+  sees only the moving delta-ring trail — the reported symptom.
+  **Write the failing test first**: via `RoomManager`, a torch-lit player
+  (`PlayerState.TorchTicks > 0`) transfers into TOWN's dark board (find it as
+  `m4_5_test.go:144` does), and separately joins it fresh; assert every board
+  tile within `TORCH_DIST_SQR` of the player renders lit — not the dark shade
+  `0x07`/`'\xb0'` (`game.go:320`) — in that room's Screen/snapshot. Then fix:
+  on arrival into a dark board, call `DrawPlayerSurroundings(x, y, 0)` for the
+  arriving stat, mirroring the respawn paths. While there, note in NOTES.md
+  (do not fix here) the multiplayer wrinkle: `TileToColorAndChar`
+  (`game.go:302-304`) lights each tile from the single *nearest* player, so
+  with two players in one dark room only the nearer one's torch counts.
+  DoD: new tests fail before the fix, pass after; `go test ./...` green;
+  replay fixture unchanged (the 600-step fixture never leaves Room One).
 
-- [ ] **M5.2 — ZZT-OOP authoring workflow.** Add browser editing for object
-  code with label navigation, validation helpers, and save/apply behavior. DoD:
-  creating or modifying an object script changes runtime behavior after reload.
+- [ ] **M7.3 — Fix the pending-input data race (NOTES.md 2026-07-10).**
+  `Engine.SubmitScrollReply` (`game.go:2298`) appends to
+  `PendingScrollReplies` from the WebSocket goroutine while
+  `GameStepWithInputs` (`game.go:1597-1633`) reads and truncates the same
+  slice from the tick goroutine; `WorldInstance.mu` and `s.mu` never exclude
+  each other. Same shape: `PendingDebugCommands` (`game.go:1237`),
+  `PendingSaveFilenames` (`game.go:1249`), `PendingQuitReplies`
+  (`game.go:1622`) — audit `gamevars.go:187-206` for any sibling added since.
+  Fix: one `sync.Mutex` on `Engine` guarding exactly those reply slices; the
+  `Submit*` methods lock it; the drain at the top of `GameStepWithInputs`
+  swaps each slice out under the lock into locals and processes them unlocked,
+  so the sim never runs holding it. Presentation/networking only: no sim-state
+  change, the mutex must not enter `StateHash` or serialization, and `go vet`
+  must stay clean (copylocks — Engine must never be copied by value).
+  DoD: `go test -race -run TestWebSocketServerScrollReplyBuysFromVendor ./...`
+  passes (it fails on a clean tree today, verified 2026-07-10); run the full
+  `go test -race ./...` and record in NOTES.md if any *other* race remains;
+  replay fixture unchanged.
 
-- [ ] **M5.3 — World persistence and publishing.** Add save/export/import paths
-  for edited worlds and multiplayer-safe persistence. DoD: a browser-created
-  world can be saved, reloaded, exported, and hosted for other clients.
+- [ ] **M7.4 — Per-player sound attribution.** Every client in a room hears
+  every player's pickups/shots/damage — accepted in M4.4 ("sound events are
+  room-wide", NOTES.md), now superseded. Add `StatId int16` to `SoundEvent`
+  (`gamevars.go:308`), `-1` = room-wide. Engine gains a presentation-only
+  `ActingPlayerStatId int16` (init/reset `-1`): set it in
+  `GameStepWithInputs`' stat loop while the ticked stat is an `E_PLAYER`
+  (`game.go:1656-1694`, restore after that stat's tick — touch procs for
+  pickups/doors/keys run inside it), and around `DamageStat` (`game.go:1271`)
+  when the damaged stat is a player. `SoundQueue` (`sounds.go:28`) stamps it
+  into the event. It must never influence a simulation decision — grep-proof
+  that only `SoundQueue` reads it. Routing in `RoomManager.StepDiffs`
+  (`room_manager.go:407-434`): `StatId >= 0` resolves via `playerIDForStat` →
+  `pendingPlayerEvents` for that player only; `StatId < 0` stays in
+  `roomEvents`. Fix the TransferEvent double-path at `room_manager.go:411-415`
+  — the passage sound currently goes to both the whole room and the traveller;
+  make it traveller-only. Sounds emitted during an object's own tick (`#play`)
+  keep `-1` and stay room-wide; record that decision in NOTES.md.
+  DoD: headless two-player test — A steps on a gem: the gem sound reaches only
+  A; an object `#play` reaches both; `go test ./...` green; replay fixture
+  unchanged (events are not hashed).
+
+- [ ] **M7.5 — Next batch of ZZT games.** Requires M7.1 (joiners must land on
+  authors' start squares — fake-wall floors are common in these worlds). The
+  server already discovers hostable worlds by scanning a directory for `.ZZT`
+  (`ListWorlds`, `web_api.go:340-351`) and lists them at `/api/worlds`; the
+  M6.1 world picker consumes that. Add: (1) a fetch script (or small Go cmd)
+  that downloads and unpacks the requested titles from the Museum of ZZT
+  (museumofzzt.com) into the worlds directory — Teen Priest, Teen Priest 2,
+  Inedible Vomit, the other bongo/wynand games, Freedom, Apparitions of the
+  City (kev-san); (2) a validation gate: for each fetched world, headless
+  `WorldLoad` + 200 `GameStep`s with no panic and a non-empty board render,
+  as a table-driven test or `cmd/zzt-validate`; (3) a deployment note in
+  README/AWS.md. The repo carries the script and a manifest, not the `.ZZT`
+  files themselves (they are gitignored like other worlds; licenses vary).
+  DoD: the script fetches whichever named titles the Museum actually hosts,
+  validation passes for each, and the world picker lists them.
 
 ## M6 — Chat and identity
 
@@ -454,6 +546,9 @@ eventually do so under a real account name.
 enter the simulation — not the `Engine`, not `StateHash`, not the replay path.
 Chat lives beside the engine in the server (`RoomManager`/`WebSocketServer`), so
 determinism (CLAUDE.md rule 2) and the replay fixtures are unaffected.
+
+(2026-07-10: this section moved ahead of M5 — only M6.2 is open here, and
+stable identity outranks creation tooling for an MMO. See NOTES.md.)
 
 - [x] **M6.0 — Chat protocol and server relay.** Add `chatSend` (client→server)
   and `chat` (server→client) protocol messages carrying `{from, text, ts}`.
@@ -491,33 +586,35 @@ determinism (CLAUDE.md rule 2) and the replay fixtures are unaffected.
   scrollback to a joining client. DoD: chat history survives a server restart,
   and the storage interface has an in-memory fake used by tests.
 
+## M5 — Creation and full-featured ZZT tooling
+
+Goal: support the creation features that make ZZT “full ZZT,” not only runtime
+playback.
+
+- [ ] **M5.0 — Browser board editor shell.** Bring up a browser editor surface
+  using the same CP437 renderer and modal UI system, initially read-only with
+  cursor movement and tile inspection. DoD: a user can open a board in editor
+  mode and inspect tiles/stats in the browser.
+
+- [ ] **M5.1 — Editable boards and object properties.** Implement tile
+  placement, color/pattern selection, stat parameter editing, board properties,
+  and object text editing. DoD: edits round-trip through the existing ZZT board
+  serializer and reload correctly.
+
+- [ ] **M5.2 — ZZT-OOP authoring workflow.** Add browser editing for object
+  code with label navigation, validation helpers, and save/apply behavior. DoD:
+  creating or modifying an object script changes runtime behavior after reload.
+
+- [ ] **M5.3 — World persistence and publishing.** Add save/export/import paths
+  for edited worlds and multiplayer-safe persistence. DoD: a browser-created
+  world can be saved, reloaded, exported, and hosted for other clients.
+
 ## Future Tasks & Community Additions
 
-- [ ] **[URGENT] Spawn at the vanilla start point, not the nearest blank square.**
-  A player joining a board whose floor is carpeted in fake walls spawns in
-  whatever stray empty square the search finds, far from where the world author
-  put them. `roomSpawn` (`engine/room_manager.go:296-326`) resolves the vanilla
-  point (`Board.Info.StartPlayerX/Y`, or the claimable player stat), then gates
-  it on `isSpawnOpen` → `PlacementOpen` (`engine/placement.go:47-53`), which
-  demands `Element == E_EMPTY`. `E_FAKE` is not `E_EMPTY`, so the gate fails and
-  the code falls through to `FindPlacement`, which walks outward to the nearest
-  truly empty tile. Every walkable non-empty tile (fake wall, floor art,
-  invisible wall) has the same effect.
-  **Wanted:** the vanilla spawn point is used unconditionally *unless another
-  player already stands there* — the tile's element is irrelevant, since ZZT
-  simply writes the player over whatever was on the start square. Fall back to
-  `FindPlacement` only on player-occupied. Note `PlacementUnoccupied`
-  (`placement.go:34-39`) tests only `Element != E_PLAYER`; a square can read
-  empty and still be held by a stat whose tile was clobbered, so the occupancy
-  test must also consult `StatAt` (see `PlacementOpen`'s own comment).
-  Watch the `requested` branch: transfers/passages pass an explicit spawn and
-  must keep their current meaning.
-  DoD: a test board with `E_FAKE` on the start square spawns the player on the
-  start square; a second player joining the same square still gets displaced;
-  `go test ./...` green, replay fixture unchanged.
+(2026-07-10: every unchecked item that lived here — spawn point, torch
+illumination, sound broadcast, next games batch — was promoted to M7 above
+with a full spec. New community reports land here first, then get specced
+into a milestone.)
 
 - [x] **Troubleshoot player stuck after damage.** Solve the issue where players get stuck after being zapped/damaged by a ruffian/bear due to stat index shift misalignment in RoomManager.
-- [ ] **Prepare next batch of ZZT games.** Add download paths, scripts, or direct curl pipelines for the rest of the requested ZZT games (Teen Priest, Teen Priest 2, Inedible Vomit, other bongo/wynand games, Freedom, Apparitions of the City by kev-san, etc.) to get them ready for deployment.
-- [ ] **Torches only illuminate player's path.** Fix the torch illumination logic so that torches correctly light up the surroundings rather than just the player's path.
 - [x] **Title screens aren't animating properly.** Investigate and resolve the issue where object scripts and movements on ZZT title screens do not animate or tick as they should. *(Done: `engine/title_sim.go` runs board 0 on an isolated engine — its own copied world, never written back — ticked from the server loop only while a browser is watching, with changed cells pushed over `/api/title/stream` as SSE.)*
-- [ ] **Sound broadcast bug.** Fix the issue where sound events (like gem pickups) are triggering and heard by all players rather than only the player who triggered them.
