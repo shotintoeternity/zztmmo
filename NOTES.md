@@ -858,3 +858,9 @@ Also gitignored the local strays: `engine/zzt-server` (cross-compiled Linux
 binary), `engine/deploy.tar.gz`, `engine/saves/` (runtime snapshots +
 chat.jsonl), and the root `test.txt` (an old M0.5 manual-test note).
 `engine/.gitignore` already covered `*.HI`, `*.ZZT`, and the local binaries.
+
+Addendum, same day: the owner's stated vision for M10 — Google-Docs-style
+tandem editing, multiple cursors each in their own color — is now explicit in
+M10.1: simultaneous canvas drawing with no turn-taking (leases never apply to
+the board surface, only to modal dialogs), continuously streamed cursor
+presence in per-member DOS colors, and local-echo for one's own cursor.

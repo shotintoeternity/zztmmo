@@ -812,11 +812,18 @@ builds toward them instead of away:
   Global undo with N editors is incoherent; decide at spec time, record in
   NOTES.md.
 
-- [ ] **M10.1 — Multi-member sessions.** Requires M5.0-M5.1. Raise the member
-  cap; broadcast session diffs to all members; presence — each member's
-  cursor rendered in a distinct DOS color with their name (M6.2 accounts, or
-  `Player N` for guests). DoD: two browsers place tiles in one session and
-  each sees the other's edits and cursor.
+- [ ] **M10.1 — Multi-member sessions with live cursors.** Requires
+  M5.0-M5.1. Raise the member cap; broadcast session diffs to all members.
+  The feel is Google-Docs-in-CP437: everyone draws on the board *at the same
+  time* — no turn-taking, no canvas locks (M10.2's leases cover modal
+  dialogs only, never the board surface). Presence: each member's cursor
+  position streams continuously (a low-rate presence message, not only on
+  edits) and renders in a DOS color pinned to that member for the session,
+  labeled with their name (M6.2 account, or `Player N` for guests); own
+  cursor stays local-echo so editing never waits on the server round trip.
+  DoD: two browsers draw simultaneously in one session, each sees the
+  other's tiles appear live and the other's named, colored cursor move
+  between edits.
 - [ ] **M10.2 — Edit leases.** Requires M5.3-M5.4. Exclusive per-stat and
   per-board leases around dialogs and the code editor, released on close or
   disconnect, with the "being edited by" refusal surfaced in the client.
