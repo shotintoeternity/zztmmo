@@ -897,6 +897,15 @@ into a milestone.)
 - [x] **Troubleshoot player stuck after damage.** Solve the issue where players get stuck after being zapped/damaged by a ruffian/bear due to stat index shift misalignment in RoomManager.
 - [x] **Title screens aren't animating properly.** Investigate and resolve the issue where object scripts and movements on ZZT title screens do not animate or tick as they should. *(Done: `engine/title_sim.go` runs board 0 on an isolated engine — its own copied world, never written back — ticked from the server loop only while a browser is watching, with changed cells pushed over `/api/title/stream` as SSE.)*
 
+- [ ] **Rewrite the launch text.** The copy at launch is weak: the name prompt
+  ("Welcome to ZZTMMO!  Enter your name:", `web/src/main.ts:310`) and
+  especially the world-select blurb (`WORLD_SELECT_BLURB`,
+  `web/src/main.ts:467-476` — the "Bring your friends… TOWN is the lobby…
+  Drop in and hang out" lines). Write launch copy with actual personality
+  that fits ZZT's voice (terse, playful, a little weird — read TOWN's scrolls
+  for the register), sized to the CP437 windows it renders in. Owner signs
+  off on the final strings. Filler task — spec is just "make it good".
+
 ### Idea backlog (2026-07-10 — NOT tasks; owner picks, then each gets an M7-style spec)
 
 Plain bullets on purpose: executors must not pick these up. Verified gaps
@@ -963,6 +972,45 @@ first, then features that exploit what this codebase is uniquely good at.
   glue for a small MMO.
 * **Achievements (post-M6.2).** Account-keyed firsts (beat TOWN, first
   purple key, 100 gems) surfaced in chat, stored via M6.3's interface.
+
+**Moonshots (2026-07-10 — the most creative directions the architecture
+enables; each is feasible precisely because of a property we already built):**
+* **Possession mode — play as the monsters.** Asymmetric multiplayer: a
+  second player joins someone's run as the *dungeon* — possessing a lion,
+  tiger, or object and driving it with their keys. The tick loop already
+  injects per-stat inputs for player stats (`GameStepWithInputs`); extending
+  the input map to a possessed non-player stat (overriding its TickProc's
+  movement with the possessor's deltas) is a narrow, deterministic seam.
+  ZZT becomes a game of D&D with a live DM.
+* **Living worlds.** Empty rooms currently freeze. Opt-in per world: keep
+  ticking while nobody's there (bounded, e.g. slow-tick), so KUDZU's vines
+  actually grow overnight and a bear wanders rooms between your visits.
+  Determinism makes "what happened while you were gone" replayable — you
+  could literally watch the recap.
+* **The ZZT Continent.** Stitch every hosted world into one geography:
+  cross-world passages (lobby idea) generalized so board *edges* can link
+  worlds — walk west out of TOWN's map and into CAVES. One persistent
+  walkable universe made of the entire Museum archive.
+* **Player-authored scrolls (messages in bottles).** Let players drop a
+  scroll tile holding their own text in the lobby or (owner-permitted)
+  worlds — Dark Souls messages in ZZT's native medium. Scrolls are already
+  first-class sim objects; placement rides the M5 edit-op path with a
+  rate/curation layer.
+* **Live DM console.** A world owner hot-edits object code and drops
+  monsters *while players are inside* (M10's leases + a "DM" permission) —
+  running a live event in a world the way a game master runs a table.
+* **Crowd-controlled runs.** Spectators (watch links) vote to spawn a lion,
+  douse a torch, or gift ammo in a streamer's run — inputs enter through
+  the same deterministic Submit* seam as everything else, so even chaos is
+  replayable.
+* **Prompt-to-world.** An LLM endpoint that emits a small ZZT world from a
+  text prompt ("a haunted bakery with a gem heist"), validated by the M7.5
+  gate, hosted instantly, disposable. ZZT-OOP is tiny, textual, and
+  well-documented — it is close to the ideal LLM target language, and the
+  editor/publish pipeline (M5.6) already handles the rest.
+* **Tournament nights.** Scheduled PvP arena brackets (PvP world + party
+  instances + spectator links + verified results from the authoritative
+  server), with the bracket itself rendered as a ZZT board in the lobby.
 
 **First-party worlds (owner 2026-07-10 — "later on in the roadmap"):**
 * **A purpose-built PvP arena world.** A ZZT world designed for

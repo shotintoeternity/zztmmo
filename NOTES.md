@@ -908,3 +908,11 @@ Addendum, same day — owner design input on three backlog ideas:
   server-interpreted cross-world passages acting as a walkable world picker.
 Both worlds are owner-flagged "later on in the roadmap"; all three remain
 idea-backlog bullets, not tasks.
+
+Addendum, same day: owner added a filler task for rewriting the weak launch
+copy (name prompt + WORLD_SELECT_BLURB, web/src/main.ts:310,467) and asked
+for the most creative feature directions; eight "moonshots" recorded in the
+idea backlog (possession mode, living worlds, the ZZT Continent,
+player-authored scrolls, live DM console, crowd-controlled runs,
+prompt-to-world, tournament nights), each annotated with the existing
+architectural property that makes it feasible. Backlog bullets, not tasks.
