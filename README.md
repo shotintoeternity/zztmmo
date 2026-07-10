@@ -1,4 +1,4 @@
-# 👾 ZZTMMO
+# ☻ ZZTMMO
 
 [![Go Test Status](https://img.shields.io/badge/go%20test-passing-brightgreen)](https://github.com/shotintoeternity/zztmmo)
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](LICENSE)
