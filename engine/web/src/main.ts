@@ -781,36 +781,70 @@ function writeOverlay(x: number, y: number, color: number, text: string) {
 }
 
 let chatMessages: { from: string; text: string }[] = [];
+let currentChatMessage = "";
+let currentChatTimer = 0;
 
 function handleChatMessage(message: { from: string; text: string }) {
   chatMessages.push({ from: message.from, text: message.text });
-  if (chatMessages.length > 3) {
+  if (chatMessages.length > 50) {
     chatMessages.shift();
   }
-  paintOverlay();
-  drawScreen();
+
+  currentChatMessage = `<${message.from}> ${message.text}`;
+  window.clearTimeout(currentChatTimer);
+  currentChatTimer = window.setTimeout(() => {
+    currentChatMessage = "";
+    paintOverlay();
+    drawScreen();
+  }, 5000);
+
+  if (modal && modal.kind === "text" && modal.baseTitle === "Global Chat") {
+    openChatWindow();
+  } else {
+    paintOverlay();
+    drawScreen();
+  }
 }
 
-function paintChat() {
-  for (let i = 0; i < 3; i++) {
-    const y = 3 + i;
-    writeOverlay(61, y, 0x1f, "                  ");
-    if (i < chatMessages.length) {
-      const msg = chatMessages[i];
-      const nick = `<${msg.from}>`;
-      const text = msg.text;
-      
-      const nickLen = Math.min(nick.length, 18);
-      writeOverlay(61, y, 0x1b, nick.slice(0, nickLen));
-      
-      if (nickLen < 18) {
-        const textLen = 18 - nickLen - 1;
-        if (textLen > 0) {
-          writeOverlay(61 + nickLen + 1, y, 0x1f, text.slice(0, textLen));
-        }
-      }
+function openChatWindow() {
+  const lines = [
+    "  --- Global Chat ---",
+    "",
+    "!send;[Send Message]",
+    "",
+  ];
+  for (let i = chatMessages.length - 1; i >= 0; i--) {
+    const msg = chatMessages[i];
+    const rawLine = `<${msg.from}> ${msg.text}`;
+    const prefix = "  ";
+    if (rawLine.length <= 44) {
+      lines.push(prefix + rawLine);
+    } else {
+      lines.push(prefix + rawLine.slice(0, 44));
+      lines.push(prefix + "  " + rawLine.slice(44, 88));
     }
   }
+  openModal({
+    kind: "text",
+    state: { title: "Global Chat", lines, linePos: 1, viewingFile: false },
+    baseTitle: "Global Chat",
+    moved: false,
+    selectable: true,
+    onSelect: (label) => {
+      if (label === "send") {
+        openEntry("Chat:", "", 30, "any", (text) => {
+          if (text && text.trim()) {
+            if (ws && ws.readyState === WebSocket.OPEN) {
+              ws.send(JSON.stringify({ type: "chat", text: text.trim() }));
+            }
+            setTimeout(() => openChatWindow(), 100);
+          } else {
+            openChatWindow();
+          }
+        });
+      }
+    },
+  });
 }
 
 // paintOverlay rebuilds the modal layer from scratch each frame, so a modal
@@ -819,7 +853,9 @@ function paintChat() {
 function paintOverlay() {
   overlay.clear();
   if (mode === "playing") {
-    paintChat();
+    if (currentChatMessage) {
+      writeOverlay(0, 24, 0x1e, currentChatMessage.slice(0, 60).padEnd(60, " "));
+    }
   }
   if (paused) {
     paintPause();
@@ -1199,11 +1235,7 @@ function handleKeyDown(event: KeyboardEvent) {
   if (event.code === "KeyC") {
     event.preventDefault();
     stopHeldInput();
-    openEntry("Chat:", "", 30, "any", (text) => {
-      if (text && text.trim() && ws && ws.readyState === WebSocket.OPEN) {
-        ws.send(JSON.stringify({ type: "chat", text: text.trim() }));
-      }
-    });
+    openChatWindow();
     return;
   }
 

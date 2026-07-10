@@ -327,7 +327,7 @@ func (s *WebSocketServer) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 				name = player.name
 			}
 			inst.mu.Unlock()
-			inst.BroadcastChat(ctx, name, chat.Text)
+			s.BroadcastGlobalChat(ctx, name, chat.Text)
 		default:
 			var input InputMessage
 			if err := json.Unmarshal(raw, &input); err != nil {
@@ -660,13 +660,17 @@ func (s *WebSocketServer) LoadWorld(name string) error {
 	return s.RoomManager.LoadWorld(dir, name)
 }
 
-func (inst *WorldInstance) BroadcastChat(ctx context.Context, from, text string) {
-	inst.mu.Lock()
-	clients := make([]*webSocketClient, 0, len(inst.Clients))
-	for _, client := range inst.Clients {
-		clients = append(clients, client)
+func (s *WebSocketServer) BroadcastGlobalChat(ctx context.Context, from, text string) {
+	s.mu.Lock()
+	var clients []*webSocketClient
+	for _, inst := range s.Instances {
+		inst.mu.Lock()
+		for _, client := range inst.Clients {
+			clients = append(clients, client)
+		}
+		inst.mu.Unlock()
 	}
-	inst.mu.Unlock()
+	s.mu.Unlock()
 
 	msg := struct {
 		Type string `json:"type"`
