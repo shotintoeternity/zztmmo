@@ -11,3 +11,16 @@ engine/zzt-server
 engine/deploy.tar.gz
 engine/saves/
 test.txt
+
+# Local agent/project planning notes; keep out of the public repository.
+/ANALYSIS.md
+/AWS.md
+/CLAUDE.md
+/IMPLEMENTATION.md
+/NOTES.md
+/PLAN.md
+/TASKS.md
+/conversion-approach.txt
+/ruzzt.txt
+/zeta.txt
+/engine/errors.txt
