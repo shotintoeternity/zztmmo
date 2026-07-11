@@ -178,6 +178,14 @@ board should have a purpose: exploration, puzzle, combat, story, transition,
 reveal, rest, spectacle, or visual centerpiece. Avoid repetitive mazes, dead
 rooms, and boards that exist only to pad the game.
 
+The visual design must serve, not hinder, navigation. Use beautiful boards
+with lots of art whenever possible to represent the board itself (such as
+landscapes, machines, or detailed backgrounds), but make sure the playfield —
+the actual path the player walks along and the areas they must visit to progress —
+is clean, open, and free of physical obstacles (like solids, normal walls, or
+breakable walls). Art belongs in the scenery and borders, not blocking the
+player's path.
+
 Gameplay should be simple but expressive: conserve ammo, spend keys carefully,
 solve readable puzzles, talk to strange objects, trigger machines, dodge
 enemies, uncover secrets, and learn the local rules of the world. ZZT-OOP
