@@ -201,6 +201,60 @@ func TestM124AsyncGenerationReportsProgress(t *testing.T) {
 	}
 }
 
+// M12.5 consumes this endpoint directly from TypeScript. Keep the wire names
+// lower camel case; Go's default exported-field names would leave the browser
+// with an apparently empty progress window.
+func TestM125AsyncGenerationProgressUsesBrowserJSON(t *testing.T) {
+	plan := generationPlan("1. start: begin. #endgame")
+	_, claude := newFakeClaude(t, plan, generatedBoard("Start", false), generatedBoard("Title", false))
+	defer claude.Close()
+	service := newGenerationTestService(t, claude.URL, 3)
+	api := &WebAPI{RoomManager: NewRoomManager(testEmptyWorld(t)), Generator: service}
+	handler := api.Handler()
+	start := httptest.NewRecorder()
+	handler.ServeHTTP(start, httptest.NewRequest(http.MethodPost, "/api/generate", strings.NewReader(`{"prompt":"wire progress","async":true}`)))
+	if start.Code != http.StatusAccepted {
+		t.Fatalf("start = %d: %s", start.Code, start.Body.String())
+	}
+	var accepted struct{ ID string }
+	if err := json.NewDecoder(start.Body).Decode(&accepted); err != nil {
+		t.Fatal(err)
+	}
+
+	deadline := time.Now().Add(time.Second)
+	for {
+		rec := httptest.NewRecorder()
+		handler.ServeHTTP(rec, httptest.NewRequest(http.MethodGet, "/api/generate?id="+accepted.ID, nil))
+		if rec.Code != http.StatusOK {
+			t.Fatalf("status = %d: %s", rec.Code, rec.Body.String())
+		}
+		var status struct {
+			Status   string                   `json:"status"`
+			Progress []map[string]interface{} `json:"progress"`
+		}
+		if err := json.NewDecoder(rec.Body).Decode(&status); err != nil {
+			t.Fatal(err)
+		}
+		if status.Status == "complete" {
+			if len(status.Progress) == 0 {
+				t.Fatal("complete job returned no progress")
+			}
+			first := status.Progress[0]
+			if first["stage"] != "planning" || first["maxAttempts"] != float64(3) {
+				t.Fatalf("progress wire shape = %#v, want lowercase stage and maxAttempts", first)
+			}
+			if _, leaked := first["Stage"]; leaked {
+				t.Fatalf("progress leaked Go field name: %#v", first)
+			}
+			return
+		}
+		if time.Now().After(deadline) {
+			t.Fatalf("async job did not finish: %+v", status)
+		}
+		time.Sleep(time.Millisecond)
+	}
+}
+
 func TestM124BoardRepairThenSuccess(t *testing.T) {
 	plan := generationPlan("1. start: begin. #endgame")
 	fake, claude := newFakeClaude(t, plan, "not fenced ZWD", generatedBoard("Start", false), generatedBoard("Title", false))
@@ -315,7 +369,7 @@ end`,
   end
 end`,
 	}
-	
+
 	// Construct a synthetic error. In the assembled document, Lobby lines starts at line 4.
 	// Lobby has 5 lines, ends at line 8.
 	// Empty lines 9 and 10.
@@ -363,7 +417,7 @@ func TestM124ExtractMultipleBoards(t *testing.T) {
 
 func TestM124BatchSuccessAndRepair(t *testing.T) {
 	plan := generationPlan("1. start: begin. #endgame")
-	
+
 	// Fake responses:
 	// Call 1: Plan generation (PLANOK)
 	// Call 2: First batch painting. Let's return Start and Title together, but Start has a bad row.
@@ -371,15 +425,15 @@ func TestM124BatchSuccessAndRepair(t *testing.T) {
 	goodTitle := strings.Replace(generatedBoard("Title", false), "```zwd\n", "", 1)
 	goodTitle = strings.Replace(goodTitle, "```", "", 1)
 	badBatchResponse := fmt.Sprintf("```zwd\n%s\n\n%s\n```", badStart, goodTitle)
-	
+
 	// Call 3: Repair call. We return good versions of both.
 	goodStart := strings.Replace(generatedBoard("Start", false), "```zwd\n", "", 1)
 	goodStart = strings.Replace(goodStart, "```", "", 1)
 	goodBatchResponse := fmt.Sprintf("```zwd\n%s\n\n%s\n```", goodStart, goodTitle)
-	
+
 	fake, claude := newFakeClaude(t, plan, badBatchResponse, goodBatchResponse)
 	defer claude.Close()
-	
+
 	// Create service with BatchSize = 2
 	service, err := NewGenerationService(GenerationConfig{
 		APIURL:      claude.URL,
@@ -393,13 +447,13 @@ func TestM124BatchSuccessAndRepair(t *testing.T) {
 	if err != nil {
 		t.Fatal(err)
 	}
-	
+
 	_, err = service.Generate(context.Background(), "test", "batch paint", "BATCHOK", nil)
 	if err != nil {
 		t.Fatal(err)
 	}
-	
-	// Total calls: 
+
+	// Total calls:
 	// 1. plan
 	// 2. first batch paint (returns bad Start, good Title)
 	// 3. second batch paint (repair, returns good Start, good Title)
@@ -409,7 +463,7 @@ func TestM124BatchSuccessAndRepair(t *testing.T) {
 	if len(fake.requests) != 3 {
 		t.Fatalf("expected 3 Claude requests, got %d", len(fake.requests))
 	}
-	
+
 	// Let's assert the repair request contains the validation failure
 	repairReq := fake.requests[2].Messages[0].Content
 	if !strings.Contains(repairReq, "board must contain exactly one player tile, found 0") {

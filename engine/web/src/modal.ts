@@ -101,10 +101,20 @@ export type PopupEntryModal = {
   y?: number;
 };
 
+/** A compact text-window editor used for free-form, multi-line prompts. F2
+ * submits the accumulated text; Enter starts a new line. */
+export type MultiLineEntryModal = {
+  kind: "multilineEntry";
+  title: string;
+  lines: string[];
+  line: number;
+  onSubmit: (text: string | null) => void;
+};
+
 /** POPUP_ROWS tall, centered in the 25-row screen. */
 export const POPUP_Y_CENTERED = Math.floor((25 - 6) / 2);
 
-export type Modal = TextModal | YesNoModal | EntryModal | PopupEntryModal;
+export type Modal = TextModal | YesNoModal | EntryModal | PopupEntryModal | MultiLineEntryModal;
 
 /** What the caller should do after routing a key. */
 export type KeyResult = "close" | "redraw" | "ignore";
@@ -156,7 +166,15 @@ export function renderModal(write: WriteText, m: Modal) {
     case "popupEntry":
       renderPopupEntry(write, m);
       return;
+    case "multilineEntry":
+      renderMultiLineEntry(write, m);
+      return;
   }
+}
+
+function renderMultiLineEntry(write: WriteText, m: MultiLineEntryModal) {
+  const lines = ["$Describe the world you want", "Enter: new line  F2: dream", "", ...m.lines];
+  renderTextWindow(write, { title: m.title, lines, linePos: Math.max(1, m.line + 4), viewingFile: false });
 }
 
 // promptField is PromptString's redraw: a `width`-wide field at (x, y) with the
@@ -231,7 +249,52 @@ export function handleModalKey(m: Modal, event: KeyboardEvent): KeyResult {
     case "popupEntry":
       // PROMPT_ANY: PopupPromptString takes any printable character.
       return entryKey(m, POPUP_FIELD_WIDTH, "any", event);
+    case "multilineEntry":
+      return multiLineEntryKey(m, event);
   }
+}
+
+function multiLineEntryKey(m: MultiLineEntryModal, event: KeyboardEvent): KeyResult {
+  if (event.code === "F2") {
+    m.onSubmit(m.lines.join("\n").trim());
+    return "close";
+  }
+  if (event.code === "Escape") {
+    m.onSubmit(null);
+    return "close";
+  }
+  if (event.code === "Enter") {
+    if (m.lines.length < 12) {
+      m.lines.splice(m.line + 1, 0, "");
+      m.line += 1;
+    }
+    return "redraw";
+  }
+  if (event.code === "ArrowUp") {
+    m.line = Math.max(0, m.line - 1);
+    return "redraw";
+  }
+  if (event.code === "ArrowDown") {
+    m.line = Math.min(m.lines.length - 1, m.line + 1);
+    return "redraw";
+  }
+  if (event.code === "Backspace") {
+    if (m.lines[m.line].length > 0) {
+      m.lines[m.line] = m.lines[m.line].slice(0, -1);
+    } else if (m.line > 0) {
+      m.lines.splice(m.line, 1);
+      m.line -= 1;
+    }
+    return "redraw";
+  }
+  if (event.key.length !== 1 || event.key < " " || event.key.charCodeAt(0) >= 0x80) {
+    return "ignore";
+  }
+  if (m.lines[m.line].length >= 42) {
+    return "ignore";
+  }
+  m.lines[m.line] += event.key;
+  return "redraw";
 }
 
 function textKey(m: TextModal, event: KeyboardEvent): KeyResult {

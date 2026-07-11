@@ -638,7 +638,7 @@ and replay are untouched.
   only compiled). DoD: all paths tested; `go test ./...` green; replay
   unchanged.
 
-- [ ] **M12.5 — Browser "Dream a world" flow.** A CP437 window (M4.1 style)
+- [x] **M12.5 — Browser "Dream a world" flow.** A CP437 window (M4.1 style)
   from the title/world-picker: multi-line prompt entry (M6.1 input capture),
   a progress state that narrates the plan-then-paint pipeline ZZT-style
   ("Imagining the world...", then per-board "Painting board 7 of 12: The

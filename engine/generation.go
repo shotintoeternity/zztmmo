@@ -55,12 +55,13 @@ type GenerationConfig struct {
 // GenerationProgress is emitted at every durable boundary in the plan-then-
 // paint pipeline. M12.5 can render it directly; headless servers log it.
 type GenerationProgress struct {
-	Stage   string
-	Board   string
-	Index   int
-	Total   int
-	Attempt int
-	Detail  string
+	Stage       string `json:"stage"`
+	Board       string `json:"board,omitempty"`
+	Index       int    `json:"index,omitempty"`
+	Total       int    `json:"total,omitempty"`
+	Attempt     int    `json:"attempt,omitempty"`
+	MaxAttempts int    `json:"maxAttempts"`
+	Detail      string `json:"detail,omitempty"`
 }
 
 type generationProgressContextKey struct{}
@@ -121,6 +122,12 @@ func (g *GenerationService) SetProgressReporter(report func(GenerationProgress))
 }
 
 func (g *GenerationService) report(ctx context.Context, progress GenerationProgress) {
+	// The browser needs the ceiling to narrate repair attempts faithfully (for
+	// example, "attempt 2 of 3"). Keep it presentation-only: it does not alter
+	// a generation decision or enter saved world state.
+	if progress.MaxAttempts == 0 {
+		progress.MaxAttempts = g.maxAttempts
+	}
 	if report, ok := ctx.Value(generationProgressContextKey{}).(func(GenerationProgress)); ok && report != nil {
 		report(progress)
 	}
@@ -325,7 +332,9 @@ func (g *GenerationService) makePlan(ctx context.Context, premise string) (strin
 			return text, plan, nil
 		}
 		lastErr = err
-		g.report(ctx, GenerationProgress{Stage: "repairing-plan", Attempt: attempt, Detail: err.Error()})
+		if attempt < g.maxAttempts {
+			g.report(ctx, GenerationProgress{Stage: "repairing-plan", Attempt: attempt + 1, Detail: err.Error()})
+		}
 		request = planRequest(premise, fmt.Sprintf("Your previous plan failed mechanical validation:\n%s\nReturn a corrected complete plan.", err))
 	}
 	return "", Plan{}, fmt.Errorf("plan generation exhausted repairs: %w", lastErr)
@@ -358,7 +367,9 @@ func (g *GenerationService) paintBoard(ctx context.Context, planText string, pla
 			}
 		}
 		lastFeedback = fmt.Sprintf("Attempt %d failed: %v%s. Repair only board %q and return only its fenced ZWD board section.", *attempts, err, generatedGridDiagnostics(section), board.Name)
-		g.report(ctx, GenerationProgress{Stage: "repairing", Board: board.Name, Attempt: *attempts, Detail: err.Error()})
+		if *attempts < g.maxAttempts {
+			g.report(ctx, GenerationProgress{Stage: "repairing", Board: board.Name, Attempt: *attempts + 1, Detail: err.Error()})
+		}
 	}
 	return "", fmt.Errorf("board %q exhausted %d generation attempts: %s", board.Name, g.maxAttempts, lastFeedback)
 }
@@ -629,13 +640,13 @@ func extractMultipleBoardsSplit(text string) map[string]string {
 	} else {
 		sections = []string{text}
 	}
-	
+
 	result := make(map[string]string)
 	for _, sec := range sections {
 		lines := strings.Split(sec, "\n")
 		var currentBoardName string
 		var currentBoardLines []string
-		
+
 		for _, line := range lines {
 			headerMatch := boardHeaderRe.FindStringSubmatch(line)
 			if len(headerMatch) > 0 {
@@ -782,12 +793,14 @@ func (g *GenerationService) paintBoardsBatch(ctx context.Context, planText strin
 			err = fmt.Errorf("batch validation failures: %s", strings.Join(batchErrors, "; "))
 		}
 		lastFeedback = err.Error()
-		g.report(ctx, GenerationProgress{
-			Stage:   "repairing",
-			Board:   boards[0].Name,
-			Attempt: batchAttempt,
-			Detail:  lastFeedback,
-		})
+		if batchAttempt < g.maxAttempts {
+			g.report(ctx, GenerationProgress{
+				Stage:   "repairing",
+				Board:   boards[0].Name,
+				Attempt: batchAttempt + 1,
+				Detail:  lastFeedback,
+			})
+		}
 	}
 	return fmt.Errorf("batch %v exhausted %d generation attempts: %s", boards, g.maxAttempts, lastFeedback)
 }
@@ -1275,7 +1288,7 @@ func generatedSaveName(requested, planName, premise string) (string, error) {
 	if requested != "" {
 		return SanitizeSaveName(requested)
 	}
-	
+
 	// Attempt to clean and format the planName into an 8-character DOS-safe string
 	var clean []byte
 	for i := 0; i < len(planName); i++ {
@@ -1284,23 +1297,22 @@ func generatedSaveName(requested, planName, premise string) (string, error) {
 			clean = append(clean, c)
 		}
 	}
-	
+
 	if len(clean) > SaveNameMaxLength {
 		clean = clean[:SaveNameMaxLength]
 	}
-	
+
 	if len(clean) > 0 {
 		if sanitized, err := SanitizeSaveName(string(clean)); err == nil {
 			return sanitized, nil
 		}
 	}
-	
+
 	// Fallback to FNV hash if the cleaned name is empty or invalid
 	h := fnv.New32a()
 	_, _ = h.Write([]byte(planName + "\n" + premise))
 	return SanitizeSaveName(fmt.Sprintf("GEN%05X", h.Sum32()&0xFFFFF))
 }
-
 
 func persistGeneratedWorld(dir, name, prompt, plan, zwd string, data []byte) error {
 	if err := os.MkdirAll(dir, 0755); err != nil {

@@ -4,6 +4,7 @@ import { renderModal, handleModalKey, POPUP_Y_CENTERED, type Modal } from "./mod
 import { commandKey, isHandledKey, isMovementKey, movementMask, rawKey } from "./keys";
 import { drawTitleSidebar, titleCommand } from "./title";
 import { soundNotesFromProtocol, ZztSound } from "./sound";
+import { generationLines, runDreamGeneration, type GenerationProgress } from "./dream";
 
 const COLS = 80;
 // The server streams board columns 0..59 only. Columns 60..79 are the sidebar,
@@ -504,13 +505,50 @@ async function showWorlds() {
 
   openSelectList(
     "Select a World",
-    ordered.map(worldLabel),
+    [...ordered.map(worldLabel), "Dream a world..."],
     (selected) => {
+      if (selected === "Dream a world...") {
+        openDreamPrompt();
+        return;
+      }
       const name = selected.split(" (")[0];
       void enterWorld(name);
     },
     WORLD_SELECT_BLURB,
   );
+}
+
+function openDreamPrompt() {
+  openModal({
+    kind: "multilineEntry",
+    title: "Dream a world",
+    lines: [""],
+    line: 0,
+    onSubmit: (premise) => {
+      if (premise) {
+        void startDreamGeneration(premise);
+      }
+    },
+  });
+}
+
+function showGenerationProgress(progress: GenerationProgress[]) {
+  openWindow("Dreaming a world", generationLines(progress), true);
+}
+
+async function startDreamGeneration(prompt: string) {
+  showGenerationProgress([]);
+  try {
+    const world = await runDreamGeneration(
+      prompt,
+      fetch,
+      () => new Promise((resolve) => window.setTimeout(resolve, 500)),
+      showGenerationProgress,
+    );
+    await enterWorld(world);
+  } catch (error) {
+    openWindow("Dream failed", ["", String(error), "", "Try a shorter premise later."], true);
+  }
 }
 
 // enterWorld joins the chosen world's own instance. It does NOT call
@@ -1258,6 +1296,9 @@ function handleTitleKey(event: KeyboardEvent) {
       break;
     case "highScores":
       void fetchLines("/api/highscores?world=" + encodeURIComponent(worldName), `High scores for ${worldName}`);
+      break;
+    case "dream":
+      openDreamPrompt();
       break;
     case "restore":
       void showSavedGames();
