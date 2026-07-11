@@ -754,11 +754,15 @@ func compileZWDBoard(e *Engine, boardID int16, src zwdBoard, boardIDs map[string
 			stat.P3 = byte(id)
 		}
 		if srcStat.data != "" {
-			if len(srcStat.data) > 32767 {
+			data, err := wrapZWDTextWindowLines(srcStat.data)
+			if err != nil {
+				return zerr(srcStat.line, 1, err.Error())
+			}
+			if len(data) > 32767 {
 				return zerr(srcStat.line, 1, "oop block exceeds 32767 bytes")
 			}
-			stat.Data = srcStat.data
-			stat.DataLen = int16(len(srcStat.data))
+			stat.Data = data
+			stat.DataLen = int16(len(data))
 		}
 		if srcStat.hasBind {
 			if srcStat.data != "" {
@@ -814,6 +818,93 @@ func elementNeedsStat(el byte) bool {
 	return false
 }
 
+// The original ZZT text-window editor limits ordinary text to 42 columns
+// (TextWindowWidth - 8 with the standard 50-column window). OOP's runtime
+// renderer does not impose that limit, so generated source could otherwise
+// write through the right border. Normalize display lines here, at the
+// compiler boundary, rather than relying on every ZWD author to get it right.
+const (
+	zztTextWindowLineWidth   = 42
+	zztTextWindowCenteredMax = 45
+	zztTextWindowChoiceMax   = 38
+	zztTextWindowTitleMax    = 45
+)
+
+// wrapZWDTextWindowLines reflows only OOP lines that the engine renders as
+// text. Commands, labels, movement instructions, and comments retain their
+// exact bytes. A long choice keeps its selectable first line; its remaining
+// caption text becomes ordinary, non-selectable display lines.
+func wrapZWDTextWindowLines(data string) (string, error) {
+	lines := strings.Split(data, "\r")
+	out := make([]string, 0, len(lines))
+	for _, line := range lines {
+		if line == "" {
+			out = append(out, line)
+			continue
+		}
+
+		switch line[0] {
+		case '@':
+			if len(line)-1 > zztTextWindowTitleMax {
+				return "", fmt.Errorf("OOP title exceeds %d characters", zztTextWindowTitleMax)
+			}
+			out = append(out, line)
+		case '#', ':', '\'', '/', '?':
+			out = append(out, line)
+		case '$':
+			for _, part := range wrapZWDText(line[1:], zztTextWindowCenteredMax) {
+				out = append(out, "$"+part)
+			}
+		case '!':
+			if separator := strings.IndexByte(line, ';'); separator >= 0 {
+				prefix := line[:separator+1]
+				parts := wrapZWDText(line[separator+1:], zztTextWindowChoiceMax)
+				out = append(out, prefix+parts[0])
+				out = append(out, parts[1:]...)
+			} else {
+				out = append(out, wrapZWDText(line, zztTextWindowLineWidth)...)
+			}
+		default:
+			out = append(out, wrapZWDText(line, zztTextWindowLineWidth)...)
+		}
+	}
+	return strings.Join(out, "\r"), nil
+}
+
+// wrapZWDText wraps at word boundaries where possible and splits a single
+// oversized word only when necessary. OOP and the ZZT renderer count bytes,
+// so the limit intentionally uses len rather than rune count.
+func wrapZWDText(text string, width int) []string {
+	words := strings.Fields(text)
+	if len(words) == 0 {
+		return []string{""}
+	}
+
+	var lines []string
+	line := ""
+	for _, word := range words {
+		for len(word) > width {
+			if line != "" {
+				lines = append(lines, line)
+				line = ""
+			}
+			lines = append(lines, word[:width])
+			word = word[width:]
+		}
+		if line == "" {
+			line = word
+		} else if len(line)+1+len(word) <= width {
+			line += " " + word
+		} else {
+			lines = append(lines, line)
+			line = word
+		}
+	}
+	if line != "" {
+		lines = append(lines, line)
+	}
+	return lines
+}
 
 func estimateZWDSerializedBoardSize(e *Engine) int {
 	size := SizeOfBoardName + SizeOfBoardInfo + 2

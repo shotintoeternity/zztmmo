@@ -161,6 +161,7 @@ const promptOutputContract = `# Output contract
   entry must be a valid element name from the spec with a two-hex-digit color.
   Never invent element names or ` + "`element <number>`" + ` entries.
 - Literal Text Strings: Avoid writing readable English text strings directly inside the grid rows (e.g. ` + "`Press P to begin`" + ` or ` + "`The gate is locked`" + `) unless you define every single letter key in the legend. Instead, prefer to use interactive **Objects** that display these messages in their OOP code on touch, bump, or enter. This is cleaner and is the idiomatic ZZT way.
+- Text Windows: Pre-wrap OOP dialogue at word boundaries: ordinary lines are at most 42 characters, centered ` + "`$`" + ` lines at most 45 characters after the marker, and ` + "`!label;`" + ` choice captions at most 38 characters after the semicolon. Keep ` + "`@`" + ` titles at most 45 characters. The compiler is a safety net, not a substitute for intentional pacing.
 - Stay within the Limits table: <=150 stats per board, <=100 non-title boards,
   60x25 grids, colors 0..15 per nibble.
 - Prefer the house-style idioms: a framed playfield, one idea per board,

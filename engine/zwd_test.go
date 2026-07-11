@@ -394,5 +394,55 @@ func TestZWDOOPIndentationStripping(t *testing.T) {
 	}
 }
 
+func TestZWDWrapsOOPTextToOriginalWindowWidth(t *testing.T) {
+	src := strings.Replace(zwdOneRoomExample, `"This world was written as text."
+"The compiler turns it into real ZZT."`, `The telescope has gone blind -- its lens rolled down into the cellar.
+$A centered transmission that is too long for one line.
+!go;Open the observatory door and climb the tower stairs to the deck.`, 1)
 
+	world, err := CompileZWDWorld(src)
+	if err != nil {
+		t.Fatalf("CompileZWDWorld failed: %v", err)
+	}
+	e := NewEngine()
+	e.World = world
+	e.BoardOpen(0)
 
+	data := e.Board.Stats[1].Data
+	for _, line := range strings.Split(data, "\r") {
+		switch {
+		case strings.HasPrefix(line, "$"):
+			if len(line)-1 > zztTextWindowCenteredMax {
+				t.Errorf("centered line %q is %d characters, want <= %d", line, len(line)-1, zztTextWindowCenteredMax)
+			}
+		case strings.HasPrefix(line, "!go;"):
+			if len(line)-len("!go;") > zztTextWindowChoiceMax {
+				t.Errorf("choice line %q is too wide", line)
+			}
+		case line != "" && !strings.HasPrefix(line, "@") && !strings.HasPrefix(line, "#"):
+			if len(line) > zztTextWindowLineWidth {
+				t.Errorf("text line %q is %d characters, want <= %d", line, len(line), zztTextWindowLineWidth)
+			}
+		}
+	}
+
+	for _, want := range []string{
+		"The telescope has gone blind -- its lens",
+		"rolled down into the cellar.",
+		"$A centered transmission that is too long for",
+		"!go;Open the observatory door and climb",
+		"the tower stairs to the deck.",
+	} {
+		if !strings.Contains(data, want) {
+			t.Errorf("wrapped OOP text missing %q; got %q", want, data)
+		}
+	}
+}
+
+func TestZWDRejectsOverwideOOPTitle(t *testing.T) {
+	src := strings.Replace(zwdOneRoomExample, "@hello", "@"+strings.Repeat("x", zztTextWindowTitleMax+1), 1)
+	_, err := CompileZWDWorld(src)
+	if err == nil || !strings.Contains(err.Error(), "OOP title exceeds") {
+		t.Fatalf("error = %v, want OOP title width error", err)
+	}
+}

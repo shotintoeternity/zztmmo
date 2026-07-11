@@ -310,6 +310,8 @@ the wrong element.
 | Stat record | 33 bytes plus optional code | `SizeOfStat = 33`. |
 | Board data | `<=20000` bytes after compression and stat code | Engine scratch buffer `TIoTmpBuf [20000]byte`; board RLE plus info plus stats plus OOP must fit. |
 | OOP block | `<=32767` bytes per stored code block | `DataLen` is signed int16; negative values mean `#bind`. |
+| Text-window dialogue | Plain text `<=42` columns; centered `$` text `<=45`; choice captions `<=38` after `!label;` | The original 50-column window reserves border, cursor, and choice-arrow cells. The compiler word-wraps overlong display text. |
+| OOP title | `<=45` columns after `@` | Titles cannot be wrapped; the compiler rejects a longer title. |
 | Bound OOP | bind target must be a previous stat `1..StatCount` | Negative `DataLen` stores the target stat index; stat `0` cannot be a bind target. |
 | Color nibbles | `0..15` foreground and background | DOS color attributes are 4-bit foreground plus 4-bit background. |
 | Player starts | exactly 1 per board | Stat `0` is always the player-controlled element. |
@@ -517,11 +519,13 @@ When writing code inside `oop ... end` blocks for ZZT objects or scrolls, you mu
      Hello
      end
      ```
-3. **Labels**: Define a message handler label using a colon prefix (e.g. `:touch`, `:bench`). Label names are case-insensitive.
-4. **Commands**: Prefix commands with `#` (e.g. `#play`, `#give`, `#take`, `#end`, `#endgame`, `#lock`, `#unlock`, `#zap`).
-5. **Initial Halt**: If an object defines a `:touch` label or other label, place `#end` on the line immediately after the name to prevent the object from executing the label's code automatically when the board loads.
-6. **Movement**: Use `/` (force move) or `?` (try move) followed by direction (`n`, `s`, `w`, `e`).
-7. **Local Board Scope**: Objects can only send direct messages (e.g. `#send target:label`) to other objects *in the same room (board)*. Objects in other rooms are frozen and cannot receive messages. To trigger events across different boards, you must use global flags (`#set flagname` on one board, and `#if flagname` on the other). The global flag limit is exactly 10 flags.
+3. **Text-Window Width**: Pre-wrap dialogue at natural word boundaries. Plain dialogue lines may be at most **42 characters**; centered `$` lines may contain at most **45 characters after `$`**; and a selectable `!label;` caption may be at most **38 characters after `;`**. The compiler reflows longer display lines as a safeguard, but authors must write to these widths so dialogue has intentional pacing. A long choice keeps its first selectable line and receives ordinary continuation text below it.
+4. **Titles Cannot Wrap**: The object/scroll title after `@` must be at most **45 characters**. The compiler rejects a longer title rather than letting it overwrite the window frame.
+5. **Labels**: Define a message handler label using a colon prefix (e.g. `:touch`, `:bench`). Label names are case-insensitive.
+6. **Commands**: Prefix commands with `#` (e.g. `#play`, `#give`, `#take`, `#end`, `#endgame`, `#lock`, `#unlock`, `#zap`).
+7. **Initial Halt**: If an object defines a `:touch` label or other label, place `#end` on the line immediately after the name to prevent the object from executing the label's code automatically when the board loads.
+8. **Movement**: Use `/` (force move) or `?` (try move) followed by direction (`n`, `s`, `w`, `e`).
+9. **Local Board Scope**: Objects can only send direct messages (e.g. `#send target:label`) to other objects *in the same room (board)*. Objects in other rooms are frozen and cannot receive messages. To trigger events across different boards, you must use global flags (`#set flagname` on one board, and `#if flagname` on the other). The global flag limit is exactly 10 flags.
 
 ## Element Reachability and Accessibility
 
@@ -578,7 +582,7 @@ The compiler must:
    buffer.
 5. Load the compiled bytes back through `worldReadFrom` and step the headless
    validation gate before accepting the world.
-6. Preserve OOP text byte-for-byte except for normalizing line endings to `\n`.
+6. Preserve OOP commands, labels, movement instructions, and comments byte-for-byte except for normalizing line endings to `\n`; word-wrap display text to the original text-window limits.
 7. Reject unknown elements, malformed colors, duplicate legend keys, missing
    grid symbols, missing player starts, impossible stat coordinates, and any
    field that would be silently truncated by ZZT's binary format.
@@ -593,4 +597,3 @@ The compiler must:
   and `worldWriteTo`.
 - Wiki of ZZT, "ZZT file format":
   `https://wiki.zzt.org/wiki/ZZT_file_format`.
-
