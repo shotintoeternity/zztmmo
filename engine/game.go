@@ -1488,7 +1488,11 @@ func (e *Engine) BoardPassageTeleport(x, y int16, sourceStatId int16) {
 		newX, newY int16
 	)
 	col = e.Board.Tiles[x][y].Color
-	e.BoardChange(int16(e.Board.Stats[e.GetStatIdAt(x, y)].P3))
+	passageStatId := e.GetStatIdAt(x, y)
+	if passageStatId < 0 {
+		return
+	}
+	e.BoardChange(int16(e.Board.Stats[passageStatId].P3))
 	newX = 0
 	for ix = 1; ix <= BOARD_WIDTH; ix++ {
 		for iy = 1; iy <= BOARD_HEIGHT; iy++ {

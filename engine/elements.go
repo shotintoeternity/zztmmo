@@ -543,7 +543,11 @@ func (e *Engine) ElementBombTick(statId int16) {
 }
 
 func (e *Engine) ElementBombTouch(x, y int16, sourceStatId int16, deltaX, deltaY *int16) {
-	stat := &e.Board.Stats[e.GetStatIdAt(x, y)]
+	statId := e.GetStatIdAt(x, y)
+	if statId < 0 {
+		return
+	}
+	stat := &e.Board.Stats[statId]
 	if stat.P1 == 0 {
 		stat.P1 = 9
 		e.BoardDrawTile(int16(stat.X), int16(stat.Y))
@@ -880,7 +884,12 @@ func (e *Engine) ElementObjectTick(statId int16) {
 }
 
 func (e *Engine) ElementObjectDraw(x, y int16, ch *byte) {
-	*ch = e.Board.Stats[e.GetStatIdAt(x, y)].P1
+	statId := e.GetStatIdAt(x, y)
+	if statId < 0 {
+		*ch = ElementDefs[E_OBJECT].Character
+		return
+	}
+	*ch = e.Board.Stats[statId].P1
 }
 
 func (e *Engine) ElementObjectTouch(x, y int16, sourceStatId int16, deltaX, deltaY *int16) {
@@ -888,6 +897,9 @@ func (e *Engine) ElementObjectTouch(x, y int16, sourceStatId int16, deltaX, delt
 		statId int16
 	)
 	statId = e.GetStatIdAt(x, y)
+	if statId < 0 {
+		return
+	}
 	// The object executes #TOUCH on its own later tick; remember who knocked so
 	// the resulting scroll is shown only to them.
 	e.SetScrollAudience(statId, sourceStatId)
@@ -941,16 +953,16 @@ func (e *Engine) ElementScrollTick(statId int16) {
 }
 
 func (e *Engine) ElementScrollTouch(x, y int16, sourceStatId int16, deltaX, deltaY *int16) {
-	var (
-		statId int16
-	)
-	statId = e.GetStatIdAt(x, y)
+	statId := e.GetStatIdAt(x, y)
+	if statId < 0 {
+		return
+	}
 	stat := &e.Board.Stats[statId]
 	e.SoundQueue(2, SoundParse("c-c+d-d+e-e+f-f+g-g"))
 	stat.DataPos = 0
 	e.SetScrollAudience(statId, sourceStatId)
 	e.OopExecute(statId, &stat.DataPos, "Scroll")
-	e.RemoveStat(e.GetStatIdAt(x, y))
+	e.RemoveStat(statId)
 }
 
 func (e *Engine) ElementKeyTouch(x, y int16, sourceStatId int16, deltaX, deltaY *int16) {
@@ -996,13 +1008,18 @@ func (e *Engine) ElementGemTouch(x, y int16, sourceStatId int16, deltaX, deltaY 
 }
 
 func (e *Engine) ElementPassageTouch(x, y int16, sourceStatId int16, deltaX, deltaY *int16) {
+	passageStatId := e.GetStatIdAt(x, y)
+	if passageStatId < 0 {
+		*deltaX = 0
+		*deltaY = 0
+		return
+	}
 	if e.MultiRoom || e.PlayerCount() > 1 {
 		// MultiRoom / multi-player: emit a TransferEvent instead of swapping the
 		// board in-place. Find the destination board and matching entry tile by
 		// decoding the destination board into a temporary engine. BoardChange
 		// would serialize this live board back into World.BoardData, including
 		// players, which is not a neutral read in multi-room mode.
-		passageStatId := e.GetStatIdAt(x, y)
 		destBoard := int16(e.Board.Stats[passageStatId].P3)
 		col := e.Board.Tiles[x][y].Color
 		var entryX, entryY int16
@@ -1059,7 +1076,12 @@ func (e *Engine) ElementPushableTouch(x, y int16, sourceStatId int16, deltaX, de
 }
 
 func (e *Engine) ElementPusherDraw(x, y int16, ch *byte) {
-	stat := &e.Board.Stats[e.GetStatIdAt(x, y)]
+	statId := e.GetStatIdAt(x, y)
+	if statId < 0 {
+		*ch = ElementDefs[E_PUSHER].Character
+		return
+	}
+	stat := &e.Board.Stats[statId]
 	if stat.StepX == 1 {
 		*ch = 16
 	} else if stat.StepX == -1 {
