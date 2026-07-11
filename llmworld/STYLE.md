@@ -237,6 +237,22 @@ Title screens are the player's first impression. A scrambled or misspelled title
    * A word of $N$ letters is exactly $W = 4N - 1$ columns wide.
    * To center the word on the 60-column ZZT screen, your starting column index must be exactly $(60 - W) / 2$.
    * *Example*: `DYING` (5 letters) is $4(5) - 1 = 19$ columns wide. Center it by starting at column $(60 - 19) / 2 = 20$.
-3. **Atmospheric Contrast**: Frame your title banner with themed ascii drawings (e.g. stars, machinery, mountains) but keep the title text clear and easy to read using `Text-<Color>` elements.
+3. **Legend Key Drawing Technique**: Use a single letter (like `c` for cyan or `y` for yellow) in the grid to represent the filled pixels of all block letters, and map it to `Text-<Color>` in the legend.
+   * *Concrete Example*: To spell out the word **"ZZT"** centered in cyan on a board, use `c` for the letter pixels and `.` for empty space.
+     * $W = 4(3) - 1 = 11$ columns wide. Centered starting index in 58 columns of playfield is $(58 - 11) / 2 = 23.5 \rightarrow 23$ padding columns.
+     * The grid rows and legend must look exactly like this:
+     ```
+     Grid:
+     w.......................ccc.ccc.ccc......................w
+     w.........................c...c..c.......................w
+     w........................c...c...c.......................w
+     w.......................c...c....c.......................w
+     w......................ccc.ccc..c.......................w
+
+     Legend:
+     c = Text-Cyan color 0x20
+     ```
+4. **Atmospheric Contrast**: Frame your title banner with themed ascii drawings (e.g. stars, machinery, mountains) but keep the title text clear and easy to read using `Text-<Color>` elements.
+
 
 
