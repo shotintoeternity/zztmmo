@@ -618,7 +618,6 @@ func extractMultipleBoardsSplit(text string) map[string]string {
 	
 	result := make(map[string]string)
 	for _, sec := range sections {
-		sec = preprocessZWDGrid(sec)
 		lines := strings.Split(sec, "\n")
 		var currentBoardName string
 		var currentBoardLines []string
@@ -627,7 +626,8 @@ func extractMultipleBoardsSplit(text string) map[string]string {
 			headerMatch := boardHeaderRe.FindStringSubmatch(line)
 			if len(headerMatch) > 0 {
 				if currentBoardName != "" && len(currentBoardLines) > 0 {
-					result[currentBoardName] = strings.TrimSpace(strings.Join(currentBoardLines, "\n"))
+					boardContent := strings.TrimSpace(strings.Join(currentBoardLines, "\n"))
+					result[currentBoardName] = preprocessZWDGrid(boardContent)
 				}
 				currentBoardName = headerMatch[1]
 				currentBoardLines = []string{line}
@@ -638,7 +638,8 @@ func extractMultipleBoardsSplit(text string) map[string]string {
 			}
 		}
 		if currentBoardName != "" && len(currentBoardLines) > 0 {
-			result[currentBoardName] = strings.TrimSpace(strings.Join(currentBoardLines, "\n"))
+			boardContent := strings.TrimSpace(strings.Join(currentBoardLines, "\n"))
+			result[currentBoardName] = preprocessZWDGrid(boardContent)
 		}
 	}
 	return result
@@ -796,6 +797,50 @@ func expandRLE(line string) string {
 
 func preprocessZWDGrid(zwdText string) string {
 	lines := strings.Split(zwdText, "\n")
+
+	playerChar := byte('@')
+	emptyChar := byte('.')
+	hasPlayerLegend := false
+
+	startPlayerRe := regexp.MustCompile(`(?i)^\s*start\s+player\s+at\s+([0-9]+)\s*,\s*([0-9]+)`)
+
+	var originalStartX, originalStartY int
+	hasOriginalStart := false
+
+	for _, line := range lines {
+		trimmed := strings.TrimSpace(line)
+		// Check for Player legend
+		if strings.Contains(trimmed, "=") && (strings.Contains(trimmed, "Player") || strings.Contains(trimmed, "element 1") || strings.Contains(trimmed, "element 01")) {
+			parts := strings.SplitN(trimmed, "=", 2)
+			if len(parts) == 2 {
+				k := strings.TrimSpace(parts[0])
+				if len(k) == 1 {
+					playerChar = k[0]
+					hasPlayerLegend = true
+				}
+			}
+		}
+		// Check for Empty legend
+		if strings.Contains(trimmed, "=") && (strings.Contains(trimmed, "Empty") || strings.Contains(trimmed, "element 0") || strings.Contains(trimmed, "element 00")) {
+			parts := strings.SplitN(trimmed, "=", 2)
+			if len(parts) == 2 {
+				k := strings.TrimSpace(parts[0])
+				if len(k) == 1 {
+					emptyChar = k[0]
+				}
+			}
+		}
+		if m := startPlayerRe.FindStringSubmatch(trimmed); m != nil {
+			x, _ := strconv.Atoi(m[1])
+			y, _ := strconv.Atoi(m[2])
+			if x >= 1 && x <= 60 && y >= 1 && y <= 25 {
+				originalStartX = x
+				originalStartY = y
+				hasOriginalStart = true
+			}
+		}
+	}
+
 	inGrid := false
 	var out []string
 
@@ -810,6 +855,10 @@ func preprocessZWDGrid(zwdText string) string {
 
 	for _, line := range lines {
 		trimmed := strings.TrimSpace(line)
+		if hasPlayerLegend && startPlayerRe.MatchString(trimmed) {
+			continue
+		}
+
 		if trimmed == "grid" {
 			inGrid = true
 			out = append(out, line)
@@ -844,10 +893,79 @@ func preprocessZWDGrid(zwdText string) string {
 					for len(gridRows) < 25 {
 						gridRows = append(gridRows, gridRow{
 							indent:  padIndent,
-							content: strings.Repeat(".", 60),
+							content: strings.Repeat(string(emptyChar), 60),
 						})
 					}
 				}
+
+				if hasPlayerLegend {
+					// Find player positions in normalized gridRows
+					type coord struct {
+						r int // 0-indexed row
+						c int // 0-indexed col
+					}
+					var playerCoords []coord
+					for r, row := range gridRows {
+						for c := 0; c < len(row.content); c++ {
+							if row.content[c] == playerChar {
+								playerCoords = append(playerCoords, coord{r: r, c: c})
+							}
+						}
+					}
+
+					var startX, startY int
+					if len(playerCoords) == 1 {
+						startX = playerCoords[0].c + 1
+						startY = playerCoords[0].r + 1
+					} else if len(playerCoords) > 1 {
+						startX = playerCoords[0].c + 1
+						startY = playerCoords[0].r + 1
+						for idx, p := range playerCoords {
+							if idx == 0 {
+								continue
+							}
+							rowBytes := []byte(gridRows[p.r].content)
+							rowBytes[p.c] = emptyChar
+							gridRows[p.r].content = string(rowBytes)
+						}
+					} else {
+						// len(playerCoords) == 0
+						if hasOriginalStart {
+							startX = originalStartX
+							startY = originalStartY
+						} else {
+							startX = 30
+							startY = 12
+						}
+						pRow := startY - 1
+						pCol := startX - 1
+						rowBytes := []byte(gridRows[pRow].content)
+						rowBytes[pCol] = playerChar
+						gridRows[pRow].content = string(rowBytes)
+					}
+
+					// Insert start player line before grid line
+					gridIndex := -1
+					for i := len(out) - 1; i >= 0; i-- {
+						if strings.TrimSpace(out[i]) == "grid" {
+							gridIndex = i
+							break
+						}
+					}
+					if gridIndex != -1 {
+						indent := ""
+						for _, r := range out[gridIndex] {
+							if r == ' ' || r == '\t' {
+								indent += string(r)
+							} else {
+								break
+							}
+						}
+						startPlayerLine := fmt.Sprintf("%sstart player at %d,%d", indent, startX, startY)
+						out = append(out[:gridIndex], append([]string{startPlayerLine}, out[gridIndex:]...)...)
+					}
+				}
+
 				// Append the normalized rows to out using appropriate indentation
 				for _, row := range gridRows {
 					out = append(out, row.indent+row.content)
@@ -878,7 +996,7 @@ func preprocessZWDGrid(zwdText string) string {
 			if len(content) > 60 {
 				content = content[:60]
 			} else if len(content) < 60 {
-				content = content + strings.Repeat(".", 60-len(content))
+				content = content + strings.Repeat(string(emptyChar), 60-len(content))
 			}
 			gridRows = append(gridRows, gridRow{indent: indent, content: content})
 			continue

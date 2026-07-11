@@ -160,6 +160,7 @@ const promptOutputContract = `# Output contract
 - Every legend character used in the grid must have a legend entry, and every
   entry must be a valid element name from the spec with a two-hex-digit color.
   Never invent element names or ` + "`element <number>`" + ` entries.
+- Literal Text Strings: Avoid writing readable English text strings directly inside the grid rows (e.g. ` + "`Press P to begin`" + ` or ` + "`The gate is locked`" + `) unless you define every single letter key in the legend. Instead, prefer to use interactive **Objects** that display these messages in their OOP code on touch, bump, or enter. This is cleaner and is the idiomatic ZZT way.
 - Stay within the Limits table: <=150 stats per board, <=100 non-title boards,
   60x25 grids, colors 0..15 per nibble.
 - Prefer the house-style idioms: a framed playfield, one idea per board,
