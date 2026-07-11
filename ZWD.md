@@ -145,6 +145,19 @@ grid
 end
 ```
 
+### Stat-backed elements & decoration (read before drawing anything)
+
+Some elements are **stat-backed**: every tile of that element in the grid is only valid if the `stats` block has a matching `stat at X,Y` at that exact coordinate. One stat = one tile. The compiler enforces this for the full set:
+
+`Object`, `Scroll`, `Passage`, `Transporter`, `Pusher`, `Bomb`, `Duplicator`, `BlinkWall`, and every creature — `Bear`, `Ruffian`, `SpinningGun`, `Lion`, `Tiger`, `Slime`, `Shark`, `CentipedeHead`, `CentipedeSegment`, `Bullet`, `Star`.
+
+**CRITICAL RULES:**
+- **No orphan tiles.** A stat-backed tile with no matching stat fails compilation with `grid contains stat-backed element X but no matching stat is defined at (col,row)`. Every such tile needs its own `stat at X,Y`.
+- **Never draw scenery with a stat-backed element.** Do not use `Object`, `Scroll`, `Passage`, `Star`, `Bomb`, or any creature to paint static art — pillars, gears, lighthouses, stars in the sky, borders, or lettering. They are live game entities, not paint: an orphan one won't compile, and even with a stat it will move, tick, block, lock, or teleport at runtime and break the scene.
+- **Draw structural scenery with inert elements.** For static walls, shapes, and fills use `Solid`, `Normal`, `Breakable`, `Line`, `Fake`, or `Water`. None of these take a stat.
+- **Draw glyphs, symbols, and lettering with Text elements.** To place a specific CP437 character as pure decoration (a `*` star, an arrow, a sign, a box-drawing char), use the `Text-<Color>` family — see the Legend section. Text tiles are inert (no stat, no behavior) and render whatever character you choose. This is the correct way to get a star field, signage, or icon-like art.
+- **An `Object` is a single scripted tile**, never a multi-tile brush. If you place `N` object glyphs you must write `N` `stat` blocks, each with its own `oop`.
+
 The player start coordinate must correspond to exactly one grid cell whose
 legend entry is `Player`. The compiler writes stat `0` there and uses the
 legend entry's `under` tile if supplied; otherwise the player's under tile is
@@ -199,10 +212,29 @@ such as `COLOR_CHOICE_ON_BLACK`, `COLOR_WHITE_ON_CHOICE`, or
 `COLOR_CHOICE_ON_CHOICE`, the compiler stores the final board color byte, not
 the sentinel.
 
-Text tiles use the `Text` element family (`E_TEXT_BLUE` through
-`E_TEXT_WHITE`). A text grid cell stores the displayed byte in the tile color
-field, so a future shorthand like `Text "Hi" color yellow` must expand to one
-text tile per grid cell rather than storing a string in one cell.
+### Text elements (decorative glyphs & lettering)
+
+Use the `Text` family (`Text-Blue`, `Text-Green`, `Text-Cyan`, `Text-Red`,
+`Text-Purple`, `Text-Yellow`, `Text-White`) to paint arbitrary CP437 characters
+as **inert decoration** — these tiles take no stat and have no runtime behavior,
+so they are the safe way to draw any purely visual symbol.
+
+For a text tile the legend's `color` value is **not** a color attribute: it is
+the **CP437 character code** to display. The on-screen color is fixed by the
+element name (`Text-White` renders white on black; the other `Text-<Color>`
+names render as that color). One text tile is one character — a string spanning
+several cells is one text tile per cell.
+
+```zwd
+legend
+  * = Text-White color 0x2A    # 0x2A = '*', a white star for a night sky
+  # = Text-Yellow color 0x20   # 0x20 = ' ' (space) renders as a solid yellow block
+  . = Empty color 0x00
+end
+```
+
+So `color 0x2A` shows `*`, `color 0x41` shows `A`, and a space (`0x20`) fills the
+cell with the element's color — the technique for big block-letter banners.
 
 ## Stats
 
@@ -228,9 +260,9 @@ end
 | `at X,Y` | `TStat.X/Y` | Required. 1-based board coordinate. |
 | `element NAME` | tile element and stat element | Required. Must be an element with a tick proc, touch proc, OOP, or text behavior. |
 | `cycle N` | `TStat.Cycle` | Required unless the element has a non-negative `ElementDefs` default. Valid `0..32767`. |
-| `p1`, `p2`, `p3` | `TStat.P1/P2/P3` | Optional bytes, defaulting to `InitEditorStatSettings`: p1=4, p2=4, p3=0, except object p1=1 and bear p1=8. |
+| `p1`, `p2`, `p3` | `TStat.P1/P2/P3` | Optional bytes, defaulting to `0` (except `Object` p1=1 for its glyph and `Bear` p1=8 for sensitivity). Leave them `0` unless the element needs them: for an `Object`, `p2` is the **lock** flag — a non-zero `p2` makes the object ignore `#send`/`TOUCH`, so it silently stops responding. |
 | `p3 board "NAME"` | `TStat.P3` | Board-name shorthand for elements whose `ParamBoardName` is set, such as passages. |
-| `step DIR` | `TStat.StepX/Y` | `idle`, `north`, `south`, `west`, `east`, or explicit `dx,dy` int16 values. Use names when `ParamDirName` is set. |
+| `step DIR` | `TStat.StepX/Y` | `idle`, `north`, `south`, `west`, `east`, or explicit `dx,dy` int16 values. Use names when `ParamDirName` is set. Defaults to `idle` (0,0); a non-zero step is a standing move order, so the element walks that direction every tick on its own. |
 | `under ELEMENT color C` | `TStat.Under` | Optional. Defaults to `Empty color 0x00`. Required when a stat starts over non-empty terrain. |
 | `follower`, `leader` | `TStat.Follower/Leader` | Optional. Defaults to `-1`. Use only for centipedes or imported worlds. |
 | `data-pos N` | `TStat.DataPos` | Optional. Defaults to `0`. `-1` means pre-ended OOP. |

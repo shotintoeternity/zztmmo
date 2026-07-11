@@ -23,6 +23,40 @@ func TestZWDExamplesCompileAndValidate(t *testing.T) {
 	}
 }
 
+// TestZWDObjectDefaultsAreZZTNeutral guards against the compiler baking garbage
+// runtime fields into stat-backed elements. An object whose stat line omits p2
+// and step must compile unlocked (P2=0) and idle (StepX=StepY=0); otherwise
+// vanilla ZZT reads P2!=0 as locked (the object ignores TOUCH) and StepY!=0 as a
+// standing walk order (the object drifts on its own).
+func TestZWDObjectDefaultsAreZZTNeutral(t *testing.T) {
+	world, err := CompileZWDWorld(zwdOneRoomExample)
+	if err != nil {
+		t.Fatalf("CompileZWDWorld failed: %v", err)
+	}
+	e := NewEngine()
+	e.Headless = true
+	e.World = world
+	e.BoardOpen(1)
+
+	var found bool
+	for i := int16(0); i <= e.Board.StatCount; i++ {
+		s := e.Board.Stats[i]
+		if e.Board.Tiles[s.X][s.Y].Element != E_OBJECT {
+			continue
+		}
+		found = true
+		if s.P2 != 0 {
+			t.Errorf("object at %d,%d compiled locked: P2=%d, want 0", s.X, s.Y, s.P2)
+		}
+		if s.StepX != 0 || s.StepY != 0 {
+			t.Errorf("object at %d,%d compiled with a walk order: StepX=%d StepY=%d, want 0,0", s.X, s.Y, s.StepX, s.StepY)
+		}
+	}
+	if !found {
+		t.Fatal("no object stat found in compiled world")
+	}
+}
+
 func TestZWDRejectsBadGridWithPreciseError(t *testing.T) {
 	src := strings.Replace(zwdOneRoomExample, strings.Repeat(".", 58), strings.Repeat(".", 59), 1)
 	_, err := CompileZWD(src)

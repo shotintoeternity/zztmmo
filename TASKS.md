@@ -1223,37 +1223,42 @@ enables; each is feasible precisely because of a property we already built):**
 * [ ] **Add capnkev to the README greetz list.** Keep the list alphabetical,
   names only, and preserve the README's no-emoji style.
 
-* [ ] **M12.2 follow-up: verify ZWD round-trip StateHash.** Decompiler and compiler work — any .ZZT decompiles cleanly and recompiles to a valid loadable world. Hash checks in TestZWDRoundTripTOWN/CAVES/CITY fail because saved .ZZT files carry garbage in player stat[0] runtime fields (StepX/StepY, P1/P2/P3, Follower/Leader). Fix: normalize those to compiler defaults before hashing the original. Also fix the pre-existing scroll_window_test.go build failure (townRoomManager/findEvent undefined) blocking go test ./...\n\n* [ ] **ZZT-OOP `#end`/`:touch` race: object overwrites its own TOUCH DataPos.**
-  Reproduction: in BAKERY.ZZT, calling `ElementObjectTouch(13,18, playerStatId)`
-  sets the townguide's `DataPos` to the `:touch` label position, but then on the
-  very same engine cycle (CurrentTick%3 == statId%3) the object's own tick runs
-  from `DataPos=0`, executes `@townguide` → `#end`, and resets `DataPos` to -1,
-  discarding the touch. Confirmed by `TestTouchWithExplicitSetup`
-  (`engine/touch_sim_test.go`): no `ScrollEvent` is ever emitted after touch.
+* [ ] **M12.2 follow-up: verify ZWD round-trip StateHash.** Decompiler and compiler work — any .ZZT decompiles cleanly and recompiles to a valid loadable world. Hash checks in TestZWDRoundTripTOWN/CAVES/CITY fail because saved .ZZT files carry garbage in player stat[0] runtime fields (StepX/StepY, P1/P2/P3, Follower/Leader). Fix: normalize those to compiler defaults before hashing the original. Also fix the pre-existing scroll_window_test.go build failure (townRoomManager/findEvent undefined) blocking go test ./...\n\n* [x] **ZZT-OOP `#end`/`:touch` "race" — MISDIAGNOSIS. Real cause: compiler stat-default garbage (FIXED).**
+  There is no tick race. The symptom (touching an object never emits a `ScrollEvent`,
+  objects "don't respond" in vanilla ZZT) came from the ZWD compiler's default
+  `zwdStat` carrying non-ZZT values `p1=4, p2=4, stepY=-1` (`engine/zwd.go`
+  `parseStatLine`), copied verbatim into every compiled `.ZZT` stat.
+  - For an `Object`, `P2` is the **lock** flag (`oop.go:468`, faithful to
+    `OOP.PAS:508`): `P2=4 ≠ 0` = locked, so `OopSend("TOUCH")` refuses delivery and
+    `:touch` never runs.
+  - `StepY=-1` separately gave every object with no explicit `step` a standing
+    walk-north order, so it drifts every tick.
+  Proven against shipped worlds: BAKERY's pre-fix `.ZZT` had 22/22 objects locked and
+  8 walking; recompiling with the fix yields 0/0.
 
-  Root cause: `OopSend("TOUCH")` sets `DataPos` immediately, but if the object's
-  cycle aligns so it ticks in the same loop iteration as the player (player stat 0
-  ticks before object stat N in the same `GameStepWithInputs` call), the object
-  immediately runs from position 0 and wipes the touch position.
+  Fix (done): base defaults set to ZZT-neutral zeros (`p1=0, p2=0, stepX=0, stepY=0`);
+  the `cycle:-1` sentinel and `Object`/`Bear` glyph overrides retained. Regression
+  test `TestZWDObjectDefaultsAreZZTNeutral` (`engine/zwd_test.go`). The `ZWD.md` /
+  `spec.md` table row that claimed defaults were `p1=4, p2=4` (from a nonexistent
+  `InitEditorStatSettings`) was the origin of the bug and is corrected.
+  ⚠ Any `.ZZT` compiled before this fix is still locked and must be recompiled from
+  its `.zwd`.
 
-  In vanilla ZZT this cannot happen because the player (stat 0) always ticks before
-  any other stat (stat 1+), and the touched object's `#end` halts it at DataPos=-1
-  before `OopSend` fires. The difference here is that `OopSend` is called during the
-  player's tick via `ElementObjectTouch`, and the *same cycle's* object tick then
-  runs from 0 — clobbering the touch.
+* [ ] **Compiler: auto-generate Passage stats from the legend `to "BOARD"` clause.**
+  A `Passage` is stat-backed, so today every passage tile needs an explicit
+  `stat at X,Y ... p3 board "…"`. LLM-generated worlds routinely draw a passage glyph
+  with `p = Passage color 0xNN to "BOARD"` in the legend and omit the stat, producing
+  `grid contains stat-backed element Passage but no matching stat is defined`. The
+  legend already carries the destination — the compiler should synthesize one passage
+  stat per matching tile when the legend entry has a `to` destination.
 
-  Possible fixes:
-  - Option A: In `OopExecute`, when DataPos is 0 and the first instruction is a
-    name line (`@`), check if a label search was already done this tick (a per-stat
-    `lastSendTick` field) and skip the `#end` reset if so.
-  - Option B: When `OopSend` sets DataPos, also set a `PendingTouch bool` on the
-    stat that `OopExecute` checks to skip the startup sequence for this one tick.
-  - Option C (simplest): Don't run an object's OOP on the same tick that it
-    received a `TOUCH` send — defer its execution to the next cycle.
-
-  **No code changes yet.** Investigate in BAKERY context first; the existing
-  `TestScrollEventAndReply` test should demonstrate the correct flow to compare
-  against.
+* [ ] **Compiler: report all orphan / decorative stat-backed tiles in one pass.**
+  `compileBoard` returns on the *first* orphan stat-backed tile (`engine/zwd.go`
+  ~line 790). The generation-repair loop then fixes one tile, recompiles, and hits the
+  next — O(n) round-trips for n mistakes. Collect and report every offending
+  `(element, col, row)` in a single error so one repair round can fix them all. (A
+  temporary `debugOrphanScan` pass during the touch investigation surfaced e.g.
+  DYINGSTA's 5-tile passage "door" and KEEPLITE's 13-tile object drawing at once.)
 
 * [ ] **Passages must link to a matching-color passage on the destination board.**
   ZZT's passage teleport logic deposits the player at the first passage on the

@@ -488,12 +488,19 @@ func parseLegendEntry(toks []string, line int) (byte, zwdLegendEntry, error) {
 
 func parseStatLine(toks []string, line int) (zwdStat, error) {
 	stat := zwdStat{
-		line:     line,
+		line: line,
+		// cycle -1 is a sentinel resolved to the element's default cycle below.
+		// All other numeric fields default to their ZZT-neutral values: a
+		// freshly placed stat is unlocked (P2=0), idle (StepX/StepY=0), and
+		// carries no P1/P2/P3. Non-zero values here would be written verbatim
+		// into the .ZZT and misread by vanilla ZZT (e.g. P2!=0 locks an object
+		// so it ignores TOUCH; StepY!=0 makes it walk on its own).
 		cycle:    -1,
-		p1:       4,
-		p2:       4,
+		p1:       0,
+		p2:       0,
 		p3:       0,
-		stepY:    -1,
+		stepX:    0,
+		stepY:    0,
 		under:    TTile{Element: E_EMPTY, Color: 0x00},
 		follower: -1,
 		leader:   -1,
