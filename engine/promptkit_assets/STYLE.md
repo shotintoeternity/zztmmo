@@ -103,6 +103,7 @@ The scripts in the corpus are short, ritualized, and voice-heavy:
 - **Sound is punctuation**: nearly every interaction opens with `#play`;
   pickups get a rising jingle, refusals a falling one.
 - **Immersive Writing Style**: Text, dialogue, and scrolls should be interesting, evocative, and deeply immerse the player in the world. Avoid generic, dry, or purely functional placeholders (like "You touched the sign. The exit is north."). Write with personality, flavor, and narrative texture that matches the board's theme (e.g., eerie whispers in a haunted tower, mechanical chatter in a engine room, poetic remnants of historical events). A line or two of highly descriptive flavor text can completely transform the atmosphere of a room.
+- **Immediate Touch Feedback**: Every interactive object that can be touched (defines a `:touch` label) **must** provide immediate textual feedback. When touched, they should say something so that the player knows what is happening. This should be conveyed either via direct dialogue (e.g., the character speaking: `Step away from the control panel!`) or via third-person/narrator description (e.g., `The ancient console hums, but the security lockout prevents input.`). Never have a touch trigger a silent gameplay action without accompanying text.
 - The writing voice is second-person, wry, and short — one or two lines per
   beat, exclamation-heavy, parentheticals for asides. Vendor-style menus use
   `!label;text` choice lines (see TASKS.md M3.10's vendor fixture).
