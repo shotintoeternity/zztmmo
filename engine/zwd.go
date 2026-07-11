@@ -378,8 +378,17 @@ func (p *zwdParser) parseStats() ([]zwdStat, error) {
 		}
 		nextLine, nextText, ok := p.peekContentLine()
 		if ok && strings.TrimSpace(nextText) == "oop" {
+			var indent string
+			oopLine := p.lines[nextLine-1]
+			for _, r := range oopLine {
+				if r == ' ' || r == '\t' {
+					indent += string(r)
+				} else {
+					break
+				}
+			}
 			p.pos = nextLine
-			data, err := p.parseOOP()
+			data, err := p.parseOOP(indent)
 			if err != nil {
 				return nil, err
 			}
@@ -389,7 +398,7 @@ func (p *zwdParser) parseStats() ([]zwdStat, error) {
 	}
 }
 
-func (p *zwdParser) parseOOP() (string, error) {
+func (p *zwdParser) parseOOP(indent string) (string, error) {
 	var lines []string
 	for p.pos < len(p.lines) {
 		line := p.pos + 1
@@ -397,6 +406,9 @@ func (p *zwdParser) parseOOP() (string, error) {
 		p.pos++
 		if strings.TrimSpace(raw) == "end" {
 			return strings.Join(lines, string([]byte{KEY_ENTER})), nil
+		}
+		if strings.HasPrefix(raw, indent) {
+			raw = strings.TrimPrefix(raw, indent)
 		}
 		lines = append(lines, raw)
 		_ = line

@@ -311,3 +311,52 @@ Bring a torch next time.
   end
 end
 `
+
+func TestZWDOOPIndentationStripping(t *testing.T) {
+	src := strings.Replace(zwdOneRoomExample, `    stat at 30,11 element Object cycle 3 p1 cp437:0x02 under Empty color 0x00
+    oop
+@hello
+"This world was written as text."
+"The compiler turns it into real ZZT."
+#end
+    end`, `    stat at 30,11 element Object cycle 3 p1 cp437:0x02 under Empty color 0x00
+      oop
+      @hello
+      "This world was written as text."
+      "The compiler turns it into real ZZT."
+      #end
+    end`, 1)
+
+	world, err := CompileZWDWorld(src)
+	if err != nil {
+		t.Fatalf("CompileZWDWorld failed: %v", err)
+	}
+
+	e := NewEngine()
+	e.World = world
+	e.BoardOpen(0)
+
+	if e.Board.StatCount < 1 {
+		t.Fatalf("expected at least 1 stat (player)")
+	}
+
+	var objStat *TStat
+	for i := int16(1); i <= e.Board.StatCount; i++ {
+		stat := &e.Board.Stats[i]
+		if stat.Under.Element == E_OBJECT || e.Board.Tiles[stat.X][stat.Y].Element == E_OBJECT {
+			objStat = stat
+			break
+		}
+	}
+
+	if objStat == nil {
+		t.Fatalf("could not find object stat on board")
+	}
+
+	expectedCode := "@hello\r\"This world was written as text.\"\r\"The compiler turns it into real ZZT.\"\r#end"
+	actualCode := string(objStat.Data)
+	if actualCode != expectedCode {
+		t.Fatalf("OOP code was not stripped correctly:\nexpected: %q\nactual:   %q", expectedCode, actualCode)
+	}
+}
+
