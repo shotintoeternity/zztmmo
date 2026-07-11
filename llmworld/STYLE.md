@@ -122,3 +122,98 @@ exceeded: ≤150 stats (hit exactly by Small Spaces), 60×25 grid, one player
 per board, exits by name to adjacent boards, OOP blocks a few dozen lines at
 most. Dense boards spend their stat budget on transporters/creatures OR on
 scripted objects — rarely both at maximum.
+
+## 8. What makes a great ZZT game
+
+A great ZZT game treats the board as both a **place** and a **composition**.
+Each screen should read immediately: a room, cave, temple, machine, town
+square, riverbank, dungeon, shrine, portrait, artifact, or strange little
+stage. The player should understand where they are, what matters, and what
+might be dangerous.
+
+ZZT art is often symbolic, but it is not purely abstract. Many strong ZZT
+games use selective realism when representing important real-world people,
+objects, buildings, machines, monsters, or artifacts on a single board. This
+is not always necessary, but when the subject needs to be recognizable,
+impressive, or emotionally important, realistic board art can make the scene
+land harder.
+
+The visual craft comes from using ZZT's limited tiles like an ASCII drawing
+system. Solids, fake walls, breakable walls, water, forests, stars, line
+walls, objects, and other elements are not important here because of what
+they "are" in the game world. They matter because of how they look on the
+board. These elements become marks, tones, densities, and textures.
+
+Solids can create bold filled areas, strong outlines, and hard silhouettes.
+Fake walls, breakables, water, and other visually textured elements can be
+used for shading, gradients, stippling, crosshatching, highlights, shadows,
+and visual noise. With the full STK palette, these tiles can be combined
+almost like different brush strokes, letting the author create depth, contour,
+texture, atmosphere, and recognizable forms from abstract symbols.
+
+Good ZZT art often comes from blending these elements carefully. A portrait
+might use different tile densities to shape a face through contrast and shadow.
+A machine might use solids, line walls, stars, and colored objects to suggest
+panels, lights, vents, circuitry, and depth. A landscape might use color and
+texture to imply distance, water, stone, sky, or foliage without needing
+literal representation. The point is not that each tile must "mean" one thing.
+The point is that each tile contributes to the image.
+
+Good board style also means avoiding obvious beginner habits. Do not use
+bright yellow borders around boards unless there is a very specific reason.
+They usually look harsh, artificial, and disconnected from the scene. Borders
+should feel like part of the board's architecture, atmosphere, or composition,
+not like a default picture frame slapped around the edge.
+
+Avoid rainbow colors, checkerboard spam, noisy textures with no shape, giant
+empty rooms, perfectly rectangular spaces with nothing breaking them up, random
+STK tiles scattered everywhere, and overusing bright colors just because they
+are available. Avoid making every wall the same color and thickness. Avoid
+boards where every area is outlined instead of composed. Avoid using
+decorations that do not support the scene, route, mood, or gameplay.
+
+Board structure matters as much as art. A strong world has hubs, loops, gates,
+shortcuts, optional rooms, locked areas, secrets, and escalating regions. Each
+board should have a purpose: exploration, puzzle, combat, story, transition,
+reveal, rest, spectacle, or visual centerpiece. Avoid repetitive mazes, dead
+rooms, and boards that exist only to pad the game.
+
+Gameplay should be simple but expressive: conserve ammo, spend keys carefully,
+solve readable puzzles, talk to strange objects, trigger machines, dodge
+enemies, uncover secrets, and learn the local rules of the world. ZZT-OOP
+objects should feel like tiny actors: guards, terminals, priests, vending
+machines, doors, elevators, bosses, ghosts, or weird machines with personality.
+
+The best ZZT games feel handmade, readable, dangerous, funny, and a little
+haunted. They do not try to escape ZZT's limits. They turn those limits into
+style.
+
+### ZZT-OOP objects: when to use #lock / #unlock
+
+`#lock` sets the object's lock flag (P2=1), preventing it from receiving
+messages from other objects or a second player touch while it runs. `#unlock`
+clears it. Use them **only** when one of these is true:
+
+- The object runs a **multi-label state machine** and must not be interrupted
+  mid-sequence by another actor's message.
+- The object has **multiple labels triggered by other objects** (e.g. a gate
+  that receives `open`/`close` messages from a switch) and must protect a
+  critical block between them.
+
+**Do not use `#lock`/`#unlock` for simple read-only signs and NPCs.** A
+single-touch object that shows a scroll and hits `#end` completes in one
+OopExecute call — the lock is 0 duration and adds nothing. The correct idiom
+for a plain NPC or sign is:
+
+```
+@npcname
+#end
+:touch
+#play tcfa
+Hello traveler. The dungeon is to the north.
+#end
+```
+
+Using `#lock`/`#unlock` on every object is cargo-cult style inherited from
+workarounds that do not apply to stateless read-only objects. Leave it out.
+
