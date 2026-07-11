@@ -15,10 +15,28 @@ import (
 )
 
 type fakeClaudeRequest struct {
-	System   string `json:"system"`
+	System   interface{} `json:"system"`
 	Messages []struct {
 		Content string `json:"content"`
 	} `json:"messages"`
+}
+
+func systemText(sys interface{}) string {
+	if s, ok := sys.(string); ok {
+		return s
+	}
+	if slice, ok := sys.([]interface{}); ok {
+		var b strings.Builder
+		for _, item := range slice {
+			if m, ok := item.(map[string]interface{}); ok {
+				if text, ok := m["text"].(string); ok {
+					b.WriteString(text)
+				}
+			}
+		}
+		return b.String()
+	}
+	return ""
 }
 
 type fakeClaude struct {
@@ -122,7 +140,7 @@ func TestM124GenerateEndpointSuccessAndPersistence(t *testing.T) {
 	if len(fake.requests) != 3 {
 		t.Fatalf("Claude calls = %d, want 3", len(fake.requests))
 	}
-	if fake.requests[1].System != fake.requests[2].System || !strings.Contains(fake.requests[1].System, "# Worked examples") {
+	if systemText(fake.requests[1].System) != systemText(fake.requests[2].System) || !strings.Contains(systemText(fake.requests[1].System), "# Worked examples") {
 		t.Fatal("per-board calls did not share the cached PromptKit system prompt")
 	}
 	if len(progress) == 0 || progress[len(progress)-1].Stage != "complete" {

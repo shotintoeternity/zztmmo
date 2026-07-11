@@ -363,17 +363,30 @@ func (g *GenerationService) paintBoard(ctx context.Context, planText string, pla
 	return "", fmt.Errorf("board %q exhausted %d generation attempts: %s", board.Name, g.maxAttempts, lastFeedback)
 }
 
+type systemBlock struct {
+	Type         string            `json:"type"`
+	Text         string            `json:"text"`
+	CacheControl map[string]string `json:"cache_control,omitempty"`
+}
+
 func (g *GenerationService) call(ctx context.Context, system, user string) (string, error) {
 	body, err := json.Marshal(struct {
-		Model     string `json:"model"`
-		MaxTokens int    `json:"max_tokens"`
-		System    string `json:"system"`
+		Model     string        `json:"model"`
+		MaxTokens int           `json:"max_tokens"`
+		System    []systemBlock `json:"system"`
 		Messages  []struct {
 			Role    string `json:"role"`
 			Content string `json:"content"`
 		} `json:"messages"`
 	}{
-		Model: g.model, MaxTokens: g.maxTokens, System: system,
+		Model: g.model, MaxTokens: g.maxTokens,
+		System: []systemBlock{{
+			Type: "text",
+			Text: system,
+			CacheControl: map[string]string{
+				"type": "ephemeral",
+			},
+		}},
 		Messages: []struct {
 			Role    string `json:"role"`
 			Content string `json:"content"`
