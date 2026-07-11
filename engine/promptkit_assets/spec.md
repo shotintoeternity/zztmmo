@@ -487,6 +487,7 @@ When writing code inside `oop ... end` blocks for ZZT objects or scrolls, you mu
 4. **Commands**: Prefix commands with `#` (e.g. `#play`, `#give`, `#take`, `#end`, `#endgame`, `#lock`, `#unlock`, `#zap`).
 5. **Initial Halt**: If an object defines a `:touch` label or other label, place `#end` on the line immediately after the name to prevent the object from executing the label's code automatically when the board loads.
 6. **Movement**: Use `/` (force move) or `?` (try move) followed by direction (`n`, `s`, `w`, `e`).
+7. **Local Board Scope**: Objects can only send direct messages (e.g. `#send target:label`) to other objects *in the same room (board)*. Objects in other rooms are frozen and cannot receive messages. To trigger events across different boards, you must use global flags (`#set flagname` on one board, and `#if flagname` on the other). The global flag limit is exactly 10 flags.
 
 ## Element Reachability and Accessibility
 
@@ -495,6 +496,10 @@ When placing elements on a board's grid, you must ensure that all interactive ob
 1. **Adjacent Accessibility**: Any tile that the player needs to touch, talk to, or collect (such as an `Object`, `Scroll`, `Passage`, or items like a `Key`, `Gem`, or `Ammo`) must be placed adjacent to a walkable tile (e.g., `Empty`, `Fake` wall, or `Forest`).
 2. **Impassable Barriers**: You must **never** place interactive objects or items inside solid structures (like `Solid` walls or `Normal` walls) or completely surround them with impassable terrain (like `Water`, unless a `Transporter` or bridge is provided). The player cannot walk on or touch these tiles, making the game unplayable.
 3. **Stat-to-Tile Mapping**: Every `Object`, `Scroll`, and `Passage` tile placed in the grid **must** have a corresponding entry in the board's `stats` block at the exact same coordinate. Placing stat-backed tiles in the grid without stats causes the game engine to crash.
+4. **Board Edge Exits vs. Grid Layout**: If a board has an exit in the header (e.g. `exits north "NextBoard"`), you must ensure the corresponding edge of the grid (e.g. the top row) has walkable openings (Empty or Fake tiles). If the edge is entirely blocked by Solid/Normal walls, the player cannot step off the board to transition.
+5. **Passage Color Matching**: When linking boards via passages, always color-code them. If Board A has a passage to Board B, then Board B **must** have a passage pointing back to Board A of the **exact same color**. ZZT matches passage teleports strictly by color; mismatched colors will drop the player at the board's default start coordinates instead of the passage.
+6. **Key and Door Pairing**: ZZT only supports 7 key/door colors: `blue`, `green`, `cyan`, `red`, `purple`, `yellow`, `white`. Always place the Key color in a reachable area *before* the Door color that requires it. A player can only carry one key of each color at a time.
+
 
 ## Monospace 3x5 Block Letter Reference Font
 
