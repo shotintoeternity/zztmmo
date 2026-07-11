@@ -102,6 +102,7 @@ The scripts in the corpus are short, ritualized, and voice-heavy:
   key!!)" — terse, playful, escalating.
 - **Sound is punctuation**: nearly every interaction opens with `#play`;
   pickups get a rising jingle, refusals a falling one.
+- **Immersive Writing Style**: Text, dialogue, and scrolls should be interesting, evocative, and deeply immerse the player in the world. Avoid generic, dry, or purely functional placeholders (like "You touched the sign. The exit is north."). Write with personality, flavor, and narrative texture that matches the board's theme (e.g., eerie whispers in a haunted tower, mechanical chatter in a engine room, poetic remnants of historical events). A line or two of highly descriptive flavor text can completely transform the atmosphere of a room.
 - The writing voice is second-person, wry, and short — one or two lines per
   beat, exclamation-heavy, parentheticals for asides. Vendor-style menus use
   `!label;text` choice lines (see TASKS.md M3.10's vendor fixture).
