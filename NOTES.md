@@ -1,5 +1,22 @@
 # NOTES — escalations and decisions log (append-only)
 
+## M12.4b (2026-07-11) — The "DAEKEPERT" title screen mystery & ZZT-OOP touch race
+
+* **DAEKEPERT Title Screen Lesson:** 
+  The LLM world generation was prompted for a game named "The Keeper's Light" but produced a title screen spelling "DAEKEPERT" (or "DAE KEPER T"). The root cause was a combination of:
+  1. **Legend/Grid key collision**: The grid used `T` for block-letter lines. But in the legend it defined `T = Solid color 0x08` (gray solid walls) instead of text elements. As a result, the block letter `T` was drawn using solid walls as a hollow rectangular box (a `TTT` / `T.T` / `TTT` grid layout), which visually looked like a `D` or `O`.
+  2. **Bad block font layouts**: The letter `H` was drawn in the grid with a top bar (`HHH`), turning it into a block-letter `A`. The rest of the letters `E K E P E R` were correctly drawn using yellow text elements (`Text-Yellow color 0x20` which compiles to blank space blocks with yellow background), but a trailing `T` was added. Together, `T H E K E E P E R T` rendered as `D A E K E P E R T`.
+  3. **Lesson for future prompts**: When prompting LLMs for ZZT block letters, strictly instruct them that:
+     - All characters used for lettering in the grid must map to `Text-<Color>` elements in the legend (not solid walls, normal walls, or objects).
+     - Standardize text color mapping to use character ASCII codes (e.g. `H = Text-Yellow color 0x48`) instead of spaces (`color 0x20`), or ensure they do not collide with wall keys.
+     - Double-check the exact grid font layout for letters like `T` (vertical bar centered) and `H` (no top crossbar).
+
+* **Orphan element compile gap & engine panic:**
+  The generated "Lamp Room" board included decorative `o` and `X` tiles mapped to `E_OBJECT` (element 36) in the legend to draw the lighthouse bulb housing, but did not define matching `stats` entries for all of them. 
+  - **The Compile Gap**: The ZWD compiler `zwd.go` checks that every listed stat has a matching grid tile, but it does NOT check the reverse (i.e. that every grid tile of type `E_OBJECT` or `E_PASSAGE` has a corresponding stat). The world compiled cleanly but contained orphan `E_OBJECT` tiles.
+  - **The Engine Panic**: On player join/room transition, `TileToColorAndChar` called `ElementObjectDraw` on the orphan object tiles. `elements.go:883` tries to read `P1` of `e.Board.Stats[e.GetStatIdAt(x, y)]`. Because there was no stat, `GetStatIdAt` returned `-1`, causing an `index out of range [-1]` panic that crashed the server.
+  - **Decision**: Added a task to make the engine draw/touch procs robust (handling `-1` gracefully by falling back to `ElementDefs[E_OBJECT].Character`) and added a compiler check enforcing that all stat-backed tiles on the grid must have stats.
+
 - 2026-07-09: Project scaffolded. Baseline `engine/` (vendored from
   benhoyt/zztgo @ master, MIT) builds and passes its tests on go1.26.5,
   macOS arm64. Reference clones are gitignored; re-clone per CLAUDE.md if

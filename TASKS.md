@@ -1275,3 +1275,21 @@ enables; each is feasible precisely because of a property we already built):**
   `CompileZWD` (or the `M12.4` validation step) that warns when a passage's
   destination board has no matching-color passage.
 
+* [ ] **Robust engine rendering/touching & compiler enforcement for orphan stats.**
+  When an `E_OBJECT` tile is placed in the board grid but not listed in the
+  `stats` section of the ZWD, it compiles successfully but lacks a stat. Drawing
+  or touching this orphan object tile triggers `index out of range [-1]` panic in
+  `ElementObjectDraw` (`elements.go:883`) because `GetStatIdAt(x, y)` returns `-1`.
+  
+  **Fixes needed:**
+  1. **Engine Robustness**: In `elements.go`, update `ElementObjectDraw` and
+     `ElementObjectTouch` (and other draw/touch procedures like Bomb/Transporter)
+     to check if `statId < 0` and handle it gracefully (e.g. falling back to the
+     default element character `ElementDefs[tile.Element].Character` or doing nothing
+     for touch) instead of panicking.
+  2. **Compiler Check**: In `zwd.go`, check that every tile placed on the board grid
+     which requires a stat (e.g., `E_OBJECT`, `E_SCROLL`, `E_PASSAGE`) has a corresponding
+     stat defined at its coordinates in the board's `stats` section. Fail compilation
+     with a descriptive error if any orphan stat-backed tiles are found.
+
+
