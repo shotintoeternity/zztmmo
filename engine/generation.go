@@ -864,27 +864,6 @@ func preprocessZWDGrid(zwdText string) string {
 
 	for idx, line := range lines {
 		trimmed := strings.TrimSpace(line)
-		// Check for Player legend
-		if strings.Contains(trimmed, "=") && (strings.Contains(trimmed, "Player") || strings.Contains(trimmed, "element 1") || strings.Contains(trimmed, "element 01")) {
-			parts := strings.SplitN(trimmed, "=", 2)
-			if len(parts) == 2 {
-				k := strings.TrimSpace(parts[0])
-				if len(k) == 1 {
-					playerChar = k[0]
-					hasPlayerLegend = true
-				}
-			}
-		}
-		// Check for Empty legend
-		if strings.Contains(trimmed, "=") && (strings.Contains(trimmed, "Empty") || strings.Contains(trimmed, "element 0") || strings.Contains(trimmed, "element 00")) {
-			parts := strings.SplitN(trimmed, "=", 2)
-			if len(parts) == 2 {
-				k := strings.TrimSpace(parts[0])
-				if len(k) == 1 {
-					emptyChar = k[0]
-				}
-			}
-		}
 		if strings.Contains(trimmed, "=") {
 			parts := strings.SplitN(trimmed, "=", 2)
 			if len(parts) == 2 {
@@ -917,6 +896,17 @@ func preprocessZWDGrid(zwdText string) string {
 				elem:    m[5],
 				rest:    m[6],
 			})
+		}
+	}
+
+	for ch, elemName := range legendMap {
+		upper := strings.ToUpper(elemName)
+		if upper == "PLAYER" || upper == "ELEMENT 1" || upper == "ELEMENT 01" {
+			playerChar = ch
+			hasPlayerLegend = true
+		}
+		if upper == "EMPTY" || upper == "ELEMENT 0" || upper == "ELEMENT 00" {
+			emptyChar = ch
 		}
 	}
 
