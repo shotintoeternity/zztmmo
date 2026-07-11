@@ -1275,10 +1275,32 @@ func generatedSaveName(requested, planName, premise string) (string, error) {
 	if requested != "" {
 		return SanitizeSaveName(requested)
 	}
+	
+	// Attempt to clean and format the planName into an 8-character DOS-safe string
+	var clean []byte
+	for i := 0; i < len(planName); i++ {
+		c := UpCase(planName[i])
+		if (c >= 'A' && c <= 'Z') || (c >= '0' && c <= '9') || c == '-' {
+			clean = append(clean, c)
+		}
+	}
+	
+	if len(clean) > SaveNameMaxLength {
+		clean = clean[:SaveNameMaxLength]
+	}
+	
+	if len(clean) > 0 {
+		if sanitized, err := SanitizeSaveName(string(clean)); err == nil {
+			return sanitized, nil
+		}
+	}
+	
+	// Fallback to FNV hash if the cleaned name is empty or invalid
 	h := fnv.New32a()
 	_, _ = h.Write([]byte(planName + "\n" + premise))
 	return SanitizeSaveName(fmt.Sprintf("GEN%05X", h.Sum32()&0xFFFFF))
 }
+
 
 func persistGeneratedWorld(dir, name, prompt, plan, zwd string, data []byte) error {
 	if err := os.MkdirAll(dir, 0755); err != nil {
