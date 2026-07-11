@@ -65,6 +65,8 @@ whole visual vocabulary, and good boards exploit them:
   background hue. In ZWD this shows up as many single-letter legend entries.
 - Text is used sparingly and monumentally — a title, a warning, a scoreboard
   label — never paragraphs (paragraphs belong in scrolls/objects).
+- **Monospace layout alignment**: When drawing large block letters, structures, or borders, remember that the ASCII art is tiled monospace. Every character cell is a fixed grid cell. Alignment, letter width, character spacing, and vertical proportions must be mathematically/manually aligned. If you draw block letters, ensure they are spelling the correct word and centered perfectly using precise padding, without letter skewing or layout overlap.
+
 
 ## 4. Population: creatures and objects
 
