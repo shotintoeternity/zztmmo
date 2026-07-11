@@ -1,0 +1,1022 @@
+zwd 1
+world "CLOCKTOM"
+
+board "Title Screen"
+  max-shots 0
+  dark false
+  reenter false
+  time-limit 0
+  exits north none south none west none east none
+
+  start player at 29,24
+  grid
+  kkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkk
+  kkkkkkkkkkkkkkkkkkkkkkkkbwwwbkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkk
+  kkkkkkkkkkkkkkkkkkkkkbbwwWWWwwbbkkkkkkkkkkkkkkkkkkkkkkkkkkkk
+  kkkkkkkkkkkkkkkkkkbbwwWWssssWWwwbbkkkkkkkkkkkkkkkkkkkkkkkkkk
+  kkkkkkkkkkkkkkkkbwwWWsshhhhssWWwwbkkkkkkkkkkkkkkkkkkkkkkkkkk
+  kkkkkkkkkkkkkkkbwWsshh....hhssWwbkkkkkkkkkkkkkkkkkkkkkkkkkkk
+  kkkkkkkkkkkkkbwWshh..bbbb..hhsWwbkkkkkkkkkkkkkkkkkkkkkkkkkkk
+  kkkkkkkkkkkkbwWsh..bwWWwb..hsWwbkkkkkkkkkkkkkkkkkkkkkkkkkkkk
+  kkkkkkkkkkkbwWsh..bwWssWwb..hsWwbkkkkkkkkkkkkkkkkkkkkkkkkkkk
+  kkkkkkkkkkbwWsh..bwWs..sWwb..hsWwkkkkkkkkkkkkkkkkkkkkkkkkkkk
+  kkkkkkkkkkbwsh..bwWs.OO.sWwb..hswbkkkkkkkkkkkkkkkkkkkkkkkkkk
+  kkkkkkkkkkbwsh..bwWs.OO.sWwb..hswbkkkkkkkkkkkkkkkkkkkkkkkkkk
+  kkkkkkkkkkbwWsh..bwWs..sWwb..hsWwkkkkkkkkkkkkkkkkkkkkkkkkkkk
+  kkkkkkkkkkkbwWsh..bwWssWwb..hsWwbkkkkkkkkkkkkkkkkkkkkkkkkkkk
+  kkkkkkkkkkkkbwWsh..bwWWwb..hsWwbkkkkkkkkkkkkkkkkkkkkkkkkkkkk
+  kkkkkkkkkkkkkbwWshh..bbbb..hhsWwbkkkkkkkkkkkkkkkkkkkkkkkkkkk
+  kkkkkkkkkkkkkkkbwWsshh....hhssWwbkkkkkkkkkkkkkkkkkkkkkkkkkkk
+  kkkkkkkkkkkkkkkkbwwWWsshhhhssWWwwbkkkkkkkkkkkkkkkkkkkkkkkkkk
+  kkkkkkkkkkkkkkkkkkbbwwWWssssWWwwbbkkkkkkkkkkkkkkkkkkkkkkkkkk
+  kkkkkkkkkkkkkkkkkkkkkbbwwWWWwwbbkkkkkkkkkkkkkkkkkkkkkkkkkkkk
+  kkkkkkkkkkkkkkkkkkkkkkkkkbwwwbkkkkkkkkkkkkkkkkkkkkkkkkkkkkkk
+  kkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkk
+  kkkkkkkkkkkkkkkkkkkkkkkkkkkkTkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkk
+  kkkkkkkkkkkkkkkkkkkkkkkkkkkk@kkkkkkkkkkkkkkkkkkkkkkkkkkkkkkk
+  kkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkk
+  end
+
+  legend
+    k = Empty color 0x00
+    b = Solid color 0x60
+    w = Solid color 0x6E
+    W = Solid color 0x66
+    s = Solid color 0x08
+    h = Empty color 0x08
+    . = Empty color 0x06
+    O = Solid color 0x6E
+    T = Object color 0x0E
+    @ = Player color 0x1F under Empty color 0x00
+  end
+
+  stats
+    stat at 29,23 element Object cycle 3 p1 cp437:0x02 step idle under Empty color 0x00
+    oop
+@title
+#end
+:touch
+#play tcefgc
+The Clockwork Tomb
+Brass gears turn in the dark below.
+Step downward, seeker, and wind the dead.
+#end
+    end
+  end
+end
+
+board "The Brass Descent"
+  max-shots 255
+  dark false
+  reenter false
+  time-limit 0
+  exits north none south "Gear Antechamber" west none east none
+
+  start player at 31,3
+  grid
+  WWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWW
+  Wwwwwwwwwwwwwwwwwwwwwwwwwwwwwww.wwwwwwwwwwwwwwwwwwwwwwwwwwww
+  Wwwbbbbbbbbbbbbbbbbbbbbbbbbbbb@bbbbbbbbbbbbbbbbbbbbbbbbbwwww
+  WwwbHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHbwwww
+  Wwwb....................................................bwww
+  Wwwb..gg......................o........................bwwwW
+  Wwwb..gg....................bbbbb......................bwwwW
+  Wwwb........................b...b......................bwwwW
+  Wwwb..HHHHHHHHHHHHHHHHHHHHHHHb...bHHHHHHHHHHHHHHHHHHHHHHbwww
+  Wwwb........................b...b......................bwwwW
+  Wwwb........................b...b......................bwwwW
+  Wwwb........................b...b......................bwwwW
+  Wwwb..HHHHHHHHHHHHHHHHHHHHHHb...bHHHHHHHHHHHHHHHHHHHHHHbwwwW
+  Wwwb........................b...b......................bwwwW
+  Wwwb........................b...b......o...............bwwwW
+  Wwwb..o.....................b...b......................bwwwW
+  Wwwb..HHHHHHHHHHHHHHHHHHHHHHb...bHHHHHHHHHHHHHHHHHHHHHHbwwwW
+  Wwwb........................b...b......................bwwwW
+  Wwwb........................b...b......................bwwwW
+  Wwwb........................b...b......................bwwwW
+  Wwwbbbbbbbbbbbbbbbbbbbbbbbbbb...bbbbbbbbbbbbbbbbbbbbbbbbwwww
+  Wwwwwwwwwwwwwwwwwwwwwwwwwwwww...wwwwwwwwwwwwwwwwwwwwwwwwwwww
+  Wwwwwwwwwwwwwwwwwwwwwwwwwwwww...wwwwwwwwwwwwwwwwwwwwwwwwwwww
+  WWWWWWWWWWWWWWWWWWWWWWWWWWWWW...WWWWWWWWWWWWWWWWWWWWWWWWWWWW
+  ............................................................
+  end
+
+  legend
+    W = Solid color 0x66
+    w = Normal color 0x68
+    b = Solid color 0x6E
+    H = Breakable color 0x60
+    . = Empty color 0x00
+    g = Gem color 0x0E
+    @ = Player color 0x1F under Empty color 0x00
+    o = Object color 0x0E
+  end
+
+  stats
+    stat at 31,6 element Object cycle 3 p1 cp437:0x0F step idle under Empty color 0x00
+    oop
+@plaque
+#end
+:touch
+#play tcd
+A brass plaque, green with age.
+Below rest the makers of the Clockwork Tomb.
+Their heart still ticks somewhere beneath your feet.
+#end
+    end
+    stat at 40,15 element Object cycle 3 p1 cp437:0x09 step idle under Empty color 0x00
+    oop
+@gear
+#end
+:touch
+#play fc
+A loose brass gear lies fallen from the wall.
+It will not turn. The stair leads down, to the south.
+#end
+    end
+    stat at 7,16 element Object cycle 3 p1 cp437:0x9E step idle under Empty color 0x00
+    oop
+@torch
+#end
+:touch
+#play tct
+A guttering wall-torch. Deeper halls will be dark.
+#give torches 3
+Three torches taken.
+#die
+    end
+  end
+end
+
+board "Gear Antechamber"
+  max-shots 10
+  dark false
+  reenter false
+  time-limit 0
+  exits north "The Brass Descent" south "Concentric Ring Gallery" west none east "Hall of Pendulums"
+
+  start player at 30,3
+  grid
+  WWWWWWWWWWWWWWWWWWWWWWWWWWWWW..WWWWWWWWWWWWWWWWWWWWWWWWWWWWW
+  W........................................................sss
+  W............................@..............................
+  W..sss..................ggg.................ooo.........ssso
+  W..s.s.................g.*.g...............o...o........s.so
+  W..sss.................g.o.g...............o.k.o........ssso
+  W......................g...g...............o...o...........o
+  W.......................ggg.................ooo...........oo
+  W..........................................................W
+  W....hhhhhh....................................hhhhhh......W
+  W....h...*h....................................h....h......W
+  W....h..bb....................o.............bb.h....h......W
+  W....h....h..................o.o............h..h....h......W
+  W....hhhhhh..................o.o............h..hhhhhh......W
+  W..........................o.*.o..........................W.
+  W..........................ooooo..........................W.
+  W.....ff...................o...o...................ff......W
+  W....ffff..................o...o..................ffff.....W
+  W....ffff..................o...o..................ffff.....W
+  W.....ff...................ooooo...................ff......W
+  W..........................................................W
+  W..........................................................W
+  W...........................DDD............................W
+  WWWWWWWWWWWWWWWWWWWWWWWWWWWWW..WWWWWWWWWWWWWWWWWWWWWWWWWWWWW
+  ............................................................
+  end
+
+  legend
+    W = Solid color 0x68
+    . = Empty color 0x08
+    s = Line color 0x6E
+    g = Line color 0x6E
+    o = Line color 0x08
+    h = Line color 0x68
+    b = Gem color 0x0E
+    f = Line color 0x68
+    k = Key color 0x0E
+    D = Empty color 0x08
+    @ = Player color 0x1F under Empty color 0x08
+    * = Object color 0x0F
+  end
+
+  stats
+    stat at 26,5 element Object cycle 3 p1 cp437:0x0F step idle under Empty color 0x08
+    oop
+@leftgear
+#end
+:touch
+#play tc+e+g
+This great brass gear will not turn.
+Its teeth are locked by a missing tooth.
+#end
+
+    end
+    stat at 46,6 element Key cycle 0 under Empty color 0x08
+    oop
+@brasskey
+#end
+:touch
+#play tcegc
+You take the Brass Key.
+#give gems 1
+#end
+
+    end
+    stat at 30,15 element Object cycle 2 p1 cp437:0x0F step idle under Empty color 0x08
+    oop
+@centergear
+#end
+:touch
+#play tfg+c
+The central gear grinds and clicks.
+Passages branch east and south.
+#end
+
+    end
+    stat at 10,11 element Object cycle 3 p1 cp437:0xF9 step idle under Empty color 0x08
+    oop
+@sign
+#end
+:touch
+The Gear Antechamber.
+North: the descent. East: pendulums.
+South: the ring gallery.
+#end
+
+    end
+  end
+end
+
+board "Hall of Pendulums"
+  max-shots 255
+  dark false
+  reenter false
+  time-limit 0
+  exits north none south none west "Gear Antechamber" east "Steam Vent Works"
+
+  start player at 1,12
+  grid
+  WWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWW
+  Ws........w.....w.....w.....w.....w.....w.....w..........sss
+  Ws.ttttt..w.....w.....w.....w.....w.....w.....w..ttttt...sss
+  Ws.t...t..|.....|.....|.....|.....|.....|.....|..t...t...sss
+  Ws.t...t..|.....|.....|.....|.....|.....|.....|..t...t...sss
+  Ws.ttttt..P.....P.....P.....P.....P.....P.....P..ttttt...sss
+  Ws........w.....w.....w.....w.....w.....w.....w..........sss
+  Ws..............................................w.......sssW
+  Wwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwww
+  Ws.........................................................W
+  Ws....o....................................................W
+  @.........................................................eW
+  Ws.........................................................W
+  Wwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwww
+  Ws........w.....w.....w.....w.....w.....w.....w............W
+  Ws........P.....P.....P.....P.....P.....P.....P....k.......W
+  Ws........|.....|.....|.....|.....|.....|.....|...ttt......W
+  Ws........|.....|.....|.....|.....|.....|.....|...t.t......W
+  Ws........w.....w.....w.....w.....w.....w.....w...ttt......W
+  Ws................................................d........W
+  Ws........................................................W.
+  Ws.ssssssssssssssssssssssssssssssssssssssssssssssssssss...W.
+  Ws........................................................W.
+  Ws........................................................W.
+  WWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWW
+  end
+
+  legend
+    W = Solid color 0x68
+    w = Normal color 0x67
+    s = Fake color 0x60
+    . = Empty color 0x00
+    t = Breakable color 0x6E
+    | = Line color 0x0E
+    P = Object color 0x0E
+    o = Object color 0x0B
+    k = Key color 0x03
+    d = Object color 0x0F
+    e = Passage color 0x6F to "Steam Vent Works"
+    @ = Player color 0x1F under Empty color 0x00
+  end
+
+  stats
+    stat at 7,11 element Object cycle 3 p1 cp437:0x02 step idle under Empty color 0x00
+    oop
+@sage
+#end
+:touch
+#play tcfa
+The pendulums swing in rhythm. Cross when the
+brass rods rise. The copper key rests beyond,
+past the southern gallery. Time your steps.
+#end
+    end
+
+    stat at 11,6 element Object cycle 2 p1 cp437:0x0F step idle under Empty color 0x00
+    oop
+@swing1
+#end
+:touch
+#play f-f
+The rod hums with tension. Watch its rhythm.
+#end
+    end
+    stat at 17,6 element Object cycle 2 p1 cp437:0x0F step idle under Empty color 0x00
+    oop
+@swing2
+#end
+:touch
+#play f-f
+#end
+    end
+    stat at 23,6 element Object cycle 2 p1 cp437:0x0F step idle under Empty color 0x00
+    oop
+@swing3
+#end
+:touch
+#play f-f
+#end
+    end
+    stat at 29,6 element Object cycle 2 p1 cp437:0x0F step idle under Empty color 0x00
+    oop
+@swing4
+#end
+:touch
+#play f-f
+#end
+    end
+    stat at 35,6 element Object cycle 2 p1 cp437:0x0F step idle under Empty color 0x00
+    oop
+@swing5
+#end
+:touch
+#play f-f
+#end
+    end
+    stat at 41,6 element Object cycle 2 p1 cp437:0x0F step idle under Empty color 0x00
+    oop
+@swing6
+#end
+:touch
+#play f-f
+#end
+    end
+    stat at 47,6 element Object cycle 2 p1 cp437:0x0F step idle under Empty color 0x00
+    oop
+@swing7
+#end
+:touch
+#play f-f
+#end
+    end
+
+    stat at 11,16 element Object cycle 2 p1 cp437:0x0F step idle under Empty color 0x00
+    oop
+@lswing1
+#end
+:touch
+#play f-f
+#end
+    end
+    stat at 17,16 element Object cycle 2 p1 cp437:0x0F step idle under Empty color 0x00
+    oop
+@lswing2
+#end
+:touch
+#play f-f
+#end
+    end
+    stat at 23,16 element Object cycle 2 p1 cp437:0x0F step idle under Empty color 0x00
+    oop
+@lswing3
+#end
+:touch
+#play f-f
+#end
+    end
+    stat at 29,16 element Object cycle 2 p1 cp437:0x0F step idle under Empty color 0x00
+    oop
+@lswing4
+#end
+:touch
+#play f-f
+#end
+    end
+    stat at 35,16 element Object cycle 2 p1 cp437:0x0F step idle under Empty color 0x00
+    oop
+@lswing5
+#end
+:touch
+#play f-f
+#end
+    end
+    stat at 41,16 element Object cycle 2 p1 cp437:0x0F step idle under Empty color 0x00
+    oop
+@lswing6
+#end
+:touch
+#play f-f
+#end
+    end
+    stat at 47,16 element Object cycle 2 p1 cp437:0x0F step idle under Empty color 0x00
+    oop
+@lswing7
+#end
+:touch
+#play f-f
+#end
+    end
+
+    stat at 51,20 element Object cycle 3 p1 cp437:0x0F step idle under Empty color 0x00
+    oop
+@keysign
+#end
+:touch
+#play tcefg
+The copper key rests in the alcove above.
+Take it, then pass east to the Steam Works.
+#end
+    end
+
+    stat at 59,12 element Passage cycle 0 p3 board "Steam Vent Works" under Empty color 0x00
+  end
+end
+
+board "Steam Vent Works"
+  max-shots 255
+  dark false
+  reenter false
+  time-limit 0
+  exits north none south "Gear Vault" west "Hall of Pendulums" east none
+
+  start player at 2,12
+  grid
+  WWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWW
+  Wssssss....WWWWWWWWWWWWWWWWWWWWWW....WWWWWWWWWWWWWWWWWWWWWWW
+  WsssssssssssssvvvvvvvvvvvvvvvvvvvvvvWWWWWWWWWWWWWWWWWWWWWWWW
+  WWWWWWWvWWWWWWWWWWWWWWWWWWWWWWWWWWWWWvWWWWWWWWWWWWWWWWWWWWWW
+  WWWWWWWvWWpppppppppppppppWWWWWWWWWWWvWWWWbbbbWWWWWWWWWWWWWWW
+  WWWWWWWvWWpTTTTTTTTTTTTTpWWWWWWWWWWWvWWWWbookWWWWWWWWWWWWWWW
+  WWWWWWWvWWpTWWWWWWWWWWWTpWWWWWWWWWWWvWWWWbbbbWWWWWWWWWWWWWWW
+  WWWWWWWvWWpTWssssssssWWTpWWWWWWWWWWWvWWWWWWWWWWWWWWWWWWWWWWW
+  WWWWWWWvWWpTWsssssssssWTpWWWWWWWWWWWvvvvvvvvvvvvvvvvWWWWWWWW
+  WWWWWWWvWWpTWssKssssssWTpWWWWWWWWWWWWWWWWWWWWWWWWWWvWWWWWWWW
+  WWWWWWWvWWpTWsssssssssWTpWWWWWWWWWWWWWWWWWWWWWWWWWWvWWWWWWWW
+  .@....gvggpTWssssssssWWTpg..............g.........vgggggWWWW
+  WWWWWWWvWWpTWWWWWWWWWWWWTpWWWWWWWWWWWWWWWWWWWWWWWWWWvWWWWWWW
+  WWWWWWWvWWpTTTTTTTTTTTTTpWWWWWWWWWWWWWWWWWWWWWWWWWWvWWWWWWWW
+  WWWWWWWvWWppppppppppppppp....WWWWWWWWWWWWWWWWWWWWWWvWWWWWWWW
+  WWWWWWWvWWWWWWWWWWWWWWWWWWWWvvvvvvvvvvvvvvvvvvvvvvvvWWWWWWWW
+  WWWWWWWvWWWWWWWWWWWWWWWWWWWWvWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWW
+  WWWWWWWvvvvvvvvvvvvvvvvvvvvvvWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWW
+  WWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWW
+  WWWWWWWWWWWWWWWWWWWWWWssssssWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWW
+  WWWWWWWWWWWWWWWWWWWWWWssTTssWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWW
+  WWWWWWWWWWWWWWWWWWWWWWssdTssWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWW
+  WWWWWWWWWWWWWWWWWWWWWWssTTssWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWW
+  WWWWWWWWWWWWWWWWWWWWWWssssssWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWW
+  WWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWW
+  end
+
+  legend
+    W = Solid color 0x68
+    s = Breakable color 0x67
+    v = Line color 0x0E
+    p = Normal color 0x66
+    T = Water color 0x1B
+    K = Key color 0x0E
+    b = Solid color 0x6E
+    o = Object color 0x1E
+    k = Object color 0x1E
+    g = Empty color 0x08
+    . = Empty color 0x0E
+    d = Object color 0x0F
+    @ = Player color 0x1F under Empty color 0x0E
+  end
+
+  stats
+    stat at 43,6 element Object cycle 3 p1 cp437:0x0F under Solid color 0x6E
+    oop
+@steamboard
+#end
+:touch
+#play tc+e+g
+Steam schematics, half-legible. It reads:
+The trap valve seals the vault stair below.
+Shut down the boilers, then the way opens.
+The brass key waits in the steam chamber.
+#end
+    end
+
+    stat at 44,6 element Object cycle 0 p1 cp437:0x9D under Solid color 0x6E
+    oop
+@boilergauge
+#end
+:touch
+#play tc
+Pressure gauge: needle pinned in the red.
+#end
+    end
+
+    stat at 25,22 element Object cycle 2 p1 cp437:0x9D under Breakable color 0x67
+    oop
+@brasskey2
+#end
+:touch
+#play tcdefgab
+A brass key, warm to the touch. Number two.
+#give brownkey
+The steam chamber falls silent.
+#die
+    end
+
+    stat at 45,6 element Object cycle 3 p1 cp437:0x0F under Breakable color 0x67
+    oop
+@trapvalve
+#end
+:touch
+#lock
+#play tf-f-f
+The steam trap valve hisses under your hand.
+#if brownkey no
+#play cegceg
+The valve turns. The vault stair unseals!
+#unlock
+#end
+:no
+#play f-c-f-c
+It will not budge while the boilers roar.
+Silence the steam chamber first.
+#unlock
+#end
+    end
+  end
+end
+
+board "Gear Vault"
+  max-shots 255
+  dark true
+  reenter false
+  time-limit 0
+  exits north "Steam Vent Works" south none west "Concentric Ring Gallery" east none
+
+  start player at 20,3
+  grid
+  WWWWWWWWWWWWWWWWWWWWWWWWWWWWW..WWWWWWWWWWWWWWWWWWWWWWWWWWWWW
+  Wt........................b..b........................t.....
+  W..bb..bb..bb..bb..@..bb..b..b..bb..bb..bb..bb..bb..bb.....b
+  Wt.bGGb.bGGb.bGGb.b..b..b..b..b..bGGb.bGGb.bGGb.bGGb.bGGb...
+  W..bGGb.bGGb.bGGb.b..b..bpOb..b..bGGb.bGGb.bGGb.bGGb.bGGb...
+  Wt.bb...bb...bb...bb..b..OOb..bb...bb...bb...bb...bb...bb...
+  W..........b......................b......................t..
+  Wt..bGGGb..b..bGGGb..bGGGb.b.bGGGb..b..bGGGb..bGGGb...b....W
+  W...bGGGb..b..bGGGb..bGGGb.b.bGGGb..b..bGGGb..bGGGb...b...tW
+  Wt..bGGGb.....bGGGb..bGGGb.b.bGGGb.....bGGGb..bGGGb.......W.
+  W...bb.......bb....b.bb....b.bb....b.bb....b.bb....b.....t.W
+  Wt.......b........b........pOb..............b........b....W.
+  W..bGGb..b..bGGb..b..bGGb..OOb..bGGb..b..bGGb..bGGb..b....W.
+  Wt.bGGb.....bGGb.....bGGb..b..b..bGGb.....bGGb..bGGb..b..tW.
+  W..bGGb..b..bGGb..b..bGGb..b..b..bGGb..b..bGGb..bGGb......W.
+  Wt.bb....b..bb....b..bb....b..b...bb...b..bb...bb....b...W..
+  W......b........b........b........b........b........b....tW.
+  Wt.bGGGGb..bGGGGb..bGGGGb.b.bGGGGb..bGGGGb..bGGGGb..b....W..
+  W..bGGGGb..bGGGGb..bGGGGb.b.bGGGGb..bGGGGb..bGGGGb..b...tW..
+  Wt.bb.......bb......bb....b..bb......bb......bb.....b.....W.
+  W....................k.....pOb...........................tW.
+  Wt.................b....b..OOb....................b......W..
+  W..b......b......b....b......b....b......b......b....b...tW.
+  Wt.....................c.................................W..
+  WWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWW
+  end
+
+  legend
+    W = Water color 0x18
+    . = Empty color 0x00
+    b = Breakable color 0x08
+    G = Fake color 0x88
+    O = Solid color 0x6E
+    p = Object color 0x6E
+    t = Torch color 0x0E
+    k = Key color 0x03
+    c = Object color 0x0B
+    @ = Player color 0x1F under Empty color 0x00
+  end
+
+  stats
+    stat at 26,5 element Object cycle 2 p1 cp437:0x0F step south under Empty color 0x00
+    oop
+@gear1
+#end
+:touch
+#play tc-c
+The great gear grinds shut behind you.
+#end
+:move
+#lock
+/s/s/n/n
+#unlock
+#end
+
+    end
+    stat at 28,12 element Object cycle 2 p1 cp437:0x0F step north under Empty color 0x00
+    oop
+@gear2
+#end
+:touch
+#play tc-c
+Copper teeth spin past your face.
+#end
+
+    end
+    stat at 28,21 element Object cycle 2 p1 cp437:0x0F step south under Empty color 0x00
+    oop
+@gear3
+#end
+:touch
+#play tc-c
+The lower gear turns endlessly.
+#end
+
+    end
+    stat at 22,21 element Key cycle 0 under Empty color 0x00
+    oop
+@copperkey
+#end
+:touch
+#end
+
+    end
+    stat at 24,24 element Object cycle 3 p1 cp437:0x9E step idle under Empty color 0x00
+    oop
+@warden
+#end
+:touch
+#play tfc
+Deep in the dark the gears never rest.
+The copper key lies among the teeth.
+Take it, then go west to the rings.
+#end
+
+    end
+  end
+end
+
+board "Concentric Ring Gallery"
+  max-shots 255
+  dark false
+  reenter false
+  time-limit 0
+  exits north "Gear Antechamber" south "Guardian Ward" west none east "Gear Vault"
+
+  start player at 29,1
+  grid
+  WWWWWWWWWWWWWWWWWWWWWWWWWWW.@.WWWWWWWWWWWWWWWWWWWWWWWWWWWWWW
+  W........................................................WWW
+  W..bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb..WW
+  W..b...................................................b..WW
+  W..b..cccccccccccccccccccccccccccccccccccccccccccccc..b..WWW
+  W..b..c.........................................1..c..b..WWW
+  W..b..c..dddddddddddddddddddddddddddddddddddddd...c..b..WWWE
+  W..b..c..d................................3...d...c..b...WWW
+  W..b..c..d..eeeeeeeeeeeeeeeeeeeeeeeeeeeeeeee..d...c..b...WWW
+  W..b..c..d..e........................2...e....d...c..b..WWWW
+  W..b..c..d..e...oooooooooooooooooo.......e....d...c..b..WWWW
+  W..b..c..d..e...o..............4.o.......e....d...c..b..WWWW
+  W..b..c..d..e...o..............oo.......e....d...c..b..WWWWW
+  W..b..c..d..e...oooooooooooooooo.........e....d...c..b..WWWW
+  W..b..c..d..e...........................e.....d...c..b..WWWW
+  W..b..c..d..eeeeeeeeeeeeeeeeeeeeeeeeeeeee......d...c..b..WWW
+  W..b..c..d....................................d...c..b..WWWW
+  W..b..c..dddddddddddddddddddddddddddddddddddddd...c..b..WWWW
+  W..b..c..........................................c...b..WWWW
+  W..b..cccccccccccccccccccccccccccccccccccccccccccc...b..WWWW
+  W..b................................................b...WWWW
+  W..bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb...WWWW
+  W..................g...........S...........g.........WWWWWWW
+  WWWWWWWWWWWWWWWWWWWWWWWWWWWW...WWWWWWWWWWWWWWWWWWWWWWWWWWWWW
+  EEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEE
+  end
+
+  legend
+    W = Water color 0x17
+    . = Empty color 0x08
+    b = Line color 0x6E
+    c = Line color 0x6E
+    d = Line color 0x3B
+    e = Line color 0x3B
+    o = Line color 0x0E
+    @ = Player color 0x1F under Empty color 0x00
+    1 = Object color 0x6E
+    2 = Object color 0x6E
+    3 = Object color 0x3B
+    4 = Object color 0x3B
+    g = Gem color 0x0A
+    S = Object color 0x0F
+    E = Empty color 0x08
+  end
+
+  stats
+    stat at 49,6 element Object cycle 3 p1 cp437:0x0F step idle under Empty color 0x08
+    oop
+@ring1
+#end
+:touch
+#play tc+e
+The outer brass ring is fixed. Turn it with a brass key.
+#if brasskey1 aligned
+#play tcege
+The brass ring locks into alignment!
+#set ring1
+#end
+:aligned
+It is already aligned.
+#end
+
+    end
+    stat at 38,10 element Object cycle 3 p1 cp437:0x0F step idle under Empty color 0x08
+    oop
+@ring2
+#end
+:touch
+#play tc+e
+The second brass ring waits. Turn it with a brass key.
+#if brasskey2 aligned
+#play tcege
+The second brass ring locks into alignment!
+#set ring2
+#end
+:aligned
+It is already aligned.
+#end
+
+    end
+    stat at 43,8 element Object cycle 3 p1 cp437:0x0F step idle under Empty color 0x08
+    oop
+@ring3
+#end
+:touch
+#play sc+e
+The copper ring resists. Turn it with a copper key.
+#if copperkey1 aligned
+#play scehe
+The copper ring clicks into place!
+#set ring3
+#end
+:aligned
+It is already aligned.
+#end
+
+    end
+    stat at 32,12 element Object cycle 3 p1 cp437:0x0F step idle under Empty color 0x0E
+    oop
+@ring4
+#end
+:touch
+#play sc+e
+The inner copper ring is stubborn. Turn it with a copper key.
+#if copperkey2 aligned
+#play scehe
+The inner copper ring seats with a deep chime!
+#set ring4
+#end
+:aligned
+It is already aligned.
+#end
+
+    end
+    stat at 32,23 element Object cycle 3 p1 cp437:0x02 step idle under Empty color 0x08
+    oop
+@sentinel
+#end
+:touch
+#play tc
+The rings must all align before the south gate opens.
+#if ring1 c1
+This ring gallery hums. Four rings, four keys.
+#end
+:c1
+#if ring2 c2
+The outer brass ring glows. Three remain.
+#end
+:c2
+#if ring3 c3
+Two brass rings shine. Now the copper.
+#end
+:c3
+#if ring4 c4
+Three rings aligned. One copper ring left.
+#end
+:c4
+#play tcegxc
+All four rings align! The southern gate grinds open.
+#end
+
+    end
+    stat at 20,23 element Gem cycle 0 under Empty color 0x08
+    stat at 44,23 element Gem cycle 0 under Empty color 0x08
+  end
+end
+
+board "Guardian Ward"
+  max-shots 255
+  dark false
+  reenter true
+  time-limit 0
+  exits north "Concentric Ring Gallery" south none west none east none
+
+  start player at 35,23
+  grid
+  EEEEEEEEEEEEEEEEEEEEEEEEEEEE....EEEEEEEEEEEEEEEEEEEEEEEEEEEE
+  WWWWWWWWWWWWWWWWWWWWWWWWWWWW.pp.WWWWWWWWWWWWWWWWWWWWWWWWWWWW
+  W........................................................WWW
+  W..w..................ttttttttttt.....................w..WWW
+  W..w....a...............t.....t.......................w..WWW
+  W..w....................t.....t.......................w..WWW
+  W..wwwwww......G.........t...t.........G......wwwwwwwwww..WW
+  W.......w...............t...t.........................w..WWW
+  W.......w................t.t..........................w..WWW
+  W.......w.................t...........a...............w..WWW
+  W.......wwwwwwwwww.........t..............wwwwwwwwwwwww...WW
+  W.................w.......ttt.........................w..WWW
+  W....G............w.......t.t.....G..................ww..WWW
+  W.................w......t...t.......................w...WWW
+  W.wwwwwwwwwwww....w.....t.....t.....wwwwwwwwwwwwwwwwww....WW
+  W............w....w....t.......t....w....................WWW
+  W............w....w...tttttttttttt..w.....G.............WWWW
+  W..a.........w....w.................w...................WWWW
+  W............w....wwwwwwwwwwwwwwwwwwww..................WWWW
+  W............w.....................................a...WWWWW
+  W..G.........w..................................G......WWWWW
+  W............w........................................WWWWWE
+  W...................o.............@..................WWWWWEE
+  W....................................................WWWWWEE
+  WWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWW
+  end
+
+  legend
+    E = Empty color 0x0F
+    . = Empty color 0x08
+    W = Solid color 0x68
+    w = Normal color 0x66
+    t = Line color 0x6E
+    G = Lion color 0x0C
+    a = Ammo color 0x03
+    o = Object color 0x0E
+    p = Passage color 0x6F to "Core of the Tomb"
+    @ = Player color 0x1F under Empty color 0x08
+  end
+
+  stats
+    stat at 30,2 element Passage cycle 0 p3 board "Core of the Tomb" under Empty color 0x08
+    stat at 31,2 element Passage cycle 0 p3 board "Core of the Tomb" under Empty color 0x08
+    stat at 16,7 element Lion cycle 2 p1 6 under Empty color 0x08
+    stat at 40,7 element Lion cycle 2 p1 6 under Empty color 0x08
+    stat at 6,13 element Lion cycle 2 p1 6 under Empty color 0x08
+    stat at 35,13 element Lion cycle 2 p1 6 under Empty color 0x08
+    stat at 43,17 element Lion cycle 2 p1 6 under Empty color 0x08
+    stat at 4,21 element Lion cycle 2 p1 6 under Empty color 0x08
+    stat at 49,21 element Lion cycle 2 p1 6 under Empty color 0x08
+    stat at 21,23 element Object cycle 3 p1 cp437:0x0F under Empty color 0x08
+    oop
+@warden
+#end
+:touch
+#play tcgtcg
+The brass automatons will not rest.
+Clear the ward, and the core lies beyond the twin gates north.
+#end
+    end
+  end
+end
+
+board "Core of the Tomb"
+  max-shots 255
+  dark false
+  reenter false
+  time-limit 0
+  exits north none south none west none east none
+
+  start player at 32,22
+  grid
+  SSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSS
+  S..........................................................S
+  S...wwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwww..
+  S...w....................................................w..
+  S...w..........ttttttttttttttttttttttttt.................w..
+  S...w.......ttt.......................ttt.............w...w.
+  S...w.....tt.....gg.............gg......tt............w...w.
+  S...w....t.....gg.................gg......t...............w.
+  S...w...t....gg......bb...bb........gg.....t..............w.
+  S...w..t....g.......b.......b........g.....t.............w..
+  S...w..t...g.......b...HH....b.......g......t............w..
+  S...w.t...g........b..H..H...b........g.....t...........w...
+  S...w.t...g........b..H..H...b........g.....t..........w....
+  S...w.t...g........b...HH....b.......g......t.........w.....
+  S...w..t...g.......b.........b.......g......t........w......
+  S...w..t....g.......b.......b........g.....t..............w.
+  S...w...t....gg......bb...bb........gg.....t..............w.
+  S...w....t.....gg.................gg......t...............w.
+  S...w.....tt.....gg.............gg......tt................w.
+  S...w.......ttt.......................ttt................w.S
+  S...w..........ttttttttttttttttttttttttt................w..S
+  S...w..........................@.......................w...S
+  S...wwwwwwwwwwwwwwwwwwwwwwwwwwwPwwwwwwwwwwwwwwwwwwwwwwwww...
+  S..........................................................S
+  SSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSS
+  end
+
+  legend
+    S = Solid color 0x68
+    w = Normal color 0x6E
+    t = Line color 0x0E
+    g = Gem color 0x0E
+    b = Line color 0x08
+    H = Object color 0x0C
+    P = Passage color 0x6F to "Guardian Ward"
+    . = Empty color 0x00
+    @ = Player color 0x1F under Empty color 0x00
+  end
+
+  stats
+    stat at 32,23 element Passage cycle 0 p3 board "Guardian Ward" under Empty color 0x00
+
+    stat at 24,11 element Object cycle 3 p1 cp437:0x04 step idle under Empty color 0x00
+    oop
+@heart
+#end
+:touch
+#play tcefgab+cdefg
+The Clockwork Heart still beats,
+a relic of the tomb's makers.
+#play +c+e+g+cx
+You have reached the Core of the Tomb.
+#play iehcbagfedc
+#endgame
+#end
+
+    end
+    stat at 25,11 element Object cycle 3 p1 cp437:0x04 step idle under Empty color 0x00
+    oop
+@heart2
+#end
+:touch
+#send heart:touch
+#end
+
+    end
+    stat at 23,12 element Object cycle 3 p1 cp437:0x04 step idle under Empty color 0x00
+    oop
+@heart3
+#end
+:touch
+#send heart:touch
+#end
+
+    end
+    stat at 26,12 element Object cycle 3 p1 cp437:0x04 step idle under Empty color 0x00
+    oop
+@heart4
+#end
+:touch
+#send heart:touch
+#end
+
+    end
+    stat at 23,13 element Object cycle 3 p1 cp437:0x04 step idle under Empty color 0x00
+    oop
+@heart5
+#end
+:touch
+#send heart:touch
+#end
+
+    end
+    stat at 26,13 element Object cycle 3 p1 cp437:0x04 step idle under Empty color 0x00
+    oop
+@heart6
+#end
+:touch
+#send heart:touch
+#end
+
+    end
+    stat at 24,14 element Object cycle 3 p1 cp437:0x04 step idle under Empty color 0x00
+    oop
+@heart7
+#end
+:touch
+#send heart:touch
+#end
+
+    end
+    stat at 25,14 element Object cycle 3 p1 cp437:0x04 step idle under Empty color 0x00
+    oop
+@heart8
+#end
+:touch
+#send heart:touch
+#end
+
+    end
+  end
+end
+
