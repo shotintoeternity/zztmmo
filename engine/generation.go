@@ -495,6 +495,7 @@ func extractGeneratedBoard(text, wantName string) (string, zwdBoard, error) {
 	}
 	section := strings.TrimSpace(m[1]) + "\n"
 	section = preprocessZWDGrid(section)
+	log.Printf("[DEBUG PREPROCESSED ZWD]\n%s\n", section)
 	src := "zwd 1\nworld \"CHECK\"\n" + section
 	if strings.HasPrefix(strings.TrimSpace(section), "zwd 1") {
 		src = section
@@ -795,6 +796,26 @@ func expandRLE(line string) string {
 	return line
 }
 
+func getUnusedLegendKey(legendMap map[byte]string) byte {
+	candidates := []byte("os*?xzyptkdgcaOSXZYPTKDGCA")
+	for _, ch := range candidates {
+		if _, exists := legendMap[ch]; !exists {
+			return ch
+		}
+	}
+	for ch := byte('A'); ch <= 'Z'; ch++ {
+		if _, exists := legendMap[ch]; !exists {
+			return ch
+		}
+	}
+	for ch := byte('a'); ch <= 'z'; ch++ {
+		if _, exists := legendMap[ch]; !exists {
+			return ch
+		}
+	}
+	return '?'
+}
+
 func abs(x int) int {
 	if x < 0 {
 		return -x
@@ -1076,6 +1097,44 @@ func preprocessZWDGrid(zwdText string) string {
 								repChar = ch
 								hasRep = true
 								break
+							}
+						}
+						if !hasRep {
+							ch := getUnusedLegendKey(legendMap)
+							legendMap[ch] = spec.elem
+							repChar = ch
+							hasRep = true
+
+							// Insert the new legend definition before the legend's "end" line
+							legendEndIdx := -1
+							inLegend := false
+							for idx, line := range lines {
+								trimmed := strings.TrimSpace(line)
+								if trimmed == "legend" {
+									inLegend = true
+								}
+								if inLegend && trimmed == "end" {
+									legendEndIdx = idx
+									break
+								}
+							}
+							if legendEndIdx != -1 {
+								indent := ""
+								for _, r := range lines[legendEndIdx] {
+									if r == ' ' || r == '\t' {
+										indent += string(r)
+									} else {
+										break
+									}
+								}
+								color := "0x0F"
+								if key == "PLAYER" {
+									color = "0x1F"
+								} else if key == "OBJECT" {
+									color = "0x0F"
+								}
+								newLegendEntry := fmt.Sprintf("%s  %c = %s color %s", indent, ch, spec.elem, color)
+								lines[legendEndIdx] = newLegendEntry + "\n" + lines[legendEndIdx]
 							}
 						}
 						if hasRep {
