@@ -1073,7 +1073,8 @@ func preprocessZWDGrid(zwdText string) string {
 					key := strings.ToUpper(spec.elem)
 					coords := gridElements[key]
 
-					var bestCoord *coord
+					var bestCoord coord
+					var found bool
 					bestDist := 999999
 
 					for _, co := range coords {
@@ -1083,15 +1084,16 @@ func preprocessZWDGrid(zwdText string) string {
 						dist := abs(co.c+1-spec.startX) + abs(co.r+1-spec.startY)
 						if dist < bestDist {
 							bestDist = dist
-							bestCoord = &co
+							bestCoord = co
+							found = true
 						}
 					}
 
 					var alignedX, alignedY int
-					if bestCoord != nil {
+					if found {
 						alignedX = bestCoord.c + 1
 						alignedY = bestCoord.r + 1
-						claimed[*bestCoord] = true
+						claimed[bestCoord] = true
 					} else {
 						var repChar byte
 						hasRep := false
