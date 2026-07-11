@@ -260,6 +260,12 @@ Title screens are the player's first impression. A scrambled or misspelled title
      y = Text-Yellow color 0x20
      ```
 4. **Atmospheric Contrast**: Frame your title banner with themed ascii drawings (e.g. stars, machinery, mountains) but keep the title text clear and easy to read using `Text-<Color>` elements.
+5. **Title Screen Object & Scripting Rules**:
+   * **Player is Immobile**: On the title screen (board 0), the player is not playable and cannot move. Therefore, **objects on the title screen can never be touched**.
+   * **No `:touch` Labels**: Because collision is impossible, title screen objects must **never** start with `#end` followed by a `:touch` label (or contain `:touch` blocks).
+   * **Narrate Immediately**: Instead, use objects that trigger automatically at startup to explain the plot, animate scenery, or set the atmosphere.
+   * **Atmospheric/Plot Scrolling**: Use either scrolling text (single-line messages interspersed with wait commands like `/i` for pacing in between lines, e.g. `The cosmos is cold... \n /i \n /i \n A star dies...`) or open a long passage scroll explaining the plot of the game immediately at startup (by placing the text block at the very top of the script so it displays upon board load, rather than behind a touch label).
+
 
 
 
