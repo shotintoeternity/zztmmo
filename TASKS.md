@@ -1260,6 +1260,27 @@ enables; each is feasible precisely because of a property we already built):**
   temporary `debugOrphanScan` pass during the touch investigation surfaced e.g.
   DYINGSTA's 5-tile passage "door" and KEEPLITE's 13-tile object drawing at once.)
 
+* [ ] **Repair the broken generated world sources `DYINGSTA.zwd` and `KEEPLITE.zwd`.**
+  Both fail to compile today and their on-disk `.ZZT` predates the stat-default fix
+  (still locked). Known errors, all classic LLM mistakes now warned against in
+  `spec.md`/`STYLE.md`:
+  - `DYINGSTA.zwd`: title-banner grid rows 17–21 are 59 chars, not 60 (already
+    partially patched this session); a decorative `* = Star` legend entry (should be
+    an inert `Text-*` glyph); a 5-tile `Passage` "door" on the Hangar Bay board and
+    several decorative `Object` clusters with no stats.
+  - `KEEPLITE.zwd`: a 13-tile `Object` drawing (lines 533–537) used as static art.
+  Fix by converting decorative stat-backed tiles to `Text-*`/`Solid`/`Fake`,
+  collapsing passage doors to a single stat-backed tile, then recompile so the
+  `.ZZT` is regenerated clean. Depends on the two compiler tasks above landing first
+  (they make the repair one-shot instead of whack-a-mole).
+
+* [ ] **Retire/retitle `engine/touch_race_test.go`.**
+  The prior agent added it while chasing the phantom `#end`/`:touch` "race"; its
+  comments still assert a race that does not exist. The accurate regression guard is
+  `TestZWDObjectDefaultsAreZZTNeutral` (`engine/zwd_test.go`). Either delete
+  `touch_race_test.go` or rewrite its header to describe what it actually verifies
+  (an unlocked object runs `:touch` and emits a scroll on the tick after `OopSend`).
+
 * [ ] **Passages must link to a matching-color passage on the destination board.**
   ZZT's passage teleport logic deposits the player at the first passage on the
   destination board whose color byte matches the source passage's color. If no
