@@ -1,0 +1,621 @@
+zwd 1
+world "BAKERY"
+
+board "Title Screen"
+  max-shots 0
+  dark false
+  reenter false
+  time-limit 0
+  exits north none south none west none east none
+
+  start player at 32,23
+  grid
+  ssssssssssssssssssssssssssssssssssssssssssssssssssssssssssss
+  s..........................................................s
+  s..........................................................s
+  s...bb...bb...bbbb....bbbb...bbb...b..b.....bb..b..b..bbb...
+  s...b.b..b.b..b.......b.....b...b..b.b......b.b.b..b..b.....
+  s...bb...bbbb..bbb....bbbb...bbbbb..bb.......bb..b.b..bbb...
+  s...b.b..b.b......b....b.....b...b..b.b......b.b..bb..b.....
+  s...bb...b..b.bbbb....bbbb...b...b..b..b.....bb...b...bbb...
+  s..........................................................s
+  s..........................................................s
+  s...............ttttt..h..h..ttttt.....................o...s
+  s................ppp...hhhh..ppppp.....................o...s
+  s................ppp...h..h..p..p.......www.............s..s
+  s...............ppppp........p..p......w...w...............s
+  s..........................................w..w...........s.
+  s............................................w............s.
+  s..........................................www............s.
+  s..........................................................s
+  s..........................................................s
+  s.....................dd................dd................s.
+  s..........................................................s
+  s...............................o..........................s
+  s..............................@...........................s
+  s..........................................................s
+  ssssssssssssssssssssssssssssssssssssssssssssssssssssssssssss
+  end
+
+  legend
+    s = Normal color 0x6E
+    . = Empty color 0x00
+    b = Text-Yellow color 0x20
+    t = Text-Red color 0x20
+    p = Text-Red color 0x20
+    h = Text-Red color 0x20
+    w = Text-Cyan color 0x20
+    d = Gem color 0x0E
+    o = Object color 0x0E
+    @ = Player color 0x1F under Empty color 0x00
+  end
+
+  stats
+    stat at 33,22 element Object cycle 3 p1 cp437:0x0F step idle under Empty color 0x00
+    oop
+    @sign
+    #end
+    :touch
+    #play tcfa
+    "THE BAKERY GATE"
+    "A little errand in a little town."
+    "Press a direction to begin."
+    #end
+    end
+
+    stat at 33,22 element Object cycle 2 p1 cp437:0x9B step idle under Empty color 0x00
+    oop
+    @crumb
+    #end
+    :touch
+    #play tfc
+    "Something smells wonderful over here..."
+    #end
+    end
+
+    stat at 33,22 element Object cycle 2 p1 cp437:0x9B step idle under Empty color 0x00
+    oop
+    @crumb2
+    #end
+    :touch
+    #play tfc
+    "...but the gate is locked."
+    #end
+    end
+  end
+end
+
+board "Town Plaza"
+  max-shots 10
+  dark false
+  reenter false
+  time-limit 0
+  exits north "Fountain Square" south none west "Noticeboard Nook" east "Bench Corner"
+
+  start player at 31,20
+  grid
+  ####################......########################.........#
+  #ffffffffffffffffff#......#ffffffffffffffffffffff#.........#
+  #f................f########f........B.G.B.......f#.........#
+  #f..............................................f#.........#
+  #f...ttt....ttt.................................gf#........#
+  #f...ttt....ttt....########....#############.....f#........#
+  #Wf..............#..........#..#...........#.....f#.......W#
+  #f...............#...ffff...#..#..bbbbbbb..#.....f#........#
+  #f...............#...ffff...#..#..b.....b..#.....f#........#
+  #f...............#..........#..#..b..p..b..#.....f#........#
+  #f...............##########.#..#..b.....b..#.....f#........#
+  #f.........................#..#..bbb+bbb..#......f#........#
+  #f.............................#...........#.....f#........#
+  #ffffffffffffffffffffffffffff..############......f#.......W#
+  #f.......................................ttt.....f#........#
+  #f...s.....s.....s.......................ttt.....f#........#
+  #f...............................................f#........#
+  #f..........o....................................f#........#
+  #f...............................................f#........#
+  #f............................@..................f#........#
+  #f...............................................f#........#
+  #f..............................ffffffffff.......f#........#
+  #fffffffffffffffffffffffffffffffffffffffffffffffff#........#
+  ####################################################.......#
+  ############################################################
+  end
+
+  legend
+    # = Solid color 0x0E
+    . = Empty color 0x00
+    f = Fake color 0x70
+    t = Fake color 0x2A
+    b = Normal color 0x6E
+    g = Gem color 0x0A
+    + = Door color 0x6E
+    p = Passage color 0x6F to "Inside the Bakery"
+    s = Fake color 0x08
+    o = Object color 0x0F
+    W = Water color 0x1F
+    B = Text-Yellow color 0x42
+    G = Text-Yellow color 0x47
+    @ = Player color 0x1F under Empty color 0x00
+  end
+
+  stats
+    stat at 38,10 element Passage cycle 0 p3 board "Inside the Bakery" under Empty color 0x00
+    stat at 13,18 element Object cycle 3 p1 cp437:0x02 step idle under Fake color 0x70
+    oop
+    @townguide
+    #end
+    :touch
+    #play tcefg
+    "Welcome to the Town Plaza, traveler."
+    "The bakery gate is locked tight."
+    !bench;What do the folks by the bench say?
+    !fountain;And the fountain to the north?
+    #end
+    :bench
+    #play te
+    "They say the baker dropped the key..."
+    "...somewhere it got wet. Ask around east."
+    #end
+    :fountain
+    #play tf
+    "Cold water hides more than reflections."
+    "Wade in and you may find what you seek."
+    #end
+    end
+  end
+end
+
+board "Fountain Square"
+  max-shots 255
+  dark false
+  reenter false
+  time-limit 0
+  exits north none south "Town Plaza" west none east none
+
+  start player at 30,23
+  grid
+  ############################################################
+  #..........................................................#
+  #..sssssssssssssssssssssssssssssssssssssssssssssssssssss...#
+  #..s......................................................s.
+  #..s...wwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwww....s.
+  #..s...w~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~w....s.
+  #..s...w~~~~~~~~~~~~~~~o~~~~~~~~~~~~~~~~~~~~~~~~~~~~~w....s.
+  #..s...w~~~~~~~~~~~~~fffffffff~~~~~~~~~~~~~~~~~~~~~~~w....s.
+  #..s...w~~~~~~~~~~~~~fFFFFFFFf~~~~~~~~~~~~~~~~~~~~~~~w....s.
+  #..s...w~~~~~~~~~~~~~fF*****Ff~~~~~~~~~~~~~~~~~~~~~~~w....s.
+  #..s...w~~~~~~~~~~~~~fFokkk*Ff~~~~~~~~~~~~~~~~~~~~~~~w....s.
+  #..s...w~~~~~~~~~~~~~fF*kKk*Ff~~~~~~~~~~~~~~~~~~~~~~~w....s.
+  #..s...w~~~~~~~~~~~~~fF*kkk*Ff~~~~~~~~~~~~~~~~~~~~~~~w....s.
+  #..s...w~~~~~~~~~~~~~fF*****Ff~~~~~~~~~~~~~~~~~~~~~~~w....s.
+  #..s...w~~~~~~~~~~~~~fFFFFFFFf~~~~~~~~~~~~~~~~~~~~~~~w....s.
+  #..s...w~~~~~~~~~~~~~fffffffff~~~~~~~~~~~~~~~~~~~~~~~w....s.
+  #..s...w~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~w....s.
+  #..s...w~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~w....s.
+  #..s...wwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwww....s.#
+  #..s......................................................s.
+  #..sssssssssssssssssssssssssssssssssssssssssssssssssssss...#
+  #..........................................................#
+  #............................@.............................#
+  #################......#####################################
+  ............................................................
+  end
+
+  legend
+    # = Solid color 0x6E
+    . = Empty color 0x0F
+    s = Fake color 0x70
+    w = Normal color 0x37
+    ~ = Water color 0x19
+    f = Normal color 0x87
+    F = Normal color 0x7F
+    * = Empty color 0x19
+    k = Water color 0x19
+    K = Key color 0x1E
+    @ = Player color 0x1F under Empty color 0x0F
+    o = Object color 0x0F
+  end
+
+  stats
+    stat at 24,11 element Object cycle 3 p1 cp437:0xF8 step idle under Water color 0x19
+    oop
+    @sign
+    #end
+    :touch
+    #play tc
+    "A worn plaque, half sunk in the pool."
+    "'Toss a coin. Fish out what fell in.'"
+    #end
+    end
+
+    stat at 24,7 element Object cycle 3 p1 cp437:0xF8 step idle under Water color 0x19
+    oop
+    @spout
+    #end
+    :touch
+    #play tf
+    "The fountain spout gurgles cheerfully."
+    #end
+    end
+  end
+end
+
+board "Bench Corner"
+  max-shots 255
+  dark false
+  reenter false
+  time-limit 0
+  exits north none south none west "Town Plaza" east none
+
+  start player at 4,12
+  grid
+  ############################################################
+  #..........................................................#
+  #..bbbbbbbbbbbbbbbbbbbbbb....ffffffffffffffffffffffffffff...
+  #..b....................b...f..............................f
+  #..b....................b...f..............................f
+  #..b..HHHHHHHHHHHHHHHH..b...f...ttt...ttt...ttt............f
+  #..b..H..............H..b...f...ttt...ttt...ttt............f
+  #..b..H..HHHHHHHHHH..H..b...f..............................f
+  #..b..H..H........H..H..b...f..............................f
+  W..b..H..H...G....H..H..b...ffffffffffffffffffffffffffff...#
+  #.....H..H........H..H.....................................#
+  #..@..H..H....J...H..H.....................N...............#
+  #.....H..H........H..H.....................................#
+  #..b..H..H........H..H..b...ffffffffffffffffffffffffffff...#
+  #..b..H..HHHHHHHHHH..H..b...f..............................f
+  #..b..H..............H..b...f...M......P...................f
+  #..b..HHHHHHHHHHHHHHHH..b...f..............................f
+  #..b....................b...f..............................f
+  #..b....................b...f..............................f
+  #..bbbbbbbbbbbbbbbbbbbbbb....ffffffffffffffffffffffffffff...
+  #..........................................................#
+  #..........................................................#
+  #..........................................................#
+  ############################################################
+  ............................................................
+  end
+
+  legend
+    # = Solid color 0x6E
+    W = Passage color 0x1F to "Town Plaza"
+    . = Empty color 0x0E
+    b = Fake color 0x66
+    H = Fake color 0x60
+    f = Fake color 0x60
+    t = Empty color 0x60
+    G = Object color 0x0A
+    J = Object color 0x0F
+    N = Object color 0x0B
+    M = Object color 0x0D
+    P = Object color 0x0E
+    @ = Player color 0x1F under Empty color 0x0E
+  end
+
+  stats
+    stat at 1,10 element Passage cycle 0 p3 board "Town Plaza" under Empty color 0x00
+
+    stat at 40,16 element Object cycle 3 p1 cp437:0x01 step idle under Fake color 0x60
+    oop
+    @granny
+    #end
+    :touch
+    #play tcefg
+    "Sit a spell, dearie. The bakery's shut tight, you know."
+    "Old baker dropped his gate key in the fountain last week!"
+    "Bless him, too proud to wade in after it himself."
+    #end
+    end
+
+    stat at 40,16 element Object cycle 3 p1 cp437:0x02 step idle under Fake color 0x60
+    oop
+    @lad
+    #end
+    :touch
+    #play fga
+    "You want fresh bread? The gate's locked up north."
+    !fountain;Where's the key?
+    #end
+    :fountain
+    #play gec
+    "In the FOUNTAIN, friend. North of the plaza."
+    "Just wade right in and grab it. Water won't bite."
+    #end
+    end
+
+    stat at 40,16 element Object cycle 3 p1 cp437:0x02 step idle under Empty color 0x0E
+    oop
+    @loafer
+    #end
+    :touch
+    #play efg
+    "Me? I'm just resting. Nice benches, aren't they?"
+    "Heard the plaza gate takes a special key. Fountain, they say."
+    #end
+    end
+
+    stat at 40,16 element Object cycle 3 p1 cp437:0x01 step idle under Empty color 0x0E
+    oop
+    @gossip
+    #end
+    :touch
+    #play cdefg
+    "Psst. The key's been in that fountain for DAYS."
+    "Nobody wants wet boots. Be a hero, why don't you?"
+    #end
+    end
+
+    stat at 40,16 element Object cycle 3 p1 cp437:0x02 step idle under Empty color 0x0E
+    oop
+    @dozer
+    #end
+    :touch
+    #play f
+    "Zzz... huh? Oh. Go west to the plaza, north to the fountain."
+    #end
+    end
+  end
+end
+
+board "Noticeboard Nook"
+  max-shots 10
+  dark false
+  reenter false
+  time-limit 0
+  exits north none south none west none east "Town Plaza"
+
+  start player at 14,11
+  grid
+  ############################################################
+  #TTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTT.
+  #.wwwww.wwwww.wwwww......................................b.E
+  #.w...w.w...w.w...w......................................b.E
+  #.wwwww.wwwww.wwwww..........###.............###.........b.#
+  #........................................................b.#
+  #..###....................o................o.............b.#
+  #..#s#..................................................bb.#
+  #..###...................................................b.#
+  #........................................................b.#
+  #............@...........................................b.#
+  #........................o..............................bb.#
+  #........................................................b.#
+  #..###...................................................b.#
+  #..#c#............o......................................b.#
+  #..###...................................................b.#
+  #........................................................b.#
+  #.wwwww.wwwww.wwwww.wwwww................................b.#
+  #.w...w.w...w.w....w.....................................b.#
+  #.wwwww.wwwww.wwwww.wwwww................................b.#
+  #........................................................b.#
+  #........................................................b.#
+  #........................................................b.#
+  ############################################################
+  ............................................................
+  end
+
+  legend
+    # = Solid color 0x6E
+    . = Empty color 0x0F
+    T = Fake color 0x60
+    w = Fake color 0x78
+    b = Fake color 0x60
+    s = Object color 0x0E
+    c = Object color 0x0F
+    o = Object color 0x0E
+    @ = Player color 0x1F under Empty color 0x00
+    E = Passage color 0x2F to "Town Plaza"
+  end
+
+  stats
+    stat at 60,4 element Passage cycle 0 p3 board "Town Plaza" under Empty color 0x00
+    stat at 60,4 element Passage cycle 0 p3 board "Town Plaza" under Empty color 0x00
+
+    stat at 19,15 element Object cycle 3 p1 cp437:0x13 step idle under Fake color 0x60
+    oop
+    @closed
+    #end
+    :touch
+    #lock
+    #play tcd
+    "BAKERY -- CLOSED UNTIL FURTHER NOTICE"
+    "The key was dropped in the fountain."
+    "So sorry, dear customers. -- The Baker"
+    #unlock
+    #end
+    end
+
+    stat at 19,15 element Object cycle 3 p1 cp437:0x13 step idle under Fake color 0x60
+    oop
+    @townlaw
+    #end
+    :touch
+    #lock
+    #play tfc
+    "TOWN ORDINANCE 7:"
+    "All lost property found in public"
+    "waters may be claimed by the finder."
+    #unlock
+    #end
+    end
+
+    stat at 19,15 element Object cycle 3 p1 cp437:0x02 step idle under Empty color 0x0F
+    oop
+    @gossip
+    #end
+    :touch
+    #lock
+    #play tc+e
+    "Heard the folks by the bench say"
+    "the baker was frantic all morning."
+    #unlock
+    #end
+    end
+
+    stat at 19,15 element Object cycle 3 p1 cp437:0x9D step idle under Empty color 0x0F
+    oop
+    @map
+    #end
+    :touch
+    #lock
+    "Map of the Plaza:"
+    "  East -- Town Plaza"
+    "  From the plaza: fountain, bench."
+    #unlock
+    #end
+    end
+
+    stat at 19,15 element Object cycle 3 p1 cp437:0x9D step idle under Empty color 0x0F
+    oop
+    @founders
+    #end
+    :touch
+    #lock
+    "This nook honors the founders,"
+    "who baked the town's first bread"
+    "on the morning this plaza was raised."
+    #unlock
+    #end
+    end
+
+    stat at 19,15 element Object cycle 3 p1 cp437:0x02 step idle under Empty color 0x0F
+    oop
+    @rumor
+    #end
+    :touch
+    #lock
+    #play te
+    "Someone scrawled here:"
+    "'Wade in if you want that key back.'"
+    #unlock
+    #end
+    end
+  end
+end
+
+board "Inside the Bakery"
+  max-shots 0
+  dark false
+  reenter false
+  time-limit 0
+  exits north none south none west none east none
+
+  start player at 27,22
+  grid
+  wwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwww
+  w..........................................................w
+  w..bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb.
+  w..b......................................................b.
+  w..b..cccc....cccc....cccc....cccc....cccc....cccc....cc..b.
+  w..b..c..c....c..c....c..c....c..c....c..c....c..c....cc..b.
+  w..b..cccc....cccc....cccc....cccc....cccc....cccc....cc..b.
+  w..b......................................................b.
+  w..b..O...................o...................O.........b..w
+  w..b......................................................b.
+  w..bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb.
+  w..........................................................w
+  w..........................................................w
+  w....dddddddddddddddddddddddddddddddddddddddddddddddddd.....
+  w....d....................................................w.
+  w....d....H.......H.......H.......H.......H........d.....w..
+  w....d....................................................w.
+  w....dddddddddddddddddddddddddddddddddddddddddddddddddd.....
+  w..........................................................w
+  w..........................................................w
+  w.........................+p+.............................w.
+  w.........................@................................w
+  w..........................................................w
+  wwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwww
+  ............................................................
+  end
+
+  legend
+    w = Solid color 0x6E
+    b = Normal color 0x60
+    c = Fake color 0x6F
+    d = Fake color 0x08
+    O = Object color 0x0E
+    o = Object color 0x0C
+    H = Object color 0x0F
+    + = Door color 0x1F
+    p = Passage color 0x1F to "Town Plaza"
+    . = Empty color 0x00
+    @ = Player color 0x1F under Empty color 0x00
+  end
+
+  stats
+    stat at 28,21 element Passage cycle 0 p3 board "Town Plaza" under Empty color 0x00
+    stat at 43,16 element Object cycle 3 p1 cp437:0x0F under Fake color 0x60
+    oop
+    @baker
+    #end
+    :touch
+    #play tcega
+    "Welcome back to my bakery!"
+    "You found the key in the fountain. Bless you."
+    "The ovens are warm and the bread is rising."
+    #end
+    end
+    stat at 43,16 element Object cycle 3 p1 cp437:0x0F under Fake color 0x60
+    oop
+    @sign
+    #end
+    :touch
+    "The register. Coins for warm rolls."
+    #end
+    end
+    stat at 43,16 element Object cycle 3 p1 cp437:0x07 under Fake color 0x60
+    oop
+    @grandloaf
+    #end
+    :touch
+    #play tfab+c
+    "A golden loaf sits cooling on the rack."
+    "The whole town smells like morning again."
+    "You did it. The bakery lives once more!"
+    #end
+    #endgame
+    #end
+    end
+    stat at 43,16 element Object cycle 0 p1 cp437:0xF0 under Fake color 0x08
+    oop
+    @b1
+    #end
+    :touch
+    "A tray of fresh croissants."
+    #end
+    end
+    stat at 43,16 element Object cycle 0 p1 cp437:0xF0 under Fake color 0x08
+    oop
+    @b2
+    #end
+    :touch
+    "Sourdough boules, still steaming."
+    #end
+    end
+    stat at 43,16 element Object cycle 0 p1 cp437:0xF0 under Fake color 0x08
+    oop
+    @b3
+    #end
+    :touch
+    "Cinnamon buns dusted with sugar."
+    #end
+    end
+    stat at 43,16 element Object cycle 0 p1 cp437:0xF0 under Fake color 0x08
+    oop
+    @b4
+    #end
+    :touch
+    "Rye rolls in neat rows."
+    #end
+    end
+    stat at 43,16 element Object cycle 0 p1 cp437:0xF0 under Fake color 0x08
+    oop
+    @b5
+    #end
+    :touch
+    "A basket of soft pretzels."
+    #end
+    end
+  end
+end
+
