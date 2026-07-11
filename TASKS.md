@@ -701,6 +701,10 @@ protocol is positional, so these sit just after M12.5 and before M5.
   ordering bug). DoD: `zzt-validate` passes the same worlds the corpus run
   loads; a test covers a known-good world that currently false-fails.
 
+- [ ] **M12.9 — Enforce non-stat-backed elements are excluded from stats in compiler validation.** Modify `zwd.go` compiler to verify that only stat-backed elements (those returned by `elementNeedsStat`) are permitted to have entries in the `stats` block. If the ZWD file defines a `stat at X,Y` for a non-stat-backed element (such as `E_GEM`, `E_AMMO`, `E_KEY`, or `E_DOOR`), fail compilation with a descriptive error (e.g. `stat at (X, Y) defined for non-stat-backed element Gem`). This prevents LLMs from incorrectly attempting to define stats or color parameters for simple items.
+
+- [ ] **M12.10 — Prevent LLM from using stat-backed Object elements for static art.** Add validation or prompt instructions to reject worlds where the LLM attempts to draw multi-tile shapes (like 2x2 gears or large pillars) using `Object` characters unless every single one of those tiles has a valid corresponding stat block. Recommend representing static structures using solid/normal walls.
+
 ## M5 — Creation and full-featured ZZT tooling
 
 Goal: support the creation features that make ZZT “full ZZT,” not only runtime
