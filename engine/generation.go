@@ -795,6 +795,28 @@ func expandRLE(line string) string {
 	return line
 }
 
+func abs(x int) int {
+	if x < 0 {
+		return -x
+	}
+	return x
+}
+
+func parseLegendElemName(valStr string) string {
+	valStr = strings.TrimSpace(valStr)
+	if strings.HasPrefix(strings.ToLower(valStr), "element ") {
+		words := strings.Fields(valStr)
+		if len(words) >= 2 {
+			return words[0] + " " + words[1]
+		}
+	}
+	words := strings.Fields(valStr)
+	if len(words) > 0 {
+		return words[0]
+	}
+	return ""
+}
+
 func preprocessZWDGrid(zwdText string) string {
 	lines := strings.Split(zwdText, "\n")
 
@@ -807,7 +829,19 @@ func preprocessZWDGrid(zwdText string) string {
 	var originalStartX, originalStartY int
 	hasOriginalStart := false
 
-	for _, line := range lines {
+	legendMap := make(map[byte]string)
+	type zwdStatSpec struct {
+		lineIdx int
+		startX  int
+		startY  int
+		elem    string
+		rest    string
+	}
+	var statSpecs []zwdStatSpec
+
+	statRe := regexp.MustCompile(`(?i)^(\s*stat\s+at\s+)([0-9]+)\s*,\s*([0-9]+)(\s+element\s+)(\S+)(.*)`)
+
+	for idx, line := range lines {
 		trimmed := strings.TrimSpace(line)
 		// Check for Player legend
 		if strings.Contains(trimmed, "=") && (strings.Contains(trimmed, "Player") || strings.Contains(trimmed, "element 1") || strings.Contains(trimmed, "element 01")) {
@@ -830,6 +864,19 @@ func preprocessZWDGrid(zwdText string) string {
 				}
 			}
 		}
+		if strings.Contains(trimmed, "=") {
+			parts := strings.SplitN(trimmed, "=", 2)
+			if len(parts) == 2 {
+				k := strings.TrimSpace(parts[0])
+				if len(k) == 1 {
+					ch := k[0]
+					elemName := parseLegendElemName(parts[1])
+					if elemName != "" {
+						legendMap[ch] = elemName
+					}
+				}
+			}
+		}
 		if m := startPlayerRe.FindStringSubmatch(trimmed); m != nil {
 			x, _ := strconv.Atoi(m[1])
 			y, _ := strconv.Atoi(m[2])
@@ -839,8 +886,20 @@ func preprocessZWDGrid(zwdText string) string {
 				hasOriginalStart = true
 			}
 		}
+		if m := statRe.FindStringSubmatch(line); m != nil {
+			x, _ := strconv.Atoi(m[2])
+			y, _ := strconv.Atoi(m[3])
+			statSpecs = append(statSpecs, zwdStatSpec{
+				lineIdx: idx,
+				startX:  x,
+				startY:  y,
+				elem:    m[5],
+				rest:    m[6],
+			})
+		}
 	}
 
+	modifiedLines := make(map[int]string)
 	inGrid := false
 	var out []string
 
@@ -853,7 +912,10 @@ func preprocessZWDGrid(zwdText string) string {
 	var firstRowIndent string
 	var hasFirstRowIndent bool
 
-	for _, line := range lines {
+	for lineIdx, line := range lines {
+		if modLine, ok := modifiedLines[lineIdx]; ok {
+			line = modLine
+		}
 		trimmed := strings.TrimSpace(line)
 		if hasPlayerLegend && startPlayerRe.MatchString(trimmed) {
 			continue
@@ -964,6 +1026,85 @@ func preprocessZWDGrid(zwdText string) string {
 						startPlayerLine := fmt.Sprintf("%sstart player at %d,%d", indent, startX, startY)
 						out = append(out[:gridIndex], append([]string{startPlayerLine}, out[gridIndex:]...)...)
 					}
+				}
+
+				// Aligned stats block
+				type coord struct {
+					r int // 0-indexed row
+					c int // 0-indexed col
+				}
+				gridElements := make(map[string][]coord)
+				for r, row := range gridRows {
+					for c := 0; c < len(row.content); c++ {
+						ch := row.content[c]
+						if elemName, ok := legendMap[ch]; ok {
+							key := strings.ToUpper(elemName)
+							gridElements[key] = append(gridElements[key], coord{r: r, c: c})
+						}
+					}
+				}
+				claimed := make(map[coord]bool)
+
+				for _, spec := range statSpecs {
+					key := strings.ToUpper(spec.elem)
+					coords := gridElements[key]
+
+					var bestCoord *coord
+					bestDist := 999999
+
+					for _, co := range coords {
+						if claimed[co] {
+							continue
+						}
+						dist := abs(co.c+1-spec.startX) + abs(co.r+1-spec.startY)
+						if dist < bestDist {
+							bestDist = dist
+							bestCoord = &co
+						}
+					}
+
+					var alignedX, alignedY int
+					if bestCoord != nil {
+						alignedX = bestCoord.c + 1
+						alignedY = bestCoord.r + 1
+						claimed[*bestCoord] = true
+					} else {
+						var repChar byte
+						hasRep := false
+						for ch, name := range legendMap {
+							if strings.ToUpper(name) == key {
+								repChar = ch
+								hasRep = true
+								break
+							}
+						}
+						if hasRep {
+							alignedX = spec.startX
+							alignedY = spec.startY
+
+							pRow := alignedY - 1
+							pCol := alignedX - 1
+							if pRow >= 0 && pRow < 25 && pCol >= 0 && pCol < 60 {
+								rowBytes := []byte(gridRows[pRow].content)
+								rowBytes[pCol] = repChar
+								gridRows[pRow].content = string(rowBytes)
+								claimed[coord{r: pRow, c: pCol}] = true
+							}
+						} else {
+							alignedX = spec.startX
+							alignedY = spec.startY
+						}
+					}
+
+					indent := ""
+					for _, r := range lines[spec.lineIdx] {
+						if r == ' ' || r == '\t' {
+							indent += string(r)
+						} else {
+							break
+						}
+					}
+					modifiedLines[spec.lineIdx] = fmt.Sprintf("%sstat at %d,%d element %s%s", indent, alignedX, alignedY, spec.elem, spec.rest)
 				}
 
 				// Append the normalized rows to out using appropriate indentation
