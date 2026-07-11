@@ -529,3 +529,154 @@ end`
 		t.Fatalf("expected compile success, got: %v", err)
 	}
 }
+
+func TestPreprocessorM124FailedCandidates(t *testing.T) {
+	init := NewEngine()
+	init.InitElementsGame()
+
+	// Candidate 1: The Title Screen from task-1143 (stat alignment mismatch)
+	c1 := `board "Title Screen"
+  start player at 30,23
+  max-shots 255
+  dark false
+  reenter false
+  time-limit 0
+  exits north none south none west none east none
+
+  grid
+  |123456789012345678901234567890123456789012345678901234567890|
+  |wwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwww|
+  |w..........................................................w|
+  |w..bbbb...bb....bb..bb..bbbb.bbbb.bb..bb.bbb...bb..bb...bb..w|
+  |w..bb.bb..bb....bb.bb...bb...bb.b.bb..bb.bb.b..bb..bb...bb..w|
+  |w..bbbb...bbbbb.bbbb....bbb..bbbb.bbbbbb.bbb...bbbbbb...bb..w|
+  |w..bb.bb..bb.bb.bb.bb...bb...bb.b.bb..bb.bb.b..bb..bb.......w|
+  |w..bbbb...bb.bb.bb..bb..bbbb.bb.b.bb..bb.bbb...bb..bb...bb..w|
+  |w..........................................................w|
+  |w..........gggg....bb....bbbb...bbbb...bbbb.................w|
+  |w..........gg......bb....bb....bb.....bb..bb................w|
+  |w..........ggg.....bbbbb.bbb...bb.....bb..bb................w|
+  |w..........gg......bb.bb.bb....bb.....bb..bb................w|
+  |w..........gggg....bb.bb.bbbb...bbbb...bbbb.................w|
+  |w..........................................................w|
+  |w....................ffff+++ffff...........................w|
+  |w....................f........f............................w|
+  |w....................f...oo...f............................w|
+  |w....................f...oo...f............................w|
+  |w..................~~ffffffffff~~...........................w|
+  |w................~~~~~~~~~~~~~~~~~~~~........................w|
+  |w..................~~~~~~~~~~~~~~~~..........................w|
+  |w..........................................................w|
+  |w.............................s.............................w|
+  |w.............................@.............................w|
+  |wwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwww|
+  |123456789012345678901234567890123456789012345678901234567890|
+  end
+
+  legend
+    w = Normal color 0x6E
+    . = Empty color 0x0F
+    b = Text-Yellow color 0x20
+    g = Text-Yellow color 0x20
+    f = Solid color 0x0E
+    + = Door color 0x4E
+    o = Fake color 0x6F
+    ~ = Water color 0x1F
+    s = Object color 0x0F
+    @ = Player color 0x1F under Empty color 0x00
+  end
+
+  stats
+    stat at 30,23 element Object cycle 3 p1 cp437:0x02 step idle under Empty color 0x00
+    oop
+    @sign
+    #end
+    :touch
+    #play tcefg
+    "Welcome to THE BAKERY GATE!"
+    "A key lies lost in the fountain..."
+    "Push toward the town below to begin."
+    #end
+    end
+  end
+end`
+
+	preprocessed1 := preprocessZWDGrid(c1)
+	world1 := "zwd 1\nworld \"CHECK\"\n" + preprocessed1
+	_, err := CompileZWDWorld(world1)
+	if err != nil {
+		t.Fatalf("expected Candidate 1 to compile successfully, got: %v\nPreprocessed source:\n%s", err, preprocessed1)
+	}
+
+	// Candidate 2: The Title Screen from task-1155 Attempt 2 (missing legend key for Object)
+	c2 := `board "Title Screen"
+  start player at 30,23
+  max-shots 255
+  dark false
+  reenter false
+  time-limit 0
+  exits north none south none west none east none
+
+  grid
+  |123456789012345678901234567890123456789012345678901234567890|
+  |bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb|
+  |b..........................................................b|
+  |b..........................................................b|
+  |b....ww...ww..ww..ww...ww..w..w....ww..w..w..ww..w..w..w....b|
+  |b....w....w.w.w.w.w.w..w....ww.w....w.w.w..w.w....w.w..w....b|
+  |b....ww...ww..ww..ww...w....w.ww....ww..ww.w.ww...ww..w.....b|
+  |b....w....w.w.w.w.w.w..w....w..w....w.w.w..w.w....w.w.......b|
+  |b....ww...w.w.w.w.w.w...ww..w..w....ww..w..w..ww..w..w..w...b|
+  |b..........................................................b|
+  |b........========================================..........b|
+  |b........=oooooooooooooooooooooooooooooooooooooo=..........b|
+  |b........=o..............................o.....o=..........b|
+  |b........=o..cc..cc..cc.....cc..cc..cc...o.....o=..........b|
+  |b........=o..............................o.....o=..........b|
+  |b........=oooooooooooooooooooooooooooooooo+oooooo=..........b|
+  |b........========================================..........b|
+  |b..........................................................b|
+  |b..........................................................b|
+  |b..........................................................b|
+  |b..........................................................b|
+  |b..........................................................b|
+  |b..........................................................b|
+  |b.............................@............................b|
+  |b..........................................................b|
+  |bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb|
+  |123456789012345678901234567890123456789012345678901234567890|
+  end
+
+  legend
+    b = Normal color 0x6E
+    . = Empty color 0x00
+    w = Text-Yellow color 0x20
+    o = Fake color 0x6E
+    = = Solid color 0x6C
+    c = Fake color 0x0E
+    + = Door color 0x4E
+    @ = Player color 0x1F under Empty color 0x00
+  end
+
+  stats
+    stat at 30,11 element Object cycle 3 p1 cp437:0x02 step idle under Fake color 0x6E
+    oop
+    @baker
+    #end
+    :touch
+    #play tcefgec
+    "Welcome, hungry traveler!"
+    "The bakery is locked... the key sank in the fountain."
+    "Find it, and warm bread awaits."
+    #end
+    end
+  end
+end`
+
+	preprocessed2 := preprocessZWDGrid(c2)
+	world2 := "zwd 1\nworld \"CHECK\"\n" + preprocessed2
+	_, err = CompileZWDWorld(world2)
+	if err != nil {
+		t.Fatalf("expected Candidate 2 to compile successfully, got: %v\nPreprocessed source:\n%s", err, preprocessed2)
+	}
+}
