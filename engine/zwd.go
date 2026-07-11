@@ -766,6 +766,27 @@ func compileZWDBoard(e *Engine, boardID int16, src zwdBoard, boardIDs map[string
 		e.Board.Stats[e.Board.StatCount] = stat
 	}
 
+	// Verify that every stat-backed tile placed in the grid has a corresponding stat entry.
+	statCoords := make(map[uint32]bool, len(src.stats)+1)
+	// Player stat is at index 0
+	statCoords[uint32(src.startX)<<16|uint32(src.startY)] = true
+	for _, srcStat := range src.stats {
+		statCoords[uint32(srcStat.x)<<16|uint32(srcStat.y)] = true
+	}
+
+	for y, row := range src.grid {
+		for x := 0; x < BOARD_WIDTH; x++ {
+			ch := row.text[x]
+			entry := src.legend[ch]
+			if elementNeedsStat(entry.element) {
+				coord := uint32(x+1)<<16 | uint32(y+1)
+				if !statCoords[coord] {
+					return zerr(row.line, x+1, fmt.Sprintf("grid contains stat-backed element %s but no matching stat is defined at (%d, %d)", ElementDefs[entry.element].Name, x+1, y+1))
+				}
+			}
+		}
+	}
+
 	if size := estimateZWDSerializedBoardSize(e); size > len(e.IoTmpBuf) {
 		return zerr(src.line, 1, fmt.Sprintf("serialized board is about %d bytes; maximum is 20000", size))
 	}
@@ -775,6 +796,17 @@ func compileZWDBoard(e *Engine, boardID int16, src zwdBoard, boardIDs map[string
 	}
 	return nil
 }
+
+func elementNeedsStat(el byte) bool {
+	switch el {
+	case E_PLAYER, E_OBJECT, E_SCROLL, E_PASSAGE, E_TRANSPORTER, E_PUSHER, E_BOMB, E_BLINK_WALL, E_DUPLICATOR,
+		E_BEAR, E_RUFFIAN, E_SPINNING_GUN, E_LION, E_TIGER, E_SLIME, E_SHARK, E_CENTIPEDE_HEAD, E_CENTIPEDE_SEGMENT,
+		E_BULLET, E_STAR:
+		return true
+	}
+	return false
+}
+
 
 func estimateZWDSerializedBoardSize(e *Engine) int {
 	size := SizeOfBoardName + SizeOfBoardInfo + 2
