@@ -231,7 +231,7 @@ workarounds that do not apply to stateless read-only objects. Leave it out.
 
 Title screens are the player's first impression. A scrambled or misspelled title banner ruins immersion. When drawing large text titles:
 
-1. **Verify Spelling Letter-by-Letter**: You must double-check that every block letter in your grid matches the exact spelling of the game's title. Map each letter key to its monospaced 3x5 font template from `ZWD.md` (e.g., using `D`, `Y`, `I`, `N`, `G` templates for "DYING").
+1. **Spell the Planned Game Name**: You must draw the actual name of the game itself (specified in your plan's `WorldName`) as the main title banner on the title screen. Do not use generic placeholder words. Double-check the spelling letter-by-letter, mapping each letter key to its monospaced 3x5 font template from `ZWD.md` (e.g., if the planned name is "DYING STAR", lay out the templates for 'D', 'Y', 'I', 'N', 'G', 'S', 'T', 'A', 'R' exactly).
 2. **Monospace Centering Math**:
    * Each 3x5 block letter is 3 columns wide, with 1 column of padding between letters.
    * A word of $N$ letters is exactly $W = 4N - 1$ columns wide.
