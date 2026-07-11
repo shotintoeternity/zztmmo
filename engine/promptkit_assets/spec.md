@@ -113,6 +113,8 @@ as "no exit" for board edges.
 Each board has one `grid` block. It is exactly 25 rows, and each row is exactly
 60 legend characters after parsing escapes.
 
+Every single character cell in the grid (including literal spaces `" "` if they are present) **must** have an explicit matching entry in the `legend` section. Unmapped characters will fail compilation. To avoid easy-to-miss alignment errors, it is highly recommended to use `.` for Empty tiles and **never use literal spaces `" "` in grid rows** unless they are explicitly mapped in the legend (e.g. `  = Empty color 0x00`).
+
 ```zwd
 grid
 ############################################################
