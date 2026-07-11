@@ -1150,4 +1150,13 @@ tests; this task adds none. `go vet ./...` clean.
 * **Successful World Generation (`BAKERY`)**: The full generation loop completed successfully, outputting `BAKERY.ZZT`, `BAKERY.zwd`, and sidecars. The recompiled world boots and runs cleanly on `zzt-server` without panics, and is playable in the browser client at `:8080`.
 * **OOP Block Indentation Stripping**: Discovered a parser bug where leading indentation spaces in `oop` code blocks inside `.zwd` files were preserved during compilation. In ZZT-OOP, lines with leading spaces are treated as plain message text rather than commands (e.g. `@name` or `#end`). Consequently, indented object code blocks was displayed as scroll windows filled with the raw source code text when touched. Modified `zwdParser.parseOOP` to detect the indentation level of the `oop` keyword and strip it from subsequent lines in the block.
 
+## M12.4b (2026-07-10) — ZZT-OOP generation bugs: quoted text and Passage/Object confusion
+
+* **Quoted dialogue in OOP**: Claude wrapped all NPC dialogue lines in double quotes inside `oop ... end` blocks (e.g. `"Hello traveler."`). In ZZT-OOP, lines beginning with `"` display that literal `"` character on screen as the opening of a text window line. Plain lines (no quotes) are the correct format for in-world dialogue text. Fixed BAKERY.zwd by stripping all quotes from OOP blocks (Python script), updated ZWD.md with an explicit rule and example distinguishing quoted vs. unquoted lines.
+* **Passage vs. Object confusion**: Claude generated stats using `element Object` with passage-style glyphs (`cp437:0xF0`) to represent interactive doorways, but without any OOP code or using the `Passage` element, causing dead/unresponsive tiles. Root cause: Claude conflates the visual appearance of a tile (CP437 glyph) with its behavioral element. Added a dedicated **"Passage vs. Object: Critical Distinction"** section to `ZWD.md` and `engine/promptkit_assets/spec.md` with a comparison table and four explicit rules.
+* **Monospace grid alignment**: Added a note to `STYLE.md` reminding Claude that ZWD grids are tiled monospace — every character is one fixed-size cell. Block letter art must be planned mathematically: letter widths, spacing, and vertical proportions must be aligned precisely without skewing.
+
+
+
+
 

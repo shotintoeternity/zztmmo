@@ -244,6 +244,25 @@ Parameter aliases should follow the names on `ElementDefs`: `Param1Name`,
 raw `p1`, `p2`, and `p3` bytes, but it should warn when a named alias is used on
 the wrong element.
 
+## Passage vs. Object: Critical Distinction
+
+**Passages** and **Objects** look visually similar (both can display any CP437 glyph) but are fundamentally different and must NEVER be confused:
+
+| Feature | `Passage` | `Object` |
+|---|---|---|
+| Purpose | Teleports player to another board | Scripted interactive element |
+| Required ZWD field | `p3 board "NAME"` | `oop ... end` block |
+| Behavior when touched | Player is instantly teleported | Object's `:touch` handler fires |
+| Has ZZT-OOP code? | **Never** | **Always** (at minimum `@name\r#end\r:touch`) |
+| Legend element | `Passage color 0xNN to "BOARD"` | `Object color 0xNN` |
+
+**Rules:**
+1. Use `element Passage` **only** when the stat teleports the player to a named board. It **must** have `p3 board "BOARD NAME"`, and **must not** have an `oop` block.
+2. Use `element Object` for everything else: signs, NPCs, interactive props, doors controlled by flags, vendors, etc. It **must** have an `oop` block with a name and at least a `:touch` label.
+3. **Do not use Object with a passage glyph (`cp437:0xF0`)** to simulate a passage — this creates a dead, unresponsive tile since the engine's passage teleport logic only fires for the `Passage` element, not `Object`.
+4. Each board exit to a neighboring board **must** use `exits north/south/east/west "BOARD NAME"` in the board header, **not** a passage element on the board edge.
+
+
 ## Limits
 
 | Limit | Value | Reason |
@@ -437,6 +456,37 @@ board "Vault"
   end
 end
 ```
+
+## ZZT-OOP Language Syntax Guidelines
+
+When writing code inside `oop ... end` blocks for ZZT objects or scrolls, you must follow the strict rules of ZZT-OOP:
+
+1. **No Quotes for Dialogue/Text**: Dialogue or flavor text lines must **NEVER** be wrapped in double quotes. Write them as plain raw text. Wrapping them in quotes causes the literal quote characters to be rendered on screen.
+   * *Incorrect*: `"Welcome to my shop!"`
+   * *Correct*: `Welcome to my shop!`
+2. **Left-Align All Code (No Indentation)**: Inside the ZWD `oop ... end` block, all ZZT-OOP lines (commands, text, labels, etc.) must start at column 1 (left-aligned with no leading spaces). Any leading space on a line causes the engine to treat the entire line as literal text rather than a command or label.
+   * *Incorrect*:
+     ```
+         oop
+         @baker
+         #end
+         :touch
+         "Hello"
+         end
+     ```
+   * *Correct*:
+     ```
+         oop
+     @baker
+     #end
+     :touch
+     Hello
+     end
+     ```
+3. **Labels**: Define a message handler label using a colon prefix (e.g. `:touch`, `:bench`). Label names are case-insensitive.
+4. **Commands**: Prefix commands with `#` (e.g. `#play`, `#give`, `#take`, `#end`, `#endgame`, `#lock`, `#unlock`, `#zap`).
+5. **Initial Halt**: If an object defines a `:touch` label or other label, place `#end` on the line immediately after the name to prevent the object from executing the label's code automatically when the board loads.
+6. **Movement**: Use `/` (force move) or `?` (try move) followed by direction (`n`, `s`, `w`, `e`).
 
 ## Compiler Expectations
 
