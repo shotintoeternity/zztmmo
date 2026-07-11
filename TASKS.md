@@ -1281,6 +1281,22 @@ enables; each is feasible precisely because of a property we already built):**
   `touch_race_test.go` or rewrite its header to describe what it actually verifies
   (an unlocked object runs `:touch` and emits a scroll on the tick after `OopSend`).
 
+* [ ] **[BUG] World flags do not propagate across boards in the multiplayer `RoomManager`.**
+  `World.Info.Flags` is a value array (`[MAX_FLAG]string`, `gamevars.go:107`) embedded
+  in `TWorld`, and `RoomManager.ensureRoom` gives each board its own engine via
+  `engine.World = rm.world` (`room_manager.go`), which **copies** the flag array per
+  room. Setting a flag with `#set` on one board's engine therefore never reaches
+  another board's engine (nor back to `rm.world`). Any ZZT world that sets a flag on
+  one board and checks it on another — the backbone of ZZT progression/quest logic —
+  silently breaks: the `#if flag` check on the destination board always sees the flag
+  unset. Reproduced by the `OBSERV.ZZT` demo: `#set haslens` in "The Cellar" is
+  invisible to the telescope's `#if haslens` on "Observatory Tower", so the win can
+  never fire in multiplayer. Vanilla single-engine ZZT is unaffected (one shared
+  world). Fix: hoist world-level flag state (and audit other `World.Info` fields that
+  are true world state vs. per-board) out of the per-room `Engine` into `RoomManager`,
+  or sync flags across rooms on every `#set`/`#clear` and board transition. Add a
+  regression test: set a flag in room A, assert room B observes it.
+
 * [ ] **Passages must link to a matching-color passage on the destination board.**
   ZZT's passage teleport logic deposits the player at the first passage on the
   destination board whose color byte matches the source passage's color. If no
