@@ -189,9 +189,15 @@ player's path.
 
 Gameplay should be simple but expressive: conserve ammo, spend keys carefully,
 solve readable puzzles, talk to strange objects, trigger machines, dodge
-enemies, uncover secrets, and learn the local rules of the world. ZZT-OOP
-objects should feel like tiny actors: guards, terminals, priests, vending
-machines, doors, elevators, bosses, ghosts, or weird machines with personality.
+enemies, uncover secrets, and learn the local rules of the world. Avoid using
+generic prefab enemies (such as Tigers, Lions, Centipedes, Ruffians, or Bears) —
+they feel generic and noisy. It is much better to build custom enemies, hazards,
+and blockers using interactive Objects (`E_OBJECT`) running custom ZZT-OOP
+scripts. These custom objects can speak, flash, drop custom loot, make distinct
+sound effects, and act like tiny actors with personality: guards, terminals,
+priests, vending machines, doors, elevators, bosses, ghosts, or weird machines.
+Make sure these custom objects are placed prominently where the player can
+easily reach, touch, and interact with them.
 
 The best ZZT games feel handmade, readable, dangerous, funny, and a little
 haunted. They do not try to escape ZZT's limits. They turn those limits into
