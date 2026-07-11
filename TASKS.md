@@ -1275,7 +1275,7 @@ enables; each is feasible precisely because of a property we already built):**
   `CompileZWD` (or the `M12.4` validation step) that warns when a passage's
   destination board has no matching-color passage.
 
-* [ ] **Robust engine rendering/touching & compiler enforcement for orphan stats.**
+* [x] **Robust engine rendering/touching & compiler enforcement for orphan stats.**
   When an `E_OBJECT` tile is placed in the board grid but not listed in the
   `stats` section of the ZWD, it compiles successfully but lacks a stat. Drawing
   or touching this orphan object tile triggers `index out of range [-1]` panic in
@@ -1291,5 +1291,6 @@ enables; each is feasible precisely because of a property we already built):**
      which requires a stat (e.g., `E_OBJECT`, `E_SCROLL`, `E_PASSAGE`) has a corresponding
      stat defined at its coordinates in the board's `stats` section. Fail compilation
      with a descriptive error if any orphan stat-backed tiles are found.
+
 
 
