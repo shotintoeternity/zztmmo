@@ -226,3 +226,17 @@ Hello traveler. The dungeon is to the north.
 Using `#lock`/`#unlock` on every object is cargo-cult style inherited from
 workarounds that do not apply to stateless read-only objects. Leave it out.
 
+
+## 9. Title Screen Layout & Typography Rules
+
+Title screens are the player's first impression. A scrambled or misspelled title banner ruins immersion. When drawing large text titles:
+
+1. **Verify Spelling Letter-by-Letter**: You must double-check that every block letter in your grid matches the exact spelling of the game's title. Map each letter key to its monospaced 3x5 font template from `ZWD.md` (e.g., using `D`, `Y`, `I`, `N`, `G` templates for "DYING").
+2. **Monospace Centering Math**:
+   * Each 3x5 block letter is 3 columns wide, with 1 column of padding between letters.
+   * A word of $N$ letters is exactly $W = 4N - 1$ columns wide.
+   * To center the word on the 60-column ZZT screen, your starting column index must be exactly $(60 - W) / 2$.
+   * *Example*: `DYING` (5 letters) is $4(5) - 1 = 19$ columns wide. Center it by starting at column $(60 - 19) / 2 = 20$.
+3. **Atmospheric Contrast**: Frame your title banner with themed ascii drawings (e.g. stars, machinery, mountains) but keep the title text clear and easy to read using `Text-<Color>` elements.
+
+
