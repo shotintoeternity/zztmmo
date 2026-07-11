@@ -1,6 +1,7 @@
 zwd 1
 world "BAKERY"
 
+
 board "Title Screen"
   max-shots 0
   dark false
@@ -63,7 +64,7 @@ board "Title Screen"
     #end
     end
 
-    stat at 33,22 element Object cycle 2 p1 cp437:0x9B step idle under Empty color 0x00
+    stat at 56,12 element Object cycle 2 p1 cp437:0x9B step idle under Empty color 0x00
     oop
     @crumb
     #end
@@ -73,7 +74,7 @@ board "Title Screen"
     #end
     end
 
-    stat at 33,22 element Object cycle 2 p1 cp437:0x9B step idle under Empty color 0x00
+    stat at 56,11 element Object cycle 2 p1 cp437:0x9B step idle under Empty color 0x00
     oop
     @crumb2
     #end
@@ -84,6 +85,7 @@ board "Title Screen"
     end
   end
 end
+
 
 board "Town Plaza"
   max-shots 10
@@ -165,6 +167,7 @@ board "Town Plaza"
   end
 end
 
+
 board "Fountain Square"
   max-shots 255
   dark false
@@ -240,6 +243,7 @@ board "Fountain Square"
   end
 end
 
+
 board "Bench Corner"
   max-shots 255
   dark false
@@ -307,7 +311,7 @@ board "Bench Corner"
     #end
     end
 
-    stat at 40,16 element Object cycle 3 p1 cp437:0x02 step idle under Fake color 0x60
+    stat at 33,16 element Object cycle 3 p1 cp437:0x02 step idle under Fake color 0x60
     oop
     @lad
     #end
@@ -323,7 +327,7 @@ board "Bench Corner"
     #end
     end
 
-    stat at 40,16 element Object cycle 3 p1 cp437:0x02 step idle under Empty color 0x0E
+    stat at 44,12 element Object cycle 3 p1 cp437:0x02 step idle under Empty color 0x0E
     oop
     @loafer
     #end
@@ -334,7 +338,7 @@ board "Bench Corner"
     #end
     end
 
-    stat at 40,16 element Object cycle 3 p1 cp437:0x01 step idle under Empty color 0x0E
+    stat at 15,12 element Object cycle 3 p1 cp437:0x01 step idle under Empty color 0x0E
     oop
     @gossip
     #end
@@ -345,7 +349,7 @@ board "Bench Corner"
     #end
     end
 
-    stat at 40,16 element Object cycle 3 p1 cp437:0x02 step idle under Empty color 0x0E
+    stat at 14,10 element Object cycle 3 p1 cp437:0x02 step idle under Empty color 0x0E
     oop
     @dozer
     #end
@@ -356,6 +360,7 @@ board "Bench Corner"
     end
   end
 end
+
 
 board "Noticeboard Nook"
   max-shots 10
@@ -408,7 +413,7 @@ board "Noticeboard Nook"
 
   stats
     stat at 60,4 element Passage cycle 0 p3 board "Town Plaza" under Empty color 0x00
-    stat at 60,4 element Passage cycle 0 p3 board "Town Plaza" under Empty color 0x00
+    stat at 60,3 element Passage cycle 0 p3 board "Town Plaza" under Empty color 0x00
 
     stat at 19,15 element Object cycle 3 p1 cp437:0x13 step idle under Fake color 0x60
     oop
@@ -424,7 +429,7 @@ board "Noticeboard Nook"
     #end
     end
 
-    stat at 19,15 element Object cycle 3 p1 cp437:0x13 step idle under Fake color 0x60
+    stat at 26,12 element Object cycle 3 p1 cp437:0x13 step idle under Fake color 0x60
     oop
     @townlaw
     #end
@@ -438,7 +443,7 @@ board "Noticeboard Nook"
     #end
     end
 
-    stat at 19,15 element Object cycle 3 p1 cp437:0x02 step idle under Empty color 0x0F
+    stat at 5,15 element Object cycle 3 p1 cp437:0x02 step idle under Empty color 0x0F
     oop
     @gossip
     #end
@@ -451,7 +456,7 @@ board "Noticeboard Nook"
     #end
     end
 
-    stat at 19,15 element Object cycle 3 p1 cp437:0x9D step idle under Empty color 0x0F
+    stat at 27,7 element Object cycle 3 p1 cp437:0x9D step idle under Empty color 0x0F
     oop
     @map
     #end
@@ -464,7 +469,7 @@ board "Noticeboard Nook"
     #end
     end
 
-    stat at 19,15 element Object cycle 3 p1 cp437:0x9D step idle under Empty color 0x0F
+    stat at 5,8 element Object cycle 3 p1 cp437:0x9D step idle under Empty color 0x0F
     oop
     @founders
     #end
@@ -477,7 +482,7 @@ board "Noticeboard Nook"
     #end
     end
 
-    stat at 19,15 element Object cycle 3 p1 cp437:0x02 step idle under Empty color 0x0F
+    stat at 44,7 element Object cycle 3 p1 cp437:0x02 step idle under Empty color 0x0F
     oop
     @rumor
     #end
@@ -491,6 +496,7 @@ board "Noticeboard Nook"
     end
   end
 end
+
 
 board "Inside the Bakery"
   max-shots 0
@@ -555,7 +561,7 @@ board "Inside the Bakery"
     "The ovens are warm and the bread is rising."
     #end
     end
-    stat at 43,16 element Object cycle 3 p1 cp437:0x0F under Fake color 0x60
+    stat at 35,16 element Object cycle 3 p1 cp437:0x0F under Fake color 0x60
     oop
     @sign
     #end
@@ -563,7 +569,7 @@ board "Inside the Bakery"
     "The register. Coins for warm rolls."
     #end
     end
-    stat at 43,16 element Object cycle 3 p1 cp437:0x07 under Fake color 0x60
+    stat at 47,9 element Object cycle 3 p1 cp437:0x07 under Fake color 0x60
     oop
     @grandloaf
     #end
@@ -576,7 +582,7 @@ board "Inside the Bakery"
     #endgame
     #end
     end
-    stat at 43,16 element Object cycle 0 p1 cp437:0xF0 under Fake color 0x08
+    stat at 27,16 element Object cycle 0 p1 cp437:0xF0 under Fake color 0x08
     oop
     @b1
     #end
@@ -584,7 +590,7 @@ board "Inside the Bakery"
     "A tray of fresh croissants."
     #end
     end
-    stat at 43,16 element Object cycle 0 p1 cp437:0xF0 under Fake color 0x08
+    stat at 27,9 element Object cycle 0 p1 cp437:0xF0 under Fake color 0x08
     oop
     @b2
     #end
@@ -592,7 +598,7 @@ board "Inside the Bakery"
     "Sourdough boules, still steaming."
     #end
     end
-    stat at 43,16 element Object cycle 0 p1 cp437:0xF0 under Fake color 0x08
+    stat at 19,16 element Object cycle 0 p1 cp437:0xF0 under Fake color 0x08
     oop
     @b3
     #end
@@ -600,7 +606,7 @@ board "Inside the Bakery"
     "Cinnamon buns dusted with sugar."
     #end
     end
-    stat at 43,16 element Object cycle 0 p1 cp437:0xF0 under Fake color 0x08
+    stat at 11,16 element Object cycle 0 p1 cp437:0xF0 under Fake color 0x08
     oop
     @b4
     #end
@@ -608,7 +614,7 @@ board "Inside the Bakery"
     "Rye rolls in neat rows."
     #end
     end
-    stat at 43,16 element Object cycle 0 p1 cp437:0xF0 under Fake color 0x08
+    stat at 7,9 element Object cycle 0 p1 cp437:0xF0 under Fake color 0x08
     oop
     @b5
     #end
