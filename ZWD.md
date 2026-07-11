@@ -488,6 +488,44 @@ When writing code inside `oop ... end` blocks for ZZT objects or scrolls, you mu
 5. **Initial Halt**: If an object defines a `:touch` label or other label, place `#end` on the line immediately after the name to prevent the object from executing the label's code automatically when the board loads.
 6. **Movement**: Use `/` (force move) or `?` (try move) followed by direction (`n`, `s`, `w`, `e`).
 
+## Element Reachability and Accessibility
+
+When placing elements on a board's grid, you must ensure that all interactive objects and items are physically accessible to the player:
+
+1. **Adjacent Accessibility**: Any tile that the player needs to touch, talk to, or collect (such as an `Object`, `Scroll`, `Passage`, or items like a `Key`, `Gem`, or `Ammo`) must be placed adjacent to a walkable tile (e.g., `Empty`, `Fake` wall, or `Forest`).
+2. **Impassable Barriers**: You must **never** place interactive objects or items inside solid structures (like `Solid` walls or `Normal` walls) or completely surround them with impassable terrain (like `Water`, unless a `Transporter` or bridge is provided). The player cannot walk on or touch these tiles, making the game unplayable.
+3. **Stat-to-Tile Mapping**: Every `Object`, `Scroll`, and `Passage` tile placed in the grid **must** have a corresponding entry in the board's `stats` block at the exact same coordinate. Placing stat-backed tiles in the grid without stats causes the game engine to crash.
+
+## Monospace 3x5 Block Letter Reference Font
+
+If you are drawing large title banners or text signage on a board, you must lay them out mathematically in the grid using the following 3x5 font templates. 
+* Every letter is 3 characters wide and 5 lines tall. 
+* Separate adjacent block letters with exactly one empty tile column (`.`).
+* All keys representing these letters in the grid **must** map to `Text-<Color>` elements in the legend (e.g. `Text-Yellow`), **never** to solid/normal walls or objects, to avoid legend mapping collisions.
+
+```
+A:     B:     C:     D:     E:     F:     G:     H:     I:     J:
+AAA    BB.    CCC    BB.    EEE    EEE    CCC    H.H    III    .JJ
+A.A    B.B    C..    B.B    E..    E..    C..    H.H    .I.    ..J
+AAA    BB.    C..    B.B    EEE    EEE    C.G    HHH    .I.    ..J
+A.A    B.B    C..    B.B    E..    E..    C.C    H.H    .I.    J.J
+A.A    BB.    CCC    BB.    EEE    E..    CCC    H.H    III    .JJ
+
+K:     L:     M:     N:     O:     P:     Q:     R:     S:     T:
+K.K    L..    M.M    N.N    OOO    PP.    QQQ    RR.    SSS    TTT
+K.K    L..    MMM    NNN    O.O    P.P    Q.Q    R.R    S..    .T.
+KK.    L..    M.M    N.N    O.O    PP.    Q.Q    RR.    SSS    .T.
+K.K    L..    M.M    N.N    O.O    P..    Q.Q    R.R    ..S    .T.
+K.K    LLL    M.M    N.N    OOO    P..    QQQ.   R.R    SSS    .T.
+
+U:     V:     W:     X:     Y:     Z:     ':
+U.U    V.V    W.W    X.X    Y.Y    ZZZ    ...
+U.U    V.V    W.W    .X.    Y.Y    ..Z    .T.
+U.U    V.V    W.W    .X.    YYY    .Z.    ...
+U.U    V.V    W.W    .X.    ..Y    Z..    ...
+UUU    .V.    .W.    X.X    ..Y    ZZZ    ...
+```
+
 ## Compiler Expectations
 
 The compiler must:
@@ -516,3 +554,4 @@ The compiler must:
   and `worldWriteTo`.
 - Wiki of ZZT, "ZZT file format":
   `https://wiki.zzt.org/wiki/ZZT_file_format`.
+
