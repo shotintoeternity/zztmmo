@@ -345,6 +345,128 @@ func (s *EditorSession) SetStat(member *webSocketClient, edit EditorStatMessage)
 	return reply, err
 }
 
+// ProgramText returns an object/scroll's ZZT-OOP program as lines for the M5.4
+// browser code editor. Only text-backed elements (ParamTextName set) have one;
+// anything else returns an empty message, which the client ignores.
+func (s *EditorSession) ProgramText(member *webSocketClient, statId int16) (EditorProgramMessage, error) {
+	var reply EditorProgramMessage
+	err := s.Apply(member, func(e *Engine) {
+		if statId < 0 || statId > e.Board.StatCount {
+			return
+		}
+		stat := &e.Board.Stats[statId]
+		def := ElementDefs[e.Board.Tiles[stat.X][stat.Y].Element]
+		if def.ParamTextName == "" {
+			return
+		}
+		reply = EditorProgramMessage{
+			Type:   MessageTypeEditorProgramText,
+			StatID: statId,
+			Prompt: def.ParamTextName,
+			Lines:  editorProgramLines(e, statId),
+		}
+	})
+	return reply, err
+}
+
+// editorProgramLines is CopyStatDataToTextWindow: the stat's Data, up to DataLen
+// bytes, split on carriage returns. A trailing partial with no final CR is
+// dropped, exactly as the vanilla routine does. A negative DataLen means the
+// stat's program is shared with an earlier stat (BoardClose deduplicates
+// identical programs and rewrites DataLen in place); resolve it the way
+// BoardOpen does so shared objects still edit.
+func editorProgramLines(e *Engine, statId int16) []string {
+	stat := &e.Board.Stats[statId]
+	data := stat.Data
+	dataLen := int(stat.DataLen)
+	if stat.DataLen < 0 {
+		src := &e.Board.Stats[-stat.DataLen]
+		data = src.Data
+		dataLen = int(src.DataLen)
+	}
+	if dataLen > len(data) {
+		dataLen = len(data)
+	}
+	lines := []string{}
+	var buf []byte
+	for i := 0; i < dataLen; i++ {
+		if data[i] == KEY_ENTER {
+			lines = append(lines, string(buf))
+			buf = buf[:0]
+		} else {
+			buf = append(buf, data[i])
+		}
+	}
+	return lines
+}
+
+// SaveProgram writes an edited program back to a stat, mirroring the save half
+// of EditorEditStatText: Data becomes each line followed by a carriage return,
+// and DataLen is their total length. BoardClose serializes the board so the
+// text round-trips through the vanilla format, and re-shares identical programs.
+// Rebuilding Data fresh sidesteps the shared-data (negative DataLen) quirk: an
+// edited program is by definition no longer identical to the one it shared.
+func (s *EditorSession) SaveProgram(member *webSocketClient, statId int16, lines []string) (EditorStatSettingsMessage, error) {
+	var reply EditorStatSettingsMessage
+	err := s.Apply(member, func(e *Engine) {
+		if statId < 0 || statId > e.Board.StatCount {
+			return
+		}
+		stat := &e.Board.Stats[statId]
+		def := ElementDefs[e.Board.Tiles[stat.X][stat.Y].Element]
+		if def.ParamTextName != "" {
+			editorUnbindSharers(e, statId)
+			if len(lines) > MAX_TEXT_WINDOW_LINES {
+				lines = lines[:MAX_TEXT_WINDOW_LINES]
+			}
+			total := 0
+			for _, line := range lines {
+				total += len(line) + 1
+			}
+			// DataLen is an int16 in the vanilla stat record; refuse a program
+			// that cannot be represented rather than wrapping it.
+			if total <= 0x7FFF {
+				var buf []byte
+				for _, line := range lines {
+					buf = append(buf, line...)
+					buf = append(buf, KEY_ENTER)
+				}
+				stat.Data = string(buf)
+				stat.DataLen = int16(total)
+				e.BoardDrawTile(int16(stat.X), int16(stat.Y))
+				e.BoardClose()
+			}
+		}
+		reply = EditorStatSettingsMessage{
+			Type:    MessageTypeEditorStatSettings,
+			Inspect: editorTileInspect(e, int16(stat.X), int16(stat.Y)),
+			Cells:   e.DrainScreenDirty(),
+		}
+	})
+	return reply, err
+}
+
+// editorUnbindSharers gives every stat that shares statId's program (DataLen ==
+// -statId, the negative reference BoardClose writes in place after a prior edit)
+// its own copy of the current program, before statId's program is overwritten.
+// Vanilla never hits this because its editor closes the board only at save time;
+// the fork's per-edit BoardClose means a sibling can be left bound to the object
+// being edited, and editing it would otherwise silently rewrite that sibling.
+func editorUnbindSharers(e *Engine, statId int16) {
+	stat := &e.Board.Stats[statId]
+	data, dataLen := stat.Data, stat.DataLen
+	if dataLen < 0 {
+		src := &e.Board.Stats[-dataLen]
+		data, dataLen = src.Data, src.DataLen
+	}
+	for i := int16(0); i <= e.Board.StatCount; i++ {
+		if i != statId && e.Board.Stats[i].DataLen == -statId {
+			e.Board.Stats[i].Data = data
+			e.Board.Stats[i].DataLen = dataLen
+		}
+	}
+}
+
 func editorProperties(e *Engine) EditorProperties {
 	options := make([]EditorBoardOption, 0, e.World.BoardCount+1)
 	options = append(options, EditorBoardOption{ID: 0, Name: "None"})

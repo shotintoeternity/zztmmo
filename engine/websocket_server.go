@@ -499,6 +499,24 @@ func (s *WebSocketServer) serveEditor(ctx context.Context, conn *websocket.Conn,
 			if err != nil || client.write(ctx, reply) != nil {
 				return
 			}
+		case MessageTypeEditorProgram:
+			var req EditorProgramRequestMessage
+			if json.Unmarshal(raw, &req) != nil {
+				continue
+			}
+			reply, err := session.ProgramText(client, req.StatID)
+			if err != nil || client.write(ctx, reply) != nil {
+				return
+			}
+		case MessageTypeEditorProgramSave:
+			var save EditorProgramSaveMessage
+			if json.Unmarshal(raw, &save) != nil {
+				continue
+			}
+			reply, err := session.SaveProgram(client, save.StatID, save.Lines)
+			if err != nil || client.write(ctx, reply) != nil {
+				return
+			}
 		}
 	}
 }

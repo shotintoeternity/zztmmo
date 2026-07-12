@@ -19,8 +19,11 @@ import {
   strSep,
   strText,
   strTop,
+  TEXT_WINDOW_HEIGHT,
   TEXT_WINDOW_PAGE,
   TEXT_WINDOW_WIDTH,
+  TEXT_WINDOW_X,
+  TEXT_WINDOW_Y,
   type TextWindowState,
 } from "./textwindow";
 
@@ -111,10 +114,35 @@ export type MultiLineEntryModal = {
   onSubmit: (text: string | null) => void;
 };
 
+/**
+ * ProgramEditorModal is the M5.4 object/scroll code editor: a faithful port of
+ * TextWindowEdit (engine/txtwind.go, from TXTWIND.PAS) on top of the M4.1 window
+ * layer. Lines render raw (withoutFormatting), a block cursor tracks charPos, and
+ * Escape saves — vanilla's EditorEditStatText always rebuilds Data on exit, so
+ * there is no cancel. onSubmit receives the final lines to send as a save.
+ */
+export type ProgramEditorModal = {
+  kind: "programEditor";
+  title: string;
+  lines: string[];
+  linePos: number; // 1-based, as in the Pascal
+  charPos: number; // 1-based
+  insertMode: boolean;
+  onSubmit: (lines: string[]) => void;
+};
+
+// TextWindowEdit's derived limits with TextWindowWidth == 50 (game.go's
+// TextWindowInit(5, 3, 50, 18)). A line may hold TextWindowWidth-8 characters;
+// the caret guard is charPos < TextWindowWidth-7.
+const PROGRAM_LINE_MAX = TEXT_WINDOW_WIDTH - 8;
+const PROGRAM_CHAR_MAX = TEXT_WINDOW_WIDTH - 7;
+const PROGRAM_PAGE = TEXT_WINDOW_HEIGHT - 4;
+const PROGRAM_MAX_LINES = 1024;
+
 /** POPUP_ROWS tall, centered in the 25-row screen. */
 export const POPUP_Y_CENTERED = Math.floor((25 - 6) / 2);
 
-export type Modal = TextModal | YesNoModal | EntryModal | PopupEntryModal | MultiLineEntryModal;
+export type Modal = TextModal | YesNoModal | EntryModal | PopupEntryModal | MultiLineEntryModal | ProgramEditorModal;
 
 /** What the caller should do after routing a key. */
 export type KeyResult = "close" | "redraw" | "ignore";
@@ -169,7 +197,21 @@ export function renderModal(write: WriteText, m: Modal) {
     case "multilineEntry":
       renderMultiLineEntry(write, m);
       return;
+    case "programEditor":
+      renderProgramEditor(write, m);
+      return;
   }
+}
+
+// renderProgramEditor is TextWindowEdit's screen: the raw lines, plus the block
+// caret ZZT paints at (charPos+X+3) on the center row in color 0x70.
+function renderProgramEditor(write: WriteText, m: ProgramEditorModal) {
+  renderTextWindow(write, { title: m.title, lines: m.lines, linePos: m.linePos, viewingFile: false }, true);
+  const line = m.lines[m.linePos - 1] ?? "";
+  const charPos = Math.min(Math.max(1, m.charPos), line.length + 1);
+  const cursorY = TEXT_WINDOW_Y + Math.floor(TEXT_WINDOW_HEIGHT / 2) + 1;
+  const glyph = charPos <= line.length ? line[charPos - 1] : " ";
+  write(charPos + TEXT_WINDOW_X + 3, cursorY, 0x70, glyph);
 }
 
 function renderMultiLineEntry(write: WriteText, m: MultiLineEntryModal) {
@@ -251,7 +293,138 @@ export function handleModalKey(m: Modal, event: KeyboardEvent): KeyResult {
       return entryKey(m, POPUP_FIELD_WIDTH, "any", event);
     case "multilineEntry":
       return multiLineEntryKey(m, event);
+    case "programEditor":
+      return programEditorKey(m, event);
   }
+}
+
+// Pascal Copy(s, index, count), 1-based and clamped, matching lib.go.
+function pascalCopy(s: string, index: number, count: number): string {
+  if (index < 1) {
+    index = 1;
+  }
+  if (count < 0 || count > s.length - index + 1) {
+    count = s.length - index + 1;
+  }
+  if (count <= 0) {
+    return "";
+  }
+  return s.slice(index - 1, index - 1 + count);
+}
+
+// programEditorKey is TextWindowEdit's key loop (txtwind.go:255), one keypress at
+// a time. charPos is clamped to the current line at entry, exactly as the Pascal
+// clamps it at the top of its loop before acting.
+function programEditorKey(m: ProgramEditorModal, event: KeyboardEvent): KeyResult {
+  if (m.lines.length === 0) {
+    m.lines.push("");
+  }
+  const line = () => m.lines[m.linePos - 1];
+  m.charPos = Math.min(Math.max(1, m.charPos), line().length + 1);
+  let newLinePos = m.linePos;
+
+  const deleteCurrLine = () => {
+    if (m.lines.length > 1) {
+      m.lines.splice(m.linePos - 1, 1);
+      if (m.linePos > m.lines.length) {
+        newLinePos = m.lines.length;
+      }
+    } else {
+      m.lines[0] = "";
+    }
+  };
+
+  switch (event.code) {
+    case "Escape":
+      m.onSubmit(m.lines);
+      return "close";
+    case "ArrowUp":
+      newLinePos = m.linePos - 1;
+      break;
+    case "ArrowDown":
+      newLinePos = m.linePos + 1;
+      break;
+    case "PageUp":
+      newLinePos = m.linePos - PROGRAM_PAGE;
+      break;
+    case "PageDown":
+      newLinePos = m.linePos + PROGRAM_PAGE;
+      break;
+    case "ArrowRight":
+      m.charPos += 1;
+      if (m.charPos > line().length + 1) {
+        m.charPos = 1;
+        newLinePos = m.linePos + 1;
+      }
+      break;
+    case "ArrowLeft":
+      m.charPos -= 1;
+      if (m.charPos < 1) {
+        m.charPos = TEXT_WINDOW_WIDTH;
+        newLinePos = m.linePos - 1;
+      }
+      break;
+    case "Enter":
+      if (m.lines.length < PROGRAM_MAX_LINES) {
+        const rest = pascalCopy(line(), m.charPos, line().length - m.charPos + 1);
+        m.lines[m.linePos - 1] = pascalCopy(line(), 1, m.charPos - 1);
+        m.lines.splice(m.linePos, 0, rest);
+        newLinePos = m.linePos + 1;
+        m.charPos = 1;
+      }
+      break;
+    case "Backspace":
+      if (m.charPos > 1) {
+        m.lines[m.linePos - 1] =
+          pascalCopy(line(), 1, m.charPos - 2) + pascalCopy(line(), m.charPos, line().length - m.charPos + 1);
+        m.charPos -= 1;
+      } else if (line().length === 0) {
+        deleteCurrLine();
+        newLinePos = m.linePos - 1;
+        m.charPos = TEXT_WINDOW_WIDTH;
+      }
+      break;
+    case "Insert":
+      m.insertMode = !m.insertMode;
+      break;
+    case "Delete":
+      m.lines[m.linePos - 1] =
+        pascalCopy(line(), 1, m.charPos - 1) + pascalCopy(line(), m.charPos + 1, line().length - m.charPos);
+      break;
+    default:
+      if (event.ctrlKey && (event.code === "KeyY" || event.key.toLowerCase() === "y")) {
+        deleteCurrLine();
+        break;
+      }
+      // Any other modifier chord (Ctrl+C, Cmd+R, …) is not text input.
+      if (event.ctrlKey || event.metaKey || event.altKey) {
+        return "ignore";
+      }
+      if (event.key.length !== 1 || event.key < " " || event.key.charCodeAt(0) >= 0x80) {
+        return "ignore";
+      }
+      if (m.charPos >= PROGRAM_CHAR_MAX) {
+        return "ignore";
+      }
+      if (!m.insertMode) {
+        m.lines[m.linePos - 1] =
+          pascalCopy(line(), 1, m.charPos - 1) + event.key + pascalCopy(line(), m.charPos + 1, line().length - m.charPos);
+        m.charPos += 1;
+      } else if (line().length < PROGRAM_LINE_MAX) {
+        m.lines[m.linePos - 1] =
+          pascalCopy(line(), 1, m.charPos - 1) + event.key + pascalCopy(line(), m.charPos, line().length - m.charPos + 1);
+        m.charPos += 1;
+      }
+      break;
+  }
+
+  if (newLinePos < 1) {
+    newLinePos = 1;
+  } else if (newLinePos > m.lines.length) {
+    newLinePos = m.lines.length;
+  }
+  m.linePos = newLinePos;
+  return "redraw";
 }
 
 function multiLineEntryKey(m: MultiLineEntryModal, event: KeyboardEvent): KeyResult {

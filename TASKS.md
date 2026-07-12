@@ -769,7 +769,7 @@ and running early. See NOTES.md.)
   DoD: set dark, a time limit, and an exit in the browser editor; save; play
   the world in a live room — all three take effect.
 
-- [ ] **M5.3 — Stat parameter editing.** `EditorEditStat` /
+- [x] **M5.3 — Stat parameter editing.** `EditorEditStat` /
   `EditorEditStatSettings` (`editor.go:315-417`, `EDITOR.PAS:396-527`):
   per-element parameter dialogs — P1/P2/P3 with their
   `ParamTextName`/`Param1Name`/`Param2Name`/`ParamDirName`/`ParamBoardName`
@@ -779,7 +779,7 @@ and running early. See NOTES.md.)
   DoD: edit a spinning gun's firing rate, a passage's destination board, and
   an object's cycle in the browser; each behaves accordingly in play.
 
-- [ ] **M5.4 — Object code editor.** `EditorEditStatText` /
+- [x] **M5.4 — Object code editor.** `EditorEditStatText` /
   `EditorOpenEditTextWindow` (`editor.go:289-314,819-835`,
   `EDITOR.PAS:352-395`): a CP437 multi-line text editor in the browser (build
   on the M4.1 window layer and the M6.1 input-capture mode) for object and

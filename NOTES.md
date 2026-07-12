@@ -1234,3 +1234,29 @@ raise the cap and fan out mutation diffs without changing world ownership or
 concurrency semantics. The browser now has a distinct editor sidebar based on
 `EditorDrawSidebar`, with a read-only coordinate/element/color/P1/P2/P3 panel;
 the play HUD is not reused.
+
+## 2026-07-11 — M5.4 object code editor
+
+The browser code editor is a faithful `TextWindowEdit` port on the M4.1 modal
+layer (a new `programEditor` modal in `modal.ts`): raw (unformatted) lines, a
+block caret tracking `charPos`, insert/overwrite, `Return`/`Ctrl-Y` line ops,
+and **Escape saves** — `EditorEditStatText` always rebuilds `Data` on exit, so
+there is no cancel. The server owns the bytes: `editorProgram{statId}` returns
+the program split on carriage returns (`CopyStatDataToTextWindow` semantics,
+negative `DataLen` resolved like `BoardOpen`); `editorProgramSave{statId,lines}`
+rebuilds `Data`/`DataLen` (a CR after every line) and `BoardClose`s so the text
+round-trips through the vanilla serializer. Per-line width is not truncated
+server-side — `TextWindowEdit` also leaves an over-long externally-authored line
+untouched; the browser enforces the 42-char cap only while typing.
+
+**Fork-specific fix (`editorUnbindSharers`):** `BoardClose` rewrites identical
+stats' `DataLen` to a negative shared reference *in place*. Vanilla never
+notices because its editor closes the board only at save; the fork's per-edit
+`BoardClose` (M5.1) can leave a sibling object bound to the one being edited, so
+overwriting that object's `Data` would silently rewrite the sibling on the next
+serialize. `SaveProgram` therefore un-binds every stat sharing the target's
+program (giving each its own copy of the current program) before writing the new
+one. Covered by `TestEditorSessionProgramTextEditRoundTrip`.
+
+Bookkeeping: M5.3's box was committed (9a199ea) but never checked; corrected in
+this commit.

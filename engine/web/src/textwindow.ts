@@ -83,8 +83,9 @@ function drawFrame(write: WriteText, title: string) {
   drawTitle(write, 0x1e, title);
 }
 
-// drawLine is TextWindowDrawLine with withoutFormatting = false.
-function drawLine(write: WriteText, state: TextWindowState, lpos: number) {
+// drawLine is TextWindowDrawLine. withoutFormatting draws the raw source (col
+// X+4, color 0x1e) instead of interpreting !/:/$ — the state TextWindowEdit uses.
+function drawLine(write: WriteText, state: TextWindowState, lpos: number, withoutFormatting = false) {
   const lineCount = state.lines.length;
   const lineY = TEXT_WINDOW_Y + lpos - state.linePos + Math.floor(TEXT_WINDOW_HEIGHT / 2) + 1;
 
@@ -92,6 +93,15 @@ function drawLine(write: WriteText, state: TextWindowState, lpos: number) {
     write(TEXT_WINDOW_X + 2, lineY, 0x1c, strInnerArrows);
   } else {
     write(TEXT_WINDOW_X + 2, lineY, 0x1e, innerEmpty);
+  }
+
+  if (withoutFormatting) {
+    if (lpos > 0 && lpos <= lineCount) {
+      write(TEXT_WINDOW_X + 4, lineY, 0x1e, state.lines[lpos - 1]);
+    } else if (lpos === 0 || lpos === lineCount + 1) {
+      write(TEXT_WINDOW_X + 2, lineY, 0x1e, strInnerSep);
+    }
+    return;
   }
 
   if (lpos > 0 && lpos <= lineCount) {
@@ -131,10 +141,10 @@ function drawLine(write: WriteText, state: TextWindowState, lpos: number) {
 
 // renderTextWindow paints frame + lines, i.e. TextWindowDrawOpen followed by
 // TextWindowDraw, which is what the player sees once a window has opened.
-export function renderTextWindow(write: WriteText, state: TextWindowState) {
+export function renderTextWindow(write: WriteText, state: TextWindowState, withoutFormatting = false) {
   drawFrame(write, state.title);
   for (let i = 0; i <= TEXT_WINDOW_HEIGHT - 4; i += 1) {
-    drawLine(write, state, state.linePos - Math.floor(TEXT_WINDOW_HEIGHT / 2) + i + 2);
+    drawLine(write, state, state.linePos - Math.floor(TEXT_WINDOW_HEIGHT / 2) + i + 2, withoutFormatting);
   }
   drawTitle(write, 0x1e, state.title);
 }

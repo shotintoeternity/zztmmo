@@ -44,6 +44,9 @@ const MessageTypeEditorProperty = "editorProperty";
 const MessageTypeEditorProperties = "editorProperties";
 const MessageTypeEditorStat = "editorStat";
 const MessageTypeEditorStatSettings = "editorStatSettings";
+const MessageTypeEditorProgram = "editorProgram";
+const MessageTypeEditorProgramText = "editorProgramText";
+const MessageTypeEditorProgramSave = "editorProgramSave";
 const MessageTypeChat = "chat";
 
 // GameDebugPrompt's PromptString(63, 5, 0x1E, 0x0F, 11, PROMPT_ANY, ...).
@@ -200,7 +203,14 @@ type EditorStatSettingsMessage = {
   cells: ScreenCell[];
 };
 
-type ServerMessage = SnapshotMessage | DiffMessage | EventMessage | BoardChangeMessage | ChatMessage | EditorSnapshotMessage | EditorInspectMessage | EditorDiffMessage | EditorPropertiesMessage | EditorStatSettingsMessage;
+type EditorProgramTextMessage = {
+  type: typeof MessageTypeEditorProgramText;
+  statId: number;
+  prompt: string;
+  lines: string[];
+};
+
+type ServerMessage = SnapshotMessage | DiffMessage | EventMessage | BoardChangeMessage | ChatMessage | EditorSnapshotMessage | EditorInspectMessage | EditorDiffMessage | EditorPropertiesMessage | EditorStatSettingsMessage | EditorProgramTextMessage;
 
 type InputMessage = {
   type: typeof MessageTypeInput;
@@ -855,6 +865,9 @@ function applyMessage(message: ServerMessage) {
 	case MessageTypeEditorStatSettings:
 	  applyEditorStatSettings(message);
 	  break;
+	case MessageTypeEditorProgramText:
+	  applyEditorProgramText(message);
+	  break;
   }
 }
 
@@ -901,6 +914,22 @@ function applyEditorStatSettings(message: EditorStatSettingsMessage) {
   drawEditorSidebar(writeText, editorInspect, editorBrush, editorDrawing);
   paintOverlay();
   drawScreen();
+}
+
+// applyEditorProgramText opens the M5.4 code editor once the server returns the
+// requested object/scroll program. Saving is Escape (EditorEditStatText has no
+// cancel), which sends the edited lines back as editorProgramSave.
+function applyEditorProgramText(message: EditorProgramTextMessage) {
+  const statId = message.statId;
+  openModal({
+    kind: "programEditor",
+    title: message.prompt || "Edit Program",
+    lines: message.lines.length > 0 ? [...message.lines] : [""],
+    linePos: 1,
+    charPos: 1,
+    insertMode: true,
+    onSubmit: (lines) => sendEditorProgramSave(statId, lines),
+  });
 }
 
 function applySnapshot(message: SnapshotMessage) {
@@ -1828,8 +1857,7 @@ function openEditorStatSettings(inspect: EditorInspect) {
     choices.push({ action: "p1", label: `${inspect.param1Name} ${value}` });
   }
   if (inspect.paramTextName) {
-    // Program editing owns object Data/DataLen and intentionally begins in M5.4.
-    choices.push({ action: "program", label: `${inspect.paramTextName} (M5.4)` });
+    choices.push({ action: "program", label: inspect.paramTextName });
   }
   if (inspect.param2Name) choices.push({ action: "p2", label: `${inspect.param2Name} ${p2 & 0x7f}` });
   if (inspect.paramBulletTypeName) choices.push({ action: "bulletType", label: `${inspect.paramBulletTypeName} ${(p2 & 0x80) === 0 ? "Bullets" : "Stars"}` });
@@ -1840,9 +1868,13 @@ function openEditorStatSettings(inspect: EditorInspect) {
   if (inspect.paramBoardName) choices.push({ action: "p3", label: `${inspect.paramBoardName} ${editorBoardName(inspect.p3 ?? 0)}` });
   choices.push({ action: "cycle", label: `Cycle: ${inspect.cycle ?? 0}` });
   const actions = new Map(choices.map((choice) => [choice.label, choice.action]));
+  const statId = inspect.statId;
   openSelectList(`${inspect.element} settings`, [...choices.map((choice) => choice.label), "Quit!"], (entry) => {
     const action = actions.get(entry);
     switch (action) {
+      case "program":
+        if (statId !== undefined) sendEditorProgram(statId);
+        break;
       case "p1":
         if (inspect.paramTextName) {
           openEntry(inspect.param1Name ?? "Character?", "", 1, "any", (text) => {
@@ -1890,6 +1922,18 @@ function openEditorStatCycle(current: number) {
 function sendEditorStat(field: string, value: number) {
   if (!connected || !ws || ws.readyState !== WebSocket.OPEN || !editorInspect.hasStat || editorInspect.statId === undefined) return;
   ws.send(JSON.stringify({ type: MessageTypeEditorStat, statId: editorInspect.statId, field, value }));
+}
+
+// sendEditorProgram asks the server for a stat's program; the reply opens the
+// editor. Save travels back through sendEditorProgramSave.
+function sendEditorProgram(statId: number) {
+  if (!connected || !ws || ws.readyState !== WebSocket.OPEN) return;
+  ws.send(JSON.stringify({ type: MessageTypeEditorProgram, statId }));
+}
+
+function sendEditorProgramSave(statId: number, lines: string[]) {
+  if (!connected || !ws || ws.readyState !== WebSocket.OPEN) return;
+  ws.send(JSON.stringify({ type: MessageTypeEditorProgramSave, statId, lines }));
 }
 
 function sendEditorProperty(field: string, values: { text?: string; value?: number; bool?: boolean; exit?: number }) {

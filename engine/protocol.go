@@ -27,6 +27,9 @@ const (
 	MessageTypeEditorProperties   = "editorProperties"
 	MessageTypeEditorStat         = "editorStat"
 	MessageTypeEditorStatSettings = "editorStatSettings"
+	MessageTypeEditorProgram      = "editorProgram"
+	MessageTypeEditorProgramText  = "editorProgramText"
+	MessageTypeEditorProgramSave  = "editorProgramSave"
 )
 
 // HelpDir is where HelpFileLines looks for .HLP files. The terminal client
@@ -208,11 +211,41 @@ type EditorStatMessage struct {
 }
 
 // EditorStatSettingsMessage is the authoritative result of a stat change.
-// Cells covers character changes to objects, whose P1 affects rendering.
+// Cells covers character changes to objects, whose P1 affects rendering. It is
+// also the reply to editorProgramSave (M5.4), whose text edit never changes the
+// tile but keeps the browser's inspection panel authoritative.
 type EditorStatSettingsMessage struct {
 	Type    string            `json:"type"`
 	Inspect EditorTileInspect `json:"inspect"`
 	Cells   []ScreenCell      `json:"cells"`
+}
+
+// EditorProgramRequestMessage asks for a stat's ZZT-OOP program so the browser's
+// M5.4 code editor can open it. Only text-backed elements (objects and scrolls,
+// whose ElementDefs entry has a ParamTextName) carry a program.
+type EditorProgramRequestMessage struct {
+	Type   string `json:"type"`
+	StatID int16  `json:"statId"`
+}
+
+// EditorProgramMessage carries one object/scroll program to the browser, split
+// into lines exactly as CopyStatDataToTextWindow does (on carriage returns).
+// Prompt is the element's ParamTextName ("Edit Program" / "Edit text of scroll")
+// so the editor window titles itself the way vanilla does.
+type EditorProgramMessage struct {
+	Type   string   `json:"type"`
+	StatID int16    `json:"statId"`
+	Prompt string   `json:"prompt"`
+	Lines  []string `json:"lines"`
+}
+
+// EditorProgramSaveMessage writes an edited program back. The server rebuilds
+// Data/DataLen the way EditorEditStatText does — a carriage return after every
+// line — so the text round-trips through the vanilla serializer.
+type EditorProgramSaveMessage struct {
+	Type   string   `json:"type"`
+	StatID int16    `json:"statId"`
+	Lines  []string `json:"lines"`
 }
 
 type InputMessage struct {
