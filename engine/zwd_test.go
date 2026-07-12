@@ -446,3 +446,12 @@ func TestZWDRejectsOverwideOOPTitle(t *testing.T) {
 		t.Fatalf("error = %v, want OOP title width error", err)
 	}
 }
+
+func TestZWDRejectsStatForNonStatBackedElement(t *testing.T) {
+	src := strings.Replace(zwdOneRoomExample, "o = Object color 0x0F", "o = Gem color 0x0F", 1)
+	src = strings.Replace(src, "element Object", "element Gem", 1)
+	_, err := CompileZWDWorld(src)
+	if err == nil || !strings.Contains(err.Error(), "non-stat-backed element Gem") {
+		t.Fatalf("error = %v, want non-stat-backed stat error", err)
+	}
+}

@@ -521,7 +521,7 @@ remaining feature milestones on purpose. Ranked by player impact
   A; an object `#play` reaches both; `go test ./...` green; replay fixture
   unchanged (events are not hashed).
 
-- [ ] **M7.5 — Next batch of ZZT games.** Requires M7.1 (joiners must land on
+- [x] **M7.5 — Next batch of ZZT games.** Requires M7.1 (joiners must land on
   authors' start squares — fake-wall floors are common in these worlds). The
   server already discovers hostable worlds by scanning a directory for `.ZZT`
   (`ListWorlds`, `web_api.go:340-351`) and lists them at `/api/worlds`; the
@@ -657,7 +657,7 @@ purpose: owner priority (2026-07-10) is to get a fully AI-created world
 generated and played end-to-end ASAP, then pay these down. The executor
 protocol is positional, so these sit just after M12.5 and before M5.
 
-- [ ] **M12.6 — Decompiler emits only compiler-legal ZWD.** `DecompileZWD`
+- [x] **M12.6 — Decompiler emits only compiler-legal ZWD.** `DecompileZWD`
   (`zwd_decompile.go`) currently emits tokens the compiler rejects, so a
   decompiled board is not guaranteed to recompile (a corpus scan found only
   45/200 examples recompile cleanly, and the few-shot picks ONAMOON_board19 /
@@ -675,7 +675,13 @@ protocol is positional, so these sit just after M12.5 and before M5.
   compiles every decompiled example (wrapped as a one-board world, exits
   neutralized) and asserts the pass count; `go test ./...` green.
 
-- [ ] **M12.7 — Green the three ZWD round-trip tests (or re-scope them
+  Re-scoped (2026-07-11): `DecompileZWD` returns authorable source or an empty
+  result; `DecompileZWDAuthorable` additionally returns structured warnings
+  for safe lowerings and errors for non-representable worlds. The corpus
+  generator uses that boundary and skips rejected worlds. A separate forensic
+  format is future work; it must not be presented as compilable ZWD.
+
+- [x] **M12.7 — Green the three ZWD round-trip tests (or re-scope them
   honestly).** `TestZWDRoundTrip{TOWN,CAVES,CITY}` (`zwd_decompile_test.go`)
   have been committed red since M12.2. NOTES.md (2026-07-10 M7.5) diagnoses the
   StateHash mismatches as systematic, not per-world corruption: `World.Info`
@@ -689,7 +695,7 @@ protocol is positional, so these sit just after M12.5 and before M5.
   test the repo ships failing. DoD: `go test ./...` fully green; NOTES.md states
   which fields are preserved vs excluded and why; replay fixture unchanged.
 
-- [ ] **M12.8 — Fix `cmd/zzt-validate`'s "board render is empty" false
+- [x] **M12.8 — Fix `cmd/zzt-validate`'s "board render is empty" false
   negatives.** The M7.5 validation command reports "board render is empty" for
   50 of 108 worlds that load fine via `WorldLoad` in the corpus run
   (`cmd/zzt-validate/main.go`, NOTES.md 2026-07-10 M7.5 "Open"). It is a harness
@@ -701,9 +707,9 @@ protocol is positional, so these sit just after M12.5 and before M5.
   ordering bug). DoD: `zzt-validate` passes the same worlds the corpus run
   loads; a test covers a known-good world that currently false-fails.
 
-- [ ] **M12.9 — Enforce non-stat-backed elements are excluded from stats in compiler validation.** Modify `zwd.go` compiler to verify that only stat-backed elements (those returned by `elementNeedsStat`) are permitted to have entries in the `stats` block. If the ZWD file defines a `stat at X,Y` for a non-stat-backed element (such as `E_GEM`, `E_AMMO`, `E_KEY`, or `E_DOOR`), fail compilation with a descriptive error (e.g. `stat at (X, Y) defined for non-stat-backed element Gem`). This prevents LLMs from incorrectly attempting to define stats or color parameters for simple items.
+- [x] **M12.9 — Enforce non-stat-backed elements are excluded from stats in compiler validation.** `zwd.go` now rejects a `stats` entry for elements such as Gem, Ammo, Key, or Door with a precise diagnostic.
 
-- [ ] **M12.10 — Prevent LLM from using stat-backed Object elements for static art.** Add validation or prompt instructions to reject worlds where the LLM attempts to draw multi-tile shapes (like 2x2 gears or large pillars) using `Object` characters unless every single one of those tiles has a valid corresponding stat block. Recommend representing static structures using solid/normal walls.
+- [x] **M12.10 — Prevent LLM from using stat-backed Object elements for static art.** The authoritative ZWD spec and embedded generation prompt now require Objects to be interactive and direct decorative shapes to Text, Solid, Normal, or Fake tiles.
 
 ## M5 — Creation and full-featured ZZT tooling
 
@@ -1259,20 +1265,6 @@ enables; each is feasible precisely because of a property we already built):**
   `(element, col, row)` in a single error so one repair round can fix them all. (A
   temporary `debugOrphanScan` pass during the touch investigation surfaced e.g.
   DYINGSTA's 5-tile passage "door" and KEEPLITE's 13-tile object drawing at once.)
-
-* [ ] **Repair the broken generated world sources `DYINGSTA.zwd` and `KEEPLITE.zwd`.**
-  Both fail to compile today and their on-disk `.ZZT` predates the stat-default fix
-  (still locked). Known errors, all classic LLM mistakes now warned against in
-  `spec.md`/`STYLE.md`:
-  - `DYINGSTA.zwd`: title-banner grid rows 17–21 are 59 chars, not 60 (already
-    partially patched this session); a decorative `* = Star` legend entry (should be
-    an inert `Text-*` glyph); a 5-tile `Passage` "door" on the Hangar Bay board and
-    several decorative `Object` clusters with no stats.
-  - `KEEPLITE.zwd`: a 13-tile `Object` drawing (lines 533–537) used as static art.
-  Fix by converting decorative stat-backed tiles to `Text-*`/`Solid`/`Fake`,
-  collapsing passage doors to a single stat-backed tile, then recompile so the
-  `.ZZT` is regenerated clean. Depends on the two compiler tasks above landing first
-  (they make the repair one-shot instead of whack-a-mole).
 
 * [ ] **Retire/retitle `engine/touch_race_test.go`.**
   The prior agent added it while chasing the phantom `#end`/`:touch` "race"; its

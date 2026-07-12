@@ -67,10 +67,10 @@ $%%&*++-WTTUVXXYZ00123345667899!$%%&*++-WTTUVXXYZ00123345667
     v = Fake color 0x7F
     x = Fake color 0x0F
     y = Object color 0x74
-    z = element 61 color 0x57
-    C = element 61 color 0x99
-    D = element 61 color 0x46
-    E = element 61 color 0x21
+    z = Empty color 0x57
+    C = Empty color 0x99
+    D = Empty color 0x46
+    E = Empty color 0x21
     G = Fake color 0x42
     H = Fake color 0x2F
     I = Fake color 0x37
@@ -91,9 +91,9 @@ $%%&*++-WTTUVXXYZ00123345667899!$%%&*++-WTTUVXXYZ00123345667
     Z = Text-Yellow color 0x57
     0 = Text-Yellow color 0x4F
     1 = Text-Yellow color 0x46
-    2 = element 69 color 0x77
-    3 = element 69 color 0x6F
-    4 = element 69 color 0x66
+    2 = Empty color 0x77
+    3 = Empty color 0x6F
+    4 = Empty color 0x66
     5 = Text-White color 0x57
     6 = Text-White color 0x4F
     7 = Text-White color 0x46
@@ -109,12 +109,8 @@ $%%&*++-WTTUVXXYZ00123345667899!$%%&*++-WTTUVXXYZ00123345667
   end
 
   stats
-    stat at 59,1 element Passage p1 0 p2 0 step idle under Fake color 0x00
-    stat at 8,18 element Boulder cycle 1 p1 0 p2 0 step idle under Fake color 0x2D
-    stat at 16,18 element Boulder cycle 1 p1 0 p2 0 step idle under Fake color 0x42
-    stat at 18,12 element Boulder cycle 1 p1 0 p2 0 step idle under Fake color 0x42
-    stat at 6,11 element Boulder cycle 1 p1 0 p2 0 step idle under Fake color 0x52
-    stat at 22,15 element Object cycle 1 p1 cp437:0xEB p2 0 step idle under Fake color 0x42
+    stat at 59,1 element Passage under Fake color 0x00
+    stat at 22,15 element Object cycle 1 p1 cp437:0xEB under Fake color 0x42
     oop
 ?RNDNS 
 ?RNDP n
@@ -142,8 +138,7 @@ Bark Bark! (you pet the dog)
 #end
 
     end
-    stat at 10,15 element Boulder cycle 1 p1 0 p2 0 step idle under Fake color 0x2D
-    stat at 4,6 element Object cycle 1 p1 cp437:0xEB p2 0 step idle under Fake color 0x52
+    stat at 4,6 element Object cycle 1 p1 cp437:0xEB under Fake color 0x52
     oop
 ?RNDNS 
 ?RNDP n
@@ -169,7 +164,7 @@ Bark Bark! (you pet the dog)
 #end
 
     end
-    stat at 9,20 element Object cycle 1 p1 cp437:0xEB p2 0 step idle under Fake color 0x52
+    stat at 9,20 element Object cycle 1 p1 cp437:0xEB under Fake color 0x52
     oop
 ?RNDNS 
 ?RNDP n
@@ -195,7 +190,7 @@ Bark Bark! (you pet the dog)
 #end
 
     end
-    stat at 13,14 element Object cycle 1 p1 cp437:0xEB p2 0 step idle under Fake color 0x52
+    stat at 13,14 element Object cycle 1 p1 cp437:0xEB under Fake color 0x52
     oop
 ?RNDNS 
 ?RNDP n
@@ -222,7 +217,7 @@ Bark Bark! (you pet the dog)
 #end
 
     end
-    stat at 58,10 element Object cycle 1 p1 cp437:0xEB p2 0 step idle under Fake color 0x42
+    stat at 58,10 element Object cycle 1 p1 cp437:0xEB under Fake color 0x42
     oop
 ?RNDNS 
 ?RNDP n
@@ -256,7 +251,7 @@ Bark Bark! (you pet the dog)
 #end
 
     end
-    stat at 49,19 element Object cycle 1 p1 cp437:0xEB p2 0 step idle under Fake color 0x52
+    stat at 49,19 element Object cycle 1 p1 cp437:0xEB under Fake color 0x52
     oop
 ?RNDNS 
 ?RNDP n

@@ -1,6 +1,5 @@
 board "Mount Koya - Northwest"
   start player at 13,3
-  respawn at 32,32
   max-shots 255
   dark false
   reenter false
@@ -56,53 +55,53 @@ FFNF~NooNFFFFFFFFFFFFFFFFFFFFo~BAAAAAAAAAAAAAAAAAAAAAAAAAAAA
   end
 
   stats
-    stat at 24,12 element Object cycle 1 p1 cp437:0xBA p2 0 step idle follower 0 leader 0
-    stat at 23,9 element Object cycle 1 p1 cp437:0xBA p2 0 step idle follower 0 leader 0
-    stat at 22,8 element Object cycle 1 p1 cp437:0xBA p2 0 step idle follower 0 leader 0
-    stat at 21,7 element Object cycle 1 p1 cp437:0xBA p2 0 step idle follower 0 leader 0
-    stat at 25,15 element Object cycle 1 p1 cp437:0xBA p2 0 step idle follower 0 leader 0
-    stat at 20,5 element Object cycle 1 p1 cp437:0xBA p2 0 step idle follower 0 leader 0
-    stat at 26,17 element Object cycle 1 p1 cp437:0xBA p2 0 step idle follower 0 leader 0
-    stat at 27,20 element Object cycle 1 p1 cp437:0xBA p2 0 step idle follower 0 leader 0
-    stat at 28,23 element Object cycle 1 p1 cp437:0xBA p2 0 step idle follower 0 leader 0
-    stat at 29,24 element Object cycle 1 p1 cp437:0xBA p2 0 step idle follower 0 leader 0
-    stat at 30,25 element Object cycle 1 p1 cp437:0xBA p2 0 step idle follower 0 leader 0
-    stat at 7,7 element Object cycle 1 p1 cp437:0xBA p2 0 step idle follower 0 leader 0
-    stat at 5,14 element Object cycle 1 p1 cp437:0xBA p2 0 step idle follower 0 leader 0
-    stat at 18,1 element Object cycle 1 p1 cp437:0xBA p2 0 step idle follower 0 leader 0
-    stat at 19,1 element Object cycle 1 p1 cp437:0xBA p2 0 step idle follower 0 leader 0
-    stat at 8,25 element Object cycle 1 p1 cp437:0xBA p2 0 step idle follower 0 leader 0
-    stat at 7,25 element Object cycle 1 p1 cp437:0xBA p2 0 step idle follower 0 leader 0
-    stat at 4,14 element Object cycle 1 p1 cp437:0xBA p2 0 step idle follower 0 leader 0
-    stat at 4,21 element Object cycle 1 p1 cp437:0xBA p2 0 step idle follower 0 leader 0
-    stat at 4,24 element Object cycle 1 p1 cp437:0xBA p2 0 step idle follower 0 leader 0
-    stat at 4,7 element Object cycle 1 p1 cp437:0xBA p2 0 step idle follower 0 leader 0
-    stat at 5,4 element Object cycle 1 p1 cp437:0xBA p2 0 step idle follower 0 leader 0
-    stat at 6,2 element Object cycle 1 p1 cp437:0xBA p2 0 step idle follower 0 leader 0
-    stat at 4,19 element Object cycle 1 p1 cp437:0xBA p2 0 step idle follower 0 leader 0
-    stat at 6,11 element Object cycle 1 p1 cp437:0xBA p2 0 step idle follower 0 leader 0
-    stat at 6,16 element Object cycle 1 p1 cp437:0xBA p2 0 step idle follower 0 leader 0
-    stat at 50,2 element Object cycle 1 p1 cp437:0xBA p2 0 step idle follower 0 leader 0
-    stat at 51,2 element Object cycle 1 p1 cp437:0xBA p2 0 step idle follower 0 leader 0
-    stat at 52,2 element Object cycle 1 p1 cp437:0xBA p2 0 step idle follower 0 leader 0
-    stat at 53,2 element Object cycle 1 p1 cp437:0xBA p2 0 step idle follower 0 leader 0
-    stat at 54,2 element Object cycle 1 p1 cp437:0xBA p2 0 step idle follower 0 leader 0
-    stat at 49,1 element Object cycle 1 p1 cp437:0xBA p2 0 step idle follower 0 leader 0
-    stat at 48,1 element Object cycle 1 p1 cp437:0xBA p2 0 step idle follower 0 leader 0
-    stat at 38,1 element Object cycle 1 p1 cp437:0xBA p2 0 step idle follower 0 leader 0
-    stat at 24,1 element Object cycle 1 p1 cp437:0xBA p2 0 step idle follower 0 leader 0
-    stat at 23,1 element Object cycle 1 p1 cp437:0xBA p2 0 step idle follower 0 leader 0
-    stat at 8,1 element Passage p1 0 p2 0 p3 board "Hideout - Japan - 4" step idle follower 0 leader 0
-    stat at 9,1 element Passage p1 0 p2 0 p3 board "Hideout - Japan - 4" step idle follower 0 leader 0
-    stat at 10,1 element Passage p1 0 p2 0 p3 board "Hideout - Japan - 4" step idle follower 0 leader 0
-    stat at 11,1 element Passage p1 0 p2 0 p3 board "Hideout - Japan - 4" step idle follower 0 leader 0
-    stat at 12,1 element Passage p1 0 p2 0 p3 board "Hideout - Japan - 4" step idle follower 0 leader 0
-    stat at 13,1 element Passage p1 0 p2 0 p3 board "Hideout - Japan - 4" step idle follower 0 leader 0
-    stat at 14,1 element Passage p1 0 p2 0 p3 board "Hideout - Japan - 4" step idle follower 0 leader 0
-    stat at 15,1 element Passage p1 0 p2 0 p3 board "Hideout - Japan - 4" step idle follower 0 leader 0
-    stat at 16,1 element Passage p1 0 p2 0 p3 board "Hideout - Japan - 4" step idle follower 0 leader 0
-    stat at 17,1 element Passage p1 0 p2 0 p3 board "Hideout - Japan - 4" step idle follower 0 leader 0
-    stat at 17,12 element Object p1 cp437:0x02 p2 0 step idle under Fake color 0x7F follower 0 leader 0
+    stat at 24,12 element Object cycle 1 p1 cp437:0xBA follower 0 leader 0
+    stat at 23,9 element Object cycle 1 p1 cp437:0xBA follower 0 leader 0
+    stat at 22,8 element Object cycle 1 p1 cp437:0xBA follower 0 leader 0
+    stat at 21,7 element Object cycle 1 p1 cp437:0xBA follower 0 leader 0
+    stat at 25,15 element Object cycle 1 p1 cp437:0xBA follower 0 leader 0
+    stat at 20,5 element Object cycle 1 p1 cp437:0xBA follower 0 leader 0
+    stat at 26,17 element Object cycle 1 p1 cp437:0xBA follower 0 leader 0
+    stat at 27,20 element Object cycle 1 p1 cp437:0xBA follower 0 leader 0
+    stat at 28,23 element Object cycle 1 p1 cp437:0xBA follower 0 leader 0
+    stat at 29,24 element Object cycle 1 p1 cp437:0xBA follower 0 leader 0
+    stat at 30,25 element Object cycle 1 p1 cp437:0xBA follower 0 leader 0
+    stat at 7,7 element Object cycle 1 p1 cp437:0xBA follower 0 leader 0
+    stat at 5,14 element Object cycle 1 p1 cp437:0xBA follower 0 leader 0
+    stat at 18,1 element Object cycle 1 p1 cp437:0xBA follower 0 leader 0
+    stat at 19,1 element Object cycle 1 p1 cp437:0xBA follower 0 leader 0
+    stat at 8,25 element Object cycle 1 p1 cp437:0xBA follower 0 leader 0
+    stat at 7,25 element Object cycle 1 p1 cp437:0xBA follower 0 leader 0
+    stat at 4,14 element Object cycle 1 p1 cp437:0xBA follower 0 leader 0
+    stat at 4,21 element Object cycle 1 p1 cp437:0xBA follower 0 leader 0
+    stat at 4,24 element Object cycle 1 p1 cp437:0xBA follower 0 leader 0
+    stat at 4,7 element Object cycle 1 p1 cp437:0xBA follower 0 leader 0
+    stat at 5,4 element Object cycle 1 p1 cp437:0xBA follower 0 leader 0
+    stat at 6,2 element Object cycle 1 p1 cp437:0xBA follower 0 leader 0
+    stat at 4,19 element Object cycle 1 p1 cp437:0xBA follower 0 leader 0
+    stat at 6,11 element Object cycle 1 p1 cp437:0xBA follower 0 leader 0
+    stat at 6,16 element Object cycle 1 p1 cp437:0xBA follower 0 leader 0
+    stat at 50,2 element Object cycle 1 p1 cp437:0xBA follower 0 leader 0
+    stat at 51,2 element Object cycle 1 p1 cp437:0xBA follower 0 leader 0
+    stat at 52,2 element Object cycle 1 p1 cp437:0xBA follower 0 leader 0
+    stat at 53,2 element Object cycle 1 p1 cp437:0xBA follower 0 leader 0
+    stat at 54,2 element Object cycle 1 p1 cp437:0xBA follower 0 leader 0
+    stat at 49,1 element Object cycle 1 p1 cp437:0xBA follower 0 leader 0
+    stat at 48,1 element Object cycle 1 p1 cp437:0xBA follower 0 leader 0
+    stat at 38,1 element Object cycle 1 p1 cp437:0xBA follower 0 leader 0
+    stat at 24,1 element Object cycle 1 p1 cp437:0xBA follower 0 leader 0
+    stat at 23,1 element Object cycle 1 p1 cp437:0xBA follower 0 leader 0
+    stat at 8,1 element Passage p3 board "Hideout - Japan - 4" follower 0 leader 0
+    stat at 9,1 element Passage p3 board "Hideout - Japan - 4" follower 0 leader 0
+    stat at 10,1 element Passage p3 board "Hideout - Japan - 4" follower 0 leader 0
+    stat at 11,1 element Passage p3 board "Hideout - Japan - 4" follower 0 leader 0
+    stat at 12,1 element Passage p3 board "Hideout - Japan - 4" follower 0 leader 0
+    stat at 13,1 element Passage p3 board "Hideout - Japan - 4" follower 0 leader 0
+    stat at 14,1 element Passage p3 board "Hideout - Japan - 4" follower 0 leader 0
+    stat at 15,1 element Passage p3 board "Hideout - Japan - 4" follower 0 leader 0
+    stat at 16,1 element Passage p3 board "Hideout - Japan - 4" follower 0 leader 0
+    stat at 17,1 element Passage p3 board "Hideout - Japan - 4" follower 0 leader 0
+    stat at 17,12 element Object p1 cp437:0x02 under Fake color 0x7F follower 0 leader 0
     oop
 @Monk
 $

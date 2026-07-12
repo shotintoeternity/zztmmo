@@ -506,7 +506,10 @@ func parseStatLine(toks []string, line int) (zwdStat, error) {
 		leader:   -1,
 		bind:     -1,
 	}
-	if len(toks) < 6 || toks[1] != "at" {
+	// All fields after the element name are optional.  In particular, the
+	// decompiler omits fields whose values match the compiler defaults, so the
+	// shortest valid form is exactly: stat at X,Y element NAME.
+	if len(toks) < 5 || toks[1] != "at" {
 		return stat, zerr(line, 1, "stat requires at X,Y element NAME")
 	}
 	x, y, err := parseCoordToken(toks[2])
@@ -728,6 +731,9 @@ func compileZWDBoard(e *Engine, boardID int16, src zwdBoard, boardIDs map[string
 	for _, srcStat := range src.stats {
 		if e.Board.StatCount >= MAX_STAT {
 			return zerr(srcStat.line, 1, "board has more than 150 non-player stats")
+		}
+		if !elementNeedsStat(srcStat.element) {
+			return zerr(srcStat.line, 1, fmt.Sprintf("stat at (%d, %d) defined for non-stat-backed element %s", srcStat.x, srcStat.y, ElementDefs[srcStat.element].Name))
 		}
 		if e.Board.Tiles[srcStat.x][srcStat.y].Element != srcStat.element {
 			return zerr(srcStat.line, 1, "stat element must match grid tile at its coordinate")

@@ -1,0 +1,92 @@
+board "Dusty Cellar"
+  start player at 3,3
+  max-shots 255
+  dark true
+  reenter true
+  time-limit 0
+  exits north "Cellar Landing" south none west none east none
+
+  grid
+NNNNNNNNNNNNNNNNNNNNN..NNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNN
+N..N.....N.......N....N...N.......N.......N...........N.....
+N.@N.NNN.N.NNNNN.N.NNNN.N.N.NNNNN.N.NNNNN.N.NNNNNNN.N.N.NNN.
+N.NNNN.N.N.N...N.N.N....N.N.....N.N.....N.N.......N.N.N...N.
+N......N.N.N.N.N.N.N.NNNN.NNNNN.N.NNNNN.N.NNNNNNN.N.N.NNN.N.
+NNNNNN.N.N.N.N.N.N.N.N......N...N.....N.N.......N.N.N...N.N.
+N....N.N.N.N.N.N.N.N.N.NNNN.N.NNNNNNN.N.NNNNNNN.N.N.NNN.N.N.
+N.NN.N.N.N.N.N.N.N.N.N.N..N.N.......N.N.......N.N.N...N.N.N.
+N.N..N.N.N.N.N.N.N.N.N.N.oN.NNNNNNN.N.NNNNNNN.N.N.NNN.N.N.N.
+N.N.NN.N.N.N.N.N.N.N.N.NNNN.N.....N.N.......N.N.N...N.N.N.N.
+N.N.N..N.N.N.N.N.N.N.N......N.NNN.N.NNNNNNN.N.N.NNN.N.N.N.N.
+N.N.N.NN.N.N.N.N.N.N.NNNNNNNN.N.N.N.......N.N.N...N.N.N.N.N.
+N.N.N....N.N.N.N.N.N........N.N.N.NNNNNNN.N.N.NNN.N.N.N.N.N.
+N.N.NNNNNN.N.N.N.N.NNNNNNNN.N.N.N.......N.N.N...N.N.N.N.N.N.
+N.N......N.N.N.N.N........N.N.N.NNNNNNN.N.N.NNN.N.N.N.N.N.N.
+N.NNNNNN.N.N.N.N.NNNNNNNN.N.N.N.......N.N.N...N.N.N.N.N.N.N.
+N......N.N.N.N.N........N.N.N.NNNNNNN.N.N.NNN.N.N.N.N.N.N.N.
+NNNNNN.N.N.N.N.NNNNNNNN.N.N.N.......N.N.N...N.N.N.N.N.N.N.N.
+N....N.N.N.N.N........N.N.N.NNNNNNN.N.N.NNN.N.N.N.N.N.N.N.N.
+N.NN.N.N.N.N.NNNNNNNN.N.N.N.......N.N.N...O.N.N.N.N.N.N.N.N.
+N.N..N.N.N.N........N.N.N.NNNNNNN.N.N.NNNNN.N.N.N.N.N.N.N...
+N.N.NN.N.N.NNNNNNNN.N.N.N........N.N........N.N.N.N.N.NNNNN.
+N.N....N.N........N.N.N.NNNNNNNNNN.NNNNNNNNNNN.N.N.N......pa
+N.NNNNNN.NNNNNNNNN.N.N..............................N.NNNNNN
+NNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNN
+  end
+
+  legend
+    N = Normal color 0x08
+    . = Empty color 0x00
+    @ = Player color 0x1F under Empty color 0x00
+    o = Object color 0x0E
+    O = Object color 0x0B
+    p = Passage color 0x1F to "Dome Top"
+    a = Object color 0x0A
+  end
+
+  stats
+    stat at 26,9 element Object p1 cp437:0x0F
+    oop
+@torch
+#end
+:touch
+#play tcdefg
+A stub of an old torch, still dry enough
+to catch.
+#give torches 3
+Take it and keep the dark at bay.
+#die
+    end
+    stat at 43,20 element Object p1 cp437:0xE8
+    oop
+@lens
+#end
+:touch
+#play iebg-c#e
+The great glass lens! Cool and heavy,
+ringed with brass.
+#set gotlens
+The astronomer will want this at once.
+#die
+    end
+    stat at 60,23 element Object p1 cp437:0xF0
+    oop
+@wayback
+#end
+:touch
+#if gotlens goup
+A dumbwaiter shaft, but you have nothing
+worth hauling up.
+#end
+:goup
+#play cegceg
+You load the lens into the old dumbwaiter
+and climb the rope.
+#send owner:up
+#end
+:up
+#end
+    end
+    stat at 59,23 element Passage p3 board "Dome Top"
+  end
+end

@@ -65,7 +65,7 @@ lflflflflflflflflflflflflflflflflflflflflflflflflflffffffff.
   end
 
   stats
-    stat at 23,20 element Object p1 cp437:0x09 p2 0 step idle
+    stat at 23,20 element Object p1 cp437:0x09
     oop
 @Steering Wheel
 #end
@@ -76,7 +76,7 @@ SCREECH!
 #end
 
     end
-    stat at 28,19 element Object p1 cp437:0x08 p2 0 step idle
+    stat at 28,19 element Object p1 cp437:0x08
     oop
 @Thing
 #end
@@ -85,9 +85,9 @@ SCREECH!
 #end
 
     end
-    stat at 26,22 element Object p1 cp437:0x07 p2 0 step idle
-    stat at 32,22 element Object p1 cp437:0x07 p2 0 step idle
-    stat at 1,23 element Object p1 cp437:0xFF p2 0 step idle under Empty color 0x0F
+    stat at 26,22 element Object p1 cp437:0x07
+    stat at 32,22 element Object p1 cp437:0x07
+    stat at 1,23 element Object p1 cp437:0xFF under Empty color 0x0F
     oop
 @Line
 #char 45
@@ -100,132 +100,132 @@ SCREECH!
 #end
 
     end
-    stat at 3,23 element Object p1 cp437:0xFF p2 0 step idle
+    stat at 3,23 element Object p1 cp437:0xFF
     oop
 #bind Line
 
     end
-    stat at 5,23 element Object p1 cp437:0xFF p2 0 step idle
+    stat at 5,23 element Object p1 cp437:0xFF
     oop
 #bind Line
 
     end
-    stat at 7,23 element Object p1 cp437:0xFF p2 0 step idle
+    stat at 7,23 element Object p1 cp437:0xFF
     oop
 #bind Line
 
     end
-    stat at 9,23 element Object p1 cp437:0xFF p2 0 step idle
+    stat at 9,23 element Object p1 cp437:0xFF
     oop
 #bind Line
 
     end
-    stat at 11,23 element Object p1 cp437:0xFF p2 0 step idle
+    stat at 11,23 element Object p1 cp437:0xFF
     oop
 #bind Line
 
     end
-    stat at 13,23 element Object p1 cp437:0xFF p2 0 step idle
+    stat at 13,23 element Object p1 cp437:0xFF
     oop
 #bind Line
 
     end
-    stat at 15,23 element Object p1 cp437:0xFF p2 0 step idle
+    stat at 15,23 element Object p1 cp437:0xFF
     oop
 #bind Line
 
     end
-    stat at 17,23 element Object p1 cp437:0xFF p2 0 step idle
+    stat at 17,23 element Object p1 cp437:0xFF
     oop
 #bind Line
 
     end
-    stat at 19,23 element Object p1 cp437:0xFF p2 0 step idle
+    stat at 19,23 element Object p1 cp437:0xFF
     oop
 #bind Line
 
     end
-    stat at 21,23 element Object p1 cp437:0xFF p2 0 step idle
+    stat at 21,23 element Object p1 cp437:0xFF
     oop
 #bind Line
 
     end
-    stat at 23,23 element Object p1 cp437:0xFF p2 0 step idle
+    stat at 23,23 element Object p1 cp437:0xFF
     oop
 #bind Line
 
     end
-    stat at 25,23 element Object p1 cp437:0xFF p2 0 step idle
+    stat at 25,23 element Object p1 cp437:0xFF
     oop
 #bind Line
 
     end
-    stat at 27,23 element Object p1 cp437:0xFF p2 0 step idle
+    stat at 27,23 element Object p1 cp437:0xFF
     oop
 #bind Line
 
     end
-    stat at 29,23 element Object p1 cp437:0xFF p2 0 step idle
+    stat at 29,23 element Object p1 cp437:0xFF
     oop
 #bind Line
 
     end
-    stat at 31,23 element Object p1 cp437:0xFF p2 0 step idle
+    stat at 31,23 element Object p1 cp437:0xFF
     oop
 #bind Line
 
     end
-    stat at 33,23 element Object p1 cp437:0xFF p2 0 step idle
+    stat at 33,23 element Object p1 cp437:0xFF
     oop
 #bind Line
 
     end
-    stat at 35,23 element Object p1 cp437:0xFF p2 0 step idle
+    stat at 35,23 element Object p1 cp437:0xFF
     oop
 #bind Line
 
     end
-    stat at 37,23 element Object p1 cp437:0xFF p2 0 step idle
+    stat at 37,23 element Object p1 cp437:0xFF
     oop
 #bind Line
 
     end
-    stat at 39,23 element Object p1 cp437:0xFF p2 0 step idle
+    stat at 39,23 element Object p1 cp437:0xFF
     oop
 #bind Line
 
     end
-    stat at 41,23 element Object p1 cp437:0xFF p2 0 step idle
+    stat at 41,23 element Object p1 cp437:0xFF
     oop
 #bind Line
 
     end
-    stat at 43,23 element Object p1 cp437:0xFF p2 0 step idle
+    stat at 43,23 element Object p1 cp437:0xFF
     oop
 #bind Line
 
     end
-    stat at 45,23 element Object p1 cp437:0xFF p2 0 step idle
+    stat at 45,23 element Object p1 cp437:0xFF
     oop
 #bind Line
 
     end
-    stat at 47,23 element Object p1 cp437:0xFF p2 0 step idle
+    stat at 47,23 element Object p1 cp437:0xFF
     oop
 #bind Line
 
     end
-    stat at 49,23 element Object p1 cp437:0xFF p2 0 step idle
+    stat at 49,23 element Object p1 cp437:0xFF
     oop
 #bind Line
 
     end
-    stat at 51,23 element Object p1 cp437:0xFF p2 0 step idle
+    stat at 51,23 element Object p1 cp437:0xFF
     oop
 #bind Line
 
     end
-    stat at 36,21 element Object p1 cp437:0x07 p2 0 step idle under Empty color 0x0F
+    stat at 36,21 element Object p1 cp437:0x07 under Empty color 0x0F
     oop
 /i
 #char 42
@@ -234,8 +234,8 @@ SCREECH!
 #restart
 
     end
-    stat at 28,18 element Passage p1 0 p2 0 p3 board "$The back of the bus" step idle
-    stat at 31,16 element Object p1 cp437:0x2B p2 0 step idle
+    stat at 28,18 element Passage p3 board "$The back of the bus"
+    stat at 31,16 element Object p1 cp437:0x2B
     oop
 @Object1
 /i
@@ -245,7 +245,7 @@ SCREECH!
 #restart
 
     end
-    stat at 32,16 element Object p1 cp437:0xFF p2 0 step idle
+    stat at 32,16 element Object p1 cp437:0xFF
     oop
 @Object2
 #end
@@ -254,7 +254,7 @@ SCREECH!
 #end
 
     end
-    stat at 30,16 element Object p1 cp437:0xFF p2 0 step idle
+    stat at 30,16 element Object p1 cp437:0xFF
     oop
 @Object3
 #end
@@ -263,14 +263,14 @@ SCREECH!
 #end
 
     end
-    stat at 27,20 element Scroll p1 0 p2 0 step idle
+    stat at 27,20 element Scroll
     oop
 NOTE: This game is incredibly stupid. Be
 forewarned. There is absolutely no point
 of this. It's just a stupid game.
 
     end
-    stat at 1,13 element Object p1 cp437:0xDB p2 0 step idle under Empty color 0x0C
+    stat at 1,13 element Object p1 cp437:0xDB under Empty color 0x0C
     oop
 @Music
 #cycle 1

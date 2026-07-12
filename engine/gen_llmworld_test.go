@@ -55,12 +55,16 @@ func genWorldExamples(t *testing.T, stem, outDir string) {
 		return
 	}
 
+	fullZWD, diagnostics := DecompileZWDAuthorable(&e.World)
+	if fullZWD == "" {
+		t.Logf("skip %s: not authorable (%s)", stem, formatZWDDecompileDiagnostics(diagnostics))
+		return
+	}
+	if len(diagnostics) > 0 {
+		t.Logf("%s: %s", stem, formatZWDDecompileDiagnostics(diagnostics))
+	}
 	for _, boardIdx := range pickRepresentativeBoards(e, 2) {
-		zwd := decompileSingleBoard(e, boardIdx)
-		if zwd == "" {
-			t.Logf("skip %s board %d: decompile produced empty output", stem, boardIdx)
-			continue
-		}
+		zwd := zwdExtractBoardSection(fullZWD, boardIdx)
 
 		outPath := filepath.Join(outDir, fmt.Sprintf("%s_board%d.zwd", stem, boardIdx))
 		if err := os.WriteFile(outPath, []byte(zwd), 0644); err != nil {
@@ -69,6 +73,14 @@ func genWorldExamples(t *testing.T, stem, outDir string) {
 		t.Logf("%s → board %d (%q) → %s (%d bytes)",
 			stem, boardIdx, boardNameAt(e, boardIdx), outPath, len(zwd))
 	}
+}
+
+func formatZWDDecompileDiagnostics(diagnostics []ZWDDecompileDiagnostic) string {
+	parts := make([]string, 0, len(diagnostics))
+	for _, d := range diagnostics {
+		parts = append(parts, fmt.Sprintf("board %d %s: %s", d.Board, d.Severity, d.Message))
+	}
+	return strings.Join(parts, "; ")
 }
 
 // pickRepresentativeBoards returns the indices of the n boards in e.World that

@@ -1,6 +1,5 @@
 board "Assassi Village - Center"
   start player at 32,16
-  respawn at 32,32
   max-shots 255
   dark false
   reenter false
@@ -67,21 +66,21 @@ ppppppFpppFFpFpFFFFFpFFFFFpFFpFFFFFFFFFFFFpFFFFFFFFFFFFFFFpF
   end
 
   stats
-    stat at 23,12 element Object cycle 1 p1 cp437:0xDF p2 0 step idle follower 0 leader 0
-    stat at 24,11 element Object cycle 1 p1 cp437:0xDF p2 0 step idle follower 0 leader 0
-    stat at 25,12 element Object cycle 1 p1 cp437:0xDF p2 0 step idle follower 0 leader 0
-    stat at 40,12 element Object cycle 1 p1 cp437:0xDF p2 0 step idle follower 0 leader 0
-    stat at 41,11 element Object cycle 1 p1 cp437:0xDF p2 0 step idle follower 0 leader 0
-    stat at 42,12 element Object cycle 1 p1 cp437:0xDF p2 0 step idle follower 0 leader 0
-    stat at 30,5 element Object cycle 1 p1 cp437:0xDF p2 0 step idle follower 0 leader 0
-    stat at 35,6 element Object cycle 1 p1 cp437:0xDF p2 0 step idle follower 0 leader 0
-    stat at 30,6 element Object cycle 1 p1 cp437:0xDF p2 0 step idle follower 0 leader 0
-    stat at 31,7 element Object cycle 1 p1 cp437:0xDF p2 0 step idle follower 0 leader 0
-    stat at 34,7 element Object cycle 1 p1 cp437:0xDF p2 0 step idle follower 0 leader 0
-    stat at 35,5 element Object cycle 1 p1 cp437:0xDF p2 0 step idle follower 0 leader 0
-    stat at 35,3 element Object cycle 1 p1 cp437:0xDC p2 0 step idle follower 0 leader 0
-    stat at 30,3 element Object cycle 1 p1 cp437:0xDC p2 0 step idle follower 0 leader 0
-    stat at 32,14 element Object cycle 1 p1 cp437:0x00 p2 0 step idle follower 0 leader 0
+    stat at 23,12 element Object cycle 1 p1 cp437:0xDF follower 0 leader 0
+    stat at 24,11 element Object cycle 1 p1 cp437:0xDF follower 0 leader 0
+    stat at 25,12 element Object cycle 1 p1 cp437:0xDF follower 0 leader 0
+    stat at 40,12 element Object cycle 1 p1 cp437:0xDF follower 0 leader 0
+    stat at 41,11 element Object cycle 1 p1 cp437:0xDF follower 0 leader 0
+    stat at 42,12 element Object cycle 1 p1 cp437:0xDF follower 0 leader 0
+    stat at 30,5 element Object cycle 1 p1 cp437:0xDF follower 0 leader 0
+    stat at 35,6 element Object cycle 1 p1 cp437:0xDF follower 0 leader 0
+    stat at 30,6 element Object cycle 1 p1 cp437:0xDF follower 0 leader 0
+    stat at 31,7 element Object cycle 1 p1 cp437:0xDF follower 0 leader 0
+    stat at 34,7 element Object cycle 1 p1 cp437:0xDF follower 0 leader 0
+    stat at 35,5 element Object cycle 1 p1 cp437:0xDF follower 0 leader 0
+    stat at 35,3 element Object cycle 1 p1 cp437:0xDC follower 0 leader 0
+    stat at 30,3 element Object cycle 1 p1 cp437:0xDC follower 0 leader 0
+    stat at 32,14 element Object cycle 1 p1 cp437:0x00 follower 0 leader 0
     oop
 @Hotel
 #end
@@ -93,20 +92,20 @@ $themselves all around town.
 #end
 
     end
-    stat at 33,14 element Object cycle 1 p1 cp437:0x00 p2 0 step idle follower 0 leader 0
+    stat at 33,14 element Object cycle 1 p1 cp437:0x00 follower 0 leader 0
     oop
 #bind Hotel
 
     end
-    stat at 32,4 element Object cycle 1 p1 cp437:0xDE p2 0 step idle follower 0 leader 0
-    stat at 33,4 element Object cycle 1 p1 cp437:0xDD p2 0 step idle follower 0 leader 0
-    stat at 31,4 element Object cycle 1 p1 cp437:0xDD p2 0 step idle follower 0 leader 0
-    stat at 34,4 element Object cycle 1 p1 cp437:0xDE p2 0 step idle follower 0 leader 0
-    stat at 33,3 element Object cycle 1 p1 cp437:0xDF p2 0 step idle follower 0 leader 0
-    stat at 32,3 element Object cycle 1 p1 cp437:0xDF p2 0 step idle follower 0 leader 0
-    stat at 32,5 element Object cycle 1 p1 cp437:0xDC p2 0 step idle follower 0 leader 0
-    stat at 33,5 element Object cycle 1 p1 cp437:0xDC p2 0 step idle follower 0 leader 0
-    stat at 32,20 element Object cycle 1 p1 cp437:0x02 p2 0 step idle under Fake color 0x7E follower 0 leader 0
+    stat at 32,4 element Object cycle 1 p1 cp437:0xDE follower 0 leader 0
+    stat at 33,4 element Object cycle 1 p1 cp437:0xDD follower 0 leader 0
+    stat at 31,4 element Object cycle 1 p1 cp437:0xDD follower 0 leader 0
+    stat at 34,4 element Object cycle 1 p1 cp437:0xDE follower 0 leader 0
+    stat at 33,3 element Object cycle 1 p1 cp437:0xDF follower 0 leader 0
+    stat at 32,3 element Object cycle 1 p1 cp437:0xDF follower 0 leader 0
+    stat at 32,5 element Object cycle 1 p1 cp437:0xDC follower 0 leader 0
+    stat at 33,5 element Object cycle 1 p1 cp437:0xDC follower 0 leader 0
+    stat at 32,20 element Object cycle 1 p1 cp437:0x02 under Fake color 0x7E follower 0 leader 0
     oop
 @Rumi
 #play e#e#exggggxbbbbx+ddddxxxccccxxx-bbb
@@ -140,7 +139,7 @@ Sadler resumed the investigation with Rumi
 #become fake
 
     end
-    stat at 53,13 element Object p1 cp437:0x02 p2 0 step idle under Fake color 0x6E follower 0 leader 0
+    stat at 53,13 element Object p1 cp437:0x02 under Fake color 0x6E follower 0 leader 0
     oop
 @Fakhyle
 #end
@@ -166,7 +165,7 @@ Fakhyle joins the entourage
 #end
 
     end
-    stat at 47,20 element Object p1 cp437:0x02 p2 0 step idle under Fake color 0x7E follower 0 leader 0
+    stat at 47,20 element Object p1 cp437:0x02 under Fake color 0x7E follower 0 leader 0
     oop
 @Boy
 #ds

@@ -118,7 +118,7 @@ ffffffffffffffffffffffff;fffffffffffffffffffffffffgggggggggg
   end
 
   stats
-    stat at 52,1 element Object cycle 1 p2 0 step idle under Empty color 0x0F
+    stat at 52,1 element Object cycle 1 under Empty color 0x0F
     oop
 @statuschecker
 :b
@@ -165,7 +165,7 @@ ffffffffffffffffffffffff;fffffffffffffffffffffffffgggggggggg
 
 
     end
-    stat at 53,1 element Object cycle 1 p2 0 step idle under Empty color 0x0F
+    stat at 53,1 element Object cycle 1 under Empty color 0x0F
     oop
 @Tome
 :b
@@ -325,7 +325,7 @@ You don't have a flask.
 #flhl
 
     end
-    stat at 54,1 element Object cycle 1 p2 0 step idle under Empty color 0x0F
+    stat at 54,1 element Object cycle 1 under Empty color 0x0F
     oop
 @StarCatcher
 :b
@@ -338,7 +338,7 @@ You don't have a flask.
 #b
 
     end
-    stat at 57,9 element Object cycle 1 p1 cp437:0x4E p2 0 step idle under Empty color 0x0F
+    stat at 57,9 element Object cycle 1 p1 cp437:0x4E under Empty color 0x0F
     oop
 @RuneMarker
 :b
@@ -380,7 +380,7 @@ You don't have a flask.
 #rdone
 
     end
-    stat at 58,9 element Object cycle 1 p1 cp437:0x75 p2 0 step idle under Empty color 0x0F
+    stat at 58,9 element Object cycle 1 p1 cp437:0x75 under Empty color 0x0F
     oop
 @RuneMarker
 :b
@@ -422,7 +422,7 @@ You don't have a flask.
 #rdone
 
     end
-    stat at 59,9 element Object cycle 1 p1 cp437:0x6C p2 0 step idle under Empty color 0x0F
+    stat at 59,9 element Object cycle 1 p1 cp437:0x6C under Empty color 0x0F
     oop
 @RuneMarker
 :b
@@ -464,7 +464,7 @@ You don't have a flask.
 #rdone
 
     end
-    stat at 60,9 element Object cycle 1 p1 cp437:0x6C p2 0 step idle under Empty color 0x0F
+    stat at 60,9 element Object cycle 1 p1 cp437:0x6C under Empty color 0x0F
     oop
 @RuneMarker
 :b
@@ -506,7 +506,7 @@ You don't have a flask.
 #rdone
 
     end
-    stat at 52,12 element Object cycle 1 p1 cp437:0x4E p2 0 step idle under Empty color 0x0F
+    stat at 52,12 element Object cycle 1 p1 cp437:0x4E under Empty color 0x0F
     oop
 @RuneMarker
 :b
@@ -522,7 +522,7 @@ You don't have a flask.
 #sdone
 
     end
-    stat at 53,12 element Object cycle 1 p1 cp437:0x6F p2 0 step idle under Empty color 0x0F
+    stat at 53,12 element Object cycle 1 p1 cp437:0x6F under Empty color 0x0F
     oop
 @RuneMarker
 :b
@@ -540,7 +540,7 @@ You don't have a flask.
 #sdone
 
     end
-    stat at 54,12 element Object cycle 1 p1 cp437:0x72 p2 0 step idle under Empty color 0x0F
+    stat at 54,12 element Object cycle 1 p1 cp437:0x72 under Empty color 0x0F
     oop
 @RuneMarker
 :b
@@ -558,7 +558,7 @@ You don't have a flask.
 #sdone
 
     end
-    stat at 55,12 element Object cycle 1 p1 cp437:0x6D p2 0 step idle under Empty color 0x0F
+    stat at 55,12 element Object cycle 1 p1 cp437:0x6D under Empty color 0x0F
     oop
 @RuneMarker
 :b
@@ -576,7 +576,7 @@ You don't have a flask.
 #sdone
 
     end
-    stat at 56,12 element Object cycle 1 p1 cp437:0x61 p2 0 step idle under Empty color 0x0F
+    stat at 56,12 element Object cycle 1 p1 cp437:0x61 under Empty color 0x0F
     oop
 @RuneMarker
 :b
@@ -594,7 +594,7 @@ You don't have a flask.
 #sdone
 
     end
-    stat at 57,12 element Object cycle 1 p1 cp437:0x6C p2 0 step idle under Empty color 0x0F
+    stat at 57,12 element Object cycle 1 p1 cp437:0x6C under Empty color 0x0F
     oop
 @RuneMarker
 :b
@@ -612,7 +612,7 @@ You don't have a flask.
 #sdone
 
     end
-    stat at 58,12 element Object cycle 1 p1 cp437:0x20 p2 0 step idle under Empty color 0x0F
+    stat at 58,12 element Object cycle 1 p1 cp437:0x20 under Empty color 0x0F
     oop
 @RuneMarker
 :b
@@ -630,7 +630,7 @@ You don't have a flask.
 #sdone
 
     end
-    stat at 59,12 element Object cycle 1 p1 cp437:0x20 p2 0 step idle under Empty color 0x0F
+    stat at 59,12 element Object cycle 1 p1 cp437:0x20 under Empty color 0x0F
     oop
 @RuneMarker
 :b
@@ -648,7 +648,7 @@ You don't have a flask.
 #sdone
 
     end
-    stat at 55,1 element Object cycle 1 p2 0 step idle under Empty color 0x0F
+    stat at 55,1 element Object cycle 1 under Empty color 0x0F
     oop
 @hl
 #end
@@ -856,7 +856,7 @@ You don't have a flask.
 #end
 
     end
-    stat at 56,1 element Object cycle 1 p1 cp437:0xAD p2 0 step idle under Empty color 0x0F
+    stat at 56,1 element Object cycle 1 p1 cp437:0xAD under Empty color 0x0F
     oop
 @Flask
 #end
@@ -890,7 +890,7 @@ You cannot pick up any more flasks.
 
 
     end
-    stat at 60,14 element Object cycle 1 p1 cp437:0x30 p2 0 step idle under Empty color 0x0F
+    stat at 60,14 element Object cycle 1 p1 cp437:0x30 under Empty color 0x0F
     oop
 @FMark
 :b
@@ -916,7 +916,7 @@ You cannot pick up any more flasks.
 #fdone
 
     end
-    stat at 57,1 element Object cycle 1 p1 cp437:0x08 p2 0 step idle under Empty color 0x0F
+    stat at 57,1 element Object cycle 1 p1 cp437:0x08 under Empty color 0x0F
     oop
 @Door
 #end
@@ -926,7 +926,7 @@ You cannot pick up any more flasks.
 #die
 
     end
-    stat at 52,8 element Object cycle 1 p1 cp437:0xF9 p2 0 step idle under Empty color 0x0F
+    stat at 52,8 element Object cycle 1 p1 cp437:0xF9 under Empty color 0x0F
     oop
 @SCoin
 #end
@@ -936,7 +936,7 @@ You pick up a gold coin worth 1 gold.
 #become fake
 
     end
-    stat at 53,8 element Object cycle 1 p1 cp437:0x07 p2 0 step idle under Empty color 0x0F
+    stat at 53,8 element Object cycle 1 p1 cp437:0x07 under Empty color 0x0F
     oop
 @BCoin
 #end
@@ -946,7 +946,7 @@ You pick up a gold doubloon worth 5 gold.
 #become fake
 
     end
-    stat at 54,8 element Object cycle 1 p1 cp437:0x16 p2 0 step idle under Empty color 0x0F
+    stat at 54,8 element Object cycle 1 p1 cp437:0x16 under Empty color 0x0F
     oop
 @GBar
 #end
@@ -956,7 +956,7 @@ You pick up a gold bar worth 20 gold.
 #become fake
 
     end
-    stat at 55,8 element Object cycle 1 p1 cp437:0x7F p2 0 step idle under Empty color 0x0F
+    stat at 55,8 element Object cycle 1 p1 cp437:0x7F under Empty color 0x0F
     oop
 @Chest
 #end
@@ -970,7 +970,7 @@ The chest is empty.
 #end
 
     end
-    stat at 60,1 element Object cycle 1 p1 cp437:0x48 p2 0 step idle under Empty color 0x0F
+    stat at 60,1 element Object cycle 1 p1 cp437:0x48 under Empty color 0x0F
     oop
 @Help
 :l
@@ -987,42 +987,42 @@ Choose a topic for information:
 
 
     end
-    stat at 25,24 element Passage p1 0 p2 0 p3 board "Garden: Paths Bend" step idle under Empty color 0x0F
-    stat at 50,13 element Passage p1 0 p2 0 p3 board "Garden: Paths Bend 2" step idle under Empty color 0x0F
-    stat at 25,2 element Passage p1 0 p2 0 p3 board "Garden: Exit" step idle under Empty color 0x0F
-    stat at 36,18 element Object p1 cp437:0x0F p2 0 step idle under Fake color 0x20
-    stat at 38,18 element Object p1 cp437:0x0F p2 0 step idle under Fake color 0x20
-    stat at 40,18 element Object p1 cp437:0x0F p2 0 step idle under Fake color 0x20
-    stat at 42,18 element Object p1 cp437:0x0F p2 0 step idle under Fake color 0x20
-    stat at 43,18 element Object p1 cp437:0xE6 p2 0 step idle under Fake color 0x20
-    stat at 41,18 element Object p1 cp437:0xE6 p2 0 step idle under Fake color 0x20
-    stat at 39,18 element Object p1 cp437:0xE6 p2 0 step idle under Fake color 0x20
-    stat at 37,18 element Object p1 cp437:0xE6 p2 0 step idle under Fake color 0x20
-    stat at 36,20 element Object p1 cp437:0x0F p2 0 step idle under Fake color 0x20
-    stat at 37,20 element Object p1 cp437:0xE6 p2 0 step idle under Fake color 0x20
-    stat at 40,20 element Object p1 cp437:0x0F p2 0 step idle under Fake color 0x20
-    stat at 42,20 element Object p1 cp437:0x0F p2 0 step idle under Fake color 0x20
-    stat at 38,20 element Object p1 cp437:0x0F p2 0 step idle under Empty color 0x0F
-    stat at 36,6 element Object p1 cp437:0x0F p2 0 step idle under Fake color 0x20
-    stat at 37,6 element Object p1 cp437:0xE6 p2 0 step idle under Fake color 0x20
-    stat at 38,6 element Object p1 cp437:0x0F p2 0 step idle under Fake color 0x20
-    stat at 39,6 element Object p1 cp437:0xE6 p2 0 step idle under Fake color 0x20
-    stat at 40,6 element Object p1 cp437:0x0F p2 0 step idle under Fake color 0x20
-    stat at 41,6 element Object p1 cp437:0xE6 p2 0 step idle under Fake color 0x20
-    stat at 42,6 element Object p1 cp437:0x0F p2 0 step idle under Fake color 0x20
-    stat at 43,6 element Object p1 cp437:0xE6 p2 0 step idle under Fake color 0x20
-    stat at 36,8 element Object p1 cp437:0x0F p2 0 step idle under Fake color 0x20
-    stat at 37,8 element Object p1 cp437:0xE6 p2 0 step idle under Fake color 0x20
-    stat at 38,8 element Object p1 cp437:0x0F p2 0 step idle under Empty color 0x0F
-    stat at 40,8 element Object p1 cp437:0x0F p2 0 step idle under Fake color 0x20
-    stat at 42,8 element Object p1 cp437:0x0F p2 0 step idle under Fake color 0x20
-    stat at 39,20 element Object p1 cp437:0xE6 p2 0 step idle under Empty color 0x0F
-    stat at 41,20 element Object p1 cp437:0xE6 p2 0 step idle under Empty color 0x0F
-    stat at 43,20 element Object p1 cp437:0xE6 p2 0 step idle under Empty color 0x0F
-    stat at 39,8 element Object p1 cp437:0xE6 p2 0 step idle under Empty color 0x0F
-    stat at 41,8 element Object p1 cp437:0xE6 p2 0 step idle under Empty color 0x0F
-    stat at 43,8 element Object p1 cp437:0xE6 p2 0 step idle under Empty color 0x0F
-    stat at 32,10 element Object cycle 1 p1 cp437:0x77 p2 0 step idle under Fake color 0x20
+    stat at 25,24 element Passage p3 board "Garden: Paths Bend" under Empty color 0x0F
+    stat at 50,13 element Passage p3 board "Garden: Paths Bend 2" under Empty color 0x0F
+    stat at 25,2 element Passage p3 board "Garden: Exit" under Empty color 0x0F
+    stat at 36,18 element Object p1 cp437:0x0F under Fake color 0x20
+    stat at 38,18 element Object p1 cp437:0x0F under Fake color 0x20
+    stat at 40,18 element Object p1 cp437:0x0F under Fake color 0x20
+    stat at 42,18 element Object p1 cp437:0x0F under Fake color 0x20
+    stat at 43,18 element Object p1 cp437:0xE6 under Fake color 0x20
+    stat at 41,18 element Object p1 cp437:0xE6 under Fake color 0x20
+    stat at 39,18 element Object p1 cp437:0xE6 under Fake color 0x20
+    stat at 37,18 element Object p1 cp437:0xE6 under Fake color 0x20
+    stat at 36,20 element Object p1 cp437:0x0F under Fake color 0x20
+    stat at 37,20 element Object p1 cp437:0xE6 under Fake color 0x20
+    stat at 40,20 element Object p1 cp437:0x0F under Fake color 0x20
+    stat at 42,20 element Object p1 cp437:0x0F under Fake color 0x20
+    stat at 38,20 element Object p1 cp437:0x0F under Empty color 0x0F
+    stat at 36,6 element Object p1 cp437:0x0F under Fake color 0x20
+    stat at 37,6 element Object p1 cp437:0xE6 under Fake color 0x20
+    stat at 38,6 element Object p1 cp437:0x0F under Fake color 0x20
+    stat at 39,6 element Object p1 cp437:0xE6 under Fake color 0x20
+    stat at 40,6 element Object p1 cp437:0x0F under Fake color 0x20
+    stat at 41,6 element Object p1 cp437:0xE6 under Fake color 0x20
+    stat at 42,6 element Object p1 cp437:0x0F under Fake color 0x20
+    stat at 43,6 element Object p1 cp437:0xE6 under Fake color 0x20
+    stat at 36,8 element Object p1 cp437:0x0F under Fake color 0x20
+    stat at 37,8 element Object p1 cp437:0xE6 under Fake color 0x20
+    stat at 38,8 element Object p1 cp437:0x0F under Empty color 0x0F
+    stat at 40,8 element Object p1 cp437:0x0F under Fake color 0x20
+    stat at 42,8 element Object p1 cp437:0x0F under Fake color 0x20
+    stat at 39,20 element Object p1 cp437:0xE6 under Empty color 0x0F
+    stat at 41,20 element Object p1 cp437:0xE6 under Empty color 0x0F
+    stat at 43,20 element Object p1 cp437:0xE6 under Empty color 0x0F
+    stat at 39,8 element Object p1 cp437:0xE6 under Empty color 0x0F
+    stat at 41,8 element Object p1 cp437:0xE6 under Empty color 0x0F
+    stat at 43,8 element Object p1 cp437:0xE6 under Empty color 0x0F
+    stat at 32,10 element Object cycle 1 p1 cp437:0x77 under Fake color 0x20
     oop
 @Werewolf
 :b
@@ -1165,7 +1165,7 @@ The werewolf goes berserk!
 #mdmgb
 
     end
-    stat at 44,16 element Object cycle 1 p1 cp437:0x77 p2 0 step idle under Fake color 0x20
+    stat at 44,16 element Object cycle 1 p1 cp437:0x77 under Fake color 0x20
     oop
 @Werewolf
 :b
@@ -1308,7 +1308,7 @@ The werewolf goes berserk!
 #mdmgb
 
     end
-    stat at 19,6 element Object cycle 1 p1 cp437:0x77 p2 0 step idle under Fake color 0x20
+    stat at 19,6 element Object cycle 1 p1 cp437:0x77 under Fake color 0x20
     oop
 @Werewolf
 :b
@@ -1451,7 +1451,7 @@ The werewolf goes berserk!
 #mdmgb
 
     end
-    stat at 20,10 element Object cycle 1 p1 cp437:0x76 p2 0 step idle under Fake color 0x20
+    stat at 20,10 element Object cycle 1 p1 cp437:0x76 under Fake color 0x20
     oop
 @VampireBat
 :b
@@ -1535,7 +1535,7 @@ The werewolf goes berserk!
 
 
     end
-    stat at 32,6 element Object cycle 1 p1 cp437:0x76 p2 0 step idle under Fake color 0x20
+    stat at 32,6 element Object cycle 1 p1 cp437:0x76 under Fake color 0x20
     oop
 @VampireBat
 :b
@@ -1619,7 +1619,7 @@ The werewolf goes berserk!
 
 
     end
-    stat at 38,11 element Object cycle 1 p1 cp437:0x76 p2 0 step idle under Fake color 0x20
+    stat at 38,11 element Object cycle 1 p1 cp437:0x76 under Fake color 0x20
     oop
 @VampireBat
 :b
@@ -1703,27 +1703,27 @@ The werewolf goes berserk!
 
 
     end
-    stat at 11,13 element Object cycle 1 p1 cp437:0x7F p2 0 step idle under Fake color 0x20
+    stat at 11,13 element Object cycle 1 p1 cp437:0x7F under Fake color 0x20
     oop
 #bind Chest
 
     end
-    stat at 17,18 element Object cycle 1 p1 cp437:0x07 p2 0 step idle under Fake color 0x20
+    stat at 17,18 element Object cycle 1 p1 cp437:0x07 under Fake color 0x20
     oop
 #bind BCoin
 
     end
-    stat at 48,18 element Object cycle 1 p1 cp437:0x07 p2 0 step idle under Fake color 0x20
+    stat at 48,18 element Object cycle 1 p1 cp437:0x07 under Fake color 0x20
     oop
 #bind BCoin
 
     end
-    stat at 17,4 element Object cycle 1 p1 cp437:0xF9 p2 0 step idle under Fake color 0x20
+    stat at 17,4 element Object cycle 1 p1 cp437:0xF9 under Fake color 0x20
     oop
 #bind SCoin
 
     end
-    stat at 47,9 element Object cycle 1 p1 cp437:0xF9 p2 0 step idle under Fake color 0x20
+    stat at 47,9 element Object cycle 1 p1 cp437:0xF9 under Fake color 0x20
     oop
 #bind SCoin
 

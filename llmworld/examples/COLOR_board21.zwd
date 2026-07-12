@@ -60,7 +60,7 @@ Endingf-f3~~~~~~BB~~~~~~~~~~~~~~BB~~~~~~~~~~~~~~BB~~~~~~~~~~
   end
 
   stats
-    stat at 10,6 element Object p1 cp437:0x00 p2 0 step idle under Fake color 0x11
+    stat at 10,6 element Object p1 cp437:0x00 under Fake color 0x11
     oop
 @Fin
 /i/i/i
@@ -68,7 +68,7 @@ My quest is complete. The color revival
 /i/i/i/i/i/i
 has been achived... yet I still have
 /i/i/i/i/i/i
-questions. Where is the nowhere that 
+questions. Where is the nowhere that
 /i/i/i/i/i/i
 selected me to revive the colors? What in-
 /i/i/i/i/i/i

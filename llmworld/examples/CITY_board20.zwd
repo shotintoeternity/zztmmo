@@ -75,88 +75,88 @@ llllllllllllllllllllllllllllllllllllllllllllllllllllllllllll
   end
 
   stats
-    stat at 19,4 element Lion p1 8 p2 0 step idle
-    stat at 20,4 element Lion p1 8 p2 0 step idle
-    stat at 21,4 element Lion p1 8 p2 0 step idle
-    stat at 22,4 element Lion p1 8 p2 0 step idle
-    stat at 23,4 element Lion p1 8 p2 0 step idle
-    stat at 24,4 element Lion p1 8 p2 0 step idle
-    stat at 25,4 element Lion p1 8 p2 0 step idle
-    stat at 26,4 element Lion p1 8 p2 0 step idle
-    stat at 27,4 element Lion p1 8 p2 0 step idle
-    stat at 28,4 element Lion p1 8 p2 0 step idle
-    stat at 29,4 element Lion p1 8 p2 0 step idle
-    stat at 29,3 element Lion p1 8 p2 0 step idle
-    stat at 28,3 element Lion p1 8 p2 0 step idle
-    stat at 27,3 element Lion p1 8 p2 0 step idle
-    stat at 26,3 element Lion p1 8 p2 0 step idle
-    stat at 25,3 element Lion p1 8 p2 0 step idle
-    stat at 24,3 element Lion p1 8 p2 0 step idle
-    stat at 23,3 element Lion p1 8 p2 0 step idle
-    stat at 22,3 element Lion p1 8 p2 0 step idle
-    stat at 21,3 element Lion p1 8 p2 0 step idle
-    stat at 20,3 element Lion p1 8 p2 0 step idle
-    stat at 19,3 element Lion p1 8 p2 0 step idle
-    stat at 18,22 element Lion p1 8 p2 0 step idle
-    stat at 17,22 element Lion p1 8 p2 0 step idle
-    stat at 16,22 element Lion p1 8 p2 0 step idle
-    stat at 15,22 element Lion p1 8 p2 0 step idle
-    stat at 14,22 element Lion p1 8 p2 0 step idle under Empty color 0x0F
-    stat at 13,22 element Lion p1 8 p2 0 step idle under Empty color 0x0F
-    stat at 13,21 element Lion p1 8 p2 0 step idle
-    stat at 14,21 element Lion p1 8 p2 0 step idle under Empty color 0x0F
-    stat at 15,21 element Lion p1 8 p2 0 step idle under Empty color 0x0F
-    stat at 16,21 element Lion p1 8 p2 0 step idle under Empty color 0x0F
-    stat at 17,21 element Lion p1 8 p2 0 step idle under Empty color 0x0F
-    stat at 18,21 element Lion p1 8 p2 0 step idle
-    stat at 5,21 element Lion p1 0 p2 0 step idle under Empty color 0x0F
-    stat at 6,21 element Lion p1 0 p2 0 step idle under Empty color 0x0F
-    stat at 7,21 element Lion p1 0 p2 0 step idle under Empty color 0x0F
-    stat at 8,21 element Lion p1 0 p2 0 step idle
-    stat at 9,21 element Lion p1 0 p2 0 step idle
-    stat at 10,21 element Lion p1 0 p2 0 step idle
-    stat at 10,22 element Lion p1 0 p2 0 step idle under Empty color 0x0F
-    stat at 9,22 element Lion p1 0 p2 0 step idle under Empty color 0x0F
-    stat at 8,22 element Lion p1 0 p2 0 step idle under Empty color 0x0F
-    stat at 7,22 element Lion p1 0 p2 0 step idle under Empty color 0x0F
-    stat at 6,22 element Lion p1 0 p2 0 step idle
-    stat at 5,22 element Lion p1 0 p2 0 step idle
-    stat at 31,10 element Tiger p1 7 p2 2 step idle
-    stat at 30,10 element Tiger p1 7 p2 2 step idle
-    stat at 32,10 element Tiger p1 7 p2 2 step idle
-    stat at 33,10 element Tiger p1 7 p2 2 step idle
-    stat at 34,10 element Tiger p1 7 p2 2 step idle
-    stat at 34,11 element Tiger p1 7 p2 2 step idle
-    stat at 33,11 element Tiger p1 7 p2 2 step idle
-    stat at 32,11 element Tiger p1 7 p2 2 step idle
-    stat at 31,11 element Tiger p1 7 p2 2 step idle
-    stat at 30,11 element Tiger p1 7 p2 2 step idle
-    stat at 37,15 element Head step idle
-    stat at 38,15 element Segment p1 0 p2 0 step idle
-    stat at 37,17 element Head step idle
-    stat at 37,19 element Head step idle
-    stat at 37,21 element Head step idle
-    stat at 37,13 element Head step idle
-    stat at 37,11 element Head step idle
-    stat at 38,11 element Segment p1 0 p2 0 step idle
-    stat at 38,13 element Segment p1 0 p2 0 step idle
-    stat at 38,17 element Segment p1 0 p2 0 step idle
-    stat at 38,19 element Segment p1 0 p2 0 step idle
-    stat at 38,21 element Segment p1 0 p2 0 step idle
-    stat at 42,21 element Head step idle under Empty color 0x0F
-    stat at 43,21 element Segment p1 0 p2 0 step idle under Empty color 0x0F
-    stat at 47,21 element Head step idle
-    stat at 48,21 element Segment p1 0 p2 0 step idle
-    stat at 52,21 element Head step idle
-    stat at 53,21 element Segment p1 0 p2 0 step idle
-    stat at 54,14 element Ruffian p1 8 p2 8 step idle
-    stat at 55,14 element Ruffian p1 8 p2 8 step idle
-    stat at 56,14 element Ruffian p1 8 p2 8 step idle
-    stat at 57,14 element Ruffian p1 8 p2 8 step idle
-    stat at 53,14 element Ruffian p1 8 p2 8 step idle
-    stat at 52,14 element Ruffian p1 8 p2 8 step idle
-    stat at 51,14 element Ruffian p1 8 p2 8 step idle
-    stat at 50,14 element Ruffian p1 8 p2 8 step idle
-    stat at 53,7 element Passage p1 0 p2 0 p3 board "Dr. Bob's Hideout" step idle under Empty color 0x4F
+    stat at 19,4 element Lion p1 8
+    stat at 20,4 element Lion p1 8
+    stat at 21,4 element Lion p1 8
+    stat at 22,4 element Lion p1 8
+    stat at 23,4 element Lion p1 8
+    stat at 24,4 element Lion p1 8
+    stat at 25,4 element Lion p1 8
+    stat at 26,4 element Lion p1 8
+    stat at 27,4 element Lion p1 8
+    stat at 28,4 element Lion p1 8
+    stat at 29,4 element Lion p1 8
+    stat at 29,3 element Lion p1 8
+    stat at 28,3 element Lion p1 8
+    stat at 27,3 element Lion p1 8
+    stat at 26,3 element Lion p1 8
+    stat at 25,3 element Lion p1 8
+    stat at 24,3 element Lion p1 8
+    stat at 23,3 element Lion p1 8
+    stat at 22,3 element Lion p1 8
+    stat at 21,3 element Lion p1 8
+    stat at 20,3 element Lion p1 8
+    stat at 19,3 element Lion p1 8
+    stat at 18,22 element Lion p1 8
+    stat at 17,22 element Lion p1 8
+    stat at 16,22 element Lion p1 8
+    stat at 15,22 element Lion p1 8
+    stat at 14,22 element Lion p1 8 under Empty color 0x0F
+    stat at 13,22 element Lion p1 8 under Empty color 0x0F
+    stat at 13,21 element Lion p1 8
+    stat at 14,21 element Lion p1 8 under Empty color 0x0F
+    stat at 15,21 element Lion p1 8 under Empty color 0x0F
+    stat at 16,21 element Lion p1 8 under Empty color 0x0F
+    stat at 17,21 element Lion p1 8 under Empty color 0x0F
+    stat at 18,21 element Lion p1 8
+    stat at 5,21 element Lion under Empty color 0x0F
+    stat at 6,21 element Lion under Empty color 0x0F
+    stat at 7,21 element Lion under Empty color 0x0F
+    stat at 8,21 element Lion
+    stat at 9,21 element Lion
+    stat at 10,21 element Lion
+    stat at 10,22 element Lion under Empty color 0x0F
+    stat at 9,22 element Lion under Empty color 0x0F
+    stat at 8,22 element Lion under Empty color 0x0F
+    stat at 7,22 element Lion under Empty color 0x0F
+    stat at 6,22 element Lion
+    stat at 5,22 element Lion
+    stat at 31,10 element Tiger p1 7 p2 2
+    stat at 30,10 element Tiger p1 7 p2 2
+    stat at 32,10 element Tiger p1 7 p2 2
+    stat at 33,10 element Tiger p1 7 p2 2
+    stat at 34,10 element Tiger p1 7 p2 2
+    stat at 34,11 element Tiger p1 7 p2 2
+    stat at 33,11 element Tiger p1 7 p2 2
+    stat at 32,11 element Tiger p1 7 p2 2
+    stat at 31,11 element Tiger p1 7 p2 2
+    stat at 30,11 element Tiger p1 7 p2 2
+    stat at 37,15 element Head p1 4 p2 4
+    stat at 38,15 element Segment
+    stat at 37,17 element Head p1 4 p2 4
+    stat at 37,19 element Head p1 4 p2 4
+    stat at 37,21 element Head p1 4 p2 4
+    stat at 37,13 element Head p1 4 p2 4
+    stat at 37,11 element Head p1 4 p2 4
+    stat at 38,11 element Segment
+    stat at 38,13 element Segment
+    stat at 38,17 element Segment
+    stat at 38,19 element Segment
+    stat at 38,21 element Segment
+    stat at 42,21 element Head p1 4 p2 4 under Empty color 0x0F
+    stat at 43,21 element Segment under Empty color 0x0F
+    stat at 47,21 element Head p1 4 p2 4
+    stat at 48,21 element Segment
+    stat at 52,21 element Head p1 4 p2 4
+    stat at 53,21 element Segment
+    stat at 54,14 element Ruffian p1 8 p2 8
+    stat at 55,14 element Ruffian p1 8 p2 8
+    stat at 56,14 element Ruffian p1 8 p2 8
+    stat at 57,14 element Ruffian p1 8 p2 8
+    stat at 53,14 element Ruffian p1 8 p2 8
+    stat at 52,14 element Ruffian p1 8 p2 8
+    stat at 51,14 element Ruffian p1 8 p2 8
+    stat at 50,14 element Ruffian p1 8 p2 8
+    stat at 53,7 element Passage p3 board "Dr. Bob's Hideout" under Empty color 0x4F
   end
 end

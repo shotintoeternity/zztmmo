@@ -78,8 +78,8 @@ SSSSSSxSSSSSSyyzzzzzzyySSSSSSSSSS######P######ffCCCCvvrrrrvv
   end
 
   stats
-    stat at 40,25 element Passage p1 0 p2 0 p3 board "outside right" step idle under Empty color 0x74
-    stat at 36,15 element Object p1 cp437:0xDE p2 0 step idle under Empty color 0x74
+    stat at 40,25 element Passage p3 board "outside right" under Empty color 0x74
+    stat at 36,15 element Object p1 cp437:0xDE under Empty color 0x74
     oop
 @picture
 #end
@@ -94,7 +94,7 @@ these paintings are all very similar.
 #end
 
     end
-    stat at 36,18 element Object p1 cp437:0xDE p2 0 step idle under Empty color 0x74
+    stat at 36,18 element Object p1 cp437:0xDE under Empty color 0x74
     oop
 @fine art
 #cycle 1
@@ -114,7 +114,7 @@ this one looks strange for some reason.
 #end
 :z3
 you say, "I don't know much about art,
-          but I know what I like."
+but I know what I like."
 
 the painting hits you.
 /i/i/i
@@ -142,14 +142,14 @@ the painting sinks into the wall.
 #end
 
     end
-    stat at 36,19 element Object p1 cp437:0xDE p2 0 step idle under Empty color 0x74
+    stat at 36,19 element Object p1 cp437:0xDE under Empty color 0x74
     oop
 @left
 #bind fine art
 #end
 
     end
-    stat at 44,15 element Object p1 cp437:0xDD p2 0 step idle under Empty color 0x74
+    stat at 44,15 element Object p1 cp437:0xDD under Empty color 0x74
     oop
 @picture
 #end
@@ -164,7 +164,7 @@ these paintings are all very similar.
 #end
 
     end
-    stat at 44,16 element Object p1 cp437:0xDD p2 0 step idle under Empty color 0x74
+    stat at 44,16 element Object p1 cp437:0xDD under Empty color 0x74
     oop
 @picture
 #end
@@ -179,7 +179,7 @@ these paintings are all very similar.
 #end
 
     end
-    stat at 44,19 element Object p1 cp437:0xDD p2 0 step idle under Empty color 0x74
+    stat at 44,19 element Object p1 cp437:0xDD under Empty color 0x74
     oop
 @picture
 #end
@@ -194,7 +194,7 @@ these paintings are all very similar.
 #end
 
     end
-    stat at 44,21 element Object p1 cp437:0xDD p2 0 step idle under Empty color 0x74
+    stat at 44,21 element Object p1 cp437:0xDD under Empty color 0x74
     oop
 @picture
 #end
@@ -209,7 +209,7 @@ these paintings are all very similar.
 #end
 
     end
-    stat at 44,22 element Object p1 cp437:0xDD p2 0 step idle under Empty color 0x74
+    stat at 44,22 element Object p1 cp437:0xDD under Empty color 0x74
     oop
 @picture
 #end
@@ -224,7 +224,7 @@ these paintings are all very similar.
 #end
 
     end
-    stat at 44,12 element Object p1 cp437:0xDD p2 0 step idle under Empty color 0x74
+    stat at 44,12 element Object p1 cp437:0xDD under Empty color 0x74
     oop
 @picture
 #end
@@ -239,7 +239,7 @@ these paintings are all very similar.
 #end
 
     end
-    stat at 44,13 element Object p1 cp437:0xDD p2 0 step idle under Empty color 0x74
+    stat at 44,13 element Object p1 cp437:0xDD under Empty color 0x74
     oop
 @picture
 #end
@@ -254,7 +254,7 @@ these paintings are all very similar.
 #end
 
     end
-    stat at 44,18 element Object p1 cp437:0xDD p2 0 step idle under Empty color 0x74
+    stat at 44,18 element Object p1 cp437:0xDD under Empty color 0x74
     oop
 @picture
 #end
@@ -269,7 +269,7 @@ these paintings are all very similar.
 #end
 
     end
-    stat at 36,12 element Object p1 cp437:0xDE p2 0 step idle under Empty color 0x74
+    stat at 36,12 element Object p1 cp437:0xDE under Empty color 0x74
     oop
 @picture
 #end
@@ -284,7 +284,7 @@ these paintings are all very similar.
 #end
 
     end
-    stat at 36,13 element Object p1 cp437:0xDE p2 0 step idle under Empty color 0x74
+    stat at 36,13 element Object p1 cp437:0xDE under Empty color 0x74
     oop
 @picture
 #end
@@ -299,7 +299,7 @@ these paintings are all very similar.
 #end
 
     end
-    stat at 36,16 element Object p1 cp437:0xDE p2 0 step idle under Empty color 0x0E
+    stat at 36,16 element Object p1 cp437:0xDE under Empty color 0x0E
     oop
 @picture
 #end
@@ -314,7 +314,7 @@ these paintings are all very similar.
 #end
 
     end
-    stat at 36,22 element Object p1 cp437:0xDE p2 0 step idle under Empty color 0x74
+    stat at 36,22 element Object p1 cp437:0xDE under Empty color 0x74
     oop
 @picture
 #end
@@ -329,7 +329,7 @@ these paintings are all very similar.
 #end
 
     end
-    stat at 36,21 element Object p1 cp437:0xDE p2 0 step idle under Empty color 0x74
+    stat at 36,21 element Object p1 cp437:0xDE under Empty color 0x74
     oop
 @picture
 #end
@@ -344,7 +344,7 @@ these paintings are all very similar.
 #end
 
     end
-    stat at 18,12 element Object p1 cp437:0xFE p2 0 step idle under Empty color 0x04
+    stat at 18,12 element Object p1 cp437:0xFE under Empty color 0x04
     oop
 @doorse
 #cycle 1
@@ -357,7 +357,7 @@ this door is locked and chained.
 #end
 
     end
-    stat at 7,12 element Object p1 cp437:0xFE p2 0 step idle under Empty color 0x04
+    stat at 7,12 element Object p1 cp437:0xFE under Empty color 0x04
     oop
 @doorse
 #cycle 1
@@ -370,17 +370,17 @@ this door is locked and chained.
 #end
 
     end
-    stat at 49,9 element Transporter p1 0 p2 0 step north under Empty color 0x40
-    stat at 50,9 element Transporter p1 0 p2 0 step north
-    stat at 51,9 element Transporter p1 0 p2 0 step north
-    stat at 52,9 element Transporter p1 0 p2 0 step north
-    stat at 53,9 element Transporter p1 0 p2 0 step north
-    stat at 54,9 element Transporter p1 0 p2 0 step north
-    stat at 55,9 element Transporter p1 0 p2 0 step north
-    stat at 56,9 element Transporter p1 0 p2 0 step north
-    stat at 57,9 element Transporter p1 0 p2 0 step north
-    stat at 58,9 element Transporter p1 0 p2 0 step north
-    stat at 29,12 element Object p1 cp437:0xFE p2 0 step idle under Empty color 0x04
+    stat at 49,9 element Transporter step north under Empty color 0x40
+    stat at 50,9 element Transporter step north
+    stat at 51,9 element Transporter step north
+    stat at 52,9 element Transporter step north
+    stat at 53,9 element Transporter step north
+    stat at 54,9 element Transporter step north
+    stat at 55,9 element Transporter step north
+    stat at 56,9 element Transporter step north
+    stat at 57,9 element Transporter step north
+    stat at 58,9 element Transporter step north
+    stat at 29,12 element Object p1 cp437:0xFE under Empty color 0x04
     oop
 @doorse
 #cycle 1
@@ -393,7 +393,7 @@ this door is locked and chained.
 #end
 
     end
-    stat at 50,10 element Object p1 cp437:0xDC p2 0 step idle
+    stat at 50,10 element Object p1 cp437:0xDC
     oop
 @sign
 #end
@@ -405,7 +405,7 @@ the sign says, 'stay away from the edge.'
 #end
 
     end
-    stat at 50,11 element Object p1 cp437:0xB3 p2 0 step idle
+    stat at 50,11 element Object p1 cp437:0xB3
     oop
 @post
 #cycle 1
@@ -432,7 +432,7 @@ it's the post you ripped out.
 #end
 
     end
-    stat at 20,18 element Object p1 cp437:0x1F p2 0 step idle under Empty color 0x74
+    stat at 20,18 element Object p1 cp437:0x1F under Empty color 0x74
     oop
 @vase
 #cycle 1
@@ -483,44 +483,44 @@ now it's really priceless. ha ha.
 #end
 
     end
-    stat at 8,7 element Passage p1 0 p2 0 p3 board "roof right" step idle under Empty color 0x40
-    stat at 7,7 element Passage p1 0 p2 0 p3 board "roof right" step idle under Empty color 0x40
-    stat at 9,7 element Passage p1 0 p2 0 p3 board "roof right" step idle under Empty color 0x40
-    stat at 9,1 element Object p1 cp437:0xDC p2 0 step idle under Empty color 0x74
-    stat at 9,2 element Object p1 cp437:0xDC p2 0 step idle under Empty color 0x04
-    stat at 9,3 element Object p1 cp437:0xDC p2 0 step idle under Empty color 0x04
-    stat at 9,6 element Object p1 cp437:0xDC p2 0 step idle under Empty color 0x40
-    stat at 9,5 element Object p1 cp437:0xDC p2 0 step idle under Empty color 0x40
-    stat at 9,4 element Object p1 cp437:0xDC p2 0 step idle under Empty color 0x40
-    stat at 7,3 element Object p1 cp437:0xDC p2 0 step idle under Empty color 0x04
-    stat at 7,2 element Object p1 cp437:0xDC p2 0 step idle under Empty color 0x04
-    stat at 7,1 element Object p1 cp437:0xDC p2 0 step idle under Empty color 0x74
-    stat at 8,1 element Object p1 cp437:0xDC p2 0 step idle under Empty color 0x74
-    stat at 8,3 element Object p1 cp437:0xDC p2 0 step idle under Normal color 0x04
-    stat at 8,2 element Object p1 cp437:0xDC p2 0 step idle under Empty color 0x04
-    stat at 8,5 element Object p1 cp437:0xDC p2 0 step idle under Empty color 0x40
-    stat at 7,6 element Object p1 cp437:0xDC p2 0 step idle under Empty color 0x40
-    stat at 8,6 element Object p1 cp437:0xDC p2 0 step idle under Empty color 0x40
-    stat at 7,5 element Object p1 cp437:0xDC p2 0 step idle under Empty color 0x40
-    stat at 7,4 element Object p1 cp437:0xDC p2 0 step idle under Empty color 0x40
-    stat at 8,4 element Object p1 cp437:0xDC p2 0 step idle under Empty color 0x40
-    stat at 55,3 element Object p1 cp437:0xDC p2 0 step idle under Empty color 0x04
-    stat at 54,3 element Object p1 cp437:0xDC p2 0 step idle under Empty color 0x04
-    stat at 53,3 element Object p1 cp437:0xDC p2 0 step idle under Empty color 0x04
-    stat at 52,3 element Object p1 cp437:0xDC p2 0 step idle under Empty color 0x04
-    stat at 45,3 element Object p1 cp437:0xDC p2 0 step idle under Empty color 0x04
-    stat at 44,3 element Object p1 cp437:0xDC p2 0 step idle under Empty color 0x04
-    stat at 43,3 element Object p1 cp437:0xDC p2 0 step idle under Empty color 0x04
-    stat at 42,3 element Object p1 cp437:0xDC p2 0 step idle under Empty color 0x04
-    stat at 41,3 element Object p1 cp437:0xDC p2 0 step idle under Empty color 0x04
-    stat at 35,3 element Object p1 cp437:0xDC p2 0 step idle under Empty color 0x04
-    stat at 34,3 element Object p1 cp437:0xDC p2 0 step idle under Empty color 0x04
-    stat at 33,3 element Object p1 cp437:0xDC p2 0 step idle under Empty color 0x04
-    stat at 32,3 element Object p1 cp437:0xDC p2 0 step idle under Empty color 0x04
-    stat at 31,3 element Object p1 cp437:0xDC p2 0 step idle under Empty color 0x04
-    stat at 30,3 element Object p1 cp437:0xDC p2 0 step idle under Empty color 0x04
-    stat at 29,3 element Object p1 cp437:0xDC p2 0 step idle under Empty color 0x04
-    stat at 35,2 element Object p1 cp437:0xFF p2 0 step idle under Fake color 0x11
+    stat at 8,7 element Passage p3 board "roof right" under Empty color 0x40
+    stat at 7,7 element Passage p3 board "roof right" under Empty color 0x40
+    stat at 9,7 element Passage p3 board "roof right" under Empty color 0x40
+    stat at 9,1 element Object p1 cp437:0xDC under Empty color 0x74
+    stat at 9,2 element Object p1 cp437:0xDC under Empty color 0x04
+    stat at 9,3 element Object p1 cp437:0xDC under Empty color 0x04
+    stat at 9,6 element Object p1 cp437:0xDC under Empty color 0x40
+    stat at 9,5 element Object p1 cp437:0xDC under Empty color 0x40
+    stat at 9,4 element Object p1 cp437:0xDC under Empty color 0x40
+    stat at 7,3 element Object p1 cp437:0xDC under Empty color 0x04
+    stat at 7,2 element Object p1 cp437:0xDC under Empty color 0x04
+    stat at 7,1 element Object p1 cp437:0xDC under Empty color 0x74
+    stat at 8,1 element Object p1 cp437:0xDC under Empty color 0x74
+    stat at 8,3 element Object p1 cp437:0xDC under Normal color 0x04
+    stat at 8,2 element Object p1 cp437:0xDC under Empty color 0x04
+    stat at 8,5 element Object p1 cp437:0xDC under Empty color 0x40
+    stat at 7,6 element Object p1 cp437:0xDC under Empty color 0x40
+    stat at 8,6 element Object p1 cp437:0xDC under Empty color 0x40
+    stat at 7,5 element Object p1 cp437:0xDC under Empty color 0x40
+    stat at 7,4 element Object p1 cp437:0xDC under Empty color 0x40
+    stat at 8,4 element Object p1 cp437:0xDC under Empty color 0x40
+    stat at 55,3 element Object p1 cp437:0xDC under Empty color 0x04
+    stat at 54,3 element Object p1 cp437:0xDC under Empty color 0x04
+    stat at 53,3 element Object p1 cp437:0xDC under Empty color 0x04
+    stat at 52,3 element Object p1 cp437:0xDC under Empty color 0x04
+    stat at 45,3 element Object p1 cp437:0xDC under Empty color 0x04
+    stat at 44,3 element Object p1 cp437:0xDC under Empty color 0x04
+    stat at 43,3 element Object p1 cp437:0xDC under Empty color 0x04
+    stat at 42,3 element Object p1 cp437:0xDC under Empty color 0x04
+    stat at 41,3 element Object p1 cp437:0xDC under Empty color 0x04
+    stat at 35,3 element Object p1 cp437:0xDC under Empty color 0x04
+    stat at 34,3 element Object p1 cp437:0xDC under Empty color 0x04
+    stat at 33,3 element Object p1 cp437:0xDC under Empty color 0x04
+    stat at 32,3 element Object p1 cp437:0xDC under Empty color 0x04
+    stat at 31,3 element Object p1 cp437:0xDC under Empty color 0x04
+    stat at 30,3 element Object p1 cp437:0xDC under Empty color 0x04
+    stat at 29,3 element Object p1 cp437:0xDC under Empty color 0x04
+    stat at 35,2 element Object p1 cp437:0xFF under Fake color 0x11
     oop
 @phish3
 #cycle 1
@@ -538,9 +538,9 @@ now it's really priceless. ha ha.
 #end
 
     end
-    stat at 40,3 element Object p1 cp437:0xDC p2 0 step idle under Empty color 0x04
-    stat at 39,3 element Object p1 cp437:0xDC p2 0 step idle under Empty color 0x04
-    stat at 45,2 element Object p1 cp437:0xFF p2 0 step idle under Fake color 0x11
+    stat at 40,3 element Object p1 cp437:0xDC under Empty color 0x04
+    stat at 39,3 element Object p1 cp437:0xDC under Empty color 0x04
+    stat at 45,2 element Object p1 cp437:0xFF under Fake color 0x11
     oop
 @phish2
 #cycle 1
@@ -561,10 +561,10 @@ now it's really priceless. ha ha.
 #end
 
     end
-    stat at 51,3 element Object p1 cp437:0xDC p2 0 step idle under Empty color 0x04
-    stat at 50,3 element Object p1 cp437:0xDC p2 0 step idle under Empty color 0x04
-    stat at 49,3 element Object p1 cp437:0xDC p2 0 step idle under Empty color 0x04
-    stat at 55,2 element Object p1 cp437:0xAE p2 0 step idle under Fake color 0x11
+    stat at 51,3 element Object p1 cp437:0xDC under Empty color 0x04
+    stat at 50,3 element Object p1 cp437:0xDC under Empty color 0x04
+    stat at 49,3 element Object p1 cp437:0xDC under Empty color 0x04
+    stat at 55,2 element Object p1 cp437:0xAE under Fake color 0x11
     oop
 @phish1
 #cycle 1
@@ -586,7 +586,7 @@ now it's really priceless. ha ha.
 #end
 
     end
-    stat at 18,5 element Object p1 cp437:0xDB p2 0 step idle under Fake color 0x40
+    stat at 18,5 element Object p1 cp437:0xDB under Fake color 0x40
     oop
 @barrel
 #cycle 1
@@ -637,7 +637,7 @@ the way is blocked.
 #end
 
     end
-    stat at 20,5 element Object p1 cp437:0xDB p2 0 step idle under Fake color 0x40
+    stat at 20,5 element Object p1 cp437:0xDB under Fake color 0x40
     oop
 @barrel
 #cycle 1
@@ -688,7 +688,7 @@ the way is blocked.
 #end
 
     end
-    stat at 22,5 element Object p1 cp437:0xDB p2 0 step idle under Fake color 0x40
+    stat at 22,5 element Object p1 cp437:0xDB under Fake color 0x40
     oop
 @barrel
 #cycle 1
@@ -739,7 +739,7 @@ the way is blocked.
 #end
 
     end
-    stat at 24,5 element Object p1 cp437:0xDB p2 0 step idle under Fake color 0x40
+    stat at 24,5 element Object p1 cp437:0xDB under Fake color 0x40
     oop
 @barrel
 #cycle 1
@@ -790,7 +790,7 @@ the way is blocked.
 #end
 
     end
-    stat at 26,5 element Object p1 cp437:0xDB p2 0 step idle under Fake color 0x40
+    stat at 26,5 element Object p1 cp437:0xDB under Fake color 0x40
     oop
 @barrel
 #cycle 1
@@ -841,7 +841,7 @@ the way is blocked.
 #end
 
     end
-    stat at 57,3 element Object p1 cp437:0x07 p2 0 step idle under Empty color 0x04
+    stat at 57,3 element Object p1 cp437:0x07 under Empty color 0x04
     oop
 @lock
 #cycle 1
@@ -865,7 +865,7 @@ hey, this isn't water!
 #end
 
     end
-    stat at 16,18 element Object p1 cp437:0x1F p2 0 step idle under Empty color 0x0E
+    stat at 16,18 element Object p1 cp437:0x1F under Empty color 0x0E
     oop
 @vase
 #cycle 1

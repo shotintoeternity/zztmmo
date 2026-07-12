@@ -5,11 +5,47 @@ import (
 	"strings"
 )
 
-// DecompileZWD converts a loaded TWorld (with all boards serialized as
-// BoardData) into ZWD text. The caller must have called BoardClose on the
-// current board before calling this, so that BoardData is up to date for every
-// board.
+// ZWDDecompileDiagnostic describes a lossy lowering or an authorability
+// failure encountered while exporting a historical world. Severity is either
+// "warning" (source was produced with a documented lowering) or "error"
+// (no authorable source was returned).
+type ZWDDecompileDiagnostic struct {
+	Board    int16
+	Severity string
+	Message  string
+}
+
+// DecompileZWDAuthorable exports only compiler-legal ZWD. Historical input
+// can contain data the authoring format cannot model; in that case it returns
+// no source and one or more error diagnostics rather than emitting a tempting
+// but broken ZWD document. Warnings describe intentional safe lowerings such
+// as unnamed raw elements becoming Empty tiles.
+func DecompileZWDAuthorable(world *TWorld) (string, []ZWDDecompileDiagnostic) {
+	diagnostics := inspectZWDDecompileLowerings(world)
+	src := decompileZWD(world)
+	if _, err := CompileZWD(src); err != nil {
+		diagnostics = append(diagnostics, ZWDDecompileDiagnostic{
+			Board: -1, Severity: "error", Message: "not authorable: " + err.Error(),
+		})
+		return "", diagnostics
+	}
+	return src, diagnostics
+}
+
+// DecompileZWD returns authorable ZWD for a loaded TWorld, or an empty string
+// when the historical input cannot be represented safely. Call
+// DecompileZWDAuthorable to receive diagnostics for the latter case. The
+// caller must have called BoardClose on the current board before calling this,
+// so that BoardData is up to date for every board.
 func DecompileZWD(world *TWorld) string {
+	src, _ := DecompileZWDAuthorable(world)
+	return src
+}
+
+// decompileZWD renders the raw canonical representation. It is kept private:
+// callers use DecompileZWDAuthorable so no public API emits non-compilable
+// source for malformed historical worlds.
+func decompileZWD(world *TWorld) string {
 	init := NewEngine()
 	init.InitElementsGame()
 
@@ -61,7 +97,7 @@ func decompileBoard(b *strings.Builder, e *Engine, boardID int16, boardNames []s
 	// the start-player position" so we don't emit it in that case.
 	respawnX := board.Info.StartPlayerX
 	respawnY := board.Info.StartPlayerY
-	if (respawnX != startX || respawnY != startY) && respawnX != 0 && respawnY != 0 {
+	if (respawnX != startX || respawnY != startY) && validZWDCoord(respawnX, respawnY) {
 		b.WriteString(fmt.Sprintf("  respawn at %d,%d\n", respawnX, respawnY))
 	}
 	b.WriteString(fmt.Sprintf("  max-shots %d\n", board.Info.MaxShots))
@@ -175,48 +211,48 @@ func decompileBoard(b *strings.Builder, e *Engine, boardID int16, boardNames []s
 	// Preferred chars per element — hand-picked to match ZWD examples and
 	// maximise readability.
 	preferredChars := map[byte]byte{
-		E_EMPTY:              '.',
-		E_SOLID:              '#',
-		E_NORMAL:             'N',
-		E_BREAKABLE:          'B',
-		E_PLAYER:             '@',
-		E_OBJECT:             'o',
-		E_SCROLL:             '!',
-		E_PASSAGE:            'p',
-		E_GEM:                'g',
-		E_KEY:                'k',
-		E_DOOR:               '+',
-		E_AMMO:               'a',
-		E_TORCH:              't',
-		E_ENERGIZER:          'e',
-		E_BOMB:               'b',
-		E_BEAR:               'R',
-		E_RUFFIAN:            'r',
-		E_LION:               'L',
-		E_TIGER:              'T',
-		E_SHARK:              'S',
-		E_SLIME:              's',
-		E_BOULDER:            'O',
-		E_PUSHER:             'P',
-		E_DUPLICATOR:         'd',
-		E_WATER:              '~',
-		E_FOREST:             'f',
-		E_FAKE:               'F',
-		E_INVISIBLE:          'i',
-		E_LINE:               'l',
-		E_RICOCHET:           '*',
-		E_MONITOR:            'M',
-		E_CONVEYOR_CW:        '/',
-		E_CONVEYOR_CCW:       '\\',
-		E_BLINK_WALL:         'W',
-		E_TRANSPORTER:        'X',
-		E_SPINNING_GUN:       'G',
-		E_SLIDER_NS:          'n',
-		E_SLIDER_EW:          'w',
-		E_CENTIPEDE_HEAD:     'H',
-		E_CENTIPEDE_SEGMENT:  'c',
-		E_BULLET:             'u',
-		E_STAR:               'x',
+		E_EMPTY:             '.',
+		E_SOLID:             '#',
+		E_NORMAL:            'N',
+		E_BREAKABLE:         'B',
+		E_PLAYER:            '@',
+		E_OBJECT:            'o',
+		E_SCROLL:            '!',
+		E_PASSAGE:           'p',
+		E_GEM:               'g',
+		E_KEY:               'k',
+		E_DOOR:              '+',
+		E_AMMO:              'a',
+		E_TORCH:             't',
+		E_ENERGIZER:         'e',
+		E_BOMB:              'b',
+		E_BEAR:              'R',
+		E_RUFFIAN:           'r',
+		E_LION:              'L',
+		E_TIGER:             'T',
+		E_SHARK:             'S',
+		E_SLIME:             's',
+		E_BOULDER:           'O',
+		E_PUSHER:            'P',
+		E_DUPLICATOR:        'd',
+		E_WATER:             '~',
+		E_FOREST:            'f',
+		E_FAKE:              'F',
+		E_INVISIBLE:         'i',
+		E_LINE:              'l',
+		E_RICOCHET:          '*',
+		E_MONITOR:           'M',
+		E_CONVEYOR_CW:       '/',
+		E_CONVEYOR_CCW:      '\\',
+		E_BLINK_WALL:        'W',
+		E_TRANSPORTER:       'X',
+		E_SPINNING_GUN:      'G',
+		E_SLIDER_NS:         'n',
+		E_SLIDER_EW:         'w',
+		E_CENTIPEDE_HEAD:    'H',
+		E_CENTIPEDE_SEGMENT: 'c',
+		E_BULLET:            'u',
+		E_STAR:              'x',
 	}
 
 	isPrintableASCII := func(ch byte) bool { return ch >= 0x21 && ch <= 0x7E }
@@ -339,11 +375,21 @@ func decompileBoard(b *strings.Builder, e *Engine, boardID int16, boardNames []s
 
 	// -- Write stats --
 	b.WriteString("\n  stats\n")
+	// Dropped records (off-board centipede sentinels and stats for raw elements
+	// ZWD cannot name) must not leave stale stat indices behind. Follower and
+	// leader fields are stat indices, so map every emitted source stat to the
+	// index it will have in the recompiled board before writing either field.
+	emittedStatIndex := make(map[int16]int16, board.StatCount)
+	var nextStatIndex int16 = 1
+	for si := int16(1); si <= board.StatCount; si++ {
+		if decompileStatIsRepresentable(board, si) {
+			emittedStatIndex[si] = nextStatIndex
+			nextStatIndex++
+		}
+	}
 	for si := int16(1); si <= board.StatCount; si++ {
 		stat := &board.Stats[si]
-		// Skip off-board stats (X=0 or Y=0 or out-of-bounds). ZZT uses these
-		// as sentinel/null targets for centipede chains; they carry no tile.
-		if stat.X == 0 || stat.Y == 0 || int(stat.X) > BOARD_WIDTH || int(stat.Y) > BOARD_HEIGHT {
+		if !decompileStatIsRepresentable(board, si) {
 			continue
 		}
 		elem := board.Tiles[stat.X][stat.Y].Element
@@ -357,11 +403,16 @@ func decompileBoard(b *strings.Builder, e *Engine, boardID int16, boardNames []s
 			line.WriteString(fmt.Sprintf(" cycle %d", stat.Cycle))
 		}
 
-		// p1: omit if matches default.
-		defP1 := byte(4)
-		if elem == E_OBJECT {
+		// ZWD compiler defaults are deliberately neutral. Preserve any runtime
+		// value that differs so a decompile/recompile does not silently turn an
+		// object locked or give it a standing walk order.
+		defP1 := byte(0)
+		// Match parseStatLine's element-specific defaults so an otherwise
+		// default stat does not acquire a redundant p1 on the second pass.
+		switch elem {
+		case E_OBJECT:
 			defP1 = 1
-		} else if elem == E_BEAR {
+		case E_BEAR:
 			defP1 = 8
 		}
 		if stat.P1 != defP1 {
@@ -372,8 +423,8 @@ func decompileBoard(b *strings.Builder, e *Engine, boardID int16, boardNames []s
 			}
 		}
 
-		// p2: omit if 4 (default).
-		if stat.P2 != 4 {
+		// p2: omit if neutral (objects use it as their lock flag).
+		if stat.P2 != 0 {
 			line.WriteString(fmt.Sprintf(" p2 %d", stat.P2))
 		}
 
@@ -388,7 +439,7 @@ func decompileBoard(b *strings.Builder, e *Engine, boardID int16, boardNames []s
 
 		// Step direction.
 		stepStr := zwdStepStr(stat.StepX, stat.StepY)
-		if stepStr != "0,-1" {
+		if stepStr != "idle" {
 			line.WriteString(fmt.Sprintf(" step %s", stepStr))
 		}
 
@@ -400,11 +451,11 @@ func decompileBoard(b *strings.Builder, e *Engine, boardID int16, boardNames []s
 		}
 
 		// Follower/Leader: omit if -1.
-		if stat.Follower != -1 {
-			line.WriteString(fmt.Sprintf(" follower %d", stat.Follower))
+		if follower := remapDecompiledStatRef(stat.Follower, emittedStatIndex); follower != -1 {
+			line.WriteString(fmt.Sprintf(" follower %d", follower))
 		}
-		if stat.Leader != -1 {
-			line.WriteString(fmt.Sprintf(" leader %d", stat.Leader))
+		if leader := remapDecompiledStatRef(stat.Leader, emittedStatIndex); leader != -1 {
+			line.WriteString(fmt.Sprintf(" leader %d", leader))
 		}
 
 		// DataPos: omit if 0.
@@ -423,7 +474,17 @@ func decompileBoard(b *strings.Builder, e *Engine, boardID int16, boardNames []s
 		// OOP block.
 		if stat.DataLen > 0 && stat.Data != "" {
 			b.WriteString("    oop\n")
-			oopLines := strings.Split(stat.Data, string([]byte{KEY_ENTER}))
+			// The compiler normalizes display text to the original ZZT text
+			// window width. Apply the same canonicalization before emitting so
+			// decompile → compile → decompile is stable for historical OOP.
+			oopData, err := wrapZWDTextWindowLines(stat.Data)
+			if err != nil {
+				// A loaded .ZZT can contain malformed OOP that the compiler would
+				// reject. Keep its bytes visible for diagnostics; the normal path
+				// is canonical and compiler-legal.
+				oopData = stat.Data
+			}
+			oopLines := strings.Split(oopData, string([]byte{KEY_ENTER}))
 			for _, ol := range oopLines {
 				b.WriteString(ol)
 				b.WriteByte('\n')
@@ -434,6 +495,62 @@ func decompileBoard(b *strings.Builder, e *Engine, boardID int16, boardNames []s
 	b.WriteString("  end\n")
 
 	b.WriteString("end\n")
+}
+
+func validZWDCoord(x, y byte) bool {
+	return x >= 1 && x <= BOARD_WIDTH && y >= 1 && y <= BOARD_HEIGHT
+}
+
+func inspectZWDDecompileLowerings(world *TWorld) []ZWDDecompileDiagnostic {
+	e := NewEngine()
+	e.Headless = true
+	e.InitElementsGame()
+	e.World = *world
+	var diagnostics []ZWDDecompileDiagnostic
+	for boardID := int16(0); boardID <= world.BoardCount; boardID++ {
+		e.BoardOpen(boardID)
+		if x, y := e.Board.Info.StartPlayerX, e.Board.Info.StartPlayerY; (x != 0 || y != 0) && !validZWDCoord(x, y) {
+			diagnostics = append(diagnostics, ZWDDecompileDiagnostic{boardID, "warning", "invalid respawn omitted"})
+		}
+		for y := int16(1); y <= BOARD_HEIGHT; y++ {
+			for x := int16(1); x <= BOARD_WIDTH; x++ {
+				elem := e.Board.Tiles[x][y].Element
+				if !zwdElementIsNamed(elem) {
+					diagnostics = append(diagnostics, ZWDDecompileDiagnostic{boardID, "warning", fmt.Sprintf("raw element %d at %d,%d lowered to Empty", elem, x, y)})
+				}
+			}
+		}
+		for statID := int16(1); statID <= e.Board.StatCount; statID++ {
+			if !decompileStatIsRepresentable(&e.Board, statID) {
+				diagnostics = append(diagnostics, ZWDDecompileDiagnostic{boardID, "warning", fmt.Sprintf("stat %d omitted because it has no representable board tile", statID)})
+			}
+		}
+	}
+	return diagnostics
+}
+
+// decompileStatIsRepresentable reports whether a stat has a corresponding
+// legal ZWD stat line. Coordinates are intentionally strict because the ZWD
+// grammar describes board tiles, not ZZT's off-board sentinel records.
+func decompileStatIsRepresentable(board *TBoard, statID int16) bool {
+	stat := &board.Stats[statID]
+	if stat.X == 0 || stat.Y == 0 || int(stat.X) > BOARD_WIDTH || int(stat.Y) > BOARD_HEIGHT {
+		return false
+	}
+	return elementNeedsStat(board.Tiles[stat.X][stat.Y].Element)
+}
+
+// remapDecompiledStatRef preserves references between emitted stats while
+// neutralizing references to omitted sentinel/raw-element records. Index 0 is
+// the player stat and remains valid; -1 means no reference.
+func remapDecompiledStatRef(ref int16, emitted map[int16]int16) int16 {
+	if ref <= 0 {
+		return ref
+	}
+	if mapped, ok := emitted[ref]; ok {
+		return mapped
+	}
+	return -1
 }
 
 // textElementNames maps E_TEXT_BLUE..E_TEXT_WHITE to their canonical ZWD names.
@@ -456,7 +573,14 @@ func zwdElementName(elem byte) string {
 	if int(elem) <= MAX_ELEMENT && ElementDefs[elem].Name != "" {
 		return ElementDefs[elem].Name
 	}
-	return fmt.Sprintf("element %d", elem)
+	// Some historical worlds use unnamed engine slots. ZWD deliberately has no
+	// raw numeric element syntax, so lower them to a safe, drawable Empty tile
+	// rather than emitting source the compiler cannot read.
+	return "Empty"
+}
+
+func zwdElementIsNamed(elem byte) bool {
+	return (elem >= E_TEXT_MIN && elem <= E_TEXT_WHITE) || (int(elem) <= MAX_ELEMENT && ElementDefs[elem].Name != "")
 }
 
 // zwdColorStr returns a color value as a hex string.

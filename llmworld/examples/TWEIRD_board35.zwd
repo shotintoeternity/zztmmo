@@ -69,7 +69,7 @@ FFFFFFFFFFFFFFFFFFFFFFFb.....d.....bFFFFFFFFFFFFFFFFFFFFFFFF
   end
 
   stats
-    stat at 7,10 element Object p1 cp437:0xF0 p2 0 step idle under Empty color 0x0F
+    stat at 7,10 element Object p1 cp437:0xF0 under Empty color 0x0F
     oop
 @"Passage"
 #end
@@ -79,9 +79,9 @@ letting you back in.
 #end
 
     end
-    stat at 14,17 element Passage p1 0 p2 0 p3 board "Ammo shop" step idle under Empty color 0x0E
-    stat at 47,9 element Passage p1 0 p2 0 p3 board "Painting place" step idle under Empty color 0x0B
-    stat at 1,6 element Passage p1 0 p2 0 p3 board "Palace Restarautnjflsdjfsdfj" step idle under Empty color 0x0F
-    stat at 47,21 element Passage p1 0 p2 0 p3 board "Eddie!" step idle under Empty color 0x20
+    stat at 14,17 element Passage p3 board "Ammo shop" under Empty color 0x0E
+    stat at 47,9 element Passage p3 board "Painting place" under Empty color 0x0B
+    stat at 1,6 element Passage p3 board "Palace Restarautnjflsdjfsdfj" under Empty color 0x0F
+    stat at 47,21 element Passage p3 board "Eddie!" under Empty color 0x20
   end
 end

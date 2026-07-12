@@ -55,20 +55,20 @@ board "$The Next Room"
   end
 
   stats
-    stat at 52,20 element Object p1 cp437:0xDE p2 0 step idle under Fake color 0x0D
-    stat at 58,20 element Object p1 cp437:0xDD p2 0 step idle under Fake color 0x0D
-    stat at 55,9 element Object p1 cp437:0xB3 p2 0 step idle under Fake color 0x0D
-    stat at 55,8 element Object p1 cp437:0xB3 p2 0 step idle under Fake color 0x0D
-    stat at 54,10 element Object p1 cp437:0xDE p2 0 step idle under Fake color 0x0D
-    stat at 56,10 element Object p1 cp437:0xDD p2 0 step idle under Fake color 0x0D
-    stat at 56,12 element Object p1 cp437:0xB3 p2 0 step idle under Empty color 0x0F
-    stat at 56,13 element Object p1 cp437:0xB3 p2 0 step idle under Empty color 0x0F
-    stat at 56,14 element Object p1 cp437:0xB3 p2 0 step idle under Empty color 0x0F
-    stat at 56,15 element Object p1 cp437:0xB3 p2 0 step idle under Empty color 0x0F
-    stat at 56,16 element Object p1 cp437:0xB3 p2 0 step idle under Empty color 0x0F
-    stat at 56,17 element Object p1 cp437:0xB3 p2 0 step idle under Empty color 0x0F
-    stat at 56,18 element Object p1 cp437:0xB3 p2 0 step idle under Empty color 0x0F
-    stat at 55,22 element Object p1 cp437:0xE0 p2 0 step idle under Fake color 0x0D
+    stat at 52,20 element Object p1 cp437:0xDE under Fake color 0x0D
+    stat at 58,20 element Object p1 cp437:0xDD under Fake color 0x0D
+    stat at 55,9 element Object p1 cp437:0xB3 under Fake color 0x0D
+    stat at 55,8 element Object p1 cp437:0xB3 under Fake color 0x0D
+    stat at 54,10 element Object p1 cp437:0xDE under Fake color 0x0D
+    stat at 56,10 element Object p1 cp437:0xDD under Fake color 0x0D
+    stat at 56,12 element Object p1 cp437:0xB3 under Empty color 0x0F
+    stat at 56,13 element Object p1 cp437:0xB3 under Empty color 0x0F
+    stat at 56,14 element Object p1 cp437:0xB3 under Empty color 0x0F
+    stat at 56,15 element Object p1 cp437:0xB3 under Empty color 0x0F
+    stat at 56,16 element Object p1 cp437:0xB3 under Empty color 0x0F
+    stat at 56,17 element Object p1 cp437:0xB3 under Empty color 0x0F
+    stat at 56,18 element Object p1 cp437:0xB3 under Empty color 0x0F
+    stat at 55,22 element Object p1 cp437:0xE0 under Fake color 0x0D
     oop
 @Thing
 #end
@@ -84,8 +84,8 @@ SNAP!
 #die
 
     end
-    stat at 30,25 element Passage p1 0 p2 0 p3 board "$Office" step idle under Empty color 0x0D
-    stat at 36,24 element Object p1 cp437:0xB2 p2 0 step idle under Fake color 0x0D
+    stat at 30,25 element Passage p3 board "$Office" under Empty color 0x0D
+    stat at 36,24 element Object p1 cp437:0xB2 under Fake color 0x0D
     oop
 GO
 /i/i/i
@@ -93,7 +93,7 @@ GO
 #become purple fake
 
     end
-    stat at 49,7 element Object p1 cp437:0xE3 p2 0 step idle under Fake color 0x0D
+    stat at 49,7 element Object p1 cp437:0xE3 under Fake color 0x0D
     oop
 @Tiger (yeah right)
 #cycle 1
@@ -108,19 +108,19 @@ GO
 #end
 
     end
-    stat at 9,6 element Object p1 cp437:0xDB p2 0 step idle under Empty color 0x0D
+    stat at 9,6 element Object p1 cp437:0xDB under Empty color 0x0D
     oop
 #if not any red solid then #restart
 #become purple fake
 #end
 
     end
-    stat at 48,11 element Blink wall p1 3 step west under Fake color 0x0D
-    stat at 48,10 element Blink wall p1 2 step west under Fake color 0x0D
-    stat at 48,9 element Blink wall p1 1 step west under Fake color 0x0D
-    stat at 48,8 element Blink wall p1 0 step west under Fake color 0x0D
-    stat at 50,21 element Blink wall p1 0 p2 8 step east under Fake color 0x0D
-    stat at 59,21 element Object p1 cp437:0xFF p2 0 step idle under Empty color 0x0D
+    stat at 48,11 element Blink wall p1 3 p2 4 step west under Fake color 0x0D
+    stat at 48,10 element Blink wall p1 2 p2 4 step west under Fake color 0x0D
+    stat at 48,9 element Blink wall p1 1 p2 4 step west under Fake color 0x0D
+    stat at 48,8 element Blink wall p2 4 step west under Fake color 0x0D
+    stat at 50,21 element Blink wall p2 8 step east under Fake color 0x0D
+    stat at 59,21 element Object p1 cp437:0xFF under Empty color 0x0D
     oop
 @Invisible Wall
 #end
@@ -130,7 +130,7 @@ Yeah right. I'm not that stupid!
 #become purple normal
 
     end
-    stat at 30,12 element Scroll p1 0 p2 0 step idle under Fake color 0x0D
+    stat at 30,12 element Scroll under Fake color 0x0D
     oop
 Dance to the beat of a different drummer
 boy!

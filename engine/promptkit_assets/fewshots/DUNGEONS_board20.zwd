@@ -70,80 +70,80 @@ BBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBNNNNNqedsKey
   end
 
   stats
-    stat at 22,15 element Head step idle
-    stat at 21,15 element Segment p1 0 p2 0 step idle
-    stat at 20,15 element Segment p1 0 p2 0 step idle
-    stat at 19,15 element Segment p1 0 p2 0 step idle
-    stat at 16,14 element Head step idle
-    stat at 15,14 element Segment p1 0 p2 0 step idle
-    stat at 14,14 element Segment p1 0 p2 0 step idle
-    stat at 13,14 element Segment p1 0 p2 0 step idle
-    stat at 32,14 element Head step idle
-    stat at 33,14 element Segment p1 0 p2 0 step idle
-    stat at 34,14 element Segment p1 0 p2 0 step idle
-    stat at 35,14 element Segment p1 0 p2 0 step idle
-    stat at 37,13 element Head step idle
-    stat at 38,13 element Segment p1 0 p2 0 step idle
-    stat at 39,13 element Segment p1 0 p2 0 step idle
-    stat at 40,13 element Segment p1 0 p2 0 step idle
-    stat at 40,11 element Head step idle
-    stat at 41,11 element Segment p1 0 p2 0 step idle
-    stat at 42,11 element Segment p1 0 p2 0 step idle
-    stat at 43,11 element Segment p1 0 p2 0 step idle
-    stat at 50,11 element Head step idle
-    stat at 48,13 element Head step idle
-    stat at 51,15 element Head step idle
-    stat at 38,15 element Head step idle
-    stat at 29,15 element Head step idle
-    stat at 26,15 element Head step idle
-    stat at 24,17 element Head step idle
-    stat at 20,17 element Head step idle
-    stat at 17,17 element Lion p1 0 p2 0 step idle
-    stat at 14,16 element Lion p1 0 p2 0 step idle
-    stat at 13,12 element Lion p1 0 p2 0 step idle
-    stat at 19,13 element Lion p1 0 p2 0 step idle
-    stat at 27,17 element Lion p1 0 p2 0 step idle
-    stat at 33,16 element Lion p1 0 p2 0 step idle
-    stat at 45,14 element Lion p1 0 p2 0 step idle
-    stat at 45,9 element Lion p1 0 p2 0 step idle
-    stat at 53,19 element Lion p1 0 p2 0 step idle
-    stat at 55,19 element Lion p1 8 p2 0 step idle
-    stat at 53,21 element Lion p1 8 p2 0 step idle
-    stat at 51,17 element Lion p1 8 p2 0 step idle
-    stat at 52,13 element Lion p1 8 p2 0 step idle
-    stat at 46,11 element Lion p1 8 p2 0 step idle
-    stat at 37,12 element Lion p1 8 p2 0 step idle
-    stat at 34,13 element Lion p1 8 p2 0 step idle
-    stat at 30,14 element Lion p1 8 p2 0 step idle
-    stat at 23,16 element Lion p1 8 p2 0 step idle
-    stat at 16,13 element Lion p1 8 p2 0 step idle
-    stat at 16,11 element Ruffian step idle
-    stat at 17,15 element Ruffian step idle
-    stat at 29,17 element Ruffian step idle
-    stat at 42,14 element Ruffian step idle
-    stat at 48,15 element Ruffian step idle
-    stat at 53,17 element Ruffian step idle
-    stat at 56,21 element Ruffian step idle
-    stat at 52,23 element Ruffian step idle
-    stat at 48,10 element Ruffian step idle
-    stat at 41,9 element Ruffian step idle
-    stat at 19,11 element Ruffian step idle
-    stat at 11,14 element Ruffian step idle
-    stat at 11,13 element Bear p1 0 p2 0 step idle
-    stat at 21,14 element Bear p1 0 p2 0 step idle
-    stat at 35,15 element Bear p1 0 p2 0 step idle
-    stat at 45,12 element Bear p1 0 p2 0 step idle
-    stat at 53,11 element Bear p1 0 p2 0 step idle
-    stat at 54,20 element Bear p1 0 p2 0 step idle
-    stat at 57,20 element Bear p1 0 p2 0 step idle
-    stat at 56,18 element Bear p1 0 p2 0 step idle
-    stat at 47,15 element Bear p1 0 p2 0 step idle
-    stat at 40,14 element Bear p1 0 p2 0 step idle
-    stat at 27,16 element Bear p1 0 p2 0 step idle
-    stat at 19,16 element Bear p1 0 p2 0 step idle
-    stat at 11,15 element Bear p1 0 p2 0 step idle
-    stat at 21,19 element Bear p1 0 p2 0 step idle
-    stat at 22,7 element Object p2 0 step idle
+    stat at 22,15 element Head p1 4 p2 4
+    stat at 21,15 element Segment
+    stat at 20,15 element Segment
+    stat at 19,15 element Segment
+    stat at 16,14 element Head p1 4 p2 4
+    stat at 15,14 element Segment
+    stat at 14,14 element Segment
+    stat at 13,14 element Segment
+    stat at 32,14 element Head p1 4 p2 4
+    stat at 33,14 element Segment
+    stat at 34,14 element Segment
+    stat at 35,14 element Segment
+    stat at 37,13 element Head p1 4 p2 4
+    stat at 38,13 element Segment
+    stat at 39,13 element Segment
+    stat at 40,13 element Segment
+    stat at 40,11 element Head p1 4 p2 4
+    stat at 41,11 element Segment
+    stat at 42,11 element Segment
+    stat at 43,11 element Segment
+    stat at 50,11 element Head p1 4 p2 4
+    stat at 48,13 element Head p1 4 p2 4
+    stat at 51,15 element Head p1 4 p2 4
+    stat at 38,15 element Head p1 4 p2 4
+    stat at 29,15 element Head p1 4 p2 4
+    stat at 26,15 element Head p1 4 p2 4
+    stat at 24,17 element Head p1 4 p2 4
+    stat at 20,17 element Head p1 4 p2 4
+    stat at 17,17 element Lion
+    stat at 14,16 element Lion
+    stat at 13,12 element Lion
+    stat at 19,13 element Lion
+    stat at 27,17 element Lion
+    stat at 33,16 element Lion
+    stat at 45,14 element Lion
+    stat at 45,9 element Lion
+    stat at 53,19 element Lion
+    stat at 55,19 element Lion p1 8
+    stat at 53,21 element Lion p1 8
+    stat at 51,17 element Lion p1 8
+    stat at 52,13 element Lion p1 8
+    stat at 46,11 element Lion p1 8
+    stat at 37,12 element Lion p1 8
+    stat at 34,13 element Lion p1 8
+    stat at 30,14 element Lion p1 8
+    stat at 23,16 element Lion p1 8
+    stat at 16,13 element Lion p1 8
+    stat at 16,11 element Ruffian p1 4 p2 4
+    stat at 17,15 element Ruffian p1 4 p2 4
+    stat at 29,17 element Ruffian p1 4 p2 4
+    stat at 42,14 element Ruffian p1 4 p2 4
+    stat at 48,15 element Ruffian p1 4 p2 4
+    stat at 53,17 element Ruffian p1 4 p2 4
+    stat at 56,21 element Ruffian p1 4 p2 4
+    stat at 52,23 element Ruffian p1 4 p2 4
+    stat at 48,10 element Ruffian p1 4 p2 4
+    stat at 41,9 element Ruffian p1 4 p2 4
+    stat at 19,11 element Ruffian p1 4 p2 4
+    stat at 11,14 element Ruffian p1 4 p2 4
+    stat at 11,13 element Bear p1 0
+    stat at 21,14 element Bear p1 0
+    stat at 35,15 element Bear p1 0
+    stat at 45,12 element Bear p1 0
+    stat at 53,11 element Bear p1 0
+    stat at 54,20 element Bear p1 0
+    stat at 57,20 element Bear p1 0
+    stat at 56,18 element Bear p1 0
+    stat at 47,15 element Bear p1 0
+    stat at 40,14 element Bear p1 0
+    stat at 27,16 element Bear p1 0
+    stat at 19,16 element Bear p1 0
+    stat at 11,15 element Bear p1 0
+    stat at 21,19 element Bear p1 0
+    stat at 22,7 element Object
     oop
 #end
 :touch
@@ -153,7 +153,7 @@ Look Out!
 #die
 
     end
-    stat at 22,5 element Object p1 cp437:0x8E p2 0 step idle
+    stat at 22,5 element Object p1 cp437:0x8E
     oop
 #end
 :touch
@@ -164,7 +164,7 @@ Bonus: 250 Units of Ammo!
 #die
 
     end
-    stat at 21,3 element Object p2 0 step idle under Empty color 0x0C
+    stat at 21,3 element Object under Empty color 0x0C
     oop
 @a
 #end

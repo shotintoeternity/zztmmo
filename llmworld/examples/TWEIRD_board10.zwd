@@ -79,26 +79,26 @@ board "ggggggggggggggggaMe"
   end
 
   stats
-    stat at 16,16 element Spinning gun p1 0 p2 0 step idle under Fake color 0x0B
-    stat at 22,16 element Lion p1 0 p2 0 step idle under Fake color 0x0B
-    stat at 34,16 element Head p1 0 p2 0 step idle under Fake color 0x0B
-    stat at 35,16 element Segment p1 0 p2 0 step idle under Fake color 0x0B
-    stat at 36,16 element Segment p1 0 p2 0 step idle under Fake color 0x0B
-    stat at 37,16 element Segment p1 0 p2 0 step idle under Fake color 0x0B
-    stat at 38,16 element Segment p1 0 p2 0 step idle under Fake color 0x0B
-    stat at 39,16 element Segment p1 0 p2 0 step idle under Fake color 0x0B
-    stat at 40,16 element Segment p1 0 p2 0 step idle under Fake color 0x0B
-    stat at 41,16 element Segment p1 0 p2 0 step idle under Fake color 0x0B
-    stat at 42,16 element Segment p1 0 p2 0 step idle under Fake color 0x0B
-    stat at 42,15 element Segment p1 0 p2 0 step idle under Fake color 0x0B
-    stat at 41,15 element Segment p1 0 p2 0 step idle under Fake color 0x0B
-    stat at 40,15 element Segment p1 0 p2 0 step idle under Fake color 0x0B
-    stat at 39,15 element Segment p1 0 p2 0 step idle under Fake color 0x0B
-    stat at 38,15 element Segment p1 0 p2 0 step idle under Fake color 0x0B
-    stat at 37,15 element Segment p1 0 p2 0 step idle under Fake color 0x0B
-    stat at 36,15 element Segment p1 0 p2 0 step idle under Fake color 0x0B
-    stat at 35,15 element Segment p1 0 p2 0 step idle under Fake color 0x0B
-    stat at 34,15 element Segment p1 0 p2 0 step idle under Fake color 0x0B
-    stat at 55,16 element Passage p1 0 p2 0 p3 board "that was fun" step idle under Empty color 0x0B
+    stat at 16,16 element Spinning gun under Fake color 0x0B
+    stat at 22,16 element Lion under Fake color 0x0B
+    stat at 34,16 element Head under Fake color 0x0B
+    stat at 35,16 element Segment under Fake color 0x0B
+    stat at 36,16 element Segment under Fake color 0x0B
+    stat at 37,16 element Segment under Fake color 0x0B
+    stat at 38,16 element Segment under Fake color 0x0B
+    stat at 39,16 element Segment under Fake color 0x0B
+    stat at 40,16 element Segment under Fake color 0x0B
+    stat at 41,16 element Segment under Fake color 0x0B
+    stat at 42,16 element Segment under Fake color 0x0B
+    stat at 42,15 element Segment under Fake color 0x0B
+    stat at 41,15 element Segment under Fake color 0x0B
+    stat at 40,15 element Segment under Fake color 0x0B
+    stat at 39,15 element Segment under Fake color 0x0B
+    stat at 38,15 element Segment under Fake color 0x0B
+    stat at 37,15 element Segment under Fake color 0x0B
+    stat at 36,15 element Segment under Fake color 0x0B
+    stat at 35,15 element Segment under Fake color 0x0B
+    stat at 34,15 element Segment under Fake color 0x0B
+    stat at 55,16 element Passage p3 board "that was fun" under Empty color 0x0B
   end
 end

@@ -1,0 +1,128 @@
+board "Inside the Bakery"
+  start player at 27,22
+  max-shots 0
+  dark false
+  reenter false
+  time-limit 0
+  exits north none south none west none east none
+
+  grid
+############################################################
+#..........................................................#
+#..NNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNN.
+#..N......................................................N.
+#..N..FFFF....FFFF....FFFF....FFFF....FFFF....FFFF....FF..N.
+#..N..F..F....F..F....F..F....F..F....F..F....F..F....FF..N.
+#..N..FFFF....FFFF....FFFF....FFFF....FFFF....FFFF....FF..N.
+#..N......................................................N.
+#..N..o...................O...................o.........N..#
+#..N......................................................N.
+#..NNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNN.
+#..........................................................#
+#..........................................................#
+#....AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA.....
+#....A....................................................#.
+#....A....a.......a.......a.......a.......a........A.....#..
+#....A....................................................#.
+#....AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA.....
+#..........................................................#
+#..........................................................#
+#.........................+p+.............................#.
+#.........................@................................#
+#..........................................................#
+############################################################
+............................................................
+  end
+
+  legend
+    # = Solid color 0x6E
+    . = Empty color 0x00
+    N = Normal color 0x60
+    F = Fake color 0x6F
+    o = Object color 0x0E
+    O = Object color 0x0C
+    A = Fake color 0x08
+    a = Object color 0x0F
+    + = Door color 0x1F
+    p = Passage color 0x1F to "Town Plaza"
+    @ = Player color 0x1F under Empty color 0x00
+  end
+
+  stats
+    stat at 28,21 element Passage p3 board "Town Plaza"
+    stat at 43,16 element Object p1 cp437:0x0F under Fake color 0x60
+    oop
+@baker
+#end
+:touch
+#play tcega
+Welcome back to my bakery!
+You found the key in the fountain. Bless
+you.
+The ovens are warm and the bread is
+rising.
+#end
+    end
+    stat at 35,16 element Object p1 cp437:0x0F under Fake color 0x60
+    oop
+@sign
+#end
+:touch
+The register. Coins for warm rolls.
+#end
+    end
+    stat at 47,9 element Object p1 cp437:0x07 under Fake color 0x60
+    oop
+@grandloaf
+#end
+:touch
+#play tfab+c
+A golden loaf sits cooling on the rack.
+The whole town smells like morning again.
+You did it. The bakery lives once more!
+#end
+#endgame
+#end
+    end
+    stat at 27,16 element Object cycle 0 p1 cp437:0xF0 under Fake color 0x08
+    oop
+@b1
+#end
+:touch
+A tray of fresh croissants.
+#end
+    end
+    stat at 27,9 element Object cycle 0 p1 cp437:0xF0 under Fake color 0x08
+    oop
+@b2
+#end
+:touch
+Sourdough boules, still steaming.
+#end
+    end
+    stat at 19,16 element Object cycle 0 p1 cp437:0xF0 under Fake color 0x08
+    oop
+@b3
+#end
+:touch
+Cinnamon buns dusted with sugar.
+#end
+    end
+    stat at 11,16 element Object cycle 0 p1 cp437:0xF0 under Fake color 0x08
+    oop
+@b4
+#end
+:touch
+Rye rolls in neat rows.
+#end
+    end
+    stat at 7,9 element Object cycle 0 p1 cp437:0xF0 under Fake color 0x08
+    oop
+@b5
+#end
+:touch
+A basket of soft pretzels.
+#end
+    end
+  end
+end

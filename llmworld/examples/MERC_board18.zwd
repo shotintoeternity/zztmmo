@@ -1,6 +1,5 @@
 board "Magma Lake 3.5"
   start player at 8,9
-  respawn at 32,32
   max-shots 255
   dark false
   reenter false
@@ -84,7 +83,7 @@ ccc~BNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNB~cccdSSS
   end
 
   stats
-    stat at 60,1 element Object p1 cp437:0xDB p2 0 step idle under Empty color 0x20
+    stat at 60,1 element Object p1 cp437:0xDB under Empty color 0x20
     oop
 @Healthcheck
 #cycle 1
@@ -153,7 +152,7 @@ ccc~BNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNB~cccdSSS
 #loop 
 
     end
-    stat at 60,17 element Object p1 cp437:0xDB p2 0 step idle under Empty color 0x09
+    stat at 60,17 element Object p1 cp437:0xDB under Empty color 0x09
     oop
 @Changer
 :loop
@@ -165,7 +164,7 @@ ccc~BNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNB~cccdSSS
 #end
 
     end
-    stat at 59,1 element Object p1 cp437:0xDB p2 0 step idle under Empty color 0x11
+    stat at 59,1 element Object p1 cp437:0xDB under Empty color 0x11
     oop
 @Ammocheck
 #cycle 1
@@ -244,7 +243,7 @@ You have reached your Ammo limit.
 #loop 
 
     end
-    stat at 58,1 element Object p1 cp437:0xDB p2 0 step idle under Empty color 0x0E
+    stat at 58,1 element Object p1 cp437:0xDB under Empty color 0x0E
     oop
 @Torchcheck
 #cycle 1
@@ -323,7 +322,7 @@ You have reached your Torches limit.
 #loop 
 
     end
-    stat at 60,2 element Object p1 cp437:0xDB p2 0 step idle under Empty color 0x11
+    stat at 60,2 element Object p1 cp437:0xDB under Empty color 0x11
     oop
 @Scorecheck
 #cycle 1
@@ -408,7 +407,7 @@ YOU ARE NOW LEVEL A
 #loop 
 
     end
-    stat at 59,13 element Object p1 cp437:0xFF p2 0 step idle under Empty color 0x2D
+    stat at 59,13 element Object p1 cp437:0xFF under Empty color 0x2D
     oop
 @Lockpicks
 :loop
@@ -420,7 +419,7 @@ YOU ARE NOW LEVEL A
 #end 
 
     end
-    stat at 59,14 element Object p1 cp437:0xFF p2 0 step idle under Empty color 0x20
+    stat at 59,14 element Object p1 cp437:0xFF under Empty color 0x20
     oop
 @Gauntlet
 :loop
@@ -432,7 +431,7 @@ YOU ARE NOW LEVEL A
 #end
 
     end
-    stat at 59,15 element Object p1 cp437:0xFF p2 0 step idle under Empty color 0x20
+    stat at 59,15 element Object p1 cp437:0xFF under Empty color 0x20
     oop
 @Rope
 :loop
@@ -444,7 +443,7 @@ YOU ARE NOW LEVEL A
 #end
 
     end
-    stat at 59,16 element Object p1 cp437:0xFF p2 0 step idle under Empty color 0x20
+    stat at 59,16 element Object p1 cp437:0xFF under Empty color 0x20
     oop
 @Aqualung
 :loop
@@ -456,7 +455,7 @@ YOU ARE NOW LEVEL A
 #end
 
     end
-    stat at 59,23 element Object p1 cp437:0x31 p2 0 step idle under Empty color 0x11
+    stat at 59,23 element Object p1 cp437:0x31 under Empty color 0x11
     oop
 @Weapon
 #cycle 3
@@ -485,7 +484,7 @@ YOU ARE NOW LEVEL A
 #loop
 
     end
-    stat at 59,5 element Object p1 cp437:0x31 p2 0 step idle under Empty color 0x2D
+    stat at 59,5 element Object p1 cp437:0x31 under Empty color 0x2D
     oop
 @Level
 #cycle 3
@@ -544,7 +543,7 @@ YOU ARE NOW LEVEL A
 #loop
 
     end
-    stat at 1,1 element Object p1 cp437:0x02 p2 0 step idle under Empty color 0x0E
+    stat at 1,1 element Object p1 cp437:0x02 under Empty color 0x0E
     oop
 @Randomiser
 #cycle 2
@@ -555,7 +554,7 @@ YOU ARE NOW LEVEL A
 #restart
 
     end
-    stat at 1,2 element Object p2 0 step idle under Empty color 0x0E
+    stat at 1,2 element Object under Empty color 0x0E
     oop
 @Randomiser
 #if blocked rndns then do
@@ -570,8 +569,8 @@ YOU ARE NOW LEVEL A
 #restart
 
     end
-    stat at 46,22 element Passage p1 0 p2 0 p3 board "Magma Lake 3.4 (E of 3.2)" step idle follower 0 leader 0
-    stat at 43,19 element Object cycle 1 p1 cp437:0x08 p2 0 step idle under Fake color 0x08 follower 0 leader 0
+    stat at 46,22 element Passage p3 board "Magma Lake 3.4 (E of 3.2)" follower 0 leader 0
+    stat at 43,19 element Object cycle 1 p1 cp437:0x08 under Fake color 0x08 follower 0 leader 0
     oop
 @Door
 #end
@@ -585,7 +584,7 @@ You pick the lock.
 #end
 
     end
-    stat at 30,23 element Object p1 cp437:0xA1 p2 0 step idle under Empty color 0x0C
+    stat at 30,23 element Object p1 cp437:0xA1 under Empty color 0x0C
     oop
 @Candle
 #cycle 1
@@ -606,7 +605,7 @@ A candle.
 #loop
 
     end
-    stat at 27,3 element Object p1 cp437:0xA1 p2 0 step idle under Empty color 0x0C
+    stat at 27,3 element Object p1 cp437:0xA1 under Empty color 0x0C
     oop
 @Candle
 #cycle 1
@@ -627,7 +626,7 @@ A candle.
 #loop
 
     end
-    stat at 6,17 element Object p1 cp437:0xA1 p2 0 step idle under Empty color 0x0C
+    stat at 6,17 element Object p1 cp437:0xA1 under Empty color 0x0C
     oop
 @Candle
 #cycle 1
@@ -648,7 +647,7 @@ A candle.
 #loop
 
     end
-    stat at 6,7 element Object p1 cp437:0xA1 p2 0 step idle under Empty color 0x0C
+    stat at 6,7 element Object p1 cp437:0xA1 under Empty color 0x0C
     oop
 @Candle
 #cycle 1
@@ -669,7 +668,7 @@ A candle.
 #loop
 
     end
-    stat at 51,8 element Object p1 cp437:0xA1 p2 0 step idle under Empty color 0x0C
+    stat at 51,8 element Object p1 cp437:0xA1 under Empty color 0x0C
     oop
 @Candle
 #cycle 1
@@ -690,7 +689,7 @@ A candle.
 #loop
 
     end
-    stat at 51,15 element Object p1 cp437:0xA1 p2 0 step idle under Empty color 0x0C
+    stat at 51,15 element Object p1 cp437:0xA1 under Empty color 0x0C
     oop
 @Candle
 #cycle 1
@@ -711,7 +710,7 @@ A candle.
 #loop
 
     end
-    stat at 18,22 element Object p1 cp437:0xA1 p2 0 step idle under Empty color 0x0C
+    stat at 18,22 element Object p1 cp437:0xA1 under Empty color 0x0C
     oop
 @Candle
 #cycle 1
@@ -732,7 +731,7 @@ A candle.
 #loop
 
     end
-    stat at 43,3 element Object p1 cp437:0xA1 p2 0 step idle under Empty color 0x0C
+    stat at 43,3 element Object p1 cp437:0xA1 under Empty color 0x0C
     oop
 @Candle
 #cycle 1
@@ -753,7 +752,7 @@ A candle.
 #loop
 
     end
-    stat at 46,6 element Object cycle 1 p1 cp437:0x06 p2 0 step idle under Fake color 0x08 follower 0 leader 0
+    stat at 46,6 element Object cycle 1 p1 cp437:0x06 under Fake color 0x08 follower 0 leader 0
     oop
 @Magmyte
 #cycle 2
@@ -797,7 +796,7 @@ The Magmyte melts! +20 EXP!
 #explo
 
     end
-    stat at 46,17 element Object cycle 1 p1 cp437:0x06 p2 0 step idle under Fake color 0x08 follower 0 leader 0
+    stat at 46,17 element Object cycle 1 p1 cp437:0x06 under Fake color 0x08 follower 0 leader 0
     oop
 @Magmyte
 #cycle 2
@@ -841,7 +840,7 @@ The Magmyte melts! +20 EXP!
 #explo
 
     end
-    stat at 10,17 element Object cycle 1 p1 cp437:0x06 p2 0 step idle under Fake color 0x08 follower 0 leader 0
+    stat at 10,17 element Object cycle 1 p1 cp437:0x06 under Fake color 0x08 follower 0 leader 0
     oop
 @Magmyte
 #cycle 2
@@ -885,7 +884,7 @@ The Magmyte melts! +20 EXP!
 #explo
 
     end
-    stat at 10,6 element Object cycle 1 p1 cp437:0x06 p2 0 step idle under Fake color 0x08 follower 0 leader 0
+    stat at 10,6 element Object cycle 1 p1 cp437:0x06 under Fake color 0x08 follower 0 leader 0
     oop
 @Magmyte
 #cycle 2
@@ -929,7 +928,7 @@ The Magmyte melts! +20 EXP!
 #explo
 
     end
-    stat at 29,5 element Object cycle 1 p1 cp437:0x94 p2 0 step idle under Fake color 0x08 follower 0 leader 0
+    stat at 29,5 element Object cycle 1 p1 cp437:0x94 under Fake color 0x08 follower 0 leader 0
     oop
 @Fireball
 #cycle 1
@@ -969,7 +968,7 @@ The fireball explodes!
 #end
 
     end
-    stat at 24,21 element Object cycle 1 p1 cp437:0x94 p2 0 step idle under Fake color 0x08 follower 0 leader 0
+    stat at 24,21 element Object cycle 1 p1 cp437:0x94 under Fake color 0x08 follower 0 leader 0
     oop
 @Fireball
 #cycle 1
@@ -1009,7 +1008,7 @@ The fireball explodes!
 #end
 
     end
-    stat at 17,19 element Object p1 cp437:0x93 p2 0 step idle under Fake color 0x08
+    stat at 17,19 element Object p1 cp437:0x93 under Fake color 0x08
     oop
 @FlameGoblin
 #try rndp rndne
@@ -1065,7 +1064,7 @@ The Flame Goblin hits you! -4 HP
 #become yellow gem
 
     end
-    stat at 32,22 element Object p1 cp437:0x93 p2 0 step idle under Fake color 0x08
+    stat at 32,22 element Object p1 cp437:0x93 under Fake color 0x08
     oop
 @FlameGoblin
 #try rndp rndne
@@ -1121,7 +1120,7 @@ The Flame Goblin hits you! -4 HP
 #become yellow gem
 
     end
-    stat at 48,12 element Object p1 cp437:0x93 p2 0 step idle under Fake color 0x08
+    stat at 48,12 element Object p1 cp437:0x93 under Fake color 0x08
     oop
 @FlameGoblin
 #try rndp rndne
@@ -1177,7 +1176,7 @@ The Flame Goblin hits you! -4 HP
 #become yellow gem
 
     end
-    stat at 38,6 element Object p1 cp437:0x93 p2 0 step idle under Fake color 0x08
+    stat at 38,6 element Object p1 cp437:0x93 under Fake color 0x08
     oop
 @FlameGoblin
 #try rndp rndne
@@ -1233,7 +1232,7 @@ The Flame Goblin hits you! -4 HP
 #become yellow gem
 
     end
-    stat at 19,5 element Object cycle 1 p1 cp437:0x9C p2 0 step idle follower 0 leader 0
+    stat at 19,5 element Object cycle 1 p1 cp437:0x9C follower 0 leader 0
     oop
 @Pyromaniac
 #cycle 1
@@ -1297,7 +1296,7 @@ The Pyromaniac burns you! -10HP
 #loop1
 
     end
-    stat at 42,20 element Object cycle 1 p1 cp437:0xAD p2 0 step idle follower 0 leader 0
+    stat at 42,20 element Object cycle 1 p1 cp437:0xAD follower 0 leader 0
     oop
 @LowPotion
 #end
@@ -1309,7 +1308,7 @@ You found a Low Potion : +5 HP!
 #end
 
     end
-    stat at 29,23 element Object cycle 1 p1 cp437:0xAD p2 0 step idle follower 0 leader 0
+    stat at 29,23 element Object cycle 1 p1 cp437:0xAD follower 0 leader 0
     oop
 @LowPotion
 #end
@@ -1321,7 +1320,7 @@ You found a Low Potion : +5 HP!
 #end
 
     end
-    stat at 26,3 element Object cycle 1 p1 cp437:0xAD p2 0 step idle follower 0 leader 0
+    stat at 26,3 element Object cycle 1 p1 cp437:0xAD follower 0 leader 0
     oop
 @LowPotion
 #end
@@ -1333,7 +1332,7 @@ You found a Low Potion : +5 HP!
 #end
 
     end
-    stat at 19,13 element Object cycle 1 p1 cp437:0xA8 p2 0 step idle follower 0 leader 0
+    stat at 19,13 element Object cycle 1 p1 cp437:0xA8 follower 0 leader 0
     oop
 @Potion
 #end
@@ -1345,7 +1344,7 @@ You found a Potion : +10 HP!
 #end
 
     end
-    stat at 33,12 element Object cycle 1 p1 cp437:0x94 p2 0 step idle under Fake color 0x08 follower 0 leader 0
+    stat at 33,12 element Object cycle 1 p1 cp437:0x94 under Fake color 0x08 follower 0 leader 0
     oop
 @Fireball
 #cycle 1
@@ -1385,9 +1384,9 @@ The fireball explodes!
 #end
 
     end
-    stat at 6,5 element Passage p1 0 p2 0 p3 board "Magma Lake 3.3 (N of 3.2)" step idle follower 0 leader 0
-    stat at 26,13 element Passage p1 0 p2 0 p3 board "Magma Lake Boss" step idle follower 0 leader 0
-    stat at 31,14 element Object cycle 1 p1 cp437:0xA5 p2 0 step idle follower 0 leader 0
+    stat at 6,5 element Passage p3 board "Magma Lake 3.3 (N of 3.2)" follower 0 leader 0
+    stat at 26,13 element Passage p3 board "Magma Lake Boss" follower 0 leader 0
+    stat at 31,14 element Object cycle 1 p1 cp437:0xA5 follower 0 leader 0
     oop
 @Chest
 #end
@@ -1400,7 +1399,7 @@ You found a chest full of ammo!
 #end
 
     end
-    stat at 39,11 element Object cycle 1 p1 cp437:0xB0 p2 0 step idle follower 0 leader 0
+    stat at 39,11 element Object cycle 1 p1 cp437:0xB0 follower 0 leader 0
     oop
 @Detect
 #cycle 1

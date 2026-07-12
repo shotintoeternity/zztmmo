@@ -64,46 +64,46 @@ bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb!bbbbbbbbbbbbbbbb
   end
 
   stats
-    stat at 27,9 element Object p1 cp437:0x48 p2 0 step idle
+    stat at 27,9 element Object p1 cp437:0x48
     oop
 #end
 :touch
 $
 $Pretty kewl, eh?
 $
-  When you immediately exit a game, and
+When you immediately exit a game, and
 try to play it again, ZZT will load up
 a game with the same FILENAME as the NAME
-of the game you just played.  A FILENAME
-and a NAME are not the same thing.  The
-NAME of a ZZT game is stored into the 
+of the game you just played. A FILENAME
+and a NAME are not the same thing. The
+NAME of a ZZT game is stored into the
 game's data, near the beginning, and
 appears at the upper-right when you
 load up a world. Though the second half
-of the Encyclopedia has a certain 
-filename, its NAME is NEWWORLD.  So when
-you exit, it actually loaded up the game 
-NEWWORLD.ZZT.  To set up this engine,
+of the Encyclopedia has a certain
+filename, its NAME is NEWWORLD. So when
+you exit, it actually loaded up the game
+NEWWORLD.ZZT. To set up this engine,
 do the following steps:
 $
 $1) Make a world.
 $2) Make another world.
 $3) Make sure the name of the first world
-$   is the filename of the other.  There
-$   are 2 ways to do this:                
+$is the filename of the other. There
+$are 2 ways to do this:
 $
-  a) Save the game again as the name you
-     want.  Delete the original copy.
-     Rename it back to the old filename.
-     It will have a different name, but
-     keep the filename.
-  b) Open the world in a text file and
-     rename it, keeping sure it is opened
-     as binary and the length of the name
-     is stored as the first byte in that
-     string.
+a) Save the game again as the name you
+want. Delete the original copy.
+Rename it back to the old filename.
+It will have a different name, but
+keep the filename.
+b) Open the world in a text file and
+rename it, keeping sure it is opened
+as binary and the length of the name
+is stored as the first byte in that
+string.
 $
-  I hope this wasn't too confusing... it's
+I hope this wasn't too confusing... it's
 really cool if you get it.
 $
 #end

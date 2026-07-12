@@ -56,49 +56,49 @@ aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa
   end
 
   stats
-    stat at 18,8 element Object p1 cp437:0xDF p2 0 step idle
-    stat at 19,8 element Object p1 cp437:0xDF p2 0 step idle
-    stat at 20,8 element Object p1 cp437:0xDF p2 0 step idle
-    stat at 21,8 element Object p1 cp437:0xDF p2 0 step idle
-    stat at 22,8 element Object p1 cp437:0xDF p2 0 step idle
-    stat at 25,8 element Object p1 cp437:0xDF p2 0 step idle
-    stat at 26,8 element Object p1 cp437:0xDF p2 0 step idle
-    stat at 27,8 element Object p1 cp437:0xDF p2 0 step idle
-    stat at 28,8 element Object p1 cp437:0xDF p2 0 step idle
-    stat at 29,8 element Object p1 cp437:0xDF p2 0 step idle
-    stat at 30,8 element Object p1 cp437:0xDF p2 0 step idle
-    stat at 31,8 element Object p1 cp437:0xDF p2 0 step idle
-    stat at 32,8 element Object p1 cp437:0xDF p2 0 step idle
-    stat at 33,8 element Object p1 cp437:0xDF p2 0 step idle
-    stat at 34,8 element Object p1 cp437:0xDF p2 0 step idle
-    stat at 35,8 element Object p1 cp437:0xDF p2 0 step idle
-    stat at 38,8 element Object p1 cp437:0xDF p2 0 step idle
-    stat at 39,8 element Object p1 cp437:0xDF p2 0 step idle
-    stat at 40,8 element Object p1 cp437:0xDF p2 0 step idle
-    stat at 41,8 element Object p1 cp437:0xDF p2 0 step idle
-    stat at 42,8 element Object p1 cp437:0xDF p2 0 step idle
-    stat at 27,13 element Object p1 cp437:0xDF p2 0 step idle
-    stat at 25,13 element Object p1 cp437:0xDF p2 0 step idle
-    stat at 23,13 element Object p1 cp437:0xDF p2 0 step idle
-    stat at 21,13 element Object p1 cp437:0xDF p2 0 step idle
-    stat at 19,13 element Object p1 cp437:0xDF p2 0 step idle
-    stat at 18,13 element Object p1 cp437:0xDF p2 0 step idle
-    stat at 18,16 element Object p1 cp437:0xDF p2 0 step idle
-    stat at 21,16 element Object p1 cp437:0xDF p2 0 step idle
-    stat at 27,16 element Object p1 cp437:0xDF p2 0 step idle
-    stat at 33,16 element Object p1 cp437:0xDF p2 0 step idle
-    stat at 35,16 element Object p1 cp437:0xDF p2 0 step idle
-    stat at 37,16 element Object p1 cp437:0xDF p2 0 step idle
-    stat at 39,16 element Object p1 cp437:0xDF p2 0 step idle
-    stat at 41,16 element Object p1 cp437:0xDF p2 0 step idle
-    stat at 42,16 element Object p1 cp437:0xDF p2 0 step idle
-    stat at 42,13 element Object p1 cp437:0xDF p2 0 step idle
-    stat at 41,13 element Object p1 cp437:0xDF p2 0 step idle
-    stat at 39,13 element Object p1 cp437:0xDF p2 0 step idle
-    stat at 37,13 element Object p1 cp437:0xDF p2 0 step idle
-    stat at 35,13 element Object p1 cp437:0xDF p2 0 step idle
-    stat at 33,13 element Object p1 cp437:0xDF p2 0 step idle
-    stat at 37,10 element Object p1 cp437:0xDC p2 0 step idle
+    stat at 18,8 element Object p1 cp437:0xDF
+    stat at 19,8 element Object p1 cp437:0xDF
+    stat at 20,8 element Object p1 cp437:0xDF
+    stat at 21,8 element Object p1 cp437:0xDF
+    stat at 22,8 element Object p1 cp437:0xDF
+    stat at 25,8 element Object p1 cp437:0xDF
+    stat at 26,8 element Object p1 cp437:0xDF
+    stat at 27,8 element Object p1 cp437:0xDF
+    stat at 28,8 element Object p1 cp437:0xDF
+    stat at 29,8 element Object p1 cp437:0xDF
+    stat at 30,8 element Object p1 cp437:0xDF
+    stat at 31,8 element Object p1 cp437:0xDF
+    stat at 32,8 element Object p1 cp437:0xDF
+    stat at 33,8 element Object p1 cp437:0xDF
+    stat at 34,8 element Object p1 cp437:0xDF
+    stat at 35,8 element Object p1 cp437:0xDF
+    stat at 38,8 element Object p1 cp437:0xDF
+    stat at 39,8 element Object p1 cp437:0xDF
+    stat at 40,8 element Object p1 cp437:0xDF
+    stat at 41,8 element Object p1 cp437:0xDF
+    stat at 42,8 element Object p1 cp437:0xDF
+    stat at 27,13 element Object p1 cp437:0xDF
+    stat at 25,13 element Object p1 cp437:0xDF
+    stat at 23,13 element Object p1 cp437:0xDF
+    stat at 21,13 element Object p1 cp437:0xDF
+    stat at 19,13 element Object p1 cp437:0xDF
+    stat at 18,13 element Object p1 cp437:0xDF
+    stat at 18,16 element Object p1 cp437:0xDF
+    stat at 21,16 element Object p1 cp437:0xDF
+    stat at 27,16 element Object p1 cp437:0xDF
+    stat at 33,16 element Object p1 cp437:0xDF
+    stat at 35,16 element Object p1 cp437:0xDF
+    stat at 37,16 element Object p1 cp437:0xDF
+    stat at 39,16 element Object p1 cp437:0xDF
+    stat at 41,16 element Object p1 cp437:0xDF
+    stat at 42,16 element Object p1 cp437:0xDF
+    stat at 42,13 element Object p1 cp437:0xDF
+    stat at 41,13 element Object p1 cp437:0xDF
+    stat at 39,13 element Object p1 cp437:0xDF
+    stat at 37,13 element Object p1 cp437:0xDF
+    stat at 35,13 element Object p1 cp437:0xDF
+    stat at 33,13 element Object p1 cp437:0xDF
+    stat at 37,10 element Object p1 cp437:0xDC
     oop
 @timesucker
 #cycle 10
@@ -115,13 +115,13 @@ aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa
 #endgame
 
     end
-    stat at 36,10 element Object p1 cp437:0xDC p2 0 step idle
-    stat at 35,10 element Object p1 cp437:0xDC p2 0 step idle
-    stat at 34,10 element Object p1 cp437:0xDC p2 0 step idle
-    stat at 33,10 element Object p1 cp437:0xDC p2 0 step idle
-    stat at 32,10 element Object p1 cp437:0xDC p2 0 step idle
-    stat at 31,10 element Object p1 cp437:0xDC p2 0 step idle
-    stat at 30,10 element Object p1 cp437:0xDC p2 0 step idle
+    stat at 36,10 element Object p1 cp437:0xDC
+    stat at 35,10 element Object p1 cp437:0xDC
+    stat at 34,10 element Object p1 cp437:0xDC
+    stat at 33,10 element Object p1 cp437:0xDC
+    stat at 32,10 element Object p1 cp437:0xDC
+    stat at 31,10 element Object p1 cp437:0xDC
+    stat at 30,10 element Object p1 cp437:0xDC
     oop
 @Clerk
 #end
@@ -185,14 +185,14 @@ $
 #bach
 
     end
-    stat at 29,10 element Object p1 cp437:0xDC p2 0 step idle
-    stat at 28,10 element Object p1 cp437:0xDC p2 0 step idle
-    stat at 27,10 element Object p1 cp437:0xDC p2 0 step idle
-    stat at 26,10 element Object p1 cp437:0xDC p2 0 step idle
-    stat at 25,10 element Object p1 cp437:0xDC p2 0 step idle
-    stat at 24,10 element Object p1 cp437:0xDC p2 0 step idle
-    stat at 23,10 element Object p1 cp437:0xDC p2 0 step idle
-    stat at 30,9 element Object p1 cp437:0x02 p2 0 step idle
+    stat at 29,10 element Object p1 cp437:0xDC
+    stat at 28,10 element Object p1 cp437:0xDC
+    stat at 27,10 element Object p1 cp437:0xDC
+    stat at 26,10 element Object p1 cp437:0xDC
+    stat at 25,10 element Object p1 cp437:0xDC
+    stat at 24,10 element Object p1 cp437:0xDC
+    stat at 23,10 element Object p1 cp437:0xDC
+    stat at 30,9 element Object p1 cp437:0x02
     oop
 @guy
 #end
@@ -218,8 +218,8 @@ $
 #end
 
     end
-    stat at 30,18 element Passage p1 0 p2 0 p3 board "Outside" step idle under Empty color 0x20
-    stat at 18,9 element Object p1 cp437:0x29 p2 0 step idle
+    stat at 30,18 element Passage p3 board "Outside" under Empty color 0x20
+    stat at 18,9 element Object p1 cp437:0x29
     oop
 @Help Phone
 #end
@@ -255,7 +255,7 @@ $
 #end
 
     end
-    stat at 20,9 element Object p2 0 step idle
+    stat at 20,9 element Object
     oop
 @Helpful Man
 #end
@@ -291,12 +291,12 @@ MAN: Don't talk to me! The phone!
 #end
 
     end
-    stat at 34,13 element Object p1 cp437:0xFB p2 0 step idle
+    stat at 34,13 element Object p1 cp437:0xFB
     oop
 #bind crap
 
     end
-    stat at 40,16 element Object p1 cp437:0xFE p2 0 step idle
+    stat at 40,16 element Object p1 cp437:0xFE
     oop
 @Milk
 #end
@@ -317,7 +317,7 @@ $steal it?
 $
 What? Why should I let you...
 $
-$Well, if you don't, this game won't 
+$Well, if you don't, this game won't
 $really get much farther than where it is
 $right now.
 $
@@ -338,8 +338,8 @@ Shut up.
 #end
 
     end
-    stat at 35,9 element Object p1 cp437:0xE8 p2 0 step idle
-    stat at 26,16 element Object p1 cp437:0xDD p2 0 step idle
+    stat at 35,9 element Object p1 cp437:0xE8
+    stat at 26,16 element Object p1 cp437:0xDD
     oop
 @Bestsellers
 #end
@@ -350,27 +350,27 @@ roomates.
 #end
 
     end
-    stat at 25,16 element Object p1 cp437:0xDD p2 0 step idle
+    stat at 25,16 element Object p1 cp437:0xDD
     oop
 #bind Bestsellers
 
     end
-    stat at 24,16 element Object p1 cp437:0xDD p2 0 step idle
+    stat at 24,16 element Object p1 cp437:0xDD
     oop
 #bind Bestsellers
 
     end
-    stat at 23,16 element Object p1 cp437:0xDD p2 0 step idle
+    stat at 23,16 element Object p1 cp437:0xDD
     oop
 #bind Bestsellers
 
     end
-    stat at 22,16 element Object p1 cp437:0xDD p2 0 step idle
+    stat at 22,16 element Object p1 cp437:0xDD
     oop
 #bind Bestsellers
 
     end
-    stat at 36,13 element Object p1 cp437:0x26 p2 0 step idle
+    stat at 36,13 element Object p1 cp437:0x26
     oop
 @Syrup
 #end
@@ -379,8 +379,8 @@ Mmm, Aunt Jemima.
 #end
 
     end
-    stat at 38,13 element Object p1 cp437:0xDF p2 0 step idle
-    stat at 20,13 element Object p1 cp437:0xE0 p2 0 step idle
+    stat at 38,13 element Object p1 cp437:0xDF
+    stat at 20,13 element Object p1 cp437:0xE0
     oop
 @crap
 #end
@@ -389,12 +389,12 @@ Some useless crap or other.
 #end
 
     end
-    stat at 22,13 element Object p1 cp437:0xE4 p2 0 step idle
+    stat at 22,13 element Object p1 cp437:0xE4
     oop
 #bind crap
 
     end
-    stat at 26,13 element Object p1 cp437:0x02 p2 0 step idle
+    stat at 26,13 element Object p1 cp437:0x02
     oop
 @Head
 #end
@@ -415,12 +415,12 @@ to the damn head.
 #end
 
     end
-    stat at 24,13 element Object p1 cp437:0x05 p2 0 step idle
+    stat at 24,13 element Object p1 cp437:0x05
     oop
 #bind crap
 
     end
-    stat at 20,16 element Object p1 cp437:0xDD p2 0 step idle
+    stat at 20,16 element Object p1 cp437:0xDD
     oop
 @comics
 #end
@@ -429,7 +429,7 @@ Yes! Bone #33!
 #end
 
     end
-    stat at 19,16 element Object p1 cp437:0xDD p2 0 step idle
+    stat at 19,16 element Object p1 cp437:0xDD
     oop
 #end
 :touch
@@ -443,12 +443,12 @@ CLERK: Hey, that Randal guy's my hero.
 #end
 
     end
-    stat at 38,16 element Object p1 cp437:0xF6 p2 0 step idle
+    stat at 38,16 element Object p1 cp437:0xF6
     oop
 #bind crap
 
     end
-    stat at 36,16 element Object p1 cp437:0xF4 p2 0 step idle
+    stat at 36,16 element Object p1 cp437:0xF4
     oop
 @crowbar
 #end
@@ -457,12 +457,12 @@ CLERK: Hey, that Randal guy's my hero.
 #end
 
     end
-    stat at 34,16 element Object p1 cp437:0xEA p2 0 step idle
+    stat at 34,16 element Object p1 cp437:0xEA
     oop
 #bind crap
 
     end
-    stat at 40,13 element Object p1 cp437:0xE1 p2 0 step idle
+    stat at 40,13 element Object p1 cp437:0xE1
     oop
 #bind crap
 

@@ -87,61 +87,61 @@ BBBBBBBBBBNNNNNNNNNNNNNNNNNBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBB
   end
 
   stats
-    stat at 49,13 element Transporter p1 0 p2 0 step west under Empty color 0x0C
-    stat at 25,13 element Transporter p1 0 p2 0 step east
-    stat at 12,5 element Transporter p1 0 p2 0 step north under Empty color 0x0C
-    stat at 25,11 element Transporter p1 0 p2 0 step east under Empty color 0x0C
-    stat at 25,12 element Transporter p1 0 p2 0 step east under Empty color 0x0C
-    stat at 37,18 element Transporter p1 0 p2 0 step west
-    stat at 49,12 element Transporter p1 0 p2 0 step west under Empty color 0x0C
-    stat at 49,11 element Transporter p1 0 p2 0 step west
-    stat at 6,19 element Transporter p1 0 p2 0 step east under Empty color 0x0C
-    stat at 6,18 element Transporter p1 0 p2 0 step east
-    stat at 6,20 element Transporter p1 0 p2 0 step east under Empty color 0x0C
-    stat at 37,20 element Transporter p1 0 p2 0 step west under Empty color 0x0C
-    stat at 37,19 element Transporter p1 0 p2 0 step west under Empty color 0x0C
-    stat at 3,2 element Head step idle under Empty color 0x0C
-    stat at 4,2 element Head step idle under Empty color 0x0C
-    stat at 5,2 element Head step idle under Empty color 0x0C
-    stat at 6,2 element Head step idle under Empty color 0x0C
-    stat at 7,2 element Head step idle under Empty color 0x0C
-    stat at 8,2 element Head step idle under Empty color 0x0C
-    stat at 8,3 element Head step idle under Empty color 0x0C
-    stat at 7,3 element Head step idle under Empty color 0x0C
-    stat at 6,3 element Head step idle under Empty color 0x0C
-    stat at 5,3 element Head step idle under Empty color 0x0C
-    stat at 4,3 element Head step idle under Empty color 0x0C
-    stat at 3,3 element Head step idle under Empty color 0x0C
-    stat at 3,4 element Head step idle under Empty color 0x0C
-    stat at 4,4 element Head step idle under Empty color 0x0C
-    stat at 5,4 element Head step idle under Empty color 0x0C
-    stat at 6,4 element Head step idle under Empty color 0x0C
-    stat at 7,4 element Head step idle under Empty color 0x0C
-    stat at 8,4 element Head step idle under Empty color 0x0C
-    stat at 8,5 element Head step idle under Empty color 0x0C
-    stat at 7,5 element Head step idle under Empty color 0x0C
-    stat at 5,5 element Head step idle under Empty color 0x0C
-    stat at 4,5 element Head step idle under Empty color 0x0C
-    stat at 3,5 element Head step idle under Empty color 0x0C
-    stat at 3,6 element Head step idle under Empty color 0x0C
-    stat at 4,6 element Head step idle under Empty color 0x0C
-    stat at 5,6 element Head step idle under Empty color 0x0C
-    stat at 6,6 element Head step idle under Empty color 0x0C
-    stat at 7,6 element Head step idle under Empty color 0x0C
-    stat at 8,6 element Head step idle under Empty color 0x0C
-    stat at 8,7 element Head step idle under Empty color 0x0C
-    stat at 7,7 element Head step idle under Empty color 0x0C
-    stat at 6,7 element Head step idle under Empty color 0x0C
-    stat at 5,7 element Head step idle under Empty color 0x0C
-    stat at 4,7 element Head step idle under Empty color 0x0C
-    stat at 3,7 element Head step idle under Empty color 0x0C
-    stat at 3,8 element Head step idle under Empty color 0x0C
-    stat at 4,8 element Head step idle under Empty color 0x0C
-    stat at 5,8 element Head step idle under Empty color 0x0C
-    stat at 6,8 element Head step idle under Empty color 0x0C
-    stat at 7,8 element Head step idle under Empty color 0x0C
-    stat at 8,8 element Head step idle under Empty color 0x0C
-    stat at 10,3 element Object p1 cp437:0xEF p2 0 step idle under Empty color 0x0C
+    stat at 49,13 element Transporter step west under Empty color 0x0C
+    stat at 25,13 element Transporter step east
+    stat at 12,5 element Transporter step north under Empty color 0x0C
+    stat at 25,11 element Transporter step east under Empty color 0x0C
+    stat at 25,12 element Transporter step east under Empty color 0x0C
+    stat at 37,18 element Transporter step west
+    stat at 49,12 element Transporter step west under Empty color 0x0C
+    stat at 49,11 element Transporter step west
+    stat at 6,19 element Transporter step east under Empty color 0x0C
+    stat at 6,18 element Transporter step east
+    stat at 6,20 element Transporter step east under Empty color 0x0C
+    stat at 37,20 element Transporter step west under Empty color 0x0C
+    stat at 37,19 element Transporter step west under Empty color 0x0C
+    stat at 3,2 element Head p1 4 p2 4 under Empty color 0x0C
+    stat at 4,2 element Head p1 4 p2 4 under Empty color 0x0C
+    stat at 5,2 element Head p1 4 p2 4 under Empty color 0x0C
+    stat at 6,2 element Head p1 4 p2 4 under Empty color 0x0C
+    stat at 7,2 element Head p1 4 p2 4 under Empty color 0x0C
+    stat at 8,2 element Head p1 4 p2 4 under Empty color 0x0C
+    stat at 8,3 element Head p1 4 p2 4 under Empty color 0x0C
+    stat at 7,3 element Head p1 4 p2 4 under Empty color 0x0C
+    stat at 6,3 element Head p1 4 p2 4 under Empty color 0x0C
+    stat at 5,3 element Head p1 4 p2 4 under Empty color 0x0C
+    stat at 4,3 element Head p1 4 p2 4 under Empty color 0x0C
+    stat at 3,3 element Head p1 4 p2 4 under Empty color 0x0C
+    stat at 3,4 element Head p1 4 p2 4 under Empty color 0x0C
+    stat at 4,4 element Head p1 4 p2 4 under Empty color 0x0C
+    stat at 5,4 element Head p1 4 p2 4 under Empty color 0x0C
+    stat at 6,4 element Head p1 4 p2 4 under Empty color 0x0C
+    stat at 7,4 element Head p1 4 p2 4 under Empty color 0x0C
+    stat at 8,4 element Head p1 4 p2 4 under Empty color 0x0C
+    stat at 8,5 element Head p1 4 p2 4 under Empty color 0x0C
+    stat at 7,5 element Head p1 4 p2 4 under Empty color 0x0C
+    stat at 5,5 element Head p1 4 p2 4 under Empty color 0x0C
+    stat at 4,5 element Head p1 4 p2 4 under Empty color 0x0C
+    stat at 3,5 element Head p1 4 p2 4 under Empty color 0x0C
+    stat at 3,6 element Head p1 4 p2 4 under Empty color 0x0C
+    stat at 4,6 element Head p1 4 p2 4 under Empty color 0x0C
+    stat at 5,6 element Head p1 4 p2 4 under Empty color 0x0C
+    stat at 6,6 element Head p1 4 p2 4 under Empty color 0x0C
+    stat at 7,6 element Head p1 4 p2 4 under Empty color 0x0C
+    stat at 8,6 element Head p1 4 p2 4 under Empty color 0x0C
+    stat at 8,7 element Head p1 4 p2 4 under Empty color 0x0C
+    stat at 7,7 element Head p1 4 p2 4 under Empty color 0x0C
+    stat at 6,7 element Head p1 4 p2 4 under Empty color 0x0C
+    stat at 5,7 element Head p1 4 p2 4 under Empty color 0x0C
+    stat at 4,7 element Head p1 4 p2 4 under Empty color 0x0C
+    stat at 3,7 element Head p1 4 p2 4 under Empty color 0x0C
+    stat at 3,8 element Head p1 4 p2 4 under Empty color 0x0C
+    stat at 4,8 element Head p1 4 p2 4 under Empty color 0x0C
+    stat at 5,8 element Head p1 4 p2 4 under Empty color 0x0C
+    stat at 6,8 element Head p1 4 p2 4 under Empty color 0x0C
+    stat at 7,8 element Head p1 4 p2 4 under Empty color 0x0C
+    stat at 8,8 element Head p1 4 p2 4 under Empty color 0x0C
+    stat at 10,3 element Object p1 cp437:0xEF under Empty color 0x0C
     oop
 @gate1
 #cycle 4
@@ -149,8 +149,8 @@ BBBBBBBBBBNNNNNNNNNNNNNNNNNBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBB
 #restart
 
     end
-    stat at 9,3 element Head p1 8 p2 0 step idle under Empty color 0x0C
-    stat at 32,5 element Object p1 cp437:0x08 p2 0 step idle
+    stat at 9,3 element Head p1 8 under Empty color 0x0C
+    stat at 32,5 element Object p1 cp437:0x08
     oop
 #end
 :touch
@@ -160,7 +160,7 @@ BBBBBBBBBBNNNNNNNNNNNNNNNNNBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBB
 #die
 
     end
-    stat at 41,12 element Object p1 cp437:0xEF p2 0 step idle under Empty color 0x0C
+    stat at 41,12 element Object p1 cp437:0xEF under Empty color 0x0C
     oop
 @gate2
 #cycle 4
@@ -168,7 +168,7 @@ BBBBBBBBBBNNNNNNNNNNNNNNNNNBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBB
 #restart
 
     end
-    stat at 13,19 element Object p1 cp437:0x81 p2 0 step idle under Empty color 0x0C
+    stat at 13,19 element Object p1 cp437:0x81 under Empty color 0x0C
     oop
 @The Devil
 #end
@@ -195,10 +195,10 @@ And finally...
 /i/i/i/i
 The Devil speaks...
 /i/i/i/i
-    You have invaded the forsaken halls
-of Lucifer the great evil,  master of
-the dungeons,  ruler of blah blah blah
-blah,  blah blah,  etc,  etc,  etc...
+You have invaded the forsaken halls
+of Lucifer the great evil, master of
+the dungeons, ruler of blah blah blah
+blah, blah blah, etc, etc, etc...
 /i/i/i/i
 Sounds pretty scarry to me...
 /i/i/i/i
@@ -207,7 +207,7 @@ The devil finally speaks again...
 #zap touch
 #unlock
 :touch
-    Do you,  a mere mortal,  challenge the
+Do you, a mere mortal, challenge the
 omniscent powers of evil that lurk in the
 dungeons of Hell?
 
@@ -216,7 +216,7 @@ dungeons of Hell?
 #end
 :doyes
 #lock
-Ok,  you win.
+Ok, you win.
 /e/e
 #play 0xxxx0xxx0xx0x09
 /i
@@ -233,14 +233,14 @@ Then die, cowardly adventurer!
 #send noloop
 
     end
-    stat at 6,5 element Head step idle under Empty color 0x09
-    stat at 20,12 element Object p2 0 step idle under Empty color 0x0C
+    stat at 6,5 element Head p1 4 p2 4 under Empty color 0x09
+    stat at 20,12 element Object under Empty color 0x0C
     oop
 @blok
 #end
 :touch
 #if any head xhead
-Good job...  So far!
+Good job... So far!
 #play cdcdecdefcdefgcdefgacdefgabcdefgab+c
 #die
 :xhead
@@ -248,8 +248,8 @@ Good job...  So far!
 You must destroy the creatures.
 
     end
-    stat at 17,19 element Passage p1 0 p2 0 p3 board "Crossover Cave" step idle under Empty color 0x0C
-    stat at 13,22 element Scroll p1 0 p2 0 step idle under Empty color 0x0C
+    stat at 17,19 element Passage p3 board "Crossover Cave" under Empty color 0x0C
+    stat at 13,22 element Scroll under Empty color 0x0C
     oop
 Almost there...
 

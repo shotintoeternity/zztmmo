@@ -48,7 +48,7 @@ bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb
   end
 
   stats
-    stat at 60,12 element Object p1 cp437:0x02 p2 0 step idle under Empty color 0x0E
+    stat at 60,12 element Object p1 cp437:0x02 under Empty color 0x0E
     oop
 @Guard
 /seek
@@ -60,10 +60,10 @@ Gotcha!
 #endgame
 
     end
-    stat at 33,14 element Transporter p1 0 p2 0 step north under Empty color 0x0C
-    stat at 33,10 element Transporter p1 0 p2 0 step south under Empty color 0x20
-    stat at 35,12 element Transporter p1 0 p2 0 step west
-    stat at 31,12 element Transporter p1 0 p2 0 step east
-    stat at 33,1 element Passage p1 0 p2 0 p3 board "Warania Temple" step idle under Empty color 0x0C
+    stat at 33,14 element Transporter step north under Empty color 0x0C
+    stat at 33,10 element Transporter step south under Empty color 0x20
+    stat at 35,12 element Transporter step west
+    stat at 31,12 element Transporter step east
+    stat at 33,1 element Passage p3 board "Warania Temple" under Empty color 0x0C
   end
 end

@@ -42,7 +42,7 @@ gggggggggggggggggggggggggggggooooooooooooooooggggggggggggggg
   end
 
   stats
-    stat at 11,10 element Object p1 cp437:0x04 p2 0 step idle under Empty color 0x0E
+    stat at 11,10 element Object p1 cp437:0x04 under Empty color 0x0E
     oop
 @KILLGEM
 #end
@@ -52,7 +52,7 @@ gggggggggggggggggggggggggggggooooooooooooooooggggggggggggggg
 #end
 
     end
-    stat at 43,11 element Object p1 cp437:0x04 p2 0 step idle under Empty color 0x0E
+    stat at 43,11 element Object p1 cp437:0x04 under Empty color 0x0E
     oop
 @goodone
 #end
@@ -65,7 +65,7 @@ TYPE ?+FANTA
 ON THE TITLE SCREEN FOR THE SECRET LEVEL1!
 
     end
-    stat at 21,18 element Object p1 cp437:0x04 p2 0 step idle under Empty color 0x0F
+    stat at 21,18 element Object p1 cp437:0x04 under Empty color 0x0F
     oop
 @KILLGEM
 #end
@@ -75,7 +75,7 @@ ON THE TITLE SCREEN FOR THE SECRET LEVEL1!
 #end
 
     end
-    stat at 20,18 element Object p1 cp437:0x04 p2 0 step idle under Empty color 0x0F
+    stat at 20,18 element Object p1 cp437:0x04 under Empty color 0x0F
     oop
 @KILLGEM
 #end
@@ -85,7 +85,7 @@ ON THE TITLE SCREEN FOR THE SECRET LEVEL1!
 #end
 
     end
-    stat at 19,18 element Object p1 cp437:0x04 p2 0 step idle under Empty color 0x0F
+    stat at 19,18 element Object p1 cp437:0x04 under Empty color 0x0F
     oop
 @KILLGEM
 #end
@@ -95,7 +95,7 @@ ON THE TITLE SCREEN FOR THE SECRET LEVEL1!
 #end
 
     end
-    stat at 18,18 element Object p1 cp437:0x04 p2 0 step idle under Empty color 0x0F
+    stat at 18,18 element Object p1 cp437:0x04 under Empty color 0x0F
     oop
 @KILLGEM
 #end
@@ -105,7 +105,7 @@ ON THE TITLE SCREEN FOR THE SECRET LEVEL1!
 #end
 
     end
-    stat at 18,7 element Object p1 cp437:0x04 p2 0 step idle under Empty color 0x0F
+    stat at 18,7 element Object p1 cp437:0x04 under Empty color 0x0F
     oop
 @KILLGEM
 #end
@@ -115,7 +115,7 @@ ON THE TITLE SCREEN FOR THE SECRET LEVEL1!
 #end
 
     end
-    stat at 19,7 element Object p1 cp437:0x04 p2 0 step idle under Empty color 0x0F
+    stat at 19,7 element Object p1 cp437:0x04 under Empty color 0x0F
     oop
 @KILLGEM
 #end
@@ -125,7 +125,7 @@ ON THE TITLE SCREEN FOR THE SECRET LEVEL1!
 #end
 
     end
-    stat at 20,7 element Object p1 cp437:0x04 p2 0 step idle under Empty color 0x0F
+    stat at 20,7 element Object p1 cp437:0x04 under Empty color 0x0F
     oop
 @KILLGEM
 #end
@@ -135,7 +135,7 @@ ON THE TITLE SCREEN FOR THE SECRET LEVEL1!
 #end
 
     end
-    stat at 21,7 element Object p1 cp437:0x04 p2 0 step idle under Empty color 0x0F
+    stat at 21,7 element Object p1 cp437:0x04 under Empty color 0x0F
     oop
 @KILLGEM
 #end
@@ -145,7 +145,7 @@ ON THE TITLE SCREEN FOR THE SECRET LEVEL1!
 #end
 
     end
-    stat at 22,7 element Object p1 cp437:0x04 p2 0 step idle under Empty color 0x0F
+    stat at 22,7 element Object p1 cp437:0x04 under Empty color 0x0F
     oop
 @KILLGEM
 #end
@@ -155,7 +155,7 @@ ON THE TITLE SCREEN FOR THE SECRET LEVEL1!
 #end
 
     end
-    stat at 23,7 element Object p1 cp437:0x04 p2 0 step idle under Empty color 0x0F
+    stat at 23,7 element Object p1 cp437:0x04 under Empty color 0x0F
     oop
 @KILLGEM
 #end
@@ -165,7 +165,7 @@ ON THE TITLE SCREEN FOR THE SECRET LEVEL1!
 #end
 
     end
-    stat at 24,7 element Object p1 cp437:0x04 p2 0 step idle under Empty color 0x0F
+    stat at 24,7 element Object p1 cp437:0x04 under Empty color 0x0F
     oop
 @KILLGEM
 #end
@@ -175,7 +175,7 @@ ON THE TITLE SCREEN FOR THE SECRET LEVEL1!
 #end
 
     end
-    stat at 23,8 element Object p1 cp437:0x04 p2 0 step idle under Empty color 0x0F
+    stat at 23,8 element Object p1 cp437:0x04 under Empty color 0x0F
     oop
 @KILLGEM
 #end
@@ -185,7 +185,7 @@ ON THE TITLE SCREEN FOR THE SECRET LEVEL1!
 #end
 
     end
-    stat at 24,8 element Object p1 cp437:0x04 p2 0 step idle under Empty color 0x0F
+    stat at 24,8 element Object p1 cp437:0x04 under Empty color 0x0F
     oop
 @KILLGEM
 #end
@@ -195,7 +195,7 @@ ON THE TITLE SCREEN FOR THE SECRET LEVEL1!
 #end
 
     end
-    stat at 24,9 element Object p1 cp437:0x04 p2 0 step idle under Empty color 0x0F
+    stat at 24,9 element Object p1 cp437:0x04 under Empty color 0x0F
     oop
 @KILLGEM
 #end
@@ -205,7 +205,7 @@ ON THE TITLE SCREEN FOR THE SECRET LEVEL1!
 #end
 
     end
-    stat at 23,9 element Object p1 cp437:0x04 p2 0 step idle under Empty color 0x0F
+    stat at 23,9 element Object p1 cp437:0x04 under Empty color 0x0F
     oop
 @KILLGEM
 #end
@@ -215,7 +215,7 @@ ON THE TITLE SCREEN FOR THE SECRET LEVEL1!
 #end
 
     end
-    stat at 38,18 element Object p1 cp437:0x04 p2 0 step idle under Empty color 0x0F
+    stat at 38,18 element Object p1 cp437:0x04 under Empty color 0x0F
     oop
 @KILLGEM
 #end
@@ -225,7 +225,7 @@ ON THE TITLE SCREEN FOR THE SECRET LEVEL1!
 #end
 
     end
-    stat at 36,17 element Object p1 cp437:0x04 p2 0 step idle under Empty color 0x0F
+    stat at 36,17 element Object p1 cp437:0x04 under Empty color 0x0F
     oop
 @KILLGEM
 #end
@@ -235,7 +235,7 @@ ON THE TITLE SCREEN FOR THE SECRET LEVEL1!
 #end
 
     end
-    stat at 36,16 element Object p1 cp437:0x04 p2 0 step idle under Empty color 0x0F
+    stat at 36,16 element Object p1 cp437:0x04 under Empty color 0x0F
     oop
 @KILLGEM
 #end
@@ -245,7 +245,7 @@ ON THE TITLE SCREEN FOR THE SECRET LEVEL1!
 #end
 
     end
-    stat at 36,15 element Object p1 cp437:0x04 p2 0 step idle under Empty color 0x0F
+    stat at 36,15 element Object p1 cp437:0x04 under Empty color 0x0F
     oop
 @KILLGEM
 #end
@@ -255,7 +255,7 @@ ON THE TITLE SCREEN FOR THE SECRET LEVEL1!
 #end
 
     end
-    stat at 35,15 element Object p1 cp437:0x04 p2 0 step idle under Empty color 0x0F
+    stat at 35,15 element Object p1 cp437:0x04 under Empty color 0x0F
     oop
 @KILLGEM
 #end
@@ -265,7 +265,7 @@ ON THE TITLE SCREEN FOR THE SECRET LEVEL1!
 #end
 
     end
-    stat at 35,14 element Object p1 cp437:0x04 p2 0 step idle under Empty color 0x0F
+    stat at 35,14 element Object p1 cp437:0x04 under Empty color 0x0F
     oop
 @KILLGEM
 #end
@@ -275,7 +275,7 @@ ON THE TITLE SCREEN FOR THE SECRET LEVEL1!
 #end
 
     end
-    stat at 34,14 element Object p1 cp437:0x04 p2 0 step idle under Empty color 0x0F
+    stat at 34,14 element Object p1 cp437:0x04 under Empty color 0x0F
     oop
 @KILLGEM
 #end
@@ -285,7 +285,7 @@ ON THE TITLE SCREEN FOR THE SECRET LEVEL1!
 #end
 
     end
-    stat at 34,13 element Object p1 cp437:0x04 p2 0 step idle under Empty color 0x0F
+    stat at 34,13 element Object p1 cp437:0x04 under Empty color 0x0F
     oop
 @KILLGEM
 #end
@@ -295,7 +295,7 @@ ON THE TITLE SCREEN FOR THE SECRET LEVEL1!
 #end
 
     end
-    stat at 35,6 element Object p1 cp437:0x04 p2 0 step idle under Empty color 0x0F
+    stat at 35,6 element Object p1 cp437:0x04 under Empty color 0x0F
     oop
 @KILLGEM
 #end
@@ -305,7 +305,7 @@ ON THE TITLE SCREEN FOR THE SECRET LEVEL1!
 #end
 
     end
-    stat at 34,6 element Object p1 cp437:0x04 p2 0 step idle under Empty color 0x0F
+    stat at 34,6 element Object p1 cp437:0x04 under Empty color 0x0F
     oop
 @KILLGEM
 #end
@@ -315,7 +315,7 @@ ON THE TITLE SCREEN FOR THE SECRET LEVEL1!
 #end
 
     end
-    stat at 34,5 element Object p1 cp437:0x04 p2 0 step idle under Empty color 0x0F
+    stat at 34,5 element Object p1 cp437:0x04 under Empty color 0x0F
     oop
 @KILLGEM
 #end
@@ -325,7 +325,7 @@ ON THE TITLE SCREEN FOR THE SECRET LEVEL1!
 #end
 
     end
-    stat at 33,5 element Object p1 cp437:0x04 p2 0 step idle under Empty color 0x0F
+    stat at 33,5 element Object p1 cp437:0x04 under Empty color 0x0F
     oop
 @KILLGEM
 #end
@@ -335,7 +335,7 @@ ON THE TITLE SCREEN FOR THE SECRET LEVEL1!
 #end
 
     end
-    stat at 33,4 element Object p1 cp437:0x04 p2 0 step idle under Empty color 0x0F
+    stat at 33,4 element Object p1 cp437:0x04 under Empty color 0x0F
     oop
 @KILLGEM
 #end
@@ -345,7 +345,7 @@ ON THE TITLE SCREEN FOR THE SECRET LEVEL1!
 #end
 
     end
-    stat at 32,4 element Object p1 cp437:0x04 p2 0 step idle under Empty color 0x0F
+    stat at 32,4 element Object p1 cp437:0x04 under Empty color 0x0F
     oop
 @KILLGEM
 #end
@@ -355,7 +355,7 @@ ON THE TITLE SCREEN FOR THE SECRET LEVEL1!
 #end
 
     end
-    stat at 32,3 element Object p1 cp437:0x04 p2 0 step idle under Empty color 0x0F
+    stat at 32,3 element Object p1 cp437:0x04 under Empty color 0x0F
     oop
 @KILLGEM
 #end
@@ -365,7 +365,7 @@ ON THE TITLE SCREEN FOR THE SECRET LEVEL1!
 #end
 
     end
-    stat at 31,3 element Object p1 cp437:0x04 p2 0 step idle under Empty color 0x0F
+    stat at 31,3 element Object p1 cp437:0x04 under Empty color 0x0F
     oop
 @KILLGEM
 #end
@@ -375,7 +375,7 @@ ON THE TITLE SCREEN FOR THE SECRET LEVEL1!
 #end
 
     end
-    stat at 31,2 element Object p1 cp437:0x04 p2 0 step idle under Empty color 0x0F
+    stat at 31,2 element Object p1 cp437:0x04 under Empty color 0x0F
     oop
 @KILLGEM
 #end
@@ -385,7 +385,7 @@ ON THE TITLE SCREEN FOR THE SECRET LEVEL1!
 #end
 
     end
-    stat at 30,25 element Object p1 cp437:0x04 p2 0 step idle under Empty color 0x0F
+    stat at 30,25 element Object p1 cp437:0x04 under Empty color 0x0F
     oop
 @KILLGEM
 #end
@@ -395,7 +395,7 @@ ON THE TITLE SCREEN FOR THE SECRET LEVEL1!
 #end
 
     end
-    stat at 31,25 element Object p1 cp437:0x04 p2 0 step idle under Empty color 0x0F
+    stat at 31,25 element Object p1 cp437:0x04 under Empty color 0x0F
     oop
 @KILLGEM
 #end
@@ -405,7 +405,7 @@ ON THE TITLE SCREEN FOR THE SECRET LEVEL1!
 #end
 
     end
-    stat at 32,25 element Object p1 cp437:0x04 p2 0 step idle under Empty color 0x0F
+    stat at 32,25 element Object p1 cp437:0x04 under Empty color 0x0F
     oop
 @KILLGEM
 #end
@@ -415,7 +415,7 @@ ON THE TITLE SCREEN FOR THE SECRET LEVEL1!
 #end
 
     end
-    stat at 33,25 element Object p1 cp437:0x04 p2 0 step idle under Empty color 0x0F
+    stat at 33,25 element Object p1 cp437:0x04 under Empty color 0x0F
     oop
 @KILLGEM
 #end
@@ -425,7 +425,7 @@ ON THE TITLE SCREEN FOR THE SECRET LEVEL1!
 #end
 
     end
-    stat at 34,25 element Object p1 cp437:0x04 p2 0 step idle under Empty color 0x0F
+    stat at 34,25 element Object p1 cp437:0x04 under Empty color 0x0F
     oop
 @KILLGEM
 #end
@@ -435,7 +435,7 @@ ON THE TITLE SCREEN FOR THE SECRET LEVEL1!
 #end
 
     end
-    stat at 35,25 element Object p1 cp437:0x04 p2 0 step idle under Empty color 0x0F
+    stat at 35,25 element Object p1 cp437:0x04 under Empty color 0x0F
     oop
 @KILLGEM
 #end
@@ -445,7 +445,7 @@ ON THE TITLE SCREEN FOR THE SECRET LEVEL1!
 #end
 
     end
-    stat at 36,25 element Object p1 cp437:0x04 p2 0 step idle under Empty color 0x0F
+    stat at 36,25 element Object p1 cp437:0x04 under Empty color 0x0F
     oop
 @KILLGEM
 #end
@@ -455,7 +455,7 @@ ON THE TITLE SCREEN FOR THE SECRET LEVEL1!
 #end
 
     end
-    stat at 37,25 element Object p1 cp437:0x04 p2 0 step idle under Empty color 0x0F
+    stat at 37,25 element Object p1 cp437:0x04 under Empty color 0x0F
     oop
 @KILLGEM
 #end
@@ -465,7 +465,7 @@ ON THE TITLE SCREEN FOR THE SECRET LEVEL1!
 #end
 
     end
-    stat at 38,25 element Object p1 cp437:0x04 p2 0 step idle under Empty color 0x0F
+    stat at 38,25 element Object p1 cp437:0x04 under Empty color 0x0F
     oop
 @KILLGEM
 #end
@@ -475,7 +475,7 @@ ON THE TITLE SCREEN FOR THE SECRET LEVEL1!
 #end
 
     end
-    stat at 39,25 element Object p1 cp437:0x04 p2 0 step idle under Empty color 0x0F
+    stat at 39,25 element Object p1 cp437:0x04 under Empty color 0x0F
     oop
 @KILLGEM
 #end
@@ -485,7 +485,7 @@ ON THE TITLE SCREEN FOR THE SECRET LEVEL1!
 #end
 
     end
-    stat at 40,25 element Object p1 cp437:0x04 p2 0 step idle under Empty color 0x0F
+    stat at 40,25 element Object p1 cp437:0x04 under Empty color 0x0F
     oop
 @KILLGEM
 #end
@@ -495,7 +495,7 @@ ON THE TITLE SCREEN FOR THE SECRET LEVEL1!
 #end
 
     end
-    stat at 41,25 element Object p1 cp437:0x04 p2 0 step idle under Empty color 0x0F
+    stat at 41,25 element Object p1 cp437:0x04 under Empty color 0x0F
     oop
 @KILLGEM
 #end
@@ -505,7 +505,7 @@ ON THE TITLE SCREEN FOR THE SECRET LEVEL1!
 #end
 
     end
-    stat at 42,25 element Object p1 cp437:0x04 p2 0 step idle under Empty color 0x0F
+    stat at 42,25 element Object p1 cp437:0x04 under Empty color 0x0F
     oop
 @KILLGEM
 #end
@@ -515,7 +515,7 @@ ON THE TITLE SCREEN FOR THE SECRET LEVEL1!
 #end
 
     end
-    stat at 43,25 element Object p1 cp437:0x04 p2 0 step idle under Empty color 0x0F
+    stat at 43,25 element Object p1 cp437:0x04 under Empty color 0x0F
     oop
 @KILLGEM
 #end
@@ -525,7 +525,7 @@ ON THE TITLE SCREEN FOR THE SECRET LEVEL1!
 #end
 
     end
-    stat at 44,25 element Object p1 cp437:0x04 p2 0 step idle under Empty color 0x0F
+    stat at 44,25 element Object p1 cp437:0x04 under Empty color 0x0F
     oop
 @KILLGEM
 #end
@@ -535,7 +535,7 @@ ON THE TITLE SCREEN FOR THE SECRET LEVEL1!
 #end
 
     end
-    stat at 45,25 element Object p1 cp437:0x04 p2 0 step idle under Empty color 0x0F
+    stat at 45,25 element Object p1 cp437:0x04 under Empty color 0x0F
     oop
 @KILLGEM
 #end
@@ -545,7 +545,7 @@ ON THE TITLE SCREEN FOR THE SECRET LEVEL1!
 #end
 
     end
-    stat at 45,17 element Object p1 cp437:0x04 p2 0 step idle under Empty color 0x0F
+    stat at 45,17 element Object p1 cp437:0x04 under Empty color 0x0F
     oop
 @KILLGEM
 #end
@@ -555,7 +555,7 @@ ON THE TITLE SCREEN FOR THE SECRET LEVEL1!
 #end
 
     end
-    stat at 46,17 element Object p1 cp437:0x04 p2 0 step idle under Empty color 0x0F
+    stat at 46,17 element Object p1 cp437:0x04 under Empty color 0x0F
     oop
 @KILLGEM
 #end
@@ -565,7 +565,7 @@ ON THE TITLE SCREEN FOR THE SECRET LEVEL1!
 #end
 
     end
-    stat at 47,17 element Object p1 cp437:0x04 p2 0 step idle under Empty color 0x0F
+    stat at 47,17 element Object p1 cp437:0x04 under Empty color 0x0F
     oop
 @KILLGEM
 #end
@@ -575,7 +575,7 @@ ON THE TITLE SCREEN FOR THE SECRET LEVEL1!
 #end
 
     end
-    stat at 48,17 element Object p1 cp437:0x04 p2 0 step idle under Empty color 0x0F
+    stat at 48,17 element Object p1 cp437:0x04 under Empty color 0x0F
     oop
 @KILLGEM
 #end
@@ -585,7 +585,7 @@ ON THE TITLE SCREEN FOR THE SECRET LEVEL1!
 #end
 
     end
-    stat at 49,17 element Object p1 cp437:0x04 p2 0 step idle under Empty color 0x0F
+    stat at 49,17 element Object p1 cp437:0x04 under Empty color 0x0F
     oop
 @KILLGEM
 #end
@@ -595,7 +595,7 @@ ON THE TITLE SCREEN FOR THE SECRET LEVEL1!
 #end
 
     end
-    stat at 50,17 element Object p1 cp437:0x04 p2 0 step idle under Empty color 0x0F
+    stat at 50,17 element Object p1 cp437:0x04 under Empty color 0x0F
     oop
 @KILLGEM
 #end
@@ -605,7 +605,7 @@ ON THE TITLE SCREEN FOR THE SECRET LEVEL1!
 #end
 
     end
-    stat at 51,17 element Object p1 cp437:0x04 p2 0 step idle under Empty color 0x0F
+    stat at 51,17 element Object p1 cp437:0x04 under Empty color 0x0F
     oop
 @KILLGEM
 #end
@@ -615,7 +615,7 @@ ON THE TITLE SCREEN FOR THE SECRET LEVEL1!
 #end
 
     end
-    stat at 52,17 element Object p1 cp437:0x04 p2 0 step idle under Empty color 0x0F
+    stat at 52,17 element Object p1 cp437:0x04 under Empty color 0x0F
     oop
 @KILLGEM
 #end
@@ -625,7 +625,7 @@ ON THE TITLE SCREEN FOR THE SECRET LEVEL1!
 #end
 
     end
-    stat at 53,17 element Object p1 cp437:0x04 p2 0 step idle under Empty color 0x0F
+    stat at 53,17 element Object p1 cp437:0x04 under Empty color 0x0F
     oop
 @KILLGEM
 #end
@@ -635,7 +635,7 @@ ON THE TITLE SCREEN FOR THE SECRET LEVEL1!
 #end
 
     end
-    stat at 53,16 element Object p1 cp437:0x04 p2 0 step idle under Empty color 0x0F
+    stat at 53,16 element Object p1 cp437:0x04 under Empty color 0x0F
     oop
 @KILLGEM
 #end
@@ -645,7 +645,7 @@ ON THE TITLE SCREEN FOR THE SECRET LEVEL1!
 #end
 
     end
-    stat at 53,15 element Object p1 cp437:0x04 p2 0 step idle under Empty color 0x0F
+    stat at 53,15 element Object p1 cp437:0x04 under Empty color 0x0F
     oop
 @KILLGEM
 #end
@@ -655,7 +655,7 @@ ON THE TITLE SCREEN FOR THE SECRET LEVEL1!
 #end
 
     end
-    stat at 53,14 element Object p1 cp437:0x04 p2 0 step idle under Empty color 0x0F
+    stat at 53,14 element Object p1 cp437:0x04 under Empty color 0x0F
     oop
 @KILLGEM
 #end
@@ -665,7 +665,7 @@ ON THE TITLE SCREEN FOR THE SECRET LEVEL1!
 #end
 
     end
-    stat at 53,13 element Object p1 cp437:0x04 p2 0 step idle under Empty color 0x0F
+    stat at 53,13 element Object p1 cp437:0x04 under Empty color 0x0F
     oop
 @KILLGEM
 #end
@@ -675,7 +675,7 @@ ON THE TITLE SCREEN FOR THE SECRET LEVEL1!
 #end
 
     end
-    stat at 53,12 element Object p1 cp437:0x04 p2 0 step idle under Empty color 0x0F
+    stat at 53,12 element Object p1 cp437:0x04 under Empty color 0x0F
     oop
 @KILLGEM
 #end
@@ -685,7 +685,7 @@ ON THE TITLE SCREEN FOR THE SECRET LEVEL1!
 #end
 
     end
-    stat at 53,11 element Object p1 cp437:0x04 p2 0 step idle under Empty color 0x0F
+    stat at 53,11 element Object p1 cp437:0x04 under Empty color 0x0F
     oop
 @KILLGEM
 #end
@@ -695,7 +695,7 @@ ON THE TITLE SCREEN FOR THE SECRET LEVEL1!
 #end
 
     end
-    stat at 53,10 element Object p1 cp437:0x04 p2 0 step idle under Empty color 0x0F
+    stat at 53,10 element Object p1 cp437:0x04 under Empty color 0x0F
     oop
 @KILLGEM
 #end
@@ -705,7 +705,7 @@ ON THE TITLE SCREEN FOR THE SECRET LEVEL1!
 #end
 
     end
-    stat at 53,9 element Object p1 cp437:0x04 p2 0 step idle under Empty color 0x0F
+    stat at 53,9 element Object p1 cp437:0x04 under Empty color 0x0F
     oop
 @KILLGEM
 #end
@@ -715,7 +715,7 @@ ON THE TITLE SCREEN FOR THE SECRET LEVEL1!
 #end
 
     end
-    stat at 53,8 element Object p1 cp437:0x04 p2 0 step idle under Empty color 0x0F
+    stat at 53,8 element Object p1 cp437:0x04 under Empty color 0x0F
     oop
 @KILLGEM
 #end
@@ -725,7 +725,7 @@ ON THE TITLE SCREEN FOR THE SECRET LEVEL1!
 #end
 
     end
-    stat at 53,7 element Object p1 cp437:0x04 p2 0 step idle under Empty color 0x0F
+    stat at 53,7 element Object p1 cp437:0x04 under Empty color 0x0F
     oop
 @KILLGEM
 #end
@@ -735,7 +735,7 @@ ON THE TITLE SCREEN FOR THE SECRET LEVEL1!
 #end
 
     end
-    stat at 53,6 element Object p1 cp437:0x04 p2 0 step idle under Empty color 0x0F
+    stat at 53,6 element Object p1 cp437:0x04 under Empty color 0x0F
     oop
 @KILLGEM
 #end
@@ -745,7 +745,7 @@ ON THE TITLE SCREEN FOR THE SECRET LEVEL1!
 #end
 
     end
-    stat at 52,6 element Object p1 cp437:0x04 p2 0 step idle under Empty color 0x0F
+    stat at 52,6 element Object p1 cp437:0x04 under Empty color 0x0F
     oop
 @KILLGEM
 #end
@@ -755,7 +755,7 @@ ON THE TITLE SCREEN FOR THE SECRET LEVEL1!
 #end
 
     end
-    stat at 1,2 element Object p1 cp437:0x04 p2 0 step idle under Empty color 0x0F
+    stat at 1,2 element Object p1 cp437:0x04 under Empty color 0x0F
     oop
 @KILLGEM
 #end
@@ -765,7 +765,7 @@ ON THE TITLE SCREEN FOR THE SECRET LEVEL1!
 #end
 
     end
-    stat at 2,2 element Object p1 cp437:0x04 p2 0 step idle under Empty color 0x0F
+    stat at 2,2 element Object p1 cp437:0x04 under Empty color 0x0F
     oop
 @KILLGEM
 #end
@@ -775,7 +775,7 @@ ON THE TITLE SCREEN FOR THE SECRET LEVEL1!
 #end
 
     end
-    stat at 2,4 element Object p1 cp437:0x04 p2 0 step idle under Empty color 0x0F
+    stat at 2,4 element Object p1 cp437:0x04 under Empty color 0x0F
     oop
 @KILLGEM
 #end
@@ -785,7 +785,7 @@ ON THE TITLE SCREEN FOR THE SECRET LEVEL1!
 #end
 
     end
-    stat at 2,5 element Object p1 cp437:0x04 p2 0 step idle under Empty color 0x0F
+    stat at 2,5 element Object p1 cp437:0x04 under Empty color 0x0F
     oop
 @KILLGEM
 #end
@@ -795,7 +795,7 @@ ON THE TITLE SCREEN FOR THE SECRET LEVEL1!
 #end
 
     end
-    stat at 2,6 element Object p1 cp437:0x04 p2 0 step idle under Empty color 0x0F
+    stat at 2,6 element Object p1 cp437:0x04 under Empty color 0x0F
     oop
 @KILLGEM
 #end
@@ -805,7 +805,7 @@ ON THE TITLE SCREEN FOR THE SECRET LEVEL1!
 #end
 
     end
-    stat at 2,7 element Object p1 cp437:0x04 p2 0 step idle under Empty color 0x0F
+    stat at 2,7 element Object p1 cp437:0x04 under Empty color 0x0F
     oop
 @KILLGEM
 #end
@@ -815,7 +815,7 @@ ON THE TITLE SCREEN FOR THE SECRET LEVEL1!
 #end
 
     end
-    stat at 3,7 element Object p1 cp437:0x04 p2 0 step idle under Empty color 0x0F
+    stat at 3,7 element Object p1 cp437:0x04 under Empty color 0x0F
     oop
 @KILLGEM
 #end
@@ -825,7 +825,7 @@ ON THE TITLE SCREEN FOR THE SECRET LEVEL1!
 #end
 
     end
-    stat at 3,8 element Object p1 cp437:0x04 p2 0 step idle under Empty color 0x0F
+    stat at 3,8 element Object p1 cp437:0x04 under Empty color 0x0F
     oop
 @KILLGEM
 #end
@@ -835,7 +835,7 @@ ON THE TITLE SCREEN FOR THE SECRET LEVEL1!
 #end
 
     end
-    stat at 3,9 element Object p1 cp437:0x04 p2 0 step idle under Empty color 0x0F
+    stat at 3,9 element Object p1 cp437:0x04 under Empty color 0x0F
     oop
 @KILLGEM
 #end
@@ -845,7 +845,7 @@ ON THE TITLE SCREEN FOR THE SECRET LEVEL1!
 #end
 
     end
-    stat at 4,9 element Object p1 cp437:0x04 p2 0 step idle under Empty color 0x0F
+    stat at 4,9 element Object p1 cp437:0x04 under Empty color 0x0F
     oop
 @KILLGEM
 #end
@@ -855,7 +855,7 @@ ON THE TITLE SCREEN FOR THE SECRET LEVEL1!
 #end
 
     end
-    stat at 4,10 element Object p1 cp437:0x04 p2 0 step idle under Empty color 0x0F
+    stat at 4,10 element Object p1 cp437:0x04 under Empty color 0x0F
     oop
 @KILLGEM
 #end
@@ -865,7 +865,7 @@ ON THE TITLE SCREEN FOR THE SECRET LEVEL1!
 #end
 
     end
-    stat at 4,11 element Object p1 cp437:0x04 p2 0 step idle under Empty color 0x0F
+    stat at 4,11 element Object p1 cp437:0x04 under Empty color 0x0F
     oop
 @KILLGEM
 #end
@@ -875,7 +875,7 @@ ON THE TITLE SCREEN FOR THE SECRET LEVEL1!
 #end
 
     end
-    stat at 5,11 element Object p1 cp437:0x04 p2 0 step idle under Empty color 0x0F
+    stat at 5,11 element Object p1 cp437:0x04 under Empty color 0x0F
     oop
 @KILLGEM
 #end
@@ -885,7 +885,7 @@ ON THE TITLE SCREEN FOR THE SECRET LEVEL1!
 #end
 
     end
-    stat at 44,11 element Object p1 cp437:0x04 p2 0 step idle under Empty color 0x0F
+    stat at 44,11 element Object p1 cp437:0x04 under Empty color 0x0F
     oop
 @KILLGEM
 #end
@@ -895,7 +895,7 @@ ON THE TITLE SCREEN FOR THE SECRET LEVEL1!
 #end
 
     end
-    stat at 41,11 element Object p1 cp437:0x04 p2 0 step idle under Empty color 0x0F
+    stat at 41,11 element Object p1 cp437:0x04 under Empty color 0x0F
     oop
 @KILLGEM
 #end
@@ -905,7 +905,7 @@ ON THE TITLE SCREEN FOR THE SECRET LEVEL1!
 #end
 
     end
-    stat at 42,11 element Object p1 cp437:0x04 p2 0 step idle under Empty color 0x0F
+    stat at 42,11 element Object p1 cp437:0x04 under Empty color 0x0F
     oop
 @KILLGEM
 #end
@@ -915,7 +915,7 @@ ON THE TITLE SCREEN FOR THE SECRET LEVEL1!
 #end
 
     end
-    stat at 45,11 element Object p1 cp437:0x04 p2 0 step idle under Empty color 0x0F
+    stat at 45,11 element Object p1 cp437:0x04 under Empty color 0x0F
     oop
 @KILLGEM
 #end
@@ -925,7 +925,7 @@ ON THE TITLE SCREEN FOR THE SECRET LEVEL1!
 #end
 
     end
-    stat at 46,11 element Object p1 cp437:0x04 p2 0 step idle under Empty color 0x0F
+    stat at 46,11 element Object p1 cp437:0x04 under Empty color 0x0F
     oop
 @KILLGEM
 #end
@@ -935,7 +935,7 @@ ON THE TITLE SCREEN FOR THE SECRET LEVEL1!
 #end
 
     end
-    stat at 47,11 element Object p1 cp437:0x04 p2 0 step idle under Empty color 0x0F
+    stat at 47,11 element Object p1 cp437:0x04 under Empty color 0x0F
     oop
 @KILLGEM
 #end
@@ -945,7 +945,7 @@ ON THE TITLE SCREEN FOR THE SECRET LEVEL1!
 #end
 
     end
-    stat at 48,11 element Object p1 cp437:0x04 p2 0 step idle under Empty color 0x0F
+    stat at 48,11 element Object p1 cp437:0x04 under Empty color 0x0F
     oop
 @KILLGEM
 #end
@@ -955,7 +955,7 @@ ON THE TITLE SCREEN FOR THE SECRET LEVEL1!
 #end
 
     end
-    stat at 49,11 element Object p1 cp437:0x04 p2 0 step idle under Empty color 0x0F
+    stat at 49,11 element Object p1 cp437:0x04 under Empty color 0x0F
     oop
 @KILLGEM
 #end
@@ -965,7 +965,7 @@ ON THE TITLE SCREEN FOR THE SECRET LEVEL1!
 #end
 
     end
-    stat at 49,12 element Object p1 cp437:0x04 p2 0 step idle under Empty color 0x0F
+    stat at 49,12 element Object p1 cp437:0x04 under Empty color 0x0F
     oop
 @KILLGEM
 #end
@@ -975,7 +975,7 @@ ON THE TITLE SCREEN FOR THE SECRET LEVEL1!
 #end
 
     end
-    stat at 48,12 element Object p1 cp437:0x04 p2 0 step idle under Empty color 0x0F
+    stat at 48,12 element Object p1 cp437:0x04 under Empty color 0x0F
     oop
 @KILLGEM
 #end
@@ -985,7 +985,7 @@ ON THE TITLE SCREEN FOR THE SECRET LEVEL1!
 #end
 
     end
-    stat at 47,12 element Object p1 cp437:0x04 p2 0 step idle under Empty color 0x0F
+    stat at 47,12 element Object p1 cp437:0x04 under Empty color 0x0F
     oop
 @KILLGEM
 #end
@@ -995,7 +995,7 @@ ON THE TITLE SCREEN FOR THE SECRET LEVEL1!
 #end
 
     end
-    stat at 46,12 element Object p1 cp437:0x04 p2 0 step idle under Empty color 0x0F
+    stat at 46,12 element Object p1 cp437:0x04 under Empty color 0x0F
     oop
 @KILLGEM
 #end
@@ -1005,7 +1005,7 @@ ON THE TITLE SCREEN FOR THE SECRET LEVEL1!
 #end
 
     end
-    stat at 45,12 element Object p1 cp437:0x04 p2 0 step idle under Empty color 0x0F
+    stat at 45,12 element Object p1 cp437:0x04 under Empty color 0x0F
     oop
 @KILLGEM
 #end
@@ -1015,7 +1015,7 @@ ON THE TITLE SCREEN FOR THE SECRET LEVEL1!
 #end
 
     end
-    stat at 44,12 element Object p1 cp437:0x04 p2 0 step idle under Empty color 0x0F
+    stat at 44,12 element Object p1 cp437:0x04 under Empty color 0x0F
     oop
 @KILLGEM
 #end
@@ -1025,7 +1025,7 @@ ON THE TITLE SCREEN FOR THE SECRET LEVEL1!
 #end
 
     end
-    stat at 43,12 element Object p1 cp437:0x04 p2 0 step idle under Empty color 0x0F
+    stat at 43,12 element Object p1 cp437:0x04 under Empty color 0x0F
     oop
 @KILLGEM
 #end
@@ -1035,7 +1035,7 @@ ON THE TITLE SCREEN FOR THE SECRET LEVEL1!
 #end
 
     end
-    stat at 42,12 element Object p1 cp437:0x04 p2 0 step idle under Empty color 0x0F
+    stat at 42,12 element Object p1 cp437:0x04 under Empty color 0x0F
     oop
 @KILLGEM
 #end
@@ -1045,7 +1045,7 @@ ON THE TITLE SCREEN FOR THE SECRET LEVEL1!
 #end
 
     end
-    stat at 41,12 element Object p1 cp437:0x04 p2 0 step idle under Empty color 0x0F
+    stat at 41,12 element Object p1 cp437:0x04 under Empty color 0x0F
     oop
 @KILLGEM
 #end
@@ -1055,7 +1055,7 @@ ON THE TITLE SCREEN FOR THE SECRET LEVEL1!
 #end
 
     end
-    stat at 40,12 element Object p1 cp437:0x04 p2 0 step idle under Empty color 0x0F
+    stat at 40,12 element Object p1 cp437:0x04 under Empty color 0x0F
     oop
 @KILLGEM
 #end
@@ -1065,7 +1065,7 @@ ON THE TITLE SCREEN FOR THE SECRET LEVEL1!
 #end
 
     end
-    stat at 39,12 element Object p1 cp437:0x04 p2 0 step idle under Empty color 0x0F
+    stat at 39,12 element Object p1 cp437:0x04 under Empty color 0x0F
     oop
 @KILLGEM
 #end
@@ -1075,7 +1075,7 @@ ON THE TITLE SCREEN FOR THE SECRET LEVEL1!
 #end
 
     end
-    stat at 38,12 element Object p1 cp437:0x04 p2 0 step idle under Empty color 0x0F
+    stat at 38,12 element Object p1 cp437:0x04 under Empty color 0x0F
     oop
 @KILLGEM
 #end
@@ -1085,7 +1085,7 @@ ON THE TITLE SCREEN FOR THE SECRET LEVEL1!
 #end
 
     end
-    stat at 38,11 element Object p1 cp437:0x04 p2 0 step idle under Empty color 0x0F
+    stat at 38,11 element Object p1 cp437:0x04 under Empty color 0x0F
     oop
 @KILLGEM
 #end
@@ -1095,7 +1095,7 @@ ON THE TITLE SCREEN FOR THE SECRET LEVEL1!
 #end
 
     end
-    stat at 39,11 element Object p1 cp437:0x04 p2 0 step idle under Empty color 0x0F
+    stat at 39,11 element Object p1 cp437:0x04 under Empty color 0x0F
     oop
 @KILLGEM
 #end
@@ -1105,7 +1105,7 @@ ON THE TITLE SCREEN FOR THE SECRET LEVEL1!
 #end
 
     end
-    stat at 40,11 element Object p1 cp437:0x04 p2 0 step idle under Empty color 0x0F
+    stat at 40,11 element Object p1 cp437:0x04 under Empty color 0x0F
     oop
 @KILLGEM
 #end
@@ -1115,7 +1115,7 @@ ON THE TITLE SCREEN FOR THE SECRET LEVEL1!
 #end
 
     end
-    stat at 2,1 element Scroll p1 0 p2 0 step idle under Empty color 0x0F
+    stat at 2,1 element Scroll under Empty color 0x0F
     oop
 this is the long jump
 

@@ -88,7 +88,7 @@ QQQQQQQQQQQQQQQQFFFFFFFFQQQQQQQQQQQQQQQQQQQQQQQQQQQQQQQQQQQQ
   end
 
   stats
-    stat at 20,3 element Object p1 cp437:0x2E p2 0 step idle under Empty color 0x0F
+    stat at 20,3 element Object p1 cp437:0x2E under Empty color 0x0F
     oop
 #cycle 1
 #end

@@ -70,7 +70,7 @@ aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaraaaaaa
   end
 
   stats
-    stat at 30,3 element Object p1 cp437:0x02 p2 0 step idle under Empty color 0x20
+    stat at 30,3 element Object p1 cp437:0x02 under Empty color 0x20
     oop
 @King
 #end
@@ -125,7 +125,7 @@ KING: Watch me!
 #die
 
     end
-    stat at 29,5 element Object p1 cp437:0x02 p2 0 step idle
+    stat at 29,5 element Object p1 cp437:0x02
     oop
 @Native
 /i/i/i/i
@@ -137,7 +137,7 @@ snooping around. What should we do with
 /i/i/i/i
 him?
 /i/i/i
-KING: Hmm... 
+KING: Hmm...
 /i/i/i/i
 KING: Aha!
 /i/i/i
@@ -154,7 +154,7 @@ NATIVE: A novel idea, sir.
 #die
 
     end
-    stat at 42,5 element Object p1 cp437:0xDB p2 0 step idle
+    stat at 42,5 element Object p1 cp437:0xDB
     oop
 @door
 #cycle 1
@@ -170,8 +170,8 @@ NATIVE: A novel idea, sir.
 #end
 
     end
-    stat at 43,5 element Passage p1 0 p2 0 p3 board "War Department" step idle
-    stat at 54,15 element Object p1 cp437:0x02 p2 0 step idle
+    stat at 43,5 element Passage p3 board "War Department"
+    stat at 54,15 element Object p1 cp437:0x02
     oop
 @Guard
 #end
@@ -179,7 +179,7 @@ NATIVE: A novel idea, sir.
 /s
 #end
 :touch
-GUARD: So you think you can escape! 
+GUARD: So you think you can escape!
 /i/i/i/i/i
 Well, you're wrong!
 /i/i/i/i
@@ -199,7 +199,7 @@ GUARD: Agghh!
 #die
 
     end
-    stat at 54,17 element Object p1 cp437:0x02 p2 0 step idle
+    stat at 54,17 element Object p1 cp437:0x02
     oop
 @Guard
 #end
@@ -217,15 +217,15 @@ GUARD 2: I surrender!
 #die
 
     end
-    stat at 57,11 element Object p1 cp437:0xFF p2 0 step idle
+    stat at 57,11 element Object p1 cp437:0xFF
     oop
 #if not alligned #restart
 #send King:what
 #become blue gem
 
     end
-    stat at 59,10 element Passage p1 0 p2 0 p3 board "War Department" step idle
-    stat at 53,16 element Object p1 cp437:0xFF p2 0 step idle under Empty color 0x0E
+    stat at 59,10 element Passage p3 board "War Department"
+    stat at 53,16 element Object p1 cp437:0xFF under Empty color 0x0E
     oop
 @Door
 #cycle 1
@@ -254,298 +254,298 @@ INCORRECT PASSWORD. TERMINATE PLAYER.
 #die
 
     end
-    stat at 54,14 element Scroll p1 0 p2 0 step idle under Empty color 0x20
+    stat at 54,14 element Scroll under Empty color 0x20
     oop
 AUTHORIZED PERSONNEL ONLY
 
     end
-    stat at 53,23 element Scroll p1 0 p2 0 step idle under Empty color 0x20
+    stat at 53,23 element Scroll under Empty color 0x20
     oop
 AUTHORIZED PERSONNEL ONLY
 
     end
-    stat at 55,23 element Scroll p1 0 p2 0 step idle under Empty color 0x20
+    stat at 55,23 element Scroll under Empty color 0x20
     oop
 AUTHORIZED PERSONNEL ONLY
 
     end
-    stat at 46,15 element Object p1 cp437:0xFF p2 0 step idle
+    stat at 46,15 element Object p1 cp437:0xFF
     oop
 #if not blocked s #restart
 #change yellow invisible empty
 
     end
-    stat at 2,10 element Pusher p1 0 p2 0 step south
-    stat at 3,10 element Pusher p1 0 p2 0 step south
-    stat at 4,10 element Pusher p1 0 p2 0 step south
-    stat at 5,10 element Pusher p1 0 p2 0 step south
-    stat at 6,10 element Pusher p1 0 p2 0 step south
-    stat at 7,10 element Pusher p1 0 p2 0 step south
-    stat at 8,10 element Pusher p1 0 p2 0 step south
-    stat at 9,10 element Pusher p1 0 p2 0 step south
-    stat at 10,10 element Pusher p1 0 p2 0 step south
-    stat at 11,10 element Pusher p1 0 p2 0 step south
-    stat at 12,10 element Pusher p1 0 p2 0 step south
-    stat at 13,10 element Pusher p1 0 p2 0 step south
-    stat at 14,10 element Pusher p1 0 p2 0 step south
-    stat at 15,10 element Pusher p1 0 p2 0 step south
-    stat at 16,10 element Pusher p1 0 p2 0 step south
-    stat at 17,10 element Pusher p1 0 p2 0 step south
-    stat at 18,10 element Pusher p1 0 p2 0 step south
-    stat at 19,10 element Pusher p1 0 p2 0 step south
-    stat at 20,10 element Pusher p1 0 p2 0 step south
-    stat at 21,10 element Pusher p1 0 p2 0 step south
-    stat at 22,10 element Pusher p1 0 p2 0 step south
-    stat at 23,10 element Pusher p1 0 p2 0 step south
-    stat at 24,10 element Pusher p1 0 p2 0 step south
-    stat at 25,10 element Pusher p1 0 p2 0 step south
-    stat at 26,10 element Pusher p1 0 p2 0 step south
-    stat at 27,10 element Pusher p1 0 p2 0 step south
-    stat at 28,10 element Pusher p1 0 p2 0 step south
-    stat at 29,10 element Pusher p1 0 p2 0 step south
-    stat at 30,10 element Pusher p1 0 p2 0 step south
-    stat at 31,10 element Pusher p1 0 p2 0 step south
-    stat at 32,10 element Pusher p1 0 p2 0 step south
-    stat at 33,10 element Pusher p1 0 p2 0 step south
-    stat at 34,10 element Pusher p1 0 p2 0 step south
-    stat at 35,10 element Pusher p1 0 p2 0 step south
-    stat at 36,10 element Pusher p1 0 p2 0 step south
-    stat at 37,10 element Pusher p1 0 p2 0 step south
-    stat at 38,10 element Pusher p1 0 p2 0 step south
-    stat at 39,10 element Pusher p1 0 p2 0 step south
-    stat at 40,10 element Pusher p1 0 p2 0 step south
-    stat at 41,10 element Pusher p1 0 p2 0 step south
-    stat at 42,10 element Pusher p1 0 p2 0 step south
-    stat at 43,10 element Pusher p1 0 p2 0 step south
-    stat at 44,10 element Pusher p1 0 p2 0 step south
-    stat at 45,10 element Pusher p1 0 p2 0 step south
-    stat at 46,10 element Pusher p1 0 p2 0 step south
-    stat at 46,24 element Scroll p1 0 p2 0 step idle
+    stat at 2,10 element Pusher step south
+    stat at 3,10 element Pusher step south
+    stat at 4,10 element Pusher step south
+    stat at 5,10 element Pusher step south
+    stat at 6,10 element Pusher step south
+    stat at 7,10 element Pusher step south
+    stat at 8,10 element Pusher step south
+    stat at 9,10 element Pusher step south
+    stat at 10,10 element Pusher step south
+    stat at 11,10 element Pusher step south
+    stat at 12,10 element Pusher step south
+    stat at 13,10 element Pusher step south
+    stat at 14,10 element Pusher step south
+    stat at 15,10 element Pusher step south
+    stat at 16,10 element Pusher step south
+    stat at 17,10 element Pusher step south
+    stat at 18,10 element Pusher step south
+    stat at 19,10 element Pusher step south
+    stat at 20,10 element Pusher step south
+    stat at 21,10 element Pusher step south
+    stat at 22,10 element Pusher step south
+    stat at 23,10 element Pusher step south
+    stat at 24,10 element Pusher step south
+    stat at 25,10 element Pusher step south
+    stat at 26,10 element Pusher step south
+    stat at 27,10 element Pusher step south
+    stat at 28,10 element Pusher step south
+    stat at 29,10 element Pusher step south
+    stat at 30,10 element Pusher step south
+    stat at 31,10 element Pusher step south
+    stat at 32,10 element Pusher step south
+    stat at 33,10 element Pusher step south
+    stat at 34,10 element Pusher step south
+    stat at 35,10 element Pusher step south
+    stat at 36,10 element Pusher step south
+    stat at 37,10 element Pusher step south
+    stat at 38,10 element Pusher step south
+    stat at 39,10 element Pusher step south
+    stat at 40,10 element Pusher step south
+    stat at 41,10 element Pusher step south
+    stat at 42,10 element Pusher step south
+    stat at 43,10 element Pusher step south
+    stat at 44,10 element Pusher step south
+    stat at 45,10 element Pusher step south
+    stat at 46,10 element Pusher step south
+    stat at 46,24 element Scroll
     oop
 #endgame
 
     end
-    stat at 45,24 element Scroll p1 0 p2 0 step idle
+    stat at 45,24 element Scroll
     oop
 #endgame
 
     end
-    stat at 44,24 element Scroll p1 0 p2 0 step idle
+    stat at 44,24 element Scroll
     oop
 #endgame
 
     end
-    stat at 43,24 element Scroll p1 0 p2 0 step idle
+    stat at 43,24 element Scroll
     oop
 #endgame
 
     end
-    stat at 42,24 element Scroll p1 0 p2 0 step idle
+    stat at 42,24 element Scroll
     oop
 #endgame
 
     end
-    stat at 41,24 element Scroll p1 0 p2 0 step idle
+    stat at 41,24 element Scroll
     oop
 #endgame
 
     end
-    stat at 40,24 element Scroll p1 0 p2 0 step idle
+    stat at 40,24 element Scroll
     oop
 #endgame
 
     end
-    stat at 39,24 element Scroll p1 0 p2 0 step idle
+    stat at 39,24 element Scroll
     oop
 #endgame
 
     end
-    stat at 38,24 element Scroll p1 0 p2 0 step idle
+    stat at 38,24 element Scroll
     oop
 #endgame
 
     end
-    stat at 37,24 element Scroll p1 0 p2 0 step idle
+    stat at 37,24 element Scroll
     oop
 #endgame
 
     end
-    stat at 36,24 element Scroll p1 0 p2 0 step idle
+    stat at 36,24 element Scroll
     oop
 #endgame
 
     end
-    stat at 35,24 element Scroll p1 0 p2 0 step idle
+    stat at 35,24 element Scroll
     oop
 #endgame
 
     end
-    stat at 34,24 element Scroll p1 0 p2 0 step idle
+    stat at 34,24 element Scroll
     oop
 #endgame
 
     end
-    stat at 33,24 element Scroll p1 0 p2 0 step idle
+    stat at 33,24 element Scroll
     oop
 #endgame
 
     end
-    stat at 32,24 element Scroll p1 0 p2 0 step idle
+    stat at 32,24 element Scroll
     oop
 #endgame
 
     end
-    stat at 31,24 element Scroll p1 0 p2 0 step idle
+    stat at 31,24 element Scroll
     oop
 #endgame
 
     end
-    stat at 30,24 element Scroll p1 0 p2 0 step idle
+    stat at 30,24 element Scroll
     oop
 #endgame
 
     end
-    stat at 29,24 element Scroll p1 0 p2 0 step idle
+    stat at 29,24 element Scroll
     oop
 #endgame
 
     end
-    stat at 28,24 element Scroll p1 0 p2 0 step idle
+    stat at 28,24 element Scroll
     oop
 #endgame
 
     end
-    stat at 27,24 element Scroll p1 0 p2 0 step idle
+    stat at 27,24 element Scroll
     oop
 #endgame
 
     end
-    stat at 26,24 element Scroll p1 0 p2 0 step idle
+    stat at 26,24 element Scroll
     oop
 #endgame
 
     end
-    stat at 25,24 element Scroll p1 0 p2 0 step idle
+    stat at 25,24 element Scroll
     oop
 #endgame
 
     end
-    stat at 24,24 element Scroll p1 0 p2 0 step idle
+    stat at 24,24 element Scroll
     oop
 #endgame
 
     end
-    stat at 23,24 element Scroll p1 0 p2 0 step idle
+    stat at 23,24 element Scroll
     oop
 #endgame
 
     end
-    stat at 22,24 element Scroll p1 0 p2 0 step idle
+    stat at 22,24 element Scroll
     oop
 #endgame
 
     end
-    stat at 21,24 element Scroll p1 0 p2 0 step idle
+    stat at 21,24 element Scroll
     oop
 #endgame
 
     end
-    stat at 20,24 element Scroll p1 0 p2 0 step idle
+    stat at 20,24 element Scroll
     oop
 #endgame
 
     end
-    stat at 19,24 element Scroll p1 0 p2 0 step idle
+    stat at 19,24 element Scroll
     oop
 #endgame
 
     end
-    stat at 18,24 element Scroll p1 0 p2 0 step idle
+    stat at 18,24 element Scroll
     oop
 #endgame
 
     end
-    stat at 17,24 element Scroll p1 0 p2 0 step idle
+    stat at 17,24 element Scroll
     oop
 #endgame
 
     end
-    stat at 16,24 element Scroll p1 0 p2 0 step idle
+    stat at 16,24 element Scroll
     oop
 #endgame
 
     end
-    stat at 15,24 element Scroll p1 0 p2 0 step idle
+    stat at 15,24 element Scroll
     oop
 #endgame
 
     end
-    stat at 14,24 element Scroll p1 0 p2 0 step idle
+    stat at 14,24 element Scroll
     oop
 #endgame
 
     end
-    stat at 13,24 element Scroll p1 0 p2 0 step idle
+    stat at 13,24 element Scroll
     oop
 #endgame
 
     end
-    stat at 12,24 element Scroll p1 0 p2 0 step idle
+    stat at 12,24 element Scroll
     oop
 #endgame
 
     end
-    stat at 11,24 element Scroll p1 0 p2 0 step idle
+    stat at 11,24 element Scroll
     oop
 #endgame
 
     end
-    stat at 10,24 element Scroll p1 0 p2 0 step idle
+    stat at 10,24 element Scroll
     oop
 #endgame
 
     end
-    stat at 9,24 element Scroll p1 0 p2 0 step idle
+    stat at 9,24 element Scroll
     oop
 #endgame
 
     end
-    stat at 8,24 element Scroll p1 0 p2 0 step idle
+    stat at 8,24 element Scroll
     oop
 #endgame
 
     end
-    stat at 7,24 element Scroll p1 0 p2 0 step idle
+    stat at 7,24 element Scroll
     oop
 #endgame
 
     end
-    stat at 6,24 element Scroll p1 0 p2 0 step idle
+    stat at 6,24 element Scroll
     oop
 #endgame
 
     end
-    stat at 5,24 element Scroll p1 0 p2 0 step idle
+    stat at 5,24 element Scroll
     oop
 #endgame
 
     end
-    stat at 4,24 element Scroll p1 0 p2 0 step idle
+    stat at 4,24 element Scroll
     oop
 #endgame
 
     end
-    stat at 3,24 element Scroll p1 0 p2 0 step idle
+    stat at 3,24 element Scroll
     oop
 #endgame
 
     end
-    stat at 2,24 element Scroll p1 0 p2 0 step idle
+    stat at 2,24 element Scroll
     oop
 #endgame
 
     end
-    stat at 33,4 element Object p1 cp437:0x02 p2 0 step idle under Empty color 0x2D
+    stat at 33,4 element Object p1 cp437:0x02 under Empty color 0x2D
     oop
 @Guard
 #end
@@ -554,16 +554,16 @@ GUARD: Don't give me any trouble.
 #end
 
     end
-    stat at 1,23 element Passage p1 0 p2 0 p3 board "Secret passage" step idle under Empty color 0x20
-    stat at 53,8 element Passage p1 0 p2 0 p3 board "Secret passage" step idle under Empty color 0x20
-    stat at 54,7 element Object p1 cp437:0xFF p2 0 step idle under Empty color 0x0E
+    stat at 1,23 element Passage p3 board "Secret passage" under Empty color 0x20
+    stat at 53,8 element Passage p3 board "Secret passage" under Empty color 0x20
+    stat at 54,7 element Object p1 cp437:0xFF under Empty color 0x0E
     oop
 #if not blocked w #restart
 #send King:well
 #die
 
     end
-    stat at 53,1 element Object p1 cp437:0xDB p2 0 step idle under Empty color 0x20
+    stat at 53,1 element Object p1 cp437:0xDB under Empty color 0x20
     oop
 @Doorp
 #cycle 1
@@ -574,6 +574,6 @@ GUARD: Don't give me any trouble.
 #end
 
     end
-    stat at 60,18 element Passage p1 0 p2 0 p3 board "Basement" step idle under Empty color 0x20
+    stat at 60,18 element Passage p3 board "Basement" under Empty color 0x20
   end
 end

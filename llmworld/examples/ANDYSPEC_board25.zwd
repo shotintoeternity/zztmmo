@@ -68,8 +68,8 @@ N##.............e..O..O...O....O..O....O....O......O.....##N
   end
 
   stats
-    stat at 30,25 element Passage p1 0 p2 0 p3 board "Dildoberg 1" step idle under Empty color 0x0E
-    stat at 33,19 element Object p1 cp437:0x02 p2 0 step idle
+    stat at 30,25 element Passage p3 board "Dildoberg 1" under Empty color 0x0E
+    stat at 33,19 element Object p1 cp437:0x02
     oop
 @Mosher
 #cycle 1
@@ -79,7 +79,7 @@ N##.............e..O..O...O....O..O....O....O......O.....##N
 #send fart
 
     end
-    stat at 36,20 element Object p1 cp437:0x02 p2 0 step idle
+    stat at 36,20 element Object p1 cp437:0x02
     oop
 @Mosher
 #cycle 1
@@ -89,7 +89,7 @@ N##.............e..O..O...O....O..O....O....O......O.....##N
 #send fart
 
     end
-    stat at 39,18 element Object p1 cp437:0x02 p2 0 step idle
+    stat at 39,18 element Object p1 cp437:0x02
     oop
 @Mosher
 #cycle 1
@@ -99,7 +99,7 @@ N##.............e..O..O...O....O..O....O....O......O.....##N
 #send fart
 
     end
-    stat at 35,16 element Object p1 cp437:0x02 p2 0 step idle
+    stat at 35,16 element Object p1 cp437:0x02
     oop
 @Mosher
 #cycle 1
@@ -109,7 +109,7 @@ N##.............e..O..O...O....O..O....O....O......O.....##N
 #send fart
 
     end
-    stat at 28,18 element Object p1 cp437:0x02 p2 0 step idle
+    stat at 28,18 element Object p1 cp437:0x02
     oop
 @Mosher
 #cycle 1
@@ -119,7 +119,7 @@ N##.............e..O..O...O....O..O....O....O......O.....##N
 #send fart
 
     end
-    stat at 25,21 element Object p1 cp437:0x02 p2 0 step idle
+    stat at 25,21 element Object p1 cp437:0x02
     oop
 @Mosher
 #cycle 1
@@ -129,7 +129,7 @@ N##.............e..O..O...O....O..O....O....O......O.....##N
 #send fart
 
     end
-    stat at 22,18 element Object p1 cp437:0x02 p2 0 step idle
+    stat at 22,18 element Object p1 cp437:0x02
     oop
 @Mosher
 #cycle 1
@@ -139,7 +139,7 @@ N##.............e..O..O...O....O..O....O....O......O.....##N
 #send fart
 
     end
-    stat at 19,21 element Object p1 cp437:0x02 p2 0 step idle
+    stat at 19,21 element Object p1 cp437:0x02
     oop
 @Mosher
 #cycle 1
@@ -149,7 +149,7 @@ N##.............e..O..O...O....O..O....O....O......O.....##N
 #send fart
 
     end
-    stat at 20,16 element Object p1 cp437:0x02 p2 0 step idle
+    stat at 20,16 element Object p1 cp437:0x02
     oop
 @Mosher
 #cycle 1
@@ -159,7 +159,7 @@ N##.............e..O..O...O....O..O....O....O......O.....##N
 #send fart
 
     end
-    stat at 23,16 element Object p1 cp437:0x02 p2 0 step idle
+    stat at 23,16 element Object p1 cp437:0x02
     oop
 @Mosher
 #cycle 1
@@ -169,7 +169,7 @@ N##.............e..O..O...O....O..O....O....O......O.....##N
 #send fart
 
     end
-    stat at 11,23 element Object p1 cp437:0x02 p2 0 step idle
+    stat at 11,23 element Object p1 cp437:0x02
     oop
 @Mosher
 #cycle 1
@@ -179,7 +179,7 @@ N##.............e..O..O...O....O..O....O....O......O.....##N
 #send fart
 
     end
-    stat at 8,20 element Object p1 cp437:0x02 p2 0 step idle
+    stat at 8,20 element Object p1 cp437:0x02
     oop
 @Mosher
 #cycle 1
@@ -189,7 +189,7 @@ N##.............e..O..O...O....O..O....O....O......O.....##N
 #send fart
 
     end
-    stat at 11,17 element Object p1 cp437:0x02 p2 0 step idle
+    stat at 11,17 element Object p1 cp437:0x02
     oop
 @Mosher
 #cycle 1
@@ -199,7 +199,7 @@ N##.............e..O..O...O....O..O....O....O......O.....##N
 #send fart
 
     end
-    stat at 12,15 element Object p1 cp437:0x02 p2 0 step idle
+    stat at 12,15 element Object p1 cp437:0x02
     oop
 @Mosher
 #cycle 1
@@ -209,7 +209,7 @@ N##.............e..O..O...O....O..O....O....O......O.....##N
 #send fart
 
     end
-    stat at 7,17 element Object p1 cp437:0x02 p2 0 step idle
+    stat at 7,17 element Object p1 cp437:0x02
     oop
 @Mosher
 #cycle 1
@@ -219,7 +219,7 @@ N##.............e..O..O...O....O..O....O....O......O.....##N
 #send fart
 
     end
-    stat at 11,20 element Object p1 cp437:0x02 p2 0 step idle
+    stat at 11,20 element Object p1 cp437:0x02
     oop
 @Mosher
 #cycle 1
@@ -229,7 +229,7 @@ N##.............e..O..O...O....O..O....O....O......O.....##N
 #send fart
 
     end
-    stat at 15,22 element Object p1 cp437:0x02 p2 0 step idle
+    stat at 15,22 element Object p1 cp437:0x02
     oop
 @Mosher
 #cycle 1
@@ -239,7 +239,7 @@ N##.............e..O..O...O....O..O....O....O......O.....##N
 #send fart
 
     end
-    stat at 20,18 element Object p1 cp437:0x02 p2 0 step idle
+    stat at 20,18 element Object p1 cp437:0x02
     oop
 @Mosher
 #cycle 1
@@ -249,7 +249,7 @@ N##.............e..O..O...O....O..O....O....O......O.....##N
 #send fart
 
     end
-    stat at 22,22 element Object p1 cp437:0x02 p2 0 step idle
+    stat at 22,22 element Object p1 cp437:0x02
     oop
 @Mosher
 #cycle 1
@@ -259,7 +259,7 @@ N##.............e..O..O...O....O..O....O....O......O.....##N
 #send fart
 
     end
-    stat at 20,24 element Object p1 cp437:0x02 p2 0 step idle
+    stat at 20,24 element Object p1 cp437:0x02
     oop
 @Mosher
 #cycle 1
@@ -269,7 +269,7 @@ N##.............e..O..O...O....O..O....O....O......O.....##N
 #send fart
 
     end
-    stat at 19,22 element Object p1 cp437:0x02 p2 0 step idle
+    stat at 19,22 element Object p1 cp437:0x02
     oop
 @Mosher
 #cycle 1
@@ -279,7 +279,7 @@ N##.............e..O..O...O....O..O....O....O......O.....##N
 #send fart
 
     end
-    stat at 17,23 element Object p1 cp437:0x02 p2 0 step idle
+    stat at 17,23 element Object p1 cp437:0x02
     oop
 @Mosher
 #cycle 1
@@ -289,7 +289,7 @@ N##.............e..O..O...O....O..O....O....O......O.....##N
 #send fart
 
     end
-    stat at 22,20 element Object p1 cp437:0x02 p2 0 step idle
+    stat at 22,20 element Object p1 cp437:0x02
     oop
 @Mosher
 #cycle 1
@@ -299,7 +299,7 @@ N##.............e..O..O...O....O..O....O....O......O.....##N
 #send fart
 
     end
-    stat at 26,19 element Object p1 cp437:0x02 p2 0 step idle
+    stat at 26,19 element Object p1 cp437:0x02
     oop
 @Mosher
 #cycle 1
@@ -309,7 +309,7 @@ N##.............e..O..O...O....O..O....O....O......O.....##N
 #send fart
 
     end
-    stat at 26,23 element Object p1 cp437:0x02 p2 0 step idle
+    stat at 26,23 element Object p1 cp437:0x02
     oop
 @Mosher
 #cycle 1
@@ -319,7 +319,7 @@ N##.............e..O..O...O....O..O....O....O......O.....##N
 #send fart
 
     end
-    stat at 28,21 element Object p1 cp437:0x02 p2 0 step idle
+    stat at 28,21 element Object p1 cp437:0x02
     oop
 @Mosher
 #cycle 1
@@ -329,7 +329,7 @@ N##.............e..O..O...O....O..O....O....O......O.....##N
 #send fart
 
     end
-    stat at 31,21 element Object p1 cp437:0x02 p2 0 step idle
+    stat at 31,21 element Object p1 cp437:0x02
     oop
 @Mosher
 #cycle 1
@@ -339,7 +339,7 @@ N##.............e..O..O...O....O..O....O....O......O.....##N
 #send fart
 
     end
-    stat at 35,24 element Object p1 cp437:0x02 p2 0 step idle
+    stat at 35,24 element Object p1 cp437:0x02
     oop
 @Mosher
 #cycle 1
@@ -349,7 +349,7 @@ N##.............e..O..O...O....O..O....O....O......O.....##N
 #send fart
 
     end
-    stat at 37,22 element Object p1 cp437:0x02 p2 0 step idle
+    stat at 37,22 element Object p1 cp437:0x02
     oop
 @Mosher
 #cycle 1
@@ -359,7 +359,7 @@ N##.............e..O..O...O....O..O....O....O......O.....##N
 #send fart
 
     end
-    stat at 40,19 element Object p1 cp437:0x02 p2 0 step idle
+    stat at 40,19 element Object p1 cp437:0x02
     oop
 @Mosher
 #cycle 1
@@ -369,7 +369,7 @@ N##.............e..O..O...O....O..O....O....O......O.....##N
 #send fart
 
     end
-    stat at 40,16 element Object p1 cp437:0x02 p2 0 step idle
+    stat at 40,16 element Object p1 cp437:0x02
     oop
 @Mosher
 #cycle 1
@@ -379,7 +379,7 @@ N##.............e..O..O...O....O..O....O....O......O.....##N
 #send fart
 
     end
-    stat at 43,18 element Object p1 cp437:0x02 p2 0 step idle
+    stat at 43,18 element Object p1 cp437:0x02
     oop
 @Mosher
 #cycle 1
@@ -389,7 +389,7 @@ N##.............e..O..O...O....O..O....O....O......O.....##N
 #send fart
 
     end
-    stat at 45,16 element Object p1 cp437:0x02 p2 0 step idle
+    stat at 45,16 element Object p1 cp437:0x02
     oop
 @Mosher
 #cycle 1
@@ -399,7 +399,7 @@ N##.............e..O..O...O....O..O....O....O......O.....##N
 #send fart
 
     end
-    stat at 48,19 element Object p1 cp437:0x02 p2 0 step idle
+    stat at 48,19 element Object p1 cp437:0x02
     oop
 @Mosher
 #cycle 1
@@ -409,7 +409,7 @@ N##.............e..O..O...O....O..O....O....O......O.....##N
 #send fart
 
     end
-    stat at 45,22 element Object p1 cp437:0x02 p2 0 step idle
+    stat at 45,22 element Object p1 cp437:0x02
     oop
 @Mosher
 #cycle 1
@@ -419,7 +419,7 @@ N##.............e..O..O...O....O..O....O....O......O.....##N
 #send fart
 
     end
-    stat at 43,19 element Object p1 cp437:0x02 p2 0 step idle
+    stat at 43,19 element Object p1 cp437:0x02
     oop
 @Mosher
 #cycle 1
@@ -429,7 +429,7 @@ N##.............e..O..O...O....O..O....O....O......O.....##N
 #send fart
 
     end
-    stat at 40,22 element Object p1 cp437:0x02 p2 0 step idle
+    stat at 40,22 element Object p1 cp437:0x02
     oop
 @Mosher
 #cycle 1
@@ -439,7 +439,7 @@ N##.............e..O..O...O....O..O....O....O......O.....##N
 #send fart
 
     end
-    stat at 45,21 element Object p1 cp437:0x02 p2 0 step idle
+    stat at 45,21 element Object p1 cp437:0x02
     oop
 @Mosher
 #cycle 1
@@ -449,7 +449,7 @@ N##.............e..O..O...O....O..O....O....O......O.....##N
 #send fart
 
     end
-    stat at 49,21 element Object p1 cp437:0x02 p2 0 step idle
+    stat at 49,21 element Object p1 cp437:0x02
     oop
 @Mosher
 #cycle 1
@@ -459,7 +459,7 @@ N##.............e..O..O...O....O..O....O....O......O.....##N
 #send fart
 
     end
-    stat at 55,18 element Object p1 cp437:0x02 p2 0 step idle
+    stat at 55,18 element Object p1 cp437:0x02
     oop
 @Mosher
 #cycle 1
@@ -469,7 +469,7 @@ N##.............e..O..O...O....O..O....O....O......O.....##N
 #send fart
 
     end
-    stat at 58,21 element Object p1 cp437:0x02 p2 0 step idle
+    stat at 58,21 element Object p1 cp437:0x02
     oop
 @Mosher
 #cycle 1
@@ -479,7 +479,7 @@ N##.............e..O..O...O....O..O....O....O......O.....##N
 #send fart
 
     end
-    stat at 55,24 element Object p1 cp437:0x02 p2 0 step idle
+    stat at 55,24 element Object p1 cp437:0x02
     oop
 @Mosher
 #cycle 1
@@ -489,7 +489,7 @@ N##.............e..O..O...O....O..O....O....O......O.....##N
 #send fart
 
     end
-    stat at 52,21 element Object p1 cp437:0x02 p2 0 step idle
+    stat at 52,21 element Object p1 cp437:0x02
     oop
 @Mosher
 #cycle 1
@@ -499,7 +499,7 @@ N##.............e..O..O...O....O..O....O....O......O.....##N
 #send fart
 
     end
-    stat at 50,23 element Object p1 cp437:0x02 p2 0 step idle
+    stat at 50,23 element Object p1 cp437:0x02
     oop
 @Mosher
 #cycle 1
@@ -509,7 +509,7 @@ N##.............e..O..O...O....O..O....O....O......O.....##N
 #send fart
 
     end
-    stat at 47,24 element Object p1 cp437:0x02 p2 0 step idle
+    stat at 47,24 element Object p1 cp437:0x02
     oop
 @Mosher
 #cycle 1
@@ -519,7 +519,7 @@ N##.............e..O..O...O....O..O....O....O......O.....##N
 #send fart
 
     end
-    stat at 43,24 element Object p1 cp437:0x02 p2 0 step idle
+    stat at 43,24 element Object p1 cp437:0x02
     oop
 @Mosher
 #cycle 1
@@ -529,7 +529,7 @@ N##.............e..O..O...O....O..O....O....O......O.....##N
 #send fart
 
     end
-    stat at 42,21 element Object p1 cp437:0x02 p2 0 step idle
+    stat at 42,21 element Object p1 cp437:0x02
     oop
 @Mosher
 #cycle 1
@@ -539,7 +539,7 @@ N##.............e..O..O...O....O..O....O....O......O.....##N
 #send fart
 
     end
-    stat at 30,18 element Object p1 cp437:0x02 p2 0 step idle
+    stat at 30,18 element Object p1 cp437:0x02
     oop
 @Mosher
 #cycle 1
@@ -549,7 +549,7 @@ N##.............e..O..O...O....O..O....O....O......O.....##N
 #send fart
 
     end
-    stat at 32,16 element Object p1 cp437:0x02 p2 0 step idle
+    stat at 32,16 element Object p1 cp437:0x02
     oop
 @Mosher
 #cycle 1
@@ -559,7 +559,7 @@ N##.............e..O..O...O....O..O....O....O......O.....##N
 #send fart
 
     end
-    stat at 27,16 element Object p1 cp437:0x02 p2 0 step idle
+    stat at 27,16 element Object p1 cp437:0x02
     oop
 @Mosher
 #cycle 1
@@ -569,7 +569,7 @@ N##.............e..O..O...O....O..O....O....O......O.....##N
 #send fart
 
     end
-    stat at 25,18 element Object p1 cp437:0x02 p2 0 step idle
+    stat at 25,18 element Object p1 cp437:0x02
     oop
 @Mosher
 #cycle 1
@@ -579,7 +579,7 @@ N##.............e..O..O...O....O..O....O....O......O.....##N
 #send fart
 
     end
-    stat at 29,20 element Object p1 cp437:0x02 p2 0 step idle
+    stat at 29,20 element Object p1 cp437:0x02
     oop
 @Mosher
 #cycle 1
@@ -589,7 +589,7 @@ N##.............e..O..O...O....O..O....O....O......O.....##N
 #send fart
 
     end
-    stat at 32,17 element Object p1 cp437:0x02 p2 0 step idle
+    stat at 32,17 element Object p1 cp437:0x02
     oop
 @Mosher
 #cycle 1
@@ -599,7 +599,7 @@ N##.............e..O..O...O....O..O....O....O......O.....##N
 #send fart
 
     end
-    stat at 35,19 element Object p1 cp437:0x02 p2 0 step idle
+    stat at 35,19 element Object p1 cp437:0x02
     oop
 @Mosher
 #cycle 1
@@ -609,7 +609,7 @@ N##.............e..O..O...O....O..O....O....O......O.....##N
 #send fart
 
     end
-    stat at 37,17 element Object p1 cp437:0x02 p2 0 step idle
+    stat at 37,17 element Object p1 cp437:0x02
     oop
 @Mosher
 #cycle 1
@@ -619,7 +619,7 @@ N##.............e..O..O...O....O..O....O....O......O.....##N
 #send fart
 
     end
-    stat at 39,15 element Object p1 cp437:0x02 p2 0 step idle under Empty color 0x0E
+    stat at 39,15 element Object p1 cp437:0x02 under Empty color 0x0E
     oop
 @Mosher
 #cycle 1
@@ -629,7 +629,7 @@ N##.............e..O..O...O....O..O....O....O......O.....##N
 #send fart
 
     end
-    stat at 43,17 element Object p1 cp437:0x02 p2 0 step idle
+    stat at 43,17 element Object p1 cp437:0x02
     oop
 @Mosher
 #cycle 1
@@ -639,7 +639,7 @@ N##.............e..O..O...O....O..O....O....O......O.....##N
 #send fart
 
     end
-    stat at 46,15 element Object p1 cp437:0x02 p2 0 step idle
+    stat at 46,15 element Object p1 cp437:0x02
     oop
 @Mosher
 #cycle 1
@@ -649,7 +649,7 @@ N##.............e..O..O...O....O..O....O....O......O.....##N
 #send fart
 
     end
-    stat at 48,13 element Object p1 cp437:0x02 p2 0 step idle
+    stat at 48,13 element Object p1 cp437:0x02
     oop
 @Mosher
 #cycle 1
@@ -659,7 +659,7 @@ N##.............e..O..O...O....O..O....O....O......O.....##N
 #send fart
 
     end
-    stat at 47,11 element Object p1 cp437:0x02 p2 0 step idle
+    stat at 47,11 element Object p1 cp437:0x02
     oop
 @Mosher
 #cycle 1
@@ -669,7 +669,7 @@ N##.............e..O..O...O....O..O....O....O......O.....##N
 #send fart
 
     end
-    stat at 49,9 element Object p1 cp437:0x02 p2 0 step idle
+    stat at 49,9 element Object p1 cp437:0x02
     oop
 @Mosher
 #cycle 1
@@ -679,7 +679,7 @@ N##.............e..O..O...O....O..O....O....O......O.....##N
 #send fart
 
     end
-    stat at 51,12 element Object p1 cp437:0x02 p2 0 step idle
+    stat at 51,12 element Object p1 cp437:0x02
     oop
 @Mosher
 #cycle 1
@@ -689,7 +689,7 @@ N##.............e..O..O...O....O..O....O....O......O.....##N
 #send fart
 
     end
-    stat at 53,14 element Object p1 cp437:0x02 p2 0 step idle
+    stat at 53,14 element Object p1 cp437:0x02
     oop
 @Mosher
 #cycle 1
@@ -699,7 +699,7 @@ N##.............e..O..O...O....O..O....O....O......O.....##N
 #send fart
 
     end
-    stat at 50,17 element Object p1 cp437:0x02 p2 0 step idle
+    stat at 50,17 element Object p1 cp437:0x02
     oop
 @Mosher
 #cycle 1
@@ -709,7 +709,7 @@ N##.............e..O..O...O....O..O....O....O......O.....##N
 #send fart
 
     end
-    stat at 52,16 element Object p1 cp437:0x02 p2 0 step idle
+    stat at 52,16 element Object p1 cp437:0x02
     oop
 @Mosher
 #cycle 1
@@ -719,7 +719,7 @@ N##.............e..O..O...O....O..O....O....O......O.....##N
 #send fart
 
     end
-    stat at 50,15 element Object p1 cp437:0x02 p2 0 step idle
+    stat at 50,15 element Object p1 cp437:0x02
     oop
 @Mosher
 #cycle 1
@@ -729,7 +729,7 @@ N##.............e..O..O...O....O..O....O....O......O.....##N
 #send fart
 
     end
-    stat at 48,17 element Object p1 cp437:0x02 p2 0 step idle
+    stat at 48,17 element Object p1 cp437:0x02
     oop
 @Mosher
 #cycle 1
@@ -739,7 +739,7 @@ N##.............e..O..O...O....O..O....O....O......O.....##N
 #send fart
 
     end
-    stat at 46,18 element Object p1 cp437:0x02 p2 0 step idle
+    stat at 46,18 element Object p1 cp437:0x02
     oop
 @Mosher
 #cycle 1
@@ -749,7 +749,7 @@ N##.............e..O..O...O....O..O....O....O......O.....##N
 #send fart
 
     end
-    stat at 51,20 element Object p1 cp437:0x02 p2 0 step idle
+    stat at 51,20 element Object p1 cp437:0x02
     oop
 @Mosher
 #cycle 1
@@ -759,7 +759,7 @@ N##.............e..O..O...O....O..O....O....O......O.....##N
 #send fart
 
     end
-    stat at 53,18 element Object p1 cp437:0x02 p2 0 step idle
+    stat at 53,18 element Object p1 cp437:0x02
     oop
 @Mosher
 #cycle 1
@@ -769,7 +769,7 @@ N##.............e..O..O...O....O..O....O....O......O.....##N
 #send fart
 
     end
-    stat at 55,20 element Object p1 cp437:0x02 p2 0 step idle
+    stat at 55,20 element Object p1 cp437:0x02
     oop
 @Mosher
 #cycle 1
@@ -779,7 +779,7 @@ N##.............e..O..O...O....O..O....O....O......O.....##N
 #send fart
 
     end
-    stat at 53,22 element Object p1 cp437:0x02 p2 0 step idle
+    stat at 53,22 element Object p1 cp437:0x02
     oop
 @Mosher
 #cycle 1
@@ -789,7 +789,7 @@ N##.............e..O..O...O....O..O....O....O......O.....##N
 #send fart
 
     end
-    stat at 56,23 element Object p1 cp437:0x02 p2 0 step idle
+    stat at 56,23 element Object p1 cp437:0x02
     oop
 @Mosher
 #cycle 1
@@ -799,7 +799,7 @@ N##.............e..O..O...O....O..O....O....O......O.....##N
 #send fart
 
     end
-    stat at 55,21 element Object p1 cp437:0x02 p2 0 step idle
+    stat at 55,21 element Object p1 cp437:0x02
     oop
 @Mosher
 #cycle 1
@@ -809,7 +809,7 @@ N##.............e..O..O...O....O..O....O....O......O.....##N
 #send fart
 
     end
-    stat at 58,19 element Object p1 cp437:0x02 p2 0 step idle
+    stat at 58,19 element Object p1 cp437:0x02
     oop
 @Mosher
 #cycle 1
@@ -819,7 +819,7 @@ N##.............e..O..O...O....O..O....O....O......O.....##N
 #send fart
 
     end
-    stat at 53,24 element Object p1 cp437:0x02 p2 0 step idle
+    stat at 53,24 element Object p1 cp437:0x02
     oop
 @Mosher
 #cycle 1
@@ -829,7 +829,7 @@ N##.............e..O..O...O....O..O....O....O......O.....##N
 #send fart
 
     end
-    stat at 47,22 element Object p1 cp437:0x02 p2 0 step idle
+    stat at 47,22 element Object p1 cp437:0x02
     oop
 @Mosher
 #cycle 1
@@ -839,7 +839,7 @@ N##.............e..O..O...O....O..O....O....O......O.....##N
 #send fart
 
     end
-    stat at 43,23 element Object p1 cp437:0x02 p2 0 step idle
+    stat at 43,23 element Object p1 cp437:0x02
     oop
 @Mosher
 #cycle 1
@@ -849,7 +849,7 @@ N##.............e..O..O...O....O..O....O....O......O.....##N
 #send fart
 
     end
-    stat at 40,24 element Object p1 cp437:0x02 p2 0 step idle
+    stat at 40,24 element Object p1 cp437:0x02
     oop
 @Mosher
 #cycle 1
@@ -859,7 +859,7 @@ N##.............e..O..O...O....O..O....O....O......O.....##N
 #send fart
 
     end
-    stat at 34,22 element Object p1 cp437:0x02 p2 0 step idle
+    stat at 34,22 element Object p1 cp437:0x02
     oop
 @Mosher
 #cycle 1
@@ -869,7 +869,7 @@ N##.............e..O..O...O....O..O....O....O......O.....##N
 #send fart
 
     end
-    stat at 33,23 element Object p1 cp437:0x02 p2 0 step idle
+    stat at 33,23 element Object p1 cp437:0x02
     oop
 @Mosher
 #cycle 1
@@ -879,7 +879,7 @@ N##.............e..O..O...O....O..O....O....O......O.....##N
 #send fart
 
     end
-    stat at 30,22 element Object p1 cp437:0x02 p2 0 step idle
+    stat at 30,22 element Object p1 cp437:0x02
     oop
 @Mosher
 #cycle 1
@@ -889,7 +889,7 @@ N##.............e..O..O...O....O..O....O....O......O.....##N
 #send fart
 
     end
-    stat at 26,24 element Object p1 cp437:0x02 p2 0 step idle
+    stat at 26,24 element Object p1 cp437:0x02
     oop
 @Mosher
 #cycle 1
@@ -899,7 +899,7 @@ N##.............e..O..O...O....O..O....O....O......O.....##N
 #send fart
 
     end
-    stat at 23,23 element Object p1 cp437:0x02 p2 0 step idle
+    stat at 23,23 element Object p1 cp437:0x02
     oop
 @Mosher
 #cycle 1
@@ -909,7 +909,7 @@ N##.............e..O..O...O....O..O....O....O......O.....##N
 #send fart
 
     end
-    stat at 17,24 element Object p1 cp437:0x02 p2 0 step idle
+    stat at 17,24 element Object p1 cp437:0x02
     oop
 @Mosher
 #cycle 1
@@ -919,7 +919,7 @@ N##.............e..O..O...O....O..O....O....O......O.....##N
 #send fart
 
     end
-    stat at 14,24 element Object p1 cp437:0x02 p2 0 step idle
+    stat at 14,24 element Object p1 cp437:0x02
     oop
 @Mosher
 #cycle 1
@@ -929,7 +929,7 @@ N##.............e..O..O...O....O..O....O....O......O.....##N
 #send fart
 
     end
-    stat at 12,22 element Object p1 cp437:0x02 p2 0 step idle
+    stat at 12,22 element Object p1 cp437:0x02
     oop
 @Mosher
 #cycle 1
@@ -939,7 +939,7 @@ N##.............e..O..O...O....O..O....O....O......O.....##N
 #send fart
 
     end
-    stat at 10,21 element Object p1 cp437:0x02 p2 0 step idle
+    stat at 10,21 element Object p1 cp437:0x02
     oop
 @Mosher
 #cycle 1
@@ -949,7 +949,7 @@ N##.............e..O..O...O....O..O....O....O......O.....##N
 #send fart
 
     end
-    stat at 8,23 element Object p1 cp437:0x02 p2 0 step idle
+    stat at 8,23 element Object p1 cp437:0x02
     oop
 @Mosher
 #cycle 1
@@ -959,7 +959,7 @@ N##.............e..O..O...O....O..O....O....O......O.....##N
 #send fart
 
     end
-    stat at 6,21 element Object p1 cp437:0x02 p2 0 step idle
+    stat at 6,21 element Object p1 cp437:0x02
     oop
 @Mosher
 #cycle 1
@@ -969,7 +969,7 @@ N##.............e..O..O...O....O..O....O....O......O.....##N
 #send fart
 
     end
-    stat at 3,24 element Object p1 cp437:0x02 p2 0 step idle
+    stat at 3,24 element Object p1 cp437:0x02
     oop
 @Mosher
 #cycle 1
@@ -979,7 +979,7 @@ N##.............e..O..O...O....O..O....O....O......O.....##N
 #send fart
 
     end
-    stat at 5,23 element Object p1 cp437:0x02 p2 0 step idle
+    stat at 5,23 element Object p1 cp437:0x02
     oop
 @Mosher
 #cycle 1
@@ -989,7 +989,7 @@ N##.............e..O..O...O....O..O....O....O......O.....##N
 #send fart
 
     end
-    stat at 4,22 element Object p1 cp437:0x02 p2 0 step idle
+    stat at 4,22 element Object p1 cp437:0x02
     oop
 @Mosher
 #cycle 1
@@ -999,7 +999,7 @@ N##.............e..O..O...O....O..O....O....O......O.....##N
 #send fart
 
     end
-    stat at 3,21 element Object p1 cp437:0x02 p2 0 step idle
+    stat at 3,21 element Object p1 cp437:0x02
     oop
 @Mosher
 #cycle 1
@@ -1009,7 +1009,7 @@ N##.............e..O..O...O....O..O....O....O......O.....##N
 #send fart
 
     end
-    stat at 3,20 element Object p1 cp437:0x02 p2 0 step idle
+    stat at 3,20 element Object p1 cp437:0x02
     oop
 @Mosher
 #cycle 1
@@ -1019,7 +1019,7 @@ N##.............e..O..O...O....O..O....O....O......O.....##N
 #send fart
 
     end
-    stat at 6,18 element Object p1 cp437:0x02 p2 0 step idle
+    stat at 6,18 element Object p1 cp437:0x02
     oop
 @Mosher
 #cycle 1
@@ -1029,7 +1029,7 @@ N##.............e..O..O...O....O..O....O....O......O.....##N
 #send fart
 
     end
-    stat at 9,15 element Object p1 cp437:0x02 p2 0 step idle
+    stat at 9,15 element Object p1 cp437:0x02
     oop
 @Mosher
 #cycle 1
@@ -1039,17 +1039,17 @@ N##.............e..O..O...O....O..O....O....O......O.....##N
 #send fart
 
     end
-    stat at 30,13 element Object p1 cp437:0xF4 p2 0 step idle
-    stat at 22,12 element Object p1 cp437:0xF4 p2 0 step idle
-    stat at 38,12 element Object p1 cp437:0xF4 p2 0 step idle
-    stat at 30,10 element Object p1 cp437:0xF8 p2 0 step idle
-    stat at 33,10 element Object p1 cp437:0xF8 p2 0 step idle
-    stat at 31,11 element Object p1 cp437:0x4F p2 0 step idle
-    stat at 32,10 element Object p1 cp437:0x40 p2 0 step idle
-    stat at 30,12 element Object p1 cp437:0x02 p2 0 step idle
+    stat at 30,13 element Object p1 cp437:0xF4
+    stat at 22,12 element Object p1 cp437:0xF4
+    stat at 38,12 element Object p1 cp437:0xF4
+    stat at 30,10 element Object p1 cp437:0xF8
+    stat at 33,10 element Object p1 cp437:0xF8
+    stat at 31,11 element Object p1 cp437:0x4F
+    stat at 32,10 element Object p1 cp437:0x40
+    stat at 30,12 element Object p1 cp437:0x02
     oop
 @Sam Bair
-Sam:This next song is dedicated to our 
+Sam:This next song is dedicated to our
 /i/i/i/i/i/i/i
 Sam:good friend, Andy.
 /i/i/i/i/i/i/i
@@ -1128,7 +1128,7 @@ of being dildonic.
 #end
 
     end
-    stat at 31,14 element Object p1 cp437:0xDB p2 0 step idle under Empty color 0x0E
+    stat at 31,14 element Object p1 cp437:0xDB under Empty color 0x0E
     oop
 @andy
 #end
@@ -1140,19 +1140,19 @@ mean Andy Kauffman!
 #end
 
     end
-    stat at 37,11 element Object p1 cp437:0xF2 p2 0 step idle
-    stat at 38,11 element Object p1 cp437:0x02 p2 0 step idle
-    stat at 22,11 element Object p1 cp437:0x02 p2 0 step idle
-    stat at 21,11 element Object p1 cp437:0xEB p2 0 step idle under Empty color 0x0A
-    stat at 31,10 element Object p1 cp437:0x02 p2 0 step idle
+    stat at 37,11 element Object p1 cp437:0xF2
+    stat at 38,11 element Object p1 cp437:0x02
+    stat at 22,11 element Object p1 cp437:0x02
+    stat at 21,11 element Object p1 cp437:0xEB under Empty color 0x0A
+    stat at 31,10 element Object p1 cp437:0x02
     oop
 @Alex Barnes
 #end
 
     end
-    stat at 14,7 element Object p1 cp437:0x0C p2 0 step idle under Empty color 0x0C
-    stat at 47,7 element Object p1 cp437:0x0B p2 0 step idle under Empty color 0x0C
-    stat at 47,8 element Passage p1 0 p2 0 p3 board "Men's Bathroom" step idle under Empty color 0x0C
-    stat at 14,8 element Passage p1 0 p2 0 p3 board "Women's Bathroom" step idle under Empty color 0x0C
+    stat at 14,7 element Object p1 cp437:0x0C under Empty color 0x0C
+    stat at 47,7 element Object p1 cp437:0x0B under Empty color 0x0C
+    stat at 47,8 element Passage p3 board "Men's Bathroom" under Empty color 0x0C
+    stat at 14,8 element Passage p3 board "Women's Bathroom" under Empty color 0x0C
   end
 end

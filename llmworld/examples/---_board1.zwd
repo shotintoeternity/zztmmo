@@ -53,12 +53,12 @@ kkkkkkkkkkkkkkkkkkkkkkkkkkkkkb@bkkkkkkkkkkkkkkkkkkkkkkkkkkkk
     I = Invisible color 0x0A
     h = Invisible color 0x0B
     j = Invisible color 0x0C
-    k = element 33 color 0x08
-    @ = Player color 0x1F under element 33 color 0x08
+    k = Empty color 0x08
+    @ = Player color 0x1F under Empty color 0x08
   end
 
   stats
-    stat at 29,24 element Object cycle 1 p1 cp437:0x11 p2 0 step idle under Empty color 0x0F
+    stat at 29,24 element Object cycle 1 p1 cp437:0x11 under Empty color 0x0F
     oop
 
 :l
@@ -69,7 +69,7 @@ kkkkkkkkkkkkkkkkkkkkkkkkkkkkkb@bkkkkkkkkkkkkkkkkkkkkkkkkkkkk
 #l
 
     end
-    stat at 33,24 element Object cycle 1 p1 cp437:0x10 p2 0 step idle under Empty color 0x0F
+    stat at 33,24 element Object cycle 1 p1 cp437:0x10 under Empty color 0x0F
     oop
 
 :l
@@ -80,7 +80,7 @@ kkkkkkkkkkkkkkkkkkkkkkkkkkkkkb@bkkkkkkkkkkkkkkkkkkkkkkkkkkkk
 #l
 
     end
-    stat at 32,25 element Object cycle 1 p1 cp437:0xCD p2 0 step idle under Empty color 0x0F
+    stat at 32,25 element Object cycle 1 p1 cp437:0xCD under Empty color 0x0F
     oop
 
 :l
@@ -92,15 +92,15 @@ kkkkkkkkkkkkkkkkkkkkkkkkkkkkkb@bkkkkkkkkkkkkkkkkkkkkkkkkkkkk
 /i#l
 
     end
-    stat at 17,12 element Object p1 cp437:0xDC p2 0 step idle under Empty color 0x07
-    stat at 18,13 element Object p1 cp437:0xDD p2 0 step idle under Empty color 0x0F
-    stat at 17,14 element Object p1 cp437:0xDF p2 0 step idle under Empty color 0x0F
-    stat at 43,18 element Object p1 cp437:0xDF p2 0 step idle under Empty color 0x0F
-    stat at 48,14 element Object p1 cp437:0xDC p2 0 step idle under Empty color 0x07
-    stat at 49,15 element Object p1 cp437:0xDD p2 0 step idle under Empty color 0x0F
-    stat at 41,17 element Object p1 cp437:0xDE p2 0 step idle under Empty color 0x0F
-    stat at 42,15 element Object p1 cp437:0xDE p2 0 step idle under Empty color 0x0F
-    stat at 41,16 element Object p1 cp437:0x11 p2 0 step idle under Empty color 0x0F
+    stat at 17,12 element Object p1 cp437:0xDC under Empty color 0x07
+    stat at 18,13 element Object p1 cp437:0xDD under Empty color 0x0F
+    stat at 17,14 element Object p1 cp437:0xDF under Empty color 0x0F
+    stat at 43,18 element Object p1 cp437:0xDF under Empty color 0x0F
+    stat at 48,14 element Object p1 cp437:0xDC under Empty color 0x07
+    stat at 49,15 element Object p1 cp437:0xDD under Empty color 0x0F
+    stat at 41,17 element Object p1 cp437:0xDE under Empty color 0x0F
+    stat at 42,15 element Object p1 cp437:0xDE under Empty color 0x0F
+    stat at 41,16 element Object p1 cp437:0x11 under Empty color 0x0F
     oop
 
 :l
@@ -110,27 +110,27 @@ kkkkkkkkkkkkkkkkkkkkkkkkkkkkkb@bkkkkkkkkkkkkkkkkkkkkkkkkkkkk
 #l
 
     end
-    stat at 43,14 element Object p1 cp437:0xDE p2 0 step idle under Empty color 0x0F
-    stat at 44,13 element Object p1 cp437:0xDC p2 0 step idle under Empty color 0x0F
-    stat at 45,13 element Object p1 cp437:0xDC p2 0 step idle under Empty color 0x0F
-    stat at 46,13 element Object p1 cp437:0xDC p2 0 step idle under Empty color 0x0F
-    stat at 49,16 element Object p1 cp437:0xDD p2 0 step idle under Empty color 0x0F
-    stat at 49,17 element Object p1 cp437:0xDD p2 0 step idle under Empty color 0x0F
-    stat at 48,18 element Object p1 cp437:0xDD p2 0 step idle under Empty color 0x0F
-    stat at 47,19 element Object p1 cp437:0xDF p2 0 step idle under Empty color 0x0F
-    stat at 46,19 element Object p1 cp437:0xDF p2 0 step idle under Empty color 0x0F
-    stat at 45,19 element Object p1 cp437:0xDF p2 0 step idle under Empty color 0x0F
-    stat at 42,18 element Object p1 cp437:0xDF p2 0 step idle under Empty color 0x0F
-    stat at 14,11 element Object p1 cp437:0xDC p2 0 step idle under Empty color 0x0F
-    stat at 15,11 element Object p1 cp437:0xDC p2 0 step idle under Empty color 0x0F
-    stat at 12,12 element Object p1 cp437:0xDE p2 0 step idle under Empty color 0x0F
-    stat at 13,11 element Object p1 cp437:0xDC p2 0 step idle under Empty color 0x0F
-    stat at 12,14 element Object p1 cp437:0xDE p2 0 step idle under Empty color 0x0F
-    stat at 13,15 element Object p1 cp437:0xDF p2 0 step idle under Empty color 0x0F
-    stat at 14,15 element Object p1 cp437:0xDF p2 0 step idle under Empty color 0x0F
-    stat at 15,15 element Object p1 cp437:0xDF p2 0 step idle under Empty color 0x0F
-    stat at 16,15 element Object p1 cp437:0xDF p2 0 step idle under Empty color 0x0F
-    stat at 42,20 element Object cycle 6 p1 cp437:0x04 p2 0 step idle under Empty color 0x0F
+    stat at 43,14 element Object p1 cp437:0xDE under Empty color 0x0F
+    stat at 44,13 element Object p1 cp437:0xDC under Empty color 0x0F
+    stat at 45,13 element Object p1 cp437:0xDC under Empty color 0x0F
+    stat at 46,13 element Object p1 cp437:0xDC under Empty color 0x0F
+    stat at 49,16 element Object p1 cp437:0xDD under Empty color 0x0F
+    stat at 49,17 element Object p1 cp437:0xDD under Empty color 0x0F
+    stat at 48,18 element Object p1 cp437:0xDD under Empty color 0x0F
+    stat at 47,19 element Object p1 cp437:0xDF under Empty color 0x0F
+    stat at 46,19 element Object p1 cp437:0xDF under Empty color 0x0F
+    stat at 45,19 element Object p1 cp437:0xDF under Empty color 0x0F
+    stat at 42,18 element Object p1 cp437:0xDF under Empty color 0x0F
+    stat at 14,11 element Object p1 cp437:0xDC under Empty color 0x0F
+    stat at 15,11 element Object p1 cp437:0xDC under Empty color 0x0F
+    stat at 12,12 element Object p1 cp437:0xDE under Empty color 0x0F
+    stat at 13,11 element Object p1 cp437:0xDC under Empty color 0x0F
+    stat at 12,14 element Object p1 cp437:0xDE under Empty color 0x0F
+    stat at 13,15 element Object p1 cp437:0xDF under Empty color 0x0F
+    stat at 14,15 element Object p1 cp437:0xDF under Empty color 0x0F
+    stat at 15,15 element Object p1 cp437:0xDF under Empty color 0x0F
+    stat at 16,15 element Object p1 cp437:0xDF under Empty color 0x0F
+    stat at 42,20 element Object cycle 6 p1 cp437:0x04 under Empty color 0x0F
     oop
 
 :l
@@ -138,7 +138,7 @@ kkkkkkkkkkkkkkkkkkkkkkkkkkkkkb@bkkkkkkkkkkkkkkkkkkkkkkkkkkkk
 /i#l
 
     end
-    stat at 9,12 element Object cycle 6 p1 cp437:0x04 p2 0 step idle under Empty color 0x0F
+    stat at 9,12 element Object cycle 6 p1 cp437:0x04 under Empty color 0x0F
     oop
 
 :l
@@ -146,7 +146,7 @@ kkkkkkkkkkkkkkkkkkkkkkkkkkkkkb@bkkkkkkkkkkkkkkkkkkkkkkkkkkkk
 /i#l
 
     end
-    stat at 44,3 element Object cycle 6 p1 cp437:0x04 p2 0 step idle under Empty color 0x0F
+    stat at 44,3 element Object cycle 6 p1 cp437:0x04 under Empty color 0x0F
     oop
 
 :l
@@ -154,8 +154,8 @@ kkkkkkkkkkkkkkkkkkkkkkkkkkkkkb@bkkkkkkkkkkkkkkkkkkkkkkkkkkkk
 /i#l
 
     end
-    stat at 37,1 element Object p1 cp437:0xF9 p2 0 step idle under Empty color 0x0F
-    stat at 30,4 element Object cycle 1 p1 cp437:0xDC p2 0 step idle under Empty color 0x0F data-pos -1
+    stat at 37,1 element Object p1 cp437:0xF9 under Empty color 0x0F
+    stat at 30,4 element Object cycle 1 p1 cp437:0xDC under Empty color 0x0F data-pos -1
     oop
 
 :add
@@ -205,7 +205,7 @@ kkkkkkkkkkkkkkkkkkkkkkkkkkkkkb@bkkkkkkkkkkkkkkkkkkkkkkkkkkkk
 #end
 
     end
-    stat at 33,4 element Object cycle 1 p1 cp437:0xDC p2 0 step idle under Empty color 0x07 data-pos -1
+    stat at 33,4 element Object cycle 1 p1 cp437:0xDC under Empty color 0x07 data-pos -1
     oop
 @hyper
 :g
@@ -224,11 +224,11 @@ kkkkkkkkkkkkkkkkkkkkkkkkkkkkkb@bkkkkkkkkkkkkkkkkkkkkkkkkkkkk
 /i#l
 
     end
-    stat at 29,5 element Object p1 cp437:0xDE p2 0 step idle under Empty color 0x0F
-    stat at 34,5 element Object p1 cp437:0xDD p2 0 step idle under Empty color 0x0F
-    stat at 30,6 element Object p1 cp437:0xDF p2 0 step idle under Empty color 0x0F
-    stat at 33,6 element Object p1 cp437:0xDF p2 0 step idle under Empty color 0x0F
-    stat at 30,2 element Object cycle 1 p1 cp437:0x20 p2 0 step idle under Empty color 0x0F data-pos -1
+    stat at 29,5 element Object p1 cp437:0xDE under Empty color 0x0F
+    stat at 34,5 element Object p1 cp437:0xDD under Empty color 0x0F
+    stat at 30,6 element Object p1 cp437:0xDF under Empty color 0x0F
+    stat at 33,6 element Object p1 cp437:0xDF under Empty color 0x0F
+    stat at 30,2 element Object cycle 1 p1 cp437:0x20 under Empty color 0x0F data-pos -1
     oop
 
 :add
@@ -238,7 +238,7 @@ kkkkkkkkkkkkkkkkkkkkkkkkkkkkkb@bkkkkkkkkkkkkkkkkkkkkkkkkkkkk
 /i/i/i/i#add
 
     end
-    stat at 31,2 element Object cycle 1 p1 cp437:0x20 p2 0 step idle under Empty color 0x0F data-pos -1
+    stat at 31,2 element Object cycle 1 p1 cp437:0x20 under Empty color 0x0F data-pos -1
     oop
 
 :add
@@ -251,7 +251,7 @@ kkkkkkkkkkkkkkkkkkkkkkkkkkkkkb@bkkkkkkkkkkkkkkkkkkkkkkkkkkkk
 /i/i/i/i#add
 
     end
-    stat at 32,2 element Object cycle 1 p1 cp437:0x20 p2 0 step idle under Empty color 0x0F data-pos -1
+    stat at 32,2 element Object cycle 1 p1 cp437:0x20 under Empty color 0x0F data-pos -1
     oop
 
 :add
@@ -265,7 +265,7 @@ kkkkkkkkkkkkkkkkkkkkkkkkkkkkkb@bkkkkkkkkkkkkkkkkkkkkkkkkkkkk
 /i/i/i/i#add
 
     end
-    stat at 33,2 element Object cycle 1 p1 cp437:0x20 p2 0 step idle under Empty color 0x0F data-pos -1
+    stat at 33,2 element Object cycle 1 p1 cp437:0x20 under Empty color 0x0F data-pos -1
     oop
 
 :add
@@ -281,7 +281,7 @@ kkkkkkkkkkkkkkkkkkkkkkkkkkkkkb@bkkkkkkkkkkkkkkkkkkkkkkkkkkkk
 
 
     end
-    stat at 18,5 element Object cycle 6 p1 cp437:0x04 p2 0 step idle under Empty color 0x0F
+    stat at 18,5 element Object cycle 6 p1 cp437:0x04 under Empty color 0x0F
     oop
 
 :l
@@ -289,28 +289,28 @@ kkkkkkkkkkkkkkkkkkkkkkkkkkkkkb@bkkkkkkkkkkkkkkkkkkkkkkkkkkkk
 /i#l
 
     end
-    stat at 38,6 element Object cycle 2 p1 cp437:0xD8 p2 0 step idle under Empty color 0x0F
+    stat at 38,6 element Object cycle 2 p1 cp437:0xD8 under Empty color 0x0F
     oop
 
 :l
 /s/s/s/s/s/s/n/n/n/n/n/n#l
 
     end
-    stat at 25,9 element Object cycle 2 p1 cp437:0xD8 p2 0 step idle under Empty color 0x0F
+    stat at 25,9 element Object cycle 2 p1 cp437:0xD8 under Empty color 0x0F
     oop
 
 :l
 /w/w/w/w/w/w/e/e/e/e/e/e#l
 
     end
-    stat at 19,17 element Object cycle 2 p1 cp437:0xD8 p2 0 step idle under Empty color 0x0F
+    stat at 19,17 element Object cycle 2 p1 cp437:0xD8 under Empty color 0x0F
     oop
 
 :l
 /s/s/s/s/s/n/n/n/n/n#l
 
     end
-    stat at 30,25 element Object cycle 1 p1 cp437:0xCD p2 0 step idle under Empty color 0x0F
+    stat at 30,25 element Object cycle 1 p1 cp437:0xCD under Empty color 0x0F
     oop
 
 :l
@@ -324,7 +324,7 @@ kkkkkkkkkkkkkkkkkkkkkkkkkkkkkb@bkkkkkkkkkkkkkkkkkkkkkkkkkkkk
 /i#l
 
     end
-    stat at 31,9 element Object cycle 6 p1 cp437:0x04 p2 0 step idle under Empty color 0x0F
+    stat at 31,9 element Object cycle 6 p1 cp437:0x04 under Empty color 0x0F
     oop
 
 :l
@@ -332,7 +332,7 @@ kkkkkkkkkkkkkkkkkkkkkkkkkkkkkb@bkkkkkkkkkkkkkkkkkkkkkkkkkkkk
 /i#l
 
     end
-    stat at 31,19 element Object cycle 1 p1 cp437:0x1E p2 0 step idle under Empty color 0x0F
+    stat at 31,19 element Object cycle 1 p1 cp437:0x1E under Empty color 0x0F
     oop
 @ship
 #set north
@@ -416,7 +416,7 @@ kkkkkkkkkkkkkkkkkkkkkkkkkkkkkb@bkkkkkkkkkkkkkkkkkkkkkkkkkkkk
 :stop
 
     end
-    stat at 34,2 element Object cycle 1 p1 cp437:0x20 p2 0 step idle under Empty color 0x0F data-pos -1
+    stat at 34,2 element Object cycle 1 p1 cp437:0x20 under Empty color 0x0F data-pos -1
     oop
 
 :add

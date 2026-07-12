@@ -91,51 +91,51 @@ UUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUU..U
   end
 
   stats
-    stat at 2,3 element Object p1 cp437:0xDC p2 0 step idle under Empty color 0x02
-    stat at 3,3 element Object p1 cp437:0xDC p2 0 step idle under Empty color 0x02
-    stat at 4,3 element Object p1 cp437:0xDC p2 0 step idle under Empty color 0x02
-    stat at 5,3 element Object p1 cp437:0xDC p2 0 step idle under Empty color 0x02
-    stat at 6,3 element Object p1 cp437:0xDC p2 0 step idle under Empty color 0x02
-    stat at 7,3 element Object p1 cp437:0xDC p2 0 step idle under Empty color 0x02
-    stat at 8,3 element Object p1 cp437:0xDC p2 0 step idle under Empty color 0x02
-    stat at 9,3 element Object p1 cp437:0xDC p2 0 step idle under Empty color 0x02
-    stat at 10,3 element Object p1 cp437:0xDC p2 0 step idle under Empty color 0x02
-    stat at 11,3 element Object p1 cp437:0xDC p2 0 step idle under Empty color 0x02
-    stat at 12,3 element Object p1 cp437:0xDC p2 0 step idle under Empty color 0x02
-    stat at 13,3 element Object p1 cp437:0xDC p2 0 step idle under Empty color 0x02
-    stat at 14,3 element Object p1 cp437:0xDC p2 0 step idle under Empty color 0x02
-    stat at 15,3 element Object p1 cp437:0xDC p2 0 step idle under Empty color 0x02
-    stat at 16,3 element Object p1 cp437:0xDC p2 0 step idle under Empty color 0x02
-    stat at 17,3 element Object p1 cp437:0xDC p2 0 step idle under Empty color 0x02
-    stat at 18,3 element Object p1 cp437:0xDC p2 0 step idle under Empty color 0x02
-    stat at 19,3 element Object p1 cp437:0xDC p2 0 step idle under Empty color 0x02
-    stat at 20,3 element Object p1 cp437:0xDC p2 0 step idle under Empty color 0x02
-    stat at 21,3 element Object p1 cp437:0xDC p2 0 step idle under Empty color 0x02
-    stat at 22,3 element Object p1 cp437:0xDC p2 0 step idle under Empty color 0x02
-    stat at 23,3 element Object p1 cp437:0xDC p2 0 step idle under Empty color 0x02
-    stat at 24,3 element Object p1 cp437:0xDC p2 0 step idle under Empty color 0x02
-    stat at 25,3 element Object p1 cp437:0xDC p2 0 step idle under Empty color 0x02
-    stat at 26,3 element Object p1 cp437:0xDC p2 0 step idle under Empty color 0x02
-    stat at 27,3 element Object p1 cp437:0xDC p2 0 step idle under Empty color 0x02
-    stat at 28,3 element Object p1 cp437:0xDC p2 0 step idle under Empty color 0x02
-    stat at 29,3 element Object p1 cp437:0xDC p2 0 step idle under Empty color 0x02
-    stat at 30,3 element Object p1 cp437:0xDC p2 0 step idle under Empty color 0x02
-    stat at 31,3 element Object p1 cp437:0xDC p2 0 step idle under Empty color 0x02
-    stat at 32,3 element Object p1 cp437:0xDC p2 0 step idle under Empty color 0x02
-    stat at 33,3 element Object p1 cp437:0xDC p2 0 step idle under Empty color 0x02
-    stat at 34,3 element Object p1 cp437:0xDC p2 0 step idle under Empty color 0x02
-    stat at 35,3 element Object p1 cp437:0xDC p2 0 step idle under Empty color 0x02
-    stat at 36,3 element Object p1 cp437:0xDC p2 0 step idle under Empty color 0x02
-    stat at 37,3 element Object p1 cp437:0xDC p2 0 step idle under Empty color 0x02
-    stat at 38,3 element Object p1 cp437:0xDC p2 0 step idle under Empty color 0x02
-    stat at 39,3 element Object p1 cp437:0xDC p2 0 step idle under Empty color 0x02
-    stat at 40,3 element Object p1 cp437:0xDC p2 0 step idle under Empty color 0x02
-    stat at 41,3 element Object p1 cp437:0xDC p2 0 step idle under Empty color 0x02
-    stat at 42,3 element Object p1 cp437:0xDC p2 0 step idle under Empty color 0x02
-    stat at 43,3 element Object p1 cp437:0xDC p2 0 step idle under Empty color 0x02
-    stat at 44,3 element Object p1 cp437:0xDC p2 0 step idle under Empty color 0x02
-    stat at 45,3 element Object p1 cp437:0xDC p2 0 step idle under Empty color 0x02
-    stat at 14,13 element Object p1 cp437:0x02 p2 0 step idle under Empty color 0x06
+    stat at 2,3 element Object p1 cp437:0xDC under Empty color 0x02
+    stat at 3,3 element Object p1 cp437:0xDC under Empty color 0x02
+    stat at 4,3 element Object p1 cp437:0xDC under Empty color 0x02
+    stat at 5,3 element Object p1 cp437:0xDC under Empty color 0x02
+    stat at 6,3 element Object p1 cp437:0xDC under Empty color 0x02
+    stat at 7,3 element Object p1 cp437:0xDC under Empty color 0x02
+    stat at 8,3 element Object p1 cp437:0xDC under Empty color 0x02
+    stat at 9,3 element Object p1 cp437:0xDC under Empty color 0x02
+    stat at 10,3 element Object p1 cp437:0xDC under Empty color 0x02
+    stat at 11,3 element Object p1 cp437:0xDC under Empty color 0x02
+    stat at 12,3 element Object p1 cp437:0xDC under Empty color 0x02
+    stat at 13,3 element Object p1 cp437:0xDC under Empty color 0x02
+    stat at 14,3 element Object p1 cp437:0xDC under Empty color 0x02
+    stat at 15,3 element Object p1 cp437:0xDC under Empty color 0x02
+    stat at 16,3 element Object p1 cp437:0xDC under Empty color 0x02
+    stat at 17,3 element Object p1 cp437:0xDC under Empty color 0x02
+    stat at 18,3 element Object p1 cp437:0xDC under Empty color 0x02
+    stat at 19,3 element Object p1 cp437:0xDC under Empty color 0x02
+    stat at 20,3 element Object p1 cp437:0xDC under Empty color 0x02
+    stat at 21,3 element Object p1 cp437:0xDC under Empty color 0x02
+    stat at 22,3 element Object p1 cp437:0xDC under Empty color 0x02
+    stat at 23,3 element Object p1 cp437:0xDC under Empty color 0x02
+    stat at 24,3 element Object p1 cp437:0xDC under Empty color 0x02
+    stat at 25,3 element Object p1 cp437:0xDC under Empty color 0x02
+    stat at 26,3 element Object p1 cp437:0xDC under Empty color 0x02
+    stat at 27,3 element Object p1 cp437:0xDC under Empty color 0x02
+    stat at 28,3 element Object p1 cp437:0xDC under Empty color 0x02
+    stat at 29,3 element Object p1 cp437:0xDC under Empty color 0x02
+    stat at 30,3 element Object p1 cp437:0xDC under Empty color 0x02
+    stat at 31,3 element Object p1 cp437:0xDC under Empty color 0x02
+    stat at 32,3 element Object p1 cp437:0xDC under Empty color 0x02
+    stat at 33,3 element Object p1 cp437:0xDC under Empty color 0x02
+    stat at 34,3 element Object p1 cp437:0xDC under Empty color 0x02
+    stat at 35,3 element Object p1 cp437:0xDC under Empty color 0x02
+    stat at 36,3 element Object p1 cp437:0xDC under Empty color 0x02
+    stat at 37,3 element Object p1 cp437:0xDC under Empty color 0x02
+    stat at 38,3 element Object p1 cp437:0xDC under Empty color 0x02
+    stat at 39,3 element Object p1 cp437:0xDC under Empty color 0x02
+    stat at 40,3 element Object p1 cp437:0xDC under Empty color 0x02
+    stat at 41,3 element Object p1 cp437:0xDC under Empty color 0x02
+    stat at 42,3 element Object p1 cp437:0xDC under Empty color 0x02
+    stat at 43,3 element Object p1 cp437:0xDC under Empty color 0x02
+    stat at 44,3 element Object p1 cp437:0xDC under Empty color 0x02
+    stat at 45,3 element Object p1 cp437:0xDC under Empty color 0x02
+    stat at 14,13 element Object p1 cp437:0x02 under Empty color 0x06
     oop
 #end
 :run
@@ -147,7 +147,7 @@ UUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUU..U
 #end
 
     end
-    stat at 7,11 element Object p1 cp437:0x02 p2 0 step idle under Empty color 0x06
+    stat at 7,11 element Object p1 cp437:0x02 under Empty color 0x06
     oop
 #end
 :Run
@@ -159,7 +159,7 @@ UUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUU..U
 #end
 
     end
-    stat at 14,11 element Object p1 cp437:0x02 p2 0 step idle under Empty color 0x06
+    stat at 14,11 element Object p1 cp437:0x02 under Empty color 0x06
     oop
 #end
 :run
@@ -171,7 +171,7 @@ UUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUU..U
 #end
 
     end
-    stat at 22,13 element Object p1 cp437:0x02 p2 0 step idle under Empty color 0x06
+    stat at 22,13 element Object p1 cp437:0x02 under Empty color 0x06
     oop
 #end
 :Run
@@ -183,7 +183,7 @@ UUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUU..U
 #end
 
     end
-    stat at 7,13 element Object p1 cp437:0x02 p2 0 step idle under Empty color 0x06
+    stat at 7,13 element Object p1 cp437:0x02 under Empty color 0x06
     oop
 #end
 :run
@@ -195,7 +195,7 @@ UUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUU..U
 #end
 
     end
-    stat at 22,9 element Object p1 cp437:0x02 p2 0 step idle under Empty color 0x06
+    stat at 22,9 element Object p1 cp437:0x02 under Empty color 0x06
     oop
 #end
 :run
@@ -207,7 +207,7 @@ UUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUU..U
 #end
 
     end
-    stat at 7,9 element Object p1 cp437:0x02 p2 0 step idle under Empty color 0x06
+    stat at 7,9 element Object p1 cp437:0x02 under Empty color 0x06
     oop
 @Homie G
 #end
@@ -282,7 +282,7 @@ $to misbehave like this.
 Homie g: "Let go of me, god damn you! I'll
 tell my parents!"
 
-$Oh? I bet your parents are too busy 
+$Oh? I bet your parents are too busy
 $gettin' stoned and boned to give a flying
 $fuck about you!!
 
@@ -293,7 +293,7 @@ $God love ya.
 
 Homie G: "...can i go to the health room?"
 
-$Yeah. and take your asshole friend with 
+$Yeah. and take your asshole friend with
 $you.
 /i
 #send all:dis
@@ -305,14 +305,14 @@ $you.
 
 
     end
-    stat at 21,6 element Object p1 cp437:0xFE p2 0 step idle under Empty color 0x06
+    stat at 21,6 element Object p1 cp437:0xFE under Empty color 0x06
     oop
 #end
 :touch
 #if blocked s boof
 #fuuuun
 :boof
-You can't read upside-down. get on the 
+You can't read upside-down. get on the
 other side of the desk.
 #end
 :fuuuun
@@ -365,10 +365,10 @@ $Ok, who the fuck was that?
 
 Homie g: "That was Juan. He's a bad ass."
 
-$Tell me about it. What was THAT for, 
+$Tell me about it. What was THAT for,
 $Juan?
 
-Juan: "I don't know. I felt like saying 
+Juan: "I don't know. I felt like saying
 it. You got a problem with that, Padre?"
 
 $Yes, i do.
@@ -377,7 +377,7 @@ He licks his fingers for some reason, then
 flips you off.
 Juan: "Then DEAL with it, bitch."
 
-$Listen to me, uhh...what's yer name, 
+$Listen to me, uhh...what's yer name,
 $gimp monkey? you got a name, right?
 
 Juan: "The name's Juan, fucker."
@@ -408,7 +408,7 @@ $up?
 
 Classroom: "..."
 
-$...Or a better question to ask would 
+$...Or a better question to ask would
 $be...DOES FATHER DANGER FEEL LUCKY??
 /i
 #play ++abcabcabcabcabcabc
@@ -419,7 +419,7 @@ $Class dis--
 #end
 
     end
-    stat at 21,5 element Object p1 cp437:0x02 p2 0 step idle under Empty color 0x06
+    stat at 21,5 element Object p1 cp437:0x02 under Empty color 0x06
     oop
 @goatee brutha
 #end
@@ -466,7 +466,7 @@ You proceed to toss HIM out, too.
 
 
     end
-    stat at 37,9 element Object p1 cp437:0x02 p2 0 step idle under Empty color 0x06
+    stat at 37,9 element Object p1 cp437:0x02 under Empty color 0x06
     oop
 #end
 :run
@@ -479,7 +479,7 @@ You proceed to toss HIM out, too.
 #end
 
     end
-    stat at 30,9 element Object p1 cp437:0x02 p2 0 step idle under Empty color 0x06
+    stat at 30,9 element Object p1 cp437:0x02 under Empty color 0x06
     oop
 @Homie
 #end
@@ -496,7 +496,7 @@ You proceed to toss HIM out, too.
 #take health 5 ded
 #whoop
 :ded
-You are ice-picked to death. Damn it, 
+You are ice-picked to death. Damn it,
 where is all your Vietnam training??
 
 $Agh, screw you.
@@ -534,7 +534,7 @@ Homie: "Go to hell."
 
 You tighten.
 
-Homie: "AIEEE!! Ok, fine! have it!" He 
+Homie: "AIEEE!! Ok, fine! have it!" He
 drops the ice pick, which you pick up and
 stash away in your habit pocket.
 
@@ -606,7 +606,7 @@ $You SHOULD be.
 
 
     end
-    stat at 20,5 element Object p1 cp437:0xDF p2 0 step idle under Empty color 0x06
+    stat at 20,5 element Object p1 cp437:0xDF under Empty color 0x06
     oop
 @boombox
 #end
@@ -647,7 +647,7 @@ the window.
 
 
     end
-    stat at 51,9 element Object p1 cp437:0xDB p2 0 step idle under Empty color 0x03
+    stat at 51,9 element Object p1 cp437:0xDB under Empty color 0x03
     oop
 #end
 :hey
@@ -655,7 +655,7 @@ the window.
 #end
 
     end
-    stat at 50,9 element Object p1 cp437:0xB2 p2 0 step idle under Empty color 0x3B
+    stat at 50,9 element Object p1 cp437:0xB2 under Empty color 0x3B
     oop
 #end
 :hey
@@ -663,7 +663,7 @@ the window.
 #end
 
     end
-    stat at 51,10 element Object p1 cp437:0xB2 p2 0 step idle under Empty color 0x3B
+    stat at 51,10 element Object p1 cp437:0xB2 under Empty color 0x3B
     oop
 #end
 :hey
@@ -671,7 +671,7 @@ the window.
 #end
 
     end
-    stat at 52,8 element Object p1 cp437:0xB2 p2 0 step idle under Empty color 0x03
+    stat at 52,8 element Object p1 cp437:0xB2 under Empty color 0x03
     oop
 #end
 :hey
@@ -679,7 +679,7 @@ the window.
 #end
 
     end
-    stat at 51,7 element Object p1 cp437:0xB1 p2 0 step idle under Empty color 0x03
+    stat at 51,7 element Object p1 cp437:0xB1 under Empty color 0x03
     oop
 #end
 :hey
@@ -687,7 +687,7 @@ the window.
 #end
 
     end
-    stat at 51,11 element Object p1 cp437:0xDB p2 0 step idle under Empty color 0x3B
+    stat at 51,11 element Object p1 cp437:0xDB under Empty color 0x3B
     oop
 #end
 :hey
@@ -695,7 +695,7 @@ the window.
 #end
 
     end
-    stat at 52,9 element Object p1 cp437:0xB1 p2 0 step idle under Empty color 0x3B
+    stat at 52,9 element Object p1 cp437:0xB1 under Empty color 0x3B
     oop
 #end
 :hey
@@ -703,7 +703,7 @@ the window.
 #end
 
     end
-    stat at 52,10 element Object p1 cp437:0xDB p2 0 step idle under Empty color 0x3B
+    stat at 52,10 element Object p1 cp437:0xDB under Empty color 0x3B
     oop
 #end
 :hey
@@ -711,7 +711,7 @@ the window.
 #end
 
     end
-    stat at 53,10 element Object p1 cp437:0xB1 p2 0 step idle under Empty color 0x3B
+    stat at 53,10 element Object p1 cp437:0xB1 under Empty color 0x3B
     oop
 #end
 :hey
@@ -719,7 +719,7 @@ the window.
 #end
 
     end
-    stat at 54,9 element Object p1 cp437:0xB2 p2 0 step idle under Empty color 0x03
+    stat at 54,9 element Object p1 cp437:0xB2 under Empty color 0x03
     oop
 #end
 :hey
@@ -727,7 +727,7 @@ the window.
 #end
 
     end
-    stat at 53,9 element Object p1 cp437:0xDB p2 0 step idle under Empty color 0x03
+    stat at 53,9 element Object p1 cp437:0xDB under Empty color 0x03
     oop
 #end
 :hey
@@ -735,7 +735,7 @@ the window.
 #end
 
     end
-    stat at 54,10 element Object p1 cp437:0xDB p2 0 step idle under Empty color 0x03
+    stat at 54,10 element Object p1 cp437:0xDB under Empty color 0x03
     oop
 #end
 :hey
@@ -743,7 +743,7 @@ the window.
 #end
 
     end
-    stat at 50,8 element Object p1 cp437:0xB2 p2 0 step idle under Empty color 0x3B
+    stat at 50,8 element Object p1 cp437:0xB2 under Empty color 0x3B
     oop
 #end
 :fly
@@ -772,7 +772,7 @@ the window.
 #end
 
     end
-    stat at 54,11 element Object p1 cp437:0xDB p2 0 step idle under Empty color 0x0E
+    stat at 54,11 element Object p1 cp437:0xDB under Empty color 0x0E
     oop
 #end
 :hey
@@ -780,18 +780,18 @@ the window.
 #end
 
     end
-    stat at 23,17 element Passage p1 0 p2 0 p3 board "$high" step idle under Empty color 0x06
-    stat at 24,17 element Passage p1 0 p2 0 p3 board "$high" step idle under Empty color 0x06
-    stat at 25,17 element Passage p1 0 p2 0 p3 board "$high" step idle under Empty color 0x06
-    stat at 26,17 element Passage p1 0 p2 0 p3 board "$high" step idle under Empty color 0x0C
-    stat at 44,15 element Object p1 cp437:0x0A p2 0 step idle under Empty color 0x06
+    stat at 23,17 element Passage p3 board "$high" under Empty color 0x06
+    stat at 24,17 element Passage p3 board "$high" under Empty color 0x06
+    stat at 25,17 element Passage p3 board "$high" under Empty color 0x06
+    stat at 26,17 element Passage p3 board "$high" under Empty color 0x0C
+    stat at 44,15 element Object p1 cp437:0x0A under Empty color 0x06
     oop
 @cabinet
 #end
 :touch
 #if pix bang
 #if gimp bang
-Don't go through Father O'Flarrety's 
+Don't go through Father O'Flarrety's
 files. You got class to teach.
 #end
 :bang
@@ -803,8 +803,8 @@ lock-picking routine...
 #play --ta+b
 #char 8
 /i
-...Or rather,  you kick the cabinet as 
-hard as you can with your steel-toed 
+...Or rather, you kick the cabinet as
+hard as you can with your steel-toed
 boots.
 
 $Dammit, dont tell.
@@ -828,13 +828,13 @@ Its empty, remember??
 
 
     end
-    stat at 44,14 element Object p1 cp437:0x0A p2 0 step idle under Empty color 0x06
+    stat at 44,14 element Object p1 cp437:0x0A under Empty color 0x06
     oop
 @cabinet
 #end
 :touch
 #if gimp bang
-Don't go through Father O'Flarrety's 
+Don't go through Father O'Flarrety's
 files. You got class to teach.
 #end
 :bang
@@ -846,8 +846,8 @@ lock-picking routine...
 #play --ta+b
 #char 8
 /i
-...Or rather,  you kick the cabinet as 
-hard as you can with your steel-toed 
+...Or rather, you kick the cabinet as
+hard as you can with your steel-toed
 boots.
 
 $Dammit, dont tell.
@@ -855,7 +855,7 @@ $Dammit, dont tell.
 Sorry.
 /i
 $Let's see what he has here...ahh, files.
-$Lesse...hey. It's Father O'Flarrety's 
+$Lesse...hey. It's Father O'Flarrety's
 $teaching license...complete with mug shot
 $and personal information. Interesting...
 $i think i'll borrow this.

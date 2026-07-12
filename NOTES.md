@@ -1173,9 +1173,46 @@ tests; this task adds none. `go vet ./...` clean.
 * **Passage vs. Object confusion**: Claude generated stats using `element Object` with passage-style glyphs (`cp437:0xF0`) to represent interactive doorways, but without any OOP code or using the `Passage` element, causing dead/unresponsive tiles. Root cause: Claude conflates the visual appearance of a tile (CP437 glyph) with its behavioral element. Added a dedicated **"Passage vs. Object: Critical Distinction"** section to `ZWD.md` and `engine/promptkit_assets/spec.md` with a comparison table and four explicit rules.
 * **Monospace grid alignment**: Added a note to `STYLE.md` reminding Claude that ZWD grids are tiled monospace — every character is one fixed-size cell. Block letter art must be planned mathematically: letter widths, spacing, and vertical proportions must be aligned precisely without skewing.
 
+## 2026-07-11 — M12 cleanup: canonical round trips and standalone rendering
 
+M12.7 is now green. `parseStatLine` accepts the legal minimal form `stat at
+X,Y element NAME`; the decompiler normalizes OOP display text using the same
+text-window wrapping as the compiler, and remaps follower/leader references
+when it omits an off-board stat. The TOWN, CAVES, and CITY tests compare each
+board's canonical ZWD source after decompile → compile → serialize/reload.
+This is intentionally narrower than `StateHash`: ZWD preserves authored board
+properties, named tiles, representable stats, and OOP, but not `World.Info`
+save state (including current board and flags), player stat-0 runtime fields,
+unnamed raw elements (lowered to Empty), or off-board sentinel stats. Replay
+hashes are unchanged.
 
+M12.8 is now green. `cmd/zzt-validate` explicitly renders the final board
+snapshot before inspecting `Screen`; a static board may otherwise run safely
+for 200 ticks without dirtying a board cell. `TOWN` is the regression fixture,
+and the standalone command now passes TOWN, CAVES, and CITY.
 
+M12.6 remains open. Regenerating and auditing the historical corpus revealed
+additional non-representable source: boards exceeding the one-byte legend
+capacity, invalid saved respawns/player positions, and stat-backed tiles with
+no stat record. Those require a documented lowering policy or a format change;
+they are not masked by the M12.7 test rescope.
+
+## 2026-07-11 — M12.6 authorable-export boundary
+
+M12.6 is re-scoped and complete as an authoring boundary, not a claim of
+lossless archival conversion. `DecompileZWD` now returns only authorable ZWD;
+otherwise it returns an empty result. `DecompileZWDAuthorable` supplies
+structured diagnostics: warnings cover safe lowerings (raw elements become
+Empty, off-board stats are omitted, and invalid respawns are omitted), while a
+compiler failure becomes an error and no source is returned. The corpus
+generator uses this API and skips rejected historical worlds. This prevents
+invalid examples from entering future corpus regeneration while preserving a
+clear path for a distinct forensic export format later.
+
+The regenerated corpus contains 125 authorable one-board examples. The
+rejected historical worlds are intentionally absent rather than retained as
+non-compiling prompt material; `TestLLMWorldExamplesCompile` wraps every
+fragment as a neutral one-board world and requires all 125 to compile.
 
 ## 2026-07-11 — M5.0 editor session model
 

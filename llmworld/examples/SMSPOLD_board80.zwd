@@ -94,7 +94,7 @@ bXYYYMsLsMMMPPMPPPPQPPPPPPPPQPPPPV#ammmmma#PPPMPMMMMMMYYYYXb
   end
 
   stats
-    stat at 1,1 element Object p2 0 step idle
+    stat at 1,1 element Object
     oop
 @linemanager
 ' Should be first in stat list
@@ -193,7 +193,7 @@ bXYYYMsLsMMMPPMPPPPQPPPPPPPPQPPPPV#ammmmma#PPPMPMMMMMMYYYYXb
 #all:go
 
     end
-    stat at 38,1 element Object cycle 1 p1 cp437:0xB3 p2 0 step idle under Empty color 0x0F
+    stat at 38,1 element Object cycle 1 p1 cp437:0xB3 under Empty color 0x0F
     oop
 @l22
 #end
@@ -208,7 +208,7 @@ bXYYYMsLsMMMPPMPPPPQPPPPPPPPQPPPPV#ammmmma#PPPMPMMMMMMYYYYXb
 #char 179
 
     end
-    stat at 40,1 element Object cycle 1 p1 cp437:0xB3 p2 0 step idle under Empty color 0x0F
+    stat at 40,1 element Object cycle 1 p1 cp437:0xB3 under Empty color 0x0F
     oop
 @l22
 #end
@@ -223,7 +223,7 @@ bXYYYMsLsMMMPPMPPPPQPPPPPPPPQPPPPV#ammmmma#PPPMPMMMMMMYYYYXb
 #char 179
 
     end
-    stat at 38,2 element Object cycle 1 p1 cp437:0xB3 p2 0 step idle under Empty color 0x0F
+    stat at 38,2 element Object cycle 1 p1 cp437:0xB3 under Empty color 0x0F
     oop
 @l21
 #end
@@ -238,7 +238,7 @@ bXYYYMsLsMMMPPMPPPPQPPPPPPPPQPPPPV#ammmmma#PPPMPMMMMMMYYYYXb
 #char 179
 
     end
-    stat at 40,2 element Object cycle 1 p1 cp437:0xB3 p2 0 step idle under Empty color 0x0F
+    stat at 40,2 element Object cycle 1 p1 cp437:0xB3 under Empty color 0x0F
     oop
 @l21
 #end
@@ -253,7 +253,7 @@ bXYYYMsLsMMMPPMPPPPQPPPPPPPPQPPPPV#ammmmma#PPPMPMMMMMMYYYYXb
 #char 179
 
     end
-    stat at 38,3 element Object cycle 1 p1 cp437:0xB3 p2 0 step idle under Empty color 0x0F
+    stat at 38,3 element Object cycle 1 p1 cp437:0xB3 under Empty color 0x0F
     oop
 @l20
 #end
@@ -268,7 +268,7 @@ bXYYYMsLsMMMPPMPPPPQPPPPPPPPQPPPPV#ammmmma#PPPMPMMMMMMYYYYXb
 #char 179
 
     end
-    stat at 40,3 element Object cycle 1 p1 cp437:0xB3 p2 0 step idle under Empty color 0x0F
+    stat at 40,3 element Object cycle 1 p1 cp437:0xB3 under Empty color 0x0F
     oop
 @l20
 #end
@@ -283,7 +283,7 @@ bXYYYMsLsMMMPPMPPPPQPPPPPPPPQPPPPV#ammmmma#PPPMPMMMMMMYYYYXb
 #char 179
 
     end
-    stat at 38,4 element Object cycle 1 p1 cp437:0xB3 p2 0 step idle under Empty color 0x0F
+    stat at 38,4 element Object cycle 1 p1 cp437:0xB3 under Empty color 0x0F
     oop
 @l19
 #end
@@ -298,7 +298,7 @@ bXYYYMsLsMMMPPMPPPPQPPPPPPPPQPPPPV#ammmmma#PPPMPMMMMMMYYYYXb
 '#char 179
 
     end
-    stat at 40,4 element Object cycle 1 p1 cp437:0xB3 p2 0 step idle under Empty color 0x0F
+    stat at 40,4 element Object cycle 1 p1 cp437:0xB3 under Empty color 0x0F
     oop
 @l19
 #end
@@ -313,7 +313,7 @@ bXYYYMsLsMMMPPMPPPPQPPPPPPPPQPPPPV#ammmmma#PPPMPMMMMMMYYYYXb
 '#char 179
 
     end
-    stat at 38,5 element Object cycle 1 p1 cp437:0xB3 p2 0 step idle under Empty color 0x0F
+    stat at 38,5 element Object cycle 1 p1 cp437:0xB3 under Empty color 0x0F
     oop
 @l18
 #end
@@ -328,7 +328,7 @@ bXYYYMsLsMMMPPMPPPPQPPPPPPPPQPPPPV#ammmmma#PPPMPMMMMMMYYYYXb
 #char 179
 
     end
-    stat at 40,5 element Object cycle 1 p1 cp437:0xB3 p2 0 step idle under Empty color 0x0F
+    stat at 40,5 element Object cycle 1 p1 cp437:0xB3 under Empty color 0x0F
     oop
 @l18
 #end
@@ -343,7 +343,7 @@ bXYYYMsLsMMMPPMPPPPQPPPPPPPPQPPPPV#ammmmma#PPPMPMMMMMMYYYYXb
 #char 179
 
     end
-    stat at 38,6 element Object cycle 1 p1 cp437:0xB3 p2 0 step idle under Empty color 0x0F
+    stat at 38,6 element Object cycle 1 p1 cp437:0xB3 under Empty color 0x0F
     oop
 @l17
 #end
@@ -358,7 +358,7 @@ bXYYYMsLsMMMPPMPPPPQPPPPPPPPQPPPPV#ammmmma#PPPMPMMMMMMYYYYXb
 #char 179
 
     end
-    stat at 40,6 element Object cycle 1 p1 cp437:0xB3 p2 0 step idle under Empty color 0x0F
+    stat at 40,6 element Object cycle 1 p1 cp437:0xB3 under Empty color 0x0F
     oop
 @l17
 #end
@@ -373,7 +373,7 @@ bXYYYMsLsMMMPPMPPPPQPPPPPPPPQPPPPV#ammmmma#PPPMPMMMMMMYYYYXb
 #char 179
 
     end
-    stat at 38,7 element Object cycle 1 p1 cp437:0xB3 p2 0 step idle under Empty color 0x0F
+    stat at 38,7 element Object cycle 1 p1 cp437:0xB3 under Empty color 0x0F
     oop
 @l16
 #end
@@ -388,7 +388,7 @@ bXYYYMsLsMMMPPMPPPPQPPPPPPPPQPPPPV#ammmmma#PPPMPMMMMMMYYYYXb
 #char 179
 
     end
-    stat at 40,7 element Object cycle 1 p1 cp437:0xB3 p2 0 step idle under Empty color 0x0F
+    stat at 40,7 element Object cycle 1 p1 cp437:0xB3 under Empty color 0x0F
     oop
 @l16
 #end
@@ -403,7 +403,7 @@ bXYYYMsLsMMMPPMPPPPQPPPPPPPPQPPPPV#ammmmma#PPPMPMMMMMMYYYYXb
 #char 179
 
     end
-    stat at 38,8 element Object cycle 1 p1 cp437:0xB3 p2 0 step idle under Empty color 0x0F
+    stat at 38,8 element Object cycle 1 p1 cp437:0xB3 under Empty color 0x0F
     oop
 @l15
 #end
@@ -418,7 +418,7 @@ bXYYYMsLsMMMPPMPPPPQPPPPPPPPQPPPPV#ammmmma#PPPMPMMMMMMYYYYXb
 #char 179
 
     end
-    stat at 40,8 element Object cycle 1 p1 cp437:0xB3 p2 0 step idle under Empty color 0x0F
+    stat at 40,8 element Object cycle 1 p1 cp437:0xB3 under Empty color 0x0F
     oop
 @l15
 #end
@@ -433,7 +433,7 @@ bXYYYMsLsMMMPPMPPPPQPPPPPPPPQPPPPV#ammmmma#PPPMPMMMMMMYYYYXb
 #char 179
 
     end
-    stat at 38,9 element Object cycle 1 p1 cp437:0xB3 p2 0 step idle under Empty color 0x0F
+    stat at 38,9 element Object cycle 1 p1 cp437:0xB3 under Empty color 0x0F
     oop
 @l14
 #end
@@ -448,7 +448,7 @@ bXYYYMsLsMMMPPMPPPPQPPPPPPPPQPPPPV#ammmmma#PPPMPMMMMMMYYYYXb
 #char 179
 
     end
-    stat at 40,9 element Object cycle 1 p1 cp437:0xB3 p2 0 step idle under Empty color 0x0F
+    stat at 40,9 element Object cycle 1 p1 cp437:0xB3 under Empty color 0x0F
     oop
 @l14
 #end
@@ -463,7 +463,7 @@ bXYYYMsLsMMMPPMPPPPQPPPPPPPPQPPPPV#ammmmma#PPPMPMMMMMMYYYYXb
 #char 179
 
     end
-    stat at 38,10 element Object cycle 1 p1 cp437:0xB3 p2 0 step idle under Empty color 0x0F
+    stat at 38,10 element Object cycle 1 p1 cp437:0xB3 under Empty color 0x0F
     oop
 @l13
 #end
@@ -482,7 +482,7 @@ bXYYYMsLsMMMPPMPPPPQPPPPPPPPQPPPPV#ammmmma#PPPMPMMMMMMYYYYXb
 /i#die
 
     end
-    stat at 40,10 element Object cycle 1 p1 cp437:0xB3 p2 0 step idle under Empty color 0x0F
+    stat at 40,10 element Object cycle 1 p1 cp437:0xB3 under Empty color 0x0F
     oop
 @l13
 #end
@@ -498,7 +498,7 @@ bXYYYMsLsMMMPPMPPPPQPPPPPPPPQPPPPV#ammmmma#PPPMPMMMMMMYYYYXb
 /i#die
 
     end
-    stat at 38,11 element Object cycle 1 p1 cp437:0xB3 p2 0 step idle under Empty color 0x0F
+    stat at 38,11 element Object cycle 1 p1 cp437:0xB3 under Empty color 0x0F
     oop
 @l12
 #end
@@ -517,7 +517,7 @@ bXYYYMsLsMMMPPMPPPPQPPPPPPPPQPPPPV#ammmmma#PPPMPMMMMMMYYYYXb
 /i#die
 
     end
-    stat at 40,11 element Object cycle 1 p1 cp437:0xB3 p2 0 step idle under Empty color 0x0F
+    stat at 40,11 element Object cycle 1 p1 cp437:0xB3 under Empty color 0x0F
     oop
 @l12
 #end
@@ -533,7 +533,7 @@ bXYYYMsLsMMMPPMPPPPQPPPPPPPPQPPPPV#ammmmma#PPPMPMMMMMMYYYYXb
 /i#die
 
     end
-    stat at 38,12 element Object cycle 1 p1 cp437:0xB3 p2 0 step idle under Empty color 0x0F
+    stat at 38,12 element Object cycle 1 p1 cp437:0xB3 under Empty color 0x0F
     oop
 @l11
 #end
@@ -552,7 +552,7 @@ bXYYYMsLsMMMPPMPPPPQPPPPPPPPQPPPPV#ammmmma#PPPMPMMMMMMYYYYXb
 /i#die
 
     end
-    stat at 40,12 element Object cycle 1 p1 cp437:0xB3 p2 0 step idle under Empty color 0x0F
+    stat at 40,12 element Object cycle 1 p1 cp437:0xB3 under Empty color 0x0F
     oop
 @l11
 #end
@@ -568,7 +568,7 @@ bXYYYMsLsMMMPPMPPPPQPPPPPPPPQPPPPV#ammmmma#PPPMPMMMMMMYYYYXb
 /i#die
 
     end
-    stat at 38,13 element Object cycle 1 p1 cp437:0xB3 p2 0 step idle under Empty color 0x0F
+    stat at 38,13 element Object cycle 1 p1 cp437:0xB3 under Empty color 0x0F
     oop
 @l10
 #end
@@ -587,7 +587,7 @@ bXYYYMsLsMMMPPMPPPPQPPPPPPPPQPPPPV#ammmmma#PPPMPMMMMMMYYYYXb
 /i#die
 
     end
-    stat at 40,13 element Object cycle 1 p1 cp437:0xB3 p2 0 step idle under Empty color 0x0F
+    stat at 40,13 element Object cycle 1 p1 cp437:0xB3 under Empty color 0x0F
     oop
 @l10
 #end
@@ -603,7 +603,7 @@ bXYYYMsLsMMMPPMPPPPQPPPPPPPPQPPPPV#ammmmma#PPPMPMMMMMMYYYYXb
 /i#die
 
     end
-    stat at 38,14 element Object cycle 1 p1 cp437:0xB3 p2 0 step idle under Empty color 0x0F
+    stat at 38,14 element Object cycle 1 p1 cp437:0xB3 under Empty color 0x0F
     oop
 @l9
 #end
@@ -622,7 +622,7 @@ bXYYYMsLsMMMPPMPPPPQPPPPPPPPQPPPPV#ammmmma#PPPMPMMMMMMYYYYXb
 /i#die
 
     end
-    stat at 40,14 element Object cycle 1 p1 cp437:0xB3 p2 0 step idle under Empty color 0x0F
+    stat at 40,14 element Object cycle 1 p1 cp437:0xB3 under Empty color 0x0F
     oop
 @l9
 #end
@@ -638,7 +638,7 @@ bXYYYMsLsMMMPPMPPPPQPPPPPPPPQPPPPV#ammmmma#PPPMPMMMMMMYYYYXb
 /i#die
 
     end
-    stat at 38,15 element Object cycle 1 p1 cp437:0xB3 p2 0 step idle under Empty color 0x0F
+    stat at 38,15 element Object cycle 1 p1 cp437:0xB3 under Empty color 0x0F
     oop
 @l8
 #end
@@ -657,7 +657,7 @@ bXYYYMsLsMMMPPMPPPPQPPPPPPPPQPPPPV#ammmmma#PPPMPMMMMMMYYYYXb
 /i#die
 
     end
-    stat at 40,15 element Object cycle 1 p1 cp437:0xB3 p2 0 step idle under Empty color 0x0F
+    stat at 40,15 element Object cycle 1 p1 cp437:0xB3 under Empty color 0x0F
     oop
 @l8
 #end
@@ -673,7 +673,7 @@ bXYYYMsLsMMMPPMPPPPQPPPPPPPPQPPPPV#ammmmma#PPPMPMMMMMMYYYYXb
 /i#die
 
     end
-    stat at 38,16 element Object cycle 1 p1 cp437:0xB3 p2 0 step idle under Empty color 0x0F
+    stat at 38,16 element Object cycle 1 p1 cp437:0xB3 under Empty color 0x0F
     oop
 @l7
 #end
@@ -689,7 +689,7 @@ bXYYYMsLsMMMPPMPPPPQPPPPPPPPQPPPPV#ammmmma#PPPMPMMMMMMYYYYXb
 /i#die
 
     end
-    stat at 40,16 element Object cycle 1 p1 cp437:0xB3 p2 0 step idle under Empty color 0x0F
+    stat at 40,16 element Object cycle 1 p1 cp437:0xB3 under Empty color 0x0F
     oop
 @l7
 #end
@@ -705,7 +705,7 @@ bXYYYMsLsMMMPPMPPPPQPPPPPPPPQPPPPV#ammmmma#PPPMPMMMMMMYYYYXb
 /i#die
 
     end
-    stat at 38,17 element Object cycle 1 p1 cp437:0xB3 p2 0 step idle under Empty color 0x0F
+    stat at 38,17 element Object cycle 1 p1 cp437:0xB3 under Empty color 0x0F
     oop
 @l6
 #end
@@ -721,7 +721,7 @@ bXYYYMsLsMMMPPMPPPPQPPPPPPPPQPPPPV#ammmmma#PPPMPMMMMMMYYYYXb
 /i#die
 
     end
-    stat at 40,17 element Object cycle 1 p1 cp437:0xB3 p2 0 step idle under Empty color 0x0F
+    stat at 40,17 element Object cycle 1 p1 cp437:0xB3 under Empty color 0x0F
     oop
 @l6
 #end
@@ -737,7 +737,7 @@ bXYYYMsLsMMMPPMPPPPQPPPPPPPPQPPPPV#ammmmma#PPPMPMMMMMMYYYYXb
 /i#die
 
     end
-    stat at 38,18 element Object cycle 1 p1 cp437:0xB3 p2 0 step idle under Empty color 0x0F
+    stat at 38,18 element Object cycle 1 p1 cp437:0xB3 under Empty color 0x0F
     oop
 @l5
 #end
@@ -753,7 +753,7 @@ bXYYYMsLsMMMPPMPPPPQPPPPPPPPQPPPPV#ammmmma#PPPMPMMMMMMYYYYXb
 /i#die
 
     end
-    stat at 40,18 element Object cycle 1 p1 cp437:0xB3 p2 0 step idle under Empty color 0x0F
+    stat at 40,18 element Object cycle 1 p1 cp437:0xB3 under Empty color 0x0F
     oop
 @l5
 #end
@@ -769,7 +769,7 @@ bXYYYMsLsMMMPPMPPPPQPPPPPPPPQPPPPV#ammmmma#PPPMPMMMMMMYYYYXb
 /i#die
 
     end
-    stat at 38,19 element Object cycle 1 p1 cp437:0xB3 p2 0 step idle under Empty color 0x0F
+    stat at 38,19 element Object cycle 1 p1 cp437:0xB3 under Empty color 0x0F
     oop
 @l4
 #end
@@ -785,7 +785,7 @@ bXYYYMsLsMMMPPMPPPPQPPPPPPPPQPPPPV#ammmmma#PPPMPMMMMMMYYYYXb
 /i#die
 
     end
-    stat at 40,19 element Object cycle 1 p1 cp437:0xB3 p2 0 step idle under Empty color 0x0F
+    stat at 40,19 element Object cycle 1 p1 cp437:0xB3 under Empty color 0x0F
     oop
 @l4
 #end
@@ -801,7 +801,7 @@ bXYYYMsLsMMMPPMPPPPQPPPPPPPPQPPPPV#ammmmma#PPPMPMMMMMMYYYYXb
 /i#die
 
     end
-    stat at 38,20 element Object cycle 1 p1 cp437:0xB3 p2 0 step idle under Empty color 0x0F
+    stat at 38,20 element Object cycle 1 p1 cp437:0xB3 under Empty color 0x0F
     oop
 @l3
 #end
@@ -817,7 +817,7 @@ bXYYYMsLsMMMPPMPPPPQPPPPPPPPQPPPPV#ammmmma#PPPMPMMMMMMYYYYXb
 /i#die
 
     end
-    stat at 40,20 element Object cycle 1 p1 cp437:0xB3 p2 0 step idle under Empty color 0x0F
+    stat at 40,20 element Object cycle 1 p1 cp437:0xB3 under Empty color 0x0F
     oop
 @l3
 #end
@@ -833,7 +833,7 @@ bXYYYMsLsMMMPPMPPPPQPPPPPPPPQPPPPV#ammmmma#PPPMPMMMMMMYYYYXb
 /i#die
 
     end
-    stat at 38,21 element Object cycle 1 p1 cp437:0xB3 p2 0 step idle under Empty color 0x0F
+    stat at 38,21 element Object cycle 1 p1 cp437:0xB3 under Empty color 0x0F
     oop
 @l2
 #end
@@ -849,7 +849,7 @@ bXYYYMsLsMMMPPMPPPPQPPPPPPPPQPPPPV#ammmmma#PPPMPMMMMMMYYYYXb
 /i#die
 
     end
-    stat at 40,21 element Object cycle 1 p1 cp437:0xB3 p2 0 step idle under Empty color 0x0F
+    stat at 40,21 element Object cycle 1 p1 cp437:0xB3 under Empty color 0x0F
     oop
 @l2
 #end
@@ -865,7 +865,7 @@ bXYYYMsLsMMMPPMPPPPQPPPPPPPPQPPPPV#ammmmma#PPPMPMMMMMMYYYYXb
 /i#die
 
     end
-    stat at 36,22 element Object cycle 1 p1 cp437:0x00 p2 0 step idle under Empty color 0x0F
+    stat at 36,22 element Object cycle 1 p1 cp437:0x00 under Empty color 0x0F
     oop
 @lx
 /i/i/i/i/i/i/i/i/i/i/i
@@ -873,7 +873,7 @@ bXYYYMsLsMMMPPMPPPPQPPPPPPPPQPPPPV#ammmmma#PPPMPMMMMMMYYYYXb
 #char 179
 
     end
-    stat at 42,22 element Object cycle 1 p1 cp437:0x00 p2 0 step idle under Empty color 0x0F
+    stat at 42,22 element Object cycle 1 p1 cp437:0x00 under Empty color 0x0F
     oop
 @lx
 /i/i/i/i/i/i/i/i/i/i/i
@@ -881,7 +881,7 @@ bXYYYMsLsMMMPPMPPPPQPPPPPPPPQPPPPV#ammmmma#PPPMPMMMMMMYYYYXb
 #char 179
 
     end
-    stat at 36,23 element Object cycle 1 p1 cp437:0x00 p2 0 step idle under Empty color 0x0F
+    stat at 36,23 element Object cycle 1 p1 cp437:0x00 under Empty color 0x0F
     oop
 @lx
 /i/i/i/i/i
@@ -891,7 +891,7 @@ bXYYYMsLsMMMPPMPPPPQPPPPPPPPQPPPPV#ammmmma#PPPMPMMMMMMYYYYXb
 #char 179
 
     end
-    stat at 38,23 element Object cycle 1 p1 cp437:0xDC p2 0 step idle under Empty color 0x07
+    stat at 38,23 element Object cycle 1 p1 cp437:0xDC under Empty color 0x07
     oop
 @e1l
 #end
@@ -902,7 +902,7 @@ bXYYYMsLsMMMPPMPPPPQPPPPPPPPQPPPPV#ammmmma#PPPMPMMMMMMYYYYXb
 /e
 
     end
-    stat at 39,23 element Object cycle 1 p1 cp437:0xDC p2 0 step idle under Empty color 0x07
+    stat at 39,23 element Object cycle 1 p1 cp437:0xDC under Empty color 0x07
     oop
 @e1r
 #end
@@ -913,7 +913,7 @@ bXYYYMsLsMMMPPMPPPPQPPPPPPPPQPPPPV#ammmmma#PPPMPMMMMMMYYYYXb
 /e
 
     end
-    stat at 40,23 element Object cycle 1 p1 cp437:0xDC p2 0 step idle under Empty color 0x07
+    stat at 40,23 element Object cycle 1 p1 cp437:0xDC under Empty color 0x07
     oop
 @e1r
 #end
@@ -924,7 +924,7 @@ bXYYYMsLsMMMPPMPPPPQPPPPPPPPQPPPPV#ammmmma#PPPMPMMMMMMYYYYXb
 /e
 
     end
-    stat at 42,23 element Object cycle 1 p1 cp437:0x00 p2 0 step idle under Empty color 0x0F
+    stat at 42,23 element Object cycle 1 p1 cp437:0x00 under Empty color 0x0F
     oop
 @lx
 /i/i/i/i/i/i
@@ -934,7 +934,7 @@ bXYYYMsLsMMMPPMPPPPQPPPPPPPPQPPPPV#ammmmma#PPPMPMMMMMMYYYYXb
 #char 179
 
     end
-    stat at 36,24 element Object cycle 1 p1 cp437:0x00 p2 0 step idle under Empty color 0x0F
+    stat at 36,24 element Object cycle 1 p1 cp437:0x00 under Empty color 0x0F
     oop
 @lx
 /i/i
@@ -944,7 +944,7 @@ bXYYYMsLsMMMPPMPPPPQPPPPPPPPQPPPPV#ammmmma#PPPMPMMMMMMYYYYXb
 #char 179
 
     end
-    stat at 37,24 element Object cycle 1 p1 cp437:0xDE p2 0 step idle under Empty color 0x07
+    stat at 37,24 element Object cycle 1 p1 cp437:0xDE under Empty color 0x07
     oop
 @e2l
 #end
@@ -955,7 +955,7 @@ bXYYYMsLsMMMPPMPPPPQPPPPPPPPQPPPPV#ammmmma#PPPMPMMMMMMYYYYXb
 /e
 
     end
-    stat at 38,24 element Object cycle 1 p1 cp437:0x07 p2 0 step idle under Empty color 0x07
+    stat at 38,24 element Object cycle 1 p1 cp437:0x07 under Empty color 0x07
     oop
 @b
 #end
@@ -977,7 +977,7 @@ bXYYYMsLsMMMPPMPPPPQPPPPPPPPQPPPPV#ammmmma#PPPMPMMMMMMYYYYXb
 /i#char 7
 
     end
-    stat at 41,24 element Object cycle 1 p1 cp437:0xDD p2 0 step idle under Empty color 0x07
+    stat at 41,24 element Object cycle 1 p1 cp437:0xDD under Empty color 0x07
     oop
 @e2r
 #end
@@ -988,7 +988,7 @@ bXYYYMsLsMMMPPMPPPPQPPPPPPPPQPPPPV#ammmmma#PPPMPMMMMMMYYYYXb
 /e
 
     end
-    stat at 42,24 element Object cycle 1 p1 cp437:0x00 p2 0 step idle under Empty color 0x0F
+    stat at 42,24 element Object cycle 1 p1 cp437:0x00 under Empty color 0x0F
     oop
 @lx
 /i/i/i
@@ -998,7 +998,7 @@ bXYYYMsLsMMMPPMPPPPQPPPPPPPPQPPPPV#ammmmma#PPPMPMMMMMMYYYYXb
 #char 179
 
     end
-    stat at 36,25 element Object cycle 1 p1 cp437:0x00 p2 0 step idle under Empty color 0x0F
+    stat at 36,25 element Object cycle 1 p1 cp437:0x00 under Empty color 0x0F
     oop
 @lx
 /e
@@ -1006,7 +1006,7 @@ bXYYYMsLsMMMPPMPPPPQPPPPPPPPQPPPPV#ammmmma#PPPMPMMMMMMYYYYXb
 #char 179
 
     end
-    stat at 37,25 element Object cycle 1 p1 cp437:0xDE p2 0 step idle under Empty color 0x07
+    stat at 37,25 element Object cycle 1 p1 cp437:0xDE under Empty color 0x07
     oop
 @e31
 #end
@@ -1017,7 +1017,7 @@ bXYYYMsLsMMMPPMPPPPQPPPPPPPPQPPPPV#ammmmma#PPPMPMMMMMMYYYYXb
 /e
 
     end
-    stat at 38,25 element Object cycle 1 p1 cp437:0xDC p2 0 step idle under Empty color 0x07
+    stat at 38,25 element Object cycle 1 p1 cp437:0xDC under Empty color 0x07
     oop
 @e32
 #end
@@ -1028,7 +1028,7 @@ bXYYYMsLsMMMPPMPPPPQPPPPPPPPQPPPPV#ammmmma#PPPMPMMMMMMYYYYXb
 /e
 
     end
-    stat at 39,25 element Object cycle 1 p1 cp437:0xDC p2 0 step idle under Empty color 0x07
+    stat at 39,25 element Object cycle 1 p1 cp437:0xDC under Empty color 0x07
     oop
 @e33
 #end
@@ -1039,7 +1039,7 @@ bXYYYMsLsMMMPPMPPPPQPPPPPPPPQPPPPV#ammmmma#PPPMPMMMMMMYYYYXb
 /e
 
     end
-    stat at 40,25 element Object cycle 1 p1 cp437:0xDC p2 0 step idle under Empty color 0x07
+    stat at 40,25 element Object cycle 1 p1 cp437:0xDC under Empty color 0x07
     oop
 @e33
 #end
@@ -1050,7 +1050,7 @@ bXYYYMsLsMMMPPMPPPPQPPPPPPPPQPPPPV#ammmmma#PPPMPMMMMMMYYYYXb
 /e
 
     end
-    stat at 41,25 element Object cycle 1 p1 cp437:0xDD p2 0 step idle under Empty color 0x07
+    stat at 41,25 element Object cycle 1 p1 cp437:0xDD under Empty color 0x07
     oop
 @e34
 #end
@@ -1061,7 +1061,7 @@ bXYYYMsLsMMMPPMPPPPQPPPPPPPPQPPPPV#ammmmma#PPPMPMMMMMMYYYYXb
 /e
 
     end
-    stat at 42,25 element Object cycle 1 p1 cp437:0x00 p2 0 step idle under Empty color 0x0F
+    stat at 42,25 element Object cycle 1 p1 cp437:0x00 under Empty color 0x0F
     oop
 @lx
 /w
@@ -1069,7 +1069,7 @@ bXYYYMsLsMMMPPMPPPPQPPPPPPPPQPPPPV#ammmmma#PPPMPMMMMMMYYYYXb
 #char 179
 
     end
-    stat at 8,25 element Object cycle 1 p1 cp437:0x12 p2 0 step idle under Empty color 0x0F
+    stat at 8,25 element Object cycle 1 p1 cp437:0x12 under Empty color 0x0F
     oop
 
 :a
@@ -1093,8 +1093,8 @@ bXYYYMsLsMMMPPMPPPPQPPPPPPPPQPPPPV#ammmmma#PPPMPMMMMMMYYYYXb
 /i#a
 
     end
-    stat at 44,22 element Object cycle 1 p1 cp437:0x07 p2 0 step idle under Empty color 0x0F
-    stat at 53,22 element Object cycle 1 p1 cp437:0xEA p2 0 step idle under Empty color 0x0F
+    stat at 44,22 element Object cycle 1 p1 cp437:0x07 under Empty color 0x0F
+    stat at 53,22 element Object cycle 1 p1 cp437:0xEA under Empty color 0x0F
     oop
 @lion
 :a
@@ -1121,12 +1121,12 @@ bXYYYMsLsMMMPPMPPPPQPPPPPPPPQPPPPV#ammmmma#PPPMPMMMMMMYYYYXb
 #die
 
     end
-    stat at 48,6 element Tiger cycle 5 step idle under Empty color 0x0F
-    stat at 50,6 element Tiger cycle 6 step idle under Empty color 0x0F
-    stat at 55,6 element Tiger cycle 7 step idle under Empty color 0x0F
-    stat at 58,6 element Tiger cycle 8 step idle under Empty color 0x0F
-    stat at 60,6 element Tiger cycle 9 step idle under Empty color 0x0F
-    stat at 45,23 element Object cycle 1 p1 cp437:0xDC p2 0 step idle under Empty color 0x0F
+    stat at 48,6 element Tiger cycle 5 p1 4 p2 4 under Empty color 0x0F
+    stat at 50,6 element Tiger cycle 6 p1 4 p2 4 under Empty color 0x0F
+    stat at 55,6 element Tiger cycle 7 p1 4 p2 4 under Empty color 0x0F
+    stat at 58,6 element Tiger cycle 8 p1 4 p2 4 under Empty color 0x0F
+    stat at 60,6 element Tiger cycle 9 p1 4 p2 4 under Empty color 0x0F
+    stat at 45,23 element Object cycle 1 p1 cp437:0xDC under Empty color 0x0F
     oop
 @elev
 'Must be after lion in stat list
@@ -1135,11 +1135,11 @@ bXYYYMsLsMMMPPMPPPPQPPPPPPPPQPPPPV#ammmmma#PPPMPMMMMMMYYYYXb
 #put n white sliderns
 
     end
-    stat at 22,23 element Object p1 cp437:0xBA p2 0 step idle under Empty color 0x0F
-    stat at 22,22 element Object p1 cp437:0xBB p2 0 step idle under Empty color 0x0F
-    stat at 17,23 element Object p1 cp437:0xBB p2 0 step idle under Empty color 0x0F
-    stat at 17,24 element Object p1 cp437:0xBA p2 0 step idle under Empty color 0x0F
-    stat at 16,6 element Object p1 cp437:0x7E p2 0 step idle under Fake color 0x11
+    stat at 22,23 element Object p1 cp437:0xBA under Empty color 0x0F
+    stat at 22,22 element Object p1 cp437:0xBB under Empty color 0x0F
+    stat at 17,23 element Object p1 cp437:0xBB under Empty color 0x0F
+    stat at 17,24 element Object p1 cp437:0xBA under Empty color 0x0F
+    stat at 16,6 element Object p1 cp437:0x7E under Fake color 0x11
     oop
 @brd
 :a
@@ -1149,26 +1149,26 @@ bXYYYMsLsMMMPPMPPPPQPPPPPPPPQPPPPV#ammmmma#PPPMPMMMMMMYYYYXb
 /i#a
 
     end
-    stat at 13,5 element Object p1 cp437:0x7E p2 0 step idle under Fake color 0x11
+    stat at 13,5 element Object p1 cp437:0x7E under Fake color 0x11
     oop
 #bind brd
 
     end
-    stat at 13,7 element Object p1 cp437:0x5F p2 0 step idle under Empty color 0x0F
-    stat at 14,7 element Object p1 cp437:0x5F p2 0 step idle under Empty color 0x0F
-    stat at 15,7 element Object p1 cp437:0x5F p2 0 step idle under Empty color 0x0F
-    stat at 16,7 element Object p1 cp437:0x5F p2 0 step idle under Empty color 0x0F
-    stat at 17,7 element Object p1 cp437:0x5F p2 0 step idle under Empty color 0x0F
-    stat at 18,7 element Object p1 cp437:0x5F p2 0 step idle under Empty color 0x0F
-    stat at 19,7 element Object p1 cp437:0x5F p2 0 step idle under Empty color 0x0F
-    stat at 3,3 element Object p1 cp437:0x5F p2 0 step idle under Empty color 0x0F
-    stat at 4,3 element Object p1 cp437:0x5F p2 0 step idle under Empty color 0x0F
-    stat at 5,3 element Object p1 cp437:0x5F p2 0 step idle under Empty color 0x0F
-    stat at 6,3 element Object p1 cp437:0x5F p2 0 step idle under Empty color 0x0F
-    stat at 7,3 element Object p1 cp437:0x5F p2 0 step idle under Empty color 0x0F
-    stat at 8,3 element Object p1 cp437:0x5F p2 0 step idle under Empty color 0x0F
-    stat at 9,3 element Object p1 cp437:0x5F p2 0 step idle under Empty color 0x0F
-    stat at 23,17 element Object cycle 1 p2 0 step idle under Empty color 0x0F
+    stat at 13,7 element Object p1 cp437:0x5F under Empty color 0x0F
+    stat at 14,7 element Object p1 cp437:0x5F under Empty color 0x0F
+    stat at 15,7 element Object p1 cp437:0x5F under Empty color 0x0F
+    stat at 16,7 element Object p1 cp437:0x5F under Empty color 0x0F
+    stat at 17,7 element Object p1 cp437:0x5F under Empty color 0x0F
+    stat at 18,7 element Object p1 cp437:0x5F under Empty color 0x0F
+    stat at 19,7 element Object p1 cp437:0x5F under Empty color 0x0F
+    stat at 3,3 element Object p1 cp437:0x5F under Empty color 0x0F
+    stat at 4,3 element Object p1 cp437:0x5F under Empty color 0x0F
+    stat at 5,3 element Object p1 cp437:0x5F under Empty color 0x0F
+    stat at 6,3 element Object p1 cp437:0x5F under Empty color 0x0F
+    stat at 7,3 element Object p1 cp437:0x5F under Empty color 0x0F
+    stat at 8,3 element Object p1 cp437:0x5F under Empty color 0x0F
+    stat at 9,3 element Object p1 cp437:0x5F under Empty color 0x0F
+    stat at 23,17 element Object cycle 1 under Empty color 0x0F
     oop
 @dup
 :l
@@ -1181,7 +1181,7 @@ bXYYYMsLsMMMPPMPPPPQPPPPPPPPQPPPPV#ammmmma#PPPMPMMMMMMYYYYXb
 #put s player
 
     end
-    stat at 21,19 element Object cycle 1 p2 0 step idle under Empty color 0x0F
+    stat at 21,19 element Object cycle 1 under Empty color 0x0F
     oop
 @dup
 :l
@@ -1194,8 +1194,8 @@ bXYYYMsLsMMMPPMPPPPQPPPPPPPPQPPPPV#ammmmma#PPPMPMMMMMMYYYYXb
 #put e player
 
     end
-    stat at 23,19 element Passage p1 0 p2 0 p3 board "Elevator 5 (Rabbit Boots)" step idle under Empty color 0x0F
-    stat at 25,19 element Object cycle 1 p2 0 step idle under Empty color 0x0F
+    stat at 23,19 element Passage p3 board "Elevator 5 (Rabbit Boots)" under Empty color 0x0F
+    stat at 25,19 element Object cycle 1 under Empty color 0x0F
     oop
 @dup
 :l
@@ -1208,7 +1208,7 @@ bXYYYMsLsMMMPPMPPPPQPPPPPPPPQPPPPV#ammmmma#PPPMPMMMMMMYYYYXb
 #put w player
 
     end
-    stat at 23,21 element Object cycle 1 p2 0 step idle under Empty color 0x0F
+    stat at 23,21 element Object cycle 1 under Empty color 0x0F
     oop
 @dup
 :l
@@ -1221,15 +1221,15 @@ bXYYYMsLsMMMPPMPPPPQPPPPPPPPQPPPPV#ammmmma#PPPMPMMMMMMYYYYXb
 #put n player
 
     end
-    stat at 20,7 element Object p1 cp437:0x5F p2 0 step idle under Empty color 0x0F
-    stat at 10,3 element Object p1 cp437:0x5F p2 0 step idle under Empty color 0x0F
-    stat at 1,8 element Object p1 cp437:0x5F p2 0 step idle under Empty color 0x0F
-    stat at 22,6 element Object p1 cp437:0x7E p2 0 step idle under Fake color 0x11
+    stat at 20,7 element Object p1 cp437:0x5F under Empty color 0x0F
+    stat at 10,3 element Object p1 cp437:0x5F under Empty color 0x0F
+    stat at 1,8 element Object p1 cp437:0x5F under Empty color 0x0F
+    stat at 22,6 element Object p1 cp437:0x7E under Fake color 0x11
     oop
 #bind brd
 
     end
-    stat at 12,22 element Object cycle 1 p1 cp437:0x20 p2 0 step idle under Empty color 0x01
+    stat at 12,22 element Object cycle 1 p1 cp437:0x20 under Empty color 0x01
     oop
 
 /i/i/i/i/i/i/i/i/i/i/i/i/i/i/i/i/i/i/i/i/i
@@ -1240,13 +1240,13 @@ bXYYYMsLsMMMPPMPPPPQPPPPPPPPQPPPPV#ammmmma#PPPMPMMMMMMYYYYXb
 #char 32
 
     end
-    stat at 12,21 element Object cycle 1 p1 cp437:0x19 p2 0 step idle under Empty color 0x01
+    stat at 12,21 element Object cycle 1 p1 cp437:0x19 under Empty color 0x01
     oop
 #die
 
     end
-    stat at 57,6 element Ruffian step idle under Empty color 0x0F
-    stat at 45,5 element Object cycle 1 p1 cp437:0x17 p2 0 step idle under Empty color 0x0F
+    stat at 57,6 element Ruffian p1 4 p2 4 under Empty color 0x0F
+    stat at 45,5 element Object cycle 1 p1 cp437:0x17 under Empty color 0x0F
     oop
 @t
 :a
@@ -1270,6 +1270,6 @@ bXYYYMsLsMMMPPMPPPPQPPPPPPPPQPPPPV#ammmmma#PPPMPMMMMMMYYYYXb
 /i/i/i/i/i/i?n#a
 
     end
-    stat at 52,6 element Ruffian step idle under Empty color 0x0F
+    stat at 52,6 element Ruffian p1 4 p2 4 under Empty color 0x0F
   end
 end

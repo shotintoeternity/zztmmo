@@ -1,0 +1,72 @@
+board "Fountain Square"
+  start player at 30,23
+  max-shots 255
+  dark false
+  reenter false
+  time-limit 0
+  exits north none south "Town Plaza" west none east none
+
+  grid
+############################################################
+#..........................................................#
+#..FFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFF...#
+#..F......................................................F.
+#..F...NNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNN....F.
+#..F...N~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~N....F.
+#..F...N~~~~~~~~~~~~~~~o~~~~~~~~~~~~~~~~~~~~~~~~~~~~~N....F.
+#..F...N~~~~~~~~~~~~~aaaaaaaaa~~~~~~~~~~~~~~~~~~~~~~~N....F.
+#..F...N~~~~~~~~~~~~~abbbbbbba~~~~~~~~~~~~~~~~~~~~~~~N....F.
+#..F...N~~~~~~~~~~~~~abcccccba~~~~~~~~~~~~~~~~~~~~~~~N....F.
+#..F...N~~~~~~~~~~~~~abo~~~cba~~~~~~~~~~~~~~~~~~~~~~~N....F.
+#..F...N~~~~~~~~~~~~~abc~k~cba~~~~~~~~~~~~~~~~~~~~~~~N....F.
+#..F...N~~~~~~~~~~~~~abc~~~cba~~~~~~~~~~~~~~~~~~~~~~~N....F.
+#..F...N~~~~~~~~~~~~~abcccccba~~~~~~~~~~~~~~~~~~~~~~~N....F.
+#..F...N~~~~~~~~~~~~~abbbbbbba~~~~~~~~~~~~~~~~~~~~~~~N....F.
+#..F...N~~~~~~~~~~~~~aaaaaaaaa~~~~~~~~~~~~~~~~~~~~~~~N....F.
+#..F...N~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~N....F.
+#..F...N~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~N....F.
+#..F...NNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNN....F.#
+#..F......................................................F.
+#..FFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFF...#
+#..........................................................#
+#............................@.............................#
+#################......#####################################
+............................................................
+  end
+
+  legend
+    # = Solid color 0x6E
+    . = Empty color 0x0F
+    F = Fake color 0x70
+    N = Normal color 0x37
+    ~ = Water color 0x19
+    o = Object color 0x0F
+    a = Normal color 0x87
+    b = Normal color 0x7F
+    c = Empty color 0x19
+    k = Key color 0x1E
+    @ = Player color 0x1F under Empty color 0x0F
+  end
+
+  stats
+    stat at 24,11 element Object p1 cp437:0xF8 under Water color 0x19
+    oop
+@sign
+#end
+:touch
+#play tc
+A worn plaque, half sunk in the pool.
+'Toss a coin. Fish out what fell in.'
+#end
+    end
+    stat at 24,7 element Object p1 cp437:0xF8 under Water color 0x19
+    oop
+@spout
+#end
+:touch
+#play tf
+The fountain spout gurgles cheerfully.
+#end
+    end
+  end
+end

@@ -1,0 +1,91 @@
+board "Winding Stair"
+  start player at 26,2
+  max-shots 255
+  dark false
+  reenter false
+  time-limit 0
+  exits north "Dome Top" south "Cellar Landing" west none east none
+
+  grid
+######################....................##################
+#aa*aaaaaa*aaaaaaa*aaaaaa@aaaaaaaaa*aaaaaaa*aaaa*aaaaaaaaaa#
+#aaaaaaa*aaaaaaa*aaaaa*aaaaaaaa*aaaaaa*aaaaaa*aaaaaaaa*aaaa#
+#aa*aaNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNaaaaaa*aaaaaaa#a
+#aaaaaNFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFNaa*aaaaaaaaaaa*#
+#a*aaaNFaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaoaaaaa*aaaaaaa#a
+#aaaaaNFaNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNaaaaaaa*aaaaa#a
+#*aaaaNFaNFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFNaa*aaaaaaaaaa*#
+#aa*aaNFaNFaaaaaaaaaaaaaaaaaaaaaoaaaaaaaaaaNaaaaa*aaaaaaaa#a
+#aaaaaNFaNFaNNNNNNNNNNNNNNNNNNNNaNNNNNNNNNNNa*aaaaaaaaa*aa#a
+#aaa*aNFaNFaNFFFFFFFFFFFFFFFFFFFaNFNaaaaaaaaaaaaaa*aaaaaaa#a
+#*aaaaNFaNFaNFaaaaaaaaaaaaaaaaoaaNFNaaaa*aaaaaaaaaaaaaaa*a#a
+#aaaaaNFaNFaNFaNNNNNNNNNNNNNNNNNNNFNaaaaaaa*aaaaaaaa*aaaaa#a
+#aa*aaNFaNFaNFaNFFFFFFFFFFFFFFFFFFFNa*aaaaaaaaaaaaaaaa*aaa#a
+#aaaaaNFaNFaNFaNFaaaaaaaaaaaaaaaaaaNaaaa*aaaaaaa*aaaaaaaaa#a
+#*a*aaNFaNFaNFaNFaNNNNNNNNNNNNNNNNNaNaaaaaa*aaaaaaaaaa*aaa*#
+#aaaaaNFaNFaNFaNFaNFFFFFFFFFFFFFFFNaNa*aaaaaaaaa*aaaaaaaaa#a
+#aaaaaNFaNFaNFaNFaNFaaaaaaaaaaaaaoNaNaaaaaaa*aaaaaaa*aaaaa#a
+#aa*aaNFaNFaNFaNFaNFaNNNNNNNNNNNNaNaNaaa*aaaaaaa*aaaaaaaaa#a
+#aaaaaNaaNaaNaaNaaNaaNaaaaaaaaaaaaaaaaaaaaaaaaaa*aaaaaaaa*#a
+#*aaaaNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNaaaaa*aaaaaa#a
+#aa*aaaaaaa*aaaaaaa*aaaaaa*aaaaaaaa*aaaaaa*aaaaaaa*aaaaaaa#a
+#aaaaaaa*aaaaaaaa*aaaaaaa*aaaaaaa*aaaaaaa*aaaaa*aaaaaaaaa*a#
+#aa*aaaaaaa*aaaaa....................aaaaaa*aaaaaaaa*aaaaa#a
+#################....................#######################
+  end
+
+  legend
+    # = Solid color 0x19
+    . = Empty color 0x00
+    a = Empty color 0x0F
+    * = Text-Yellow color 0x2A
+    @ = Player color 0x1F under Empty color 0x00
+    N = Normal color 0x08
+    F = Fake color 0x08
+    o = Object color 0x0E
+  end
+
+  stats
+    stat at 45,6 element Object p1 cp437:0x0F under Empty color 0x0F
+    oop
+@torch1
+#end
+:touch
+#play tcd
+A cold draft rises from the winding stair.
+Down and down it spirals into the dark.
+#end
+    end
+    stat at 33,9 element Object p1 cp437:0x0F under Empty color 0x0F
+    oop
+@torch2
+#end
+:touch
+#play tcd
+Old sconces cling to the stone, long cold.
+#end
+    end
+    stat at 31,12 element Object p1 cp437:0x0F under Empty color 0x0F
+    oop
+@torch3
+#end
+:touch
+#play tcd
+The steps are worn smooth by centuries of
+feet.
+#end
+    end
+    stat at 34,18 element Object p1 cp437:0x02 under Empty color 0x0F
+    oop
+@keeper
+#end
+:touch
+#play tefgab
+The Keeper of Steps stirs, half-stone,
+half-shadow.
+Mind the dark below, little one.
+Bring a light, or the dark keeps you.
+#end
+    end
+  end
+end

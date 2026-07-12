@@ -1,0 +1,109 @@
+board "Steam Vent Works"
+  start player at 2,12
+  max-shots 255
+  dark false
+  reenter false
+  time-limit 0
+  exits north none south "Gear Vault" west "Hall of Pendulums" east none
+
+  grid
+############################################################
+#BBBBBB....######################....#######################
+#BBBBBBBBBBBBBllllllllllllllllllllll########################
+#######l#############################l######################
+#######l##NNNNNNNNNNNNNNN###########l####SSSS###############
+#######l##N~~~~~~~~~~~~~N###########l####Sooo###############
+#######l##N~###########~N###########l####SSSS###############
+#######l##N~#BBBBBBBB##~N###########l#######################
+#######l##N~#BBBBBBBBB#~N###########llllllllllllllll########
+#######l##N~#BBkBBBBBB#~N##########################l########
+#######l##N~#BBBBBBBBB#~N##########################l########
+.@....alaaN~#BBBBBBBB##~Na..............a.........laaaaa####
+#######l##N~############~N##########################l#######
+#######l##N~~~~~~~~~~~~~N##########################l########
+#######l##NNNNNNNNNNNNNNN....######################l########
+#######l####################llllllllllllllllllllllll########
+#######l####################l###############################
+#######llllllllllllllllllllll###############################
+############################################################
+######################BBBBBB################################
+######################BB~~BB################################
+######################BBO~BB################################
+######################BB~~BB################################
+######################BBBBBB################################
+############################################################
+  end
+
+  legend
+    # = Solid color 0x68
+    B = Breakable color 0x67
+    . = Empty color 0x0E
+    l = Line color 0x0E
+    N = Normal color 0x66
+    S = Solid color 0x6E
+    ~ = Water color 0x1B
+    o = Object color 0x1E
+    k = Key color 0x0E
+    @ = Player color 0x1F under Empty color 0x0E
+    a = Empty color 0x08
+    O = Object color 0x0F
+  end
+
+  stats
+    stat at 43,6 element Object p1 cp437:0x0F p2 4 step north under Solid color 0x6E
+    oop
+@steamboard
+#end
+:touch
+#play tc+e+g
+Steam schematics, half-legible. It reads:
+The trap valve seals the vault stair
+below.
+Shut down the boilers, then the way opens.
+The brass key waits in the steam chamber.
+#end
+    end
+    stat at 44,6 element Object cycle 0 p1 cp437:0x9D p2 4 step north under Solid color 0x6E
+    oop
+@boilergauge
+#end
+:touch
+#play tc
+Pressure gauge: needle pinned in the red.
+#end
+    end
+    stat at 25,22 element Object cycle 2 p1 cp437:0x9D p2 4 step north under Breakable color 0x67
+    oop
+@brasskey2
+#end
+:touch
+#play tcdefgab
+A brass key, warm to the touch. Number
+two.
+#give brownkey
+The steam chamber falls silent.
+#die
+    end
+    stat at 45,6 element Object p1 cp437:0x0F p2 4 step north under Breakable color 0x67
+    oop
+@trapvalve
+#end
+:touch
+#lock
+#play tf-f-f
+The steam trap valve hisses under your
+hand.
+#if brownkey no
+#play cegceg
+The valve turns. The vault stair unseals!
+#unlock
+#end
+:no
+#play f-c-f-c
+It will not budge while the boilers roar.
+Silence the steam chamber first.
+#unlock
+#end
+    end
+  end
+end

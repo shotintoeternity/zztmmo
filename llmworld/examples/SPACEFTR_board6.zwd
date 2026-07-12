@@ -56,8 +56,8 @@ NNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNN
   end
 
   stats
-    stat at 1,24 element Passage p1 0 p2 0 p3 board "$Back Door" step idle under Empty color 0x66
-    stat at 2,23 element Object p2 0 step idle
+    stat at 1,24 element Passage p3 board "$Back Door" under Empty color 0x66
+    stat at 2,23 element Object
     oop
 @Thug
 /s
@@ -67,12 +67,12 @@ NNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNN
 #end
 
     end
-    stat at 32,5 element Object p1 cp437:0xDB p2 0 step idle under Empty color 0x66
+    stat at 32,5 element Object p1 cp437:0xDB under Empty color 0x66
     oop
 @BarKeep
 #end
 :touch
- Hey, you're a merc ain't cha? Listen bud,
+Hey, you're a merc ain't cha? Listen bud,
 I got a job for you. I need you to smuggle
 some weapons to the planet Ekul, where
 there's a civil war going on between the
@@ -86,7 +86,7 @@ chain cannon. What do you say?
 #end
 :1
 Fine. But remember, there ain't that much
-work around for mercenaries these days. 
+work around for mercenaries these days.
 I doubt you'll be able to find another
 customer all too soon.
 #end
@@ -107,106 +107,106 @@ $shall feel his bite
 #end
 
     end
-    stat at 59,2 element Object p1 cp437:0xB9 p2 0 step idle
-    stat at 59,3 element Object p1 cp437:0xB9 p2 0 step idle under Empty color 0x09
-    stat at 59,4 element Object p1 cp437:0xB9 p2 0 step idle
-    stat at 57,2 element Object p1 cp437:0xCC p2 0 step idle
-    stat at 57,3 element Object p1 cp437:0xCC p2 0 step idle
-    stat at 57,4 element Object p1 cp437:0xCC p2 0 step idle
-    stat at 56,2 element Object p1 cp437:0xB9 p2 0 step idle
-    stat at 56,3 element Object p1 cp437:0xB9 p2 0 step idle
-    stat at 56,4 element Object p1 cp437:0xB9 p2 0 step idle
-    stat at 54,2 element Object p1 cp437:0xCC p2 0 step idle
-    stat at 54,4 element Object p1 cp437:0xCC p2 0 step idle
-    stat at 54,3 element Object p1 cp437:0xCC p2 0 step idle
-    stat at 53,4 element Object p1 cp437:0xB9 p2 0 step idle
-    stat at 53,3 element Object p1 cp437:0xB9 p2 0 step idle
-    stat at 53,2 element Object p1 cp437:0xB9 p2 0 step idle
-    stat at 51,2 element Object p1 cp437:0xCC p2 0 step idle
-    stat at 51,3 element Object p1 cp437:0xCC p2 0 step idle
-    stat at 51,4 element Object p1 cp437:0xCC p2 0 step idle
-    stat at 50,4 element Object p1 cp437:0xB9 p2 0 step idle
-    stat at 50,3 element Object p1 cp437:0xB9 p2 0 step idle
-    stat at 50,2 element Object p1 cp437:0xB9 p2 0 step idle
-    stat at 48,2 element Object p1 cp437:0xCC p2 0 step idle
-    stat at 48,3 element Object p1 cp437:0xCC p2 0 step idle
-    stat at 48,4 element Object p1 cp437:0xCC p2 0 step idle
-    stat at 47,4 element Object p1 cp437:0xB9 p2 0 step idle
-    stat at 47,3 element Object p1 cp437:0xB9 p2 0 step idle
-    stat at 47,2 element Object p1 cp437:0xB9 p2 0 step idle
-    stat at 45,2 element Object p1 cp437:0xCC p2 0 step idle
-    stat at 45,3 element Object p1 cp437:0xCC p2 0 step idle
-    stat at 45,4 element Object p1 cp437:0xCC p2 0 step idle
-    stat at 44,4 element Object p1 cp437:0xB9 p2 0 step idle
-    stat at 44,3 element Object p1 cp437:0xB9 p2 0 step idle
-    stat at 44,2 element Object p1 cp437:0xB9 p2 0 step idle
-    stat at 42,2 element Object p1 cp437:0xCC p2 0 step idle
-    stat at 42,4 element Object p1 cp437:0xCC p2 0 step idle
-    stat at 42,3 element Object p1 cp437:0xCC p2 0 step idle
-    stat at 41,3 element Object p1 cp437:0xB9 p2 0 step idle
-    stat at 41,2 element Object p1 cp437:0xB9 p2 0 step idle
-    stat at 41,4 element Object p1 cp437:0xB9 p2 0 step idle
-    stat at 39,4 element Object p1 cp437:0xCC p2 0 step idle
-    stat at 39,3 element Object p1 cp437:0xCC p2 0 step idle
-    stat at 39,2 element Object p1 cp437:0xCC p2 0 step idle
-    stat at 40,4 element Object p1 cp437:0xAD p2 0 step idle
-    stat at 43,4 element Object p1 cp437:0xAD p2 0 step idle
-    stat at 43,3 element Object p1 cp437:0xAD p2 0 step idle
-    stat at 46,2 element Object p1 cp437:0xAD p2 0 step idle
-    stat at 46,3 element Object p1 cp437:0xAD p2 0 step idle
-    stat at 46,4 element Object p1 cp437:0xAD p2 0 step idle
-    stat at 49,4 element Object p1 cp437:0xAD p2 0 step idle
-    stat at 49,3 element Object p1 cp437:0xAD p2 0 step idle
-    stat at 49,2 element Object p1 cp437:0xAD p2 0 step idle
-    stat at 52,2 element Object p1 cp437:0xAD p2 0 step idle
-    stat at 52,3 element Object p1 cp437:0xAD p2 0 step idle
-    stat at 52,4 element Object p1 cp437:0xAD p2 0 step idle
-    stat at 55,4 element Object p1 cp437:0xAD p2 0 step idle
-    stat at 55,3 element Object p1 cp437:0xAD p2 0 step idle
-    stat at 55,2 element Object p1 cp437:0xAD p2 0 step idle
-    stat at 58,2 element Object p1 cp437:0xAD p2 0 step idle
-    stat at 58,3 element Object p1 cp437:0xAD p2 0 step idle
-    stat at 58,4 element Object p1 cp437:0xAD p2 0 step idle
-    stat at 40,2 element Object p1 cp437:0xAD p2 0 step idle
-    stat at 40,3 element Object p1 cp437:0xAD p2 0 step idle
-    stat at 43,2 element Object p1 cp437:0xAD p2 0 step idle
-    stat at 2,4 element Object p1 cp437:0xAE p2 0 step idle
-    stat at 2,3 element Object p1 cp437:0xAE p2 0 step idle
-    stat at 2,2 element Object p1 cp437:0xAE p2 0 step idle
-    stat at 4,2 element Object p1 cp437:0xAF p2 0 step idle
-    stat at 4,3 element Object p1 cp437:0xAF p2 0 step idle
-    stat at 4,4 element Object p1 cp437:0xAF p2 0 step idle
-    stat at 5,4 element Object p1 cp437:0xAE p2 0 step idle
-    stat at 5,3 element Object p1 cp437:0xAE p2 0 step idle
-    stat at 5,2 element Object p1 cp437:0xAE p2 0 step idle
-    stat at 7,2 element Object p1 cp437:0xAF p2 0 step idle
-    stat at 7,3 element Object p1 cp437:0xAF p2 0 step idle
-    stat at 7,4 element Object p1 cp437:0xAF p2 0 step idle
-    stat at 10,4 element Object p1 cp437:0xAF p2 0 step idle
-    stat at 10,3 element Object p1 cp437:0xAF p2 0 step idle
-    stat at 10,2 element Object p1 cp437:0xAF p2 0 step idle
-    stat at 8,2 element Object p1 cp437:0xAE p2 0 step idle
-    stat at 8,3 element Object p1 cp437:0xAE p2 0 step idle
-    stat at 8,4 element Object p1 cp437:0xAE p2 0 step idle
-    stat at 3,4 element Object p1 cp437:0xE8 p2 0 step idle
-    stat at 3,3 element Object p1 cp437:0xE8 p2 0 step idle
-    stat at 3,2 element Object p1 cp437:0xE8 p2 0 step idle
-    stat at 6,2 element Object p1 cp437:0xE8 p2 0 step idle
-    stat at 6,3 element Object p1 cp437:0xE8 p2 0 step idle
-    stat at 6,4 element Object p1 cp437:0xE8 p2 0 step idle
-    stat at 9,4 element Object p1 cp437:0xE8 p2 0 step idle
-    stat at 9,3 element Object p1 cp437:0xE8 p2 0 step idle
-    stat at 9,2 element Object p1 cp437:0xE8 p2 0 step idle
-    stat at 16,4 element Object p1 cp437:0xE4 p2 0 step idle
-    stat at 16,3 element Object p1 cp437:0xE4 p2 0 step idle
-    stat at 16,2 element Object p1 cp437:0xE4 p2 0 step idle
-    stat at 17,4 element Object p1 cp437:0xDD p2 0 step idle
-    stat at 17,3 element Object p1 cp437:0xDD p2 0 step idle
-    stat at 17,2 element Object p1 cp437:0xDD p2 0 step idle
-    stat at 38,4 element Object p1 cp437:0xDE p2 0 step idle
-    stat at 38,3 element Object p1 cp437:0xDE p2 0 step idle
-    stat at 38,2 element Object p1 cp437:0xDE p2 0 step idle
-    stat at 18,2 element Object p1 cp437:0x02 p2 0 step idle
+    stat at 59,2 element Object p1 cp437:0xB9
+    stat at 59,3 element Object p1 cp437:0xB9 under Empty color 0x09
+    stat at 59,4 element Object p1 cp437:0xB9
+    stat at 57,2 element Object p1 cp437:0xCC
+    stat at 57,3 element Object p1 cp437:0xCC
+    stat at 57,4 element Object p1 cp437:0xCC
+    stat at 56,2 element Object p1 cp437:0xB9
+    stat at 56,3 element Object p1 cp437:0xB9
+    stat at 56,4 element Object p1 cp437:0xB9
+    stat at 54,2 element Object p1 cp437:0xCC
+    stat at 54,4 element Object p1 cp437:0xCC
+    stat at 54,3 element Object p1 cp437:0xCC
+    stat at 53,4 element Object p1 cp437:0xB9
+    stat at 53,3 element Object p1 cp437:0xB9
+    stat at 53,2 element Object p1 cp437:0xB9
+    stat at 51,2 element Object p1 cp437:0xCC
+    stat at 51,3 element Object p1 cp437:0xCC
+    stat at 51,4 element Object p1 cp437:0xCC
+    stat at 50,4 element Object p1 cp437:0xB9
+    stat at 50,3 element Object p1 cp437:0xB9
+    stat at 50,2 element Object p1 cp437:0xB9
+    stat at 48,2 element Object p1 cp437:0xCC
+    stat at 48,3 element Object p1 cp437:0xCC
+    stat at 48,4 element Object p1 cp437:0xCC
+    stat at 47,4 element Object p1 cp437:0xB9
+    stat at 47,3 element Object p1 cp437:0xB9
+    stat at 47,2 element Object p1 cp437:0xB9
+    stat at 45,2 element Object p1 cp437:0xCC
+    stat at 45,3 element Object p1 cp437:0xCC
+    stat at 45,4 element Object p1 cp437:0xCC
+    stat at 44,4 element Object p1 cp437:0xB9
+    stat at 44,3 element Object p1 cp437:0xB9
+    stat at 44,2 element Object p1 cp437:0xB9
+    stat at 42,2 element Object p1 cp437:0xCC
+    stat at 42,4 element Object p1 cp437:0xCC
+    stat at 42,3 element Object p1 cp437:0xCC
+    stat at 41,3 element Object p1 cp437:0xB9
+    stat at 41,2 element Object p1 cp437:0xB9
+    stat at 41,4 element Object p1 cp437:0xB9
+    stat at 39,4 element Object p1 cp437:0xCC
+    stat at 39,3 element Object p1 cp437:0xCC
+    stat at 39,2 element Object p1 cp437:0xCC
+    stat at 40,4 element Object p1 cp437:0xAD
+    stat at 43,4 element Object p1 cp437:0xAD
+    stat at 43,3 element Object p1 cp437:0xAD
+    stat at 46,2 element Object p1 cp437:0xAD
+    stat at 46,3 element Object p1 cp437:0xAD
+    stat at 46,4 element Object p1 cp437:0xAD
+    stat at 49,4 element Object p1 cp437:0xAD
+    stat at 49,3 element Object p1 cp437:0xAD
+    stat at 49,2 element Object p1 cp437:0xAD
+    stat at 52,2 element Object p1 cp437:0xAD
+    stat at 52,3 element Object p1 cp437:0xAD
+    stat at 52,4 element Object p1 cp437:0xAD
+    stat at 55,4 element Object p1 cp437:0xAD
+    stat at 55,3 element Object p1 cp437:0xAD
+    stat at 55,2 element Object p1 cp437:0xAD
+    stat at 58,2 element Object p1 cp437:0xAD
+    stat at 58,3 element Object p1 cp437:0xAD
+    stat at 58,4 element Object p1 cp437:0xAD
+    stat at 40,2 element Object p1 cp437:0xAD
+    stat at 40,3 element Object p1 cp437:0xAD
+    stat at 43,2 element Object p1 cp437:0xAD
+    stat at 2,4 element Object p1 cp437:0xAE
+    stat at 2,3 element Object p1 cp437:0xAE
+    stat at 2,2 element Object p1 cp437:0xAE
+    stat at 4,2 element Object p1 cp437:0xAF
+    stat at 4,3 element Object p1 cp437:0xAF
+    stat at 4,4 element Object p1 cp437:0xAF
+    stat at 5,4 element Object p1 cp437:0xAE
+    stat at 5,3 element Object p1 cp437:0xAE
+    stat at 5,2 element Object p1 cp437:0xAE
+    stat at 7,2 element Object p1 cp437:0xAF
+    stat at 7,3 element Object p1 cp437:0xAF
+    stat at 7,4 element Object p1 cp437:0xAF
+    stat at 10,4 element Object p1 cp437:0xAF
+    stat at 10,3 element Object p1 cp437:0xAF
+    stat at 10,2 element Object p1 cp437:0xAF
+    stat at 8,2 element Object p1 cp437:0xAE
+    stat at 8,3 element Object p1 cp437:0xAE
+    stat at 8,4 element Object p1 cp437:0xAE
+    stat at 3,4 element Object p1 cp437:0xE8
+    stat at 3,3 element Object p1 cp437:0xE8
+    stat at 3,2 element Object p1 cp437:0xE8
+    stat at 6,2 element Object p1 cp437:0xE8
+    stat at 6,3 element Object p1 cp437:0xE8
+    stat at 6,4 element Object p1 cp437:0xE8
+    stat at 9,4 element Object p1 cp437:0xE8
+    stat at 9,3 element Object p1 cp437:0xE8
+    stat at 9,2 element Object p1 cp437:0xE8
+    stat at 16,4 element Object p1 cp437:0xE4
+    stat at 16,3 element Object p1 cp437:0xE4
+    stat at 16,2 element Object p1 cp437:0xE4
+    stat at 17,4 element Object p1 cp437:0xDD
+    stat at 17,3 element Object p1 cp437:0xDD
+    stat at 17,2 element Object p1 cp437:0xDD
+    stat at 38,4 element Object p1 cp437:0xDE
+    stat at 38,3 element Object p1 cp437:0xDE
+    stat at 38,2 element Object p1 cp437:0xDE
+    stat at 18,2 element Object p1 cp437:0x02
     oop
 @Bar assistant
 #cycle 2
@@ -220,21 +220,21 @@ $shall feel his bite
 /n
 #restart
 :touch
-now jerry dig, i got a gig, with funky 
-frank and dino..  yeah, babe, yes do it to
+now jerry dig, i got a gig, with funky
+frank and dino.. yeah, babe, yes do it to
 me george
 /i/i
 #say
 #endgame
 #end
 :say
-You lost!!! 
+You lost!!!
 /i
 #say
 #end
 
     end
-    stat at 37,4 element Object p1 cp437:0x02 p2 0 step idle
+    stat at 37,4 element Object p1 cp437:0x02
     oop
 @bar assistant 2
 #cycle 2
@@ -255,16 +255,16 @@ You lost!!!
 #restart
 
     end
-    stat at 32,4 element Object p1 cp437:0x02 p2 0 step idle
+    stat at 32,4 element Object p1 cp437:0x02
     oop
 @Barkeep
 #end
 
     end
-    stat at 41,20 element Object p1 cp437:0x02 p2 0 step idle
-    stat at 49,20 element Object p2 0 step idle
-    stat at 45,21 element Object p1 cp437:0x02 p2 0 step idle
-    stat at 45,16 element Object p1 cp437:0x02 p2 0 step idle
+    stat at 41,20 element Object p1 cp437:0x02
+    stat at 49,20 element Object
+    stat at 45,21 element Object p1 cp437:0x02
+    stat at 45,16 element Object p1 cp437:0x02
     oop
 @Grim Reaper
 #end
@@ -274,39 +274,39 @@ I mean
 #end
 
     end
-    stat at 49,16 element Object p2 0 step idle
+    stat at 49,16 element Object
     oop
 @Manson
 #end
 :touch
 $God why are you doing this to me?
-$Am I not living up to what I'm 
+$Am I not living up to what I'm
 $supposed to be?
 
-.. oh sorry, I was listening to 
+.. oh sorry, I was listening to
 $±±±±±±±±±±±±±±±±±±±±±±±
 $±²°°°±²°°±²°°±²°°±²°°°±
 $±²°°°°²°°±²°°±²°°²°°°°±
 $±²°°²°°°°±²°°±²°°°°²°°±
 $±²°°±²°°°±²°°±²°°°±²°°±
 $±±±±±±±±±±±±±±±±±±±±±±±
- on my walkman here.
+on my walkman here.
 It's pretty cool!
 #end
 
     end
-    stat at 53,15 element Object p2 0 step idle
+    stat at 53,15 element Object
     oop
 @Reznor
 #end
 :touch
-Waiter? Yes, get me a severed head.. 
+Waiter? Yes, get me a severed head..
 .. please?
 #zap touch
 #end
 
     end
-    stat at 53,10 element Object p2 0 step idle
+    stat at 53,10 element Object
     oop
 @DIE
 #end
@@ -319,15 +319,15 @@ $_ ________________ _
 #END
 
     end
-    stat at 33,11 element Object p2 0 step idle
+    stat at 33,11 element Object
     oop
 @Monty
 #end
 :touch
 #zap touch
 Hello. Would you like me to sing?
-!1; Yeah, sure.
-!2; No way!
+!1;Yeah, sure.
+!2;No way!
 #end
 :2
 Fine.. get outta here!
@@ -342,12 +342,12 @@ $is an outfit that looks good..
 $See my vest! See my vest! Made from real
 $gorilla chest, see my sweater there's no
 $better than authentic Irish setter.
-$See this hat? Twas my cat! My evening 
+$See this hat? Twas my cat! My evening
 $wear- vampire bat! These white slippers
 $are albino African endangered rhino!
 $Grizzly bear underwear, turtles necks-
 $I've had my share, beret of poodle on
-$my noodle it shall rest.. try my red 
+$my noodle it shall rest.. try my red
 $robin suit, comes in one breast of two
 $so see my vest, see my vest, see my vest
 
@@ -355,7 +355,7 @@ uh.. that's like all I know
 #end 
 
     end
-    stat at 25,10 element Object p2 0 step idle
+    stat at 25,10 element Object
     oop
 @boozer
 #end
@@ -365,8 +365,8 @@ BUUUUURP!
 #end
 
     end
-    stat at 25,20 element Object p2 0 step idle under Empty color 0x66
-    stat at 16,16 element Object p2 0 step idle
+    stat at 25,20 element Object under Empty color 0x66
+    stat at 16,16 element Object
     oop
 @Nivek
 #end
@@ -374,7 +374,7 @@ BUUUUURP!
 #cycle 1
 Tis I, Nivek! Why am I not red? Well, I'm
 wearing a disguise. Anyway.. if you find
-DarkMage, don't listen to him! He'll 
+DarkMage, don't listen to him! He'll
 give you some stupid speech about our
 other games.. ok.. gotta go.. see ya!
 #idle
@@ -393,22 +393,22 @@ other games.. ok.. gotta go.. see ya!
 #die 
 
     end
-    stat at 11,21 element Object p1 cp437:0x02 p2 0 step idle
-    stat at 7,15 element Object p1 cp437:0x02 p2 0 step idle
-    stat at 11,11 element Object p1 cp437:0x02 p2 0 step idle
+    stat at 11,21 element Object p1 cp437:0x02
+    stat at 7,15 element Object p1 cp437:0x02
+    stat at 11,11 element Object p1 cp437:0x02
     oop
 @Funky Frank
 #end
 :touch
-One time, I was in Vegas, and I saw 
+One time, I was in Vegas, and I saw
 this guy who won 1.2 million in slots.
 I said, "that can't be possible!" And as
 it turns out.. it was counterfeit money.
 He made all that damned money just to look
 cool. How'd ya like my story?
 
-!1; I hated it!
-!2; I loved it!
+!1;I hated it!
+!2;I loved it!
 #end
 
 :1
@@ -422,12 +422,12 @@ Yay! Well.. I only got one story..
 #end
 
     end
-    stat at 25,15 element Object p1 cp437:0x02 p2 0 step idle
+    stat at 25,15 element Object p1 cp437:0x02
     oop
 @DarkMage
 #end
 :touch
-Hi, It's me, DarkMage. Thanks for playing 
+Hi, It's me, DarkMage. Thanks for playing
 this game! Hey, and don't forget to see
 some of our other games, too.. like..
 $Super Mario ZZT 1 & 2
@@ -435,20 +435,20 @@ $Legacies
 $KevQuest 1 & 2
 $The Morphos
 $Attack of the Smilies
- and a whole lotta others! 
+and a whole lotta others!
 Visit us on the web at:
 $http://members.aol.com/darkmage90/
 Enjoy the rest of the game!
 #end  
 
     end
-    stat at 33,15 element Object p1 cp437:0x02 p2 0 step idle
+    stat at 33,15 element Object p1 cp437:0x02
     oop
 @Twiggy
 #end
 :touch
 Hi, I'd like some scabs, guns, and peanut
-butter, please. Waiter? You're not my 
+butter, please. Waiter? You're not my
 waiter? Oh, sorry.
 #end
 

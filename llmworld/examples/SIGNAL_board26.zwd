@@ -70,7 +70,7 @@ FFFFFFFFFFFFFFFFFFFFFFggggggggggggggggggFFFFFFFFFFFFFFFFFFFF
   end
 
   stats
-    stat at 30,23 element Passage p1 0 p2 0 p3 board "And another gets on" step idle under Empty color 0x0E
-    stat at 31,20 element Passage p1 0 p2 0 p3 board "Space Center" step idle under Empty color 0x0F
+    stat at 30,23 element Passage p3 board "And another gets on" under Empty color 0x0E
+    stat at 31,20 element Passage p3 board "Space Center" under Empty color 0x0F
   end
 end

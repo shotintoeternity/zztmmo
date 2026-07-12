@@ -1,0 +1,120 @@
+board "Spiral Stairwell"
+  start player at 27,23
+  max-shots 255
+  dark true
+  reenter true
+  time-limit 0
+  exits north "Lamp Room" south "Keeper's Quarters" west none east none
+
+  grid
+##########################N..N##############################
+##########################N..N##############################
+###################NNNNNNNN....NNNNNNNN#####################
+##################N..................N######################
+##################N..FF..F..........N#######################
+##################N..............FF..NNNNNN#################
+################NNNN............F......N####################
+###############N......FoF..............N####################
+##############N..............F........FN####################
+#############N....FF....oF....FF......N#####################
+############N.......F............o...N######################
+###########N............FF...........NNNNNN#################
+###########N....F........F..FoF........N####################
+############N........F...............N######################
+#############N..oF......FF....F.....N#######################
+##############N.................F...N#######################
+###############N....FoF...........N#########################
+################NNNN.........F..NNN#########################
+###################N..FF.........N##########################
+####################N..........FN###########################
+#####################N....O....N############################
+######################N.......N#############################
+#######################N..@..N##############################
+########################N...N###############################
+#########################NNN################################
+  end
+
+  legend
+    # = Solid color 0x08
+    N = Normal color 0x07
+    . = Empty color 0x00
+    F = Fake color 0x08
+    o = Object color 0x0F
+    O = Object color 0x0B
+    @ = Player color 0x1F under Empty color 0x00
+  end
+
+  stats
+    stat at 24,8 element Object p1 cp437:0xB0 p2 4 step north
+    oop
+@ghost
+#end
+:touch
+#play s.-c.-c
+Cold hands press against you in the dark.
+#end
+
+    end
+    stat at 25,10 element Object p1 cp437:0xB0 p2 4 step north
+    oop
+@ghost
+#end
+:touch
+#play s.-c.-c
+A drowned voice moans up the stairwell.
+#end
+
+    end
+    stat at 34,11 element Object p1 cp437:0xB0 p2 4 step north
+    oop
+@ghost
+#end
+:touch
+#play s.-c.-c
+Something wet slithers past your feet.
+#end
+
+    end
+    stat at 30,13 element Object p1 cp437:0xB0 p2 4 step north
+    oop
+@ghost
+#end
+:touch
+#play s.-c.-c
+The block feels like ice and grief.
+#end
+
+    end
+    stat at 17,15 element Object p1 cp437:0xB0 p2 4 step north
+    oop
+@ghost
+#end
+:touch
+#play s.-c.-c
+Keep climbing. Do not look back.
+#end
+
+    end
+    stat at 22,17 element Object p1 cp437:0xB0 p2 4 step north
+    oop
+@ghost
+#end
+:touch
+#play s.-c.-c
+You feel them counting your steps.
+#end
+
+    end
+    stat at 27,21 element Object cycle 2 p1 cp437:0x0F p2 4 step north
+    oop
+@torch
+#end
+:touch
+#play tcefg
+A guttered wall-torch, still warm.
+#give torches 3
+#die
+
+    end
+  end
+end

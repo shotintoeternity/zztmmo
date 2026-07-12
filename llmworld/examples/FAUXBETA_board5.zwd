@@ -70,9 +70,9 @@ kiibbbbbcbbbbcbcccbcbccbcbbbcbbbbbbbbbbccccbbbbbbbbbbbbbbrrr
   end
 
   stats
-    stat at 42,24 element Passage p1 0 p2 0 p3 board "West Coast Internal" step idle under Empty color 0x0F
-    stat at 42,13 element Passage p1 0 p2 0 p3 board "West Coast Internal" step idle under Empty color 0x0F
-    stat at 32,12 element Object cycle 1 p1 cp437:0xF0 p2 0 step idle under Empty color 0x0F
+    stat at 42,24 element Passage p3 board "West Coast Internal" under Empty color 0x0F
+    stat at 42,13 element Passage p3 board "West Coast Internal" under Empty color 0x0F
+    stat at 32,12 element Object cycle 1 p1 cp437:0xF0 under Empty color 0x0F
     oop
 #end
 :touch
@@ -81,12 +81,12 @@ kiibbbbbcbbbbcbcccbcbccbcbbbcbbbbbbbbbbccccbbbbbbbbbbbbbbrrr
 #lock
 
     end
-    stat at 17,20 element Object cycle 1 p1 cp437:0xAF p2 0 step idle under Fake color 0x11
+    stat at 17,20 element Object cycle 1 p1 cp437:0xAF under Fake color 0x11
     oop
 /i/i/i/i#bind a
 
     end
-    stat at 15,13 element Object cycle 1 p1 cp437:0xAF p2 0 step idle under Fake color 0x11
+    stat at 15,13 element Object cycle 1 p1 cp437:0xAF under Fake color 0x11
     oop
 @a
 #char 32
@@ -104,7 +104,7 @@ kiibbbbbcbbbbcbcccbcbccbcbbbcbbbbbbbbbbccccbbbbbbbbbbbbbbrrr
 /w#a
 
     end
-    stat at 40,14 element Object cycle 1 p1 cp437:0xE2 p2 0 step idle under Fake color 0x08
+    stat at 40,14 element Object cycle 1 p1 cp437:0xE2 under Fake color 0x08
     oop
 @Sign
 #end
@@ -116,7 +116,7 @@ $ù ù ù
 $OPEN TO SUPERVISED VISITORS
 
     end
-    stat at 34,13 element Object cycle 1 p1 cp437:0xE2 p2 0 step idle under Fake color 0x08
+    stat at 34,13 element Object cycle 1 p1 cp437:0xE2 under Fake color 0x08
     oop
 @Sign
 #end
@@ -128,7 +128,7 @@ $ù ù ù
 $PRIVATE RESIDENCE
 
     end
-    stat at 41,23 element Object cycle 1 p1 cp437:0xE2 p2 0 step idle under Empty color 0x0F
+    stat at 41,23 element Object cycle 1 p1 cp437:0xE2 under Empty color 0x0F
     oop
 @Sign
 #end
@@ -140,82 +140,82 @@ $ù ù ù
 $* RETIRED, BUT OPEN TO VISITORS *
 
     end
-    stat at 17,15 element Object cycle 1 p1 cp437:0xAF p2 0 step idle under Fake color 0x11
+    stat at 17,15 element Object cycle 1 p1 cp437:0xAF under Fake color 0x11
     oop
 /i#bind a
 
     end
-    stat at 16,16 element Object cycle 1 p1 cp437:0xAF p2 0 step idle under Fake color 0x11
+    stat at 16,16 element Object cycle 1 p1 cp437:0xAF under Fake color 0x11
     oop
 /i#bind a
 
     end
-    stat at 17,18 element Object cycle 1 p1 cp437:0xAF p2 0 step idle under Fake color 0x11
+    stat at 17,18 element Object cycle 1 p1 cp437:0xAF under Fake color 0x11
     oop
 /i/i#bind a
 
     end
-    stat at 19,14 element Object cycle 1 p1 cp437:0xAF p2 0 step idle under Fake color 0x11
+    stat at 19,14 element Object cycle 1 p1 cp437:0xAF under Fake color 0x11
     oop
 #bind a
 
     end
-    stat at 16,17 element Object cycle 1 p1 cp437:0xAF p2 0 step idle under Fake color 0x11
+    stat at 16,17 element Object cycle 1 p1 cp437:0xAF under Fake color 0x11
     oop
 /i/i#bind a
 
     end
-    stat at 15,19 element Object cycle 1 p1 cp437:0xAF p2 0 step idle under Fake color 0x11
+    stat at 15,19 element Object cycle 1 p1 cp437:0xAF under Fake color 0x11
     oop
 /i/i/i#bind a
 
     end
-    stat at 19,21 element Object cycle 1 p1 cp437:0xAF p2 0 step idle under Fake color 0x11
+    stat at 19,21 element Object cycle 1 p1 cp437:0xAF under Fake color 0x11
     oop
 /i/i/i/i#bind a
 
     end
-    stat at 22,22 element Object cycle 1 p1 cp437:0xAF p2 0 step idle under Fake color 0x11
+    stat at 22,22 element Object cycle 1 p1 cp437:0xAF under Fake color 0x11
     oop
 /i/i/i/i#bind a
 
     end
-    stat at 23,23 element Object cycle 1 p1 cp437:0xAF p2 0 step idle under Fake color 0x11
+    stat at 23,23 element Object cycle 1 p1 cp437:0xAF under Fake color 0x11
     oop
 /i/i/i/i/i#bind a
 
     end
-    stat at 27,24 element Object cycle 1 p1 cp437:0xAF p2 0 step idle under Fake color 0x11
+    stat at 27,24 element Object cycle 1 p1 cp437:0xAF under Fake color 0x11
     oop
 /i/i/i/i/i#bind a
 
     end
-    stat at 13,13 element Object p1 cp437:0xF7 p2 0 step idle under Fake color 0x71
+    stat at 13,13 element Object p1 cp437:0xF7 under Fake color 0x71
     oop
 #bind w
 
     end
-    stat at 10,14 element Object p1 cp437:0xF7 p2 0 step idle under Fake color 0x71
+    stat at 10,14 element Object p1 cp437:0xF7 under Fake color 0x71
     oop
 #bind w
 
     end
-    stat at 5,15 element Object p1 cp437:0xF7 p2 0 step idle under Fake color 0x71
+    stat at 5,15 element Object p1 cp437:0xF7 under Fake color 0x71
     oop
 #bind w
 
     end
-    stat at 6,16 element Object p1 cp437:0xF7 p2 0 step idle under Fake color 0x71
+    stat at 6,16 element Object p1 cp437:0xF7 under Fake color 0x71
     oop
 #bind w
 
     end
-    stat at 4,17 element Object p1 cp437:0xF7 p2 0 step idle under Fake color 0x71
+    stat at 4,17 element Object p1 cp437:0xF7 under Fake color 0x71
     oop
 #bind w
 
     end
-    stat at 10,18 element Object p1 cp437:0xF7 p2 0 step idle under Fake color 0x71
+    stat at 10,18 element Object p1 cp437:0xF7 under Fake color 0x71
     oop
 @w
 #char 219
@@ -223,97 +223,97 @@ $* RETIRED, BUT OPEN TO VISITORS *
 /i/i/i?e/i/i/i?w#a
 
     end
-    stat at 6,19 element Object p1 cp437:0xF7 p2 0 step idle under Fake color 0x71
+    stat at 6,19 element Object p1 cp437:0xF7 under Fake color 0x71
     oop
 #bind w
 
     end
-    stat at 7,20 element Object p1 cp437:0xF7 p2 0 step idle under Fake color 0x71
+    stat at 7,20 element Object p1 cp437:0xF7 under Fake color 0x71
     oop
 #bind w
 
     end
-    stat at 6,21 element Object p1 cp437:0xF7 p2 0 step idle under Fake color 0x71
+    stat at 6,21 element Object p1 cp437:0xF7 under Fake color 0x71
     oop
 #bind w
 
     end
-    stat at 11,22 element Object p1 cp437:0xF7 p2 0 step idle under Fake color 0x71
+    stat at 11,22 element Object p1 cp437:0xF7 under Fake color 0x71
     oop
 #bind w
 
     end
-    stat at 9,23 element Object p1 cp437:0xF7 p2 0 step idle under Fake color 0x71
+    stat at 9,23 element Object p1 cp437:0xF7 under Fake color 0x71
     oop
 #bind w
 
     end
-    stat at 16,24 element Object p1 cp437:0xF7 p2 0 step idle under Fake color 0x71
+    stat at 16,24 element Object p1 cp437:0xF7 under Fake color 0x71
     oop
 #bind w
 
     end
-    stat at 3,13 element Object p1 cp437:0xF7 p2 0 step idle under Fake color 0x11
+    stat at 3,13 element Object p1 cp437:0xF7 under Fake color 0x11
     oop
 #bind w
 
     end
-    stat at 1,14 element Object p1 cp437:0xF7 p2 0 step idle under Fake color 0x11
+    stat at 1,14 element Object p1 cp437:0xF7 under Fake color 0x11
     oop
 #bind w
 
     end
-    stat at 2,20 element Object p1 cp437:0xF7 p2 0 step idle under Fake color 0x11
+    stat at 2,20 element Object p1 cp437:0xF7 under Fake color 0x11
     oop
 #bind w
 
     end
-    stat at 1,24 element Object p1 cp437:0xF7 p2 0 step idle under Fake color 0x11
+    stat at 1,24 element Object p1 cp437:0xF7 under Fake color 0x11
     oop
 #bind w
 
     end
-    stat at 11,1 element Object p1 cp437:0xB0 p2 0 step idle under Water color 0x78
+    stat at 11,1 element Object p1 cp437:0xB0 under Water color 0x78
     oop
 #bind c
 
     end
-    stat at 5,2 element Object p1 cp437:0xB0 p2 0 step idle under Water color 0x78
+    stat at 5,2 element Object p1 cp437:0xB0 under Water color 0x78
     oop
 #bind c
 
     end
-    stat at 7,1 element Object p1 cp437:0xB0 p2 0 step idle under Water color 0x78
+    stat at 7,1 element Object p1 cp437:0xB0 under Water color 0x78
     oop
 #bind c
 
     end
-    stat at 9,3 element Object p1 cp437:0xB0 p2 0 step idle under Water color 0x78
+    stat at 9,3 element Object p1 cp437:0xB0 under Water color 0x78
     oop
 #bind c
 
     end
-    stat at 1,6 element Object p1 cp437:0xB0 p2 0 step idle under Water color 0x78
+    stat at 1,6 element Object p1 cp437:0xB0 under Water color 0x78
     oop
 #bind c
 
     end
-    stat at 15,5 element Object p1 cp437:0xB0 p2 0 step idle under Water color 0x78
+    stat at 15,5 element Object p1 cp437:0xB0 under Water color 0x78
     oop
 #bind c
 
     end
-    stat at 9,8 element Object p1 cp437:0xB0 p2 0 step idle under Water color 0x78
+    stat at 9,8 element Object p1 cp437:0xB0 under Water color 0x78
     oop
 #bind c
 
     end
-    stat at 28,4 element Object p1 cp437:0xB0 p2 0 step idle under Water color 0x78
+    stat at 28,4 element Object p1 cp437:0xB0 under Water color 0x78
     oop
 #bind c
 
     end
-    stat at 28,20 element Object p1 cp437:0xE5 p2 0 step idle under Fake color 0x07
+    stat at 28,20 element Object p1 cp437:0xE5 under Fake color 0x07
     oop
 @crab
 :a
@@ -334,17 +334,17 @@ The hermit crab retracts into its shell.
 #become fake
 
     end
-    stat at 38,19 element Object p1 cp437:0xE5 p2 0 step idle under Fake color 0x07
+    stat at 38,19 element Object p1 cp437:0xE5 under Fake color 0x07
     oop
 #bind crab
 
     end
-    stat at 49,18 element Object p1 cp437:0xE5 p2 0 step idle under Fake color 0x08
+    stat at 49,18 element Object p1 cp437:0xE5 under Fake color 0x08
     oop
 #bind crab
 
     end
-    stat at 49,2 element Object p1 cp437:0xB0 p2 0 step idle under Water color 0x78
+    stat at 49,2 element Object p1 cp437:0xB0 under Water color 0x78
     oop
 @c
 #cycle 32
@@ -354,12 +354,12 @@ The hermit crab retracts into its shell.
 #a
 
     end
-    stat at 57,3 element Object p1 cp437:0xB0 p2 0 step idle under Water color 0x78
+    stat at 57,3 element Object p1 cp437:0xB0 under Water color 0x78
     oop
 #bind c
 
     end
-    stat at 46,1 element Object p1 cp437:0xB0 p2 0 step idle under Fake color 0x77
+    stat at 46,1 element Object p1 cp437:0xB0 under Fake color 0x77
     oop
 @c
 #cycle 32
@@ -369,7 +369,7 @@ The hermit crab retracts into its shell.
 #a
 
     end
-    stat at 58,25 element Object cycle 1 p1 cp437:0xB2 p2 0 step idle under Empty color 0x0F
+    stat at 58,25 element Object cycle 1 p1 cp437:0xB2 under Empty color 0x0F
     oop
 @suncontrol
 :t
@@ -397,7 +397,7 @@ The hermit crab retracts into its shell.
 :t
 
     end
-    stat at 59,25 element Object cycle 1 p1 cp437:0xB2 p2 0 step idle under Empty color 0x0F
+    stat at 59,25 element Object cycle 1 p1 cp437:0xB2 under Empty color 0x0F
     oop
 @hours
 #end
@@ -435,7 +435,7 @@ The hermit crab retracts into its shell.
 #end
 
     end
-    stat at 60,25 element Object cycle 1 p1 cp437:0xB2 p2 0 step idle under Empty color 0x0F
+    stat at 60,25 element Object cycle 1 p1 cp437:0xB2 under Empty color 0x0F
     oop
 @rf
 #end
@@ -470,7 +470,7 @@ The hermit crab retracts into its shell.
 :a
 
     end
-    stat at 41,2 element Object cycle 1 p1 cp437:0xDB p2 0 step idle under Empty color 0x0F
+    stat at 41,2 element Object cycle 1 p1 cp437:0xDB under Empty color 0x0F
     oop
 @lc
 #end
@@ -482,37 +482,37 @@ The hermit crab retracts into its shell.
 #end
 
     end
-    stat at 42,3 element Object cycle 1 p1 cp437:0xDB p2 0 step idle under Empty color 0x0F
+    stat at 42,3 element Object cycle 1 p1 cp437:0xDB under Empty color 0x0F
     oop
 #bind lc
 
     end
-    stat at 43,4 element Object cycle 1 p1 cp437:0xDB p2 0 step idle under Empty color 0x0F
+    stat at 43,4 element Object cycle 1 p1 cp437:0xDB under Empty color 0x0F
     oop
 #bind lc
 
     end
-    stat at 44,5 element Object cycle 1 p1 cp437:0xDB p2 0 step idle under Empty color 0x0F
+    stat at 44,5 element Object cycle 1 p1 cp437:0xDB under Empty color 0x0F
     oop
 #bind lc
 
     end
-    stat at 45,6 element Object cycle 1 p1 cp437:0xDB p2 0 step idle under Empty color 0x0F
+    stat at 45,6 element Object cycle 1 p1 cp437:0xDB under Empty color 0x0F
     oop
 #bind lc
 
     end
-    stat at 46,7 element Object cycle 1 p1 cp437:0xDB p2 0 step idle under Empty color 0x0F
+    stat at 46,7 element Object cycle 1 p1 cp437:0xDB under Empty color 0x0F
     oop
 #bind lc
 
     end
-    stat at 47,8 element Object cycle 1 p1 cp437:0xDB p2 0 step idle under Empty color 0x0F
+    stat at 47,8 element Object cycle 1 p1 cp437:0xDB under Empty color 0x0F
     oop
 #bind lc
 
     end
-    stat at 40,1 element Object cycle 1 p1 cp437:0x20 p2 0 step idle under Empty color 0x0F
+    stat at 40,1 element Object cycle 1 p1 cp437:0x20 under Empty color 0x0F
     oop
 @lb
 #end
@@ -524,47 +524,47 @@ The hermit crab retracts into its shell.
 #end
 
     end
-    stat at 40,2 element Object cycle 1 p1 cp437:0x20 p2 0 step idle under Empty color 0x0F
+    stat at 40,2 element Object cycle 1 p1 cp437:0x20 under Empty color 0x0F
     oop
 #bind la
 
     end
-    stat at 39,3 element Object cycle 1 p1 cp437:0x20 p2 0 step idle under Empty color 0x0F
+    stat at 39,3 element Object cycle 1 p1 cp437:0x20 under Empty color 0x0F
     oop
 #bind lb
 
     end
-    stat at 39,4 element Object cycle 1 p1 cp437:0x20 p2 0 step idle under Empty color 0x0F
+    stat at 39,4 element Object cycle 1 p1 cp437:0x20 under Empty color 0x0F
     oop
 #bind la
 
     end
-    stat at 38,5 element Object cycle 1 p1 cp437:0x20 p2 0 step idle under Empty color 0x0F
+    stat at 38,5 element Object cycle 1 p1 cp437:0x20 under Empty color 0x0F
     oop
 #bind lb
 
     end
-    stat at 38,6 element Object cycle 1 p1 cp437:0x20 p2 0 step idle under Empty color 0x0F
+    stat at 38,6 element Object cycle 1 p1 cp437:0x20 under Empty color 0x0F
     oop
 #bind la
 
     end
-    stat at 37,7 element Object cycle 1 p1 cp437:0x20 p2 0 step idle under Empty color 0x0F
+    stat at 37,7 element Object cycle 1 p1 cp437:0x20 under Empty color 0x0F
     oop
 #bind lb
 
     end
-    stat at 37,8 element Object cycle 1 p1 cp437:0x20 p2 0 step idle under Empty color 0x0F
+    stat at 37,8 element Object cycle 1 p1 cp437:0x20 under Empty color 0x0F
     oop
 #bind la
 
     end
-    stat at 36,9 element Object cycle 1 p1 cp437:0x20 p2 0 step idle under Empty color 0x0F
+    stat at 36,9 element Object cycle 1 p1 cp437:0x20 under Empty color 0x0F
     oop
 #bind lb
 
     end
-    stat at 40,3 element Object cycle 1 p1 cp437:0x20 p2 0 step idle under Empty color 0x0F
+    stat at 40,3 element Object cycle 1 p1 cp437:0x20 under Empty color 0x0F
     oop
 @la
 #end
@@ -576,37 +576,37 @@ The hermit crab retracts into its shell.
 #end
 
     end
-    stat at 39,5 element Object cycle 1 p1 cp437:0x20 p2 0 step idle under Empty color 0x0F
+    stat at 39,5 element Object cycle 1 p1 cp437:0x20 under Empty color 0x0F
     oop
 #bind la
 
     end
-    stat at 38,7 element Object cycle 1 p1 cp437:0x20 p2 0 step idle under Empty color 0x0F
+    stat at 38,7 element Object cycle 1 p1 cp437:0x20 under Empty color 0x0F
     oop
 #bind la
 
     end
-    stat at 37,9 element Object cycle 1 p1 cp437:0x20 p2 0 step idle under Empty color 0x0F
+    stat at 37,9 element Object cycle 1 p1 cp437:0x20 under Empty color 0x0F
     oop
 #bind la
 
     end
-    stat at 36,8 element Object cycle 1 p1 cp437:0xDB p2 0 step idle under Empty color 0x0F
+    stat at 36,8 element Object cycle 1 p1 cp437:0xDB under Empty color 0x0F
     oop
 #bind lc
 
     end
-    stat at 35,9 element Object cycle 1 p1 cp437:0xDB p2 0 step idle under Empty color 0x0F
+    stat at 35,9 element Object cycle 1 p1 cp437:0xDB under Empty color 0x0F
     oop
 #bind lc
 
     end
-    stat at 34,10 element Object cycle 1 p1 cp437:0xDB p2 0 step idle under Empty color 0x0F
+    stat at 34,10 element Object cycle 1 p1 cp437:0xDB under Empty color 0x0F
     oop
 #bind lc
 
     end
-    stat at 35,8 element Object cycle 1 p1 cp437:0xDB p2 0 step idle under Empty color 0x0F
+    stat at 35,8 element Object cycle 1 p1 cp437:0xDB under Empty color 0x0F
     oop
 @ld
 #end
@@ -618,141 +618,141 @@ The hermit crab retracts into its shell.
 #end
 
     end
-    stat at 34,9 element Object cycle 1 p1 cp437:0xDB p2 0 step idle under Empty color 0x0F
+    stat at 34,9 element Object cycle 1 p1 cp437:0xDB under Empty color 0x0F
     oop
 #bind ld
 
     end
-    stat at 33,10 element Object cycle 1 p1 cp437:0xDB p2 0 step idle under Empty color 0x0F
+    stat at 33,10 element Object cycle 1 p1 cp437:0xDB under Empty color 0x0F
     oop
 #bind ld
 
     end
-    stat at 36,10 element Object cycle 1 p1 cp437:0x20 p2 0 step idle under Empty color 0x0F
+    stat at 36,10 element Object cycle 1 p1 cp437:0x20 under Empty color 0x0F
     oop
 #bind lb
 
     end
-    stat at 54,17 element Object cycle 1 p1 cp437:0x20 p2 0 step idle under Empty color 0x0F
+    stat at 54,17 element Object cycle 1 p1 cp437:0x20 under Empty color 0x0F
     oop
 #bind la
 
     end
-    stat at 53,18 element Object cycle 1 p1 cp437:0x20 p2 0 step idle under Empty color 0x0F
+    stat at 53,18 element Object cycle 1 p1 cp437:0x20 under Empty color 0x0F
     oop
 #bind la
 
     end
-    stat at 52,19 element Object cycle 1 p1 cp437:0x20 p2 0 step idle under Empty color 0x0F
+    stat at 52,19 element Object cycle 1 p1 cp437:0x20 under Empty color 0x0F
     oop
 #bind la
 
     end
-    stat at 51,20 element Object cycle 1 p1 cp437:0x20 p2 0 step idle under Empty color 0x0F
+    stat at 51,20 element Object cycle 1 p1 cp437:0x20 under Empty color 0x0F
     oop
 #bind la
 
     end
-    stat at 50,21 element Object cycle 1 p1 cp437:0x20 p2 0 step idle under Empty color 0x0F
+    stat at 50,21 element Object cycle 1 p1 cp437:0x20 under Empty color 0x0F
     oop
 #bind la
 
     end
-    stat at 49,22 element Object cycle 1 p1 cp437:0x20 p2 0 step idle under Empty color 0x0F
+    stat at 49,22 element Object cycle 1 p1 cp437:0x20 under Empty color 0x0F
     oop
 #bind la
 
     end
-    stat at 54,16 element Object cycle 1 p1 cp437:0x20 p2 0 step idle under Empty color 0x0F
+    stat at 54,16 element Object cycle 1 p1 cp437:0x20 under Empty color 0x0F
     oop
 #bind lb
 
     end
-    stat at 53,17 element Object cycle 1 p1 cp437:0x20 p2 0 step idle under Empty color 0x0F
+    stat at 53,17 element Object cycle 1 p1 cp437:0x20 under Empty color 0x0F
     oop
 #bind lb
 
     end
-    stat at 52,18 element Object cycle 1 p1 cp437:0x20 p2 0 step idle under Empty color 0x0F
+    stat at 52,18 element Object cycle 1 p1 cp437:0x20 under Empty color 0x0F
     oop
 #bind lb
 
     end
-    stat at 51,19 element Object cycle 1 p1 cp437:0x20 p2 0 step idle under Empty color 0x0F
+    stat at 51,19 element Object cycle 1 p1 cp437:0x20 under Empty color 0x0F
     oop
 #bind lb
 
     end
-    stat at 50,20 element Object cycle 1 p1 cp437:0x20 p2 0 step idle under Empty color 0x0F
+    stat at 50,20 element Object cycle 1 p1 cp437:0x20 under Empty color 0x0F
     oop
 #bind lb
 
     end
-    stat at 49,21 element Object cycle 1 p1 cp437:0x20 p2 0 step idle under Empty color 0x0F
+    stat at 49,21 element Object cycle 1 p1 cp437:0x20 under Empty color 0x0F
     oop
 #bind lb
 
     end
-    stat at 55,17 element Object cycle 1 p1 cp437:0xDB p2 0 step idle under Empty color 0x0F
+    stat at 55,17 element Object cycle 1 p1 cp437:0xDB under Empty color 0x0F
     oop
 #bind lc
 
     end
-    stat at 56,18 element Object cycle 1 p1 cp437:0xDB p2 0 step idle under Empty color 0x0F
+    stat at 56,18 element Object cycle 1 p1 cp437:0xDB under Empty color 0x0F
     oop
 #bind lc
 
     end
-    stat at 57,19 element Object cycle 1 p1 cp437:0xDB p2 0 step idle under Empty color 0x0F
+    stat at 57,19 element Object cycle 1 p1 cp437:0xDB under Empty color 0x0F
     oop
 #bind lc
 
     end
-    stat at 58,20 element Object cycle 1 p1 cp437:0xDB p2 0 step idle under Empty color 0x0F
+    stat at 58,20 element Object cycle 1 p1 cp437:0xDB under Empty color 0x0F
     oop
 #bind lc
 
     end
-    stat at 59,21 element Object cycle 1 p1 cp437:0xDB p2 0 step idle under Empty color 0x0F
+    stat at 59,21 element Object cycle 1 p1 cp437:0xDB under Empty color 0x0F
     oop
 #bind lc
 
     end
-    stat at 46,23 element Object cycle 1 p1 cp437:0xDB p2 0 step idle under Empty color 0x0F
+    stat at 46,23 element Object cycle 1 p1 cp437:0xDB under Empty color 0x0F
     oop
 #bind ld
 
     end
-    stat at 47,23 element Object cycle 1 p1 cp437:0xDB p2 0 step idle under Empty color 0x0F
+    stat at 47,23 element Object cycle 1 p1 cp437:0xDB under Empty color 0x0F
     oop
 #bind lc
 
     end
-    stat at 47,22 element Object cycle 1 p1 cp437:0xDB p2 0 step idle under Empty color 0x0F
+    stat at 47,22 element Object cycle 1 p1 cp437:0xDB under Empty color 0x0F
     oop
 #bind ld
 
     end
-    stat at 48,22 element Object cycle 1 p1 cp437:0xDB p2 0 step idle under Empty color 0x0F
+    stat at 48,22 element Object cycle 1 p1 cp437:0xDB under Empty color 0x0F
     oop
 #bind lc
 
     end
-    stat at 41,12 element Object cycle 1 p1 cp437:0xDC p2 0 step idle under Empty color 0x0F
-    stat at 42,12 element Object cycle 1 p1 cp437:0xDC p2 0 step idle under Empty color 0x0F
-    stat at 43,12 element Object cycle 1 p1 cp437:0xDC p2 0 step idle under Empty color 0x0F
-    stat at 41,13 element Object cycle 1 p1 cp437:0xDD p2 0 step idle under Empty color 0x0F
-    stat at 43,13 element Object cycle 1 p1 cp437:0xDE p2 0 step idle under Empty color 0x0F
-    stat at 41,14 element Object cycle 1 p1 cp437:0xDD p2 0 step idle under Empty color 0x0F
-    stat at 43,14 element Object cycle 1 p1 cp437:0xDE p2 0 step idle under Empty color 0x0F
-    stat at 31,11 element Object cycle 1 p1 cp437:0xDC p2 0 step idle under Empty color 0x0F
-    stat at 32,11 element Object cycle 1 p1 cp437:0xDC p2 0 step idle under Empty color 0x0F
-    stat at 33,11 element Object cycle 1 p1 cp437:0xDC p2 0 step idle under Empty color 0x0F
-    stat at 31,12 element Object cycle 1 p1 cp437:0xDD p2 0 step idle under Empty color 0x0F
-    stat at 33,12 element Object cycle 1 p1 cp437:0xDE p2 0 step idle under Empty color 0x0F
-    stat at 31,13 element Object cycle 1 p1 cp437:0xDD p2 0 step idle under Empty color 0x0F
-    stat at 33,13 element Object cycle 1 p1 cp437:0xDE p2 0 step idle under Empty color 0x0F
-    stat at 56,14 element Object cycle 1 p2 1 step idle under Empty color 0x0F
+    stat at 41,12 element Object cycle 1 p1 cp437:0xDC under Empty color 0x0F
+    stat at 42,12 element Object cycle 1 p1 cp437:0xDC under Empty color 0x0F
+    stat at 43,12 element Object cycle 1 p1 cp437:0xDC under Empty color 0x0F
+    stat at 41,13 element Object cycle 1 p1 cp437:0xDD under Empty color 0x0F
+    stat at 43,13 element Object cycle 1 p1 cp437:0xDE under Empty color 0x0F
+    stat at 41,14 element Object cycle 1 p1 cp437:0xDD under Empty color 0x0F
+    stat at 43,14 element Object cycle 1 p1 cp437:0xDE under Empty color 0x0F
+    stat at 31,11 element Object cycle 1 p1 cp437:0xDC under Empty color 0x0F
+    stat at 32,11 element Object cycle 1 p1 cp437:0xDC under Empty color 0x0F
+    stat at 33,11 element Object cycle 1 p1 cp437:0xDC under Empty color 0x0F
+    stat at 31,12 element Object cycle 1 p1 cp437:0xDD under Empty color 0x0F
+    stat at 33,12 element Object cycle 1 p1 cp437:0xDE under Empty color 0x0F
+    stat at 31,13 element Object cycle 1 p1 cp437:0xDD under Empty color 0x0F
+    stat at 33,13 element Object cycle 1 p1 cp437:0xDE under Empty color 0x0F
+    stat at 56,14 element Object cycle 1 p2 1 under Empty color 0x0F
     oop
 @Amy Hermit
 'reminder: obj is locked in kevedit
@@ -788,7 +788,7 @@ Oh... Hi.
 /i/i/i/i/i/i/i/i#ins
 
     end
-    stat at 58,16 element Object cycle 1 p1 cp437:0xE2 p2 0 step idle under Empty color 0x0F
+    stat at 58,16 element Object cycle 1 p1 cp437:0xE2 under Empty color 0x0F
     oop
 @Sign
 #end

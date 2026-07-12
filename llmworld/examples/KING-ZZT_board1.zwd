@@ -120,7 +120,7 @@ OzOzOzOz~&*#++++++~&*#++++++++++++++++#*&~++++++#*&~OzOzOzOz
   end
 
   stats
-    stat at 56,4 element Object p1 cp437:0x00 p2 0 step idle under Empty color 0x0A
+    stat at 56,4 element Object p1 cp437:0x00 under Empty color 0x0A
     oop
 @Music
 #Play icqd#ifqgi!g#gqfid-q!b+icdq!d
@@ -129,14 +129,14 @@ OzOzOzOz~&*#++++++~&*#++++++++++++++++#*&~++++++#*&~OzOzOzOz
 #End
 
     end
-    stat at 34,21 element Passage p1 0 p2 0 p3 board "[Castle - Throne Room]" step idle under Empty color 0x40
-    stat at 6,4 element Object p1 cp437:0x57 p2 0 step idle under Empty color 0x57
-    stat at 7,4 element Object p1 cp437:0x68 p2 0 step idle under Empty color 0x68
-    stat at 8,4 element Object p1 cp437:0x65 p2 0 step idle under Empty color 0x65
-    stat at 9,4 element Object p1 cp437:0x6E p2 0 step idle under Empty color 0x6E
-    stat at 41,18 element Object p1 cp437:0x2E p2 0 step idle under Empty color 0x6E
-    stat at 43,18 element Object p1 cp437:0x2E p2 0 step idle under Empty color 0x2E
-    stat at 42,18 element Object p1 cp437:0x2E p2 0 step idle under Empty color 0x2E
-    stat at 44,18 element Object p1 cp437:0x2E p2 0 step idle under Empty color 0x2E
+    stat at 34,21 element Passage p3 board "[Castle - Throne Room]" under Empty color 0x40
+    stat at 6,4 element Object p1 cp437:0x57 under Empty color 0x57
+    stat at 7,4 element Object p1 cp437:0x68 under Empty color 0x68
+    stat at 8,4 element Object p1 cp437:0x65 under Empty color 0x65
+    stat at 9,4 element Object p1 cp437:0x6E under Empty color 0x6E
+    stat at 41,18 element Object p1 cp437:0x2E under Empty color 0x6E
+    stat at 43,18 element Object p1 cp437:0x2E under Empty color 0x2E
+    stat at 42,18 element Object p1 cp437:0x2E under Empty color 0x2E
+    stat at 44,18 element Object p1 cp437:0x2E under Empty color 0x2E
   end
 end

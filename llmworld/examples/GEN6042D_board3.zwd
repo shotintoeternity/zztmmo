@@ -1,0 +1,194 @@
+board "Hall of Pendulums"
+  start player at 1,12
+  max-shots 255
+  dark false
+  reenter false
+  time-limit 0
+  exits north none south none west "Gear Antechamber" east "Steam Vent Works"
+
+  grid
+############################################################
+#F........N.....N.....N.....N.....N.....N.....N..........FFF
+#F.BBBBB..N.....N.....N.....N.....N.....N.....N..BBBBB...FFF
+#F.B...B..l.....l.....l.....l.....l.....l.....l..B...B...FFF
+#F.B...B..l.....l.....l.....l.....l.....l.....l..B...B...FFF
+#F.BBBBB..o.....o.....o.....o.....o.....o.....o..BBBBB...FFF
+#F........N.....N.....N.....N.....N.....N.....N..........FFF
+#F..............................................N.......FFF#
+#NNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNN
+#F.........................................................#
+#F....O....................................................#
+@.........................................................p#
+#F.........................................................#
+#NNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNN
+#F........N.....N.....N.....N.....N.....N.....N............#
+#F........o.....o.....o.....o.....o.....o.....o....k.......#
+#F........l.....l.....l.....l.....l.....l.....l...BBB......#
+#F........l.....l.....l.....l.....l.....l.....l...B.B......#
+#F........N.....N.....N.....N.....N.....N.....N...BBB......#
+#F................................................a........#
+#F........................................................#.
+#F.FFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFF...#.
+#F........................................................#.
+#F........................................................#.
+############################################################
+  end
+
+  legend
+    # = Solid color 0x68
+    F = Fake color 0x60
+    . = Empty color 0x00
+    N = Normal color 0x67
+    B = Breakable color 0x6E
+    l = Line color 0x0E
+    o = Object color 0x0E
+    O = Object color 0x0B
+    @ = Player color 0x1F under Empty color 0x00
+    p = Passage color 0x6F to "Steam Vent Works"
+    k = Key color 0x03
+    a = Object color 0x0F
+  end
+
+  stats
+    stat at 7,11 element Object p1 cp437:0x02 p2 4
+    oop
+@sage
+#end
+:touch
+#play tcfa
+The pendulums swing in rhythm. Cross when
+the
+brass rods rise. The copper key rests
+beyond,
+past the southern gallery. Time your
+steps.
+#end
+    end
+    stat at 11,6 element Object cycle 2 p1 cp437:0x0F p2 4
+    oop
+@swing1
+#end
+:touch
+#play f-f
+The rod hums with tension. Watch its
+rhythm.
+#end
+    end
+    stat at 17,6 element Object cycle 2 p1 cp437:0x0F p2 4
+    oop
+@swing2
+#end
+:touch
+#play f-f
+#end
+    end
+    stat at 23,6 element Object cycle 2 p1 cp437:0x0F p2 4
+    oop
+@swing3
+#end
+:touch
+#play f-f
+#end
+    end
+    stat at 29,6 element Object cycle 2 p1 cp437:0x0F p2 4
+    oop
+@swing4
+#end
+:touch
+#play f-f
+#end
+    end
+    stat at 35,6 element Object cycle 2 p1 cp437:0x0F p2 4
+    oop
+@swing5
+#end
+:touch
+#play f-f
+#end
+    end
+    stat at 41,6 element Object cycle 2 p1 cp437:0x0F p2 4
+    oop
+@swing6
+#end
+:touch
+#play f-f
+#end
+    end
+    stat at 47,6 element Object cycle 2 p1 cp437:0x0F p2 4
+    oop
+@swing7
+#end
+:touch
+#play f-f
+#end
+    end
+    stat at 11,16 element Object cycle 2 p1 cp437:0x0F p2 4
+    oop
+@lswing1
+#end
+:touch
+#play f-f
+#end
+    end
+    stat at 17,16 element Object cycle 2 p1 cp437:0x0F p2 4
+    oop
+@lswing2
+#end
+:touch
+#play f-f
+#end
+    end
+    stat at 23,16 element Object cycle 2 p1 cp437:0x0F p2 4
+    oop
+@lswing3
+#end
+:touch
+#play f-f
+#end
+    end
+    stat at 29,16 element Object cycle 2 p1 cp437:0x0F p2 4
+    oop
+@lswing4
+#end
+:touch
+#play f-f
+#end
+    end
+    stat at 35,16 element Object cycle 2 p1 cp437:0x0F p2 4
+    oop
+@lswing5
+#end
+:touch
+#play f-f
+#end
+    end
+    stat at 41,16 element Object cycle 2 p1 cp437:0x0F p2 4
+    oop
+@lswing6
+#end
+:touch
+#play f-f
+#end
+    end
+    stat at 47,16 element Object cycle 2 p1 cp437:0x0F p2 4
+    oop
+@lswing7
+#end
+:touch
+#play f-f
+#end
+    end
+    stat at 51,20 element Object p1 cp437:0x0F p2 4
+    oop
+@keysign
+#end
+:touch
+#play tcefg
+The copper key rests in the alcove above.
+Take it, then pass east to the Steam
+Works.
+#end
+    end
+    stat at 59,12 element Passage p1 4 p2 4 p3 board "Steam Vent Works" step north
+  end
+end

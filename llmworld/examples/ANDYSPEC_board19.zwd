@@ -56,85 +56,85 @@ ggggggggfffee~WaaaabcccccccccbaaWWaaaaaaaaaaaWW~~~~~~~~~~~~~
   end
 
   stats
-    stat at 16,15 element Object p1 cp437:0xDB p2 0 step idle under Empty color 0x0A
+    stat at 16,15 element Object p1 cp437:0xDB under Empty color 0x0A
     oop
 @Gay
 Uh oh, Omega pledgees
 #end
 
     end
-    stat at 24,15 element Lion p2 0 step idle
-    stat at 29,12 element Lion p2 0 step idle
-    stat at 31,10 element Lion p2 0 step idle
-    stat at 37,14 element Lion p2 0 step idle
-    stat at 39,14 element Lion p2 0 step idle
-    stat at 41,14 element Lion p2 0 step idle
-    stat at 44,12 element Lion p2 0 step idle
-    stat at 49,14 element Lion p2 0 step idle
-    stat at 56,13 element Lion p2 0 step idle
-    stat at 59,10 element Lion p2 0 step idle
-    stat at 58,8 element Lion p2 0 step idle
-    stat at 55,3 element Lion p2 0 step idle
-    stat at 47,3 element Lion p2 0 step idle
-    stat at 34,11 element Lion p2 0 step idle
-    stat at 30,15 element Lion p2 0 step idle
-    stat at 25,17 element Lion p2 0 step idle
-    stat at 23,18 element Lion p2 0 step idle
-    stat at 20,15 element Lion p2 0 step idle
-    stat at 18,13 element Lion p2 0 step idle
-    stat at 16,13 element Lion p2 0 step idle
-    stat at 15,11 element Lion p2 0 step idle
-    stat at 13,9 element Lion p2 0 step idle
-    stat at 13,10 element Lion p1 8 p2 0 step idle
-    stat at 15,12 element Lion p1 8 p2 0 step idle
-    stat at 17,12 element Lion p1 8 p2 0 step idle
-    stat at 17,14 element Lion p1 8 p2 0 step idle
-    stat at 20,14 element Lion p1 8 p2 0 step idle
-    stat at 23,14 element Lion p1 8 p2 0 step idle
-    stat at 26,14 element Lion p1 8 p2 0 step idle
-    stat at 28,13 element Lion p1 8 p2 0 step idle
-    stat at 28,12 element Lion p1 8 p2 0 step idle
-    stat at 28,10 element Lion p1 8 p2 0 step idle
-    stat at 30,8 element Lion p1 8 p2 0 step idle
-    stat at 31,8 element Lion p1 8 p2 0 step idle
-    stat at 29,14 element Lion p1 8 p2 0 step idle
-    stat at 33,12 element Lion p1 8 p2 0 step idle
-    stat at 36,12 element Lion p1 8 p2 0 step idle
-    stat at 38,14 element Lion p1 8 p2 0 step idle
-    stat at 40,16 element Lion p1 8 p2 0 step idle
-    stat at 40,17 element Lion p1 8 p2 0 step idle
-    stat at 43,14 element Lion p1 8 p2 0 step idle
-    stat at 46,11 element Lion p1 8 p2 0 step idle
-    stat at 44,11 element Lion p1 8 p2 0 step idle
-    stat at 45,10 element Lion p1 8 p2 0 step idle
-    stat at 46,13 element Lion p1 8 p2 0 step idle
-    stat at 48,15 element Lion p1 8 p2 0 step idle
-    stat at 51,15 element Lion p1 8 p2 0 step idle
-    stat at 53,16 element Lion p1 8 p2 0 step idle
-    stat at 53,17 element Lion p1 8 p2 0 step idle
-    stat at 54,15 element Lion p1 8 p2 0 step idle
-    stat at 55,14 element Lion p1 8 p2 0 step idle
-    stat at 55,13 element Lion p1 8 p2 0 step idle
-    stat at 57,12 element Lion p1 8 p2 0 step idle
-    stat at 57,11 element Lion p1 8 p2 0 step idle
-    stat at 58,10 element Lion p1 8 p2 0 step idle
-    stat at 58,9 element Lion p1 8 p2 0 step idle
-    stat at 59,8 element Lion p1 8 p2 0 step idle
-    stat at 58,6 element Lion p1 8 p2 0 step idle
-    stat at 57,5 element Lion p1 8 p2 0 step idle
-    stat at 56,4 element Lion p1 8 p2 0 step idle
-    stat at 55,4 element Lion p1 8 p2 0 step idle
-    stat at 51,3 element Lion p1 8 p2 0 step idle
-    stat at 49,3 element Lion p1 8 p2 0 step idle
-    stat at 45,3 element Lion p1 8 p2 0 step idle
-    stat at 43,3 element Lion p1 8 p2 0 step idle
-    stat at 41,3 element Lion p1 8 p2 0 step idle
-    stat at 40,3 element Lion p1 8 p2 0 step idle
-    stat at 38,3 element Lion p1 8 p2 0 step idle
-    stat at 37,2 element Lion p1 8 p2 0 step idle
-    stat at 25,21 element Spinning gun p1 8 p2 8 step idle
-    stat at 40,18 element Spinning gun p1 8 p2 8 step idle
-    stat at 45,9 element Spinning gun p1 8 p2 8 step idle
-    stat at 30,7 element Spinning gun p1 8 p2 8 step idle
+    stat at 24,15 element Lion p1 4
+    stat at 29,12 element Lion p1 4
+    stat at 31,10 element Lion p1 4
+    stat at 37,14 element Lion p1 4
+    stat at 39,14 element Lion p1 4
+    stat at 41,14 element Lion p1 4
+    stat at 44,12 element Lion p1 4
+    stat at 49,14 element Lion p1 4
+    stat at 56,13 element Lion p1 4
+    stat at 59,10 element Lion p1 4
+    stat at 58,8 element Lion p1 4
+    stat at 55,3 element Lion p1 4
+    stat at 47,3 element Lion p1 4
+    stat at 34,11 element Lion p1 4
+    stat at 30,15 element Lion p1 4
+    stat at 25,17 element Lion p1 4
+    stat at 23,18 element Lion p1 4
+    stat at 20,15 element Lion p1 4
+    stat at 18,13 element Lion p1 4
+    stat at 16,13 element Lion p1 4
+    stat at 15,11 element Lion p1 4
+    stat at 13,9 element Lion p1 4
+    stat at 13,10 element Lion p1 8
+    stat at 15,12 element Lion p1 8
+    stat at 17,12 element Lion p1 8
+    stat at 17,14 element Lion p1 8
+    stat at 20,14 element Lion p1 8
+    stat at 23,14 element Lion p1 8
+    stat at 26,14 element Lion p1 8
+    stat at 28,13 element Lion p1 8
+    stat at 28,12 element Lion p1 8
+    stat at 28,10 element Lion p1 8
+    stat at 30,8 element Lion p1 8
+    stat at 31,8 element Lion p1 8
+    stat at 29,14 element Lion p1 8
+    stat at 33,12 element Lion p1 8
+    stat at 36,12 element Lion p1 8
+    stat at 38,14 element Lion p1 8
+    stat at 40,16 element Lion p1 8
+    stat at 40,17 element Lion p1 8
+    stat at 43,14 element Lion p1 8
+    stat at 46,11 element Lion p1 8
+    stat at 44,11 element Lion p1 8
+    stat at 45,10 element Lion p1 8
+    stat at 46,13 element Lion p1 8
+    stat at 48,15 element Lion p1 8
+    stat at 51,15 element Lion p1 8
+    stat at 53,16 element Lion p1 8
+    stat at 53,17 element Lion p1 8
+    stat at 54,15 element Lion p1 8
+    stat at 55,14 element Lion p1 8
+    stat at 55,13 element Lion p1 8
+    stat at 57,12 element Lion p1 8
+    stat at 57,11 element Lion p1 8
+    stat at 58,10 element Lion p1 8
+    stat at 58,9 element Lion p1 8
+    stat at 59,8 element Lion p1 8
+    stat at 58,6 element Lion p1 8
+    stat at 57,5 element Lion p1 8
+    stat at 56,4 element Lion p1 8
+    stat at 55,4 element Lion p1 8
+    stat at 51,3 element Lion p1 8
+    stat at 49,3 element Lion p1 8
+    stat at 45,3 element Lion p1 8
+    stat at 43,3 element Lion p1 8
+    stat at 41,3 element Lion p1 8
+    stat at 40,3 element Lion p1 8
+    stat at 38,3 element Lion p1 8
+    stat at 37,2 element Lion p1 8
+    stat at 25,21 element Spinning gun p1 8 p2 8
+    stat at 40,18 element Spinning gun p1 8 p2 8
+    stat at 45,9 element Spinning gun p1 8 p2 8
+    stat at 30,7 element Spinning gun p1 8 p2 8
   end
 end

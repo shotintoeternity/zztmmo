@@ -45,133 +45,133 @@ FFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFTTT
   end
 
   stats
-    stat at 4,12 element Scroll p1 0 p2 0 step idle under Fake color 0x0E
+    stat at 4,12 element Scroll under Fake color 0x0E
     oop
 Okay. Here's where the REAL action is!!!!!
 
     end
-    stat at 58,24 element Tiger p1 8 p2 8 step idle under Fake color 0x0E
-    stat at 59,25 element Tiger p1 8 p2 8 step idle under Fake color 0x0E
-    stat at 58,23 element Tiger p1 8 p2 8 step idle under Fake color 0x0E
-    stat at 59,24 element Tiger p1 8 p2 8 step idle under Fake color 0x0E
-    stat at 59,24 element Tiger p1 8 p2 8 step idle under Tiger color 0x0B
-    stat at 60,25 element Tiger p1 8 p2 8 step idle under Fake color 0x0E
-    stat at 58,22 element Tiger p1 8 p2 8 step idle under Fake color 0x0E
-    stat at 59,23 element Tiger p1 8 p2 8 step idle under Fake color 0x0E
-    stat at 59,23 element Tiger p1 8 p2 8 step idle under Tiger color 0x0B
-    stat at 60,24 element Tiger p1 8 p2 8 step idle under Fake color 0x0E
-    stat at 60,24 element Tiger p1 8 p2 8 step idle under Tiger color 0x0B
-    stat at 58,21 element Tiger p1 8 p2 8 step idle under Fake color 0x0E
-    stat at 59,22 element Tiger p1 8 p2 8 step idle under Fake color 0x0E
-    stat at 59,22 element Tiger p1 8 p2 8 step idle under Tiger color 0x0B
-    stat at 60,23 element Tiger p1 8 p2 8 step idle under Fake color 0x0E
-    stat at 60,23 element Tiger p1 8 p2 8 step idle under Tiger color 0x0B
-    stat at 58,20 element Tiger p1 8 p2 8 step idle under Fake color 0x0E
-    stat at 59,21 element Tiger p1 8 p2 8 step idle under Fake color 0x0E
-    stat at 59,21 element Tiger p1 8 p2 8 step idle under Tiger color 0x0B
-    stat at 60,22 element Tiger p1 8 p2 8 step idle under Fake color 0x0E
-    stat at 60,22 element Tiger p1 8 p2 8 step idle under Tiger color 0x0B
-    stat at 58,19 element Tiger p1 8 p2 8 step idle under Fake color 0x0E
-    stat at 59,20 element Tiger p1 8 p2 8 step idle under Fake color 0x0E
-    stat at 59,20 element Tiger p1 8 p2 8 step idle under Tiger color 0x0B
-    stat at 60,21 element Tiger p1 8 p2 8 step idle under Fake color 0x0E
-    stat at 60,21 element Tiger p1 8 p2 8 step idle under Tiger color 0x0B
-    stat at 58,18 element Tiger p1 8 p2 8 step idle under Fake color 0x0E
-    stat at 59,19 element Tiger p1 8 p2 8 step idle under Fake color 0x0E
-    stat at 59,19 element Tiger p1 8 p2 8 step idle under Tiger color 0x0B
-    stat at 60,20 element Tiger p1 8 p2 8 step idle under Fake color 0x0E
-    stat at 60,20 element Tiger p1 8 p2 8 step idle under Tiger color 0x0B
-    stat at 58,17 element Tiger p1 8 p2 8 step idle under Fake color 0x0E
-    stat at 59,18 element Tiger p1 8 p2 8 step idle under Fake color 0x0E
-    stat at 59,18 element Tiger p1 8 p2 8 step idle under Tiger color 0x0B
-    stat at 60,19 element Tiger p1 8 p2 8 step idle under Fake color 0x0E
-    stat at 60,19 element Tiger p1 8 p2 8 step idle under Tiger color 0x0B
-    stat at 58,16 element Tiger p1 8 p2 8 step idle under Fake color 0x0E
-    stat at 59,17 element Tiger p1 8 p2 8 step idle under Fake color 0x0E
-    stat at 59,17 element Tiger p1 8 p2 8 step idle under Tiger color 0x0B
-    stat at 60,18 element Tiger p1 8 p2 8 step idle under Fake color 0x0E
-    stat at 60,18 element Tiger p1 8 p2 8 step idle under Tiger color 0x0B
-    stat at 58,15 element Tiger p1 8 p2 8 step idle under Fake color 0x0E
-    stat at 59,16 element Tiger p1 8 p2 8 step idle under Fake color 0x0E
-    stat at 59,16 element Tiger p1 8 p2 8 step idle under Tiger color 0x0B
-    stat at 60,17 element Tiger p1 8 p2 8 step idle under Fake color 0x0E
-    stat at 60,17 element Tiger p1 8 p2 8 step idle under Tiger color 0x0B
-    stat at 58,14 element Tiger p1 8 p2 8 step idle under Fake color 0x0E
-    stat at 59,15 element Tiger p1 8 p2 8 step idle under Fake color 0x0E
-    stat at 59,15 element Tiger p1 8 p2 8 step idle under Tiger color 0x0B
-    stat at 60,16 element Tiger p1 8 p2 8 step idle under Fake color 0x0E
-    stat at 60,16 element Tiger p1 8 p2 8 step idle under Tiger color 0x0B
-    stat at 58,13 element Tiger p1 8 p2 8 step idle under Fake color 0x0E
-    stat at 59,14 element Tiger p1 8 p2 8 step idle under Fake color 0x0E
-    stat at 59,14 element Tiger p1 8 p2 8 step idle under Tiger color 0x0B
-    stat at 60,15 element Tiger p1 8 p2 8 step idle under Fake color 0x0E
-    stat at 60,15 element Tiger p1 8 p2 8 step idle under Tiger color 0x0B
-    stat at 58,12 element Tiger p1 8 p2 8 step idle under Fake color 0x0E
-    stat at 59,13 element Tiger p1 8 p2 8 step idle under Fake color 0x0E
-    stat at 59,13 element Tiger p1 8 p2 8 step idle under Tiger color 0x0B
-    stat at 60,14 element Tiger p1 8 p2 8 step idle under Fake color 0x0E
-    stat at 60,14 element Tiger p1 8 p2 8 step idle under Tiger color 0x0B
-    stat at 58,11 element Tiger p1 8 p2 8 step idle under Fake color 0x0E
-    stat at 59,12 element Tiger p1 8 p2 8 step idle under Fake color 0x0E
-    stat at 59,12 element Tiger p1 8 p2 8 step idle under Tiger color 0x0B
-    stat at 60,13 element Tiger p1 8 p2 8 step idle under Fake color 0x0E
-    stat at 60,13 element Tiger p1 8 p2 8 step idle under Tiger color 0x0B
-    stat at 58,10 element Tiger p1 8 p2 8 step idle under Fake color 0x0E
-    stat at 59,11 element Tiger p1 8 p2 8 step idle under Fake color 0x0E
-    stat at 59,11 element Tiger p1 8 p2 8 step idle under Tiger color 0x0B
-    stat at 58,9 element Tiger p1 8 p2 8 step idle under Fake color 0x0E
-    stat at 59,10 element Tiger p1 8 p2 8 step idle under Fake color 0x0E
-    stat at 59,10 element Tiger p1 8 p2 8 step idle under Tiger color 0x0B
-    stat at 60,11 element Tiger p1 8 p2 8 step idle under Fake color 0x0E
-    stat at 60,11 element Tiger p1 8 p2 8 step idle under Tiger color 0x0B
-    stat at 58,8 element Tiger p1 8 p2 8 step idle under Fake color 0x0E
-    stat at 59,9 element Tiger p1 8 p2 8 step idle under Fake color 0x0E
-    stat at 59,9 element Tiger p1 8 p2 8 step idle under Tiger color 0x0B
-    stat at 60,10 element Tiger p1 8 p2 8 step idle under Fake color 0x0E
-    stat at 60,10 element Tiger p1 8 p2 8 step idle under Tiger color 0x0B
-    stat at 58,7 element Tiger p1 8 p2 8 step idle under Fake color 0x0E
-    stat at 59,8 element Tiger p1 8 p2 8 step idle under Fake color 0x0E
-    stat at 59,8 element Tiger p1 8 p2 8 step idle under Tiger color 0x0B
-    stat at 60,9 element Tiger p1 8 p2 8 step idle under Fake color 0x0E
-    stat at 60,9 element Tiger p1 8 p2 8 step idle under Tiger color 0x0B
-    stat at 58,6 element Tiger p1 8 p2 8 step idle under Fake color 0x0E
-    stat at 59,7 element Tiger p1 8 p2 8 step idle under Fake color 0x0E
-    stat at 59,7 element Tiger p1 8 p2 8 step idle under Tiger color 0x0B
-    stat at 60,8 element Tiger p1 8 p2 8 step idle under Fake color 0x0E
-    stat at 60,8 element Tiger p1 8 p2 8 step idle under Tiger color 0x0B
-    stat at 58,5 element Tiger p1 8 p2 8 step idle under Fake color 0x0E
-    stat at 59,6 element Tiger p1 8 p2 8 step idle under Fake color 0x0E
-    stat at 59,6 element Tiger p1 8 p2 8 step idle under Tiger color 0x0B
-    stat at 60,7 element Tiger p1 8 p2 8 step idle under Fake color 0x0E
-    stat at 60,7 element Tiger p1 8 p2 8 step idle under Tiger color 0x0B
-    stat at 58,4 element Tiger p1 8 p2 8 step idle under Fake color 0x0E
-    stat at 59,5 element Tiger p1 8 p2 8 step idle under Fake color 0x0E
-    stat at 59,5 element Tiger p1 8 p2 8 step idle under Tiger color 0x0B
-    stat at 60,6 element Tiger p1 8 p2 8 step idle under Fake color 0x0E
-    stat at 60,6 element Tiger p1 8 p2 8 step idle under Tiger color 0x0B
-    stat at 58,3 element Tiger p1 8 p2 8 step idle under Fake color 0x0E
-    stat at 59,4 element Tiger p1 8 p2 8 step idle under Fake color 0x0E
-    stat at 59,4 element Tiger p1 8 p2 8 step idle under Tiger color 0x0B
-    stat at 60,5 element Tiger p1 8 p2 8 step idle under Fake color 0x0E
-    stat at 60,5 element Tiger p1 8 p2 8 step idle under Tiger color 0x0B
-    stat at 58,2 element Tiger p1 8 p2 8 step idle under Fake color 0x0E
-    stat at 59,3 element Tiger p1 8 p2 8 step idle under Fake color 0x0E
-    stat at 59,3 element Tiger p1 8 p2 8 step idle under Tiger color 0x0B
-    stat at 60,4 element Tiger p1 8 p2 8 step idle under Fake color 0x0E
-    stat at 60,4 element Tiger p1 8 p2 8 step idle under Tiger color 0x0B
-    stat at 58,1 element Tiger p1 8 p2 8 step idle under Fake color 0x0E
-    stat at 59,2 element Tiger p1 8 p2 8 step idle under Fake color 0x0E
-    stat at 59,2 element Tiger p1 8 p2 8 step idle under Tiger color 0x0B
-    stat at 60,3 element Tiger p1 8 p2 8 step idle under Fake color 0x0E
-    stat at 60,3 element Tiger p1 8 p2 8 step idle under Tiger color 0x0B
-    stat at 59,1 element Tiger p1 8 p2 8 step idle under Fake color 0x0E
-    stat at 59,1 element Tiger p1 8 p2 8 step idle under Tiger color 0x0B
-    stat at 60,2 element Tiger p1 8 p2 8 step idle under Fake color 0x0E
-    stat at 60,2 element Tiger p1 8 p2 8 step idle under Tiger color 0x0B
-    stat at 60,1 element Tiger p1 8 p2 8 step idle under Fake color 0x0E
-    stat at 60,1 element Tiger p1 8 p2 8 step idle under Tiger color 0x0B
-    stat at 58,25 element Tiger p1 8 p2 8 step idle under Fake color 0x0E
-    stat at 53,12 element Object p1 cp437:0x02 p2 0 step idle under Fake color 0x0E
+    stat at 58,24 element Tiger p1 8 p2 8 under Fake color 0x0E
+    stat at 59,25 element Tiger p1 8 p2 8 under Fake color 0x0E
+    stat at 58,23 element Tiger p1 8 p2 8 under Fake color 0x0E
+    stat at 59,24 element Tiger p1 8 p2 8 under Fake color 0x0E
+    stat at 59,24 element Tiger p1 8 p2 8 under Tiger color 0x0B
+    stat at 60,25 element Tiger p1 8 p2 8 under Fake color 0x0E
+    stat at 58,22 element Tiger p1 8 p2 8 under Fake color 0x0E
+    stat at 59,23 element Tiger p1 8 p2 8 under Fake color 0x0E
+    stat at 59,23 element Tiger p1 8 p2 8 under Tiger color 0x0B
+    stat at 60,24 element Tiger p1 8 p2 8 under Fake color 0x0E
+    stat at 60,24 element Tiger p1 8 p2 8 under Tiger color 0x0B
+    stat at 58,21 element Tiger p1 8 p2 8 under Fake color 0x0E
+    stat at 59,22 element Tiger p1 8 p2 8 under Fake color 0x0E
+    stat at 59,22 element Tiger p1 8 p2 8 under Tiger color 0x0B
+    stat at 60,23 element Tiger p1 8 p2 8 under Fake color 0x0E
+    stat at 60,23 element Tiger p1 8 p2 8 under Tiger color 0x0B
+    stat at 58,20 element Tiger p1 8 p2 8 under Fake color 0x0E
+    stat at 59,21 element Tiger p1 8 p2 8 under Fake color 0x0E
+    stat at 59,21 element Tiger p1 8 p2 8 under Tiger color 0x0B
+    stat at 60,22 element Tiger p1 8 p2 8 under Fake color 0x0E
+    stat at 60,22 element Tiger p1 8 p2 8 under Tiger color 0x0B
+    stat at 58,19 element Tiger p1 8 p2 8 under Fake color 0x0E
+    stat at 59,20 element Tiger p1 8 p2 8 under Fake color 0x0E
+    stat at 59,20 element Tiger p1 8 p2 8 under Tiger color 0x0B
+    stat at 60,21 element Tiger p1 8 p2 8 under Fake color 0x0E
+    stat at 60,21 element Tiger p1 8 p2 8 under Tiger color 0x0B
+    stat at 58,18 element Tiger p1 8 p2 8 under Fake color 0x0E
+    stat at 59,19 element Tiger p1 8 p2 8 under Fake color 0x0E
+    stat at 59,19 element Tiger p1 8 p2 8 under Tiger color 0x0B
+    stat at 60,20 element Tiger p1 8 p2 8 under Fake color 0x0E
+    stat at 60,20 element Tiger p1 8 p2 8 under Tiger color 0x0B
+    stat at 58,17 element Tiger p1 8 p2 8 under Fake color 0x0E
+    stat at 59,18 element Tiger p1 8 p2 8 under Fake color 0x0E
+    stat at 59,18 element Tiger p1 8 p2 8 under Tiger color 0x0B
+    stat at 60,19 element Tiger p1 8 p2 8 under Fake color 0x0E
+    stat at 60,19 element Tiger p1 8 p2 8 under Tiger color 0x0B
+    stat at 58,16 element Tiger p1 8 p2 8 under Fake color 0x0E
+    stat at 59,17 element Tiger p1 8 p2 8 under Fake color 0x0E
+    stat at 59,17 element Tiger p1 8 p2 8 under Tiger color 0x0B
+    stat at 60,18 element Tiger p1 8 p2 8 under Fake color 0x0E
+    stat at 60,18 element Tiger p1 8 p2 8 under Tiger color 0x0B
+    stat at 58,15 element Tiger p1 8 p2 8 under Fake color 0x0E
+    stat at 59,16 element Tiger p1 8 p2 8 under Fake color 0x0E
+    stat at 59,16 element Tiger p1 8 p2 8 under Tiger color 0x0B
+    stat at 60,17 element Tiger p1 8 p2 8 under Fake color 0x0E
+    stat at 60,17 element Tiger p1 8 p2 8 under Tiger color 0x0B
+    stat at 58,14 element Tiger p1 8 p2 8 under Fake color 0x0E
+    stat at 59,15 element Tiger p1 8 p2 8 under Fake color 0x0E
+    stat at 59,15 element Tiger p1 8 p2 8 under Tiger color 0x0B
+    stat at 60,16 element Tiger p1 8 p2 8 under Fake color 0x0E
+    stat at 60,16 element Tiger p1 8 p2 8 under Tiger color 0x0B
+    stat at 58,13 element Tiger p1 8 p2 8 under Fake color 0x0E
+    stat at 59,14 element Tiger p1 8 p2 8 under Fake color 0x0E
+    stat at 59,14 element Tiger p1 8 p2 8 under Tiger color 0x0B
+    stat at 60,15 element Tiger p1 8 p2 8 under Fake color 0x0E
+    stat at 60,15 element Tiger p1 8 p2 8 under Tiger color 0x0B
+    stat at 58,12 element Tiger p1 8 p2 8 under Fake color 0x0E
+    stat at 59,13 element Tiger p1 8 p2 8 under Fake color 0x0E
+    stat at 59,13 element Tiger p1 8 p2 8 under Tiger color 0x0B
+    stat at 60,14 element Tiger p1 8 p2 8 under Fake color 0x0E
+    stat at 60,14 element Tiger p1 8 p2 8 under Tiger color 0x0B
+    stat at 58,11 element Tiger p1 8 p2 8 under Fake color 0x0E
+    stat at 59,12 element Tiger p1 8 p2 8 under Fake color 0x0E
+    stat at 59,12 element Tiger p1 8 p2 8 under Tiger color 0x0B
+    stat at 60,13 element Tiger p1 8 p2 8 under Fake color 0x0E
+    stat at 60,13 element Tiger p1 8 p2 8 under Tiger color 0x0B
+    stat at 58,10 element Tiger p1 8 p2 8 under Fake color 0x0E
+    stat at 59,11 element Tiger p1 8 p2 8 under Fake color 0x0E
+    stat at 59,11 element Tiger p1 8 p2 8 under Tiger color 0x0B
+    stat at 58,9 element Tiger p1 8 p2 8 under Fake color 0x0E
+    stat at 59,10 element Tiger p1 8 p2 8 under Fake color 0x0E
+    stat at 59,10 element Tiger p1 8 p2 8 under Tiger color 0x0B
+    stat at 60,11 element Tiger p1 8 p2 8 under Fake color 0x0E
+    stat at 60,11 element Tiger p1 8 p2 8 under Tiger color 0x0B
+    stat at 58,8 element Tiger p1 8 p2 8 under Fake color 0x0E
+    stat at 59,9 element Tiger p1 8 p2 8 under Fake color 0x0E
+    stat at 59,9 element Tiger p1 8 p2 8 under Tiger color 0x0B
+    stat at 60,10 element Tiger p1 8 p2 8 under Fake color 0x0E
+    stat at 60,10 element Tiger p1 8 p2 8 under Tiger color 0x0B
+    stat at 58,7 element Tiger p1 8 p2 8 under Fake color 0x0E
+    stat at 59,8 element Tiger p1 8 p2 8 under Fake color 0x0E
+    stat at 59,8 element Tiger p1 8 p2 8 under Tiger color 0x0B
+    stat at 60,9 element Tiger p1 8 p2 8 under Fake color 0x0E
+    stat at 60,9 element Tiger p1 8 p2 8 under Tiger color 0x0B
+    stat at 58,6 element Tiger p1 8 p2 8 under Fake color 0x0E
+    stat at 59,7 element Tiger p1 8 p2 8 under Fake color 0x0E
+    stat at 59,7 element Tiger p1 8 p2 8 under Tiger color 0x0B
+    stat at 60,8 element Tiger p1 8 p2 8 under Fake color 0x0E
+    stat at 60,8 element Tiger p1 8 p2 8 under Tiger color 0x0B
+    stat at 58,5 element Tiger p1 8 p2 8 under Fake color 0x0E
+    stat at 59,6 element Tiger p1 8 p2 8 under Fake color 0x0E
+    stat at 59,6 element Tiger p1 8 p2 8 under Tiger color 0x0B
+    stat at 60,7 element Tiger p1 8 p2 8 under Fake color 0x0E
+    stat at 60,7 element Tiger p1 8 p2 8 under Tiger color 0x0B
+    stat at 58,4 element Tiger p1 8 p2 8 under Fake color 0x0E
+    stat at 59,5 element Tiger p1 8 p2 8 under Fake color 0x0E
+    stat at 59,5 element Tiger p1 8 p2 8 under Tiger color 0x0B
+    stat at 60,6 element Tiger p1 8 p2 8 under Fake color 0x0E
+    stat at 60,6 element Tiger p1 8 p2 8 under Tiger color 0x0B
+    stat at 58,3 element Tiger p1 8 p2 8 under Fake color 0x0E
+    stat at 59,4 element Tiger p1 8 p2 8 under Fake color 0x0E
+    stat at 59,4 element Tiger p1 8 p2 8 under Tiger color 0x0B
+    stat at 60,5 element Tiger p1 8 p2 8 under Fake color 0x0E
+    stat at 60,5 element Tiger p1 8 p2 8 under Tiger color 0x0B
+    stat at 58,2 element Tiger p1 8 p2 8 under Fake color 0x0E
+    stat at 59,3 element Tiger p1 8 p2 8 under Fake color 0x0E
+    stat at 59,3 element Tiger p1 8 p2 8 under Tiger color 0x0B
+    stat at 60,4 element Tiger p1 8 p2 8 under Fake color 0x0E
+    stat at 60,4 element Tiger p1 8 p2 8 under Tiger color 0x0B
+    stat at 58,1 element Tiger p1 8 p2 8 under Fake color 0x0E
+    stat at 59,2 element Tiger p1 8 p2 8 under Fake color 0x0E
+    stat at 59,2 element Tiger p1 8 p2 8 under Tiger color 0x0B
+    stat at 60,3 element Tiger p1 8 p2 8 under Fake color 0x0E
+    stat at 60,3 element Tiger p1 8 p2 8 under Tiger color 0x0B
+    stat at 59,1 element Tiger p1 8 p2 8 under Fake color 0x0E
+    stat at 59,1 element Tiger p1 8 p2 8 under Tiger color 0x0B
+    stat at 60,2 element Tiger p1 8 p2 8 under Fake color 0x0E
+    stat at 60,2 element Tiger p1 8 p2 8 under Tiger color 0x0B
+    stat at 60,1 element Tiger p1 8 p2 8 under Fake color 0x0E
+    stat at 60,1 element Tiger p1 8 p2 8 under Tiger color 0x0B
+    stat at 58,25 element Tiger p1 8 p2 8 under Fake color 0x0E
+    stat at 53,12 element Object p1 cp437:0x02 under Fake color 0x0E
     oop
 Guy: hahahahahahahahahahahah!
 /i/i/i/i/i/i
@@ -180,6 +180,6 @@ You: Who the HECK was that!!??
 #end
 
     end
-    stat at 60,12 element Passage p1 0 p2 0 p3 board "US!!!!!" step idle under Fake color 0x0F
+    stat at 60,12 element Passage p3 board "US!!!!!" under Fake color 0x0F
   end
 end

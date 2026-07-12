@@ -221,148 +221,148 @@ board "Non-Locked File!"
   end
 
   stats
-    stat at 18,10 element Passage p1 0 p2 0 p3 board "Opener: START" step idle
-    stat at 18,11 element Passage p1 0 p2 0 p3 board "Opener: START" step idle
-    stat at 18,12 element Passage p1 0 p2 0 p3 board "Opener: START" step idle
-    stat at 18,13 element Passage p1 0 p2 0 p3 52 step idle
-    stat at 20,10 element Passage p1 0 p2 0 p3 52 step idle
-    stat at 20,11 element Passage p1 0 p2 0 p3 52 step idle
-    stat at 20,12 element Passage p1 0 p2 0 p3 52 step idle
-    stat at 20,13 element Passage p1 0 p2 0 p3 52 step idle
-    stat at 22,13 element Passage p1 0 p2 0 p3 52 step idle
-    stat at 22,12 element Passage p1 0 p2 0 p3 52 step idle
-    stat at 22,11 element Passage p1 0 p2 0 p3 52 step idle
-    stat at 22,10 element Passage p1 0 p2 0 p3 52 step idle
-    stat at 24,10 element Passage p1 0 p2 0 p3 52 step idle
-    stat at 24,11 element Passage p1 0 p2 0 p3 52 step idle
-    stat at 24,12 element Passage p1 0 p2 0 p3 board "Opener: START" step idle
-    stat at 24,13 element Passage p1 0 p2 0 p3 52 step idle
-    stat at 26,10 element Passage p1 0 p2 0 p3 board "Opener: START" step idle
-    stat at 26,11 element Passage p1 0 p2 0 p3 board "Opener: START" step idle
-    stat at 26,12 element Passage p1 0 p2 0 p3 board "Opener: START" step idle
-    stat at 26,13 element Passage p1 0 p2 0 p3 52 step idle
-    stat at 28,13 element Passage p1 0 p2 0 p3 52 step idle
-    stat at 28,12 element Passage p1 0 p2 0 p3 board "Opener: START" step idle
-    stat at 28,11 element Passage p1 0 p2 0 p3 board "Tower F2" step idle
-    stat at 28,10 element Passage p1 0 p2 0 p3 52 step idle
-    stat at 30,10 element Passage p1 0 p2 0 p3 52 step idle
-    stat at 30,11 element Passage p1 0 p2 0 p3 board "Opener: START" step idle
-    stat at 30,12 element Passage p1 0 p2 0 p3 board "Opener: START" step idle
-    stat at 30,13 element Passage p1 0 p2 0 p3 52 step idle
-    stat at 32,13 element Passage p1 0 p2 0 p3 52 step idle
-    stat at 32,12 element Passage p1 0 p2 0 p3 52 step idle
-    stat at 32,11 element Passage p1 0 p2 0 p3 board "Opener: START" step idle
-    stat at 32,10 element Passage p1 0 p2 0 p3 52 step idle
-    stat at 34,10 element Passage p1 0 p2 0 p3 board "Opener: START" step idle
-    stat at 34,11 element Passage p1 0 p2 0 p3 52 step idle
-    stat at 34,12 element Passage p1 0 p2 0 p3 52 step idle
-    stat at 34,13 element Passage p1 0 p2 0 p3 board "Opener: START" step idle
-    stat at 36,13 element Passage p1 0 p2 0 p3 board "Opener: START" step idle
-    stat at 36,12 element Passage p1 0 p2 0 p3 52 step idle
-    stat at 36,11 element Passage p1 0 p2 0 p3 45 step idle
-    stat at 36,10 element Passage p1 0 p2 0 p3 52 step idle
-    stat at 38,10 element Passage p1 0 p2 0 p3 52 step idle
-    stat at 38,11 element Passage p1 0 p2 0 p3 52 step idle
-    stat at 38,12 element Passage p1 0 p2 0 p3 52 step idle
-    stat at 38,13 element Passage p1 0 p2 0 p3 board "Opener: START" step idle
-    stat at 40,13 element Passage p1 0 p2 0 p3 board "Opener: START" step idle
-    stat at 40,12 element Passage p1 0 p2 0 p3 52 step idle
-    stat at 40,11 element Passage p1 0 p2 0 p3 52 step idle
-    stat at 40,10 element Passage p1 0 p2 0 p3 52 step idle
-    stat at 42,10 element Passage p1 0 p2 0 p3 52 step idle
-    stat at 42,11 element Passage p1 0 p2 0 p3 52 step idle
-    stat at 42,12 element Passage p1 0 p2 0 p3 52 step idle
-    stat at 42,13 element Passage p1 0 p2 0 p3 52 step idle
-    stat at 44,13 element Passage p1 0 p2 0 p3 52 step idle
-    stat at 44,12 element Passage p1 0 p2 0 p3 52 step idle
-    stat at 44,11 element Passage p1 0 p2 0 p3 board "Opener: START" step idle
-    stat at 44,10 element Passage p1 0 p2 0 p3 board "Dock 7" step idle
-    stat at 46,10 element Passage p1 0 p2 0 p3 52 step idle
-    stat at 46,11 element Passage p1 0 p2 0 p3 52 step idle
-    stat at 46,12 element Passage p1 0 p2 0 p3 52 step idle
-    stat at 46,13 element Passage p1 0 p2 0 p3 board "Opener: START" step idle
-    stat at 48,13 element Passage p1 0 p2 0 p3 52 step idle
-    stat at 48,12 element Passage p1 0 p2 0 p3 52 step idle
-    stat at 48,11 element Passage p1 0 p2 0 p3 52 step idle
-    stat at 48,10 element Passage p1 0 p2 0 p3 52 step idle
-    stat at 50,10 element Passage p1 0 p2 0 p3 52 step idle
-    stat at 50,11 element Passage p1 0 p2 0 p3 52 step idle
-    stat at 50,12 element Passage p1 0 p2 0 p3 board "Opener: START" step idle
-    stat at 50,13 element Passage p1 0 p2 0 p3 52 step idle
-    stat at 52,13 element Passage p1 0 p2 0 p3 52 step idle
-    stat at 52,12 element Passage p1 0 p2 0 p3 board "Opener: START" step idle
-    stat at 52,11 element Passage p1 0 p2 0 p3 52 step idle
-    stat at 52,10 element Passage p1 0 p2 0 p3 52 step idle
-    stat at 54,10 element Passage p1 0 p2 0 p3 52 step idle
-    stat at 54,11 element Passage p1 0 p2 0 p3 52 step idle
-    stat at 54,12 element Passage p1 0 p2 0 p3 52 step idle
-    stat at 54,13 element Passage p1 0 p2 0 p3 board "Main Building Basement Maze" step idle
-    stat at 56,13 element Passage p1 0 p2 0 p3 52 step idle
-    stat at 56,12 element Passage p1 0 p2 0 p3 52 step idle
-    stat at 56,11 element Passage p1 0 p2 0 p3 52 step idle
-    stat at 56,10 element Passage p1 0 p2 0 p3 52 step idle
-    stat at 58,10 element Passage p1 0 p2 0 p3 52 step idle
-    stat at 58,11 element Passage p1 0 p2 0 p3 52 step idle
-    stat at 58,12 element Passage p1 0 p2 0 p3 52 step idle
-    stat at 58,13 element Passage p1 0 p2 0 p3 52 step idle
-    stat at 18,9 element Passage p1 0 p2 0 p3 board "Credits" step idle under Empty color 0x0F
-    stat at 32,9 element Passage p1 0 p2 0 p3 52 step idle under Empty color 0x0F
-    stat at 46,9 element Passage p1 0 p2 0 p3 52 step idle under Empty color 0x0F
-    stat at 48,9 element Passage p1 0 p2 0 p3 52 step idle under Empty color 0x0F
-    stat at 34,9 element Passage p1 0 p2 0 p3 52 step idle under Empty color 0x0F
-    stat at 20,9 element Passage p1 0 p2 0 p3 board "Opener: START" step idle under Empty color 0x0F
-    stat at 22,9 element Passage p1 0 p2 0 p3 board "Opener: START" step idle under Empty color 0x0F
-    stat at 36,9 element Passage p1 0 p2 0 p3 board "Opener: START" step idle under Empty color 0x0F
-    stat at 50,9 element Passage p1 0 p2 0 p3 52 step idle under Empty color 0x0F
-    stat at 52,9 element Passage p1 0 p2 0 p3 52 step idle under Empty color 0x0F
-    stat at 38,9 element Passage p1 0 p2 0 p3 52 step idle under Empty color 0x0F
-    stat at 24,9 element Passage p1 0 p2 0 p3 board "Opener: START" step idle under Empty color 0x0F
-    stat at 26,9 element Passage p1 0 p2 0 p3 board "Opener: START" step idle under Empty color 0x0F
-    stat at 40,9 element Passage p1 0 p2 0 p3 52 step idle under Empty color 0x0F
-    stat at 54,9 element Passage p1 0 p2 0 p3 52 step idle under Empty color 0x0F
-    stat at 56,9 element Passage p1 0 p2 0 p3 52 step idle under Empty color 0x0F
-    stat at 42,9 element Passage p1 0 p2 0 p3 52 step idle under Empty color 0x0F
-    stat at 28,9 element Passage p1 0 p2 0 p3 52 step idle under Empty color 0x0F
-    stat at 30,9 element Passage p1 0 p2 0 p3 52 step idle under Empty color 0x0F
-    stat at 44,9 element Passage p1 0 p2 0 p3 52 step idle under Empty color 0x0F
-    stat at 58,9 element Passage p1 0 p2 0 p3 board "Opener: START" step idle under Empty color 0x0F
-    stat at 18,14 element Passage p1 0 p2 0 p3 52 step idle
-    stat at 20,14 element Passage p1 0 p2 0 p3 52 step idle
-    stat at 22,14 element Passage p1 0 p2 0 p3 board "Opener: START" step idle
-    stat at 24,14 element Passage p1 0 p2 0 p3 52 step idle
-    stat at 26,14 element Passage p1 0 p2 0 p3 board "Opener: START" step idle
-    stat at 28,14 element Passage p1 0 p2 0 p3 52 step idle
-    stat at 30,14 element Passage p1 0 p2 0 p3 52 step idle
-    stat at 32,14 element Passage p1 0 p2 0 p3 52 step idle
-    stat at 34,14 element Passage p1 0 p2 0 p3 52 step idle
-    stat at 36,14 element Passage p1 0 p2 0 p3 52 step idle
-    stat at 38,14 element Passage p1 0 p2 0 p3 52 step idle
-    stat at 40,14 element Passage p1 0 p2 0 p3 52 step idle
-    stat at 42,14 element Passage p1 0 p2 0 p3 52 step idle
-    stat at 44,14 element Passage p1 0 p2 0 p3 52 step idle
-    stat at 46,14 element Passage p1 0 p2 0 p3 90 step idle
-    stat at 48,14 element Passage p1 0 p2 0 p3 52 step idle
-    stat at 50,14 element Passage p1 0 p2 0 p3 board "Opener: START" step idle
-    stat at 52,14 element Passage p1 0 p2 0 p3 52 step idle
-    stat at 54,14 element Passage p1 0 p2 0 p3 board "Opener: START" step idle
-    stat at 56,14 element Passage p1 0 p2 0 p3 52 step idle
-    stat at 58,14 element Passage p1 0 p2 0 p3 board "Opener: START" step idle
-    stat at 18,15 element Passage p1 0 p2 0 p3 board "Opener: START" step idle
-    stat at 20,15 element Passage p1 0 p2 0 p3 board "Opener: START" step idle
-    stat at 22,15 element Passage p1 0 p2 0 p3 board "Opener: START" step idle
-    stat at 24,15 element Passage p1 0 p2 0 p3 board "Opener: START" step idle
-    stat at 26,15 element Passage p1 0 p2 0 p3 52 step idle
-    stat at 28,15 element Passage p1 0 p2 0 p3 52 step idle
-    stat at 30,15 element Passage p1 0 p2 0 p3 52 step idle
-    stat at 32,15 element Passage p1 0 p2 0 p3 58 step idle under Fake color 0x0F
-    stat at 34,15 element Passage p1 0 p2 0 p3 52 step idle under Fake color 0x0F
-    stat at 36,15 element Passage p1 0 p2 0 p3 board "Opener: START" step idle under Fake color 0x0F
-    stat at 38,15 element Passage p1 0 p2 0 p3 52 step idle under Fake color 0x0F
-    stat at 40,15 element Passage p1 0 p2 0 p3 board "Opener: START" step idle under Fake color 0x0F
-    stat at 42,15 element Passage p1 0 p2 0 p3 52 step idle under Fake color 0x0F
-    stat at 44,15 element Passage p1 0 p2 0 p3 board "Opener: START" step idle under Fake color 0x0F
-    stat at 46,15 element Passage p1 0 p2 0 p3 52 step idle under Fake color 0x0F
-    stat at 48,15 element Passage p1 0 p2 0 p3 board "Opener: START" step idle under Fake color 0x0F
-    stat at 50,15 element Passage p1 0 p2 0 p3 52 step idle under Fake color 0x0F
+    stat at 18,10 element Passage p3 board "Opener: START"
+    stat at 18,11 element Passage p3 board "Opener: START"
+    stat at 18,12 element Passage p3 board "Opener: START"
+    stat at 18,13 element Passage p3 52
+    stat at 20,10 element Passage p3 52
+    stat at 20,11 element Passage p3 52
+    stat at 20,12 element Passage p3 52
+    stat at 20,13 element Passage p3 52
+    stat at 22,13 element Passage p3 52
+    stat at 22,12 element Passage p3 52
+    stat at 22,11 element Passage p3 52
+    stat at 22,10 element Passage p3 52
+    stat at 24,10 element Passage p3 52
+    stat at 24,11 element Passage p3 52
+    stat at 24,12 element Passage p3 board "Opener: START"
+    stat at 24,13 element Passage p3 52
+    stat at 26,10 element Passage p3 board "Opener: START"
+    stat at 26,11 element Passage p3 board "Opener: START"
+    stat at 26,12 element Passage p3 board "Opener: START"
+    stat at 26,13 element Passage p3 52
+    stat at 28,13 element Passage p3 52
+    stat at 28,12 element Passage p3 board "Opener: START"
+    stat at 28,11 element Passage p3 board "Tower F2"
+    stat at 28,10 element Passage p3 52
+    stat at 30,10 element Passage p3 52
+    stat at 30,11 element Passage p3 board "Opener: START"
+    stat at 30,12 element Passage p3 board "Opener: START"
+    stat at 30,13 element Passage p3 52
+    stat at 32,13 element Passage p3 52
+    stat at 32,12 element Passage p3 52
+    stat at 32,11 element Passage p3 board "Opener: START"
+    stat at 32,10 element Passage p3 52
+    stat at 34,10 element Passage p3 board "Opener: START"
+    stat at 34,11 element Passage p3 52
+    stat at 34,12 element Passage p3 52
+    stat at 34,13 element Passage p3 board "Opener: START"
+    stat at 36,13 element Passage p3 board "Opener: START"
+    stat at 36,12 element Passage p3 52
+    stat at 36,11 element Passage p3 45
+    stat at 36,10 element Passage p3 52
+    stat at 38,10 element Passage p3 52
+    stat at 38,11 element Passage p3 52
+    stat at 38,12 element Passage p3 52
+    stat at 38,13 element Passage p3 board "Opener: START"
+    stat at 40,13 element Passage p3 board "Opener: START"
+    stat at 40,12 element Passage p3 52
+    stat at 40,11 element Passage p3 52
+    stat at 40,10 element Passage p3 52
+    stat at 42,10 element Passage p3 52
+    stat at 42,11 element Passage p3 52
+    stat at 42,12 element Passage p3 52
+    stat at 42,13 element Passage p3 52
+    stat at 44,13 element Passage p3 52
+    stat at 44,12 element Passage p3 52
+    stat at 44,11 element Passage p3 board "Opener: START"
+    stat at 44,10 element Passage p3 board "Dock 7"
+    stat at 46,10 element Passage p3 52
+    stat at 46,11 element Passage p3 52
+    stat at 46,12 element Passage p3 52
+    stat at 46,13 element Passage p3 board "Opener: START"
+    stat at 48,13 element Passage p3 52
+    stat at 48,12 element Passage p3 52
+    stat at 48,11 element Passage p3 52
+    stat at 48,10 element Passage p3 52
+    stat at 50,10 element Passage p3 52
+    stat at 50,11 element Passage p3 52
+    stat at 50,12 element Passage p3 board "Opener: START"
+    stat at 50,13 element Passage p3 52
+    stat at 52,13 element Passage p3 52
+    stat at 52,12 element Passage p3 board "Opener: START"
+    stat at 52,11 element Passage p3 52
+    stat at 52,10 element Passage p3 52
+    stat at 54,10 element Passage p3 52
+    stat at 54,11 element Passage p3 52
+    stat at 54,12 element Passage p3 52
+    stat at 54,13 element Passage p3 board "Main Building Basement Maze"
+    stat at 56,13 element Passage p3 52
+    stat at 56,12 element Passage p3 52
+    stat at 56,11 element Passage p3 52
+    stat at 56,10 element Passage p3 52
+    stat at 58,10 element Passage p3 52
+    stat at 58,11 element Passage p3 52
+    stat at 58,12 element Passage p3 52
+    stat at 58,13 element Passage p3 52
+    stat at 18,9 element Passage p3 board "Credits" under Empty color 0x0F
+    stat at 32,9 element Passage p3 52 under Empty color 0x0F
+    stat at 46,9 element Passage p3 52 under Empty color 0x0F
+    stat at 48,9 element Passage p3 52 under Empty color 0x0F
+    stat at 34,9 element Passage p3 52 under Empty color 0x0F
+    stat at 20,9 element Passage p3 board "Opener: START" under Empty color 0x0F
+    stat at 22,9 element Passage p3 board "Opener: START" under Empty color 0x0F
+    stat at 36,9 element Passage p3 board "Opener: START" under Empty color 0x0F
+    stat at 50,9 element Passage p3 52 under Empty color 0x0F
+    stat at 52,9 element Passage p3 52 under Empty color 0x0F
+    stat at 38,9 element Passage p3 52 under Empty color 0x0F
+    stat at 24,9 element Passage p3 board "Opener: START" under Empty color 0x0F
+    stat at 26,9 element Passage p3 board "Opener: START" under Empty color 0x0F
+    stat at 40,9 element Passage p3 52 under Empty color 0x0F
+    stat at 54,9 element Passage p3 52 under Empty color 0x0F
+    stat at 56,9 element Passage p3 52 under Empty color 0x0F
+    stat at 42,9 element Passage p3 52 under Empty color 0x0F
+    stat at 28,9 element Passage p3 52 under Empty color 0x0F
+    stat at 30,9 element Passage p3 52 under Empty color 0x0F
+    stat at 44,9 element Passage p3 52 under Empty color 0x0F
+    stat at 58,9 element Passage p3 board "Opener: START" under Empty color 0x0F
+    stat at 18,14 element Passage p3 52
+    stat at 20,14 element Passage p3 52
+    stat at 22,14 element Passage p3 board "Opener: START"
+    stat at 24,14 element Passage p3 52
+    stat at 26,14 element Passage p3 board "Opener: START"
+    stat at 28,14 element Passage p3 52
+    stat at 30,14 element Passage p3 52
+    stat at 32,14 element Passage p3 52
+    stat at 34,14 element Passage p3 52
+    stat at 36,14 element Passage p3 52
+    stat at 38,14 element Passage p3 52
+    stat at 40,14 element Passage p3 52
+    stat at 42,14 element Passage p3 52
+    stat at 44,14 element Passage p3 52
+    stat at 46,14 element Passage p3 90
+    stat at 48,14 element Passage p3 52
+    stat at 50,14 element Passage p3 board "Opener: START"
+    stat at 52,14 element Passage p3 52
+    stat at 54,14 element Passage p3 board "Opener: START"
+    stat at 56,14 element Passage p3 52
+    stat at 58,14 element Passage p3 board "Opener: START"
+    stat at 18,15 element Passage p3 board "Opener: START"
+    stat at 20,15 element Passage p3 board "Opener: START"
+    stat at 22,15 element Passage p3 board "Opener: START"
+    stat at 24,15 element Passage p3 board "Opener: START"
+    stat at 26,15 element Passage p3 52
+    stat at 28,15 element Passage p3 52
+    stat at 30,15 element Passage p3 52
+    stat at 32,15 element Passage p3 58 under Fake color 0x0F
+    stat at 34,15 element Passage p3 52 under Fake color 0x0F
+    stat at 36,15 element Passage p3 board "Opener: START" under Fake color 0x0F
+    stat at 38,15 element Passage p3 52 under Fake color 0x0F
+    stat at 40,15 element Passage p3 board "Opener: START" under Fake color 0x0F
+    stat at 42,15 element Passage p3 52 under Fake color 0x0F
+    stat at 44,15 element Passage p3 board "Opener: START" under Fake color 0x0F
+    stat at 46,15 element Passage p3 52 under Fake color 0x0F
+    stat at 48,15 element Passage p3 board "Opener: START" under Fake color 0x0F
+    stat at 50,15 element Passage p3 52 under Fake color 0x0F
   end
 end

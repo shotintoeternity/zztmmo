@@ -1,6 +1,5 @@
 board "Baiguria Forest - Treetops West"
   start player at 60,15
-  respawn at 32,32
   max-shots 255
   dark false
   reenter false
@@ -53,8 +52,8 @@ BBBBBBBBBBBBBNNBNNNNNNNNNNNbbbbbbbbbbb#W#cbbbebbbbbbbbbbbbeb
   end
 
   stats
-    stat at 2,14 element Passage p1 0 p2 0 p3 board "Baiguria Forest - Garuda Wing" step idle follower 0 leader 0
-    stat at 3,14 element Object cycle 1 p1 cp437:0x00 p2 0 step idle follower 0 leader 0
+    stat at 2,14 element Passage p3 board "Baiguria Forest - Garuda Wing" follower 0 leader 0
+    stat at 3,14 element Object cycle 1 p1 cp437:0x00 follower 0 leader 0
     oop
 @Barrier
 #end

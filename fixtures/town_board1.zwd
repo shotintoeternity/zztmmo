@@ -116,9 +116,9 @@ BBBBBBBBBBBBBBBBBBBBBBN..........YY0000000000000000000000000
   end
 
   stats
-    stat at 15,10 element Passage p1 0 p2 0 p3 board "Armory" step idle under Empty color 0x0C
-    stat at 40,10 element Passage p1 0 p2 0 p3 board "Bank Vault" step idle under Empty color 0x0F
-    stat at 30,15 element Object p1 cp437:0xE8 p2 0 step idle under Empty color 0x0A
+    stat at 15,10 element Passage p3 board "Armory" under Empty color 0x0C
+    stat at 40,10 element Passage p3 board "Bank Vault" under Empty color 0x0F
+    stat at 30,15 element Object p1 cp437:0xE8 under Empty color 0x0A
     oop
 @Town of ZZT
 #end
@@ -128,43 +128,43 @@ BBBBBBBBBBBBBBBBBBBBBBN..........YY0000000000000000000000000
 #play --gfdg#f#d#agea#g#f
 $Welcome to the Town of ZZT!
 
-    Your task is to find the five purple
+Your task is to find the five purple
 keys that are hidden throughout the Town.
 These keys unlock the doors leading into
-the Palace,  your destination.
+the Palace, your destination.
 
-    Your search for the keys will lead you
+Your search for the keys will lead you
 through the town in all four directions.
-On the way,  you will battle ferrocious
+On the way, you will battle ferrocious
 creatures and solve intricate puzzles.
 
 $Health points
 
-    You start out with 100 health points
+You start out with 100 health points
 and lose 10 when a creature or bullet hits
-you.  You can gain health by collecting
+you. You can gain health by collecting
 gems (1 point each.)
 
 $Saving the game
 
-    You should frequently use the Save
+You should frequently use the Save
 command (press "S") to save the game in
-progress.  That way if you are hit or you
-get stuck in a room,  you can go back and
-try again.  This is very important! Nobody
+progress. That way if you are hit or you
+get stuck in a room, you can go back and
+try again. This is very important! Nobody
 wins ZZT without doing a zillion saves.
 
 $The Purple Keys
 
-    The five keys are kept in various
-parts of the Town.  Each time you find a
-new one,  you must bring it to the Palace
-and unlock another door.  Once you get
-into the Palace...  You're almost done!
+The five keys are kept in various
+parts of the Town. Each time you find a
+new one, you must bring it to the Palace
+and unlock another door. Once you get
+into the Palace... You're almost done!
 
 $More help...
 
-    You can bring up a detailed help file
+You can bring up a detailed help file
 by pressing "H" during the game.
 
     end

@@ -72,94 +72,94 @@ BBBBBBBBBBBBB##bbb##BBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBB
   end
 
   stats
-    stat at 10,16 element Bear p1 4 p2 0 step idle
-    stat at 10,15 element Bear p1 4 p2 0 step idle
-    stat at 10,17 element Bear p1 4 p2 0 step idle
-    stat at 10,19 element Bear p1 4 p2 0 step idle
-    stat at 10,18 element Bear p1 4 p2 0 step idle
-    stat at 26,19 element Bear p1 4 p2 0 step idle
-    stat at 26,18 element Bear p1 4 p2 0 step idle
-    stat at 26,17 element Bear p1 4 p2 0 step idle
-    stat at 26,16 element Bear p1 4 p2 0 step idle
-    stat at 26,15 element Bear p1 4 p2 0 step idle
-    stat at 25,15 element Bear p1 4 p2 0 step idle
-    stat at 25,16 element Bear p1 4 p2 0 step idle
-    stat at 25,17 element Bear p1 4 p2 0 step idle
-    stat at 25,18 element Bear p1 4 p2 0 step idle
-    stat at 25,19 element Bear p1 4 p2 0 step idle
-    stat at 11,19 element Bear p1 4 p2 0 step idle
-    stat at 11,18 element Bear p1 4 p2 0 step idle
-    stat at 11,17 element Bear p1 4 p2 0 step idle
-    stat at 11,16 element Bear p1 4 p2 0 step idle
-    stat at 11,15 element Bear p1 4 p2 0 step idle
-    stat at 24,15 element Bear p1 4 p2 0 step idle
-    stat at 24,16 element Bear p1 4 p2 0 step idle
-    stat at 24,17 element Bear p1 4 p2 0 step idle
-    stat at 24,18 element Bear p1 4 p2 0 step idle
-    stat at 24,19 element Bear p1 4 p2 0 step idle
-    stat at 12,19 element Bear p1 4 p2 0 step idle
-    stat at 12,18 element Bear p1 4 p2 0 step idle
-    stat at 12,17 element Bear p1 4 p2 0 step idle
-    stat at 12,16 element Bear p1 4 p2 0 step idle under Empty color 0x0C
-    stat at 12,15 element Bear p1 4 p2 0 step idle
-    stat at 14,17 element Bear p1 4 p2 0 step idle
-    stat at 14,16 element Bear p1 4 p2 0 step idle
-    stat at 14,15 element Bear p1 4 p2 0 step idle
-    stat at 13,15 element Bear p1 4 p2 0 step idle
-    stat at 15,15 element Bear p1 4 p2 0 step idle
-    stat at 15,16 element Bear p1 4 p2 0 step idle
-    stat at 15,17 element Bear p1 4 p2 0 step idle
-    stat at 22,17 element Bear p1 4 p2 0 step idle
-    stat at 22,16 element Bear p1 4 p2 0 step idle
-    stat at 22,15 element Bear p1 4 p2 0 step idle
-    stat at 21,15 element Bear p1 4 p2 0 step idle
-    stat at 21,16 element Bear p1 4 p2 0 step idle
-    stat at 21,17 element Bear p1 4 p2 0 step idle
-    stat at 23,15 element Bear p1 4 p2 0 step idle
-    stat at 48,6 element Transporter p1 0 p2 0 step west under Empty color 0x0D
-    stat at 44,19 element Transporter p1 0 p2 0 step south under Empty color 0x0A
-    stat at 53,19 element Transporter p1 0 p2 0 step north under Empty color 0x0D
-    stat at 30,8 element Lion cycle 3 p1 1 p2 0 step idle
-    stat at 30,7 element Lion cycle 3 p1 1 p2 0 step idle
-    stat at 30,6 element Lion cycle 3 p1 1 p2 0 step idle
-    stat at 30,5 element Lion cycle 3 p1 1 p2 0 step idle
-    stat at 38,4 element Lion cycle 3 p1 1 p2 0 step idle
-    stat at 38,6 element Lion cycle 3 p1 1 p2 0 step idle
-    stat at 38,7 element Lion cycle 3 p1 1 p2 0 step idle under Empty color 0x0D
-    stat at 38,8 element Lion cycle 3 p1 1 p2 0 step idle
-    stat at 50,10 element Tiger p1 8 p2 6 step idle
-    stat at 56,13 element Tiger p1 8 p2 6 step idle
-    stat at 56,7 element Tiger p1 8 p2 6 step idle
-    stat at 21,8 element Lion p1 2 p2 0 step idle
-    stat at 21,7 element Lion p1 2 p2 0 step idle
-    stat at 21,6 element Lion p1 2 p2 0 step idle
-    stat at 21,5 element Lion p1 2 p2 0 step idle
-    stat at 21,4 element Lion p1 2 p2 0 step idle
-    stat at 30,5 element Lion p1 2 p2 0 step idle under Bear color 0x06
-    stat at 30,6 element Lion p1 2 p2 0 step idle under Bear color 0x06
-    stat at 30,7 element Lion p1 2 p2 0 step idle under Bear color 0x06
-    stat at 30,8 element Lion p1 2 p2 0 step idle under Bear color 0x06
-    stat at 30,4 element Lion p1 2 p2 0 step idle
-    stat at 38,4 element Lion p1 2 p2 0 step idle under Bear color 0x06
-    stat at 38,6 element Lion p1 2 p2 0 step idle under Bear color 0x06
-    stat at 38,7 element Lion p1 2 p2 0 step idle under Bear color 0x06
-    stat at 38,8 element Lion p1 2 p2 0 step idle under Bear color 0x06
-    stat at 38,5 element Lion p1 2 p2 0 step idle
-    stat at 40,9 element Lion p1 2 p2 0 step idle
-    stat at 41,9 element Lion p1 2 p2 0 step idle
-    stat at 42,9 element Lion p1 2 p2 0 step idle
-    stat at 43,9 element Lion p1 2 p2 0 step idle
-    stat at 44,9 element Lion p1 2 p2 0 step idle
-    stat at 45,9 element Lion p1 2 p2 0 step idle
-    stat at 46,9 element Lion p1 2 p2 0 step idle under Empty color 0x0A
-    stat at 47,9 element Lion p1 2 p2 0 step idle
-    stat at 47,16 element Lion p1 2 p2 0 step idle
-    stat at 46,16 element Lion p1 2 p2 0 step idle
-    stat at 45,16 element Lion p1 2 p2 0 step idle
-    stat at 44,16 element Lion p1 2 p2 0 step idle
-    stat at 43,16 element Lion p1 2 p2 0 step idle
-    stat at 42,16 element Lion p1 2 p2 0 step idle under Empty color 0x0A
-    stat at 41,16 element Lion p1 2 p2 0 step idle
-    stat at 40,16 element Lion p1 2 p2 0 step idle
+    stat at 10,16 element Bear p1 4
+    stat at 10,15 element Bear p1 4
+    stat at 10,17 element Bear p1 4
+    stat at 10,19 element Bear p1 4
+    stat at 10,18 element Bear p1 4
+    stat at 26,19 element Bear p1 4
+    stat at 26,18 element Bear p1 4
+    stat at 26,17 element Bear p1 4
+    stat at 26,16 element Bear p1 4
+    stat at 26,15 element Bear p1 4
+    stat at 25,15 element Bear p1 4
+    stat at 25,16 element Bear p1 4
+    stat at 25,17 element Bear p1 4
+    stat at 25,18 element Bear p1 4
+    stat at 25,19 element Bear p1 4
+    stat at 11,19 element Bear p1 4
+    stat at 11,18 element Bear p1 4
+    stat at 11,17 element Bear p1 4
+    stat at 11,16 element Bear p1 4
+    stat at 11,15 element Bear p1 4
+    stat at 24,15 element Bear p1 4
+    stat at 24,16 element Bear p1 4
+    stat at 24,17 element Bear p1 4
+    stat at 24,18 element Bear p1 4
+    stat at 24,19 element Bear p1 4
+    stat at 12,19 element Bear p1 4
+    stat at 12,18 element Bear p1 4
+    stat at 12,17 element Bear p1 4
+    stat at 12,16 element Bear p1 4 under Empty color 0x0C
+    stat at 12,15 element Bear p1 4
+    stat at 14,17 element Bear p1 4
+    stat at 14,16 element Bear p1 4
+    stat at 14,15 element Bear p1 4
+    stat at 13,15 element Bear p1 4
+    stat at 15,15 element Bear p1 4
+    stat at 15,16 element Bear p1 4
+    stat at 15,17 element Bear p1 4
+    stat at 22,17 element Bear p1 4
+    stat at 22,16 element Bear p1 4
+    stat at 22,15 element Bear p1 4
+    stat at 21,15 element Bear p1 4
+    stat at 21,16 element Bear p1 4
+    stat at 21,17 element Bear p1 4
+    stat at 23,15 element Bear p1 4
+    stat at 48,6 element Transporter step west under Empty color 0x0D
+    stat at 44,19 element Transporter step south under Empty color 0x0A
+    stat at 53,19 element Transporter step north under Empty color 0x0D
+    stat at 30,8 element Lion cycle 3 p1 1
+    stat at 30,7 element Lion cycle 3 p1 1
+    stat at 30,6 element Lion cycle 3 p1 1
+    stat at 30,5 element Lion cycle 3 p1 1
+    stat at 38,4 element Lion cycle 3 p1 1
+    stat at 38,6 element Lion cycle 3 p1 1
+    stat at 38,7 element Lion cycle 3 p1 1 under Empty color 0x0D
+    stat at 38,8 element Lion cycle 3 p1 1
+    stat at 50,10 element Tiger p1 8 p2 6
+    stat at 56,13 element Tiger p1 8 p2 6
+    stat at 56,7 element Tiger p1 8 p2 6
+    stat at 21,8 element Lion p1 2
+    stat at 21,7 element Lion p1 2
+    stat at 21,6 element Lion p1 2
+    stat at 21,5 element Lion p1 2
+    stat at 21,4 element Lion p1 2
+    stat at 30,5 element Lion p1 2 under Bear color 0x06
+    stat at 30,6 element Lion p1 2 under Bear color 0x06
+    stat at 30,7 element Lion p1 2 under Bear color 0x06
+    stat at 30,8 element Lion p1 2 under Bear color 0x06
+    stat at 30,4 element Lion p1 2
+    stat at 38,4 element Lion p1 2 under Bear color 0x06
+    stat at 38,6 element Lion p1 2 under Bear color 0x06
+    stat at 38,7 element Lion p1 2 under Bear color 0x06
+    stat at 38,8 element Lion p1 2 under Bear color 0x06
+    stat at 38,5 element Lion p1 2
+    stat at 40,9 element Lion p1 2
+    stat at 41,9 element Lion p1 2
+    stat at 42,9 element Lion p1 2
+    stat at 43,9 element Lion p1 2
+    stat at 44,9 element Lion p1 2
+    stat at 45,9 element Lion p1 2
+    stat at 46,9 element Lion p1 2 under Empty color 0x0A
+    stat at 47,9 element Lion p1 2
+    stat at 47,16 element Lion p1 2
+    stat at 46,16 element Lion p1 2
+    stat at 45,16 element Lion p1 2
+    stat at 44,16 element Lion p1 2
+    stat at 43,16 element Lion p1 2
+    stat at 42,16 element Lion p1 2 under Empty color 0x0A
+    stat at 41,16 element Lion p1 2
+    stat at 40,16 element Lion p1 2
   end
 end

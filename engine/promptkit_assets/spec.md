@@ -295,6 +295,7 @@ the wrong element.
 2. Use `element Object` for everything else: signs, NPCs, interactive props, doors controlled by flags, vendors, etc. It **must** have an `oop` block with a name and at least a `:touch` label.
 3. **Do not use Object with a passage glyph (`cp437:0xF0`)** to simulate a passage — this creates a dead, unresponsive tile since the engine's passage teleport logic only fires for the `Passage` element, not `Object`.
 4. Each board exit to a neighboring board **must** use `exits north/south/east/west "BOARD NAME"` in the board header, **not** a passage element on the board edge.
+5. **Objects are interactive, never static art.** Every `Object` grid tile requires a matching stat and OOP script. Draw decorative machinery, pillars, letters, and multi-tile shapes with `Text-*`, `Solid`, `Normal`, or `Fake` tiles instead.
 
 
 ## Limits

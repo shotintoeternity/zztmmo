@@ -89,61 +89,61 @@ c.SbbbbBBzzCCCCCzzzzzzBBlllllllllllBBBzzzzCCCCzzCCOCCCCCCzzz
   end
 
   stats
-    stat at 2,11 element Scroll p1 0 p2 0 step idle under Empty color 0x0F
-    stat at 1,25 element Segment p1 0 p2 0 step idle under Empty color 0x0F
-    stat at 1,24 element Segment p1 0 p2 0 step idle under Empty color 0x0F
-    stat at 1,23 element Segment p1 0 p2 0 step idle under Empty color 0x0F
-    stat at 1,22 element Segment p1 0 p2 0 step idle under Empty color 0x0F
-    stat at 1,21 element Segment p1 0 p2 0 step idle under Empty color 0x0F
-    stat at 1,20 element Head step idle under Empty color 0x0F
-    stat at 3,20 element Head step idle under Empty color 0x0F
-    stat at 3,21 element Segment p1 0 p2 0 step idle under Empty color 0x0F
-    stat at 3,22 element Segment p1 0 p2 0 step idle under Empty color 0x0F
-    stat at 3,23 element Segment p1 0 p2 0 step idle under Empty color 0x0F
-    stat at 3,24 element Segment p1 0 p2 0 step idle under Empty color 0x0F
-    stat at 3,25 element Segment p1 0 p2 0 step idle under Empty color 0x0F
-    stat at 29,3 element Object p1 cp437:0xEF p2 0 step idle under Empty color 0x0F
-    stat at 31,3 element Object p1 cp437:0xEF p2 0 step idle under Empty color 0x0F
-    stat at 32,2 element Object p1 cp437:0xEF p2 0 step idle under Empty color 0x0F
-    stat at 31,1 element Object p1 cp437:0xEF p2 0 step idle under Empty color 0x0F
-    stat at 29,1 element Object p1 cp437:0xEF p2 0 step idle under Empty color 0x0F
-    stat at 28,2 element Object p1 cp437:0xEF p2 0 step idle under Empty color 0x0F
-    stat at 18,23 element Object p1 cp437:0x3F p2 0 step idle under Empty color 0x0F
-    stat at 43,23 element Object p1 cp437:0x94 p2 0 step idle under Fake color 0x6C
-    stat at 51,25 element Object p1 cp437:0xEB p2 0 step idle under Fake color 0x6C
-    stat at 59,24 element Object p1 cp437:0xEB p2 0 step idle under Fake color 0x6C
-    stat at 54,20 element Object p1 cp437:0xEB p2 0 step idle under Fake color 0x6C
-    stat at 56,18 element Object p1 cp437:0xEB p2 0 step idle under Fake color 0x6C
-    stat at 51,22 element Object p1 cp437:0xEB p2 0 step idle under Fake color 0x6C
-    stat at 60,8 element Pusher p1 0 p2 0 step north under Empty color 0x0F
-    stat at 60,7 element Pusher p1 0 p2 0 step north under Empty color 0x0F
-    stat at 60,6 element Pusher p1 0 p2 0 step north under Empty color 0x0F
-    stat at 60,5 element Pusher p1 0 p2 0 step north under Empty color 0x0F
-    stat at 60,4 element Pusher p1 0 p2 0 step east under Empty color 0x0F
-    stat at 4,10 element Pusher p1 0 p2 0 step west
-    stat at 5,10 element Pusher p1 0 p2 0 step west
-    stat at 6,10 element Pusher p1 0 p2 0 step west
-    stat at 7,10 element Pusher p1 0 p2 0 step west
-    stat at 8,10 element Pusher p1 0 p2 0 step west
-    stat at 9,10 element Pusher p1 0 p2 0 step west
-    stat at 8,9 element Pusher p1 0 p2 0 step south
-    stat at 9,9 element Pusher p1 0 p2 0 step south under Empty color 0x0F
-    stat at 9,8 element Pusher p1 0 p2 0 step south
-    stat at 10,7 element Pusher p1 0 p2 0 step south
-    stat at 11,6 element Pusher p1 0 p2 0 step south
-    stat at 11,5 element Pusher p1 0 p2 0 step south
-    stat at 11,4 element Pusher p1 0 p2 0 step south
-    stat at 12,3 element Pusher p1 0 p2 0 step south
-    stat at 12,2 element Pusher p1 0 p2 0 step south
-    stat at 10,8 element Pusher p1 0 p2 0 step west
-    stat at 11,7 element Pusher p1 0 p2 0 step west
-    stat at 12,6 element Pusher p1 0 p2 0 step west
-    stat at 12,5 element Pusher p1 0 p2 0 step south
-    stat at 12,4 element Pusher p1 0 p2 0 step south
-    stat at 13,3 element Pusher p1 0 p2 0 step west
-    stat at 13,2 element Pusher p1 0 p2 0 step south
-    stat at 13,1 element Pusher p1 0 p2 0 step south
-    stat at 14,1 element Pusher p1 0 p2 0 step west
-    stat at 30,2 element Passage p1 0 p2 0 p3 board "y" step idle under Empty color 0x0F
+    stat at 2,11 element Scroll under Empty color 0x0F
+    stat at 1,25 element Segment under Empty color 0x0F
+    stat at 1,24 element Segment under Empty color 0x0F
+    stat at 1,23 element Segment under Empty color 0x0F
+    stat at 1,22 element Segment under Empty color 0x0F
+    stat at 1,21 element Segment under Empty color 0x0F
+    stat at 1,20 element Head p1 4 p2 4 under Empty color 0x0F
+    stat at 3,20 element Head p1 4 p2 4 under Empty color 0x0F
+    stat at 3,21 element Segment under Empty color 0x0F
+    stat at 3,22 element Segment under Empty color 0x0F
+    stat at 3,23 element Segment under Empty color 0x0F
+    stat at 3,24 element Segment under Empty color 0x0F
+    stat at 3,25 element Segment under Empty color 0x0F
+    stat at 29,3 element Object p1 cp437:0xEF under Empty color 0x0F
+    stat at 31,3 element Object p1 cp437:0xEF under Empty color 0x0F
+    stat at 32,2 element Object p1 cp437:0xEF under Empty color 0x0F
+    stat at 31,1 element Object p1 cp437:0xEF under Empty color 0x0F
+    stat at 29,1 element Object p1 cp437:0xEF under Empty color 0x0F
+    stat at 28,2 element Object p1 cp437:0xEF under Empty color 0x0F
+    stat at 18,23 element Object p1 cp437:0x3F under Empty color 0x0F
+    stat at 43,23 element Object p1 cp437:0x94 under Fake color 0x6C
+    stat at 51,25 element Object p1 cp437:0xEB under Fake color 0x6C
+    stat at 59,24 element Object p1 cp437:0xEB under Fake color 0x6C
+    stat at 54,20 element Object p1 cp437:0xEB under Fake color 0x6C
+    stat at 56,18 element Object p1 cp437:0xEB under Fake color 0x6C
+    stat at 51,22 element Object p1 cp437:0xEB under Fake color 0x6C
+    stat at 60,8 element Pusher step north under Empty color 0x0F
+    stat at 60,7 element Pusher step north under Empty color 0x0F
+    stat at 60,6 element Pusher step north under Empty color 0x0F
+    stat at 60,5 element Pusher step north under Empty color 0x0F
+    stat at 60,4 element Pusher step east under Empty color 0x0F
+    stat at 4,10 element Pusher step west
+    stat at 5,10 element Pusher step west
+    stat at 6,10 element Pusher step west
+    stat at 7,10 element Pusher step west
+    stat at 8,10 element Pusher step west
+    stat at 9,10 element Pusher step west
+    stat at 8,9 element Pusher step south
+    stat at 9,9 element Pusher step south under Empty color 0x0F
+    stat at 9,8 element Pusher step south
+    stat at 10,7 element Pusher step south
+    stat at 11,6 element Pusher step south
+    stat at 11,5 element Pusher step south
+    stat at 11,4 element Pusher step south
+    stat at 12,3 element Pusher step south
+    stat at 12,2 element Pusher step south
+    stat at 10,8 element Pusher step west
+    stat at 11,7 element Pusher step west
+    stat at 12,6 element Pusher step west
+    stat at 12,5 element Pusher step south
+    stat at 12,4 element Pusher step south
+    stat at 13,3 element Pusher step west
+    stat at 13,2 element Pusher step south
+    stat at 13,1 element Pusher step south
+    stat at 14,1 element Pusher step west
+    stat at 30,2 element Passage p3 board "y" under Empty color 0x0F
   end
 end

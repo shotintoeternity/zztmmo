@@ -1,6 +1,5 @@
 board "Chernobyl - Center South"
   start player at 32,23
-  respawn at 32,32
   max-shots 0
   dark false
   reenter false
@@ -56,21 +55,21 @@ lllllllllllllllllllllllllllllppPPpplllllllllllllllllllllllll
   end
 
   stats
-    stat at 24,17 element Object cycle 1 p1 cp437:0xDC p2 0 step idle follower 0 leader 0
-    stat at 24,14 element Object cycle 1 p1 cp437:0xB3 p2 0 step idle follower 0 leader 0
-    stat at 24,13 element Object cycle 1 p1 cp437:0xB3 p2 0 step idle follower 0 leader 0
-    stat at 16,13 element Object cycle 1 p1 cp437:0xB3 p2 0 step idle follower 0 leader 0
-    stat at 16,14 element Object cycle 1 p1 cp437:0xB3 p2 0 step idle follower 0 leader 0
-    stat at 16,17 element Object cycle 1 p1 cp437:0xDC p2 0 step idle follower 0 leader 0
-    stat at 16,11 element Object cycle 1 p1 cp437:0xDC p2 0 step idle follower 0 leader 0
-    stat at 24,11 element Object cycle 1 p1 cp437:0xDC p2 0 step idle follower 0 leader 0
-    stat at 19,10 element Object cycle 1 p1 cp437:0xDC p2 0 step idle follower 0 leader 0
-    stat at 21,10 element Object cycle 1 p1 cp437:0xDC p2 0 step idle follower 0 leader 0
-    stat at 21,16 element Object cycle 1 p1 cp437:0xDC p2 0 step idle follower 0 leader 0
-    stat at 19,16 element Object cycle 1 p1 cp437:0xDC p2 0 step idle follower 0 leader 0
-    stat at 16,19 element Object cycle 1 p1 cp437:0xB3 p2 0 step idle follower 0 leader 0
-    stat at 16,20 element Object cycle 1 p1 cp437:0xB3 p2 0 step idle follower 0 leader 0
-    stat at 24,19 element Object cycle 1 p1 cp437:0xB3 p2 0 step idle follower 0 leader 0
+    stat at 24,17 element Object cycle 1 p1 cp437:0xDC follower 0 leader 0
+    stat at 24,14 element Object cycle 1 p1 cp437:0xB3 follower 0 leader 0
+    stat at 24,13 element Object cycle 1 p1 cp437:0xB3 follower 0 leader 0
+    stat at 16,13 element Object cycle 1 p1 cp437:0xB3 follower 0 leader 0
+    stat at 16,14 element Object cycle 1 p1 cp437:0xB3 follower 0 leader 0
+    stat at 16,17 element Object cycle 1 p1 cp437:0xDC follower 0 leader 0
+    stat at 16,11 element Object cycle 1 p1 cp437:0xDC follower 0 leader 0
+    stat at 24,11 element Object cycle 1 p1 cp437:0xDC follower 0 leader 0
+    stat at 19,10 element Object cycle 1 p1 cp437:0xDC follower 0 leader 0
+    stat at 21,10 element Object cycle 1 p1 cp437:0xDC follower 0 leader 0
+    stat at 21,16 element Object cycle 1 p1 cp437:0xDC follower 0 leader 0
+    stat at 19,16 element Object cycle 1 p1 cp437:0xDC follower 0 leader 0
+    stat at 16,19 element Object cycle 1 p1 cp437:0xB3 follower 0 leader 0
+    stat at 16,20 element Object cycle 1 p1 cp437:0xB3 follower 0 leader 0
+    stat at 24,19 element Object cycle 1 p1 cp437:0xB3 follower 0 leader 0
     oop
 @X Z R
 $
@@ -79,46 +78,46 @@ $A capitol city with an elusive prince...
 $
 
     end
-    stat at 24,20 element Object cycle 1 p1 cp437:0xB3 p2 0 step idle follower 0 leader 0
-    stat at 13,9 element Object cycle 1 p1 cp437:0xB3 p2 0 step idle follower 0 leader 0
-    stat at 13,8 element Object cycle 1 p1 cp437:0xB3 p2 0 step idle follower 0 leader 0
-    stat at 13,6 element Object cycle 1 p1 cp437:0xDC p2 0 step idle follower 0 leader 0
-    stat at 10,5 element Object cycle 1 p1 cp437:0xDC p2 0 step idle follower 0 leader 0
-    stat at 8,5 element Object cycle 1 p1 cp437:0xDC p2 0 step idle follower 0 leader 0
-    stat at 5,6 element Object cycle 1 p1 cp437:0xDC p2 0 step idle follower 0 leader 0
-    stat at 5,8 element Object cycle 1 p1 cp437:0xB3 p2 0 step idle follower 0 leader 0
-    stat at 5,9 element Object cycle 1 p1 cp437:0xB3 p2 0 step idle follower 0 leader 0
-    stat at 41,17 element Object cycle 1 p1 cp437:0xDC p2 0 step idle follower 0 leader 0
-    stat at 46,16 element Object cycle 1 p1 cp437:0xDC p2 0 step idle follower 0 leader 0
-    stat at 44,16 element Object cycle 1 p1 cp437:0xDC p2 0 step idle follower 0 leader 0
-    stat at 49,17 element Object cycle 1 p1 cp437:0xDC p2 0 step idle follower 0 leader 0
-    stat at 41,19 element Object cycle 1 p1 cp437:0xB3 p2 0 step idle follower 0 leader 0
-    stat at 41,20 element Object cycle 1 p1 cp437:0xB3 p2 0 step idle follower 0 leader 0
-    stat at 49,20 element Object cycle 1 p1 cp437:0xB3 p2 0 step idle follower 0 leader 0
-    stat at 49,19 element Object cycle 1 p1 cp437:0xB3 p2 0 step idle follower 0 leader 0
-    stat at 41,14 element Object cycle 1 p1 cp437:0xB3 p2 0 step idle follower 0 leader 0
-    stat at 41,13 element Object cycle 1 p1 cp437:0xB3 p2 0 step idle follower 0 leader 0
-    stat at 49,13 element Object cycle 1 p1 cp437:0xB3 p2 0 step idle follower 0 leader 0
-    stat at 49,14 element Object cycle 1 p1 cp437:0xB3 p2 0 step idle follower 0 leader 0
-    stat at 49,11 element Object cycle 1 p1 cp437:0xDC p2 0 step idle follower 0 leader 0
-    stat at 41,11 element Object cycle 1 p1 cp437:0xDC p2 0 step idle follower 0 leader 0
-    stat at 44,10 element Object cycle 1 p1 cp437:0xDC p2 0 step idle follower 0 leader 0
-    stat at 46,10 element Object cycle 1 p1 cp437:0xDC p2 0 step idle follower 0 leader 0
-    stat at 51,6 element Object cycle 1 p1 cp437:0xDC p2 0 step idle follower 0 leader 0
-    stat at 56,5 element Object cycle 1 p1 cp437:0xDC p2 0 step idle follower 0 leader 0
-    stat at 59,8 element Object cycle 1 p1 cp437:0xB3 p2 0 step idle follower 0 leader 0
-    stat at 59,9 element Object cycle 1 p1 cp437:0xB3 p2 0 step idle follower 0 leader 0
-    stat at 54,5 element Object cycle 1 p1 cp437:0xDC p2 0 step idle follower 0 leader 0
-    stat at 59,6 element Object cycle 1 p1 cp437:0xDC p2 0 step idle follower 0 leader 0
-    stat at 51,8 element Object cycle 1 p1 cp437:0xB3 p2 0 step idle follower 0 leader 0
-    stat at 35,25 element Passage p1 0 p2 0 p3 board "Hideout - Caira - 3" step idle follower 0 leader 0
-    stat at 34,25 element Passage p1 0 p2 0 p3 board "Hideout - Caira - 3" step idle follower 0 leader 0
-    stat at 51,9 element Object cycle 1 p1 cp437:0xB3 p2 0 step idle follower 0 leader 0
-    stat at 33,25 element Passage p1 0 p2 0 p3 board "Hideout - Caira - 3" step idle follower 0 leader 0
-    stat at 32,25 element Passage p1 0 p2 0 p3 board "Hideout - Caira - 3" step idle follower 0 leader 0
-    stat at 31,25 element Passage p1 0 p2 0 p3 board "Hideout - Caira - 3" step idle follower 0 leader 0
-    stat at 30,25 element Passage p1 0 p2 0 p3 board "Hideout - Caira - 3" step idle follower 0 leader 0
-    stat at 30,24 element Object cycle 1 p1 cp437:0xDB p2 0 step idle under Fake color 0x77 follower 0 leader 0
+    stat at 24,20 element Object cycle 1 p1 cp437:0xB3 follower 0 leader 0
+    stat at 13,9 element Object cycle 1 p1 cp437:0xB3 follower 0 leader 0
+    stat at 13,8 element Object cycle 1 p1 cp437:0xB3 follower 0 leader 0
+    stat at 13,6 element Object cycle 1 p1 cp437:0xDC follower 0 leader 0
+    stat at 10,5 element Object cycle 1 p1 cp437:0xDC follower 0 leader 0
+    stat at 8,5 element Object cycle 1 p1 cp437:0xDC follower 0 leader 0
+    stat at 5,6 element Object cycle 1 p1 cp437:0xDC follower 0 leader 0
+    stat at 5,8 element Object cycle 1 p1 cp437:0xB3 follower 0 leader 0
+    stat at 5,9 element Object cycle 1 p1 cp437:0xB3 follower 0 leader 0
+    stat at 41,17 element Object cycle 1 p1 cp437:0xDC follower 0 leader 0
+    stat at 46,16 element Object cycle 1 p1 cp437:0xDC follower 0 leader 0
+    stat at 44,16 element Object cycle 1 p1 cp437:0xDC follower 0 leader 0
+    stat at 49,17 element Object cycle 1 p1 cp437:0xDC follower 0 leader 0
+    stat at 41,19 element Object cycle 1 p1 cp437:0xB3 follower 0 leader 0
+    stat at 41,20 element Object cycle 1 p1 cp437:0xB3 follower 0 leader 0
+    stat at 49,20 element Object cycle 1 p1 cp437:0xB3 follower 0 leader 0
+    stat at 49,19 element Object cycle 1 p1 cp437:0xB3 follower 0 leader 0
+    stat at 41,14 element Object cycle 1 p1 cp437:0xB3 follower 0 leader 0
+    stat at 41,13 element Object cycle 1 p1 cp437:0xB3 follower 0 leader 0
+    stat at 49,13 element Object cycle 1 p1 cp437:0xB3 follower 0 leader 0
+    stat at 49,14 element Object cycle 1 p1 cp437:0xB3 follower 0 leader 0
+    stat at 49,11 element Object cycle 1 p1 cp437:0xDC follower 0 leader 0
+    stat at 41,11 element Object cycle 1 p1 cp437:0xDC follower 0 leader 0
+    stat at 44,10 element Object cycle 1 p1 cp437:0xDC follower 0 leader 0
+    stat at 46,10 element Object cycle 1 p1 cp437:0xDC follower 0 leader 0
+    stat at 51,6 element Object cycle 1 p1 cp437:0xDC follower 0 leader 0
+    stat at 56,5 element Object cycle 1 p1 cp437:0xDC follower 0 leader 0
+    stat at 59,8 element Object cycle 1 p1 cp437:0xB3 follower 0 leader 0
+    stat at 59,9 element Object cycle 1 p1 cp437:0xB3 follower 0 leader 0
+    stat at 54,5 element Object cycle 1 p1 cp437:0xDC follower 0 leader 0
+    stat at 59,6 element Object cycle 1 p1 cp437:0xDC follower 0 leader 0
+    stat at 51,8 element Object cycle 1 p1 cp437:0xB3 follower 0 leader 0
+    stat at 35,25 element Passage p3 board "Hideout - Caira - 3" follower 0 leader 0
+    stat at 34,25 element Passage p3 board "Hideout - Caira - 3" follower 0 leader 0
+    stat at 51,9 element Object cycle 1 p1 cp437:0xB3 follower 0 leader 0
+    stat at 33,25 element Passage p3 board "Hideout - Caira - 3" follower 0 leader 0
+    stat at 32,25 element Passage p3 board "Hideout - Caira - 3" follower 0 leader 0
+    stat at 31,25 element Passage p3 board "Hideout - Caira - 3" follower 0 leader 0
+    stat at 30,25 element Passage p3 board "Hideout - Caira - 3" follower 0 leader 0
+    stat at 30,24 element Object cycle 1 p1 cp437:0xDB under Fake color 0x77 follower 0 leader 0
     oop
 @door
 #ds
@@ -133,7 +132,7 @@ $
 #end
 
     end
-    stat at 31,24 element Object cycle 1 p1 cp437:0xDB p2 0 step idle under Fake color 0x77 follower 0 leader 0
+    stat at 31,24 element Object cycle 1 p1 cp437:0xDB under Fake color 0x77 follower 0 leader 0
     oop
 @door
 #ds
@@ -148,7 +147,7 @@ $
 #end
 
     end
-    stat at 34,24 element Object cycle 1 p1 cp437:0xDB p2 0 step idle under Fake color 0x77 follower 0 leader 0
+    stat at 34,24 element Object cycle 1 p1 cp437:0xDB under Fake color 0x77 follower 0 leader 0
     oop
 @door
 #ds
@@ -163,7 +162,7 @@ $
 #end
 
     end
-    stat at 35,24 element Object cycle 1 p1 cp437:0xDB p2 0 step idle under Fake color 0x77 follower 0 leader 0
+    stat at 35,24 element Object cycle 1 p1 cp437:0xDB under Fake color 0x77 follower 0 leader 0
     oop
 @door
 #ds
@@ -178,7 +177,7 @@ $
 #end
 
     end
-    stat at 33,24 element Object cycle 1 p1 cp437:0xB2 p2 0 step idle under Fake color 0x77 follower 0 leader 0
+    stat at 33,24 element Object cycle 1 p1 cp437:0xB2 under Fake color 0x77 follower 0 leader 0
     oop
 @door
 #ds
@@ -193,7 +192,7 @@ $
 #end
 
     end
-    stat at 32,24 element Object cycle 1 p1 cp437:0xB2 p2 0 step idle under Fake color 0x77 follower 0 leader 0
+    stat at 32,24 element Object cycle 1 p1 cp437:0xB2 under Fake color 0x77 follower 0 leader 0
     oop
 @door
 #ds
@@ -208,7 +207,7 @@ $
 #end
 
     end
-    stat at 31,13 element Object p1 cp437:0x02 p2 0 step idle under Fake color 0x77 follower 0 leader 0
+    stat at 31,13 element Object p1 cp437:0x02 under Fake color 0x77 follower 0 leader 0
     oop
 @Woman
 #ds
@@ -236,7 +235,7 @@ $dear.
 #end
 
     end
-    stat at 32,19 element Object p1 cp437:0x02 p2 0 step idle under Fake color 0x77 follower 0 leader 0
+    stat at 32,19 element Object p1 cp437:0x02 under Fake color 0x77 follower 0 leader 0
     oop
 @Man
 #ds
@@ -264,7 +263,7 @@ $river Garadarill.
 #end
 
     end
-    stat at 35,12 element Object p1 cp437:0x02 p2 0 step idle under Fake color 0x77 follower 0 leader 0
+    stat at 35,12 element Object p1 cp437:0x02 under Fake color 0x77 follower 0 leader 0
     oop
 @Man
 #ds

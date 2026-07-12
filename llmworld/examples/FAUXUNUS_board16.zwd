@@ -58,9 +58,9 @@ NNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNN
   end
 
   stats
-    stat at 3,13 element Transporter cycle 255 p1 0 p2 0 step east under Empty color 0x0F
-    stat at 4,13 element Transporter cycle 255 p1 0 p2 0 step west under Empty color 0x0F
-    stat at 59,12 element Object cycle 1 p1 cp437:0x46 p2 0 step idle under Empty color 0x0F
+    stat at 3,13 element Transporter cycle 255 step east under Empty color 0x0F
+    stat at 4,13 element Transporter cycle 255 step west under Empty color 0x0F
+    stat at 59,12 element Object cycle 1 p1 cp437:0x46 under Empty color 0x0F
     oop
 @foreststart
 #end
@@ -84,9 +84,9 @@ Job's done.
 #forestres:a
 
     end
-    stat at 49,13 element Transporter cycle 255 p1 0 p2 0 step east under Empty color 0x0F
-    stat at 50,13 element Transporter cycle 255 p1 0 p2 0 step west under Empty color 0x0F
-    stat at 59,14 element Object cycle 1 p1 cp437:0x4C p2 0 step idle under Empty color 0x0F
+    stat at 49,13 element Transporter cycle 255 step east under Empty color 0x0F
+    stat at 50,13 element Transporter cycle 255 step west under Empty color 0x0F
+    stat at 59,14 element Object cycle 1 p1 cp437:0x4C under Empty color 0x0F
     oop
 @lakestart
 #end
@@ -111,11 +111,11 @@ Job's done.
 #lakeres:a
 
     end
-    stat at 26,3 element Transporter cycle 255 p1 0 p2 0 step south under Empty color 0x0F
-    stat at 26,4 element Transporter cycle 255 p1 0 p2 0 step north under Empty color 0x0F
-    stat at 26,22 element Transporter cycle 255 p1 0 p2 0 step south under Empty color 0x0F
-    stat at 26,23 element Transporter cycle 255 p1 0 p2 0 step north under Empty color 0x0F
-    stat at 58,8 element Object cycle 1 p1 cp437:0xF7 p2 0 step idle under Empty color 0x0F
+    stat at 26,3 element Transporter cycle 255 step south under Empty color 0x0F
+    stat at 26,4 element Transporter cycle 255 step north under Empty color 0x0F
+    stat at 26,22 element Transporter cycle 255 step south under Empty color 0x0F
+    stat at 26,23 element Transporter cycle 255 step north under Empty color 0x0F
+    stat at 58,8 element Object cycle 1 p1 cp437:0xF7 under Empty color 0x0F
     oop
 
 :l
@@ -125,7 +125,7 @@ Job's done.
 
 
     end
-    stat at 58,18 element Object cycle 1 p1 cp437:0x6D p2 0 step idle under Empty color 0x0F
+    stat at 58,18 element Object cycle 1 p1 cp437:0x6D under Empty color 0x0F
     oop
 @m
 #end
@@ -139,7 +139,7 @@ Job's done.
 You're the boss, boss. Shoot me when done.
 
     end
-    stat at 58,19 element Object cycle 1 p1 cp437:0x52 p2 0 step idle under Empty color 0x0F
+    stat at 58,19 element Object cycle 1 p1 cp437:0x52 under Empty color 0x0F
     oop
 @res
 #set noreset
@@ -167,7 +167,7 @@ Reset everything?
 #end
 
     end
-    stat at 58,17 element Object cycle 1 p1 cp437:0x78 p2 0 step idle under Empty color 0x0F
+    stat at 58,17 element Object cycle 1 p1 cp437:0x78 under Empty color 0x0F
     oop
 @c
 #end
@@ -209,7 +209,7 @@ Reset everything?
 #end
 
     end
-    stat at 60,14 element Object cycle 1 p1 cp437:0x72 p2 0 step idle under Empty color 0x0F
+    stat at 60,14 element Object cycle 1 p1 cp437:0x72 under Empty color 0x0F
     oop
 @lakeres
 #end
@@ -233,7 +233,7 @@ Okay.
 #change cyan slime empty
 
     end
-    stat at 60,12 element Object cycle 1 p1 cp437:0x72 p2 0 step idle under Empty color 0x0F
+    stat at 60,12 element Object cycle 1 p1 cp437:0x72 under Empty color 0x0F
     oop
 @forestres
 #end
@@ -257,7 +257,7 @@ Okay.
 #change green slime empty
 
     end
-    stat at 57,23 element Object cycle 1 p1 cp437:0x02 p2 0 step idle under Empty color 0x0F
+    stat at 57,23 element Object cycle 1 p1 cp437:0x02 under Empty color 0x0F
     oop
 #end
 :touch
@@ -293,7 +293,7 @@ A well
 A big tree
 
     end
-    stat at 25,10 element Object cycle 1 p1 cp437:0x7C p2 0 step idle under Empty color 0x0F
+    stat at 25,10 element Object cycle 1 p1 cp437:0x7C under Empty color 0x0F
     oop
 @Tower
 #end
@@ -446,7 +446,7 @@ $께<께
 #unlock
 
     end
-    stat at 27,10 element Object cycle 1 p1 cp437:0x24 p2 0 step idle under Empty color 0x0F
+    stat at 27,10 element Object cycle 1 p1 cp437:0x24 under Empty color 0x0F
     oop
 @Market
 #end
@@ -611,7 +611,7 @@ $.께.께.
 #unlock
 
     end
-    stat at 22,11 element Object cycle 1 p1 cp437:0x4D p2 0 step idle under Empty color 0x0F
+    stat at 22,11 element Object cycle 1 p1 cp437:0x4D under Empty color 0x0F
     oop
 @Mill
 #end
@@ -759,7 +759,7 @@ $께께께께께께께께�
 #unlock
 
     end
-    stat at 30,11 element Object cycle 1 p1 cp437:0x57 p2 0 step idle under Empty color 0x0F
+    stat at 30,11 element Object cycle 1 p1 cp437:0x57 under Empty color 0x0F
     oop
 @Well
 #end
@@ -885,7 +885,7 @@ $..께께�..
 #unlock
 
     end
-    stat at 21,13 element Object cycle 1 p1 cp437:0x46 p2 0 step idle under Empty color 0x0F
+    stat at 21,13 element Object cycle 1 p1 cp437:0x46 under Empty color 0x0F
     oop
 @Forest
 #end
@@ -931,7 +931,7 @@ cell to start the forest, boss.
 #forestres:a
 
     end
-    stat at 31,13 element Object cycle 1 p1 cp437:0x4C p2 0 step idle under Empty color 0x0F
+    stat at 31,13 element Object cycle 1 p1 cp437:0x4C under Empty color 0x0F
     oop
 @Lake
 #end
@@ -979,7 +979,7 @@ to start the lake, boss.
 #lakeres:a
 
     end
-    stat at 22,15 element Object cycle 1 p1 cp437:0x48 p2 0 step idle under Empty color 0x0F
+    stat at 22,15 element Object cycle 1 p1 cp437:0x48 under Empty color 0x0F
     oop
 @House
 #end
@@ -1135,7 +1135,7 @@ $께께께>께께께
 #unlock
 
     end
-    stat at 30,15 element Object cycle 1 p1 cp437:0xA5 p2 0 step idle under Empty color 0x0F
+    stat at 30,15 element Object cycle 1 p1 cp437:0xA5 under Empty color 0x0F
     oop
 @Stables
 #end
@@ -1270,7 +1270,7 @@ $....께께�....
 #unlock
 
     end
-    stat at 24,16 element Object cycle 1 p1 cp437:0xF8 p2 0 step idle under Empty color 0x0F
+    stat at 24,16 element Object cycle 1 p1 cp437:0xF8 under Empty color 0x0F
     oop
 @Bridge
 #end
@@ -1293,7 +1293,7 @@ the board first though, boss.
 /i#die
 
     end
-    stat at 26,16 element Object cycle 1 p1 cp437:0x54 p2 0 step idle under Empty color 0x0F
+    stat at 26,16 element Object cycle 1 p1 cp437:0x54 under Empty color 0x0F
     oop
 @Tree
 #end
@@ -1463,7 +1463,7 @@ $.....�<�.....
 #unlock
 
     end
-    stat at 28,16 element Object cycle 1 p1 cp437:0x52 p2 0 step idle under Empty color 0x0F
+    stat at 28,16 element Object cycle 1 p1 cp437:0x52 under Empty color 0x0F
     oop
 @River
 #end
@@ -1524,125 +1524,125 @@ river here, boss.
 #y
 
     end
-    stat at 48,22 element Transporter cycle 255 p1 0 p2 0 step south under Empty color 0x0F
-    stat at 47,22 element Transporter cycle 255 p1 0 p2 0 step south under Empty color 0x0F
-    stat at 46,22 element Transporter cycle 255 p1 0 p2 0 step south under Empty color 0x0F
-    stat at 45,22 element Transporter cycle 255 p1 0 p2 0 step south under Empty color 0x0F
-    stat at 44,22 element Transporter cycle 255 p1 0 p2 0 step south under Empty color 0x0F
-    stat at 43,22 element Transporter cycle 255 p1 0 p2 0 step south under Empty color 0x0F
-    stat at 42,22 element Transporter cycle 255 p1 0 p2 0 step south under Empty color 0x0F
-    stat at 41,22 element Transporter cycle 255 p1 0 p2 0 step south under Empty color 0x0F
-    stat at 40,22 element Transporter cycle 255 p1 0 p2 0 step south under Empty color 0x0F
-    stat at 39,22 element Transporter cycle 255 p1 0 p2 0 step south under Empty color 0x0F
-    stat at 38,22 element Transporter cycle 255 p1 0 p2 0 step south under Empty color 0x0F
-    stat at 37,22 element Transporter cycle 255 p1 0 p2 0 step south under Empty color 0x0F
-    stat at 36,22 element Transporter cycle 255 p1 0 p2 0 step south under Empty color 0x0F
-    stat at 35,22 element Transporter cycle 255 p1 0 p2 0 step south under Empty color 0x0F
-    stat at 34,22 element Transporter cycle 255 p1 0 p2 0 step south under Empty color 0x0F
-    stat at 33,22 element Transporter cycle 255 p1 0 p2 0 step south under Empty color 0x0F
-    stat at 32,22 element Transporter cycle 255 p1 0 p2 0 step south under Empty color 0x0F
-    stat at 31,22 element Transporter cycle 255 p1 0 p2 0 step south under Empty color 0x0F
-    stat at 30,22 element Transporter cycle 255 p1 0 p2 0 step south under Empty color 0x0F
-    stat at 29,22 element Transporter cycle 255 p1 0 p2 0 step south under Empty color 0x0F
-    stat at 28,22 element Transporter cycle 255 p1 0 p2 0 step south under Empty color 0x0F
-    stat at 27,22 element Transporter cycle 255 p1 0 p2 0 step south under Empty color 0x0F
-    stat at 49,21 element Transporter cycle 255 p1 0 p2 0 step east under Empty color 0x0F
-    stat at 49,20 element Transporter cycle 255 p1 0 p2 0 step east under Empty color 0x0F
-    stat at 49,19 element Transporter cycle 255 p1 0 p2 0 step east under Empty color 0x0F
-    stat at 49,18 element Transporter cycle 255 p1 0 p2 0 step east under Empty color 0x0F
-    stat at 49,17 element Transporter cycle 255 p1 0 p2 0 step east under Empty color 0x0F
-    stat at 49,16 element Transporter cycle 255 p1 0 p2 0 step east under Empty color 0x0F
-    stat at 49,15 element Transporter cycle 255 p1 0 p2 0 step east under Empty color 0x0F
-    stat at 49,14 element Transporter cycle 255 p1 0 p2 0 step east under Empty color 0x0F
-    stat at 49,12 element Transporter cycle 255 p1 0 p2 0 step east under Empty color 0x0F
-    stat at 49,11 element Transporter cycle 255 p1 0 p2 0 step east under Empty color 0x0F
-    stat at 49,10 element Transporter cycle 255 p1 0 p2 0 step east under Empty color 0x0F
-    stat at 49,9 element Transporter cycle 255 p1 0 p2 0 step east under Empty color 0x0F
-    stat at 49,8 element Transporter cycle 255 p1 0 p2 0 step east under Empty color 0x0F
-    stat at 49,7 element Transporter cycle 255 p1 0 p2 0 step east under Empty color 0x0F
-    stat at 49,6 element Transporter cycle 255 p1 0 p2 0 step east under Empty color 0x0F
-    stat at 49,5 element Transporter cycle 255 p1 0 p2 0 step east under Empty color 0x0F
-    stat at 48,4 element Transporter cycle 255 p1 0 p2 0 step north under Empty color 0x0F
-    stat at 47,4 element Transporter cycle 255 p1 0 p2 0 step north under Empty color 0x0F
-    stat at 46,4 element Transporter cycle 255 p1 0 p2 0 step north under Empty color 0x0F
-    stat at 45,4 element Transporter cycle 255 p1 0 p2 0 step north under Empty color 0x0F
-    stat at 44,4 element Transporter cycle 255 p1 0 p2 0 step north under Empty color 0x0F
-    stat at 43,4 element Transporter cycle 255 p1 0 p2 0 step north under Empty color 0x0F
-    stat at 42,4 element Transporter cycle 255 p1 0 p2 0 step north under Empty color 0x0F
-    stat at 41,4 element Transporter cycle 255 p1 0 p2 0 step north under Empty color 0x0F
-    stat at 40,4 element Transporter cycle 255 p1 0 p2 0 step north under Empty color 0x0F
-    stat at 39,4 element Transporter cycle 255 p1 0 p2 0 step north under Empty color 0x0F
-    stat at 38,4 element Transporter cycle 255 p1 0 p2 0 step north under Empty color 0x0F
-    stat at 37,4 element Transporter cycle 255 p1 0 p2 0 step north under Empty color 0x0F
-    stat at 36,4 element Transporter cycle 255 p1 0 p2 0 step north under Empty color 0x0F
-    stat at 35,4 element Transporter cycle 255 p1 0 p2 0 step north under Empty color 0x0F
-    stat at 34,4 element Transporter cycle 255 p1 0 p2 0 step north under Empty color 0x0F
-    stat at 33,4 element Transporter cycle 255 p1 0 p2 0 step north under Empty color 0x0F
-    stat at 32,4 element Transporter cycle 255 p1 0 p2 0 step north under Empty color 0x0F
-    stat at 31,4 element Transporter cycle 255 p1 0 p2 0 step north under Empty color 0x0F
-    stat at 30,4 element Transporter cycle 255 p1 0 p2 0 step north under Empty color 0x0F
-    stat at 29,4 element Transporter cycle 255 p1 0 p2 0 step north under Empty color 0x0F
-    stat at 28,4 element Transporter cycle 255 p1 0 p2 0 step north under Empty color 0x0F
-    stat at 27,4 element Transporter cycle 255 p1 0 p2 0 step north under Empty color 0x0F
-    stat at 25,4 element Transporter cycle 255 p1 0 p2 0 step north under Empty color 0x0F
-    stat at 24,4 element Transporter cycle 255 p1 0 p2 0 step north under Empty color 0x0F
-    stat at 23,4 element Transporter cycle 255 p1 0 p2 0 step north under Empty color 0x0F
-    stat at 22,4 element Transporter cycle 255 p1 0 p2 0 step north under Empty color 0x0F
-    stat at 21,4 element Transporter cycle 255 p1 0 p2 0 step north under Empty color 0x0F
-    stat at 20,4 element Transporter cycle 255 p1 0 p2 0 step north under Empty color 0x0F
-    stat at 19,4 element Transporter cycle 255 p1 0 p2 0 step north under Empty color 0x0F
-    stat at 18,4 element Transporter cycle 255 p1 0 p2 0 step north under Empty color 0x0F
-    stat at 17,4 element Transporter cycle 255 p1 0 p2 0 step north under Empty color 0x0F
-    stat at 16,4 element Transporter cycle 255 p1 0 p2 0 step north under Empty color 0x0F
-    stat at 15,4 element Transporter cycle 255 p1 0 p2 0 step north under Empty color 0x0F
-    stat at 14,4 element Transporter cycle 255 p1 0 p2 0 step north under Empty color 0x0F
-    stat at 13,4 element Transporter cycle 255 p1 0 p2 0 step north under Empty color 0x0F
-    stat at 12,4 element Transporter cycle 255 p1 0 p2 0 step north under Empty color 0x0F
-    stat at 11,4 element Transporter cycle 255 p1 0 p2 0 step north under Empty color 0x0F
-    stat at 10,4 element Transporter cycle 255 p1 0 p2 0 step north under Empty color 0x0F
-    stat at 9,4 element Transporter cycle 255 p1 0 p2 0 step north under Empty color 0x0F
-    stat at 8,4 element Transporter cycle 255 p1 0 p2 0 step north under Empty color 0x0F
-    stat at 7,4 element Transporter cycle 255 p1 0 p2 0 step north under Empty color 0x0F
-    stat at 6,4 element Transporter cycle 255 p1 0 p2 0 step north under Empty color 0x0F
-    stat at 5,4 element Transporter cycle 255 p1 0 p2 0 step north under Empty color 0x0F
-    stat at 4,5 element Transporter cycle 255 p1 0 p2 0 step west under Empty color 0x0F
-    stat at 4,6 element Transporter cycle 255 p1 0 p2 0 step west under Empty color 0x0F
-    stat at 4,7 element Transporter cycle 255 p1 0 p2 0 step west under Empty color 0x0F
-    stat at 4,8 element Transporter cycle 255 p1 0 p2 0 step west under Empty color 0x0F
-    stat at 4,9 element Transporter cycle 255 p1 0 p2 0 step west under Empty color 0x0F
-    stat at 4,10 element Transporter cycle 255 p1 0 p2 0 step west under Empty color 0x0F
-    stat at 4,11 element Transporter cycle 255 p1 0 p2 0 step west under Empty color 0x0F
-    stat at 4,12 element Transporter cycle 255 p1 0 p2 0 step west under Empty color 0x0F
-    stat at 4,14 element Transporter cycle 255 p1 0 p2 0 step west under Empty color 0x0F
-    stat at 4,15 element Transporter cycle 255 p1 0 p2 0 step west under Empty color 0x0F
-    stat at 4,16 element Transporter cycle 255 p1 0 p2 0 step west under Empty color 0x0F
-    stat at 4,17 element Transporter cycle 255 p1 0 p2 0 step west under Empty color 0x0F
-    stat at 4,18 element Transporter cycle 255 p1 0 p2 0 step west under Empty color 0x0F
-    stat at 4,19 element Transporter cycle 255 p1 0 p2 0 step west under Empty color 0x0F
-    stat at 4,20 element Transporter cycle 255 p1 0 p2 0 step west under Empty color 0x0F
-    stat at 4,21 element Transporter cycle 255 p1 0 p2 0 step west under Empty color 0x0F
-    stat at 25,22 element Transporter cycle 255 p1 0 p2 0 step south under Empty color 0x0F
-    stat at 24,22 element Transporter cycle 255 p1 0 p2 0 step south under Empty color 0x0F
-    stat at 23,22 element Transporter cycle 255 p1 0 p2 0 step south under Empty color 0x0F
-    stat at 22,22 element Transporter cycle 255 p1 0 p2 0 step south under Empty color 0x0F
-    stat at 21,22 element Transporter cycle 255 p1 0 p2 0 step south under Empty color 0x0F
-    stat at 20,22 element Transporter cycle 255 p1 0 p2 0 step south under Empty color 0x0F
-    stat at 19,22 element Transporter cycle 255 p1 0 p2 0 step south under Empty color 0x0F
-    stat at 18,22 element Transporter cycle 255 p1 0 p2 0 step south under Empty color 0x0F
-    stat at 17,22 element Transporter cycle 255 p1 0 p2 0 step south under Empty color 0x0F
-    stat at 16,22 element Transporter cycle 255 p1 0 p2 0 step south under Empty color 0x0F
-    stat at 15,22 element Transporter cycle 255 p1 0 p2 0 step south under Empty color 0x0F
-    stat at 14,22 element Transporter cycle 255 p1 0 p2 0 step south under Empty color 0x0F
-    stat at 13,22 element Transporter cycle 255 p1 0 p2 0 step south under Empty color 0x0F
-    stat at 12,22 element Transporter cycle 255 p1 0 p2 0 step south under Empty color 0x0F
-    stat at 11,22 element Transporter cycle 255 p1 0 p2 0 step south under Empty color 0x0F
-    stat at 10,22 element Transporter cycle 255 p1 0 p2 0 step south under Empty color 0x0F
-    stat at 9,22 element Transporter cycle 255 p1 0 p2 0 step south under Empty color 0x0F
-    stat at 8,22 element Transporter cycle 255 p1 0 p2 0 step south under Empty color 0x0F
-    stat at 7,22 element Transporter cycle 255 p1 0 p2 0 step south under Empty color 0x0F
-    stat at 6,22 element Transporter cycle 255 p1 0 p2 0 step south under Empty color 0x0F
-    stat at 5,22 element Transporter cycle 255 p1 0 p2 0 step south under Empty color 0x0F
-    stat at 52,23 element Object cycle 1 p1 cp437:0x21 p2 0 step idle under Empty color 0x0F
+    stat at 48,22 element Transporter cycle 255 step south under Empty color 0x0F
+    stat at 47,22 element Transporter cycle 255 step south under Empty color 0x0F
+    stat at 46,22 element Transporter cycle 255 step south under Empty color 0x0F
+    stat at 45,22 element Transporter cycle 255 step south under Empty color 0x0F
+    stat at 44,22 element Transporter cycle 255 step south under Empty color 0x0F
+    stat at 43,22 element Transporter cycle 255 step south under Empty color 0x0F
+    stat at 42,22 element Transporter cycle 255 step south under Empty color 0x0F
+    stat at 41,22 element Transporter cycle 255 step south under Empty color 0x0F
+    stat at 40,22 element Transporter cycle 255 step south under Empty color 0x0F
+    stat at 39,22 element Transporter cycle 255 step south under Empty color 0x0F
+    stat at 38,22 element Transporter cycle 255 step south under Empty color 0x0F
+    stat at 37,22 element Transporter cycle 255 step south under Empty color 0x0F
+    stat at 36,22 element Transporter cycle 255 step south under Empty color 0x0F
+    stat at 35,22 element Transporter cycle 255 step south under Empty color 0x0F
+    stat at 34,22 element Transporter cycle 255 step south under Empty color 0x0F
+    stat at 33,22 element Transporter cycle 255 step south under Empty color 0x0F
+    stat at 32,22 element Transporter cycle 255 step south under Empty color 0x0F
+    stat at 31,22 element Transporter cycle 255 step south under Empty color 0x0F
+    stat at 30,22 element Transporter cycle 255 step south under Empty color 0x0F
+    stat at 29,22 element Transporter cycle 255 step south under Empty color 0x0F
+    stat at 28,22 element Transporter cycle 255 step south under Empty color 0x0F
+    stat at 27,22 element Transporter cycle 255 step south under Empty color 0x0F
+    stat at 49,21 element Transporter cycle 255 step east under Empty color 0x0F
+    stat at 49,20 element Transporter cycle 255 step east under Empty color 0x0F
+    stat at 49,19 element Transporter cycle 255 step east under Empty color 0x0F
+    stat at 49,18 element Transporter cycle 255 step east under Empty color 0x0F
+    stat at 49,17 element Transporter cycle 255 step east under Empty color 0x0F
+    stat at 49,16 element Transporter cycle 255 step east under Empty color 0x0F
+    stat at 49,15 element Transporter cycle 255 step east under Empty color 0x0F
+    stat at 49,14 element Transporter cycle 255 step east under Empty color 0x0F
+    stat at 49,12 element Transporter cycle 255 step east under Empty color 0x0F
+    stat at 49,11 element Transporter cycle 255 step east under Empty color 0x0F
+    stat at 49,10 element Transporter cycle 255 step east under Empty color 0x0F
+    stat at 49,9 element Transporter cycle 255 step east under Empty color 0x0F
+    stat at 49,8 element Transporter cycle 255 step east under Empty color 0x0F
+    stat at 49,7 element Transporter cycle 255 step east under Empty color 0x0F
+    stat at 49,6 element Transporter cycle 255 step east under Empty color 0x0F
+    stat at 49,5 element Transporter cycle 255 step east under Empty color 0x0F
+    stat at 48,4 element Transporter cycle 255 step north under Empty color 0x0F
+    stat at 47,4 element Transporter cycle 255 step north under Empty color 0x0F
+    stat at 46,4 element Transporter cycle 255 step north under Empty color 0x0F
+    stat at 45,4 element Transporter cycle 255 step north under Empty color 0x0F
+    stat at 44,4 element Transporter cycle 255 step north under Empty color 0x0F
+    stat at 43,4 element Transporter cycle 255 step north under Empty color 0x0F
+    stat at 42,4 element Transporter cycle 255 step north under Empty color 0x0F
+    stat at 41,4 element Transporter cycle 255 step north under Empty color 0x0F
+    stat at 40,4 element Transporter cycle 255 step north under Empty color 0x0F
+    stat at 39,4 element Transporter cycle 255 step north under Empty color 0x0F
+    stat at 38,4 element Transporter cycle 255 step north under Empty color 0x0F
+    stat at 37,4 element Transporter cycle 255 step north under Empty color 0x0F
+    stat at 36,4 element Transporter cycle 255 step north under Empty color 0x0F
+    stat at 35,4 element Transporter cycle 255 step north under Empty color 0x0F
+    stat at 34,4 element Transporter cycle 255 step north under Empty color 0x0F
+    stat at 33,4 element Transporter cycle 255 step north under Empty color 0x0F
+    stat at 32,4 element Transporter cycle 255 step north under Empty color 0x0F
+    stat at 31,4 element Transporter cycle 255 step north under Empty color 0x0F
+    stat at 30,4 element Transporter cycle 255 step north under Empty color 0x0F
+    stat at 29,4 element Transporter cycle 255 step north under Empty color 0x0F
+    stat at 28,4 element Transporter cycle 255 step north under Empty color 0x0F
+    stat at 27,4 element Transporter cycle 255 step north under Empty color 0x0F
+    stat at 25,4 element Transporter cycle 255 step north under Empty color 0x0F
+    stat at 24,4 element Transporter cycle 255 step north under Empty color 0x0F
+    stat at 23,4 element Transporter cycle 255 step north under Empty color 0x0F
+    stat at 22,4 element Transporter cycle 255 step north under Empty color 0x0F
+    stat at 21,4 element Transporter cycle 255 step north under Empty color 0x0F
+    stat at 20,4 element Transporter cycle 255 step north under Empty color 0x0F
+    stat at 19,4 element Transporter cycle 255 step north under Empty color 0x0F
+    stat at 18,4 element Transporter cycle 255 step north under Empty color 0x0F
+    stat at 17,4 element Transporter cycle 255 step north under Empty color 0x0F
+    stat at 16,4 element Transporter cycle 255 step north under Empty color 0x0F
+    stat at 15,4 element Transporter cycle 255 step north under Empty color 0x0F
+    stat at 14,4 element Transporter cycle 255 step north under Empty color 0x0F
+    stat at 13,4 element Transporter cycle 255 step north under Empty color 0x0F
+    stat at 12,4 element Transporter cycle 255 step north under Empty color 0x0F
+    stat at 11,4 element Transporter cycle 255 step north under Empty color 0x0F
+    stat at 10,4 element Transporter cycle 255 step north under Empty color 0x0F
+    stat at 9,4 element Transporter cycle 255 step north under Empty color 0x0F
+    stat at 8,4 element Transporter cycle 255 step north under Empty color 0x0F
+    stat at 7,4 element Transporter cycle 255 step north under Empty color 0x0F
+    stat at 6,4 element Transporter cycle 255 step north under Empty color 0x0F
+    stat at 5,4 element Transporter cycle 255 step north under Empty color 0x0F
+    stat at 4,5 element Transporter cycle 255 step west under Empty color 0x0F
+    stat at 4,6 element Transporter cycle 255 step west under Empty color 0x0F
+    stat at 4,7 element Transporter cycle 255 step west under Empty color 0x0F
+    stat at 4,8 element Transporter cycle 255 step west under Empty color 0x0F
+    stat at 4,9 element Transporter cycle 255 step west under Empty color 0x0F
+    stat at 4,10 element Transporter cycle 255 step west under Empty color 0x0F
+    stat at 4,11 element Transporter cycle 255 step west under Empty color 0x0F
+    stat at 4,12 element Transporter cycle 255 step west under Empty color 0x0F
+    stat at 4,14 element Transporter cycle 255 step west under Empty color 0x0F
+    stat at 4,15 element Transporter cycle 255 step west under Empty color 0x0F
+    stat at 4,16 element Transporter cycle 255 step west under Empty color 0x0F
+    stat at 4,17 element Transporter cycle 255 step west under Empty color 0x0F
+    stat at 4,18 element Transporter cycle 255 step west under Empty color 0x0F
+    stat at 4,19 element Transporter cycle 255 step west under Empty color 0x0F
+    stat at 4,20 element Transporter cycle 255 step west under Empty color 0x0F
+    stat at 4,21 element Transporter cycle 255 step west under Empty color 0x0F
+    stat at 25,22 element Transporter cycle 255 step south under Empty color 0x0F
+    stat at 24,22 element Transporter cycle 255 step south under Empty color 0x0F
+    stat at 23,22 element Transporter cycle 255 step south under Empty color 0x0F
+    stat at 22,22 element Transporter cycle 255 step south under Empty color 0x0F
+    stat at 21,22 element Transporter cycle 255 step south under Empty color 0x0F
+    stat at 20,22 element Transporter cycle 255 step south under Empty color 0x0F
+    stat at 19,22 element Transporter cycle 255 step south under Empty color 0x0F
+    stat at 18,22 element Transporter cycle 255 step south under Empty color 0x0F
+    stat at 17,22 element Transporter cycle 255 step south under Empty color 0x0F
+    stat at 16,22 element Transporter cycle 255 step south under Empty color 0x0F
+    stat at 15,22 element Transporter cycle 255 step south under Empty color 0x0F
+    stat at 14,22 element Transporter cycle 255 step south under Empty color 0x0F
+    stat at 13,22 element Transporter cycle 255 step south under Empty color 0x0F
+    stat at 12,22 element Transporter cycle 255 step south under Empty color 0x0F
+    stat at 11,22 element Transporter cycle 255 step south under Empty color 0x0F
+    stat at 10,22 element Transporter cycle 255 step south under Empty color 0x0F
+    stat at 9,22 element Transporter cycle 255 step south under Empty color 0x0F
+    stat at 8,22 element Transporter cycle 255 step south under Empty color 0x0F
+    stat at 7,22 element Transporter cycle 255 step south under Empty color 0x0F
+    stat at 6,22 element Transporter cycle 255 step south under Empty color 0x0F
+    stat at 5,22 element Transporter cycle 255 step south under Empty color 0x0F
+    stat at 52,23 element Object cycle 1 p1 cp437:0x21 under Empty color 0x0F
     oop
 
 'DEBUG

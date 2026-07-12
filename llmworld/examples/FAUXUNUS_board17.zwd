@@ -67,7 +67,7 @@ bobccccccccccccccccccccccccbobcccccccccccccccccccccccbJumpbc
   end
 
   stats
-    stat at 58,20 element Object cycle 1 p1 cp437:0x9D p2 0 step idle under Empty color 0x0F
+    stat at 58,20 element Object cycle 1 p1 cp437:0x9D under Empty color 0x0F
     oop
 @retorch
 #end
@@ -76,102 +76,102 @@ bobccccccccccccccccccccccccbobcccccccccccccccccccccccbJumpbc
 #end
 
     end
-    stat at 58,19 element Object cycle 1 p1 cp437:0x9D p2 0 step idle under Empty color 0x0F
+    stat at 58,19 element Object cycle 1 p1 cp437:0x9D under Empty color 0x0F
     oop
 #bind retorch
 
     end
-    stat at 58,18 element Object cycle 1 p1 cp437:0x9D p2 0 step idle under Empty color 0x0F
+    stat at 58,18 element Object cycle 1 p1 cp437:0x9D under Empty color 0x0F
     oop
 #bind retorch
 
     end
-    stat at 58,17 element Object cycle 1 p1 cp437:0x9D p2 0 step idle under Empty color 0x0F
+    stat at 58,17 element Object cycle 1 p1 cp437:0x9D under Empty color 0x0F
     oop
 #bind retorch
 
     end
-    stat at 58,16 element Object cycle 1 p1 cp437:0x9D p2 0 step idle under Empty color 0x0F
+    stat at 58,16 element Object cycle 1 p1 cp437:0x9D under Empty color 0x0F
     oop
 #bind retorch
 
     end
-    stat at 58,15 element Object cycle 1 p1 cp437:0x9D p2 0 step idle under Empty color 0x0F
+    stat at 58,15 element Object cycle 1 p1 cp437:0x9D under Empty color 0x0F
     oop
 #bind retorch
 
     end
-    stat at 58,14 element Object cycle 1 p1 cp437:0x9D p2 0 step idle under Empty color 0x0F
+    stat at 58,14 element Object cycle 1 p1 cp437:0x9D under Empty color 0x0F
     oop
 #bind retorch
 
     end
-    stat at 58,13 element Object cycle 1 p1 cp437:0x9D p2 0 step idle under Empty color 0x0F
+    stat at 58,13 element Object cycle 1 p1 cp437:0x9D under Empty color 0x0F
     oop
 #bind retorch
 
     end
-    stat at 58,12 element Object cycle 1 p1 cp437:0x9D p2 0 step idle under Empty color 0x0F
+    stat at 58,12 element Object cycle 1 p1 cp437:0x9D under Empty color 0x0F
     oop
 #bind retorch
 
     end
-    stat at 58,11 element Object cycle 1 p1 cp437:0x9D p2 0 step idle under Empty color 0x0F
+    stat at 58,11 element Object cycle 1 p1 cp437:0x9D under Empty color 0x0F
     oop
 #bind retorch
 
     end
-    stat at 58,10 element Object cycle 1 p1 cp437:0x9D p2 0 step idle under Empty color 0x0F
+    stat at 58,10 element Object cycle 1 p1 cp437:0x9D under Empty color 0x0F
     oop
 #bind retorch
 
     end
-    stat at 58,9 element Object cycle 1 p1 cp437:0x9D p2 0 step idle under Empty color 0x0F
+    stat at 58,9 element Object cycle 1 p1 cp437:0x9D under Empty color 0x0F
     oop
 #bind retorch
 
     end
-    stat at 58,8 element Object cycle 1 p1 cp437:0x9D p2 0 step idle under Empty color 0x0F
+    stat at 58,8 element Object cycle 1 p1 cp437:0x9D under Empty color 0x0F
     oop
 #bind retorch
 
     end
-    stat at 58,7 element Object cycle 1 p1 cp437:0x9D p2 0 step idle under Empty color 0x0F
+    stat at 58,7 element Object cycle 1 p1 cp437:0x9D under Empty color 0x0F
     oop
 #bind retorch
 
     end
-    stat at 58,6 element Object cycle 1 p1 cp437:0x9D p2 0 step idle under Empty color 0x0F
+    stat at 58,6 element Object cycle 1 p1 cp437:0x9D under Empty color 0x0F
     oop
 #bind retorch
 
     end
-    stat at 58,5 element Object cycle 1 p1 cp437:0x9D p2 0 step idle under Empty color 0x0F
+    stat at 58,5 element Object cycle 1 p1 cp437:0x9D under Empty color 0x0F
     oop
 #bind retorch
 
     end
-    stat at 58,4 element Object cycle 1 p1 cp437:0x9D p2 0 step idle under Empty color 0x0F
+    stat at 58,4 element Object cycle 1 p1 cp437:0x9D under Empty color 0x0F
     oop
 #bind retorch
 
     end
-    stat at 58,3 element Object cycle 1 p1 cp437:0x9D p2 0 step idle under Empty color 0x0F
+    stat at 58,3 element Object cycle 1 p1 cp437:0x9D under Empty color 0x0F
     oop
 #bind retorch
 
     end
-    stat at 58,2 element Object cycle 1 p1 cp437:0x9D p2 0 step idle under Empty color 0x0F
+    stat at 58,2 element Object cycle 1 p1 cp437:0x9D under Empty color 0x0F
     oop
 #bind retorch
 
     end
-    stat at 58,1 element Object cycle 1 p1 cp437:0x9D p2 0 step idle under Empty color 0x0F
+    stat at 58,1 element Object cycle 1 p1 cp437:0x9D under Empty color 0x0F
     oop
 #bind retorch
 
     end
-    stat at 38,19 element Object cycle 1 p1 cp437:0x9D p2 0 step idle under Empty color 0x0F
+    stat at 38,19 element Object cycle 1 p1 cp437:0x9D under Empty color 0x0F
     oop
 @objtorch
 :revert
@@ -190,27 +190,27 @@ bobccccccccccccccccccccccccbobcccccccccccccccccccccccbJumpbc
 #end
 
     end
-    stat at 40,19 element Object cycle 1 p1 cp437:0x9D p2 0 step idle under Empty color 0x0F
+    stat at 40,19 element Object cycle 1 p1 cp437:0x9D under Empty color 0x0F
     oop
 #bind objtorch
 
     end
-    stat at 52,19 element Object cycle 1 p1 cp437:0x9D p2 0 step idle under Empty color 0x0F
+    stat at 52,19 element Object cycle 1 p1 cp437:0x9D under Empty color 0x0F
     oop
 #bind objtorch
 
     end
-    stat at 44,16 element Object cycle 1 p1 cp437:0x9D p2 0 step idle under Empty color 0x0F
+    stat at 44,16 element Object cycle 1 p1 cp437:0x9D under Empty color 0x0F
     oop
 #bind objtorch
 
     end
-    stat at 23,11 element Object cycle 1 p1 cp437:0x9D p2 0 step idle under Empty color 0x0F
+    stat at 23,11 element Object cycle 1 p1 cp437:0x9D under Empty color 0x0F
     oop
 #bind objtorch
 
     end
-    stat at 2,21 element Object cycle 1 p1 cp437:0x52 p2 0 step idle under Empty color 0x0F
+    stat at 2,21 element Object cycle 1 p1 cp437:0x52 under Empty color 0x0F
     oop
 @resetter
 'initialize
@@ -239,7 +239,7 @@ bobccccccccccccccccccccccccbobcccccccccccccccccccccccbJumpbc
 #unlock
 
     end
-    stat at 33,23 element Object cycle 1 p1 cp437:0x23 p2 0 step idle under Empty color 0x0F
+    stat at 33,23 element Object cycle 1 p1 cp437:0x23 under Empty color 0x0F
     oop
 @boostmaker
 #end
@@ -249,27 +249,27 @@ bobccccccccccccccccccccccccbobcccccccccccccccccccccccbJumpbc
 #end
 
     end
-    stat at 34,23 element Object cycle 1 p1 cp437:0x23 p2 0 step idle under Empty color 0x0F
+    stat at 34,23 element Object cycle 1 p1 cp437:0x23 under Empty color 0x0F
     oop
 #bind boostmaker
 
     end
-    stat at 35,23 element Object cycle 1 p1 cp437:0x23 p2 0 step idle under Empty color 0x0F
+    stat at 35,23 element Object cycle 1 p1 cp437:0x23 under Empty color 0x0F
     oop
 #bind boostmaker
 
     end
-    stat at 36,23 element Object cycle 1 p1 cp437:0x23 p2 0 step idle under Empty color 0x0F
+    stat at 36,23 element Object cycle 1 p1 cp437:0x23 under Empty color 0x0F
     oop
 #bind boostmaker
 
     end
-    stat at 37,23 element Object cycle 1 p1 cp437:0x23 p2 0 step idle under Empty color 0x0F
+    stat at 37,23 element Object cycle 1 p1 cp437:0x23 under Empty color 0x0F
     oop
 #bind boostmaker
 
     end
-    stat at 60,20 element Object cycle 1 p1 cp437:0x11 p2 0 step idle under Empty color 0x0F
+    stat at 60,20 element Object cycle 1 p1 cp437:0x11 under Empty color 0x0F
     oop
 @torchadd
 #end
@@ -306,92 +306,92 @@ bobccccccccccccccccccccccccbobcccccccccccccccccccccccbJumpbc
 #unlock
 
     end
-    stat at 3,11 element Object cycle 1 p1 cp437:0x9D p2 0 step idle under Empty color 0x0F
+    stat at 3,11 element Object cycle 1 p1 cp437:0x9D under Empty color 0x0F
     oop
 #bind objtorch
 
     end
-    stat at 4,11 element Object cycle 1 p1 cp437:0x9D p2 0 step idle under Empty color 0x0F
+    stat at 4,11 element Object cycle 1 p1 cp437:0x9D under Empty color 0x0F
     oop
 #bind objtorch
 
     end
-    stat at 5,11 element Object cycle 1 p1 cp437:0x9D p2 0 step idle under Empty color 0x0F
+    stat at 5,11 element Object cycle 1 p1 cp437:0x9D under Empty color 0x0F
     oop
 #bind objtorch
 
     end
-    stat at 6,11 element Object cycle 1 p1 cp437:0x9D p2 0 step idle under Empty color 0x0F
+    stat at 6,11 element Object cycle 1 p1 cp437:0x9D under Empty color 0x0F
     oop
 #bind objtorch
 
     end
-    stat at 7,11 element Object cycle 1 p1 cp437:0x9D p2 0 step idle under Empty color 0x0F
+    stat at 7,11 element Object cycle 1 p1 cp437:0x9D under Empty color 0x0F
     oop
 #bind objtorch
 
     end
-    stat at 8,11 element Object cycle 1 p1 cp437:0x9D p2 0 step idle under Empty color 0x0F
+    stat at 8,11 element Object cycle 1 p1 cp437:0x9D under Empty color 0x0F
     oop
 #bind objtorch
 
     end
-    stat at 9,11 element Object cycle 1 p1 cp437:0x9D p2 0 step idle under Empty color 0x0F
+    stat at 9,11 element Object cycle 1 p1 cp437:0x9D under Empty color 0x0F
     oop
 #bind objtorch
 
     end
-    stat at 10,11 element Object cycle 1 p1 cp437:0x9D p2 0 step idle under Empty color 0x0F
+    stat at 10,11 element Object cycle 1 p1 cp437:0x9D under Empty color 0x0F
     oop
 #bind objtorch
 
     end
-    stat at 11,11 element Object cycle 1 p1 cp437:0x9D p2 0 step idle under Empty color 0x0F
+    stat at 11,11 element Object cycle 1 p1 cp437:0x9D under Empty color 0x0F
     oop
 #bind objtorch
 
     end
-    stat at 12,11 element Object cycle 1 p1 cp437:0x9D p2 0 step idle under Empty color 0x0F
+    stat at 12,11 element Object cycle 1 p1 cp437:0x9D under Empty color 0x0F
     oop
 #bind objtorch
 
     end
-    stat at 13,11 element Object cycle 1 p1 cp437:0x9D p2 0 step idle under Empty color 0x0F
+    stat at 13,11 element Object cycle 1 p1 cp437:0x9D under Empty color 0x0F
     oop
 #bind objtorch
 
     end
-    stat at 14,11 element Object cycle 1 p1 cp437:0x9D p2 0 step idle under Empty color 0x0F
+    stat at 14,11 element Object cycle 1 p1 cp437:0x9D under Empty color 0x0F
     oop
 #bind objtorch
 
     end
-    stat at 15,11 element Object cycle 1 p1 cp437:0x9D p2 0 step idle under Empty color 0x0F
+    stat at 15,11 element Object cycle 1 p1 cp437:0x9D under Empty color 0x0F
     oop
 #bind objtorch
 
     end
-    stat at 16,11 element Object cycle 1 p1 cp437:0x9D p2 0 step idle under Empty color 0x0F
+    stat at 16,11 element Object cycle 1 p1 cp437:0x9D under Empty color 0x0F
     oop
 #bind objtorch
 
     end
-    stat at 17,11 element Object cycle 1 p1 cp437:0x9D p2 0 step idle under Empty color 0x0F
+    stat at 17,11 element Object cycle 1 p1 cp437:0x9D under Empty color 0x0F
     oop
 #bind objtorch
 
     end
-    stat at 18,11 element Object cycle 1 p1 cp437:0x9D p2 0 step idle under Empty color 0x0F
+    stat at 18,11 element Object cycle 1 p1 cp437:0x9D under Empty color 0x0F
     oop
 #bind objtorch
 
     end
-    stat at 36,13 element Object cycle 1 p1 cp437:0x9D p2 0 step idle under Empty color 0x0F
+    stat at 36,13 element Object cycle 1 p1 cp437:0x9D under Empty color 0x0F
     oop
 #bind objtorch
 
     end
-    stat at 23,23 element Object cycle 1 p1 cp437:0x7F p2 0 step idle under Empty color 0x0F
+    stat at 23,23 element Object cycle 1 p1 cp437:0x7F under Empty color 0x0F
     oop
 @ResetButton
 #end
@@ -443,7 +443,7 @@ Reset the board?
 #restore touch
 
     end
-    stat at 29,21 element Object cycle 1 p1 cp437:0x7F p2 0 step idle under Empty color 0x0F
+    stat at 29,21 element Object cycle 1 p1 cp437:0x7F under Empty color 0x0F
     oop
 @js
 #end
@@ -492,7 +492,7 @@ Straight Jump uninstalled.
 #char 24
 
     end
-    stat at 28,22 element Object cycle 1 p1 cp437:0x7F p2 0 step idle under Empty color 0x0F
+    stat at 28,22 element Object cycle 1 p1 cp437:0x7F under Empty color 0x0F
     oop
 @jtw
 #end
@@ -541,7 +541,7 @@ Tall Jump West uninstalled.
 #char 191
 
     end
-    stat at 30,22 element Object cycle 1 p1 cp437:0x7F p2 0 step idle under Empty color 0x0F
+    stat at 30,22 element Object cycle 1 p1 cp437:0x7F under Empty color 0x0F
     oop
 @jte
 #end
@@ -590,7 +590,7 @@ Tall Jump East uninstalled.
 #char 218
 
     end
-    stat at 27,23 element Object cycle 1 p1 cp437:0x7F p2 0 step idle under Empty color 0x0F
+    stat at 27,23 element Object cycle 1 p1 cp437:0x7F under Empty color 0x0F
     oop
 @jlw
 #end
@@ -639,7 +639,7 @@ Long Jump West uninstalled.
 #char 170
 
     end
-    stat at 31,23 element Object cycle 1 p1 cp437:0x7F p2 0 step idle under Empty color 0x0F
+    stat at 31,23 element Object cycle 1 p1 cp437:0x7F under Empty color 0x0F
     oop
 @jle
 #end
@@ -688,7 +688,7 @@ Long Jump East uninstalled.
 #char 169
 
     end
-    stat at 27,24 element Object cycle 1 p1 cp437:0x7F p2 0 step idle under Empty color 0x0F
+    stat at 27,24 element Object cycle 1 p1 cp437:0x7F under Empty color 0x0F
     oop
 @ww
 #end
@@ -737,7 +737,7 @@ Walk West uninstalled.
 #char 27
 
     end
-    stat at 31,24 element Object cycle 1 p1 cp437:0x7F p2 0 step idle under Empty color 0x0F
+    stat at 31,24 element Object cycle 1 p1 cp437:0x7F under Empty color 0x0F
     oop
 @we
 #end
@@ -786,7 +786,7 @@ Walk East uninstalled.
 #char 26
 
     end
-    stat at 28,19 element Object cycle 1 p1 cp437:0x02 p2 0 step idle under Empty color 0x0F
+    stat at 28,19 element Object cycle 1 p1 cp437:0x02 under Empty color 0x0F
     oop
 @avatar
 :a
@@ -886,67 +886,67 @@ Walk East uninstalled.
 #a
 
     end
-    stat at 25,13 element Object cycle 1 p1 cp437:0x9D p2 0 step idle under Empty color 0x0F
+    stat at 25,13 element Object cycle 1 p1 cp437:0x9D under Empty color 0x0F
     oop
 #bind objtorch
 
     end
-    stat at 56,7 element Object cycle 1 p1 cp437:0x9D p2 0 step idle under Empty color 0x0F
+    stat at 56,7 element Object cycle 1 p1 cp437:0x9D under Empty color 0x0F
     oop
 #bind objtorch
 
     end
-    stat at 55,7 element Object cycle 1 p1 cp437:0x9D p2 0 step idle under Empty color 0x0F
+    stat at 55,7 element Object cycle 1 p1 cp437:0x9D under Empty color 0x0F
     oop
 #bind objtorch
 
     end
-    stat at 54,7 element Object cycle 1 p1 cp437:0x9D p2 0 step idle under Empty color 0x0F
+    stat at 54,7 element Object cycle 1 p1 cp437:0x9D under Empty color 0x0F
     oop
 #bind objtorch
 
     end
-    stat at 53,7 element Object cycle 1 p1 cp437:0x9D p2 0 step idle under Empty color 0x0F
+    stat at 53,7 element Object cycle 1 p1 cp437:0x9D under Empty color 0x0F
     oop
 #bind objtorch
 
     end
-    stat at 52,7 element Object cycle 1 p1 cp437:0x9D p2 0 step idle under Empty color 0x0F
+    stat at 52,7 element Object cycle 1 p1 cp437:0x9D under Empty color 0x0F
     oop
 #bind objtorch
 
     end
-    stat at 51,7 element Object cycle 1 p1 cp437:0x9D p2 0 step idle under Empty color 0x0F
+    stat at 51,7 element Object cycle 1 p1 cp437:0x9D under Empty color 0x0F
     oop
 #bind objtorch
 
     end
-    stat at 50,7 element Object cycle 1 p1 cp437:0x9D p2 0 step idle under Empty color 0x0F
+    stat at 50,7 element Object cycle 1 p1 cp437:0x9D under Empty color 0x0F
     oop
 #bind objtorch
 
     end
-    stat at 49,7 element Object cycle 1 p1 cp437:0x9D p2 0 step idle under Empty color 0x0F
+    stat at 49,7 element Object cycle 1 p1 cp437:0x9D under Empty color 0x0F
     oop
 #bind objtorch
 
     end
-    stat at 48,7 element Object cycle 1 p1 cp437:0x9D p2 0 step idle under Empty color 0x0F
+    stat at 48,7 element Object cycle 1 p1 cp437:0x9D under Empty color 0x0F
     oop
 #bind objtorch
 
     end
-    stat at 47,7 element Object cycle 1 p1 cp437:0x9D p2 0 step idle under Empty color 0x0F
+    stat at 47,7 element Object cycle 1 p1 cp437:0x9D under Empty color 0x0F
     oop
 #bind objtorch
 
     end
-    stat at 46,7 element Object cycle 1 p1 cp437:0x9D p2 0 step idle under Empty color 0x0F
+    stat at 46,7 element Object cycle 1 p1 cp437:0x9D under Empty color 0x0F
     oop
 #bind objtorch
 
     end
-    stat at 51,25 element Object cycle 1 p1 cp437:0xE8 p2 0 step idle under Empty color 0x0F
+    stat at 51,25 element Object cycle 1 p1 cp437:0xE8 under Empty color 0x0F
     oop
 @Robot
 #end
@@ -977,7 +977,7 @@ appreciate it a lot.
 Robot: ...Why are you frowning?
 
     end
-    stat at 52,25 element Object cycle 1 p1 cp437:0x6D p2 0 step idle under Empty color 0x0F
+    stat at 52,25 element Object cycle 1 p1 cp437:0x6D under Empty color 0x0F
     oop
 @HowTo
 #end
@@ -996,13 +996,13 @@ becoming boxed in, however it could still
 potentially happen.
 
     end
-    stat at 18,24 element Object p2 0 step idle under Empty color 0x0F
+    stat at 18,24 element Object under Empty color 0x0F
     oop
 #give ammo 1000
 #die
 
     end
-    stat at 20,23 element Object cycle 1 p1 cp437:0x7F p2 0 step idle under Empty color 0x0F
+    stat at 20,23 element Object cycle 1 p1 cp437:0x7F under Empty color 0x0F
     oop
 @Fart
 #end

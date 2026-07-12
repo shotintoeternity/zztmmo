@@ -1,6 +1,5 @@
 board "XZR II: A FUCKSHIT MASTERPIECE"
   start player at 36,5
-  respawn at 32,32
   max-shots 255
   dark false
   reenter false
@@ -68,79 +67,79 @@ board "XZR II: A FUCKSHIT MASTERPIECE"
   end
 
   stats
-    stat at 6,11 element Object cycle 1 p1 cp437:0xDC p2 0 step idle follower 0 leader 0
-    stat at 7,11 element Object cycle 1 p1 cp437:0xDC p2 0 step idle follower 0 leader 0
-    stat at 8,11 element Object cycle 1 p1 cp437:0xDC p2 0 step idle follower 0 leader 0
-    stat at 9,11 element Object cycle 1 p1 cp437:0xDC p2 0 step idle follower 0 leader 0
-    stat at 10,11 element Object cycle 1 p1 cp437:0xDC p2 0 step idle follower 0 leader 0
-    stat at 11,11 element Object cycle 1 p1 cp437:0xDC p2 0 step idle follower 0 leader 0
-    stat at 12,11 element Object cycle 1 p1 cp437:0xDC p2 0 step idle follower 0 leader 0
-    stat at 13,11 element Object cycle 1 p1 cp437:0xDC p2 0 step idle follower 0 leader 0
-    stat at 14,11 element Object cycle 1 p1 cp437:0xDC p2 0 step idle follower 0 leader 0
-    stat at 15,11 element Object cycle 1 p1 cp437:0xDC p2 0 step idle follower 0 leader 0
-    stat at 16,11 element Object cycle 1 p1 cp437:0xDC p2 0 step idle follower 0 leader 0
-    stat at 17,11 element Object cycle 1 p1 cp437:0xDC p2 0 step idle follower 0 leader 0
-    stat at 18,11 element Object cycle 1 p1 cp437:0xDC p2 0 step idle follower 0 leader 0
-    stat at 19,11 element Object cycle 1 p1 cp437:0xDC p2 0 step idle follower 0 leader 0
-    stat at 19,16 element Object cycle 1 p1 cp437:0xDF p2 0 step idle follower 0 leader 0
-    stat at 18,16 element Object cycle 1 p1 cp437:0xDF p2 0 step idle follower 0 leader 0
-    stat at 17,16 element Object cycle 1 p1 cp437:0xDF p2 0 step idle follower 0 leader 0
-    stat at 16,16 element Object cycle 1 p1 cp437:0xDF p2 0 step idle follower 0 leader 0
-    stat at 15,16 element Object cycle 1 p1 cp437:0xDF p2 0 step idle follower 0 leader 0
-    stat at 14,16 element Object cycle 1 p1 cp437:0xDF p2 0 step idle follower 0 leader 0
-    stat at 13,16 element Object cycle 1 p1 cp437:0xDF p2 0 step idle follower 0 leader 0
-    stat at 12,16 element Object cycle 1 p1 cp437:0xDF p2 0 step idle follower 0 leader 0
-    stat at 11,16 element Object cycle 1 p1 cp437:0xDF p2 0 step idle follower 0 leader 0
-    stat at 10,16 element Object cycle 1 p1 cp437:0xDF p2 0 step idle follower 0 leader 0
-    stat at 9,16 element Object cycle 1 p1 cp437:0xDF p2 0 step idle follower 0 leader 0
-    stat at 8,16 element Object cycle 1 p1 cp437:0xDF p2 0 step idle follower 0 leader 0
-    stat at 7,16 element Object cycle 1 p1 cp437:0xDF p2 0 step idle follower 0 leader 0
-    stat at 6,16 element Object cycle 1 p1 cp437:0xDF p2 0 step idle follower 0 leader 0
-    stat at 7,9 element Object cycle 1 p1 cp437:0xDF p2 0 step idle follower 0 leader 0
-    stat at 6,9 element Object cycle 1 p1 cp437:0xDF p2 0 step idle follower 0 leader 0
-    stat at 8,9 element Object cycle 1 p1 cp437:0xDF p2 0 step idle follower 0 leader 0
-    stat at 4,9 element Object cycle 1 p1 cp437:0xDF p2 0 step idle follower 0 leader 0
-    stat at 3,9 element Object cycle 1 p1 cp437:0xDF p2 0 step idle follower 0 leader 0
-    stat at 2,9 element Object cycle 1 p1 cp437:0xDF p2 0 step idle follower 0 leader 0
-    stat at 10,9 element Object cycle 1 p1 cp437:0xDF p2 0 step idle follower 0 leader 0
-    stat at 11,9 element Object cycle 1 p1 cp437:0xDF p2 0 step idle follower 0 leader 0
-    stat at 12,9 element Object cycle 1 p1 cp437:0xDF p2 0 step idle follower 0 leader 0
-    stat at 13,9 element Object cycle 1 p1 cp437:0xDF p2 0 step idle follower 0 leader 0
-    stat at 14,9 element Object cycle 1 p1 cp437:0xDF p2 0 step idle follower 0 leader 0
-    stat at 15,9 element Object cycle 1 p1 cp437:0xDF p2 0 step idle follower 0 leader 0
-    stat at 16,9 element Object cycle 1 p1 cp437:0xDF p2 0 step idle follower 0 leader 0
-    stat at 6,3 element Object cycle 1 p1 cp437:0xDC p2 0 step idle follower 0 leader 0
-    stat at 7,3 element Object cycle 1 p1 cp437:0xDC p2 0 step idle follower 0 leader 0
-    stat at 8,3 element Object cycle 1 p1 cp437:0xDC p2 0 step idle follower 0 leader 0
-    stat at 4,3 element Object cycle 1 p1 cp437:0xDC p2 0 step idle follower 0 leader 0
-    stat at 3,3 element Object cycle 1 p1 cp437:0xDC p2 0 step idle follower 0 leader 0
-    stat at 2,3 element Object cycle 1 p1 cp437:0xDC p2 0 step idle follower 0 leader 0
-    stat at 10,3 element Object cycle 1 p1 cp437:0xDC p2 0 step idle follower 0 leader 0
-    stat at 11,3 element Object cycle 1 p1 cp437:0xDC p2 0 step idle follower 0 leader 0
-    stat at 12,3 element Object cycle 1 p1 cp437:0xDC p2 0 step idle follower 0 leader 0
-    stat at 13,3 element Object cycle 1 p1 cp437:0xDC p2 0 step idle follower 0 leader 0
-    stat at 14,3 element Object cycle 1 p1 cp437:0xDC p2 0 step idle follower 0 leader 0
-    stat at 15,3 element Object cycle 1 p1 cp437:0xDC p2 0 step idle follower 0 leader 0
-    stat at 16,3 element Object cycle 1 p1 cp437:0xDC p2 0 step idle follower 0 leader 0
-    stat at 18,3 element Object cycle 1 p1 cp437:0xDC p2 0 step idle follower 0 leader 0
-    stat at 19,3 element Object cycle 1 p1 cp437:0xDC p2 0 step idle follower 0 leader 0
-    stat at 20,3 element Object cycle 1 p1 cp437:0xDC p2 0 step idle follower 0 leader 0
-    stat at 21,3 element Object cycle 1 p1 cp437:0xDC p2 0 step idle follower 0 leader 0
-    stat at 22,3 element Object cycle 1 p1 cp437:0xDC p2 0 step idle follower 0 leader 0
-    stat at 22,9 element Object cycle 1 p1 cp437:0xDF p2 0 step idle follower 0 leader 0
-    stat at 23,9 element Object cycle 1 p1 cp437:0xDF p2 0 step idle follower 0 leader 0
-    stat at 19,9 element Object cycle 1 p1 cp437:0xDF p2 0 step idle follower 0 leader 0
-    stat at 18,9 element Object cycle 1 p1 cp437:0xDF p2 0 step idle follower 0 leader 0
-    stat at 16,8 element Object cycle 1 p1 cp437:0xDC p2 0 step idle follower 0 leader 0
-    stat at 15,8 element Object cycle 1 p1 cp437:0xDC p2 0 step idle follower 0 leader 0
-    stat at 10,4 element Object cycle 1 p1 cp437:0xDF p2 0 step idle follower 0 leader 0
-    stat at 11,4 element Object cycle 1 p1 cp437:0xDF p2 0 step idle follower 0 leader 0
-    stat at 6,18 element Object cycle 1 p1 cp437:0x65 p2 0 step idle follower 0 leader 0
-    stat at 15,18 element Object cycle 1 p1 cp437:0x6C p2 0 step idle follower 0 leader 0
-    stat at 18,18 element Object cycle 1 p1 cp437:0x65 p2 0 step idle follower 0 leader 0
-    stat at 12,18 element Object cycle 1 p1 cp437:0x69 p2 0 step idle follower 0 leader 0
-    stat at 9,18 element Object cycle 1 p1 cp437:0x78 p2 0 step idle follower 0 leader 0
-    stat at 36,22 element Object cycle 1 p1 cp437:0xF0 p2 0 step idle follower 0 leader 0
+    stat at 6,11 element Object cycle 1 p1 cp437:0xDC follower 0 leader 0
+    stat at 7,11 element Object cycle 1 p1 cp437:0xDC follower 0 leader 0
+    stat at 8,11 element Object cycle 1 p1 cp437:0xDC follower 0 leader 0
+    stat at 9,11 element Object cycle 1 p1 cp437:0xDC follower 0 leader 0
+    stat at 10,11 element Object cycle 1 p1 cp437:0xDC follower 0 leader 0
+    stat at 11,11 element Object cycle 1 p1 cp437:0xDC follower 0 leader 0
+    stat at 12,11 element Object cycle 1 p1 cp437:0xDC follower 0 leader 0
+    stat at 13,11 element Object cycle 1 p1 cp437:0xDC follower 0 leader 0
+    stat at 14,11 element Object cycle 1 p1 cp437:0xDC follower 0 leader 0
+    stat at 15,11 element Object cycle 1 p1 cp437:0xDC follower 0 leader 0
+    stat at 16,11 element Object cycle 1 p1 cp437:0xDC follower 0 leader 0
+    stat at 17,11 element Object cycle 1 p1 cp437:0xDC follower 0 leader 0
+    stat at 18,11 element Object cycle 1 p1 cp437:0xDC follower 0 leader 0
+    stat at 19,11 element Object cycle 1 p1 cp437:0xDC follower 0 leader 0
+    stat at 19,16 element Object cycle 1 p1 cp437:0xDF follower 0 leader 0
+    stat at 18,16 element Object cycle 1 p1 cp437:0xDF follower 0 leader 0
+    stat at 17,16 element Object cycle 1 p1 cp437:0xDF follower 0 leader 0
+    stat at 16,16 element Object cycle 1 p1 cp437:0xDF follower 0 leader 0
+    stat at 15,16 element Object cycle 1 p1 cp437:0xDF follower 0 leader 0
+    stat at 14,16 element Object cycle 1 p1 cp437:0xDF follower 0 leader 0
+    stat at 13,16 element Object cycle 1 p1 cp437:0xDF follower 0 leader 0
+    stat at 12,16 element Object cycle 1 p1 cp437:0xDF follower 0 leader 0
+    stat at 11,16 element Object cycle 1 p1 cp437:0xDF follower 0 leader 0
+    stat at 10,16 element Object cycle 1 p1 cp437:0xDF follower 0 leader 0
+    stat at 9,16 element Object cycle 1 p1 cp437:0xDF follower 0 leader 0
+    stat at 8,16 element Object cycle 1 p1 cp437:0xDF follower 0 leader 0
+    stat at 7,16 element Object cycle 1 p1 cp437:0xDF follower 0 leader 0
+    stat at 6,16 element Object cycle 1 p1 cp437:0xDF follower 0 leader 0
+    stat at 7,9 element Object cycle 1 p1 cp437:0xDF follower 0 leader 0
+    stat at 6,9 element Object cycle 1 p1 cp437:0xDF follower 0 leader 0
+    stat at 8,9 element Object cycle 1 p1 cp437:0xDF follower 0 leader 0
+    stat at 4,9 element Object cycle 1 p1 cp437:0xDF follower 0 leader 0
+    stat at 3,9 element Object cycle 1 p1 cp437:0xDF follower 0 leader 0
+    stat at 2,9 element Object cycle 1 p1 cp437:0xDF follower 0 leader 0
+    stat at 10,9 element Object cycle 1 p1 cp437:0xDF follower 0 leader 0
+    stat at 11,9 element Object cycle 1 p1 cp437:0xDF follower 0 leader 0
+    stat at 12,9 element Object cycle 1 p1 cp437:0xDF follower 0 leader 0
+    stat at 13,9 element Object cycle 1 p1 cp437:0xDF follower 0 leader 0
+    stat at 14,9 element Object cycle 1 p1 cp437:0xDF follower 0 leader 0
+    stat at 15,9 element Object cycle 1 p1 cp437:0xDF follower 0 leader 0
+    stat at 16,9 element Object cycle 1 p1 cp437:0xDF follower 0 leader 0
+    stat at 6,3 element Object cycle 1 p1 cp437:0xDC follower 0 leader 0
+    stat at 7,3 element Object cycle 1 p1 cp437:0xDC follower 0 leader 0
+    stat at 8,3 element Object cycle 1 p1 cp437:0xDC follower 0 leader 0
+    stat at 4,3 element Object cycle 1 p1 cp437:0xDC follower 0 leader 0
+    stat at 3,3 element Object cycle 1 p1 cp437:0xDC follower 0 leader 0
+    stat at 2,3 element Object cycle 1 p1 cp437:0xDC follower 0 leader 0
+    stat at 10,3 element Object cycle 1 p1 cp437:0xDC follower 0 leader 0
+    stat at 11,3 element Object cycle 1 p1 cp437:0xDC follower 0 leader 0
+    stat at 12,3 element Object cycle 1 p1 cp437:0xDC follower 0 leader 0
+    stat at 13,3 element Object cycle 1 p1 cp437:0xDC follower 0 leader 0
+    stat at 14,3 element Object cycle 1 p1 cp437:0xDC follower 0 leader 0
+    stat at 15,3 element Object cycle 1 p1 cp437:0xDC follower 0 leader 0
+    stat at 16,3 element Object cycle 1 p1 cp437:0xDC follower 0 leader 0
+    stat at 18,3 element Object cycle 1 p1 cp437:0xDC follower 0 leader 0
+    stat at 19,3 element Object cycle 1 p1 cp437:0xDC follower 0 leader 0
+    stat at 20,3 element Object cycle 1 p1 cp437:0xDC follower 0 leader 0
+    stat at 21,3 element Object cycle 1 p1 cp437:0xDC follower 0 leader 0
+    stat at 22,3 element Object cycle 1 p1 cp437:0xDC follower 0 leader 0
+    stat at 22,9 element Object cycle 1 p1 cp437:0xDF follower 0 leader 0
+    stat at 23,9 element Object cycle 1 p1 cp437:0xDF follower 0 leader 0
+    stat at 19,9 element Object cycle 1 p1 cp437:0xDF follower 0 leader 0
+    stat at 18,9 element Object cycle 1 p1 cp437:0xDF follower 0 leader 0
+    stat at 16,8 element Object cycle 1 p1 cp437:0xDC follower 0 leader 0
+    stat at 15,8 element Object cycle 1 p1 cp437:0xDC follower 0 leader 0
+    stat at 10,4 element Object cycle 1 p1 cp437:0xDF follower 0 leader 0
+    stat at 11,4 element Object cycle 1 p1 cp437:0xDF follower 0 leader 0
+    stat at 6,18 element Object cycle 1 p1 cp437:0x65 follower 0 leader 0
+    stat at 15,18 element Object cycle 1 p1 cp437:0x6C follower 0 leader 0
+    stat at 18,18 element Object cycle 1 p1 cp437:0x65 follower 0 leader 0
+    stat at 12,18 element Object cycle 1 p1 cp437:0x69 follower 0 leader 0
+    stat at 9,18 element Object cycle 1 p1 cp437:0x78 follower 0 leader 0
+    stat at 36,22 element Object cycle 1 p1 cp437:0xF0 follower 0 leader 0
     oop
 @Credits
 #end
@@ -194,8 +193,8 @@ Original Game: 1989 Telenet Japan / RiOT
 $
 
     end
-    stat at 36,3 element Passage p1 0 p2 0 p3 board "Opening 1" step idle follower 0 leader 0
-    stat at 36,12 element Object cycle 1 p1 cp437:0xF0 p2 0 step idle follower 0 leader 0
+    stat at 36,3 element Passage p3 board "Opening 1" follower 0 leader 0
+    stat at 36,12 element Object cycle 1 p1 cp437:0xF0 follower 0 leader 0
     oop
 @I N F O
 #end
@@ -318,7 +317,7 @@ $
 #end
 :ha
 $
-$R P G    M O D E
+$R P G M O D E
 In RPG Mode, you spend your time walking
 around various areas, collecting
 information, conversing with various
@@ -326,7 +325,7 @@ characters, and buying tonics. Be sure to
 talk to everybody, to get the full story.
 #end
 :hb
-$A C T I O N    M O D E
+$A C T I O N M O D E
 Action mode is your typical ZZT Action-RPG
 dungeon, where you run into your enemy to
 damage them. Later on, you'll earn magic,
@@ -338,7 +337,7 @@ You're also able to use tonics you've
 purchased in town by pressing ? +tonic
 #end
 :hc
-$B U Y I N G / U S I N G    T O N I C S
+$B U Y I N G / U S I N G T O N I C S
 In town, you're able to buy tonics at the
 pharmacy. You're only able to carry one
 of each tonic at a time, and you may use
@@ -348,8 +347,8 @@ later on, heal MP.
 #end
 
     end
-    stat at 10,2 element Object cycle 1 p1 cp437:0xE4 p2 0 step idle follower 0 leader 0
-    stat at 16,2 element Object cycle 1 p1 cp437:0xA8 p2 0 step idle follower 0 leader 0
-    stat at 13,2 element Object cycle 1 p1 cp437:0xE2 p2 0 step idle follower 0 leader 0
+    stat at 10,2 element Object cycle 1 p1 cp437:0xE4 follower 0 leader 0
+    stat at 16,2 element Object cycle 1 p1 cp437:0xA8 follower 0 leader 0
+    stat at 13,2 element Object cycle 1 p1 cp437:0xE2 follower 0 leader 0
   end
 end

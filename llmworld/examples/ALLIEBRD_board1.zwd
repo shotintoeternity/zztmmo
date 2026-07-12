@@ -84,7 +84,7 @@ NNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNN
   end
 
   stats
-    stat at 9,13 element Object cycle 2 p2 0 step idle under Empty color 0x0F
+    stat at 9,13 element Object cycle 2 under Empty color 0x0F
     oop
 @SlideChecker
 #if blocked north aaaaaa
@@ -106,7 +106,7 @@ You were SUPPOSED to find this fake wall..
 #send Waller:dowall
 
     end
-    stat at 23,6 element Object p1 cp437:0xB2 p2 0 step idle under Empty color 0x0F
+    stat at 23,6 element Object p1 cp437:0xB2 under Empty color 0x0F
     oop
 @Waller
 #end
@@ -120,7 +120,7 @@ Ugh. Maybe we can salvage this. Go right.
 #become green fake
 
     end
-    stat at 25,2 element Object cycle 1 p1 cp437:0xB1 p2 0 step idle under Empty color 0x0F
+    stat at 25,2 element Object cycle 1 p1 cp437:0xB1 under Empty color 0x0F
     oop
 @Combination
 #char 178
@@ -131,7 +131,7 @@ Ugh. Maybe we can salvage this. Go right.
 Don't bother with this stuff, it's broken.
 
     end
-    stat at 42,2 element Object cycle 1 p1 cp437:0xB1 p2 0 step idle under Empty color 0x0F
+    stat at 42,2 element Object cycle 1 p1 cp437:0xB1 under Empty color 0x0F
     oop
 @The Person in the Vault
 #char 178
@@ -152,7 +152,7 @@ Unless... Please go down to the vault
 entrance. I have an idea.
 
     end
-    stat at 45,19 element Object cycle 1 p2 0 step idle under Empty color 0x0F
+    stat at 45,19 element Object cycle 1 under Empty color 0x0F
     oop
 @Person
 #end
@@ -217,7 +217,7 @@ I shouldn't have been so controlling.
 ...
 
     end
-    stat at 48,13 element Object cycle 1 p1 cp437:0xB1 p2 0 step idle under Empty color 0x0F
+    stat at 48,13 element Object cycle 1 p1 cp437:0xB1 under Empty color 0x0F
     oop
 @Me
 #char 178
@@ -228,7 +228,7 @@ I shouldn't have been so controlling.
 #send Person:act
 
     end
-    stat at 45,14 element Object p1 cp437:0x21 p2 0 step idle under Empty color 0x0F
+    stat at 45,14 element Object p1 cp437:0x21 under Empty color 0x0F
     oop
 @FakeSlider
 #char 29
@@ -238,7 +238,7 @@ I shouldn't have been so controlling.
 #become purple sliderew
 
     end
-    stat at 39,22 element Object p1 cp437:0x09 p2 0 step idle under Empty color 0x0F
+    stat at 39,22 element Object p1 cp437:0x09 under Empty color 0x0F
     oop
 @Toilet
 #end
@@ -260,9 +260,9 @@ Inexplicably, you decide not to flush the
 toilet.
 
     end
-    stat at 39,21 element Object p1 cp437:0x16 p2 0 step idle under Empty color 0x0F
-    stat at 39,23 element Object p1 cp437:0x16 p2 0 step idle under Empty color 0x0F
-    stat at 39,24 element Object p1 cp437:0x09 p2 0 step idle under Empty color 0x0F
+    stat at 39,21 element Object p1 cp437:0x16 under Empty color 0x0F
+    stat at 39,23 element Object p1 cp437:0x16 under Empty color 0x0F
+    stat at 39,24 element Object p1 cp437:0x09 under Empty color 0x0F
     oop
 @Another Toilet
 #end
@@ -286,7 +286,7 @@ abstain from the hedonistic pleasures of
 needless toilet-flushing.
 
     end
-    stat at 47,24 element Object p1 cp437:0xF2 p2 0 step idle under Empty color 0x0F
+    stat at 47,24 element Object p1 cp437:0xF2 under Empty color 0x0F
     oop
 #end
 :touch
@@ -296,7 +296,7 @@ You have obtained a ò!
 #die
 
     end
-    stat at 50,24 element Object p1 cp437:0xE8 p2 0 step idle under Empty color 0x0F
+    stat at 50,24 element Object p1 cp437:0xE8 under Empty color 0x0F
     oop
 @Scroll of Wisdom
 #end
@@ -320,7 +320,7 @@ $Maybe I'll get some super salmon
 $Mmm-mmm, that's good!
 $I don't want no chicken,
 $it tastes like wood"
-$                               -Biz Markie
+$-Biz Markie
 
 You feel spiritually enlightened.
 #end
@@ -330,7 +330,7 @@ Scroll destroys the sanity of anyone who
 reads it, so you choose not to open it.
 
     end
-    stat at 43,24 element Object p1 cp437:0xD1 p2 0 step idle under Empty color 0x0F
+    stat at 43,24 element Object p1 cp437:0xD1 under Empty color 0x0F
     oop
 @Keyboard.
 #end
@@ -353,7 +353,7 @@ You aren't very confident in your playing,
 so you leave the keyboard alone.
 
     end
-    stat at 41,21 element Object p1 cp437:0x26 p2 0 step idle under Empty color 0x0F
+    stat at 41,21 element Object p1 cp437:0x26 under Empty color 0x0F
     oop
 #end
 :touch
@@ -363,7 +363,7 @@ You have obtained an ampersand!
 #die
 
     end
-    stat at 47,20 element Object p1 cp437:0x13 p2 0 step idle under Empty color 0x0F
+    stat at 47,20 element Object p1 cp437:0x13 under Empty color 0x0F
     oop
 #end
 :touch
@@ -373,6 +373,6 @@ You have obtained various riches!
 #die
 
     end
-    stat at 9,3 element Passage p1 0 p2 0 p3 board "Bank 2 of ZZT" step idle under Empty color 0x0F
+    stat at 9,3 element Passage p3 board "Bank 2 of ZZT" under Empty color 0x0F
   end
 end

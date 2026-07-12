@@ -114,79 +114,79 @@ NNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNN##########
   end
 
   stats
-    stat at 25,1 element Passage p1 0 p2 0 p3 board "Magic Lab: Psi Test Chamber" step idle under Empty color 0x0F
-    stat at 26,1 element Passage p1 0 p2 0 p3 board "Magic Lab: Psi Test Chamber" step idle under Empty color 0x0F
-    stat at 30,7 element Object p1 cp437:0xDC p2 0 step idle under Empty color 0x0F
-    stat at 35,7 element Object p1 cp437:0xDC p2 0 step idle under Empty color 0x0F
-    stat at 38,9 element Object p1 cp437:0xDC p2 0 step idle under Empty color 0x0F
-    stat at 45,9 element Object p1 cp437:0xDC p2 0 step idle under Empty color 0x0F
-    stat at 27,9 element Object p1 cp437:0xDC p2 0 step idle under Empty color 0x0F
-    stat at 18,9 element Object p1 cp437:0xDC p2 0 step idle under Empty color 0x0F
-    stat at 16,10 element Object p1 cp437:0xDC p2 0 step idle under Empty color 0x0F
-    stat at 11,11 element Object p1 cp437:0xDC p2 0 step idle under Empty color 0x0F
-    stat at 4,11 element Object p1 cp437:0xDC p2 0 step idle under Empty color 0x0F
-    stat at 4,18 element Object p1 cp437:0xDC p2 0 step idle under Empty color 0x0F
-    stat at 6,17 element Object p1 cp437:0xDC p2 0 step idle under Empty color 0x0F
-    stat at 15,17 element Object p1 cp437:0xDC p2 0 step idle under Empty color 0x0F
-    stat at 17,18 element Object p1 cp437:0xDC p2 0 step idle under Empty color 0x0F
-    stat at 22,21 element Object p1 cp437:0xDC p2 0 step idle under Empty color 0x0F
-    stat at 27,21 element Object p1 cp437:0xDC p2 0 step idle under Empty color 0x0F
-    stat at 35,10 element Object p1 cp437:0xDF p2 0 step idle under Empty color 0x0F
-    stat at 38,13 element Object p1 cp437:0xDF p2 0 step idle under Empty color 0x0F
-    stat at 45,13 element Object p1 cp437:0xDF p2 0 step idle under Empty color 0x0F
-    stat at 27,24 element Object p1 cp437:0xDF p2 0 step idle under Empty color 0x0F
-    stat at 22,24 element Object p1 cp437:0xDF p2 0 step idle under Empty color 0x0F
-    stat at 17,23 element Object p1 cp437:0xDF p2 0 step idle under Empty color 0x0F
-    stat at 15,24 element Object p1 cp437:0xDF p2 0 step idle under Empty color 0x0F
-    stat at 6,24 element Object p1 cp437:0xDF p2 0 step idle under Empty color 0x0F
-    stat at 4,23 element Object p1 cp437:0xDF p2 0 step idle under Empty color 0x0F
-    stat at 18,16 element Object p1 cp437:0xDF p2 0 step idle under Empty color 0x0F
-    stat at 16,15 element Object p1 cp437:0xDF p2 0 step idle under Empty color 0x0F
-    stat at 27,16 element Object p1 cp437:0xDF p2 0 step idle under Empty color 0x0F
-    stat at 29,15 element Object p1 cp437:0xDF p2 0 step idle under Empty color 0x0F
-    stat at 30,14 element Object p1 cp437:0xDF p2 0 step idle under Empty color 0x0F
-    stat at 26,16 element Object p1 cp437:0xDF p2 0 step idle under Empty color 0x0F
-    stat at 19,16 element Object p1 cp437:0xDF p2 0 step idle under Empty color 0x0F
-    stat at 15,14 element Object p1 cp437:0xDF p2 0 step idle under Empty color 0x0F
-    stat at 15,11 element Object p1 cp437:0xDC p2 0 step idle under Empty color 0x0F
-    stat at 30,11 element Object p1 cp437:0xDC p2 0 step idle under Empty color 0x0F
-    stat at 26,9 element Object p1 cp437:0xDC p2 0 step idle under Empty color 0x0F
-    stat at 19,9 element Object p1 cp437:0xDC p2 0 step idle under Empty color 0x0F
-    stat at 14,17 element Object p1 cp437:0xDC p2 0 step idle under Empty color 0x0F
-    stat at 7,17 element Object p1 cp437:0xDC p2 0 step idle under Empty color 0x0F
-    stat at 3,19 element Object p1 cp437:0xDC p2 0 step idle under Empty color 0x0F
-    stat at 18,19 element Object p1 cp437:0xDC p2 0 step idle under Empty color 0x0F
-    stat at 14,24 element Object p1 cp437:0xDF p2 0 step idle under Empty color 0x0F
-    stat at 7,24 element Object p1 cp437:0xDF p2 0 step idle under Empty color 0x0F
-    stat at 3,22 element Object p1 cp437:0xDF p2 0 step idle under Empty color 0x0F
-    stat at 18,22 element Object p1 cp437:0xDF p2 0 step idle under Empty color 0x0F
-    stat at 11,15 element Object p1 cp437:0xDF p2 0 step idle under Empty color 0x0F
-    stat at 4,15 element Object p1 cp437:0xDF p2 0 step idle under Empty color 0x0F
-    stat at 8,15 element Object p1 cp437:0xDF p2 0 step idle under Empty color 0x0F
-    stat at 11,14 element Object p1 cp437:0xDF p2 0 step idle under Empty color 0x0F
-    stat at 12,13 element Object p1 cp437:0xDF p2 0 step idle under Empty color 0x0F
-    stat at 9,15 element Object p1 cp437:0xDF p2 0 step idle under Empty color 0x0F
-    stat at 11,24 element Object p1 cp437:0xDF p2 0 step idle under Empty color 0x0F
-    stat at 12,24 element Object p1 cp437:0xDF p2 0 step idle under Empty color 0x0F
-    stat at 15,23 element Object p1 cp437:0xDF p2 0 step idle under Empty color 0x0F
-    stat at 25,24 element Object p1 cp437:0xDF p2 0 step idle under Empty color 0x0F
-    stat at 27,23 element Object p1 cp437:0xDF p2 0 step idle under Empty color 0x0F
-    stat at 28,22 element Object p1 cp437:0xDF p2 0 step idle under Empty color 0x0F
-    stat at 24,24 element Object p1 cp437:0xDF p2 0 step idle under Empty color 0x0F
-    stat at 46,11 element Object p1 cp437:0xDF p2 0 step idle under Empty color 0x0F
-    stat at 45,12 element Object p1 cp437:0xDF p2 0 step idle under Empty color 0x0F
-    stat at 42,13 element Object p1 cp437:0xDF p2 0 step idle under Empty color 0x0F
-    stat at 43,13 element Object p1 cp437:0xDF p2 0 step idle under Empty color 0x0F
-    stat at 36,8 element Object p1 cp437:0xDF p2 0 step idle under Empty color 0x0F
-    stat at 35,9 element Object p1 cp437:0xDF p2 0 step idle under Empty color 0x0F
-    stat at 32,10 element Object p1 cp437:0xDF p2 0 step idle under Empty color 0x0F
-    stat at 33,10 element Object p1 cp437:0xDF p2 0 step idle under Empty color 0x0F
-    stat at 27,15 element Object p1 cp437:0xDF p2 0 step idle under Empty color 0x0F
-    stat at 23,16 element Object p1 cp437:0xDF p2 0 step idle under Empty color 0x0F
-    stat at 24,16 element Object p1 cp437:0xDF p2 0 step idle under Empty color 0x0F
-    stat at 30,10 element Object p1 cp437:0xDF p2 0 step idle under Empty color 0x0F
-    stat at 29,10 element Object p1 cp437:0xDC p2 0 step idle under Empty color 0x0F
-    stat at 10,16 element Object cycle 1 p1 cp437:0x65 p2 0 step idle under Empty color 0x0F
+    stat at 25,1 element Passage p3 board "Magic Lab: Psi Test Chamber" under Empty color 0x0F
+    stat at 26,1 element Passage p3 board "Magic Lab: Psi Test Chamber" under Empty color 0x0F
+    stat at 30,7 element Object p1 cp437:0xDC under Empty color 0x0F
+    stat at 35,7 element Object p1 cp437:0xDC under Empty color 0x0F
+    stat at 38,9 element Object p1 cp437:0xDC under Empty color 0x0F
+    stat at 45,9 element Object p1 cp437:0xDC under Empty color 0x0F
+    stat at 27,9 element Object p1 cp437:0xDC under Empty color 0x0F
+    stat at 18,9 element Object p1 cp437:0xDC under Empty color 0x0F
+    stat at 16,10 element Object p1 cp437:0xDC under Empty color 0x0F
+    stat at 11,11 element Object p1 cp437:0xDC under Empty color 0x0F
+    stat at 4,11 element Object p1 cp437:0xDC under Empty color 0x0F
+    stat at 4,18 element Object p1 cp437:0xDC under Empty color 0x0F
+    stat at 6,17 element Object p1 cp437:0xDC under Empty color 0x0F
+    stat at 15,17 element Object p1 cp437:0xDC under Empty color 0x0F
+    stat at 17,18 element Object p1 cp437:0xDC under Empty color 0x0F
+    stat at 22,21 element Object p1 cp437:0xDC under Empty color 0x0F
+    stat at 27,21 element Object p1 cp437:0xDC under Empty color 0x0F
+    stat at 35,10 element Object p1 cp437:0xDF under Empty color 0x0F
+    stat at 38,13 element Object p1 cp437:0xDF under Empty color 0x0F
+    stat at 45,13 element Object p1 cp437:0xDF under Empty color 0x0F
+    stat at 27,24 element Object p1 cp437:0xDF under Empty color 0x0F
+    stat at 22,24 element Object p1 cp437:0xDF under Empty color 0x0F
+    stat at 17,23 element Object p1 cp437:0xDF under Empty color 0x0F
+    stat at 15,24 element Object p1 cp437:0xDF under Empty color 0x0F
+    stat at 6,24 element Object p1 cp437:0xDF under Empty color 0x0F
+    stat at 4,23 element Object p1 cp437:0xDF under Empty color 0x0F
+    stat at 18,16 element Object p1 cp437:0xDF under Empty color 0x0F
+    stat at 16,15 element Object p1 cp437:0xDF under Empty color 0x0F
+    stat at 27,16 element Object p1 cp437:0xDF under Empty color 0x0F
+    stat at 29,15 element Object p1 cp437:0xDF under Empty color 0x0F
+    stat at 30,14 element Object p1 cp437:0xDF under Empty color 0x0F
+    stat at 26,16 element Object p1 cp437:0xDF under Empty color 0x0F
+    stat at 19,16 element Object p1 cp437:0xDF under Empty color 0x0F
+    stat at 15,14 element Object p1 cp437:0xDF under Empty color 0x0F
+    stat at 15,11 element Object p1 cp437:0xDC under Empty color 0x0F
+    stat at 30,11 element Object p1 cp437:0xDC under Empty color 0x0F
+    stat at 26,9 element Object p1 cp437:0xDC under Empty color 0x0F
+    stat at 19,9 element Object p1 cp437:0xDC under Empty color 0x0F
+    stat at 14,17 element Object p1 cp437:0xDC under Empty color 0x0F
+    stat at 7,17 element Object p1 cp437:0xDC under Empty color 0x0F
+    stat at 3,19 element Object p1 cp437:0xDC under Empty color 0x0F
+    stat at 18,19 element Object p1 cp437:0xDC under Empty color 0x0F
+    stat at 14,24 element Object p1 cp437:0xDF under Empty color 0x0F
+    stat at 7,24 element Object p1 cp437:0xDF under Empty color 0x0F
+    stat at 3,22 element Object p1 cp437:0xDF under Empty color 0x0F
+    stat at 18,22 element Object p1 cp437:0xDF under Empty color 0x0F
+    stat at 11,15 element Object p1 cp437:0xDF under Empty color 0x0F
+    stat at 4,15 element Object p1 cp437:0xDF under Empty color 0x0F
+    stat at 8,15 element Object p1 cp437:0xDF under Empty color 0x0F
+    stat at 11,14 element Object p1 cp437:0xDF under Empty color 0x0F
+    stat at 12,13 element Object p1 cp437:0xDF under Empty color 0x0F
+    stat at 9,15 element Object p1 cp437:0xDF under Empty color 0x0F
+    stat at 11,24 element Object p1 cp437:0xDF under Empty color 0x0F
+    stat at 12,24 element Object p1 cp437:0xDF under Empty color 0x0F
+    stat at 15,23 element Object p1 cp437:0xDF under Empty color 0x0F
+    stat at 25,24 element Object p1 cp437:0xDF under Empty color 0x0F
+    stat at 27,23 element Object p1 cp437:0xDF under Empty color 0x0F
+    stat at 28,22 element Object p1 cp437:0xDF under Empty color 0x0F
+    stat at 24,24 element Object p1 cp437:0xDF under Empty color 0x0F
+    stat at 46,11 element Object p1 cp437:0xDF under Empty color 0x0F
+    stat at 45,12 element Object p1 cp437:0xDF under Empty color 0x0F
+    stat at 42,13 element Object p1 cp437:0xDF under Empty color 0x0F
+    stat at 43,13 element Object p1 cp437:0xDF under Empty color 0x0F
+    stat at 36,8 element Object p1 cp437:0xDF under Empty color 0x0F
+    stat at 35,9 element Object p1 cp437:0xDF under Empty color 0x0F
+    stat at 32,10 element Object p1 cp437:0xDF under Empty color 0x0F
+    stat at 33,10 element Object p1 cp437:0xDF under Empty color 0x0F
+    stat at 27,15 element Object p1 cp437:0xDF under Empty color 0x0F
+    stat at 23,16 element Object p1 cp437:0xDF under Empty color 0x0F
+    stat at 24,16 element Object p1 cp437:0xDF under Empty color 0x0F
+    stat at 30,10 element Object p1 cp437:0xDF under Empty color 0x0F
+    stat at 29,10 element Object p1 cp437:0xDC under Empty color 0x0F
+    stat at 10,16 element Object cycle 1 p1 cp437:0x65 under Empty color 0x0F
     oop
 @EvilEye
 :b
@@ -345,7 +345,7 @@ EvilEye is weak to this damage!
 #b
 
     end
-    stat at 20,22 element Object cycle 1 p1 cp437:0x65 p2 0 step idle under Empty color 0x0F
+    stat at 20,22 element Object cycle 1 p1 cp437:0x65 under Empty color 0x0F
     oop
 @EvilEye
 :b
@@ -504,7 +504,7 @@ EvilEye is weak to this damage!
 #b
 
     end
-    stat at 34,11 element Object cycle 1 p1 cp437:0x65 p2 0 step idle under Empty color 0x0F
+    stat at 34,11 element Object cycle 1 p1 cp437:0x65 under Empty color 0x0F
     oop
 @EvilEye
 :b
@@ -663,64 +663,64 @@ EvilEye is weak to this damage!
 #b
 
     end
-    stat at 49,14 element Passage p1 0 p2 0 p3 board "Magic Lab: Animation Chamber" step idle under Empty color 0x0F
-    stat at 3,15 element Object cycle 1 p1 cp437:0x16 p2 0 step idle under Empty color 0x0F
+    stat at 49,14 element Passage p3 board "Magic Lab: Animation Chamber" under Empty color 0x0F
+    stat at 3,15 element Object cycle 1 p1 cp437:0x16 under Empty color 0x0F
     oop
 #bind GBar
 
     end
-    stat at 3,18 element Object cycle 1 p1 cp437:0x16 p2 0 step idle under Empty color 0x0F
+    stat at 3,18 element Object cycle 1 p1 cp437:0x16 under Empty color 0x0F
     oop
 #bind GBar
 
     end
-    stat at 21,24 element Object cycle 1 p1 cp437:0x16 p2 0 step idle under Empty color 0x0F
+    stat at 21,24 element Object cycle 1 p1 cp437:0x16 under Empty color 0x0F
     oop
 #bind GBar
 
     end
-    stat at 16,24 element Object cycle 1 p1 cp437:0x16 p2 0 step idle under Empty color 0x0F
+    stat at 16,24 element Object cycle 1 p1 cp437:0x16 under Empty color 0x0F
     oop
 #bind GBar
 
     end
-    stat at 31,11 element Object cycle 1 p1 cp437:0x16 p2 0 step idle under Empty color 0x0F
+    stat at 31,11 element Object cycle 1 p1 cp437:0x16 under Empty color 0x0F
     oop
 #bind GBar
 
     end
-    stat at 36,10 element Object cycle 1 p1 cp437:0x16 p2 0 step idle under Empty color 0x0F
+    stat at 36,10 element Object cycle 1 p1 cp437:0x16 under Empty color 0x0F
     oop
 #bind GBar
 
     end
-    stat at 36,7 element Object cycle 1 p1 cp437:0x7F p2 0 step idle under Empty color 0x0F
+    stat at 36,7 element Object cycle 1 p1 cp437:0x7F under Empty color 0x0F
     oop
 #bind Chest
 
     end
-    stat at 3,11 element Object cycle 1 p1 cp437:0x7F p2 0 step idle under Empty color 0x0F
+    stat at 3,11 element Object cycle 1 p1 cp437:0x7F under Empty color 0x0F
     oop
 #bind Chest
 
     end
-    stat at 32,16 element Object p1 cp437:0xDC p2 0 step idle under Empty color 0x0F
-    stat at 39,16 element Object p1 cp437:0xDC p2 0 step idle under Empty color 0x0F
-    stat at 40,18 element Object p1 cp437:0xDF p2 0 step idle under Empty color 0x0F
-    stat at 39,19 element Object p1 cp437:0xDF p2 0 step idle under Empty color 0x0F
-    stat at 32,20 element Object p1 cp437:0xDF p2 0 step idle under Empty color 0x0F
-    stat at 36,20 element Object p1 cp437:0xDF p2 0 step idle under Empty color 0x0F
-    stat at 37,20 element Object p1 cp437:0xDF p2 0 step idle under Empty color 0x0F
-    stat at 39,20 element Object p1 cp437:0xDF p2 0 step idle under Empty color 0x0F
-    stat at 40,20 element Object p1 cp437:0xDC p2 0 step idle under Empty color 0x0F
-    stat at 47,20 element Object p1 cp437:0xDC p2 0 step idle under Empty color 0x0F
-    stat at 48,22 element Object p1 cp437:0xDF p2 0 step idle under Empty color 0x0F
-    stat at 47,23 element Object p1 cp437:0xDF p2 0 step idle under Empty color 0x0F
-    stat at 40,24 element Object p1 cp437:0xDF p2 0 step idle under Empty color 0x0F
-    stat at 44,24 element Object p1 cp437:0xDF p2 0 step idle under Empty color 0x0F
-    stat at 45,24 element Object p1 cp437:0xDF p2 0 step idle under Empty color 0x0F
-    stat at 47,24 element Object p1 cp437:0xDF p2 0 step idle under Empty color 0x0F
-    stat at 52,1 element Object cycle 1 p2 0 step idle under Empty color 0x0F
+    stat at 32,16 element Object p1 cp437:0xDC under Empty color 0x0F
+    stat at 39,16 element Object p1 cp437:0xDC under Empty color 0x0F
+    stat at 40,18 element Object p1 cp437:0xDF under Empty color 0x0F
+    stat at 39,19 element Object p1 cp437:0xDF under Empty color 0x0F
+    stat at 32,20 element Object p1 cp437:0xDF under Empty color 0x0F
+    stat at 36,20 element Object p1 cp437:0xDF under Empty color 0x0F
+    stat at 37,20 element Object p1 cp437:0xDF under Empty color 0x0F
+    stat at 39,20 element Object p1 cp437:0xDF under Empty color 0x0F
+    stat at 40,20 element Object p1 cp437:0xDC under Empty color 0x0F
+    stat at 47,20 element Object p1 cp437:0xDC under Empty color 0x0F
+    stat at 48,22 element Object p1 cp437:0xDF under Empty color 0x0F
+    stat at 47,23 element Object p1 cp437:0xDF under Empty color 0x0F
+    stat at 40,24 element Object p1 cp437:0xDF under Empty color 0x0F
+    stat at 44,24 element Object p1 cp437:0xDF under Empty color 0x0F
+    stat at 45,24 element Object p1 cp437:0xDF under Empty color 0x0F
+    stat at 47,24 element Object p1 cp437:0xDF under Empty color 0x0F
+    stat at 52,1 element Object cycle 1 under Empty color 0x0F
     oop
 @statuschecker
 :b
@@ -767,7 +767,7 @@ EvilEye is weak to this damage!
 
 
     end
-    stat at 53,1 element Object cycle 1 p2 0 step idle under Empty color 0x0F
+    stat at 53,1 element Object cycle 1 under Empty color 0x0F
     oop
 @Tome
 :b
@@ -927,7 +927,7 @@ You don't have a flask.
 #flhl
 
     end
-    stat at 54,1 element Object cycle 1 p2 0 step idle under Empty color 0x0F
+    stat at 54,1 element Object cycle 1 under Empty color 0x0F
     oop
 @StarCatcher
 :b
@@ -940,7 +940,7 @@ You don't have a flask.
 #b
 
     end
-    stat at 55,1 element Object cycle 1 p2 0 step idle under Empty color 0x0F
+    stat at 55,1 element Object cycle 1 under Empty color 0x0F
     oop
 @hl
 #end
@@ -1148,7 +1148,7 @@ You don't have a flask.
 #end
 
     end
-    stat at 56,1 element Object cycle 1 p1 cp437:0xAD p2 0 step idle under Empty color 0x0F
+    stat at 56,1 element Object cycle 1 p1 cp437:0xAD under Empty color 0x0F
     oop
 @Flask
 #end
@@ -1182,7 +1182,7 @@ You cannot pick up any more flasks.
 
 
     end
-    stat at 57,1 element Object cycle 1 p1 cp437:0x08 p2 0 step idle under Empty color 0x0F
+    stat at 57,1 element Object cycle 1 p1 cp437:0x08 under Empty color 0x0F
     oop
 @Door
 #end
@@ -1192,7 +1192,7 @@ You cannot pick up any more flasks.
 #die
 
     end
-    stat at 60,1 element Object cycle 1 p1 cp437:0x48 p2 0 step idle under Empty color 0x0F
+    stat at 60,1 element Object cycle 1 p1 cp437:0x48 under Empty color 0x0F
     oop
 @Help
 :l
@@ -1209,7 +1209,7 @@ Choose a topic for information:
 
 
     end
-    stat at 52,8 element Object cycle 1 p1 cp437:0xF9 p2 0 step idle under Empty color 0x0F
+    stat at 52,8 element Object cycle 1 p1 cp437:0xF9 under Empty color 0x0F
     oop
 @SCoin
 #end
@@ -1219,7 +1219,7 @@ You pick up a gold coin worth 1 gold.
 #become fake
 
     end
-    stat at 53,8 element Object cycle 1 p1 cp437:0x07 p2 0 step idle under Empty color 0x0F
+    stat at 53,8 element Object cycle 1 p1 cp437:0x07 under Empty color 0x0F
     oop
 @BCoin
 #end
@@ -1229,7 +1229,7 @@ You pick up a gold doubloon worth 5 gold.
 #become fake
 
     end
-    stat at 54,8 element Object cycle 1 p1 cp437:0x16 p2 0 step idle under Empty color 0x0F
+    stat at 54,8 element Object cycle 1 p1 cp437:0x16 under Empty color 0x0F
     oop
 @GBar
 #end
@@ -1239,7 +1239,7 @@ You pick up a gold bar worth 20 gold.
 #become fake
 
     end
-    stat at 55,8 element Object cycle 1 p1 cp437:0x7F p2 0 step idle under Empty color 0x0F
+    stat at 55,8 element Object cycle 1 p1 cp437:0x7F under Empty color 0x0F
     oop
 @Chest
 #end
@@ -1253,7 +1253,7 @@ The chest is empty.
 #end
 
     end
-    stat at 57,9 element Object cycle 1 p1 cp437:0x4E p2 0 step idle under Empty color 0x0F
+    stat at 57,9 element Object cycle 1 p1 cp437:0x4E under Empty color 0x0F
     oop
 @RuneMarker
 :b
@@ -1295,7 +1295,7 @@ The chest is empty.
 #rdone
 
     end
-    stat at 58,9 element Object cycle 1 p1 cp437:0x75 p2 0 step idle under Empty color 0x0F
+    stat at 58,9 element Object cycle 1 p1 cp437:0x75 under Empty color 0x0F
     oop
 @RuneMarker
 :b
@@ -1337,7 +1337,7 @@ The chest is empty.
 #rdone
 
     end
-    stat at 59,9 element Object cycle 1 p1 cp437:0x6C p2 0 step idle under Empty color 0x0F
+    stat at 59,9 element Object cycle 1 p1 cp437:0x6C under Empty color 0x0F
     oop
 @RuneMarker
 :b
@@ -1379,7 +1379,7 @@ The chest is empty.
 #rdone
 
     end
-    stat at 60,9 element Object cycle 1 p1 cp437:0x6C p2 0 step idle under Empty color 0x0F
+    stat at 60,9 element Object cycle 1 p1 cp437:0x6C under Empty color 0x0F
     oop
 @RuneMarker
 :b
@@ -1421,7 +1421,7 @@ The chest is empty.
 #rdone
 
     end
-    stat at 52,12 element Object cycle 1 p1 cp437:0x4E p2 0 step idle under Empty color 0x0F
+    stat at 52,12 element Object cycle 1 p1 cp437:0x4E under Empty color 0x0F
     oop
 @RuneMarker
 :b
@@ -1437,7 +1437,7 @@ The chest is empty.
 #sdone
 
     end
-    stat at 53,12 element Object cycle 1 p1 cp437:0x6F p2 0 step idle under Empty color 0x0F
+    stat at 53,12 element Object cycle 1 p1 cp437:0x6F under Empty color 0x0F
     oop
 @RuneMarker
 :b
@@ -1455,7 +1455,7 @@ The chest is empty.
 #sdone
 
     end
-    stat at 54,12 element Object cycle 1 p1 cp437:0x72 p2 0 step idle under Empty color 0x0F
+    stat at 54,12 element Object cycle 1 p1 cp437:0x72 under Empty color 0x0F
     oop
 @RuneMarker
 :b
@@ -1473,7 +1473,7 @@ The chest is empty.
 #sdone
 
     end
-    stat at 55,12 element Object cycle 1 p1 cp437:0x6D p2 0 step idle under Empty color 0x0F
+    stat at 55,12 element Object cycle 1 p1 cp437:0x6D under Empty color 0x0F
     oop
 @RuneMarker
 :b
@@ -1491,7 +1491,7 @@ The chest is empty.
 #sdone
 
     end
-    stat at 56,12 element Object cycle 1 p1 cp437:0x61 p2 0 step idle under Empty color 0x0F
+    stat at 56,12 element Object cycle 1 p1 cp437:0x61 under Empty color 0x0F
     oop
 @RuneMarker
 :b
@@ -1509,7 +1509,7 @@ The chest is empty.
 #sdone
 
     end
-    stat at 57,12 element Object cycle 1 p1 cp437:0x6C p2 0 step idle under Empty color 0x0F
+    stat at 57,12 element Object cycle 1 p1 cp437:0x6C under Empty color 0x0F
     oop
 @RuneMarker
 :b
@@ -1527,7 +1527,7 @@ The chest is empty.
 #sdone
 
     end
-    stat at 58,12 element Object cycle 1 p1 cp437:0x20 p2 0 step idle under Empty color 0x0F
+    stat at 58,12 element Object cycle 1 p1 cp437:0x20 under Empty color 0x0F
     oop
 @RuneMarker
 :b
@@ -1545,7 +1545,7 @@ The chest is empty.
 #sdone
 
     end
-    stat at 59,12 element Object cycle 1 p1 cp437:0x20 p2 0 step idle under Empty color 0x0F
+    stat at 59,12 element Object cycle 1 p1 cp437:0x20 under Empty color 0x0F
     oop
 @RuneMarker
 :b
@@ -1563,7 +1563,7 @@ The chest is empty.
 #sdone
 
     end
-    stat at 60,14 element Object cycle 1 p1 cp437:0x30 p2 0 step idle under Empty color 0x0F
+    stat at 60,14 element Object cycle 1 p1 cp437:0x30 under Empty color 0x0F
     oop
 @FMark
 :b

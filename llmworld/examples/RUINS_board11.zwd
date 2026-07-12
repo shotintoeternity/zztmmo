@@ -87,7 +87,7 @@ OOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOK
   end
 
   stats
-    stat at 18,16 element Object p1 cp437:0xFE p2 0 step idle under Empty color 0x0F
+    stat at 18,16 element Object p1 cp437:0xFE under Empty color 0x0F
     oop
 @box
 #end
@@ -96,7 +96,7 @@ The box is too heavy to push
 #end
 
     end
-    stat at 25,15 element Object p1 cp437:0xFE p2 0 step idle under Empty color 0x0F
+    stat at 25,15 element Object p1 cp437:0xFE under Empty color 0x0F
     oop
 @box
 #end
@@ -105,7 +105,7 @@ The box is too heavy to push
 #end
 
     end
-    stat at 25,14 element Object p1 cp437:0xFE p2 0 step idle under Empty color 0x0F
+    stat at 25,14 element Object p1 cp437:0xFE under Empty color 0x0F
     oop
 @box
 #end
@@ -114,7 +114,7 @@ The box is too heavy to push
 #end
 
     end
-    stat at 26,14 element Object p1 cp437:0xFE p2 0 step idle under Empty color 0x0F
+    stat at 26,14 element Object p1 cp437:0xFE under Empty color 0x0F
     oop
 @box
 #end
@@ -123,7 +123,7 @@ The box is too heavy to push
 #end
 
     end
-    stat at 26,15 element Object p1 cp437:0xFE p2 0 step idle under Empty color 0x0F
+    stat at 26,15 element Object p1 cp437:0xFE under Empty color 0x0F
     oop
 @box
 #end
@@ -132,7 +132,7 @@ The box is too heavy to push
 #end
 
     end
-    stat at 22,14 element Object p1 cp437:0xFE p2 0 step idle under Empty color 0x0F
+    stat at 22,14 element Object p1 cp437:0xFE under Empty color 0x0F
     oop
 @box
 #end
@@ -141,7 +141,7 @@ The box is too heavy to push
 #end
 
     end
-    stat at 23,14 element Object p1 cp437:0xFE p2 0 step idle under Empty color 0x0F
+    stat at 23,14 element Object p1 cp437:0xFE under Empty color 0x0F
     oop
 @box
 #end
@@ -150,7 +150,7 @@ The box is too heavy to push
 #end
 
     end
-    stat at 23,15 element Object p1 cp437:0xFE p2 0 step idle under Empty color 0x07
+    stat at 23,15 element Object p1 cp437:0xFE under Empty color 0x07
     oop
 @box
 #end
@@ -159,7 +159,7 @@ The box is too heavy to push
 #end
 
     end
-    stat at 22,15 element Object p1 cp437:0xFE p2 0 step idle under Empty color 0x0F
+    stat at 22,15 element Object p1 cp437:0xFE under Empty color 0x0F
     oop
 @box
 #end
@@ -168,7 +168,7 @@ The box is too heavy to push
 #end
 
     end
-    stat at 28,15 element Object p1 cp437:0xFE p2 0 step idle under Empty color 0x0F
+    stat at 28,15 element Object p1 cp437:0xFE under Empty color 0x0F
     oop
 @box
 #end
@@ -177,7 +177,7 @@ The box is too heavy to push
 #end
 
     end
-    stat at 28,14 element Object p1 cp437:0xFE p2 0 step idle under Empty color 0x0F
+    stat at 28,14 element Object p1 cp437:0xFE under Empty color 0x0F
     oop
 @box
 #end
@@ -186,7 +186,7 @@ The box is too heavy to push
 #end
 
     end
-    stat at 28,16 element Object p1 cp437:0xFE p2 0 step idle under Empty color 0x0F
+    stat at 28,16 element Object p1 cp437:0xFE under Empty color 0x0F
     oop
 @box
 #end
@@ -195,7 +195,7 @@ The box is too heavy to push
 #end
 
     end
-    stat at 26,16 element Object p1 cp437:0xFE p2 0 step idle under Empty color 0x0F
+    stat at 26,16 element Object p1 cp437:0xFE under Empty color 0x0F
     oop
 @box
 #end
@@ -204,7 +204,7 @@ The box is too heavy to push
 #end
 
     end
-    stat at 25,16 element Object p1 cp437:0xFE p2 0 step idle under Empty color 0x0F
+    stat at 25,16 element Object p1 cp437:0xFE under Empty color 0x0F
     oop
 @box
 #end
@@ -213,7 +213,7 @@ The box is too heavy to push
 #end
 
     end
-    stat at 23,16 element Object p1 cp437:0xFE p2 0 step idle under Empty color 0x0F
+    stat at 23,16 element Object p1 cp437:0xFE under Empty color 0x0F
     oop
 @box
 #end
@@ -222,7 +222,7 @@ The box is too heavy to push
 #end
 
     end
-    stat at 22,16 element Object p1 cp437:0xFE p2 0 step idle under Empty color 0x0F
+    stat at 22,16 element Object p1 cp437:0xFE under Empty color 0x0F
     oop
 @box
 #end
@@ -231,7 +231,7 @@ The box is too heavy to push
 #end
 
     end
-    stat at 29,19 element Object p1 cp437:0xFE p2 0 step idle under Empty color 0x0F
+    stat at 29,19 element Object p1 cp437:0xFE under Empty color 0x0F
     oop
 @box
 #end
@@ -240,13 +240,13 @@ The box is too heavy to push
 #end
 
     end
-    stat at 20,14 element Scroll p1 0 p2 0 step idle under Empty color 0x0F
+    stat at 20,14 element Scroll under Empty color 0x0F
     oop
 It's important that you're able to return
 as well...
 
     end
-    stat at 31,15 element Object p1 cp437:0xFE p2 0 step idle under Empty color 0x0F
+    stat at 31,15 element Object p1 cp437:0xFE under Empty color 0x0F
     oop
 @box
 #end
@@ -255,7 +255,7 @@ The box is too heavy to push
 #end
 
     end
-    stat at 33,15 element Object p1 cp437:0xFE p2 0 step idle under Empty color 0x0F
+    stat at 33,15 element Object p1 cp437:0xFE under Empty color 0x0F
     oop
 @box
 #end
@@ -264,7 +264,7 @@ The box is too heavy to push
 #end
 
     end
-    stat at 35,15 element Object p1 cp437:0xFE p2 0 step idle under Empty color 0x0F
+    stat at 35,15 element Object p1 cp437:0xFE under Empty color 0x0F
     oop
 @box
 #end
@@ -273,7 +273,7 @@ The box is too heavy to push
 #end
 
     end
-    stat at 37,15 element Object p1 cp437:0xFE p2 0 step idle under Empty color 0x0F
+    stat at 37,15 element Object p1 cp437:0xFE under Empty color 0x0F
     oop
 @box
 #end
@@ -282,7 +282,7 @@ The box is too heavy to push
 #end
 
     end
-    stat at 38,13 element Object p1 cp437:0xFE p2 0 step idle under Empty color 0x0F
+    stat at 38,13 element Object p1 cp437:0xFE under Empty color 0x0F
     oop
 @box
 #end
@@ -291,7 +291,7 @@ The box is too heavy to push
 #end
 
     end
-    stat at 36,13 element Object p1 cp437:0xFE p2 0 step idle under Empty color 0x0F
+    stat at 36,13 element Object p1 cp437:0xFE under Empty color 0x0F
     oop
 @box
 #end
@@ -300,7 +300,7 @@ The box is too heavy to push
 #end
 
     end
-    stat at 34,13 element Object p1 cp437:0xFE p2 0 step idle under Empty color 0x0F
+    stat at 34,13 element Object p1 cp437:0xFE under Empty color 0x0F
     oop
 @box
 #end
@@ -309,7 +309,7 @@ The box is too heavy to push
 #end
 
     end
-    stat at 32,13 element Object p1 cp437:0xFE p2 0 step idle under Empty color 0x0F
+    stat at 32,13 element Object p1 cp437:0xFE under Empty color 0x0F
     oop
 @box
 #end
@@ -318,8 +318,8 @@ The box is too heavy to push
 #end
 
     end
-    stat at 13,19 element Passage p1 0 p2 0 p3 board "Don't Be Greedy!" step idle under Empty color 0x0F
-    stat at 32,16 element Object p1 cp437:0xFE p2 0 step idle under Empty color 0x0F
+    stat at 13,19 element Passage p3 board "Don't Be Greedy!" under Empty color 0x0F
+    stat at 32,16 element Object p1 cp437:0xFE under Empty color 0x0F
     oop
 @box
 #end
@@ -328,7 +328,7 @@ The box is too heavy to push
 #end
 
     end
-    stat at 36,16 element Object p1 cp437:0xFE p2 0 step idle under Empty color 0x0F
+    stat at 36,16 element Object p1 cp437:0xFE under Empty color 0x0F
     oop
 @box
 #end
@@ -337,7 +337,7 @@ The box is too heavy to push
 #end
 
     end
-    stat at 35,12 element Object p1 cp437:0xFE p2 0 step idle under Empty color 0x0F
+    stat at 35,12 element Object p1 cp437:0xFE under Empty color 0x0F
     oop
 @box
 #end
@@ -346,7 +346,7 @@ The box is too heavy to push
 #end
 
     end
-    stat at 31,12 element Object p1 cp437:0xFE p2 0 step idle under Empty color 0x0F
+    stat at 31,12 element Object p1 cp437:0xFE under Empty color 0x0F
     oop
 @box
 #end
@@ -355,9 +355,9 @@ The box is too heavy to push
 #end
 
     end
-    stat at 41,15 element Passage p1 0 p2 0 p3 board "Alone in the Dark" step idle under Empty color 0x0F
-    stat at 40,15 element Passage p1 0 p2 0 p3 board "Alone in the Dark" step idle under Empty color 0x0F
-    stat at 60,25 element Object p1 cp437:0xFE p2 0 step idle under Empty color 0x0F
+    stat at 41,15 element Passage p3 board "Alone in the Dark" under Empty color 0x0F
+    stat at 40,15 element Passage p3 board "Alone in the Dark" under Empty color 0x0F
+    stat at 60,25 element Object p1 cp437:0xFE under Empty color 0x0F
     oop
 #set dark
 

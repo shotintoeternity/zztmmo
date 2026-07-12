@@ -89,66 +89,62 @@ FFF*FThIFZaJJIrF*FThIFZaJJIrF*FThIFZaJJIrF*FThIFZaJJIrF*FFFF
   end
 
   stats
-    stat at 28,9 element Head p1 0 p2 0 step idle
-    stat at 29,9 element Segment p1 0 p2 0 step idle
-    stat at 30,9 element Segment p1 0 p2 0 step idle
-    stat at 31,9 element Segment p1 0 p2 0 step idle
-    stat at 28,13 element Head p1 0 p2 0 step idle
-    stat at 27,13 element Segment p1 0 p2 0 step idle
-    stat at 26,13 element Segment p1 0 p2 0 step idle
-    stat at 25,13 element Segment p1 0 p2 0 step idle
-    stat at 22,20 element Bear p2 0 step idle
-    stat at 23,20 element Bear p2 0 step idle
-    stat at 21,20 element Bear p2 0 step idle under Empty color 0x0E
-    stat at 46,18 element Counter p1 0 p2 0 step idle
-    stat at 43,18 element Counter p1 0 p2 0 step idle
-    stat at 49,18 element Counter p1 0 p2 0 step idle
-    stat at 52,18 element Counter p1 0 p2 0 step idle
-    stat at 46,3 element Bear p2 0 step idle
-    stat at 45,3 element Bear p2 0 step idle
-    stat at 44,3 element Bear p2 0 step idle
-    stat at 43,3 element Bear p2 0 step idle
-    stat at 42,3 element Bear p2 0 step idle
-    stat at 41,3 element Bear p2 0 step idle
-    stat at 40,3 element Bear p2 0 step idle
-    stat at 39,3 element Bear p2 0 step idle
-    stat at 38,3 element Bear p2 0 step idle
-    stat at 37,3 element Bear p2 0 step idle
-    stat at 36,3 element Bear p2 0 step idle
-    stat at 35,3 element Bear p2 0 step idle
-    stat at 34,3 element Bear p2 0 step idle
-    stat at 33,3 element Bear p2 0 step idle
-    stat at 32,3 element Bear p2 0 step idle
-    stat at 31,3 element Bear p2 0 step idle
-    stat at 30,3 element Bear p2 0 step idle
-    stat at 29,3 element Bear p2 0 step idle
-    stat at 28,3 element Bear p2 0 step idle
-    stat at 27,3 element Bear p2 0 step idle
-    stat at 26,3 element Bear p2 0 step idle
-    stat at 25,3 element Bear p2 0 step idle
-    stat at 24,3 element Bear p2 0 step idle
-    stat at 23,3 element Bear p2 0 step idle
-    stat at 22,3 element Bear p2 0 step idle
-    stat at 21,3 element Bear p2 0 step idle
-    stat at 20,3 element Bear p2 0 step idle
-    stat at 19,3 element Bear p2 0 step idle
-    stat at 18,3 element Bear p2 0 step idle
-    stat at 17,3 element Bear p2 0 step idle
-    stat at 16,3 element Bear p2 0 step idle
-    stat at 15,3 element Bear p2 0 step idle
-    stat at 14,3 element Bear p2 0 step idle
-    stat at 24,20 element Bear p2 0 step idle
-    stat at 20,20 element Bear p2 0 step idle
-    stat at 33,8 element Lion p1 6 p2 0 step idle
-    stat at 34,8 element Lion p1 6 p2 0 step idle
-    stat at 35,8 element Lion p1 6 p2 0 step idle
-    stat at 36,8 element Lion p1 6 p2 0 step idle
-    stat at 37,8 element Lion p1 6 p2 0 step idle
-    stat at 49,17 element Lion p1 0 p2 0 step idle
-    stat at 12,19 element Transporter p1 0 p2 0 step north under Empty color 0x09
-    stat at 12,15 element Transporter p1 0 p2 0 step south under Empty color 0x09
-    stat at 6,23 element Transporter p1 0 p2 0 step east under Empty color 0x0A
-    stat at 19,23 element Transporter p1 0 p2 0 step west under Empty color 0x09
-    stat at 55,23 element Passage p1 0 p2 0 p3 board "Mazing" step idle under Empty color 0x5F
+    stat at 28,9 element Head
+    stat at 29,9 element Segment
+    stat at 30,9 element Segment
+    stat at 31,9 element Segment
+    stat at 28,13 element Head
+    stat at 27,13 element Segment
+    stat at 26,13 element Segment
+    stat at 25,13 element Segment
+    stat at 22,20 element Bear
+    stat at 23,20 element Bear
+    stat at 21,20 element Bear under Empty color 0x0E
+    stat at 46,3 element Bear
+    stat at 45,3 element Bear
+    stat at 44,3 element Bear
+    stat at 43,3 element Bear
+    stat at 42,3 element Bear
+    stat at 41,3 element Bear
+    stat at 40,3 element Bear
+    stat at 39,3 element Bear
+    stat at 38,3 element Bear
+    stat at 37,3 element Bear
+    stat at 36,3 element Bear
+    stat at 35,3 element Bear
+    stat at 34,3 element Bear
+    stat at 33,3 element Bear
+    stat at 32,3 element Bear
+    stat at 31,3 element Bear
+    stat at 30,3 element Bear
+    stat at 29,3 element Bear
+    stat at 28,3 element Bear
+    stat at 27,3 element Bear
+    stat at 26,3 element Bear
+    stat at 25,3 element Bear
+    stat at 24,3 element Bear
+    stat at 23,3 element Bear
+    stat at 22,3 element Bear
+    stat at 21,3 element Bear
+    stat at 20,3 element Bear
+    stat at 19,3 element Bear
+    stat at 18,3 element Bear
+    stat at 17,3 element Bear
+    stat at 16,3 element Bear
+    stat at 15,3 element Bear
+    stat at 14,3 element Bear
+    stat at 24,20 element Bear
+    stat at 20,20 element Bear
+    stat at 33,8 element Lion p1 6
+    stat at 34,8 element Lion p1 6
+    stat at 35,8 element Lion p1 6
+    stat at 36,8 element Lion p1 6
+    stat at 37,8 element Lion p1 6
+    stat at 49,17 element Lion
+    stat at 12,19 element Transporter step north under Empty color 0x09
+    stat at 12,15 element Transporter step south under Empty color 0x09
+    stat at 6,23 element Transporter step east under Empty color 0x0A
+    stat at 19,23 element Transporter step west under Empty color 0x09
+    stat at 55,23 element Passage p3 board "Mazing" under Empty color 0x5F
   end
 end

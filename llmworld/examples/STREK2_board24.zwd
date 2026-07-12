@@ -64,7 +64,7 @@ oaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaO
   end
 
   stats
-    stat at 60,25 element Object p1 cp437:0xFF p2 0 step idle under Empty color 0x20
+    stat at 60,25 element Object p1 cp437:0xFF under Empty color 0x20
     oop
 #cycle 1
 /i
@@ -78,7 +78,7 @@ oaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaO
 #restart
 
     end
-    stat at 11,12 element Object p1 cp437:0xB2 p2 0 step idle under Empty color 0x0F
+    stat at 11,12 element Object p1 cp437:0xB2 under Empty color 0x0F
     oop
 #cycle 1
 /e/e/e/e/e/e/e/e/e/e/e/e/e/e/e/e/e/e/e/e/e
@@ -87,7 +87,7 @@ oaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaO
 #become white fake
 
     end
-    stat at 1,25 element Object p1 cp437:0xFF p2 0 step idle under Empty color 0x20
+    stat at 1,25 element Object p1 cp437:0xFF under Empty color 0x20
     oop
 @You
 /i/i/i/i/i/i/i/i/i/i/i/i/i/i/i/i/i
@@ -96,6 +96,6 @@ there, go in!
 #die
 
     end
-    stat at 35,12 element Passage p1 0 p2 0 p3 board "Winyerprize" step idle under Empty color 0x0F
+    stat at 35,12 element Passage p3 board "Winyerprize" under Empty color 0x0F
   end
 end

@@ -86,41 +86,41 @@ board "But is it neat?"
   end
 
   stats
-    stat at 47,21 element Duplicator p1 0 p2 3 step south
-    stat at 49,21 element Duplicator p1 0 step south
-    stat at 53,21 element Duplicator p1 0 p2 6 step south
-    stat at 51,21 element Duplicator p1 0 p2 5 step south under Empty color 0x0B
-    stat at 55,21 element Duplicator p1 0 p2 7 step south
-    stat at 57,21 element Duplicator p1 0 p2 8 step south
-    stat at 55,22 element Head p1 8 p2 8 step idle
-    stat at 52,16 element Bomb p1 0 p2 0 step idle under Empty color 0x0C
-    stat at 57,22 element Segment p1 0 p2 0 step idle
-    stat at 47,18 element Slime p1 0 p2 0 step idle under Empty color 0x0E
-    stat at 48,18 element Slime p1 0 p2 0 step idle under Empty color 0x0E
-    stat at 49,18 element Slime p1 0 p2 0 step idle under Empty color 0x0E
-    stat at 50,18 element Slime p1 0 p2 0 step idle under Empty color 0x0E
-    stat at 51,18 element Slime p1 0 p2 0 step idle under Empty color 0x0E
-    stat at 52,18 element Slime p1 0 p2 0 step idle under Empty color 0x0E
-    stat at 53,18 element Slime p1 0 p2 0 step idle under Empty color 0x0E
-    stat at 54,18 element Slime p1 0 p2 0 step idle under Empty color 0x0E
-    stat at 55,18 element Slime p1 0 p2 0 step idle under Empty color 0x0E
-    stat at 56,18 element Slime p1 0 p2 0 step idle under Empty color 0x0E
-    stat at 57,18 element Slime p1 0 p2 0 step idle under Empty color 0x0E
-    stat at 47,20 element Bear p1 0 p2 0 step idle
-    stat at 47,22 element Bear p1 0 p2 0 step idle
-    stat at 49,20 element Ruffian p1 8 p2 0 step idle
-    stat at 49,22 element Ruffian p1 8 p2 0 step idle
-    stat at 51,20 element Lion p1 8 p2 0 step idle
-    stat at 51,22 element Lion p1 8 p2 0 step idle
-    stat at 53,20 element Tiger p1 8 p2 8 step idle
-    stat at 53,22 element Tiger p1 8 p2 8 step idle
-    stat at 55,20 element Head p1 8 p2 0 step idle
-    stat at 56,20 element Segment p1 0 p2 0 step idle
-    stat at 57,20 element Segment p1 0 p2 0 step idle
-    stat at 57,19 element Segment p1 0 p2 0 step idle under Empty color 0x0E
-    stat at 56,19 element Segment p1 0 p2 0 step idle under Empty color 0x0E
-    stat at 55,19 element Segment p1 0 p2 0 step idle under Empty color 0x0E
-    stat at 54,19 element Segment p1 0 p2 0 step idle under Empty color 0x0E
-    stat at 7,25 element Passage p1 0 p2 0 p3 board "But is it neat?" step idle under Empty color 0x0F
+    stat at 47,21 element Duplicator p2 3 step south
+    stat at 49,21 element Duplicator p2 4 step south
+    stat at 53,21 element Duplicator p2 6 step south
+    stat at 51,21 element Duplicator p2 5 step south under Empty color 0x0B
+    stat at 55,21 element Duplicator p2 7 step south
+    stat at 57,21 element Duplicator p2 8 step south
+    stat at 55,22 element Head p1 8 p2 8
+    stat at 52,16 element Bomb under Empty color 0x0C
+    stat at 57,22 element Segment
+    stat at 47,18 element Slime under Empty color 0x0E
+    stat at 48,18 element Slime under Empty color 0x0E
+    stat at 49,18 element Slime under Empty color 0x0E
+    stat at 50,18 element Slime under Empty color 0x0E
+    stat at 51,18 element Slime under Empty color 0x0E
+    stat at 52,18 element Slime under Empty color 0x0E
+    stat at 53,18 element Slime under Empty color 0x0E
+    stat at 54,18 element Slime under Empty color 0x0E
+    stat at 55,18 element Slime under Empty color 0x0E
+    stat at 56,18 element Slime under Empty color 0x0E
+    stat at 57,18 element Slime under Empty color 0x0E
+    stat at 47,20 element Bear p1 0
+    stat at 47,22 element Bear p1 0
+    stat at 49,20 element Ruffian p1 8
+    stat at 49,22 element Ruffian p1 8
+    stat at 51,20 element Lion p1 8
+    stat at 51,22 element Lion p1 8
+    stat at 53,20 element Tiger p1 8 p2 8
+    stat at 53,22 element Tiger p1 8 p2 8
+    stat at 55,20 element Head p1 8
+    stat at 56,20 element Segment
+    stat at 57,20 element Segment
+    stat at 57,19 element Segment under Empty color 0x0E
+    stat at 56,19 element Segment under Empty color 0x0E
+    stat at 55,19 element Segment under Empty color 0x0E
+    stat at 54,19 element Segment under Empty color 0x0E
+    stat at 7,25 element Passage p3 board "But is it neat?" under Empty color 0x0F
   end
 end

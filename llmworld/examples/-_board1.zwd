@@ -56,115 +56,115 @@ iiiiiiiiiiIIIIIIIIIIaaaaaaaaaabbbbbbbbbbccccccccccdddddddddd
   end
 
   stats
-    stat at 22,11 element Object cycle 1 p1 cp437:0xFF p2 0 step idle under Empty color 0x0F data-pos -1
+    stat at 22,11 element Object cycle 1 p1 cp437:0xFF under Empty color 0x0F data-pos -1
     oop
 @eye
 :g
 #char 220
 
     end
-    stat at 23,11 element Object cycle 1 p1 cp437:0xFF p2 0 step idle under Empty color 0x0F data-pos -1
+    stat at 23,11 element Object cycle 1 p1 cp437:0xFF under Empty color 0x0F data-pos -1
     oop
 @eye
 :g
 #char 220
 
     end
-    stat at 24,11 element Object cycle 1 p1 cp437:0xFF p2 0 step idle under Empty color 0x0F data-pos -1
+    stat at 24,11 element Object cycle 1 p1 cp437:0xFF under Empty color 0x0F data-pos -1
     oop
 @eye
 :g
 #char 220
 
     end
-    stat at 37,11 element Object cycle 1 p1 cp437:0xFF p2 0 step idle under Empty color 0x0F data-pos -1
+    stat at 37,11 element Object cycle 1 p1 cp437:0xFF under Empty color 0x0F data-pos -1
     oop
 @eye
 :g
 #char 220
 
     end
-    stat at 38,11 element Object cycle 1 p1 cp437:0xFF p2 0 step idle under Empty color 0x0F data-pos -1
+    stat at 38,11 element Object cycle 1 p1 cp437:0xFF under Empty color 0x0F data-pos -1
     oop
 @eye
 :g
 #char 220
 
     end
-    stat at 39,11 element Object cycle 1 p1 cp437:0xFF p2 0 step idle under Empty color 0x0F data-pos -1
+    stat at 39,11 element Object cycle 1 p1 cp437:0xFF under Empty color 0x0F data-pos -1
     oop
 @eye
 :g
 #char 220
 
     end
-    stat at 21,12 element Object cycle 1 p1 cp437:0x20 p2 0 step idle under Empty color 0x0F data-pos -1
+    stat at 21,12 element Object cycle 1 p1 cp437:0x20 under Empty color 0x0F data-pos -1
     oop
 @eye
 :g
 #char 222
 
     end
-    stat at 25,12 element Object cycle 1 p1 cp437:0x20 p2 0 step idle under Empty color 0x0F data-pos -1
+    stat at 25,12 element Object cycle 1 p1 cp437:0x20 under Empty color 0x0F data-pos -1
     oop
 @eye
 :g
 #char 221
 
     end
-    stat at 36,12 element Object cycle 1 p1 cp437:0xFF p2 0 step idle under Empty color 0x0F data-pos -1
+    stat at 36,12 element Object cycle 1 p1 cp437:0xFF under Empty color 0x0F data-pos -1
     oop
 @eye
 :g
 #char 222
 
     end
-    stat at 40,12 element Object cycle 1 p1 cp437:0xFF p2 0 step idle under Empty color 0x0F data-pos -1
+    stat at 40,12 element Object cycle 1 p1 cp437:0xFF under Empty color 0x0F data-pos -1
     oop
 @eye
 :g
 #char 221
 
     end
-    stat at 21,13 element Object cycle 1 p1 cp437:0x20 p2 0 step idle under Empty color 0x0F data-pos -1
+    stat at 21,13 element Object cycle 1 p1 cp437:0x20 under Empty color 0x0F data-pos -1
     oop
 @eye
 :g
 #char 222
 
     end
-    stat at 25,13 element Object cycle 1 p1 cp437:0x20 p2 0 step idle under Empty color 0x0F data-pos -1
+    stat at 25,13 element Object cycle 1 p1 cp437:0x20 under Empty color 0x0F data-pos -1
     oop
 @eye
 :g
 #char 221
 
     end
-    stat at 36,13 element Object cycle 1 p1 cp437:0xFF p2 0 step idle under Empty color 0x0F data-pos -1
+    stat at 36,13 element Object cycle 1 p1 cp437:0xFF under Empty color 0x0F data-pos -1
     oop
 @eye
 :g
 #char 222
 
     end
-    stat at 40,13 element Object cycle 1 p1 cp437:0xFF p2 0 step idle under Empty color 0x0F data-pos -1
+    stat at 40,13 element Object cycle 1 p1 cp437:0xFF under Empty color 0x0F data-pos -1
     oop
 @eye
 :g
 #char 221
 
     end
-    stat at 28,25 element Object cycle 1 p2 0 step idle under Empty color 0x08
+    stat at 28,25 element Object cycle 1 under Empty color 0x08
     oop
- 
+
 /i/i/i/i/i/i/i/i/i/i
- 
+
 /i/i/i/i/i/i/i/i/i/i
 #shimmer:g
 #play 011
- 
+
 /i/i/i/i/i/i/i/i/i/i
- 
+
 /i/i/i/i/i/i/i/i/i/i
 #voice:g
 HELlo human.
@@ -267,7 +267,7 @@ see you SOON.
 /i/i#play --wc
 
     end
-    stat at 34,25 element Object cycle 1 p1 cp437:0x0D p2 0 step idle under Empty color 0x08 data-pos -1
+    stat at 34,25 element Object cycle 1 p1 cp437:0x0D under Empty color 0x08 data-pos -1
     oop
 @voice
 :g
@@ -298,7 +298,7 @@ see you SOON.
 /i/i#play 7777777x
 
     end
-    stat at 35,25 element Object cycle 1 p1 cp437:0xDC p2 0 step idle under Empty color 0x08 data-pos -1
+    stat at 35,25 element Object cycle 1 p1 cp437:0xDC under Empty color 0x08 data-pos -1
     oop
 
 :fall
@@ -317,12 +317,12 @@ see you SOON.
 #all:z
 
     end
-    stat at 36,25 element Object cycle 1 p1 cp437:0xDC p2 0 step idle under Empty color 0x08 data-pos -1
+    stat at 36,25 element Object cycle 1 p1 cp437:0xDC under Empty color 0x08 data-pos -1
     oop
 
 :fall
 /i
- 
+
 /i/i/i/i/i/i/i/i/i/i/i/i/i/i/i/i/i/i/i/i
 #fall
 :z
@@ -331,7 +331,7 @@ ARE YOU READY?
 /i#z
 
     end
-    stat at 37,25 element Object cycle 1 p2 0 step idle under Empty color 0x08 data-pos -1
+    stat at 37,25 element Object cycle 1 under Empty color 0x08 data-pos -1
     oop
 @shimmer
 :g
@@ -358,56 +358,56 @@ ARE YOU READY?
 #change white water empty
 
     end
-    stat at 26,12 element Object cycle 1 p1 cp437:0x20 p2 0 step idle under Text-White color 0x4F data-pos -1
+    stat at 26,12 element Object cycle 1 p1 cp437:0x20 under Text-White color 0x4F data-pos -1
     oop
 
 :z
 /n
 
     end
-    stat at 27,12 element Object cycle 1 p1 cp437:0x20 p2 0 step idle under Text-White color 0x43 data-pos -1
+    stat at 27,12 element Object cycle 1 p1 cp437:0x20 under Text-White color 0x43 data-pos -1
     oop
 
 :z
 /n
 
     end
-    stat at 28,12 element Object cycle 1 p1 cp437:0x20 p2 0 step idle under Text-White color 0x54 data-pos -1
+    stat at 28,12 element Object cycle 1 p1 cp437:0x20 under Text-White color 0x54 data-pos -1
     oop
 
 :z
 /n
 
     end
-    stat at 30,12 element Object cycle 1 p1 cp437:0x20 p2 0 step idle under Text-White color 0x39 data-pos -1
+    stat at 30,12 element Object cycle 1 p1 cp437:0x20 under Text-White color 0x39 data-pos -1
     oop
 
 :z
 /n
 
     end
-    stat at 32,12 element Object cycle 1 p1 cp437:0x20 p2 0 step idle under Text-White color 0x32 data-pos -1
+    stat at 32,12 element Object cycle 1 p1 cp437:0x20 under Text-White color 0x32 data-pos -1
     oop
 
 :z
 /n
 
     end
-    stat at 33,12 element Object cycle 1 p1 cp437:0x20 p2 0 step idle under Text-White color 0x30 data-pos -1
+    stat at 33,12 element Object cycle 1 p1 cp437:0x20 under Text-White color 0x30 data-pos -1
     oop
 
 :z
 /n
 
     end
-    stat at 34,12 element Object cycle 1 p1 cp437:0x20 p2 0 step idle under Text-White color 0x32 data-pos -1
+    stat at 34,12 element Object cycle 1 p1 cp437:0x20 under Text-White color 0x32 data-pos -1
     oop
 
 :z
 /n
 
     end
-    stat at 35,12 element Object cycle 1 p1 cp437:0x20 p2 0 step idle under Text-White color 0x30 data-pos -1
+    stat at 35,12 element Object cycle 1 p1 cp437:0x20 under Text-White color 0x30 data-pos -1
     oop
 
 :z

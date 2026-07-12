@@ -1,6 +1,5 @@
 board "Baiguria Forest - Treetops East"
   start player at 16,25
-  respawn at 32,32
   max-shots 255
   dark false
   reenter false

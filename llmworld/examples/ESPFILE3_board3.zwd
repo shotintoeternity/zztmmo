@@ -94,7 +94,7 @@ gzzfzgzgg........gN.....N.....gN......Ng.......fffffffffffff
   end
 
   stats
-    stat at 6,24 element Object p1 cp437:0xFE p2 0 step idle under Empty color 0x08
+    stat at 6,24 element Object p1 cp437:0xFE under Empty color 0x08
     oop
 @blockobj
 #cycle 1
@@ -122,7 +122,7 @@ Burns: Here goes...
 #die
 
     end
-    stat at 2,21 element Object p1 cp437:0xB3 p2 0 step idle under Empty color 0x20
+    stat at 2,21 element Object p1 cp437:0xB3 under Empty color 0x20
     oop
 @aim
 #char 179
@@ -145,7 +145,7 @@ Burns: Here goes...
 #die
 
     end
-    stat at 5,23 element Object p1 cp437:0x18 p2 0 step idle under Empty color 0x20
+    stat at 5,23 element Object p1 cp437:0x18 under Empty color 0x20
     oop
 @throw
 #cycle 1
@@ -164,7 +164,7 @@ Burns: Here goes...
 #restore touch
 
     end
-    stat at 3,1 element Object p1 cp437:0x20 p2 0 step idle under Empty color 0x0E
+    stat at 3,1 element Object p1 cp437:0x20 under Empty color 0x0E
     oop
 @nowin1
 #cycle 1
@@ -215,13 +215,13 @@ Ohms: That is quite impossible.
 Second marble: Botheration. I have a
 crick in my neck.
 
-   - At least the property tax is low. -
+- At least the property tax is low. -
 /i
 #endgame
 #end
 
     end
-    stat at 4,1 element Object p1 cp437:0x20 p2 0 step idle under Empty color 0x0E
+    stat at 4,1 element Object p1 cp437:0x20 under Empty color 0x0E
     oop
 @nowin2
 #cycle 1
@@ -242,7 +242,7 @@ myself and Watt-san.
 #send nowin1:besttwo
 
     end
-    stat at 59,4 element Object p1 cp437:0x30 p2 0 step idle under Empty color 0x09
+    stat at 59,4 element Object p1 cp437:0x30 under Empty color 0x09
     oop
 @ct1
 #cycle 1
@@ -292,7 +292,7 @@ Burns: I'd better do something fast!
 #end
 
     end
-    stat at 58,9 element Object p1 cp437:0x33 p2 0 step idle under Empty color 0x20
+    stat at 58,9 element Object p1 cp437:0x33 under Empty color 0x20
     oop
 @ct2
 #cycle 1
@@ -301,7 +301,7 @@ Burns: I'd better do something fast!
 #char 52
 
     end
-    stat at 59,9 element Object p1 cp437:0x37 p2 0 step idle under Empty color 0x20
+    stat at 59,9 element Object p1 cp437:0x37 under Empty color 0x20
     oop
 @ct3
 #cycle 1
@@ -319,7 +319,7 @@ Burns: I'd better do something fast!
 #char 48
 
     end
-    stat at 14,1 element Object p1 cp437:0x19 p2 0 step idle under Empty color 0x0E
+    stat at 14,1 element Object p1 cp437:0x19 under Empty color 0x0E
     oop
 @pin
 #cycle 1
@@ -332,17 +332,17 @@ Burns: I'd better do something fast!
 #char 25
 
     end
-    stat at 15,2 element Object p1 cp437:0x19 p2 0 step idle under Empty color 0x0F
+    stat at 15,2 element Object p1 cp437:0x19 under Empty color 0x0F
     oop
 #bind pin
 
     end
-    stat at 13,2 element Object p1 cp437:0x19 p2 0 step idle
+    stat at 13,2 element Object p1 cp437:0x19
     oop
 #bind pin
 
     end
-    stat at 12,3 element Object p1 cp437:0x19 p2 0 step idle
+    stat at 12,3 element Object p1 cp437:0x19
     oop
 @pin2
 #cycle 1
@@ -356,82 +356,82 @@ Burns: I'd better do something fast!
 #end
 
     end
-    stat at 14,3 element Object p1 cp437:0x19 p2 0 step idle
+    stat at 14,3 element Object p1 cp437:0x19
     oop
 #bind pin
 
     end
-    stat at 16,3 element Object p1 cp437:0x19 p2 0 step idle
+    stat at 16,3 element Object p1 cp437:0x19
     oop
 #bind pin
 
     end
-    stat at 17,4 element Object p1 cp437:0x19 p2 0 step idle
+    stat at 17,4 element Object p1 cp437:0x19
     oop
 #bind pin
 
     end
-    stat at 15,4 element Object p1 cp437:0x19 p2 0 step idle
+    stat at 15,4 element Object p1 cp437:0x19
     oop
 #bind pin
 
     end
-    stat at 13,4 element Object p1 cp437:0x19 p2 0 step idle
+    stat at 13,4 element Object p1 cp437:0x19
     oop
 #bind pin
 
     end
-    stat at 11,4 element Object p1 cp437:0x19 p2 0 step idle
+    stat at 11,4 element Object p1 cp437:0x19
     oop
 #bind pin
 
     end
-    stat at 35,1 element Object p1 cp437:0x19 p2 0 step idle under Empty color 0x0E
+    stat at 35,1 element Object p1 cp437:0x19 under Empty color 0x0E
     oop
 #bind pin3
 
     end
-    stat at 36,2 element Object p1 cp437:0x19 p2 0 step idle
+    stat at 36,2 element Object p1 cp437:0x19
     oop
 #bind pin3
 
     end
-    stat at 34,2 element Object p1 cp437:0x19 p2 0 step idle
+    stat at 34,2 element Object p1 cp437:0x19
     oop
 #bind pin3
 
     end
-    stat at 33,3 element Object p1 cp437:0x19 p2 0 step idle
+    stat at 33,3 element Object p1 cp437:0x19
     oop
 #bind pin3
 
     end
-    stat at 35,3 element Object p1 cp437:0x19 p2 0 step idle
+    stat at 35,3 element Object p1 cp437:0x19
     oop
 #bind pin3
 
     end
-    stat at 37,3 element Object p1 cp437:0x19 p2 0 step idle
+    stat at 37,3 element Object p1 cp437:0x19
     oop
 #bind pin3
 
     end
-    stat at 38,4 element Object p1 cp437:0x19 p2 0 step idle
+    stat at 38,4 element Object p1 cp437:0x19
     oop
 #bind pin3
 
     end
-    stat at 36,4 element Object p1 cp437:0x19 p2 0 step idle
+    stat at 36,4 element Object p1 cp437:0x19
     oop
 #bind pin3
 
     end
-    stat at 32,4 element Object p1 cp437:0x19 p2 0 step idle
+    stat at 32,4 element Object p1 cp437:0x19
     oop
 #bind pin3
 
     end
-    stat at 34,4 element Object p1 cp437:0x19 p2 0 step idle
+    stat at 34,4 element Object p1 cp437:0x19
     oop
 @pin3
 #cycle 1
@@ -444,7 +444,7 @@ Burns: I'd better do something fast!
 #char 35
 
     end
-    stat at 2,1 element Object p1 cp437:0x20 p2 0 step idle under Empty color 0x0E
+    stat at 2,1 element Object p1 cp437:0x20 under Empty color 0x0E
     oop
 @invobj
 #cycle 1
@@ -489,7 +489,7 @@ Burns: Dropped my rock. How clumsy of me.
 #end
 
     end
-    stat at 1,1 element Object p1 cp437:0x20 p2 0 step idle under Empty color 0x0E
+    stat at 1,1 element Object p1 cp437:0x20 under Empty color 0x0E
     oop
 @detect
 #cycle 1
@@ -537,7 +537,7 @@ They should put a safety on this thing.
 #end
 
     end
-    stat at 14,22 element Object p1 cp437:0x02 p2 0 step idle
+    stat at 14,22 element Object p1 cp437:0x02
     oop
 @burns
 #cycle 1
@@ -584,7 +584,7 @@ Burns: Strike!
 #die
 
     end
-    stat at 15,22 element Object p1 cp437:0x20 p2 0 step idle
+    stat at 15,22 element Object p1 cp437:0x20
     oop
 @ball1
 #cycle 1
@@ -611,7 +611,7 @@ Burns: Strike!
 #die
 
     end
-    stat at 15,23 element Object p1 cp437:0x20 p2 0 step idle
+    stat at 15,23 element Object p1 cp437:0x20
     oop
 @ball2
 #cycle 1
@@ -646,7 +646,7 @@ Burns: Strike!
 #die
 
     end
-    stat at 15,24 element Object p1 cp437:0x20 p2 0 step idle
+    stat at 15,24 element Object p1 cp437:0x20
     oop
 @ball3
 'Don't try binding this to ball2. It ruins
@@ -683,7 +683,7 @@ Burns: Strike!
 #die
 
     end
-    stat at 35,22 element Object p1 cp437:0x02 p2 0 step idle under Empty color 0x0E
+    stat at 35,22 element Object p1 cp437:0x02 under Empty color 0x0E
     oop
 @ohms
 #cycle 1
@@ -698,7 +698,7 @@ Burns: Strike!
 #send burns:allover
 
     end
-    stat at 36,22 element Object p1 cp437:0x20 p2 0 step idle
+    stat at 36,22 element Object p1 cp437:0x20
     oop
 @ball4
 #cycle 1
@@ -781,6 +781,6 @@ much.
 #die
 
     end
-    stat at 7,24 element Passage p1 0 p2 0 p3 board "Eavesdrop" step idle under Empty color 0x08
+    stat at 7,24 element Passage p3 board "Eavesdrop" under Empty color 0x08
   end
 end

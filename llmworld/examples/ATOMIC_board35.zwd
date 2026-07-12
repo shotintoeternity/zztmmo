@@ -66,100 +66,100 @@ WWWWWWWWWWWWWWW#rrgggggggggggggggggggggggggrr#WWWWWWWWWWWWWW
   end
 
   stats
-    stat at 33,21 element Object p1 cp437:0xCD p2 0 step idle under Fake color 0x77
-    stat at 32,21 element Object p1 cp437:0xCD p2 0 step idle under Fake color 0x77
-    stat at 30,21 element Object p1 cp437:0xCD p2 0 step idle under Fake color 0x77
-    stat at 29,21 element Object p1 cp437:0xCD p2 0 step idle under Fake color 0x77
-    stat at 30,11 element Object p1 cp437:0xCD p2 0 step idle under Empty color 0x7F
+    stat at 33,21 element Object p1 cp437:0xCD under Fake color 0x77
+    stat at 32,21 element Object p1 cp437:0xCD under Fake color 0x77
+    stat at 30,21 element Object p1 cp437:0xCD under Fake color 0x77
+    stat at 29,21 element Object p1 cp437:0xCD under Fake color 0x77
+    stat at 30,11 element Object p1 cp437:0xCD under Empty color 0x7F
     oop
 #bind door
 
     end
-    stat at 32,11 element Object p1 cp437:0xCD p2 0 step idle under Empty color 0x7F
+    stat at 32,11 element Object p1 cp437:0xCD under Empty color 0x7F
     oop
 #bind door
 
     end
-    stat at 34,11 element Object p1 cp437:0xBE p2 0 step idle under Empty color 0x7F
+    stat at 34,11 element Object p1 cp437:0xBE under Empty color 0x7F
     oop
 #bind door
 
     end
-    stat at 28,11 element Object p1 cp437:0xD4 p2 0 step idle under Empty color 0x7F
+    stat at 28,11 element Object p1 cp437:0xD4 under Empty color 0x7F
     oop
 #bind door
 
     end
-    stat at 29,11 element Object p1 cp437:0xCD p2 0 step idle under Empty color 0x7F
+    stat at 29,11 element Object p1 cp437:0xCD under Empty color 0x7F
     oop
 #bind door
 
     end
-    stat at 31,11 element Object p1 cp437:0xCB p2 0 step idle under Empty color 0x7F
+    stat at 31,11 element Object p1 cp437:0xCB under Empty color 0x7F
     oop
 #bind door
 
     end
-    stat at 31,3 element Object p1 cp437:0xCB p2 0 step idle under Empty color 0x7F
+    stat at 31,3 element Object p1 cp437:0xCB under Empty color 0x7F
     oop
 #bind nextdoor
 
     end
-    stat at 32,3 element Object p1 cp437:0xCD p2 0 step idle under Empty color 0x7F
+    stat at 32,3 element Object p1 cp437:0xCD under Empty color 0x7F
     oop
 #bind nextdoor
 
     end
-    stat at 34,3 element Object p1 cp437:0xBE p2 0 step idle under Empty color 0x7F
+    stat at 34,3 element Object p1 cp437:0xBE under Empty color 0x7F
     oop
 #bind nextdoor
 
     end
-    stat at 28,3 element Object p1 cp437:0xD4 p2 0 step idle under Empty color 0x7F
+    stat at 28,3 element Object p1 cp437:0xD4 under Empty color 0x7F
     oop
 #bind nextdoor
 
     end
-    stat at 28,21 element Object p1 cp437:0xD4 p2 0 step idle under Empty color 0x77
-    stat at 34,21 element Object p1 cp437:0xBE p2 0 step idle under Empty color 0x77
-    stat at 31,21 element Object p1 cp437:0xCB p2 0 step idle under Empty color 0x77
-    stat at 30,9 element Object p1 cp437:0xC7 p2 0 step idle under Empty color 0x08
-    stat at 30,8 element Object p1 cp437:0xC7 p2 0 step idle under Empty color 0x08
-    stat at 30,7 element Object p1 cp437:0xC7 p2 0 step idle under Empty color 0x08
-    stat at 30,6 element Object p1 cp437:0xC7 p2 0 step idle under Empty color 0x08
-    stat at 30,5 element Object p1 cp437:0xC7 p2 0 step idle under Empty color 0x08
-    stat at 30,4 element Object p1 cp437:0xC7 p2 0 step idle under Empty color 0x08
-    stat at 30,2 element Object p1 cp437:0xC7 p2 0 step idle under Empty color 0x0F
-    stat at 30,20 element Object p1 cp437:0xC7 p2 0 step idle under Empty color 0x0F
-    stat at 30,19 element Object p1 cp437:0xC7 p2 0 step idle under Empty color 0x0F
-    stat at 30,12 element Object p1 cp437:0xC7 p2 0 step idle under Empty color 0x0F
-    stat at 32,4 element Object p1 cp437:0xB6 p2 0 step idle under Empty color 0x0F
-    stat at 32,7 element Object p1 cp437:0xB6 p2 0 step idle under Empty color 0x0F
-    stat at 32,8 element Object p1 cp437:0xB6 p2 0 step idle under Empty color 0x0F
-    stat at 32,9 element Object p1 cp437:0xB6 p2 0 step idle under Empty color 0x0F
-    stat at 32,10 element Object p1 cp437:0xB6 p2 0 step idle under Empty color 0x0F
-    stat at 32,1 element Object p1 cp437:0xB6 p2 0 step idle under Empty color 0x0F
-    stat at 32,18 element Object p1 cp437:0xB6 p2 0 step idle under Empty color 0x0F
-    stat at 32,17 element Object p1 cp437:0xB6 p2 0 step idle under Empty color 0x0F
-    stat at 32,16 element Object p1 cp437:0xB6 p2 0 step idle under Empty color 0x0F
-    stat at 32,15 element Object p1 cp437:0xB6 p2 0 step idle under Empty color 0x0F
-    stat at 32,14 element Object p1 cp437:0xB6 p2 0 step idle under Empty color 0x0F
-    stat at 32,13 element Object p1 cp437:0xB6 p2 0 step idle under Empty color 0x0F
-    stat at 32,12 element Object p1 cp437:0xB6 p2 0 step idle under Empty color 0x0F
-    stat at 31,19 element Object p1 cp437:0xC4 p2 0 step idle under Empty color 0x0F
-    stat at 31,18 element Object p1 cp437:0xC4 p2 0 step idle under Empty color 0x0F
-    stat at 31,13 element Object p1 cp437:0xC4 p2 0 step idle under Empty color 0x0F
-    stat at 31,12 element Object p1 cp437:0xC4 p2 0 step idle under Empty color 0x0F
-    stat at 31,10 element Object p1 cp437:0xC4 p2 0 step idle under Empty color 0x0F
-    stat at 31,9 element Object p1 cp437:0xC4 p2 0 step idle under Empty color 0x0F
-    stat at 31,6 element Object p1 cp437:0xC4 p2 0 step idle under Empty color 0x0F
-    stat at 31,5 element Object p1 cp437:0xC4 p2 0 step idle under Empty color 0x0F
-    stat at 21,1 element Object p1 cp437:0xDD p2 0 step idle under Empty color 0x70
+    stat at 28,21 element Object p1 cp437:0xD4 under Empty color 0x77
+    stat at 34,21 element Object p1 cp437:0xBE under Empty color 0x77
+    stat at 31,21 element Object p1 cp437:0xCB under Empty color 0x77
+    stat at 30,9 element Object p1 cp437:0xC7 under Empty color 0x08
+    stat at 30,8 element Object p1 cp437:0xC7 under Empty color 0x08
+    stat at 30,7 element Object p1 cp437:0xC7 under Empty color 0x08
+    stat at 30,6 element Object p1 cp437:0xC7 under Empty color 0x08
+    stat at 30,5 element Object p1 cp437:0xC7 under Empty color 0x08
+    stat at 30,4 element Object p1 cp437:0xC7 under Empty color 0x08
+    stat at 30,2 element Object p1 cp437:0xC7 under Empty color 0x0F
+    stat at 30,20 element Object p1 cp437:0xC7 under Empty color 0x0F
+    stat at 30,19 element Object p1 cp437:0xC7 under Empty color 0x0F
+    stat at 30,12 element Object p1 cp437:0xC7 under Empty color 0x0F
+    stat at 32,4 element Object p1 cp437:0xB6 under Empty color 0x0F
+    stat at 32,7 element Object p1 cp437:0xB6 under Empty color 0x0F
+    stat at 32,8 element Object p1 cp437:0xB6 under Empty color 0x0F
+    stat at 32,9 element Object p1 cp437:0xB6 under Empty color 0x0F
+    stat at 32,10 element Object p1 cp437:0xB6 under Empty color 0x0F
+    stat at 32,1 element Object p1 cp437:0xB6 under Empty color 0x0F
+    stat at 32,18 element Object p1 cp437:0xB6 under Empty color 0x0F
+    stat at 32,17 element Object p1 cp437:0xB6 under Empty color 0x0F
+    stat at 32,16 element Object p1 cp437:0xB6 under Empty color 0x0F
+    stat at 32,15 element Object p1 cp437:0xB6 under Empty color 0x0F
+    stat at 32,14 element Object p1 cp437:0xB6 under Empty color 0x0F
+    stat at 32,13 element Object p1 cp437:0xB6 under Empty color 0x0F
+    stat at 32,12 element Object p1 cp437:0xB6 under Empty color 0x0F
+    stat at 31,19 element Object p1 cp437:0xC4 under Empty color 0x0F
+    stat at 31,18 element Object p1 cp437:0xC4 under Empty color 0x0F
+    stat at 31,13 element Object p1 cp437:0xC4 under Empty color 0x0F
+    stat at 31,12 element Object p1 cp437:0xC4 under Empty color 0x0F
+    stat at 31,10 element Object p1 cp437:0xC4 under Empty color 0x0F
+    stat at 31,9 element Object p1 cp437:0xC4 under Empty color 0x0F
+    stat at 31,6 element Object p1 cp437:0xC4 under Empty color 0x0F
+    stat at 31,5 element Object p1 cp437:0xC4 under Empty color 0x0F
+    stat at 21,1 element Object p1 cp437:0xDD under Empty color 0x70
     oop
 @Generator
 #end
 :touch
-Do you wish to activate the Power 
+Do you wish to activate the Power
 generator?
 
 !a;Yes
@@ -173,9 +173,9 @@ generator?
 #end
 
     end
-    stat at 19,10 element Object p1 cp437:0xDE p2 0 step idle under Empty color 0x70
-    stat at 26,10 element Object p1 cp437:0xDE p2 0 step idle under Empty color 0x70
-    stat at 36,9 element Object p1 cp437:0x09 p2 0 step idle under Empty color 0x20
+    stat at 19,10 element Object p1 cp437:0xDE under Empty color 0x70
+    stat at 26,10 element Object p1 cp437:0xDE under Empty color 0x70
+    stat at 36,9 element Object p1 cp437:0x09 under Empty color 0x20
     oop
 @Data
 #end
@@ -192,7 +192,7 @@ $character corruption.
 To date, all work has been successfully
 completed. We now await developement of
 Nemesis project. Corrior of key project
-details has been intercepted. 
+details has been intercepted.
 
 Date of completion:
 
@@ -229,7 +229,7 @@ Revised Date:
 #end
 
     end
-    stat at 42,8 element Object p1 cp437:0x09 p2 0 step idle under Empty color 0x20
+    stat at 42,8 element Object p1 cp437:0x09 under Empty color 0x20
     oop
 @Handle
 #end
@@ -276,8 +276,8 @@ n
 #end
 
     end
-    stat at 42,9 element Object p1 cp437:0x09 p2 0 step idle under Empty color 0x20
-    stat at 36,8 element Object p1 cp437:0x09 p2 0 step idle under Empty color 0x20
+    stat at 42,9 element Object p1 cp437:0x09 under Empty color 0x20
+    stat at 36,8 element Object p1 cp437:0x09 under Empty color 0x20
     oop
 @Handle
 #end
@@ -309,12 +309,12 @@ $°±²ATTEMPTING TO CORRECT FILE²±°
 :c
 Crew is as follows:
 Enginner - Hans Harol Frinz
-Pilot    - Michael Rippen
+Pilot - Michael Rippen
 
 Officals - Adolf Hitler
-         - Albert Spear
-         - Josef Goebbles
-         - Hermann Goering
+- Albert Spear
+- Josef Goebbles
+- Hermann Goering
 #set read
 #end
 :b
@@ -339,9 +339,9 @@ roughly one hour. Glory to the New Reich!
 #end
 
     end
-    stat at 36,10 element Object p1 cp437:0x09 p2 0 step idle under Empty color 0x20
-    stat at 42,10 element Object p1 cp437:0x09 p2 0 step idle under Empty color 0x20
-    stat at 39,2 element Object p1 cp437:0x08 p2 0 step idle under Fake color 0x70
+    stat at 36,10 element Object p1 cp437:0x09 under Empty color 0x20
+    stat at 42,10 element Object p1 cp437:0x09 under Empty color 0x20
+    stat at 39,2 element Object p1 cp437:0x08 under Fake color 0x70
     oop
 @Plug
 #end
@@ -356,7 +356,7 @@ It's a plug
 #end
 
     end
-    stat at 43,2 element Object p1 cp437:0xBB p2 0 step idle under Fake color 0x70
+    stat at 43,2 element Object p1 cp437:0xBB under Fake color 0x70
     oop
 @Cable1
 #end
@@ -368,7 +368,7 @@ It's a cable
 #end
 
     end
-    stat at 40,2 element Object p1 cp437:0xCD p2 0 step idle under Fake color 0x70
+    stat at 40,2 element Object p1 cp437:0xCD under Fake color 0x70
     oop
 @computer
 #end
@@ -385,7 +385,7 @@ It's a cable
 #end
 
     end
-    stat at 41,2 element Object p1 cp437:0xBE p2 0 step idle under Fake color 0x70
+    stat at 41,2 element Object p1 cp437:0xBE under Fake color 0x70
     oop
 @Broken
 #end
@@ -412,7 +412,7 @@ You use some Heavy Duty tape to fix it...
 #end
 
     end
-    stat at 42,2 element Object p1 cp437:0xD4 p2 0 step idle under Empty color 0x70
+    stat at 42,2 element Object p1 cp437:0xD4 under Empty color 0x70
     oop
 @Cable
 #end
@@ -439,7 +439,7 @@ You use some Heavy Duty tape to fix it...
 #end
 
     end
-    stat at 37,12 element Object p1 cp437:0x15 p2 0 step idle under Fake color 0x70
+    stat at 37,12 element Object p1 cp437:0x15 under Fake color 0x70
     oop
 @Wrench
 #end
@@ -454,13 +454,13 @@ You already have a wrench
 #end
 
     end
-    stat at 38,12 element Object p1 cp437:0x15 p2 0 step idle under Empty color 0x70
-    stat at 43,14 element Object p1 cp437:0x0F p2 0 step idle under Fake color 0x70
+    stat at 38,12 element Object p1 cp437:0x15 under Empty color 0x70
+    stat at 43,14 element Object p1 cp437:0x0F under Fake color 0x70
     oop
 #bind ammo
 
     end
-    stat at 39,16 element Object p1 cp437:0x0F p2 0 step idle under Fake color 0x70
+    stat at 39,16 element Object p1 cp437:0x0F under Fake color 0x70
     oop
 @Ammo
 #end
@@ -469,7 +469,7 @@ It's ammo, but not for your gun.
 #end
 
     end
-    stat at 37,14 element Object p1 cp437:0x14 p2 0 step idle under Fake color 0x70
+    stat at 37,14 element Object p1 cp437:0x14 under Fake color 0x70
     oop
 @Tape
 #end
@@ -492,17 +492,17 @@ You already have some tape
 #end
 
     end
-    stat at 25,12 element Object p1 cp437:0x14 p2 0 step idle under Empty color 0x70
+    stat at 25,12 element Object p1 cp437:0x14 under Empty color 0x70
     oop
 #bind tape
 
     end
-    stat at 21,12 element Object p1 cp437:0x13 p2 0 step idle under Empty color 0x70
+    stat at 21,12 element Object p1 cp437:0x13 under Empty color 0x70
     oop
 #bind food
 
     end
-    stat at 36,12 element Object p1 cp437:0x13 p2 0 step idle under Empty color 0x70
+    stat at 36,12 element Object p1 cp437:0x13 under Empty color 0x70
     oop
 @Food
 #end
@@ -513,63 +513,63 @@ It's a dried food package
 #end
 
     end
-    stat at 20,14 element Object p1 cp437:0x14 p2 0 step idle under Empty color 0x70
+    stat at 20,14 element Object p1 cp437:0x14 under Empty color 0x70
     oop
 #bind tape
 
     end
-    stat at 42,12 element Object p1 cp437:0x14 p2 0 step idle under Empty color 0x70
+    stat at 42,12 element Object p1 cp437:0x14 under Empty color 0x70
     oop
 #bind tape
 
     end
-    stat at 23,14 element Object p1 cp437:0x13 p2 0 step idle under Empty color 0x70
+    stat at 23,14 element Object p1 cp437:0x13 under Empty color 0x70
     oop
 #bind food
 
     end
-    stat at 19,16 element Object p1 cp437:0x13 p2 0 step idle under Empty color 0x70
+    stat at 19,16 element Object p1 cp437:0x13 under Empty color 0x70
     oop
 #bind food
 
     end
-    stat at 40,16 element Object p1 cp437:0x13 p2 0 step idle under Empty color 0x70
+    stat at 40,16 element Object p1 cp437:0x13 under Empty color 0x70
     oop
 #bind food
 
     end
-    stat at 41,12 element Object p1 cp437:0x13 p2 0 step idle under Empty color 0x70
+    stat at 41,12 element Object p1 cp437:0x13 under Empty color 0x70
     oop
 #bind food
 
     end
-    stat at 43,12 element Object p1 cp437:0x0F p2 0 step idle under Empty color 0x70
+    stat at 43,12 element Object p1 cp437:0x0F under Empty color 0x70
     oop
 #bind ammo
 
     end
-    stat at 40,12 element Object p1 cp437:0x0F p2 0 step idle under Fake color 0x70
-    stat at 39,12 element Object p1 cp437:0x0F p2 0 step idle under Fake color 0x70
+    stat at 40,12 element Object p1 cp437:0x0F under Fake color 0x70
+    stat at 39,12 element Object p1 cp437:0x0F under Fake color 0x70
     oop
 #bind ammo
 
     end
-    stat at 19,12 element Object p1 cp437:0x0F p2 0 step idle under Empty color 0x70
+    stat at 19,12 element Object p1 cp437:0x0F under Empty color 0x70
     oop
 #bind ammo
 
     end
-    stat at 20,16 element Object p1 cp437:0x0F p2 0 step idle under Empty color 0x70
+    stat at 20,16 element Object p1 cp437:0x0F under Empty color 0x70
     oop
 #bind ammo
 
     end
-    stat at 22,14 element Object p1 cp437:0x0F p2 0 step idle under Empty color 0x70
+    stat at 22,14 element Object p1 cp437:0x0F under Empty color 0x70
     oop
 #bind ammo
 
     end
-    stat at 43,4 element Object p1 cp437:0xBA p2 0 step idle under Empty color 0x70
+    stat at 43,4 element Object p1 cp437:0xBA under Empty color 0x70
     oop
 @Cable2
 #end
@@ -583,7 +583,7 @@ It's a cable
 #end
 
     end
-    stat at 43,5 element Object p1 cp437:0xBA p2 0 step idle under Empty color 0x70
+    stat at 43,5 element Object p1 cp437:0xBA under Empty color 0x70
     oop
 @Cable3
 #end
@@ -602,7 +602,7 @@ It's a cable
 #end
 
     end
-    stat at 43,6 element Object p1 cp437:0xBA p2 0 step idle under Empty color 0x70
+    stat at 43,6 element Object p1 cp437:0xBA under Empty color 0x70
     oop
 @Cable4
 #end
@@ -616,7 +616,7 @@ It's a cable
 #end
 
     end
-    stat at 43,7 element Object p1 cp437:0xBA p2 0 step idle under Empty color 0x70
+    stat at 43,7 element Object p1 cp437:0xBA under Empty color 0x70
     oop
 @Cable5
 #end
@@ -630,7 +630,7 @@ It's a cable
 #end
 
     end
-    stat at 39,9 element Object p1 cp437:0xDB p2 0 step idle under Empty color 0x03
+    stat at 39,9 element Object p1 cp437:0xDB under Empty color 0x03
     oop
 @Cabinet
 #end
@@ -647,14 +647,14 @@ Touch the left button for English...
 #end
 
     end
-    stat at 33,11 element Object p1 cp437:0xCD p2 0 step idle under Empty color 0x0E
+    stat at 33,11 element Object p1 cp437:0xCD under Empty color 0x0E
     oop
 @Door
 #end
 :touch
-It's a sealed door. To open it you will 
+It's a sealed door. To open it you will
 need to guage it correctly. If you use
-the right ammount of health, you will 
+the right ammount of health, you will
 regain it otherwise it is lost or some-
 other calamity occurs. How much health?
 
@@ -699,13 +699,13 @@ How much health?
 #end
 
     end
-    stat at 33,3 element Object p1 cp437:0xCD p2 0 step idle under Empty color 0x0E
+    stat at 33,3 element Object p1 cp437:0xCD under Empty color 0x0E
     oop
 @NextDoor
 #end
 :touch
 It's a sealed door, but it looks a little
-tougher then the others. How much health? 
+tougher then the others. How much health?
 
 !5;Five Health
 !10;Ten Health
@@ -752,27 +752,27 @@ You now need a wrench to open this
 #end
 
     end
-    stat at 30,3 element Object p1 cp437:0xCD p2 0 step idle under Empty color 0x0E
+    stat at 30,3 element Object p1 cp437:0xCD under Empty color 0x0E
     oop
 #bind nextdoor
 
     end
-    stat at 29,3 element Object p1 cp437:0xCD p2 0 step idle under Empty color 0x0E
+    stat at 29,3 element Object p1 cp437:0xCD under Empty color 0x0E
     oop
 #bind nextdoor
 
     end
-    stat at 42,14 element Object p1 cp437:0x15 p2 0 step idle under Empty color 0x70
+    stat at 42,14 element Object p1 cp437:0x15 under Empty color 0x70
     oop
 #bind wrench
 
     end
-    stat at 21,14 element Object p1 cp437:0x15 p2 0 step idle under Empty color 0x70
+    stat at 21,14 element Object p1 cp437:0x15 under Empty color 0x70
     oop
 #bind wrench
 
     end
-    stat at 34,20 element Object p1 cp437:0xFB p2 0 step idle under Empty color 0x0E
+    stat at 34,20 element Object p1 cp437:0xFB under Empty color 0x0E
     oop
 @Pump
 #end
@@ -784,7 +784,7 @@ It appears to be a pump
 #end
 
     end
-    stat at 31,25 element Object p1 cp437:0xB0 p2 0 step idle under Fake color 0x70
+    stat at 31,25 element Object p1 cp437:0xB0 under Fake color 0x70
     oop
 @Flood
 #cycle 15
@@ -796,7 +796,7 @@ It appears to be a pump
 #restart
 #end
 :bye
-As you fall in the water, you are unable 
+As you fall in the water, you are unable
 to find your oxygen tank in the darkness
 of the capsule. Sadly, you drown.
 #endgame
@@ -805,127 +805,127 @@ of the capsule. Sadly, you drown.
 #end
 
     end
-    stat at 30,25 element Object p1 cp437:0xB0 p2 0 step idle under Fake color 0x70
+    stat at 30,25 element Object p1 cp437:0xB0 under Fake color 0x70
     oop
 #bind flood
 
     end
-    stat at 28,25 element Object p1 cp437:0xB0 p2 0 step idle under Empty color 0x0E
+    stat at 28,25 element Object p1 cp437:0xB0 under Empty color 0x0E
     oop
 #bind flood
 
     end
-    stat at 27,25 element Object p1 cp437:0xB0 p2 0 step idle under Empty color 0x0E
+    stat at 27,25 element Object p1 cp437:0xB0 under Empty color 0x0E
     oop
 #bind flood
 
     end
-    stat at 26,25 element Object p1 cp437:0xB0 p2 0 step idle under Empty color 0x0E
+    stat at 26,25 element Object p1 cp437:0xB0 under Empty color 0x0E
     oop
 #bind flood
 
     end
-    stat at 25,25 element Object p1 cp437:0xB0 p2 0 step idle under Empty color 0x0E
+    stat at 25,25 element Object p1 cp437:0xB0 under Empty color 0x0E
     oop
 #bind flood
 
     end
-    stat at 24,25 element Object p1 cp437:0xB0 p2 0 step idle under Empty color 0x0E
+    stat at 24,25 element Object p1 cp437:0xB0 under Empty color 0x0E
     oop
 #bind flood
 
     end
-    stat at 23,25 element Object p1 cp437:0xB0 p2 0 step idle under Empty color 0x0E
+    stat at 23,25 element Object p1 cp437:0xB0 under Empty color 0x0E
     oop
 #bind flood
 
     end
-    stat at 22,25 element Object p1 cp437:0xB0 p2 0 step idle under Empty color 0x0E
+    stat at 22,25 element Object p1 cp437:0xB0 under Empty color 0x0E
     oop
 #bind flood
 
     end
-    stat at 21,25 element Object p1 cp437:0xB0 p2 0 step idle under Empty color 0x0E
+    stat at 21,25 element Object p1 cp437:0xB0 under Empty color 0x0E
     oop
 #bind flood
 
     end
-    stat at 20,25 element Object p1 cp437:0xB0 p2 0 step idle under Empty color 0x0E
+    stat at 20,25 element Object p1 cp437:0xB0 under Empty color 0x0E
     oop
 #bind flood
 
     end
-    stat at 19,25 element Object p1 cp437:0xB0 p2 0 step idle under Empty color 0x0E
+    stat at 19,25 element Object p1 cp437:0xB0 under Empty color 0x0E
     oop
 #bind flood
 
     end
-    stat at 29,25 element Object p1 cp437:0xB0 p2 0 step idle under Empty color 0x70
+    stat at 29,25 element Object p1 cp437:0xB0 under Empty color 0x70
     oop
 #bind flood
 
     end
-    stat at 32,25 element Object p1 cp437:0xB0 p2 0 step idle under Fake color 0x70
+    stat at 32,25 element Object p1 cp437:0xB0 under Fake color 0x70
     oop
 #bind flood
 
     end
-    stat at 33,25 element Object p1 cp437:0xB0 p2 0 step idle under Fake color 0x70
+    stat at 33,25 element Object p1 cp437:0xB0 under Fake color 0x70
     oop
 #bind flood
 
     end
-    stat at 34,25 element Object p1 cp437:0xB0 p2 0 step idle under Fake color 0x70
+    stat at 34,25 element Object p1 cp437:0xB0 under Fake color 0x70
     oop
 #bind flood
 
     end
-    stat at 35,25 element Object p1 cp437:0xB0 p2 0 step idle under Fake color 0x70
+    stat at 35,25 element Object p1 cp437:0xB0 under Fake color 0x70
     oop
 #bind flood
 
     end
-    stat at 36,25 element Object p1 cp437:0xB0 p2 0 step idle under Fake color 0x70
+    stat at 36,25 element Object p1 cp437:0xB0 under Fake color 0x70
     oop
 #bind flood
 
     end
-    stat at 37,25 element Object p1 cp437:0xB0 p2 0 step idle under Fake color 0x70
+    stat at 37,25 element Object p1 cp437:0xB0 under Fake color 0x70
     oop
 #bind flood
 
     end
-    stat at 38,25 element Object p1 cp437:0xB0 p2 0 step idle under Fake color 0x70
+    stat at 38,25 element Object p1 cp437:0xB0 under Fake color 0x70
     oop
 #bind flood
 
     end
-    stat at 39,25 element Object p1 cp437:0xB0 p2 0 step idle under Fake color 0x70
+    stat at 39,25 element Object p1 cp437:0xB0 under Fake color 0x70
     oop
 #bind flood
 
     end
-    stat at 40,25 element Object p1 cp437:0xB0 p2 0 step idle under Fake color 0x70
+    stat at 40,25 element Object p1 cp437:0xB0 under Fake color 0x70
     oop
 #bind flood
 
     end
-    stat at 41,25 element Object p1 cp437:0xB0 p2 0 step idle under Fake color 0x70
+    stat at 41,25 element Object p1 cp437:0xB0 under Fake color 0x70
     oop
 #bind flood
 
     end
-    stat at 42,25 element Object p1 cp437:0xB0 p2 0 step idle under Fake color 0x70
+    stat at 42,25 element Object p1 cp437:0xB0 under Fake color 0x70
     oop
 #bind flood
 
     end
-    stat at 43,25 element Object p1 cp437:0xB0 p2 0 step idle under Fake color 0x70
+    stat at 43,25 element Object p1 cp437:0xB0 under Fake color 0x70
     oop
 #bind flood
 
     end
-    stat at 31,4 element Object p1 cp437:0xC4 p2 0 step idle under Empty color 0x0F
+    stat at 31,4 element Object p1 cp437:0xC4 under Empty color 0x0F
     oop
 @Power
 #end
@@ -935,9 +935,9 @@ $°°°°°±±±±²²²²POWER GENERATED²²²²±±±±°°°°°
 Working at Minimum power. Please choose
 a function to power:
 
-!a; Pump
-!b; Computer
-!c; Warm-up Engines
+!a;Pump
+!b;Computer
+!c;Warm-up Engines
 #end
 :a
 Pump is now in full operation.
@@ -956,10 +956,10 @@ There is not enough power to do this.
 #end
 
     end
-    stat at 31,7 element Object p1 cp437:0xC4 p2 0 step idle under Empty color 0x0F
-    stat at 31,8 element Object p1 cp437:0xC4 p2 0 step idle under Empty color 0x0F
-    stat at 20,1 element Object p1 cp437:0x09 p2 0 step idle under Empty color 0x20
-    stat at 27,10 element Object p1 cp437:0xFB p2 0 step idle under Empty color 0x70
+    stat at 31,7 element Object p1 cp437:0xC4 under Empty color 0x0F
+    stat at 31,8 element Object p1 cp437:0xC4 under Empty color 0x0F
+    stat at 20,1 element Object p1 cp437:0x09 under Empty color 0x20
+    stat at 27,10 element Object p1 cp437:0xFB under Empty color 0x70
     oop
 @Pump
 #end
@@ -971,6 +971,6 @@ It appears to be a pump
 #end
 
     end
-    stat at 42,15 element Passage p1 0 p2 0 p3 board "Underwater2" step idle under Empty color 0x76
+    stat at 42,15 element Passage p3 board "Underwater2" under Empty color 0x76
   end
 end

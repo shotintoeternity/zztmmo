@@ -128,6 +128,16 @@ func validate(worldName, dir string, steps int) (ok bool, reason string) {
 		}
 	}
 
+	// GameStep only redraws tiles that simulation activity touches. Static
+	// boards such as TOWN's title screen can therefore have a valid loaded
+	// board and an entirely blank Screen buffer. Render the final board snapshot
+	// explicitly before applying this validator's render assertion.
+	for y := int16(1); y <= zztgo.BOARD_HEIGHT; y++ {
+		for x := int16(1); x <= zztgo.BOARD_WIDTH; x++ {
+			zztgo.E.BoardDrawTile(x, y)
+		}
+	}
+
 	// Non-empty render check: at least one board cell must be non-blank.
 	for x := 0; x < 60; x++ {
 		for y := 0; y < 25; y++ {

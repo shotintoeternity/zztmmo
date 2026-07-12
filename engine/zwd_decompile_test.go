@@ -5,11 +5,13 @@ import (
 	"fmt"
 	"os"
 	"path/filepath"
+	"regexp"
+	"strings"
 	"testing"
 )
 
 // TestZWDRoundTripTOWN decompiles TOWN.ZZT → ZWD → recompiles → reloads and
-// compares StateHash at step 0 for every board.
+// compares the canonical ZWD representation of every board.
 func TestZWDRoundTripTOWN(t *testing.T) {
 	testZWDRoundTrip(t, "TOWN.ZZT")
 }
@@ -20,6 +22,99 @@ func TestZWDRoundTripCAVES(t *testing.T) {
 
 func TestZWDRoundTripCITY(t *testing.T) {
 	testZWDRoundTrip(t, "CITY.ZZT")
+}
+
+func TestDecompileZWDAuthorableRejectsInvalidHistoricalState(t *testing.T) {
+	world, err := CompileZWDWorld(zwdOneRoomExample)
+	if err != nil {
+		t.Fatal(err)
+	}
+	e := NewEngine()
+	e.Headless = true
+	e.World = world
+	e.BoardOpen(0)
+	e.Board.Info.StartPlayerX = 98
+	e.Board.Info.StartPlayerY = 98
+	e.BoardClose()
+
+	src, diagnostics := DecompileZWDAuthorable(&e.World)
+	if src == "" {
+		t.Fatalf("invalid respawn should be safely omitted, diagnostics: %#v", diagnostics)
+	}
+	if len(diagnostics) == 0 || diagnostics[0].Severity != "warning" {
+		t.Fatalf("diagnostics = %#v, want invalid-respawn warning", diagnostics)
+	}
+	if _, err := CompileZWD(src); err != nil {
+		t.Fatalf("authorable source does not compile: %v", err)
+	}
+}
+
+func TestDecompileZWDAuthorableRefusesUnrepresentableBoard(t *testing.T) {
+	world, err := CompileZWDWorld(zwdOneRoomExample)
+	if err != nil {
+		t.Fatal(err)
+	}
+	e := NewEngine()
+	e.Headless = true
+	e.World = world
+	e.BoardOpen(0)
+	// A second object tile without a stat has no safe interactive semantics.
+	// The authorable exporter must report it rather than emit invalid ZWD.
+	e.Board.Tiles[1][1] = TTile{Element: E_OBJECT, Color: 0x0F}
+	e.BoardClose()
+
+	src, diagnostics := DecompileZWDAuthorable(&e.World)
+	if src != "" {
+		t.Fatal("unrepresentable board unexpectedly returned authorable source")
+	}
+	if src := DecompileZWD(&e.World); src != "" {
+		t.Fatal("DecompileZWD unexpectedly returned non-authorable source")
+	}
+	for _, diagnostic := range diagnostics {
+		if diagnostic.Severity == "error" {
+			return
+		}
+	}
+	t.Fatalf("diagnostics = %#v, want an error", diagnostics)
+}
+
+// TestLLMWorldExamplesCompile is the corpus gate for M12.6. Each committed
+// example is a board fragment, so compile it as a one-board world after
+// neutralizing references that cannot be represented by a standalone board.
+// This tests the authorability of the fragment itself, not the original
+// world's cross-board topology.
+func TestLLMWorldExamplesCompile(t *testing.T) {
+	entries, err := os.ReadDir(filepath.Join("..", "llmworld", "examples"))
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	exitRe := regexp.MustCompile(`(?m)^\s*exits .*$`)
+	passageBoardRe := regexp.MustCompile(`\bp3\s+board\s+"(?:\\.|[^"])*"`)
+	count := 0
+	for _, entry := range entries {
+		if entry.IsDir() || filepath.Ext(entry.Name()) != ".zwd" {
+			continue
+		}
+		count++
+		src, err := os.ReadFile(filepath.Join("..", "llmworld", "examples", entry.Name()))
+		if err != nil {
+			t.Errorf("read %s: %v", entry.Name(), err)
+			continue
+		}
+		section := exitRe.ReplaceAllString(string(src), "  exits north none south none west none east none")
+		section = passageBoardRe.ReplaceAllString(section, "p3 0")
+		doc := "zwd 1\nworld \"CORPUS\"\n\n" + section
+		if _, err := CompileZWD(doc); err != nil {
+			t.Errorf("%s does not compile: %v", entry.Name(), err)
+		}
+	}
+	// The original 200-board corpus included historical boards that cannot be
+	// represented by authorable ZWD. The remaining 125 are regenerated through
+	// DecompileZWDAuthorable; changing that accepted set must be intentional.
+	if count != 125 {
+		t.Fatalf("corpus has %d authorable examples, want 125", count)
+	}
 }
 
 func testZWDRoundTrip(t *testing.T, filename string) {
@@ -36,8 +131,11 @@ func testZWDRoundTrip(t *testing.T, filename string) {
 	// Load the original world.
 	orig := loadTestWorld(t, path)
 
-	// Collect per-board StateHash from the original.
-	origHashes := collectBoardHashes(t, orig)
+	// ZWD deliberately excludes save-game state (world flags/current board and
+	// player runtime fields), raw unnamed elements, and off-board sentinel
+	// stats. Its canonical board sections are therefore the round-trip contract,
+	// rather than StateHash, which includes all of those fields.
+	origBoards := collectCanonicalZWDBoards(t, orig)
 
 	// Decompile.
 	zwd := DecompileZWD(orig)
@@ -67,25 +165,49 @@ func testZWDRoundTrip(t *testing.T, filename string) {
 		t.Fatalf("worldReadFrom on recompiled bytes failed: %v", err)
 	}
 
-	// Collect per-board StateHash from the reloaded world.
-	reloadHashes := collectBoardHashes(t, &reloadE2.World)
+	// Collect the canonical source again after serialize/reload.
+	reloadBoards := collectCanonicalZWDBoards(t, &reloadE2.World)
 
 	// Compare board counts.
-	if len(origHashes) != len(reloadHashes) {
-		t.Fatalf("board count mismatch: orig=%d, reloaded=%d", len(origHashes), len(reloadHashes))
+	if len(origBoards) != len(reloadBoards) {
+		t.Fatalf("board count mismatch: orig=%d, reloaded=%d", len(origBoards), len(reloadBoards))
 	}
 
-	// Compare hashes.
+	// Compare canonical board source. This includes all ZWD-defined board,
+	// tile, stat, and OOP fields while excluding save-game-only state.
 	mismatches := 0
-	for i := range origHashes {
-		if origHashes[i] != reloadHashes[i] {
-			t.Errorf("board %d StateHash mismatch: orig=%016x, reloaded=%016x", i, origHashes[i], reloadHashes[i])
+	for i := range origBoards {
+		if origBoards[i] != reloadBoards[i] {
+			t.Errorf("board %d canonical ZWD mismatch: %s", i, firstZWDTextDifference(origBoards[i], reloadBoards[i]))
 			mismatches++
 			if mismatches >= 5 {
 				t.Fatalf("too many mismatches, stopping")
 			}
 		}
 	}
+}
+
+func collectCanonicalZWDBoards(t *testing.T, world *TWorld) []string {
+	t.Helper()
+	full := DecompileZWD(world)
+	boards := make([]string, world.BoardCount+1)
+	for i := range boards {
+		boards[i] = extractBoardSection(full, i)
+		if boards[i] == "" {
+			t.Fatalf("decompiler omitted board %d", i)
+		}
+	}
+	return boards
+}
+
+func firstZWDTextDifference(want, got string) string {
+	wantLines, gotLines := strings.Split(want, "\n"), strings.Split(got, "\n")
+	for i := 0; i < len(wantLines) && i < len(gotLines); i++ {
+		if wantLines[i] != gotLines[i] {
+			return fmt.Sprintf("line %d = %q, want %q", i+1, gotLines[i], wantLines[i])
+		}
+	}
+	return fmt.Sprintf("line count = %d, want %d", len(gotLines), len(wantLines))
 }
 
 // TestTOWNBoard1DecompiledFixture writes the decompiled TOWN board 1 to
@@ -161,40 +283,6 @@ func loadTestWorld(t *testing.T, path string) *TWorld {
 		t.Fatalf("worldReadFrom %s: %v", path, err)
 	}
 	return &e.World
-}
-
-// collectBoardHashes returns the StateHash at step 0 for every board.
-// Stat[0] (the player) has P1/P2/P3/Cycle/Follower/Leader fields that carry
-// live save-game state, not world-design data. The decompiler intentionally
-// omits these from the stats section (stat[0] is reconstructed from
-// "start player at"), so the compiled world always has them zeroed.
-// Normalize them on the original before hashing so save-state artifacts don't
-// cause spurious round-trip mismatches.
-func collectBoardHashes(t *testing.T, world *TWorld) []uint64 {
-	t.Helper()
-	hashes := make([]uint64, world.BoardCount+1)
-	for i := int16(0); i <= world.BoardCount; i++ {
-		e := NewEngine()
-		e.Headless = true
-		e.VideoInstall()
-		e.InitElementsGame()
-		e.World = *world
-		e.BoardOpen(i)
-		// Zero live-game-state fields on the player stat (stat[0]).
-		// P1/P2/P3 carry save-game state (health pointer, board time, etc.)
-		// and are not world-design data. StepX/StepY hold runtime movement
-		// deltas. Follower/Leader default to -1.
-		// Cycle is intentionally left as-is: the compiler always writes 1.
-		e.Board.Stats[0].P1 = 0
-		e.Board.Stats[0].P2 = 0
-		e.Board.Stats[0].P3 = 0
-		e.Board.Stats[0].StepX = 0
-		e.Board.Stats[0].StepY = 0
-		e.Board.Stats[0].Follower = -1
-		e.Board.Stats[0].Leader = -1
-		hashes[i] = StateHash(e)
-	}
-	return hashes
 }
 
 // extractBoardSection extracts the Nth board section (0-indexed) from ZWD text.

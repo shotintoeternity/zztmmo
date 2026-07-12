@@ -1,6 +1,5 @@
 board "Outro6 (Town top)"
   start player at 60,18
-  respawn at 98,98
   max-shots 255
   dark false
   reenter false
@@ -109,31 +108,31 @@ AAAAAAAAAAAAAAAAAAAAAAkAAAAAAAAAAAAFFFFFFFFFAAAAAAAAAAAAAFFF
   end
 
   stats
-    stat at 41,15 element Object p1 cp437:0xC5 p2 0 step idle under Empty color 0x0F
-    stat at 42,15 element Object p1 cp437:0xDD p2 0 step idle under Water color 0x78
-    stat at 45,15 element Object p1 cp437:0xC5 p2 0 step idle under Empty color 0x0F
-    stat at 46,15 element Object p1 cp437:0xDD p2 0 step idle under Water color 0x78
-    stat at 41,13 element Object p1 cp437:0xC5 p2 0 step idle under Empty color 0x0F
-    stat at 42,13 element Object p1 cp437:0xDD p2 0 step idle under Water color 0x78
-    stat at 45,13 element Object p1 cp437:0xC5 p2 0 step idle under Empty color 0x0F
-    stat at 46,13 element Object p1 cp437:0xDD p2 0 step idle under Water color 0x78
-    stat at 41,11 element Object p1 cp437:0xC5 p2 0 step idle under Empty color 0x0F
-    stat at 42,11 element Object p1 cp437:0xDD p2 0 step idle under Water color 0x78
-    stat at 45,11 element Object p1 cp437:0xC5 p2 0 step idle under Empty color 0x0F
-    stat at 46,11 element Object p1 cp437:0xDD p2 0 step idle under Water color 0x78
-    stat at 41,9 element Object p1 cp437:0xC5 p2 0 step idle under Empty color 0x0F
-    stat at 42,9 element Object p1 cp437:0xDD p2 0 step idle under Water color 0x78
-    stat at 45,9 element Object p1 cp437:0xC5 p2 0 step idle under Empty color 0x0F
-    stat at 46,9 element Object p1 cp437:0xDD p2 0 step idle under Water color 0x78
-    stat at 40,9 element Object p1 cp437:0xDE p2 0 step idle under Water color 0x78
-    stat at 44,9 element Object p1 cp437:0xDE p2 0 step idle under Water color 0x78
-    stat at 40,11 element Object p1 cp437:0xDE p2 0 step idle under Water color 0x78
-    stat at 44,11 element Object p1 cp437:0xDE p2 0 step idle under Water color 0x78
-    stat at 40,13 element Object p1 cp437:0xDE p2 0 step idle under Water color 0x78
-    stat at 44,13 element Object p1 cp437:0xDE p2 0 step idle under Water color 0x78
-    stat at 40,15 element Object p1 cp437:0xDE p2 0 step idle under Water color 0x78
-    stat at 44,15 element Object p1 cp437:0xDE p2 0 step idle under Water color 0x78
-    stat at 43,16 element Object p1 cp437:0xF0 p2 0 step idle under Fake color 0x46
+    stat at 41,15 element Object p1 cp437:0xC5 under Empty color 0x0F
+    stat at 42,15 element Object p1 cp437:0xDD under Water color 0x78
+    stat at 45,15 element Object p1 cp437:0xC5 under Empty color 0x0F
+    stat at 46,15 element Object p1 cp437:0xDD under Water color 0x78
+    stat at 41,13 element Object p1 cp437:0xC5 under Empty color 0x0F
+    stat at 42,13 element Object p1 cp437:0xDD under Water color 0x78
+    stat at 45,13 element Object p1 cp437:0xC5 under Empty color 0x0F
+    stat at 46,13 element Object p1 cp437:0xDD under Water color 0x78
+    stat at 41,11 element Object p1 cp437:0xC5 under Empty color 0x0F
+    stat at 42,11 element Object p1 cp437:0xDD under Water color 0x78
+    stat at 45,11 element Object p1 cp437:0xC5 under Empty color 0x0F
+    stat at 46,11 element Object p1 cp437:0xDD under Water color 0x78
+    stat at 41,9 element Object p1 cp437:0xC5 under Empty color 0x0F
+    stat at 42,9 element Object p1 cp437:0xDD under Water color 0x78
+    stat at 45,9 element Object p1 cp437:0xC5 under Empty color 0x0F
+    stat at 46,9 element Object p1 cp437:0xDD under Water color 0x78
+    stat at 40,9 element Object p1 cp437:0xDE under Water color 0x78
+    stat at 44,9 element Object p1 cp437:0xDE under Water color 0x78
+    stat at 40,11 element Object p1 cp437:0xDE under Water color 0x78
+    stat at 44,11 element Object p1 cp437:0xDE under Water color 0x78
+    stat at 40,13 element Object p1 cp437:0xDE under Water color 0x78
+    stat at 44,13 element Object p1 cp437:0xDE under Water color 0x78
+    stat at 40,15 element Object p1 cp437:0xDE under Water color 0x78
+    stat at 44,15 element Object p1 cp437:0xDE under Water color 0x78
+    stat at 43,16 element Object p1 cp437:0xF0 under Fake color 0x46
     oop
 @Door2
 #cycle 1
@@ -149,7 +148,7 @@ Still can't get in without the key!
 #end
 
     end
-    stat at 44,17 element Object p1 cp437:0xE7 p2 0 step idle under Fake color 0x46
+    stat at 44,17 element Object p1 cp437:0xE7 under Fake color 0x46
     oop
 @Signpost
 #cycle 1
@@ -159,7 +158,7 @@ Still can't get in without the key!
 #end
 
     end
-    stat at 21,3 element Object p1 cp437:0xED p2 0 step idle under Water color 0x78
+    stat at 21,3 element Object p1 cp437:0xED under Water color 0x78
     oop
 @Bucket
 #cycle 1
@@ -169,12 +168,12 @@ A bucket.
 #end
 
     end
-    stat at 7,12 element Object p1 cp437:0xDD p2 0 step idle under Water color 0x78
-    stat at 8,12 element Object p1 cp437:0xC5 p2 0 step idle under Empty color 0x0F
-    stat at 9,12 element Object p1 cp437:0xDE p2 0 step idle under Water color 0x78
-    stat at 12,12 element Object p1 cp437:0xC5 p2 0 step idle under Empty color 0x0F
-    stat at 13,12 element Object p1 cp437:0xDE p2 0 step idle under Water color 0x78
-    stat at 10,13 element Object p1 cp437:0xF0 p2 0 step idle under Fake color 0x46
+    stat at 7,12 element Object p1 cp437:0xDD under Water color 0x78
+    stat at 8,12 element Object p1 cp437:0xC5 under Empty color 0x0F
+    stat at 9,12 element Object p1 cp437:0xDE under Water color 0x78
+    stat at 12,12 element Object p1 cp437:0xC5 under Empty color 0x0F
+    stat at 13,12 element Object p1 cp437:0xDE under Water color 0x78
+    stat at 10,13 element Object p1 cp437:0xF0 under Fake color 0x46
     oop
 @Door
 #cycle 1
@@ -190,13 +189,13 @@ No answer!
 #end
 
     end
-    stat at 23,14 element Object p1 cp437:0xDD p2 0 step idle under Water color 0x78
-    stat at 24,14 element Object p1 cp437:0xC5 p2 0 step idle under Empty color 0x0F
-    stat at 25,14 element Object p1 cp437:0xDE p2 0 step idle under Water color 0x78
-    stat at 27,14 element Object p1 cp437:0xDD p2 0 step idle under Water color 0x78
-    stat at 28,14 element Object p1 cp437:0xC5 p2 0 step idle under Empty color 0x0F
-    stat at 29,14 element Object p1 cp437:0xDE p2 0 step idle under Water color 0x78
-    stat at 26,15 element Object p1 cp437:0x02 p2 0 step idle under Fake color 0x46
+    stat at 23,14 element Object p1 cp437:0xDD under Water color 0x78
+    stat at 24,14 element Object p1 cp437:0xC5 under Empty color 0x0F
+    stat at 25,14 element Object p1 cp437:0xDE under Water color 0x78
+    stat at 27,14 element Object p1 cp437:0xDD under Water color 0x78
+    stat at 28,14 element Object p1 cp437:0xC5 under Empty color 0x0F
+    stat at 29,14 element Object p1 cp437:0xDE under Water color 0x78
+    stat at 26,15 element Object p1 cp437:0x02 under Fake color 0x46
     oop
 @Healer
 #cycle 1
@@ -212,18 +211,18 @@ heals while you could!
 #end 
 
     end
-    stat at 10,22 element Object p1 cp437:0xDD p2 0 step idle under Water color 0x78
-    stat at 11,22 element Object p1 cp437:0xC5 p2 0 step idle under Empty color 0x0F
-    stat at 12,22 element Object p1 cp437:0xDE p2 0 step idle under Water color 0x78
-    stat at 14,22 element Object p1 cp437:0xDD p2 0 step idle under Empty color 0x0F
-    stat at 15,22 element Object p1 cp437:0xC5 p2 0 step idle under Empty color 0x0F
-    stat at 16,22 element Object p1 cp437:0xDE p2 0 step idle under Water color 0x78
-    stat at 34,21 element Object p1 cp437:0x06 p2 0 step idle under Fake color 0x60
-    stat at 36,21 element Object p1 cp437:0x06 p2 0 step idle under Fake color 0x60
-    stat at 38,21 element Object p1 cp437:0x06 p2 0 step idle under Fake color 0x60
-    stat at 48,20 element Object p1 cp437:0xB3 p2 0 step idle under Fake color 0x46
-    stat at 54,20 element Object p1 cp437:0xB3 p2 0 step idle under Fake color 0x46
-    stat at 51,21 element Object p1 cp437:0x23 p2 0 step idle under Empty color 0x0F
+    stat at 10,22 element Object p1 cp437:0xDD under Water color 0x78
+    stat at 11,22 element Object p1 cp437:0xC5 under Empty color 0x0F
+    stat at 12,22 element Object p1 cp437:0xDE under Water color 0x78
+    stat at 14,22 element Object p1 cp437:0xDD under Empty color 0x0F
+    stat at 15,22 element Object p1 cp437:0xC5 under Empty color 0x0F
+    stat at 16,22 element Object p1 cp437:0xDE under Water color 0x78
+    stat at 34,21 element Object p1 cp437:0x06 under Fake color 0x60
+    stat at 36,21 element Object p1 cp437:0x06 under Fake color 0x60
+    stat at 38,21 element Object p1 cp437:0x06 under Fake color 0x60
+    stat at 48,20 element Object p1 cp437:0xB3 under Fake color 0x46
+    stat at 54,20 element Object p1 cp437:0xB3 under Fake color 0x46
+    stat at 51,21 element Object p1 cp437:0x23 under Empty color 0x0F
     oop
 @Shopkeeper
 #cycle 1
@@ -241,14 +240,14 @@ balloons!
 #end
 
     end
-    stat at 13,23 element Object p1 cp437:0xF0 p2 0 step idle under Fake color 0x46
+    stat at 13,23 element Object p1 cp437:0xF0 under Fake color 0x46
     oop
 @Pub
 #cycle 1
 #end
 :touch
-                NOTICE:
-              PUB CLOSED
+NOTICE:
+PUB CLOSED
 
 We are assiduously working to bring you
 more booze, however such things take time
@@ -256,7 +255,7 @@ so we appreciate your patience!
 #end 
 
     end
-    stat at 33,6 element Object p1 cp437:0x02 p2 0 step idle under Fake color 0x66
+    stat at 33,6 element Object p1 cp437:0x02 under Fake color 0x66
     oop
 @Boy
 #cycle 1
@@ -269,7 +268,7 @@ STOP SHOOTING ME, JERK!
 #end
 
     end
-    stat at 17,13 element Object p1 cp437:0x02 p2 0 step idle under Fake color 0x66
+    stat at 17,13 element Object p1 cp437:0x02 under Fake color 0x66
     oop
 @Woman
 #cycle 1
@@ -289,8 +288,8 @@ AAAAAAAHHHH, Ronny! HELP!!!!!!!!!!
 #end
 
     end
-    stat at 11,12 element Object p1 cp437:0xDD p2 0 step idle under Empty color 0x0F
-    stat at 19,13 element Object p1 cp437:0x02 p2 0 step idle under Fake color 0x02
+    stat at 11,12 element Object p1 cp437:0xDD under Empty color 0x0F
+    stat at 19,13 element Object p1 cp437:0x02 under Fake color 0x02
     oop
 @Ronny
 #cycle 1
@@ -306,7 +305,7 @@ WHY WOULD YOU TRY TO KILL ME >_<'
 #end
 
     end
-    stat at 31,19 element Object p1 cp437:0x02 p2 0 step idle under Fake color 0x02
+    stat at 31,19 element Object p1 cp437:0x02 under Fake color 0x02
     oop
 @Man
 #cycle 1
@@ -320,132 +319,132 @@ DAMMIT NOT AGAIN!!!
 #end
 
     end
-    stat at 55,4 element Object p1 cp437:0xFE p2 0 step idle under Fake color 0x22
+    stat at 55,4 element Object p1 cp437:0xFE under Fake color 0x22
     oop
 #bind Balloon
 
     end
-    stat at 60,13 element Object p1 cp437:0xFE p2 0 step idle under Fake color 0x22
+    stat at 60,13 element Object p1 cp437:0xFE under Fake color 0x22
     oop
 #bind Balloon
 
     end
-    stat at 59,11 element Object p1 cp437:0xFE p2 0 step idle under Fake color 0x22
+    stat at 59,11 element Object p1 cp437:0xFE under Fake color 0x22
     oop
 #bind Balloon
 
     end
-    stat at 60,9 element Object p1 cp437:0xFE p2 0 step idle under Fake color 0x22
+    stat at 60,9 element Object p1 cp437:0xFE under Fake color 0x22
     oop
 #bind Balloon
 
     end
-    stat at 58,10 element Object p1 cp437:0xFE p2 0 step idle under Fake color 0x22
+    stat at 58,10 element Object p1 cp437:0xFE under Fake color 0x22
     oop
 #bind Balloon
 
     end
-    stat at 57,8 element Object p1 cp437:0xFE p2 0 step idle under Fake color 0x22
+    stat at 57,8 element Object p1 cp437:0xFE under Fake color 0x22
     oop
 #bind Balloon
 
     end
-    stat at 54,6 element Object p1 cp437:0xFE p2 0 step idle under Fake color 0x22
+    stat at 54,6 element Object p1 cp437:0xFE under Fake color 0x22
     oop
 #bind Balloon
 
     end
-    stat at 55,8 element Object p1 cp437:0xFE p2 0 step idle under Fake color 0x22
+    stat at 55,8 element Object p1 cp437:0xFE under Fake color 0x22
     oop
 #bind Balloon
 
     end
-    stat at 56,10 element Object p1 cp437:0xFE p2 0 step idle under Fake color 0x22
+    stat at 56,10 element Object p1 cp437:0xFE under Fake color 0x22
     oop
 #bind Balloon
 
     end
-    stat at 52,2 element Object p1 cp437:0xFE p2 0 step idle under Fake color 0x22
+    stat at 52,2 element Object p1 cp437:0xFE under Fake color 0x22
     oop
 #bind Balloon
 
     end
-    stat at 53,3 element Object p1 cp437:0xFE p2 0 step idle under Fake color 0x22
+    stat at 53,3 element Object p1 cp437:0xFE under Fake color 0x22
     oop
 #bind Balloon
 
     end
-    stat at 51,1 element Object p1 cp437:0xFE p2 0 step idle under Fake color 0x22
+    stat at 51,1 element Object p1 cp437:0xFE under Fake color 0x22
     oop
 #bind Balloon
 
     end
-    stat at 56,2 element Object p1 cp437:0xFE p2 0 step idle under Fake color 0x22
+    stat at 56,2 element Object p1 cp437:0xFE under Fake color 0x22
     oop
 #bind Balloon
 
     end
-    stat at 54,2 element Object p1 cp437:0xFE p2 0 step idle under Fake color 0x22
+    stat at 54,2 element Object p1 cp437:0xFE under Fake color 0x22
     oop
 #bind Balloon
 
     end
-    stat at 3,4 element Object p1 cp437:0xFE p2 0 step idle under Fake color 0x22
+    stat at 3,4 element Object p1 cp437:0xFE under Fake color 0x22
     oop
 #bind Balloon
 
     end
-    stat at 2,6 element Object p1 cp437:0xFE p2 0 step idle under Fake color 0x22
+    stat at 2,6 element Object p1 cp437:0xFE under Fake color 0x22
     oop
 #bind Balloon
 
     end
-    stat at 3,7 element Object p1 cp437:0xFE p2 0 step idle under Fake color 0x22
+    stat at 3,7 element Object p1 cp437:0xFE under Fake color 0x22
     oop
 #bind Balloon
 
     end
-    stat at 2,9 element Object p1 cp437:0xFE p2 0 step idle under Fake color 0x22
+    stat at 2,9 element Object p1 cp437:0xFE under Fake color 0x22
     oop
 #bind Balloon
 
     end
-    stat at 1,11 element Object p1 cp437:0xFE p2 0 step idle under Fake color 0x22
+    stat at 1,11 element Object p1 cp437:0xFE under Fake color 0x22
     oop
 #bind Balloon
 
     end
-    stat at 3,13 element Object p1 cp437:0xFE p2 0 step idle under Fake color 0x22
+    stat at 3,13 element Object p1 cp437:0xFE under Fake color 0x22
     oop
 #bind Balloon
 
     end
-    stat at 2,14 element Object p1 cp437:0xFE p2 0 step idle under Fake color 0x22
+    stat at 2,14 element Object p1 cp437:0xFE under Fake color 0x22
     oop
 #bind Balloon
 
     end
-    stat at 1,15 element Object p1 cp437:0xFE p2 0 step idle under Fake color 0x22
+    stat at 1,15 element Object p1 cp437:0xFE under Fake color 0x22
     oop
 #bind Balloon
 
     end
-    stat at 4,11 element Object p1 cp437:0xFE p2 0 step idle under Fake color 0x22
+    stat at 4,11 element Object p1 cp437:0xFE under Fake color 0x22
     oop
 #bind Balloon
 
     end
-    stat at 4,5 element Object p1 cp437:0xFE p2 0 step idle under Fake color 0x22
+    stat at 4,5 element Object p1 cp437:0xFE under Fake color 0x22
     oop
 #bind Balloon
 
     end
-    stat at 5,3 element Object p1 cp437:0xFE p2 0 step idle under Fake color 0x22
+    stat at 5,3 element Object p1 cp437:0xFE under Fake color 0x22
     oop
 #bind Balloon
 
     end
-    stat at 6,1 element Object p1 cp437:0xFE p2 0 step idle under Fake color 0x22
+    stat at 6,1 element Object p1 cp437:0xFE under Fake color 0x22
     oop
 @Balloon
 #cycle 1
@@ -460,29 +459,29 @@ resistent to bullets!
 #end
 
     end
-    stat at 7,3 element Object p1 cp437:0xFE p2 0 step idle under Fake color 0x22
+    stat at 7,3 element Object p1 cp437:0xFE under Fake color 0x22
     oop
 #bind Balloon
 
     end
-    stat at 8,2 element Object p1 cp437:0xFE p2 0 step idle under Fake color 0x22
+    stat at 8,2 element Object p1 cp437:0xFE under Fake color 0x22
     oop
 #bind Balloon
 
     end
-    stat at 9,1 element Object p1 cp437:0xFE p2 0 step idle under Fake color 0x22
+    stat at 9,1 element Object p1 cp437:0xFE under Fake color 0x22
     oop
 #bind Balloon
 
     end
-    stat at 54,21 element Object p1 cp437:0xB2 p2 0 step idle under Empty color 0x0F
-    stat at 53,21 element Object p1 cp437:0xB1 p2 0 step idle under Empty color 0x0F
-    stat at 49,21 element Object p1 cp437:0xB1 p2 0 step idle under Empty color 0x0F
-    stat at 8,21 element Object p1 cp437:0xB1 p2 0 step idle under Empty color 0x0F
-    stat at 9,21 element Object p1 cp437:0xB0 p2 0 step idle under Empty color 0x0F
-    stat at 17,21 element Object p1 cp437:0xB0 p2 0 step idle under Empty color 0x0F
-    stat at 18,21 element Object p1 cp437:0xB1 p2 0 step idle under Empty color 0x0F
-    stat at 24,3 element Object p1 cp437:0x02 p2 0 step idle under Fake color 0x02
+    stat at 54,21 element Object p1 cp437:0xB2 under Empty color 0x0F
+    stat at 53,21 element Object p1 cp437:0xB1 under Empty color 0x0F
+    stat at 49,21 element Object p1 cp437:0xB1 under Empty color 0x0F
+    stat at 8,21 element Object p1 cp437:0xB1 under Empty color 0x0F
+    stat at 9,21 element Object p1 cp437:0xB0 under Empty color 0x0F
+    stat at 17,21 element Object p1 cp437:0xB0 under Empty color 0x0F
+    stat at 18,21 element Object p1 cp437:0xB1 under Empty color 0x0F
+    stat at 24,3 element Object p1 cp437:0x02 under Fake color 0x02
     oop
 @Man
 #cycle 1
@@ -518,7 +517,7 @@ OH YEAH?! TAKE THIS!!
 #end
 
     end
-    stat at 25,19 element Object p1 cp437:0x02 p2 0 step idle under Fake color 0x02
+    stat at 25,19 element Object p1 cp437:0x02 under Fake color 0x02
     oop
 @Guy
 :do
@@ -541,7 +540,7 @@ No more dancing for me ...
 #end
 
     end
-    stat at 23,21 element Object p1 cp437:0x02 p2 0 step idle under Fake color 0x02
+    stat at 23,21 element Object p1 cp437:0x02 under Fake color 0x02
     oop
 @Guy
 :do
@@ -565,7 +564,7 @@ to the knee ...
 #end
 
     end
-    stat at 35,15 element Object p1 cp437:0x02 p2 0 step idle under Fake color 0x02
+    stat at 35,15 element Object p1 cp437:0x02 under Fake color 0x02
     oop
 @Boy
 #cycle 1
@@ -580,7 +579,7 @@ Oh sure, shoot me when I'm down!
 #end
 
     end
-    stat at 45,20 element Object p1 cp437:0x02 p2 0 step idle under Fake color 0x02
+    stat at 45,20 element Object p1 cp437:0x02 under Fake color 0x02
     oop
 @Virgil
 #cycle 1
@@ -607,7 +606,7 @@ I'm still wearing my bullet-proof vest!
 #end
 
     end
-    stat at 15,4 element Object p1 cp437:0x02 p2 0 step idle under Fake color 0x02
+    stat at 15,4 element Object p1 cp437:0x02 under Fake color 0x02
     oop
 @Gem Lady
 #cycle 1
@@ -655,7 +654,7 @@ Enjoy your MANY GEMS! Wahahahaha!
 #end
 
     end
-    stat at 57,21 element Object p1 cp437:0xE8 p2 0 step idle under Fake color 0x02
+    stat at 57,21 element Object p1 cp437:0xE8 under Fake color 0x02
     oop
 @Scroll
 #cycle 1
@@ -670,7 +669,7 @@ The party continues to the south!
 #end
 
     end
-    stat at 6,19 element Object p1 cp437:0xDF p2 0 step idle under Fake color 0x02
+    stat at 6,19 element Object p1 cp437:0xDF under Fake color 0x02
     oop
 @ColorChanger
 #cycle 1
@@ -690,7 +689,7 @@ The party continues to the south!
 #do
 
     end
-    stat at 6,18 element Object p1 cp437:0x7F p2 0 step idle under Fake color 0x02
+    stat at 6,18 element Object p1 cp437:0x7F under Fake color 0x02
     oop
 @Thing
 #cycle 1
@@ -702,69 +701,69 @@ celebration!
 #end
 
     end
-    stat at 27,6 element Object p1 cp437:0x7F p2 0 step idle under Fake color 0x02
+    stat at 27,6 element Object p1 cp437:0x7F under Fake color 0x02
     oop
 #bind Thing
 
     end
-    stat at 27,7 element Object p1 cp437:0xDF p2 0 step idle under Fake color 0x02
+    stat at 27,7 element Object p1 cp437:0xDF under Fake color 0x02
     oop
 #bind ColorChanger
 
     end
-    stat at 51,8 element Object p1 cp437:0x7F p2 0 step idle under Fake color 0x02
+    stat at 51,8 element Object p1 cp437:0x7F under Fake color 0x02
     oop
 #bind Thing
 
     end
-    stat at 51,9 element Object p1 cp437:0xDF p2 0 step idle under Fake color 0x02
+    stat at 51,9 element Object p1 cp437:0xDF under Fake color 0x02
     oop
 #bind ColorChanger
 
     end
-    stat at 28,21 element Object p1 cp437:0x7F p2 0 step idle under Fake color 0x02
+    stat at 28,21 element Object p1 cp437:0x7F under Fake color 0x02
     oop
 #bind Thing
 
     end
-    stat at 28,22 element Object p1 cp437:0xDF p2 0 step idle under Fake color 0x02
+    stat at 28,22 element Object p1 cp437:0xDF under Fake color 0x02
     oop
 #bind ColorChanger
 
     end
-    stat at 12,4 element Object p1 cp437:0x7F p2 0 step idle under Fake color 0x02
+    stat at 12,4 element Object p1 cp437:0x7F under Fake color 0x02
     oop
 #bind Thing
 
     end
-    stat at 12,5 element Object p1 cp437:0xDF p2 0 step idle under Fake color 0x02
+    stat at 12,5 element Object p1 cp437:0xDF under Fake color 0x02
     oop
 #bind ColorChanger
 
     end
-    stat at 36,12 element Object p1 cp437:0x7F p2 0 step idle under Fake color 0x02
+    stat at 36,12 element Object p1 cp437:0x7F under Fake color 0x02
     oop
 #bind Thing
 
     end
-    stat at 36,13 element Object p1 cp437:0xDF p2 0 step idle under Fake color 0x02
+    stat at 36,13 element Object p1 cp437:0xDF under Fake color 0x02
     oop
 #bind ColorChanger
 
     end
-    stat at 46,22 element Object p1 cp437:0x7F p2 0 step idle under Fake color 0x02
+    stat at 46,22 element Object p1 cp437:0x7F under Fake color 0x02
     oop
 #bind Thing
 
     end
-    stat at 46,23 element Object p1 cp437:0xDF p2 0 step idle under Fake color 0x02
+    stat at 46,23 element Object p1 cp437:0xDF under Fake color 0x02
     oop
 #bind ColorChanger
 
     end
-    stat at 54,7 element Object p1 cp437:0xB3 p2 0 step idle under Empty color 0x0F
-    stat at 55,9 element Object p1 cp437:0xB3 p2 0 step idle under Empty color 0x0F
-    stat at 53,9 element Object p1 cp437:0x02 p2 0 step idle under Fake color 0x20
+    stat at 54,7 element Object p1 cp437:0xB3 under Empty color 0x0F
+    stat at 55,9 element Object p1 cp437:0xB3 under Empty color 0x0F
+    stat at 53,9 element Object p1 cp437:0x02 under Fake color 0x20
     oop
 @Guy
 #cycle 1
@@ -777,13 +776,13 @@ Why I outta #endgame you for that!!!
 #end
 
     end
-    stat at 55,5 element Object p1 cp437:0xB3 p2 0 step idle under Empty color 0x0F
-    stat at 34,5 element Object p1 cp437:0xFE p2 0 step idle under Empty color 0x0F
+    stat at 55,5 element Object p1 cp437:0xB3 under Empty color 0x0F
+    stat at 34,5 element Object p1 cp437:0xFE under Empty color 0x0F
     oop
 #bind Balloon
 
     end
-    stat at 52,17 element Object p1 cp437:0x02 p2 0 step idle under Fake color 0x02
+    stat at 52,17 element Object p1 cp437:0x02 under Fake color 0x02
     oop
 @Woman
 #cycle 1
@@ -799,7 +798,7 @@ Please, we're trying to celebrate, here!
 #end
 
     end
-    stat at 53,16 element Object p1 cp437:0xFE p2 0 step idle under Empty color 0x0F
+    stat at 53,16 element Object p1 cp437:0xFE under Empty color 0x0F
     oop
 #bind Balloon
 

@@ -84,85 +84,39 @@ dddddddddddddddddddddddddddddddddddddddddddddddddddddddddddd
   end
 
   stats
-    stat at 15,12 element Clockwise p1 0 p2 0 step idle under Empty color 0x09
-    stat at 15,8 element Clockwise p1 0 p2 0 step idle
-    stat at 13,9 element Clockwise p1 0 p2 0 step idle
-    stat at 13,11 element Clockwise p1 0 p2 0 step idle under Empty color 0x09
-    stat at 11,10 element Clockwise p1 0 p2 0 step idle
-    stat at 17,9 element Clockwise p1 0 p2 0 step idle
-    stat at 17,11 element Clockwise p1 0 p2 0 step idle
-    stat at 19,10 element Clockwise p1 0 p2 0 step idle
-    stat at 21,9 element Clockwise p1 0 p2 0 step idle
-    stat at 23,8 element Clockwise p1 0 p2 0 step idle
-    stat at 23,10 element Clockwise p1 0 p2 0 step idle
-    stat at 21,11 element Clockwise p1 0 p2 0 step idle
-    stat at 19,12 element Clockwise p1 0 p2 0 step idle
-    stat at 17,13 element Clockwise p1 0 p2 0 step idle under Empty color 0x09
-    stat at 21,13 element Clockwise p1 0 p2 0 step idle
-    stat at 13,13 element Clockwise p1 0 p2 0 step idle
-    stat at 11,12 element Clockwise p1 0 p2 0 step idle
-    stat at 13,7 element Clockwise p1 0 p2 0 step idle
-    stat at 17,7 element Clockwise p1 0 p2 0 step idle
-    stat at 21,7 element Clockwise p1 0 p2 0 step idle
-    stat at 19,6 element Clockwise p1 0 p2 0 step idle
-    stat at 15,6 element Clockwise p1 0 p2 0 step idle
-    stat at 17,5 element Clockwise p1 0 p2 0 step idle under Empty color 0x0F
-    stat at 19,14 element Clockwise p1 0 p2 0 step idle
-    stat at 17,15 element Clockwise p1 0 p2 0 step idle under Empty color 0x09
-    stat at 9,11 element Clockwise p1 0 p2 0 step idle
-    stat at 9,9 element Clockwise p1 0 p2 0 step idle
-    stat at 7,10 element Clockwise p1 0 p2 0 step idle
-    stat at 25,9 element Clockwise p1 0 p2 0 step idle
-    stat at 5,9 element Clockwise p1 0 p2 0 step idle
-    stat at 9,13 element Clockwise p1 0 p2 0 step idle
-    stat at 11,14 element Clockwise p1 0 p2 0 step idle
-    stat at 13,15 element Clockwise p1 0 p2 0 step idle
-    stat at 15,16 element Clockwise p1 0 p2 0 step idle
-    stat at 7,8 element Clockwise p1 0 p2 0 step idle
-    stat at 9,7 element Clockwise p1 0 p2 0 step idle under Empty color 0x0D
-    stat at 11,6 element Clockwise p1 0 p2 0 step idle under Empty color 0x0D
-    stat at 13,5 element Clockwise p1 0 p2 0 step idle
-    stat at 15,4 element Clockwise p1 0 p2 0 step idle under Empty color 0x0F
-    stat at 5,11 element Clockwise p1 0 p2 0 step idle
-    stat at 25,11 element Clockwise p1 0 p2 0 step idle
-    stat at 23,12 element Clockwise p1 0 p2 0 step idle
-    stat at 19,8 element Clockwise p1 0 p2 0 step idle
-    stat at 11,8 element Clockwise p1 0 p2 0 step idle under Empty color 0x0D
-    stat at 7,12 element Clockwise p1 0 p2 0 step idle
-    stat at 15,14 element Clockwise p1 0 p2 0 step idle
-    stat at 34,18 element Transporter p1 0 p2 0 step west under Empty color 0x0A
-    stat at 29,18 element Transporter p1 0 p2 0 step east under Empty color 0x09
-    stat at 43,16 element Transporter p1 0 p2 0 step north under Empty color 0x0A
-    stat at 6,2 element Transporter p1 0 p2 0 step east under Empty color 0x09
-    stat at 29,3 element Transporter p1 0 p2 0 step south under Empty color 0x09
-    stat at 24,2 element Transporter p1 0 p2 0 step west under Empty color 0x09
-    stat at 26,16 element Transporter p1 0 p2 0 step west under Empty color 0x09
-    stat at 7,16 element Transporter p1 0 p2 0 step east under Empty color 0x09
-    stat at 32,2 element Transporter p1 0 p2 0 step east under Empty color 0x09
-    stat at 52,2 element Transporter p1 0 p2 0 step west under Empty color 0x0A
-    stat at 13,22 element Head step idle under Empty color 0x09
-    stat at 12,22 element Segment p1 0 p2 0 step idle under Empty color 0x09
-    stat at 11,22 element Segment p1 0 p2 0 step idle under Empty color 0x09
-    stat at 40,18 element Head step idle under Empty color 0x0A
-    stat at 39,18 element Segment p1 0 p2 0 step idle under Empty color 0x0A
-    stat at 38,18 element Segment p1 0 p2 0 step idle under Empty color 0x0A
-    stat at 34,4 element Head step idle under Empty color 0x0A
-    stat at 34,5 element Segment p1 0 p2 0 step idle under Empty color 0x0A
-    stat at 34,6 element Segment p1 0 p2 0 step idle under Empty color 0x0A
-    stat at 43,9 element Transporter p1 0 p2 0 step south under Empty color 0x0A
-    stat at 40,4 element Transporter p1 0 p2 0 step west under Empty color 0x0A
-    stat at 32,4 element Transporter p1 0 p2 0 step east under Empty color 0x09
-    stat at 29,8 element Transporter p1 0 p2 0 step north under Empty color 0x09
-    stat at 12,7 element Lion p2 0 step idle under Empty color 0x0D
-    stat at 18,7 element Lion p2 0 step idle under Empty color 0x09
-    stat at 18,13 element Lion p2 0 step idle under Empty color 0x09
-    stat at 11,13 element Lion p2 0 step idle
-    stat at 57,12 element Transporter p1 0 p2 0 step west under Empty color 0x09
-    stat at 53,12 element Transporter p1 0 p2 0 step east under Empty color 0x09
-    stat at 58,9 element Head step idle under Empty color 0x0A
-    stat at 58,8 element Segment p1 0 p2 0 step idle under Empty color 0x0A
-    stat at 58,7 element Segment p1 0 p2 0 step idle under Empty color 0x0A
-    stat at 58,6 element Segment p1 0 p2 0 step idle under Empty color 0x0A
-    stat at 46,15 element Transporter p1 0 p2 0 step south under Empty color 0x0A
+    stat at 34,18 element Transporter step west under Empty color 0x0A
+    stat at 29,18 element Transporter step east under Empty color 0x09
+    stat at 43,16 element Transporter step north under Empty color 0x0A
+    stat at 6,2 element Transporter step east under Empty color 0x09
+    stat at 29,3 element Transporter step south under Empty color 0x09
+    stat at 24,2 element Transporter step west under Empty color 0x09
+    stat at 26,16 element Transporter step west under Empty color 0x09
+    stat at 7,16 element Transporter step east under Empty color 0x09
+    stat at 32,2 element Transporter step east under Empty color 0x09
+    stat at 52,2 element Transporter step west under Empty color 0x0A
+    stat at 13,22 element Head p1 4 p2 4 under Empty color 0x09
+    stat at 12,22 element Segment under Empty color 0x09
+    stat at 11,22 element Segment under Empty color 0x09
+    stat at 40,18 element Head p1 4 p2 4 under Empty color 0x0A
+    stat at 39,18 element Segment under Empty color 0x0A
+    stat at 38,18 element Segment under Empty color 0x0A
+    stat at 34,4 element Head p1 4 p2 4 under Empty color 0x0A
+    stat at 34,5 element Segment under Empty color 0x0A
+    stat at 34,6 element Segment under Empty color 0x0A
+    stat at 43,9 element Transporter step south under Empty color 0x0A
+    stat at 40,4 element Transporter step west under Empty color 0x0A
+    stat at 32,4 element Transporter step east under Empty color 0x09
+    stat at 29,8 element Transporter step north under Empty color 0x09
+    stat at 12,7 element Lion p1 4 under Empty color 0x0D
+    stat at 18,7 element Lion p1 4 under Empty color 0x09
+    stat at 18,13 element Lion p1 4 under Empty color 0x09
+    stat at 11,13 element Lion p1 4
+    stat at 57,12 element Transporter step west under Empty color 0x09
+    stat at 53,12 element Transporter step east under Empty color 0x09
+    stat at 58,9 element Head p1 4 p2 4 under Empty color 0x0A
+    stat at 58,8 element Segment under Empty color 0x0A
+    stat at 58,7 element Segment under Empty color 0x0A
+    stat at 58,6 element Segment under Empty color 0x0A
+    stat at 46,15 element Transporter step south under Empty color 0x0A
   end
 end

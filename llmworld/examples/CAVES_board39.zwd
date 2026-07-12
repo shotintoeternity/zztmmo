@@ -59,95 +59,95 @@ llllllllllaaaaaaaaaaaeeOOTTTTTTTTTOOeeeeaaddaaal############
   end
 
   stats
-    stat at 31,11 element Lion p1 8 p2 0 step idle
-    stat at 32,11 element Lion p1 8 p2 0 step idle
-    stat at 33,11 element Lion p1 8 p2 0 step idle under Empty color 0x0E
-    stat at 33,12 element Lion p1 8 p2 0 step idle under Empty color 0x0D
-    stat at 32,12 element Lion p1 8 p2 0 step idle under Empty color 0x0D
-    stat at 31,12 element Lion p1 8 p2 0 step idle under Empty color 0x0D
-    stat at 30,12 element Lion p1 8 p2 0 step idle under Empty color 0x0D
-    stat at 29,12 element Lion p1 8 p2 0 step idle under Empty color 0x0D
-    stat at 28,12 element Lion p1 8 p2 0 step idle under Empty color 0x09
-    stat at 27,12 element Lion p1 8 p2 0 step idle under Empty color 0x09
-    stat at 27,11 element Lion p1 8 p2 0 step idle under Empty color 0x0E
-    stat at 28,11 element Lion p1 8 p2 0 step idle under Empty color 0x09
-    stat at 29,11 element Lion p1 8 p2 0 step idle
-    stat at 27,10 element Lion p1 8 p2 0 step idle under Empty color 0x09
-    stat at 28,10 element Lion p1 8 p2 0 step idle under Empty color 0x09
-    stat at 29,10 element Lion p1 8 p2 0 step idle
-    stat at 30,10 element Lion p1 8 p2 0 step idle
-    stat at 31,10 element Lion p1 8 p2 0 step idle
-    stat at 32,10 element Lion p1 8 p2 0 step idle
-    stat at 33,10 element Lion p1 8 p2 0 step idle under Empty color 0x0E
-    stat at 34,8 element Head step idle under Empty color 0x0D
-    stat at 35,8 element Segment p1 0 p2 0 step idle under Empty color 0x0D
-    stat at 35,9 element Segment p1 0 p2 0 step idle under Empty color 0x0D
-    stat at 35,11 element Head step idle under Empty color 0x0D
-    stat at 35,12 element Segment p1 0 p2 0 step idle under Empty color 0x0D
-    stat at 35,13 element Segment p1 0 p2 0 step idle
-    stat at 34,14 element Head step idle
-    stat at 33,14 element Segment p1 0 p2 0 step idle
-    stat at 32,14 element Segment p1 0 p2 0 step idle
-    stat at 30,14 element Head step idle under Empty color 0x09
-    stat at 29,14 element Segment p1 0 p2 0 step idle under Empty color 0x09
-    stat at 28,14 element Segment p1 0 p2 0 step idle under Empty color 0x09
-    stat at 26,14 element Head step idle under Empty color 0x09
-    stat at 25,14 element Segment p1 0 p2 0 step idle
-    stat at 25,13 element Segment p1 0 p2 0 step idle
-    stat at 25,11 element Head step idle under Empty color 0x0D
-    stat at 25,10 element Segment p1 0 p2 0 step idle under Empty color 0x09
-    stat at 25,9 element Segment p1 0 p2 0 step idle under Empty color 0x0D
-    stat at 26,8 element Head step idle under Empty color 0x0D
-    stat at 27,8 element Segment p1 0 p2 0 step idle under Empty color 0x0D
-    stat at 28,8 element Segment p1 0 p2 0 step idle under Empty color 0x0D
-    stat at 30,8 element Head step idle under Empty color 0x0D
-    stat at 31,8 element Segment p1 0 p2 0 step idle under Empty color 0x0D
-    stat at 32,8 element Segment p1 0 p2 0 step idle under Empty color 0x0D
-    stat at 37,8 element Bear p2 0 step idle under Empty color 0x0D
-    stat at 37,9 element Bear p2 0 step idle under Empty color 0x0D
-    stat at 37,10 element Bear p2 0 step idle under Empty color 0x0D
-    stat at 37,11 element Bear p2 0 step idle under Empty color 0x0D
-    stat at 37,12 element Bear p2 0 step idle under Empty color 0x0D
-    stat at 37,13 element Bear p2 0 step idle
-    stat at 37,14 element Bear p2 0 step idle
-    stat at 38,14 element Bear p2 0 step idle
-    stat at 38,13 element Bear p2 0 step idle
-    stat at 38,12 element Bear p2 0 step idle under Empty color 0x0D
-    stat at 38,11 element Bear p2 0 step idle under Empty color 0x0D
-    stat at 38,10 element Bear p2 0 step idle under Empty color 0x0D
-    stat at 38,9 element Bear p2 0 step idle under Empty color 0x0D
-    stat at 38,8 element Bear p2 0 step idle under Empty color 0x0D
-    stat at 23,8 element Bear p2 0 step idle under Empty color 0x0D
-    stat at 23,9 element Bear p2 0 step idle under Empty color 0x0D
-    stat at 23,10 element Bear p2 0 step idle under Empty color 0x09
-    stat at 23,11 element Bear p2 0 step idle under Empty color 0x0D
-    stat at 23,12 element Bear p2 0 step idle under Empty color 0x09
-    stat at 23,13 element Bear p2 0 step idle
-    stat at 23,14 element Bear p2 0 step idle
-    stat at 22,14 element Bear p2 0 step idle under Empty color 0x09
-    stat at 22,13 element Bear p2 0 step idle under Empty color 0x09
-    stat at 22,12 element Bear p2 0 step idle under Empty color 0x09
-    stat at 22,11 element Bear p2 0 step idle under Empty color 0x0D
-    stat at 22,10 element Bear p2 0 step idle under Empty color 0x09
-    stat at 22,9 element Bear p2 0 step idle under Empty color 0x0D
-    stat at 22,8 element Bear p2 0 step idle under Empty color 0x0D
-    stat at 26,6 element Tiger p1 8 p2 6 step idle under Empty color 0x0D
-    stat at 27,6 element Tiger p1 8 p2 6 step idle under Empty color 0x0D
-    stat at 28,6 element Tiger p1 8 p2 6 step idle under Empty color 0x0D
-    stat at 29,6 element Tiger p1 8 p2 6 step idle under Empty color 0x0D
-    stat at 30,6 element Tiger p1 8 p2 6 step idle under Empty color 0x0D
-    stat at 31,6 element Tiger p1 8 p2 6 step idle under Empty color 0x0D
-    stat at 32,6 element Tiger p1 8 p2 6 step idle under Empty color 0x0D
-    stat at 33,6 element Tiger p1 8 p2 6 step idle under Empty color 0x0D
-    stat at 34,6 element Tiger p1 8 p2 6 step idle under Empty color 0x0D
-    stat at 34,16 element Tiger p1 8 p2 6 step idle
-    stat at 33,16 element Tiger p1 8 p2 6 step idle
-    stat at 32,16 element Tiger p1 8 p2 6 step idle
-    stat at 31,16 element Tiger p1 8 p2 6 step idle
-    stat at 30,16 element Tiger p1 8 p2 6 step idle
-    stat at 29,16 element Tiger p1 8 p2 6 step idle
-    stat at 28,16 element Tiger p1 8 p2 6 step idle under Empty color 0x09
-    stat at 27,16 element Tiger p1 8 p2 6 step idle
-    stat at 26,16 element Tiger p1 8 p2 6 step idle
+    stat at 31,11 element Lion p1 8
+    stat at 32,11 element Lion p1 8
+    stat at 33,11 element Lion p1 8 under Empty color 0x0E
+    stat at 33,12 element Lion p1 8 under Empty color 0x0D
+    stat at 32,12 element Lion p1 8 under Empty color 0x0D
+    stat at 31,12 element Lion p1 8 under Empty color 0x0D
+    stat at 30,12 element Lion p1 8 under Empty color 0x0D
+    stat at 29,12 element Lion p1 8 under Empty color 0x0D
+    stat at 28,12 element Lion p1 8 under Empty color 0x09
+    stat at 27,12 element Lion p1 8 under Empty color 0x09
+    stat at 27,11 element Lion p1 8 under Empty color 0x0E
+    stat at 28,11 element Lion p1 8 under Empty color 0x09
+    stat at 29,11 element Lion p1 8
+    stat at 27,10 element Lion p1 8 under Empty color 0x09
+    stat at 28,10 element Lion p1 8 under Empty color 0x09
+    stat at 29,10 element Lion p1 8
+    stat at 30,10 element Lion p1 8
+    stat at 31,10 element Lion p1 8
+    stat at 32,10 element Lion p1 8
+    stat at 33,10 element Lion p1 8 under Empty color 0x0E
+    stat at 34,8 element Head p1 4 p2 4 under Empty color 0x0D
+    stat at 35,8 element Segment under Empty color 0x0D
+    stat at 35,9 element Segment under Empty color 0x0D
+    stat at 35,11 element Head p1 4 p2 4 under Empty color 0x0D
+    stat at 35,12 element Segment under Empty color 0x0D
+    stat at 35,13 element Segment
+    stat at 34,14 element Head p1 4 p2 4
+    stat at 33,14 element Segment
+    stat at 32,14 element Segment
+    stat at 30,14 element Head p1 4 p2 4 under Empty color 0x09
+    stat at 29,14 element Segment under Empty color 0x09
+    stat at 28,14 element Segment under Empty color 0x09
+    stat at 26,14 element Head p1 4 p2 4 under Empty color 0x09
+    stat at 25,14 element Segment
+    stat at 25,13 element Segment
+    stat at 25,11 element Head p1 4 p2 4 under Empty color 0x0D
+    stat at 25,10 element Segment under Empty color 0x09
+    stat at 25,9 element Segment under Empty color 0x0D
+    stat at 26,8 element Head p1 4 p2 4 under Empty color 0x0D
+    stat at 27,8 element Segment under Empty color 0x0D
+    stat at 28,8 element Segment under Empty color 0x0D
+    stat at 30,8 element Head p1 4 p2 4 under Empty color 0x0D
+    stat at 31,8 element Segment under Empty color 0x0D
+    stat at 32,8 element Segment under Empty color 0x0D
+    stat at 37,8 element Bear under Empty color 0x0D
+    stat at 37,9 element Bear under Empty color 0x0D
+    stat at 37,10 element Bear under Empty color 0x0D
+    stat at 37,11 element Bear under Empty color 0x0D
+    stat at 37,12 element Bear under Empty color 0x0D
+    stat at 37,13 element Bear
+    stat at 37,14 element Bear
+    stat at 38,14 element Bear
+    stat at 38,13 element Bear
+    stat at 38,12 element Bear under Empty color 0x0D
+    stat at 38,11 element Bear under Empty color 0x0D
+    stat at 38,10 element Bear under Empty color 0x0D
+    stat at 38,9 element Bear under Empty color 0x0D
+    stat at 38,8 element Bear under Empty color 0x0D
+    stat at 23,8 element Bear under Empty color 0x0D
+    stat at 23,9 element Bear under Empty color 0x0D
+    stat at 23,10 element Bear under Empty color 0x09
+    stat at 23,11 element Bear under Empty color 0x0D
+    stat at 23,12 element Bear under Empty color 0x09
+    stat at 23,13 element Bear
+    stat at 23,14 element Bear
+    stat at 22,14 element Bear under Empty color 0x09
+    stat at 22,13 element Bear under Empty color 0x09
+    stat at 22,12 element Bear under Empty color 0x09
+    stat at 22,11 element Bear under Empty color 0x0D
+    stat at 22,10 element Bear under Empty color 0x09
+    stat at 22,9 element Bear under Empty color 0x0D
+    stat at 22,8 element Bear under Empty color 0x0D
+    stat at 26,6 element Tiger p1 8 p2 6 under Empty color 0x0D
+    stat at 27,6 element Tiger p1 8 p2 6 under Empty color 0x0D
+    stat at 28,6 element Tiger p1 8 p2 6 under Empty color 0x0D
+    stat at 29,6 element Tiger p1 8 p2 6 under Empty color 0x0D
+    stat at 30,6 element Tiger p1 8 p2 6 under Empty color 0x0D
+    stat at 31,6 element Tiger p1 8 p2 6 under Empty color 0x0D
+    stat at 32,6 element Tiger p1 8 p2 6 under Empty color 0x0D
+    stat at 33,6 element Tiger p1 8 p2 6 under Empty color 0x0D
+    stat at 34,6 element Tiger p1 8 p2 6 under Empty color 0x0D
+    stat at 34,16 element Tiger p1 8 p2 6
+    stat at 33,16 element Tiger p1 8 p2 6
+    stat at 32,16 element Tiger p1 8 p2 6
+    stat at 31,16 element Tiger p1 8 p2 6
+    stat at 30,16 element Tiger p1 8 p2 6
+    stat at 29,16 element Tiger p1 8 p2 6
+    stat at 28,16 element Tiger p1 8 p2 6 under Empty color 0x09
+    stat at 27,16 element Tiger p1 8 p2 6
+    stat at 26,16 element Tiger p1 8 p2 6
   end
 end
