@@ -141,64 +141,20 @@ func (s *WebSocketServer) Tick(ctx context.Context) {
 	// removed on this same tick goroutine (M13.2).
 	s.expireDetached()
 
+	// Every hosted world — including the default instance — ticks through the
+	// same WorldInstance.Tick path under its own inst.mu. The default used to be
+	// stepped by a separate "legacy" block under s.mu, which meant its RoomManager
+	// was guarded by two different mutexes depending on the code path (s.mu when
+	// stepping, inst.mu on join/leave/detach); that split was M13.4's race
+	// (DrainPlayerEvents from Tick under s.mu vs handleReadLoopExit under inst.mu).
+	// With one lock per instance, the tick and every join/leave/detach on the same
+	// RoomManager are mutually exclusive.
 	s.mu.Lock()
-	// Legacy tick for compatibility
-	if len(s.clients) > 0 {
-		inputs := s.inputs
-		s.inputs = make(map[PlayerID]PlayerInput)
-		diffs := safeStepDiffs("legacy", s.RoomManager, inputs)
-		clients := make(map[PlayerID]*webSocketClient, len(s.clients))
-		messages := make(map[PlayerID]interface{}, len(diffs))
-		for playerID, client := range s.clients {
-			clients[playerID] = client
-		}
-		for playerID, diff := range diffs {
-			client := s.clients[playerID]
-			if client == nil {
-				continue
-			}
-			if client.boardID != 0 && client.boardID != diff.BoardID {
-				snapshot, ok := s.RoomManager.Snapshot(playerID)
-				if ok {
-					client.boardID = snapshot.BoardID
-					snapshot.Events = append(snapshot.Events, ProtocolEvents(s.RoomManager.DrainPlayerEvents(playerID))...)
-					messages[playerID] = BoardChangeMessage{Type: MessageTypeBoardChange, Snapshot: snapshot}
-					continue
-				}
-			}
-			client.boardID = diff.BoardID
-			diff.Events = append(diff.Events, ProtocolEvents(s.RoomManager.DrainPlayerEvents(playerID))...)
-			messages[playerID] = diff
-		}
-		for _, quit := range s.RoomManager.DrainQuits() {
-			if s.clients[quit.PlayerID] == nil {
-				continue
-			}
-			messages[quit.PlayerID] = s.quitOutcome(s.RoomManager, quit)
-		}
-		s.mu.Unlock()
-
-		for playerID, message := range messages {
-			client := clients[playerID]
-			if client != nil {
-				_ = client.write(ctx, message)
-			}
-		}
-		s.mu.Lock()
-	}
-
-	// Dynamic instances tick
 	var instances []*WorldInstance
 	var titles []*TitleSim
 	for _, inst := range s.Instances {
-		// Every world's title board advances, including the default instance's,
-		// which the room loop above may already have stepped. They are separate
-		// engines; the title sim is nobody's room.
 		if inst.Title != nil {
 			titles = append(titles, inst.Title)
-		}
-		if len(s.clients) > 0 && inst.RoomManager == s.RoomManager {
-			continue
 		}
 		instances = append(instances, inst)
 	}
@@ -1198,14 +1154,6 @@ func (inst *WorldInstance) setInput(s *WebSocketServer, playerID PlayerID, input
 		inst.Inputs[playerID] = input
 	}
 	inst.mu.Unlock()
-
-	if inst.RoomManager == s.RoomManager {
-		s.mu.Lock()
-		if _, ok := s.clients[playerID]; ok {
-			s.inputs[playerID] = input
-		}
-		s.mu.Unlock()
-	}
 }
 
 // mintResumeTokenLocked returns a resume token for playerID, reusing the

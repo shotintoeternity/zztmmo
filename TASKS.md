@@ -975,7 +975,7 @@ only: no simulation change, replay fixture unchanged throughout.
   file is skipped with a log line, not a boot failure; `-fresh` skips
   restore; `go test ./...` green; replay fixture unchanged.
 
-- [ ] **M13.4 — Kill the room-lifecycle race; make `-race` a required CI
+- [x] **M13.4 — Kill the room-lifecycle race; make `-race` a required CI
   job.** `go test -race ./...` fails `TestWebSocketServerTwentyBotSoak`
   (recorded 2026-07-10, M7.3 entry): an HTTP disconnect path (`ServeHTTP` →
   `removeClientFromInstance` `websocket_server.go:1038` → `LeavePlayer`

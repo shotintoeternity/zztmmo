@@ -27,10 +27,9 @@ jobs:
   engine-race:
     runs-on: ubuntu-latest
     timeout-minutes: 30
-    # Known race: TestWebSocketServerTwentyBotSoak fails under -race
-    # (NOTES.md 2026-07-10, M7.3 entry). M13.4 fixes the race and removes
-    # this continue-on-error, making the job required.
-    continue-on-error: true
+    # Required job: the default-instance room-lifecycle race is fixed (M13.4,
+    # NOTES.md 2026-07-12). The whole world ticks through one lock per instance,
+    # so `go test -race ./...` must stay green.
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-go@v5

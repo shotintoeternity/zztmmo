@@ -26,7 +26,7 @@ func TestWebSocketServerJoinInputDiff(t *testing.T) {
 
 	ctx, cancel := context.WithCancel(context.Background())
 	defer cancel()
-	go server.Run(ctx)
+	runServerAsync(t, ctx, server)
 
 	httpServer := httptest.NewServer(server)
 	defer httpServer.Close()
@@ -261,7 +261,7 @@ func TestWebSocketServerBoardEdgeSendsBoardChange(t *testing.T) {
 
 	ctx, cancel := context.WithCancel(context.Background())
 	defer cancel()
-	go server.Run(ctx)
+	runServerAsync(t, ctx, server)
 
 	httpServer := httptest.NewServer(server)
 	defer httpServer.Close()
@@ -338,7 +338,7 @@ func TestWebSocketServerTwoClientsSeeAndFight(t *testing.T) {
 
 	ctx, cancel := context.WithCancel(context.Background())
 	defer cancel()
-	go server.Run(ctx)
+	runServerAsync(t, ctx, server)
 
 	httpServer := httptest.NewServer(server)
 	defer httpServer.Close()
@@ -384,7 +384,7 @@ func TestWebSocketServerMultiplayerSmokePickupTransferHUD(t *testing.T) {
 
 	ctx, cancel := context.WithCancel(context.Background())
 	defer cancel()
-	go server.Run(ctx)
+	runServerAsync(t, ctx, server)
 
 	httpServer := httptest.NewServer(server)
 	defer httpServer.Close()
@@ -629,6 +629,22 @@ func TestPlayerInputPastBoardSentinelDoesNotPanic(t *testing.T) {
 	setup.GameStepWithInputs(map[int16]PlayerInput{
 		0: {DeltaX: 1, Key: KEY_RIGHT},
 	})
+}
+
+// runServerAsync starts server.Run in a goroutine and registers a cleanup that
+// waits for it to return, so a server's tick goroutine never outlives its test
+// and leaks into the next one. A leaked ticker reads the package-global
+// ElementDefs that the next test's WorldCreate rewrites — a -count race the
+// detector flags (M13.4, see NOTES.md). The caller's own `defer cancel()` fires
+// before test cleanups, so it unblocks Run; this helper only joins it.
+func runServerAsync(t *testing.T, ctx context.Context, server *WebSocketServer) {
+	t.Helper()
+	done := make(chan struct{})
+	go func() {
+		defer close(done)
+		server.Run(ctx)
+	}()
+	t.Cleanup(func() { <-done })
 }
 
 func joinTestClient(t *testing.T, ctx context.Context, serverURL, name string) (*websocket.Conn, SnapshotMessage) {

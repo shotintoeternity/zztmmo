@@ -383,7 +383,7 @@ func TestM42CommandKeyOverWebSocket(t *testing.T) {
 
 	ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
 	defer cancel()
-	go server.Run(ctx)
+	runServerAsync(t, ctx, server)
 
 	httpServer := httptest.NewServer(server)
 	defer httpServer.Close()

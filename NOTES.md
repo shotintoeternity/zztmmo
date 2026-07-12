@@ -1767,3 +1767,72 @@ restore in a recover, because a garbage board length can reach a `make` and pani
 
 **Occupancy refusal at boot is vacuous** — `RestoreSnapshot` refuses while a room
 is occupied, but at boot nobody has joined, so restore always proceeds.
+
+## 2026-07-12 — M13.4 room-lifecycle race: the pair, the fix, the leftovers
+
+**The racing pair the detector actually reported** (not the pair the spec
+guessed at). Both sides call `RoomManager.DrainPlayerEvents` on the **default
+instance's** RoomManager:
+* tick goroutine — `WebSocketServer.Tick` → the legacy `s.mu` block →
+  `DrainPlayerEvents` (was `websocket_server.go:170`), holding `s.mu`;
+* HTTP disconnect goroutine — `handleReadLoopExit` → `DrainPlayerEvents`
+  (`websocket_server.go:1323`, clearing pending events on detach per M13.2
+  decision 2), holding `inst.mu`.
+
+Root cause is the **default-instance dual-mutex split**: the default instance is
+the only one whose RoomManager was stepped by a separate "legacy" tick block
+under `s.mu`, while every *other* access to that same RoomManager (join, leave,
+detach, input) holds `inst.mu`. Two mutexes guarding one RoomManager never
+exclude each other. Every non-default instance was already correct — its
+`WorldInstance.Tick` and its `handleReadLoopExit` both hold `inst.mu`, so they
+are mutually exclusive. The join path (`JoinPlayer` under `inst.mu`) raced the
+legacy tick the same way; the detector only happened to catch `DrainPlayerEvents`
+first.
+
+**Fix (fewer lock orderings, not more locks — the spec's stated preference):**
+retire the legacy `s.mu` room-stepping block entirely and tick the default
+instance through `WorldInstance.Tick` under `inst.mu`, exactly like every other
+hosted world. After this the default RoomManager is touched under one lock
+(`inst.mu`) on every path, so tick vs join/leave/detach are mutually exclusive by
+construction. This is a targeted slice of M14.1's "one instance model" collapse.
+The now-orphaned `s.inputs` mirror write in `inst.setInput` was removed (nothing
+drained it once the legacy tick was gone — it would have leaked, and the soak
+test caps alloc growth). `s.clients` stays maintained; the soak test still reads
+it to count active clients, and it is connection state consistently under `s.mu`,
+never part of the race. The dead legacy `s.*` methods
+(`s.setInput`/`s.submitQuitReply`/`s.submitHighScoreName`/`s.submitSaveFilename`/
+`s.removeClient`, all zero-callers) were left in place for M14.1 to delete with
+the rest of the default-instance special case; they cannot race because nothing
+calls them. No mutex was added to `Engine`; `go vet` copylocks stays clean.
+
+**Second distinct race found while running `-race` (fixed here, test-only):**
+several tests launched `go server.Run(ctx)` with only `defer cancel()` and never
+joined it, so a server's tick goroutine outlived its test and leaked into the
+next one, where it read the package-global `ElementDefs` that the next test's
+`WorldCreate → InitElementsGame → InitElementDefs` (`elements.go:1548`) rewrites —
+a `-count`-back-to-back race. Fixed with a `runServerAsync(t, ctx, server)` test
+helper that joins the goroutine in `t.Cleanup` (the caller's `defer cancel()`
+still fires first and unblocks `Run`). Applied to all five launch sites.
+
+**Third distinct race — pre-existing, NOT fixed here, filed per the spec.**
+`ElementDefs` is a package-level global (`gamevars.go:415`) that
+`(*Engine).InitElementDefs` rewrites, and it is read as a global in thousands of
+sim sites. Any `InitElementsGame` re-init therefore writes shared state. In
+production the live one is **ZWD generation**: `preprocessZWDGridWithWarnings`
+(`generation.go:907`) and the ZWD compile/decompile paths (`zwd.go:33,117`,
+`zwd_decompile.go:50,507`) each spin up a throwaway `NewEngine()` and call
+`init.InitElementsGame()`, which — because `ElementDefs` is not per-engine —
+writes the global while hosted rooms tick and read it. `WorldLoad` (`game.go:660`)
+does **not** re-init, so on-demand world *load* is safe; only world *create* and
+the generation/ZWD paths re-init. The write is value-benign (InitElementDefs is a
+pure function of constants, so the bytes are identical every time) but still a
+data race under Go's memory model. No test triggers it after the goroutine-leak
+fix, so the `-race` job is green; the proper fix (a `sync.Once` init, or moving
+`ElementDefs` onto the Engine) is a large mechanical change across every read
+site and belongs to a future task (natural fit with M14.0/M14.1's world-scope
+seam), not M13.4.
+
+**Verification:** `go test -race ./...` run 5× over the whole module, plus 6×
+`-count=3` engine-only and ~24 hammered soak/smoke iterations — 0 races, 0
+failures. Server-layer only; `StateHash`, serialization, and the replay fixture
+are untouched. `engine-race` loses its `continue-on-error` and is now required.
