@@ -368,11 +368,14 @@ func (s *EditorSession) ProgramText(member *webSocketClient, statId int16) (Edit
 		if def.ParamTextName == "" {
 			return
 		}
+		labels, warnings := e.OopAnalyze(statId)
 		reply = EditorProgramMessage{
-			Type:   MessageTypeEditorProgramText,
-			StatID: statId,
-			Prompt: def.ParamTextName,
-			Lines:  editorProgramLines(e, statId),
+			Type:     MessageTypeEditorProgramText,
+			StatID:   statId,
+			Prompt:   def.ParamTextName,
+			Lines:    editorProgramLines(e, statId),
+			Labels:   labels,
+			Warnings: warnings,
 		}
 	})
 	return reply, err

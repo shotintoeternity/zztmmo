@@ -1351,3 +1351,48 @@ step), `TestWebSocketServerEditorSaveRefusesOccupiedWorld`,
 `TestWebSocketServerEditorSaveRejectsTraversalName`, and the wire-level
 `TestWebSocketEditorWorldSaveAndDownload`. Browser: `S` in the editor opens a
 World menu (Save and publish / Download .ZZT / Upload .ZZT).
+
+## M5.7 — ZZT-OOP authoring aids (2026-07-11)
+
+`OopAnalyze(statId)` (`oop_authoring.go`) is an advisory static pass over one
+object/scroll program for the browser code editor. It returns the object's
+`:labels` (with 0-based line numbers, for navigation) and warnings, and it reuses
+the runtime tokenizer primitives — `OopReadChar`/`OopReadWord`/`OopSkipLine`/
+`OopReadLineToEnd` and `OopFindLabel`, the same calls `OopExecute` makes — rather
+than a second parser, so what it reports is exactly what the engine resolves at
+run time. It never executes, never mutates board state, and never blocks a save.
+
+**What it flags:**
+- `#send`/`#zap`/`#restore LABEL` where `OopFindLabel` cannot resolve LABEL (an
+  unqualified label resolves against this object only; a `Name:label` form
+  iterates named objects — both faithful to `OopSend`).
+- A bare `#word` that is neither a known command nor a local label. The known set
+  is exactly `OopExecute`'s dispatch vocabulary (`oopCommands`); anything else is,
+  in ZZT, an implicit self-`#send`, so `#word` matching a local `:word` is valid
+  and quiet, while a typo warns.
+- A `!label;text` message hyperlink whose label the object does not define
+  (label extraction mirrors `TextWindowSelect`; a leading `-` is a file jump, not
+  a label, and is skipped).
+
+**Decisions / limitations (advisory tool, deliberately conservative):**
+- Warnings and the label list show labels **uppercased**, matching the tokenizer
+  (`OopReadWord` upcases) and how ZZT matches labels case-insensitively.
+- Only the **leading** command per line is classified. A compound
+  `#if cond #send label` validates the `#if` and does not descend into the
+  trailing `#send`, so a bad label inside an `#if` is not flagged. Erring toward
+  fewer false positives; expanding this is future polish.
+- Analysis runs on the **stored** program (on `ProgramText`/open). Since the
+  editor closes on save (vanilla `EditorEditStatText` has no cancel), edited-then-
+  saved warnings appear on reopen. Saving never blocks
+  (`TestEditorSessionProgramAnalysisAndSaveSucceeds` saves a `#send ghost` and it
+  stores; the warning shows on reopen).
+- A shared program (negative `DataLen`) resolves to its source stat first, like
+  `BoardOpen`, so a bound object still lists and validates the real text.
+
+Protocol: `EditorProgramMessage` gained `Labels []OopLabelInfo` and
+`Warnings []OopWarning`. The browser renders them in a right-margin panel beside
+the code-editor window (`renderProgramAidsPanel`, `modal.ts`). Tests:
+`TestOopAnalyze{VendorScript,MissingSendWarns,ZapRestoreAndHyperlink,
+UnknownCommandWarns,ImplicitSelfSendIsValid,KnownCommandsAreQuiet}` and
+`TestEditorSessionProgramAnalysisAndSaveSucceeds`. Replay fixture unchanged
+(analysis is editor-only and never touches the sim).

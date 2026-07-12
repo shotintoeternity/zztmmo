@@ -121,6 +121,11 @@ export type MultiLineEntryModal = {
  * Escape saves — vanilla's EditorEditStatText always rebuilds Data on exit, so
  * there is no cancel. onSubmit receives the final lines to send as a save.
  */
+// OopLabel / OopWarning mirror the server's M5.7 authoring aids: the object's
+// :labels and advisory diagnostics, both tagged with a 0-based program line.
+export type OopLabel = { name: string; line: number };
+export type OopWarning = { line: number; message: string };
+
 export type ProgramEditorModal = {
   kind: "programEditor";
   title: string;
@@ -128,6 +133,10 @@ export type ProgramEditorModal = {
   linePos: number; // 1-based, as in the Pascal
   charPos: number; // 1-based
   insertMode: boolean;
+  // M5.7 authoring aids, computed server-side by the real ZZT-OOP tokenizer and
+  // shown in the right margin. Advisory only; they never block a save.
+  labels: OopLabel[];
+  warnings: OopWarning[];
   onSubmit: (lines: string[]) => void;
 };
 
@@ -212,6 +221,47 @@ function renderProgramEditor(write: WriteText, m: ProgramEditorModal) {
   const cursorY = TEXT_WINDOW_Y + Math.floor(TEXT_WINDOW_HEIGHT / 2) + 1;
   const glyph = charPos <= line.length ? line[charPos - 1] : " ";
   write(charPos + TEXT_WINDOW_X + 3, cursorY, 0x70, glyph);
+  renderProgramAidsPanel(write, m);
+}
+
+// renderProgramAidsPanel is the M5.7 right-margin panel: the object's :labels
+// (with 1-based line numbers, for navigation) over the tokenizer's advisory
+// warnings. It lives in the free columns beside the editor window and is purely
+// informational — the aid never blocks a save.
+const AIDS_PANEL_X = TEXT_WINDOW_X + TEXT_WINDOW_WIDTH + 1; // 56
+const AIDS_PANEL_W = 80 - AIDS_PANEL_X; // 24
+function renderProgramAidsPanel(write: WriteText, m: ProgramEditorModal) {
+  const fit = (s: string) => (s.length > AIDS_PANEL_W ? s.slice(0, AIDS_PANEL_W) : s.padEnd(AIDS_PANEL_W, " "));
+  const bottom = TEXT_WINDOW_Y + TEXT_WINDOW_HEIGHT;
+  for (let y = TEXT_WINDOW_Y; y < bottom; y += 1) {
+    write(AIDS_PANEL_X, y, 0x10, " ".repeat(AIDS_PANEL_W));
+  }
+  let y = TEXT_WINDOW_Y;
+  write(AIDS_PANEL_X, y, 0x1f, fit(" Labels"));
+  y += 1;
+  if (m.labels.length === 0) {
+    write(AIDS_PANEL_X, y, 0x18, fit("  (none)"));
+    y += 1;
+  }
+  for (const label of m.labels) {
+    if (y >= bottom - 3) break;
+    write(AIDS_PANEL_X, y, 0x1e, fit(`  ${label.line + 1}: ${label.name}`));
+    y += 1;
+  }
+  y += 1;
+  if (y < bottom) {
+    write(AIDS_PANEL_X, y, m.warnings.length > 0 ? 0x1c : 0x1f, fit(" Warnings"));
+    y += 1;
+  }
+  if (m.warnings.length === 0 && y < bottom) {
+    write(AIDS_PANEL_X, y, 0x18, fit("  (none)"));
+    y += 1;
+  }
+  for (const warning of m.warnings) {
+    if (y >= bottom) break;
+    write(AIDS_PANEL_X, y, 0x1c, fit(`  L${warning.line + 1} ${warning.message}`));
+    y += 1;
+  }
 }
 
 function renderMultiLineEntry(write: WriteText, m: MultiLineEntryModal) {

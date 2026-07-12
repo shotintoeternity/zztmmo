@@ -814,7 +814,7 @@ and running early. See NOTES.md.)
   through `WorldLoad` with board contents intact (round-trip test); uploading
   a hand-made `.ZZT` works; a traversal filename is rejected, with a test.
 
-- [ ] **M5.7 — ZZT-OOP authoring aids.** Label navigation and validation in
+- [x] **M5.7 — ZZT-OOP authoring aids.** Label navigation and validation in
   the code editor: use the real tokenizer semantics (`OopParseWord` and
   friends in `oop.go` — do not write a second parser) to list `:labels`,
   flag `#send`s to labels that don't exist in the target object, and warn on

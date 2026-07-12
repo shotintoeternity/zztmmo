@@ -208,11 +208,18 @@ type EditorStatSettingsMessage = {
   cells: ScreenCell[];
 };
 
+// OopLabel / OopWarning are the M5.7 authoring aids the server computes with the
+// real ZZT-OOP tokenizer: the object's :labels and advisory diagnostics.
+type OopLabel = { name: string; line: number };
+type OopWarning = { line: number; message: string };
+
 type EditorProgramTextMessage = {
   type: typeof MessageTypeEditorProgramText;
   statId: number;
   prompt: string;
   lines: string[];
+  labels?: OopLabel[];
+  warnings?: OopWarning[];
 };
 
 // EditorBoardDataMessage carries an exported board as base64 .BRD bytes; the
@@ -965,6 +972,8 @@ function applyEditorProgramText(message: EditorProgramTextMessage) {
     linePos: 1,
     charPos: 1,
     insertMode: true,
+    labels: message.labels ?? [],
+    warnings: message.warnings ?? [],
     onSubmit: (lines) => sendEditorProgramSave(statId, lines),
   });
 }

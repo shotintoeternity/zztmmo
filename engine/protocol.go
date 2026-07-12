@@ -238,11 +238,16 @@ type EditorProgramRequestMessage struct {
 // into lines exactly as CopyStatDataToTextWindow does (on carriage returns).
 // Prompt is the element's ParamTextName ("Edit Program" / "Edit text of scroll")
 // so the editor window titles itself the way vanilla does.
+// Labels and Warnings are the M5.7 authoring aids: the object's :labels (for
+// navigation) and advisory diagnostics from OopAnalyze. They are informational
+// only — a program with warnings still saves.
 type EditorProgramMessage struct {
-	Type   string   `json:"type"`
-	StatID int16    `json:"statId"`
-	Prompt string   `json:"prompt"`
-	Lines  []string `json:"lines"`
+	Type     string         `json:"type"`
+	StatID   int16          `json:"statId"`
+	Prompt   string         `json:"prompt"`
+	Lines    []string       `json:"lines"`
+	Labels   []OopLabelInfo `json:"labels,omitempty"`
+	Warnings []OopWarning   `json:"warnings,omitempty"`
 }
 
 // EditorProgramSaveMessage writes an edited program back. The server rebuilds

@@ -27,6 +27,8 @@ function editor(lines) {
     linePos: 1,
     charPos: 1,
     insertMode: true,
+    labels: [],
+    warnings: [],
     submitted: null,
     onSubmit(result) {
       this.submitted = result;
