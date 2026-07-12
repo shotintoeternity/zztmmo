@@ -798,6 +798,283 @@ protocol is positional, so these sit just after M12.5 and before M5.
   minimal board per case above and asserts it compiles + validates after
   preprocess with the expected warning; `go test ./...` green.
 
+## M13 — Ship-shape: hygiene, CI, and service survivability
+
+Goal: protect the game that already works. Added 2026-07-12 (see NOTES.md):
+the replay fixture only guards commits that run it, and the live service can
+still lose every player's run to a crash, a Wi-Fi blip, or a known data race.
+Deliberately positioned before the remaining M12 generation tasks — losing a
+player's evening outranks improving a generated board's palette. Order note
+(2026-07-12): after M13, execute **M12.16** before the remaining M12.15
+slices — procedural repair raises generation *yield*, which the corpus/style
+work then builds on. Every task in this section is presentation/server-layer
+only: no simulation change, replay fixture unchanged throughout.
+
+- [ ] **M13.0 — Working-tree and log hygiene: STARGEN strays, the misplaced
+  engine/NOTES.md, and the stale touch_race_test.go header.** No new code.
+  * `engine/STARGEN.zwd`, `engine/STARGEN.plan.md`, `engine/STARGEN.prompt.txt`
+    are Dream-pipeline outputs sitting untracked at the engine root
+    (verified 2026-07-12). Precedent: the BAKERY trio (`BAKERY.zwd`,
+    `BAKERY.plan.md`, `BAKERY.prompt.txt`) is git-tracked at the same
+    location. Gate before adopting: `CompileZWD` on `STARGEN.zwd` must
+    succeed and the compiled world must pass the M7.5 gate (headless load +
+    200 `GameStep`s, no panic — reuse the validation path
+    `gen_generated_test.go` uses). If it passes, commit the trio like
+    BAKERY's; if it fails, record the exact failure in NOTES.md (it is
+    generation-failure evidence, useful to M12.16) and add `STARGEN.*` to
+    `engine/.gitignore` instead. Never commit a non-compiling `.zwd` as if
+    it were a good example (the M12.6 lesson).
+  * `engine/NOTES.md` (45 lines: the 2026-07-11 Dream failure taxonomy and
+    the M12.12 door/panic-containment entry) is escalation-log content that
+    landed in the wrong file — the project log is the repo-root `NOTES.md`
+    (CLAUDE.md doc map). First check whether root NOTES.md already carries
+    either entry (the taxonomy is cited by M12.13's spec); merge whatever is
+    missing into root NOTES.md as new entries under their original dates,
+    noting they were moved (append-only file — never rewrite around them),
+    then delete `engine/NOTES.md`.
+  * `engine/touch_race_test.go` still claims in its header comments to guard
+    a `#end`/`:touch` tick race; that diagnosis was disproven (Future Tasks
+    "MISDIAGNOSIS" entry — the real cause was ZWD compiler stat-default
+    garbage, since fixed and guarded by `TestZWDObjectDefaultsAreZZTNeutral`
+    in `engine/zwd_test.go`). Rewrite the file's header comment to state
+    what the test actually verifies: an unlocked object (P2=0) runs `:touch`
+    and emits a ScrollEvent on the tick after `OopSend`. Keep the test body.
+    This executes the "Retire/retitle touch_race_test.go" backlog bullet
+    (annotated as folded).
+  DoD: `go test ./...` green; `git status` shows no untracked strays at the
+  engine root; `engine/NOTES.md` gone with its content preserved in root
+  NOTES.md; commit `M13.0: ...`.
+
+- [ ] **M13.1 — CI: a GitHub Actions gate on every push and PR.** Verified
+  2026-07-12: `.github/workflows/` does not exist, so the replay fixture —
+  the project's stated safety net (CLAUDE.md rule 3) — only protects commits
+  whose author remembered to run it. Create `.github/workflows/ci.yml` at the
+  repo root with three jobs:
+  * **engine** — `actions/checkout@v4`, `actions/setup-go@v5` with
+    `go-version: '1.26.x'`. Do NOT use `go-version-file`: `engine/go.mod`
+    says `go 1.16`, which is the language floor `go:embed` required (NOTES.md
+    M12.3 entry), not the toolchain; the baseline was verified on go1.26.5
+    (this file, line 14). Steps, all with `working-directory: engine`:
+    `go build ./...`, `go vet ./...`, `go test ./...`.
+  * **engine-race** — same setup, `go test -race ./...`, with
+    `continue-on-error: true` and a YAML comment citing the known race in
+    `TestWebSocketServerTwentyBotSoak` (NOTES.md 2026-07-10 M7.3 entry).
+    M13.4 removes the `continue-on-error`.
+  * **web** — `actions/setup-node@v4` (LTS), `working-directory: engine/web`.
+    If `engine/web/package-lock.json` does not exist, run `npm install` once
+    locally and COMMIT the lockfile in this task (deterministic CI needs
+    it); the job then uses `npm ci`. Steps: `npm ci`, `npm test` (runs
+    `node test/dream.test.mjs && node test/modal.test.mjs` —
+    `web/package.json` scripts), and `npm run build` (runs `tsc && vite
+    build`, so type errors fail CI).
+  * **Clean-clone proof.** CI runs on a fresh checkout, so every test must
+    pass without untracked local files. `fixtures/TOWN.ZZT` and
+    `engine/BAKERY.zwd` are tracked (verified 2026-07-12); the M7.5 corpus
+    `.ZZT` worlds are NOT (gitignored). Before pushing, prove it locally:
+    `git clone . /tmp/zztmmo-clean && cd /tmp/zztmmo-clean/engine &&
+    go test ./...`. Any test that needs an untracked world must `t.Skip`
+    when the file is absent, following the `testhelpers_test.go:19` pattern
+    — list in NOTES.md every test you had to guard.
+  DoD: the workflow file is committed; a pushed run shows the engine and web
+  jobs green (engine-race may be red-but-allowed); NOTES.md records any skip
+  guards added; `go test ./...` green locally.
+
+- [ ] **M13.2 — Reconnect grace: a dropped WebSocket must not delete the
+  run.** Today the read loop's exit path calls
+  `s.removeClientFromInstance(inst, playerID)` unconditionally
+  (`websocket_server.go:426`; also the join-failure paths at `:325` and
+  `:329`), which calls `RoomManager.LeavePlayer` (`room_manager.go:371`) and
+  removes the player's stat immediately. A browser refresh or a Wi-Fi blip
+  therefore destroys the run — position, keys, score, everything. Backlog
+  item promoted with a full spec.
+  * **Resume token.** Mint on join (`ServeHTTP`'s join path,
+    `websocket_server.go:307-322`): 16 bytes from `crypto/rand`, hex-encoded,
+    stored in a new `inst.ResumeTokens map[string]PlayerID`. Send it to the
+    client by adding `ResumeToken string` (json `resumeToken,omitempty`) to
+    `SnapshotMessage` (`protocol.go:382-393`), set only on the join/resume
+    snapshot. `crypto/rand` is fine here — this is the network layer;
+    CLAUDE.md rule 2 governs simulation state only.
+  * **Detach, don't leave.** On read-loop exit, when the player still
+    exists: remove them from `inst.Clients`/`inst.Inputs` (so broadcast and
+    input application skip them) but do NOT call `LeavePlayer`. Instead set
+    `inst.Detached map[PlayerID]int` = `ReconnectGraceTicks` (new const; 545
+    ticks ≈ 60s at the fixed 110ms tick — count ticks, never wall-clock, so
+    tests can step it deterministically). The stat stays on the board and
+    keeps ticking with zeroed input, exactly like an idle player.
+  * **Expiry runs on the tick goroutine.** `WorldInstance.Tick`
+    (`websocket_server.go:185`) decrements each `Detached` entry under
+    `inst.mu`; at zero it performs today's removal (factor the body of
+    `removeClientFromInstance`, `websocket_server.go:1038`, into a helper the
+    expiry path can call while already holding the lock). Note for M13.4:
+    this moves the leave mutation onto the tick goroutine, which is the
+    shape that race fix wants anyway.
+  * **Resume.** `JoinMessage` (`protocol.go:82-87`) gains
+    `ResumeToken string` (json `resumeToken,omitempty`). If it maps to a
+    detached PlayerID in this instance: reattach — put the new client in
+    `inst.Clients[playerID]`, delete the `Detached` entry, send a fresh full
+    `Snapshot(playerID)`. Unknown or expired token: fall through to a normal
+    fresh join — never an error, never a dead client.
+  * **Decisions to record in NOTES.md before coding** (the M4.3a pattern):
+    (1) a second live connection presenting a token whose player is NOT
+    detached — recommend newest-wins: detach the old socket and hand the
+    stat to the new connection (also the fix for "my tab froze, I opened a
+    new one"); (2) `pendingPlayerEvents` (`room_manager.go:34`) accumulate
+    unboundedly for a detached player because only connected clients drain
+    them (`DrainPlayerEvents`, `room_manager.go:203`) — recommend clearing
+    on detach and accepting the loss (events are presentation-only);
+    (3) a detached player holding a scroll open (`roomPlayer.scrollOpen`)
+    stays frozen until expiry — acceptable, but say so.
+  * **Client.** `web/src/main.ts`: store the token in `sessionStorage` keyed
+    by world name; on an unexpected socket close during play, auto-reconnect
+    with capped backoff, presenting the token; repaint from the resume
+    snapshot. An explicit confirmed quit clears the stored token.
+  DoD: Go tests — (a) disconnect + resume within grace reclaims the same
+  PlayerID/statId with inventory intact (collect a key first, assert it
+  survives); (b) expiry removes the stat, frees the square, and
+  `freezeRoomIfEmpty` still fires when the room empties; (c) an unknown
+  token joins fresh; (d) the second-connection policy. Node-driven test for
+  the client reconnect state machine (the M4.1 pattern). `go test ./...`
+  green; replay fixture unchanged (all changes are server-layer).
+
+- [ ] **M13.3 — Autosave and restore-on-boot.** Verified gap (idea backlog
+  2026-07-10): nothing snapshots automatically — `SaveSnapshot` runs only
+  when a player presses 'S' (`websocket_server.go:745,768`) — so a crash or
+  restart loses every live room. The single worst UX event the service can
+  produce is currently unguarded.
+  * **Cadence.** A `-autosave <seconds>` flag on `cmd/zzt-server` (default
+    60; 0 disables). Drive it from the existing tick loop by counting ticks
+    (`seconds*1000/110`), not a new timer — one clock, deterministic tests.
+    Each firing snapshots every *occupied* instance: `s.DefaultInstance`
+    plus every `s.Instances` entry with `len(inst.Clients) > 0` (empty
+    rooms are already frozen into `rm.world` and have nothing new to say).
+  * **Write path.** `RoomManager.SaveSnapshot(dir, name, playerID)` takes
+    the saving player (their inventory is written into `World.Info`,
+    M4.3a). Autosave has no saver: add an internal variant that writes
+    zero-value inventory and document the choice — the server already
+    ignores those fields on join (M4.3a decision 1). Files go to
+    `SavesDir/autosave/<INSTANCENAME>.SAV`. Instance names already passed
+    `SanitizeSaveName` on their hosting paths, but re-verify each name at
+    save time and skip-with-log rather than guess. Write atomically:
+    create `*.tmp`, then `os.Rename` — a crash mid-write must never corrupt
+    the previous good autosave.
+  * **Restore-on-boot.** At server startup, before serving: for each
+    `SavesDir/autosave/*.SAV` whose name matches a hostable world, restore
+    it as that instance's starting world via the existing
+    `RoomManager.RestoreSnapshot` machinery (its occupancy refusal is
+    vacuous at boot). Record the freshness policy in NOTES.md: an autosave
+    beats the pristine `.ZZT` at boot (that is what crash recovery MEANS);
+    deleting the autosave file is the operator's reset; add a `-fresh` flag
+    that skips restore for a deliberately clean boot.
+  * **Concurrency.** Snapshot from a copy exactly as `SaveSnapshot` already
+    does (M4.3a: "a save never disturbs the game it is a save of"); hold
+    `inst.mu` only long enough to take the copy, never during file I/O.
+  DoD: test — join, collect items, step, fire the autosave seam directly,
+  construct a fresh `WebSocketServer` over the same directories, and assert
+  board contents and flags survived; players are dropped from the snapshot
+  (M4.3a decision 1 — reuse its assertion); a corrupt/truncated autosave
+  file is skipped with a log line, not a boot failure; `-fresh` skips
+  restore; `go test ./...` green; replay fixture unchanged.
+
+- [ ] **M13.4 — Kill the room-lifecycle race; make `-race` a required CI
+  job.** `go test -race ./...` fails `TestWebSocketServerTwentyBotSoak`
+  (recorded 2026-07-10, M7.3 entry): an HTTP disconnect path (`ServeHTTP` →
+  `removeClientFromInstance` `websocket_server.go:1038` → `LeavePlayer`
+  `room_manager.go:371` → `Engine.RemovePlayer`/`RemoveStat`) mutates room
+  engine state while something else reads `StateHash` on the same room.
+  * **Diagnose before fixing.** `removeClientFromInstance` holds `inst.mu`
+    and `WorldInstance.Tick` holds `inst.mu` (`websocket_server.go:186`),
+    but the DEFAULT world runs through `removeClient` (`:1027`) under `s.mu`
+    with `WebSocketServer.Tick` (`:113`) — map exactly which reader/writer
+    pair the race detector reports. It may be the soak test itself calling
+    `StateHash` unlocked; then the production fix is a locked accessor the
+    test uses, not new locking in the tick path. Write the actual pair down
+    in NOTES.md.
+  * **Preferred shape.** Route ALL leaves through the tick goroutine:
+    M13.2's expiry already runs there; make the immediate-leave paths
+    (join-failure cleanup, explicit quit teardown) enqueue onto the same
+    drain instead of mutating from the HTTP goroutine. Fewer lock orderings
+    beats more locks. If M14.1 (one instance model) lands first, this
+    collapses to a single code path.
+  * **Constraints.** No mutex may enter `Engine` simulation state or
+    `StateHash` inputs (M7.3 precedent); `go vet` stays clean (copylocks —
+    Engine must never be copied by value); determinism untouched.
+  * Then run the full `go test -race ./...` at least 5 times; fix or file
+    (NOTES.md) every distinct race reported; remove `continue-on-error`
+    from the M13.1 race job.
+  DoD: `go test -race ./...` green repeatedly; the CI race job is required;
+  NOTES.md names the racing pair that was actually found; replay fixture
+  unchanged.
+
+## M12 continued — world-style adapter and procedural repair (after M13)
+
+(2026-07-12: these tasks sat above M13 before it was inserted; they keep
+their M12 numbering. Execution order within this section: **M12.16 first**,
+then the M12.15 slices — procedural repair raises generation yield, which
+the corpus/style work builds on. The specs below are unchanged.)
+
+- [ ] **M12.16 [ADVISOR] — Error-driven procedural repair layer (compiler
+  self-heals before the LLM).** (Order note 2026-07-12: execute this
+  directly after M13, BEFORE the remaining M12.15 slices — yield first, then
+  style; see NOTES.md. Extended the same day with three folded Future-Tasks
+  bullets, marked below.) Owner priority: maximize what the
+  compiler/decompiler fixes itself before resending to the model — LLM repair
+  rounds are slow, cost tokens, and don't always converge (Saga Archive burned
+  all 3 attempts and blanked to a placeholder). Generalize the ad-hoc procedural
+  fixers (M12.11 undefined-char, M12.13 orphan-glyph, M12.14 dup-key /
+  unknown-field / missing-end) into a first-class **error→fixer dispatch** with a
+  fixpoint loop; the LLM becomes the fallback of last resort. Full design in
+  NOTES.md (2026-07-11). Requirements:
+  * **Typed error codes.** Add a structured `code` (enum of error kinds) to
+    `zwdError` so fixers dispatch on the code, not by string-matching the human
+    message. Keep the precise line/col/message (M12.1) for the LLM/humans.
+  * **Fixpoint loop** (`compileWithRepair`): parse → on error look up
+    `fixers[err.code]` → apply → re-parse → repeat until success, no fixer
+    matches, or no progress (byte-identical output / recurring error → hand to
+    LLM). Never spin.
+  * **The bucket boundary (load-bearing).** Bucket 1 — bookkeeping/syntactic
+    (undefined char, orphan glyph, dup key, unknown field, missing `end`, row
+    width, off-board coords, out-of-range color, the M12.12 door nibble) →
+    procedurally fix; these are the entire dominant failure taxonomy. Bucket 2 —
+    semantic/intent (exit to a nonexistent board, missing passage target, key
+    behind its own door) → NEVER procedurally guess; a silent wrong guess yields
+    a compiling-but-broken world (worse than a repair round). Route bucket 2 to
+    the LLM or prevent it upstream via M12.3a plan constraints. Composition/quality
+    raises no error and is out of scope here (M12.15 territory).
+  * **Auditability.** Emit a diagnostic per fix (reuse
+    `generatedGridDiagnostics`, `generation.go:557`); feed diagnostics forward
+    into the next board's context / prompt-hardening so the model drifts toward
+    correctness without a round trip.
+  * **Folded from Future Tasks (2026-07-12) — register these in the same
+    dispatch table:**
+    (1) *Passage-stat synthesis from the legend.* A legend entry like
+    `p = Passage color 0x0F to "BOARD"` already names the destination
+    (`parseLegendEntry`, `zwd.go:442`); when the orphan check (`zwd.go:842`)
+    fires for a Passage tile whose legend entry carries a `to` destination,
+    synthesize the stat — coordinate AND target are both derived, never
+    guessed, so this is bucket 1.
+    (2) *Aggregate orphan reporting.* `compileBoard` stops at the FIRST
+    orphan stat-backed tile (`zwd.go:842`), costing one repair round per
+    tile; collect every offending (element, col, row) into one error so a
+    single fixer pass (M12.13's synthesizer) repairs all of them at once.
+    (3) *Passage color reciprocity.* After full-world compile, warn when a
+    passage's destination board has no matching-color return passage
+    (vanilla `BoardPassageTeleport` lands on the first color-matched
+    passage, else the start square). This one is bucket 2: DETECT with a
+    precise message routed to the LLM/plan repair — never re-color
+    procedurally — and add the authoring rule to `ZWD.md` and
+    `engine/promptkit_assets/spec.md` (wording already drafted in the
+    Future Tasks bullet).
+  This subsumes the *mechanism* of M12.13/M12.14 — implement those as the first
+  fixers registered in the dispatch table rather than as standalone preprocessor
+  special cases; whoever reaches the first of {M12.13, M12.14, M12.16} should
+  build the framework here. Purely generation/compile-time — outside the sim;
+  replay fixture unchanged. DoD: typed error codes; a fixer table with the
+  bucket-1 fixers above; a table-driven test that feeds one broken board per
+  bucket-1 error class and asserts it compiles after procedural repair with the
+  expected diagnostic and **no LLM call**; a bucket-2 error is confirmed to fall
+  through to the LLM path unchanged; `go test ./...` green. Consult the advisor
+  on the error-code taxonomy and the bucket boundary before building.
+
 - [ ] **M12.15 [ADVISOR] — Offline "world-style adapter": mine every board of
   curated worlds into corpus-derived priors + retrieval few-shots (a LoRA we
   can't train, done as offline RAG).** Owner framing (2026-07-11): we cannot
@@ -959,45 +1236,127 @@ protocol is positional, so these sit just after M12.5 and before M5.
   non-empty, data-grounded, deterministic, and regenerated from the corpus.
   No sim changes, no runtime LLM calls, replay fixture unchanged.
 
-- [ ] **M12.16 [ADVISOR] — Error-driven procedural repair layer (compiler
-  self-heals before the LLM).** Owner priority: maximize what the
-  compiler/decompiler fixes itself before resending to the model — LLM repair
-  rounds are slow, cost tokens, and don't always converge (Saga Archive burned
-  all 3 attempts and blanked to a placeholder). Generalize the ad-hoc procedural
-  fixers (M12.11 undefined-char, M12.13 orphan-glyph, M12.14 dup-key /
-  unknown-field / missing-end) into a first-class **error→fixer dispatch** with a
-  fixpoint loop; the LLM becomes the fallback of last resort. Full design in
-  NOTES.md (2026-07-11). Requirements:
-  * **Typed error codes.** Add a structured `code` (enum of error kinds) to
-    `zwdError` so fixers dispatch on the code, not by string-matching the human
-    message. Keep the precise line/col/message (M12.1) for the LLM/humans.
-  * **Fixpoint loop** (`compileWithRepair`): parse → on error look up
-    `fixers[err.code]` → apply → re-parse → repeat until success, no fixer
-    matches, or no progress (byte-identical output / recurring error → hand to
-    LLM). Never spin.
-  * **The bucket boundary (load-bearing).** Bucket 1 — bookkeeping/syntactic
-    (undefined char, orphan glyph, dup key, unknown field, missing `end`, row
-    width, off-board coords, out-of-range color, the M12.12 door nibble) →
-    procedurally fix; these are the entire dominant failure taxonomy. Bucket 2 —
-    semantic/intent (exit to a nonexistent board, missing passage target, key
-    behind its own door) → NEVER procedurally guess; a silent wrong guess yields
-    a compiling-but-broken world (worse than a repair round). Route bucket 2 to
-    the LLM or prevent it upstream via M12.3a plan constraints. Composition/quality
-    raises no error and is out of scope here (M12.15 territory).
-  * **Auditability.** Emit a diagnostic per fix (reuse
-    `generatedGridDiagnostics`, `generation.go:557`); feed diagnostics forward
-    into the next board's context / prompt-hardening so the model drifts toward
-    correctness without a round trip.
-  This subsumes the *mechanism* of M12.13/M12.14 — implement those as the first
-  fixers registered in the dispatch table rather than as standalone preprocessor
-  special cases; whoever reaches the first of {M12.13, M12.14, M12.16} should
-  build the framework here. Purely generation/compile-time — outside the sim;
-  replay fixture unchanged. DoD: typed error codes; a fixer table with the
-  bucket-1 fixers above; a table-driven test that feeds one broken board per
-  bucket-1 error class and asserts it compiles after procedural repair with the
-  expected diagnostic and **no LLM call**; a bucket-2 error is confirmed to fall
-  through to the LLM path unchanged; `go test ./...` green. Consult the advisor
-  on the error-code taxonomy and the bucket boundary before building.
+## M14 — Rearchitecting for the service ZZTMMO is becoming
+
+Filed 2026-07-12 from a whole-repo review (NOTES.md): three structural debts
+and one banked dividend, each with a mechanical, fixture-proven path. Execute
+after the M12 generation batch and before M11 — M14.1 directly de-risks
+M11's multi-world hosting. Every task here must leave the replay fixture
+unchanged: these are ownership/plumbing changes, never simulation changes.
+
+- [ ] **M14.0 — World-scope state: one seam instead of scattered syncs.**
+  The flag-propagation bug (fixed 2026-07-11, commit 67a642c) was patched by
+  copying flags into each room's engine before it steps and publishing after
+  (`room_manager.go:423-426`, `:473`, `syncWorldFlagsFromRoom` `:745`, and
+  the freeze path `:737`). Correct, but it is a per-field dance: the NEXT
+  world-scope field someone adds will silently not propagate, exactly as
+  flags didn't. Steps:
+  1. **Audit table first** (M8.2's deliverable shape, appended to NOTES.md):
+     classify every `TWorldInfo` field (`gamevars.go:96-110`) as per-player
+     (already virtualized through `PlayerState`, M2.1 — Health, Ammo, Gems,
+     Keys, Torches, Score, EnergizerTicks...), world-scope (at minimum
+     `Flags` `:107`; check `Name`, `IsSave` `:110`), or save-file-only
+     (`CurrentBoard` `:100`, `BoardTimeSec` `:108` given per-player time
+     limits). Cite the evidence per field — which code reads it from a room
+     engine after load.
+  2. **Consolidate the mechanism:** two named seams —
+     `refreshRoomWorldScope(room)` before a room steps and
+     `publishRoomWorldScope(room)` after — each iterating ONE explicit list
+     of world-scope fields, so adding a field is one list entry, not four
+     call sites. Route the freeze/thaw paths (`freezeRoomIfEmpty`,
+     `syncFrozenBoardToLiveRooms`) through the same seams.
+  3. Do NOT introduce shared pointers into engine state unless you first
+     prove `StateHash` and `worldWriteTo` are byte-unchanged — value-copy at
+     two seams is the recommended shape; rooms step sequentially on one
+     goroutine inside `StepDiffs`, so copies are race-free by construction.
+  DoD: the table in NOTES.md; `world_flags_test.go` extended — a flag set by
+  a room is visible to a later-ticking room the SAME tick, and flags survive
+  a freeze/thaw cycle; `go test ./...` green; replay fixture unchanged.
+
+- [ ] **M14.1 — One instance model: retire the DefaultInstance special case;
+  mint server-scoped PlayerIDs.** The boot world predates `Instances` and
+  kept parallel bookkeeping: `s.clients`/`s.inputs` mirror the default
+  instance only (double-written in the join path
+  `websocket_server.go:312-316` and in `setInput` `:1002`/`:1013`), leaves
+  have twin paths (`removeClient` `:1027` vs `removeClientFromInstance`
+  `:1038`), most `submit*` helpers have an `...InInstance` twin
+  (`:665`/`:675`, `:688`/`:705`, `:733`/`:757`), and there are two tick
+  bodies (`WebSocketServer.Tick` `:113` vs `WorldInstance.Tick` `:185`).
+  Separately, `PlayerID`s are minted per-`RoomManager`
+  (`room_manager.go:17`, `:229`), so ids collide across instances — the
+  blocker M4.3 recorded against multi-world world-select, and a standing
+  trap for any server-wide map keyed by bare PlayerID. Steps, mechanical and
+  in order:
+  1. Make the boot world a normal `Instances` entry; `DefaultInstance`
+     becomes a pointer into the map (keep the field so callers don't churn).
+  2. Delete the mirrors and twins: one join path, one leave path, one
+     setInput, one submit* family, one Tick body. Grep-proof: `removeClient\b`
+     gone; no `inst.RoomManager == s.RoomManager` special-casing remains.
+  3. Mint PlayerID from a server-scoped counter under `s.mu`, passed into
+     `JoinPlayer` (or a `JoinPlayerWithID` variant) so every id is
+     process-unique. The client treats the id as opaque — verify no Go test
+     or TS code assumes ids start at 1 per world; update the ones that do.
+  DoD: a test hosts two instances simultaneously with interleaved joins and
+  asserts disjoint PlayerIDs; all existing WebSocket/editor/chat tests
+  green; the grep proofs pass; replay fixture unchanged. Directly de-risks
+  M11.1 (Museum worlds are instances) and simplifies M13.4 if that hasn't
+  landed yet.
+
+- [ ] **M14.2 — Session recording: bank the determinism dividend.** A
+  complete session is `{world identity, seeds, per-tick inputs and
+  submits}` — kilobytes. This is the foundation for shareable replays,
+  ghost racing, the daily challenge, and verified leaderboards (idea
+  backlog), and M7.3 already centralized every submit into pending queues
+  whose drain is the natural log point.
+  * **Record at the tick boundary.** In the (post-M14.1, single) instance
+    Tick: append one JSON line per tick —
+    `{tick, inputs: {playerID: input}, joins: [{playerID, board, name}],
+    leaves: [playerID], submits: [...]}` — where `submits` is everything
+    applied that tick (scroll replies, save names, quit replies, debug
+    commands: the M7.3 queues). Header line: world name, FNV-1a of the
+    world bytes, and every seed involved — find them ALL by grepping
+    `RandomSeed`/`RandSeed` across engine and server; each room engine's
+    seed at creation is part of the record or playback diverges. If any
+    seed on the server path currently derives from wall-clock, route it
+    through the recorder so the header captures it.
+  * **Write behind a flag** (`-record <dir>` on `cmd/zzt-server`), one file
+    per instance session, buffered writes, never blocking the tick (on
+    backpressure drop-and-count, log the count). Recording off = byte-for-
+    byte today's behavior.
+  * **Playback.** `cmd/zzt-replay <file>`: reconstruct the RoomManager from
+    the recorded world + seeds, apply the log tick by tick through the SAME
+    entry points (`JoinPlayer`, `StepDiffs`, `Submit*`, `LeavePlayer`).
+  DoD: a scripted two-player session (join, move, buy from the TOWN vendor
+  via scroll reply, transfer boards, one quits) recorded and played back
+  headless reproduces per-room `StateHash` at every 100 ticks and at the
+  end; recording disabled changes nothing; `go test ./...` green; replay
+  fixture unchanged.
+
+- [ ] **M14.3 — Package split, smallest honest cut (OPTIONAL — skip unless
+  the single package is actually hurting, and record the decision either
+  way).** Everything lives in one ~29k-line `package zztgo`: sim,
+  serializer, ZWD compiler, generation service, prompt kit, room manager,
+  WebSocket server, editor sessions, web API. The tempting cut — extract
+  `worldgen` (zwd.go, zwd_decompile.go, generation.go, promptkit.go +
+  assets, plan.go) — does NOT stand alone: worldgen needs engine types
+  (`TWorld`, `ElementDefs`, `BoardClose`) while `web_api.go`/
+  `websocket_server.go` (which would stay) call worldgen, so the parent
+  would import its own child that imports it back — a cycle. The smallest
+  honest cut is therefore TWO extractions in one task: `worldgen` AND
+  `server` (`websocket_server.go`, `web_api.go`, and whatever import
+  analysis proves must follow; `protocol.go` and `room_manager.go` stay
+  with the engine — `RoomManager` returns protocol types and touches Engine
+  internals). Rules if executed: purely mechanical — no renames beyond
+  package qualifiers, no signature changes, test files move with their
+  code, `// ZZT-QUIRK` comments untouched; CLAUDE.md rule 4 applies in
+  full. **Stop signal:** if the split forces exporting more than a handful
+  of previously-unexported identifiers, STOP, revert, and record in
+  NOTES.md that the cut is wrong — that friction is the package boundary
+  telling you where it wants to be.
+  DoD (if executed): `go build ./... && go test ./...` green; `git diff
+  --stat` shows moves and qualifier edits only; replay fixture unchanged.
+  DoD (if skipped): a NOTES.md entry saying why the single package still
+  isn't hurting, so the next audit doesn't re-litigate from scratch.
 
 ## M5 — Creation and full-featured ZZT tooling
 
@@ -1493,6 +1852,42 @@ enables; each is feasible precisely because of a property we already built):**
   instances + spectator links + verified results from the authoritative
   server), with the bracket itself rendered as a ZZT board in the lobby.
 
+**Moonshots, second batch (2026-07-12 — what the M12 generation machinery
+newly enables; same rule: backlog bullets, owner promotes before spec):**
+* **The Endless Dungeon — generation as geography.** When a player walks off
+  the mapped edge of a designated frontier world, the server dreams the next
+  board *in place* and it becomes permanent shared geography — the Continent
+  idea, but grown by exploration instead of stitched from the Museum.
+  Feasible because M12.4 already paints boards against the edge rows of
+  adjacent boards and validates/hosts on the fly; wants M12.16's yield work
+  first so a frontier board can never come back blank.
+* **The critique flywheel — generate → render → score → keep.** `cmd/zzt-shot`
+  plus the M12.15 caption pipeline closes an evaluation loop: generate K
+  candidates per board, render each to PNG, have a vision model score them
+  against the plan, keep the best, and feed accepted worlds back into the
+  retrieval corpus. The compiler made correctness verifiable; this makes
+  QUALITY verifiable — a self-improving generator with no fine-tuning.
+* **In-world dreaming — the Dream Machine.** Put generation inside the lobby
+  world: an object you touch, a scroll you type the prompt into (M6.1 input
+  capture + the scroll-reply seam), and on success a cross-world passage
+  materializes beside it leading into your world. Generation stops being a
+  menu and becomes a place; composes with the lobby world's
+  server-interpreted passages below.
+* **Style séances — remix instead of create.** Decompile → LLM transform →
+  recompile: "make TOWN haunted", era/author style packs mined from the
+  Museum corpus (M12.15c tags), a sequel seeded from what you actually did
+  (the session log, once M14.2 records it). The decompiler/compiler round
+  trip is exactly this machine.
+* **Daily Dreamed Challenge.** One generated world per day, identical seed
+  for everyone, server-verified completion times, one leaderboard — combines
+  the codebase's two strongest properties (deterministic replay + instant
+  world generation) into the strongest retention mechanic in its class.
+* **The AI Dungeon Master.** An LLM watches the session event stream (M14.2)
+  and edits ahead of the party through the editor-session apply path and M10
+  leases — drops monsters, rewrites the vendor's lines, opens a wall. Every
+  action rides the same compiled/validated seams as a human editor, so
+  determinism and the security boundary are untouched.
+
 **First-party worlds (owner 2026-07-10 — "later on in the roadmap"):**
 * **A purpose-built PvP arena world.** A ZZT world designed for
   player-vs-player: arena boards, ammo/energizer spawns via ZZT-OOP
@@ -1538,7 +1933,8 @@ enables; each is feasible precisely because of a property we already built):**
   ⚠ Any `.ZZT` compiled before this fix is still locked and must be recompiled from
   its `.zwd`.
 
-* [ ] **Compiler: auto-generate Passage stats from the legend `to "BOARD"` clause.**
+* *(Folded into M12.16 on 2026-07-12 — execute there, not from this bullet.)*
+  **Compiler: auto-generate Passage stats from the legend `to "BOARD"` clause.**
   A `Passage` is stat-backed, so today every passage tile needs an explicit
   `stat at X,Y ... p3 board "…"`. LLM-generated worlds routinely draw a passage glyph
   with `p = Passage color 0xNN to "BOARD"` in the legend and omit the stat, producing
@@ -1546,7 +1942,8 @@ enables; each is feasible precisely because of a property we already built):**
   legend already carries the destination — the compiler should synthesize one passage
   stat per matching tile when the legend entry has a `to` destination.
 
-* [ ] **Compiler: report all orphan / decorative stat-backed tiles in one pass.**
+* *(Folded into M12.16 on 2026-07-12 — execute there, not from this bullet.)*
+  **Compiler: report all orphan / decorative stat-backed tiles in one pass.**
   `compileBoard` returns on the *first* orphan stat-backed tile (`engine/zwd.go`
   ~line 790). The generation-repair loop then fixes one tile, recompiles, and hits the
   next — O(n) round-trips for n mistakes. Collect and report every offending
@@ -1554,7 +1951,8 @@ enables; each is feasible precisely because of a property we already built):**
   temporary `debugOrphanScan` pass during the touch investigation surfaced e.g.
   DYINGSTA's 5-tile passage "door" and KEEPLITE's 13-tile object drawing at once.)
 
-* [ ] **Retire/retitle `engine/touch_race_test.go`.**
+* *(Folded into M13.0 on 2026-07-12 — execute there, not from this bullet.)*
+  **Retire/retitle `engine/touch_race_test.go`.**
   The prior agent added it while chasing the phantom `#end`/`:touch` "race"; its
   comments still assert a race that does not exist. The accurate regression guard is
   `TestZWDObjectDefaultsAreZZTNeutral` (`engine/zwd_test.go`). Either delete
@@ -1577,7 +1975,8 @@ enables; each is feasible precisely because of a property we already built):**
   or sync flags across rooms on every `#set`/`#clear` and board transition. Add a
   regression test: set a flag in room A, assert room B observes it.
 
-* [ ] **Passages must link to a matching-color passage on the destination board.**
+* *(Folded into M12.16 on 2026-07-12 — execute there, not from this bullet.)*
+  **Passages must link to a matching-color passage on the destination board.**
   ZZT's passage teleport logic deposits the player at the first passage on the
   destination board whose color byte matches the source passage's color. If no
   color-matched passage exists on the destination, the player arrives at the

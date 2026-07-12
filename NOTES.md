@@ -1522,3 +1522,49 @@ fewer blank boards), and a cheaper painter becomes viable for the correctness
 dimension. One change improves yield, cuts cost/latency, and decouples quality
 from model choice. Filed as M12.16; it subsumes the mechanism of M12.13/M12.14,
 which become the first fixers registered in it.
+
+## 2026-07-12 — Planning: full-repo review; M13 and M14 filed; order notes
+
+PROCESS: the advisor tool is unavailable in this environment and the owner
+directed this session not to use it; recorded per rule 5. A second session
+was committing M12.15b/c work concurrently while this file and TASKS.md were
+being edited — two edits were clobbered mid-write and reapplied. Lesson:
+when two sessions run at once, only one should hold the planning docs.
+
+Whole-repo review at the owner's request (state verified 2026-07-12:
+`go build`/`go vet`/`go test ./...` fully green including the once-red
+round-trip tests; no CI workflows; web client at engine/web, ~3.9k lines TS
+with node-driven tests but no runner in CI). Assessment in one line: the
+engine and its process discipline are in excellent shape; nearly all current
+friction is (1) generation robustness — being addressed by the M12 cleanup
+arc — and (2) service survivability, which had no tasks at all. Decisions,
+all filed as full specs in TASKS.md:
+
+* **M13 (new): hygiene, CI, reconnect grace, autosave, the lifecycle race.**
+  Placed before the remaining M12 tasks: the fixture only protects commits
+  that run it, and a crash or a Wi-Fi blip currently deletes players' runs.
+  M13.0 also absorbs the stray `engine/NOTES.md` (mis-filed log content) and
+  the STARGEN untracked trio, and folds the touch_race_test retitle bullet.
+* **M12.16 moved physically ahead of the remaining M12.15 slices** (under a
+  new "M12 continued" header placed after M13). Procedural repair raises
+  yield; the corpus/style work builds on top of it. The executor protocol
+  is positional, so the priority had to be file order, not a note — the
+  same reasoning as M7's placement (2026-07-10 entry). M12.16 also absorbed
+  three Future-Tasks bullets as registered fixers/checks: passage-stat
+  synthesis from the legend `to` clause (bucket 1), aggregate orphan
+  reporting (bucket 1), passage color reciprocity (bucket 2, detect-only).
+* **M14 (new): rearchitecting.** M14.0 one-seam world-scope state (the flag
+  sync fix 67a642c generalized so the next world-scope field can't silently
+  not propagate); M14.1 retire the DefaultInstance special case + server-
+  scoped PlayerIDs (unblocks multi-world cleanly, de-risks M11); M14.2
+  session recording at the tick boundary (replays/ghosts/daily challenge all
+  reduce to it); M14.3 an OPTIONAL two-package split with an explicit stop
+  signal — skip-and-record is a legitimate outcome.
+* **Six new moonshots** in the idea backlog (second batch): Endless Dungeon
+  (edge-context generation as geography), critique flywheel (zzt-shot +
+  vision scoring closes a quality loop), in-world Dream Machine, style
+  séances (decompile→transform→recompile), Daily Dreamed Challenge, AI
+  Dungeon Master. Backlog bullets, not tasks — owner promotes first.
+
+Execution order after this session: M13 → M12.16 → remaining M12.15 slices →
+M14 → M11 → M8 → M9 → M6 → M10.
