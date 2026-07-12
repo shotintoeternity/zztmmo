@@ -871,13 +871,39 @@ protocol is positional, so these sit just after M12.5 and before M5.
      *paired* exemplar: a real world's derived plan + a cohesive subset of its
      own boards (same world, so exits/palette actually line up), not unrelated
      single boards.
+  5. **Visual captions (optional enrichment; one-time build step, not runtime).**
+     The generation model never "understands" — its whole knowledge of a board is
+     whatever fits in one bounded prompt, so its behavior is dictated by the few
+     (limited) few-shot slots. Raw ZWD hides the *rendered* look behind legend
+     indirection; a short visual caption packs design intent into each scarce slot
+     (higher understanding-per-token) rather than adding more slots. Two parts:
+     * **`Screen → PNG` renderer.** Render a decompiled board headlessly via the
+       existing `Screen [80][25]{Ch,Color}` buffer with a CP437 font and the
+       16-color DOS palette, producing a pixel-faithful board image. A reusable
+       util (`cmd/` tool or exported func); this half is pure Go, no LLM.
+     * **One-time offline captioning.** Feed the PNGs to a vision model *once at
+       corpus-build time*, with a **structured** caption prompt (composition,
+       palette, focal point, archetype, and a good/bad quality read), and commit
+       the captions as static text sidecars per corpus board. This is the only
+       LLM use in M12.15 and it is build-time, not per-generation — the runtime
+       pipeline consumes the committed captions with zero LLM calls (the same
+       shape as labeling LoRA training data offline). Cross-check each caption
+       against the phase-2 deterministic tile stats to ground it and catch vision
+       hallucination on abstract tile art; consistency matters more than prose.
+     The captions feed phase 2 (compositional patterns the numbers can't express)
+     and phase 3 (each retrieved few-shot carries a one-line "what this board is
+     doing visually" annotation). Provider-agnostic; key via env, never in repo.
   Constraints: few-shots must be valid, recompilable ZWD (M12.6/M12.3); keep the
   prompt cacheable (mined artifacts are stable across a run; only the retrieved
-  subset varies per request, so order it deterministically); no LLM calls; no sim
-  changes; replay fixture unchanged. DoD (per phase): the whole-world corpus
+  subset varies per request, so order it deterministically); **no LLM calls at
+  generation runtime** — phase 5's captioning is a one-time corpus-build step
+  whose output is committed static text; no sim changes; replay fixture
+  unchanged. DoD (per phase): the whole-world corpus
   builds under `go test`; miners emit their artifacts and a test asserts non-empty
   data-grounded output; retrieval returns relevant few-shots for a sample premise;
-  the prompt kit loads the new artifacts; `go test ./...` green. Consult the
+  the prompt kit loads the new artifacts; the `Screen → PNG` renderer produces a
+  pixel-faithful image for a known board (golden test) and captions load from
+  committed sidecars; `go test ./...` green. Consult the
   advisor on the artifact shapes and the retrieval/budget design before building.
 
 ## M5 — Creation and full-featured ZZT tooling
