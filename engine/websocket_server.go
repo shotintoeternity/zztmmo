@@ -49,9 +49,10 @@ type WebSocketServer struct {
 	AutosaveEveryTicks int
 	autosaveTicks      int // countdown accumulator; touched only on the tick goroutine
 
-	mu              sync.Mutex
-	clients         map[PlayerID]*webSocketClient
-	inputs          map[PlayerID]PlayerInput
+	mu sync.Mutex
+	// nextPlayerID mints process-unique PlayerIDs across every instance, so ids
+	// never collide between hosted worlds (M14.1). Guarded by mu.
+	nextPlayerID    PlayerID
 	Instances       map[string]*WorldInstance
 	DefaultInstance *WorldInstance
 	EditorSessions  map[*webSocketClient]*EditorSession
@@ -111,8 +112,6 @@ func NewWebSocketServer(world TWorld, defaultBoard int16) *WebSocketServer {
 		DefaultBoard:   defaultBoard,
 		TickDuration:   ServerTickDuration,
 		OriginHosts:    []string{"localhost:*", "127.0.0.1:*"},
-		clients:        make(map[PlayerID]*webSocketClient),
-		inputs:         make(map[PlayerID]PlayerInput),
 		Instances:      make(map[string]*WorldInstance),
 		EditorSessions: make(map[*webSocketClient]*EditorSession),
 		ChatDB:         NewMemChatDatabase(),
@@ -320,8 +319,12 @@ func (s *WebSocketServer) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 			}
 		}
 
+		// Mint a process-unique id before taking inst.mu; the two locks are never
+		// held together (M14.1).
+		playerID = s.mintPlayerID()
+
 		inst.mu.Lock()
-		playerID = inst.RoomManager.JoinPlayer(join.Board, 0, 0)
+		inst.RoomManager.JoinPlayerWithID(playerID, join.Board, 0, 0)
 		inst.RoomManager.SetPlayerName(playerID, join.Name)
 		client.playerID = playerID
 		inst.Clients[playerID] = client
@@ -334,11 +337,6 @@ func (s *WebSocketServer) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 		}
 		inst.mu.Unlock()
 
-		if inst.RoomManager == s.RoomManager {
-			s.mu.Lock()
-			s.clients[playerID] = client
-			s.mu.Unlock()
-		}
 		if !ok {
 			s.removeClientFromInstance(inst, playerID)
 			return
@@ -442,7 +440,7 @@ func (s *WebSocketServer) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 			if err := json.Unmarshal(raw, &input); err != nil {
 				continue
 			}
-			inst.setInput(s, playerID, inputMessageToPlayerInput(input))
+			inst.setInput(playerID, inputMessageToPlayerInput(input))
 		}
 	}
 	s.handleReadLoopExit(inst, client, playerID)
@@ -681,19 +679,9 @@ func (s *WebSocketServer) quitOutcome(rm *RoomManager, quit QuitResult) EventMes
 	return EventMessage{Type: MessageTypeEvent, Event: event}
 }
 
-// submitQuitReply routes a client's answer to the quit prompt. A confirmed quit
-// becomes a QuitEvent on the next step, which RoomManager turns into a
-// DrainQuits entry — the player is never removed from a room mid-tick.
-func (s *WebSocketServer) submitQuitReply(playerID PlayerID, quit bool) {
-	s.mu.Lock()
-	defer s.mu.Unlock()
-
-	if _, ok := s.clients[playerID]; !ok {
-		return
-	}
-	s.RoomManager.SubmitQuitReply(playerID, quit)
-}
-
+// submitQuitReplyInInstance routes a client's answer to the quit prompt. A
+// confirmed quit becomes a QuitEvent on the next step, which RoomManager turns
+// into a DrainQuits entry — the player is never removed from a room mid-tick.
 func (s *WebSocketServer) submitQuitReplyInInstance(inst *WorldInstance, playerID PlayerID, quit bool) {
 	inst.mu.Lock()
 	defer inst.mu.Unlock()
@@ -704,26 +692,9 @@ func (s *WebSocketServer) submitQuitReplyInInstance(inst *WorldInstance, playerI
 	inst.RoomManager.SubmitQuitReply(playerID, quit)
 }
 
-// submitHighScoreName writes the name a quitter typed into the slot their score
-// earned, then sends the finished list back for display. A client that was
-// never offered a slot gets nothing: RecordHighScore refuses it.
-func (s *WebSocketServer) submitHighScoreName(ctx context.Context, playerID PlayerID, name string) {
-	s.mu.Lock()
-	client := s.clients[playerID]
-	if client == nil || !s.RoomManager.RecordHighScore(playerID, name) {
-		s.mu.Unlock()
-		return
-	}
-	message := EventMessage{Type: MessageTypeEvent, Event: ProtocolEvent{
-		Type:  "highScores",
-		Title: "High scores for " + s.RoomManager.WorldName(),
-		Lines: s.RoomManager.HighScoreLines(0),
-	}}
-	s.mu.Unlock()
-
-	_ = client.write(ctx, message)
-}
-
+// submitHighScoreNameInInstance writes the name a quitter typed into the slot
+// their score earned, then sends the finished list back for display. A client
+// that was never offered a slot gets nothing: RecordHighScore refuses it.
 func (s *WebSocketServer) submitHighScoreNameInInstance(ctx context.Context, inst *WorldInstance, playerID PlayerID, name string) {
 	inst.mu.Lock()
 	client := inst.Clients[playerID]
@@ -741,41 +712,17 @@ func (s *WebSocketServer) submitHighScoreNameInInstance(ctx context.Context, ins
 	_ = client.write(ctx, message)
 }
 
-// submitSaveFilename answers a savePrompt event. The name is a client's, so it
-// never reaches a path before SanitizeSaveName; the reply tells the player what
-// their snapshot is called, or why it was refused.
+// submitSaveFilenameInInstance answers a savePrompt event. The name is a
+// client's, so it never reaches a path before SanitizeSaveName; the reply tells
+// the player what their snapshot is called, or why it was refused.
 //
 // The snapshot deliberately does NOT go through Engine.SubmitSaveFilename: that
 // writes one room engine's world — a single board, with the other rooms stale —
 // to the process working directory. It is the terminal's path. The server saves
 // the whole world through the RoomManager.
 //
-// The write happens under s.mu, as RecordHighScore's does: a room may not tick
-// while its boards are being serialized.
-func (s *WebSocketServer) submitSaveFilename(ctx context.Context, playerID PlayerID, name string) {
-	s.mu.Lock()
-	client := s.clients[playerID]
-	if client == nil {
-		s.mu.Unlock()
-		return
-	}
-	// An empty name is vanilla's cancelled prompt: save nothing, say nothing.
-	if name == "" {
-		s.mu.Unlock()
-		return
-	}
-	path, err := s.RoomManager.SaveSnapshot(s.SavesDir, name, playerID)
-	s.mu.Unlock()
-
-	event := ProtocolEvent{Type: "saveResult"}
-	if err != nil {
-		event.Error = err.Error()
-	} else {
-		event.Filename = strings.TrimSuffix(filepath.Base(path), ".SAV")
-	}
-	_ = client.write(ctx, EventMessage{Type: MessageTypeEvent, Event: event})
-}
-
+// The write happens under inst.mu, as RecordHighScore's does: a room may not
+// tick while its boards are being serialized.
 func (s *WebSocketServer) submitSaveFilenameInInstance(ctx context.Context, inst *WorldInstance, playerID PlayerID, name string) {
 	inst.mu.Lock()
 	client := inst.Clients[playerID]
@@ -1139,21 +1086,21 @@ func inputMessageToPlayerInput(input InputMessage) PlayerInput {
 	return playerInput
 }
 
-func (s *WebSocketServer) setInput(playerID PlayerID, input PlayerInput) {
-	s.mu.Lock()
-	defer s.mu.Unlock()
-
-	if _, ok := s.clients[playerID]; ok {
-		s.inputs[playerID] = input
-	}
-}
-
-func (inst *WorldInstance) setInput(s *WebSocketServer, playerID PlayerID, input PlayerInput) {
+func (inst *WorldInstance) setInput(playerID PlayerID, input PlayerInput) {
 	inst.mu.Lock()
 	if _, ok := inst.Clients[playerID]; ok {
 		inst.Inputs[playerID] = input
 	}
 	inst.mu.Unlock()
+}
+
+// mintPlayerID returns the next process-unique PlayerID. It locks only s.mu and
+// never inst.mu, so it is safe to call before taking an instance lock.
+func (s *WebSocketServer) mintPlayerID() PlayerID {
+	s.mu.Lock()
+	defer s.mu.Unlock()
+	s.nextPlayerID++
+	return s.nextPlayerID
 }
 
 // mintResumeTokenLocked returns a resume token for playerID, reusing the
@@ -1231,11 +1178,6 @@ func (s *WebSocketServer) tryResume(inst *WorldInstance, client *webSocketClient
 	if old != nil && old != client {
 		old.conn.Close(websocket.StatusNormalClosure, "resumed on a new connection")
 	}
-	if inst.RoomManager == s.RoomManager {
-		s.mu.Lock()
-		s.clients[playerID] = client
-		s.mu.Unlock()
-	}
 	if !snapOK {
 		// The player existed a moment ago, so this should not happen; treat it as
 		// a failed resume and let the caller join fresh.
@@ -1264,7 +1206,6 @@ func (s *WebSocketServer) handleReadLoopExit(inst *WorldInstance, client *webSoc
 		inst.deleteResumeTokenLocked(playerID)
 		delete(inst.Detached, playerID)
 		inst.mu.Unlock()
-		s.clearDefaultClient(inst, playerID)
 		return
 	}
 	// Detach: drop queued per-player events (decision 2) and start the countdown.
@@ -1274,19 +1215,6 @@ func (s *WebSocketServer) handleReadLoopExit(inst *WorldInstance, client *webSoc
 	}
 	inst.Detached[playerID] = ReconnectGraceTicks
 	inst.mu.Unlock()
-	s.clearDefaultClient(inst, playerID)
-}
-
-// clearDefaultClient removes a player from the legacy default-instance maps.
-// It is a no-op for any other instance.
-func (s *WebSocketServer) clearDefaultClient(inst *WorldInstance, playerID PlayerID) {
-	if inst.RoomManager != s.RoomManager {
-		return
-	}
-	s.mu.Lock()
-	delete(s.clients, playerID)
-	delete(s.inputs, playerID)
-	s.mu.Unlock()
 }
 
 // expireDetached advances every instance's reconnect-grace countdown by one tick
@@ -1319,24 +1247,12 @@ func (inst *WorldInstance) expireDetached() {
 }
 
 // removeDetachedLocked performs the room-side removal of an expired detached
-// player. Caller holds inst.mu. The default instance's s.clients/s.inputs
-// entries were already cleared at detach, so no s.mu work is needed here.
+// player. Caller holds inst.mu.
 func (inst *WorldInstance) removeDetachedLocked(playerID PlayerID) {
 	delete(inst.Detached, playerID)
 	inst.deleteResumeTokenLocked(playerID)
 	inst.RoomManager.LeavePlayer(playerID)
 	inst.RoomManager.DiscardPendingScore(playerID)
-}
-
-func (s *WebSocketServer) removeClient(playerID PlayerID) {
-	s.mu.Lock()
-	defer s.mu.Unlock()
-
-	delete(s.clients, playerID)
-	delete(s.inputs, playerID)
-	s.RoomManager.LeavePlayer(playerID)
-	// They may have quit and closed the tab before typing a name.
-	s.RoomManager.DiscardPendingScore(playerID)
 }
 
 func (s *WebSocketServer) removeClientFromInstance(inst *WorldInstance, playerID PlayerID) {
@@ -1346,15 +1262,9 @@ func (s *WebSocketServer) removeClientFromInstance(inst *WorldInstance, playerID
 	inst.deleteResumeTokenLocked(playerID)
 	delete(inst.Detached, playerID)
 	inst.RoomManager.LeavePlayer(playerID)
+	// They may have quit and closed the tab before typing a name.
 	inst.RoomManager.DiscardPendingScore(playerID)
 	inst.mu.Unlock()
-
-	if inst.RoomManager == s.RoomManager {
-		s.mu.Lock()
-		delete(s.clients, playerID)
-		delete(s.inputs, playerID)
-		s.mu.Unlock()
-	}
 }
 
 func (c *webSocketClient) write(ctx context.Context, message interface{}) error {

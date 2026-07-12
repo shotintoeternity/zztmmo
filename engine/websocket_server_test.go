@@ -543,9 +543,10 @@ func TestWebSocketServerTwentyBotSoak(t *testing.T) {
 		}
 	}
 
-	server.mu.Lock()
-	if got := len(server.clients); got != botCount {
-		server.mu.Unlock()
+	inst := server.DefaultInstance
+	inst.mu.Lock()
+	if got := len(inst.Clients); got != botCount {
+		inst.mu.Unlock()
 		t.Fatalf("active clients=%d, want %d", got, botCount)
 	}
 	roomHashes := make(map[int16]uint64)
@@ -555,7 +556,7 @@ func TestWebSocketServerTwentyBotSoak(t *testing.T) {
 			roomHashes[boardID] = StateHash(room.Engine)
 		}
 	}
-	server.mu.Unlock()
+	inst.mu.Unlock()
 
 	for i, bot := range bots {
 		boardID := int16(bot.board.Load())

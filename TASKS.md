@@ -1282,7 +1282,7 @@ unchanged: these are ownership/plumbing changes, never simulation changes.
   a room is visible to a later-ticking room the SAME tick, and flags survive
   a freeze/thaw cycle; `go test ./...` green; replay fixture unchanged.
 
-- [ ] **M14.1 — One instance model: retire the DefaultInstance special case;
+- [x] **M14.1 — One instance model: retire the DefaultInstance special case;
   mint server-scoped PlayerIDs.** The boot world predates `Instances` and
   kept parallel bookkeeping: `s.clients`/`s.inputs` mirror the default
   instance only (double-written in the join path

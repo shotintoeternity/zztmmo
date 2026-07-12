@@ -221,13 +221,27 @@ func (rm *RoomManager) quitPlayer(playerID PlayerID) {
 	rm.LeavePlayer(playerID)
 }
 
+// JoinPlayer mints a RoomManager-scoped PlayerID and joins it. Direct callers
+// (mostly tests) get sequential ids from this manager's own counter. The server
+// mints process-unique ids and joins through JoinPlayerWithID instead, so ids do
+// not collide across instances (M14.1).
 func (rm *RoomManager) JoinPlayer(boardID, spawnX, spawnY int16) PlayerID {
+	rm.nextPlayerID++
+	return rm.JoinPlayerWithID(rm.nextPlayerID, boardID, spawnX, spawnY)
+}
+
+// JoinPlayerWithID joins a player under a caller-supplied PlayerID. The server
+// uses it to assign server-scoped ids. It advances the manager's own counter
+// past the supplied id so a later plain JoinPlayer on the same manager cannot
+// reissue it.
+func (rm *RoomManager) JoinPlayerWithID(playerID PlayerID, boardID, spawnX, spawnY int16) PlayerID {
+	if playerID > rm.nextPlayerID {
+		rm.nextPlayerID = playerID
+	}
 	room := rm.ensureRoom(boardID)
 	statID := rm.spawnPlayerInRoom(room, spawnX, spawnY)
 	room.Engine.ResetPlayerState(statID)
 	drawPlayerArrivalSurroundings(room.Engine, statID)
-	rm.nextPlayerID++
-	playerID := rm.nextPlayerID
 	player := &roomPlayer{
 		id:      playerID,
 		boardID: room.BoardID,
