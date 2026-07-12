@@ -810,7 +810,7 @@ slices — procedural repair raises generation *yield*, which the corpus/style
 work then builds on. Every task in this section is presentation/server-layer
 only: no simulation change, replay fixture unchanged throughout.
 
-- [ ] **M13.0 — Working-tree and log hygiene: STARGEN strays, the misplaced
+- [x] **M13.0 — Working-tree and log hygiene: STARGEN strays, the misplaced
   engine/NOTES.md, and the stale touch_race_test.go header.** No new code.
   * `engine/STARGEN.zwd`, `engine/STARGEN.plan.md`, `engine/STARGEN.prompt.txt`
     are Dream-pipeline outputs sitting untracked at the engine root

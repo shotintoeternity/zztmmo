@@ -1,0 +1,427 @@
+zwd 1
+world "STARGEN"
+
+board "Starlit Title"
+  max-shots 0
+  dark false
+  reenter false
+  time-limit 0
+  exits north none south none west none east none
+
+  start player at 29,23
+  grid
+  ..........*...............................*...............e.
+  ....*.............*..............*...............*.........e
+  ...........................*.............................*.e
+  .*.....*.................*..................*..........*...e
+  ...........................................................e
+  ......ooo.b.b.sss.zzz.rrr.v.v.a.a.ttt..ooo.rrr.y.y.........e
+  ......o.o.b.b.s...z...r.r.v.v.a.a..t...o.o.r.r.y.y.........e
+  ......o.o.bbb.sss.zzz.rrr.v.v.aaa..t...o.o.rrr..y..........e
+  ......o.o.b.b...s.z...r.r.v.v.a.a..t...o.o.r.r..y..........e
+  ......ooo.b.b.sss.zzz.r.r..v..a.a..t...ooo.r.r..y..........e
+  ...*.......................................................e
+  ........................................................*..e
+  ...*.....p.l.u.n.d..u.c.o.l.d..s.t.g.r.k.w.h.q.j...........e
+  .....*...............*....................*..........*.....e
+  ..........................#####............................e
+  .......*................##.......##...............*........e
+  .......................#....===....#.......................e
+  .......................#...=====...#.......*...............e
+  ....*................####.=======.####.....................e
+  .....................#..............#......................e
+  .................*...#..............#..........*...........e
+  .....................################......................e
+  ............................@..............................e
+  ........*.................................*................e
+  ............................................................
+  end
+
+  legend
+    . = Empty color 0x00
+    e = Empty color 0x00
+    * = Text-Yellow color 0x2A
+    o = Text-Cyan color 0x20
+    b = Text-Cyan color 0x20
+    s = Text-Cyan color 0x20
+    z = Text-Cyan color 0x20
+    r = Text-Cyan color 0x20
+    v = Text-Cyan color 0x20
+    a = Text-Cyan color 0x20
+    t = Text-Cyan color 0x20
+    y = Text-Cyan color 0x20
+    p = Text-White color 0x70
+    l = Text-White color 0x6C
+    u = Text-White color 0x75
+    n = Text-White color 0x6E
+    d = Text-White color 0x64
+    c = Text-White color 0x63
+    g = Text-White color 0x67
+    k = Text-White color 0x6B
+    w = Text-White color 0x77
+    h = Text-White color 0x68
+    q = Text-White color 0x71
+    j = Text-White color 0x6A
+    # = Solid color 0x07
+    = = Solid color 0x1B
+    @ = Player color 0x1F under Empty color 0x00
+  end
+
+  stats
+  end
+end
+
+board "Dome Top"
+  max-shots 255
+  dark false
+  reenter false
+  time-limit 0
+  exits north none south "Winding Stair" west none east none
+
+  start player at 31,21
+  grid
+  wwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwww
+  ww....*.......*..........*............*..........*.......*.w
+  w..*.......*........*............*..........*.........*....*
+  w.....ssssssssssssssssssssssssssssssssssssssssssss.........w
+  w....s..................................................s...
+  w...s.......*.........................................*..s..
+  w...s.....................TTT............................s..
+  w..s.....................TTTTT..........................s...
+  w..s....................TT.T.TT.........................s...
+  w..s.................o..TTTTTTT.........................s...
+  w..s....................TT.T.TT.........................s...
+  w...s...................T.....T.........................s..w
+  w...s..................................................s...w
+  w....s................................................s....w
+  w.....ssssssssss..........................ssssssssssss.....w
+  w..........................................................w
+  w..........................................................w
+  w..........................................................w
+  w.........................a................................w
+  w..........................................................w
+  w.............................@............................w
+  w..........................................................w
+  w....................ddddddddddddddddddd...................w
+  w....................dp................d...................w
+  wwwwwwwwwwwwwwwwwwwwwwddddddddddddddddddddwwwwwwwwwwwwwwwwww
+  end
+
+  legend
+    w = Normal color 0x08
+    . = Empty color 0x0F
+    * = Text-White color 0x2A
+    s = Solid color 0x07
+    d = Solid color 0x08
+    T = Line color 0x0B
+    o = Object color 0x0E
+    a = Object color 0x0A
+    p = Passage color 0x1F to "Dusty Cellar"
+    @ = Player color 0x1F under Empty color 0x00
+  end
+
+  stats
+    stat at 22,10 element Object cycle 3 p1 cp437:0x54 step idle under Empty color 0x00
+    oop
+@telescope
+#end
+:touch
+#play tc
+The great brass telescope points skyward through the dome slit.
+#if lensfound thn
+Its main lens is missing. Without it, the sky is only a blur.
+#end
+:thn
+You slot the lens home. The heavens leap into focus!
+#play tcegC
+A ring around a distant world... a comet's frozen tail...
+#play cegCegCe
+You have seen the sky as it was always meant to be seen.
+#endgame
+#end
+
+    end
+    stat at 27,19 element Object cycle 3 p1 cp437:0x02 step idle under Empty color 0x00
+    oop
+@astronomer
+#end
+:touch
+#play tcf
+Ah! A visitor, at this late hour.
+I am the keeper of this old observatory.
+#play tef
+My telescope is blind, friend. The grinding lens
+went missing years ago -- lost somewhere below.
+#play te
+The stair spirals down into the south. Find my lens,
+bring it back, and I will show you the stars entire.
+#end
+
+    end
+    stat at 23,24 element Passage cycle 0 p3 board "Dusty Cellar" under Empty color 0x00
+  end
+end
+
+board "Winding Stair"
+  max-shots 255
+  dark false
+  reenter false
+  time-limit 0
+  exits north "Dome Top" south "Cellar Landing" west none east none
+
+  start player at 26,2
+  grid
+  wwwwwwwwwwwwwwwwwwwwwwddddddddddddddddddddwwwwwwwwwwwwwwwwww
+  w..s......s.......s......@.........s.......s....s..........w
+  w.......s.......s.....s........s......s......s........s....w
+  w..s..######################################......s.......w.
+  w.....#TTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTT#..s...........sw
+  w.s...#T....................................o.....s.......w.
+  w.....#T.####################################.......s.....w.
+  ws....#T.#TTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTT#..s..........sw
+  w..s..#T.#T.....................o..........#.....s........w.
+  w.....#T.#T.####################.###########.s.........s..w.
+  w...s.#T.#T.#TTTTTTTTTTTTTTTTTTT.#T#..............s.......w.
+  ws....#T.#T.#T................o..#T#....s...............s.w.
+  w.....#T.#T.#T.###################T#.......s........s.....w.
+  w..s..#T.#T.#T.#TTTTTTTTTTTTTTTTTTT#.s................s...w.
+  w.....#T.#T.#T.#T..................#....s.......s.........w.
+  ws.s..#T.#T.#T.#T.#################.#......s..........s...sw
+  w.....#T.#T.#T.#T.#TTTTTTTTTTTTTTT#.#.s.........s.........w.
+  w.....#T.#T.#T.#T.#T.............o#.#.......s.......s.....w.
+  w..s..#T.#T.#T.#T.#T.############.#.#...s.......s.........w.
+  w.....#..#..#..#..#..#..........................s........sw.
+  ws....########################################.....s......w.
+  w..s.......s.......s......s........s......s.......s.......w.
+  w.......s........s.......s.......s.......s.....s.........s.w
+  w..s.......s.....DDDDDDDDDDDDDDDDDDDD......s........s.....w.
+  wwwwwwwwwwwwwwwwwDDDDDDDDDDDDDDDDDDDDwwwwwwwwwwwwwwwwwwwwwww
+  end
+
+  legend
+    w = Solid color 0x19
+    d = Empty color 0x00
+    D = Empty color 0x00
+    . = Empty color 0x0F
+    s = Text-Yellow color 0x2A
+    # = Normal color 0x08
+    T = Fake color 0x08
+    @ = Player color 0x1F under Empty color 0x00
+    o = Object color 0x0E
+  end
+
+  stats
+    stat at 45,6 element Object cycle 3 p1 cp437:0x0F step idle under Empty color 0x0F
+    oop
+@torch1
+#end
+:touch
+#play tcd
+A cold draft rises from the winding stair.
+Down and down it spirals into the dark.
+#end
+    end
+
+    stat at 33,9 element Object cycle 3 p1 cp437:0x0F step idle under Empty color 0x0F
+    oop
+@torch2
+#end
+:touch
+#play tcd
+Old sconces cling to the stone, long cold.
+#end
+    end
+
+    stat at 31,12 element Object cycle 3 p1 cp437:0x0F step idle under Empty color 0x0F
+    oop
+@torch3
+#end
+:touch
+#play tcd
+The steps are worn smooth by centuries of feet.
+#end
+    end
+
+    stat at 34,18 element Object cycle 3 p1 cp437:0x02 step idle under Empty color 0x0F
+    oop
+@keeper
+#end
+:touch
+#play tefgab
+The Keeper of Steps stirs, half-stone, half-shadow.
+Mind the dark below, little one.
+Bring a light, or the dark keeps you.
+#end
+    end
+  end
+end
+
+board "Cellar Landing"
+  max-shots 20
+  dark false
+  reenter false
+  time-limit 0
+  exits north "Winding Stair" south "Dusty Cellar" west none east none
+
+  start player at 29,3
+  grid
+  wwwwwwwwwwwwwwwwwww..................wwwwwwwwwwwwwwwwwwwwwww
+  wSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSS
+  wS..........................@...........................hhSS
+  wS...hh.....................................hh..........hhSS
+  wS...hh...cccccccccccccccccccccccccccc...hh.hh.........hhhSS
+  wS........c..............................hh.hh........hhhhSS
+  wS........c...RR...RR...RR...RR...RR..c.................hhSS
+  wS........c..........................c.....k...........hhSSw
+  wS........c..RR...RR...RR...RR...RR...c................hhhSS
+  wS........c..........................c...............hhhhhSS
+  wS........c..RR...RR...RR...RR...RR...c.............hhhhhhhS
+  wS........c..........................c...bbbbbbbbb.......hhS
+  wS........c..RR...RR...RR...RR...RR...c..b.......b.......hhS
+  wS........ccccccccccccccccccccccccccc.c..b..o....b........hS
+  wS...................................c..bb.......b.........S
+  wS...................................c..b........b........hS
+  wS...................................c..bbb+bbbbbb........hS
+  wS...hh..............................c...................hhS
+  wS...hh......G.......................c..................hhhS
+  wS...................................ccccccccccccc.....hhhhS
+  wS..........................................o.........hhhhhS
+  wS.........................................+.........hhhhhhS
+  wSSSSSSSSSSSSSSSSSSSSSSSSSSS+SSSSSSSSSSSSSSSSSSSSSSSSSSSSSSS
+  wwwwwwwwwwwwwwwwwwwwwwwwwww.DD.wwwwwwwwwwwwwwwwwwwwwwwwwwwww
+  DDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDD
+  end
+
+  legend
+    w = Water color 0x9F
+    S = Solid color 0x08
+    . = Empty color 0x00
+    h = Fake color 0x08
+    c = Normal color 0x06
+    R = Breakable color 0x06
+    b = Solid color 0x06
+    G = Gem color 0x0A
+    k = Key color 0x0C
+    o = Object color 0x0E
+    + = Door color 0x4C
+    @ = Player color 0x1F under Empty color 0x00
+    D = Empty color 0x00
+  end
+
+  stats
+    stat at 45,14 element Object cycle 3 p1 cp437:0x02 step idle under Empty color 0x00
+    oop
+@warden
+#end
+:touch
+#play tcefg
+A dusty warden-statue creaks to life, one stone eye rolling toward you.
+The cellar door below only yields to the RED key. It lies among the
+rubble-cages... but mind the walls, some crumble, some do not.
+#end
+    end
+    stat at 45,21 element Object cycle 3 p1 cp437:0x0F step idle under Empty color 0x00
+    oop
+@doorsign
+#end
+:touch
+#play tc
+A brass plaque above the south door: LOWER CELLAR - AUTHORIZED KEEPERS ONLY.
+The red lock is cold to the touch.
+#end
+    end
+  end
+end
+
+board "Dusty Cellar"
+  max-shots 255
+  dark true
+  reenter true
+  time-limit 0
+  exits north "Cellar Landing" south none west none east none
+
+  start player at 3,3
+  grid
+  WWWWWWWWWWWWWWWWWWWWW..WWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWW
+  W..W.....W.......W....W...W.......W.......W...........W.....
+  W.@W.WWW.W.WWWWW.W.WWWW.W.W.WWWWW.W.WWWWW.W.WWWWWWW.W.W.WWW.
+  W.WWWW.W.W.W...W.W.W....W.W.....W.W.....W.W.......W.W.W...W.
+  W......W.W.W.W.W.W.W.WWWW.WWWWW.W.WWWWW.W.WWWWWWW.W.W.WWW.W.
+  WWWWWW.W.W.W.W.W.W.W.W......W...W.....W.W.......W.W.W...W.W.
+  W....W.W.W.W.W.W.W.W.W.WWWW.W.WWWWWWW.W.WWWWWWW.W.W.WWW.W.W.
+  W.WW.W.W.W.W.W.W.W.W.W.W..W.W.......W.W.......W.W.W...W.W.W.
+  W.W..W.W.W.W.W.W.W.W.W.W.tW.WWWWWWW.W.WWWWWWW.W.W.WWW.W.W.W.
+  W.W.WW.W.W.W.W.W.W.W.W.WWWW.W.....W.W.......W.W.W...W.W.W.W.
+  W.W.W..W.W.W.W.W.W.W.W......W.WWW.W.WWWWWWW.W.W.WWW.W.W.W.W.
+  W.W.W.WW.W.W.W.W.W.W.WWWWWWWW.W.W.W.......W.W.W...W.W.W.W.W.
+  W.W.W....W.W.W.W.W.W........W.W.W.WWWWWWW.W.W.WWW.W.W.W.W.W.
+  W.W.WWWWWW.W.W.W.W.WWWWWWWW.W.W.W.......W.W.W...W.W.W.W.W.W.
+  W.W......W.W.W.W.W........W.W.W.WWWWWWW.W.W.WWW.W.W.W.W.W.W.
+  W.WWWWWW.W.W.W.W.WWWWWWWW.W.W.W.......W.W.W...W.W.W.W.W.W.W.
+  W......W.W.W.W.W........W.W.W.WWWWWWW.W.W.WWW.W.W.W.W.W.W.W.
+  WWWWWW.W.W.W.W.WWWWWWWW.W.W.W.......W.W.W...W.W.W.W.W.W.W.W.
+  W....W.W.W.W.W........W.W.W.WWWWWWW.W.W.WWW.W.W.W.W.W.W.W.W.
+  W.WW.W.W.W.W.WWWWWWWW.W.W.W.......W.W.W...L.W.W.W.W.W.W.W.W.
+  W.W..W.W.W.W........W.W.W.WWWWWWW.W.W.WWWWW.W.W.W.W.W.W.W...
+  W.W.WW.W.W.WWWWWWWW.W.W.W........W.W........W.W.W.W.W.WWWWW.
+  W.W....W.W........W.W.W.WWWWWWWWWW.WWWWWWWWWWW.W.W.W......pg
+  W.WWWWWW.WWWWWWWWW.W.W..............................W.WWWWWW
+  WWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWW
+  end
+
+  legend
+    W = Normal color 0x08
+    . = Empty color 0x00
+    @ = Player color 0x1F under Empty color 0x00
+    t = Object color 0x0E
+    L = Object color 0x0B
+    g = Object color 0x0A
+    p = Passage color 0x1F to "Dome Top"
+  end
+
+  stats
+    stat at 26,9 element Object cycle 3 p1 cp437:0x0F step idle under Empty color 0x00
+    oop
+@torch
+#end
+:touch
+#play tcdefg
+A stub of an old torch, still dry enough to catch.
+#give torches 3
+Take it and keep the dark at bay.
+#die
+    end
+
+    stat at 43,20 element Object cycle 3 p1 cp437:0xE8 step idle under Empty color 0x00
+    oop
+@lens
+#end
+:touch
+#play iebg-c#e
+The great glass lens! Cool and heavy, ringed with brass.
+#set gotlens
+The astronomer will want this at once.
+#die
+    end
+
+    stat at 60,23 element Object cycle 3 p1 cp437:0xF0 step idle under Empty color 0x00
+    oop
+@wayback
+#end
+:touch
+#if gotlens goup
+A dumbwaiter shaft, but you have nothing worth hauling up.
+#end
+:goup
+#play cegceg
+You load the lens into the old dumbwaiter and climb the rope.
+#send owner:up
+#end
+:up
+#end
+    end
+
+    stat at 59,23 element Passage cycle 0 p3 board "Dome Top" under Empty color 0x00
+  end
+end
+

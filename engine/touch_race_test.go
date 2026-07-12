@@ -5,6 +5,14 @@ import (
 	"testing"
 )
 
+// TestTouchRaceBakery verifies that an unlocked object (P2 == 0) runs its
+// `:touch` label and emits a ScrollEvent on the tick after `OopSend(TOUCH)`.
+//
+// The filename is historical: this test was originally written to chase a
+// suspected `#end`/`:touch` tick race. That diagnosis was disproven — the real
+// cause was ZWD-compiler stat-default garbage, since fixed and guarded by
+// TestZWDObjectDefaultsAreZZTNeutral (zwd_test.go). There is no race here; the
+// test simply checks the unlocked-object touch → scroll path end to end.
 func TestTouchRaceBakery(t *testing.T) {
 	// Read BAKERY.zwd
 	src, err := ioutil.ReadFile("BAKERY.zwd")
