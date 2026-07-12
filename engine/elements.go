@@ -1056,6 +1056,15 @@ func (e *Engine) ElementPassageTouch(x, y int16, sourceStatId int16, deltaX, del
 func (e *Engine) ElementDoorTouch(x, y int16, sourceStatId int16, deltaX, deltaY *int16) {
 	var key int16
 	key = int16(e.Board.Tiles[x][y].Color) / 16 % 8
+	// A door's key colour lives in the background nibble.  A malformed DOS
+	// world can legally carry 0 or 8 here, but neither maps to our zero-based
+	// Keys/ColorNames arrays.  Vanilla's one-based arrays tolerate key 0; keep
+	// that tolerance rather than letting an invalid world take down the server.
+	if key == 0 {
+		e.DisplayMessage(200, "The door is locked!")
+		e.SoundQueue(3, "\x17\x01\x10\x01")
+		return
+	}
 	pState := e.PlayerFor(sourceStatId)
 	if pState.Keys[key-1] {
 		e.Board.Tiles[x][y].Element = E_EMPTY

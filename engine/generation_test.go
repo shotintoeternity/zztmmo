@@ -804,3 +804,166 @@ end`
 		t.Errorf("(3,3) = element %d; want the space mapped to E_EMPTY", got.Element)
 	}
 }
+
+// M12.13: model-authored grids frequently contain the glyph but omit the
+// independent stats declaration.  The preprocessor must derive both positions
+// from the grid, create the absent stats block, and give objects/passages the
+// minimum runtime data their elements require.
+func TestM1213PreprocessSynthesizesOrphanGlyphStats(t *testing.T) {
+	rows := make([]string, BOARD_HEIGHT)
+	for y := range rows {
+		rows[y] = strings.Repeat(".", BOARD_WIDTH)
+	}
+	put := func(x, y int, ch byte) {
+		row := []byte(rows[y-1])
+		row[x-1] = ch
+		rows[y-1] = string(row)
+	}
+	put(1, 1, '@')
+	put(10, 5, 'o')
+	put(20, 8, 'p')
+
+	var grid strings.Builder
+	for _, row := range rows {
+		fmt.Fprintf(&grid, "  %s\n", row)
+	}
+	input := `board "Orphans"
+  grid
+` + grid.String() + `  end
+  legend
+    @ = Player color 0x1F under Empty color 0x00
+    . = Empty color 0x00
+    o = Object color 0x0F
+    p = Passage color 0x1F
+  end
+end`
+
+	preprocessed := preprocessZWDGrid(input)
+	if !strings.Contains(preprocessed, "  stats\n    stat at 10,5 element Object cycle 3\n    oop\n    #end\n    end\n    stat at 20,8 element Passage cycle 0 p3 0\n  end") {
+		t.Fatalf("orphan stats were not synthesized as expected:\n%s", preprocessed)
+	}
+
+	world, err := CompileZWDWorld("zwd 1\nworld \"ORPHANS\"\n" + preprocessed)
+	if err != nil {
+		t.Fatalf("preprocessed orphan glyphs did not compile: %v\n%s", err, preprocessed)
+	}
+	e := NewEngine()
+	e.InitElementsGame()
+	e.World = world
+	e.BoardOpen(0)
+	var object, passage *TStat
+	for i := int16(1); i <= e.Board.StatCount; i++ {
+		stat := &e.Board.Stats[i]
+		switch {
+		case stat.X == 10 && stat.Y == 5:
+			object = stat
+		case stat.X == 20 && stat.Y == 8:
+			passage = stat
+		}
+	}
+	if object == nil || e.Board.Tiles[object.X][object.Y].Element != E_OBJECT || object.Data != "#end" {
+		t.Fatalf("object stat = %+v, want synthesized Object at (10,5) with only #end", object)
+	}
+	if passage == nil || e.Board.Tiles[passage.X][passage.Y].Element != E_PASSAGE || passage.P3 != 0 {
+		t.Fatalf("passage stat = %+v, want synthesized Passage at (20,8) targeting board 0", passage)
+	}
+
+	// Existing stats remain authoritative and are marked claimed by alignment;
+	// only the still-orphaned passage belongs in that block.
+	withExistingStats := strings.Replace(input, "\nend", `
+  stats
+    stat at 10,5 element Object
+  end
+end`, 1)
+	preprocessed = preprocessZWDGrid(withExistingStats)
+	if got := strings.Count(preprocessed, "stat at 10,5 element Object"); got != 1 {
+		t.Fatalf("object was declared %d times after alignment:\n%s", got, preprocessed)
+	}
+	if got := strings.Count(preprocessed, "stat at 20,8 element Passage"); got != 1 {
+		t.Fatalf("passage was declared %d times after synthesis:\n%s", got, preprocessed)
+	}
+	if _, err := CompileZWDWorld("zwd 1\nworld \"ORPHANS\"\n" + preprocessed); err != nil {
+		t.Fatalf("preprocessed board with an existing stats block did not compile: %v\n%s", err, preprocessed)
+	}
+}
+
+func TestM1214PreprocessRepairsRecurringDreamRejections(t *testing.T) {
+	rows := make([]string, BOARD_HEIGHT)
+	for i := range rows {
+		rows[i] = strings.Repeat(".", BOARD_WIDTH)
+	}
+	rows[0] = "@" + strings.Repeat(".", BOARD_WIDTH-1)
+	grid := strings.Join(rows, "\n  ")
+
+	tests := []struct {
+		name    string
+		board   string
+		warning string
+	}{
+		{
+			name: "duplicate legend key keeps first entry",
+			board: `board "Duplicate"
+  grid
+  ` + grid + `
+  end
+  legend
+    @ = Player color 0x1F
+    . = Empty color 0x00
+    . = Normal color 0x0F
+  end
+end`,
+			warning: "dropped duplicate legend key",
+		},
+		{
+			name: "unknown stat field is dropped",
+			board: `board "Unknown Field"
+  grid
+  @o` + strings.Repeat(".", BOARD_WIDTH-2) + "\n  " + strings.Repeat(".", BOARD_WIDTH) + "\n  " + strings.Join(rows[2:], "\n  ") + `
+  end
+  legend
+    @ = Player color 0x1F
+    . = Empty color 0x00
+    o = Object color 0x0F
+  end
+  stats
+    stat at 2,1 element Object imaginary 7
+    oop
+    #end
+    end
+  end
+end`,
+			warning: "dropped unknown stat field imaginary",
+		},
+		{
+			name: "unterminated board is closed",
+			board: `board "Missing End"
+  grid
+  ` + grid + `
+  end
+  legend
+    @ = Player color 0x1F
+    . = Empty color 0x00
+  end`,
+			warning: "auto-closed board section",
+		},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			preprocessed, warnings := preprocessZWDGridWithWarnings(tt.board)
+			if !strings.Contains(strings.Join(warnings, "; "), tt.warning) {
+				t.Fatalf("warnings = %q; want %q", warnings, tt.warning)
+			}
+			data, err := CompileZWD("zwd 1\nworld \"REPAIRS\"\n" + preprocessed)
+			if err != nil {
+				t.Fatalf("preprocessed board did not compile: %v\n%s", err, preprocessed)
+			}
+			if err := validateGeneratedZWD(data); err != nil {
+				t.Fatalf("compiled board did not validate: %v", err)
+			}
+			if got := generatedGridDiagnostics(preprocessed, warnings...); !strings.Contains(got, tt.warning) {
+				t.Fatalf("diagnostics = %q; want warning %q", got, tt.warning)
+			}
+		})
+	}
+}

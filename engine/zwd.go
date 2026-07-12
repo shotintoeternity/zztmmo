@@ -460,7 +460,7 @@ func parseLegendEntry(toks []string, line int) (byte, zwdLegendEntry, error) {
 			if i+1 >= len(toks) {
 				return 0, entry, zerr(line, 1, "color requires a value")
 			}
-			color, err := parseColor(toks[i+1])
+			color, err := parseLegendColor(elem, toks[i+1])
 			if err != nil {
 				return 0, entry, zerr(line, 1, err.Error())
 			}
@@ -484,6 +484,47 @@ func parseLegendEntry(toks []string, line int) (byte, zwdLegendEntry, error) {
 		}
 	}
 	return key, entry, nil
+}
+
+// parseLegendColor interprets the seven named door colours as the convenient
+// ZWD shorthand they are documented to be.  In a stored Door tile the key is
+// encoded in the background nibble, so raw colors with nibble 0 or 8 have no
+// valid key and are rejected at the generated-world security boundary.
+func parseLegendColor(element byte, tok string) (byte, error) {
+	if element == E_DOOR {
+		if key, ok := doorColorName(tok); ok {
+			return key<<4 | 0x0F, nil
+		}
+	}
+	color, err := parseColor(tok)
+	if err != nil {
+		return 0, err
+	}
+	if element == E_DOOR && (color/16)%8 == 0 {
+		return 0, fmt.Errorf("door color must have a key background nibble 1..7 (for example 0x1E); got %s", tok)
+	}
+	return color, nil
+}
+
+func doorColorName(tok string) (byte, bool) {
+	switch tok {
+	case "blue":
+		return 1, true
+	case "green":
+		return 2, true
+	case "cyan":
+		return 3, true
+	case "red":
+		return 4, true
+	case "purple":
+		return 5, true
+	case "yellow":
+		return 6, true
+	case "white":
+		return 7, true
+	default:
+		return 0, false
+	}
 }
 
 func parseStatLine(toks []string, line int) (zwdStat, error) {

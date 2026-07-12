@@ -212,6 +212,12 @@ such as `COLOR_CHOICE_ON_BLACK`, `COLOR_WHITE_ON_CHOICE`, or
 `COLOR_CHOICE_ON_CHOICE`, the compiler stores the final board color byte, not
 the sentinel.
 
+Doors are special: their required key color is stored in the background nibble.
+Use the key names `blue`, `green`, `cyan`, `red`, `purple`, `yellow`, or `white`
+as shorthand (for example, `Door color blue` compiles to `0x1F`), or use a raw
+color whose background nibble is `1` through `7`. Raw door colors with a `0` or
+`8` background nibble are rejected because they do not name a vanilla key.
+
 ### Text elements (decorative glyphs & lettering)
 
 Use the `Text` family (`Text-Blue`, `Text-Green`, `Text-Cyan`, `Text-Red`,

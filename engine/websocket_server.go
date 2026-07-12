@@ -6,6 +6,7 @@ import (
 	"encoding/base64"
 	"encoding/json"
 	"fmt"
+	"log"
 	"net/http"
 	"os"
 	"path/filepath"
@@ -115,7 +116,7 @@ func (s *WebSocketServer) Tick(ctx context.Context) {
 	if len(s.clients) > 0 {
 		inputs := s.inputs
 		s.inputs = make(map[PlayerID]PlayerInput)
-		diffs := s.RoomManager.StepDiffs(inputs)
+		diffs := safeStepDiffs("legacy", s.RoomManager, inputs)
 		clients := make(map[PlayerID]*webSocketClient, len(s.clients))
 		messages := make(map[PlayerID]interface{}, len(diffs))
 		for playerID, client := range s.clients {
@@ -185,7 +186,7 @@ func (inst *WorldInstance) Tick(ctx context.Context, s *WebSocketServer) {
 	inst.mu.Lock()
 	inputs := inst.Inputs
 	inst.Inputs = make(map[PlayerID]PlayerInput)
-	diffs := inst.RoomManager.StepDiffs(inputs)
+	diffs := safeStepDiffs(inst.Name, inst.RoomManager, inputs)
 	clients := make(map[PlayerID]*webSocketClient, len(inst.Clients))
 	messages := make(map[PlayerID]interface{}, len(diffs))
 	for playerID, client := range inst.Clients {
@@ -223,6 +224,19 @@ func (inst *WorldInstance) Tick(ctx context.Context, s *WebSocketServer) {
 			_ = client.write(ctx, message)
 		}
 	}
+}
+
+// RoomManager.StepDiffs isolates simulation panics per room.  This outer guard
+// keeps a future panic in room routing or diff construction from escaping the
+// instance tick goroutine and taking down other hosted worlds.
+func safeStepDiffs(worldName string, rm *RoomManager, inputs map[PlayerID]PlayerInput) (diffs map[PlayerID]DiffMessage) {
+	defer func() {
+		if recovered := recover(); recovered != nil {
+			log.Printf("zztgo: isolating world %q after tick panic: %v", worldName, recovered)
+			diffs = make(map[PlayerID]DiffMessage)
+		}
+	}()
+	return rm.StepDiffs(inputs)
 }
 
 func (s *WebSocketServer) ServeHTTP(w http.ResponseWriter, r *http.Request) {

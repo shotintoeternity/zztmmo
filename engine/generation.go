@@ -351,7 +351,7 @@ func (g *GenerationService) paintBoard(ctx context.Context, planText string, pla
 			return "", err
 		}
 		lastCandidate = fencedGeneratedCandidate(text)
-		section, parsed, err := extractGeneratedBoard(text, board.Name)
+		section, parsed, warnings, err := extractGeneratedBoardWithWarnings(text, board.Name)
 		if err == nil {
 			candidate := cloneGeneratedSections(sections)
 			candidate[board.Name] = section
@@ -360,13 +360,16 @@ func (g *GenerationService) paintBoard(ctx context.Context, planText string, pla
 				compileErr = validateGeneratedZWD(data)
 			}
 			if compileErr == nil && parsed.name == board.Name {
+				if len(warnings) > 0 {
+					g.report(ctx, GenerationProgress{Stage: "validating", Board: board.Name, Attempt: *attempts, Detail: "preprocessor warnings: " + strings.Join(warnings, "; ")})
+				}
 				return section, nil
 			}
 			if compileErr != nil {
 				err = translateZWDError(compileErr, plan, candidate)
 			}
 		}
-		lastFeedback = fmt.Sprintf("Attempt %d failed: %v%s. Repair only board %q and return only its fenced ZWD board section.", *attempts, err, generatedGridDiagnostics(section), board.Name)
+		lastFeedback = fmt.Sprintf("Attempt %d failed: %v%s. Repair only board %q and return only its fenced ZWD board section.", *attempts, err, generatedGridDiagnostics(section, warnings...), board.Name)
 		if *attempts < g.maxAttempts {
 			g.report(ctx, GenerationProgress{Stage: "repairing", Board: board.Name, Attempt: *attempts + 1, Detail: err.Error()})
 		}
@@ -513,12 +516,17 @@ func fencedGeneratedCandidate(text string) string {
 }
 
 func extractGeneratedBoard(text, wantName string) (string, zwdBoard, error) {
+	section, board, _, err := extractGeneratedBoardWithWarnings(text, wantName)
+	return section, board, err
+}
+
+func extractGeneratedBoardWithWarnings(text, wantName string) (string, zwdBoard, []string, error) {
 	m := fencedGeneratedBoardRe.FindStringSubmatch(text)
 	if m == nil {
-		return "", zwdBoard{}, fmt.Errorf("model response must be exactly one fenced zwd block")
+		return "", zwdBoard{}, nil, fmt.Errorf("model response must be exactly one fenced zwd block")
 	}
 	section := strings.TrimSpace(m[1]) + "\n"
-	section = preprocessZWDGrid(section)
+	section, warnings := preprocessZWDGridWithWarnings(section)
 	log.Printf("[DEBUG PREPROCESSED ZWD]\n%s\n", section)
 	src := "zwd 1\nworld \"CHECK\"\n" + section
 	if strings.HasPrefix(strings.TrimSpace(section), "zwd 1") {
@@ -526,13 +534,13 @@ func extractGeneratedBoard(text, wantName string) (string, zwdBoard, error) {
 	}
 	doc, err := newZWDParser(src).parse()
 	if err != nil {
-		return "", zwdBoard{}, err
+		return "", zwdBoard{}, warnings, err
 	}
 	if len(doc.boards) != 1 {
-		return "", zwdBoard{}, fmt.Errorf("model response must contain exactly one board")
+		return "", zwdBoard{}, warnings, fmt.Errorf("model response must contain exactly one board")
 	}
 	if doc.boards[0].name != wantName {
-		return "", zwdBoard{}, fmt.Errorf("board is named %q; expected %q", doc.boards[0].name, wantName)
+		return "", zwdBoard{}, warnings, fmt.Errorf("board is named %q; expected %q", doc.boards[0].name, wantName)
 	}
 	if strings.HasPrefix(strings.TrimSpace(section), "zwd 1") {
 		// A model occasionally wraps the requested one-board section in a
@@ -547,14 +555,14 @@ func extractGeneratedBoard(text, wantName string) (string, zwdBoard, error) {
 			}
 		}
 		if start < 0 {
-			return "", zwdBoard{}, fmt.Errorf("model response has no board section")
+			return "", zwdBoard{}, warnings, fmt.Errorf("model response has no board section")
 		}
 		section = strings.Join(lines[start:], "\n")
 	}
-	return section, doc.boards[0], nil
+	return section, doc.boards[0], warnings, nil
 }
 
-func generatedGridDiagnostics(section string) string {
+func generatedGridDiagnostics(section string, warnings ...string) string {
 	if section == "" {
 		return ""
 	}
@@ -594,6 +602,9 @@ func generatedGridDiagnostics(section string) string {
 				row, len(line), line, ruler1.String(), ruler2.String()))
 		}
 	}
+	if len(warnings) > 0 {
+		problems = append(problems, "\n- preprocessor warnings: "+strings.Join(warnings, "; "))
+	}
 	if len(problems) == 0 {
 		return ""
 	}
@@ -631,6 +642,11 @@ func translateZWDError(err error, plan Plan, sections map[string]string) error {
 var boardHeaderRe = regexp.MustCompile(`(?m)^[ \t]*board\s+"([^"]+)"`)
 
 func extractMultipleBoardsSplit(text string) map[string]string {
+	sections, _ := extractMultipleBoardsSplitWithWarnings(text)
+	return sections
+}
+
+func extractMultipleBoardsSplitWithWarnings(text string) (map[string]string, map[string][]string) {
 	matches := multiFencedBoardRe.FindAllStringSubmatch(text, -1)
 	var sections []string
 	if len(matches) > 0 {
@@ -642,6 +658,7 @@ func extractMultipleBoardsSplit(text string) map[string]string {
 	}
 
 	result := make(map[string]string)
+	warnings := make(map[string][]string)
 	for _, sec := range sections {
 		lines := strings.Split(sec, "\n")
 		var currentBoardName string
@@ -652,7 +669,7 @@ func extractMultipleBoardsSplit(text string) map[string]string {
 			if len(headerMatch) > 0 {
 				if currentBoardName != "" && len(currentBoardLines) > 0 {
 					boardContent := strings.TrimSpace(strings.Join(currentBoardLines, "\n"))
-					result[currentBoardName] = preprocessZWDGrid(boardContent)
+					result[currentBoardName], warnings[currentBoardName] = preprocessZWDGridWithWarnings(boardContent)
 				}
 				currentBoardName = headerMatch[1]
 				currentBoardLines = []string{line}
@@ -664,18 +681,23 @@ func extractMultipleBoardsSplit(text string) map[string]string {
 		}
 		if currentBoardName != "" && len(currentBoardLines) > 0 {
 			boardContent := strings.TrimSpace(strings.Join(currentBoardLines, "\n"))
-			result[currentBoardName] = preprocessZWDGrid(boardContent)
+			result[currentBoardName], warnings[currentBoardName] = preprocessZWDGridWithWarnings(boardContent)
 		}
 	}
-	return result
+	return result, warnings
 }
 
 func extractMultipleBoards(text string) (map[string]string, error) {
-	sections := extractMultipleBoardsSplit(text)
+	sections, _, err := extractMultipleBoardsWithWarnings(text)
+	return sections, err
+}
+
+func extractMultipleBoardsWithWarnings(text string) (map[string]string, map[string][]string, error) {
+	sections, warnings := extractMultipleBoardsSplitWithWarnings(text)
 	if len(sections) == 0 {
-		return nil, fmt.Errorf("model response must contain at least one fenced zwd block")
+		return nil, nil, fmt.Errorf("model response must contain at least one fenced zwd block")
 	}
-	return sections, nil
+	return sections, warnings, nil
 }
 
 func batchBoardRequest(planText string, plan Plan, boards []PlanBoard, sections map[string]string, feedback string, previous map[string]string, attempt, maxAttempts int) string {
@@ -728,7 +750,7 @@ func (g *GenerationService) paintBoardsBatch(ctx context.Context, planText strin
 		if err != nil {
 			return err
 		}
-		extracted, err := extractMultipleBoards(text)
+		extracted, extractedWarnings, err := extractMultipleBoardsWithWarnings(text)
 		if err == nil {
 			allOk := true
 			var batchErrors []string
@@ -747,7 +769,6 @@ func (g *GenerationService) paintBoardsBatch(ctx context.Context, planText strin
 				doc, parseErr := newZWDParser(src).parse()
 				if parseErr != nil {
 					allOk = false
-					diag := generatedGridDiagnostics(section)
 					var localErr error = parseErr
 					if zErr, ok := parseErr.(*zwdError); ok {
 						localLine := zErr.line
@@ -756,7 +777,7 @@ func (g *GenerationService) paintBoardsBatch(ctx context.Context, planText strin
 						}
 						localErr = fmt.Errorf("in board %q, line %d, col %d: %s", board.Name, localLine, zErr.col, zErr.msg)
 					}
-					batchErrors = append(batchErrors, fmt.Sprintf("board %q: %v%s", board.Name, localErr, diag))
+					batchErrors = append(batchErrors, fmt.Sprintf("board %q: %v%s", board.Name, localErr, generatedGridDiagnostics(section, extractedWarnings[board.Name]...)))
 					continue
 				}
 
@@ -779,7 +800,7 @@ func (g *GenerationService) paintBoardsBatch(ctx context.Context, planText strin
 				}
 				if compileErr != nil {
 					allOk = false
-					diag := generatedGridDiagnostics(section)
+					diag := generatedGridDiagnostics(section, extractedWarnings[board.Name]...)
 					translatedErr := translateZWDError(compileErr, plan, candidate)
 					batchErrors = append(batchErrors, fmt.Sprintf("board %q failed validation: %v%s", board.Name, translatedErr, diag))
 				}
@@ -787,6 +808,9 @@ func (g *GenerationService) paintBoardsBatch(ctx context.Context, planText strin
 			if allOk {
 				for _, board := range boards {
 					sections[board.Name] = extracted[board.Name]
+					if warnings := extractedWarnings[board.Name]; len(warnings) > 0 {
+						g.report(ctx, GenerationProgress{Stage: "validating", Board: board.Name, Attempt: batchAttempt, Detail: "preprocessor warnings: " + strings.Join(warnings, "; ")})
+					}
 				}
 				return nil
 			}
@@ -865,7 +889,26 @@ func parseLegendElemName(valStr string) string {
 }
 
 func preprocessZWDGrid(zwdText string) string {
+	preprocessed, _ := preprocessZWDGridWithWarnings(zwdText)
+	return preprocessed
+}
+
+// preprocessZWDGridWithWarnings repairs mechanical omissions in model output
+// before the strict compiler sees it. Its warnings are presentation context:
+// the repaired ZWD remains ordinary source and the compiler still guards every
+// semantic value that cannot be safely derived.
+func preprocessZWDGridWithWarnings(zwdText string) (string, []string) {
+	var warnings []string
+	zwdText, warnings = autoCloseZWDSections(zwdText, warnings)
+	// This preprocessor needs the same element metadata as the ZWD compiler to
+	// recognize a legend's stat-backed elements and to derive their default
+	// cycles.  Generation can call us before any world has been compiled.
+	init := NewEngine()
+	init.InitElementsGame()
+
 	lines := strings.Split(zwdText, "\n")
+	lines = deduplicateZWDLegendEntries(lines, &warnings)
+	lines = dropUnknownZWDStatFields(lines, &warnings)
 
 	playerChar := byte('@')
 	emptyChar := byte('.')
@@ -1184,6 +1227,52 @@ func preprocessZWDGrid(zwdText string) string {
 					modifiedLines[spec.lineIdx] = fmt.Sprintf("%sstat at %d,%d element %s%s", indent, alignedX, alignedY, spec.elem, spec.rest)
 				}
 
+				// The other half of stat reconciliation: a generated grid can
+				// contain a stat-backed glyph with no matching declaration.  Do
+				// not make the model repeat its coordinate in a separate block;
+				// derive it from this final, normalized grid instead.  claimed is
+				// deliberately shared with the alignment pass above, so a declared
+				// stat is never emitted twice.  Scanning rows first, then columns,
+				// keeps synthesized-stat ordering deterministic.
+				var synthesized []string
+				for r, row := range gridRows {
+					for c := 0; c < len(row.content); c++ {
+						co := coord{r: r, c: c}
+						if claimed[co] {
+							continue
+						}
+						elemName, ok := legendMap[row.content[c]]
+						if !ok {
+							continue
+						}
+						el, ok := elementByZWDName(elemName)
+						if !ok || el == E_PLAYER || !elementNeedsStat(el) {
+							continue
+						}
+						claimed[co] = true
+						synthesized = append(synthesized, synthesizeZWDStat(el, elemName, c+1, r+1)...)
+					}
+				}
+
+				var newStatsBlock []string
+				if len(synthesized) > 0 {
+					// A normal generated board already has a stats block.  Add to
+					// that block rather than placing a second one earlier in the
+					// board: parseBoard intentionally treats a later stats block as
+					// authoritative.  If the model omitted it entirely, create one
+					// immediately after the grid.
+					statsEndIdx := zwdStatsEnd(lines, lineIdx)
+					if statsEndIdx >= 0 {
+						indent := leadingZWDIndent(lines[statsEndIdx])
+						lines[statsEndIdx] = formatSynthesizedZWDStats(synthesized, indent+"  ") + lines[statsEndIdx]
+					} else {
+						indent := gridIndent
+						newStatsBlock = append(newStatsBlock, indent+"stats")
+						newStatsBlock = append(newStatsBlock, strings.Split(strings.TrimSuffix(formatSynthesizedZWDStats(synthesized, indent+"  "), "\n"), "\n")...)
+						newStatsBlock = append(newStatsBlock, indent+"end")
+					}
+				}
+
 				// Any grid char that still lacks a legend entry (and is not the
 				// player or empty char) is prose the LLM drew straight into the
 				// board — the top cause of dream failures. The compiler reports
@@ -1290,6 +1379,7 @@ func preprocessZWDGrid(zwdText string) string {
 					out = append(out, row.indent+row.content)
 				}
 				out = append(out, line)
+				out = append(out, newStatsBlock...)
 				continue
 			}
 			if strings.Contains(trimmed, "1234567890") {
@@ -1322,7 +1412,285 @@ func preprocessZWDGrid(zwdText string) string {
 		}
 		out = append(out, line)
 	}
-	return strings.Join(out, "\n")
+	return strings.Join(out, "\n"), warnings
+}
+
+func autoCloseZWDSections(src string, warnings []string) (string, []string) {
+	lines := strings.Split(src, "\n")
+	boardOpen := false
+	section := ""
+	inOOP := false
+	sectionIndent := ""
+	boardIndent := ""
+	for _, line := range lines {
+		text := strings.TrimSpace(line)
+		if text == "" {
+			continue
+		}
+		if !boardOpen {
+			if strings.HasPrefix(text, "board ") {
+				boardOpen = true
+				boardIndent = leadingZWDIndent(line)
+			}
+			continue
+		}
+		if section != "" {
+			switch section {
+			case "stats":
+				if inOOP {
+					if text == "end" {
+						inOOP = false
+					}
+				} else if text == "oop" {
+					inOOP = true
+				} else if text == "end" {
+					section = ""
+				}
+			default:
+				if text == "end" {
+					section = ""
+				}
+			}
+			continue
+		}
+		switch text {
+		case "grid", "legend", "stats":
+			section = text
+			sectionIndent = leadingZWDIndent(line)
+		case "end":
+			boardOpen = false
+		}
+	}
+	if !boardOpen {
+		return src, warnings
+	}
+	if inOOP {
+		lines = append(lines, sectionIndent+"  end")
+		warnings = append(warnings, "auto-closed oop block")
+	}
+	if section != "" {
+		lines = append(lines, sectionIndent+"end")
+		warnings = append(warnings, "auto-closed "+section+" section")
+	}
+	lines = append(lines, boardIndent+"end")
+	warnings = append(warnings, "auto-closed board section")
+	return strings.Join(lines, "\n"), warnings
+}
+
+func deduplicateZWDLegendEntries(lines []string, warnings *[]string) []string {
+	out := make([]string, 0, len(lines))
+	inLegend := false
+	seen := make(map[byte]bool)
+	for _, line := range lines {
+		text := strings.TrimSpace(line)
+		if text == "legend" {
+			inLegend = true
+			seen = make(map[byte]bool)
+			out = append(out, line)
+			continue
+		}
+		if inLegend && text == "end" {
+			inLegend = false
+			out = append(out, line)
+			continue
+		}
+		if inLegend {
+			toks, err := tokenizeZWD(text, 0)
+			if err == nil && len(toks) >= 2 && toks[1] == "=" {
+				if key, err := parseByteToken(toks[0]); err == nil {
+					if seen[key] {
+						*warnings = append(*warnings, fmt.Sprintf("dropped duplicate legend key %q", string([]byte{key})))
+						continue
+					}
+					seen[key] = true
+				}
+			}
+		}
+		out = append(out, line)
+	}
+	return out
+}
+
+func dropUnknownZWDStatFields(lines []string, warnings *[]string) []string {
+	inStats := false
+	inOOP := false
+	for i, line := range lines {
+		text := strings.TrimSpace(line)
+		if text == "stats" {
+			inStats = true
+			continue
+		}
+		if !inStats {
+			continue
+		}
+		if inOOP {
+			if text == "end" {
+				inOOP = false
+			}
+			continue
+		}
+		if text == "oop" {
+			inOOP = true
+			continue
+		}
+		if text == "end" {
+			inStats = false
+			continue
+		}
+		toks, err := tokenizeZWD(text, i+1)
+		if err != nil || len(toks) == 0 || toks[0] != "stat" {
+			continue
+		}
+		_, next, err := parseElementName(toks, 4)
+		if err != nil || len(toks) < 5 || toks[1] != "at" || toks[3] != "element" {
+			continue
+		}
+		kept := append([]string(nil), toks[:next]...)
+		for next < len(toks) {
+			field := toks[next]
+			switch field {
+			case "cycle", "p1", "p2", "step", "follower", "leader", "data-pos", "bind":
+				if next+1 >= len(toks) {
+					kept = append(kept, toks[next:]...)
+					next = len(toks)
+				} else {
+					kept = append(kept, toks[next], toks[next+1])
+					next += 2
+				}
+			case "p3":
+				if next+2 < len(toks) && toks[next+1] == "board" && isQuotedToken(toks[next+2]) {
+					kept = append(kept, toks[next], toks[next+1], toks[next+2])
+					next += 3
+				} else if next+1 < len(toks) {
+					kept = append(kept, toks[next], toks[next+1])
+					next += 2
+				} else {
+					kept = append(kept, toks[next:]...)
+					next = len(toks)
+				}
+			case "under":
+				_, underNext, underErr := parseElementName(toks, next+1)
+				if underErr != nil || underNext+1 >= len(toks) || toks[underNext] != "color" {
+					kept = append(kept, toks[next:]...)
+					next = len(toks)
+				} else {
+					kept = append(kept, toks[next:underNext+2]...)
+					next = underNext + 2
+				}
+			default:
+				*warnings = append(*warnings, "dropped unknown stat field "+field)
+				next++
+				if next < len(toks) && !isKnownZWDStatField(toks[next]) {
+					next++
+				}
+			}
+		}
+		lines[i] = leadingZWDIndent(line) + strings.Join(kept, " ")
+	}
+	return lines
+}
+
+func isKnownZWDStatField(field string) bool {
+	switch field {
+	case "cycle", "p1", "p2", "p3", "step", "under", "follower", "leader", "data-pos", "bind":
+		return true
+	}
+	return false
+}
+
+// synthesizeZWDStat returns the shortest safe stat declaration for a glyph that
+// survived grid normalization without a declared stat.  Cycles are explicit so
+// the generated source records the ElementDefs-derived runtime value instead of
+// depending on a parser default.  Parameter values mirror
+// InitEditorStatSettings: ordinary intelligence/rate defaults are 4, Bear and
+// Object retain their element-specific defaults, and direction-bearing editor
+// elements point north.  A passage uses board 0, which is always representable
+// even when preprocessing a single board section with no world-name context.
+func synthesizeZWDStat(el byte, elemName string, x, y int) []string {
+	line := fmt.Sprintf("stat at %d,%d element %s cycle %d", x, y, elemName, ElementDefs[el].Cycle)
+	switch el {
+	case E_PASSAGE:
+		line += " p3 0"
+	case E_TRANSPORTER, E_PUSHER, E_DUPLICATOR, E_BLINK_WALL:
+		line += " step north"
+	}
+
+	// TStat's P1/P2 fields are element parameters.  Only supply values for
+	// parameters the element actually defines; doing otherwise can, for
+	// example, arm a synthesized bomb or turn an inert projectile into an
+	// invented behavior.
+	switch el {
+	case E_LION, E_SHARK:
+		line += " p1 4"
+	case E_TIGER, E_RUFFIAN, E_SPINNING_GUN, E_CENTIPEDE_HEAD:
+		line += " p1 4 p2 4"
+	case E_SLIME:
+		line += " p2 4"
+	case E_BLINK_WALL:
+		line += " p1 4 p2 4"
+	case E_DUPLICATOR:
+		line += " p2 4"
+	}
+
+	if el != E_OBJECT {
+		return []string{line}
+	}
+	// Objects are the exception: the compiler requires an OOP body so they
+	// remain a real, inert object rather than a stat-shaped invalid tile.
+	return []string{line, "oop", "#end", "end"}
+}
+
+func formatSynthesizedZWDStats(stats []string, indent string) string {
+	var b strings.Builder
+	for _, statLine := range stats {
+		fmt.Fprintf(&b, "%s%s\n", indent, statLine)
+	}
+	return b.String()
+}
+
+func leadingZWDIndent(line string) string {
+	return line[:len(line)-len(strings.TrimLeft(line, " \t"))]
+}
+
+// zwdStatsEnd finds the closing end of the first stats block following a grid.
+// OOP blocks contain their own end, so they must be skipped rather than being
+// mistaken for the stats terminator.
+func zwdStatsEnd(lines []string, gridEnd int) int {
+	inSection := false
+	for i := gridEnd + 1; i < len(lines); i++ {
+		text := strings.TrimSpace(lines[i])
+		if text == "stats" {
+			inOOP := false
+			for j := i + 1; j < len(lines); j++ {
+				body := strings.TrimSpace(lines[j])
+				if body == "oop" {
+					inOOP = true
+					continue
+				}
+				if body == "end" {
+					if inOOP {
+						inOOP = false
+						continue
+					}
+					return j
+				}
+			}
+			return -1
+		}
+		if text == "grid" || text == "legend" {
+			inSection = true
+			continue
+		}
+		if text == "end" {
+			if inSection {
+				inSection = false
+				continue
+			}
+			// This is the enclosing board end; there is no stats block.
+			return -1
+		}
+	}
+	return -1
 }
 
 func assembleGeneratedZWD(worldName string, plan Plan, sections map[string]string) string {

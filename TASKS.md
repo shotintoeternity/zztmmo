@@ -713,7 +713,7 @@ protocol is positional, so these sit just after M12.5 and before M5.
 
 - [x] **M12.11 — Dream-a-world fixes: prose-in-grid tolerance, prompt hardening, progress window.** The top Dream failure was the LLM drawing prose straight into the grid, where every letter is an undefined legend key the compiler rejects one-per-compile (never converging within K=3 repairs). `preprocessZWDGrid` now injects a legend entry for every undefined grid char (space → Empty; else → white on-board Text via `cp437:0xNN`), deriving the exclusion set from a correct legend-key tokenization rather than the lossy `legendMap` (which drops the `=` key and pre-existing `cp437:` keys). The generation prompt was hardened against prose-in-grid. Client: Dream progress lines are clamped to the window inner width, and the progress modal updates in place with `linePos` auto-following instead of reopening each poll (which snapped the scroll to the top). Generation is outside the sim; replay fixture unchanged. See NOTES.md.
 
-- [ ] **M12.12 — Door with a 0/8 background nibble crashes the whole server.**
+- [x] **M12.12 — Door with a 0/8 background nibble crashes the whole server.**
   Discovered 2026-07-11: playing a *generated* world, a player touched a Door
   whose color had a background nibble of 0, and `ElementDoorTouch`
   (`elements.go:1058`) computed `key = Color/16 % 8 == 0` then indexed
@@ -778,7 +778,7 @@ protocol is positional, so these sit just after M12.5 and before M5.
   synthesized Object at the glyph's exact coordinate and an empty `#end`; a
   Passage-glyph case gets a valid destination; `go test ./...` green.
 
-- [ ] **M12.14 — Compiler/preprocessor tolerance for the remaining recurring
+- [x] **M12.14 — Compiler/preprocessor tolerance for the remaining recurring
   Dream rejections.** After M12.13, the next tier of repair-round causes
   (NOTES.md taxonomy) are still hard errors that bounce a whole board through the
   LLM. Absorb each deterministically instead, following the "derive, don't

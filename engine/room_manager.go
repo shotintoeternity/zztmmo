@@ -1,6 +1,7 @@
 package zztgo
 
 import (
+	"log"
 	"os"
 	"sort"
 )
@@ -427,7 +428,9 @@ func (rm *RoomManager) StepDiffs(inputs map[PlayerID]PlayerInput) map[PlayerID]D
 		if inputsForRoom == nil {
 			inputsForRoom = map[int16]PlayerInput{}
 		}
-		room.Engine.GameStepWithInputs(inputsForRoom)
+		if !rm.stepRoom(room, inputsForRoom) {
+			continue
+		}
 
 		// Transfers and quits both name a stat id, and both reindex stat ids
 		// when they are applied. Resolve them to stable PlayerIDs here, while
@@ -510,6 +513,32 @@ func (rm *RoomManager) StepDiffs(inputs map[PlayerID]PlayerInput) map[PlayerID]D
 		}
 	}
 	return diffs
+}
+
+// stepRoom contains a simulation panic to the room that caused it.  Engines
+// are deliberately isolated per board, so retaining a partially-mutated one
+// after a panic is unsafe; drop it and its players instead of allowing a bad
+// uploaded/generated world to stop unrelated rooms or the server process.
+func (rm *RoomManager) stepRoom(room *Room, inputs map[int16]PlayerInput) (ok bool) {
+	ok = true
+	defer func() {
+		if recovered := recover(); recovered != nil {
+			log.Printf("zztgo: isolating board %d after simulation panic: %v", room.BoardID, recovered)
+			rm.dropPanickedRoom(room)
+			ok = false
+		}
+	}()
+	room.Engine.GameStepWithInputs(inputs)
+	return ok
+}
+
+func (rm *RoomManager) dropPanickedRoom(room *Room) {
+	for playerID := range room.players {
+		delete(rm.players, playerID)
+		delete(rm.pendingPlayerEvents, playerID)
+		delete(rm.pendingScores, playerID)
+	}
+	delete(rm.rooms, room.BoardID)
 }
 
 func (rm *RoomManager) PlayerState(playerID PlayerID) (*PlayerState, bool) {
