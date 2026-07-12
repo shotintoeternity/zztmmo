@@ -472,6 +472,15 @@ func (s *WebSocketServer) serveEditor(ctx context.Context, conn *websocket.Conn,
 			if err != nil || client.write(ctx, reply) != nil {
 				return
 			}
+		case MessageTypeEditorEdit:
+			var edit EditorEditMessage
+			if json.Unmarshal(raw, &edit) != nil {
+				continue
+			}
+			reply, err := session.Edit(client, edit)
+			if err != nil || client.write(ctx, reply) != nil {
+				return
+			}
 		}
 	}
 }

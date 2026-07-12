@@ -741,7 +741,7 @@ and running early. See NOTES.md.)
   tile info; live games are unaffected; protocol tests; `go test ./...` and
   replay green.
 
-- [ ] **M5.1 — Tile placement, patterns, colors, drawing, flood fill.** Port
+- [x] **M5.1 — Tile placement, patterns, colors, drawing, flood fill.** Port
   the interaction semantics of `EditorPlaceTile` / `EditorSetAndCopyTile` /
   `EditorPrepareModifyTile` (`editor.go:146-203`, `EDITOR.PAS:187-246`): the
   pattern row and color selector as `EditorDrawSidebar` presents them,

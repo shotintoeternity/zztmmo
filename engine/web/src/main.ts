@@ -38,6 +38,8 @@ const MessageTypeEditorEnter = "editorEnter";
 const MessageTypeEditorExit = "editorExit";
 const MessageTypeEditorInspect = "editorInspect";
 const MessageTypeEditorSnapshot = "editorSnapshot";
+const MessageTypeEditorEdit = "editorEdit";
+const MessageTypeEditorDiff = "editorDiff";
 const MessageTypeChat = "chat";
 
 // GameDebugPrompt's PromptString(63, 5, 0x1E, 0x0F, 11, PROMPT_ANY, ...).
@@ -158,7 +160,13 @@ type EditorInspectMessage = {
   inspect: EditorInspect;
 };
 
-type ServerMessage = SnapshotMessage | DiffMessage | EventMessage | BoardChangeMessage | ChatMessage | EditorSnapshotMessage | EditorInspectMessage;
+type EditorDiffMessage = {
+  type: typeof MessageTypeEditorDiff;
+  cells: ScreenCell[];
+  inspect: EditorInspect;
+};
+
+type ServerMessage = SnapshotMessage | DiffMessage | EventMessage | BoardChangeMessage | ChatMessage | EditorSnapshotMessage | EditorInspectMessage | EditorDiffMessage;
 
 type InputMessage = {
   type: typeof MessageTypeInput;
@@ -311,10 +319,15 @@ let editorCursor = { x: 30, y: 12 };
 let editorInspect: EditorInspect = {
   x: editorCursor.x,
   y: editorCursor.y,
+  elementId: 0,
   element: "",
+  character: 32,
   color: 0x0f,
   hasStat: false,
 };
+let editorBrush = { element: 21, character: 0xdb, color: 0x0e, copied: false };
+let editorDrawing = false;
+let editorPointerDrawing = false;
 const overlay = new Map<number, { ch: number; color: number }>();
 const cells: ScreenCell[] = Array.from({ length: COLS * ROWS }, (_, i) => ({
   x: i % COLS,
@@ -354,6 +367,8 @@ if ("fonts" in document) {
   });
 }
 canvas.addEventListener("mousedown", handlePointerDown);
+canvas.addEventListener("mousemove", handlePointerMove);
+window.addEventListener("mouseup", () => { editorPointerDrawing = false; });
 canvas.addEventListener("keydown", handleKeyDown);
 canvas.addEventListener("keyup", handleKeyUp);
 window.addEventListener("blur", () => {
@@ -477,8 +492,10 @@ function startEditor() {
   leavingToTitle = false;
   mode = "editor";
   editorCursor = { x: 30, y: 12 };
-  editorInspect = { x: 30, y: 12, element: "", color: 0x0f, hasStat: false };
-  drawEditorSidebar(writeText, editorInspect);
+  editorInspect = { x: 30, y: 12, elementId: 0, element: "", character: 32, color: 0x0f, hasStat: false };
+  editorBrush = { element: 21, character: 0xdb, color: 0x0e, copied: false };
+  editorDrawing = false;
+  drawEditorSidebar(writeText, editorInspect, editorBrush, editorDrawing);
   paintOverlay();
   drawScreen();
   connectEditor();
@@ -784,6 +801,9 @@ function applyMessage(message: ServerMessage) {
     case MessageTypeEditorInspect:
       applyEditorInspect(message);
       break;
+    case MessageTypeEditorDiff:
+      applyEditorDiff(message);
+      break;
   }
 }
 
@@ -792,7 +812,7 @@ function applyEditorSnapshot(message: EditorSnapshotMessage) {
   editorInspect = message.inspect;
   editorCursor = { x: message.inspect.x, y: message.inspect.y };
   replaceCells(message.screen);
-  drawEditorSidebar(writeText, editorInspect);
+  drawEditorSidebar(writeText, editorInspect, editorBrush, editorDrawing);
   paintOverlay();
   drawScreen();
 }
@@ -800,7 +820,16 @@ function applyEditorSnapshot(message: EditorSnapshotMessage) {
 function applyEditorInspect(message: EditorInspectMessage) {
   editorInspect = message.inspect;
   editorCursor = { x: message.inspect.x, y: message.inspect.y };
-  drawEditorSidebar(writeText, editorInspect);
+  drawEditorSidebar(writeText, editorInspect, editorBrush, editorDrawing);
+  paintOverlay();
+  drawScreen();
+}
+
+function applyEditorDiff(message: EditorDiffMessage) {
+  for (const cell of message.cells) setBoardCell(cell);
+  editorInspect = message.inspect;
+  editorCursor = { x: message.inspect.x, y: message.inspect.y };
+  drawEditorSidebar(writeText, editorInspect, editorBrush, editorDrawing);
   paintOverlay();
   drawScreen();
 }
@@ -1486,6 +1515,15 @@ function handlePointerDown(event: MouseEvent) {
   canvas.focus();
   zztSound.resume();
 
+  if (mode === "editor" && !modal) {
+    const cell = eventCell(event);
+    if (!cell || cell.x >= BOARD_COLS) return;
+    event.preventDefault();
+    editorCursor = { x: cell.x + 1, y: cell.y + 1 };
+    editorPointerDrawing = true;
+    sendEditorEdit("place");
+    return;
+  }
   if (mode !== "playing" || modal) {
     return;
   }
@@ -1498,6 +1536,19 @@ function handlePointerDown(event: MouseEvent) {
     stopHeldInput();
     sendKey(COMMAND_SOUND);
   }
+}
+
+function handlePointerMove(event: MouseEvent) {
+  if (!editorPointerDrawing || mode !== "editor" || modal || event.buttons === 0) {
+    editorPointerDrawing = false;
+    return;
+  }
+  const cell = eventCell(event);
+  if (!cell || cell.x >= BOARD_COLS) return;
+  const next = { x: cell.x + 1, y: cell.y + 1 };
+  if (next.x === editorCursor.x && next.y === editorCursor.y) return;
+  editorCursor = next;
+  sendEditorEdit("place");
 }
 
 function handleEditorKey(event: KeyboardEvent) {
@@ -1525,6 +1576,60 @@ function handleEditorKey(event: KeyboardEvent) {
     case "Numpad6":
       nextX += 1;
       break;
+    case "Space":
+      event.preventDefault();
+      sendEditorEdit("place");
+      return;
+    case "Delete":
+    case "Backspace":
+      event.preventDefault();
+      sendEditorEdit("erase");
+      return;
+    case "KeyX":
+      event.preventDefault();
+      sendEditorEdit("fill");
+      return;
+    case "Enter":
+      event.preventDefault();
+      editorBrush = {
+        element: editorInspect.elementId,
+        character: editorInspect.character,
+        color: editorInspect.color,
+        copied: true,
+      };
+      drawEditorSidebar(writeText, editorInspect, editorBrush, editorDrawing);
+      paintOverlay();
+      drawScreen();
+      return;
+    case "KeyP": {
+      event.preventDefault();
+      const patterns = [21, 22, 23, 0, 31];
+      const index = editorBrush.copied ? patterns.length - 1 : patterns.indexOf(editorBrush.element);
+      const next = patterns[(index + 1) % patterns.length];
+      const chars = [0xdb, 0xb2, 0xb1, 0x20, 0xce];
+      editorBrush = { element: next, character: chars[patterns.indexOf(next)], color: editorBrush.color, copied: false };
+      drawEditorSidebar(writeText, editorInspect, editorBrush, editorDrawing);
+      paintOverlay();
+      drawScreen();
+      return;
+    }
+    case "KeyC":
+      event.preventDefault();
+      editorBrush = {
+        ...editorBrush,
+        color: (editorBrush.color & 0x0f) === 15 ? 9 : (editorBrush.color & 0x0f) + 1,
+      };
+      drawEditorSidebar(writeText, editorInspect, editorBrush, editorDrawing);
+      paintOverlay();
+      drawScreen();
+      return;
+    case "Tab":
+      event.preventDefault();
+      editorDrawing = !editorDrawing;
+      drawEditorSidebar(writeText, editorInspect, editorBrush, editorDrawing);
+      paintOverlay();
+      drawScreen();
+      return;
     default:
       return;
   }
@@ -1536,10 +1641,11 @@ function handleEditorKey(event: KeyboardEvent) {
   // Keep the local cursor responsive; the authoritative tile readout follows
   // in the editorInspect reply.
   editorInspect = { ...editorInspect, x: editorCursor.x, y: editorCursor.y };
-  drawEditorSidebar(writeText, editorInspect);
+  drawEditorSidebar(writeText, editorInspect, editorBrush, editorDrawing);
   paintOverlay();
   drawScreen();
   sendEditorInspect();
+  if (editorDrawing) sendEditorEdit("place");
 }
 
 function eventCell(event: MouseEvent): { x: number; y: number } | null {
@@ -1657,5 +1763,20 @@ function sendEditorInspect() {
     type: MessageTypeEditorInspect,
     x: editorCursor.x,
     y: editorCursor.y,
+  }));
+}
+
+function sendEditorEdit(op: "place" | "erase" | "fill") {
+  if (!connected || !ws || ws.readyState !== WebSocket.OPEN || mode !== "editor") {
+    return;
+  }
+  ws.send(JSON.stringify({
+    type: MessageTypeEditorEdit,
+    op,
+    x: editorCursor.x,
+    y: editorCursor.y,
+    element: editorBrush.element,
+    color: editorBrush.color,
+    copied: editorBrush.copied,
   }));
 }

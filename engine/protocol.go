@@ -21,6 +21,8 @@ const (
 	MessageTypeEditorExit     = "editorExit"
 	MessageTypeEditorInspect  = "editorInspect"
 	MessageTypeEditorSnapshot = "editorSnapshot"
+	MessageTypeEditorEdit     = "editorEdit"
+	MessageTypeEditorDiff     = "editorDiff"
 )
 
 // HelpDir is where HelpFileLines looks for .HLP files. The terminal client
@@ -91,15 +93,17 @@ type EditorInspectMessage struct {
 }
 
 type EditorTileInspect struct {
-	X       int16  `json:"x"`
-	Y       int16  `json:"y"`
-	Element string `json:"element"`
-	Color   byte   `json:"color"`
-	HasStat bool   `json:"hasStat"`
-	StatID  int16  `json:"statId,omitempty"`
-	P1      byte   `json:"p1,omitempty"`
-	P2      byte   `json:"p2,omitempty"`
-	P3      byte   `json:"p3,omitempty"`
+	X         int16  `json:"x"`
+	Y         int16  `json:"y"`
+	ElementID byte   `json:"elementId"`
+	Element   string `json:"element"`
+	Character byte   `json:"character"`
+	Color     byte   `json:"color"`
+	HasStat   bool   `json:"hasStat"`
+	StatID    int16  `json:"statId,omitempty"`
+	P1        byte   `json:"p1,omitempty"`
+	P2        byte   `json:"p2,omitempty"`
+	P3        byte   `json:"p3,omitempty"`
 }
 
 // EditorSnapshotMessage intentionally uses ScreenCell, the same full-frame
@@ -109,6 +113,28 @@ type EditorSnapshotMessage struct {
 	Type    string            `json:"type"`
 	BoardID int16             `json:"boardId"`
 	Screen  []ScreenCell      `json:"screen"`
+	Inspect EditorTileInspect `json:"inspect"`
+}
+
+// EditorEditMessage is one browser editor operation. Selection and cursor
+// state remain client-local; the session validates and applies this operation
+// through its serialized Apply boundary.
+type EditorEditMessage struct {
+	Type    string `json:"type"`
+	Op      string `json:"op"`
+	X       int16  `json:"x"`
+	Y       int16  `json:"y"`
+	Element byte   `json:"element,omitempty"`
+	Color   byte   `json:"color,omitempty"`
+	Copied  bool   `json:"copied,omitempty"`
+}
+
+// EditorDiffMessage is the editor counterpart of DiffMessage. It carries only
+// cells dirtied by an edit plus the refreshed inspection panel for the browser
+// cursor, never a live-room/player snapshot.
+type EditorDiffMessage struct {
+	Type    string            `json:"type"`
+	Cells   []ScreenCell      `json:"cells"`
 	Inspect EditorTileInspect `json:"inspect"`
 }
 
