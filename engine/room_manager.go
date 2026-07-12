@@ -419,6 +419,10 @@ func (rm *RoomManager) StepDiffs(inputs map[PlayerID]PlayerInput) map[PlayerID]D
 		if room == nil || len(room.players) == 0 {
 			continue
 		}
+		// Each room has an isolated engine and therefore a copied TWorld. Flags
+		// are world state, not board state: refresh before this room runs so a
+		// #set in an earlier room is visible to every later player this tick.
+		room.Engine.World.Info.Flags = rm.world.Info.Flags
 		inputsForRoom := engineInputs[boardID]
 		if inputsForRoom == nil {
 			inputsForRoom = map[int16]PlayerInput{}
@@ -463,6 +467,7 @@ func (rm *RoomManager) StepDiffs(inputs map[PlayerID]PlayerInput) map[PlayerID]D
 				roomEvents[boardID] = append(roomEvents[boardID], event)
 			}
 		}
+		rm.syncWorldFlagsFromRoom(room)
 	}
 
 	for _, transfer := range transfers {
@@ -700,9 +705,22 @@ func (rm *RoomManager) freezeRoomIfEmpty(boardID int16) {
 	room.Engine.BoardClose()
 	rm.world.BoardData[boardID] = append([]byte(nil), room.Engine.World.BoardData[boardID]...)
 	rm.world.BoardLen[boardID] = room.Engine.World.BoardLen[boardID]
-	rm.world.Info.Flags = room.Engine.World.Info.Flags
+	rm.syncWorldFlagsFromRoom(room)
 	delete(rm.rooms, boardID)
 	rm.syncFrozenBoardToLiveRooms(boardID)
+}
+
+// syncWorldFlagsFromRoom publishes a room's just-mutated flags to the shared
+// world and every live room. Without this, TWorld's value-copy semantics make
+// #set/#clear visible only on the board where they were executed.
+func (rm *RoomManager) syncWorldFlagsFromRoom(source *Room) {
+	if source == nil || source.Engine.World.Info.Flags == rm.world.Info.Flags {
+		return
+	}
+	rm.world.Info.Flags = source.Engine.World.Info.Flags
+	for _, room := range rm.rooms {
+		room.Engine.World.Info.Flags = rm.world.Info.Flags
+	}
 }
 
 func (rm *RoomManager) syncFrozenBoardToLiveRooms(boardID int16) {

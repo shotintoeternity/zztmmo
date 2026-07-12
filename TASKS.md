@@ -1273,7 +1273,7 @@ enables; each is feasible precisely because of a property we already built):**
   `touch_race_test.go` or rewrite its header to describe what it actually verifies
   (an unlocked object runs `:touch` and emits a scroll on the tick after `OopSend`).
 
-* [ ] **[BUG] World flags do not propagate across boards in the multiplayer `RoomManager`.**
+* [x] **[BUG] World flags do not propagate across boards in the multiplayer `RoomManager`.**
   `World.Info.Flags` is a value array (`[MAX_FLAG]string`, `gamevars.go:107`) embedded
   in `TWorld`, and `RoomManager.ensureRoom` gives each board its own engine via
   `engine.World = rm.world` (`room_manager.go`), which **copies** the flag array per
