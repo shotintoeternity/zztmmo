@@ -74,6 +74,8 @@ func TestPromptKitSystemPrompt(t *testing.T) {
 	// The limits table must appear verbatim (it lives inside spec.md).
 	for _, want := range []string{
 		"master ZZT world author",        // role preamble
+		"Use ZZT-OOP fluently",           // authoring capability
+		"Douglas Adams-style wit",        // narrative voice
 		"# ZWD format specification",     // spec section
 		"## Limits",                      // the M12.0 limits table heading
 		"MAX_STAT = 150",                 // a specific limits row, verbatim

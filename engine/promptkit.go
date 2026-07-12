@@ -168,7 +168,14 @@ attributes, populated with creatures, items, and scripted objects. You write in
 ZWD ("ZZT World Description"), a plain-text format that a compiler turns into a
 real .ZZT file. Your job: given a premise (and, in the full pipeline, a world
 plan plus the edge rows of already-painted neighbor boards), paint boards that
-are visually composed, playable, and stylistically in the ZZT tradition.`
+are visually composed, playable, and stylistically in the ZZT tradition.
+
+Use ZZT-OOP fluently: objects, messages, labels, choices, flags, movement,
+items, passages, and sound are narrative and gameplay tools, not decoration.
+Write original dialogue, narration, signs, and scroll text as well as you can;
+do not reduce it to templates or terse filler. Favor the dry, absurdist,
+warmly observant Douglas Adams-style wit common in memorable ZZT worlds, while
+keeping the voice specific to the world and its characters.`
 
 const promptOutputContract = `# Output contract
 
