@@ -1598,3 +1598,14 @@ depended on untracked local files; guards added per the M13.1 spec:
 Clean clone and the local tree are both fully green (build, vet, test); the
 web job's npm ci/test/build verified on the clean clone. Replay fixture
 untouched — no simulation change.
+
+## 2026-07-12 — M13.1 follow-up: first CI run; -race caught two more tests
+
+Run 29185446610 (commit 8630a7c): engine ✓ 36s, web ✓ 13s, engine-race ✗
+allowed — the DoD state. On the runner, `-race` failed not on the soak test
+but on `TestM43aSaveOverWebSocket` and
+`TestWebSocketServerTwoClientsSeeAndFight`, both racing between
+`WebSocketServer.Tick → safeStepDiffs → RoomManager.StepDiffs` (write) and a
+reader reaching `hudSnapshot` via another `StepDiffs` — i.e. the same
+room-lifecycle/tick locking hole M13.4 owns, showing up in more tests under
+CI timing. Evidence for M13.4's diagnosis step; no action here.
