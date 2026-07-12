@@ -798,6 +798,64 @@ protocol is positional, so these sit just after M12.5 and before M5.
   minimal board per case above and asserts it compiles + validates after
   preprocess with the expected warning; `go test ./...` green.
 
+- [ ] **M12.15 [ADVISOR] — Offline "world-style adapter": mine every board of
+  curated worlds into corpus-derived priors + retrieval few-shots (a LoRA we
+  can't train, done as offline RAG).** Owner framing (2026-07-11): we cannot
+  fine-tune a closed API model, so the offline, no-LLM equivalent of a LoRA is
+  *corpus-mined priors + retrieval-augmented few-shots* — everything a LoRA would
+  bake into weights, we instead compute deterministically from real worlds and
+  inject at prompt time (and, where it fits "derive don't require", bake into the
+  compiler as defaults). Two problems with today's few-shot setup this fixes:
+  the corpus samples only **2 boards per world** (`pickRepresentativeBoards`,
+  `gen_llmworld_test.go:91`) and the prompt embeds **4 fixed single-board
+  few-shots from older games** (`fewShotArchetypes`, `promptkit.go:41`;
+  `SystemPrompt` at `promptkit.go:107`), so the model never sees how a whole world
+  coheres (title→hub→branches, reciprocal exits, shared palette, a progression
+  spine). All mining is pure Go over the decompiled corpus — **no LLM request
+  anywhere in this task**. Raw material is all offline-available: `NeighborBoards`
+  (`gamevars.go:87`) gives the exit graph; `DecompileZWDAuthorable`
+  (`zwd_decompile.go`) gives every board's tiles/colors/stats/OOP.
+  Build on M12.6's decompiler boundary: `DecompileZWDAuthorable` returns
+  `[]ZWDDecompileDiagnostic` (`zwd_decompile.go:12`, `Severity` "warn"/"error")
+  — the per-board "status updates" that flag safe lowerings vs. non-representable
+  boards. Curation must consult these: prefer worlds that decompile with no
+  `error`-severity diagnostics, and per phase 1 record/skip any board a world
+  cannot express cleanly (do not silently emit invalid few-shot ZWD — the M12.3
+  reason ONAMOON/OBELISK were dropped).
+  Phases (may split into M12.15a–d):
+  1. **Whole-world corpus.** A curated allowlist of well-constructed (prefer
+     modern, not the oldest) exemplar worlds; decompile *every* board of each,
+     grouped per world under `llmworld/worlds/<NAME>/` (all boards + a
+     mechanically-derived plan: board table with names + the `NeighborBoards`
+     graph, so the plan format M12.3a defined is grounded in real topologies).
+     Extend/parametrize the M12.3 corpus generator rather than forking it.
+  2. **Mined priors (the "adapter weights").** Deterministic Go miners emitting
+     compact structured artifacts: a **palette/tile codebook** (element+color
+     frequencies, common wall/floor/shading pairings, text-lettering color
+     conventions), **world-architecture stats** (board-count norms, topology
+     shapes, exit-reciprocity, per-board object density, spine shapes), and an
+     **OOP idiom library** (mined `#`-command n-grams + the recurring rituals).
+     These regenerate STYLE.md's quantitative claims from data and can seed
+     M12.13's synthesized-stat/color defaults.
+  3. **Retrieval few-shots (the LoRA-equivalent core).** Tag every corpus board
+     offline (archetype/theme/palette/density); at generation time
+     *deterministically* select the few-shots nearest the requested premise/board
+     concept (keyword/tag match — no LLM) instead of 4 static boards. Feeds the
+     per-board painter (`generation.go` board request) and the plan step.
+  4. **Whole-world cohesion example.** Because whole worlds are too large to embed
+     verbatim (token/prompt-cache budget), teach cohesion with at least one
+     *paired* exemplar: a real world's derived plan + a cohesive subset of its
+     own boards (same world, so exits/palette actually line up), not unrelated
+     single boards.
+  Constraints: few-shots must be valid, recompilable ZWD (M12.6/M12.3); keep the
+  prompt cacheable (mined artifacts are stable across a run; only the retrieved
+  subset varies per request, so order it deterministically); no LLM calls; no sim
+  changes; replay fixture unchanged. DoD (per phase): the whole-world corpus
+  builds under `go test`; miners emit their artifacts and a test asserts non-empty
+  data-grounded output; retrieval returns relevant few-shots for a sample premise;
+  the prompt kit loads the new artifacts; `go test ./...` green. Consult the
+  advisor on the artifact shapes and the retrieval/budget design before building.
+
 ## M5 — Creation and full-featured ZZT tooling
 
 Goal: support the creation features that make ZZT “full ZZT,” not only runtime
