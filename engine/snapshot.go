@@ -99,13 +99,27 @@ func ListSnapshots(dir string) []string {
 // the World.Info fields vanilla keeps it in. It does not disturb the live game:
 // every board is serialized out of a copy.
 func (rm *RoomManager) SaveSnapshot(dir, name string, playerID PlayerID) (string, error) {
-	path, err := snapshotPath(dir, name)
-	if err != nil {
+	// Resolve/validate the path before copying anything, so a disabled server or a
+	// bad name is refused ahead of "no such player" (preserves the old ordering).
+	if _, err := snapshotPath(dir, name); err != nil {
 		return "", err
 	}
 	world, ok := rm.snapshotWorld(playerID)
 	if !ok {
 		return "", ErrNoSuchPlayer
+	}
+	return writeWorldSnapshot(dir, name, world)
+}
+
+// writeWorldSnapshot serializes an already-copied world to dir/<NAME>.SAV. The
+// caller has taken the world copy under whatever lock guards the rooms, so this
+// touches no live state and may run unlocked. The write is atomic: a temp file
+// is written and renamed into place, so a crash mid-write can never corrupt the
+// previous good snapshot (M13.3).
+func writeWorldSnapshot(dir, name string, world TWorld) (string, error) {
+	path, err := snapshotPath(dir, name)
+	if err != nil {
+		return "", err
 	}
 	if err := os.MkdirAll(dir, 0o755); err != nil {
 		return "", err
@@ -114,17 +128,22 @@ func (rm *RoomManager) SaveSnapshot(dir, name string, playerID PlayerID) (string
 	scratch := newSnapshotEngine()
 	scratch.World = world
 
-	f, err := os.Create(path)
+	tmp := path + ".tmp"
+	f, err := os.Create(tmp)
 	if err != nil {
 		return "", err
 	}
 	if err := scratch.worldWriteTo(f); err != nil {
 		f.Close()
-		os.Remove(path)
+		os.Remove(tmp)
 		return "", err
 	}
 	if err := f.Close(); err != nil {
-		os.Remove(path)
+		os.Remove(tmp)
+		return "", err
+	}
+	if err := os.Rename(tmp, path); err != nil {
+		os.Remove(tmp)
 		return "", err
 	}
 	return path, nil
@@ -198,15 +217,11 @@ func (rm *RoomManager) LoadWorld(dir, name string) error {
 	return nil
 }
 
-// snapshotWorld is the world as it stands right now: frozen boards from
-// rm.world, live boards re-serialized from their engines with the players taken
-// off them, and the union of everybody's flags.
-func (rm *RoomManager) snapshotWorld(playerID PlayerID) (TWorld, bool) {
-	player := rm.players[playerID]
-	if player == nil {
-		return TWorld{}, false
-	}
-
+// snapshotWorldBase is the world as it stands right now, with no player
+// inventory written into it: frozen boards from rm.world, live boards
+// re-serialized from their engines with the players taken off them, and the
+// union of everybody's flags. CurrentBoard is left as rm.world's.
+func (rm *RoomManager) snapshotWorldBase() TWorld {
 	// TWorld's BoardData is an array of slices: copying the struct aliases them.
 	// Copy the bytes so the file can never be written from a board a live room
 	// is mutating.
@@ -221,8 +236,20 @@ func (rm *RoomManager) snapshotWorld(playerID PlayerID) (TWorld, bool) {
 	}
 
 	world.Info.Flags = rm.snapshotFlags()
-	world.Info.CurrentBoard = player.boardID
 	world.Info.IsSave = true
+	return world
+}
+
+// snapshotWorld is snapshotWorldBase with playerID's inventory written into the
+// World.Info fields vanilla keeps it in, and CurrentBoard set to their board.
+func (rm *RoomManager) snapshotWorld(playerID PlayerID) (TWorld, bool) {
+	player := rm.players[playerID]
+	if player == nil {
+		return TWorld{}, false
+	}
+
+	world := rm.snapshotWorldBase()
+	world.Info.CurrentBoard = player.boardID
 
 	// Vanilla stores the one player's inventory in World.Info (GAME.PAS:763).
 	// Here it is the saver's, which keeps the file loadable by real ZZT and by
@@ -240,6 +267,25 @@ func (rm *RoomManager) snapshotWorld(playerID PlayerID) (TWorld, bool) {
 	world.Info.BoardTimeHsec = state.BoardTimeHsec
 
 	return world, true
+}
+
+// snapshotWorldNoSaver is the world copy for an autosave, which has no saving
+// player. The vanilla one-player inventory fields are zeroed rather than left at
+// whatever the frozen world happened to carry — the server ignores them on join
+// anyway (M4.3a decision 1), so they describe nobody.
+func (rm *RoomManager) snapshotWorldNoSaver() TWorld {
+	world := rm.snapshotWorldBase()
+	world.Info.Health = 0
+	world.Info.Ammo = 0
+	world.Info.Gems = 0
+	world.Info.Torches = 0
+	world.Info.TorchTicks = 0
+	world.Info.EnergizerTicks = 0
+	world.Info.Score = 0
+	world.Info.Keys = [7]bool{}
+	world.Info.BoardTimeSec = 0
+	world.Info.BoardTimeHsec = 0
+	return world
 }
 
 // snapshotRoomBoard serializes a live room's board with every player stat

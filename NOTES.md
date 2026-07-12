@@ -1716,3 +1716,54 @@ clean tree (read-loop exit → `removeClientFromInstance` → `RemovePlayer` und
 removal it replaced (only `DrainPlayerEvents`, per decision 2), still under the
 same `inst.mu`; closing the default-instance `s.mu`/`inst.mu` split is M13.4's,
 which removes engine-race's `continue-on-error`.
+
+## 2026-07-12 — M13.3 autosave and restore-on-boot: freshness policy and decisions
+
+Nothing snapshotted automatically before this — `SaveSnapshot` ran only on a
+player's `S` press — so a crash or restart lost every live room. M13.3 closes
+that on the server layer only (no simulation change; replay fixture unchanged).
+
+**Cadence.** `-autosave <seconds>` on `cmd/zzt-server` (default 60; 0 disables)
+becomes `WebSocketServer.AutosaveEveryTicks = seconds*1000/110`, and the tick
+loop counts toward it (`maybeAutosave` at the end of `Tick`). One clock, no
+second timer — tests step the seam directly (`maybeAutosave`, `Autosave`).
+`NewWebSocketServer` leaves `AutosaveEveryTicks` 0, so tests never autosave
+unless they opt in.
+
+**Write path.** `Autosave` snapshots every *occupied* instance (`len(Clients)>0`;
+the default instance is in `s.Instances`, so the map loop covers it) to
+`SavesDir/autosave/<INSTANCENAME>.SAV`. The world copy is taken under `inst.mu`,
+then the file is written after the lock is released — a running room never blocks
+on disk I/O (M4.3a's "a save never disturbs the game it is a save of"). Writes are
+atomic (`*.tmp` then `os.Rename`, in the shared `writeWorldSnapshot`, which the
+`S`-key `SaveSnapshot` now also uses): a crash mid-write can never corrupt the
+previous good autosave. Instance names are re-`SanitizeSaveName`d at save time
+and skipped-with-log if they fail, rather than guessing a safe filename.
+
+**Autosave has no saver → zero inventory (documented choice).** `SaveSnapshot`
+writes the saving player's inventory into the vanilla one-player `World.Info`
+fields (M4.3a). Autosave has no saver, so `snapshotWorldNoSaver` zeroes those
+fields (health/ammo/gems/torches/score/keys/board-time) rather than leaking
+whatever the frozen world carried. This is harmless: the server already ignores
+those fields on join (M4.3a decision 1 — a joiner arrives fresh), and a snapshot
+drops all players anyway, so nobody's inventory is expected to survive.
+
+**Players are dropped from an autosave**, same as an `S` save (M4.3a decision 1):
+`snapshotRoomBoard` strips `E_PLAYER` stats. A round-trip restored board holds
+zero player tiles; joiners arrive fresh.
+
+**Freshness policy (the one the spec asked to record): an autosave beats the
+pristine `.ZZT` at boot.** That is what crash recovery MEANS — the last live
+state, not the shipped world. `RestoreAutosaves` runs at startup, before serving:
+for each `SavesDir/autosave/*.SAV` whose name matches a hostable world
+(`GetOrCreateInstance` returns the default instance for its own name, or loads a
+pristine hostable world otherwise; a name with no hostable world is skipped), it
+restores that world as the instance's starting state. Deleting the autosave file
+is the operator's reset. `-fresh` skips restore entirely for a deliberately clean
+boot (it simply does not call `RestoreAutosaves`). A corrupt or truncated autosave
+is logged and skipped, never a boot failure: `safeRestoreSnapshot` wraps the
+restore in a recover, because a garbage board length can reach a `make` and panic
+(same survivability floor as M12.12).
+
+**Occupancy refusal at boot is vacuous** — `RestoreSnapshot` refuses while a room
+is occupied, but at boot nobody has joined, so restore always proceeds.

@@ -41,6 +41,13 @@ type WebSocketServer struct {
 	// world picker lists them (M5.6). Empty falls back to the loaded world's
 	// directory, then the working directory — the picker's historical behavior.
 	WorldsDir string
+	// AutosaveEveryTicks, when >0, snapshots every occupied instance every this
+	// many ticks from the tick loop (M13.3). Zero disables. cmd/zzt-server sets it
+	// from -autosave seconds via seconds*1000/tickMillis, so it shares the tick
+	// clock rather than a second timer. NewWebSocketServer leaves it 0, so tests
+	// never autosave unless they set the seam.
+	AutosaveEveryTicks int
+	autosaveTicks      int // countdown accumulator; touched only on the tick goroutine
 
 	mu              sync.Mutex
 	clients         map[PlayerID]*webSocketClient
@@ -203,6 +210,22 @@ func (s *WebSocketServer) Tick(ctx context.Context) {
 	for _, title := range titles {
 		title.Tick()
 	}
+
+	s.maybeAutosave()
+}
+
+// maybeAutosave counts ticks toward the autosave cadence and fires Autosave when
+// it comes due. It runs on the tick goroutine, so autosaveTicks needs no lock.
+func (s *WebSocketServer) maybeAutosave() {
+	if s.AutosaveEveryTicks <= 0 {
+		return
+	}
+	s.autosaveTicks++
+	if s.autosaveTicks < s.AutosaveEveryTicks {
+		return
+	}
+	s.autosaveTicks = 0
+	s.Autosave()
 }
 
 func (inst *WorldInstance) Tick(ctx context.Context, s *WebSocketServer) {
@@ -818,6 +841,118 @@ func (s *WebSocketServer) submitSaveFilenameInInstance(ctx context.Context, inst
 		event.Filename = strings.TrimSuffix(filepath.Base(path), ".SAV")
 	}
 	_ = client.write(ctx, EventMessage{Type: MessageTypeEvent, Event: event})
+}
+
+// autosaveDir is where restore-on-boot autosaves live: a subdirectory of
+// SavesDir so an autosave never collides with a player's named 'S' save. Empty
+// SavesDir means saving is disabled and there is no autosave directory.
+func (s *WebSocketServer) autosaveDir() string {
+	if s.SavesDir == "" {
+		return ""
+	}
+	return filepath.Join(s.SavesDir, "autosave")
+}
+
+// Autosave snapshots every occupied instance to autosaveDir()/<NAME>.SAV. It is
+// the M13.3 seam: the tick loop calls it on cadence, and tests call it directly.
+//
+// Concurrency: each world copy is taken under that instance's lock and the file
+// is written after the lock is released, so a running room never blocks on disk
+// I/O (mirroring SaveSnapshot's "a save never disturbs the game it is a save
+// of"). The snapshot carries no saver, so the vanilla one-player inventory
+// fields are zero — the server ignores them on join (M4.3a decision 1).
+func (s *WebSocketServer) Autosave() {
+	dir := s.autosaveDir()
+	if dir == "" {
+		return
+	}
+
+	type autosaveJob struct {
+		name  string
+		world TWorld
+	}
+	var jobs []autosaveJob
+
+	s.mu.Lock()
+	instances := make([]*WorldInstance, 0, len(s.Instances))
+	for _, inst := range s.Instances {
+		instances = append(instances, inst)
+	}
+	s.mu.Unlock()
+
+	// The default instance is registered in s.Instances (NewWebSocketServer), so
+	// iterating the map already covers it.
+	for _, inst := range instances {
+		inst.mu.Lock()
+		if len(inst.Clients) == 0 {
+			// Empty rooms are already frozen into rm.world with nothing new to say.
+			inst.mu.Unlock()
+			continue
+		}
+		// Instance names are already sanitized on their hosting paths, but the
+		// name becomes a filename here — re-verify and skip-with-log rather than
+		// guess at a safe one.
+		name, err := SanitizeSaveName(inst.Name)
+		if err != nil {
+			inst.mu.Unlock()
+			log.Printf("zztgo: skipping autosave of instance %q: %v", inst.Name, err)
+			continue
+		}
+		world := inst.RoomManager.snapshotWorldNoSaver()
+		inst.mu.Unlock()
+		jobs = append(jobs, autosaveJob{name: name, world: world})
+	}
+
+	for _, job := range jobs {
+		if _, err := writeWorldSnapshot(dir, job.name, job.world); err != nil {
+			log.Printf("zztgo: autosave of %q failed: %v", job.name, err)
+		}
+	}
+}
+
+// RestoreAutosaves runs at boot, before serving: for every autosave whose name
+// matches a hostable world it restores that world as the instance's starting
+// state. An autosave beats the pristine .ZZT — that is what crash recovery means
+// (freshness policy in NOTES.md). A corrupt or truncated file is logged and
+// skipped, never a boot failure. -fresh skips this entirely (caller's choice).
+func (s *WebSocketServer) RestoreAutosaves() {
+	dir := s.autosaveDir()
+	if dir == "" {
+		return
+	}
+	for _, name := range ListSnapshots(dir) {
+		// GetOrCreateInstance returns the already-registered default instance for
+		// its own name, and loads a pristine hostable world for any other. A name
+		// with no hostable world is not ours to restore — skip it.
+		inst, err := s.GetOrCreateInstance(name)
+		if err != nil {
+			log.Printf("zztgo: autosave %q has no hostable world, skipping: %v", name, err)
+			continue
+		}
+		// The occupancy refusal in RestoreSnapshot is vacuous at boot — nobody has
+		// joined yet — but harmless to go through. A corrupt or truncated file may
+		// error or even panic (a garbage board length reaches a make); recover so a
+		// bad autosave is skipped, never a boot failure.
+		inst.mu.Lock()
+		err = safeRestoreSnapshot(inst.RoomManager, dir, name)
+		inst.mu.Unlock()
+		if err != nil {
+			log.Printf("zztgo: autosave %q could not be restored, using pristine world: %v", name, err)
+			continue
+		}
+		log.Printf("zztgo: restored autosave %q", name)
+	}
+}
+
+// safeRestoreSnapshot restores rm from dir/<NAME>.SAV, turning a panic on a
+// malformed file into an ordinary error so RestoreAutosaves can skip it.
+func safeRestoreSnapshot(rm *RoomManager, dir, name string) (err error) {
+	defer func() {
+		if r := recover(); r != nil {
+			err = fmt.Errorf("malformed snapshot: %v", r)
+		}
+	}()
+	return rm.RestoreSnapshot(dir, name)
 }
 
 func (s *WebSocketServer) GetOrCreateInstance(worldName string) (*WorldInstance, error) {

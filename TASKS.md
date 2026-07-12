@@ -936,7 +936,7 @@ only: no simulation change, replay fixture unchanged throughout.
   the client reconnect state machine (the M4.1 pattern). `go test ./...`
   green; replay fixture unchanged (all changes are server-layer).
 
-- [ ] **M13.3 — Autosave and restore-on-boot.** Verified gap (idea backlog
+- [x] **M13.3 — Autosave and restore-on-boot.** Verified gap (idea backlog
   2026-07-10): nothing snapshots automatically — `SaveSnapshot` runs only
   when a player presses 'S' (`websocket_server.go:745,768`) — so a crash or
   restart loses every live room. The single worst UX event the service can

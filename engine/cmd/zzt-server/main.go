@@ -7,6 +7,7 @@ import (
 	"net/http"
 	"os"
 	"path/filepath"
+	"time"
 
 	"github.com/benhoyt/zztgo"
 )
@@ -19,6 +20,8 @@ func main() {
 	helpDir := flag.String("help", ".", "directory holding the .HLP help files")
 	savesDir := flag.String("saves", "saves", "directory for saved-game snapshots; empty disables saving")
 	worldsDir := flag.String("worlds", ".", "directory holding hosted .ZZT worlds; where the editor publishes")
+	autosaveSecs := flag.Int("autosave", 60, "seconds between autosaves of occupied rooms; 0 disables")
+	fresh := flag.Bool("fresh", false, "skip restoring autosaves at boot for a deliberately clean start")
 	flag.Parse()
 
 	zztgo.HelpDir = *helpDir
@@ -49,6 +52,17 @@ func main() {
 			server.ChatDB = chatDB
 		}
 	}
+
+	// Autosave + restore-on-boot (M13.3). Drive the cadence off the tick clock, so
+	// there is one clock and tests can step it. Restore before serving: a crash
+	// recovery must be in place before the first client can join.
+	if *autosaveSecs > 0 {
+		server.AutosaveEveryTicks = *autosaveSecs * 1000 / int(zztgo.ServerTickDuration/time.Millisecond)
+	}
+	if !*fresh {
+		server.RestoreAutosaves()
+	}
+
 	go server.Run(context.Background())
 
 	api := &zztgo.WebAPI{
