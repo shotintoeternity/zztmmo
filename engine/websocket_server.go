@@ -2,6 +2,7 @@ package zztgo
 
 import (
 	"context"
+	"encoding/base64"
 	"encoding/json"
 	"fmt"
 	"net/http"
@@ -517,8 +518,54 @@ func (s *WebSocketServer) serveEditor(ctx context.Context, conn *websocket.Conn,
 			if err != nil || client.write(ctx, reply) != nil {
 				return
 			}
+		case MessageTypeEditorBoard:
+			var board EditorBoardMessage
+			if json.Unmarshal(raw, &board) != nil {
+				continue
+			}
+			if s.serveEditorBoard(ctx, client, session, board) != nil {
+				return
+			}
 		}
 	}
+}
+
+// serveEditorBoard routes an editorBoard operation (M5.5). add/switch/import
+// reply with a full editor snapshot; export replies with the board's .BRD bytes.
+// A malformed base64 payload or unknown op is ignored, not fatal, so a bad
+// message never drops the editor connection. It returns the write error only.
+func (s *WebSocketServer) serveEditorBoard(ctx context.Context, client *webSocketClient, session *EditorSession, board EditorBoardMessage) error {
+	switch board.Op {
+	case "add":
+		reply, err := session.AddBoard(client, board.Name)
+		if err != nil {
+			return nil
+		}
+		return client.write(ctx, reply)
+	case "switch":
+		reply, err := session.SwitchBoard(client, board.BoardID)
+		if err != nil {
+			return nil
+		}
+		return client.write(ctx, reply)
+	case "export":
+		reply, err := session.ExportBoard(client)
+		if err != nil {
+			return nil
+		}
+		return client.write(ctx, reply)
+	case "import":
+		data, decErr := base64.StdEncoding.DecodeString(board.Data)
+		if decErr != nil {
+			return nil
+		}
+		reply, err := session.ImportBoard(client, data)
+		if err != nil {
+			return nil
+		}
+		return client.write(ctx, reply)
+	}
+	return nil
 }
 
 // quitOutcome is what a player sees after confirming the quit prompt: either

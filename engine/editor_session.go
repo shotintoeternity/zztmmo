@@ -1,6 +1,7 @@
 package zztgo
 
 import (
+	"encoding/base64"
 	"fmt"
 	"sync"
 )
@@ -77,18 +78,25 @@ func (s *EditorSession) Apply(member *webSocketClient, fn func(*Engine)) error {
 func (s *EditorSession) Snapshot(member *webSocketClient, x, y int16) (EditorSnapshotMessage, error) {
 	var snapshot EditorSnapshotMessage
 	err := s.Apply(member, func(e *Engine) {
-		snapshot = EditorSnapshotMessage{
-			Type:       MessageTypeEditorSnapshot,
-			BoardID:    e.World.Info.CurrentBoard,
-			Screen:     screenCells(e),
-			Inspect:    editorTileInspect(e, x, y),
-			Properties: editorProperties(e),
-		}
-		// The full frame supersedes all setup writes. Later edits can therefore
-		// return just their dirty cells.
-		e.DrainScreenDirty()
+		snapshot = editorSnapshot(e, x, y)
 	})
 	return snapshot, err
+}
+
+// editorSnapshot builds a full-frame editor snapshot and drains the dirty list,
+// so the caller's next edit can return just its dirty cells. A board change
+// (add/switch/import) reuses it: repainting the whole board is exactly what
+// EditorDrawRefresh does after those operations in the Pascal editor.
+func editorSnapshot(e *Engine, x, y int16) EditorSnapshotMessage {
+	snapshot := EditorSnapshotMessage{
+		Type:       MessageTypeEditorSnapshot,
+		BoardID:    e.World.Info.CurrentBoard,
+		Screen:     screenCells(e),
+		Inspect:    editorTileInspect(e, x, y),
+		Properties: editorProperties(e),
+	}
+	e.DrainScreenDirty()
+	return snapshot
 }
 
 // Edit applies EditorPlaceTile's placement semantics to the isolated session.
@@ -444,6 +452,123 @@ func (s *EditorSession) SaveProgram(member *webSocketClient, statId int16, lines
 		}
 	})
 	return reply, err
+}
+
+// AddBoard appends a new named board and makes it current, mirroring
+// EditorAppendBoard (EDITOR.PAS:51). Board names are free text in vanilla — only
+// .BRD filenames are sanitized — so Name is only trimmed to the record width.
+// At MAX_BOARD it is a no-op that returns the unchanged frame, exactly as the
+// Pascal guard does. The reply is a full snapshot: a new board repaints all of it.
+func (s *EditorSession) AddBoard(member *webSocketClient, name string) (EditorSnapshotMessage, error) {
+	var reply EditorSnapshotMessage
+	err := s.Apply(member, func(e *Engine) {
+		if e.World.BoardCount < MAX_BOARD {
+			e.BoardClose()
+			e.World.BoardCount++
+			e.World.Info.CurrentBoard = e.World.BoardCount
+			e.World.BoardLen[e.World.BoardCount] = 0
+			e.BoardCreate()
+			e.Board.Name = editorString(name, SizeOfBoardName-1)
+			e.BoardClose()
+			e.TransitionDrawToBoard()
+		}
+		reply = editorSnapshot(e, BOARD_WIDTH/2, BOARD_HEIGHT/2)
+	})
+	return reply, err
+}
+
+// SwitchBoard makes boardId the current board via BoardChange semantics
+// (EDITOR.PAS:668 'B'). boardId 0 is the title board; anything past BoardCount is
+// rejected (the "Add new board" sentinel is resolved client-side into an add).
+func (s *EditorSession) SwitchBoard(member *webSocketClient, boardId int16) (EditorSnapshotMessage, error) {
+	var reply EditorSnapshotMessage
+	err := s.Apply(member, func(e *Engine) {
+		if boardId >= 0 && boardId <= e.World.BoardCount && boardId != e.World.Info.CurrentBoard {
+			e.BoardChange(boardId)
+			e.TransitionDrawToBoard()
+		}
+		reply = editorSnapshot(e, BOARD_WIDTH/2, BOARD_HEIGHT/2)
+	})
+	return reply, err
+}
+
+// ExportBoard serializes the current board to vanilla .BRD bytes, mirroring
+// EditorTransferBoard's export branch (EDITOR.PAS:556): a 2-byte little-endian
+// length prefix followed by the serialized board. BoardClose flushes pending
+// edits into BoardData first, exactly as the Pascal does before BlockWrite.
+func (s *EditorSession) ExportBoard(member *webSocketClient) (EditorBoardDataMessage, error) {
+	var reply EditorBoardDataMessage
+	err := s.Apply(member, func(e *Engine) {
+		e.BoardClose()
+		cur := e.World.Info.CurrentBoard
+		data := e.World.BoardData[cur]
+		brd := make([]byte, 2+len(data))
+		StoreInt16(brd[:2], int16(len(data)))
+		copy(brd[2:], data)
+		name, nameErr := SanitizeSaveName(e.Board.Name)
+		if nameErr != nil {
+			name = "BOARD"
+		}
+		reply = EditorBoardDataMessage{
+			Type: MessageTypeEditorBoardData,
+			Name: name,
+			Data: base64.StdEncoding.EncodeToString(brd),
+		}
+	})
+	return reply, err
+}
+
+// ImportBoard replaces the current board with .BRD bytes, mirroring
+// EditorTransferBoard's import branch (EDITOR.PAS:534): read the 2-byte length,
+// swap in the board data, reopen it, and clear the four edge exits (they name
+// boards that need not exist in this world). The bytes come from a client file,
+// so a malformed board must be rejected, never crash the server: the length is
+// bounded and BoardOpen is guarded, rolling the previous board back on any panic.
+func (s *EditorSession) ImportBoard(member *webSocketClient, data []byte) (EditorSnapshotMessage, error) {
+	var reply EditorSnapshotMessage
+	err := s.Apply(member, func(e *Engine) {
+		reply = editorSnapshot(e, BOARD_WIDTH/2, BOARD_HEIGHT/2)
+		if len(data) < 2 {
+			return
+		}
+		length := LoadInt16(data[:2])
+		if length < 0 || int(length) != len(data)-2 || int(length) > len(e.IoTmpBuf) {
+			return
+		}
+
+		e.BoardClose()
+		cur := e.World.Info.CurrentBoard
+		prevData, prevLen := e.World.BoardData[cur], e.World.BoardLen[cur]
+		e.World.BoardData[cur] = append([]byte(nil), data[2:]...)
+		e.World.BoardLen[cur] = length
+		if !safeBoardOpen(e, cur) {
+			e.World.BoardData[cur], e.World.BoardLen[cur] = prevData, prevLen
+			e.BoardOpen(cur)
+			e.TransitionDrawToBoard()
+			reply = editorSnapshot(e, BOARD_WIDTH/2, BOARD_HEIGHT/2)
+			return
+		}
+		for i := 0; i <= 3; i++ {
+			e.Board.Info.NeighborBoards[i] = 0
+		}
+		e.TransitionDrawToBoard()
+		reply = editorSnapshot(e, BOARD_WIDTH/2, BOARD_HEIGHT/2)
+	})
+	return reply, err
+}
+
+// safeBoardOpen runs BoardOpen under a recover. BoardOpen has no bounds checks —
+// a truncated or internally inconsistent .BRD would slice past its data and
+// panic. The editor session is isolated and never ticked, so recovering here
+// only rejects a bad import; it cannot affect any live room or the sim.
+func safeBoardOpen(e *Engine, boardId int16) (ok bool) {
+	defer func() {
+		if recover() != nil {
+			ok = false
+		}
+	}()
+	e.BoardOpen(boardId)
+	return true
 }
 
 // editorUnbindSharers gives every stat that shares statId's program (DataLen ==

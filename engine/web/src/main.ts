@@ -47,6 +47,8 @@ const MessageTypeEditorStatSettings = "editorStatSettings";
 const MessageTypeEditorProgram = "editorProgram";
 const MessageTypeEditorProgramText = "editorProgramText";
 const MessageTypeEditorProgramSave = "editorProgramSave";
+const MessageTypeEditorBoard = "editorBoard";
+const MessageTypeEditorBoardData = "editorBoardData";
 const MessageTypeChat = "chat";
 
 // GameDebugPrompt's PromptString(63, 5, 0x1E, 0x0F, 11, PROMPT_ANY, ...).
@@ -210,7 +212,15 @@ type EditorProgramTextMessage = {
   lines: string[];
 };
 
-type ServerMessage = SnapshotMessage | DiffMessage | EventMessage | BoardChangeMessage | ChatMessage | EditorSnapshotMessage | EditorInspectMessage | EditorDiffMessage | EditorPropertiesMessage | EditorStatSettingsMessage | EditorProgramTextMessage;
+// EditorBoardDataMessage carries an exported board as base64 .BRD bytes; the
+// client turns it into a browser download (EditorTransferBoard's export half).
+type EditorBoardDataMessage = {
+  type: typeof MessageTypeEditorBoardData;
+  name: string;
+  data: string;
+};
+
+type ServerMessage = SnapshotMessage | DiffMessage | EventMessage | BoardChangeMessage | ChatMessage | EditorSnapshotMessage | EditorInspectMessage | EditorDiffMessage | EditorPropertiesMessage | EditorStatSettingsMessage | EditorProgramTextMessage | EditorBoardDataMessage;
 
 type InputMessage = {
   type: typeof MessageTypeInput;
@@ -867,6 +877,9 @@ function applyMessage(message: ServerMessage) {
 	  break;
 	case MessageTypeEditorProgramText:
 	  applyEditorProgramText(message);
+	  break;
+	case MessageTypeEditorBoardData:
+	  applyEditorBoardData(message);
 	  break;
   }
 }
@@ -1692,6 +1705,14 @@ function handleEditorKey(event: KeyboardEvent) {
       event.preventDefault();
       openEditorBoardInfo();
       return;
+    case "KeyB":
+      event.preventDefault();
+      openEditorBoardList();
+      return;
+    case "KeyT":
+      event.preventDefault();
+      openEditorTransfer();
+      return;
     case "Enter":
       event.preventDefault();
       if (editorInspect.hasStat) {
@@ -1939,6 +1960,77 @@ function sendEditorProgramSave(statId: number, lines: string[]) {
 function sendEditorProperty(field: string, values: { text?: string; value?: number; bool?: boolean; exit?: number }) {
   if (!connected || !ws || ws.readyState !== WebSocket.OPEN) return;
   ws.send(JSON.stringify({ type: MessageTypeEditorProperty, field, ...values }));
+}
+
+function sendEditorBoard(values: { op: string; name?: string; boardId?: number; data?: string }) {
+  if (!connected || !ws || ws.readyState !== WebSocket.OPEN) return;
+  ws.send(JSON.stringify({ type: MessageTypeEditorBoard, ...values }));
+}
+
+// openEditorBoardList is EditorSelectBoard on the 'B' key: switch among the
+// world's boards or append a new one. The reply to either is a full editor
+// snapshot, so applyEditorSnapshot repaints the new board.
+function openEditorBoardList() {
+  const entries = editorProperties.boards
+    .filter((board) => board.id !== 0)
+    .map((board) => `${board.id}: ${board.name}`);
+  entries.push("Add new board");
+  openSelectList("Switch boards", entries, (entry) => {
+    if (entry === "Add new board") {
+      openPopupEntry("Room's Title:", (text) => {
+        if (text) sendEditorBoard({ op: "add", name: text });
+      });
+      return;
+    }
+    const boardId = Number.parseInt(entry, 10);
+    if (Number.isInteger(boardId)) sendEditorBoard({ op: "switch", boardId });
+  });
+}
+
+// openEditorTransfer is EditorTransferBoard: import a .BRD file into the current
+// board, or export the current board as a .BRD download.
+function openEditorTransfer() {
+  openSelectList("Transfer board:", ["Import board", "Export board"], (entry) => {
+    if (entry === "Import board") {
+      importEditorBoardFile();
+    } else if (entry === "Export board") {
+      sendEditorBoard({ op: "export" });
+    }
+  });
+}
+
+// importEditorBoardFile reads a local .BRD file and hands its bytes to the
+// server as base64. The server validates and rejects a malformed board.
+function importEditorBoardFile() {
+  const input = document.createElement("input");
+  input.type = "file";
+  input.accept = ".brd,.BRD";
+  input.addEventListener("change", () => {
+    const file = input.files?.[0];
+    if (!file) return;
+    file.arrayBuffer().then((buffer) => {
+      const bytes = new Uint8Array(buffer);
+      let binary = "";
+      for (let i = 0; i < bytes.length; i += 1) binary += String.fromCharCode(bytes[i]);
+      sendEditorBoard({ op: "import", data: btoa(binary) });
+    });
+  });
+  input.click();
+}
+
+// applyEditorBoardData turns an export reply into a browser download of vanilla
+// .BRD bytes, which reload in DOS ZZT/zeta and re-import here alike.
+function applyEditorBoardData(message: EditorBoardDataMessage) {
+  const binary = atob(message.data);
+  const bytes = new Uint8Array(binary.length);
+  for (let i = 0; i < binary.length; i += 1) bytes[i] = binary.charCodeAt(i);
+  const blob = new Blob([bytes], { type: "application/octet-stream" });
+  const url = URL.createObjectURL(blob);
+  const link = document.createElement("a");
+  link.href = url;
+  link.download = `${message.name}.BRD`;
+  link.click();
+  URL.revokeObjectURL(url);
 }
 
 function eventCell(event: MouseEvent): { x: number; y: number } | null {

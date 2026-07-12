@@ -2,6 +2,7 @@ package zztgo
 
 import (
 	"bytes"
+	"encoding/base64"
 	"testing"
 )
 
@@ -456,5 +457,275 @@ func TestEditorSessionProgramTextEditRoundTrip(t *testing.T) {
 	}
 	if len(roundTrip.Lines) != len(newLines) || roundTrip.Lines[0] != newLines[0] || roundTrip.Lines[1] != newLines[1] {
 		t.Fatalf("program did not round-trip through serializer: %q", roundTrip.Lines)
+	}
+}
+
+// clearEditorBoardInterior empties the currently-open board and drops its stats,
+// matching testEdgeWorld's setup, so a live-room player can walk to any edge.
+func clearEditorBoardInterior(e *Engine) {
+	for ix := int16(1); ix <= BOARD_WIDTH; ix++ {
+		for iy := int16(1); iy <= BOARD_HEIGHT; iy++ {
+			e.Board.Tiles[ix][iy] = TTile{Element: E_EMPTY}
+		}
+	}
+	e.Board.Tiles[e.Board.Stats[0].X][e.Board.Stats[0].Y] = TTile{Element: E_EMPTY}
+	e.Board.StatCount = -1
+}
+
+// M5.5: add a second board, link the two boards' edges both ways in the editor,
+// then host the saved world and walk a live player across the seam and back.
+func TestEditorSessionAddBoardAndCrossBoardsInPlay(t *testing.T) {
+	session := NewEditorSession("TEST", testEmptyWorld(t))
+	member := &webSocketClient{}
+	if err := session.Enter(member); err != nil {
+		t.Fatal(err)
+	}
+	defer session.Exit(member)
+
+	// Board 1 is current and empty. Give it a right (east) exit to board 2 and a
+	// start square on its right edge.
+	if err := session.Apply(member, func(e *Engine) {
+		e.Board.Info.NeighborBoards[3] = 2
+		e.Board.Info.StartPlayerX = BOARD_WIDTH
+		e.Board.Info.StartPlayerY = 12
+		e.BoardClose()
+	}); err != nil {
+		t.Fatal(err)
+	}
+
+	// EditorAppendBoard: a new board becomes current, is named, and the board
+	// list grows to None + two boards.
+	snap, err := session.AddBoard(member, "EAST")
+	if err != nil {
+		t.Fatalf("AddBoard: %v", err)
+	}
+	if snap.Type != MessageTypeEditorSnapshot || snap.BoardID != 2 || snap.Properties.BoardName != "EAST" {
+		t.Fatalf("AddBoard snapshot=%+v, want board 2 named EAST", snap.Properties)
+	}
+	if len(snap.Properties.Boards) != 3 || snap.Properties.Boards[2].Name != "EAST" {
+		t.Fatalf("board list=%+v, want None + two boards", snap.Properties.Boards)
+	}
+
+	// Board 2 (now current) gets an empty interior, a left (west) exit back to
+	// board 1, and a start square on its left edge.
+	if err := session.Apply(member, func(e *Engine) {
+		clearEditorBoardInterior(e)
+		e.Board.Info.NeighborBoards[2] = 1
+		e.Board.Info.StartPlayerX = 1
+		e.Board.Info.StartPlayerY = 12
+		e.BoardClose()
+	}); err != nil {
+		t.Fatal(err)
+	}
+
+	// SwitchBoard returns to board 1 and reads its content, proving the switch
+	// reopened the right board while the east exit survived.
+	back, err := session.SwitchBoard(member, 1)
+	if err != nil {
+		t.Fatalf("SwitchBoard: %v", err)
+	}
+	if back.BoardID != 1 || back.Properties.NeighborBoards[3] != 2 {
+		t.Fatalf("SwitchBoard(1) props=%+v, want board 1 east exit 2", back.Properties)
+	}
+
+	// Host the saved world and cross the seam in both directions.
+	var saved TWorld
+	if err := session.Apply(member, func(e *Engine) { saved = cloneWorld(e.World) }); err != nil {
+		t.Fatal(err)
+	}
+	rm := NewRoomManager(saved)
+	playerID := rm.JoinPlayer(1, BOARD_WIDTH, 12)
+	rm.StepDiffs(map[PlayerID]PlayerInput{playerID: {DeltaX: 1}})
+	if got := rm.players[playerID].boardID; got != 2 {
+		t.Fatalf("walking east landed on board %d, want 2", got)
+	}
+	rm.StepDiffs(map[PlayerID]PlayerInput{playerID: {DeltaX: -1}})
+	if got := rm.players[playerID].boardID; got != 1 {
+		t.Fatalf("walking west back landed on board %d, want 1", got)
+	}
+}
+
+// M5.5: EditorTransferBoard — export a board to .BRD bytes and re-import them
+// into a different world's editor session. The board contents travel; the
+// destination board's edge exits are cleared, matching the Pascal import.
+func TestEditorSessionBoardExportImportRoundTrip(t *testing.T) {
+	src := NewEditorSession("SRC", testMultiplayerSmokeWorld(t))
+	member := &webSocketClient{}
+	if err := src.Enter(member); err != nil {
+		t.Fatal(err)
+	}
+	defer src.Exit(member)
+
+	// Board 1 ("Smoke A") holds a gem at 11,12 and a passage stat at 12,12.
+	if _, err := src.SwitchBoard(member, 1); err != nil {
+		t.Fatalf("SwitchBoard(1): %v", err)
+	}
+	if _, err := src.SetProperty(member, EditorPropertyMessage{Field: "boardTitle", Text: "SMOKEA"}); err != nil {
+		t.Fatalf("boardTitle: %v", err)
+	}
+	export, err := src.ExportBoard(member)
+	if err != nil {
+		t.Fatalf("ExportBoard: %v", err)
+	}
+	if export.Type != MessageTypeEditorBoardData || export.Name != "SMOKEA" {
+		t.Fatalf("export=%+v, want SMOKEA .BRD", export)
+	}
+	data, err := base64.StdEncoding.DecodeString(export.Data)
+	if err != nil {
+		t.Fatalf("export data not base64: %v", err)
+	}
+	if len(data) < 2 || int(LoadInt16(data[:2])) != len(data)-2 {
+		t.Fatalf("export data is not length-prefixed .BRD: %d bytes", len(data))
+	}
+
+	// Import into a different, empty world. Seed a stray edge exit first to prove
+	// the import clears all four.
+	dst := NewEditorSession("DST", testEmptyWorld(t))
+	other := &webSocketClient{}
+	if err := dst.Enter(other); err != nil {
+		t.Fatal(err)
+	}
+	defer dst.Exit(other)
+	if err := dst.Apply(other, func(e *Engine) {
+		e.Board.Info.NeighborBoards[0] = 1
+		e.BoardClose()
+	}); err != nil {
+		t.Fatal(err)
+	}
+
+	imported, err := dst.ImportBoard(other, data)
+	if err != nil {
+		t.Fatalf("ImportBoard: %v", err)
+	}
+	if imported.Type != MessageTypeEditorSnapshot || imported.Properties.BoardName != "SMOKEA" {
+		t.Fatalf("import snapshot=%+v, want board named SMOKEA", imported.Properties)
+	}
+	if err := dst.Apply(other, func(e *Engine) {
+		if e.Board.Tiles[11][12].Element != E_GEM {
+			t.Fatalf("imported board missing gem at 11,12: %+v", e.Board.Tiles[11][12])
+		}
+		if e.Board.Tiles[12][12].Element != E_PASSAGE {
+			t.Fatalf("imported board missing passage at 12,12: %+v", e.Board.Tiles[12][12])
+		}
+		for i := 0; i <= 3; i++ {
+			if e.Board.Info.NeighborBoards[i] != 0 {
+				t.Fatalf("import did not clear edge exits: %+v", e.Board.Info.NeighborBoards)
+			}
+		}
+	}); err != nil {
+		t.Fatal(err)
+	}
+}
+
+// M5.5: a world edited entirely through the browser editor must serialize to the
+// vanilla on-disk .ZZT format, so it loads in DOS ZZT/zeta and ZZTMMO alike. The
+// editor session never ticks, joins a player, or fires a bullet, so no
+// multiplayer-only state (extra player stats, shot owners in bullet P1) can reach
+// a board; StoreStat/BoardClose write only vanilla fields. This drives the real
+// worldWriteTo -> worldReadFrom byte path to prove it.
+func TestEditorSessionEditedWorldRoundTripsThroughVanillaFormat(t *testing.T) {
+	session := NewEditorSession("TEST", testEmptyWorld(t))
+	member := &webSocketClient{}
+	if err := session.Enter(member); err != nil {
+		t.Fatal(err)
+	}
+	defer session.Exit(member)
+
+	if _, err := session.Edit(member, EditorEditMessage{Op: "place", X: 15, Y: 10, Element: E_SOLID, Color: 0x0e}); err != nil {
+		t.Fatalf("Edit: %v", err)
+	}
+	if _, err := session.SetProperty(member, EditorPropertyMessage{Field: "boardTitle", Text: "EDITED"}); err != nil {
+		t.Fatalf("boardTitle: %v", err)
+	}
+	if _, err := session.SetProperty(member, EditorPropertyMessage{Field: "worldName", Text: "MYWORLD"}); err != nil {
+		t.Fatalf("worldName: %v", err)
+	}
+	if _, err := session.AddBoard(member, "SECOND"); err != nil {
+		t.Fatalf("AddBoard: %v", err)
+	}
+	if _, err := session.SwitchBoard(member, 1); err != nil {
+		t.Fatalf("SwitchBoard: %v", err)
+	}
+	if _, err := session.SetProperty(member, EditorPropertyMessage{Field: "exit", Exit: 3, Value: 2}); err != nil {
+		t.Fatalf("exit: %v", err)
+	}
+
+	// Serialize exactly as WorldSave does (BoardClose then worldWriteTo).
+	var buf bytes.Buffer
+	if err := session.Apply(member, func(e *Engine) {
+		e.BoardClose()
+		if err := e.worldWriteTo(&buf); err != nil {
+			t.Fatalf("worldWriteTo: %v", err)
+		}
+	}); err != nil {
+		t.Fatal(err)
+	}
+
+	// Reload through the vanilla reader in a fresh engine.
+	fresh := NewEngine()
+	fresh.Headless = true
+	if err := fresh.worldReadFrom(&buf, false, func() {}); err != nil {
+		t.Fatalf("worldReadFrom: %v", err)
+	}
+	if fresh.World.BoardCount != 2 {
+		t.Fatalf("reloaded BoardCount=%d, want 2", fresh.World.BoardCount)
+	}
+	if fresh.World.Info.Name != "MYWORLD" {
+		t.Fatalf("reloaded world name=%q, want MYWORLD", fresh.World.Info.Name)
+	}
+	fresh.BoardOpen(1)
+	if fresh.Board.Name != "EDITED" {
+		t.Fatalf("reloaded board 1 name=%q, want EDITED", fresh.Board.Name)
+	}
+	if got := fresh.Board.Tiles[15][10]; got.Element != E_SOLID || got.Color != 0x0e {
+		t.Fatalf("edited tile did not survive .ZZT round trip: %+v", got)
+	}
+	if fresh.Board.Info.NeighborBoards[3] != 2 {
+		t.Fatalf("reloaded east exit=%d, want 2", fresh.Board.Info.NeighborBoards[3])
+	}
+}
+
+// M5.5: an imported .BRD comes from a client file. A malformed one — wrong
+// length prefix, or well-sized but internally garbage — must be rejected without
+// panicking the server or disturbing the current board.
+func TestEditorSessionImportRejectsMalformedBoard(t *testing.T) {
+	session := NewEditorSession("TEST", testMultiplayerSmokeWorld(t))
+	member := &webSocketClient{}
+	if err := session.Enter(member); err != nil {
+		t.Fatal(err)
+	}
+	defer session.Exit(member)
+
+	snapshotBoard := func() []byte {
+		var data []byte
+		if err := session.Apply(member, func(e *Engine) {
+			e.BoardClose()
+			data = append([]byte(nil), e.World.BoardData[e.World.Info.CurrentBoard]...)
+		}); err != nil {
+			t.Fatal(err)
+		}
+		return data
+	}
+
+	before := snapshotBoard()
+
+	// Length prefix claims 100 bytes but only 4 follow.
+	if _, err := session.ImportBoard(member, []byte{100, 0, 1, 2, 3, 4}); err != nil {
+		t.Fatalf("ImportBoard(short): %v", err)
+	}
+	if !bytes.Equal(before, snapshotBoard()) {
+		t.Fatal("length-mismatched import altered the current board")
+	}
+
+	// Correctly length-prefixed but far too short to hold even a board name:
+	// BoardOpen slices past the end of the buffer. The guard must catch that panic
+	// and roll the board back.
+	garbage := make([]byte, 2+20)
+	StoreInt16(garbage[:2], 20)
+	if _, err := session.ImportBoard(member, garbage); err != nil {
+		t.Fatalf("ImportBoard(garbage): %v", err)
+	}
+	if !bytes.Equal(before, snapshotBoard()) {
+		t.Fatal("garbage import altered the current board")
 	}
 }

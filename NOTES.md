@@ -1260,3 +1260,50 @@ one. Covered by `TestEditorSessionProgramTextEditRoundTrip`.
 
 Bookkeeping: M5.3's box was committed (9a199ea) but never checked; corrected in
 this commit.
+
+## 2026-07-11 — M5.5 board management and transfer
+
+Add/switch/name boards and `EditorTransferBoard` (the one dropped procedure) are
+now a browser surface over the isolated `EditorSession`. New session methods, all
+through `Apply`: `AddBoard` (EditorAppendBoard), `SwitchBoard` (BoardChange),
+`ExportBoard`, `ImportBoard`. add/switch/import reply with a full
+`EditorSnapshotMessage` — a board change repaints the whole frame, exactly what
+`EditorDrawRefresh` does after those ops — so the client reuses
+`applyEditorSnapshot` with no new render path.
+
+**Transfer travels over the WebSocket, not HTTP.** The `.BRD` format is a 2-byte
+little-endian length + serialized board (vanilla's `BlockRead`/`BlockWrite`), so
+export ships base64 board bytes as `editorBoardData`; the browser turns that into
+a `Blob` download, and import reads a local file and posts base64 back. HTTP was
+rejected because the session state is keyed by the editor's `*webSocketClient` —
+an HTTP handler has no clean handle on the per-client session. The exported file
+is genuine vanilla `.BRD`, loadable in DOS ZZT/zeta.
+
+**Import is a client-file boundary, so a malformed board must never crash the
+server.** `BoardOpen` has no bounds checks (faithful port), so a truncated or
+inconsistent `.BRD` would slice past its buffer and panic. `ImportBoard` bounds
+the declared length (`== len-2`, `<= len(IoTmpBuf)`) and runs `BoardOpen` under
+`safeBoardOpen`, which `recover()`s and rolls the previous board back on any
+panic. The editor session is isolated and never ticked, so recovering there only
+rejects a bad import — it cannot reach a live room or the sim. A well-formed
+all-zero board is *not* malformed: the RLE `Count` byte wraps (0-- → 255), so it
+parses as a valid empty board; the guard test uses a length shorter than the
+51-byte board name instead. Matching the Pascal, a successful import clears all
+four edge exits (they name boards that need not exist in the destination world).
+
+Filenames go through `SanitizeSaveName` (export download stem; "BOARD" fallback
+when the board name has non-alphanumeric characters). Covered by
+`TestEditorSessionAddBoardAndCrossBoardsInPlay` (create + link both ways + walk
+across in a live room), `TestEditorSessionBoardExportImportRoundTrip`,
+`TestEditorSessionImportRejectsMalformedBoard`, and the WebSocket-level
+`TestWebSocketEditorBoardManagement`.
+
+**Vanilla compatibility (requirement raised during M5.5):** every board edited in
+the browser editor is a vanilla-format board by construction. The editor session
+is a never-ticked copy that never joins a live player or fires a bullet, so no
+multiplayer-only state (extra appended player stats, shot-owner statId in a
+bullet's P1) can reach a serialized board; `StoreStat` writes the exact 33-byte
+vanilla record and `BoardClose` the vanilla RLE/BoardInfo/stat stream. Exported
+`.BRD` bytes and a fully saved world therefore load in DOS ZZT/zeta and ZZTMMO
+alike. `TestEditorSessionEditedWorldRoundTripsThroughVanillaFormat` drives the
+real `worldWriteTo` -> `worldReadFrom` on-disk byte path to prove it.

@@ -56,6 +56,8 @@ export function drawEditorSidebar(write: WriteText, inspect: EditorInspect, brus
   write(65, 4, 0x1f, " Exit");
   write(61, 5, 0x30, " \x18\x19\x1a\x1b ");
   write(68, 5, 0x1f, " Move");
+  write(61, 6, 0x70, " B ");
+  write(65, 6, 0x1f, " Switch boards");
   write(61, 7, 0x70, " P ");
   write(65, 7, 0x1f, " Pattern");
   write(61, 8, 0x30, " C ");
@@ -74,6 +76,8 @@ export function drawEditorSidebar(write: WriteText, inspect: EditorInspect, brus
   write(67, 15, 0x1f, " Erase");
   write(61, 16, 0x30, " I ");
   write(65, 16, 0x1f, " Board info");
+  write(61, 9, 0x30, " T ");
+  write(65, 9, 0x1f, " Transfer board");
   write(61, 17, 0x1e, ` Pos: ${inspect.x},${inspect.y}`.padEnd(19, " "));
   write(61, 18, 0x1f, " " + trim(inspect.element, 17));
   if (inspect.hasStat) {

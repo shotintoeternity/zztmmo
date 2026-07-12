@@ -788,7 +788,7 @@ and running early. See NOTES.md.)
   DoD: rewrite the TOWN vendor's script in the browser, save, play — the new
   dialogue runs; the text round-trips through the serializer.
 
-- [ ] **M5.5 — Board management and transfer.** `EditorAppendBoard` /
+- [x] **M5.5 — Board management and transfer.** `EditorAppendBoard` /
   `EditorSelectBoard` (`editor.go:21-38,866-889`, `EDITOR.PAS:51-70`) for
   adding, switching, and naming boards — and port the one dropped procedure:
   `EditorTransferBoard` (TODO stub at `editor.go:422-479`,

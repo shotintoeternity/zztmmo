@@ -159,6 +159,101 @@ func TestWebSocketEditorSessionReadOnly(t *testing.T) {
 	}
 }
 
+// M5.5: the editorBoard dispatch over a real WebSocket — add, switch, export,
+// and import — replies with the shapes the browser client consumes.
+func TestWebSocketEditorBoardManagement(t *testing.T) {
+	world := testMultiplayerSmokeWorld(t)
+	world.Info.CurrentBoard = 1
+	server := NewWebSocketServer(world, 1)
+	httpServer := httptest.NewServer(server)
+	defer httpServer.Close()
+
+	ctx, cancel := context.WithCancel(context.Background())
+	defer cancel()
+	wsURL := "ws" + strings.TrimPrefix(httpServer.URL, "http")
+	conn, _, err := websocket.Dial(ctx, wsURL, nil)
+	if err != nil {
+		t.Fatalf("dial editor: %v", err)
+	}
+	defer conn.Close(websocket.StatusNormalClosure, "")
+	conn.SetReadLimit(ServerReadLimit)
+
+	if err := wsjson.Write(ctx, conn, EditorEnterMessage{Type: MessageTypeEditorEnter, World: "TOWN"}); err != nil {
+		t.Fatalf("write editorEnter: %v", err)
+	}
+	var snapshot EditorSnapshotMessage
+	if err := wsjson.Read(ctx, conn, &snapshot); err != nil {
+		t.Fatalf("read editor snapshot: %v", err)
+	}
+
+	// Add a board: reply is a full snapshot on the new board.
+	if err := wsjson.Write(ctx, conn, EditorBoardMessage{Type: MessageTypeEditorBoard, Op: "add", Name: "NORTH"}); err != nil {
+		t.Fatalf("write editorBoard add: %v", err)
+	}
+	if err := wsjson.Read(ctx, conn, &snapshot); err != nil {
+		t.Fatalf("read add snapshot: %v", err)
+	}
+	if snapshot.BoardID != 3 || snapshot.Properties.BoardName != "NORTH" {
+		t.Fatalf("add reply=%+v, want new board 3 NORTH", snapshot.Properties)
+	}
+
+	// Switch back to board 1 (the gem/passage board).
+	if err := wsjson.Write(ctx, conn, EditorBoardMessage{Type: MessageTypeEditorBoard, Op: "switch", BoardID: 1}); err != nil {
+		t.Fatalf("write editorBoard switch: %v", err)
+	}
+	if err := wsjson.Read(ctx, conn, &snapshot); err != nil {
+		t.Fatalf("read switch snapshot: %v", err)
+	}
+	if snapshot.BoardID != 1 {
+		t.Fatalf("switch reply board=%d, want 1", snapshot.BoardID)
+	}
+
+	// Export the current board.
+	if err := wsjson.Write(ctx, conn, EditorBoardMessage{Type: MessageTypeEditorBoard, Op: "export"}); err != nil {
+		t.Fatalf("write editorBoard export: %v", err)
+	}
+	var exported EditorBoardDataMessage
+	if err := wsjson.Read(ctx, conn, &exported); err != nil {
+		t.Fatalf("read export: %v", err)
+	}
+	if exported.Type != MessageTypeEditorBoardData || exported.Data == "" {
+		t.Fatalf("export=%+v, want board data", exported)
+	}
+
+	// Import those bytes over board 3.
+	if err := wsjson.Write(ctx, conn, EditorBoardMessage{Type: MessageTypeEditorBoard, Op: "switch", BoardID: 3}); err != nil {
+		t.Fatalf("write switch to 3: %v", err)
+	}
+	if err := wsjson.Read(ctx, conn, &snapshot); err != nil {
+		t.Fatalf("read switch-3 snapshot: %v", err)
+	}
+	if err := wsjson.Write(ctx, conn, EditorBoardMessage{Type: MessageTypeEditorBoard, Op: "import", Data: exported.Data}); err != nil {
+		t.Fatalf("write editorBoard import: %v", err)
+	}
+	if err := wsjson.Read(ctx, conn, &snapshot); err != nil {
+		t.Fatalf("read import snapshot: %v", err)
+	}
+	if snapshot.BoardID != 3 {
+		t.Fatalf("import reply board=%d, want 3", snapshot.BoardID)
+	}
+	// Board 3 now holds board 1's passage at 12,12.
+	if err := wsjson.Write(ctx, conn, EditorInspectMessage{Type: MessageTypeEditorInspect, X: 12, Y: 12}); err != nil {
+		t.Fatalf("write inspect: %v", err)
+	}
+	var inspect EditorInspectMessage
+	if err := wsjson.Read(ctx, conn, &inspect); err != nil {
+		t.Fatalf("read inspect: %v", err)
+	}
+	if inspect.Inspect.Element != "Passage" {
+		t.Fatalf("imported board 3 at 12,12=%q, want Passage", inspect.Inspect.Element)
+	}
+
+	// Opening/editing an editor session must not create a live room or player.
+	if len(server.RoomManager.players) != 0 || len(server.RoomManager.rooms) != 0 {
+		t.Fatalf("editor touched live simulation: players=%d rooms=%d", len(server.RoomManager.players), len(server.RoomManager.rooms))
+	}
+}
+
 func TestWebSocketServerBoardEdgeSendsBoardChange(t *testing.T) {
 	world := testEdgeWorld(t)
 	server := NewWebSocketServer(world, 1)

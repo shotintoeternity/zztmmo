@@ -30,6 +30,8 @@ const (
 	MessageTypeEditorProgram      = "editorProgram"
 	MessageTypeEditorProgramText  = "editorProgramText"
 	MessageTypeEditorProgramSave  = "editorProgramSave"
+	MessageTypeEditorBoard        = "editorBoard"
+	MessageTypeEditorBoardData    = "editorBoardData"
 )
 
 // HelpDir is where HelpFileLines looks for .HLP files. The terminal client
@@ -156,7 +158,8 @@ type EditorDiffMessage struct {
 }
 
 // EditorBoardOption is one legal target for a board edge. Board zero is the
-// vanilla "None" choice; M5.5 will add the editor's "Add new board" choice.
+// vanilla "None" choice; the editor's "Add new board" choice is a client-side
+// menu entry (M5.5), not a board option, and travels as an EditorBoardMessage.
 type EditorBoardOption struct {
 	ID   int16  `json:"id"`
 	Name string `json:"name"`
@@ -246,6 +249,33 @@ type EditorProgramSaveMessage struct {
 	Type   string   `json:"type"`
 	StatID int16    `json:"statId"`
 	Lines  []string `json:"lines"`
+}
+
+// EditorBoardMessage manages the boards of an editor session (M5.5). Op is:
+//   "add"    — EditorAppendBoard: append a new board named Name, make it current
+//   "switch" — BoardChange to BoardID (0..BoardCount), keeping session edits
+//   "export" — EditorTransferBoard export: reply with the current board's .BRD
+//   "import" — EditorTransferBoard import: replace the current board with Data,
+//              base64-encoded .BRD bytes (2-byte length prefix + board data)
+// add/switch/import reply with a full EditorSnapshotMessage because a board
+// change repaints the whole frame; export replies with EditorBoardDataMessage.
+type EditorBoardMessage struct {
+	Type    string `json:"type"`
+	Op      string `json:"op"`
+	Name    string `json:"name,omitempty"`
+	BoardID int16  `json:"boardId,omitempty"`
+	Data    string `json:"data,omitempty"`
+}
+
+// EditorBoardDataMessage is the reply to an "export": the current board as
+// vanilla .BRD bytes, base64-encoded, plus a SanitizeSaveName filename stem the
+// browser uses for the download. The format is BlockWrite's: a 2-byte
+// little-endian length followed by that many bytes of serialized board data,
+// so the file loads in DOS ZZT and re-imports here alike.
+type EditorBoardDataMessage struct {
+	Type string `json:"type"`
+	Name string `json:"name"`
+	Data string `json:"data"`
 }
 
 type InputMessage struct {
