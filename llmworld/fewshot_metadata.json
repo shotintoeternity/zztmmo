@@ -1,0 +1,15 @@
+[
+  {"name":"CUTLASS_board27","world":"CUTLASS","archetype":"action arena","themes":["action","combat","arena","pirate"],"palette":["gray","blue","brown"],"density":"high"},
+  {"name":"DUNGEONS_board20","world":"DUNGEONS","archetype":"interior scene","themes":["dungeon","cavern","monsters","gameplay"],"palette":["brown","gray","yellow"],"density":"high","cohesion":"DUNGEONS route excerpt: Way Below → north → Below Dungeon. This board is the lower cavern encounter in that connected world."},
+  {"name":"RAEKUUL_board1","world":"RAEKUUL","archetype":"story board","themes":["story","dialogue","fantasy","interior"],"palette":["brown","gray","red"],"density":"medium"},
+  {"name":"SEWERS_board17","world":"SEWERS","archetype":"texture showcase","themes":["sewer","dungeon","maze","gameplay"],"palette":["green","gray","brown"],"density":"high"},
+  {"name":"winter_board0","world":"winter","archetype":"title lettering","themes":["title","lettering","winter","ice","icy","monumental"],"palette":["white","cyan","blue","black"],"density":"sparse"},
+  {"name":"scorchede_board0","world":"scorchede","archetype":"title lettering","themes":["title","lettering","fire","rough"],"palette":["red","yellow","black"],"density":"medium"},
+  {"name":"sudoku_board0","world":"sudoku","archetype":"title lettering","themes":["title","lettering","geometric","puzzle"],"palette":["white","blue","black"],"density":"medium"},
+  {"name":"zztv7_board0","world":"zztv7","archetype":"title lettering","themes":["title","lettering","neon","abstract"],"palette":["magenta","cyan","blue","black"],"density":"medium"},
+  {"name":"variety_board0","world":"variety","archetype":"title lettering","themes":["title","lettering","rainbow","wordmark"],"palette":["red","yellow","green","blue"],"density":"medium"},
+  {"name":"nyan_board0","world":"nyan","archetype":"title art","themes":["title","art","cartoon","cat","space","rainbow"],"palette":["pink","magenta","blue","green","yellow"],"density":"medium"},
+  {"name":"rhygar2_arogans_range_1_board0","world":"rhygar2_arogans_range_1","archetype":"gameplay scene","themes":["gameplay","sunset","landscape","adventure"],"palette":["orange","yellow","blue","brown"],"density":"medium"},
+  {"name":"gh2se0_ap_edge_se_board0","world":"gh2se0","archetype":"gameplay scene","themes":["gameplay","road","trees","outdoor"],"palette":["green","brown","gray"],"density":"medium"},
+  {"name":"gh2se0_mcqueen_heights_ne_board0","world":"gh2se0","archetype":"gameplay scene","themes":["gameplay","town","architecture","street"],"palette":["gray","brown","green"],"density":"high"}
+]

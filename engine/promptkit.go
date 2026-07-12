@@ -30,6 +30,7 @@ import (
 //go:embed promptkit_assets/STYLE.md
 //go:embed promptkit_assets/fewshots/*.zwd
 //go:embed promptkit_assets/captions/*.json
+//go:embed promptkit_assets/fewshot_metadata.json
 var promptKitFS embed.FS
 
 // fewShotArchetypes labels each embedded few-shot by the board archetype it
@@ -75,12 +76,35 @@ type BoardCaption struct {
 	Summary      string   `json:"summary"`
 }
 
+// FewShotMetadata is the deliberately small, offline retrieval index for an
+// authorable few-shot.  It is authored from the corpus (rather than inferred by
+// a model at generation time), so selection is reproducible and cannot spend a
+// request on classification.  Keywords are normalized by retrievalTerms.
+type FewShotMetadata struct {
+	Name      string   `json:"name"`
+	World     string   `json:"world"`
+	Archetype string   `json:"archetype"`
+	Themes    []string `json:"themes"`
+	Palette   []string `json:"palette"`
+	Density   string   `json:"density"`
+	Cohesion  string   `json:"cohesion,omitempty"`
+}
+
+// retrievalBudget is intentionally a source-byte budget rather than a token
+// estimate: it is deterministic across tokenizer/model revisions and gives a
+// hard upper bound on request growth.  Three examples keep the prompt focused.
+const (
+	retrievalMaxExamples = 3
+	retrievalMaxBytes    = 24000
+)
+
 // PromptKit holds the assembled generation ingredients.
 type PromptKit struct {
 	Spec     string // ZWD format grammar + limits table (spec.md)
 	Style    string // STYLE.md
 	FewShots []FewShot
-	Captions map[string]BoardCaption // keyed by FewShot.Name
+	Captions map[string]BoardCaption    // keyed by FewShot.Name
+	Metadata map[string]FewShotMetadata // keyed by FewShot.Name
 }
 
 // LoadPromptKit reads the embedded assets into a PromptKit. It errors rather
@@ -98,7 +122,7 @@ func LoadPromptKit() (*PromptKit, error) {
 	if err != nil {
 		return nil, fmt.Errorf("promptkit: read fewshots dir: %w", err)
 	}
-	kit := &PromptKit{Spec: string(spec), Style: string(style), Captions: map[string]BoardCaption{}}
+	kit := &PromptKit{Spec: string(spec), Style: string(style), Captions: map[string]BoardCaption{}, Metadata: map[string]FewShotMetadata{}}
 	for _, e := range entries {
 		if e.IsDir() || !strings.HasSuffix(e.Name(), ".zwd") {
 			continue
@@ -135,13 +159,39 @@ func LoadPromptKit() (*PromptKit, error) {
 		}
 		kit.Captions[fsx.Name] = caption
 	}
+	metadataBytes, err := promptKitFS.ReadFile("promptkit_assets/fewshot_metadata.json")
+	if err != nil {
+		return nil, fmt.Errorf("promptkit: read few-shot metadata: %w", err)
+	}
+	var metadata []FewShotMetadata
+	if err := json.Unmarshal(metadataBytes, &metadata); err != nil {
+		return nil, fmt.Errorf("promptkit: parse few-shot metadata: %w", err)
+	}
+	for _, m := range metadata {
+		if m.Name == "" || m.World == "" || m.Archetype == "" || len(m.Themes) == 0 || len(m.Palette) == 0 || m.Density == "" {
+			return nil, fmt.Errorf("promptkit: metadata for %q is incomplete", m.Name)
+		}
+		if _, duplicate := kit.Metadata[m.Name]; duplicate {
+			return nil, fmt.Errorf("promptkit: duplicate metadata for %q", m.Name)
+		}
+		kit.Metadata[m.Name] = m
+	}
+	for _, fsx := range kit.FewShots {
+		if _, ok := kit.Metadata[fsx.Name]; !ok {
+			return nil, fmt.Errorf("promptkit: few-shot %q has no retrieval metadata", fsx.Name)
+		}
+	}
+	for name := range kit.Metadata {
+		if _, ok := fewShotArchetypes[name]; !ok {
+			return nil, fmt.Errorf("promptkit: metadata for unknown few-shot %q", name)
+		}
+	}
 	return kit, nil
 }
 
-// SystemPrompt assembles the full generation system prompt. It is identical
-// across every board call in a world (M12.4 relies on that for prompt caching):
-// the per-request specifics — the premise, the world plan, and the edge rows of
-// adjacent boards — are the caller's user message, not this system prompt.
+// SystemPrompt assembles the stable, cacheable generation system prompt.  The
+// retrieved examples deliberately do not live here: only a small ordered subset
+// varies per premise/board concept, and it is supplied in the user request.
 func (k *PromptKit) SystemPrompt() string {
 	var b strings.Builder
 	b.WriteString(promptRolePreamble)
@@ -151,15 +201,74 @@ func (k *PromptKit) SystemPrompt() string {
 	b.WriteString("\n\n# House style\n\n")
 	b.WriteString("How good ZZT boards actually look and read. Follow these idioms; they are what separates a composed scene from tile soup.\n\n")
 	b.WriteString(k.Style)
-	b.WriteString("\n\n# Worked examples\n\n")
-	b.WriteString("Real boards decompiled from shipped games, one per archetype. Study their framing, shading, legend density, and OOP voice — then write your own scene, do not copy these.\n")
-	for _, fsx := range k.FewShots {
-		caption := k.Captions[fsx.Name]
-		fmt.Fprintf(&b, "\n## Example — %s (`%s`)\n\nVisual note: %s\n\n```zwd\n%s\n```\n", fsx.Archetype, fsx.Name, caption.Summary, strings.TrimRight(fsx.ZWD, "\n"))
-	}
 	b.WriteString("\n")
 	b.WriteString(promptOutputContract)
 	return b.String()
+}
+
+// RetrievalContext returns the bounded retrieval-augmented part of a request.
+// No network or model is involved: the same inputs always produce byte-identical
+// output, including ties (which sort by corpus name).
+func (k *PromptKit) RetrievalContext(premise, boardConcept string) string {
+	type ranked struct {
+		shot     FewShot
+		metadata FewShotMetadata
+		score    int
+	}
+	terms := retrievalTerms(premise + " " + boardConcept)
+	rankedShots := make([]ranked, 0, len(k.FewShots))
+	for _, shot := range k.FewShots {
+		m := k.Metadata[shot.Name]
+		score := retrievalScore(terms, m, k.Captions[shot.Name])
+		rankedShots = append(rankedShots, ranked{shot, m, score})
+	}
+	sort.Slice(rankedShots, func(i, j int) bool {
+		if rankedShots[i].score != rankedShots[j].score {
+			return rankedShots[i].score > rankedShots[j].score
+		}
+		return rankedShots[i].shot.Name < rankedShots[j].shot.Name
+	})
+	var b strings.Builder
+	b.WriteString("# Retrieved corpus examples\n\nThese are offline, authorable reference boards selected for this premise and board concept. Study them; do not copy them.\n")
+	used := 0
+	for _, r := range rankedShots {
+		if used == retrievalMaxExamples {
+			break
+		}
+		caption := k.Captions[r.shot.Name]
+		entry := fmt.Sprintf("\n## Example — %s (`%s`)\n\nTags: %s; palette: %s; density: %s.\nVisual note: %s\n\n```zwd\n%s\n```\n", r.metadata.Archetype, r.shot.Name, strings.Join(r.metadata.Themes, ", "), strings.Join(r.metadata.Palette, ", "), r.metadata.Density, caption.Summary, strings.TrimRight(r.shot.ZWD, "\n"))
+		if b.Len()+len(entry) > retrievalMaxBytes {
+			continue
+		}
+		b.WriteString(entry)
+		if r.metadata.Cohesion != "" {
+			fmt.Fprintf(&b, "\nSame-world plan excerpt: %s\n", r.metadata.Cohesion)
+		}
+		used++
+	}
+	return b.String()
+}
+
+func retrievalTerms(s string) map[string]bool {
+	terms := make(map[string]bool)
+	for _, term := range strings.FieldsFunc(strings.ToLower(s), func(r rune) bool { return r < 'a' || r > 'z' }) {
+		if len(term) > 1 {
+			terms[term] = true
+		}
+	}
+	return terms
+}
+
+func retrievalScore(terms map[string]bool, m FewShotMetadata, caption BoardCaption) int {
+	score := 0
+	for _, field := range append(append([]string{m.Archetype, m.Density, caption.Title, caption.Archetype, caption.Technique, caption.PictorialArt}, m.Themes...), m.Palette...) {
+		for term := range retrievalTerms(field) {
+			if terms[term] {
+				score++
+			}
+		}
+	}
+	return score
 }
 
 const promptRolePreamble = `You are a master ZZT world author. ZZT is the 1991 DOS creation kit; a world is

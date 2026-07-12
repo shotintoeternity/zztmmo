@@ -316,7 +316,10 @@ func (g *GenerationService) admit(ctx context.Context, client string) error {
 }
 
 func (g *GenerationService) makePlan(ctx context.Context, premise string) (string, Plan, error) {
-	request := planRequest(premise, "")
+	// Keep the planner's system prompt stable for caching; the only per-request
+	// corpus material is this deterministic retrieval block.
+	retrieval := g.promptKit.RetrievalContext(premise, "world plan")
+	request := planRequest(premise, "") + "\n\n" + retrieval
 	var lastErr error
 	for attempt := 1; attempt <= g.maxAttempts; attempt++ {
 		g.report(ctx, GenerationProgress{Stage: "planning", Attempt: attempt, Detail: "asking Claude for a world plan"})
@@ -335,7 +338,7 @@ func (g *GenerationService) makePlan(ctx context.Context, premise string) (strin
 		if attempt < g.maxAttempts {
 			g.report(ctx, GenerationProgress{Stage: "repairing-plan", Attempt: attempt + 1, Detail: err.Error()})
 		}
-		request = planRequest(premise, fmt.Sprintf("Your previous plan failed mechanical validation:\n%s\nReturn a corrected complete plan.", err))
+		request = planRequest(premise, fmt.Sprintf("Your previous plan failed mechanical validation:\n%s\nReturn a corrected complete plan.", err)) + "\n\n" + retrieval
 	}
 	return "", Plan{}, fmt.Errorf("plan generation exhausted repairs: %w", lastErr)
 }
@@ -346,7 +349,9 @@ func (g *GenerationService) paintBoard(ctx context.Context, planText string, pla
 	for *attempts < g.maxAttempts {
 		*attempts++
 		g.report(ctx, GenerationProgress{Stage: "painting", Board: board.Name, Attempt: *attempts, Detail: "asking Claude for board ZWD"})
-		text, err := g.call(ctx, g.promptKit.SystemPrompt(), boardRequest(planText, plan, board, sections, lastFeedback, lastCandidate, *attempts, g.maxAttempts))
+		request := boardRequest(planText, plan, board, sections, lastFeedback, lastCandidate, *attempts, g.maxAttempts)
+		request += "\n\n" + g.promptKit.RetrievalContext(plan.WorldName, board.Concept)
+		text, err := g.call(ctx, g.promptKit.SystemPrompt(), request)
 		if err != nil {
 			return "", err
 		}

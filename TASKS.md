@@ -1218,7 +1218,7 @@ the corpus/style work builds on. The specs below are unchanged.)
   coverage, JSON validity, and prompt inclusion; `go test ./...` green; replay
   fixture unchanged.
 
-- [ ] **M12.15c [ADVISOR] — Deterministic few-shot metadata and retrieval.**
+- [x] **M12.15c [ADVISOR] — Deterministic few-shot metadata and retrieval.**
   Tag every authorable corpus board offline with stable archetype/theme/palette/
   density metadata, then select a bounded, deterministic, premise-and-board-
   concept-relevant subset for generation instead of embedding every static

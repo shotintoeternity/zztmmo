@@ -56,6 +56,10 @@ func TestLoadPromptKit(t *testing.T) {
 		if !ok || caption.Summary == "" {
 			t.Errorf("few-shot %s has no loaded caption", fsx.Name)
 		}
+		metadata, ok := kit.Metadata[fsx.Name]
+		if !ok || metadata.World == "" || len(metadata.Themes) == 0 || len(metadata.Palette) == 0 || metadata.Density == "" {
+			t.Errorf("few-shot %s has incomplete retrieval metadata", fsx.Name)
+		}
 	}
 	if len(want) != 0 {
 		t.Errorf("missing few-shots: %v", want)
@@ -81,7 +85,6 @@ func TestPromptKitSystemPrompt(t *testing.T) {
 		"MAX_STAT = 150",                 // a specific limits row, verbatim
 		"# House style",                  // style section
 		"composed scenes, not tile soup", // a STYLE.md heading, verbatim
-		"# Worked examples",              // few-shot section
 		"# Output contract",              // contract
 		"single fenced code block",       // contract rule
 	} {
@@ -89,16 +92,11 @@ func TestPromptKitSystemPrompt(t *testing.T) {
 			t.Errorf("system prompt missing %q", want)
 		}
 	}
-	// Every few-shot's name and body must be embedded in the prompt.
+	// The cached system prompt deliberately contains no examples; the bounded
+	// retrieval block is per request, so it cannot poison the cache key.
 	for _, fsx := range kit.FewShots {
-		if !strings.Contains(p, fsx.Name) {
-			t.Errorf("system prompt missing few-shot name %q", fsx.Name)
-		}
-		if !strings.Contains(p, strings.TrimRight(fsx.ZWD, "\n")) {
-			t.Errorf("system prompt missing few-shot body for %q", fsx.Name)
-		}
-		if !strings.Contains(p, kit.Captions[fsx.Name].Summary) {
-			t.Errorf("system prompt missing visual caption for %q", fsx.Name)
+		if strings.Contains(p, strings.TrimRight(fsx.ZWD, "\n")) || strings.Contains(p, kit.Captions[fsx.Name].Summary) {
+			t.Errorf("cacheable system prompt unexpectedly contains few-shot %q", fsx.Name)
 		}
 	}
 }
@@ -122,6 +120,48 @@ func TestPromptKitAssetsMatchSource(t *testing.T) {
 			t.Fatalf("read embedded caption %s: %v", fsx.Name, err)
 		}
 		assertMatchesFile(t, "captions/"+fsx.Name+".json", string(embedded), captionSrc)
+	}
+	metadata, err := promptKitFS.ReadFile("promptkit_assets/fewshot_metadata.json")
+	if err != nil {
+		t.Fatalf("read embedded retrieval metadata: %v", err)
+	}
+	assertMatchesFile(t, "fewshot_metadata.json", string(metadata), filepath.Join("..", "llmworld", "fewshot_metadata.json"))
+}
+
+func TestPromptKitRetrieval(t *testing.T) {
+	kit, err := LoadPromptKit()
+	if err != nil {
+		t.Fatal(err)
+	}
+	cases := []struct{ query, want string }{
+		{"an icy title wordmark with monumental lettering", "winter_board0"},
+		{"cartoon cat space art with rainbow", "nyan_board0"},
+		{"a dungeon combat gameplay cavern", "DUNGEONS_board20"},
+	}
+	for _, tc := range cases {
+		t.Run(tc.want, func(t *testing.T) {
+			got := kit.RetrievalContext(tc.query, "")
+			if !strings.Contains(got, "(`"+tc.want+"`)") {
+				t.Fatalf("retrieval for %q omitted %s:\n%s", tc.query, tc.want, got)
+			}
+			if again := kit.RetrievalContext(tc.query, ""); got != again {
+				t.Fatal("retrieval is not deterministic")
+			}
+			if count := strings.Count(got, "## Example —"); count > retrievalMaxExamples {
+				t.Fatalf("retrieved %d examples, budget is %d", count, retrievalMaxExamples)
+			}
+			if len(got) > retrievalMaxBytes {
+				t.Fatalf("retrieval exceeded byte budget: %d", len(got))
+			}
+		})
+	}
+	// No matching terms makes every score tie; corpus name is the stable tiebreak.
+	tied := kit.RetrievalContext("quuxblorb", "")
+	if !strings.Contains(tied, "(`CUTLASS_board27`)") {
+		t.Fatalf("tie did not select lexical first few-shot:\n%s", tied)
+	}
+	if !strings.Contains(kit.RetrievalContext("dungeon", ""), "Same-world plan excerpt:") {
+		t.Fatal("dungeon retrieval omitted cohesive same-world plan-and-board example")
 	}
 }
 

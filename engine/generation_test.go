@@ -140,8 +140,11 @@ func TestM124GenerateEndpointSuccessAndPersistence(t *testing.T) {
 	if len(fake.requests) != 3 {
 		t.Fatalf("Claude calls = %d, want 3", len(fake.requests))
 	}
-	if systemText(fake.requests[1].System) != systemText(fake.requests[2].System) || !strings.Contains(systemText(fake.requests[1].System), "# Worked examples") {
+	if systemText(fake.requests[1].System) != systemText(fake.requests[2].System) || !strings.Contains(systemText(fake.requests[1].System), "# House style") {
 		t.Fatal("per-board calls did not share the cached PromptKit system prompt")
+	}
+	if !strings.Contains(fake.requests[1].Messages[0].Content, "# Retrieved corpus examples") || !strings.Contains(fake.requests[2].Messages[0].Content, "# Retrieved corpus examples") {
+		t.Fatal("per-board calls omitted deterministic retrieved corpus examples")
 	}
 	if len(progress) == 0 || progress[len(progress)-1].Stage != "complete" {
 		t.Fatalf("progress = %+v, want terminal complete event", progress)
