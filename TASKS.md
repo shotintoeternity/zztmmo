@@ -713,6 +713,91 @@ protocol is positional, so these sit just after M12.5 and before M5.
 
 - [x] **M12.11 — Dream-a-world fixes: prose-in-grid tolerance, prompt hardening, progress window.** The top Dream failure was the LLM drawing prose straight into the grid, where every letter is an undefined legend key the compiler rejects one-per-compile (never converging within K=3 repairs). `preprocessZWDGrid` now injects a legend entry for every undefined grid char (space → Empty; else → white on-board Text via `cp437:0xNN`), deriving the exclusion set from a correct legend-key tokenization rather than the lossy `legendMap` (which drops the `=` key and pre-existing `cp437:` keys). The generation prompt was hardened against prose-in-grid. Client: Dream progress lines are clamped to the window inner width, and the progress modal updates in place with `linePos` auto-following instead of reopening each poll (which snapped the scroll to the top). Generation is outside the sim; replay fixture unchanged. See NOTES.md.
 
+- [ ] **M12.12 — Door with a 0/8 background nibble crashes the whole server.**
+  Discovered 2026-07-11: playing a *generated* world, a player touched a Door
+  whose color had a background nibble of 0, and `ElementDoorTouch`
+  (`elements.go:1058`) computed `key = Color/16 % 8 == 0` then indexed
+  `pState.Keys[key-1]` = `Keys[-1]` → `panic: index out of range [-1]`. The
+  panic is in the tick goroutine with no recover, so it takes down the entire
+  process for **every** player in **every** room, not just the toucher. This is
+  a machine-conversion divergence from the Pascal: vanilla
+  (`ELEMENTS.PAS:1101-1113`) uses 1-based `key` directly (`Keys[key]`,
+  `ColorNames[key]`), so a `key==0` door harmlessly reads `Keys[0]`; the Go port
+  shifted every access to `key-1` for 0-based arrays and so underflows instead.
+  Two independent problems to weigh (write the decision in NOTES.md):
+  (1) **Robustness** — the compiler is the security boundary for generated
+  worlds (M12.4), so decide whether `zwd.go` should reject a `Door` legend
+  entry / tile whose background nibble is 0 or 8 (no vanilla key color), or the
+  sim should guard `key==0` (matching vanilla's tolerant read), or both. A DOS
+  ZZT world could also carry such a door, so a sim guard is the safer floor.
+  (2) **Server survivability** — a single sim panic should never kill the
+  process. Wrap `WorldInstance.Tick`/`RoomManager.StepDiffs`
+  (`websocket_server.go:188`, `room_manager.go:430`) in a per-room recover that
+  isolates or drops the offending room and logs, so one bad world cannot take
+  the fleet down. Keep any guard/recover out of `StateHash` and determinism.
+  DoD: a headless test touches a `0x0E`/`0x8E` door without panicking; a test
+  proves one room's panic does not stop the others; `go test ./...` green;
+  replay fixture unchanged.
+
+- [ ] **M12.13 — Auto-synthesize stats for orphan grid glyphs (kill the dominant
+  Dream failure).** The single most common generation failure (2026-07-11 log
+  taxonomy in NOTES.md; Saga Archive burned all 3 repair attempts on it) is
+  `grid contains stat-backed element X but no matching stat is defined at (x,y)`
+  (`zwd.go:801`, the reverse-direction check at `zwd.go:786-805`): the LLM draws
+  a stat-backed **glyph** in the grid but never declares a matching stat. ZWD
+  forces the model to keep the grid and a separate `stats` list with exact
+  `at X,Y` coordinates in byte-for-byte agreement, which it cannot do reliably.
+  `preprocessZWDGrid` (`generation.go:867`) already reconciles the *declared-stat
+  → nearest glyph* direction (stat-alignment block ~`generation.go:1085-1185`)
+  and, as of M12.11, absorbs undefined grid chars just before the rows are
+  appended (~`generation.go:1187`). This task adds the missing reverse direction:
+  **after stat alignment, for every stat-backed glyph left unclaimed in the final
+  25-row grid, synthesize a minimal valid `stat at <gridX>,<gridY> element <name>`
+  so the coordinate is DERIVED from where the glyph sits — the model never writes
+  it.** Requirements:
+  * The stat-backed set is `elementNeedsStat` (`zwd.go:817`): Object, Scroll,
+    Passage, Transporter, Pusher, Bomb, BlinkWall, Duplicator, Bear, Ruffian,
+    SpinningGun, Lion, Tiger, Slime, Shark, CentipedeHead/Segment, Bullet, Star.
+    (E_PLAYER is already handled by the player-positioning block; skip it here.)
+  * Reuse the block's existing `claimed`/`gridElements` maps to find unclaimed
+    stat-backed glyphs, so a glyph already matched to a declared stat is not
+    double-declared.
+  * Per-element defaults table: cycle from `ElementDefs[el].Cycle`; Object → an
+    empty `#end` OOP body so it is inert but valid (M12.10: Objects must exist as
+    stats); Passage/Transporter → a sane target (the start/hub board id or board
+    0) since a Passage with no destination is useless; monsters → default
+    intelligence/params. Ground each default in `gamevars.go` stat fields and the
+    Pascal element inits; do NOT invent params. When a default cannot be chosen
+    safely, prefer leaving the existing hard error over guessing wrong.
+  * Emit the synthesized `stat`/`oop`/`end` lines into the board's `stats` block
+    (create the block if absent), mirroring how the undefined-char fix injects
+    into the legend. Determinism: iterate glyphs in row-major order.
+  Purely preprocessing/generation — outside the sim; replay fixture unchanged.
+  DoD: a regression built from the real Saga Archive failure (an Object glyph in
+  the grid with no stat) compiles + validates after preprocess, with the
+  synthesized Object at the glyph's exact coordinate and an empty `#end`; a
+  Passage-glyph case gets a valid destination; `go test ./...` green.
+
+- [ ] **M12.14 — Compiler/preprocessor tolerance for the remaining recurring
+  Dream rejections.** After M12.13, the next tier of repair-round causes
+  (NOTES.md taxonomy) are still hard errors that bounce a whole board through the
+  LLM. Absorb each deterministically instead, following the "derive, don't
+  require" principle and the M12.11 precedent (fix in preprocess where possible;
+  the compiler stays the security boundary and still rejects the genuinely
+  unrepresentable):
+  * `duplicate legend key` (`zwd.go:348`) — keep the first entry, drop the
+    duplicate, and surface a warning rather than failing.
+  * `unknown stat field <name>` (`zwd.go:612`) — drop the unknown field and warn,
+    rather than rejecting the whole stat/board.
+  * `board <name> missing end` (`zwd.go:204`) — have `preprocessZWDGrid`
+    structurally auto-close an unterminated board/section (the model truncates),
+    rather than the compiler rejecting it.
+  Warnings should flow where `generatedGridDiagnostics` (`generation.go:557`)
+  already surfaces context, so accepted-with-repair worlds are still visible.
+  Outside the sim; replay fixture unchanged. DoD: a table-driven test feeds one
+  minimal board per case above and asserts it compiles + validates after
+  preprocess with the expected warning; `go test ./...` green.
+
 ## M5 — Creation and full-featured ZZT tooling
 
 Goal: support the creation features that make ZZT “full ZZT,” not only runtime
