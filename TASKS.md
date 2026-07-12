@@ -829,6 +829,30 @@ protocol is positional, so these sit just after M12.5 and before M5.
      mechanically-derived plan: board table with names + the `NeighborBoards`
      graph, so the plan format M12.3a defined is grounded in real topologies).
      Extend/parametrize the M12.3 corpus generator rather than forking it.
+     **Board-quality filter (required — the current selection actively picks the
+     wrong boards).** `pickRepresentativeBoards` scores
+     `nonEmpty + stats*25 + textCells*3 + colors*20`
+     (`gen_llmworld_test.go:127`), which *rewards* exactly the boards we must
+     exclude. Add a reject pass, all computed offline from the decompiled board,
+     before scoring/sampling:
+     * **Blank / border-only rooms** — a framed empty room (e.g. only a
+       yellow/CP437 border, empty interior). Reject when interior (non-border)
+       non-empty tiles fall below a floor, or one element/color dominates ~all
+       tiles with ~0 stats.
+     * **"Toolkit" / palette rooms** — an author's stash of one-of-every
+       element/color for copy-paste. Reject on abnormally high *distinct* element
+       and color counts combined with low spatial coherence: many singleton stat
+       types (one of each creature/object), high per-tile variety / low
+       contiguous-region structure — the tell that a board is a swatch sheet, not
+       a scene. Note this is the direct opposite failure from blank rooms and is
+       precisely what the `stats*25 + colors*20` terms currently over-reward.
+     * **Otherwise low-value rooms** — boards that read as neither a composed
+       scene nor authored content. Prefer a *balanced* signal (structure AND
+       content AND some authored OOP/text) over any single dimension maxed out;
+       a good board is not the densest or most colorful one.
+     Make the thresholds explicit and documented; a test asserts a hand-built
+     border-only board and a hand-built toolkit board are both rejected while a
+     real composed board passes.
   2. **Mined priors (the "adapter weights").** Deterministic Go miners emitting
      compact structured artifacts: a **palette/tile codebook** (element+color
      frequencies, common wall/floor/shading pairings, text-lettering color
