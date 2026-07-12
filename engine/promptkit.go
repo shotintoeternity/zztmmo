@@ -2,6 +2,7 @@ package zztgo
 
 import (
 	"embed"
+	"encoding/json"
 	"fmt"
 	"io/fs"
 	"sort"
@@ -28,21 +29,28 @@ import (
 //go:embed promptkit_assets/spec.md
 //go:embed promptkit_assets/STYLE.md
 //go:embed promptkit_assets/fewshots/*.zwd
+//go:embed promptkit_assets/captions/*.json
 var promptKitFS embed.FS
 
 // fewShotArchetypes labels each embedded few-shot by the board archetype it
-// demonstrates. CUTLASS_board27 and SEWERS_board17 are the M12.3 spec's own
-// action-arena and texture-showcase picks; DUNGEONS_board20 (a framed cavern
-// interior) and RAEKUUL_board1 (text lettering + playful #zap dialogue) replace
-// the spec's ONAMOON/OBELISK candidates, which carry decompiler artifacts
-// (raw `element 33` legend entries, an off-board `respawn 98,98`) that the
-// compiler rejects — a few-shot must itself be valid ZWD or it teaches the
-// model invalid tokens. See NOTES.md.
+// demonstrates. The original M12.3 action/interior/story spread remains, and
+// M12.15a adds owner-curated title lettering, pictorial art, and playable-scene
+// examples. Every entry is independently decompiled, link-neutralized, compiled,
+// headlessly validated, and pixel-compared before it may enter this map.
 var fewShotArchetypes = map[string]string{
-	"CUTLASS_board27":  "action arena",
-	"SEWERS_board17":   "texture showcase",
-	"DUNGEONS_board20": "interior scene",
-	"RAEKUUL_board1":   "story board",
+	"CUTLASS_board27":                  "action arena",
+	"SEWERS_board17":                   "texture showcase",
+	"DUNGEONS_board20":                 "interior scene",
+	"RAEKUUL_board1":                   "story board",
+	"winter_board0":                    "title lettering — icy monumental",
+	"scorchede_board0":                 "title lettering — rough block",
+	"sudoku_board0":                    "title lettering — geometric",
+	"zztv7_board0":                     "title lettering — neon abstract",
+	"variety_board0":                   "title lettering — rainbow wordmark",
+	"nyan_board0":                      "title art — cartoon pictorial",
+	"rhygar2_arogans_range_1_board0":   "gameplay scene — sunset landscape",
+	"gh2se0_ap_edge_se_board0":         "gameplay scene — road and trees",
+	"gh2se0_mcqueen_heights_ne_board0": "gameplay scene — town architecture",
 }
 
 // FewShot is one embedded example board section, shown to the model as a style
@@ -53,11 +61,26 @@ type FewShot struct {
 	ZWD       string // the board section text
 }
 
+// BoardCaption is an offline, structured visual label for a few-shot. Summary
+// is deliberately compact because it sits beside the board source in prompts;
+// the other fields remain available for M12.15c's deterministic retrieval.
+type BoardCaption struct {
+	Title        string   `json:"title"`
+	Archetype    string   `json:"archetype"`
+	Technique    string   `json:"technique"`
+	Palette      []string `json:"palette"`
+	Composition  string   `json:"composition"`
+	PictorialArt string   `json:"pictorial_art"`
+	Quality      string   `json:"quality"`
+	Summary      string   `json:"summary"`
+}
+
 // PromptKit holds the assembled generation ingredients.
 type PromptKit struct {
 	Spec     string // ZWD format grammar + limits table (spec.md)
 	Style    string // STYLE.md
 	FewShots []FewShot
+	Captions map[string]BoardCaption // keyed by FewShot.Name
 }
 
 // LoadPromptKit reads the embedded assets into a PromptKit. It errors rather
@@ -75,7 +98,7 @@ func LoadPromptKit() (*PromptKit, error) {
 	if err != nil {
 		return nil, fmt.Errorf("promptkit: read fewshots dir: %w", err)
 	}
-	kit := &PromptKit{Spec: string(spec), Style: string(style)}
+	kit := &PromptKit{Spec: string(spec), Style: string(style), Captions: map[string]BoardCaption{}}
 	for _, e := range entries {
 		if e.IsDir() || !strings.HasSuffix(e.Name(), ".zwd") {
 			continue
@@ -97,6 +120,21 @@ func LoadPromptKit() (*PromptKit, error) {
 	// Stable order (embed.FS is already sorted, but make it explicit): group by
 	// archetype spread in a deterministic sequence for prompt caching.
 	sort.Slice(kit.FewShots, func(i, j int) bool { return kit.FewShots[i].Name < kit.FewShots[j].Name })
+	for _, fsx := range kit.FewShots {
+		b, err := promptKitFS.ReadFile("promptkit_assets/captions/" + fsx.Name + ".json")
+		if err != nil {
+			return nil, fmt.Errorf("promptkit: read caption for %s: %w", fsx.Name, err)
+		}
+		var caption BoardCaption
+		if err := json.Unmarshal(b, &caption); err != nil {
+			return nil, fmt.Errorf("promptkit: parse caption for %s: %w", fsx.Name, err)
+		}
+		if caption.Title == "" || caption.Archetype == "" || caption.Technique == "" ||
+			len(caption.Palette) == 0 || caption.Composition == "" || caption.Quality == "" || caption.Summary == "" {
+			return nil, fmt.Errorf("promptkit: caption for %s is incomplete", fsx.Name)
+		}
+		kit.Captions[fsx.Name] = caption
+	}
 	return kit, nil
 }
 
@@ -116,7 +154,8 @@ func (k *PromptKit) SystemPrompt() string {
 	b.WriteString("\n\n# Worked examples\n\n")
 	b.WriteString("Real boards decompiled from shipped games, one per archetype. Study their framing, shading, legend density, and OOP voice — then write your own scene, do not copy these.\n")
 	for _, fsx := range k.FewShots {
-		fmt.Fprintf(&b, "\n## Example — %s (`%s`)\n\n```zwd\n%s\n```\n", fsx.Archetype, fsx.Name, strings.TrimRight(fsx.ZWD, "\n"))
+		caption := k.Captions[fsx.Name]
+		fmt.Fprintf(&b, "\n## Example — %s (`%s`)\n\nVisual note: %s\n\n```zwd\n%s\n```\n", fsx.Archetype, fsx.Name, caption.Summary, strings.TrimRight(fsx.ZWD, "\n"))
 	}
 	b.WriteString("\n")
 	b.WriteString(promptOutputContract)

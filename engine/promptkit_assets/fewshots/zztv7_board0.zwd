@@ -1,0 +1,185 @@
+board "$zztv vii"
+  start player at 1,1
+  max-shots 255
+  dark false
+  reenter false
+  time-limit 0
+  exits north none south none west none east none
+
+  grid
+@........aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaOaaaaaaaaaaaaaa+aaa
+##NNBB~~b##NNBB~~b##NNBB~~b##NNbB~~Sbbccoobbbbobbbbdbo#ccola
+##NNBB~~b##NNBB~~b##NNBB~~b##NNbB~~Sbebgcc##oobbboo#ccWgcgba
+abooBB~hbbbooBB~hbbbNNBBbbb##NNbB~~SbbbbdgWi#cccc##iiWg#Wgba
+o#NNhhbbbo#NNhhbbbbbNNBBbbbo#NNbB~~hbbbobb+ddWjWggggddb#Weba
+##NNBB~~b##NNBB~~bbbNNBBbbbb#NNbB~~bbbbbebbbkbbbbbbbebcWjbba
+##NNBB~~.##NNBB~~bbbNNBBbbbbboNBBhbbbbbbbbbbbbblbbbObbcWbbba
+mfnpbbbbbbbbbppppppbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbqbbb#Wglbba
+fnppppbbbbbpppnnnnnpppbpbbbbbbbbbdbbbbbbbbbbbbbbbbob#WgbbOba
+npbbboo###oobbpppppbbboo#ccccooobbbbbbbbbbbbbObbbbbcjWbbbbbp
+pbbocc#iggccccoobboocc##iiWWicc####oObbbbbbdbbbbbocjWbebbbbp
+pbc#igggdddWiicccccciiWWjddbbdgWjWg#ccebbbbbbbeoccWWkbbb+bpn
+acWggddbbbbbbddjjWWggddbbbbbbbbbblddggcccobbocc#iggbbbbbbpnf
+cWgdbbbbbppbbbbbbbbbbbbbppppppbbbbbobddgW####iWggdbbbdbppnfm
+cgbbbbbbbbbppppppppbbbppnnnnnnppppppbbbb+bggWjddlbobbbpnnfmr
+a#obocc#oobbbbbppnnpppnnffffffnnnnnnppkpppbbbbbbbebbbpnffmrs
+abo#iigii##bbbbbbpnnnnffmmmmmmffffffnnnnnnppbObbbbbppnfmmrst
+abbdWjddWgi#cbbbbbpnffmmrrrrrrmmmmmmffffffnnpppppppnnfmrrstu
+pbbbbbbbbbbbgcbbbbbpnfmrssssssrrrrrrmmmmmmffnnnnnnnffmrsstuv
+nppbbbpppbbbbbcbbbbpnfmrstttttssssssrrrrrrmmfffffffmmrsttuvw
+bbbbbbbbbbbbbbbgbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb
+jjxxyyzzAAzzyybcbjxxyyzzAAzzyyxxjjxxyyzzAAzzyyxxjjxxyyzzAAzz
+bbbbbbbbbbbbbbbcgbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb
+bbbbbbbbbbbbbbb.gbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb
+bbbbbbbbbbbbbaaa#.aaaabbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbboo
+  end
+
+  legend
+    @ = Player color 0x1F under Empty color 0x0C
+    . = Empty color 0x0C
+    a = Empty color 0x0E
+    O = Boulder color 0x05
+    + = Door color 0x50
+    # = Solid color 0x0C
+    N = Normal color 0x4C
+    B = Breakable color 0x4C
+    ~ = Water color 0x4C
+    b = Empty color 0x00
+    S = Solid color 0x04
+    c = Normal color 0x5C
+    o = Object color 0x0C
+    d = Object color 0x05
+    l = Line color 0x05
+    e = Line color 0x0C
+    g = Breakable color 0x5C
+    W = Water color 0x5C
+    h = Object color 0x04
+    i = Object color 0x5C
+    j = Solid color 0x05
+    k = Boulder color 0x0C
+    m = Solid color 0x02
+    f = Forest color 0x20
+    n = Breakable color 0x02
+    p = Normal color 0x20
+    q = Empty color 0x05
+    r = Water color 0x2A
+    s = Breakable color 0x2A
+    t = Normal color 0x2A
+    u = Normal color 0x3A
+    v = Breakable color 0x3A
+    w = Water color 0x3A
+    x = Normal color 0x15
+    y = Breakable color 0x51
+    z = Normal color 0x51
+    A = Solid color 0x01
+  end
+
+  stats
+    stat at 30,7 element Object p1 cp437:0xDF under Empty color 0x0C data-pos -1
+    stat at 3,4 element Object p1 cp437:0xDC data-pos -1
+    stat at 4,4 element Object p1 cp437:0xDC data-pos -1
+    stat at 12,4 element Object p1 cp437:0xDC data-pos -1
+    stat at 13,4 element Object p1 cp437:0xDC data-pos -1
+    stat at 10,5 element Object p1 cp437:0xDC under Empty color 0x0C data-pos -1
+    stat at 1,5 element Object p1 cp437:0xDC under Empty color 0x0C data-pos -1
+    stat at 28,5 element Object p1 cp437:0xDE under Empty color 0x0C data-pos -1
+    stat at 51,9 element Object p1 cp437:0x0F data-pos -1
+    stat at 40,5 element Object p1 cp437:0x0F data-pos -1
+    stat at 44,11 element Object p1 cp437:0x0F data-pos -1
+    stat at 54,14 element Object p1 cp437:0x0F data-pos -1
+    stat at 52,2 element Object p1 cp437:0x0F data-pos -1
+    stat at 34,9 element Object p1 cp437:0x0F data-pos -1
+    stat at 47,2 element Object p1 cp437:0x09 under Empty color 0x0C data-pos -1
+    stat at 51,15 element Object p1 cp437:0x09 data-pos -1
+    stat at 36,14 element Object p1 cp437:0x09 data-pos -1
+    stat at 14,5 element Object p1 cp437:0xDF data-pos -1
+    stat at 15,5 element Object p1 cp437:0xDF data-pos -1
+    stat at 17,4 element Object p1 cp437:0xDF under Empty color 0x0C data-pos -1
+    stat at 8,4 element Object p1 cp437:0xDF under Empty color 0x4C data-pos -1
+    stat at 6,5 element Object p1 cp437:0xDF data-pos -1
+    stat at 5,5 element Object p1 cp437:0xDF data-pos -1
+    stat at 34,7 element Object p1 cp437:0xDF data-pos -1
+    stat at 36,5 element Object p1 cp437:0xDD under Empty color 0x0C data-pos -1
+    stat at 9,16 element Object p1 cp437:0xDC data-pos -1
+    stat at 10,16 element Object p1 cp437:0xDC under Empty color 0x0C data-pos -1
+    stat at 5,16 element Object p1 cp437:0xDC data-pos -1
+    stat at 3,16 element Object p1 cp437:0xDC data-pos -1
+    stat at 7,10 element Object p1 cp437:0xDC data-pos -1
+    stat at 6,10 element Object p1 cp437:0xDC data-pos -1
+    stat at 12,10 element Object p1 cp437:0xDC data-pos -1
+    stat at 11,10 element Object p1 cp437:0xDC data-pos -1
+    stat at 15,11 element Object p1 cp437:0xDC data-pos -1
+    stat at 16,11 element Object p1 cp437:0xDC data-pos -1
+    stat at 20,11 element Object p1 cp437:0xDC data-pos -1
+    stat at 19,11 element Object p1 cp437:0xDC data-pos -1
+    stat at 23,10 element Object p1 cp437:0xDC data-pos -1
+    stat at 24,10 element Object p1 cp437:0xDC data-pos -1
+    stat at 31,10 element Object p1 cp437:0xDC data-pos -1
+    stat at 30,10 element Object p1 cp437:0xDC data-pos -1
+    stat at 32,10 element Object p1 cp437:0xDC data-pos -1
+    stat at 36,11 element Object p1 cp437:0xDC data-pos -1
+    stat at 42,13 element Object p1 cp437:0xDC data-pos -1
+    stat at 45,13 element Object p1 cp437:0xDC data-pos -1
+    stat at 48,12 element Object p1 cp437:0xDC data-pos -1
+    stat at 50,11 element Object p1 cp437:0xDC data-pos -1
+    stat at 46,3 element Object p1 cp437:0xDC data-pos -1
+    stat at 45,3 element Object p1 cp437:0xDC under Empty color 0x0C data-pos -1
+    stat at 50,3 element Object p1 cp437:0xDC data-pos -1
+    stat at 51,3 element Object p1 cp437:0xDC under Empty color 0x05 data-pos -1
+    stat at 54,2 element Object p1 cp437:0xDC data-pos -1
+    stat at 41,2 element Object p1 cp437:0xDC data-pos -1
+    stat at 42,2 element Object p1 cp437:0xDC data-pos -1
+    stat at 58,2 element Object p1 cp437:0xDC data-pos -1
+    stat at 49,13 element Object p1 cp437:0xDF under Water color 0x5C data-pos -1
+    stat at 46,14 element Object p1 cp437:0xDF under Empty color 0x05 data-pos -1
+    stat at 25,11 element Object p1 cp437:0xDF under Water color 0x5C data-pos -1
+    stat at 26,11 element Object p1 cp437:0xDF under Empty color 0x5C data-pos -1
+    stat at 29,11 element Object p1 cp437:0xDF under Empty color 0x5C data-pos -1
+    stat at 21,12 element Object p1 cp437:0xDF under Water color 0x5C data-pos -1
+    stat at 22,12 element Object p1 cp437:0xDF under Empty color 0x5C data-pos -1
+    stat at 14,12 element Object p1 cp437:0xDF under Empty color 0x05 data-pos -1
+    stat at 13,12 element Object p1 cp437:0xDF under Water color 0x5C data-pos -1
+    stat at 8,11 element Object p1 cp437:0xDF under Water color 0x5C data-pos -1
+    stat at 5,12 element Object p1 cp437:0xDF under Water color 0x5C data-pos -1
+    stat at 4,11 element Object p1 cp437:0xDC data-pos -1
+    stat at 5,17 element Object p1 cp437:0xDF under Empty color 0x0C data-pos -1
+    stat at 3,17 element Object p1 cp437:0xDF under Empty color 0x0C data-pos -1
+    stat at 9,17 element Object p1 cp437:0xDF under Empty color 0x0C data-pos -1
+    stat at 8,17 element Object p1 cp437:0xDF under Empty color 0x5C data-pos -1
+    stat at 6,17 element Object p1 cp437:0xDF under Water color 0x5C data-pos -1
+    stat at 11,18 element Object p1 cp437:0xDF under Empty color 0x5C data-pos -1
+    stat at 8,18 element Object p1 cp437:0xDF data-pos -1
+    stat at 26,12 element Object p1 cp437:0xDF data-pos -1
+    stat at 27,12 element Object p1 cp437:0xDF data-pos -1
+    stat at 30,12 element Object p1 cp437:0xDF data-pos -1
+    stat at 36,13 element Object p1 cp437:0xDF data-pos -1
+    stat at 35,13 element Object p1 cp437:0xDF under Empty color 0x05 data-pos -1
+    stat at 38,14 element Object p1 cp437:0xDF data-pos -1
+    stat at 39,14 element Object p1 cp437:0xDF data-pos -1
+    stat at 47,15 element Object p1 cp437:0xDF data-pos -1
+    stat at 48,15 element Object p1 cp437:0xDF data-pos -1
+    stat at 50,14 element Object p1 cp437:0xDF data-pos -1
+    stat at 53,5 element Object p1 cp437:0xDF data-pos -1
+    stat at 54,5 element Object p1 cp437:0xDF data-pos -1
+    stat at 22,13 element Object p1 cp437:0xDF data-pos -1
+    stat at 23,13 element Object p1 cp437:0xDF data-pos -1
+    stat at 15,13 element Object p1 cp437:0xDF data-pos -1
+    stat at 14,13 element Object p1 cp437:0xDF data-pos -1
+    stat at 9,12 element Object p1 cp437:0xDF data-pos -1
+    stat at 10,12 element Object p1 cp437:0xDF data-pos -1
+    stat at 11,12 element Object p1 cp437:0xDF data-pos -1
+    stat at 7,13 element Object p1 cp437:0xDF data-pos -1
+    stat at 6,13 element Object p1 cp437:0xDF data-pos -1
+    stat at 4,14 element Object p1 cp437:0xDF data-pos -1
+    stat at 4,18 element Object p1 cp437:0xDF under Empty color 0x5C data-pos -1
+    stat at 7,18 element Object p1 cp437:0xDF data-pos -1
+    stat at 45,5 element Object p1 cp437:0xDF under Empty color 0x5C data-pos -1
+    stat at 44,5 element Object p1 cp437:0xDF under Empty color 0x50 data-pos -1
+    stat at 41,4 element Object p1 cp437:0xDF data-pos -1
+    stat at 44,4 element Object p1 cp437:0xDF under Water color 0x5C data-pos -1
+    stat at 52,4 element Object p1 cp437:0xDF under Water color 0x5C data-pos -1
+    stat at 53,4 element Object p1 cp437:0xDF under Water color 0x5C data-pos -1
+    stat at 59,25 element Object p1 cp437:0x30 data-pos -1
+    stat at 60,25 element Object p1 cp437:0x32 under Empty color 0x0E data-pos -1
+  end
+end

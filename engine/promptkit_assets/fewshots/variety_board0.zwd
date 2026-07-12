@@ -1,0 +1,893 @@
+board "Title screen"
+  start player at 1,1
+  max-shots 255
+  dark false
+  reenter false
+  time-limit 0
+  exits north none south none west none east none
+
+  grid
+@...........................bbbbb.......................jd.o
+............................................................
+....#####....##.....OS.kkkkk.lllllp.qtttttuuvvxxxxvvii.yyzi.
+....AAA##....##....OSS.kCDDkkEFllFG.ttuH.IIIJJJJIIIK..yyy...
+....####L....#M...OSSS.kN...kN.lP..qttQ.....JJIK.yyyiyyz.ii.
+....####M...#LM..OSSSS.kk..kN.lPG..ttttuuu.JJJK...yyyyy..ii.
+.....###M..##MM.OSSOSR.kkkkN..lP..qttu.....JJIK....yyz...ii.
+.....##MMT##LM.OSO.ORU.kkDkN.llP..tttH....JJJK....yyyi...ii.
+......MMMT#LM.OSSSSSR.kkV..kCllG.qttu.....JJIK...yyzii...ii.
+.......MMTLM.OSX...XR.kk....NCP..tttH....JJJK...yyy.ii...ii.
+........MTM.OXO..OXRU.Nk..pppNCpPtttuuuuQJJIK..yyz...iiiii..
+............................................................
+........~W~.OX...OXR..YY..Z.Z00Z1.222222.3334..55B...iiiii..
+........~WW..OS.....R.Y.....Y0Z..22.2....33.4...555.ii...ii.
+......~.~WW.~..SSS.SR.YYY..Y.ZZZ.22.2......334...5.Bii...ii.
+......~.~.W.W...S...R...Y.Y...Z...2.2.....3.3.....5.5i...ii.
+.....W.W...W.~~.OSS.S..Y.YY0..Z1...226.....3.34....55i...ii.
+....WWW.~...W.~..OS.SS.YY...0..11..2.2266..33.4...5.55...ii.
+....W.W.~.....~...O..S.Y0.......1..2.26.....3.44.5..i5.B.ii.
+....W.WW.....W.....O....0..Y.7..ZZ..226..44.33..4.44..5.....
+....W.WW.....W......O..Y.........Z..2..2.26.33..88..ii...Bi.
+............................................................
+..a..g.a.m.o..w.h.e.r.e..9.!.f.f.e.r.$.n.c.e.s..m.a.o.o.o.o.
+............................................................
+.......................................................TTTT.
+  end
+
+  legend
+    @ = Player color 0x1F under Empty color 0x00
+    . = Empty color 0x0F
+    b = Empty color 0x01
+    j = Empty color 0x80
+    d = Duplicator color 0x80
+    o = Object color 0x0F
+    # = Solid color 0x01
+    O = Object color 0x04
+    S = Solid color 0x04
+    k = Solid color 0x05
+    l = Solid color 0x08
+    p = Object color 0x78
+    q = Object color 0x03
+    t = Solid color 0x03
+    u = Object color 0x3B
+    v = Object color 0x02
+    x = Object color 0x2E
+    i = Invisible color 0x08
+    y = Solid color 0x0E
+    z = Object color 0x7E
+    A = Object color 0x10
+    C = Solid color 0x0D
+    D = Object color 0x0D
+    E = Object color 0x58
+    F = Object color 0x08
+    G = Object color 0x70
+    H = Object color 0x0B
+    I = Object color 0x2A
+    J = Solid color 0x02
+    K = Solid color 0x2A
+    L = Object color 0x19
+    M = Solid color 0x19
+    N = Object color 0x5D
+    P = Solid color 0x07
+    Q = Solid color 0x3B
+    R = Solid color 0x0C
+    T = Object color 0x01
+    U = Object color 0x0C
+    V = Object color 0x05
+    X = Object color 0x4C
+    ~ = Water color 0x09
+    W = Water color 0x01
+    Y = Water color 0x05
+    Z = Water color 0x08
+    0 = Water color 0x0D
+    1 = Water color 0x07
+    2 = Water color 0x03
+    3 = Water color 0x02
+    4 = Water color 0x0A
+    5 = Water color 0x0E
+    B = Breakable color 0x0E
+    6 = Water color 0x0B
+    7 = Water color 0x58
+    8 = Breakable color 0x2E
+    a = Text-White color 0x61
+    g = Text-White color 0x67
+    m = Text-White color 0x6D
+    w = Text-White color 0x77
+    h = Text-White color 0x68
+    e = Text-White color 0x65
+    r = Text-White color 0x72
+    9 = Text-White color 0x64
+    ! = Object color 0x07
+    f = Text-White color 0x66
+    $ = Object color 0x0E
+    n = Text-White color 0x6E
+    c = Text-White color 0x63
+    s = Text-White color 0x73
+  end
+
+  stats
+    stat at 14,6 element Object p1 cp437:0xDC under Empty color 0x0F
+    stat at 13,8 element Object p1 cp437:0xDC under Empty color 0x0F
+    stat at 12,9 element Object p1 cp437:0xDC under Empty color 0x0F
+    stat at 11,10 element Object p1 cp437:0xDC under Empty color 0x0F
+    stat at 10,8 element Object p1 cp437:0xDE under Empty color 0x0F
+    stat at 10,9 element Object p1 cp437:0xDE under Empty color 0x0F
+    stat at 10,10 element Object p1 cp437:0xDE under Empty color 0x0F
+    stat at 10,11 element Object p1 cp437:0xDE under Empty color 0x0F
+    stat at 14,11 element Object p1 cp437:0xDC under Empty color 0x0F
+    oop
+#bind u
+
+    end
+    stat at 18,8 element Object p1 cp437:0xDF under Empty color 0x0F
+    oop
+@u
+#cycle 1
+#end
+:u
+#if blocked rndp rndne die
+#if blocked rndp rndne die
+
+    end
+    stat at 15,11 element Object p1 cp437:0xDF under Empty color 0x0F
+    oop
+#bind u
+
+    end
+    stat at 13,11 element Object p1 cp437:0xDC under Empty color 0x0F
+    oop
+#bind u
+
+    end
+    stat at 14,10 element Object p1 cp437:0xDC under Empty color 0x0F
+    oop
+#bind u
+
+    end
+    stat at 15,9 element Object p1 cp437:0xDC under Empty color 0x0F
+    oop
+#bind u
+
+    end
+    stat at 16,8 element Object p1 cp437:0xDC under Empty color 0x0F
+    oop
+#bind u
+
+    end
+    stat at 17,7 element Object p1 cp437:0xDC under Empty color 0x0F
+    oop
+#bind u
+
+    end
+    stat at 18,6 element Object p1 cp437:0xDC under Empty color 0x0F
+    oop
+#bind u
+
+    end
+    stat at 19,5 element Object p1 cp437:0xDC under Empty color 0x0F
+    oop
+#bind u
+
+    end
+    stat at 20,4 element Object p1 cp437:0xDC under Empty color 0x0F
+    oop
+#bind u
+
+    end
+    stat at 21,3 element Object p1 cp437:0xDC under Empty color 0x0F
+    oop
+#bind u
+
+    end
+    stat at 18,11 element Object p1 cp437:0xDC under Empty color 0x0F
+    oop
+#bind u
+
+    end
+    stat at 22,8 element Object p1 cp437:0xDF under Empty color 0x0F
+    oop
+#bind u
+
+    end
+    stat at 23,11 element Object p1 cp437:0xDC under Empty color 0x0F
+    oop
+#bind u
+
+    end
+    stat at 19,11 element Object p1 cp437:0xDC under Empty color 0x0F
+    oop
+#bind u
+
+    end
+    stat at 20,10 element Object p1 cp437:0xDC under Empty color 0x0F
+    oop
+#bind u
+
+    end
+    stat at 16,10 element Object p1 cp437:0xDC under Empty color 0x0F
+    oop
+#bind u
+
+    end
+    stat at 20,8 element Object p1 cp437:0xDC under Empty color 0x0F
+    oop
+#bind u
+
+    end
+    stat at 20,7 element Object p1 cp437:0xDF under Empty color 0x0F
+    oop
+#bind u
+
+    end
+    stat at 28,7 element Object p1 cp437:0xDF under Empty color 0x0F
+    oop
+#bind u
+
+    end
+    stat at 29,6 element Object p1 cp437:0xDC under Empty color 0x0F
+    oop
+#bind u
+
+    end
+    stat at 30,5 element Object p1 cp437:0xDC under Empty color 0x0F
+    oop
+#bind u
+
+    end
+    stat at 25,5 element Object p1 cp437:0xDF under Empty color 0x0F
+    oop
+#bind u
+
+    end
+    stat at 28,8 element Object p1 cp437:0xDC under Empty color 0x0F
+    oop
+#bind u
+
+    end
+    stat at 29,10 element Object p1 cp437:0xDF under Empty color 0x0F
+    oop
+#bind u
+
+    end
+    stat at 30,11 element Object p1 cp437:0xDC under Empty color 0x0F
+    oop
+#bind u
+
+    end
+    stat at 27,4 element Object p1 cp437:0xDF under Empty color 0x0F
+    oop
+#bind u
+
+    end
+    stat at 26,4 element Object p1 cp437:0xDF under Empty color 0x0F
+    oop
+#bind u
+
+    end
+    stat at 34,4 element Object p1 cp437:0xDF under Empty color 0x0F
+    stat at 35,4 element Object p1 cp437:0xDC under Empty color 0x0F
+    oop
+#bind u
+
+    end
+    stat at 31,4 element Object p1 cp437:0xDF under Empty color 0x0F
+    oop
+#bind u
+
+    end
+    stat at 30,4 element Object p1 cp437:0xDF under Empty color 0x0F
+    stat at 33,6 element Object p1 cp437:0xDC under Empty color 0x0F
+    oop
+#bind u
+
+    end
+    stat at 32,9 element Object p1 cp437:0xDC under Empty color 0x0F
+    oop
+#bind u
+
+    end
+    stat at 32,11 element Object p1 cp437:0xDF under Empty color 0x0F
+    oop
+#bind u
+
+    end
+    stat at 35,3 element Object p1 cp437:0xDF under Empty color 0x0F
+    oop
+#bind u
+
+    end
+    stat at 29,11 element Object p1 cp437:0xDF under Empty color 0x0F
+    oop
+#bind u
+
+    end
+    stat at 28,11 element Object p1 cp437:0xDF under Empty color 0x0F
+    oop
+#bind u
+
+    end
+    stat at 27,11 element Object p1 cp437:0xDF under Empty color 0x0F
+    oop
+#bind u
+
+    end
+    stat at 25,9 element Object p1 cp437:0xDF under Empty color 0x0F
+    stat at 40,11 element Object p1 cp437:0xDC under Empty color 0x0F
+    oop
+#bind u
+
+    end
+    stat at 39,11 element Object p1 cp437:0xDC under Empty color 0x0F
+    oop
+#bind u
+
+    end
+    stat at 38,11 element Object p1 cp437:0xDC under Empty color 0x0F
+    oop
+#bind u
+
+    end
+    stat at 37,11 element Object p1 cp437:0xDC under Empty color 0x0F
+    oop
+#bind u
+
+    end
+    stat at 42,6 element Object p1 cp437:0xDC under Empty color 0x0F
+    oop
+#bind u
+
+    end
+    stat at 41,6 element Object p1 cp437:0xDC under Empty color 0x0F
+    oop
+#bind u
+
+    end
+    stat at 40,6 element Object p1 cp437:0xDC under Empty color 0x0F
+    oop
+#bind u
+
+    end
+    stat at 44,3 element Object p1 cp437:0xDC under Empty color 0x0F
+    oop
+#bind u
+
+    end
+    stat at 43,3 element Object p1 cp437:0xDC under Empty color 0x0F
+    oop
+#bind u
+
+    end
+    stat at 39,4 element Object p1 cp437:0xDE under Empty color 0x0F
+    oop
+#bind u
+
+    end
+    stat at 38,7 element Object p1 cp437:0xDE under Empty color 0x0F
+    oop
+#bind u
+
+    end
+    stat at 38,8 element Object p1 cp437:0xDD under Empty color 0x0F
+    oop
+#bind u
+
+    end
+    stat at 37,10 element Object p1 cp437:0xDD under Empty color 0x0F
+    oop
+#bind u
+
+    end
+    stat at 37,9 element Object p1 cp437:0xDE under Empty color 0x0F
+    oop
+#bind u
+
+    end
+    stat at 40,4 element Object p1 cp437:0xDD under Empty color 0x0F
+    oop
+#bind u
+
+    end
+    stat at 37,3 element Object p1 cp437:0xDE under Empty color 0x0F
+    oop
+#bind u
+
+    end
+    stat at 36,5 element Object p1 cp437:0xDE under Empty color 0x0F
+    oop
+#bind u
+
+    end
+    stat at 35,7 element Object p1 cp437:0xDE under Empty color 0x0F
+    oop
+#bind u
+
+    end
+    stat at 34,9 element Object p1 cp437:0xDE under Empty color 0x0F
+    oop
+#bind u
+
+    end
+    stat at 42,4 element Object p1 cp437:0xDC under Empty color 0x0F
+    oop
+#bind u
+
+    end
+    stat at 43,4 element Object p1 cp437:0xDC under Empty color 0x0F
+    oop
+#bind u
+
+    end
+    stat at 44,4 element Object p1 cp437:0xDC under Empty color 0x0F
+    oop
+#bind u
+
+    end
+    stat at 49,4 element Object p1 cp437:0xDC under Empty color 0x0F
+    oop
+#bind u
+
+    end
+    stat at 50,4 element Object p1 cp437:0xDC under Empty color 0x0F
+    oop
+#bind u
+
+    end
+    stat at 51,4 element Object p1 cp437:0xDC under Empty color 0x0F
+    oop
+#bind u
+
+    end
+    stat at 52,3 element Object p1 cp437:0xDC under Empty color 0x0F
+    oop
+#bind u
+
+    end
+    stat at 51,3 element Object p1 cp437:0xDC under Empty color 0x0F
+    oop
+#bind u
+
+    end
+    stat at 50,3 element Object p1 cp437:0xDF under Empty color 0x0F
+    oop
+#bind u
+
+    end
+    stat at 45,3 element Object p1 cp437:0xDC under Empty color 0x0F
+    oop
+#bind u
+
+    end
+    stat at 47,3 element Object p1 cp437:0xDF under Empty color 0x0F
+    oop
+#bind u
+
+    end
+    stat at 46,3 element Object p1 cp437:0xDC under Empty color 0x0F
+    oop
+#bind u
+
+    end
+    stat at 44,11 element Object p1 cp437:0xDC under Empty color 0x0F
+    oop
+#bind u
+
+    end
+    stat at 45,9 element Object p1 cp437:0xDC under Empty color 0x0F
+    oop
+#bind u
+
+    end
+    stat at 46,7 element Object p1 cp437:0xDC under Empty color 0x0F
+    oop
+#bind u
+
+    end
+    stat at 47,5 element Object p1 cp437:0xDC under Empty color 0x0F
+    oop
+#bind u
+
+    end
+    stat at 48,3 element Object p1 cp437:0xDF under Empty color 0x0F
+    oop
+#bind u
+
+    end
+    stat at 49,3 element Object p1 cp437:0xDF under Empty color 0x0F
+    oop
+#bind u
+
+    end
+    stat at 50,11 element Object p1 cp437:0xDF under Empty color 0x0F
+    oop
+#bind u
+
+    end
+    stat at 56,5 element Object p1 cp437:0xDF under Empty color 0x0F
+    oop
+#bind u
+
+    end
+    stat at 52,9 element Object p1 cp437:0xDF under Empty color 0x0F
+    oop
+#bind u
+
+    end
+    stat at 13,13 element Object p1 cp437:0xDC under Empty color 0x0F
+    oop
+#bind u
+
+    end
+    stat at 14,13 element Object p1 cp437:0xDC under Empty color 0x0F
+    oop
+#bind u
+
+    end
+    stat at 18,13 element Object p1 cp437:0xDC under Empty color 0x0F
+    oop
+#bind u
+
+    end
+    stat at 19,13 element Object p1 cp437:0xDC under Empty color 0x0F
+    oop
+#bind u
+
+    end
+    stat at 14,14 element Object p1 cp437:0xDC under Empty color 0x0F
+    oop
+#bind u
+
+    end
+    stat at 17,17 element Object p1 cp437:0xDC under Empty color 0x0F
+    oop
+#bind u
+
+    end
+    stat at 18,18 element Object p1 cp437:0xDC under Empty color 0x0F
+    oop
+#bind u
+
+    end
+    stat at 19,19 element Object p1 cp437:0xDC under Empty color 0x0F
+    oop
+#bind u
+
+    end
+    stat at 20,20 element Object p1 cp437:0xDC under Empty color 0x0F
+    oop
+#bind u
+
+    end
+    stat at 21,21 element Object p1 cp437:0xDC under Empty color 0x0F
+    oop
+#bind u
+
+    end
+    stat at 26,8 element Object p1 cp437:0xDF under Empty color 0x0F
+    oop
+#bind u
+
+    end
+    stat at 28,23 element Object cycle 1 p1 cp437:0x69 under Empty color 0x0F
+    oop
+#char 141
+/i#char 161
+/i#char 105
+/i/i/i/i/i/i/i/i/i/i/i/i/i/i/i/i/i#restart
+:u
+#char 154
+
+    end
+    stat at 5,4 element Object cycle 1 p1 cp437:0x57 under Empty color 0x0F
+    oop
+#end
+:u
+#char 154
+:v
+#change white water empty
+/i#v
+
+    end
+    stat at 6,4 element Object cycle 1 p1 cp437:0x69 under Empty color 0x0F
+    oop
+#char 141
+/i#char 161
+/i#char 105
+/i/i/i/i/i/i/i/i/i/i/i/i/i/i/i/i/i#restart
+:u
+#char 154
+
+    end
+    stat at 7,4 element Object cycle 1 p1 cp437:0x4C under Empty color 0x0F
+    oop
+#char 55
+/i#char 76
+/i/i/i/i/i/i/i/i/i/i/i/i/i/i/i/i/i#restart
+:u
+#char 154
+
+    end
+    stat at 21,11 element Object p1 cp437:0xDF under Empty color 0x0F
+    oop
+#bind u
+
+    end
+    stat at 9,5 element Object p1 cp437:0xDE under Empty color 0x0F
+    stat at 56,25 element Object cycle 1 p1 cp437:0x32 under Empty color 0x1D
+    oop
+/i#if not dread restart
+#char 154
+#all:u
+#change invisible water
+:a
+:a
+:a
+/i
+:c
+'h
+#d
+:d
+#play q.++c
+:d
+ERR: Bad command �
+/i/i/i/i/i/i#zap a
+#a
+:a
+:b
+:b
+:b
+/i#f
+:f
+#play q.++c
+:f
+ERR: Something is wr�ng
+/i/i/i/i/i/i#zap b
+#b
+:b
+ERR: �� He is here ���
+/i#restore b
+#restore a
+#h
+:h
+#zap g
+#g
+:g
+:g
+#c
+:g
+#zap d
+#zap f
+#restore h
+#play t3--c
+#c
+
+    end
+    stat at 58,25 element Object cycle 1 p1 cp437:0x32 under Empty color 0x1D
+    oop
+#bind v
+
+    end
+    stat at 57,25 element Object cycle 1 p1 cp437:0x30 under Empty color 0x1D
+    oop
+#bind v
+
+    end
+    stat at 59,25 element Object cycle 1 p1 cp437:0x30 under Empty color 0x1D
+    oop
+#bind v
+
+    end
+    stat at 38,23 element Object cycle 1 p1 cp437:0x65 under Empty color 0x0F
+    oop
+@v
+#end
+:u
+#char 154
+
+    end
+    stat at 58,3 element Object cycle 1 p1 cp437:0xDF under Fake color 0x08
+    oop
+#end
+:u
+/n#put s water
+#die
+
+    end
+    stat at 54,7 element Object cycle 1 p1 cp437:0xDF under Fake color 0x08
+    oop
+#end
+:u
+/e#put w water
+#die
+
+    end
+    stat at 12,23 element Object cycle 1 p1 cp437:0x65 under Empty color 0x0F
+    oop
+@v
+#end
+:u
+#char 154
+
+    end
+    stat at 57,23 element Object cycle 1 p1 cp437:0x65 under Empty color 0x0F
+    oop
+#bind v
+
+    end
+    stat at 55,23 element Object cycle 1 p1 cp437:0x74 under Empty color 0x0F
+    oop
+#bind v
+
+    end
+    stat at 53,23 element Object cycle 1 p1 cp437:0x74 under Empty color 0x0F
+    oop
+#bind v
+
+    end
+    stat at 59,23 element Object cycle 1 p1 cp437:0x72 under Empty color 0x0F
+    oop
+@You are bad at this.
+/i#if not zzz restart
+:a
+:a
+#zap a
+Thank you for playing!
+
+Please rate VARIETY:
+
+!z;*
+!z;**
+!z;***
+!z;****
+!z;*****
+/i#a
+:z
+Thank you for your feedback. It has been
+recorded.
+
+Please check "I agree" to recieve
+promotional emails related to VARIETY,
+its partners and affiliates, and other
+third parties.
+#ma
+:a
+We are sorry we were unable to receive
+your feedback. Please subscribe to our
+mailing list so that we can continue to
+send you additional communication
+regarding VARIETY, its partners and
+affiliates, and other third parties.
+
+:ma
+!;[] I disagree
+!;[] I agree
+/i
+Thank you. You have been signed up for
+our weekly newsletter.
+
+After providing your feedback, would you
+like to participate in a short survey
+about the service you have just
+experienced? You will be entered into a
+drawing to recieve up to $100 in in-game
+currency.
+
+!;[] I will participate.
+!;[] I will not participate.
+/i
+Taking you to surveyzzz.co.ru, waiting:
+
+!;I want to leave now.
+/i
+Welcome to surveyzzz.co.ru, please enter
+your email address to receive your FREE
+survey!
+
+!mb;Might as well.
+!;Close the window!
+/i
+$You click 'X' to close the window.
+$It immediately reopens.
+
+!;Ugh, Great.
+/i
+:mb
+QUESTION ONE:
+
+The service I recieved was:
+
+!mc;Excellent.
+!md;Great.
+!me;Very Good.
+!mf;Good.
+!mg;Average.
+!mh;Below Average.
+/i#mb
+:mc
+#zap mi
+:md
+#zap mi
+:me
+#zap mi
+:mf
+#zap mi
+:mg
+#zap mi
+:mh
+QUESTION TWO:
+
+Please describe in minimum 1 paragraph
+detail why you have selected the
+#mi
+:mi
+$BELOW
+:mi
+$AVERAGE
+#mj
+:mk
+$VERY
+:mi
+$GOOD
+#mj
+:mi
+#mk
+:mi
+$GREAT
+#mj
+:mi
+$EXCELLENT
+
+:mj
+Rating for VARIETY End-of-game survey:
+
+!ml;Man, I don't want to do that.
+!mm;Ugh. Might as well see this through.
+/i#mh
+:mm
+QUESTION THREE:
+
+Please rate this survey on a scale of one
+to six, with 1 being the most satisfied
+you have ever been filling out a survey
+and six represents the worst moment of
+your entire existence.
+
+!;6
+!;5
+!;4
+!;3
+!;2
+!;1
+/i
+:ml
+Thank you. Your responses have been
+recorded.
+
+:ww
+fin
+/i#ww
+:q
+#char 154
+
+    end
+    stat at 60,1 element Object cycle 1 p1 cp437:0xFA under Empty color 0x0F
+    oop
+#char 32
+/i#if not dread play xx
+#if not dread restart
+/i/i/i/i/i/i/i/i/i/i
+/i/i/i/i/i/i/i/i/i/i
+/i/i/i/i/i/i/i/i/i/i
+/i/i/i/i/i/i/i/i/i/i
+/i/i/i/i/i/i/i/i/i/i
+/i/i/i/i/i/i/i/i/i/i
+/i/i/i/i/i/i/i/i/i/i
+/i/i/i/i/i/i/i/i/i/i
+/i/i/i/i/i/i/i/i/i/i
+/i/i/i/i/i/i/i/i/i/i
+/i/i/i/i/i/i/i/i/i/i
+#put w player
+
+    end
+    stat at 58,1 element Duplicator cycle 9 p2 6 step west under Empty color 0x0F
+  end
+end

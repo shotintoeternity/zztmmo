@@ -1,0 +1,10 @@
+{
+  "title": "Sewers board 17",
+  "archetype": "texture showcase",
+  "technique": "Repeated tile clusters and alternating shade families imply wet masonry and channels.",
+  "palette": ["gray", "dark cyan", "green", "white"],
+  "composition": "Texture varies by region so routes and boundaries remain visually distinct.",
+  "pictorial_art": "",
+  "quality": "Good material language: repetition has rhythm without becoming a swatch sheet.",
+  "summary": "Texture showcase: clustered repeats and shade changes make sewer materials readable by region."
+}

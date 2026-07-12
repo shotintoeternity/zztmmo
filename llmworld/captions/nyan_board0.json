@@ -1,0 +1,10 @@
+{
+  "title": "NYAN CAT'S ADVENTURES IN NYANLAND",
+  "archetype": "title art — cartoon pictorial",
+  "technique": "CP437 cell art combines a large outlined cat, pink pastry body, rainbow trail, and star-speckled sky.",
+  "palette": ["dark blue", "bright blue", "pink", "magenta", "green", "yellow", "gray", "white"],
+  "composition": "A central cat is the focal point; the rainbow enters from the left and the blue sky supplies spacious contrast.",
+  "pictorial_art": "Cartoon pixel-art shading uses flat color regions, outlines, and small star highlights rather than photo dithering.",
+  "quality": "Excellent pictorial readability: silhouette and rainbow motion read instantly at text-mode resolution.",
+  "summary": "Cartoon title art: a central outlined cat, rainbow motion trail, and sparse blue star field."
+}

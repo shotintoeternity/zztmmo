@@ -1,0 +1,204 @@
+board "$scorched earth zzt               "
+  start player at 60,1
+  max-shots 255
+  dark false
+  reenter false
+  time-limit 0
+  exits north none south none west none east none
+
+  grid
+.bbboobbbbbboobddddoobbbbboobbbbboobbbbbbbbbbbbbbbbbbboobbb@
+db######boN~####o#~###Bo##NB~~o~~##B~oB~b.~#o##B~##o~~#B~#bd
+do##bbboboBBbbboo~~bbNBbbbboBoo~BbbbooNBb.~Bbo#No.obbbbbBNbd
+dbo#NB~~~o~~bddbo##ooB~oB~##oboBNbddboNB##BNo~BB~~#o~~bo#obd
+dbbbbo~#ooB~bbbboNBbb~~o~Bb.B~oB#bbbboB~ddB~d#~obboo#~o#obdd
+db#B~Bobdbo#N~~.boB~~#oo~Bb.~~do#NB~~o~~dd#~ddo#B~~dNB~#dddd
+dbbbbbbbdbbbbbbbbbbboobbbbbooddddddddddddddddddddddddddddddd
+do#~~BN#bo#~NB##ooB~~NB~o~~BB~#o##dd~~dddddddddddddddddddddd
+dbo~Bogobdbb#oBob..bbo#odo.~Bddo~NddB~dddddOOOSdOOOSOOSOdddd
+do~BN###bd.##doNoo~B##oddd.~Nddo~~B#NBdddddOOOddOOObbbSbdddd
+db##ogbob.##dddo#o~Ndd#Ndd.B#ddo~Ndd#NdddddSOOOdSOOObbSbdddd
+dddoNB~~o~#ddddddo#Bdd##dd.#NddoB#dd##dddddddddddddddOdddddd
+ddddddddddddddddddddddddddo#oddddddddddddddddddddddddddddddd
+ddddddddjdddddddddddddddddddddddddjddddddddddddddddddddddddd
+dddddddddddddddddddddddddddddddddddddddddddddddddddjdddddddd
+ddddddddddddddddjddddddddddddddddddddddddddjdddddddddddddddd
+ddddjddddddddddddddddddddddddddddddddddddddddddddddddddddddd
+dddddddddddddddddddddddddjddddddddddddddddddddddddddddddjddd
+dddddddddjdddddddddddddddddddddddddddddddddddddddddddddddddd
+jddddddddddddddddddddddddddddddddddjdddddddddddddjdddddddddd
+ddddddddddddddddddddjddddddddddddddddddddddddddddddddddddddd
+kdddddddddddddddddddddddddddddlddddddddddddddddddddddddddddd
+dddddddddddddddddddddddddddddddddddddddddddddddddddddddddddd
+dddddddddddddddddddddddddddddddddddddddddddddddddddddddddddd
+maetschmnfmifmddddddddddddddddddddddddddddddddddddddddm2001m
+  end
+
+  legend
+    . = Empty color 0x07
+    b = Empty color 0x00
+    o = Object color 0x07
+    d = Empty color 0x0E
+    @ = Player color 0x1F under Empty color 0x00
+    # = Solid color 0x07
+    N = Normal color 0x78
+    ~ = Water color 0x78
+    B = Breakable color 0x78
+    g = Empty color 0x0C
+    O = Object color 0x0C
+    S = Solid color 0x0C
+    j = Empty color 0x02
+    k = Object color 0x0B
+    l = Empty color 0x11
+    m = Text-Green color 0x20
+    a = Text-Green color 0x61
+    e = Text-Green color 0x65
+    t = Text-Green color 0x74
+    s = Text-Green color 0x73
+    c = Text-Green color 0x63
+    h = Text-Green color 0x68
+    n = Text-Green color 0x6F
+    f = Text-Green color 0x66
+    i = Text-Green color 0x69
+    2 = Text-Green color 0x32
+    0 = Text-Green color 0x30
+    1 = Text-Green color 0x31
+  end
+
+  stats
+    stat at 5,1 element Object p1 cp437:0xDC
+    stat at 6,1 element Object p1 cp437:0xDC
+    stat at 8,3 element Object p1 cp437:0xDC
+    stat at 3,4 element Object p1 cp437:0xDF
+    stat at 6,5 element Object p1 cp437:0xDC under Empty color 0x07
+    stat at 9,5 element Object p1 cp437:0xDF under Empty color 0x07
+    stat at 7,6 element Object p1 cp437:0xDF under Empty color 0x07
+    stat at 13,1 element Object p1 cp437:0xDC
+    stat at 14,1 element Object p1 cp437:0xDC
+    stat at 16,3 element Object p1 cp437:0xDF
+    stat at 18,6 element Object p1 cp437:0xDF
+    stat at 23,6 element Object p1 cp437:0xDF
+    stat at 20,4 element Object p1 cp437:0xDE
+    stat at 21,4 element Object p1 cp437:0xDD
+    stat at 20,1 element Object p1 cp437:0xDC
+    stat at 21,1 element Object p1 cp437:0xDC
+    stat at 27,1 element Object p1 cp437:0xDC
+    stat at 28,1 element Object p1 cp437:0xDC
+    stat at 30,3 element Object p1 cp437:0xDF
+    stat at 28,3 element Object p1 cp437:0xDC
+    stat at 29,4 element Object p1 cp437:0xDC
+    stat at 11,6 element Object p1 cp437:0xDF
+    stat at 34,1 element Object p1 cp437:0xDC
+    stat at 35,1 element Object p1 cp437:0xDC
+    stat at 32,6 element Object p1 cp437:0xDF
+    stat at 49,3 element Object p1 cp437:0xDC under Empty color 0x07
+    stat at 48,5 element Object p1 cp437:0xDC under Empty color 0x07
+    stat at 47,6 element Object p1 cp437:0xDF
+    stat at 46,3 element Object p1 cp437:0xDF
+    stat at 58,4 element Object p1 cp437:0xDD under Empty color 0x07
+    stat at 57,5 element Object p1 cp437:0xDD under Empty color 0x07
+    stat at 56,4 element Object p1 cp437:0xDE under Empty color 0x07
+    stat at 55,5 element Object p1 cp437:0xDE under Empty color 0x07
+    stat at 2,3 element Object p1 cp437:0xDE
+    stat at 10,3 element Object p1 cp437:0xDE
+    stat at 10,2 element Object p1 cp437:0xDE
+    stat at 10,5 element Object p1 cp437:0xDE
+    stat at 17,5 element Object p1 cp437:0xDE
+    stat at 17,4 element Object p1 cp437:0xDE
+    stat at 17,3 element Object p1 cp437:0xDE
+    stat at 17,2 element Object p1 cp437:0xDE
+    stat at 24,2 element Object p1 cp437:0xDE
+    stat at 24,4 element Object p1 cp437:0xDE
+    stat at 24,6 element Object p1 cp437:0xDE
+    stat at 31,2 element Object p1 cp437:0xDE
+    stat at 31,3 element Object p1 cp437:0xDE
+    stat at 31,4 element Object p1 cp437:0xDE
+    stat at 31,5 element Object p1 cp437:0xDE
+    stat at 38,6 element Object p1 cp437:0xDE
+    stat at 38,5 element Object p1 cp437:0xDE
+    stat at 38,4 element Object p1 cp437:0xDE
+    stat at 38,3 element Object p1 cp437:0xDE
+    stat at 38,2 element Object p1 cp437:0xDE
+    stat at 45,2 element Object p1 cp437:0xDE
+    stat at 45,4 element Object p1 cp437:0xDE
+    stat at 52,4 element Object p1 cp437:0xDE
+    stat at 52,5 element Object p1 cp437:0xDE
+    stat at 52,2 element Object p1 cp437:0xDE
+    stat at 55,1 element Object p1 cp437:0xDC
+    stat at 56,1 element Object p1 cp437:0xDC
+    stat at 2,8 element Object p1 cp437:0xDE
+    stat at 3,9 element Object p1 cp437:0xDF
+    stat at 6,9 element Object p1 cp437:0xDC under Empty color 0x07
+    stat at 2,10 element Object p1 cp437:0xDE
+    stat at 4,12 element Object p1 cp437:0xDF
+    stat at 5,11 element Object p1 cp437:0xDC
+    stat at 51,3 element Object p1 cp437:0xDF
+    stat at 51,5 element Object p1 cp437:0xDC
+    stat at 37,3 element Object p1 cp437:0xDF
+    stat at 8,9 element Object p1 cp437:0xDF
+    stat at 8,11 element Object p1 cp437:0xDC
+    stat at 10,8 element Object p1 cp437:0xDF
+    stat at 15,10 element Object p1 cp437:0xDE under Empty color 0x07
+    stat at 16,11 element Object p1 cp437:0xDE under Empty color 0x07
+    stat at 14,9 element Object p1 cp437:0xDE under Empty color 0x07
+    stat at 16,9 element Object p1 cp437:0xDD under Empty color 0x0C
+    stat at 17,10 element Object p1 cp437:0xDD under Empty color 0x0C
+    stat at 17,8 element Object p1 cp437:0xDF under Empty color 0x0C
+    stat at 18,8 element Object p1 cp437:0xDE
+    stat at 18,10 element Object p1 cp437:0xDE
+    stat at 18,11 element Object p1 cp437:0xDE
+    stat at 18,12 element Object p1 cp437:0xDE
+    stat at 22,7 element Object p1 cp437:0xDC
+    stat at 21,7 element Object p1 cp437:0xDC
+    stat at 24,9 element Object p1 cp437:0xDF under Empty color 0x07
+    stat at 22,9 element Object p1 cp437:0xDC
+    stat at 23,10 element Object p1 cp437:0xDC under Empty color 0x07
+    stat at 26,9 element Object p1 cp437:0xDF under Empty color 0x07
+    stat at 28,7 element Object p1 cp437:0xDC
+    stat at 29,7 element Object p1 cp437:0xDC
+    stat at 27,13 element Object p1 cp437:0xDC under Empty color 0x07
+    stat at 29,13 element Object p1 cp437:0xDF
+    stat at 32,8 element Object p1 cp437:0xDE
+    stat at 32,9 element Object p1 cp437:0xDE
+    stat at 32,10 element Object p1 cp437:0xDE
+    stat at 32,11 element Object p1 cp437:0xDE
+    stat at 32,12 element Object p1 cp437:0xDE
+    stat at 25,8 element Object p1 cp437:0xDE
+    stat at 9,12 element Object p1 cp437:0xDE
+    stat at 44,9 element Object p1 cp437:0xDF
+    stat at 45,9 element Object p1 cp437:0xDF
+    stat at 44,10 element Object p1 cp437:0xDC
+    stat at 45,10 element Object p1 cp437:0xDC under Empty color 0x0C
+    stat at 46,10 element Object p1 cp437:0xDF
+    stat at 46,9 element Object p1 cp437:0xDF
+    stat at 45,11 element Object p1 cp437:0xDC
+    stat at 46,11 element Object p1 cp437:0xDC
+    stat at 47,11 element Object p1 cp437:0xDC
+    stat at 49,9 element Object p1 cp437:0xDF
+    stat at 50,9 element Object p1 cp437:0xDF
+    stat at 51,9 element Object p1 cp437:0xDF
+    stat at 50,11 element Object p1 cp437:0xDC
+    stat at 51,11 element Object p1 cp437:0xDC
+    stat at 52,11 element Object p1 cp437:0xDC
+    stat at 51,10 element Object p1 cp437:0xDF
+    stat at 50,10 element Object p1 cp437:0xDC
+    stat at 49,10 element Object p1 cp437:0xDC
+    stat at 53,9 element Object p1 cp437:0xDE
+    stat at 54,9 element Object p1 cp437:0xDF under Empty color 0x0C
+    stat at 56,9 element Object p1 cp437:0xDF under Empty color 0x0C
+    stat at 54,12 element Object p1 cp437:0xDF
+    stat at 24,5 element Object p1 cp437:0xDE
+    stat at 10,4 element Object p1 cp437:0xDE
+    stat at 1,22 element Object p1 cp437:0x20 under Empty color 0x0F
+    oop
+@willywonka
+#cycle 7
+/i/i/i/i
+#cycle 1
+#change empty white solid
+#change white solid empty
+#restart
+
+    end
+  end
+end

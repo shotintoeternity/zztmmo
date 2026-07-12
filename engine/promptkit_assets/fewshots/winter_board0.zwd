@@ -1,0 +1,274 @@
+board ":: title"
+  start player at 31,10
+  respawn at 27,7
+  max-shots 255
+  dark false
+  reenter false
+  time-limit 0
+  exits north none south none west none east none
+
+  grid
+o...........................................................
+.acccccccc.........aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa.
+.adeeeee.c.........aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa.
+.cOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOa.
+.aafaaaaaaaaaaaafaafaaaaaaafaaaaaaaaaaaaaaacaaaaaaaaaaaaaaa.
+.a##gaaaaf###fa##a##aaaacc##c##########c########c#######fia.
+.a##aaaaaaak##aN#a###faacc##aaaac##caaaa##ccaaaaa##kaaak#fc.
+.aN#aaaafaaa##aN#aN#k#faccN#aaaacN#caaaa##ccaaafa##aaaif#ka.
+.aN#aaa##aaf##aN#aN#ak#fccN#aaaacN#caaaaN#######cN#af##kaaa.
+.aN#af#N#aa##aaN#aN#aak#fcN#aa@acN#caaaaN#ccaaaaaN##knk##ia.
+.aN#f#kN#f#kaaaN#aN#aaak#f##aaaacN#caaaaN#ccaaaaaN#aaaaaN#i.
+.aN##kaN##kaaaaNNaNNaaaakN##aaaacNNcaaaaN#ccaaafaN#aaaaaN#ci
+.aN#kppNNkpccccNNcNNccccckN#qrsvcNNcaaaaNN######c##aaaaaNNnc
+.aNaaaaaNacccccNccNcccccccNcaaaaaNaaaaaaNaa#aaaaakaaaaaaNca.
+.aOOOOOOOOOOOOOOOONOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOONOa.
+.abypmythaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaajulyp1999w.
+.aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa.
+.axxSxxxxxBBBxBBBB~~B~~zzzzzAAAAAAAAAzAAAAAAACCACCCACCCCCCa.
+.axxxxxxSxxxBBBxBB~~~~~~~~z~zzzzAzzzAAAAzAAAAAACAACCCACCCCa.
+.DSSSxSxxxxxxBxBBBBBB~~B~~~~~~z~zz~zzzzzAAAzAAAAACAACCCACCa.
+.aSSxSSSSxSxxxxxxBBxBBBBB~~B~~~~~zzzz~zzzzAAAzAAAAAAAACCCCa.
+.aSSSSxSSSxxxSxxBxxBBBxBB~B~~~~B~z~zzzz~zzzzAAAAAAAACAACACa.
+.aSSSSSSSxSSxxxxxxBxBBBBBBBB~B~~~~~~~~zzzzzAzAAAzAAAAAAACCE.
+.aSSSSSSSSSSSSSSxxxxxxxBBBBBBBBB~B~z~~~~zzzzzzAzAAAAAAAAACD.
+............................................................
+  end
+
+  legend
+    o = Object color 0x0F
+    . = Empty color 0x0E
+    a = Empty color 0x00
+    c = Empty color 0x0F
+    d = Empty color 0x0B
+    e = Empty color 0x20
+    O = Object color 0x0B
+    f = Text-White color 0xDC
+    # = Solid color 0x0F
+    g = Empty color 0x65
+    i = Empty color 0xDC
+    k = Text-White color 0xDF
+    N = Normal color 0x7F
+    @ = Player color 0x1F under Empty color 0x00
+    n = Empty color 0xDF
+    p = Text-White color 0x20
+    q = Empty color 0x73
+    r = Empty color 0x63
+    s = Empty color 0x72
+    v = Empty color 0x6F
+    b = Text-White color 0x62
+    y = Text-White color 0x79
+    m = Text-White color 0x6D
+    t = Text-White color 0x74
+    h = Text-White color 0x68
+    j = Text-White color 0x6A
+    u = Text-White color 0x75
+    l = Text-White color 0x6C
+    1 = Text-White color 0x31
+    9 = Text-White color 0x39
+    w = Empty color 0x39
+    x = Normal color 0x18
+    S = Solid color 0x08
+    B = Breakable color 0x18
+    ~ = Water color 0x18
+    z = Normal color 0x01
+    A = Breakable color 0x01
+    C = Normal color 0x10
+    D = Empty color 0x08
+    E = Empty color 0x18
+  end
+
+  stats
+    stat at 3,4 element Object p1 cp437:0xC4 under Empty color 0x0F
+    stat at 4,4 element Object p1 cp437:0xC4 under Empty color 0x0F
+    stat at 5,4 element Object p1 cp437:0xC4 under Empty color 0x0F
+    stat at 6,4 element Object p1 cp437:0xC4 under Empty color 0x0F
+    stat at 7,4 element Object p1 cp437:0xC4 under Empty color 0x0F
+    stat at 8,4 element Object p1 cp437:0xC4 under Empty color 0x0F
+    stat at 9,4 element Object p1 cp437:0xC4 under Empty color 0x0F
+    stat at 10,4 element Object p1 cp437:0xC4 under Empty color 0x0F
+    stat at 11,4 element Object p1 cp437:0xC4
+    stat at 12,4 element Object p1 cp437:0xC4
+    stat at 13,4 element Object p1 cp437:0xC4
+    stat at 14,4 element Object p1 cp437:0xC4
+    stat at 15,4 element Object p1 cp437:0xC4
+    stat at 16,4 element Object p1 cp437:0xC4
+    stat at 17,4 element Object p1 cp437:0xC4
+    stat at 18,4 element Object p1 cp437:0xC4
+    stat at 19,4 element Object p1 cp437:0xC4
+    stat at 20,4 element Object p1 cp437:0xC4
+    stat at 21,4 element Object p1 cp437:0xC4
+    stat at 22,4 element Object p1 cp437:0xC4
+    stat at 23,4 element Object p1 cp437:0xC4
+    stat at 24,4 element Object p1 cp437:0xC4
+    stat at 25,4 element Object p1 cp437:0xC4
+    stat at 26,4 element Object p1 cp437:0xC4
+    stat at 27,4 element Object p1 cp437:0xC4
+    stat at 28,4 element Object p1 cp437:0xC4
+    stat at 29,4 element Object p1 cp437:0xC4
+    stat at 30,4 element Object p1 cp437:0xC4
+    stat at 31,4 element Object p1 cp437:0xC4
+    stat at 32,4 element Object p1 cp437:0xC4
+    stat at 33,4 element Object p1 cp437:0xC4
+    stat at 34,4 element Object p1 cp437:0xC4
+    stat at 35,4 element Object p1 cp437:0xC4
+    stat at 36,4 element Object p1 cp437:0xC4
+    stat at 37,4 element Object p1 cp437:0xC4
+    stat at 38,4 element Object p1 cp437:0xC4
+    stat at 39,4 element Object p1 cp437:0xC4
+    stat at 40,4 element Object p1 cp437:0xC4
+    stat at 41,4 element Object p1 cp437:0xC4
+    stat at 42,4 element Object p1 cp437:0xC4
+    stat at 43,4 element Object p1 cp437:0xC4
+    stat at 44,4 element Object p1 cp437:0xC4
+    stat at 45,4 element Object p1 cp437:0xC4
+    stat at 46,4 element Object p1 cp437:0xC4
+    stat at 47,4 element Object p1 cp437:0xC4
+    stat at 48,4 element Object p1 cp437:0xC4
+    stat at 49,4 element Object p1 cp437:0xC4
+    stat at 50,4 element Object p1 cp437:0xC4
+    stat at 51,4 element Object p1 cp437:0xC4
+    stat at 52,4 element Object p1 cp437:0xC4
+    stat at 53,4 element Object p1 cp437:0xC4
+    stat at 54,4 element Object p1 cp437:0xC4
+    stat at 55,4 element Object p1 cp437:0xC4
+    stat at 56,4 element Object p1 cp437:0xC4
+    stat at 57,4 element Object p1 cp437:0xC4
+    stat at 58,4 element Object p1 cp437:0xC4
+    stat at 3,15 element Object p1 cp437:0xC4
+    stat at 4,15 element Object p1 cp437:0xC4
+    stat at 5,15 element Object p1 cp437:0xC4
+    stat at 6,15 element Object p1 cp437:0xC4
+    stat at 7,15 element Object p1 cp437:0xC4
+    stat at 8,15 element Object p1 cp437:0xC4
+    stat at 9,15 element Object p1 cp437:0xC4
+    stat at 10,15 element Object p1 cp437:0xC4
+    stat at 11,15 element Object p1 cp437:0xC4 under Empty color 0x0F
+    stat at 12,15 element Object p1 cp437:0xC4 under Empty color 0x0F
+    stat at 13,15 element Object p1 cp437:0xC4 under Empty color 0x0F
+    stat at 14,15 element Object p1 cp437:0xC4 under Empty color 0x0F
+    stat at 15,15 element Object p1 cp437:0xC4 under Empty color 0x0F
+    stat at 16,15 element Object p1 cp437:0xC4 under Empty color 0x0F
+    stat at 17,15 element Object p1 cp437:0xC4 under Empty color 0x0F
+    stat at 18,15 element Object p1 cp437:0xC4 under Empty color 0x0F
+    stat at 20,15 element Object p1 cp437:0xC4 under Empty color 0x0F
+    stat at 21,15 element Object p1 cp437:0xC4 under Empty color 0x0F
+    stat at 22,15 element Object p1 cp437:0xC4 under Empty color 0x0F
+    stat at 23,15 element Object p1 cp437:0xC4 under Empty color 0x0F
+    stat at 24,15 element Object p1 cp437:0xC4 under Empty color 0x0F
+    stat at 25,15 element Object p1 cp437:0xC4 under Empty color 0x0F
+    stat at 26,15 element Object p1 cp437:0xC4 under Empty color 0x0F
+    stat at 27,15 element Object p1 cp437:0xC4 under Empty color 0x0F
+    stat at 28,15 element Object p1 cp437:0xC4 under Empty color 0x0F
+    stat at 29,15 element Object p1 cp437:0xC4 under Empty color 0x0F
+    stat at 30,15 element Object p1 cp437:0xC4 under Empty color 0x0F
+    stat at 31,15 element Object p1 cp437:0xC4 under Empty color 0x0F
+    stat at 32,15 element Object p1 cp437:0xC4 under Empty color 0x0F
+    stat at 33,15 element Object p1 cp437:0xC4 under Empty color 0x0F
+    stat at 34,15 element Object p1 cp437:0xC4 under Empty color 0x0F
+    stat at 35,15 element Object p1 cp437:0xC4 under Empty color 0x0F
+    stat at 36,15 element Object p1 cp437:0xC4 under Empty color 0x0F
+    stat at 37,15 element Object p1 cp437:0xC4 under Empty color 0x0F
+    stat at 38,15 element Object p1 cp437:0xC4 under Empty color 0x0F
+    stat at 39,15 element Object p1 cp437:0xC4 under Empty color 0x0F
+    stat at 40,15 element Object p1 cp437:0xC4 under Empty color 0x0F
+    stat at 41,15 element Object p1 cp437:0xC4 under Empty color 0x0F
+    stat at 42,15 element Object p1 cp437:0xC4 under Empty color 0x0F
+    stat at 43,15 element Object p1 cp437:0xC4 under Empty color 0x0F
+    stat at 44,15 element Object p1 cp437:0xC4 under Empty color 0x0F
+    stat at 45,15 element Object p1 cp437:0xC4 under Empty color 0x0F
+    stat at 46,15 element Object p1 cp437:0xC4 under Empty color 0x0F
+    stat at 47,15 element Object p1 cp437:0xC4 under Empty color 0x0F
+    stat at 48,15 element Object p1 cp437:0xC4 under Empty color 0x0F
+    stat at 49,15 element Object p1 cp437:0xC4 under Empty color 0x0F
+    stat at 50,15 element Object p1 cp437:0xC4 under Empty color 0x0F
+    stat at 51,15 element Object p1 cp437:0xC4
+    stat at 52,15 element Object p1 cp437:0xC4
+    stat at 53,15 element Object p1 cp437:0xC4
+    stat at 54,15 element Object p1 cp437:0xC4
+    stat at 55,15 element Object p1 cp437:0xC4
+    stat at 56,15 element Object p1 cp437:0xC4
+    stat at 58,15 element Object p1 cp437:0xC4 under Empty color 0x0F
+    stat at 1,1 element Object p1 cp437:0x00 under Empty color 0x0E
+    oop
+#cycle 20
+#play +ide
+#play +ih.fiefhecw.dqxide
+/i/i
+#play +ih.fiefhecw.-gqx+ide
+/i/i
+#play +ih.fiefhecw.dqxide
+/i/i
+#play +ih.fiefhecw.ghx
+/i/i
+:parta
+#cycle 20
+#play ida+d-ad+fd-a
+/i
+#play ifa+c-af+ec-a
+/i
+#play icg+c-gc+ec-g
+/i
+#play i-g+g+d-g-g++gd-g
+/i
+#play ida+d-ad+fd-a
+/i
+#play ifa+c-af+ec-a
+/i
+#play icg+c-gc+ec-g
+/i
+#play i-g+g+h3d-g-g++qdgb
+#send coda
+/i/i/i
+#cycle 9
+:loopy
+#play tda+fd-da+fd-da+fd-da+fd
+/i
+#play tda+fd-da+fd-da+fd-da+fd
+/i
+#play tfa+ec-fa+ec-fa+ec-fa+ec
+/i
+#play tfa+gc-fa+gc-fa+gc-fa+gc
+/i
+#play tcg+ed-cg+ed-cg+ed-cg+ed
+/i
+#play tcg+gd-cg+gd-cg+gd-cg+gd
+/i
+#play t-g+g+gd--g+g+gd--g+g+gd--g+g+gd
+/i
+#play t-g+g+bd--g+g+bd--g+g+bd--g+g+bd
+/i
+#play t++d-af-d++d-af-d++d-af-d++d-af-d
+/i
+#play t++d-afd+d-afd+d-afd+d-afd
+/i
+#play t++c-afe+c-afe+c-afe+c-afe
+/i
+#play t++c-afe+c-afe+c-afe+c-age
+/i
+#play t+bgecbgecbgecbgec
+/i
+#play t+bgecbgecbgecbgec
+/i
+#send part2
+#play t+bgd-b+bgd-b+bgd-b+bgd-b
+/i
+#play t++d-bg-b++d-bg-b++d-bg-b++d-bg-b
+/i
+#restore part2
+#send loopy
+'part2
+#play t+bgd-b+bgd-bi3+bgd-bs+bgd-b
+/i
+#play h.ghxqx
+/i
+#restore coda
+#send parta
+'coda
+/i
+#play w++d---wd
+#end
+
+    end
+  end
+end

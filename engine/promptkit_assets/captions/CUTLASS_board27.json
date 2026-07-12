@@ -1,0 +1,10 @@
+{
+  "title": "Cutlass board 27",
+  "archetype": "action arena",
+  "technique": "Dense tile arena with readable combat lanes and object-led focal points.",
+  "palette": ["dark blue", "gray", "white", "accent red"],
+  "composition": "A bounded playfield directs movement through obstacles while leaving clear combat space.",
+  "pictorial_art": "",
+  "quality": "Good gameplay readability: decoration supports navigation rather than obscuring it.",
+  "summary": "Action arena: dense but legible obstacles, clear lanes, and restrained combat-color accents."
+}

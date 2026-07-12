@@ -928,6 +928,37 @@ protocol is positional, so these sit just after M12.5 and before M5.
   candidate one-shot assembled for owner review; `go test ./...` green; replay
   fixture unchanged.
 
+- [x] **M12.15b — Static visual caption sidecars for curated few-shots.**
+  Commit a structured, consistent caption alongside every registered curated
+  example (title lettering, pictorial art, and gameplay scene): title/board,
+  archetype, lettering or tile technique, palette families, composition/focal
+  point, pictorial-art technique where applicable, and a compact prompt-facing
+  summary. Store source sidecars under `llmworld/captions/` and embedded copies
+  under `engine/promptkit_assets/captions/`; `LoadPromptKit` must load them and
+  fail if any registered few-shot lacks one. Show each summary beside its ZWD
+  example in the system prompt. Captions are authored/offline labels only — no
+  runtime vision or LLM calls. Tests must guard source/embedded drift, complete
+  coverage, JSON validity, and prompt inclusion; `go test ./...` green; replay
+  fixture unchanged.
+
+- [ ] **M12.15c [ADVISOR] — Deterministic few-shot metadata and retrieval.**
+  Tag every authorable corpus board offline with stable archetype/theme/palette/
+  density metadata, then select a bounded, deterministic, premise-and-board-
+  concept-relevant subset for generation instead of embedding every static
+  example. Preserve prompt-cacheability: stable artifacts are loaded once and
+  only the ordered retrieved subset varies per request. Include at least one
+  cohesive same-world plan-plus-board subset. Tests cover deterministic ties,
+  relevance for lettering/art/gameplay premises, budget enforcement, and the
+  no-LLM runtime boundary.
+
+- [ ] **M12.15d [ADVISOR] — Mined style priors (the offline adapter weights).**
+  Mine deterministic compact artifacts from the authorable whole-world corpus:
+  palette/tile frequencies and shading pairings, world-architecture/topology
+  norms, and OOP command idioms. Version and embed the artifacts, expose them
+  to the generation prompt as stable context, and test that each artifact is
+  non-empty, data-grounded, deterministic, and regenerated from the corpus.
+  No sim changes, no runtime LLM calls, replay fixture unchanged.
+
 - [ ] **M12.16 [ADVISOR] — Error-driven procedural repair layer (compiler
   self-heals before the LLM).** Owner priority: maximize what the
   compiler/decompiler fixes itself before resending to the model — LLM repair

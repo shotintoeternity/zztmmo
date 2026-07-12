@@ -1,0 +1,89 @@
+board "Arogans Range 1"
+  start player at 1,23
+  respawn at 27,7
+  max-shots 255
+  dark false
+  reenter false
+  time-limit 0
+  exits north none south none west none east none
+
+  grid
+BBBBBBBBaabBBBBb~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~#ccNNNN####
+BBBBBBaaBbabBBaadbb~~~~~~~~~~~~~~~~~~~~~~~~~~~WWWccNNNNN####
+dddBBaaaaBbdddaaaabbSSSSSSSSSSSSSSSSSSSSSSSSSSWWWcNNNNNN####
+aaddbaabaBBdBBaadaabSSSSSSSSSSSSSSSSSSSSSSSSSWWWccNNNNNNN###
+daaaabaaadddaBBaadabeeeeeeeeeeeeeeeeeeeeeeeWWWWccNNNNNNNN###
+ddaaabbdddaabBBaadbeeeeeeeeeeeeeeeeeeeeeeeeWWWccNNNNNNNN####
+babNbcbbbbcWWBaaadbfffffffffffffffffffffffWWWWccNNNNNNNN####
+bNNNbcbccbbWWbadabfffffffffffffffffffffffWWWWccccNNNNNNN####
+NbbacccccWbbWddbbgggggggggggggggggggggggWWWWcccccNNNNNNNN###
+NNccccWaW.abbaaggggggggggggggggggggggggWWWWWcccccNNNNNNNNN##
+NccccWWbbaahhhhhhhhhhhhhhhhhhhhhhhhhhhWWWWWWcccccNNNNNNNNNN#
+NccccWWhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhWWWWWWccccNNNNNNNNNNN#
+ccccWiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiWWWWWWcccccNNNNNNNNNNN#
+ccWWFFFAAAAAAAAAAAAAAAAAAAAAjjjjjjjjpWWWWWcccccccNNNNNNNNNNN
+ccWFFFFFAAAAAAAAAAAAAAAAAAAAAjjjjjjjWWWWWccccccccNNNNNNNNNNN
+ccWWFFFFFFFAAAAAAAAAAAAAAAAAAAjjjjjWWWWWWccccccccNNNNNNNNNNN
+ccWWFFFFFFFFFAAAAAAAAAAAAAAAAAjojjOjjWWWWccccccccNNNNNNNNNNN
+ccWWFFFFFFFFFFFAAAAAAAAAAAAAAAjjjjjjjjWccccccccccNNNNNNNNNNN
+cccWWFFFFFFFFFFFAAAAAAAAAAAAAAAjjjjjjjjccccccccNNNNNNNNNNNNN
+cccWWWFFFFFFFFFAAAAAAAAAAAAAAAAjjjjjjjjjccccccNNNNNNNNNNNNNN
+ccccWWWFFFFFFFAAAAAAAAAAAAAAAAjjjjjjjjjjjcccccNNNNNNNNNNNNNN
+FFFFFFFFFFFFFAAAAAAAAAAAAAAAAjjjjjjjjjjjjjjjccNNNNNNNNNNNNNN
+@FFFFFFFFFFAAAAAAAAAAAAAAAAAjjjjjjjjjjjjjjjjjjjNNNNNNNNNNNNN
+FFFFFFFFFAAAAAAAAAAAAAAAAAAAjjjjjjjjjjjjjjjjjjjjNNNNNNNNNNNN
+FFFFFFFFFAAAAAAAAAAAAAAAAAAjjjjjjjjjjjjjjjjjjjjjjjNNNNNNNNNN
+  end
+
+  legend
+    B = Breakable color 0x28
+    a = Breakable color 0x02
+    b = Breakable color 0x2A
+    ~ = Water color 0x5D
+    # = Solid color 0x06
+    c = Breakable color 0x06
+    N = Normal color 0x06
+    d = Normal color 0x72
+    W = Water color 0x06
+    S = Solid color 0x05
+    e = Water color 0x54
+    f = Breakable color 0x54
+    g = Normal color 0x54
+    . = Empty color 0x00
+    h = Solid color 0x04
+    i = Water color 0x4C
+    F = Fake color 0x20
+    A = Fake color 0x02
+    j = Fake color 0x22
+    p = Passage color 0x2A
+    o = Object color 0x2F
+    O = Object color 0x24
+    @ = Player color 0x1F under Fake color 0x20
+  end
+
+  stats
+    stat at 32,17 element Object p1 cp437:0xE2 under Fake color 0x22
+    oop
+@SignPost
+#end
+:touch
+
+Head north and east up the path to enter
+the foothills... is your sword sharpened?
+
+$-The Unfortunate Traveller
+#end
+
+    end
+    stat at 35,17 element Object p1 cp437:0x02 under Fake color 0x22
+    oop
+@Aisha
+#cycle 2
+/n/n/e/n
+#become fake
+#end
+
+    end
+    stat at 37,14 element Passage p3 12 under Empty color 0x22
+  end
+end

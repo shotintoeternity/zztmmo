@@ -1,0 +1,84 @@
+board "AP Edge: SE"
+  start player at 38,6
+  max-shots 255
+  dark false
+  reenter false
+  time-limit 0
+  exits north none south none west none east none
+
+  grid
+FFFAaaaFFbbaaa###AAFFbbbAAAaaAbFcd.....dcFbAAbbaaabbbFFFAFlb
+aaFAaAAbAbFFFN###NAaFbaaAFaabFbFcdeefeedcFbAbbaAAaAAAFAAAFlb
+baAAFAbbAAAbFNNNNNAaFaaAbFFbbFbFcdeefeedcFbAaaaAFFaaAbbbaFlb
+baFFFAbFabbbBBBBBBBaaAAAbaFbFFbFcdeeeeedcFbaAAAFaFFaabaaaAlb
+bbAaaaFFaAA~~g~~~g~~FFFbbaaaAAbFcdeefeedcFbaAFFFabbb###AAAlb
+AAAabbFaaFAb~ghShg~bFaaaAFbbFFbFcdeef@edcFbaaAAaabFN###Nbblb
+aaFFAbAAAFbFFghShgFFbaAAAFAbaFbFcdeeeeedcFbFFFAAFFFNNNNNFblb
+AaaFAbAFFbFiighShgiiFbaaFFAbaFbFcdeefeedcFbFbbbaaaBBBBBBBblb
+AAAFAAFFbFiighSSShgiiFbaaAAaaabFcdeefeedcFb###baA~~g~~~g~~lb
+bbbbbbbbbbFiiiiiiiiiFbbbbbbbbbbFcdeeeeedcFN###NAAb~ghShg~blb
+FFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFcdeefeedcFNNNNNAbFFghShgFFlb
+cccccccccccccccccccccccccccccccccdeefeedcBBBBBBBFiighShgiilb
+ddddddddddddddddddddddddddddddddddeeeeed~~g~~~g~~ighSSShgijF
+.eeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeefeedc~ghShg~Fii###iiiilb
+.eeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeefeedcFghShgFFFN###NFFFlb
+.fffeefff.efffeefffeefffeefffeefffeeeeedcighShgiiFNNNNNbbblb
+.eeeeeeeeeeeeeeeeeeeeeeeeee###eeeeeeeeedcghSSShgiBBBBBBBAAlb
+.eeeeeeeeeeeeeeeeeeeeeeeeeN###Neeeeeeeedciiiiiii~~g~~~g~~Alb
+ddddddddddddddddddddddddddNNNNNddddddddcFFFFFFFFb~ghShg~bAlb
+cccccccccccccccccccccccccBBBBBBBcccccccFbbbbbbbbFFghShgFFblb
+FFFFFFFFFFFFFFFFFFFFFFFF~~g~~~g~~FFFFFFbAAAaFFbFiighShgiiFlb
+bbbbbbbbbbbbbbbbbbbbbbbbb~ghShg~bbbbbbbaAaaaFbFiighSSShgiilb
+AAaaaAAAFFFAAAaaaFFFAAAbFFghShgFFbFFFaaabbbAAAbFiiiiiiiiiFlb
+lllllllllllllllllllllllljjghShgjjlllllllllllllllllllllllllll
+bbbbbbbobbbbbbbbbbbbbbFiighSSShgiiFbbbbbbbbbbbbbbbbbbbbbbblb
+  end
+
+  legend
+    F = Fake color 0x02
+    A = Fake color 0x32
+    a = Fake color 0x62
+    b = Fake color 0x22
+    # = Solid color 0x0A
+    c = Fake color 0x70
+    d = Fake color 0x01
+    . = Empty color 0x0E
+    l = Line color 0x2F
+    N = Normal color 0x2A
+    e = Empty color 0x00
+    f = Fake color 0x0E
+    B = Breakable color 0x2A
+    ~ = Water color 0x2A
+    g = Breakable color 0x06
+    h = Normal color 0x06
+    S = Solid color 0x06
+    @ = Player color 0x1F under Empty color 0x00
+    i = Fake color 0x20
+    j = Line color 0x02
+    o = Object color 0x2F
+  end
+
+  stats
+    stat at 8,25 element Object p1 cp437:0xFF under Fake color 0x22
+    oop
+@Gem
+#cycle 1
+/i#char 250
+/i#char 43
+/i#char 42
+/i#char 88
+/i#char 197
+/i#char 88
+/i#char 42
+/i#char 43
+/i#char 250
+/i#char 255
+#end
+:touch
+GEM HUNTER: It's... a Silver Gem!
+#give gems 1
+#become fake
+
+    end
+  end
+end

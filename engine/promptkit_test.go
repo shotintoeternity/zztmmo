@@ -21,21 +21,44 @@ func TestLoadPromptKit(t *testing.T) {
 	if len(kit.Style) == 0 {
 		t.Error("style is empty")
 	}
-	if len(kit.FewShots) != 4 {
-		t.Fatalf("want 4 few-shots, got %d", len(kit.FewShots))
+	want := map[string]string{
+		"CUTLASS_board27":                  "action arena",
+		"SEWERS_board17":                   "texture showcase",
+		"DUNGEONS_board20":                 "interior scene",
+		"RAEKUUL_board1":                   "story board",
+		"winter_board0":                    "title lettering — icy monumental",
+		"scorchede_board0":                 "title lettering — rough block",
+		"sudoku_board0":                    "title lettering — geometric",
+		"zztv7_board0":                     "title lettering — neon abstract",
+		"variety_board0":                   "title lettering — rainbow wordmark",
+		"nyan_board0":                      "title art — cartoon pictorial",
+		"rhygar2_arogans_range_1_board0":   "gameplay scene — sunset landscape",
+		"gh2se0_ap_edge_se_board0":         "gameplay scene — road and trees",
+		"gh2se0_mcqueen_heights_ne_board0": "gameplay scene — town architecture",
 	}
-	wantArch := map[string]bool{"action arena": true, "texture showcase": true, "interior scene": true, "story board": true}
+	if len(kit.FewShots) != len(want) {
+		t.Fatalf("want %d few-shots, got %d", len(want), len(kit.FewShots))
+	}
 	for _, fsx := range kit.FewShots {
 		if fsx.ZWD == "" {
 			t.Errorf("few-shot %s has empty ZWD", fsx.Name)
 		}
-		if !wantArch[fsx.Archetype] {
-			t.Errorf("few-shot %s has unexpected archetype %q", fsx.Name, fsx.Archetype)
+		archetype, ok := want[fsx.Name]
+		if !ok {
+			t.Errorf("unexpected few-shot %s", fsx.Name)
+			continue
 		}
-		delete(wantArch, fsx.Archetype)
+		if fsx.Archetype != archetype {
+			t.Errorf("few-shot %s archetype = %q, want %q", fsx.Name, fsx.Archetype, archetype)
+		}
+		delete(want, fsx.Name)
+		caption, ok := kit.Captions[fsx.Name]
+		if !ok || caption.Summary == "" {
+			t.Errorf("few-shot %s has no loaded caption", fsx.Name)
+		}
 	}
-	if len(wantArch) != 0 {
-		t.Errorf("missing archetypes: %v", wantArch)
+	if len(want) != 0 {
+		t.Errorf("missing few-shots: %v", want)
 	}
 }
 
@@ -50,15 +73,15 @@ func TestPromptKitSystemPrompt(t *testing.T) {
 
 	// The limits table must appear verbatim (it lives inside spec.md).
 	for _, want := range []string{
-		"master ZZT world author",       // role preamble
-		"# ZWD format specification",    // spec section
-		"## Limits",                     // the M12.0 limits table heading
-		"MAX_STAT = 150",                // a specific limits row, verbatim
-		"# House style",                 // style section
+		"master ZZT world author",        // role preamble
+		"# ZWD format specification",     // spec section
+		"## Limits",                      // the M12.0 limits table heading
+		"MAX_STAT = 150",                 // a specific limits row, verbatim
+		"# House style",                  // style section
 		"composed scenes, not tile soup", // a STYLE.md heading, verbatim
-		"# Worked examples",             // few-shot section
-		"# Output contract",             // contract
-		"single fenced code block",      // contract rule
+		"# Worked examples",              // few-shot section
+		"# Output contract",              // contract
+		"single fenced code block",       // contract rule
 	} {
 		if !strings.Contains(p, want) {
 			t.Errorf("system prompt missing %q", want)
@@ -71,6 +94,9 @@ func TestPromptKitSystemPrompt(t *testing.T) {
 		}
 		if !strings.Contains(p, strings.TrimRight(fsx.ZWD, "\n")) {
 			t.Errorf("system prompt missing few-shot body for %q", fsx.Name)
+		}
+		if !strings.Contains(p, kit.Captions[fsx.Name].Summary) {
+			t.Errorf("system prompt missing visual caption for %q", fsx.Name)
 		}
 	}
 }
@@ -88,6 +114,12 @@ func TestPromptKitAssetsMatchSource(t *testing.T) {
 	for _, fsx := range kit.FewShots {
 		src := filepath.Join("..", "llmworld", "examples", fsx.Name+".zwd")
 		assertMatchesFile(t, "fewshots/"+fsx.Name+".zwd", fsx.ZWD, src)
+		captionSrc := filepath.Join("..", "llmworld", "captions", fsx.Name+".json")
+		embedded, err := promptKitFS.ReadFile("promptkit_assets/captions/" + fsx.Name + ".json")
+		if err != nil {
+			t.Fatalf("read embedded caption %s: %v", fsx.Name, err)
+		}
+		assertMatchesFile(t, "captions/"+fsx.Name+".json", string(embedded), captionSrc)
 	}
 }
 

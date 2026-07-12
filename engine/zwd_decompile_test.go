@@ -110,10 +110,10 @@ func TestLLMWorldExamplesCompile(t *testing.T) {
 		}
 	}
 	// The original 200-board corpus included historical boards that cannot be
-	// represented by authorable ZWD. The remaining 125 are regenerated through
-	// DecompileZWDAuthorable; changing that accepted set must be intentional.
-	if count != 125 {
-		t.Fatalf("corpus has %d authorable examples, want 125", count)
+	// represented by authorable ZWD. M12.15a adds nine owner-curated title and
+	// gameplay examples, all gated through the same standalone compiler path.
+	if count != 134 {
+		t.Fatalf("corpus has %d authorable examples, want 134", count)
 	}
 }
 

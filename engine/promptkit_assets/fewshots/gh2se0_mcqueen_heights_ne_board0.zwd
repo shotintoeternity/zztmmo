@@ -1,0 +1,115 @@
+board "McQueen Heights: NE"
+  start player at 60,8
+  max-shots 255
+  dark false
+  reenter false
+  time-limit 0
+  exits north none south none west none east none
+
+  grid
+aaaaaaaaaaaaaaaaaaaaaoaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa
+FFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFF
+AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA
+.bbbbbbbbbbbbbbbbbbbbbbbbb####~######~##bbbbbbbbbbbbbbbbbbb.
+.bbbbbbbbbbbbbbbbbbbbbbbbb#~######~#####bbbbbbbbbbbbbbbbbbb.
+.cccbbcccbbcccbbcccbbcccbb#####~#######~.cccbbcccbbcccbbccc.
+.bbbbbbbbbbbbbbbbbbbbbbbbb~#dd###~##dd##bbbbbbbbbbbbbbbbbbb.
+.bbbbbbbbbbbbbbbbbbbbbbbbb#~B~#~~#B~~#~~bbbbb##~#######~###@
+AAAAAAAAAAAAAAAAAAAAAAAAAA~~~~B~~~~~~~~BAAAAA#####~#######~A
+FFFFFFFFFFFFFFFFFFFFFFFFFFB~#~~~~~~#B~~#FFFFF~########~####F
+eeeeeeeeeeeeeeeeeeeeeeeeee~~dd~#B~~~dd~~eeeee##dd##~###dd~#e
+ffgggggggggggggggfffffffff~BBBBB~NBB~BBBfffffB#~~B~~#~B~~#~f
+hiiiiiiiiiiiiiiiiijjhhhjjjBBBBNBBBBBBBNBjeejj~~~~#~~~~~#~~~j
+SSSSSSSSSSSSSSSSSSSjeehkkkBNB~BBBBN~BBB~jjeff#~B~~~~B~~~~B#j
+hmAnnlnAnnnAnlnAnmfjejpkkkpBddB~BBBBddBBfjehh~~dd~#~~#~dd~~j
+jmnnnlllllllllnnnmffejpppppNBNNBNNNNkkkNefhhe~BBBNBBB~BBN~Bh
+jmnAnlnlnlnlnlnnAmhfhqqqqqqqNNNNNNBpkkkprefeeBNBBB~BBNBBBBBh
+jmsWWlWlWtWlslWsWmhhuuvuuuvuuBNNNNNppppprrefeBB~BBBBBBB~BBNh
+ewWWWlWtWWWtWlWWWwjjfuvxyxvuNNNNBNqqqqqqqreffNBddBN~BBNddB~f
+fwWsWtWWWOWWWtWWswffeevxyxvrrrrrruuvuuuvuuffeBNNBNNNNNNBNNNe
+ekzzzzzzzzzzzzzzzkeerrvxyxvrrrrrrruvxyxvufferNNNNNNNBNNNNNNr
+epkFFFFFFFFFFFFFkperrvxyyyxvrrCeeeevxyxveeerrNBNNNNNNNNNNBNr
+fepkkkkzzzzzkkkkpeferrrrrrrrrefferrvxyxvrrerrNNNNNBNNNBNNNNr
+hfepppppFFFpppppefjfeeeeeeeeefferrvxyyyxvrrrrrrrrrrrrrrrrrrr
+hhfeeeeeeeeeeeeefjjjfffffffffeeferrrrrrrrreerrrrrrrrrrrrrrrr
+  end
+
+  legend
+    a = Text-Green color 0xCD
+    o = Object color 0x2F
+    F = Fake color 0x70
+    A = Fake color 0x01
+    . = Empty color 0x0E
+    b = Empty color 0x00
+    # = Solid color 0x07
+    ~ = Water color 0x78
+    c = Fake color 0x0E
+    d = Text-Cyan color 0xC5
+    B = Breakable color 0x78
+    @ = Player color 0x1F under Empty color 0x0E
+    e = Fake color 0x02
+    f = Fake color 0x22
+    g = Breakable color 0x04
+    N = Normal color 0x78
+    h = Fake color 0x32
+    i = Normal color 0x04
+    j = Fake color 0x62
+    S = Solid color 0x04
+    k = Solid color 0x0A
+    m = Solid color 0x09
+    n = Breakable color 0x19
+    l = Line color 0x1F
+    p = Normal color 0x2A
+    q = Breakable color 0x2A
+    r = Fake color 0x20
+    s = Text-Blue color 0x20
+    W = Water color 0x19
+    t = Line color 0x11
+    u = Water color 0x2A
+    v = Breakable color 0x06
+    w = Normal color 0x19
+    x = Normal color 0x06
+    y = Solid color 0x06
+    O = Object color 0x1F
+    z = Fake color 0x07
+    C = Object color 0x2B
+  end
+
+  stats
+    stat at 10,20 element Object p1 cp437:0xF0 under Water color 0x19
+    oop
+@Door
+#end
+:touch
+GEM HUNTER: This door's booby trapped with
+a Hanson CD. Ain't no way in hell that
+I'm gonna break into this house.
+
+    end
+    stat at 22,1 element Object p1 cp437:0xC4 under Fake color 0x22
+    oop
+@FenceBreak
+#end
+:touch
+#if bob then yay
+GEM HUNTER: A break in this fence... if I
+just had some hedgeclippers or something..
+#end
+:yay
+#clear bob
+GEM HUNTER: Broke the clippers, but I'm
+in.
+#become fake
+
+    end
+    stat at 31,22 element Object p1 cp437:0x02 under Fake color 0x22
+    oop
+@Dude
+#end
+:touch
+DUDE GUY: Yo, mon. Whaz tha dealie?
+#end
+
+    end
+  end
+end

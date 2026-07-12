@@ -1,0 +1,96 @@
+board "$. = { ENJOY! SUDOKU } = ."
+  start player at 58,21
+  respawn at 1,1
+  max-shots 255
+  dark false
+  reenter false
+  time-limit 0
+  exits north none south none west none east none
+
+  grid
+#################Sddfff###########fd################SS######
+d##########dddffffd################S#################SS#####
+S####dddfff#######S#################S################fSd####
+SSfff##############S################fd###############dSS####
+fSd########ddd#####fd################S#########dddfff##SS###
+#SS#######f###S#####S#################S##dddfff########fSd##
+##SS#######dff#######S#############dddfSf###############SS##
+##fSd#####Sdddd######fd######dddfff####S#######dfffd#####SS#
+###SS#################Sdddfff###########S######fdddS#####fSd
+####SS###########dddfffS################fd#####d###S######SS
+####fSd####dddfff######fd######ffffS#####S######fff########S
+#####SSdfff#############S########df#######S##############ddS
+ddfff#SS#################S######df########fd#######dddSSSfff
+######fSd################fd#####f##########S#dddSSSfff######
+#######SS#################f################fffff############
+########SS######fSSgggSoSSd#SSo###fSSf#dSggSd#SSo#SSodSSd###
+########fSd######SShSo#oSSgSSS.fff#SS.#SS.#SS.fShdSg.fSSg.##
+#########SS######SS.fod#SS.#SS.SSo#SS.#SS.#SS.##SS.o##fg.###
+##########SS####fgggggg.fg.#fg.#fggg.o##fggg.o#fgggo##fgo###
+#########dSSS#dSggSd#SSo#SSofSSggSd#dSggSd#fSSo#SSoSSo#SSo##
+###dddSSSfff##fSSddooSS.#SS.#SS.#SS.SS.#SS.#SShSg.oSS.#SS@##
+SSSfff########ddofSSoSS.#SS.#SS.#SS.SS.#SS.#SS.fSd#SS.#SS.##
+###############fggg.o#fggg.ofggggg.o#fggg.ofgg.#fg.#fggg.o##
+############################################################
+##########################abstractisyntaxitree##21/12/2020##
+  end
+
+  legend
+    # = Solid color 0x01
+    S = Solid color 0x0F
+    d = Text-Blue color 0xDC
+    f = Text-Blue color 0xDF
+    g = Text-White color 0xDF
+    o = Object color 0x01
+    h = Text-White color 0xDC
+    . = Empty color 0x0F
+    @ = Player color 0x1F under Empty color 0x0F
+    a = Text-Blue color 0x61
+    b = Text-Blue color 0x62
+    s = Text-Blue color 0x73
+    t = Text-Blue color 0x74
+    r = Text-Blue color 0x72
+    c = Text-Blue color 0x63
+    i = Text-Blue color 0x20
+    y = Text-Blue color 0x79
+    n = Text-Blue color 0x6E
+    x = Text-Blue color 0x78
+    e = Text-Blue color 0x65
+    2 = Text-Blue color 0x32
+    1 = Text-Blue color 0x31
+    / = Text-Blue color 0x2F
+    0 = Text-Blue color 0x30
+  end
+
+  stats
+    stat at 47,20 element Object cycle 1 p1 cp437:0xDF
+    stat at 51,20 element Object cycle 1 p1 cp437:0xDF
+    stat at 54,20 element Object cycle 1 p1 cp437:0xDF
+    stat at 58,20 element Object cycle 1 p1 cp437:0xDF
+    stat at 51,21 element Object cycle 1 p1 cp437:0xDC
+    stat at 24,16 element Object cycle 1 p1 cp437:0xDF
+    stat at 31,16 element Object cycle 1 p1 cp437:0xDF
+    stat at 49,16 element Object cycle 1 p1 cp437:0xDF
+    stat at 53,16 element Object cycle 1 p1 cp437:0xDF
+    stat at 22,17 element Object cycle 1 p1 cp437:0xDF
+    stat at 24,17 element Object cycle 1 p1 cp437:0xDC
+    stat at 22,18 element Object cycle 1 p1 cp437:0xDC
+    stat at 34,18 element Object cycle 1 p1 cp437:0xDF
+    stat at 52,18 element Object cycle 1 p1 cp437:0xDC
+    stat at 38,19 element Object cycle 1 p1 cp437:0xDC
+    stat at 46,19 element Object cycle 1 p1 cp437:0xDC
+    stat at 52,19 element Object cycle 1 p1 cp437:0xDF
+    stat at 57,19 element Object cycle 1 p1 cp437:0xDF
+    stat at 24,20 element Object cycle 1 p1 cp437:0xDF
+    stat at 28,20 element Object cycle 1 p1 cp437:0xDF
+    stat at 20,21 element Object cycle 1 p1 cp437:0xDC
+    stat at 21,21 element Object cycle 1 p1 cp437:0xDC
+    stat at 17,22 element Object cycle 1 p1 cp437:0xDC
+    stat at 21,22 element Object cycle 1 p1 cp437:0xDF
+    stat at 21,23 element Object cycle 1 p1 cp437:0xDC
+    stat at 28,23 element Object cycle 1 p1 cp437:0xDC
+    stat at 36,23 element Object cycle 1 p1 cp437:0xDC
+    stat at 43,23 element Object cycle 1 p1 cp437:0xDC
+    stat at 58,23 element Object cycle 1 p1 cp437:0xDC
+  end
+end

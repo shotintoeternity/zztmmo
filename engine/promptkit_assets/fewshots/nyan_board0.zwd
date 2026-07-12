@@ -1,0 +1,495 @@
+board "NYAN TITLE"
+  start player at 60,25
+  max-shots 255
+  dark false
+  reenter false
+  time-limit 0
+  exits north none south none west none east none
+
+  grid
+NNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNN
+*bfYAfbCAT'SbADVEfTURESbIfbfYAfLAfDbAbGAMEbBYbWiLbIfb2012b*b
+~~gggNNNgNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNN
+jj~~~ggg#g#kk####kk###g##k######k####kk###########k######k#k
+jjjj~~~gk#####g####g####k#k#g##k#######k####k###############
+jjjjjjj~~gg#k#gk#kkk#kk######k#####k#k#k###k###############k
+ljjjjjjjjj~~k~jjjj~~gg####kk##ommmmmmmmmmmmmmmmmmo#######k##
+lljjjjjjjjjjjjjjjjjjjjjj~g###omnnnnnnnnnnnnnnnnnnmo#####k###
+llllljjjjjjjjjjllljjjjjjjjjjjmnnppqqppppppppppqqnnm######k#k
+rllllllljllllllllllllljjjjjjjmnppppppppppp..pppppnm#..######
+rrrlllllllllllrrrrrlllllmmlllmnppppppqqppmssmppppnmmssm##kk#
+rrrrrrrlllrrrrrrrrrrrrlmuumllmnpppqqpppppmuuummmmmmuuumok###
+vrrrrrrrrrrrrrrrvvrrrrrrmuumrmnpppppppppmsuuuuuuuuuuuuumk###
+vvvvrrrrrrrrrvvvvvvvvvrrrmuummnpqqppppqqmuuuwxuuuuuwxuum####
+vvvvvvvrrvvvvvvvvvvvvvvvvvmuumnpppppppppmuuuxxuuuuuxxuumkk##
+yyvvvvvvvvvvvvvyyyyvvvvvvvvmumnpppppqqppmuzzuuuuusuuuzzmk###
+yyyyyvvvvvvyyyyyyyyyyyyyyyvvmmnppqqpppppmuzzusuusuusuzzm####
+yyyyyyyyyyyyyyyyyyyyyyyyyyyyymnnppppppppmsuuusssssssuusm#kk#
+yyyyyyyyyyyyFFFFFFFFFFFyyyyyymmnnnnnnnnnnmsuuuuuuuuuusm#k##k
+yyFFFFyyyyyFFFFFFFFFFFFFFFFmsuummmssmooooommsmsssssmmo######
+yFFFFFFFFFFFFFFFHH#FFFFFFFmsuumo#muum#####kmuumkmuum##kk###k
+FFFFFFFFFFFJJH#k##########mssmo##osso####k#osso#osso########
+FFFJJHHNNNNNNNNNN#N#NNkk##k##############kk###k#k#k####NN##N
+KQXXXbZbTObPZXXN344443333334333333444334333343343333#4334343
+JHNNN5NNNNNNNNNN4m4m444mm4mm44m4m466:66:6676m8atchedmmm4m44@
+  end
+
+  legend
+    N = Normal color 0x01
+    * = Text-Blue color 0x2A
+    b = Text-Blue color 0x20
+    f = Text-Blue color 0x4E
+    Y = Text-Blue color 0x59
+    A = Text-Blue color 0x41
+    C = Text-Blue color 0x43
+    T = Text-Blue color 0x54
+    ' = Text-Blue color 0x27
+    S = Text-Blue color 0x53
+    D = Text-Blue color 0x44
+    V = Text-Blue color 0x56
+    E = Text-Blue color 0x45
+    U = Text-Blue color 0x55
+    R = Text-Blue color 0x52
+    I = Text-Blue color 0x49
+    L = Text-Blue color 0x4C
+    G = Text-Blue color 0x47
+    M = Text-Blue color 0x4D
+    B = Text-Blue color 0x42
+    W = Text-Blue color 0x57
+    i = Text-Blue color 0x69
+    2 = Text-Blue color 0x32
+    0 = Text-Blue color 0x30
+    1 = Text-Blue color 0x31
+    ~ = Water color 0x1C
+    g = Water color 0x14
+    j = Breakable color 0x4C
+    # = Solid color 0x01
+    k = Water color 0x12
+    l = Breakable color 0x4E
+    o = Object color 0x01
+    m = Solid color 0x00
+    n = Normal color 0x4F
+    p = Normal color 0x7D
+    q = Breakable color 0x4D
+    r = Solid color 0x0E
+    . = Empty color 0x0F
+    s = Object color 0x07
+    u = Solid color 0x07
+    v = Breakable color 0x2A
+    w = Solid color 0x0F
+    x = Empty color 0x7F
+    y = Breakable color 0x39
+    z = Breakable color 0x4F
+    F = Normal color 0x59
+    H = Water color 0x15
+    J = Water color 0x1D
+    K = Object color 0x1D
+    Q = Object color 0x15
+    X = Object color 0x18
+    Z = Object color 0x17
+    O = Text-Blue color 0x4F
+    P = Text-Blue color 0x50
+    3 = Breakable color 0x01
+    4 = Water color 0x01
+    5 = Object color 0x10
+    6 = Object color 0x0F
+    : = Text-White color 0x3A
+    7 = Text-White color 0x2E
+    8 = Text-White color 0x57
+    a = Text-White color 0x61
+    t = Text-White color 0x74
+    c = Text-White color 0x63
+    h = Text-White color 0x68
+    e = Text-White color 0x65
+    d = Text-White color 0x64
+    @ = Player color 0x1F under Empty color 0x00
+  end
+
+  stats
+    stat at 13,24 element Object p1 cp437:0x4C under Empty color 0x0F
+    stat at 14,24 element Object p1 cp437:0x41 under Empty color 0x0F
+    stat at 15,24 element Object p1 cp437:0x59 under Empty color 0x0F
+    stat at 1,24 element Object p1 cp437:0x50 under Empty color 0x0F
+    stat at 2,24 element Object p1 cp437:0x52 under Empty color 0x0F
+    stat at 3,24 element Object p1 cp437:0x45 under Empty color 0x0F
+    stat at 4,24 element Object p1 cp437:0x53 under Empty color 0x0F
+    stat at 5,24 element Object p1 cp437:0x53 under Empty color 0x0F
+    stat at 31,7 element Object p1 cp437:0xDF under Water color 0x12
+    stat at 30,8 element Object p1 cp437:0xDF under Water color 0x12
+    stat at 50,7 element Object p1 cp437:0xDF under Water color 0x12
+    stat at 51,8 element Object p1 cp437:0xDF under Water color 0x12
+    stat at 32,21 element Object p1 cp437:0xDC under Empty color 0x0F
+    stat at 31,22 element Object p1 cp437:0xDC under Empty color 0x0F
+    stat at 44,22 element Object p1 cp437:0xDC under Empty color 0x0F
+    stat at 47,22 element Object p1 cp437:0xDC under Empty color 0x0F
+    stat at 49,22 element Object p1 cp437:0xDC under Empty color 0x0F
+    stat at 52,22 element Object p1 cp437:0xDC under Empty color 0x0F
+    stat at 54,20 element Object p1 cp437:0xDC under Empty color 0x0F
+    stat at 56,12 element Object p1 cp437:0xDF under Empty color 0x0F
+    stat at 29,22 element Object p1 cp437:0xDF under Empty color 0x0F
+    stat at 35,22 element Object p1 cp437:0xDF under Empty color 0x0F
+    stat at 36,22 element Object p1 cp437:0xDF under Empty color 0x0F
+    stat at 35,20 element Object p1 cp437:0xDC under Empty color 0x0F
+    stat at 36,20 element Object p1 cp437:0xDC under Empty color 0x0F
+    stat at 45,20 element Object p1 cp437:0xDC under Empty color 0x0F
+    stat at 50,20 element Object p1 cp437:0xDF under Empty color 0x0F
+    stat at 45,22 element Object p1 cp437:0xDF under Empty color 0x0F
+    stat at 46,22 element Object p1 cp437:0xDF under Empty color 0x0F
+    stat at 50,22 element Object p1 cp437:0xDF under Empty color 0x0F
+    stat at 51,22 element Object p1 cp437:0xDF under Empty color 0x0F
+    stat at 54,19 element Object p1 cp437:0xDF under Empty color 0x0F
+    stat at 55,18 element Object p1 cp437:0xDF under Empty color 0x0F
+    stat at 48,20 element Object p1 cp437:0xDF under Empty color 0x0F
+    stat at 49,20 element Object p1 cp437:0xDF under Empty color 0x0F
+    stat at 47,20 element Object p1 cp437:0xDF under Empty color 0x0F
+    stat at 43,19 element Object p1 cp437:0xDF under Empty color 0x0F
+    stat at 42,18 element Object p1 cp437:0xDF under Empty color 0x0F
+    stat at 38,20 element Object p1 cp437:0xDC under Empty color 0x0F
+    stat at 39,20 element Object p1 cp437:0xDC under Empty color 0x0F
+    stat at 40,20 element Object p1 cp437:0xDC under Empty color 0x0F
+    stat at 41,20 element Object p1 cp437:0xDC under Empty color 0x0F
+    stat at 42,20 element Object p1 cp437:0xDC under Empty color 0x0F
+    stat at 28,22 element Object p1 cp437:0xDF under Empty color 0x0F
+    stat at 29,20 element Object p1 cp437:0xDC under Empty color 0x0F
+    stat at 42,13 element Object p1 cp437:0xDC under Empty color 0x0F
+    stat at 37,22 element Object p1 cp437:0xDC under Empty color 0x0F
+    stat at 34,22 element Object p1 cp437:0xDC under Empty color 0x0F
+    stat at 28,21 element Object p1 cp437:0xDC under Empty color 0x0F
+    stat at 7,24 element Object p1 cp437:0x50 under Water color 0x15
+    stat at 50,18 element Object p1 cp437:0xDF under Empty color 0x0F
+    stat at 51,18 element Object p1 cp437:0xDF under Empty color 0x0F
+    stat at 48,18 element Object p1 cp437:0xDF under Empty color 0x0F
+    stat at 47,18 element Object p1 cp437:0xDF under Empty color 0x0F
+    stat at 50,16 element Object p1 cp437:0xDF under Empty color 0x0F
+    stat at 52,17 element Object p1 cp437:0xDF under Empty color 0x0F
+    stat at 49,17 element Object p1 cp437:0xDF under Empty color 0x0F
+    stat at 46,17 element Object p1 cp437:0xDF under Empty color 0x0F
+    stat at 46,18 element Object p1 cp437:0xDC under Empty color 0x0F
+    stat at 49,18 element Object p1 cp437:0xDC under Empty color 0x0F
+    stat at 52,18 element Object p1 cp437:0xDC under Empty color 0x0F
+    stat at 44,11 element Object p1 cp437:0xDC under Empty color 0x0F
+    stat at 53,11 element Object p1 cp437:0xDC under Empty color 0x0F
+    stat at 43,11 element Object p1 cp437:0xDC under Empty color 0x0F
+    stat at 54,11 element Object p1 cp437:0xDC under Empty color 0x0F
+    stat at 51,20 element Object p1 cp437:0xDF under Empty color 0x0F
+    stat at 6,25 element Object p1 cp437:0x0E under Empty color 0x0F
+    oop
+#cycle 8
+#play s++efgx+c-xefg+cded-b+cx
+#play s++gxefgx+cxd-b+cdfefd
+/i/i/i/i
+:nyan
+:nyan
+'#play s+gxaxeexcd#dcxcxdx
+'#play s+d#xd#dcdegaegdecdc
+'#play s+exgxaegdecd#ed#dcd
+'#play s+d#xcdegdedcdxcxdx
+'/i/i/i/i/i/i/i/i
+#play t+g--f++g--f++a--f++a--f
+#play t+e--g++e--gxg++c--g
+#play t+d#--e++d--e++c--exe
+#play t+c--a++c--a++d--a++d--a
+/i/i
+#play t+d#--dxd++d#--d++d--d
+#play t+c--g++d--g++e--g++g--g
+#play t+a--c++e--c++g--c++d--c
+#play t+e--c++c--c++d--c++c--c
+/i/i
+#play t+e--f++e--f++g--f++g--f
+#play t+a--g++e--g++g--g++d--g
+#play t+e--e++c--e++d#--e++e--e
+#play t+d#--a++d--a++c--a++d--a
+/i/i
+#play t+d#--d++d#--d++c--d++d--d
+#play t+e--g++g--g++d--g++e--g
+#play t+d--c++c--c++d--c++d--c
+#play s+cxdx
+/i/i
+#zap nyan
+#nyan
+:nyan
+'#play s+cx-ga+cx-ga+cdecfefg
+'#play s+cxcx-ga+c-g+fedc-gefg
+'#play s+cx-ga+cx-ga+ccdec-gag
+'#play s+cxc-b+c-ga+c fefg cx-bx
+'/i/i/i/i/i/i/i/i
+'#play s+cx-ga+cx-ga+cdecfefg
+'#play s+cxcx-ga+c-g+fedc-gefg
+'#play s+cx-ga+cx-ga+ccdec-gag
+'#play s+cxc-b+c-ga+cfefgcxdx
+'/i/i/i/i/i/i/i/i
+#play t+c--f++c--f+g-f+a-f
+#play t+c--f++c--f+g-f+a-f
+#play t+c--e++d--e++e--e++c--e
+#play t+f--e++e--e++f--e++g--e
+/i/i
+#play t+c--dxd++c--d++c--d
+#play tg-d+a-d++c--d+g-d
+#play t+f--c++e--c++d--c++c--c
+#play tg-c+e-c+f-c+g-c
+/i/i
+#play t+c--f++c--f+g-f+a-f
+#play t+c--f++c--f+g-f+a-f
+#play t+c--e++c--e++d--e++e--e
+#play t+c--e+g-e+a-e+g-e
+/i/i
+#play t+c--dxd++c--d+b-d
+#play t+c--d+g-d+a-d++c--d
+#play t+f--c++e--c++f--c++g--c
+#play s+cx-bx
+/i/i
+#play t+c--f++c--f+g-f+a-f
+#play t+c--f++c--f+g-f+a-f
+#play t+c--e++d--e++e--e++c--e
+#play t+f--e++e--e++f--e++g--e
+/i/i
+#play t+c--dxd++c--d++c--d
+#play tg-d+a-d++c--d+g-d
+#play t+f--c++e--c++d--c++c--c
+#play tg-c+e-c+f-c+g-c
+/i/i
+#play t+c--f++c--f+g-f+a-f
+#play t+c--f++c--f+g-f+a-f
+#play t+c--e++c--e++d--e++e--e
+#play t+c--e+g-e+a-e+g-e
+/i/i
+#play t+c--dxd++c--d+b-d
+#play t+c--d+g-d+a-d++c--d
+#play t+f--c++e--c++f--c++g--c
+#play s+cxdx
+/i/i
+#restore nyan
+#nyan
+
+    end
+    stat at 44,25 element Object cycle 1 p1 cp437:0x30 under Empty color 0x0F
+    oop
+@xa
+:a
+/i#char 49
+/i#char 50
+/i#char 51
+/i#char 52
+/i#char 53
+/i#char 54
+/i#char 55
+/i#char 56
+/i#char 57
+/i#char 48
+#xb:a
+#a
+
+    end
+    stat at 42,25 element Object cycle 1 p1 cp437:0x30 under Empty color 0x0F
+    oop
+@xb
+#end
+:a
+#char 49
+:b
+#zap a
+#give score 5
+#end
+:a
+#char 50
+#b
+:a
+#char 51
+#b
+:a
+#char 52
+#b
+:a
+#char 53
+#b
+:a
+#char 54
+#b
+:a
+#char 55
+#b
+:a
+#char 56
+#b
+:a
+#char 57
+#b
+:a
+#char 48
+#xc:a
+#restore a
+
+    end
+    stat at 41,25 element Object cycle 1 p1 cp437:0x30 under Empty color 0x0F
+    oop
+@xc
+#end
+:a
+#char 49
+:b
+#zap a
+#end
+:a
+#char 50
+#b
+:a
+#char 51
+#b
+:a
+#char 52
+#b
+:a
+#char 53
+#b
+:a
+#char 48
+#xd:a
+#restore a
+
+    end
+    stat at 39,25 element Object cycle 1 p1 cp437:0x30 under Empty color 0x0F
+    oop
+@xd
+#end
+:a
+#char 49
+:b
+#zap a
+#end
+:a
+#char 50
+#b
+:a
+#char 51
+#b
+:a
+#char 52
+#b
+:a
+#char 53
+#b
+:a
+#char 54
+#b
+:a
+#char 55
+#b
+:a
+#char 56
+#b
+:a
+#char 57
+#b
+:a
+#char 48
+#xe:a
+#restore a
+
+    end
+    stat at 38,25 element Object cycle 1 p1 cp437:0x30 under Empty color 0x0F
+    oop
+@xe
+#end
+:a
+#char 49
+:b
+#zap a
+#end
+:a
+#char 50
+#b
+:a
+#char 51
+#b
+:a
+#char 52
+#b
+:a
+#char 53
+#b
+:a
+#char 48
+#xf:a
+#restore a
+
+    end
+    stat at 36,25 element Object cycle 1 p1 cp437:0x30 under Empty color 0x0F
+    oop
+@xf
+#end
+:a
+#char 49
+:b
+#zap a
+#end
+:a
+#char 50
+#b
+:a
+#char 51
+#b
+:a
+#char 52
+#b
+:a
+#char 53
+#b
+:a
+#char 54
+#b
+:a
+#char 55
+#b
+:a
+#char 56
+#b
+:a
+#char 57
+#b
+:a
+#char 48
+#xg:a
+#restore a
+
+    end
+    stat at 35,25 element Object cycle 1 p1 cp437:0x30 under Empty color 0x0F
+    oop
+@xg
+#end
+:a
+#char 49
+:b
+#zap a
+#end
+:a
+#char 50
+#b
+:a
+#char 51
+#b
+:a
+#char 52
+#b
+:a
+#char 53
+#b
+:a
+#char 54
+#b
+:a
+#char 55
+#b
+:a
+#char 56
+#b
+:a
+#char 57
+#b
+:a
+#char 48
+#endgame
+#restore a
+
+    end
+  end
+end

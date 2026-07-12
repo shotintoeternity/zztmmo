@@ -1,0 +1,10 @@
+{
+  "title": "McQueen Heights: NE",
+  "archetype": "gameplay scene — town architecture",
+  "technique": "Night-road bands, gray building slabs, cyan window grids, roofs, trees, and lawns use separate tile/shade vocabularies.",
+  "palette": ["black", "dark blue", "bright blue", "gray", "cyan", "green", "brown", "red"],
+  "composition": "A horizontal road establishes depth; a small house and trees balance two taller right-side buildings.",
+  "pictorial_art": "",
+  "quality": "Excellent architectural readability: windows, roofs, vegetation, and roads each retain a distinct material language.",
+  "summary": "Gameplay town scene: night road, cyan-windowed gray buildings, roofs, lawns, and readable tree clusters."
+}
