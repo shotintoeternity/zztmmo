@@ -1568,3 +1568,33 @@ all filed as full specs in TASKS.md:
 
 Execution order after this session: M13 → M12.16 → remaining M12.15 slices →
 M14 → M11 → M8 → M9 → M6 → M10.
+
+## 2026-07-12 — M13.1: CI gate; clean-clone skip guards
+
+`.github/workflows/ci.yml` added: **engine** (go build/vet/test, Go 1.26.x
+pinned — `engine/go.mod`'s `go 1.16` is the go:embed language floor, not the
+toolchain), **engine-race** (`go test -race`, `continue-on-error: true` until
+M13.4 fixes the TestWebSocketServerTwentyBotSoak race, 2026-07-10 M7.3 entry),
+and **web** (npm ci / test / build in `engine/web`; the lockfile was already
+tracked, so no lockfile commit was needed).
+
+Clean-clone proof (`git clone . && go test ./...`) found three tests that
+depended on untracked local files; guards added per the M13.1 spec:
+
+* `TestZWDRoundTripCAVES` / `TestZWDRoundTripCITY` — `t.Skip` when the
+  gitignored world file is absent (`testZWDRoundTrip` now stats the resolved
+  path, the `testhelpers_test.go:19` pattern). `TestZWDRoundTripTOWN` still
+  runs everywhere: `fixtures/TOWN.ZZT` is tracked.
+* `TestValidateRendersStaticTown` (cmd/zzt-validate) did not fail on a clean
+  clone — it **hung forever**, timing out the whole suite at go test's 10m
+  limit: it pointed at the untracked `engine/TOWN.ZZT`, and a missing file
+  sends `validate` → `WorldLoad` → `DisplayIOError`, whose modal
+  `TextWindowSelect` blocks on a keypress nothing feeds headless. Repointed
+  the test at the tracked `fixtures/TOWN.ZZT` (byte-identical to the engine
+  copy, md5-verified), so the M12.8 guard actually runs in CI instead of
+  skipping; a stat-based skip guard sits before the call because a skip
+  after it can never be reached.
+
+Clean clone and the local tree are both fully green (build, vet, test); the
+web job's npm ci/test/build verified on the clean clone. Replay fixture
+untouched — no simulation change.

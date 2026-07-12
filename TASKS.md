@@ -845,7 +845,7 @@ only: no simulation change, replay fixture unchanged throughout.
   engine root; `engine/NOTES.md` gone with its content preserved in root
   NOTES.md; commit `M13.0: ...`.
 
-- [ ] **M13.1 — CI: a GitHub Actions gate on every push and PR.** Verified
+- [x] **M13.1 — CI: a GitHub Actions gate on every push and PR.** Verified
   2026-07-12: `.github/workflows/` does not exist, so the replay fixture —
   the project's stated safety net (CLAUDE.md rule 3) — only protects commits
   whose author remembered to run it. Create `.github/workflows/ci.yml` at the

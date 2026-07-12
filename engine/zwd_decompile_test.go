@@ -127,6 +127,9 @@ func testZWDRoundTrip(t *testing.T, filename string) {
 	if _, err := os.Stat(path); err != nil {
 		path = filepath.Join("../fixtures", filename)
 	}
+	if _, err := os.Stat(path); err != nil {
+		t.Skipf("%s unavailable", filename)
+	}
 
 	// Load the original world.
 	orig := loadTestWorld(t, path)

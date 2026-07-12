@@ -1,0 +1,58 @@
+name: CI
+
+on:
+  push:
+  pull_request:
+
+jobs:
+  engine:
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@v4
+      # go-version is pinned here, NOT read from go.mod: engine/go.mod says
+      # `go 1.16`, which is the language floor go:embed required, not the
+      # toolchain. The baseline was verified on go1.26.5 (TASKS.md line 14).
+      - uses: actions/setup-go@v5
+        with:
+          go-version: '1.26.x'
+          cache-dependency-path: engine/go.sum
+      - run: go build ./...
+        working-directory: engine
+      - run: go vet ./...
+        working-directory: engine
+      - run: go test ./...
+        working-directory: engine
+
+  engine-race:
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    # Known race: TestWebSocketServerTwentyBotSoak fails under -race
+    # (NOTES.md 2026-07-10, M7.3 entry). M13.4 fixes the race and removes
+    # this continue-on-error, making the job required.
+    continue-on-error: true
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-go@v5
+        with:
+          go-version: '1.26.x'
+          cache-dependency-path: engine/go.sum
+      - run: go test -race ./...
+        working-directory: engine
+
+  web:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    defaults:
+      run:
+        working-directory: engine/web
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 'lts/*'
+          cache: npm
+          cache-dependency-path: engine/web/package-lock.json
+      - run: npm ci
+      - run: npm test
+      - run: npm run build
