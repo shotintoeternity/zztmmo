@@ -798,7 +798,7 @@ and running early. See NOTES.md.)
   DoD: create a second board, link exits both ways, walk between them in
   play; export a board and re-import it into another world.
 
-- [ ] **M5.6 — Save, host, and publish edited worlds.** Save the session
+- [x] **M5.6 — Save, host, and publish edited worlds.** Save the session
   world under a new name (`SanitizeSaveName`, bytes via `worldWriteTo`) into
   the hosted worlds directory so `ListWorlds` (`web_api.go:340-351`) and the
   world picker see it, with a collision policy — no silent overwrite of a

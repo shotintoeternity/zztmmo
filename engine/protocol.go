@@ -32,6 +32,9 @@ const (
 	MessageTypeEditorProgramSave  = "editorProgramSave"
 	MessageTypeEditorBoard        = "editorBoard"
 	MessageTypeEditorBoardData    = "editorBoardData"
+	MessageTypeEditorWorld        = "editorWorld"
+	MessageTypeEditorWorldData    = "editorWorldData"
+	MessageTypeEditorSaveResult   = "editorSaveResult"
 )
 
 // HelpDir is where HelpFileLines looks for .HLP files. The terminal client
@@ -276,6 +279,44 @@ type EditorBoardDataMessage struct {
 	Type string `json:"type"`
 	Name string `json:"name"`
 	Data string `json:"data"`
+}
+
+// EditorWorldMessage saves, downloads, or uploads the whole editor session world
+// (M5.6). Op is:
+//   "save"     — serialize the session world and write it to the hosted worlds
+//                directory as Name.ZZT (SanitizeSaveName), then host it so the
+//                world picker sees it. Refused if a world of that name is being
+//                played (RestoreSnapshot's occupancy rule). Replies
+//                EditorSaveResultMessage.
+//   "download" — reply EditorWorldDataMessage with the session world's vanilla
+//                .ZZT bytes, so a creator owns a portable file.
+//   "upload"   — replace the session world with Data (base64 .ZZT bytes from a
+//                client file) after the M7.5 gate (headless load + 200 steps, no
+//                panic). Replies a full EditorSnapshotMessage, or an
+//                EditorSaveResultMessage carrying the gate error on refusal.
+type EditorWorldMessage struct {
+	Type string `json:"type"`
+	Op   string `json:"op"`
+	Name string `json:"name,omitempty"`
+	Data string `json:"data,omitempty"`
+}
+
+// EditorWorldDataMessage is the reply to a "download": the whole session world as
+// vanilla .ZZT bytes, base64-encoded, plus a SanitizeSaveName filename stem. The
+// bytes come straight from worldWriteTo, so the file loads in DOS ZZT/zeta and
+// through WorldLoad here alike.
+type EditorWorldDataMessage struct {
+	Type string `json:"type"`
+	Name string `json:"name"`
+	Data string `json:"data"`
+}
+
+// EditorSaveResultMessage reports the outcome of a "save" or a refused "upload".
+// World is the hosted world name on success; Error explains a refusal.
+type EditorSaveResultMessage struct {
+	Type  string `json:"type"`
+	World string `json:"world,omitempty"`
+	Error string `json:"error,omitempty"`
 }
 
 type InputMessage struct {

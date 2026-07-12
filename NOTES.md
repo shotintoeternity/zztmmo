@@ -1307,3 +1307,47 @@ vanilla record and `BoardClose` the vanilla RLE/BoardInfo/stat stream. Exported
 `.BRD` bytes and a fully saved world therefore load in DOS ZZT/zeta and ZZTMMO
 alike. `TestEditorSessionEditedWorldRoundTripsThroughVanillaFormat` drives the
 real `worldWriteTo` -> `worldReadFrom` on-disk byte path to prove it.
+
+## M5.6 — Save, host, download, and upload edited worlds (2026-07-11)
+
+The editor gained a whole-world equivalent of M5.5's board transfer. Three ops on
+a new `editorWorld` message, all through `EditorSession.Apply`:
+
+- **save** — `WebSocketServer.saveEditorWorld` serializes the session world via
+  `EditorSession.WorldBytes` (the `worldWriteTo` seam, `BoardClose`+`BoardOpen`
+  around it exactly as `WorldSave` does), writes it to the worlds directory as
+  `<NAME>.ZZT` under `SanitizeSaveName`, and hosts it through the existing
+  `HostGeneratedWorld`, so the picker (`ListWorlds`) lists it and a joiner plays
+  it. `World.Info.Name` is set to the save name and `IsSave` cleared, so the file
+  loads as an authored world, not a saved game.
+- **download** — replies `editorWorldData` with the session world's `.ZZT` bytes;
+  the browser saves it as a portable `<name>.ZZT` (loads in DOS ZZT/zeta too).
+- **upload** — replaces the session world with client `.ZZT` bytes after the M7.5
+  gate (`validateGeneratedZWD`: headless load + 200 `GameStep`s, no panic). A
+  world that fails the gate is refused with the gate message; the session is left
+  untouched (mirrors `ImportBoard`).
+
+**Decisions:**
+- *Worlds directory.* Added `WebSocketServer.WorldsDir` and a `-worlds` flag
+  (default `.`). `worldsDir()` falls back to the loaded world's directory then the
+  working directory — the picker's historical behavior — so nothing changes for a
+  server that does not set it. `GetOrCreateInstance` and `handleWorlds` now both
+  resolve through `worldsDir()`, so save target and picker never diverge.
+- *Collision policy.* A save refuses a world of the same name that anyone is
+  currently playing (`len(Instances[name].Clients) != 0`), the same occupancy
+  rule as `RestoreSnapshot`, and refuses **before** writing the file — an occupied
+  world is never even partially overwritten. Overwriting an empty/hosted or a new
+  world is allowed (matches `HostGeneratedWorld`'s own precedent for generated
+  worlds).
+- *Filename safety.* `SanitizeSaveName` is the whole defense (its charset cannot
+  emit a separator or `.`), with a belt-and-braces `filepath.Dir` check identical
+  to `snapshotPath`.
+
+Tests: `TestEditorSessionWorldBytesRoundTrip` (download → disk → `LoadPristineWorld`,
+board contents intact), `TestEditorSessionWorldBytesLeavesSessionEditable`,
+`TestEditorSessionUploadWorldValidatesAndReplaces` (valid replaces, garbage
+refused), `TestWebSocketServerEditorSavePublishesAndPlays` (save → picker → join →
+step), `TestWebSocketServerEditorSaveRefusesOccupiedWorld`,
+`TestWebSocketServerEditorSaveRejectsTraversalName`, and the wire-level
+`TestWebSocketEditorWorldSaveAndDownload`. Browser: `S` in the editor opens a
+World menu (Save and publish / Download .ZZT / Upload .ZZT).

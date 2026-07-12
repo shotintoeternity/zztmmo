@@ -18,6 +18,7 @@ func main() {
 	webDir := flag.String("web", "web/dist", "built browser client directory")
 	helpDir := flag.String("help", ".", "directory holding the .HLP help files")
 	savesDir := flag.String("saves", "saves", "directory for saved-game snapshots; empty disables saving")
+	worldsDir := flag.String("worlds", ".", "directory holding hosted .ZZT worlds; where the editor publishes")
 	flag.Parse()
 
 	zztgo.HelpDir = *helpDir
@@ -37,6 +38,8 @@ func main() {
 	server.RoomManager.LoadHighScores()
 	// The only directory a client's save name can reach (M4.3a).
 	server.SavesDir = *savesDir
+	// Where the browser editor publishes worlds and the picker lists them (M5.6).
+	server.WorldsDir = *worldsDir
 	if *savesDir != "" {
 		_ = os.MkdirAll(*savesDir, 0755)
 		chatDB, err := zztgo.NewFileChatDatabase(filepath.Join(*savesDir, "chat.jsonl"))

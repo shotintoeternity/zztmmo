@@ -49,6 +49,9 @@ const MessageTypeEditorProgramText = "editorProgramText";
 const MessageTypeEditorProgramSave = "editorProgramSave";
 const MessageTypeEditorBoard = "editorBoard";
 const MessageTypeEditorBoardData = "editorBoardData";
+const MessageTypeEditorWorld = "editorWorld";
+const MessageTypeEditorWorldData = "editorWorldData";
+const MessageTypeEditorSaveResult = "editorSaveResult";
 const MessageTypeChat = "chat";
 
 // GameDebugPrompt's PromptString(63, 5, 0x1E, 0x0F, 11, PROMPT_ANY, ...).
@@ -220,7 +223,22 @@ type EditorBoardDataMessage = {
   data: string;
 };
 
-type ServerMessage = SnapshotMessage | DiffMessage | EventMessage | BoardChangeMessage | ChatMessage | EditorSnapshotMessage | EditorInspectMessage | EditorDiffMessage | EditorPropertiesMessage | EditorStatSettingsMessage | EditorProgramTextMessage | EditorBoardDataMessage;
+// EditorWorldDataMessage carries a downloaded world as base64 .ZZT bytes; the
+// client turns it into a browser download the creator owns as a portable file.
+type EditorWorldDataMessage = {
+  type: typeof MessageTypeEditorWorldData;
+  name: string;
+  data: string;
+};
+
+// EditorSaveResultMessage reports the outcome of publishing or a refused upload.
+type EditorSaveResultMessage = {
+  type: typeof MessageTypeEditorSaveResult;
+  world?: string;
+  error?: string;
+};
+
+type ServerMessage = SnapshotMessage | DiffMessage | EventMessage | BoardChangeMessage | ChatMessage | EditorSnapshotMessage | EditorInspectMessage | EditorDiffMessage | EditorPropertiesMessage | EditorStatSettingsMessage | EditorProgramTextMessage | EditorBoardDataMessage | EditorWorldDataMessage | EditorSaveResultMessage;
 
 type InputMessage = {
   type: typeof MessageTypeInput;
@@ -880,6 +898,12 @@ function applyMessage(message: ServerMessage) {
 	  break;
 	case MessageTypeEditorBoardData:
 	  applyEditorBoardData(message);
+	  break;
+	case MessageTypeEditorWorldData:
+	  applyEditorWorldData(message);
+	  break;
+	case MessageTypeEditorSaveResult:
+	  applyEditorSaveResult(message);
 	  break;
   }
 }
@@ -1713,6 +1737,10 @@ function handleEditorKey(event: KeyboardEvent) {
       event.preventDefault();
       openEditorTransfer();
       return;
+    case "KeyS":
+      event.preventDefault();
+      openEditorWorldMenu();
+      return;
     case "Enter":
       event.preventDefault();
       if (editorInspect.hasStat) {
@@ -2016,6 +2044,75 @@ function importEditorBoardFile() {
     });
   });
   input.click();
+}
+
+function sendEditorWorld(values: { op: string; name?: string; data?: string }) {
+  if (!connected || !ws || ws.readyState !== WebSocket.OPEN) return;
+  ws.send(JSON.stringify({ type: MessageTypeEditorWorld, ...values }));
+}
+
+// openEditorWorldMenu is the 'S' key: save/publish the world so others can play
+// it, download it as a portable .ZZT, or upload a .ZZT to edit.
+function openEditorWorldMenu() {
+  openSelectList("World:", ["Save and publish", "Download .ZZT", "Upload .ZZT"], (entry) => {
+    if (entry === "Save and publish") {
+      openEntry("Save world as:", "", 8, "any", (text) => {
+        if (text) sendEditorWorld({ op: "save", name: text });
+      }, editorProperties.worldName);
+    } else if (entry === "Download .ZZT") {
+      sendEditorWorld({ op: "download" });
+    } else if (entry === "Upload .ZZT") {
+      uploadEditorWorldFile();
+    }
+  });
+}
+
+// uploadEditorWorldFile reads a local .ZZT file and hands its bytes to the server
+// as base64. The server validates it (headless load + 200 steps) and rejects a
+// world that fails, leaving the session untouched.
+function uploadEditorWorldFile() {
+  const input = document.createElement("input");
+  input.type = "file";
+  input.accept = ".zzt,.ZZT";
+  input.addEventListener("change", () => {
+    const file = input.files?.[0];
+    if (!file) return;
+    file.arrayBuffer().then((buffer) => {
+      const bytes = new Uint8Array(buffer);
+      let binary = "";
+      for (let i = 0; i < bytes.length; i += 1) binary += String.fromCharCode(bytes[i]);
+      sendEditorWorld({ op: "upload", data: btoa(binary) });
+    });
+  });
+  input.click();
+}
+
+// applyEditorWorldData turns a download reply into a browser download of vanilla
+// .ZZT bytes, which reload in DOS ZZT/zeta and through this engine alike.
+function applyEditorWorldData(message: EditorWorldDataMessage) {
+  const binary = atob(message.data);
+  const bytes = new Uint8Array(binary.length);
+  for (let i = 0; i < binary.length; i += 1) bytes[i] = binary.charCodeAt(i);
+  const blob = new Blob([bytes], { type: "application/octet-stream" });
+  const url = URL.createObjectURL(blob);
+  const link = document.createElement("a");
+  link.href = url;
+  link.download = `${message.name}.ZZT`;
+  link.click();
+  URL.revokeObjectURL(url);
+}
+
+// applyEditorSaveResult reports whether a publish (or upload) succeeded. A refused
+// upload arrives here too, carrying the validation gate's message.
+function applyEditorSaveResult(message: EditorSaveResultMessage) {
+  if (message.error) {
+    openSelectList("Cannot save", ["Ok"], () => {}, [message.error]);
+    return;
+  }
+  openSelectList("Saved", ["Ok"], () => {}, [
+    `World published as ${message.world}.`,
+    "It now appears in the world picker.",
+  ]);
 }
 
 // applyEditorBoardData turns an export reply into a browser download of vanilla

@@ -1,6 +1,7 @@
 package zztgo
 
 import (
+	"bytes"
 	"encoding/base64"
 	"fmt"
 	"sync"
@@ -590,6 +591,63 @@ func editorUnbindSharers(e *Engine, statId int16) {
 			e.Board.Stats[i].DataLen = dataLen
 		}
 	}
+}
+
+// WorldBytes serializes the whole session world to vanilla .ZZT bytes through
+// worldWriteTo — the same seam WorldSave and SaveSnapshot use — so the file loads
+// in DOS ZZT/zeta and through WorldLoad here alike. BoardClose flushes the open
+// board's edits into BoardData first, then BoardOpen restores the in-memory board
+// exactly as WorldSave does. When name is non-empty it is written into
+// World.Info.Name, mirroring GameWorldSave's .ZZT behavior. IsSave is cleared so
+// the result loads as an authored world, not a saved game.
+func (s *EditorSession) WorldBytes(member *webSocketClient, name string) ([]byte, error) {
+	var out []byte
+	err := s.Apply(member, func(e *Engine) {
+		e.BoardClose()
+		if name != "" {
+			e.World.Info.Name = editorString(name, 20)
+		}
+		e.World.Info.IsSave = false
+		var buf bytes.Buffer
+		if e.worldWriteTo(&buf) == nil {
+			out = buf.Bytes()
+		}
+		e.BoardOpen(e.World.Info.CurrentBoard)
+	})
+	return out, err
+}
+
+// UploadWorld replaces the entire session world with data, vanilla .ZZT bytes
+// from a client file, after the M7.5 gate: the bytes must load and survive 200
+// headless GameSteps without a panic. It mirrors ImportBoard for a whole world.
+// A world that fails the gate leaves the session untouched, and the returned gate
+// string tells the client why. The returned snapshot is always a complete frame
+// (unchanged on refusal, the uploaded board on success).
+func (s *EditorSession) UploadWorld(member *webSocketClient, data []byte) (EditorSnapshotMessage, string, error) {
+	var reply EditorSnapshotMessage
+	var gate string
+	err := s.Apply(member, func(e *Engine) {
+		reply = editorSnapshot(e, BOARD_WIDTH/2, BOARD_HEIGHT/2)
+		if verr := validateGeneratedZWD(data); verr != nil {
+			gate = verr.Error()
+			return
+		}
+		scratch := newSnapshotEngine()
+		if rerr := scratch.worldReadFrom(bytes.NewReader(data), false, nil); rerr != nil {
+			gate = rerr.Error()
+			return
+		}
+		e.World = scratch.World
+		boardID := e.World.Info.CurrentBoard
+		if boardID < 0 || boardID > e.World.BoardCount {
+			boardID = 0
+		}
+		e.BoardOpen(boardID)
+		e.GenerateTransitionTable()
+		e.TransitionDrawToBoard()
+		reply = editorSnapshot(e, BOARD_WIDTH/2, BOARD_HEIGHT/2)
+	})
+	return reply, gate, err
 }
 
 func editorProperties(e *Engine) EditorProperties {

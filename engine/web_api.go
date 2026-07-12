@@ -366,7 +366,9 @@ func (a *WebAPI) handleTitleStream(w http.ResponseWriter, r *http.Request) {
 // handleWorlds lists the worlds a client may join.
 func (a *WebAPI) handleWorlds(w http.ResponseWriter, r *http.Request) {
 	dir := "."
-	if E != nil && E.LoadedGameFileName != "" {
+	if a.Server != nil {
+		dir = a.Server.worldsDir()
+	} else if E != nil && E.LoadedGameFileName != "" {
 		dir = filepath.Dir(E.LoadedGameFileName)
 	}
 	worlds := ListWorlds(dir)

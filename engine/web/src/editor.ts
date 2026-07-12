@@ -68,6 +68,8 @@ export function drawEditorSidebar(write: WriteText, inspect: EditorInspect, brus
   write(68, 10, 0x1f, " Plot");
   write(61, 11, 0x30, "  Tab  ");
   write(68, 11, 0x1f, drawing ? "Drawing on " : "Drawing off");
+  write(61, 12, 0x70, " S ");
+  write(65, 12, 0x1f, " World save/load");
   write(61, 13, 0x70, " Enter ");
   write(68, 13, 0x1f, inspect.hasStat ? " Edit stat" : " Copy tile");
   write(61, 14, 0x30, " X ");

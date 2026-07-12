@@ -1,6 +1,7 @@
 package zztgo
 
 import (
+	"bytes"
 	"context"
 	"encoding/base64"
 	"encoding/json"
@@ -28,6 +29,10 @@ type WebSocketServer struct {
 	// refuses every save, which is what NewWebSocketServer leaves it as: a test
 	// must never write to disk.
 	SavesDir string
+	// WorldsDir is where the editor writes published .ZZT worlds and where the
+	// world picker lists them (M5.6). Empty falls back to the loaded world's
+	// directory, then the working directory — the picker's historical behavior.
+	WorldsDir string
 
 	mu              sync.Mutex
 	clients         map[PlayerID]*webSocketClient
@@ -526,8 +531,63 @@ func (s *WebSocketServer) serveEditor(ctx context.Context, conn *websocket.Conn,
 			if s.serveEditorBoard(ctx, client, session, board) != nil {
 				return
 			}
+		case MessageTypeEditorWorld:
+			var world EditorWorldMessage
+			if json.Unmarshal(raw, &world) != nil {
+				continue
+			}
+			if s.serveEditorWorld(ctx, client, session, world) != nil {
+				return
+			}
 		}
 	}
+}
+
+// serveEditorWorld routes an editorWorld operation (M5.6). save publishes the
+// session world and hosts it; download replies with the world's .ZZT bytes;
+// upload replaces the session world with client bytes after the M7.5 gate. A
+// malformed base64 payload or unknown op is ignored, not fatal. It returns the
+// write error only.
+func (s *WebSocketServer) serveEditorWorld(ctx context.Context, client *webSocketClient, session *EditorSession, world EditorWorldMessage) error {
+	switch world.Op {
+	case "save":
+		name, err := s.saveEditorWorld(client, session, world.Name)
+		reply := EditorSaveResultMessage{Type: MessageTypeEditorSaveResult}
+		if err != nil {
+			reply.Error = err.Error()
+		} else {
+			reply.World = name
+		}
+		return client.write(ctx, reply)
+	case "download":
+		data, err := session.WorldBytes(client, "")
+		if err != nil || data == nil {
+			return nil
+		}
+		name, nameErr := SanitizeSaveName(session.WorldName)
+		if nameErr != nil {
+			name = "WORLD"
+		}
+		return client.write(ctx, EditorWorldDataMessage{
+			Type: MessageTypeEditorWorldData,
+			Name: name,
+			Data: base64.StdEncoding.EncodeToString(data),
+		})
+	case "upload":
+		data, decErr := base64.StdEncoding.DecodeString(world.Data)
+		if decErr != nil {
+			return nil
+		}
+		snapshot, gate, err := session.UploadWorld(client, data)
+		if err != nil {
+			return nil
+		}
+		if gate != "" {
+			return client.write(ctx, EditorSaveResultMessage{Type: MessageTypeEditorSaveResult, Error: gate})
+		}
+		return client.write(ctx, snapshot)
+	}
+	return nil
 }
 
 // serveEditorBoard routes an editorBoard operation (M5.5). add/switch/import
@@ -716,14 +776,11 @@ func (s *WebSocketServer) GetOrCreateInstance(worldName string) (*WorldInstance,
 		return inst, nil
 	}
 
-	dir := "."
-	if E != nil && E.LoadedGameFileName != "" {
-		dir = filepath.Dir(E.LoadedGameFileName)
-	}
-	world, err := LoadPristineWorld(dir, worldName)
+	world, err := LoadPristineWorld(s.worldsDir(), worldName)
 	if err != nil {
 		return nil, err
 	}
+	dir := s.worldsDir()
 
 	rm := NewRoomManager(world)
 	rm.HighScorePath = filepath.Join(dir, worldName+".HI")
@@ -772,6 +829,89 @@ func (s *WebSocketServer) HostGeneratedWorld(name string, world TWorld) error {
 		Title:       NewTitleSim(world),
 	}
 	return nil
+}
+
+// worldsDir resolves where published worlds live. An explicit WorldsDir wins;
+// otherwise it matches the picker's historical behavior — the loaded world's
+// directory, then the working directory.
+func (s *WebSocketServer) worldsDir() string {
+	if s.WorldsDir != "" {
+		return s.WorldsDir
+	}
+	if E != nil && E.LoadedGameFileName != "" {
+		return filepath.Dir(E.LoadedGameFileName)
+	}
+	return "."
+}
+
+// saveEditorWorld publishes an editor session's world as dir/<NAME>.ZZT and hosts
+// it so the world picker lists it and a second client can join and play it (M5.6).
+// The name comes from a client, so SanitizeSaveName is the whole defense: path
+// separators, '.', '..' and absolute paths all fail its charset. A world of the
+// same name that anyone is currently playing is never overwritten — the same
+// occupancy refusal RestoreSnapshot uses.
+func (s *WebSocketServer) saveEditorWorld(client *webSocketClient, session *EditorSession, name string) (string, error) {
+	safe, err := SanitizeSaveName(name)
+	if err != nil {
+		return "", err
+	}
+
+	// Refuse before writing anything if the target world is occupied.
+	s.mu.Lock()
+	existing := s.Instances[safe]
+	occupied := false
+	if existing != nil {
+		existing.mu.Lock()
+		occupied = len(existing.Clients) != 0
+		existing.mu.Unlock()
+	}
+	s.mu.Unlock()
+	if occupied {
+		return "", fmt.Errorf("world %q is being played and cannot be overwritten", safe)
+	}
+
+	data, err := session.WorldBytes(client, safe)
+	if err != nil {
+		return "", err
+	}
+	if data == nil {
+		return "", fmt.Errorf("could not serialize the editor world")
+	}
+
+	dir := s.worldsDir()
+	if dir == "" {
+		return "", ErrSavesDisabled
+	}
+	path := filepath.Join(dir, safe+".ZZT")
+	// Belt and braces: SanitizeSaveName cannot emit a separator, so this can only
+	// fire if that charset is ever loosened.
+	if filepath.Dir(path) != filepath.Clean(dir) {
+		return "", ErrInvalidSaveName
+	}
+	if err := os.MkdirAll(dir, 0o755); err != nil {
+		return "", err
+	}
+	if err := os.WriteFile(path, data, 0o644); err != nil {
+		return "", err
+	}
+
+	world, err := LoadWorldBytes(data)
+	if err != nil {
+		return "", err
+	}
+	if err := s.HostGeneratedWorld(safe, world); err != nil {
+		return "", err
+	}
+	return safe, nil
+}
+
+// LoadWorldBytes parses vanilla .ZZT bytes into a TWorld without touching disk.
+func LoadWorldBytes(data []byte) (TWorld, error) {
+	scratch := newSnapshotEngine()
+	if err := scratch.worldReadFrom(bytes.NewReader(data), false, nil); err != nil {
+		return TWorld{}, err
+	}
+	return scratch.World, nil
 }
 
 func LoadPristineWorld(dir, name string) (TWorld, error) {
