@@ -906,6 +906,28 @@ protocol is positional, so these sit just after M12.5 and before M5.
   committed sidecars; `go test ./...` green. Consult the
   advisor on the artifact shapes and the retrieval/budget design before building.
 
+- [ ] **M12.15a — Curation-first title-screen few-shots from hand-selected
+  worlds.** The curation-first slice of M12.15 (taste over statistics — the
+  `pickRepresentativeBoards` scorer picks toolkit rooms; the owner hand-picks
+  excellent boards). Ten owner-selected worlds with excellent title screens /
+  lettering (zips in `~/Downloads`: `winter`, `On_A_Distant_Moon`, `scorchede`,
+  `SUDOKU`, `TROLLOL`, `THOUGHTS`, `zztv7`, `VARIETY`, `nyan`, `BUBLZ14c`); two
+  carry photo-like pictorial art (Jean-Luc Picard, a cat) to seed **art
+  examples** specifically. Pipeline: unzip → render each title screen (board 0)
+  to PNG via a headless `Screen→PNG` renderer (M12.15 phase 5: CP437 font + DOS
+  16-color palette, reusing the engine's own `TileToColorAndChar`) →
+  vision-analyze lettering/art/palette/composition into a structured caption →
+  decompile board 0 with `DecompileZWDAuthorable` and gate on clean recompile +
+  M7.5 validate (the M12.6 boundary) → assemble matched (PNG, caption, ZWD)
+  triples into candidate few-shots with archetype labels (lettering + art) for
+  the promptkit. Hard gate: a few-shot MUST recompile or it teaches the model
+  invalid tokens (the ONAMOON/OBELISK lesson, M12.3/M12.6). Do NOT commit
+  `.ZZT` or zip files (gitignored; licenses vary, as with the rest of the
+  corpus). DoD: a PNG + structured caption + clean-recompiling title-board ZWD
+  for each usable world; the two photo-art worlds captured as art examples; a
+  candidate one-shot assembled for owner review; `go test ./...` green; replay
+  fixture unchanged.
+
 - [ ] **M12.16 [ADVISOR] — Error-driven procedural repair layer (compiler
   self-heals before the LLM).** Owner priority: maximize what the
   compiler/decompiler fixes itself before resending to the model — LLM repair
