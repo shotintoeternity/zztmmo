@@ -39,9 +39,32 @@ func CompileZWDWorld(src string) (TWorld, error) {
 	return compileZWDDocument(doc)
 }
 
+// zwdErrCode classifies a compile error so the procedural repair layer
+// (zwd_repair.go) can dispatch a fixer on the kind of failure rather than by
+// string-matching the human-readable message. The message stays precise (M12.1)
+// for the LLM and for humans; the code is what fixers switch on. Codes are only
+// assigned at the error sites for the "bucket 1" bookkeeping/syntactic failures
+// that a deterministic fixer can repair; everything else stays zwdErrOther and
+// falls through to the LLM (see NOTES.md 2026-07-11 for the bucket boundary).
+type zwdErrCode int
+
+const (
+	zwdErrOther zwdErrCode = iota
+	zwdErrMissingEnd
+	zwdErrDuplicateLegendKey
+	zwdErrUnknownStatField
+	zwdErrRowTooWide
+	zwdErrOffBoardCoord
+	zwdErrColorRange
+	zwdErrDoorNibble
+	zwdErrUndefinedGridChar
+	zwdErrOrphanStatGlyph
+)
+
 type zwdError struct {
 	line, col int
 	msg       string
+	code      zwdErrCode
 }
 
 func (e *zwdError) Error() string {
@@ -201,7 +224,7 @@ func (p *zwdParser) parseBoard(name string, line int) (zwdBoard, error) {
 	for {
 		line, text, ok := p.nextContentLine()
 		if !ok {
-			return board, zerr(line, 1, "board "+name+" missing end")
+			return board, zerrc(zwdErrMissingEnd, line, 1, "board "+name+" missing end")
 		}
 		toks, err := tokenizeZWD(text, line)
 		if err != nil {
@@ -312,20 +335,20 @@ func (p *zwdParser) parseGrid() ([]zwdGridLine, error) {
 		}
 		if len(raw) != BOARD_WIDTH {
 			if len(raw) > BOARD_WIDTH {
-				return nil, zerr(line, BOARD_WIDTH+1, "grid row wider than 60")
+				return nil, zerrc(zwdErrRowTooWide, line, BOARD_WIDTH+1, "grid row wider than 60")
 			}
 			return nil, zerr(line, len(raw)+1, "grid row shorter than 60")
 		}
 		grid = append(grid, zwdGridLine{line: line, text: raw})
 	}
-	return nil, zerr(0, 0, "grid missing end")
+	return nil, zerrc(zwdErrMissingEnd, 0, 0, "grid missing end")
 }
 
 func (p *zwdParser) parseLegend() (map[byte]zwdLegendEntry, error) {
 	legend := make(map[byte]zwdLegendEntry)
 	for {
 		if p.pos >= len(p.lines) {
-			return nil, zerr(0, 0, "legend missing end")
+			return nil, zerrc(zwdErrMissingEnd, 0, 0, "legend missing end")
 		}
 		line := p.pos + 1
 		text := strings.TrimSpace(p.lines[p.pos])
@@ -345,7 +368,7 @@ func (p *zwdParser) parseLegend() (map[byte]zwdLegendEntry, error) {
 			return nil, err
 		}
 		if _, exists := legend[entryKey]; exists {
-			return nil, zerr(line, 1, "duplicate legend key")
+			return nil, zerrc(zwdErrDuplicateLegendKey, line, 1, "duplicate legend key")
 		}
 		entry.line = line
 		legend[entryKey] = entry
@@ -357,7 +380,7 @@ func (p *zwdParser) parseStats() ([]zwdStat, error) {
 	for {
 		line, text, ok := p.nextContentLine()
 		if !ok {
-			return nil, zerr(0, 0, "stats missing end")
+			return nil, zerrc(zwdErrMissingEnd, 0, 0, "stats missing end")
 		}
 		toks, err := tokenizeZWD(text, line)
 		if err != nil {
@@ -462,7 +485,7 @@ func parseLegendEntry(toks []string, line int) (byte, zwdLegendEntry, error) {
 			}
 			color, err := parseLegendColor(elem, toks[i+1])
 			if err != nil {
-				return 0, entry, zerr(line, 1, err.Error())
+				return 0, entry, retagZerr(err, line, 1)
 			}
 			entry.color = color
 			i += 2
@@ -501,7 +524,7 @@ func parseLegendColor(element byte, tok string) (byte, error) {
 		return 0, err
 	}
 	if element == E_DOOR && (color/16)%8 == 0 {
-		return 0, fmt.Errorf("door color must have a key background nibble 1..7 (for example 0x1E); got %s", tok)
+		return 0, zerrc(zwdErrDoorNibble, 0, 0, fmt.Sprintf("door color must have a key background nibble 1..7 (for example 0x1E); got %s", tok))
 	}
 	return color, nil
 }
@@ -555,7 +578,7 @@ func parseStatLine(toks []string, line int) (zwdStat, error) {
 	}
 	x, y, err := parseCoordToken(toks[2])
 	if err != nil {
-		return stat, zerr(line, 9, "stat coordinate must be X,Y within 1..60 and 1..25")
+		return stat, zerrc(zwdErrOffBoardCoord, line, 9, "stat coordinate must be X,Y within 1..60 and 1..25")
 	}
 	stat.x, stat.y = x, y
 	if toks[3] != "element" {
@@ -650,7 +673,7 @@ func parseStatLine(toks []string, line int) (zwdStat, error) {
 			stat.hasBind = true
 			i += 2
 		default:
-			return stat, zerr(line, 1, "unknown stat field "+toks[i])
+			return stat, zerrc(zwdErrUnknownStatField, line, 1, "unknown stat field "+toks[i])
 		}
 	}
 	if stat.cycle < 0 {
@@ -736,13 +759,21 @@ func compileZWDBoard(e *Engine, boardID int16, src zwdBoard, boardIDs map[string
 		e.Board.Info.NeighborBoards[i] = byte(id)
 	}
 
+	// Pre-scan for undefined grid keys and report every one at once, so the
+	// procedural repair layer (zwd_repair.go) can inject all missing legend
+	// entries in a single pass instead of one repair round per key (M12.11/16).
+	if firstLine, firstCol, missing := scanUndefinedGridKeys(src); len(missing) > 0 {
+		return zerrc(zwdErrUndefinedGridChar, firstLine, firstCol,
+			fmt.Sprintf("grid uses %d legend key(s) with no legend entry: %s", len(missing), strings.Join(missing, ", ")))
+	}
+
 	playerCount := 0
 	for y, row := range src.grid {
 		for x := 0; x < BOARD_WIDTH; x++ {
 			ch := row.text[x]
 			entry, ok := src.legend[ch]
 			if !ok {
-				return zerr(row.line, x+1, fmt.Sprintf("grid uses legend key %q with no legend entry", string([]byte{ch})))
+				return zerrc(zwdErrUndefinedGridChar, row.line, x+1, fmt.Sprintf("grid uses legend key %q with no legend entry", string([]byte{ch})))
 			}
 			e.Board.Tiles[x+1][y+1] = TTile{Element: entry.element, Color: entry.color}
 			if entry.element == E_PLAYER {
@@ -832,6 +863,11 @@ func compileZWDBoard(e *Engine, boardID int16, src zwdBoard, boardIDs map[string
 		statCoords[uint32(srcStat.x)<<16|uint32(srcStat.y)] = true
 	}
 
+	// Aggregate every orphan stat-backed glyph into one error (M12.16 folded
+	// bullet 2). Reporting the first only cost one repair round per tile; the
+	// procedural synthesizer (zwd_repair.go) repairs them all in a single pass.
+	var orphans []string
+	firstOrphanLine, firstOrphanCol := 0, 0
 	for y, row := range src.grid {
 		for x := 0; x < BOARD_WIDTH; x++ {
 			ch := row.text[x]
@@ -839,10 +875,17 @@ func compileZWDBoard(e *Engine, boardID int16, src zwdBoard, boardIDs map[string
 			if elementNeedsStat(entry.element) {
 				coord := uint32(x+1)<<16 | uint32(y+1)
 				if !statCoords[coord] {
-					return zerr(row.line, x+1, fmt.Sprintf("grid contains stat-backed element %s but no matching stat is defined at (%d, %d)", ElementDefs[entry.element].Name, x+1, y+1))
+					if len(orphans) == 0 {
+						firstOrphanLine, firstOrphanCol = row.line, x+1
+					}
+					orphans = append(orphans, fmt.Sprintf("%s at (%d, %d)", ElementDefs[entry.element].Name, x+1, y+1))
 				}
 			}
 		}
+	}
+	if len(orphans) > 0 {
+		return zerrc(zwdErrOrphanStatGlyph, firstOrphanLine, firstOrphanCol,
+			fmt.Sprintf("grid contains %d stat-backed element(s) with no matching stat: %s", len(orphans), strings.Join(orphans, "; ")))
 	}
 
 	if size := estimateZWDSerializedBoardSize(e); size > len(e.IoTmpBuf) {
@@ -853,6 +896,29 @@ func compileZWDBoard(e *Engine, boardID int16, src zwdBoard, boardIDs map[string
 		return zerr(src.line, 1, "serialized board exceeds 20000 bytes")
 	}
 	return nil
+}
+
+// scanUndefinedGridKeys returns the source line/col of the first grid key that
+// has no legend entry, plus a first-seen-ordered, deduped list of human labels
+// for every distinct undefined key. Row-major so the order is deterministic.
+func scanUndefinedGridKeys(src zwdBoard) (firstLine, firstCol int, missing []string) {
+	seen := make(map[byte]bool)
+	for _, row := range src.grid {
+		for x := 0; x < BOARD_WIDTH; x++ {
+			ch := row.text[x]
+			if _, ok := src.legend[ch]; ok {
+				continue
+			}
+			if firstLine == 0 {
+				firstLine, firstCol = row.line, x+1
+			}
+			if !seen[ch] {
+				seen[ch] = true
+				missing = append(missing, fmt.Sprintf("%q", string([]byte{ch})))
+			}
+		}
+	}
+	return firstLine, firstCol, missing
 }
 
 func elementNeedsStat(el byte) bool {
@@ -1234,7 +1300,7 @@ func parseColor(tok string) (byte, error) {
 	if err == nil {
 		return byte(n), nil
 	}
-	return 0, fmt.Errorf("color must be 0x00..0xFF or a DOS color name")
+	return 0, zerrc(zwdErrColorRange, 0, 0, "color must be 0x00..0xFF or a DOS color name")
 }
 
 func parseByteToken(tok string) (byte, error) {
@@ -1304,4 +1370,19 @@ func unquoteToken(s string) string {
 
 func zerr(line, col int, msg string) error {
 	return &zwdError{line: line, col: col, msg: msg}
+}
+
+// zerrc is zerr with a repair-dispatch code attached.
+func zerrc(code zwdErrCode, line, col int, msg string) error {
+	return &zwdError{line: line, col: col, msg: msg, code: code}
+}
+
+// retagZerr stamps a source line/col onto an error, preserving its code when the
+// error is already a coded *zwdError (e.g. a door-nibble or color-range failure
+// raised deep in a value parser that has no line context of its own).
+func retagZerr(err error, line, col int) error {
+	if ze, ok := err.(*zwdError); ok {
+		return &zwdError{line: line, col: col, msg: ze.msg, code: ze.code}
+	}
+	return &zwdError{line: line, col: col, msg: err.Error()}
 }

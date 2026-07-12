@@ -283,6 +283,14 @@ func (g *GenerationService) generate(ctx context.Context, client, premise, reque
 		}
 	}
 
+	// Bucket-2 detection (M12.16 folded bullet 3): one-way passage colors are
+	// reported for visibility, never re-colored procedurally — a deliberately
+	// one-way passage is legitimate, and the authoring rule prevents accidents
+	// upstream. Informational only, so it never rejects an otherwise good world.
+	if notes := CheckZWDPassageReciprocity(world); len(notes) > 0 {
+		g.report(ctx, GenerationProgress{Stage: "validating", Detail: "passage reciprocity notes: " + strings.Join(notes, "; ")})
+	}
+
 	g.report(ctx, GenerationProgress{Stage: "persisting", Detail: "saving accepted world and sidecars"})
 	if err := persistGeneratedWorld(g.outputDir, name, premise, planText, full, data); err != nil {
 		return GenerationResult{}, err
@@ -360,11 +368,20 @@ func (g *GenerationService) paintBoard(ctx context.Context, planText string, pla
 		if err == nil {
 			candidate := cloneGeneratedSections(sections)
 			candidate[board.Name] = section
-			data, compileErr := CompileZWD(assembleGeneratedZWD("CHECK", plan, candidate))
+			// Procedural repair (M12.16) self-heals bucket-1 defects before the
+			// LLM is asked again; if it applies a fix, adopt the repaired board so
+			// the final assembly and the next board's edge context see it.
+			data, repairedSrc, repairDiags, compileErr := compileZWDBytesWithRepair(assembleGeneratedZWD("CHECK", plan, candidate))
 			if compileErr == nil {
 				compileErr = validateGeneratedZWD(data)
 			}
 			if compileErr == nil && parsed.name == board.Name {
+				if len(repairDiags) > 0 {
+					if repaired := boardSectionFromSource(repairedSrc, board.Name); repaired != "" {
+						section = repaired
+					}
+					warnings = append(warnings, repairDiags...)
+				}
 				if len(warnings) > 0 {
 					g.report(ctx, GenerationProgress{Stage: "validating", Board: board.Name, Attempt: *attempts, Detail: "preprocessor warnings: " + strings.Join(warnings, "; ")})
 				}
@@ -692,6 +709,32 @@ func extractMultipleBoardsSplitWithWarnings(text string) (map[string]string, map
 	return result, warnings
 }
 
+// boardSectionFromSource returns the trimmed ZWD section for the named board out
+// of a full-world source, using the same board-header split the generator uses.
+// Empty when the board is absent. Used to lift a procedurally repaired board back
+// out of the repaired full-world source (M12.16).
+func boardSectionFromSource(src, name string) string {
+	lines := strings.Split(src, "\n")
+	start := -1
+	for i, l := range lines {
+		if m := boardHeaderRe.FindStringSubmatch(l); len(m) > 0 && m[1] == name {
+			start = i
+			break
+		}
+	}
+	if start < 0 {
+		return ""
+	}
+	end := len(lines)
+	for i := start + 1; i < len(lines); i++ {
+		if boardHeaderRe.MatchString(lines[i]) {
+			end = i
+			break
+		}
+	}
+	return strings.TrimSpace(strings.Join(lines[start:end], "\n"))
+}
+
 func extractMultipleBoards(text string) (map[string]string, error) {
 	sections, _, err := extractMultipleBoardsWithWarnings(text)
 	return sections, err
@@ -799,7 +842,7 @@ func (g *GenerationService) paintBoardsBatch(ctx context.Context, planText strin
 				}
 				candidate := cloneGeneratedSections(sections)
 				candidate[board.Name] = section
-				data, compileErr := CompileZWD(assembleGeneratedZWD("CHECK", plan, candidate))
+				data, repairedSrc, repairDiags, compileErr := compileZWDBytesWithRepair(assembleGeneratedZWD("CHECK", plan, candidate))
 				if compileErr == nil {
 					compileErr = validateGeneratedZWD(data)
 				}
@@ -808,6 +851,13 @@ func (g *GenerationService) paintBoardsBatch(ctx context.Context, planText strin
 					diag := generatedGridDiagnostics(section, extractedWarnings[board.Name]...)
 					translatedErr := translateZWDError(compileErr, plan, candidate)
 					batchErrors = append(batchErrors, fmt.Sprintf("board %q failed validation: %v%s", board.Name, translatedErr, diag))
+				} else if len(repairDiags) > 0 {
+					// Procedural repair fixed this board (M12.16); commit the
+					// repaired section instead of forcing an LLM repair round.
+					if repaired := boardSectionFromSource(repairedSrc, board.Name); repaired != "" {
+						extracted[board.Name] = repaired
+					}
+					extractedWarnings[board.Name] = append(extractedWarnings[board.Name], repairDiags...)
 				}
 			}
 			if allOk {

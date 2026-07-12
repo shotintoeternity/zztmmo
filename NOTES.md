@@ -1836,3 +1836,60 @@ seam), not M13.4.
 `-count=3` engine-only and ~24 hammered soak/smoke iterations — 0 races, 0
 failures. Server-layer only; `StateHash`, serialization, and the replay fixture
 are untouched. `engine-race` loses its `continue-on-error` and is now required.
+
+## 2026-07-12 — M12.16 error-driven procedural repair layer (implementation)
+
+PROCESS: the advisor tool is unavailable in this environment (same as the
+2026-07-12 planning entry), so the required `[ADVISOR]` consult on the
+error-code taxonomy / bucket boundary could not run. Recorded per rule 5. The
+one load-bearing architectural fork was surfaced to the owner instead
+(AskUserQuestion): **layer on top** — keep `preprocessZWDGridWithWarnings` as
+pass 1 unchanged, add `CompileZWDWithRepair` as a new error-code-driven pass 2,
+and test the dispatch loop directly on RAW broken boards so each fixer actually
+fires (preprocess is not in the unit path). No rewrite of the working M12.11/13/
+14 fixers.
+
+### What landed
+* **Typed error codes.** `zwdError` gains a `code zwdErrCode`; a `zerrc` helper
+  and `retagZerr` (preserves an inner coded error's code while stamping
+  line/col) tag the bucket-1 sites. Fixers dispatch on the code, never the
+  human message (which stays precise for the LLM/humans, M12.1).
+* **Fixpoint loop.** `compileZWDWithRepair` / `CompileZWDWithRepair`: parse → on
+  a coded bucket-1 error look up `zwdBucket1Fixers[code]` → apply to source →
+  re-parse → repeat until success, no fixer, or no progress (byte-identical
+  output or a `seen` source recurs → hand back to the caller/LLM). Hard
+  iteration cap as a backstop; never spins.
+* **Bucket-1 fixers.** missing-end → `autoCloseZWDSections`; duplicate-legend-key
+  → `deduplicateZWDLegendEntries`; unknown-stat-field → `dropUnknownZWDStatFields`
+  (the three M12.14 whole-source helpers wired as table entries); plus new
+  source fixers: row-too-wide (truncate to 60), off-board-coord (drop the stat),
+  color-range (rewrite to 0x0F), door-nibble (M12.12 — set the Door bg nibble to
+  a valid key when 0/8); undefined-grid-char and orphan-stat-glyph delegate to
+  `preprocessZWDGridWithWarnings` on the enclosing board section (reuses the
+  M12.11 legend injection and M12.13 stat synthesis — "subsumes the mechanism").
+* **Aggregate orphan reporting (folded bullet 2).** `compileZWDBoard` now
+  collects EVERY orphan stat-backed tile and every undefined grid char into one
+  coded error instead of stopping at the first, so one fixer pass repairs all.
+* **Passage-stat synthesis from the legend `to` (folded bullet 1).** The orphan
+  fixer synthesizes a Passage stat with `p3 board "NAME"` when the glyph's
+  legend entry carries a `to` destination — coordinate AND target both derived,
+  never guessed (bucket 1).
+* **Passage color reciprocity (folded bullet 3, BUCKET 2 / detect-only).**
+  `checkZWDPassageReciprocity` warns when a passage's destination board has no
+  matching-color return passage; it is DETECT-only (routed to the LLM/plan
+  repair), never re-colored procedurally. Authoring rule added to `ZWD.md` and
+  `promptkit_assets/spec.md`.
+
+### The bucket boundary (load-bearing, unchanged from the 2026-07-11 design)
+Bucket 1 (bookkeeping/syntactic) is fixed procedurally and aggressively; it is
+the entire dominant failure taxonomy. Bucket 2 (semantic/intent — exit to a
+nonexistent board, missing passage target, key behind its own door, passage
+reciprocity) is NEVER guessed procedurally: a silent wrong guess compiles a
+subtly-broken world, worse than a repair round. Bucket-2 errors have no fixer
+registered, so the fixpoint loop returns them to the caller unchanged for the
+LLM path. Composition/quality raises no error and is out of scope (M12.15).
+
+Generation wired: `paintBoard` and the batch painter call
+`CompileZWDWithRepair`, feeding repair diagnostics forward via
+`generatedGridDiagnostics`. Purely generation/compile-time — outside the sim;
+replay fixture unchanged.

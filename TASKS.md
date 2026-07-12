@@ -1012,7 +1012,7 @@ their M12 numbering. Execution order within this section: **M12.16 first**,
 then the M12.15 slices — procedural repair raises generation yield, which
 the corpus/style work builds on. The specs below are unchanged.)
 
-- [ ] **M12.16 [ADVISOR] — Error-driven procedural repair layer (compiler
+- [x] **M12.16 [ADVISOR] — Error-driven procedural repair layer (compiler
   self-heals before the LLM).** (Order note 2026-07-12: execute this
   directly after M13, BEFORE the remaining M12.15 slices — yield first, then
   style; see NOTES.md. Extended the same day with three folded Future-Tasks

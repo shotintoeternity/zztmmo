@@ -302,6 +302,7 @@ the wrong element.
 3. **Do not use Object with a passage glyph (`cp437:0xF0`)** to simulate a passage — this creates a dead, unresponsive tile since the engine's passage teleport logic only fires for the `Passage` element, not `Object`.
 4. Each board exit to a neighboring board **must** use `exits north/south/east/west "BOARD NAME"` in the board header, **not** a passage element on the board edge.
 5. **Objects are interactive, never static art.** Every `Object` grid tile requires a matching stat and OOP script. Draw decorative machinery, pillars, letters, and multi-tile shapes with `Text-*`, `Solid`, `Normal`, or `Fake` tiles instead.
+6. **Give paired passages matching colors for two-way travel.** When a passage on board A leads to board B, place a passage of the **same color** on board B for the return trip. On arrival, ZZT lands the player on the destination board's **first passage whose color matches the one they entered** (else on that board's start square). A return passage in a different color leaves the traveller somewhere the author did not intend, so a passage from A to B and its partner from B to A should share one color.
 
 
 ## Limits
