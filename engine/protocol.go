@@ -84,6 +84,10 @@ type JoinMessage struct {
 	Name  string `json:"name"`
 	World string `json:"world,omitempty"`
 	Board int16  `json:"board,omitempty"`
+	// ResumeToken, when it names a detached (or live) player in the joined
+	// instance, reclaims that run instead of spawning a new player (M13.2). An
+	// unknown or expired token falls through to a normal fresh join.
+	ResumeToken string `json:"resumeToken,omitempty"`
 }
 
 // EditorEnterMessage opens an isolated editing copy of World. It is the first
@@ -390,6 +394,9 @@ type SnapshotMessage struct {
 	HUD     HUDSnapshot      `json:"hud"`
 	Screen  []ScreenCell     `json:"screen"`
 	Events  []ProtocolEvent  `json:"events,omitempty"`
+	// ResumeToken is set only on the join/resume snapshot (M13.2). The client
+	// stores it keyed by world name and presents it to reclaim a dropped run.
+	ResumeToken string `json:"resumeToken,omitempty"`
 }
 
 type DiffMessage struct {

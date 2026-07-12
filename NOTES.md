@@ -1663,3 +1663,56 @@ logs the panic, and drops the affected room and its players rather than keeping
 a partially-mutated engine. `WorldInstance.Tick` (and the legacy tick path) has
 an outer recovery guard as a final boundary. These safeguards are presentation /
 server control flow only: neither changes `StateHash` nor the replay fixture.
+
+## 2026-07-12 — M13.2 reconnect grace: decisions before coding
+
+A dropped WebSocket (refresh, Wi-Fi blip) no longer destroys the run. On
+read-loop exit the client is *detached*, not left: it leaves `inst.Clients`/
+`inst.Inputs` (and the default instance's `s.clients`/`s.inputs`) but its stat
+stays on the board and keeps ticking with zeroed input, exactly like an idle
+player. `inst.Detached[playerID]` counts down `ReconnectGraceTicks` (545 ≈ 60s
+at the 110ms tick — counted in ticks, never wall-clock, so tests step it
+deterministically). Expiry runs on the tick goroutine (`s.expireDetached` at the
+top of `WebSocketServer.Tick`, once per instance per tick) and performs today's
+`LeavePlayer` removal. A 16-byte `crypto/rand` resume token (hex) is minted at
+join, mapped in `inst.ResumeTokens`/`inst.TokensByPlayer`, and sent on the
+join/resume snapshot as `SnapshotMessage.ResumeToken`. `JoinMessage.ResumeToken`
+resumes: a token naming a live-or-detached player in this instance reattaches
+(same PlayerID/statID, inventory intact); an unknown or stale token falls through
+to a normal fresh join, never an error.
+
+The three decisions the spec required, recorded before coding:
+
+1. **A second live connection presenting a token whose player is NOT detached —
+   newest-wins.** The resume displaces the old socket: the new client takes
+   `inst.Clients[pid]`, and the old connection is closed. The old socket's
+   read-loop exit then sees `inst.Clients[pid] != itsClient` and returns without
+   detaching, so it cannot cancel the new attachment. This is also the fix for
+   "my tab froze, I opened a new one."
+
+2. **`pendingPlayerEvents` for a detached player are cleared on detach and the
+   loss accepted.** They are presentation-only (scroll/sound/transfer routing),
+   and only a connected client drains them (`DrainPlayerEvents`). Without the
+   clear they would accumulate for the whole grace window; the reattaching client
+   gets a fresh full `Snapshot` anyway, so nothing of value is lost.
+
+3. **A detached player holding a scroll open (`roomPlayer.scrollOpen`) stays
+   frozen until expiry — acceptable.** Their stat simply does not tick until they
+   resume (and the client dismisses the scroll) or the grace runs out and they
+   are removed. It matches "detached players are idle," and a co-op partner is
+   never blocked because only that one stat is frozen.
+
+Server-layer only: no simulation change, the resume machinery never enters
+`StateHash` or serialization, replay fixture unchanged. `go test ./...` green.
+
+NOTE (M13.4): detach now moves the heavy room-state mutation (`RemovePlayer`/
+`RemoveStat`) off the disconnect goroutine and onto the tick goroutine at expiry
+— the shape M13.4's race fix wants. Verified the default-instance race is
+pre-existing, not introduced here: `go test -race -run
+TestWebSocketServerMultiplayerSmokePickupTransferHUD` fails the same way on a
+clean tree (read-loop exit → `removeClientFromInstance` → `RemovePlayer` under
+`inst.mu`, vs the legacy tick reading the shared default RoomManager under
+`s.mu`). This task's disconnect path does a *lighter* off-tick touch than the
+removal it replaced (only `DrainPlayerEvents`, per decision 2), still under the
+same `inst.mu`; closing the default-instance `s.mu`/`inst.mu` split is M13.4's,
+which removes engine-race's `continue-on-error`.

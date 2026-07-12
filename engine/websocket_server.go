@@ -3,7 +3,9 @@ package zztgo
 import (
 	"bytes"
 	"context"
+	"crypto/rand"
 	"encoding/base64"
+	"encoding/hex"
 	"encoding/json"
 	"fmt"
 	"log"
@@ -20,6 +22,11 @@ import (
 
 const ServerTickDuration = 110 * time.Millisecond
 const ServerReadLimit = 1 << 20
+
+// ReconnectGraceTicks is how long a detached player's stat lingers on the board
+// before removal, counted in ticks (not wall-clock) so tests can step it
+// deterministically. 545 ticks ≈ 60s at the 110ms server tick (M13.2).
+const ReconnectGraceTicks = 545
 
 type WebSocketServer struct {
 	RoomManager  *RoomManager
@@ -55,7 +62,16 @@ type WorldInstance struct {
 	// Title animates board 0 for browsers sitting on the title screen. It owns
 	// its own Engine and shares no state with RoomManager — see TitleSim.
 	Title *TitleSim
-	mu    sync.Mutex
+	// Detached, ResumeTokens, and TokensByPlayer implement reconnect grace
+	// (M13.2). A dropped socket detaches its player (leaves Clients/Inputs but
+	// keeps the stat) and Detached counts down ReconnectGraceTicks to removal on
+	// the tick goroutine. ResumeTokens maps a minted token to its player, and
+	// TokensByPlayer is the reverse index used to delete a player's token on
+	// removal. All three are guarded by mu.
+	Detached       map[PlayerID]int
+	ResumeTokens   map[string]PlayerID
+	TokensByPlayer map[PlayerID]string
+	mu             sync.Mutex
 }
 
 type webSocketClient struct {
@@ -73,12 +89,15 @@ func NewWebSocketServer(world TWorld, defaultBoard int16) *WebSocketServer {
 		name = "TOWN"
 	}
 	inst := &WorldInstance{
-		Name:        name,
-		SourceWorld: cloneWorld(world),
-		RoomManager: rm,
-		Clients:     make(map[PlayerID]*webSocketClient),
-		Inputs:      make(map[PlayerID]PlayerInput),
-		Title:       NewTitleSim(world),
+		Name:           name,
+		SourceWorld:    cloneWorld(world),
+		RoomManager:    rm,
+		Clients:        make(map[PlayerID]*webSocketClient),
+		Inputs:         make(map[PlayerID]PlayerInput),
+		Title:          NewTitleSim(world),
+		Detached:       make(map[PlayerID]int),
+		ResumeTokens:   make(map[string]PlayerID),
+		TokensByPlayer: make(map[PlayerID]string),
 	}
 	s := &WebSocketServer{
 		RoomManager:    rm,
@@ -111,6 +130,10 @@ func (s *WebSocketServer) Run(ctx context.Context) {
 }
 
 func (s *WebSocketServer) Tick(ctx context.Context) {
+	// Advance reconnect-grace countdowns before stepping, so an expired player is
+	// removed on this same tick goroutine (M13.2).
+	s.expireDetached()
+
 	s.mu.Lock()
 	// Legacy tick for compatibility
 	if len(s.clients) > 0 {
@@ -293,40 +316,60 @@ func (s *WebSocketServer) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 	if err := json.Unmarshal(raw, &join); err != nil {
 		return
 	}
-	if join.Board == 0 {
-		join.Board = inst.RoomManager.FrozenWorld().Info.CurrentBoard
-		if join.Board == 0 {
-			join.Board = s.DefaultBoard
-		}
-		if join.Board == 0 {
-			join.Board = 1
-		}
-	}
 
 	client := &webSocketClient{conn: conn, worldName: safeWorld}
-	inst.mu.Lock()
-	playerID := inst.RoomManager.JoinPlayer(join.Board, 0, 0)
-	inst.RoomManager.SetPlayerName(playerID, join.Name)
-	client.playerID = playerID
-	inst.Clients[playerID] = client
-	if inst.RoomManager == s.RoomManager {
-		s.mu.Lock()
-		s.clients[playerID] = client
-		s.mu.Unlock()
-	}
-	snapshot, ok := inst.RoomManager.Snapshot(playerID)
-	if ok {
-		client.boardID = snapshot.BoardID
-		err = client.write(ctx, snapshot)
-	}
-	inst.mu.Unlock()
 
-	if !ok {
-		s.removeClientFromInstance(inst, playerID)
-		return
+	// Resume first: a valid token reclaims the dropped run (same PlayerID/statID,
+	// inventory intact). An unknown or expired token falls through to a fresh join.
+	var playerID PlayerID
+	var snapshot SnapshotMessage
+	resumed := false
+	if join.ResumeToken != "" {
+		if pid, snap, ok := s.tryResume(inst, client, join.ResumeToken); ok {
+			playerID, snapshot, resumed = pid, snap, true
+		}
 	}
-	if err != nil {
-		s.removeClientFromInstance(inst, playerID)
+
+	if !resumed {
+		if join.Board == 0 {
+			join.Board = inst.RoomManager.FrozenWorld().Info.CurrentBoard
+			if join.Board == 0 {
+				join.Board = s.DefaultBoard
+			}
+			if join.Board == 0 {
+				join.Board = 1
+			}
+		}
+
+		inst.mu.Lock()
+		playerID = inst.RoomManager.JoinPlayer(join.Board, 0, 0)
+		inst.RoomManager.SetPlayerName(playerID, join.Name)
+		client.playerID = playerID
+		inst.Clients[playerID] = client
+		token := inst.mintResumeTokenLocked(playerID)
+		var ok bool
+		snapshot, ok = inst.RoomManager.Snapshot(playerID)
+		if ok {
+			snapshot.ResumeToken = token
+			client.boardID = snapshot.BoardID
+		}
+		inst.mu.Unlock()
+
+		if inst.RoomManager == s.RoomManager {
+			s.mu.Lock()
+			s.clients[playerID] = client
+			s.mu.Unlock()
+		}
+		if !ok {
+			s.removeClientFromInstance(inst, playerID)
+			return
+		}
+	}
+
+	if err := client.write(ctx, snapshot); err != nil {
+		// The connection never got its first frame; detach (or tidy up if the
+		// player is already gone) exactly as a mid-game drop would.
+		s.handleReadLoopExit(inst, client, playerID)
 		return
 	}
 
@@ -423,7 +466,7 @@ func (s *WebSocketServer) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 			inst.setInput(s, playerID, inputMessageToPlayerInput(input))
 		}
 	}
-	s.removeClientFromInstance(inst, playerID)
+	s.handleReadLoopExit(inst, client, playerID)
 }
 
 // serveEditor owns an editor-only WebSocket. Unlike a game connection it never
@@ -801,12 +844,15 @@ func (s *WebSocketServer) GetOrCreateInstance(worldName string) (*WorldInstance,
 	rm.LoadHighScores()
 
 	inst = &WorldInstance{
-		Name:        worldName,
-		SourceWorld: cloneWorld(world),
-		RoomManager: rm,
-		Clients:     make(map[PlayerID]*webSocketClient),
-		Inputs:      make(map[PlayerID]PlayerInput),
-		Title:       NewTitleSim(world),
+		Name:           worldName,
+		SourceWorld:    cloneWorld(world),
+		RoomManager:    rm,
+		Clients:        make(map[PlayerID]*webSocketClient),
+		Inputs:         make(map[PlayerID]PlayerInput),
+		Title:          NewTitleSim(world),
+		Detached:       make(map[PlayerID]int),
+		ResumeTokens:   make(map[string]PlayerID),
+		TokensByPlayer: make(map[PlayerID]string),
 	}
 	s.Instances[worldName] = inst
 	return inst, nil
@@ -835,12 +881,15 @@ func (s *WebSocketServer) HostGeneratedWorld(name string, world TWorld) error {
 	}
 	rm := NewRoomManager(world)
 	s.Instances[safe] = &WorldInstance{
-		Name:        safe,
-		SourceWorld: cloneWorld(world),
-		RoomManager: rm,
-		Clients:     make(map[PlayerID]*webSocketClient),
-		Inputs:      make(map[PlayerID]PlayerInput),
-		Title:       NewTitleSim(world),
+		Name:           safe,
+		SourceWorld:    cloneWorld(world),
+		RoomManager:    rm,
+		Clients:        make(map[PlayerID]*webSocketClient),
+		Inputs:         make(map[PlayerID]PlayerInput),
+		Title:          NewTitleSim(world),
+		Detached:       make(map[PlayerID]int),
+		ResumeTokens:   make(map[string]PlayerID),
+		TokensByPlayer: make(map[PlayerID]string),
 	}
 	return nil
 }
@@ -1024,6 +1073,178 @@ func (inst *WorldInstance) setInput(s *WebSocketServer, playerID PlayerID, input
 	}
 }
 
+// mintResumeTokenLocked returns a resume token for playerID, reusing the
+// existing one if the player already has it (an idempotent re-join keeps the
+// same token). Caller holds inst.mu.
+func (inst *WorldInstance) mintResumeTokenLocked(playerID PlayerID) string {
+	if inst.ResumeTokens == nil {
+		inst.ResumeTokens = make(map[string]PlayerID)
+	}
+	if inst.TokensByPlayer == nil {
+		inst.TokensByPlayer = make(map[PlayerID]string)
+	}
+	if token, ok := inst.TokensByPlayer[playerID]; ok {
+		return token
+	}
+	var buf [16]byte
+	if _, err := rand.Read(buf[:]); err != nil {
+		// crypto/rand should never fail on a supported platform. If it somehow
+		// does, a zero token is still a valid (if predictable) session key —
+		// resume is best-effort and never a security boundary.
+		log.Printf("zztgo: resume token entropy unavailable: %v", err)
+	}
+	token := hex.EncodeToString(buf[:])
+	inst.ResumeTokens[token] = playerID
+	inst.TokensByPlayer[playerID] = token
+	return token
+}
+
+// deleteResumeTokenLocked drops a player's resume token from both indexes.
+// Caller holds inst.mu.
+func (inst *WorldInstance) deleteResumeTokenLocked(playerID PlayerID) {
+	if token, ok := inst.TokensByPlayer[playerID]; ok {
+		delete(inst.ResumeTokens, token)
+		delete(inst.TokensByPlayer, playerID)
+	}
+}
+
+// tryResume reattaches client to the player named by token, if any. On success
+// it returns the reclaimed PlayerID and a fresh full snapshot (with the same
+// token echoed back). An unknown or stale token returns ok=false, and the caller
+// falls through to a normal fresh join.
+//
+// Newest-wins: if the token's player still has a live client, that socket is
+// displaced — the new client takes its place and the old connection is closed.
+func (s *WebSocketServer) tryResume(inst *WorldInstance, client *webSocketClient, token string) (PlayerID, SnapshotMessage, bool) {
+	inst.mu.Lock()
+	playerID, ok := inst.ResumeTokens[token]
+	if !ok {
+		inst.mu.Unlock()
+		return 0, SnapshotMessage{}, false
+	}
+	// The token outlived its player (quit/expired before the client came back):
+	// clean it up and let the caller join fresh.
+	if inst.RoomManager.players[playerID] == nil {
+		inst.deleteResumeTokenLocked(playerID)
+		delete(inst.Detached, playerID)
+		inst.mu.Unlock()
+		return 0, SnapshotMessage{}, false
+	}
+
+	old := inst.Clients[playerID]
+	delete(inst.Detached, playerID)
+	client.playerID = playerID
+	inst.Clients[playerID] = client
+	// A resuming player's queued per-player events are stale; the fresh snapshot
+	// below carries the current world state instead.
+	inst.RoomManager.DrainPlayerEvents(playerID)
+	snapshot, snapOK := inst.RoomManager.Snapshot(playerID)
+	if snapOK {
+		snapshot.ResumeToken = token
+		client.boardID = snapshot.BoardID
+	}
+	inst.mu.Unlock()
+
+	if old != nil && old != client {
+		old.conn.Close(websocket.StatusNormalClosure, "resumed on a new connection")
+	}
+	if inst.RoomManager == s.RoomManager {
+		s.mu.Lock()
+		s.clients[playerID] = client
+		s.mu.Unlock()
+	}
+	if !snapOK {
+		// The player existed a moment ago, so this should not happen; treat it as
+		// a failed resume and let the caller join fresh.
+		return 0, SnapshotMessage{}, false
+	}
+	return playerID, snapshot, true
+}
+
+// handleReadLoopExit runs when a game connection's read loop ends. If the player
+// still exists it is detached (its stat lingers for ReconnectGraceTicks so a
+// reconnect can reclaim it) rather than removed. A connection that has already
+// been superseded by a newer one (newest-wins) owns nothing and just returns.
+func (s *WebSocketServer) handleReadLoopExit(inst *WorldInstance, client *webSocketClient, playerID PlayerID) {
+	inst.mu.Lock()
+	if inst.Clients[playerID] != client {
+		// A newer connection took over this player; this stale socket must not
+		// detach it or it would cancel the live attachment.
+		inst.mu.Unlock()
+		return
+	}
+	delete(inst.Clients, playerID)
+	delete(inst.Inputs, playerID)
+	if inst.RoomManager.players[playerID] == nil {
+		// The player already left (confirmed quit or expiry); no grace to grant,
+		// just finish tidying up.
+		inst.deleteResumeTokenLocked(playerID)
+		delete(inst.Detached, playerID)
+		inst.mu.Unlock()
+		s.clearDefaultClient(inst, playerID)
+		return
+	}
+	// Detach: drop queued per-player events (decision 2) and start the countdown.
+	inst.RoomManager.DrainPlayerEvents(playerID)
+	if inst.Detached == nil {
+		inst.Detached = make(map[PlayerID]int)
+	}
+	inst.Detached[playerID] = ReconnectGraceTicks
+	inst.mu.Unlock()
+	s.clearDefaultClient(inst, playerID)
+}
+
+// clearDefaultClient removes a player from the legacy default-instance maps.
+// It is a no-op for any other instance.
+func (s *WebSocketServer) clearDefaultClient(inst *WorldInstance, playerID PlayerID) {
+	if inst.RoomManager != s.RoomManager {
+		return
+	}
+	s.mu.Lock()
+	delete(s.clients, playerID)
+	delete(s.inputs, playerID)
+	s.mu.Unlock()
+}
+
+// expireDetached advances every instance's reconnect-grace countdown by one tick
+// and removes any player whose grace has run out. It runs once per instance per
+// tick from WebSocketServer.Tick, so the room-state mutation of a departing
+// player happens on the tick goroutine (the shape M13.4 wants).
+func (s *WebSocketServer) expireDetached() {
+	s.mu.Lock()
+	instances := make([]*WorldInstance, 0, len(s.Instances))
+	for _, inst := range s.Instances {
+		instances = append(instances, inst)
+	}
+	s.mu.Unlock()
+
+	for _, inst := range instances {
+		inst.expireDetached()
+	}
+}
+
+func (inst *WorldInstance) expireDetached() {
+	inst.mu.Lock()
+	defer inst.mu.Unlock()
+	for playerID, ticks := range inst.Detached {
+		if ticks <= 1 {
+			inst.removeDetachedLocked(playerID)
+			continue
+		}
+		inst.Detached[playerID] = ticks - 1
+	}
+}
+
+// removeDetachedLocked performs the room-side removal of an expired detached
+// player. Caller holds inst.mu. The default instance's s.clients/s.inputs
+// entries were already cleared at detach, so no s.mu work is needed here.
+func (inst *WorldInstance) removeDetachedLocked(playerID PlayerID) {
+	delete(inst.Detached, playerID)
+	inst.deleteResumeTokenLocked(playerID)
+	inst.RoomManager.LeavePlayer(playerID)
+	inst.RoomManager.DiscardPendingScore(playerID)
+}
+
 func (s *WebSocketServer) removeClient(playerID PlayerID) {
 	s.mu.Lock()
 	defer s.mu.Unlock()
@@ -1039,6 +1260,8 @@ func (s *WebSocketServer) removeClientFromInstance(inst *WorldInstance, playerID
 	inst.mu.Lock()
 	delete(inst.Clients, playerID)
 	delete(inst.Inputs, playerID)
+	inst.deleteResumeTokenLocked(playerID)
+	delete(inst.Detached, playerID)
 	inst.RoomManager.LeavePlayer(playerID)
 	inst.RoomManager.DiscardPendingScore(playerID)
 	inst.mu.Unlock()

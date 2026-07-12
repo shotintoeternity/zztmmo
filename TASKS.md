@@ -879,7 +879,7 @@ only: no simulation change, replay fixture unchanged throughout.
   jobs green (engine-race may be red-but-allowed); NOTES.md records any skip
   guards added; `go test ./...` green locally.
 
-- [ ] **M13.2 — Reconnect grace: a dropped WebSocket must not delete the
+- [x] **M13.2 — Reconnect grace: a dropped WebSocket must not delete the
   run.** Today the read loop's exit path calls
   `s.removeClientFromInstance(inst, playerID)` unconditionally
   (`websocket_server.go:426`; also the join-failure paths at `:325` and

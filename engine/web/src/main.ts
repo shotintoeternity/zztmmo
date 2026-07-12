@@ -6,6 +6,13 @@ import { drawTitleSidebar, titleCommand } from "./title";
 import { soundNotesFromProtocol, ZztSound } from "./sound";
 import { generationLines, runDreamGeneration, type GenerationProgress } from "./dream";
 import { drawEditorSidebar, type EditorInspect } from "./editor";
+import {
+  buildJoinMessage,
+  clearResumeToken,
+  loadResumeToken,
+  reconnectDelay,
+  saveResumeToken,
+} from "./resume";
 
 const COLS = 80;
 // The server streams board columns 0..59 only. Columns 60..79 are the sidebar,
@@ -129,6 +136,7 @@ type SnapshotMessage = {
   hud: HudSnapshot;
   screen: ScreenCell[];
   events?: ProtocolEvent[];
+  resumeToken?: string;
 };
 
 type DiffMessage = {
@@ -358,6 +366,10 @@ let seq = 0;
 let lastMask = 0;
 let inputTimer = 0;
 let retryTimer = 0;
+// reconnectAttempt drives the capped backoff (M13.2). It resets to zero the
+// moment a connection is established, so a brief blip retries fast and only a
+// prolonged outage backs off.
+let reconnectAttempt = 0;
 let connected = false;
 let lastMessageKey = "";
 let lastMessageAt = 0;
@@ -553,6 +565,10 @@ function leaveToTitle() {
   window.clearInterval(inputTimer);
   window.clearTimeout(retryTimer);
   connected = false;
+  reconnectAttempt = 0;
+  // An intentional exit ends the run: forget its resume token so pressing Play
+  // again starts a fresh player rather than reclaiming a room we chose to leave.
+  clearResumeToken(window.sessionStorage, worldName);
   chatMessages = [];
   if (ws) {
     ws.close();
@@ -567,6 +583,7 @@ function startPlay() {
   zztSound.setEnabled(true);
   zztSound.resume();
   leavingToTitle = false;
+  reconnectAttempt = 0;
   drawSidebar();
   drawScreen();
   connect();
@@ -797,8 +814,12 @@ function connect() {
 
   socket.addEventListener("open", () => {
     connected = true;
-    // No board: the server picks its configured default (zzt-server -board).
-    socket.send(JSON.stringify({ type: MessageTypeJoin, name: nickname }));
+    reconnectAttempt = 0;
+    // No board: the server picks its configured default (zzt-server -board). A
+    // stored resume token reclaims a dropped run instead of spawning a new
+    // player (M13.2); an unknown/expired token is treated as a fresh join.
+    const token = loadResumeToken(window.sessionStorage, worldName);
+    socket.send(JSON.stringify(buildJoinMessage(MessageTypeJoin, nickname, token)));
     canvas.focus();
     inputTimer = window.setInterval(() => sendInput(currentMask()), 55);
   });
@@ -852,7 +873,11 @@ function disconnect(reason: string) {
   setPaused(false);
   ws = null;
   drawConnectionNotice(reason);
-  retryTimer = window.setTimeout(connect, 2000);
+  // Capped backoff (M13.2): a Wi-Fi blip reconnects quickly and presents the
+  // stored resume token; a prolonged outage backs off toward the cap.
+  const delay = reconnectDelay(reconnectAttempt);
+  reconnectAttempt += 1;
+  retryTimer = window.setTimeout(connect, delay);
 }
 
 // drawConnectionNotice writes the only non-vanilla text this client shows, and
@@ -992,6 +1017,11 @@ function applyEditorProgramText(message: EditorProgramTextMessage) {
 
 function applySnapshot(message: SnapshotMessage) {
   mode = "playing";
+  // The join/resume snapshot carries our resume token; keep it so a later drop
+  // can reclaim this run (M13.2).
+  if (message.resumeToken) {
+    saveResumeToken(window.sessionStorage, worldName, message.resumeToken);
+  }
   playerId = message.you.id;
   myStatId = message.you.statId;
   myX = message.you.x;
