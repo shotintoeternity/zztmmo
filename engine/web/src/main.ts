@@ -40,6 +40,10 @@ const MessageTypeEditorInspect = "editorInspect";
 const MessageTypeEditorSnapshot = "editorSnapshot";
 const MessageTypeEditorEdit = "editorEdit";
 const MessageTypeEditorDiff = "editorDiff";
+const MessageTypeEditorProperty = "editorProperty";
+const MessageTypeEditorProperties = "editorProperties";
+const MessageTypeEditorStat = "editorStat";
+const MessageTypeEditorStatSettings = "editorStatSettings";
 const MessageTypeChat = "chat";
 
 // GameDebugPrompt's PromptString(63, 5, 0x1E, 0x0F, 11, PROMPT_ANY, ...).
@@ -149,10 +153,11 @@ type ChatMessage = {
 };
 
 type EditorSnapshotMessage = {
-  type: typeof MessageTypeEditorSnapshot;
-  boardId: number;
-  screen: ScreenCell[];
-  inspect: EditorInspect;
+	type: typeof MessageTypeEditorSnapshot;
+	boardId: number;
+	screen: ScreenCell[];
+	inspect: EditorInspect;
+	properties: EditorProperties;
 };
 
 type EditorInspectMessage = {
@@ -166,7 +171,36 @@ type EditorDiffMessage = {
   inspect: EditorInspect;
 };
 
-type ServerMessage = SnapshotMessage | DiffMessage | EventMessage | BoardChangeMessage | ChatMessage | EditorSnapshotMessage | EditorInspectMessage | EditorDiffMessage;
+type EditorBoardOption = {
+  id: number;
+  name: string;
+};
+
+type EditorProperties = {
+  boardId: number;
+  boardName: string;
+  worldName: string;
+  maxShots: number;
+  isDark: boolean;
+  neighborBoards: number[];
+  reenterWhenZapped: boolean;
+  timeLimitSec: number;
+  boards: EditorBoardOption[];
+};
+
+type EditorPropertiesMessage = {
+  type: typeof MessageTypeEditorProperties;
+  properties: EditorProperties;
+  screen: ScreenCell[];
+};
+
+type EditorStatSettingsMessage = {
+  type: typeof MessageTypeEditorStatSettings;
+  inspect: EditorInspect;
+  cells: ScreenCell[];
+};
+
+type ServerMessage = SnapshotMessage | DiffMessage | EventMessage | BoardChangeMessage | ChatMessage | EditorSnapshotMessage | EditorInspectMessage | EditorDiffMessage | EditorPropertiesMessage | EditorStatSettingsMessage;
 
 type InputMessage = {
   type: typeof MessageTypeInput;
@@ -324,6 +358,17 @@ let editorInspect: EditorInspect = {
   character: 32,
   color: 0x0f,
   hasStat: false,
+};
+let editorProperties: EditorProperties = {
+  boardId: 0,
+  boardName: "",
+  worldName: "",
+  maxShots: 0,
+  isDark: false,
+  neighborBoards: [0, 0, 0, 0],
+  reenterWhenZapped: false,
+  timeLimitSec: 0,
+  boards: [{ id: 0, name: "None" }],
 };
 let editorBrush = { element: 21, character: 0xdb, color: 0x0e, copied: false };
 let editorDrawing = false;
@@ -801,9 +846,15 @@ function applyMessage(message: ServerMessage) {
     case MessageTypeEditorInspect:
       applyEditorInspect(message);
       break;
-    case MessageTypeEditorDiff:
-      applyEditorDiff(message);
-      break;
+	case MessageTypeEditorDiff:
+	  applyEditorDiff(message);
+	  break;
+	case MessageTypeEditorProperties:
+	  applyEditorProperties(message);
+	  break;
+	case MessageTypeEditorStatSettings:
+	  applyEditorStatSettings(message);
+	  break;
   }
 }
 
@@ -811,6 +862,7 @@ function applyEditorSnapshot(message: EditorSnapshotMessage) {
   mode = "editor";
   editorInspect = message.inspect;
   editorCursor = { x: message.inspect.x, y: message.inspect.y };
+	  editorProperties = message.properties;
   replaceCells(message.screen);
   drawEditorSidebar(writeText, editorInspect, editorBrush, editorDrawing);
   paintOverlay();
@@ -826,6 +878,23 @@ function applyEditorInspect(message: EditorInspectMessage) {
 }
 
 function applyEditorDiff(message: EditorDiffMessage) {
+  for (const cell of message.cells) setBoardCell(cell);
+  editorInspect = message.inspect;
+  editorCursor = { x: message.inspect.x, y: message.inspect.y };
+  drawEditorSidebar(writeText, editorInspect, editorBrush, editorDrawing);
+  paintOverlay();
+  drawScreen();
+}
+
+function applyEditorProperties(message: EditorPropertiesMessage) {
+  editorProperties = message.properties;
+  replaceCells(message.screen);
+  drawEditorSidebar(writeText, editorInspect, editorBrush, editorDrawing);
+  paintOverlay();
+  drawScreen();
+}
+
+function applyEditorStatSettings(message: EditorStatSettingsMessage) {
   for (const cell of message.cells) setBoardCell(cell);
   editorInspect = message.inspect;
   editorCursor = { x: message.inspect.x, y: message.inspect.y };
@@ -1124,8 +1193,9 @@ function openEntry(
   width: number,
   charset: "any" | "alphanum",
   onSubmit: (text: string | null) => void,
+  buffer = "",
 ) {
-  openModal({ kind: "entry", label, suffix, width, buffer: "", charset, onSubmit });
+  openModal({ kind: "entry", label, suffix, width, buffer, charset, onSubmit });
 }
 
 function openPopupEntry(
@@ -1589,8 +1659,16 @@ function handleEditorKey(event: KeyboardEvent) {
       event.preventDefault();
       sendEditorEdit("fill");
       return;
+    case "KeyI":
+      event.preventDefault();
+      openEditorBoardInfo();
+      return;
     case "Enter":
       event.preventDefault();
+      if (editorInspect.hasStat) {
+        openEditorStatSettings(editorInspect);
+        return;
+      }
       editorBrush = {
         element: editorInspect.elementId,
         character: editorInspect.character,
@@ -1646,6 +1724,177 @@ function handleEditorKey(event: KeyboardEvent) {
   drawScreen();
   sendEditorInspect();
   if (editorDrawing) sendEditorEdit("place");
+}
+
+function editorBool(value: boolean): string {
+  return value ? "Yes" : "No";
+}
+
+function editorBoardName(id: number): string {
+  return editorProperties.boards.find((board) => board.id === id)?.name ?? "None";
+}
+
+// Board Information is EditorEditBoardInfo on top of the M4.1 text-window
+// layer. Every selection turns into one authoritative editorProperty operation;
+// the session, not this browser, validates ranges and persists BoardClose.
+function openEditorBoardInfo() {
+  const p = editorProperties;
+  const choices = [
+    { action: "boardTitle", label: `Title: ${p.boardName || "Untitled"}` },
+    { action: "maxShots", label: `Can fire: ${p.maxShots} shots.` },
+    { action: "dark", label: `Board is dark: ${editorBool(p.isDark)}` },
+    { action: "exit0", label: `Board \u0018: ${editorBoardName(p.neighborBoards[0] ?? 0)}` },
+    { action: "exit1", label: `Board \u0019: ${editorBoardName(p.neighborBoards[1] ?? 0)}` },
+    { action: "exit2", label: `Board \u001b: ${editorBoardName(p.neighborBoards[2] ?? 0)}` },
+    { action: "exit3", label: `Board \u001a: ${editorBoardName(p.neighborBoards[3] ?? 0)}` },
+    { action: "reenter", label: `Re-enter when zapped: ${editorBool(p.reenterWhenZapped)}` },
+    { action: "timeLimit", label: `Time limit, 0=None: ${p.timeLimitSec} sec.` },
+    { action: "worldName", label: `World name: ${p.worldName || "Untitled"}` },
+  ];
+  const actions = new Map(choices.map((choice) => [choice.label, choice.action]));
+  openSelectList("Board Information", [...choices.map((choice) => choice.label), "Quit!"], (choice) => {
+    const action = actions.get(choice);
+    switch (action) {
+      case "boardTitle":
+        openEntry("New title for board:", "", 20, "any", (text) => {
+          if (text !== null) sendEditorProperty("boardTitle", { text });
+        }, p.boardName);
+        break;
+      case "worldName":
+        openEntry("World name:", "", 20, "any", (text) => {
+          if (text !== null) sendEditorProperty("worldName", { text });
+        }, p.worldName);
+        break;
+      case "maxShots":
+        openEditorNumber("Maximum shots?", p.maxShots, 255, "maxShots");
+        break;
+      case "dark":
+        sendEditorProperty("dark", { bool: !p.isDark });
+        break;
+      case "reenter":
+        sendEditorProperty("reenter", { bool: !p.reenterWhenZapped });
+        break;
+      case "timeLimit":
+        openEditorNumber("Time limit?", p.timeLimitSec, 32767, "timeLimit");
+        break;
+      case "exit0":
+      case "exit1":
+      case "exit2":
+      case "exit3":
+        openEditorExitPicker(Number(action.slice(-1)));
+        break;
+    }
+  });
+}
+
+function openEditorNumber(label: string, current: number, maximum: number, field: "maxShots" | "timeLimit") {
+  openEntry(label, field === "timeLimit" ? " Sec" : "", String(maximum).length, "any", (text) => {
+    if (text === null || !/^\d+$/.test(text)) return;
+    const value = Number(text);
+    if (value <= maximum) sendEditorProperty(field, { value });
+  }, String(current));
+}
+
+function openEditorExitPicker(exit: number) {
+  const entries = editorProperties.boards.map((board) => `${board.id}: ${board.name}`);
+  openSelectList(`Select Board ${"\u0018\u0019\u001b\u001a"[exit] ?? ""}`, entries, (entry) => {
+    const target = Number(entry.slice(0, entry.indexOf(":")));
+    if (Number.isInteger(target)) sendEditorProperty("exit", { exit, value: target });
+  });
+}
+
+function statDirection(stepX: number, stepY: number): number {
+  if (stepY === -1) return 0;
+  if (stepY === 1) return 1;
+  if (stepX === -1) return 2;
+  return 3;
+}
+
+function openEditorStatSlider(title: string, field: "p1" | "p2") {
+  const values = Array.from({ length: 9 }, (_, index) => String(index));
+  openSelectList(title, values, (entry) => sendEditorStat(field, Number(entry)));
+}
+
+// EditorEditStatSettings follows ElementDefs rather than a browser-maintained
+// element table. This keeps the UI in step with the engine's Param*Name
+// meanings and makes the server the authority for every stat mutation.
+function openEditorStatSettings(inspect: EditorInspect) {
+  if (!inspect.hasStat || inspect.statId === undefined) return;
+  const choices: { action: string; label: string }[] = [];
+  const p1 = inspect.p1 ?? 0;
+  const p2 = inspect.p2 ?? 0;
+  if (inspect.param1Name) {
+    const value = inspect.paramTextName ? String.fromCharCode(p1) : String(p1);
+    choices.push({ action: "p1", label: `${inspect.param1Name} ${value}` });
+  }
+  if (inspect.paramTextName) {
+    // Program editing owns object Data/DataLen and intentionally begins in M5.4.
+    choices.push({ action: "program", label: `${inspect.paramTextName} (M5.4)` });
+  }
+  if (inspect.param2Name) choices.push({ action: "p2", label: `${inspect.param2Name} ${p2 & 0x7f}` });
+  if (inspect.paramBulletTypeName) choices.push({ action: "bulletType", label: `${inspect.paramBulletTypeName} ${(p2 & 0x80) === 0 ? "Bullets" : "Stars"}` });
+  if (inspect.paramDirName) {
+    const direction = ["North", "South", "West", "East"][statDirection(inspect.stepX ?? 0, inspect.stepY ?? 0)] ?? "East";
+    choices.push({ action: "direction", label: `${inspect.paramDirName} ${direction}` });
+  }
+  if (inspect.paramBoardName) choices.push({ action: "p3", label: `${inspect.paramBoardName} ${editorBoardName(inspect.p3 ?? 0)}` });
+  choices.push({ action: "cycle", label: `Cycle: ${inspect.cycle ?? 0}` });
+  const actions = new Map(choices.map((choice) => [choice.label, choice.action]));
+  openSelectList(`${inspect.element} settings`, [...choices.map((choice) => choice.label), "Quit!"], (entry) => {
+    const action = actions.get(entry);
+    switch (action) {
+      case "p1":
+        if (inspect.paramTextName) {
+          openEntry(inspect.param1Name ?? "Character?", "", 1, "any", (text) => {
+            if (text) sendEditorStat("p1", text.charCodeAt(0) & 0xff);
+          }, String.fromCharCode(p1));
+        } else {
+          openEditorStatSlider(inspect.param1Name ?? "Parameter", "p1");
+        }
+        break;
+      case "p2":
+        openEditorStatSlider(inspect.param2Name ?? "Parameter", "p2");
+        break;
+      case "bulletType":
+        openSelectList(inspect.paramBulletTypeName ?? "Firing type?", ["Bullets", "Stars"], (value) => sendEditorStat("bulletType", value === "Stars" ? 1 : 0));
+        break;
+      case "direction":
+        openSelectList(inspect.paramDirName ?? "Direction", ["North", "South", "West", "East"], (value) => sendEditorStat("direction", ["North", "South", "West", "East"].indexOf(value)));
+        break;
+      case "p3":
+        openEditorStatBoardPicker(inspect.paramBoardName ?? "Board");
+        break;
+      case "cycle":
+        openEditorStatCycle(inspect.cycle ?? 0);
+        break;
+    }
+  });
+}
+
+function openEditorStatBoardPicker(title: string) {
+  const entries = editorProperties.boards.map((board) => `${board.id}: ${board.name}`);
+  openSelectList(title, entries, (entry) => {
+    const value = Number(entry.slice(0, entry.indexOf(":")));
+    if (Number.isInteger(value)) sendEditorStat("p3", value);
+  });
+}
+
+function openEditorStatCycle(current: number) {
+  openEntry("Cycle:", "", 5, "any", (text) => {
+    if (text === null || !/^\d+$/.test(text)) return;
+    const value = Number(text);
+    if (value <= 32767) sendEditorStat("cycle", value);
+  }, String(current));
+}
+
+function sendEditorStat(field: string, value: number) {
+  if (!connected || !ws || ws.readyState !== WebSocket.OPEN || !editorInspect.hasStat || editorInspect.statId === undefined) return;
+  ws.send(JSON.stringify({ type: MessageTypeEditorStat, statId: editorInspect.statId, field, value }));
+}
+
+function sendEditorProperty(field: string, values: { text?: string; value?: number; bool?: boolean; exit?: number }) {
+  if (!connected || !ws || ws.readyState !== WebSocket.OPEN) return;
+  ws.send(JSON.stringify({ type: MessageTypeEditorProperty, field, ...values }));
 }
 
 function eventCell(event: MouseEvent): { x: number; y: number } | null {

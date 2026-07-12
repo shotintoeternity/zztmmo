@@ -78,10 +78,11 @@ func (s *EditorSession) Snapshot(member *webSocketClient, x, y int16) (EditorSna
 	var snapshot EditorSnapshotMessage
 	err := s.Apply(member, func(e *Engine) {
 		snapshot = EditorSnapshotMessage{
-			Type:    MessageTypeEditorSnapshot,
-			BoardID: e.World.Info.CurrentBoard,
-			Screen:  screenCells(e),
-			Inspect: editorTileInspect(e, x, y),
+			Type:       MessageTypeEditorSnapshot,
+			BoardID:    e.World.Info.CurrentBoard,
+			Screen:     screenCells(e),
+			Inspect:    editorTileInspect(e, x, y),
+			Properties: editorProperties(e),
 		}
 		// The full frame supersedes all setup writes. Later edits can therefore
 		// return just their dirty cells.
@@ -205,6 +206,175 @@ func (s *EditorSession) Inspect(member *webSocketClient, x, y int16) (EditorInsp
 	return reply, err
 }
 
+// Properties returns the currently-open board's editable metadata. This is
+// read through Apply even though it does not mutate: one serialized boundary
+// makes M10's eventual multi-editor session safe by construction.
+func (s *EditorSession) Properties(member *webSocketClient) (EditorPropertiesMessage, error) {
+	var reply EditorPropertiesMessage
+	err := s.Apply(member, func(e *Engine) {
+		reply = EditorPropertiesMessage{
+			Type:       MessageTypeEditorProperties,
+			Properties: editorProperties(e),
+			Screen:     screenCells(e),
+		}
+	})
+	return reply, err
+}
+
+// SetProperty is the sole mutation path for Board Information and world-name
+// dialogs. BoardClose is intentional: editor sessions retain their editable
+// world as serialized board data, just like vanilla's editor does between
+// BoardOpen calls.
+func (s *EditorSession) SetProperty(member *webSocketClient, edit EditorPropertyMessage) (EditorPropertiesMessage, error) {
+	var reply EditorPropertiesMessage
+	err := s.Apply(member, func(e *Engine) {
+		switch edit.Field {
+		case "boardTitle":
+			e.Board.Name = editorString(edit.Text, SizeOfBoardName-1)
+		case "worldName":
+			e.World.Info.Name = editorString(edit.Text, 20)
+		case "maxShots":
+			if edit.Value < 0 || edit.Value > 255 {
+				return
+			}
+			e.Board.Info.MaxShots = byte(edit.Value)
+		case "dark":
+			e.Board.Info.IsDark = edit.Bool
+		case "exit":
+			if edit.Exit < 0 || edit.Exit >= int16(len(e.Board.Info.NeighborBoards)) || edit.Value < 0 || edit.Value > e.World.BoardCount {
+				return
+			}
+			e.Board.Info.NeighborBoards[edit.Exit] = byte(edit.Value)
+		case "reenter":
+			e.Board.Info.ReenterWhenZapped = edit.Bool
+		case "timeLimit":
+			if edit.Value < 0 {
+				return
+			}
+			e.Board.Info.TimeLimitSec = edit.Value
+		default:
+			return
+		}
+
+		e.BoardClose()
+		e.TransitionDrawToBoard()
+		reply = EditorPropertiesMessage{
+			Type:       MessageTypeEditorProperties,
+			Properties: editorProperties(e),
+			Screen:     screenCells(e),
+		}
+		e.DrainScreenDirty()
+	})
+	return reply, err
+}
+
+// SetStat changes one of EditorEditStat's parameters. It does not accept
+// follower/leader fields: vanilla's stat dialog leaves centipede chains alone.
+// Likewise it never reads or writes object Data/DataLen, so an object's bound
+// program remains bound until M5.4 implements the program editor.
+func (s *EditorSession) SetStat(member *webSocketClient, edit EditorStatMessage) (EditorStatSettingsMessage, error) {
+	var reply EditorStatSettingsMessage
+	err := s.Apply(member, func(e *Engine) {
+		if edit.StatID < 0 || edit.StatID > e.Board.StatCount {
+			return
+		}
+		stat := &e.Board.Stats[edit.StatID]
+		tile := e.Board.Tiles[stat.X][stat.Y]
+		element := tile.Element
+		def := ElementDefs[element]
+		changed := false
+
+		switch edit.Field {
+		case "p1":
+			if def.Param1Name == "" || edit.Value < 0 || edit.Value > 255 || (def.ParamTextName == "" && edit.Value > 8) {
+				return
+			}
+			stat.P1 = byte(edit.Value)
+			e.World.EditorStatSettings[element].P1 = stat.P1
+			changed = true
+		case "p2":
+			if def.Param2Name == "" || edit.Value < 0 || edit.Value > 8 {
+				return
+			}
+			stat.P2 = stat.P2&0x80 | byte(edit.Value)
+			e.World.EditorStatSettings[element].P2 = stat.P2
+			changed = true
+		case "bulletType":
+			if def.ParamBulletTypeName == "" || edit.Value < 0 || edit.Value > 1 {
+				return
+			}
+			stat.P2 = stat.P2&0x7f | byte(edit.Value<<7)
+			e.World.EditorStatSettings[element].P2 = stat.P2
+			changed = true
+		case "direction":
+			if def.ParamDirName == "" || edit.Value < 0 || edit.Value > 3 {
+				return
+			}
+			stat.StepX = NeighborDeltaX[edit.Value]
+			stat.StepY = NeighborDeltaY[edit.Value]
+			e.World.EditorStatSettings[element].StepX = stat.StepX
+			e.World.EditorStatSettings[element].StepY = stat.StepY
+			changed = true
+		case "p3":
+			if def.ParamBoardName == "" || edit.Value < 0 || edit.Value > e.World.BoardCount {
+				return
+			}
+			stat.P3 = byte(edit.Value)
+			e.World.EditorStatSettings[element].P3 = stat.P3
+			changed = true
+		case "cycle":
+			if edit.Value < 0 || edit.Value > 32767 {
+				return
+			}
+			stat.Cycle = edit.Value
+			changed = true
+		default:
+			return
+		}
+
+		if changed {
+			e.BoardDrawTile(int16(stat.X), int16(stat.Y))
+			e.BoardClose()
+		}
+		reply = EditorStatSettingsMessage{
+			Type:    MessageTypeEditorStatSettings,
+			Inspect: editorTileInspect(e, int16(stat.X), int16(stat.Y)),
+			Cells:   e.DrainScreenDirty(),
+		}
+	})
+	return reply, err
+}
+
+func editorProperties(e *Engine) EditorProperties {
+	options := make([]EditorBoardOption, 0, e.World.BoardCount+1)
+	options = append(options, EditorBoardOption{ID: 0, Name: "None"})
+	for boardID := int16(1); boardID <= e.World.BoardCount; boardID++ {
+		name := LoadString(e.World.BoardData[boardID][:SizeOfBoardName])
+		if name == "" {
+			name = "Untitled"
+		}
+		options = append(options, EditorBoardOption{ID: boardID, Name: name})
+	}
+	return EditorProperties{
+		BoardID:           e.World.Info.CurrentBoard,
+		BoardName:         e.Board.Name,
+		WorldName:         e.World.Info.Name,
+		MaxShots:          e.Board.Info.MaxShots,
+		IsDark:            e.Board.Info.IsDark,
+		NeighborBoards:    e.Board.Info.NeighborBoards,
+		ReenterWhenZapped: e.Board.Info.ReenterWhenZapped,
+		TimeLimitSec:      e.Board.Info.TimeLimitSec,
+		Boards:            options,
+	}
+}
+
+func editorString(value string, max int) string {
+	if len(value) > max {
+		return value[:max]
+	}
+	return value
+}
+
 func editorTileInspect(e *Engine, x, y int16) EditorTileInspect {
 	if x < 1 {
 		x = 1
@@ -239,6 +409,16 @@ func editorTileInspect(e *Engine, x, y int16) EditorTileInspect {
 		inspect.P1 = stat.P1
 		inspect.P2 = stat.P2
 		inspect.P3 = stat.P3
+		inspect.StepX = stat.StepX
+		inspect.StepY = stat.StepY
+		inspect.Cycle = stat.Cycle
+		def := ElementDefs[tile.Element]
+		inspect.Param1Name = def.Param1Name
+		inspect.Param2Name = def.Param2Name
+		inspect.ParamBulletTypeName = def.ParamBulletTypeName
+		inspect.ParamBoardName = def.ParamBoardName
+		inspect.ParamDirName = def.ParamDirName
+		inspect.ParamTextName = def.ParamTextName
 	}
 	return inspect
 }

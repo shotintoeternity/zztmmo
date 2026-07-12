@@ -36,13 +36,18 @@ func TestProtocolMessageRoundTrips(t *testing.T) {
 	roundTrip(t, EditorEnterMessage{Type: MessageTypeEditorEnter, World: "TOWN"}, &EditorEnterMessage{})
 	roundTrip(t, EditorInspectMessage{Type: MessageTypeEditorInspect, X: 10, Y: 12}, &EditorInspectMessage{})
 	roundTrip(t, EditorEditMessage{Type: MessageTypeEditorEdit, Op: "fill", X: 10, Y: 12, Element: E_SOLID, Color: 0x0e}, &EditorEditMessage{})
+	roundTrip(t, EditorPropertyMessage{Type: MessageTypeEditorProperty, Field: "exit", Exit: 3, Value: 2}, &EditorPropertyMessage{})
+	roundTrip(t, EditorStatMessage{Type: MessageTypeEditorStat, StatID: 3, Field: "bulletType", Value: 1}, &EditorStatMessage{})
 	roundTrip(t, EditorSnapshotMessage{
-		Type:    MessageTypeEditorSnapshot,
-		BoardID: 1,
-		Screen:  []ScreenCell{{X: 0, Y: 0, Ch: 'Z', Color: 0x1F}},
-		Inspect: EditorTileInspect{X: 10, Y: 12, ElementID: E_PASSAGE, Element: "Passage", Color: 0x0e, HasStat: true, StatID: 2, P3: 1},
+		Type:       MessageTypeEditorSnapshot,
+		BoardID:    1,
+		Screen:     []ScreenCell{{X: 0, Y: 0, Ch: 'Z', Color: 0x1F}},
+		Inspect:    EditorTileInspect{X: 10, Y: 12, ElementID: E_PASSAGE, Element: "Passage", Color: 0x0e, HasStat: true, StatID: 2, P3: 1},
+		Properties: EditorProperties{BoardID: 1, BoardName: "Start", WorldName: "TOWN", Boards: []EditorBoardOption{{ID: 0, Name: "None"}, {ID: 1, Name: "Start"}}},
 	}, &EditorSnapshotMessage{})
 	roundTrip(t, EditorDiffMessage{Type: MessageTypeEditorDiff, Cells: []ScreenCell{{X: 1, Y: 2, Ch: '!', Color: 0x0e}}, Inspect: EditorTileInspect{X: 2, Y: 3, ElementID: E_SOLID, Element: "Solid", Color: 0x0e}}, &EditorDiffMessage{})
+	roundTrip(t, EditorPropertiesMessage{Type: MessageTypeEditorProperties, Properties: EditorProperties{BoardID: 1, IsDark: true, TimeLimitSec: 30}, Screen: []ScreenCell{{X: 0, Y: 0, Ch: 'Z', Color: 0x1F}}}, &EditorPropertiesMessage{})
+	roundTrip(t, EditorStatSettingsMessage{Type: MessageTypeEditorStatSettings, Inspect: EditorTileInspect{X: 2, Y: 3, ElementID: E_SPINNING_GUN, HasStat: true, StatID: 2, P2: 0x84, Cycle: 3, Param2Name: "Firing rate?"}, Cells: []ScreenCell{{X: 2, Y: 3, Ch: 'G', Color: 0x0e}}}, &EditorStatSettingsMessage{})
 	roundTrip(t, InputMessage{Type: MessageTypeInput, PlayerID: 7, Seq: 9, DeltaX: 1, Shift: true, Key: KEY_RIGHT, Keymask: InputMaskRight | InputMaskShoot}, &InputMessage{})
 	roundTrip(t, snapshot, &SnapshotMessage{})
 	roundTrip(t, DiffMessage{

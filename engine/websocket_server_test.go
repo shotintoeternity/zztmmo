@@ -142,6 +142,16 @@ func TestWebSocketEditorSessionReadOnly(t *testing.T) {
 	if diff.Type != MessageTypeEditorDiff || len(diff.Cells) == 0 || diff.Inspect.ElementID != E_SOLID {
 		t.Fatalf("editor diff=%+v, want dirty solid placement", diff)
 	}
+	if err := wsjson.Write(ctx, conn, EditorPropertyMessage{Type: MessageTypeEditorProperty, Field: "timeLimit", Value: 42}); err != nil {
+		t.Fatalf("write editor property: %v", err)
+	}
+	var properties EditorPropertiesMessage
+	if err := wsjson.Read(ctx, conn, &properties); err != nil {
+		t.Fatalf("read editor properties: %v", err)
+	}
+	if properties.Type != MessageTypeEditorProperties || properties.Properties.TimeLimitSec != 42 || len(properties.Screen) != BOARD_WIDTH*BOARD_HEIGHT {
+		t.Fatalf("editor properties=%+v, want saved time limit and complete repaint", properties)
+	}
 	if err := wsjson.Write(ctx, conn, struct {
 		Type string `json:"type"`
 	}{Type: MessageTypeEditorExit}); err != nil {

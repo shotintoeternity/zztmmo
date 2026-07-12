@@ -18,6 +18,15 @@ export type EditorInspect = {
   p1?: number;
   p2?: number;
   p3?: number;
+  stepX?: number;
+  stepY?: number;
+  cycle?: number;
+  param1Name?: string;
+  param2Name?: string;
+  paramBulletTypeName?: string;
+  paramBoardName?: string;
+  paramDirName?: string;
+  paramTextName?: string;
 };
 
 export type EditorBrush = {
@@ -58,11 +67,13 @@ export function drawEditorSidebar(write: WriteText, inspect: EditorInspect, brus
   write(61, 11, 0x30, "  Tab  ");
   write(68, 11, 0x1f, drawing ? "Drawing on " : "Drawing off");
   write(61, 13, 0x70, " Enter ");
-  write(68, 13, 0x1f, " Copy tile");
+  write(68, 13, 0x1f, inspect.hasStat ? " Edit stat" : " Copy tile");
   write(61, 14, 0x30, " X ");
   write(65, 14, 0x1f, " Fill");
   write(61, 15, 0x70, " Del ");
   write(67, 15, 0x1f, " Erase");
+  write(61, 16, 0x30, " I ");
+  write(65, 16, 0x1f, " Board info");
   write(61, 17, 0x1e, ` Pos: ${inspect.x},${inspect.y}`.padEnd(19, " "));
   write(61, 18, 0x1f, " " + trim(inspect.element, 17));
   if (inspect.hasStat) {

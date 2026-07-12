@@ -761,7 +761,7 @@ and running early. See NOTES.md.)
   round-trip through `BoardClose`/`BoardOpen` (save the session, reload it);
   protocol-level tests.
 
-- [ ] **M5.2 — Board and world property dialogs.** `EditorEditBoardInfo`
+- [x] **M5.2 — Board and world property dialogs.** `EditorEditBoardInfo`
   (`editor.go:204-288`, `EDITOR.PAS:247-351`): board title, max player shots,
   dark, the four exits (targets picked via `EditorSelectBoard`,
   `editor.go:866`), reenter-when-zapped, time limit; plus the world name.
@@ -1329,6 +1329,3 @@ enables; each is feasible precisely because of a property we already built):**
      which requires a stat (e.g., `E_OBJECT`, `E_SCROLL`, `E_PASSAGE`) has a corresponding
      stat defined at its coordinates in the board's `stats` section. Fail compilation
      with a descriptive error if any orphan stat-backed tiles are found.
-
-
-

@@ -481,6 +481,24 @@ func (s *WebSocketServer) serveEditor(ctx context.Context, conn *websocket.Conn,
 			if err != nil || client.write(ctx, reply) != nil {
 				return
 			}
+		case MessageTypeEditorProperty:
+			var property EditorPropertyMessage
+			if json.Unmarshal(raw, &property) != nil {
+				continue
+			}
+			reply, err := session.SetProperty(client, property)
+			if err != nil || client.write(ctx, reply) != nil {
+				return
+			}
+		case MessageTypeEditorStat:
+			var stat EditorStatMessage
+			if json.Unmarshal(raw, &stat) != nil {
+				continue
+			}
+			reply, err := session.SetStat(client, stat)
+			if err != nil || client.write(ctx, reply) != nil {
+				return
+			}
 		}
 	}
 }

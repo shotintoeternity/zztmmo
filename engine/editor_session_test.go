@@ -193,3 +193,139 @@ func TestEditorSessionPlacementRemovesExistingStat(t *testing.T) {
 		t.Fatal(err)
 	}
 }
+
+func TestEditorSessionStatSettingsPreserveVanillaStatSemantics(t *testing.T) {
+	InitElementDefs()
+	session := NewEditorSession("TEST", testEmptyWorld(t))
+	member := &webSocketClient{}
+	if err := session.Enter(member); err != nil {
+		t.Fatal(err)
+	}
+	defer session.Exit(member)
+
+	var gunID, passageID, objectID int16
+	if err := session.Apply(member, func(e *Engine) {
+		e.AddStat(10, 10, E_SPINNING_GUN, 0x0e, 3, StatTemplateDefault)
+		gunID = e.Board.StatCount
+		e.AddStat(11, 10, E_PASSAGE, 0x0e, 0, StatTemplateDefault)
+		passageID = e.Board.StatCount
+		e.AddStat(12, 10, E_OBJECT, 0x0f, 3, StatTemplateDefault)
+		objectID = e.Board.StatCount
+		object := &e.Board.Stats[objectID]
+		object.Data, object.DataLen = "shared program", -1 // a #BIND-style object
+		e.BoardClose()
+		e.DrainScreenDirty()
+	}); err != nil {
+		t.Fatal(err)
+	}
+
+	set := func(statID int16, field string, value int16) EditorStatSettingsMessage {
+		t.Helper()
+		reply, err := session.SetStat(member, EditorStatMessage{Type: MessageTypeEditorStat, StatID: statID, Field: field, Value: value})
+		if err != nil {
+			t.Fatalf("SetStat(%s): %v", field, err)
+		}
+		if reply.Type != MessageTypeEditorStatSettings {
+			t.Fatalf("SetStat(%s) reply=%+v", field, reply)
+		}
+		return reply
+	}
+
+	gun := set(gunID, "p2", 5)
+	set(gunID, "bulletType", 1)
+	set(gunID, "cycle", 7)
+	passage := set(passageID, "p3", 0)
+	object := set(objectID, "p1", '@')
+	if gun.Inspect.Param2Name != "Firing rate?" || gun.Inspect.ParamBulletTypeName != "Firing type?" {
+		t.Fatalf("spinning gun labels=%+v", gun.Inspect)
+	}
+	if passage.Inspect.ParamBoardName == "" || object.Inspect.Param1Name != "Character?" || object.Inspect.ParamTextName != "Edit Program" {
+		t.Fatalf("element parameter meanings missing: passage=%+v object=%+v", passage.Inspect, object.Inspect)
+	}
+
+	if err := session.Apply(member, func(e *Engine) {
+		gun := e.Board.Stats[gunID]
+		if gun.P2 != 0x85 || gun.Cycle != 7 {
+			t.Fatalf("gun settings=%+v, want firing rate 5, stars, cycle 7", gun)
+		}
+		if got := e.Board.Stats[passageID].P3; got != 0 {
+			t.Fatalf("passage destination=%d, want none", got)
+		}
+		obj := e.Board.Stats[objectID]
+		if obj.P1 != '@' || obj.Data != "shared program" || obj.DataLen != -1 {
+			t.Fatalf("object edit changed bind/program: %+v", obj)
+		}
+		if obj.Follower != -1 || obj.Leader != -1 {
+			t.Fatalf("object edit touched centipede links: %+v", obj)
+		}
+	}); err != nil {
+		t.Fatal(err)
+	}
+}
+
+func TestEditorSessionBoardAndWorldPropertiesRoundTripIntoLiveRoom(t *testing.T) {
+	// Board 2 of this fixture starts at its right edge, so a newly configured
+	// right exit gives the live-room half of this test a real edge crossing.
+	session := NewEditorSession("TEST", testEdgeWorld(t))
+	member := &webSocketClient{}
+	if err := session.Enter(member); err != nil {
+		t.Fatal(err)
+	}
+	defer session.Exit(member)
+
+	set := func(field string, edit EditorPropertyMessage) {
+		t.Helper()
+		edit.Type = MessageTypeEditorProperty
+		edit.Field = field
+		if _, err := session.SetProperty(member, edit); err != nil {
+			t.Fatalf("SetProperty(%s): %v", field, err)
+		}
+	}
+	set("boardTitle", EditorPropertyMessage{Text: "Edited East"})
+	set("worldName", EditorPropertyMessage{Text: "Property Test"})
+	set("maxShots", EditorPropertyMessage{Value: 7})
+	set("dark", EditorPropertyMessage{Bool: true})
+	set("exit", EditorPropertyMessage{Exit: 3, Value: 1})
+	set("reenter", EditorPropertyMessage{Bool: true})
+	set("timeLimit", EditorPropertyMessage{Value: 42})
+
+	var saved TWorld
+	if err := session.Apply(member, func(e *Engine) { saved = cloneWorld(e.World) }); err != nil {
+		t.Fatal(err)
+	}
+	reloaded := NewEditorSession("TEST", saved)
+	if err := reloaded.Enter(member); err != nil {
+		t.Fatal(err)
+	}
+	defer reloaded.Exit(member)
+	properties, err := reloaded.Properties(member)
+	if err != nil {
+		t.Fatal(err)
+	}
+	p := properties.Properties
+	if p.BoardName != "Edited East" || p.WorldName != "Property Test" || p.MaxShots != 7 || !p.IsDark || !p.ReenterWhenZapped || p.TimeLimitSec != 42 || p.NeighborBoards[3] != 1 {
+		t.Fatalf("properties did not survive BoardClose/BoardOpen: %+v", p)
+	}
+
+	// A fresh RoomManager is what M5.6 will host from the saved session world.
+	// These assertions prove the three M5.2 gameplay-relevant settings survive
+	// that boundary: dark and time limit are visible to the room; the exit
+	// actually transfers a player to its selected board.
+	rm := NewRoomManager(saved)
+	playerID := rm.JoinPlayer(2, BOARD_WIDTH, BOARD_HEIGHT/2)
+	snapshot, ok := rm.Snapshot(playerID)
+	if !ok {
+		t.Fatal("live room did not produce a snapshot")
+	}
+	if snapshot.HUD.TimeLimitSec != 42 {
+		t.Fatalf("live HUD time limit=%d, want 42", snapshot.HUD.TimeLimitSec)
+	}
+	room, ok := rm.Room(2)
+	if !ok || !room.Engine.Board.Info.IsDark {
+		t.Fatal("saved dark board did not take effect in live room")
+	}
+	rm.StepDiffs(map[PlayerID]PlayerInput{playerID: {DeltaX: 1}})
+	if got := rm.players[playerID].boardID; got != 1 {
+		t.Fatalf("edited right exit transferred to board %d, want 1", got)
+	}
+}

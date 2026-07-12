@@ -6,23 +6,27 @@ import (
 )
 
 const (
-	MessageTypeJoin           = "join"
-	MessageTypeInput          = "input"
-	MessageTypeSnapshot       = "snapshot"
-	MessageTypeDiff           = "diff"
-	MessageTypeEvent          = "event"
-	MessageTypeBoardChange    = "boardChange"
-	MessageTypeDebugCommand   = "debugCommand"
-	MessageTypeScrollReply    = "scrollReply"
-	MessageTypeQuitReply      = "quitReply"
-	MessageTypeHighScoreName  = "highScoreName"
-	MessageTypeSaveFilename   = "saveFilename"
-	MessageTypeEditorEnter    = "editorEnter"
-	MessageTypeEditorExit     = "editorExit"
-	MessageTypeEditorInspect  = "editorInspect"
-	MessageTypeEditorSnapshot = "editorSnapshot"
-	MessageTypeEditorEdit     = "editorEdit"
-	MessageTypeEditorDiff     = "editorDiff"
+	MessageTypeJoin               = "join"
+	MessageTypeInput              = "input"
+	MessageTypeSnapshot           = "snapshot"
+	MessageTypeDiff               = "diff"
+	MessageTypeEvent              = "event"
+	MessageTypeBoardChange        = "boardChange"
+	MessageTypeDebugCommand       = "debugCommand"
+	MessageTypeScrollReply        = "scrollReply"
+	MessageTypeQuitReply          = "quitReply"
+	MessageTypeHighScoreName      = "highScoreName"
+	MessageTypeSaveFilename       = "saveFilename"
+	MessageTypeEditorEnter        = "editorEnter"
+	MessageTypeEditorExit         = "editorExit"
+	MessageTypeEditorInspect      = "editorInspect"
+	MessageTypeEditorSnapshot     = "editorSnapshot"
+	MessageTypeEditorEdit         = "editorEdit"
+	MessageTypeEditorDiff         = "editorDiff"
+	MessageTypeEditorProperty     = "editorProperty"
+	MessageTypeEditorProperties   = "editorProperties"
+	MessageTypeEditorStat         = "editorStat"
+	MessageTypeEditorStatSettings = "editorStatSettings"
 )
 
 // HelpDir is where HelpFileLines looks for .HLP files. The terminal client
@@ -93,27 +97,37 @@ type EditorInspectMessage struct {
 }
 
 type EditorTileInspect struct {
-	X         int16  `json:"x"`
-	Y         int16  `json:"y"`
-	ElementID byte   `json:"elementId"`
-	Element   string `json:"element"`
-	Character byte   `json:"character"`
-	Color     byte   `json:"color"`
-	HasStat   bool   `json:"hasStat"`
-	StatID    int16  `json:"statId,omitempty"`
-	P1        byte   `json:"p1,omitempty"`
-	P2        byte   `json:"p2,omitempty"`
-	P3        byte   `json:"p3,omitempty"`
+	X                   int16  `json:"x"`
+	Y                   int16  `json:"y"`
+	ElementID           byte   `json:"elementId"`
+	Element             string `json:"element"`
+	Character           byte   `json:"character"`
+	Color               byte   `json:"color"`
+	HasStat             bool   `json:"hasStat"`
+	StatID              int16  `json:"statId,omitempty"`
+	P1                  byte   `json:"p1,omitempty"`
+	P2                  byte   `json:"p2,omitempty"`
+	P3                  byte   `json:"p3,omitempty"`
+	StepX               int16  `json:"stepX,omitempty"`
+	StepY               int16  `json:"stepY,omitempty"`
+	Cycle               int16  `json:"cycle,omitempty"`
+	Param1Name          string `json:"param1Name,omitempty"`
+	Param2Name          string `json:"param2Name,omitempty"`
+	ParamBulletTypeName string `json:"paramBulletTypeName,omitempty"`
+	ParamBoardName      string `json:"paramBoardName,omitempty"`
+	ParamDirName        string `json:"paramDirName,omitempty"`
+	ParamTextName       string `json:"paramTextName,omitempty"`
 }
 
 // EditorSnapshotMessage intentionally uses ScreenCell, the same full-frame
 // board representation as SnapshotMessage. It has no player/HUD because an
 // editor session is not a room and never simulates.
 type EditorSnapshotMessage struct {
-	Type    string            `json:"type"`
-	BoardID int16             `json:"boardId"`
-	Screen  []ScreenCell      `json:"screen"`
-	Inspect EditorTileInspect `json:"inspect"`
+	Type       string            `json:"type"`
+	BoardID    int16             `json:"boardId"`
+	Screen     []ScreenCell      `json:"screen"`
+	Inspect    EditorTileInspect `json:"inspect"`
+	Properties EditorProperties  `json:"properties"`
 }
 
 // EditorEditMessage is one browser editor operation. Selection and cursor
@@ -136,6 +150,69 @@ type EditorDiffMessage struct {
 	Type    string            `json:"type"`
 	Cells   []ScreenCell      `json:"cells"`
 	Inspect EditorTileInspect `json:"inspect"`
+}
+
+// EditorBoardOption is one legal target for a board edge. Board zero is the
+// vanilla "None" choice; M5.5 will add the editor's "Add new board" choice.
+type EditorBoardOption struct {
+	ID   int16  `json:"id"`
+	Name string `json:"name"`
+}
+
+// EditorProperties is the data rendered by the editor's Board Information
+// dialog. It deliberately carries values, not presentation strings, so the
+// browser can use the same dialog for future collaborative-edit leases.
+type EditorProperties struct {
+	BoardID           int16               `json:"boardId"`
+	BoardName         string              `json:"boardName"`
+	WorldName         string              `json:"worldName"`
+	MaxShots          byte                `json:"maxShots"`
+	IsDark            bool                `json:"isDark"`
+	NeighborBoards    [4]byte             `json:"neighborBoards"`
+	ReenterWhenZapped bool                `json:"reenterWhenZapped"`
+	TimeLimitSec      int16               `json:"timeLimitSec"`
+	Boards            []EditorBoardOption `json:"boards"`
+}
+
+// EditorPropertyMessage mutates one board/world property. Values are
+// validated by EditorSession: browser controls are not an authority boundary.
+// Field is one of boardTitle, worldName, maxShots, dark, exit, reenter, or
+// timeLimit. Exit selects NeighborBoards[Exit], and Value is the target board.
+type EditorPropertyMessage struct {
+	Type  string `json:"type"`
+	Field string `json:"field"`
+	Text  string `json:"text,omitempty"`
+	Value int16  `json:"value,omitempty"`
+	Bool  bool   `json:"bool,omitempty"`
+	Exit  int16  `json:"exit,omitempty"`
+}
+
+// EditorPropertiesMessage is returned after every property change. Screen is
+// a complete board frame because toggling darkness changes more than a local
+// tile; it also makes each property edit a self-contained browser repaint.
+type EditorPropertiesMessage struct {
+	Type       string           `json:"type"`
+	Properties EditorProperties `json:"properties"`
+	Screen     []ScreenCell     `json:"screen"`
+}
+
+// EditorStatMessage changes one stat setting. The server validates the stat
+// still exists at StatID and that Field is meaningful for its element. Value
+// is p1, the low seven bits of p2, bulletType, p3, direction (0..3), or cycle.
+// Object program data is intentionally outside this message: M5.4 owns it.
+type EditorStatMessage struct {
+	Type   string `json:"type"`
+	StatID int16  `json:"statId"`
+	Field  string `json:"field"`
+	Value  int16  `json:"value"`
+}
+
+// EditorStatSettingsMessage is the authoritative result of a stat change.
+// Cells covers character changes to objects, whose P1 affects rendering.
+type EditorStatSettingsMessage struct {
+	Type    string            `json:"type"`
+	Inspect EditorTileInspect `json:"inspect"`
+	Cells   []ScreenCell      `json:"cells"`
 }
 
 type InputMessage struct {
