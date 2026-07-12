@@ -1470,6 +1470,40 @@ and running early. See NOTES.md.)
   DoD: the label list and warnings render for the vendor object; a send to a
   missing label warns; saving an "invalid" script still succeeds.
 
+- [ ] **M5.8 [ADVISOR] — Full editor feature and UI parity with the original.**
+  M5.0–M5.7 built the browser editor capability by capability; this task closes
+  the remaining gap to the *original* DOS ZZT editor so a veteran author feels
+  no missing surface. Reference is the whole modal editor — `EditorLoop`
+  (`editor.go:39-818`) and `reference/reconstruction-of-zzt/SRC/EDITOR.PAS` —
+  read top to bottom and diff every interaction and every drawn cell against the
+  browser editor; the advisor consult must agree the gap list is complete before
+  coding. Known parity surface to audit (extend as the diff finds more):
+  * **Element menus and category cheatsheets.** The Item/Creature/Terrain
+    selection menus and the F1–F4 element category tables
+    (`EditorDrawSidebar`/`EditorDrawTileAndNeighborsAt`, the menu lines in
+    `EDITOR.PAS:89-186`) — every placeable element reachable by its original
+    keystroke, in the original grouping and order.
+  * **Sidebar/status layout.** The editor sidebar must match the DOS editor
+    cell-for-cell (pattern row, color picker with fg/bg + blink, mode
+    indicators, coordinate/element readout), rendered with CP437 glyphs and DOS
+    colors like the play sidebar (M3.8/M4.0), not a web-styled panel.
+  * **Color selection UI.** The full 16 fg × 8 bg + blink selector and the
+    "P" pattern/plot-mode and draw-mode toggles as vanilla presents them.
+  * **Menu bar / help.** The editor's top menu and in-editor help (`H`) pages,
+    and any keystroke the terminal editor answers that the browser drops
+    (grep `EditorLoop`'s key switch, mirror M4.2's "every row has a test").
+  * **Keyboard parity.** Arrow/shift-arrow paint, Tab draw toggle, Enter
+    copy-tile, Insert/Delete, the `X`/`Y` and gradient helpers, board list
+    navigation — the complete `EditorLoop` vocabulary, routed through the M5.0
+    session apply path (never mutating a ticked room).
+  Faithful port only (CLAUDE.md rules): the editor session stays server-side and
+  never-ticked, the sim is untouched, and no new UI invents behavior the DOS
+  editor lacks. DoD: a documented feature-by-feature parity checklist (this task
+  produces it, e.g. in NOTES.md) with every row implemented or explicitly
+  deferred with a reason; a browser author can build a TOWN-class world using
+  only original-editor muscle memory; protocol-level tests per new keystroke;
+  `go test ./...` and replay green.
+
 ## M11 — Museum of ZZT: search and play anything
 
 Goal: from the browser, search the Museum of ZZT's archive of community
