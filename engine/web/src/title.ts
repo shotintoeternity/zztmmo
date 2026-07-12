@@ -28,6 +28,7 @@ export type TitleAction =
   | "about"
   | "highScores"
   | "dream"
+  | "editor"
   | "none";
 
 /** The subset of KeyboardEvent this module reads, so a test can drive it. */
@@ -47,6 +48,7 @@ const TITLE_CODES: Record<string, TitleAction> = {
   KeyA: "about",
   KeyH: "highScores",
   KeyD: "dream",
+  KeyE: "editor",
 };
 
 /** titleCommand maps a key to a title-menu action, or "none". */
@@ -90,4 +92,6 @@ export function drawTitleSidebar(write: WriteText, worldName: string) {
   write(65, 17, 0x1e, " High Scores");
   write(62, 19, 0x30, " D ");
   write(65, 19, 0x1f, " Dream a world");
+  write(62, 20, 0x70, " E ");
+  write(65, 20, 0x1f, " Board editor");
 }

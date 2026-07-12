@@ -33,6 +33,14 @@ func TestProtocolMessageRoundTrips(t *testing.T) {
 	}
 
 	roundTrip(t, JoinMessage{Type: MessageTypeJoin, Name: "tester", World: "TOWN", Board: 1}, &JoinMessage{})
+	roundTrip(t, EditorEnterMessage{Type: MessageTypeEditorEnter, World: "TOWN"}, &EditorEnterMessage{})
+	roundTrip(t, EditorInspectMessage{Type: MessageTypeEditorInspect, X: 10, Y: 12}, &EditorInspectMessage{})
+	roundTrip(t, EditorSnapshotMessage{
+		Type:    MessageTypeEditorSnapshot,
+		BoardID: 1,
+		Screen:  []ScreenCell{{X: 0, Y: 0, Ch: 'Z', Color: 0x1F}},
+		Inspect: EditorTileInspect{X: 10, Y: 12, Element: "Passage", Color: 0x0e, HasStat: true, StatID: 2, P3: 1},
+	}, &EditorSnapshotMessage{})
 	roundTrip(t, InputMessage{Type: MessageTypeInput, PlayerID: 7, Seq: 9, DeltaX: 1, Shift: true, Key: KEY_RIGHT, Keymask: InputMaskRight | InputMaskShoot}, &InputMessage{})
 	roundTrip(t, snapshot, &SnapshotMessage{})
 	roundTrip(t, DiffMessage{

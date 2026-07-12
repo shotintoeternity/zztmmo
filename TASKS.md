@@ -720,7 +720,7 @@ the sim untouched, replay green.
 forward ahead of M8/M9/M6 by owner priority — creation tools should be up
 and running early. See NOTES.md.)
 
-- [ ] **M5.0 [ADVISOR] — Editor session model and read-only shell.** Decide
+- [x] **M5.0 [ADVISOR] — Editor session model and read-only shell.** Decide
   and build the session model before any editing lands: an editor session is
   a server-side copy of a world (a fresh `WorldCreate` or a loaded `.ZZT`),
   owned by exactly one client, never ticked, and invisible to live rooms —

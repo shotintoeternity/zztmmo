@@ -90,6 +90,55 @@ func TestWebSocketServerJoinInputDiff(t *testing.T) {
 	}
 }
 
+func TestWebSocketEditorSessionReadOnly(t *testing.T) {
+	world := testMultiplayerSmokeWorld(t)
+	world.Info.CurrentBoard = 1
+	server := NewWebSocketServer(world, 1)
+	httpServer := httptest.NewServer(server)
+	defer httpServer.Close()
+
+	ctx, cancel := context.WithCancel(context.Background())
+	defer cancel()
+	wsURL := "ws" + strings.TrimPrefix(httpServer.URL, "http")
+	conn, _, err := websocket.Dial(ctx, wsURL, nil)
+	if err != nil {
+		t.Fatalf("dial editor: %v", err)
+	}
+	defer conn.Close(websocket.StatusNormalClosure, "")
+	conn.SetReadLimit(ServerReadLimit)
+
+	if err := wsjson.Write(ctx, conn, EditorEnterMessage{Type: MessageTypeEditorEnter, World: "TOWN"}); err != nil {
+		t.Fatalf("write editorEnter: %v", err)
+	}
+	var snapshot EditorSnapshotMessage
+	if err := wsjson.Read(ctx, conn, &snapshot); err != nil {
+		t.Fatalf("read editor snapshot: %v", err)
+	}
+	if snapshot.Type != MessageTypeEditorSnapshot || snapshot.BoardID != 1 || len(snapshot.Screen) != BOARD_WIDTH*BOARD_HEIGHT {
+		t.Fatalf("bad editor snapshot: type=%q board=%d cells=%d", snapshot.Type, snapshot.BoardID, len(snapshot.Screen))
+	}
+	// Opening an editor session must not create a room player or a live room.
+	if len(server.RoomManager.players) != 0 || len(server.RoomManager.rooms) != 0 {
+		t.Fatalf("editor joined live simulation: players=%d rooms=%d", len(server.RoomManager.players), len(server.RoomManager.rooms))
+	}
+
+	if err := wsjson.Write(ctx, conn, EditorInspectMessage{Type: MessageTypeEditorInspect, X: 12, Y: 12}); err != nil {
+		t.Fatalf("write editorInspect: %v", err)
+	}
+	var inspect EditorInspectMessage
+	if err := wsjson.Read(ctx, conn, &inspect); err != nil {
+		t.Fatalf("read editor inspect: %v", err)
+	}
+	if inspect.Inspect.Element != "Passage" || !inspect.Inspect.HasStat || inspect.Inspect.P3 != 2 {
+		t.Fatalf("editor inspect=%+v, want passage P3=2", inspect.Inspect)
+	}
+	if err := wsjson.Write(ctx, conn, struct {
+		Type string `json:"type"`
+	}{Type: MessageTypeEditorExit}); err != nil {
+		t.Fatalf("write editorExit: %v", err)
+	}
+}
+
 func TestWebSocketServerBoardEdgeSendsBoardChange(t *testing.T) {
 	world := testEdgeWorld(t)
 	server := NewWebSocketServer(world, 1)

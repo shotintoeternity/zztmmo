@@ -1177,3 +1177,23 @@ tests; this task adds none. `go vet ./...` clean.
 
 
 
+## 2026-07-11 — M5.0 editor session model
+
+The required advisor tool was unavailable in this environment. The user gave
+explicit approval to proceed, matching the documented fallback used for prior
+advisor-tagged tasks.
+
+**Decision:** an `EditorSession` owns a deep-copied pristine `TWorld` and one
+headless, never-ticked `Engine`; it is not a `RoomManager` room. `WorldInstance`
+therefore retains a `SourceWorld` separate from the mutable live-room state.
+Opening `editorEnter{world}` creates this isolated copy, returns an
+`editorSnapshot` using the existing 60x25 `ScreenCell` board frame, and leaves
+the live player/room maps untouched. `editorInspect{x,y}` only reads tile/stat
+data: the cursor itself remains client-local.
+
+The session has a `Members` set (capped at one in M5.0), never an owner field,
+and every session operation crosses its serialized `Apply` boundary. M10 can
+raise the cap and fan out mutation diffs without changing world ownership or
+concurrency semantics. The browser now has a distinct editor sidebar based on
+`EditorDrawSidebar`, with a read-only coordinate/element/color/P1/P2/P3 panel;
+the play HUD is not reused.

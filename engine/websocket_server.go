@@ -33,11 +33,15 @@ type WebSocketServer struct {
 	inputs          map[PlayerID]PlayerInput
 	Instances       map[string]*WorldInstance
 	DefaultInstance *WorldInstance
+	EditorSessions  map[*webSocketClient]*EditorSession
 	ChatDB          ChatDatabase
 }
 
 type WorldInstance struct {
-	Name        string
+	Name string
+	// SourceWorld is the pristine content used for isolated title and editor
+	// copies. RoomManager's frozen world is live state and must not seed edits.
+	SourceWorld TWorld
 	RoomManager *RoomManager
 	Clients     map[PlayerID]*webSocketClient
 	Inputs      map[PlayerID]PlayerInput
@@ -63,20 +67,22 @@ func NewWebSocketServer(world TWorld, defaultBoard int16) *WebSocketServer {
 	}
 	inst := &WorldInstance{
 		Name:        name,
+		SourceWorld: cloneWorld(world),
 		RoomManager: rm,
 		Clients:     make(map[PlayerID]*webSocketClient),
 		Inputs:      make(map[PlayerID]PlayerInput),
 		Title:       NewTitleSim(world),
 	}
 	s := &WebSocketServer{
-		RoomManager:  rm,
-		DefaultBoard: defaultBoard,
-		TickDuration: ServerTickDuration,
-		OriginHosts:  []string{"localhost:*", "127.0.0.1:*"},
-		clients:      make(map[PlayerID]*webSocketClient),
-		inputs:       make(map[PlayerID]PlayerInput),
-		Instances:    make(map[string]*WorldInstance),
-		ChatDB:       NewMemChatDatabase(),
+		RoomManager:    rm,
+		DefaultBoard:   defaultBoard,
+		TickDuration:   ServerTickDuration,
+		OriginHosts:    []string{"localhost:*", "127.0.0.1:*"},
+		clients:        make(map[PlayerID]*webSocketClient),
+		inputs:         make(map[PlayerID]PlayerInput),
+		Instances:      make(map[string]*WorldInstance),
+		EditorSessions: make(map[*webSocketClient]*EditorSession),
+		ChatDB:         NewMemChatDatabase(),
 	}
 	s.DefaultInstance = inst
 	s.Instances[name] = inst
@@ -242,8 +248,29 @@ func (s *WebSocketServer) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 	conn.SetReadLimit(ServerReadLimit)
 
 	ctx := r.Context()
+	var raw json.RawMessage
+	if err := wsjson.Read(ctx, conn, &raw); err != nil {
+		return
+	}
+	var envelope struct {
+		Type string `json:"type"`
+	}
+	if err := json.Unmarshal(raw, &envelope); err != nil {
+		return
+	}
+	if envelope.Type == MessageTypeEditorEnter {
+		var enter EditorEnterMessage
+		if err := json.Unmarshal(raw, &enter); err != nil {
+			return
+		}
+		s.serveEditor(ctx, conn, enter)
+		return
+	}
+	if envelope.Type != MessageTypeJoin {
+		return
+	}
 	var join JoinMessage
-	if err := wsjson.Read(ctx, conn, &join); err != nil {
+	if err := json.Unmarshal(raw, &join); err != nil {
 		return
 	}
 	if join.Board == 0 {
@@ -377,6 +404,76 @@ func (s *WebSocketServer) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 		}
 	}
 	s.removeClientFromInstance(inst, playerID)
+}
+
+// serveEditor owns an editor-only WebSocket. Unlike a game connection it never
+// joins RoomManager, so an editor cannot affect ticks, players, or live state.
+func (s *WebSocketServer) serveEditor(ctx context.Context, conn *websocket.Conn, enter EditorEnterMessage) {
+	worldName := enter.World
+	if worldName == "" {
+		worldName = s.DefaultInstance.Name
+	}
+	safeWorld, err := SanitizeSaveName(worldName)
+	if err != nil {
+		return
+	}
+	inst, err := s.GetOrCreateInstance(safeWorld)
+	if err != nil {
+		return
+	}
+
+	client := &webSocketClient{conn: conn, worldName: safeWorld}
+	inst.mu.Lock()
+	session := NewEditorSession(safeWorld, inst.SourceWorld)
+	inst.mu.Unlock()
+	if err := session.Enter(client); err != nil {
+		return
+	}
+	s.mu.Lock()
+	if s.EditorSessions == nil {
+		s.EditorSessions = make(map[*webSocketClient]*EditorSession)
+	}
+	s.EditorSessions[client] = session
+	s.mu.Unlock()
+	defer func() {
+		session.Exit(client)
+		s.mu.Lock()
+		delete(s.EditorSessions, client)
+		s.mu.Unlock()
+	}()
+
+	// The cursor belongs to the browser. These are only the initial inspection
+	// coordinates sent with its full frame, never session state.
+	snapshot, err := session.Snapshot(client, BOARD_WIDTH/2, BOARD_HEIGHT/2)
+	if err != nil || client.write(ctx, snapshot) != nil {
+		return
+	}
+
+	for {
+		var raw json.RawMessage
+		if err := wsjson.Read(ctx, conn, &raw); err != nil {
+			return
+		}
+		var envelope struct {
+			Type string `json:"type"`
+		}
+		if json.Unmarshal(raw, &envelope) != nil {
+			continue
+		}
+		switch envelope.Type {
+		case MessageTypeEditorExit:
+			return
+		case MessageTypeEditorInspect:
+			var inspect EditorInspectMessage
+			if json.Unmarshal(raw, &inspect) != nil {
+				continue
+			}
+			reply, err := session.Inspect(client, inspect.X, inspect.Y)
+			if err != nil || client.write(ctx, reply) != nil {
+				return
+			}
+		}
+	}
 }
 
 // quitOutcome is what a player sees after confirming the quit prompt: either
@@ -542,6 +639,7 @@ func (s *WebSocketServer) GetOrCreateInstance(worldName string) (*WorldInstance,
 
 	inst = &WorldInstance{
 		Name:        worldName,
+		SourceWorld: cloneWorld(world),
 		RoomManager: rm,
 		Clients:     make(map[PlayerID]*webSocketClient),
 		Inputs:      make(map[PlayerID]PlayerInput),
@@ -575,6 +673,7 @@ func (s *WebSocketServer) HostGeneratedWorld(name string, world TWorld) error {
 	rm := NewRoomManager(world)
 	s.Instances[safe] = &WorldInstance{
 		Name:        safe,
+		SourceWorld: cloneWorld(world),
 		RoomManager: rm,
 		Clients:     make(map[PlayerID]*webSocketClient),
 		Inputs:      make(map[PlayerID]PlayerInput),

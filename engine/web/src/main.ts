@@ -5,6 +5,7 @@ import { commandKey, isHandledKey, isMovementKey, movementMask, rawKey } from ".
 import { drawTitleSidebar, titleCommand } from "./title";
 import { soundNotesFromProtocol, ZztSound } from "./sound";
 import { generationLines, runDreamGeneration, type GenerationProgress } from "./dream";
+import { drawEditorSidebar, type EditorInspect } from "./editor";
 
 const COLS = 80;
 // The server streams board columns 0..59 only. Columns 60..79 are the sidebar,
@@ -33,6 +34,10 @@ const MessageTypeScrollReply = "scrollReply";
 const MessageTypeQuitReply = "quitReply";
 const MessageTypeHighScoreName = "highScoreName";
 const MessageTypeSaveFilename = "saveFilename";
+const MessageTypeEditorEnter = "editorEnter";
+const MessageTypeEditorExit = "editorExit";
+const MessageTypeEditorInspect = "editorInspect";
+const MessageTypeEditorSnapshot = "editorSnapshot";
 const MessageTypeChat = "chat";
 
 // GameDebugPrompt's PromptString(63, 5, 0x1E, 0x0F, 11, PROMPT_ANY, ...).
@@ -141,7 +146,19 @@ type ChatMessage = {
   text: string;
 };
 
-type ServerMessage = SnapshotMessage | DiffMessage | EventMessage | BoardChangeMessage | ChatMessage;
+type EditorSnapshotMessage = {
+  type: typeof MessageTypeEditorSnapshot;
+  boardId: number;
+  screen: ScreenCell[];
+  inspect: EditorInspect;
+};
+
+type EditorInspectMessage = {
+  type: typeof MessageTypeEditorInspect;
+  inspect: EditorInspect;
+};
+
+type ServerMessage = SnapshotMessage | DiffMessage | EventMessage | BoardChangeMessage | ChatMessage | EditorSnapshotMessage | EditorInspectMessage;
 
 type InputMessage = {
   type: typeof MessageTypeInput;
@@ -264,7 +281,7 @@ const zztSound = new ZztSound();
 // — no socket, no player, the monitor sidebar over a static board 0. "playing"
 // is GamePlayLoop: joined to a room, streaming diffs. 'P' enters, quitting
 // leaves.
-type Mode = "title" | "playing";
+type Mode = "title" | "playing" | "editor";
 let mode: Mode = "title";
 let worldName = "Untitled";
 let nickname = "browser";
@@ -290,6 +307,14 @@ let returnToTitleOnClose = false;
 let highScoreTimer = 0;
 let myX = 0;
 let myY = 0;
+let editorCursor = { x: 30, y: 12 };
+let editorInspect: EditorInspect = {
+  x: editorCursor.x,
+  y: editorCursor.y,
+  element: "",
+  color: 0x0f,
+  hasStat: false,
+};
 const overlay = new Map<number, { ch: number; color: number }>();
 const cells: ScreenCell[] = Array.from({ length: COLS * ROWS }, (_, i) => ({
   x: i % COLS,
@@ -385,6 +410,7 @@ async function showTitle() {
   modal = null;
   playerId = 0;
   myStatId = -1;
+  editorCursor = { x: 30, y: 12 };
   zztSound.setEnabled(false);
   setPaused(false);
   pressed.clear();
@@ -439,6 +465,35 @@ function startPlay() {
   drawSidebar();
   drawScreen();
   connect();
+}
+
+// startEditor deliberately opens a different kind of WebSocket. The server
+// receives editorEnter instead of join, creates an isolated EditorSession, and
+// never registers this browser with a RoomManager.
+function startEditor() {
+  closeTitleStream();
+  clearScrolls();
+  zztSound.setEnabled(false);
+  leavingToTitle = false;
+  mode = "editor";
+  editorCursor = { x: 30, y: 12 };
+  editorInspect = { x: 30, y: 12, element: "", color: 0x0f, hasStat: false };
+  drawEditorSidebar(writeText, editorInspect);
+  paintOverlay();
+  drawScreen();
+  connectEditor();
+}
+
+function leaveEditor() {
+  leavingToTitle = true;
+  connected = false;
+  window.clearTimeout(retryTimer);
+  if (ws && ws.readyState === WebSocket.OPEN) {
+    ws.send(JSON.stringify({ type: MessageTypeEditorExit }));
+    ws.close();
+  }
+  ws = null;
+  void showTitle();
 }
 
 // fetchLines backs the title screen's read-only windows (About, High Scores,
@@ -638,6 +693,34 @@ function connect() {
   socket.addEventListener("error", () => disconnect("Connection error"));
 }
 
+function connectEditor() {
+  if (ws && ws.readyState === WebSocket.OPEN) {
+    return;
+  }
+  const socket = new WebSocket(wsURL());
+  ws = socket;
+  socket.addEventListener("open", () => {
+    connected = true;
+    socket.send(JSON.stringify({ type: MessageTypeEditorEnter, world: worldName }));
+    canvas.focus();
+  });
+  socket.addEventListener("message", (event) => {
+    applyMessage(JSON.parse(String(event.data)) as ServerMessage);
+  });
+  socket.addEventListener("close", () => {
+    if (leavingToTitle) {
+      return;
+    }
+    connected = false;
+    ws = null;
+    void showTitle();
+    drawConnectionNotice("Editor disconnected");
+  });
+  socket.addEventListener("error", () => {
+    // close owns the recovery so an error cannot race it into a game reconnect.
+  });
+}
+
 function disconnect(reason: string) {
   // A socket we closed ourselves (quit) is not a lost connection: showTitle has
   // already taken the screen, and reconnecting would silently rejoin the room.
@@ -673,7 +756,7 @@ function applyMessage(message: ServerMessage) {
   // A snapshot is what takes us out of title mode; anything else arriving while
   // we are on (or on our way to) the title screen is in flight from a room we
   // have already left, and must not repaint over the menu.
-  if (message.type !== MessageTypeSnapshot && (leavingToTitle || mode === "title")) {
+  if (message.type !== MessageTypeSnapshot && message.type !== MessageTypeEditorSnapshot && (leavingToTitle || mode === "title")) {
     return;
   }
 
@@ -695,7 +778,31 @@ function applyMessage(message: ServerMessage) {
     case MessageTypeChat:
       handleChatMessage(message);
       break;
+    case MessageTypeEditorSnapshot:
+      applyEditorSnapshot(message);
+      break;
+    case MessageTypeEditorInspect:
+      applyEditorInspect(message);
+      break;
   }
+}
+
+function applyEditorSnapshot(message: EditorSnapshotMessage) {
+  mode = "editor";
+  editorInspect = message.inspect;
+  editorCursor = { x: message.inspect.x, y: message.inspect.y };
+  replaceCells(message.screen);
+  drawEditorSidebar(writeText, editorInspect);
+  paintOverlay();
+  drawScreen();
+}
+
+function applyEditorInspect(message: EditorInspectMessage) {
+  editorInspect = message.inspect;
+  editorCursor = { x: message.inspect.x, y: message.inspect.y };
+  drawEditorSidebar(writeText, editorInspect);
+  paintOverlay();
+  drawScreen();
 }
 
 function applySnapshot(message: SnapshotMessage) {
@@ -889,6 +996,9 @@ function paintOverlay() {
     if (currentChatMessage) {
       writeOverlay(0, 24, 0x1e, currentChatMessage.slice(0, 60).padEnd(60, " "));
     }
+  }
+  if (mode === "editor") {
+    writeOverlay(editorCursor.x - 1, editorCursor.y - 1, 0x1f, "\x1f");
   }
   if (paused) {
     paintPause();
@@ -1300,6 +1410,9 @@ function handleTitleKey(event: KeyboardEvent) {
     case "dream":
       openDreamPrompt();
       break;
+    case "editor":
+      startEditor();
+      break;
     case "restore":
       void showSavedGames();
       break;
@@ -1323,6 +1436,11 @@ function handleKeyDown(event: KeyboardEvent) {
 
   if (mode === "title") {
     handleTitleKey(event);
+    return;
+  }
+
+  if (mode === "editor") {
+    handleEditorKey(event);
     return;
   }
 
@@ -1354,7 +1472,7 @@ function handleKeyDown(event: KeyboardEvent) {
 }
 
 function handleKeyUp(event: KeyboardEvent) {
-  if (modal || mode === "title") {
+  if (modal || mode === "title" || mode === "editor") {
     return;
   }
   const handled = updatePressed(event, false);
@@ -1380,6 +1498,48 @@ function handlePointerDown(event: MouseEvent) {
     stopHeldInput();
     sendKey(COMMAND_SOUND);
   }
+}
+
+function handleEditorKey(event: KeyboardEvent) {
+  let nextX = editorCursor.x;
+  let nextY = editorCursor.y;
+  switch (event.code) {
+    case "Escape":
+    case "KeyQ":
+      event.preventDefault();
+      leaveEditor();
+      return;
+    case "ArrowUp":
+    case "Numpad8":
+      nextY -= 1;
+      break;
+    case "ArrowDown":
+    case "Numpad2":
+      nextY += 1;
+      break;
+    case "ArrowLeft":
+    case "Numpad4":
+      nextX -= 1;
+      break;
+    case "ArrowRight":
+    case "Numpad6":
+      nextX += 1;
+      break;
+    default:
+      return;
+  }
+  event.preventDefault();
+  editorCursor = {
+    x: Math.max(1, Math.min(BOARD_COLS, nextX)),
+    y: Math.max(1, Math.min(ROWS, nextY)),
+  };
+  // Keep the local cursor responsive; the authoritative tile readout follows
+  // in the editorInspect reply.
+  editorInspect = { ...editorInspect, x: editorCursor.x, y: editorCursor.y };
+  drawEditorSidebar(writeText, editorInspect);
+  paintOverlay();
+  drawScreen();
+  sendEditorInspect();
 }
 
 function eventCell(event: MouseEvent): { x: number; y: number } | null {
@@ -1485,4 +1645,17 @@ function sendInput(mask: number, key = 0) {
     input.keymask = 0;
   }
   ws.send(JSON.stringify(input));
+}
+
+// editorInspect is a read request, not an input or a persisted cursor. The
+// browser owns editorCursor; the session only returns the tile's current data.
+function sendEditorInspect() {
+  if (!connected || !ws || ws.readyState !== WebSocket.OPEN || mode !== "editor") {
+    return;
+  }
+  ws.send(JSON.stringify({
+    type: MessageTypeEditorInspect,
+    x: editorCursor.x,
+    y: editorCursor.y,
+  }));
 }

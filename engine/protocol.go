@@ -6,17 +6,21 @@ import (
 )
 
 const (
-	MessageTypeJoin          = "join"
-	MessageTypeInput         = "input"
-	MessageTypeSnapshot      = "snapshot"
-	MessageTypeDiff          = "diff"
-	MessageTypeEvent         = "event"
-	MessageTypeBoardChange   = "boardChange"
-	MessageTypeDebugCommand  = "debugCommand"
-	MessageTypeScrollReply   = "scrollReply"
-	MessageTypeQuitReply     = "quitReply"
-	MessageTypeHighScoreName = "highScoreName"
-	MessageTypeSaveFilename  = "saveFilename"
+	MessageTypeJoin           = "join"
+	MessageTypeInput          = "input"
+	MessageTypeSnapshot       = "snapshot"
+	MessageTypeDiff           = "diff"
+	MessageTypeEvent          = "event"
+	MessageTypeBoardChange    = "boardChange"
+	MessageTypeDebugCommand   = "debugCommand"
+	MessageTypeScrollReply    = "scrollReply"
+	MessageTypeQuitReply      = "quitReply"
+	MessageTypeHighScoreName  = "highScoreName"
+	MessageTypeSaveFilename   = "saveFilename"
+	MessageTypeEditorEnter    = "editorEnter"
+	MessageTypeEditorExit     = "editorExit"
+	MessageTypeEditorInspect  = "editorInspect"
+	MessageTypeEditorSnapshot = "editorSnapshot"
 )
 
 // HelpDir is where HelpFileLines looks for .HLP files. The terminal client
@@ -66,6 +70,46 @@ type JoinMessage struct {
 	Name  string `json:"name"`
 	World string `json:"world,omitempty"`
 	Board int16  `json:"board,omitempty"`
+}
+
+// EditorEnterMessage opens an isolated editing copy of World. It is the first
+// message on an editor WebSocket, instead of JoinMessage, so editor users never
+// become live-room players.
+type EditorEnterMessage struct {
+	Type  string `json:"type"`
+	World string `json:"world"`
+}
+
+// EditorInspectMessage reports a client-local cursor position. The server does
+// not retain that position: it only reads the isolated session to build the
+// sidebar inspection result.
+type EditorInspectMessage struct {
+	Type    string            `json:"type"`
+	X       int16             `json:"x,omitempty"`
+	Y       int16             `json:"y,omitempty"`
+	Inspect EditorTileInspect `json:"inspect,omitempty"`
+}
+
+type EditorTileInspect struct {
+	X       int16  `json:"x"`
+	Y       int16  `json:"y"`
+	Element string `json:"element"`
+	Color   byte   `json:"color"`
+	HasStat bool   `json:"hasStat"`
+	StatID  int16  `json:"statId,omitempty"`
+	P1      byte   `json:"p1,omitempty"`
+	P2      byte   `json:"p2,omitempty"`
+	P3      byte   `json:"p3,omitempty"`
+}
+
+// EditorSnapshotMessage intentionally uses ScreenCell, the same full-frame
+// board representation as SnapshotMessage. It has no player/HUD because an
+// editor session is not a room and never simulates.
+type EditorSnapshotMessage struct {
+	Type    string            `json:"type"`
+	BoardID int16             `json:"boardId"`
+	Screen  []ScreenCell      `json:"screen"`
+	Inspect EditorTileInspect `json:"inspect"`
 }
 
 type InputMessage struct {
