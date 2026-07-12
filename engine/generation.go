@@ -1184,6 +1184,107 @@ func preprocessZWDGrid(zwdText string) string {
 					modifiedLines[spec.lineIdx] = fmt.Sprintf("%sstat at %d,%d element %s%s", indent, alignedX, alignedY, spec.elem, spec.rest)
 				}
 
+				// Any grid char that still lacks a legend entry (and is not the
+				// player or empty char) is prose the LLM drew straight into the
+				// board — the top cause of dream failures. The compiler reports
+				// one undefined char per compile, so with 31 distinct undefined
+				// chars the K=3 repair budget can never converge. Give each one a
+				// legend entry here instead: space -> Empty (walkable blank);
+				// every other byte -> white on-board Text, whose legend color IS
+				// the CP437 char code (the ZZT lettering idiom, the likely intent).
+				// Build the true set of legend keys the way the compiler tokenizes
+				// them (first whitespace token, parsed by parseByteToken). We can't
+				// reuse the legendMap above: it mis-parses keys it cannot split —
+				// notably '=', whose key equals the "=" separator, and any
+				// pre-existing cp437:0xNN entry — which would make this scan treat
+				// them as undefined and inject a duplicate legend key. Scan the
+				// current lines (which already carry the stat block's injected
+				// entries) so stat rep chars are excluded too.
+				legendKeys := make(map[byte]bool)
+				inLeg := false
+				for _, l := range lines {
+					for _, p := range strings.Split(l, "\n") {
+						t := strings.TrimSpace(p)
+						if t == "legend" {
+							inLeg = true
+							continue
+						}
+						if !inLeg {
+							continue
+						}
+						if t == "end" {
+							inLeg = false
+							continue
+						}
+						toks := strings.Fields(t)
+						if len(toks) >= 2 && toks[1] == "=" {
+							if b, err := parseByteToken(toks[0]); err == nil {
+								legendKeys[b] = true
+							}
+						}
+					}
+				}
+
+				var undefinedChars []byte
+				seenUndefined := make(map[byte]bool)
+				for _, row := range gridRows {
+					for i := 0; i < len(row.content); i++ {
+						ch := row.content[i]
+						if ch == playerChar || ch == emptyChar {
+							continue
+						}
+						if legendKeys[ch] {
+							continue
+						}
+						if seenUndefined[ch] {
+							continue
+						}
+						seenUndefined[ch] = true
+						undefinedChars = append(undefinedChars, ch)
+					}
+				}
+				if len(undefinedChars) > 0 {
+					// Find the legend's closing "end" line. The stat-alignment
+					// block above may have already turned that element into a
+					// multiline "entry\n...\nend" string, so match on its LAST
+					// physical line.
+					legendEndIdx := -1
+					inLegend := false
+					for idx, l := range lines {
+						physical := strings.Split(l, "\n")
+						for _, p := range physical {
+							if strings.TrimSpace(p) == "legend" {
+								inLegend = true
+							}
+						}
+						if inLegend && strings.TrimSpace(physical[len(physical)-1]) == "end" {
+							legendEndIdx = idx
+							break
+						}
+					}
+					if legendEndIdx != -1 {
+						indent := ""
+						for _, r := range lines[legendEndIdx] {
+							if r == ' ' || r == '\t' {
+								indent += string(r)
+							} else {
+								break
+							}
+						}
+						var inject strings.Builder
+						for _, ch := range undefinedChars {
+							if ch == ' ' {
+								fmt.Fprintf(&inject, "%s  cp437:0x20 = Empty color 0x00\n", indent)
+								legendMap[ch] = "Empty"
+							} else {
+								fmt.Fprintf(&inject, "%s  cp437:0x%02X = Text-White color 0x%02X\n", indent, ch, ch)
+								legendMap[ch] = "Text-White"
+							}
+						}
+						lines[legendEndIdx] = inject.String() + lines[legendEndIdx]
+					}
+				}
+
 				// Append the normalized rows to out using appropriate indentation
 				for _, row := range gridRows {
 					out = append(out, row.indent+row.content)

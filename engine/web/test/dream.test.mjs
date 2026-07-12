@@ -23,6 +23,16 @@ assert.deepEqual(
   ["Painting board 7 of 12: The Tide Cellar", "Repairing The Tide Cellar: attempt 2 of 3"],
 );
 
+// Fix #A: client-composed progress lines must be clamped to the text window's
+// inner width (TEXT_WINDOW_WIDTH-8 = 42) so a long board name plus the attempt
+// suffix cannot bleed past the window border into the sidebar.
+const longName = generationLines([
+  { stage: "painting", board: "The Everlong Saga of the ZZTers", index: 7, total: 12, attempt: 2, maxAttempts: 3 },
+]);
+assert.equal(longName.length, 1);
+assert.ok(longName[0].length <= 42, `progress line too wide: ${longName[0].length}`);
+assert.ok(longName[0].endsWith("\x85"), "over-width line should be truncated with a CP437 ellipsis");
+
 const successCalls = [];
 const progress = [];
 const successReplies = [

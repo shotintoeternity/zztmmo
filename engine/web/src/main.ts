@@ -695,7 +695,19 @@ function openDreamPrompt() {
 }
 
 function showGenerationProgress(progress: GenerationProgress[]) {
-  openWindow("Dreaming a world", generationLines(progress), true);
+  const lines = generationLines(progress);
+  // Poll updates arrive every 500ms. Re-opening the window each time reset
+  // linePos to 1, snapping the scroll back to the top so later lines could not
+  // be read. If the progress window is already open, update its lines in place
+  // and auto-follow the newest line instead.
+  if (modal && modal.kind === "text" && modal.baseTitle === "Dreaming a world" && lines.length > 0) {
+    modal.state.lines = lines;
+    modal.state.linePos = lines.length;
+    paintOverlay();
+    drawScreen();
+    return;
+  }
+  openWindow("Dreaming a world", lines, true);
 }
 
 async function startDreamGeneration(prompt: string) {

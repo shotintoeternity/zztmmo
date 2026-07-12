@@ -3,6 +3,21 @@
 // the UI supplies rendering and the final join; this module supplies protocol
 // requests, polling, and the ZZT-style status copy.
 
+import { TEXT_WINDOW_WIDTH } from "./textwindow";
+
+// An ordinary text-window line is drawn at column X+4 inside an inner span of
+// TEXT_WINDOW_WIDTH-5 cells, so TEXT_WINDOW_WIDTH-8 chars fit without bleeding
+// past the right border into the sidebar. Progress lines are client-composed
+// (unlike engine scroll lines, which arrive pre-wrapped), so we clamp them here.
+const PROGRESS_LINE_WIDTH = TEXT_WINDOW_WIDTH - 8;
+
+function clampProgressLine(line: string): string {
+  if (line.length <= PROGRESS_LINE_WIDTH) {
+    return line;
+  }
+  return line.slice(0, PROGRESS_LINE_WIDTH - 1) + "\x85"; // CP437 ellipsis
+}
+
 export type GenerationProgress = {
   stage: string;
   board?: string;
@@ -52,7 +67,7 @@ export function generationLines(progress: GenerationProgress[]): string[] {
     if (event.stage === "persisting") return "Saving the new world...";
     return event.detail || event.stage;
   });
-  return lines.slice(-10);
+  return lines.slice(-10).map(clampProgressLine);
 }
 
 /**

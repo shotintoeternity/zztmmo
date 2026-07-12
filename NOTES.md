@@ -1396,3 +1396,53 @@ the code-editor window (`renderProgramAidsPanel`, `modal.ts`). Tests:
 UnknownCommandWarns,ImplicitSelfSendIsValid,KnownCommandsAreQuiet}` and
 `TestEditorSessionProgramAnalysisAndSaveSucceeds`. Replay fixture unchanged
 (analysis is editor-only and never touches the sim).
+
+## M12.11 — Dream-a-world fixes: prose-in-grid tolerance, prompt hardening, progress window (2026-07-11)
+
+Root cause of most Dream failures (reproduced with real `CompileZWD`): the LLM
+draws prose/chat straight into the board grid as literal characters. Every grid
+char needs a legend entry; letters typed as prose are not legend keys. One failed
+board had 31 distinct undefined chars over 147 cells. The compiler reports ONE
+undefined char per compile, and the per-board repair budget is K=3 — so a
+prose-heavy board can never converge and the whole dream fails. Compiler line
+numbers were verified correct; no line-number bug.
+
+Four fixes (all outside the sim — generation is world bytes; replay fixture
+unchanged):
+
+- **Fix #1 — compiler tolerance** (`generation.go` `preprocessZWDGrid`, after the
+  stat-alignment block, before the rows are appended): scan the finalized 25-row
+  grid for any char that is not the player/empty char and not a legend key, and
+  inject a legend entry for each — space → `cp437:0x20 = Empty color 0x00`
+  (walkable blank); every other byte b → `cp437:0xNN = Text-White color 0xNN`,
+  which renders it as white on-board lettering (for Text tiles the legend color IS
+  the CP437 char code; `parseByteToken` accepts `cp437:0xNN` as the key). One
+  compile now absorbs all undefined chars instead of failing one at a time.
+  **Trap found and fixed:** the exclusion set must NOT come from preprocess's own
+  `legendMap`, which is built by `SplitN(line,"=",2)` and therefore silently
+  drops the `=` key (key equals the separator → empty `parts[0]`) and any
+  pre-existing `cp437:` key. Using it re-injected a duplicate `= ` entry and hit
+  the compiler's "duplicate legend key". The scan now derives legend keys by
+  tokenizing each legend line the way the compiler does (first field, then
+  `parseByteToken`), reading the current `lines` so stat-injected keys are
+  excluded too. Regression: `TestPreprocessProseInGridBecomesText`.
+- **Fix #3 — prompt hardening** (`promptkit.go` output contract, strengthening the
+  M12.10 line): every grid char MUST have a legend entry; to show text, map each
+  letter to a `Text-<Color>` element (color = CP437 code) or, preferred, put
+  dialogue in an Object's scroll text — never type prose into the grid.
+- **Fix #A — progress window overflow** (`web/src/dream.ts`): client-composed
+  progress lines (e.g. "Painting board 7 of 12: <long name> (attempt 2 of 3)")
+  bled past the 50-col window into the sidebar. They are now clamped to the
+  window's inner width (`TEXT_WINDOW_WIDTH-8` = 42), truncating with a CP437
+  ellipsis. Engine scroll lines arrive pre-wrapped; these do not, so the client
+  clamps them. Regression added to `web/test/dream.test.mjs`.
+- **Fix #B — progress scroll snap-back** (`web/src/main.ts` `showGenerationProgress`):
+  each 500ms poll re-opened the window with `linePos: 1`, snapping the scroll to
+  the top so later lines couldn't be read. Now, if the "Dreaming a world" text
+  modal is already open, its lines are updated in place and `linePos` auto-follows
+  the newest line, avoiding the reopen (and its `stopHeldInput`).
+
+Verified: `go build ./...`, `go vet ./...`, `go test ./...` green (replay fixture
+unchanged); client `tsc --noEmit`, `npm test`, `npm run build` green. NOTE: the
+background `zzt-serve` on :8090 is still the pre-fix binary — restart it and it
+serves the rebuilt client to see these live.

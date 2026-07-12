@@ -752,3 +752,55 @@ end`
 		t.Fatalf("expected Candidate 2 to compile successfully, got: %v\nPreprocessed source:\n%s", err, preprocessed2)
 	}
 }
+
+// TestPreprocessProseInGridBecomesText is the M12-cleanup Fix #1 regression:
+// the LLM's most common failure is drawing prose straight into the grid, so
+// every letter is an undefined legend key. The compiler reports one per compile,
+// which the K=3 repair budget can never converge on. preprocessZWDGrid must map
+// each undefined grid char to a legend entry (space -> Empty; other -> white
+// on-board Text whose color is the CP437 char code) so the world compiles and
+// the prose renders as lettering.
+func TestPreprocessProseInGridBecomesText(t *testing.T) {
+	init := NewEngine()
+	init.InitElementsGame()
+
+	input := `zwd 1
+world "PROSE"
+
+board "Sign"
+  start player at 1,1
+  grid
+  @
+  ...
+  HI welcome!
+  end
+  legend
+    @ = Player color 0x1F
+    . = Empty color 0x00
+  end
+end`
+
+	data, err := CompileZWD(preprocessZWDGrid(input))
+	if err != nil {
+		t.Fatalf("expected prose-in-grid board to compile after preprocess, got: %v", err)
+	}
+
+	e := NewEngine()
+	e.Headless = true
+	e.VideoInstall()
+	if err := e.worldReadFrom(strings.NewReader(string(data)), false, nil); err != nil {
+		t.Fatalf("load compiled bytes: %v", err)
+	}
+	e.BoardOpen(1)
+
+	// Row 3 is "HI welcome!": H at x=1, I at x=2, then a space at x=3.
+	if got := e.Board.Tiles[1][3]; got.Element != E_TEXT_WHITE || got.Color != 'H' {
+		t.Errorf("(1,3) = element %d color 0x%02X; want E_TEXT_WHITE 'H'", got.Element, got.Color)
+	}
+	if got := e.Board.Tiles[2][3]; got.Element != E_TEXT_WHITE || got.Color != 'I' {
+		t.Errorf("(2,3) = element %d color 0x%02X; want E_TEXT_WHITE 'I'", got.Element, got.Color)
+	}
+	if got := e.Board.Tiles[3][3]; got.Element != E_EMPTY {
+		t.Errorf("(3,3) = element %d; want the space mapped to E_EMPTY", got.Element)
+	}
+}

@@ -711,6 +711,8 @@ protocol is positional, so these sit just after M12.5 and before M5.
 
 - [x] **M12.10 — Prevent LLM from using stat-backed Object elements for static art.** The authoritative ZWD spec and embedded generation prompt now require Objects to be interactive and direct decorative shapes to Text, Solid, Normal, or Fake tiles.
 
+- [x] **M12.11 — Dream-a-world fixes: prose-in-grid tolerance, prompt hardening, progress window.** The top Dream failure was the LLM drawing prose straight into the grid, where every letter is an undefined legend key the compiler rejects one-per-compile (never converging within K=3 repairs). `preprocessZWDGrid` now injects a legend entry for every undefined grid char (space → Empty; else → white on-board Text via `cp437:0xNN`), deriving the exclusion set from a correct legend-key tokenization rather than the lossy `legendMap` (which drops the `=` key and pre-existing `cp437:` keys). The generation prompt was hardened against prose-in-grid. Client: Dream progress lines are clamped to the window inner width, and the progress modal updates in place with `linePos` auto-following instead of reopening each poll (which snapped the scroll to the top). Generation is outside the sim; replay fixture unchanged. See NOTES.md.
+
 ## M5 — Creation and full-featured ZZT tooling
 
 Goal: support the creation features that make ZZT “full ZZT,” not only runtime
