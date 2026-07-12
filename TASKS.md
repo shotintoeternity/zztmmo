@@ -1075,9 +1075,13 @@ the corpus/style work builds on. The specs below are unchanged.)
   through to the LLM path unchanged; `go test ./...` green. Consult the advisor
   on the error-code taxonomy and the bucket boundary before building.
 
-- [ ] **M12.15 [ADVISOR] — Offline "world-style adapter": mine every board of
+- [x] **M12.15 [ADVISOR] — Offline "world-style adapter": mine every board of
   curated worlds into corpus-derived priors + retrieval few-shots (a LoRA we
-  can't train, done as offline RAG).** Owner framing (2026-07-11): we cannot
+  can't train, done as offline RAG).** (Landed via slices a/b/c: curation-first
+  title-screen few-shots, static visual caption sidecars, and deterministic
+  few-shot metadata + retrieval. Slice **d** — mined style priors — DEFERRED
+  2026-07-12 by owner call as optional; retrieval few-shots already cover the
+  prompt. See M12.15d below.) Owner framing (2026-07-11): we cannot
   fine-tune a closed API model, so the offline, no-LLM equivalent of a LoRA is
   *corpus-mined priors + retrieval-augmented few-shots* — everything a LoRA would
   bake into weights, we instead compute deterministically from real worlds and
@@ -1228,7 +1232,12 @@ the corpus/style work builds on. The specs below are unchanged.)
   relevance for lettering/art/gameplay premises, budget enforcement, and the
   no-LLM runtime boundary.
 
-- [ ] **M12.15d [ADVISOR] — Mined style priors (the offline adapter weights).**
+- [ ] **M12.15d [ADVISOR] — Mined style priors (the offline adapter weights)
+  (DEFERRED 2026-07-12 — later; optional/recommended, skip unless the owner
+  asks for it). Owner call: unclear this is needed yet; retrieval few-shots
+  (M12.15c) already cover the generation prompt, and mined priors would only
+  regenerate STYLE.md's quantitative claims from data. Revisit if generation
+  quality plateaus.**
   Mine deterministic compact artifacts from the authorable whole-world corpus:
   palette/tile frequencies and shading pairings, world-architecture/topology
   norms, and OOP command idioms. Version and embed the artifacts, expose them
@@ -1244,7 +1253,7 @@ after the M12 generation batch and before M11 — M14.1 directly de-risks
 M11's multi-world hosting. Every task here must leave the replay fixture
 unchanged: these are ownership/plumbing changes, never simulation changes.
 
-- [ ] **M14.0 — World-scope state: one seam instead of scattered syncs.**
+- [x] **M14.0 — World-scope state: one seam instead of scattered syncs.**
   The flag-propagation bug (fixed 2026-07-11, commit 67a642c) was patched by
   copying flags into each room's engine before it steps and publishing after
   (`room_manager.go:423-426`, `:473`, `syncWorldFlagsFromRoom` `:745`, and

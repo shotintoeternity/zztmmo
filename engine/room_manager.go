@@ -420,10 +420,11 @@ func (rm *RoomManager) StepDiffs(inputs map[PlayerID]PlayerInput) map[PlayerID]D
 		if room == nil || len(room.players) == 0 {
 			continue
 		}
-		// Each room has an isolated engine and therefore a copied TWorld. Flags
-		// are world state, not board state: refresh before this room runs so a
-		// #set in an earlier room is visible to every later player this tick.
-		room.Engine.World.Info.Flags = rm.world.Info.Flags
+		// Each room has an isolated engine and therefore a copied TWorld.
+		// World-scope state (flags) is not board state: refresh before this room
+		// runs so a #set in an earlier room is visible to every later player this
+		// tick. Adding another world-scope field is one line in copyWorldScope.
+		rm.refreshRoomWorldScope(room)
 		inputsForRoom := engineInputs[boardID]
 		if inputsForRoom == nil {
 			inputsForRoom = map[int16]PlayerInput{}
@@ -470,7 +471,7 @@ func (rm *RoomManager) StepDiffs(inputs map[PlayerID]PlayerInput) map[PlayerID]D
 				roomEvents[boardID] = append(roomEvents[boardID], event)
 			}
 		}
-		rm.syncWorldFlagsFromRoom(room)
+		rm.publishRoomWorldScope(room)
 	}
 
 	for _, transfer := range transfers {
@@ -734,21 +735,51 @@ func (rm *RoomManager) freezeRoomIfEmpty(boardID int16) {
 	room.Engine.BoardClose()
 	rm.world.BoardData[boardID] = append([]byte(nil), room.Engine.World.BoardData[boardID]...)
 	rm.world.BoardLen[boardID] = room.Engine.World.BoardLen[boardID]
-	rm.syncWorldFlagsFromRoom(room)
+	rm.publishRoomWorldScope(room)
 	delete(rm.rooms, boardID)
 	rm.syncFrozenBoardToLiveRooms(boardID)
 }
 
-// syncWorldFlagsFromRoom publishes a room's just-mutated flags to the shared
-// world and every live room. Without this, TWorld's value-copy semantics make
-// #set/#clear visible only on the board where they were executed.
-func (rm *RoomManager) syncWorldFlagsFromRoom(source *Room) {
-	if source == nil || source.Engine.World.Info.Flags == rm.world.Info.Flags {
+// copyWorldScope copies the world-scope subset of TWorldInfo — state shared by
+// every room of a world rather than per-player or per-engine — from src to dst.
+// It is the single list the two seams (refresh/publish) iterate: adding the next
+// world-scope field is one line here. The M14.0 audit (NOTES.md 2026-07-12)
+// found Flags is the only per-tick-mutable world-scope field; Name is
+// world-scope but immutable during play and read straight off rm.world, so it is
+// deliberately out of this seam.
+func copyWorldScope(dst, src *TWorldInfo) {
+	dst.Flags = src.Flags
+}
+
+// worldScopeEqual reports whether two infos already agree on every world-scope
+// field, so publishRoomWorldScope can skip the O(rooms) fan-out when nothing a
+// room did this tick changed shared state.
+func worldScopeEqual(a, b *TWorldInfo) bool {
+	return a.Flags == b.Flags
+}
+
+// refreshRoomWorldScope pulls the shared world-scope state into a room's engine
+// before it steps, so a #set/#clear made by an earlier-ticking room this tick is
+// visible to this one. Value copy: rooms step sequentially on one goroutine, so
+// no shared pointer and no race.
+func (rm *RoomManager) refreshRoomWorldScope(room *Room) {
+	if room == nil {
 		return
 	}
-	rm.world.Info.Flags = source.Engine.World.Info.Flags
+	copyWorldScope(&room.Engine.World.Info, &rm.world.Info)
+}
+
+// publishRoomWorldScope copies a just-stepped room's world-scope state back to
+// the shared world and fans it to every live room, so #set/#clear is not
+// stranded on the board that executed it. Generalizes the M14.0-retired
+// syncWorldFlagsFromRoom to the full copyWorldScope list.
+func (rm *RoomManager) publishRoomWorldScope(source *Room) {
+	if source == nil || worldScopeEqual(&source.Engine.World.Info, &rm.world.Info) {
+		return
+	}
+	copyWorldScope(&rm.world.Info, &source.Engine.World.Info)
 	for _, room := range rm.rooms {
-		room.Engine.World.Info.Flags = rm.world.Info.Flags
+		copyWorldScope(&room.Engine.World.Info, &rm.world.Info)
 	}
 }
 
@@ -757,7 +788,7 @@ func (rm *RoomManager) syncFrozenBoardToLiveRooms(boardID int16) {
 		room := rm.rooms[roomID]
 		room.Engine.World.BoardData[boardID] = append([]byte(nil), rm.world.BoardData[boardID]...)
 		room.Engine.World.BoardLen[boardID] = rm.world.BoardLen[boardID]
-		room.Engine.World.Info.Flags = rm.world.Info.Flags
+		rm.refreshRoomWorldScope(room)
 	}
 }
 

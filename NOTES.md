@@ -1893,3 +1893,63 @@ Generation wired: `paintBoard` and the batch painter call
 `CompileZWDWithRepair`, feeding repair diagnostics forward via
 `generatedGridDiagnostics`. Purely generation/compile-time — outside the sim;
 replay fixture unchanged.
+
+## 2026-07-12 — M14.0 world-scope state: one seam instead of scattered syncs
+
+The required advisor tool was unavailable in this environment; the user gave
+explicit approval to proceed on deferring M12.15d and moving to the next task,
+matching the documented fallback for advisor-tagged work. (M14.0 itself is not
+[ADVISOR]-tagged.)
+
+**Audit table — every `TWorldInfo` field (`gamevars.go:96-110`), classified by
+whether it is per-player, world-scope, or save-file/per-engine, with the
+evidence (which code reads/writes it from a room engine after load):**
+
+| Field | Class | Evidence |
+|---|---|---|
+| `Ammo` | per-player | virtualized in `PlayerState` (`gamevars.go:351`); sim reads `PlayerFor(statId).Ammo`, not `World.Info.Ammo` |
+| `Gems` | per-player | `PlayerState.Gems` (`gamevars.go:352`) |
+| `Keys[7]` | per-player | `PlayerState.Keys` (`gamevars.go:357`); door/key touch acts on the triggering player (M2.4) |
+| `Health` | per-player | `PlayerState.Health` (`gamevars.go:350`); `DamageStat`/respawn are per-stat (M2.4) |
+| `Torches` | per-player | `PlayerState.Torches` (`gamevars.go:353`) |
+| `TorchTicks` | per-player | `PlayerState.TorchTicks` (`gamevars.go:354`); dark-room lighting is per-player (M7.2) |
+| `EnergizerTicks` | per-player | `PlayerState.EnergizerTicks` (`gamevars.go:355`) |
+| `Score` | per-player | `PlayerState.Score` (`gamevars.go:356`); high scores per-player on `RoomManager` (M4.3) |
+| `BoardTimeSec` | per-player | `PlayerState.BoardTimeSec` (`gamevars.go:358`) — time limits are per-player |
+| `BoardTimeHsec` | per-player | `PlayerState.BoardTimeHsec` (`gamevars.go:359`) |
+| `Name` | world-scope, **immutable during play** | the world title; written only at load/editor (`editor.go:165`, `editor_session.go:244`), read straight off `rm.world` (`WorldName`, `room_manager.go:575`). Never mutated by a stat tick, so it needs no per-tick room->room seam. |
+| `Flags[MAX_FLAG]` | **world-scope, mutable during play** | `#set`/`#clear` -> `WorldSetFlag`/`WorldClearFlag` mutate the *ticking room's* engine copy; shared puzzle progress. The ONLY per-tick-mutable world-scope field, and the one the 2026-07-11 bug (commit 67a642c) missed. |
+| `CurrentBoard` | per-engine (NOT world-scope) | each room engine is opened on its own board (`ensureRoom` -> `BoardOpen`, `room_manager.go:613`); `BoardChange` writes it per engine (`game.go:193`). Syncing it across rooms would make every room render the same board, so it must NOT enter the seam. |
+| `IsSave` | save-file-only | set false on load/`BoardChange` (`game.go:256`), consumed by the serializer; not touched by a tick. |
+| `padding1`, `padding2` | inert | struct padding, TODO-removal; carried by value copies, never read. |
+
+Conclusion: the world-scope sync list that must propagate room->room every tick
+is exactly `{Flags}`. `Name` is world-scope but immutable-during-play (read from
+`rm.world` directly, so out of the seam). Everything else is per-player or
+per-engine.
+
+**Mechanism.** Replaced the four-site flag dance (`room_manager.go:426`, `:473`,
+`syncWorldFlagsFromRoom`, and the flag lines inside `freezeRoomIfEmpty`/
+`syncFrozenBoardToLiveRooms`) with two named seams that each iterate ONE explicit
+list — `copyWorldScope(dst, src *TWorldInfo)` (the single place to add the next
+world-scope field):
+
+* `refreshRoomWorldScope(room)` — pull world-scope fields from `rm.world` into a
+  room's engine *before* it steps (so a `#set` in an earlier-ticking room is
+  visible this same tick).
+* `publishRoomWorldScope(source)` — copy a just-stepped room's world-scope fields
+  back to `rm.world` and fan them to every live room; a `worldScopeEqual`
+  short-circuit preserves the old no-op-when-unchanged behavior (avoids O(rooms^2)
+  churn per tick).
+
+Both freeze (`freezeRoomIfEmpty`) and thaw route through these: freeze publishes
+the frozen room's scope before deleting it; thaw is already covered because
+`ensureRoom` does `engine.World = rm.world` (a value copy that carries `Flags`).
+`syncFrozenBoardToLiveRooms` now refreshes each remaining room's scope through
+the seam instead of assigning `Info.Flags` inline.
+
+**No shared pointers.** Kept the value-copy shape (rooms step sequentially on one
+goroutine inside `StepDiffs`, so copies are race-free by construction); `Flags`
+is a `[MAX_FLAG]string` value array, comparable and copyable. No `TWorldInfo`
+field was added or removed, so `StateHash` and `worldWriteTo` are byte-unchanged;
+replay fixture unchanged.
