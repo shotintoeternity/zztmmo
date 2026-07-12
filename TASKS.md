@@ -739,7 +739,7 @@ protocol is positional, so these sit just after M12.5 and before M5.
   proves one room's panic does not stop the others; `go test ./...` green;
   replay fixture unchanged.
 
-- [ ] **M12.13 — Auto-synthesize stats for orphan grid glyphs (kill the dominant
+- [x] **M12.13 — Auto-synthesize stats for orphan grid glyphs (kill the dominant
   Dream failure).** The single most common generation failure (2026-07-11 log
   taxonomy in NOTES.md; Saga Archive burned all 3 repair attempts on it) is
   `grid contains stat-backed element X but no matching stat is defined at (x,y)`
@@ -905,6 +905,46 @@ protocol is positional, so these sit just after M12.5 and before M5.
   pixel-faithful image for a known board (golden test) and captions load from
   committed sidecars; `go test ./...` green. Consult the
   advisor on the artifact shapes and the retrieval/budget design before building.
+
+- [ ] **M12.16 [ADVISOR] — Error-driven procedural repair layer (compiler
+  self-heals before the LLM).** Owner priority: maximize what the
+  compiler/decompiler fixes itself before resending to the model — LLM repair
+  rounds are slow, cost tokens, and don't always converge (Saga Archive burned
+  all 3 attempts and blanked to a placeholder). Generalize the ad-hoc procedural
+  fixers (M12.11 undefined-char, M12.13 orphan-glyph, M12.14 dup-key /
+  unknown-field / missing-end) into a first-class **error→fixer dispatch** with a
+  fixpoint loop; the LLM becomes the fallback of last resort. Full design in
+  NOTES.md (2026-07-11). Requirements:
+  * **Typed error codes.** Add a structured `code` (enum of error kinds) to
+    `zwdError` so fixers dispatch on the code, not by string-matching the human
+    message. Keep the precise line/col/message (M12.1) for the LLM/humans.
+  * **Fixpoint loop** (`compileWithRepair`): parse → on error look up
+    `fixers[err.code]` → apply → re-parse → repeat until success, no fixer
+    matches, or no progress (byte-identical output / recurring error → hand to
+    LLM). Never spin.
+  * **The bucket boundary (load-bearing).** Bucket 1 — bookkeeping/syntactic
+    (undefined char, orphan glyph, dup key, unknown field, missing `end`, row
+    width, off-board coords, out-of-range color, the M12.12 door nibble) →
+    procedurally fix; these are the entire dominant failure taxonomy. Bucket 2 —
+    semantic/intent (exit to a nonexistent board, missing passage target, key
+    behind its own door) → NEVER procedurally guess; a silent wrong guess yields
+    a compiling-but-broken world (worse than a repair round). Route bucket 2 to
+    the LLM or prevent it upstream via M12.3a plan constraints. Composition/quality
+    raises no error and is out of scope here (M12.15 territory).
+  * **Auditability.** Emit a diagnostic per fix (reuse
+    `generatedGridDiagnostics`, `generation.go:557`); feed diagnostics forward
+    into the next board's context / prompt-hardening so the model drifts toward
+    correctness without a round trip.
+  This subsumes the *mechanism* of M12.13/M12.14 — implement those as the first
+  fixers registered in the dispatch table rather than as standalone preprocessor
+  special cases; whoever reaches the first of {M12.13, M12.14, M12.16} should
+  build the framework here. Purely generation/compile-time — outside the sim;
+  replay fixture unchanged. DoD: typed error codes; a fixer table with the
+  bucket-1 fixers above; a table-driven test that feeds one broken board per
+  bucket-1 error class and asserts it compiles after procedural repair with the
+  expected diagnostic and **no LLM call**; a bucket-2 error is confirmed to fall
+  through to the LLM path unchanged; `go test ./...` green. Consult the advisor
+  on the error-code taxonomy and the bucket boundary before building.
 
 ## M5 — Creation and full-featured ZZT tooling
 

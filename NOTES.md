@@ -1446,3 +1446,79 @@ Verified: `go build ./...`, `go vet ./...`, `go test ./...` green (replay fixtur
 unchanged); client `tsc --noEmit`, `npm test`, `npm run build` green. NOTE: the
 background `zzt-serve` on :8090 is still the pre-fix binary — restart it and it
 serves the rebuilt client to see these live.
+
+## 2026-07-11 — Error-driven procedural repair layer (compiler self-heals before the LLM)
+
+Owner direction: **maximize what the compiler/decompiler can fix itself before
+resending to the model.** LLM repair rounds are slow, cost tokens, and don't
+always converge (Saga Archive burned all 3 attempts and blanked to a
+placeholder). Every non-convergence is a *hole in the world*, not just spend.
+The whole dominant failure taxonomy (2026-07-11 entry above) is mechanical
+bookkeeping — exactly the class a deterministic fixer can repair. So the repair
+loop should be procedural-first, with the LLM as the fallback of last resort.
+
+This generalizes what already exists: M12.11 (undefined grid char → Text),
+M12.13 (orphan glyph → synthesized stat), M12.14 (dup legend key / unknown field
+/ missing end) are all ad-hoc procedural fixers in `preprocessZWDGrid`. This
+gives them a common home.
+
+### Architecture — compile as a repair fixpoint loop
+
+```
+compileWithRepair(src):
+  loop:
+    result, err = parse(src)
+    if err == nil: return result
+    fixer = fixers[err.code]              # dispatch on error KIND
+    if fixer == nil: return err            # → LLM repair (fallback)
+    src, applied, diag = fixer(src, err)
+    if !applied || fixpoint(src): return err   # no progress → LLM
+    record(diag)                           # audit trail
+```
+
+- **Typed error codes are the prerequisite.** `zwdError` needs a structured
+  `code` (enum of error kinds) so fixers dispatch on the code, not by
+  string-matching the human-readable message (the message is for the LLM/humans).
+- **Fixpoint / no-progress guard**: if a fixer makes no change, or the same
+  error recurs, or output is byte-identical, stop and hand to the LLM — never
+  spin.
+- The existing whole-grid normalizations (RLE, padding, player positioning,
+  M12.11/13) stay as a first preprocessing pass; the error-driven fixers handle
+  what only a parse attempt reveals.
+
+### The load-bearing boundary — which errors are procedurally fixable
+
+**Bucket 1 — bookkeeping / syntactic → FIX procedurally, aggressively.**
+Undefined char, orphan glyph, duplicate legend key, unknown stat field, missing
+`end`, row width, off-board coords, out-of-range color, the door-nibble-0 crash
+(M12.12). The repair is unambiguous and cannot corrupt meaning. This bucket is
+the *entire* dominant taxonomy — procedural fixing can drive its repair rounds
+toward zero.
+
+**Bucket 2 — semantic / intent → NEVER guess procedurally.** Exit to a
+nonexistent board, missing passage target, key placed behind its own door. The
+compiler can *detect* these but cannot invent the author's intent; a silent
+wrong guess (drop the exit, point at board 0) yields a world that **compiles but
+is subtly broken** — worse than a repair round because it's invisible. These go
+to the LLM (it knows intent) or are prevented upstream by plan constraints
+(M12.3a). A third class — **composition/quality** — raises no error at all;
+procedural fixing can't touch it (corpus/fine-tune territory, M12.15).
+
+### Guardrails
+
+- **Emit a diagnostic per fix** (reuse the `generatedGridDiagnostics` channel)
+  so every silent deviation from the model's output is visible and testable.
+- **Feed diagnostics forward** — into the next board's context or into
+  prompt-hardening — so the model drifts toward correctness over time *without*
+  a round trip. This recovers the learning signal a repair round provides,
+  minus the round trip.
+
+### Why this is high-leverage (ties to the model-choice thread)
+
+If the compiler heals all bookkeeping, **correctness stops depending on model
+tier** — the painter's remaining job narrows to composition + intent, the K=3
+repair budget is freed for the genuinely hard cases (raising convergence →
+fewer blank boards), and a cheaper painter becomes viable for the correctness
+dimension. One change improves yield, cuts cost/latency, and decouples quality
+from model choice. Filed as M12.16; it subsumes the mechanism of M12.13/M12.14,
+which become the first fixers registered in it.
