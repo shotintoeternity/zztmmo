@@ -1183,7 +1183,7 @@ the corpus/style work builds on. The specs below are unchanged.)
   committed sidecars; `go test ./...` green. Consult the
   advisor on the artifact shapes and the retrieval/budget design before building.
 
-- [ ] **M12.15a — Curation-first title-screen few-shots from hand-selected
+- [x] **M12.15a — Curation-first title-screen few-shots from hand-selected
   worlds.** The curation-first slice of M12.15 (taste over statistics — the
   `pickRepresentativeBoards` scorer picks toolkit rooms; the owner hand-picks
   excellent boards). Ten owner-selected worlds with excellent title screens /
