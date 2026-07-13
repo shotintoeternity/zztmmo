@@ -1,5 +1,19 @@
 # NOTES — escalations and decisions log (append-only)
 
+## M6.4 (2026-07-13) — account player-state scope
+
+DECISION. Account-keyed player state is scoped by `(accountID, worldName)`, not
+by snapshot. A signed-in player who leaves TOWN and later rejoins TOWN gets the
+same inventory/counters restored before the first tick; the same account joining
+a different hosted world starts from that world's saved account state, or fresh
+if none exists.
+
+Concurrent sessions for one account are allowed for now. The server does not
+kick older sessions or merge live inventories; each authenticated disconnect or
+manual save writes that account/world state, so the last write wins. This keeps
+M6.4 narrow and leaves stronger single-session enforcement for ownership/invite
+work if it becomes necessary.
+
 ## M12.4b (2026-07-11) — The "DAEKEPERT" title screen mystery & ZZT-OOP touch race
 
 * **DAEKEPERT Title Screen Lesson:** 

@@ -1,6 +1,7 @@
 package zztgo
 
 import (
+	"encoding/json"
 	"errors"
 	"os"
 	"path/filepath"
@@ -112,7 +113,17 @@ func (rm *RoomManager) SaveSnapshot(dir, name string, playerID PlayerID) (string
 	// (it only writes a file), so playback skips it — but a recording should still
 	// show that a player saved (M14.2).
 	rm.recorder.record(recOp{Op: "submit", Kind: "save", Player: playerID, Name: name})
-	return writeWorldSnapshot(dir, name, world)
+	path, err := writeWorldSnapshot(dir, name, world)
+	if err != nil {
+		return "", err
+	}
+	player := rm.players[playerID]
+	if player != nil && player.accountID != "" {
+		if err := writeSnapshotPlayerStateSidecar(path, rm.WorldName(), player.accountID, *player.state); err != nil {
+			return path, err
+		}
+	}
+	return path, nil
 }
 
 // writeWorldSnapshot serializes an already-copied world to dir/<NAME>.SAV. The
@@ -151,6 +162,37 @@ func writeWorldSnapshot(dir, name string, world TWorld) (string, error) {
 		return "", err
 	}
 	return path, nil
+}
+
+type snapshotPlayerStateSidecar struct {
+	World     string      `json:"world"`
+	AccountID string      `json:"accountId"`
+	State     PlayerState `json:"state"`
+}
+
+func snapshotPlayerStateSidecarPath(snapshotPath string) string {
+	return snapshotPath + ".playerstate.json"
+}
+
+func writeSnapshotPlayerStateSidecar(snapshotPath, worldName, accountID string, state PlayerState) error {
+	path := snapshotPlayerStateSidecarPath(snapshotPath)
+	data, err := json.MarshalIndent(snapshotPlayerStateSidecar{
+		World:     worldName,
+		AccountID: accountID,
+		State:     state,
+	}, "", "  ")
+	if err != nil {
+		return err
+	}
+	tmp := path + ".tmp"
+	if err := os.WriteFile(tmp, data, 0o600); err != nil {
+		return err
+	}
+	if err := os.Rename(tmp, path); err != nil {
+		os.Remove(tmp)
+		return err
+	}
+	return nil
 }
 
 // RestoreSnapshot replaces the world with dir/<NAME>.SAV. It refuses while any

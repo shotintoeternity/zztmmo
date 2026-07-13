@@ -17,12 +17,15 @@ type ChatRecord struct {
 type ChatDatabase interface {
 	AddMessage(from, text string) (ChatRecord, error)
 	GetRecentMessages(limit int) ([]ChatRecord, error)
+	PutPlayerState(accountID, worldName string, state PlayerState) error
+	GetPlayerState(accountID, worldName string) (PlayerState, bool, error)
 	Close() error
 }
 
 type MemChatDatabase struct {
-	mu       sync.Mutex
-	messages []ChatRecord
+	mu           sync.Mutex
+	messages     []ChatRecord
+	playerStates map[string]PlayerState
 }
 
 func NewMemChatDatabase() *MemChatDatabase {
@@ -59,14 +62,36 @@ func (db *MemChatDatabase) GetRecentMessages(limit int) ([]ChatRecord, error) {
 	return res, nil
 }
 
+func (db *MemChatDatabase) PutPlayerState(accountID, worldName string, state PlayerState) error {
+	db.mu.Lock()
+	defer db.mu.Unlock()
+	if db.playerStates == nil {
+		db.playerStates = make(map[string]PlayerState)
+	}
+	db.playerStates[playerStateKey(accountID, worldName)] = state
+	return nil
+}
+
+func (db *MemChatDatabase) GetPlayerState(accountID, worldName string) (PlayerState, bool, error) {
+	db.mu.Lock()
+	defer db.mu.Unlock()
+	if db.playerStates == nil {
+		return PlayerState{}, false, nil
+	}
+	state, ok := db.playerStates[playerStateKey(accountID, worldName)]
+	return state, ok, nil
+}
+
 func (db *MemChatDatabase) Close() error {
 	return nil
 }
 
 type FileChatDatabase struct {
-	mu       sync.Mutex
-	file     *os.File
-	messages []ChatRecord
+	mu           sync.Mutex
+	file         *os.File
+	statePath    string
+	messages     []ChatRecord
+	playerStates map[string]PlayerState
 }
 
 func NewFileChatDatabase(filepath string) (*FileChatDatabase, error) {
@@ -76,7 +101,9 @@ func NewFileChatDatabase(filepath string) (*FileChatDatabase, error) {
 	}
 
 	db := &FileChatDatabase{
-		file: file,
+		file:         file,
+		statePath:    filepath + ".playerstate.json",
+		playerStates: make(map[string]PlayerState),
 	}
 
 	dec := json.NewDecoder(file)
@@ -90,6 +117,7 @@ func NewFileChatDatabase(filepath string) (*FileChatDatabase, error) {
 		}
 		db.messages = append(db.messages, rec)
 	}
+	db.loadPlayerStates()
 
 	return db, nil
 }
@@ -134,8 +162,56 @@ func (db *FileChatDatabase) GetRecentMessages(limit int) ([]ChatRecord, error) {
 	return res, nil
 }
 
+func (db *FileChatDatabase) PutPlayerState(accountID, worldName string, state PlayerState) error {
+	db.mu.Lock()
+	defer db.mu.Unlock()
+	if db.playerStates == nil {
+		db.playerStates = make(map[string]PlayerState)
+	}
+	db.playerStates[playerStateKey(accountID, worldName)] = state
+	return db.writePlayerStatesLocked()
+}
+
+func (db *FileChatDatabase) GetPlayerState(accountID, worldName string) (PlayerState, bool, error) {
+	db.mu.Lock()
+	defer db.mu.Unlock()
+	state, ok := db.playerStates[playerStateKey(accountID, worldName)]
+	return state, ok, nil
+}
+
 func (db *FileChatDatabase) Close() error {
 	db.mu.Lock()
 	defer db.mu.Unlock()
 	return db.file.Close()
+}
+
+func (db *FileChatDatabase) loadPlayerStates() {
+	data, err := os.ReadFile(db.statePath)
+	if err != nil {
+		return
+	}
+	_ = json.Unmarshal(data, &db.playerStates)
+	if db.playerStates == nil {
+		db.playerStates = make(map[string]PlayerState)
+	}
+}
+
+func (db *FileChatDatabase) writePlayerStatesLocked() error {
+	data, err := json.MarshalIndent(db.playerStates, "", "  ")
+	if err != nil {
+		return err
+	}
+	tmp := db.statePath + ".tmp"
+	if err := os.WriteFile(tmp, data, 0o600); err != nil {
+		return err
+	}
+	if err := os.Rename(tmp, db.statePath); err != nil {
+		os.Remove(tmp)
+		return err
+	}
+	return nil
+}
+
+func playerStateKey(accountID, worldName string) string {
+	return worldName + "\t" + accountID
 }

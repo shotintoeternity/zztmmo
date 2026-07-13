@@ -617,6 +617,15 @@ func (rm *RoomManager) PlayerState(playerID PlayerID) (*PlayerState, bool) {
 	return player.state, true
 }
 
+func (rm *RoomManager) ApplyPlayerState(playerID PlayerID, state PlayerState) bool {
+	player := rm.players[playerID]
+	if player == nil || player.state == nil {
+		return false
+	}
+	*player.state = state
+	return true
+}
+
 func (rm *RoomManager) PlayerLocation(playerID PlayerID) (boardID, statID int16, ok bool) {
 	player := rm.players[playerID]
 	if player == nil {

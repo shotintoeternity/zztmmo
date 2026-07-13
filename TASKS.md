@@ -1680,7 +1680,7 @@ gate for M6.4 and M10.3. See NOTES.md.)
   scrollback to a joining client. DoD: chat history survives a server restart,
   and the storage interface has an in-memory fake used by tests.
 
-- [ ] **M6.4 — Account-keyed player-state persistence.** Requires M6.2.
+- [x] **M6.4 — Account-keyed player-state persistence.** Requires M6.2.
   Vanilla parity gap deferred by M4.3a: restoring a save returns *your*
   health/ammo/keys, but fork snapshots drop players — `World.Info` can hold
   only one player's counters, so N players cannot round-trip through the

@@ -306,9 +306,12 @@ func (s *WebSocketServer) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 
 	client := &webSocketClient{conn: conn, worldName: safeWorld}
 	account, authenticated := s.authAccount(r)
+	var storedState PlayerState
+	hasStoredState := false
 	if authenticated {
 		client.accountID = account.ID
 		join.Name = account.DisplayName()
+		storedState, hasStoredState = s.loadAccountPlayerState(account.ID, safeWorld)
 	}
 
 	// Resume first: a valid token reclaims the dropped run (same PlayerID/statID,
@@ -346,6 +349,9 @@ func (s *WebSocketServer) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 		inst.RoomManager.JoinPlayerWithID(playerID, join.Board, 0, 0)
 		if authenticated {
 			inst.RoomManager.SetPlayerIdentity(playerID, account.ID, account.DisplayName())
+			if hasStoredState {
+				inst.RoomManager.ApplyPlayerState(playerID, storedState)
+			}
 		} else {
 			inst.RoomManager.SetPlayerName(playerID, join.Name)
 		}
@@ -474,6 +480,27 @@ func (s *WebSocketServer) authAccount(r *http.Request) (AuthenticatedAccount, bo
 		return AuthenticatedAccount{}, false
 	}
 	return s.Auth.AccountFromRequest(r)
+}
+
+func (s *WebSocketServer) loadAccountPlayerState(accountID, worldName string) (PlayerState, bool) {
+	if s.ChatDB == nil || accountID == "" {
+		return PlayerState{}, false
+	}
+	state, ok, err := s.ChatDB.GetPlayerState(accountID, worldName)
+	if err != nil {
+		log.Printf("zztgo: failed to load player state for account %q in %q: %v", accountID, worldName, err)
+		return PlayerState{}, false
+	}
+	return state, ok
+}
+
+func (s *WebSocketServer) persistAccountPlayerState(accountID, worldName string, state PlayerState) {
+	if s.ChatDB == nil || accountID == "" {
+		return
+	}
+	if err := s.ChatDB.PutPlayerState(accountID, worldName, state); err != nil {
+		log.Printf("zztgo: failed to persist player state for account %q in %q: %v", accountID, worldName, err)
+	}
 }
 
 // serveEditor owns an editor-only WebSocket. Unlike a game connection it never
@@ -782,8 +809,17 @@ func (s *WebSocketServer) submitSaveFilenameInInstance(ctx context.Context, inst
 		inst.mu.Unlock()
 		return
 	}
+	accountID, _, _ := inst.RoomManager.PlayerIdentity(playerID)
+	state, hasState := inst.RoomManager.PlayerState(playerID)
+	var stateCopy PlayerState
+	if hasState {
+		stateCopy = *state
+	}
 	path, err := inst.RoomManager.SaveSnapshot(s.SavesDir, name, playerID)
 	inst.mu.Unlock()
+	if err == nil && accountID != "" && hasState {
+		s.persistAccountPlayerState(accountID, inst.Name, stateCopy)
+	}
 
 	event := ProtocolEvent{Type: "saveResult"}
 	if err != nil {
@@ -1330,6 +1366,12 @@ func (s *WebSocketServer) handleReadLoopExit(inst *WorldInstance, client *webSoc
 		inst.mu.Unlock()
 		return
 	}
+	accountID, _, _ := inst.RoomManager.PlayerIdentity(playerID)
+	state, hasState := inst.RoomManager.PlayerState(playerID)
+	var stateCopy PlayerState
+	if hasState {
+		stateCopy = *state
+	}
 	// Detach: drop queued per-player events (decision 2) and start the countdown.
 	inst.RoomManager.DrainPlayerEvents(playerID)
 	if inst.Detached == nil {
@@ -1337,6 +1379,9 @@ func (s *WebSocketServer) handleReadLoopExit(inst *WorldInstance, client *webSoc
 	}
 	inst.Detached[playerID] = ReconnectGraceTicks
 	inst.mu.Unlock()
+	if accountID != "" && hasState {
+		s.persistAccountPlayerState(accountID, inst.Name, stateCopy)
+	}
 }
 
 // expireDetached advances every instance's reconnect-grace countdown by one tick
