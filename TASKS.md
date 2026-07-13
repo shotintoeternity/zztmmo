@@ -2008,6 +2008,22 @@ newly enables; same rule: backlog bullets, owner promotes before spec):**
   designated passages, not a sim change). The lobby becomes a physical
   world picker you walk through; TOWN goes back to being a game you beat.
 
+**Architecture follow-ups:**
+* [ ] **Evaluate server scaling for 20–30 concurrent players.** Determine whether
+  the current EC2 instance is sufficient before upgrading blindly. Measure CPU,
+  memory, network, WebSocket fanout, tick latency, and per-room simulation cost under
+  a 20–30 bot/client load test. Document the likely bottleneck and the decision
+  threshold for vertical scaling (larger EC2 instance) versus architectural work
+  such as room sharding, process supervision, external persistence, or load-balanced
+  world servers.
+
+**World picker follow-ups:**
+* [ ] **Open selected worlds to their title screen before play.** When a player
+  selects a world from the picker, show that world's native ZZT title/start screen
+  first instead of immediately spawning into active gameplay. Preserve multiplayer
+  join semantics after the player chooses to start, and make sure direct links or
+  reconnects still land in the expected room/session.
+
 **README follow-ups:**
 * [x] **Add capnkev to the README greetz list.** Keep the list alphabetical,
   names only, and preserve the README's no-emoji style.
