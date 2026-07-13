@@ -199,6 +199,70 @@ func TestM101EditorSessionBroadcastsDiffsAndPresence(t *testing.T) {
 	}
 }
 
+func TestM102EditorLeasesRefuseAndDisconnectRelease(t *testing.T) {
+	world := testMultiplayerSmokeWorld(t)
+	world.Info.CurrentBoard = 1
+	server := NewWebSocketServer(world, 1)
+	httpServer := httptest.NewServer(server)
+	defer httpServer.Close()
+
+	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
+	defer cancel()
+	wsURL := "ws" + strings.TrimPrefix(httpServer.URL, "http")
+	connA := dialEditorClient(t, ctx, wsURL)
+	connB := dialEditorClient(t, ctx, wsURL)
+	defer connB.Close(websocket.StatusNormalClosure, "")
+	readEditorPresenceWithMembers(t, ctx, connA, 2)
+
+	if err := wsjson.Write(ctx, connA, EditorInspectMessage{Type: MessageTypeEditorInspect, X: 12, Y: 12}); err != nil {
+		t.Fatalf("write editorInspect: %v", err)
+	}
+	var inspect EditorInspectMessage
+	readEditorMessage(t, ctx, connA, MessageTypeEditorInspect, &inspect)
+	if !inspect.Inspect.HasStat {
+		t.Fatalf("inspect=%+v, want a stat tile to lease", inspect.Inspect)
+	}
+	lease := EditorLeaseMessage{
+		Type:    MessageTypeEditorLease,
+		Op:      "request",
+		Kind:    "stat",
+		BoardID: 1,
+		StatID:  inspect.Inspect.StatID,
+	}
+	if err := wsjson.Write(ctx, connA, lease); err != nil {
+		t.Fatalf("write connA lease: %v", err)
+	}
+	var granted EditorLeaseMessage
+	readEditorMessage(t, ctx, connA, MessageTypeEditorLease, &granted)
+	if granted.Op != "granted" {
+		t.Fatalf("connA lease=%+v, want granted", granted)
+	}
+	if err := wsjson.Write(ctx, connB, lease); err != nil {
+		t.Fatalf("write connB lease: %v", err)
+	}
+	var refused EditorLeaseMessage
+	readEditorMessage(t, ctx, connB, MessageTypeEditorLease, &refused)
+	if refused.Op != "refused" || refused.HolderName == "" {
+		t.Fatalf("connB lease=%+v, want refused with holder", refused)
+	}
+
+	_ = connA.Close(websocket.StatusNormalClosure, "")
+	deadline := time.Now().Add(2 * time.Second)
+	for {
+		if time.Now().After(deadline) {
+			t.Fatal("connB never acquired lease after connA disconnected")
+		}
+		if err := wsjson.Write(ctx, connB, lease); err != nil {
+			t.Fatalf("retry connB lease: %v", err)
+		}
+		readEditorMessage(t, ctx, connB, MessageTypeEditorLease, &granted)
+		if granted.Op == "granted" {
+			break
+		}
+		time.Sleep(10 * time.Millisecond)
+	}
+}
+
 // M5.5: the editorBoard dispatch over a real WebSocket — add, switch, export,
 // and import — replies with the shapes the browser client consumes.
 func TestWebSocketEditorBoardManagement(t *testing.T) {

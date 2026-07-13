@@ -23,6 +23,13 @@ type EditorSession struct {
 	Members    map[*webSocketClient]struct{}
 	memberInfo map[*webSocketClient]EditorPresence
 	nextMember int
+	leases     map[editorLeaseKey]*webSocketClient
+}
+
+type editorLeaseKey struct {
+	kind    string
+	boardID int16
+	statID  int16
 }
 
 func NewEditorSession(worldName string, world TWorld) *EditorSession {
@@ -48,6 +55,7 @@ func NewEditorSession(worldName string, world TWorld) *EditorSession {
 		engine:     e,
 		Members:    make(map[*webSocketClient]struct{}),
 		memberInfo: make(map[*webSocketClient]EditorPresence),
+		leases:     make(map[editorLeaseKey]*webSocketClient),
 	}
 }
 
@@ -82,6 +90,11 @@ func (s *EditorSession) Exit(member *webSocketClient) {
 	s.mu.Lock()
 	delete(s.Members, member)
 	delete(s.memberInfo, member)
+	for key, holder := range s.leases {
+		if holder == member {
+			delete(s.leases, key)
+		}
+	}
 	s.mu.Unlock()
 }
 
@@ -125,6 +138,80 @@ func (s *EditorSession) MemberClients() []*webSocketClient {
 func editorPresenceColor(n int) byte {
 	colors := []byte{0x1e, 0x2f, 0x3e, 0x4f, 0x5e, 0x6f, 0x9e, 0x0f}
 	return colors[(n-1)%len(colors)]
+}
+
+func (s *EditorSession) AcquireLease(member *webSocketClient, request EditorLeaseMessage) (EditorLeaseMessage, error) {
+	s.mu.Lock()
+	defer s.mu.Unlock()
+	if _, ok := s.Members[member]; !ok {
+		return EditorLeaseMessage{}, fmt.Errorf("editor session membership required")
+	}
+	key, ok := s.leaseKeyLocked(request)
+	if !ok {
+		return EditorLeaseMessage{}, nil
+	}
+	reply := EditorLeaseMessage{
+		Type:    MessageTypeEditorLease,
+		Op:      "granted",
+		Kind:    key.kind,
+		BoardID: key.boardID,
+		StatID:  key.statID,
+	}
+	if holder, ok := s.leases[key]; ok && holder != member {
+		holderInfo := s.memberInfo[holder]
+		reply.Op = "refused"
+		reply.HolderID = holderInfo.ID
+		reply.HolderName = holderInfo.Name
+		return reply, nil
+	}
+	s.leases[key] = member
+	return reply, nil
+}
+
+func (s *EditorSession) ReleaseLease(member *webSocketClient, request EditorLeaseMessage) {
+	s.mu.Lock()
+	defer s.mu.Unlock()
+	key, ok := s.leaseKeyLocked(request)
+	if !ok {
+		return
+	}
+	if s.leases[key] == member {
+		delete(s.leases, key)
+	}
+}
+
+func (s *EditorSession) leaseKeyLocked(request EditorLeaseMessage) (editorLeaseKey, bool) {
+	boardID := s.engine.World.Info.CurrentBoard
+	if request.BoardID >= 0 && request.BoardID <= s.engine.World.BoardCount {
+		boardID = request.BoardID
+	}
+	switch request.Kind {
+	case "board":
+		return editorLeaseKey{kind: "board", boardID: boardID}, true
+	case "stat":
+		if boardID != s.engine.World.Info.CurrentBoard || request.StatID < 0 || request.StatID > s.engine.Board.StatCount {
+			return editorLeaseKey{}, false
+		}
+		return editorLeaseKey{kind: "stat", boardID: boardID, statID: request.StatID}, true
+	default:
+		return editorLeaseKey{}, false
+	}
+}
+
+func (s *EditorSession) hasCurrentBoardLeaseLocked(member *webSocketClient, e *Engine) bool {
+	if len(s.Members) <= 1 {
+		return true
+	}
+	key := editorLeaseKey{kind: "board", boardID: e.World.Info.CurrentBoard}
+	return s.leases[key] == member
+}
+
+func (s *EditorSession) hasCurrentStatLeaseLocked(member *webSocketClient, e *Engine, statID int16) bool {
+	if len(s.Members) <= 1 {
+		return true
+	}
+	key := editorLeaseKey{kind: "stat", boardID: e.World.Info.CurrentBoard, statID: statID}
+	return s.leases[key] == member
 }
 
 // Apply is the sole serialized session boundary. M5.0 is read-only, but later
@@ -461,6 +548,9 @@ func (s *EditorSession) Properties(member *webSocketClient) (EditorPropertiesMes
 func (s *EditorSession) SetProperty(member *webSocketClient, edit EditorPropertyMessage) (EditorPropertiesMessage, error) {
 	var reply EditorPropertiesMessage
 	err := s.Apply(member, func(e *Engine) {
+		if !s.hasCurrentBoardLeaseLocked(member, e) {
+			return
+		}
 		switch edit.Field {
 		case "boardTitle":
 			e.Board.Name = editorString(edit.Text, SizeOfBoardName-1)
@@ -509,6 +599,9 @@ func (s *EditorSession) SetStat(member *webSocketClient, edit EditorStatMessage)
 	var reply EditorStatSettingsMessage
 	err := s.Apply(member, func(e *Engine) {
 		if edit.StatID < 0 || edit.StatID > e.Board.StatCount {
+			return
+		}
+		if !s.hasCurrentStatLeaseLocked(member, e, edit.StatID) {
 			return
 		}
 		stat := &e.Board.Stats[edit.StatID]
@@ -587,6 +680,9 @@ func (s *EditorSession) ProgramText(member *webSocketClient, statId int16) (Edit
 		if statId < 0 || statId > e.Board.StatCount {
 			return
 		}
+		if !s.hasCurrentStatLeaseLocked(member, e, statId) {
+			return
+		}
 		stat := &e.Board.Stats[statId]
 		def := ElementDefs[e.Board.Tiles[stat.X][stat.Y].Element]
 		if def.ParamTextName == "" {
@@ -646,6 +742,9 @@ func (s *EditorSession) SaveProgram(member *webSocketClient, statId int16, lines
 	var reply EditorStatSettingsMessage
 	err := s.Apply(member, func(e *Engine) {
 		if statId < 0 || statId > e.Board.StatCount {
+			return
+		}
+		if !s.hasCurrentStatLeaseLocked(member, e, statId) {
 			return
 		}
 		stat := &e.Board.Stats[statId]
@@ -730,6 +829,9 @@ func (s *EditorSession) SwitchBoard(member *webSocketClient, boardId int16) (Edi
 func (s *EditorSession) ClearBoard(member *webSocketClient) (EditorSnapshotMessage, error) {
 	var reply EditorSnapshotMessage
 	err := s.Apply(member, func(e *Engine) {
+		if !s.hasCurrentBoardLeaseLocked(member, e) {
+			return
+		}
 		for i := e.Board.StatCount; i >= 1; i-- {
 			e.RemoveStat(i)
 		}
@@ -751,6 +853,9 @@ func (s *EditorSession) ClearBoard(member *webSocketClient) (EditorSnapshotMessa
 func (s *EditorSession) NewWorld(member *webSocketClient) (EditorSnapshotMessage, error) {
 	var reply EditorSnapshotMessage
 	err := s.Apply(member, func(e *Engine) {
+		if !s.hasCurrentBoardLeaseLocked(member, e) {
+			return
+		}
 		e.WorldCreate()
 		e.BoardClose()
 		e.BoardOpen(e.World.Info.CurrentBoard)
@@ -797,6 +902,9 @@ func (s *EditorSession) ImportBoard(member *webSocketClient, data []byte) (Edito
 	var reply EditorSnapshotMessage
 	err := s.Apply(member, func(e *Engine) {
 		reply = editorSnapshot(e, BOARD_WIDTH/2, BOARD_HEIGHT/2)
+		if !s.hasCurrentBoardLeaseLocked(member, e) {
+			return
+		}
 		if len(data) < 2 {
 			return
 		}

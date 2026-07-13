@@ -21,6 +21,7 @@ const (
 	MessageTypeEditorExit         = "editorExit"
 	MessageTypeEditorInspect      = "editorInspect"
 	MessageTypeEditorPresence     = "editorPresence"
+	MessageTypeEditorLease        = "editorLease"
 	MessageTypeEditorSnapshot     = "editorSnapshot"
 	MessageTypeEditorEdit         = "editorEdit"
 	MessageTypeEditorDiff         = "editorDiff"
@@ -120,6 +121,20 @@ type EditorPresence struct {
 type EditorPresenceMessage struct {
 	Type    string           `json:"type"`
 	Members []EditorPresence `json:"members"`
+}
+
+// EditorLeaseMessage coordinates modal/code-editor exclusivity in collaborative
+// editor sessions. Clients request/release "board" or "stat" leases; the server
+// replies with Op "granted" or "refused". A refusal includes the holder's name
+// for the browser's "being edited by" dialog.
+type EditorLeaseMessage struct {
+	Type       string `json:"type"`
+	Op         string `json:"op"`
+	Kind       string `json:"kind"`
+	BoardID    int16  `json:"boardId,omitempty"`
+	StatID     int16  `json:"statId,omitempty"`
+	HolderID   string `json:"holderId,omitempty"`
+	HolderName string `json:"holderName,omitempty"`
 }
 
 type EditorTileInspect struct {

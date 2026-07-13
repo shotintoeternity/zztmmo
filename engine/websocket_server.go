@@ -599,13 +599,33 @@ func (s *WebSocketServer) serveEditor(ctx context.Context, conn *websocket.Conn,
 			session.UpdatePresence(client, edit.X, edit.Y)
 			s.broadcastEditor(ctx, session, reply)
 			s.broadcastEditorPresence(ctx, session)
+		case MessageTypeEditorLease:
+			var lease EditorLeaseMessage
+			if json.Unmarshal(raw, &lease) != nil {
+				continue
+			}
+			switch lease.Op {
+			case "request":
+				reply, err := session.AcquireLease(client, lease)
+				if err != nil {
+					return
+				}
+				if reply.Type != "" && client.write(ctx, reply) != nil {
+					return
+				}
+			case "release":
+				session.ReleaseLease(client, lease)
+			}
 		case MessageTypeEditorProperty:
 			var property EditorPropertyMessage
 			if json.Unmarshal(raw, &property) != nil {
 				continue
 			}
 			reply, err := session.SetProperty(client, property)
-			if err != nil || client.write(ctx, reply) != nil {
+			if err != nil {
+				return
+			}
+			if reply.Type != "" && client.write(ctx, reply) != nil {
 				return
 			}
 		case MessageTypeEditorStat:
@@ -614,7 +634,10 @@ func (s *WebSocketServer) serveEditor(ctx context.Context, conn *websocket.Conn,
 				continue
 			}
 			reply, err := session.SetStat(client, stat)
-			if err != nil || client.write(ctx, reply) != nil {
+			if err != nil {
+				return
+			}
+			if reply.Type != "" && client.write(ctx, reply) != nil {
 				return
 			}
 		case MessageTypeEditorProgram:
@@ -623,7 +646,10 @@ func (s *WebSocketServer) serveEditor(ctx context.Context, conn *websocket.Conn,
 				continue
 			}
 			reply, err := session.ProgramText(client, req.StatID)
-			if err != nil || client.write(ctx, reply) != nil {
+			if err != nil {
+				return
+			}
+			if reply.Type != "" && client.write(ctx, reply) != nil {
 				return
 			}
 		case MessageTypeEditorProgramSave:
@@ -632,7 +658,10 @@ func (s *WebSocketServer) serveEditor(ctx context.Context, conn *websocket.Conn,
 				continue
 			}
 			reply, err := session.SaveProgram(client, save.StatID, save.Lines)
-			if err != nil || client.write(ctx, reply) != nil {
+			if err != nil {
+				return
+			}
+			if reply.Type != "" && client.write(ctx, reply) != nil {
 				return
 			}
 		case MessageTypeEditorBoard:
@@ -762,16 +791,25 @@ func (s *WebSocketServer) serveEditorBoard(ctx context.Context, client *webSocke
 		if err != nil {
 			return nil
 		}
+		if reply.Type == "" {
+			return nil
+		}
 		return client.write(ctx, reply)
 	case "clear":
 		reply, err := session.ClearBoard(client)
 		if err != nil {
 			return nil
 		}
+		if reply.Type == "" {
+			return nil
+		}
 		return client.write(ctx, reply)
 	case "new":
 		reply, err := session.NewWorld(client)
 		if err != nil {
+			return nil
+		}
+		if reply.Type == "" {
 			return nil
 		}
 		return client.write(ctx, reply)

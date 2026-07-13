@@ -73,6 +73,67 @@ func TestEditorSessionAllowsMembersAndRequiresMembership(t *testing.T) {
 	}
 }
 
+func TestM102EditorSessionLeasesRefuseAndRelease(t *testing.T) {
+	InitElementDefs()
+	session := NewEditorSession("TEST", testEmptyWorld(t))
+	alice := &webSocketClient{}
+	bob := &webSocketClient{}
+	if _, err := session.EnterNamed(alice, "Alice"); err != nil {
+		t.Fatalf("EnterNamed(Alice): %v", err)
+	}
+	defer session.Exit(alice)
+	if _, err := session.EnterNamed(bob, "Bob"); err != nil {
+		t.Fatalf("EnterNamed(Bob): %v", err)
+	}
+
+	var boardID, objectID int16
+	if err := session.Apply(alice, func(e *Engine) {
+		boardID = e.World.Info.CurrentBoard
+		e.AddStat(10, 10, E_OBJECT, 0x0f, 3, StatTemplateDefault)
+		objectID = e.Board.StatCount
+		e.BoardClose()
+		e.DrainScreenDirty()
+	}); err != nil {
+		t.Fatal(err)
+	}
+
+	statLease := EditorLeaseMessage{Kind: "stat", BoardID: boardID, StatID: objectID}
+	granted, err := session.AcquireLease(alice, statLease)
+	if err != nil || granted.Op != "granted" {
+		t.Fatalf("Alice stat lease=%+v err=%v, want granted", granted, err)
+	}
+	refused, err := session.AcquireLease(bob, statLease)
+	if err != nil || refused.Op != "refused" || refused.HolderName != "Alice" {
+		t.Fatalf("Bob stat lease=%+v err=%v, want refused by Alice", refused, err)
+	}
+	if reply, err := session.SetStat(bob, EditorStatMessage{Type: MessageTypeEditorStat, StatID: objectID, Field: "p1", Value: 65}); err != nil || reply.Type != "" {
+		t.Fatalf("Bob SetStat without lease reply=%+v err=%v, want denied", reply, err)
+	}
+	session.ReleaseLease(alice, statLease)
+	granted, err = session.AcquireLease(bob, statLease)
+	if err != nil || granted.Op != "granted" {
+		t.Fatalf("Bob stat lease after release=%+v err=%v, want granted", granted, err)
+	}
+	session.Exit(bob)
+	granted, err = session.AcquireLease(alice, statLease)
+	if err != nil || granted.Op != "granted" {
+		t.Fatalf("Alice stat lease after disconnect=%+v err=%v, want granted", granted, err)
+	}
+
+	boardLease := EditorLeaseMessage{Kind: "board", BoardID: boardID}
+	granted, err = session.AcquireLease(alice, boardLease)
+	if err != nil || granted.Op != "granted" {
+		t.Fatalf("Alice board lease=%+v err=%v, want granted", granted, err)
+	}
+	if _, err := session.EnterNamed(bob, "Bob"); err != nil {
+		t.Fatalf("re-enter Bob: %v", err)
+	}
+	refused, err = session.AcquireLease(bob, boardLease)
+	if err != nil || refused.Op != "refused" || refused.HolderName != "Alice" {
+		t.Fatalf("Bob board lease=%+v err=%v, want refused by Alice", refused, err)
+	}
+}
+
 func TestEditorSessionEditsPlaceEraseFillAndRoundTrip(t *testing.T) {
 	session := NewEditorSession("TEST", testEmptyWorld(t))
 	member := &webSocketClient{}

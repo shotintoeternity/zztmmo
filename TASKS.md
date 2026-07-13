@@ -1735,7 +1735,7 @@ builds toward them instead of away:
   DoD: two browsers draw simultaneously in one session, each sees the
   other's tiles appear live and the other's named, colored cursor move
   between edits.
-- [ ] **M10.2 — Edit leases.** Requires M5.3-M5.4. Exclusive per-stat and
+- [x] **M10.2 — Edit leases.** Requires M5.3-M5.4. Exclusive per-stat and
   per-board leases around dialogs and the code editor, released on close or
   disconnect, with the "being edited by" refusal surfaced in the client.
   DoD: two members racing for one object — one edits, the other is refused

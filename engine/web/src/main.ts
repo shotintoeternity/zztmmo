@@ -63,6 +63,7 @@ const MessageTypeEditorEnter = "editorEnter";
 const MessageTypeEditorExit = "editorExit";
 const MessageTypeEditorInspect = "editorInspect";
 const MessageTypeEditorPresence = "editorPresence";
+const MessageTypeEditorLease = "editorLease";
 const MessageTypeEditorSnapshot = "editorSnapshot";
 const MessageTypeEditorEdit = "editorEdit";
 const MessageTypeEditorDiff = "editorDiff";
@@ -242,6 +243,18 @@ type EditorPresenceMessage = {
   members: EditorPresence[];
 };
 
+type EditorLeaseKind = "board" | "stat";
+
+type EditorLeaseMessage = {
+  type: typeof MessageTypeEditorLease;
+  op: "request" | "release" | "granted" | "refused";
+  kind: EditorLeaseKind;
+  boardId?: number;
+  statId?: number;
+  holderId?: string;
+  holderName?: string;
+};
+
 type EditorDiffMessage = {
   type: typeof MessageTypeEditorDiff;
   memberId?: string;
@@ -315,7 +328,7 @@ type EditorSaveResultMessage = {
   error?: string;
 };
 
-type ServerMessage = SnapshotMessage | DiffMessage | EventMessage | BoardChangeMessage | ChatMessage | EditorSnapshotMessage | EditorInspectMessage | EditorPresenceMessage | EditorDiffMessage | EditorPropertiesMessage | EditorStatSettingsMessage | EditorProgramTextMessage | EditorBoardDataMessage | EditorWorldDataMessage | EditorSaveResultMessage;
+type ServerMessage = SnapshotMessage | DiffMessage | EventMessage | BoardChangeMessage | ChatMessage | EditorSnapshotMessage | EditorInspectMessage | EditorPresenceMessage | EditorLeaseMessage | EditorDiffMessage | EditorPropertiesMessage | EditorStatSettingsMessage | EditorProgramTextMessage | EditorBoardDataMessage | EditorWorldDataMessage | EditorSaveResultMessage;
 
 type InputMessage = {
   type: typeof MessageTypeInput;
@@ -505,6 +518,9 @@ let editorModified = false;
 let editorExitAfterSave = false;
 let editorMemberId = "";
 let editorPresence: EditorPresence[] = [];
+let pendingEditorLease: { lease: EditorLeaseMessage; onGranted: () => void } | null = null;
+let activeEditorLease: EditorLeaseMessage | null = null;
+let retainEditorLeaseOnClose = false;
 // The F1/F2/F3 element category tables, delivered once on the entry snapshot.
 let editorMenus: EditorElementMenu[] = [];
 const overlay = new Map<number, { ch: number; color: number }>();
@@ -720,6 +736,9 @@ function startEditor() {
   editorExitAfterSave = false;
   editorMemberId = "";
   editorPresence = [];
+  pendingEditorLease = null;
+  activeEditorLease = null;
+  retainEditorLeaseOnClose = false;
   drawEditorSidebar(writeText, editorInspect, editorBrush, editorDrawing, editorTextMode);
   paintOverlay();
   drawScreen();
@@ -1145,6 +1164,9 @@ function applyMessage(message: ServerMessage) {
     case MessageTypeEditorPresence:
       applyEditorPresence(message);
       break;
+    case MessageTypeEditorLease:
+      applyEditorLease(message);
+      break;
 	case MessageTypeEditorDiff:
 	  applyEditorDiff(message);
 	  break;
@@ -1199,6 +1221,46 @@ function applyEditorPresence(message: EditorPresenceMessage) {
   drawScreen();
 }
 
+function editorLeaseMatches(a: EditorLeaseMessage | null, b: EditorLeaseMessage): boolean {
+  return !!a && a.kind === b.kind && (a.boardId ?? 0) === (b.boardId ?? 0) && (a.statId ?? -1) === (b.statId ?? -1);
+}
+
+function requestEditorLease(lease: Omit<EditorLeaseMessage, "type" | "op">, onGranted: () => void) {
+  if (!connected || !ws || ws.readyState !== WebSocket.OPEN) return;
+  const request: EditorLeaseMessage = { type: MessageTypeEditorLease, op: "request", ...lease };
+  if (editorLeaseMatches(activeEditorLease, request)) {
+    onGranted();
+    return;
+  }
+  releaseActiveEditorLease();
+  pendingEditorLease = { lease: request, onGranted };
+  ws.send(JSON.stringify(request));
+}
+
+function releaseActiveEditorLease() {
+  const lease = activeEditorLease;
+  activeEditorLease = null;
+  retainEditorLeaseOnClose = false;
+  if (!lease || !connected || !ws || ws.readyState !== WebSocket.OPEN) return;
+  ws.send(JSON.stringify({ ...lease, type: MessageTypeEditorLease, op: "release" }));
+}
+
+function applyEditorLease(message: EditorLeaseMessage) {
+  if (message.op === "refused") {
+    pendingEditorLease = null;
+    const name = message.holderName || "Another editor";
+    openSelectList("Already editing", ["Ok"], () => {}, [`${name} is editing this ${message.kind}.`]);
+    return;
+  }
+  if (message.op !== "granted" || !pendingEditorLease || !editorLeaseMatches(message, pendingEditorLease.lease)) {
+    return;
+  }
+  const onGranted = pendingEditorLease.onGranted;
+  pendingEditorLease = null;
+  activeEditorLease = message;
+  onGranted();
+}
+
 function applyEditorDiff(message: EditorDiffMessage) {
   for (const cell of message.cells) setBoardCell(cell);
   if (!message.memberId || message.memberId === editorMemberId) {
@@ -1232,6 +1294,7 @@ function applyEditorStatSettings(message: EditorStatSettingsMessage) {
 // cancel), which sends the edited lines back as editorProgramSave.
 function applyEditorProgramText(message: EditorProgramTextMessage) {
   const statId = message.statId;
+  retainEditorLeaseOnClose = false;
   openModal({
     kind: "programEditor",
     title: message.prompt || "Edit Program",
@@ -1685,6 +1748,13 @@ function closeModal() {
   const scrollStatId = openScrollStatId;
   openScrollStatId = -1;
   modal = null;
+  if (activeEditorLease) {
+    if (retainEditorLeaseOnClose) {
+      retainEditorLeaseOnClose = false;
+    } else {
+      releaseActiveEditorLease();
+    }
+  }
 
   if (scrollStatId >= 0) {
     // An empty label is "dismissed, no hyperlink". The engine ignores it; the
@@ -2133,14 +2203,18 @@ function handleEditorKey(event: KeyboardEvent) {
       return;
     case "KeyZ":
       event.preventDefault();
-      openYesNo("Clear board? ", (yes) => {
-        if (yes) sendEditorBoard({ op: "clear" });
+      requestEditorLease({ kind: "board", boardId: editorProperties.boardId }, () => {
+        openYesNo("Clear board? ", (yes) => {
+          if (yes) sendEditorBoard({ op: "clear" });
+        });
       });
       return;
     case "KeyN":
       event.preventDefault();
-      openYesNo("Make new world? ", (yes) => {
-        if (yes) sendEditorBoard({ op: "new" });
+      requestEditorLease({ kind: "board", boardId: editorProperties.boardId }, () => {
+        openYesNo("Make new world? ", (yes) => {
+          if (yes) sendEditorBoard({ op: "new" });
+        });
       });
       return;
     case "KeyH":
@@ -2190,7 +2264,7 @@ function handleEditorKey(event: KeyboardEvent) {
       return;
     case "KeyI":
       event.preventDefault();
-      openEditorBoardInfo();
+      requestEditorLease({ kind: "board", boardId: editorProperties.boardId }, openEditorBoardInfo);
       return;
     case "KeyB":
       event.preventDefault();
@@ -2207,7 +2281,7 @@ function handleEditorKey(event: KeyboardEvent) {
     case "Enter":
       event.preventDefault();
       if (editorInspect.hasStat) {
-        openEditorStatSettings(editorInspect);
+        requestEditorLease({ kind: "stat", boardId: editorProperties.boardId, statId: editorInspect.statId }, () => openEditorStatSettings(editorInspect));
         return;
       }
       editorBrush = {
@@ -2444,7 +2518,10 @@ function sendEditorStat(field: string, value: number) {
 // editor. Save travels back through sendEditorProgramSave.
 function sendEditorProgram(statId: number) {
   if (!connected || !ws || ws.readyState !== WebSocket.OPEN) return;
-  ws.send(JSON.stringify({ type: MessageTypeEditorProgram, statId }));
+  requestEditorLease({ kind: "stat", boardId: editorProperties.boardId, statId }, () => {
+    retainEditorLeaseOnClose = true;
+    ws?.send(JSON.stringify({ type: MessageTypeEditorProgram, statId }));
+  });
 }
 
 function sendEditorProgramSave(statId: number, lines: string[]) {
@@ -2487,7 +2564,10 @@ function openEditorBoardList() {
 function openEditorTransfer() {
   openSelectList("Transfer board:", ["Import board", "Export board"], (entry) => {
     if (entry === "Import board") {
-      importEditorBoardFile();
+      requestEditorLease({ kind: "board", boardId: editorProperties.boardId }, () => {
+        retainEditorLeaseOnClose = true;
+        importEditorBoardFile();
+      });
     } else if (entry === "Export board") {
       sendEditorBoard({ op: "export" });
     }
@@ -2500,16 +2580,27 @@ function importEditorBoardFile() {
   const input = document.createElement("input");
   input.type = "file";
   input.accept = ".brd,.BRD";
+  let handled = false;
   input.addEventListener("change", () => {
+    handled = true;
     const file = input.files?.[0];
-    if (!file) return;
+    if (!file) {
+      releaseActiveEditorLease();
+      return;
+    }
     file.arrayBuffer().then((buffer) => {
       const bytes = new Uint8Array(buffer);
       let binary = "";
       for (let i = 0; i < bytes.length; i += 1) binary += String.fromCharCode(bytes[i]);
       sendEditorBoard({ op: "import", data: btoa(binary) });
+      releaseActiveEditorLease();
     });
   });
+  window.addEventListener("focus", () => {
+    window.setTimeout(() => {
+      if (!handled) releaseActiveEditorLease();
+    }, 1000);
+  }, { once: true });
   input.click();
 }
 
