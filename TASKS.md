@@ -1556,6 +1556,22 @@ and running early. See NOTES.md.)
   place; `npm test`/`npm run build`/`go test ./...` green; replay unchanged. See
   NOTES.md.
 
+- [ ] **M5.10 — URGENT: editor sidebar UI parity, not scroll popups.** The
+  browser editor still diverges substantially from the original DOS editor: many
+  editor interactions are being rendered as generic scroll/modal popups instead of
+  drawing into the right sidebar and top/bottom editor chrome the way
+  `EditorDrawSidebar`, `EditorUpdateSidebar`, and `EDITOR.PAS` do. Audit every
+  remaining editor popup/scroll path (element/category menus, color/pattern
+  selection, board/world/stat prompts, help/status readouts, text-mode indicators,
+  and any feature surfaced through `openSelectList`/scroll UI) and convert the
+  ones that were sidebar/status interactions in vanilla ZZT back into faithful
+  CP437 sidebar/editor-chrome rendering. Keep true text windows as text windows,
+  but do not use scroll popups as a substitute for editor sidebar UI. DoD: a
+  screenshot-level checklist comparing each major editor mode against the original
+  editor; no original-sidebar interaction is implemented as a generic scroll popup;
+  browser tests cover at least the sidebar menu/readout state transitions; and
+  `npm test`, `npm run build`, `go build ./...`, and `go test ./...` are green.
+
 ## M11 — Museum of ZZT: search and play anything
 
 Goal: from the browser, search the Museum of ZZT's archive of community
