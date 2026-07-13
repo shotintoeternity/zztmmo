@@ -3,36 +3,40 @@
 [![Go Test Status](https://img.shields.io/badge/go%20test-passing-brightgreen)](https://github.com/shotintoeternity/zztmmo)
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](LICENSE)
 
-**Welcome back to the Town of ZZT. Except now you can play multiplayer with your friends.**
+**Welcome back to the Town of ZZT. This time, bring friends.**
 
-ZZTMMO transforms Tim Sweeney's legendary 1991 shareware classic, **ZZT**, into a fully synchronized multiplayer online world. Play, chat, explore, buy torches from the Armory, dodge ruffians, cross passages, save shared room snapshots, and wander through classic ZZT worlds together in a browser-rendered DOS text mode.
+ZZTMMO turns Tim Sweeney's 1991 shareware classic **ZZT** into a shared browser world: same blue text windows, same blinking player, same ruffians making awful decisions, but now multiple people can wander the boards together.
 
-## Key Features
+Explore classic `.ZZT` worlds in synchronized rooms, chat while you play, read scrolls, buy supplies, get hurt, respawn, cross passages, save shared snapshots, and watch someone else discover that yes, that fake wall was fake the whole time.
 
-*   **Shared co-op play:** Multiple players can share the same board, move independently, pick up items, trigger scrolls, die, respawn, and transfer between rooms without freezing everyone else.
-*   **Authentic browser ZZT UI:** The web client renders the original 60x25 board plus 20x25 sidebar in CP437 cells with DOS colors, dark-room lighting, torch behavior, player blink, modal text windows, help screens, debug prompts, high scores, and title-screen flows.
-*   **Dynamic worlds and room instances:** The server can discover `.ZZT` files, load worlds by name, run one room per board, freeze empty rooms, and move players through passages and board edges while keeping active rooms alive.
-*   **Server-wide chat:** Browser clients can send and receive global chat, with optional JSONL persistence under the configured saves directory.
-*   **Savable shared snapshots:** The browser save flow writes sanitized room snapshots to a configured `-saves` directory, and the title screen can list and restore them later.
-*   **Spritesheet-based CP437 fidelity:** Rendering uses pixel-perfect PNG font sheets from Adrian Siekierka's [Zeta](https://github.com/asiekierka/zeta) emulator so smileys, borders, items, and text align like DOS ZZT.
-*   **Server-authoritative simulation:** The Go backend owns all gameplay. Browser clients send keyboard state and command bytes; the server returns snapshots, dirty-cell diffs, player HUD state, modal events, sound events, and board changes.
+## Play Together Today
 
----
+*   **Explore classic ZZT worlds together:** Load local `.ZZT` files or search Museum of ZZT titles from the world picker, then join each world as its own live instance.
+*   **Share rooms without sharing a keyboard:** Multiple players can stand on the same board, move independently, trigger scrolls, buy and use items, take damage, die, and respawn.
+*   **Keep the world moving:** Board transfers, passages, active-room ticks, frozen empty rooms, dark rooms, torches, high scores, help screens, pause, quit, and title-screen flows are all handled server-side.
+*   **Chat like it is 1995 with better sockets:** Browser clients get global chat, with optional JSONL persistence when saves are enabled.
+*   **Save the shared mess:** Room snapshots can be saved to disk and restored later, so a party can preserve puzzle progress instead of starting from a pristine world every session.
+*   **Play co-op first, PvP later:** The current game is honest multiplayer ZZT co-op. Combat, damage, bullets, and hazards are server-authoritative where implemented, but there are no PvP arenas, rankings, ownership rules, or duel systems yet.
 
-## Under the Hood
+## The ZZT Feel
 
-Making a frame-rate-dependent DOS game from 1991 multiplayer is a technical challenge because ZZT was built around global state, blocking modal UI loops, and timing quirks.
+*   **Canvas CP437 renderer:** The browser draws the original 60x25 board plus 20x25 sidebar in DOS colors using pixel-perfect PNG font sheets from Adrian Siekierka's [Zeta](https://github.com/asiekierka/zeta).
+*   **ZZT-style windows:** Scrolls, files, prompts, help, saves, generated-world progress, world search, and failure messages render as text-mode modal windows.
+*   **Server-authoritative simulation:** Clients send keyboard state and command bytes; the Go server owns gameplay and streams snapshots, dirty-cell diffs, HUD updates, sounds, modal events, and board changes.
+*   **Faithful where it matters:** Classic behavior and bugs are treated as the spec unless multiplayer needs an explicit deviation.
 
-To make it work:
+## Moonshot Roadmap
 
-1.  **The engine:** Forked from [benhoyt/zztgo](https://github.com/benhoyt/zztgo), a Go port of the reconstructed Pascal source, then converted into an importable, headless, instanced engine package.
-2.  **Faithful over clean:** Classic behavior and bugs are treated as the specification unless the multiplayer server needs an explicit deviation. The Pascal source and Reconstruction of ZZT remain the behavior oracle.
-3.  **Deterministic simulation:** Randomness flows through a seeded Turbo Pascal-style RNG, and replay/state-hash tests guard the engine against drift.
-4.  **De-modal protocol:** Scrolls, help, save prompts, debug prompts, quit confirmation, high-score entry, pause state, sound toggles, death, respawn, and board transfers are emitted as events instead of blocking the simulation.
-5.  **Room manager:** One `RoomManager` owns the world, creates one engine per active board, routes player joins/leaves/transfers, snapshots rooms for saving, and preserves shared puzzle progress across rooms.
-6.  **Dumb terminal client:** The TypeScript/Vite client draws CP437 cells on canvas, synthesizes ZZT sounds with WebAudio, routes keyboard input, and renders modal UI, but it does not simulate gameplay.
+ZZTMMO is already playable as a shared ZZT server, but the long game is stranger and bigger:
 
----
+*   **Dream worlds:** Generate compact, playable `.ZZT` worlds from prompts, validate them, and host them as multiplayer instances.
+*   **Museum search-and-play:** Keep turning the Museum of ZZT archive into a walkable universe where old community worlds are a few keystrokes away.
+*   **Player identity:** Add account-backed names, persistent player state, invites, parties, and cleaner ownership for worlds and saves.
+*   **Party instances:** Make it easy for a group to spin up a private run, continue later, and invite more players into the same adventure.
+*   **Replays and daily challenges:** Record runs, replay them deterministically, publish daily seeds, and let players race the same strange little board.
+*   **Ghost racing:** Show prior runs as ghosts so players can speedrun ZZT boards against friends without needing everyone online at once.
+*   **Live-DM tools:** Explore possession, moderation, and “dungeon master” style control for running events inside classic ZZT worlds.
+*   **Community publishing:** Grow the browser editor into a collaborative way to build, test, publish, and share worlds without leaving the page.
 
 ## Running it Locally
 
@@ -70,8 +74,6 @@ All commands are run from the `engine/` directory.
 *   `-help .` points at the directory containing ZZT `.HLP` files.
 *   `-saves saves` enables saved-room snapshots and persistent chat logs. Use an empty value to disable saving.
 
----
-
 ## Directory Structure
 
 ```
@@ -81,19 +83,6 @@ engine/fixtures/     Replay fixtures and deterministic verification data
 engine/saves/        Local saved-game snapshots and chat logs when enabled
 reference/           Local reference checkouts, ignored by git
 ```
-
----
-
-## Development Docs
-
-For a deep dive into the architecture:
-
-*   [TASKS.md](TASKS.md) - Active roadmap, completed milestones, and definitions of done.
-*   [IMPLEMENTATION.md](IMPLEMENTATION.md) - Architecture overview and design decisions.
-*   [ANALYSIS.md](ANALYSIS.md) - Low-level code maps and surgery details.
-*   [NOTES.md](NOTES.md) - Running log of deviations, bugs, and decisions.
-
----
 
 ## Credits & Special Appreciation
 
@@ -107,4 +96,4 @@ This project is licensed under the **MIT License** (see [LICENSE](LICENSE)). Epi
 
 ## Greetz
 
-atom, blazer, bluemagus, bongo, chronos, cly5m, crankgod, darkmage, dex, dive, dr. dos, drac0, dragonlord, evilmario, fishfood, flatcoat_lab, flicker, funk, hercules, hm, hydra, jujubee, kkairos, knightt, lemmer, lord_igsel, madtom, masamune, mono, mooseka, myth, nadir, roastbeef, smiley, tseng, tucan, viovis, wil, xabbott, xf, yenrab, zamros, zed
+atom, blazer, bluemagus, bongo, capnkev, chronos, cly5m, crankgod, darkmage, dex, dive, dr. dos, drac0, dragonlord, evilmario, fishfood, flatcoat_lab, flicker, funk, hercules, hm, hydra, jujubee, kkairos, knightt, lemmer, lord_igsel, madtom, masamune, mono, mooseka, myth, nadir, roastbeef, smiley, tseng, tucan, viovis, wil, xabbott, xf, yenrab, zamros, zed

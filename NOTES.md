@@ -846,7 +846,7 @@ Gaps found → tasks:
   class and leaves a classification table here.
 * Browser board changes cut instantly; vanilla fades via
   `TransitionDrawBoardChange` (game.go:1448) → M9.1, client-side only.
-* No `A` About screen on the browser title → M9.2.
+* `A` About screen on the browser title → fixed in M9.2.
 * Saves drop per-player inventory (M4.3a's documented decision) → M6.4,
   gated on M6.2 identity, stored as a sidecar so the vanilla file format is
   never touched.
@@ -859,6 +859,17 @@ so future audits don't re-flag them: game-over ending the run (death
 respawns instead, M2.4/M4.3 DEVIATIONs), `S` game speed (the server owns the
 110ms tick), global pause (per-player instead, M3.11), and the modal
 terminal editor as the browser path (M5 replaces it; the terminal keeps it).
+
+## M9.2 — title About/menu completeness (2026-07-13)
+
+Browser title `A` now follows vanilla's About path via
+`/api/help?file=ABOUT.HLP&title=About+ZZT...`, using the existing text-window
+help renderer. The title sidebar and key map cover `W`, `P`, `R`, `Q`/Escape,
+`A`, `H`, and the browser editor `E`. `S` game speed remains intentionally
+omitted because the server owns tick pacing; adding a client-side slider would
+not affect simulation speed. `D` dream-world generation is a ZZTMMO extension,
+not vanilla title vocabulary. Tests cover the ABOUT.HLP endpoint and the pure
+title key/sidebar mapping.
 
 ## 2026-07-10 — Design horizon: collaborative editing (M10)
 
@@ -2201,20 +2212,55 @@ Deliberate omissions (recorded, not built):
 
 Sidebar deviations from cell-for-cell DOS (both are browser-capability, not
 cosmetic drift): the DOS `L Load` key is folded into the `S` world menu's
-`Upload .ZZT` (M5.6), and the browser adds a `T Transfer board` key (M5.5 .BRD
-import/export) the DOS editor lacks. Both are listed in the omissions/bonuses
-above; the sidebar labels them where DOS put `L`.
+`Upload .ZZT` (M5.6), and the browser adds a `T Tran
 
-DECISION — color selector (spec correction): the task spec listed a "16 fg × 8
-bg + blink" selector, but that is NOT a classic ZZT editor feature — `C`
-(EDITOR.PAS:725-731) only cycles bright fg 9–15 within the current background,
-no bg picker, no blink. The browser already matches vanilla. Building the richer
-selector would invent UI the DOS editor lacks (CLAUDE.md rule 4), so color parity
-is DONE as-is; backgrounds are set the ZZT way (copy a tile via Enter). No work.
 
-Landed (2026-07-13): all seven gaps implemented or deferred with a reason above.
-A browser author now reaches every placeable element by category, types text,
-paints lines with Shift, clears a board, starts a new world, reads editor help,
-and is prompted to save on exit — the original-editor muscle-memory surface.
-`go test ./...`, `go vet`, web `npm test`, and `tsc` all green; replay fixture
-untouched (the editor session is server-side and never ticked).
+## 2026-07-13 — M5.9: sidebar F1/F2/F3 element picker (M5.8 gap-closure)
+
+The user reported the editor still lacked parity: pressing F2 opened a scroll
+(modal list) instead of turning the sidebar into a creature picker the way the
+DOS editor does. Confirmed against three layers:
+
+- Go editor (`editor.go:689-782`): faithful — F1/F2/F3 draw the category on the
+  sidebar and wait for a shortcut key (ports `EDITOR.PAS:808-887`).
+- Server protocol: already correct — `editorElementMenus`
+  (`editor_session.go:517`) sends all three category tables on the entry
+  snapshot, and `editorPlaceElement` (op `"element"`, `editor_session.go:417`)
+  ports the vanilla AddStat/seed placement.
+- Browser client: the gap. `openEditorElementMenu` (`main.ts`) rendered the menu
+  via `openSelectList` — a modal scroll overlay you arrow through — not the
+  in-sidebar picker. M5.8 shipped the menu *data* but never brought the browser
+  render to sidebar parity, though M5.8's box claimed "the F1–F4 element category
+  tables… every placeable element reachable by its original keystroke".
+
+Fix is client-only (server was already faithful):
+- `editor.ts`: `drawEditorSidebar` gained an optional `categoryMenu` that, when
+  set, clears sidebar rows 3-20 and lists the category (shortcut badge with the
+  vanilla row-parity shading `((i%2)<<6)+0x30`, name, glyph), leaving the title
+  and selector/mode rows — exactly what `EDITOR.PAS:808-842` overlays. Glyph
+  colour follows `EDITOR.PAS:834-837` (`menuGlyphColor`): dark-background colours
+  shown on blue for legibility.
+- `main.ts`: replaced the modal with `openEditorCategoryMenu` /
+  `handleEditorCategoryKey` / `selectEditorMenuItem`; added `editorCategoryMenu`
+  and `editorStatEditAfterPlace` state. A matching shortcut places via op
+  `"element"`; Escape or any non-match closes (vanilla reads one key and the
+  no-match loop falls through to a sidebar redraw). All 12 sidebar-draw sites now
+  route through one `renderEditorSidebar()` so an open picker survives async
+  collaborator diffs/inspects that would otherwise repaint the plain command
+  block over it. `applyEditorDiff` opens the stat editor once the placed stat's
+  diff arrives, mirroring `EditorEditStat` after `AddStat`.
+
+DECISION — exact-vanilla selection behaviour (owner-chosen): selecting from the
+picker places immediately at the cursor and, for stat-backed elements, opens the
+stat editor — not a select-a-brush-then-paint model.
+
+KNOWN CAVEAT (pre-existing, NOT introduced here; shared with the old modal):
+CHOICE-coloured elements resolve their placement colour against `0x0F` rather
+than the editor's current selected colour, because `editorElementMenus`
+neutralises CHOICE colours to `0x0F` in the menu payload. Fixing it means sending
+the editor's live colour as the cursor colour on placement; left for a future
+task to keep M5.9 scoped to the interaction.
+
+Verified: `npm test` (7 web suites), `npm run build`, `go build ./...`,
+`go test ./...` all green; replay fixture unchanged (change is TS-only, outside
+the sim).

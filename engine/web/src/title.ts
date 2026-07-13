@@ -10,13 +10,13 @@
 // title screen runs before any WebSocket exists and there is nothing else to
 // test it against.
 //
-// Two rows of vanilla's menu are deliberately absent:
+// One vanilla row is deliberately absent, and one is deliberately different:
 //
 //   * ' S ' Game speed (SidebarPromptSlider at 66,21). Pacing is the server's:
 //     it ticks every ServerTickDuration for every player in the room. A slider
 //     that moved nothing would be a lie.
-//   * ' E ' Board Editor, which vanilla draws only when EditorEnabled. The
-//     browser editor is M5.
+//   * ' E ' Board Editor is always shown here because the browser editor is the
+//     multiplayer-safe M5 path rather than vanilla's terminal editor loop.
 
 import { sidebarClearLine, type WriteText } from "./sidebar";
 

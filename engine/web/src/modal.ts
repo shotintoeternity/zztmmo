@@ -260,22 +260,30 @@ function fitText(text: string, width: number): string {
 }
 
 function worldSearchMatches(m: WorldSearchModal): WorldSearchEntry[] {
-  const terms = m.query.toLowerCase().trim().split(/\s+/).filter(Boolean);
-  const matches = terms.length === 0
-    ? m.entries
-    : m.entries.filter((entry) => {
-      const haystack = [entry.world, entry.id, entry.title, entry.author, entry.created].join(" ").toLowerCase();
-      return terms.every((term) => haystack.includes(term));
-    });
-  return matches.slice(0, WORLD_SEARCH_LIMIT);
+	const terms = m.query.toLowerCase().trim().split(/\s+/).filter(Boolean);
+	const lobby = m.entries.filter((entry) => entry.world.toUpperCase() === "TOWN");
+	if (terms.length === 0) {
+		const occupied = m.entries.filter((entry) => entry.world.toUpperCase() !== "TOWN" && (entry.players ?? 0) > 0);
+		return [...lobby, ...occupied].slice(0, WORLD_SEARCH_LIMIT);
+	}
+	const matches = m.entries.filter((entry) => {
+		if (entry.world.toUpperCase() === "TOWN") {
+			return false;
+		}
+		const haystack = [entry.world, entry.id, entry.title, entry.author, entry.created].join(" ").toLowerCase();
+		return terms.every((term) => haystack.includes(term));
+	});
+	return [...matches, ...lobby].slice(0, WORLD_SEARCH_LIMIT);
 }
 
-function worldSearchLines(m: WorldSearchModal, matches: WorldSearchEntry[]): string[] {
-  const count = matches.length === 1 ? "1 match" : `${matches.length} matches`;
-  const lines = [
-    `$Search: ${m.query || "*"}`,
-    `$${count}`,
-    "",
+function worldSearchLines(matches: WorldSearchEntry[]): string[] {
+	const count = matches.length === 1 ? "1 match" : `${matches.length} matches`;
+	const lines = [
+		"$Search for a world on Museum of ZZT by",
+		"$typing below. Results update as you type.",
+		"",
+		`$${count}`,
+		"",
   ];
   if (matches.length === 0) {
     lines.push("  No matching worlds.");
@@ -294,10 +302,10 @@ function worldSearchLines(m: WorldSearchModal, matches: WorldSearchEntry[]): str
 
 function worldSearchLinePos(selected: number, matches: WorldSearchEntry[]): number {
   if (matches.length === 0) {
-    return 4;
+    return 6;
   }
   const clamped = Math.min(Math.max(0, selected), matches.length - 1);
-  return 4 + clamped * 2;
+  return 6 + clamped * 2;
 }
 
 function renderWorldSearch(write: WriteText, m: WorldSearchModal) {
@@ -307,10 +315,19 @@ function renderWorldSearch(write: WriteText, m: WorldSearchModal) {
   }
   renderTextWindow(write, {
     title: m.title,
-    lines: worldSearchLines(m, matches),
+    lines: worldSearchLines(matches),
     linePos: worldSearchLinePos(m.selected, matches),
     viewingFile: false,
   });
+  renderWorldSearchInput(write, m.query);
+}
+
+function renderWorldSearchInput(write: WriteText, query: string) {
+  const label = "Type to search: ";
+  const input = query.length === 0 ? "\xdb" : `${query}\xdb`;
+  const maxInput = WORLD_DETAIL_WIDTH - label.length;
+  const text = label + fitText(input, maxInput).padEnd(maxInput, " ");
+  write(TEXT_WINDOW_X + 4, TEXT_WINDOW_Y + 6, 0x70, text);
 }
 
 // renderProgramEditor is TextWindowEdit's screen: the raw lines, plus the block

@@ -265,12 +265,12 @@ func zztFilesFromZip(data []byte) ([]museumZipWorld, error) {
 	}
 	var worlds []museumZipWorld
 	for _, zf := range zr.File {
-		if !strings.EqualFold(filepath.Ext(zf.Name), ".zzt") {
+		if !strings.EqualFold(path.Ext(strings.ReplaceAll(zf.Name, "\\", "/")), ".zzt") {
 			continue
 		}
-		base := filepath.Base(zf.Name)
-		if base == "" || base == "." || strings.ContainsAny(base, "/\\") {
-			continue
+		base, err := museumZipEntryBase(zf.Name)
+		if err != nil {
+			return nil, err
 		}
 		rc, err := zf.Open()
 		if err != nil {
@@ -291,6 +291,21 @@ func zztFilesFromZip(data []byte) ([]museumZipWorld, error) {
 	}
 	sort.SliceStable(worlds, func(i, j int) bool { return worlds[i].Name < worlds[j].Name })
 	return worlds, nil
+}
+
+func museumZipEntryBase(name string) (string, error) {
+	if name == "" || strings.Contains(name, "\x00") || strings.Contains(name, "\\") {
+		return "", fmt.Errorf("unsafe zzt filename %q", name)
+	}
+	cleaned := path.Clean(name)
+	if path.IsAbs(cleaned) || cleaned == "." || cleaned == ".." || strings.HasPrefix(cleaned, "../") {
+		return "", fmt.Errorf("unsafe zzt filename %q", name)
+	}
+	base := path.Base(cleaned)
+	if base == "" || base == "." || base == ".." {
+		return "", fmt.Errorf("unsafe zzt filename %q", name)
+	}
+	return strings.ToUpper(base), nil
 }
 
 func (m *MuseumService) downloadZip(ctx context.Context, letter, filename string) ([]byte, error) {

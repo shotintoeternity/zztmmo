@@ -12,7 +12,7 @@ const output = await build({
   write: false,
 });
 const source = Buffer.from(output.outputFiles[0].contents).toString("base64");
-const { handleModalKey } = await import(`data:text/javascript;base64,${source}`);
+const { handleModalKey, renderModal } = await import(`data:text/javascript;base64,${source}`);
 
 // modal.ts reads only event.code / event.key / the modifier flags at runtime.
 function key(code, k = "", opts = {}) {
@@ -43,12 +43,18 @@ function worldSearch() {
     query: "",
     selected: 0,
     entries: [
+      { world: "TOWN", id: "TOWN", title: "TOWN (ZZTMMO Lobby)", author: "Unknown", created: "" },
+      { world: "RHYGAR1", id: "rhygar1", title: "Rhygar", author: "Saxxon Pike", created: "1997", players: 1 },
       { world: "TEEN", id: "teen", title: "Teen Priest", author: "Draco", created: "1998" },
       { world: "CUTLASS", id: "cutlass", title: "Tales of Adventure: The Treasure of Captain Cutlass", author: "Dr. Dos", created: "2001" },
     ],
     picked: null,
     onSelect(entry) {
       this.picked = entry;
+    },
+    queries: [],
+    onQuery(query) {
+      this.queries.push(query);
     },
   };
 }
@@ -131,12 +137,26 @@ function worldSearch() {
   assert.equal(m.linePos, 1);
 }
 
+// Empty world search shows instructions, TOWN, and occupied rooms.
+{
+  const m = worldSearch();
+  const writes = [];
+  renderModal((x, y, color, text) => writes.push({ x, y, color, text }), m);
+  const rendered = writes.map((write) => write.text).join(" ");
+  assert.match(rendered, /Search for a world on Museum of ZZT by .*Results update as you type\./);
+  assert.ok(writes.some((write) => write.color === 0x70 && write.text.startsWith("Type to search: ")));
+  assert.match(rendered, /TOWN \(ZZTMMO Lobby\)/);
+  assert.match(rendered, /Rhygar/);
+  assert.doesNotMatch(rendered, /Teen Priest/);
+}
+
 // World search filters by Museum author/title metadata and selects the match.
 {
   const m = worldSearch();
   assert.equal(handleModalKey(m, key("KeyD", "D")), "redraw");
   assert.equal(handleModalKey(m, key("KeyR", "r")), "redraw");
   assert.equal(m.query, "Dr");
+  assert.deepEqual(m.queries, ["D", "Dr"]);
   assert.equal(handleModalKey(m, key("Enter", "Enter")), "close");
   assert.equal(m.picked.world, "TEEN");
 }
@@ -149,6 +169,26 @@ function worldSearch() {
   assert.equal(handleModalKey(m, key("Backspace", "Backspace")), "redraw");
   assert.equal(m.query, "");
   assert.equal(m.selected, 0);
+  assert.deepEqual(m.queries, ["c", ""]);
+}
+
+// Museum entries live in the same ZZT-style world selector and can be selected.
+{
+  const m = worldSearch();
+  m.entries.push({
+    world: "ZIGZAG",
+    id: "zzt_zigzag",
+    title: "Zigzag and the Crystal Maze",
+    author: "Benco",
+    created: "1997-04-01",
+    source: "museum",
+    letter: "z",
+    filename: "zigzag.zip",
+  });
+  handleModalKey(m, key("KeyB", "B"));
+  assert.equal(handleModalKey(m, key("Enter", "Enter")), "close");
+  assert.equal(m.picked.source, "museum");
+  assert.equal(m.picked.filename, "zigzag.zip");
 }
 
 console.log("modal.test.mjs: all assertions passed");

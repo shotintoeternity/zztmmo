@@ -596,6 +596,30 @@ func TestM43HelpFilenameRejectsTraversal(t *testing.T) {
 	}
 }
 
+func TestM92TitleAboutHelpEndpoint(t *testing.T) {
+	api := &WebAPI{}
+	rec := httptest.NewRecorder()
+	req := httptest.NewRequest("GET", "/api/help?file=ABOUT.HLP&title=About+ZZT...", nil)
+	api.Handler().ServeHTTP(rec, req)
+
+	if rec.Code != 200 {
+		t.Fatalf("ABOUT.HLP status=%d body=%q", rec.Code, rec.Body.String())
+	}
+	var msg struct {
+		Title string   `json:"title"`
+		Lines []string `json:"lines"`
+	}
+	if err := json.Unmarshal(rec.Body.Bytes(), &msg); err != nil {
+		t.Fatalf("decode ABOUT.HLP response: %v", err)
+	}
+	if msg.Title != "About ZZT..." {
+		t.Fatalf("title=%q, want About ZZT...", msg.Title)
+	}
+	if len(msg.Lines) == 0 || !strings.Contains(strings.Join(msg.Lines, "\n"), "ZZT") {
+		t.Fatalf("ABOUT.HLP response did not include ZZT text: %+v", msg)
+	}
+}
+
 // The title screen is the board the client draws behind its menu.
 func TestM43TitleScreenCells(t *testing.T) {
 	world := testEmptyWorld(t)

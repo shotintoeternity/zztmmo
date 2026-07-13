@@ -15,6 +15,24 @@ Baseline verified 2026-07-09: `engine/` builds and its tests pass on go1.26.5.
 
 ---
 
+## Execution priority (overrides the positional "first unchecked task" default)
+
+Ranked 2026-07-12. Nothing open is a live bug (M7/M8/M13/M14.1–2 are done), so
+this is value + unblocking + effort, cheapest-highest-value first. **Current
+focus: M5.8** (owner pick). Work the list top-down; skip the optional/deferred
+tail unless the owner asks.
+
+1. **M5.8** — editor feature/UI parity *(current focus, owner-selected)*
+2. M6.2 — Google OAuth; gates M6.4 and M10.3
+3. M6.4 — account-keyed player-state persistence (needs M6.2)
+4. M10.1 → M10.2 → M10.3 → M10.4 — collaborative editing (M10.3 needs M6.2)
+
+**Optional / deferred (bottom):**
+- M14.3 — package split (skip unless the single package is actually hurting)
+- M12.15d — mined style priors (owner-deferred; revisit only if generation quality plateaus)
+
+---
+
 ## M0 — Headless & deterministic (NO behavior changes)
 
 Goal: the game simulates identically, but all I/O goes through replaceable seams
@@ -1545,7 +1563,7 @@ worlds, pick one, and be playing it moments later — the server fetches,
 validates, and hosts on demand. Composes M7.5's fetch/validate pipeline with
 M5.6's hosting path. Positioned right after M5 by owner priority.
 
-- [ ] **M11.1 — Server-side Museum client: search, fetch, validate, host.**
+- [x] **M11.1 — Server-side Museum client: search, fetch, validate, host.**
   A Go client for the Museum of ZZT's public JSON API (museumofzzt.com — read
   the current API docs at implementation time rather than trusting memory;
   they document search and file endpoints). Server endpoints:
@@ -1567,7 +1585,7 @@ M5.6's hosting path. Positioned right after M5 by owner priority.
   tests; a second play of the same world hits the cache; `go test ./...`
   green; replay fixture unchanged (nothing touches the sim).
 
-- [ ] **M11.2 — Browser Museum search window.** A CP437 search UI on the
+- [x] **M11.2 — Browser Museum search window.** A CP437 search UI on the
   title screen (a new key in the monitor menu, e.g. `M`), built from the
   M4.1 window system: a text-entry line (the M6.1 input-capture mode), a
   scrollable result list (title, author, year — whatever the search proxy
@@ -1643,7 +1661,7 @@ no protocol message changes, no simulation changes.
   node-driven TS test (the M4.3a pattern) covers the order and
   complete-reveal logic; `go test ./...` untouched and green.
 
-- [ ] **M9.2 — Title-screen About and menu completeness.** Vanilla's title
+- [x] **M9.2 — Title-screen About and menu completeness.** Vanilla's title
   monitor accepts `A` to show ABOUT.HLP through the help viewer; the browser
   title (M4.3) has start/restart, `W`, `R`, quit, and high scores, but no `A`.
   Wire it through the existing `HelpEvent`/help-window path (M3.9) — the file
@@ -1783,10 +1801,12 @@ illumination, sound broadcast, next games batch — was promoted to M7 above
 with a full spec. New community reports land here first, then get specced
 into a milestone.)
 
+- [ ] **Editor text-entry sluggishness.** Browser editor text mode feels laggy while typing; investigate the F4 text input/render path, especially per-keystroke WebSocket round trips, sidebar/overlay redraws, and `sendEditorInspect` after each character. DoD: rapid text entry feels immediate locally, still persists authoritatively through `editorEdit` diffs, and has a regression test or lightweight browser-side coverage.
+
 - [x] **Troubleshoot player stuck after damage.** Solve the issue where players get stuck after being zapped/damaged by a ruffian/bear due to stat index shift misalignment in RoomManager.
 - [x] **Title screens aren't animating properly.** Investigate and resolve the issue where object scripts and movements on ZZT title screens do not animate or tick as they should. *(Done: `engine/title_sim.go` runs board 0 on an isolated engine — its own copied world, never written back — ticked from the server loop only while a browser is watching, with changed cells pushed over `/api/title/stream` as SSE.)*
 
-- [ ] **Rewrite the launch text.** The copy at launch is weak: the name prompt
+- [x] **Rewrite the launch text.** The copy at launch is weak: the name prompt
   ("Welcome to ZZTMMO!  Enter your name:", `web/src/main.ts:310`) and
   especially the world-select blurb (`WORLD_SELECT_BLURB`,
   `web/src/main.ts:467-476` — the "Bring your friends… TOWN is the lobby…
@@ -1795,7 +1815,7 @@ into a milestone.)
   for the register), sized to the CP437 windows it renders in. Owner signs
   off on the final strings. Filler task — spec is just "make it good".
 
-- [ ] **README refresh: sell the multiplayer game and roadmap.** Remove the
+- [x] **README refresh: sell the multiplayer game and roadmap.** Remove the
   development-docs block from `README.md` entirely:
   "For a deep dive into the architecture:" plus the `TASKS.md`,
   `IMPLEMENTATION.md`, `ANALYSIS.md`, and `NOTES.md` bullets. Also remove the
@@ -1977,10 +1997,10 @@ newly enables; same rule: backlog bullets, owner promotes before spec):**
   world picker you walk through; TOWN goes back to being a game you beat.
 
 **README follow-ups:**
-* [ ] **Add capnkev to the README greetz list.** Keep the list alphabetical,
+* [x] **Add capnkev to the README greetz list.** Keep the list alphabetical,
   names only, and preserve the README's no-emoji style.
 
-* [ ] **M12.2 follow-up: verify ZWD round-trip StateHash.** Decompiler and compiler work — any .ZZT decompiles cleanly and recompiles to a valid loadable world. Hash checks in TestZWDRoundTripTOWN/CAVES/CITY fail because saved .ZZT files carry garbage in player stat[0] runtime fields (StepX/StepY, P1/P2/P3, Follower/Leader). Fix: normalize those to compiler defaults before hashing the original. Also fix the pre-existing scroll_window_test.go build failure (townRoomManager/findEvent undefined) blocking go test ./...\n\n* [x] **ZZT-OOP `#end`/`:touch` "race" — MISDIAGNOSIS. Real cause: compiler stat-default garbage (FIXED).**
+* [x] **ZZT-OOP `#end`/`:touch` "race" — MISDIAGNOSIS. Real cause: compiler stat-default garbage (FIXED).**
   There is no tick race. The symptom (touching an object never emits a `ScrollEvent`,
   objects "don't respond" in vanilla ZZT) came from the ZWD compiler's default
   `zwdStat` carrying non-ZZT values `p1=4, p2=4, stepY=-1` (`engine/zwd.go`
@@ -2054,33 +2074,4 @@ newly enables; same rule: backlog bullets, owner promotes before spec):**
   Claude currently generates passages without coordinating their colors across
   boards. For example, a red passage on the Town Plaza that leads to Inside the
   Bakery must have a corresponding red passage on Inside the Bakery pointing
-  back. If the color differs (or if no return passage exists), players land at the
-  wrong spot.
-
-  **Fix needed in prompt spec:** Add to `ZWD.md` and `engine/promptkit_assets/spec.md`
-  under the Passage section:
-  > A passage to board B must have a matching-color return passage on board B.
-  > The color byte (`0xNN`) of both passages must be identical. When linking two
-  > boards, always define both the outgoing and the return passage in the same
-  > legend entry color and verify they match.
-
-  **Optional engine improvement:** Add a post-compilation cross-board check in
-  `CompileZWD` (or the `M12.4` validation step) that warns when a passage's
-  destination board has no matching-color passage.
-
-* [x] **Robust engine rendering/touching & compiler enforcement for orphan stats.**
-  When an `E_OBJECT` tile is placed in the board grid but not listed in the
-  `stats` section of the ZWD, it compiles successfully but lacks a stat. Drawing
-  or touching this orphan object tile triggers `index out of range [-1]` panic in
-  `ElementObjectDraw` (`elements.go:883`) because `GetStatIdAt(x, y)` returns `-1`.
-  
-  **Fixes needed:**
-  1. **Engine Robustness**: In `elements.go`, update `ElementObjectDraw` and
-     `ElementObjectTouch` (and other draw/touch procedures like Bomb/Transporter)
-     to check if `statId < 0` and handle it gracefully (e.g. falling back to the
-     default element character `ElementDefs[tile.Element].Character` or doing nothing
-     for touch) instead of panicking.
-  2. **Compiler Check**: In `zwd.go`, check that every tile placed on the board grid
-     which requires a stat (e.g., `E_OBJECT`, `E_SCROLL`, `E_PASSAGE`) has a corresponding
-     stat defined at its coordinates in the board's `stats` section. Fail compilation
-     with a descriptive error if any orphan stat-backed tiles are found.
+  back. If the color differs (or if n
