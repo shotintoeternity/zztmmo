@@ -2421,6 +2421,33 @@ function editorBoardName(id: number): string {
   return editorProperties.boards.find((board) => board.id === id)?.name ?? "None";
 }
 
+function openEditorElementMenu(key: string) {
+  const menu = editorMenus.find((candidate) => candidate.key.toLowerCase() === key.toLowerCase());
+  if (!menu || menu.items.length === 0) return;
+  const labels = menu.items.map((item) => {
+    const prefix = item.shortcut ? `${item.shortcut} ` : "";
+    const category = item.categoryName ? `${item.categoryName}: ` : "";
+    return `${prefix}${category}${item.name}`;
+  });
+  const items = new Map(labels.map((label, index) => [label, menu.items[index]]));
+  openSelectList(menu.title, labels, (label) => {
+    const item = items.get(label);
+    if (!item) return;
+    editorBrush = {
+      element: item.elementId,
+      character: item.character,
+      color: item.color,
+      copied: false,
+    };
+    redrawEditor();
+    if (editorReadOnly) {
+      showEditorReadOnly();
+      return;
+    }
+    sendEditorEdit("element");
+  });
+}
+
 // Board Information is EditorEditBoardInfo on top of the M4.1 text-window
 // layer. Every selection turns into one authoritative editorProperty operation;
 // the session, not this browser, validates ranges and persists BoardClose.
@@ -2809,3 +2836,129 @@ function eventCell(event: MouseEvent): { x: number; y: number } | null {
   }
   const x = Math.floor(((event.clientX - rect.left) / rect.width) * COLS);
   const y = Math.floor(((event.clientY - rect.top) / rect.height) * ROWS);
+  if (x < 0 || x >= COLS || y < 0 || y >= ROWS) {
+    return null;
+  }
+  return { x, y };
+}
+
+function sendKey(key: number) {
+  if (!connected || !ws || ws.readyState !== WebSocket.OPEN || playerId === 0) {
+    return;
+  }
+  const input: InputMessage = {
+    type: MessageTypeInput,
+    playerId,
+    seq: ++seq,
+    key,
+  };
+  ws.send(JSON.stringify(input));
+}
+
+function sendDebugCommand(text: string) {
+  if (!connected || !ws || ws.readyState !== WebSocket.OPEN || playerId === 0) {
+    return;
+  }
+  ws.send(JSON.stringify({ type: MessageTypeDebugCommand, playerId, text }));
+}
+
+function sendQuitReply(quit: boolean) {
+  if (!connected || !ws || ws.readyState !== WebSocket.OPEN || playerId === 0) {
+    return;
+  }
+  ws.send(JSON.stringify({ type: MessageTypeQuitReply, playerId, quit }));
+}
+
+// sendSaveFilename answers a savePrompt. The server sanitizes the name before it
+// reaches a path, and answers with a saveResult event either way.
+function sendSaveFilename(name: string) {
+  if (!connected || !ws || ws.readyState !== WebSocket.OPEN || playerId === 0) {
+    return;
+  }
+  ws.send(JSON.stringify({ type: MessageTypeSaveFilename, playerId, name }));
+}
+
+function sendHighScoreName(name: string) {
+  if (!connected || !ws || ws.readyState !== WebSocket.OPEN || playerId === 0) {
+    leaveToTitle();
+    return;
+  }
+  ws.send(JSON.stringify({ type: MessageTypeHighScoreName, playerId, name }));
+  // We have already left the room, so no diff will ever repaint this screen.
+  // If the server does not send the finished list, do not strand the player on
+  // a frozen board with no way out.
+  window.clearTimeout(highScoreTimer);
+  highScoreTimer = window.setTimeout(leaveToTitle, 3000);
+}
+
+function updatePressed(event: KeyboardEvent, down: boolean): boolean {
+  if (!isHandledKey(event.code)) {
+    return false;
+  }
+  if (down) {
+    pressed.add(event.code);
+  } else {
+    pressed.delete(event.code);
+  }
+  return true;
+}
+
+function currentMask(): number {
+  return movementMask(pressed);
+}
+
+function sendInput(mask: number, key = 0) {
+  if (!connected || !ws || ws.readyState !== WebSocket.OPEN || playerId === 0) {
+    return;
+  }
+  // A modal is open: never let held movement keys through.
+  if (modal && mask !== 0) {
+    return;
+  }
+  if (mask === 0 && lastMask === 0 && key === 0) {
+    return;
+  }
+  lastMask = mask;
+  const input: InputMessage = {
+    type: MessageTypeInput,
+    playerId,
+    seq: ++seq,
+  };
+  if (mask !== 0) {
+    input.keymask = mask;
+  } else if (key !== 0) {
+    input.key = key;
+  } else {
+    input.keymask = 0;
+  }
+  ws.send(JSON.stringify(input));
+}
+
+// editorInspect is a read request, not an input or a persisted cursor. The
+// browser owns editorCursor; the session only returns the tile's current data.
+function sendEditorInspect() {
+  if (!connected || !ws || ws.readyState !== WebSocket.OPEN || mode !== "editor") {
+    return;
+  }
+  ws.send(JSON.stringify({
+    type: MessageTypeEditorInspect,
+    x: editorCursor.x,
+    y: editorCursor.y,
+  }));
+}
+
+function sendEditorEdit(op: "place" | "erase" | "fill" | "element" | "text", char = 0) {
+  if (!connected || !ws || ws.readyState !== WebSocket.OPEN || mode !== "editor") {
+    return;
+  }
+  ws.send(JSON.stringify({
+    type: MessageTypeEditorEdit,
+    op,
+    x: editorCursor.x,
+    y: editorCursor.y,
+    element: editorBrush.element,
+    color: editorBrush.color,
+    copied: editorBrush.copied,
+    char,
+  }));
+}
