@@ -1311,7 +1311,7 @@ unchanged: these are ownership/plumbing changes, never simulation changes.
   M11.1 (Museum worlds are instances) and simplifies M13.4 if that hasn't
   landed yet.
 
-- [ ] **M14.2 — Session recording: bank the determinism dividend.** A
+- [x] **M14.2 — Session recording: bank the determinism dividend.** A
   complete session is `{world identity, seeds, per-tick inputs and
   submits}` — kilobytes. This is the foundation for shareable replays,
   ghost racing, the daily challenge, and verified leaderboards (idea

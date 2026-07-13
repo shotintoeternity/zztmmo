@@ -49,6 +49,12 @@ type WebSocketServer struct {
 	AutosaveEveryTicks int
 	autosaveTicks      int // countdown accumulator; touched only on the tick goroutine
 
+	// RecordDir, when non-empty, is where per-instance session recordings are
+	// written (M14.2). Set it through EnableRecording, which also stamps
+	// recordStamp once so a restart does not clobber a prior run's files.
+	RecordDir   string
+	recordStamp string
+
 	mu sync.Mutex
 	// nextPlayerID mints process-unique PlayerIDs across every instance, so ids
 	// never collide between hosted worlds (M14.1). Guarded by mu.
@@ -128,6 +134,7 @@ func (s *WebSocketServer) Run(ctx context.Context) {
 	for {
 		select {
 		case <-ctx.Done():
+			s.CloseRecorders()
 			return
 		case <-ticker.C:
 			s.Tick(ctx)
@@ -858,6 +865,77 @@ func safeRestoreSnapshot(rm *RoomManager, dir, name string) (err error) {
 	return rm.RestoreSnapshot(dir, name)
 }
 
+// EnableRecording turns on session recording for every current and future
+// instance, writing one JSONL file per instance under dir (M14.2). It is
+// best-effort: it creates the directory and attaches recorders to the instances
+// that already exist (the boot world). Instances created later attach their own
+// recorder from GetOrCreateInstance / HostGeneratedWorld.
+func (s *WebSocketServer) EnableRecording(dir string) error {
+	if dir == "" {
+		return nil
+	}
+	if err := os.MkdirAll(dir, 0o755); err != nil {
+		return err
+	}
+	s.mu.Lock()
+	defer s.mu.Unlock()
+	s.RecordDir = dir
+	s.recordStamp = time.Now().UTC().Format("20060102-150405")
+	for _, inst := range s.Instances {
+		s.attachRecorderLocked(inst)
+	}
+	return nil
+}
+
+// attachRecorderLocked opens a recording for one instance if recording is on and
+// the instance is not already recording. Caller holds s.mu. Failures are logged,
+// never fatal: a debugging feature must not stop a world from hosting.
+func (s *WebSocketServer) attachRecorderLocked(inst *WorldInstance) {
+	if s.RecordDir == "" || inst.RoomManager.recorder != nil {
+		return
+	}
+	// FrozenWorld is the manager's authoritative world; before the first client
+	// or tick it is the pristine starting state playback must begin from.
+	header, _, err := newSessionHeader(inst.Name, inst.RoomManager.FrozenWorld())
+	if err != nil {
+		log.Printf("zztgo: session recording disabled for %q: %v", inst.Name, err)
+		return
+	}
+	path := filepath.Join(s.RecordDir, inst.Name+"-"+s.recordStamp+".jsonl")
+	f, err := os.Create(path)
+	if err != nil {
+		log.Printf("zztgo: session recording disabled for %q: %v", inst.Name, err)
+		return
+	}
+	rec, err := NewSessionRecorder(f, header)
+	if err != nil {
+		_ = f.Close()
+		log.Printf("zztgo: session recording disabled for %q: %v", inst.Name, err)
+		return
+	}
+	inst.RoomManager.SetRecorder(rec)
+	log.Printf("zztgo: recording session for %q to %s", inst.Name, path)
+}
+
+// CloseRecorders flushes and closes every instance's session recorder. It runs
+// when Run's context is cancelled so a clean shutdown does not lose the buffered
+// tail of a recording. An abrupt kill can still lose buffered lines — acceptable
+// for a debugging feature.
+func (s *WebSocketServer) CloseRecorders() {
+	s.mu.Lock()
+	var recorders []*SessionRecorder
+	for _, inst := range s.Instances {
+		if inst.RoomManager.recorder != nil {
+			recorders = append(recorders, inst.RoomManager.recorder)
+			inst.RoomManager.SetRecorder(nil)
+		}
+	}
+	s.mu.Unlock()
+	for _, rec := range recorders {
+		rec.Close()
+	}
+}
+
 func (s *WebSocketServer) GetOrCreateInstance(worldName string) (*WorldInstance, error) {
 	s.mu.Lock()
 	defer s.mu.Unlock()
@@ -893,6 +971,7 @@ func (s *WebSocketServer) GetOrCreateInstance(worldName string) (*WorldInstance,
 		TokensByPlayer: make(map[PlayerID]string),
 	}
 	s.Instances[worldName] = inst
+	s.attachRecorderLocked(inst)
 	return inst, nil
 }
 
@@ -918,7 +997,7 @@ func (s *WebSocketServer) HostGeneratedWorld(name string, world TWorld) error {
 		}
 	}
 	rm := NewRoomManager(world)
-	s.Instances[safe] = &WorldInstance{
+	inst := &WorldInstance{
 		Name:           safe,
 		SourceWorld:    cloneWorld(world),
 		RoomManager:    rm,
@@ -929,6 +1008,8 @@ func (s *WebSocketServer) HostGeneratedWorld(name string, world TWorld) error {
 		ResumeTokens:   make(map[string]PlayerID),
 		TokensByPlayer: make(map[PlayerID]string),
 	}
+	s.Instances[safe] = inst
+	s.attachRecorderLocked(inst)
 	return nil
 }
 

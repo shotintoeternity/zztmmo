@@ -1953,3 +1953,70 @@ goroutine inside `StepDiffs`, so copies are race-free by construction); `Flags`
 is a `[MAX_FLAG]string` value array, comparable and copyable. No `TWorldInfo`
 field was added or removed, so `StateHash` and `worldWriteTo` are byte-unchanged;
 replay fixture unchanged.
+
+---
+
+## 2026-07-12 — M14.2 Session recording (the determinism dividend)
+
+**Seed audit (the "find them ALL" the spec demanded).** Grepped
+`RandomSeed`/`RandSeed` across engine + server. RNG is per-`Engine`
+(`e.RandSeed`, seeded via `e.Random`); the package-level `Random`/`RandomSeed`
+act on the global `E` (terminal/tools only). On the *server* path there is NO
+`RandomSeed` call at all: `cmd/zzt-server/main.go` never seeds, and each room
+engine is minted by `NewEngine` (`room_manager.go:ensureRoom`) with the zero
+value `RandSeed == 0`. No seed derives from wall-clock (CLAUDE.md rule 2 forbids
+`time.Now()` in sim). So the only seed a recording must carry is the constant 0,
+recorded explicitly in the header (`newSessionHeader`) so playback verifies the
+assumption rather than inheriting it silently. `RandomSeed(42)` appears only in
+`cmd/zzt-validate` and `cmd/zzt-smoke`, neither on the record/replay path.
+
+**Recording altitude: the RoomManager seam, not WorldInstance.** The spec names
+"the SAME entry points (`JoinPlayer`, `StepDiffs`, `Submit*`, `LeavePlayer`)" —
+those are RoomManager methods, and every server mutation funnels through them
+under `inst.mu`. Hooking there (not at the WebSocket layer) makes the recorder
+testable without socket plumbing and keeps `websocket_server.go` changes to one
+wiring call per instance-creation site. Every hook is nil-guarded, so recording
+OFF is byte-for-byte prior behavior (`TestSessionRecorderDisabledIsInert`).
+
+**Flush at the top of `StepDiffs`.** The recorder buffers external ops (joins,
+names, leaves, submits) as they arrive and emits one `recTick{tick, ops, inputs}`
+at the top of each `StepDiffs`. Because the server holds `inst.mu` across the
+whole join/submit/leave/step window, the buffer at StepDiffs-top holds *exactly*
+that tick's external stimuli. Consequences the sim derives — transfers, respawns,
+quit-driven removals — are NOT recorded; playback regenerates them from the same
+inputs. This is why a transfer needs no op (`TestSessionRecordReplayTransfer`).
+
+**Quit-leave suppression.** `LeavePlayer` is the shared funnel for both an
+external drop (recorded) and a quit's internal removal (`quitPlayer`, a
+consequence of a recorded `SubmitQuitReply`). A `recSuppressLeave` flag set around
+`quitPlayer`'s `LeavePlayer` keeps the quit-leave out of the log so replay does
+not double-apply it. Set/cleared on the tick goroutine only; external leaves can
+never interleave (both under `inst.mu`).
+
+**Save vs. highscore submits.** Both are recorded for session fidelity. On
+playback a highscore submit is re-applied (`RecordHighScore`, harmless — not in
+per-room `StateHash`); a save submit is skipped — it only writes a file, has no
+simulation effect, and playback has no target directory.
+
+**Self-contained replay file.** The header embeds the pristine starting world as
+base64 (`worldToBytes` → `LoadWorldBytes`) plus an FNV-1a integrity check, so a
+recording needs nothing else to replay — the foundation for shareable replays and
+ghost racing. Per-tick lines are kilobytes; the world is a one-time header cost.
+
+**Non-blocking writes.** `SessionRecorder` hands each `recTick` to an async
+writer goroutine over a bounded channel; a full channel drops the line and counts
+it (logged on `Close`), so the tick never blocks (spec's "drop-and-count").
+
+**Graceful shutdown added.** `cmd/zzt-server` previously ran on
+`context.Background()` with no signal handling, so nothing ever cancelled the tick
+loop — the buffered tail of a recording (and any bufio contents) would be lost on
+exit. Added `signal.NotifyContext` (SIGINT/SIGTERM) → `server.Run` drains and
+`CloseRecorders()` flushes on ctx.Done, plus an `http.Server.Shutdown`. Presentation/
+server layer only; no sim change, replay fixture unchanged.
+
+Verified end-to-end: `cmd/zzt-server -record <dir>` writes `TOWN-<stamp>.jsonl`
+(header + one line/tick, world hash embedded), and `cmd/zzt-replay <file>`
+reloads the world (hash-checked) and replays it. Tests reproduce per-room
+`StateHash` at every 100 ticks and at the end for a two-player TOWN
+vendor/scroll-reply/quit session and a two-board passage transfer. `go test
+-race ./...` green; replay fixture unchanged.

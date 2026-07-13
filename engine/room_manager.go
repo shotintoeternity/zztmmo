@@ -32,6 +32,22 @@ type RoomManager struct {
 	quits               []QuitResult
 	pendingScores       map[PlayerID]QuitResult
 	pendingPlayerEvents map[PlayerID][]Event
+
+	// recorder, when non-nil, logs the external stimuli this manager applies —
+	// joins, leaves, submits, and per-tick inputs — for deterministic replay
+	// (M14.2). Every hook is nil-guarded, so recording off is byte-for-byte the
+	// prior behavior. recSuppressLeave silences the leave hook during a quit,
+	// whose removal is a consequence StepDiffs regenerates rather than an
+	// external stimulus. Both are touched only under the same serialization that
+	// guards the manager (inst.mu on the server; single goroutine in tests).
+	recorder         *SessionRecorder
+	recSuppressLeave bool
+}
+
+// SetRecorder attaches (or clears, with nil) a session recorder. It must be set
+// before the first tick so the recording starts from a pristine world.
+func (rm *RoomManager) SetRecorder(r *SessionRecorder) {
+	rm.recorder = r
 }
 
 // QuitResult is one player's confirmed quit, drained by the server after a step.
@@ -158,6 +174,7 @@ func (rm *RoomManager) RecordHighScore(playerID PlayerID, name string) bool {
 	if !ok || pending.ListPos < 1 || pending.ListPos > HIGH_SCORE_COUNT {
 		return false
 	}
+	rm.recorder.record(recOp{Op: "submit", Kind: "highscore", Player: playerID, Name: name})
 	delete(rm.pendingScores, playerID)
 
 	for i := int16(HIGH_SCORE_COUNT - 1); i >= pending.ListPos; i-- {
@@ -182,6 +199,7 @@ func (rm *RoomManager) SubmitQuitReply(playerID PlayerID, quit bool) bool {
 	if player == nil {
 		return false
 	}
+	rm.recorder.record(recOp{Op: "submit", Kind: "quit", Player: playerID, Quit: quit})
 	room := rm.rooms[player.boardID]
 	if room == nil {
 		return false
@@ -218,7 +236,13 @@ func (rm *RoomManager) quitPlayer(playerID PlayerID) {
 		rm.pendingScores[playerID] = result
 	}
 	rm.quits = append(rm.quits, result)
+	// A quit's removal is a consequence of the recorded SubmitQuitReply, not a
+	// fresh external stimulus: playback's StepDiffs produces the same QuitEvent
+	// and removes the player itself. Suppress the leave hook so it is not logged
+	// (and double-applied on replay).
+	rm.recSuppressLeave = true
 	rm.LeavePlayer(playerID)
+	rm.recSuppressLeave = false
 }
 
 // JoinPlayer mints a RoomManager-scoped PlayerID and joins it. Direct callers
@@ -250,6 +274,7 @@ func (rm *RoomManager) JoinPlayerWithID(playerID PlayerID, boardID, spawnX, spaw
 	}
 	rm.players[playerID] = player
 	room.players[playerID] = struct{}{}
+	rm.recorder.record(recOp{Op: "join", Player: playerID, Board: boardID, X: spawnX, Y: spawnY})
 	return playerID
 }
 
@@ -258,6 +283,7 @@ func (rm *RoomManager) SetPlayerName(playerID PlayerID, name string) {
 	if player != nil {
 		player.name = name
 	}
+	rm.recorder.record(recOp{Op: "name", Player: playerID, Name: name})
 }
 
 func (rm *RoomManager) spawnPlayerInRoom(room *Room, spawnX, spawnY int16) int16 {
@@ -387,6 +413,9 @@ func (rm *RoomManager) LeavePlayer(playerID PlayerID) bool {
 	if player == nil {
 		return false
 	}
+	if !rm.recSuppressLeave {
+		rm.recorder.record(recOp{Op: "leave", Player: playerID})
+	}
 	room := rm.rooms[player.boardID]
 	if room == nil {
 		delete(rm.players, playerID)
@@ -408,6 +437,12 @@ func (rm *RoomManager) Step(inputs map[PlayerID]PlayerInput) {
 }
 
 func (rm *RoomManager) StepDiffs(inputs map[PlayerID]PlayerInput) map[PlayerID]DiffMessage {
+	// Record this tick before stepping: the buffered ops are exactly the
+	// external stimuli that arrived since the last step, and inputs is what the
+	// step consumes. Quit/transfer removals happen below and are deliberately
+	// not recorded — playback regenerates them (M14.2).
+	rm.recorder.flush(inputs)
+
 	engineInputs := make(map[int16]map[int16]PlayerInput)
 	for playerID, input := range inputs {
 		player := rm.players[playerID]
@@ -579,6 +614,21 @@ func (rm *RoomManager) Room(boardID int16) (*Room, bool) {
 
 func (rm *RoomManager) ActiveRoomCount() int {
 	return len(rm.rooms)
+}
+
+// RoomStateHashes returns the per-room StateHash keyed by board id, in a stable
+// order. It is the determinism checkpoint used to prove a replay reproduces a
+// recorded session tick-for-tick (M14.2).
+func (rm *RoomManager) RoomStateHashes() map[int16]uint64 {
+	hashes := make(map[int16]uint64, len(rm.rooms))
+	for _, boardID := range rm.roomIDs() {
+		room := rm.rooms[boardID]
+		if room == nil {
+			continue
+		}
+		hashes[boardID] = StateHash(room.Engine)
+	}
+	return hashes
 }
 
 func (rm *RoomManager) FrozenWorld() TWorld {
@@ -814,6 +864,7 @@ func (rm *RoomManager) SubmitDebugCommand(playerID PlayerID, text string) bool {
 	if player == nil {
 		return false
 	}
+	rm.recorder.record(recOp{Op: "submit", Kind: "debug", Player: playerID, Text: text})
 	room := rm.rooms[player.boardID]
 	if room == nil {
 		return false
@@ -833,6 +884,7 @@ func (rm *RoomManager) SubmitScrollReply(playerID PlayerID, objectStatID int16, 
 	if player == nil {
 		return false
 	}
+	rm.recorder.record(recOp{Op: "submit", Kind: "scroll", Player: playerID, StatID: objectStatID, Label: label})
 	player.scrollOpen = false
 	room := rm.rooms[player.boardID]
 	if room == nil {

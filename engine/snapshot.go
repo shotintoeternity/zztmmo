@@ -108,6 +108,10 @@ func (rm *RoomManager) SaveSnapshot(dir, name string, playerID PlayerID) (string
 	if !ok {
 		return "", ErrNoSuchPlayer
 	}
+	// Log the save as a submit for session fidelity. It has no simulation effect
+	// (it only writes a file), so playback skips it — but a recording should still
+	// show that a player saved (M14.2).
+	rm.recorder.record(recOp{Op: "submit", Kind: "save", Player: playerID, Name: name})
 	return writeWorldSnapshot(dir, name, world)
 }
 
