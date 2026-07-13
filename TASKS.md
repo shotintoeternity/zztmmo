@@ -1563,7 +1563,7 @@ element tick/touch surface, the full ZZT-OOP command set, per-player time
 limits, flash messages, passage-arrival pause, energizer, cheats, and high
 scores are all complete and replay-guarded; the tasks below are the remainder.
 
-- [ ] **M8.1 — Point-blank shots must respect the *target* player's
+- [x] **M8.1 — Point-blank shots must respect the *target* player's
   energizer.** `BoardShoot` (`game.go:1402-1420`) guards its damage branch
   with `e.PlayerFor(0).EnergizerTicks <= 0` (`game.go:1411`): whichever player
   stands in front of the shooter, the check reads player 0's energizer.

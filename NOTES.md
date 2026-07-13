@@ -2020,3 +2020,44 @@ reloads the world (hash-checked) and replays it. Tests reproduce per-room
 `StateHash` at every 100 ticks and at the end for a two-player TOWN
 vendor/scroll-reply/quit session and a two-board passage transfer. `go test
 -race ./...` green; replay fixture unchanged.
+
+## M8.1 — point-blank shots: target energizer + PvP decision (2026-07-12)
+
+`BoardShoot`'s point-blank damage branch (`game.go`) had two multiplayer bugs
+where vanilla read the one player's `World.Info.EnergizerTicks` (GAME.PAS
+BoardShoot, `= Boolean(source)` clause and the energizer guard):
+
+1. **Energizer (the stated M8.1 bug).** The Go read `PlayerFor(0).EnergizerTicks`
+   regardless of who stood in front of the shooter, so player 0's energizer
+   protected (or failed to protect) an entirely different player on the target
+   square. Fix: new `pointBlankEnergizerTicks(x,y)` resolves the stat on the
+   target square via `StatAt` when the tile is `E_PLAYER` and reads *that*
+   player's ticks; non-player targets keep `PlayerFor(0)` (unchanged). The
+   `(Element==E_PLAYER)==(source>=SHOT_SOURCE_PLAYER_BASE)` term is left
+   byte-for-byte per the task.
+
+2. **PvP decision — RESOLVED: point-blank follows BulletTick's no-PvP rule
+   (the recommended option).** The condition term above lets a player-owned
+   shot (`source>=BASE`) damage a player point-blank, which contradicted
+   BulletTick's M2.4 ownership rule (player bullets don't damage players unless
+   `FriendlyFire`, and never self). Reconciled by mirroring BulletTick: inside
+   the damage branch, when the target is `E_PLAYER` and the shot is
+   player-owned, no damage if `!FriendlyFire` or `targetStatId == ownerStatId`
+   (returns `false`, so the shot fizzles and no ammo is spent). `FriendlyFire`
+   defaults true (`NewEngine`), so default multiplayer still allows PvP but now
+   honors the same flag and self-protection as bullets.
+
+Note (out of scope, left as-is): the Go port's `source>=BASE` substitution for
+Pascal `Boolean(source)` also silently dropped vanilla's *enemy* point-blank
+damage to the player — an enemy shot (`source==SHOT_SOURCE_ENEMY==1 < BASE`)
+now makes the term false, so creatures never point-blank-damage a player. The
+task fixed this line only for the energizer read and said leave the precedence
+byte-for-byte, so the enemy case is untouched; flag for a future parity pass if
+it matters.
+
+Replay fixture unchanged: single player has only stat 0, so `StatAt` on the
+target returns 0 (`PlayerFor(0)` — identical), and no second player exists to
+point-blank, so the no-PvP guard never fires. Tests: `m8_1_test.go` covers
+energized-target protection (friendly fire on), un-energized PvP damage,
+no-damage with friendly fire off, self-shot, and creature-vs-energized-player.
+`go test ./...` green.

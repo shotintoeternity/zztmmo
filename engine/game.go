@@ -1418,7 +1418,17 @@ func (e *Engine) BoardShoot(element byte, tx, ty, deltaX, deltaY int16, source i
 		stat.StepY = deltaY
 		stat.P2 = 100
 		BoardShoot = true
-	} else if e.Board.Tiles[tx+deltaX][ty+deltaY].Element == E_BREAKABLE || ElementDefs[e.Board.Tiles[tx+deltaX][ty+deltaY].Element].Destructible && e.Board.Tiles[tx+deltaX][ty+deltaY].Element == E_PLAYER == (source >= SHOT_SOURCE_PLAYER_BASE) && e.PlayerFor(0).EnergizerTicks <= 0 {
+	} else if e.Board.Tiles[tx+deltaX][ty+deltaY].Element == E_BREAKABLE || ElementDefs[e.Board.Tiles[tx+deltaX][ty+deltaY].Element].Destructible && e.Board.Tiles[tx+deltaX][ty+deltaY].Element == E_PLAYER == (source >= SHOT_SOURCE_PLAYER_BASE) && e.pointBlankEnergizerTicks(tx+deltaX, ty+deltaY) <= 0 {
+		// M8.1: a player point-blanking a player follows the same no-PvP
+		// ownership rule as BulletTick (M2.4): no damage without FriendlyFire,
+		// and a player never point-blanks themselves. See NOTES.md (M8.1).
+		if e.Board.Tiles[tx+deltaX][ty+deltaY].Element == E_PLAYER && source >= SHOT_SOURCE_PLAYER_BASE {
+			targetStatId, _ := e.StatAt(tx+deltaX, ty+deltaY, -1)
+			ownerStatId := source - SHOT_SOURCE_PLAYER_BASE
+			if !e.FriendlyFire || targetStatId == ownerStatId {
+				return false
+			}
+		}
 		e.BoardDamageTile(tx+deltaX, ty+deltaY)
 		e.SoundQueue(2, "\x10\x01")
 		BoardShoot = true
@@ -1427,6 +1437,22 @@ func (e *Engine) BoardShoot(element byte, tx, ty, deltaX, deltaY int16, source i
 	}
 
 	return
+}
+
+// pointBlankEnergizerTicks returns the EnergizerTicks that gate a point-blank
+// shot's damage in BoardShoot. Vanilla read the one player's
+// World.Info.EnergizerTicks (GAME.PAS BoardShoot); the multiplayer
+// generalization (M8.1) uses the energizer of the player standing on the target
+// square, so an energized defender is protected regardless of shooter. Falls
+// back to player 0 for non-player targets (single player: player 0 IS the
+// target, so replay is unchanged).
+func (e *Engine) pointBlankEnergizerTicks(x, y int16) int16 {
+	if e.Board.Tiles[x][y].Element == E_PLAYER {
+		if statId, ok := e.StatAt(x, y, -1); ok {
+			return e.PlayerFor(statId).EnergizerTicks
+		}
+	}
+	return e.PlayerFor(0).EnergizerTicks
 }
 
 func (e *Engine) CalcDirectionRnd(deltaX, deltaY *int16) {
