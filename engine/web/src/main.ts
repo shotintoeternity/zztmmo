@@ -1,6 +1,6 @@
 import "./style.css";
 import { drawSidebar as paintSidebar, updateSidebar as paintSidebarHud } from "./sidebar";
-import { renderModal, handleModalKey, POPUP_Y_CENTERED, type Modal } from "./modal";
+import { renderModal, handleModalKey, POPUP_Y_CENTERED, type Modal, type WorldSearchEntry } from "./modal";
 import { commandKey, isHandledKey, isMovementKey, movementMask, rawKey } from "./keys";
 import { drawTitleSidebar, titleCommand } from "./title";
 import { soundNotesFromProtocol, ZztSound } from "./sound";
@@ -264,6 +264,25 @@ type EditorSaveResultMessage = {
 };
 
 type ServerMessage = SnapshotMessage | DiffMessage | EventMessage | BoardChangeMessage | ChatMessage | EditorSnapshotMessage | EditorInspectMessage | EditorDiffMessage | EditorPropertiesMessage | EditorStatSettingsMessage | EditorProgramTextMessage | EditorBoardDataMessage | EditorWorldDataMessage | EditorSaveResultMessage;
+
+type MuseumSearchResult = {
+  id?: string;
+  letter: string;
+  filename: string;
+  title: string;
+  author?: string[];
+  releaseDate?: string;
+  genres?: string[];
+  rating?: number | null;
+  playableBoards?: number;
+  totalBoards?: number;
+  archiveName?: string;
+};
+
+type MuseumPlayResponse = {
+  world?: string;
+  choices?: { name: string }[];
+};
 
 type InputMessage = {
   type: typeof MessageTypeInput;
@@ -660,33 +679,12 @@ async function fetchLines(url: string, fallbackTitle: string) {
 // finish: the hangout. Every other world is a game you bring people to.
 const LOBBY_WORLD = "TOWN";
 
-// The blurb sits above the list as ordinary text-window lines: only "!label;"
-// lines are selectable, so none of it can be picked by accident. Keep it short.
-// The text window shows 15 lines centered on the cursor, and the cursor opens on
-// the first world — so a blurb longer than this scrolls its own first lines off
-// the top before the player has read them.
-const WORLD_SELECT_BLURB = [
-  "",
-  "  Each world runs on its own. Bring your",
-  "  friends into one and it is yours alone.",
-  "",
-  `  ${LOBBY_WORLD} is the ZZTMMO lobby: no quest, just`,
-  "  people. Drop in and hang out.",
-  "",
-  "$Pick a world",
-];
-
-/** worldLabel marks the lobby in the list, e.g. "TOWN (ZZTMMO Lobby)". */
-function worldLabel(name: string): string {
-  return name === LOBBY_WORLD ? `${name} (ZZTMMO Lobby)` : name;
-}
-
 async function showWorlds() {
-  let worlds: string[] = [];
+  let worlds: WorldSearchEntry[] = [];
   try {
     const response = await fetch("/api/worlds");
-    const data = (await response.json()) as { worlds?: string[] };
-    worlds = data.worlds ?? [];
+    const data = (await response.json()) as { worlds?: (WorldSearchEntry | string)[] };
+    worlds = normalizeWorldEntries(data.worlds ?? []);
   } catch {
     openWindow("ZZT Worlds", ["", "  Not available: the server did not answer.", ""], true);
     return;
@@ -697,25 +695,141 @@ async function showWorlds() {
     return;
   }
 
-  // The lobby leads, then everything else in the order the server listed it.
-  const ordered = [
-    ...worlds.filter((w) => w === LOBBY_WORLD),
-    ...worlds.filter((w) => w !== LOBBY_WORLD),
-  ];
+  openModal({
+    kind: "worldSearch",
+    title: "Select a World",
+    query: "",
+    selected: 0,
+    entries: worlds,
+    onSelect: (entry) => void selectWorldEntry(entry),
+    onQuery: (query) => scheduleMuseumSearch(query, worlds),
+  });
+}
 
-  openSelectList(
-    "Select a World",
-    [...ordered.map(worldLabel), "Dream a world..."],
-    (selected) => {
-      if (selected === "Dream a world...") {
-        openDreamPrompt();
-        return;
-      }
-      const name = selected.split(" (")[0];
-      void enterWorld(name);
-    },
-    WORLD_SELECT_BLURB,
-  );
+let museumSearchTimer = 0;
+let museumSearchSeq = 0;
+
+function scheduleMuseumSearch(query: string, localEntries: WorldSearchEntry[]) {
+  window.clearTimeout(museumSearchTimer);
+  const trimmed = query.trim();
+  if (trimmed.length < 2) {
+    if (modal && modal.kind === "worldSearch") {
+      modal.entries = localEntries;
+    }
+    return;
+  }
+  const seq = ++museumSearchSeq;
+  museumSearchTimer = window.setTimeout(() => {
+    void updateMuseumSearch(trimmed, localEntries, seq);
+  }, 350);
+}
+
+async function updateMuseumSearch(query: string, localEntries: WorldSearchEntry[], seq: number) {
+  try {
+    const response = await fetch("/api/museum/search?q=" + encodeURIComponent(query));
+    if (!response.ok) {
+      return;
+    }
+    const data = (await response.json()) as { results?: MuseumSearchResult[] };
+    if (seq !== museumSearchSeq || !modal || modal.kind !== "worldSearch") {
+      return;
+    }
+    modal.entries = mergeWorldEntries(localEntries, museumResultsToEntries(data.results ?? []));
+    modal.selected = 0;
+    paintOverlay();
+    drawScreen();
+  } catch {
+    // Local filtering still works; Museum search is opportunistic.
+  }
+}
+
+function mergeWorldEntries(localEntries: WorldSearchEntry[], museumEntries: WorldSearchEntry[]): WorldSearchEntry[] {
+  const localWorlds = new Set(localEntries.map((entry) => entry.world.toUpperCase()));
+  return [
+    ...localEntries,
+    ...museumEntries.filter((entry) => !localWorlds.has(entry.world.toUpperCase())),
+  ];
+}
+
+function museumResultsToEntries(results: MuseumSearchResult[]): WorldSearchEntry[] {
+  return results.map((result) => {
+    const stem = result.filename.replace(/\.[^.]+$/, "").toUpperCase().slice(0, 8);
+    return {
+      world: stem,
+      id: result.id || result.archiveName || result.filename.replace(/\.[^.]+$/, ""),
+      title: result.title || result.filename,
+      author: (result.author ?? []).join(", ") || "Unknown",
+      created: result.releaseDate || "",
+      source: "museum",
+      letter: result.letter,
+      filename: result.filename,
+    };
+  });
+}
+
+function selectWorldEntry(entry: WorldSearchEntry) {
+  if (entry.source === "museum") {
+    void playMuseumWorld(entry);
+    return;
+  }
+  void enterWorld(entry.world);
+}
+
+async function playMuseumWorld(entry: WorldSearchEntry, zztFile = "") {
+  if (!entry.letter || !entry.filename) {
+    openWindow("Museum of ZZT", ["", "  Missing Museum download information.", ""], true);
+    return;
+  }
+  try {
+    const response = await fetch("/api/museum/play", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ letter: entry.letter, filename: entry.filename, zztFile }),
+    });
+    if (!response.ok) {
+      const reason = (await response.text()).trim() || `error ${response.status}`;
+      openWindow("Museum of ZZT", ["", `  Not playable: ${reason}`, ""], true);
+      return;
+    }
+    const result = (await response.json()) as MuseumPlayResponse;
+    if (result.choices && result.choices.length > 0) {
+      openSelectList("Choose World", result.choices.map((choice) => choice.name), (choice) => {
+        void playMuseumWorld(entry, choice);
+      });
+      return;
+    }
+    if (result.world) {
+      await enterWorld(result.world);
+    }
+  } catch {
+    openWindow("Museum of ZZT", ["", "  The Museum did not answer.", ""], true);
+  }
+}
+
+function normalizeWorldEntries(entries: (WorldSearchEntry | string)[]): WorldSearchEntry[] {
+  return entries.map((entry) => {
+    if (typeof entry !== "string") {
+      return {
+        world: entry.world,
+        id: entry.id || entry.world,
+        title: entry.world === LOBBY_WORLD && entry.title === entry.world ? `${entry.title} (ZZTMMO Lobby)` : entry.title || entry.world,
+        author: entry.author || "Unknown",
+        created: entry.created || "",
+        players: entry.players || 0,
+        source: "local",
+      };
+    }
+    const world = entry.split(" (")[0];
+    return {
+      world,
+      id: world,
+      title: world === LOBBY_WORLD ? `${world} (ZZTMMO Lobby)` : world,
+      author: "Unknown",
+      created: "",
+      players: 0,
+      source: "local",
+    };
+  });
 }
 
 function openDreamPrompt() {

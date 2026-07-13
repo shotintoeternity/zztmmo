@@ -36,6 +36,23 @@ function editor(lines) {
   };
 }
 
+function worldSearch() {
+  return {
+    kind: "worldSearch",
+    title: "Select a World",
+    query: "",
+    selected: 0,
+    entries: [
+      { world: "TEEN", id: "teen", title: "Teen Priest", author: "Draco", created: "1998" },
+      { world: "CUTLASS", id: "cutlass", title: "Tales of Adventure: The Treasure of Captain Cutlass", author: "Dr. Dos", created: "2001" },
+    ],
+    picked: null,
+    onSelect(entry) {
+      this.picked = entry;
+    },
+  };
+}
+
 // Insert mode types a character at the caret and advances it.
 {
   const m = editor(["@Vendor"]);
@@ -112,6 +129,26 @@ function editor(lines) {
   assert.equal(m.linePos, 1);
   handleModalKey(m, key("ArrowUp", "ArrowUp"));
   assert.equal(m.linePos, 1);
+}
+
+// World search filters by Museum author/title metadata and selects the match.
+{
+  const m = worldSearch();
+  assert.equal(handleModalKey(m, key("KeyD", "D")), "redraw");
+  assert.equal(handleModalKey(m, key("KeyR", "r")), "redraw");
+  assert.equal(m.query, "Dr");
+  assert.equal(handleModalKey(m, key("Enter", "Enter")), "close");
+  assert.equal(m.picked.world, "TEEN");
+}
+
+// Backspace updates the search query and resets to the first result.
+{
+  const m = worldSearch();
+  handleModalKey(m, key("KeyC", "c"));
+  handleModalKey(m, key("ArrowDown", "ArrowDown"));
+  assert.equal(handleModalKey(m, key("Backspace", "Backspace")), "redraw");
+  assert.equal(m.query, "");
+  assert.equal(m.selected, 0);
 }
 
 console.log("modal.test.mjs: all assertions passed");

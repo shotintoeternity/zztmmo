@@ -140,6 +140,29 @@ export type ProgramEditorModal = {
   onSubmit: (lines: string[]) => void;
 };
 
+export type WorldSearchEntry = {
+  world: string;
+  id: string;
+  title: string;
+  author: string;
+  created: string;
+  players?: number;
+  source?: "local" | "museum";
+  letter?: string;
+  filename?: string;
+  zztFile?: string;
+};
+
+export type WorldSearchModal = {
+  kind: "worldSearch";
+  title: string;
+  query: string;
+  selected: number;
+  entries: WorldSearchEntry[];
+  onSelect: (entry: WorldSearchEntry) => void;
+  onQuery?: (query: string) => void;
+};
+
 // TextWindowEdit's derived limits with TextWindowWidth == 50 (game.go's
 // TextWindowInit(5, 3, 50, 18)). A line may hold TextWindowWidth-8 characters;
 // the caret guard is charPos < TextWindowWidth-7.
@@ -151,7 +174,14 @@ const PROGRAM_MAX_LINES = 1024;
 /** POPUP_ROWS tall, centered in the 25-row screen. */
 export const POPUP_Y_CENTERED = Math.floor((25 - 6) / 2);
 
-export type Modal = TextModal | YesNoModal | EntryModal | PopupEntryModal | MultiLineEntryModal | ProgramEditorModal;
+export type Modal =
+  | TextModal
+  | YesNoModal
+  | EntryModal
+  | PopupEntryModal
+  | MultiLineEntryModal
+  | ProgramEditorModal
+  | WorldSearchModal;
 
 /** What the caller should do after routing a key. */
 export type KeyResult = "close" | "redraw" | "ignore";
@@ -209,7 +239,78 @@ export function renderModal(write: WriteText, m: Modal) {
     case "programEditor":
       renderProgramEditor(write, m);
       return;
+    case "worldSearch":
+      renderWorldSearch(write, m);
+      return;
   }
+}
+
+const WORLD_SEARCH_LIMIT = 50;
+const WORLD_TITLE_WIDTH = 36;
+const WORLD_DETAIL_WIDTH = 42;
+
+function fitText(text: string, width: number): string {
+  if (text.length <= width) {
+    return text;
+  }
+  if (width <= 1) {
+    return text.slice(0, width);
+  }
+  return text.slice(0, width - 1) + "\x1a";
+}
+
+function worldSearchMatches(m: WorldSearchModal): WorldSearchEntry[] {
+  const terms = m.query.toLowerCase().trim().split(/\s+/).filter(Boolean);
+  const matches = terms.length === 0
+    ? m.entries
+    : m.entries.filter((entry) => {
+      const haystack = [entry.world, entry.id, entry.title, entry.author, entry.created].join(" ").toLowerCase();
+      return terms.every((term) => haystack.includes(term));
+    });
+  return matches.slice(0, WORLD_SEARCH_LIMIT);
+}
+
+function worldSearchLines(m: WorldSearchModal, matches: WorldSearchEntry[]): string[] {
+  const count = matches.length === 1 ? "1 match" : `${matches.length} matches`;
+  const lines = [
+    `$Search: ${m.query || "*"}`,
+    `$${count}`,
+    "",
+  ];
+  if (matches.length === 0) {
+    lines.push("  No matching worlds.");
+    lines.push("  Try a title, author, year, or id.");
+    return lines;
+  }
+  for (let i = 0; i < matches.length; i += 1) {
+    const entry = matches[i];
+    const playerText = entry.players ? `  ${entry.players}p` : "";
+    const sourceText = entry.source === "museum" ? "  Museum" : "";
+    lines.push(`!${String(i)};${fitText(entry.title || entry.world, WORLD_TITLE_WIDTH)}`);
+    lines.push(fitText(`  id:${entry.id || entry.world}  by ${entry.author || "Unknown"}  ${entry.created || "????"}${playerText}${sourceText}`, WORLD_DETAIL_WIDTH));
+  }
+  return lines;
+}
+
+function worldSearchLinePos(selected: number, matches: WorldSearchEntry[]): number {
+  if (matches.length === 0) {
+    return 4;
+  }
+  const clamped = Math.min(Math.max(0, selected), matches.length - 1);
+  return 4 + clamped * 2;
+}
+
+function renderWorldSearch(write: WriteText, m: WorldSearchModal) {
+  const matches = worldSearchMatches(m);
+  if (matches.length > 0 && m.selected >= matches.length) {
+    m.selected = matches.length - 1;
+  }
+  renderTextWindow(write, {
+    title: m.title,
+    lines: worldSearchLines(m, matches),
+    linePos: worldSearchLinePos(m.selected, matches),
+    viewingFile: false,
+  });
 }
 
 // renderProgramEditor is TextWindowEdit's screen: the raw lines, plus the block
@@ -345,6 +446,56 @@ export function handleModalKey(m: Modal, event: KeyboardEvent): KeyResult {
       return multiLineEntryKey(m, event);
     case "programEditor":
       return programEditorKey(m, event);
+    case "worldSearch":
+      return worldSearchKey(m, event);
+  }
+}
+
+function worldSearchKey(m: WorldSearchModal, event: KeyboardEvent): KeyResult {
+  const matches = worldSearchMatches(m);
+  switch (event.code) {
+    case "Escape":
+      return "close";
+    case "Enter":
+      if (matches.length === 0) {
+        return "ignore";
+      }
+      m.onSelect(matches[Math.min(Math.max(0, m.selected), matches.length - 1)]);
+      return "close";
+    case "ArrowUp":
+      m.selected = Math.max(0, m.selected - 1);
+      return "redraw";
+    case "ArrowDown":
+      m.selected = Math.min(Math.max(0, matches.length - 1), m.selected + 1);
+      return "redraw";
+    case "PageUp":
+      m.selected = Math.max(0, m.selected - TEXT_WINDOW_PAGE);
+      return "redraw";
+    case "PageDown":
+      m.selected = Math.min(Math.max(0, matches.length - 1), m.selected + TEXT_WINDOW_PAGE);
+      return "redraw";
+    case "Backspace":
+      if (m.query.length === 0) {
+        return "ignore";
+      }
+      m.query = m.query.slice(0, -1);
+      m.selected = 0;
+      m.onQuery?.(m.query);
+      return "redraw";
+    default:
+      if (event.ctrlKey || event.metaKey || event.altKey) {
+        return "ignore";
+      }
+      if (event.key.length !== 1 || event.key < " " || event.key.charCodeAt(0) >= 0x80) {
+        return "ignore";
+      }
+      if (m.query.length >= 30) {
+        return "ignore";
+      }
+      m.query += event.key;
+      m.selected = 0;
+      m.onQuery?.(m.query);
+      return "redraw";
   }
 }
 
