@@ -1,6 +1,7 @@
 package zztgo
 
 import (
+	"bytes"
 	"context"
 	"encoding/json"
 	"net/http"
@@ -333,6 +334,57 @@ func TestM103EditorOwnershipInvitesGateEdits(t *testing.T) {
 	readEditorMessage(t, ctx, collabConn, MessageTypeEditorDiff, &diff)
 	if !editorDiffHasCell(diff, 11, 9, E_SOLID) {
 		t.Fatalf("collaborator diff cells=%+v, want solid tile", diff.Cells)
+	}
+}
+
+func TestM104EditorTestPlayUsesIsolatedTickingCopy(t *testing.T) {
+	world := testEmptyWorld(t)
+	world.Info.CurrentBoard = 1
+	server := NewWebSocketServer(world, 1)
+	httpServer := httptest.NewServer(server)
+	defer httpServer.Close()
+
+	session := NewEditorSession("TOWN", world)
+	memberA := &webSocketClient{}
+	memberB := &webSocketClient{}
+	if err := session.Enter(memberA); err != nil {
+		t.Fatalf("Enter(A): %v", err)
+	}
+	defer session.Exit(memberA)
+	if err := session.Enter(memberB); err != nil {
+		t.Fatalf("Enter(B): %v", err)
+	}
+	defer session.Exit(memberB)
+	if _, err := session.Edit(memberA, EditorEditMessage{Type: MessageTypeEditorEdit, Op: "place", X: 12, Y: 10, Element: E_SOLID, Color: 0x0e}); err != nil {
+		t.Fatalf("session edit: %v", err)
+	}
+	before, err := session.WorldBytes(memberA, "")
+	if err != nil {
+		t.Fatalf("WorldBytes(before): %v", err)
+	}
+
+	testWorld, err := server.startEditorTestPlay(memberA, session)
+	if err != nil {
+		t.Fatalf("startEditorTestPlay: %v", err)
+	}
+	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
+	defer cancel()
+	connA, snapA := joinTestClientWorld(t, ctx, httpServer.URL, testWorld, "tester-a")
+	defer connA.Close(websocket.StatusNormalClosure, "")
+	connB, snapB := joinTestClientWorld(t, ctx, httpServer.URL, testWorld, "tester-b")
+	defer connB.Close(websocket.StatusNormalClosure, "")
+	if snapA.You.ID == snapB.You.ID {
+		t.Fatalf("test players share id %d", snapA.You.ID)
+	}
+	for i := 0; i < 3; i++ {
+		server.Tick(ctx)
+	}
+	after, err := session.WorldBytes(memberA, "")
+	if err != nil {
+		t.Fatalf("WorldBytes(after): %v", err)
+	}
+	if !bytes.Equal(before, after) {
+		t.Fatal("test play mutated the editor session world")
 	}
 }
 
@@ -816,9 +868,16 @@ func runServerAsync(t *testing.T, ctx context.Context, server *WebSocketServer) 
 }
 
 func joinTestClient(t *testing.T, ctx context.Context, serverURL, name string) (*websocket.Conn, SnapshotMessage) {
+	return joinTestClientWorld(t, ctx, serverURL, "", name)
+}
+
+func joinTestClientWorld(t *testing.T, ctx context.Context, serverURL, world, name string) (*websocket.Conn, SnapshotMessage) {
 	t.Helper()
 
 	wsURL := "ws" + strings.TrimPrefix(serverURL, "http")
+	if world != "" {
+		wsURL += "?world=" + world
+	}
 	conn, _, err := websocket.Dial(ctx, wsURL, nil)
 	if err != nil {
 		t.Fatalf("dial websocket: %v", err)

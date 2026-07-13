@@ -684,6 +684,15 @@ func (s *WebSocketServer) serveEditor(ctx context.Context, conn *websocket.Conn,
 			if s.serveEditorWorld(ctx, client, session, world) != nil {
 				return
 			}
+		case MessageTypeEditorTestPlay:
+			world, err := s.startEditorTestPlay(client, session)
+			reply := EditorTestPlayMessage{Type: MessageTypeEditorTestPlay}
+			if err != nil {
+				reply.Error = err.Error()
+			} else {
+				reply.World = world
+			}
+			s.broadcastEditor(ctx, session, reply)
 		}
 	}
 }
@@ -1331,6 +1340,42 @@ func (s *WebSocketServer) inviteEditorCollaborator(client *webSocketClient, sess
 	}
 	session.SetAccountReadOnly(strings.TrimSpace(accountID), false)
 	return nil
+}
+
+func (s *WebSocketServer) startEditorTestPlay(client *webSocketClient, session *EditorSession) (string, error) {
+	data, err := session.WorldBytes(client, "")
+	if err != nil {
+		return "", err
+	}
+	if data == nil {
+		return "", fmt.Errorf("could not serialize the editor world")
+	}
+	world, err := LoadWorldBytes(data)
+	if err != nil {
+		return "", err
+	}
+	for i := 0; i < 8; i++ {
+		name, err := randomTestPlayWorldName()
+		if err != nil {
+			return "", err
+		}
+		if err := s.HostGeneratedWorld(name, world); err != nil {
+			if strings.Contains(err.Error(), "occupied") {
+				continue
+			}
+			return "", err
+		}
+		return name, nil
+	}
+	return "", fmt.Errorf("could not allocate test play world")
+}
+
+func randomTestPlayWorldName() (string, error) {
+	var nonce [3]byte
+	if _, err := rand.Read(nonce[:]); err != nil {
+		return "", err
+	}
+	return "TP" + strings.ToUpper(hex.EncodeToString(nonce[:])), nil
 }
 
 // LoadWorldBytes parses vanilla .ZZT bytes into a TWorld without touching disk.

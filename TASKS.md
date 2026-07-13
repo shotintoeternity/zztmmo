@@ -1744,7 +1744,7 @@ builds toward them instead of away:
   an owning account; the owner invites collaborator accounts; everyone else
   is read-only in that session. DoD: an invited account edits, an uninvited
   one can look but not touch.
-- [ ] **M10.4 — Co-op test play.** A session member starts a test run: the
+- [x] **M10.4 — Co-op test play.** A session member starts a test run: the
   server spins a private, ticking room from a *copy* of the session world
   (the `TitleSim` isolation pattern) that any member may join, leaving the
   session itself untouched and un-ticked. DoD: two members test-play their

@@ -37,6 +37,7 @@ const (
 	MessageTypeEditorWorld        = "editorWorld"
 	MessageTypeEditorWorldData    = "editorWorldData"
 	MessageTypeEditorSaveResult   = "editorSaveResult"
+	MessageTypeEditorTestPlay     = "editorTestPlay"
 )
 
 // HelpDir is where HelpFileLines looks for .HLP files. The terminal client
@@ -396,6 +397,15 @@ type EditorWorldDataMessage struct {
 // EditorSaveResultMessage reports the outcome of a "save" or a refused "upload".
 // World is the hosted world name on success; Error explains a refusal.
 type EditorSaveResultMessage struct {
+	Type  string `json:"type"`
+	World string `json:"world,omitempty"`
+	Error string `json:"error,omitempty"`
+}
+
+// EditorTestPlayMessage starts or announces an M10.4 private play-test room.
+// The request is just Type; the reply carries a private hosted World name, or
+// Error if the session copy could not be created.
+type EditorTestPlayMessage struct {
 	Type  string `json:"type"`
 	World string `json:"world,omitempty"`
 	Error string `json:"error,omitempty"`

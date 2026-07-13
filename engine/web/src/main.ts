@@ -79,6 +79,7 @@ const MessageTypeEditorBoardData = "editorBoardData";
 const MessageTypeEditorWorld = "editorWorld";
 const MessageTypeEditorWorldData = "editorWorldData";
 const MessageTypeEditorSaveResult = "editorSaveResult";
+const MessageTypeEditorTestPlay = "editorTestPlay";
 const MessageTypeChat = "chat";
 
 // GameDebugPrompt's PromptString(63, 5, 0x1E, 0x0F, 11, PROMPT_ANY, ...).
@@ -330,7 +331,13 @@ type EditorSaveResultMessage = {
   error?: string;
 };
 
-type ServerMessage = SnapshotMessage | DiffMessage | EventMessage | BoardChangeMessage | ChatMessage | EditorSnapshotMessage | EditorInspectMessage | EditorPresenceMessage | EditorLeaseMessage | EditorDiffMessage | EditorPropertiesMessage | EditorStatSettingsMessage | EditorProgramTextMessage | EditorBoardDataMessage | EditorWorldDataMessage | EditorSaveResultMessage;
+type EditorTestPlayMessage = {
+  type: typeof MessageTypeEditorTestPlay;
+  world?: string;
+  error?: string;
+};
+
+type ServerMessage = SnapshotMessage | DiffMessage | EventMessage | BoardChangeMessage | ChatMessage | EditorSnapshotMessage | EditorInspectMessage | EditorPresenceMessage | EditorLeaseMessage | EditorDiffMessage | EditorPropertiesMessage | EditorStatSettingsMessage | EditorProgramTextMessage | EditorBoardDataMessage | EditorWorldDataMessage | EditorSaveResultMessage | EditorTestPlayMessage;
 
 type InputMessage = {
   type: typeof MessageTypeInput;
@@ -1191,6 +1198,9 @@ function applyMessage(message: ServerMessage) {
 	  break;
 	case MessageTypeEditorSaveResult:
 	  applyEditorSaveResult(message);
+	  break;
+	case MessageTypeEditorTestPlay:
+	  applyEditorTestPlay(message);
 	  break;
   }
 }
@@ -2675,13 +2685,20 @@ function sendEditorWorld(values: { op: string; name?: string; data?: string; acc
   ws.send(JSON.stringify({ type: MessageTypeEditorWorld, ...values }));
 }
 
+function sendEditorTestPlay() {
+  if (!connected || !ws || ws.readyState !== WebSocket.OPEN) return;
+  ws.send(JSON.stringify({ type: MessageTypeEditorTestPlay }));
+}
+
 // openEditorWorldMenu is the 'S' key: save/publish the world so others can play
 // it, download it as a portable .ZZT, or upload a .ZZT to edit.
 function openEditorWorldMenu() {
-  const entries = ["Save and publish", "Download .ZZT", "Upload .ZZT"];
+  const entries = ["Test play together", "Save and publish", "Download .ZZT", "Upload .ZZT"];
   if (!editorReadOnly) entries.push("Invite collaborator");
   openSelectList("World:", entries, (entry) => {
-    if (entry === "Save and publish") {
+    if (entry === "Test play together") {
+      sendEditorTestPlay();
+    } else if (entry === "Save and publish") {
       openEntry("Save world as:", "", 8, "any", (text) => {
         if (text) sendEditorWorld({ op: "save", name: text });
       }, editorProperties.worldName);
@@ -2751,6 +2768,23 @@ function applyEditorSaveResult(message: EditorSaveResultMessage) {
     `World published as ${message.world}.`,
     "It now appears in the world picker.",
   ]);
+}
+
+function applyEditorTestPlay(message: EditorTestPlayMessage) {
+  if (message.error || !message.world) {
+    openSelectList("Cannot test", ["Ok"], () => {}, [message.error || "Could not start test play."]);
+    return;
+  }
+  connected = false;
+  leavingToTitle = true;
+  window.clearTimeout(retryTimer);
+  if (ws && ws.readyState === WebSocket.OPEN) {
+    ws.send(JSON.stringify({ type: MessageTypeEditorExit }));
+    ws.close();
+  }
+  ws = null;
+  worldName = message.world;
+  startPlay();
 }
 
 // applyEditorBoardData turns an export reply into a browser download of vanilla
