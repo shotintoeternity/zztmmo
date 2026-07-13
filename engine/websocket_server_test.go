@@ -3,6 +3,7 @@ package zztgo
 import (
 	"context"
 	"encoding/json"
+	"net/http"
 	"net/http/httptest"
 	"os"
 	"path/filepath"
@@ -260,6 +261,78 @@ func TestM102EditorLeasesRefuseAndDisconnectRelease(t *testing.T) {
 			break
 		}
 		time.Sleep(10 * time.Millisecond)
+	}
+}
+
+func TestM103EditorOwnershipInvitesGateEdits(t *testing.T) {
+	dir := t.TempDir()
+	world := testEmptyWorld(t)
+	world.Info.CurrentBoard = 1
+	server := NewWebSocketServer(world, 1)
+	server.WorldsDir = dir
+	server.Auth = NewAuthService("client-id", "", "", []byte("test-cookie-secret"))
+	httpServer := httptest.NewServer(server)
+	defer httpServer.Close()
+
+	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
+	defer cancel()
+	wsURL := "ws" + strings.TrimPrefix(httpServer.URL, "http")
+	ownerCookie := signedAuthCookie(t, server.Auth, AuthenticatedAccount{ID: "google:owner", Name: "Owner"})
+	ownerConn, ownerSnap := dialEditorClientWithCookie(t, ctx, wsURL, "TOWN", ownerCookie)
+	defer ownerConn.Close(websocket.StatusNormalClosure, "")
+	if ownerSnap.ReadOnly {
+		t.Fatal("owner's initial unowned editor session is read-only")
+	}
+
+	if err := wsjson.Write(ctx, ownerConn, EditorWorldMessage{Type: MessageTypeEditorWorld, Op: "save", Name: "OWNED"}); err != nil {
+		t.Fatalf("write owner save: %v", err)
+	}
+	var save EditorSaveResultMessage
+	readEditorMessage(t, ctx, ownerConn, MessageTypeEditorSaveResult, &save)
+	if save.Error != "" || save.World != "OWNED" {
+		t.Fatalf("owner save=%+v, want OWNED", save)
+	}
+	access, ok, err := loadWorldAccess(dir, "OWNED")
+	if err != nil || !ok || access.OwnerAccountID != "google:owner" {
+		t.Fatalf("access=(%+v,%v,%v), want owner google:owner", access, ok, err)
+	}
+	if err := wsjson.Write(ctx, ownerConn, EditorWorldMessage{Type: MessageTypeEditorWorld, Op: "invite", AccountID: "google:collab"}); err != nil {
+		t.Fatalf("write invite: %v", err)
+	}
+	var invite EditorSaveResultMessage
+	readEditorMessage(t, ctx, ownerConn, MessageTypeEditorSaveResult, &invite)
+	if invite.Error != "" {
+		t.Fatalf("invite refused: %+v", invite)
+	}
+
+	intruderCookie := signedAuthCookie(t, server.Auth, AuthenticatedAccount{ID: "google:intruder", Name: "Intruder"})
+	intruderConn, intruderSnap := dialEditorClientWithCookie(t, ctx, wsURL, "OWNED", intruderCookie)
+	defer intruderConn.Close(websocket.StatusNormalClosure, "")
+	if !intruderSnap.ReadOnly {
+		t.Fatal("uninvited account entered owned world with edit access")
+	}
+	if err := wsjson.Write(ctx, intruderConn, EditorLeaseMessage{Type: MessageTypeEditorLease, Op: "request", Kind: "board", BoardID: intruderSnap.BoardID}); err != nil {
+		t.Fatalf("write intruder lease: %v", err)
+	}
+	var refused EditorLeaseMessage
+	readEditorMessage(t, ctx, intruderConn, MessageTypeEditorLease, &refused)
+	if refused.Op != "refused" || refused.Error != "read-only" {
+		t.Fatalf("intruder lease=%+v, want read-only refusal", refused)
+	}
+
+	collabCookie := signedAuthCookie(t, server.Auth, AuthenticatedAccount{ID: "google:collab", Name: "Collaborator"})
+	collabConn, collabSnap := dialEditorClientWithCookie(t, ctx, wsURL, "OWNED", collabCookie)
+	defer collabConn.Close(websocket.StatusNormalClosure, "")
+	if collabSnap.ReadOnly {
+		t.Fatal("invited collaborator entered owned world as read-only")
+	}
+	if err := wsjson.Write(ctx, collabConn, EditorEditMessage{Type: MessageTypeEditorEdit, Op: "place", X: 12, Y: 10, Element: E_SOLID, Color: 0x0e}); err != nil {
+		t.Fatalf("write collaborator edit: %v", err)
+	}
+	var diff EditorDiffMessage
+	readEditorMessage(t, ctx, collabConn, MessageTypeEditorDiff, &diff)
+	if !editorDiffHasCell(diff, 11, 9, E_SOLID) {
+		t.Fatalf("collaborator diff cells=%+v, want solid tile", diff.Cells)
 	}
 }
 
@@ -767,12 +840,22 @@ func joinTestClient(t *testing.T, ctx context.Context, serverURL, name string) (
 
 func dialEditorClient(t *testing.T, ctx context.Context, wsURL string) *websocket.Conn {
 	t.Helper()
-	conn, _, err := websocket.Dial(ctx, wsURL, nil)
+	conn, _ := dialEditorClientWithCookie(t, ctx, wsURL, "TOWN", nil)
+	return conn
+}
+
+func dialEditorClientWithCookie(t *testing.T, ctx context.Context, wsURL, world string, cookie *http.Cookie) (*websocket.Conn, EditorSnapshotMessage) {
+	t.Helper()
+	opts := &websocket.DialOptions{}
+	if cookie != nil {
+		opts.HTTPHeader = http.Header{"Cookie": []string{cookie.String()}}
+	}
+	conn, _, err := websocket.Dial(ctx, wsURL, opts)
 	if err != nil {
 		t.Fatalf("dial editor: %v", err)
 	}
 	conn.SetReadLimit(ServerReadLimit)
-	if err := wsjson.Write(ctx, conn, EditorEnterMessage{Type: MessageTypeEditorEnter, World: "TOWN"}); err != nil {
+	if err := wsjson.Write(ctx, conn, EditorEnterMessage{Type: MessageTypeEditorEnter, World: world}); err != nil {
 		t.Fatalf("write editorEnter: %v", err)
 	}
 	var snapshot EditorSnapshotMessage
@@ -780,7 +863,7 @@ func dialEditorClient(t *testing.T, ctx context.Context, wsURL string) *websocke
 	if snapshot.Type != MessageTypeEditorSnapshot || snapshot.MemberID == "" {
 		t.Fatalf("editor snapshot=%+v, want member id", snapshot)
 	}
-	return conn
+	return conn, snapshot
 }
 
 func readEditorMessage(t *testing.T, ctx context.Context, conn *websocket.Conn, wantType string, out interface{}) {

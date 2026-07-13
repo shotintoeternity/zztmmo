@@ -135,6 +135,7 @@ type EditorLeaseMessage struct {
 	StatID     int16  `json:"statId,omitempty"`
 	HolderID   string `json:"holderId,omitempty"`
 	HolderName string `json:"holderName,omitempty"`
+	Error      string `json:"error,omitempty"`
 }
 
 type EditorTileInspect struct {
@@ -190,6 +191,7 @@ type EditorElementMenu struct {
 type EditorSnapshotMessage struct {
 	Type       string              `json:"type"`
 	MemberID   string              `json:"memberId,omitempty"`
+	ReadOnly   bool                `json:"readOnly,omitempty"`
 	BoardID    int16               `json:"boardId"`
 	Screen     []ScreenCell        `json:"screen"`
 	Inspect    EditorTileInspect   `json:"inspect"`
@@ -372,11 +374,13 @@ type EditorBoardDataMessage struct {
 //	             client file) after the M7.5 gate (headless load + 200 steps, no
 //	             panic). Replies a full EditorSnapshotMessage, or an
 //	             EditorSaveResultMessage carrying the gate error on refusal.
+//	"invite"   — owner-only M10.3 collaborator invite by AccountID.
 type EditorWorldMessage struct {
-	Type string `json:"type"`
-	Op   string `json:"op"`
-	Name string `json:"name,omitempty"`
-	Data string `json:"data,omitempty"`
+	Type      string `json:"type"`
+	Op        string `json:"op"`
+	Name      string `json:"name,omitempty"`
+	Data      string `json:"data,omitempty"`
+	AccountID string `json:"accountId,omitempty"`
 }
 
 // EditorWorldDataMessage is the reply to a "download": the whole session world as

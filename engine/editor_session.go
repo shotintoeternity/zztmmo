@@ -22,6 +22,7 @@ type EditorSession struct {
 	engine     *Engine
 	Members    map[*webSocketClient]struct{}
 	memberInfo map[*webSocketClient]EditorPresence
+	readOnly   map[*webSocketClient]bool
 	nextMember int
 	leases     map[editorLeaseKey]*webSocketClient
 }
@@ -55,6 +56,7 @@ func NewEditorSession(worldName string, world TWorld) *EditorSession {
 		engine:     e,
 		Members:    make(map[*webSocketClient]struct{}),
 		memberInfo: make(map[*webSocketClient]EditorPresence),
+		readOnly:   make(map[*webSocketClient]bool),
 		leases:     make(map[editorLeaseKey]*webSocketClient),
 	}
 }
@@ -83,6 +85,7 @@ func (s *EditorSession) EnterNamed(member *webSocketClient, name string) (Editor
 	}
 	s.Members[member] = struct{}{}
 	s.memberInfo[member] = presence
+	s.readOnly[member] = false
 	return presence, nil
 }
 
@@ -90,6 +93,7 @@ func (s *EditorSession) Exit(member *webSocketClient) {
 	s.mu.Lock()
 	delete(s.Members, member)
 	delete(s.memberInfo, member)
+	delete(s.readOnly, member)
 	for key, holder := range s.leases {
 		if holder == member {
 			delete(s.leases, key)
@@ -102,6 +106,60 @@ func (s *EditorSession) MemberID(member *webSocketClient) string {
 	s.mu.Lock()
 	defer s.mu.Unlock()
 	return s.memberInfo[member].ID
+}
+
+func (s *EditorSession) SetMemberReadOnly(member *webSocketClient, readOnly bool) {
+	s.mu.Lock()
+	defer s.mu.Unlock()
+	if _, ok := s.Members[member]; !ok {
+		return
+	}
+	s.readOnly[member] = readOnly
+	if readOnly {
+		for key, holder := range s.leases {
+			if holder == member {
+				delete(s.leases, key)
+			}
+		}
+	}
+}
+
+func (s *EditorSession) SetAccountReadOnly(accountID string, readOnly bool) {
+	if accountID == "" {
+		return
+	}
+	s.mu.Lock()
+	defer s.mu.Unlock()
+	for member := range s.Members {
+		if member.accountID == accountID {
+			s.readOnly[member] = readOnly
+		}
+	}
+}
+
+func (s *EditorSession) CanEdit(member *webSocketClient) bool {
+	s.mu.Lock()
+	defer s.mu.Unlock()
+	return s.canEditLocked(member)
+}
+
+func (s *EditorSession) Name() string {
+	s.mu.Lock()
+	defer s.mu.Unlock()
+	return s.WorldName
+}
+
+func (s *EditorSession) SetWorldName(name string) {
+	s.mu.Lock()
+	defer s.mu.Unlock()
+	s.WorldName = name
+}
+
+func (s *EditorSession) canEditLocked(member *webSocketClient) bool {
+	if _, ok := s.Members[member]; !ok {
+		return false
+	}
+	return !s.readOnly[member]
 }
 
 func (s *EditorSession) UpdatePresence(member *webSocketClient, x, y int16) {
@@ -157,6 +215,11 @@ func (s *EditorSession) AcquireLease(member *webSocketClient, request EditorLeas
 		BoardID: key.boardID,
 		StatID:  key.statID,
 	}
+	if !s.canEditLocked(member) {
+		reply.Op = "refused"
+		reply.Error = "read-only"
+		return reply, nil
+	}
 	if holder, ok := s.leases[key]; ok && holder != member {
 		holderInfo := s.memberInfo[holder]
 		reply.Op = "refused"
@@ -199,6 +262,9 @@ func (s *EditorSession) leaseKeyLocked(request EditorLeaseMessage) (editorLeaseK
 }
 
 func (s *EditorSession) hasCurrentBoardLeaseLocked(member *webSocketClient, e *Engine) bool {
+	if !s.canEditLocked(member) {
+		return false
+	}
 	if len(s.Members) <= 1 {
 		return true
 	}
@@ -207,6 +273,9 @@ func (s *EditorSession) hasCurrentBoardLeaseLocked(member *webSocketClient, e *E
 }
 
 func (s *EditorSession) hasCurrentStatLeaseLocked(member *webSocketClient, e *Engine, statID int16) bool {
+	if !s.canEditLocked(member) {
+		return false
+	}
 	if len(s.Members) <= 1 {
 		return true
 	}
@@ -232,6 +301,7 @@ func (s *EditorSession) Snapshot(member *webSocketClient, x, y int16) (EditorSna
 		snapshot = editorSnapshot(e, x, y)
 	})
 	snapshot.MemberID = s.MemberID(member)
+	snapshot.ReadOnly = !s.CanEdit(member)
 	snapshot.Presence = s.Presence()
 	return snapshot, err
 }
@@ -260,6 +330,9 @@ func (s *EditorSession) Edit(member *webSocketClient, edit EditorEditMessage) (E
 	var reply EditorDiffMessage
 	memberID := s.MemberID(member)
 	err := s.Apply(member, func(e *Engine) {
+		if !s.canEditLocked(member) {
+			return
+		}
 		x, y := editorClamp(edit.X, edit.Y)
 		switch edit.Op {
 		case "place":
@@ -789,6 +862,9 @@ func (s *EditorSession) SaveProgram(member *webSocketClient, statId int16, lines
 func (s *EditorSession) AddBoard(member *webSocketClient, name string) (EditorSnapshotMessage, error) {
 	var reply EditorSnapshotMessage
 	err := s.Apply(member, func(e *Engine) {
+		if !s.canEditLocked(member) {
+			return
+		}
 		if e.World.BoardCount < MAX_BOARD {
 			e.BoardClose()
 			e.World.BoardCount++
@@ -1004,6 +1080,9 @@ func (s *EditorSession) UploadWorld(member *webSocketClient, data []byte) (Edito
 	var gate string
 	err := s.Apply(member, func(e *Engine) {
 		reply = editorSnapshot(e, BOARD_WIDTH/2, BOARD_HEIGHT/2)
+		if !s.canEditLocked(member) {
+			return
+		}
 		if verr := validateGeneratedZWD(data); verr != nil {
 			gate = verr.Error()
 			return

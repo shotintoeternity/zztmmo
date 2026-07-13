@@ -533,6 +533,7 @@ func (s *WebSocketServer) serveEditor(ctx context.Context, conn *websocket.Conn,
 	if err != nil {
 		return
 	}
+	session.SetMemberReadOnly(client, !s.editorCanEdit(safeWorld, client.accountID))
 	client.name = presence.Name
 	s.mu.Lock()
 	if s.EditorSessions == nil {
@@ -595,6 +596,9 @@ func (s *WebSocketServer) serveEditor(ctx context.Context, conn *websocket.Conn,
 			reply, err := session.Edit(client, edit)
 			if err != nil {
 				return
+			}
+			if reply.Type == "" {
+				continue
 			}
 			session.UpdatePresence(client, edit.X, edit.Y)
 			s.broadcastEditor(ctx, session, reply)
@@ -711,6 +715,22 @@ func (s *WebSocketServer) broadcastEditorPresence(ctx context.Context, session *
 	})
 }
 
+func (s *WebSocketServer) editorCanEdit(worldName, accountID string) bool {
+	dir := s.worldsDir()
+	if dir == "" {
+		return true
+	}
+	access, ok, err := loadWorldAccess(dir, worldName)
+	if err != nil {
+		log.Printf("zztgo: failed to load access metadata for %q: %v", worldName, err)
+		return false
+	}
+	if !ok {
+		return true
+	}
+	return access.CanEdit(accountID)
+}
+
 // serveEditorWorld routes an editorWorld operation (M5.6). save publishes the
 // session world and hosts it; download replies with the world's .ZZT bytes;
 // upload replaces the session world with client bytes after the M7.5 gate. A
@@ -719,6 +739,9 @@ func (s *WebSocketServer) broadcastEditorPresence(ctx context.Context, session *
 func (s *WebSocketServer) serveEditorWorld(ctx context.Context, client *webSocketClient, session *EditorSession, world EditorWorldMessage) error {
 	switch world.Op {
 	case "save":
+		if !session.CanEdit(client) {
+			return client.write(ctx, EditorSaveResultMessage{Type: MessageTypeEditorSaveResult, Error: "world is read-only for this account"})
+		}
 		name, err := s.saveEditorWorld(client, session, world.Name)
 		reply := EditorSaveResultMessage{Type: MessageTypeEditorSaveResult}
 		if err != nil {
@@ -732,7 +755,7 @@ func (s *WebSocketServer) serveEditorWorld(ctx context.Context, client *webSocke
 		if err != nil || data == nil {
 			return nil
 		}
-		name, nameErr := SanitizeSaveName(session.WorldName)
+		name, nameErr := SanitizeSaveName(session.Name())
 		if nameErr != nil {
 			name = "WORLD"
 		}
@@ -742,6 +765,9 @@ func (s *WebSocketServer) serveEditorWorld(ctx context.Context, client *webSocke
 			Data: base64.StdEncoding.EncodeToString(data),
 		})
 	case "upload":
+		if !session.CanEdit(client) {
+			return client.write(ctx, EditorSaveResultMessage{Type: MessageTypeEditorSaveResult, Error: "world is read-only for this account"})
+		}
 		data, decErr := base64.StdEncoding.DecodeString(world.Data)
 		if decErr != nil {
 			return nil
@@ -754,6 +780,15 @@ func (s *WebSocketServer) serveEditorWorld(ctx context.Context, client *webSocke
 			return client.write(ctx, EditorSaveResultMessage{Type: MessageTypeEditorSaveResult, Error: gate})
 		}
 		return client.write(ctx, snapshot)
+	case "invite":
+		if !session.CanEdit(client) {
+			return client.write(ctx, EditorSaveResultMessage{Type: MessageTypeEditorSaveResult, Error: "world is read-only for this account"})
+		}
+		reply := EditorSaveResultMessage{Type: MessageTypeEditorSaveResult, World: session.Name()}
+		if err := s.inviteEditorCollaborator(client, session, world.AccountID); err != nil {
+			reply.Error = err.Error()
+		}
+		return client.write(ctx, reply)
 	}
 	return nil
 }
@@ -767,6 +802,9 @@ func (s *WebSocketServer) serveEditorBoard(ctx context.Context, client *webSocke
 	case "add":
 		reply, err := session.AddBoard(client, board.Name)
 		if err != nil {
+			return nil
+		}
+		if reply.Type == "" {
 			return nil
 		}
 		return client.write(ctx, reply)
@@ -1209,6 +1247,25 @@ func (s *WebSocketServer) saveEditorWorld(client *webSocketClient, session *Edit
 		return "", fmt.Errorf("world %q is being played and cannot be overwritten", safe)
 	}
 
+	dir := s.worldsDir()
+	if dir == "" {
+		return "", ErrSavesDisabled
+	}
+	access, hasAccess, err := loadWorldAccess(dir, safe)
+	if err != nil {
+		return "", err
+	}
+	if hasAccess && !access.CanEdit(client.accountID) {
+		return "", fmt.Errorf("world %q is read-only for this account", safe)
+	}
+	if !hasAccess && client.accountID != "" {
+		access = WorldAccess{
+			OwnerAccountID: client.accountID,
+			OwnerName:      client.name,
+		}
+		hasAccess = true
+	}
+
 	data, err := session.WorldBytes(client, safe)
 	if err != nil {
 		return "", err
@@ -1217,10 +1274,6 @@ func (s *WebSocketServer) saveEditorWorld(client *webSocketClient, session *Edit
 		return "", fmt.Errorf("could not serialize the editor world")
 	}
 
-	dir := s.worldsDir()
-	if dir == "" {
-		return "", ErrSavesDisabled
-	}
 	path := filepath.Join(dir, safe+".ZZT")
 	// Belt and braces: SanitizeSaveName cannot emit a separator, so this can only
 	// fire if that charset is ever loosened.
@@ -1233,6 +1286,11 @@ func (s *WebSocketServer) saveEditorWorld(client *webSocketClient, session *Edit
 	if err := os.WriteFile(path, data, 0o644); err != nil {
 		return "", err
 	}
+	if hasAccess {
+		if err := writeWorldAccess(dir, safe, access); err != nil {
+			return "", err
+		}
+	}
 
 	world, err := LoadWorldBytes(data)
 	if err != nil {
@@ -1241,7 +1299,38 @@ func (s *WebSocketServer) saveEditorWorld(client *webSocketClient, session *Edit
 	if err := s.HostGeneratedWorld(safe, world); err != nil {
 		return "", err
 	}
+	session.SetWorldName(safe)
 	return safe, nil
+}
+
+func (s *WebSocketServer) inviteEditorCollaborator(client *webSocketClient, session *EditorSession, accountID string) error {
+	if client.accountID == "" {
+		return fmt.Errorf("authentication required")
+	}
+	if strings.TrimSpace(accountID) == "" {
+		return fmt.Errorf("collaborator account required")
+	}
+	dir := s.worldsDir()
+	if dir == "" {
+		return ErrSavesDisabled
+	}
+	worldName, err := SanitizeSaveName(session.Name())
+	if err != nil {
+		return err
+	}
+	access, ok, err := loadWorldAccess(dir, worldName)
+	if err != nil {
+		return err
+	}
+	if !ok || !access.IsOwner(client.accountID) {
+		return fmt.Errorf("only the world owner can invite collaborators")
+	}
+	access.AddCollaborator(strings.TrimSpace(accountID))
+	if err := writeWorldAccess(dir, worldName, access); err != nil {
+		return err
+	}
+	session.SetAccountReadOnly(strings.TrimSpace(accountID), false)
+	return nil
 }
 
 // LoadWorldBytes parses vanilla .ZZT bytes into a TWorld without touching disk.

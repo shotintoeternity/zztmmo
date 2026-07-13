@@ -1740,7 +1740,7 @@ builds toward them instead of away:
   disconnect, with the "being edited by" refusal surfaced in the client.
   DoD: two members racing for one object — one edits, the other is refused
   and sees who holds it; a disconnect releases the lease.
-- [ ] **M10.3 — Ownership and invites.** Requires M6.2 and M5.6. Worlds have
+- [x] **M10.3 — Ownership and invites.** Requires M6.2 and M5.6. Worlds have
   an owning account; the owner invites collaborator accounts; everyone else
   is read-only in that session. DoD: an invited account edits, an uninvited
   one can look but not touch.

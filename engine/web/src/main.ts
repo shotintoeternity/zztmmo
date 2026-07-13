@@ -225,6 +225,7 @@ type EditorPresence = {
 type EditorSnapshotMessage = {
 	type: typeof MessageTypeEditorSnapshot;
 	memberId?: string;
+	readOnly?: boolean;
 	boardId: number;
 	screen: ScreenCell[];
 	inspect: EditorInspect;
@@ -253,6 +254,7 @@ type EditorLeaseMessage = {
   statId?: number;
   holderId?: string;
   holderName?: string;
+  error?: string;
 };
 
 type EditorDiffMessage = {
@@ -518,6 +520,7 @@ let editorModified = false;
 let editorExitAfterSave = false;
 let editorMemberId = "";
 let editorPresence: EditorPresence[] = [];
+let editorReadOnly = false;
 let pendingEditorLease: { lease: EditorLeaseMessage; onGranted: () => void } | null = null;
 let activeEditorLease: EditorLeaseMessage | null = null;
 let retainEditorLeaseOnClose = false;
@@ -736,6 +739,7 @@ function startEditor() {
   editorExitAfterSave = false;
   editorMemberId = "";
   editorPresence = [];
+  editorReadOnly = false;
   pendingEditorLease = null;
   activeEditorLease = null;
   retainEditorLeaseOnClose = false;
@@ -1194,6 +1198,7 @@ function applyMessage(message: ServerMessage) {
 function applyEditorSnapshot(message: EditorSnapshotMessage) {
   mode = "editor";
   if (message.memberId) editorMemberId = message.memberId;
+  editorReadOnly = !!message.readOnly;
   if (message.presence) editorPresence = message.presence;
   editorInspect = message.inspect;
   editorCursor = { x: message.inspect.x, y: message.inspect.y };
@@ -1227,6 +1232,10 @@ function editorLeaseMatches(a: EditorLeaseMessage | null, b: EditorLeaseMessage)
 
 function requestEditorLease(lease: Omit<EditorLeaseMessage, "type" | "op">, onGranted: () => void) {
   if (!connected || !ws || ws.readyState !== WebSocket.OPEN) return;
+  if (editorReadOnly) {
+    showEditorReadOnly();
+    return;
+  }
   const request: EditorLeaseMessage = { type: MessageTypeEditorLease, op: "request", ...lease };
   if (editorLeaseMatches(activeEditorLease, request)) {
     onGranted();
@@ -1248,6 +1257,10 @@ function releaseActiveEditorLease() {
 function applyEditorLease(message: EditorLeaseMessage) {
   if (message.op === "refused") {
     pendingEditorLease = null;
+    if (message.error === "read-only") {
+      showEditorReadOnly();
+      return;
+    }
     const name = message.holderName || "Another editor";
     openSelectList("Already editing", ["Ok"], () => {}, [`${name} is editing this ${message.kind}.`]);
     return;
@@ -1259,6 +1272,10 @@ function applyEditorLease(message: EditorLeaseMessage) {
   pendingEditorLease = null;
   activeEditorLease = message;
   onGranted();
+}
+
+function showEditorReadOnly() {
+  openSelectList("Read-only", ["Ok"], () => {}, ["You can look around, but this world is read-only for this account."]);
 }
 
 function applyEditorDiff(message: EditorDiffMessage) {
@@ -2106,6 +2123,10 @@ function handlePointerDown(event: MouseEvent) {
     const cell = eventCell(event);
     if (!cell || cell.x >= BOARD_COLS) return;
     event.preventDefault();
+    if (editorReadOnly) {
+      showEditorReadOnly();
+      return;
+    }
     editorCursor = { x: cell.x + 1, y: cell.y + 1 };
     editorPointerDrawing = true;
     sendEditorEdit("place");
@@ -2126,7 +2147,7 @@ function handlePointerDown(event: MouseEvent) {
 }
 
 function handlePointerMove(event: MouseEvent) {
-  if (!editorPointerDrawing || mode !== "editor" || modal || event.buttons === 0) {
+  if (!editorPointerDrawing || mode !== "editor" || modal || editorReadOnly || event.buttons === 0) {
     editorPointerDrawing = false;
     return;
   }
@@ -2152,6 +2173,19 @@ function redrawEditor() {
 // true when it consumed the key. Anything else (arrows, F-keys) returns false so
 // the normal handler still runs while text entry stays on.
 function handleEditorTextKey(event: KeyboardEvent): boolean {
+  if (editorReadOnly) {
+    if (event.code === "Enter" || event.code === "Escape") {
+      event.preventDefault();
+      editorTextMode = false;
+      redrawEditor();
+      return true;
+    }
+    if (event.code === "Backspace" || event.code === "Delete" || event.key.length === 1) {
+      event.preventDefault();
+      showEditorReadOnly();
+      return true;
+    }
+  }
   if (event.code === "Enter" || event.code === "Escape") {
     event.preventDefault();
     editorTextMode = false;
@@ -2239,15 +2273,27 @@ function handleEditorKey(event: KeyboardEvent) {
       break;
     case "Space":
       event.preventDefault();
+      if (editorReadOnly) {
+        showEditorReadOnly();
+        return;
+      }
       sendEditorEdit("place");
       return;
     case "Delete":
     case "Backspace":
       event.preventDefault();
+      if (editorReadOnly) {
+        showEditorReadOnly();
+        return;
+      }
       sendEditorEdit("erase");
       return;
     case "KeyX":
       event.preventDefault();
+      if (editorReadOnly) {
+        showEditorReadOnly();
+        return;
+      }
       sendEditorEdit("fill");
       return;
     case "F1":
@@ -2330,7 +2376,13 @@ function handleEditorKey(event: KeyboardEvent) {
   // Shift+arrow paints the pattern along the path: EditorLoop places at the
   // current cursor before moving (EDITOR.PAS:397-411), so a Shift-drag lays a
   // line of the selected pattern. Placing happens at the old cursor position.
-  if (event.shiftKey) sendEditorEdit("place");
+  if (event.shiftKey) {
+    if (editorReadOnly) {
+      showEditorReadOnly();
+      return;
+    }
+    sendEditorEdit("place");
+  }
   editorCursor = {
     x: Math.max(1, Math.min(BOARD_COLS, nextX)),
     y: Math.max(1, Math.min(ROWS, nextY)),
@@ -2342,7 +2394,13 @@ function handleEditorKey(event: KeyboardEvent) {
   paintOverlay();
   drawScreen();
   sendEditorInspect();
-  if (editorDrawing) sendEditorEdit("place");
+  if (editorDrawing) {
+    if (editorReadOnly) {
+      showEditorReadOnly();
+      return;
+    }
+    sendEditorEdit("place");
+  }
 }
 
 function editorBool(value: boolean): string {
@@ -2536,6 +2594,10 @@ function sendEditorProperty(field: string, values: { text?: string; value?: numb
 
 function sendEditorBoard(values: { op: string; name?: string; boardId?: number; data?: string }) {
   if (!connected || !ws || ws.readyState !== WebSocket.OPEN) return;
+  if (editorReadOnly && ["add", "import", "clear", "new"].includes(values.op)) {
+    showEditorReadOnly();
+    return;
+  }
   ws.send(JSON.stringify({ type: MessageTypeEditorBoard, ...values }));
 }
 
@@ -2604,15 +2666,21 @@ function importEditorBoardFile() {
   input.click();
 }
 
-function sendEditorWorld(values: { op: string; name?: string; data?: string }) {
+function sendEditorWorld(values: { op: string; name?: string; data?: string; accountId?: string }) {
   if (!connected || !ws || ws.readyState !== WebSocket.OPEN) return;
+  if (editorReadOnly && values.op !== "download") {
+    showEditorReadOnly();
+    return;
+  }
   ws.send(JSON.stringify({ type: MessageTypeEditorWorld, ...values }));
 }
 
 // openEditorWorldMenu is the 'S' key: save/publish the world so others can play
 // it, download it as a portable .ZZT, or upload a .ZZT to edit.
 function openEditorWorldMenu() {
-  openSelectList("World:", ["Save and publish", "Download .ZZT", "Upload .ZZT"], (entry) => {
+  const entries = ["Save and publish", "Download .ZZT", "Upload .ZZT"];
+  if (!editorReadOnly) entries.push("Invite collaborator");
+  openSelectList("World:", entries, (entry) => {
     if (entry === "Save and publish") {
       openEntry("Save world as:", "", 8, "any", (text) => {
         if (text) sendEditorWorld({ op: "save", name: text });
@@ -2621,6 +2689,10 @@ function openEditorWorldMenu() {
       sendEditorWorld({ op: "download" });
     } else if (entry === "Upload .ZZT") {
       uploadEditorWorldFile();
+    } else if (entry === "Invite collaborator") {
+      openEntry("Account id:", "", 30, "any", (text) => {
+        if (text) sendEditorWorld({ op: "invite", accountId: text });
+      });
     }
   });
 }
