@@ -45,6 +45,7 @@ function worldSearch() {
     entries: [
       { world: "TOWN", id: "TOWN", title: "TOWN (ZZTMMO Lobby)", author: "Unknown", created: "" },
       { world: "RHYGAR1", id: "rhygar1", title: "Rhygar", author: "Saxxon Pike", created: "1997", players: 1 },
+      { world: "CASTLE", id: "castle", title: "Castle", author: "Unknown", created: "1999", players: 2 },
       { world: "TEEN", id: "teen", title: "Teen Priest", author: "Draco", created: "1998" },
       { world: "CUTLASS", id: "cutlass", title: "Tales of Adventure: The Treasure of Captain Cutlass", author: "Dr. Dos", created: "2001" },
     ],
@@ -147,7 +148,8 @@ function worldSearch() {
   assert.ok(writes.some((write) => write.color === 0x70 && write.text.startsWith("Type to search: ")));
   assert.match(rendered, /TOWN \(ZZTMMO Lobby\)/);
   assert.match(rendered, /Rhygar/);
-  assert.match(rendered, /\(1 player\(s\) currently online\)/);
+  assert.match(rendered, /\(1 player currently online\)/);
+  assert.match(rendered, /\(2 players currently online\)/);
   const searchWrites = writes.filter((write) => write.text.startsWith("Type to search: "));
   assert.equal(searchWrites.length, 1);
   assert.equal(searchWrites[0].y, 19, "search prompt stays below the result rows");

@@ -290,7 +290,7 @@ function worldSearchLines(matches: WorldSearchEntry[]): string[] {
   }
   for (let i = 0; i < matches.length; i += 1) {
     const entry = matches[i];
-    const playerText = entry.players ? ` (${entry.players} player(s) currently online)` : "";
+    const playerText = worldSearchPlayerText(entry.players ?? 0);
     const sourceText = entry.source === "museum" ? "  Museum" : "";
     lines.push(`!${String(i)};${fitText(entry.title || entry.world, WORLD_TITLE_WIDTH)}`);
     lines.push(fitText(`  id:${entry.id || entry.world} by ${entry.author || "Unknown"} ${entry.created || "????"}${sourceText}`, WORLD_DETAIL_WIDTH));
@@ -299,6 +299,13 @@ function worldSearchLines(matches: WorldSearchEntry[]): string[] {
     }
   }
   return lines;
+}
+
+function worldSearchPlayerText(players: number): string {
+  if (players <= 0) {
+    return "";
+  }
+  return ` (${players} ${players === 1 ? "player" : "players"} currently online)`;
 }
 
 function worldSearchLinePos(selected: number, matches: WorldSearchEntry[]): number {
