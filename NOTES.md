@@ -1,5 +1,19 @@
 # NOTES — escalations and decisions log (append-only)
 
+## M5.10 (2026-07-13) — first editor sidebar parity slice
+
+Started the M5.10 popup audit by splitting editor interactions into two buckets:
+true text windows stay on the text-window layer, while original sidebar prompts
+must render in the right editor chrome. `EDITOR.PAS` keeps Board Information and
+EditorSelectBoard as text windows, so those remain `openSelectList` paths for
+now. EditorEditStat is not a selectable "Object settings" menu: vanilla clears
+the sidebar, writes category/name at rows 6-7, paints slider/character/choice
+prompts at rows 9/13/17, and advances through them sequentially. The browser now
+follows that flow, with object/scroll program editing still opening the true text
+window editor at the right point. EditorTransferBoard's import/export prompt now
+uses `SidebarPromptChoice`-style sidebar chrome. Board/file browser operations
+still need the broader M5.10 screenshot checklist before the task can close.
+
 ## M6.4 (2026-07-13) — account player-state scope
 
 DECISION. Account-keyed player state is scoped by `(accountID, worldName)`, not

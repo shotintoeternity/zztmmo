@@ -5,7 +5,7 @@ import { commandKey, isHandledKey, isMovementKey, movementMask, rawKey } from ".
 import { drawTitleSidebar, titleCommand } from "./title";
 import { soundNotesFromProtocol, ZztSound } from "./sound";
 import { generationLines, runDreamGeneration, type GenerationProgress } from "./dream";
-import { drawEditorSidebar, type EditorInspect } from "./editor";
+import { drawEditorSidebar, type EditorInspect, type SidebarActionMenu, type SidebarStatPrompt } from "./editor";
 import { editorReplyMatchesCursor } from "./editor_cursor";
 import { optimisticEditorEraseCell, optimisticEditorTextCell } from "./editor_input";
 import {
@@ -215,6 +215,35 @@ type EditorElementMenu = {
   key: string;
   title: string;
   items: EditorElementItem[];
+};
+
+type EditorSidebarMenuItem = {
+  label: string;
+  value?: string;
+  shortcut?: string;
+  onPick: () => void;
+};
+
+type EditorSidebarMenu = {
+  title: string;
+  items: EditorSidebarMenuItem[];
+  selected: number;
+  hint?: string;
+  releaseLeaseOnClose?: boolean;
+};
+
+type EditorStatPromptItem =
+  | { kind: "slider"; field: "p1" | "p2"; label: string; value: number; startChar?: string; endChar?: string }
+  | { kind: "character"; field: "p1"; label: string; value: number }
+  | { kind: "choice"; field: "bulletType" | "direction"; label: string; choices: string[]; selected: number; values: number[] }
+  | { kind: "board"; label: string; value: number }
+  | { kind: "program"; statId: number };
+
+type EditorStatPrompt = {
+  categoryName: string;
+  elementName: string;
+  items: EditorStatPromptItem[];
+  active: number;
 };
 
 type EditorPresence = {
@@ -539,6 +568,8 @@ let editorMenus: EditorElementMenu[] = [];
 // next keystroke selects an element by its shortcut instead of driving the board
 // (EDITOR.PAS:808-842).
 let editorCategoryMenu: EditorElementMenu | null = null;
+let editorSidebarMenu: EditorSidebarMenu | null = null;
+let editorStatPrompt: EditorStatPrompt | null = null;
 // Set when a menu selection placed a stat-backed element, so the diff reply
 // carrying the new stat can open its editor — EditorLoop calls EditorEditStat
 // right after AddStat (EDITOR.PAS:766-772).
@@ -654,6 +685,8 @@ async function showTitle() {
   playerId = 0;
   myStatId = -1;
   editorCursor = { x: 30, y: 12 };
+  editorSidebarMenu = null;
+  editorStatPrompt = null;
   zztSound.setEnabled(false);
   setPaused(false);
   pressed.clear();
@@ -760,6 +793,9 @@ function startEditor() {
   pendingEditorLease = null;
   activeEditorLease = null;
   retainEditorLeaseOnClose = false;
+  editorCategoryMenu = null;
+  editorSidebarMenu = null;
+  editorStatPrompt = null;
   renderEditorSidebar();
   paintOverlay();
   drawScreen();
@@ -2196,7 +2232,37 @@ function handlePointerMove(event: MouseEvent) {
 // runs through it so an open F1/F2/F3 category picker survives async collaborator
 // diffs/inspects that would otherwise repaint the plain command block over it.
 function renderEditorSidebar() {
-  drawEditorSidebar(writeText, editorInspect, editorBrush, editorDrawing, editorTextMode, editorCategoryMenu);
+  const actionMenu: SidebarActionMenu | null = editorSidebarMenu ? {
+    title: editorSidebarMenu.title,
+    items: editorSidebarMenu.items.map((item) => ({
+      label: item.label,
+      value: item.value,
+      shortcut: item.shortcut,
+    })),
+    selected: editorSidebarMenu.selected,
+    hint: editorSidebarMenu.hint,
+  } : null;
+  const statPrompt: SidebarStatPrompt | null = editorStatPrompt ? {
+    categoryName: editorStatPrompt.categoryName,
+    elementName: editorStatPrompt.elementName,
+    items: editorStatPrompt.items
+      .filter((item) => item.kind !== "program")
+      .map((item, visibleIndex) => {
+        const promptIndex = visiblePromptIndex(editorStatPrompt!, visibleIndex);
+        const active = promptIndex === editorStatPrompt!.active;
+        switch (item.kind) {
+          case "slider":
+            return { kind: "slider", label: item.label, value: item.value, active, startChar: item.startChar, endChar: item.endChar };
+          case "character":
+            return { kind: "character", label: item.label, value: item.value, active };
+          case "choice":
+            return { kind: "choice", label: item.label, choices: item.choices, selected: item.selected, active };
+          case "board":
+            return { kind: "board", label: "Room", value: editorBoardName(item.value), active };
+        }
+      }),
+  } : null;
+  drawEditorSidebar(writeText, editorInspect, editorBrush, editorDrawing, editorTextMode, editorCategoryMenu, actionMenu, statPrompt);
 }
 
 // redrawEditor repaints the editor sidebar and board from local state, the
@@ -2263,6 +2329,14 @@ function handleEditorTextKey(event: KeyboardEvent): boolean {
 }
 
 function handleEditorKey(event: KeyboardEvent) {
+  if (editorStatPrompt) {
+    handleEditorStatPromptKey(event);
+    return;
+  }
+  if (editorSidebarMenu) {
+    handleEditorSidebarMenuKey(event);
+    return;
+  }
   if (editorCategoryMenu) {
     handleEditorCategoryKey(event);
     return;
@@ -2457,6 +2531,68 @@ function editorBoardName(id: number): string {
   return editorProperties.boards.find((board) => board.id === id)?.name ?? "None";
 }
 
+function openEditorSidebarMenu(menu: Omit<EditorSidebarMenu, "selected"> & { selected?: number }) {
+  editorCategoryMenu = null;
+  editorSidebarMenu = { ...menu, selected: menu.selected ?? 0 };
+  redrawEditor();
+}
+
+function closeEditorSidebarMenu(releaseLease = true) {
+  const releaseLeaseOnClose = releaseLease && !!editorSidebarMenu?.releaseLeaseOnClose;
+  editorSidebarMenu = null;
+  redrawEditor();
+  if (releaseLeaseOnClose) {
+    releaseActiveEditorLease();
+  }
+}
+
+function pickEditorSidebarItem(menu: EditorSidebarMenu, item: EditorSidebarMenuItem) {
+  item.onPick();
+  if (editorSidebarMenu === menu) {
+    closeEditorSidebarMenu();
+  }
+}
+
+function handleEditorSidebarMenuKey(event: KeyboardEvent) {
+  event.preventDefault();
+  const menu = editorSidebarMenu;
+  if (!menu) return;
+  switch (event.code) {
+    case "Escape":
+      closeEditorSidebarMenu();
+      return;
+    case "ArrowUp":
+    case "Numpad8":
+      menu.selected = Math.max(0, menu.selected - 1);
+      redrawEditor();
+      return;
+    case "ArrowDown":
+    case "Numpad2":
+      menu.selected = Math.min(menu.items.length - 1, menu.selected + 1);
+      redrawEditor();
+      return;
+    case "Home":
+      menu.selected = 0;
+      redrawEditor();
+      return;
+    case "End":
+      menu.selected = menu.items.length - 1;
+      redrawEditor();
+      return;
+    case "Enter":
+    case "Space":
+      pickEditorSidebarItem(menu, menu.items[menu.selected]);
+      return;
+  }
+  const pressed = event.key.length === 1 ? event.key.toUpperCase() : "";
+  if (!pressed) return;
+  const shortcutIndex = menu.items.findIndex((item) => (item.shortcut ?? item.label.slice(0, 1)).toUpperCase() === pressed);
+  if (shortcutIndex >= 0) {
+    menu.selected = shortcutIndex;
+    pickEditorSidebarItem(menu, menu.items[shortcutIndex]);
+  }
+}
+
 // openEditorCategoryMenu opens the F1/F2/F3 element picker on the sidebar
 // (EDITOR.PAS:808-816). Unlike a modal, it leaves the board visible and arms
 // handleEditorCategoryKey to read the next keystroke as an element shortcut.
@@ -2585,68 +2721,210 @@ function statDirection(stepX: number, stepY: number): number {
   return 3;
 }
 
-function openEditorStatSlider(title: string, field: "p1" | "p2") {
-  const values = Array.from({ length: 9 }, (_, index) => String(index));
-  openSelectList(title, values, (entry) => sendEditorStat(field, Number(entry)));
+function splitSliderPrompt(prompt: string): { label: string; startChar?: string; endChar?: string } {
+  if (prompt.length >= 3 && prompt[prompt.length - 3] === ";") {
+    return {
+      label: prompt.slice(0, -3),
+      startChar: prompt[prompt.length - 2],
+      endChar: prompt[prompt.length - 1],
+    };
+  }
+  return { label: prompt };
 }
 
-// EditorEditStatSettings follows ElementDefs rather than a browser-maintained
-// element table. This keeps the UI in step with the engine's Param*Name
-// meanings and makes the server the authority for every stat mutation.
+function editorStatCategoryName(inspect: EditorInspect): string {
+  for (const menu of editorMenus) {
+    let categoryName = "";
+    for (const item of menu.items) {
+      if (item.categoryName) categoryName = item.categoryName;
+      if (item.elementId === inspect.elementId) return categoryName;
+    }
+  }
+  return "";
+}
+
+function visiblePromptIndex(prompt: EditorStatPrompt, visibleIndex: number): number {
+  let seen = -1;
+  for (let i = 0; i < prompt.items.length; i += 1) {
+    if (prompt.items[i].kind === "program") continue;
+    seen += 1;
+    if (seen === visibleIndex) return i;
+  }
+  return -1;
+}
+
+function closeEditorStatPrompt(releaseLease = true) {
+  editorStatPrompt = null;
+  redrawEditor();
+  if (releaseLease) releaseActiveEditorLease();
+}
+
+function sendEditorStatPromptValue(item: EditorStatPromptItem) {
+  switch (item.kind) {
+    case "slider":
+    case "character":
+      sendEditorStat(item.field, item.value);
+      return;
+    case "choice":
+      sendEditorStat(item.field, item.values[item.selected] ?? 0);
+      return;
+  }
+}
+
+function startActiveEditorStatPrompt() {
+  const prompt = editorStatPrompt;
+  if (!prompt) return;
+  while (prompt.active < prompt.items.length) {
+    const item = prompt.items[prompt.active];
+    if (item.kind === "program") {
+      closeEditorStatPrompt(false);
+      sendEditorProgram(item.statId);
+      return;
+    }
+    if (item.kind === "board") {
+      closeEditorStatPrompt(false);
+      openEditorStatBoardPicker(item.label);
+      return;
+    }
+    redrawEditor();
+    return;
+  }
+  closeEditorStatPrompt();
+}
+
+function advanceEditorStatPrompt() {
+  const prompt = editorStatPrompt;
+  if (!prompt) return;
+  const item = prompt.items[prompt.active];
+  if (item) sendEditorStatPromptValue(item);
+  prompt.active += 1;
+  startActiveEditorStatPrompt();
+}
+
+function updateEditorStatPromptValue(item: EditorStatPromptItem, next: number) {
+  switch (item.kind) {
+    case "slider": {
+      const value = Math.max(0, Math.min(8, next));
+      if (value !== item.value) {
+        item.value = value;
+        sendEditorStat(item.field, value);
+        redrawEditor();
+      }
+      return;
+    }
+    case "character": {
+      const value = (next + 0x100) % 0x100;
+      if (value !== item.value) {
+        item.value = value;
+        sendEditorStat("p1", value);
+        redrawEditor();
+      }
+      return;
+    }
+    case "choice": {
+      const selected = Math.max(0, Math.min(item.choices.length - 1, next));
+      if (selected !== item.selected) {
+        item.selected = selected;
+        sendEditorStat(item.field, item.values[selected] ?? 0);
+        redrawEditor();
+      }
+      return;
+    }
+  }
+}
+
+function handleEditorStatPromptKey(event: KeyboardEvent) {
+  event.preventDefault();
+  const prompt = editorStatPrompt;
+  if (!prompt) return;
+  const item = prompt.items[prompt.active];
+  if (!item) {
+    closeEditorStatPrompt();
+    return;
+  }
+  switch (event.code) {
+    case "Escape":
+      closeEditorStatPrompt();
+      return;
+    case "Enter":
+      advanceEditorStatPrompt();
+      return;
+    case "Tab":
+      if (item.kind === "character") updateEditorStatPromptValue(item, item.value + 9);
+      return;
+    case "ArrowLeft":
+    case "Numpad4":
+      if (item.kind === "slider") updateEditorStatPromptValue(item, item.value - 1);
+      if (item.kind === "character") updateEditorStatPromptValue(item, item.value - 1);
+      if (item.kind === "choice") updateEditorStatPromptValue(item, item.selected - 1);
+      return;
+    case "ArrowRight":
+    case "Numpad6":
+      if (item.kind === "slider") updateEditorStatPromptValue(item, item.value + 1);
+      if (item.kind === "character") updateEditorStatPromptValue(item, item.value + 1);
+      if (item.kind === "choice") updateEditorStatPromptValue(item, item.selected + 1);
+      return;
+  }
+  if (item.kind === "slider" && event.key >= "1" && event.key <= "9") {
+    updateEditorStatPromptValue(item, event.key.charCodeAt(0) - "1".charCodeAt(0));
+  }
+}
+
+// EditorEditStatSettings is not a selectable "settings" menu. Vanilla clears
+// the sidebar, writes the element category/name, draws every parameter prompt,
+// then edits them sequentially in place.
 function openEditorStatSettings(inspect: EditorInspect) {
   if (!inspect.hasStat || inspect.statId === undefined) return;
-  const choices: { action: string; label: string }[] = [];
+  const items: EditorStatPromptItem[] = [];
   const p1 = inspect.p1 ?? 0;
   const p2 = inspect.p2 ?? 0;
   if (inspect.param1Name) {
-    const value = inspect.paramTextName ? String.fromCharCode(p1) : String(p1);
-    choices.push({ action: "p1", label: `${inspect.param1Name} ${value}` });
+    const slider = splitSliderPrompt(inspect.param1Name);
+    if (inspect.paramTextName) {
+      items.push({ kind: "character", field: "p1", label: slider.label, value: p1 });
+    } else {
+      items.push({ kind: "slider", field: "p1", label: slider.label, value: p1, startChar: slider.startChar, endChar: slider.endChar });
+    }
   }
   if (inspect.paramTextName) {
-    choices.push({ action: "program", label: inspect.paramTextName });
+    items.push({ kind: "program", statId: inspect.statId });
   }
-  if (inspect.param2Name) choices.push({ action: "p2", label: `${inspect.param2Name} ${p2 & 0x7f}` });
-  if (inspect.paramBulletTypeName) choices.push({ action: "bulletType", label: `${inspect.paramBulletTypeName} ${(p2 & 0x80) === 0 ? "Bullets" : "Stars"}` });
+  if (inspect.param2Name) {
+    const slider = splitSliderPrompt(inspect.param2Name);
+    items.push({ kind: "slider", field: "p2", label: slider.label, value: p2 & 0x7f, startChar: slider.startChar, endChar: slider.endChar });
+  }
+  if (inspect.paramBulletTypeName) {
+    items.push({
+      kind: "choice",
+      field: "bulletType",
+      label: inspect.paramBulletTypeName,
+      choices: ["Bullets", "Stars"],
+      selected: (p2 & 0x80) === 0 ? 0 : 1,
+      values: [0, 1],
+    });
+  }
   if (inspect.paramDirName) {
-    const direction = ["North", "South", "West", "East"][statDirection(inspect.stepX ?? 0, inspect.stepY ?? 0)] ?? "East";
-    choices.push({ action: "direction", label: `${inspect.paramDirName} ${direction}` });
+    items.push({
+      kind: "choice",
+      field: "direction",
+      label: inspect.paramDirName,
+      choices: ["\x18", "\x19", "\x1b", "\x1a"],
+      selected: statDirection(inspect.stepX ?? 0, inspect.stepY ?? 0),
+      values: [0, 1, 2, 3],
+    });
   }
-  if (inspect.paramBoardName) choices.push({ action: "p3", label: `${inspect.paramBoardName} ${editorBoardName(inspect.p3 ?? 0)}` });
-  choices.push({ action: "cycle", label: `Cycle: ${inspect.cycle ?? 0}` });
-  const actions = new Map(choices.map((choice) => [choice.label, choice.action]));
-  const statId = inspect.statId;
-  openSelectList(`${inspect.element} settings`, [...choices.map((choice) => choice.label), "Quit!"], (entry) => {
-    const action = actions.get(entry);
-    switch (action) {
-      case "program":
-        if (statId !== undefined) sendEditorProgram(statId);
-        break;
-      case "p1":
-        if (inspect.paramTextName) {
-          openEntry(inspect.param1Name ?? "Character?", "", 1, "any", (text) => {
-            if (text) sendEditorStat("p1", text.charCodeAt(0) & 0xff);
-          }, String.fromCharCode(p1));
-        } else {
-          openEditorStatSlider(inspect.param1Name ?? "Parameter", "p1");
-        }
-        break;
-      case "p2":
-        openEditorStatSlider(inspect.param2Name ?? "Parameter", "p2");
-        break;
-      case "bulletType":
-        openSelectList(inspect.paramBulletTypeName ?? "Firing type?", ["Bullets", "Stars"], (value) => sendEditorStat("bulletType", value === "Stars" ? 1 : 0));
-        break;
-      case "direction":
-        openSelectList(inspect.paramDirName ?? "Direction", ["North", "South", "West", "East"], (value) => sendEditorStat("direction", ["North", "South", "West", "East"].indexOf(value)));
-        break;
-      case "p3":
-        openEditorStatBoardPicker(inspect.paramBoardName ?? "Board");
-        break;
-      case "cycle":
-        openEditorStatCycle(inspect.cycle ?? 0);
-        break;
-    }
-  });
+  if (inspect.paramBoardName) {
+    items.push({ kind: "board", label: inspect.paramBoardName, value: inspect.p3 ?? 0 });
+  }
+  editorCategoryMenu = null;
+  editorSidebarMenu = null;
+  editorStatPrompt = {
+    categoryName: editorStatCategoryName(inspect),
+    elementName: inspect.element,
+    items,
+    active: 0,
+  };
+  startActiveEditorStatPrompt();
 }
 
 function openEditorStatBoardPicker(title: string) {
@@ -2655,14 +2933,6 @@ function openEditorStatBoardPicker(title: string) {
     const value = Number(entry.slice(0, entry.indexOf(":")));
     if (Number.isInteger(value)) sendEditorStat("p3", value);
   });
-}
-
-function openEditorStatCycle(current: number) {
-  openEntry("Cycle:", "", 5, "any", (text) => {
-    if (text === null || !/^\d+$/.test(text)) return;
-    const value = Number(text);
-    if (value <= 32767) sendEditorStat("cycle", value);
-  }, String(current));
 }
 
 function sendEditorStat(field: string, value: number) {
@@ -2722,15 +2992,27 @@ function openEditorBoardList() {
 // openEditorTransfer is EditorTransferBoard: import a .BRD file into the current
 // board, or export the current board as a .BRD download.
 function openEditorTransfer() {
-  openSelectList("Transfer board:", ["Import board", "Export board"], (entry) => {
-    if (entry === "Import board") {
-      requestEditorLease({ kind: "board", boardId: editorProperties.boardId }, () => {
-        retainEditorLeaseOnClose = true;
-        importEditorBoardFile();
-      });
-    } else if (entry === "Export board") {
-      sendEditorBoard({ op: "export" });
-    }
+  openEditorSidebarMenu({
+    title: "Transfer board:",
+    items: [
+      {
+        label: "Import board",
+        shortcut: "I",
+        onPick: () => {
+          closeEditorSidebarMenu(false);
+          requestEditorLease({ kind: "board", boardId: editorProperties.boardId }, () => {
+            retainEditorLeaseOnClose = true;
+            importEditorBoardFile();
+          });
+        },
+      },
+      {
+        label: "Export board",
+        shortcut: "E",
+        onPick: () => sendEditorBoard({ op: "export" }),
+      },
+    ],
+    hint: "Enter/Esc",
   });
 }
 

@@ -89,4 +89,52 @@ const brush = { element: 21, character: 0xdb, color: 0x0e, copied: false };
   assert.ok(!all.includes("Board Info"), "command block hidden behind the picker");
 }
 
+// Transfer board is SidebarPromptChoice(true, 3, ...): it overlays only rows
+// 3-5 with a horizontal choice prompt, not a scroll/text-window picker.
+{
+  const actionMenu = {
+    title: "Transfer board:",
+    selected: 1,
+    items: [
+      { shortcut: "I", label: "Import board" },
+      { shortcut: "E", label: "Export board" },
+    ],
+  };
+  const s = surface();
+  drawEditorSidebar(s.write, inspect, brush, false, false, null, actionMenu);
+  const all = s.text();
+  assert.ok(all.includes("Transfer board:"), "sidebar action title rendered");
+  assert.ok(all.includes("Import"), "first sidebar action rendered");
+  assert.ok(all.includes("Export"), "selected sidebar action rendered");
+  assert.ok(all.includes("Switch boards"), "lower command block survives transfer choice");
+  assert.ok(all.includes("Drawing off"), "mode row survives the action menu overlay");
+}
+
+// Stat editing is EditorEditStat: the normal editor chrome is cleared, category
+// and element name are written at rows 6-7, and parameter prompts are painted
+// directly into the sidebar. There is no "Object settings" select-list.
+{
+  const statPrompt = {
+    categoryName: "Creatures:",
+    elementName: "Spinning Gun",
+    items: [
+      { kind: "slider", label: "Intelligence?", value: 4, active: true },
+      { kind: "choice", label: "Firing type?", choices: ["Bullets", "Stars"], selected: 0, active: false },
+    ],
+  };
+  const s = surface();
+  drawEditorSidebar(s.write, inspect, brush, false, false, null, null, statPrompt);
+  const all = s.text();
+  assert.ok(all.includes("Creatures:"), "stat category rendered in sidebar");
+  assert.ok(all.includes("Spinning Gun"), "stat element name rendered in sidebar");
+  assert.ok(all.includes("Intelligence?"), "slider prompt rendered directly");
+  assert.ok(all.includes("1....:....9"), "slider scale rendered directly");
+  assert.ok(all.includes("Firing type?"), "choice prompt rendered directly");
+  assert.ok(all.includes("Bullets Stars"), "choice labels rendered horizontally");
+  assert.ok(!all.includes("Object settings"), "no fake object settings menu");
+  assert.ok(!all.includes("Cycle"), "cycle is not a vanilla stat prompt");
+  assert.ok(!all.includes("ZZT Editor"), "normal editor title is cleared during stat edit");
+  assert.ok(!all.includes("Drawing off"), "mode row is cleared during stat edit");
+}
+
 console.log("editor.test.mjs: all assertions passed");

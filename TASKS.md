@@ -1571,6 +1571,12 @@ and running early. See NOTES.md.)
   editor; no original-sidebar interaction is implemented as a generic scroll popup;
   browser tests cover at least the sidebar menu/readout state transitions; and
   `npm test`, `npm run build`, `go build ./...`, and `go test ./...` are green.
+  2026-07-13 first pass: routed EditorEditStat's parameter flow through the
+  vanilla sidebar prompt sequence (category/name rows, slider/character/choice
+  prompts, no "Object settings" select-list) and routed Transfer Board's
+  import/export choice through `SidebarPromptChoice`-style sidebar chrome.
+  Board Information and board selection intentionally remain text windows,
+  matching `EDITOR.PAS`. See NOTES.md.
 
 ## M11 — Museum of ZZT: search and play anything
 

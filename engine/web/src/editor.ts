@@ -54,6 +54,31 @@ export type SidebarCategoryMenu = {
   items: SidebarCategoryItem[];
 };
 
+export type SidebarActionMenuItem = {
+  label: string;
+  value?: string;
+  shortcut?: string;
+};
+
+export type SidebarActionMenu = {
+  title: string;
+  items: SidebarActionMenuItem[];
+  selected: number;
+  hint?: string;
+};
+
+export type SidebarStatPromptItem =
+  | { kind: "slider"; label: string; value: number; active: boolean; startChar?: string; endChar?: string }
+  | { kind: "character"; label: string; value: number; active: boolean }
+  | { kind: "choice"; label: string; choices: string[]; selected: number; active: boolean }
+  | { kind: "board"; label: string; value: string; active: boolean };
+
+export type SidebarStatPrompt = {
+  categoryName: string;
+  elementName: string;
+  items: SidebarStatPromptItem[];
+};
+
 // menuGlyphColor is EDITOR.PAS:834-837: an element whose colour has a black
 // (dark) background nibble is shown on blue in the menu so its glyph is legible,
 // otherwise its own colour is used. CHOICE-coloured elements reach us as 0x0F
@@ -72,6 +97,84 @@ function trim(text: string, width: number): string {
   return text.slice(0, width).padEnd(width, " ");
 }
 
+function choiceOffset(choices: string[], selected: number): number {
+  let offset = 0;
+  for (let i = 0; i < selected; i += 1) {
+    offset += choices[i].length + 1;
+  }
+  return offset;
+}
+
+function renderSidebarChoice(write: WriteText, y: number, prompt: string, choices: string[], selected: number, active: boolean) {
+  const choiceStr = choices.join(" ");
+  sidebarClearLine(write, y);
+  sidebarClearLine(write, y + 1);
+  sidebarClearLine(write, y + 2);
+  write(63, y, active ? 0x1f : 0x1e, prompt);
+  write(63, y + 2, 0x1e, choiceStr);
+  write(63 + choiceOffset(choices, selected), y + 1, active ? 0x9f : 0x1f, "\x1f");
+}
+
+function renderSidebarSlider(
+  write: WriteText,
+  y: number,
+  prompt: string,
+  value: number,
+  active: boolean,
+  startChar = "1",
+  endChar = "9",
+) {
+  sidebarClearLine(write, y);
+  sidebarClearLine(write, y + 1);
+  sidebarClearLine(write, y + 2);
+  write(63, y, active ? 0x1f : 0x1e, prompt);
+  write(63, y + 2, 0x1e, `${startChar}....:....${endChar}`);
+  write(64 + Math.max(0, Math.min(8, value)), y + 1, active ? 0x9f : 0x1f, "\x1f");
+}
+
+function renderSidebarCharacter(write: WriteText, y: number, prompt: string, value: number, active: boolean) {
+  sidebarClearLine(write, y);
+  sidebarClearLine(write, y + 1);
+  sidebarClearLine(write, y + 2);
+  write(63, y, active ? 0x1f : 0x1e, prompt);
+  write(68, y + 1, active ? 0x9f : 0x1f, "\x1f");
+  let text = "";
+  for (let i = value - 4; i <= value + 4; i += 1) {
+    text += String.fromCharCode((i + 0x100) % 0x100);
+  }
+  write(63, y + 2, 0x1e, text);
+}
+
+function renderSidebarStatPrompt(write: WriteText, prompt: SidebarStatPrompt) {
+  for (let y = 0; y < 25; y += 1) {
+    sidebarClearLine(write, y);
+  }
+  write(64, 6, 0x1e, prompt.categoryName);
+  write(64, 7, 0x1f, prompt.elementName);
+  let y = 9;
+  for (const item of prompt.items) {
+    switch (item.kind) {
+      case "slider":
+        renderSidebarSlider(write, y, item.label, item.value, item.active, item.startChar, item.endChar);
+        y += 4;
+        break;
+      case "character":
+        renderSidebarCharacter(write, y, item.label, item.value, item.active);
+        y += 4;
+        break;
+      case "choice":
+        renderSidebarChoice(write, y, item.label, item.choices, item.selected, item.active);
+        y += 4;
+        break;
+      case "board":
+        sidebarClearLine(write, y);
+        write(63, y, item.active ? 0x1f : 0x1f, `${item.label}: ${trim(item.value, 10)}`.slice(0, 17));
+        y += 4;
+        break;
+    }
+  }
+}
+
 export function drawEditorSidebar(
   write: WriteText,
   inspect: EditorInspect,
@@ -79,9 +182,15 @@ export function drawEditorSidebar(
   drawing: boolean,
   textMode = false,
   categoryMenu: SidebarCategoryMenu | null = null,
+  actionMenu: SidebarActionMenu | null = null,
+  statPrompt: SidebarStatPrompt | null = null,
 ) {
   for (let y = 0; y < 25; y += 1) {
     sidebarClearLine(write, y);
+  }
+  if (statPrompt) {
+    renderSidebarStatPrompt(write, statPrompt);
+    return;
   }
   // Header and the command block are transcribed from EditorDrawSidebar
   // (editor.go:56-107 / EDITOR.PAS:89-186), row for row. Two rows differ from
@@ -177,5 +286,11 @@ export function drawEditorSidebar(
       write(78, i, menuGlyphColor(item.color), String.fromCharCode(item.character));
       i += 1;
     }
+  }
+
+  // SidebarPromptChoice(true, 3, ...), used by EditorTransferBoard: a horizontal
+  // choice row in editor chrome, not a text window.
+  if (actionMenu) {
+    renderSidebarChoice(write, 3, actionMenu.title, actionMenu.items.map((item) => item.label), actionMenu.selected, true);
   }
 }
