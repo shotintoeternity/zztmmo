@@ -137,4 +137,32 @@ const brush = { element: 21, character: 0xdb, color: 0x0e, copied: false };
   assert.ok(!all.includes("Drawing off"), "mode row is cleared during stat edit");
 }
 
+// The sidebar readouts are chrome, not popups: EditorDrawSidebar paints the
+// brush color name, cursor position, and hovered element on fixed rows, and over
+// a stat swaps the Pos row for "x,y Stat N: P1/P2/P3" and relabels Space to
+// "Edit stat" (editor.ts, EDITOR.PAS:158-186). These transitions are asserted so
+// a regression that reroutes any of them into a modal is caught.
+{
+  const yellow = surface();
+  drawEditorSidebar(yellow.write, inspect, brush, false, false);
+  assert.ok(yellow.text().includes("Yellow"), "Color readout names the brush color");
+  assert.ok(yellow.text().includes("Pos: 5,6"), "Pos readout tracks the cursor");
+  assert.ok(yellow.text().includes("Empty"), "element readout names the hovered tile");
+  assert.ok(yellow.text().includes("Plot"), "Space command reads Plot over open ground");
+
+  const cyan = surface();
+  drawEditorSidebar(cyan.write, inspect, { ...brush, color: 0x0b }, false, false);
+  assert.ok(cyan.text().includes("Lt Cyan"), "Color readout follows a color change");
+
+  const stat = surface();
+  const statInspect = { ...inspect, element: "Object", elementId: 36, hasStat: true, statId: 3, p1: 7, p2: 1, p3: 4 };
+  drawEditorSidebar(stat.write, statInspect, brush, false, false);
+  const all = stat.text();
+  assert.ok(all.includes("Stat 3"), "stat readout shows the stat index over an object");
+  assert.ok(all.includes("7/1/4"), "stat readout shows P1/P2/P3");
+  assert.ok(all.includes("Object"), "element readout names the object");
+  assert.ok(all.includes("Edit stat"), "Space command relabels to Edit stat over a stat");
+  assert.ok(!all.includes("Plot"), "Plot label suppressed over a stat");
+}
+
 console.log("editor.test.mjs: all assertions passed");

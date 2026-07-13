@@ -1,5 +1,45 @@
 # NOTES — escalations and decisions log (append-only)
 
+## M5.10 (2026-07-13) — editor sidebar parity: full audit + close
+
+Completed the popup audit the first slice began. Classified every editor-reachable
+modal open in `main.ts` against `EDITOR.PAS`, using the rule from the first pass:
+vanilla *sidebar prompts* (`SidebarPrompt{YesNo,String,Choice}`, and the row-3..20
+F-key element list) must render in editor chrome; vanilla *text windows*
+(`TextWindowState` centered boxes — `EditorEditBoardInfo`, `EditorSelectBoard`,
+`TextWindowDisplayFile`) legitimately stay on the text-window layer. The parity
+checklist, each editor mode vs. the original:
+
+| Editor mode / interaction | EDITOR.PAS form | Browser now | Verdict |
+|---|---|---|---|
+| Command block + Pos/Color/Mode/element readouts | sidebar (`EditorDrawSidebar`) | `drawEditorSidebar` | parity |
+| F1/F2/F3 element category picker | sidebar rows 3–20 + `InputReadWaitKey` (808–842) | `editorCategoryMenu` | parity (M5.9) |
+| Stat param editing `EditorEditStat` | sidebar clear + rows 6–7 name + slider/char/choice at 9/13/17 | `editorStatPrompt` | parity (first pass) |
+| Object/scroll code editor `EditorEditStatText` | text window edit | `programEditor` modal | parity |
+| Transfer board import/export | `SidebarPromptChoice(true,3,…)` | `openEditorSidebarMenu` → `actionMenu` | parity (first pass) |
+| Clear board / Make new world | `SidebarPromptYesNo` | `openYesNo` (renders at 63,5) | parity |
+| Max shots / Time limit / Save filename | `SidebarPromptString` | `openEntry` (label→col 75 r3, field 63,5) | parity |
+| Board Information (`I`) | **text window** `EditorEditBoardInfo` | `openSelectList` | parity (text window is vanilla) |
+| Switch boards (`B`) / exit picker / stat P3 board | **text window** `EditorSelectBoard` | `openSelectList` | parity (text window is vanilla) |
+| Editor help (`H`) → `EDITOR.HLP` | **text window** `TextWindowDisplayFile` | `fetchLines` → `openWindow` | parity of the *window*; its `!-FILE` links are dead — split out as **M5.12** |
+| "World:" menu (`S`) publish/download/upload/invite | *no vanilla equivalent* (vanilla `S` = save-filename prompt) | `openSelectList` | client-only multiplayer surface, kept as a text-window menu |
+| Lease-conflict / read-only / save-result "Ok" dialogs | *no vanilla equivalent* (vanilla `PauseOnError`) | `openSelectList` | client-only, acceptable |
+
+Conclusion: **no vanilla sidebar interaction is rendered as a scroll/text-window
+popup** — the first pass had already moved the two that were (`EditorEditStat`,
+`EditorTransferBoard`). Two intentional non-issues noted, not fixed (neither is a
+"sidebar-as-popup" defect): the board-title prompt uses the sidebar string field
+where vanilla uses `PopupPromptString` (a box), and `B`→Add-new-board asks a room
+title via a popup where vanilla's `EditorAppendBoard` takes a default name. The
+dead `.HLP` cross-links inside the editor help window are a real functional bug,
+carved out as its own task (M5.12) rather than folded in here.
+
+Added readout state-transition coverage to `editor.test.mjs` (color name, Pos,
+hovered element, and the over-a-stat swap to "x,y Stat N: P1/P2/P3" + Space→"Edit
+stat"), joining the existing menu/mode/category/action/stat-prompt assertions.
+Verified: `npm test` (10 web suites), `npm run build`, `go build ./...`,
+`go test ./...` all green; TS-only, outside the sim, replay fixture unchanged.
+
 ## M5.10 (2026-07-13) — first editor sidebar parity slice
 
 Started the M5.10 popup audit by splitting editor interactions into two buckets:

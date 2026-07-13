@@ -1556,7 +1556,7 @@ and running early. See NOTES.md.)
   place; `npm test`/`npm run build`/`go test ./...` green; replay unchanged. See
   NOTES.md.
 
-- [ ] **M5.10 — URGENT: editor sidebar UI parity, not scroll popups.** The
+- [x] **M5.10 — URGENT: editor sidebar UI parity, not scroll popups.** The
   browser editor still diverges substantially from the original DOS editor: many
   editor interactions are being rendered as generic scroll/modal popups instead of
   drawing into the right sidebar and top/bottom editor chrome the way
@@ -1588,6 +1588,38 @@ and running early. See NOTES.md.)
   cursors blink without layout jitter; the underlying tile/object is visible
   during the off phase; and browser coverage/screenshots exercise local cursor,
   collaborator cursor, and stat-backed/object tiles under the cursor.
+
+- [ ] **M5.12 — Editor help `.HLP` cross-references must work in the browser.**
+  The editor's help windows are dead ends in the browser: `fetchLines`
+  (`main.ts:845`) loads a `.HLP` via `/api/help` and hands it to `openWindow(...,
+  viewingFile=true)`, whose `onSelect` (`main.ts:1755`) routes **every** selected
+  hyperlink to `sendScrollReply(-1)` — a no-op reply to a nonexistent object. So
+  inside `EDITOR.HLP` (opened by the editor's `H` key, `main.ts:2382`) selecting
+  `!-creature;Creatures`, `!-terrain;Terrains`, `!-item;Items`, `!-lang;ZZT-OOP
+  Programming Language`, or `!-info;Board information menu` does nothing, and the
+  in-file jumps `!start;Getting Started` / `!cmds;Editor Commands` do nothing.
+  Vanilla `TextWindowSelect` (`engine/txtwind.go:163-236`, `TXTWIND.PAS`) handles
+  both link kinds: a `-`-prefixed hyperlink opens that file via
+  `TextWindowOpenFile` (`txtwind.go:382`, appends `.HLP`), and a bare hyperlink
+  jumps to the matching `:label` line inside the current window.
+  **Wanted:** browser text windows opened as help (read-only, `viewingFile`)
+  resolve both link kinds instead of sending scroll replies — a `-file` link
+  refetches `/api/help?file=FILE.HLP` and replaces the window contents (keep a
+  back path so `Getting Started`→sub-topic→back is navigable, matching how vanilla
+  reloads); a bare `!label` link scrolls to the `:label` line in the current
+  lines. Distinguish help windows from real scroll windows (which must keep
+  sending `sendScrollReply` to the engine — do not break M3.10 vendor dialogue).
+  Then verify the whole editor help graph is actually served: every file reachable
+  from `EDITOR.HLP` — `CREATURE`, `TERRAIN`, `ITEM`, `LANG` → `LANGTUT` /
+  `LANGREF`, `INFO`, plus `ABOUT`/`LICENSE`/`GAME` — passes `validHelpFile`
+  (`web_api.go:621`) and exists in `HelpDir`, and the object-code editor's route
+  to the ZZT-OOP language help is reachable. `handleHelp` returns 404 on a missing
+  file, so a broken `!-` target would surface as an error window — cover that too.
+  DoD: a browser test opens `EDITOR.HLP`, follows `!-creature` into `CREATURE.HLP`
+  and an in-file `!label` jump, and returns; a test (Go or TS) enumerates the
+  `!-FILE` link graph rooted at `EDITOR.HLP` and asserts every target resolves via
+  `/api/help`; `npm test`, `npm run build`, `go build ./...`, `go test ./...`
+  green. Presentation/help only — no simulation change, replay fixture unchanged.
 
 ## M11 — Museum of ZZT: search and play anything
 
