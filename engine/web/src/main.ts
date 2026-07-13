@@ -675,7 +675,7 @@ async function showTitle() {
     // Offline: keep whatever board is on screen and still draw the menu, so
     // the player can retry with 'P'.
   }
-  drawTitleSidebar(writeText, friendlyName, authDisplayName());
+  drawTitleSidebar(writeText, friendlyName, authDisplayName(), authStatus.enabled);
   paintOverlay();
   drawScreen();
   canvas.focus();
@@ -693,7 +693,7 @@ async function refreshAuthStatus() {
     authStatus = { enabled: false, authenticated: false };
   }
   if (mode === "title") {
-    drawTitleSidebar(writeText, titleFriendlyName, authDisplayName());
+    drawTitleSidebar(writeText, titleFriendlyName, authDisplayName(), authStatus.enabled);
     paintOverlay();
     drawScreen();
   }

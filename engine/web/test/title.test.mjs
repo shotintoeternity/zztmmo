@@ -32,6 +32,12 @@ const sidebarText = writes.map((write) => write.text).join("\n");
 assert.match(sidebarText, / About ZZT!/);
 assert.match(sidebarText, / High Scores/);
 assert.match(sidebarText, / Board editor/);
+assert.doesNotMatch(sidebarText, /Google sign-in/);
 assert.doesNotMatch(sidebarText, /Game speed/);
+
+const authWrites = [];
+drawTitleSidebar((x, y, color, text) => authWrites.push({ x, y, color, text }), "TOWN", "", true);
+const authSidebarText = authWrites.map((write) => write.text).join("\n");
+assert.match(authSidebarText, / Google sign-in/);
 
 console.log("title.test.mjs: title actions and sidebar menu passed");

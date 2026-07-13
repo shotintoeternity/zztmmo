@@ -66,7 +66,7 @@ export function titleCommand(event: KeyLike): TitleAction {
 }
 
 /** drawTitleSidebar is GameDrawSidebar's GameStateElement = E_MONITOR branch. */
-export function drawTitleSidebar(write: WriteText, worldName: string, accountName = "") {
+export function drawTitleSidebar(write: WriteText, worldName: string, accountName = "", authEnabled = false) {
   for (let y = 3; y <= 24; y += 1) {
     sidebarClearLine(write, y);
   }
@@ -96,6 +96,8 @@ export function drawTitleSidebar(write: WriteText, worldName: string, accountNam
   write(65, 19, 0x1f, " Dream a world");
   write(62, 20, 0x70, " E ");
   write(65, 20, 0x1f, " Board editor");
-  write(62, 22, 0x30, " G ");
-  write(65, 22, 0x1e, accountName ? " " + accountName.slice(0, 13) : " Google sign-in");
+  if (authEnabled || accountName) {
+    write(62, 22, 0x30, " G ");
+    write(65, 22, 0x1e, accountName ? " " + accountName.slice(0, 13) : " Google sign-in");
+  }
 }
