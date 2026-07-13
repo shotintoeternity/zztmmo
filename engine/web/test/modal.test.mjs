@@ -143,10 +143,14 @@ function worldSearch() {
   const writes = [];
   renderModal((x, y, color, text) => writes.push({ x, y, color, text }), m);
   const rendered = writes.map((write) => write.text).join(" ");
-  assert.match(rendered, /Search for a world on Museum of ZZT by .*Results update as you type\./);
+  assert.match(rendered, /Type below to search the Museum/);
   assert.ok(writes.some((write) => write.color === 0x70 && write.text.startsWith("Type to search: ")));
   assert.match(rendered, /TOWN \(ZZTMMO Lobby\)/);
   assert.match(rendered, /Rhygar/);
+  assert.match(rendered, /\(1 player\(s\) currently online\)/);
+  const searchWrites = writes.filter((write) => write.text.startsWith("Type to search: "));
+  assert.equal(searchWrites.length, 1);
+  assert.equal(searchWrites[0].y, 19, "search prompt stays below the result rows");
   assert.doesNotMatch(rendered, /Teen Priest/);
 }
 

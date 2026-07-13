@@ -246,8 +246,9 @@ export function renderModal(write: WriteText, m: Modal) {
 }
 
 const WORLD_SEARCH_LIMIT = 50;
-const WORLD_TITLE_WIDTH = 36;
+const WORLD_TITLE_WIDTH = 38;
 const WORLD_DETAIL_WIDTH = 42;
+const WORLD_SEARCH_ROW = TEXT_WINDOW_Y + TEXT_WINDOW_HEIGHT - 2;
 
 function fitText(text: string, width: number): string {
   if (text.length <= width) {
@@ -279,10 +280,7 @@ function worldSearchMatches(m: WorldSearchModal): WorldSearchEntry[] {
 function worldSearchLines(matches: WorldSearchEntry[]): string[] {
 	const count = matches.length === 1 ? "1 match" : `${matches.length} matches`;
 	const lines = [
-		"$Search for a world on Museum of ZZT by",
-		"$typing below. Results update as you type.",
-		"",
-		`$${count}`,
+		`$${count}  Type below to search the Museum`,
 		"",
   ];
   if (matches.length === 0) {
@@ -292,10 +290,13 @@ function worldSearchLines(matches: WorldSearchEntry[]): string[] {
   }
   for (let i = 0; i < matches.length; i += 1) {
     const entry = matches[i];
-    const playerText = entry.players ? `  ${entry.players}p` : "";
+    const playerText = entry.players ? ` (${entry.players} player(s) currently online)` : "";
     const sourceText = entry.source === "museum" ? "  Museum" : "";
     lines.push(`!${String(i)};${fitText(entry.title || entry.world, WORLD_TITLE_WIDTH)}`);
-    lines.push(fitText(`  id:${entry.id || entry.world}  by ${entry.author || "Unknown"}  ${entry.created || "????"}${playerText}${sourceText}`, WORLD_DETAIL_WIDTH));
+    lines.push(fitText(`  id:${entry.id || entry.world} by ${entry.author || "Unknown"} ${entry.created || "????"}${sourceText}`, WORLD_DETAIL_WIDTH));
+    if (playerText) {
+      lines.push(fitText(`  ${playerText}`, WORLD_DETAIL_WIDTH));
+    }
   }
   return lines;
 }
@@ -305,7 +306,11 @@ function worldSearchLinePos(selected: number, matches: WorldSearchEntry[]): numb
     return 6;
   }
   const clamped = Math.min(Math.max(0, selected), matches.length - 1);
-  return 6 + clamped * 2;
+  let pos = 3;
+  for (let i = 0; i < clamped; i += 1) {
+    pos += matches[i].players ? 3 : 2;
+  }
+  return pos;
 }
 
 function renderWorldSearch(write: WriteText, m: WorldSearchModal) {
@@ -327,7 +332,7 @@ function renderWorldSearchInput(write: WriteText, query: string) {
   const input = query.length === 0 ? "\xdb" : `${query}\xdb`;
   const maxInput = WORLD_DETAIL_WIDTH - label.length;
   const text = label + fitText(input, maxInput).padEnd(maxInput, " ");
-  write(TEXT_WINDOW_X + 4, TEXT_WINDOW_Y + 6, 0x70, text);
+  write(TEXT_WINDOW_X + 4, WORLD_SEARCH_ROW, 0x70, text);
 }
 
 // renderProgramEditor is TextWindowEdit's screen: the raw lines, plus the block
