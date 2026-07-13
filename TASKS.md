@@ -1801,7 +1801,7 @@ illumination, sound broadcast, next games batch — was promoted to M7 above
 with a full spec. New community reports land here first, then get specced
 into a milestone.)
 
-- [ ] **Editor text-entry sluggishness.** Browser editor text mode feels laggy while typing; investigate the F4 text input/render path, especially per-keystroke WebSocket round trips, sidebar/overlay redraws, and `sendEditorInspect` after each character. DoD: rapid text entry feels immediate locally, still persists authoritatively through `editorEdit` diffs, and has a regression test or lightweight browser-side coverage.
+- [x] **Editor text-entry sluggishness.** Browser editor text mode feels laggy while typing; investigate the F4 text input/render path, especially per-keystroke WebSocket round trips, sidebar/overlay redraws, and `sendEditorInspect` after each character. DoD: rapid text entry feels immediate locally, still persists authoritatively through `editorEdit` diffs, and has a regression test or lightweight browser-side coverage.
 
 - [x] **Troubleshoot player stuck after damage.** Solve the issue where players get stuck after being zapped/damaged by a ruffian/bear due to stat index shift misalignment in RoomManager.
 - [x] **Title screens aren't animating properly.** Investigate and resolve the issue where object scripts and movements on ZZT title screens do not animate or tick as they should. *(Done: `engine/title_sim.go` runs board 0 on an isolated engine — its own copied world, never written back — ticked from the server loop only while a browser is watching, with changed cells pushed over `/api/title/stream` as SSE.)*

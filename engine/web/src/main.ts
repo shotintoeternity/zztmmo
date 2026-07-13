@@ -6,6 +6,7 @@ import { drawTitleSidebar, titleCommand } from "./title";
 import { soundNotesFromProtocol, ZztSound } from "./sound";
 import { generationLines, runDreamGeneration, type GenerationProgress } from "./dream";
 import { drawEditorSidebar, type EditorInspect } from "./editor";
+import { optimisticEditorEraseCell, optimisticEditorTextCell } from "./editor_input";
 import {
   mergeWorldEntries,
   museumNetworkFailureLines,
@@ -2229,11 +2230,12 @@ function handleEditorTextKey(event: KeyboardEvent): boolean {
   if (event.code === "Backspace" || event.code === "Delete") {
     event.preventDefault();
     if (editorCursor.x > 1) {
+      const erased = optimisticEditorEraseCell(editorCursor);
       editorCursor = { x: editorCursor.x - 1, y: editorCursor.y };
       editorInspect = { ...editorInspect, x: editorCursor.x, y: editorCursor.y };
       sendEditorEdit("erase");
+      if (erased) setBoardCell(erased);
       redrawEditor();
-      sendEditorInspect();
     }
     return true;
   }
@@ -2241,13 +2243,14 @@ function handleEditorTextKey(event: KeyboardEvent): boolean {
     const code = event.key.charCodeAt(0);
     if (code >= 0x20 && code < 0x80) {
       event.preventDefault();
+      const typed = optimisticEditorTextCell(editorCursor, code, editorBrush.color);
       sendEditorEdit("text", code);
+      if (typed) setBoardCell(typed);
       if (editorCursor.x < BOARD_COLS) {
         editorCursor = { x: editorCursor.x + 1, y: editorCursor.y };
         editorInspect = { ...editorInspect, x: editorCursor.x, y: editorCursor.y };
       }
       redrawEditor();
-      sendEditorInspect();
       return true;
     }
   }
