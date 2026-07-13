@@ -2130,3 +2130,77 @@ never mutates `cells`, so `applyDiff`/`applySnapshot` are untouched. Guarded on
 Test: `test/transition.test.mjs` covers order coverage/permutation and the
 complete-reveal invariant (every board cell ends "new", none left purple).
 `go test ./...` untouched and green; web `npm test` + build green.
+
+## M5.8 — editor parity: approved gap checklist + decisions (2026-07-12)
+
+[ADVISOR] task; advisor tool unavailable this session, so the owner signed off
+the gap list (owner had no preference on the two scope forks below; I took the
+CLAUDE.md-rule-4 default on both). Grounded in `editor.go:39-817` / `EDITOR.PAS`,
+diffed against the current browser editor (M5.0–M5.7).
+
+Present & faithful (no work): arrow/numpad move, Space plot, Tab draw-toggle,
+P pattern (5: Solid/Normal/Breakable/Empty/Line, verified vs ELEMENTS.PAS:1944),
+C color, Enter copy/edit-stat, I board info, B switch/add board, S save+publish/
+download, X flood fill, object-code editor, stat-param dialog; plus beyond-DOS
+bonuses (T .BRD import/export, world upload/download, M5.7 OOP aids).
+
+Gaps to build (highest-impact first — the approved sequence):
+1. [DONE] F1/F2/F3 element category menus (`editor.go:689-776`). Server derives
+   the three tables from `ElementDefs` and rides them on the entry snapshot
+   (`editorElementMenus`); the `"element"` edit op ports the placement half of
+   the switch, incl. E_PLAYER-moves-not-adds and the stat-seeding from
+   `EditorStatSettings`. `m5_8_test.go` covers menus + item/creature/player.
+2. [DONE] F4 text-entry mode (`:552-569,:777`). New `"text"` edit op
+   (`editorPlaceText`): tile element = fg-colour text variant, Color byte = the
+   typed char; client `handleEditorTextKey` types + advances, Backspace erases
+   left, Enter/Esc leaves. Go test `TestEditorSessionPlaceTextTile`.
+3. [DONE] Shift+arrow line paint (`:571`): the client places the pattern at the
+   cursor before moving, so a Shift-drag lays a line (reuses the `"place"` op).
+4. [DONE] Z clear board (`:645`) → board op `"clear"` (`ClearBoard`); N new
+   world (`:655`) → board op `"new"` (`NewWorld`). Both reply a full snapshot,
+   gated behind a client yes/no prompt. Go tests for each.
+5. [PARTIAL] H editor help (`:783`) — DONE: client fetches `EDITOR.HLP` through
+   the existing `/api/help` endpoint into the M4.1 window. `?` debug (`:680`) —
+   DEFERRED (see decision below): a debug prompt is meaningless in an isolated,
+   never-ticked editor session.
+6. [DONE] Save-on-exit prompt (`:805` EditorAskSaveChanged): leaving a modified
+   world offers "Save first?"; yes runs the world save and defers the exit to
+   the `saveResult` (a failed save keeps the editor open), no exits at once.
+7. [DONE] Sidebar closer to DOS parity (`editor.ts`): the command block is
+   transcribed row-for-row from `EditorDrawSidebar` (header, H/Q, B/I, f1–f4,
+   Space/Tab, P/C + colour name, swatch+pattern selector rows with markers, Mode
+   line incl. blinking "Text entry"). Two rows deviate by necessity (below).
+   Web test `editor.test.mjs` asserts the new rows + mode indicator.
+
+Deliberate omissions (recorded, not built):
+- `` ` `` redraw (`:599`) — terminal screen-refresh; browser repaints from
+  server snapshots, so meaningless.
+- `!` edit-help-file (`:787` EditorEditHelpFile) — writes arbitrary .HLP to
+  server disk; security non-starter on a hosted service.
+- `L` load-from-disk (`:616`) — intent already covered by `S → Upload .ZZT`;
+  not adding a separate key.
+- `?` debug prompt (`:680` GameDebugPrompt) — its only effects are gameplay
+  cheats on a live `World.Info` (health/ammo/keys) and toggling `DebugEnabled`
+  to bypass the "can't edit a saved game" gate. The editor session is isolated
+  and never ticked and has no such gate, so the prompt would do nothing an
+  author could observe. Left out rather than wired to a no-op path.
+
+Sidebar deviations from cell-for-cell DOS (both are browser-capability, not
+cosmetic drift): the DOS `L Load` key is folded into the `S` world menu's
+`Upload .ZZT` (M5.6), and the browser adds a `T Transfer board` key (M5.5 .BRD
+import/export) the DOS editor lacks. Both are listed in the omissions/bonuses
+above; the sidebar labels them where DOS put `L`.
+
+DECISION — color selector (spec correction): the task spec listed a "16 fg × 8
+bg + blink" selector, but that is NOT a classic ZZT editor feature — `C`
+(EDITOR.PAS:725-731) only cycles bright fg 9–15 within the current background,
+no bg picker, no blink. The browser already matches vanilla. Building the richer
+selector would invent UI the DOS editor lacks (CLAUDE.md rule 4), so color parity
+is DONE as-is; backgrounds are set the ZZT way (copy a tile via Enter). No work.
+
+Landed (2026-07-13): all seven gaps implemented or deferred with a reason above.
+A browser author now reaches every placeable element by category, types text,
+paints lines with Shift, clears a board, starts a new world, reads editor help,
+and is prompted to save on exit — the original-editor muscle-memory surface.
+`go test ./...`, `go vet`, web `npm test`, and `tsc` all green; replay fixture
+untouched (the editor session is server-side and never ticked).

@@ -7,6 +7,14 @@ import { soundNotesFromProtocol, ZztSound } from "./sound";
 import { generationLines, runDreamGeneration, type GenerationProgress } from "./dream";
 import { drawEditorSidebar, type EditorInspect } from "./editor";
 import {
+  mergeWorldEntries,
+  museumNetworkFailureLines,
+  museumPlayFailureLines,
+  museumResultsToEntries,
+  type MuseumPlayResponse,
+  type MuseumSearchResult,
+} from "./museum";
+import {
   buildJoinMessage,
   clearResumeToken,
   loadResumeToken,
@@ -178,12 +186,31 @@ type ChatMessage = {
   text: string;
 };
 
+// EditorElementItem / EditorElementMenu are the F1/F2/F3 category tables the
+// server derives from ElementDefs (M5.8). They ride the entry snapshot once.
+type EditorElementItem = {
+  elementId: number;
+  name: string;
+  shortcut: string;
+  character: number;
+  color: number;
+  categoryName?: string;
+};
+
+type EditorElementMenu = {
+  category: number;
+  key: string;
+  title: string;
+  items: EditorElementItem[];
+};
+
 type EditorSnapshotMessage = {
 	type: typeof MessageTypeEditorSnapshot;
 	boardId: number;
 	screen: ScreenCell[];
 	inspect: EditorInspect;
 	properties: EditorProperties;
+	menus?: EditorElementMenu[];
 };
 
 type EditorInspectMessage = {
@@ -264,25 +291,6 @@ type EditorSaveResultMessage = {
 };
 
 type ServerMessage = SnapshotMessage | DiffMessage | EventMessage | BoardChangeMessage | ChatMessage | EditorSnapshotMessage | EditorInspectMessage | EditorDiffMessage | EditorPropertiesMessage | EditorStatSettingsMessage | EditorProgramTextMessage | EditorBoardDataMessage | EditorWorldDataMessage | EditorSaveResultMessage;
-
-type MuseumSearchResult = {
-  id?: string;
-  letter: string;
-  filename: string;
-  title: string;
-  author?: string[];
-  releaseDate?: string;
-  genres?: string[];
-  rating?: number | null;
-  playableBoards?: number;
-  totalBoards?: number;
-  archiveName?: string;
-};
-
-type MuseumPlayResponse = {
-  world?: string;
-  choices?: { name: string }[];
-};
 
 type InputMessage = {
   type: typeof MessageTypeInput;
@@ -459,6 +467,17 @@ let editorProperties: EditorProperties = {
 let editorBrush = { element: 21, character: 0xdb, color: 0x0e, copied: false };
 let editorDrawing = false;
 let editorPointerDrawing = false;
+// F4 text-entry mode (M5.8): while on, printable keys paint text tiles and the
+// cursor advances, exactly as EditorLoop's TextEntry draw mode does.
+let editorTextMode = false;
+// Tracks whether the session world has unedited changes since the last save, so
+// leaving the editor can offer EditorAskSaveChanged's "Save first?" prompt.
+let editorModified = false;
+// Set when a save was requested as part of leaving; the saveResult handler then
+// completes the exit (or, on error, keeps the editor open).
+let editorExitAfterSave = false;
+// The F1/F2/F3 element category tables, delivered once on the entry snapshot.
+let editorMenus: EditorElementMenu[] = [];
 const overlay = new Map<number, { ch: number; color: number }>();
 const cells: ScreenCell[] = Array.from({ length: COLS * ROWS }, (_, i) => ({
   x: i % COLS,
@@ -479,6 +498,8 @@ let transitionRaf = 0;
 const TRANSITION_DURATION_MS = 420;
 
 let hasPromptedNameOnLaunch = false;
+const LAUNCH_NAME_PROMPT = "Traveler!  Type your name:";
+const WORLD_SEARCH_TITLE = "Choose a World";
 
 // The launch sequence: name, then world, then play. Nothing joins a room until
 // a world is chosen, so the animated title board keeps running underneath.
@@ -488,7 +509,7 @@ function promptNicknameOnLaunch() {
   }
   hasPromptedNameOnLaunch = true;
   openPopupEntry(
-    "Welcome to ZZTMMO!  Enter your name:",
+    LAUNCH_NAME_PROMPT,
     (name) => {
       nickname = name && name.trim() ? name.trim() : "player" + Math.floor(Math.random() * 1000);
       void showWorlds();
@@ -642,15 +663,43 @@ function startEditor() {
   editorInspect = { x: 30, y: 12, elementId: 0, element: "", character: 32, color: 0x0f, hasStat: false };
   editorBrush = { element: 21, character: 0xdb, color: 0x0e, copied: false };
   editorDrawing = false;
-  drawEditorSidebar(writeText, editorInspect, editorBrush, editorDrawing);
+  editorTextMode = false;
+  editorModified = false;
+  editorExitAfterSave = false;
+  drawEditorSidebar(writeText, editorInspect, editorBrush, editorDrawing, editorTextMode);
   paintOverlay();
   drawScreen();
   connectEditor();
 }
 
+// leaveEditor is EditorAskSaveChanged on the way out (EDITOR.PAS:801-810): an
+// edited world offers "Save first?" before exiting. Answering yes runs the world
+// save flow and defers the exit until the save succeeds; no exits immediately.
 function leaveEditor() {
+  if (editorModified) {
+    openYesNo("Save first? ", (yes) => {
+      if (!yes) {
+        closeEditor();
+        return;
+      }
+      openEntry("Save world as:", "", 8, "any", (name) => {
+        // An escaped/blank name cancels the exit, keeping the editor open, as
+        // vanilla does when the save prompt is escaped.
+        if (name) {
+          editorExitAfterSave = true;
+          sendEditorWorld({ op: "save", name });
+        }
+      }, editorProperties.worldName);
+    });
+    return;
+  }
+  closeEditor();
+}
+
+function closeEditor() {
   leavingToTitle = true;
   connected = false;
+  editorExitAfterSave = false;
   window.clearTimeout(retryTimer);
   if (ws && ws.readyState === WebSocket.OPEN) {
     ws.send(JSON.stringify({ type: MessageTypeEditorExit }));
@@ -697,7 +746,7 @@ async function showWorlds() {
 
   openModal({
     kind: "worldSearch",
-    title: "Select a World",
+    title: WORLD_SEARCH_TITLE,
     query: "",
     selected: 0,
     entries: worlds,
@@ -743,30 +792,6 @@ async function updateMuseumSearch(query: string, localEntries: WorldSearchEntry[
   }
 }
 
-function mergeWorldEntries(localEntries: WorldSearchEntry[], museumEntries: WorldSearchEntry[]): WorldSearchEntry[] {
-  const localWorlds = new Set(localEntries.map((entry) => entry.world.toUpperCase()));
-  return [
-    ...localEntries,
-    ...museumEntries.filter((entry) => !localWorlds.has(entry.world.toUpperCase())),
-  ];
-}
-
-function museumResultsToEntries(results: MuseumSearchResult[]): WorldSearchEntry[] {
-  return results.map((result) => {
-    const stem = result.filename.replace(/\.[^.]+$/, "").toUpperCase().slice(0, 8);
-    return {
-      world: stem,
-      id: result.id || result.archiveName || result.filename.replace(/\.[^.]+$/, ""),
-      title: result.title || result.filename,
-      author: (result.author ?? []).join(", ") || "Unknown",
-      created: result.releaseDate || "",
-      source: "museum",
-      letter: result.letter,
-      filename: result.filename,
-    };
-  });
-}
-
 function selectWorldEntry(entry: WorldSearchEntry) {
   if (entry.source === "museum") {
     void playMuseumWorld(entry);
@@ -788,7 +813,7 @@ async function playMuseumWorld(entry: WorldSearchEntry, zztFile = "") {
     });
     if (!response.ok) {
       const reason = (await response.text()).trim() || `error ${response.status}`;
-      openWindow("Museum of ZZT", ["", `  Not playable: ${reason}`, ""], true);
+      openWindow("Museum of ZZT", museumPlayFailureLines(reason), true);
       return;
     }
     const result = (await response.json()) as MuseumPlayResponse;
@@ -802,7 +827,7 @@ async function playMuseumWorld(entry: WorldSearchEntry, zztFile = "") {
       await enterWorld(result.world);
     }
   } catch {
-    openWindow("Museum of ZZT", ["", "  The Museum did not answer.", ""], true);
+    openWindow("Museum of ZZT", museumNetworkFailureLines(), true);
   }
 }
 
@@ -1092,8 +1117,11 @@ function applyEditorSnapshot(message: EditorSnapshotMessage) {
   editorInspect = message.inspect;
   editorCursor = { x: message.inspect.x, y: message.inspect.y };
 	  editorProperties = message.properties;
+  // Menus arrive only on the entry snapshot; board add/switch reuse this
+  // message without them, so keep the tables already held.
+  if (message.menus) editorMenus = message.menus;
   replaceCells(message.screen);
-  drawEditorSidebar(writeText, editorInspect, editorBrush, editorDrawing);
+  drawEditorSidebar(writeText, editorInspect, editorBrush, editorDrawing, editorTextMode);
   paintOverlay();
   drawScreen();
 }
@@ -1101,7 +1129,7 @@ function applyEditorSnapshot(message: EditorSnapshotMessage) {
 function applyEditorInspect(message: EditorInspectMessage) {
   editorInspect = message.inspect;
   editorCursor = { x: message.inspect.x, y: message.inspect.y };
-  drawEditorSidebar(writeText, editorInspect, editorBrush, editorDrawing);
+  drawEditorSidebar(writeText, editorInspect, editorBrush, editorDrawing, editorTextMode);
   paintOverlay();
   drawScreen();
 }
@@ -1110,7 +1138,7 @@ function applyEditorDiff(message: EditorDiffMessage) {
   for (const cell of message.cells) setBoardCell(cell);
   editorInspect = message.inspect;
   editorCursor = { x: message.inspect.x, y: message.inspect.y };
-  drawEditorSidebar(writeText, editorInspect, editorBrush, editorDrawing);
+  drawEditorSidebar(writeText, editorInspect, editorBrush, editorDrawing, editorTextMode);
   paintOverlay();
   drawScreen();
 }
@@ -1118,7 +1146,7 @@ function applyEditorDiff(message: EditorDiffMessage) {
 function applyEditorProperties(message: EditorPropertiesMessage) {
   editorProperties = message.properties;
   replaceCells(message.screen);
-  drawEditorSidebar(writeText, editorInspect, editorBrush, editorDrawing);
+  drawEditorSidebar(writeText, editorInspect, editorBrush, editorDrawing, editorTextMode);
   paintOverlay();
   drawScreen();
 }
@@ -1127,7 +1155,7 @@ function applyEditorStatSettings(message: EditorStatSettingsMessage) {
   for (const cell of message.cells) setBoardCell(cell);
   editorInspect = message.inspect;
   editorCursor = { x: message.inspect.x, y: message.inspect.y };
-  drawEditorSidebar(writeText, editorInspect, editorBrush, editorDrawing);
+  drawEditorSidebar(writeText, editorInspect, editorBrush, editorDrawing, editorTextMode);
   paintOverlay();
   drawScreen();
 }
@@ -1958,7 +1986,56 @@ function handlePointerMove(event: MouseEvent) {
   sendEditorEdit("place");
 }
 
+// redrawEditor repaints the editor sidebar and board from local state, the
+// common tail of every editor key that changes brush/mode/cursor.
+function redrawEditor() {
+  drawEditorSidebar(writeText, editorInspect, editorBrush, editorDrawing, editorTextMode);
+  paintOverlay();
+  drawScreen();
+}
+
+// handleEditorTextKey is F4 text-entry mode (EDITOR.PAS:459-475): a printable
+// key paints a text tile at the cursor and advances right; Backspace erases the
+// tile to the left and moves onto it; Enter or Escape leaves the mode. Returns
+// true when it consumed the key. Anything else (arrows, F-keys) returns false so
+// the normal handler still runs while text entry stays on.
+function handleEditorTextKey(event: KeyboardEvent): boolean {
+  if (event.code === "Enter" || event.code === "Escape") {
+    event.preventDefault();
+    editorTextMode = false;
+    redrawEditor();
+    return true;
+  }
+  if (event.code === "Backspace" || event.code === "Delete") {
+    event.preventDefault();
+    if (editorCursor.x > 1) {
+      editorCursor = { x: editorCursor.x - 1, y: editorCursor.y };
+      editorInspect = { ...editorInspect, x: editorCursor.x, y: editorCursor.y };
+      sendEditorEdit("erase");
+      redrawEditor();
+      sendEditorInspect();
+    }
+    return true;
+  }
+  if (event.key.length === 1) {
+    const code = event.key.charCodeAt(0);
+    if (code >= 0x20 && code < 0x80) {
+      event.preventDefault();
+      sendEditorEdit("text", code);
+      if (editorCursor.x < BOARD_COLS) {
+        editorCursor = { x: editorCursor.x + 1, y: editorCursor.y };
+        editorInspect = { ...editorInspect, x: editorCursor.x, y: editorCursor.y };
+      }
+      redrawEditor();
+      sendEditorInspect();
+      return true;
+    }
+  }
+  return false;
+}
+
 function handleEditorKey(event: KeyboardEvent) {
+  if (editorTextMode && handleEditorTextKey(event)) return;
   let nextX = editorCursor.x;
   let nextY = editorCursor.y;
   switch (event.code) {
@@ -1966,6 +2043,27 @@ function handleEditorKey(event: KeyboardEvent) {
     case "KeyQ":
       event.preventDefault();
       leaveEditor();
+      return;
+    case "F4":
+      event.preventDefault();
+      editorTextMode = !editorTextMode;
+      redrawEditor();
+      return;
+    case "KeyZ":
+      event.preventDefault();
+      openYesNo("Clear board? ", (yes) => {
+        if (yes) sendEditorBoard({ op: "clear" });
+      });
+      return;
+    case "KeyN":
+      event.preventDefault();
+      openYesNo("Make new world? ", (yes) => {
+        if (yes) sendEditorBoard({ op: "new" });
+      });
+      return;
+    case "KeyH":
+      event.preventDefault();
+      void fetchLines("/api/help?file=EDITOR.HLP&title=" + encodeURIComponent("World editor help"), "World editor help");
       return;
     case "ArrowUp":
     case "Numpad8":
@@ -1996,6 +2094,18 @@ function handleEditorKey(event: KeyboardEvent) {
       event.preventDefault();
       sendEditorEdit("fill");
       return;
+    case "F1":
+      event.preventDefault();
+      openEditorElementMenu("f1");
+      return;
+    case "F2":
+      event.preventDefault();
+      openEditorElementMenu("f2");
+      return;
+    case "F3":
+      event.preventDefault();
+      openEditorElementMenu("f3");
+      return;
     case "KeyI":
       event.preventDefault();
       openEditorBoardInfo();
@@ -2024,7 +2134,7 @@ function handleEditorKey(event: KeyboardEvent) {
         color: editorInspect.color,
         copied: true,
       };
-      drawEditorSidebar(writeText, editorInspect, editorBrush, editorDrawing);
+      drawEditorSidebar(writeText, editorInspect, editorBrush, editorDrawing, editorTextMode);
       paintOverlay();
       drawScreen();
       return;
@@ -2035,7 +2145,7 @@ function handleEditorKey(event: KeyboardEvent) {
       const next = patterns[(index + 1) % patterns.length];
       const chars = [0xdb, 0xb2, 0xb1, 0x20, 0xce];
       editorBrush = { element: next, character: chars[patterns.indexOf(next)], color: editorBrush.color, copied: false };
-      drawEditorSidebar(writeText, editorInspect, editorBrush, editorDrawing);
+      drawEditorSidebar(writeText, editorInspect, editorBrush, editorDrawing, editorTextMode);
       paintOverlay();
       drawScreen();
       return;
@@ -2046,14 +2156,14 @@ function handleEditorKey(event: KeyboardEvent) {
         ...editorBrush,
         color: (editorBrush.color & 0x0f) === 15 ? 9 : (editorBrush.color & 0x0f) + 1,
       };
-      drawEditorSidebar(writeText, editorInspect, editorBrush, editorDrawing);
+      drawEditorSidebar(writeText, editorInspect, editorBrush, editorDrawing, editorTextMode);
       paintOverlay();
       drawScreen();
       return;
     case "Tab":
       event.preventDefault();
       editorDrawing = !editorDrawing;
-      drawEditorSidebar(writeText, editorInspect, editorBrush, editorDrawing);
+      drawEditorSidebar(writeText, editorInspect, editorBrush, editorDrawing, editorTextMode);
       paintOverlay();
       drawScreen();
       return;
@@ -2061,6 +2171,10 @@ function handleEditorKey(event: KeyboardEvent) {
       return;
   }
   event.preventDefault();
+  // Shift+arrow paints the pattern along the path: EditorLoop places at the
+  // current cursor before moving (EDITOR.PAS:397-411), so a Shift-drag lays a
+  // line of the selected pattern. Placing happens at the old cursor position.
+  if (event.shiftKey) sendEditorEdit("place");
   editorCursor = {
     x: Math.max(1, Math.min(BOARD_COLS, nextX)),
     y: Math.max(1, Math.min(ROWS, nextY)),
@@ -2068,7 +2182,7 @@ function handleEditorKey(event: KeyboardEvent) {
   // Keep the local cursor responsive; the authoritative tile readout follows
   // in the editorInspect reply.
   editorInspect = { ...editorInspect, x: editorCursor.x, y: editorCursor.y };
-  drawEditorSidebar(writeText, editorInspect, editorBrush, editorDrawing);
+  drawEditorSidebar(writeText, editorInspect, editorBrush, editorDrawing, editorTextMode);
   paintOverlay();
   drawScreen();
   sendEditorInspect();
@@ -2377,7 +2491,15 @@ function applyEditorWorldData(message: EditorWorldDataMessage) {
 // upload arrives here too, carrying the validation gate's message.
 function applyEditorSaveResult(message: EditorSaveResultMessage) {
   if (message.error) {
+    // A failed save-on-exit keeps the editor open so the work is not lost.
+    editorExitAfterSave = false;
     openSelectList("Cannot save", ["Ok"], () => {}, [message.error]);
+    return;
+  }
+  editorModified = false;
+  if (editorExitAfterSave) {
+    editorExitAfterSave = false;
+    closeEditor();
     return;
   }
   openSelectList("Saved", ["Ok"], () => {}, [
@@ -2408,128 +2530,3 @@ function eventCell(event: MouseEvent): { x: number; y: number } | null {
   }
   const x = Math.floor(((event.clientX - rect.left) / rect.width) * COLS);
   const y = Math.floor(((event.clientY - rect.top) / rect.height) * ROWS);
-  if (x < 0 || x >= COLS || y < 0 || y >= ROWS) {
-    return null;
-  }
-  return { x, y };
-}
-
-function sendKey(key: number) {
-  if (!connected || !ws || ws.readyState !== WebSocket.OPEN || playerId === 0) {
-    return;
-  }
-  const input: InputMessage = {
-    type: MessageTypeInput,
-    playerId,
-    seq: ++seq,
-    key,
-  };
-  ws.send(JSON.stringify(input));
-}
-
-function sendDebugCommand(text: string) {
-  if (!connected || !ws || ws.readyState !== WebSocket.OPEN || playerId === 0) {
-    return;
-  }
-  ws.send(JSON.stringify({ type: MessageTypeDebugCommand, playerId, text }));
-}
-
-function sendQuitReply(quit: boolean) {
-  if (!connected || !ws || ws.readyState !== WebSocket.OPEN || playerId === 0) {
-    return;
-  }
-  ws.send(JSON.stringify({ type: MessageTypeQuitReply, playerId, quit }));
-}
-
-// sendSaveFilename answers a savePrompt. The server sanitizes the name before it
-// reaches a path, and answers with a saveResult event either way.
-function sendSaveFilename(name: string) {
-  if (!connected || !ws || ws.readyState !== WebSocket.OPEN || playerId === 0) {
-    return;
-  }
-  ws.send(JSON.stringify({ type: MessageTypeSaveFilename, playerId, name }));
-}
-
-function sendHighScoreName(name: string) {
-  if (!connected || !ws || ws.readyState !== WebSocket.OPEN || playerId === 0) {
-    leaveToTitle();
-    return;
-  }
-  ws.send(JSON.stringify({ type: MessageTypeHighScoreName, playerId, name }));
-  // We have already left the room, so no diff will ever repaint this screen.
-  // If the server does not send the finished list, do not strand the player on
-  // a frozen board with no way out.
-  window.clearTimeout(highScoreTimer);
-  highScoreTimer = window.setTimeout(leaveToTitle, 3000);
-}
-
-function updatePressed(event: KeyboardEvent, down: boolean): boolean {
-  if (!isHandledKey(event.code)) {
-    return false;
-  }
-  if (down) {
-    pressed.add(event.code);
-  } else {
-    pressed.delete(event.code);
-  }
-  return true;
-}
-
-function currentMask(): number {
-  return movementMask(pressed);
-}
-
-function sendInput(mask: number, key = 0) {
-  if (!connected || !ws || ws.readyState !== WebSocket.OPEN || playerId === 0) {
-    return;
-  }
-  // A modal is open: never let held movement keys through.
-  if (modal && mask !== 0) {
-    return;
-  }
-  if (mask === 0 && lastMask === 0 && key === 0) {
-    return;
-  }
-  lastMask = mask;
-  const input: InputMessage = {
-    type: MessageTypeInput,
-    playerId,
-    seq: ++seq,
-  };
-  if (mask !== 0) {
-    input.keymask = mask;
-  } else if (key !== 0) {
-    input.key = key;
-  } else {
-    input.keymask = 0;
-  }
-  ws.send(JSON.stringify(input));
-}
-
-// editorInspect is a read request, not an input or a persisted cursor. The
-// browser owns editorCursor; the session only returns the tile's current data.
-function sendEditorInspect() {
-  if (!connected || !ws || ws.readyState !== WebSocket.OPEN || mode !== "editor") {
-    return;
-  }
-  ws.send(JSON.stringify({
-    type: MessageTypeEditorInspect,
-    x: editorCursor.x,
-    y: editorCursor.y,
-  }));
-}
-
-function sendEditorEdit(op: "place" | "erase" | "fill") {
-  if (!connected || !ws || ws.readyState !== WebSocket.OPEN || mode !== "editor") {
-    return;
-  }
-  ws.send(JSON.stringify({
-    type: MessageTypeEditorEdit,
-    op,
-    x: editorCursor.x,
-    y: editorCursor.y,
-    element: editorBrush.element,
-    color: editorBrush.color,
-    copied: editorBrush.copied,
-  }));
-}

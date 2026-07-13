@@ -492,7 +492,13 @@ func (s *WebSocketServer) serveEditor(ctx context.Context, conn *websocket.Conn,
 	// The cursor belongs to the browser. These are only the initial inspection
 	// coordinates sent with its full frame, never session state.
 	snapshot, err := session.Snapshot(client, BOARD_WIDTH/2, BOARD_HEIGHT/2)
-	if err != nil || client.write(ctx, snapshot) != nil {
+	if err != nil {
+		return
+	}
+	// The F1/F2/F3 element menus are static, so they ride the entry snapshot
+	// once rather than a request per keypress (M5.8).
+	snapshot.Menus = editorElementMenus()
+	if client.write(ctx, snapshot) != nil {
 		return
 	}
 
@@ -661,6 +667,18 @@ func (s *WebSocketServer) serveEditorBoard(ctx context.Context, client *webSocke
 			return nil
 		}
 		reply, err := session.ImportBoard(client, data)
+		if err != nil {
+			return nil
+		}
+		return client.write(ctx, reply)
+	case "clear":
+		reply, err := session.ClearBoard(client)
+		if err != nil {
+			return nil
+		}
+		return client.write(ctx, reply)
+	case "new":
+		reply, err := session.NewWorld(client)
 		if err != nil {
 			return nil
 		}

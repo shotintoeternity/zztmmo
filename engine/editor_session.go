@@ -124,6 +124,14 @@ func (s *EditorSession) Edit(member *webSocketClient, edit EditorEditMessage) (E
 			if editorFloodFill(e, x, y, e.Board.Tiles[x][y], edit.Element, edit.Color, edit.Copied) {
 				e.BoardClose()
 			}
+		case "element":
+			if editorPlaceElement(e, x, y, edit.Element, edit.Color) {
+				e.BoardClose()
+			}
+		case "text":
+			if editorPlaceText(e, x, y, edit.Char, edit.Color) {
+				e.BoardClose()
+			}
 		}
 		reply = EditorDiffMessage{
 			Type:    MessageTypeEditorDiff,
@@ -170,6 +178,155 @@ func editorPlaceTile(e *Engine, x, y int16, element, color byte, copied bool) bo
 
 func editorPatternElement(element byte) bool {
 	return element == E_SOLID || element == E_NORMAL || element == E_BREAKABLE || element == E_EMPTY || element == E_LINE
+}
+
+// editorPlaceElement places an F1/F2/F3 category-menu element (M5.8), porting
+// the placement half of EditorLoop's element switch (EDITOR.PAS:731-772). Unlike
+// editorPlaceTile (pattern brush only), this accepts any category element and
+// adds a stat when the element needs one, seeding its parameters from
+// EditorStatSettings exactly as the Pascal does after AddStat. cursorColor is
+// the client's current brush colour byte; the element's own colour rule decides
+// whether it is honoured. Returns whether the board changed.
+func editorPlaceElement(e *Engine, x, y int16, element, cursorColor byte) bool {
+	if int16(element) > MAX_ELEMENT {
+		return false
+	}
+	// E_PLAYER is category-less: placing it moves the single player stat, never
+	// adds a second one (EDITOR.PAS:731-734).
+	if element == E_PLAYER {
+		if !e.BoardPrepareTileForPlacement(x, y) {
+			return false
+		}
+		e.MoveStat(0, x, y)
+		editorDrawTileAndNeighbors(e, x, y)
+		return true
+	}
+	def := ElementDefs[element]
+	if def.EditorCategory != CATEGORY_ITEM && def.EditorCategory != CATEGORY_CREATURE && def.EditorCategory != CATEGORY_TERRAIN {
+		return false
+	}
+	color := editorResolveElementColor(element, cursorColor)
+	if def.Cycle == -1 {
+		// No stat: a plain tile, coloured and copied (EDITOR.PAS:746-749).
+		if !e.BoardPrepareTileForPlacement(x, y) {
+			return false
+		}
+		e.Board.Tiles[x][y].Element = element
+		e.Board.Tiles[x][y].Color = byte(color)
+		editorDrawTileAndNeighbors(e, x, y)
+		return true
+	}
+	// Stat-backed: guard MAX_STAT (EditorPrepareModifyStatAtCursor), prepare the
+	// tile, then AddStat and seed defaults (EDITOR.PAS:751-766).
+	if e.Board.StatCount >= MAX_STAT || !e.BoardPrepareTileForPlacement(x, y) {
+		return false
+	}
+	e.AddStat(x, y, element, color, def.Cycle, StatTemplateDefault)
+	stat := &e.Board.Stats[e.Board.StatCount]
+	if def.Param1Name != "" {
+		stat.P1 = e.World.EditorStatSettings[element].P1
+	}
+	if def.Param2Name != "" {
+		stat.P2 = e.World.EditorStatSettings[element].P2
+	}
+	if def.ParamDirName != "" {
+		stat.StepX = e.World.EditorStatSettings[element].StepX
+		stat.StepY = e.World.EditorStatSettings[element].StepY
+	}
+	if def.ParamBoardName != "" {
+		stat.P3 = e.World.EditorStatSettings[element].P3
+	}
+	editorDrawTileAndNeighbors(e, x, y)
+	return true
+}
+
+// editorPlaceText places one F4 text-entry character (M5.8), porting the text
+// branch of EditorLoop (EDITOR.PAS:459-467, editor.go:552-560): the tile's
+// element is the text-colour variant chosen by the cursor foreground colour and
+// its Color byte carries the typed character. cursorColor is the editor's fg
+// colour (guaranteed 9..15 by the C selector, clamped here in case the client
+// sends otherwise); char is a printable ASCII byte, exactly the range vanilla
+// accepts (>= ' ' and < 0x80). Returns whether it drew.
+func editorPlaceText(e *Engine, x, y int16, char, cursorColor byte) bool {
+	if char < ' ' || char >= 0x80 {
+		return false
+	}
+	fg := int16(cursorColor & 0x0f)
+	if fg < 9 {
+		fg = 9
+	} else if fg > 15 {
+		fg = 15
+	}
+	if !e.BoardPrepareTileForPlacement(x, y) {
+		return false
+	}
+	e.Board.Tiles[x][y].Element = byte(fg - 9 + E_TEXT_MIN)
+	e.Board.Tiles[x][y].Color = char
+	editorDrawTileAndNeighbors(e, x, y)
+	return true
+}
+
+// editorResolveElementColor ports the placement colour rule (EDITOR.PAS:853-857):
+// the CHOICE sentinels blend the element with the cursor colour; any other value
+// is the element's fixed colour.
+func editorResolveElementColor(element, cursorColor byte) int16 {
+	switch ElementDefs[element].Color {
+	case COLOR_CHOICE_ON_BLACK:
+		return int16(cursorColor)
+	case COLOR_WHITE_ON_CHOICE:
+		return int16(cursorColor)*0x10 - 0x71
+	case COLOR_CHOICE_ON_CHOICE:
+		return (int16(cursorColor)-8)*0x11 + 8
+	default:
+		return int16(ElementDefs[element].Color)
+	}
+}
+
+// editorElementMenus builds the three F1/F2/F3 category tables from ElementDefs,
+// mirroring EditorLoop's listing loop (EDITOR.PAS:702-726): every element in the
+// category, in element order, with its EditorShortcut key, glyph, and the
+// section header (CategoryName) that precedes it. ElementDefs is immutable after
+// init, so the menus are identical across sessions and ride the entry snapshot.
+func editorElementMenus() []EditorElementMenu {
+	cats := []struct {
+		cat   int16
+		key   string
+		title string
+	}{
+		{CATEGORY_ITEM, "f1", "Item"},
+		{CATEGORY_CREATURE, "f2", "Creature"},
+		{CATEGORY_TERRAIN, "f3", "Terrain"},
+	}
+	menus := make([]EditorElementMenu, 0, len(cats))
+	for _, c := range cats {
+		menu := EditorElementMenu{Category: c.cat, Key: c.key, Title: c.title}
+		for el := int16(0); el <= MAX_ELEMENT; el++ {
+			def := ElementDefs[el]
+			if def.EditorCategory != c.cat {
+				continue
+			}
+			color := def.Color
+			// The CHOICE sentinels are not renderable swatch colours; show a
+			// neutral white glyph in the menu (the real colour is resolved at
+			// placement from the cursor colour).
+			if color == COLOR_CHOICE_ON_BLACK || color == COLOR_WHITE_ON_CHOICE || color == COLOR_CHOICE_ON_CHOICE {
+				color = 0x0F
+			}
+			item := EditorElementItem{
+				ElementID:    byte(el),
+				Name:         def.Name,
+				Character:    def.Character,
+				Color:        color,
+				CategoryName: def.CategoryName,
+			}
+			if def.EditorShortcut != 0 {
+				item.Shortcut = string([]byte{UpCase(def.EditorShortcut)})
+			}
+			menu.Items = append(menu.Items, item)
+		}
+		menus = append(menus, menu)
+	}
+	return menus
 }
 
 // editorFloodFill is EditorFloodFill with its selected pattern passed across
@@ -491,6 +648,47 @@ func (s *EditorSession) SwitchBoard(member *webSocketClient, boardId int16) (Edi
 			e.BoardChange(boardId)
 			e.TransitionDrawToBoard()
 		}
+		reply = editorSnapshot(e, BOARD_WIDTH/2, BOARD_HEIGHT/2)
+	})
+	return reply, err
+}
+
+// ClearBoard empties the current board, mirroring EditorLoop's 'Z' branch
+// (EDITOR.PAS:591-598, editor.go:645-654): every stat above the player is
+// removed, then BoardCreate resets the board to an empty bordered room with the
+// player at centre. BoardClose persists the cleared board into BoardData so a
+// later board switch does not resurrect the old contents, matching how every
+// other session edit closes the board. Replies a full snapshot: a cleared board
+// repaints the whole frame, exactly as EditorDrawRefresh does after 'Z'.
+func (s *EditorSession) ClearBoard(member *webSocketClient) (EditorSnapshotMessage, error) {
+	var reply EditorSnapshotMessage
+	err := s.Apply(member, func(e *Engine) {
+		for i := e.Board.StatCount; i >= 1; i-- {
+			e.RemoveStat(i)
+		}
+		e.BoardCreate()
+		e.BoardClose()
+		e.TransitionDrawToBoard()
+		reply = editorSnapshot(e, BOARD_WIDTH/2, BOARD_HEIGHT/2)
+	})
+	return reply, err
+}
+
+// NewWorld resets the whole session to a fresh one-board world, mirroring
+// EditorLoop's 'N' branch (EDITOR.PAS:600-609, editor.go:655-665): WorldCreate
+// clears World.Info and builds an empty board 0. BoardClose serializes that board
+// into BoardData so the session's BoardOpen/BoardClose invariant holds, then
+// BoardOpen reopens it. The regenerated transition table keeps board-change fades
+// deterministic. Shared world flags reset with the rest of World.Info, which is
+// correct: a new world starts with no puzzle progress. Replies a full snapshot.
+func (s *EditorSession) NewWorld(member *webSocketClient) (EditorSnapshotMessage, error) {
+	var reply EditorSnapshotMessage
+	err := s.Apply(member, func(e *Engine) {
+		e.WorldCreate()
+		e.BoardClose()
+		e.BoardOpen(e.World.Info.CurrentBoard)
+		e.GenerateTransitionTable()
+		e.TransitionDrawToBoard()
 		reply = editorSnapshot(e, BOARD_WIDTH/2, BOARD_HEIGHT/2)
 	})
 	return reply, err

@@ -1479,7 +1479,7 @@ and running early. See NOTES.md.)
   DoD: the label list and warnings render for the vendor object; a send to a
   missing label warns; saving an "invalid" script still succeeds.
 
-- [ ] **M5.8 [ADVISOR] — Full editor feature and UI parity with the original.**
+- [x] **M5.8 [ADVISOR] — Full editor feature and UI parity with the original.**
   M5.0–M5.7 built the browser editor capability by capability; this task closes
   the remaining gap to the *original* DOS ZZT editor so a veteran author feels
   no missing surface. Reference is the whole modal editor — `EditorLoop`

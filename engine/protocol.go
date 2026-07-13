@@ -131,20 +131,51 @@ type EditorTileInspect struct {
 	ParamTextName       string `json:"paramTextName,omitempty"`
 }
 
+// EditorElementItem is one placeable element in an F1/F2/F3 category menu
+// (M5.8), derived from ElementDefs exactly as EditorLoop's category listing is
+// (EDITOR.PAS:702-726): its EditorShortcut key, its display glyph, and the
+// section header (CategoryName) that precedes it, if any.
+type EditorElementItem struct {
+	ElementID    byte   `json:"elementId"`
+	Name         string `json:"name"`
+	Shortcut     string `json:"shortcut"`
+	Character    byte   `json:"character"`
+	Color        byte   `json:"color"`
+	CategoryName string `json:"categoryName,omitempty"`
+}
+
+// EditorElementMenu is one editor category (Item/Creature/Terrain) as F1/F2/F3
+// present it. The menus are static (ElementDefs is immutable after init), so
+// they ride the entry snapshot once rather than a message per keypress.
+type EditorElementMenu struct {
+	Category int16               `json:"category"`
+	Key      string              `json:"key"`
+	Title    string              `json:"title"`
+	Items    []EditorElementItem `json:"items"`
+}
+
 // EditorSnapshotMessage intentionally uses ScreenCell, the same full-frame
 // board representation as SnapshotMessage. It has no player/HUD because an
-// editor session is not a room and never simulates.
+// editor session is not a room and never simulates. Menus is populated only on
+// the entry snapshot (M5.8): the F1/F2/F3 category tables the client renders.
 type EditorSnapshotMessage struct {
-	Type       string            `json:"type"`
-	BoardID    int16             `json:"boardId"`
-	Screen     []ScreenCell      `json:"screen"`
-	Inspect    EditorTileInspect `json:"inspect"`
-	Properties EditorProperties  `json:"properties"`
+	Type       string              `json:"type"`
+	BoardID    int16               `json:"boardId"`
+	Screen     []ScreenCell        `json:"screen"`
+	Inspect    EditorTileInspect   `json:"inspect"`
+	Properties EditorProperties    `json:"properties"`
+	Menus      []EditorElementMenu `json:"menus,omitempty"`
 }
 
 // EditorEditMessage is one browser editor operation. Selection and cursor
 // state remain client-local; the session validates and applies this operation
-// through its serialized Apply boundary.
+// through its serialized Apply boundary. Op is "place"/"erase"/"fill" for the
+// pattern brush, or "element" (M5.8): place the F1/F2/F3 menu element in
+// Element, resolving its colour against the client's cursor colour in Color the
+// way EditorLoop does (EDITOR.PAS:736-772) and adding a stat when it needs one.
+// Op "text" is F4 text entry (M5.8): Char is the typed printable byte and Color
+// is the cursor foreground colour, which together pick the text tile the way
+// EditorLoop's text branch does (EDITOR.PAS:459-467).
 type EditorEditMessage struct {
 	Type    string `json:"type"`
 	Op      string `json:"op"`
@@ -153,6 +184,7 @@ type EditorEditMessage struct {
 	Element byte   `json:"element,omitempty"`
 	Color   byte   `json:"color,omitempty"`
 	Copied  bool   `json:"copied,omitempty"`
+	Char    byte   `json:"char,omitempty"`
 }
 
 // EditorDiffMessage is the editor counterpart of DiffMessage. It carries only
@@ -264,13 +296,17 @@ type EditorProgramSaveMessage struct {
 }
 
 // EditorBoardMessage manages the boards of an editor session (M5.5). Op is:
-//   "add"    — EditorAppendBoard: append a new board named Name, make it current
-//   "switch" — BoardChange to BoardID (0..BoardCount), keeping session edits
-//   "export" — EditorTransferBoard export: reply with the current board's .BRD
-//   "import" — EditorTransferBoard import: replace the current board with Data,
-//              base64-encoded .BRD bytes (2-byte length prefix + board data)
-// add/switch/import reply with a full EditorSnapshotMessage because a board
-// change repaints the whole frame; export replies with EditorBoardDataMessage.
+//
+//	"add"    — EditorAppendBoard: append a new board named Name, make it current
+//	"switch" — BoardChange to BoardID (0..BoardCount), keeping session edits
+//	"export" — EditorTransferBoard export: reply with the current board's .BRD
+//	"import" — EditorTransferBoard import: replace the current board with Data,
+//	           base64-encoded .BRD bytes (2-byte length prefix + board data)
+//	"clear"  — EditorLoop 'Z': empty the current board (EDITOR.PAS:591)
+//	"new"    — EditorLoop 'N': reset to a fresh one-board world (EDITOR.PAS:600)
+//
+// add/switch/import/clear/new reply with a full EditorSnapshotMessage because a
+// board change repaints the whole frame; export replies with EditorBoardDataMessage.
 type EditorBoardMessage struct {
 	Type    string `json:"type"`
 	Op      string `json:"op"`
@@ -292,17 +328,18 @@ type EditorBoardDataMessage struct {
 
 // EditorWorldMessage saves, downloads, or uploads the whole editor session world
 // (M5.6). Op is:
-//   "save"     — serialize the session world and write it to the hosted worlds
-//                directory as Name.ZZT (SanitizeSaveName), then host it so the
-//                world picker sees it. Refused if a world of that name is being
-//                played (RestoreSnapshot's occupancy rule). Replies
-//                EditorSaveResultMessage.
-//   "download" — reply EditorWorldDataMessage with the session world's vanilla
-//                .ZZT bytes, so a creator owns a portable file.
-//   "upload"   — replace the session world with Data (base64 .ZZT bytes from a
-//                client file) after the M7.5 gate (headless load + 200 steps, no
-//                panic). Replies a full EditorSnapshotMessage, or an
-//                EditorSaveResultMessage carrying the gate error on refusal.
+//
+//	"save"     — serialize the session world and write it to the hosted worlds
+//	             directory as Name.ZZT (SanitizeSaveName), then host it so the
+//	             world picker sees it. Refused if a world of that name is being
+//	             played (RestoreSnapshot's occupancy rule). Replies
+//	             EditorSaveResultMessage.
+//	"download" — reply EditorWorldDataMessage with the session world's vanilla
+//	             .ZZT bytes, so a creator owns a portable file.
+//	"upload"   — replace the session world with Data (base64 .ZZT bytes from a
+//	             client file) after the M7.5 gate (headless load + 200 steps, no
+//	             panic). Replies a full EditorSnapshotMessage, or an
+//	             EditorSaveResultMessage carrying the gate error on refusal.
 type EditorWorldMessage struct {
 	Type string `json:"type"`
 	Op   string `json:"op"`
