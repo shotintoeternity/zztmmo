@@ -1578,6 +1578,17 @@ and running early. See NOTES.md.)
   Board Information and board selection intentionally remain text windows,
   matching `EDITOR.PAS`. See NOTES.md.
 
+- [ ] **M5.11 — Editor cursor blink/under-tile visibility parity.** The browser
+  editor's local and collaborator cursors are currently persistent overlays that
+  can obscure the tile or object underneath them. Match the original editor
+  cursor behavior: the active editor cursor should blink between a visible
+  cursor/highlight state and the underlying board tile on the vanilla cadence,
+  while remote collaborator cursors use a similar blink/readability treatment
+  without permanently hiding the object beneath. DoD: local and remote editor
+  cursors blink without layout jitter; the underlying tile/object is visible
+  during the off phase; and browser coverage/screenshots exercise local cursor,
+  collaborator cursor, and stat-backed/object tiles under the cursor.
+
 ## M11 — Museum of ZZT: search and play anything
 
 Goal: from the browser, search the Museum of ZZT's archive of community

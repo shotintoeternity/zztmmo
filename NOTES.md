@@ -2278,3 +2278,17 @@ task to keep M5.9 scoped to the interaction.
 Verified: `npm test` (7 web suites), `npm run build`, `go build ./...`,
 `go test ./...` all green; replay fixture unchanged (change is TS-only, outside
 the sim).
+
+## 2026-07-13 — LEMWILLK/LEMMER crash: orphan stat-backed draw procs
+
+The reported `LEMMER.zzt` crash was not present as a local file, but Museum hit
+`lemmerkill.zip` contains `LEMWILLK.ZZT`; board-rendering that world reproduced a
+panic on board 5. Root cause: the file contains at least one stat-backed tile
+(Bomb) with no matching stat record, so `ElementBombDraw` indexed
+`Board.Stats[-1]` through `GetStatIdAt`. Hardened Bomb, Duplicator, and
+Transporter draw procs to fall back to their default glyph when their tile has no
+stat. This preserves corrupt/world-edge content instead of crashing renderers or
+hosts.
+
+Verified: `go test ./...`; `zzt-shot` renders `LEMWILLK.ZZT` board 5 and boards
+0-80 without panicking.

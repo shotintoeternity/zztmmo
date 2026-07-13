@@ -509,7 +509,12 @@ func (e *Engine) ElementConveyorCCWTick(statId int16) {
 }
 
 func (e *Engine) ElementBombDraw(x, y int16, ch *byte) {
-	stat := &e.Board.Stats[e.GetStatIdAt(x, y)]
+	statId := e.GetStatIdAt(x, y)
+	if statId < 0 {
+		*ch = ElementDefs[E_BOMB].Character
+		return
+	}
+	stat := &e.Board.Stats[statId]
 	if stat.P1 <= 1 {
 		*ch = 11
 	} else {
@@ -622,7 +627,12 @@ func (e *Engine) ElementTransporterTick(statId int16) {
 }
 
 func (e *Engine) ElementTransporterDraw(x, y int16, ch *byte) {
-	stat := &e.Board.Stats[e.GetStatIdAt(x, y)]
+	statId := e.GetStatIdAt(x, y)
+	if statId < 0 {
+		*ch = ElementDefs[E_TRANSPORTER].Character
+		return
+	}
+	stat := &e.Board.Stats[statId]
 	if stat.StepX == 0 {
 		*ch = Ord(TransporterNSChars[stat.StepY*2+3+e.CurrentTick/stat.Cycle%4-1])
 	} else {
@@ -852,7 +862,12 @@ func (e *Engine) ElementPushablePush(x, y int16, deltaX, deltaY int16) {
 }
 
 func (e *Engine) ElementDuplicatorDraw(x, y int16, ch *byte) {
-	stat := &e.Board.Stats[e.GetStatIdAt(x, y)]
+	statId := e.GetStatIdAt(x, y)
+	if statId < 0 {
+		*ch = ElementDefs[E_DUPLICATOR].Character
+		return
+	}
+	stat := &e.Board.Stats[statId]
 	switch stat.P1 {
 	case 1:
 		*ch = 250
