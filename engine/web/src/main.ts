@@ -6,6 +6,7 @@ import { drawTitleSidebar, titleCommand } from "./title";
 import { soundNotesFromProtocol, ZztSound } from "./sound";
 import { generationLines, runDreamGeneration, type GenerationProgress } from "./dream";
 import { drawEditorSidebar, type EditorInspect } from "./editor";
+import { editorReplyMatchesCursor } from "./editor_cursor";
 import { optimisticEditorEraseCell, optimisticEditorTextCell } from "./editor_input";
 import {
   mergeWorldEntries,
@@ -1232,8 +1233,10 @@ function applyEditorSnapshot(message: EditorSnapshotMessage) {
 }
 
 function applyEditorInspect(message: EditorInspectMessage) {
+  if (!editorReplyMatchesCursor(editorCursor, message.inspect)) {
+    return;
+  }
   editorInspect = message.inspect;
-  editorCursor = { x: message.inspect.x, y: message.inspect.y };
   renderEditorSidebar();
   paintOverlay();
   drawScreen();
@@ -1300,9 +1303,11 @@ function showEditorReadOnly() {
 function applyEditorDiff(message: EditorDiffMessage) {
   for (const cell of message.cells) setBoardCell(cell);
   if (!message.memberId || message.memberId === editorMemberId) {
-    editorInspect = message.inspect;
-    editorCursor = { x: message.inspect.x, y: message.inspect.y };
-    renderEditorSidebar();
+    const inspectIsCurrent = editorReplyMatchesCursor(editorCursor, message.inspect);
+    if (inspectIsCurrent) {
+      editorInspect = message.inspect;
+      renderEditorSidebar();
+    }
     // A category-menu placement of a stat-backed element opens its editor now
     // that the diff carries the new stat, mirroring EditorEditStat after AddStat.
     if (editorStatEditAfterPlace) {

@@ -1803,7 +1803,7 @@ into a milestone.)
 
 - [x] **Editor text-entry sluggishness.** Browser editor text mode feels laggy while typing; investigate the F4 text input/render path, especially per-keystroke WebSocket round trips, sidebar/overlay redraws, and `sendEditorInspect` after each character. DoD: rapid text entry feels immediate locally, still persists authoritatively through `editorEdit` diffs, and has a regression test or lightweight browser-side coverage.
 
-- [ ] **Editor held-cursor movement stutters/regresses.** Holding an arrow key in
+- [x] **Editor held-cursor movement stutters/regresses.** Holding an arrow key in
   the browser editor should move the cursor smoothly and monotonically like the
   original editor. Today it stutters and appears to jump backward, likely from
   local cursor movement racing with delayed authoritative `editorInspect` /
