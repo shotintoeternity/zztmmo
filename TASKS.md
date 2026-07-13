@@ -1513,6 +1513,31 @@ and running early. See NOTES.md.)
   only original-editor muscle memory; protocol-level tests per new keystroke;
   `go test ./...` and replay green.
 
+- [x] **M5.9 — Sidebar F1/F2/F3 element picker (M5.8 gap-closure).** M5.8
+  claimed the "F1–F4 element category tables… every placeable element reachable
+  by its original keystroke", but only the *data* shipped: the server sent the
+  three category menus on the entry snapshot (`editorElementMenus`,
+  `editor_session.go:517`) and the vanilla placement path (`editorPlaceElement`,
+  op `"element"`) was faithful, yet the browser rendered F1/F2/F3 as a modal
+  scroll list (`openEditorElementMenu` → `openSelectList`) instead of the
+  original's in-sidebar picker. Vanilla (`EDITOR.PAS:808-887`) clears sidebar
+  rows 3-20, lists the category's elements there (shortcut badge + name + glyph),
+  then waits for one keystroke: a matching shortcut places the element, Escape or
+  any non-match closes. A stat-backed element opens its stat editor immediately
+  after placement (`EditorEditStat` after `AddStat`). Client-only fix (server was
+  already correct): `drawEditorSidebar` gained a `categoryMenu` overlay
+  (`editor.ts`); `main.ts` replaced the modal with
+  `openEditorCategoryMenu`/`handleEditorCategoryKey`/`selectEditorMenuItem`, added
+  `editorCategoryMenu`/`editorStatEditAfterPlace` state, routed every sidebar draw
+  through one `renderEditorSidebar()` so an open picker survives async
+  collaborator diffs, and hooked `applyEditorDiff` to open the stat editor once
+  the placed stat's diff lands. Known pre-existing caveat (not introduced here,
+  shared with the old modal): CHOICE-coloured elements resolve against `0x0F`
+  because the menu payload neutralises CHOICE colours. DoD: sidebar picker renders
+  the category (test in `editor.test.mjs`); stat elements open their editor on
+  place; `npm test`/`npm run build`/`go test ./...` green; replay unchanged. See
+  NOTES.md.
+
 ## M11 — Museum of ZZT: search and play anything
 
 Goal: from the browser, search the Museum of ZZT's archive of community

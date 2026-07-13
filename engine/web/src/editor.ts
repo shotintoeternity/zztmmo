@@ -36,6 +36,33 @@ export type EditorBrush = {
   copied: boolean;
 };
 
+// SidebarCategoryMenu is the F1/F2/F3 in-sidebar element picker (M5.8 parity gap):
+// when a category is open, EditorLoop clears sidebar rows 3-20 and lists that
+// category's elements there, waiting for the element's shortcut key
+// (EDITOR.PAS:808-842). This is the structural subset drawEditorSidebar needs to
+// paint it; main.ts's EditorElementMenu is a superset and passes structurally.
+export type SidebarCategoryItem = {
+  shortcut: string;
+  name: string;
+  character: number;
+  color: number;
+  categoryName?: string;
+};
+
+export type SidebarCategoryMenu = {
+  title: string;
+  items: SidebarCategoryItem[];
+};
+
+// menuGlyphColor is EDITOR.PAS:834-837: an element whose colour has a black
+// (dark) background nibble is shown on blue in the menu so its glyph is legible,
+// otherwise its own colour is used. CHOICE-coloured elements reach us as 0x0F
+// (neutralised server-side) and so fall into the dark-background case.
+function menuGlyphColor(color: number): number {
+  if ((color & 0x70) === 0) return (color & 0x0f) + 0x10;
+  return color;
+}
+
 const DOS_COLORS = [
   "Black", "Blue", "Green", "Cyan", "Red", "Purple", "Brown", "Gray",
   "Dk Gray", "Lt Blue", "Lt Green", "Lt Cyan", "Lt Red", "Lt Purple", "Yellow", "White",
@@ -45,7 +72,14 @@ function trim(text: string, width: number): string {
   return text.slice(0, width).padEnd(width, " ");
 }
 
-export function drawEditorSidebar(write: WriteText, inspect: EditorInspect, brush: EditorBrush, drawing: boolean, textMode = false) {
+export function drawEditorSidebar(
+  write: WriteText,
+  inspect: EditorInspect,
+  brush: EditorBrush,
+  drawing: boolean,
+  textMode = false,
+  categoryMenu: SidebarCategoryMenu | null = null,
+) {
   for (let y = 0; y < 25; y += 1) {
     sidebarClearLine(write, y);
   }
@@ -120,4 +154,28 @@ export function drawEditorSidebar(write: WriteText, inspect: EditorInspect, brus
   const modeColor = textMode || drawing ? 0x9e : 0x1e;
   write(61, 24, 0x1f, " Mode:");
   write(68, 24, modeColor, modeText);
+
+  // F1/F2/F3 category picker (EDITOR.PAS:808-842): clear rows 3-20 and list the
+  // category's elements — a shortcut badge (alternating shade by row parity), the
+  // name, and the glyph — over the command block, leaving the title and the
+  // selector/mode rows below untouched, exactly as EditorLoop overlays them.
+  if (categoryMenu) {
+    for (let y = 3; y <= 20; y += 1) {
+      sidebarClearLine(write, y);
+    }
+    let i = 3;
+    for (const item of categoryMenu.items) {
+      if (i > 24) break;
+      if (item.categoryName) {
+        i += 1;
+        write(65, i, 0x1e, item.categoryName);
+        i += 1;
+      }
+      const badgeColor = ((i % 2) << 6) + 0x30;
+      write(61, i, badgeColor, ` ${item.shortcut} `);
+      write(65, i, 0x1f, item.name);
+      write(78, i, menuGlyphColor(item.color), String.fromCharCode(item.character));
+      i += 1;
+    }
+  }
 }

@@ -63,4 +63,30 @@ const brush = { element: 21, character: 0xdb, color: 0x0e, copied: false };
   assert.ok(!textMode.text().includes("Drawing off"), "text entry suppresses the draw label");
 }
 
+// F1/F2/F3 open the element picker on the sidebar itself (EDITOR.PAS:808-842),
+// not a modal: passing a category menu lists its elements over rows 3-20, each
+// with a shortcut badge, name, and glyph, while the title and mode rows remain.
+{
+  const menu = {
+    title: "Creature",
+    items: [
+      { shortcut: "L", name: "Lion", character: 0xea, color: 0x0c, categoryName: "Beasts" },
+      { shortcut: "T", name: "Tiger", character: 0xe3, color: 0x0b },
+      { shortcut: "O", name: "Object", character: 0x02, color: 0x0f },
+    ],
+  };
+  const s = surface();
+  drawEditorSidebar(s.write, inspect, brush, false, false, menu);
+  const all = s.text();
+  assert.ok(all.includes("Lion"), "creature name Lion listed on the sidebar");
+  assert.ok(all.includes("Tiger"), "creature name Tiger listed on the sidebar");
+  assert.ok(all.includes("Object"), "creature name Object listed on the sidebar");
+  assert.ok(all.includes(" L "), "Lion shortcut badge rendered");
+  assert.ok(all.includes("Beasts"), "category header rendered");
+  assert.ok(all.includes("ZZT Editor"), "title row survives the picker overlay");
+  // The command block that normally occupies rows 3-20 is overlaid: the "Board
+  // Info" command line is gone while the picker is open.
+  assert.ok(!all.includes("Board Info"), "command block hidden behind the picker");
+}
+
 console.log("editor.test.mjs: all assertions passed");

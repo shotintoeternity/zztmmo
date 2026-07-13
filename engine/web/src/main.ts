@@ -533,6 +533,14 @@ let activeEditorLease: EditorLeaseMessage | null = null;
 let retainEditorLeaseOnClose = false;
 // The F1/F2/F3 element category tables, delivered once on the entry snapshot.
 let editorMenus: EditorElementMenu[] = [];
+// The category currently open on the sidebar (F1/F2/F3), or null. While set, the
+// next keystroke selects an element by its shortcut instead of driving the board
+// (EDITOR.PAS:808-842).
+let editorCategoryMenu: EditorElementMenu | null = null;
+// Set when a menu selection placed a stat-backed element, so the diff reply
+// carrying the new stat can open its editor — EditorLoop calls EditorEditStat
+// right after AddStat (EDITOR.PAS:766-772).
+let editorStatEditAfterPlace = false;
 const overlay = new Map<number, { ch: number; color: number }>();
 const cells: ScreenCell[] = Array.from({ length: COLS * ROWS }, (_, i) => ({
   x: i % COLS,
@@ -750,7 +758,7 @@ function startEditor() {
   pendingEditorLease = null;
   activeEditorLease = null;
   retainEditorLeaseOnClose = false;
-  drawEditorSidebar(writeText, editorInspect, editorBrush, editorDrawing, editorTextMode);
+  renderEditorSidebar();
   paintOverlay();
   drawScreen();
   connectEditor();
@@ -1217,7 +1225,7 @@ function applyEditorSnapshot(message: EditorSnapshotMessage) {
   // message without them, so keep the tables already held.
   if (message.menus) editorMenus = message.menus;
   replaceCells(message.screen);
-  drawEditorSidebar(writeText, editorInspect, editorBrush, editorDrawing, editorTextMode);
+  renderEditorSidebar();
   paintOverlay();
   drawScreen();
 }
@@ -1225,7 +1233,7 @@ function applyEditorSnapshot(message: EditorSnapshotMessage) {
 function applyEditorInspect(message: EditorInspectMessage) {
   editorInspect = message.inspect;
   editorCursor = { x: message.inspect.x, y: message.inspect.y };
-  drawEditorSidebar(writeText, editorInspect, editorBrush, editorDrawing, editorTextMode);
+  renderEditorSidebar();
   paintOverlay();
   drawScreen();
 }
@@ -1293,7 +1301,16 @@ function applyEditorDiff(message: EditorDiffMessage) {
   if (!message.memberId || message.memberId === editorMemberId) {
     editorInspect = message.inspect;
     editorCursor = { x: message.inspect.x, y: message.inspect.y };
-    drawEditorSidebar(writeText, editorInspect, editorBrush, editorDrawing, editorTextMode);
+    renderEditorSidebar();
+    // A category-menu placement of a stat-backed element opens its editor now
+    // that the diff carries the new stat, mirroring EditorEditStat after AddStat.
+    if (editorStatEditAfterPlace) {
+      editorStatEditAfterPlace = false;
+      if (message.inspect.hasStat && message.inspect.statId !== undefined) {
+        const inspect = message.inspect;
+        requestEditorLease({ kind: "stat", boardId: editorProperties.boardId, statId: inspect.statId }, () => openEditorStatSettings(inspect));
+      }
+    }
   }
   paintOverlay();
   drawScreen();
@@ -1302,7 +1319,7 @@ function applyEditorDiff(message: EditorDiffMessage) {
 function applyEditorProperties(message: EditorPropertiesMessage) {
   editorProperties = message.properties;
   replaceCells(message.screen);
-  drawEditorSidebar(writeText, editorInspect, editorBrush, editorDrawing, editorTextMode);
+  renderEditorSidebar();
   paintOverlay();
   drawScreen();
 }
@@ -1311,7 +1328,7 @@ function applyEditorStatSettings(message: EditorStatSettingsMessage) {
   for (const cell of message.cells) setBoardCell(cell);
   editorInspect = message.inspect;
   editorCursor = { x: message.inspect.x, y: message.inspect.y };
-  drawEditorSidebar(writeText, editorInspect, editorBrush, editorDrawing, editorTextMode);
+  renderEditorSidebar();
   paintOverlay();
   drawScreen();
 }
@@ -2169,10 +2186,17 @@ function handlePointerMove(event: MouseEvent) {
   sendEditorEdit("place");
 }
 
+// renderEditorSidebar is the single sidebar-draw seam: every editor redraw path
+// runs through it so an open F1/F2/F3 category picker survives async collaborator
+// diffs/inspects that would otherwise repaint the plain command block over it.
+function renderEditorSidebar() {
+  drawEditorSidebar(writeText, editorInspect, editorBrush, editorDrawing, editorTextMode, editorCategoryMenu);
+}
+
 // redrawEditor repaints the editor sidebar and board from local state, the
 // common tail of every editor key that changes brush/mode/cursor.
 function redrawEditor() {
-  drawEditorSidebar(writeText, editorInspect, editorBrush, editorDrawing, editorTextMode);
+  renderEditorSidebar();
   paintOverlay();
   drawScreen();
 }
@@ -2231,6 +2255,10 @@ function handleEditorTextKey(event: KeyboardEvent): boolean {
 }
 
 function handleEditorKey(event: KeyboardEvent) {
+  if (editorCategoryMenu) {
+    handleEditorCategoryKey(event);
+    return;
+  }
   if (editorTextMode && handleEditorTextKey(event)) return;
   let nextX = editorCursor.x;
   let nextY = editorCursor.y;
@@ -2308,15 +2336,15 @@ function handleEditorKey(event: KeyboardEvent) {
       return;
     case "F1":
       event.preventDefault();
-      openEditorElementMenu("f1");
+      openEditorCategoryMenu("f1");
       return;
     case "F2":
       event.preventDefault();
-      openEditorElementMenu("f2");
+      openEditorCategoryMenu("f2");
       return;
     case "F3":
       event.preventDefault();
-      openEditorElementMenu("f3");
+      openEditorCategoryMenu("f3");
       return;
     case "KeyI":
       event.preventDefault();
@@ -2346,7 +2374,7 @@ function handleEditorKey(event: KeyboardEvent) {
         color: editorInspect.color,
         copied: true,
       };
-      drawEditorSidebar(writeText, editorInspect, editorBrush, editorDrawing, editorTextMode);
+      renderEditorSidebar();
       paintOverlay();
       drawScreen();
       return;
@@ -2357,7 +2385,7 @@ function handleEditorKey(event: KeyboardEvent) {
       const next = patterns[(index + 1) % patterns.length];
       const chars = [0xdb, 0xb2, 0xb1, 0x20, 0xce];
       editorBrush = { element: next, character: chars[patterns.indexOf(next)], color: editorBrush.color, copied: false };
-      drawEditorSidebar(writeText, editorInspect, editorBrush, editorDrawing, editorTextMode);
+      renderEditorSidebar();
       paintOverlay();
       drawScreen();
       return;
@@ -2368,14 +2396,14 @@ function handleEditorKey(event: KeyboardEvent) {
         ...editorBrush,
         color: (editorBrush.color & 0x0f) === 15 ? 9 : (editorBrush.color & 0x0f) + 1,
       };
-      drawEditorSidebar(writeText, editorInspect, editorBrush, editorDrawing, editorTextMode);
+      renderEditorSidebar();
       paintOverlay();
       drawScreen();
       return;
     case "Tab":
       event.preventDefault();
       editorDrawing = !editorDrawing;
-      drawEditorSidebar(writeText, editorInspect, editorBrush, editorDrawing, editorTextMode);
+      renderEditorSidebar();
       paintOverlay();
       drawScreen();
       return;
@@ -2400,7 +2428,7 @@ function handleEditorKey(event: KeyboardEvent) {
   // Keep the local cursor responsive; the authoritative tile readout follows
   // in the editorInspect reply.
   editorInspect = { ...editorInspect, x: editorCursor.x, y: editorCursor.y };
-  drawEditorSidebar(writeText, editorInspect, editorBrush, editorDrawing, editorTextMode);
+  renderEditorSidebar();
   paintOverlay();
   drawScreen();
   sendEditorInspect();
@@ -2421,31 +2449,56 @@ function editorBoardName(id: number): string {
   return editorProperties.boards.find((board) => board.id === id)?.name ?? "None";
 }
 
-function openEditorElementMenu(key: string) {
+// openEditorCategoryMenu opens the F1/F2/F3 element picker on the sidebar
+// (EDITOR.PAS:808-816). Unlike a modal, it leaves the board visible and arms
+// handleEditorCategoryKey to read the next keystroke as an element shortcut.
+function openEditorCategoryMenu(key: string) {
   const menu = editorMenus.find((candidate) => candidate.key.toLowerCase() === key.toLowerCase());
   if (!menu || menu.items.length === 0) return;
-  const labels = menu.items.map((item) => {
-    const prefix = item.shortcut ? `${item.shortcut} ` : "";
-    const category = item.categoryName ? `${item.categoryName}: ` : "";
-    return `${prefix}${category}${item.name}`;
-  });
-  const items = new Map(labels.map((label, index) => [label, menu.items[index]]));
-  openSelectList(menu.title, labels, (label) => {
-    const item = items.get(label);
-    if (!item) return;
-    editorBrush = {
-      element: item.elementId,
-      character: item.character,
-      color: item.color,
-      copied: false,
-    };
+  editorCategoryMenu = menu;
+  redrawEditor();
+}
+
+// handleEditorCategoryKey is the single-key wait after F1/F2/F3
+// (EDITOR.PAS:843-887): a matching element shortcut places that element; Escape
+// or any non-matching key just closes the picker (vanilla reads one key and the
+// no-match loop simply falls through to EditorDrawSidebar).
+function handleEditorCategoryKey(event: KeyboardEvent) {
+  event.preventDefault();
+  const menu = editorCategoryMenu;
+  editorCategoryMenu = null;
+  if (!menu || event.code === "Escape") {
     redrawEditor();
-    if (editorReadOnly) {
-      showEditorReadOnly();
-      return;
-    }
-    sendEditorEdit("element");
-  });
+    return;
+  }
+  const pressed = event.key.length === 1 ? event.key.toUpperCase() : "";
+  const item = pressed ? menu.items.find((candidate) => candidate.shortcut.toUpperCase() === pressed) : undefined;
+  if (!item) {
+    redrawEditor();
+    return;
+  }
+  selectEditorMenuItem(item);
+}
+
+// selectEditorMenuItem places the chosen category element at the cursor. The
+// server op "element" ports EditorLoop's AddStat/seed path (editorPlaceElement);
+// for a stat-backed element the diff reply then triggers its stat editor, so the
+// coordinate and stat parameters are authored the way vanilla's EditorEditStat
+// does after AddStat.
+function selectEditorMenuItem(item: EditorElementItem) {
+  editorBrush = {
+    element: item.elementId,
+    character: item.character,
+    color: item.color,
+    copied: false,
+  };
+  redrawEditor();
+  if (editorReadOnly) {
+    showEditorReadOnly();
+    return;
+  }
+  editorStatEditAfterPlace = true;
+  sendEditorEdit("element");
 }
 
 // Board Information is EditorEditBoardInfo on top of the M4.1 text-window
