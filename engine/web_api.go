@@ -10,7 +10,6 @@ import (
 	"os"
 	"path/filepath"
 	"sort"
-	"strconv"
 	"strings"
 	"sync"
 	"sync/atomic"
@@ -43,6 +42,9 @@ type WebAPI struct {
 	// existing API endpoints available. A nil generator is initialized lazily
 	// from the environment by /api/generate.
 	Generator *GenerationService
+	// Museum proxies the Museum of ZZT API and hosts downloaded worlds on
+	// demand. Nil is initialized lazily from Server.
+	Museum *MuseumService
 
 	generationMu   sync.Mutex
 	generationJobs map[string]*generationJob
@@ -68,7 +70,52 @@ func (a *WebAPI) Handler() http.Handler {
 	mux.HandleFunc("/api/restore", a.handleRestore)
 	mux.HandleFunc("/api/loadworld", a.handleLoadWorld)
 	mux.HandleFunc("/api/generate", a.handleGenerate)
+	mux.HandleFunc("/api/museum/search", a.handleMuseumSearch)
+	mux.HandleFunc("/api/museum/play", a.handleMuseumPlay)
 	return mux
+}
+
+func (a *WebAPI) museumService() *MuseumService {
+	if a.Museum == nil {
+		a.Museum = NewMuseumService(a.Server)
+	}
+	return a.Museum
+}
+
+func (a *WebAPI) handleMuseumSearch(w http.ResponseWriter, r *http.Request) {
+	if r.Method != http.MethodGet {
+		http.Error(w, "use GET", http.StatusMethodNotAllowed)
+		return
+	}
+	q := strings.TrimSpace(r.URL.Query().Get("q"))
+	if q == "" {
+		writeJSON(w, MuseumSearchResponse{})
+		return
+	}
+	result, err := a.museumService().Search(r.Context(), q)
+	if err != nil {
+		http.Error(w, "museum search failed: "+err.Error(), http.StatusBadGateway)
+		return
+	}
+	writeJSON(w, result)
+}
+
+func (a *WebAPI) handleMuseumPlay(w http.ResponseWriter, r *http.Request) {
+	if r.Method != http.MethodPost {
+		http.Error(w, "use POST", http.StatusMethodNotAllowed)
+		return
+	}
+	var req MuseumPlayRequest
+	if err := json.NewDecoder(http.MaxBytesReader(w, r.Body, 16<<10)).Decode(&req); err != nil {
+		http.Error(w, "bad request body", http.StatusBadRequest)
+		return
+	}
+	result, err := a.museumService().Play(r.Context(), req)
+	if err != nil {
+		http.Error(w, err.Error(), http.StatusUnprocessableEntity)
+		return
+	}
+	writeJSON(w, result)
 }
 
 // handleGenerate starts the M12.4 plan-then-paint pipeline. The browser only
@@ -376,33 +423,23 @@ func (a *WebAPI) handleWorlds(w http.ResponseWriter, r *http.Request) {
 		worlds = []string{a.RoomManager.WorldName()}
 	}
 
-	formatted := make([]string, len(worlds))
-	for i, name := range worlds {
-		count := 0
+	counts := make(map[string]int, len(worlds))
+	for _, name := range worlds {
 		if a.Server != nil {
 			a.Server.mu.Lock()
 			inst := a.Server.Instances[name]
 			if inst != nil {
 				inst.mu.Lock()
-				count = len(inst.Clients)
+				counts[name] = len(inst.Clients)
 				inst.mu.Unlock()
 			}
 			a.Server.mu.Unlock()
 		}
-		if count > 0 {
-			if count == 1 {
-				formatted[i] = name + " (1 player)"
-			} else {
-				formatted[i] = name + " (" + strconv.Itoa(count) + " players)"
-			}
-		} else {
-			formatted[i] = name
-		}
 	}
 
 	writeJSON(w, struct {
-		Worlds []string `json:"worlds"`
-	}{Worlds: formatted})
+		Worlds []WorldListEntry `json:"worlds"`
+	}{Worlds: WorldListEntries(worlds, counts)})
 }
 
 func (a *WebAPI) handleLoadWorld(w http.ResponseWriter, r *http.Request) {
