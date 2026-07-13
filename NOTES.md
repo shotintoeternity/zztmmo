@@ -2292,3 +2292,14 @@ hosts.
 
 Verified: `go test ./...`; `zzt-shot` renders `LEMWILLK.ZZT` board 5 and boards
 0-80 without panicking.
+
+## 2026-07-13 — Title flow: world selection must not auto-play
+
+The browser was still entering worlds immediately after a world picker/Museum/
+dream selection because `enterWorld` loaded the selected board 0 and then called
+`startPlay`. That skipped the traditional ZZT title-screen pause where selecting
+or loading a world shows its title board and the player must press `P` to play.
+Changed `enterWorld` to only select the world and repaint board 0; `startPlay`
+remains reachable solely through the title menu's explicit Play action. Added a
+small `title_flow` regression so a selected world resolves to `{ startPlay:
+false }`.

@@ -33,6 +33,7 @@ import {
   TRANSITION_FILL_COLOR,
   type TransitionState,
 } from "./transition";
+import { selectWorldForTitle } from "./title_flow";
 
 const COLS = 80;
 // The server streams board columns 0..59 only. Columns 60..79 are the sidebar,
@@ -1032,21 +1033,26 @@ async function startDreamGeneration(prompt: string) {
   }
 }
 
-// enterWorld joins the chosen world's own instance. It does NOT call
+// enterWorld selects a world's title board and stops there. Pressing P is the
+// only thing that joins the chosen world's own instance. It does NOT call
 // /api/loadworld: that swaps the server's single default world for everybody
 // and is refused while anyone is playing. Each world already has its own
 // RoomManager server-side (WebSocketServer.GetOrCreateInstance), reached by the
 // ?world= parameter wsURL sends — which is what makes worlds independent.
 async function enterWorld(name: string) {
-  worldName = name;
+  const selection = selectWorldForTitle(name);
+  worldName = selection.worldName;
   await showTitle();
-  startPlay();
+  if (selection.startPlay) {
+    startPlay();
+  }
 }
 
 // The old loadWorld POSTed /api/loadworld, swapping the server's single default
 // world for everybody — which the server rightly refused while anyone was in a
-// room. enterWorld replaces it: worlds are instances, so picking one is a local
-// choice and needs no server-wide reload. The endpoint remains for other callers.
+// room. enterWorld replaces it: worlds are title-screen selections, so picking
+// one is a local choice and needs no server-wide reload or automatic join. The
+// endpoint remains for other callers.
 
 // showSavedGames is GameWorldLoad(".SAV"): the selectable "Saved Games" window.
 // Picking one restores it server-side, which is refused while anybody is still
