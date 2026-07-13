@@ -1803,6 +1803,18 @@ into a milestone.)
 
 - [x] **Editor text-entry sluggishness.** Browser editor text mode feels laggy while typing; investigate the F4 text input/render path, especially per-keystroke WebSocket round trips, sidebar/overlay redraws, and `sendEditorInspect` after each character. DoD: rapid text entry feels immediate locally, still persists authoritatively through `editorEdit` diffs, and has a regression test or lightweight browser-side coverage.
 
+- [ ] **Editor held-cursor movement stutters/regresses.** Holding an arrow key in
+  the browser editor should move the cursor smoothly and monotonically like the
+  original editor. Today it stutters and appears to jump backward, likely from
+  local cursor movement racing with delayed authoritative `editorInspect` /
+  editor diff replies that reset `editorCursor` to stale positions. Investigate
+  the held-key path in `handleEditorKey`, `sendEditorInspect`,
+  `applyEditorInspect`, and `applyEditorDiff`; preserve server authority for
+  tile inspection while keeping cursor motion local-echo and ordered. DoD: held
+  arrow movement feels smooth in the editor, stale inspect/diff replies cannot
+  move the cursor backward, and a regression test covers out-of-order editor
+  inspect/diff replies or the equivalent client-side state transition.
+
 - [x] **Troubleshoot player stuck after damage.** Solve the issue where players get stuck after being zapped/damaged by a ruffian/bear due to stat index shift misalignment in RoomManager.
 - [x] **Title screens aren't animating properly.** Investigate and resolve the issue where object scripts and movements on ZZT title screens do not animate or tick as they should. *(Done: `engine/title_sim.go` runs board 0 on an isolated engine — its own copied world, never written back — ticked from the server loop only while a browser is watching, with changed cells pushed over `/api/title/stream` as SSE.)*
 
