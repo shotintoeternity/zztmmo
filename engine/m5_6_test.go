@@ -268,18 +268,14 @@ func TestWebSocketEditorWorldSaveAndDownload(t *testing.T) {
 		t.Fatalf("write editorEnter: %v", err)
 	}
 	var snapshot EditorSnapshotMessage
-	if err := wsjson.Read(ctx, conn, &snapshot); err != nil {
-		t.Fatalf("read editor snapshot: %v", err)
-	}
+	readEditorMessage(t, ctx, conn, MessageTypeEditorSnapshot, &snapshot)
 
 	// Download the world.
 	if err := wsjson.Write(ctx, conn, EditorWorldMessage{Type: MessageTypeEditorWorld, Op: "download"}); err != nil {
 		t.Fatalf("write download: %v", err)
 	}
 	var downloaded EditorWorldDataMessage
-	if err := wsjson.Read(ctx, conn, &downloaded); err != nil {
-		t.Fatalf("read download: %v", err)
-	}
+	readEditorMessage(t, ctx, conn, MessageTypeEditorWorldData, &downloaded)
 	if downloaded.Type != MessageTypeEditorWorldData || downloaded.Data == "" {
 		t.Fatalf("download reply=%+v, want world bytes", downloaded)
 	}
@@ -293,9 +289,7 @@ func TestWebSocketEditorWorldSaveAndDownload(t *testing.T) {
 		t.Fatalf("write save: %v", err)
 	}
 	var result EditorSaveResultMessage
-	if err := wsjson.Read(ctx, conn, &result); err != nil {
-		t.Fatalf("read saveResult: %v", err)
-	}
+	readEditorMessage(t, ctx, conn, MessageTypeEditorSaveResult, &result)
 	if result.Error != "" || result.World != "EDITED" {
 		t.Fatalf("saveResult=%+v, want world EDITED", result)
 	}

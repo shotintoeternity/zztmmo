@@ -18,9 +18,11 @@ import (
 type EditorSession struct {
 	mu sync.Mutex
 
-	WorldName string
-	engine    *Engine
-	Members   map[*webSocketClient]struct{}
+	WorldName  string
+	engine     *Engine
+	Members    map[*webSocketClient]struct{}
+	memberInfo map[*webSocketClient]EditorPresence
+	nextMember int
 }
 
 func NewEditorSession(worldName string, world TWorld) *EditorSession {
@@ -42,26 +44,87 @@ func NewEditorSession(worldName string, world TWorld) *EditorSession {
 	e.DrainScreenDirty()
 
 	return &EditorSession{
-		WorldName: worldName,
-		engine:    e,
-		Members:   make(map[*webSocketClient]struct{}),
+		WorldName:  worldName,
+		engine:     e,
+		Members:    make(map[*webSocketClient]struct{}),
+		memberInfo: make(map[*webSocketClient]EditorPresence),
 	}
 }
 
 func (s *EditorSession) Enter(member *webSocketClient) error {
+	_, err := s.EnterNamed(member, "")
+	return err
+}
+
+func (s *EditorSession) EnterNamed(member *webSocketClient, name string) (EditorPresence, error) {
 	s.mu.Lock()
 	defer s.mu.Unlock()
-	if len(s.Members) >= 1 {
-		return fmt.Errorf("editor session is already in use")
+	if _, ok := s.Members[member]; ok {
+		return s.memberInfo[member], nil
+	}
+	s.nextMember++
+	if name == "" {
+		name = fmt.Sprintf("Player %d", s.nextMember)
+	}
+	presence := EditorPresence{
+		ID:    fmt.Sprintf("editor-%d", s.nextMember),
+		Name:  name,
+		Color: editorPresenceColor(s.nextMember),
+		X:     BOARD_WIDTH / 2,
+		Y:     BOARD_HEIGHT / 2,
 	}
 	s.Members[member] = struct{}{}
-	return nil
+	s.memberInfo[member] = presence
+	return presence, nil
 }
 
 func (s *EditorSession) Exit(member *webSocketClient) {
 	s.mu.Lock()
 	delete(s.Members, member)
+	delete(s.memberInfo, member)
 	s.mu.Unlock()
+}
+
+func (s *EditorSession) MemberID(member *webSocketClient) string {
+	s.mu.Lock()
+	defer s.mu.Unlock()
+	return s.memberInfo[member].ID
+}
+
+func (s *EditorSession) UpdatePresence(member *webSocketClient, x, y int16) {
+	s.mu.Lock()
+	defer s.mu.Unlock()
+	presence, ok := s.memberInfo[member]
+	if !ok {
+		return
+	}
+	presence.X, presence.Y = editorClamp(x, y)
+	s.memberInfo[member] = presence
+}
+
+func (s *EditorSession) Presence() []EditorPresence {
+	s.mu.Lock()
+	defer s.mu.Unlock()
+	out := make([]EditorPresence, 0, len(s.memberInfo))
+	for _, presence := range s.memberInfo {
+		out = append(out, presence)
+	}
+	return out
+}
+
+func (s *EditorSession) MemberClients() []*webSocketClient {
+	s.mu.Lock()
+	defer s.mu.Unlock()
+	out := make([]*webSocketClient, 0, len(s.Members))
+	for member := range s.Members {
+		out = append(out, member)
+	}
+	return out
+}
+
+func editorPresenceColor(n int) byte {
+	colors := []byte{0x1e, 0x2f, 0x3e, 0x4f, 0x5e, 0x6f, 0x9e, 0x0f}
+	return colors[(n-1)%len(colors)]
 }
 
 // Apply is the sole serialized session boundary. M5.0 is read-only, but later
@@ -81,6 +144,8 @@ func (s *EditorSession) Snapshot(member *webSocketClient, x, y int16) (EditorSna
 	err := s.Apply(member, func(e *Engine) {
 		snapshot = editorSnapshot(e, x, y)
 	})
+	snapshot.MemberID = s.MemberID(member)
+	snapshot.Presence = s.Presence()
 	return snapshot, err
 }
 
@@ -106,6 +171,7 @@ func editorSnapshot(e *Engine, x, y int16) EditorSnapshotMessage {
 // overwritten. The browser never writes board state directly.
 func (s *EditorSession) Edit(member *webSocketClient, edit EditorEditMessage) (EditorDiffMessage, error) {
 	var reply EditorDiffMessage
+	memberID := s.MemberID(member)
 	err := s.Apply(member, func(e *Engine) {
 		x, y := editorClamp(edit.X, edit.Y)
 		switch edit.Op {
@@ -134,9 +200,10 @@ func (s *EditorSession) Edit(member *webSocketClient, edit EditorEditMessage) (E
 			}
 		}
 		reply = EditorDiffMessage{
-			Type:    MessageTypeEditorDiff,
-			Cells:   e.DrainScreenDirty(),
-			Inspect: editorTileInspect(e, x, y),
+			Type:     MessageTypeEditorDiff,
+			MemberID: memberID,
+			Cells:    e.DrainScreenDirty(),
+			Inspect:  editorTileInspect(e, x, y),
 		}
 	})
 	return reply, err

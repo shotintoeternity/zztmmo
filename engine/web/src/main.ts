@@ -62,6 +62,7 @@ const MessageTypeSaveFilename = "saveFilename";
 const MessageTypeEditorEnter = "editorEnter";
 const MessageTypeEditorExit = "editorExit";
 const MessageTypeEditorInspect = "editorInspect";
+const MessageTypeEditorPresence = "editorPresence";
 const MessageTypeEditorSnapshot = "editorSnapshot";
 const MessageTypeEditorEdit = "editorEdit";
 const MessageTypeEditorDiff = "editorDiff";
@@ -212,13 +213,23 @@ type EditorElementMenu = {
   items: EditorElementItem[];
 };
 
+type EditorPresence = {
+  id: string;
+  name: string;
+  color: number;
+  x: number;
+  y: number;
+};
+
 type EditorSnapshotMessage = {
 	type: typeof MessageTypeEditorSnapshot;
+	memberId?: string;
 	boardId: number;
 	screen: ScreenCell[];
 	inspect: EditorInspect;
 	properties: EditorProperties;
 	menus?: EditorElementMenu[];
+	presence?: EditorPresence[];
 };
 
 type EditorInspectMessage = {
@@ -226,8 +237,14 @@ type EditorInspectMessage = {
   inspect: EditorInspect;
 };
 
+type EditorPresenceMessage = {
+  type: typeof MessageTypeEditorPresence;
+  members: EditorPresence[];
+};
+
 type EditorDiffMessage = {
   type: typeof MessageTypeEditorDiff;
+  memberId?: string;
   cells: ScreenCell[];
   inspect: EditorInspect;
 };
@@ -298,7 +315,7 @@ type EditorSaveResultMessage = {
   error?: string;
 };
 
-type ServerMessage = SnapshotMessage | DiffMessage | EventMessage | BoardChangeMessage | ChatMessage | EditorSnapshotMessage | EditorInspectMessage | EditorDiffMessage | EditorPropertiesMessage | EditorStatSettingsMessage | EditorProgramTextMessage | EditorBoardDataMessage | EditorWorldDataMessage | EditorSaveResultMessage;
+type ServerMessage = SnapshotMessage | DiffMessage | EventMessage | BoardChangeMessage | ChatMessage | EditorSnapshotMessage | EditorInspectMessage | EditorPresenceMessage | EditorDiffMessage | EditorPropertiesMessage | EditorStatSettingsMessage | EditorProgramTextMessage | EditorBoardDataMessage | EditorWorldDataMessage | EditorSaveResultMessage;
 
 type InputMessage = {
   type: typeof MessageTypeInput;
@@ -486,6 +503,8 @@ let editorModified = false;
 // Set when a save was requested as part of leaving; the saveResult handler then
 // completes the exit (or, on error, keeps the editor open).
 let editorExitAfterSave = false;
+let editorMemberId = "";
+let editorPresence: EditorPresence[] = [];
 // The F1/F2/F3 element category tables, delivered once on the entry snapshot.
 let editorMenus: EditorElementMenu[] = [];
 const overlay = new Map<number, { ch: number; color: number }>();
@@ -699,6 +718,8 @@ function startEditor() {
   editorTextMode = false;
   editorModified = false;
   editorExitAfterSave = false;
+  editorMemberId = "";
+  editorPresence = [];
   drawEditorSidebar(writeText, editorInspect, editorBrush, editorDrawing, editorTextMode);
   paintOverlay();
   drawScreen();
@@ -1121,6 +1142,9 @@ function applyMessage(message: ServerMessage) {
     case MessageTypeEditorInspect:
       applyEditorInspect(message);
       break;
+    case MessageTypeEditorPresence:
+      applyEditorPresence(message);
+      break;
 	case MessageTypeEditorDiff:
 	  applyEditorDiff(message);
 	  break;
@@ -1147,6 +1171,8 @@ function applyMessage(message: ServerMessage) {
 
 function applyEditorSnapshot(message: EditorSnapshotMessage) {
   mode = "editor";
+  if (message.memberId) editorMemberId = message.memberId;
+  if (message.presence) editorPresence = message.presence;
   editorInspect = message.inspect;
   editorCursor = { x: message.inspect.x, y: message.inspect.y };
 	  editorProperties = message.properties;
@@ -1167,11 +1193,19 @@ function applyEditorInspect(message: EditorInspectMessage) {
   drawScreen();
 }
 
+function applyEditorPresence(message: EditorPresenceMessage) {
+  editorPresence = message.members;
+  paintOverlay();
+  drawScreen();
+}
+
 function applyEditorDiff(message: EditorDiffMessage) {
   for (const cell of message.cells) setBoardCell(cell);
-  editorInspect = message.inspect;
-  editorCursor = { x: message.inspect.x, y: message.inspect.y };
-  drawEditorSidebar(writeText, editorInspect, editorBrush, editorDrawing, editorTextMode);
+  if (!message.memberId || message.memberId === editorMemberId) {
+    editorInspect = message.inspect;
+    editorCursor = { x: message.inspect.x, y: message.inspect.y };
+    drawEditorSidebar(writeText, editorInspect, editorBrush, editorDrawing, editorTextMode);
+  }
   paintOverlay();
   drawScreen();
 }
@@ -1495,6 +1529,14 @@ function paintOverlay() {
   }
   if (mode === "editor") {
     writeOverlay(editorCursor.x - 1, editorCursor.y - 1, 0x1f, "\x1f");
+    for (const member of editorPresence) {
+      if (member.id === editorMemberId) continue;
+      const x = member.x - 1;
+      const y = member.y - 1;
+      if (x < 0 || x >= BOARD_COLS || y < 0 || y >= ROWS) continue;
+      writeOverlay(x, y, member.color, "\x1f");
+      writeOverlay(x + 1, y, member.color, member.name.slice(0, 10));
+    }
   }
   if (paused) {
     paintPause();

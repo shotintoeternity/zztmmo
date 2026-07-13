@@ -47,7 +47,7 @@ func TestEditorSessionReadOnlySnapshotAndInspect(t *testing.T) {
 	}
 }
 
-func TestEditorSessionCapsMembersAndRequiresMembership(t *testing.T) {
+func TestEditorSessionAllowsMembersAndRequiresMembership(t *testing.T) {
 	session := NewEditorSession("TEST", testEmptyWorld(t))
 	member := &webSocketClient{}
 	other := &webSocketClient{}
@@ -55,11 +55,21 @@ func TestEditorSessionCapsMembersAndRequiresMembership(t *testing.T) {
 		t.Fatalf("first Enter: %v", err)
 	}
 	defer session.Exit(member)
-	if err := session.Enter(other); err == nil {
-		t.Fatal("second editor member entered despite M5.0's one-member cap")
+	if err := session.Enter(other); err != nil {
+		t.Fatalf("second Enter: %v", err)
 	}
+	defer session.Exit(other)
+	if len(session.Presence()) != 2 {
+		t.Fatalf("presence len=%d, want 2", len(session.Presence()))
+	}
+	outsider := &webSocketClient{}
 	if _, err := session.Inspect(other, 1, 1); err == nil {
-		t.Fatal("non-member inspected editor session")
+		// other is a member; the assertion below checks a true outsider.
+	} else {
+		t.Fatalf("second member inspected editor session: %v", err)
+	}
+	if _, err := session.Inspect(outsider, 1, 1); err == nil {
+		t.Fatal("outsider inspected editor session")
 	}
 }
 

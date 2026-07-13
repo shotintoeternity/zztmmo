@@ -1723,7 +1723,7 @@ builds toward them instead of away:
   Global undo with N editors is incoherent; decide at spec time, record in
   NOTES.md.
 
-- [ ] **M10.1 — Multi-member sessions with live cursors.** Requires
+- [x] **M10.1 — Multi-member sessions with live cursors.** Requires
   M5.0-M5.1. Raise the member cap; broadcast session diffs to all members.
   The feel is Google-Docs-in-CP437: everyone draws on the board *at the same
   time* — no turn-taking, no canvas locks (M10.2's leases cover modal

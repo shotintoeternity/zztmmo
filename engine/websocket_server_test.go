@@ -24,7 +24,7 @@ func TestWebSocketServerJoinInputDiff(t *testing.T) {
 	server := NewWebSocketServer(world, 1)
 	server.TickDuration = 10 * time.Millisecond
 
-	ctx, cancel := context.WithCancel(context.Background())
+	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
 	defer cancel()
 	runServerAsync(t, ctx, server)
 
@@ -97,7 +97,7 @@ func TestWebSocketEditorSessionReadOnly(t *testing.T) {
 	httpServer := httptest.NewServer(server)
 	defer httpServer.Close()
 
-	ctx, cancel := context.WithCancel(context.Background())
+	ctx, cancel := context.WithTimeout(context.Background(), 2*time.Second)
 	defer cancel()
 	wsURL := "ws" + strings.TrimPrefix(httpServer.URL, "http")
 	conn, _, err := websocket.Dial(ctx, wsURL, nil)
@@ -111,9 +111,7 @@ func TestWebSocketEditorSessionReadOnly(t *testing.T) {
 		t.Fatalf("write editorEnter: %v", err)
 	}
 	var snapshot EditorSnapshotMessage
-	if err := wsjson.Read(ctx, conn, &snapshot); err != nil {
-		t.Fatalf("read editor snapshot: %v", err)
-	}
+	readEditorMessage(t, ctx, conn, MessageTypeEditorSnapshot, &snapshot)
 	if snapshot.Type != MessageTypeEditorSnapshot || snapshot.BoardID != 1 || len(snapshot.Screen) != BOARD_WIDTH*BOARD_HEIGHT {
 		t.Fatalf("bad editor snapshot: type=%q board=%d cells=%d", snapshot.Type, snapshot.BoardID, len(snapshot.Screen))
 	}
@@ -126,9 +124,7 @@ func TestWebSocketEditorSessionReadOnly(t *testing.T) {
 		t.Fatalf("write editorInspect: %v", err)
 	}
 	var inspect EditorInspectMessage
-	if err := wsjson.Read(ctx, conn, &inspect); err != nil {
-		t.Fatalf("read editor inspect: %v", err)
-	}
+	readEditorMessage(t, ctx, conn, MessageTypeEditorInspect, &inspect)
 	if inspect.Inspect.Element != "Passage" || !inspect.Inspect.HasStat || inspect.Inspect.P3 != 2 {
 		t.Fatalf("editor inspect=%+v, want passage P3=2", inspect.Inspect)
 	}
@@ -136,9 +132,7 @@ func TestWebSocketEditorSessionReadOnly(t *testing.T) {
 		t.Fatalf("write editor edit: %v", err)
 	}
 	var diff EditorDiffMessage
-	if err := wsjson.Read(ctx, conn, &diff); err != nil {
-		t.Fatalf("read editor diff: %v", err)
-	}
+	readEditorMessage(t, ctx, conn, MessageTypeEditorDiff, &diff)
 	if diff.Type != MessageTypeEditorDiff || len(diff.Cells) == 0 || diff.Inspect.ElementID != E_SOLID {
 		t.Fatalf("editor diff=%+v, want dirty solid placement", diff)
 	}
@@ -146,9 +140,7 @@ func TestWebSocketEditorSessionReadOnly(t *testing.T) {
 		t.Fatalf("write editor property: %v", err)
 	}
 	var properties EditorPropertiesMessage
-	if err := wsjson.Read(ctx, conn, &properties); err != nil {
-		t.Fatalf("read editor properties: %v", err)
-	}
+	readEditorMessage(t, ctx, conn, MessageTypeEditorProperties, &properties)
 	if properties.Type != MessageTypeEditorProperties || properties.Properties.TimeLimitSec != 42 || len(properties.Screen) != BOARD_WIDTH*BOARD_HEIGHT {
 		t.Fatalf("editor properties=%+v, want saved time limit and complete repaint", properties)
 	}
@@ -156,6 +148,54 @@ func TestWebSocketEditorSessionReadOnly(t *testing.T) {
 		Type string `json:"type"`
 	}{Type: MessageTypeEditorExit}); err != nil {
 		t.Fatalf("write editorExit: %v", err)
+	}
+}
+
+func TestM101EditorSessionBroadcastsDiffsAndPresence(t *testing.T) {
+	world := testEmptyWorld(t)
+	world.Info.CurrentBoard = 1
+	server := NewWebSocketServer(world, 1)
+	httpServer := httptest.NewServer(server)
+	defer httpServer.Close()
+
+	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
+	defer cancel()
+	wsURL := "ws" + strings.TrimPrefix(httpServer.URL, "http")
+	connA := dialEditorClient(t, ctx, wsURL)
+	defer connA.Close(websocket.StatusNormalClosure, "")
+	connB := dialEditorClient(t, ctx, wsURL)
+	defer connB.Close(websocket.StatusNormalClosure, "")
+
+	presence := readEditorPresenceWithMembers(t, ctx, connA, 2)
+
+	if err := wsjson.Write(ctx, connA, EditorInspectMessage{Type: MessageTypeEditorInspect, X: 8, Y: 9}); err != nil {
+		t.Fatalf("write editorInspect: %v", err)
+	}
+	var inspect EditorInspectMessage
+	readEditorMessage(t, ctx, connA, MessageTypeEditorInspect, &inspect)
+	presence = readEditorPresenceAt(t, ctx, connB, 8, 9)
+	var sawMoved bool
+	for _, member := range presence.Members {
+		if member.X == 8 && member.Y == 9 {
+			sawMoved = true
+		}
+	}
+	if !sawMoved {
+		t.Fatalf("presence after cursor move=%+v, want one member at 8,9", presence.Members)
+	}
+
+	if err := wsjson.Write(ctx, connA, EditorEditMessage{Type: MessageTypeEditorEdit, Op: "place", X: 12, Y: 10, Element: E_SOLID, Color: 0x0e}); err != nil {
+		t.Fatalf("write editor edit: %v", err)
+	}
+	var diffA EditorDiffMessage
+	readEditorMessage(t, ctx, connA, MessageTypeEditorDiff, &diffA)
+	var diffB EditorDiffMessage
+	readEditorMessage(t, ctx, connB, MessageTypeEditorDiff, &diffB)
+	if diffA.MemberID == "" || diffA.MemberID != diffB.MemberID {
+		t.Fatalf("diff member ids A=%q B=%q, want same author", diffA.MemberID, diffB.MemberID)
+	}
+	if !editorDiffHasCell(diffB, 11, 9, E_SOLID) {
+		t.Fatalf("remote diff cells=%+v, want solid tile at screen 11,9", diffB.Cells)
 	}
 }
 
@@ -190,9 +230,7 @@ func TestWebSocketEditorBoardManagement(t *testing.T) {
 	if err := wsjson.Write(ctx, conn, EditorBoardMessage{Type: MessageTypeEditorBoard, Op: "add", Name: "NORTH"}); err != nil {
 		t.Fatalf("write editorBoard add: %v", err)
 	}
-	if err := wsjson.Read(ctx, conn, &snapshot); err != nil {
-		t.Fatalf("read add snapshot: %v", err)
-	}
+	readEditorMessage(t, ctx, conn, MessageTypeEditorSnapshot, &snapshot)
 	if snapshot.BoardID != 3 || snapshot.Properties.BoardName != "NORTH" {
 		t.Fatalf("add reply=%+v, want new board 3 NORTH", snapshot.Properties)
 	}
@@ -201,9 +239,7 @@ func TestWebSocketEditorBoardManagement(t *testing.T) {
 	if err := wsjson.Write(ctx, conn, EditorBoardMessage{Type: MessageTypeEditorBoard, Op: "switch", BoardID: 1}); err != nil {
 		t.Fatalf("write editorBoard switch: %v", err)
 	}
-	if err := wsjson.Read(ctx, conn, &snapshot); err != nil {
-		t.Fatalf("read switch snapshot: %v", err)
-	}
+	readEditorMessage(t, ctx, conn, MessageTypeEditorSnapshot, &snapshot)
 	if snapshot.BoardID != 1 {
 		t.Fatalf("switch reply board=%d, want 1", snapshot.BoardID)
 	}
@@ -213,9 +249,7 @@ func TestWebSocketEditorBoardManagement(t *testing.T) {
 		t.Fatalf("write editorBoard export: %v", err)
 	}
 	var exported EditorBoardDataMessage
-	if err := wsjson.Read(ctx, conn, &exported); err != nil {
-		t.Fatalf("read export: %v", err)
-	}
+	readEditorMessage(t, ctx, conn, MessageTypeEditorBoardData, &exported)
 	if exported.Type != MessageTypeEditorBoardData || exported.Data == "" {
 		t.Fatalf("export=%+v, want board data", exported)
 	}
@@ -224,15 +258,11 @@ func TestWebSocketEditorBoardManagement(t *testing.T) {
 	if err := wsjson.Write(ctx, conn, EditorBoardMessage{Type: MessageTypeEditorBoard, Op: "switch", BoardID: 3}); err != nil {
 		t.Fatalf("write switch to 3: %v", err)
 	}
-	if err := wsjson.Read(ctx, conn, &snapshot); err != nil {
-		t.Fatalf("read switch-3 snapshot: %v", err)
-	}
+	readEditorMessage(t, ctx, conn, MessageTypeEditorSnapshot, &snapshot)
 	if err := wsjson.Write(ctx, conn, EditorBoardMessage{Type: MessageTypeEditorBoard, Op: "import", Data: exported.Data}); err != nil {
 		t.Fatalf("write editorBoard import: %v", err)
 	}
-	if err := wsjson.Read(ctx, conn, &snapshot); err != nil {
-		t.Fatalf("read import snapshot: %v", err)
-	}
+	readEditorMessage(t, ctx, conn, MessageTypeEditorSnapshot, &snapshot)
 	if snapshot.BoardID != 3 {
 		t.Fatalf("import reply board=%d, want 3", snapshot.BoardID)
 	}
@@ -669,6 +699,83 @@ func joinTestClient(t *testing.T, ctx context.Context, serverURL, name string) (
 		t.Fatalf("read snapshot: %v", err)
 	}
 	return conn, snapshot
+}
+
+func dialEditorClient(t *testing.T, ctx context.Context, wsURL string) *websocket.Conn {
+	t.Helper()
+	conn, _, err := websocket.Dial(ctx, wsURL, nil)
+	if err != nil {
+		t.Fatalf("dial editor: %v", err)
+	}
+	conn.SetReadLimit(ServerReadLimit)
+	if err := wsjson.Write(ctx, conn, EditorEnterMessage{Type: MessageTypeEditorEnter, World: "TOWN"}); err != nil {
+		t.Fatalf("write editorEnter: %v", err)
+	}
+	var snapshot EditorSnapshotMessage
+	readEditorMessage(t, ctx, conn, MessageTypeEditorSnapshot, &snapshot)
+	if snapshot.Type != MessageTypeEditorSnapshot || snapshot.MemberID == "" {
+		t.Fatalf("editor snapshot=%+v, want member id", snapshot)
+	}
+	return conn
+}
+
+func readEditorMessage(t *testing.T, ctx context.Context, conn *websocket.Conn, wantType string, out interface{}) {
+	t.Helper()
+	for {
+		var raw json.RawMessage
+		if err := wsjson.Read(ctx, conn, &raw); err != nil {
+			t.Fatalf("read editor %s: %v", wantType, err)
+		}
+		var envelope struct {
+			Type string `json:"type"`
+		}
+		if err := json.Unmarshal(raw, &envelope); err != nil {
+			t.Fatalf("decode editor envelope: %v", err)
+		}
+		if envelope.Type == MessageTypeEditorPresence && wantType != MessageTypeEditorPresence {
+			continue
+		}
+		if envelope.Type != wantType {
+			t.Fatalf("read editor type=%q, want %q raw=%s", envelope.Type, wantType, string(raw))
+		}
+		if err := json.Unmarshal(raw, out); err != nil {
+			t.Fatalf("decode editor %s: %v", wantType, err)
+		}
+		return
+	}
+}
+
+func readEditorPresenceWithMembers(t *testing.T, ctx context.Context, conn *websocket.Conn, want int) EditorPresenceMessage {
+	t.Helper()
+	for {
+		var presence EditorPresenceMessage
+		readEditorMessage(t, ctx, conn, MessageTypeEditorPresence, &presence)
+		if len(presence.Members) == want {
+			return presence
+		}
+	}
+}
+
+func readEditorPresenceAt(t *testing.T, ctx context.Context, conn *websocket.Conn, x, y int16) EditorPresenceMessage {
+	t.Helper()
+	for {
+		var presence EditorPresenceMessage
+		readEditorMessage(t, ctx, conn, MessageTypeEditorPresence, &presence)
+		for _, member := range presence.Members {
+			if member.X == x && member.Y == y {
+				return presence
+			}
+		}
+	}
+}
+
+func editorDiffHasCell(diff EditorDiffMessage, x, y int16, element byte) bool {
+	for _, cell := range diff.Cells {
+		if cell.X == x && cell.Y == y && cell.Ch == ElementDefs[element].Character {
+			return true
+		}
+	}
+	return false
 }
 
 func waitForPlayers(t *testing.T, ctx context.Context, conn *websocket.Conn, count int) DiffMessage {

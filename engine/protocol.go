@@ -20,6 +20,7 @@ const (
 	MessageTypeEditorEnter        = "editorEnter"
 	MessageTypeEditorExit         = "editorExit"
 	MessageTypeEditorInspect      = "editorInspect"
+	MessageTypeEditorPresence     = "editorPresence"
 	MessageTypeEditorSnapshot     = "editorSnapshot"
 	MessageTypeEditorEdit         = "editorEdit"
 	MessageTypeEditorDiff         = "editorDiff"
@@ -108,6 +109,19 @@ type EditorInspectMessage struct {
 	Inspect EditorTileInspect `json:"inspect,omitempty"`
 }
 
+type EditorPresence struct {
+	ID    string `json:"id"`
+	Name  string `json:"name"`
+	Color byte   `json:"color"`
+	X     int16  `json:"x"`
+	Y     int16  `json:"y"`
+}
+
+type EditorPresenceMessage struct {
+	Type    string           `json:"type"`
+	Members []EditorPresence `json:"members"`
+}
+
 type EditorTileInspect struct {
 	X                   int16  `json:"x"`
 	Y                   int16  `json:"y"`
@@ -160,11 +174,13 @@ type EditorElementMenu struct {
 // the entry snapshot (M5.8): the F1/F2/F3 category tables the client renders.
 type EditorSnapshotMessage struct {
 	Type       string              `json:"type"`
+	MemberID   string              `json:"memberId,omitempty"`
 	BoardID    int16               `json:"boardId"`
 	Screen     []ScreenCell        `json:"screen"`
 	Inspect    EditorTileInspect   `json:"inspect"`
 	Properties EditorProperties    `json:"properties"`
 	Menus      []EditorElementMenu `json:"menus,omitempty"`
+	Presence   []EditorPresence    `json:"presence,omitempty"`
 }
 
 // EditorEditMessage is one browser editor operation. Selection and cursor
@@ -191,9 +207,10 @@ type EditorEditMessage struct {
 // cells dirtied by an edit plus the refreshed inspection panel for the browser
 // cursor, never a live-room/player snapshot.
 type EditorDiffMessage struct {
-	Type    string            `json:"type"`
-	Cells   []ScreenCell      `json:"cells"`
-	Inspect EditorTileInspect `json:"inspect"`
+	Type     string            `json:"type"`
+	MemberID string            `json:"memberId,omitempty"`
+	Cells    []ScreenCell      `json:"cells"`
+	Inspect  EditorTileInspect `json:"inspect"`
 }
 
 // EditorBoardOption is one legal target for a board edge. Board zero is the

@@ -58,12 +58,13 @@ type WebSocketServer struct {
 	mu sync.Mutex
 	// nextPlayerID mints process-unique PlayerIDs across every instance, so ids
 	// never collide between hosted worlds (M14.1). Guarded by mu.
-	nextPlayerID    PlayerID
-	Instances       map[string]*WorldInstance
-	DefaultInstance *WorldInstance
-	EditorSessions  map[*webSocketClient]*EditorSession
-	ChatDB          ChatDatabase
-	Auth            *AuthService
+	nextPlayerID        PlayerID
+	Instances           map[string]*WorldInstance
+	DefaultInstance     *WorldInstance
+	EditorSessions      map[*webSocketClient]*EditorSession
+	EditorWorldSessions map[string]*EditorSession
+	ChatDB              ChatDatabase
+	Auth                *AuthService
 }
 
 type WorldInstance struct {
@@ -96,6 +97,7 @@ type webSocketClient struct {
 	mu        sync.Mutex
 	worldName string
 	accountID string
+	name      string
 }
 
 func NewWebSocketServer(world TWorld, defaultBoard int16) *WebSocketServer {
@@ -116,13 +118,14 @@ func NewWebSocketServer(world TWorld, defaultBoard int16) *WebSocketServer {
 		TokensByPlayer: make(map[PlayerID]string),
 	}
 	s := &WebSocketServer{
-		RoomManager:    rm,
-		DefaultBoard:   defaultBoard,
-		TickDuration:   ServerTickDuration,
-		OriginHosts:    []string{"localhost:*", "127.0.0.1:*"},
-		Instances:      make(map[string]*WorldInstance),
-		EditorSessions: make(map[*webSocketClient]*EditorSession),
-		ChatDB:         NewMemChatDatabase(),
+		RoomManager:         rm,
+		DefaultBoard:        defaultBoard,
+		TickDuration:        ServerTickDuration,
+		OriginHosts:         []string{"localhost:*", "127.0.0.1:*"},
+		Instances:           make(map[string]*WorldInstance),
+		EditorSessions:      make(map[*webSocketClient]*EditorSession),
+		EditorWorldSessions: make(map[string]*EditorSession),
+		ChatDB:              NewMemChatDatabase(),
 	}
 	s.DefaultInstance = inst
 	s.Instances[name] = inst
@@ -293,7 +296,8 @@ func (s *WebSocketServer) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 		if err := json.Unmarshal(raw, &enter); err != nil {
 			return
 		}
-		s.serveEditor(ctx, conn, enter)
+		account, authenticated := s.authAccount(r)
+		s.serveEditor(ctx, conn, enter, account, authenticated)
 		return
 	}
 	if envelope.Type != MessageTypeJoin {
@@ -505,7 +509,7 @@ func (s *WebSocketServer) persistAccountPlayerState(accountID, worldName string,
 
 // serveEditor owns an editor-only WebSocket. Unlike a game connection it never
 // joins RoomManager, so an editor cannot affect ticks, players, or live state.
-func (s *WebSocketServer) serveEditor(ctx context.Context, conn *websocket.Conn, enter EditorEnterMessage) {
+func (s *WebSocketServer) serveEditor(ctx context.Context, conn *websocket.Conn, enter EditorEnterMessage, account AuthenticatedAccount, authenticated bool) {
 	worldName := enter.World
 	if worldName == "" {
 		worldName = s.DefaultInstance.Name
@@ -520,12 +524,16 @@ func (s *WebSocketServer) serveEditor(ctx context.Context, conn *websocket.Conn,
 	}
 
 	client := &webSocketClient{conn: conn, worldName: safeWorld}
-	inst.mu.Lock()
-	session := NewEditorSession(safeWorld, inst.SourceWorld)
-	inst.mu.Unlock()
-	if err := session.Enter(client); err != nil {
+	if authenticated {
+		client.accountID = account.ID
+		client.name = account.DisplayName()
+	}
+	session := s.editorSessionForWorld(safeWorld, inst.SourceWorld)
+	presence, err := session.EnterNamed(client, client.name)
+	if err != nil {
 		return
 	}
+	client.name = presence.Name
 	s.mu.Lock()
 	if s.EditorSessions == nil {
 		s.EditorSessions = make(map[*webSocketClient]*EditorSession)
@@ -537,6 +545,7 @@ func (s *WebSocketServer) serveEditor(ctx context.Context, conn *websocket.Conn,
 		s.mu.Lock()
 		delete(s.EditorSessions, client)
 		s.mu.Unlock()
+		s.broadcastEditorPresence(context.Background(), session)
 	}()
 
 	// The cursor belongs to the browser. These are only the initial inspection
@@ -551,6 +560,7 @@ func (s *WebSocketServer) serveEditor(ctx context.Context, conn *websocket.Conn,
 	if client.write(ctx, snapshot) != nil {
 		return
 	}
+	s.broadcastEditorPresence(ctx, session)
 
 	for {
 		var raw json.RawMessage
@@ -571,19 +581,24 @@ func (s *WebSocketServer) serveEditor(ctx context.Context, conn *websocket.Conn,
 			if json.Unmarshal(raw, &inspect) != nil {
 				continue
 			}
+			session.UpdatePresence(client, inspect.X, inspect.Y)
 			reply, err := session.Inspect(client, inspect.X, inspect.Y)
 			if err != nil || client.write(ctx, reply) != nil {
 				return
 			}
+			s.broadcastEditorPresence(ctx, session)
 		case MessageTypeEditorEdit:
 			var edit EditorEditMessage
 			if json.Unmarshal(raw, &edit) != nil {
 				continue
 			}
 			reply, err := session.Edit(client, edit)
-			if err != nil || client.write(ctx, reply) != nil {
+			if err != nil {
 				return
 			}
+			session.UpdatePresence(client, edit.X, edit.Y)
+			s.broadcastEditor(ctx, session, reply)
+			s.broadcastEditorPresence(ctx, session)
 		case MessageTypeEditorProperty:
 			var property EditorPropertyMessage
 			if json.Unmarshal(raw, &property) != nil {
@@ -638,6 +653,33 @@ func (s *WebSocketServer) serveEditor(ctx context.Context, conn *websocket.Conn,
 			}
 		}
 	}
+}
+
+func (s *WebSocketServer) editorSessionForWorld(worldName string, world TWorld) *EditorSession {
+	s.mu.Lock()
+	defer s.mu.Unlock()
+	if s.EditorWorldSessions == nil {
+		s.EditorWorldSessions = make(map[string]*EditorSession)
+	}
+	session := s.EditorWorldSessions[worldName]
+	if session == nil {
+		session = NewEditorSession(worldName, world)
+		s.EditorWorldSessions[worldName] = session
+	}
+	return session
+}
+
+func (s *WebSocketServer) broadcastEditor(ctx context.Context, session *EditorSession, message interface{}) {
+	for _, member := range session.MemberClients() {
+		_ = member.write(ctx, message)
+	}
+}
+
+func (s *WebSocketServer) broadcastEditorPresence(ctx context.Context, session *EditorSession) {
+	s.broadcastEditor(ctx, session, EditorPresenceMessage{
+		Type:    MessageTypeEditorPresence,
+		Members: session.Presence(),
+	})
 }
 
 // serveEditorWorld routes an editorWorld operation (M5.6). save publishes the
