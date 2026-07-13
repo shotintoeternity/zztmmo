@@ -1583,7 +1583,7 @@ scores are all complete and replay-guarded; the tasks below are the remainder.
   energized nonzero-stat player (no damage); `go test ./...` green; replay
   fixture unchanged (single player: PlayerFor(0) *is* the target).
 
-- [ ] **M8.2 — Sweep the remaining single-player assumptions.** M8.1's bug was
+- [x] **M8.2 — Sweep the remaining single-player assumptions.** M8.1's bug was
   found by grep, not luck; finish the sweep. For every `PlayerFor(0)`,
   `Stats[0]`, and `PlayerDir` read in sim files (`elements.go`, `game.go`,
   `oop.go`), classify it: (a) terminal-wrapper or title-screen only

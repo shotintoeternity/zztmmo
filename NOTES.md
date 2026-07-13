@@ -2061,3 +2061,46 @@ point-blank, so the no-PvP guard never fires. Tests: `m8_1_test.go` covers
 energized-target protection (friendly fire on), un-energized PvP damage,
 no-damage with friendly fire off, self-shot, and creature-vs-energized-player.
 `go test ./...` green.
+
+## M8.2 — sweep the remaining single-player assumptions (2026-07-12)
+
+Finished the grep sweep M8.1 started. Classified every `PlayerFor(0)`,
+`Stats[0]`, and `PlayerDir` read in the sim files (`elements.go`, `game.go`,
+`oop.go`) as: **(a)** terminal-wrapper / title-screen / legacy-sidebar-draw
+only, **(b)** world-create / load / save (init before any join, or the vanilla
+single-player file-format bridge), or **(c)** reachable from
+`GameStepWithInputs` in a multi-room engine (must fix).
+
+`PlayerDir` has **no** sim hits — it is now a per-player `PlayerState` field
+(the former `Engine.PlayerDirX/Y`, see `gamevars.go:360`), so nothing to
+classify there.
+
+Key fact that makes most hits (a): `RoomManager` sets `engine.MultiRoom = true`
+on every room engine (`room_manager.go:672`), and the board-swap / edge /
+passage paths all gate on `MultiRoom || PlayerCount() > 1`
+(`elements.go:1017,1191`, `elements.go:1282` for death) to emit a
+`TransferEvent` instead of swapping the board. So `BoardChange`,
+`BoardPassageTeleport`, and their `Stats[0]` writes are unreachable on the
+server; they run only in the terminal `GamePlayLoop`/`GameTitleLoop` or at init.
+
+| site | function | class | notes |
+|---|---|---|---|
+| `elements.go:1534` | `ResetMessageNotShownFlags` | **(c) FIXED** | reset hint flags for stat 0 only; now loops every entry in `e.Players`. `PlayerFor(0)` kept to preserve vanilla's "stat-0 state exists after world create even before a join". All flags set to the same value → map iteration order can't affect state (CLAUDE.md rule 2 safe). Refactored the 11-flag block into `PlayerState.resetMessageFlags`, shared with `ResetPlayerState`. |
+| `game.go:270` | `WorldCreate` | (b) | init, before any join |
+| `game.go:623` | `worldReadFrom` | (b) | maps `World.Info` → player 0 on the vanilla single-player load format; server ignores stat-0 inventory on join (M4.3a deferred note) |
+| `game.go:752` | `WorldSave` | (a)/(b) | maps player 0 → `World.Info` for the terminal save format; RoomManager snapshots via its own path (M4.3a) |
+| `game.go:1187` | `GameUpdateSidebar` | (a) | legacy sidebar draw into the engine `Screen`; the server builds a per-player HUD via `hudSnapshot(e, statID)` (`protocol.go:570`), never this |
+| `game.go:1226` | `GameUpdateSidebar` (`SoundEnabled`) | (a) | same legacy "Be quiet/noisy" line; per-player `SoundEnabled` reaches clients through `hudSnapshot` |
+| `game.go:1455` | `pointBlankEnergizerTicks` | intentional | the `PlayerFor(0)` here is the *non-player-target* fallback decided in M8.1; when the target tile is `E_PLAYER` the stat is resolved via `StatAt` |
+| `game.go:1893,1931,2017,2073,2120` | `GamePlayLoop` / `GameTitleLoop` | (a) | terminal pause / end-play / title flows |
+| `game.go:197-198` | `BoardChange` | (a) | single-engine board swap; multi-room emits `TransferEvent` instead (gated, above) |
+| `game.go:239-245` | `BoardCreate` | (b) | init |
+| `game.go:1878-1927, 2054-2055` | `GamePlayLoop` | (a) | end-play "walk the player over" + damage-flash redraw + `MoveStat(0,…)` — terminal only |
+
+No `Stats[0]` or `PlayerFor(0)` hits in `oop.go`; OOP's counter/health writes
+already route through the triggering player (M2.1/M2.4).
+
+Fix: `ResetMessageNotShownFlags` now iterates `e.Players`. Tests
+(`m8_2_test.go`): two players' flags both reset; a fresh engine still gets a
+stat-0 state with flags set. Replay fixture unchanged — single player has only
+stat 0, which is still reset identically. `go test ./...` green.

@@ -489,17 +489,10 @@ func (e *Engine) SpawnPlayer() int16 {
 	return statId
 }
 
-func (e *Engine) ResetPlayerState(statId int16) {
-	pState := e.PlayerFor(statId)
-	pState.Health = 100
-	pState.Ammo = 0
-	pState.Gems = 0
-	pState.Torches = 0
-	pState.TorchTicks = 0
-	pState.EnergizerTicks = 0
-	pState.Score = 0
-	pState.BoardTimeSec = 0
-	pState.BoardTimeHsec = 0
+// resetMessageFlags sets every one-shot hint flag back to "not shown yet", so
+// the player sees each first-time hint again. Shared by ResetPlayerState (per
+// spawning player) and Engine.ResetMessageNotShownFlags (per world create).
+func (pState *PlayerState) resetMessageFlags() {
 	pState.MessageAmmoNotShown = true
 	pState.MessageOutOfAmmoNotShown = true
 	pState.MessageNoShootingNotShown = true
@@ -511,6 +504,20 @@ func (e *Engine) ResetPlayerState(statId int16) {
 	pState.MessageFakeNotShown = true
 	pState.MessageGemNotShown = true
 	pState.MessageEnergizerNotShown = true
+}
+
+func (e *Engine) ResetPlayerState(statId int16) {
+	pState := e.PlayerFor(statId)
+	pState.Health = 100
+	pState.Ammo = 0
+	pState.Gems = 0
+	pState.Torches = 0
+	pState.TorchTicks = 0
+	pState.EnergizerTicks = 0
+	pState.Score = 0
+	pState.BoardTimeSec = 0
+	pState.BoardTimeHsec = 0
+	pState.resetMessageFlags()
 	pState.Paused = false
 	for i := 1; i <= 7; i++ {
 		pState.Keys[i-1] = false

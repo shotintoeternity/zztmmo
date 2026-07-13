@@ -1531,18 +1531,14 @@ func (e *Engine) ElementMonitorTick(statId int16) {
 }
 
 func (e *Engine) ResetMessageNotShownFlags() {
-	pState := e.PlayerFor(0)
-	pState.MessageAmmoNotShown = true
-	pState.MessageOutOfAmmoNotShown = true
-	pState.MessageNoShootingNotShown = true
-	pState.MessageTorchNotShown = true
-	pState.MessageOutOfTorchesNotShown = true
-	pState.MessageRoomNotDarkNotShown = true
-	pState.MessageHintTorchNotShown = true
-	pState.MessageForestNotShown = true
-	pState.MessageFakeNotShown = true
-	pState.MessageGemNotShown = true
-	pState.MessageEnergizerNotShown = true
+	// Reset the hint flags for every joined player, not just stat 0 (M8.2).
+	// PlayerFor(0) preserves vanilla's guarantee that the single-player state
+	// exists after a world create even before anyone has joined; all flags are
+	// set to the same value, so map iteration order cannot affect state.
+	e.PlayerFor(0)
+	for _, pState := range e.Players {
+		pState.resetMessageFlags()
+	}
 }
 
 func (e *Engine) InitElementDefs() {
