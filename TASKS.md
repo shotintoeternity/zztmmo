@@ -1603,7 +1603,7 @@ scores are all complete and replay-guarded; the tasks below are the remainder.
 Goal: the browser should look like ZZT even between boards. Client-side only —
 no protocol message changes, no simulation changes.
 
-- [ ] **M9.1 — Board-change transition fade.** Vanilla covers every board
+- [x] **M9.1 — Board-change transition fade.** Vanilla covers every board
   change with `TransitionDrawBoardChange` (`game.go:1448-1456`): fill the
   60x25 viewport with purple `'\xdb'` cells in `TransitionTable` random order,
   then reveal the new board in the same order. The terminal path still does

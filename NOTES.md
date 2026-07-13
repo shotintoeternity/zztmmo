@@ -2104,3 +2104,29 @@ Fix: `ResetMessageNotShownFlags` now iterates `e.Players`. Tests
 (`m8_2_test.go`): two players' flags both reset; a fresh engine still gets a
 stat-0 state with flags set. Replay fixture unchanged — single player has only
 stat 0, which is still reset identically. `go test ./...` green.
+
+## M9.1 — board-change transition fade (2026-07-12)
+
+Client-only (no protocol/sim change). Vanilla's `TransitionDrawBoardChange`
+(`game.go:1484`) fills the 60x25 viewport with purple `\xdb` in `TransitionTable`
+order, then reveals the new board in the same order; the browser previously cut
+instantly on a `boardChange` snapshot.
+
+New `web/src/transition.ts` (DOM-free, node-tested like `resume.ts`) owns the
+pure logic: `boardCellIndices`, a Fisher–Yates `shuffle` (local `Math.random` —
+CLAUDE.md rule 2 governs the sim, not the client, so the order need not match the
+server's seeded table), and `cellSource(pos, step, total)` — the fill/reveal
+decision. One `order` array drives both phases, so a cell filled early reveals
+early (vanilla's "same order" guarantee).
+
+Integration in `main.ts`: on `boardChange`, `startBoardTransition` captures the
+outgoing viewport into `transitionOld`, then applies the incoming snapshot to
+`cells` **up front** so mid-fade diffs land normally and the final frame is
+always the true board (the "diffs must not be lost or painted over" requirement).
+`drawScreen` renders board cells through the transition; a `requestAnimationFrame`
+timer advances `step` over ~420ms. The fade is a pure render-time overlay — it
+never mutates `cells`, so `applyDiff`/`applySnapshot` are untouched. Guarded on
+`mode === "playing"` so a quit/editor switch mid-fade can't paint over the title.
+Test: `test/transition.test.mjs` covers order coverage/permutation and the
+complete-reveal invariant (every board cell ends "new", none left purple).
+`go test ./...` untouched and green; web `npm test` + build green.

@@ -13,6 +13,16 @@ import {
   reconnectDelay,
   saveResumeToken,
 } from "./resume";
+import {
+  boardCellIndices,
+  cellSource,
+  createTransition,
+  shuffle,
+  transitionSteps,
+  TRANSITION_FILL_CH,
+  TRANSITION_FILL_COLOR,
+  type TransitionState,
+} from "./transition";
 
 const COLS = 80;
 // The server streams board columns 0..59 only. Columns 60..79 are the sidebar,
@@ -437,6 +447,17 @@ const cells: ScreenCell[] = Array.from({ length: COLS * ROWS }, (_, i) => ({
   ch: 32,
   color: 0x1f,
 }));
+
+// M9.1 board-change fade. While `boardTransition` is set, drawScreen renders the
+// viewport through it: the outgoing board (`transitionOld`) dissolves into purple
+// blocks, then the incoming board (the live `cells`) is revealed in the same
+// order. The incoming board is applied to `cells` up front, so diffs arriving
+// mid-fade land normally and the final frame is always the true board.
+let boardTransition: TransitionState | null = null;
+let transitionOld = new Map<number, { ch: number; color: number }>();
+let transitionRaf = 0;
+// Fill + reveal together, ~vanilla's brief dissolve.
+const TRANSITION_DURATION_MS = 420;
 
 let hasPromptedNameOnLaunch = false;
 
@@ -917,7 +938,7 @@ function applyMessage(message: ServerMessage) {
     case MessageTypeBoardChange:
       stopHeldInput();
       closeModal();
-      applySnapshot(message.snapshot);
+      startBoardTransition(message.snapshot);
       break;
     case MessageTypeChat:
       handleChatMessage(message);
@@ -1034,6 +1055,71 @@ function applySnapshot(message: SnapshotMessage) {
   drawScreen();
 }
 
+// startBoardTransition plays the M9.1 fill-then-reveal fade over a board change.
+// The outgoing board is captured first; the incoming snapshot is then applied
+// authoritatively (so mid-fade diffs land on `cells` and are never lost), and
+// the animation only changes what drawScreen paints, never the model.
+function startBoardTransition(snapshot: SnapshotMessage) {
+  const old = new Map<number, { ch: number; color: number }>();
+  for (let i = 0; i < cells.length; i += 1) {
+    if (cells[i].x < BOARD_COLS) {
+      old.set(i, { ch: cells[i].ch, color: cells[i].color });
+    }
+  }
+  // Local shuffle — presentation only, so Math.random is fine (CLAUDE.md rule 2
+  // governs the simulation, not the client).
+  const order = shuffle(boardCellIndices(COLS, BOARD_COLS, ROWS), Math.random);
+  boardTransition = createTransition(order);
+  transitionOld = old;
+  // Apply the new board before the timer starts. applySnapshot's own drawScreen
+  // now renders through boardTransition at step 0 (all "old"), so the incoming
+  // board never flashes before the fade begins.
+  applySnapshot(snapshot);
+  startTransitionTimer();
+}
+
+function endBoardTransition() {
+  if (transitionRaf) {
+    window.cancelAnimationFrame(transitionRaf);
+    transitionRaf = 0;
+  }
+  boardTransition = null;
+  transitionOld = new Map();
+}
+
+function startTransitionTimer() {
+  if (transitionRaf) {
+    window.cancelAnimationFrame(transitionRaf);
+    transitionRaf = 0;
+  }
+  const state = boardTransition;
+  if (!state) {
+    return;
+  }
+  const total2 = transitionSteps(state.total);
+  const start = performance.now();
+  const tick = (now: number) => {
+    transitionRaf = 0;
+    if (boardTransition !== state) {
+      return; // a newer transition superseded this one
+    }
+    if (mode !== "playing") {
+      endBoardTransition(); // left the room mid-fade (quit / editor)
+      return;
+    }
+    const elapsed = now - start;
+    state.step = Math.min(total2, Math.floor((elapsed / TRANSITION_DURATION_MS) * total2));
+    if (state.step >= total2) {
+      endBoardTransition();
+      drawScreen();
+      return;
+    }
+    drawScreen();
+    transitionRaf = window.requestAnimationFrame(tick);
+  };
+  transitionRaf = window.requestAnimationFrame(tick);
+}
+
 // Stat ids shift when other players leave the board, so track ours — and our
 // position, which the pause blink draws over — from every message that carries
 // the roster.
@@ -1099,8 +1185,28 @@ function drawScreen() {
   for (let i = 0; i < cells.length; i += 1) {
     const base = cells[i];
     const over = overlay.get(i);
-    const ch = over ? over.ch : base.ch;
-    const color = over ? over.color : base.color;
+    let ch: number;
+    let color: number;
+    if (over) {
+      ch = over.ch;
+      color = over.color;
+    } else if (boardTransition && mode === "playing" && base.x < BOARD_COLS) {
+      const src = cellSource(boardTransition.orderPos.get(i), boardTransition.step, boardTransition.total);
+      if (src === "purple") {
+        ch = TRANSITION_FILL_CH;
+        color = TRANSITION_FILL_COLOR;
+      } else if (src === "old") {
+        const o = transitionOld.get(i);
+        ch = o ? o.ch : base.ch;
+        color = o ? o.color : base.color;
+      } else {
+        ch = base.ch;
+        color = base.color;
+      }
+    } else {
+      ch = base.ch;
+      color = base.color;
+    }
     const fg = color & 0x0f;
     const bg = (color >> 4) & 0x0f;
     const x = base.x * CELL_W;
