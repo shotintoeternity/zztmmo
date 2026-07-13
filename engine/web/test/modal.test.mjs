@@ -148,6 +148,8 @@ function worldSearch() {
   assert.ok(writes.some((write) => write.color === 0x70 && write.text.startsWith("Type to search: ")));
   assert.match(rendered, /TOWN \(ZZTMMO Lobby\)/);
   assert.match(rendered, /Rhygar/);
+  assert.doesNotMatch(rendered, /id:/);
+  assert.match(rendered, /by Saxxon Pike/);
   assert.match(rendered, /\(1 player currently online\)/);
   assert.match(rendered, /\(2 players currently online\)/);
   const searchWrites = writes.filter((write) => write.text.startsWith("Type to search: "));

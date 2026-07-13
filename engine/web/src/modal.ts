@@ -293,7 +293,7 @@ function worldSearchLines(matches: WorldSearchEntry[]): string[] {
     const playerText = worldSearchPlayerText(entry.players ?? 0);
     const sourceText = entry.source === "museum" ? "  Museum" : "";
     lines.push(`!${String(i)};${fitText(entry.title || entry.world, WORLD_TITLE_WIDTH)}`);
-    lines.push(fitText(`  id:${entry.id || entry.world} by ${entry.author || "Unknown"} ${entry.created || "????"}${sourceText}`, WORLD_DETAIL_WIDTH));
+    lines.push(fitText(`  by ${entry.author || "Unknown"}  ${entry.created || "????"}${sourceText}`, WORLD_DETAIL_WIDTH));
     if (playerText) {
       lines.push(fitText(`  ${playerText}`, WORLD_DETAIL_WIDTH));
     }
