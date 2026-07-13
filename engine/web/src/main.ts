@@ -186,6 +186,14 @@ type ChatMessage = {
   text: string;
 };
 
+type AuthStatus = {
+  enabled: boolean;
+  authenticated: boolean;
+  id?: string;
+  name?: string;
+  email?: string;
+};
+
 // EditorElementItem / EditorElementMenu are the F1/F2/F3 category tables the
 // server derives from ElementDefs (M5.8). They ride the entry snapshot once.
 type EditorElementItem = {
@@ -420,7 +428,9 @@ const zztSound = new ZztSound();
 type Mode = "title" | "playing" | "editor";
 let mode: Mode = "title";
 let worldName = "Untitled";
+let titleFriendlyName = "Untitled";
 let nickname = "browser";
+let authStatus: AuthStatus = { enabled: false, authenticated: false };
 // leavingToTitle suppresses the reconnect that a dropped socket normally
 // triggers: a socket we closed on purpose must not come back.
 let leavingToTitle = false;
@@ -604,19 +614,42 @@ async function showTitle() {
     const title = (await response.json()) as { world: string; filename?: string; screen: ScreenCell[] };
     worldName = title.filename || title.world;
     friendlyName = title.world;
+    titleFriendlyName = friendlyName;
     replaceCells(title.screen);
     streaming = true;
   } catch {
     // Offline: keep whatever board is on screen and still draw the menu, so
     // the player can retry with 'P'.
   }
-  drawTitleSidebar(writeText, friendlyName);
+  drawTitleSidebar(writeText, friendlyName, authDisplayName());
   paintOverlay();
   drawScreen();
   canvas.focus();
   if (streaming) {
     openTitleStream(worldName);
   }
+  void refreshAuthStatus();
+}
+
+async function refreshAuthStatus() {
+  try {
+    const response = await fetch("/api/auth/me");
+    authStatus = (await response.json()) as AuthStatus;
+  } catch {
+    authStatus = { enabled: false, authenticated: false };
+  }
+  if (mode === "title") {
+    drawTitleSidebar(writeText, titleFriendlyName, authDisplayName());
+    paintOverlay();
+    drawScreen();
+  }
+}
+
+function authDisplayName(): string {
+  if (!authStatus.authenticated) {
+    return "";
+  }
+  return authStatus.name || authStatus.email || "";
 }
 
 // leaveToTitle ends this player's game: the room already dropped them, so all
@@ -1861,6 +1894,13 @@ function handleTitleKey(event: KeyboardEvent) {
   switch (action) {
     case "play":
       startPlay();
+      break;
+    case "login":
+      if (authStatus.authenticated) {
+        void fetch("/api/auth/logout", { method: "POST" }).then(() => refreshAuthStatus());
+      } else if (authStatus.enabled) {
+        window.location.href = "/api/auth/google/start?return=" + encodeURIComponent(window.location.pathname + window.location.search);
+      }
       break;
     case "world":
       void showWorlds();

@@ -66,11 +66,12 @@ type Room struct {
 }
 
 type roomPlayer struct {
-	id      PlayerID
-	boardID int16
-	statID  int16
-	state   *PlayerState
-	name    string
+	id        PlayerID
+	boardID   int16
+	statID    int16
+	state     *PlayerState
+	name      string
+	accountID string
 	// scrollOpen freezes this player while they read a scroll. Vanilla's text
 	// window blocks the whole game loop (TextWindowDrawOpen); here only the
 	// reader stops, so the rest of the room plays on. Without it the player
@@ -284,6 +285,23 @@ func (rm *RoomManager) SetPlayerName(playerID PlayerID, name string) {
 		player.name = name
 	}
 	rm.recorder.record(recOp{Op: "name", Player: playerID, Name: name})
+}
+
+func (rm *RoomManager) SetPlayerIdentity(playerID PlayerID, accountID, name string) {
+	player := rm.players[playerID]
+	if player != nil {
+		player.accountID = accountID
+		player.name = name
+	}
+	rm.recorder.record(recOp{Op: "name", Player: playerID, Name: name})
+}
+
+func (rm *RoomManager) PlayerIdentity(playerID PlayerID) (accountID, name string, ok bool) {
+	player := rm.players[playerID]
+	if player == nil {
+		return "", "", false
+	}
+	return player.accountID, player.name, true
 }
 
 func (rm *RoomManager) spawnPlayerInRoom(room *Room, spawnX, spawnY int16) int16 {

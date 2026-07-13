@@ -63,6 +63,7 @@ type WebSocketServer struct {
 	DefaultInstance *WorldInstance
 	EditorSessions  map[*webSocketClient]*EditorSession
 	ChatDB          ChatDatabase
+	Auth            *AuthService
 }
 
 type WorldInstance struct {
@@ -94,6 +95,7 @@ type webSocketClient struct {
 	conn      *websocket.Conn
 	mu        sync.Mutex
 	worldName string
+	accountID string
 }
 
 func NewWebSocketServer(world TWorld, defaultBoard int16) *WebSocketServer {
@@ -303,6 +305,11 @@ func (s *WebSocketServer) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 	}
 
 	client := &webSocketClient{conn: conn, worldName: safeWorld}
+	account, authenticated := s.authAccount(r)
+	if authenticated {
+		client.accountID = account.ID
+		join.Name = account.DisplayName()
+	}
 
 	// Resume first: a valid token reclaims the dropped run (same PlayerID/statID,
 	// inventory intact). An unknown or expired token falls through to a fresh join.
@@ -312,6 +319,11 @@ func (s *WebSocketServer) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 	if join.ResumeToken != "" {
 		if pid, snap, ok := s.tryResume(inst, client, join.ResumeToken); ok {
 			playerID, snapshot, resumed = pid, snap, true
+			if authenticated {
+				inst.mu.Lock()
+				inst.RoomManager.SetPlayerIdentity(playerID, account.ID, account.DisplayName())
+				inst.mu.Unlock()
+			}
 		}
 	}
 
@@ -332,7 +344,11 @@ func (s *WebSocketServer) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 
 		inst.mu.Lock()
 		inst.RoomManager.JoinPlayerWithID(playerID, join.Board, 0, 0)
-		inst.RoomManager.SetPlayerName(playerID, join.Name)
+		if authenticated {
+			inst.RoomManager.SetPlayerIdentity(playerID, account.ID, account.DisplayName())
+		} else {
+			inst.RoomManager.SetPlayerName(playerID, join.Name)
+		}
 		client.playerID = playerID
 		inst.Clients[playerID] = client
 		token := inst.mintResumeTokenLocked(playerID)
@@ -451,6 +467,13 @@ func (s *WebSocketServer) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 		}
 	}
 	s.handleReadLoopExit(inst, client, playerID)
+}
+
+func (s *WebSocketServer) authAccount(r *http.Request) (AuthenticatedAccount, bool) {
+	if s.Auth == nil {
+		return AuthenticatedAccount{}, false
+	}
+	return s.Auth.AccountFromRequest(r)
 }
 
 // serveEditor owns an editor-only WebSocket. Unlike a game connection it never

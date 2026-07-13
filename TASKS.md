@@ -1665,7 +1665,7 @@ gate for M6.4 and M10.3. See NOTES.md.)
   browsers on one server exchange visible messages; pressing the chat key opens
   the input line and the player does not move while typing.
 
-- [ ] **M6.2 — Google OAuth authentication.** Replace MVP player numbers with
+- [x] **M6.2 — Google OAuth authentication.** Replace MVP player numbers with
   real accounts via Google OAuth 2.0 (Authorization Code + PKCE). Server
   verifies the ID token, derives a stable account id, and maps it to a display
   name used by chat and any future roster UI. Sessions ride a signed cookie or

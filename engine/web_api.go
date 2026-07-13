@@ -45,6 +45,9 @@ type WebAPI struct {
 	// Museum proxies the Museum of ZZT API and hosts downloaded worlds on
 	// demand. Nil is initialized lazily from Server.
 	Museum *MuseumService
+	// Auth serves browser-facing Google OAuth endpoints. Nil keeps the server in
+	// guest-only mode.
+	Auth *AuthService
 
 	generationMu   sync.Mutex
 	generationJobs map[string]*generationJob
@@ -72,7 +75,48 @@ func (a *WebAPI) Handler() http.Handler {
 	mux.HandleFunc("/api/generate", a.handleGenerate)
 	mux.HandleFunc("/api/museum/search", a.handleMuseumSearch)
 	mux.HandleFunc("/api/museum/play", a.handleMuseumPlay)
+	mux.HandleFunc("/api/auth/me", a.handleAuthMe)
+	mux.HandleFunc("/api/auth/logout", a.handleAuthLogout)
+	mux.HandleFunc("/api/auth/google/start", a.handleAuthStart)
+	mux.HandleFunc("/api/auth/google/callback", a.handleAuthCallback)
 	return mux
+}
+
+func (a *WebAPI) handleAuthMe(w http.ResponseWriter, r *http.Request) {
+	if a.Auth == nil {
+		writeJSON(w, struct {
+			Enabled       bool `json:"enabled"`
+			Authenticated bool `json:"authenticated"`
+		}{})
+		return
+	}
+	a.Auth.HandleMe(w, r)
+}
+
+func (a *WebAPI) handleAuthStart(w http.ResponseWriter, r *http.Request) {
+	if a.Auth == nil {
+		http.Error(w, ErrAuthDisabled.Error(), http.StatusServiceUnavailable)
+		return
+	}
+	a.Auth.HandleStart(w, r)
+}
+
+func (a *WebAPI) handleAuthCallback(w http.ResponseWriter, r *http.Request) {
+	if a.Auth == nil {
+		http.Error(w, ErrAuthDisabled.Error(), http.StatusServiceUnavailable)
+		return
+	}
+	a.Auth.HandleCallback(w, r)
+}
+
+func (a *WebAPI) handleAuthLogout(w http.ResponseWriter, r *http.Request) {
+	if a.Auth == nil {
+		writeJSON(w, struct {
+			OK bool `json:"ok"`
+		}{OK: true})
+		return
+	}
+	a.Auth.HandleLogout(w, r)
 }
 
 func (a *WebAPI) museumService() *MuseumService {

@@ -55,6 +55,13 @@ func main() {
 			server.ChatDB = chatDB
 		}
 	}
+	auth, err := zztgo.NewAuthServiceFromEnv()
+	if err != nil {
+		log.Printf("google auth disabled: %v", err)
+	} else if auth != nil {
+		server.Auth = auth
+		log.Printf("google auth enabled")
+	}
 
 	// Autosave + restore-on-boot (M13.3). Drive the cadence off the tick clock, so
 	// there is one clock and tests can step it. Restore before serving: a crash
@@ -88,6 +95,7 @@ func main() {
 		World:       zztgo.E.World,
 		SavesDir:    *savesDir,
 		Server:      server,
+		Auth:        server.Auth,
 	}
 	if generator, err := zztgo.GenerationServiceFromEnv(); err != nil {
 		log.Printf("world generation unavailable: %v", err)
