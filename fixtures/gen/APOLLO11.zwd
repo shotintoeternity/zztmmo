@@ -1,0 +1,1734 @@
+zwd 1
+world "APOLLO11"
+
+board "Apollo Eleven"
+  max-shots 255
+  dark false
+  reenter false
+  time-limit 0
+  exits north none south none west none east none
+
+  start player at 29,23
+  grid
+  ............................................................
+  ...*..........................*..................*..........
+  .......................................*....................
+  ...ppp.ppp.ppp.p.p.p.p.ppp.....ppp.ttt.ppp..p..ppp.p.p.ppp..
+  ...p.p.p.p.p.p.p.p.p.p.p.p.....p.p..t..p.p.p.p..p...p.p.p.p.
+  ...ppp.ppp.p.p.p.p.p.p.p.p.....ppp..t..p.p.pp...ppp.ppp.ppp.
+  ...p.p.p...p.p.p.p.p.p.p.p.....p....t..p.p.p.p..p...p.p.p.p.
+  ...p.p.p...ppp.ppp.ppp.ppp.....p....t..ppp.p.p..ppp.p.p.p.p.
+  ............................................................
+  ......*...........................................*.........
+  ....................ssss.ssss.ss.ss.ss.ss.ss................
+  ....................ss....ss.....ss.ss..ss.ss...............
+  ....................ssss..ssss...ssssss...ss................
+  .......................ss....ss..ss.ss....ss...*............
+  ....................ssss.ssss....ss.ss....ss................
+  .....*......................................................
+  ...................................*........................
+  .................._______..........................*........
+  ................./.......\..................................
+  *................|..o....|.........*.......................*
+  .................|.......|..................................
+  .................\_______/..................................
+  ............................@...............................
+  ............................................................
+  ............................................................
+  end
+
+  legend
+    . = Empty color 0x00
+    * = Text-White color 0x2A
+    @ = Player color 0x1F under Empty color 0x00
+    p = Text-White color 0x20
+    t = Text-White color 0x20
+    s = Text-Cyan color 0x20
+    _ = Text-White color 0x5F
+    / = Text-White color 0x2F
+    \ = Text-White color 0x5C
+    | = Solid color 0x08
+    o = Object color 0x0E
+  end
+
+  stats
+    stat at 21,20 element Object cycle 3 p1 cp437:0x0F under Empty color 0x00
+    oop
+@narrator
+#end
+The year is 1969.
+$Three men. A quarter-million miles.
+$One small step ahead.
+#end
+    end
+  end
+end
+
+board "Launch Pad 39A"
+  max-shots 255
+  dark false
+  reenter true
+  time-limit 0
+  exits north "Command Module" south none west none east none
+
+  start player at 29,23
+  grid
+ss.ss..ss....ss..ss.....ss..ss..ss...ss.....ss..ss....ss.ss.
+.ss....ss..ss.....ss..ss....ss....ss....ss.....ss..ss.....s.
+##################################.n.n.#####################
+#GGGG.GGGG..GGGG.GGGG..GGGG.GGGG.....n......GGGG.GGGG.GGGG..
+#.wwwwwwwwwwwwwwwwwww.....d.......d.....d....wwwwwwwwwwwwwww
+#.w...............w..###########################....wwwww...
+#.w.....CCC.......w..#TtttttttttttttttttttttT.#....w.....w..
+#.w....CCCCC......w..#T..CHECKLIST.GATE.....T.#...w.......w.
+#.w....CCCCC......w..#T....................T.#..w.........w.
+#.w.....CCC.......w..#T.o.................o.T.#.w....V....w.
+#.w......C........w..#T....................T.#..w.......w...
+#.w......C........w..#TtttttttttttttttttttttT.#...w...w....#
+#.w.....VVV.......w..#########.n.n.##########.#....wV.....w.
+#.w....VVVVV......w.............n............#...wwwwwwwwww.
+#.wwwwwwwwwwwwwwwwww............n.............#.............
+#.....FFFFFFFFFFF..............n.............#....HHHHHHHH..
+#....FFFFFFFFFFFFF.........g.g.g.g.g..........#..HHHHHHHHHH.
+#....FF.FF.FF.FF.F.........s.s.s.s.s..........#..HH.HH.HH.H.
+#...FFFFFFFFFFFFFFF........s.s.s.s.s..........#..HHHHHHHHHHH
+#..FFFFFFFFFFFFFFFFF.......s.s.s.s.s..........#.............
+#.rrrrrrrrrrrrrrrrrrr......s.s.s.s.s..........#..OOOOOOOOO..
+#..rrrrr.rrrrr.rrrrr.......s.s.s.s.s..........#..r.rrr.rrr.#
+#.........................s.@.s.s.s..........###############
+############################################################
+............................................................
+  end
+
+  legend
+    # = Solid color 0x08
+    . = Empty color 0x00
+    @ = Player color 0x1F under Empty color 0x00
+    s = Text-White color 0x2E
+    n = Text-Yellow color 0xB1
+    G = Solid color 0x78
+    w = Line color 0x07
+    C = Solid color 0x1F
+    V = Solid color 0x0F
+    F = Solid color 0x07
+    r = Solid color 0x04
+    H = Solid color 0x78
+    d = Object color 0x0E
+    g = Gem color 0x0A
+    T = Text-Cyan color 0x20
+    t = Text-Cyan color 0x20
+    o = Object color 0x0F
+    O = Solid color 0x06
+    cp437:0x45 = Text-White color 0x45
+    cp437:0x4B = Text-White color 0x4B
+    cp437:0x4C = Text-White color 0x4C
+    cp437:0x49 = Text-White color 0x49
+    cp437:0x53 = Text-White color 0x53
+    cp437:0x41 = Text-White color 0x41
+  end
+
+  stats
+    stat at 27,5 element Object cycle 3 p1 cp437:0x9E under Line color 0x07
+    oop
+@steam1
+#end
+:touch
+The launch umbilicals hiss and drip condensate.
+Nothing to touch here but nerves.
+#end
+    end
+    stat at 35,5 element Object cycle 3 p1 cp437:0x9E under Line color 0x07
+    oop
+@steam2
+#end
+:touch
+Liquid oxygen boils off into a cold fog.
+#play tc-c
+#end
+    end
+    stat at 41,5 element Object cycle 3 p1 cp437:0x9E under Line color 0x07
+    oop
+@steam3
+#end
+:touch
+Three-point-four million kilograms, poised.
+Try not to sneeze.
+#end
+    end
+    stat at 25,10 element Object cycle 3 p1 cp437:0x04 under Text-Cyan color 0x20
+    oop
+@capcom
+#end
+:touch
+#play tcge
+CAPCOM: Apollo 11, this is Launch Control.
+Run the pre-launch checklist before you
+board. Talk to Guenter Wendt at the hatch.
+#end
+    end
+    stat at 43,10 element Object cycle 3 p1 cp437:0x04 under Text-Cyan color 0x20
+    oop
+@guenter
+#end
+:touch
+#play tcfg
+GUENTER WENDT: Guten Morgen, gentlemen.
+$-- LAUNCH CHECKLIST --
+Fuel valves: PRESSURIZED.
+Guidance: ALIGNED.
+Escape tower: ARMED.
+Crew: three brave fools, ACCOUNTED FOR.
+Everything is nominal. The White Room is
+yours. Go north, up the gantry, and fly.
+#play tcegc
+#end
+    end
+  end
+end
+
+board "Command Module"
+  max-shots 4
+  dark false
+  reenter false
+  time-limit 0
+  exits north "Powered Ascent" south "Launch Pad 39A" west none east none
+
+  start player at 32,23
+  grid
+  WWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWW
+  W....n....................................................nW
+  W..CCC..OO..MM..MM..AAA..NN..DDD.........abc..def..ghi....nW
+  W..dddddddddddddddddddddddddddddddddddddddddddddddddddddd..W
+  W..d....................................................d..W
+  W..d..[o]....[o]....[o]....[o]....[o]....[o]....[o].....d..W
+  W..d...........................................LLLLL....d..W
+  W..d..[o]....[o]....[o]....[o]....[o]....[o]...LG=LiL...d..W
+  W..d...........................................LLLLL....d..W
+  W..d..........................................<<<<<.....d..W
+  W..d.......zzzzzzzzzzzzzzzzzzzzzzzzzzzzzz...............d..W
+  W..d.......z..........................z......rrrrr.....d..W.
+  W..d.......z..RADIO................z......rMANUALr....d..W..
+  W..d.......z..........................z......rrrrr.....d..W.
+  W..d.......zzzzzzzzzzzzzzzzzzzzzzzzzzzz.................d..W
+  W..d....................................................d..W
+  W..dddddddddddddddddddddddddddddddddddddddddddddddddddddd..W
+  W.........................................................W.
+  W..hhhhhhhhhhhhhhhhhhhhhhhhhh..hhhhhhhhhhhhhhhhhhhhhhhhhh...
+  W.........................................................W.
+  W................................oLNL.....................W.
+  W....................hhhhhhhhh..........hhhhhhhhh.........W.
+  W..............................@..........................W.
+  W.........................................................W.
+  WWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWW
+  end
+
+  legend
+    W = Solid color 0x18
+    . = Empty color 0x08
+    @ = Player color 0x1F under Empty color 0x08
+    d = Line color 0x1E
+    z = Line color 0x1B
+    r = Line color 0x1C
+    h = Fake color 0x08
+    n = Text-Yellow color 0x07
+    C = Text-Cyan color 0x43
+    O = Text-Cyan color 0x4F
+    M = Text-Cyan color 0x4D
+    A = Text-Cyan color 0x41
+    N = Text-Cyan color 0x4E
+    D = Text-Cyan color 0x44
+    a = Text-White color 0x53
+    b = Text-White color 0x59
+    c = Text-White color 0x53
+    e = Text-White color 0x2E
+    f = Text-White color 0x2E
+    g = Text-White color 0x2E
+    i = Text-White color 0x2E
+    R = Text-Green color 0x52
+    L = Line color 0x1F
+    G = Text-Green color 0x47
+    = = Text-Green color 0x3D
+    < = Text-Cyan color 0x11
+    [ = Text-White color 0x5B
+    ] = Text-White color 0x5D
+    o = Object color 0x1E
+    I = Text-Green color 0x49
+    cp437:0x55 = Text-White color 0x55
+  end
+
+  stats
+    stat at 8,6 element Object cycle 3 p1 cp437:0x04 under Line color 0x1E
+    oop
+@sw1
+#end
+:touch
+#play tc
+SWITCH 1: SEQ-A ARM
+Toggled ON. Green.
+#set s1
+#become Line c31
+#end
+
+    end
+    stat at 15,6 element Object cycle 3 p1 cp437:0x04 under Line color 0x1E
+    oop
+@sw2
+#end
+:touch
+#play td
+SWITCH 2: EDS AUTO
+Toggled ON. Green.
+#set s2
+#become Line c31
+#end
+
+    end
+    stat at 22,6 element Object cycle 3 p1 cp437:0x04 under Line color 0x1E
+    oop
+@sw3
+#end
+:touch
+#play te
+SWITCH 3: XLUNAR INJECT
+Toggled ON. Green.
+#set s3
+#become Line c31
+#end
+
+    end
+    stat at 29,6 element Object cycle 3 p1 cp437:0x04 under Line color 0x1E
+    oop
+@sw4
+#end
+:touch
+#play tf
+SWITCH 4: GUIDANCE HOLD
+Toggled ON. Green.
+#set s4
+#become Line c31
+#end
+
+    end
+    stat at 36,6 element Object cycle 3 p1 cp437:0x04 under Line color 0x1E
+    oop
+@sw5
+#end
+:touch
+#play tg
+SWITCH 5: MAIN ENGINE
+Toggled ON. Green.
+#set s5
+#become Line c31
+#end
+
+    end
+    stat at 43,6 element Object cycle 3 p1 cp437:0x04 under Line color 0x1E
+    oop
+@sw6
+#end
+:touch
+#play ta
+SWITCH 6: PROP TANK PRESS
+Toggled ON. Green.
+#set s6
+#become Line c31
+#end
+
+    end
+    stat at 50,6 element Object cycle 3 p1 cp437:0x04 under Line color 0x1E
+    oop
+@sw7
+#end
+:touch
+#play tb
+SWITCH 7: ABORT SAFE
+Toggled ON. Green.
+#set s7
+#become Line c31
+#end
+
+    end
+    stat at 8,8 element Object cycle 3 p1 cp437:0x04 under Line color 0x1E
+    oop
+@sw8
+#end
+:touch
+#play tc
+SWITCH 8: CABIN SEAL
+Toggled ON. Green.
+#set s8
+#become Line c31
+#end
+
+    end
+    stat at 15,8 element Object cycle 3 p1 cp437:0x04 under Line color 0x1E
+    oop
+@sw9
+#end
+:touch
+#play td
+SWITCH 9: TELEMETRY LINK
+Toggled ON. Green.
+#set s9
+#become Line c31
+#end
+
+    end
+    stat at 22,8 element Object cycle 3 p1 cp437:0x04 under Line color 0x1E
+    oop
+@swten
+#end
+:touch
+#play te
+SWITCH 10: HOUSTON CLEAR
+Toggled ON. Green.
+#set sten
+#become Line c31
+#end
+
+    end
+    stat at 29,8 element Object cycle 3 p1 cp437:0x04 under Line color 0x1E
+    oop
+@swx
+#end
+:touch
+#play tf
+DECOY: This breaker does nothing.
+Michael Collins swears it's important.
+Leave it alone.
+#end
+
+    end
+    stat at 36,8 element Object cycle 3 p1 cp437:0x04 under Line color 0x1E
+    oop
+@swy
+#end
+:touch
+#play tg
+DECOY: Coffee warmer. Off.
+The manual warns against hot coffee
+during 6-G liftoff. Fair enough.
+#end
+
+    end
+    stat at 43,8 element Object cycle 3 p1 cp437:0x1E under Line color 0x1F
+    oop
+@masterarm
+#end
+:touch
+#play tcdefg
+This is the MASTER LIFTOFF LEVER.
+It only throws when every flight
+switch reads GREEN. Ten of them.
+#end
+:check
+#if s1 c2
+#play f-c
+Not yet. Some breakers are still red.
+Check your panel, Commander.
+#end
+:c2
+#if s2 c3
+#play f-c
+Not yet. Some breakers are still red.
+#end
+:c3
+#if s3 c4
+#play f-c
+Still red. Keep working.
+#end
+:c4
+#if s4 c5
+#play f-c
+Still red. Keep working.
+#end
+:c5
+#if s5 c6
+#play f-c
+Still red. Keep working.
+#end
+:c6
+#if s6 c7
+#play f-c
+Still red. Keep working.
+#end
+:c7
+#if s7 c8
+#play f-c
+Still red. Keep working.
+#end
+:c8
+#if s8 c9
+#play f-c
+Still red. Keep working.
+#end
+:c9
+#if s9 c10
+#play f-c
+Still red. Keep working.
+#end
+:c10
+#if sten go
+#play f-c
+One breaker remains. Almost there.
+#end
+:go
+#play cdefgab+c
+ALL GREEN. Liftoff sequence armed!
+The hatch to ascent stands open.
+#end
+
+    end
+    stat at 34,21 element Object cycle 2 p1 cp437:0x1E under Fake color 0x08
+    oop
+@armcheck
+#cycle 2
+#end
+:touch
+#send masterarm:check
+#end
+:tick
+#send masterarm:check
+#end
+
+    end
+  end
+end
+
+board "Powered Ascent"
+  max-shots 255
+  dark true
+  reenter true
+  time-limit 0
+  exits north "Earth Orbit" south "Command Module" west none east none
+
+  start player at 43,24
+  grid
+  ............................ff..............................
+  ...........................ffff.............................
+  ..........................f.ff.f............................
+  ..........................f.ff.f............................
+  ..d.....D.................f.ff.f..............D......d......
+  ..........d.......d.......f.ff.f.....d..........d...........
+  ....................d.....f.ff.f.d.................d........
+  ........d.......f...f......ffffff......f...f.....d..........
+  .............d..fSSSf.....f.ff.f.....fSSSf...d..............
+  .....d...........SSS......f.ff.f......SSS.......d.....d.....
+  .......d....f...f...f.....f.ff.f.....f...f.d................
+  ..........d......d..........tt.....d.......d....d...........
+  ....d.................d.....tt.........d.........d..........
+  ........d....o..............tt............o......d....d.....
+  ..d.......d........d.......rrrr......d..........d...........
+  ....d...........d..........r..r.....d.......d.....d.........
+  .......d....d..............r..r....d....d.........d....d....
+  ..d.........d.....d........rrrr...d.......d......d..........
+  .....d....d.......d.......bLLLLb......d.........d.....d.....
+  ........d........d.......bbLLLLbb....d.....d.....d..........
+  ...d.......d.....d.......bbbbbbbb...d.....d.....d.....d.....
+  ..............s.................................s...........
+  ..d....d........d....d.....gg.....d....d........d....d......
+  .....d........d.......G....gg....G......d.@...d.......d.....
+  .....................GGG.gGggG.GGG..........................
+  end
+
+  legend
+    . = Empty color 0x00
+    d = Text-White color 0xFA
+    D = Star color 0x0F
+    f = Fake color 0x1B
+    S = Solid color 0x1F
+    t = Solid color 0x0E
+    r = Breakable color 0x08
+    b = Solid color 0x08
+    L = Solid color 0x0C
+    s = Object color 0x0E
+    o = Object color 0x0C
+    g = Fake color 0x0E
+    G = Fake color 0x04
+    @ = Player color 0x1F under Empty color 0x00
+  end
+
+  stats
+    stat at 47,5 element Star cycle 1 under Empty color 0x00
+    stat at 9,5 element Star cycle 1 under Empty color 0x00
+
+    stat at 14,14 element Object cycle 2 p1 cp437:0x0F under Empty color 0x00
+    oop
+@debrisL
+#end
+:touch
+#play s.f
+Debris grazes the hull! Watch your trajectory!
+#take health 8 dead
+:dead
+#zap touch
+#end
+    end
+
+    stat at 43,14 element Object cycle 2 p1 cp437:0x0F under Empty color 0x00
+    oop
+@debrisR
+#end
+:touch
+#play s.f
+A tumbling panel clips the window! Steady now.
+#take health 8 dead
+:dead
+#zap touch
+#end
+    end
+
+    stat at 15,22 element Object cycle 3 p1 cp437:0x9E under Empty color 0x00
+    oop
+@capcom
+#end
+:touch
+#play tcfg
+CAPCOM: You are GO for staging.
+Center the stack between the debris streams
+and ride her all the way up, Eagle.
+The first stage is spent -- let her fall away.
+#end
+    end
+
+    stat at 49,22 element Object cycle 3 p1 cp437:0x9E under Empty color 0x00
+    oop
+@sep
+#end
+:touch
+#play t-c+e-g+#c
+STAGE SEPARATION -- pyros fire, bolts blow!
+The dead first stage tumbles into the dark.
+Second-stage ignition. Keep climbing north!
+#end
+    end
+  end
+end
+
+board "Earth Orbit"
+  max-shots 255
+  dark false
+  reenter false
+  time-limit 0
+  exits north "Translunar Coast" south "Powered Ascent" west none east none
+
+  start player at 29,23
+  grid
+ssssssssssssssssssssssssssssssssssssssssssssssssssssssssssss
+s..*.......*.........*......*..........*........*..........*
+s.....*..........*.......TTTT..............*..........*.....
+s..*.......*....EEE.E.EEE.T..T.EE.EE..*.........*..........*
+s........*......E...E.E.E.T..T.E..E.E.......*.........*.....
+s...*.........EEEEEEEEEEEEEEEEEEEEEEEEE............*........
+sBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBB
+sBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBB
+sbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb
+s..........................................................s
+s...........w.................o............................s
+s..........................................................s
+s..........................w..............w................s
+s..........................................................s
+s.......................www.www...........................s.
+s........................w.G.w.............................s
+s.......................www.www............................s
+s..........................................................s
+s.................................w........................s
+s..........w...............................................s
+s.........................1................................s
+s..........................1..............................s.
+s...........................@..............................s
+s..........................................................s
+ssssssssssssssssssssssssssssssssssssssssssssssssssssssssssss
+end
+
+  legend
+    s = Normal color 0x18
+    . = Empty color 0x00
+    * = Text-White color 0x2A
+    T = Text-Cyan color 0x54
+    E = Text-Green color 0x20
+    B = Fake color 0x17
+    b = Fake color 0x18
+    w = Text-Blue color 0x2E
+    o = Object color 0x0B
+    G = Object color 0x0E
+    1 = Object color 0x0A
+    @ = Player color 0x1F under Empty color 0x00
+  end
+
+  stats
+    stat at 31,11 element Object cycle 3 p1 cp437:0x0F under Empty color 0x00
+    oop
+@capcom
+#end
+:touch
+#play tcegtceg
+CAPCOM, Houston. You are GO for TLI.
+Watch your burn window. Burn too early
+or too late and you miss the Moon.
+The window opens at the marked node.
+Hold position, then touch it when the
+timing indicator flashes green.
+#end
+
+    end
+    stat at 28,16 element Object cycle 1 p1 cp437:0x2A under Empty color 0x00
+    oop
+@node
+#end
+:restart
+#char 42
+:loop
+#play s
+#char 42
+#set red
+#clear green
+#send indicator:red
+/i/i/i
+#char 15
+#clear red
+#set green
+#send indicator:green
+/i/i
+#send indicator:red
+#clear green
+#char 42
+#send node:loop
+#end
+:touch
+#lock
+#if green burn
+#play f-c
+Too early! The window is still closed.
+Wait for the indicator to flash green.
+#unlock
+#end
+:burn
+#play cegtcegt+c
+TRANSLUNAR INJECTION BURN -- IGNITION!
+The S-IVB lights. Earth falls away
+behind you. You are bound for the Moon.
+#endgame
+#zap touch
+#send flyout
+#end
+:flyout
+/n/n/n
+#send flyout
+#end
+
+    end
+    stat at 28,22 element Object cycle 2 p1 cp437:0x04 under Empty color 0x00
+    oop
+@indicator
+#end
+:red
+#char 4
+#end
+:green
+#char 1
+#end
+:touch
+The timing indicator. Green means the
+translunar injection window is open.
+#end
+
+    end
+    stat at 27,21 element Object cycle 3 p1 cp437:0xF0 under Empty color 0x00
+    oop
+@procedure
+#end
+:touch
+#play tc
+FLIGHT PLAN -- ORBITAL PHASE
+You are in a parking orbit at 100 nm.
+Loiter here until the injection node
+(the *) is aligned, then touch it only
+when the red timing lamp turns green.
+Timing is everything, gentlemen.
+#end
+
+    end
+  end
+end
+
+board "Translunar Coast"
+  max-shots 255
+  dark true
+  reenter false
+  time-limit 0
+  exits north none south "Earth Orbit" west none east "Lunar Orbit"
+
+  start player at 5,23
+  grid
+  ............*...................................*...........
+  .....*..................*.......................:...........
+  .............................D*.....*.............*.........
+  ...*..............*.............................*...........
+  .......*................*................*................*.
+  ........................................................:..:
+  ..........TTTT..............................*...........:..:
+  .........TT..TT.............*..............................:
+  ........TT....TT........*.............*.......*...........:.
+  .......DTT....TT..............................HHHHHH........
+  .........TT..TT.......*.............*.......HHH....HHH......
+  ..........TTTT............................HH........HH.....*
+  ......*.............*.......*............HH..Dcc.....HH.....
+  .............*.................*.........HH...cc.....HH.....
+  .........*................*..............HH........HH......:
+  .....*..........*................*........HHH....HHH.......:
+  .................*.................*........HHHHHH.........:
+  ...*.......*.................*.....................*.......:
+  ........*................*..............*...............*..:
+  .....*..............*..............*.................*.....:
+  ffffff.....*................*..............*...........*...:
+  ffffff.......*................*..................*.........:
+  ffff@f...........*................*.....................*..:
+  ffffff.....*................*..............*..............:.
+  ssssssssssssssssssssssssssssssssssssssssssssssssssssssssssss
+  end
+
+  legend
+    . = Empty color 0x00
+    * = Text-White color 0x2A
+    : = Text-Yellow color 0x2E
+    T = Solid color 0x08
+    H = Solid color 0x07
+    c = Solid color 0x0F
+    f = Fake color 0x08
+    s = Water color 0x18
+    @ = Player color 0x1F under Fake color 0x08
+    D = Object color 0x0B
+  end
+
+  stats
+    stat at 46,13 element Object cycle 3 p1 cp437:0x0F under Solid color 0x07
+    oop
+@columbia
+#end
+:touch
+#play tc-e+gc
+The Command Module Columbia drifts ahead,
+turning slowly in the black. To dock, you
+must ease your craft in nose-first while
+the two ships are aligned.
+Hold your approach steady... contact and
+capture.
+#play tcfa
+:dock
+#if docked already
+#set docked
+#play +c+e+g+c+e+g#c
+CAPTURE! The docking latches ring home.
+Columbia and the LM are now one stack.
+The way east is open to lunar orbit.
+#end
+:already
+Docking capture confirmed. Fly east.
+#end
+
+    end
+    stat at 8,10 element Object cycle 3 p1 cp437:0x9E under Empty color 0x00
+    oop
+@sun
+#end
+:touch
+The Sun burns off your port side, small and
+merciless. Do not stare. There is nothing
+out here but distance and arithmetic.
+#end
+
+    end
+    stat at 30,3 element Object cycle 7 p1 cp437:0x07 under Empty color 0x00
+    oop
+@drift
+#end
+:touch
+#play s.c.e
+Cislunar space. Weightless, silent, and
+about a quarter million miles wide. The
+Earth is a blue marble behind you; the Moon
+a pale coin to the east.
+Steer toward Columbia and dock before you
+press onward.
+#end
+
+    end
+  end
+end
+
+board "Lunar Orbit"
+  max-shots 255
+  dark false
+  reenter false
+  time-limit 0
+  exits north none south none west "Translunar Coast" east none
+
+  start player at 1,12
+  grid
+  ..*.......:..........*.........:...........*................
+  .....:::...............:..............*.........:...........
+  ....*.................:::::......................:..........
+  .........*..........:cCCCCCc:.........*.................:...
+  ....:........*......cCCCCCCCCc.................*............
+  .:.......*.........:CCCwwwCCC:...:.....................*....
+  .......:.......*...:CCwEEEwCC:.........:.................*..
+  ....*..............:CCwEEEwCC:.......*.........:...........*
+  ........:.....*....:CCCwwwCCC:.................:...........*
+  ....:.......*.......cCCCCCCCCc........*..................:..
+  .:.....*............:cCCCCCc:.....:.....................:...
+  @..........:........:.......:.........*.........:...........
+  .....*.........:......L...M..........:.........*.........:..
+  ...:.......*............:..P..:................:...........*
+  ......*.........:.................*.........:.............:.
+  .:........*.................:.........*.........:.........*.
+  ....*.........:......*.........:.............*.........:....
+  ........:........*.........:........O....*.........:.......*
+  ...:.......*.........:.......s......s...:.........*.........
+  .:......*.........:.........*.........:.........*.........:.
+  ....*.........:.........*.........:.........*.........:.....
+  ........:........*.........:.........*.........:.........*..
+  .:.....*.........:.........*.........:.........*.........:..
+  ...:.......*.........:.......*........:.........*.........:.
+  ............................................................
+  end
+
+  legend
+    . = Empty color 0x00
+    * = Text-White color 0x2A
+    : = Text-Blue color 0x2E
+    c = Text-Cyan color 0xC4
+    C = Solid color 0x08
+    w = Text-Yellow color 0x20
+    E = Fake color 0x87
+    @ = Player color 0x1F under Empty color 0x00
+    L = Object color 0x0F
+    M = Object color 0x0B
+    P = Passage color 0x1B to "Powered Descent"
+    O = Object color 0x0E
+    s = Text-White color 0x2E
+  end
+
+  stats
+    stat at 23,13 element Object cycle 3 p1 cp437:0xF0 under Empty color 0x00
+    oop
+@columbia
+#end
+:touch
+#play tc
+COLUMBIA (CSM): Command Module systems
+nominal. You are docked and ready.
+The Eagle is loaded, sealed, and hot.
+When you undock, I keep the ranch here
+in orbit. Bring my crewmate back.
+#end
+
+    end
+    stat at 27,13 element Object cycle 3 p1 cp437:0xEA under Empty color 0x00
+    oop
+@eagle
+#end
+:touch
+#play tfc
+EAGLE (LM): Undock latches armed. Two
+of us are riding the bug down; one
+stays warm upstairs.
+$Ready to separate the Lunar Module?
+!go;Release the docking latches.
+!wait;Not yet. Run the checks again.
+#end
+:wait
+Prudent. Descent is unforgiving. Touch
+me again when your nerve returns.
+#end
+:go
+#play tcegtcegtc#e
+#zap touch
+CAPCOM: Eagle, you are go for undocking.
+The latches release with a soft thump,
+and Columbia drifts silently away above
+the gray horizon. The descent passage is
+open below you.
+#end
+:touch
+The Eagle floats free, tethered to
+nothing but gravity now. Step onto the
+descent stage south of here.
+#end
+
+    end
+    stat at 37,18 element Object cycle 3 p1 cp437:0x9E under Empty color 0x00
+    oop
+@window
+#end
+:touch
+Through the small triangular window the
+Moon fills everything below: craters on
+craters, no color but a hundred grays,
+and no sound at all. Tranquility waits.
+#end
+
+    end
+    stat at 28,14 element Passage cycle 0 p3 board "Powered Descent" under Empty color 0x00
+  end
+end
+
+board "Powered Descent"
+  max-shots 255
+  dark true
+  reenter true
+  time-limit 0
+  exits north "Tranquility Base" south none west none east none
+
+  start player at 23,24
+  grid
+  NNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNN
+  N.hhh.....................T....t...........................N
+  N.hhh...t..........o...........................t..........tN
+  N........................t.........o......................hN
+  N....t..........................t..............t..........hN
+  N..........o..............t.......................t........N
+  N.t..............t..................o..........t..........tN
+  N.......t...............t.....................t...........hN
+  N....o.........................t.........o.................N
+  N.........t........o........................t.............tN
+  N..t..............................t...............t.......hN
+  N........t...............o...............t................hN
+  N..............t.....................t...............t.....N
+  N.....t........................t.............o............tN
+  N.........o..........t...................t.................N
+  N.t..............t..............o...................t.....hN
+  N.....X..........................................X........hN
+  N.....X..........p...........................L...X........tN
+  N.....X....................................hhhhh.X........hN
+  N.....X..................LLLLLLL...........hhhhh.X.........N
+  N.....XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX........hh
+  N....................................e....................N.
+  N...................lllllllllllllllllllll.................N.
+  N..................LLL@LLLLLLLLLLLLLLLLLLLL...............hN
+  NNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNN
+  end
+
+  legend
+    N = Solid color 0x08
+    . = Empty color 0x00
+    h = Fake color 0x08
+    t = Text-White color 0x07
+    o = Object color 0x0E
+    X = Line color 0x08
+    L = Normal color 0x87
+    l = Line color 0x87
+    p = Passage color 0x1F to "Lunar Orbit"
+    e = Object color 0x0B
+    @ = Player color 0x1F under Normal color 0x87
+    cp437:0x54 = Text-White color 0x54
+  end
+
+  stats
+    stat at 20,3 element Object cycle 2 p1 cp437:0x07 step south under Empty color 0x00
+    oop
+@boulder1
+#end
+:touch
+#play -c
+The Eagle shudders. Boulder impact!
+#give health -8
+#die
+:think
+#walk s
+#end
+
+    end
+    stat at 36,4 element Object cycle 2 p1 cp437:0x07 step south under Empty color 0x00
+    oop
+@boulder2
+#walk s
+#end
+:touch
+#play -c
+Rock strike! Warning tone in your ears.
+#give health -8
+#die
+
+    end
+    stat at 12,6 element Object cycle 3 p1 cp437:0x07 step south under Empty color 0x00
+    oop
+@boulder3
+#walk s
+#end
+:touch
+#play -c
+The lander lurches. Debris!
+#give health -6
+#die
+
+    end
+    stat at 37,7 element Object cycle 2 p1 cp437:0x07 step south under Empty color 0x00
+    oop
+@boulder4
+#walk s
+#end
+:touch
+#play -c
+Contact light? No. A boulder.
+#give health -8
+#die
+
+    end
+    stat at 6,9 element Object cycle 3 p1 cp437:0x07 step south under Empty color 0x00
+    oop
+@boulder5
+#walk s
+#end
+:touch
+#play -c
+Aldrin calls a rock. You feel it.
+#give health -6
+#die
+
+    end
+    stat at 42,9 element Object cycle 2 p1 cp437:0x07 step south under Empty color 0x00
+    oop
+@boulder6
+#walk s
+#end
+:touch
+#play -c
+Impact! Fuel gauge trembles.
+#give health -8
+#die
+
+    end
+    stat at 20,10 element Object cycle 3 p1 cp437:0x07 step south under Empty color 0x00
+    oop
+@boulder7
+#walk s
+#end
+:touch
+#play -c
+A grey stone tumbles past. Too close.
+#give health -6
+#die
+
+    end
+    stat at 26,12 element Object cycle 2 p1 cp437:0x07 step south under Empty color 0x00
+    oop
+@boulder8
+#walk s
+#end
+:touch
+#play -c
+Boulder! Hold steady, Neil.
+#give health -8
+#die
+
+    end
+    stat at 46,14 element Object cycle 3 p1 cp437:0x07 step south under Empty color 0x00
+    oop
+@boulder9
+#walk s
+#end
+:touch
+#play -c
+Rock hail against the descent stage.
+#give health -6
+#die
+
+    end
+    stat at 11,15 element Object cycle 2 p1 cp437:0x07 step south under Empty color 0x00
+    oop
+@boulder10
+#walk s
+#end
+:touch
+#play -c
+Something struck the leg strut.
+#give health -8
+#die
+
+    end
+    stat at 33,16 element Object cycle 3 p1 cp437:0x07 step south under Empty color 0x00
+    oop
+@boulder11
+#walk s
+#end
+:touch
+#play -c
+Boulder field! Ease her down.
+#give health -6
+#die
+
+    end
+    stat at 18,18 element Passage cycle 0 p3 board "Lunar Orbit" under Empty color 0x00
+    stat at 38,22 element Object cycle 3 p1 cp437:0x0F under Normal color 0x87
+    oop
+@controller
+#end
+:touch
+#play tcefg
+EAGLE GUIDANCE, T-DOWN CHECKLIST
+Boulders drop from above. Slip
+between them and reach the flat
+regolith below the grey ridge.
+The northern edge is Tranquility
+Base -- touchdown zone.
+#play tgfec
+Fuel is thin. Watch your health.
+Contact light is your friend.
+#end
+
+    end
+  end
+end
+
+board "Tranquility Base"
+  max-shots 8
+  dark false
+  reenter false
+  time-limit 0
+  exits north "Lunar Liftoff" south "Powered Descent" west none east none
+
+  start player at 40,24
+  grid
+kkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkk
+kkkkkkkkkkkkkkSSSSSkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkSSSkkkkkk
+kkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkSSSkkkkkkkkkkkkkkkk
+kk.....kkkkkkkkkkkkkkkkkkkFffkkkkkkkkkkkkkkkkkkkkkkkkkk.....
+k.......kkkkkkkkkkkkkkkkkkfEfkkkkkkkkkkkkkkkkkkkkkkkk.......
+k.......kkkkkkkkkkkkkkkkkkfffkkkkkkkkkkkkkkkkkkkkkkk........
+kk.....kkkkkkkkkkkkkkkkkkkfLfkkkkkkkkkkkkkkkkkkkkkkkk.......
+kkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkk.....k
+kkkkkkkkkkkkkkkkkkkkkkkkoooooooooooooooooooooooooooooooooook
+kkkkkkkkkkkkkkkkkkkkkkkkoggkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkk
+kkkkkkkkkkkkkkkkkkkkkkkkokkkkkkkkkkkkkkkkkkkkkkkkGkkkkkkkkkk
+kkkkkkkkkkkkkkkkkkkkkkkkokkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkk
+kkkkkkkkkkkkkkkkkkkkkkkkokkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkk
+kkkkkkkkkkkkkkkkkkkkkkkkokkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkk
+kkkkkkkkkkkkkkkkkkkkkkkkokkkkkkkkkkkkkkGkkkkkkkkkkkkkkkkkkkk
+kkkkkkkkkkkkkkkkkkkkkkkkokkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkk
+kkkkkkkkkkkkkkGkkkkkkkkkokkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkk
+kkkkkkkkkkkkkkkkkkkkkkkkokkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkk
+kkkkkkkkkkkkkkkkkkkkkkkkokkkkkkkkkkkkkkkkkkkkGkkkkkkkkkkkkkk
+kkkkkkkkkkkkkkkkkkkkkkkkokkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkk
+kkkkkkkkkkkkkkkkkkkkkkkkokkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkk
+kkkkkkkkkkkkkkkkkkkkkkkkTTTkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkk
+kkkkkkkkkkkkkkkkkkkkkkkkTETkkkkkkkkkk.....kkkkkkkkkkkkkkkkkk
+kkkkkkkkkkkkkkkkkkkkkkkkkTTkkkkkkkkkk..@..kkkkkkkkkkkkkkkkkk
+............................................................
+  end
+
+  legend
+    k = Solid color 0x08
+    . = Empty color 0x00
+    o = Fake color 0x87
+    @ = Player color 0x1F under Empty color 0x00
+    S = Text-White color 0x2A
+    G = Gem color 0x0F
+    F = Text-White color 0x20
+    f = Text-Red color 0x20
+    E = Object color 0x1F
+    L = Object color 0x0E
+    T = Object color 0x0F
+    cp437:0x67 = Text-White color 0x67
+  end
+
+  stats
+    stat at 28,5 element Object cycle 3 p1 cp437:0x0F under Empty color 0x00
+    oop
+@flag
+#end
+:touch
+#play tcefg
+The flag stands stiff on a spring-wire top,
+in a place with no wind to move it.
+You salute the red and white stripes.
+#if planted done
+#set planted
+One small step is behind you now.
+The next leap begins with a launch.
+:done
+#end
+
+    end
+    stat at 28,7 element Object cycle 3 p1 cp437:0x18 under Empty color 0x00
+    oop
+@lem
+#end
+:touch
+#play tcdefg
+The Eagle waits on four spidery legs,
+foil skin crinkled and gold in the sun.
+Ascent stage fueled. Ladder retracted?
+Not yet. Gather the samples first.
+#end
+
+    end
+    stat at 25,22 element Object cycle 0 p1 cp437:0x1E under Empty color 0x00
+    oop
+@footprint
+#end
+:touch
+A single bootprint in the gray dust.
+It will still be here in a million years.
+Nothing out here to sweep it away.
+#end
+
+    end
+    stat at 26,23 element Object cycle 3 p1 cp437:0x1F under Empty color 0x00
+    oop
+@geologist
+#end
+:touch
+#play tcfa
+CAPCOM crackles in your helmet.
+Houston wants rock boxes filled before
+you climb that ladder home.
+#if samples plenty
+Gather the sample gems scattered around
+the base, then come back to me.
+#end
+:plenty
+#play tcegc+
+Rock boxes sealed. Contingency samples
+stowed. Houston is very, very happy.
+The way north is clear when you are.
+#end
+
+    end
+    stat at 26,22 element Object cycle 3
+    oop
+    #end
+    end
+    stat at 27,22 element Object cycle 3
+    oop
+    #end
+    end
+    stat at 25,23 element Object cycle 3
+    oop
+    #end
+    end
+    stat at 27,23 element Object cycle 3
+    oop
+    #end
+    end
+    stat at 26,24 element Object cycle 3
+    oop
+    #end
+    end
+    stat at 27,24 element Object cycle 3
+    oop
+    #end
+    end
+  end
+end
+
+board "Lunar Liftoff"
+  max-shots 255
+  dark true
+  reenter true
+  time-limit 0
+  exits north "Transearth Coast" south "Tranquility Base" west none east none
+
+  start player at 30,23
+  grid
+  ..........................*.....*............*..............
+  ....*.........*..................................*..........
+  ...................ssssssssssssssss.........................
+  ...........*......sCCCCCCCCCCCCCCCCs........*...............
+  .................sCCddddddddddddCCCCs.......................
+  .......*........sCCd..........w.dCCCCs......................
+  ...............sCCd....ccccc....dCCCCs.....................*
+  ..............sCCd....cCCCCCc....dCCCCs.....................
+  .....*........sCCd....cCwwwCc....dCCCCs.....................
+  ..............sCCd....cCCCCCc....dCCCCs...*................*
+  ......*.......sCCd.....ccpcc.....dCCCCs.....................
+  ..............sCCd.....................dCs.................*
+  ...*..........sCCddddddddddddddddddddddCs..................*
+  ...............sCCCCCCCCCCCCCCCCCCCCCCCCs..........*........
+  .....*..........sssssssssssssssssssssss....................*
+  ..............................o.............*..............*
+  ............*.......>.........||.........<..................
+  ....................aaa.......||.......aaa.................*
+  ...*............aaaaaaaaaaa..HHHH..aaaaaaaaaaa..............
+  ..............aaaaaaaaaaaaaaaHHHHaaaaaaaaaaaaaaa............
+  .......*....aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa..........
+  ...........aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa.........
+  kkkkkkkkkkkkkkkkkkkkkkkkkkkkk@kkkkkkkkkkkkkkkkkkkkkkkkkkkkkk
+  kkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkk
+  kkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkk
+  end
+
+  legend
+    . = Empty color 0x00
+    * = Text-White color 0x2A
+    s = Solid color 0x08
+    C = Solid color 0x07
+    d = Normal color 0x78
+    c = Solid color 0x0F
+    w = Text-Cyan color 0x2E
+    p = Object color 0x0B
+    o = Object color 0x0E
+    a = Solid color 0x07
+    H = Solid color 0x08
+    | = Line color 0x0E
+    > = Object color 0x0A
+    < = Object color 0x0A
+    k = Breakable color 0x78
+    @ = Player color 0x1F under Breakable color 0x78
+  end
+
+  stats
+    stat at 26,11 element Object cycle 3 p1 cp437:0xF9 under Solid color 0x0F
+    oop
+@columbia
+#end
+:touch
+#play tcefgab
+Columbia here. Michael Collins, reading you loud.
+Bring Eagle up and we'll dock. Rendezvous is go.
+#end
+    end
+
+    stat at 31,16 element Object cycle 2 p1 cp437:0x1E under Empty color 0x00
+    oop
+@ascent
+#end
+:touch
+#play t+c+e+g+c
+The ascent engine coughs, then holds. You rise
+off the descent stage in silence and dust.
+Columbia grows from a dot to a home.
+#give torches 1
+Ascent stage nominal. Coasting to rendezvous.
+Head north to close the gap with Columbia.
+#end
+    end
+
+    stat at 21,17 element Object cycle 4 p1 cp437:0x10 under Empty color 0x00
+    oop
+@thrusterL
+#end
+:touch
+The left RCS quad puffs a cold jet of hydrazine.
+Attitude holding. It reads like a faint firefly
+against the black.
+#end
+    end
+
+    stat at 42,17 element Object cycle 4 p1 cp437:0x11 under Empty color 0x00
+    oop
+@thrusterR
+#end
+:touch
+The right RCS quad answers with a matching cough.
+The horizon of the Moon slides away beneath you,
+gray and enormous and finished with.
+#end
+    end
+  end
+end
+
+board "Transearth Coast"
+  max-shots 255
+  dark true
+  reenter false
+  time-limit 0
+  exits north none south "Lunar Liftoff" west none east "Reentry Corridor"
+  message ""
+
+  start player at 30,21
+  grid
+  ............*...................*.......*...................
+  ........................*..............................*....
+  ....*.................................*...........*.........
+  ..............*..............................*.............*
+  ..*.....*.................................*.................
+  ...........###....................................*........*
+  ..........#EEE#....................................t........
+  .........#EEEEE#........*..................................*
+  ........#EEqqqEE#...........................................
+  .......#EEqbbqEE#..............*............................
+  ........#EEqqqEE#...........................................
+  .........#EEEEE#........................................*...
+  ..........#EEE#....................*......................*.
+  ....*......#s#..............................................
+  ..............................*..........*..................
+  .......*..................o.................................
+  ...................................*........................
+  .............*..............*................*..............
+  ...*.....................................................*..
+  .......................*.......................*............
+  ..............*..............@..............*...............
+  .................................*..........................
+  ...*..................*.........................*.....*.....
+  .................*.........................*................
+  ............*.....................*.........*...............
+  end
+
+  legend
+    . = Empty color 0x00
+    * = Text-White color 0x2A
+    # = Solid color 0x0F
+    E = Solid color 0x08
+    q = Solid color 0x07
+    b = Fake color 0x03
+    s = Solid color 0x0C
+    t = Object color 0x0E
+    o = Object color 0x0B
+    @ = Player color 0x1F under Empty color 0x00
+  end
+
+  stats
+    stat at 52,7 element Object cycle 3 p1 cp437:0x0F under Empty color 0x00
+    oop
+@thrust1
+#end
+:touch
+The service module thruster flickers. Cold.
+#end
+
+    end
+    stat at 27,16 element Object cycle 3 p1 cp437:0x02 under Empty color 0x00
+    oop
+@collins
+#end
+:touch
+#play tcf
+COLUMBIA, HOUSTON. You are three days from home.
+The tiny sphere of Earth swells in the window.
+$-- Midcourse Correction --
+Nudge the burn just so, or you miss the corridor.
+!burn;Fire the correction burn.
+!jettison;Jettison the service module.
+!hold;Hold. Drift a while and look at the Earth.
+#end
+:burn
+#play tefgab
+Attitude thrusters bark. A gentle shove.
+The trajectory needle settles into the green.
+#set corrected
+Correction complete. Now shed the dead weight.
+#end
+:jettison
+#if corrected okgo
+#play t-c-c
+Not yet. Correct your course before you cut loose.
+Sever the module now and you fly home blind.
+#end
+:okgo
+#play tfc-fc-c
+Explosive bolts fire. The service module
+tumbles away, silent, into the dark.
+COLUMBIA is a lone cone now, headed for home.
+The reentry corridor lies to the east.
+#zap touch
+#end
+:hold
+#play t.c.e.g
+The Earth turns below, blue and small and far.
+You could watch it forever. You won't.
+#end
+
+    end
+  end
+end
+
+board "Reentry Corridor"
+  max-shots 255
+  dark true
+  reenter true
+  time-limit 0
+  exits north "Pacific Splashdown" south none west "Transearth Coast" east none
+
+  start player at 1,13
+  grid
+########################bbbb################################
+#..........................b.b.b...#########################
+ccc....................b.b.b...#############################
+########################bbbb#..t.t.t.t.t.t.t.t.t.t.t.t.t.t.t
+#..R....................t.t.t.t.t.t.t.t.t.#.................
+#.......................t.t.t.t.t.t.t.t.t.#.................
+#..o....................t.t.t.t.t.t.t.t.t.#.................
+#.......................t.t.t.t.t.t.t.t.t.#.................
+#.......................t.t.t.t.t.t.t.t.t.#.................
+#..s....................t.t.t.t.t.t.t.t.t.#.................
+#.......................t.t.t.t.t.t.t.t.t.#.................
+w.......................t.t.t.t.t.t.t.t.t.#.................
+@.......................t.t.t.t.t.t.t.t.t.p.................
+w.......................t.t.t.t.t.t.t.t.t.#.................
+#.......................t.t.t.t.t.t.t.t.t.#.................
+#.......................t.t.t.t.t.t.t.t.t.#.................
+#.......................t.t.t.t.t.t.t.t.t.#.................
+#.......................t.t.t.t.t.t.t.t.t.#.................
+#.......................t.t.t.t.t.t.t.t.t.#.................
+#.......................t.t.t.t.t.t.t.t.t.#.................
+#..R....................t.t.t.t.t.t.t.t.t.#.................
+#.......................t.t.t.t.t.t.t.t.t.#.................
+########################.....####################.......#...
+############################################################
+............................................................
+end
+
+  legend
+    # = Solid color 0x08
+    . = Empty color 0x00
+    b = Solid color 0x06
+    c = Text-Yellow color 0x20
+    w = Water color 0x1C
+    @ = Player color 0x1F under Empty color 0x00
+    R = Object color 0x0E
+    o = Object color 0x0B
+    s = Object color 0x0A
+    a = Object color 0x0C
+    t = Breakable color 0x4C
+    p = Passage color 0x5F to "Pacific Splashdown"
+  end
+
+  stats
+    stat at 4,5 element Object cycle 3 p1 cp437:0xF8 under Solid color 0x06
+    oop
+@heat
+#end
+:touch
+The tiles glow cherry-red at your fingertips.
+1371 degrees Celsius, and holding.
+#play tcd
+#end
+    end
+
+    stat at 4,7 element Object cycle 3 p1 cp437:0x1E under Empty color 0x00
+    oop
+@guidance
+#end
+:touch
+GUIDANCE OFFICER: Columbia, you are GO for
+reentry. Hold your angle -- shallow and you
+skip off the atmosphere into the dark forever.
+Steep, and you burn. Thread the corridor.
+The plasma will take your radio. Godspeed.
+#play tcefg
+#end
+    end
+
+    stat at 4,10 element Object cycle 2 p1 cp437:0x04 under Empty color 0x00
+    oop
+@attitude
+#end
+:touch
+#play tfcd
+The attitude jets cough and correct.
+The capsule noses down to 6.5 degrees --
+right in the middle of the corridor.
+Now push east, through the fire.
+#end
+    end
+
+    stat at 4,21 element Object cycle 3 p1 cp437:0x0F under Empty color 0x00
+    oop
+@plasma
+#end
+:touch
+A sheet of ionized flame wraps the windows.
+For four minutes there is no Houston, no
+sound but the shell shrieking around you.
+Then, ahead, a thinning. Blue. Air.
+#play tcgc
+#end
+    end
+
+    stat at 4,21 element Object cycle 3 p1 cp437:0x19 under Empty color 0x00
+    oop
+@drogue
+#end
+:touch
+#play tefg+c
+The drogue chutes snap open with a jolt.
+The g-forces bleed away. You are subsonic,
+falling into the bright Pacific morning.
+The recovery ships are already turning your way.
+Head north when the corridor is clear.
+#end
+    end
+    stat at 43,13 element Passage cycle 0 p3 0
+  end
+end
+
+board "Pacific Splashdown"
+  max-shots 0
+  dark false
+  reenter false
+  time-limit 0
+  exits north none south "Reentry Corridor" west none east none
+
+  start player at 22,13
+  grid
+  wwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwww
+  wwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwww
+  wwww.......wwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwww.......www
+  www.PPP.AAA.CCC.III.FFF.III.CCC.....SSS.EEE.AAA.wwwww~~~~www
+  wwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwww~~~~~~~~~w
+  wwww~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~w
+  ww~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+  w~~~~~~~~~~~~~~rrrrrrrrrrrrrr~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+  w~~~~~~~~~~~~rrRRRRRRRRRRRRRRrr~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+  w~~~~~~~~~~~rRRddddddddddddddRRr~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+  w~~~~~~~~~~rRRdddddddddddddddddRRr~~~~~~~~~~~~~~~~~~~~~~~~~~
+  w~~~~~~~~~~rRddddddddddddddddddddRr~~~~~~~~~~~~~~~~~~~~~~~~~
+  w~~~~~~~~~~rRdddddddd@dddddddddddRr~~~~~~~~~~~~~~~~~~~~~~~~~
+  w~~~~~~~~~~rRddddddddddddddddddddRr~~~~~~~~~~~~~~~~~~~~~~~~~
+  w~~~~~~~~~~rRRdddddddddddddddddRRr~~~~~~~~~~~~~~~~~~~~~~~~~~
+  w~~~~~~~~~~~rRRddddddddddddddRRr~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+  w~~~~~~~~~~~~rrRRRRRRRRRRRRRRrr~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+  ww~~~~~~~~~~~~~~rrrrrrrrrrrrrr~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+  ww~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+  www~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+  wwww~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~w
+  wwwwww~~~~~~~~~~~~~~~~~~~H~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~www
+  wwwwwwwww~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~wwwwww
+  wwwwwwwwwwwwww~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~wwwwwwwwwwwww
+  wwwwwwwwwwwwwwwwwwwwwwwwbbbbwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwww
+  end
+
+  legend
+    w = Water color 0x9F
+    ~ = Water color 0x19
+    . = Empty color 0x00
+    r = Fake color 0x08
+    R = Fake color 0x70
+    d = Fake color 0x77
+    b = Empty color 0x00
+    @ = Player color 0x1F under Fake color 0x77
+    P = Text-White color 0x50
+    A = Text-White color 0x41
+    C = Text-White color 0x43
+    I = Text-White color 0x49
+    F = Text-White color 0x46
+    S = Text-White color 0x53
+    E = Text-White color 0x45
+    H = Object color 0x0E
+  end
+
+  stats
+    stat at 26,22 element Object cycle 3 p1 cp437:0x0F under Water color 0x19
+    oop
+@recovery
+#end
+:touch
+#play tcgtcg
+Recovery One to Columbia. We have you visual!
+Prepare for helicopter hoist. Welcome home,
+gentlemen.
+#play iernv
+$SPLASHDOWN CONFIRMED
+$Pacific Ocean, 08:50 EDT
+The Eagle has landed, and the crew is home.
+Three men crossed the void and returned.
+#play tcefgtcefg
+$A A R O N   S O N   A P O L L O
+Thank you for flying Apollo Eleven.
+#endgame
+#end
+    end
+  end
+end
+

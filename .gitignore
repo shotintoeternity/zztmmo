@@ -13,6 +13,10 @@ engine/deploy.tar.gz
 engine/saves/
 test.txt
 
+# M12.17 eval runs: keep reports, screenshots, and ZWD sidecars; never the
+# generated .ZZT binaries (fixtures are committed as ZWD text only).
+llmworld/eval/**/*.ZZT
+
 # Local agent/project planning notes; keep out of the public repository.
 /ANALYSIS.md
 /AWS.md

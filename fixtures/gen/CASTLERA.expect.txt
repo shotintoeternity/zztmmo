@@ -1,0 +1,4 @@
+# Known-failing checks at recording time (M12.17 baseline, 2026-07-14).
+# Remove a line when a prompt improvement fixes it so the gain is locked in.
+title-wordmark
+reachable-endgame

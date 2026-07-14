@@ -2343,3 +2343,96 @@ Changed `enterWorld` to only select the world and repaint board 0; `startPlay`
 remains reachable solely through the title menu's explicit Play action. Added a
 small `title_flow` regression so a selected world resolves to `{ startPlay:
 false }`.
+
+## 2026-07-14 — M12.17 generation prompting-quality evaluation harness
+
+**Advisor unavailable this session** (tool returned unavailable; same situation
+as the 2026-07-10 plan.go precedent), so the [ADVISOR] consultations — the task
+approach and the rubric/LLM-judge design — could not happen. Decisions were
+made explicitly and recorded here instead.
+
+### What landed
+
+* **Tier 1 — `engine/eval.go` (`EvalGeneratedZWD`)**, an exported checker
+  library shared by the CI test and `zzt-eval`, measuring the COMPILED world
+  (post-preprocess) so it sees what a player gets: compiles-within-limits,
+  200-step headless validation (reuses `validateGeneratedZWD`), title wordmark,
+  title creature/item ban, one player start, reachable `#endgame`, no orphan
+  stat-backed tiles. Design decisions:
+  - *Wordmark is mechanically checkable*: ZZT text elements carry the glyph in
+    `tile.Color`, so "spells the world name" is a string comparison per board
+    row (single-cell gaps read as word spaces). Exactly one row must spell the
+    display name; at most one other text row, strictly below (the brief's
+    subtitle allowance). The display name is the PLAN's world name, not the
+    sanitized file name — fixtures carry it in `NAME.title.txt`.
+  - *Banned title elements* are the enumerated creatures/projectiles/items
+    (Bear..Star, Gem/Ammo/Torch/Energizer/Key/Bomb). Objects, scrolls, and
+    passages stay legal: vanilla titles animate with objects.
+  - *Endgame walk starts at board 1* — matching the server join path for
+    generated worlds (`CurrentBoard` compiles to 0, WebSocket join falls back
+    to 1) — over edge exits + passage `P3` targets, looking for `#ENDGAME` in
+    stat OOP (case-insensitive).
+  - *Fixtures use honest expectation files* (M12.7's philosophy): a fixture
+    with `NAME.expect.txt` must fail EXACTLY that check set; no file means
+    full pass. A new failure is a regression, a silently fixed one forces the
+    expectation update, so prompt-quality movement is always visible in a
+    diff. This was necessary because current prompting cannot yet produce a
+    passing title (see baseline) and the repo does not ship known-red tests.
+* **CP437 renderer moved into the engine** (`render_png.go`:
+  `RenderBoardImage`/`WriteBoardPNG`/`RenderZWDBoardPNG`, embedded `pc_ega.png`);
+  `cmd/zzt-shot` delegates and its golden PNG hash is byte-identical.
+* **Tier 2 — `cmd/zzt-eval`** + `engine/eval_judge.go`: generates each premise
+  with the production pipeline, runs the tier-1 gate, renders board 0 + first
+  two gameplay boards to PNG, and scores against the written rubric with one
+  vision-judge API call per world (JSON verdict, parse-validated; -1 = n/a for
+  grounding on ungrounded runs). The rubric lives ONCE in `llmworld/EVAL.md`
+  (embedded copy drift-guarded like the promptkit assets) and the judge quotes
+  it verbatim. `ZZT_EVAL_JUDGE_MODEL` overrides the judge model.
+* Premise set (EVAL.md): Apollo 11 (grounded-checkable), "a dream about slowly
+  forgetting someone you loved" (abstract), haunted castle (pastiche); each
+  run grounded and ungrounded.
+
+### Eval-run configuration (comparison runs MUST match)
+
+`-attempts 5` (matches `cmd/run-generation`; the server default is 3, so the
+eval is slightly more forgiving than production Dream), batch size 1, model
+`claude-opus-4-8`, max tokens 8192, judge = same model. One harness fix mid-run:
+the service-default 2-minute HTTP client killed a grounded planner call
+(server-side web_search holds the response); `zzt-eval` now passes a 10-minute
+client. The affected run was retried with the fix (`baseline-retry/`).
+
+### Baseline (llmworld/eval/baseline/report.md + baseline-retry/report.md)
+
+| run | world | tier-1 gate | title | comp | voice | grounding |
+|---|---|---|---|---|---|---|
+| apollo plain | APOLLO11 | FAIL(title-wordmark) | 0 | 3 | 4 | n/a |
+| apollo grounded | — | repairs exhausted: undefined legend key "." | | | | |
+| dream plain | — | repairs exhausted: orphan Object | | | | |
+| dream grounded (retry) | THESLOWF | FAIL(title-wordmark) | 1 | 3 | 5 | 5 |
+| castle plain | CASTLERA | FAIL(title-wordmark, reachable-endgame) | 1 | 3 | 4 | n/a |
+| castle grounded | CASTLEOF | FAIL(title-wordmark) | 2 | 3 | 5 | 5 |
+
+Findings, in priority order:
+1. **Title wordmarks are broken on every world** (gate + judge agree
+   independently; judge reads "SSHY", "half-formed letters"). The M12
+   title-screen brief improved intent but not execution — the model builds
+   monumental letters that do not resolve into the name. This is THE
+   prompt-quality target; the gate's `title-wordmark` expectations in
+   `fixtures/gen/*.expect.txt` are the finish line.
+2. **Convergence is the second problem**: 2 of 6 runs died exhausting repairs
+   on errors the M12.11/M12.13 absorbers exist to prevent → filed **M12.19**
+   (undefined legend key surviving preprocess; orphan stat synthesis missing
+   cases, incl. a last-column Passage clue; and #endgame never enforced —
+   CASTLERA is unwinnable and everything passed it).
+3. **Where generation converges, quality is decent and grounding works**:
+   composition a uniform 3, OOP voice 4-5 (judge singled out Guenter Wendt's
+   checklist and the ten-switch #if cascade on APOLLO11), grounding accuracy
+   5/5 on both grounded successes.
+
+Fixtures committed: `fixtures/gen/{APOLLO11,CASTLERA,CASTLEOF,THESLOWF}.zwd`
+(+ `.title.txt`, `.expect.txt`). Debug transcripts preserved as
+`llmworld/eval/baseline*/run.log.gz`; generated `.ZZT` binaries are gitignored
+(`llmworld/eval/**/*.ZZT`). Also filed **M12.18** (owner-reported: Dream
+progress scroll duplicates lines). Verified: `go build/test ./...`, `go vet`,
+`npm test`, `npm run build` all green; replay fixture unchanged (generation
+and eval are outside the sim).

@@ -5,45 +5,19 @@
 //	go run ./cmd/zzt-shot -world /path/to/WORLD.ZZT -out title.png
 //
 // The default board is 0 (the title screen). Output is the 60x25 playfield;
-// it intentionally omits the client-owned sidebar.
+// it intentionally omits the client-owned sidebar. Rendering itself lives in
+// the engine package (RenderBoardImage) so cmd/zzt-eval shares it.
 package main
 
 import (
-	"bytes"
-	_ "embed"
 	"flag"
 	"fmt"
-	"image"
-	"image/color"
-	"image/png"
 	"os"
 	"path/filepath"
 	"strings"
 
 	"github.com/benhoyt/zztgo"
 )
-
-const (
-	cellWidth  = 8
-	cellHeight = 14
-	glyphCols  = 32
-)
-
-//go:embed pc_ega.png
-var pcEGA []byte
-
-// ega is the browser client's DOS/EGA palette. Keep this byte-for-byte in
-// colour values with web/src/main.ts so offline title captures match canvas.
-var ega = [16]color.RGBA{
-	{0x00, 0x00, 0x00, 0xff}, {0x00, 0x00, 0xaa, 0xff},
-	{0x00, 0xaa, 0x00, 0xff}, {0x00, 0xaa, 0xaa, 0xff},
-	{0xaa, 0x00, 0x00, 0xff}, {0xaa, 0x00, 0xaa, 0xff},
-	{0xaa, 0x55, 0x00, 0xff}, {0xaa, 0xaa, 0xaa, 0xff},
-	{0x55, 0x55, 0x55, 0xff}, {0x55, 0x55, 0xff, 0xff},
-	{0x55, 0xff, 0x55, 0xff}, {0x55, 0xff, 0xff, 0xff},
-	{0xff, 0x55, 0x55, 0xff}, {0xff, 0x55, 0xff, 0xff},
-	{0xff, 0xff, 0x55, 0xff}, {0xff, 0xff, 0xff, 0xff},
-}
 
 func main() {
 	worldPath := flag.String("world", "", "path to a .ZZT world")
@@ -86,16 +60,12 @@ func shot(worldPath, outPath string, board int16) error {
 			return err
 		}
 	}
-	img, err := renderBoard(e)
-	if err != nil {
-		return err
-	}
 	f, err := os.Create(outPath)
 	if err != nil {
 		return err
 	}
 	defer f.Close()
-	return png.Encode(f, img)
+	return zztgo.WriteBoardPNG(e, f)
 }
 
 func boardHasZeroRun(e *zztgo.Engine, board int16) bool {
@@ -183,66 +153,4 @@ func openBoardWithVanillaRLE(e *zztgo.Engine, board int16) error {
 		}
 	}
 	return nil
-}
-
-func renderBoard(e *zztgo.Engine) (*image.RGBA, error) {
-	font, err := png.Decode(bytes.NewReader(pcEGA))
-	if err != nil {
-		return nil, fmt.Errorf("decode embedded CP437 atlas: %w", err)
-	}
-	if font.Bounds().Dx() != glyphCols*cellWidth || font.Bounds().Dy() != 8*cellHeight {
-		return nil, fmt.Errorf("unexpected CP437 atlas dimensions %dx%d", font.Bounds().Dx(), font.Bounds().Dy())
-	}
-
-	out := image.NewRGBA(image.Rect(0, 0, int(zztgo.BOARD_WIDTH)*cellWidth, int(zztgo.BOARD_HEIGHT)*cellHeight))
-	for y := int16(1); y <= zztgo.BOARD_HEIGHT; y++ {
-		for x := int16(1); x <= zztgo.BOARD_WIDTH; x++ {
-			attr, ch, err := tileToColorAndChar(e, x, y)
-			if err != nil {
-				return nil, err
-			}
-			drawCell(out, font, int(x-1)*cellWidth, int(y-1)*cellHeight, attr, ch)
-		}
-	}
-	return out, nil
-}
-
-func tileToColorAndChar(e *zztgo.Engine, x, y int16) (attr, ch byte, err error) {
-	tile := e.Board.Tiles[x][y]
-	if int(tile.Element) <= zztgo.MAX_ELEMENT {
-		attr, ch = e.TileToColorAndChar(x, y)
-		return attr, ch, nil
-	}
-	// Several historical editors stored all 16 text colours in the low nibble
-	// of tile IDs 128..255, with the character byte in Color. Vanilla's native text range
-	// only has seven foreground colours, and the engine intentionally rejects
-	// these foreign element IDs. They are nevertheless unambiguous static text
-	// in title art, so render their DOS foreground exactly here.
-	if tile.Element >= 128 {
-		return tile.Element & 0x0f, tile.Color, nil
-	}
-	return 0, 0, fmt.Errorf("unsupported element %d at %d,%d", tile.Element, x, y)
-}
-
-func drawCell(dst *image.RGBA, font image.Image, x, y int, attr, ch byte) {
-	fg := ega[attr&0x0f]
-	// Bit 7 is blink in DOS text mode. A static shot uses the underlying
-	// three-bit background colour, rather than inventing a bright background.
-	bg := ega[(attr>>4)&0x07]
-	for py := 0; py < cellHeight; py++ {
-		for px := 0; px < cellWidth; px++ {
-			dst.SetRGBA(x+px, y+py, bg)
-		}
-	}
-	gx, gy := int(ch%glyphCols)*cellWidth, int(ch/glyphCols)*cellHeight
-	for py := 0; py < cellHeight; py++ {
-		for px := 0; px < cellWidth; px++ {
-			r, g, b, _ := font.At(gx+px, gy+py).RGBA()
-			// pc_ega.png is black ink on white. The browser punches black out
-			// and tints the remaining white pixels with the foreground colour.
-			if r+g+b > 3*0x7fff {
-				dst.SetRGBA(x+px, y+py, fg)
-			}
-		}
-	}
 }

@@ -1,0 +1,1001 @@
+zwd 1
+world "THESLOWF"
+
+board "The Slow Forgetting"
+  max-shots 255
+  dark false
+  reenter false
+  time-limit 0
+  exits north none south none west none east none
+
+  start player at 30,23
+  grid
+  ............................................................
+  ..ttt.t.t.ttt.....ttt.t...ttt.tt..tttt.ttt.ttt.t.t.ttt.ttt..
+  ..t...t.t.t.......t...t...t...t.t.t...t...t.t.t.t.tt..t...t.
+  ..ttt.ttt.ttt.....ttt.t...t...t.t.ttt.tt..ttt.t.t.t..ttt.t..
+  ....t.t.t.t.........t.t...t...t.t.t...t...t.t.t.t.t.....t.t.
+  ..ttt.t.t.ttt.....ttt.ttt.ttt.tt..t...tt..t.t.t.t.t..ttt.t..
+  ............................................................
+  .............oooooooooooooooooo.............................
+  ...........ooddddddddddddddddddoo...........................
+  ..........oddddhhddddddddddhh*dddo..........................
+  .........oddddhhhhddddddddhhhhdddddo........................
+  ........oddddddddddddddddddddddddddo........................
+  .......oddddddddddssssssdddddddddddo........................
+  .......oddddddddsuuuuuuuusddddddddo.........................
+  ........odddddddddssssssdddddddddo..........................
+  .........oddddddddddddddddddddddo...........................
+  ..........oooddddddddddddddddooo............................
+  ............bb.ooooooooooooo.bb.............................
+  .........b......b.........b......b..........................
+  .....b.......b.......b.........b.......b....................
+  ..b......b.......b.........b........b......b................
+  ............................................................
+  .............................@..............................
+  ............................................................
+  ............................................................
+  end
+
+  legend
+    . = Empty color 0x10
+    t = Text-Cyan color 0x20
+    b = Text-Blue color 0xF9
+    o = Solid color 0x19
+    d = Solid color 0x17
+    h = Solid color 0x11
+    s = Solid color 0x18
+    u = Solid color 0x1F
+    @ = Player color 0x1F under Empty color 0x10
+    * = Object color 0x0F
+  end
+
+  stats
+    stat at 30,10 element Object cycle 7 p1 cp437:0xB0 under Solid color 0x17
+    oop
+@static
+:loop
+#play t
+/i/i/i/i/i/i/i/i
+The face is here, for now.
+/i/i/i/i/i/i/i/i
+It will not be, soon.
+#loop
+    end
+  end
+end
+
+board "The Bedside"
+  max-shots 0
+  dark false
+  reenter false
+  time-limit 0
+  exits north none south none west none east "The Long Hallway"
+
+  start player at 29,12
+  grid
+wwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwww
+w..........................................................w
+w....ccc..........................................lll......w
+w...cIIIc.........................................lYl......w
+w...cIIIc.........................................lYl......w
+w...cIIIc.........................................GGG......w
+w...cIIIc.........................................lYl......w
+w...ccccc.........................................lYl......w
+w.........................................................ew
+w.pppppppppp..............................................ew
+w.pbbbbbbbbp..............................................ew
+w.pbbbbbbbbp................@.............................ew
+w.pbbbbbbbbp..............................................ew
+w.pbbbbbbbbp..............................................ew
+w.pppppppppp.......................................t......ew
+w..........................................................w
+w.....dddd.................................o..............ew
+w.....dDDd.................................................w
+w.....dDDd.................................................w
+w.....dDDd.................................................w
+w.....dddd........................................ssss.....w
+w.................................................ssss.....w
+w..........................................................w
+wwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwww
+............................................................
+  end
+
+  legend
+    w = Normal color 0x18
+    . = Empty color 0x00
+    c = Solid color 0x08
+    I = Breakable color 0x0F
+    l = Solid color 0x06
+    Y = Breakable color 0x6E
+    G = Solid color 0x0E
+    p = Solid color 0x07
+    b = Fake color 0x70
+    d = Solid color 0x06
+    D = Fake color 0x60
+    s = Fake color 0x08
+    @ = Player color 0x1F under Fake color 0x70
+    e = Empty color 0x00
+    t = Object color 0x0F
+    o = Object color 0x0E
+  end
+
+  stats
+    stat at 52,15 element Object cycle 3 p1 cp437:0x0F under Empty color 0x00
+    oop
+@lamp
+#cycle 3
+:loop
+#char 15
+/i
+#char 15
+/i/i
+#loop
+:touch
+#play tcf+c
+The lamp is still warm. You must have
+only just fallen asleep. The bulb hums
+its small amber hum, throwing everything
+into sharp, kind focus.
+Nothing here has begun to soften yet.
+#end
+    end
+
+    stat at 44,17 element Object cycle 2 p1 cp437:0x0E under Empty color 0x00
+    oop
+@you-waking
+#end
+:touch
+#play tefgc
+You are awake inside the dream, and it
+knows it. Colors sit exactly where they
+belong. You can read the spines of the
+books. You can count the folds in the
+quilt.
+$Somewhere, a door you love is open.
+It is to the east. It always was.
+#end
+    end
+  end
+end
+
+board "The Long Hallway"
+  max-shots 255
+  dark false
+  reenter false
+  time-limit 0
+  exits north none south none west "The Bedside" east "The Fading Gardens"
+
+  start player at 1,13
+  grid
+SSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSS
+Sfffffffffffffffffffffffffffffffffffffffffffffffffffffffffff
+Sf.......................................................ff.
+Sf.DDD.....DDD.....DDD.....DDD.....DDD.....DDD.....DDD..ff..
+Sf.DkD.....DrD.....DDD.....DDD.....DDD.....DDD.....DDD.ff...
+Sf.DDD.....DDD.....DDD.....DDD.....DDD.....DDD.....DDD.f....
+Sf...................................................f......
+Sf..................................................ff......
+Sf.................................................ff.......
+Sf................................................ff........
+Sf...............................................ff.b.......
+.f...............................................f.........p
+@f...............................................f.........p
+.f...............................................ff.b.......
+Sf................................................ff........
+Sf.................................................ff.......
+Sf..................................................ff......
+Sf...................................................f......
+Sf.DDD.....DDD.....DDD.....DDD.....DDD.....DDD.....DDD.f....
+Sf.DDD.....DDD.....DDD.....DsD.....DDD.....DDD.....DDDff....
+Sf.DDD.....DDD.....DDD.....DDD.....DDD.....DDD.....DDDf.....
+Sf.......................................................ff.
+Sfffffffffffffffffffffffffffffffffffffffffffffffffffffffffff
+SSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSS
+............................................................
+  end
+
+  legend
+    S = Solid color 0x08
+    f = Fake color 0x08
+    . = Empty color 0x00
+    @ = Player color 0x1F under Empty color 0x00
+    D = Normal color 0x78
+    k = Object color 0x0B
+    r = Object color 0x0E
+    s = Object color 0x0F
+    b = Object color 0x09
+    p = Passage color 0x1F to "The Floating Booth"
+  end
+
+  stats
+    stat at 5,5 element Object cycle 3 p1 cp437:0xF0 under Normal color 0x78
+    oop
+@doorbedside
+#end
+:touch
+#play tc
+A door you know. Behind it, a lamp still burns,
+and a shape is sleeping. Go back?
+!west;Step back west, into the warm room.
+!stay;No. Keep walking the hall.
+:west
+#play tfc
+/w/w
+#end
+:stay
+The door softens at its edges, and stays shut.
+#zap touch
+#end
+:touch
+Just the hall now. It has always been the hall.
+#end
+    end
+
+    stat at 13,5 element Object cycle 3 p1 cp437:0xF0 under Normal color 0x78
+    oop
+@doorlaugh
+#end
+:touch
+#play te
+You open it. Someone is laughing on the other
+side, in a kitchen full of afternoon light.
+You can almost see who.
+#play tf
+Then it is only a hallway again.
+#zap touch
+#end
+:touch
+A yellow door. You are sure something was here.
+#end
+    end
+
+    stat at 29,20 element Object cycle 3 p1 cp437:0xF0 under Normal color 0x78
+    oop
+@doorname
+#end
+:touch
+#play tc
+Behind this one, a voice is saying your name,
+over and over, the way only they ever said it.
+#play tcd
+You lean close to listen -- and the sound thins
+to nothing, like breath on a cold window.
+#zap touch
+#end
+:touch
+This door is warm. You cannot say why.
+#end
+    end
+
+    stat at 53,11 element Object cycle 3 p1 cp437:0x18 under Empty color 0x00
+    oop
+@signup
+#end
+:touch
+#play tc
+Scratched into the plaster, an arrow, and below
+it a word that keeps sliding out of focus:
+a phone... a booth... someone waiting to talk.
+The corridor here has gone soft, unfinished.
+Step into the pale seam to answer.
+#end
+    end
+
+    stat at 53,14 element Object cycle 3 p1 cp437:0x19 under Empty color 0x00
+    oop
+@signdown
+#end
+:touch
+Same word, the same arrow. The hall repeats,
+and you cannot tell if you are further along
+or exactly where you began.
+#end
+    end
+
+    stat at 60,12 element Passage cycle 0 p3 board "The Floating Booth" under Empty color 0x00
+    stat at 60,13 element Passage cycle 0 p3 board "The Floating Booth" under Empty color 0x00
+  end
+end
+
+board "The Floating Booth"
+  max-shots 0
+  dark true
+  reenter true
+  time-limit 0
+  exits north none south none west none east none
+
+  start player at 27,21
+  grid
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+~~~~ccc~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ccccc~~~~~~
+~~cccccccc~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~cccccccc~~~~~
+~~~ccccc~~~~~~~~~~~cccc~~~~~~~~~~ccc~~~~~~~~~~~~~ccc~~~~~~~~
+~~~~~~~~~~~~~~~~~cccccccc~~~~~~cccccc~~~~~~~~~~~~~~~~~~~~~~~
+~~~~~~~~~~~~~~~~~~cccc~~~~~~~~~~cccc~~~~~~~~~~~~~~~~~~~~~~~~
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+~~~~~~~~~~~~~~~~~~~~~=========~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+~~~~~~~~~~~~~~~~~~~~=BBBBBBBBB=~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+~~~~~~~~~~~~~~~~~~~=BwwwwwwwwwB=~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+~~~~~~~~~~~~~~~~~~~=Bw.....wwwB=~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+~~~~~~~~~~~~~~~~~~~=Bw.....wwwB=~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+~~~~~~~~~~~~~~~~~~~=Bw.o...wPwB=~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+~~~~~~~~~~~~~~~~~~~=Bw.....wwwB=~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+~~~~~~~~~~~~~~~~~~~=Bw.....wwwB=~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+~~~~~~~~~~~~~~~~~~~=Bw.......wB=~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+~~~~~~~~~~~~~~~~~~~=Bwwww.wwwwB=~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+~~~~~~~~~~~~~~~~~~~=BBBBB.BBBBB=~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+~~~~~~~~~~~~~~~~~~~==========B=~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+~~~~~~~~~~~~~~~~~~~~~~~~~~.~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+~~~~~~~~~~~~~~~~~~~~~~~~~~@~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+~~~~~~~~~~~~~~~~~~~~~cc~~~~~~~~~~~~~~~~~~~~~~~ccc~~~~~~~~~~~
+~~~~~~~~~~~~~~~~~ccccccc~~~~~~~~~~~~~~~~~~ccccccccc~~~~~~~~~
+~~~~~~~~~~~~~~~~~~ccccc~~~~~~~~~~ccc~~~~~~~~ccccc~~~~~~~~~~~
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~cccc~~~~~~~~~~~~~~~~~~~~~~~~
+  end
+
+  legend
+    ~ = Empty color 0x00
+    c = Fake color 0x08
+    = = Solid color 0x08
+    B = Solid color 0x09
+    w = Normal color 0x09
+    . = Empty color 0x00
+    o = Object color 0x0B
+    P = Passage color 0x1F to "The Long Hallway"
+    @ = Player color 0x1F under Empty color 0x00
+  end
+
+  stats
+    stat at 29,13 element Passage cycle 0 p3 board "The Long Hallway" under Empty color 0x00
+
+    stat at 24,13 element Object cycle 2 p1 cp437:0x0E under Empty color 0x00
+    oop
+@receiver
+#end
+:touch
+#play tcega
+The receiver is warm. You lift it and
+listen. Cloud drifts through the glass.
+/i
+A voice, unmistakable, a little far away:
+$--- so glad you called. Where are you?
+/i
+You open your mouth. The clouds thicken
+around the booth, muffling the line.
+/i
+:again
+#zap touch
+#play tfdca
+You press the receiver harder to your ear.
+$--- promise you'll remember the ---
+/i
+Static swallows the rest. The voice thins,
+folding into the hiss like a name you can
+almost say and then cannot.
+/i
+:last
+#zap again
+#play tc-a-f-c
+Only your own breathing on the line now.
+The cord runs up into the fog and stops.
+/i
+You set the receiver down, gently, the way
+you would close a door on someone sleeping.
+#end
+    end
+  end
+end
+
+board "The Fading Gardens"
+  max-shots 255
+  dark false
+  reenter false
+  time-limit 0
+  exits north none south none west "The Long Hallway" east "The Wall of Faces"
+
+  start player at 1,12
+  grid
+SSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSS
+Sf.......f...v...f.....v....f........v......f.........f...fS
+S..v...........................o..............v...........gS
+S....f....F....v....FF.....v.....FF......v....F...gg....v..g
+S.v.......v..........v.....FFF....v..........gg....gg..v...S
+S....f.......v....f....v.......f.....v...gg....gg.......f..S
+S.v...v.........v...........v.....gg....hh....gg....v.....gS
+S.......f...v.......f...v......gg...hh...hh...v......f....gS
+S..v.......v......v.....gg...hh....hh...hh...gg.....v......S
+S....f........v......gg...hh...hh...hh...gg.......f.......gS
+.........................hh...hh...hh...gg................pS
+@........hh...hh...hh...hh...hh...hh...gg....hh...gg......pS
+.........................hh...hh...gg....gg.....hh........gS
+S....f........v......gg...hh...gg...gg...hh.......f.......gS
+S..v.......v......v.....gg...gg....gg...hh...gg.....v......S
+S.......f...v.......f...v......gg...gg...gg...v......f....gS
+S.v...v.........v...........v.....gg....gg....gg....v.....gS
+S....f.......v....f....v.......f.....v...gg....gg.......f..S
+S.v.......v..........v.....FFF....v..........gg....gg..v...S
+S....f....F....v....FF.....v.....FF......v....F...gg....v..g
+S..v...........................o..............v...........gS
+Sf.......f...v...f.....v....f........v......f.........f...fS
+SSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSS
+............................................................
+............................................................
+  end
+
+  legend
+    S = Solid color 0x08
+    . = Empty color 0x00
+    f = Fake color 0x28
+    v = Text-Green color 0x0F
+    F = Fake color 0x28
+    g = Fake color 0x08
+    h = Fake color 0x07
+    @ = Player color 0x1F under Empty color 0x00
+    o = Object color 0x0A
+    p = Passage color 0x3A to "The Wall of Faces"
+  end
+
+  stats
+    stat at 32,3 element Object cycle 3 p1 cp437:0x05 under Empty color 0x00
+    oop
+@keeper
+#end
+:touch
+#play tcefg
+The garden-keeper is a smudge of green
+where a woman used to stand.
+
+She does not turn. She is watching a bed
+of flowers gray to ash, one row at a time,
+in the exact shape of your footprints.
+
+:more
+#zap touch
+I planted these together with someone.
+#play tc
+I water them every dawn. It does no good.
+
+The color keeps leaking west, toward the
+door, toward the room where the lamp is
+going cold.
+#end
+
+:touch
+#zap more
+She speaks without moving her ruined face.
+#play tcf
+The bright ones ahead are the last of it.
+The gray behind you is what we've lost.
+
+Walk east while there is still something
+left to walk toward.
+#end
+    end
+
+    stat at 32,21 element Object cycle 3 p1 cp437:0x0F under Empty color 0x00
+    oop
+@bloom
+#end
+:touch
+#play tcgec
+A single flower still holds its color,
+stubborn and impossibly bright.
+
+You cannot say whose favorite it was.
+Only that it was someone's, and that
+knowing it once mattered more than air.
+#end
+    end
+
+    stat at 59,11 element Passage cycle 0 p3 board "The Wall of Faces" under Empty color 0x00
+    stat at 59,12 element Passage cycle 0 p3 board "The Wall of Faces" under Empty color 0x00
+  end
+end
+
+board "The Wall of Faces"
+  max-shots 10
+  dark false
+  reenter false
+  time-limit 0
+  exits north "The Lake of Fog" south none west "The Fading Gardens" east none
+
+  start player at 4,13
+  grid
+#################SSSSSSSSSSSSSSSSSS#########################
+#..........................................................#
+#..........................................................#
+#..fffff...fffff...fffff...fffff...fffff...fffff...........#
+#..f...f...f...f...f...f...f...f...f...f...f...f...........#
+#..f.O.f...f.O.f...f.O.f...f.O.f...f.O.f...f.O.f...........#
+#..f...f...f...f...f...f...f...f...f...f...f...f...........#
+#..fffff...fffff...fffff...fffff...fffff...fffff...........#
+#..........................................................#
+#..........................................................#
+S..........................................................S
+S..........................................................S
+S..@.......................................................S
+S..........................................................S
+S..........................................................S
+#..........................................................#
+#..fffff...fffff...fffff...........MMMMMMMMMMMMMMMMMM.......
+#..f...f...f...f...f...f...........M..............M.......#.
+#..f.O.f...f.O.f...f.O.f...........M....G....G....M.......#.
+#..f...f...f...f...f...f...........M..............M.......#.
+#..fffff...fffff...fffff...........MMMMMMMMMMMMMMMMMM.......
+#..........................................................#
+#..........................................................#
+############################################################
+............................................................
+  end
+
+  legend
+    # = Solid color 0x08
+    S = Solid color 0x07
+    . = Empty color 0x00
+    f = Normal color 0x08
+    M = Fake color 0x07
+    O = Object color 0x0F
+    G = Object color 0x09
+    @ = Player color 0x1F under Empty color 0x00
+  end
+
+  stats
+    stat at 6,6 element Object cycle 3 p1 cp437:0x01 under Normal color 0x08
+    oop
+@f1
+#end
+:touch
+#play tc
+The features slide off this one like rain
+down glass. A woman, maybe. Kind eyes, or
+the memory of kind eyes. Not the face.
+#end
+
+    end
+    stat at 14,6 element Object cycle 3 p1 cp437:0x02 under Normal color 0x08
+    oop
+@f2
+#end
+:touch
+#play tc
+A laughing mouth with no one attached to it.
+You are almost certain you never knew this
+laugh. Almost.
+#end
+
+    end
+    stat at 22,6 element Object cycle 3 p1 cp437:0x01 under Normal color 0x08
+    oop
+@theone
+#end
+:touch
+#play te-g
+#give torch 1
+This one you know. You know the way the
+brow furrows before a joke, the small
+crooked warmth of it. It steadies as you
+look, the way a name steadies on the tongue.
+You hold it. Hold it. Hold it.
+#zap touch
+#set found
+#play tcegc
+The portrait glows and grows still, at last
+in focus. Behind you, something unbolts.
+#send gate:open
+#end
+:touch
+You have it now. Go, before it slips.
+#end
+
+    end
+    stat at 30,6 element Object cycle 3 p1 cp437:0x02 under Normal color 0x08
+    oop
+@f4
+#end
+:touch
+#play tc
+A face made entirely of the color of a coat
+you cannot place. Familiar as weather.
+Wrong.
+#end
+
+    end
+    stat at 38,6 element Object cycle 3 p1 cp437:0x01 under Normal color 0x08
+    oop
+@f5
+#end
+:touch
+#play tc
+Someone from a station platform, once. A
+stranger you have grieved by mistake. The
+grief was real. The face was not.
+#end
+
+    end
+    stat at 46,6 element Object cycle 3 p1 cp437:0x02 under Normal color 0x08
+    oop
+@f6
+#end
+:touch
+#play tc
+This one has your own eyes in it, borrowed.
+The dream runs low on faces and starts to
+reuse the parts. Not the one.
+#end
+
+    end
+    stat at 6,19 element Object cycle 3 p1 cp437:0x01 under Normal color 0x08
+    oop
+@f7
+#end
+:touch
+#play tc
+Half a face. The other half has already
+gone wherever the forgotten things go.
+#end
+
+    end
+    stat at 14,19 element Object cycle 3 p1 cp437:0x02 under Normal color 0x08
+    oop
+@f8
+#end
+:touch
+#play tc
+Two faces overlapping, arguing over which
+of them you loved. Neither wins. Neither
+is right.
+#end
+
+    end
+    stat at 22,19 element Object cycle 3 p1 cp437:0x01 under Normal color 0x08
+    oop
+@f9
+#end
+:touch
+#play tc
+A blur so gentle it could be anyone. That
+is the trap of it. Do not settle for anyone.
+#end
+
+    end
+    stat at 41,19 element Object cycle 3 p1 cp437:0x0F under Fake color 0x07
+    oop
+@gate
+#end
+:touch
+The way north is sealed. A soft voice under
+the wall says: you have to remember which
+one it was. Look at the faces. Really look.
+#end
+:open
+#lock
+#play tcegc+c
+#change Solid Empty
+#zap touch
+#send gatetwo:open
+#unlock
+#end
+
+    end
+    stat at 46,19 element Object cycle 3 p1 cp437:0x0F under Fake color 0x07
+    oop
+@gatetwo
+#end
+:touch
+The northern seal will not budge. It is
+waiting for a face it can trust.
+#end
+:open
+#lock
+#change SSSSSSSSSSSSSSSSSS Empty
+#play cdefg
+The barred gate to the north dissolves into
+pale light. The path opens onto still water.
+#unlock
+#end
+
+    end
+  end
+end
+
+board "The Lake of Fog"
+  max-shots 255
+  dark true
+  reenter true
+  time-limit 0
+  exits north none south "The Wall of Faces" west none east "The Empty Room"
+
+  start player at 27,23
+  grid
+############################################################
+#..........................................................#
+#....ffff......ffffff.........ffff.........ffffff..........f
+#..fff~~~ffff.ff~~~~~ff....fff~~~~ffff...ff~~~~~ffff........
+#.ff~~~~~~~~~ff~~~~~~~~ffff~~~~~~~~~~~ff~~~~~~~~~~~ff.......
+#f~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~f.....
+#~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~f....
+#~~~~~~~~AA~~~~~~~~~BB~~~~~~~~CC~~~~~~~~~DD~~~~~~~~~~~~~....
+#~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~f.E..
+#f~~~~~~~~~~~~~~~~~~~~~~~o~~~~~~~~~~~~~~~~~~~~~~~~~~~~f.....
+#.f~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~f.......
+#..ff~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~fff........
+#....ffff~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~fffff...........
+#........fffff~~~~~~~~~~~~~~~~~~~~~~~ffffff.................
+#............ffffffff~~~~~~~~~ffffff.......................#
+#..................ffffff.................................#s
+#.......................o.................................#s
+#.....p..........p..........p...........p.........p.......#s
+#.........................................................#s
+#.........................................................#s
+#..............................o..........................#s
+#.........................................................#s
+#.........................@...............................#s
+#################sssssssssssssssss#########################s
+ssssssssssssssssssssssssssssssssssssssssssssssssssssssssssss
+  end
+
+  legend
+    # = Solid color 0x08
+    . = Empty color 0x00
+    f = Fake color 0x08
+    ~ = Water color 0x18
+    A = Text-Cyan color 0xB0
+    B = Text-Cyan color 0xB1
+    C = Text-Cyan color 0xB0
+    D = Text-Cyan color 0xB1
+    s = Empty color 0x00
+    p = Object color 0x18
+    o = Object color 0x1F
+    E = Passage color 0x1D to "The Empty Room"
+    e = Empty color 0x00
+    @ = Player color 0x1F under Empty color 0x00
+  end
+
+  stats
+    stat at 58,9 element Passage cycle 0 p3 board "The Empty Room" under Empty color 0x00
+
+    stat at 26,10 element Object cycle 3 p1 cp437:0x01 under Water color 0x18
+    oop
+@face
+#end
+:touch
+#play tcdefg
+There is a face on the water.
+It is looking up at you the way you
+remember it looking up at you.
+/i
+You lean closer to be sure of the eyes.
+/i
+The water shivers. The eyes come apart
+into ripples, and the ripples into fog.
+/i
+You cannot say now whose face it was.
+Only that it was loved.
+#zap touch
+#end
+
+    end
+
+    stat at 25,17 element Object cycle 3 p1 cp437:0xFA under Water color 0x18
+    oop
+@footprint
+#end
+:touch
+Your own footprints trail out onto the
+lake, dark on the pale water.
+/i
+As you watch, the nearest one fills
+with fog and is gone. Then the next.
+The lake is unmaking the path behind you.
+#play s.c.-a
+#zap touch
+#end
+
+    end
+
+    stat at 32,21 element Object cycle 3 p1 cp437:0x0F under Empty color 0x00
+    oop
+@reflection
+#end
+:touch
+Something pale drifts just under the
+surface, keeping pace with you.
+/i
+A reflection with no one above it to cast
+it. It raises a hand you do not raise.
+/i
+Then it thins, the way breath thins on
+cold glass, and there is only the dark.
+#play sc-c-c
+#zap touch
+#end
+
+    end
+
+    stat at 7,18 element Object cycle 3 p1 cp437:0xF7 under Empty color 0x00
+    oop
+@marker1
+#end
+:touch
+A stone marker, wet and half-sunk.
+The name carved on it has worn smooth.
+#play tc
+#zap touch
+Now the marker is only a stone.
+#end
+
+    end
+
+    stat at 18,18 element Object cycle 3 p1 cp437:0xF7 under Empty color 0x00
+    oop
+@marker2
+#end
+:touch
+Another marker. You feel you should know
+what it says. You feel it very strongly.
+#play tc
+#zap touch
+The feeling passes, like all the rest.
+#end
+
+    end
+
+    stat at 29,18 element Object cycle 3 p1 cp437:0xF7 under Empty color 0x00
+    oop
+@marker3
+#end
+:touch
+The fog is thicker here. Sound goes flat.
+Somewhere east the fog thins to a door.
+#play tcg
+#zap touch
+The door is still east. It is all you
+have left that is still true.
+#end
+
+    end
+
+    stat at 41,18 element Object cycle 3 p1 cp437:0xF7 under Empty color 0x00
+    oop
+@marker4
+#end
+:touch
+You touch the cold stone and try, hard,
+to hold one thing about them in your mind.
+/i
+The color of a coat. A laugh. Anything.
+/i
+You hold it for a moment. Then it is
+just fog on your fingers.
+#play s.c.-c.-c
+#zap touch
+#end
+
+    end
+
+    stat at 51,18 element Object cycle 3 p1 cp437:0xF7 under Empty color 0x00
+    oop
+@marker5
+#end
+:touch
+The last marker before the eastern shore.
+It is blank. Perhaps it always was.
+#play tcd
+#zap touch
+Cross the water east. There is a room
+waiting that no longer knows your name.
+#end
+
+    end
+  end
+end
+
+board "The Empty Room"
+  max-shots 0
+  dark false
+  reenter false
+  time-limit 0
+  exits north none south none west "The Lake of Fog" east none
+
+  start player at 1,12
+  grid
+  ff#########################################################f
+  f.........................................................ff
+  w.......................................................w..f
+  w....................................................w.....f
+  w..................www.................................w...f
+  w.................w...w.................................w..f
+  w.................w...w.....................................
+  w..................www......................................
+  w..........................................................f
+  w....................mmmmmmmmmmm...........................f
+  w....................m.........m...........................f
+  @....................m....L....m...........................f
+  w....................m.........m...........................f
+  w....................mmmmmmmmmmm...........................f
+  w..........................................................f
+  w..................t........................................
+  w...........................................o..............f
+  w..........................................................f
+  w........................................................w.f
+  f.....................................................w....f
+  f...................................................w.....ff
+  f.......................................................w..f
+  f.f.....................................................w.ff
+  f#########################################################ff
+  ............................................................
+  end
+
+  legend
+    # = Solid color 0x08
+    . = Empty color 0x08
+    f = Fake color 0x08
+    w = Fake color 0x88
+    m = Normal color 0x07
+    t = Object color 0x08
+    L = Object color 0x08
+    o = Object color 0x08
+    @ = Player color 0x08 under Empty color 0x08
+  end
+
+  stats
+    stat at 27,12 element Object cycle 3 p1 cp437:0xE0 under Empty color 0x08
+    oop
+@lamp
+#end
+:touch
+#play tc-e
+The lamp on the table is cold.
+No one has lit it in a long time.
+You reach for the switch and cannot
+remember whose hand used to be here.
+#zap touch
+#end
+:touch
+#play td-f
+Just a cold lamp. Just an empty table.
+#end
+
+    end
+    stat at 20,16 element Object cycle 3 p1 cp437:0xF9 under Empty color 0x08
+    oop
+@nameplate
+#end
+:touch
+#play te-g
+A small nameplate rests here, face up.
+The engraving has worn smooth.
+You know a name belongs here.
+You wait for it to come. It does not.
+#zap touch
+#end
+:touch
+#play tf-a
+The nameplate is blank. You let it be.
+#end
+
+    end
+    stat at 45,17 element Object cycle 1 p1 cp437:0x04 under Empty color 0x08
+    oop
+@acceptance
+#end
+:touch
+#play tcega
+So this is the empty room.
+The lamp is cold. The name is gone.
+And still the quiet does not hurt
+the way you were so afraid it would.
+#play ie
+You loved someone. That part stays,
+even when the shape of them does not.
+#play tfa+c
+You breathe out. You let the room
+be empty. You let yourself wake.
+#play gec.
+#endgame
+
+    end
+  end
+end
+

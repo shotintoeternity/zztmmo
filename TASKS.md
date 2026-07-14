@@ -1263,7 +1263,7 @@ the corpus/style work builds on. The specs below are unchanged.)
   non-empty, data-grounded, deterministic, and regenerated from the corpus.
   No sim changes, no runtime LLM calls, replay fixture unchanged.
 
-- [ ] **M12.17 [ADVISOR] — Generation prompting-quality evaluation harness.**
+- [x] **M12.17 [ADVISOR] — Generation prompting-quality evaluation harness.**
   The generation prompts have grown — planner (`plannerSystemPrompt`), board
   painting (`boardRequest`), `ZWD.md` spec + `STYLE.md` idiom, retrieval few-shots
   (M12.15a–c), the board-0 title-screen brief (`titleScreenBrief` +
@@ -1302,6 +1302,48 @@ the corpus/style work builds on. The specs below are unchanged.)
   it; `go build ./... && go test ./...` and `npm test` / `npm run build` green;
   replay fixture unchanged (generation is outside the sim). Consult the advisor on
   the rubric and LLM-judge design before building the live tier.
+
+- [ ] **M12.18 — Dream-a-World progress scroll duplicates written lines.**
+  Owner-reported 2026-07-14: writes to the Dream a World progress scroll are
+  duplicating — progress lines appear more than once as generation advances.
+  Client-side: suspect the M12.11 change that switched the progress modal to
+  updating in place with `linePos` auto-follow (`web/src/dream.ts`) — check how
+  poll results are appended vs. replacing the window's line buffer, and dedupe
+  by progress-event identity rather than by string. Presentation only; no
+  engine or protocol change expected. DoD: a node-driven TS test replays a
+  polled progress sequence (including repeated polls of the same stage) and
+  asserts each progress line renders exactly once; `npm test` green.
+
+- [ ] **M12.19 — Close the three generation-pipeline gaps the M12.17 baseline
+  exposed.** Evidence: `llmworld/eval/baseline/report.md` (2026-07-14) and the
+  NOTES.md M12.17 entry. Three mechanical gaps, all reproduced by real runs:
+  1. **Undefined legend key survived the M12.11 absorber.** The Apollo grounded
+     run died exhausting 5 repairs on `grid uses 1 legend key(s) with no legend
+     entry: "."` (board "Pacific Splashdown") — `preprocessZWDGridWithWarnings`
+     is supposed to inject a legend entry for every undefined grid char, so
+     either this path bypasses preprocess or the tokenization misses this case.
+     Find why with the failing candidate and absorb it.
+  2. **Orphan stat-backed Objects survive M12.13 synthesis through identical
+     repair rounds.** Two runs burned 4-5 identical attempts on `grid contains
+     stat-backed element(s) with no matching stat: Object at (x,y)` (dream-plain
+     "Morning Light"; apollo-plain "Lunar Liftoff", which converged on attempt
+     5). The M12.13 reverse-direction synthesis plus M12.16's fixer should make
+     this error impossible; the repeat-verbatim pattern suggests the fix is
+     applied then lost, or the coordinates fall outside the claimed/gridElements
+     bookkeeping. Extra clue from the dream-grounded retry: "The Fading
+     Gardens" reported orphan `Passage at (60,11)` and `(60,12)` — glyphs in
+     the LAST grid column — so check for an off-by-one excluding x=60 in the
+     synthesis walk. Reproduce from the debug transcripts
+     (`llmworld/eval/baseline*/run.log.gz`, the `[DEBUG PREPROCESSED ZWD]`
+     blocks) and fix.
+  3. **Nothing enforces the spine's #endgame is placed.** CASTLERA shipped with
+     zero `#endgame` in any OOP — an unwinnable world accepted by every check.
+     Add it to `crossBoardProblems` (the spine names a finale; the assembled
+     world must contain a reachable `#endgame` — reuse the eval walk in
+     `evalReachableEndgame`), with a repair message naming the omission.
+  DoD: a regression test per gap (failing candidates as fixtures); the M12.17
+  fixture `CASTLERA.expect.txt` line `reachable-endgame` becomes removable on a
+  fresh generation; `go test ./...` green; replay fixture unchanged.
 
 ## M14 — Rearchitecting for the service ZZTMMO is becoming
 
