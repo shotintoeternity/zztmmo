@@ -1,6 +1,7 @@
 import "./style.css";
 import { drawSidebar as paintSidebar, updateSidebar as paintSidebarHud } from "./sidebar";
 import { renderModal, handleModalKey, POPUP_Y_CENTERED, type Modal, type WorldSearchEntry } from "./modal";
+import { openHelp } from "./help";
 import { commandKey, isHandledKey, isMovementKey, movementMask, rawKey } from "./keys";
 import { drawTitleSidebar, titleCommand } from "./title";
 import { soundNotesFromProtocol, ZztSound } from "./sound";
@@ -840,8 +841,10 @@ function closeEditor() {
   void showTitle();
 }
 
-// fetchLines backs the title screen's read-only windows (About, High Scores,
-// World). A failure shows the reason rather than nothing at all.
+// fetchLines backs the title screen's plain read-only windows (High Scores and
+// the world/restore lists). A failure shows the reason rather than nothing at
+// all. Help files (About, editor H) go through showHelp instead, which resolves
+// their cross-file "!-FILE" links.
 async function fetchLines(url: string, fallbackTitle: string) {
   try {
     const response = await fetch(url);
@@ -853,6 +856,23 @@ async function fetchLines(url: string, fallbackTitle: string) {
   } catch {
     openWindow(fallbackTitle, ["", "  Not available: the server did not answer.", ""], true);
   }
+}
+
+// showHelp opens a .HLP file as a navigable help window (M5.12): "!-FILE" links
+// (e.g. EDITOR.HLP's Creatures/Terrains/ZZT-OOP) load that file with a back path,
+// and bare "!label" links jump within the file. fetchHelpLines throws on a 404 so
+// the help module can show a "not available" window instead of a dead link.
+async function fetchHelpLines(file: string): Promise<string[]> {
+  const response = await fetch("/api/help?file=" + encodeURIComponent(file) + "&title=" + encodeURIComponent(file));
+  if (!response.ok) {
+    throw new Error(String(response.status));
+  }
+  const data = (await response.json()) as { lines?: string[] };
+  return data.lines ?? [];
+}
+
+function showHelp(file: string, title: string) {
+  openHelp(file, title, { fetchLines: fetchHelpLines, openModal });
 }
 
 // LOBBY_WORLD is the world everyone lands in by default and nobody has to
@@ -2110,7 +2130,7 @@ function handleTitleKey(event: KeyboardEvent) {
       void showWorlds();
       break;
     case "about":
-      void fetchLines("/api/help?file=ABOUT.HLP&title=About+ZZT...", "About ZZT...");
+      showHelp("ABOUT.HLP", "About ZZT...");
       break;
     case "highScores":
       void fetchLines("/api/highscores?world=" + encodeURIComponent(worldName), `High scores for ${worldName}`);
@@ -2379,7 +2399,7 @@ function handleEditorKey(event: KeyboardEvent) {
       return;
     case "KeyH":
       event.preventDefault();
-      void fetchLines("/api/help?file=EDITOR.HLP&title=" + encodeURIComponent("World editor help"), "World editor help");
+      showHelp("EDITOR.HLP", "World editor help");
       return;
     case "ArrowUp":
     case "Numpad8":

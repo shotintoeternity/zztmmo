@@ -1589,7 +1589,7 @@ and running early. See NOTES.md.)
   during the off phase; and browser coverage/screenshots exercise local cursor,
   collaborator cursor, and stat-backed/object tiles under the cursor.
 
-- [ ] **M5.12 — Editor help `.HLP` cross-references must work in the browser.**
+- [x] **M5.12 — Editor help `.HLP` cross-references must work in the browser.**
   The editor's help windows are dead ends in the browser: `fetchLines`
   (`main.ts:845`) loads a `.HLP` via `/api/help` and hands it to `openWindow(...,
   viewingFile=true)`, whose `onSelect` (`main.ts:1755`) routes **every** selected
@@ -1620,6 +1620,23 @@ and running early. See NOTES.md.)
   `!-FILE` link graph rooted at `EDITOR.HLP` and asserts every target resolves via
   `/api/help`; `npm test`, `npm run build`, `go build ./...`, `go test ./...`
   green. Presentation/help only — no simulation change, replay fixture unchanged.
+
+  Landed: `web/src/help.ts` — `openHelp` builds a read-only, file-viewing text
+  window (`selectable:false`, so it never sends `sendScrollReply`) whose Enter is
+  resolved locally by the modal: a `!-FILE` link calls `onOpenFile`, which
+  refetches `/api/help` and pushes a frame; a bare `!label` link jumps to the
+  `:label` line via the new `modal.ts` `jumpToLabel`. `fileLinkOf` (modal.ts) is
+  `hyperlinkOf`'s `-`-prefixed sibling. Escape pops the browser-only back stack
+  (`onBack`) so `EDITOR.HLP → CREATURE.HLP → back` works; vanilla replaces + closes,
+  the title is kept constant across `-file` hops as vanilla never resets it.
+  Real object scrolls keep their reply path untouched (M3.10). Title About and the
+  editor `H` key route through `showHelp`; `helpFileFor` uppercases the pointer so a
+  case-sensitive server resolves `CREATURE.HLP` from `!-creature`. Tests:
+  `web/test/help.test.mjs` drives the full open→follow→jump→back flow plus the
+  missing-file window; `m5_12_test.go` BFS-walks the `!-FILE` graph from
+  EDITOR/ABOUT/GAME and asserts every target (CREATURE, TERRAIN, ITEM, LANG,
+  LANGTUT, LANGREF, INFO, ABOUT, LICENSE, GAME) resolves via `/api/help`, plus a
+  404 for a missing target.
 
 ## M11 — Museum of ZZT: search and play anything
 

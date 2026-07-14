@@ -66,6 +66,17 @@ export type TextModal = {
    *  rather than dismissing the window. Escape still closes. Scrolls leave this
    *  unset, because there Enter on any line is how you close them. */
   requireSelection?: boolean;
+  /** M5.12 — help/file-viewing windows (vanilla TextWindowSelect viewingFile).
+   *  When set, this window resolves hyperlinks itself instead of replying to the
+   *  engine: Enter on a "!-FILE" link calls onOpenFile(FILE) (the caller refetches
+   *  and replaces the contents), and Enter on a bare "!label" link jumps to the
+   *  ":label" line in the current window. Real object scrolls leave this unset so
+   *  their Enter keeps sending sendScrollReply (M3.10). */
+  onOpenFile?: (file: string) => void;
+  /** M5.12 — help sub-windows opened via a "!-FILE" link: Escape returns to the
+   *  previous file instead of tearing the window down. Undefined at the root, so
+   *  Escape there closes as usual. */
+  onBack?: () => void;
 };
 
 export type YesNoModal = {
@@ -187,10 +198,9 @@ export type Modal =
 export type KeyResult = "close" | "redraw" | "ignore";
 
 /**
- * hyperlinkOf extracts the ZZT-OOP label from a "!label;text" line, or "" if the
- * line is not a hyperlink. "!-FILE;text" jumps to another help file — not wired
- * up (it needs a client→server "open help file" request, see TASKS.md M4.1
- * notes and NOTES.md M3.10), so it is reported as "" and Enter just closes.
+ * hyperlinkOf extracts the bare ZZT-OOP label from a "!label;text" line, or "" if
+ * the line is not a bare hyperlink. A "!-FILE;text" cross-file link is not a bare
+ * label, so it reports "" here; use fileLinkOf for those (M5.12).
  */
 export function hyperlinkOf(line: string): string {
   if (!line.startsWith("!")) {
@@ -205,6 +215,44 @@ export function hyperlinkOf(line: string): string {
     return "";
   }
   return pointer;
+}
+
+/**
+ * fileLinkOf extracts the target of a "!-FILE;text" cross-file help link (the
+ * name without the leading "-"), or "" if the line is not such a link. This is
+ * vanilla TextWindowSelect's `-` branch (txtwind.go:183), which opens the named
+ * .HLP file.
+ */
+export function fileLinkOf(line: string): string {
+  if (!line.startsWith("!")) {
+    return "";
+  }
+  let pointer = line.slice(1);
+  const semi = pointer.indexOf(";");
+  if (semi >= 0) {
+    pointer = pointer.slice(0, semi);
+  }
+  if (pointer.startsWith("-")) {
+    return pointer.slice(1);
+  }
+  return "";
+}
+
+// jumpToLabel is TextWindowSelect's bare-hyperlink branch when not selecting
+// (txtwind.go:200-215): it scrolls to the ":label" line inside the current
+// window. The match is a case-insensitive prefix, exactly as the Pascal compares
+// UpCase char by char over the pointer length.
+function jumpToLabel(m: TextModal, label: string) {
+  const target = (":" + label).toLowerCase();
+  for (let i = 0; i < m.state.lines.length; i += 1) {
+    if (m.state.lines[i].toLowerCase().startsWith(target)) {
+      if (i + 1 !== m.state.linePos) {
+        m.state.linePos = i + 1;
+        m.moved = true;
+      }
+      return;
+    }
+  }
 }
 
 function resolveTitle(m: TextModal) {
@@ -716,9 +764,31 @@ function textKey(m: TextModal, event: KeyboardEvent): KeyResult {
       next += TEXT_WINDOW_PAGE;
       break;
     case "Escape":
+      // Help sub-windows pop back to the previous file; every other window closes.
+      if (m.onBack) {
+        m.onBack();
+        return "redraw";
+      }
       return "close";
     case "Enter": {
-      const label = hyperlinkOf(m.state.lines[m.state.linePos - 1] ?? "");
+      const current = m.state.lines[m.state.linePos - 1] ?? "";
+      // Help/file-viewing windows resolve links themselves (M5.12): a "!-FILE"
+      // link opens that file, a bare "!label" jumps within this file, and Enter on
+      // ordinary text closes — matching vanilla TextWindowSelect(viewingFile).
+      if (m.onOpenFile) {
+        const file = fileLinkOf(current);
+        if (file) {
+          m.onOpenFile(file);
+          return "redraw";
+        }
+        const label = hyperlinkOf(current);
+        if (label) {
+          jumpToLabel(m, label);
+          return "redraw";
+        }
+        return "close";
+      }
+      const label = hyperlinkOf(current);
       if (label && m.selectable) {
         m.onSelect(label);
         return "close";
