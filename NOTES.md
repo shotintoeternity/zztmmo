@@ -2506,3 +2506,36 @@ Evidence / DoD:
   `llmworld/eval/baseline/` and link it here.
 - `go build ./... && go vet ./... && go test ./...` green; replay fixture
   unchanged (generation/eval are outside the sim).
+
+## 2026-07-14 — M12.22: retry a failed board (owner request)
+
+When a board exhausted its attempts, `generate` discarded the plan and every
+board already painted; the player paid for a full fresh run. Now board-scoped
+failures return `*GenerationBoardError` carrying a `generationResume` (premise,
+plan, name, painted sections, attempt counters) plus the generation-order
+resume index, and `RetryBoard` re-enters `paintAndFinish` from the failed
+board. Decisions:
+
+- **Any board-scoped failure is retryable, not just exhaustion.** LLM transport
+  errors surface through the same `paintBoard` path with the same intact state;
+  refusing them would force a full re-run for a network blip. Plan-stage and
+  assembled-compile failures stay non-retryable — no single board owns them.
+- **Retries skip the per-client rate limit but still take a concurrency slot.**
+  The player is continuing one admitted generation, not starting another; the
+  semaphore still prevents retry dogpiles.
+- **Batch mode retries the whole failed batch** (attempt counters of every
+  board in it reset; the display name is the joined list) — the batch is the
+  unit of failure and of the resume index.
+- **A failure inside the cross-board repair loop resumes with
+  startIdx = len(GenerationOrder)**: painting no-ops and the assembled-world
+  loop re-runs from round 0, recomputing problems against the repaired
+  sections.
+- **Double retry cannot race the shared resume state**: the async job flips
+  back to "running" under `generationMu` before the retry goroutine starts,
+  and `POST /api/generate {"retry": id}` refuses (409) any job that is not
+  failed-with-resume. Unknown ids are 404.
+
+Client: `runDreamGeneration` rejects with `DreamFailure{jobId, retryable,
+failedBoard}`; the failure path asks `Dream failed. Repaint "<board>"? ` and on
+yes resumes polling the same job. `go test -race -run TestM1222` and the full
+suites are green; replay fixture unchanged (generation is outside the sim).

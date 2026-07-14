@@ -72,6 +72,40 @@ type GenerationResult struct {
 	ZWD  string
 }
 
+// GenerationBoardError wraps a failure that happened while painting one known
+// board (or batch) with every earlier board intact, so the caller can offer a
+// targeted retry (M12.22): after the attempt budget is exhausted the player
+// re-requests just that board instead of losing the whole world.
+type GenerationBoardError struct {
+	// Board names the failed unit for display ("Lunar Liftoff", or a joined
+	// list in batch mode).
+	Board string
+	// retryBoards are the boards whose attempt counters a retry resets.
+	retryBoards []string
+	// startIdx is the position in plan.GenerationOrder to resume painting
+	// from; len(order) means painting finished and the cross-board repair
+	// loop failed.
+	startIdx int
+	resume   *generationResume
+	err      error
+}
+
+func (e *GenerationBoardError) Error() string { return e.err.Error() }
+func (e *GenerationBoardError) Unwrap() error { return e.err }
+
+// generationResume is everything paintAndFinish needs to continue a
+// generation: the plan and the boards painted so far. It is carried by
+// GenerationBoardError so a failed async job can be resumed in place.
+type generationResume struct {
+	premise  string
+	planText string
+	plan     Plan
+	name     string
+	sections map[string]string
+	attempts map[string]*int
+	server   *WebSocketServer
+}
+
 // ErrGenerationUnavailable is returned before making a network call when the
 // server has not been configured with its Anthropic credentials.
 var ErrGenerationUnavailable = fmt.Errorf("world generation is not configured")
@@ -205,46 +239,91 @@ func (g *GenerationService) generate(ctx context.Context, client, premise, reque
 		return GenerationResult{}, err
 	}
 
-	byID := make(map[string]PlanBoard, len(plan.Boards))
-	for _, b := range plan.Boards {
-		byID[strings.ToLower(b.ID)] = b
-	}
 	sections := make(map[string]string, len(plan.Boards))
 	attempts := make(map[string]*int, len(plan.Boards))
 	for _, board := range plan.Boards {
 		count := 0
 		attempts[board.Name] = &count
 	}
+	st := &generationResume{
+		premise: premise, planText: planText, plan: plan, name: name,
+		sections: sections, attempts: attempts, server: server,
+	}
+	return g.paintAndFinish(ctx, st, 0)
+}
+
+// RetryBoard resumes a generation that failed with a GenerationBoardError
+// (M12.22): the failed board's attempt budget is reset and painting re-enters
+// at that board, keeping the plan and every board painted before it. Retries
+// skip the per-client rate limit — the player is continuing one admitted
+// generation, not starting another — but still take a concurrency slot so
+// retries cannot dogpile the API. The caller must not run two retries of the
+// same failure concurrently (the async job layer enforces this by flipping the
+// job back to running under its lock before spawning the retry).
+func (g *GenerationService) RetryBoard(ctx context.Context, boardErr *GenerationBoardError, progress func(GenerationProgress)) (GenerationResult, error) {
+	if boardErr == nil || boardErr.resume == nil {
+		return GenerationResult{}, fmt.Errorf("generation failure is not board-retryable")
+	}
+	if progress != nil {
+		ctx = context.WithValue(ctx, generationProgressContextKey{}, progress)
+	}
+	select {
+	case g.sem <- struct{}{}:
+	case <-ctx.Done():
+		return GenerationResult{}, ctx.Err()
+	}
+	defer func() { <-g.sem }()
+	st := boardErr.resume
+	for _, name := range boardErr.retryBoards {
+		if counter := st.attempts[name]; counter != nil {
+			*counter = 0
+		}
+	}
+	return g.paintAndFinish(ctx, st, boardErr.startIdx)
+}
+
+// paintAndFinish paints the plan's boards from startIdx onward, then runs the
+// assembled-world validation, persistence, and hosting. Board-scoped failures
+// come back as *GenerationBoardError so the caller can offer a targeted retry.
+func (g *GenerationService) paintAndFinish(ctx context.Context, st *generationResume, startIdx int) (GenerationResult, error) {
+	plan, planText, name := st.plan, st.planText, st.name
+	byID := make(map[string]PlanBoard, len(plan.Boards))
+	for _, b := range plan.Boards {
+		byID[strings.ToLower(b.ID)] = b
+	}
 	if g.batchSize <= 1 {
-		for index, id := range plan.GenerationOrder {
+		for index := startIdx; index < len(plan.GenerationOrder); index++ {
+			id := plan.GenerationOrder[index]
 			board, ok := byID[strings.ToLower(id)]
 			if !ok {
 				return GenerationResult{}, fmt.Errorf("plan generation order references unknown board %q", id)
 			}
-			g.report(ctx, GenerationProgress{Stage: "painting", Board: board.Name, Index: index + 1, Total: len(plan.GenerationOrder), Attempt: *attempts[board.Name] + 1})
-			section, err := g.paintBoard(ctx, planText, plan, board, sections, attempts[board.Name], "")
+			g.report(ctx, GenerationProgress{Stage: "painting", Board: board.Name, Index: index + 1, Total: len(plan.GenerationOrder), Attempt: *st.attempts[board.Name] + 1})
+			section, err := g.paintBoard(ctx, planText, plan, board, st.sections, st.attempts[board.Name], "")
 			if err != nil {
-				return GenerationResult{}, err
+				return GenerationResult{}, &GenerationBoardError{Board: board.Name, retryBoards: []string{board.Name}, startIdx: index, resume: st, err: err}
 			}
-			sections[board.Name] = section
+			st.sections[board.Name] = section
 		}
 	} else {
-		for i := 0; i < len(plan.GenerationOrder); i += g.batchSize {
+		for i := startIdx; i < len(plan.GenerationOrder); i += g.batchSize {
 			end := i + g.batchSize
 			if end > len(plan.GenerationOrder) {
 				end = len(plan.GenerationOrder)
 			}
 			var batchBoards []PlanBoard
+			var batchNames []string
 			for _, id := range plan.GenerationOrder[i:end] {
 				board, ok := byID[strings.ToLower(id)]
 				if !ok {
 					return GenerationResult{}, fmt.Errorf("plan generation order references unknown board %q", id)
 				}
 				batchBoards = append(batchBoards, board)
+				batchNames = append(batchNames, board.Name)
 			}
-			err := g.paintBoardsBatch(ctx, planText, plan, batchBoards, sections, attempts)
+			err := g.paintBoardsBatch(ctx, planText, plan, batchBoards, st.sections, st.attempts)
 			if err != nil {
-				return GenerationResult{}, err
+				return GenerationResult{}, &GenerationBoardError{Board: strings.Join(batchNames, ", "), retryBoards: batchNames, startIdx: i, resume: st, err: err}
 			}
 		}
 	}
@@ -252,19 +331,20 @@ func (g *GenerationService) generate(ctx context.Context, client, premise, reque
 	var full string
 	var data []byte
 	var world TWorld
+	var err error
 	for repairRound := 0; repairRound < g.maxAttempts; repairRound++ {
 		g.report(ctx, GenerationProgress{Stage: "validating", Detail: "compiling and validating the assembled world"})
-		full = assembleGeneratedZWD(name, plan, sections)
+		full = assembleGeneratedZWD(name, plan, st.sections)
 		data, err = CompileZWD(full)
 		if err != nil {
-			return GenerationResult{}, fmt.Errorf("assembled world did not compile: %w", translateZWDError(err, plan, sections))
+			return GenerationResult{}, fmt.Errorf("assembled world did not compile: %w", translateZWDError(err, plan, st.sections))
 		}
 		if err := validateGeneratedZWD(data); err != nil {
 			return GenerationResult{}, fmt.Errorf("assembled world did not validate: %w", err)
 		}
 		world, err = CompileZWDWorld(full)
 		if err != nil {
-			return GenerationResult{}, fmt.Errorf("assembled world did not compile: %w", translateZWDError(err, plan, sections))
+			return GenerationResult{}, fmt.Errorf("assembled world did not compile: %w", translateZWDError(err, plan, st.sections))
 		}
 		problems := crossBoardProblems(plan, full)
 		if len(problems) == 0 {
@@ -274,12 +354,12 @@ func (g *GenerationService) generate(ctx context.Context, client, premise, reque
 			return GenerationResult{}, fmt.Errorf("cross-board validation exhausted repairs: %s", formatGenerationProblems(problems))
 		}
 		for _, board := range orderedProblemBoards(plan, problems) {
-			g.report(ctx, GenerationProgress{Stage: "repairing", Board: board.Name, Attempt: *attempts[board.Name] + 1, Detail: strings.Join(problems[board.Name], "; ")})
-			section, err := g.paintBoard(ctx, planText, plan, board, sections, attempts[board.Name], strings.Join(problems[board.Name], "; "))
+			g.report(ctx, GenerationProgress{Stage: "repairing", Board: board.Name, Attempt: *st.attempts[board.Name] + 1, Detail: strings.Join(problems[board.Name], "; ")})
+			section, err := g.paintBoard(ctx, planText, plan, board, st.sections, st.attempts[board.Name], strings.Join(problems[board.Name], "; "))
 			if err != nil {
-				return GenerationResult{}, err
+				return GenerationResult{}, &GenerationBoardError{Board: board.Name, retryBoards: []string{board.Name}, startIdx: len(plan.GenerationOrder), resume: st, err: err}
 			}
-			sections[board.Name] = section
+			st.sections[board.Name] = section
 		}
 	}
 
@@ -292,11 +372,11 @@ func (g *GenerationService) generate(ctx context.Context, client, premise, reque
 	}
 
 	g.report(ctx, GenerationProgress{Stage: "persisting", Detail: "saving accepted world and sidecars"})
-	if err := persistGeneratedWorld(g.outputDir, name, premise, planText, full, data); err != nil {
+	if err := persistGeneratedWorld(g.outputDir, name, st.premise, planText, full, data); err != nil {
 		return GenerationResult{}, err
 	}
-	if server != nil {
-		if err := server.HostGeneratedWorld(name, world); err != nil {
+	if st.server != nil {
+		if err := st.server.HostGeneratedWorld(name, world); err != nil {
 			return GenerationResult{}, err
 		}
 	}

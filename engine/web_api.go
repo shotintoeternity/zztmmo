@@ -55,10 +55,18 @@ type WebAPI struct {
 }
 
 type generationJob struct {
-	Status   string               `json:"status"`
-	World    string               `json:"world,omitempty"`
-	Error    string               `json:"error,omitempty"`
-	Progress []GenerationProgress `json:"progress"`
+	Status string `json:"status"`
+	World  string `json:"world,omitempty"`
+	Error  string `json:"error,omitempty"`
+	// Retryable and FailedBoard are set when a failure kept resumable state
+	// (M12.22): the client may POST {"retry": "<job id>"} to re-request the
+	// failed board instead of starting the whole world over.
+	Retryable   bool                 `json:"retryable,omitempty"`
+	FailedBoard string               `json:"failedBoard,omitempty"`
+	Progress    []GenerationProgress `json:"progress"`
+
+	resume    *GenerationBoardError
+	generator *GenerationService
 }
 
 // Handler mounts the title-screen endpoints under /api/.
@@ -184,9 +192,14 @@ func (a *WebAPI) handleGenerate(w http.ResponseWriter, r *http.Request) {
 		Name   string `json:"name"`
 		Async  bool   `json:"async"`
 		Ground bool   `json:"ground"`
+		Retry  string `json:"retry"`
 	}
 	if err := json.NewDecoder(http.MaxBytesReader(w, r.Body, 16<<10)).Decode(&body); err != nil {
 		http.Error(w, "bad request body", http.StatusBadRequest)
+		return
+	}
+	if body.Retry != "" {
+		a.handleGenerationRetry(w, body.Retry)
 		return
 	}
 	generator := a.Generator
@@ -236,14 +249,21 @@ func (a *WebAPI) handleGenerate(w http.ResponseWriter, r *http.Request) {
 }
 
 func (a *WebAPI) runGenerationJob(id string, generator *GenerationService, client, prompt, name string, ground bool) {
-	progress := func(event GenerationProgress) {
+	result, err := generator.GenerateWithProgress(context.Background(), client, prompt, name, a.Server, a.jobProgress(id), ground)
+	a.finishGenerationJob(id, generator, result, err)
+}
+
+func (a *WebAPI) jobProgress(id string) func(GenerationProgress) {
+	return func(event GenerationProgress) {
 		a.generationMu.Lock()
 		if job := a.generationJobs[id]; job != nil {
 			job.Progress = append(job.Progress, event)
 		}
 		a.generationMu.Unlock()
 	}
-	result, err := generator.GenerateWithProgress(context.Background(), client, prompt, name, a.Server, progress, ground)
+}
+
+func (a *WebAPI) finishGenerationJob(id string, generator *GenerationService, result GenerationResult, err error) {
 	a.generationMu.Lock()
 	defer a.generationMu.Unlock()
 	job := a.generationJobs[id]
@@ -253,10 +273,53 @@ func (a *WebAPI) runGenerationJob(id string, generator *GenerationService, clien
 	if err != nil {
 		job.Status = "failed"
 		job.Error = err.Error()
+		// A board-scoped failure keeps its resume state so the player can
+		// re-request just the failed board (M12.22).
+		var boardErr *GenerationBoardError
+		if errors.As(err, &boardErr) {
+			job.Retryable = true
+			job.FailedBoard = boardErr.Board
+			job.resume = boardErr
+			job.generator = generator
+		}
 		return
 	}
 	job.Status = "complete"
 	job.World = result.Name
+}
+
+// handleGenerationRetry resumes a failed async job from its failed board. The
+// job is flipped back to running under the lock before the goroutine starts,
+// so a second concurrent retry of the same job is refused rather than racing
+// the shared resume state.
+func (a *WebAPI) handleGenerationRetry(w http.ResponseWriter, id string) {
+	a.generationMu.Lock()
+	job := a.generationJobs[id]
+	if job == nil {
+		a.generationMu.Unlock()
+		http.Error(w, "no such generation job", http.StatusNotFound)
+		return
+	}
+	if job.Status != "failed" || job.resume == nil || job.generator == nil {
+		a.generationMu.Unlock()
+		http.Error(w, "generation job is not retryable", http.StatusConflict)
+		return
+	}
+	resume, generator := job.resume, job.generator
+	job.Status = "running"
+	job.Error = ""
+	job.Retryable = false
+	job.FailedBoard = ""
+	job.resume = nil
+	a.generationMu.Unlock()
+	go func() {
+		result, err := generator.RetryBoard(context.Background(), resume, a.jobProgress(id))
+		a.finishGenerationJob(id, generator, result, err)
+	}()
+	w.WriteHeader(http.StatusAccepted)
+	writeJSON(w, struct {
+		ID string `json:"id"`
+	}{ID: id})
 }
 
 func (a *WebAPI) handleGenerationStatus(w http.ResponseWriter, r *http.Request) {

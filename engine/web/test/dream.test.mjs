@@ -12,7 +12,9 @@ const output = await build({
   write: false,
 });
 const source = Buffer.from(output.outputFiles[0].contents).toString("base64");
-const { generationLines, runDreamGeneration } = await import(`data:text/javascript;base64,${source}`);
+const { DreamFailure, generationLines, retryDreamBoard, runDreamGeneration } = await import(
+  `data:text/javascript;base64,${source}`
+);
 
 assert.deepEqual(generationLines([]), ["", "$Imagining the world...", ""]);
 assert.deepEqual(
@@ -123,4 +125,47 @@ await assert.rejects(
   /board Start exhausted 3 generation attempts/,
 );
 
-console.log("M12.5 dream flow: success and failure paths passed");
+// M12.22: a retryable failure rejects with DreamFailure carrying the job id
+// and failed board, and retryDreamBoard re-requests that board and resumes
+// polling the same job id to completion.
+const retryCalls = [];
+const retryReplies = [
+  { id: "gen-4" },
+  { status: "failed", error: 'board "Lunar Liftoff" exhausted 3 generation attempts', retryable: true, failedBoard: "Lunar Liftoff", progress: [] },
+  { id: "gen-4" },
+  { status: "running", progress: [{ stage: "painting", board: "Lunar Liftoff", attempt: 1, maxAttempts: 3 }] },
+  { status: "complete", world: "MOONWORLD", progress: [] },
+];
+const retryFetcher = async (url, init) => {
+  retryCalls.push({ url, init });
+  return new Response(JSON.stringify(retryReplies.shift()), { status: 200 });
+};
+let failure;
+try {
+  await runDreamGeneration("to the moon", retryFetcher, async () => {}, () => {});
+} catch (error) {
+  failure = error;
+}
+assert.ok(failure instanceof DreamFailure, `expected DreamFailure, got ${failure}`);
+assert.equal(failure.retryable, true);
+assert.equal(failure.jobId, "gen-4");
+assert.equal(failure.failedBoard, "Lunar Liftoff");
+const retriedWorld = await retryDreamBoard(failure.jobId, retryFetcher, async () => {}, () => {});
+assert.equal(retriedWorld, "MOONWORLD");
+assert.deepEqual(JSON.parse(retryCalls[2].init.body), { retry: "gen-4", async: true });
+assert.equal(retryCalls[3].url, "/api/generate?id=gen-4");
+// A non-retryable failure surfaces retryable=false so the UI skips the offer.
+const planFailReplies = [
+  { id: "gen-5" },
+  { status: "failed", error: "plan generation exhausted repairs" },
+];
+let planFailure;
+try {
+  await runDreamGeneration("bad plan", async () => new Response(JSON.stringify(planFailReplies.shift())), async () => {}, () => {});
+} catch (error) {
+  planFailure = error;
+}
+assert.ok(planFailure instanceof DreamFailure);
+assert.equal(planFailure.retryable, false);
+
+console.log("M12.5 dream flow: success, failure, and M12.22 retry paths passed");

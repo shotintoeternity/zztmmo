@@ -5,7 +5,7 @@ import { openHelp } from "./help";
 import { commandKey, isHandledKey, isMovementKey, movementMask, rawKey } from "./keys";
 import { drawTitleSidebar, titleCommand } from "./title";
 import { soundNotesFromProtocol, ZztSound } from "./sound";
-import { generationLines, runDreamGeneration, type GenerationProgress } from "./dream";
+import { DreamFailure, generationLines, retryDreamBoard, runDreamGeneration, type GenerationProgress } from "./dream";
 import { drawEditorSidebar, type EditorInspect, type SidebarActionMenu, type SidebarStatPrompt } from "./editor";
 import { editorReplyMatchesCursor, editorCursorOverlay, EDITOR_BLINK_PHASES } from "./editor_cursor";
 import { optimisticEditorEraseCell, optimisticEditorTextCell } from "./editor_input";
@@ -1065,7 +1065,40 @@ async function startDreamGeneration(prompt: string, ground = false) {
     );
     await enterWorld(world);
   } catch (error) {
-    openWindow("Dream failed", ["", String(error), "", "Try a shorter premise later."], true);
+    handleDreamFailure(error);
+  }
+}
+
+// When the server kept resumable state (a board exhausted its attempts but
+// the plan and earlier boards survive — M12.22), offer to re-request just the
+// failed board before giving up on the whole world.
+function handleDreamFailure(error: unknown) {
+  if (error instanceof DreamFailure && error.retryable) {
+    const board = error.failedBoard || "the failed board";
+    openYesNo(`Dream failed. Repaint "${board}"? `, (yes) => {
+      if (yes) {
+        void resumeDreamGeneration(error.jobId);
+      } else {
+        openWindow("Dream failed", ["", error.message, "", "Try a shorter premise later."], true);
+      }
+    });
+    return;
+  }
+  openWindow("Dream failed", ["", String(error), "", "Try a shorter premise later."], true);
+}
+
+async function resumeDreamGeneration(jobId: string) {
+  showGenerationProgress([]);
+  try {
+    const world = await retryDreamBoard(
+      jobId,
+      fetch,
+      () => new Promise((resolve) => window.setTimeout(resolve, 500)),
+      showGenerationProgress,
+    );
+    await enterWorld(world);
+  } catch (error) {
+    handleDreamFailure(error);
   }
 }
 

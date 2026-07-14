@@ -3,6 +3,7 @@ package zztgo
 import (
 	"context"
 	"encoding/json"
+	"errors"
 	"fmt"
 	"net/http"
 	"net/http/httptest"
@@ -346,6 +347,151 @@ func TestM124ExhaustedBoardRepairs(t *testing.T) {
 	_, err := service.Generate(context.Background(), "test", "never compiles", "NOPE", nil, false)
 	if err == nil || !strings.Contains(err.Error(), "exhausted 2 generation attempts") {
 		t.Fatalf("error = %v, want exhausted repairs", err)
+	}
+}
+
+// TestM1222RetryBoardAfterExhaustion proves an exhausted board is resumable:
+// the failure carries the plan and every board painted before it, and
+// RetryBoard re-enters at the failed board with a fresh attempt budget.
+func TestM1222RetryBoardAfterExhaustion(t *testing.T) {
+	plan := generationPlan("1. start: begin. #endgame")
+	fake, claude := newFakeClaude(t, plan, "bad", "still bad", generatedBoard("Start", false), generatedBoard("Title", false))
+	defer claude.Close()
+	service := newGenerationTestService(t, claude.URL, 2)
+	_, err := service.Generate(context.Background(), "test", "retry me", "RETRYW", nil, false)
+	var boardErr *GenerationBoardError
+	if !errors.As(err, &boardErr) {
+		t.Fatalf("error = %v, want GenerationBoardError", err)
+	}
+	if boardErr.Board != "Start" {
+		t.Fatalf("failed board = %q, want Start", boardErr.Board)
+	}
+	result, err := service.RetryBoard(context.Background(), boardErr, nil)
+	if err != nil {
+		t.Fatalf("retry failed: %v", err)
+	}
+	if result.Name != "RETRYW" {
+		t.Fatalf("world = %q, want RETRYW", result.Name)
+	}
+	// plan + 2 exhausted Start attempts + retried Start + Title
+	if len(fake.requests) != 5 {
+		t.Fatalf("Claude calls = %d, want 5", len(fake.requests))
+	}
+	if _, err := os.Stat(filepath.Join(service.outputDir, "RETRYW.ZZT")); err != nil {
+		t.Errorf("retried world was not persisted: %v", err)
+	}
+}
+
+func waitForGenerationJob(t *testing.T, handler http.Handler, id, want string) generationJob {
+	t.Helper()
+	deadline := time.Now().Add(10 * time.Second)
+	for time.Now().Before(deadline) {
+		rec := httptest.NewRecorder()
+		handler.ServeHTTP(rec, httptest.NewRequest(http.MethodGet, "/api/generate?id="+id, nil))
+		if rec.Code != http.StatusOK {
+			t.Fatalf("status poll = %d: %s", rec.Code, rec.Body.String())
+		}
+		var job generationJob
+		if err := json.NewDecoder(rec.Body).Decode(&job); err != nil {
+			t.Fatal(err)
+		}
+		if job.Status == want {
+			return job
+		}
+		if job.Status != "running" {
+			t.Fatalf("job status = %q (%s), want %q", job.Status, job.Error, want)
+		}
+		time.Sleep(5 * time.Millisecond)
+	}
+	t.Fatalf("timed out waiting for job %s to reach %s", id, want)
+	return generationJob{}
+}
+
+// TestM1222RetryEndpointResumesFailedJob drives the whole async round trip:
+// fail, observe retryable+failedBoard, retry the same job id, complete, and
+// then confirm a finished job refuses another retry.
+func TestM1222RetryEndpointResumesFailedJob(t *testing.T) {
+	plan := generationPlan("1. start: begin. #endgame")
+	_, claude := newFakeClaude(t, plan, "bad", "still bad", generatedBoard("Start", false), generatedBoard("Title", false))
+	defer claude.Close()
+	service := newGenerationTestService(t, claude.URL, 2)
+	server := NewWebSocketServer(testEmptyWorld(t), 1)
+	api := &WebAPI{RoomManager: server.RoomManager, Server: server, Generator: service}
+	handler := api.Handler()
+
+	rec := httptest.NewRecorder()
+	handler.ServeHTTP(rec, httptest.NewRequest(http.MethodPost, "/api/generate", strings.NewReader(`{"prompt":"retry me","name":"RETRYA","async":true}`)))
+	if rec.Code != http.StatusAccepted {
+		t.Fatalf("start = %d: %s", rec.Code, rec.Body.String())
+	}
+	var started struct {
+		ID string `json:"id"`
+	}
+	if err := json.NewDecoder(rec.Body).Decode(&started); err != nil {
+		t.Fatal(err)
+	}
+
+	job := waitForGenerationJob(t, handler, started.ID, "failed")
+	if !job.Retryable || job.FailedBoard != "Start" {
+		t.Fatalf("failed job = %+v, want retryable with FailedBoard Start", job)
+	}
+
+	rec = httptest.NewRecorder()
+	handler.ServeHTTP(rec, httptest.NewRequest(http.MethodPost, "/api/generate", strings.NewReader(`{"retry":"`+started.ID+`"}`)))
+	if rec.Code != http.StatusAccepted {
+		t.Fatalf("retry = %d: %s", rec.Code, rec.Body.String())
+	}
+
+	job = waitForGenerationJob(t, handler, started.ID, "complete")
+	if job.World != "RETRYA" {
+		t.Fatalf("world = %q, want RETRYA", job.World)
+	}
+	if server.Instances["RETRYA"] == nil {
+		t.Fatal("retried world was not hosted as an instance")
+	}
+
+	rec = httptest.NewRecorder()
+	handler.ServeHTTP(rec, httptest.NewRequest(http.MethodPost, "/api/generate", strings.NewReader(`{"retry":"`+started.ID+`"}`)))
+	if rec.Code != http.StatusConflict {
+		t.Fatalf("retry of completed job = %d, want 409", rec.Code)
+	}
+}
+
+// TestM1222PlanFailureIsNotRetryable: only board-scoped failures keep resume
+// state. A plan that never validates fails the job with no retry offer, and
+// the retry endpoint refuses it; an unknown job id is a 404.
+func TestM1222PlanFailureIsNotRetryable(t *testing.T) {
+	_, claude := newFakeClaude(t, "not a plan", "still not a plan")
+	defer claude.Close()
+	service := newGenerationTestService(t, claude.URL, 2)
+	server := NewWebSocketServer(testEmptyWorld(t), 1)
+	api := &WebAPI{RoomManager: server.RoomManager, Server: server, Generator: service}
+	handler := api.Handler()
+
+	rec := httptest.NewRecorder()
+	handler.ServeHTTP(rec, httptest.NewRequest(http.MethodPost, "/api/generate", strings.NewReader(`{"prompt":"bad plan","name":"NOPLAN","async":true}`)))
+	if rec.Code != http.StatusAccepted {
+		t.Fatalf("start = %d: %s", rec.Code, rec.Body.String())
+	}
+	var started struct {
+		ID string `json:"id"`
+	}
+	if err := json.NewDecoder(rec.Body).Decode(&started); err != nil {
+		t.Fatal(err)
+	}
+	job := waitForGenerationJob(t, handler, started.ID, "failed")
+	if job.Retryable || job.FailedBoard != "" {
+		t.Fatalf("plan failure = %+v, want non-retryable", job)
+	}
+	rec = httptest.NewRecorder()
+	handler.ServeHTTP(rec, httptest.NewRequest(http.MethodPost, "/api/generate", strings.NewReader(`{"retry":"`+started.ID+`"}`)))
+	if rec.Code != http.StatusConflict {
+		t.Fatalf("retry of plan failure = %d, want 409", rec.Code)
+	}
+	rec = httptest.NewRecorder()
+	handler.ServeHTTP(rec, httptest.NewRequest(http.MethodPost, "/api/generate", strings.NewReader(`{"retry":"gen-does-not-exist"}`)))
+	if rec.Code != http.StatusNotFound {
+		t.Fatalf("retry of unknown job = %d, want 404", rec.Code)
 	}
 }
 

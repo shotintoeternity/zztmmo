@@ -1396,7 +1396,7 @@ the corpus/style work builds on. The specs below are unchanged.)
   rides a cached system block and no longer appears in the board user message.
   Owner-directed 2026-07-14.
 
-- [ ] **M12.22 — Retry a failed board instead of losing the world (owner
+- [x] **M12.22 — Retry a failed board instead of losing the world (owner
   request 2026-07-14).** When a board exhausts its attempt budget (default
   `maxAttempts` 3), `generate` threw away the plan and every board already
   painted: the player got "Dream failed" and had to pay for a whole fresh run.

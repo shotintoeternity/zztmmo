@@ -32,8 +32,28 @@ export type GenerationJob = {
   status: "running" | "complete" | "failed";
   world?: string;
   error?: string;
+  retryable?: boolean;
+  failedBoard?: string;
   progress?: GenerationProgress[];
 };
+
+/**
+ * DreamFailure carries the failed job's identity so the UI can offer a
+ * targeted retry (M12.22): when the server kept resumable state (retryable),
+ * re-requesting the failed board continues the same job instead of paying for
+ * a whole fresh generation.
+ */
+export class DreamFailure extends Error {
+  constructor(
+    message: string,
+    readonly jobId: string,
+    readonly retryable: boolean,
+    readonly failedBoard?: string,
+  ) {
+    super(message);
+    this.name = "DreamFailure";
+  }
+}
 
 type Fetcher = (input: RequestInfo | URL, init?: RequestInit) => Promise<Response>;
 
@@ -119,7 +139,35 @@ export async function runDreamGeneration(
   if (!response.ok) throw new Error(await response.text());
   const { id } = (await response.json()) as { id: string };
   if (!id) throw new Error("generation server returned no job id");
+  return pollDreamJob(id, fetcher, wait, onProgress);
+}
 
+/**
+ * retryDreamBoard re-requests the failed board of a still-resumable job
+ * (M12.22) and resumes polling the same job id. The server refuses jobs that
+ * are not failed-with-resume-state, so double retries surface as errors here.
+ */
+export async function retryDreamBoard(
+  jobId: string,
+  fetcher: Fetcher,
+  wait: () => Promise<void>,
+  onProgress: (progress: GenerationProgress[]) => void,
+): Promise<string> {
+  const response = await fetcher("/api/generate", {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ retry: jobId, async: true }),
+  });
+  if (!response.ok) throw new Error(await response.text());
+  return pollDreamJob(jobId, fetcher, wait, onProgress);
+}
+
+async function pollDreamJob(
+  id: string,
+  fetcher: Fetcher,
+  wait: () => Promise<void>,
+  onProgress: (progress: GenerationProgress[]) => void,
+): Promise<string> {
   for (;;) {
     await wait();
     const statusResponse = await fetcher(`/api/generate?id=${encodeURIComponent(id)}`);
@@ -127,6 +175,8 @@ export async function runDreamGeneration(
     const job = (await statusResponse.json()) as GenerationJob;
     onProgress(job.progress ?? []);
     if (job.status === "complete" && job.world) return job.world;
-    if (job.status === "failed") throw new Error(job.error || "generation failed");
+    if (job.status === "failed") {
+      throw new DreamFailure(job.error || "generation failed", id, !!job.retryable, job.failedBoard);
+    }
   }
 }
