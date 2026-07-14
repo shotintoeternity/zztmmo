@@ -33,6 +33,51 @@ assert.equal(longName.length, 1);
 assert.ok(longName[0].length <= 42, `progress line too wide: ${longName[0].length}`);
 assert.ok(longName[0].endsWith("\x85"), "over-width line should be truncated with a CP437 ellipsis");
 
+// M12.18: the server emits two wire events for one logical step (the world
+// loop's "painting" with index/total, then paintBoard's "painting" with only a
+// detail — generation.go:224/374; "planning" twins the same way at 198/342).
+// Each poll returns the full cumulative array, so replay one as it grows and
+// assert every progress line renders exactly once per poll.
+const polledSequence = [
+  { stage: "planning", attempt: 1, maxAttempts: 3, detail: "imagining the world plan" },
+  { stage: "planning", attempt: 1, maxAttempts: 3, detail: "asking Claude for a world plan" },
+  { stage: "painting", board: "Morning Light", index: 1, total: 2, attempt: 1, maxAttempts: 3 },
+  { stage: "painting", board: "Morning Light", attempt: 1, maxAttempts: 3, detail: "asking Claude for board ZWD" },
+  { stage: "repairing", board: "Morning Light", attempt: 2, maxAttempts: 3, detail: "orphan stat" },
+  { stage: "painting", board: "Morning Light", attempt: 2, maxAttempts: 3, detail: "asking Claude for board ZWD" },
+  { stage: "painting", board: "Lunar Liftoff", index: 2, total: 2, attempt: 1, maxAttempts: 3 },
+  { stage: "painting", board: "Lunar Liftoff", attempt: 1, maxAttempts: 3, detail: "asking Claude for board ZWD" },
+];
+for (let polled = 1; polled <= polledSequence.length; polled++) {
+  // Poll the same prefix twice — a repeated poll of an unchanged job must not
+  // duplicate lines either.
+  for (let repeat = 0; repeat < 2; repeat++) {
+    const lines = generationLines(polledSequence.slice(0, polled));
+    const counts = new Map();
+    for (const line of lines) counts.set(line, (counts.get(line) ?? 0) + 1);
+    for (const [line, count] of counts) {
+      assert.equal(count, 1, `progress line rendered ${count} times after ${polled} events: ${line}`);
+    }
+  }
+}
+const fullLines = generationLines(polledSequence);
+assert.deepEqual(fullLines, [
+  "Imagining the world...",
+  "Painting board 1 of 2: Morning Light",
+  "Repairing Morning Light: attempt 2 of 3",
+  "Painting board 1 of 2: Morning Light (att\x85", // clamped to the window width
+
+  "Painting board 2 of 2: Lunar Liftoff",
+]);
+// The dedupe keys on event identity (stage+board+attempt), not rendered text:
+// a real second attempt renders its own line even though the board repeats,
+// and the index/total from whichever twin carried them survive the collapse.
+const twinOrderSwapped = generationLines([
+  { stage: "painting", board: "Hub", attempt: 1, maxAttempts: 3, detail: "asking Claude for board ZWD" },
+  { stage: "painting", board: "Hub", index: 3, total: 9, attempt: 1, maxAttempts: 3 },
+]);
+assert.deepEqual(twinOrderSwapped, ["Painting board 3 of 9: Hub"]);
+
 const successCalls = [];
 const progress = [];
 const successReplies = [

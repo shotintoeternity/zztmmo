@@ -1303,7 +1303,7 @@ the corpus/style work builds on. The specs below are unchanged.)
   replay fixture unchanged (generation is outside the sim). Consult the advisor on
   the rubric and LLM-judge design before building the live tier.
 
-- [ ] **M12.18 — Dream-a-World progress scroll duplicates written lines.**
+- [x] **M12.18 — Dream-a-World progress scroll duplicates written lines.**
   Owner-reported 2026-07-14: writes to the Dream a World progress scroll are
   duplicating — progress lines appear more than once as generation advances.
   Client-side: suspect the M12.11 change that switched the progress modal to

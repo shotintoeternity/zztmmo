@@ -37,6 +37,35 @@ export type GenerationJob = {
 
 type Fetcher = (input: RequestInfo | URL, init?: RequestInit) => Promise<Response>;
 
+// The server can describe one logical step with two wire events: the world
+// loop announces `painting` with index/total (generation.go:224) and
+// paintBoard's own attempt announces `painting` again for the same board and
+// attempt with only a detail (generation.go:374); `planning` is emitted twice
+// the same way. Both twins render the identical line, so the scroll showed
+// every step twice (M12.18). Collapse consecutive events that share an
+// identity — stage+board+attempt, the fields that name a step — rather than
+// comparing rendered strings, and keep whichever twin carries the "N of M"
+// placement.
+function dedupeProgress(progress: GenerationProgress[]): GenerationProgress[] {
+  const deduped: GenerationProgress[] = [];
+  for (const event of progress) {
+    const prev = deduped[deduped.length - 1];
+    if (
+      prev &&
+      prev.stage === event.stage &&
+      (prev.board ?? "") === (event.board ?? "") &&
+      (prev.attempt ?? 0) === (event.attempt ?? 0)
+    ) {
+      if (!prev.index && event.index) {
+        deduped[deduped.length - 1] = { ...prev, index: event.index, total: event.total };
+      }
+      continue;
+    }
+    deduped.push(event);
+  }
+  return deduped;
+}
+
 /** generationLines translates wire progress into the browser's text window. */
 export function generationLines(progress: GenerationProgress[]): string[] {
   if (progress.length === 0) {
@@ -44,7 +73,7 @@ export function generationLines(progress: GenerationProgress[]): string[] {
   }
 
   const locations = new Map<string, { index: number; total: number }>();
-  const lines = progress.map((event) => {
+  const lines = dedupeProgress(progress).map((event) => {
     if (event.stage === "painting" && event.board && event.index && event.total) {
       locations.set(event.board, { index: event.index, total: event.total });
     }
