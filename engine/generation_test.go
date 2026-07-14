@@ -151,6 +151,43 @@ func TestM124GenerateEndpointSuccessAndPersistence(t *testing.T) {
 	}
 }
 
+// TestM1221PlanIsCachedSystemBlock locks in the M12.21 caching change: the world
+// plan is identical for every board, so it must ride in a cached system block
+// (billed once per world) rather than in each board's per-board user message.
+func TestM1221PlanIsCachedSystemBlock(t *testing.T) {
+	plan := generationPlan("1. start: begin. #endgame")
+	fake, claude := newFakeClaude(t, plan, generatedBoard("Start", false), generatedBoard("Title", false))
+	defer claude.Close()
+	service := newGenerationTestService(t, claude.URL, 3)
+	if _, err := service.Generate(context.Background(), "test", "a quiet clock tower", "CACHE", nil, false); err != nil {
+		t.Fatal(err)
+	}
+	if len(fake.requests) != 3 {
+		t.Fatalf("Claude calls = %d, want 3", len(fake.requests))
+	}
+	for _, i := range []int{1, 2} { // the two board calls
+		sys := systemText(fake.requests[i].System)
+		if !strings.Contains(sys, "# World plan") || !strings.Contains(sys, "## Board graph") {
+			t.Fatalf("board call %d: plan not present in cached system block", i)
+		}
+		if strings.Contains(fake.requests[i].Messages[0].Content, "## Board graph") {
+			t.Fatalf("board call %d: plan still embedded in the per-board user message", i)
+		}
+		blocks, ok := fake.requests[i].System.([]interface{})
+		if !ok || len(blocks) != 2 {
+			t.Fatalf("board call %d: system = %v, want 2 blocks (prompt + plan)", i, fake.requests[i].System)
+		}
+		for j, blk := range blocks {
+			if m, ok := blk.(map[string]interface{}); !ok || m["cache_control"] == nil {
+				t.Fatalf("board call %d: system block %d has no cache_control breakpoint", i, j)
+			}
+		}
+	}
+	if blocks, ok := fake.requests[0].System.([]interface{}); ok && len(blocks) != 1 {
+		t.Fatalf("planner call: system = %d blocks, want 1 (no plan block)", len(blocks))
+	}
+}
+
 func TestM124PlanRepairThenSuccess(t *testing.T) {
 	badPlan := "# World Plan: Bad\n\n## Board graph\n"
 	goodPlan := generationPlan("1. start: begin. #endgame")

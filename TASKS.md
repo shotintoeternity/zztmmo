@@ -1381,6 +1381,21 @@ the corpus/style work builds on. The specs below are unchanged.)
   the baseline is linked in NOTES.md; `go test ./...` green; replay fixture
   unchanged.
 
+- [x] **M12.21 — Cache the world plan across per-board calls.** The plan is
+  byte-identical for every board of a world but was embedded in each board's
+  user message (`boardRequest`/`batchBoardRequest`), so it was re-uploaded and
+  re-billed on every paint/repair call — the largest repeated per-world input.
+  Fix: move the plan into a second `cache_control: ephemeral` system block via a
+  new `callWithPlan`, giving two cache breakpoints (static system prompt shared
+  across all worlds; plan shared across this world's boards); drop the plan from
+  the per-board user messages (edges/retrieval/feedback stay uncached because
+  they genuinely vary). Also cache the grounded planner's system block
+  (`callGrounded`). Cost-only: output-bound wall-clock is unchanged (batching or
+  wave-parallelizing the serial paint loop is the separate speed lever). DoD:
+  `go test ./...` green; new `TestM1221PlanIsCachedSystemBlock` asserts the plan
+  rides a cached system block and no longer appears in the board user message.
+  Owner-directed 2026-07-14.
+
 ## M14 — Rearchitecting for the service ZZTMMO is becoming
 
 Filed 2026-07-12 from a whole-repo review (NOTES.md): three structural debts

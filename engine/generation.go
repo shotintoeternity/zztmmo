@@ -372,13 +372,13 @@ func (g *GenerationService) paintBoard(ctx context.Context, planText string, pla
 	for *attempts < g.maxAttempts {
 		*attempts++
 		g.report(ctx, GenerationProgress{Stage: "painting", Board: board.Name, Attempt: *attempts, Detail: "asking Claude for board ZWD"})
-		request := boardRequest(planText, plan, board, sections, lastFeedback, lastCandidate, *attempts, g.maxAttempts)
+		request := boardRequest(plan, board, sections, lastFeedback, lastCandidate, *attempts, g.maxAttempts)
 		if board.Index == 0 {
 			request += "\n\n" + g.promptKit.TitleRetrievalContext(plan.WorldName)
 		} else {
 			request += "\n\n" + g.promptKit.RetrievalContext(plan.WorldName, board.Concept)
 		}
-		text, err := g.call(ctx, g.promptKit.SystemPrompt(), request)
+		text, err := g.callWithPlan(ctx, g.promptKit.SystemPrompt(), planText, request)
 		if err != nil {
 			return "", err
 		}
@@ -424,7 +424,29 @@ type systemBlock struct {
 	CacheControl map[string]string `json:"cache_control,omitempty"`
 }
 
+func ephemeralBlock(text string) systemBlock {
+	return systemBlock{Type: "text", Text: text, CacheControl: map[string]string{"type": "ephemeral"}}
+}
+
 func (g *GenerationService) call(ctx context.Context, system, user string) (string, error) {
+	return g.callBlocks(ctx, []systemBlock{ephemeralBlock(system)}, user)
+}
+
+// callWithPlan is call() with the world plan added as a second cached system
+// block. The plan is byte-identical for every board of a world, so making it a
+// cached prefix means it is uploaded and billed once per world instead of once
+// per board; the per-board user message (edges, retrieval, feedback) stays
+// uncached because it genuinely varies. Both blocks carry cache_control, giving
+// two breakpoints: the static system prompt (shared across all worlds) and the
+// plan (shared across this world's boards). M12.21.
+func (g *GenerationService) callWithPlan(ctx context.Context, system, planText, user string) (string, error) {
+	return g.callBlocks(ctx, []systemBlock{
+		ephemeralBlock(system),
+		ephemeralBlock("# World plan\n" + planText),
+	}, user)
+}
+
+func (g *GenerationService) callBlocks(ctx context.Context, system []systemBlock, user string) (string, error) {
 	body, err := json.Marshal(struct {
 		Model     string        `json:"model"`
 		MaxTokens int           `json:"max_tokens"`
@@ -435,13 +457,7 @@ func (g *GenerationService) call(ctx context.Context, system, user string) (stri
 		} `json:"messages"`
 	}{
 		Model: g.model, MaxTokens: g.maxTokens,
-		System: []systemBlock{{
-			Type: "text",
-			Text: system,
-			CacheControl: map[string]string{
-				"type": "ephemeral",
-			},
-		}},
+		System: system,
 		Messages: []struct {
 			Role    string `json:"role"`
 			Content string `json:"content"`
@@ -515,7 +531,7 @@ func (g *GenerationService) callGrounded(ctx context.Context, system, user strin
 		body, err := json.Marshal(map[string]interface{}{
 			"model":      g.model,
 			"max_tokens": g.maxTokens,
-			"system":     []systemBlock{{Type: "text", Text: system}},
+			"system":     []systemBlock{ephemeralBlock(system)},
 			"tools":      []interface{}{tool},
 			"messages":   messages,
 		})
@@ -636,9 +652,9 @@ func planRequest(premise, repair string) string {
 	return b.String()
 }
 
-func boardRequest(planText string, plan Plan, board PlanBoard, sections map[string]string, feedback, previous string, attempt, maxAttempts int) string {
+func boardRequest(plan Plan, board PlanBoard, sections map[string]string, feedback, previous string, attempt, maxAttempts int) string {
 	var b strings.Builder
-	fmt.Fprintf(&b, "Paint exactly one board for this authoritative world plan. Board id=%q, required board name=%q, concept=%q, dark=%t. Output exactly one fenced zwd block containing only that board section. It must contain its own start player and use exact board names in exits and passages. Grid rows are byte-oriented: use only one-byte ASCII legend keys in every raw grid row, never literal Unicode or CP437 artwork. Use the Grid Alignment Protocol (wrapping grid rows in '|' characters and using 60-character numbered rulers above and below the grid) to ensure every grid row is exactly 60 bytes.\n\n# World plan\n%s\n\n# Already-painted adjacent board edges\n%s", board.ID, board.Name, board.Concept, board.Dark, planText, generatedEdgeContext(plan, board, sections))
+	fmt.Fprintf(&b, "Paint exactly one board for the authoritative world plan given in the system prompt. Board id=%q, required board name=%q, concept=%q, dark=%t. Output exactly one fenced zwd block containing only that board section. It must contain its own start player and use exact board names in exits and passages. Grid rows are byte-oriented: use only one-byte ASCII legend keys in every raw grid row, never literal Unicode or CP437 artwork. Use the Grid Alignment Protocol (wrapping grid rows in '|' characters and using 60-character numbered rulers above and below the grid) to ensure every grid row is exactly 60 bytes.\n\n# Already-painted adjacent board edges\n%s", board.ID, board.Name, board.Concept, board.Dark, generatedEdgeContext(plan, board, sections))
 	if board.Index == 0 {
 		b.WriteString(titleScreenBrief)
 	}
@@ -873,9 +889,9 @@ func extractMultipleBoardsWithWarnings(text string) (map[string]string, map[stri
 	return sections, warnings, nil
 }
 
-func batchBoardRequest(planText string, plan Plan, boards []PlanBoard, sections map[string]string, feedback string, previous map[string]string, attempt, maxAttempts int) string {
+func batchBoardRequest(plan Plan, boards []PlanBoard, sections map[string]string, feedback string, previous map[string]string, attempt, maxAttempts int) string {
 	var b strings.Builder
-	b.WriteString("Paint the following boards for this authoritative world plan:\n")
+	b.WriteString("Paint the following boards for the authoritative world plan given in the system prompt:\n")
 	for _, board := range boards {
 		fmt.Fprintf(&b, "- Board id=%q, required board name=%q, concept=%q, dark=%t\n", board.ID, board.Name, board.Concept, board.Dark)
 	}
@@ -886,7 +902,6 @@ func batchBoardRequest(planText string, plan Plan, boards []PlanBoard, sections 
 			break
 		}
 	}
-	fmt.Fprintf(&b, "\n# World plan\n%s", planText)
 	b.WriteString("\n\n# Already-painted adjacent board edges\n")
 	for _, board := range boards {
 		edges := generatedEdgeContext(plan, board, sections)
@@ -924,8 +939,8 @@ func (g *GenerationService) paintBoardsBatch(ctx context.Context, planText strin
 			Attempt: batchAttempt,
 			Detail:  detail,
 		})
-		req := batchBoardRequest(planText, plan, boards, sections, lastFeedback, lastCandidates, batchAttempt, g.maxAttempts)
-		text, err := g.call(ctx, g.promptKit.SystemPrompt(), req)
+		req := batchBoardRequest(plan, boards, sections, lastFeedback, lastCandidates, batchAttempt, g.maxAttempts)
+		text, err := g.callWithPlan(ctx, g.promptKit.SystemPrompt(), planText, req)
 		if err != nil {
 			return err
 		}
