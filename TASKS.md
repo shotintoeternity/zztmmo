@@ -17,15 +17,15 @@ Baseline verified 2026-07-09: `engine/` builds and its tests pass on go1.26.5.
 
 ## Execution priority (overrides the positional "first unchecked task" default)
 
-Ranked 2026-07-12. Nothing open is a live bug (M7/M8/M13/M14.1–2 are done), so
-this is value + unblocking + effort, cheapest-highest-value first. **Current
-focus: M5.8** (owner pick). Work the list top-down; skip the optional/deferred
-tail unless the owner asks.
+Ranked 2026-07-14 (the 2026-07-12 list — M5.8, M6.2, M6.4, M10.1–10.4 — has
+fully landed). Work the list top-down; skip the optional/deferred tail unless
+the owner asks.
 
-1. **M5.8** — editor feature/UI parity *(current focus, owner-selected)*
-2. M6.2 — Google OAuth; gates M6.4 and M10.3
-3. M6.4 — account-keyed player-state persistence (needs M6.2)
-4. M10.1 → M10.2 → M10.3 → M10.4 — collaborative editing (M10.3 needs M6.2)
+1. M12.22 — retry a failed board instead of losing the world (owner request
+   2026-07-14)
+2. M12.19 — close the three generation-pipeline gaps from the M12.17 baseline
+3. M15.1 — mobile text entry pops the on-screen keyboard (owner-reported
+   2026-07-14)
 
 **Optional / deferred (bottom):**
 - M14.3 — package split (skip unless the single package is actually hurting)
@@ -1395,6 +1395,56 @@ the corpus/style work builds on. The specs below are unchanged.)
   `go test ./...` green; new `TestM1221PlanIsCachedSystemBlock` asserts the plan
   rides a cached system block and no longer appears in the board user message.
   Owner-directed 2026-07-14.
+
+- [ ] **M12.22 — Retry a failed board instead of losing the world (owner
+  request 2026-07-14).** When a board exhausts its attempt budget (default
+  `maxAttempts` 3), `generate` threw away the plan and every board already
+  painted: the player got "Dream failed" and had to pay for a whole fresh run.
+  Server: wrap the board-scoped failure sites (the single-board paint loop, the
+  batch loop, and the cross-board repair loop's `paintBoard`) in a
+  `GenerationBoardError` carrying a `generationResume` (premise, plan, name,
+  sections painted so far, attempt counters) plus the generation-order resume
+  index; `RetryBoard` re-enters the pipeline from the failed board with that
+  board's attempt counter reset, skipping the per-client rate limit (the player
+  is continuing one admitted generation, not starting another) but still taking
+  a concurrency slot. Async jobs keep the resume state: a failed job's status
+  JSON gains `retryable` and `failedBoard`, and `POST /api/generate
+  {"retry": "<job id>"}` flips the job back to running in place — refused with
+  409 unless the job is failed with resume state, so a double retry cannot
+  race. Plan-stage and assembled-compile failures stay non-retryable. Client:
+  `runDreamGeneration` rejects with a `DreamFailure` carrying
+  jobId/retryable/failedBoard; the Dream failure path offers "Paint <board>
+  again?" and on yes resumes polling the same job id. Generation is outside
+  the sim. DoD: Go tests cover service-level retry-after-exhaustion, the API
+  retry round-trip, and a non-retryable plan failure refused with 409; a TS
+  test covers the retry request and resumed polling; `go test ./...` and
+  `npm test` green; replay fixture unchanged.
+
+## M15 — Mobile browser support
+
+Goal: the browser client is playable on phones and tablets. Today it is
+keyboard-only — `canvas.addEventListener("keydown", ...)`
+(`engine/web/src/main.ts:641`) is the sole input path and no focusable input
+element exists — so touch devices can neither move nor type.
+
+- [ ] **M15.1 — Text entry must pop the on-screen keyboard on mobile
+  (owner-reported 2026-07-14).** Every text-entry surface — the Dream premise
+  window (`multilineEntry`, `modal.ts:121`), save/name prompts (`entry`,
+  `modal.ts:89`), editor OOP editing, chat — is fed only by canvas `keydown`
+  events, so mobile browsers never raise the on-screen keyboard and text
+  cannot be entered at all. Fix: when an entry-capable modal opens on a touch
+  device (`navigator.maxTouchPoints > 0`, plus a `touchstart` heuristic for
+  hybrids), focus a visually hidden `<input>`/`<textarea>` overlay to summon
+  the OS keyboard; mirror its `input`/composition events into the modal's
+  existing line buffer so the CP437 window stays the single rendered truth;
+  blur and remove the overlay when the modal closes so gameplay keys don't
+  leak into it. Mind IME composition and Android's `keydown` keyCode 229
+  (use `input` events, not keydown, as the text source). Keep desktop
+  behavior byte-identical. DoD: on a touch device or emulation, opening
+  Dream-a-World or a save prompt raises the keyboard and typed/deleted text
+  appears in the modal; desktop tests unchanged; a node-driven TS test covers
+  the overlay→modal mirroring seam; `npm test` green; replay fixture
+  untouched (client-only).
 
 ## M14 — Rearchitecting for the service ZZTMMO is becoming
 
