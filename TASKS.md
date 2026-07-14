@@ -1427,7 +1427,7 @@ keyboard-only — `canvas.addEventListener("keydown", ...)`
 (`engine/web/src/main.ts:641`) is the sole input path and no focusable input
 element exists — so touch devices can neither move nor type.
 
-- [ ] **M15.1 — Text entry must pop the on-screen keyboard on mobile
+- [x] **M15.1 — Text entry must pop the on-screen keyboard on mobile
   (owner-reported 2026-07-14).** Every text-entry surface — the Dream premise
   window (`multilineEntry`, `modal.ts:121`), save/name prompts (`entry`,
   `modal.ts:89`), editor OOP editing, chat — is fed only by canvas `keydown`

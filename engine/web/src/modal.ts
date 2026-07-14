@@ -197,6 +197,58 @@ export type Modal =
 /** What the caller should do after routing a key. */
 export type KeyResult = "close" | "redraw" | "ignore";
 
+/** A committed edit reported by the native mobile input overlay. */
+export type ModalTextInput = {
+  inputType: string;
+  data: string | null;
+};
+
+/** True when a modal has an editable buffer the mobile overlay can mirror. */
+export function modalAcceptsTextInput(m: Modal | null): boolean {
+  return m !== null && (m.kind === "entry" || m.kind === "popupEntry" || m.kind === "multilineEntry" || m.kind === "programEditor" || m.kind === "worldSearch");
+}
+
+// modalTextKey adapts a committed native character to the existing key router.
+// Keeping the modal functions as the sole buffer owner means the hidden DOM
+// control never becomes a second rendered source of truth.
+function modalTextKey(key: string, code = ""): KeyboardEvent {
+  return { code, key, ctrlKey: false, metaKey: false, altKey: false } as KeyboardEvent;
+}
+
+/**
+ * handleModalTextInput mirrors a native input/composition commit into the same
+ * modal buffer path used by desktop key events. Android commonly reports
+ * keyCode 229 while composing, so printable text deliberately enters here,
+ * never through keydown.
+ */
+export function handleModalTextInput(m: Modal, input: ModalTextInput): KeyResult {
+  switch (input.inputType) {
+    case "deleteContentBackward":
+      return handleModalKey(m, modalTextKey("Backspace", "Backspace"));
+    case "deleteContentForward":
+      return handleModalKey(m, modalTextKey("Delete", "Delete"));
+    case "insertLineBreak":
+    case "insertParagraph":
+      return handleModalKey(m, modalTextKey("Enter", "Enter"));
+  }
+
+  if (!input.data) {
+    return "ignore";
+  }
+  let result: KeyResult = "ignore";
+  for (const char of input.data) {
+    if (char === "\n" || char === "\r") {
+      result = handleModalKey(m, modalTextKey("Enter", "Enter"));
+    } else {
+      result = handleModalKey(m, modalTextKey(char));
+    }
+    if (result === "close") {
+      return result;
+    }
+  }
+  return result;
+}
+
 /**
  * hyperlinkOf extracts the bare ZZT-OOP label from a "!label;text" line, or "" if
  * the line is not a bare hyperlink. A "!-FILE;text" cross-file link is not a bare

@@ -1,0 +1,101 @@
+import assert from "node:assert/strict";
+import { build } from "esbuild";
+
+const output = await build({
+  entryPoints: ["src/mobile_text_input.ts"],
+  bundle: true,
+  format: "esm",
+  platform: "node",
+  write: false,
+});
+const source = Buffer.from(output.outputFiles[0].contents).toString("base64");
+const { MobileTextInputBridge, handleModalTextInput, modalAcceptsTextInput } = await import(`data:text/javascript;base64,${source}`);
+
+class FakeElement {
+  constructor(tag, body) {
+    this.tag = tag;
+    this.body = body;
+    this.style = {};
+    this.value = "";
+    this.listeners = new Map();
+    this.focused = 0;
+    this.blurred = 0;
+  }
+
+  setAttribute() {}
+  addEventListener(type, listener) { this.listeners.set(type, listener); }
+  dispatch(type, detail = {}) { this.listeners.get(type)?.(detail); }
+  focus() { this.focused += 1; }
+  blur() { this.blurred += 1; }
+  remove() {
+    const index = this.body.children.indexOf(this);
+    if (index >= 0) this.body.children.splice(index, 1);
+  }
+}
+
+const body = {
+  children: [],
+  appendChild(element) { this.children.push(element); },
+};
+const host = {
+  body,
+  createElement(tag) { return new FakeElement(tag, body); },
+};
+
+const bridge = new MobileTextInputBridge(host, 1);
+const entry = {
+  kind: "entry",
+  label: "Name:",
+  suffix: "",
+  width: 20,
+  buffer: "",
+  charset: "any",
+  onSubmit() {},
+};
+const mirror = (modal) => (input) => handleModalTextInput(modal, input);
+
+// The overlay is native and focusable, but its text is mirrored into the modal
+// buffer; it never becomes a rendered source of truth itself.
+bridge.sync(entry, mirror(entry));
+const input = body.children[0];
+assert.equal(input.tag, "input");
+assert.equal(input.focused, 1);
+input.value = "Ada";
+input.dispatch("input", { inputType: "insertText", data: "Ada" });
+assert.equal(entry.buffer, "Ada");
+input.dispatch("input", { inputType: "deleteContentBackward", data: null });
+assert.equal(entry.buffer, "Ad");
+
+// Composition commits once even when a browser subsequently emits its ordinary
+// insertText event. This is the Android/IME seam that canvas keydown misses.
+input.dispatch("compositionstart");
+input.dispatch("compositionupdate", { data: "Z" });
+input.dispatch("input", { inputType: "insertCompositionText", data: "Z" });
+assert.equal(entry.buffer, "Ad");
+input.dispatch("compositionend", { data: "Z" });
+input.dispatch("input", { inputType: "insertText", data: "Z" });
+assert.equal(entry.buffer, "AdZ");
+
+const multi = {
+  kind: "multilineEntry",
+  title: "Dream a world",
+  lines: [""],
+  line: 0,
+  onSubmit() {},
+};
+bridge.sync(multi, mirror(multi));
+const textarea = body.children[0];
+assert.equal(textarea.tag, "textarea");
+textarea.dispatch("input", { inputType: "insertText", data: "moon" });
+textarea.dispatch("input", { inputType: "insertLineBreak", data: "\n" });
+textarea.dispatch("input", { inputType: "insertText", data: "sea" });
+assert.deepEqual(multi.lines, ["moon", "sea"]);
+
+assert.equal(modalAcceptsTextInput({ kind: "programEditor" }), true);
+assert.equal(modalAcceptsTextInput({ kind: "worldSearch" }), true);
+assert.equal(modalAcceptsTextInput({ kind: "yesno" }), false);
+bridge.close();
+assert.equal(body.children.length, 0);
+assert.equal(textarea.blurred, 1);
+
+console.log("mobile_text_input.test.mjs: all assertions passed");

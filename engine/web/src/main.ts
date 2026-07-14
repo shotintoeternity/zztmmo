@@ -1,6 +1,7 @@
 import "./style.css";
 import { drawSidebar as paintSidebar, updateSidebar as paintSidebarHud } from "./sidebar";
-import { renderModal, handleModalKey, POPUP_Y_CENTERED, type Modal, type WorldSearchEntry } from "./modal";
+import { renderModal, handleModalKey, handleModalTextInput, POPUP_Y_CENTERED, type Modal, type ModalTextInput, type WorldSearchEntry } from "./modal";
+import { MobileTextInputBridge } from "./mobile_text_input";
 import { openHelp } from "./help";
 import { commandKey, isHandledKey, isMovementKey, movementMask, rawKey } from "./keys";
 import { drawTitleSidebar, titleCommand } from "./title";
@@ -515,6 +516,7 @@ let leavingToTitle = false;
 // the board keeps updating underneath and the modal is painted as an overlay
 // rather than by saving/restoring cells.
 let modal: Modal | null = null;
+const mobileTextInput = new MobileTextInputBridge(document);
 // Per-player pause (M3.11): the server tells us via PauseEvent whether OUR stat
 // is paused. The room keeps running for everyone else, so this is presentation
 // only — we draw what vanilla's GamePlayLoop pause branch drew.
@@ -637,6 +639,7 @@ if ("fonts" in document) {
 }
 canvas.addEventListener("mousedown", handlePointerDown);
 canvas.addEventListener("mousemove", handlePointerMove);
+canvas.addEventListener("touchstart", () => mobileTextInput.noteTouchStart(), { passive: true });
 window.addEventListener("mouseup", () => { editorPointerDrawing = false; });
 canvas.addEventListener("keydown", handleKeyDown);
 canvas.addEventListener("keyup", handleKeyUp);
@@ -692,6 +695,7 @@ function openTitleStream(filename: string) {
 async function showTitle() {
   mode = "title";
   modal = null;
+  mobileTextInput.close();
   playerId = 0;
   myStatId = -1;
   editorCursor = { x: 30, y: 12 };
@@ -1833,6 +1837,7 @@ function setEditorBlinking(on: boolean) {
 function openModal(next: Modal) {
   stopHeldInput();
   modal = next;
+  mobileTextInput.sync(modal, routeMobileModalInput);
   paintOverlay();
   drawScreen();
 }
@@ -1935,6 +1940,9 @@ function closeModal() {
   const scrollStatId = openScrollStatId;
   openScrollStatId = -1;
   modal = null;
+  if (mobileTextInput.close()) {
+    canvas.focus();
+  }
   if (activeEditorLease) {
     if (retainEditorLeaseOnClose) {
       retainEditorLeaseOnClose = false;
@@ -2167,6 +2175,23 @@ function routeModalKey(event: KeyboardEvent) {
   event.preventDefault();
   const previous = modal;
   const result = handleModalKey(previous!, event);
+  finishModalInput(previous, result);
+}
+
+// routeMobileModalInput receives committed `input`/composition text from the
+// hidden native control. It deliberately bypasses keydown — Android reports
+// keyCode 229 while composing — then returns through the exact same close and
+// redraw path as desktop keyboard input.
+function routeMobileModalInput(input: ModalTextInput) {
+  if (!modal) {
+    return;
+  }
+  const previous = modal;
+  const result = handleModalTextInput(previous, input);
+  finishModalInput(previous, result);
+}
+
+function finishModalInput(previous: Modal | null, result: "close" | "redraw" | "ignore") {
   if (result === "close") {
     // A callback may have chained straight into another modal (e.g. the score
     // list opening the name popup). Only tear down if it did not.
