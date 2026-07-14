@@ -1345,6 +1345,42 @@ the corpus/style work builds on. The specs below are unchanged.)
   fixture `CASTLERA.expect.txt` line `reachable-endgame` becomes removable on a
   fresh generation; `go test ./...` green; replay fixture unchanged.
 
+- [ ] **M12.20 [ADVISOR] — Legible title wordmarks: the #1 finding of the
+  M12.17 baseline.** Every world that generated successfully failed
+  `title-wordmark`, and the vision judge independently scored every title 0-2
+  (reads "SSHY" / "MMSS OONN CCC OOO UU NN TTT" — evidence:
+  `llmworld/eval/baseline*/report.md` + `shots/*-board0.png`, NOTES.md
+  2026-07-14). The failure mode is specific: the model *attempts* the wordmark
+  (the `titleScreenBrief` stopped creature-scatter — `title-no-creatures-or-
+  items` passed everywhere) but draws letter-SHAPED clusters, duplicated
+  strokes, and asterisk noise instead of one row of literal Text glyphs. Two
+  candidate fixes — weigh both with the advisor before building:
+  1. **Deterministic wordmark stamp (recommended; the M12.13 "derive, don't
+     require" principle).** The pipeline already knows the world name; the
+     model should never have to spell it. In board-0 preprocessing (or
+     assembly), reserve a centered band and STAMP the plan's world name into
+     it as `Text-White` tiles (`generation.go` board-0 path; the eval's
+     `evalTextRow` shows how text tiles encode glyphs), displacing whatever
+     the model drew there and stripping stray text rows beyond the brief's
+     one-subtitle allowance. Prompt keeps asking for the wordmark (the model
+     composes AROUND it); the stamp guarantees it. Mind the 60-col width:
+     names longer than the band need a two-line split or font-free fallback —
+     decide with the advisor.
+  2. **Prompt-only iteration.** Rework `titleScreenBrief` to demand literal
+     one-tile-per-letter glyph text keyed by the letter itself, with a worked
+     grid example; audit the M12.15a curated title few-shots — they are
+     monumental letter-ART titles, which likely TEACH the letter-shaped-
+     cluster failure — and re-caption or swap them for literal-glyph titles.
+     Measure each edit against the M12.17 harness before keeping it.
+  Measured, not eyeballed: iterate with `go test -run TestEvalGateFixtures`
+  plus fresh `zzt-eval` runs at the recorded baseline config (`-attempts 5`,
+  same model — NOTES.md 2026-07-14). DoD: a fresh generation per premise
+  passes `title-wordmark`; a new fixture is recorded WITHOUT a
+  `title-wordmark` expectation line (and existing fixtures' expectations are
+  left as history unless regenerated); a comparison `zzt-eval` report against
+  the baseline is linked in NOTES.md; `go test ./...` green; replay fixture
+  unchanged.
+
 ## M14 — Rearchitecting for the service ZZTMMO is becoming
 
 Filed 2026-07-12 from a whole-repo review (NOTES.md): three structural debts
