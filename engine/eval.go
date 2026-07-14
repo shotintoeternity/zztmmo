@@ -148,12 +148,43 @@ func evalNormalizeName(s string) string {
 	return strings.ToUpper(strings.Join(strings.Fields(s), " "))
 }
 
+// foldWordmark reduces a display name to the printable CP437 bytes a title
+// wordmark can actually store one glyph per cell: ASCII passes through, common
+// typographic punctuation folds to its ASCII equivalent, and any other rune is
+// dropped. Both the deterministic title stamp (stampTitleWordmark) and the
+// title-wordmark check fold the name the same way, so a stamped row of bytes and
+// the expected name are compared in one byte space instead of one being UTF-8
+// and the other CP437. It is the identity on pure-ASCII names, so existing
+// fixtures and unit tests are unaffected.
+func foldWordmark(s string) string {
+	var b []byte
+	for _, r := range s {
+		switch {
+		case r == '—' || r == '–' || r == '―' || r == '−':
+			b = append(b, '-') // em/en/horizontal-bar dash, minus sign
+		case r == '‘' || r == '’' || r == '‚':
+			b = append(b, '\'') // curly single quotes
+		case r == '“' || r == '”' || r == '„':
+			b = append(b, '"') // curly double quotes
+		case r == '…':
+			b = append(b, '.', '.', '.') // ellipsis
+		case r == '×':
+			b = append(b, 'x') // multiplication sign
+		case r >= 0x20 && r < 0x7F:
+			b = append(b, byte(r))
+		default:
+			// Unrepresentable rune: drop it rather than emit a mystery byte.
+		}
+	}
+	return string(b)
+}
+
 // evalTitleWordmark checks board 0 for exactly one horizontal text band
 // spelling the world name, with at most one subtitle text row beneath it and
 // no stray text anywhere else (the "GAFFHA + stray G" failure class).
 func evalTitleWordmark(e *Engine, displayName string) EvalCheck {
 	check := EvalCheck{Name: "title-wordmark"}
-	want := evalNormalizeName(displayName)
+	want := evalNormalizeName(foldWordmark(displayName))
 	var wordmarkRows, otherRows []int16
 	var samples []string
 	for y := int16(1); y <= BOARD_HEIGHT; y++ {

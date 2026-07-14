@@ -2436,3 +2436,73 @@ Fixtures committed: `fixtures/gen/{APOLLO11,CASTLERA,CASTLEOF,THESLOWF}.zwd`
 progress scroll duplicates lines). Verified: `go build/test ./...`, `go vet`,
 `npm test`, `npm run build` all green; replay fixture unchanged (generation
 and eval are outside the sim).
+
+---
+
+## 2026-07-14 — M12.20: legible title wordmarks (deterministic stamp)
+
+The #1 M12.17 baseline finding: every successfully generated world FAILED
+`title-wordmark`, and the vision judge independently scored every title 0-2
+("SSHY", "MMSS OONN CCC OOO UU NN TTT"). Root cause, confirmed by reading a real
+recorded title (`fixtures/gen/CASTLEOF.zwd` board 0): the model builds the name
+out of **3x5 block letters made of Text tiles** (each cell a tiny letter glyph
+arranged into a big letter shape), so no single grid row spells the name, plus
+scattered `*` star noise. The `titleScreenBrief` fixed intent (creatures gone —
+`title-no-creatures-or-items` passes everywhere) but not execution.
+
+**Advisor unavailable** this session (tool returned unavailable); this is an
+`[ADVISOR]` task, so recording the decision here in lieu of the consult.
+
+**Decision: option 1 (deterministic wordmark stamp), not prompt-only.** A
+decisive constraint settles the two candidates: `evalTitleWordmark` requires
+exactly ONE horizontal Text row whose glyphs spell the name. A block-letter font
+spreads a name across five rows and can therefore *never* satisfy the single-row
+check — literal one-tile-per-letter Text is the only representation that passes,
+and the only one the model cannot garble. So the pipeline stamps it.
+
+`stampTitleWordmark(section, displayName)` (`generation.go`), called from
+`assembleGeneratedZWD` for the `Index==0` board (the single funnel every path —
+single, batch, repair, per-board validate, final — flows through, and it already
+carries `plan.WorldName`). It works purely at the ZWD-text level (grid + legend
+surgery) so the persisted sidecar and the hosted world stay identical:
+- Centers the folded display name as one clean row of literal `Text-White`
+  glyphs, placed at the vertical center of the model's own lettering (so the
+  wordmark lands where the title was intended), never on a row holding the
+  player or a stat.
+- Allocates a FRESH legend key per distinct glyph (never reuses the model's
+  keys, so it can't change what an existing cell means).
+- STRIPS every other Text tile → exactly one text row remains. Non-text scenery
+  (walls, borders), the single player, and decorative Object stats are
+  untouched (the strip only rewrites Text-element cells).
+- On any structural surprise (empty/over-wide name, no grid/legend) it returns
+  the section unchanged — the compiler stays the security boundary.
+
+`foldWordmark` (shared by the stamp and `evalTitleWordmark`) maps a display name
+to the printable CP437 bytes a wordmark can store one-per-cell (em-dash→`-`,
+curly quotes→ASCII, etc.); identity on ASCII, so existing fixtures/unit tests are
+unaffected. This is what lets the em-dash APOLLO11 name pass.
+
+**Kept the prompt unchanged.** Option 1 guarantees the gate regardless of what
+the model draws, and prompt tuning is the option-2 path with an explicit
+"measure against the harness" requirement that needs API access; changing it
+blind would be unmeasured drift. The brief still asks for the wordmark; the model
+composes around it and the stamp overrides.
+
+Evidence / DoD:
+- New fixture `fixtures/gen/CRIMSONC.zwd` (+ `.title.txt`, NO `.expect.txt`):
+  CASTLEOF re-assembled with the M12.20 stamp — exactly what the pipeline now
+  emits for that world's board 0. It passes every tier-1 check, so
+  `TestEvalGateFixtures` gates it with no `title-wordmark` waiver. The original
+  CASTLEOF fixture and its expectation are left as baseline history.
+- `title_wordmark_test.go`: the recorded CASTLEOF FAILS `title-wordmark` before
+  stamping and the whole gate PASSES after; the strip leaves exactly one text
+  row; player and Object counts are preserved; the em-dash APOLLO11 name passes
+  via the fold; structural surprises are no-ops.
+- **Live comparison report is owner-run** (spends API — `zzt-eval -attempts 5`,
+  same model as the 2026-07-14 baseline). Cannot run it here without a key; the
+  stamp guarantees `title-wordmark` by construction at assembly, so any fresh
+  generation passes it regardless of model output — the deterministic tests
+  above stand in for CI. When run, drop the report beside
+  `llmworld/eval/baseline/` and link it here.
+- `go build ./... && go vet ./... && go test ./...` green; replay fixture
+  unchanged (generation/eval are outside the sim).

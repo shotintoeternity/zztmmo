@@ -1345,7 +1345,7 @@ the corpus/style work builds on. The specs below are unchanged.)
   fixture `CASTLERA.expect.txt` line `reachable-endgame` becomes removable on a
   fresh generation; `go test ./...` green; replay fixture unchanged.
 
-- [ ] **M12.20 [ADVISOR] — Legible title wordmarks: the #1 finding of the
+- [x] **M12.20 [ADVISOR] — Legible title wordmarks: the #1 finding of the
   M12.17 baseline.** Every world that generated successfully failed
   `title-wordmark`, and the vision judge independently scored every title 0-2
   (reads "SSHY" / "MMSS OONN CCC OOO UU NN TTT" — evidence:

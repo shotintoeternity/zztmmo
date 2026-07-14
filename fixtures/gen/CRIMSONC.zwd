@@ -1,0 +1,1189 @@
+zwd 1
+world "CASTLEOF"
+
+board "Castle of the Crimson Count"
+  max-shots 255
+  dark false
+  reenter false
+  time-limit 0
+  exits north none south none west none east none
+
+  start player at 24,22
+  grid
+  ............................................................
+  ............................................................
+  ...........................vwwwwww..........................
+  ...........................wwxxxxww.........................
+  ...........................wxx..xxw.........................
+  ...........................................................c
+  ............................................................
+  ................BDEFGH.JK.FPH.BQVWEJX.BJYXF.................
+  ............................................................
+  ............................................................
+  ............................................................
+  ...........................hhhhhhhh........................c
+  .....dd........dd......dd..h######h..dd.......dd.......dd...
+  ..###dd##...###dd###..#dd##h#pppp#h##dd###.###dd##..###dd..c
+  ..#.#gg#g...#.#gg#g...#gg#gh#p##p#h#gg#g#.#.#gg#g.#..#.#gg..
+  ..#######...#######...#####h#p##p#h#######.#######..######.c
+  ..sssssss...sssssss...ssssshhh##hhhssssss..sssssss..sssss..c
+  ............................######..........................
+  .....o..................o..######..................o.......c
+  ..........................######...........................c
+  ffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff
+  ffffffffffffffffffffff.@.fffffffffffffffffffffffffffffffffff
+  gggggggggggggggggggggggggggggggggggggggggggggggggggggggggggg
+  gggggggggggggggggggggggggggggggggggggggggggggggggggggggggggg
+  gggggggggggggggggggggggggggggggggggggggggggggggggggggggggggg
+  end
+
+  legend
+    . = Empty color 0x00
+    * = Text-Yellow color 0x2A
+    c = Empty color 0x00
+    v = Solid color 0x08
+    w = Solid color 0x07
+    x = Solid color 0x08
+    b = Text-Red color 0x2A
+    h = Solid color 0x08
+    p = Normal color 0x04
+    # = Solid color 0x07
+    L = Text-Yellow color 0x2E
+    g = Empty color 0x00
+    s = Solid color 0x08
+    d = Solid color 0x06
+    f = Solid color 0x08
+    o = Object color 0x0C
+    @ = Player color 0x1F under Empty color 0x00
+    A = Text-Red color 0x41
+    R = Text-Red color 0x52
+    I = Text-Red color 0x49
+    M = Text-Red color 0x4D
+    S = Text-Red color 0x53
+    O = Text-Red color 0x4F
+    N = Text-Red color 0x4E
+    C = Text-Red color 0x43
+    U = Text-Red color 0x55
+    T = Text-Red color 0x54
+    B = Text-White color 0x43
+    D = Text-White color 0x61
+    E = Text-White color 0x73
+    F = Text-White color 0x74
+    G = Text-White color 0x6C
+    H = Text-White color 0x65
+    J = Text-White color 0x6F
+    K = Text-White color 0x66
+    P = Text-White color 0x68
+    Q = Text-White color 0x72
+    V = Text-White color 0x69
+    W = Text-White color 0x6D
+    X = Text-White color 0x6E
+    Y = Text-White color 0x75
+  end
+
+  stats
+    stat at 6,19 element Object cycle 7 p1 cp437:0x0F under Empty color 0x00
+    oop
+@banner
+#end
+Castle of the Crimson Count
+    end
+    stat at 25,19 element Object cycle 7 p1 cp437:0x0F under Empty color 0x00
+    oop
+@crest
+#end
+The Count awaits below the cliffs...
+    end
+    stat at 52,19 element Object cycle 7 p1 cp437:0x0F under Empty color 0x00
+    oop
+@wolves
+#end
+Somewhere in the dark, the wolves sing.
+    end
+  end
+end
+
+board "The Great Gate"
+  max-shots 255
+  dark false
+  reenter false
+  time-limit 0
+  exits north "Grand Hall" south none west none east none
+
+  start player at 28,24
+  grid
+  WWWWWWWWWWWWWWWWWWWWWW.###..###.WWWWWWWWWWWWWWWWWWWWWWWWWWWW
+  WwWWWwWWWwWWWWwWWWwWWW.#I#..#I#.WwWWWwWWWWwWWWwWWWWwWWWwWWWW
+  WWWWWWWWwWWWWWWWWWWWWW.#I#..#I#.WWWWWwWWWWWWWWWWWwWWWWWWWWWW
+  sssssssssssssssssssss.#III##III#.sssssssssssssssssssssssssss
+  sMMMMMMMMMMMMMMMMMMMMs.IIIIIIIIII.sMMMMMMMMMMMMMMMMMMMMMMMMM
+  sMbbbbbbbbbbbbbbbbbbMs.I.I.I.I.I.sMbbbbbbbbbbbbbbbbbbbbbbbbM
+  sMbaaaaaaaaaaaaaaaabMs.I.I.I.I.I.sMbaaaaaaaaaaaaaaaaaaaaaabM
+  sMbaGGGGGGGGGGGGGGabMs.I.I.I.I.I.sMbaaaaaaaaaaaaaaaaaaaaaabM
+  sMbaGGaaaaaaaaaaGGabMs.IIIIIIIIII.sMbaaaaaaaaaaaaaaaaaaaaabM
+  sMbaaaaaaaaaaaaaaaabMs..........s.sMbaaaaaaaaaaaaaaaaaaaaabM
+  sMbaaaaaaaaaaaaaaaabMsssssssssssssssMbaaaaaaaaaaaaaaaaaaaabM
+  sMbaaaaaaaaaaaaaaaabMMMMMMMMMMMMMMMMMbaaaaaaaaaaaaaaaaaaaabM
+  sMbaaaaaaaaaaaaaaaabbbbbbbbbbbbbbbbbbbaaaaaaaaaaaaaaaaaaaabM
+  sMbaaaaaaWaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaWaaaaaaaaabM
+  sMbaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaabM
+  sMbaaaaaaaaaaaLaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaRaaaaaaaaaaaabM
+  sMbaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaabM
+  sMbaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaabM
+  sMbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbM
+  sMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMM
+  ssssssssssssssssssssssssssssssssssssssssssssssssssssssssssss
+  ............................O...............................
+  ............................P...............................
+  ...........................@................................
+  ............................................................
+  end
+
+  legend
+    W = Water color 0x19
+    w = Text-White color 0x2A
+    s = Solid color 0x08
+    M = Normal color 0x87
+    b = Breakable color 0x86
+    a = Empty color 0x00
+    G = Fake color 0x08
+    . = Empty color 0x0F
+    # = Solid color 0x06
+    I = Text-Yellow color 0x20
+    L = Lion color 0x0F
+    R = Lion color 0x0F
+    O = Object color 0x0E
+    P = Object color 0x0C
+    @ = Player color 0x1F under Empty color 0x00
+  end
+
+  stats
+    stat at 15,16 element Lion cycle 3 p1 6 under Empty color 0x00
+    stat at 46,16 element Lion cycle 3 p1 6 under Empty color 0x00
+    stat at 29,22 element Object cycle 3 p1 cp437:0xF0 under Empty color 0x0F
+    oop
+@wolves
+#end
+:touch
+#play tc-cd
+The wind screams through the barbican.
+Somewhere in the dark, wolves are singing
+to a moon you cannot see.
+$Turn back, they seem to say. Turn back.
+But the courtyard swallows you regardless.
+#end
+    end
+    stat at 29,23 element Object cycle 3 p1 cp437:0x1F under Empty color 0x0F
+    oop
+@portcullis
+#end
+:touch
+#play tfc
+The iron portcullis stands raised behind
+you, dripping storm-water. Its teeth of
+black iron glisten in the lightning.
+$It will not fall. Not yet.
+The great hall waits to the north.
+#end
+    end
+  end
+end
+
+board "Grand Hall"
+  max-shots 10
+  dark false
+  reenter true
+  time-limit 0
+  exits north "Spiral Descent" south "The Great Gate" west "Dusty Library" east "Ruined Chapel"
+
+  start player at 30,23
+  grid
+  SSSSSSSSSSSSSSSSSSSSSS.NNN..NNN.SSSSSSSSSSSSSSSSSSSSSSSSSSSS
+  SfffffSfffffSfffffSfffffSf..fSfffffSfffffSfffffSfffffSffffff
+  Sf...........................N..N...........................
+  Sf..pp..pp..pp....pp..pp....NnnN....pp..pp....pp..pp..pp...f
+  Sf..pP..Pp..pP....Pp..pP....NnnN....pP..Pp....Pp..pP..pP...f
+  Sf..pp..pp..pp....pp..pp....NnnN....pp..pp....pp..pp..pp...f
+  Sf..........................N..N............................
+  Sf.wwwwwwwwwwwwwwwwwwwwwww........wwwwwwwwwwwwwwwwwwwwwwww..
+  Sf..........................................................
+  Sf..........................................................
+  cf..........v..............cc..............v...............f
+  cf.........vvv.............cVc.............vvv..............
+  cf..........v..............cc..............v...............f
+  cf..........................................................
+  Sf..........................................................
+  Sf.wwwwwwwwwwwwwwwwwwww...............wwwwwwwwwwwwwwwwwwww..
+  Sf..........................................................
+  Sf.......k..................................................
+  Sf..........................................................
+  Sf..........................o...............................
+  Sfffffffffffffffffffffff.........fffffffffffffffffffffffffff
+  SSSSSSSSSSSSSSSSSSSSSSSf.........fSSSSSSSSSSSSSSSSSSSSSSSSSS
+  SSSSSSSSSSSSSSSSSSSSSS.......@...SSSSSSSSSSSSSSSSSSSSSSSSSSS
+  SSSSSSSSSSSSSSSSSSSSSS.NNN..NNN.SSSSSSSSSSSSSSSSSSSSSSSSSSSS
+  SSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSS
+  end
+
+  legend
+    S = Solid color 0x08
+    N = Normal color 0x08
+    n = Normal color 0x06
+    c = Solid color 0x06
+    D = Door color 0x6E
+    f = Fake color 0x08
+    . = Empty color 0x00
+    w = Line color 0x08
+    p = Breakable color 0x06
+    P = Text-Yellow color 0x07
+    v = Text-Yellow color 0x0F
+    V = Object color 0x0E
+    k = Key color 0x0E
+    o = Object color 0x0F
+    @ = Player color 0x1F under Empty color 0x00
+  end
+
+  stats
+    stat at 29,12 element Object cycle 3 p1 cp437:0x0F under Empty color 0x00
+    oop
+@candelabra
+#end
+:touch
+#play tc-ge
+The great candelabra gutters, its wax
+long since run to grey stalactites.
+For a moment the shadows lean toward
+you. Then they settle back.
+#end
+    end
+
+    stat at 29,20 element Object cycle 3 p1 cp437:0x02 under Empty color 0x00
+    oop
+@steward
+#end
+:touch
+#play tcdefg
+Welcome, welcome, welcome. The Count
+does so seldom entertain the living.
+$-- The Ghost Steward
+#zap touch
+#end
+:touch
+Mind the doors, guest. WEST lies the
+library; the iron key sleeps in a tome
+there. EAST, the ruined chapel will
+bless your stake. NORTH, the stairs go
+DOWN -- but that door is locked until
+you carry the iron key.
+#zap touch
+#end
+:touch
+The portraits watch you. They always
+watch. Do try not to die in the hall;
+the Count considers it untidy.
+#end
+    end
+  end
+end
+
+board "Ruined Chapel"
+  max-shots 255
+  dark false
+  reenter false
+  time-limit 0
+  exits north none south none west "Grand Hall" east none
+
+  start player at 2,13
+  grid
+SSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSS
+Sbbbbbbbbbbbbbbbbbbbbbbbbccccccbbbbbbbbbbbbbbbbbbbbbbbbbbbbb
+Sbbbbbbbbbbbbbbbbbbbbbbbcc.tt.ccbbbbbbbbbbbbbbbbbbbbbbbbbbbb
+Sbbbbbbbbbbbbbbbbbbbbbbbc.tvvt.cbbbbbbbbbbbbbbbbbbbbbbbbbbbb
+Sbbbbbbbbbbbbbbbbbbbbbbbc.tvvt.cbbbbbbbbbbbbbbbbbbbbbbbbbbbb
+Sb.......b.......b.....cc.t..t.ccb.....b.......b.......b...b
+Sb.PPPPP.b.PPPPP.b......c..t..t..cb....b.PPPPP.b.PPPPP.b...b
+Sb.P...P.b.P...P.b.......c.tvvt.c.b....b.P...P.b.P...P.b...b
+Sb.P...P.b.P...P.b........ctvvtc..b....b.P...P.b.P...P.b...b
+Sb.......b.......b.........cttc...b....b.......b.......b...b
+Sbbbbbbbbbbbbbbbbbbbbbbbbbbb.b.bbbbbbbbbbbbbbbbbbbbbbbbbbbbb
+w.........................f.o.h...........................bS
+S@bbbbbbbbbbbbbbbbbbbbbbbbbb.b.bbbbbbbbbbbbbbbbbbbbbbbbbbbbb
+Sb.......b.......b.........cttc...b....b.......b.......b...b
+Sb.PPPPP.b.PPPPP.b........ctFFtc..b....b.PPPPP.b.PPPPP.b...b
+Sb.P...P.b.P...P.b.......c.tFFt.c.b....b.P...P.b.P...P.b...b
+Sb.P...P.b.P...P.b......cc.tFFt.ccb....b.P...P.b.P...P.b...b
+Sb.......b.......b.....cc.tFFFt.ccb....b.......b.......b...b
+Sbbbbbbbbbbbbbbbbbbbbbbbc.tFFFFt.cbbbbbbbbbbbbbbbbbbbbbbbbbb
+Sbbbbbbbbbbbbbbbbbbbbbbbc..tFFt..cbbbbbbbbbbbbbbbbbbbbbbbbbb
+Sbbbbbbbbbbbbbbbbbbbbbbbcc.tFt.ccbbbbbbbbbbbbbbbbbbbbbbbbbbb
+Sbbbbbbbbbbbbbbbbbbbbbbbbccc..cccbbbbbbbbbbbbbbbbbbbbbbbbbbb
+Sbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb
+SSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSS
+............................................................
+  end
+
+  legend
+    S = Solid color 0x08
+    b = Empty color 0x00
+    . = Empty color 0x00
+    c = Breakable color 0x78
+    t = Text-Yellow color 0xB0
+    v = Text-Yellow color 0xB1
+    P = Line color 0x08
+    F = Water color 0x1B
+    w = Passage color 0x1F to "Grand Hall"
+    f = Object color 0x1E
+    o = Object color 0x0F
+    h = Object color 0x1B
+    @ = Player color 0x1F under Empty color 0x00
+  end
+
+  stats
+    stat at 1,12 element Passage cycle 0 p3 board "Grand Hall" under Empty color 0x00
+    stat at 27,12 element Object cycle 3 p1 cp437:0x0F under Empty color 0x00
+    oop
+@crucifix
+#end
+:touch
+#play tcefgec
+An iron crucifix, black with age, hangs
+crooked above the shattered altar.
+The wood of the Cross has not rotted,
+though everything around it has.
+:more
+#zap touch
+#play tfa
+You lay your hand on the cold iron.
+For a moment the wind outside falls silent,
+as if something distant flinched.
+#end
+    end
+    stat at 29,12 element Object cycle 3 p1 cp437:0x0F under Empty color 0x00
+    oop
+@altar
+#end
+:touch
+#play tfec
+The altar stone is split down its center.
+Someone, long ago, carved words into it:
+$WHAT SLEEPS BELOW FEARS ONLY THREE THINGS:
+$THE CROSS, THE FLAME, AND THE COMING SUN.
+Wax pools in the cracks. The candles here
+burned down centuries past.
+#end
+    end
+    stat at 31,12 element Object cycle 3 p1 cp437:0x0F under Empty color 0x1B
+    oop
+@font
+#end
+:touch
+#play tcgc
+The holy water font is a basin of blue
+marble, brimming still with clear water
+that has never once gone stagnant.
+:ask
+#zap ask
+Ripples move though no wind touches it.
+Do you have a stake to bless?
+!bless;Dip your wooden stake in the water.
+!leave;Step back from the font.
+#end
+:bless
+#play tcegcegc-c
+You dip the sharpened stake into the font.
+The water hisses; the wood drinks the light
+and comes out pale, humming faintly.
+A BLESSED STAKE is yours. The Count will
+not like this at all.
+#give gems 1
+#zap ask
+#end
+:leave
+The water settles. Your reflection is,
+reassuringly, still there.
+#end
+    end
+  end
+end
+
+board "Dusty Library"
+  max-shots 10
+  dark false
+  reenter false
+  time-limit 0
+  exits north none south none west none east "Grand Hall"
+
+  start player at 60,12
+  grid
+WWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWW
+Wcccccccc.cccccccc.cccccccc.cccccccc.cccccccc.ccccc..WWWWWWW
+Wc......c.c......c.c......c.c......c.c......c.c...c...WWWWWW
+Wcccccccc.cccccccc.cccccccc.cccccccc.cccccccc.ccccc..WWWWWWW
+W...................................................WWWWWWWW
+W.p.....................................................WWWW
+W...................................................WWWWWWWW
+Wcccccccc.cccccccc.cccccccc.cccc..cccccccc.ccccccc..WWWWWWWW
+Wc......c.c......c.c......c.cttc...c......c.c.....c..WWWWWWW
+Wcccccccc.cccccccc.cccccccc.cttc...cccccccc.ccccccc..WWWWWWW
+W..................................................WWWWWWWWW
+W.................T................................WWWWWWWW@
+W..................................................WWWWWWWWW
+Wcccccccc.cccccccc.cccccccc.cccccccc.cccccccc.ccccc..WWWWWWW
+Wc......c.c......c.c......c.c......c.c......c.c...c...WWWWWW
+Wcccccccc.cccccccc.cccccccc.cccccccc.cccccccc.ccccc..WWWWWWW
+W...................................................WWWWWWWW
+W.................o.................................WWWWWWWW
+W...................................................WWWWWWWW
+Wcccccccc.cccccccc.cccccccc.cccccccc.cccccc.cccccc..WWWWWWWW
+Wc......c.c......c.c......c.c......c.c....c.c....c..WWWWWWWW
+WccccccccDcccccccc.cccccccc.cccccccc.cccccc.cccccc.WWWWWWWWW
+W..................................................WWWWWWWWW
+WWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWW
+............................................................
+  end
+
+  legend
+    W = Solid color 0x08
+    c = Normal color 0x68
+    . = Empty color 0x00
+    @ = Player color 0x1F under Empty color 0x00
+    p = Passage color 0x1A to "Family Crypt"
+    t = Object color 0x6E
+    T = Object color 0x0E
+    o = Object color 0x0F
+    D = Door color 0xF8
+  end
+
+  stats
+    stat at 3,6 element Passage cycle 0 p3 board "Family Crypt" under Empty color 0x00
+
+    stat at 30,9 element Object cycle 0 p1 cp437:0xEC under Normal color 0x68
+    oop
+@tome
+#end
+:touch
+#play tcd
+A single crimson-bound tome sits apart from
+the rest, its spine cracked with disuse.
+The title is barely legible: "Ferro, Locke,
+et Clavis" -- Of Iron, Locks, and Keys.
+#play tc+e+g
+You pry the cover open. It is hollow. Nestled
+in the carved-out pages: a heavy iron key,
+cold as a grave.
+#give key white
+#play tefgab+c
+The key is yours. The iron door to the south
+now seems worth revisiting.
+#zap touch
+:touch
+The hollow tome is empty now.
+It kept its secret longer than its author.
+#end
+    end
+
+    stat at 31,9 element Object cycle 0 p1 cp437:0xEC under Normal color 0x68
+    oop
+@tomeb
+#end
+:touch
+#play tc
+Another crimson volume, but its pages are
+solid and yellowed. Just a book, after all.
+#end
+    end
+
+    stat at 19,12 element Object cycle 3 p1 cp437:0x0F under Empty color 0x00
+    oop
+@ghost
+#end
+:touch
+#play tc-c
+A pale reading-clerk drifts between the stacks,
+still shelving books two centuries dead.
+He does not look up. His voice is dry paper:
+"The key is bound in words, not lockmakers'
+iron. Seek the crimson tome that speaks of
+keys itself. It hides what it describes."
+#play td-d
+Then he fades, muttering catalogue numbers.
+#end
+    end
+
+    stat at 19,18 element Object cycle 0 p1 cp437:0xF0 under Empty color 0x00
+    oop
+@plaque
+#end
+:touch
+#play tf
+A brass plaque, tarnished green with age:
+$THE COUNT'S PRIVATE LIBRARY
+Below it, scratched by a shakier hand:
+"He never lends a book. Nor forgives a
+reader who wanders too far south past the
+iron door. Bring light. Bring courage."
+#end
+    end
+    stat at 30,10 element Object cycle 3
+    oop
+    #end
+    end
+    stat at 31,10 element Object cycle 3
+    oop
+    #end
+    end
+  end
+end
+
+board "Family Crypt"
+  max-shots 6
+  dark false
+  reenter false
+  time-limit 0
+  exits north none south none west none east none
+
+  start player at 28,23
+  grid
+WWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWW
+W..........................................................W
+W..sTdTs...sTdTs...sTdTs...sTdTs...sTdTs...sTdTs...sTdTs....
+W..s+++s...s+++s...s+++s...s+++s...s+++s...s+++s...s+++s....
+W..sm.rs...sm.rs...sm.rs...sm.rs...sm.rs...sm.rs...sm.rs....
+W..sssss...sssss...sssss...sssss...sssss...sssss...sssss....
+W..........................................................W
+WWWWWWWWWW.WWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWW.WWWWWWWWW
+W........................................................o.W
+W..sTdTs...sTdTs.........o................sTdTs...sTdTs....W
+W..s+++s...s+++s..........................s+++s...s+++s....W
+W..sm.rs...sm.rs..........................sm.rs...sm.rs....W
+W..sssss...sssss..........................sssss...sssss....W
+W..........................................................W
+W.....WWWWWWWWWWWWWWWWWWW.......WWWWWWWWWWWWWWWWWWWWWW......
+W.....W..............................................W.....W
+W.....W...GGGG..............................o........W.....W
+W.....W...GGGG.......................................W.....W
+W.....W..............................................W.....W
+W.....WWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWW....
+W..........................................................W
+W.....................p..............b.....................W
+W..........................@...............................W
+WWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWW
+............................................................
+  end
+
+  legend
+    W = Solid color 0x08
+    . = Empty color 0x00
+    s = Normal color 0x07
+    T = Text-White color 0xB1
+    d = Text-White color 0xEF
+    + = Text-White color 0x2B
+    m = Text-Red color 0xF7
+    r = Text-Red color 0xF7
+    G = Gem color 0x0A
+    @ = Player color 0x1F under Empty color 0x00
+    p = Passage color 0x1D to "Dusty Library"
+    o = Object color 0x0F
+    b = Object color 0x0E
+  end
+
+  stats
+    stat at 23,22 element Passage cycle 0 p3 board "Dusty Library" under Empty color 0x00
+
+    stat at 26,10 element Object cycle 3 p1 cp437:0xE7 under Empty color 0x00
+    oop
+@garlic
+#end
+:touch
+#play tcegtceg
+A withered braid of garlic flowers, dry
+as old parchment. The family hung these
+above every niche - and still it was not
+enough to keep the master in his coffin.
+You gather what you can carry.
+#give ammo 6
+The strands vanish into your pack.
+#zap touch
+#end
+:touch
+The niche is bare. Every clove is yours.
+#end
+      end
+
+    stat at 45,17 element Object cycle 3 p1 cp437:0xE7 under Empty color 0x00
+    oop
+@garlic2
+#end
+:touch
+#play tcegtceg
+More garlic, brittle and grey with age,
+knotted onto a rusted iron hook. It smells
+of a fear that lasted for generations.
+#give ammo 6
+You tuck the braid away.
+#zap touch
+#end
+:touch
+Only the empty hook remains.
+#end
+      end
+
+    stat at 58,9 element Object cycle 3 p1 cp437:0xF0 under Empty color 0x00
+    oop
+@epitaph
+#end
+:touch
+#play fcd
+Chiselled into the wall above the great
+vault, half-eaten by lichen:
+$HERE SLEEPS NO ONE.
+$WEEP NOT AT THE EMPTY BED.
+$BAR THE DOOR. SALT THE SILL.
+$AND PRAY THE DAWN COMES SWIFTLY.
+#end
+      end
+
+    stat at 38,22 element Object cycle 3 p1 cp437:0x0F under Empty color 0x00
+    oop
+@warning
+#end
+:touch
+#play tfc-a
+A brass plaque, tarnished nearly black.
+You rub it clean with your sleeve.
+$"TO WHOEVER READS THIS -
+$ the garlic is your only mercy.
+$ Take it. Take all of it.
+$ He counts his dead, and he will
+$ notice one braid missing sooner
+$ than he notices you."
+Signed only: a groundskeeper who left.
+#end
+      end
+  end
+end
+
+board "Spiral Descent"
+  max-shots 255
+  dark false
+  reenter false
+  time-limit 0
+  exits north "Dark Dungeon" south "Grand Hall" west none east none
+
+  start player at 28,2
+  grid
+  NNNNNNNNNNNNNNNNNNNNNN.###..###.NNNNNNNNNNNNNNNNNNNNNNNNNNNN
+  NNNNNNNNNNNNNNNNNNNNNN..bb.@bb..NNNNNNNNNNNNNNNNNNNNNNNNNNNN
+  NNNNNNNNNNNNNNNNNN####..b....b..####NNNNNNNNNNNNNNNNNNNNNNNN
+  NNNNNNNNNNNNNNNN##bbbbbb......bbbbbb##NNNNNNNNNNNNNNNNNNNNNN
+  NNNNNNNNNNNNNN##bbbbbbbb......bbbbbbbb##NNNNNNNNNNNNNNNNNNNN
+  NNNNNNNNNNNN##bbbbb##bb........bb##bbbbb##NNNNNNNNNNNNNNNNNN
+  NNNNNNNNNNN#bbbbb##NNbb........bbNN##bbbbb#NNNNNNNNNNNNNNNNN
+  NNNNNNNNNN#bbbb##NNNNNb........bNNNNN##bbbb#NNNNNNNNNNNNNNNN
+  NNNNNNNNN#bbb##NNNNNNNNc......cNNNNNNNN##bbb#NNNNNNNNNNNNNNN
+  NNNNNNNNN#bbb#NNNNNNNNNNb....bNNNNNNNNNN#bbb#NNNNNNNNNNNNNNN
+  NNNNNNNNN#bb#NNNNNNNNNNNNb..bNNNNNNNNNNNN#bb#NNNNNNNNNNNNNNN
+  NNNNNNNNN#bb#NNNNNNNNNNNNbccbNNNNNNNNNNNN#bb#NNNNNNNNNNNNNNN
+  NNNNNNNNN#bb#NNNNNNNNNNNbb..bbNNNNNNNNNNN#bb#NNNNNNNNNNNNNNN
+  NNNNNNNNN#bbb#NNNNNNNNNb......bNNNNNNNNNN#bbb#NNNNNNNNNNNNNN
+  NNNNNNNNNN#bbb#NNNNNNNb........bNNNNNNNN#bbb#NNNNNNNNNNNNNNN
+  NNNNNNNNNNN#bbbb##NNNb..........bNN##bbbb#NNNNNNNNNNNNNNNNNN
+  NNNNNNNNNNNN#bbbbb##bb..........bb##bbbb#NNNNNNNNNNNNNNNNNNN
+  NNNNNNNNNNNNN##bbbbbbb..........bbbbbbb##NNNNNNNNNNNNNNNNNNN
+  NNNNNNNNNNNNNNN##bbbbb..........bbbbb##NNNNNNNNNNNNNNNNNNNNN
+  NNNNNNNNNNNNNNNNN####bb........bb####NNNNNNNNNNNNNNNNNNNNNNN
+  NNNNNNNNNNNNNNNNNNNNN#bo......ob#NNNNNNNNNNNNNNNNNNNNNNNNNNN
+  NNNNNNNNNNNNNNNNNNNNN#bbb....bbb#NNNNNNNNNNNNNNNNNNNNNNNNNNN
+  NNNNNNNNNNNNNNNNNNNNNN#bb.gg.bb#NNNNNNNNNNNNNNNNNNNNNNNNNNNN
+  NNNNNNNNNNNNNNNNNNNNNNN#bb....bb#NNNNNNNNNNNNNNNNNNNNNNNNNNN
+  NNNNNNNNNNNNNNNNNNNNNNNN.######.NNNNNNNNNNNNNNNNNNNNNNNNNNNN
+  end
+
+  legend
+    N = Solid color 0x08
+    # = Normal color 0x87
+    b = Empty color 0x08
+    c = Breakable color 0x87
+    . = Empty color 0x00
+    g = Gem color 0x0B
+    o = Object color 0x0B
+    @ = Player color 0x1F under Empty color 0x00
+  end
+
+  stats
+    stat at 24,21 element Object cycle 3 p1 cp437:0x0F under Empty color 0x00
+    oop
+@coldair
+#end
+:touch
+#play tc-c-c
+The stairwell breathes a cold that is not
+weather. It rises from below, patient,
+and it knows your name.
+Each broken step spirals deeper. The
+candles you passed above will not follow.
+#end
+    end
+    stat at 31,21 element Object cycle 3 p1 cp437:0x0F under Empty color 0x00
+    oop
+@epitaph
+#end
+:touch
+#play tfc
+Scratched into the stone, a warning left
+by someone who climbed back up:
+$TURN BACK
+It is a poor omen that they never made it
+to the gate. Their coat still hangs there.
+#end
+    end
+  end
+end
+
+board "Dark Dungeon"
+  max-shots 255
+  dark true
+  reenter true
+  time-limit 0
+  exits north "The Count's Throne" south "Spiral Descent" west none east none
+
+  start player at 21,23
+  grid
+  ####################...H...#################################
+  #cc#cc#cc#........#..w...w..#....#cc#cc#cc#cc#cc#cc#cc#cc#cc
+  #..............#..#.........#.h..#........................#.
+  #.############.#..#####.#####....#.######################.#.
+  #.#cc#cc#cc#.#....#...#.#........#.#....................#.#.
+  #.#........#.####.#.#.#.####.#####.#.##################.#.#.
+  #.#.######.#....#.#.#.#....#....#.#.#.#..............#.#.#.#
+  #.#.#....#.####.#.#.#.####.####.#.#.#.#.############.#.#.#.#
+  #.#.#.cc#....#..#.#.#....#....#.#.#.#.#.#..........#.#.#.#.#
+  #.#.#.####.#.#.####.####.####.#.#.#.#.#.#.########.#.#.#.#.#
+  #.#.#....#.#.#....#....#....#.#.#.#.#.#.#.#......#.#.#.#.#.#
+  #.#.####.#.####.#.####.####.#.#.#.#.#.#.#.#.####.#.#.#.#.#.#
+  #.#....#.#....#.#....#....#.#.#.#.#.#.#.#.#.#..#.#.#.#.#.#.#
+  #.####.#.####.#.####.####.#.#.#.#.#.#.#.#.#T#T.#.#.#.#.#.#.#
+  #....#.#....#.#....#....#.#.#.#.#.#.#.#.#.#.####.#.#.#.#.#.#
+  ####.#.####.####.#.####.#.#.#.#.#.#.#.#.#.#....#.#.#.#.#.#.#
+  #....#....#....#.#....#.#.#.#.#.#.#.#.#.#.####.#.#.#.#.#.#.#
+  #.########.####.####.#.#.#.#.#.#.#.#.#.#....#.#.#.#.#.#.#.#.
+  #........#....#....#.#.#.#.#.#.#.#.#.#.####.#.#.#.#.#.#.#.#.
+  #.######.####.####.#.#.#.#.#.#.#.#.#....#.#.#.#.#.#.#.#.#.#.
+  #.#s...#......#....#.#.#...#...#...#.####.#.#.#.#.#.#.#.#.#.
+  #.#.####.#############.#############.#....#.#.#.#.#.#.#.#.#.
+  #...................@..............................#.......#
+  ####################.###..###.##############################
+  ............................................................
+  end
+
+  legend
+    # = Solid color 0x08
+    . = Empty color 0x00
+    c = Normal color 0x87
+    w = Water color 0x1F
+    h = Object color 0x0C
+    H = Object color 0x0E
+    T = Object color 0x0F
+    s = Scroll color 0x0F
+    @ = Player color 0x1F under Empty color 0x00
+  end
+
+  stats
+    stat at 24,1 element Object cycle 7 p1 cp437:0xE7 under Empty color 0x00
+    oop
+@wraith1
+#end
+:touch
+#play s-cdefg
+A shape of cold smoke drifts along the chains,
+mouthing words you cannot hear.
+It passes through you and is gone.
+#give health 0
+#zap touch
+:touch
+The dark presses back against your torch.
+Keep moving. Do not let the light die.
+#end
+    end
+
+    stat at 31,3 element Object cycle 7 p1 cp437:0xE7 under Empty color 0x00
+    oop
+@wraith2
+#end
+:touch
+#play t-fedc
+Another prisoner, long dead, still pacing
+its cell. Its eyes find your flame and it recoils.
+#end
+    end
+
+    stat at 46,14 element Object cycle 3 p1 cp437:0xE8 under Empty color 0x00
+    oop
+@rat
+#end
+:touch
+#play tc+c
+Something small and slick scuttles over your boot
+and vanishes into a crack in the black stone.
+#end
+    end
+
+    stat at 44,14 element Object cycle 0 p1 cp437:0x08 under Solid color 0x08
+    oop
+@hiddendoor
+#end
+:touch
+#play c-e-g+c
+You press the loose stone. Deep in the wall,
+a counterweight groans and stone grinds on stone.
+A passage yawns open toward the north... toward HIM.
+#zap touch
+#change Solid Empty
+#put north empty
+#put north empty
+#put east empty
+#die
+:touch
+The wall is sealed and cold. There is nothing more.
+#end
+    end
+
+    stat at 4,21 element Scroll cycle 1 under Empty color 0x00
+    oop
+$THE OUBLIETTE
+$of the Crimson Count
+The chains here have held men until men were
+only chains.
+
+The way onward is not a door you will find by
+touching walls at random. Somewhere among these
+cells one stone remembers how to move.
+
+Bring light. The Count keeps none for guests.
+#end
+    end
+  end
+end
+
+board "The Count's Throne"
+  max-shots 255
+  dark false
+  reenter false
+  time-limit 0
+  exits north "Broken Battlements" south "Dark Dungeon" west none east none
+
+  start player at 29,23
+  grid
+  WWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWW
+  W...T....T....T....T....T....T....T....T....T....T....T....T
+  W..........................dd..............................W
+  W.........hhhhhhhhhhhhhhhhh.dd.hhhhhhhhhhhhhhhhh...........W
+  W.........h.....................................h.........W.
+  W.........h...bbbbbbbbbbbbbbbbbbbbbbbbbbb.......h.........W.
+  W.........h...b...........................b.....h.........WW
+  W.........h...b....ccccccccccccccccc......b.....h.........WW
+  W.........h...b....c...............c......b.....h.........WW
+  W.........h...b....c...KKKKKKKKK...c......b.....h.........WW
+  W.........h...b....c...K.......K...c......b.....h.........WW
+  W.........h...b....c...K.......K...c......b.....h.........WW
+  W.........h...b....c...K...V...K...c......b.....h.........WW
+  W.........h...b....c...K.......K...c......b.....h.........WW
+  W.........h...b....c...KKKKKKKKK...c......b.....h.........WW
+  W.........h...b....c...............c......b.....h.........WW
+  W.........h...b....ccccccccccccccccc......b.....h.........WW
+  W.........h...b...........................b.....h.........WW
+  W.........h...bbbbbbbbbbbbbbbbbbbbbbbbbbbbb.....h.........WW
+  W.........h....................................h.........WW.
+  W.........hhhhhhhhhh...S....G...hhhhhhhhhhhhhhhhh.........WW
+  W...................................................ffffffW.
+  W..................f........@........f..................fW..
+  W...................................................ffffffW.
+  WWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWW
+  end
+
+  legend
+    W = Solid color 0x08
+    . = Empty color 0x00
+    T = Text-Red color 0xDF
+    h = Solid color 0x8F
+    b = Solid color 0x07
+    c = Breakable color 0x74
+    K = Solid color 0x0C
+    V = Object color 0x0C
+    d = Fake color 0x08
+    f = Fake color 0x70
+    S = Scroll color 0x0F
+    G = Object color 0x0B
+    @ = Player color 0x1F under Empty color 0x00
+  end
+
+  stats
+    stat at 28,13 element Object cycle 3 p1 cp437:0x02 under Breakable color 0x74
+    oop
+@count
+#end
+:touch
+#play tc.c.c.a-a-a-
+The coffin lid grinds open. A pale lord unfolds
+from the dark, eyes like two red coals.
+So. Another warm little thing come to disturb
+my rest. How CONSIDERATE of you to bring dinner.
+:menu
+#lock
+!strike;Drive the stake through his heart
+!water;Fling the vial of holy water
+!flee;Back slowly toward the stairs
+#unlock
+#end
+:flee
+The Count laughs, a sound like coffin nails.
+Running only tires the meat before I eat it.
+#zap flee
+The doors have sealed. There is only forward now.
+#zap flee
+No exit. No dawn. Only me.
+#unlock
+#restart
+:water
+#if holy #blessed
+You claw at your belt and find no holy water.
+The chapel font is still full, fool. Go BLESS
+your courage before you waste my evening.
+#unlock
+#restart
+:blessed
+#play s+c+e+g+i
+Holy water bursts across his brow. The Count
+SHRIEKS, smoke boiling from cracked white skin.
+He reels. His guard is down. STRIKE NOW.
+#set weakened
+#zap water
+The vial is empty. He is reeling. Finish him.
+#unlock
+#restart
+:strike
+#if weakened #kill
+Without holy water to stay him, he catches
+your wrist mid-thrust and laughs in your face.
+Cold. Wet. Then dark.
+#unlock
+#restart
+:kill
+#play tc+d+e+f+g+a+b+c
+You drive the stake home. Bone gives. He howls
+a howl five centuries old, then folds to ash.
+The great east shutters crack. Grey light bleeds
+in, and where the ash lies, nothing rises.
+#set countdead
+#give torches 1
+Go north. Meet the dawn he feared so long.
+#change object empty
+#end
+    end
+
+    stat at 24,21 element Scroll cycle 1 under Empty color 0x00
+    oop
+@epitaph
+Carved into the dais stone, half worn away:
+
+$   HERE SLEEPS THE CRIMSON COUNT
+
+He fears three things and three things only:
+the blessed water, the sharpened stake,
+and the sunrise he has not seen in an age.
+Bring the first two. Let the third do the rest.
+#end
+    end
+
+    stat at 29,21 element Object cycle 3 p1 cp437:0x9D under Empty color 0x00
+    oop
+@font
+#end
+:touch
+#play tcfc
+A shallow stone basin, brimming with clear water
+that faintly glows. The chapel's last blessing,
+carried this far in a stoppered vial.
+#if holy #already
+You dip your vial. It fills, and warms your palm.
+#give torches 0
+#set holy
+#end
+:already
+Your vial is already brimful. Steady, now.
+#end
+    end
+  end
+end
+
+board "Broken Battlements"
+  max-shots 255
+  dark false
+  reenter false
+  time-limit 0
+  exits north none south "The Count's Throne" west none east none
+
+  start player at 31,22
+  grid
+nnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnn
+nnnnn**nnnnnnnnnn**nnnnnnnnnnnnnnnnnn**nnnnnn**nnnnnnnnnn**n
+nnnnnnnnnnnnnnn**nnnnnnnnnnn**nnnnnnnnnnnnnnnnnnnn**nnnnnnnn
+rrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrr
+rrrrrrrrrrrrrrrrrrrrrryyyyyyyyyyyyyyrrrrrrrrrrrrrrrrrrrrrrrr
+yyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyy
+S..S..S..S..S..S..S..S..S..S..S..S..S..S..S..S..S..S..S..S..
+SsSsSsSsSsSsSsSsSsSsSsSsSsSsSsSsSsSsSsSsSsSsSsSsSsSsSsSsSsSs
+SSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSS
+S........................................................SSS
+S....o..............b.......................b...........SSSS
+S...................b.......................b..........SSSSS
+S...................b.......................b........SSSSSSS
+S...................b......cccc.............b......SSSSSSSSS
+S...................b.....c....c............b....SSSSSSSSSSS
+S...................b.....c....c............b..SSSSSSSSSSSSS
+S...................b.....c....c............b.SSSSSSSSSSSSSS
+S...................b......cccc.............b.SSSSSSSSSSSSSS
+S...................b.......................b.SSSSSSSSSSSSSS
+S...................b.......................b.SSSSSSSSSSSSSS
+SSSSSSSSSSSSSSSSSSSSb.......................bSSSSSSSSSSSSSSS
+SSSSSSSSSSSSSSSSSSSS..........@.............SSSSSSSSSSSSSSSS
+SSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSS
+SSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSS
+............................................................
+  end
+
+  legend
+    n = Text-White color 0x20
+    * = Text-Yellow color 0x2A
+    r = Text-Red color 0x20
+    y = Text-Yellow color 0x20
+    S = Solid color 0x08
+    s = Breakable color 0x87
+    . = Empty color 0x00
+    o = Object color 0x0E
+    b = Object color 0x0B
+    c = Text-Yellow color 0x2A
+    @ = Player color 0x1F under Empty color 0x00
+  end
+
+  stats
+    stat at 6,11 element Object cycle 3 p1 cp437:0x0F under Empty color 0x00
+    oop
+@dawn
+#end
+:touch
+#play tcefgab+c
+The first light spills over the Carpathian
+peaks. Where the Count stood, only a fistful
+of grey dust drifts on the mountain wind.
+The horror of these walls is broken.
+The wolves have gone silent.
+You have earned the morning.
+#play iciciciddefgab+c
+#endgame
+#end
+
+    end
+    stat at 21,11 element Object cycle 0 p1 cp437:0xB3 under Empty color 0x08
+    oop
+@rail1
+#end
+:touch
+The battlement rail is cold under your hand.
+Below, the valley wakes in gold.
+#end
+
+    end
+    stat at 45,11 element Object cycle 0 p1 cp437:0xB3 under Empty color 0x08
+    oop
+@rail2
+#end
+:touch
+Stone crumbles at the merlon's broken edge.
+Dawn has never looked so merciful.
+#end
+
+    end
+    stat at 21,12 element Object cycle 3
+    oop
+    #end
+    end
+    stat at 45,12 element Object cycle 3
+    oop
+    #end
+    end
+    stat at 21,13 element Object cycle 3
+    oop
+    #end
+    end
+    stat at 45,13 element Object cycle 3
+    oop
+    #end
+    end
+    stat at 21,14 element Object cycle 3
+    oop
+    #end
+    end
+    stat at 45,14 element Object cycle 3
+    oop
+    #end
+    end
+    stat at 21,15 element Object cycle 3
+    oop
+    #end
+    end
+    stat at 45,15 element Object cycle 3
+    oop
+    #end
+    end
+    stat at 21,16 element Object cycle 3
+    oop
+    #end
+    end
+    stat at 45,16 element Object cycle 3
+    oop
+    #end
+    end
+    stat at 21,17 element Object cycle 3
+    oop
+    #end
+    end
+    stat at 45,17 element Object cycle 3
+    oop
+    #end
+    end
+    stat at 21,18 element Object cycle 3
+    oop
+    #end
+    end
+    stat at 45,18 element Object cycle 3
+    oop
+    #end
+    end
+    stat at 21,19 element Object cycle 3
+    oop
+    #end
+    end
+    stat at 45,19 element Object cycle 3
+    oop
+    #end
+    end
+    stat at 21,20 element Object cycle 3
+    oop
+    #end
+    end
+    stat at 45,20 element Object cycle 3
+    oop
+    #end
+    end
+    stat at 21,21 element Object cycle 3
+    oop
+    #end
+    end
+    stat at 45,21 element Object cycle 3
+    oop
+    #end
+    end
+  end
+end
+

@@ -1889,10 +1889,278 @@ func assembleGeneratedZWD(worldName string, plan Plan, sections map[string]strin
 		if section == "" {
 			section = generatedPlaceholderBoard(board.Name, board.Dark)
 		}
+		// M12.20: guarantee a legible title. The model still paints board 0 to
+		// the titleScreenBrief, but it draws letter-SHAPED clusters of Text tiles
+		// that never resolve into the name (the #1 M12.17 baseline finding). The
+		// pipeline already knows the name, so we STAMP it as one clean centered
+		// row of literal Text glyphs and strip the model's stray title text —
+		// derive, don't require (M12.13).
+		if board.Index == 0 {
+			section, _ = stampTitleWordmark(section, plan.WorldName)
+		}
 		b.WriteString(strings.TrimSpace(section))
 		b.WriteString("\n\n")
 	}
 	return b.String()
+}
+
+// stampTitleWordmark rewrites a title board's ZWD section so the world name is
+// spelled as one clean, centered row of literal Text-White glyphs and every
+// other Text tile is stripped, leaving the title's non-text scenery (walls,
+// borders, decorative objects) and its single player untouched. The evalTextRow
+// / evalTitleWordmark gate reads the glyph out of each Text tile's Color byte,
+// so one contiguous row of one-glyph-per-cell Text is exactly what "spells the
+// world name" means. Block-letter fonts spread a name across five rows and so
+// can never satisfy that single-row check — literal one-tile-per-letter is the
+// only representation that passes, and the only one the model cannot garble.
+//
+// It works purely at the ZWD-text level (grid + legend surgery) so the persisted
+// sidecar and the hosted world stay identical, and on any structural surprise it
+// returns the section unchanged — the compiler remains the security boundary.
+func stampTitleWordmark(section, displayName string) (string, []string) {
+	var warnings []string
+	wordmark := foldWordmark(displayName)
+	if strings.TrimSpace(wordmark) == "" {
+		return section, warnings
+	}
+	if len(wordmark) > int(BOARD_WIDTH) {
+		return section, append(warnings, fmt.Sprintf("title wordmark %q is wider than %d columns; left unstamped", wordmark, BOARD_WIDTH))
+	}
+
+	lines := strings.Split(section, "\n")
+
+	// Locate the first grid block and the first legend block.
+	gridStart, gridEnd, legendStart, legendEnd := -1, -1, -1, -1
+	inGrid, inLegend := false, false
+	for i, l := range lines {
+		t := strings.TrimSpace(l)
+		switch {
+		case t == "grid" && gridStart == -1:
+			gridStart, inGrid = i, true
+		case inGrid && t == "end":
+			gridEnd, inGrid = i, false
+		case t == "legend" && legendStart == -1 && !inGrid:
+			legendStart, inLegend = i, true
+		case inLegend && t == "end":
+			legendEnd, inLegend = i, false
+		}
+	}
+	if gridStart < 0 || gridEnd < 0 || legendStart < 0 || legendEnd < 0 {
+		return section, append(warnings, "title board has no grid/legend block; left unstamped")
+	}
+
+	// Parse the legend: which single-byte keys map to Text elements (strip
+	// targets), which are protected (player or stat-backed, never overwritten),
+	// the Empty key (the gap glyph), and the full set of used key bytes.
+	init := NewEngine()
+	init.InitElementsGame()
+	textKeys := map[byte]bool{}
+	protectedKeys := map[byte]bool{}
+	usedKeys := map[byte]bool{}
+	emptyKey := byte(0)
+	haveEmptyKey := false
+	legendIndent := "    "
+	for i := legendStart + 1; i < legendEnd; i++ {
+		toks := strings.Fields(lines[i])
+		if len(toks) < 3 || toks[1] != "=" {
+			continue
+		}
+		if in := leadingIndent(lines[i]); in != "" {
+			legendIndent = in
+		}
+		key, ok := zwdLegendKeyByte(toks[0])
+		if !ok {
+			continue
+		}
+		usedKeys[key] = true
+		elem, ok := elementByZWDName(parseLegendElemName(strings.Join(toks[2:], " ")))
+		if !ok {
+			continue
+		}
+		switch {
+		case elem >= E_TEXT_MIN && elem <= E_TEXT_WHITE:
+			textKeys[key] = true
+		case elem == E_PLAYER || elementNeedsStat(elem):
+			protectedKeys[key] = true
+		}
+		if elem == E_EMPTY && !haveEmptyKey {
+			emptyKey, haveEmptyKey = key, true
+		}
+	}
+	if !haveEmptyKey {
+		emptyKey = '.'
+	}
+
+	// Extract the 25 grid rows as (indent, cells).
+	type gridRow struct {
+		lineIdx int
+		indent  string
+		cells   []byte
+	}
+	var rows []gridRow
+	for i := gridStart + 1; i < gridEnd; i++ {
+		indent := leadingIndent(lines[i])
+		rows = append(rows, gridRow{lineIdx: i, indent: indent, cells: []byte(strings.TrimRight(lines[i][len(indent):], "\r"))})
+	}
+	if len(rows) == 0 {
+		return section, append(warnings, "title board grid is empty; left unstamped")
+	}
+
+	rowHasKind := func(cells []byte, kind map[byte]bool) bool {
+		for _, c := range cells {
+			if kind[c] {
+				return true
+			}
+		}
+		return false
+	}
+
+	// Choose the band row: the vertical center of the model's own lettering (so
+	// the clean wordmark lands where the title was intended), else near the top.
+	// Never a row that holds the player or a stat.
+	var textRowIdx []int
+	for r := range rows {
+		if rowHasKind(rows[r].cells, textKeys) {
+			textRowIdx = append(textRowIdx, r)
+		}
+	}
+	band := 3
+	if band >= len(rows) {
+		band = len(rows) / 2
+	}
+	if len(textRowIdx) > 0 {
+		band = textRowIdx[len(textRowIdx)/2]
+	}
+	if rowHasKind(rows[band].cells, protectedKeys) {
+		band = -1
+		for r := range rows {
+			if !rowHasKind(rows[r].cells, protectedKeys) {
+				band = r
+				break
+			}
+		}
+		if band < 0 {
+			return section, append(warnings, "title board has no row free of the player/stats to stamp; left unstamped")
+		}
+	}
+
+	// Allocate a fresh legend key per distinct wordmark glyph. Fresh keys never
+	// collide with the model's legend, so this can never change what an existing
+	// grid cell means. Prefer readable keys (letters, digits) before symbols.
+	glyphKey := map[byte]byte{}
+	var newLegend []string
+	nextKey := func() (byte, bool) {
+		try := func(lo, hi byte) (byte, bool) {
+			for c := lo; c <= hi; c++ {
+				if c == emptyKey || c == ' ' || c == '=' || c == '"' || usedKeys[c] {
+					continue
+				}
+				return c, true
+			}
+			return 0, false
+		}
+		if k, ok := try('A', 'Z'); ok {
+			return k, true
+		}
+		if k, ok := try('a', 'z'); ok {
+			return k, true
+		}
+		if k, ok := try('0', '9'); ok {
+			return k, true
+		}
+		return try(0x21, 0x7E)
+	}
+	ensureGlyphKey := func(glyph byte) (byte, bool) {
+		if k, ok := glyphKey[glyph]; ok {
+			return k, true
+		}
+		k, ok := nextKey()
+		if !ok {
+			return 0, false
+		}
+		usedKeys[k] = true
+		glyphKey[glyph] = k
+		newLegend = append(newLegend, fmt.Sprintf("%s%c = Text-White color 0x%02X", legendIndent, k, glyph))
+		return k, true
+	}
+
+	// Build the centered band row: empty everywhere, one Text key per glyph.
+	width := len(rows[band].cells)
+	if width < int(BOARD_WIDTH) {
+		width = int(BOARD_WIDTH)
+	}
+	newRow := make([]byte, width)
+	for i := range newRow {
+		newRow[i] = emptyKey
+	}
+	start := (width - len(wordmark)) / 2
+	if start < 0 {
+		start = 0
+	}
+	for i := 0; i < len(wordmark); i++ {
+		if wordmark[i] == ' ' {
+			continue // leave the gap as the Empty key
+		}
+		k, ok := ensureGlyphKey(wordmark[i])
+		if !ok {
+			return section, append(warnings, "title board legend is full; wordmark left unstamped")
+		}
+		newRow[start+i] = k
+	}
+	rows[band].cells = newRow
+
+	// Strip every other Text tile so the wordmark is the only text row.
+	for r := range rows {
+		if r == band {
+			continue
+		}
+		for c, ch := range rows[r].cells {
+			if textKeys[ch] {
+				rows[r].cells[c] = emptyKey
+			}
+		}
+	}
+
+	// Rewrite the grid rows in place, then splice the new legend entries in
+	// before the legend's closing `end`.
+	for _, row := range rows {
+		lines[row.lineIdx] = row.indent + string(row.cells)
+	}
+	if len(newLegend) > 0 {
+		out := make([]string, 0, len(lines)+len(newLegend))
+		out = append(out, lines[:legendEnd]...)
+		out = append(out, newLegend...)
+		out = append(out, lines[legendEnd:]...)
+		lines = out
+	}
+	warnings = append(warnings, fmt.Sprintf("stamped title wordmark %q on grid row %d", wordmark, band+1))
+	return strings.Join(lines, "\n"), warnings
+}
+
+// leadingIndent returns the run of spaces/tabs at the start of s.
+func leadingIndent(s string) string {
+	for i := 0; i < len(s); i++ {
+		if s[i] != ' ' && s[i] != '\t' {
+			return s[:i]
+		}
+	}
+	return s
+}
+
+// zwdLegendKeyByte resolves a legend key token to its single grid byte. Handles
+// a bare one-byte key and the cp437:0xNN escape; other tokens have no single
+// grid byte.
+func zwdLegendKeyByte(tok string) (byte, bool) {
+	if len(tok) == 1 {
+		return tok[0], true
+	}
+	if strings.HasPrefix(tok, "cp437:0x") || strings.HasPrefix(tok, "cp437:0X") {
+		n, err := strconv.ParseUint(tok[len("cp437:0x"):], 16, 8)
+		if err == nil {
+			return byte(n), true
+		}
+	}
+	return 0, false
 }
 
 func generatedPlaceholderBoard(name string, dark bool) string {
