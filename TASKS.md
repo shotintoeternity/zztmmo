@@ -1314,7 +1314,7 @@ the corpus/style work builds on. The specs below are unchanged.)
   polled progress sequence (including repeated polls of the same stage) and
   asserts each progress line renders exactly once; `npm test` green.
 
-- [ ] **M12.19 — Close the three generation-pipeline gaps the M12.17 baseline
+- [x] **M12.19 — Close the three generation-pipeline gaps the M12.17 baseline
   exposed.** Evidence: `llmworld/eval/baseline/report.md` (2026-07-14) and the
   NOTES.md M12.17 entry. Three mechanical gaps, all reproduced by real runs:
   1. **Undefined legend key survived the M12.11 absorber.** The Apollo grounded

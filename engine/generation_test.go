@@ -94,17 +94,20 @@ func generationPlan(spine string) string {
 }
 
 func generatedBoard(name string, withBlueKey bool) string {
-	row := "@" + strings.Repeat(".", 59)
-	legend := "    @ = Player color 0x1F\n    . = Empty color 0x00"
+	// Every valid test plan below promises #endgame. Keep the shared successful
+	// board fixture honest about that promise so unrelated API/cache/batch tests
+	// do not trigger M12.19's cross-board finale repair loop.
+	row := "@o" + strings.Repeat(".", 58)
+	legend := "    @ = Player color 0x1F\n    . = Empty color 0x00\n    o = Object color 0x0F"
 	if withBlueKey {
-		row = "@k" + strings.Repeat(".", 58)
+		row = "@ok" + strings.Repeat(".", 57)
 		legend += "\n    k = Key color 0x09"
 	}
 	rows := []string{row}
 	for len(rows) < 25 {
 		rows = append(rows, strings.Repeat(".", 60))
 	}
-	return "```zwd\nboard \"" + name + "\"\n  start player at 1,1\n  dark false\n  exits north none south none west none east none\n  grid\n" + strings.Join(rows, "\n") + "\n  end\n  legend\n" + legend + "\n  end\nend\n```"
+	return "```zwd\nboard \"" + name + "\"\n  start player at 1,1\n  dark false\n  exits north none south none west none east none\n  grid\n" + strings.Join(rows, "\n") + "\n  end\n  legend\n" + legend + "\n  end\n  stats\n    stat at 2,1 element Object cycle 3\n    oop\n    @finale\n    #end\n    :touch\n    #endgame\n    #end\n    end\n  end\nend\n```"
 }
 
 func TestM124GenerateEndpointSuccessAndPersistence(t *testing.T) {

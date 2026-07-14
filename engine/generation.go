@@ -1600,9 +1600,6 @@ func preprocessZWDGridWithWarnings(zwdText string) (string, []string) {
 				for _, row := range gridRows {
 					for i := 0; i < len(row.content); i++ {
 						ch := row.content[i]
-						if ch == playerChar || ch == emptyChar {
-							continue
-						}
 						if legendKeys[ch] {
 							continue
 						}
@@ -1646,6 +1643,15 @@ func preprocessZWDGridWithWarnings(zwdText string) (string, []string) {
 							if ch == ' ' {
 								fmt.Fprintf(&inject, "%s  cp437:0x20 = Empty color 0x00\n", indent)
 								legendMap[ch] = "Empty"
+							} else if ch == emptyChar {
+								// The conventional empty key is '.', but a model can
+								// omit its legend entry. It must stay walkable rather
+								// than becoming an on-board period of Text.
+								fmt.Fprintf(&inject, "%s  cp437:0x%02X = Empty color 0x00\n", indent, ch)
+								legendMap[ch] = "Empty"
+							} else if ch == playerChar {
+								fmt.Fprintf(&inject, "%s  cp437:0x%02X = Player color 0x1F under Empty color 0x00\n", indent, ch)
+								legendMap[ch] = "Player"
 							} else {
 								fmt.Fprintf(&inject, "%s  cp437:0x%02X = Text-White color 0x%02X\n", indent, ch, ch)
 								legendMap[ch] = "Text-White"
@@ -1703,7 +1709,7 @@ func autoCloseZWDSections(src string, warnings []string) (string, []string) {
 	inOOP := false
 	sectionIndent := ""
 	boardIndent := ""
-	for _, line := range lines {
+	for i, line := range lines {
 		text := strings.TrimSpace(line)
 		if text == "" {
 			continue
@@ -1719,6 +1725,16 @@ func autoCloseZWDSections(src string, warnings []string) (string, []string) {
 			switch section {
 			case "stats":
 				if inOOP {
+					// A recurring model omission is the structural `end` after an
+					// OOP program. The next stat declaration is unambiguous proof
+					// that the OOP ended; without this repair every following stat
+					// is parsed as OOP text and its grid glyph becomes an orphan.
+					if strings.HasPrefix(strings.ToLower(text), "stat at ") {
+						closeLine := leadingZWDIndent(line) + "end"
+						lines = append(lines[:i], append([]string{closeLine}, lines[i:]...)...)
+						warnings = append(warnings, "auto-closed oop block before stat declaration")
+						return autoCloseZWDSections(strings.Join(lines, "\n"), warnings)
+					}
 					if text == "end" {
 						inOOP = false
 					}
@@ -2490,6 +2506,28 @@ func crossBoardProblems(plan Plan, full string) map[string][]string {
 			}
 		}
 	}
+
+	// Plan validation guarantees that a non-empty spine names a #endgame
+	// finale, but the painter can still omit it. Check the assembled, compiled
+	// world rather than trusting the plan: a world with no reachable #endgame is
+	// unwinnable even when every board compiled and every promised key/flag is
+	// present. Use the same board-1 reachability walk as the evaluation gate.
+	for _, step := range plan.Spine {
+		if !step.Endgame {
+			continue
+		}
+		world, err := CompileZWDWorld(full)
+		if err != nil {
+			break // The caller has already reported compile failures separately.
+		}
+		e := NewEngine()
+		e.Headless = true
+		e.World = world
+		if ok, _ := reachableEndgame(e); !ok {
+			add(spineFinaleBoardName(plan, step), "missing reachable #endgame promised by progression spine")
+		}
+		break
+	}
 	return problems
 }
 
@@ -2563,9 +2601,7 @@ func worldSetsFlag(doc zwdDocument, flag string) bool {
 }
 
 func spineBoardName(plan Plan, step SpineStep) string {
-	words := strings.FieldsFunc(strings.ToLower(step.Text), func(r rune) bool {
-		return !(r >= 'a' && r <= 'z') && !(r >= '0' && r <= '9') && r != '_' && r != '-'
-	})
+	words := spineBoardWords(step)
 	for _, word := range words {
 		for _, board := range plan.Boards {
 			if word == strings.ToLower(board.ID) {
@@ -2579,6 +2615,28 @@ func spineBoardName(plan Plan, step SpineStep) string {
 		}
 	}
 	return plan.Boards[0].Name
+}
+
+// spineFinaleBoardName assigns a missing #endgame to the destination named at
+// the end of its spine step ("throne -> endgame" belongs to endgame, not the
+// board the player is leaving). Other progression checks keep spineBoardName's
+// first-mentioned-source behavior.
+func spineFinaleBoardName(plan Plan, step SpineStep) string {
+	words := spineBoardWords(step)
+	for i := len(words) - 1; i >= 0; i-- {
+		for _, board := range plan.Boards {
+			if words[i] == strings.ToLower(board.ID) {
+				return board.Name
+			}
+		}
+	}
+	return spineBoardName(plan, step)
+}
+
+func spineBoardWords(step SpineStep) []string {
+	return strings.FieldsFunc(strings.ToLower(step.Text), func(r rune) bool {
+		return !(r >= 'a' && r <= 'z') && !(r >= '0' && r <= '9') && r != '_' && r != '-'
+	})
 }
 
 func orderedProblemBoards(plan Plan, problems map[string][]string) []PlanBoard {

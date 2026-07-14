@@ -275,6 +275,16 @@ func evalReachableEndgame(e *Engine) EvalCheck {
 		check.Detail = "world has no gameplay boards"
 		return check
 	}
+	passed, detail := reachableEndgame(e)
+	check.Passed = passed
+	check.Detail = detail
+	return check
+}
+
+// reachableEndgame is the shared compiled-world walk used by the evaluation
+// gate and generation's cross-board validation. It follows exactly the routes
+// a joiner can take from board 1: edge exits plus Passage stat P3 targets.
+func reachableEndgame(e *Engine) (bool, string) {
 	visited := map[int16]bool{}
 	queue := []int16{1}
 	var endgameBoards []string
@@ -311,12 +321,9 @@ func evalReachableEndgame(e *Engine) EvalCheck {
 			reached = append(reached, int(b))
 		}
 		sort.Ints(reached)
-		check.Detail = fmt.Sprintf("no #endgame reachable from board 1 (reached boards %v of %d)", reached, e.World.BoardCount)
-		return check
+		return false, fmt.Sprintf("no #endgame reachable from board 1 (reached boards %v of %d)", reached, e.World.BoardCount)
 	}
-	check.Passed = true
-	check.Detail = "#endgame on " + strings.Join(endgameBoards, ", ")
-	return check
+	return true, "#endgame on " + strings.Join(endgameBoards, ", ")
 }
 
 // EvalOOPSample gathers the world's stat OOP for the tier-2 judge, labeled by
