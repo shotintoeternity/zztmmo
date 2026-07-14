@@ -80,11 +80,12 @@ export async function runDreamGeneration(
   fetcher: Fetcher,
   wait: () => Promise<void>,
   onProgress: (progress: GenerationProgress[]) => void,
+  ground = false,
 ): Promise<string> {
   const response = await fetcher("/api/generate", {
     method: "POST",
     headers: { "Content-Type": "application/json" },
-    body: JSON.stringify({ prompt, async: true }),
+    body: JSON.stringify({ prompt, async: true, ground }),
   });
   if (!response.ok) throw new Error(await response.text());
   const { id } = (await response.json()) as { id: string };

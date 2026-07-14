@@ -249,6 +249,61 @@ func (k *PromptKit) RetrievalContext(premise, boardConcept string) string {
 	return b.String()
 }
 
+// TitleRetrievalContext is RetrievalContext specialized for the title board
+// (board 0): it always places the curated title-lettering/art examples first so
+// the model paints from clean monumental wordmarks instead of whatever gameplay
+// board happens to rank highest, then fills any remaining slots with
+// premise-ranked shots. Deterministic, like RetrievalContext.
+func (k *PromptKit) TitleRetrievalContext(premise string) string {
+	terms := retrievalTerms(premise)
+	type ranked struct {
+		shot     FewShot
+		metadata FewShotMetadata
+		score    int
+	}
+	var titleShots, otherShots []ranked
+	for _, shot := range k.FewShots {
+		m := k.Metadata[shot.Name]
+		r := ranked{shot, m, retrievalScore(terms, m, k.Captions[shot.Name])}
+		if strings.HasPrefix(fewShotArchetypes[shot.Name], "title") {
+			titleShots = append(titleShots, r)
+		} else {
+			otherShots = append(otherShots, r)
+		}
+	}
+	byScoreThenName := func(s []ranked) {
+		sort.Slice(s, func(i, j int) bool {
+			if s[i].score != s[j].score {
+				return s[i].score > s[j].score
+			}
+			return s[i].shot.Name < s[j].shot.Name
+		})
+	}
+	byScoreThenName(titleShots)
+	byScoreThenName(otherShots)
+	ordered := append(titleShots, otherShots...)
+
+	var b strings.Builder
+	b.WriteString("# Retrieved corpus examples\n\nThese are offline, authorable reference boards for a title screen; the title-lettering examples come first — study their monumental wordmarks. Do not copy them.\n")
+	used := 0
+	for _, r := range ordered {
+		if used == retrievalMaxExamples {
+			break
+		}
+		caption := k.Captions[r.shot.Name]
+		entry := fmt.Sprintf("\n## Example — %s (`%s`)\n\nTags: %s; palette: %s; density: %s.\nVisual note: %s\n\n```zwd\n%s\n```\n", r.metadata.Archetype, r.shot.Name, strings.Join(r.metadata.Themes, ", "), strings.Join(r.metadata.Palette, ", "), r.metadata.Density, caption.Summary, strings.TrimRight(r.shot.ZWD, "\n"))
+		if b.Len()+len(entry) > retrievalMaxBytes {
+			continue
+		}
+		b.WriteString(entry)
+		if r.metadata.Cohesion != "" {
+			fmt.Fprintf(&b, "\nSame-world plan excerpt: %s\n", r.metadata.Cohesion)
+		}
+		used++
+	}
+	return b.String()
+}
+
 func retrievalTerms(s string) map[string]bool {
 	terms := make(map[string]bool)
 	for _, term := range strings.FieldsFunc(strings.ToLower(s), func(r rune) bool { return r < 'a' || r > 'z' }) {

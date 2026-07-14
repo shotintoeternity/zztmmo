@@ -194,3 +194,25 @@ func TestPromptKitFewShotsCompile(t *testing.T) {
 		}
 	}
 }
+
+// TestTitleRetrievalContextPrefersTitleShots locks in the M12 title fix: the
+// title board must see the curated title-lettering examples first, not whatever
+// gameplay board the premise happens to rank highest.
+func TestTitleRetrievalContextPrefersTitleShots(t *testing.T) {
+	kit, err := LoadPromptKit()
+	if err != nil {
+		t.Fatal(err)
+	}
+	// A premise whose terms lean toward gameplay boards, to prove title shots
+	// still come first regardless of premise ranking.
+	block := kit.TitleRetrievalContext("a sunset battle arena in a ruined town")
+	re := regexp.MustCompile("(?m)^## Example — ([^(]+) \\(`([^`]+)`\\)")
+	matches := re.FindAllStringSubmatch(block, -1)
+	if len(matches) == 0 {
+		t.Fatalf("title retrieval produced no examples:\n%s", block)
+	}
+	firstArchetype := strings.TrimSpace(matches[0][1])
+	if !strings.HasPrefix(firstArchetype, "title") {
+		t.Fatalf("first title-retrieval example is %q (%s), want a title-lettering/art shot", firstArchetype, matches[0][2])
+	}
+}

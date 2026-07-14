@@ -1263,6 +1263,46 @@ the corpus/style work builds on. The specs below are unchanged.)
   non-empty, data-grounded, deterministic, and regenerated from the corpus.
   No sim changes, no runtime LLM calls, replay fixture unchanged.
 
+- [ ] **M12.17 [ADVISOR] — Generation prompting-quality evaluation harness.**
+  The generation prompts have grown — planner (`plannerSystemPrompt`), board
+  painting (`boardRequest`), `ZWD.md` spec + `STYLE.md` idiom, retrieval few-shots
+  (M12.15a–c), the board-0 title-screen brief (`titleScreenBrief` +
+  `TitleRetrievalContext`), and opt-in web grounding (`groundingInstruction` /
+  `callGrounded`) — but we have no repeatable way to tell whether the prompting
+  actually produces *good* worlds, only whether they compile. The M7.5 gate and
+  M12.16 repair prove a world is mechanically valid; they say nothing about
+  whether the title screen is a clean legible wordmark (the "GAFFHA + stray G +
+  scattered creatures" failure that motivated `titleScreenBrief`), whether boards
+  are composed, whether the OOP has voice, or whether grounded worlds are
+  factually accurate. Build an eval that measures this, so future prompt edits
+  can be judged instead of eyeballed. Two tiers:
+  1. **Offline structural gate (CI, no API, deterministic).** A `go test` over a
+     small set of *recorded* generation outputs (commit the ZWD text as fixtures;
+     never the `.ZZT`) asserting the objective properties the prompt is supposed
+     to guarantee, especially for board 0: exactly one contiguous horizontal Text
+     wordmark band spelling the world name; no creatures/items/enemy stats on the
+     title; exactly one `start player`; plus whole-world checks — every board
+     compiles and headlessly validates (`WorldLoad` + 200 steps, no panic),
+     reachable `#endgame`, within the Limits table, and no orphan stat-backed art
+     (M12.10). Cheap, deterministic, catches regressions.
+  2. **Live quality pass (owner-run, spends API).** A `zzt-eval` command building
+     on `cmd/run-generation` + the `Screen→PNG` renderer (M12.15a) + `cmd/zzt-shot`:
+     for a documented premise set spanning a real-world grounded topic, an
+     abstract theme, and a genre pastiche — each run with and without the grounding
+     opt-in — generate the world, render board 0 and two gameplay boards to PNG,
+     and score each against a **written rubric** (title-screen cleanliness/
+     legibility, visual composition, OOP voice/originality, and grounding accuracy
+     when opted in). Scoring is the tier-1 objective gate plus an LLM-judge over
+     the rubric (provider-agnostic, key via env, never commit fetched worlds).
+     Emit a scored Markdown report embedding the screenshots.
+  DoD: the premise set and rubric are documented; tier-1 runs under `go test` and
+  fails on a title-screen/structural regression; `zzt-eval` produces a scored
+  report + screenshots for the premise set (owner-run, not in CI — it spends API);
+  a baseline report is captured in NOTES.md so later prompt edits compare against
+  it; `go build ./... && go test ./...` and `npm test` / `npm run build` green;
+  replay fixture unchanged (generation is outside the sim). Consult the advisor on
+  the rubric and LLM-judge design before building the live tier.
+
 ## M14 — Rearchitecting for the service ZZTMMO is becoming
 
 Filed 2026-07-12 from a whole-repo review (NOTES.md): three structural debts

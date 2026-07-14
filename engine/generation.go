@@ -169,18 +169,18 @@ func GenerationServiceFromEnv() (*GenerationService, error) {
 	return NewGenerationService(c)
 }
 
-func (g *GenerationService) Generate(ctx context.Context, client, premise, requestedName string, server *WebSocketServer) (GenerationResult, error) {
-	return g.generate(ctx, client, premise, requestedName, server, nil)
+func (g *GenerationService) Generate(ctx context.Context, client, premise, requestedName string, server *WebSocketServer, ground bool) (GenerationResult, error) {
+	return g.generate(ctx, client, premise, requestedName, server, ground, nil)
 }
 
 // GenerateWithProgress runs the same production pipeline but adds a caller-
 // scoped observer. It is used by asynchronous HTTP jobs without mixing events
 // between concurrent clients.
-func (g *GenerationService) GenerateWithProgress(ctx context.Context, client, premise, requestedName string, server *WebSocketServer, progress func(GenerationProgress)) (GenerationResult, error) {
-	return g.generate(ctx, client, premise, requestedName, server, progress)
+func (g *GenerationService) GenerateWithProgress(ctx context.Context, client, premise, requestedName string, server *WebSocketServer, progress func(GenerationProgress), ground bool) (GenerationResult, error) {
+	return g.generate(ctx, client, premise, requestedName, server, ground, progress)
 }
 
-func (g *GenerationService) generate(ctx context.Context, client, premise, requestedName string, server *WebSocketServer, progress func(GenerationProgress)) (GenerationResult, error) {
+func (g *GenerationService) generate(ctx context.Context, client, premise, requestedName string, server *WebSocketServer, ground bool, progress func(GenerationProgress)) (GenerationResult, error) {
 	if progress != nil {
 		ctx = context.WithValue(ctx, generationProgressContextKey{}, progress)
 	}
@@ -196,7 +196,7 @@ func (g *GenerationService) generate(ctx context.Context, client, premise, reque
 	defer func() { <-g.sem }()
 
 	g.report(ctx, GenerationProgress{Stage: "planning", Attempt: 1, Detail: "imagining the world plan"})
-	planText, plan, err := g.makePlan(ctx, premise)
+	planText, plan, err := g.makePlan(ctx, premise, ground)
 	if err != nil {
 		return GenerationResult{}, err
 	}
@@ -323,15 +323,30 @@ func (g *GenerationService) admit(ctx context.Context, client string) error {
 	}
 }
 
-func (g *GenerationService) makePlan(ctx context.Context, premise string) (string, Plan, error) {
+func (g *GenerationService) makePlan(ctx context.Context, premise string, ground bool) (string, Plan, error) {
 	// Keep the planner's system prompt stable for caching; the only per-request
-	// corpus material is this deterministic retrieval block.
+	// corpus material is this deterministic retrieval block. When grounding is on
+	// the planner also gets the web_search tool (via callGrounded) and is told to
+	// emit a Grounding notes section, so real facts ride into every board.
 	retrieval := g.promptKit.RetrievalContext(premise, "world plan")
-	request := planRequest(premise, "") + "\n\n" + retrieval
+	buildRequest := func(repair string) string {
+		base := planRequest(premise, repair)
+		if ground {
+			base += "\n\n" + groundingInstruction
+		}
+		return base + "\n\n" + retrieval
+	}
+	request := buildRequest("")
 	var lastErr error
 	for attempt := 1; attempt <= g.maxAttempts; attempt++ {
 		g.report(ctx, GenerationProgress{Stage: "planning", Attempt: attempt, Detail: "asking Claude for a world plan"})
-		text, err := g.call(ctx, plannerSystemPrompt, request)
+		var text string
+		var err error
+		if ground {
+			text, err = g.callGrounded(ctx, plannerSystemPrompt, request)
+		} else {
+			text, err = g.call(ctx, plannerSystemPrompt, request)
+		}
 		if err != nil {
 			return "", Plan{}, err
 		}
@@ -346,7 +361,7 @@ func (g *GenerationService) makePlan(ctx context.Context, premise string) (strin
 		if attempt < g.maxAttempts {
 			g.report(ctx, GenerationProgress{Stage: "repairing-plan", Attempt: attempt + 1, Detail: err.Error()})
 		}
-		request = planRequest(premise, fmt.Sprintf("Your previous plan failed mechanical validation:\n%s\nReturn a corrected complete plan.", err)) + "\n\n" + retrieval
+		request = buildRequest(fmt.Sprintf("Your previous plan failed mechanical validation:\n%s\nReturn a corrected complete plan.", err))
 	}
 	return "", Plan{}, fmt.Errorf("plan generation exhausted repairs: %w", lastErr)
 }
@@ -358,7 +373,11 @@ func (g *GenerationService) paintBoard(ctx context.Context, planText string, pla
 		*attempts++
 		g.report(ctx, GenerationProgress{Stage: "painting", Board: board.Name, Attempt: *attempts, Detail: "asking Claude for board ZWD"})
 		request := boardRequest(planText, plan, board, sections, lastFeedback, lastCandidate, *attempts, g.maxAttempts)
-		request += "\n\n" + g.promptKit.RetrievalContext(plan.WorldName, board.Concept)
+		if board.Index == 0 {
+			request += "\n\n" + g.promptKit.TitleRetrievalContext(plan.WorldName)
+		} else {
+			request += "\n\n" + g.promptKit.RetrievalContext(plan.WorldName, board.Concept)
+		}
 		text, err := g.call(ctx, g.promptKit.SystemPrompt(), request)
 		if err != nil {
 			return "", err
@@ -475,6 +494,90 @@ func (g *GenerationService) call(ctx context.Context, system, user string) (stri
 	return resultText, nil
 }
 
+// callGrounded is call() with the server-side web_search tool enabled and a
+// bounded pause_turn resume loop (M12 opt-in grounding). It is used only for the
+// planner step; per-board painting stays tool-free, offline, and deterministic.
+func (g *GenerationService) callGrounded(ctx context.Context, system, user string) (string, error) {
+	type msg struct {
+		Role    string          `json:"role"`
+		Content json.RawMessage `json:"content"`
+	}
+	userContent, err := json.Marshal(user)
+	if err != nil {
+		return "", err
+	}
+	messages := []msg{{Role: "user", Content: userContent}}
+	tool := map[string]interface{}{"type": "web_search_20260209", "name": "web_search", "max_uses": 5}
+	// The web_search tool runs a server-side loop; it can return pause_turn if it
+	// hits the server's iteration cap. Echo the assistant turn back a few times to
+	// let it resume before giving up.
+	for round := 0; round < 4; round++ {
+		body, err := json.Marshal(map[string]interface{}{
+			"model":      g.model,
+			"max_tokens": g.maxTokens,
+			"system":     []systemBlock{{Type: "text", Text: system}},
+			"tools":      []interface{}{tool},
+			"messages":   messages,
+		})
+		if err != nil {
+			return "", err
+		}
+		req, err := http.NewRequestWithContext(ctx, http.MethodPost, g.apiURL, strings.NewReader(string(body)))
+		if err != nil {
+			return "", err
+		}
+		req.Header.Set("Content-Type", "application/json")
+		req.Header.Set("x-api-key", g.apiKey)
+		req.Header.Set("anthropic-version", "2023-06-01")
+		resp, err := g.httpClient.Do(req)
+		if err != nil {
+			return "", fmt.Errorf("Claude API request: %w", err)
+		}
+		data, err := io.ReadAll(io.LimitReader(resp.Body, 8<<20))
+		resp.Body.Close()
+		if err != nil {
+			return "", err
+		}
+		if resp.StatusCode < 200 || resp.StatusCode >= 300 {
+			return "", fmt.Errorf("Claude API returned %s: %s", resp.Status, strings.TrimSpace(string(data)))
+		}
+		var decoded struct {
+			StopReason string            `json:"stop_reason"`
+			Content    []json.RawMessage `json:"content"`
+		}
+		if err := json.Unmarshal(data, &decoded); err != nil {
+			return "", fmt.Errorf("decode Claude API response: %w", err)
+		}
+		if decoded.StopReason == "pause_turn" {
+			assistantContent, err := json.Marshal(decoded.Content)
+			if err != nil {
+				return "", err
+			}
+			messages = append(messages, msg{Role: "assistant", Content: assistantContent})
+			continue
+		}
+		var text strings.Builder
+		for _, raw := range decoded.Content {
+			var block struct {
+				Type string `json:"type"`
+				Text string `json:"text"`
+			}
+			if json.Unmarshal(raw, &block) == nil && block.Type == "text" {
+				text.WriteString(block.Text)
+			}
+		}
+		if text.Len() == 0 {
+			return "", fmt.Errorf("Claude API grounded response contained no text")
+		}
+		resultText := text.String()
+		if os.Getenv("ZZT_GENERATION_DEBUG") == "1" {
+			log.Printf("[DEBUG CLAUDE GROUNDED PROMPT]\n%s\n[DEBUG CLAUDE GROUNDED RESPONSE]\n%s\n", user, resultText)
+		}
+		return resultText, nil
+	}
+	return "", fmt.Errorf("grounded planner did not converge (too many web-search pause rounds)")
+}
+
 const plannerSystemPrompt = `You design compact, mechanically checkable ZZT world plans.
 
 Emit Markdown in exactly this shape:
@@ -502,6 +605,25 @@ names are display labels only; exits target ids, never display names; link
 tokens are N→id, S→id, E→id, W→id, or passage→id/passage↔id. Include one
 title row (0), exactly one START concept, reciprocal paths, and #endgame.`
 
+// titleScreenBrief is appended to the board request for board 0 only. Without it
+// the model paints the title like a gameplay room with a name stamped on top
+// (scattered creatures, inconsistent letters, stray glyphs); a ZZT title screen
+// is a decorative splash.
+const titleScreenBrief = "\n\n# Title screen brief (board 0)\n" +
+	"This is the title screen: a decorative splash shown before play, NOT a gameplay room. Follow the title-lettering examples above.\n" +
+	"- Center the world's exact name as ONE monumental wordmark, spelled left to right in a single horizontal band near the top. Do not leave stray, duplicate, or half-formed letters anywhere else on the board.\n" +
+	"- Give every letter the SAME height and even spacing, built from `Text-<color>` legend entries (each entry's color is the CP437 code of the glyph). Keep a small, coherent palette — a few colors, not a different color per letter unless deliberate.\n" +
+	"- Do NOT scatter creatures, items, keys, gems, or furniture across the title. At most a thin border, a small decorative motif, or one short subtitle line beneath the wordmark.\n" +
+	"- Place `start player` unobtrusively (a corner, or just below the wordmark). The title board has no combat.\n" +
+	"- Leave generous empty space; a clean, readable wordmark beats a busy board. Do not draw menu instructions — the engine already shows Play / Restore / Quit.\n"
+
+// groundingInstruction is appended to the planner request when the caller opts
+// in to open-ended web grounding (M12). Only the planner step searches; the
+// facts it gathers ride into every board through the plan text's Grounding notes.
+const groundingInstruction = "# Web grounding (enabled)\n" +
+	"You have a web_search tool. First research the real-world subject of the premise: search for accurate names, facts, events, tone, and iconic imagery, and base the world plan on what you find rather than on assumptions.\n" +
+	"After the ## Generation order section, append a ## Grounding notes section: 4-8 terse prose bullets capturing the key real facts, proper names, tone, and iconic images a board author should honor. Use plain bullets only — no tables, no pipe (`|`) characters, no code fences — so the plan still parses."
+
 func planRequest(premise, repair string) string {
 	var b strings.Builder
 	b.WriteString("Create a world plan for this player premise. Include ## Board graph as the six-column table used by the reference format, ## Progression spine, and ## Generation order. The `id` column is a lowercase single-token slug (for example `shopfront`), never a display name. In exits/links, targets are ids and every link is one compact token such as `E→kitchen`, `W→shopfront`, or `passage↔cellar`; do not use display names or prose as targets. Use board ids in generation order. The plan must have a title board (0), a START board, reciprocal directional exits or passages, and a reachable #endgame.\n\nPlayer premise:\n---\n")
@@ -517,6 +639,9 @@ func planRequest(premise, repair string) string {
 func boardRequest(planText string, plan Plan, board PlanBoard, sections map[string]string, feedback, previous string, attempt, maxAttempts int) string {
 	var b strings.Builder
 	fmt.Fprintf(&b, "Paint exactly one board for this authoritative world plan. Board id=%q, required board name=%q, concept=%q, dark=%t. Output exactly one fenced zwd block containing only that board section. It must contain its own start player and use exact board names in exits and passages. Grid rows are byte-oriented: use only one-byte ASCII legend keys in every raw grid row, never literal Unicode or CP437 artwork. Use the Grid Alignment Protocol (wrapping grid rows in '|' characters and using 60-character numbered rulers above and below the grid) to ensure every grid row is exactly 60 bytes.\n\n# World plan\n%s\n\n# Already-painted adjacent board edges\n%s", board.ID, board.Name, board.Concept, board.Dark, planText, generatedEdgeContext(plan, board, sections))
+	if board.Index == 0 {
+		b.WriteString(titleScreenBrief)
+	}
 	if feedback != "" {
 		fmt.Fprintf(&b, "\n\n# Repair required (attempt %d of %d)\n%s", attempt, maxAttempts, feedback)
 		if previous != "" {
@@ -755,6 +880,12 @@ func batchBoardRequest(planText string, plan Plan, boards []PlanBoard, sections 
 		fmt.Fprintf(&b, "- Board id=%q, required board name=%q, concept=%q, dark=%t\n", board.ID, board.Name, board.Concept, board.Dark)
 	}
 	b.WriteString("\nOutput a fenced zwd block for EACH board. Each board section must be complete, contain its own start player (if applicable), and use exact board names in exits and passages. Grid rows are byte-oriented: use only one-byte ASCII legend keys in every raw grid row, never literal Unicode or CP437 artwork. Use the Grid Alignment Protocol (wrapping grid rows in '|' characters and using 60-character numbered rulers above and below the grid) to ensure every grid row is exactly 60 bytes.\n")
+	for _, board := range boards {
+		if board.Index == 0 {
+			b.WriteString(titleScreenBrief)
+			break
+		}
+	}
 	fmt.Fprintf(&b, "\n# World plan\n%s", planText)
 	b.WriteString("\n\n# Already-painted adjacent board edges\n")
 	for _, board := range boards {

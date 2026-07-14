@@ -183,6 +183,7 @@ func (a *WebAPI) handleGenerate(w http.ResponseWriter, r *http.Request) {
 		Prompt string `json:"prompt"`
 		Name   string `json:"name"`
 		Async  bool   `json:"async"`
+		Ground bool   `json:"ground"`
 	}
 	if err := json.NewDecoder(http.MaxBytesReader(w, r.Body, 16<<10)).Decode(&body); err != nil {
 		http.Error(w, "bad request body", http.StatusBadRequest)
@@ -210,14 +211,14 @@ func (a *WebAPI) handleGenerate(w http.ResponseWriter, r *http.Request) {
 		}
 		a.generationJobs[jobID] = &generationJob{Status: "running"}
 		a.generationMu.Unlock()
-		go a.runGenerationJob(jobID, generator, client, body.Prompt, body.Name)
+		go a.runGenerationJob(jobID, generator, client, body.Prompt, body.Name, body.Ground)
 		w.WriteHeader(http.StatusAccepted)
 		writeJSON(w, struct {
 			ID string `json:"id"`
 		}{ID: jobID})
 		return
 	}
-	result, err := generator.Generate(r.Context(), client, body.Prompt, body.Name, a.Server)
+	result, err := generator.Generate(r.Context(), client, body.Prompt, body.Name, a.Server, body.Ground)
 	if err != nil {
 		switch {
 		case strings.Contains(err.Error(), "rate limit"):
@@ -234,7 +235,7 @@ func (a *WebAPI) handleGenerate(w http.ResponseWriter, r *http.Request) {
 	}{World: result.Name})
 }
 
-func (a *WebAPI) runGenerationJob(id string, generator *GenerationService, client, prompt, name string) {
+func (a *WebAPI) runGenerationJob(id string, generator *GenerationService, client, prompt, name string, ground bool) {
 	progress := func(event GenerationProgress) {
 		a.generationMu.Lock()
 		if job := a.generationJobs[id]; job != nil {
@@ -242,7 +243,7 @@ func (a *WebAPI) runGenerationJob(id string, generator *GenerationService, clien
 		}
 		a.generationMu.Unlock()
 	}
-	result, err := generator.GenerateWithProgress(context.Background(), client, prompt, name, a.Server, progress)
+	result, err := generator.GenerateWithProgress(context.Background(), client, prompt, name, a.Server, progress, ground)
 	a.generationMu.Lock()
 	defer a.generationMu.Unlock()
 	job := a.generationJobs[id]

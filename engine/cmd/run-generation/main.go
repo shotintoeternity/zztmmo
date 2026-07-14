@@ -69,7 +69,7 @@ func main() {
 		}
 	})
 
-	result, err := service.Generate(context.Background(), "script", prompt, "BAKERY", nil)
+	result, err := service.Generate(context.Background(), "script", prompt, "BAKERY", nil, false)
 	if err != nil {
 		log.Fatalf("Generation failed: %v", err)
 	}

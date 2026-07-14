@@ -52,9 +52,22 @@ const world = await runDreamGeneration("an underwater clockwork city", successFe
 assert.equal(world, "TIDECELLAR");
 assert.equal(successCalls[0].url, "/api/generate");
 assert.equal(successCalls[0].init.method, "POST");
-assert.deepEqual(JSON.parse(successCalls[0].init.body), { prompt: "an underwater clockwork city", async: true });
+assert.deepEqual(JSON.parse(successCalls[0].init.body), { prompt: "an underwater clockwork city", async: true, ground: false });
 assert.equal(successCalls[2].url, "/api/generate?id=gen-1");
 assert.equal(generationLines(progress.at(-1))[0], "Painting board 7 of 12: The Tide Cellar");
+
+// Opt-in grounding flag propagates into the /api/generate request body.
+const groundCalls = [];
+const groundReplies = [
+  { id: "gen-3" },
+  { status: "complete", world: "GROUNDED", progress: [] },
+];
+const groundFetcher = async (url, init) => {
+  groundCalls.push({ url, init });
+  return new Response(JSON.stringify(groundReplies.shift()), { status: 200 });
+};
+await runDreamGeneration("the saga of the mzxers", groundFetcher, async () => {}, () => {}, true);
+assert.deepEqual(JSON.parse(groundCalls[0].init.body), { prompt: "the saga of the mzxers", async: true, ground: true });
 
 const failureReplies = [
   { id: "gen-2" },

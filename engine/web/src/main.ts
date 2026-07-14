@@ -1027,7 +1027,11 @@ function openDreamPrompt() {
     line: 0,
     onSubmit: (premise) => {
       if (premise) {
-        void startDreamGeneration(premise);
+        // Opt-in open-ended grounding: the planner may web-search for real facts
+        // about the premise's subject before designing the world.
+        openYesNo("Research the web for real facts? ", (yes) => {
+          void startDreamGeneration(premise, yes);
+        });
       }
     },
   });
@@ -1049,7 +1053,7 @@ function showGenerationProgress(progress: GenerationProgress[]) {
   openWindow("Dreaming a world", lines, true);
 }
 
-async function startDreamGeneration(prompt: string) {
+async function startDreamGeneration(prompt: string, ground = false) {
   showGenerationProgress([]);
   try {
     const world = await runDreamGeneration(
@@ -1057,6 +1061,7 @@ async function startDreamGeneration(prompt: string) {
       fetch,
       () => new Promise((resolve) => window.setTimeout(resolve, 500)),
       showGenerationProgress,
+      ground,
     );
     await enterWorld(world);
   } catch (error) {
