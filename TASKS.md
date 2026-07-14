@@ -1578,7 +1578,7 @@ and running early. See NOTES.md.)
   Board Information and board selection intentionally remain text windows,
   matching `EDITOR.PAS`. See NOTES.md.
 
-- [ ] **M5.11 — Editor cursor blink/under-tile visibility parity.** The browser
+- [x] **M5.11 — Editor cursor blink/under-tile visibility parity.** The browser
   editor's local and collaborator cursors are currently persistent overlays that
   can obscure the tile or object underneath them. Match the original editor
   cursor behavior: the active editor cursor should blink between a visible
@@ -1588,6 +1588,22 @@ and running early. See NOTES.md.)
   cursors blink without layout jitter; the underlying tile/object is visible
   during the off phase; and browser coverage/screenshots exercise local cursor,
   collaborator cursor, and stat-backed/object tiles under the cursor.
+
+  Landed: modeled EditorLoop's 3-phase `cursorBlinker` (editor.go:534-551).
+  `editor_cursor.ts` gained pure helpers — `editorCursorShown(blink)` (phase 0 =
+  tile shown, phases 1&2 = cursor shown) and `editorCursorOverlay(...)`, which
+  builds the overlay cells: on the tile-shown phase it returns nothing so the
+  board cell (object glyph included) renders untouched, and on cursor-shown
+  phases it emits the local cross cursor (glyph `0xC5`, color `0x0F`, matching
+  vanilla — replacing the old persistent `0x1F`/`\x1f` marker) plus each remote
+  collaborator's marker+name, which blink on the same phase so they never
+  permanently hide the tile beneath. `main.ts` drives it from a 150ms
+  `setEditorBlinking` interval (`SoundHasTimeElapsed(_, 15)` = 15 hundredths),
+  torn down on every editor-exit path (leave/close, play snapshot, showTitle).
+  Presentation-only: no simulation change, replay fixture unchanged.
+  `editor_cursor.test.mjs` covers the phase gate, the local glyph/color, the
+  collaborator blink (self and off-board culled, name clipped to 10), and the
+  phase-0 reveal that keeps a stat-backed object visible under the cursor.
 
 - [x] **M5.12 — Editor help `.HLP` cross-references must work in the browser.**
   The editor's help windows are dead ends in the browser: `fetchLines`

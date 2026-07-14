@@ -7,7 +7,7 @@ import { drawTitleSidebar, titleCommand } from "./title";
 import { soundNotesFromProtocol, ZztSound } from "./sound";
 import { generationLines, runDreamGeneration, type GenerationProgress } from "./dream";
 import { drawEditorSidebar, type EditorInspect, type SidebarActionMenu, type SidebarStatPrompt } from "./editor";
-import { editorReplyMatchesCursor } from "./editor_cursor";
+import { editorReplyMatchesCursor, editorCursorOverlay, EDITOR_BLINK_PHASES } from "./editor_cursor";
 import { optimisticEditorEraseCell, optimisticEditorTextCell } from "./editor_input";
 import {
   mergeWorldEntries,
@@ -97,6 +97,9 @@ const COLOR_PLAYER = 0x1f;
 // SoundHasTimeElapsed(TickTimeCounter, 25) in GAME.PAS:1520. A TimerTick is 6
 // hundredths of a second (SOUNDS.PAS:172), so the blink toggles every 250ms.
 const PAUSE_BLINK_MS = 250;
+// SoundHasTimeElapsed(TickTimeCounter, 15) in EDITOR.PAS's cursor blink: 15
+// hundredths of a second per cursorBlinker phase.
+const EDITOR_BLINK_MS = 150;
 const COMMAND_SOUND = "B".charCodeAt(0);
 
 type ScreenCell = {
@@ -518,6 +521,11 @@ let modal: Modal | null = null;
 let paused = false;
 let pauseBlink = false;
 let pauseTimer = 0;
+// EditorLoop's idle cursor blink (editor.go:534-551). editorBlink is the 3-phase
+// cursorBlinker; the timer advances it every EDITOR_BLINK_MS so the cross cursor
+// fades to reveal the tile/object underneath, matching the DOS editor cadence.
+let editorBlink = 0;
+let editorBlinkTimer = 0;
 // The high-score chain is three modals deep: the list with "-- You! --", the
 // name popup, then the finished list. Each opens as the previous one closes.
 let pendingHighScore = false;
@@ -691,6 +699,7 @@ async function showTitle() {
   editorStatPrompt = null;
   zztSound.setEnabled(false);
   setPaused(false);
+  setEditorBlinking(false);
   pressed.clear();
   lastMask = 0;
   clearScrolls();
@@ -799,6 +808,7 @@ function startEditor() {
   editorSidebarMenu = null;
   editorStatPrompt = null;
   renderEditorSidebar();
+  setEditorBlinking(true);
   paintOverlay();
   drawScreen();
   connectEditor();
@@ -831,6 +841,7 @@ function leaveEditor() {
 function closeEditor() {
   leavingToTitle = true;
   connected = false;
+  setEditorBlinking(false);
   editorExitAfterSave = false;
   window.clearTimeout(retryTimer);
   if (ws && ws.readyState === WebSocket.OPEN) {
@@ -1290,6 +1301,7 @@ function applyEditorSnapshot(message: EditorSnapshotMessage) {
   if (message.menus) editorMenus = message.menus;
   replaceCells(message.screen);
   renderEditorSidebar();
+  setEditorBlinking(true);
   paintOverlay();
   drawScreen();
 }
@@ -1422,6 +1434,7 @@ function applyEditorProgramText(message: EditorProgramTextMessage) {
 
 function applySnapshot(message: SnapshotMessage) {
   mode = "playing";
+  setEditorBlinking(false);
   // The join/resume snapshot carries our resume token; keep it so a later drop
   // can reclaim this run (M13.2).
   if (message.resumeToken) {
@@ -1703,14 +1716,18 @@ function paintOverlay() {
     }
   }
   if (mode === "editor") {
-    writeOverlay(editorCursor.x - 1, editorCursor.y - 1, 0x1f, "\x1f");
-    for (const member of editorPresence) {
-      if (member.id === editorMemberId) continue;
-      const x = member.x - 1;
-      const y = member.y - 1;
-      if (x < 0 || x >= BOARD_COLS || y < 0 || y >= ROWS) continue;
-      writeOverlay(x, y, member.color, "\x1f");
-      writeOverlay(x + 1, y, member.color, member.name.slice(0, 10));
+    // The cross cursor and collaborator markers blink off on phase 0 so the
+    // board tile (and any object beneath) shows through — see editor_cursor.ts.
+    const cells = editorCursorOverlay({
+      blink: editorBlink,
+      cursor: editorCursor,
+      presence: editorPresence,
+      selfId: editorMemberId,
+      boardCols: BOARD_COLS,
+      rows: ROWS,
+    });
+    for (const cell of cells) {
+      writeOverlay(cell.x, cell.y, cell.color, cell.text);
     }
   }
   if (paused) {
@@ -1753,6 +1770,26 @@ function setPaused(next: boolean) {
   }
   paintOverlay();
   drawScreen();
+}
+
+// setEditorBlinking mirrors setPaused: an interval drives the editor cursor's
+// 3-phase blink while in editor mode and is torn down on the way out. Idempotent
+// so the several editor-entry paths (startEditor, editor snapshots) can all call
+// it without stacking timers.
+function setEditorBlinking(on: boolean) {
+  if (on) {
+    if (editorBlinkTimer) return;
+    editorBlink = EDITOR_BLINK_PHASES - 1; // start on a cursor-shown phase
+    editorBlinkTimer = window.setInterval(() => {
+      editorBlink = (editorBlink + 1) % EDITOR_BLINK_PHASES;
+      paintOverlay();
+      drawScreen();
+    }, EDITOR_BLINK_MS);
+    return;
+  }
+  window.clearInterval(editorBlinkTimer);
+  editorBlinkTimer = 0;
+  editorBlink = EDITOR_BLINK_PHASES - 1;
 }
 
 function openModal(next: Modal) {
