@@ -2597,5 +2597,23 @@ fix is to DEFER the scroll's removal until its reply is drained (empty on dismis
 or with a label), mirroring vanilla's post-modal RemoveStat. Risks to weigh:
 replay (does any fixture touch a windowed scroll?), statId renumbering between
 touch and reply (already a latent de-modal fragility for objects), and the
-multiplayer case of two scrolls open on one board. Diagnosis committed; fix
-pending owner sign-off on the approach given the advisor is unavailable.
+multiplayer case of two scrolls open on one board.
+
+**Fix landed (engine-only, replay unchanged).** `ElementScrollTouch` now DEFERS
+`RemoveStat` when the scroll opened a window (`scrollWindowEmittedFor` scans the
+events OopExecute just appended). The scroll-reply drain in `GameStepWithInputs`
+runs the selected `:label` — `OopSend` to position the OOP, then an inline
+`OopExecute`, because a Scroll never runs its OOP on tick the way an Object does
+(`ElementScrollTick` only shimmers the color) — then consumes the scroll, located
+by POSITION (`GetStatIdAt`) so renumbering between touch and reply cannot delete
+the wrong stat. This reproduces vanilla's modal ordering (run `:label`, then
+RemoveStat). Object hyperlinks were never broken and are untouched (for an object
+reply `scrollX` stays -1). M17.4 is not `[ADVISOR]`-marked, replay stayed green
+(the fixture never touches a windowed scroll), the object/vendor test still
+passes, `go test -race` on the reply paths is clean, and the change is faithful to
+the Pascal — so it landed without an advisor (which was unavailable) or a
+`DEVIATION:`. Two known edge cases carry the SAME latent de-modal fragility that
+object replies already have, documented not fixed: a scroll whose `:label` opens
+a *further* window (the new event targets a stat about to be consumed), and two
+players reading scrolls on one board while other stats churn (a stale reply
+statId). Both are rare; neither regressed an existing test.

@@ -1575,7 +1575,7 @@ these are live breakage in front of the player.
   note plays. `tsc` + all web tests green. Not yet audibly confirmed in a real
   browser — verify `zztSound`'s context reads `"running"` in the console.
 
-- [ ] **M17.4 — Scroll object hyperlinks do nothing when selected
+- [x] **M17.4 — Scroll object hyperlinks do nothing when selected
   (owner-reported).** Selecting an `!label;text` option inside an in-world object
   scroll (the M3.10 vendor dialogue) has no effect. No task was on file for this;
   this captures the report. **Reproduce first** (touch a vendor object, arrow the
@@ -1594,6 +1594,32 @@ these are live breakage in front of the player.
   object responds (buys the item / prints advice), with a test at the layer that
   was broken; replay fixture untouched unless an engine fix requires a documented
   `DEVIATION:`.
+
+  Landed: the break was **not** the vendor (a persistent Object — that path works
+  at every layer: modal fires `onSelect`, the reply reaches `OopSend`, the item is
+  bought — verified in default AND `?world=`-picked instances). It was **E_SCROLL
+  elements**. `ElementScrollTouch` (`elements.go:970`) ran `OopExecute` then
+  `RemoveStat(statId)` immediately; in the de-modal design `OopExecute` only emits
+  the `ScrollEvent`, so by the time the hyperlink reply arrived the scroll stat was
+  gone (and renumbered) and the reply was dropped by the drain's
+  `StatId <= StatCount` guard. Objects persist, so they survive; consumed scrolls
+  did not — every world using scroll pickups with `!label` choices was broken
+  ("multiple worlds with hyperlinks"). Fix (engine-only): `ElementScrollTouch`
+  DEFERS the scroll's removal when it opened a window (`scrollWindowEmittedFor`);
+  the scroll-reply drain in `GameStepWithInputs` runs the selected `:label` — via
+  `OopSend` **then** an inline `OopExecute`, because a Scroll never runs its OOP on
+  tick (`ElementScrollTick` only shimmers) the way an Object does — and then
+  consumes the scroll, located by POSITION so stat renumbering can't misfire. This
+  mirrors vanilla, whose modal `OopExecute` runs `:label` inline before
+  `RemoveStat`. Regression tests: `TestScrollHyperlinkReplyGrantsRewardThenConsumes`
+  and `TestScrollDismissConsumesWithoutReward` (`scroll_window_test.go`); the
+  vendor/object test still passes. No client change (the client already sends the
+  reply). Replay fixture UNCHANGED — the 600-step TOWN fixture never touches a
+  windowed scroll — so no `DEVIATION:` is required, though the removal timing for
+  windowed scrolls now trails the reply by design. Known edge: a scroll whose
+  `:label` opens a *further* window, and two players reading scrolls on one board
+  under heavy stat churn, inherit the same de-modal statId fragility objects
+  already have (NOTES.md 2026-07-15).
 
 ## M16 — Whole-product feature-parity proof
 

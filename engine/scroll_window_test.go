@@ -236,3 +236,147 @@ func TestScrollFreezesReaderUntilDismissed(t *testing.T) {
 		t.Errorf("reader still frozen at %d,%d after dismissing the scroll", x, y)
 	}
 }
+
+// scrollHyperlinkWorldZWD is a one-board world with a Scroll whose reward is
+// gated behind a `!go` hyperlink — the M17.4 regression fixture. The `#end`
+// after the hyperlink halts the initial run so `#give ammo 9` is reachable only
+// via the reply, exactly like a shop object's `:label` branch.
+const scrollHyperlinkWorldZWD = `zwd 1
+world "SCROLLHL"
+
+board "Room"
+  start player at 30,12
+  max-shots 4
+  dark false
+  reenter false
+  time-limit 0
+  exits north none south none west none east none
+
+  grid
+############################################################
+#..........................................................#
+#..........................................................#
+#..........................................................#
+#..........................................................#
+#..........................................................#
+#..........................................................#
+#..........................................................#
+#..........................................................#
+#..........................................................#
+#..........................................................#
+#............................@!............................#
+#..........................................................#
+#..........................................................#
+#..........................................................#
+#..........................................................#
+#..........................................................#
+#..........................................................#
+#..........................................................#
+#..........................................................#
+#..........................................................#
+#..........................................................#
+#..........................................................#
+#..........................................................#
+############################################################
+  end
+
+  legend
+    # = Solid color 0x0E
+    . = Empty color 0x0F
+    @ = Player color 0x1F under Empty color 0x00
+    ! = Scroll color 0x0F
+  end
+
+  stats
+    stat at 31,12 element Scroll cycle 1 under Empty color 0x00
+    oop
+@Reward
+Take the prize?
+!go;Yes please
+#end
+:go
+#give ammo 9
+#end
+    end
+  end
+end
+`
+
+func loadScrollHyperlinkEngine(t *testing.T) *Engine {
+	t.Helper()
+	world, err := CompileZWDWorld(scrollHyperlinkWorldZWD)
+	if err != nil {
+		t.Fatalf("compile: %v", err)
+	}
+	e := NewEngine()
+	e.Headless = true
+	e.World = world
+	e.BoardOpen(0)
+	return e
+}
+
+func scrollTileIs(e *Engine, x, y int16) bool {
+	return e.Board.Tiles[x][y].Element == E_SCROLL
+}
+
+// M17.4: touching a Scroll with a hyperlink must not delete it before the reply
+// can reach it. Selecting the hyperlink runs the `:label`, then the scroll is
+// consumed.
+func TestScrollHyperlinkReplyGrantsRewardThenConsumes(t *testing.T) {
+	e := loadScrollHyperlinkEngine(t)
+	dx, dy := int16(1), int16(0)
+	e.Events = nil
+	e.ElementScrollTouch(31, 12, 0, &dx, &dy)
+
+	var evStatId int16 = -1
+	for _, ev := range e.Events {
+		if s, ok := ev.(ScrollEvent); ok {
+			evStatId = s.StatId
+		}
+	}
+	if evStatId < 1 {
+		t.Fatalf("no ScrollEvent emitted (statId=%d)", evStatId)
+	}
+	if !scrollTileIs(e, 31, 12) {
+		t.Fatal("scroll was removed on touch; the reply would have no target")
+	}
+	if e.PlayerFor(0).Ammo != 0 {
+		t.Fatalf("reward granted before the hyperlink was selected: ammo=%d", e.PlayerFor(0).Ammo)
+	}
+
+	e.SubmitScrollReply(evStatId, "go")
+	for i := 0; i < 3; i++ {
+		e.GameStepWithInputs(map[int16]PlayerInput{})
+	}
+	if e.PlayerFor(0).Ammo != 9 {
+		t.Fatalf("hyperlink reward not granted: ammo=%d, want 9", e.PlayerFor(0).Ammo)
+	}
+	if scrollTileIs(e, 31, 12) {
+		t.Fatal("scroll not consumed after its reply was answered")
+	}
+}
+
+// A dismissed scroll (empty reply, no hyperlink) is still consumed, and grants
+// nothing.
+func TestScrollDismissConsumesWithoutReward(t *testing.T) {
+	e := loadScrollHyperlinkEngine(t)
+	dx, dy := int16(1), int16(0)
+	e.Events = nil
+	e.ElementScrollTouch(31, 12, 0, &dx, &dy)
+	var evStatId int16 = -1
+	for _, ev := range e.Events {
+		if s, ok := ev.(ScrollEvent); ok {
+			evStatId = s.StatId
+		}
+	}
+	e.SubmitScrollReply(evStatId, "") // dismiss
+	for i := 0; i < 3; i++ {
+		e.GameStepWithInputs(map[int16]PlayerInput{})
+	}
+	if e.PlayerFor(0).Ammo != 0 {
+		t.Fatalf("dismiss should grant nothing: ammo=%d", e.PlayerFor(0).Ammo)
+	}
+	if scrollTileIs(e, 31, 12) {
+		t.Fatal("dismissed scroll not consumed")
+	}
+}

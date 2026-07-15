@@ -1646,8 +1646,41 @@ func (e *Engine) GameStepWithInputs(inputs map[int16]PlayerInput) {
 	e.pendingInputMu.Unlock()
 
 	for _, reply := range scrollReplies {
-		if reply.Label != "" && reply.StatId >= 0 && reply.StatId <= e.Board.StatCount {
-			e.OopSend(reply.StatId, reply.Label, false)
+		if reply.StatId < 0 || reply.StatId > e.Board.StatCount {
+			continue
+		}
+		// Is this reply from a Scroll element (vs a persistent object)? Remember
+		// where it sits (M17.4): ElementScrollTouch deferred the scroll's removal
+		// to here so the reply would have a stat to reach. Track by position, not
+		// id, so an intervening stat removal (which renumbers ids) cannot misfire
+		// the label send or the removal.
+		var scrollX, scrollY int16 = -1, -1
+		if reply.StatId >= 1 {
+			st := e.Board.Stats[reply.StatId]
+			if e.Board.Tiles[st.X][st.Y].Element == E_SCROLL {
+				scrollX, scrollY = int16(st.X), int16(st.Y)
+			}
+		}
+		if reply.Label != "" {
+			if e.OopSend(reply.StatId, reply.Label, false) && scrollX >= 0 {
+				// A Scroll never runs its OOP on tick (ElementScrollTick only
+				// shimmers), so — unlike an object, which runs the jumped-to
+				// label on its own next tick — it would never execute the label.
+				// Run it now, mirroring vanilla's modal OopExecute that executes
+				// `:label` inline before the scroll is consumed.
+				if sid := e.GetStatIdAt(scrollX, scrollY); sid >= 1 {
+					st := &e.Board.Stats[sid]
+					e.OopExecute(sid, &st.DataPos, "Scroll")
+				}
+			}
+		}
+		// Consume the scroll now that its reply (label or dismiss) has run — the
+		// RemoveStat ElementScrollTouch deferred. Its own label code may have
+		// already removed or transformed it, so re-check the tile.
+		if scrollX >= 0 && e.Board.Tiles[scrollX][scrollY].Element == E_SCROLL {
+			if sid := e.GetStatIdAt(scrollX, scrollY); sid >= 1 {
+				e.RemoveStat(sid)
+			}
 		}
 	}
 

@@ -976,8 +976,32 @@ func (e *Engine) ElementScrollTouch(x, y int16, sourceStatId int16, deltaX, delt
 	e.SoundQueue(2, SoundParse("c-c+d-d+e-e+f-f+g-g"))
 	stat.DataPos = 0
 	e.SetScrollAudience(statId, sourceStatId)
+	eventsBefore := len(e.Events)
 	e.OopExecute(statId, &stat.DataPos, "Scroll")
+	// M17.4: a scroll that opened a text window must survive until the reader
+	// answers it. In the de-modal design (M1.3) OopExecute only EMITS the
+	// ScrollEvent and returns; the hyperlink reply arrives on a later step via
+	// PendingScrollReply and is sent back to THIS scroll's stat. Vanilla removes
+	// the scroll here safely only because its OopExecute is modal and has already
+	// run the selected `:label` before returning. Removing it now would strip the
+	// reply's target, so defer the consume to the scroll-reply drain
+	// (GameStepWithInputs). A scroll that only flashed a one-line message opened
+	// no window (no ScrollEvent) and is consumed immediately, exactly as vanilla.
+	if scrollWindowEmittedFor(e.Events[eventsBefore:], statId) {
+		return
+	}
 	e.RemoveStat(statId)
+}
+
+// scrollWindowEmittedFor reports whether OopExecute appended a ScrollEvent for
+// statId (i.e. the scroll opened a multi-line window the reader must dismiss).
+func scrollWindowEmittedFor(newEvents []Event, statId int16) bool {
+	for _, ev := range newEvents {
+		if s, ok := ev.(ScrollEvent); ok && s.StatId == statId {
+			return true
+		}
+	}
+	return false
 }
 
 func (e *Engine) ElementKeyTouch(x, y int16, sourceStatId int16, deltaX, deltaY *int16) {
