@@ -21,10 +21,11 @@ Ranked 2026-07-14. The preceding priority list — M12.22, M12.19, and M15.1 —
 has fully landed. Work the list top-down; skip the optional/deferred tail unless
 the owner asks.
 
-1. M17.1–M17.4 — owner-reported live browser fixes (2026-07-14): name popup
+1. M17.1–M17.6 — owner-reported live browser fixes (2026-07-14/15): name popup
    centering/width, world picker (list all + metadata + count overlap), audio
-   regression, scroll hyperlinks. Ahead of M16: live breakage in front of the
-   player.
+   regression, scroll hyperlinks, sidebar banner centering (done), mobile
+   responsiveness incl. the iPhone soft-keyboard Enter key. Ahead of M16: live
+   breakage in front of the player.
 2. M16.0–M16.20 — whole-product feature-parity proof (owner request 2026-07-14)
 
 **Optional / deferred (bottom):**
@@ -1620,6 +1621,36 @@ these are live breakage in front of the player.
   `:label` opens a *further* window, and two players reading scrolls on one board
   under heavy stat churn, inherit the same de-modal statId fragility objects
   already have (NOTES.md 2026-07-15).
+
+- [x] **M17.5 — Sidebar "ZZTMMO" banner off-centre (owner-reported 2026-07-15).**
+  The "ZZTMMO" wordmark and its dash decoration sat left of the sidebar centre.
+  Centre the 6-letter word on the sidebar interior (cols 61-79, centre 70) in both
+  the in-game HUD (`web/src/sidebar.ts`) and the title screen (`web/src/title.ts`).
+  Owner approved changing the dash pattern to make it line up.
+
+  Landed: the 15-cell box moved to cols 63-77 (equal 2-cell margins) with `ZZTMMO`
+  at 67-72; the dash rows changed from five single-spaced dashes to four
+  double-spaced dashes (`-  -  -  -`, cols 65/68/71/74) so the word and dashes share
+  centre 69.5. A 5-dash row centres on a cell while an even-length word centres on a
+  cell boundary, so they could never share a centre without changing the dash count.
+  Client-only; `npm run build` green.
+
+- [ ] **M17.6 — Mobile-browser responsiveness (owner-reported 2026-07-15).**
+  Make the client usable on a phone browser: layout scales to the viewport, touch
+  controls are reachable, and on-screen-keyboard interactions work. Concrete defect
+  to fix and regression-test first: on **iPhone** the soft keyboard's Return/Enter
+  key does not register as an Enter press, so modal text entry (name popup, chat,
+  editor prompts) cannot be submitted from the on-screen keyboard. Likely cause: the
+  M15.1 mobile bridge (`web/src/mobile_text_input.ts`, `routeMobileModalInput` in
+  `main.ts`) routes committed text via `input`/composition events and deliberately
+  bypasses `keydown` (Android reports keyCode 229 while composing); Enter is a
+  non-character key that emits no `input` event, so it never reaches
+  `handleModalTextInput`/the modal submit path. Fix: detect the soft-keyboard Enter
+  (a trailing `\n` in the value, `beforeinput` with `inputType==="insertLineBreak"`,
+  and/or `enterKeyHint`) and route it to the same commit path desktop Enter uses.
+  DoD: submitting the name popup, chat, and an editor prompt all work from the iOS
+  soft keyboard; general layout audited at phone widths. Verify on a real iPhone
+  (Safari + Chrome), not a desktop emulator.
 
 ## M16 — Whole-product feature-parity proof
 
