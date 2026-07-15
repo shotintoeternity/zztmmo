@@ -1684,7 +1684,7 @@ M16 gap-fix task before M16.20; it does not hide the defect in a golden, weaken
 the oracle, or perform an unrelated fix. M16.20 cannot land until every such
 gap task has landed.
 
-- [ ] **M16.0 [ADVISOR] — Define the parity contract and traceability
+- [x] **M16.0 [ADVISOR] — Define the parity contract and traceability
   manifest.** Create `PARITY.md` plus a machine-readable manifest under
   `fixtures/parity/`. Inventory, with stable IDs: every checked non-hygiene
   task in M0–M15; every `ElementDef` draw/tick/touch surface; every ZZT-OOP
@@ -1704,6 +1704,30 @@ gap task has landed.
   rejects duplicate/stale test names, and initially permits `unverified` only
   for a row assigned to a later M16 task; the advisor and owner approve the
   contract/deviation list before any oracle fixtures are recorded.
+
+  Landed: `PARITY.md` (the V/P/E contract, status vocabulary, nine inventory
+  dimensions, seeded 14-deviation catalog, and the two owner scope decisions);
+  `fixtures/parity/manifest.json` (339 rows — 111 tasks, 53 elements, 59 OOP
+  words + 8 structural, 44 protocol types, 16 routes, 21 inputs, 15 browser
+  modes, 12 services — plus the deviation catalog); and the validator/scaffold
+  `engine/parity_manifest_test.go`. The validator **derives** five mechanical
+  dimensions from code (checked `[x]` tasks in TASKS.md; `ElementDefs` procs by
+  reflection over the E_ constant set; `OopWord` literals scanned + classified;
+  `MessageType*`/`ProtocolEvent{Type}` scanned; `mux.HandleFunc` routes + `/ws`)
+  so a newly added element/command/route/task reddens `go test` until a row is
+  added — it cannot be silently unlisted. It enforces one-row-per-item, no
+  duplicate/orphan ids, no stale test/fixture references, the deviation-catalog
+  cross-check, and the `unverified`-only-if-assigned-to-a-later-M16-task rule.
+  `PARITY_SCAFFOLD=1 go test -run TestParityManifestScaffold` regenerates the
+  manifest, merging in later sweeps' status/test edits. Fail-closed proven by
+  perturbation (dropped row, orphan row, stale test all caught). Every
+  behavioral row is `unverified` and assigned to its sweep; no oracle evidence
+  is recorded here (that is M16.2+). Owner decisions (2026-07-15): mobile
+  playability → **gap task M16.18a** (touch movement/shoot/torch/pause; blocks
+  M16.20); the four **M17** live fixes are in scope as `task` rows. The
+  `[ADVISOR]` consult could not run — the advisor tool was unavailable this
+  session; the owner is the approval gate. Generation/manifest are outside the
+  sim; replay fixture unchanged. See NOTES.md.
 
 - [ ] **M16.1 — Make required parity evidence immutable and runnable.** Add one
   repo command that runs the existing clean gates (`go build`, `go vet`,
@@ -1922,6 +1946,29 @@ gap task has landed.
   in the parity report contains no unexplained skip; screenshots prove the
   80x25+sidebar/modal layout remains usable; touch gameplay is neither implied
   nor marked `pass` without a tested input path.
+
+- [ ] **M16.18a — Touch gameplay controls (M16.0 gap task; blocks M16.20).**
+  Filed by M16.0's scope resolution: M15.1 shipped mobile *text entry* (the
+  on-screen keyboard for prompts/chat) but no touch **gameplay** controls, so a
+  phone cannot move, shoot, light a torch, or pause. The owner chose to build
+  the control path rather than narrow the "playable on phones" claim (decision
+  2026-07-15). Add an on-screen touch control surface to the browser client —
+  a movement pad (the original's arrows + numpad `8/4/6/2` vocabulary, per the
+  `wasd-removed` deviation), a fire control (Shift+dir / Space-repeat
+  semantics), and Torch/Pause buttons — that emits the same `PlayerInput`
+  keymask the keyboard path does, so the server stays authoritative and no new
+  input vocabulary reaches the sim. Gate it on a touch device (reuse M15.1's
+  `navigator.maxTouchPoints`/`touchstart` heuristic); never let touch controls
+  steal focus from a text-entry modal (M15.1 seam) or leak taps into movement.
+  Cover it in the M16.18 real-browser matrix under Chromium touch emulation at
+  portrait and landscape. When it lands, flip the manifest row
+  `mode.mobile-touchplay` from `gap` to `pass`/`deviation` and re-run
+  `PARITY_SCAFFOLD=1` so the report reflects it. Client-only + protocol
+  keymask; no simulation change; replay fixture unchanged. DoD: a touch-emulated
+  browser test moves, shoots, lights a torch, and pauses through the on-screen
+  controls with no keyboard; focus never leaks between a text modal and the pad;
+  `npm test` and `go test ./...` green; the manifest gate passes with
+  `mode.mobile-touchplay` no longer `gap`.
 
 - [ ] **M16.19 — Production-boundary, security, and load validation.** Launch
   the built server as a subprocess and cover startup/shutdown, static assets,

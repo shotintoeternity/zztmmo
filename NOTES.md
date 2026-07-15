@@ -2617,3 +2617,58 @@ object replies already have, documented not fixed: a scroll whose `:label` opens
 a *further* window (the new event targets a stat about to be consumed), and two
 players reading scrolls on one board while other stats churn (a stale reply
 statId). Both are rare; neither regressed an existing test.
+
+---
+
+## 2026-07-15 — M16.0: parity contract, manifest, and validator
+
+Built the M16 feature-parity framework: `PARITY.md` (contract), `fixtures/
+parity/manifest.json` (339 rows + 14 seeded deviations), and the validator +
+scaffold `engine/parity_manifest_test.go`. Decisions and caveats worth logging:
+
+**Advisor unavailable.** M16.0 is `[ADVISOR]` and its DoD gates on "the advisor
+and owner approve the contract/deviation list." The `advisor` tool errored as
+unavailable this session, so the owner is the sole approval gate; recorded here
+so M16.2 (first oracle fixtures) knows the advisor half of the gate is still
+outstanding and should be sought when the tool returns.
+
+**Owner scope decisions (2026-07-15), the two the spec demanded:**
+- *Mobile "playable on phones"* → **gap task M16.18a**, not a narrowed claim.
+  M15.1 shipped text entry only; touch movement/shoot/torch/pause is unbuilt.
+  M16.18a builds an on-screen control pad emitting the existing `PlayerInput`
+  keymask (no new sim input vocabulary); it blocks M16.20. Manifest row
+  `mode.mobile-touchplay` is `gap` until it lands.
+- *M17 live fixes* → **in scope** as `task` rows (name-popup, world-picker,
+  audio, scroll-hyperlink), so a shipped fix carries a certified regression row.
+
+**Manifest design — derive, don't hand-list.** Five of nine dimensions are
+mechanically derived from code at test time (checked `[x]` tasks; `ElementDefs`
+procs by reflection over the E_ constant set; `OopWord` literals scanned and
+cross-checked against a curated classification; `MessageType*`/`ProtocolEvent`
+types; `mux.HandleFunc` routes + `/ws`). The remaining four (oop-structural,
+input, browser-mode, service) are curated Go slice literals whose consistency
+the validator still checks. Consequence the sweeps rely on: adding an element,
+OOP word, protocol type, route, or checking a task box reddens `go test` until a
+row exists — the "a newly added command cannot be unlisted" guarantee M16.6
+asks for, generalized. The scaffold (`PARITY_SCAFFOLD=1`) regenerates the
+manifest and *merges in* later sweeps' status/test/fixture edits so flipping a
+row to `pass` is not clobbered on regeneration.
+
+**Element set = E_ constants, not "has a custom proc".** First cut used a
+reflection "in use" heuristic and silently dropped the 7 text tiles (E_TEXT_*,
+drawn by the special case in `game.go` `TileToColorAndChar`, no DrawProc) and
+the 2 blink rays (registered but unnamed) — exactly the surfaces M16.3/M16.4
+name. Fixed to enumerate every defined E_ constant (index 46, the reserved
+black-text slot, has no constant and is correctly omitted): 53 element rows.
+
+**Caching caveat for the gate.** `TestParityManifest` reads the manifest and
+several source files via `os.ReadFile`, which Go's test cache does not track, so
+a *manifest-only* edit with a plain `go test` can return a cached pass. In the
+normal commit workflow any package `.go` change (including the sweep that edits a
+row) busts the cache; standalone manifest audits must use `-count=1`. M16.1
+(runnable immutable evidence command) should wire `-count=1`. Fail-closed was
+verified with `-count=1`: a dropped row, an orphan mechanical row, and a stale
+Go-test reference are each caught.
+
+Generation and the manifest are entirely outside the simulation; the replay
+fixture is unchanged. No `DEVIATION:` — nothing in the sim moved.
