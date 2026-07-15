@@ -57,6 +57,11 @@ All commands are run from the `engine/` directory.
     ```bash
     cd web && npm install && npm run build && cd ..
     ```
+    > The server serves the **built** bundle in `web/dist`, which is gitignored.
+    > Any change under `web/src` requires re-running `npm run build` (and a
+    > browser hard-refresh) before it is visible — editing source alone ships a
+    > stale UI. The server logs a `STALE build` warning at startup if `web/dist`
+    > is older than `web/src`.
 
 3.  **Launch the MMO server:**
     ```bash

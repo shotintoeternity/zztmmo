@@ -2564,3 +2564,38 @@ browser runner.
 
 Evidence: `cd engine && go test ./...` passed on 2026-07-14; no replay fixture
 was changed.
+
+## 2026-07-15 — M17.1/M17.4 owner reports: stale build + scroll hyperlink root cause
+
+Owner re-tested the live browser and reported (a) the M17.1 launch popup STILL
+uncentered/overflowing, and (b) scroll hyperlinks doing nothing in "multiple
+worlds with hyperlinks" (not TOWN).
+
+**(a) M17.1 was never actually broken in code — it was a STALE BUILD.** The fix
+(commit 3a3d5b2) changed only `web/src`. The server serves the *built* bundle
+(`zzt-server -web web/dist`), and `dist/` is gitignored, so it stayed stale
+until `npm run build` ran. Proven: rendering the launch popup through a minified
+production build centers it correctly (box cols 12–67, prompt cols 15–64 inside
+the borders). Fix: rebuilt `dist/`; added a startup staleness guard
+(`warnIfClientStale` in cmd/zzt-server) that logs a `STALE build` warning when
+`web/dist` is older than `web/src`, plus a README note. This trap will recur for
+any web change committed without a rebuild.
+
+**(b) M17.4 root cause: E_SCROLL elements are removed before their async reply.**
+`ElementScrollTouch` (elements.go:970) runs `OopExecute` then `RemoveStat(statId)`
+*immediately*. In the M1.3 de-modal design, OopExecute only EMITS a ScrollEvent
+and returns; the hyperlink reply arrives on a LATER step via PendingScrollReply →
+OopSend. By then the scroll stat is gone (and stats renumbered), so the reply's
+statId fails the drain guard `StatId <= Board.StatCount` and is dropped — the
+`:label` never runs. Persistent objects (the vendor) survive OopExecute, so
+object hyperlinks work; only consumed SCROLL elements break. Vanilla works because
+OopExecute is MODAL there — it sends the hyperlink label to the scroll BEFORE
+`RemoveStat`. Reproduced headlessly: a scroll whose reward is gated behind `!go`
+never grants it (reply dropped, StatId=1 > StatCount=0); the same shape as an
+object grants it. This is an [ADVISOR]-class change (touches M1.3): the faithful
+fix is to DEFER the scroll's removal until its reply is drained (empty on dismiss,
+or with a label), mirroring vanilla's post-modal RemoveStat. Risks to weigh:
+replay (does any fixture touch a windowed scroll?), statId renumbering between
+touch and reply (already a latent de-modal fragility for objects), and the
+multiplayer case of two scrolls open on one board. Diagnosis committed; fix
+pending owner sign-off on the approach given the advisor is unavailable.
