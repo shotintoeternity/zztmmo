@@ -472,7 +472,11 @@ func (e *Engine) SetReenterPoint(statId int16, x, y int16) {
 func (e *Engine) SpawnPlayer() int16 {
 	spawnX := int16(e.Board.Info.StartPlayerX)
 	spawnY := int16(e.Board.Info.StartPlayerY)
-	if spawnX == 0 || spawnY == 0 {
+	// The stored StartPlayerX/Y is untrusted: it can be zero, or (from a corrupt
+	// save) far outside the board. An out-of-range value would index past
+	// e.Board.Tiles and panic in AddStat, so fall back to the board centre for
+	// anything that is not a real on-board square.
+	if spawnX < 1 || spawnX > BOARD_WIDTH || spawnY < 1 || spawnY > BOARD_HEIGHT {
 		spawnX = BOARD_WIDTH / 2
 		spawnY = BOARD_HEIGHT / 2
 	}

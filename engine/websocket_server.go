@@ -349,26 +349,33 @@ func (s *WebSocketServer) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 		// held together (M14.1).
 		playerID = s.mintPlayerID()
 
-		inst.mu.Lock()
-		inst.RoomManager.JoinPlayerWithID(playerID, join.Board, 0, 0)
-		if authenticated {
-			inst.RoomManager.SetPlayerIdentity(playerID, account.ID, account.DisplayName())
-			if hasStoredState {
-				inst.RoomManager.ApplyPlayerState(playerID, storedState)
+		// The join runs under inst.mu; a defer guarantees the unlock even if a
+		// callee panics (e.g. spawning onto a corrupt board). Without it a panic
+		// would leak inst.mu, and every later handleWorlds / GetOrCreateInstance
+		// that waits on that lock (while holding the global server lock) wedges.
+		ok := func() bool {
+			inst.mu.Lock()
+			defer inst.mu.Unlock()
+			inst.RoomManager.JoinPlayerWithID(playerID, join.Board, 0, 0)
+			if authenticated {
+				inst.RoomManager.SetPlayerIdentity(playerID, account.ID, account.DisplayName())
+				if hasStoredState {
+					inst.RoomManager.ApplyPlayerState(playerID, storedState)
+				}
+			} else {
+				inst.RoomManager.SetPlayerName(playerID, join.Name)
 			}
-		} else {
-			inst.RoomManager.SetPlayerName(playerID, join.Name)
-		}
-		client.playerID = playerID
-		inst.Clients[playerID] = client
-		token := inst.mintResumeTokenLocked(playerID)
-		var ok bool
-		snapshot, ok = inst.RoomManager.Snapshot(playerID)
-		if ok {
-			snapshot.ResumeToken = token
-			client.boardID = snapshot.BoardID
-		}
-		inst.mu.Unlock()
+			client.playerID = playerID
+			inst.Clients[playerID] = client
+			token := inst.mintResumeTokenLocked(playerID)
+			var snapOK bool
+			snapshot, snapOK = inst.RoomManager.Snapshot(playerID)
+			if snapOK {
+				snapshot.ResumeToken = token
+				client.boardID = snapshot.BoardID
+			}
+			return snapOK
+		}()
 
 		if !ok {
 			s.removeClientFromInstance(inst, playerID)

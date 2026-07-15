@@ -441,3 +441,31 @@ func TestDeathRespawnInventoryIsolation(t *testing.T) {
 			e.PlayerFor(p2).Ammo, e.PlayerFor(p2).Gems, e.PlayerFor(p2).Score, e.PlayerFor(p2).Health)
 	}
 }
+
+// TestSpawnPlayerClampsOutOfRangeStart guards the M-fix for the production
+// deadlock: a corrupt board whose StartPlayerX/Y is outside [1,BOARD_WIDTH] /
+// [1,BOARD_HEIGHT] must not index past e.Board.Tiles and panic in AddStat.
+// SpawnPlayer falls back to the board centre instead. 211 is the exact value
+// that crashed the live server (index out of range [211] with length 62).
+func TestSpawnPlayerClampsOutOfRangeStart(t *testing.T) {
+	cases := []struct{ x, y byte }{
+		{211, 12}, // the observed crash value
+		{10, 211},
+		{0, 0},   // the long-standing zero case still centres
+		{255, 255},
+	}
+	for _, tc := range cases {
+		e := NewEngine()
+		e.Headless = true
+		e.WorldCreate()
+		e.BoardCreate()
+		e.Board.Info.StartPlayerX = tc.x
+		e.Board.Info.StartPlayerY = tc.y
+
+		statId := e.SpawnPlayer() // must not panic
+		stat := e.Board.Stats[statId]
+		if stat.X < 1 || stat.X > BOARD_WIDTH || stat.Y < 1 || stat.Y > BOARD_HEIGHT {
+			t.Errorf("StartPlayer=(%d,%d): spawned off-board at (%d,%d)", tc.x, tc.y, stat.X, stat.Y)
+		}
+	}
+}
