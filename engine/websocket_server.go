@@ -1708,3 +1708,60 @@ func (s *WebSocketServer) BroadcastGlobalChat(ctx context.Context, from, text st
 		_ = client.write(ctx, msg)
 	}
 }
+
+// AnnounceShutdown pushes a shutdown warning to every connected player whose
+// world engine is still responsive, so they can save before the server restarts.
+//
+// It never blocks on a wedged engine: the global lock is taken with a bounded
+// TryLock, and each instance lock with a plain TryLock. An instance we cannot
+// lock is skipped — that engine is already stuck, which is exactly the case we
+// cannot warn a player through ("as long as the engine for their world is up").
+// It returns the number of reachable players it messaged, so a caller draining
+// for shutdown can skip the wait when nobody is connected.
+func (s *WebSocketServer) AnnounceShutdown(ctx context.Context, seconds int, text string) int {
+	insts, ok := s.instancesForAnnounce()
+	if !ok {
+		log.Printf("shutdown announce: server lock busy, players not warned")
+		return 0
+	}
+
+	var clients []*webSocketClient
+	for _, inst := range insts {
+		if !inst.mu.TryLock() {
+			continue // wedged engine — its players cannot be reached
+		}
+		for _, client := range inst.Clients {
+			clients = append(clients, client)
+		}
+		inst.mu.Unlock()
+	}
+
+	msg := struct {
+		Type    string `json:"type"`
+		Text    string `json:"text"`
+		Seconds int    `json:"seconds"`
+	}{Type: "announce", Text: text, Seconds: seconds}
+
+	for _, client := range clients {
+		_ = client.write(ctx, msg)
+	}
+	return len(clients)
+}
+
+// instancesForAnnounce snapshots the instance pointers under a bounded TryLock so
+// a wedged global lock (the failure this warning exists for) degrades to a
+// best-effort skip instead of blocking the whole shutdown drain.
+func (s *WebSocketServer) instancesForAnnounce() ([]*WorldInstance, bool) {
+	for i := 0; i < 20; i++ {
+		if s.mu.TryLock() {
+			insts := make([]*WorldInstance, 0, len(s.Instances))
+			for _, inst := range s.Instances {
+				insts = append(insts, inst)
+			}
+			s.mu.Unlock()
+			return insts, true
+		}
+		time.Sleep(50 * time.Millisecond)
+	}
+	return nil, false
+}

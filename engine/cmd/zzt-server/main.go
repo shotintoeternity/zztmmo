@@ -156,18 +156,23 @@ func drainAndAnnounce(server *zztgo.WebSocketServer, grace time.Duration, sigCh 
 	if grace <= 0 {
 		return
 	}
-	log.Printf("shutdown requested — warning players, draining for %s", grace)
 	bg := context.Background()
 	deadline := time.Now().Add(grace)
-	announce := func() {
+	announce := func() int {
 		remaining := int(time.Until(deadline).Round(time.Second).Seconds())
 		if remaining < 0 {
 			remaining = 0
 		}
-		server.AnnounceShutdown(bg, remaining,
+		return server.AnnounceShutdown(bg, remaining,
 			fmt.Sprintf("SERVER RESTARTING IN %d SEC - PRESS S TO SAVE YOUR GAME", remaining))
 	}
-	announce()
+	// Skip the drain entirely when nobody is connected (the common case for a
+	// deploy) so an empty server restarts immediately.
+	if announce() == 0 {
+		log.Printf("shutdown requested — no players connected, stopping now")
+		return
+	}
+	log.Printf("shutdown requested — warning players, draining for %s", grace)
 	ticker := time.NewTicker(15 * time.Second)
 	defer ticker.Stop()
 	for {

@@ -1,0 +1,9 @@
+[Unit]
+Description=zztmmo health watchdog (restarts zzt-server if it wedges)
+# Probe only makes sense once the game server is up; the timer drives cadence.
+After=zztmmo.service
+
+[Service]
+Type=oneshot
+# Runs as root so it can `systemctl restart zztmmo` when a wedge is detected.
+ExecStart=/opt/zztmmo/zztmmo-watchdog.sh

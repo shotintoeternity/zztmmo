@@ -86,6 +86,7 @@ const MessageTypeEditorWorldData = "editorWorldData";
 const MessageTypeEditorSaveResult = "editorSaveResult";
 const MessageTypeEditorTestPlay = "editorTestPlay";
 const MessageTypeChat = "chat";
+const MessageTypeAnnounce = "announce";
 
 // GameDebugPrompt's PromptString(63, 5, 0x1E, 0x0F, 11, PROMPT_ANY, ...).
 // The rest of that geometry lives in modal.ts, which owns every prompt's layout.
@@ -195,6 +196,12 @@ type ChatMessage = {
   type: typeof MessageTypeChat;
   from: string;
   text: string;
+};
+
+type AnnounceMessage = {
+  type: typeof MessageTypeAnnounce;
+  text: string;
+  seconds?: number;
 };
 
 type AuthStatus = {
@@ -374,7 +381,7 @@ type EditorTestPlayMessage = {
   error?: string;
 };
 
-type ServerMessage = SnapshotMessage | DiffMessage | EventMessage | BoardChangeMessage | ChatMessage | EditorSnapshotMessage | EditorInspectMessage | EditorPresenceMessage | EditorLeaseMessage | EditorDiffMessage | EditorPropertiesMessage | EditorStatSettingsMessage | EditorProgramTextMessage | EditorBoardDataMessage | EditorWorldDataMessage | EditorSaveResultMessage | EditorTestPlayMessage;
+type ServerMessage = SnapshotMessage | DiffMessage | EventMessage | BoardChangeMessage | ChatMessage | AnnounceMessage | EditorSnapshotMessage | EditorInspectMessage | EditorPresenceMessage | EditorLeaseMessage | EditorDiffMessage | EditorPropertiesMessage | EditorStatSettingsMessage | EditorProgramTextMessage | EditorBoardDataMessage | EditorWorldDataMessage | EditorSaveResultMessage | EditorTestPlayMessage;
 
 type InputMessage = {
   type: typeof MessageTypeInput;
@@ -1298,6 +1305,9 @@ function applyMessage(message: ServerMessage) {
     case MessageTypeChat:
       handleChatMessage(message);
       break;
+    case MessageTypeAnnounce:
+      handleAnnounceMessage(message);
+      break;
     case MessageTypeEditorSnapshot:
       applyEditorSnapshot(message);
       break;
@@ -1691,6 +1701,28 @@ let chatMessages: { from: string; text: string }[] = [];
 let currentChatMessage = "";
 let currentChatTimer = 0;
 
+// A server announcement (currently the shutdown/save warning). Unlike chat it is
+// a persistent banner across every mode — the player must not miss it — that
+// clears itself a few seconds after the countdown it carries would elapse.
+let serverAnnounce = "";
+let serverAnnounceTimer = 0;
+
+function handleAnnounceMessage(message: { text: string; seconds?: number }) {
+  serverAnnounce = message.text;
+  window.clearTimeout(serverAnnounceTimer);
+  // Hold the banner past the announced deadline; a fresh announce (the 15s
+  // countdown re-broadcast) resets it, and if the server dies mid-countdown the
+  // banner still fades instead of sticking forever.
+  const holdMs = ((message.seconds ?? 60) + 8) * 1000;
+  serverAnnounceTimer = window.setTimeout(() => {
+    serverAnnounce = "";
+    paintOverlay();
+    drawScreen();
+  }, holdMs);
+  paintOverlay();
+  drawScreen();
+}
+
 function handleChatMessage(message: { from: string; text: string }) {
   chatMessages.push({ from: message.from, text: message.text });
   if (chatMessages.length > 50) {
@@ -1734,6 +1766,11 @@ function openChatWindow() {
 // the modal: a paused player can still have a scroll open over the board.
 function paintOverlay() {
   overlay.clear();
+  // Server announcements (the shutdown/save warning) sit at the very top in
+  // white-on-red across every mode — losing this one is losing your game.
+  if (serverAnnounce) {
+    writeOverlay(0, 0, 0x4f, serverAnnounce.slice(0, 60).padEnd(60, " "));
+  }
   if (mode === "playing") {
     if (currentChatMessage) {
       writeOverlay(0, 24, 0x1e, currentChatMessage.slice(0, 60).padEnd(60, " "));

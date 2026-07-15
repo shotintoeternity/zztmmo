@@ -1521,3 +1521,32 @@ func testTownWorld(t *testing.T) TWorld {
 	}
 	return setup.World
 }
+
+// TestAnnounceShutdownSkipsWedgedInstance is the M-fix guarantee for the graceful
+// shutdown warning: AnnounceShutdown must warn healthy worlds without blocking on
+// a world whose engine is wedged (its lock cannot be taken). If it blocked, the
+// whole shutdown drain would stall — the exact failure the warning exists to
+// survive ("as long as the engine for their world is still up").
+func TestAnnounceShutdownSkipsWedgedInstance(t *testing.T) {
+	world := testEmptyWorld(t)
+	server := NewWebSocketServer(world, 1)
+	server.Instances = map[string]*WorldInstance{
+		"healthy": {Name: "healthy", Clients: make(map[PlayerID]*webSocketClient)},
+		"wedged":  {Name: "wedged", Clients: make(map[PlayerID]*webSocketClient)},
+	}
+
+	// Simulate a wedged engine: hold its lock and never release it.
+	server.Instances["wedged"].mu.Lock()
+	defer server.Instances["wedged"].mu.Unlock()
+
+	done := make(chan struct{})
+	go func() {
+		server.AnnounceShutdown(context.Background(), 60, "SERVER RESTARTING")
+		close(done)
+	}()
+	select {
+	case <-done:
+	case <-time.After(3 * time.Second):
+		t.Fatal("AnnounceShutdown blocked on a wedged instance lock")
+	}
+}

@@ -1,0 +1,12 @@
+[Unit]
+Description=Run the zztmmo health watchdog every 30s
+
+[Timer]
+# First check a minute after boot (let zzt-server finish restoring autosaves),
+# then every 30s thereafter. Consecutive-failure logic lives in the script.
+OnBootSec=60
+OnUnitActiveSec=30
+AccuracySec=5s
+
+[Install]
+WantedBy=timers.target
