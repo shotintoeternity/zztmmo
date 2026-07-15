@@ -55,3 +55,41 @@ jobs:
       - run: npm ci
       - run: npm test
       - run: npm run build
+
+  parity:
+    runs-on: ubuntu-latest
+    timeout-minutes: 40
+    # The single M16 certification command (task M16.1). It runs every clean
+    # gate and emits a deterministic report keyed by the parity manifest. The
+    # command fails only on a failed gate; "not yet certified" is expected until
+    # M16.20 and does not redden this job. The report is uploaded as an artifact
+    # and the tree is asserted clean — the command must write only gitignored
+    # files. Aggregate line coverage is deliberately never computed here: parity
+    # is proven row by row in the manifest, not by a coverage percentage.
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-go@v5
+        with:
+          go-version: '1.26.x'
+          cache-dependency-path: engine/go.sum
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 'lts/*'
+          cache: npm
+          cache-dependency-path: engine/web/package-lock.json
+      - run: make parity
+      - name: Assert clean tree
+        run: |
+          if [ -n "$(git status --short)" ]; then
+            echo "parity command dirtied the working tree:"
+            git status --short
+            exit 1
+          fi
+      - name: Upload parity report
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: parity-report
+          path: |
+            fixtures/parity/report.json
+            fixtures/parity/report.md

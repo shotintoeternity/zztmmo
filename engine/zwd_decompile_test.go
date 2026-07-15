@@ -11,17 +11,12 @@ import (
 )
 
 // TestZWDRoundTripTOWN decompiles TOWN.ZZT → ZWD → recompiles → reloads and
-// compares the canonical ZWD representation of every board.
+// compares the canonical ZWD representation of every board. TOWN is a committed
+// fixture, so this is a required, fail-closed round-trip. The CAVES/CITY
+// round-trips over larger untracked community worlds live behind the `canary`
+// build tag (worlds_canary_test.go), out of the required path (task M16.1).
 func TestZWDRoundTripTOWN(t *testing.T) {
-	testZWDRoundTrip(t, "TOWN.ZZT")
-}
-
-func TestZWDRoundTripCAVES(t *testing.T) {
-	testZWDRoundTrip(t, "CAVES.ZZT")
-}
-
-func TestZWDRoundTripCITY(t *testing.T) {
-	testZWDRoundTrip(t, "CITY.ZZT")
+	testZWDRoundTrip(t, filepath.Join("..", "fixtures", "TOWN.ZZT"), true)
 }
 
 func TestDecompileZWDAuthorableRejectsInvalidHistoricalState(t *testing.T) {
@@ -117,18 +112,17 @@ func TestLLMWorldExamplesCompile(t *testing.T) {
 	}
 }
 
-func testZWDRoundTrip(t *testing.T, filename string) {
+// testZWDRoundTrip round-trips one world through ZWD. When required is true the
+// world is a committed fixture named by its exact path and its absence is a hard
+// failure; when false (the `canary` extended-world tests) an untracked world may
+// legitimately be absent and the test skips.
+func testZWDRoundTrip(t *testing.T, path string, required bool) {
 	t.Helper()
 
-	path := filepath.Join(".", filename)
-	if _, err := os.Stat(path); err != nil {
-		path = filepath.Join("fixtures", filename)
-	}
-	if _, err := os.Stat(path); err != nil {
-		path = filepath.Join("../fixtures", filename)
-	}
-	if _, err := os.Stat(path); err != nil {
-		t.Skipf("%s unavailable", filename)
+	if required {
+		requireFixture(t, path)
+	} else if _, err := os.Stat(path); err != nil {
+		t.Skipf("%s unavailable", path)
 	}
 
 	// Load the original world.
@@ -216,13 +210,11 @@ func firstZWDTextDifference(want, got string) string {
 // TestTOWNBoard1DecompiledFixture writes the decompiled TOWN board 1 to
 // fixtures/town_board1.zwd and verifies it on subsequent runs.
 func TestTOWNBoard1DecompiledFixture(t *testing.T) {
-	path := filepath.Join(".", "TOWN.ZZT")
-	if _, err := os.Stat(path); err != nil {
-		path = filepath.Join("fixtures", "TOWN.ZZT")
-	}
-	if _, err := os.Stat(path); err != nil {
-		path = filepath.Join("../fixtures", "TOWN.ZZT")
-	}
+	// Read the committed TOWN fixture, not an untracked engine-directory copy,
+	// so the required path never depends on a world that is absent in a clean
+	// clone (task M16.1).
+	path := filepath.Join("..", "fixtures", "TOWN.ZZT")
+	requireFixture(t, path)
 
 	world := loadTestWorld(t, path)
 	e := NewEngine()
@@ -248,25 +240,27 @@ func TestTOWNBoard1DecompiledFixture(t *testing.T) {
 		t.Fatal("could not extract board 1 from decompiled TOWN")
 	}
 
-	fixturePath := filepath.Join(".", "fixtures", "town_board1.zwd")
-	if _, err := os.Stat(filepath.Dir(fixturePath)); err != nil {
-		fixturePath = filepath.Join("..", "fixtures", "town_board1.zwd")
-	}
+	fixturePath := filepath.Join("..", "fixtures", "town_board1.zwd")
 
 	existing, err := os.ReadFile(fixturePath)
 	if err != nil {
-		// Write the fixture for the first time.
-		if err := os.WriteFile(fixturePath, []byte(board1ZWD), 0644); err != nil {
-			t.Fatalf("writing fixture: %v", err)
+		// The fixture is committed and must fail closed when absent, not
+		// auto-write a fresh baseline. Regeneration is an explicit maintainer
+		// command (task M16.1).
+		if parityRegen() {
+			if werr := os.WriteFile(fixturePath, []byte(board1ZWD), 0644); werr != nil {
+				t.Fatalf("regenerating fixture: %v", werr)
+			}
+			t.Logf("regenerated %s (%d bytes, %s set)", fixturePath, len(board1ZWD), parityRegenEnv)
+			return
 		}
-		t.Logf("wrote fixture %s (%d bytes)", fixturePath, len(board1ZWD))
-		return
+		t.Fatalf("required fixture %s is missing: %v; regenerate with %s=1", fixturePath, err, parityRegenEnv)
 	}
 
 	// Compare.
 	if string(existing) != board1ZWD {
-		t.Fatalf("fixture %s has changed; delete it and re-run to regenerate\n\ngot length %d, want length %d",
-			fixturePath, len(board1ZWD), len(existing))
+		t.Fatalf("fixture %s has changed; regenerate with %s=1\n\ngot length %d, want length %d",
+			fixturePath, parityRegenEnv, len(board1ZWD), len(existing))
 	}
 }
 

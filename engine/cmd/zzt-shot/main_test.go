@@ -9,9 +9,12 @@ import (
 )
 
 func TestTownTitleGolden(t *testing.T) {
-	world := filepath.Join("..", "..", "TOWN.ZZT")
+	// Read the committed fixture (byte-identical to any engine-dir copy), not an
+	// untracked world, so the golden runs and fails closed in a clean clone
+	// (task M16.1).
+	world := filepath.Join("..", "..", "..", "fixtures", "TOWN.ZZT")
 	if _, err := os.Stat(world); err != nil {
-		t.Skipf("TOWN fixture unavailable: %v", err)
+		t.Fatalf("required fixture %s is missing: %v (it is committed; do not skip past it)", world, err)
 	}
 	out := filepath.Join(t.TempDir(), "town-title.png")
 	if err := shot(world, out, 0); err != nil {

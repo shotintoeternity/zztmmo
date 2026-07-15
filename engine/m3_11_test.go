@@ -296,8 +296,9 @@ func TestReenterWhenZappedPreservesUnder(t *testing.T) {
 func TestReenterUsesPlayerEntrySquareNotStaleBoardValue(t *testing.T) {
 	e := NewEngine()
 	e.Headless = true
+	requireFixture(t, "../fixtures/TOWN.ZZT")
 	if !e.WorldLoad("../fixtures/TOWN", ".ZZT", false) {
-		t.Skip("fixtures/TOWN.ZZT unavailable")
+		t.Fatal("loading required fixture ../fixtures/TOWN.ZZT failed")
 	}
 	e.BoardOpen(19)
 

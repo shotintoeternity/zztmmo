@@ -15,7 +15,7 @@ import (
 func TestEvalDocEmbeddedMatchesSource(t *testing.T) {
 	src, err := os.ReadFile(filepath.Join("..", "llmworld", "EVAL.md"))
 	if err != nil {
-		t.Skipf("llmworld/EVAL.md unavailable: %v", err)
+		t.Fatalf("required source llmworld/EVAL.md is missing: %v (it is committed; do not skip past it)", err)
 	}
 	embedded, err := evalDocFS.ReadFile("promptkit_assets/EVAL.md")
 	if err != nil {

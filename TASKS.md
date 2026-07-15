@@ -1729,7 +1729,7 @@ gap task has landed.
   session; the owner is the approval gate. Generation/manifest are outside the
   sim; replay fixture unchanged. See NOTES.md.
 
-- [ ] **M16.1 — Make required parity evidence immutable and runnable.** Add one
+- [x] **M16.1 — Make required parity evidence immutable and runnable.** Add one
   repo command that runs the existing clean gates (`go build`, `go vet`,
   `go test`, `go test -race`, `npm ci`, `npm test`, `npm run build`) and emits
   a deterministic JSON/Markdown report keyed by the M16 manifest. Required
@@ -1741,6 +1741,41 @@ gap task has landed.
   `git status --short` empty, reports the exact test covering each already-
   verified row, and CI stores the report as an artifact without treating
   aggregate line coverage as proof of parity.
+
+  Landed: **`make parity`** (`cmd/zzt-parity`) — the single certification
+  command. `main.go` runs the seven clean gates in order (with `-count=1` on the
+  Go gates, since the manifest validator reads files the test cache does not
+  track — NOTES.md 2026-07-15) and `report.go` renders a deterministic
+  JSON+Markdown report keyed by `fixtures/parity/manifest.json`: status tallies
+  per dimension, the verdict, the certification blockers, and — the DoD's key
+  clause — every `pass` row with the exact test that certifies it (zero today;
+  all 338 behavioral rows are `unverified`, 1 `gap`). No timestamps/durations/
+  map-order leak in, so the artifact is byte-stable run to run
+  (`report_test.go` locks determinism + verdict logic). The report writes only
+  to the gitignored `fixtures/parity/report.{json,md}`, so a run leaves the tree
+  clean; CI's new `parity` job uploads it and asserts `git status --short`
+  empty. Line coverage is never computed — parity is proven row by row. Exit
+  policy: a failed/skipped gate is a hard failure; not-yet-certified is expected
+  pre-M16.20 and only fails under `-require-certified` (the M16.20 gate).
+
+  Fail-closed hygiene on the required path: the core replay fixture
+  (`town.replay.json`) and `town_board1.zwd` no longer auto-write a fresh
+  baseline when absent — they `t.Fatal` and regenerate only under
+  `ZZT_PARITY_REGEN=1`. Every `t.Skip("...unavailable")` over a committed
+  fixture (TOWN, `fixtures/gen/*`, `llmworld/examples`, EVAL.md) became a hard
+  failure via `requireFixture`; `zzt-shot`/`zzt-validate`/the TOWN round-trip
+  now read the committed `fixtures/TOWN.ZZT` (byte-identical to the engine copy)
+  instead of an untracked engine-dir world. Generators/experiments that depend
+  on untracked worlds or write committed corpus (`gen_fixture`, `gen_llmworld`,
+  the CAVES/CITY round-trips → `worlds_canary_test.go`) moved behind the
+  `//go:build canary` tag (`make parity-canaries`), out of the certified
+  `go test ./...`; `gen_generated`'s `.ZZT` side-effect write is now regen-gated.
+  Network tests were already hermetic (`httptest` + `fakeClaude`/
+  `fakeIDTokenVerifier`); left as-is. Only one skip remains in the required
+  path — `TestParityManifestScaffold`, the explicit manifest-regen guard.
+  Verified: `make parity` exits 0 with all gates green and a clean tree; the
+  advisor tool was unavailable this session (as at M16.0). No sim code moved;
+  replay fixture unchanged; no `DEVIATION:`.
 
 - [ ] **M16.2 [ADVISOR] — Establish an independent vanilla oracle and scenario
   format.** Pin a redistributable/reference runner for ZZT 3.2 behavior (for

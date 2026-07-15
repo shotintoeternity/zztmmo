@@ -42,8 +42,16 @@ func TestTownReplayDeterminism(t *testing.T) {
 	path := filepath.Join("..", "fixtures", "town.replay.json")
 	data, err := os.ReadFile(path)
 	if os.IsNotExist(err) {
-		writeReplayFixture(t, path, want)
-		return
+		// The replay fixture is the core parity safety net (CLAUDE.md rule 3):
+		// it is committed and must fail closed when absent, never silently
+		// auto-write a fresh baseline that would launder whatever the engine
+		// currently does. Regeneration is an explicit maintainer command.
+		if parityRegen() {
+			writeReplayFixture(t, path, want)
+			t.Logf("regenerated %s (ZZT_PARITY_REGEN set)", path)
+			return
+		}
+		t.Fatalf("required replay fixture %s is missing; regenerate with %s=1", path, parityRegenEnv)
 	}
 	if err != nil {
 		t.Fatalf("read replay fixture: %v", err)

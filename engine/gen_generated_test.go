@@ -16,7 +16,7 @@ import (
 func TestGeneratedZWDWorldsCompileAndValidate(t *testing.T) {
 	paths, _ := filepath.Glob(filepath.Join("..", "llmworld", "generated", "*.zwd"))
 	if len(paths) == 0 {
-		t.Skip("no generated worlds")
+		t.Fatal("no generated worlds under llmworld/generated — these are committed and required")
 	}
 
 	for _, path := range paths {
@@ -32,11 +32,17 @@ func TestGeneratedZWDWorldsCompileAndValidate(t *testing.T) {
 			}
 			validateCompiledZWD(t, data)
 
-			outPath := strings.ToUpper(name) + ".ZZT"
-			if err := os.WriteFile(outPath, data, 0644); err != nil {
-				t.Fatalf("write %s: %v", outPath, err)
+			// Compiling and validating the committed ZWD world is the required
+			// check. Writing the .ZZT so the server's world picker can host it
+			// is a maintainer side effect, gated behind the regen flag so the
+			// required path performs no auto-write (task M16.1).
+			if parityRegen() {
+				outPath := strings.ToUpper(name) + ".ZZT"
+				if err := os.WriteFile(outPath, data, 0644); err != nil {
+					t.Fatalf("write %s: %v", outPath, err)
+				}
+				t.Logf("%s → %s (%d bytes, %s set)", path, outPath, len(data), parityRegenEnv)
 			}
-			t.Logf("%s → %s (%d bytes)", path, outPath, len(data))
 		})
 	}
 }

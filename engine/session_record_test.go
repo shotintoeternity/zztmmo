@@ -82,8 +82,9 @@ func townWorld(t *testing.T) TWorld {
 	setup := NewEngine()
 	setup.Headless = true
 	setup.WorldCreate()
+	requireFixture(t, filepath.Join("..", "fixtures", "TOWN.ZZT"))
 	if !setup.WorldLoad(filepath.Join("..", "fixtures", "TOWN"), ".ZZT", false) {
-		t.Skip("fixtures/TOWN.ZZT unavailable")
+		t.Fatal("loading required fixture ../fixtures/TOWN.ZZT failed")
 	}
 	return setup.World
 }

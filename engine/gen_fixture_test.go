@@ -1,3 +1,11 @@
+//go:build canary
+
+// Corpus/fixture generator (task M16.1): this test regenerates the committed
+// fixtures/town_board1.zwd from an untracked engine-directory TOWN.ZZT. It is a
+// maintainer generator, not an assertion, and writes a committed file, so it is
+// kept behind the `canary` build tag and out of the required `go test ./...`
+// path. The required, fail-closed comparison of that fixture lives in
+// zwd_decompile_test.go's TestTOWNBoard1DecompiledFixture.
 package zztgo
 
 import (

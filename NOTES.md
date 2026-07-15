@@ -2672,3 +2672,68 @@ Go-test reference are each caught.
 
 Generation and the manifest are entirely outside the simulation; the replay
 fixture is unchanged. No `DEVIATION:` — nothing in the sim moved.
+
+---
+
+## M16.1 — Runnable, immutable parity evidence (2026-07-15)
+
+**The command.** `make parity` → `cmd/zzt-parity` is the single certification
+entry point. `main.go` runs the seven clean gates (`go build`, `go vet`,
+`go test -count=1`, `go test -race -count=1`, `npm ci`, `npm test`,
+`npm run build`) in order, streaming their output, then `report.go` renders a
+deterministic JSON+Markdown report keyed by `fixtures/parity/manifest.json`.
+`-count=1` on the Go gates is deliberate: the manifest validator reads files the
+test cache does not track, so a cached pass could otherwise mask a manifest edit
+(M16.0 note). The report is a *pure* function of `(manifest, gateResults)` —
+no timestamps, durations, or map/slice-order leak in — so the artifact is
+byte-stable and diffable; `report_test.go` asserts that plus the certification
+verdict logic.
+
+**Why the report is a gitignored artifact, not committed.** DoD requires
+`git status --short` empty after a run and "CI stores the report as an
+artifact." Committing a report whose content depends on gate results would fight
+determinism and dirty the tree. So `report.{json,md}` are gitignored; CI's new
+`parity` job uploads them and asserts a clean tree. Certification is proven by
+the committed *manifest*, never by the rendered report and never by line
+coverage (the report computes none, by design — PARITY.md §2).
+
+**Exit policy (matters for CI staying green pre-M16.20).** A failed or skipped
+clean gate is always a hard failure. "Not yet certified" (338 rows still
+`unverified`, 1 `gap`) is the expected state until M16.20 and is a failure only
+under `-require-certified`. So the `parity` CI job is green today as long as the
+gates pass, and M16.20 flips it strict.
+
+**Fail-closed hygiene.** Required parity fixtures now fail when missing instead
+of silently skipping or auto-writing:
+- `town.replay.json` and `town_board1.zwd` no longer write a fresh baseline on
+  absence (that would launder whatever the engine currently does past the safety
+  net — CLAUDE.md rule 3). They `t.Fatal`; regeneration is the explicit
+  maintainer command `ZZT_PARITY_REGEN=1` (mirrors `PARITY_SCAFFOLD`).
+- `t.Skip("...unavailable")` over any committed fixture (TOWN, `fixtures/gen/*`,
+  `llmworld/examples`, EVAL.md) → hard failure via the shared `requireFixture`.
+- `zzt-shot`, `zzt-validate`, and the TOWN ZWD round-trip read the committed
+  `fixtures/TOWN.ZZT` (sha `994ebade…`, byte-identical to the engine-dir copy)
+  rather than an untracked engine-dir world, so they run in a clean clone.
+
+**Separated, not deleted, the untracked-world/generator canaries.** Tests that
+depend on untracked engine-dir worlds or write committed corpus are maintainer
+tools, not parity assertions, so they moved behind `//go:build canary`
+(`make parity-canaries`) and out of the certified `go test ./...`:
+`gen_fixture` (regenerates `town_board1.zwd`), `gen_llmworld` (writes the
+`llmworld/examples` corpus), and the CAVES/CITY round-trips (new
+`worlds_canary_test.go`). `gen_generated` keeps its required compile+validate of
+the committed ZWD worlds but its `.ZZT` world-picker side-effect write is now
+regen-gated. The committed corpus is still verified in the required path by
+`TestLLMWorldExamplesCompile`.
+
+**Network.** Already hermetic — `auth`/`museum`/`generation`/`eval-judge` tests
+use `httptest` + `fakeClaude`/`fakeIDTokenVerifier`, no live sockets. Left as-is;
+they are the "required tests use hermetic fakes" the spec asks for. Live OAuth/
+Museum/LLM canaries remain out of scope (none run in the required path).
+
+Only one skip survives the required path: `TestParityManifestScaffold`, the
+explicit `PARITY_SCAFFOLD=1` regen guard. `make parity` verified locally: all
+seven gates green, exit 0, `git status --short` empty (report files ignored).
+The `[ADVISOR]`-style consult could not run — the advisor tool was unavailable
+this session, as it was at M16.0; the owner is the approval gate. No simulation
+code moved; the replay fixture is unchanged; no `DEVIATION:`.

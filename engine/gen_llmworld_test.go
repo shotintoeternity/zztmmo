@@ -1,3 +1,11 @@
+//go:build canary
+
+// LLM few-shot corpus generator (task M16.1): TestGenLLMWorldExamples decompiles
+// boards from the untracked .ZZT worlds in the engine directory and writes the
+// committed ../llmworld/examples/ corpus. It depends on untracked worlds and
+// writes committed files, so it is a maintainer generator kept behind the
+// `canary` build tag, out of the required `go test ./...` path. The committed
+// corpus is verified in the required path by TestLLMWorldExamplesCompile.
 package zztgo
 
 import (

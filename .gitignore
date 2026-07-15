@@ -9,9 +9,16 @@ dist/
 
 # Build/deploy artifacts and runtime state
 engine/zzt-server
+engine/zzt-parity
 engine/deploy.tar.gz
 engine/saves/
 test.txt
+
+# M16.1 parity report: a regenerable CI artifact, never committed. The command
+# `make parity` (cmd/zzt-parity) writes these; certification is proven by the
+# committed manifest, not by this rendered report.
+fixtures/parity/report.json
+fixtures/parity/report.md
 
 # M12.17 eval runs: keep reports, screenshots, and ZWD sidecars; never the
 # generated .ZZT binaries (fixtures are committed as ZWD text only).

@@ -300,7 +300,7 @@ func TestEvalGateFixtures(t *testing.T) {
 		t.Fatal(err)
 	}
 	if len(paths) == 0 {
-		t.Skip("no recorded generation fixtures under fixtures/gen")
+		t.Fatal("no recorded generation fixtures under fixtures/gen — these goldens are committed and required")
 	}
 	for _, path := range paths {
 		path := path

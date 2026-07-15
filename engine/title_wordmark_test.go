@@ -35,7 +35,7 @@ func TestStampTitleWordmarkMakesGatePass(t *testing.T) {
 	path := filepath.Join("..", "fixtures", "gen", "CASTLEOF.zwd")
 	src, err := os.ReadFile(path)
 	if err != nil {
-		t.Skipf("fixture unavailable: %v", err)
+		t.Fatalf("required parity fixture %s is missing: %v (it is committed; do not skip past it)", path, err)
 	}
 
 	// Before: the recorded world fails title-wordmark (the baseline finding).
@@ -59,7 +59,7 @@ func TestStampTitleWordmarkStripsStrayText(t *testing.T) {
 	path := filepath.Join("..", "fixtures", "gen", "CASTLEOF.zwd")
 	src, err := os.ReadFile(path)
 	if err != nil {
-		t.Skipf("fixture unavailable: %v", err)
+		t.Fatalf("required parity fixture %s is missing: %v (it is committed; do not skip past it)", path, err)
 	}
 	full := spliceStampedTitle(t, string(src), name, name)
 	e := loadWorldFromZWD(t, full)
@@ -93,7 +93,7 @@ func TestStampTitleWordmarkPreservesPlayerAndObjects(t *testing.T) {
 	path := filepath.Join("..", "fixtures", "gen", "CASTLEOF.zwd")
 	src, err := os.ReadFile(path)
 	if err != nil {
-		t.Skipf("fixture unavailable: %v", err)
+		t.Fatalf("required parity fixture %s is missing: %v (it is committed; do not skip past it)", path, err)
 	}
 
 	countStats := func(full string) (players, objects int) {
@@ -132,7 +132,7 @@ func TestStampTitleWordmarkFoldsNonASCIIName(t *testing.T) {
 	path := filepath.Join("..", "fixtures", "gen", "APOLLO11.zwd")
 	src, err := os.ReadFile(path)
 	if err != nil {
-		t.Skipf("fixture unavailable: %v", err)
+		t.Fatalf("required parity fixture %s is missing: %v (it is committed; do not skip past it)", path, err)
 	}
 	full := spliceStampedTitle(t, string(src), board0, displayName)
 	report := EvalGeneratedZWD(full, displayName)

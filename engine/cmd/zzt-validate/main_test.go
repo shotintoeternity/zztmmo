@@ -15,7 +15,7 @@ func TestValidateRendersStaticTown(t *testing.T) {
 	// DisplayIOError's modal window, which blocks forever headless.
 	dir := filepath.Join("..", "..", "..", "fixtures")
 	if _, err := os.Stat(filepath.Join(dir, "TOWN.ZZT")); err != nil {
-		t.Skipf("fixtures/TOWN.ZZT unavailable")
+		t.Fatalf("required fixture fixtures/TOWN.ZZT is missing: %v (it is committed; do not skip past it)", err)
 	}
 	ok, reason := validate("TOWN", dir, 200)
 	if !ok {
