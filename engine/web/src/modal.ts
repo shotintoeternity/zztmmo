@@ -364,11 +364,9 @@ export function renderModal(write: WriteText, m: Modal) {
 }
 
 const WORLD_SEARCH_LIMIT = 50;
-const WORLD_DEFAULT_LOCAL_LIMIT = 5;
 const WORLD_TITLE_WIDTH = 38;
 const WORLD_DETAIL_WIDTH = 42;
 const WORLD_SEARCH_ROW = TEXT_WINDOW_Y + TEXT_WINDOW_HEIGHT - 2;
-const FEATURED_LOCAL_WORLDS = ["CAVES", "CITY", "DUNGEONS", "CUTLASS", "KUDZU"];
 
 function fitText(text: string, width: number): string {
   if (text.length <= width) {
@@ -384,29 +382,11 @@ function worldSearchMatches(m: WorldSearchModal): WorldSearchEntry[] {
   const terms = m.query.toLowerCase().trim().split(/\s+/).filter(Boolean);
   const lobby = m.entries.filter((entry) => entry.world.toUpperCase() === "TOWN");
   if (terms.length === 0) {
-    // Local worlds are loaded on demand when selected. Show a handful up
-    // front so the selector communicates that this is a playable library,
-    // while search remains the way to browse the full Museum catalog.
-    const featured = FEATURED_LOCAL_WORLDS
-      .map((world) => m.entries.find((entry) => entry.world.toUpperCase() === world))
-      .filter((entry): entry is WorldSearchEntry => entry !== undefined);
-    const featuredNames = new Set(featured.map((entry) => entry.world.toUpperCase()));
-    const occupied = m.entries.filter((entry) => (
-      entry.world.toUpperCase() !== "TOWN"
-      && !featuredNames.has(entry.world.toUpperCase())
-      && (entry.players ?? 0) > 0
-    ));
-    const fallback = m.entries.filter((entry) => (
-      entry.world.toUpperCase() !== "TOWN"
-      && !featuredNames.has(entry.world.toUpperCase())
-      && (entry.players ?? 0) === 0
-    ));
-    return [
-      ...lobby,
-      ...featured.slice(0, WORLD_DEFAULT_LOCAL_LIMIT),
-      ...occupied,
-      ...fallback.slice(0, Math.max(0, WORLD_DEFAULT_LOCAL_LIMIT - featured.length)),
-    ].slice(0, WORLD_SEARCH_LIMIT);
+    // Empty query: list every hosted world (scrollable), lobby first, keeping
+    // the server's order (sorted by title with TOWN first). Museum search is
+    // reached by typing.
+    const others = m.entries.filter((entry) => entry.world.toUpperCase() !== "TOWN");
+    return [...lobby, ...others];
   }
   const matches = m.entries.filter((entry) => {
     if (entry.world.toUpperCase() === "TOWN") {

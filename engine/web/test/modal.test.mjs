@@ -214,8 +214,9 @@ function scroll() {
   assert.equal(m.linePos, 1);
 }
 
-// Empty world search shows its Museum instruction, featured local games, and
-// occupied rooms. The count is separate from the centered instruction.
+// Empty world search lists every hosted world (scrollable), lobby first, with a
+// match count that reflects all of them. The count is separate from the centered
+// instruction. Museum search is reached by typing.
 {
   const m = worldSearch();
   const writes = [];
@@ -226,25 +227,38 @@ function scroll() {
   // instruction row (y=11) where it used to overprint "museum!" into "muse6 matches".
   const instructionWrite = writes.find((write) => write.text === "Type below to search the museum!");
   assert.ok(instructionWrite && instructionWrite.y === 11);
+  // All six fixture worlds are matched, not a featured subset.
   assert.ok(writes.some((write) => write.text === "6 matches" && write.x === 42 && write.y === 12));
   assert.ok(writes.some((write) => write.color === 0x70 && write.text.startsWith("Type to search: ")));
   assert.match(rendered, /TOWN \(ZZTMMO Lobby\)/);
   assert.match(rendered, /Rhygar/);
-  assert.match(rendered, /Caves/);
-  assert.doesNotMatch(rendered, /id:/);
   assert.match(rendered, /by Saxxon Pike/);
+  assert.doesNotMatch(rendered, /id:/);
   const searchWrites = writes.filter((write) => write.text.startsWith("Type to search: "));
   assert.equal(searchWrites.length, 1);
   assert.equal(searchWrites[0].y, 19, "search prompt stays below the result rows");
 }
 
-// Existing players remain in the default list after the featured local games.
+// A world with players online shows its live player count in the list.
 {
   const m = worldSearch();
-  m.selected = 3;
+  m.selected = 1; // RHYGAR1, the first occupied world after the lobby
   const writes = [];
   renderModal((x, y, color, text) => writes.push({ x, y, color, text }), m);
   assert.match(writes.map((write) => write.text).join(" "), /\(1 player currently online\)/);
+}
+
+// The empty-query view lists the whole library, not a capped handful: the old
+// build showed only ~6 default worlds, hiding most of a large hosted catalog.
+{
+  const entries = [{ world: "TOWN", id: "TOWN", title: "TOWN", author: "Unknown", created: "" }];
+  for (let i = 1; i <= 12; i += 1) {
+    entries.push({ world: `WORLD${i}`, id: `world${i}`, title: `World ${i}`, author: "Nobody", created: "2000" });
+  }
+  const m = { kind: "worldSearch", title: "Select a World", query: "", selected: 0, entries, onSelect() {}, onQuery() {} };
+  const writes = [];
+  renderModal((x, y, color, text) => writes.push({ x, y, color, text }), m);
+  assert.ok(writes.some((write) => write.text === "13 matches" && write.y === 12), "all 13 worlds are matched, not a featured subset");
 }
 
 // World search filters by Museum author/title metadata and selects the match.

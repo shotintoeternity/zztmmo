@@ -1,6 +1,7 @@
 {
   "_comment": "ZZT world fetch manifest for M7.5. Download with: go run ./cmd/zzt-fetch -manifest worlds.manifest.json -out .",
   "_note": "50 worlds. Criteria: ZZT only (no Weave/Super ZZT), release 1997+, high rating, large board counts, visual variety for LLM training corpus. 8 required M7.5 titles + 42 high-rated picks sorted by rating then board count.",
+  "_note2": "M17.2 appended display-metadata-only entries (zip empty): worlds bundled/built-in or already on disk. zzt-fetch skips empty-zip entries; they only supply picker metadata (title/author/year) keyed by id and zzt_files. Museum authors verified via the Museum of ZZT REST API; the four Tim Sweeney built-ins (town/caves/city/dungeons) confirmed by the owner.",
   "worlds": [
     {"id": "teen",        "letter": "t", "zip": "teen.zip",                 "title": "Teen Priest",                                       "author": "Draco",           "year": 1998, "zzt_files": ["TEEN.ZZT"]},
     {"id": "tp2",         "letter": "t", "zip": "tp2.zip",                  "title": "Teen Priest 2",                                      "author": "Draco",           "year": 1999, "zzt_files": ["TP2DISC1.ZZT", "TP2DISC2.ZZT"]},
@@ -13,7 +14,7 @@
     {"id": "maxzzt",      "letter": "f", "zip": "maxzzt.zip",               "title": "Five Years of Maximum ZZT",                          "author": "Scott Hammack",   "year": 1999, "zzt_files": []},
     {"id": "zztenc",      "letter": "z", "zip": "zztenc.zip",               "title": "ZZT Encyclopedia 3C",                                "author": "Unknown",         "year": 1998, "zzt_files": []},
     {"id": "small_spaces","letter": "s", "zip": "Small Spaces.zip",         "title": "Small Spaces",                                       "author": "KKairos et al.",  "year": 2019, "zzt_files": []},
-    {"id": "xzr",         "letter": "x", "zip": "xzr.zip",                  "title": "XZR: Exile",                                         "author": "Unknown",         "year": 2003, "zzt_files": []},
+    {"id": "xzr",         "letter": "x", "zip": "xzr.zip",                  "title": "XZR: Exile",                                         "author": "_ry0suke_",       "year": 2003, "zzt_files": []},
     {"id": "fauxamis",    "letter": "f", "zip": "FAUXAMIS-v1.02.zip",       "title": "Faux Amis (v1.02)",                                  "author": "Rabbitboots",     "year": 2019, "zzt_files": []},
     {"id": "zfiles25",    "letter": "z", "zip": "zfiles25.zip",             "title": "Z-Files v2.5",                                       "author": "Unknown",         "year": 2007, "zzt_files": []},
     {"id": "kqzzt",       "letter": "k", "zip": "kqzzt.zip",                "title": "King's Quest ZZT",                                   "author": "Hydra, MeBo",     "year": 1997, "zzt_files": []},
@@ -49,9 +50,44 @@
     {"id": "austnet",     "letter": "a", "zip": "austnet.zip",              "title": "Austnet: The Chronicles",                            "author": "craNKGod",        "year": 1999, "zzt_files": []},
     {"id": "chknwire",    "letter": "c", "zip": "chknwire.zip",             "title": "ChickenWire v1.5",                                   "author": "Zenith Nadir",    "year": 2000, "zzt_files": []},
     {"id": "color_rev",   "letter": "c", "zip": "COLOR.zip",                "title": "Color Revival (Modified)",                           "author": "Zenith Nadir",    "year": 2007, "zzt_files": []},
-    {"id": "esp",         "letter": "e", "zip": "Esp.zip",                  "title": "ESP (Evil Sorcerers' Party)",                        "author": "Commodore",       "year": 2003, "zzt_files": []},
+    {"id": "esp",         "letter": "e", "zip": "Esp.zip",                  "title": "ESP (Evil Sorcerers' Party)",                        "author": "Bob Pragt, Funk, John W. Wells, Zenith Nadir", "year": 2003, "zzt_files": []},
     {"id": "frost1",      "letter": "f", "zip": "frost1.zip",               "title": "Frost 1; Power",                                     "author": "Zenith Nadir",    "year": 2003, "zzt_files": []},
     {"id": "ruins",       "letter": "r", "zip": "RUINS.zip",                "title": "Ruins of ZZT",                                       "author": "Dr. Dos",         "year": 2016, "zzt_files": []},
-    {"id": "andyspec",    "letter": "m", "zip": "andyspec.zip",             "title": "The Magical Adventures of Andy Chapter 1: SE",       "author": "Silas Burdick",   "year": 2000, "zzt_files": []}
+    {"id": "andyspec",    "letter": "m", "zip": "andyspec.zip",             "title": "The Magical Adventures of Andy Chapter 1: SE",       "author": "Silas Burdick",   "year": 2000, "zzt_files": []},
+
+    {"id": "town",        "zip": "",                                        "title": "",                                                  "author": "Tim Sweeney",     "year": 1991, "zzt_files": ["TOWN.ZZT"]},
+    {"id": "caves",       "zip": "",                                        "title": "Caves of ZZT",                                       "author": "Tim Sweeney",     "year": 1991, "zzt_files": ["CAVES.ZZT"]},
+    {"id": "city",        "zip": "",                                        "title": "City of ZZT",                                        "author": "Tim Sweeney",     "year": 1991, "zzt_files": ["CITY.ZZT"]},
+    {"id": "dungeons",    "zip": "",                                        "title": "Dungeons of ZZT",                                    "author": "Tim Sweeney",     "year": 1991, "zzt_files": ["DUNGEONS.ZZT"]},
+
+    {"id": "dweird",      "zip": "",                                        "title": "Double Weird",                                       "author": "Scott Hammack",   "year": 1996, "zzt_files": ["DWEIRD.ZZT"]},
+    {"id": "tweird",      "zip": "",                                        "title": "Triple Weird",                                       "author": "Scott Hammack",   "year": 1996, "zzt_files": ["TWEIRD.ZZT"]},
+    {"id": "weird01",     "zip": "",                                        "title": "Weird 0.01",                                         "author": "Scott Hammack",   "year": 1996, "zzt_files": ["WEIRD01.ZZT"]},
+    {"id": "weird03",     "zip": "",                                        "title": "Weird 0.03",                                         "author": "Scott Hammack",   "year": 1996, "zzt_files": ["WEIRD03.ZZT"]},
+    {"id": "llama1",      "zip": "",                                        "title": "Llama Masters 1",                                    "author": "Scott Hammack",   "year": 1996, "zzt_files": ["LLAMA1.ZZT"]},
+    {"id": "llama2",      "zip": "",                                        "title": "Llama Masters 2",                                    "author": "Scott Hammack",   "year": 1995, "zzt_files": ["LLAMA2.ZZT"]},
+    {"id": "strek1",      "zip": "",                                        "title": "Strange Trek",                                       "author": "Scott Hammack",   "year": 1996, "zzt_files": ["STREK1.ZZT"]},
+    {"id": "strek2",      "zip": "",                                        "title": "Strange Trek 2",                                     "author": "Scott Hammack",   "year": 1996, "zzt_files": ["STREK2.ZZT"]},
+    {"id": "pizzaman",    "zip": "",                                        "title": "Pizza Man",                                          "author": "Scott Hammack",   "year": 1997, "zzt_files": ["PIZZAMAN.ZZT"]},
+    {"id": "signal",      "zip": "",                                        "title": "The Signal",                                         "author": "Scott Hammack",   "year": 1996, "zzt_files": ["SIGNAL.ZZT"]},
+
+    {"id": "burgerj",     "zip": "",                                        "title": "Burger Joint",                                       "author": "Madguy",          "year": 1998, "zzt_files": ["BURGERJ.ZZT"]},
+    {"id": "wartorn",     "zip": "",                                        "title": "War-Torn",                                           "author": "Madguy",          "year": 1998, "zzt_files": ["WARTORN.ZZT"]},
+    {"id": "wartornx",    "zip": "",                                        "title": "War-Torn",                                           "author": "Madguy",          "year": 1998, "zzt_files": ["WARTORNX.ZZT"]},
+
+    {"id": "rhygar2",     "zip": "",                                        "title": "Rhygar 2",                                           "author": "Bongo",           "year": 1997, "zzt_files": ["RHYGAR2.ZZT"]},
+    {"id": "rhygar2x",    "zip": "",                                        "title": "Rhygar 2",                                           "author": "Bongo",           "year": 1997, "zzt_files": ["RHYGAR2X.ZZT"]},
+    {"id": "rhygar3",     "zip": "",                                        "title": "Rhygar 3",                                           "author": "Bongo",           "year": 1998, "zzt_files": ["RHYG3-1.ZZT", "RHYG3-2.ZZT", "RHYG3-3.ZZT"]},
+
+    {"id": "zfiles1",     "zip": "",                                        "title": "Z-Files",                                            "author": "Zenith Nadir",    "year": 1998, "zzt_files": ["ZFILES1.ZZT"]},
+    {"id": "zfiles2",     "zip": "",                                        "title": "Z-Files 2",                                          "author": "Zenith Nadir",    "year": 2001, "zzt_files": ["ZFILES2.ZZT"]},
+    {"id": "zfiles3",     "zip": "",                                        "title": "Z-Files 3",                                          "author": "Zenith Nadir",    "year": 0,    "zzt_files": ["ZFILES3.ZZT"]},
+
+    {"id": "xzr2",        "zip": "",                                        "title": "XZR: Exile",                                         "author": "_ry0suke_",       "year": 2003, "zzt_files": ["XZR2.ZZT"]},
+    {"id": "xzr3",        "zip": "",                                        "title": "XZR: Exile",                                         "author": "_ry0suke_",       "year": 2003, "zzt_files": ["XZR3.ZZT"]},
+
+    {"id": "kudzu",       "zip": "",                                        "title": "Kudzu",                                              "author": "clysm",           "year": 0,    "zzt_files": ["KUDZU.ZZT"]},
+
+    {"id": "espfiles",    "zip": "",                                        "title": "ESP (Evil Sorcerers' Party)",                        "author": "Bob Pragt, Funk, John W. Wells, Zenith Nadir", "year": 2003, "zzt_files": ["ESPFILE1.ZZT", "ESPFILE2.ZZT", "ESPFILE3.ZZT", "ESPFILE4.ZZT"]}
   ]
 }

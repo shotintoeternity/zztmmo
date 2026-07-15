@@ -78,6 +78,11 @@ func main() {
 	seen := make(map[string]bool)
 
 	for i, entry := range manifest.Worlds {
+		// Display-metadata-only entries carry no zip (they describe worlds that
+		// are bundled/built-in, not Museum downloads). Nothing to fetch.
+		if entry.Zip == "" {
+			continue
+		}
 		zipKey := strings.ToLower(entry.Zip)
 		if seen[zipKey] {
 			continue

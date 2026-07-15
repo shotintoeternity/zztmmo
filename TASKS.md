@@ -1487,7 +1487,7 @@ these are live breakage in front of the player.
   box spans cols 12–67 with the full 50-char prompt inside the borders; the
   high-score box is unchanged at col 3. `npm test` + `tsc` green.
 
-- [ ] **M17.2 — "Choose a World" picker: list all worlds, restore metadata, and
+- [x] **M17.2 — "Choose a World" picker: list all worlds, restore metadata, and
   stop the count from overlapping the header.** Three faults, all visible at once
   in the picker:
   * **(a) Count collides with the instruction.** `renderWorldSearchCount`
@@ -1521,12 +1521,29 @@ these are live breakage in front of the player.
   tests updated/added; `npm test`, `npm run build`, `go build ./...`,
   `go test ./...` green; replay fixture untouched.
 
-  Partly landed: **(a)** the count overlap is fixed — `renderWorldSearchCount`
-  (`modal.ts`) now draws the count on the blank line below the instruction (y=12,
-  was y=11 where it overprinted "museum!"), with the test updated to prove the two
-  rows differ. **(b)** and **(c)** remain open pending an owner decision on the
-  metadata source (extend the manifest vs. read `.ZZT` headers) and whether the
-  empty-query view lists all ~117 worlds.
+  Landed: **(a)** the count overlap was fixed earlier — `renderWorldSearchCount`
+  (`modal.ts`) draws the count on the blank line below the instruction (y=12, was
+  y=11 where it overprinted "museum!"). **(b)** owner chose "read `.ZZT` headers
+  AND fetch Museum authors": `WorldListEntriesInDir` (`world_metadata.go`) reads
+  each world's stored header Name as a title fallback (manifest title still wins;
+  filename is last), so worlds absent from the manifest show their real in-game
+  title (e.g. OBSERV → "MOONLIT OBSERVATORY"). The manifest gained 28
+  display-metadata-only entries (empty `zip`, so `zzt-fetch` skips them) verified
+  against the Museum of ZZT REST API, plus the four Tim Sweeney built-ins
+  (owner-confirmed 1991); real-author coverage of the hosted set rose 33 → 61.
+  `ListWorlds` (`web_api.go`) now drops entries that can't be joined — names
+  outside `SanitizeSaveName`'s charset (`_DEATH_`, `DOG!`, `CAT_TRAP`) and
+  pure-separator junk (`-`…`----`) — so 117 → 110 listed, none broken. **(c)**
+  the empty-query view lists every hosted world (scrollable, lobby first) instead
+  of a featured handful. TOWN gets author/year but no title override, preserving
+  the client's "(ZZTMMO Lobby)" relabel.
+  DEVIATION (metadata, not simulation): the pre-existing `esp` manifest entry
+  credited "Commodore"; the Museum API and the owner both give ESP (Evil
+  Sorcerers' Party) as Bob Pragt / Funk / John W. Wells / Zenith Nadir — corrected
+  here along with the new `espfiles` entry. Genuinely unidentifiable worlds (49)
+  stay `Unknown` rather than risk a misattribution (a `dungeons.zip` filename
+  collision on the Museum is an unrelated "Dungeons of Doom", not our built-in).
+  `go build`/`go test`/`npm test`/`npm run build` green; replay fixture untouched.
 
 - [x] **M17.3 — Audio stopped working entirely (owner-reported regression).**
   Symptom: "Music isn't working anymore at all." `sound.ts`'s `ZztSound` is

@@ -547,7 +547,7 @@ func (a *WebAPI) handleWorlds(w http.ResponseWriter, r *http.Request) {
 
 	writeJSON(w, struct {
 		Worlds []WorldListEntry `json:"worlds"`
-	}{Worlds: WorldListEntries(worlds, counts)})
+	}{Worlds: WorldListEntriesInDir(dir, worlds, counts)})
 }
 
 func (a *WebAPI) handleLoadWorld(w http.ResponseWriter, r *http.Request) {
@@ -622,12 +622,35 @@ func ListWorlds(dir string) []string {
 			continue
 		}
 		name := entry.Name()
-		if strings.HasSuffix(strings.ToUpper(name), ".ZZT") {
-			worlds = append(worlds, strings.TrimSuffix(name, filepath.Ext(name)))
+		if !strings.HasSuffix(strings.ToUpper(name), ".ZZT") {
+			continue
 		}
+		base := strings.TrimSuffix(name, filepath.Ext(name))
+		// A world is only listable if a client could actually join it: the join
+		// path resolves the name through SanitizeSaveName (LoadPristineWorld),
+		// so names outside that charset (e.g. "_DEATH_", "DOG!") are dead
+		// entries and are dropped. Pure-separator junk ("-", "--") passes the
+		// charset but has no real name, so also require an alphanumeric.
+		if _, err := SanitizeSaveName(base); err != nil {
+			continue
+		}
+		if !hasAlphanumeric(base) {
+			continue
+		}
+		worlds = append(worlds, base)
 	}
 	sort.Strings(worlds)
 	return worlds
+}
+
+func hasAlphanumeric(s string) bool {
+	for i := 0; i < len(s); i++ {
+		c := s[i]
+		if (c >= 'A' && c <= 'Z') || (c >= 'a' && c <= 'z') || (c >= '0' && c <= '9') {
+			return true
+		}
+	}
+	return false
 }
 
 func (a *WebAPI) handleHighScores(w http.ResponseWriter, r *http.Request) {

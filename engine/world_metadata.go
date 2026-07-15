@@ -3,6 +3,8 @@ package zztgo
 import (
 	_ "embed"
 	"encoding/json"
+	"io"
+	"os"
 	"path/filepath"
 	"sort"
 	"strconv"
@@ -42,6 +44,25 @@ var (
 )
 
 func WorldListEntries(worlds []string, playerCounts map[string]int) []WorldListEntry {
+	return worldListEntries(worlds, playerCounts, nil)
+}
+
+// WorldListEntriesInDir is WorldListEntries plus a fallback title read from each
+// world's own .ZZT header (its stored Name), so worlds absent from the metadata
+// manifest still show their real in-game title instead of the bare filename.
+// The header title never overrides curated manifest metadata; it only beats the
+// filename fallback.
+func WorldListEntriesInDir(dir string, worlds []string, playerCounts map[string]int) []WorldListEntry {
+	headerTitles := make(map[string]string, len(worlds))
+	for _, world := range worlds {
+		if title := worldHeaderTitle(filepath.Join(dir, world+".ZZT")); title != "" {
+			headerTitles[world] = title
+		}
+	}
+	return worldListEntries(worlds, playerCounts, headerTitles)
+}
+
+func worldListEntries(worlds []string, playerCounts map[string]int, headerTitles map[string]string) []WorldListEntry {
 	out := make([]WorldListEntry, 0, len(worlds))
 	for _, world := range worlds {
 		entry := WorldListEntry{
@@ -52,9 +73,14 @@ func WorldListEntries(worlds []string, playerCounts map[string]int) []WorldListE
 			Created: "",
 			Players: playerCounts[world],
 		}
+		if title := headerTitles[world]; title != "" {
+			entry.Title = title
+		}
 		if meta, ok := museumMetadataForWorld(world); ok {
 			entry.ID = meta.ID
-			entry.Title = meta.Title
+			if meta.Title != "" {
+				entry.Title = meta.Title
+			}
 			entry.Author = meta.Author
 			entry.Created = meta.Created
 			if entry.Created == "" && meta.Year != 0 {
@@ -104,4 +130,51 @@ func addWorldMetadataKey(key string, entry museumWorldEntry) {
 	if _, exists := worldMetadataBy[safe]; !exists {
 		worldMetadataBy[safe] = entry
 	}
+}
+
+// worldHeaderTitle reads the world Name stored in a .ZZT header (the same field
+// LoadWorldInfo parses from offset 25 of the world-info block). It returns "" if
+// the file cannot be read, is not a recognized world version, or the name is
+// empty or contains control characters (i.e. is not a displayable title). Only
+// the first bytes are read, so this stays cheap across a large worlds directory.
+func worldHeaderTitle(path string) string {
+	f, err := os.Open(path)
+	if err != nil {
+		return ""
+	}
+	defer f.Close()
+
+	var buf [96]byte
+	n, err := io.ReadFull(f, buf[:])
+	if err != nil && err != io.ErrUnexpectedEOF {
+		return ""
+	}
+	b := buf[:n]
+
+	// Mirror worldReadFrom's board-count/version skip to find the world-info
+	// block: normally 2 bytes, or 4 for the -1 version marker.
+	if len(b) < 2 {
+		return ""
+	}
+	off := 2
+	if bc := LoadInt16(b[:2]); bc < 0 {
+		if bc != -1 {
+			return "" // a newer, unrecognized version
+		}
+		off = 4
+	}
+	if len(b) < off+46 {
+		return ""
+	}
+	name := LoadString(b[off+25 : off+46])
+	name = strings.TrimRight(name, " \x00")
+	if name == "" {
+		return ""
+	}
+	for i := 0; i < len(name); i++ {
+		if name[i] < 0x20 {
+			return "" // control byte: not a real title
+		}
+	}
+	return name
 }
