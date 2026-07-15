@@ -73,10 +73,10 @@ export function drawTitleSidebar(write: WriteText, worldName: string, accountNam
   sidebarClearLine(write, 0);
   sidebarClearLine(write, 1);
   sidebarClearLine(write, 2);
-  write(61, 0, 0x1f, "    - - - - -      ");
-  // DEVIATION: vanilla's banner reads "ZZT". Same 15 cells, see sidebar.ts.
-  write(62, 1, 0x70, "    ZZTMMO     ");
-  write(61, 2, 0x1f, "    - - - - -      ");
+  // Centered "ZZTMMO" banner with an even 4-dash row — see sidebar.ts.
+  write(61, 0, 0x1f, "    -  -  -  -     ");
+  write(63, 1, 0x70, "    ZZTMMO     ");
+  write(61, 2, 0x1f, "    -  -  -  -     ");
 
   write(62, 7, 0x30, " W ");
   write(65, 7, 0x1e, " World:");

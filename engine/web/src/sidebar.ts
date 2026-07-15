@@ -50,11 +50,15 @@ export function drawSidebar(write: WriteText) {
   sidebarClearLine(write, 0);
   sidebarClearLine(write, 1);
   sidebarClearLine(write, 2);
-  write(61, 0, 0x1f, "    - - - - -      ");
-  // DEVIATION: vanilla's banner reads "ZZT". Both strings are the same 15 cells
-  // wide, so the box the banner sits in is unchanged.
-  write(62, 1, 0x70, "    ZZTMMO     ");
-  write(61, 2, 0x1f, "    - - - - -      ");
+  // DEVIATION: vanilla's banner reads "ZZT"; ours is "ZZTMMO". The 6-letter word
+  // is centered on the sidebar interior (cols 61-79, centre 70): the 15-cell box
+  // sits at 63-77 (equal 2-cell margins) with "ZZTMMO" at 67-72. The dashes are
+  // an even 4-dash row (was 5) so they line up symmetrically under that word — a
+  // 5-dash row centres on a cell, the 6-letter word on a boundary, so they could
+  // never share a centre.
+  write(61, 0, 0x1f, "    -  -  -  -     ");
+  write(63, 1, 0x70, "    ZZTMMO     ");
+  write(61, 2, 0x1f, "    -  -  -  -     ");
   write(64, 7, 0x1e, " Health:");
   write(64, 8, 0x1e, "   Ammo:");
   write(64, 9, 0x1e, "Torches:");
