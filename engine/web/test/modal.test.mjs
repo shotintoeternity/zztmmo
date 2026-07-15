@@ -48,6 +48,7 @@ function worldSearch() {
       { world: "CASTLE", id: "castle", title: "Castle", author: "Unknown", created: "1999", players: 2 },
       { world: "TEEN", id: "teen", title: "Teen Priest", author: "Draco", created: "1998" },
       { world: "CUTLASS", id: "cutlass", title: "Tales of Adventure: The Treasure of Captain Cutlass", author: "Dr. Dos", created: "2001" },
+      { world: "CAVES", id: "caves", title: "Caves", author: "Potter", created: "1991" },
     ],
     picked: null,
     onSelect(entry) {
@@ -57,6 +58,44 @@ function worldSearch() {
     onQuery(query) {
       this.queries.push(query);
     },
+  };
+}
+
+function prompt() {
+  return {
+    kind: "multilineEntry",
+    title: "Dream a world",
+    buffer: "",
+    submitted: null,
+    onSubmit(text) { this.submitted = text; },
+  };
+}
+
+function chat() {
+  return {
+    kind: "chat",
+    title: "Global Chat",
+    messages: ["<Ada> a message that should wrap on a word boundary inside the ZZT text window"],
+    buffer: "",
+    submitted: null,
+    onSubmit(text) { this.submitted = text; },
+  };
+}
+
+function scroll() {
+  return {
+    kind: "text",
+    state: {
+      title: "Vendor",
+      lines: ["Hello, you must be new to town!", "!ba;Ammunition, 3 shots.........1 gem", "!bt;Torch.......................1 gem"],
+      linePos: 2,
+      viewingFile: false,
+    },
+    baseTitle: "Vendor",
+    moved: false,
+    selectable: true,
+    selected: null,
+    onSelect(label) { this.selected = label; },
   };
 }
 
@@ -120,6 +159,43 @@ function worldSearch() {
   assert.equal(m.lines[0].length, 42);
 }
 
+// Dream is one logical prompt: visual wrapping does not insert a newline and
+// Enter starts generation rather than creating a second editor line.
+{
+  const m = prompt();
+  for (const char of "a moonlit castle above a very wide underground sea") {
+    handleModalKey(m, key("KeyX", char));
+  }
+  assert.equal(handleModalKey(m, key("Enter", "Enter")), "close");
+  assert.equal(m.submitted, "a moonlit castle above a very wide underground sea");
+  const writes = [];
+  renderModal((x, y, color, text) => writes.push({ x, y, color, text }), m);
+  assert.ok(writes.some((write) => write.text.includes("Enter: dream")));
+}
+
+// Chat composes directly in its scroll window. Both history and a long active
+// message wrap at words, while Enter sends the unbroken logical message.
+{
+  const m = chat();
+  for (const char of "this is a long message that wraps instead of needing a manual line break") {
+    handleModalKey(m, key("KeyX", char));
+  }
+  const writes = [];
+  renderModal((x, y, color, text) => writes.push({ x, y, color, text }), m);
+  assert.ok(writes.some((write) => write.text === "Type a message; Enter sends:"));
+  assert.ok(writes.some((write) => write.text === "<Ada> a message that should wrap on a word"));
+  assert.equal(handleModalKey(m, key("Enter", "Enter")), "close");
+  assert.equal(m.submitted, "this is a long message that wraps instead of needing a manual line break");
+}
+
+// A scroll hyperlink returns its OOP label—not its visible caption—on Enter.
+// The main client sends that one label as the scroll reply before closing.
+{
+  const m = scroll();
+  assert.equal(handleModalKey(m, key("Enter", "Enter")), "close");
+  assert.equal(m.selected, "ba");
+}
+
 // Escape submits the accumulated lines and closes; there is no cancel.
 {
   const m = editor(["@NewVendor", "#end"]);
@@ -138,24 +214,37 @@ function worldSearch() {
   assert.equal(m.linePos, 1);
 }
 
-// Empty world search shows instructions, TOWN, and occupied rooms.
+// Empty world search shows its Museum instruction, featured local games, and
+// occupied rooms. The count is separate from the centered instruction.
 {
   const m = worldSearch();
   const writes = [];
   renderModal((x, y, color, text) => writes.push({ x, y, color, text }), m);
   const rendered = writes.map((write) => write.text).join(" ");
-  assert.match(rendered, /Type below to search the Museum/);
+  assert.match(rendered, /Type below to search the museum!/);
+  // The count sits on the blank line below the instruction (y=12), not on the
+  // instruction row (y=11) where it used to overprint "museum!" into "muse6 matches".
+  const instructionWrite = writes.find((write) => write.text === "Type below to search the museum!");
+  assert.ok(instructionWrite && instructionWrite.y === 11);
+  assert.ok(writes.some((write) => write.text === "6 matches" && write.x === 42 && write.y === 12));
   assert.ok(writes.some((write) => write.color === 0x70 && write.text.startsWith("Type to search: ")));
   assert.match(rendered, /TOWN \(ZZTMMO Lobby\)/);
   assert.match(rendered, /Rhygar/);
+  assert.match(rendered, /Caves/);
   assert.doesNotMatch(rendered, /id:/);
   assert.match(rendered, /by Saxxon Pike/);
-  assert.match(rendered, /\(1 player currently online\)/);
-  assert.match(rendered, /\(2 players currently online\)/);
   const searchWrites = writes.filter((write) => write.text.startsWith("Type to search: "));
   assert.equal(searchWrites.length, 1);
   assert.equal(searchWrites[0].y, 19, "search prompt stays below the result rows");
-  assert.doesNotMatch(rendered, /Teen Priest/);
+}
+
+// Existing players remain in the default list after the featured local games.
+{
+  const m = worldSearch();
+  m.selected = 3;
+  const writes = [];
+  renderModal((x, y, color, text) => writes.push({ x, y, color, text }), m);
+  assert.match(writes.map((write) => write.text).join(" "), /\(1 player currently online\)/);
 }
 
 // World search filters by Museum author/title metadata and selects the match.

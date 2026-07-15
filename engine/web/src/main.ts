@@ -606,7 +606,7 @@ let transitionRaf = 0;
 const TRANSITION_DURATION_MS = 420;
 
 let hasPromptedNameOnLaunch = false;
-const LAUNCH_NAME_PROMPT = "Traveler!  Type your name:";
+const LAUNCH_NAME_PROMPT = "Welcome to ZZTMMO! Type your name and press Enter.";
 const WORLD_SEARCH_TITLE = "Choose a World";
 
 // The launch sequence: name, then world, then play. Nothing joins a room until
@@ -643,6 +643,15 @@ canvas.addEventListener("touchstart", () => mobileTextInput.noteTouchStart(), { 
 window.addEventListener("mouseup", () => { editorPointerDrawing = false; });
 canvas.addEventListener("keydown", handleKeyDown);
 canvas.addEventListener("keyup", handleKeyUp);
+// Web Audio starts suspended until a user gesture resumes it. handleKeyDown /
+// handlePointerDown call resume() only for gestures on the canvas, so any gesture
+// that lands on the hidden mobile-input overlay (M15.1) or during the muted title
+// screen never unlocked audio — the launch name popup opens on load, so on touch
+// devices that is every early gesture. Unlock from a document-level, capture-phase
+// listener that fires no matter what has focus and regardless of the enabled gate.
+for (const type of ["pointerdown", "keydown", "touchstart"] as const) {
+  document.addEventListener(type, () => zztSound.unlock(), { capture: true, passive: true });
+}
 window.addEventListener("blur", () => {
   pressed.clear();
   sendInput(0);
@@ -1027,15 +1036,13 @@ function openDreamPrompt() {
   openModal({
     kind: "multilineEntry",
     title: "Dream a world",
-    lines: [""],
-    line: 0,
+    buffer: "",
     onSubmit: (premise) => {
       if (premise) {
-        // Opt-in open-ended grounding: the planner may web-search for real facts
-        // about the premise's subject before designing the world.
-        openYesNo("Research the web for real facts? ", (yes) => {
-          void startDreamGeneration(premise, yes);
-        });
+        // Enter is the whole submission gesture: start the world immediately.
+        // Grounded generation remains an explicit API capability, but never
+        // inserts an extra confirmation step between this prompt and the job.
+        void startDreamGeneration(premise);
       }
     },
   });
@@ -1698,8 +1705,10 @@ function handleChatMessage(message: { from: string; text: string }) {
     drawScreen();
   }, 5000);
 
-  if (modal && modal.kind === "text" && modal.baseTitle === "Global Chat") {
-    openChatWindow();
+  if (modal && modal.kind === "chat") {
+    modal.messages = chatMessages.map((message) => `<${message.from}> ${message.text}`);
+    paintOverlay();
+    drawScreen();
   } else {
     paintOverlay();
     drawScreen();
@@ -1707,41 +1716,14 @@ function handleChatMessage(message: { from: string; text: string }) {
 }
 
 function openChatWindow() {
-  const lines = [
-    "  --- Global Chat ---",
-    "",
-    "!send;[Send Message]",
-    "",
-  ];
-  for (let i = chatMessages.length - 1; i >= 0; i--) {
-    const msg = chatMessages[i];
-    const rawLine = `<${msg.from}> ${msg.text}`;
-    const prefix = "  ";
-    if (rawLine.length <= 44) {
-      lines.push(prefix + rawLine);
-    } else {
-      lines.push(prefix + rawLine.slice(0, 44));
-      lines.push(prefix + "  " + rawLine.slice(44, 88));
-    }
-  }
   openModal({
-    kind: "text",
-    state: { title: "Global Chat", lines, linePos: 1, viewingFile: false },
-    baseTitle: "Global Chat",
-    moved: false,
-    selectable: true,
-    onSelect: (label) => {
-      if (label === "send") {
-        openEntry("Chat:", "", 30, "any", (text) => {
-          if (text && text.trim()) {
-            if (ws && ws.readyState === WebSocket.OPEN) {
-              ws.send(JSON.stringify({ type: "chat", text: text.trim() }));
-            }
-            setTimeout(() => openChatWindow(), 100);
-          } else {
-            openChatWindow();
-          }
-        });
+    kind: "chat",
+    title: "Global Chat",
+    messages: chatMessages.map((message) => `<${message.from}> ${message.text}`),
+    buffer: "",
+    onSubmit: (text) => {
+      if (ws && ws.readyState === WebSocket.OPEN) {
+        ws.send(JSON.stringify({ type: "chat", text }));
       }
     },
   });
@@ -1852,7 +1834,7 @@ function openWindow(title: string, lines: string[], viewingFile: boolean, replyS
     baseTitle: title,
     moved: false,
     selectable: replyStatId >= 0,
-    onSelect: (label) => sendScrollReply(replyStatId, label),
+    onSelect: (label) => selectScrollReply(replyStatId, label),
   });
 }
 
@@ -1914,6 +1896,9 @@ let scrollQueue: PendingScroll[] = [];
 // The object stat of the scroll currently on screen, or -1. Its reply, sent on
 // dismiss, is what unfreezes this player server-side.
 let openScrollStatId = -1;
+// A selected hyperlink already sent its label. closeModal still owns queue
+// advancement, but must not follow a real choice with an empty dismiss reply.
+let scrollReplySent = false;
 
 function enqueueScroll(scroll: PendingScroll) {
   if (scroll.lines.length === 0) {
@@ -1928,17 +1913,21 @@ function enqueueScroll(scroll: PendingScroll) {
 
 function showScroll(scroll: PendingScroll) {
   openScrollStatId = scroll.statId;
+  scrollReplySent = false;
   openWindow(scroll.title, scroll.lines, false, scroll.statId);
 }
 
 function clearScrolls() {
   scrollQueue = [];
   openScrollStatId = -1;
+  scrollReplySent = false;
 }
 
 function closeModal() {
   const scrollStatId = openScrollStatId;
+  const replySent = scrollReplySent;
   openScrollStatId = -1;
+  scrollReplySent = false;
   modal = null;
   if (mobileTextInput.close()) {
     canvas.focus();
@@ -1955,7 +1944,9 @@ function closeModal() {
     // An empty label is "dismissed, no hyperlink". The engine ignores it; the
     // RoomManager reads it as this player having finished reading, and lets
     // them move again. A hyperlink pick already sent its own reply.
-    sendScrollReply(scrollStatId, "");
+    if (!replySent) {
+      sendScrollReply(scrollStatId, "");
+    }
     const next = scrollQueue.shift();
     if (next) {
       showScroll(next);
@@ -1996,6 +1987,14 @@ function sendScrollReply(statId: number, label: string) {
     return;
   }
   ws.send(JSON.stringify({ type: MessageTypeScrollReply, playerId, statId, label }));
+}
+
+function selectScrollReply(statId: number, label: string) {
+  // The immediate close after Enter is still responsible for opening the next
+  // queued scroll. Mark this reply so that closeModal does not send a second,
+  // empty reply to the same object.
+  scrollReplySent = true;
+  sendScrollReply(statId, label);
 }
 
 // writeText mirrors the engine's VideoWriteText: each code unit of `text` is a

@@ -2539,3 +2539,28 @@ Client: `runDreamGeneration` rejects with `DreamFailure{jobId, retryable,
 failedBoard}`; the failure path asks `Dream failed. Repaint "<board>"? ` and on
 yes resumes polling the same job. `go test -race -run TestM1222` and the full
 suites are green; replay fixture unchanged (generation is outside the sim).
+
+## 2026-07-14 — M16.16 audit: chat/Museum certification gap
+
+M16.16 cannot be marked complete yet. The existing tests cover individual
+auth, chat-history, and Museum happy-path pieces, but the audit found two
+implementation-level violations of its stated service contract:
+
+1. `websocket_server.go` accepts any non-whitespace chat text and immediately
+   persists/broadcasts it. It has no CP437/control filtering, maximum length,
+   or per-player rate state. This also means a direct WebSocket client can
+   bypass the browser's 30-character entry UI.
+2. `museum.go` writes the downloaded archive to `.museum-cache` in
+   `downloadZip`, before `Play` calls `zztFilesFromZip`, selects a `.ZZT`, or
+   validates the selected bytes. A corrupt archive or traversal-bearing ZIP
+   therefore returns an error after mutating the cache, contrary to M16.16's
+   "security refusal paths prove no state/file mutation" criterion.
+
+Added M16.16a with exact admission/cache-commit boundaries and required
+hermetic regression coverage. This is deliberately a gap task rather than a
+silent golden/test adjustment. The browser portion of M16.16 also remains
+dependent on M16.9's real-browser harness; the current checkout has no pinned
+browser runner.
+
+Evidence: `cd engine && go test ./...` passed on 2026-07-14; no replay fixture
+was changed.

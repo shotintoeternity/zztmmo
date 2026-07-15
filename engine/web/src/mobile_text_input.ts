@@ -44,7 +44,9 @@ export class MobileTextInputBridge {
     }
     this.remove();
 
-    const multiline = modal!.kind === "multilineEntry" || modal!.kind === "programEditor";
+    // Dream and chat submit on Enter, so only the source-code editor needs a
+    // native textarea (where a line break is actual document content).
+    const multiline = modal!.kind === "programEditor";
     const input = this.host.createElement(multiline ? "textarea" : "input") as HTMLInputElement | HTMLTextAreaElement;
     input.setAttribute("aria-hidden", "true");
     input.setAttribute("autocapitalize", "off");

@@ -79,23 +79,39 @@ assert.equal(entry.buffer, "AdZ");
 const multi = {
   kind: "multilineEntry",
   title: "Dream a world",
-  lines: [""],
-  line: 0,
-  onSubmit() {},
+  buffer: "",
+  submitted: null,
+  onSubmit(text) { this.submitted = text; },
 };
 bridge.sync(multi, mirror(multi));
-const textarea = body.children[0];
-assert.equal(textarea.tag, "textarea");
-textarea.dispatch("input", { inputType: "insertText", data: "moon" });
-textarea.dispatch("input", { inputType: "insertLineBreak", data: "\n" });
-textarea.dispatch("input", { inputType: "insertText", data: "sea" });
-assert.deepEqual(multi.lines, ["moon", "sea"]);
+const dreamInput = body.children[0];
+assert.equal(dreamInput.tag, "input");
+dreamInput.dispatch("input", { inputType: "insertText", data: "moon sea" });
+dreamInput.dispatch("input", { inputType: "insertLineBreak", data: "\n" });
+assert.equal(multi.buffer, "moon sea");
+assert.equal(multi.submitted, "moon sea");
+
+const chat = {
+  kind: "chat",
+  title: "Global Chat",
+  messages: [],
+  buffer: "",
+  submitted: null,
+  onSubmit(text) { this.submitted = text; },
+};
+bridge.sync(chat, mirror(chat));
+const chatInput = body.children[0];
+assert.equal(chatInput.tag, "input");
+chatInput.dispatch("input", { inputType: "insertText", data: "hello from touch" });
+chatInput.dispatch("input", { inputType: "insertLineBreak", data: "\n" });
+assert.equal(chat.submitted, "hello from touch");
 
 assert.equal(modalAcceptsTextInput({ kind: "programEditor" }), true);
 assert.equal(modalAcceptsTextInput({ kind: "worldSearch" }), true);
 assert.equal(modalAcceptsTextInput({ kind: "yesno" }), false);
 bridge.close();
 assert.equal(body.children.length, 0);
-assert.equal(textarea.blurred, 1);
+assert.equal(dreamInput.blurred, 1);
+assert.equal(chatInput.blurred, 1);
 
 console.log("mobile_text_input.test.mjs: all assertions passed");

@@ -50,6 +50,20 @@ export class ZztSound {
     this.schedule();
   }
 
+  // A Web Audio context starts "suspended" until a user gesture resumes it.
+  // unlock() does that on ANY gesture — even while sound is disabled (the title
+  // screen mutes, main.ts) and even when the gesture landed on the hidden mobile
+  // text-input overlay (M15.1) rather than the canvas — so the context is already
+  // running by the time startPlay enables sound and the first note is queued.
+  // Unlike resume(), it never touches the note scheduler; a resumed idle context
+  // is silent (gain stays 0) until scheduleTone/scheduleDrum gate a note on.
+  unlock() {
+    this.ensureAudio();
+    if (this.ctx && this.ctx.state === "suspended") {
+      void this.ctx.resume();
+    }
+  }
+
   setEnabled(on: boolean) {
     if (this.enabled === on) {
       return;

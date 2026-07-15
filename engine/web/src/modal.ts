@@ -51,6 +51,11 @@ const POPUP_FIELD_X = 10;
 const POPUP_FIELD_Y = 22;
 const POPUP_FIELD_COLOR = 0x4e;
 const POPUP_FIELD_WIDTH = TEXT_WINDOW_WIDTH - 16;
+// The launch name dialog is a ZZTMMO addition drawn over the 80-column title
+// board (no sidebar to avoid), so it centers on screen and grows to fit its
+// question; vanilla's high-score popup keeps POPUP_X and the 45-wide interior.
+const SCREEN_WIDTH = 80;
+const POPUP_INNER = TEXT_WINDOW_WIDTH - 5;
 
 /** Read-only text, selectable links, and paged help all share this shape. */
 export type TextModal = {
@@ -115,14 +120,23 @@ export type PopupEntryModal = {
   y?: number;
 };
 
-/** A compact text-window editor used for free-form, multi-line prompts. F2
- * submits the accumulated text; Enter starts a new line. */
+/** A compact text-window prompt for free-form input. Text wraps only on screen;
+ * Enter submits the one logical prompt rather than inserting a line break. */
 export type MultiLineEntryModal = {
   kind: "multilineEntry";
   title: string;
-  lines: string[];
-  line: number;
+  buffer: string;
   onSubmit: (text: string | null) => void;
+};
+
+/** Global chat stays in its ZZT text window while composing. History and the
+ * active input wrap visually; the submitted message remains one logical line. */
+export type ChatModal = {
+  kind: "chat";
+  title: string;
+  messages: string[];
+  buffer: string;
+  onSubmit: (text: string) => void;
 };
 
 /**
@@ -191,6 +205,7 @@ export type Modal =
   | EntryModal
   | PopupEntryModal
   | MultiLineEntryModal
+  | ChatModal
   | ProgramEditorModal
   | WorldSearchModal;
 
@@ -205,7 +220,7 @@ export type ModalTextInput = {
 
 /** True when a modal has an editable buffer the mobile overlay can mirror. */
 export function modalAcceptsTextInput(m: Modal | null): boolean {
-  return m !== null && (m.kind === "entry" || m.kind === "popupEntry" || m.kind === "multilineEntry" || m.kind === "programEditor" || m.kind === "worldSearch");
+  return m !== null && (m.kind === "entry" || m.kind === "popupEntry" || m.kind === "multilineEntry" || m.kind === "chat" || m.kind === "programEditor" || m.kind === "worldSearch");
 }
 
 // modalTextKey adapts a committed native character to the existing key router.
@@ -336,6 +351,9 @@ export function renderModal(write: WriteText, m: Modal) {
     case "multilineEntry":
       renderMultiLineEntry(write, m);
       return;
+    case "chat":
+      renderChat(write, m);
+      return;
     case "programEditor":
       renderProgramEditor(write, m);
       return;
@@ -346,9 +364,11 @@ export function renderModal(write: WriteText, m: Modal) {
 }
 
 const WORLD_SEARCH_LIMIT = 50;
+const WORLD_DEFAULT_LOCAL_LIMIT = 5;
 const WORLD_TITLE_WIDTH = 38;
 const WORLD_DETAIL_WIDTH = 42;
 const WORLD_SEARCH_ROW = TEXT_WINDOW_Y + TEXT_WINDOW_HEIGHT - 2;
+const FEATURED_LOCAL_WORLDS = ["CAVES", "CITY", "DUNGEONS", "CUTLASS", "KUDZU"];
 
 function fitText(text: string, width: number): string {
   if (text.length <= width) {
@@ -361,27 +381,47 @@ function fitText(text: string, width: number): string {
 }
 
 function worldSearchMatches(m: WorldSearchModal): WorldSearchEntry[] {
-	const terms = m.query.toLowerCase().trim().split(/\s+/).filter(Boolean);
-	const lobby = m.entries.filter((entry) => entry.world.toUpperCase() === "TOWN");
-	if (terms.length === 0) {
-		const occupied = m.entries.filter((entry) => entry.world.toUpperCase() !== "TOWN" && (entry.players ?? 0) > 0);
-		return [...lobby, ...occupied].slice(0, WORLD_SEARCH_LIMIT);
-	}
-	const matches = m.entries.filter((entry) => {
-		if (entry.world.toUpperCase() === "TOWN") {
-			return false;
-		}
-		const haystack = [entry.world, entry.id, entry.title, entry.author, entry.created].join(" ").toLowerCase();
-		return terms.every((term) => haystack.includes(term));
-	});
-	return [...matches, ...lobby].slice(0, WORLD_SEARCH_LIMIT);
+  const terms = m.query.toLowerCase().trim().split(/\s+/).filter(Boolean);
+  const lobby = m.entries.filter((entry) => entry.world.toUpperCase() === "TOWN");
+  if (terms.length === 0) {
+    // Local worlds are loaded on demand when selected. Show a handful up
+    // front so the selector communicates that this is a playable library,
+    // while search remains the way to browse the full Museum catalog.
+    const featured = FEATURED_LOCAL_WORLDS
+      .map((world) => m.entries.find((entry) => entry.world.toUpperCase() === world))
+      .filter((entry): entry is WorldSearchEntry => entry !== undefined);
+    const featuredNames = new Set(featured.map((entry) => entry.world.toUpperCase()));
+    const occupied = m.entries.filter((entry) => (
+      entry.world.toUpperCase() !== "TOWN"
+      && !featuredNames.has(entry.world.toUpperCase())
+      && (entry.players ?? 0) > 0
+    ));
+    const fallback = m.entries.filter((entry) => (
+      entry.world.toUpperCase() !== "TOWN"
+      && !featuredNames.has(entry.world.toUpperCase())
+      && (entry.players ?? 0) === 0
+    ));
+    return [
+      ...lobby,
+      ...featured.slice(0, WORLD_DEFAULT_LOCAL_LIMIT),
+      ...occupied,
+      ...fallback.slice(0, Math.max(0, WORLD_DEFAULT_LOCAL_LIMIT - featured.length)),
+    ].slice(0, WORLD_SEARCH_LIMIT);
+  }
+  const matches = m.entries.filter((entry) => {
+    if (entry.world.toUpperCase() === "TOWN") {
+      return false;
+    }
+    const haystack = [entry.world, entry.id, entry.title, entry.author, entry.created].join(" ").toLowerCase();
+    return terms.every((term) => haystack.includes(term));
+  });
+  return [...matches, ...lobby].slice(0, WORLD_SEARCH_LIMIT);
 }
 
 function worldSearchLines(matches: WorldSearchEntry[]): string[] {
-	const count = matches.length === 1 ? "1 match" : `${matches.length} matches`;
-	const lines = [
-		`$${count}  Type below to search the Museum`,
-		"",
+  const lines = [
+    "$Type below to search the museum!",
+    "",
   ];
   if (matches.length === 0) {
     lines.push("  No matching worlds.");
@@ -425,13 +465,30 @@ function renderWorldSearch(write: WriteText, m: WorldSearchModal) {
   if (matches.length > 0 && m.selected >= matches.length) {
     m.selected = matches.length - 1;
   }
+  const linePos = worldSearchLinePos(m.selected, matches);
   renderTextWindow(write, {
     title: m.title,
     lines: worldSearchLines(matches),
-    linePos: worldSearchLinePos(m.selected, matches),
+    linePos,
     viewingFile: false,
   });
+  renderWorldSearchCount(write, matches.length, linePos);
   renderWorldSearchInput(write, m.query);
+}
+
+function renderWorldSearchCount(write: WriteText, matchCount: number, linePos: number) {
+  // The instruction is a centered TextWindow line; its result count sits on the
+  // blank line just beneath it (worldSearchLines' second, empty line),
+  // right-aligned, so the two never overprint — the header text is wide enough to
+  // reach the far-right column the count wants. It scrolls away with the
+  // instruction once the player moves down the list.
+  const countY = TEXT_WINDOW_Y + 2 - linePos + Math.floor(TEXT_WINDOW_HEIGHT / 2) + 1;
+  const firstVisibleY = TEXT_WINDOW_Y + 3;
+  if (countY < firstVisibleY || countY >= WORLD_SEARCH_ROW) {
+    return;
+  }
+  const count = matchCount === 1 ? "1 match" : `${matchCount} matches`;
+  write(TEXT_WINDOW_X + 4 + WORLD_DETAIL_WIDTH - count.length, countY, 0x1f, count);
 }
 
 function renderWorldSearchInput(write: WriteText, query: string) {
@@ -494,9 +551,53 @@ function renderProgramAidsPanel(write: WriteText, m: ProgramEditorModal) {
   }
 }
 
+const TEXT_ENTRY_WIDTH = TEXT_WINDOW_WIDTH - 8;
+
+// textWindowWrap keeps free-form prompts and chat as one logical value while
+// fitting the narrow CP437 text window. Whitespace becomes one visible space;
+// an unbroken word splits only when it cannot fit the window.
+function textWindowWrap(text: string, width = TEXT_ENTRY_WIDTH): string[] {
+  const words = text.replace(/\s+/g, " ").trim().split(" ").filter(Boolean);
+  if (words.length === 0) return [""];
+  const lines: string[] = [];
+  let line = "";
+  for (const word of words) {
+    if (word.length > width) {
+      if (line) {
+        lines.push(line);
+        line = "";
+      }
+      for (let offset = 0; offset < word.length; offset += width) {
+        const piece = word.slice(offset, offset + width);
+        if (piece.length === width) lines.push(piece);
+        else line = piece;
+      }
+      continue;
+    }
+    if (!line) {
+      line = word;
+    } else if (line.length + 1 + word.length <= width) {
+      line += " " + word;
+    } else {
+      lines.push(line);
+      line = word;
+    }
+  }
+  if (line) lines.push(line);
+  return lines;
+}
+
 function renderMultiLineEntry(write: WriteText, m: MultiLineEntryModal) {
-  const lines = ["$Describe the world you want", "Enter: new line  F2: dream", "", ...m.lines];
-  renderTextWindow(write, { title: m.title, lines, linePos: Math.max(1, m.line + 4), viewingFile: false });
+  const input = m.buffer ? textWindowWrap(m.buffer) : [""];
+  const lines = ["$Describe the world you want", "Enter: dream  Esc: cancel", "", ...input.slice(0, -1), `${input[input.length - 1]}\xdb`];
+  renderTextWindow(write, { title: m.title, lines, linePos: lines.length, viewingFile: false });
+}
+
+function renderChat(write: WriteText, m: ChatModal) {
+  const history = m.messages.flatMap((message) => textWindowWrap(message));
+  const input = m.buffer ? textWindowWrap(m.buffer) : [""];
+  const lines = ["$Global Chat", "", ...history, "", "Type a message; Enter sends:", ...input.slice(0, -1), `> ${input[input.length - 1]}\xdb`];
+  renderTextWindow(write, { title: m.title, lines, linePos: lines.length, viewingFile: false });
 }
 
 // promptField is PromptString's redraw: a `width`-wide field at (x, y) with the
@@ -532,24 +633,49 @@ function renderEntry(write: WriteText, m: EntryModal) {
   }
 }
 
+// popupBoxRows is PopupPromptString's six-row frame at an arbitrary interior
+// width. textwindow.ts's strTop/strText/... fix their own strings at POPUP_INNER
+// (45); the launch dialog needs a wider box, so it builds its own here.
+function popupBoxRows(inner: number): string[] {
+  const innerEmpty = " ".repeat(inner);
+  const innerLine = "\xcd".repeat(inner);
+  return [
+    `\xc6\xd1${innerLine}\xd1\xb5`,
+    ` \xb3${innerEmpty}\xb3 `,
+    ` \xc6${innerLine}\xb5 `,
+    ` \xb3${innerEmpty}\xb3 `,
+    ` \xb3${innerEmpty}\xb3 `,
+    `\xc6\xcf${innerLine}\xcf\xb5`,
+  ];
+}
+
 // renderPopupEntry is PopupPromptString: the box, then the same field inside it.
+// The vanilla high-score prompt (no m.y) is left-anchored at POPUP_X with the
+// 45-wide interior. The free-standing launch dialog (m.y set) grows to fit its
+// question and centers on the 80-column title screen it floats over.
 function renderPopupEntry(write: WriteText, m: PopupEntryModal) {
-  const top = m.y ?? POPUP_Y;
-  const rows = [strTop, strText, strSep, strText, strText, strBottom];
-  for (let i = 0; i < rows.length; i += 1) {
-    write(POPUP_X, top + i, POPUP_COLOR, rows[i]);
+  if (m.y === undefined) {
+    const rows = [strTop, strText, strSep, strText, strText, strBottom];
+    for (let i = 0; i < rows.length; i += 1) {
+      write(POPUP_X, POPUP_Y + i, POPUP_COLOR, rows[i]);
+    }
+    const centered = POPUP_X + 1 + Math.floor((TEXT_WINDOW_WIDTH - m.question.length) / 2);
+    write(centered, POPUP_Y + 1, POPUP_COLOR, m.question);
+    promptField(write, POPUP_FIELD_X, POPUP_FIELD_Y, POPUP_COLOR, POPUP_FIELD_COLOR, POPUP_FIELD_WIDTH, m.buffer);
+    return;
   }
-  const centered = POPUP_X + 1 + Math.floor((TEXT_WINDOW_WIDTH - m.question.length) / 2);
+  const top = m.y;
+  const inner = Math.max(POPUP_INNER, m.question.length + 2);
+  const left = Math.floor((SCREEN_WIDTH - (inner + 4)) / 2);
+  const rows = popupBoxRows(inner);
+  for (let i = 0; i < rows.length; i += 1) {
+    write(left, top + i, POPUP_COLOR, rows[i]);
+  }
+  // The interior runs from column left+2; center the question and field in it.
+  const centered = left + 2 + Math.floor((inner - m.question.length) / 2);
   write(centered, top + 1, POPUP_COLOR, m.question);
-  promptField(
-    write,
-    POPUP_FIELD_X,
-    top + (POPUP_FIELD_Y - POPUP_Y),
-    POPUP_COLOR,
-    POPUP_FIELD_COLOR,
-    POPUP_FIELD_WIDTH,
-    m.buffer,
-  );
+  const fieldX = left + 2 + Math.floor((inner - POPUP_FIELD_WIDTH) / 2);
+  promptField(write, fieldX, top + (POPUP_FIELD_Y - POPUP_Y), POPUP_COLOR, POPUP_FIELD_COLOR, POPUP_FIELD_WIDTH, m.buffer);
 }
 
 /**
@@ -573,6 +699,8 @@ export function handleModalKey(m: Modal, event: KeyboardEvent): KeyResult {
       return entryKey(m, POPUP_FIELD_WIDTH, "any", event);
     case "multilineEntry":
       return multiLineEntryKey(m, event);
+    case "chat":
+      return chatKey(m, event);
     case "programEditor":
       return programEditorKey(m, event);
     case "worldSearch":
@@ -758,45 +886,43 @@ function programEditorKey(m: ProgramEditorModal, event: KeyboardEvent): KeyResul
 }
 
 function multiLineEntryKey(m: MultiLineEntryModal, event: KeyboardEvent): KeyResult {
-  if (event.code === "F2") {
-    m.onSubmit(m.lines.join("\n").trim());
+  if (event.code === "Enter") {
+    m.onSubmit(m.buffer.trim());
     return "close";
   }
   if (event.code === "Escape") {
     m.onSubmit(null);
     return "close";
   }
-  if (event.code === "Enter") {
-    if (m.lines.length < 12) {
-      m.lines.splice(m.line + 1, 0, "");
-      m.line += 1;
-    }
-    return "redraw";
-  }
-  if (event.code === "ArrowUp") {
-    m.line = Math.max(0, m.line - 1);
-    return "redraw";
-  }
-  if (event.code === "ArrowDown") {
-    m.line = Math.min(m.lines.length - 1, m.line + 1);
-    return "redraw";
-  }
-  if (event.code === "Backspace") {
-    if (m.lines[m.line].length > 0) {
-      m.lines[m.line] = m.lines[m.line].slice(0, -1);
-    } else if (m.line > 0) {
-      m.lines.splice(m.line, 1);
-      m.line -= 1;
-    }
-    return "redraw";
-  }
+  if (event.code === "Backspace" || event.code === "ArrowLeft") return eraseBuffer(m);
   if (event.key.length !== 1 || event.key < " " || event.key.charCodeAt(0) >= 0x80) {
     return "ignore";
   }
-  if (m.lines[m.line].length >= 42) {
+  if (m.buffer.length >= 480) {
     return "ignore";
   }
-  m.lines[m.line] += event.key;
+  m.buffer += event.key;
+  return "redraw";
+}
+
+function chatKey(m: ChatModal, event: KeyboardEvent): KeyResult {
+  if (event.code === "Enter") {
+    const text = m.buffer.trim();
+    if (!text) return "ignore";
+    m.onSubmit(text);
+    return "close";
+  }
+  if (event.code === "Escape") return "close";
+  if (event.code === "Backspace" || event.code === "ArrowLeft") return eraseBuffer(m);
+  if (event.key.length !== 1 || event.key < " " || event.key.charCodeAt(0) >= 0x80) return "ignore";
+  if (m.buffer.length >= 120) return "ignore";
+  m.buffer += event.key;
+  return "redraw";
+}
+
+function eraseBuffer(m: { buffer: string }): KeyResult {
+  if (m.buffer.length === 0) return "ignore";
+  m.buffer = m.buffer.slice(0, -1);
   return "redraw";
 }
 

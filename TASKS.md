@@ -17,15 +17,15 @@ Baseline verified 2026-07-09: `engine/` builds and its tests pass on go1.26.5.
 
 ## Execution priority (overrides the positional "first unchecked task" default)
 
-Ranked 2026-07-14 (the 2026-07-12 list — M5.8, M6.2, M6.4, M10.1–10.4 — has
-fully landed). Work the list top-down; skip the optional/deferred tail unless
+Ranked 2026-07-14. The preceding priority list — M12.22, M12.19, and M15.1 —
+has fully landed. Work the list top-down; skip the optional/deferred tail unless
 the owner asks.
 
-1. M12.22 — retry a failed board instead of losing the world (owner request
-   2026-07-14)
-2. M12.19 — close the three generation-pipeline gaps from the M12.17 baseline
-3. M15.1 — mobile text entry pops the on-screen keyboard (owner-reported
-   2026-07-14)
+1. M17.1–M17.4 — owner-reported live browser fixes (2026-07-14): name popup
+   centering/width, world picker (list all + metadata + count overlap), audio
+   regression, scroll hyperlinks. Ahead of M16: live breakage in front of the
+   player.
+2. M16.0–M16.20 — whole-product feature-parity proof (owner request 2026-07-14)
 
 **Optional / deferred (bottom):**
 - M14.3 — package split (skip unless the single package is actually hurting)
@@ -1445,6 +1445,436 @@ element exists — so touch devices can neither move nor type.
   appears in the modal; desktop tests unchanged; a node-driven TS test covers
   the overlay→modal mirroring seam; `npm test` green; replay fixture
   untouched (client-only).
+
+## M17 — Owner-reported live browser fixes (2026-07-14)
+
+Goal: four things the owner hit while playing the browser build on 2026-07-14,
+filed verbatim from the session so none is lost. All are presentation/service
+bugs in the web client and its APIs — none touches the simulation, so the replay
+fixture must stay unchanged for every one. Ranked ahead of the M16 parity audit:
+these are live breakage in front of the player.
+
+- [x] **M17.1 — Launch name popup: center it and widen the box to fit the
+  prompt.** The first-launch name dialog `LAUNCH_NAME_PROMPT = "Welcome to
+  ZZTMMO! Type your name and press Enter."` (`engine/web/src/main.ts:609`) is 50
+  characters. It renders through `renderPopupEntry`
+  (`engine/web/src/modal.ts:630`) as a `popupEntry` box at `POPUP_X = 3` whose
+  interior is only `TEXT_WINDOW_WIDTH - 5 = 45` columns wide, so the question —
+  centered by `POPUP_X + 1 + floor((TEXT_WINDOW_WIDTH - qlen)/2) = 4` and drawn
+  50 wide — spills past the right border (col 50) out to col 53. The box also
+  left-anchors at vanilla's column 3 instead of centering on the 80-column title
+  screen it floats over. This launch prompt is a ZZTMMO addition drawn atop the
+  animated title board (no sidebar to avoid) and already passes
+  `y = POPUP_Y_CENTERED` (`main.ts:625`) to center vertically. **Wanted:** for the
+  free-standing launch dialog (identify it by `m.y !== undefined`, per the
+  existing `PopupEntryModal.y` doc comment at `modal.ts:113`), size the box inner
+  width to fit the question (never below the vanilla 45), center the whole box
+  horizontally on the 80-column screen, and center the question and the input
+  field inside it. The vanilla high-score popup (`openHighScoreName`,
+  `main.ts:1964`, no `y`) is `PopupPromptString` and must stay byte-for-byte at
+  `POPUP_X = 3` — branch so its path is untouched. DoD: the launch box is
+  horizontally centered and the full 50-char prompt sits inside the borders with
+  at least one column of padding each side; the high-score popup render is
+  unchanged (assert both in `modal.test.mjs`); `npm test` and `npm run build`
+  green; replay fixture untouched (client-only).
+
+  Landed: `renderPopupEntry` (`modal.ts`) branches on `m.y`. The vanilla
+  high-score path (no `y`) is untouched at `POPUP_X` with the 45-wide interior;
+  the free-standing launch dialog (`y` set) builds its frame at an arbitrary
+  interior width via new `popupBoxRows`, sizes the interior to
+  `max(45, question.length + 2)`, and centers the box on the 80-column screen with
+  the question and field centered inside. Verified by rendering both: the launch
+  box spans cols 12–67 with the full 50-char prompt inside the borders; the
+  high-score box is unchanged at col 3. `npm test` + `tsc` green.
+
+- [ ] **M17.2 — "Choose a World" picker: list all worlds, restore metadata, and
+  stop the count from overlapping the header.** Three faults, all visible at once
+  in the picker:
+  * **(a) Count collides with the instruction.** `renderWorldSearchCount`
+    (`modal.ts:474`) writes the result count (e.g. `6 matches`) at
+    `TEXT_WINDOW_X + 4 + WORLD_DETAIL_WIDTH - count.length` on the *same row* as
+    the centered `$Type below to search the museum!` header
+    (`worldSearchLines`, `modal.ts:417`), so the two overprint into
+    `muse6 matches`. Move the count off the header row (the line below it is
+    blank) or otherwise guarantee no overlap. The existing test
+    (`modal.test.mjs:225`) pins the count at `x:42,y:11` — update it to the
+    corrected position; it encoded the bug.
+  * **(b) Metadata is missing for most worlds.** 84 of the 117 local `.ZZT`
+    files render `by Unknown ????`. Server `WorldListEntries`
+    (`engine/world_metadata.go:44`) fills Author/Created only when a world name
+    matches an entry in the embedded `worlds.manifest.json` (51 Museum entries);
+    the other ~66 — including built-in TOWN/CAVES/CITY/DUNGEONS — fall back to
+    `Author:"Unknown", Created:""`. Decide and implement the metadata source:
+    extend the manifest to cover the worlds actually shipped (built-ins plus the
+    Museum titles present but unlisted), and/or read title/author from each
+    `.ZZT` world header where present. Also: junk filenames (`-`, `--`, `---`,
+    `----`) sit among the 117 and should be excluded by `ListWorlds`
+    (`web_api.go:611`).
+  * **(c) The default view hides almost everything.** With an empty query,
+    `worldSearchMatches` (`modal.ts:378`) returns only the lobby +
+    `FEATURED_LOCAL_WORLDS` (5) + occupied rooms + a tiny fallback slice, so the
+    player sees ~6 worlds and cannot browse the ~117 hosted ones without typing a
+    Museum search. **Wanted:** an empty query lists ALL local worlds (sorted,
+    scrollable), with Museum search still reachable by typing.
+  DoD: the picker lists every hosted world with real metadata where it exists,
+  junk entries excluded; the match count never overlaps the header; TS and Go
+  tests updated/added; `npm test`, `npm run build`, `go build ./...`,
+  `go test ./...` green; replay fixture untouched.
+
+  Partly landed: **(a)** the count overlap is fixed — `renderWorldSearchCount`
+  (`modal.ts`) now draws the count on the blank line below the instruction (y=12,
+  was y=11 where it overprinted "museum!"), with the test updated to prove the two
+  rows differ. **(b)** and **(c)** remain open pending an owner decision on the
+  metadata source (extend the manifest vs. read `.ZZT` headers) and whether the
+  empty-query view lists all ~117 worlds.
+
+- [x] **M17.3 — Audio stopped working entirely (owner-reported regression).**
+  Symptom: "Music isn't working anymore at all." `sound.ts`'s `ZztSound` is
+  unchanged since M4.4 (`d53ff01`), and the current uncommitted edits to
+  `main.ts` do not touch any `zztSound`/`setEnabled`/`resume` call, so the break
+  is elsewhere in the trigger chain — **git-bisect the regression first, then fix
+  the specific cause.** Surgical map of the chain: `startPlay` enables + resumes
+  (`main.ts:780-781`); `showTitle` mutes (`main.ts:704`); `updateSidebar`
+  re-syncs `enabled` from `hud.soundEnabled` on *every* snapshot
+  (`main.ts:2004`); in-game `SoundEvent`s queue at `main.ts:2084`; the server's
+  per-player `SoundEnabled` defaults `true` (`gamevars.go:435`) and is surfaced
+  in the HUD (`protocol.go:657`); `AudioContext.resume()` needs a user gesture
+  (`sound.ts:43-51`). Candidate causes to rule in/out: a HUD snapshot now
+  reporting `soundEnabled:false` and muting via `main.ts:2004`; a resume() no
+  longer reached from a real user gesture; or the server no longer emitting sound
+  events. DoD: pickups/shots/doors/damage and object `#play` are audible in-game
+  again (the M4.4 behavior); a regression test guards whatever the root cause
+  was; replay fixture untouched.
+
+  Landed: the AudioContext was never leaving `"suspended"`. `resume()` fired only
+  from canvas gestures and early-returns while sound is disabled (the title screen
+  mutes), and the launch name popup opens on load — so on touch devices M15.1's
+  hidden input steals focus and no canvas gesture ever reaches `resume()`, while
+  `startPlay()`'s later `resume()` runs after an `await` (outside a gesture, which
+  browsers reject). New `ZztSound.unlock()` (`sound.ts`) resumes the context on any
+  gesture regardless of the `enabled` gate and never touches the note scheduler;
+  it is wired to document-level, capture-phase `pointerdown`/`keydown`/`touchstart`
+  listeners in `main.ts`, so the first interaction anywhere unlocks audio before a
+  note plays. `tsc` + all web tests green. Not yet audibly confirmed in a real
+  browser — verify `zztSound`'s context reads `"running"` in the console.
+
+- [ ] **M17.4 — Scroll object hyperlinks do nothing when selected
+  (owner-reported).** Selecting an `!label;text` option inside an in-world object
+  scroll (the M3.10 vendor dialogue) has no effect. No task was on file for this;
+  this captures the report. **Reproduce first** (touch a vendor object, arrow the
+  cursor onto a `!` line, press Enter), then localize along the known-good-looking
+  path and fix where it actually breaks: object scrolls open via
+  `enqueueScroll`→`showScroll`→`openWindow(title, lines, false, statId)`
+  (`main.ts:1894-1908`, `main.ts:1818`) with `selectable: replyStatId >= 0`;
+  Enter on a `!` line routes `textKey`→`hyperlinkOf`→`onSelect`→
+  `selectScrollReply`→`sendScrollReply` (`{type:"scrollReply", playerId, statId,
+  label}`, `main.ts:1976-1989`); the server must route that reply into the
+  object's OOP so it resumes at the chosen `:label`. Check each layer: client
+  (does `onSelect` fire and is the reply actually sent? note `sendScrollReply`
+  silently drops if `playerId === 0`), protocol/server (is `scrollReply`
+  handled?), and engine (does the label reach the object via `PendingScrollReply`,
+  M1.3/M7.3?). DoD: selecting a vendor scroll option sends the reply and the
+  object responds (buys the item / prints advice), with a test at the layer that
+  was broken; replay fixture untouched unless an engine fix requires a documented
+  `DEVIATION:`.
+
+## M16 — Whole-product feature-parity proof
+
+Goal: replace “the completed milestones probably compose” with an auditable,
+independent proof of everything the product claims to do so far. This is one
+certification milestone split into one-agent/session-sized tasks. It must not
+collapse into one enormous smoke test: a green aggregate suite can still miss
+an entire feature family, and an engine replay can faithfully preserve a bug.
+
+“Perfect feature parity” has three explicit meanings here:
+
+1. **Vanilla (`V`)** — single-player simulation and file behavior match ZZT
+   3.2. The reconstructed Pascal in `reference/reconstruction-of-zzt/SRC` is
+   the semantic authority; committed captures must come from an independent
+   executable implementation of that authority, never from this Go engine.
+2. **Projection (`P`)** — given the same authoritative engine state, the
+   RoomManager, JSON protocol, real browser client, renderer, controls, modals,
+   and sound expose the same playable result as the terminal path.
+3. **Extension (`E`)** — multiplayer, persistence, accounts/chat, editor
+   collaboration, Museum, and Dream features have no vanilla counterpart, so
+   they must satisfy their completed task contracts and preserve the `V`
+   projection for each player except where an owner-approved deviation says
+   otherwise.
+
+No percentage or coverage number is a parity claim. Certification means every
+row in the M16 manifest is `pass` or an owner-approved `deviation`, with no
+`unknown`, `manual-only`, skipped required fixture, or open gap. Audit tasks in
+this milestone add tests for behavior that passes. If an audit discovers a
+product defect, it records the minimal repro and adds a small, fully specified
+M16 gap-fix task before M16.20; it does not hide the defect in a golden, weaken
+the oracle, or perform an unrelated fix. M16.20 cannot land until every such
+gap task has landed.
+
+- [ ] **M16.0 [ADVISOR] — Define the parity contract and traceability
+  manifest.** Create `PARITY.md` plus a machine-readable manifest under
+  `fixtures/parity/`. Inventory, with stable IDs: every checked non-hygiene
+  task in M0–M15; every `ElementDef` draw/tick/touch surface; every ZZT-OOP
+  command, condition, direction, counter, text/link, and `#play` form; every
+  play/title/editor input command; every protocol message/event and HTTP/SSE
+  route; every browser mode; and every shipped service workflow. Each row
+  names contract `V`/`P`/`E`, its authority (Pascal file:line or completed task),
+  exact vs. intentional deviation, automated test, required fixture, and
+  status. Seed the known deviations instead of rediscovering them: multiplayer
+  respawn vs. game-over, collision push-out, no-PvP policy, per-player modal
+  freeze, shared world flags, snapshot player dropping/account sidecar restore,
+  omitted server-owned game-speed control, and presentation-only additions.
+  Explicitly resolve scope claims that are broader than landed work: M15 has
+  mobile text entry but no touch movement controls, so “playable on phones” is
+  either narrowed with owner approval or becomes a gap task. DoD: a manifest
+  validator proves every inventory item and checked task has exactly one row,
+  rejects duplicate/stale test names, and initially permits `unverified` only
+  for a row assigned to a later M16 task; the advisor and owner approve the
+  contract/deviation list before any oracle fixtures are recorded.
+
+- [ ] **M16.1 — Make required parity evidence immutable and runnable.** Add one
+  repo command that runs the existing clean gates (`go build`, `go vet`,
+  `go test`, `go test -race`, `npm ci`, `npm test`, `npm run build`) and emits
+  a deterministic JSON/Markdown report keyed by the M16 manifest. Required
+  parity fixtures must fail when missing: remove or separate any auto-write,
+  silent `t.Skip`, untracked-world dependency, network dependency, or
+  environment-dependent pass from the required path. Live OAuth, Museum, and
+  LLM canaries stay optional and clearly outside certification; their required
+  tests use hermetic fakes. DoD: the command passes in a clean clone, leaves
+  `git status --short` empty, reports the exact test covering each already-
+  verified row, and CI stores the report as an artifact without treating
+  aggregate line coverage as proof of parity.
+
+- [ ] **M16.2 [ADVISOR] — Establish an independent vanilla oracle and scenario
+  format.** Pin a redistributable/reference runner for ZZT 3.2 behavior (for
+  example original ZZT under a scripted DOS runner or a pinned Zeta build) and
+  prove the seam on one tiny world: fixed initial file bytes, RNG seed, timed
+  key inputs, and captured checkpoints after movement, an item pickup, a board
+  transfer, and a scroll. Define a small data scenario format shared by the
+  oracle runner and Go test adapter. Checkpoints cover the 60x25 cell buffer,
+  player/world counters, current board and position, board tiles/stats, RNG,
+  and observable modal/sound output where the oracle exposes it. Store fixture
+  provenance (runner revision, original program/world hashes, seed, script),
+  normalize only documented representation differences, and print the first
+  tick/field/cell mismatch. Oracle regeneration is an explicit maintainer
+  command and never happens during tests. DoD: deliberately perturbing one Go
+  result makes the comparison fail precisely; restoring it passes offline in a
+  clean clone; no capture was generated by zztmmo itself. This task does not
+  pass with a self-comparison disguised as an oracle.
+
+- [ ] **M16.3 — Vanilla player, inventory, and terrain parity sweep.** Using
+  M16.2 micro-world scenarios, cover player movement and shooting directions,
+  pushing, board edges and passages, keys/doors, ammo, gems, torches/darkness,
+  energizer, water/forest/fake/invisible/walls, text tiles, breakables, ricochet,
+  and per-board time limits. Exercise success/refusal/full-inventory/boundary
+  cases and compare checkpoints with the independent oracle, not only internal
+  expected constants. DoD: all assigned element/input/side-effect rows in the
+  manifest are `pass` or approved deviations; every deviation has a focused
+  projection test; required scenarios run without TOWN stat staging; replay
+  fixture unchanged unless a separately approved gap-fix task says otherwise.
+
+- [ ] **M16.4 — Vanilla movers and devices parity sweep.** Cover boulders,
+  sliders, conveyors, duplicators, bombs/explosions, blink walls/rays,
+  transporters, pushers, spinning guns, and any remaining non-creature element
+  with a draw/tick/touch proc. Pin cycle staggering, `Under` restoration,
+  blocking/pushing order, stat reindexing, seeded randomness, and edge behavior
+  against M16.2 captures. DoD: the manifest validator finds no unassigned
+  mover/device proc; each family has at least one interaction scenario plus its
+  meaningful refusal/edge case; all oracle comparisons and existing replays
+  are green.
+
+- [ ] **M16.5 — Vanilla creatures, combat, and projectiles parity sweep.** Cover
+  bullets by source, point-blank shots, stars, lions, tigers, bears, ruffians,
+  sharks, centipede heads/segments, slime, duplicator-spawned actors, contact
+  damage, energizer inversion, death/game-over, and seeded seeking/random
+  movement. Single-player scenarios must match vanilla exactly; multiplayer
+  friendly-fire/respawn differences are only asserted here as already-approved
+  deviations and are exercised fully in M16.12. DoD: every creature/projectile
+  proc and combat branch has a manifest row and oracle-backed scenario; repeated
+  seeded runs are byte-identical; no mismatch is blessed by updating a golden.
+
+- [ ] **M16.6 — ZZT-OOP, scroll, sound, and modal parity sweep.** Enumerate and
+  exercise every implemented OOP command, condition, direction, counter,
+  `#send`/`#zap`/`#restore`/`#bind`, labels, locked objects, text windows,
+  hyperlinks, `#play`, error handling, instruction budget, code position, and
+  object interaction. Include byte/length/case/prefix quirks grounded in
+  `OOP.PAS`; verify both state changes and visible scroll/sound events. DoD:
+  the manifest is mechanically cross-checked against the interpreter dispatch
+  so a newly added command cannot be unlisted; all OOP rows are oracle-backed
+  or carry a cited approved deviation; vendor/link and touch timing are covered
+  without relying only on the historic TOWN replay.
+
+- [ ] **M16.7 — Vanilla world, title, and portable-file parity sweep.** Build a
+  committed small corpus covering `.ZZT`, `.SAV`, and `.BRD` limits and oddities;
+  compare load/save semantics and, where vanilla promises it, bytes. Cover
+  board enter/leave/re-enter, flags, entry point, title animation/menu, pause,
+  help, quit, high scores, debug/cheat commands, darkness and time across save
+  boundaries, corrupt-input refusal, and Pascal string/RLE/stat/OOP limits.
+  CAVES/CITY evidence may not silently skip because local ignored files are
+  absent. DoD: every world lifecycle, title command, and portable-format row is
+  verified from committed provenance-locked input; round trips distinguish
+  intentional normalization from data loss; malformed fixtures cannot panic.
+
+- [ ] **M16.8 — Prove engine → room → protocol equivalence.** Replay the M16.3–
+  M16.7 scenarios through three paths: direct `Engine`, `RoomManager`, and a
+  real WebSocket client. Reconstruct each full screen from snapshot + dirty
+  diffs and compare it, HUD, player position/state, board changes, scrolls,
+  sounds, prompts, and hashes to the direct authoritative result at matching
+  ticks. Inventory every protocol request/reply/event, including malformed and
+  stale input handling. DoD: no protocol surface is unassigned; full-snapshot
+  fallback and diff-only paths converge on identical state; a deliberately
+  dropped dirty cell or misrouted per-player event makes the test fail at the
+  producing tick.
+
+- [ ] **M16.9 — Add a real-browser visual parity harness.** Introduce a pinned
+  Playwright browser (Chromium first) that starts the production Go server,
+  serves the built client, and captures the actual canvas at fixed viewport,
+  DPR, font atlas, and animation clock. Add reviewed pixel/cell goldens for the
+  title, ordinary board + authentic sidebar, CP437 extended glyphs, DOS colors,
+  text tiles, dark/torch states, blink/energizer, player identity overlay,
+  scroll/help/debug/save/quit/high-score windows, and board transition end
+  state. Test intermediate animation invariants without timing-flaky whole-
+  frame guesses. DoD: goldens come from the browser canvas (not Go's PNG
+  renderer), a one-cell glyph/color regression produces a useful diff artifact,
+  and CI uploads actual/expected/diff images on failure.
+
+- [ ] **M16.10 — Add real-browser control, modal, and audio parity.** Drive
+  actual `KeyboardEvent`, focus, composition/input, WebSocket, SSE, and a mocked
+  observable `AudioContext` through the built application—no direct calls into
+  pure helper modules as the only evidence. Cover the complete title/play key
+  vocabulary; held direction and shift-shoot; pause/save/quit/help/debug/sound;
+  scroll navigation/link replies; chat capture isolation; Dream and filename
+  entry; IME commit/delete; reconnect; sound parsing, priority/queue/toggle;
+  and modal freeze/routing. DoD: each browser input/mode/protocol row has an
+  end-to-end assertion, focus never leaks text into movement, and the same
+  script succeeds against both full snapshots and subsequent diffs.
+
+- [ ] **M16.11 — Browser end-to-end player journeys without state staging.**
+  Create one tiny committed acceptance world designed for a short deterministic
+  route and drive it only through the production title/world picker and real
+  browser inputs: join, move, shoot, light a torch, collect/buy/use items, open
+  and reply to a scroll, cross boards, take damage, die/respawn, save, quit,
+  restore, disconnect, and resume. Add a second TOWN route that starts normally
+  and never calls `stageTownPlayer`; it may be shorter, but must prove a shipped
+  world is genuinely traversable. DoD: tests retain browser trace, protocol
+  transcript, and final server StateHash on failure; the acceptance-world run
+  is deterministic and catches a client/server tick-order change; M4.6 remains
+  a fast staged diagnostic rather than the certification evidence.
+
+- [ ] **M16.12 — Multiplayer projection and invariants.** Run the same committed
+  micro-world schedules solo and with 2–3 players. A chosen player's projected
+  `V` experience must match solo except manifest deviations. Cover independent
+  inputs/inventory/direction/pause/modals/sounds/events, nearest-player targeting,
+  collision and stat reindexing, death/respawn/invulnerability, friendly-fire
+  policy, passages/edges, shared flags, room freeze/thaw, join/leave/rejoin, and
+  simultaneous actions in stable order. Add deterministic randomized schedules
+  that record their seed. DoD: per-player screens/HUD/events cannot cross-talk;
+  each declared multiplayer deviation is tested at its boundary; replaying a
+  failed seed reproduces the same hashes and event order.
+
+- [ ] **M16.13 — Solo browser editor and portable-output parity.** Through a
+  real browser, exercise the complete editor key/menu vocabulary and every
+  placeable element family; movement/drawing/text mode; pattern, color, and
+  sidebar menus; fill/clear; board/world properties; stat editing and OOP;
+  help; import/export; new/load/save/publish; and isolated test play. Download
+  the resulting `.ZZT`/`.BRD`, load it through the vanilla-format gate, and
+  compare semantics with the editor session authority. DoD: the editor command
+  manifest has no untested key/dialog, rapid and held input is ordered, exported
+  files are portable rather than merely re-readable by this fork, and test play
+  leaves the editing world byte-identical.
+
+- [ ] **M16.14 — Collaborative editor invariants in real browsers.** Use two
+  authenticated fake accounts plus a guest to cover live diffs/cursors, local
+  echo, out-of-order replies, per-stat/per-board leases, disconnect release,
+  ownership/invites/read-only refusal, simultaneous last-write-wins cell edits,
+  publish occupancy rules, and co-op test-play isolation. DoD: both browsers
+  converge on one serialized world and matching screens after every schedule;
+  unauthorized operations leave bytes unchanged; lease/presence cleanup is
+  proven after abrupt disconnect.
+
+- [ ] **M16.15 — Persistence, reconnect, and replay service journey.** With
+  temporary directories and the production server binary, cover manual save,
+  account sidecar state, guest behavior, autosave atomicity, crash/restart
+  restore, `-fresh`, corrupt-save skip, reconnect within/after grace, competing
+  resume connections, session recording, and deterministic replay across rooms
+  and transfers. DoD: a multi-board/shared-flag/player-inventory journey
+  survives the promised boundaries exactly; restored/replayed StateHashes match
+  live checkpoints; filesystem artifacts and player-dropping/account-restore
+  deviations match the manifest.
+
+- [ ] **M16.16 — Auth, chat, and Museum service journey.** Use hermetic OIDC and
+  Museum HTTP fakes through the real HTTP/WebSocket server. Cover signed-in vs.
+  guest identity, cookie/session rejection, chat filtering/rate limit/history,
+  restart persistence, Museum search/dedup/not-found, ZIP traversal/corruption,
+  selection, validation, caching, hosting, world picker, and join. DoD: no test
+  requires Google or museumofzzt.com; security refusal paths prove no state/file
+  mutation; a real browser completes search→select→host→join and sees correct
+  metadata and chat identity.
+
+- [ ] **M16.16a — Close audit findings: chat admission and Museum cache
+  commit.** M16.16 found two missing M6.0/Museum contracts. Before a chat is
+  persisted or broadcast, normalize it to at most 120 printable CP437 bytes,
+  remove control/unmappable input, and refuse empty results; enforce a
+  deterministic per-player limit of five accepted messages in any rolling
+  ten-second window. Refusals must create no chat record or broadcast. Do not
+  put rate-limit state in the simulation or replay hash. Make Museum archive
+  caching a post-validation commit: a corrupt ZIP, a ZIP containing an unsafe
+  entry, an archive with no `.ZZT` file, a missing selection, or a selected
+  invalid world must create neither a cache entry, hosted `.ZZT`, nor server
+  instance. A valid selection still caches once and hosts/joins normally.
+  Inject the non-simulation clock and use hermetic HTTP/WS fakes. DoD: focused
+  tests prove the exact accepted/refused chat boundary, restart history, and
+  zero filesystem/server mutation for every refusal; valid Museum cache-hit and
+  selection paths remain covered; `go test ./...` and replay are green. Then
+  resume M16.16's real-browser journey using the M16.9 harness.
+
+- [ ] **M16.17 — ZWD, publishing, and Dream service journey.** Exercise the ZWD
+  compiler/decompiler and limits, editor publish/replace/download, prompt-kit
+  retrieval, plan/paint/batch/repair/cross-board validation, async progress,
+  rate/concurrency limits, failed-board retry, final compile/validation, hosting,
+  and browser join using a scripted fake model. Include malformed/adversarial
+  model output and prove generation never mutates a running sim or replay hash.
+  DoD: one real-browser Dream journey covers success and retry-in-place; every
+  stage/error row has a hermetic assertion; generated output passes the same
+  portable-world and headless gates as human-authored output; live paid LLM
+  quality evaluation stays separately labeled and is not required for parity.
+
+- [ ] **M16.18 — Mobile and browser-platform contract.** Run the browser suite
+  under supported desktop engines and touch emulation at portrait/landscape
+  sizes. Cover resize/DPR, focus, native keyboard activation, composition,
+  deletion, and game/modal input isolation for every text surface. Resolve the
+  M15 scope decision from M16.0: if phones are claimed playable, add and test an
+  explicit movement/shoot/torch/pause control path; otherwise narrow product
+  copy and certify mobile text-entry support only. DoD: a device/browser matrix
+  in the parity report contains no unexplained skip; screenshots prove the
+  80x25+sidebar/modal layout remains usable; touch gameplay is neither implied
+  nor marked `pass` without a tested input path.
+
+- [ ] **M16.19 — Production-boundary, security, and load validation.** Launch
+  the built server as a subprocess and cover startup/shutdown, static assets,
+  health behavior, panic isolation, corrupt worlds/saves, path and ZIP traversal,
+  malformed/oversized HTTP and WebSocket input, chat/generation rate limits,
+  slow-client/backpressure behavior, and autosave during load. Drive 30 network
+  clients (not direct `RoomManager` calls), measure tick-latency p50/p95/max,
+  memory growth, fanout bytes, and room cost against explicit thresholds, then
+  record the vertical-scale vs. sharding decision boundary. DoD: required race
+  and load runs are reproducible, bounded, and publish metrics; no client can
+  stall the tick loop or escape configured directories; this task also closes
+  the unchecked 20–30-player scaling follow-up below—check that folded box in
+  the same commit so it cannot be executed twice.
+
+- [ ] **M16.20 [ADVISOR] — Clean-clone certification and claim reconciliation.**
+  Run the entire required parity gate from a clean clone twice, including race,
+  real-browser, service, security, and bounded-load tracks. The manifest must
+  contain zero `unverified`, `unknown`, open gaps, silent skips, mutable required
+  fixtures, or unapproved deviations; every checked M0–M15 task and every
+  inventoried surface must resolve to passing evidence. Publish the manifest,
+  environment/tool hashes, timings, parity report, browser diffs/traces, and load
+  metrics as CI artifacts. Reconcile README and TASKS claims to the evidence—fix
+  stale wording rather than certifying an unbuilt feature. DoD: perturb one
+  fixture/test mapping to prove the manifest gate fails closed; restore it and
+  get two identical green reports; advisor reviews the independent-oracle chain
+  and owner approves the final deviation list. Only this task may state that the
+  current product has full feature parity within the written M16 contract.
 
 ## M14 — Rearchitecting for the service ZZTMMO is becoming
 
