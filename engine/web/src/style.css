@@ -52,3 +52,61 @@ canvas {
   image-rendering: pixelated;
   outline: none;
 }
+
+/* On-screen touch controls (phones). Built only on touch devices (see
+   touch_controls.ts). The bar itself is pointer-transparent so taps in the gaps
+   fall through to the board; only the buttons capture input. */
+.touch-controls {
+  position: fixed;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  display: flex;
+  align-items: flex-end;
+  justify-content: space-between;
+  gap: 8px;
+  padding: 8px 10px calc(8px + env(safe-area-inset-bottom, 0px));
+  z-index: 10;
+  pointer-events: none;
+}
+.touch-dpad {
+  display: grid;
+  grid-template-columns: repeat(3, 46px);
+  grid-template-rows: repeat(2, 46px);
+  gap: 4px;
+}
+/* DOM order is ▲ ◄ ► ▼; lay them out as a cross. */
+.touch-dpad .touch-btn:nth-child(1) { grid-column: 2; grid-row: 1; }
+.touch-dpad .touch-btn:nth-child(2) { grid-column: 1; grid-row: 2; }
+.touch-dpad .touch-btn:nth-child(3) { grid-column: 3; grid-row: 2; }
+.touch-dpad .touch-btn:nth-child(4) { grid-column: 2; grid-row: 2; }
+.touch-actions {
+  display: flex;
+  flex-wrap: wrap;
+  align-content: flex-end;
+  justify-content: flex-end;
+  gap: 6px;
+  max-width: 55%;
+}
+.touch-btn {
+  pointer-events: auto;
+  touch-action: none;
+  -webkit-user-select: none;
+  user-select: none;
+  min-width: 46px;
+  min-height: 46px;
+  padding: 0 10px;
+  font: 700 18px/1 monospace;
+  color: #e6e6e6;
+  background: rgba(0, 0, 40, 0.55);
+  border: 1px solid rgba(160, 160, 210, 0.55);
+  border-radius: 6px;
+  -webkit-tap-highlight-color: transparent;
+}
+.touch-btn-action {
+  min-width: 58px;
+  font-size: 13px;
+}
+.touch-btn:active {
+  background: rgba(70, 70, 170, 0.8);
+}

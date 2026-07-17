@@ -45,6 +45,20 @@ export class MobileTextInputBridge {
     return this.shouldUseOverlay(this.modal);
   }
 
+  /** The on-screen ⌨ button: raise the soft keyboard if it is down, dismiss it if
+   *  it is up. A no-op when no editable modal is open (nothing to type into).
+   *  Must run inside the button's own tap gesture — that is when iOS will show it. */
+  toggleKeyboard() {
+    if (!this.element) {
+      return;
+    }
+    if (this.isFocused()) {
+      this.element.blur();
+    } else {
+      this.focus(this.element);
+    }
+  }
+
   sync(modal: Modal | null, sink: MobileTextInputSink) {
     const unchanged = this.modal === modal && this.sink === sink;
     this.modal = modal;

@@ -2,6 +2,7 @@ import "./style.css";
 import { drawSidebar as paintSidebar, updateSidebar as paintSidebarHud } from "./sidebar";
 import { renderModal, handleModalKey, handleModalTextInput, POPUP_Y_CENTERED, type Modal, type ModalTextInput, type WorldSearchEntry } from "./modal";
 import { MobileTextInputBridge } from "./mobile_text_input";
+import { createTouchControls } from "./touch_controls";
 import { openHelp } from "./help";
 import { commandKey, isHandledKey, isMovementKey, movementMask, rawKey } from "./keys";
 import { drawTitleSidebar, titleCommand } from "./title";
@@ -665,6 +666,22 @@ canvas.addEventListener(
   },
   { passive: false },
 );
+// On-screen controls for phones: ZZT is a keyboard game and a phone has none, so
+// the bar's buttons drive the same key handlers a physical key would. No-op on
+// desktop (createTouchControls returns null when there is no touch).
+createTouchControls(document, {
+  key(down, code, key) {
+    const event = new KeyboardEvent(down ? "keydown" : "keyup", { code, key, bubbles: true, cancelable: true });
+    if (down) {
+      handleKeyDown(event);
+    } else {
+      handleKeyUp(event);
+    }
+  },
+  toggleKeyboard() {
+    mobileTextInput.toggleKeyboard();
+  },
+});
 window.addEventListener("mouseup", () => { editorPointerDrawing = false; });
 canvas.addEventListener("keydown", handleKeyDown);
 canvas.addEventListener("keyup", handleKeyUp);
