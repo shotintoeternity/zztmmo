@@ -24,7 +24,13 @@ class FakeElement {
 
   setAttribute() {}
   addEventListener(type, listener) { this.listeners.set(type, listener); }
-  dispatch(type, detail = {}) { this.listeners.get(type)?.(detail); }
+  dispatch(type, detail = {}) {
+    if (typeof detail.preventDefault !== "function") {
+      detail.preventDefault = () => { detail.defaultPrevented = true; };
+    }
+    this.listeners.get(type)?.(detail);
+    return detail;
+  }
   focus() { this.focused += 1; }
   blur() { this.blurred += 1; }
   remove() {
@@ -105,6 +111,59 @@ assert.equal(chatInput.tag, "input");
 chatInput.dispatch("input", { inputType: "insertText", data: "hello from touch" });
 chatInput.dispatch("input", { inputType: "insertLineBreak", data: "\n" });
 assert.equal(chat.submitted, "hello from touch");
+
+// M17.6: the iOS soft-keyboard Return does not mutate a single-line <input>, so
+// no `input` event fires — only `beforeinput` reports the line break. The bridge
+// must route it to the same submit path desktop Enter uses, or the name popup /
+// editor prompts can never be submitted from the on-screen keyboard.
+const enterEntry = {
+  kind: "entry",
+  label: "Name:",
+  suffix: "",
+  width: 20,
+  buffer: "Zoe",
+  charset: "any",
+  submitted: null,
+  onSubmit(text) { this.submitted = text; },
+};
+bridge.sync(enterEntry, mirror(enterEntry));
+const enterInput = body.children[0];
+assert.equal(enterInput.enterKeyHint, "go");
+const enterEvent = enterInput.dispatch("beforeinput", { inputType: "insertLineBreak", data: null });
+assert.equal(enterEntry.submitted, "Zoe");
+assert.equal(enterEvent.defaultPrevented, true);
+
+// Chat submits on the paragraph-break variant (some keyboards report it) and
+// labels its Return key "send".
+const enterChat = {
+  kind: "chat",
+  title: "Global Chat",
+  messages: [],
+  buffer: "gg",
+  submitted: null,
+  onSubmit(text) { this.submitted = text; },
+};
+bridge.sync(enterChat, mirror(enterChat));
+const enterChatInput = body.children[0];
+assert.equal(enterChatInput.enterKeyHint, "send");
+enterChatInput.dispatch("beforeinput", { inputType: "insertParagraph", data: null });
+assert.equal(enterChat.submitted, "gg");
+
+// The source-code editor keeps a native <textarea> where Return is real newline
+// content, so it must NOT get the beforeinput submit shortcut — its newline
+// still flows through the `input` path as document text.
+const editor = {
+  kind: "programEditor",
+  title: "Object",
+  lines: [""],
+  cursorRow: 0,
+  cursorCol: 0,
+  onSubmit() {},
+};
+bridge.sync(editor, mirror(editor));
+const editorEl = body.children[0];
+assert.equal(editorEl.tag, "textarea");
+assert.equal(editorEl.listeners.has("beforeinput"), false);
 
 assert.equal(modalAcceptsTextInput({ kind: "programEditor" }), true);
 assert.equal(modalAcceptsTextInput({ kind: "worldSearch" }), true);

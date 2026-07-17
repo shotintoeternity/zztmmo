@@ -1635,7 +1635,7 @@ these are live breakage in front of the player.
   cell boundary, so they could never share a centre without changing the dash count.
   Client-only; `npm run build` green.
 
-- [ ] **M17.6 — Mobile-browser responsiveness (owner-reported 2026-07-15).**
+- [x] **M17.6 — Mobile-browser responsiveness (owner-reported 2026-07-15).**
   Make the client usable on a phone browser: layout scales to the viewport, touch
   controls are reachable, and on-screen-keyboard interactions work. Concrete defect
   to fix and regression-test first: on **iPhone** the soft keyboard's Return/Enter
@@ -1651,6 +1651,32 @@ these are live breakage in front of the player.
   DoD: submitting the name popup, chat, and an editor prompt all work from the iOS
   soft keyboard; general layout audited at phone widths. Verify on a real iPhone
   (Safari + Chrome), not a desktop emulator.
+
+  Landed: the bridge's single-line `<input>` (entry/popupEntry/multilineEntry/chat/
+  worldSearch — everything except the `programEditor` textarea) now listens for
+  `beforeinput`. A single-line input rejects newlines, so on iOS the soft-keyboard
+  Return mutates nothing and fires **no** `input` event — only `beforeinput` reports
+  `insertLineBreak`/`insertParagraph`. The bridge routes that straight to the
+  existing `handleModalTextInput` commit path (which already maps a line break to
+  the Enter key), so the name popup, chat, and single-line editor prompts submit
+  from the on-screen keyboard exactly as desktop Enter does. `preventDefault()`
+  cancels the no-op default action and suppresses the `input` event some keyboards
+  chase it with, so Enter is delivered exactly once. Each single-line input also
+  gets an `enterKeyHint` ("send" for chat, "go" otherwise) so its Return key reads
+  as a submit. The `programEditor` textarea is deliberately excluded — there Enter
+  is real newline content, still committed through the `input` path. New regression
+  assertions in `test/mobile_text_input.test.mjs` prove a `beforeinput` line break
+  submits entry and chat and calls `preventDefault`, and that the textarea gets no
+  `beforeinput` shortcut. Layout half: the canvas already scales to the viewport,
+  aspect-preserved and letterboxed, via `width: min(100vw, calc(100vh*640/350))`
+  (`style.css`), so it fits any phone width unchanged; touch **movement/shoot**
+  controls remain the separate gap task M16.18a (M16.0 owner decision), not folded
+  in here. Client-only; `npx tsc --noEmit`, `npm run build`, and `npm test` green;
+  Go engine unaffected (`go build`/`go test ./...` green).
+  NOT VERIFIED ON A PHYSICAL DEVICE: no iPhone was available this session, so the
+  `beforeinput` path is proven only by the Node regression, which models the iOS
+  "Return fires beforeinput, no input event" behavior. A real iPhone (Safari +
+  Chrome) check is still owed before this is trusted in the field.
 
 ## M16 — Whole-product feature-parity proof
 

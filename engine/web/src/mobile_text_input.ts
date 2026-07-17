@@ -103,6 +103,29 @@ export class MobileTextInputBridge {
       input.value = "";
       this.deliver({ inputType: native.inputType, data });
     });
+    if (!multiline) {
+      // A single-line <input> rejects newlines, so on iOS the soft-keyboard
+      // Return mutates nothing and fires no `input` event — only `beforeinput`
+      // reports the insertLineBreak. Route it to the same commit path desktop
+      // Enter uses, so name popups, chat, and single-line editor prompts submit
+      // from the on-screen keyboard. preventDefault() cancels the no-op default
+      // action and the `input` event some keyboards would otherwise chase it
+      // with, so Enter is delivered exactly once. The textarea (programEditor)
+      // is excluded: there Enter is real newline content, committed via `input`.
+      input.enterKeyHint = modal!.kind === "chat" ? "send" : "go";
+      input.addEventListener("beforeinput", (event) => {
+        const native = event as InputEvent;
+        if (this.composing) {
+          return;
+        }
+        if (native.inputType === "insertLineBreak" || native.inputType === "insertParagraph") {
+          native.preventDefault();
+          input.value = "";
+          this.skipCommittedText = "";
+          this.deliver({ inputType: native.inputType, data: null });
+        }
+      });
+    }
     this.element = input;
     this.host.body.appendChild(input);
     this.focus(input);
