@@ -503,6 +503,10 @@ let lastMessageKey = "";
 let lastMessageAt = 0;
 const pressed = new Set<string>();
 const zztSound = new ZztSound();
+// Expose the synth for live diagnosis (M17.7): the M17.3 fix told the operator to
+// confirm the AudioContext reads "running" in the console, but the object was
+// module-scoped and unreachable. `zztSound.diagnostics()` now works in DevTools.
+(window as unknown as { zztSound: ZztSound }).zztSound = zztSound;
 
 // M4.3: the client is a two-state machine, as ZZT is. "title" is GameTitleLoop
 // — no socket, no player, the monitor sidebar over a static board 0. "playing"
@@ -646,7 +650,21 @@ if ("fonts" in document) {
 }
 canvas.addEventListener("mousedown", handlePointerDown);
 canvas.addEventListener("mousemove", handlePointerMove);
-canvas.addEventListener("touchstart", () => mobileTextInput.noteTouchStart(), { passive: true });
+canvas.addEventListener(
+  "touchstart",
+  (event) => {
+    // While an editable modal is open on a touch device, keep the soft keyboard
+    // up: swallow the tap's default so the focusable (tabindex=0) canvas cannot
+    // steal focus and dismiss the keyboard, then (re)focus the hidden input inside
+    // this gesture — the one moment iOS will actually raise it. Outside a text
+    // modal the tap is left alone (future touch controls, M16.18a).
+    if (mobileTextInput.isActive()) {
+      event.preventDefault();
+    }
+    mobileTextInput.noteTouchStart();
+  },
+  { passive: false },
+);
 window.addEventListener("mouseup", () => { editorPointerDrawing = false; });
 canvas.addEventListener("keydown", handleKeyDown);
 canvas.addEventListener("keyup", handleKeyUp);
@@ -2051,6 +2069,22 @@ function updateSidebar(hud: HudSnapshot) {
   paintSidebarHud(writeText, hud);
 }
 
+// M17.7: the first time an in-game sound arrives that the browser cannot voice,
+// say why in the console instead of failing silently. "not running" means the
+// AudioContext never unlocked (autoplay policy / no gesture reached unlock);
+// "disabled" means hud.soundEnabled muted the synth (the 'B' toggle).
+let soundUnplayableWarned = false;
+function warnIfSoundUnplayable() {
+  if (soundUnplayableWarned) {
+    return;
+  }
+  const d = zztSound.diagnostics();
+  if (d.contextState !== "running" || !d.enabled) {
+    soundUnplayableWarned = true;
+    console.warn("ZZTMMO: a sound event arrived but audio is not playable:", d);
+  }
+}
+
 function renderEvents(events: ProtocolEvent[] | undefined) {
   if (!events) {
     return;
@@ -2127,6 +2161,7 @@ function handleProtocolEvent(event: ProtocolEvent) {
       }
       break;
     case "sound":
+      warnIfSoundUnplayable();
       zztSound.queue(event.priority ?? 0, soundNotesFromProtocol(event.notes));
       break;
     case "transfer":

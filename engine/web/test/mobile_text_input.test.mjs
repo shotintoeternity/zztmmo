@@ -12,9 +12,10 @@ const source = Buffer.from(output.outputFiles[0].contents).toString("base64");
 const { MobileTextInputBridge, handleModalTextInput, modalAcceptsTextInput } = await import(`data:text/javascript;base64,${source}`);
 
 class FakeElement {
-  constructor(tag, body) {
+  constructor(tag, host) {
     this.tag = tag;
-    this.body = body;
+    this.host = host;
+    this.body = host.body;
     this.style = {};
     this.value = "";
     this.listeners = new Map();
@@ -31,8 +32,10 @@ class FakeElement {
     this.listeners.get(type)?.(detail);
     return detail;
   }
-  focus() { this.focused += 1; }
-  blur() { this.blurred += 1; }
+  // Track document.activeElement so the bridge's isFocused()/keep-keyboard path is
+  // exercised: focusing an element makes it active; blurring it clears active.
+  focus() { this.focused += 1; this.host.activeElement = this; }
+  blur() { this.blurred += 1; if (this.host.activeElement === this) this.host.activeElement = null; }
   remove() {
     const index = this.body.children.indexOf(this);
     if (index >= 0) this.body.children.splice(index, 1);
@@ -45,7 +48,8 @@ const body = {
 };
 const host = {
   body,
-  createElement(tag) { return new FakeElement(tag, body); },
+  activeElement: null,
+  createElement(tag) { return new FakeElement(tag, host); },
 };
 
 const bridge = new MobileTextInputBridge(host, 1);
@@ -61,10 +65,16 @@ const entry = {
 const mirror = (modal) => (input) => handleModalTextInput(modal, input);
 
 // The overlay is native and focusable, but its text is mirrored into the modal
-// buffer; it never becomes a rendered source of truth itself.
+// buffer; it never becomes a rendered source of truth itself. A cold open does
+// NOT focus — iOS raises the keyboard only inside a user gesture, and focusing an
+// already-active field is what makes the keyboard flicker. The gesture (canvas
+// touchstart → noteTouchStart) is the sole place we focus and raise it.
 bridge.sync(entry, mirror(entry));
 const input = body.children[0];
 assert.equal(input.tag, "input");
+assert.equal(input.focused, 0);
+assert.equal(bridge.isActive(), true);
+bridge.noteTouchStart();
 assert.equal(input.focused, 1);
 input.value = "Ada";
 input.dispatch("input", { inputType: "insertText", data: "Ada" });
@@ -133,6 +143,25 @@ const enterEvent = enterInput.dispatch("beforeinput", { inputType: "insertLineBr
 assert.equal(enterEntry.submitted, "Zoe");
 assert.equal(enterEvent.defaultPrevented, true);
 
+// M17.7: other soft keyboards report Return only as a `keydown` (key "Enter").
+// That must submit too, and its preventDefault cancels the `beforeinput` a browser
+// would otherwise also fire, so Enter never double-submits.
+const keyEntry = {
+  kind: "entry",
+  label: "Name:",
+  suffix: "",
+  width: 20,
+  buffer: "Rex",
+  charset: "any",
+  submitted: null,
+  onSubmit(text) { this.submitted = text; },
+};
+bridge.sync(keyEntry, mirror(keyEntry));
+const keyInput = body.children[0];
+const keyEvent = keyInput.dispatch("keydown", { key: "Enter" });
+assert.equal(keyEntry.submitted, "Rex");
+assert.equal(keyEvent.defaultPrevented, true);
+
 // Chat submits on the paragraph-break variant (some keyboards report it) and
 // labels its Return key "send".
 const enterChat = {
@@ -164,6 +193,7 @@ bridge.sync(editor, mirror(editor));
 const editorEl = body.children[0];
 assert.equal(editorEl.tag, "textarea");
 assert.equal(editorEl.listeners.has("beforeinput"), false);
+assert.equal(editorEl.listeners.has("keydown"), false);
 
 assert.equal(modalAcceptsTextInput({ kind: "programEditor" }), true);
 assert.equal(modalAcceptsTextInput({ kind: "worldSearch" }), true);

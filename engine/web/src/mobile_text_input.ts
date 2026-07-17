@@ -24,10 +24,25 @@ export class MobileTextInputBridge {
     private readonly maxTouchPoints = typeof navigator === "undefined" ? 0 : navigator.maxTouchPoints,
   ) {}
 
-  /** Covers hybrid devices whose maxTouchPoints is unreliable. */
+  /** Covers hybrid devices whose maxTouchPoints is unreliable. This is also the
+   *  sole place we raise the keyboard: iOS only shows it when focus() runs inside
+   *  a real user gesture, and a modal can open outside one (launch, a server
+   *  event). Focusing here — inside the canvas touchstart — is what makes the
+   *  keyboard appear and, because the canvas tap no longer steals focus, stay up. */
   noteTouchStart() {
     this.touchSeen = true;
     this.sync(this.modal, this.sink ?? (() => {}));
+    if (this.element) {
+      this.focus(this.element);
+    }
+  }
+
+  /** True while an editable overlay is (or should be) mounted. The canvas tap
+   *  handler consults this to keep the keyboard up: it swallows the tap's default
+   *  focus so the focusable (tabindex=0) canvas cannot steal focus and dismiss
+   *  the keyboard. */
+  isActive(): boolean {
+    return this.shouldUseOverlay(this.modal);
   }
 
   sync(modal: Modal | null, sink: MobileTextInputSink) {
@@ -39,9 +54,15 @@ export class MobileTextInputBridge {
       return;
     }
     if (unchanged && this.element) {
-      this.focus(this.element);
+      // Already mounted. Do NOT focus here — a non-gesture focus() will not raise
+      // the iOS keyboard, and re-focusing an already-focused field is what makes
+      // it flicker. The canvas touchstart handler focuses inside the gesture.
       return;
     }
+    // If the keyboard is already up (an editable→editable modal swap), move focus
+    // to the replacement field synchronously so iOS keeps it up; a cold open waits
+    // for the first tap because iOS needs a gesture.
+    const keepKeyboard = this.isFocused();
     this.remove();
 
     // Dream and chat submit on Enter, so only the source-code editor needs a
@@ -62,6 +83,9 @@ export class MobileTextInputBridge {
     input.style.padding = "0";
     input.style.pointerEvents = "none";
     input.style.zIndex = "1";
+    // iOS zooms the whole page when focusing an input whose font is under 16px —
+    // that zoom is the "layout is broken on my phone" symptom. 16px suppresses it.
+    input.style.fontSize = "16px";
     input.addEventListener("compositionstart", () => {
       this.composing = true;
       this.compositionText = "";
@@ -104,15 +128,28 @@ export class MobileTextInputBridge {
       this.deliver({ inputType: native.inputType, data });
     });
     if (!multiline) {
-      // A single-line <input> rejects newlines, so on iOS the soft-keyboard
-      // Return mutates nothing and fires no `input` event — only `beforeinput`
-      // reports the insertLineBreak. Route it to the same commit path desktop
-      // Enter uses, so name popups, chat, and single-line editor prompts submit
-      // from the on-screen keyboard. preventDefault() cancels the no-op default
-      // action and the `input` event some keyboards would otherwise chase it
-      // with, so Enter is delivered exactly once. The textarea (programEditor)
-      // is excluded: there Enter is real newline content, committed via `input`.
+      // Commit the soft-keyboard Return. A single-line <input> rejects newlines,
+      // so on iOS the Return mutates nothing and fires no `input` event; it is
+      // seen only as a `keydown` (key "Enter", a non-character key immune to the
+      // 229-composing problem) and/or a `beforeinput` insertLineBreak. Route
+      // either to the same commit path desktop Enter uses, so name popups, chat,
+      // and single-line editor prompts submit from the on-screen keyboard. The
+      // textarea (programEditor) is excluded — there Enter is real newline content.
       input.enterKeyHint = modal!.kind === "chat" ? "send" : "go";
+      const submitEnter = () => {
+        input.value = "";
+        this.skipCommittedText = "";
+        this.deliver({ inputType: "insertLineBreak", data: null });
+      };
+      input.addEventListener("keydown", (event) => {
+        const key = event as KeyboardEvent;
+        if (!this.composing && key.key === "Enter") {
+          // preventDefault also cancels the `beforeinput` this keydown would
+          // spawn, so Enter commits exactly once when a keyboard fires both.
+          key.preventDefault();
+          submitEnter();
+        }
+      });
       input.addEventListener("beforeinput", (event) => {
         const native = event as InputEvent;
         if (this.composing) {
@@ -120,15 +157,15 @@ export class MobileTextInputBridge {
         }
         if (native.inputType === "insertLineBreak" || native.inputType === "insertParagraph") {
           native.preventDefault();
-          input.value = "";
-          this.skipCommittedText = "";
-          this.deliver({ inputType: native.inputType, data: null });
+          submitEnter();
         }
       });
     }
     this.element = input;
     this.host.body.appendChild(input);
-    this.focus(input);
+    if (keepKeyboard) {
+      this.focus(input);
+    }
   }
 
   close(): boolean {
@@ -154,6 +191,10 @@ export class MobileTextInputBridge {
     } catch {
       input.focus();
     }
+  }
+
+  private isFocused(): boolean {
+    return this.element !== null && this.host.activeElement === this.element;
   }
 
   private remove() {
