@@ -2737,3 +2737,73 @@ seven gates green, exit 0, `git status --short` empty (report files ignored).
 The `[ADVISOR]`-style consult could not run — the advisor tool was unavailable
 this session, as it was at M16.0; the owner is the approval gate. No simulation
 code moved; the replay fixture is unchanged; no `DEVIATION:`.
+
+---
+
+## 2026-07-18 — M17.7 sound: broken build was masking the M17.3 fix + regression net
+
+**Owner field confirmation: sound works now.** Asked the owner to pin the "not
+working properly" symptom before touching anything; answer was "Sound is working
+now. This has already been fixed." That satisfies the DoD's "verify audibly in an
+actual browser." This entry records the root cause we landed a guard for and the
+cleanup around it.
+
+**Root cause of the field breakage: a half-committed method left HEAD unbuildable,
+so the M17.3 audio-unlock fix could never be deployed.** Commit `78413d4` (labeled
+an M17.6 follow-up) shipped `web/src/main.ts` code that calls
+`zztSound.diagnostics()` and `warnIfSoundUnplayable()`, but the `diagnostics()`
+method itself was never committed to `web/src/sound.ts`. HEAD therefore fails
+`tsc`: `main.ts(2098,22): Property 'diagnostics' does not exist on type
+'ZztSound'` (verified by building HEAD's `sound.ts` against the working `main.ts`).
+The server serves the *gitignored* built bundle (`zzt-server -web web/dist`), so a
+failed `npm run build` leaves `dist/` stale — the identical trap that made M17.1
+look unfixed (2026-07-15 note). Net effect: M17.3's `unlock()`-on-gesture fix sat
+in source but the browser kept running an older bundle. This is a build/deploy
+gap, not a synth-logic bug.
+
+**The client synth was verified faithful to vanilla — no note/timing bug.**
+Compared `web/src/sound.ts` against the authoritative `SOUNDS.PAS`: the `queue()`
+priority guard (`not playing OR ((p>=cur AND cur<>-1) OR p=-1)`), the buffer
+tail-swap on a lower-priority interrupt, the tone/drum/rest dispatch, the
+`SoundInitFreqTable` frequency table, and the `duration * TICK_SEC` (1/18.2065)
+note length all match the Pascal `SoundQueue`/`SoundTimerHandler` with the default
+`SoundDurationMultiplier = 1`. So the "wrong pitch/tempo/cutoff" family was ruled
+out by construction, which is why the field fix was purely getting the correct
+bundle to the browser.
+
+**What landed (client-only; sim untouched, replay fixture unchanged):**
+- `sound.ts` gains `diagnostics()` — unbreaks the build (the committed `main.ts`
+  already calls it) and reports live audio state (`contextState`, `enabled`,
+  `isPlaying`, `schedulerRunning`) from the console via the `window.zztSound`
+  handle for pinning any future silence. `contextState === "running"` means the
+  AudioContext unlocked; anything else means a note would be swallowed.
+- `test/sound.test.mjs` (new; wired into `npm test`) is the regression net M17.3
+  never had: it bundles the real `ZztSound` under Node against a recording mock
+  Web Audio graph and asserts a queued note actually gates the oscillator on
+  (positive gain ramp + positive frequency), that `unlock()` resumes a suspended
+  context even while muted (title-screen mute must not swallow the first in-game
+  note), that a disabled synth stays silent, and that `soundNotesFromProtocol`
+  keeps the numeric-array wire contract (a string would `&0xff` to NaN→0 and
+  silence everything).
+- The root-cause guard is the build itself: `npm run build` (run by CI and
+  `make parity`) now fails loudly on any future half-committed method, and the
+  M17.1 `warnIfClientStale` startup check already flags a stale `dist/`. `dist/`
+  rebuilt fresh this session.
+
+**Intentional multiplayer parity departure, restated (owner's framing 2026-07-18:
+depart from vanilla only to preserve the new features).** Sound's one departure is
+per-player attribution (M7.4): a player's own pickups/shots/damage reach only that
+client; an object's `#play` stays room-wide (`StatId = -1`). Vanilla is
+single-player and has no such split, so this is by-design, not a bug — documented,
+not "fixed" back to vanilla.
+
+**Tree hygiene this session (not part of M17.7, surfaced to the owner):**
+- Deleted `engine/oracle_scratch_test.go` — a *foreign-session* M16.2 oracle
+  bring-up harness (self-labeled "Deleted before commit") that read another
+  session's scratchpad and was failing an oracle transfer-parity check, reddening
+  `go test ./...`. It captured a real M16.2 finding (a transfer-cell mismatch,
+  oracle `ch=02 at=1f` vs go `ch=20 at=0f`) but belongs to M16.2's own harness,
+  not the tree; removed so the safety net is green.
+- Left the unrelated `world_metadata.go`/`world_metadata_test.go` changes (a
+  "curated Museum catalog only" world-picker refactor; green on their own tests)
+  uncommitted and out of the M17.7 commit — separate WIP, not this task.

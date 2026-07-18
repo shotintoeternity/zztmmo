@@ -21,10 +21,11 @@ Ranked 2026-07-14. The preceding priority list — M12.22, M12.19, and M15.1 —
 has fully landed. Work the list top-down; skip the optional/deferred tail unless
 the owner asks.
 
-1. M17.1–M17.6 — owner-reported live browser fixes (2026-07-14/15): name popup
+1. M17.1–M17.7 — owner-reported live browser fixes (2026-07-14/17): name popup
    centering/width, world picker (list all + metadata + count overlap), audio
    regression, scroll hyperlinks, sidebar banner centering (done), mobile
-   responsiveness incl. the iPhone soft-keyboard Enter key. Ahead of M16: live
+   responsiveness incl. the iPhone soft-keyboard Enter key, and sound still not
+   working properly in the client (M17.7, 2026-07-17). Ahead of M16: live
    breakage in front of the player.
 2. M16.0–M16.20 — whole-product feature-parity proof (owner request 2026-07-14)
 
@@ -1677,6 +1678,34 @@ these are live breakage in front of the player.
   `beforeinput` path is proven only by the Node regression, which models the iOS
   "Return fires beforeinput, no input event" behavior. A real iPhone (Safari +
   Chrome) check is still owed before this is trusted in the field.
+
+- [x] **M17.7 — Sound not working properly in the client (owner-reported).**
+  Owner reports that in-game audio still does not behave correctly in the browser
+  client. This is distinct from M17.3, which fixed audio being silent *entirely*
+  (AudioContext stuck `"suspended"`) but whose landing note flagged it "NOT yet
+  audibly confirmed in a real browser" — so treat M17.3 as unverified and this as
+  the follow-up field report. **Reproduce and characterize first**: play in a real
+  browser, note exactly what "not working properly" is — no sound at all, some
+  sound categories missing (pickups/shots/doors/damage vs object `#play`), wrong
+  pitch/tempo, notes cut off or overlapping, the sidebar toggle out of sync, or
+  audio that drifts/stops after a while. Ask the owner to pin the symptom if it is
+  ambiguous. Surgical map of the trigger chain (from M17.3): `ZztSound` in
+  `web/src/sound.ts` is the WebAudio synth (note scheduler + `unlock()`/`resume()`
+  gate); `startPlay` enables + resumes (`main.ts:780-781`); `showTitle` mutes
+  (`main.ts:704`); `updateSidebar` re-syncs `enabled` from `hud.soundEnabled` on
+  *every* snapshot (`main.ts:2004`); in-game `SoundEvent`s queue at `main.ts:2084`;
+  the document-level capture-phase `unlock()` listeners land the context in
+  `"running"` on first gesture. Server side: per-player `SoundEnabled` defaults
+  `true` (`gamevars.go:435`), surfaced in the HUD (`protocol.go:657`); per-player
+  sound attribution (M7.4) stamps `SoundEvent.StatId`. Rule in/out along that
+  chain — is the event emitted, does it arrive over the protocol, does the client
+  queue it, does the synth actually schedule it, and does the toggle track the
+  acting player only. DoD: the specific misbehavior is identified and fixed; the
+  M4.4 audible behaviors (pickups/shots/doors/damage and object `#play`) and the
+  sidebar toggle all work in a real browser; a regression test guards the root
+  cause; verify audibly in an actual browser (console: `zztSound`'s context reads
+  `"running"`) and record the confirmation, since M17.3's gap was precisely the
+  missing real-browser check; replay fixture untouched.
 
 ## M16 — Whole-product feature-parity proof
 

@@ -64,6 +64,20 @@ export class ZztSound {
     }
   }
 
+  // diagnostics reports the live audio state for pinning silence in the field
+  // (M17.7). `zztSound` is exposed on window in main.ts, so this is reachable from
+  // the browser console as `zztSound.diagnostics()`. contextState "running" means
+  // the AudioContext is unlocked; anything else means a note would be swallowed.
+  diagnostics() {
+    return {
+      hasContext: !!this.ctx,
+      contextState: this.ctx?.state ?? "none",
+      enabled: this.enabled,
+      isPlaying: this.isPlaying,
+      schedulerRunning: this.scheduler !== 0,
+    };
+  }
+
   setEnabled(on: boolean) {
     if (this.enabled === on) {
       return;
