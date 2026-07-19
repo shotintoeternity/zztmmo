@@ -110,6 +110,63 @@ func generatedBoard(name string, withBlueKey bool) string {
 	return "```zwd\nboard \"" + name + "\"\n  start player at 1,1\n  dark false\n  exits north none south none west none east none\n  grid\n" + strings.Join(rows, "\n") + "\n  end\n  legend\n" + legend + "\n  end\n  stats\n    stat at 2,1 element Object cycle 3\n    oop\n    @finale\n    #end\n    :touch\n    #endgame\n    #end\n    end\n  end\nend\n```"
 }
 
+func generatedBlueprint(t *testing.T, name string, title bool) string {
+	t.Helper()
+	bp := BoardBlueprint{
+		Version: 1, Board: name, Start: BlueprintPoint{X: 1, Y: 1},
+		Exits:      BlueprintExits{},
+		Background: BlueprintTile{Element: "Empty", Color: "0x00"},
+		Floor:      BlueprintTile{Element: "Empty", Color: "0x00"},
+		Operations: []BlueprintOperation{},
+	}
+	if title {
+		bp.Operations = append(bp.Operations, BlueprintOperation{Kind: "text", X: 28, Y: 4, Text: "DREAM", Color: "Text-Cyan"})
+	} else {
+		bp.Actors = append(bp.Actors, BlueprintActor{
+			Element: "Object", X: 2, Y: 1, Color: "0x0F", Character: "?",
+			OOP: "@finale\n:touch\nThe ending arrives on schedule.\n#endgame\n#end",
+		})
+	}
+	data, err := json.Marshal(bp)
+	if err != nil {
+		t.Fatal(err)
+	}
+	return string(data)
+}
+
+func TestGenerationUsesSemanticBlueprintPath(t *testing.T) {
+	plan := generationPlan("1. start: begin. #endgame")
+	fake, claude := newFakeClaude(t, plan, generatedBlueprint(t, "Start", false), generatedBlueprint(t, "Title", true))
+	defer claude.Close()
+	service := newGenerationTestService(t, claude.URL, 3)
+	result, err := service.Generate(context.Background(), "test", "a semantic relay", "BLUEAPI", nil, false)
+	if err != nil {
+		t.Fatal(err)
+	}
+	if _, err := CompileZWD(result.ZWD); err != nil {
+		t.Fatalf("generated ZWD did not compile: %v", err)
+	}
+	if len(fake.requests) != 3 {
+		t.Fatalf("API calls = %d, want planner plus two boards", len(fake.requests))
+	}
+	if strings.Contains(fake.requests[0].Messages[0].Content, "```zwd") || strings.Contains(fake.requests[0].Messages[0].Content, "Grid Alignment Protocol") {
+		t.Fatal("planner call still receives full ZWD serialization examples")
+	}
+	for _, i := range []int{1, 2} {
+		system := systemText(fake.requests[i].System)
+		request := fake.requests[i].Messages[0].Content
+		if !strings.Contains(system, "semantic JSON blueprint") || strings.Contains(system, "# ZWD format specification") {
+			t.Fatalf("board call %d used wrong system prompt", i)
+		}
+		if strings.Contains(request, "Grid Alignment Protocol") || strings.Contains(request, "```zwd") {
+			t.Fatalf("board call %d still asks the model to serialize ZWD", i)
+		}
+		if !strings.Contains(request, "# Retrieved corpus examples") {
+			t.Fatalf("board call %d omitted semantic corpus retrieval", i)
+		}
+	}
+}
+
 func generatedBoardWithSealedFinale(name string) string {
 	section := generatedBoard(name, false)
 	lines := strings.Split(section, "\n")

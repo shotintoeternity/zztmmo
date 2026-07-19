@@ -21,6 +21,12 @@ func TestLoadPromptKit(t *testing.T) {
 	if len(kit.Style) == 0 {
 		t.Error("style is empty")
 	}
+	if len(kit.Blueprint) == 0 {
+		t.Error("blueprint schema is empty")
+	}
+	if len(kit.BlueprintStyle) == 0 {
+		t.Error("semantic blueprint style is empty")
+	}
 	want := map[string]string{
 		"CUTLASS_board27":                  "action arena",
 		"SEWERS_board17":                   "texture showcase",
@@ -63,6 +69,40 @@ func TestLoadPromptKit(t *testing.T) {
 	}
 	if len(want) != 0 {
 		t.Errorf("missing few-shots: %v", want)
+	}
+}
+
+func TestBlueprintPromptIsSemanticAndBounded(t *testing.T) {
+	kit, err := LoadPromptKit()
+	if err != nil {
+		t.Fatal(err)
+	}
+	system := kit.BlueprintSystemPrompt()
+	for _, want := range []string{"master ZZT world designer", "60x25", "ZT-OOP", "semantic JSON", "# House style", "# Drawing operations", "# Actors and ZZT-OOP"} {
+		if !strings.Contains(system, want) {
+			t.Errorf("blueprint system prompt missing %q", want)
+		}
+	}
+	for _, unwanted := range []string{"# ZWD format specification", "Grid Alignment Protocol", "Legend Key Drawing Technique", "```zwd"} {
+		if strings.Contains(system, unwanted) {
+			t.Errorf("blueprint system prompt still teaches renderer-owned syntax %q", unwanted)
+		}
+	}
+	if len(system) > 18_000 {
+		t.Fatalf("blueprint system prompt is %d bytes; expected <=18000", len(system))
+	}
+	retrieval := kit.BlueprintRetrievalContext("icy relay", "a dark machine room", false)
+	if !strings.Contains(retrieval, "# Retrieved corpus examples") || !strings.Contains(retrieval, "Technique:") {
+		t.Fatalf("semantic retrieval is incomplete:\n%s", retrieval)
+	}
+	if strings.Contains(retrieval, "```zwd") || strings.Contains(retrieval, "  grid\n") {
+		t.Fatal("semantic retrieval leaked full ZWD source")
+	}
+	if len(retrieval) > 6_000 {
+		t.Fatalf("semantic retrieval is %d bytes; expected <=6000", len(retrieval))
+	}
+	if again := kit.BlueprintRetrievalContext("icy relay", "a dark machine room", false); retrieval != again {
+		t.Fatal("blueprint retrieval is not deterministic")
 	}
 }
 

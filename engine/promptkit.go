@@ -28,6 +28,8 @@ import (
 
 //go:embed promptkit_assets/spec.md
 //go:embed promptkit_assets/STYLE.md
+//go:embed promptkit_assets/BLUEPRINT.md
+//go:embed promptkit_assets/BLUEPRINT_STYLE.md
 //go:embed promptkit_assets/fewshots/*.zwd
 //go:embed promptkit_assets/captions/*.json
 //go:embed promptkit_assets/fewshot_metadata.json
@@ -100,11 +102,14 @@ const (
 
 // PromptKit holds the assembled generation ingredients.
 type PromptKit struct {
-	Spec     string // ZWD format grammar + limits table (spec.md)
-	Style    string // STYLE.md
-	FewShots []FewShot
-	Captions map[string]BoardCaption    // keyed by FewShot.Name
-	Metadata map[string]FewShotMetadata // keyed by FewShot.Name
+	Spec      string // ZWD format grammar + limits table (spec.md)
+	Style     string // STYLE.md
+	Blueprint string // semantic JSON schema and ZZT mechanics (BLUEPRINT.md)
+	// BlueprintStyle is corpus style with renderer-owned ZWD instructions removed.
+	BlueprintStyle string
+	FewShots       []FewShot
+	Captions       map[string]BoardCaption    // keyed by FewShot.Name
+	Metadata       map[string]FewShotMetadata // keyed by FewShot.Name
 }
 
 // LoadPromptKit reads the embedded assets into a PromptKit. It errors rather
@@ -118,11 +123,19 @@ func LoadPromptKit() (*PromptKit, error) {
 	if err != nil {
 		return nil, fmt.Errorf("promptkit: read STYLE.md: %w", err)
 	}
+	blueprint, err := promptKitFS.ReadFile("promptkit_assets/BLUEPRINT.md")
+	if err != nil {
+		return nil, fmt.Errorf("promptkit: read BLUEPRINT.md: %w", err)
+	}
+	blueprintStyle, err := promptKitFS.ReadFile("promptkit_assets/BLUEPRINT_STYLE.md")
+	if err != nil {
+		return nil, fmt.Errorf("promptkit: read BLUEPRINT_STYLE.md: %w", err)
+	}
 	entries, err := fs.ReadDir(promptKitFS, "promptkit_assets/fewshots")
 	if err != nil {
 		return nil, fmt.Errorf("promptkit: read fewshots dir: %w", err)
 	}
-	kit := &PromptKit{Spec: string(spec), Style: string(style), Captions: map[string]BoardCaption{}, Metadata: map[string]FewShotMetadata{}}
+	kit := &PromptKit{Spec: string(spec), Style: string(style), Blueprint: string(blueprint), BlueprintStyle: string(blueprintStyle), Captions: map[string]BoardCaption{}, Metadata: map[string]FewShotMetadata{}}
 	for _, e := range entries {
 		if e.IsDir() || !strings.HasSuffix(e.Name(), ".zwd") {
 			continue
@@ -203,6 +216,73 @@ func (k *PromptKit) SystemPrompt() string {
 	b.WriteString(k.Style)
 	b.WriteString("\n")
 	b.WriteString(promptOutputContract)
+	return b.String()
+}
+
+// BlueprintSystemPrompt is the default board-painting prompt. Unlike the
+// legacy SystemPrompt it contains no ZWD serialization grammar: the model owns
+// semantic design while RenderBoardBlueprint owns grids, legends, and stats.
+func (k *PromptKit) BlueprintSystemPrompt() string {
+	var b strings.Builder
+	b.WriteString(promptBlueprintRolePreamble)
+	b.WriteString("\n\n")
+	b.WriteString(k.Blueprint)
+	b.WriteString("\n\n# House style\n\n")
+	b.WriteString("Use this corpus-derived guidance for composition, palette, pacing, and voice.\n\n")
+	b.WriteString(k.BlueprintStyle)
+	return b.String()
+}
+
+// BlueprintRetrievalContext carries the same authentic corpus knowledge as
+// RetrievalContext but omits full ZWD grids. Captions, techniques, palettes,
+// and cohesion notes are useful semantic evidence without teaching the model
+// the serialization format that the deterministic renderer now owns.
+func (k *PromptKit) BlueprintRetrievalContext(premise, boardConcept string, title bool) string {
+	type ranked struct {
+		shot     FewShot
+		metadata FewShotMetadata
+		score    int
+	}
+	terms := retrievalTerms(premise + " " + boardConcept)
+	var titleShots, otherShots []ranked
+	for _, shot := range k.FewShots {
+		m := k.Metadata[shot.Name]
+		r := ranked{shot: shot, metadata: m, score: retrievalScore(terms, m, k.Captions[shot.Name])}
+		if strings.HasPrefix(fewShotArchetypes[shot.Name], "title") {
+			titleShots = append(titleShots, r)
+		} else {
+			otherShots = append(otherShots, r)
+		}
+	}
+	sortRanked := func(s []ranked) {
+		sort.Slice(s, func(i, j int) bool {
+			if s[i].score != s[j].score {
+				return s[i].score > s[j].score
+			}
+			return s[i].shot.Name < s[j].shot.Name
+		})
+	}
+	sortRanked(titleShots)
+	sortRanked(otherShots)
+	ordered := append(otherShots, titleShots...)
+	if title {
+		ordered = append(titleShots, otherShots...)
+	}
+	var b strings.Builder
+	b.WriteString("# Retrieved corpus examples\n\nOffline semantic notes selected from real ZZT boards. Study their technique; do not copy their content.\n")
+	for i, r := range ordered {
+		if i == retrievalMaxExamples {
+			break
+		}
+		c := k.Captions[r.shot.Name]
+		fmt.Fprintf(&b, "\n## %s (`%s`)\nTags: %s; palette: %s; density: %s.\nTechnique: %s\nComposition: %s\nVisual note: %s\n", r.metadata.Archetype, r.shot.Name, strings.Join(r.metadata.Themes, ", "), strings.Join(r.metadata.Palette, ", "), r.metadata.Density, c.Technique, c.Composition, c.Summary)
+		if c.PictorialArt != "" {
+			fmt.Fprintf(&b, "Pictorial approach: %s\n", c.PictorialArt)
+		}
+		if r.metadata.Cohesion != "" {
+			fmt.Fprintf(&b, "Same-world plan excerpt: %s\n", r.metadata.Cohesion)
+		}
+	}
 	return b.String()
 }
 
@@ -340,6 +420,18 @@ Write original dialogue, narration, signs, and scroll text as well as you can;
 do not reduce it to templates or terse filler. Favor the dry, absurdist,
 warmly observant Douglas Adams-style wit common in memorable ZZT worlds, while
 keeping the voice specific to the world and its characters.`
+
+const promptBlueprintRolePreamble = `You are a master ZZT world designer. ZZT is the 1991 DOS creation kit: worlds
+are connected 60x25 CP437 text-mode boards with terrain, items, creatures,
+passages, and scripted Objects. Design one board from the authoritative world
+plan as a semantic JSON blueprint. The host application—not you—rasterizes the
+blueprint, emits ZWD, compiles the .ZZT file, simulates it, and validates routes
+and ZZT-OOP.
+
+Use ZZT-OOP fluently for character, story, and mechanics. Write original,
+specific dialogue rather than template filler. Favor the dry, absurdist,
+warmly observant wit common in memorable ZZT worlds, but keep the voice native
+to this world's premise.`
 
 const promptOutputContract = `# Output contract
 

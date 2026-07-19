@@ -408,7 +408,7 @@ func (g *GenerationService) makePlan(ctx context.Context, premise string, ground
 	// corpus material is this deterministic retrieval block. When grounding is on
 	// the planner also gets the web_search tool (via callGrounded) and is told to
 	// emit a Grounding notes section, so real facts ride into every board.
-	retrieval := g.promptKit.RetrievalContext(premise, "world plan")
+	retrieval := g.promptKit.BlueprintRetrievalContext(premise, "world plan", false)
 	buildRequest := func(repair string) string {
 		base := planRequest(premise, repair)
 		if ground {
@@ -451,19 +451,15 @@ func (g *GenerationService) paintBoard(ctx context.Context, planText string, pla
 	lastCandidate := ""
 	for *attempts < g.maxAttempts {
 		*attempts++
-		g.report(ctx, GenerationProgress{Stage: "painting", Board: board.Name, Attempt: *attempts, Detail: "asking Claude for board ZWD"})
-		request := boardRequest(plan, board, sections, lastFeedback, lastCandidate, *attempts, g.maxAttempts)
-		if board.Index == 0 {
-			request += "\n\n" + g.promptKit.TitleRetrievalContext(plan.WorldName)
-		} else {
-			request += "\n\n" + g.promptKit.RetrievalContext(plan.WorldName, board.Concept)
-		}
-		text, err := g.callWithPlan(ctx, g.promptKit.SystemPrompt(), planText, request)
+		g.report(ctx, GenerationProgress{Stage: "painting", Board: board.Name, Attempt: *attempts, Detail: "asking Claude for a semantic board blueprint"})
+		request := blueprintBoardRequest(plan, board, sections, lastFeedback, lastCandidate, *attempts, g.maxAttempts)
+		request += "\n\n" + g.promptKit.BlueprintRetrievalContext(plan.WorldName, board.Concept, board.Index == 0)
+		text, err := g.callWithPlan(ctx, g.promptKit.BlueprintSystemPrompt(), planText, request)
 		if err != nil {
 			return "", err
 		}
-		lastCandidate = fencedGeneratedCandidate(text)
-		section, parsed, warnings, err := extractGeneratedBoardWithWarnings(text, board.Name)
+		section, parsed, warnings, candidate, err := extractBlueprintOrLegacyBoard(text, plan, board)
+		lastCandidate = candidate
 		if err == nil {
 			candidate := cloneGeneratedSections(sections)
 			candidate[board.Name] = section
@@ -490,7 +486,7 @@ func (g *GenerationService) paintBoard(ctx context.Context, planText string, pla
 				err = translateZWDError(compileErr, plan, candidate)
 			}
 		}
-		lastFeedback = fmt.Sprintf("Attempt %d failed: %v%s. Repair only board %q and return only its fenced ZWD board section.", *attempts, err, generatedGridDiagnostics(section, warnings...), board.Name)
+		lastFeedback = fmt.Sprintf("Attempt %d failed: %v%s. Repair only board %q and return its complete JSON blueprint.", *attempts, err, generatedGridDiagnostics(section, warnings...), board.Name)
 		if *attempts < g.maxAttempts {
 			g.report(ctx, GenerationProgress{Stage: "repairing", Board: board.Name, Attempt: *attempts + 1, Detail: err.Error()})
 		}
@@ -745,6 +741,165 @@ func boardRequest(plan Plan, board PlanBoard, sections map[string]string, feedba
 		}
 	}
 	return b.String()
+}
+
+// blueprintBoardRequest replaces the brittle grid-writing request used by the
+// legacy path. Plan-owned facts are explicit, while composition remains the
+// model's job. The renderer will enforce the plan fields again after parsing.
+func blueprintBoardRequest(plan Plan, board PlanBoard, sections map[string]string, feedback, previous string, attempt, maxAttempts int) string {
+	exits := plannedBlueprintExits(plan, board)
+	var b strings.Builder
+	fmt.Fprintf(&b, "Design exactly one semantic JSON board blueprint for the authoritative world plan. Board id=%q; exact board name=%q; concept=%q; dark=%t. The host will rasterize it to a 60x25 ZZT board, so do not emit ZWD, grid rows, legends, or stats.\n\n", board.ID, board.Name, board.Concept, board.Dark)
+	fmt.Fprintf(&b, "# Plan-owned topology\nUse these exact edge targets (empty means no edge exit): north=%q, south=%q, west=%q, east=%q. Give every non-empty exit a matching port coordinate and connect the start to that port with the floor or a traversable path.\n", exits.North, exits.South, exits.West, exits.East)
+	var passageTargets []string
+	byID := make(map[string]PlanBoard, len(plan.Boards))
+	for _, candidate := range plan.Boards {
+		byID[strings.ToLower(candidate.ID)] = candidate
+	}
+	for _, link := range board.Links {
+		if link.Kind == "passage" {
+			if target, ok := byID[strings.ToLower(link.Target)]; ok {
+				passageTargets = append(passageTargets, target.Name)
+			}
+		}
+	}
+	if len(passageTargets) > 0 {
+		sort.Strings(passageTargets)
+		fmt.Fprintf(&b, "Required Passage actor targets: %s.\n", strings.Join(passageTargets, ", "))
+	}
+	fmt.Fprintf(&b, "\n# Already-painted adjacent geometry\n%s", blueprintEdgeContext(plan, board, sections))
+	if board.Index == 0 {
+		fmt.Fprintf(&b, "\nThe title text must spell the exact world name %q once.\n", plan.WorldName)
+		b.WriteString(blueprintTitleScreenBrief)
+	}
+	if feedback != "" {
+		fmt.Fprintf(&b, "\n\n# Repair required (attempt %d of %d)\n%s", attempt, maxAttempts, feedback)
+		if previous != "" {
+			b.WriteString("\n\n# Previous failed candidate\nEdit this candidate rather than repainting valid content.\n")
+			if strings.HasPrefix(strings.TrimSpace(previous), "{") {
+				fmt.Fprintf(&b, "```json\n%s\n```", previous)
+			} else {
+				// Transitional compatibility: old providers may have returned ZWD.
+				fmt.Fprintf(&b, "```zwd\n%s\n```", previous)
+			}
+		}
+	}
+	return b.String()
+}
+
+const blueprintTitleScreenBrief = "\n\n# Title board constraints\n" +
+	"This is a decorative splash, not a gameplay room. Use one centered text operation spelling the world's exact name, at most one subtitle, a restrained border or motif, generous empty space, and no creatures or collectible actors. Put start unobtrusively."
+
+func plannedBlueprintExits(plan Plan, board PlanBoard) BlueprintExits {
+	byID := make(map[string]PlanBoard, len(plan.Boards))
+	for _, candidate := range plan.Boards {
+		byID[strings.ToLower(candidate.ID)] = candidate
+	}
+	var exits BlueprintExits
+	for _, link := range board.Links {
+		if link.Kind != "edge" {
+			continue
+		}
+		target, ok := byID[strings.ToLower(link.Target)]
+		if !ok {
+			continue
+		}
+		switch link.Dir {
+		case "N":
+			exits.North = target.Name
+		case "S":
+			exits.South = target.Name
+		case "W":
+			exits.West = target.Name
+		case "E":
+			exits.East = target.Name
+		}
+	}
+	return exits
+}
+
+func extractBlueprintOrLegacyBoard(text string, plan Plan, board PlanBoard) (string, zwdBoard, []string, string, error) {
+	if raw := blueprintJSONCandidate(text); raw != "" {
+		candidate := compactBlueprintJSON(raw)
+		bp, err := ParseBoardBlueprint(text)
+		if err != nil {
+			return "", zwdBoard{}, nil, candidate, err
+		}
+		// These values belong to the validated plan, not to model creativity.
+		// Normalize them deterministically instead of spending a repair attempt.
+		bp.Board = board.Name
+		bp.Dark = board.Dark
+		bp.Exits = plannedBlueprintExits(plan, board)
+		normalizeBlueprintPassageTargets(&bp, plan)
+		section, err := RenderBoardBlueprint(bp, board.Name)
+		if err != nil {
+			return "", zwdBoard{}, nil, candidate, err
+		}
+		parsedSection, parsed, warnings, err := extractGeneratedBoardWithWarnings("```zwd\n"+strings.TrimSpace(section)+"\n```", board.Name)
+		return parsedSection, parsed, warnings, candidate, err
+	}
+	section, parsed, warnings, err := extractGeneratedBoardWithWarnings(text, board.Name)
+	return section, parsed, warnings, fencedGeneratedCandidate(text), err
+}
+
+func normalizeBlueprintPassageTargets(bp *BoardBlueprint, plan Plan) {
+	canonical := make(map[string]string, len(plan.Boards)*2)
+	for _, board := range plan.Boards {
+		canonical[strings.ToLower(board.ID)] = board.Name
+		canonical[strings.ToLower(board.Name)] = board.Name
+	}
+	for i := range bp.Actors {
+		if normalizeZWDName(bp.Actors[i].Element) != "PASSAGE" {
+			continue
+		}
+		if target, ok := canonical[strings.ToLower(strings.TrimSpace(bp.Actors[i].Target))]; ok {
+			bp.Actors[i].Target = target
+		}
+	}
+}
+
+// blueprintEdgeContext translates existing neighbors into semantic opening
+// coordinates. Sending their raw legend bytes would be meaningless to a JSON
+// blueprint author because legend assignment is now a renderer concern.
+func blueprintEdgeContext(plan Plan, board PlanBoard, sections map[string]string) string {
+	var lines []string
+	for _, other := range plan.Boards {
+		section := sections[other.Name]
+		if section == "" {
+			continue
+		}
+		_, parsed, err := extractGeneratedBoard("```zwd\n"+strings.TrimSpace(section)+"\n```", other.Name)
+		if err != nil {
+			continue
+		}
+		for _, link := range board.Links {
+			if !strings.EqualFold(link.Target, other.ID) || link.Kind != "edge" {
+				continue
+			}
+			facing := oppositeDir(link.Dir)
+			lines = append(lines, fmt.Sprintf("%s is %s of this board; align this board's %s port with neighbor opening coordinates %s", other.Name, dirName(link.Dir), strings.ToLower(dirName(link.Dir)), blueprintEdgeOpenings(parsed, facing)))
+		}
+	}
+	if len(lines) == 0 {
+		return "No adjacent board has been painted yet; choose a clear port coordinate and the reciprocal board will be told to align with it."
+	}
+	sort.Strings(lines)
+	return strings.Join(lines, "\n")
+}
+
+func blueprintEdgeOpenings(board zwdBoard, dir string) string {
+	edge := gridEdge(board, dir)
+	var open []string
+	for i := 0; i < len(edge); i++ {
+		entry, ok := board.legend[edge[i]]
+		if ok && (ElementDefs[entry.element].Walkable || entry.element == E_FAKE || entry.element == E_FOREST || entry.element == E_BREAKABLE) {
+			open = append(open, strconv.Itoa(i+1))
+		}
+	}
+	if len(open) == 0 {
+		return "none (repair by choosing a sensible matching coordinate)"
+	}
+	return strings.Join(open, ",")
 }
 
 var fencedGeneratedBoardRe = regexp.MustCompile("(?s)^\\s*```zwd[ \\t]*\\r?\\n(.*?)\\r?\\n?```[ \\t]*\\s*$")
