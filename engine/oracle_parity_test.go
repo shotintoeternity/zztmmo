@@ -236,13 +236,21 @@ func (cp *oracleCheckpoint) rowText(row int) string {
 
 // soundEventFreqs expands a queued SoundEvent's (note, duration) pairs to the
 // tone-onset frequencies vanilla's timer ISR would play (SOUNDS.PAS: one
-// Sound(SoundFreqTable[note-1]) per tone note; drums and rests excluded).
+// Sound(SoundFreqTable[note-1]) per tone note; rests excluded). A drum note
+// (>= 240) is SoundPlayDrum's burst of Len rapid onsets; several drums draw
+// their frequencies from Random() at ZZT startup, seeded by the oracle's boot
+// clock, so drum onsets match by count as wildcards (-1), not by frequency.
 func soundEventFreqs(notes string) []int {
 	var freqs []int
 	for i := 0; i+1 < len(notes); i += 2 {
 		note := notes[i]
-		if note >= 16 && note < 240 {
+		switch {
+		case note >= 16 && note < 240:
 			freqs = append(freqs, int(SoundFreqTable[note-1]))
+		case note >= 240:
+			for j := int16(0); j < SoundDrumTable[note-240].Len; j++ {
+				freqs = append(freqs, -1)
+			}
 		}
 	}
 	return freqs
@@ -275,14 +283,15 @@ func (m *oracleSoundMatcher) match(tones []int) error {
 				return fmt.Errorf("oracle played %d Hz with no engine melody left in the queue", f)
 			}
 			notes := m.melodies[m.mi]
-			if m.ni < len(notes) && notes[m.ni] == f {
+			if m.ni < len(notes) && (notes[m.ni] == f || notes[m.ni] == -1) {
 				m.ni++
 				break
 			}
 			if m.ni < len(notes) {
 				// Mid-melody mismatch: only a preemption by the next queued
 				// melody explains it.
-				if m.mi+1 < len(m.melodies) && len(m.melodies[m.mi+1]) > 0 && m.melodies[m.mi+1][0] == f {
+				if m.mi+1 < len(m.melodies) && len(m.melodies[m.mi+1]) > 0 &&
+					(m.melodies[m.mi+1][0] == f || m.melodies[m.mi+1][0] == -1) {
 					m.mi++
 					m.ni = 1
 					break
@@ -402,15 +411,7 @@ func oracleAdapterRun(t *testing.T, scenario, capture string, mutate func(label 
 			E.Board.Tiles[E.Board.Stats[0].X][E.Board.Stats[0].Y].Color = ElementDefs[E_PLAYER].Color
 			E.PlayerFor(0).Paused = true
 			E.TransitionDrawToBoard()
-			// The oracle's `play` spends 30 PIT ticks, but its first player
-			// tick lands 2 ticks earlier on the board-clock grid than a
-			// straight tick count predicts (keyboard IRQ delivery and the
-			// pause loop's stale cycle gate both fire inside the emulator's
-			// tick, measured against the recorded ORCLTIME captures — the
-			// timing model in the header). 28 puts the engine's first player
-			// tick on the same grid, which the ORCLTIME board-second
-			// boundaries and their message flash phases pin exactly.
-			E.TimerTicks += 28
+			E.TimerTicks += 30
 			E.CurrentTick = 0
 			E.CurrentStatTicked = 0
 			drainEvents()

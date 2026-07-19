@@ -1873,7 +1873,7 @@ gap task has landed.
   (documented in oracle/README.md). Advisor unavailable again this session
   (as at M16.0/M16.1); the owner approved starting per the session decision.
 
-- [ ] **M16.2a — Return the independent-oracle baseline to green without
+- [x] **M16.2a — Return the independent-oracle baseline to green without
   weakening it.** Review finding (2026-07-18): the expanded oracle scenarios
   currently make `go test ./...` fail. Treat each mismatch as a concrete parity
   lead, not as a reason to update a capture: item pickup has an extra/missing
@@ -1888,7 +1888,24 @@ gap task has landed.
   `DEBUG PREPROCESSED ZWD` dump opt-in (or emit it only on the focused failure)
   so CI logs preserve the first useful oracle mismatch.
 
-- [ ] **M16.3 — Vanilla player, inventory, and terrain parity sweep.** Using
+  Landed with M16.3 (the failures were that sweep's mid-session state; NOTES
+  2026-07-18 has each root cause). Every mismatch was minimized, none hidden:
+  the item/energizer/passage tone mismatches are one representation gap — the
+  engine queues whole melodies as events while vanilla's ISR lets a new
+  `SoundQueue` cut off what is still sounding and keeps playing across
+  checkpoints — closed by an ISR-faithful matcher (strict order, one-sided
+  leniency, drum-onset wildcards for the boot-RNG drum tables; PARITY.md §7),
+  not by capture edits. The ricochet tile was the friendly-fire policy
+  suppressing vanilla self-shot damage: assigned to M16.5's bullet row as
+  deviation `friendly-fire-policy`; the scenario now steps the shooter aside
+  and its capture regeneration is the one justified capture change. The
+  low-time color was two real engine defects, fixed narrowly with oracle
+  assertions (unpause consuming the player's cycle; board time on the stubbed
+  `SoundHasTimeElapsed` — see the M16.3 entry). `[DEBUG PREPROCESSED ZWD]` now
+  prints only under `ZZT_DEBUG_ZWD=1`. Full backend suite green;
+  `make parity` gates pass; provenance regenerated.
+
+- [x] **M16.3 — Vanilla player, inventory, and terrain parity sweep.** Using
   M16.2 micro-world scenarios, cover player movement and shooting directions,
   pushing, board edges and passages, keys/doors, ammo, gems, torches/darkness,
   energizer, water/forest/fake/invisible/walls, text tiles, breakables, ricochet,
@@ -1898,6 +1915,27 @@ gap task has landed.
   manifest are `pass` or approved deviations; every deviation has a focused
   projection test; required scenarios run without TOWN stat staging; replay
   fixture unchanged unless a separately approved gap-fix task says otherwise.
+
+  Landed: seven micro-worlds (`fixtures/oracle/ORCL{MOVE,ITEM,DARK,NRG,SHOT,
+  PASS,TIME}.zwd`, compiled once and byte-locked by
+  `TestOracleWorldsMatchZWDSources`) + seven scenarios replayed through the
+  real ZZT.EXE (`make oracle-regen`, generalized to per-scenario worlds and a
+  `shoot` directive) and the engine (`TestOracleParity{Move,Item,Dark,
+  Energizer,Shot,Passage,Time}Scenario`, plus title-state checkpoints and
+  `TestMonitorTickExitKeys` for elem.monitor). All 27 assigned element rows
+  are `pass`; cells, sidebar counters (incl. `Time:`), modal content, and
+  ISR-preemption-aware sound sequences match the oracle. Three defects the
+  sweep caught were fixed (NOTES 2026-07-18): the headless pause branch is now
+  vanilla's per-player port (touch-while-paused, unpause only on a successful
+  move, the post-passage stamp branch M16.2 flagged, and the same-window
+  no-input PlayerTick), per-board time now runs on `Engine.BoardTimeElapsed`'s
+  virtual BIOS clock (one second per 19 PIT ticks at speed 4, not one per
+  tick), and `MaxShots` actually counts the acting player's bullets (the old
+  `P1 == 0` test matched nothing). Deviations touching this sweep
+  (`mp-respawn` on elem.player) carry focused tests; self-shot friendly-fire
+  and paused-input coverage are recorded for M16.5/M16.10. Replay fixture
+  unchanged; M16.2 captures regenerate byte-identically. Advisor unavailable
+  again this session (no `[ADVISOR]` tag on this task).
 
 - [ ] **M16.4 — Vanilla movers and devices parity sweep.** Cover boulders,
   sliders, conveyors, duplicators, bombs/explosions, blink walls/rays,

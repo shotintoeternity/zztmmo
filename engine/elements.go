@@ -1424,9 +1424,18 @@ func (e *Engine) ElementPlayerTick(statId int16) {
 				}
 				pState.MessageOutOfAmmoNotShown = false
 			} else {
+				// M16.3: vanilla counts on-board player bullets by
+				// P1 = SHOT_SOURCE_PLAYER; the fork stores the owner as
+				// statId+SHOT_SOURCE_PLAYER_BASE, so the old P1 == 0 test
+				// never counted anything and Board.Info.MaxShots never
+				// limited players (caught by the ORCLSHOT oracle capture).
+				// Counting this player's own bullets is vanilla-exact for a
+				// single player and gives each player their own budget in a
+				// shared room.
 				bulletCount = 0
 				for i = 0; i <= e.Board.StatCount; i++ {
-					if e.Board.Tiles[e.Board.Stats[i].X][e.Board.Stats[i].Y].Element == E_BULLET && e.Board.Stats[i].P1 == 0 {
+					if e.Board.Tiles[e.Board.Stats[i].X][e.Board.Stats[i].Y].Element == E_BULLET &&
+						int16(e.Board.Stats[i].P1) == statId+SHOT_SOURCE_PLAYER_BASE {
 						bulletCount++
 					}
 				}

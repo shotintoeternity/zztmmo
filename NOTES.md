@@ -2875,3 +2875,65 @@ global for the run: the first version polluted shared `E` (PlayerState hint
 flags) and flipped TOWN replay hashes when tests ran in one process. The
 manifest scaffold regen also added the `task.M17.7` row that M17.7's commit
 forgot (same miss as M17.6's, caught by TestParityManifest).
+
+## 2026-07-18 — M16.3: vanilla player/inventory/terrain sweep
+
+Seven new micro-worlds (ORCLMOVE/ITEM/DARK/NRG/SHOT/PASS/TIME, authored as
+`.zwd`, compiled once, byte-locked to their sources by
+`TestOracleWorldsMatchZWDSources`) and seven scenarios drive the real ZZT.EXE
+and the engine through movement, pushing, walls/terrain, text tiles, items,
+keys/doors, darkness/torches, energizer, shooting/breakable/ricochet/max-shots,
+passages, board edges, and per-board time limits. All 27 assigned element rows
+are `pass`; every checkpoint (cells, sidebar counters incl. `Time:`, sounds)
+matches the oracle. The advisor tool was again unavailable this session (as at
+M16.0–M16.2); M16.3 carries no `[ADVISOR]` tag, so work proceeded under the
+executor protocol.
+
+**Defects found by the sweep and fixed here** (all invisible to the TOWN
+replay, whose fixture is unchanged):
+
+- **Headless unpause was unfaithful three ways** (the M16.2 finding, now
+  fixed): the step loop's pause branch is a per-player port of vanilla's
+  (GAME.PAS:1519-1567): the touch fires while paused, the player unpauses only
+  when the move succeeds (a blocked move keeps you paused), a stat standing on
+  a non-player tile (post-passage) stamp-moves instead of MoveStat — so a
+  single-engine player can now unpause after a passage teleport — and a
+  successful unpause falls through to a no-input PlayerTick, because vanilla's
+  stale cycle gate runs a full stat cycle in the same timer window (pinned by
+  ORCLTIME's message flash phase). CurrentTick still is not re-randomized and
+  the room keeps ticking for other players (M3.11 deviation).
+- **Per-board time limits ran ~9x fast** headless: `SoundHasTimeElapsed` is
+  stubbed `true` (NOTES 2026-07-09), so `BoardTimeSec` rose every player tick.
+  New `Engine.BoardTimeElapsed` ports the SOUNDS.PAS *system-time* branch
+  (`UseSystemTimeForElapsed` — the path taken on any machine with a working
+  BIOS clock, and under Zeta) over a virtual PIT counter the step loop
+  advances: one board second per 19 ticks (~9.5 cycles) at speed 4, first
+  second immediately on entering a timed board (stale-counter quirk), reset on
+  damage. ORCLTIME pins boundaries, the warning message, damage, and the
+  sidebar Time counter.
+- **`Board.Info.MaxShots` never limited players**: PlayerTick counted player
+  bullets by `P1 == 0`, but the fork stores `statId+SHOT_SOURCE_PLAYER_BASE`.
+  Now counts the acting player's own bullets — vanilla-exact for one player,
+  per-player budgets in a shared room.
+
+**Findings for later sweeps (recorded, not fixed — rule 4):**
+
+- **M16.5 (bullets):** vanilla self-shot damage (a ricochet returning the
+  player's own bullet) is suppressed by the friendly-fire policy
+  (elements.go `ownerStatId` check). Owner-approved deviation
+  `friendly-fire-policy`; the bullet row must pin it with a focused test. The
+  ORCLSHOT scenario steps the shooter aside so the V-comparison stays clean.
+- **M16.10 (play inputs):** pressing into a wall while paused now stays paused
+  (vanilla); the `input.play-pause` row should cover both it and the
+  touch-while-paused pickup quirk.
+- **Sound representation:** the oracle comparison is ISR-preemption-aware with
+  drum-onset wildcards (drum tables 4/5/8/9 are `Random()`-seeded at ZZT
+  boot); documented in PARITY.md §7.
+
+**Oracle infra additions:** multi-world scenarios (`world` directive read by
+regen.sh; per-scenario ZZT.CFG), `shoot DIR` (held Shift around the arrow —
+vanilla samples the modifier when InputUpdate consumes the key), title-state
+adapter (engine boots in monitor state and `capture title` compares the title
+board against the real boot screen, certifying elem.monitor together with
+TestMonitorTickExitKeys), and the Time sidebar counter comparison. M16.2's
+main/scroll captures regenerate byte-identically under the extended harness.

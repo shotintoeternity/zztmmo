@@ -770,7 +770,11 @@ func extractGeneratedBoardWithWarnings(text, wantName string) (string, zwdBoard,
 	}
 	section := strings.TrimSpace(m[1]) + "\n"
 	section, warnings := preprocessZWDGridWithWarnings(section)
-	log.Printf("[DEBUG PREPROCESSED ZWD]\n%s\n", section)
+	// Opt-in only (M16.2a): this dump is large enough to drown the first
+	// useful failure in CI logs when it prints unconditionally.
+	if os.Getenv("ZZT_DEBUG_ZWD") != "" {
+		log.Printf("[DEBUG PREPROCESSED ZWD]\n%s\n", section)
+	}
 	src := "zwd 1\nworld \"CHECK\"\n" + section
 	if strings.HasPrefix(strings.TrimSpace(section), "zwd 1") {
 		src = section

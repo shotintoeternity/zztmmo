@@ -1769,6 +1769,7 @@ func (e *Engine) GameStepWithInputs(inputs map[int16]PlayerInput) {
 
 	for e.CurrentStatTicked <= e.Board.StatCount && !e.GamePlayExitRequested {
 		stat := &e.Board.Stats[e.CurrentStatTicked]
+		unpausedThisStep := false
 		if stat.Cycle != 0 && e.CurrentTick%stat.Cycle == e.CurrentStatTicked%stat.Cycle {
 			// Per-player pause (M3.11): a paused player's stat turn is vanilla's
 			// pause branch (GAME.PAS:1519-1567, mirrored from the interactive
@@ -1811,15 +1812,25 @@ func (e *Engine) GameStepWithInputs(inputs map[int16]PlayerInput) {
 						e.Events = append(e.Events, PauseEvent{StatId: e.CurrentStatTicked, Paused: false})
 						e.SidebarClearLine(5)
 						e.World.Info.IsSave = true
+						unpausedThisStep = true
 					}
 				}
-				e.CurrentStatTicked++
-				continue
+				if !unpausedThisStep {
+					e.CurrentStatTicked++
+					continue
+				}
+				// A successful unpause falls through to a no-input player tick:
+				// vanilla's cycle gate is stale after any pause, so the same
+				// timer window that carries the unpausing move also runs a full
+				// stat cycle — the pause loop's InputUpdate has already consumed
+				// the keypress, so that cycle's PlayerTick sees no input but
+				// does advance torch/energizer/board-time counters (pinned by
+				// the ORCLTIME oracle captures' message flash phase).
 			}
 			// Per-player input injection: load this player's input before tick,
 			// zero movement globals for non-player stats.
 			if e.Board.Tiles[stat.X][stat.Y].Element == E_PLAYER {
-				if inp, ok := inputs[e.CurrentStatTicked]; ok {
+				if inp, ok := inputs[e.CurrentStatTicked]; ok && !unpausedThisStep {
 					InputDeltaX = inp.DeltaX
 					InputDeltaY = inp.DeltaY
 					InputShiftPressed = inp.Shift

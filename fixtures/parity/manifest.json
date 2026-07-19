@@ -1251,8 +1251,11 @@
       "contract": "V",
       "authority": "reference/reconstruction-of-zzt/SRC ELEMENTS.PAS; ANALYSIS.md",
       "parity": "exact",
-      "status": "unverified",
-      "assignedTask": "M16.3"
+      "test": "TestOracleParityItemScenario,TestOracleParityShotScenario",
+      "fixture": "fixtures/oracle/item.capture.txt",
+      "status": "pass",
+      "assignedTask": "M16.3",
+      "notes": "+5 with one-time hint; consumed by shooting"
     },
     {
       "id": "elem.bear",
@@ -1301,8 +1304,11 @@
       "contract": "V",
       "authority": "reference/reconstruction-of-zzt/SRC ELEMENTS.PAS; ANALYSIS.md",
       "parity": "exact",
-      "status": "unverified",
-      "assignedTask": "M16.3"
+      "test": "TestOracleParityMoveScenario,TestOracleParityPassageScenario",
+      "fixture": "fixtures/oracle/pass.capture.txt",
+      "status": "pass",
+      "assignedTask": "M16.3",
+      "notes": "refusal with no neighbor; transfer with a neighbor board"
     },
     {
       "id": "elem.bomb",
@@ -1331,8 +1337,11 @@
       "contract": "V",
       "authority": "reference/reconstruction-of-zzt/SRC ELEMENTS.PAS; ANALYSIS.md",
       "parity": "exact",
-      "status": "unverified",
-      "assignedTask": "M16.3"
+      "test": "TestOracleParityMoveScenario,TestOracleParityShotScenario",
+      "fixture": "fixtures/oracle/shot.capture.txt",
+      "status": "pass",
+      "assignedTask": "M16.3",
+      "notes": "inert on touch; destroyed by a bullet"
     },
     {
       "id": "elem.bullet",
@@ -1391,8 +1400,11 @@
       "contract": "V",
       "authority": "reference/reconstruction-of-zzt/SRC ELEMENTS.PAS; ANALYSIS.md",
       "parity": "exact",
-      "status": "unverified",
-      "assignedTask": "M16.3"
+      "test": "TestOracleParityItemScenario",
+      "fixture": "fixtures/oracle/item.capture.txt",
+      "status": "pass",
+      "assignedTask": "M16.3",
+      "notes": "matching key opens; missing key refuses"
     },
     {
       "id": "elem.duplicator",
@@ -1411,7 +1423,9 @@
       "contract": "V",
       "authority": "reference/reconstruction-of-zzt/SRC ELEMENTS.PAS; ANALYSIS.md",
       "parity": "exact",
-      "status": "unverified",
+      "test": "TestOracleParityMoveScenario",
+      "fixture": "fixtures/oracle/move.capture.txt",
+      "status": "pass",
       "assignedTask": "M16.3"
     },
     {
@@ -1421,8 +1435,11 @@
       "contract": "V",
       "authority": "reference/reconstruction-of-zzt/SRC ELEMENTS.PAS; ANALYSIS.md",
       "parity": "exact",
-      "status": "unverified",
-      "assignedTask": "M16.3"
+      "test": "TestOracleParityEnergizerScenario",
+      "fixture": "fixtures/oracle/nrg.capture.txt",
+      "status": "pass",
+      "assignedTask": "M16.3",
+      "notes": "pickup/warning melodies and post-expiry state; no checkpoint while energized (flash color derives from vanilla-randomized CurrentTick the engine pins — scenario-design exclusion)"
     },
     {
       "id": "elem.fake",
@@ -1431,8 +1448,11 @@
       "contract": "V",
       "authority": "reference/reconstruction-of-zzt/SRC ELEMENTS.PAS; ANALYSIS.md",
       "parity": "exact",
-      "status": "unverified",
-      "assignedTask": "M16.3"
+      "test": "TestOracleParityMoveScenario",
+      "fixture": "fixtures/oracle/move.capture.txt",
+      "status": "pass",
+      "assignedTask": "M16.3",
+      "notes": "walk-through with one-time message"
     },
     {
       "id": "elem.forest",
@@ -1441,8 +1461,11 @@
       "contract": "V",
       "authority": "reference/reconstruction-of-zzt/SRC ELEMENTS.PAS; ANALYSIS.md",
       "parity": "exact",
-      "status": "unverified",
-      "assignedTask": "M16.3"
+      "test": "TestOracleParityMoveScenario",
+      "fixture": "fixtures/oracle/move.capture.txt",
+      "status": "pass",
+      "assignedTask": "M16.3",
+      "notes": "clears with message and sound"
     },
     {
       "id": "elem.gem",
@@ -1451,8 +1474,11 @@
       "contract": "V",
       "authority": "reference/reconstruction-of-zzt/SRC ELEMENTS.PAS; ANALYSIS.md",
       "parity": "exact",
-      "status": "unverified",
-      "assignedTask": "M16.3"
+      "test": "TestOracleParityItemScenario",
+      "fixture": "fixtures/oracle/item.capture.txt",
+      "status": "pass",
+      "assignedTask": "M16.3",
+      "notes": "counters via oracle sidebar"
     },
     {
       "id": "elem.invisible",
@@ -1461,8 +1487,11 @@
       "contract": "V",
       "authority": "reference/reconstruction-of-zzt/SRC ELEMENTS.PAS; ANALYSIS.md",
       "parity": "exact",
-      "status": "unverified",
-      "assignedTask": "M16.3"
+      "test": "TestOracleParityMoveScenario",
+      "fixture": "fixtures/oracle/move.capture.txt",
+      "status": "pass",
+      "assignedTask": "M16.3",
+      "notes": "hidden in the initial capture, revealed to a normal wall on touch"
     },
     {
       "id": "elem.key",
@@ -1471,8 +1500,11 @@
       "contract": "V",
       "authority": "reference/reconstruction-of-zzt/SRC ELEMENTS.PAS; ANALYSIS.md",
       "parity": "exact",
-      "status": "unverified",
-      "assignedTask": "M16.3"
+      "test": "TestOracleParityItemScenario",
+      "fixture": "fixtures/oracle/item.capture.txt",
+      "status": "pass",
+      "assignedTask": "M16.3",
+      "notes": "pickup and duplicate-key refusal"
     },
     {
       "id": "elem.line",
@@ -1481,8 +1513,11 @@
       "contract": "V",
       "authority": "reference/reconstruction-of-zzt/SRC ELEMENTS.PAS; ANALYSIS.md",
       "parity": "exact",
-      "status": "unverified",
-      "assignedTask": "M16.3"
+      "test": "TestOracleParityMoveScenario",
+      "fixture": "fixtures/oracle/move.capture.txt",
+      "status": "pass",
+      "assignedTask": "M16.3",
+      "notes": "neighbor-joined line characters compared in the board captures"
     },
     {
       "id": "elem.lion",
@@ -1501,8 +1536,11 @@
       "contract": "V",
       "authority": "reference/reconstruction-of-zzt/SRC ELEMENTS.PAS; ANALYSIS.md",
       "parity": "exact",
-      "status": "unverified",
-      "assignedTask": "M16.3"
+      "test": "TestOracleParityMoveScenario,TestOracleParityTimeScenario",
+      "fixture": "fixtures/oracle/time.capture.txt",
+      "status": "pass",
+      "assignedTask": "M16.3",
+      "notes": "message text, position, flash phase (P2), and expiry compared against the oracle"
     },
     {
       "id": "elem.monitor",
@@ -1511,8 +1549,11 @@
       "contract": "V",
       "authority": "reference/reconstruction-of-zzt/SRC ELEMENTS.PAS; ANALYSIS.md",
       "parity": "exact",
-      "status": "unverified",
-      "assignedTask": "M16.3"
+      "test": "TestMonitorTickExitKeys,TestOracleParityMoveScenario",
+      "fixture": "fixtures/oracle/move.capture.txt",
+      "status": "pass",
+      "assignedTask": "M16.3",
+      "notes": "title-screen board state via every sweep scenario title checkpoint; exit-key set pinned by the unit test"
     },
     {
       "id": "elem.normal",
@@ -1521,8 +1562,11 @@
       "contract": "V",
       "authority": "reference/reconstruction-of-zzt/SRC ELEMENTS.PAS; ANALYSIS.md",
       "parity": "exact",
-      "status": "unverified",
-      "assignedTask": "M16.3"
+      "test": "TestOracleParityMoveScenario,TestOracleParityShotScenario",
+      "fixture": "fixtures/oracle/move.capture.txt",
+      "status": "pass",
+      "assignedTask": "M16.3",
+      "notes": "touch refusal; bullet dies against it unharmed"
     },
     {
       "id": "elem.object",
@@ -1552,7 +1596,9 @@
       "authority": "reference/reconstruction-of-zzt/SRC ELEMENTS.PAS; ANALYSIS.md",
       "parity": "deviation",
       "deviation": "mp-respawn",
-      "status": "unverified",
+      "test": "TestOracleParityMoveScenario,TestOracleParityItemScenario,TestOracleParityShotScenario,TestOracleParityTimeScenario,TestDeathRespawnInventoryIsolation",
+      "fixture": "fixtures/oracle/main.capture.txt",
+      "status": "pass",
       "assignedTask": "M16.3",
       "notes": "also subject to collision-pushout and friendly-fire-policy; single-player V behavior is exact"
     },
@@ -1573,8 +1619,11 @@
       "contract": "V",
       "authority": "reference/reconstruction-of-zzt/SRC ELEMENTS.PAS; ANALYSIS.md",
       "parity": "exact",
-      "status": "unverified",
-      "assignedTask": "M16.3"
+      "test": "TestOracleParityShotScenario",
+      "fixture": "fixtures/oracle/shot.capture.txt",
+      "status": "pass",
+      "assignedTask": "M16.3",
+      "notes": "reversal proven with the shooter stepped aside; self-shot damage is the friendly-fire deviation, pinned by the M16.5 bullet row"
     },
     {
       "id": "elem.ruffian",
@@ -1643,7 +1692,9 @@
       "contract": "V",
       "authority": "reference/reconstruction-of-zzt/SRC ELEMENTS.PAS; ANALYSIS.md",
       "parity": "exact",
-      "status": "unverified",
+      "test": "TestOracleParityMoveScenario",
+      "fixture": "fixtures/oracle/move.capture.txt",
+      "status": "pass",
       "assignedTask": "M16.3"
     },
     {
@@ -1673,7 +1724,9 @@
       "contract": "V",
       "authority": "reference/reconstruction-of-zzt/SRC ELEMENTS.PAS; ANALYSIS.md",
       "parity": "exact",
-      "status": "unverified",
+      "test": "TestOracleParityMoveScenario",
+      "fixture": "fixtures/oracle/move.capture.txt",
+      "status": "pass",
       "assignedTask": "M16.3",
       "notes": "text tiles are drawn by the special case in game.go TileToColorAndChar, not a DrawProc"
     },
@@ -1684,7 +1737,9 @@
       "contract": "V",
       "authority": "reference/reconstruction-of-zzt/SRC ELEMENTS.PAS; ANALYSIS.md",
       "parity": "exact",
-      "status": "unverified",
+      "test": "TestOracleParityMoveScenario",
+      "fixture": "fixtures/oracle/move.capture.txt",
+      "status": "pass",
       "assignedTask": "M16.3",
       "notes": "text tiles are drawn by the special case in game.go TileToColorAndChar, not a DrawProc"
     },
@@ -1695,7 +1750,9 @@
       "contract": "V",
       "authority": "reference/reconstruction-of-zzt/SRC ELEMENTS.PAS; ANALYSIS.md",
       "parity": "exact",
-      "status": "unverified",
+      "test": "TestOracleParityMoveScenario",
+      "fixture": "fixtures/oracle/move.capture.txt",
+      "status": "pass",
       "assignedTask": "M16.3",
       "notes": "text tiles are drawn by the special case in game.go TileToColorAndChar, not a DrawProc"
     },
@@ -1706,7 +1763,9 @@
       "contract": "V",
       "authority": "reference/reconstruction-of-zzt/SRC ELEMENTS.PAS; ANALYSIS.md",
       "parity": "exact",
-      "status": "unverified",
+      "test": "TestOracleParityMoveScenario",
+      "fixture": "fixtures/oracle/move.capture.txt",
+      "status": "pass",
       "assignedTask": "M16.3",
       "notes": "text tiles are drawn by the special case in game.go TileToColorAndChar, not a DrawProc"
     },
@@ -1717,7 +1776,9 @@
       "contract": "V",
       "authority": "reference/reconstruction-of-zzt/SRC ELEMENTS.PAS; ANALYSIS.md",
       "parity": "exact",
-      "status": "unverified",
+      "test": "TestOracleParityMoveScenario",
+      "fixture": "fixtures/oracle/move.capture.txt",
+      "status": "pass",
       "assignedTask": "M16.3",
       "notes": "text tiles are drawn by the special case in game.go TileToColorAndChar, not a DrawProc"
     },
@@ -1728,7 +1789,9 @@
       "contract": "V",
       "authority": "reference/reconstruction-of-zzt/SRC ELEMENTS.PAS; ANALYSIS.md",
       "parity": "exact",
-      "status": "unverified",
+      "test": "TestOracleParityMoveScenario",
+      "fixture": "fixtures/oracle/move.capture.txt",
+      "status": "pass",
       "assignedTask": "M16.3",
       "notes": "text tiles are drawn by the special case in game.go TileToColorAndChar, not a DrawProc"
     },
@@ -1739,7 +1802,9 @@
       "contract": "V",
       "authority": "reference/reconstruction-of-zzt/SRC ELEMENTS.PAS; ANALYSIS.md",
       "parity": "exact",
-      "status": "unverified",
+      "test": "TestOracleParityMoveScenario",
+      "fixture": "fixtures/oracle/move.capture.txt",
+      "status": "pass",
       "assignedTask": "M16.3",
       "notes": "text tiles are drawn by the special case in game.go TileToColorAndChar, not a DrawProc"
     },
@@ -1760,8 +1825,11 @@
       "contract": "V",
       "authority": "reference/reconstruction-of-zzt/SRC ELEMENTS.PAS; ANALYSIS.md",
       "parity": "exact",
-      "status": "unverified",
-      "assignedTask": "M16.3"
+      "test": "TestOracleParityItemScenario,TestOracleParityDarkScenario",
+      "fixture": "fixtures/oracle/dark.capture.txt",
+      "status": "pass",
+      "assignedTask": "M16.3",
+      "notes": "lit-room refusal, no-torch refusal, dark pickup, lighting circle, expiry"
     },
     {
       "id": "elem.transporter",
@@ -1780,8 +1848,11 @@
       "contract": "V",
       "authority": "reference/reconstruction-of-zzt/SRC ELEMENTS.PAS; ANALYSIS.md",
       "parity": "exact",
-      "status": "unverified",
-      "assignedTask": "M16.3"
+      "test": "TestOracleParityMoveScenario",
+      "fixture": "fixtures/oracle/move.capture.txt",
+      "status": "pass",
+      "assignedTask": "M16.3",
+      "notes": "blocks with message"
     },
     {
       "id": "oop.command.become",

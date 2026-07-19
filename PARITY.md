@@ -210,12 +210,29 @@ committed; `make oracle-regen` is the only way to regenerate them, and tests
 never run the oracle (`oracle/README.md`).
 
 **Compared surface.** The 80x25 text page is what a vanilla player observes and
-what the oracle exposes: board cells are compared raw; player/world counters are
-parsed from the sidebar and compared against engine state; modal text windows
+what the oracle exposes: board cells are compared raw; player/world counters
+(including a timed board's remaining `Time:`) are parsed from the sidebar and
+compared against engine state; title-screen checkpoints (taken before `play`)
+compare board cells only, since the sidebar shows the menu; modal text windows
 are compared by content; speaker tone onsets are compared as frequency
-sequences. Board tiles/stats/RNG are covered via their screen projection —
-memory-level capture out of the emulated data segment is a possible later
-extension, not part of this seam.
+sequences through an ISR-faithful matcher — vanilla plays one melody at a time
+and a newly accepted `SoundQueue` replaces whatever is still sounding, so each
+engine-queued melody may match only a prefix, a mid-play melody's remaining
+onsets may land after the checkpoint, and drum bursts match by onset count
+(several drum tables draw frequencies from `Random()` seeded at the oracle's
+boot). That sound leniency is one-sided: every tone the oracle did play must
+appear, in order, at the engine's queue positions. Board tiles/stats/RNG are
+covered via their screen projection — memory-level capture out of the emulated
+data segment is a possible later extension, not part of this seam.
+
+**Scenario-design exclusions** (M16.3): no checkpoint is taken while the
+player is energized — the flash color derives from vanilla's play-start
+`Random(100)` CurrentTick, which the engine deliberately pins (M3.11) — and no
+checkpoint depends on a message that crossed the initial pause boundary, where
+vanilla's global freeze and the fork's per-player freeze (deviation
+`per-player-modal-freeze`) tick board stats differently. Sweep scenarios also
+avoid vanilla's self-shot ricochet damage, which the friendly-fire policy
+suppresses (deviation `friendly-fire-policy`, pinned by the M16.5 bullet row).
 
 **Documented representation normalizations** (the complete list — anything else
 that differs is a defect):
