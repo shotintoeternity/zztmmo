@@ -3008,6 +3008,23 @@ newly enables; same rule: backlog bullets, owner promotes before spec):**
   world picker you walk through; TOWN goes back to being a game you beat.
 
 **Architecture follow-ups:**
+* [ ] **Deduplicate the world catalog.** Owner report (2026-07-18): the world
+  picker shows the same ZZT world multiple times. Likely vectors, to be
+  confirmed against the live worlds directory: `ListWorlds` accepts any
+  case variant of the `.ZZT` suffix and base name, so `TOWN.ZZT`/`town.zzt`
+  list as two joinable entries that `SanitizeSaveName` then collapses onto one
+  pristine world; several distinct files can resolve to one Museum manifest
+  entry (`addWorldMetadataKey` registers the ID, zip base, and every zip
+  member as aliases), so re-uploaded or renamed copies of a world repeat the
+  same curated title; and the metadata-only picker policy currently sitting on
+  the experimental branch (`WorldListEntriesInDir`) changes which of these
+  survive. Decide the identity rule (one entry per pristine world the join
+  path would load — probably keyed on the sanitized name, preferring the
+  curated metadata match), then make `ListWorlds`/`WorldListEntries` enforce
+  it. DoD: a worlds directory seeded with case variants and renamed copies of
+  one world yields exactly one picker entry, covered by a unit test; the live
+  duplicate disappears; no world that was joinable before becomes unlistable
+  without an explicit exclusion note.
 * [ ] **Set and protect the co-op product cutline.** Before promoting another
   roadmap system (Dream, Museum, auth, editor collaboration, ghosts, or
   live-DM), define one automated and manually repeatable acceptance journey:
