@@ -1873,6 +1873,21 @@ gap task has landed.
   (documented in oracle/README.md). Advisor unavailable again this session
   (as at M16.0/M16.1); the owner approved starting per the session decision.
 
+- [ ] **M16.2a — Return the independent-oracle baseline to green without
+  weakening it.** Review finding (2026-07-18): the expanded oracle scenarios
+  currently make `go test ./...` fail. Treat each mismatch as a concrete parity
+  lead, not as a reason to update a capture: item pickup has an extra/missing
+  tone onset; energizer melody timing diverges; a ricochet checkpoint renders a
+  different tile; a passage resume emits no expected tones; and the low-time
+  checkpoint has the wrong color attribute. For each, first minimize and assign
+  the cause to M16.3/M16.5/M16.6/M16.7 as appropriate; either land the narrow
+  fix with its oracle assertion or file a fully specified blocking gap task.
+  DoD: the complete backend suite is green again, every changed capture retains
+  provenance and an explicit behavioral justification, and no failure is
+  hidden by skipping/normalizing the comparison. Also make the large
+  `DEBUG PREPROCESSED ZWD` dump opt-in (or emit it only on the focused failure)
+  so CI logs preserve the first useful oracle mismatch.
+
 - [ ] **M16.3 — Vanilla player, inventory, and terrain parity sweep.** Using
   M16.2 micro-world scenarios, cover player movement and shooting directions,
   pushing, board edges and passages, keys/doors, ammo, gems, torches/darkness,
@@ -2955,6 +2970,21 @@ newly enables; same rule: backlog bullets, owner promotes before spec):**
   world picker you walk through; TOWN goes back to being a game you beat.
 
 **Architecture follow-ups:**
+* [ ] **Set and protect the co-op product cutline.** Before promoting another
+  roadmap system (Dream, Museum, auth, editor collaboration, ghosts, or
+  live-DM), define one automated and manually repeatable acceptance journey:
+  a small group starts a classic world, completes a meaningful multi-board
+  segment together, survives reconnect/save/restore, and observes the same
+  authoritative result. Keep this journey green while M16 closes fidelity gaps;
+  use it to decide whether an otherwise attractive feature advances the core
+  shared-ZZT experience.
+* [ ] **Give the fork its own Go module identity.** The repository is
+  `github.com/shotintoeternity/zztmmo`, but `engine/go.mod` still declares
+  `github.com/benhoyt/zztgo`. Plan a deliberate import-path migration after the
+  current parity baseline is green: update self-imports, commands, documentation,
+  and any release/deploy references; preserve upstream attribution in README and
+  NOTICE. DoD: a clean clone builds/tests under the ZZTMMO module path and no
+  tooling or generated artifact presents the fork as upstream zztgo.
 * [ ] **Evaluate server scaling for 20–30 concurrent players.** Determine whether
   the current EC2 instance is sufficient before upgrading blindly. Measure CPU,
   memory, network, WebSocket fanout, tick latency, and per-room simulation cost under
@@ -2971,6 +3001,10 @@ newly enables; same rule: backlog bullets, owner promotes before spec):**
   reconnects still land in the expected room/session.
 
 **README follow-ups:**
+* [ ] **Correct the fixture path in the directory map.** The README currently
+  calls the fixture directory `engine/fixtures/`; committed fixtures live at
+  repository-root `fixtures/`. Make the map and any associated local-run wording
+  accurate, then verify the documented commands from a clean clone.
 * [x] **Add capnkev to the README greetz list.** Keep the list alphabetical,
   names only, and preserve the README's no-emoji style.
 
