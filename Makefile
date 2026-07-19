@@ -6,7 +6,16 @@
 # non-zero when a gate fails or the manifest is not yet certified, and writes
 # only the gitignored report files, so a clean run leaves `git status` empty.
 
-.PHONY: parity parity-report parity-canaries oracle-tools oracle-regen
+.PHONY: parity parity-report parity-canaries oracle-tools oracle-regen world
+
+# Deterministic ZWD authoring gate. Example:
+#   make world SOURCE=llmworld/generated/NULLSIGN.zwd OUT=engine/NULLSIGN.ZZT
+SOURCE ?= llmworld/generated/NULLSIGN.zwd
+OUT ?= engine/NULLSIGN.ZZT
+PREVIEW ?= llmworld/previews/NULLSIGN
+
+world:
+	cd engine && go run ./cmd/zzt-build -out ../$(OUT) -preview ../$(PREVIEW) ../$(SOURCE)
 
 # Full certification run: gates + report.
 parity:

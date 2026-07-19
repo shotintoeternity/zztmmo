@@ -2497,6 +2497,26 @@ func crossBoardProblems(plan Plan, full string) map[string][]string {
 		}
 	}
 
+	// A topologically correct graph can still be physically unwinnable when a
+	// painter seals an exit, key, passage, or finale behind immutable scenery.
+	// Feed these board-scoped defects through the existing targeted repaint loop
+	// rather than accepting the world or throwing away already-good boards.
+	if world, err := CompileZWDWorld(full); err == nil {
+		e := NewEngine()
+		e.Headless = true
+		e.World = world
+		for board, routeProblems := range evalBoardRouteProblems(e) {
+			for _, problem := range routeProblems {
+				add(board, problem)
+			}
+		}
+		for board, oopProblems := range evalOOPProblems(e) {
+			for _, problem := range oopProblems {
+				add(board, problem)
+			}
+		}
+	}
+
 	for _, step := range plan.Spine {
 		owner := spineBoardName(plan, step)
 		for _, color := range step.Keys {

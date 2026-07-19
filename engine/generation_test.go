@@ -110,6 +110,34 @@ func generatedBoard(name string, withBlueKey bool) string {
 	return "```zwd\nboard \"" + name + "\"\n  start player at 1,1\n  dark false\n  exits north none south none west none east none\n  grid\n" + strings.Join(rows, "\n") + "\n  end\n  legend\n" + legend + "\n  end\n  stats\n    stat at 2,1 element Object cycle 3\n    oop\n    @finale\n    #end\n    :touch\n    #endgame\n    #end\n    end\n  end\nend\n```"
 }
 
+func generatedBoardWithSealedFinale(name string) string {
+	section := generatedBoard(name, false)
+	lines := strings.Split(section, "\n")
+	inGrid := false
+	for i, line := range lines {
+		trimmed := strings.TrimSpace(line)
+		if trimmed == "grid" {
+			inGrid = true
+			continue
+		}
+		if inGrid && trimmed == "end" {
+			inGrid = false
+			continue
+		}
+		if inGrid && len(line) == int(BOARD_WIDTH) {
+			row := []byte(line)
+			row[1] = '#'
+			lines[i] = string(row)
+		}
+	}
+	section = strings.Join(lines, "\n")
+	section = strings.Replace(section, "    o = Object color 0x0F", "    o = Object color 0x0F\n    # = Solid color 0x07", 1)
+	section = strings.Replace(section, "stat at 2,1 element Object", "stat at 3,1 element Object", 1)
+	// Move the finale object to the far side of the new full-height wall.
+	section = strings.Replace(section, "@#"+strings.Repeat(".", 58), "@#o"+strings.Repeat(".", 57), 1)
+	return section
+}
+
 func TestM124GenerateEndpointSuccessAndPersistence(t *testing.T) {
 	plan := generationPlan("1. start: begin. #endgame")
 	fake, claude := newFakeClaude(t, plan, generatedBoard("Start", false), generatedBoard("Title", false))
@@ -508,6 +536,36 @@ func TestM124SpineOmissionRepairsOnlyOwningBoard(t *testing.T) {
 	}
 	if len(fake.requests) != 4 || !strings.Contains(fake.requests[3].Messages[0].Content, "missing promised BLUE key") {
 		t.Fatalf("expected targeted key repair, got %d calls", len(fake.requests))
+	}
+}
+
+func TestGenerationRepairsPhysicallySealedFinale(t *testing.T) {
+	plan := generationPlan("1. start: begin. #endgame")
+	bad := generatedBoardWithSealedFinale("Start")
+	good := generatedBoard("Start", false)
+	fake, claude := newFakeClaude(t, plan, bad, generatedBoard("Title", false), good)
+	defer claude.Close()
+	service := newGenerationTestService(t, claude.URL, 3)
+	if _, err := service.Generate(context.Background(), "test", "repair sealed finale", "ROUTEOK", nil, false); err != nil {
+		t.Fatal(err)
+	}
+	if len(fake.requests) != 4 || !strings.Contains(fake.requests[3].Messages[0].Content, "finale at (3,1) is sealed") {
+		t.Fatalf("expected targeted physical-route repair, got %d calls", len(fake.requests))
+	}
+}
+
+func TestGenerationRepairsOOPAnalyzerWarning(t *testing.T) {
+	plan := generationPlan("1. start: begin. #endgame")
+	bad := strings.Replace(generatedBoard("Start", false), "    #endgame", "    #sned nowhere\n    #endgame", 1)
+	good := generatedBoard("Start", false)
+	fake, claude := newFakeClaude(t, plan, bad, generatedBoard("Title", false), good)
+	defer claude.Close()
+	service := newGenerationTestService(t, claude.URL, 3)
+	if _, err := service.Generate(context.Background(), "test", "repair bad OOP", "OOPOK", nil, false); err != nil {
+		t.Fatal(err)
+	}
+	if len(fake.requests) != 4 || !strings.Contains(fake.requests[3].Messages[0].Content, "unknown command") {
+		t.Fatalf("expected targeted OOP repair, got %d calls", len(fake.requests))
 	}
 }
 

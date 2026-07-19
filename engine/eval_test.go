@@ -149,6 +149,38 @@ func TestEvalGateGoodWorldPasses(t *testing.T) {
 	}
 }
 
+func TestEvalGateBoardRoutesRejectsSealedFinale(t *testing.T) {
+	w := evalGoodWorld()
+	// A full-height immutable wall between the start and the finale object is
+	// mechanically valid ZWD and graph-reachable, but not physically playable.
+	src := w.build()
+	world, err := CompileZWDWorld(src)
+	if err != nil {
+		t.Fatal(err)
+	}
+	e := NewEngine()
+	e.Headless = true
+	e.World = world
+	e.BoardOpen(1)
+	for y := int16(1); y <= BOARD_HEIGHT; y++ {
+		e.Board.Tiles[31][y] = TTile{Element: E_SOLID, Color: 0x07}
+	}
+	e.BoardClose()
+	check := evalBoardRoutes(e)
+	if check.Passed || !strings.Contains(check.Detail, "finale") {
+		t.Fatalf("sealed finale route check = %+v", check)
+	}
+}
+
+func TestEvalZWDOOPRejectsUnknownCommand(t *testing.T) {
+	w := evalGoodWorld()
+	w.cavernOOP = "@exit\n    #end\n    :touch\n    #sned nowhere\n    #endgame\n    #end"
+	check := EvalZWDOOP(w.build())
+	if check.Passed || !strings.Contains(check.Detail, "unknown command") {
+		t.Fatalf("bad OOP analysis = %+v", check)
+	}
+}
+
 func TestEvalGateWordmarkMissing(t *testing.T) {
 	w := evalGoodWorld()
 	w.titleCells = map[[2]int]byte{}

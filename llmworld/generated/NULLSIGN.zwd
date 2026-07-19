@@ -1,0 +1,432 @@
+zwd 1
+world "NULL SIGNAL"
+
+board "Title Screen"
+  start player at 30,23
+  max-shots 0
+  dark false
+  reenter false
+  time-limit 0
+  exits north none south none west none east none
+
+  grid
+############################################################
+#..........................................................#
+#..........................................................#
+#..........................................................#
+#.......................NULL.SIGNAL........................#
+#...nnnnnnnnnn...............................nnnnnnnnnn....#
+#..........................................................#
+#......bbbbbbbbbb.........................bbbbbbbbbb.......#
+#.............................s............................#
+#.............................s............................#
+#............................nsn...........................#
+#............................nsn...........................#
+#............................nsn...........................#
+#............................nsn...........................#
+#............................nsn...........................#
+#............................nsn...........................#
+#............................nsn...........................#
+#............................nsn...........................#
+#............................nsn...........................#
+#............................nsn...........................#
+#.........................sssssssss........................#
+#.....................nnnnnnnnnnnnnnnnn....................#
+#............................@.............................#
+#..........................................................#
+############################################################
+  end
+
+  legend
+    . = Empty color 0x00
+    # = Solid color 0x08
+    n = Normal color 0x03
+    b = Breakable color 0x1B
+    s = Solid color 0x07
+    N = Text-White color 0x4E
+    U = Text-White color 0x55
+    L = Text-White color 0x4C
+    S = Text-White color 0x53
+    I = Text-White color 0x49
+    G = Text-White color 0x47
+    A = Text-White color 0x41
+    @ = Player color 0x1F under Empty color 0x00
+  end
+
+  stats
+  end
+end
+
+board "Storm Platform"
+  start player at 5,13
+  max-shots 5
+  dark false
+  reenter false
+  time-limit 0
+  exits north none south none west none east "Neon Orchard"
+
+  grid
+############################################################
+#..w...w.........w...w...............w...............w.....#
+#..w...w.........w...w........n......w...............w.....#
+#..w...w.........w...w....NNNNnNNNN..w...............w.....#
+#..w...w.........w...w....N...n...N..w...............w.....#
+#..w...w.........w...w....N.bbbbb.N..w...............w.....#
+#..w...w.........w...w....N...n...N..w...............w.....#
+#..w...w.........w...w....N...n...N..w...............w.....#
+#.........................N...n...N........................#
+#nnnnnnnnnnnnnnnnnnnnnnnnnNNNNNNNNNnnnnnnnnnnnnnnnnnnnnnnnn#
+#fffffffffffffffffffffffffffffffffffffbbbbbbbffffffffffffff#
+#ffffffffffffffffffaffffffffffffffffffbffrffbffrffffffffgff#
+#fff@ffffffoffffffffffffffffffffffffffbfffffbffffffffffffff.
+#fffffffffffffffffffffftffffffffffffffbffgffbffffffflffffff#
+#fffffffffffffffffffffffffffffffffffffbbbbbbbffffffffffffff#
+#nnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnn#
+#..........................................................#
+#..........................................................#
+#..........................................................#
+#..........................................................#
+#..........................................................#
+#..........................................................#
+#..........................................................#
+#..........................................................#
+############################################################
+  end
+
+  legend
+    . = Empty color 0x00
+    # = Solid color 0x08
+    f = Fake color 0x70
+    n = Normal color 0x03
+    N = Solid color 0x07
+    b = Breakable color 0x1B
+    w = Water color 0x1D
+    a = Ammo color 0x03
+    t = Torch color 0x0E
+    g = Gem color 0x0B
+    r = Ruffian color 0x0D
+    l = Lion color 0x0C
+    o = Object color 0x0B
+    @ = Player color 0x1F under Fake color 0x70
+  end
+
+  stats
+    stat at 12,13 element Object cycle 3 p1 cp437:0x02 step idle under Fake color 0x70
+    oop
+    @lastoperator
+    #end
+    :touch
+    #play tc-e-g
+    You are late. By nine nights, roughly.
+    The rain is falling the wrong way.
+    Take these. Wake the relay east of here.
+    #give ammo 15
+    #give torches 3
+    #zap touch
+    #end
+    :touch
+    The dead frequency keeps saying your name.
+    I did not tell it your name.
+    #end
+    end
+
+    stat at 42,12 element Ruffian cycle 2 step idle under Fake color 0x70
+    stat at 48,12 element Ruffian cycle 2 step idle under Fake color 0x70
+    stat at 53,14 element Lion cycle 2 p1 5 step idle under Fake color 0x70
+  end
+end
+
+board "Neon Orchard"
+  start player at 4,13
+  max-shots 5
+  dark false
+  reenter false
+  time-limit 0
+  exits north none south none west "Storm Platform" east "Relay Ossuary"
+
+  grid
+############################################################
+#...........................wwww...........................#
+#.FFFFFFFFFFFF...n....n.....wwww.....n....n..FFFFFFFFFFFF..#
+#.FFFFFFFFFFFF...g....g.....wwww.....g....g..FFFFFFFFFFFF..#
+#.FFFFFFFFFFFF...n....n....kwwww.....n....n..FFFFFFFFFFFF..#
+#.FFFFFFFFFFFF...g....g.....wwww.....g....g..FFFFFFFFFFFF..#
+#.FFFFFFFFFFFF...n....n..ffffffffff..n....n..FFFFFFFFFFFF..#
+#.FFFFFFFFFFFF...n....n.....wwww.....n....n..FFFFFFFFFFFF..#
+#...........................wwww...........................#
+#nnnnnnnnnnnnnnnnnnnnnnnnffffffffffnnnnnnnnnnnnnnnnnnnnnnnn#
+#ffffffffffffffffffffffffffffffffffffffffffffffffffffffffff#
+#fffffffffffffffffflffffffffffffffffffffffffffflfffffffffff#
+.ff@ffffffoffffffffffffffffffffffffffffffffffffffffffffffff.
+#fffffffffffffffffffffffafffffffffffrffffffffffffffffgfffff#
+#ffffffffffffffffffffffffffffffffffffffffffffffffffffffffff#
+#nnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnn#
+#..........................................................#
+#..........................................................#
+#..........................................................#
+#..........................................................#
+#..........................................................#
+#..........................................................#
+#..........................................................#
+#..........................................................#
+############################################################
+  end
+
+  legend
+    . = Empty color 0x00
+    # = Solid color 0x08
+    f = Fake color 0x70
+    n = Normal color 0x03
+    F = Forest color 0x20
+    w = Water color 0x1B
+    g = Gem color 0x0B
+    a = Ammo color 0x03
+    k = Key color blue
+    r = Ruffian color 0x0D
+    l = Lion color 0x0C
+    o = Object color 0x0A
+    @ = Player color 0x1F under Fake color 0x70
+  end
+
+  stats
+    stat at 11,13 element Object cycle 3 p1 cp437:0x05 step idle under Fake color 0x70
+    oop
+    @glassfruit
+    #end
+    :touch
+    #play s.c.e.g
+    Glass fruit hums on the trellises.
+    Every branch points toward the blue key.
+    Nothing here has roots anymore.
+    #zap touch
+    #end
+    :touch
+    The orchard hums one note too low.
+    #end
+    end
+
+    stat at 20,12 element Lion cycle 2 p1 4 step idle under Fake color 0x70
+    stat at 37,14 element Ruffian cycle 2 step idle under Fake color 0x70
+    stat at 48,12 element Lion cycle 2 p1 5 step idle under Fake color 0x70
+  end
+end
+
+board "Relay Ossuary"
+  start player at 4,13
+  max-shots 4
+  dark false
+  reenter false
+  time-limit 0
+  exits north none south none west "Neon Orchard" east "Signal Spire"
+
+  grid
+############################################################
+#..........................................................#
+#........bbbbb.bbbbb.......bbbbb.......bbbbb.......bbbbb...#
+#..........n.....n...........n...........n...........n.....#
+#..........n.....n...........n...........n...........n.....#
+#..........n.....n...........n...........n...........n.....#
+#..........n.....n...........n...........n...........n.....#
+#..........n.....n...........n...........n...........n.....#
+#..........n.....n...........n...........n...........n.....#
+#NNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNN#
+#ffffffffffffffffffffffbffffffffffbffffffffffffffffffffffff#
+#ffffffffffffffrfffffffbffffffffffbffffffsffffffffffgffffff#
+.ff@fffffffffffffffffffdffffffffffofffffffffffffkffffffffff.
+#ffffffffffffffffffffffbffflffffffbfffffffffaffffffffffffff#
+#ffffffffffffffffffffffbffffffffffbffffffffffffffffffffffff#
+#NNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNN#
+#..........................................................#
+#..........................................................#
+#..........................................................#
+#..........................................................#
+#..........................................................#
+#..........................................................#
+#..........................................................#
+#..........................................................#
+############################################################
+  end
+
+  legend
+    . = Empty color 0x00
+    # = Solid color 0x08
+    f = Fake color 0x70
+    n = Normal color 0x07
+    N = Solid color 0x03
+    b = Breakable color 0x17
+    d = Door color blue
+    k = Key color cyan
+    g = Gem color 0x0B
+    a = Ammo color 0x03
+    r = Ruffian color 0x0D
+    l = Lion color 0x0C
+    s = Slime color 0x0A
+    o = Object color 0x0E
+    @ = Player color 0x1F under Fake color 0x70
+  end
+
+  stats
+    stat at 16,12 element Ruffian cycle 2 step idle under Fake color 0x70
+    stat at 28,14 element Lion cycle 2 p1 5 step idle under Fake color 0x70
+    stat at 42,12 element Slime cycle 3 p1 8 step idle under Fake color 0x70
+
+    stat at 35,13 element Object cycle 3 p1 cp437:0x0F step idle under Fake color 0x70
+    oop
+    @relay
+    #end
+    :touch
+    #play tceg+c
+    The relay wakes bone by bone.
+    It broadcasts one impossible sentence:
+    "THERE IS NO OUTSIDE FROM IN HERE."
+    #set relayawake
+    #give score 250
+    #die
+    end
+  end
+end
+
+board "Signal Spire"
+  start player at 4,13
+  max-shots 4
+  dark true
+  reenter false
+  time-limit 0
+  exits north none south none west "Relay Ossuary" east none
+
+  grid
+############################################################
+#..........................................................#
+#........N.......N...........N.........N.........N.........#
+#........N.......N...........N.........N.........N.........#
+#......bbbbb...bbbbb.......bbbbb.....bbbbb.....bbbbb.......#
+#........N.......N...........N.........N.........N.........#
+#........N.......N...........N.........N.........N.........#
+#........N.......N...........N.........N.........N.........#
+#........N.......N...........N.........N.........N.........#
+#nnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnn#
+#ffffffffffffffffffffbffffffffffffffffffffffffNNNNNNNNNNNff#
+#ffffffffffffffffffffbfffffffffrfffffffffffgffNfffffffffNff#
+.ff@fffffffffffffffffdffffoffffffffffffffffffffffffpffffNff#
+#ffffffffffffffffffffbffffffffffffffflffffffffNfffffffffNff#
+#ffffffffffffffffffffbffffffffffffffffffffffffNNNNNNNNNNNff#
+#nnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnn#
+#..........................................................#
+#..........................................................#
+#..........................................................#
+#..........................................................#
+#..........................................................#
+#..........................................................#
+#..........................................................#
+#..........................................................#
+############################################################
+  end
+
+  legend
+    . = Empty color 0x00
+    # = Solid color 0x08
+    f = Fake color 0x70
+    n = Normal color 0x03
+    N = Solid color 0x07
+    b = Breakable color 0x1B
+    d = Door color cyan
+    g = Gem color 0x0B
+    r = Ruffian color 0x0D
+    l = Lion color 0x0C
+    o = Object color 0x09
+    p = Passage color 0x3F to "Broadcast Core"
+    @ = Player color 0x1F under Fake color 0x70
+  end
+
+  stats
+    stat at 27,13 element Object cycle 3 p1 cp437:0x18 step idle under Fake color 0x70
+    oop
+    @uplink
+    #end
+    :touch
+    #play t-c-e
+    The lift has no buttons, only a pulse.
+    It recognizes the relay in your shadow.
+    Up is briefly a matter of opinion.
+    #die
+    end
+
+    stat at 32,12 element Ruffian cycle 2 step idle under Fake color 0x70
+    stat at 38,14 element Lion cycle 2 p1 5 step idle under Fake color 0x70
+    stat at 52,13 element Passage cycle 0 p3 board "Broadcast Core" under Fake color 0x70
+  end
+end
+
+board "Broadcast Core"
+  start player at 6,20
+  max-shots 0
+  dark false
+  reenter false
+  time-limit 0
+  exits north none south none west none east none
+
+  grid
+############################################################
+#..........................................................#
+#........NNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNN........#
+#........N........................................N........#
+#........N.....nnnnnnnnnnnnnnnnnnnnnnnnnnnnnn.....N........#
+#........N.....n............................n.....N........#
+#........N.....n.....bbbbbbbbbbbbbbbbbb.....n.....N........#
+#........N.....n.....b................b.....n.....N........#
+#........N.....n.....b................b.....n.....N........#
+#........N.....n.....b...ffffffffff...b.....n.....N........#
+#........N.....n.....b...ffffofffff...b.....n.....N........#
+#........N.....n.....b...ffffffffff...b.....n.....N........#
+#........N.....n.....b...ffffffffff...b.....n.....N........#
+#........N.....n.....b...ffffffffff...b.....n.....N........#
+#........N.....n.....bbbbbbffffffbbbbbb.....n.....N........#
+#........N.....n............................n.....N........#
+#........N.....n..g......................g..n.....N........#
+#.fffffffNfffffnnnnnnnnnnnnffffffnnnnnnnnnnnnfffffNfffffff.#
+#.fffffffNffffffffffffffffffffffffffffffffffffffffNfffffff.#
+#.fff@fffNfffffffffffffgffffffffffffgfffffffffffffNfffffff.#
+#.fffffffNNNNNNNNNNNNNNNNNNffffffNNNNNNNNNNNNNNNNNNfffffff.#
+#.fffpffffffffffffffffffffffffffffffffffffffffffffffffffff.#
+#.ffffffffffffffffffffffffffffffffffffffffffffffffffffffff.#
+#..........................................................#
+############################################################
+  end
+
+  legend
+    . = Empty color 0x00
+    # = Solid color 0x08
+    f = Fake color 0x70
+    n = Normal color 0x03
+    N = Solid color 0x07
+    b = Breakable color 0x1B
+    g = Gem color 0x0B
+    p = Passage color 0x3F to "Signal Spire"
+    o = Object color 0x0E
+    @ = Player color 0x1F under Fake color 0x70
+  end
+
+  stats
+    stat at 6,22 element Passage cycle 0 p3 board "Signal Spire" under Fake color 0x70
+
+    stat at 30,11 element Object cycle 2 p1 cp437:0x0F step idle under Fake color 0x70
+    oop
+    @carrier
+    #end
+    :touch
+    #if relayawake answer
+    The carrier wave is empty.
+    Something downstream is still asleep.
+    #end
+    :answer
+    #play tcdefgab+c
+    NULL SIGNAL // CARRIER ACQUIRED
+    The voice from nowhere is your own.
+    It has been waiting a very long time
+    to remember which side of you is real.
+    #give score 1000
+    #endgame
+    #end
+    end
+  end
+end

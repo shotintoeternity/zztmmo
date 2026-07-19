@@ -326,6 +326,201 @@ func reachableEndgame(e *Engine) (bool, string) {
 	return true, "#endgame on " + strings.Join(endgameBoards, ", ")
 }
 
+// EvalZWDLayoutRoutes runs the stricter physical-layout gate used by the
+// deterministic authoring command. It is separate from EvalGeneratedZWD so
+// historical generation baselines keep measuring the original tier-1 contract
+// while newly authored worlds can opt into the stronger acceptance bar.
+func EvalZWDLayoutRoutes(src string) EvalCheck {
+	world, err := CompileZWDWorld(src)
+	if err != nil {
+		return EvalCheck{Name: "board-routes", Detail: err.Error()}
+	}
+	e := NewEngine()
+	e.Headless = true
+	e.World = world
+	return evalBoardRoutes(e)
+}
+
+func evalBoardRoutes(e *Engine) EvalCheck {
+	check := EvalCheck{Name: "board-routes"}
+	byBoard := evalBoardRouteProblems(e)
+	var problems []string
+	for board := int16(1); board <= e.World.BoardCount; board++ {
+		e.BoardOpen(board)
+		for _, problem := range byBoard[e.Board.Name] {
+			problems = append(problems, fmt.Sprintf("board %d %q: %s", board, e.Board.Name, problem))
+			if len(problems) == 8 {
+				break
+			}
+		}
+	}
+	if len(problems) != 0 {
+		check.Detail = strings.Join(problems, "; ")
+		return check
+	}
+	check.Passed = true
+	check.Detail = "all exits, passages, keys, and finales have a physical route from their board start"
+	return check
+}
+
+// evalBoardRouteProblems closes a gap left by the board-graph walk: a declared
+// exit, passage, key, or finale can exist in the binary while being sealed
+// behind Solid/Normal/Water scenery. This deliberately uses an optimistic
+// movement model. Doors, breakables, creatures, and touch objects are treated
+// as traversable because ordinary play can remove them; immutable terrain is
+// not. A failure therefore means the authored layout is definitely blocked,
+// without rejecting combat, key, or OOP puzzles that static analysis cannot
+// fully simulate. Problems are keyed by board name so generation can repaint
+// only the defective boards.
+func evalBoardRouteProblems(e *Engine) map[string][]string {
+	problems := make(map[string][]string)
+	for board := int16(1); board <= e.World.BoardCount; board++ {
+		e.BoardOpen(board)
+		name := e.Board.Name
+		add := func(format string, args ...interface{}) {
+			problems[name] = append(problems[name], fmt.Sprintf(format, args...))
+		}
+		start := [2]int16{int16(e.Board.Stats[0].X), int16(e.Board.Stats[0].Y)}
+		reached := evalFloodBoard(e, start)
+		reachable := func(x, y int16) bool { return reached[[2]int16{x, y}] }
+
+		for exit, target := range e.Board.Info.NeighborBoards {
+			if target == 0 {
+				continue
+			}
+			found := false
+			switch exit {
+			case 0, 1: // north, south
+				y := int16(1)
+				if exit == 1 {
+					y = BOARD_HEIGHT
+				}
+				for x := int16(1); x <= BOARD_WIDTH; x++ {
+					found = found || reachable(x, y)
+				}
+			case 2, 3: // west, east
+				x := int16(1)
+				if exit == 3 {
+					x = BOARD_WIDTH
+				}
+				for y := int16(1); y <= BOARD_HEIGHT; y++ {
+					found = found || reachable(x, y)
+				}
+			}
+			if !found {
+				add("%s exit is sealed", dirName([]string{"N", "S", "W", "E"}[exit]))
+			}
+		}
+
+		for y := int16(1); y <= BOARD_HEIGHT; y++ {
+			for x := int16(1); x <= BOARD_WIDTH; x++ {
+				if e.Board.Tiles[x][y].Element == E_KEY && !reachable(x, y) {
+					add("key at (%d,%d) is sealed", x, y)
+				}
+			}
+		}
+		for statID := int16(1); statID <= e.Board.StatCount; statID++ {
+			stat := e.Board.Stats[statID]
+			tile := e.Board.Tiles[stat.X][stat.Y]
+			kind := ""
+			switch {
+			case tile.Element == E_PASSAGE:
+				kind = "passage"
+			case strings.Contains(strings.ToUpper(stat.Data), "#ENDGAME"):
+				kind = "finale"
+			}
+			if kind != "" && !reachable(int16(stat.X), int16(stat.Y)) {
+				add("%s at (%d,%d) is sealed", kind, stat.X, stat.Y)
+			}
+		}
+	}
+	return problems
+}
+
+func evalFloodBoard(e *Engine, start [2]int16) map[[2]int16]bool {
+	reached := map[[2]int16]bool{}
+	queue := [][2]int16{start}
+	for len(queue) > 0 {
+		pos := queue[0]
+		queue = queue[1:]
+		x, y := pos[0], pos[1]
+		if x < 1 || x > BOARD_WIDTH || y < 1 || y > BOARD_HEIGHT || reached[pos] {
+			continue
+		}
+		if pos != start && !evalOptimisticallyTraversable(e.Board.Tiles[x][y].Element) {
+			continue
+		}
+		reached[pos] = true
+		queue = append(queue,
+			[2]int16{x - 1, y}, [2]int16{x + 1, y},
+			[2]int16{x, y - 1}, [2]int16{x, y + 1})
+	}
+	return reached
+}
+
+func evalOptimisticallyTraversable(element byte) bool {
+	if int(element) <= MAX_ELEMENT && ElementDefs[element].Walkable {
+		return true
+	}
+	switch element {
+	case E_PLAYER, E_AMMO, E_TORCH, E_GEM, E_KEY, E_ENERGIZER,
+		E_BREAKABLE, E_FOREST, E_DOOR, E_PASSAGE, E_SCROLL,
+		E_OBJECT, E_BEAR, E_RUFFIAN, E_LION, E_TIGER, E_SHARK,
+		E_SPINNING_GUN, E_SLIME, E_CENTIPEDE_HEAD, E_CENTIPEDE_SEGMENT:
+		return true
+	}
+	return false
+}
+
+// EvalZWDOOP runs the engine's own advisory OOP analyzer over every stored
+// program. The compiler intentionally accepts ZZT's free-form OOP text, so
+// this catches misspelled commands and dead label sends before an authored
+// world is published.
+func EvalZWDOOP(src string) EvalCheck {
+	world, err := CompileZWDWorld(src)
+	if err != nil {
+		return EvalCheck{Name: "oop-analysis", Detail: err.Error()}
+	}
+	e := NewEngine()
+	e.Headless = true
+	e.World = world
+	byBoard := evalOOPProblems(e)
+	check := EvalCheck{Name: "oop-analysis"}
+	var problems []string
+	for board := int16(0); board <= e.World.BoardCount && len(problems) < 8; board++ {
+		e.BoardOpen(board)
+		for _, problem := range byBoard[e.Board.Name] {
+			problems = append(problems, fmt.Sprintf("board %d %q: %s", board, e.Board.Name, problem))
+			if len(problems) == 8 {
+				break
+			}
+		}
+	}
+	if len(problems) != 0 {
+		check.Detail = strings.Join(problems, "; ")
+		return check
+	}
+	check.Passed = true
+	check.Detail = "all OOP commands and label references resolve"
+	return check
+}
+
+func evalOOPProblems(e *Engine) map[string][]string {
+	problems := make(map[string][]string)
+	for board := int16(0); board <= e.World.BoardCount; board++ {
+		e.BoardOpen(board)
+		for statID := int16(1); statID <= e.Board.StatCount; statID++ {
+			stat := e.Board.Stats[statID]
+			_, warnings := e.OopAnalyze(statID)
+			for _, warning := range warnings {
+				problems[e.Board.Name] = append(problems[e.Board.Name],
+					fmt.Sprintf("stat at (%d,%d), OOP line %d: %s", stat.X, stat.Y, warning.Line+1, warning.Message))
+			}
+		}
+	}
+	return problems
+}
+
 // EvalOOPSample gathers the world's stat OOP for the tier-2 judge, labeled by
 // board, truncated to maxBytes. Empty and bind-only stats are skipped.
 func EvalOOPSample(src string, maxBytes int) (string, error) {
