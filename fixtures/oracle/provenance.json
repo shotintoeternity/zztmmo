@@ -1,0 +1,32 @@
+{
+  "generated_by": "oracle/regen.sh (make oracle-regen)",
+  "runner": {
+    "emulator": "zeta",
+    "repo": "https://github.com/asiekierka/zeta.git",
+    "commit": "ad85bcf81971460c8d29951e489658855ced225c",
+    "frontend": "oracle/frontend_oracle.c",
+    "frontend_sha256": "64db76cd24401fdde3280b7b7fb30cef9406d5ee6ba59a1aa0b068b153ac1adc"
+  },
+  "program": {
+    "name": "ZZT v3.2 (registered, Epic freeware release)",
+    "source": "https://museumofzzt.com/zgames/z/zzt.zip",
+    "zip_sha256": "fdf5a0f9f45c32447199aaad3d3caa5dbabcb6ec6a5f55cd954d060515488d5e",
+    "zzt_exe_sha256": "6a7f8d7f60f33f43ca4b008c02ae436cb4025da259b5c73947580f6ddf06fadb",
+    "zzt_dat_sha256": "94c371c09d252046416505704d610d189fbe9e542b709d1008f325f65ca904b8",
+    "zzt_cfg": "ORCLROOM\r\nREGISTERED\r\n"
+  },
+  "world": {
+    "file": "ORCLROOM.ZZT",
+    "sha256": "d63d9b549f2d0c3f9e1dc0dc2fa1654cad06a3fa4ca472787c66b88d91ca4fbe",
+    "authored_as": "ORCLROOM.zwd (compiled once by zwd; identical bytes are the input to both engines)"
+  },
+  "determinism": {
+    "timer_offset": 0,
+    "virtual_clock_start_ms": 0,
+    "note": "Randomize() seeds from the fixed virtual clock; the compared path is RNG-free."
+  },
+  "scenarios": {
+    "main.scn": "f8e4ff63fba190115fe4273fa8bab7c5e13896f374c1b0c72b90668a46db9d9c",
+    "scroll.scn": "631b1367f057d16a14cd67272897a031e79ccaf6506cbdbacdf5733fc0da6e3a"
+  }
+}

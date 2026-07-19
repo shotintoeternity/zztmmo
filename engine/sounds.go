@@ -50,7 +50,12 @@ func SoundInitFreqTable() {
 	ln2 = Ln(2.0)
 	noteStep = Exp(ln2 / 12.0)
 	for octave = 1; octave <= 15; octave++ {
-		noteBase = Exp(float64(octave)*ln2) * freqC1
+		// Exp(octave*ln2) in float64 lands just below the exact power of two
+		// (e.g. 15.999999999999998), so Trunc gave 511/255 Hz for the C notes
+		// where Turbo Pascal's 48-bit real — and therefore real ZZT.EXE — plays
+		// 512/256 Hz (pinned by the M16.2 oracle captures). Use the exact
+		// power of two for the octave base; the stepped notes already match.
+		noteBase = float64(uint32(1)<<uint(octave)) * freqC1
 		for note = 0; note <= 11; note++ {
 			SoundFreqTable[octave*16+note-1] = uint16(Trunc(noteBase))
 			noteBase = noteBase * noteStep

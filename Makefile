@@ -6,7 +6,7 @@
 # non-zero when a gate fails or the manifest is not yet certified, and writes
 # only the gitignored report files, so a clean run leaves `git status` empty.
 
-.PHONY: parity parity-report parity-canaries
+.PHONY: parity parity-report parity-canaries oracle-tools oracle-regen
 
 # Full certification run: gates + report.
 parity:
@@ -21,3 +21,13 @@ parity-report:
 # the corpus or exercising community worlds present in the engine directory.
 parity-canaries:
 	cd engine && go test -tags canary -count=1 ./...
+
+# M16.2 vanilla oracle — maintainer tooling only; tests never run these.
+# oracle-tools builds the pinned Zeta harness and fetches the pinned ZZT.EXE.
+# oracle-regen additionally re-records fixtures/oracle/*.capture.txt.
+oracle-tools:
+	sh oracle/fetch_zzt.sh
+	sh oracle/build.sh
+
+oracle-regen:
+	sh oracle/regen.sh

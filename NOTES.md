@@ -2807,3 +2807,71 @@ not "fixed" back to vanilla.
 - Left the unrelated `world_metadata.go`/`world_metadata_test.go` changes (a
   "curated Museum catalog only" world-picker refactor; green on their own tests)
   uncommitted and out of the M17.7 commit — separate WIP, not this task.
+
+## 2026-07-18 — M16.2: the independent vanilla oracle
+
+Landed the oracle seam: real **ZZT.EXE v3.2** (Museum of ZZT `zzt.zip`,
+sha256-pinned; identical `ZZT.EXE` bytes to the prior bring-up) under Zeta
+`ad85bcf8`, driven by the committed headless frontend `oracle/frontend_oracle.c`
+(virtual clock, `.scn` scenario scripts, VRAM checkpoints, speaker log).
+`make oracle-regen` regenerates `fixtures/oracle/`; tests compare offline via
+`engine/oracle_parity_test.go`. A from-scratch pipeline run (fresh Zeta clone,
+Museum zip, new work dir) reproduced the prior session's capture bytes exactly.
+The foreign-session scratchpad harness deleted during M17.7 hygiene was
+recovered from `/private/tmp` and is now the committed, extended version of
+itself (80-column capture with sidebar, speaker events, scroll scenario).
+
+**Advisor gate.** The advisor tool errored as unavailable again (third session:
+M16.0, M16.1, now M16.2). The owner approved starting M16.2 this session and is
+the approval gate, per the M16.0 precedent. The still-outstanding advisor half
+of the M16.0 contract approval carries forward.
+
+**What the seam caught immediately — the reason M16.2 exists:**
+
+- **Vanilla's real cycle cadence.** `TickTimeDuration = TickSpeed*2` is in
+  *hundredths of a second* (GAME.PAS:1511 with SoundHasTimeElapsed), so the
+  default speed runs one game cycle per ~2 PIT ticks (~110ms), not 8. Pinned
+  empirically: the gem-hint message color `9+(P2 mod 7)` decrements P2 by 4 per
+  8 PIT ticks in the real ZZT.EXE. The adapter maps each oracle `move`
+  (keypress + 8 PIT ticks) to 4 GameSteps: input, then 3 idle.
+- **`SoundInitFreqTable` C-note truncation (fixed in sounds.go).** float64
+  `Exp(octave*ln2)` lands just under the exact power of two, so `Trunc` gave
+  511/255 Hz where Turbo Pascal's 48-bit real — and the oracle — plays 512/256.
+  Fixed by computing the octave base as the exact power of two; all other notes
+  already matched. Presentation-only (the table is not hashed; the wire carries
+  note bytes): replay fixture unchanged. The TS client's `sound.ts` port has
+  the same 1 Hz artifact — left for the M16.6/M17 audio surface, noted here so
+  M17.7's "synth verified faithful" claim is corrected on this one detail.
+- **The transfer mismatch that reddened M17.7's tree is the pause-blink
+  normalization, not a board defect.** After `BoardPassageTeleport` both
+  engines hold identical board state (arrival tile erased to empty, stat at the
+  arrival square, player paused); vanilla's interactive loop *draws* the paused
+  player blinking `02`/`1F` while the fork emits `PauseEvent` and leaves
+  drawing to the client. Normalized at exactly the paused player's square
+  (PARITY.md §7 `oracle-pause-blink`).
+
+**Findings recorded for later sweeps (not fixed here — rule 4):**
+
+- **Walk click gap (M16.6).** Vanilla plays `Sound(110)` directly per step onto
+  a walkable tile (ELEMENTS.PAS, ported at elements.go:1458) but the port's
+  `Sound()`/`NoSound()` are TODO stubs (lib.go:124), so no client ever hears
+  vanilla's walk click. Excluded from oracle sound comparison as a *gap*, not a
+  deviation.
+- **Headless post-passage unpause is unreachable (M16.3).** The step loop
+  dispatches by tile element, and the paused-player/unpause branch sits inside
+  `tile == E_PLAYER` (game.go:1741-1758). After a passage teleport the player
+  stat stands on an erased (empty) tile, so a headless single-engine player can
+  never unpause — vanilla recovers because its pause branch is not
+  tile-dispatched and stamps the player tile on unpause (same failure class as
+  ReenterWhenZapped, NOTES 2026-07-09). Live multiplayer is unaffected
+  (RoomManager's transferPlayer/roomSpawn path stamps tiles); the M16.3
+  passage sweep must cover and fix the single-engine path.
+
+**Adapter design notes.** The oracle scenarios are RNG-free on the compared
+path by design; VRAM is the exposed surface (tiles/stats/RandSeed compared via
+their screen projection — memory-segment capture is a possible later
+extension). The adapter runs on a fresh `Engine` swapped into the package
+global for the run: the first version polluted shared `E` (PlayerState hint
+flags) and flipped TOWN replay hashes when tests ran in one process. The
+manifest scaffold regen also added the `task.M17.7` row that M17.7's commit
+forgot (same miss as M17.6's, caught by TestParityManifest).

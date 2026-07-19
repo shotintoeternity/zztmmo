@@ -195,3 +195,33 @@ approval or turned into gap tasks. Resolved:
 When a sweep certifies a row it flips `status` to `pass` (or `deviation`) and
 fills `test`/`fixture`. When a sweep discovers a defect it files a small M16 gap
 task and sets the row to `gap`. The validator keeps everyone honest in between.
+
+---
+
+## 7. The vanilla oracle (M16.2)
+
+The independent ground truth every `V` sweep compares against is the **real
+ZZT.EXE v3.2** (Museum of ZZT `zzt.zip`, Epic's freeware release) running under
+a pinned build of the Zeta 8086 emulator with a custom headless frontend
+(`oracle/frontend_oracle.c`): virtual clock, scripted keyboard schedule,
+checkpoints read from emulated text VRAM, PC-speaker transitions logged. Every
+input is sha256-pinned in `fixtures/oracle/provenance.json`. Captures are
+committed; `make oracle-regen` is the only way to regenerate them, and tests
+never run the oracle (`oracle/README.md`).
+
+**Compared surface.** The 80x25 text page is what a vanilla player observes and
+what the oracle exposes: board cells are compared raw; player/world counters are
+parsed from the sidebar and compared against engine state; modal text windows
+are compared by content; speaker tone onsets are compared as frequency
+sequences. Board tiles/stats/RNG are covered via their screen projection —
+memory-level capture out of the emulated data segment is a possible later
+extension, not part of this seam.
+
+**Documented representation normalizations** (the complete list — anything else
+that differs is a defect):
+
+| id | normalization | grounded in |
+|---|---|---|
+| `oracle-pause-blink` | Vanilla's interactive loop draws a paused player blinking (`02`/`1F` alternating with the square's content); the headless engine emits `PauseEvent` and leaves drawing to the client. The paused player's square accepts either blink phase. | deviation `per-player-modal-freeze` |
+| `oracle-modal-scroll` | Vanilla freezes the sim inside a modal text window drawn over the board; the engine emits `ScrollEvent`. Checkpoints with an open window compare window text against the event's lines/title. | deviation `per-player-modal-freeze` (M1.3) |
+| `oracle-walk-click` | Vanilla pokes the speaker directly (`Sound(110)`, ELEMENTS.PAS) per step onto a walkable tile; the port stubs `Sound()`/`NoSound()`, so 110 Hz onsets are excluded from sound comparison. A recorded gap for the M16.6 sound sweep, not an approved deviation. | NOTES 2026-07-18 |
