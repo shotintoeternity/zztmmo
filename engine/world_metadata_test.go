@@ -29,31 +29,10 @@ func TestWorldListEntriesUsesMuseumMetadata(t *testing.T) {
 	}
 }
 
-func TestWorldListEntriesFallsBackToFilename(t *testing.T) {
+func TestWorldListEntriesOmitsWorldsWithoutMuseumMetadata(t *testing.T) {
 	entries := WorldListEntries([]string{"EDITED"}, nil)
-	if len(entries) != 1 {
-		t.Fatalf("len(entries)=%d, want 1", len(entries))
-	}
-	entry := entries[0]
-	if entry.World != "EDITED" || entry.ID != "EDITED" || entry.Title != "EDITED" {
-		t.Fatalf("fallback metadata=%+v, want filename fields", entry)
-	}
-	if entry.Author != "Unknown" {
-		t.Fatalf("fallback author=%q, want Unknown", entry.Author)
-	}
-}
-
-// writeHeaderWorld writes a minimal .ZZT file carrying just the header fields
-// worldHeaderTitle reads: board count 0 and a stored world Name.
-func writeHeaderWorld(t *testing.T, dir, base, name string) {
-	t.Helper()
-	buf := make([]byte, 100)
-	// buf[0:2] board count 0 -> world-info block starts at offset 2; Name is a
-	// Pascal string at info offset 25 (file offset 27).
-	buf[27] = byte(len(name))
-	copy(buf[28:], name)
-	if err := os.WriteFile(filepath.Join(dir, base+".ZZT"), buf, 0o644); err != nil {
-		t.Fatalf("write %s: %v", base, err)
+	if len(entries) != 0 {
+		t.Fatalf("entries=%+v, want no entry without Museum metadata", entries)
 	}
 }
 
@@ -84,20 +63,13 @@ func TestListWorldsExcludesJunkAndUnjoinable(t *testing.T) {
 	}
 }
 
-func TestWorldListEntriesInDirTitleSources(t *testing.T) {
+func TestWorldListEntriesInDirOmitsWorldsWithoutMetadata(t *testing.T) {
 	dir := t.TempDir()
-	// A world absent from the manifest: its header Name is the only real title.
-	writeHeaderWorld(t, dir, "OBSCURE", "Moonlit Observatory")
-	// A manifest world: the curated title must win over the header Name.
-	writeHeaderWorld(t, dir, "BURGERJ", "BURGERJ")
-	// The lobby: manifest supplies author but no title, so the filename-equal
-	// title survives (the client relabels it "(ZZTMMO Lobby)").
-	writeHeaderWorld(t, dir, "TOWN", "TOWN")
 
 	byWorld := entriesByWorld(WorldListEntriesInDir(dir, []string{"OBSCURE", "BURGERJ", "TOWN"}, nil))
 
-	if e := byWorld["OBSCURE"]; e.Title != "Moonlit Observatory" || e.Author != "Unknown" {
-		t.Fatalf("OBSCURE=%+v, want header title + Unknown author", e)
+	if _, ok := byWorld["OBSCURE"]; ok {
+		t.Fatalf("OBSCURE=%+v, want omitted world without Museum metadata", byWorld["OBSCURE"])
 	}
 	if e := byWorld["BURGERJ"]; e.Title != "Burger Joint" || e.Author != "Madguy" {
 		t.Fatalf("BURGERJ=%+v, want manifest title/author over header", e)

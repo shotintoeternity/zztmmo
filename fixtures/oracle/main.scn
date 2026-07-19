@@ -1,6 +1,7 @@
 # ORCLROOM: prove the oracle seam over movement, gem pickup, and a board transfer.
 # Player starts at 30,13 (Room A). Gem at 34,13; passage at 26,13 -> Room B.
 # Vanilla starts play paused; the first move unpauses and moves in the same tick.
+world ORCLROOM
 seed 0
 boot 240
 play

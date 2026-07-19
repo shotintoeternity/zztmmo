@@ -1,0 +1,50 @@
+# ORCLITEM: ammo, gem, torch, key, and door touch parity (M16.3).
+# Player starts at 30,13. Gem 30,11; ammo 32,13 and 34,13; torch 28,13;
+# white keys 30,15 and 31,15 (duplicate refusal); white door 30,19;
+# red door 30,21 (locked, no red key).
+world ORCLITEM
+seed 0
+boot 240
+capture title
+play
+move up
+# gem pickup: counters change and the gem hint shows once
+move up
+capture gem
+move down
+move down
+move right
+# first ammo: +5 with the ammo hint
+move right
+move right
+# second ammo: +5, hint not repeated
+move right
+capture ammo
+move left
+move left
+move left
+move left
+move left
+# torch pickup (lit room)
+move left
+capture torch
+# T in a lit room refuses with a message
+key 116 14
+capture nodark
+move right
+move right
+move down
+# white key pickup
+move down
+# duplicate white key: refusal message, key stays on the board
+move right
+capture keys
+move down
+move down
+move down
+# white door opens and the player walks through
+move down
+move down
+# red door is locked
+move down
+capture doors

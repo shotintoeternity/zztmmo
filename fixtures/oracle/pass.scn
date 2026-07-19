@@ -1,0 +1,48 @@
+# ORCLPASS: passage teleport, post-passage unpause, board-edge transfer (M16.3).
+# Board 0 "Pass Hub": player 30,13, cyan passage 32,13 -> "Pass Target".
+# "Pass Target": arrival passage 34,13, border gap 60,14, east exit ->
+# "Pass East" (entry gap 1,14). The arrival leaves the player paused ON the
+# passage tile; the next move must unpause via the stamp branch, leaving the
+# passage tile intact (the M16.2 finding this sweep covers and fixes).
+world ORCLPASS
+seed 0
+boot 240
+capture title
+play
+move right
+# touch the passage: teleport to Pass Target, arrive paused on the passage
+move right
+capture arrival
+# unpause off a non-player tile: player steps south, passage stays visible
+move down
+capture unpaused
+move right
+move right
+move right
+move right
+move right
+move right
+move right
+move right
+move right
+move right
+move right
+move right
+move right
+move right
+move right
+move right
+move right
+move right
+move right
+move right
+move right
+move right
+move right
+move right
+move right
+move right
+# stand on the border gap at 60,14 and cross the eastern board edge
+capture atedge
+move right
+capture east

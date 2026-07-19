@@ -1,0 +1,15 @@
+# ORCLNRG: energizer pickup, duration, and expiry (M16.3).
+# Player starts at 30,13; energizer at 32,13. No checkpoints are taken while
+# energized: the flash color derives from vanilla's randomized CurrentTick,
+# which the engine deliberately pins (scenario-design exclusion, PARITY.md
+# oracle notes). The pickup and 10-ticks-left melodies are compared, and the
+# post-expiry checkpoint proves the player is restored.
+world ORCLNRG
+seed 0
+boot 240
+capture title
+play
+move right
+move right
+settle 170
+capture after

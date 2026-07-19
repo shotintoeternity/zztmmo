@@ -1613,6 +1613,33 @@ func GameAboutScreen() {
 	TextWindowDisplayFile("ABOUT.HLP", "About ZZT...")
 }
 
+// BoardTimeElapsed is vanilla's SoundHasTimeElapsed (SOUNDS.PAS:156-181) over
+// the engine's virtual PIT clock, on the system-time branch vanilla takes on
+// any machine with a working BIOS clock (UseSystemTimeForElapsed flips true
+// during boot — SOUNDS.PAS:144-154 — and stays true under the pinned Zeta
+// oracle): GetTime's sec*100+hSec is the day clock in hundredths modulo one
+// minute, i.e. (ms/10) mod 6000, with the word-wrap difference arithmetic
+// ported exactly. Milliseconds derive from PIT ticks at the 8253's rate
+// (65536000/1193181.66 ms per tick — the same constant the pinned Zeta uses),
+// so one board second elapses every 19 ticks (~9.5 cycles at speed 4), never
+// the fallback path's 17. The package-level SoundHasTimeElapsed stays the
+// always-true stub the interactive loop's pacing relies on (NOTES
+// 2026-07-09); only the per-board time limit consumes this port.
+// ZZT-QUIRK: BoardEnter resets BoardTimeSec but not the hundredths counter,
+// so the first board-second elapses on the first player tick whenever the
+// clock has advanced ≥100 hundredths since the counter last rebased —
+// exactly as a freshly-entered timed board behaves in vanilla after boot.
+func (e *Engine) BoardTimeElapsed(counter *int16, duration int16) bool {
+	ms := int64(float64(e.TimerTicks) * (65536000.0 / 1193181.66))
+	hSecsTotal := int16((ms / 10) % 6000)
+	hSecsDiff := uint16(hSecsTotal-*counter+6000) % 6000
+	if hSecsDiff >= uint16(duration) {
+		*counter = hSecsTotal
+		return true
+	}
+	return false
+}
+
 // GameStepWithInputs runs one game cycle with per-player input injection.
 // Before ticking each E_PLAYER stat, the matching PlayerInput from inputs is
 // loaded into the global input variables; for non-player stats those globals
@@ -1733,30 +1760,65 @@ func (e *Engine) GameStepWithInputs(inputs map[int16]PlayerInput) {
 		e.InputKeyBuffer = InputKeyBuffer
 	}()
 
+	// Advance the virtual PIT clock by the ticks one cycle consumes at the
+	// current speed: vanilla's cycle gate rebases its counter each cycle, so
+	// the per-cycle tick count is the constant ceil(TickTimeDuration/6) — 2
+	// at the pinned speed 4, matching the real ZZT.EXE cadence the M16.2
+	// oracle measured. Only the per-board time limit reads this clock.
+	e.TimerTicks += uint32((e.TickTimeDuration + 5) / 6)
+
 	for e.CurrentStatTicked <= e.Board.StatCount && !e.GamePlayExitRequested {
 		stat := &e.Board.Stats[e.CurrentStatTicked]
 		if stat.Cycle != 0 && e.CurrentTick%stat.Cycle == e.CurrentStatTicked%stat.Cycle {
+			// Per-player pause (M3.11): a paused player's stat turn is vanilla's
+			// pause branch (GAME.PAS:1519-1567, mirrored from the interactive
+			// port above): the touched element acts even while paused, and the
+			// player unpauses only when the move actually succeeds — never via
+			// PlayerTick, so torch/energizer/time counters do not tick on the
+			// unpausing cycle. When the stat stands on a non-player tile (after
+			// a passage teleport erased it, GAME.PAS:1346) the move stamps a
+			// fresh player tile instead of MoveStat — without this else-branch a
+			// headless single-engine player could never unpause after a passage
+			// (NOTES 2026-07-18, fixed here in M16.3). Unlike vanilla's global
+			// unpause, the room keeps running for everyone else and CurrentTick
+			// is deliberately NOT re-randomized: that would perturb every other
+			// player's stat scheduling.
+			if pState := e.Players[e.CurrentStatTicked]; pState != nil && pState.Paused {
+				if inp, ok := inputs[e.CurrentStatTicked]; ok && (inp.DeltaX != 0 || inp.DeltaY != 0) {
+					deltaX, deltaY := inp.DeltaX, inp.DeltaY
+					targetX := int16(stat.X) + deltaX
+					targetY := int16(stat.Y) + deltaY
+					ElementDefs[e.Board.Tiles[targetX][targetY].Element].TouchProc(e, targetX, targetY, e.CurrentStatTicked, &deltaX, &deltaY)
+					// Touch procs may mutate the deltas and the board (even the
+					// current board id, via a paused passage touch); re-read
+					// everything, as vanilla does.
+					targetX = int16(stat.X) + deltaX
+					targetY = int16(stat.Y) + deltaY
+					if (deltaX != 0 || deltaY != 0) && ElementDefs[e.Board.Tiles[targetX][targetY].Element].Walkable {
+						if e.Board.Tiles[stat.X][stat.Y].Element == E_PLAYER {
+							e.MoveStat(e.CurrentStatTicked, targetX, targetY)
+						} else {
+							e.BoardDrawTile(int16(stat.X), int16(stat.Y))
+							stat.X = byte(targetX)
+							stat.Y = byte(targetY)
+							e.Board.Tiles[stat.X][stat.Y].Element = E_PLAYER
+							e.Board.Tiles[stat.X][stat.Y].Color = ElementDefs[E_PLAYER].Color
+							e.BoardDrawTile(int16(stat.X), int16(stat.Y))
+							e.DrawPlayerSurroundings(int16(stat.X), int16(stat.Y), 0)
+							e.DrawPlayerSurroundings(int16(stat.X)-deltaX, int16(stat.Y)-deltaY, 0)
+						}
+						pState.Paused = false
+						e.Events = append(e.Events, PauseEvent{StatId: e.CurrentStatTicked, Paused: false})
+						e.SidebarClearLine(5)
+						e.World.Info.IsSave = true
+					}
+				}
+				e.CurrentStatTicked++
+				continue
+			}
 			// Per-player input injection: load this player's input before tick,
 			// zero movement globals for non-player stats.
 			if e.Board.Tiles[stat.X][stat.Y].Element == E_PLAYER {
-				// Per-player pause (M3.11): a paused player's tick and input are
-				// skipped, but the room keeps running for everyone else. As in
-				// vanilla, movement input resumes play — and we fall through so
-				// the resuming move happens on this tick rather than being
-				// swallowed. The room's CurrentTick is deliberately NOT reset the
-				// way vanilla's global unpause does: that would perturb every
-				// other player's stat scheduling.
-				pState := e.PlayerFor(e.CurrentStatTicked)
-				if pState.Paused {
-					inp, ok := inputs[e.CurrentStatTicked]
-					if ok && (inp.DeltaX != 0 || inp.DeltaY != 0) {
-						pState.Paused = false
-						e.Events = append(e.Events, PauseEvent{StatId: e.CurrentStatTicked, Paused: false})
-					} else {
-						e.CurrentStatTicked++
-						continue
-					}
-				}
 				if inp, ok := inputs[e.CurrentStatTicked]; ok {
 					InputDeltaX = inp.DeltaX
 					InputDeltaY = inp.DeltaY

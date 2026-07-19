@@ -5,7 +5,7 @@
     "repo": "https://github.com/asiekierka/zeta.git",
     "commit": "ad85bcf81971460c8d29951e489658855ced225c",
     "frontend": "oracle/frontend_oracle.c",
-    "frontend_sha256": "64db76cd24401fdde3280b7b7fb30cef9406d5ee6ba59a1aa0b068b153ac1adc"
+    "frontend_sha256": "005a682a335d29201dc1253ac709d1fb977f8202898dfda12294e43451a6ecee"
   },
   "program": {
     "name": "ZZT v3.2 (registered, Epic freeware release)",
@@ -13,12 +13,17 @@
     "zip_sha256": "fdf5a0f9f45c32447199aaad3d3caa5dbabcb6ec6a5f55cd954d060515488d5e",
     "zzt_exe_sha256": "6a7f8d7f60f33f43ca4b008c02ae436cb4025da259b5c73947580f6ddf06fadb",
     "zzt_dat_sha256": "94c371c09d252046416505704d610d189fbe9e542b709d1008f325f65ca904b8",
-    "zzt_cfg": "ORCLROOM\r\nREGISTERED\r\n"
+    "zzt_cfg": "<WORLD>\r\nREGISTERED\r\n"
   },
-  "world": {
-    "file": "ORCLROOM.ZZT",
-    "sha256": "d63d9b549f2d0c3f9e1dc0dc2fa1654cad06a3fa4ca472787c66b88d91ca4fbe",
-    "authored_as": "ORCLROOM.zwd (compiled once by zwd; identical bytes are the input to both engines)"
+  "worlds": {
+    "ORCLDARK.ZZT": "6cf64ecd8b2acb65a1fb8def965b5b64d1745fcc0a845bcc951171a1faa48805",
+    "ORCLITEM.ZZT": "cba615572360d471cd6f4bce61ae58dbfb41bfff41345b81f78e0f9302129ed3",
+    "ORCLROOM.ZZT": "d63d9b549f2d0c3f9e1dc0dc2fa1654cad06a3fa4ca472787c66b88d91ca4fbe",
+    "ORCLMOVE.ZZT": "a4f7ffd9ab17e3a323efc6d8b415de0c77ce8ffbb436b5c5d534b2faead7a9bd",
+    "ORCLNRG.ZZT": "faff6e41dc9a52c7099f451c19c9adca556dab75ed8da1250ae9d720e3805de3",
+    "ORCLPASS.ZZT": "cbcaccfe7943dd2097e5ed2dd4ed06f56e8a133f32d578a2b3fe86512a8d7274",
+    "ORCLSHOT.ZZT": "38b23a17c978c013f3adcf7a58c5d083a2e46be006ce5f89cb3ae88465adb156",
+    "ORCLTIME.ZZT": "9f61a60c4ebc587aea0097b7a63f8307dd2803f522abd1528908335c3201127e"
   },
   "determinism": {
     "timer_offset": 0,
@@ -26,7 +31,14 @@
     "note": "Randomize() seeds from the fixed virtual clock; the compared path is RNG-free."
   },
   "scenarios": {
-    "main.scn": "f8e4ff63fba190115fe4273fa8bab7c5e13896f374c1b0c72b90668a46db9d9c",
-    "scroll.scn": "631b1367f057d16a14cd67272897a031e79ccaf6506cbdbacdf5733fc0da6e3a"
+    "dark.scn": "0978e370ec0ea5138a6c139ee9102dcac89714dcb398f2dd67fff7b62ca0316d",
+    "item.scn": "6e8857472fe0fcd1ff04617d81c4c82fcfc763297fdab965359fa090ec78f790",
+    "main.scn": "2b9dae26c5bfb5495eb84c0fbbbd4340517c3aff0de4cf676c53d9d4d2ebd596",
+    "move.scn": "c15176887c0edad0f49aa12925ef76d59d7535ce33fa1d2937f015e6d969ba7d",
+    "nrg.scn": "1169bb3c0d18d7e438519fdb272ab572b0ea0da41f64c1fbd1d8aeea71372b8b",
+    "pass.scn": "3b7e19c3b8e0af924ac4bb1b85a463be9adc6389b69ee9b7ad815f6c45768b63",
+    "scroll.scn": "0f15797ccbcdb98b45be98ccb3f9ab04a4b5e447d99e17ebbc8ef5276ba3edd7",
+    "shot.scn": "c8e1f28ad4745c314d876f9fcacbd6383b5a3e88c0ac68d911841ab5338de4a2",
+    "time.scn": "5501185575a2b151734723655c09f75f291fa218c75a90808ea0d753620016b7"
   }
 }

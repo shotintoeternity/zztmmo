@@ -1,0 +1,19 @@
+# ORCLTIME: per-board time limit (M16.3). time-limit 15, reenter false.
+# Player starts at 30,13 in an empty room. Board seconds advance one per 100
+# virtual hundredths (~9 game cycles at speed 4; the first second elapses on
+# the first player tick because the hundredths counter is stale from boot —
+# vanilla behavior). "Running out of time!" fires at 10 seconds remaining;
+# each second past the limit deals 10 damage. Checkpoints sit >=2 cycles from
+# every second boundary.
+world ORCLTIME
+seed 0
+boot 240
+capture title
+play
+move right
+settle 80
+capture timelow
+settle 200
+capture damaged
+settle 30
+capture damaged2

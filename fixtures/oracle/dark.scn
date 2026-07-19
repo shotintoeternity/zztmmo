@@ -1,0 +1,31 @@
+# ORCLDARK: dark board rendering, torch pickup/lighting/expiry (M16.3).
+# Player starts at 30,13 on a dark board; torch item at 31,13.
+# The board-enter torch hint and each pickup message are allowed to expire
+# before the next checkpoint (settle > 2x message lifetime) so no checkpoint
+# depends on a message that crossed the initial pause boundary.
+world ORCLDARK
+seed 0
+boot 240
+capture title
+play
+move up
+settle 440
+capture darkness
+# T with no torches: refusal message
+key 116 14
+capture notorch
+settle 440
+move down
+# torch item pickup in the dark
+move right
+capture pickup
+settle 440
+# light the torch: the visibility circle appears
+key 116 14
+capture lit
+move right
+move right
+capture lit2
+# torch burns out: expiry melody, darkness returns
+settle 500
+capture out

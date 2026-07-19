@@ -1,6 +1,7 @@
 # ORCLROOM: modal scroll parity — walk up and touch the sign object.
 # Player starts at 30,13; the @sign object at 30,9 shows two text lines on
 # :touch, which vanilla displays as a modal text window (2+ lines = window).
+world ORCLROOM
 seed 0
 boot 240
 play

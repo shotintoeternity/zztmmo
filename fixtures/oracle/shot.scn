@@ -1,0 +1,41 @@
+# ORCLSHOT: shooting in four directions, breakable, ricochet, max-shots (M16.3).
+# Player starts at 8,13; ammo at 9,13 and 10,13; breakable 14,13;
+# ricochet 10,9; normal wall 10,17; board max-shots 2; long empty corridor
+# east of the breakable for the max-shots test.
+world ORCLSHOT
+seed 0
+boot 240
+capture title
+play
+# two ammo pickups (with, then without, the hint message)
+move right
+move right
+capture ammo
+settle 220
+# Space shoots along the last direction moved (east): bullet breaks the wall
+key 32 39
+capture broke
+# Shift+Up: the bullet reflects off the ricochet; the player steps aside so
+# the returning bullet passes their old square (self-shot damage is the
+# friendly-fire deviation, pinned by the M16.5 bullet sweep, not exercised
+# here) and dies against the normal wall below
+shoot up
+move left
+capture rico
+settle 8
+move right
+# Shift+Left: bullet dies against the border, no damage
+shoot left
+settle 8
+capture west
+# Shift+Down: bullet dies against a normal wall, wall unharmed
+shoot down
+settle 8
+capture south
+# max-shots 2: the third shot is refused while two bullets are in flight
+shoot right
+shoot right
+shoot right
+capture maxshots
+settle 120
+capture drained

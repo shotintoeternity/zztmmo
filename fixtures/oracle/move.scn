@@ -1,0 +1,43 @@
+# ORCLMOVE: player movement, pushing, and terrain touch parity (M16.3).
+# Player starts at 8,13. Boulder at 9,13 (solid wall at 11,13 behind its push
+# path), fake 7,13, forest 6,13, water 8,12, breakable 9,12, invisible 8,14,
+# normal 2,12, line wall 7..9,11, text bank 4..10,9, border gap at 1,13 with
+# no west neighbor (board-edge refusal).
+world ORCLMOVE
+seed 0
+boot 240
+capture title
+play
+# unpause by pushing the boulder east (push succeeds: 9->10, player 8->9)
+move right
+capture push
+# boulder now rests against the solid wall: push refused, player stays
+move right
+# breakable is inert on touch: nothing happens
+move up
+capture refusals
+move left
+# water blocks with a message
+move up
+capture water
+# invisible wall reveals itself and blocks
+move down
+capture invisible
+# fake wall announces itself and lets the player through
+move left
+capture fake
+# forest clears with a message and the player steps in
+move left
+capture forest
+move left
+move left
+move left
+move left
+# normal wall refusal (silent)
+move up
+move left
+# solid border refusal (silent)
+move up
+# board edge with no neighbor: nothing happens
+move left
+capture edge

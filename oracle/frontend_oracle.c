@@ -20,11 +20,13 @@
  * Scenario directives (shared with the Go adapter in engine/oracle_parity_test.go;
  * unknown lines are errors):
  *   # ...            comment
+ *   world NAME       record only (regen.sh reads it to pick the world file)
  *   seed N           record only (RNG-free scenarios); timer offset is fixed
  *   boot N           run N PIT ticks to settle the title screen
  *   play             press P to enter play, then settle
  *   settle N         run N PIT ticks
  *   move DIR         press+release a direction (up/down/left/right), then settle
+ *   shoot DIR        press+release a direction with Shift held, then settle
  *   key CH SC        press+release a raw key: decimal char, hex scancode
  *   capture LABEL    emit a checkpoint of the 80x25 text page
  *
@@ -135,7 +137,7 @@ static void run_scenario(const char *path) {
 		int n = sscanf(p, "%63s %127s %127s", cmd, a1, a2);
 		if (n < 1) continue;
 
-		if (!strcmp(cmd, "seed")) {
+		if (!strcmp(cmd, "seed") || !strcmp(cmd, "world")) {
 			/* recorded by the caller; RNG-free scenarios don't depend on it */
 		} else if (!strcmp(cmd, "boot")) {
 			if (drive_ticks(atoi(a1)) == 0) { fprintf(stderr, "oracle: exit during boot\n"); exit(4); }
@@ -149,6 +151,18 @@ static void run_scenario(const char *path) {
 			if (sc < 0) { fprintf(stderr, "oracle: bad direction %s\n", a1); exit(5); }
 			press_key(0, sc);
 			drive_ticks(settle_default);
+		} else if (!strcmp(cmd, "shoot")) {
+			int sc = dir_scancode(a1);
+			if (sc < 0) { fprintf(stderr, "oracle: bad direction %s\n", a1); exit(5); }
+			/* Shift must still be held when ZZT's InputUpdate consumes the
+			 * arrow (INPUT.PAS reads the modifier at that moment, not at
+			 * press time), so release it only after the settle. A held
+			 * shift cannot re-fire: InputUpdate resets InputShiftPressed
+			 * and only samples the modifier when an arrow arrives. */
+			zzt_kmod_set(ZZT_KMOD_LSHIFT);
+			press_key(0, sc);
+			drive_ticks(settle_default);
+			zzt_kmod_clear(ZZT_KMOD_LSHIFT);
 		} else if (!strcmp(cmd, "key")) {
 			press_key(atoi(a1), (int) strtol(a2, NULL, 16));
 			drive_ticks(settle_default);

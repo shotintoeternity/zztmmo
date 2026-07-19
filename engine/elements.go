@@ -1548,7 +1548,10 @@ func (e *Engine) ElementPlayerTick(statId int16) {
 
 	}
 	if e.Board.Info.TimeLimitSec > 0 && pState.Health > 0 {
-		if SoundHasTimeElapsed(&pState.BoardTimeHsec, 100) {
+		// M16.3: the stubbed package-level SoundHasTimeElapsed returns true
+		// every tick, which made board time count ~9x too fast headless; the
+		// engine's virtual-PIT port paces it as vanilla does.
+		if e.BoardTimeElapsed(&pState.BoardTimeHsec, 100) {
 			pState.BoardTimeSec++
 			if e.Board.Info.TimeLimitSec-10 == pState.BoardTimeSec {
 				e.DisplayMessage(200, "Running out of time!")

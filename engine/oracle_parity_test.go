@@ -65,20 +65,37 @@ type oracleCheckpoint struct {
 }
 
 type oracleOp struct {
-	Kind   string // "play", "move", "settle", "capture"
+	Kind   string // "boot", "play", "move", "shoot", "key", "settle", "capture"
 	Label  string // capture label
-	DX, DY int16  // move deltas
-	Key    byte   // move key byte
-	Ticks  int    // settle PIT ticks
+	DX, DY int16  // move/shoot deltas
+	Key    byte   // key byte carried into PlayerInput.Key
+	Ticks  int    // boot/settle PIT ticks
 }
 
-func parseOracleScenario(t *testing.T, path string) []oracleOp {
+func oracleDirDeltas(t *testing.T, path string, lineNo int, dir string) (int16, int16, byte) {
+	t.Helper()
+	switch dir {
+	case "up":
+		return 0, -1, KEY_UP
+	case "down":
+		return 0, 1, KEY_DOWN
+	case "left":
+		return -1, 0, KEY_LEFT
+	case "right":
+		return 1, 0, KEY_RIGHT
+	}
+	t.Fatalf("%s:%d: bad direction %q", path, lineNo, dir)
+	return 0, 0, 0
+}
+
+func parseOracleScenario(t *testing.T, path string) (string, []oracleOp) {
 	t.Helper()
 	requireFixture(t, path)
 	data, err := os.ReadFile(path)
 	if err != nil {
 		t.Fatalf("read scenario %s: %v", path, err)
 	}
+	world := ""
 	var ops []oracleOp
 	for lineNo, raw := range strings.Split(string(data), "\n") {
 		line := strings.TrimSpace(raw)
@@ -87,9 +104,19 @@ func parseOracleScenario(t *testing.T, path string) []oracleOp {
 		}
 		fields := strings.Fields(line)
 		switch fields[0] {
-		case "seed", "boot":
-			// seed is provenance; boot settles the emulated title screen. The
-			// adapter starts directly in play state.
+		case "seed":
+			// provenance only; the compared path is RNG-free
+		case "world":
+			world = fields[1]
+		case "boot":
+			// The oracle boots the real ZZT to its title screen; the adapter
+			// runs the same span in title (monitor) state so title-screen
+			// checkpoints and the virtual clock line up.
+			n, err := strconv.Atoi(fields[1])
+			if err != nil {
+				t.Fatalf("%s:%d: bad boot %q", path, lineNo+1, line)
+			}
+			ops = append(ops, oracleOp{Kind: "boot", Ticks: n})
 		case "play":
 			ops = append(ops, oracleOp{Kind: "play"})
 		case "settle":
@@ -98,28 +125,28 @@ func parseOracleScenario(t *testing.T, path string) []oracleOp {
 				t.Fatalf("%s:%d: bad settle %q", path, lineNo+1, line)
 			}
 			ops = append(ops, oracleOp{Kind: "settle", Ticks: n})
-		case "move":
-			op := oracleOp{Kind: "move"}
-			switch fields[1] {
-			case "up":
-				op.DY, op.Key = -1, KEY_UP
-			case "down":
-				op.DY, op.Key = 1, KEY_DOWN
-			case "left":
-				op.DX, op.Key = -1, KEY_LEFT
-			case "right":
-				op.DX, op.Key = 1, KEY_RIGHT
-			default:
-				t.Fatalf("%s:%d: bad direction %q", path, lineNo+1, fields[1])
-			}
+		case "move", "shoot":
+			op := oracleOp{Kind: fields[0]}
+			op.DX, op.DY, op.Key = oracleDirDeltas(t, path, lineNo+1, fields[1])
 			ops = append(ops, op)
+		case "key":
+			// key CH SC: the engine's input path reads characters, not
+			// scancodes, so only CH crosses the seam.
+			ch, err := strconv.Atoi(fields[1])
+			if err != nil || ch < 0 || ch > 255 {
+				t.Fatalf("%s:%d: bad key %q", path, lineNo+1, line)
+			}
+			ops = append(ops, oracleOp{Kind: "key", Key: byte(ch)})
 		case "capture":
 			ops = append(ops, oracleOp{Kind: "capture", Label: fields[1]})
 		default:
 			t.Fatalf("%s:%d: unknown scenario directive %q", path, lineNo+1, fields[0])
 		}
 	}
-	return ops
+	if world == "" {
+		t.Fatalf("%s: missing world directive", path)
+	}
+	return world, ops
 }
 
 func parseOracleCapture(t *testing.T, path string) []oracleCheckpoint {
@@ -221,6 +248,56 @@ func soundEventFreqs(notes string) []int {
 	return freqs
 }
 
+// oracleSoundMatcher walks the oracle's tone onsets through the engine's
+// queued melodies across the whole scenario. Vanilla's ISR plays one melody
+// at a time and a newly accepted SoundQueue REPLACES whatever is still
+// sounding (SOUNDS.PAS SoundQueue), so the oracle may play only a prefix of
+// any melody; and a melody can still be mid-play when a checkpoint is taken,
+// in which case its remaining onsets land in the next interval. The engine
+// has no ISR — it emits each whole melody as a SoundEvent at queue time — so
+// the matcher lets a melody be cut short exactly where the next one begins,
+// and lets trailing melodies go unplayed (still sounding, or dropped by
+// vanilla's priority rule). That leniency is one-sided: every tone the
+// oracle DID play must appear, in order, at the engine's queue positions.
+type oracleSoundMatcher struct {
+	melodies [][]int
+	mi, ni   int
+}
+
+func (m *oracleSoundMatcher) queue(notes string) {
+	m.melodies = append(m.melodies, soundEventFreqs(notes))
+}
+
+func (m *oracleSoundMatcher) match(tones []int) error {
+	for _, f := range tones {
+		for {
+			if m.mi >= len(m.melodies) {
+				return fmt.Errorf("oracle played %d Hz with no engine melody left in the queue", f)
+			}
+			notes := m.melodies[m.mi]
+			if m.ni < len(notes) && notes[m.ni] == f {
+				m.ni++
+				break
+			}
+			if m.ni < len(notes) {
+				// Mid-melody mismatch: only a preemption by the next queued
+				// melody explains it.
+				if m.mi+1 < len(m.melodies) && len(m.melodies[m.mi+1]) > 0 && m.melodies[m.mi+1][0] == f {
+					m.mi++
+					m.ni = 1
+					break
+				}
+				return fmt.Errorf("oracle tone %d Hz: engine melody %d expected %d Hz next (%v)",
+					f, m.mi, notes[m.ni], notes)
+			}
+			// Melody fully played: move on to the next queued one.
+			m.mi++
+			m.ni = 0
+		}
+	}
+	return nil
+}
+
 // oracleAdapterRun drives the engine through scenario ops, comparing each
 // checkpoint against the oracle capture. mutate, if non-nil, runs right before
 // the named checkpoint's comparison (the perturbation seam for the fail-closed
@@ -228,7 +305,7 @@ func soundEventFreqs(notes string) []int {
 func oracleAdapterRun(t *testing.T, scenario, capture string, mutate func(label string)) error {
 	t.Helper()
 
-	ops := parseOracleScenario(t, filepath.Join("..", "fixtures", "oracle", scenario))
+	world, ops := parseOracleScenario(t, filepath.Join("..", "fixtures", "oracle", scenario))
 	checkpoints := parseOracleCapture(t, filepath.Join("..", "fixtures", "oracle", capture))
 
 	// Run on a fresh Engine swapped into the package global so the adapter
@@ -255,7 +332,7 @@ func oracleAdapterRun(t *testing.T, scenario, capture string, mutate func(label 
 	E.SoundBlockQueueing = false
 	SoundClearQueue()
 
-	worldBase := filepath.Join("..", "fixtures", "oracle", "ORCLROOM")
+	worldBase := filepath.Join("..", "fixtures", "oracle", world)
 	requireFixture(t, worldBase+".ZZT")
 
 	RandomSeed(0)
@@ -264,11 +341,15 @@ func oracleAdapterRun(t *testing.T, scenario, capture string, mutate func(label 
 		t.Fatalf("WorldLoad(%q) failed", worldBase)
 	}
 
-	E.GameStateElement = E_PLAYER
+	// Start in title state, as the booted ZZT does: the monitor sits on the
+	// player square (GAME.PAS GamePlayLoop stamps GameStateElement) and the
+	// title board simulates under it during `boot`.
+	E.GameStateElement = E_MONITOR
 	E.GamePlayExitRequested = false
-	E.Board.Tiles[E.Board.Stats[0].X][E.Board.Stats[0].Y].Element = E_PLAYER
-	E.Board.Tiles[E.Board.Stats[0].X][E.Board.Stats[0].Y].Color = ElementDefs[E_PLAYER].Color
-	BoardEnter(0)
+	E.Board.Tiles[E.Board.Stats[0].X][E.Board.Stats[0].Y].Element = E_MONITOR
+	E.Board.Tiles[E.Board.Stats[0].X][E.Board.Stats[0].Y].Color = ElementDefs[E_MONITOR].Color
+	E.GenerateTransitionTable() // vanilla builds it at startup; TransitionDrawToBoard walks it
+	E.TransitionDrawToBoard()
 	E.CurrentTick = 0
 	// Start ready to tick stats immediately: vanilla's pause branch acts on the
 	// unpausing keypress at once, so the adapter's first step must tick stat 0
@@ -276,9 +357,10 @@ func oracleAdapterRun(t *testing.T, scenario, capture string, mutate func(label 
 	// StatCount+1 convention would put the engine one move behind the oracle).
 	E.CurrentStatTicked = 0
 	E.Events = nil
+	inTitle := true
 
 	var (
-		intervalSounds  []string      // queued SoundEvent note strings this interval
+		sounds          oracleSoundMatcher
 		intervalScrolls []ScrollEvent // scroll events this interval
 		checkpointIdx   int
 	)
@@ -287,7 +369,7 @@ func oracleAdapterRun(t *testing.T, scenario, capture string, mutate func(label 
 		for _, ev := range E.Events {
 			switch ev := ev.(type) {
 			case SoundEvent:
-				intervalSounds = append(intervalSounds, ev.Notes)
+				sounds.queue(ev.Notes)
 			case ScrollEvent:
 				intervalScrolls = append(intervalScrolls, ev)
 			}
@@ -302,16 +384,52 @@ func oracleAdapterRun(t *testing.T, scenario, capture string, mutate func(label 
 
 	for _, op := range ops {
 		switch op.Kind {
+		case "boot":
+			// Title simulation: the monitor consumes no input and the oracle
+			// micro-worlds keep their title boards static, so these steps only
+			// advance the clocks in lockstep with the oracle's boot span.
+			for i := 0; i < op.Ticks/2; i++ {
+				step(PlayerInput{})
+			}
 		case "play":
-			// Vanilla enters play paused; nothing steps until the first input.
+			// Vanilla's 'P': BoardEnter, stamp the player over the monitor
+			// square, then enter play paused; nothing steps until the first
+			// input (the oracle side spends 30 PIT ticks on the same paused
+			// span, so only the virtual clock advances).
+			E.GameStateElement = E_PLAYER
+			BoardEnter(0)
+			E.Board.Tiles[E.Board.Stats[0].X][E.Board.Stats[0].Y].Element = E_PLAYER
+			E.Board.Tiles[E.Board.Stats[0].X][E.Board.Stats[0].Y].Color = ElementDefs[E_PLAYER].Color
 			E.PlayerFor(0).Paused = true
-			E.GenerateTransitionTable() // vanilla builds it at startup; TransitionDrawToBoard walks it
 			E.TransitionDrawToBoard()
+			// The oracle's `play` spends 30 PIT ticks, but its first player
+			// tick lands 2 ticks earlier on the board-clock grid than a
+			// straight tick count predicts (keyboard IRQ delivery and the
+			// pause loop's stale cycle gate both fire inside the emulator's
+			// tick, measured against the recorded ORCLTIME captures — the
+			// timing model in the header). 28 puts the engine's first player
+			// tick on the same grid, which the ORCLTIME board-second
+			// boundaries and their message flash phases pin exactly.
+			E.TimerTicks += 28
+			E.CurrentTick = 0
+			E.CurrentStatTicked = 0
 			drainEvents()
+			inTitle = false
 		case "move":
 			// One `move` = 8 PIT ticks = 4 game cycles: input, then 3 idle
 			// (see the timing model above).
 			step(PlayerInput{DeltaX: op.DX, DeltaY: op.DY, Key: op.Key})
+			for i := 0; i < 3; i++ {
+				step(PlayerInput{})
+			}
+		case "shoot":
+			// Shift+direction: shoots without moving (ELEMENTS.PAS PlayerTick).
+			step(PlayerInput{DeltaX: op.DX, DeltaY: op.DY, Key: op.Key, Shift: true})
+			for i := 0; i < 3; i++ {
+				step(PlayerInput{})
+			}
+		case "key":
+			step(PlayerInput{Key: op.Key})
 			for i := 0; i < 3; i++ {
 				step(PlayerInput{})
 			}
@@ -330,10 +448,19 @@ func oracleAdapterRun(t *testing.T, scenario, capture string, mutate func(label 
 			if mutate != nil {
 				mutate(cp.Label)
 			}
-			if err := compareCheckpoint(cp, intervalSounds, intervalScrolls); err != nil {
+			if err := compareCheckpoint(cp, intervalScrolls, inTitle); err != nil {
 				return fmt.Errorf("checkpoint %s: %w", cp.Label, err)
 			}
-			intervalSounds = nil
+			var oracleTones []int
+			for _, f := range cp.SoundOn {
+				if f == 110 {
+					continue // vanilla walk click: direct Sound(110), stubbed in the port
+				}
+				oracleTones = append(oracleTones, f)
+			}
+			if err := sounds.match(oracleTones); err != nil {
+				return fmt.Errorf("checkpoint %s: %w", cp.Label, err)
+			}
 			intervalScrolls = nil
 			checkpointIdx++
 		}
@@ -344,10 +471,13 @@ func oracleAdapterRun(t *testing.T, scenario, capture string, mutate func(label 
 	return nil
 }
 
-// compareCheckpoint holds every comparison rule for one checkpoint. The error
-// message pins the first mismatching cell/field/frequency precisely: that
-// message is the seam's entire diagnostic value.
-func compareCheckpoint(cp *oracleCheckpoint, soundNotes []string, scrolls []ScrollEvent) error {
+// compareCheckpoint holds the cell/counter/scroll comparison rules for one
+// checkpoint (sounds are matched by the caller's oracleSoundMatcher). The
+// error message pins the first mismatching cell/field precisely: that message
+// is the seam's entire diagnostic value. Title checkpoints (taken before
+// `play`) compare board cells only: the sidebar shows the title menu, not
+// counters.
+func compareCheckpoint(cp *oracleCheckpoint, scrolls []ScrollEvent, title bool) error {
 	// Modal scroll checkpoints (vanilla draws a window over the board; the
 	// engine emitted ScrollEvent instead) compare by window content.
 	if len(scrolls) > 0 {
@@ -404,8 +534,11 @@ func compareCheckpoint(cp *oracleCheckpoint, soundNotes []string, scrolls []Scro
 	}
 
 	// Player counters, parsed from the oracle sidebar against engine state.
+	if title {
+		return nil
+	}
 	p := E.PlayerFor(0)
-	for _, c := range []struct {
+	counters := []struct {
 		row   int
 		label string
 		got   int16
@@ -415,7 +548,16 @@ func compareCheckpoint(cp *oracleCheckpoint, soundNotes []string, scrolls []Scro
 		{9, "Torches:", p.Torches},
 		{10, "Gems:", p.Gems},
 		{11, "Score:", p.Score},
-	} {
+	}
+	if E.Board.Info.TimeLimitSec > 0 {
+		// Sidebar row 6 shows remaining board time on timed boards.
+		counters = append(counters, struct {
+			row   int
+			label string
+			got   int16
+		}{6, "Time:", E.Board.Info.TimeLimitSec - p.BoardTimeSec})
+	}
+	for _, c := range counters {
 		text := cp.sidebarText(c.row)
 		i := strings.Index(text, c.label)
 		if i < 0 {
@@ -435,32 +577,6 @@ func compareCheckpoint(cp *oracleCheckpoint, soundNotes []string, scrolls []Scro
 		}
 	}
 
-	// Sound: the oracle's tone onsets (walk clicks excluded — see the header)
-	// must be a prefix-consistent match of the engine's queued melodies.
-	var oracleTones []int
-	for _, f := range cp.SoundOn {
-		if f == 110 {
-			continue // vanilla walk click: direct Sound(110), stubbed in the port
-		}
-		oracleTones = append(oracleTones, f)
-	}
-	var expected []int
-	for _, notes := range soundNotes {
-		expected = append(expected, soundEventFreqs(notes)...)
-	}
-	if len(oracleTones) > len(expected) {
-		return fmt.Errorf("oracle played %d tone onsets %v, engine queued only %d %v",
-			len(oracleTones), oracleTones, len(expected), expected)
-	}
-	for i, f := range oracleTones {
-		if f != expected[i] {
-			return fmt.Errorf("tone onset %d: oracle %d Hz, engine %d Hz (oracle %v, engine %v)",
-				i, f, expected[i], oracleTones, expected)
-		}
-	}
-	if len(expected) > 0 && len(oracleTones) == 0 {
-		return fmt.Errorf("engine queued melody %v but the oracle played no tones", expected)
-	}
 	return nil
 }
 
@@ -473,6 +589,83 @@ func TestOracleParityMainScenario(t *testing.T) {
 func TestOracleParityScrollScenario(t *testing.T) {
 	if err := oracleAdapterRun(t, "scroll.scn", "scroll.capture.txt", nil); err != nil {
 		t.Fatalf("oracle divergence: %v", err)
+	}
+}
+
+// The M16.3 sweep scenarios (fixtures/oracle/*.scn document each one's
+// coverage; the micro-worlds are authored in the matching .zwd files).
+
+func TestOracleParityMoveScenario(t *testing.T) {
+	if err := oracleAdapterRun(t, "move.scn", "move.capture.txt", nil); err != nil {
+		t.Fatalf("oracle divergence: %v", err)
+	}
+}
+
+func TestOracleParityItemScenario(t *testing.T) {
+	if err := oracleAdapterRun(t, "item.scn", "item.capture.txt", nil); err != nil {
+		t.Fatalf("oracle divergence: %v", err)
+	}
+}
+
+func TestOracleParityDarkScenario(t *testing.T) {
+	if err := oracleAdapterRun(t, "dark.scn", "dark.capture.txt", nil); err != nil {
+		t.Fatalf("oracle divergence: %v", err)
+	}
+}
+
+func TestOracleParityEnergizerScenario(t *testing.T) {
+	if err := oracleAdapterRun(t, "nrg.scn", "nrg.capture.txt", nil); err != nil {
+		t.Fatalf("oracle divergence: %v", err)
+	}
+}
+
+func TestOracleParityShotScenario(t *testing.T) {
+	if err := oracleAdapterRun(t, "shot.scn", "shot.capture.txt", nil); err != nil {
+		t.Fatalf("oracle divergence: %v", err)
+	}
+}
+
+func TestOracleParityPassageScenario(t *testing.T) {
+	if err := oracleAdapterRun(t, "pass.scn", "pass.capture.txt", nil); err != nil {
+		t.Fatalf("oracle divergence: %v", err)
+	}
+}
+
+func TestOracleParityTimeScenario(t *testing.T) {
+	if err := oracleAdapterRun(t, "time.scn", "time.capture.txt", nil); err != nil {
+		t.Fatalf("oracle divergence: %v", err)
+	}
+}
+
+// TestMonitorTickExitKeys pins ElementMonitorTick's semantics (ELEMENTS.PAS:
+// the title-screen monitor requests a play-loop exit for exactly the title
+// menu keys and consumes no other input). The monitor's on-screen behavior is
+// covered by every sweep scenario's `title` checkpoint against the oracle's
+// booted title screen.
+func TestMonitorTickExitKeys(t *testing.T) {
+	prevE := E
+	defer func() { E = prevE }()
+	E = NewEngine()
+	prevKey := InputKeyPressed
+	defer func() { InputKeyPressed = prevKey }()
+
+	exitKeys := []byte{'\x1b', 'A', 'E', 'H', 'N', 'P', 'Q', 'R', 'S', 'W', '|',
+		'a', 'e', 'h', 'n', 'p', 'q', 'r', 's', 'w'}
+	for _, k := range exitKeys {
+		E.GamePlayExitRequested = false
+		InputKeyPressed = k
+		E.ElementMonitorTick(0)
+		if !E.GamePlayExitRequested {
+			t.Errorf("monitor did not request exit for title key %q", k)
+		}
+	}
+	for _, k := range []byte{0, ' ', 'x', '1', KEY_UP} {
+		E.GamePlayExitRequested = false
+		InputKeyPressed = k
+		E.ElementMonitorTick(0)
+		if E.GamePlayExitRequested {
+			t.Errorf("monitor requested exit for non-title key %q", k)
+		}
 	}
 }
 

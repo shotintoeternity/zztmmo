@@ -159,6 +159,19 @@ type (
 		CurrentTick            int16
 		CurrentStatTicked      int16
 		TickTimeCounter        int16
+		// TimerTicks is the engine's virtual 18.2 Hz PIT counter (M16.3).
+		// Vanilla paces the per-board time limit through SoundHasTimeElapsed
+		// over the BIOS day clock (SOUNDS.PAS:167 — UseSystemTimeForElapsed
+		// is true on any machine with a working clock, and under the pinned
+		// Zeta oracle); headless there is no ISR, so GameStepWithInputs
+		// advances this by the ticks one game cycle consumes (2 at the
+		// pinned speed 4 — M16.2 timing model) and BoardTimeElapsed converts
+		// ticks to clock hundredths. uint32, not vanilla's word: the word
+		// counter only feeds the no-clock fallback path, while the day clock
+		// this models does not wrap hourly (its minute wrap is the mod 6000
+		// in BoardTimeElapsed). Runtime-only: never serialized, hashed, or
+		// snapshotted, exactly like the real time-of-day it stands in for.
+		TimerTicks uint32
 		ForceDarknessOff       bool
 		OopChar                byte
 		OopWord                string
