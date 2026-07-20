@@ -1877,6 +1877,16 @@ these are live breakage in front of the player.
   not see each other's board switches, palette, or copied tile; two members on
   the *same* board keep today's shared-editing behaviour, including leases.
 
+  Cursors must be board-scoped too: you should not see a collaborator's cursor
+  while they are on a different board. `EditorPresence` (`protocol.go:114`)
+  carries `X`/`Y` but no board, and `editorCursorOverlay`
+  (`web/src/editor_cursor.ts`) draws every member unconditionally — today that
+  is harmless only because everyone is pinned to the same board, so it becomes a
+  visible defect (ghost cursors from other boards) the moment this task lands.
+  Add the member's board to `EditorPresence` and filter the overlay to members
+  on the viewing member's board. Keep it presentation-only; do not reuse it as
+  edit authorisation, which stays with the lease system.
+
   This is not a small change: it means editing operations take an explicit board
   argument instead of reading the engine's implicit current board, and the
   broadcast snapshot must be per-recipient-board rather than one screen for
@@ -1889,7 +1899,9 @@ these are live breakage in front of the player.
   must be unaffected.
 
   DoD: with two browsers in one world, each can open a different board and edit
-  it without moving or corrupting the other's view; each sidebar shows the
+  it without moving or corrupting the other's view; a member's cursor is visible
+  only to members viewing the same board, and reappears when they switch back;
+  each sidebar shows the
   palette, copied tile, colour and pattern for the board that member is actually
   viewing, with no elements that do not exist on it; same-board collaborative
   editing and lease conflicts still behave as before; a Go test covers two
