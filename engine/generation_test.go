@@ -1382,7 +1382,7 @@ func TestM1713StubBoardIsTraversableAndCompiles(t *testing.T) {
 		},
 	}
 	hall := plan.Boards[2]
-	stub := generatedStubBoard(plan, hall)
+	stub := generatedStubBoard(plan, hall, nil)
 
 	// Edge exits mirror the plan; the title board is never an edge target.
 	for _, want := range []string{`west "Lobby"`, `north "Attic"`, `south none`, `east none`} {
@@ -1430,7 +1430,7 @@ func TestM1713StubBoardIsTraversableAndCompiles(t *testing.T) {
 	// what makes salvage safe to host.
 	sections := make(map[string]string, len(plan.Boards))
 	for _, b := range plan.Boards {
-		sections[b.Name] = generatedStubBoard(plan, b)
+		sections[b.Name] = generatedStubBoard(plan, b, nil)
 	}
 	full := assembleGeneratedZWD("SALVAGE", plan, sections)
 	data, err := CompileZWD(full)
@@ -1519,5 +1519,151 @@ func TestM1713FailedBoardIsSalvagedNotFatal(t *testing.T) {
 	}
 	if len(fake.requests) != 3 {
 		t.Fatalf("Claude calls = %d, want 3 (plan + one attempt per board)", len(fake.requests))
+	}
+}
+
+// M17.13 — a stub's passage must actually land the player on the destination's
+// facing passage. ZZT deposits the player at the first passage on the
+// destination whose color byte matches the source's (elements.go:1071); with no
+// match the player arrives at the destination's start point instead, which reads
+// as a broken exit. So the stub adopts the color of the passage pointing back.
+func TestM1713StubPassageMatchesDestinationColor(t *testing.T) {
+	plan := Plan{
+		WorldName: "Salvage",
+		Boards: []PlanBoard{
+			{Index: 0, ID: "title", Name: "Title", IsTitle: true},
+			{Index: 1, ID: "lobby", Name: "Lobby", IsStart: true, Links: []PlanLink{
+				{Kind: "passage", Target: "cellar"},
+			}},
+			{Index: 2, ID: "cellar", Name: "Cellar", Links: []PlanLink{
+				{Kind: "passage", Target: "lobby"},
+			}},
+		},
+	}
+	lobby := plan.Boards[1]
+
+	// With no painted destination there is no partner color to match.
+	if got := generatedStubBoard(plan, lobby, nil); !strings.Contains(got, `= Passage color 0x1F to "Cellar"`) {
+		t.Errorf("unpainted destination should fall back to 0x1F:\n%s", got)
+	}
+
+	// Cellar is painted with a 0x4C passage back to Lobby; the stub must match it.
+	rows := []string{"p" + strings.Repeat(".", 59)}
+	for len(rows) < BOARD_HEIGHT {
+		rows = append(rows, strings.Repeat(".", BOARD_WIDTH))
+	}
+	sections := map[string]string{
+		"Cellar": "board \"Cellar\"\n  start player at 5,5\n  dark false\n" +
+			"  exits north none south none west none east none\n  grid\n" +
+			strings.Join(rows, "\n") + "\n  end\n  legend\n" +
+			"    . = Empty color 0x00\n    p = Passage color 0x4C to \"Lobby\"\n  end\n" +
+			"  stats\n    stat at 1,1 element Passage cycle 0 p3 board \"Lobby\" under Empty color 0x00\n  end\nend",
+	}
+	stub := generatedStubBoard(plan, lobby, sections)
+	if !strings.Contains(stub, `= Passage color 0x4C to "Cellar"`) {
+		t.Errorf("stub passage did not adopt the destination's facing color:\n%s", stub)
+	}
+}
+
+// M17.13 — a board the plan gives no links at all must still not be a sealed
+// room. The stub falls back to a passage to the start board so the player can
+// always get out.
+func TestM1713StubWithNoLinksStillHasAWayOut(t *testing.T) {
+	plan := Plan{
+		WorldName: "Salvage",
+		Boards: []PlanBoard{
+			{Index: 0, ID: "title", Name: "Title", IsTitle: true},
+			{Index: 1, ID: "lobby", Name: "Lobby", IsStart: true},
+			{Index: 2, ID: "orphan", Name: "Orphan"}, // no links whatsoever
+		},
+	}
+	stub := generatedStubBoard(plan, plan.Boards[2], nil)
+	if !strings.Contains(stub, `= Passage color 0x1F to "Lobby"`) {
+		t.Errorf("linkless stub has no escape passage to the start board:\n%s", stub)
+	}
+	if !strings.Contains(stub, `element Passage cycle 0 p3 board "Lobby"`) {
+		t.Errorf("escape passage has no backing stat:\n%s", stub)
+	}
+	// A board that does have a way out must not get a spurious escape passage.
+	withExit := generatedStubBoard(plan, PlanBoard{
+		Index: 3, ID: "hall", Name: "Hall",
+		Links: []PlanLink{{Kind: "edge", Dir: "W", Target: "lobby"}},
+	}, nil)
+	if strings.Contains(withExit, "Passage") {
+		t.Errorf("stub with an edge exit should not add an escape passage:\n%s", withExit)
+	}
+}
+
+// M17.13 — the end the owner actually cares about: walking into a stub's passage
+// must put the player on the next board, on its facing passage tile. This drives
+// the real compiled world through the RoomManager rather than trusting the ZWD
+// text, so a stub that merely *looks* wired cannot pass.
+func TestM1713StubPassageTransportsPlayerToNextBoard(t *testing.T) {
+	plan := Plan{
+		WorldName: "Salvage",
+		Boards: []PlanBoard{
+			{Index: 0, ID: "title", Name: "Title", IsTitle: true},
+			{Index: 1, ID: "lobby", Name: "Lobby", IsStart: true, Links: []PlanLink{
+				{Kind: "passage", Target: "cellar"},
+			}},
+			{Index: 2, ID: "cellar", Name: "Cellar", Links: []PlanLink{
+				{Kind: "passage", Target: "lobby"},
+			}},
+		},
+	}
+
+	// Cellar is a painted board whose passage back to Lobby sits at (1,1) in
+	// color 0x4C. The stub must adopt that color to land on it.
+	rows := []string{"p" + strings.Repeat(".", 59)}
+	for len(rows) < BOARD_HEIGHT {
+		rows = append(rows, strings.Repeat(".", BOARD_WIDTH))
+	}
+	rows[19] = strings.Repeat(".", 29) + "@" + strings.Repeat(".", 30) // player at 30,20
+	sections := map[string]string{
+		"Title": generatedStubBoard(plan, plan.Boards[0], nil),
+		"Cellar": "board \"Cellar\"\n  start player at 30,20\n  dark false\n" +
+			"  exits north none south none west none east none\n  grid\n" +
+			strings.Join(rows, "\n") + "\n  end\n  legend\n" +
+			"    . = Empty color 0x00\n    @ = Player color 0x1F\n    p = Passage color 0x4C to \"Lobby\"\n  end\n" +
+			"  stats\n    stat at 1,1 element Passage cycle 0 p3 board \"Lobby\" under Empty color 0x00\n  end\nend",
+	}
+	sections["Lobby"] = generatedStubBoard(plan, plan.Boards[1], sections)
+
+	world, err := CompileZWDWorld(assembleGeneratedZWD("SALVAGE", plan, sections))
+	if err != nil {
+		t.Fatalf("stub world did not compile: %v", err)
+	}
+	const (
+		lobbyBoard  = 1
+		cellarBoard = 2
+		// generatedStubBoard puts a lone passage at grid (30,16) 0-indexed.
+		passageX = 31
+		passageY = 17
+	)
+
+	rm := NewRoomManager(world)
+	player := rm.JoinPlayer(lobbyBoard, passageX-1, passageY)
+	if state, ok := rm.PlayerState(player); ok {
+		state.Health = 100
+	}
+	board, _, ok := rm.PlayerLocation(player)
+	if !ok || board != lobbyBoard {
+		t.Fatalf("player started on board %d (ok=%v), want the stub board %d", board, ok, lobbyBoard)
+	}
+
+	// Walk east, onto the stub's passage.
+	rm.Step(map[PlayerID]PlayerInput{player: {DeltaX: 1, DeltaY: 0}})
+
+	board, statID, ok := rm.PlayerLocation(player)
+	if !ok {
+		t.Fatal("player vanished after touching the stub's passage")
+	}
+	if board != cellarBoard {
+		t.Fatalf("player is on board %d, want Cellar (%d) — the stub's passage went nowhere", board, cellarBoard)
+	}
+	room := rm.rooms[cellarBoard]
+	stat := room.Engine.Board.Stats[statID]
+	if stat.X != 1 || stat.Y != 1 {
+		t.Errorf("player arrived at (%d,%d), want the facing passage at (1,1)", stat.X, stat.Y)
 	}
 }

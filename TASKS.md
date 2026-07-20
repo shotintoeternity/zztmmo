@@ -1993,10 +1993,22 @@ these are live breakage in front of the player.
   already in the world. `RetryBoard` resets those boards' attempt budgets and
   `paintAndFinish` repaints only them.
 
-  Known limitation: stub passages are emitted as `color 0x1F`. ZZT deposits the
-  player at the first color-matching passage on the destination board, so a
-  stub's passage may land the player at the destination's default start point
-  rather than its facing passage. Edge exits — the common case — are exact.
+  Stub passages really transport. ZZT deposits the player at the first passage
+  on the destination whose color byte MATCHES the source's
+  (`elements.go:1071`); with no match `roomSpawn` falls back to the
+  destination's start point (`room_manager.go:368`), which reads as a broken
+  exit. So `stubPassageColor` parses the destination's painted section and
+  adopts the color of the passage pointing back, making the round trip land on
+  the facing tile in both directions. Because a stub is built at the moment its
+  board fails — when later boards are not painted yet — every stub is re-derived
+  once painting finishes, so the color match sees the complete section map.
+  `TestM179StubPassageTransportsPlayerToNextBoard` drives the compiled world
+  through the RoomManager and asserts the arrival tile, so a stub that merely
+  looks wired cannot pass.
+
+  A board the plan gives no links at all would otherwise be a sealed room, so
+  `stubEscapeTarget` gives it a passage to the start board. A stub that already
+  has a way out never gets a spurious one.
 
   DEVIATION: four generation tests asserted the old fail-hard contract and were
   rewritten to the requested behavior, each still guarding its original property.

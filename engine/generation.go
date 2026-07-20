@@ -124,7 +124,7 @@ func (st *generationResume) stub(board PlanBoard) {
 	if !st.isStubbed(board.Name) {
 		st.stubbed = append(st.stubbed, board.Name)
 	}
-	st.sections[board.Name] = generatedStubBoard(st.plan, board)
+	st.sections[board.Name] = generatedStubBoard(st.plan, board, st.sections)
 }
 
 func (st *generationResume) isStubbed(name string) bool {
@@ -387,13 +387,23 @@ func (g *GenerationService) paintAndFinish(ctx context.Context, st *generationRe
 			section, err := g.paintBoard(ctx, planText, plan, board, st.sections, st.attempts[name], "")
 			if err != nil {
 				g.report(ctx, GenerationProgress{Stage: "salvaging", Board: name, Detail: err.Error()})
-				st.sections[name] = generatedStubBoard(plan, board)
+				st.sections[name] = generatedStubBoard(plan, board, st.sections)
 				stillStubbed = append(stillStubbed, name)
 				continue
 			}
 			st.sections[name] = section
 		}
 		st.stubbed = stillStubbed
+	}
+
+	// Re-derive every stub now that painting is finished. A stub built at the
+	// moment its board failed could not see boards painted after it, so its
+	// passages fell back to the default color; with the full section map each
+	// passage can adopt its destination's facing color and actually land there.
+	for _, name := range st.stubbed {
+		if board, ok := byName[name]; ok {
+			st.sections[name] = generatedStubBoard(plan, board, st.sections)
+		}
 	}
 
 	// M17.13: salvage has a floor. A world in which nothing painted is not a
@@ -2552,6 +2562,59 @@ var stubBoardMessage = []string{
 	"PLEASE PROCEED TO THE NEXT BOARD",
 }
 
+// defaultStubPassageColor is used when the destination board is not painted yet
+// or declares no passage back, so there is no partner color to match.
+const defaultStubPassageColor = 0x1F
+
+// stubPassageColor picks the color for a stub's passage to target. ZZT deposits
+// the player at the first passage on the destination board whose color byte
+// MATCHES the source passage's (elements.go:1071); with no match the player
+// lands on the destination's start point instead, which reads as a broken exit.
+// So when the destination is already painted and declares a passage back to
+// this board, adopt that passage's color and the round trip lands on the
+// facing tile in both directions.
+func stubPassageColor(sections map[string]string, target, self string) byte {
+	section := sections[target]
+	if section == "" {
+		return defaultStubPassageColor
+	}
+	_, parsed, err := extractGeneratedBoard("```zwd\n"+strings.TrimSpace(section)+"\n```", target)
+	if err != nil {
+		return defaultStubPassageColor
+	}
+	// Legend iteration order is map order, so pick deterministically by key.
+	best, found := byte(0), false
+	for key, entry := range parsed.legend {
+		if entry.element != E_PASSAGE || entry.toBoard != self {
+			continue
+		}
+		if !found || key < best {
+			best, found = key, true
+		}
+	}
+	if !found {
+		return defaultStubPassageColor
+	}
+	return parsed.legend[best].color
+}
+
+// stubEscapeTarget names the board a sealed stub should offer a passage to: the
+// plan's start board, or failing that the first non-title board that is not the
+// stub itself. A stub with no way out is worse than a failed generation.
+func stubEscapeTarget(plan Plan, board PlanBoard) (string, bool) {
+	for _, b := range plan.Boards {
+		if b.IsStart && b.Name != board.Name && b.Index != 0 {
+			return b.Name, true
+		}
+	}
+	for _, b := range plan.Boards {
+		if b.Index != 0 && b.Name != board.Name {
+			return b.Name, true
+		}
+	}
+	return "", false
+}
+
 // generatedStubBoard builds the salvage board substituted for a board whose
 // paint attempts were exhausted (M17.13). Unlike generatedPlaceholderBoard — a
 // sealed empty room, fine as a transient stand-in for a board that has not been
@@ -2563,7 +2626,7 @@ var stubBoardMessage = []string{
 //
 // It is always lit regardless of the plan's `dark`, because its only job is to
 // be read and walked out of.
-func generatedStubBoard(plan Plan, board PlanBoard) string {
+func generatedStubBoard(plan Plan, board PlanBoard, sections map[string]string) string {
 	const (
 		wallKey   = '#'
 		emptyKey  = '.'
@@ -2643,6 +2706,7 @@ func generatedStubBoard(plan Plan, board PlanBoard) string {
 		key    byte
 		x, y   int
 		target string
+		color  byte
 	}
 	var passages []stubPassage
 	var passageTargets []string
@@ -2658,6 +2722,13 @@ func generatedStubBoard(plan Plan, board PlanBoard) string {
 		seen[target.Name] = true
 		passageTargets = append(passageTargets, target.Name)
 	}
+	// A stub with no edge exit and no passage would be a sealed room the player
+	// could never leave. Guarantee one way out: a passage to the start board.
+	if len(passageTargets) == 0 && exits == [4]string{} {
+		if escape, ok := stubEscapeTarget(plan, board); ok {
+			passageTargets = append(passageTargets, escape)
+		}
+	}
 	if len(passageTargets) > 9 {
 		passageTargets = passageTargets[:9] // one digit key each
 	}
@@ -2665,7 +2736,10 @@ func generatedStubBoard(plan Plan, board PlanBoard) string {
 	for i, target := range passageTargets {
 		x := (BOARD_WIDTH * (i + 1)) / (len(passageTargets) + 1)
 		grid[passageRow][x] = byte('1' + i)
-		passages = append(passages, stubPassage{key: byte('1' + i), x: x, y: passageRow, target: target})
+		passages = append(passages, stubPassage{
+			key: byte('1' + i), x: x, y: passageRow, target: target,
+			color: stubPassageColor(sections, target, board.Name),
+		})
 	}
 
 	// The player goes above the message, on a row nothing else claims.
@@ -2699,7 +2773,7 @@ func generatedStubBoard(plan Plan, board PlanBoard) string {
 		}
 	}
 	for _, p := range passages {
-		fmt.Fprintf(&b, "    %c = Passage color 0x1F to %q\n", p.key, p.target)
+		fmt.Fprintf(&b, "    %c = Passage color 0x%02X to %q\n", p.key, p.color, p.target)
 	}
 	b.WriteString("  end\n")
 	if len(passages) > 0 {
