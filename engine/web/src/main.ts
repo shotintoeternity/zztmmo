@@ -1384,12 +1384,23 @@ function applyMessage(message: ServerMessage) {
 
 function applyEditorSnapshot(message: EditorSnapshotMessage) {
   mode = "editor";
-  if (message.memberId) editorMemberId = message.memberId;
+  // EditorSnapshot is broadcast to every session member carrying the *acting*
+  // member's id, cursor and inspect (editor_session.go:313, broadcast at
+  // websocket_server.go:611). Only the board/screen half of it is shared state.
+  // Adopting the rest unconditionally meant another player's edit overwrote our
+  // identity and dragged our cursor onto their cell, where the local white cross
+  // painted over their coloured one — the "both cursors went white" report.
+  // Claim an id only when we do not already have one (the entry snapshot), and
+  // take cursor-shaped state only from snapshots that are actually ours.
+  const forMe = !editorMemberId || !message.memberId || message.memberId === editorMemberId;
+  if (message.memberId && !editorMemberId) editorMemberId = message.memberId;
   editorReadOnly = !!message.readOnly;
   if (message.presence) editorPresence = message.presence;
-  editorInspect = message.inspect;
-  editorCursor = { x: message.inspect.x, y: message.inspect.y };
-	  editorProperties = message.properties;
+  if (forMe) {
+    editorInspect = message.inspect;
+    editorCursor = { x: message.inspect.x, y: message.inspect.y };
+    editorProperties = message.properties;
+  }
   // Menus arrive only on the entry snapshot; board add/switch reuse this
   // message without them, so keep the tables already held.
   if (message.menus) editorMenus = message.menus;
