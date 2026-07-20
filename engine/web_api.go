@@ -545,9 +545,15 @@ func (a *WebAPI) handleWorlds(w http.ResponseWriter, r *http.Request) {
 		}
 	}
 
+	// M17.11: editor occupancy, gathered exactly as the player counts above.
+	var editorCounts map[string]int
+	if a.Server != nil {
+		editorCounts = a.Server.EditorCounts()
+	}
+
 	writeJSON(w, struct {
 		Worlds []WorldListEntry `json:"worlds"`
-	}{Worlds: WorldListEntriesInDir(dir, worlds, counts)})
+	}{Worlds: WorldListEntriesInDirWithEditors(dir, worlds, counts, editorCounts)})
 }
 
 func (a *WebAPI) handleLoadWorld(w http.ResponseWriter, r *http.Request) {

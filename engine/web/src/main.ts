@@ -1061,6 +1061,7 @@ function normalizeWorldEntries(entries: (WorldSearchEntry | string)[]): WorldSea
         author: entry.author || "Unknown",
         created: entry.created || "",
         players: entry.players || 0,
+        editors: entry.editors || 0,
         source: "local",
       };
     }
@@ -1072,6 +1073,7 @@ function normalizeWorldEntries(entries: (WorldSearchEntry | string)[]): WorldSea
       author: "Unknown",
       created: "",
       players: 0,
+      editors: 0,
       source: "local",
     };
   });

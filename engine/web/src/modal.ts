@@ -172,6 +172,8 @@ export type WorldSearchEntry = {
   author: string;
   created: string;
   players?: number;
+  // M17.11: people editing this world, the counterpart to players.
+  editors?: number;
   source?: "local" | "museum";
   letter?: string;
   filename?: string;
@@ -410,7 +412,7 @@ function worldSearchLines(matches: WorldSearchEntry[]): string[] {
   }
   for (let i = 0; i < matches.length; i += 1) {
     const entry = matches[i];
-    const playerText = worldSearchPlayerText(entry.players ?? 0);
+    const playerText = worldSearchPlayerText(entry.players ?? 0, entry.editors ?? 0);
     const sourceText = entry.source === "museum" ? "  Museum" : "";
     lines.push(`!${String(i)};${fitText(entry.title || entry.world, WORLD_TITLE_WIDTH)}`);
     lines.push(fitText(`  by ${entry.author || "Unknown"}  ${entry.created || "????"}${sourceText}`, WORLD_DETAIL_WIDTH));
@@ -421,11 +423,26 @@ function worldSearchLines(matches: WorldSearchEntry[]): string[] {
   return lines;
 }
 
-function worldSearchPlayerText(players: number): string {
-  if (players <= 0) {
+function worldSearchPlayerText(players: number, editors = 0): string {
+  const parts: string[] = [];
+  if (players > 0) {
+    parts.push(`${players} ${players === 1 ? "player" : "players"} currently online`);
+  }
+  // M17.11: editing occupancy reads the same way playing occupancy does.
+  if (editors > 0) {
+    parts.push(`${editors} ${editors === 1 ? "editor" : "editors"}`);
+  }
+  if (parts.length === 0) {
     return "";
   }
-  return ` (${players} ${players === 1 ? "player" : "players"} currently online)`;
+  return ` (${parts.join(", ")})`;
+}
+
+// worldSearchHasOccupancy decides whether an entry gets its extra occupancy
+// line. worldSearchLinePos must agree with renderWorldSearch here or the
+// selection highlight drifts off the entry it belongs to.
+function worldSearchHasOccupancy(entry: WorldSearchEntry): boolean {
+  return (entry.players ?? 0) > 0 || (entry.editors ?? 0) > 0;
 }
 
 function worldSearchLinePos(selected: number, matches: WorldSearchEntry[]): number {
@@ -435,7 +452,7 @@ function worldSearchLinePos(selected: number, matches: WorldSearchEntry[]): numb
   const clamped = Math.min(Math.max(0, selected), matches.length - 1);
   let pos = 3;
   for (let i = 0; i < clamped; i += 1) {
-    pos += matches[i].players ? 3 : 2;
+    pos += worldSearchHasOccupancy(matches[i]) ? 3 : 2;
   }
   return pos;
 }

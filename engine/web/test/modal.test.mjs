@@ -303,3 +303,43 @@ function scroll() {
 }
 
 console.log("modal.test.mjs: all assertions passed");
+
+// M17.11: editing occupancy renders the same way playing occupancy does, and an
+// entry with only editors still gets its occupancy line — including the line
+// accounting behind the selection highlight, which previously keyed off
+// `players` alone and would have drifted for an editors-only entry.
+{
+  const entries = [
+    { world: "AAA", id: "aaa", title: "Aaa", author: "Nobody", created: "2000", editors: 1 },
+    { world: "BBB", id: "bbb", title: "Bbb", author: "Nobody", created: "2000", players: 2, editors: 3 },
+    { world: "CCC", id: "ccc", title: "Ccc", author: "Nobody", created: "2000" },
+  ];
+  const render = (selected) => {
+    const m = { kind: "worldSearch", title: "Select a World", query: "", selected, entries, onSelect() {}, onQuery() {} };
+    const writes = [];
+    renderModal((x, y, color, text) => writes.push({ x, y, color, text }), m);
+    return writes;
+  };
+
+  const writes = render(0);
+  const text = writes.map((w) => w.text).join("\n");
+  assert.ok(text.includes("1 editor)"), `editors-only world shows its count: ${text}`);
+  assert.ok(text.includes("2 players currently online, 3 editors)"), `both counts read together: ${text}`);
+  assert.ok(!/\(0 (players|editors)/.test(text), "zero counts are never printed");
+
+  // Each occupied entry occupies three lines (title, byline, occupancy), so the
+  // two occupied entries above CCC push it down by six. The list scrolls with
+  // the selection, so assert the spacing rather than absolute rows — that is
+  // what worldSearchLinePos has to agree with, and it keyed off `players` alone
+  // before M17.11, which would have mis-measured the editors-only entry.
+  for (const selected of [0, 2]) {
+    const rows = render(selected);
+    const rowOf = (needle) => {
+      const w = rows.find((write) => write.text.includes(needle));
+      return w ? w.y : -1;
+    };
+    assert.ok(rowOf("Aaa") > 0 && rowOf("Ccc") > 0, "entries are rendered");
+    assert.equal(rowOf("Ccc") - rowOf("Aaa"), 6, "two occupied entries take three lines each");
+    assert.equal(rowOf("Bbb") - rowOf("Aaa"), 3, "the editors-only entry still gets its occupancy line");
+  }
+}

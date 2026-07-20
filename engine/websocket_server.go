@@ -704,6 +704,31 @@ func (s *WebSocketServer) serveEditor(ctx context.Context, conn *websocket.Conn,
 	}
 }
 
+// EditorCounts reports how many people are editing each world (M17.11), the
+// editor-side counterpart to the per-instance client counts handleWorlds
+// gathers for Players. Takes the server lock to walk the session map, then each
+// session's own lock via MemberCount — never reads EditorSession.Members
+// directly, which is guarded by that session's mutex.
+func (s *WebSocketServer) EditorCounts() map[string]int {
+	s.mu.Lock()
+	sessions := make(map[string]*EditorSession, len(s.EditorWorldSessions))
+	for name, session := range s.EditorWorldSessions {
+		sessions[name] = session
+	}
+	s.mu.Unlock()
+
+	counts := make(map[string]int, len(sessions))
+	for name, session := range sessions {
+		if session == nil {
+			continue
+		}
+		if n := session.MemberCount(); n > 0 {
+			counts[name] = n
+		}
+	}
+	return counts
+}
+
 func (s *WebSocketServer) editorSessionForWorld(worldName string, world TWorld) *EditorSession {
 	s.mu.Lock()
 	defer s.mu.Unlock()

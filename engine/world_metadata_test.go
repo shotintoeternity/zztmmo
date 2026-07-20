@@ -1,6 +1,8 @@
 package zztgo
 
 import (
+	"bytes"
+	"encoding/json"
 	"os"
 	"path/filepath"
 	"testing"
@@ -92,5 +94,53 @@ func TestWorldListEntriesResolvesAddedManifestWorlds(t *testing.T) {
 		if e.Title != c.title || e.Author != c.author || e.Created != c.created {
 			t.Fatalf("%s=%+v, want title=%q author=%q created=%q", c.world, e, c.title, c.author, c.created)
 		}
+	}
+}
+
+// TestWorldListEntriesReportEditors is the M17.11 claim: editing occupancy
+// travels the same path as playing occupancy, for catalogued and local worlds
+// alike, and a zero count stays absent from the JSON.
+func TestWorldListEntriesReportEditors(t *testing.T) {
+	dir := t.TempDir()
+	for _, name := range []string{"TOWN", "OBSCURE"} {
+		if err := os.WriteFile(filepath.Join(dir, name+".ZZT"), []byte{}, 0o644); err != nil {
+			t.Fatal(err)
+		}
+	}
+	entries := WorldListEntriesInDirWithEditors(dir,
+		[]string{"TOWN", "OBSCURE"},
+		map[string]int{"TOWN": 3},
+		map[string]int{"TOWN": 2, "OBSCURE": 1},
+	)
+	byWorld := entriesByWorld(entries)
+
+	town, ok := byWorld["TOWN"]
+	if !ok {
+		t.Fatal("TOWN missing from the list")
+	}
+	if town.Players != 3 {
+		t.Errorf("TOWN Players = %d, want 3", town.Players)
+	}
+	if town.Editors != 2 {
+		t.Errorf("TOWN Editors = %d, want 2", town.Editors)
+	}
+
+	// A world with editors but no players still reports them.
+	obscure, ok := byWorld["OBSCURE"]
+	if !ok {
+		t.Fatal("OBSCURE missing from the list")
+	}
+	if obscure.Players != 0 || obscure.Editors != 1 {
+		t.Errorf("OBSCURE = {Players:%d Editors:%d}, want {0 1}", obscure.Players, obscure.Editors)
+	}
+
+	// omitempty: an unoccupied world carries neither count in the JSON.
+	quiet := WorldListEntriesInDirWithEditors(dir, []string{"TOWN"}, nil, nil)
+	blob, err := json.Marshal(quiet)
+	if err != nil {
+		t.Fatal(err)
+	}
+	if bytes.Contains(blob, []byte(`"editors"`)) || bytes.Contains(blob, []byte(`"players"`)) {
+		t.Errorf("quiet world should omit both counts, got %s", blob)
 	}
 }

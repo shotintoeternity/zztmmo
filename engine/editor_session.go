@@ -198,6 +198,15 @@ func (s *EditorSession) Presence() []EditorPresence {
 	return out
 }
 
+// MemberCount reports how many people are editing this world (M17.11). Members
+// is mutex-guarded, so callers outside the session must come through here rather
+// than reading the map directly.
+func (s *EditorSession) MemberCount() int {
+	s.mu.Lock()
+	defer s.mu.Unlock()
+	return len(s.Members)
+}
+
 func (s *EditorSession) MemberClients() []*webSocketClient {
 	s.mu.Lock()
 	defer s.mu.Unlock()
