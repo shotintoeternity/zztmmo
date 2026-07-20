@@ -21,21 +21,26 @@ Ranked 2026-07-14. The preceding priority list — M12.22, M12.19, and M15.1 —
 has fully landed. Work the list top-down; skip the optional/deferred tail unless
 the owner asks.
 
-1. **M17.9 — collaborator cursors in the editor (owner request 2026-07-20,
-   URGENT).** Small, client-side: a remote collaborator's cursor must be the
-   ordinary ZZT editor cursor in a different colour, with no name label eating
-   board cells. Takes immediate priority over everything below.
-2. M12.23 — generated-world acceptance and targeted repair hardening
+1. **M17.12 — per-board editing isolation (owner request 2026-07-20, URGENT
+   [ADVISOR]).** Two people editing one world cannot work on different boards:
+   the session shares a single engine and current board, so a board switch drags
+   everyone along and the sidebar paints elements from a board the member is not
+   viewing. Not a small change — confirm the approach before starting. Takes
+   priority over everything below.
+2. M17.9 — collaborator cursors in the editor (owner request 2026-07-20,
+   URGENT). **Landed**, plus a follow-up fixing broadcast snapshots that
+   hijacked another member's identity and cursor.
+3. M12.23 — generated-world acceptance and targeted repair hardening
    (owner-reported 2026-07-19): generated worlds must not reach the browser with
    a hidden picker entry, an invalid title, or a board that panics when played.
-3. M17.1–M17.8 — owner-reported live browser fixes and branch-backed dev
+4. M17.1–M17.8 — owner-reported live browser fixes and branch-backed dev
    deployment (2026-07-14/20): name popup
    centering/width, world picker (list all + metadata + count overlap), audio
    regression, scroll hyperlinks, sidebar banner centering (done), mobile
    responsiveness incl. the iPhone soft-keyboard Enter key, and sound still not
    working properly in the client (M17.7, 2026-07-17). Ahead of M16: live
    breakage in front of the player.
-4. M16.0–M16.20 — whole-product feature-parity proof (owner request 2026-07-14)
+5. M16.0–M16.20 — whole-product feature-parity proof (owner request 2026-07-14)
 
 **Optional / deferred (bottom):**
 - M14.3 — package split (skip unless the single package is actually hurting)
@@ -1843,6 +1848,54 @@ these are live breakage in front of the player.
   one cell per remote member (and none on phase 0); `go test ./...` and the web
   tests are green; replay fixture untouched. Verify in two real browsers, not
   only in unit tests — per the M17.3/M17.7 lesson.
+
+- [ ] **M17.12 — Per-board editing isolation: two editors, two boards (owner
+  request 2026-07-20, URGENT — take first).** Two people editing the same world
+  cannot work on different boards. Whoever switches boards drags everyone else
+  with them, because the whole session shares one engine and one current board.
+  The owner also traced a second symptom to this same root cause: the editor
+  sidebar shows elements that do not exist on the board being viewed —
+  `Element 53`, keys/solids/breakables/fakes that are not there, bombs where
+  there are none — in the rows directly above `Mode: Drawing off`.
+
+  Surgical map. `EditorSession` holds a single `s.engine` (`editor_session.go`),
+  opened once at `editor_session.go:43-47` on `e.World.Info.CurrentBoard`. Every
+  board-scoped operation resolves against that one implicit current board:
+  `leaseKeyLocked` (`:257-268`), `hasCurrentBoardLeaseLocked` (`:274-292`), and
+  `Edit`/`Apply` (`:339+`). The sidebar garbage follows from the same state: the
+  vanilla `EditorUpdateSidebar` / pattern-buffer rows are painted from engine
+  globals — `E.EditorPatternCount` and `copiedTile` at `editor.go:100-106`
+  (rows 21-22), `cursorPattern`/`cursorColor` at `editor.go:130-132` — so a
+  member viewing board A sees the palette and copied-tile state of whichever
+  board the shared engine currently has open.
+
+  The lease system (`editorLeaseKey{kind, boardID, statID}`) already models
+  board-scoped ownership, so the concept exists; what is missing is per-member
+  board context. Give each member their own current board and resolve every
+  edit, inspect, snapshot, and sidebar paint against *that* member's board
+  rather than `World.Info.CurrentBoard`. Two members on different boards must
+  not see each other's board switches, palette, or copied tile; two members on
+  the *same* board keep today's shared-editing behaviour, including leases.
+
+  This is not a small change: it means editing operations take an explicit board
+  argument instead of reading the engine's implicit current board, and the
+  broadcast snapshot must be per-recipient-board rather than one screen for
+  everyone (see the M17.9 follow-up commit, which fixed the related case of a
+  broadcast snapshot carrying the acting member's cursor to every client).
+  Confirm the approach with the advisor before starting.
+
+  Determinism (hard rule 2): per-member board context is server-side session
+  state, never engine simulation state; the replay fixture and parity oracle
+  must be unaffected.
+
+  DoD: with two browsers in one world, each can open a different board and edit
+  it without moving or corrupting the other's view; each sidebar shows the
+  palette, copied tile, colour and pattern for the board that member is actually
+  viewing, with no elements that do not exist on it; same-board collaborative
+  editing and lease conflicts still behave as before; a Go test covers two
+  members editing different boards concurrently and asserts neither observes the
+  other's board state; a web test covers the sidebar rendering against a member's
+  own board; `go test ./...` and web tests green; replay fixture untouched.
 
 - [ ] **M17.11 — Show how many people are playing or editing each world (owner
   request 2026-07-20).** The picker already carries a per-world player count but
