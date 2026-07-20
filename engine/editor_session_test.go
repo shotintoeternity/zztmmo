@@ -877,3 +877,42 @@ func TestEditorSessionMembersEditDifferentBoards(t *testing.T) {
 		t.Errorf("bob presence BoardID = %d, want 2", got)
 	}
 }
+
+// TestEditorPresenceColorsAreDistinctFromTheLocalCursor pins the M17.9 palette
+// against the bug that shipped with it: bright cyan 0x0B is #55ffff in the
+// client's EGA palette, white minus the red channel, and on the thin cross
+// cursor glyph it is indistinguishable from the local cursor's white 0x0F. It
+// was the second colour, so a two-person session hit it immediately — the first
+// player saw the second's cursor as white while the second saw yellow.
+func TestEditorPresenceColorsAreDistinctFromTheLocalCursor(t *testing.T) {
+	const localCursorColor = 0x0f // EDITOR_CURSOR_COLOR in editor_cursor.ts
+
+	seen := map[byte]int{}
+	for n := 1; n <= 8; n++ {
+		color := editorPresenceColor(n)
+
+		if color == localCursorColor {
+			t.Errorf("member %d gets 0x%02x, the local cursor's own colour", n, color)
+		}
+		for _, near := range editorPresenceColorsNearWhite {
+			if color == near {
+				t.Errorf("member %d gets 0x%02x, too close to the local cursor's white to tell apart", n, color)
+			}
+		}
+		// Foreground-only: a background nibble would paint the whole cell and
+		// hide the board tile under the cursor.
+		if color&0xf0 != 0 {
+			t.Errorf("member %d gets 0x%02x, which has a background nibble", n, color)
+		}
+		if prev, dup := seen[color]; dup {
+			t.Errorf("member %d reuses member %d's colour 0x%02x", n, prev, color)
+		}
+		seen[color] = n
+	}
+
+	// The palette wraps rather than running out.
+	if editorPresenceColor(9) != editorPresenceColor(1) {
+		t.Errorf("palette should wrap: member 9 = 0x%02x, member 1 = 0x%02x",
+			editorPresenceColor(9), editorPresenceColor(1))
+	}
+}

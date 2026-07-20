@@ -224,13 +224,25 @@ func (s *EditorSession) MemberClients() []*webSocketClient {
 // attributes (0x1e = blue background), which painted the whole cell as a solid
 // block and hid the tile underneath.
 //
-// 0x0F is deliberately absent: it is EDITOR_CURSOR_COLOR, the local player's own
-// cursor colour, and the old palette's eighth entry made the eighth
-// collaborator indistinguishable from yourself.
+// Entries must be visibly distinct from the local cursor's white (0x0F), which
+// rules out more than 0x0F itself. In the client's EGA palette (main.ts) bright
+// cyan 0x0B is #55ffff — white with the red channel dropped — and on a thin 8x14
+// cross glyph it reads as white. That shipped as the *second* colour, so with two
+// editors the first player saw the second's cursor as white while the second
+// correctly saw yellow: the asymmetric "both cursors white on one screen" report.
+// Bright cyan is therefore excluded too, and the order runs most-distinct first
+// so small sessions get the least confusable colours.
+//
+// Guarded by TestEditorPresenceColorsAreDistinctFromTheLocalCursor.
 func editorPresenceColor(n int) byte {
-	colors := []byte{0x0e, 0x0b, 0x0a, 0x0d, 0x0c, 0x09, 0x06, 0x05}
+	colors := []byte{0x0e, 0x0a, 0x0d, 0x0c, 0x09, 0x03, 0x06, 0x05}
 	return colors[(n-1)%len(colors)]
 }
+
+// editorPresenceColorsNearWhite are attributes too close to EDITOR_CURSOR_COLOR
+// to serve as a collaborator cursor: white itself, and bright cyan, which
+// differs from it only in the red channel.
+var editorPresenceColorsNearWhite = []byte{0x0f, 0x0b}
 
 func (s *EditorSession) AcquireLease(member *webSocketClient, request EditorLeaseMessage) (EditorLeaseMessage, error) {
 	s.mu.Lock()
