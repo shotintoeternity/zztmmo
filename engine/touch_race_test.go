@@ -13,11 +13,20 @@ import (
 // cause was ZWD-compiler stat-default garbage, since fixed and guarded by
 // TestZWDObjectDefaultsAreZZTNeutral (zwd_test.go). There is no race here; the
 // test simply checks the unlocked-object touch → scroll path end to end.
+//
+// It reads testdata/touch_scroll.zwd, a pinned copy of the BAKERY world as it
+// stood when this test was written, rather than engine/BAKERY.zwd itself.
+// BAKERY.zwd is a *generated* artifact that the world generator is expected to
+// rewrite wholesale; when it was regenerated the "Warm Bread Plaza" board
+// replaced "Title Screen" and the @townguide object this test asserts on
+// vanished, reddening the suite for a reason unrelated to the touch → scroll
+// path. The invariant under test is not about BAKERY, so it gets a stable
+// fixture that regeneration cannot disturb.
 func TestTouchRaceBakery(t *testing.T) {
-	// Read BAKERY.zwd
-	src, err := ioutil.ReadFile("BAKERY.zwd")
+	// Read the pinned touch/scroll fixture
+	src, err := ioutil.ReadFile("testdata/touch_scroll.zwd")
 	if err != nil {
-		t.Fatalf("Failed to read BAKERY.zwd: %v", err)
+		t.Fatalf("Failed to read testdata/touch_scroll.zwd: %v", err)
 	}
 
 	// Compile it

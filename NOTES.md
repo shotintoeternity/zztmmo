@@ -2937,3 +2937,49 @@ adapter (engine boots in monitor state and `capture title` compares the title
 board against the real boot screen, certifying elem.monitor together with
 TestMonitorTickExitKeys), and the Time sidebar counter comparison. M16.2's
 main/scroll captures regenerate byte-identically under the extended harness.
+
+## 2026-07-20 — M17.8 escalation: TestTouchRaceBakery blocked by regenerated fixture
+
+Deploying M17.8's dev environment surfaced a commit blocker in the
+`feature/structured-world-generation` worktree. `go test ./...` is red:
+
+    --- FAIL: TestTouchRaceBakery
+        touch_race_test.go:46: Townguide stat not found
+
+Not pre-existing and not caused by M17.8. The test passes at the clean commit
+6e7dc60 with the same BAKERY.ZZT; it fails only in the working tree, and
+`touch_race_test.go` itself is unmodified. Bisecting the WIP by file showed
+`generation.go` and `world_metadata.go` are both innocent (pass individually
+and together).
+
+Root cause: the uncommitted `BAKERY.zwd` is a wholesale regeneration, not an
+edit. Board 1 changed from "Title Screen" to "Warm Bread Plaza", the grid is
+entirely different, and `@townguide` is absent (`git show HEAD:engine/BAKERY.zwd`
+has 1 occurrence; the working copy has 0). `touch_race_test.go:35-46` compiles
+BAKERY.zwd and scans board 1 for an E_OBJECT at hardcoded (13,18) — the
+townguide — so the assertion can no longer hold.
+
+The coupling is the real defect: a touch-race invariant test rides on a
+generated artifact that the generator is expected to rewrite. Retargeting by
+label does not help (no guide object exists in the new world).
+
+Resolved (owner authorised 2026-07-20) by pinning a stable fixture:
+`engine/testdata/touch_scroll.zwd` is the HEAD copy of BAKERY.zwd, and
+touch_race_test.go now reads it instead of engine/BAKERY.zwd. The test's own
+header already recorded that the BAKERY filename is "historical" and that it
+merely checks the unlocked-object touch -> scroll path, so nothing about the
+invariant is BAKERY-specific. No assertion was weakened: the fixture is the
+exact world the (13,18) board-1 coordinates were written against, and the
+generated BAKERY.zwd stays free to change. `go test ./...` green after the
+change. The test was not deleted or skipped, so no DEVIATION applies.
+
+M17.8 itself is
+functionally complete: dev.zztmmo.com serves commit 6e7dc60 over HTTPS with a
+Let's Encrypt cert, /status reports the SHA, /api/worlds returns 65 worlds
+(byte-identical to prod's catalog), and wss upgrades return 101 for TOWN,
+BAKERY, and uncatalogued worlds; production stayed at 200 throughout. Instance
+i-06149a1a52a126f0c, EIP 54.210.138.45, SG sg-08859294bf38ac4c3; provision,
+deploy, rollback and teardown are documented in AWS.md (gitignored). The
+remaining M17.8 DoD item is the owner's real-browser check, deliberately not
+self-certified per the M17.3/M17.7 lesson. M17.8's TASKS.md box is therefore
+still unchecked.
