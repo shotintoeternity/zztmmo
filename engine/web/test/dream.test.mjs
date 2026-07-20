@@ -169,3 +169,13 @@ assert.ok(planFailure instanceof DreamFailure);
 assert.equal(planFailure.retryable, false);
 
 console.log("M12.5 dream flow: success, failure, and M12.22 retry paths passed");
+
+// M17.13: a salvaged board renders as a named loss, not as a raw stage token.
+assert.deepEqual(
+  generationLines([{ stage: "salvaging", board: "The Tide Cellar", detail: "exhausted 3 attempts" }]),
+  ["Lost board: The Tide Cellar"],
+);
+assert.deepEqual(
+  generationLines([{ stage: "salvaging", detail: "2 of 9 boards failed" }]),
+  ["Some rooms would not form..."],
+);

@@ -1963,6 +1963,50 @@ these are live breakage in front of the player.
   itself stays free of name text; web test covers the list; replay fixture
   untouched.
 
+- [x] **M17.13 — Dreaming a world salvages the boards that worked (owner-requested
+  2026-07-20).** Previously any board that exhausted its paint attempts failed the
+  whole generation, so one bad room threw away a world the player had waited
+  minutes for. Now a failed board is replaced by a *traversable* stub —
+  `generatedStubBoard` in `engine/generation.go` — that re-declares the plan's
+  edge exits (cutting a doorway in each matching border) and places a real
+  Passage tile per planned passage link, with two centered Text rows reading
+  "THIS BOARD FAILED GENERATION" / "PLEASE PROCEED TO THE NEXT BOARD". The world
+  then compiles, validates, persists, and hosts as usual.
+
+  Three abort points became salvage points in `paintAndFinish`: single-board
+  paint exhaustion, batch paint failure (only boards that produced no section are
+  stubbed), and cross-board validation exhausting its repair rounds (the assembly
+  already compiled, so the remaining problems are dangling exits and unmet
+  progression — reported via a `salvaging` progress event, then accepted). A
+  repair paint that fails keeps the board's existing section. Stubbed boards are
+  excluded from the repair loop so they cannot burn attempts they have already
+  exhausted. Assembly compile/validate failure still hard-fails: a world that does
+  not compile cannot be hosted.
+
+  Salvage has a floor: if *every* board fails there is nothing to salvage and
+  generation errors rather than shipping a tour of identical stub rooms.
+
+  M12.22's targeted retry moved from the failure path to the success path rather
+  than being deleted. `GenerationResult` gained `Stubbed` and `Retry`; a salvaged
+  async job is `complete` (hosted and playable) *and* `retryable`, reporting
+  `stubbedBoards`, so the client can repaint the missing rooms while the player is
+  already in the world. `RetryBoard` resets those boards' attempt budgets and
+  `paintAndFinish` repaints only them.
+
+  Known limitation: stub passages are emitted as `color 0x1F`. ZZT deposits the
+  player at the first color-matching passage on the destination board, so a
+  stub's passage may land the player at the destination's default start point
+  rather than its facing passage. Edge exits — the common case — are exact.
+
+  DEVIATION: four generation tests asserted the old fail-hard contract and were
+  rewritten to the requested behavior, each still guarding its original property.
+  `TestM124ExhaustedBoardRepairs` now guards the nothing-to-salvage floor;
+  `TestM1222RetryBoardAfterExhaustion` and `TestM1222RetryEndpointResumesFailedJob`
+  now drive retry from a salvaged-complete job; `TestM124InjectionIsOnlyBadZWD`
+  now asserts the strictly stronger property that injected text is replaced by a
+  stub we generated ourselves and never reaches the assembled world. No replay
+  fixture or hash was touched.
+
 ## M16 — Whole-product feature-parity proof
 
 Goal: replace “the completed milestones probably compose” with an auditable,

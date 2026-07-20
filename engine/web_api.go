@@ -61,9 +61,12 @@ type generationJob struct {
 	// Retryable and FailedBoard are set when a failure kept resumable state
 	// (M12.22): the client may POST {"retry": "<job id>"} to re-request the
 	// failed board instead of starting the whole world over.
-	Retryable   bool                 `json:"retryable,omitempty"`
-	FailedBoard string               `json:"failedBoard,omitempty"`
-	Progress    []GenerationProgress `json:"progress"`
+	Retryable   bool   `json:"retryable,omitempty"`
+	FailedBoard string `json:"failedBoard,omitempty"`
+	// StubbedBoards names the boards that failed and were salvaged as stub rooms
+	// (M17.13). Set on a *complete* job: the world is playable but incomplete.
+	StubbedBoards []string             `json:"stubbedBoards,omitempty"`
+	Progress      []GenerationProgress `json:"progress"`
 
 	resume    *GenerationBoardError
 	generator *GenerationService
@@ -286,6 +289,16 @@ func (a *WebAPI) finishGenerationJob(id string, generator *GenerationService, re
 	}
 	job.Status = "complete"
 	job.World = result.Name
+	// M17.13: a salvaged world is playable now, but the boards that failed are
+	// stub rooms. Keep the job retryable so the client can offer to repaint them
+	// while the player is already in the world.
+	job.StubbedBoards = result.Stubbed
+	if result.Retry != nil {
+		job.Retryable = true
+		job.FailedBoard = result.Retry.Board
+		job.resume = result.Retry
+		job.generator = generator
+	}
 }
 
 // handleGenerationRetry resumes a failed async job from its failed board. The
@@ -300,7 +313,10 @@ func (a *WebAPI) handleGenerationRetry(w http.ResponseWriter, id string) {
 		http.Error(w, "no such generation job", http.StatusNotFound)
 		return
 	}
-	if job.Status != "failed" || job.resume == nil || job.generator == nil {
+	// A salvaged job is "complete" and still retryable (M17.13), so the gate is
+	// the resume state rather than the status. Flipping to running below still
+	// makes a second concurrent retry impossible.
+	if (job.Status != "failed" && job.Status != "complete") || job.resume == nil || job.generator == nil {
 		a.generationMu.Unlock()
 		http.Error(w, "generation job is not retryable", http.StatusConflict)
 		return

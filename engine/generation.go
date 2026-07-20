@@ -70,6 +70,15 @@ type GenerationResult struct {
 	Name string
 	Plan string
 	ZWD  string
+	// Stubbed names the boards that could not be painted and were salvaged with
+	// a traversable stub room (M17.13). Empty on a clean generation.
+	Stubbed []string
+	// Retry is set alongside Stubbed and carries the state RetryBoard needs to
+	// repaint the stubbed boards in place. Salvage means a failed board no
+	// longer fails the world, so M12.22's targeted retry moves from the failure
+	// path to the success path: the player is already playing while the missing
+	// rooms can still be patched in.
+	Retry *GenerationBoardError
 }
 
 // GenerationBoardError wraps a failure that happened while painting one known
@@ -104,6 +113,27 @@ type generationResume struct {
 	sections map[string]string
 	attempts map[string]*int
 	server   *WebSocketServer
+	// stubbed names the boards whose paint attempts were exhausted and which
+	// were salvaged with generatedStubBoard (M17.13), in generation order.
+	stubbed []string
+}
+
+// stub replaces a board that could not be painted with a traversable stub and
+// records it. Idempotent: a board already stubbed is not recorded twice.
+func (st *generationResume) stub(board PlanBoard) {
+	if !st.isStubbed(board.Name) {
+		st.stubbed = append(st.stubbed, board.Name)
+	}
+	st.sections[board.Name] = generatedStubBoard(st.plan, board)
+}
+
+func (st *generationResume) isStubbed(name string) bool {
+	for _, n := range st.stubbed {
+		if n == name {
+			return true
+		}
+	}
+	return false
 }
 
 // ErrGenerationUnavailable is returned before making a network call when the
@@ -288,8 +318,10 @@ func (g *GenerationService) RetryBoard(ctx context.Context, boardErr *Generation
 func (g *GenerationService) paintAndFinish(ctx context.Context, st *generationResume, startIdx int) (GenerationResult, error) {
 	plan, planText, name := st.plan, st.planText, st.name
 	byID := make(map[string]PlanBoard, len(plan.Boards))
+	byName := make(map[string]PlanBoard, len(plan.Boards))
 	for _, b := range plan.Boards {
 		byID[strings.ToLower(b.ID)] = b
+		byName[b.Name] = b
 	}
 	if g.batchSize <= 1 {
 		for index := startIdx; index < len(plan.GenerationOrder); index++ {
@@ -301,7 +333,10 @@ func (g *GenerationService) paintAndFinish(ctx context.Context, st *generationRe
 			g.report(ctx, GenerationProgress{Stage: "painting", Board: board.Name, Index: index + 1, Total: len(plan.GenerationOrder), Attempt: *st.attempts[board.Name] + 1})
 			section, err := g.paintBoard(ctx, planText, plan, board, st.sections, st.attempts[board.Name], "")
 			if err != nil {
-				return GenerationResult{}, &GenerationBoardError{Board: board.Name, retryBoards: []string{board.Name}, startIdx: index, resume: st, err: err}
+				// M17.13: one unpaintable board costs a room, not the world.
+				g.report(ctx, GenerationProgress{Stage: "salvaging", Board: board.Name, Index: index + 1, Total: len(plan.GenerationOrder), Detail: err.Error()})
+				st.stub(board)
+				continue
 			}
 			st.sections[board.Name] = section
 		}
@@ -312,20 +347,60 @@ func (g *GenerationService) paintAndFinish(ctx context.Context, st *generationRe
 				end = len(plan.GenerationOrder)
 			}
 			var batchBoards []PlanBoard
-			var batchNames []string
 			for _, id := range plan.GenerationOrder[i:end] {
 				board, ok := byID[strings.ToLower(id)]
 				if !ok {
 					return GenerationResult{}, fmt.Errorf("plan generation order references unknown board %q", id)
 				}
 				batchBoards = append(batchBoards, board)
-				batchNames = append(batchNames, board.Name)
 			}
 			err := g.paintBoardsBatch(ctx, planText, plan, batchBoards, st.sections, st.attempts)
 			if err != nil {
-				return GenerationResult{}, &GenerationBoardError{Board: strings.Join(batchNames, ", "), retryBoards: batchNames, startIdx: i, resume: st, err: err}
+				// A failed batch may still have landed some of its boards; stub
+				// only the ones that never produced a section (M17.13).
+				var lost []string
+				for _, b := range batchBoards {
+					if st.sections[b.Name] == "" {
+						st.stub(b)
+						lost = append(lost, b.Name)
+					}
+				}
+				if len(lost) > 0 {
+					g.report(ctx, GenerationProgress{Stage: "salvaging", Board: strings.Join(lost, ", "), Index: i + 1, Total: len(plan.GenerationOrder), Detail: err.Error()})
+				}
 			}
 		}
+	}
+
+	// M17.13 retry: RetryBoard resets the attempt budget of boards a previous
+	// pass stubbed, which is the only way a stubbed board's counter is below the
+	// maximum here. Repaint each one; a board that fails again keeps its stub.
+	if len(st.stubbed) > 0 {
+		var stillStubbed []string
+		for _, name := range st.stubbed {
+			board, ok := byName[name]
+			if !ok || st.attempts[name] == nil || *st.attempts[name] >= g.maxAttempts {
+				stillStubbed = append(stillStubbed, name)
+				continue
+			}
+			g.report(ctx, GenerationProgress{Stage: "painting", Board: name, Attempt: *st.attempts[name] + 1, Detail: "repainting a previously stubbed board"})
+			section, err := g.paintBoard(ctx, planText, plan, board, st.sections, st.attempts[name], "")
+			if err != nil {
+				g.report(ctx, GenerationProgress{Stage: "salvaging", Board: name, Detail: err.Error()})
+				st.sections[name] = generatedStubBoard(plan, board)
+				stillStubbed = append(stillStubbed, name)
+				continue
+			}
+			st.sections[name] = section
+		}
+		st.stubbed = stillStubbed
+	}
+
+	// M17.13: salvage has a floor. A world in which nothing painted is not a
+	// degraded world, it is a failed one, and shipping a tour of identical stub
+	// rooms would be worse than saying so.
+	if len(st.stubbed) >= len(plan.GenerationOrder) {
+		return GenerationResult{}, fmt.Errorf("every board failed generation (%d of %d); nothing to salvage", len(st.stubbed), len(plan.GenerationOrder))
 	}
 
 	var full string
@@ -347,17 +422,32 @@ func (g *GenerationService) paintAndFinish(ctx context.Context, st *generationRe
 			return GenerationResult{}, fmt.Errorf("assembled world did not compile: %w", translateZWDError(err, plan, st.sections))
 		}
 		problems := crossBoardProblems(plan, full)
+		// A stub board is a known, accepted hole in the topology — it deliberately
+		// does not realize its plan row. Repainting it would burn attempts it has
+		// already exhausted, so its problems are neither repaired nor counted.
+		for name := range problems {
+			if st.isStubbed(name) {
+				delete(problems, name)
+			}
+		}
 		if len(problems) == 0 {
 			break
 		}
 		if repairRound == g.maxAttempts-1 {
-			return GenerationResult{}, fmt.Errorf("cross-board validation exhausted repairs: %s", formatGenerationProblems(problems))
+			// M17.13: unresolved cross-board problems are dangling exits and
+			// missing progression, not a broken world — the assembly already
+			// compiled and validated above. Ship it and say what is wrong.
+			g.report(ctx, GenerationProgress{Stage: "salvaging", Detail: "accepting world with unresolved cross-board problems: " + formatGenerationProblems(problems)})
+			break
 		}
 		for _, board := range orderedProblemBoards(plan, problems) {
 			g.report(ctx, GenerationProgress{Stage: "repairing", Board: board.Name, Attempt: *st.attempts[board.Name] + 1, Detail: strings.Join(problems[board.Name], "; ")})
 			section, err := g.paintBoard(ctx, planText, plan, board, st.sections, st.attempts[board.Name], strings.Join(problems[board.Name], "; "))
 			if err != nil {
-				return GenerationResult{}, &GenerationBoardError{Board: board.Name, retryBoards: []string{board.Name}, startIdx: len(plan.GenerationOrder), resume: st, err: err}
+				// The board painted once; it just could not be repaired. Keep the
+				// section it already has rather than losing the world over it.
+				g.report(ctx, GenerationProgress{Stage: "salvaging", Board: board.Name, Detail: "keeping unrepaired board: " + err.Error()})
+				continue
 			}
 			st.sections[board.Name] = section
 		}
@@ -380,8 +470,19 @@ func (g *GenerationService) paintAndFinish(ctx context.Context, st *generationRe
 			return GenerationResult{}, err
 		}
 	}
+	result := GenerationResult{Name: name, Plan: planText, ZWD: full, Stubbed: append([]string(nil), st.stubbed...)}
+	if len(st.stubbed) > 0 {
+		g.report(ctx, GenerationProgress{Stage: "salvaging", Detail: fmt.Sprintf("%d of %d boards failed and were stubbed: %s", len(st.stubbed), len(plan.GenerationOrder), strings.Join(st.stubbed, ", "))})
+		result.Retry = &GenerationBoardError{
+			Board:       strings.Join(st.stubbed, ", "),
+			retryBoards: append([]string(nil), st.stubbed...),
+			startIdx:    len(plan.GenerationOrder), // painting is done; only stubs are repainted
+			resume:      st,
+			err:         fmt.Errorf("board(s) %s failed generation and were stubbed", strings.Join(st.stubbed, ", ")),
+		}
+	}
 	g.report(ctx, GenerationProgress{Stage: "complete", Detail: name})
-	return GenerationResult{Name: name, Plan: planText, ZWD: full}, nil
+	return result, nil
 }
 
 func (g *GenerationService) admit(ctx context.Context, client string) error {
@@ -2440,6 +2541,176 @@ func generatedPlaceholderBoard(name string, dark bool) string {
 		rows[i] = strings.Repeat(".", BOARD_WIDTH)
 	}
 	return fmt.Sprintf("board %q\n  start player at 1,1\n  dark %t\n  exits north none south none west none east none\n  grid\n%s\n  end\n  legend\n    @ = Player color 0x1F\n    . = Empty color 0x00\n  end\nend", name, dark, strings.Join(rows, "\n"))
+}
+
+// stubBoardMessage is what a salvaged board says. Uppercase letters and spaces
+// only: each distinct letter becomes a legend key that is its own glyph, so the
+// keys can never collide with the stub's structural keys ('#', '.', '@', '1'-'9')
+// and no key allocator is needed. A period would collide with the Empty key.
+var stubBoardMessage = []string{
+	"THIS BOARD FAILED GENERATION",
+	"PLEASE PROCEED TO THE NEXT BOARD",
+}
+
+// generatedStubBoard builds the salvage board substituted for a board whose
+// paint attempts were exhausted (M17.13). Unlike generatedPlaceholderBoard — a
+// sealed empty room, fine as a transient stand-in for a board that has not been
+// painted YET — this one is traversable: it re-declares the plan's edge exits
+// and opens a doorway in each matching border wall, and it places a real
+// Passage tile for every planned passage link. A player who wanders into a room
+// that never generated can always leave it the way the plan intended, so one
+// failed board costs a room rather than the whole world.
+//
+// It is always lit regardless of the plan's `dark`, because its only job is to
+// be read and walked out of.
+func generatedStubBoard(plan Plan, board PlanBoard) string {
+	const (
+		wallKey   = '#'
+		emptyKey  = '.'
+		playerKey = '@'
+	)
+	boardByID := make(map[string]PlanBoard, len(plan.Boards))
+	for _, b := range plan.Boards {
+		boardByID[strings.ToLower(b.ID)] = b
+	}
+
+	grid := make([][]byte, BOARD_HEIGHT)
+	for y := range grid {
+		grid[y] = make([]byte, BOARD_WIDTH)
+		for x := range grid[y] {
+			if y == 0 || y == BOARD_HEIGHT-1 || x == 0 || x == BOARD_WIDTH-1 {
+				grid[y][x] = wallKey
+			} else {
+				grid[y][x] = emptyKey
+			}
+		}
+	}
+
+	// Edge exits: declare the plan's neighbor and cut a three-cell doorway in
+	// that border so the player can actually reach the edge. Links to board 0
+	// are skipped — the compiler rejects edge exits to the title board.
+	var exits [4]string
+	for _, link := range board.Links {
+		if link.Kind != "edge" {
+			continue
+		}
+		target, ok := boardByID[strings.ToLower(link.Target)]
+		if !ok || target.Index == 0 {
+			continue
+		}
+		idx := zwdExitIndex(link.Dir)
+		exits[idx] = target.Name
+		switch link.Dir {
+		case "N", "S":
+			y := 0
+			if link.Dir == "S" {
+				y = BOARD_HEIGHT - 1
+			}
+			for x := BOARD_WIDTH/2 - 1; x <= BOARD_WIDTH/2+1; x++ {
+				grid[y][x] = emptyKey
+			}
+		case "W", "E":
+			x := 0
+			if link.Dir == "E" {
+				x = BOARD_WIDTH - 1
+			}
+			for y := BOARD_HEIGHT/2 - 1; y <= BOARD_HEIGHT/2+1; y++ {
+				grid[y][x] = emptyKey
+			}
+		}
+	}
+
+	// Message rows, centered, above the passage row.
+	textGlyphs := map[byte]bool{}
+	for i, text := range stubBoardMessage {
+		row := 8 + i*2
+		if len(text) > BOARD_WIDTH-2 {
+			text = text[:BOARD_WIDTH-2]
+		}
+		start := (BOARD_WIDTH - len(text)) / 2
+		for j := 0; j < len(text); j++ {
+			if text[j] == ' ' {
+				continue
+			}
+			grid[row][start+j] = text[j]
+			textGlyphs[text[j]] = true
+		}
+	}
+
+	// Passages, evenly spread along one row so a stub with several planned
+	// passages stays legible. Deterministic order: the plan's link order.
+	type stubPassage struct {
+		key    byte
+		x, y   int
+		target string
+	}
+	var passages []stubPassage
+	var passageTargets []string
+	seen := map[string]bool{}
+	for _, link := range board.Links {
+		if link.Kind != "passage" {
+			continue
+		}
+		target, ok := boardByID[strings.ToLower(link.Target)]
+		if !ok || seen[target.Name] {
+			continue
+		}
+		seen[target.Name] = true
+		passageTargets = append(passageTargets, target.Name)
+	}
+	if len(passageTargets) > 9 {
+		passageTargets = passageTargets[:9] // one digit key each
+	}
+	const passageRow = 16
+	for i, target := range passageTargets {
+		x := (BOARD_WIDTH * (i + 1)) / (len(passageTargets) + 1)
+		grid[passageRow][x] = byte('1' + i)
+		passages = append(passages, stubPassage{key: byte('1' + i), x: x, y: passageRow, target: target})
+	}
+
+	// The player goes above the message, on a row nothing else claims.
+	playerX, playerY := BOARD_WIDTH/2, 4
+	grid[playerY][playerX] = playerKey
+
+	var b strings.Builder
+	fmt.Fprintf(&b, "board %q\n", board.Name)
+	fmt.Fprintf(&b, "  start player at %d,%d\n", playerX+1, playerY+1)
+	b.WriteString("  dark false\n")
+	b.WriteString("  exits")
+	for i, dir := range []string{"north", "south", "west", "east"} {
+		if exits[i] == "" {
+			fmt.Fprintf(&b, " %s none", dir)
+		} else {
+			fmt.Fprintf(&b, " %s %q", dir, exits[i])
+		}
+	}
+	b.WriteString("\n  grid\n")
+	for _, row := range grid {
+		b.WriteString(string(row))
+		b.WriteString("\n")
+	}
+	b.WriteString("  end\n  legend\n")
+	fmt.Fprintf(&b, "    %c = Player color 0x1F\n", playerKey)
+	fmt.Fprintf(&b, "    %c = Empty color 0x00\n", emptyKey)
+	fmt.Fprintf(&b, "    %c = Normal color 0x0E\n", wallKey)
+	for glyph := byte('A'); glyph <= 'Z'; glyph++ {
+		if textGlyphs[glyph] {
+			fmt.Fprintf(&b, "    %c = Text-White color 0x%02X\n", glyph, glyph)
+		}
+	}
+	for _, p := range passages {
+		fmt.Fprintf(&b, "    %c = Passage color 0x1F to %q\n", p.key, p.target)
+	}
+	b.WriteString("  end\n")
+	if len(passages) > 0 {
+		b.WriteString("  stats\n")
+		for _, p := range passages {
+			fmt.Fprintf(&b, "    stat at %d,%d element Passage cycle 0 p3 board %q under Empty color 0x00\n", p.x+1, p.y+1, p.target)
+		}
+		b.WriteString("  end\n")
+	}
+	b.WriteString("end")
+	return b.String()
 }
 
 func cloneGeneratedSections(in map[string]string) map[string]string {

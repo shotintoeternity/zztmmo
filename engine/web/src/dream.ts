@@ -111,6 +111,11 @@ export function generationLines(progress: GenerationProgress[]): string[] {
     if (event.stage === "repairing-plan") {
       return `Repairing the plan: attempt ${event.attempt ?? 1} of ${event.maxAttempts ?? 3}`;
     }
+    // M17.13: a board that would not form is stubbed rather than failing the
+    // whole dream, so the player sees what was lost and still gets a world.
+    if (event.stage === "salvaging") {
+      return event.board ? `Lost board: ${event.board}` : "Some rooms would not form...";
+    }
     if (event.stage === "planning") return "Imagining the world...";
     if (event.stage === "validating") return "Checking every board...";
     if (event.stage === "persisting") return "Saving the new world...";
