@@ -52,7 +52,25 @@ choices.
 
 ## Drawing operations
 
-Every non-text operation has `tile: {"element":"...","color":"..."}`.
+Every operation is an object with a required `kind` string. Do not use `type`,
+`op`, `fill`, `border`, `line`, or `text` as JSON field names; they are values
+of `kind`. Every non-text operation has `tile: {"element":"...","color":"..."}`.
+
+```json
+"operations": [
+  {"kind":"fill","x":2,"y":2,"x2":59,"y2":24,
+   "tile":{"element":"Empty","color":"0x07"}},
+  {"kind":"border","x":17,"y":7,"x2":43,"y2":21,
+   "tile":{"element":"Normal","color":"0x99"}},
+  {"kind":"line","x":17,"y":7,"x2":43,"y2":7,
+   "tile":{"element":"Normal","color":"0x99"}},
+  {"kind":"path","x":30,"y":22,"x2":30,"y2":2,"width":3,
+   "bend":"vertical-first","tile":{"element":"Empty","color":"0x07"}},
+  {"kind":"tile","x":24,"y":10,
+   "tile":{"element":"Boulder","color":"0x0E"}},
+  {"kind":"text","x":22,"y":2,"text":"FOUNTAIN COURT","color":"Text-Cyan"}
+]
+```
 
 - `fill`: filled rectangle using `x,y,x2,y2`.
 - `border`: one-cell rectangular outline using `x,y,x2,y2`.
@@ -109,8 +127,10 @@ equal `start`.
 OOP is a printable-ASCII JSON string with newline escapes. It becomes data, never executable
 host code. Write normal ZZT-OOP: optional `@name`, labels like `:touch`, display
 text, commands such as `#end`, `#go`, `#walk`, `#send`, `#set`, `#clear`,
-`#give`, `#take`, `#play`, `#shoot`, `#put`, `#change`, `#if`, `#lock`, and
-`#unlock`, plus choices `!label;Caption`. Do not invent commands or send to
+`#give`, `#take`, `#play`, `#shoot`, `#put`, `#change`, `#die`, `#if`, `#lock`, and
+`#unlock`, plus choices `!label;Caption`. `#change` changes every matching tile
+on the board; never use `#change Object Empty` to remove the current object.
+Use `#die` when an object should remove itself. Do not invent commands or send to
 missing labels. Never include a bare line `end` (that word belongs to ZWD, not
 OOP). Keep ordinary display lines at most 42 characters, centered `$` lines at
 most 45, choice captions at most 38, and `@` titles at most 45.

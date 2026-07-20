@@ -42,33 +42,37 @@ var (
 )
 
 func WorldListEntries(worlds []string, playerCounts map[string]int) []WorldListEntry {
-	return worldListEntries(worlds, playerCounts)
+	return worldListEntries(worlds, playerCounts, false)
 }
 
-// WorldListEntriesInDir has the same metadata-only catalog policy as
-// WorldListEntries. Its directory argument remains part of the API because the
-// caller already uses it while enumerating local world files.
+// WorldListEntriesInDir includes every joinable local world. Museum metadata
+// enriches catalogued files, while generated and editor-published files use a
+// safe local fallback so the picker never hides a world it can load.
 func WorldListEntriesInDir(_ string, worlds []string, playerCounts map[string]int) []WorldListEntry {
-	return worldListEntries(worlds, playerCounts)
+	return worldListEntries(worlds, playerCounts, true)
 }
 
-func worldListEntries(worlds []string, playerCounts map[string]int) []WorldListEntry {
+func worldListEntries(worlds []string, playerCounts map[string]int, includeLocal bool) []WorldListEntry {
 	out := make([]WorldListEntry, 0, len(worlds))
 	for _, world := range worlds {
 		meta, ok := museumMetadataForWorld(world)
-		if !ok {
-			// The picker is a curated Museum catalog. Files without metadata
-			// remain on disk but are not presented as join targets.
+		if !ok && !includeLocal {
 			continue
 		}
 		entry := WorldListEntry{
 			World:   world,
-			ID:      meta.ID,
 			Title:   world,
-			Author:  meta.Author,
-			Created: meta.Created,
 			Players: playerCounts[world],
 		}
+		if !ok {
+			entry.ID = strings.ToLower(world)
+			entry.Author = "Local"
+			out = append(out, entry)
+			continue
+		}
+		entry.ID = meta.ID
+		entry.Author = meta.Author
+		entry.Created = meta.Created
 		if meta.Title != "" {
 			entry.Title = meta.Title
 		}

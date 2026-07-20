@@ -2462,16 +2462,18 @@ func validateGeneratedZWD(data []byte) (err error) {
 	if err := e.worldReadFrom(strings.NewReader(string(data)), false, nil); err != nil {
 		return fmt.Errorf("load compiled bytes: %w", err)
 	}
-	e.BoardOpen(0)
-	e.BoardEnter(0)
-	e.GameStateElement = E_PLAYER
-	e.PlayerFor(0).Paused = false
-	e.GamePlayExitRequested = false
-	e.SetInputSource(&ScriptedInput{})
-	for i := 0; i < 200; i++ {
-		e.GameStep(nil)
-		if e.GamePlayExitRequested {
-			return fmt.Errorf("world requested exit at step %d", i+1)
+	for boardID := int16(0); boardID <= e.World.BoardCount; boardID++ {
+		e.BoardOpen(boardID)
+		e.BoardEnter(0)
+		e.GameStateElement = E_PLAYER
+		e.PlayerFor(0).Paused = false
+		e.GamePlayExitRequested = false
+		e.SetInputSource(&ScriptedInput{})
+		for i := 0; i < 200; i++ {
+			e.GameStep(nil)
+			if e.GamePlayExitRequested {
+				return fmt.Errorf("board %d requested exit at step %d", boardID, i+1)
+			}
 		}
 	}
 	return nil

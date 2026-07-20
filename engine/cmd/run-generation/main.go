@@ -14,6 +14,9 @@ import (
 func loadEnv() {
 	content, err := ioutil.ReadFile("../../../.env")
 	if err != nil {
+		content, err = ioutil.ReadFile("../../zztmmo/.env")
+	}
+	if err != nil {
 		content, err = ioutil.ReadFile("../../.env")
 	}
 	if err != nil {
@@ -49,8 +52,6 @@ func main() {
 	}
 
 	fmt.Printf("Starting live generation for prompt: %q\n", prompt)
-
-
 
 	os.Setenv("ZZT_GENERATION_BATCH_SIZE", "1")
 	os.Setenv("ZZT_GENERATION_ATTEMPTS", "5")

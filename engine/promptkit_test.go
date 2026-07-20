@@ -78,7 +78,7 @@ func TestBlueprintPromptIsSemanticAndBounded(t *testing.T) {
 		t.Fatal(err)
 	}
 	system := kit.BlueprintSystemPrompt()
-	for _, want := range []string{"master ZZT world designer", "60x25", "ZT-OOP", "semantic JSON", "# House style", "# Drawing operations", "# Actors and ZZT-OOP"} {
+	for _, want := range []string{"master ZZT world designer", "60x25", "ZT-OOP", "semantic JSON", "# House style", "# Drawing operations", "\"kind\":\"fill\"", "# Actors and ZZT-OOP", "Use `#die`"} {
 		if !strings.Contains(system, want) {
 			t.Errorf("blueprint system prompt missing %q", want)
 		}

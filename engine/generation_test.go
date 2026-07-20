@@ -134,6 +134,29 @@ func generatedBlueprint(t *testing.T, name string, title bool) string {
 	return string(data)
 }
 
+func TestGeneratedValidationTicksEveryBoard(t *testing.T) {
+	planText := generationPlan("1. start: begin. #endgame")
+	plan, err := ParsePlan(planText)
+	if err != nil {
+		t.Fatal(err)
+	}
+	raw := func(section string) string {
+		return strings.TrimSuffix(strings.TrimPrefix(section, "```zwd\n"), "\n```")
+	}
+	badStart := strings.Replace(raw(generatedBoard("Start", false)), "@finale\n    #end\n", "@finale\n    #change Object Empty\n", 1)
+	data, err := CompileZWD(assembleGeneratedZWD("CHECK", plan, map[string]string{
+		"Title": raw(generatedBoard("Title", false)),
+		"Start": badStart,
+	}))
+	if err != nil {
+		t.Fatal(err)
+	}
+	err = validateGeneratedZWD(data)
+	if err == nil || !strings.Contains(err.Error(), "headless validation panicked") {
+		t.Fatalf("validation error = %v, want non-title board simulation panic", err)
+	}
+}
+
 func TestGenerationUsesSemanticBlueprintPath(t *testing.T) {
 	plan := generationPlan("1. start: begin. #endgame")
 	fake, claude := newFakeClaude(t, plan, generatedBlueprint(t, "Start", false), generatedBlueprint(t, "Title", true))

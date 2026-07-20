@@ -63,13 +63,13 @@ func TestListWorldsExcludesJunkAndUnjoinable(t *testing.T) {
 	}
 }
 
-func TestWorldListEntriesInDirOmitsWorldsWithoutMetadata(t *testing.T) {
+func TestWorldListEntriesInDirIncludesLocalWorldsWithoutMetadata(t *testing.T) {
 	dir := t.TempDir()
 
 	byWorld := entriesByWorld(WorldListEntriesInDir(dir, []string{"OBSCURE", "BURGERJ", "TOWN"}, nil))
 
-	if _, ok := byWorld["OBSCURE"]; ok {
-		t.Fatalf("OBSCURE=%+v, want omitted world without Museum metadata", byWorld["OBSCURE"])
+	if e := byWorld["OBSCURE"]; e.ID != "obscure" || e.Title != "OBSCURE" || e.Author != "Local" {
+		t.Fatalf("OBSCURE=%+v, want local fallback metadata", e)
 	}
 	if e := byWorld["BURGERJ"]; e.Title != "Burger Joint" || e.Author != "Madguy" {
 		t.Fatalf("BURGERJ=%+v, want manifest title/author over header", e)
