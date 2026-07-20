@@ -33,6 +33,10 @@ export type EditorPresenceCursor = {
   id: string;
   name: string;
   color: number;
+  // M17.12: the board this member is editing. Members of one session can be on
+  // different boards, and a cursor only means anything to viewers on the same
+  // one — otherwise you get ghost cursors from boards you cannot see.
+  boardId?: number;
   x: number;
   y: number;
 };
@@ -51,6 +55,10 @@ export function editorCursorOverlay(opts: {
   selfId: string;
   boardCols: number;
   rows: number;
+  // The board the viewer is looking at (M17.12). Collaborators on other boards
+  // are omitted. Left undefined, no board filtering happens, which is the
+  // pre-M17.12 behaviour.
+  boardId?: number;
 }): EditorOverlayCell[] {
   if (!editorCursorShown(opts.blink)) {
     return [];
@@ -64,6 +72,10 @@ export function editorCursorOverlay(opts: {
   });
   for (const member of opts.presence) {
     if (member.id === opts.selfId) continue;
+    // Only draw collaborators editing the same board as the viewer.
+    if (opts.boardId !== undefined && member.boardId !== undefined && member.boardId !== opts.boardId) {
+      continue;
+    }
     const x = member.x - 1;
     const y = member.y - 1;
     if (x < 0 || x >= opts.boardCols || y < 0 || y >= opts.rows) continue;

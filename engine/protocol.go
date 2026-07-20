@@ -115,8 +115,13 @@ type EditorPresence struct {
 	ID    string `json:"id"`
 	Name  string `json:"name"`
 	Color byte   `json:"color"`
-	X     int16  `json:"x"`
-	Y     int16  `json:"y"`
+	// BoardID is the board this member is editing (M17.12). Members of one
+	// session can be on different boards, so a cursor is only meaningful to
+	// viewers on the same board. Presentation-only: edit authorisation stays
+	// with the lease system, never with cursor visibility.
+	BoardID int16 `json:"boardId"`
+	X       int16 `json:"x"`
+	Y       int16 `json:"y"`
 }
 
 type EditorPresenceMessage struct {

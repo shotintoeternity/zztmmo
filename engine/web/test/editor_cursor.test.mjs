@@ -80,6 +80,26 @@ assert.ok(
   !withPeer.some((cell) => cell.text.length > 1),
   "no collaborator name text is painted onto the board",
 );
+// M17.12: a collaborator on another board is not drawn at all — no ghost cursors
+// from boards the viewer cannot see.
+const boarded = [
+  { id: "me", name: "Self", color: 0x0e, boardId: 1, x: 5, y: 5 },
+  { id: "same", name: "SameBoard", color: 0x0b, boardId: 1, x: 10, y: 8 },
+  { id: "other", name: "OtherBoard", color: 0x0a, boardId: 2, x: 12, y: 9 },
+];
+const onBoard1 = editorCursorOverlay({ blink: 1, cursor, presence: boarded, selfId: "me", boardCols, rows, boardId: 1 });
+assert.equal(onBoard1.length, 2, "local cursor + only the collaborator on the same board");
+assert.deepEqual(
+  onBoard1[1],
+  { x: 9, y: 7, color: 0x0b, text: String.fromCharCode(EDITOR_CURSOR_CHAR) },
+  "same-board collaborator drawn; other-board collaborator omitted",
+);
+const onBoard2 = editorCursorOverlay({ blink: 1, cursor, presence: boarded, selfId: "me", boardCols, rows, boardId: 2 });
+assert.equal(onBoard2.length, 2, "switching boards reveals that board's collaborator instead");
+assert.equal(onBoard2[1].color, 0x0a, "the board-2 collaborator is the one now shown");
+const unfiltered = editorCursorOverlay({ blink: 1, cursor, presence: boarded, selfId: "me", boardCols, rows });
+assert.equal(unfiltered.length, 3, "omitting boardId keeps pre-M17.12 behaviour (no filtering)");
+
 const peerRevealed = editorCursorOverlay({ blink: 0, cursor, presence, selfId: "me", boardCols, rows });
 assert.deepEqual(peerRevealed, [], "collaborator cursors blink off with the local one");
 

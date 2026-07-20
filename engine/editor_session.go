@@ -25,6 +25,13 @@ type EditorSession struct {
 	readOnly   map[*webSocketClient]bool
 	nextMember int
 	leases     map[editorLeaseKey]*webSocketClient
+	// memberBoard is each member's own current board (M17.12). The session has
+	// one shared engine, so `engine.World.Info.CurrentBoard` is whichever board
+	// was last operated on — it is engine bookkeeping, not any member's view.
+	// Apply switches the engine onto the acting member's board before running
+	// their operation, which is why every vanilla-derived path can keep reading
+	// the implicit current board unchanged.
+	memberBoard map[*webSocketClient]int16
 }
 
 type editorLeaseKey struct {
@@ -52,12 +59,13 @@ func NewEditorSession(worldName string, world TWorld) *EditorSession {
 	e.DrainScreenDirty()
 
 	return &EditorSession{
-		WorldName:  worldName,
-		engine:     e,
-		Members:    make(map[*webSocketClient]struct{}),
-		memberInfo: make(map[*webSocketClient]EditorPresence),
-		readOnly:   make(map[*webSocketClient]bool),
-		leases:     make(map[editorLeaseKey]*webSocketClient),
+		WorldName:   worldName,
+		engine:      e,
+		Members:     make(map[*webSocketClient]struct{}),
+		memberInfo:  make(map[*webSocketClient]EditorPresence),
+		readOnly:    make(map[*webSocketClient]bool),
+		leases:      make(map[editorLeaseKey]*webSocketClient),
+		memberBoard: make(map[*webSocketClient]int16),
 	}
 }
 
@@ -76,16 +84,22 @@ func (s *EditorSession) EnterNamed(member *webSocketClient, name string) (Editor
 	if name == "" {
 		name = fmt.Sprintf("Player %d", s.nextMember)
 	}
+	boardID := int16(0)
+	if s.engine != nil {
+		boardID = s.engine.World.Info.CurrentBoard
+	}
 	presence := EditorPresence{
-		ID:    fmt.Sprintf("editor-%d", s.nextMember),
-		Name:  name,
-		Color: editorPresenceColor(s.nextMember),
-		X:     BOARD_WIDTH / 2,
-		Y:     BOARD_HEIGHT / 2,
+		ID:      fmt.Sprintf("editor-%d", s.nextMember),
+		Name:    name,
+		Color:   editorPresenceColor(s.nextMember),
+		BoardID: boardID,
+		X:       BOARD_WIDTH / 2,
+		Y:       BOARD_HEIGHT / 2,
 	}
 	s.Members[member] = struct{}{}
 	s.memberInfo[member] = presence
 	s.readOnly[member] = false
+	s.memberBoard[member] = boardID
 	return presence, nil
 }
 
@@ -93,6 +107,7 @@ func (s *EditorSession) Exit(member *webSocketClient) {
 	s.mu.Lock()
 	delete(s.Members, member)
 	delete(s.memberInfo, member)
+	delete(s.memberBoard, member)
 	delete(s.readOnly, member)
 	for key, holder := range s.leases {
 		if holder == member {
@@ -301,8 +316,55 @@ func (s *EditorSession) Apply(member *webSocketClient, fn func(*Engine)) error {
 	if _, ok := s.Members[member]; !ok {
 		return fmt.Errorf("editor session membership required")
 	}
+	s.focusMemberBoardLocked(member)
 	fn(s.engine)
+	// The operation itself may have moved the engine to another board — a board
+	// add, or an edge/passage transition during test-play — so the member
+	// follows it. Without this, the next Apply would drag them back to the board
+	// they were on before, undoing an engine-driven move.
+	if s.engine != nil {
+		s.setMemberBoardLocked(member, s.engine.World.Info.CurrentBoard)
+	}
 	return nil
+}
+
+// focusMemberBoardLocked points the shared engine at the acting member's own
+// board before their operation runs (M17.12). Members edit different boards of
+// one world, but the session holds a single engine whose converted-from-Pascal
+// paths all read the implicit current board (Edit/Apply, leaseKeyLocked,
+// hasCurrentBoardLeaseLocked, editorSnapshot, and the sidebar's pattern/copied
+// tile globals). Rather than thread an explicit board through all of that, put
+// the engine on the right board first, so each of those paths stays unchanged
+// and faithful.
+//
+// The switch is lossless and is what vanilla already does on a board change:
+// BoardChange closes the open board (RLE-serialising it back into BoardData)
+// and opens the target. Apply holds s.mu, so no other member can observe or
+// interleave with the intermediate state.
+//
+// Callers must hold s.mu.
+func (s *EditorSession) focusMemberBoardLocked(member *webSocketClient) {
+	e := s.engine
+	if e == nil {
+		return
+	}
+	boardID, ok := s.memberBoard[member]
+	if !ok {
+		// A member with no recorded board adopts whatever is open; this is the
+		// pre-M17.12 behaviour and covers members who joined before their first
+		// board switch.
+		s.memberBoard[member] = e.World.Info.CurrentBoard
+		return
+	}
+	if boardID < 0 || boardID > e.World.BoardCount {
+		boardID = 0
+		s.memberBoard[member] = boardID
+	}
+	if boardID == e.World.Info.CurrentBoard {
+		return
+	}
+	e.BoardChange(boardID)
+	e.TransitionDrawToBoard()
 }
 
 func (s *EditorSession) Snapshot(member *webSocketClient, x, y int16) (EditorSnapshotMessage, error) {
@@ -900,9 +962,26 @@ func (s *EditorSession) SwitchBoard(member *webSocketClient, boardId int16) (Edi
 			e.BoardChange(boardId)
 			e.TransitionDrawToBoard()
 		}
+		// M17.12: the switch belongs to this member, not the session. Record it
+		// so their later operations refocus here, and so other members stay on
+		// their own boards instead of being dragged along.
+		if boardId >= 0 && boardId <= e.World.BoardCount {
+			s.setMemberBoardLocked(member, boardId)
+		}
 		reply = editorSnapshot(e, BOARD_WIDTH/2, BOARD_HEIGHT/2)
 	})
 	return reply, err
+}
+
+// setMemberBoardLocked records a member's current board and keeps their
+// broadcast presence in step, so collaborators can tell which board a cursor is
+// on. Callers must hold s.mu (Apply does).
+func (s *EditorSession) setMemberBoardLocked(member *webSocketClient, boardID int16) {
+	s.memberBoard[member] = boardID
+	if presence, ok := s.memberInfo[member]; ok {
+		presence.BoardID = boardID
+		s.memberInfo[member] = presence
+	}
 }
 
 // ClearBoard empties the current board, mirroring EditorLoop's 'Z' branch

@@ -264,6 +264,9 @@ type EditorPresence = {
   id: string;
   name: string;
   color: number;
+  // M17.12: which board this member is editing; cursors are only drawn for
+  // members on the board the viewer is looking at.
+  boardId?: number;
   x: number;
   y: number;
 };
@@ -1832,6 +1835,9 @@ function paintOverlay() {
       selfId: editorMemberId,
       boardCols: BOARD_COLS,
       rows: ROWS,
+      // Our own board: editorProperties only tracks snapshots that are ours,
+      // so this is the board we are actually viewing (M17.12).
+      boardId: editorProperties.boardId,
     });
     for (const cell of cells) {
       writeOverlay(cell.x, cell.y, cell.color, cell.text);

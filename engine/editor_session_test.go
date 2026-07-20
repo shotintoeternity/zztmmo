@@ -800,3 +800,80 @@ func TestEditorSessionImportRejectsMalformedBoard(t *testing.T) {
 		t.Fatal("garbage import altered the current board")
 	}
 }
+
+// TestEditorSessionMembersEditDifferentBoards is the M17.12 core claim: two
+// members of one session hold their own current board. Before M17.12 the
+// session had a single shared board, so whoever switched dragged everyone with
+// them — and each member's sidebar/palette state came from whichever board the
+// shared engine happened to have open, which is how phantom elements appeared.
+func TestEditorSessionMembersEditDifferentBoards(t *testing.T) {
+	session := NewEditorSession("TEST", testEmptyWorld(t))
+	alice := &webSocketClient{}
+	bob := &webSocketClient{}
+	if err := session.Enter(alice); err != nil {
+		t.Fatal(err)
+	}
+	defer session.Exit(alice)
+	if err := session.Enter(bob); err != nil {
+		t.Fatal(err)
+	}
+	defer session.Exit(bob)
+
+	// Give the world a second board for Bob to work on.
+	if _, err := session.AddBoard(alice, "Board 2"); err != nil {
+		t.Fatalf("AddBoard: %v", err)
+	}
+	// AddBoard leaves Alice on the new board; put her back on board 1.
+	if _, err := session.SwitchBoard(alice, 1); err != nil {
+		t.Fatalf("SwitchBoard(alice, 1): %v", err)
+	}
+
+	// Bob moves to board 2. Alice must not follow.
+	if _, err := session.SwitchBoard(bob, 2); err != nil {
+		t.Fatalf("SwitchBoard(bob, 2): %v", err)
+	}
+
+	var aliceBoard, bobBoard int16
+	if err := session.Apply(alice, func(e *Engine) {
+		aliceBoard = e.World.Info.CurrentBoard
+	}); err != nil {
+		t.Fatal(err)
+	}
+	if err := session.Apply(bob, func(e *Engine) {
+		bobBoard = e.World.Info.CurrentBoard
+	}); err != nil {
+		t.Fatal(err)
+	}
+	if aliceBoard != 1 {
+		t.Errorf("alice edits board %d, want 1 (bob's switch dragged her along)", aliceBoard)
+	}
+	if bobBoard != 2 {
+		t.Errorf("bob edits board %d, want 2", bobBoard)
+	}
+
+	// Each member's edit must land on their own board, not the other's.
+	if err := session.Apply(alice, func(e *Engine) {
+		e.Board.Tiles[5][5].Element = E_SOLID
+	}); err != nil {
+		t.Fatal(err)
+	}
+	if err := session.Apply(bob, func(e *Engine) {
+		if e.Board.Tiles[5][5].Element == E_SOLID {
+			t.Errorf("alice's edit on board 1 is visible on bob's board 2")
+		}
+	}); err != nil {
+		t.Fatal(err)
+	}
+
+	// Presence carries each member's board so collaborators can filter cursors.
+	byID := map[string]EditorPresence{}
+	for _, presence := range session.Presence() {
+		byID[presence.ID] = presence
+	}
+	if got := byID[session.MemberID(alice)].BoardID; got != 1 {
+		t.Errorf("alice presence BoardID = %d, want 1", got)
+	}
+	if got := byID[session.MemberID(bob)].BoardID; got != 2 {
+		t.Errorf("bob presence BoardID = %d, want 2", got)
+	}
+}
