@@ -21,13 +21,21 @@ Ranked 2026-07-14. The preceding priority list — M12.22, M12.19, and M15.1 —
 has fully landed. Work the list top-down; skip the optional/deferred tail unless
 the owner asks.
 
-1. M17.1–M17.7 — owner-reported live browser fixes (2026-07-14/17): name popup
+1. **M17.9 — collaborator cursors in the editor (owner request 2026-07-20,
+   URGENT).** Small, client-side: a remote collaborator's cursor must be the
+   ordinary ZZT editor cursor in a different colour, with no name label eating
+   board cells. Takes immediate priority over everything below.
+2. M12.23 — generated-world acceptance and targeted repair hardening
+   (owner-reported 2026-07-19): generated worlds must not reach the browser with
+   a hidden picker entry, an invalid title, or a board that panics when played.
+3. M17.1–M17.8 — owner-reported live browser fixes and branch-backed dev
+   deployment (2026-07-14/20): name popup
    centering/width, world picker (list all + metadata + count overlap), audio
    regression, scroll hyperlinks, sidebar banner centering (done), mobile
    responsiveness incl. the iPhone soft-keyboard Enter key, and sound still not
    working properly in the client (M17.7, 2026-07-17). Ahead of M16: live
    breakage in front of the player.
-2. M16.0–M16.20 — whole-product feature-parity proof (owner request 2026-07-14)
+4. M16.0–M16.20 — whole-product feature-parity proof (owner request 2026-07-14)
 
 **Optional / deferred (bottom):**
 - M14.3 — package split (skip unless the single package is actually hurting)
@@ -1422,6 +1430,47 @@ the corpus/style work builds on. The specs below are unchanged.)
   test covers the retry request and resumed polling; `go test ./...` and
   `npm test` green; replay fixture unchanged.
 
+- [ ] **M12.23 — Generated-world acceptance and targeted repair hardening
+  (owner-reported 2026-07-19).** A live generated `BAKERY` world exposed three
+  acceptance gaps: the blueprint prompt did not make `operations[].kind`
+  unambiguous; the local-world picker hid generated files without Museum
+  metadata; and board 2 contained `#change Object Empty`, which removes the
+  executing Object and panics on a later room tick. The authoring build also
+  rejected that same generated world for a missing exact title wordmark and
+  forbidden title-screen Torches, checks the generation pipeline never ran.
+
+  Make generated-world acceptance a board-scoped repair loop, not a one-shot
+  pre-persistence failure:
+
+  1. Keep the semantic blueprint contract concrete: show valid operation
+     examples with required `kind`, and explicitly reject `type`, `op`, and
+     object-shaped operation encodings.
+  2. Simulate every board before acceptance, in an isolated headless engine,
+     and include the failing board id/name and panic/error in repair feedback.
+     The current title-only simulation is insufficient.
+  3. Add OOP semantic validation for destructive self-mutation. At minimum,
+     reject `#change Object Empty` in an Object program and tell the repair
+     prompt to use `#die`; do not rely on a prompt instruction for safety.
+     Cover commands reachable through `:touch`/choice labels as well as initial
+     object execution.
+  4. Run the same generated-world quality checks used by `zzt-build` (exact
+     title wordmark, title has no creatures/items, reachability, orphan stats,
+     and OOP analysis) before persistence. Map each failure to its owning board
+     — title failures to board 0, local OOP/render failures to that board — and
+     repaint only those boards using the existing retry/resume machinery.
+  5. Keep generated and editor-published `.ZZT` files visible in the local
+     picker with safe fallback metadata (for example title=filename,
+     author=`Local`) while preserving richer Museum metadata when available.
+
+  DoD: hermetic regressions prove (a) malformed operation encodings receive a
+  board-only repair, (b) a panic in a non-title board is caught before
+  persistence and repaired/retried with that board named, (c) the dangerous OOP
+  form is rejected even when it sits behind a touch/choice label, (d) invalid
+  title art triggers a board-0 repair rather than shipping, and (e) a generated
+  local world appears in `/api/worlds` and can be selected in the browser.
+  A successful live generation loads and plays across every generated board;
+  `go test ./...`, web tests, and the replay fixture remain green.
+
 ## M15 — Mobile browser support
 
 Goal: the browser client is playable on phones and tablets. Today it is
@@ -1706,6 +1755,106 @@ these are live breakage in front of the player.
   cause; verify audibly in an actual browser (console: `zztSound`'s context reads
   `"running"`) and record the confirmation, since M17.3's gap was precisely the
   missing real-browser check; replay fixture untouched.
+
+- [ ] **M17.8 — Branch-backed AWS development environment (owner request
+  2026-07-20).** Provision a separate AWS EC2 environment for validating the
+  newest committed revision of `feature/structured-world-generation` without
+  touching the production `zztmmo.com` host. Use the existing deployment's
+  instance class and architecture: Amazon Linux 2023 ARM64 on a `t4g.nano` in
+  `us-east-1`, with its own Elastic IP, security-group rules, `/opt/zztmmo`
+  install, `zztmmo.service`, Caddy, watchdog, `.env`, and `saves/` directory.
+  Build browser assets and the Linux ARM64 server from the immutable branch
+  commit; record the deployed SHA on the host and expose it in an operational
+  status/readme path so the running revision is unambiguous.
+
+  Route the environment at `https://dev.zztmmo.com`, not
+  `www.zztmmo.com/dev`: DNS cannot direct an individual URL path to a separate
+  EC2 host, and the current client assumes root-relative `/`, `/api`, and `/ws`
+  endpoints. Add a Namecheap BasicDNS `A` record for `dev` to the dev Elastic IP;
+  configure Caddy on the dev host for `dev.zztmmo.com` so it obtains and renews
+  its own certificate and reverse-proxies to localhost-only `zzt-server`.
+  Keep SSH restricted to authorized workstation CIDRs; never copy production
+  saves, credentials, or service state. Use a distinct development Anthropic key
+  or explicitly disable Dream generation when one is unavailable.
+
+  DoD: production continues serving `https://zztmmo.com` unchanged; the dev
+  host serves the selected branch SHA over HTTPS, `/api/worlds` returns local
+  worlds, and `wss://dev.zztmmo.com/ws?world=TOWN` upgrades successfully.
+  Document provision, deploy, rollback, and explicit teardown commands in
+  `AWS.md`, including the instance/EIP identifiers and ongoing-cost reminder.
+  Verify from a browser with a generated local world, then record the deployed
+  commit and smoke-test result in `NOTES.md`. Replay fixture unchanged.
+
+- [x] **M17.9 — Collaborator editor cursors: standard glyph, colour-only
+  identity (owner request 2026-07-20, URGENT — take before M12.23).** When two
+  or more players edit a world at once, each remote collaborator's cursor is
+  drawn as a full-cell marker plus their name spilling across the board. The
+  name is what the owner objects to: `Player 2` consumes up to ten board cells
+  next to the marker, covering tiles the editor is trying to show. Replace it
+  with a smaller marker distinguished by colour alone.
+
+  Surgical map. `editorCursorOverlay` in `engine/web/src/editor_cursor.ts:66-72`
+  emits **two** cells per remote member: the marker `"\x1f"` (CP437 0x1F, a
+  solid down-triangle) at the member's cell in `member.color`, and a second cell
+  at `x+1` carrying `member.name.slice(0, 10)`. The name originates server-side
+  at `engine/editor_session.go:77` (`fmt.Sprintf("Player %d", s.nextMember)`).
+  Per-member colour already exists — `editorPresenceColor`
+  (`engine/editor_session.go:196-199`) assigns from
+  `{0x1e, 0x2f, 0x3e, 0x4f, 0x5e, 0x6f, 0x9e, 0x0f}` — so this is a rendering
+  change, not a protocol change. Do not alter `EditorPresence`
+  (`protocol.go:114`); `Name` stays on the wire for the collaborator list.
+
+  1. Drop the name cell from the overlay entirely. Identity on the board becomes
+     colour-only.
+  2. Draw a remote collaborator with **the same glyph as the ordinary ZZT editor
+     cursor** — `EDITOR_CURSOR_CHAR` (CP437 0xC5, `editor_cursor.ts:22`) — and
+     change only the colour. Replace the `"\x1f"` marker; the collaborator
+     cursor should be indistinguishable from the local one except in hue, so it
+     reads as an editor cursor rather than a separate kind of annotation.
+  3. Give the palette foreground-only attributes. Its present entries are
+     background-filled (high nibble = background, e.g. `0x1e` = blue
+     background), so a remote cursor paints as a solid block and hides the tile
+     beneath it, unlike the local cursor's `0x0F` (white on black). Respecify
+     `editorPresenceColor` (`engine/editor_session.go:196-199`) as black-
+     background attributes — `0x0E`, `0x0B`, `0x0A`, `0x0D`, `0x0C`, `0x09`,
+     `0x06`, `0x05` or similar — so every cursor renders the same way and only
+     the colour differs. Exclude `0x0F`: the current palette's eighth entry is
+     exactly `EDITOR_CURSOR_COLOR`, which would make the eighth collaborator
+     indistinguishable from the local player's own cursor.
+  4. Identity on the board is now colour-only, and there is **no colour↔name
+     legend anywhere**: `editorPresence` (`main.ts:584`) is consumed only by the
+     overlay (`main.ts:1820`), so `EditorPresence.Name` arrives over the wire and
+     is displayed nowhere else. For two-person editing this is unambiguous — the
+     other cursor is the other person — which is the owner's stated case, so a
+     legend is deliberately **out of scope here** to keep the fix small. Filed as
+     a follow-up instead: with three or more collaborators, colours become
+     anonymous. See M17.10.
+
+  Keep the existing blink contract intact: remote markers must still render only
+  on the cursor-shown phases (`editorCursorShown`, phases 1 and 2) so they never
+  permanently hide the tile beneath them, and phase 0 must continue to return no
+  cells.
+
+  DoD: with two browsers editing the same world, each sees the other's cursor as
+  the ordinary editor cross cursor in a different colour, with no name text on
+  the board; no collaborator colour collides with the local cursor's `0x0F`; the
+  tile under a remote cursor stays readable across the blink cycle (no
+  background fill); a unit test covers `editorCursorOverlay` emitting exactly
+  one cell per remote member (and none on phase 0); `go test ./...` and the web
+  tests are green; replay fixture untouched. Verify in two real browsers, not
+  only in unit tests — per the M17.3/M17.7 lesson.
+
+- [ ] **M17.10 — Collaborator colour↔name legend in the editor.** M17.9 removed
+  the on-board name label, so a collaborator's identity is now conveyed by
+  cursor colour alone and nothing maps colour back to a name: `EditorPresence`
+  carries `Name` over the wire (`protocol.go:114`) but the client consumes
+  `editorPresence` only in the cursor overlay (`main.ts:1820`). Fine for two
+  people; ambiguous for three or more. Add a compact presence list — editor
+  sidebar or the F-key panel — showing each member's name drawn in their cursor
+  colour, without returning text to the board. DoD: with three browsers in one
+  session, each can identify which colour belongs to which player; the board
+  itself stays free of name text; web test covers the list; replay fixture
+  untouched.
 
 ## M16 — Whole-product feature-parity proof
 

@@ -193,8 +193,18 @@ func (s *EditorSession) MemberClients() []*webSocketClient {
 	return out
 }
 
+// editorPresenceColor picks a collaborator's cursor colour. M17.9: these are
+// foreground-only attributes (high nibble 0 = black background) so a remote
+// cursor renders exactly like the local one — the cross glyph over the board
+// tile — differing only in hue. The previous palette used background-filled
+// attributes (0x1e = blue background), which painted the whole cell as a solid
+// block and hid the tile underneath.
+//
+// 0x0F is deliberately absent: it is EDITOR_CURSOR_COLOR, the local player's own
+// cursor colour, and the old palette's eighth entry made the eighth
+// collaborator indistinguishable from yourself.
 func editorPresenceColor(n int) byte {
-	colors := []byte{0x1e, 0x2f, 0x3e, 0x4f, 0x5e, 0x6f, 0x9e, 0x0f}
+	colors := []byte{0x0e, 0x0b, 0x0a, 0x0d, 0x0c, 0x09, 0x06, 0x05}
 	return colors[(n-1)%len(colors)]
 }
 

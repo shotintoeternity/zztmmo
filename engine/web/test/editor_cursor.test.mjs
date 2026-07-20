@@ -67,10 +67,19 @@ const presence = [
   { id: "peer", name: "Collaborator", color: 0x1a, x: 10, y: 8 },
   { id: "off", name: "OffBoard", color: 0x1b, x: 200, y: 8 },
 ];
+// M17.9: a collaborator is the ordinary editor cursor in their own colour — one
+// cell, the same 0xC5 cross the local cursor uses, and no name label beside it.
 const withPeer = editorCursorOverlay({ blink: 2, cursor, presence, selfId: "me", boardCols, rows });
-assert.equal(withPeer.length, 3, "local cursor + peer marker + peer name; self and off-board skipped");
-assert.deepEqual(withPeer[1], { x: 9, y: 7, color: 0x1a, text: "\x1f" }, "peer marker at its cell");
-assert.deepEqual(withPeer[2], { x: 10, y: 7, color: 0x1a, text: "Collaborat" }, "peer name clipped to 10 chars beside the marker");
+assert.equal(withPeer.length, 2, "local cursor + one cell per remote peer; self and off-board skipped");
+assert.deepEqual(
+  withPeer[1],
+  { x: 9, y: 7, color: 0x1a, text: String.fromCharCode(EDITOR_CURSOR_CHAR) },
+  "peer draws the standard editor cursor glyph in its own colour",
+);
+assert.ok(
+  !withPeer.some((cell) => cell.text.length > 1),
+  "no collaborator name text is painted onto the board",
+);
 const peerRevealed = editorCursorOverlay({ blink: 0, cursor, presence, selfId: "me", boardCols, rows });
 assert.deepEqual(peerRevealed, [], "collaborator cursors blink off with the local one");
 

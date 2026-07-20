@@ -67,8 +67,16 @@ export function editorCursorOverlay(opts: {
     const x = member.x - 1;
     const y = member.y - 1;
     if (x < 0 || x >= opts.boardCols || y < 0 || y >= opts.rows) continue;
-    cells.push({ x, y, color: member.color, text: "\x1f" });
-    cells.push({ x: x + 1, y, color: member.color, text: member.name.slice(0, 10) });
+    // M17.9: a collaborator is the ordinary editor cursor in their own colour —
+    // same glyph as the local cross cursor, never a distinct marker, and no name
+    // label (it spilled up to ten cells across the board, hiding tiles). Identity
+    // is colour-only here; the collaborator list carries the colour-to-name map.
+    cells.push({
+      x,
+      y,
+      color: member.color,
+      text: String.fromCharCode(EDITOR_CURSOR_CHAR),
+    });
   }
   return cells;
 }
