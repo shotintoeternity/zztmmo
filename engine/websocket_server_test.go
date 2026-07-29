@@ -201,6 +201,77 @@ func TestM101EditorSessionBroadcastsDiffsAndPresence(t *testing.T) {
 	}
 }
 
+// TestM1712EditorsOnDifferentBoardsDoNotSeeEachOthersEdits is the wire-level
+// half of M17.12: an edit diff must reach only the members viewing the board it
+// landed on. Before this, every member got every diff, so a collaborator on
+// board 1 had board 2's dirty cells painted over the board they were looking at
+// — the owner's "two people cannot edit different boards" report.
+func TestM1712EditorsOnDifferentBoardsDoNotSeeEachOthersEdits(t *testing.T) {
+	world := testEmptyWorld(t)
+	world.Info.CurrentBoard = 1
+	server := NewWebSocketServer(world, 1)
+	httpServer := httptest.NewServer(server)
+	defer httpServer.Close()
+
+	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
+	defer cancel()
+	wsURL := "ws" + strings.TrimPrefix(httpServer.URL, "http")
+	connA, snapA := dialEditorClientWithCookie(t, ctx, wsURL, "TOWN", nil)
+	defer connA.Close(websocket.StatusNormalClosure, "")
+	connB, snapB := dialEditorClientWithCookie(t, ctx, wsURL, "TOWN", nil)
+	defer connB.Close(websocket.StatusNormalClosure, "")
+	readEditorPresenceWithMembers(t, ctx, connA, 2)
+
+	if snapA.BoardID != 1 || snapB.BoardID != 1 {
+		t.Fatalf("entry boards A=%d B=%d, want both on 1", snapA.BoardID, snapB.BoardID)
+	}
+
+	// B opens a board of their own. A must stay where they are.
+	if err := wsjson.Write(ctx, connB, EditorBoardMessage{Type: MessageTypeEditorBoard, Op: "add", Name: "SECOND"}); err != nil {
+		t.Fatalf("write editorBoard add: %v", err)
+	}
+	var addedB EditorSnapshotMessage
+	readEditorMessage(t, ctx, connB, MessageTypeEditorSnapshot, &addedB)
+	if addedB.BoardID != 2 {
+		t.Fatalf("B after add is on board %d, want 2", addedB.BoardID)
+	}
+
+	// A edits board 1. Its diff is addressed to board 1.
+	if err := wsjson.Write(ctx, connA, EditorEditMessage{Type: MessageTypeEditorEdit, Op: "place", X: 12, Y: 10, Element: E_SOLID, Color: 0x0e}); err != nil {
+		t.Fatalf("write A edit: %v", err)
+	}
+	var diffA EditorDiffMessage
+	readEditorMessage(t, ctx, connA, MessageTypeEditorDiff, &diffA)
+	if diffA.BoardID != 1 || diffA.MemberID != snapA.MemberID {
+		t.Fatalf("A diff board=%d member=%q, want board 1 from %q", diffA.BoardID, diffA.MemberID, snapA.MemberID)
+	}
+
+	// B now edits their own board. Messages arrive on a connection in order, so
+	// the first diff B sees is A's if A's diff was broadcast to them.
+	if err := wsjson.Write(ctx, connB, EditorEditMessage{Type: MessageTypeEditorEdit, Op: "place", X: 20, Y: 12, Element: E_SOLID, Color: 0x0e}); err != nil {
+		t.Fatalf("write B edit: %v", err)
+	}
+	var diffB EditorDiffMessage
+	readEditorMessage(t, ctx, connB, MessageTypeEditorDiff, &diffB)
+	if diffB.MemberID != snapB.MemberID || diffB.BoardID != 2 {
+		t.Fatalf("first diff B received: board=%d member=%q, want B's own edit on board 2 (%q)", diffB.BoardID, diffB.MemberID, snapB.MemberID)
+	}
+	if !editorDiffHasCell(diffB, 19, 11, E_SOLID) {
+		t.Fatalf("B diff cells=%+v, want B's own solid tile at screen 19,11", diffB.Cells)
+	}
+
+	// A's board is untouched by B's work: A's next inspection of the cell B
+	// edited still reports the empty tile of board 1.
+	if err := wsjson.Write(ctx, connA, EditorInspectMessage{Type: MessageTypeEditorInspect, X: 20, Y: 12}); err != nil {
+		t.Fatalf("write A inspect: %v", err)
+	}
+	var inspectA EditorInspectMessage
+	readEditorMessage(t, ctx, connA, MessageTypeEditorInspect, &inspectA)
+	if inspectA.Inspect.ElementID != E_EMPTY {
+		t.Fatalf("A inspects 20,12 on board 1 and sees element %d, want empty — B's board 2 edit leaked", inspectA.Inspect.ElementID)
+	}
+}
+
 func TestM102EditorLeasesRefuseAndDisconnectRelease(t *testing.T) {
 	world := testMultiplayerSmokeWorld(t)
 	world.Info.CurrentBoard = 1

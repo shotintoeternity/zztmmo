@@ -21,12 +21,9 @@ Ranked 2026-07-14. The preceding priority list — M12.22, M12.19, and M15.1 —
 has fully landed. Work the list top-down; skip the optional/deferred tail unless
 the owner asks.
 
-1. **M17.12 — per-board editing isolation (owner request 2026-07-20, URGENT
-   [ADVISOR]).** Two people editing one world cannot work on different boards:
-   the session shares a single engine and current board, so a board switch drags
-   everyone along and the sidebar paints elements from a board the member is not
-   viewing. Not a small change — confirm the approach before starting. Takes
-   priority over everything below.
+1. M17.12 — per-board editing isolation (owner request 2026-07-20, URGENT).
+   **Landed**: each member holds their own current board, and edit diffs,
+   cursors, and sidebar state are all scoped to it. Next in line is M17.11.
 2. M17.9 — collaborator cursors in the editor (owner request 2026-07-20,
    URGENT). **Landed**, plus a follow-up fixing broadcast snapshots that
    hijacked another member's identity and cursor.
@@ -1849,65 +1846,56 @@ these are live breakage in front of the player.
   tests are green; replay fixture untouched. Verify in two real browsers, not
   only in unit tests — per the M17.3/M17.7 lesson.
 
-- [ ] **M17.12 — Per-board editing isolation: two editors, two boards (owner
-  request 2026-07-20, URGENT — take first).** Two people editing the same world
-  cannot work on different boards. Whoever switches boards drags everyone else
-  with them, because the whole session shares one engine and one current board.
-  The owner also traced a second symptom to this same root cause: the editor
-  sidebar shows elements that do not exist on the board being viewed —
-  `Element 53`, keys/solids/breakables/fakes that are not there, bombs where
-  there are none — in the rows directly above `Mode: Drawing off`.
+- [x] **M17.12 — Per-board editing isolation: two editors, two boards (owner
+  request 2026-07-20, URGENT).** Two people editing the same world could not work
+  on different boards: whoever switched dragged everyone with them, because the
+  session shares one engine and one current board. The owner traced a second
+  symptom to the same root — the editor sidebar naming elements that do not exist
+  on the board being viewed (`Element 53`, keys/solids/breakables/fakes that are
+  not there, bombs where there are none) in the rows above `Mode: Drawing off`.
 
-  Surgical map. `EditorSession` holds a single `s.engine` (`editor_session.go`),
-  opened once at `editor_session.go:43-47` on `e.World.Info.CurrentBoard`. Every
-  board-scoped operation resolves against that one implicit current board:
-  `leaseKeyLocked` (`:257-268`), `hasCurrentBoardLeaseLocked` (`:274-292`), and
-  `Edit`/`Apply` (`:339+`). The sidebar garbage follows from the same state: the
-  vanilla `EditorUpdateSidebar` / pattern-buffer rows are painted from engine
-  globals — `E.EditorPatternCount` and `copiedTile` at `editor.go:100-106`
-  (rows 21-22), `cursorPattern`/`cursorColor` at `editor.go:130-132` — so a
-  member viewing board A sees the palette and copied-tile state of whichever
-  board the shared engine currently has open.
+  Each member now has their own current board. `EditorSession.memberBoard`
+  records it, seeded on entry and cleared on exit, and `Apply` focuses the shared
+  engine onto the acting member's board before running their operation, under the
+  lock it already holds. Every converted-from-Pascal path that reads the implicit
+  current board — `Edit`, `leaseKeyLocked`, `hasCurrentBoardLeaseLocked`,
+  `editorSnapshot`, the sidebar's pattern/copied-tile state — then operates on the
+  right board unchanged, which is ugly-but-faithful over threading an explicit
+  board through all of it (hard rule 4). The switch is lossless and is exactly
+  what vanilla does on a board change: `BoardChange` RLE-serialises the open board
+  back into `BoardData` and opens the target. `Apply` also adopts any board the
+  operation itself moved to — a board add, or an edge/passage transition during
+  test-play — so an engine-driven move is not undone by the next `Apply`.
+  `SwitchBoard` records the switch against the member instead of the session.
 
-  The lease system (`editorLeaseKey{kind, boardID, statID}`) already models
-  board-scoped ownership, so the concept exists; what is missing is per-member
-  board context. Give each member their own current board and resolve every
-  edit, inspect, snapshot, and sidebar paint against *that* member's board
-  rather than `World.Info.CurrentBoard`. Two members on different boards must
-  not see each other's board switches, palette, or copied tile; two members on
-  the *same* board keep today's shared-editing behaviour, including leases.
+  Delivery is board-scoped too, which is what made the difference visible. An edit
+  diff carries the board it landed on (`EditorDiffMessage.BoardID`), and
+  `broadcastEditorBoard` sends it only to the members viewing that board via
+  `EditorSession.MemberClientsOnBoard` — previously every member received every
+  diff, so board 2's dirty cells were painted over the board 1 a collaborator was
+  looking at, and its inspected tile fed their sidebar's element row. The client
+  re-checks with `editorMessageIsForBoard` so a diff in flight across a board
+  switch cannot land late on the wrong board. Session-wide messages (presence,
+  test play) still broadcast to everyone. Cursors are board-scoped as well:
+  `EditorPresence` carries `BoardID` and the overlay draws only collaborators on
+  the viewer's board — presentation-only, with edit authorisation still resting on
+  the lease system, whose keys were already board-scoped and so keep same-board
+  conflict behaviour unchanged.
 
-  Cursors must be board-scoped too: you should not see a collaborator's cursor
-  while they are on a different board. `EditorPresence` (`protocol.go:114`)
-  carries `X`/`Y` but no board, and `editorCursorOverlay`
-  (`web/src/editor_cursor.ts`) draws every member unconditionally — today that
-  is harmless only because everyone is pinned to the same board, so it becomes a
-  visible defect (ghost cursors from other boards) the moment this task lands.
-  Add the member's board to `EditorPresence` and filter the overlay to members
-  on the viewing member's board. Keep it presentation-only; do not reuse it as
-  edit authorisation, which stays with the lease system.
+  Determinism: per-member board context is server-side session state, never engine
+  simulation state. No replay fixture or hash was touched.
 
-  This is not a small change: it means editing operations take an explicit board
-  argument instead of reading the engine's implicit current board, and the
-  broadcast snapshot must be per-recipient-board rather than one screen for
-  everyone (see the M17.9 follow-up commit, which fixed the related case of a
-  broadcast snapshot carrying the acting member's cursor to every client).
-  Confirm the approach with the advisor before starting.
-
-  Determinism (hard rule 2): per-member board context is server-side session
-  state, never engine simulation state; the replay fixture and parity oracle
-  must be unaffected.
-
-  DoD: with two browsers in one world, each can open a different board and edit
-  it without moving or corrupting the other's view; a member's cursor is visible
-  only to members viewing the same board, and reappears when they switch back;
-  each sidebar shows the
-  palette, copied tile, colour and pattern for the board that member is actually
-  viewing, with no elements that do not exist on it; same-board collaborative
-  editing and lease conflicts still behave as before; a Go test covers two
-  members editing different boards concurrently and asserts neither observes the
-  other's board state; a web test covers the sidebar rendering against a member's
-  own board; `go test ./...` and web tests green; replay fixture untouched.
+  Verified by `TestEditorSessionMembersEditDifferentBoards` (two members hold
+  their own board and neither observes the other's edits or presence board),
+  `TestEditorSessionDiffIsAddressedToItsOwnBoard` (a diff carries its board and
+  reaches only that board's members, with a third member on the same board still
+  included), `TestM1712EditorsOnDifferentBoardsDoNotSeeEachOthersEdits` (the same
+  over real websockets, end to end), and web tests covering the sidebar rendering
+  from the viewer's own board and the cursor overlay's board filter.
+  `TestM101EditorSessionBroadcastsDiffsAndPresence` and
+  `TestM102EditorLeasesRefuseAndDisconnectRelease` still guard same-board
+  collaboration and lease conflicts. The two-browser acceptance run itself is the
+  owner's to make: this repo has no real-browser harness until M16.9.
 
 - [ ] **M17.11 — Show how many people are playing or editing each world (owner
   request 2026-07-20).** The picker already carries a per-world player count but

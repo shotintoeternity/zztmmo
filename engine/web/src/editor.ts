@@ -175,6 +175,20 @@ function renderSidebarStatPrompt(write: WriteText, prompt: SidebarStatPrompt) {
   }
 }
 
+// editorMessageIsForBoard decides whether a board-shaped editor message applies
+// to the board this client is viewing (M17.12). Session members edit different
+// boards of one world, so an edit diff carries the board its cells belong to;
+// painting another board's cells — or feeding its tile into the sidebar's
+// element row — is how a collaborator's board leaked into a viewer's screen.
+// The server already addresses diffs to the right members; this is the client
+// re-checking, so a message in flight across a board switch cannot land late on
+// the wrong board. Either side undefined means an older peer that does not
+// carry the board, and the pre-M17.12 behaviour (accept) applies.
+export function editorMessageIsForBoard(messageBoardId: number | undefined, viewerBoardId: number | undefined): boolean {
+  if (messageBoardId === undefined || viewerBoardId === undefined) return true;
+  return messageBoardId === viewerBoardId;
+}
+
 export function drawEditorSidebar(
   write: WriteText,
   inspect: EditorInspect,

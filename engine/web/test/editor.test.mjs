@@ -12,7 +12,7 @@ const output = await build({
   write: false,
 });
 const source = Buffer.from(output.outputFiles[0].contents).toString("base64");
-const { drawEditorSidebar } = await import(`data:text/javascript;base64,${source}`);
+const { drawEditorSidebar, editorMessageIsForBoard } = await import(`data:text/javascript;base64,${source}`);
 
 // A fake sidebar surface that records the text written at each row, so a test
 // can assert the strings the sidebar paints without a canvas.
@@ -163,6 +163,40 @@ const brush = { element: 21, character: 0xdb, color: 0x0e, copied: false };
   assert.ok(all.includes("Object"), "element readout names the object");
   assert.ok(all.includes("Edit stat"), "Space command relabels to Edit stat over a stat");
   assert.ok(!all.includes("Plot"), "Plot label suppressed over a stat");
+}
+
+// M17.12 — the sidebar paints the board this member is viewing, never a
+// collaborator's. Two people in one editor session can be on different boards;
+// an edit diff carries the board its cells and inspected tile belong to, and a
+// diff for another board is dropped before it can reach the sidebar. Without
+// this, a member on board 1 saw the element row name tiles that only exist on
+// somebody else's board ("Element 53", keys and bombs that are not there).
+{
+  assert.equal(editorMessageIsForBoard(1, 1), true, "a diff for the viewed board applies");
+  assert.equal(editorMessageIsForBoard(2, 1), false, "a diff for another board is dropped");
+  assert.equal(editorMessageIsForBoard(0, 1), false, "the title board is a board like any other");
+  // An older peer that sends no board is accepted, the pre-M17.12 behaviour.
+  assert.equal(editorMessageIsForBoard(undefined, 1), true, "a diff with no board applies");
+  assert.equal(editorMessageIsForBoard(1, undefined), true, "no viewing board means no filtering");
+
+  // The sidebar renders from the viewer's own inspected tile. A collaborator's
+  // diff on another board is filtered out, so the element row keeps naming what
+  // is under this member's cursor.
+  const mine = { ...inspect, element: "Empty", elementId: 0 };
+  const theirs = { ...inspect, element: "Bomb", elementId: 37 };
+  const applyDiff = (viewerBoardId, diff, current) =>
+    editorMessageIsForBoard(diff.boardId, viewerBoardId) ? diff.inspect : current;
+
+  const foreign = applyDiff(1, { boardId: 2, inspect: theirs }, mine);
+  const s1 = surface();
+  drawEditorSidebar(s1.write, foreign, brush, false, false);
+  assert.ok(s1.text().includes("Empty"), "sidebar keeps this member's own board tile");
+  assert.ok(!s1.text().includes("Bomb"), "another board's tile never reaches the sidebar");
+
+  const own = applyDiff(1, { boardId: 1, inspect: theirs }, mine);
+  const s2 = surface();
+  drawEditorSidebar(s2.write, own, brush, false, false);
+  assert.ok(s2.text().includes("Bomb"), "a same-board diff still updates the sidebar");
 }
 
 console.log("editor.test.mjs: all assertions passed");

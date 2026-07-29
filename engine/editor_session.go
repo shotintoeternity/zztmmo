@@ -217,6 +217,35 @@ func (s *EditorSession) MemberClients() []*webSocketClient {
 	return out
 }
 
+// MemberClientsOnBoard reports the members currently editing boardID (M17.12).
+// Board-shaped broadcasts — an edit diff is the only one today — go through
+// here instead of MemberClients, because sending one board's dirty cells to a
+// member viewing another board paints their screen with tiles that are not
+// there. memberBoard is guarded by s.mu, so this is the only safe way to ask.
+func (s *EditorSession) MemberClientsOnBoard(boardID int16) []*webSocketClient {
+	s.mu.Lock()
+	defer s.mu.Unlock()
+	out := make([]*webSocketClient, 0, len(s.Members))
+	for member := range s.Members {
+		if s.memberBoard[member] == boardID {
+			out = append(out, member)
+		}
+	}
+	return out
+}
+
+// MemberBoard reports the board a member is editing, and whether they are a
+// member at all (M17.12).
+func (s *EditorSession) MemberBoard(member *webSocketClient) (int16, bool) {
+	s.mu.Lock()
+	defer s.mu.Unlock()
+	if _, ok := s.Members[member]; !ok {
+		return 0, false
+	}
+	boardID, ok := s.memberBoard[member]
+	return boardID, ok
+}
+
 // editorPresenceColor picks a collaborator's cursor colour. M17.9: these are
 // foreground-only attributes (high nibble 0 = black background) so a remote
 // cursor renders exactly like the local one — the cross glyph over the board
@@ -455,8 +484,14 @@ func (s *EditorSession) Edit(member *webSocketClient, edit EditorEditMessage) (E
 		reply = EditorDiffMessage{
 			Type:     MessageTypeEditorDiff,
 			MemberID: memberID,
-			Cells:    e.DrainScreenDirty(),
-			Inspect:  editorTileInspect(e, x, y),
+			// Apply has focused the engine on this member's board, so the
+			// engine's current board is the board these cells belong to
+			// (M17.12). The server broadcasts the diff only to members viewing
+			// it; without that, an edit on board 2 repainted cells over the
+			// board 1 a collaborator was looking at.
+			BoardID: e.World.Info.CurrentBoard,
+			Cells:   e.DrainScreenDirty(),
+			Inspect: editorTileInspect(e, x, y),
 		}
 	})
 	return reply, err

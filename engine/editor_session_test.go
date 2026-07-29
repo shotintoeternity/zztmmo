@@ -916,3 +916,83 @@ func TestEditorPresenceColorsAreDistinctFromTheLocalCursor(t *testing.T) {
 			editorPresenceColor(9), editorPresenceColor(1))
 	}
 }
+
+// TestEditorSessionDiffIsAddressedToItsOwnBoard covers the delivery half of
+// M17.12. Per-member board context stops an edit landing on the wrong board,
+// but the edit's dirty cells were still broadcast to every member: someone
+// viewing board 1 had board 2's tiles painted onto their screen. A diff carries
+// the board it belongs to, and only the members viewing that board are sent it.
+func TestEditorSessionDiffIsAddressedToItsOwnBoard(t *testing.T) {
+	session := NewEditorSession("TEST", testEmptyWorld(t))
+	alice := &webSocketClient{}
+	bob := &webSocketClient{}
+	carol := &webSocketClient{}
+	for _, member := range []*webSocketClient{alice, bob, carol} {
+		if err := session.Enter(member); err != nil {
+			t.Fatal(err)
+		}
+		defer session.Exit(member)
+	}
+
+	// Alice adds board 2 and moves back to board 1; Bob joins her there, Carol
+	// works on board 2.
+	if _, err := session.AddBoard(alice, "Board 2"); err != nil {
+		t.Fatalf("AddBoard: %v", err)
+	}
+	if _, err := session.SwitchBoard(alice, 1); err != nil {
+		t.Fatalf("SwitchBoard(alice, 1): %v", err)
+	}
+	if _, err := session.SwitchBoard(bob, 1); err != nil {
+		t.Fatalf("SwitchBoard(bob, 1): %v", err)
+	}
+	if _, err := session.SwitchBoard(carol, 2); err != nil {
+		t.Fatalf("SwitchBoard(carol, 2): %v", err)
+	}
+
+	diff, err := session.Edit(alice, EditorEditMessage{
+		Type: MessageTypeEditorEdit, Op: "place", X: 12, Y: 10, Element: E_SOLID, Color: 0x0e,
+	})
+	if err != nil {
+		t.Fatalf("Edit: %v", err)
+	}
+	if diff.BoardID != 1 {
+		t.Errorf("diff BoardID = %d, want 1 (the board alice is editing)", diff.BoardID)
+	}
+	if len(diff.Cells) == 0 {
+		t.Fatal("edit produced no dirty cells")
+	}
+
+	recipients := map[*webSocketClient]bool{}
+	for _, member := range session.MemberClientsOnBoard(diff.BoardID) {
+		recipients[member] = true
+	}
+	if !recipients[alice] || !recipients[bob] {
+		t.Errorf("board 1 diff recipients = %v, want both members viewing board 1", recipients)
+	}
+	if recipients[carol] {
+		t.Error("carol is editing board 2 but would be sent board 1's cells")
+	}
+
+	// Carol's own edit is addressed to board 2, and reaches only her.
+	carolDiff, err := session.Edit(carol, EditorEditMessage{
+		Type: MessageTypeEditorEdit, Op: "place", X: 12, Y: 10, Element: E_SOLID, Color: 0x0e,
+	})
+	if err != nil {
+		t.Fatalf("Edit(carol): %v", err)
+	}
+	if carolDiff.BoardID != 2 {
+		t.Errorf("carol's diff BoardID = %d, want 2", carolDiff.BoardID)
+	}
+	if got := session.MemberClientsOnBoard(2); len(got) != 1 || got[0] != carol {
+		t.Errorf("board 2 recipients = %v, want carol alone", got)
+	}
+
+	// MemberBoard is the accessor the server uses instead of touching the
+	// mutex-guarded map; a non-member has no board.
+	if board, ok := session.MemberBoard(bob); !ok || board != 1 {
+		t.Errorf("MemberBoard(bob) = %d,%v, want 1,true", board, ok)
+	}
+	if _, ok := session.MemberBoard(&webSocketClient{}); ok {
+		t.Error("MemberBoard reported a board for a non-member")
+	}
+}

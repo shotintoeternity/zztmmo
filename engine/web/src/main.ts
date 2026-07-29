@@ -8,7 +8,7 @@ import { commandKey, isHandledKey, isMovementKey, movementMask, rawKey } from ".
 import { drawTitleSidebar, titleCommand } from "./title";
 import { soundNotesFromProtocol, ZztSound } from "./sound";
 import { DreamFailure, generationLines, retryDreamBoard, runDreamGeneration, type GenerationProgress } from "./dream";
-import { drawEditorSidebar, type EditorInspect, type SidebarActionMenu, type SidebarStatPrompt } from "./editor";
+import { drawEditorSidebar, editorMessageIsForBoard, type EditorInspect, type SidebarActionMenu, type SidebarStatPrompt } from "./editor";
 import { editorReplyMatchesCursor, editorCursorOverlay, EDITOR_BLINK_PHASES } from "./editor_cursor";
 import { optimisticEditorEraseCell, optimisticEditorTextCell } from "./editor_input";
 import {
@@ -309,6 +309,9 @@ type EditorLeaseMessage = {
 type EditorDiffMessage = {
   type: typeof MessageTypeEditorDiff;
   memberId?: string;
+  // The board these cells belong to (M17.12). Members edit different boards of
+  // one world, so a diff for another board must not paint over ours.
+  boardId?: number;
   cells: ScreenCell[];
   inspect: EditorInspect;
 };
@@ -1485,6 +1488,10 @@ function showEditorReadOnly() {
 }
 
 function applyEditorDiff(message: EditorDiffMessage) {
+  // A diff belongs to one board (M17.12). The server sends it only to members
+  // viewing that board, but a diff can still be in flight while we switch, and
+  // its cells would then paint the previous board's tiles onto this one.
+  if (!editorMessageIsForBoard(message.boardId, editorProperties.boardId)) return;
   for (const cell of message.cells) setBoardCell(cell);
   if (!message.memberId || message.memberId === editorMemberId) {
     const inspectIsCurrent = editorReplyMatchesCursor(editorCursor, message.inspect);

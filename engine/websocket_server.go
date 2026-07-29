@@ -608,7 +608,8 @@ func (s *WebSocketServer) serveEditor(ctx context.Context, conn *websocket.Conn,
 				continue
 			}
 			session.UpdatePresence(client, edit.X, edit.Y)
-			s.broadcastEditor(ctx, session, reply)
+			// Only members viewing the edited board get its cells (M17.12).
+			s.broadcastEditorBoard(ctx, session, reply.BoardID, reply)
 			s.broadcastEditorPresence(ctx, session)
 		case MessageTypeEditorLease:
 			var lease EditorLeaseMessage
@@ -745,6 +746,17 @@ func (s *WebSocketServer) editorSessionForWorld(worldName string, world TWorld) 
 
 func (s *WebSocketServer) broadcastEditor(ctx context.Context, session *EditorSession, message interface{}) {
 	for _, member := range session.MemberClients() {
+		_ = member.write(ctx, message)
+	}
+}
+
+// broadcastEditorBoard sends a board-shaped message only to the members viewing
+// that board (M17.12). An edit diff carries the dirty cells of one board; a
+// member editing another board would paint them onto the screen they are
+// actually looking at, which is the corruption half of the owner's report.
+// Session-wide messages (presence, test play) keep using broadcastEditor.
+func (s *WebSocketServer) broadcastEditorBoard(ctx context.Context, session *EditorSession, boardID int16, message interface{}) {
+	for _, member := range session.MemberClientsOnBoard(boardID) {
 		_ = member.write(ctx, message)
 	}
 }

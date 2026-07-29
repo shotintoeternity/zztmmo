@@ -230,10 +230,16 @@ type EditorEditMessage struct {
 // cells dirtied by an edit plus the refreshed inspection panel for the browser
 // cursor, never a live-room/player snapshot.
 type EditorDiffMessage struct {
-	Type     string            `json:"type"`
-	MemberID string            `json:"memberId,omitempty"`
-	Cells    []ScreenCell      `json:"cells"`
-	Inspect  EditorTileInspect `json:"inspect"`
+	Type     string `json:"type"`
+	MemberID string `json:"memberId,omitempty"`
+	// BoardID is the board the edit landed on (M17.12). Session members can be
+	// editing different boards, so a diff is only meaningful to viewers on the
+	// same one — the server addresses it to them, and the client re-checks it
+	// before painting cells, because a diff for another board would overwrite
+	// the board the viewer is actually looking at.
+	BoardID int16             `json:"boardId"`
+	Cells   []ScreenCell      `json:"cells"`
+	Inspect EditorTileInspect `json:"inspect"`
 }
 
 // EditorBoardOption is one legal target for a board edge. Board zero is the
