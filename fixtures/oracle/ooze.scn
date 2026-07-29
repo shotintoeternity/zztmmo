@@ -1,0 +1,88 @@
+# ORCLOOZE: the shark that only swims, and the slime that only spreads (M16.5).
+#
+# These two creatures are opposites in what makes them comparable. A shark seeks
+# exactly like a lion (P1 9 forces the seek half of `P1 < Random(10)`), so it is
+# only draw-free while it shares the player's row or column — the beast.scn rule.
+# A slime draws nothing at all: ElementSlimeTick counts P1 up to P2 and then
+# walks the four NeighborDelta directions in a fixed order, so it is comparable
+# wherever the player stands.
+#
+# Ooze Bay, row 13 — the shark channel. ElementSharkTick moves onto E_WATER and
+# nothing else, and attacks only E_PLAYER, so the same seek that carries it down
+# the channel stops dead at the shoreline:
+#   20,13  a shark in fifteen squares of water, seeking west along the player's
+#          own row. It swims to 6,13, the last wet square, and then attacks the
+#          player standing dry at 5,13 — 100 health -> 90, and the attack kills
+#          it (DamageStat on the attacker).
+#   30,13  a second shark in its own pool, with dry land at 29,13 between it and
+#          everything else. Its seek points west at that land every tick and it
+#          never moves; once the player leaves row 13 both of the directions
+#          CalcDirectionSeek can return are dry, so it stays put whatever the
+#          draw says. That is the refusal, and it is what makes the rest of the
+#          scenario safe to walk around in.
+#
+# Ooze Bay, row 8 — the slime tunnel, one square wide between two walls. The
+# width is the point: NeighborDeltaX/Y is (north, south, west, east), so in a
+# horizontal tunnel the first two directions are walls, the third MOVES the
+# slime west and leaves a breakable in its own colour behind it, and the fourth
+# ADDS a second slime to the east carrying the same P2. From then on each front
+# has one walkable neighbour and simply advances, so the tunnel becomes a wall
+# of breakables growing from the middle outward at one square per two slime
+# ticks (P1 counts to P2 = 1 before every spread).
+#
+# Both of the ways a slime can end are here, and they need two different slimes
+# because a spreading one cannot be caught by hand:
+#   6,11   a DORMANT slime (P2 250, so P1 never counts far enough to spread)
+#          sitting where the player walks past it. ElementSlimeTouch damages the
+#          SLIME, not the player — the slime's stat is removed and its square
+#          becomes a breakable in its own colour, at no health cost. It is the
+#          one creature in ZZT whose touch is free, and the player is left
+#          standing in front of a breakable instead of walking through.
+#   the tunnel fronts die the other way ElementSlimeTick can end: no walkable
+#          neighbour at all, so the slime turns into a breakable where it
+#          stands. The east front runs out of tunnel at 41,8; the west front is
+#          cornered by the player standing in its path, which is exactly why the
+#          touch station cannot be done with a moving slime — the moment the
+#          player is adjacent, the slime has nowhere left to go and dies on its
+#          own before a walk-in can land.
+world ORCLOOZE
+seed 0
+phase
+boot 240
+capture title
+play
+# Ooze Hub: unpause and cross the east border opening at 60,13.
+move right
+move right
+move right
+move right
+move right
+capture arrive
+# Walk to the shoreline at 5,13 and wait for the shark to come to us.
+move right
+move right
+move right
+move right
+capture shoreline
+settle 30
+capture shark-closing
+settle 30
+capture shark-hit
+# Up the dry western edge, walking into the dormant slime on the way.
+move up
+move up
+move right
+capture slime-touched
+move up
+move up
+move up
+capture tunnel-mouth
+# East into the tunnel, in front of the advancing west front.
+move right
+move right
+move right
+capture slime-met
+settle 20
+capture slime-cornered
+settle 60
+capture slime-spent

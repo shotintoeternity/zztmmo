@@ -29,7 +29,12 @@ whole point is comparing this engine against state it did not generate.
   walls, text, pushing, board-edge refusal), ORCLITEM (ammo/gem/torch/keys/
   doors), ORCLDARK (darkness and torches), ORCLNRG (energizer), ORCLSHOT
   (shooting, breakable, ricochet, max-shots), ORCLPASS (passages, post-passage
-  unpause, board-edge transfer), and ORCLTIME (per-board time limit).
+  unpause, board-edge transfer), and ORCLTIME (per-board time limit). M16.4
+  added ORCLPUSH, ORCLDEV, ORCLMECH, ORCLBLNK and ORCLRIDE (movers and
+  devices); M16.5 added ORCLBEAST (lion/ruffian/bear and contact damage),
+  ORCLFIRE (bullets by source, ricochet branches, stars), ORCLOOZE (shark and
+  slime), ORCLPEDE (centipedes), and ORCLHUNT (energizer inversion and a
+  duplicator fed by a creature).
 - `*.scn` — scenario scripts, the shared contract between
   `frontend_oracle.c` and `engine/oracle_parity_test.go` (directives documented
   in both). Each names its world in a `world NAME` directive that `regen.sh`

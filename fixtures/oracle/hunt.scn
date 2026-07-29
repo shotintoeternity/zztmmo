@@ -1,0 +1,97 @@
+# ORCLHUNT: the energizer, which turns the whole board inside out (M16.5).
+#
+# An energizer changes three separate things, and this scenario takes all three
+# against the real ZZT.EXE:
+#
+#   1. CalcDirectionSeek negates its own answer while World.Info.EnergizerTicks
+#      is positive, so every creature that seeks RUNS AWAY. The lion in row 13
+#      is charging the player when the energizer is picked up and spends the
+#      rest of its life backing into the solid at 13,13.
+#   2. BoardAttack pays the player instead of hurting them. Walking into the
+#      cornered lion adds its ScoreValue and does NOT call DamageStat on the
+#      player (GAME.PAS:1224, first branch); being attacked BY a creature while
+#      energized adds the attacker's ScoreValue instead of costing 10 health
+#      (the same routine's second branch). One energizer each, so both branches
+#      are read off the sidebar separately.
+#   3. The player's own square stops being 0x1F: ElementPlayerTick flashes it
+#      off CurrentTick — `0x0F` on odd ticks and `(CurrentTick mod 7 + 1) * 16 +
+#      0x0F` on even ones — and toggles the E_PLAYER character between 1 and 2.
+#      M16.3 could not compare an energized checkpoint at all, because the
+#      adapter pinned CurrentTick to 0 and vanilla picks it with Random(100).
+#      The M16.4 phase solver removed that restriction: `phase` here means the
+#      flash colour and character are compared like any other cell, and they are
+#      what makes this scenario's phase pin as tight as it is.
+#
+# A bear ignores all of this, and that is deliberate: ElementBearTick never calls
+# CalcDirectionSeek — it steps by Signum straight off the player's position — so
+# an energized player is still charged by bears. The duplicator at 30,13 (source
+# direction east, reading the bear at 31,13, writing to 29,13) is here to supply
+# them: a duplicated creature carries the SOURCE stat's P1/P2/Cycle, so each copy
+# hunts exactly like its original. Copies walk west down the lane and stop
+# against the second energizer at 25,13, which is not walkable — so the moment
+# the player picks that energizer up, the bear behind it is adjacent and attacks
+# into branch 2 above.
+#
+# Health and score are the compared counters, and health never moves at all:
+# 100 throughout, with the score going 0 -> 1 (the cornered lion, eaten) ->
+# 2 (a bear charging into a player who has just picked up the second energizer,
+# which pays instead of biting) -> 3 (that bear's replacement, walked into).
+# The energizer runs out in between — its warning melody at ten ticks left is in
+# the compared sound stream — and the checkpoint after it expires is the one
+# that proves the flash colour went back to plain 0x1F.
+world ORCLHUNT
+seed 0
+phase
+boot 240
+capture title
+play
+# Hunt Hub: unpause and cross the east border opening at 60,13.
+move right
+move right
+move right
+move right
+move right
+capture arrive
+# Two steps east onto the energizer; the charging lion turns and runs.
+move right
+move right
+capture energized
+settle 16
+capture lion-fleeing
+# Chase it into the corner at 12,13 and eat it.
+move right
+move right
+move right
+move right
+move right
+move right
+move right
+move right
+capture cornered
+move right
+capture lion-eaten
+# Stand still until the energizer runs out.
+settle 60
+capture energizer-spent
+# Around the backstop by row 12 and east down the lane to the second energizer.
+move up
+move right
+move right
+move right
+move down
+move right
+move right
+move right
+move right
+move right
+move right
+move right
+move right
+move right
+capture approach
+move right
+capture bear-bites-back
+move right
+capture bear-eaten
+settle 40
+capture duplicated

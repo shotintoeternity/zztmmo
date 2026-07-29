@@ -1,0 +1,102 @@
+# ORCLPEDE: the centipede, which is four stats pretending to be one animal (M16.5).
+#
+# Both trains carry P1 0 and P2 0, and that is what makes a centipede
+# comparable at all. ElementCentipedeHeadTick opens with three gates:
+#
+#   (X = playerX) and (Random(10) < P1)      -> turn onto the player's column
+#   (Y = playerY) and (Random(10) < P1)      -> turn onto the player's row
+#   ((Random(10) * 4) < P2) or step is zero  -> pick a random direction
+#
+# P1 0 makes `Random(10) < 0` unsatisfiable and P2 0 does the same for the
+# deviance gate, so a head with an authored step simply keeps it — from anywhere
+# on the board, with no alignment requirement at all. That is unlike every other
+# creature in this sweep, and it is why the player can walk away from these
+# trains without stranding them in a random draw.
+#
+# The blocked-path logic underneath is random too — it turns onto a perpendicular
+# chosen by `((Random(2) * 2) - 1)` — and it is forced the same way M16.4 forced
+# the spinning gun: both corridors are exactly one square wide, so BOTH
+# perpendiculars are walls whichever way the draw lands, and the code falls
+# through to the deterministic tail: reverse onto `-ix, -iy`, and if that is
+# blocked too (it is — the train's own next segment is there), zero the step.
+# A zeroed step is what makes a centipede turn around: the head becomes a
+# segment, the leader/follower chain is walked and flipped end to end, and the
+# TAIL becomes the head. Train B does that against the dead end at 5,9 and again
+# at 25,9, so the reversal is caught at both ends of its corridor.
+#
+# Nothing is authored as a linked train: every segment starts with Leader and
+# Follower -1, exactly as the ZZT editor leaves them, and the head adopts them on
+# its first move — the `repeat ... until statId = -1` loop that looks one square
+# behind, then to either side, for an unclaimed segment. The trains would fall
+# apart on the first tick if that loop were wrong.
+#
+# Train A marches down the player's own corridor and bites four times, once per
+# stat. ElementCentipedeHeadTick promotes its own follower to head BEFORE
+# attacking, so each bite costs the player 10 health and the train one stat, and
+# the last stat in the train has no follower left to promote: 100 -> 60.
+#
+# Train B is then walked into from the side, through the one gap at 12,10.
+# ElementDamagingTouch on a SEGMENT costs the player 10 health and removes that
+# segment, cutting the train in half. The rear half's leader is gone, so
+# ElementCentipedeSegmentTick — whose whole body is a countdown from Leader -1 —
+# turns it into a head two ticks later and it marches off on its own. That is
+# the only path through that proc, and the cut is the only way to reach it.
+#
+# There is no shooting in this world, and the reason is worth recording: a bullet
+# fired down a one-square-wide corridor never kills a head. The head is blocked
+# by the oncoming bullet, and a blocked head in a one-wide corridor reverses, so
+# the bullet lands on the tail-turned-front instead. Bullets against creatures
+# are pinned in fire.scn, where the target is a bear standing in the open.
+world ORCLPEDE
+seed 0
+phase
+boot 240
+capture title
+play
+# Pede Hub: unpause and cross the east border opening at 60,13.
+move right
+move right
+move right
+move right
+move right
+capture arrive
+# Both trains march west; train B reaches its dead end first and flips.
+settle 48
+capture linked
+settle 4
+capture reversed-west
+# Train A arrives at the player and bites once per stat.
+settle 16
+capture first-bite
+settle 14
+capture bites-done
+# Train B turns around again at the far end of its corridor.
+settle 34
+capture reversed-east
+# Up through the gap at 4,12 into the hall, then east to train B's own gap.
+move right
+move right
+move right
+move up
+move up
+move right
+move right
+move right
+move right
+move right
+move right
+move right
+move right
+capture at-gap
+move up
+capture in-gap
+# Wait in the gap for the train to come back past it, so what the player walks
+# into is a SEGMENT and not the head or bare floor.
+settle 48
+capture train-passing
+move up
+capture segment-touched
+settle 6
+capture segment-promoted
+settle 12
+capture train-cut

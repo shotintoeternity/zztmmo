@@ -2313,7 +2313,7 @@ gap task has landed.
   including why an accumulating device cannot live on the title board and why it
   must be walked into over a board edge rather than a passage.
 
-- [ ] **M16.5 — Vanilla creatures, combat, and projectiles parity sweep.** Cover
+- [x] **M16.5 — Vanilla creatures, combat, and projectiles parity sweep.** Cover
   bullets by source, point-blank shots, stars, lions, tigers, bears, ruffians,
   sharks, centipede heads/segments, slime, duplicator-spawned actors, contact
   damage, energizer inversion, death/game-over, and seeded seeking/random
@@ -2322,6 +2322,52 @@ gap task has landed.
   deviations and are exercised fully in M16.12. DoD: every creature/projectile
   proc and combat branch has a manifest row and oracle-backed scenario; repeated
   seeded runs are byte-identical; no mismatch is blessed by updating a golden.
+
+  Landed: five micro-worlds and five scenarios replayed through the real ZZT.EXE
+  (`fixtures/oracle/ORCL{BEAST,FIRE,OOZE,PEDE,HUNT}.zwd` + `{beast,fire,ooze,
+  pede,hunt}.scn`) and through this engine (`TestOracleParity{Beast,Fire,Ooze,
+  Pede,Hunt}Scenario`). Eight of the ten assigned element rows are `pass`; the
+  other two are `gap` behind the defect below. Creatures are made comparable by
+  FORCING their draws rather than avoiding them: a creature in the player's row
+  or column takes CalcDirectionSeek's branch whatever `Random(2)` returns, P1 9
+  makes `P1 < Random(10)` unsatisfiable, P1 8 makes `Random(9) <= P1` certain,
+  P2 9 makes a ruffian's rest test unsatisfiable, P2 27/155 make a tiger always
+  fire bullets/stars, and P1 0 + P2 0 + a one-wide corridor make a centipede
+  draw-free from anywhere on the board. Two branches have no draw-free form and
+  are recorded as such: a ruffian's rest-to-wake transition, and a centipede's
+  perpendicular turn where both perpendiculars are not walls.
+  **No simulation code changed.** The one engine-side change is in the oracle
+  sound matcher: vanilla's `SoundQueue` priority arbitration now persists across
+  cycles (SOUNDS.PAS keeps `SoundIsPlaying` true for the pattern's note
+  durations), which is what lets an energized player's attack clicks be refused
+  under the 168-tick energizer melody the way the real ZZT.EXE refuses them.
+  M16.3's "no energized checkpoint" exclusion is lifted — the M16.4 phase solver
+  recovers the CurrentTick the flash colour rides on.
+  **Defect found: `BoardShoot`'s point-blank ownership test is inverted** — filed
+  as M16.5a below, with `elem.bullet` and `elem.tiger` set to `gap`.
+
+- [ ] **M16.5a — Close the point-blank shot-ownership inversion (M16.5 gap task;
+  blocks M16.20).** `engine/game.go:1421` translates GAME.PAS:1246's
+  `((Element = E_PLAYER) = Boolean(source))` — "the shooter is an enemy" — as
+  `== (source >= SHOT_SOURCE_PLAYER_BASE)`, "the shooter is a player", which is
+  its negation. Consequences, all pinned by `TestPointBlankShotOwnershipGap`:
+  a player's shot at an adjacent monster does nothing (vanilla kills it); an
+  adjacent monster's shot at the player does nothing (vanilla costs 10 health);
+  and an enemy shot that lands on a creature damages it, which makes a tiger or
+  spinning gun standing in the player's own row destroy itself with its own
+  zero-delta vertical shot (`Signum(0)`), since ElementTigerTick/
+  ElementSpinningGunTick try that shot first whenever `Difference(X, playerX)
+  <= 2`. Fix: restore vanilla's sense (`!= (source >= SHOT_SOURCE_PLAYER_BASE)`,
+  or equivalently `== (source == SHOT_SOURCE_ENEMY)`), keeping the M8.1
+  player-vs-player friendly-fire block that sits inside the branch — that block
+  is correct and must still refuse PvP damage without `FriendlyFire` and always
+  refuse self-shots. DoD: `TestPointBlankShotOwnershipGap` is rewritten to
+  assert the vanilla outcomes; a new oracle station covers a point-blank shot in
+  both directions and a close-range tiger that does NOT destroy itself; the
+  replay fixture and every existing oracle capture stay green (if the TOWN
+  replay hash moves, the commit says `DEVIATION:` with the reason); and the
+  manifest rows `elem.bullet`, `elem.tiger`, `elem.player` and
+  `elem.spinning-gun` are returned to `pass`/`deviation` with the new evidence.
 
 - [ ] **M16.6 — ZZT-OOP, scroll, sound, and modal parity sweep.** Enumerate and
   exercise every implemented OOP command, condition, direction, counter,

@@ -1,0 +1,124 @@
+# ORCLFIRE: bullets by source, and what a star does (M16.5).
+#
+# Both tigers in this world are MUZZLED: three solid squares and one square of
+# water. BoardShoot accepts a target square that is `Walkable or E_WATER`
+# (GAME.PAS:1246) but ElementLionTick — which ElementTigerTick ends by calling —
+# moves only onto a Walkable one, so a tiger with a water muzzle fires forever
+# and never takes a step. That is what makes a tiger comparable at all: its
+# firing half is pure Signum arithmetic off the player's position, while its
+# moving half is CalcDirectionSeek, which is only draw-free when creature and
+# player share a row or a column (see beast.scn). P2 27 forces the firing gate
+# `(Random(10) * 3) <= (P2 mod $80)`, whose draw tops out at 27; P2 155 is the
+# same 27 with bit 7 set, which is what makes the second tiger fire STARS.
+#
+# Fire Bay, row 13 — the bullet tiger at 30,13, shooting west down the arrival
+# row. Its stream is the clock the whole board runs on: a bullet every second
+# frame, each travelling one square per frame, dying on the board edge west of
+# the player. The player is only ever IN that stream while standing in row 13;
+# the tiger keeps firing while the player is within two rows of it, but the
+# bullets always travel row 13, so stepping off the row is enough. Stations:
+#   - two ammo squares at 2,13 and 3,13 (+5 each, with the one-time hint)
+#   - the player shoots east into the oncoming stream, which pins BOTH sides of
+#     ElementBulletTick's ownership test at once. A player bullet may damage
+#     anything Destructible, so it attacks the enemy bullet it meets and both
+#     die with two DamageStat clicks; an enemy bullet may damage only the
+#     player, so when the enemy bullet is the one that ticks into the square it
+#     simply removes itself, silently. Which happens on a given frame is decided
+#     by stat order, so the player's bullet walks east through the stream eating
+#     roughly one bullet per frame before a collision finally goes the other way.
+#   - an enemy bullet reaches the player: 100 health -> 90. The mirror of that
+#     branch — a PLAYER bullet damaging a player — is the friendly-fire
+#     deviation and is deliberately not exercised here.
+#
+# Fire Bay, row 8 — what a player bullet does at range, and the two ricochet
+# branches that are not the head-on one ORCLSHOT already pinned:
+#   - a bear at 12,8 (P1 8: it moves only along the player's own row) charges
+#     west and is shot dead at range. Score 0 -> 1 is ElementBulletTick's
+#     ScoreValue credit, read off the sidebar.
+#   - the second shot runs the length of the row, over the water at 16,8
+#     (bullets fly over water, ELEMENTS.PAS ElementBulletTick), and is stopped
+#     by the solid at 19,8. The ricochet at 18,9 is BELOW the bullet's own
+#     square, which is the `Board.Tiles[X + StepY][Y + StepX]` branch: it turns
+#     the bullet NORTH, away from the ricochet, and it destroys the breakable
+#     at 18,5 four squares up.
+# Fire Bay, row 16 — the mirror: the ricochet at 16,15 is ABOVE the bullet, the
+#   `Board.Tiles[X - StepY][Y - StepX]` branch, and the bullet turns SOUTH into
+#   the breakable at 16,19. Taking both proves the two branches are not
+#   interchangeable.
+#
+# Star Bay (reached over the west edge) — the star tiger at 50,13 firing east
+# at a player standing in its own row, so ElementStarTick's CalcDirectionSeek is
+# forced onto the horizontal every time. A star is not a bullet: it lives 100
+# ticks, moves only on even P2, cannot be shot (Destructible false) and attacks
+# E_PLAYER and E_BREAKABLE alike. The breakable at 56,13 takes the first star;
+# the ones behind it reach the player, 10 health each.
+#
+# What is NOT here, deliberately: a point-blank shot in either direction. The
+# fork's BoardShoot inverts vanilla's `(Element = E_PLAYER) = Boolean(source)`
+# ownership test, so a player cannot shoot an adjacent monster and an adjacent
+# monster cannot shoot the player — the M16.5 finding, filed as gap task M16.5a
+# and pinned by TestPointBlankShotOwnershipGap. Every tiger here is kept more
+# than two columns from the player for the same reason.
+world ORCLFIRE
+seed 0
+phase
+boot 240
+capture title
+play
+# Fire Hub: unpause and cross the east border opening at 60,13.
+move right
+move right
+move right
+move right
+move right
+capture arrive
+# Two ammo squares, then a shot east into the oncoming stream.
+move right
+move right
+shoot right
+capture shot-out
+settle 4
+capture bullets-meet
+settle 14
+capture bullets-eaten
+settle 30
+capture player-hit
+# Out of row 13 and up the western corridor into the bear's row.
+move up
+move up
+move up
+move up
+move up
+capture in-lane
+shoot right
+settle 12
+capture bear-shot
+shoot right
+settle 30
+capture ricochet-north
+# Down to row 16 for the mirror-image ricochet.
+move down
+move down
+move down
+move down
+move down
+move down
+move down
+move down
+shoot right
+settle 30
+capture ricochet-south
+# Back up to the arrival row and out over the west edge into Star Bay.
+move up
+move up
+move up
+move left
+move left
+move left
+capture arrive-star
+settle 12
+capture star-breakable
+settle 20
+capture star-hit
+settle 4
+capture star-hit-again

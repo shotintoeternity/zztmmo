@@ -3380,3 +3380,120 @@ rather than the sim: vanilla's `SoundQueue` arbitration is now modelled per cycl
 and `sameTone` runs the real PIT divisor round trip instead of a rounding fudge.
 No simulation code changed in M16.4 at all — every element matched the real
 ZZT.EXE as ported. The only elements.go edit was a `// ZZT-QUIRK:` comment.
+
+## 2026-07-29 — M16.5: creatures, and the one line that inverts every point-blank shot
+
+Five worlds, five scenarios: ORCLBEAST (the seekers and what contact costs),
+ORCLFIRE (bullets by source, both perpendicular ricochets, stars), ORCLOOZE
+(shark and slime), ORCLPEDE (centipedes), ORCLHUNT (energizer inversion and a
+duplicator whose source is a creature). Eight of M16.5's ten element rows are
+`pass`; `elem.bullet` and `elem.tiger` are `gap`, behind the defect below.
+
+### How a creature is made comparable at all
+
+Every creature in ZZT draws from the RNG on almost every tick, and the oracle's
+stream is not this engine's. M16.4's spinning gun showed the honest way past
+that — force the draw's *outcome* rather than avoid the draw — and the whole
+sweep is built on two facts about `CalcDirectionSeek` (GAME.PAS:1284):
+
+    if (Random(2) < 1) or (Board.Stats[0].Y = y) then deltaX := Signum(...)
+    if deltaX = 0 then deltaY := Signum(...)
+
+A creature in the player's **row** takes the first branch whatever the draw
+returns. A creature in the player's **column** gets `Signum(0) = 0` from it
+either way and falls through to the second. So seeking is draw-free on both axes
+while creature and player share one, and nowhere else — which is why every charge
+in ORCLBEAST/ORCLOOZE/ORCLHUNT happens down row 13 and why the player never
+leaves that row while anything is hunting them. The parameter gates go the same
+way: P1 9 makes `P1 < Random(10)` unsatisfiable (lion, tiger, shark always seek),
+P1 8 makes `Random(9) <= P1` certain (a ruffian always re-seeks when aligned),
+P2 9 makes `(P2 + 8) <= Random(17)` unsatisfiable (a ruffian never rests once
+moving and never wakes once stopped), P2 27 and P2 155 make a tiger always fire
+bullets and stars respectively, and P1 0 with P2 0 makes BOTH of a centipede
+head's alignment gates and its deviance gate unsatisfiable — the only creature in
+the sweep that is deterministic from anywhere on the board.
+
+Two branches have no draw-free form at all, and are recorded rather than faked:
+
+- **A ruffian's rest-to-wake transition.** `(P2 + 8) <= Random(17)` cannot be
+  forced true for any byte P2, so nothing can guarantee a resting ruffian wakes.
+  ORCLBEAST covers the resting branch as a permanent refusal (P2 9) instead.
+- **A centipede's perpendicular turn.** `((Random(2) * 2) - 1)` picks which way a
+  blocked head turns. A one-wide corridor makes both choices walls, so the code
+  falls through to its deterministic tail (reverse, then zero the step); in a
+  corridor wider than one, the turn is a real coin flip.
+
+### Three authoring facts the oracle taught, not the Pascal
+
+- **A tiger with a water muzzle fires forever and never moves.** `BoardShoot`
+  accepts a target square that is `Walkable or E_WATER`, but the tick proc's
+  movement half only accepts Walkable. Three solid squares and one square of
+  water therefore produce a gun emplacement — the only way to compare a tiger's
+  firing half without also having to keep its movement half aligned.
+- **A player's bullet eats an oncoming stream one bullet per frame.** A player
+  bullet may damage anything Destructible, so it attacks the enemy bullet it
+  meets (two DamageStat clicks); an enemy bullet may damage only the player, so
+  when the enemy bullet is the one that ticks into the square it silently removes
+  itself. Which happens on a given frame is decided by stat order.
+- **A spreading slime cannot be walked into.** The moment the player is adjacent,
+  the slime has no walkable neighbour and dies of that on its next spread, before
+  a walk-in can land. ORCLOOZE gets `ElementSlimeTouch` from a dormant slime
+  (P2 250, so P1 never counts far enough to spread) and gets the death-by-corner
+  branch from the moving fronts.
+
+### The finding: BoardShoot's ownership test is inverted (gap task M16.5a)
+
+GAME.PAS:1246 gates point-blank damage with
+
+    ElementDefs[...].Destructible and ((Element = E_PLAYER) = Boolean(source))
+
+where `source` is 0 for a player shot and non-zero for an enemy one, so
+`Boolean(source)` means "the shooter is an enemy". The fork re-encoded source as
+`statId + SHOT_SOURCE_PLAYER_BASE` and translated the line as
+`== (source >= SHOT_SOURCE_PLAYER_BASE)` — "the shooter is a player", the exact
+negation (game.go:1421). Every point-blank outcome is therefore backwards:
+
+- a player cannot kill an adjacent monster by shooting it;
+- an adjacent monster cannot hurt the player by shooting it;
+- an enemy shot that lands on another creature damages it — and because
+  `ElementTigerTick`/`ElementSpinningGunTick` try their VERTICAL shot first
+  whenever `Difference(X, playerX) <= 2`, a tiger or gun standing in the player's
+  own row fires at `Signum(0) = 0`, i.e. at its own square, and destroys itself.
+  Vanilla refuses that shot and falls through to the horizontal one.
+
+Per the M16 rule for audit findings this was NOT fixed here: the minimal repro is
+`TestPointBlankShotOwnershipGap` (all three consequences, asserting the current
+defective behaviour so it cannot quietly change shape), the fix is fully
+specified as task **M16.5a**, and `elem.bullet` and `elem.tiger` are `gap` against
+it. `elem.player` and `elem.spinning-gun` carry notes pointing at the same task —
+they are certified by earlier sweeps whose evidence still stands, but their
+point-blank behaviour is part of this gap and M16.5a re-certifies all four. The
+sweep's scenarios keep every tiger more than two columns from the player and
+contain no point-blank shot in either direction; PARITY.md §7 records that.
+
+### What did change in the harness
+
+The oracle sound matcher now carries vanilla's `SoundQueue` arbitration ACROSS
+cycles, not just within one. `SoundIsPlaying` stays true for as long as the
+pattern's note durations last (SOUNDS.PAS `SoundTimerHandler` counts
+`SoundDurationCounter` down one per PIT tick), and every attempt below the
+sounding pattern's priority is refused for that whole span. ORCLHUNT is the case
+that needs it: the energizer melody is 168 ticks at priority 9, so the priority-2
+attack clicks a player makes while energized never reach the speaker. Modelling
+it removes melodies the matcher would otherwise have demanded; all fourteen
+pre-existing captures stay green under it, and re-recording every scenario
+reproduces the committed bytes.
+
+M16.3's scenario-design exclusion of energized checkpoints is **lifted**. It
+existed only because the adapter pinned CurrentTick to 0 while vanilla picks it
+with `Random(100)`; the M16.4 phase solver recovers it, so ORCLHUNT compares the
+energizer flash colour (`(CurrentTick mod 7 + 1) * 16 + $0F` on even ticks) and
+the 1/2 character toggle like any other cell. That is also what makes ORCLHUNT
+the tightest pin in the sweep: 2 of 100 play phases reproduce every checkpoint,
+against 17 for ORCLBEAST and ORCLFIRE, 33 for ORCLOOZE and 50 for ORCLPEDE
+(whose stats are all cycle 2, so only the parity of CurrentTick is observable).
+
+Death is the other thing no scenario may reach: vanilla's game over versus the
+fork's respawn is deviation `mp-respawn`, so every scenario ends with the player
+alive and `TestSinglePlayerDeathIsRespawnDeviation` carries that branch instead.
+No simulation code changed in M16.5; the replay fixture is unchanged.

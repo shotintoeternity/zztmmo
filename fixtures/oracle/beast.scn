@@ -1,0 +1,104 @@
+# ORCLBEAST: the seekers, and what touching one costs (M16.5).
+#
+# Every creature in this world reaches the player by a path that is free of
+# random draws even though the draws still happen, which is how M16.4 handled
+# the spinning gun and is the only honest way to compare a creature against
+# vanilla at all. Two facts do the work (GAME.PAS CalcDirectionSeek):
+#
+#   if (Random(2) < 1) or (Board.Stats[0].Y = y) then deltaX := Signum(...)
+#   if deltaX = 0 then deltaY := Signum(...)
+#
+# A creature standing in the player's ROW takes the first branch whatever the
+# draw returns, and a creature in the player's COLUMN gets Signum(0) = 0 from it
+# either way and falls through to the second. So seeking is deterministic on
+# both axes as long as the creature and the player share one — and NOT otherwise,
+# which is why the whole charge happens down row 13 and why the player never
+# leaves that row while anything is hunting them.
+#
+# The gate in front of the seek is forced the same way: a lion, tiger or shark
+# with P1 9 can never satisfy `P1 < Random(10)` (the draw tops out at 9), so it
+# always seeks; a ruffian with P1 8 always satisfies `Random(9) <= P1`. Bears
+# draw nothing at all.
+#
+# Claw Bay, row 13 — the charge lane, west to east:
+#   12,13  Ruffian (cycle 1, P1 8, P2 9, step west). P2 9 is the other forced
+#          draw: `(P2 + 8) <= Random(17)` can never hold, so this ruffian never
+#          rests once moving and never wakes once stopped. It reaches the player
+#          first and attacks, which kills it — a creature that lands a hit is
+#          destroyed by its own BoardAttack (GAME.PAS:1224 DamageStat).
+#   20,13  Lion (cycle 2, P1 9). Same charge, half the speed.
+#   26,13  Breakable, and 30,13 a Bear (cycle 3, P1 8). The bear is the only
+#          creature whose attack branch accepts something other than the player
+#          (ELEMENTS.PAS ElementBearTick tests E_PLAYER or E_BREAKABLE), so it
+#          spends itself on the wall and never reaches the player. P1 8 also
+#          pins its sensitivity to `Difference(Y, playerY) <= 0`: it moves only
+#          along the player's own row.
+#
+# 10,10 — the ruffian that never wakes. Its authored step is north into the
+#   solid at 10,9, so its first tick zeroes the step; from then on it is in the
+#   resting branch, where P2 9 makes the wake test unsatisfiable. It ticks
+#   forever without moving, which is what makes it safe to walk up to it off
+#   row 13. The player then touches it: ElementDamagingTouch attacks on the
+#   player's behalf, so the ruffian dies and the player pays the same 10 health
+#   as if it had charged (GAME.PAS BoardAttack, attackerStatId 0).
+#
+# 18,3 — the sensitivity bear (P1 4). Out of range for the whole charge and for
+#   the walk to the resting ruffian; it wakes only when the player stands at
+#   14,13, four columns from its own. Its route is the proof that both of
+#   ElementBearTick's branches are being taken: it descends its column while
+#   `Difference(Y, playerY)` is still over 4, turns west along row 9 the moment
+#   that difference closes, and drops down the player's own column at the end.
+#
+# Health is the compared counter throughout: 100 -> 90 (ruffian) -> 80 (lion)
+# -> 70 (touching the resting ruffian) -> 60 (the sensitivity bear). Nothing in
+# this world can reach 0; death is the mp-respawn deviation, not vanilla, and is
+# pinned by TestSinglePlayerDeathIsRespawnDeviation, never by an oracle capture.
+world ORCLBEAST
+seed 0
+phase
+boot 240
+capture title
+play
+# Beast Hub: unpause and cross the east border opening at 60,13.
+move right
+move right
+move right
+move right
+move right
+capture arrive
+# The charge is already under way: the ruffian is the fast one.
+settle 12
+capture charge
+settle 20
+capture ruffian-hit
+settle 24
+capture lion-closing
+settle 24
+capture lion-hit
+# Walk east to the resting ruffian's column, then up to it.
+move right
+move right
+move right
+move right
+move right
+move right
+move right
+move right
+move right
+move up
+move up
+move up
+capture ruffian-touched
+# Back down to row 13 and east to 14,13, where the sensitivity bear wakes.
+move down
+move down
+move down
+move right
+move right
+move right
+move right
+capture bear-waking
+settle 40
+capture bear-descending
+settle 60
+capture bear-hit

@@ -281,6 +281,30 @@ func soundEventFreqs(notes string) []int {
 type oracleSoundMatcher struct {
 	melodies [][]int
 	mi, ni   int
+	// Vanilla's live speaker state (SOUNDS.PAS SoundIsPlaying /
+	// SoundCurrentPriority / SoundDurationCounter), carried across cycles so a
+	// queue attempt can be refused by something still sounding from an earlier
+	// one. remaining counts PIT ticks, the unit note durations are measured in.
+	playing   bool
+	current   int16
+	remaining int
+}
+
+// oracleTicksPerCycle is the ISR's advance per game cycle: vanilla paces one
+// cycle per TickTimeDuration = TickSpeed*2 hundredths of a second, about two
+// 18.2 Hz timer ticks at the pinned speed 4 (the same mapping the whole harness
+// rests on — see the timing model at the top of this file).
+const oracleTicksPerCycle = 2
+
+// soundEventTicks is how long a queued pattern occupies vanilla's speaker: the
+// sum of its note durations, which SoundTimerHandler counts down one per PIT
+// tick (SoundDurationMultiplier is 1).
+func soundEventTicks(notes string) int {
+	total := 0
+	for i := 0; i+1 < len(notes); i += 2 {
+		total += int(notes[i+1])
+	}
+	return total
 }
 
 // queueCycle takes every SoundEvent one game cycle emitted and reduces it to
@@ -302,28 +326,48 @@ type oracleSoundMatcher struct {
 // so every attempt but the last accepted one is overwritten before it makes a
 // single onset. M16.4's pusher train is exactly this: a moving pusher ticks the
 // pusher behind it immediately, out of cycle order, so two identical clicks are
-// queued microseconds apart and vanilla's speaker clicks once. Modelling that is
-// not leniency; it removes melodies the matcher would otherwise have demanded.
-// Across cycles the ISR does run, so nothing is collapsed there — that is what
-// match's one-sided prefix rule below is for.
+// queued microseconds apart and vanilla's speaker clicks once.
+//
+// The priority half of the rule also has to survive ACROSS cycles, because
+// vanilla's SoundIsPlaying stays true for as long as the pattern's note
+// durations last (SoundTimerHandler counts SoundDurationCounter down one per PIT
+// tick), and every attempt below the sounding pattern's priority is refused for
+// that whole span. M16.5's energizer is the case that needs it: its melody is
+// 168 ticks long at priority 9, so the attack clicks (priority 2) the player
+// makes while energized never reach the speaker at all. So the matcher carries
+// (playing, current, remaining) between cycles and ages it by one cycle's worth
+// of PIT ticks each time.
+//
+// None of this is leniency: it removes melodies the matcher would otherwise have
+// demanded the oracle play, using vanilla's own arbitration rather than a fudge.
+// What survives is still required, in order, by match's one-sided prefix rule.
 func (m *oracleSoundMatcher) queueCycle(events []SoundEvent) {
+	if m.playing {
+		m.remaining -= oracleTicksPerCycle
+		if m.remaining <= 0 {
+			m.playing = false
+			m.remaining = 0
+		}
+	}
 	var (
-		buffer  string
-		current int16
-		playing bool
+		buffer   string
+		accepted bool
 	)
 	for _, ev := range events {
-		if playing && !((ev.Priority >= current && current != -1) || ev.Priority == -1) {
+		if m.playing && !((ev.Priority >= m.current && m.current != -1) || ev.Priority == -1) {
 			continue // refused: something more important is still sounding
 		}
-		if ev.Priority >= 0 || !playing {
-			buffer, current = ev.Notes, ev.Priority
+		if ev.Priority >= 0 || !m.playing {
+			buffer, m.current, m.remaining = ev.Notes, ev.Priority, soundEventTicks(ev.Notes)
 		} else {
-			buffer += ev.Notes // a #play queues behind what is sounding
+			// A #play queues behind what is sounding rather than replacing it.
+			buffer += ev.Notes
+			m.remaining += soundEventTicks(ev.Notes)
 		}
-		playing = true
+		m.playing = true
+		accepted = true
 	}
-	if playing {
+	if accepted {
 		m.melodies = append(m.melodies, soundEventFreqs(buffer))
 	}
 }
@@ -871,6 +915,59 @@ func TestOracleParityBlinkScenario(t *testing.T) {
 // thing left to compare (fixtures/oracle/ride.scn documents the design).
 func TestOracleParityRideScenario(t *testing.T) {
 	if err := oracleAdapterRun(t, "ride.scn", "ride.capture.txt", nil); err != nil {
+		t.Fatalf("oracle divergence: %v", err)
+	}
+}
+
+// The M16.5 sweep scenarios: creatures, combat, and projectiles.
+
+// TestOracleParityBeastScenario covers the seeking creatures and what contact
+// costs: ruffian, lion, bear (including the bear's E_BREAKABLE attack branch and
+// its sensitivity range), and the player's own damaging touch. Every seek is
+// forced onto one axis by keeping the hunt in the player's row — see
+// fixtures/oracle/beast.scn for why that is what makes a creature comparable.
+func TestOracleParityBeastScenario(t *testing.T) {
+	if err := oracleAdapterRun(t, "beast.scn", "beast.capture.txt", nil); err != nil {
+		t.Fatalf("oracle divergence: %v", err)
+	}
+}
+
+// TestOracleParityFireScenario covers bullets by source and stars: an enemy
+// stream that damages the player, a player bullet that annihilates one and kills
+// a bear for score, both perpendicular ricochet branches, and a star tiger whose
+// stars attack a breakable and then the player. Point-blank shots are absent by
+// design — see fixtures/oracle/fire.scn and TestPointBlankShotOwnershipGap.
+func TestOracleParityFireScenario(t *testing.T) {
+	if err := oracleAdapterRun(t, "fire.scn", "fire.capture.txt", nil); err != nil {
+		t.Fatalf("oracle divergence: %v", err)
+	}
+}
+
+// TestOracleParityOozeScenario covers the shark (swims only through water,
+// attacks only the player, refuses a dry seek) and the slime (both spread
+// branches, the free touch, and both ways it can die).
+func TestOracleParityOozeScenario(t *testing.T) {
+	if err := oracleAdapterRun(t, "ooze.scn", "ooze.capture.txt", nil); err != nil {
+		t.Fatalf("oracle divergence: %v", err)
+	}
+}
+
+// TestOracleParityPedeScenario covers the centipede as a whole animal: the
+// head's follower adoption, its reversal against a dead end, its promote-then-
+// attack bite, and the segment countdown that turns an orphaned segment into a
+// new head after the train is cut in half.
+func TestOracleParityPedeScenario(t *testing.T) {
+	if err := oracleAdapterRun(t, "pede.scn", "pede.capture.txt", nil); err != nil {
+		t.Fatalf("oracle divergence: %v", err)
+	}
+}
+
+// TestOracleParityHuntScenario covers the energizer inversion — fleeing seekers,
+// both BoardAttack score branches, and the CurrentTick-driven player flash that
+// M16.3 had to exclude before the phase solver existed — plus a duplicator whose
+// source is a creature, so the copies hunt with the original's stat.
+func TestOracleParityHuntScenario(t *testing.T) {
+	if err := oracleAdapterRun(t, "hunt.scn", "hunt.capture.txt", nil); err != nil {
 		t.Fatalf("oracle divergence: %v", err)
 	}
 }

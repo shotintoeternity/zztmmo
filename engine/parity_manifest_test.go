@@ -74,11 +74,13 @@ var (
 )
 
 // validAssignedTasks are the later-M16 tasks a row may be assigned to (M16.1
-// onward, including the audit sub-task M16.16a and the M16.0 touch-controls gap
-// task M16.18a). M16.0 itself is not a valid target — a row cannot be verified
+// onward, including the audit sub-tasks M16.5a and M16.16a and the M16.0
+// touch-controls gap task M16.18a). M16.0 itself is not a valid target — a row cannot be verified
 // by the task that only defines the contract.
 func validAssignedTask(id string) bool {
-	if id == "M16.16a" || id == "M16.18a" {
+	// M16.5a is the point-blank shot-ownership gap task filed by the M16.5
+	// creature/projectile sweep (NOTES.md 2026-07-29).
+	if id == "M16.5a" || id == "M16.16a" || id == "M16.18a" {
 		return true
 	}
 	m := regexp.MustCompile(`^M16\.(\d+)$`).FindStringSubmatch(id)
@@ -233,6 +235,16 @@ func TestParityManifestScaffold(t *testing.T) {
 				if o, ok := oldByID[r.ID]; ok {
 					if o.Status != "unverified" {
 						rows[i].Status = o.Status
+						// A landed sweep also owns which task closes the row:
+						// a gap task filed against it (M16.5a) is not derivable
+						// from the code, so regeneration must not reset it.
+						if o.AssignedTask != "" {
+							rows[i].AssignedTask = o.AssignedTask
+						}
+					}
+					// Never downgrade a recorded deviation to exact.
+					if o.Parity == "deviation" {
+						rows[i].Parity, rows[i].Deviation = o.Parity, o.Deviation
 					}
 					if o.Test != "" {
 						rows[i].Test = o.Test
@@ -400,6 +412,13 @@ func deriveElementRows(t *testing.T) []parityRow {
 			row.Parity = "deviation"
 			row.Deviation = "mp-respawn"
 			row.Notes = "also subject to collision-pushout and friendly-fire-policy; single-player V behavior is exact"
+		}
+		// A bullet's owner decides who it may damage, which is where the
+		// multiplayer friendly-fire policy replaces vanilla's single-player
+		// assumption (M2.4/M8.1; pinned by the M16.5 sweep).
+		if i == E_BULLET {
+			row.Parity = "deviation"
+			row.Deviation = "friendly-fire-policy"
 		}
 		rows = append(rows, row)
 	}

@@ -225,14 +225,21 @@ appear, in order, at the engine's queue positions. Board tiles/stats/RNG are
 covered via their screen projection — memory-level capture out of the emulated
 data segment is a possible later extension, not part of this seam.
 
-**Scenario-design exclusions** (M16.3): no checkpoint is taken while the
-player is energized — the flash color derives from vanilla's play-start
-`Random(100)` CurrentTick, which the engine deliberately pins (M3.11) — and no
-checkpoint depends on a message that crossed the initial pause boundary, where
-vanilla's global freeze and the fork's per-player freeze (deviation
-`per-player-modal-freeze`) tick board stats differently. Sweep scenarios also
-avoid vanilla's self-shot ricochet damage, which the friendly-fire policy
-suppresses (deviation `friendly-fire-policy`, pinned by the M16.5 bullet row).
+**Scenario-design exclusions.** No checkpoint depends on a message that crossed
+the initial pause boundary, where vanilla's global freeze and the fork's
+per-player freeze (deviation `per-player-modal-freeze`) tick board stats
+differently (M16.3). Sweep scenarios avoid vanilla's self-shot ricochet damage,
+which the friendly-fire policy suppresses (deviation `friendly-fire-policy`,
+pinned by the M16.5 bullet row). M16.5 adds two more: no scenario drives the
+player to 0 health, because death is the `mp-respawn` deviation rather than
+vanilla's game over (`TestSinglePlayerDeathIsRespawnDeviation` carries that
+branch instead); and no scenario fires or receives a point-blank shot, because
+`BoardShoot`'s ownership test is inverted against GAME.PAS:1246 — the M16.5
+finding, filed as gap task **M16.5a** and pinned by
+`TestPointBlankShotOwnershipGap`. M16.3's exclusion of energized checkpoints is
+**lifted**: it existed only because the adapter pinned CurrentTick to 0, and the
+M16.4 phase solver recovers it instead, so ORCLHUNT compares the energizer flash
+like any other cell.
 
 **Documented representation normalizations** (the complete list — anything else
 that differs is a defect):
