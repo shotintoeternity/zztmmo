@@ -1,0 +1,81 @@
+# ORCLPUSH: the push family — boulders and both sliders (M16.4).
+#
+# ElementPushablePush (ELEMENTS.PAS) is one recursive procedure covering three
+# separate decisions, and this scenario separates them:
+#
+#   1. is the touched tile pushable at all — a boulder always is, an NS slider
+#      only when deltaX is 0, an EW slider only when deltaY is 0;
+#   2. what sits behind it — the push recurses into a chain, and only completes
+#      when the far end lands on a walkable tile;
+#   3. what happens to an unwalkable blocker — it is damaged away only when it
+#      is Destructible, which a gem is and a breakable wall is not.
+#
+# The player runs down a clear highway at x=3 and steps east into one station
+# per stop, then crosses to two stations that are pushed vertically. Refusals
+# are checkpointed as deliberately as the successes: ElementPushableTouch queues
+# its click whether or not the push lands, so a refused station is an audible
+# click over an unchanged board, not a no-op.
+world ORCLPUSH
+seed 0
+boot 240
+capture title
+play
+# unpause and walk down the highway to the first station
+move down
+move down
+# A: lone boulder with empty ground behind it — boulder 4->5, player 3->4
+move right
+capture push-boulder
+move left
+move down
+move down
+# B: boulder backed by solid — nothing is pushable behind it, so the push is
+# refused and the player stays put
+move right
+capture refuse-boulder
+move down
+move down
+# C: boulder chain ending in empty — the recursion advances both boulders
+move right
+capture push-chain
+move left
+move down
+move down
+# D: boulder backed by a breakable wall — breakable is neither pushable nor
+# Destructible, so the chain refuses and the wall survives intact
+move right
+capture refuse-breakable
+move down
+move down
+# E: boulder backed by a gem — a gem IS Destructible, so it is crushed rather
+# than collected (Gems stays 0) and the boulder takes its square
+move right
+capture crush-gem
+move left
+move down
+move down
+# F: NS slider pushed east — off-axis, so it refuses
+move right
+capture refuse-slider-ns
+move down
+move down
+# G: EW slider pushed east — on-axis, so it slides
+move right
+capture push-slider-ew
+# cross to the vertical stations along row 19
+move down
+move right
+move right
+move right
+move right
+# H: NS slider pushed south — on-axis, so it slides
+move down
+capture push-slider-ns
+move up
+move right
+move right
+move right
+move right
+# I: EW slider pushed south — off-axis, so it refuses
+move down
+capture refuse-slider-ew

@@ -1393,8 +1393,9 @@
       "contract": "V",
       "authority": "reference/reconstruction-of-zzt/SRC ELEMENTS.PAS; ANALYSIS.md",
       "parity": "exact",
-      "status": "unverified",
-      "assignedTask": "M16.4"
+      "test": "TestOracleParityPushScenario",
+      "fixture": "fixtures/oracle/push.capture.txt",
+      "status": "pass"
     },
     {
       "id": "elem.breakable",
@@ -1728,8 +1729,9 @@
       "contract": "V",
       "authority": "reference/reconstruction-of-zzt/SRC ELEMENTS.PAS; ANALYSIS.md",
       "parity": "exact",
-      "status": "unverified",
-      "assignedTask": "M16.4"
+      "test": "TestOracleParityPushScenario",
+      "fixture": "fixtures/oracle/push.capture.txt",
+      "status": "pass"
     },
     {
       "id": "elem.slider-ns",
@@ -1738,8 +1740,9 @@
       "contract": "V",
       "authority": "reference/reconstruction-of-zzt/SRC ELEMENTS.PAS; ANALYSIS.md",
       "parity": "exact",
-      "status": "unverified",
-      "assignedTask": "M16.4"
+      "test": "TestOracleParityPushScenario",
+      "fixture": "fixtures/oracle/push.capture.txt",
+      "status": "pass"
     },
     {
       "id": "elem.slime",

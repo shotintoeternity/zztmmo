@@ -3070,3 +3070,62 @@ Merge-preserving regeneration, additions only.
 Not self-certified: the DoD's "a successful live generation loads and plays
 across every generated board" needs a real API key and a browser, per the
 M17.3/M17.7 lesson about certifying live behavior from a test suite.
+
+## 2026-07-29 — M16.4 (partial): the push family, and the CurrentTick problem
+
+The push family landed: `fixtures/oracle/ORCLPUSH.zwd` + `push.scn` +
+`push.capture.txt` and `TestOracleParityPushScenario`, covering `elem.boulder`,
+`elem.slider-ns`, and `elem.slider-ew`. `ElementPushablePush` is one recursive
+procedure making three separate decisions, and the world separates them into
+nine stations: pushable-or-not (boulder always, NS slider only when deltaX is 0,
+EW slider only when deltaY is 0), what sits behind (chain recursion), and what
+happens to an unwalkable blocker (damaged away only when Destructible).
+
+Two authoring corrections worth recording, both found by the oracle disagreeing
+with my prediction rather than by reading code:
+
+- **Breakable is neither Pushable nor Destructible.** I had designed a station
+  where a boulder chain crushes a breakable wall and both boulders advance. The
+  real ZZT.EXE refused the whole chain and left the wall intact — and the engine
+  agreed, so this was my error, not a defect. Breakables are destroyed by
+  *bullets* (BoardDamageTile from the shot path), never by being pushed into.
+- **A gem IS Pushable and Destructible, so a boulder crushes it.** The gem is
+  removed and the boulder takes its square, and the Gems counter stays 0 — the
+  player gets nothing. That is now station E, and it is the only push station
+  that exercises the `BoardDamageTile` branch.
+
+`TestOracleWorldsMatchZWDSources` only auto-wrote a `.ZZT` when it was *missing*,
+so an edited oracle world could not be re-pinned the way oracle/README.md says
+(`ZZT_PARITY_REGEN=1` then `make oracle-regen`) — you had to delete the binary
+first, losing the old bytes before the new captures existed. The regen switch now
+covers drift as well. Not a weakened gate: without the env var, drift is still a
+hard failure.
+
+### The blocker for the rest of M16.4
+
+`CurrentTick := Random(100)` at play start (GAME.PAS:1515, ported at
+game.go:1995). M16.3 handled this by pinning the adapter's CurrentTick to 0 and
+writing phase-insensitive scenarios — fine for terrain and items, but **three
+M16.4 families draw straight off CurrentTick**:
+
+- `ElementConveyorCWDraw` / `CCWDraw`: `CurrentTick / Cycle % 4`
+- `ElementTransporterDraw`: `CurrentTick / stat.Cycle % 4`
+- `ElementSpinningGunDraw`: `CurrentTick % 8`
+
+`compareCheckpoint` compares all 60x25 cells exactly, so those glyphs diverge on
+phase alone. CurrentTick is not only cosmetic either: `GameStep`'s cycle stagger
+gates which stats tick on which frame, so the phase is a real initial condition.
+
+The intended fix is to **solve for it rather than import it**: add a scenario
+directive that makes the adapter search CurrentTick over 0..419, keep the
+candidates that reproduce the first post-play checkpoint, and require one of them
+to reproduce *every* checkpoint. That imports no value from the capture by hand —
+it recovers one unknown initialization scalar and leaves every later checkpoint
+an unconditioned prediction, so a wrong draw or a wrong stagger still fails. A
+brute-force replay per candidate is cheap at this board size.
+
+Deliberately not attempted yet, because a half-built phase solver is worse than
+none: the remaining families (conveyors, duplicator, pusher, bomb, blink
+wall/rays, transporter, spinning gun) are blocked behind it or trivial once it
+exists. `elem.passage` is assigned to M16.4 but is already exercised by M16.3's
+ORCLPASS scenario; it needs a manifest status change, not new coverage.

@@ -638,6 +638,14 @@ func TestOracleParityTimeScenario(t *testing.T) {
 	}
 }
 
+// The M16.4 sweep scenarios: movers and devices.
+
+func TestOracleParityPushScenario(t *testing.T) {
+	if err := oracleAdapterRun(t, "push.scn", "push.capture.txt", nil); err != nil {
+		t.Fatalf("oracle divergence: %v", err)
+	}
+}
+
 // TestMonitorTickExitKeys pins ElementMonitorTick's semantics (ELEMENTS.PAS:
 // the title-screen monitor requests a play-loop exit for exactly the title
 // menu keys and consumes no other input). The monitor's on-screen behavior is

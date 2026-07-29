@@ -50,6 +50,19 @@ func TestOracleWorldsMatchZWDSources(t *testing.T) {
 			t.Fatalf("read %s: %v", zztPath, err)
 		}
 		if !bytes.Equal(compiled, committed) {
+			// Re-pinning a world whose .zwd was deliberately edited is the same
+			// maintainer act as compiling a new one (oracle/README.md), so the
+			// regen switch covers drift too. Without this an authoring edit could
+			// only be re-pinned by deleting the .ZZT first, which the README does
+			// not say and which loses the old bytes before the captures are
+			// re-recorded against the new ones.
+			if parityRegen() {
+				if err := os.WriteFile(zztPath, compiled, 0o644); err != nil {
+					t.Fatalf("write %s: %v", zztPath, err)
+				}
+				t.Logf("re-pinned %s → %s (%d bytes, %s set); run `make oracle-regen` now", zwdPath, zztPath, len(compiled), parityRegenEnv)
+				continue
+			}
 			t.Errorf("%s no longer matches its committed %s (source or ZWD compiler drifted); re-pin with %s=1 and re-run `make oracle-regen`",
 				zwdPath, zztPath, parityRegenEnv)
 		}
