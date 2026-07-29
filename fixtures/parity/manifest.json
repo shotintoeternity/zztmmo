@@ -1435,11 +1435,11 @@
       "authority": "reference/reconstruction-of-zzt/SRC ELEMENTS.PAS; ANALYSIS.md",
       "parity": "deviation",
       "deviation": "friendly-fire-policy",
-      "test": "TestOracleParityFireScenario,TestOracleParityShotScenario,TestPointBlankShotOwnershipGap",
+      "test": "TestOracleParityFireScenario,TestOracleParityShotScenario,TestPointBlankShotOwnership",
       "fixture": "fixtures/oracle/fire.capture.txt",
-      "status": "gap",
+      "status": "pass",
       "assignedTask": "M16.5a",
-      "notes": "flight, water, both perpendicular ricochets, enemy-vs-player damage, player-vs-creature damage and score, and bullet-vs-bullet ownership are oracle-backed (ORCLFIRE). Self-shot suppression is the friendly-fire deviation. GAP: BoardShoot's point-blank ownership test is inverted against GAME.PAS:1246, so a player cannot shoot an adjacent monster and an adjacent monster cannot shoot the player. Filed as M16.5a; also affects elem.player and elem.spinning-gun. The OBJECT/SCROLL `SHOT` send a spent bullet makes is OOP, covered by M16.6"
+      "notes": "flight, water, both perpendicular ricochets, enemy-vs-player damage, player-vs-creature damage and score, and bullet-vs-bullet ownership are oracle-backed (ORCLFIRE). Self-shot suppression is the friendly-fire deviation. M16.5a closed the point-blank half: BoardShoot's ownership test now carries GAME.PAS:1246's sense, and ORCLFIRE's Blank Bay pins a player point-blanking a monster in two axes (pb-east, pb-south) and an enemy point-blanking the player (pb-point-blank). The OBJECT/SCROLL `SHOT` send a spent bullet makes is OOP, covered by M16.6"
     },
     {
       "id": "elem.centipede-head",
@@ -1705,11 +1705,11 @@
       "authority": "reference/reconstruction-of-zzt/SRC ELEMENTS.PAS; ANALYSIS.md",
       "parity": "deviation",
       "deviation": "mp-respawn",
-      "test": "TestOracleParityMoveScenario,TestOracleParityItemScenario,TestOracleParityShotScenario,TestOracleParityTimeScenario,TestDeathRespawnInventoryIsolation",
+      "test": "TestOracleParityMoveScenario,TestOracleParityItemScenario,TestOracleParityShotScenario,TestOracleParityTimeScenario,TestOracleParityFireScenario,TestDeathRespawnInventoryIsolation",
       "fixture": "fixtures/oracle/main.capture.txt",
       "status": "pass",
-      "assignedTask": "M16.3",
-      "notes": "also subject to collision-pushout and friendly-fire-policy; single-player V behavior is exact"
+      "assignedTask": "M16.5a",
+      "notes": "also subject to collision-pushout and friendly-fire-policy; single-player V behavior is exact. M16.5a adds the point-blank half of PlayerTick's shot: ELEMENTS.PAS spends ammo and clicks only when BoardShoot resolves, so ORCLFIRE's Blank Bay reads the ownership rule off the sidebar (pb-east, pb-south) as well as off the board"
     },
     {
       "id": "elem.pusher",
@@ -1831,11 +1831,11 @@
       "contract": "V",
       "authority": "reference/reconstruction-of-zzt/SRC ELEMENTS.PAS; ANALYSIS.md",
       "parity": "exact",
-      "test": "TestOracleParityDeviceScenario,TestOracleParityRideScenario",
+      "test": "TestOracleParityDeviceScenario,TestOracleParityRideScenario,TestOracleParityFireScenario",
       "fixture": "fixtures/oracle/ride.capture.txt",
       "status": "pass",
-      "assignedTask": "M16.4",
-      "notes": "rotation from ORCLDEV; both aim branches firing from ORCLRIDE, with p1 8 / p2 9 forcing both random draws so the outcome is RNG-free. M16.5: a gun standing in the player's row takes the same zero-delta self-shot as elem.tiger \u2014 part of gap M16.5a"
+      "assignedTask": "M16.5a",
+      "notes": "rotation from ORCLDEV; both aim branches firing from ORCLRIDE, with p1 8 / p2 9 forcing both random draws so the outcome is RNG-free. M16.5a adds the third case, from ORCLFIRE's Blank Bay: a gun in the player's own ROW, whose vertical shot has delta Signum(0)=0 and lands on its own square. Vanilla refuses it and falls through to the horizontal shot, which point-blanks the player for 10 a tick while the gun survives (pb-point-blank, pb-gun-alive) \u2014 under the inverted ownership test the gun destroyed itself instead"
     },
     {
       "id": "elem.star",
@@ -1948,11 +1948,11 @@
       "contract": "V",
       "authority": "reference/reconstruction-of-zzt/SRC ELEMENTS.PAS; ANALYSIS.md",
       "parity": "exact",
-      "test": "TestOracleParityFireScenario,TestPointBlankShotOwnershipGap",
+      "test": "TestOracleParityFireScenario,TestPointBlankShotOwnership",
       "fixture": "fixtures/oracle/fire.capture.txt",
-      "status": "gap",
+      "status": "pass",
       "assignedTask": "M16.5a",
-      "notes": "firing (P2 27 bullets, P2 155 stars), aim selection and the ElementLionTick movement half are oracle-backed. GAP: at close range its vertical shot has delta Signum(0)=0 and lands on its own square, which vanilla refuses and the fork accepts (BoardShoot ownership inversion) \u2014 the tiger destroys itself. Filed as M16.5a"
+      "notes": "firing (P2 27 bullets, P2 155 stars), aim selection and the ElementLionTick movement half are oracle-backed. At close range its vertical shot has delta Signum(0)=0 and lands on its own square; M16.5a restored vanilla's refusal of that shot, so the tiger falls through to the horizontal one instead of destroying itself (TestPointBlankShotOwnership; the identical firing half in elem.spinning-gun is oracle-backed at point-blank range in ORCLFIRE's Blank Bay)"
     },
     {
       "id": "elem.torch",

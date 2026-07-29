@@ -935,8 +935,12 @@ func TestOracleParityBeastScenario(t *testing.T) {
 // TestOracleParityFireScenario covers bullets by source and stars: an enemy
 // stream that damages the player, a player bullet that annihilates one and kills
 // a bear for score, both perpendicular ricochet branches, and a star tiger whose
-// stars attack a breakable and then the player. Point-blank shots are absent by
-// design — see fixtures/oracle/fire.scn and TestPointBlankShotOwnershipGap.
+// stars attack a breakable and then the player. Its Blank Bay act, added by
+// M16.5a, covers the point-blank half of the same ownership rule: a player
+// killing an adjacent monster in two axes, an enemy point-blanking the player,
+// and a spinning gun in the player's own row refusing its zero-delta shot at
+// itself instead of destroying itself (fixtures/oracle/fire.scn documents why
+// each shooter can be held still).
 func TestOracleParityFireScenario(t *testing.T) {
 	if err := oracleAdapterRun(t, "fire.scn", "fire.capture.txt", nil); err != nil {
 		t.Fatalf("oracle divergence: %v", err)

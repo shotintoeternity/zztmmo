@@ -53,12 +53,37 @@
 # E_PLAYER and E_BREAKABLE alike. The breakable at 56,13 takes the first star;
 # the ones behind it reach the player, 10 health each.
 #
-# What is NOT here, deliberately: a point-blank shot in either direction. The
-# fork's BoardShoot inverts vanilla's `(Element = E_PLAYER) = Boolean(source)`
-# ownership test, so a player cannot shoot an adjacent monster and an adjacent
-# monster cannot shoot the player — the M16.5 finding, filed as gap task M16.5a
-# and pinned by TestPointBlankShotOwnershipGap. Every tiger here is kept more
-# than two columns from the player for the same reason.
+# Blank Bay (reached over Fire Bay's south edge, column 3) — the point-blank
+# station M16.5 could not write, added by M16.5a once BoardShoot's ownership test
+# `(Element = E_PLAYER) = Boolean(source)` (GAME.PAS:1246) was restored. It is the
+# other half of the ownership rule the bullet stream above tests in flight: what
+# happens when the shot never becomes a stat at all because the square it is
+# fired into is already occupied.
+#   - two RESTING ruffians, one east of the arrival square and one south of it
+#     (p2 9 makes the wake test `(P2 + 8) <= Random(17)` unsatisfiable, so they
+#     never move, never wake, and never take a turn — the only way to hold a
+#     creature still next to the player). The player point-blanks each one: a
+#     player shot may damage anything Destructible that is not a player, so both
+#     die where they stand. Ammo is the tell — ELEMENTS.PAS PlayerTick spends a
+#     shot only when BoardShoot returns true, so an inverted test costs nothing
+#     and kills nothing.
+#   - a spinning gun at 8,5 with p1 8 / p2 9, the ORCLRIDE configuration: it
+#     always fires and always fires the AIMED shot, so both random draws happen
+#     and neither decides anything. Its vertical branch is what makes it worth
+#     standing next to. ElementSpinningGunTick (and ElementTigerTick) try the
+#     vertical shot first whenever `Difference(X, playerX) <= 2`, and for a
+#     shooter in the player's own ROW that shot's delta is Signum(0) = 0 — the gun
+#     fires at its own square. Vanilla refuses that shot (the shooter is not a
+#     player, and neither is its own tile) and falls through to the horizontal
+#     one; the inverted test accepted it and blew the gun up. So:
+#       * approached down column 9, one row at a time, the gun is out of its own
+#         row: it fires NORTH up column 8 into the backstop at 8,3, every bullet
+#         dying against the solid one frame later. The player is never in that
+#         column, so the approach is free.
+#       * stepping into 9,5 puts the player in the gun's row. The vertical shot
+#         at its own square is refused, the horizontal one point-blanks the
+#         player for 10 a tick, and the gun is STILL THERE afterwards. Under the
+#         defect the gun destroyed itself here and the player took nothing.
 world ORCLFIRE
 seed 0
 phase
@@ -108,9 +133,67 @@ move down
 shoot right
 settle 30
 capture ricochet-south
+# Down column 3 and over the south edge into Blank Bay.
+move down
+move down
+move down
+move down
+move down
+move down
+move down
+move down
+move down
+move down
+capture pb-arrive
+# One step off the arrival square, then a point-blank shot each way: east into
+# the resting ruffian at 4,2, south into the one at 3,3.
+move down
+shoot right
+capture pb-east
+shoot down
+capture pb-south
+# East along row 2, then down column 9 to the gun's row. Every frame of the
+# approach the gun is firing north into its backstop.
+move right
+move right
+move right
+move right
+move right
+move right
+move down
+move down
+capture pb-aimed
+# Into 9,5: the gun's own row.
+move down
+capture pb-point-blank
+move up
+settle 8
+capture pb-gun-alive
+# Back along row 2 and out over the north edge into Fire Bay, then up column 3
+# to the arrival row.
+move up
+move up
+move left
+move left
+move left
+move left
+move left
+move left
+move up
+move up
+capture pb-return
+move up
+move up
+move up
+move up
+move up
+move up
+move up
+move up
+move up
+move up
+move up
 # Back up to the arrival row and out over the west edge into Star Bay.
-move up
-move up
 move up
 move left
 move left

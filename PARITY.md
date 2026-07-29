@@ -230,13 +230,15 @@ the initial pause boundary, where vanilla's global freeze and the fork's
 per-player freeze (deviation `per-player-modal-freeze`) tick board stats
 differently (M16.3). Sweep scenarios avoid vanilla's self-shot ricochet damage,
 which the friendly-fire policy suppresses (deviation `friendly-fire-policy`,
-pinned by the M16.5 bullet row). M16.5 adds two more: no scenario drives the
+pinned by the M16.5 bullet row). M16.5 adds one more: no scenario drives the
 player to 0 health, because death is the `mp-respawn` deviation rather than
 vanilla's game over (`TestSinglePlayerDeathIsRespawnDeviation` carries that
-branch instead); and no scenario fires or receives a point-blank shot, because
-`BoardShoot`'s ownership test is inverted against GAME.PAS:1246 — the M16.5
-finding, filed as gap task **M16.5a** and pinned by
-`TestPointBlankShotOwnershipGap`. M16.3's exclusion of energized checkpoints is
+branch instead). M16.5's second exclusion — no scenario fires or receives a
+point-blank shot, because `BoardShoot`'s ownership test was inverted against
+GAME.PAS:1246 — is **lifted**: gap task **M16.5a** restored vanilla's sense and
+added ORCLFIRE's Blank Bay, which fires point-blank in both ownership directions
+and stands the player next to a spinning gun in its own row.
+M16.3's exclusion of energized checkpoints is
 **lifted**: it existed only because the adapter pinned CurrentTick to 0, and the
 M16.4 phase solver recovers it instead, so ORCLHUNT compares the energizer flash
 like any other cell.

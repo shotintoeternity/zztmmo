@@ -3497,3 +3497,74 @@ Death is the other thing no scenario may reach: vanilla's game over versus the
 fork's respawn is deviation `mp-respawn`, so every scenario ends with the player
 alive and `TestSinglePlayerDeathIsRespawnDeviation` carries that branch instead.
 No simulation code changed in M16.5; the replay fixture is unchanged.
+
+## 2026-07-29 — M16.5a: the line, restored — and where the fix had to stop short
+
+The one-line fix M16.5 specified (`game.go`, GAME.PAS:1246's
+`((Element = E_PLAYER) = Boolean(source))`) turned out to have a decision inside
+it, because vanilla's test is EXCLUSIVE and the fork's multiplayer rule is not.
+
+Vanilla's term is `(target is player) = (shooter is an enemy)`, so a player-owned
+shot may damage anything Destructible **except** a player. Written that way the
+M8.1 friendly-fire block sitting inside the branch becomes dead code, and
+`TestPointBlankDamagesUnenergizedTargetWithFriendlyFire` — a landed
+multiplayer behaviour — goes red: point-blanking another player would stop
+working entirely, with `FriendlyFire` on or off.
+
+Resolved by writing the term the way `ElementBulletTick` already writes it
+(ELEMENTS.PAS: `(Element = E_PLAYER) or (P1 = 0)`, i.e. target-is-player OR
+shooter-is-player). That union is vanilla's rule plus exactly one extra case —
+a player-owned shot at a player — which:
+
+- cannot arise in single player, because the fork's own player is never standing
+  on the square it shoots into, so single-player parity is exact and the TOWN
+  replay hash does not move (no `DEVIATION:` line needed); and
+- in multiplayer is deviation `friendly-fire-policy`, gated by the same
+  `!FriendlyFire || target == owner` block a bullet in flight is gated by.
+
+So point-blank and in-flight damage now read the ownership rule off identical
+expressions, which is the property that was actually missing: the port had them
+disagreeing.
+
+### The oracle station: how to hold a shooter still next to the player
+
+ORCLFIRE gains a fourth board, Blank Bay, over Fire Bay's south edge at column 3.
+Two problems had to be solved to make a point-blank shot comparable at all.
+
+**A creature the player can shoot without it moving first.** Any creature in the
+player's row seeks toward the player and `ElementLionTick` attacks on contact, so
+it bites (and dies of its own bite) before the player's shot can land. A RESTING
+ruffian is the only draw-free way to hold one still: `P2 9` makes the wake test
+`(P2 + 8) <= Random(17)` unsatisfiable, so with `StepX = StepY = 0` it never
+takes a turn at all. One east of the arrival square and one south of it give the
+player a point-blank kill in each axis. Ammo is the tell — `ELEMENTS.PAS`
+PlayerTick spends a shot only when `BoardShoot` returns true, so under the
+inverted test the shot cost nothing and killed nothing.
+
+**A shooter that fires point-blank AT the player and survives doing it.** A tiger
+adjacent to the player fires and then bites, killing itself, which would hide the
+self-shot question. A spinning gun (`p1 8 / p2 9`, the ORCLRIDE configuration)
+has the same firing half and never moves. Its approach has to stay off its row
+and column: at 8,5 with a solid backstop at 8,3, every frame of the descent down
+column 9 makes it fire NORTH into 8,4 and the bullet dies against the backstop
+one frame later, so the square the player is about to step into is never occupied
+— and the vertical branch succeeding is also what stops it firing horizontally
+into that square. Stepping into 9,5 puts the player in the gun's row: the
+vertical shot's delta becomes `Signum(0) = 0`, the gun fires at its own square,
+vanilla refuses it, and the horizontal shot point-blanks the player for 10 a
+tick. The real ZZT.EXE records 90 → 70 across the two gun ticks of that step and
+the gun still standing at 8,5 afterwards. Under the defect the gun destroyed
+itself and the player took nothing.
+
+Restoring the old condition makes the new capture unreproducible at every one of
+the 100 phases, so the station fails closed rather than merely passing. The gun
+also tightens the scenario's own phase pin: ORCLFIRE went from 17 satisfying play
+phases to 8, because `ElementSpinningGunDraw` reads its glyph off
+`CurrentTick mod 8` and the board's other stats only expose its parity.
+
+`TestPointBlankShotOwnershipGap` is now `TestPointBlankShotOwnership` and asserts
+the vanilla outcomes, including the third consequence the gap test could not
+state as a positive: an enemy shot spares a creature standing in front of it.
+PARITY.md §7's "no point-blank shot in either direction" exclusion is lifted, and
+`elem.bullet`, `elem.tiger`, `elem.player` and `elem.spinning-gun` are `pass`
+again with the Blank Bay checkpoints as evidence.

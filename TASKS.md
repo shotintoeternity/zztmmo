@@ -2346,7 +2346,7 @@ gap task has landed.
   **Defect found: `BoardShoot`'s point-blank ownership test is inverted** — filed
   as M16.5a below, with `elem.bullet` and `elem.tiger` set to `gap`.
 
-- [ ] **M16.5a — Close the point-blank shot-ownership inversion (M16.5 gap task;
+- [x] **M16.5a — Close the point-blank shot-ownership inversion (M16.5 gap task;
   blocks M16.20).** `engine/game.go:1421` translates GAME.PAS:1246's
   `((Element = E_PLAYER) = Boolean(source))` — "the shooter is an enemy" — as
   `== (source >= SHOT_SOURCE_PLAYER_BASE)`, "the shooter is a player", which is
@@ -2368,6 +2368,28 @@ gap task has landed.
   replay hash moves, the commit says `DEVIATION:` with the reason); and the
   manifest rows `elem.bullet`, `elem.tiger`, `elem.player` and
   `elem.spinning-gun` are returned to `pass`/`deviation` with the new evidence.
+
+  Landed. The condition is restored in the form `ElementBulletTick` already
+  carries (`target is player OR shooter is player`), not the exclusive Pascal
+  form: vanilla's `=` would have made the M8.1 friendly-fire block dead code and
+  silently removed player-vs-player point-blank damage, which is landed
+  multiplayer behaviour. The union is vanilla's rule plus exactly one case — a
+  player-owned shot at a player — unreachable in single player and gated inside
+  the branch as deviation `friendly-fire-policy`, so point-blank and in-flight
+  shots now read ownership off identical expressions. The TOWN replay hash did
+  not move (no `DEVIATION:` needed) and all 19 oracle captures reproduce.
+  ORCLFIRE gains a fourth board, Blank Bay: two RESTING ruffians (P2 9 makes the
+  wake test unsatisfiable — the only draw-free way to hold a creature still next
+  to the player) take a point-blank kill in each axis, with ammo as the tell
+  since PlayerTick spends a shot only when `BoardShoot` resolves; and a spinning
+  gun at 8,5 with a backstop at 8,3 point-blanks the player for 90 → 70 while
+  surviving its own `Signum(0)` shot at its own square. Restoring the defect
+  makes the new capture unreproducible at all 100 phases.
+  `TestPointBlankShotOwnershipGap` is now `TestPointBlankShotOwnership` and
+  asserts the vanilla outcomes plus the third consequence the gap test could not
+  state positively: an enemy shot spares a creature standing in front of it.
+  PARITY.md §7's point-blank exclusion is lifted. See NOTES.md for the full
+  account, including why the gun's approach must stay off its own row and column.
 
 - [ ] **M16.6 — ZZT-OOP, scroll, sound, and modal parity sweep.** Enumerate and
   exercise every implemented OOP command, condition, direction, counter,

@@ -1418,7 +1418,28 @@ func (e *Engine) BoardShoot(element byte, tx, ty, deltaX, deltaY int16, source i
 		stat.StepY = deltaY
 		stat.P2 = 100
 		BoardShoot = true
-	} else if e.Board.Tiles[tx+deltaX][ty+deltaY].Element == E_BREAKABLE || ElementDefs[e.Board.Tiles[tx+deltaX][ty+deltaY].Element].Destructible && e.Board.Tiles[tx+deltaX][ty+deltaY].Element == E_PLAYER == (source >= SHOT_SOURCE_PLAYER_BASE) && e.pointBlankEnergizerTicks(tx+deltaX, ty+deltaY) <= 0 {
+	} else if e.Board.Tiles[tx+deltaX][ty+deltaY].Element == E_BREAKABLE || ElementDefs[e.Board.Tiles[tx+deltaX][ty+deltaY].Element].Destructible && (e.Board.Tiles[tx+deltaX][ty+deltaY].Element == E_PLAYER || source >= SHOT_SOURCE_PLAYER_BASE) && e.pointBlankEnergizerTicks(tx+deltaX, ty+deltaY) <= 0 {
+		// M16.5a: the ownership term is GAME.PAS:1246's
+		// `((Element = E_PLAYER) = Boolean(source))`. `source` is 0 for a player
+		// shot and 1 for an enemy one, so `Boolean(source)` reads "the shooter is
+		// an enemy": an enemy shot damages the player, a player shot damages
+		// anything BUT a player. The port translated it as
+		// `== (source >= SHOT_SOURCE_PLAYER_BASE)` — "the shooter is a player" —
+		// which is its negation, so every point-blank outcome was inverted (a
+		// player could not shoot an adjacent monster, a monster could not shoot
+		// the player, and an enemy shot damaged whatever creature it landed on,
+		// which made a tiger in the player's own row destroy itself with its own
+		// Signum(0) vertical shot).
+		//
+		// The form here is BulletTick's (elements.go, ELEMENTS.PAS
+		// ElementBulletTick: `(Element = E_PLAYER) or (P1 = 0)`), which is
+		// vanilla's rule PLUS the one case vanilla's exclusive test rejects:
+		// a player-owned shot at a player. That case cannot arise in single
+		// player — the fork's own player is never on the square it shoots into —
+		// so single-player parity is exact; in multiplayer it is deviation
+		// `friendly-fire-policy`, gated immediately below exactly as a bullet in
+		// flight is.
+		//
 		// M8.1: a player point-blanking a player follows the same no-PvP
 		// ownership rule as BulletTick (M2.4): no damage without FriendlyFire,
 		// and a player never point-blanks themselves. See NOTES.md (M8.1).
