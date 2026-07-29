@@ -3326,3 +3326,57 @@ asserted, it was recorded from the executable and then reproduced.
 
 Still open for M16.4: the conveyor and spinning-gun acting paths, and a status
 change for `elem.passage`.
+
+## 2026-07-29 — M16.4 complete: what the devices actually do
+
+`ORCLRIDE` + `ride.scn` close the two acting paths ORCLDEV deliberately left
+open, and `elem.passage` gets the status change it was owed. Every element row
+assigned to M16.4 is now `pass`, and no mover or device proc is left unassigned:
+the only `unverified` element rows remaining belong to M16.5 (creatures and
+projectiles) and M16.6 (object and scroll).
+
+**Conveyors carrying cargo.** ORCLDEV's rings were empty because a title board
+that moves things cannot be replayed. On a board reached over an edge they can
+be loaded, and the two handednesses separate the two halves of
+`ElementConveyorTick`'s scan: the Clockwise ring at 10,8 is free, so its boulder
+and gem simply revolve one step per tick; the Counter ring at 20,8 has a solid
+square sitting *in* the ring at 19,8, so the scan's run breaks there and the
+cargo cannot come round past it.
+
+**A gun that fires.** `ElementSpinningGunTick`'s firing half is two nested random
+draws, and the honest way past them is to force rather than avoid them: p2 9
+makes `Random(9) < p2 mod 128` true for every possible draw and p1 8 makes
+`Random(9) <= p1` true for every possible draw, so the gun always fires the aimed
+shot and the compared path is RNG-free even though the draws still happen and
+still advance each side's own seed. What is left is the aim, which has two
+branches and gets one gun each: at 40,13 the player is 39 columns away, too far
+for the vertical branch, so it falls through and fires west down the row; at 2,20
+the player is one column away, near enough for the vertical branch, so it fires
+north up its own column. Both fire into solid backstops, so no bullet ever
+ricochets — `BoardShoot` and `ElementBulletTick` are RNG-free, but ricochets are
+M16.5's business, not this sweep's.
+
+**The checkpoint spacing is part of the evidence.** The clockwise ring's
+revolution is 24 frames and the bullet columns repeat every 4, so my first draft
+— captures every 24 frames — produced five checkpoints that were pixel-identical
+and proved almost nothing. The committed intervals are deliberately awkward
+(7, 7, 11, 13, 17, 21 frames). The phase solver's answer says the same thing from
+the other side: 4 of 100 play phases reproduce every checkpoint, spaced 24 apart,
+the same tight pin ORCLDEV gets — against 34 of 100 for ORCLMECH, whose devices
+never draw off CurrentTick at all.
+
+### M16.4 as a whole
+
+Five worlds, five scenarios: ORCLPUSH (the push family), ORCLDEV (devices whose
+glyph rides CurrentTick, and the phase solver that made them comparable),
+ORCLMECH (the devices that accumulate), ORCLBLNK (blink walls, and a ported ZZT
+bug), ORCLRIDE (what conveyors carry and what guns fire). The recurring lesson is
+that the title board is only usable for elements that are *stateless* across the
+boot span, and that everything else has to be walked into over a board edge —
+never a passage, which pauses.
+
+One engine-behaviour change landed across the sweep, in the oracle sound matcher
+rather than the sim: vanilla's `SoundQueue` arbitration is now modelled per cycle,
+and `sameTone` runs the real PIT divisor round trip instead of a rounding fudge.
+No simulation code changed in M16.4 at all — every element matched the real
+ZZT.EXE as ported. The only elements.go edit was a `// ZZT-QUIRK:` comment.

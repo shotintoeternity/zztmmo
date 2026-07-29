@@ -1,0 +1,68 @@
+# ORCLRIDE: what conveyors carry, and what a spinning gun fires (M16.4).
+#
+# ORCLDEV pinned these three elements' animation and their cycle-gate
+# scheduling, but deliberately left their ACTING paths untested: its conveyor
+# rings were empty and its gun carried p2 0, because a title board that moves
+# things cannot be replayed (the `boot 240` span is not a cycle-accurate model of
+# real ZZT booting, so the phase search absorbs boot-count error for animation
+# and never for accumulated state). This scenario closes that gap the way
+# ORCLMECH and ORCLBLNK do: the devices sit on a board reached over a board edge,
+# so everything they do happens inside the fully modelled play span. `phase` is
+# still declared, because all three still draw straight off CurrentTick.
+#
+# ElementConveyorTick walks the eight diagonal neighbours in ring order and
+# shuffles every Pushable tile round by one, but only across runs the scan has
+# decided can move: an empty square re-arms the run, and anything not pushable
+# stops it. Two rings, one of each handedness, separate those cases:
+#
+#   Clockwise at 10,8 — a free ring carrying a boulder and a gem, which simply
+#     revolve, one step per tick, in opposite corners of the same ring
+#   Counter at 20,8 — the same idea with a SOLID square sitting in the ring at
+#     19,8, so the scan's run is broken there and the cargo cannot come round
+#
+# ElementSpinningGunTick's firing half is two nested random draws, and both are
+# forced here rather than avoided: p2 9 makes `Random(9) < p2 mod 128` true for
+# every possible draw, and p1 8 makes `Random(9) <= p1` true for every possible
+# draw. So the gun always fires and always fires the AIMED shot, and the compared
+# path stays free of RNG-dependent outcomes even though the draws still happen.
+# What is left is the aim itself, which has two branches, one per gun:
+#
+#   40,13 — the player's row: |dx| is 39, too far for the vertical branch, so it
+#     falls through to the horizontal one and fires west down the row, into a
+#     solid backstop at 30,13
+#   2,20  — the player's column, near enough (|dx| is 1) for the vertical branch,
+#     so it fires north up its own column into a backstop at 2,15
+#
+# Both guns fire on every one of their ticks, so each checkpoint catches a
+# steady stream of bullets in flight; their spacing is the thing being compared,
+# and it comes out of the gun's cycle against the bullets' own.
+#
+# The checkpoints are spaced by deliberately awkward intervals. The clockwise
+# ring's revolution is 24 frames and the bullet columns repeat every 4, so evenly
+# spaced captures all land on the same instant of both and prove far less than
+# they appear to.
+world ORCLRIDE
+seed 0
+phase
+boot 240
+capture title
+play
+# Ride Hub: unpause and cross the east border opening at 60,13.
+move right
+move right
+move right
+move right
+move right
+capture arrive
+settle 14
+capture riding-a
+settle 14
+capture riding-b
+settle 22
+capture riding-c
+settle 26
+capture riding-d
+settle 34
+capture riding-e
+settle 42
+capture riding-f

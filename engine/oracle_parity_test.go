@@ -865,6 +865,16 @@ func TestOracleParityBlinkScenario(t *testing.T) {
 	}
 }
 
+// TestOracleParityRideScenario closes the acting paths ORCLDEV left open:
+// conveyors carrying cargo round their ring (free and obstructed) and spinning
+// guns actually firing, with both random draws forced so the aim is the only
+// thing left to compare (fixtures/oracle/ride.scn documents the design).
+func TestOracleParityRideScenario(t *testing.T) {
+	if err := oracleAdapterRun(t, "ride.scn", "ride.capture.txt", nil); err != nil {
+		t.Fatalf("oracle divergence: %v", err)
+	}
+}
+
 // TestMonitorTickExitKeys pins ElementMonitorTick's semantics (ELEMENTS.PAS:
 // the title-screen monitor requests a play-loop exit for exactly the title
 // menu keys and consumes no other input). The monitor's on-screen behavior is

@@ -1342,7 +1342,9 @@
       "parity": "exact",
       "test": "TestOracleParityBlinkScenario",
       "fixture": "fixtures/oracle/blink.capture.txt",
-      "status": "pass"
+      "status": "pass",
+      "assignedTask": "M16.4",
+      "notes": "lit ray blocks the player; destroys a Destructible tile in its path and takes the square"
     },
     {
       "id": "elem.blink-ray-ns",
@@ -1354,6 +1356,7 @@
       "test": "TestOracleParityBlinkScenario",
       "fixture": "fixtures/oracle/blink.capture.txt",
       "status": "pass",
+      "assignedTask": "M16.4",
       "notes": "includes the ported ELEMENTS.PAS:845-848 push bug (ZZT-QUIRK in elements.go), pinned by the pushed-into-wall checkpoint"
     },
     {
@@ -1365,7 +1368,9 @@
       "parity": "exact",
       "test": "TestOracleParityBlinkScenario",
       "fixture": "fixtures/oracle/blink.capture.txt",
-      "status": "pass"
+      "status": "pass",
+      "assignedTask": "M16.4",
+      "notes": "P1 start delay and P2 period; lays, damages, retracts"
     },
     {
       "id": "elem.board-edge",
@@ -1389,7 +1394,9 @@
       "parity": "exact",
       "test": "TestOracleParityMechScenario",
       "fixture": "fixtures/oracle/mech.capture.txt",
-      "status": "pass"
+      "status": "pass",
+      "assignedTask": "M16.4",
+      "notes": "armed by touch, pushed while armed; blast radius pinned on the ellipse boundary. No checkpoint falls between the two explosion phases, whose breakable colours are Random(7)"
     },
     {
       "id": "elem.boulder",
@@ -1400,7 +1407,9 @@
       "parity": "exact",
       "test": "TestOracleParityPushScenario",
       "fixture": "fixtures/oracle/push.capture.txt",
-      "status": "pass"
+      "status": "pass",
+      "assignedTask": "M16.4",
+      "notes": "pushed alone, in a chain, and refused; crushes a Destructible blocker, refused by a breakable"
     },
     {
       "id": "elem.breakable",
@@ -1452,9 +1461,11 @@
       "contract": "V",
       "authority": "reference/reconstruction-of-zzt/SRC ELEMENTS.PAS; ANALYSIS.md",
       "parity": "exact",
-      "status": "unverified",
+      "test": "TestOracleParityDeviceScenario,TestOracleParityRideScenario",
+      "fixture": "fixtures/oracle/ride.capture.txt",
+      "status": "pass",
       "assignedTask": "M16.4",
-      "notes": "animation and cycle-gate scheduling pinned by TestOracleParityDeviceScenario; the acting path (conveyor carrying tiles, gun firing) is still unverified"
+      "notes": "animation and cycle gate from ORCLDEV; a ring broken by a solid square from ORCLRIDE"
     },
     {
       "id": "elem.conveyor-cw",
@@ -1463,9 +1474,11 @@
       "contract": "V",
       "authority": "reference/reconstruction-of-zzt/SRC ELEMENTS.PAS; ANALYSIS.md",
       "parity": "exact",
-      "status": "unverified",
+      "test": "TestOracleParityDeviceScenario,TestOracleParityRideScenario",
+      "fixture": "fixtures/oracle/ride.capture.txt",
+      "status": "pass",
       "assignedTask": "M16.4",
-      "notes": "animation and cycle-gate scheduling pinned by TestOracleParityDeviceScenario; the acting path (conveyor carrying tiles, gun firing) is still unverified"
+      "notes": "animation and cycle gate from ORCLDEV; a free ring carrying a boulder and a gem from ORCLRIDE"
     },
     {
       "id": "elem.door",
@@ -1489,7 +1502,9 @@
       "parity": "exact",
       "test": "TestOracleParityMechScenario",
       "fixture": "fixtures/oracle/mech.capture.txt",
-      "status": "pass"
+      "status": "pass",
+      "assignedTask": "M16.4",
+      "notes": "all five branches: copy, push-then-copy, recursive push, refusal, and touching the source for a player standing on the destination"
     },
     {
       "id": "elem.empty",
@@ -1660,8 +1675,11 @@
       "contract": "V",
       "authority": "reference/reconstruction-of-zzt/SRC ELEMENTS.PAS; ANALYSIS.md",
       "parity": "exact",
-      "status": "unverified",
-      "assignedTask": "M16.4"
+      "test": "TestOracleParityPassageScenario",
+      "fixture": "fixtures/oracle/pass.capture.txt",
+      "status": "pass",
+      "assignedTask": "M16.4",
+      "notes": "covered by M16.3 ORCLPASS: teleport to the matching-colour passage, arrival paused, post-passage unpause"
     },
     {
       "id": "elem.player",
@@ -1686,7 +1704,9 @@
       "parity": "exact",
       "test": "TestOracleParityMechScenario",
       "fixture": "fixtures/oracle/mech.capture.txt",
-      "status": "pass"
+      "status": "pass",
+      "assignedTask": "M16.4",
+      "notes": "shoves a boulder to a backstop and stops; includes the out-of-cycle tick a moving pusher gives the pusher behind it"
     },
     {
       "id": "elem.ricochet",
@@ -1740,7 +1760,9 @@
       "parity": "exact",
       "test": "TestOracleParityPushScenario",
       "fixture": "fixtures/oracle/push.capture.txt",
-      "status": "pass"
+      "status": "pass",
+      "assignedTask": "M16.4",
+      "notes": "slides only when deltaY is 0"
     },
     {
       "id": "elem.slider-ns",
@@ -1751,7 +1773,9 @@
       "parity": "exact",
       "test": "TestOracleParityPushScenario",
       "fixture": "fixtures/oracle/push.capture.txt",
-      "status": "pass"
+      "status": "pass",
+      "assignedTask": "M16.4",
+      "notes": "slides only when deltaX is 0"
     },
     {
       "id": "elem.slime",
@@ -1782,9 +1806,11 @@
       "contract": "V",
       "authority": "reference/reconstruction-of-zzt/SRC ELEMENTS.PAS; ANALYSIS.md",
       "parity": "exact",
-      "status": "unverified",
+      "test": "TestOracleParityDeviceScenario,TestOracleParityRideScenario",
+      "fixture": "fixtures/oracle/ride.capture.txt",
+      "status": "pass",
       "assignedTask": "M16.4",
-      "notes": "animation and cycle-gate scheduling pinned by TestOracleParityDeviceScenario; the acting path (conveyor carrying tiles, gun firing) is still unverified"
+      "notes": "rotation from ORCLDEV; both aim branches firing from ORCLRIDE, with p1 8 / p2 9 forcing both random draws so the outcome is RNG-free"
     },
     {
       "id": "elem.star",
@@ -1919,7 +1945,9 @@
       "parity": "exact",
       "test": "TestOracleParityDeviceScenario",
       "fixture": "fixtures/oracle/dev.capture.txt",
-      "status": "pass"
+      "status": "pass",
+      "assignedTask": "M16.4",
+      "notes": "entry only along its own step; a paired transporter facing back re-arms the destination search"
     },
     {
       "id": "elem.water",

@@ -2280,7 +2280,7 @@ gap task has landed.
   unchanged; M16.2 captures regenerate byte-identically. Advisor unavailable
   again this session (no `[ADVISOR]` tag on this task).
 
-- [ ] **M16.4 — Vanilla movers and devices parity sweep.** Cover boulders,
+- [x] **M16.4 — Vanilla movers and devices parity sweep.** Cover boulders,
   sliders, conveyors, duplicators, bombs/explosions, blink walls/rays,
   transporters, pushers, spinning guns, and any remaining non-creature element
   with a draw/tick/touch proc. Pin cycle staggering, `Under` restoration,
@@ -2289,6 +2289,29 @@ gap task has landed.
   mover/device proc; each family has at least one interaction scenario plus its
   meaningful refusal/edge case; all oracle comparisons and existing replays
   are green.
+
+  Landed: five micro-worlds and five scenarios replayed through the real ZZT.EXE
+  (`fixtures/oracle/ORCL{PUSH,DEV,MECH,BLNK,RIDE}.zwd` + `{push,dev,mech,blink,
+  ride}.scn`) and through this engine (`TestOracleParity{Push,Device,Mech,Blink,
+  Ride}Scenario`). All 14 assigned element rows are `pass`; the only `unverified`
+  element rows left belong to M16.5 (creatures/projectiles) and M16.6
+  (object/scroll), so no mover or device proc is unassigned. Every family carries
+  its refusal as deliberately as its success: an off-axis slider, a boulder chain
+  into a breakable, a duplicator whose overflow has nowhere to go, a pusher train
+  jammed at a backstop, a conveyor ring broken by a solid square, a bomb pushed
+  instead of armed.
+  **No simulation code changed.** Every element matched vanilla as ported; the
+  one `engine/elements.go` edit is a `// ZZT-QUIRK:` comment on the blink ray's
+  player push, which ORCLBLNK proves the port carries faithfully
+  (ELEMENTS.PAS:845-848 tests the square to the west and moves the player east
+  anyway). Two pieces of oracle infrastructure did change, both strictly more
+  faithful: a scenario may declare `phase`, and `oracleSolvePhases` recovers the
+  two CurrentTick phases vanilla picks with `Random(100)` (GAME.PAS:1515,1564)
+  rather than importing them; and the sound matcher now runs vanilla's own
+  `SoundQueue` arbitration per cycle and compares tones by the real PIT divisor
+  round trip instead of a rounding fudge. See NOTES.md for the full account,
+  including why an accumulating device cannot live on the title board and why it
+  must be walked into over a board edge rather than a passage.
 
 - [ ] **M16.5 — Vanilla creatures, combat, and projectiles parity sweep.** Cover
   bullets by source, point-blank shots, stars, lions, tigers, bears, ruffians,

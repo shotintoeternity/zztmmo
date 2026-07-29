@@ -26,6 +26,7 @@
     "ORCLNRG.ZZT": "faff6e41dc9a52c7099f451c19c9adca556dab75ed8da1250ae9d720e3805de3",
     "ORCLPASS.ZZT": "cbcaccfe7943dd2097e5ed2dd4ed06f56e8a133f32d578a2b3fe86512a8d7274",
     "ORCLPUSH.ZZT": "df43c25d3712832eec96b5dd8c7578cc0121c6e772f7ec9e13779323e49fa21d",
+    "ORCLRIDE.ZZT": "3cd51acfe787bf06c31ccf623ed47a8d841d6144266a15783a79eb4847bdf327",
     "ORCLSHOT.ZZT": "38b23a17c978c013f3adcf7a58c5d083a2e46be006ce5f89cb3ae88465adb156",
     "ORCLTIME.ZZT": "9f61a60c4ebc587aea0097b7a63f8307dd2803f522abd1528908335c3201127e"
   },
@@ -45,6 +46,7 @@
     "nrg.scn": "1169bb3c0d18d7e438519fdb272ab572b0ea0da41f64c1fbd1d8aeea71372b8b",
     "pass.scn": "3b7e19c3b8e0af924ac4bb1b85a463be9adc6389b69ee9b7ad815f6c45768b63",
     "push.scn": "4fd502c8ff28b44947209191c7a70234aa96f2b1bb1299d1b4e3c6eff817fcf2",
+    "ride.scn": "09948e79f8f58aba494b56cac14abffd74bf268f5cffdc6e18854f7ac95015eb",
     "scroll.scn": "0f15797ccbcdb98b45be98ccb3f9ab04a4b5e447d99e17ebbc8ef5276ba3edd7",
     "shot.scn": "ad4970a0f2dd7b5f3ac1f73d5c81b65312e988f1861969b5646ca1747cb6e333",
     "time.scn": "5501185575a2b151734723655c09f75f291fa218c75a90808ea0d753620016b7"
