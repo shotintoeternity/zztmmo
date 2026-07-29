@@ -9,7 +9,7 @@ const output = await build({
   write: false,
 });
 const source = Buffer.from(output.outputFiles[0].contents).toString("base64");
-const { drawTitleSidebar, titleCommand } = await import(`data:text/javascript;base64,${source}`);
+const { drawTitleSidebar, titleCommand, NO_OCCUPANCY } = await import(`data:text/javascript;base64,${source}`);
 
 function key(code, k = "", opts = {}) {
   return { code, key: k, ctrlKey: false, metaKey: false, altKey: false, ...opts };
@@ -40,4 +40,53 @@ drawTitleSidebar((x, y, color, text) => authWrites.push({ x, y, color, text }), 
 const authSidebarText = authWrites.map((write) => write.text).join("\n");
 assert.match(authSidebarText, / Google sign-in/);
 
-console.log("title.test.mjs: title actions and sidebar menu passed");
+// M17.11: how busy the server is, before the player opens the picker. A quiet
+// server draws nothing rather than zeros, and neither count may reach into the
+// sidebar's right edge (column 79) or collide with the label beside it.
+{
+  const draw = (occupancy) => {
+    const writes = [];
+    drawTitleSidebar((x, y, color, text) => writes.push({ x, y, color, text }), "TOWN", "", false, occupancy);
+    return writes;
+  };
+
+  const quiet = draw(NO_OCCUPANCY).map((write) => write.text).join("\n");
+  assert.doesNotMatch(quiet, /Playing:/, "an empty server shows no playing count");
+  assert.doesNotMatch(quiet, /Editing:/, "an empty server shows no editing count");
+
+  const busy = draw({ players: 12, editors: 3 });
+  const rowOf = (needle) => busy.find((write) => write.text.includes(needle));
+  assert.ok(rowOf(" Playing:"), "the playing total is drawn");
+  assert.ok(rowOf(" Editing:"), "the editing total is drawn");
+  assert.equal(rowOf(" Editing:").y, rowOf(" Playing:").y + 1, "the two totals stack");
+  // sidebarClearLine also writes on these rows; the count is the numeric write.
+  const valueOn = (y) => busy.filter((write) => write.y === y && /^\d+$/.test(write.text));
+  assert.deepEqual(valueOn(rowOf(" Playing:").y).map((w) => w.text), ["12"]);
+  assert.deepEqual(valueOn(rowOf(" Editing:").y).map((w) => w.text), ["3"]);
+  // Nothing on those rows may overlap its neighbour or run off the sidebar.
+  for (const write of busy.filter((w) => w.y === rowOf(" Playing:").y || w.y === rowOf(" Editing:").y)) {
+    assert.ok(write.x >= 60, `sidebar row stays out of the board: ${write.x}`);
+    assert.ok(write.x + write.text.length <= 80, `"${write.text}" runs past column 79`);
+  }
+  const label = rowOf(" Playing:");
+  const value = valueOn(label.y)[0];
+  assert.ok(label.x + label.text.length <= value.x, "the count never overprints its label");
+  // The world name and the menu keep their vanilla rows beneath the totals.
+  assert.ok(busy.find((write) => write.text === " W ").y > rowOf(" Editing:").y);
+
+  // A server with editors but no players collapses the pair upward: a lone
+  // count must not float on the second row with a gap above it.
+  const editorsOnly = draw({ players: 0, editors: 2 });
+  const editing = editorsOnly.find((write) => write.text.includes(" Editing:"));
+  assert.ok(editing, "an editors-only server still reports them");
+  assert.equal(editing.y, busy.find((write) => write.text.includes(" Playing:")).y);
+}
+
+// Occupancy is optional: every existing caller that omits it still draws.
+{
+  const writes = [];
+  drawTitleSidebar((x, y, color, text) => writes.push({ x, y, color, text }), "TOWN");
+  assert.ok(writes.some((write) => write.text === " W "));
+}
+
+console.log("title.test.mjs: title actions, sidebar menu, and occupancy passed");

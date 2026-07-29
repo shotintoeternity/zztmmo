@@ -23,7 +23,9 @@ the owner asks.
 
 1. M17.12 — per-board editing isolation (owner request 2026-07-20, URGENT).
    **Landed**: each member holds their own current board, and edit diffs,
-   cursors, and sidebar state are all scoped to it. Next in line is M17.11.
+   cursors, and sidebar state are all scoped to it. M17.11 (playing/editing
+   occupancy per world, plus a live server-wide total) has also landed. Next in
+   line is M17.10.
 2. M17.9 — collaborator cursors in the editor (owner request 2026-07-20,
    URGENT). **Landed**, plus a follow-up fixing broadcast snapshots that
    hijacked another member's identity and cursor.
@@ -1897,47 +1899,53 @@ these are live breakage in front of the player.
   collaboration and lease conflicts. The two-browser acceptance run itself is the
   owner's to make: this repo has no real-browser harness until M16.9.
 
-- [ ] **M17.11 — Show how many people are playing or editing each world (owner
-  request 2026-07-20).** The picker already carries a per-world player count but
-  says nothing about editors, and there is no at-a-glance total anywhere. A
-  player choosing a world should see where other people actually are.
+- [x] **M17.11 — Show how many people are playing or editing each world (owner
+  request 2026-07-20).** A player choosing a world now sees where other people
+  actually are, and how busy the server is before they open the picker.
 
-  Surgical map. `WorldListEntry.Players` (`engine/world_metadata.go:22`,
-  `json:"players,omitempty"`) is populated from the `playerCounts` map passed
-  into `worldListEntries` (`world_metadata.go:55-65`) by `handleWorlds`
-  (`engine/web_api.go:521`), and the browser already reads `entry.players`
-  (`engine/web/src/main.ts:1060`). Editor occupancy is tracked separately:
-  `EditorSession.Members` / `memberInfo` (`engine/editor_session.go:24`), one
-  session per world via `editorSessionForWorld`
-  (`engine/websocket_server.go:707`). No editor count is exposed on any API.
+  Server. `WorldListEntry` carries `Editors` beside `Players`
+  (`json:"editors,omitempty"`, so a quiet world stays absent from the JSON and
+  the shape stays backward-compatible), populated by `handleWorlds` from
+  `WebSocketServer.EditorCounts()`. That walks the session map under the server
+  lock and asks each session for `MemberCount()` under its own lock; nothing
+  outside `EditorSession` ever reads the mutex-guarded `Members` map.
 
-  1. Add an `Editors int` field alongside `Players` on `WorldListEntry`, with
-     `json:"editors,omitempty"` so the shape stays backward-compatible, and
-     populate it from the live editor sessions the same way `playerCounts` is
-     gathered. Add an `EditorSession` accessor for the member count rather than
-     reaching into `Members` from outside — the map is mutex-guarded
-     (`editor_session.go:24`), and an unsynchronised read is a data race.
-  2. Show both counts in the world picker, distinguishing them (for example
-     `3 playing · 1 editing`). Suppress rather than print zeros so quiet worlds
-     stay uncluttered. Beware the M17.2 count-overlap regression: the count must
-     not collide with the title/author columns.
-  3. Show a total across all worlds on the title screen, so a player sees how
-     busy the server is before opening the picker.
-  4. Counts must be live, not join-time snapshots: they update as players and
-     editors come and go, on the same path that already refreshes the picker.
+  Picker. Each entry's occupancy is its own line beneath the byline — "(2
+  players currently online, 3 editors)", or either half alone — clamped to the
+  entry width, so it cannot collide with the title/author columns at any
+  supported width (the M17.2 regression). Zeros print nothing, and
+  `worldSearchHasOccupancy` keeps the selection highlight's line accounting in
+  step with what is rendered.
 
-  Determinism: occupancy is presentation-only and must never enter the
-  simulation, a replay, or the parity oracle — it is server-observed state, not
-  engine state (hard rule 2).
+  Title screen. `drawTitleSidebar` draws the server-wide total as " Playing:" /
+  " Editing:" rows above the World row, sharing the menu's text column with the
+  counts clear of the labels. A zero draws nothing rather than "0", and the rows
+  collapse upward so a lone count never floats.
 
-  DoD: with two browsers in one world and a third editing another, every client
-  shows the correct per-world playing/editing split and a correct total; counts
-  drop when a client disconnects; zero-counts are hidden; no count text overlaps
-  adjacent picker columns at the narrowest supported width (M15/M17.6 mobile
-  layout); a Go test covers `Editors` population including the concurrent-access
-  path; a web test covers the picker rendering; `go test ./...` and web tests
-  green; replay fixture untouched. Add the M16 parity manifest rows for the new
-  field and any new route, or the M16.0 validator will redden the suite.
+  Live, not a join-time snapshot. `refreshOccupancy` re-reads `/api/worlds` —
+  the path the picker already uses, so no new route — every five seconds while
+  the title screen is up, which is also the whole time the picker can be open.
+  It updates the title total and rewrites the counts of the entries on screen in
+  place (`applyWorldOccupancy`), leaving titles, authors, and Museum provenance
+  alone. Polling stops on entering play or the editor, where the sidebar belongs
+  to the game.
+
+  Determinism: occupancy is server-observed presentation state. It never enters
+  the simulation, a replay, or the parity oracle, and no fixture or hash was
+  touched. No parity manifest row was added: no route is new, and the manifest's
+  dimensions are routes and surfaces rather than JSON fields — `route.api.worlds`,
+  `mode.modal-picker`, and `service.world-picker` already cover these surfaces.
+
+  Verified by `TestM1711WorldsAPIReportsLiveEditingOccupancy` (playing and
+  editing occupancy reported separately per world through `/api/worlds`, falling
+  as people leave, with the counts read concurrently against a churning editor
+  session — clean under `go test -race`), `TestWorldListEntriesReportEditors`
+  (the entry-level contract including omitempty), and web tests covering the
+  picker's editors-only and combined lines with their line accounting, the
+  title-screen totals (stacking, collapse, no overprinting, nothing past column
+  79), and `applyWorldOccupancy`/`worldOccupancyTotal`. The multi-browser
+  acceptance run is the owner's to make: this repo has no real-browser harness
+  until M16.9.
 
 - [ ] **M17.10 — Collaborator colour↔name legend in the editor.** M17.9 removed
   the on-board name label, so a collaborator's identity is now conveyed by

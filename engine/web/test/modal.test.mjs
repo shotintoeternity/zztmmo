@@ -12,7 +12,7 @@ const output = await build({
   write: false,
 });
 const source = Buffer.from(output.outputFiles[0].contents).toString("base64");
-const { handleModalKey, renderModal } = await import(`data:text/javascript;base64,${source}`);
+const { handleModalKey, renderModal, applyWorldOccupancy, worldOccupancyTotal } = await import(`data:text/javascript;base64,${source}`);
 
 // modal.ts reads only event.code / event.key / the modifier flags at runtime.
 function key(code, k = "", opts = {}) {
@@ -343,3 +343,47 @@ console.log("modal.test.mjs: all assertions passed");
     assert.equal(rowOf("Bbb") - rowOf("Aaa"), 3, "the editors-only entry still gets its occupancy line");
   }
 }
+
+// M17.11: the counts are live. A picker left open tracks people arriving and
+// leaving, and the same listing sums into the title screen's server-wide total.
+{
+  const local = [
+    { world: "TOWN", id: "town", title: "Town", author: "Tim", created: "1991", players: 2, editors: 1, source: "local" },
+    { world: "QUIET", id: "quiet", title: "Quiet", author: "Nobody", created: "2000", source: "local" },
+  ];
+  const museum = [
+    { world: "FARAWAY", id: "faraway", title: "Faraway", author: "Someone", created: "1994", source: "museum" },
+  ];
+  const onScreen = [...local, ...museum];
+
+  assert.deepEqual(worldOccupancyTotal(onScreen), { players: 2, editors: 1 }, "the total spans every world");
+
+  // Someone left TOWN, someone else opened the editor on QUIET.
+  applyWorldOccupancy(onScreen, [
+    { world: "TOWN", players: 1, editors: 1 },
+    { world: "QUIET", editors: 2 },
+  ]);
+  assert.deepEqual(
+    onScreen.map((entry) => [entry.world, entry.players ?? 0, entry.editors ?? 0]),
+    [["TOWN", 1, 1], ["QUIET", 0, 2], ["FARAWAY", 0, 0]],
+    "counts follow the fresh listing",
+  );
+  assert.deepEqual(worldOccupancyTotal(onScreen), { players: 1, editors: 3 }, "the total follows too");
+
+  // A local world nobody is in reports nothing; a Museum entry the server does
+  // not host is left alone rather than being invented as an empty world.
+  applyWorldOccupancy(onScreen, []);
+  assert.deepEqual(
+    onScreen.map((entry) => [entry.world, entry.players ?? 0, entry.editors ?? 0]),
+    [["TOWN", 0, 0], ["QUIET", 0, 0], ["FARAWAY", 0, 0]],
+    "an empty listing empties the local worlds",
+  );
+  assert.equal(onScreen[2].players, undefined, "the Museum entry never gained counts");
+  assert.deepEqual(worldOccupancyTotal(onScreen), { players: 0, editors: 0 });
+
+  // Titles and provenance belong to whoever built the entry, not to a refresh.
+  assert.equal(onScreen[0].title, "Town");
+  assert.equal(onScreen[2].source, "museum");
+}
+
+console.log("modal.test.mjs: M17.11 live occupancy passed");

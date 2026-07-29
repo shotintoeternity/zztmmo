@@ -1,11 +1,21 @@
 import "./style.css";
 import { drawSidebar as paintSidebar, updateSidebar as paintSidebarHud } from "./sidebar";
-import { renderModal, handleModalKey, handleModalTextInput, POPUP_Y_CENTERED, type Modal, type ModalTextInput, type WorldSearchEntry } from "./modal";
+import {
+  applyWorldOccupancy,
+  renderModal,
+  handleModalKey,
+  handleModalTextInput,
+  worldOccupancyTotal,
+  POPUP_Y_CENTERED,
+  type Modal,
+  type ModalTextInput,
+  type WorldSearchEntry,
+} from "./modal";
 import { MobileTextInputBridge } from "./mobile_text_input";
 import { createTouchControls } from "./touch_controls";
 import { openHelp } from "./help";
 import { commandKey, isHandledKey, isMovementKey, movementMask, rawKey } from "./keys";
-import { drawTitleSidebar, titleCommand } from "./title";
+import { drawTitleSidebar, titleCommand, NO_OCCUPANCY, type ServerOccupancy } from "./title";
 import { soundNotesFromProtocol, ZztSound } from "./sound";
 import { DreamFailure, generationLines, retryDreamBoard, runDreamGeneration, type GenerationProgress } from "./dream";
 import { drawEditorSidebar, editorMessageIsForBoard, type EditorInspect, type SidebarActionMenu, type SidebarStatPrompt } from "./editor";
@@ -528,6 +538,12 @@ let authStatus: AuthStatus = { enabled: false, authenticated: false };
 // leavingToTitle suppresses the reconnect that a dropped socket normally
 // triggers: a socket we closed on purpose must not come back.
 let leavingToTitle = false;
+// M17.11 occupancy: how many people are playing or editing, server-wide for the
+// title screen and per-world for the picker. Server-observed presentation state
+// — it never enters the simulation. See refreshOccupancy.
+let serverOccupancy: ServerOccupancy = NO_OCCUPANCY;
+let worldPickerEntries: WorldSearchEntry[] = [];
+let occupancyTimer = 0;
 
 // While a modal is up, gameplay keys are swallowed (M4.1: handleModalKey is the
 // only consumer). The simulation does NOT pause behind it (M1.3 deviation), so
@@ -781,7 +797,7 @@ async function showTitle() {
     // Offline: keep whatever board is on screen and still draw the menu, so
     // the player can retry with 'P'.
   }
-  drawTitleSidebar(writeText, friendlyName, authDisplayName(), authStatus.enabled);
+  drawTitleSidebar(writeText, friendlyName, authDisplayName(), authStatus.enabled, serverOccupancy);
   paintOverlay();
   drawScreen();
   canvas.focus();
@@ -789,6 +805,9 @@ async function showTitle() {
     openTitleStream(worldName);
   }
   void refreshAuthStatus();
+  // M17.11: how busy the server is, refreshed for as long as we sit here.
+  void refreshOccupancy();
+  startOccupancyPolling();
 }
 
 async function refreshAuthStatus() {
@@ -799,7 +818,7 @@ async function refreshAuthStatus() {
     authStatus = { enabled: false, authenticated: false };
   }
   if (mode === "title") {
-    drawTitleSidebar(writeText, titleFriendlyName, authDisplayName(), authStatus.enabled);
+    drawTitleSidebar(writeText, titleFriendlyName, authDisplayName(), authStatus.enabled, serverOccupancy);
     paintOverlay();
     drawScreen();
   }
@@ -833,6 +852,7 @@ function leaveToTitle() {
 
 function startPlay() {
   closeTitleStream();
+  stopOccupancyPolling();
   clearScrolls();
   zztSound.setEnabled(true);
   zztSound.resume();
@@ -848,6 +868,7 @@ function startPlay() {
 // never registers this browser with a RoomManager.
 function startEditor() {
   closeTitleStream();
+  stopOccupancyPolling();
   clearScrolls();
   zztSound.setEnabled(false);
   leavingToTitle = false;
@@ -951,12 +972,16 @@ function showHelp(file: string, title: string) {
 // finish: the hangout. Every other world is a game you bring people to.
 const LOBBY_WORLD = "TOWN";
 
+async function fetchWorldEntries(): Promise<WorldSearchEntry[]> {
+  const response = await fetch("/api/worlds");
+  const data = (await response.json()) as { worlds?: (WorldSearchEntry | string)[] };
+  return normalizeWorldEntries(data.worlds ?? []);
+}
+
 async function showWorlds() {
   let worlds: WorldSearchEntry[] = [];
   try {
-    const response = await fetch("/api/worlds");
-    const data = (await response.json()) as { worlds?: (WorldSearchEntry | string)[] };
-    worlds = normalizeWorldEntries(data.worlds ?? []);
+    worlds = await fetchWorldEntries();
   } catch {
     openWindow("ZZT Worlds", ["", "  Not available: the server did not answer.", ""], true);
     return;
@@ -967,6 +992,11 @@ async function showWorlds() {
     return;
   }
 
+  serverOccupancy = worldOccupancyTotal(worlds);
+  // The picker's own local entries, kept so a later refresh can update the
+  // counts the museum-search closure will fall back to (M17.11).
+  worldPickerEntries = worlds;
+
   openModal({
     kind: "worldSearch",
     title: WORLD_SEARCH_TITLE,
@@ -976,6 +1006,52 @@ async function showWorlds() {
     onSelect: (entry) => void selectWorldEntry(entry),
     onQuery: (query) => scheduleMuseumSearch(query, worlds),
   });
+}
+
+// M17.11: occupancy is live, not a join-time snapshot. /api/worlds is the path
+// the picker already reads, so one poll feeds both the picker's per-world
+// playing/editing split and the title screen's server-wide total. It runs only
+// on the title screen — in play or the editor the sidebar belongs to the game.
+const OCCUPANCY_POLL_MS = 5000;
+
+function startOccupancyPolling() {
+  if (occupancyTimer !== 0) {
+    return;
+  }
+  occupancyTimer = window.setInterval(() => void refreshOccupancy(), OCCUPANCY_POLL_MS);
+}
+
+function stopOccupancyPolling() {
+  window.clearInterval(occupancyTimer);
+  occupancyTimer = 0;
+}
+
+async function refreshOccupancy() {
+  if (mode !== "title") {
+    stopOccupancyPolling();
+    return;
+  }
+  let worlds: WorldSearchEntry[];
+  try {
+    worlds = await fetchWorldEntries();
+  } catch {
+    // A missed poll is not an error: the previous counts stand until the next.
+    return;
+  }
+  // The player may have left the title screen while the fetch was in flight.
+  if (mode !== "title") {
+    return;
+  }
+  serverOccupancy = worldOccupancyTotal(worlds);
+  applyWorldOccupancy(worldPickerEntries, worlds);
+  if (modal && modal.kind === "worldSearch") {
+    // Museum results are merged into a fresh array, so the entries on screen are
+    // not always the ones the picker was opened with; update both.
+    applyWorldOccupancy(modal.entries, worlds);
+  }
+  drawTitleSidebar(writeText, titleFriendlyName, authDisplayName(), authStatus.enabled, serverOccupancy);
+  paintOverlay();
+  drawScreen();
 }
 
 let museumSearchTimer = 0;

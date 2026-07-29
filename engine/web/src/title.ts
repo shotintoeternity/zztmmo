@@ -32,6 +32,18 @@ export type TitleAction =
   | "editor"
   | "none";
 
+/**
+ * ServerOccupancy is how many people are on the server right now, summed across
+ * every hosted world (M17.11). It is server-observed presentation state: it
+ * never enters the simulation, a replay, or the parity oracle.
+ */
+export type ServerOccupancy = {
+  players: number;
+  editors: number;
+};
+
+export const NO_OCCUPANCY: ServerOccupancy = { players: 0, editors: 0 };
+
 /** The subset of KeyboardEvent this module reads, so a test can drive it. */
 export type KeyLike = {
   code: string;
@@ -66,7 +78,13 @@ export function titleCommand(event: KeyLike): TitleAction {
 }
 
 /** drawTitleSidebar is GameDrawSidebar's GameStateElement = E_MONITOR branch. */
-export function drawTitleSidebar(write: WriteText, worldName: string, accountName = "", authEnabled = false) {
+export function drawTitleSidebar(
+  write: WriteText,
+  worldName: string,
+  accountName = "",
+  authEnabled = false,
+  occupancy: ServerOccupancy = NO_OCCUPANCY,
+) {
   for (let y = 3; y <= 24; y += 1) {
     sidebarClearLine(write, y);
   }
@@ -77,6 +95,22 @@ export function drawTitleSidebar(write: WriteText, worldName: string, accountNam
   write(61, 0, 0x1f, "    -  -  -  -     ");
   write(63, 1, 0x70, "    ZZTMMO     ");
   write(61, 2, 0x1f, "    -  -  -  -     ");
+
+  // M17.11: how busy the server is, before the player opens the picker. A zero
+  // draws nothing rather than " Playing: 0" — a quiet server should read as
+  // quiet, and the rows collapse upward so a lone count never floats.
+  // The labels share the menu's text column (65) and the counts sit clear of
+  // them at 75, so a five-figure crowd still stops at the last column.
+  let occupancyRow = 4;
+  if (occupancy.players > 0) {
+    write(65, occupancyRow, 0x1e, " Playing:");
+    write(75, occupancyRow, 0x1f, String(occupancy.players));
+    occupancyRow += 1;
+  }
+  if (occupancy.editors > 0) {
+    write(65, occupancyRow, 0x1e, " Editing:");
+    write(75, occupancyRow, 0x1f, String(occupancy.editors));
+  }
 
   write(62, 7, 0x30, " W ");
   write(65, 7, 0x1e, " World:");

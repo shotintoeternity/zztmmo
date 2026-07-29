@@ -180,6 +180,46 @@ export type WorldSearchEntry = {
   zztFile?: string;
 };
 
+/**
+ * worldOccupancyTotal sums the picker's per-world counts into the server-wide
+ * total the title screen shows (M17.11). Museum entries the server does not host
+ * carry no counts, so they contribute nothing.
+ */
+export function worldOccupancyTotal(entries: WorldSearchEntry[]): { players: number; editors: number } {
+  let players = 0;
+  let editors = 0;
+  for (const entry of entries) {
+    players += entry.players ?? 0;
+    editors += entry.editors ?? 0;
+  }
+  return { players, editors };
+}
+
+/**
+ * applyWorldOccupancy refreshes counts in place from a fresh listing, so an open
+ * picker tracks people coming and going instead of freezing the numbers it was
+ * opened with (M17.11). Only the counts move: title, author, and Museum
+ * provenance belong to whoever built the entry. A local world absent from the
+ * fresh listing is empty; a Museum entry the server does not host is left alone,
+ * having never had counts to begin with.
+ */
+export function applyWorldOccupancy(entries: WorldSearchEntry[], fresh: WorldSearchEntry[]) {
+  const byWorld = new Map(fresh.map((entry) => [entry.world.toUpperCase(), entry]));
+  for (const entry of entries) {
+    const update = byWorld.get(entry.world.toUpperCase());
+    if (!update) {
+      if (entry.source === "museum") {
+        continue;
+      }
+      entry.players = 0;
+      entry.editors = 0;
+      continue;
+    }
+    entry.players = update.players ?? 0;
+    entry.editors = update.editors ?? 0;
+  }
+}
+
 export type WorldSearchModal = {
   kind: "worldSearch";
   title: string;
