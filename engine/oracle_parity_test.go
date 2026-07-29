@@ -283,18 +283,69 @@ type oracleSoundMatcher struct {
 	mi, ni   int
 }
 
-func (m *oracleSoundMatcher) queue(notes string) {
-	m.melodies = append(m.melodies, soundEventFreqs(notes))
+// queueCycle takes every SoundEvent one game cycle emitted and reduces it to
+// what vanilla's speaker would actually have carried, by running vanilla's own
+// arbitration (SOUNDS.PAS SoundQueue) over them.
+//
+// The port's Engine.SoundQueue emits EVERY queue attempt as an event with its
+// priority and leaves the arbitration to the client (M1.5/M4.4), so the engine's
+// stream is a superset of vanilla's. Two rules decide what survives:
+//
+//   - Priority. A queue attempt is refused outright while something with a
+//     higher priority is still sounding, and a #play (priority -1) both appends
+//     instead of replacing and locks out normal sounds until it finishes.
+//   - Replacement. An accepted attempt overwrites the buffer, so the previous
+//     pattern loses whatever the timer ISR had not played yet.
+//
+// Within ONE cycle no ISR tick can intervene — the cycle's code runs in a single
+// burst, and at the pinned speed 4 the timer fires only about twice per cycle —
+// so every attempt but the last accepted one is overwritten before it makes a
+// single onset. M16.4's pusher train is exactly this: a moving pusher ticks the
+// pusher behind it immediately, out of cycle order, so two identical clicks are
+// queued microseconds apart and vanilla's speaker clicks once. Modelling that is
+// not leniency; it removes melodies the matcher would otherwise have demanded.
+// Across cycles the ISR does run, so nothing is collapsed there — that is what
+// match's one-sided prefix rule below is for.
+func (m *oracleSoundMatcher) queueCycle(events []SoundEvent) {
+	var (
+		buffer  string
+		current int16
+		playing bool
+	)
+	for _, ev := range events {
+		if playing && !((ev.Priority >= current && current != -1) || ev.Priority == -1) {
+			continue // refused: something more important is still sounding
+		}
+		if ev.Priority >= 0 || !playing {
+			buffer, current = ev.Notes, ev.Priority
+		} else {
+			buffer += ev.Notes // a #play queues behind what is sounding
+		}
+		playing = true
+	}
+	if playing {
+		m.melodies = append(m.melodies, soundEventFreqs(buffer))
+	}
 }
 
 // sameTone compares two frequencies as the PC speaker actually distinguishes
-// them: by the PIT divisor. ZZT programs the timer with 1193182/freq from its
-// own note table, and the oracle recovers a frequency by dividing back out of
-// the divisor it observed — so the two integers round-trip a hertz apart at
-// higher pitches (the transporter melody's top note reads 1150 Hz from the
-// oracle against the engine's 1149). Anything the hardware cannot tell apart is
-// the same tone; a genuinely different note is a different divisor and still
-// fails. -1 is the wildcard the drum tables use (M16.3).
+// them: by the PIT divisor. Nothing about the note survives the hardware except
+// that one 16-bit number, and both sides round-trip through it differently, so
+// equal notes routinely differ by a hertz or two as integers.
+//
+// The round trip is exact and worth modelling exactly rather than fudging:
+//
+//	Turbo Pascal's Crt.Sound(Hz) programs the timer with 1193181 div Hz,
+//	truncating — so the engine's table entry becomes a divisor.
+//	Zeta reports 1193181.66 / divisor back to the frontend, which prints it
+//	rounded (oracle/frontend_oracle.c speaker_on).
+//
+// So the engine's 2048 Hz explosion note is divisor 582, which the oracle logs
+// as 2050 Hz; its 1149 Hz transporter note is divisor 1038, logged as 1150.
+// Running the trip forward and comparing what the oracle WOULD have printed
+// keeps a genuinely different note a failure — adjacent notes are always
+// separate divisors in this range. -1 is the wildcard the drum tables use
+// (M16.3: several drum frequencies are seeded from the oracle's boot RNG).
 func sameTone(engine, oracle int) bool {
 	if engine == oracle || engine == -1 {
 		return true
@@ -302,8 +353,11 @@ func sameTone(engine, oracle int) bool {
 	if engine <= 0 || oracle <= 0 {
 		return false
 	}
-	const pitHz = 1193182
-	return (pitHz+engine/2)/engine == (pitHz+oracle/2)/oracle
+	divisor := 1193181 / engine // Turbo Pascal Crt.Sound: truncating integer divide
+	if divisor <= 0 {
+		return false
+	}
+	return int(1193181.66/float64(divisor)+0.5) == oracle
 }
 
 func (m *oracleSoundMatcher) match(tones []int) error {
@@ -506,14 +560,16 @@ func oracleAdapterReplay(t *testing.T, scenario, world string, ops []oracleOp, c
 	)
 
 	drainEvents := func() {
+		var cycleSounds []SoundEvent
 		for _, ev := range E.Events {
 			switch ev := ev.(type) {
 			case SoundEvent:
-				sounds.queue(ev.Notes)
+				cycleSounds = append(cycleSounds, ev)
 			case ScrollEvent:
 				intervalScrolls = append(intervalScrolls, ev)
 			}
 		}
+		sounds.queueCycle(cycleSounds)
 		E.Events = nil
 	}
 
@@ -782,6 +838,18 @@ func TestOracleParityPushScenario(t *testing.T) {
 // picks with Random(100). See oracleSolvePhases.
 func TestOracleParityDeviceScenario(t *testing.T) {
 	if err := oracleAdapterRun(t, "dev.scn", "dev.capture.txt", nil); err != nil {
+		t.Fatalf("oracle divergence: %v", err)
+	}
+}
+
+// TestOracleParityMechScenario covers the devices that act on their own the
+// moment their board loads — pusher, duplicator, and bomb. They live on boards
+// reached by walking off a board edge rather than on board 0, because the title
+// span is not a cycle-accurate model of real ZZT booting and the phase search
+// absorbs that error only for animation, never for accumulated state
+// (fixtures/oracle/mech.scn documents the whole design).
+func TestOracleParityMechScenario(t *testing.T) {
+	if err := oracleAdapterRun(t, "mech.scn", "mech.capture.txt", nil); err != nil {
 		t.Fatalf("oracle divergence: %v", err)
 	}
 }

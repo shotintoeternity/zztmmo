@@ -3196,3 +3196,85 @@ projectile work). Their manifest notes say so.
 Still open for M16.4: duplicator, pusher, bomb, blink wall + both rays — all
 phase-free — plus the conveyor/gun acting paths and a status change for
 `elem.passage` (already covered by M16.3's ORCLPASS).
+
+## 2026-07-29 — M16.4: the self-acting devices, and what vanilla's speaker drops
+
+`ORCLMECH` + `mech.scn` cover `elem.pusher`, `elem.duplicator`, and `elem.bomb`.
+The previous entry called these "phase-free"; they are not. They are worse than
+phase-sensitive — they **accumulate**, and that rules out the board every earlier
+sweep used.
+
+Board 0 is the title board, and the adapter's `boot 240` span is not a
+cycle-accurate model of real ZZT booting. The phase search absorbs that error for
+anything drawn straight off CurrentTick (ORCLDEV's conveyors), because only
+`CurrentTick mod period` is observable. It cannot absorb it for a duplicator's P1
+or a pusher's position, which depend on how many cycles actually elapsed. So the
+devices live on boards the player walks into — and by a **board edge**, not a
+passage, because `ElementPassageTouch` sets `GamePaused` (GAME.PAS:1348) while
+`ElementBoardEdgeTouch` does not, and the port's pause is per-player, so vanilla
+would freeze the devices during the paused span and this engine would not. A
+board is loaded fresh from the world data on arrival, so every device starts from
+its authored state at a fully modelled instant. The boards are chained east then
+west so each crossing costs one move.
+
+### Two design corrections the oracle did not have to make
+
+Caught before recording, but worth writing down because both were wrong in my
+first layout:
+
+- **A player cannot be a barrier.** I built the duplicator's overflow to jam
+  against the player standing next to it. `ElementDefs[E_PLAYER].Pushable` is
+  true, so the gems simply shoved the player west, one square per duplication.
+  The barrier is a solid wall at 4,13 and the player walks around by row 12.
+- **The bomb's blast is not comparable while it is burning.** Phase 1 fills every
+  empty square in the ellipse with a breakable in a `Random(7)` colour, and the
+  oracle's RNG stream is not this engine's. No checkpoint is taken in the six
+  frames between the two phases; the compared evidence is the board before, and
+  the wreckage after — which is enough to pin the radius, because the blast
+  boundary itself is checked: breakables at dx -7 (49 < 50, erased) and dx -8
+  (64, survives), and at dy -4 (32, erased) and dy -5 (50, survives).
+
+### The real finding: the port emits sounds vanilla never plays
+
+The pusher train made the sound matcher fail, and the cause is a genuine
+representation gap rather than a bad scenario. `Engine.SoundQueue` (sounds.go:28)
+emits **every** queue attempt as a `SoundEvent` carrying its priority, and leaves
+arbitration to the client (M1.5/M4.4). Vanilla's `SoundQueue` (SOUNDS.PAS:60)
+arbitrates itself: an attempt is refused outright while something with a higher
+priority is still sounding, and an accepted one *replaces* the buffer, so the
+previous pattern loses whatever the timer ISR had not played yet.
+
+The train is the sharpest possible case. `ElementPusherTick` ends by ticking the
+pusher behind it immediately, out of cycle order, so a moving train queues two
+identical clicks microseconds apart. Ten clicks left the engine; the real ZZT.EXE
+clicked five times — exactly one per cycle in which the train moved.
+
+The matcher now runs vanilla's own arbitration over each cycle's events
+(`queueCycle`). Within one cycle no ISR tick can intervene — the cycle's code runs
+in a single burst and the timer fires about twice per cycle at speed 4 — so every
+attempt but the last accepted one is overwritten before it makes an onset. This
+does not weaken the comparison: it *removes* melodies the matcher would otherwise
+have demanded the oracle play, using vanilla's rule rather than a fudge, and it
+still refuses to collapse anything across a cycle boundary. All ten pre-existing
+captures stay green under it.
+
+`sameTone` was fudged and is now exact. It compared PIT divisors by rounding
+1193182/freq on both sides; the real round trip is asymmetric. Turbo Pascal's
+`Crt.Sound(Hz)` truncates `1193181 div Hz`, and Zeta reports `1193181.66 /
+divisor` back, which `frontend_oracle.c` prints rounded. The bomb's 2048 Hz
+explosion note is divisor 582, which the oracle logs as **2050** — the old
+formula called that a different tone. Running the trip forward instead of
+guessing at it keeps adjacent notes distinguishable, since they are always
+separate divisors in this range.
+
+### Rows
+
+`elem.pusher`, `elem.duplicator`, and `elem.bomb` are `pass`. Note the scenario's
+phase log: 34 of 100 play phases reproduce every checkpoint, against ORCLDEV's 4.
+That is expected and not a weakness in the evidence — nothing in this world draws
+its glyph off CurrentTick, so the phase is observable only through the cycle gate.
+Every checkpoint is still an unconditioned prediction of three state machines.
+
+Still open for M16.4: blink wall + both rays, the conveyor and spinning-gun
+acting paths, and a status change for `elem.passage` (already covered by M16.3's
+ORCLPASS).

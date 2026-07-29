@@ -1,0 +1,132 @@
+# ORCLMECH: the self-acting devices — pusher, duplicator, and bomb (M16.4).
+#
+# These three tick on their own from the moment their board is loaded, which is
+# why they cannot live on board 0 the way ORCLPUSH's boulders and ORCLDEV's
+# animations do. Board 0 is also the TITLE board, and the adapter's `boot 240`
+# span is not a cycle-accurate model of real ZZT booting (oracle/README.md): the
+# phase search absorbs that error for anything drawn straight off CurrentTick,
+# but never for accumulated state like a duplicator's P1 or a pusher's position.
+# So board 0 here is a bare corridor, and every device sits on a board reached
+# by walking off a board edge — which, unlike a passage (GAME.PAS:1348), does
+# NOT pause the game, so the arriving span is fully modelled on both sides.
+#
+# The boards are chained east then west so each crossing costs one move:
+#   Mech Hub  --east-->  Mech Bay  --west-->  Bomb Bay
+#
+# Mech Bay, row 8 — the pusher train (ELEMENTS.PAS ElementPusherTick):
+#   a front pusher at 11,8 shoves a boulder east down a runway to a solid
+#   backstop at 18,8, with a second pusher directly behind it. The trailing
+#   pusher is the recursion the tick proc does itself: a pusher that moves looks
+#   two squares back along its own step for another pusher facing the same way
+#   and ticks it immediately, out of cycle order. When the boulder reaches the
+#   backstop the push is refused, and the whole train stops.
+#
+# Mech Bay, row 13 — the duplicator (ElementDuplicatorTick), source direction
+# east, so it reads the gem at 9,13 and writes to 7,13. All four branches:
+#   1. destination empty      -> the gem is copied
+#   2. destination occupied   -> the occupant is pushed one square first
+#   3. the push recurses      -> the whole overflow row shuffles west
+#   4. push refused           -> nothing is copied, only the blocked click
+#   5. destination is the PLAYER -> the duplicator touches the SOURCE on the
+#      player's behalf, so the gem is collected without anyone walking onto it
+# A player cannot be the barrier that jams the overflow, because a player is
+# Pushable too (ElementDefs[E_PLAYER].Pushable) and is simply shoved along; the
+# barrier is the solid wall at 4,13, and the player walks around by row 12.
+#
+# Bomb Bay — the bomb (ElementBombTick/Touch). Touching an idle bomb arms it
+# (P1 := 9); touching an armed one pushes it instead, which is the refusal-side
+# station and also moves the blast one square west before it goes off. The two
+# explosion phases are DrawPlayerSurroundings(x, y, 1) — damage every
+# Destructible tile in the ellipse and fill every empty square with a breakable
+# — and phase 2 one bomb cycle later, which clears those breakables again.
+# Phase 1 paints its breakables in Random(7) colors, and the oracle's RNG stream
+# is not this engine's, so NO checkpoint is taken in the six frames between the
+# two phases; what is compared is the board before, and the wreckage after.
+# The tiles around the bomb are placed on the ellipse boundary deliberately:
+# breakables at dx -7 (49 < 50, erased) and dx -8 (64, survives), and at dy -4
+# (32, erased) and dy -5 (50, survives) — so the radius itself is pinned, not
+# just the fact that something exploded.
+world ORCLMECH
+seed 0
+phase
+boot 240
+capture title
+play
+# Mech Hub: unpause, walk to the east border opening at 60,13 and cross.
+move right
+move right
+move right
+move right
+move right
+capture arrive-bay
+# The train is already marching down row 8.
+settle 24
+capture pushers-marching
+settle 32
+capture pushers-jammed
+# Station 1: the first duplication drops a gem on the empty destination.
+settle 24
+capture dup-copy
+# Station 2: the destination is occupied, so its gem is pushed west first.
+settle 72
+capture dup-push
+# Station 3: the push recurses down the overflow squares 6 and 5.
+settle 72
+capture dup-chain
+# Station 4: the overflow reaches the solid barrier at 4,13, so the push is
+# refused and nothing is copied — only the blocked click.
+settle 72
+capture dup-refused
+settle 16
+# Walk around by row 12 (row 13 is jammed with gems) onto the destination
+# square, collecting the gem standing on it.
+move right
+move up
+move right
+move right
+move right
+move right
+move right
+move down
+capture dup-standing
+# Station 5: the destination is the PLAYER, so the duplicator touches the
+# SOURCE gem on their behalf — collected without anyone walking onto it.
+settle 72
+capture dup-touch
+# Back out by row 12 and across the west edge into Bomb Bay.
+move up
+move left
+move left
+move left
+move left
+move left
+move down
+move left
+move left
+capture arrive-bomb
+# Walk up to the bomb at 52,13 and arm it.
+move left
+move left
+move left
+move left
+move left
+move left
+move left
+move left
+capture bomb-armed
+# Touching it again pushes it instead: the blast moves one square west.
+move left
+capture bomb-pushed
+# Retreat clear of the ellipse (dx 9 at 60,13) while the fuse burns down.
+move right
+move right
+move right
+move right
+move right
+move right
+move right
+move right
+capture bomb-ticking
+# Well past both explosion phases: the wreckage, not the fireball.
+settle 80
+capture bomb-gone

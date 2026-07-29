@@ -1383,8 +1383,9 @@
       "contract": "V",
       "authority": "reference/reconstruction-of-zzt/SRC ELEMENTS.PAS; ANALYSIS.md",
       "parity": "exact",
-      "status": "unverified",
-      "assignedTask": "M16.4"
+      "test": "TestOracleParityMechScenario",
+      "fixture": "fixtures/oracle/mech.capture.txt",
+      "status": "pass"
     },
     {
       "id": "elem.boulder",
@@ -1482,8 +1483,9 @@
       "contract": "V",
       "authority": "reference/reconstruction-of-zzt/SRC ELEMENTS.PAS; ANALYSIS.md",
       "parity": "exact",
-      "status": "unverified",
-      "assignedTask": "M16.4"
+      "test": "TestOracleParityMechScenario",
+      "fixture": "fixtures/oracle/mech.capture.txt",
+      "status": "pass"
     },
     {
       "id": "elem.empty",
@@ -1678,8 +1680,9 @@
       "contract": "V",
       "authority": "reference/reconstruction-of-zzt/SRC ELEMENTS.PAS; ANALYSIS.md",
       "parity": "exact",
-      "status": "unverified",
-      "assignedTask": "M16.4"
+      "test": "TestOracleParityMechScenario",
+      "fixture": "fixtures/oracle/mech.capture.txt",
+      "status": "pass"
     },
     {
       "id": "elem.ricochet",
