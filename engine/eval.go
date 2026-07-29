@@ -558,18 +558,14 @@ func EvalOOPSample(src string, maxBytes int) (string, error) {
 // rejects orphans at the source level; this guards the assembled binary.
 func evalNoOrphanStatTiles(e *Engine) EvalCheck {
 	check := EvalCheck{Name: "no-orphan-stat-tiles"}
+	byBoard := evalOrphanStatProblems(e)
 	var found []string
 	for b := int16(0); b <= e.World.BoardCount && len(found) < 5; b++ {
 		e.BoardOpen(b)
-		for y := int16(1); y <= BOARD_HEIGHT && len(found) < 5; y++ {
-			for x := int16(1); x <= BOARD_WIDTH && len(found) < 5; x++ {
-				el := e.Board.Tiles[x][y].Element
-				if !elementNeedsStat(el) {
-					continue
-				}
-				if e.GetStatIdAt(x, y) == -1 {
-					found = append(found, fmt.Sprintf("board %d %q: %s at (%d,%d) has no stat", b, e.Board.Name, ElementDefs[el].Name, x, y))
-				}
+		for _, problem := range byBoard[e.Board.Name] {
+			found = append(found, fmt.Sprintf("board %d %q: %s", b, e.Board.Name, problem))
+			if len(found) == 5 {
+				break
 			}
 		}
 	}
@@ -579,4 +575,42 @@ func evalNoOrphanStatTiles(e *Engine) EvalCheck {
 	}
 	check.Passed = true
 	return check
+}
+
+// evalOrphanStatProblems is the same sweep keyed by board name, so generation's
+// acceptance loop can repaint only the board that carries the orphan.
+func evalOrphanStatProblems(e *Engine) map[string][]string {
+	problems := make(map[string][]string)
+	for b := int16(0); b <= e.World.BoardCount; b++ {
+		e.BoardOpen(b)
+		for y := int16(1); y <= BOARD_HEIGHT; y++ {
+			for x := int16(1); x <= BOARD_WIDTH; x++ {
+				el := e.Board.Tiles[x][y].Element
+				if !elementNeedsStat(el) || e.GetStatIdAt(x, y) != -1 {
+					continue
+				}
+				problems[e.Board.Name] = append(problems[e.Board.Name],
+					fmt.Sprintf("%s at (%d,%d) has no stat", ElementDefs[el].Name, x, y))
+			}
+		}
+	}
+	return problems
+}
+
+// evalTitleProblems runs the two title-screen acceptance checks — the exact
+// wordmark and the no-creatures/no-items rule — against the already-open board 0.
+// zzt-build has always run these; M12.23 makes generation run them too, before
+// persistence, so a title the authoring gate would reject is repainted instead of
+// shipped.
+func evalTitleProblems(e *Engine, displayName string) []string {
+	var problems []string
+	for _, check := range []EvalCheck{
+		evalTitleWordmark(e, displayName),
+		evalTitleNoCreaturesOrItems(e),
+	} {
+		if !check.Passed {
+			problems = append(problems, fmt.Sprintf("title screen (%s): %s", check.Name, check.Detail))
+		}
+	}
+	return problems
 }

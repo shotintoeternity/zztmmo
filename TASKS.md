@@ -26,13 +26,17 @@ the owner asks.
    cursors, and sidebar state are all scoped to it. M17.11 (playing/editing
    occupancy per world, plus a live server-wide total) and M17.10 (the W
    colour↔name collaborator legend) have also landed, which closes the
-   collaborative-editor group. Next in line is M12.23.
+   collaborative-editor group. M12.23 has since landed too, so the next item is
+   the M17.1–M17.8 group (item 4 below), then M16.
 2. M17.9 — collaborator cursors in the editor (owner request 2026-07-20,
    URGENT). **Landed**, plus a follow-up fixing broadcast snapshots that
    hijacked another member's identity and cursor.
 3. M12.23 — generated-world acceptance and targeted repair hardening
    (owner-reported 2026-07-19): generated worlds must not reach the browser with
    a hidden picker entry, an invalid title, or a board that panics when played.
+   **Landed**: acceptance now simulates every board in isolation and names the
+   one that fails, runs zzt-build's title/orphan checks per owning board, and
+   rejects the self-erasing `#change` form statically.
 4. M17.1–M17.8 — owner-reported live browser fixes and branch-backed dev
    deployment (2026-07-14/20): name popup
    centering/width, world picker (list all + metadata + count overlap), audio
@@ -1435,7 +1439,7 @@ the corpus/style work builds on. The specs below are unchanged.)
   test covers the retry request and resumed polling; `go test ./...` and
   `npm test` green; replay fixture unchanged.
 
-- [ ] **M12.23 — Generated-world acceptance and targeted repair hardening
+- [x] **M12.23 — Generated-world acceptance and targeted repair hardening
   (owner-reported 2026-07-19).** A live generated `BAKERY` world exposed three
   acceptance gaps: the blueprint prompt did not make `operations[].kind`
   unambiguous; the local-world picker hid generated files without Museum

@@ -1,6 +1,9 @@
 package zztgo
 
-import "strings"
+import (
+	"fmt"
+	"strings"
+)
 
 // M5.7 — ZZT-OOP authoring aids. OopAnalyze is an advisory static pass over one
 // object/scroll program for the browser code editor: it lists the object's
@@ -99,6 +102,18 @@ func (e *Engine) OopAnalyze(statId int16) ([]OopLabelInfo, []OopWarning) {
 				} else if !labelExists(target) {
 					warnings = append(warnings, OopWarning{Line: startLine, Message: "#" + strings.ToLower(word) + " " + target + ": no such label"})
 				}
+			case word == "CHANGE":
+				// The one #command whose arguments are checked, because getting
+				// them wrong deletes the running object out from under itself
+				// (M12.23). Parsed with the runtime's own OopParseTile so the
+				// color/element forms understood here are exactly the ones
+				// OopExecute accepts.
+				var from, to TTile
+				if e.OopParseTile(&src, &position, &from) && e.OopParseTile(&src, &position, &to) {
+					if message := oopSelfErasingChange(e, statId, from, to); message != "" {
+						warnings = append(warnings, OopWarning{Line: startLine, Message: message})
+					}
+				}
 			case oopCommands[word]:
 				// A known command; its arguments are not validated here.
 			default:
@@ -128,6 +143,42 @@ func (e *Engine) OopAnalyze(statId int16) ([]OopLabelInfo, []OopWarning) {
 		}
 	}
 	return labels, warnings
+}
+
+// oopSelfErasingChange reports a #change that would erase the executing object's
+// own tile while leaving its stat behind, or "" if the command is safe.
+//
+// #change is a board-wide tile substitution: OopExecute walks FindTileOnBoard and
+// calls OopPlaceTile on every match (oop.go:714-728), with no stat bookkeeping at
+// all. So `#change Object Empty` inside an Object rewrites the very tile the
+// running stat points at — the stat survives with nothing under it, and the next
+// tick draws or ticks an element that is no longer there. #die is the command
+// that removes both, and it is what the message names.
+//
+// The check is deliberately narrow: it fires only when the executing tile itself
+// matches the search tile the way FindTileOnBoard would match it (element, plus
+// color when the command names one), and only when the replacement is an element
+// that carries no stat. A generated world reached the browser with exactly this
+// line behind a :touch label and panicked on a later room tick, which is why this
+// lives here — in the analyzer both the editor and the generation gate run —
+// rather than in a prompt instruction.
+func oopSelfErasingChange(e *Engine, statId int16, from, to TTile) string {
+	if statId < 0 || statId > e.Board.StatCount {
+		return ""
+	}
+	stat := e.Board.Stats[statId]
+	self := e.Board.Tiles[stat.X][stat.Y]
+	if self.Element != from.Element || !elementNeedsStat(self.Element) {
+		return ""
+	}
+	if from.Color != 0 && GetColorForTileMatch(&self) != from.Color {
+		return ""
+	}
+	if elementNeedsStat(to.Element) {
+		return ""
+	}
+	return fmt.Sprintf("#change %s %s erases this %s but leaves its stat behind; use #die to remove the object",
+		ElementDefs[from.Element].Name, ElementDefs[to.Element].Name, ElementDefs[self.Element].Name)
 }
 
 // oopHyperlinkLabel extracts the label a "!label;text" message line sends when

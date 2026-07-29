@@ -3,6 +3,7 @@ package zztgo
 import (
 	"context"
 	"encoding/json"
+	"errors"
 	"fmt"
 	"hash/fnv"
 	"io"
@@ -417,6 +418,7 @@ func (g *GenerationService) paintAndFinish(ctx context.Context, st *generationRe
 	var data []byte
 	var world TWorld
 	var err error
+	simulationClean := false
 	for repairRound := 0; repairRound < g.maxAttempts; repairRound++ {
 		g.report(ctx, GenerationProgress{Stage: "validating", Detail: "compiling and validating the assembled world"})
 		full = assembleGeneratedZWD(name, plan, st.sections)
@@ -424,26 +426,54 @@ func (g *GenerationService) paintAndFinish(ctx context.Context, st *generationRe
 		if err != nil {
 			return GenerationResult{}, fmt.Errorf("assembled world did not compile: %w", translateZWDError(err, plan, st.sections))
 		}
-		if err := validateGeneratedZWD(data); err != nil {
-			return GenerationResult{}, fmt.Errorf("assembled world did not validate: %w", err)
-		}
 		world, err = CompileZWDWorld(full)
 		if err != nil {
 			return GenerationResult{}, fmt.Errorf("assembled world did not compile: %w", translateZWDError(err, plan, st.sections))
 		}
 		problems := crossBoardProblems(plan, full)
+		// M12.23: a board that crashes when played is a board-scoped defect, not a
+		// dead world. Simulate every board and feed each failure into the same
+		// targeted repaint loop the topology problems already use, naming the board.
+		crashed, simErr := simulateGeneratedBoards(data)
+		if simErr != nil {
+			return GenerationResult{}, fmt.Errorf("assembled world did not validate: %w", simErr)
+		}
+		simulationClean = len(crashed) == 0
 		// A stub board is a known, accepted hole in the topology — it deliberately
 		// does not realize its plan row. Repainting it would burn attempts it has
-		// already exhausted, so its problems are neither repaired nor counted.
+		// already exhausted, so its problems are neither repaired nor counted. A
+		// crash is the exception: it is added after this and never dropped, because
+		// no board may reach a browser able to take the room down.
 		for name := range problems {
 			if st.isStubbed(name) {
 				delete(problems, name)
 			}
 		}
+		for _, failure := range crashed {
+			problems[failure.Name] = append(problems[failure.Name], "board does not survive play: "+failure.Err)
+		}
 		if len(problems) == 0 {
 			break
 		}
 		if repairRound == g.maxAttempts-1 {
+			// A world that still crashes cannot ship, but it need not be lost
+			// either: replace each unrepaired crashing board with the M17.13 stub,
+			// which this pipeline generates itself and which is known to be safe.
+			if stubbed := g.stubCrashingBoards(ctx, st, byName, crashed); len(stubbed) > 0 {
+				full = assembleGeneratedZWD(name, plan, st.sections)
+				if data, err = CompileZWD(full); err != nil {
+					return GenerationResult{}, fmt.Errorf("assembled world did not compile: %w", translateZWDError(err, plan, st.sections))
+				}
+				if world, err = CompileZWDWorld(full); err != nil {
+					return GenerationResult{}, fmt.Errorf("assembled world did not compile: %w", translateZWDError(err, plan, st.sections))
+				}
+				for _, name := range stubbed {
+					delete(problems, name)
+				}
+			}
+			if len(problems) == 0 {
+				break
+			}
 			// M17.13: unresolved cross-board problems are dangling exits and
 			// missing progression, not a broken world — the assembly already
 			// compiled and validated above. Ship it and say what is wrong.
@@ -460,6 +490,16 @@ func (g *GenerationService) paintAndFinish(ctx context.Context, st *generationRe
 				continue
 			}
 			st.sections[board.Name] = section
+		}
+	}
+
+	// M12.23: the last word before persistence. Everything above is allowed to
+	// salvage, stub, and accept — but a world that panics or bails out when played
+	// is not a degraded world, it is a broken one, and it never reaches a browser.
+	// Skipped when the round that ended the loop already simulated cleanly.
+	if !simulationClean {
+		if err := validateGeneratedZWD(data); err != nil {
+			return GenerationResult{}, fmt.Errorf("assembled world did not validate: %w", err)
 		}
 	}
 
@@ -493,6 +533,26 @@ func (g *GenerationService) paintAndFinish(ctx context.Context, st *generationRe
 	}
 	g.report(ctx, GenerationProgress{Stage: "complete", Detail: name})
 	return result, nil
+}
+
+// stubCrashingBoards is the floor under M12.23's acceptance loop: a board that
+// still panics after every repair attempt is replaced by the M17.13 stub rather
+// than shipped or allowed to sink the world. It returns the boards it stubbed.
+func (g *GenerationService) stubCrashingBoards(ctx context.Context, st *generationResume, byName map[string]PlanBoard, crashed []generatedBoardFailure) []string {
+	var stubbed []string
+	for _, failure := range crashed {
+		if st.isStubbed(failure.Name) {
+			continue
+		}
+		board, ok := byName[failure.Name]
+		if !ok {
+			continue
+		}
+		g.report(ctx, GenerationProgress{Stage: "salvaging", Board: failure.Name, Detail: "stubbing a board that still crashes: " + failure.Err})
+		st.stub(board)
+		stubbed = append(stubbed, failure.Name)
+	}
+	return stubbed
 }
 
 func (g *GenerationService) admit(ctx context.Context, client string) error {
@@ -2795,33 +2855,94 @@ func cloneGeneratedSections(in map[string]string) map[string]string {
 	return out
 }
 
-func validateGeneratedZWD(data []byte) (err error) {
+// generatedBoardFailure is one board that did not survive acceptance simulation,
+// named so the repair loop can repaint that board and only that board.
+type generatedBoardFailure struct {
+	ID   int16
+	Name string
+	Err  string
+}
+
+func (f generatedBoardFailure) String() string {
+	return fmt.Sprintf("board %d %q: %s", f.ID, f.Name, f.Err)
+}
+
+// simulateGeneratedBoards ticks every board of a compiled world headlessly and
+// reports each one that panics or bails out (M12.23). Simulating only the title
+// board was never enough: the defect that reached a browser was `#change Object
+// Empty` on board 2, which panics on a later room tick and so is invisible until
+// somebody walks in.
+//
+// Every failure is attributed to its board, and the engine is rebuilt after one,
+// because a panic mid-tick leaves half-applied state that would otherwise blame
+// the next board for the previous board's crash. The scan continues past a
+// failure so one repair round can name every bad board at once.
+func simulateGeneratedBoards(data []byte) ([]generatedBoardFailure, error) {
+	load := func() (*Engine, error) {
+		e := NewEngine()
+		e.Headless = true
+		e.VideoInstall()
+		if err := e.worldReadFrom(strings.NewReader(string(data)), false, nil); err != nil {
+			return nil, fmt.Errorf("load compiled bytes: %w", err)
+		}
+		return e, nil
+	}
+	e, err := load()
+	if err != nil {
+		return nil, err
+	}
+	var failures []generatedBoardFailure
+	for boardID := int16(0); boardID <= e.World.BoardCount; boardID++ {
+		name, problem := simulateGeneratedBoard(e, boardID)
+		if problem == "" {
+			continue
+		}
+		failures = append(failures, generatedBoardFailure{ID: boardID, Name: name, Err: problem})
+		if e, err = load(); err != nil {
+			return failures, err
+		}
+	}
+	return failures, nil
+}
+
+// simulateGeneratedBoard runs one board for 200 ticks with nobody at the
+// controls. It returns the board's name (empty if it could not even be opened)
+// and the failure, or "" when the board survives.
+func simulateGeneratedBoard(e *Engine, boardID int16) (name string, problem string) {
 	defer func() {
 		if r := recover(); r != nil {
-			err = fmt.Errorf("headless validation panicked: %v", r)
+			problem = fmt.Sprintf("simulation panicked: %v", r)
 		}
 	}()
-	e := NewEngine()
-	e.Headless = true
-	e.VideoInstall()
-	if err := e.worldReadFrom(strings.NewReader(string(data)), false, nil); err != nil {
-		return fmt.Errorf("load compiled bytes: %w", err)
-	}
-	for boardID := int16(0); boardID <= e.World.BoardCount; boardID++ {
-		e.BoardOpen(boardID)
-		e.BoardEnter(0)
-		e.GameStateElement = E_PLAYER
-		e.PlayerFor(0).Paused = false
-		e.GamePlayExitRequested = false
-		e.SetInputSource(&ScriptedInput{})
-		for i := 0; i < 200; i++ {
-			e.GameStep(nil)
-			if e.GamePlayExitRequested {
-				return fmt.Errorf("board %d requested exit at step %d", boardID, i+1)
-			}
+	e.BoardOpen(boardID)
+	name = e.Board.Name
+	e.BoardEnter(0)
+	e.GameStateElement = E_PLAYER
+	e.PlayerFor(0).Paused = false
+	e.GamePlayExitRequested = false
+	e.SetInputSource(&ScriptedInput{})
+	for i := 0; i < 200; i++ {
+		e.GameStep(nil)
+		if e.GamePlayExitRequested {
+			return name, fmt.Sprintf("requested exit at step %d", i+1)
 		}
 	}
-	return nil
+	return name, ""
+}
+
+func validateGeneratedZWD(data []byte) error {
+	failures, err := simulateGeneratedBoards(data)
+	if err != nil {
+		return err
+	}
+	if len(failures) == 0 {
+		return nil
+	}
+	parts := make([]string, 0, len(failures))
+	for _, failure := range failures {
+		parts = append(parts, failure.String())
+	}
+	return errors.New(strings.Join(parts, "; "))
 }
 
 func generatedSaveName(requested, planName, premise string) (string, error) {
@@ -3016,6 +3137,19 @@ func crossBoardProblems(plan Plan, full string) map[string][]string {
 			for _, problem := range oopProblems {
 				add(board, problem)
 			}
+		}
+		// M12.23: the checks zzt-build has always run before publishing an
+		// authored world now run before persisting a generated one, each mapped
+		// to the board that owns it. Orphan stats belong to their own board;
+		// title-screen failures belong to board 0, whatever the plan called it.
+		for board, orphans := range evalOrphanStatProblems(e) {
+			for _, problem := range orphans {
+				add(board, problem)
+			}
+		}
+		e.BoardOpen(0)
+		for _, problem := range evalTitleProblems(e, plan.WorldName) {
+			add(e.Board.Name, problem)
 		}
 	}
 

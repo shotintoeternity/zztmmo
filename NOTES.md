@@ -3014,3 +3014,59 @@ The panel is deliberately not modal — arrows and edits keep working while it i
 up, so you can watch a coloured cursor move and read its name at the same time.
 It is board-sectioned because M17.12 draws cursors only for members on your
 board; a flat list would name colours that are nowhere on screen.
+
+## 2026-07-28 — M12.23: acceptance became a repair loop, not a verdict
+
+Items 1 and 5 landed earlier (5a96948). This session closed items 2, 3 and 4,
+and the shape of the fix is the point: every generated-world check that used to
+be able to kill a world now names a board instead.
+
+**Item 2.** `validateGeneratedZWD` already ticked every board — the gap was that
+it returned one unattributed "headless validation panicked" and `paintAndFinish`
+turned that into a dead generation. It is now built on
+`simulateGeneratedBoards`, which returns a `[]generatedBoardFailure` carrying the
+board id, name, and failure, keeps scanning past the first bad board so one
+repair round can name them all, and rebuilds the engine after a panic (a
+half-applied tick would otherwise blame the next board for the previous board's
+crash). Those failures are appended to `crossBoardProblems`' map and go through
+the existing targeted-repaint loop.
+
+**Item 3.** `OopAnalyze` gained the one #command whose arguments it checks.
+`#change` is a board-wide tile substitution with no stat bookkeeping
+(oop.go:714-728), so `#change Object Empty` inside an Object erases the tile the
+running stat points at and leaves the stat behind. The check fires only when the
+executing tile matches the search tile the way `FindTileOnBoard` would (element,
+plus color when the command names one) and the replacement carries no stat, and
+the message names `#die`. It lives in the analyzer rather than in a prompt
+because simulation cannot reach it: behind a `:touch` label nothing runs it, and
+the world ticks happily through its 200 acceptance steps. The editor gets the
+same warning for free.
+
+**Item 4.** `crossBoardProblems` now also runs the title wordmark and
+title-no-creatures/items checks (charged to whatever the plan called board 0) and
+the orphan-stat sweep (charged to its own board), so the checks `zzt-build`
+publishes against and the checks generation accepts against are the same checks.
+`evalNoOrphanStatTiles` was refactored onto the new per-board
+`evalOrphanStatProblems` rather than duplicated.
+
+Two deliberate choices worth keeping:
+
+- **Crashes are the one problem salvage may not swallow.** M17.13 lets a stubbed
+  board's problems be dropped, and lets unresolved topology problems ship with a
+  note. A board that panics gets neither: on the last repair round it is replaced
+  by the M17.13 stub (which this pipeline generates itself and tests separately),
+  and a final `validateGeneratedZWD` gate runs before persistence unless the
+  round that ended the loop already simulated cleanly. Nothing that panics is
+  written to disk or hosted.
+- **The title board can be repainted like any other.** Title failures are keyed
+  by the compiled board 0's name, so `orderedProblemBoards` resolves it to a real
+  `PlanBoard` and the existing attempt budget applies. No separate title path.
+
+`fixtures/parity/manifest.json` was regenerated (PARITY_SCAFFOLD=1). It picked up
+rows for M17.10 and M17.11 as well as M12.23 — those two landed without theirs,
+so `TestParityManifest` was already red at 64decb9 before this session started.
+Merge-preserving regeneration, additions only.
+
+Not self-certified: the DoD's "a successful live generation loads and plays
+across every generated board" needs a real API key and a browser, per the
+M17.3/M17.7 lesson about certifying live behavior from a test suite.

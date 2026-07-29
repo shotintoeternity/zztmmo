@@ -151,8 +151,10 @@ func TestGeneratedValidationTicksEveryBoard(t *testing.T) {
 		t.Fatal(err)
 	}
 	err = validateGeneratedZWD(data)
-	if err == nil || !strings.Contains(err.Error(), "headless validation panicked") {
-		t.Fatalf("validation error = %v, want non-title board simulation panic", err)
+	// M12.23: the failure must name the board that produced it, because that name
+	// is what the repair loop repaints and what the repair prompt is told to fix.
+	if err == nil || !strings.Contains(err.Error(), `board 1 "Start": simulation panicked`) {
+		t.Fatalf("validation error = %v, want a panic attributed to board 1 %q", err, "Start")
 	}
 }
 
