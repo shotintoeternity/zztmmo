@@ -1,0 +1,45 @@
+# ORCLDEV: devices whose animation and scheduling ride CurrentTick (M16.4).
+#
+# This is the scenario that exercises the phase solver. Vanilla runs
+# `CurrentTick := Random(100)` when it enters a GamePlayLoop (GAME.PAS:1515) and
+# again when the player unpauses (GAME.PAS:1564), and three of this world's four
+# devices draw straight off that value:
+#
+#   Clockwise conveyor  CurrentTick / 3 % 4      (glyph period 12)
+#   Counter conveyor    CurrentTick / 2 % 4      (glyph period 8)
+#   Spinning gun        CurrentTick % 8          (glyph period 8)
+#   Transporter         CurrentTick / 2 % 4      (glyph period 8)
+#
+# The periods deliberately disagree, so one phase has to satisfy all four at
+# once — a shifted or off-by-one draw mapping in any single element cannot be
+# absorbed by choosing a different phase.
+#
+# The conveyors are ringed with a boulder, a gem, and ammo so their tick moves
+# real tiles rather than only animating, which also makes the CYCLE GATE
+# observable: `CurrentTick mod Cycle = statId mod Cycle` decides which of the two
+# conveyors turns on which frame, so the phase is behavioural here, not cosmetic.
+# The gun carries p2 0 so it never fires (Random(9) < 0 is never true), keeping
+# the compared path RNG-free; its rotation is still fully checked.
+world ORCLDEV
+seed 0
+phase
+boot 240
+capture title
+play
+# unpause and let the conveyors turn for a while
+move right
+capture devices-turning
+settle 24
+capture devices-settled
+# walk east into the transporter at 8,13. ElementTransporterMove only accepts
+# entry along the transporter's own step, and only lands the player on the first
+# square past it — unless a PAIRED transporter facing back (-deltaX) re-arms the
+# search, which the one at 11,13 does. So the player clears both solid squares
+# and is set down past the pair.
+move right
+move right
+move right
+move right
+move right
+settle 16
+capture transported

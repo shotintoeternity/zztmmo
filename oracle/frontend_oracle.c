@@ -137,8 +137,12 @@ static void run_scenario(const char *path) {
 		int n = sscanf(p, "%63s %127s %127s", cmd, a1, a2);
 		if (n < 1) continue;
 
-		if (!strcmp(cmd, "seed") || !strcmp(cmd, "world")) {
-			/* recorded by the caller; RNG-free scenarios don't depend on it */
+		if (!strcmp(cmd, "seed") || !strcmp(cmd, "world") || !strcmp(cmd, "phase")) {
+			/* seed/world are recorded by the caller; RNG-free scenarios don't
+			 * depend on the seed. `phase` is purely a note to the Go adapter
+			 * that this scenario's checkpoints depend on the CurrentTick phase
+			 * vanilla picks with Random(100) — the real ZZT needs no help
+			 * picking its own, so there is nothing to do here. */
 		} else if (!strcmp(cmd, "boot")) {
 			if (drive_ticks(atoi(a1)) == 0) { fprintf(stderr, "oracle: exit during boot\n"); exit(4); }
 		} else if (!strcmp(cmd, "play")) {

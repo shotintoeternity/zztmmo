@@ -3129,3 +3129,70 @@ none: the remaining families (conveyors, duplicator, pusher, bomb, blink
 wall/rays, transporter, spinning gun) are blocked behind it or trivial once it
 exists. `elem.passage` is assigned to M16.4 but is already exercised by M16.3's
 ORCLPASS scenario; it needs a manifest status change, not new coverage.
+
+## 2026-07-29 — M16.4: solving for vanilla's CurrentTick phase
+
+The blocker recorded in the previous entry is gone. `phase` is now a scenario
+directive, and `oracleSolvePhases` recovers the two CurrentTick phases vanilla
+chose instead of importing them: one for the title span, one for the play span
+(GAME.PAS:1515 on GamePlayLoop entry, again at 1564 on unpause).
+
+The engine side turned out to be directly settable — the headless unpause
+deliberately does NOT re-randomize CurrentTick (the M16.3 multiplayer deviation:
+re-rolling it would perturb every other player's stat scheduling), so a phase
+assigned at `play` survives the unpause. And `Random(100)` bounds the search to
+100 candidates, not 420. The two spans are searched one after the other, not
+jointly: the title checkpoint is reached before `play`, and the play search
+replays from the very beginning with the solved title phase, so a title span
+that moved things still hands the play span the board it actually produced.
+
+`dev.scn`/`ORCLDEV` prove it, and the shape of the answer is the proof:
+
+    dev.scn: title phase 2; 4 of 100 play phases reproduce every checkpoint
+    ([4 28 52 76])
+
+Those four are spaced exactly 24 apart — lcm(12, 8) of the Clockwise conveyor's
+glyph period (CurrentTick/3 % 4) and the Counter/gun/transporter period. A
+shifted or off-by-one draw mapping in any one element could not survive that
+intersection. The count is logged rather than asserted: many solutions means a
+weak scenario, not a wrong one.
+
+### Three things the sweep turned up
+
+- **`elementNeedsStat` was answering two questions.** "Needs" is about orphans
+  (a tile with no stat is a defect); "may" is about authoring (a stat here is
+  legal). Both conveyors sit in the gap: a conveyor's TickProc reads
+  `Board.Stats[statId].X/Y` so it only turns with a stat, but real worlds are
+  full of stat-less conveyors used as scenery — TOWN board 19 alone has 46, and
+  CUTLASS, DUNGEONS, LLAMA1 and ZZKEY have their own. Adding conveyors to
+  `elementNeedsStat` reddened all of those; the fix is a separate
+  `elementMayHaveStat`. Without it a turning conveyor cannot be authored at all.
+- **A transporter needs a partner.** `ElementTransporterMove` only accepts entry
+  along its own step, and only lands the player on the FIRST square past it —
+  unless a paired transporter facing back (`-deltaX`) re-arms the search. My
+  first layout put solid wall behind it, which is a legitimate refusal but not
+  the transport I had labelled it. The pair at 8,13 / 11,13 carries the player
+  over both walls.
+- **Speaker frequencies round-trip a hertz apart.** The oracle recovers a
+  frequency by dividing back out of the PIT divisor ZZT programmed, so the
+  transporter melody's top note reads 1150 Hz against the engine's 1149. The
+  matcher now compares divisors — what the hardware actually distinguishes —
+  rather than derived hertz. It only loosens, and a genuinely different note is
+  still a different divisor.
+
+### Rows
+
+`elem.transporter` is `pass`. The conveyors and the spinning gun are NOT: this
+world pins their animation and their cycle-gate scheduling, but their acting
+paths are untested — the conveyor rings are deliberately empty (a title board
+that MOVES things cannot be replayed, because the `boot 240` span is not a
+cycle-accurate model of real ZZT booting, and the phase search absorbs
+boot-count error only for animation, never for accumulated state), and the gun
+carries p2 0 so it never fires. Both need the player to set them off during the
+fully-modelled play span: push a boulder onto a conveyor ring, and give the gun
+a firing p2 (which also drags in the RNG question, so it may belong with M16.5's
+projectile work). Their manifest notes say so.
+
+Still open for M16.4: duplicator, pusher, bomb, blink wall + both rays — all
+phase-free — plus the conveyor/gun acting paths and a status change for
+`elem.passage` (already covered by M16.3's ORCLPASS).

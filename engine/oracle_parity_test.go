@@ -22,9 +22,12 @@ package zztgo
 //   - `settle N` maps to N/2 empty GameSteps.
 //   - `play` enters play paused, as vanilla does; the first move unpauses and
 //     moves in the same tick on both sides.
-//   - Vanilla randomizes CurrentTick at play start; the adapter pins 0. The
-//     scenarios are written to be phase-insensitive (settle margins longer than
-//     the largest stat cycle) and RNG-free on the compared path.
+//   - Vanilla randomizes CurrentTick at play start (and again on unpause), which
+//     the adapter pins to 0 for scenarios written to be phase-insensitive
+//     (settle margins longer than the largest stat cycle) and RNG-free on the
+//     compared path. A scenario that declares `phase` instead has both spans
+//     SOLVED for — see oracleSolvePhases — which is what lets M16.4 compare
+//     devices whose glyph and scheduling ride CurrentTick.
 //
 // Documented representation normalizations (each is a vanilla-presentation vs
 // headless-engine difference, not a simulation difference — PARITY.md "Oracle"):
@@ -88,7 +91,7 @@ func oracleDirDeltas(t *testing.T, path string, lineNo int, dir string) (int16, 
 	return 0, 0, 0
 }
 
-func parseOracleScenario(t *testing.T, path string) (string, []oracleOp) {
+func parseOracleScenario(t *testing.T, path string) (string, []oracleOp, bool) {
 	t.Helper()
 	requireFixture(t, path)
 	data, err := os.ReadFile(path)
@@ -96,6 +99,7 @@ func parseOracleScenario(t *testing.T, path string) (string, []oracleOp) {
 		t.Fatalf("read scenario %s: %v", path, err)
 	}
 	world := ""
+	solvePhase := false
 	var ops []oracleOp
 	for lineNo, raw := range strings.Split(string(data), "\n") {
 		line := strings.TrimSpace(raw)
@@ -108,6 +112,13 @@ func parseOracleScenario(t *testing.T, path string) (string, []oracleOp) {
 			// provenance only; the compared path is RNG-free
 		case "world":
 			world = fields[1]
+		case "phase":
+			// Declares the scenario phase-sensitive: it contains elements whose
+			// glyph or scheduling depends on CurrentTick, which vanilla picks with
+			// Random(100) and the adapter must therefore solve for rather than
+			// assume. Ignored by the oracle frontend (the real ZZT needs no help
+			// picking its own phase).
+			solvePhase = true
 		case "boot":
 			// The oracle boots the real ZZT to its title screen; the adapter
 			// runs the same span in title (monitor) state so title-screen
@@ -146,7 +157,7 @@ func parseOracleScenario(t *testing.T, path string) (string, []oracleOp) {
 	if world == "" {
 		t.Fatalf("%s: missing world directive", path)
 	}
-	return world, ops
+	return world, ops, solvePhase
 }
 
 func parseOracleCapture(t *testing.T, path string) []oracleCheckpoint {
@@ -276,6 +287,25 @@ func (m *oracleSoundMatcher) queue(notes string) {
 	m.melodies = append(m.melodies, soundEventFreqs(notes))
 }
 
+// sameTone compares two frequencies as the PC speaker actually distinguishes
+// them: by the PIT divisor. ZZT programs the timer with 1193182/freq from its
+// own note table, and the oracle recovers a frequency by dividing back out of
+// the divisor it observed — so the two integers round-trip a hertz apart at
+// higher pitches (the transporter melody's top note reads 1150 Hz from the
+// oracle against the engine's 1149). Anything the hardware cannot tell apart is
+// the same tone; a genuinely different note is a different divisor and still
+// fails. -1 is the wildcard the drum tables use (M16.3).
+func sameTone(engine, oracle int) bool {
+	if engine == oracle || engine == -1 {
+		return true
+	}
+	if engine <= 0 || oracle <= 0 {
+		return false
+	}
+	const pitHz = 1193182
+	return (pitHz+engine/2)/engine == (pitHz+oracle/2)/oracle
+}
+
 func (m *oracleSoundMatcher) match(tones []int) error {
 	for _, f := range tones {
 		for {
@@ -283,7 +313,7 @@ func (m *oracleSoundMatcher) match(tones []int) error {
 				return fmt.Errorf("oracle played %d Hz with no engine melody left in the queue", f)
 			}
 			notes := m.melodies[m.mi]
-			if m.ni < len(notes) && (notes[m.ni] == f || notes[m.ni] == -1) {
+			if m.ni < len(notes) && sameTone(notes[m.ni], f) {
 				m.ni++
 				break
 			}
@@ -291,7 +321,7 @@ func (m *oracleSoundMatcher) match(tones []int) error {
 				// Mid-melody mismatch: only a preemption by the next queued
 				// melody explains it.
 				if m.mi+1 < len(m.melodies) && len(m.melodies[m.mi+1]) > 0 &&
-					(m.melodies[m.mi+1][0] == f || m.melodies[m.mi+1][0] == -1) {
+					sameTone(m.melodies[m.mi+1][0], f) {
 					m.mi++
 					m.ni = 1
 					break
@@ -311,10 +341,17 @@ func (m *oracleSoundMatcher) match(tones []int) error {
 // checkpoint against the oracle capture. mutate, if non-nil, runs right before
 // the named checkpoint's comparison (the perturbation seam for the fail-closed
 // test). Returns the first mismatch as an error; nil means full parity.
+// oraclePhaseRange is the number of CurrentTick phases vanilla can start a
+// GamePlayLoop on: GAME.PAS:1515 picks it with Random(100).
+const oraclePhaseRange = 100
+
+// oracleAdapterRun replays a scenario against its capture. For a scenario that
+// declares `phase`, it first SOLVES for the two CurrentTick phases vanilla chose
+// (see oracleSolvePhases); otherwise both are pinned to 0, exactly as before.
 func oracleAdapterRun(t *testing.T, scenario, capture string, mutate func(label string)) error {
 	t.Helper()
 
-	world, ops := parseOracleScenario(t, filepath.Join("..", "fixtures", "oracle", scenario))
+	world, ops, solvePhase := parseOracleScenario(t, filepath.Join("..", "fixtures", "oracle", scenario))
 	checkpoints := parseOracleCapture(t, filepath.Join("..", "fixtures", "oracle", capture))
 
 	// Run on a fresh Engine swapped into the package global so the adapter
@@ -322,6 +359,100 @@ func oracleAdapterRun(t *testing.T, scenario, capture string, mutate func(label 
 	// depend on — PlayerState hint flags, world, and screen all stay isolated.
 	prevE := E
 	defer func() { E = prevE }()
+
+	if !solvePhase {
+		return oracleAdapterReplay(t, scenario, world, ops, checkpoints, mutate, 0, 0)
+	}
+	return oracleSolvePhases(t, scenario, world, ops, checkpoints, mutate)
+}
+
+// oracleSolvePhases recovers the two unknown CurrentTick phases in a
+// phase-sensitive scenario, rather than importing them from the capture by hand.
+//
+// Vanilla runs `CurrentTick := Random(100)` on entering a GamePlayLoop
+// (GAME.PAS:1515) and AGAIN when the player unpauses (GAME.PAS:1564), so the
+// title span and the play span start on independent, unknowable phases. That
+// phase is not cosmetic: conveyor, transporter, and spinning-gun glyphs are
+// drawn straight off CurrentTick, and the cycle gate
+// `CurrentTick mod Cycle = statId mod Cycle` decides which stats tick when.
+//
+// The engine side is directly settable — the headless unpause deliberately does
+// NOT re-randomize CurrentTick (a documented multiplayer deviation; re-rolling
+// it would perturb every other player's scheduling), so a phase assigned at
+// `play` survives the unpause.
+//
+// The two spans are searched one after the other rather than jointly, which
+// costs at most 100+100 replays instead of 100*100. That is sound because the
+// title checkpoint is reached before `play`, so no play phase can affect it —
+// and the play search then replays the scenario from the very beginning with the
+// solved title phase, so a title span that MOVED things (a conveyor turning its
+// neighbours for the whole boot span) still hands the play span the board it
+// actually produced.
+//
+// This imports nothing: it recovers one scalar per span and then requires that
+// scalar to reproduce EVERY remaining checkpoint. A wrong draw or a wrong
+// stagger still fails, because no phase satisfies all of them at once — which is
+// why a phase-sensitive world should carry devices with different periods.
+func oracleSolvePhases(t *testing.T, scenario, world string, ops []oracleOp, checkpoints []oracleCheckpoint, mutate func(label string)) error {
+	t.Helper()
+
+	// The title span ends at the first checkpoint, so replay only up to it.
+	titleOps := ops
+	for i, op := range ops {
+		if op.Kind == "play" {
+			titleOps = ops[:i]
+			break
+		}
+	}
+	titlePhase := -1
+	var titleErr error
+	if len(titleOps) > 0 && len(checkpoints) > 0 {
+		for phase := 0; phase < oraclePhaseRange; phase++ {
+			err := oracleAdapterReplay(t, scenario, world, titleOps, checkpoints[:1], mutate, int16(phase), 0)
+			if err == nil {
+				titlePhase = phase
+				break
+			}
+			if phase == 0 {
+				titleErr = err
+			}
+		}
+		if titlePhase < 0 {
+			return fmt.Errorf("no CurrentTick phase in 0..%d reproduces the title checkpoint of %s; at phase 0: %w",
+				oraclePhaseRange-1, scenario, titleErr)
+		}
+	} else {
+		titlePhase = 0
+	}
+
+	var playErr error
+	var solutions []int
+	for phase := 0; phase < oraclePhaseRange; phase++ {
+		err := oracleAdapterReplay(t, scenario, world, ops, checkpoints, mutate, int16(titlePhase), int16(phase))
+		if err == nil {
+			solutions = append(solutions, phase)
+			continue
+		}
+		if phase == 0 {
+			playErr = err
+		}
+	}
+	if len(solutions) == 0 {
+		return fmt.Errorf("no CurrentTick phase in 0..%d reproduces %s; at phase 0: %w",
+			oraclePhaseRange-1, scenario, playErr)
+	}
+	// Logged, not asserted: a phase-sensitive scenario that many phases satisfy
+	// is not wrong, it is weak — it means the world's devices are not actually
+	// pinning the phase, and the scenario should carry devices whose periods
+	// disagree. Visible in `go test -v` rather than silently passing as strong.
+	t.Logf("%s: title phase %d; %d of %d play phases reproduce every checkpoint (%v)",
+		scenario, titlePhase, len(solutions), oraclePhaseRange, solutions)
+	return nil
+}
+
+func oracleAdapterReplay(t *testing.T, scenario, world string, ops []oracleOp, checkpoints []oracleCheckpoint, mutate func(label string), titlePhase, playPhase int16) error {
+	t.Helper()
+
 	E = NewEngine()
 
 	E.Headless = true
@@ -359,7 +490,7 @@ func oracleAdapterRun(t *testing.T, scenario, capture string, mutate func(label 
 	E.Board.Tiles[E.Board.Stats[0].X][E.Board.Stats[0].Y].Color = ElementDefs[E_MONITOR].Color
 	E.GenerateTransitionTable() // vanilla builds it at startup; TransitionDrawToBoard walks it
 	E.TransitionDrawToBoard()
-	E.CurrentTick = 0
+	E.CurrentTick = titlePhase
 	// Start ready to tick stats immediately: vanilla's pause branch acts on the
 	// unpausing keypress at once, so the adapter's first step must tick stat 0
 	// rather than spend the call opening a fresh cycle (replay_test's
@@ -412,7 +543,7 @@ func oracleAdapterRun(t *testing.T, scenario, capture string, mutate func(label 
 			E.PlayerFor(0).Paused = true
 			E.TransitionDrawToBoard()
 			E.TimerTicks += 30
-			E.CurrentTick = 0
+			E.CurrentTick = playPhase
 			E.CurrentStatTicked = 0
 			drainEvents()
 			inTitle = false
@@ -440,7 +571,7 @@ func oracleAdapterRun(t *testing.T, scenario, capture string, mutate func(label 
 			}
 		case "capture":
 			if checkpointIdx >= len(checkpoints) {
-				t.Fatalf("scenario %s captures more checkpoints than %s holds", scenario, capture)
+				t.Fatalf("scenario %s captures more checkpoints than its capture holds", scenario)
 			}
 			cp := &checkpoints[checkpointIdx]
 			if cp.Label != op.Label {
@@ -467,7 +598,7 @@ func oracleAdapterRun(t *testing.T, scenario, capture string, mutate func(label 
 		}
 	}
 	if checkpointIdx != len(checkpoints) {
-		t.Fatalf("capture %s holds %d checkpoints, scenario replayed %d", capture, len(checkpoints), checkpointIdx)
+		t.Fatalf("capture for %s holds %d checkpoints, scenario replayed %d", scenario, len(checkpoints), checkpointIdx)
 	}
 	return nil
 }
@@ -642,6 +773,15 @@ func TestOracleParityTimeScenario(t *testing.T) {
 
 func TestOracleParityPushScenario(t *testing.T) {
 	if err := oracleAdapterRun(t, "push.scn", "push.capture.txt", nil); err != nil {
+		t.Fatalf("oracle divergence: %v", err)
+	}
+}
+
+// TestOracleParityDeviceScenario is the first phase-solved scenario: conveyors,
+// a transporter, and a spinning gun all draw off CurrentTick, which vanilla
+// picks with Random(100). See oracleSolvePhases.
+func TestOracleParityDeviceScenario(t *testing.T) {
+	if err := oracleAdapterRun(t, "dev.scn", "dev.capture.txt", nil); err != nil {
 		t.Fatalf("oracle divergence: %v", err)
 	}
 }

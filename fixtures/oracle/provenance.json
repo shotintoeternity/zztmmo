@@ -5,7 +5,7 @@
     "repo": "https://github.com/asiekierka/zeta.git",
     "commit": "ad85bcf81971460c8d29951e489658855ced225c",
     "frontend": "oracle/frontend_oracle.c",
-    "frontend_sha256": "005a682a335d29201dc1253ac709d1fb977f8202898dfda12294e43451a6ecee"
+    "frontend_sha256": "00329c6e2d388f09ec106cbb8de5e8c154bc216ec341ee467797dc40a1eaa0a2"
   },
   "program": {
     "name": "ZZT v3.2 (registered, Epic freeware release)",
@@ -17,6 +17,7 @@
   },
   "worlds": {
     "ORCLDARK.ZZT": "6cf64ecd8b2acb65a1fb8def965b5b64d1745fcc0a845bcc951171a1faa48805",
+    "ORCLDEV.ZZT": "9ae2bd4a8f40965b0813a7deb6d8038d887aabdb3311c7f254b24187fc6971b1",
     "ORCLITEM.ZZT": "cba615572360d471cd6f4bce61ae58dbfb41bfff41345b81f78e0f9302129ed3",
     "ORCLROOM.ZZT": "d63d9b549f2d0c3f9e1dc0dc2fa1654cad06a3fa4ca472787c66b88d91ca4fbe",
     "ORCLMOVE.ZZT": "a4f7ffd9ab17e3a323efc6d8b415de0c77ce8ffbb436b5c5d534b2faead7a9bd",
@@ -33,6 +34,7 @@
   },
   "scenarios": {
     "dark.scn": "0978e370ec0ea5138a6c139ee9102dcac89714dcb398f2dd67fff7b62ca0316d",
+    "dev.scn": "00f90f96f25a692df9567e2f3abc0dfb5f7484ee728a0a339cbdea0bce15182d",
     "item.scn": "6e8857472fe0fcd1ff04617d81c4c82fcfc763297fdab965359fa090ec78f790",
     "main.scn": "2b9dae26c5bfb5495eb84c0fbbbd4340517c3aff0de4cf676c53d9d4d2ebd596",
     "move.scn": "c15176887c0edad0f49aa12925ef76d59d7535ce33fa1d2937f015e6d969ba7d",

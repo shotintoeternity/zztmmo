@@ -1448,7 +1448,8 @@
       "authority": "reference/reconstruction-of-zzt/SRC ELEMENTS.PAS; ANALYSIS.md",
       "parity": "exact",
       "status": "unverified",
-      "assignedTask": "M16.4"
+      "assignedTask": "M16.4",
+      "notes": "animation and cycle-gate scheduling pinned by TestOracleParityDeviceScenario; the acting path (conveyor carrying tiles, gun firing) is still unverified"
     },
     {
       "id": "elem.conveyor-cw",
@@ -1458,7 +1459,8 @@
       "authority": "reference/reconstruction-of-zzt/SRC ELEMENTS.PAS; ANALYSIS.md",
       "parity": "exact",
       "status": "unverified",
-      "assignedTask": "M16.4"
+      "assignedTask": "M16.4",
+      "notes": "animation and cycle-gate scheduling pinned by TestOracleParityDeviceScenario; the acting path (conveyor carrying tiles, gun firing) is still unverified"
     },
     {
       "id": "elem.door",
@@ -1774,7 +1776,8 @@
       "authority": "reference/reconstruction-of-zzt/SRC ELEMENTS.PAS; ANALYSIS.md",
       "parity": "exact",
       "status": "unverified",
-      "assignedTask": "M16.4"
+      "assignedTask": "M16.4",
+      "notes": "animation and cycle-gate scheduling pinned by TestOracleParityDeviceScenario; the acting path (conveyor carrying tiles, gun firing) is still unverified"
     },
     {
       "id": "elem.star",
@@ -1907,8 +1910,9 @@
       "contract": "V",
       "authority": "reference/reconstruction-of-zzt/SRC ELEMENTS.PAS; ANALYSIS.md",
       "parity": "exact",
-      "status": "unverified",
-      "assignedTask": "M16.4"
+      "test": "TestOracleParityDeviceScenario",
+      "fixture": "fixtures/oracle/dev.capture.txt",
+      "status": "pass"
     },
     {
       "id": "elem.water",

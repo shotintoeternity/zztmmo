@@ -804,7 +804,7 @@ func compileZWDBoard(e *Engine, boardID int16, src zwdBoard, boardIDs map[string
 		if e.Board.StatCount >= MAX_STAT {
 			return zerr(srcStat.line, 1, "board has more than 150 non-player stats")
 		}
-		if !elementNeedsStat(srcStat.element) {
+		if !elementMayHaveStat(srcStat.element) {
 			return zerr(srcStat.line, 1, fmt.Sprintf("stat at (%d, %d) defined for non-stat-backed element %s", srcStat.x, srcStat.y, ElementDefs[srcStat.element].Name))
 		}
 		if e.Board.Tiles[srcStat.x][srcStat.y].Element != srcStat.element {
@@ -919,6 +919,26 @@ func scanUndefinedGridKeys(src zwdBoard) (firstLine, firstCol int, missing []str
 		}
 	}
 	return firstLine, firstCol, missing
+}
+
+// elementMayHaveStat answers a different question from elementNeedsStat, and
+// M16.4 is where the difference started to matter. "Needs" is about orphans: a
+// tile of this element with no stat is a defect. "May" is about authoring: a
+// stat on this element is legal.
+//
+// Both conveyors sit in the gap. Vanilla's editor gives a stat to every element
+// whose ElementDefs.Cycle is >= 0 (EDITOR.PAS), and a conveyor's TickProc reads
+// Board.Stats[statId].X/Y, so a conveyor only turns when it has one — but real
+// worlds are full of stat-less conveyors used as scenery (TOWN board 19 alone
+// has 46, and CUTLASS, DUNGEONS, LLAMA1, and ZZKEY have their own). Those are
+// legal and simply never turn, so a conveyor must not be an orphan; it must
+// still be allowed a stat, or a turning conveyor cannot be authored at all.
+func elementMayHaveStat(el byte) bool {
+	switch el {
+	case E_CONVEYOR_CW, E_CONVEYOR_CCW:
+		return true
+	}
+	return elementNeedsStat(el)
 }
 
 func elementNeedsStat(el byte) bool {
