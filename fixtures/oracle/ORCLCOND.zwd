@@ -1,0 +1,325 @@
+zwd 1
+world "ORCLCOND"
+
+board "Cond Hub"
+  start player at 56,13
+  max-shots 255
+  dark false
+  reenter false
+  time-limit 0
+  exits north none south none west none east "Cond Hall"
+
+  grid
+############################################################
+#..........................................................#
+#..........................................................#
+#..........................................................#
+#..........................................................#
+#..........................................................#
+#..........................................................#
+#..........................................................#
+#..........................................................#
+#..........................................................#
+#..........................................................#
+#..........................................................#
+#......................................................@....
+#..........................................................#
+#..........................................................#
+#..........................................................#
+#..........................................................#
+#..........................................................#
+#..........................................................#
+#..........................................................#
+#..........................................................#
+#..........................................................#
+#..........................................................#
+#..........................................................#
+############################################################
+  end
+
+  legend
+    # = Solid color 0x0E
+    . = Empty color 0x07
+    @ = Player color 0x1F under Empty color 0x00
+  end
+
+  stats
+  end
+end
+
+board "Cond Hall"
+  start player at 30,3
+  max-shots 255
+  dark false
+  reenter false
+  time-limit 0
+  exits north none south "Cond Clock" west none east none
+
+  grid
+############################################################
+#..........................................................#
+#............................@.............................#
+#..........................................................#
+#..........................................................#
+#..........................................................#
+#..........................................................#
+#..........................................................#
+#..........................................................#
+#..........................................................#
+#..........................................................#
+#..o.o.o.o.o...o.o...o...o...o...o.....o.o...o.............#
+.......................g.............z.....................#
+#..........................................................#
+#..........................................................#
+#..........................................................#
+#..........................................................#
+#..........................................................#
+#..........................................................#
+#............................o....o..o.....................#
+#..........................................................#
+#..........................................................#
+#..........................................................#
+#..........................................................#
+#################################################.##########
+  end
+
+  legend
+    # = Solid color 0x0E
+    . = Empty color 0x07
+    @ = Player color 0x1F under Empty color 0x00
+    o = Object color 0x0F
+    g = Gem color 0x03
+    z = Energizer color 0x05
+  end
+
+  stats
+    stat at 4,12 element Object cycle 1 p1 cp437:0x61 under Empty color 0x00
+    oop
+@ask1
+#end
+:touch
+#if alpha #char 65
+#if not alpha #char 78
+#end
+    end
+    stat at 6,12 element Object cycle 1 p1 cp437:0x62 under Empty color 0x00
+    oop
+@setter
+#end
+:touch
+#set alpha
+#end
+    end
+    stat at 8,12 element Object cycle 1 p1 cp437:0x63 under Empty color 0x00
+    oop
+@ask2
+#end
+:touch
+#if alpha #char 65
+#if not alpha #char 78
+#end
+    end
+    stat at 10,12 element Object cycle 1 p1 cp437:0x64 under Empty color 0x00
+    oop
+@clearer
+#end
+:touch
+#clear alpha
+#end
+    end
+    stat at 12,12 element Object cycle 1 p1 cp437:0x65 under Empty color 0x00
+    oop
+@ask3
+#end
+:touch
+#if alpha #char 65
+#if not alpha #char 78
+#end
+    end
+    stat at 16,12 element Object cycle 1 p1 cp437:0x66 under Empty color 0x00
+    oop
+@gifts
+#end
+:touch
+#give health 5
+#give ammo 7
+#give gems 3
+#give torches 2
+#give score 11
+#end
+    end
+    stat at 18,12 element Object cycle 1 p1 cp437:0x67 under Empty color 0x00
+    oop
+@takes
+#end
+:touch
+#take health 5
+#take ammo 2
+#take gems 1
+#take torches 1
+#take score 4
+#take gems 99 nope
+#char 89
+#end
+:nope
+#char 78
+#end
+    end
+    stat at 22,12 element Object cycle 1 p1 cp437:0x68 under Empty color 0x00
+    oop
+@any1
+#end
+:touch
+#if any gem #char 65
+#if not any gem #char 78
+#end
+    end
+    stat at 26,12 element Object cycle 1 p1 cp437:0x69 under Empty color 0x00
+    oop
+@any2
+#end
+:touch
+#if any gem #char 65
+#if not any gem #char 78
+#end
+    end
+    stat at 30,12 element Object cycle 1 p1 cp437:0x6A under Empty color 0x00
+    oop
+@allev
+#end
+:touch
+#send alcol:ask
+#send aloff:ask
+#end
+    end
+    stat at 30,20 element Object cycle 1 p1 cp437:0x6B under Empty color 0x00
+    oop
+@alcol
+#end
+:ask
+#if alligned #char 65
+#if not alligned #char 78
+#end
+    end
+    stat at 35,20 element Object cycle 1 p1 cp437:0x6C under Empty color 0x00
+    oop
+@aloff
+#end
+:ask
+#if alligned #char 65
+#if not alligned #char 78
+#end
+    end
+    stat at 34,12 element Object cycle 1 p1 cp437:0x6D under Empty color 0x00
+    oop
+@conlev
+#end
+:touch
+#if contact #char 65
+#if not contact #char 78
+#send confar:ask
+#end
+    end
+    stat at 38,20 element Object cycle 1 p1 cp437:0x6E under Empty color 0x00
+    oop
+@confar
+#end
+:ask
+#if contact #char 65
+#if not contact #char 78
+#end
+    end
+    stat at 40,12 element Object cycle 1 p1 cp437:0x6F under Empty color 0x00
+    oop
+@nrg1
+#end
+:touch
+#if energized #char 65
+#if not energized #char 78
+#end
+    end
+    stat at 42,12 element Object cycle 1 p1 cp437:0x70 under Empty color 0x00
+    oop
+@nrg2
+#end
+:touch
+#if energized #char 65
+#if not energized #char 78
+#end
+    end
+    stat at 46,12 element Object cycle 1 p1 cp437:0x71 under Empty color 0x00
+    oop
+@then1
+#end
+:touch
+#if contact then bump
+#end
+:bump
+#char 65
+#end
+    end
+  end
+end
+
+board "Cond Clock"
+  start player at 30,3
+  max-shots 255
+  dark false
+  reenter false
+  time-limit 60
+  exits north none south none west none east none
+
+  grid
+#################################################.##########
+#..........................................................#
+#............................@.............................#
+#..........................................................#
+#................................................o.o.......#
+#..........................................................#
+#..........................................................#
+#..........................................................#
+#..........................................................#
+#..........................................................#
+#..........................................................#
+#..........................................................#
+#..........................................................#
+#..........................................................#
+#..........................................................#
+#..........................................................#
+#..........................................................#
+#..........................................................#
+#..........................................................#
+#..........................................................#
+#..........................................................#
+#..........................................................#
+#..........................................................#
+#..........................................................#
+############################################################
+  end
+
+  legend
+    # = Solid color 0x0E
+    . = Empty color 0x07
+    @ = Player color 0x1F under Empty color 0x00
+    o = Object color 0x0F
+  end
+
+  stats
+    stat at 50,5 element Object cycle 1 p1 cp437:0x72 under Empty color 0x00
+    oop
+@giver
+#end
+:touch
+#give time 20
+#end
+    end
+    stat at 52,5 element Object cycle 1 p1 cp437:0x73 under Empty color 0x00
+    oop
+@taker
+#end
+:touch
+#take time 10
+#end
+    end
+  end
+end

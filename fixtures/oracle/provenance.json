@@ -18,6 +18,7 @@
   "worlds": {
     "ORCLBEAST.ZZT": "f0933f4201b1c09c2bfd1a31bb5b6c756220ac14f40124fab22825d0c5743830",
     "ORCLBLNK.ZZT": "c000d8be264c20862def38af627eed975be8fcbdcaf833b74fa0ebb1d650135e",
+    "ORCLCOND.ZZT": "c1f9580064db6478ad685a4fb85bbb6931f5cd54f8ddc2dfdca403cd2beb6b32",
     "ORCLDARK.ZZT": "6cf64ecd8b2acb65a1fb8def965b5b64d1745fcc0a845bcc951171a1faa48805",
     "ORCLDEV.ZZT": "9ae2bd4a8f40965b0813a7deb6d8038d887aabdb3311c7f254b24187fc6971b1",
     "ORCLFIRE.ZZT": "8a9b4a4ef762c9b924619005575b3f23372997f4ffc33f36659244300f490be1",
@@ -25,6 +26,7 @@
     "ORCLITEM.ZZT": "cba615572360d471cd6f4bce61ae58dbfb41bfff41345b81f78e0f9302129ed3",
     "ORCLROOM.ZZT": "d63d9b549f2d0c3f9e1dc0dc2fa1654cad06a3fa4ca472787c66b88d91ca4fbe",
     "ORCLMECH.ZZT": "a7046ae5da15f333cfaba6174bc5451dfdbf8a626e58960c6e90728f5738c706",
+    "ORCLMORF.ZZT": "8ba6ccdb5f2fb444cf723e6b5f0a7942e04c72968f237385bb7eead10ee15de2",
     "ORCLMOVE.ZZT": "a4f7ffd9ab17e3a323efc6d8b415de0c77ce8ffbb436b5c5d534b2faead7a9bd",
     "ORCLNRG.ZZT": "faff6e41dc9a52c7099f451c19c9adca556dab75ed8da1250ae9d720e3805de3",
     "ORCLOOZE.ZZT": "41ec11449167e21a68dc89b2082865e27fc6908a00b1c7ffd7288e7690fe3874",
@@ -33,7 +35,9 @@
     "ORCLPUSH.ZZT": "df43c25d3712832eec96b5dd8c7578cc0121c6e772f7ec9e13779323e49fa21d",
     "ORCLRIDE.ZZT": "3cd51acfe787bf06c31ccf623ed47a8d841d6144266a15783a79eb4847bdf327",
     "ORCLSHOT.ZZT": "38b23a17c978c013f3adcf7a58c5d083a2e46be006ce5f89cb3ae88465adb156",
-    "ORCLTIME.ZZT": "9f61a60c4ebc587aea0097b7a63f8307dd2803f522abd1528908335c3201127e"
+    "ORCLTALK.ZZT": "982b64e66f312979cfc79b6ec30682b0c551ee2ac96213dc333ffee386247a1d",
+    "ORCLTIME.ZZT": "9f61a60c4ebc587aea0097b7a63f8307dd2803f522abd1528908335c3201127e",
+    "ORCLWALK.ZZT": "7167099a5ec6fc1b508ca82071ff6b6883590c46bf3ccd061b4575eaebcbeca7"
   },
   "determinism": {
     "timer_offset": 0,
@@ -43,6 +47,7 @@
   "scenarios": {
     "beast.scn": "ea4a38bba8af3bcba53b78af2fa0af97030acf04225fd417479088b02a98f3d8",
     "blink.scn": "ffa7e524ed3ff9640217dfc76f036f3ab2a4a6451fdb1a72501808d958e4cade",
+    "cond.scn": "6310b7c9cda1a743f4e4524f6737d3e707ef67310e1c9b9080fa273c46a92443",
     "dark.scn": "0978e370ec0ea5138a6c139ee9102dcac89714dcb398f2dd67fff7b62ca0316d",
     "dev.scn": "00f90f96f25a692df9567e2f3abc0dfb5f7484ee728a0a339cbdea0bce15182d",
     "fire.scn": "1f9425fcd6cff3f11d23c4430be92dee3b61aafb989614fe068dc33737d125d5",
@@ -50,6 +55,7 @@
     "item.scn": "6e8857472fe0fcd1ff04617d81c4c82fcfc763297fdab965359fa090ec78f790",
     "main.scn": "2b9dae26c5bfb5495eb84c0fbbbd4340517c3aff0de4cf676c53d9d4d2ebd596",
     "mech.scn": "a1b52563b712a1b68008bfcd6a7e793b54ec7474cf89fb4539b3e21f8b637ef4",
+    "morf.scn": "5b7b4f34b70efe438c8a7d89ec953c3cf537dae606468e73fcfba391beb30a9d",
     "move.scn": "c15176887c0edad0f49aa12925ef76d59d7535ce33fa1d2937f015e6d969ba7d",
     "nrg.scn": "1169bb3c0d18d7e438519fdb272ab572b0ea0da41f64c1fbd1d8aeea71372b8b",
     "ooze.scn": "5b51eb0a51fad446c29daaa143644df4a9b31d6c84c5ebc7868616ca29072465",
@@ -59,6 +65,8 @@
     "ride.scn": "09948e79f8f58aba494b56cac14abffd74bf268f5cffdc6e18854f7ac95015eb",
     "scroll.scn": "0f15797ccbcdb98b45be98ccb3f9ab04a4b5e447d99e17ebbc8ef5276ba3edd7",
     "shot.scn": "ad4970a0f2dd7b5f3ac1f73d5c81b65312e988f1861969b5646ca1747cb6e333",
-    "time.scn": "5501185575a2b151734723655c09f75f291fa218c75a90808ea0d753620016b7"
+    "talk.scn": "487bc201c02396550818dbecac3c8f98f084b78a3a64a3a9df267e3fcb6216a7",
+    "time.scn": "5501185575a2b151734723655c09f75f291fa218c75a90808ea0d753620016b7",
+    "walk.scn": "54f3d30ced0b3117667da5a1f2de2435f5a96b1240acb9406c90268a4af223e8"
   }
 }

@@ -1,0 +1,335 @@
+zwd 1
+world "ORCLWALK"
+
+board "Walk Hub"
+  start player at 56,13
+  max-shots 255
+  dark false
+  reenter false
+  time-limit 0
+  exits north none south none west none east "Walk Hall"
+
+  grid
+############################################################
+#..........................................................#
+#..........................................................#
+#..........................................................#
+#..........................................................#
+#..........................................................#
+#..........................................................#
+#..........................................................#
+#..........................................................#
+#..........................................................#
+#..........................................................#
+#..........................................................#
+#......................................................@....
+#..........................................................#
+#..........................................................#
+#..........................................................#
+#..........................................................#
+#..........................................................#
+#..........................................................#
+#..........................................................#
+#..........................................................#
+#..........................................................#
+#..........................................................#
+#..........................................................#
+############################################################
+  end
+
+  legend
+    # = Solid color 0x0E
+    . = Empty color 0x07
+    @ = Player color 0x1F under Empty color 0x00
+  end
+
+  stats
+  end
+end
+
+board "Walk Hall"
+  start player at 30,3
+  max-shots 255
+  dark false
+  reenter false
+  time-limit 0
+  exits north none south none west none east none
+
+  grid
+############################################################
+#..........................................#.......#.......#
+#............................@............#o#..o...o...o...#
+#..........................................#.......#.......#
+#..o...o...o...o...o.......................................#
+#..........................................#...............#
+#..........................................o#..o..#o#..o...#
+#..........................................................#
+#..o.....o.....o.....o.....o.....o.........................#
+#..........................................................#
+#..........................................................#
+#..........................................................#
+...........................................................#
+#..........................................................#
+#..........................................................#
+#..........................................................#
+#.......#o.....o.....o....#o....#o#o..#o...o...............#
+#..........................................................#
+#..........................................................#
+#..........................................................#
+#..........o.................o.............................#
+#..........................................................#
+#..................o....#..................................#
+#..........................................................#
+############################################################
+  end
+
+  legend
+    # = Solid color 0x0E
+    . = Empty color 0x07
+    @ = Player color 0x1F under Empty color 0x00
+    o = Object color 0x0F
+  end
+
+  stats
+    stat at 4,5 element Object cycle 1 p1 cp437:0x61 under Empty color 0x00
+    oop
+@n2
+/n
+/n
+#end
+    end
+    stat at 8,5 element Object cycle 1 p1 cp437:0x62 under Empty color 0x00
+    oop
+@north2
+/north
+/north
+#end
+    end
+    stat at 12,5 element Object cycle 1 p1 cp437:0x63 under Empty color 0x00
+    oop
+@s2
+/s
+/s
+#end
+    end
+    stat at 16,5 element Object cycle 1 p1 cp437:0x64 under Empty color 0x00
+    oop
+@south2
+/south
+/south
+#end
+    end
+    stat at 20,5 element Object cycle 1 p1 cp437:0x65 under Empty color 0x00
+    oop
+@opp2
+/opp n
+/opp n
+#end
+    end
+    stat at 4,9 element Object cycle 1 p1 cp437:0x66 under Empty color 0x00
+    oop
+@e2
+/e
+/e
+#end
+    end
+    stat at 10,9 element Object cycle 1 p1 cp437:0x67 under Empty color 0x00
+    oop
+@east2
+/east
+/east
+#end
+    end
+    stat at 16,9 element Object cycle 1 p1 cp437:0x68 under Empty color 0x00
+    oop
+@w2
+/w
+/w
+#end
+    end
+    stat at 22,9 element Object cycle 1 p1 cp437:0x69 under Empty color 0x00
+    oop
+@west2
+/west
+/west
+#end
+    end
+    stat at 28,9 element Object cycle 1 p1 cp437:0x6A under Empty color 0x00
+    oop
+@cw2
+/cw n
+/cw n
+#end
+    end
+    stat at 34,9 element Object cycle 1 p1 cp437:0x6B under Empty color 0x00
+    oop
+@ccw2
+/ccw n
+/ccw n
+#end
+    end
+    stat at 10,17 element Object cycle 1 p1 cp437:0x6C under Empty color 0x00
+    oop
+@try1
+#try w #char 84
+#end
+    end
+    stat at 16,17 element Object cycle 1 p1 cp437:0x6D under Empty color 0x00
+    oop
+@try2
+#try w #char 84
+#end
+    end
+    stat at 22,17 element Object cycle 1 p1 cp437:0x6E under Empty color 0x00
+    oop
+@go1
+#go n
+#go n
+#char 71
+#end
+    end
+    stat at 28,17 element Object cycle 1 p1 cp437:0x6F under Empty color 0x00
+    oop
+@go2
+#go w
+#char 72
+#end
+    end
+    stat at 34,17 element Object cycle 1 p1 cp437:0x70 under Empty color 0x00
+    oop
+@fw
+/w
+#char 88
+#end
+    end
+    stat at 36,17 element Object cycle 1 p1 cp437:0x71 under Empty color 0x00
+    oop
+@qw
+?w
+#char 88
+#end
+    end
+    stat at 40,17 element Object cycle 1 p1 cp437:0x72 under Empty color 0x00
+    oop
+@flow
+#walk w
+#if blocked flow #char 70
+#walk i
+#end
+    end
+    stat at 44,17 element Object cycle 1 p1 cp437:0x73 under Empty color 0x00
+    oop
+@idl
+#if blocked i #char 73
+#if blocked idle #char 74
+#end
+    end
+    stat at 12,21 element Object cycle 1 p1 cp437:0x74 under Empty color 0x00
+    oop
+@lever
+#end
+:touch
+#send seeker:go
+#end
+    end
+    stat at 30,21 element Object cycle 1 p1 cp437:0x75 under Empty color 0x00
+    oop
+@seeker
+#end
+:go
+/seek
+/seek
+/seek
+#end
+    end
+    stat at 20,23 element Object cycle 1 p1 cp437:0x76 step east under Empty color 0x00
+    oop
+@thud
+#end
+:thud
+#char 84
+#walk i
+#end
+    end
+    stat at 44,3 element Object cycle 1 p1 cp437:0x31 under Empty color 0x00
+    oop
+@rndrnd_a
+:loop
+#if not blocked rnd bad
+#send loop
+:bad
+#char 66
+#end
+    end
+    stat at 48,3 element Object cycle 1 p1 cp437:0x32 under Empty color 0x00
+    oop
+@rndrnd_b
+:loop
+#if blocked rnd bad
+#send loop
+:bad
+#char 66
+#end
+    end
+    stat at 52,3 element Object cycle 1 p1 cp437:0x33 under Empty color 0x00
+    oop
+@rndrndns_a
+:loop
+#if not blocked rndns bad
+#send loop
+:bad
+#char 66
+#end
+    end
+    stat at 56,3 element Object cycle 1 p1 cp437:0x34 under Empty color 0x00
+    oop
+@rndrndns_b
+:loop
+#if blocked rndns bad
+#send loop
+:bad
+#char 66
+#end
+    end
+    stat at 44,7 element Object cycle 1 p1 cp437:0x35 under Empty color 0x00
+    oop
+@rndrndne_a
+:loop
+#if not blocked rndne bad
+#send loop
+:bad
+#char 66
+#end
+    end
+    stat at 48,7 element Object cycle 1 p1 cp437:0x36 under Empty color 0x00
+    oop
+@rndrndne_b
+:loop
+#if blocked rndne bad
+#send loop
+:bad
+#char 66
+#end
+    end
+    stat at 52,7 element Object cycle 1 p1 cp437:0x37 under Empty color 0x00
+    oop
+@rndrndpn_a
+:loop
+#if not blocked rndp n bad
+#send loop
+:bad
+#char 66
+#end
+    end
+    stat at 56,7 element Object cycle 1 p1 cp437:0x38 under Empty color 0x00
+    oop
+@rndrndpn_b
+:loop
+#if blocked rndp n bad
+#send loop
+:bad
+#char 66
+#end
+    end
+  end
+end

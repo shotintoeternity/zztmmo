@@ -1,0 +1,282 @@
+# ORCLTALK: ZZT-OOP's talking half — messages, windows, labels, and the four
+# commands that rewrite another object's program (M16.6).
+#
+# Every object on Talk Hall carries `cycle 1`, so the whole world is
+# phase-insensitive and needs no `phase` directive: each object ticks on every
+# game cycle whatever CurrentTick vanilla started on. The board is reached by
+# walking off a board EDGE rather than through a passage (GAME.PAS:1348 pauses
+# on a passage, an edge does not), so the arriving span is modelled in lockstep
+# on both sides — the same reason ORCLMECH's devices live off board 0.
+#
+# Talk Hall, row 12 — the gallery. The player walks east along row 13 and
+# knocks on each object from below; an Object is not walkable, so a touch costs
+# one keypress and moves nobody.
+#
+#   ring1 4    #send echo:one                 -> echo shows A
+#   zapper 6   #zap echo:two                  -> the ':two' label becomes ''two'
+#   ring2a 8   #send echo:two                 -> refused, echo still shows A
+#   restorer 10 #restore echo:two             -> the label comes back
+#   ring2b 12  #send echo:two                 -> accepted, echo shows B
+#   copy 14    #bind echo                     -> copy runs echo's program AND
+#                                               answers to echo's @name
+#   ring3 16   #send echo:three               -> BOTH echo and copy show C
+#   echo 20    the target: :one/:two/:three
+#   rest 24    #char T, six #idle, #restart   -> back to the program's top, so
+#                                               the glyph returns to S
+#   budget 28  #give ammo 60 then a
+#              take/give/send loop            -> 11 loops per tick, which is the
+#                                               33-instruction budget (insCount
+#                                               > 32, OOP.PAS) measured in score
+#   piper 32   #play tcdefgab                 -> seven tone onsets
+#   msg 36     one text line                  -> DisplayMessage, not a window
+#   bad 38     #nosuch                        -> ERR: Bad command NOSUCH
+#   guard 44   #lock, thirty #idle, #unlock   -> the lock window
+#   bell 46    rings guard once per tick      -> refused while locked, accepted
+#                                               the moment #unlock runs
+#
+# Talk Study holds everything modal, and holds nothing else: while vanilla sits
+# inside a text window the whole game is frozen, whereas the fork emits a
+# ScrollEvent and keeps ticking (deviation per-player-modal-freeze). Extra
+# engine cycles are only harmless on a board where nothing is running, so the
+# windows get a board of their own — and the Scroll, whose tick shimmers its
+# own colour, is touched first and consumed before either object window opens.
+world ORCLTALK
+seed 0
+boot 240
+capture title
+play
+# Talk Hub -> Talk Hall across the east edge.
+move right
+move right
+move right
+move right
+move right
+capture arrive-hall
+# ring1: a plain #send reaches a label in another object.
+move right
+move right
+move right
+move up
+settle 8
+capture send-one
+# zapper: rewrite echo's ':two' out of existence.
+move right
+move right
+move up
+settle 8
+# ring2a: the send now finds no label at all.
+move right
+move right
+move up
+settle 8
+capture zapped
+# restorer: put ':two' back.
+move right
+move right
+move up
+settle 8
+# ring2b: the same send now lands.
+move right
+move right
+move up
+settle 8
+capture restored
+# copy: #bind takes echo's program, name and all.
+move right
+move right
+move up
+settle 8
+capture bound
+# ring3: one send, two answers — copy answers to @echo now.
+move right
+move right
+move up
+settle 8
+capture send-three
+# rest: #restart returns to the top of the program mid-conversation.
+move right
+move right
+move right
+move right
+move right
+move right
+move right
+move right
+move up
+capture restart-mid
+settle 20
+capture restart-top
+# budget: eleven loop iterations per tick, three ticks apart.
+move right
+move right
+move right
+move right
+move up
+capture budget-1
+settle 2
+capture budget-2
+settle 2
+capture budget-3
+settle 8
+capture budget-done
+# piper: #play.
+move right
+move right
+move right
+move right
+move up
+settle 8
+capture play-notes
+# msg: a single text line is a message, not a window.
+move right
+move right
+move right
+move right
+move up
+settle 4
+capture message
+# bad: an unknown command is an error message, and stops the object.
+move right
+move right
+move up
+settle 4
+capture oop-error
+# guard: #lock holds off every #send until #unlock runs.
+move right
+move right
+move right
+move right
+move right
+move right
+move up
+capture guard-locked-0
+move right
+move right
+move up
+capture guard-locked
+settle 40
+capture guard-unlocked
+# The ways a #send can be addressed, and the rule that decides whether a label
+# matches at all. Senders on row 12, listeners on row 10, so one row says who
+# answered.
+#   bcast 50  #send all:ping     -> p1 (:ping) AND the sender itself, which
+#                                   also carries :ping — ALL includes the
+#                                   sender. p2 answers too, though its label is
+#                                   :ping2: OopFindString accepts a match whose
+#                                   next character is a DIGIT and rejects only
+#                                   [A-Z_], so pz's :pingz stays silent. That
+#                                   asymmetry is vanilla's, and the three
+#                                   listeners are here to pin it.
+#   bcast2 52 #send others:knock -> q1 only; the sender carries :knock and is
+#                                   skipped, which is the whole difference
+#                                   between OTHERS and ALL
+#   selfer 54 #send self:me      -> the sender only; notme carries :me and is
+#                                   left alone
+#   bump 56   #send restarget:bumped  -> restarget shows B
+#   reset 58  #send restarget:restart -> RESTART is a reserved message, not a
+#                                       label: OopFindLabel rewinds the target
+#                                       to position 0 instead of searching, so
+#                                       restarget runs its #char 90 again
+move right
+move right
+move right
+move right
+move up
+settle 8
+capture send-all
+move right
+move right
+move up
+settle 8
+capture send-others
+move right
+move right
+move up
+settle 8
+capture send-self
+move right
+move right
+move up
+settle 8
+capture send-bumped
+move right
+move right
+move up
+settle 8
+capture send-restart
+# Back west to the column with the hole in the south border.
+move left
+move left
+move left
+move left
+move left
+move left
+move left
+move left
+move left
+move left
+move left
+move left
+# Down the column and off the south edge into Talk Study.
+move down
+move down
+move down
+move down
+move down
+move down
+move down
+move down
+move down
+move down
+move down
+move down
+move down
+capture arrive-study
+# The scroll: its own program runs on touch, and it is consumed on dismissal.
+move down
+move down
+move down
+move down
+move down
+move down
+move down
+move down
+move down
+move down
+move down
+move down
+move left
+move left
+move up
+settle 20
+capture scroll-window
+key 27 01
+settle 20
+capture scroll-gone
+# page: a two-line object window, titled from its @name.
+move left
+move left
+move left
+move up
+settle 20
+capture page-window
+key 27 01
+settle 20
+capture page-closed
+# link: !label;text hyperlinks, chosen with ENTER.
+move left
+move left
+move left
+move up
+settle 20
+capture link-window
+key 13 1C
+settle 20
+capture link-alpha
+move up
+settle 20
+capture link-window-2
+key 0 50
+key 13 1C
+settle 20
+capture link-beta

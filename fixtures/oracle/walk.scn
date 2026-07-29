@@ -1,0 +1,80 @@
+# ORCLWALK: ZZT-OOP's moving half — every direction word, the four commands
+# that use one, and the two movement shorthands (M16.6).
+#
+# Everything on Walk Hall runs the moment the board loads, so one board entry
+# sets the whole hall going and the final resting positions ARE the evidence:
+# a direction that resolved wrong lands its object on a different square, and
+# the checkpoint names the cell. Every object carries `cycle 1`, so the world
+# is phase-insensitive and declares no `phase`. The board is entered over a
+# board edge (never a passage, which pauses — GAME.PAS:1348) so the arriving
+# span is modelled on both sides.
+#
+#   row 5   /n /north /s /south, and /opp n as a south that was written north
+#   row 9   /e /east /w /west, and /cw n /ccw n as an east and a west
+#   row 17  #try refused falls through to the rest of its line (try1 -> T)
+#           while #try taken skips it (try2 keeps its glyph and moves one west);
+#           #go retries a blocked move forever (go2 never reaches #char H) but
+#           steps and continues when it can (go1 -> two north, then G);
+#           /w and ?w against the same wall: / retries forever, ? gives up and
+#           runs the next line (fw keeps its glyph, qw -> X);
+#           #walk w then `#if blocked flow` reads the step back out (flow -> F);
+#           `blocked i` and `blocked idle` are the object's own square (idl -> J)
+#   row 21  a lever the player pulls from the seeker's own row, so
+#           CalcDirectionSeek (GAME.PAS:1488) takes its `target.Y = y` branch
+#           and the seek is RNG-free: three /seek steps west
+#   row 23  a standing `step east` move order jammed against a wall sends
+#           itself THUD, which stops it (thud -> T at 24,23)
+#
+# The four random directions are the one thing an exact-cell comparison cannot
+# pin draw by draw: vanilla's RandSeed is seeded from its own boot clock and is
+# not this engine's. What IS comparable is the SET each draw comes from, and
+# that is what the eight chambers at the top right assert, on both sides, for
+# thousands of draws:
+#   *_a sits in a chamber where every legal outcome is walled and loops on
+#       `#if not blocked DIR bad` — so a draw outside the set turns it into B
+#   *_b sits in open ground and loops on `#if blocked DIR bad` — so a draw that
+#       came back as the object's own square (or any wall) turns it into B
+# rnd's chamber walls the four orthogonals and leaves the diagonals open, which
+# is what makes "orthogonal" the assertion rather than "not nowhere"; rndns
+# walls north and south, rndne walls north and east, and rndp n walls east and
+# west, which are exactly the perpendiculars of north. Both objects keep their
+# starting glyph for the whole run or the checkpoint names the cell.
+world ORCLWALK
+seed 0
+boot 240
+capture title
+play
+# Walk Hub -> Walk Hall across the east edge; the hall starts working at once.
+move right
+move right
+move right
+move right
+move right
+capture arrive-hall
+settle 20
+capture movers-settled
+# East along the arrival row, then down column 11 to row 21, so the pull
+# leaves the player in the seeker's row. (Column 1 is solid below the arrival
+# square: the west border is punched at row 13 only.)
+move right
+move right
+move right
+move right
+move right
+move right
+move right
+move right
+move right
+move right
+move down
+move down
+move down
+move down
+move down
+move down
+move down
+move down
+capture seek-before
+move right
+settle 20
+capture seek-after

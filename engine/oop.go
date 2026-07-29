@@ -667,14 +667,19 @@ func (e *Engine) OopExecute(statId int16, position *int16, name string) {
 					e.OopReadWord(statId, position)
 					labelStatId = 0
 					for e.OopFindLabel(statId, e.OopWord, &labelStatId, &labelDataPos, "\r:") {
-						e.Board.Stats[labelStatId].Data = Replace(e.Board.Stats[labelStatId].Data, labelDataPos+1, '\'')
+						// OOP.PAS:706-711 advances the data POINTER by
+						// labelDataPos+1 bytes and writes there, which is the
+						// second byte of the "\r:" match — the ':' itself.
+						// Replace indexes 1-based, so the same byte is
+						// labelDataPos+2 (M16.6).
+						e.Board.Stats[labelStatId].Data = Replace(e.Board.Stats[labelStatId].Data, labelDataPos+2, '\'')
 					}
 				} else if e.OopWord == "RESTORE" {
 					e.OopReadWord(statId, position)
 					labelStatId = 0
 					for e.OopFindLabel(statId, e.OopWord, &labelStatId, &labelDataPos, "\r'") {
 						for {
-							e.Board.Stats[labelStatId].Data = Replace(e.Board.Stats[labelStatId].Data, labelDataPos+1, ':')
+							e.Board.Stats[labelStatId].Data = Replace(e.Board.Stats[labelStatId].Data, labelDataPos+2, ':')
 							labelDataPos = e.OopFindString(labelStatId, "\r'"+e.OopWord+"\r")
 							if labelDataPos <= 0 {
 								break

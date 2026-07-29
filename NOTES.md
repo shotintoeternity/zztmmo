@@ -3568,3 +3568,126 @@ state as a positive: an enemy shot spares a creature standing in front of it.
 PARITY.md §7's "no point-blank shot in either direction" exclusion is lifted, and
 `elem.bullet`, `elem.tiger`, `elem.player` and `elem.spinning-gun` are `pass`
 again with the Blank Bay checkpoints as evidence.
+
+---
+
+## 2026-07-29 — M16.6: ZZT-OOP, scroll, sound and modal parity sweep
+
+Four micro-worlds, four scenarios, 73 manifest rows. The design problem this
+sweep had to solve is the opposite of M16.5's: creatures had to be held still to
+be comparable, whereas an interpreter is comparable by construction — what is
+hard is making its *effects* visible on a 60x25 text page. Every act therefore
+ends in something the page shows: an object's glyph (`#char`), a tile it wrote
+(`#put`/`#change`/`#become`/`#die`), a sidebar counter (`#give`/`#take`), a
+message row (a one-line scroll, or `ERR:`), a speaker onset (`#play`), or the
+contents of a text window.
+
+**The gallery pattern.** Each world puts its objects on row 12 and walks the
+player east along row 13, knocking on each from below: an Object is not
+walkable, so a touch costs one keypress and moves nobody, and the whole board
+reads as one line of answers. Every object carries `cycle 1`, so three of the
+four worlds are phase-insensitive and need no `phase` directive — only ORCLMORF
+declares one, because `#cycle 4` is the point of the act that needs it. All four
+boards are entered over a board EDGE, never a passage (which pauses,
+GAME.PAS:1348), so the arriving span is modelled on both sides — the M16.4
+lesson, unchanged.
+
+**The instruction budget, measured rather than asserted.** `insCount > 32`
+(OOP.PAS) is the only limit in the interpreter with a number in it, and it is
+invisible unless something counts. ORCLTALK's `@budget` gives itself 60 ammo and
+then loops `#take ammo 1 done` / `#give score 1` / `#send loop` — three
+instructions an iteration, so eleven iterations a tick. The real ZZT.EXE records
+score 44/55/60 against ammo 16/5/0 on three consecutive cycles. That is the 33rd
+instruction breaking the loop, read off the sidebar.
+
+**What a locked object refuses.** `#lock` is only meaningful against something
+that keeps trying, so `@bell` rings `#send guard:ring` once per tick forever
+(`/i` is the one-tick wait) while `@guard` sits inside thirty `#idle`s with
+`P2 = 1`. The ring is refused for all thirty and lands the moment `#unlock`
+runs. Note the sense of `OopSend`'s `respectSelfLock`: a NEGATIVE statId (TOUCH,
+THUD) respects the lock, a positive one (`#send`) does not, so a locked object
+ignores being touched but can still send to itself.
+
+**`OopFindString`'s word boundary is asymmetric, and that is vanilla.** A match
+is rejected only when the next character is `[A-Z_]`. So `#send all:ping` wakes
+an object whose label is `:ping2` and leaves `:pingz` alone. ORCLTALK carries
+all three listeners (`:ping`, `:ping2`, `:pingz`) precisely so the asymmetry is
+pinned rather than discovered later by a world author.
+
+**The one simulation fix: `#zap`/`#restore` overwrote the wrong byte.**
+OOP.PAS:706 takes the stat's data POINTER and advances it `labelDataPos + 1`
+bytes — the second byte of the `"\r:"` match, i.e. the `:`. The Go port reached
+for the same byte with `Replace(Data, labelDataPos+1, …)`, and `Replace` indexes
+1-based, so it wrote one byte early: the `\r`. Under `#zap` that is invisible,
+because a mangled line terminator also stops `"\r:LABEL"` from matching — the
+label does go quiet. It only surfaces under `#restore`, which then cannot find
+`"\r'LABEL"`, because the apostrophe it is looking for ate the newline it wants
+in front of it. ORCLTALK's ring2b never woke echo again, and that one cell is
+what the capture named. `TestOopZapRestoreRewriteTheLabelColon` locks the byte
+directly. The TOWN replay hash did not move (no `#zap` runs in its 600-step
+window) and all 19 earlier oracle captures reproduce byte-identically.
+
+**The random directions: compared by set, not by draw.** `RND`, `RNDNS`,
+`RNDNE` and `RNDP` are the only ZZT-OOP surface an exact-cell comparison cannot
+follow, because vanilla's `RandSeed` is seeded from its own boot clock and is
+not this engine's. Every earlier sweep dealt with randomness by *forcing the
+draw away*; here the draw IS the semantic, so the evidence had to change shape.
+ORCLWALK pairs each direction with two objects that loop forever:
+
+- `*_a` sits in a chamber where every legal outcome is walled and loops on
+  `#if not blocked DIR bad`, so a draw outside the set turns its glyph to B;
+- `*_b` sits in open ground and loops on `#if blocked DIR bad`, so a draw that
+  came back as the object's own square turns its glyph to B.
+
+`rnd`'s chamber walls the four orthogonals and leaves the DIAGONALS open, which
+is what makes "orthogonal" the assertion rather than merely "not nowhere";
+`rndns` walls north and south, `rndne` walls north and east, `rndp n` walls east
+and west. Both objects run about sixteen draws a tick for the whole scenario, on
+both sides, and both keep their starting glyph. This does not pin which of the
+two or four outcomes a given draw produced — nothing across this seam can — and
+PARITY.md §7 says so as a scenario-design exclusion rather than pretending
+otherwise.
+
+**Hyperlinks needed a client.** Vanilla's `OopExecute` shows the window inline,
+runs `TextWindowSelect`, and `goto StartParsing` back into the same call with
+the chosen label already sent. The fork emits a `ScrollEvent` and returns
+(M1.3), so the adapter now plays the half web/src plays: a line cursor moved by
+the scancode keys, ENTER resolving `!label;text` to its label, ESCAPE resolving
+to a dismissal, both answered through `SubmitScrollReply` — which is also what
+consumes a Scroll (M17.4). Window checkpoints compare the CAPTION of a
+hyperlink line, because that is what `TextWindowDrawLine` draws. Two
+consequences for scenario design, both recorded in `talk.scn`: everything modal
+lives on a board where nothing else is running, since vanilla freezes inside the
+window and the fork keeps ticking; and the Scroll — whose tick shimmers its own
+colour — is touched and consumed before either object window opens.
+
+**Two defects filed, both blocking M16.20.**
+
+- **M16.6a — `#endgame` leaves the player in limbo.** It sets `Health` to 0 and
+  nothing else. Vanilla's next `ElementPlayerTick` turns that into the game
+  over; this fork replaced game over with a respawn, but the respawn is armed by
+  `DamageStat` setting `RespawnTicks`, which `#endgame` never calls. So the
+  player gets neither: the `Health <= 0` branch zeroes their input and returns,
+  every tick, forever. `#endgame` is how ZZT worlds have always written a losing
+  ending, so in a shared room this bricks a player for good.
+  `TestOopEndgameLeavesThePlayerInLimbo` pins the current behaviour and fails
+  loudly the moment it changes.
+- **M16.6b — the walk click is never heard.** Vanilla's `Sound(110)` on every
+  attempted step (ELEMENTS.PAS:1395) has no counterpart: `Sound()`/`NoSound()`
+  are stubs, and the click cannot be expressed as a `SoundEvent` (those carry
+  note indices, and the nearest table entries are 107 and 114 Hz). PARITY.md §7
+  had recorded it as "a gap for the M16.6 sweep"; this sweep converted that into
+  a filed task rather than an approved deviation, because the fix is a small
+  presentation seam plus client work, not a parity judgement. Its DoD is the
+  strongest one available: delete the 110 Hz filter from the adapter and require
+  every committed capture to still match.
+
+**Manifest.** The interpreter cross-check now scans `lookup` and
+`objectMessage` alongside `OopWord`, so the `ALL`/`OTHERS`/`SELF` send targets
+and the reserved `RESTART` message are inventoried too. Adding the scan reddened
+`go test` until the four rows existed, which is the DoD's "a newly added command
+cannot be unlisted" clause demonstrated rather than claimed. `RESTART` is
+deliberately in two classes — a command an object runs on itself and a message
+another object sends it reach different code.
+
+Advisor unavailable again this session (no `[ADVISOR]` tag on this task).

@@ -79,8 +79,11 @@ var (
 // by the task that only defines the contract.
 func validAssignedTask(id string) bool {
 	// M16.5a is the point-blank shot-ownership gap task filed by the M16.5
-	// creature/projectile sweep (NOTES.md 2026-07-29).
-	if id == "M16.5a" || id == "M16.16a" || id == "M16.18a" {
+	// creature/projectile sweep (NOTES.md 2026-07-29); M16.6a (#endgame limbo)
+	// and M16.6b (the unheard walk click) were filed by the M16.6 OOP/sound
+	// sweep.
+	switch id {
+	case "M16.5a", "M16.6a", "M16.6b", "M16.16a", "M16.18a":
 		return true
 	}
 	m := regexp.MustCompile(`^M16\.(\d+)$`).FindStringSubmatch(id)
@@ -467,7 +470,13 @@ func elementSweep(i int) string {
 func deriveOopRows(t *testing.T) []parityRow {
 	t.Helper()
 	src := mustRead(t, "oop.go")
-	re := regexp.MustCompile(`OopWord == "([A-Z?]+)"`)
+	// Every literal the interpreter dispatches on, not just the command words:
+	// OopWord covers commands/conditions/directions/counters, `lookup` covers
+	// the #send target forms (OopIterateStat), and `objectMessage` covers the
+	// reserved messages OopFindLabel answers without searching for a label.
+	// M16.6's DoD is that a newly added one cannot go unlisted, so all three
+	// are scanned and cross-checked against oopWordClasses().
+	re := regexp.MustCompile(`(?:OopWord|lookup|objectMessage) == "([A-Z?]+)"`)
 	scanned := map[string]bool{}
 	for _, m := range re.FindAllStringSubmatch(src, -1) {
 		scanned[m[1]] = true
@@ -495,7 +504,7 @@ func deriveOopRows(t *testing.T) []parityRow {
 
 	authority := "reference/reconstruction-of-zzt/SRC OOP.PAS; oop.go"
 	var rows []parityRow
-	for _, sub := range []string{"command", "condition", "direction", "counter", "keyword"} {
+	for _, sub := range []string{"command", "condition", "direction", "counter", "keyword", "target", "message"} {
 		words := append([]string(nil), classes[sub]...)
 		sort.Strings(words)
 		for _, w := range words {
@@ -528,6 +537,13 @@ func oopWordClasses() map[string][]string {
 		"direction": {"N", "NORTH", "S", "SOUTH", "E", "EAST", "W", "WEST", "I", "IDLE", "SEEK", "FLOW", "RND", "RNDNS", "RNDNE", "CW", "CCW", "RNDP", "OPP"},
 		"counter":   {"HEALTH", "AMMO", "GEMS", "TORCHES", "SCORE", "TIME"},
 		"keyword":   {"THEN"},
+		// #send target lookups (OopIterateStat) and the reserved messages
+		// OopFindLabel answers without searching for a `:label`. RESTART is
+		// deliberately in two classes: it is both a command an object runs on
+		// itself and a message another object can send it, and the two reach
+		// different code.
+		"target":  {"ALL", "OTHERS", "SELF"},
+		"message": {"RESTART"},
 	}
 }
 

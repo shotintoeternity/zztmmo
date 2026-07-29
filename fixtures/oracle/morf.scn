@@ -1,0 +1,122 @@
+# ORCLMORF: the ZZT-OOP commands that write tiles, fire, and retime (M16.6).
+#
+# The gallery pattern once more: objects on row 12, the player walking east
+# along row 13 and knocking on each from below.
+#
+#   morph 4     #become cyan solid — the object's own square is replaced, and
+#               the colour word in front of the element name is parsed as one
+#   dier 8      #die — the same replacement with Empty on white
+#   charedge 12 #char 67, then #char 0 and #char 256, which OOP.PAS refuses
+#               (0 < value <= 255), so the glyph stays C
+#   putter 16   #put n cyan solid writes the square to the north
+#   changer 20  #change gem ammo rewrites EVERY gem on the board at once
+#   shooter 24  #shoot n, whose bullet reaches the breakable at 24,9
+#   drum 28     #play tc+c-cx4 — a duration prefix, an octave up and back, a
+#               rest, and a drum, in one line
+#   puterr 32   #put i solid — a zero direction is an error, not a no-op
+#   slowlev 36  pulls slow at 36,10, which sets `#cycle 4` and then walks east:
+#               a quarter of the ground a cycle-1 walker would cover
+#   starlev 40  pulls starrer at 52,13, which throws a star WEST along the
+#               player's own row, so CalcDirectionSeek takes its `target.Y = y`
+#               branch and the star's whole flight is RNG-free until it lands
+#
+# This scenario declares `phase`: `#cycle 4` puts a stat on the cycle gate
+# `CurrentTick mod Cycle = statId mod Cycle`, and vanilla picks the CurrentTick
+# it starts on with Random(100) (GAME.PAS:1515,1564). The solver recovers it —
+# and the walker's mid-flight position is exactly what pins it.
+world ORCLMORF
+seed 0
+phase
+boot 240
+capture title
+play
+# Morf Hub -> Morf Hall across the east edge.
+move right
+move right
+move right
+move right
+move right
+capture arrive-hall
+# #become
+move right
+move right
+move right
+move up
+settle 8
+capture become
+# #die
+move right
+move right
+move right
+move right
+move up
+settle 8
+capture die
+# #char refuses 0 and 256
+move right
+move right
+move right
+move right
+move up
+settle 8
+capture char-clamped
+# #put
+move right
+move right
+move right
+move right
+move up
+settle 8
+capture put
+# #change over every gem at once
+move right
+move right
+move right
+move right
+move up
+settle 8
+capture change
+# #shoot north into the breakable
+move right
+move right
+move right
+move right
+move up
+settle 12
+capture shoot
+# #play with an octave shift, a rest, and a drum
+move right
+move right
+move right
+move right
+move up
+settle 12
+capture play-drum
+# #put with no direction is an error
+move right
+move right
+move right
+move right
+move up
+settle 8
+capture put-error
+# #cycle 4, then a walk east measured against the clock
+move right
+move right
+move right
+move right
+move up
+settle 40
+capture cycle-walk
+settle 40
+capture cycle-walk-2
+# #throwstar down the player's own row
+move right
+move right
+move right
+move right
+move up
+settle 8
+capture star-thrown
+settle 40
+capture star-landed

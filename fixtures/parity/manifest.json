@@ -1681,8 +1681,11 @@
       "contract": "V",
       "authority": "reference/reconstruction-of-zzt/SRC ELEMENTS.PAS; ANALYSIS.md",
       "parity": "exact",
-      "status": "unverified",
-      "assignedTask": "M16.6"
+      "status": "pass",
+      "assignedTask": "M16.6",
+      "test": "TestOracleParityTalkScenario,TestOracleParityWalkScenario,TestOracleParityCondScenario,TestOracleParityMorfScenario",
+      "fixture": "fixtures/oracle/talk.capture.txt",
+      "notes": "tick runs the program then the standing step order, which sends THUD when blocked"
     },
     {
       "id": "elem.passage",
@@ -1709,7 +1712,7 @@
       "fixture": "fixtures/oracle/main.capture.txt",
       "status": "pass",
       "assignedTask": "M16.5a",
-      "notes": "also subject to collision-pushout and friendly-fire-policy; single-player V behavior is exact. M16.5a adds the point-blank half of PlayerTick's shot: ELEMENTS.PAS spends ammo and clicks only when BoardShoot resolves, so ORCLFIRE's Blank Bay reads the ownership rule off the sidebar (pb-east, pb-south) as well as off the board"
+      "notes": "also subject to collision-pushout and friendly-fire-policy; single-player V behavior is exact"
     },
     {
       "id": "elem.pusher",
@@ -1757,8 +1760,11 @@
       "contract": "V",
       "authority": "reference/reconstruction-of-zzt/SRC ELEMENTS.PAS; ANALYSIS.md",
       "parity": "exact",
-      "status": "unverified",
-      "assignedTask": "M16.6"
+      "status": "pass",
+      "assignedTask": "M16.6",
+      "test": "TestOracleParityTalkScenario,TestOracleParityScrollScenario",
+      "fixture": "fixtures/oracle/talk.capture.txt",
+      "notes": "runs its own program on touch, shimmers on tick, and is consumed when the reader answers"
     },
     {
       "id": "elem.shark",
@@ -2000,8 +2006,11 @@
       "contract": "V",
       "authority": "reference/reconstruction-of-zzt/SRC OOP.PAS; oop.go",
       "parity": "exact",
-      "status": "unverified",
-      "assignedTask": "M16.6"
+      "status": "pass",
+      "assignedTask": "M16.6",
+      "test": "TestOracleParityMorfScenario",
+      "fixture": "fixtures/oracle/morf.capture.txt",
+      "notes": "replaces the object with a coloured tile; the colour word is parsed by OopParseTile"
     },
     {
       "id": "oop.command.bind",
@@ -2010,8 +2019,11 @@
       "contract": "V",
       "authority": "reference/reconstruction-of-zzt/SRC OOP.PAS; oop.go",
       "parity": "exact",
-      "status": "unverified",
-      "assignedTask": "M16.6"
+      "status": "pass",
+      "assignedTask": "M16.6",
+      "test": "TestOracleParityTalkScenario",
+      "fixture": "fixtures/oracle/talk.capture.txt",
+      "notes": "copies another object's program, @name and all, so the bound object answers to that name"
     },
     {
       "id": "oop.command.change",
@@ -2020,8 +2032,11 @@
       "contract": "V",
       "authority": "reference/reconstruction-of-zzt/SRC OOP.PAS; oop.go",
       "parity": "exact",
-      "status": "unverified",
-      "assignedTask": "M16.6"
+      "status": "pass",
+      "assignedTask": "M16.6",
+      "test": "TestOracleParityMorfScenario",
+      "fixture": "fixtures/oracle/morf.capture.txt",
+      "notes": "rewrites every matching tile on the board in one pass"
     },
     {
       "id": "oop.command.char",
@@ -2030,8 +2045,11 @@
       "contract": "V",
       "authority": "reference/reconstruction-of-zzt/SRC OOP.PAS; oop.go",
       "parity": "exact",
-      "status": "unverified",
-      "assignedTask": "M16.6"
+      "status": "pass",
+      "assignedTask": "M16.6",
+      "test": "TestOracleParityTalkScenario,TestOracleParityMorfScenario",
+      "fixture": "fixtures/oracle/morf.capture.txt",
+      "notes": "refuses 0 and values above 255 (OOP.PAS)"
     },
     {
       "id": "oop.command.clear",
@@ -2040,8 +2058,10 @@
       "contract": "V",
       "authority": "reference/reconstruction-of-zzt/SRC OOP.PAS; oop.go",
       "parity": "exact",
-      "status": "unverified",
-      "assignedTask": "M16.6"
+      "status": "pass",
+      "assignedTask": "M16.6",
+      "test": "TestOracleParityCondScenario",
+      "fixture": "fixtures/oracle/cond.capture.txt"
     },
     {
       "id": "oop.command.cycle",
@@ -2050,8 +2070,11 @@
       "contract": "V",
       "authority": "reference/reconstruction-of-zzt/SRC OOP.PAS; oop.go",
       "parity": "exact",
-      "status": "unverified",
-      "assignedTask": "M16.6"
+      "status": "pass",
+      "assignedTask": "M16.6",
+      "test": "TestOracleParityMorfScenario",
+      "fixture": "fixtures/oracle/morf.capture.txt",
+      "notes": "retimes the stat onto the cycle gate; phase-solved scenario"
     },
     {
       "id": "oop.command.die",
@@ -2060,8 +2083,10 @@
       "contract": "V",
       "authority": "reference/reconstruction-of-zzt/SRC OOP.PAS; oop.go",
       "parity": "exact",
-      "status": "unverified",
-      "assignedTask": "M16.6"
+      "status": "pass",
+      "assignedTask": "M16.6",
+      "test": "TestOracleParityMorfScenario",
+      "fixture": "fixtures/oracle/morf.capture.txt"
     },
     {
       "id": "oop.command.end",
@@ -2070,8 +2095,10 @@
       "contract": "V",
       "authority": "reference/reconstruction-of-zzt/SRC OOP.PAS; oop.go",
       "parity": "exact",
-      "status": "unverified",
-      "assignedTask": "M16.6"
+      "status": "pass",
+      "assignedTask": "M16.6",
+      "test": "TestOracleParityTalkScenario",
+      "fixture": "fixtures/oracle/talk.capture.txt"
     },
     {
       "id": "oop.command.endgame",
@@ -2079,9 +2106,12 @@
       "subject": "ZZT-OOP command ENDGAME",
       "contract": "V",
       "authority": "reference/reconstruction-of-zzt/SRC OOP.PAS; oop.go",
-      "parity": "exact",
-      "status": "unverified",
-      "assignedTask": "M16.6"
+      "parity": "deviation",
+      "status": "gap",
+      "assignedTask": "M16.6a",
+      "test": "TestOopEndgameLeavesThePlayerInLimbo",
+      "notes": "GAP: sets Health to 0 with neither vanilla game over nor the fork respawn \u2014 see M16.6a",
+      "deviation": "mp-respawn"
     },
     {
       "id": "oop.command.give",
@@ -2090,8 +2120,11 @@
       "contract": "V",
       "authority": "reference/reconstruction-of-zzt/SRC OOP.PAS; oop.go",
       "parity": "exact",
-      "status": "unverified",
-      "assignedTask": "M16.6"
+      "status": "pass",
+      "assignedTask": "M16.6",
+      "test": "TestOracleParityCondScenario,TestOracleParityTalkScenario",
+      "fixture": "fixtures/oracle/cond.capture.txt",
+      "notes": "all six counters"
     },
     {
       "id": "oop.command.go",
@@ -2100,8 +2133,11 @@
       "contract": "V",
       "authority": "reference/reconstruction-of-zzt/SRC OOP.PAS; oop.go",
       "parity": "exact",
-      "status": "unverified",
-      "assignedTask": "M16.6"
+      "status": "pass",
+      "assignedTask": "M16.6",
+      "test": "TestOracleParityWalkScenario",
+      "fixture": "fixtures/oracle/walk.capture.txt",
+      "notes": "retries a refused move on the next tick"
     },
     {
       "id": "oop.command.idle",
@@ -2110,8 +2146,10 @@
       "contract": "V",
       "authority": "reference/reconstruction-of-zzt/SRC OOP.PAS; oop.go",
       "parity": "exact",
-      "status": "unverified",
-      "assignedTask": "M16.6"
+      "status": "pass",
+      "assignedTask": "M16.6",
+      "test": "TestOracleParityTalkScenario",
+      "fixture": "fixtures/oracle/talk.capture.txt"
     },
     {
       "id": "oop.command.if",
@@ -2120,8 +2158,11 @@
       "contract": "V",
       "authority": "reference/reconstruction-of-zzt/SRC OOP.PAS; oop.go",
       "parity": "exact",
-      "status": "unverified",
-      "assignedTask": "M16.6"
+      "status": "pass",
+      "assignedTask": "M16.6",
+      "test": "TestOracleParityCondScenario",
+      "fixture": "fixtures/oracle/cond.capture.txt",
+      "notes": "true jumps to the rest of the line; false skips it"
     },
     {
       "id": "oop.command.lock",
@@ -2130,8 +2171,11 @@
       "contract": "V",
       "authority": "reference/reconstruction-of-zzt/SRC OOP.PAS; oop.go",
       "parity": "exact",
-      "status": "unverified",
-      "assignedTask": "M16.6"
+      "status": "pass",
+      "assignedTask": "M16.6",
+      "test": "TestOracleParityTalkScenario",
+      "fixture": "fixtures/oracle/talk.capture.txt",
+      "notes": "a locked object refuses #send and TOUCH alike"
     },
     {
       "id": "oop.command.play",
@@ -2140,8 +2184,11 @@
       "contract": "V",
       "authority": "reference/reconstruction-of-zzt/SRC OOP.PAS; oop.go",
       "parity": "exact",
-      "status": "unverified",
-      "assignedTask": "M16.6"
+      "status": "pass",
+      "assignedTask": "M16.6",
+      "test": "TestOracleParityTalkScenario,TestOracleParityMorfScenario",
+      "fixture": "fixtures/oracle/talk.capture.txt",
+      "notes": "notes, octave shifts, a rest and a drum"
     },
     {
       "id": "oop.command.put",
@@ -2150,8 +2197,11 @@
       "contract": "V",
       "authority": "reference/reconstruction-of-zzt/SRC OOP.PAS; oop.go",
       "parity": "exact",
-      "status": "unverified",
-      "assignedTask": "M16.6"
+      "status": "pass",
+      "assignedTask": "M16.6",
+      "test": "TestOracleParityMorfScenario",
+      "fixture": "fixtures/oracle/morf.capture.txt",
+      "notes": "writes a neighbour; a zero direction is an error"
     },
     {
       "id": "oop.command.restart",
@@ -2160,8 +2210,10 @@
       "contract": "V",
       "authority": "reference/reconstruction-of-zzt/SRC OOP.PAS; oop.go",
       "parity": "exact",
-      "status": "unverified",
-      "assignedTask": "M16.6"
+      "status": "pass",
+      "assignedTask": "M16.6",
+      "test": "TestOracleParityTalkScenario",
+      "fixture": "fixtures/oracle/talk.capture.txt"
     },
     {
       "id": "oop.command.restore",
@@ -2170,8 +2222,11 @@
       "contract": "V",
       "authority": "reference/reconstruction-of-zzt/SRC OOP.PAS; oop.go",
       "parity": "exact",
-      "status": "unverified",
-      "assignedTask": "M16.6"
+      "status": "pass",
+      "assignedTask": "M16.6",
+      "test": "TestOracleParityTalkScenario,TestOopZapRestoreRewriteTheLabelColon",
+      "fixture": "fixtures/oracle/talk.capture.txt",
+      "notes": "M16.6 fixed the byte it overwrote (OOP.PAS:712-722)"
     },
     {
       "id": "oop.command.send",
@@ -2180,8 +2235,10 @@
       "contract": "V",
       "authority": "reference/reconstruction-of-zzt/SRC OOP.PAS; oop.go",
       "parity": "exact",
-      "status": "unverified",
-      "assignedTask": "M16.6"
+      "status": "pass",
+      "assignedTask": "M16.6",
+      "test": "TestOracleParityTalkScenario",
+      "fixture": "fixtures/oracle/talk.capture.txt"
     },
     {
       "id": "oop.command.set",
@@ -2190,8 +2247,10 @@
       "contract": "V",
       "authority": "reference/reconstruction-of-zzt/SRC OOP.PAS; oop.go",
       "parity": "exact",
-      "status": "unverified",
-      "assignedTask": "M16.6"
+      "status": "pass",
+      "assignedTask": "M16.6",
+      "test": "TestOracleParityCondScenario",
+      "fixture": "fixtures/oracle/cond.capture.txt"
     },
     {
       "id": "oop.command.shoot",
@@ -2200,8 +2259,10 @@
       "contract": "V",
       "authority": "reference/reconstruction-of-zzt/SRC OOP.PAS; oop.go",
       "parity": "exact",
-      "status": "unverified",
-      "assignedTask": "M16.6"
+      "status": "pass",
+      "assignedTask": "M16.6",
+      "test": "TestOracleParityMorfScenario",
+      "fixture": "fixtures/oracle/morf.capture.txt"
     },
     {
       "id": "oop.command.take",
@@ -2210,8 +2271,11 @@
       "contract": "V",
       "authority": "reference/reconstruction-of-zzt/SRC OOP.PAS; oop.go",
       "parity": "exact",
-      "status": "unverified",
-      "assignedTask": "M16.6"
+      "status": "pass",
+      "assignedTask": "M16.6",
+      "test": "TestOracleParityCondScenario,TestOracleParityTalkScenario",
+      "fixture": "fixtures/oracle/cond.capture.txt",
+      "notes": "a refused take falls through to the rest of its line"
     },
     {
       "id": "oop.command.throwstar",
@@ -2220,8 +2284,11 @@
       "contract": "V",
       "authority": "reference/reconstruction-of-zzt/SRC OOP.PAS; oop.go",
       "parity": "exact",
-      "status": "unverified",
-      "assignedTask": "M16.6"
+      "status": "pass",
+      "assignedTask": "M16.6",
+      "test": "TestOracleParityMorfScenario",
+      "fixture": "fixtures/oracle/morf.capture.txt",
+      "notes": "thrown along the player's row so the star's seek is RNG-free"
     },
     {
       "id": "oop.command.try",
@@ -2230,8 +2297,11 @@
       "contract": "V",
       "authority": "reference/reconstruction-of-zzt/SRC OOP.PAS; oop.go",
       "parity": "exact",
-      "status": "unverified",
-      "assignedTask": "M16.6"
+      "status": "pass",
+      "assignedTask": "M16.6",
+      "test": "TestOracleParityWalkScenario",
+      "fixture": "fixtures/oracle/walk.capture.txt",
+      "notes": "a refused try continues the same line; a taken one skips it"
     },
     {
       "id": "oop.command.unlock",
@@ -2240,8 +2310,10 @@
       "contract": "V",
       "authority": "reference/reconstruction-of-zzt/SRC OOP.PAS; oop.go",
       "parity": "exact",
-      "status": "unverified",
-      "assignedTask": "M16.6"
+      "status": "pass",
+      "assignedTask": "M16.6",
+      "test": "TestOracleParityTalkScenario",
+      "fixture": "fixtures/oracle/talk.capture.txt"
     },
     {
       "id": "oop.command.walk",
@@ -2250,8 +2322,11 @@
       "contract": "V",
       "authority": "reference/reconstruction-of-zzt/SRC OOP.PAS; oop.go",
       "parity": "exact",
-      "status": "unverified",
-      "assignedTask": "M16.6"
+      "status": "pass",
+      "assignedTask": "M16.6",
+      "test": "TestOracleParityWalkScenario",
+      "fixture": "fixtures/oracle/walk.capture.txt",
+      "notes": "sets the standing step order read back by FLOW"
     },
     {
       "id": "oop.command.zap",
@@ -2260,8 +2335,11 @@
       "contract": "V",
       "authority": "reference/reconstruction-of-zzt/SRC OOP.PAS; oop.go",
       "parity": "exact",
-      "status": "unverified",
-      "assignedTask": "M16.6"
+      "status": "pass",
+      "assignedTask": "M16.6",
+      "test": "TestOracleParityTalkScenario,TestOopZapRestoreRewriteTheLabelColon",
+      "fixture": "fixtures/oracle/talk.capture.txt",
+      "notes": "M16.6 fixed the byte it overwrote (OOP.PAS:702-711)"
     },
     {
       "id": "oop.condition.alligned",
@@ -2270,8 +2348,11 @@
       "contract": "V",
       "authority": "reference/reconstruction-of-zzt/SRC OOP.PAS; oop.go",
       "parity": "exact",
-      "status": "unverified",
-      "assignedTask": "M16.6"
+      "status": "pass",
+      "assignedTask": "M16.6",
+      "test": "TestOracleParityCondScenario",
+      "fixture": "fixtures/oracle/cond.capture.txt",
+      "notes": "asked of a column neighbour and of a stranger"
     },
     {
       "id": "oop.condition.any",
@@ -2280,8 +2361,11 @@
       "contract": "V",
       "authority": "reference/reconstruction-of-zzt/SRC OOP.PAS; oop.go",
       "parity": "exact",
-      "status": "unverified",
-      "assignedTask": "M16.6"
+      "status": "pass",
+      "assignedTask": "M16.6",
+      "test": "TestOracleParityCondScenario",
+      "fixture": "fixtures/oracle/cond.capture.txt",
+      "notes": "asked with the gem present and after it was collected"
     },
     {
       "id": "oop.condition.blocked",
@@ -2290,8 +2374,11 @@
       "contract": "V",
       "authority": "reference/reconstruction-of-zzt/SRC OOP.PAS; oop.go",
       "parity": "exact",
-      "status": "unverified",
-      "assignedTask": "M16.6"
+      "status": "pass",
+      "assignedTask": "M16.6",
+      "test": "TestOracleParityWalkScenario",
+      "fixture": "fixtures/oracle/walk.capture.txt",
+      "notes": "also the probe the random-direction chambers use"
     },
     {
       "id": "oop.condition.contact",
@@ -2300,8 +2387,10 @@
       "contract": "V",
       "authority": "reference/reconstruction-of-zzt/SRC OOP.PAS; oop.go",
       "parity": "exact",
-      "status": "unverified",
-      "assignedTask": "M16.6"
+      "status": "pass",
+      "assignedTask": "M16.6",
+      "test": "TestOracleParityCondScenario",
+      "fixture": "fixtures/oracle/cond.capture.txt"
     },
     {
       "id": "oop.condition.energized",
@@ -2310,8 +2399,11 @@
       "contract": "V",
       "authority": "reference/reconstruction-of-zzt/SRC OOP.PAS; oop.go",
       "parity": "exact",
-      "status": "unverified",
-      "assignedTask": "M16.6"
+      "status": "pass",
+      "assignedTask": "M16.6",
+      "test": "TestOracleParityCondScenario",
+      "fixture": "fixtures/oracle/cond.capture.txt",
+      "notes": "read after the flash ended, so no checkpoint rides CurrentTick"
     },
     {
       "id": "oop.condition.not",
@@ -2320,8 +2412,10 @@
       "contract": "V",
       "authority": "reference/reconstruction-of-zzt/SRC OOP.PAS; oop.go",
       "parity": "exact",
-      "status": "unverified",
-      "assignedTask": "M16.6"
+      "status": "pass",
+      "assignedTask": "M16.6",
+      "test": "TestOracleParityCondScenario,TestOracleParityWalkScenario",
+      "fixture": "fixtures/oracle/cond.capture.txt"
     },
     {
       "id": "oop.counter.ammo",
@@ -2330,8 +2424,10 @@
       "contract": "V",
       "authority": "reference/reconstruction-of-zzt/SRC OOP.PAS; oop.go",
       "parity": "exact",
-      "status": "unverified",
-      "assignedTask": "M16.6"
+      "status": "pass",
+      "assignedTask": "M16.6",
+      "test": "TestOracleParityCondScenario,TestOracleParityTalkScenario",
+      "fixture": "fixtures/oracle/cond.capture.txt"
     },
     {
       "id": "oop.counter.gems",
@@ -2340,8 +2436,10 @@
       "contract": "V",
       "authority": "reference/reconstruction-of-zzt/SRC OOP.PAS; oop.go",
       "parity": "exact",
-      "status": "unverified",
-      "assignedTask": "M16.6"
+      "status": "pass",
+      "assignedTask": "M16.6",
+      "test": "TestOracleParityCondScenario",
+      "fixture": "fixtures/oracle/cond.capture.txt"
     },
     {
       "id": "oop.counter.health",
@@ -2350,8 +2448,10 @@
       "contract": "V",
       "authority": "reference/reconstruction-of-zzt/SRC OOP.PAS; oop.go",
       "parity": "exact",
-      "status": "unverified",
-      "assignedTask": "M16.6"
+      "status": "pass",
+      "assignedTask": "M16.6",
+      "test": "TestOracleParityCondScenario",
+      "fixture": "fixtures/oracle/cond.capture.txt"
     },
     {
       "id": "oop.counter.score",
@@ -2360,8 +2460,10 @@
       "contract": "V",
       "authority": "reference/reconstruction-of-zzt/SRC OOP.PAS; oop.go",
       "parity": "exact",
-      "status": "unverified",
-      "assignedTask": "M16.6"
+      "status": "pass",
+      "assignedTask": "M16.6",
+      "test": "TestOracleParityCondScenario,TestOracleParityTalkScenario",
+      "fixture": "fixtures/oracle/cond.capture.txt"
     },
     {
       "id": "oop.counter.time",
@@ -2370,8 +2472,11 @@
       "contract": "V",
       "authority": "reference/reconstruction-of-zzt/SRC OOP.PAS; oop.go",
       "parity": "exact",
-      "status": "unverified",
-      "assignedTask": "M16.6"
+      "status": "pass",
+      "assignedTask": "M16.6",
+      "test": "TestOracleParityCondScenario",
+      "fixture": "fixtures/oracle/cond.capture.txt",
+      "notes": "observable only on a timed board: #give time spends the remaining minute"
     },
     {
       "id": "oop.counter.torches",
@@ -2380,8 +2485,10 @@
       "contract": "V",
       "authority": "reference/reconstruction-of-zzt/SRC OOP.PAS; oop.go",
       "parity": "exact",
-      "status": "unverified",
-      "assignedTask": "M16.6"
+      "status": "pass",
+      "assignedTask": "M16.6",
+      "test": "TestOracleParityCondScenario",
+      "fixture": "fixtures/oracle/cond.capture.txt"
     },
     {
       "id": "oop.direction.ccw",
@@ -2390,8 +2497,10 @@
       "contract": "V",
       "authority": "reference/reconstruction-of-zzt/SRC OOP.PAS; oop.go",
       "parity": "exact",
-      "status": "unverified",
-      "assignedTask": "M16.6"
+      "status": "pass",
+      "assignedTask": "M16.6",
+      "test": "TestOracleParityWalkScenario",
+      "fixture": "fixtures/oracle/walk.capture.txt"
     },
     {
       "id": "oop.direction.cw",
@@ -2400,8 +2509,10 @@
       "contract": "V",
       "authority": "reference/reconstruction-of-zzt/SRC OOP.PAS; oop.go",
       "parity": "exact",
-      "status": "unverified",
-      "assignedTask": "M16.6"
+      "status": "pass",
+      "assignedTask": "M16.6",
+      "test": "TestOracleParityWalkScenario",
+      "fixture": "fixtures/oracle/walk.capture.txt"
     },
     {
       "id": "oop.direction.e",
@@ -2410,8 +2521,10 @@
       "contract": "V",
       "authority": "reference/reconstruction-of-zzt/SRC OOP.PAS; oop.go",
       "parity": "exact",
-      "status": "unverified",
-      "assignedTask": "M16.6"
+      "status": "pass",
+      "assignedTask": "M16.6",
+      "test": "TestOracleParityWalkScenario",
+      "fixture": "fixtures/oracle/walk.capture.txt"
     },
     {
       "id": "oop.direction.east",
@@ -2420,8 +2533,10 @@
       "contract": "V",
       "authority": "reference/reconstruction-of-zzt/SRC OOP.PAS; oop.go",
       "parity": "exact",
-      "status": "unverified",
-      "assignedTask": "M16.6"
+      "status": "pass",
+      "assignedTask": "M16.6",
+      "test": "TestOracleParityWalkScenario",
+      "fixture": "fixtures/oracle/walk.capture.txt"
     },
     {
       "id": "oop.direction.flow",
@@ -2430,8 +2545,10 @@
       "contract": "V",
       "authority": "reference/reconstruction-of-zzt/SRC OOP.PAS; oop.go",
       "parity": "exact",
-      "status": "unverified",
-      "assignedTask": "M16.6"
+      "status": "pass",
+      "assignedTask": "M16.6",
+      "test": "TestOracleParityWalkScenario",
+      "fixture": "fixtures/oracle/walk.capture.txt"
     },
     {
       "id": "oop.direction.i",
@@ -2440,8 +2557,10 @@
       "contract": "V",
       "authority": "reference/reconstruction-of-zzt/SRC OOP.PAS; oop.go",
       "parity": "exact",
-      "status": "unverified",
-      "assignedTask": "M16.6"
+      "status": "pass",
+      "assignedTask": "M16.6",
+      "test": "TestOracleParityWalkScenario",
+      "fixture": "fixtures/oracle/walk.capture.txt"
     },
     {
       "id": "oop.direction.idle",
@@ -2450,8 +2569,10 @@
       "contract": "V",
       "authority": "reference/reconstruction-of-zzt/SRC OOP.PAS; oop.go",
       "parity": "exact",
-      "status": "unverified",
-      "assignedTask": "M16.6"
+      "status": "pass",
+      "assignedTask": "M16.6",
+      "test": "TestOracleParityWalkScenario",
+      "fixture": "fixtures/oracle/walk.capture.txt"
     },
     {
       "id": "oop.direction.n",
@@ -2460,8 +2581,10 @@
       "contract": "V",
       "authority": "reference/reconstruction-of-zzt/SRC OOP.PAS; oop.go",
       "parity": "exact",
-      "status": "unverified",
-      "assignedTask": "M16.6"
+      "status": "pass",
+      "assignedTask": "M16.6",
+      "test": "TestOracleParityWalkScenario",
+      "fixture": "fixtures/oracle/walk.capture.txt"
     },
     {
       "id": "oop.direction.north",
@@ -2470,8 +2593,10 @@
       "contract": "V",
       "authority": "reference/reconstruction-of-zzt/SRC OOP.PAS; oop.go",
       "parity": "exact",
-      "status": "unverified",
-      "assignedTask": "M16.6"
+      "status": "pass",
+      "assignedTask": "M16.6",
+      "test": "TestOracleParityWalkScenario",
+      "fixture": "fixtures/oracle/walk.capture.txt"
     },
     {
       "id": "oop.direction.opp",
@@ -2480,8 +2605,10 @@
       "contract": "V",
       "authority": "reference/reconstruction-of-zzt/SRC OOP.PAS; oop.go",
       "parity": "exact",
-      "status": "unverified",
-      "assignedTask": "M16.6"
+      "status": "pass",
+      "assignedTask": "M16.6",
+      "test": "TestOracleParityWalkScenario",
+      "fixture": "fixtures/oracle/walk.capture.txt"
     },
     {
       "id": "oop.direction.rnd",
@@ -2490,8 +2617,11 @@
       "contract": "V",
       "authority": "reference/reconstruction-of-zzt/SRC OOP.PAS; oop.go",
       "parity": "exact",
-      "status": "unverified",
-      "assignedTask": "M16.6"
+      "status": "pass",
+      "assignedTask": "M16.6",
+      "test": "TestOracleParityWalkScenario",
+      "fixture": "fixtures/oracle/walk.capture.txt",
+      "notes": "draw-invariant: chambers assert the outcome SET on every draw (walk.scn)"
     },
     {
       "id": "oop.direction.rndne",
@@ -2500,8 +2630,11 @@
       "contract": "V",
       "authority": "reference/reconstruction-of-zzt/SRC OOP.PAS; oop.go",
       "parity": "exact",
-      "status": "unverified",
-      "assignedTask": "M16.6"
+      "status": "pass",
+      "assignedTask": "M16.6",
+      "test": "TestOracleParityWalkScenario",
+      "fixture": "fixtures/oracle/walk.capture.txt",
+      "notes": "draw-invariant: chambers assert the outcome SET on every draw (walk.scn)"
     },
     {
       "id": "oop.direction.rndns",
@@ -2510,8 +2643,11 @@
       "contract": "V",
       "authority": "reference/reconstruction-of-zzt/SRC OOP.PAS; oop.go",
       "parity": "exact",
-      "status": "unverified",
-      "assignedTask": "M16.6"
+      "status": "pass",
+      "assignedTask": "M16.6",
+      "test": "TestOracleParityWalkScenario",
+      "fixture": "fixtures/oracle/walk.capture.txt",
+      "notes": "draw-invariant: chambers assert the outcome SET on every draw (walk.scn)"
     },
     {
       "id": "oop.direction.rndp",
@@ -2520,8 +2656,11 @@
       "contract": "V",
       "authority": "reference/reconstruction-of-zzt/SRC OOP.PAS; oop.go",
       "parity": "exact",
-      "status": "unverified",
-      "assignedTask": "M16.6"
+      "status": "pass",
+      "assignedTask": "M16.6",
+      "test": "TestOracleParityWalkScenario",
+      "fixture": "fixtures/oracle/walk.capture.txt",
+      "notes": "draw-invariant: chambers assert the outcome SET on every draw (walk.scn)"
     },
     {
       "id": "oop.direction.s",
@@ -2530,8 +2669,10 @@
       "contract": "V",
       "authority": "reference/reconstruction-of-zzt/SRC OOP.PAS; oop.go",
       "parity": "exact",
-      "status": "unverified",
-      "assignedTask": "M16.6"
+      "status": "pass",
+      "assignedTask": "M16.6",
+      "test": "TestOracleParityWalkScenario",
+      "fixture": "fixtures/oracle/walk.capture.txt"
     },
     {
       "id": "oop.direction.seek",
@@ -2540,8 +2681,11 @@
       "contract": "V",
       "authority": "reference/reconstruction-of-zzt/SRC OOP.PAS; oop.go",
       "parity": "exact",
-      "status": "unverified",
-      "assignedTask": "M16.6"
+      "status": "pass",
+      "assignedTask": "M16.6",
+      "test": "TestOracleParityWalkScenario",
+      "fixture": "fixtures/oracle/walk.capture.txt",
+      "notes": "forced onto one axis so CalcDirectionSeek is RNG-free"
     },
     {
       "id": "oop.direction.south",
@@ -2550,8 +2694,10 @@
       "contract": "V",
       "authority": "reference/reconstruction-of-zzt/SRC OOP.PAS; oop.go",
       "parity": "exact",
-      "status": "unverified",
-      "assignedTask": "M16.6"
+      "status": "pass",
+      "assignedTask": "M16.6",
+      "test": "TestOracleParityWalkScenario",
+      "fixture": "fixtures/oracle/walk.capture.txt"
     },
     {
       "id": "oop.direction.w",
@@ -2560,8 +2706,10 @@
       "contract": "V",
       "authority": "reference/reconstruction-of-zzt/SRC OOP.PAS; oop.go",
       "parity": "exact",
-      "status": "unverified",
-      "assignedTask": "M16.6"
+      "status": "pass",
+      "assignedTask": "M16.6",
+      "test": "TestOracleParityWalkScenario",
+      "fixture": "fixtures/oracle/walk.capture.txt"
     },
     {
       "id": "oop.direction.west",
@@ -2570,8 +2718,10 @@
       "contract": "V",
       "authority": "reference/reconstruction-of-zzt/SRC OOP.PAS; oop.go",
       "parity": "exact",
-      "status": "unverified",
-      "assignedTask": "M16.6"
+      "status": "pass",
+      "assignedTask": "M16.6",
+      "test": "TestOracleParityWalkScenario",
+      "fixture": "fixtures/oracle/walk.capture.txt"
     },
     {
       "id": "oop.keyword.then",
@@ -2580,8 +2730,63 @@
       "contract": "V",
       "authority": "reference/reconstruction-of-zzt/SRC OOP.PAS; oop.go",
       "parity": "exact",
-      "status": "unverified",
-      "assignedTask": "M16.6"
+      "status": "pass",
+      "assignedTask": "M16.6",
+      "test": "TestOracleParityCondScenario",
+      "fixture": "fixtures/oracle/cond.capture.txt",
+      "notes": "skipped, and the word after it sent as a label"
+    },
+    {
+      "id": "oop.message.restart",
+      "dimension": "oop",
+      "subject": "ZZT-OOP message RESTART",
+      "contract": "V",
+      "authority": "reference/reconstruction-of-zzt/SRC OOP.PAS; oop.go",
+      "parity": "exact",
+      "status": "pass",
+      "assignedTask": "M16.6",
+      "test": "TestOracleParityTalkScenario",
+      "fixture": "fixtures/oracle/talk.capture.txt",
+      "notes": "reserved: rewinds the target to position 0 instead of searching for a label"
+    },
+    {
+      "id": "oop.target.all",
+      "dimension": "oop",
+      "subject": "ZZT-OOP target ALL",
+      "contract": "V",
+      "authority": "reference/reconstruction-of-zzt/SRC OOP.PAS; oop.go",
+      "parity": "exact",
+      "status": "pass",
+      "assignedTask": "M16.6",
+      "test": "TestOracleParityTalkScenario",
+      "fixture": "fixtures/oracle/talk.capture.txt",
+      "notes": "includes the sender"
+    },
+    {
+      "id": "oop.target.others",
+      "dimension": "oop",
+      "subject": "ZZT-OOP target OTHERS",
+      "contract": "V",
+      "authority": "reference/reconstruction-of-zzt/SRC OOP.PAS; oop.go",
+      "parity": "exact",
+      "status": "pass",
+      "assignedTask": "M16.6",
+      "test": "TestOracleParityTalkScenario",
+      "fixture": "fixtures/oracle/talk.capture.txt",
+      "notes": "excludes the sender, which carries the same label"
+    },
+    {
+      "id": "oop.target.self",
+      "dimension": "oop",
+      "subject": "ZZT-OOP target SELF",
+      "contract": "V",
+      "authority": "reference/reconstruction-of-zzt/SRC OOP.PAS; oop.go",
+      "parity": "exact",
+      "status": "pass",
+      "assignedTask": "M16.6",
+      "test": "TestOracleParityTalkScenario",
+      "fixture": "fixtures/oracle/talk.capture.txt",
+      "notes": "reaches only the sender, though another object carries the label"
     },
     {
       "id": "oop-struct.command-prefix",
@@ -2590,8 +2795,11 @@
       "contract": "V",
       "authority": "reference/reconstruction-of-zzt/SRC OOP.PAS",
       "parity": "exact",
-      "status": "unverified",
-      "assignedTask": "M16.6"
+      "status": "pass",
+      "assignedTask": "M16.6",
+      "test": "TestOracleParityTalkScenario",
+      "fixture": "fixtures/oracle/talk.capture.txt",
+      "notes": "a bare word is text; an unknown # word is ERR: Bad command"
     },
     {
       "id": "oop-struct.comment",
@@ -2600,8 +2808,10 @@
       "contract": "V",
       "authority": "reference/reconstruction-of-zzt/SRC OOP.PAS",
       "parity": "exact",
-      "status": "unverified",
-      "assignedTask": "M16.6"
+      "status": "pass",
+      "assignedTask": "M16.6",
+      "test": "TestOracleParityTalkScenario",
+      "fixture": "fixtures/oracle/talk.capture.txt"
     },
     {
       "id": "oop-struct.hyperlink",
@@ -2610,8 +2820,11 @@
       "contract": "V",
       "authority": "reference/reconstruction-of-zzt/SRC OOP.PAS",
       "parity": "exact",
-      "status": "unverified",
-      "assignedTask": "M16.6"
+      "status": "pass",
+      "assignedTask": "M16.6",
+      "test": "TestOracleParityTalkScenario",
+      "fixture": "fixtures/oracle/talk.capture.txt",
+      "notes": "drawn as its caption, selected with ENTER, re-entered at the chosen label"
     },
     {
       "id": "oop-struct.label",
@@ -2620,8 +2833,11 @@
       "contract": "V",
       "authority": "reference/reconstruction-of-zzt/SRC OOP.PAS",
       "parity": "exact",
-      "status": "unverified",
-      "assignedTask": "M16.6"
+      "status": "pass",
+      "assignedTask": "M16.6",
+      "test": "TestOracleParityTalkScenario",
+      "fixture": "fixtures/oracle/talk.capture.txt",
+      "notes": "and OopFindString's word boundary: :ping2 answers a send of ping, :pingz does not"
     },
     {
       "id": "oop-struct.move-shorthand",
@@ -2630,8 +2846,11 @@
       "contract": "V",
       "authority": "reference/reconstruction-of-zzt/SRC OOP.PAS",
       "parity": "exact",
-      "status": "unverified",
-      "assignedTask": "M16.6"
+      "status": "pass",
+      "assignedTask": "M16.6",
+      "test": "TestOracleParityWalkScenario",
+      "fixture": "fixtures/oracle/walk.capture.txt",
+      "notes": "/dir retries a refused move forever; ?dir gives up"
     },
     {
       "id": "oop-struct.object-name",
@@ -2640,8 +2859,11 @@
       "contract": "V",
       "authority": "reference/reconstruction-of-zzt/SRC OOP.PAS",
       "parity": "exact",
-      "status": "unverified",
-      "assignedTask": "M16.6"
+      "status": "pass",
+      "assignedTask": "M16.6",
+      "test": "TestOracleParityTalkScenario",
+      "fixture": "fixtures/oracle/talk.capture.txt",
+      "notes": "titles the window and names the object for #send/#bind"
     },
     {
       "id": "oop-struct.play-sound",
@@ -2650,8 +2872,11 @@
       "contract": "V",
       "authority": "reference/reconstruction-of-zzt/SRC OOP.PAS",
       "parity": "exact",
-      "status": "unverified",
-      "assignedTask": "M16.6"
+      "status": "pass",
+      "assignedTask": "M16.6",
+      "test": "TestOracleParityTalkScenario,TestOracleParityMorfScenario",
+      "fixture": "fixtures/oracle/morf.capture.txt",
+      "notes": "#play with duration prefixes, octave shifts, a rest and a drum"
     },
     {
       "id": "oop-struct.text-line",
@@ -2660,8 +2885,11 @@
       "contract": "V",
       "authority": "reference/reconstruction-of-zzt/SRC OOP.PAS",
       "parity": "exact",
-      "status": "unverified",
-      "assignedTask": "M16.6"
+      "status": "pass",
+      "assignedTask": "M16.6",
+      "test": "TestOracleParityTalkScenario",
+      "fixture": "fixtures/oracle/talk.capture.txt",
+      "notes": "one line is a message, two or more are a window"
     },
     {
       "id": "input.editor-keys",

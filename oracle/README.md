@@ -34,7 +34,11 @@ whole point is comparing this engine against state it did not generate.
   devices); M16.5 added ORCLBEAST (lion/ruffian/bear and contact damage),
   ORCLFIRE (bullets by source, ricochet branches, stars), ORCLOOZE (shark and
   slime), ORCLPEDE (centipedes), and ORCLHUNT (energizer inversion and a
-  duplicator fed by a creature).
+  duplicator fed by a creature). M16.6 added the four ZZT-OOP worlds: ORCLTALK
+  (labels, #send targets, #zap/#restore/#bind, locking, the instruction budget,
+  messages, windows and hyperlinks), ORCLWALK (every direction word and the
+  commands that take one), ORCLCOND (conditions, flags and the six counters),
+  and ORCLMORF (the commands that rewrite tiles, fire, and retime a stat).
 - `*.scn` — scenario scripts, the shared contract between
   `frontend_oracle.c` and `engine/oracle_parity_test.go` (directives documented
   in both). Each names its world in a `world NAME` directive that `regen.sh`

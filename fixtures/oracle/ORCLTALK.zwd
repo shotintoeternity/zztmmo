@@ -1,0 +1,449 @@
+zwd 1
+world "ORCLTALK"
+
+board "Talk Hub"
+  start player at 56,13
+  max-shots 255
+  dark false
+  reenter false
+  time-limit 0
+  exits north none south none west none east "Talk Hall"
+
+  grid
+############################################################
+#..........................................................#
+#..........................................................#
+#..........................................................#
+#..........................................................#
+#..........................................................#
+#..........................................................#
+#..........................................................#
+#..........................................................#
+#..........................................................#
+#..........................................................#
+#..........................................................#
+#......................................................@....
+#..........................................................#
+#..........................................................#
+#..........................................................#
+#..........................................................#
+#..........................................................#
+#..........................................................#
+#..........................................................#
+#..........................................................#
+#..........................................................#
+#..........................................................#
+#..........................................................#
+############################################################
+  end
+
+  legend
+    # = Solid color 0x0E
+    . = Empty color 0x07
+    @ = Player color 0x1F under Empty color 0x00
+  end
+
+  stats
+  end
+end
+
+board "Talk Hall"
+  start player at 30,3
+  max-shots 255
+  dark false
+  reenter false
+  time-limit 0
+  exits north none south "Talk Study" west none east none
+
+  grid
+############################################################
+#..........................................................#
+#............................@.............................#
+#..........................................................#
+#..........................................................#
+#..........................................................#
+#..........................................................#
+#..........................................................#
+#..........................................................#
+#..............................................o.o.o.o.o.o.#
+#..........................................................#
+#..o.o.o.o.o.o.o...o...o...o...o...o.o.....o.o...o.o.o.o.o.#
+...........................................................#
+#..........................................................#
+#..........................................................#
+#..........................................................#
+#..........................................................#
+#..........................................................#
+#..........................................................#
+#..........................................................#
+#..........................................................#
+#..........................................................#
+#..........................................................#
+#..........................................................#
+#############################################.##############
+  end
+
+  legend
+    # = Solid color 0x0E
+    . = Empty color 0x07
+    @ = Player color 0x1F under Empty color 0x00
+    o = Object color 0x0F
+  end
+
+  stats
+    stat at 4,12 element Object cycle 1 p1 cp437:0x31 under Empty color 0x00
+    oop
+@ring1
+' a comment line the interpreter must skip
+#end
+:touch
+#send echo:one
+#end
+    end
+    stat at 6,12 element Object cycle 1 p1 cp437:0x5A under Empty color 0x00
+    oop
+@zapper
+#end
+:touch
+#zap echo:two
+#end
+    end
+    stat at 8,12 element Object cycle 1 p1 cp437:0x32 under Empty color 0x00
+    oop
+@ring2a
+#end
+:touch
+#send echo:two
+#end
+    end
+    stat at 10,12 element Object cycle 1 p1 cp437:0x52 under Empty color 0x00
+    oop
+@restorer
+#end
+:touch
+#restore echo:two
+#end
+    end
+    stat at 12,12 element Object cycle 1 p1 cp437:0x33 under Empty color 0x00
+    oop
+@ring2b
+#end
+:touch
+#send echo:two
+#end
+    end
+    stat at 14,12 element Object cycle 1 p1 cp437:0x4B under Empty color 0x00
+    oop
+@copy
+#end
+:touch
+#bind echo
+#end
+    end
+    stat at 16,12 element Object cycle 1 p1 cp437:0x34 under Empty color 0x00
+    oop
+@ring3
+#end
+:touch
+#send echo:three
+#end
+    end
+    stat at 20,12 element Object cycle 1 p1 cp437:0x45 under Empty color 0x00
+    oop
+@echo
+#end
+:one
+#char 65
+#end
+:two
+#char 66
+#end
+:three
+#char 67
+#end
+    end
+    stat at 24,12 element Object cycle 1 p1 cp437:0x53 under Empty color 0x00
+    oop
+@rest
+#char 83
+#end
+:touch
+#char 84
+#idle
+#idle
+#idle
+#idle
+#idle
+#idle
+#restart
+    end
+    stat at 28,12 element Object cycle 1 p1 cp437:0x47 under Empty color 0x00
+    oop
+@budget
+#end
+:touch
+#give ammo 60
+:loop
+#take ammo 1 done
+#give score 1
+#send loop
+:done
+#end
+    end
+    stat at 32,12 element Object cycle 1 p1 cp437:0x50 under Empty color 0x00
+    oop
+@piper
+#end
+:touch
+#play tcdefgab
+#end
+    end
+    stat at 36,12 element Object cycle 1 p1 cp437:0x4D under Empty color 0x00
+    oop
+@msg
+#end
+:touch
+The gallery is quiet today.
+#end
+    end
+    stat at 38,12 element Object cycle 1 p1 cp437:0x42 under Empty color 0x00
+    oop
+@bad
+#end
+:touch
+#nosuch
+#end
+    end
+    stat at 44,12 element Object cycle 1 p1 cp437:0x44 under Empty color 0x00
+    oop
+@guard
+#end
+:touch
+#lock
+#char 65
+#idle
+#idle
+#idle
+#idle
+#idle
+#idle
+#idle
+#idle
+#idle
+#idle
+#idle
+#idle
+#idle
+#idle
+#idle
+#idle
+#idle
+#idle
+#idle
+#idle
+#idle
+#idle
+#idle
+#idle
+#idle
+#idle
+#idle
+#idle
+#idle
+#idle
+#unlock
+#char 67
+#end
+:ring
+#char 88
+#end
+    end
+    stat at 46,12 element Object cycle 1 p1 cp437:0x4C under Empty color 0x00
+    oop
+@bell
+#end
+:touch
+:loop
+#send guard:ring
+/i
+#send loop
+    end
+    stat at 50,12 element Object cycle 1 p1 cp437:0x31 under Empty color 0x00
+    oop
+@bcast
+#end
+:touch
+#send all:ping
+#end
+:ping
+#char 65
+#end
+    end
+    stat at 52,12 element Object cycle 1 p1 cp437:0x32 under Empty color 0x00
+    oop
+@bcast2
+#end
+:touch
+#send others:knock
+#end
+:knock
+#char 66
+#end
+    end
+    stat at 54,12 element Object cycle 1 p1 cp437:0x33 under Empty color 0x00
+    oop
+@selfer
+#end
+:touch
+#send self:me
+#end
+:me
+#char 67
+#end
+    end
+    stat at 56,12 element Object cycle 1 p1 cp437:0x34 under Empty color 0x00
+    oop
+@bump
+#end
+:touch
+#send restarget:bumped
+#end
+    end
+    stat at 58,12 element Object cycle 1 p1 cp437:0x35 under Empty color 0x00
+    oop
+@reset
+#end
+:touch
+#send restarget:restart
+#end
+    end
+    stat at 48,10 element Object cycle 1 p1 cp437:0x74 under Empty color 0x00
+    oop
+@restarget
+#char 90
+#end
+:bumped
+#char 66
+#end
+    end
+    stat at 50,10 element Object cycle 1 p1 cp437:0x70 under Empty color 0x00
+    oop
+@p1
+#end
+:ping
+#char 80
+#end
+    end
+    stat at 52,10 element Object cycle 1 p1 cp437:0x71 under Empty color 0x00
+    oop
+@p2
+#end
+:ping2
+#char 81
+#end
+    end
+    stat at 54,10 element Object cycle 1 p1 cp437:0x72 under Empty color 0x00
+    oop
+@pz
+#end
+:pingz
+#char 82
+#end
+    end
+    stat at 56,10 element Object cycle 1 p1 cp437:0x73 under Empty color 0x00
+    oop
+@q1
+#end
+:knock
+#char 81
+#end
+    end
+    stat at 58,10 element Object cycle 1 p1 cp437:0x75 under Empty color 0x00
+    oop
+@notme
+#end
+:me
+#char 68
+#end
+    end
+  end
+end
+
+board "Talk Study"
+  start player at 30,3
+  max-shots 255
+  dark false
+  reenter false
+  time-limit 0
+  exits north none south none west none east none
+
+  grid
+#############################################.##############
+#..........................................................#
+#............................@.............................#
+#..........................................................#
+#..........................................................#
+#..........................................................#
+#..........................................................#
+#..........................................................#
+#..........................................................#
+#..........................................................#
+#..........................................................#
+#....................................o..o..s...............#
+#..........................................................#
+#..........................................................#
+#..........................................................#
+#..........................................................#
+#..........................................................#
+#..........................................................#
+#..........................................................#
+#..........................................................#
+#..........................................................#
+#..........................................................#
+#..........................................................#
+#..........................................................#
+############################################################
+  end
+
+  legend
+    # = Solid color 0x0E
+    . = Empty color 0x07
+    @ = Player color 0x1F under Empty color 0x00
+    o = Object color 0x0F
+    s = Scroll color 0x0F
+  end
+
+  stats
+    stat at 44,12 element Scroll cycle 1 under Empty color 0x00
+    oop
+@notice
+The scroll speaks in two lines.
+And this is the second line.
+#end
+    end
+    stat at 41,12 element Object cycle 1 p1 cp437:0x50 under Empty color 0x00
+    oop
+@page
+#end
+:touch
+This is the study page.
+It has a second line.
+#end
+    end
+    stat at 38,12 element Object cycle 1 p1 cp437:0x4C under Empty color 0x00
+    oop
+@link
+#end
+:touch
+!alpha;Choose alpha
+!beta;Choose beta
+#end
+:alpha
+#char 65
+#end
+:beta
+#char 66
+#end
+    end
+  end
+end

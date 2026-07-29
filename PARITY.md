@@ -242,6 +242,18 @@ M16.3's exclusion of energized checkpoints is
 **lifted**: it existed only because the adapter pinned CurrentTick to 0, and the
 M16.4 phase solver recovers it instead, so ORCLHUNT compares the energizer flash
 like any other cell.
+M16.6 adds two of its own. **No scenario runs `#endgame`**, which sets health to
+0 and therefore lands in the same `mp-respawn` territory death does
+(`TestOopEndgameLeavesThePlayerInLimbo` carries that branch, and gap task
+**M16.6a** owns the defect it pins). And **the four random OOP directions are
+compared by outcome SET, not draw by draw**: vanilla's `RandSeed` is seeded from
+its own boot clock and is not this engine's, so no exact-cell comparison can
+follow an individual `RND`/`RNDNS`/`RNDNE`/`RNDP` draw across the seam. What
+ORCLWALK compares instead is draw-invariant and holds for thousands of draws on
+both sides — a chamber whose every legal outcome is walled must report `blocked`
+every time, and an object in open ground must never report `blocked`, so a draw
+outside the legal set or one that came back as the object's own square turns the
+object's glyph and the checkpoint names the cell.
 
 **Documented representation normalizations** (the complete list — anything else
 that differs is a defect):
@@ -250,4 +262,5 @@ that differs is a defect):
 |---|---|---|
 | `oracle-pause-blink` | Vanilla's interactive loop draws a paused player blinking (`02`/`1F` alternating with the square's content); the headless engine emits `PauseEvent` and leaves drawing to the client. The paused player's square accepts either blink phase. | deviation `per-player-modal-freeze` |
 | `oracle-modal-scroll` | Vanilla freezes the sim inside a modal text window drawn over the board; the engine emits `ScrollEvent`. Checkpoints with an open window compare window text against the event's lines/title. | deviation `per-player-modal-freeze` (M1.3) |
-| `oracle-walk-click` | Vanilla pokes the speaker directly (`Sound(110)`, ELEMENTS.PAS) per step onto a walkable tile; the port stubs `Sound()`/`NoSound()`, so 110 Hz onsets are excluded from sound comparison. A recorded gap for the M16.6 sound sweep, not an approved deviation. | NOTES 2026-07-18 |
+| `oracle-walk-click` | Vanilla pokes the speaker directly (`Sound(110)`, ELEMENTS.PAS:1395) on every attempted step; the port stubs `Sound()`/`NoSound()`, so 110 Hz onsets are excluded from sound comparison. **Not an approved deviation** — the M16.6 sweep filed it as gap task **M16.6b**, which blocks M16.20. | NOTES 2026-07-18, 2026-07-29 |
+| `oracle-modal-hyperlink` | Vanilla draws a `!label;text` line as its caption alone (TXTWIND.PAS `TextWindowDrawLine` copies from the `;`) and runs the chosen label inside the same modal `OopExecute`; the engine emits the raw line in a `ScrollEvent` and re-enters on the reply. A window checkpoint compares captions, and the adapter plays the client the fork expects — cursor keys move a line cursor, ENTER/ESCAPE answer through `SubmitScrollReply`. | deviations `per-player-modal-freeze`, `scroll-removal-timing` |

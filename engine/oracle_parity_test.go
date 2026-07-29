@@ -40,10 +40,15 @@ package zztgo
 //     checkpoint taken while the oracle shows a window is compared by content:
 //     the window's text lines against the ScrollEvent's lines.
 //   - walk click: vanilla pokes the speaker directly (Sound(110),
-//     ELEMENTS.PAS) for each step onto a walkable tile. The port stubs
+//     ELEMENTS.PAS:1395) on each attempted step. The port stubs
 //     Sound()/NoSound() (lib.go:124), so no event exists to compare; 110 Hz
-//     onsets are excluded from the sound comparison. Recorded in NOTES.md as a
-//     sound-parity gap for the M16.6 sweep.
+//     onsets are excluded from the sound comparison. NOT an approved deviation:
+//     M16.6 filed it as gap task M16.6b, whose DoD is deleting this filter and
+//     requiring every committed capture to still match.
+//   - modal hyperlink: vanilla draws a `!label;text` line as its caption alone
+//     and runs the chosen label inside the same modal OopExecute. The engine
+//     emits the raw line and re-enters on the reply, so a window checkpoint
+//     compares captions and oracleTextWindow below plays the client half.
 
 import (
 	"fmt"
@@ -72,6 +77,7 @@ type oracleOp struct {
 	Label  string // capture label
 	DX, DY int16  // move/shoot deltas
 	Key    byte   // key byte carried into PlayerInput.Key
+	Scan   byte   // scancode, needed only for the zero-char keys a text window reads
 	Ticks  int    // boot/settle PIT ticks
 }
 
@@ -141,13 +147,23 @@ func parseOracleScenario(t *testing.T, path string) (string, []oracleOp, bool) {
 			op.DX, op.DY, op.Key = oracleDirDeltas(t, path, lineNo+1, fields[1])
 			ops = append(ops, op)
 		case "key":
-			// key CH SC: the engine's input path reads characters, not
-			// scancodes, so only CH crosses the seam.
+			// key CH SC: gameplay reads characters, not scancodes, so CH is
+			// normally all that crosses the seam. The exception is an open text
+			// window, whose cursor keys arrive as char 0 (INPUT.PAS reads the
+			// scancode); the adapter's window emulation needs SC for those.
 			ch, err := strconv.Atoi(fields[1])
 			if err != nil || ch < 0 || ch > 255 {
 				t.Fatalf("%s:%d: bad key %q", path, lineNo+1, line)
 			}
-			ops = append(ops, oracleOp{Kind: "key", Key: byte(ch)})
+			op := oracleOp{Kind: "key", Key: byte(ch)}
+			if len(fields) > 2 {
+				sc, err := strconv.ParseUint(fields[2], 16, 8)
+				if err != nil {
+					t.Fatalf("%s:%d: bad key scancode %q", path, lineNo+1, line)
+				}
+				op.Scan = byte(sc)
+			}
+			ops = append(ops, op)
 		case "capture":
 			ops = append(ops, oracleOp{Kind: "capture", Label: fields[1]})
 		default:
@@ -435,6 +451,66 @@ func (m *oracleSoundMatcher) match(tones []int) error {
 	return nil
 }
 
+// oracleTextWindow is the client half of a de-modalized scroll (M1.3): the
+// engine emits a ScrollEvent and keeps ticking, so somebody has to hold the
+// window state vanilla keeps on its stack in TextWindowSelect. It models only
+// what TXTWIND.PAS:273-362 does with a keystroke — cursor up/down clamped to
+// the line range, ENTER selecting a `!label;text` line, ESCAPE rejecting — and
+// leaves the reply routing to SubmitScrollReply.
+type oracleTextWindow struct {
+	Scroll    ScrollEvent
+	LinePos   int    // 1-based, as TXTWIND.PAS counts
+	Hyperlink string // label chosen with ENTER; "" for a dismissal
+}
+
+// oracleHyperlinkLabel returns the label of a `!label;text` line, or "".
+func oracleHyperlinkLabel(line string) string {
+	if !strings.HasPrefix(line, "!") {
+		return ""
+	}
+	rest := line[1:]
+	if i := strings.Index(rest, ";"); i >= 0 {
+		return rest[:i]
+	}
+	return rest
+}
+
+// oracleWindowCaption is what the oracle DRAWS for one window line: a
+// `!label;text` line shows only the caption (TXTWIND.PAS TextWindowDrawLine
+// copies from the ';'), everything else shows verbatim.
+func oracleWindowCaption(line string) string {
+	if strings.HasPrefix(line, "!") {
+		if i := strings.Index(line, ";"); i >= 0 {
+			return line[i+1:]
+		}
+	}
+	return line
+}
+
+// key applies one keystroke and reports whether the window closed.
+func (w *oracleTextWindow) key(ch, scan byte) bool {
+	switch {
+	case scan == 0x48: // up
+		if w.LinePos > 1 {
+			w.LinePos--
+		}
+	case scan == 0x50: // down
+		if w.LinePos < len(w.Scroll.Lines) {
+			w.LinePos++
+		}
+	case ch == '\x1b': // ESCAPE: TextWindowRejected, no hyperlink
+		w.Hyperlink = ""
+		return true
+	case ch == KEY_ENTER:
+		w.Hyperlink = ""
+		if w.LinePos >= 1 && w.LinePos <= len(w.Scroll.Lines) {
+			w.Hyperlink = oracleHyperlinkLabel(w.Scroll.Lines[w.LinePos-1])
+		}
+		return true
+	}
+	return false
+}
+
 // oracleAdapterRun drives the engine through scenario ops, comparing each
 // checkpoint against the oracle capture. mutate, if non-nil, runs right before
 // the named checkpoint's comparison (the perturbation seam for the fail-closed
@@ -601,6 +677,7 @@ func oracleAdapterReplay(t *testing.T, scenario, world string, ops []oracleOp, c
 		sounds          oracleSoundMatcher
 		intervalScrolls []ScrollEvent // scroll events this interval
 		checkpointIdx   int
+		window          *oracleTextWindow
 	)
 
 	drainEvents := func() {
@@ -611,6 +688,7 @@ func oracleAdapterReplay(t *testing.T, scenario, world string, ops []oracleOp, c
 				cycleSounds = append(cycleSounds, ev)
 			case ScrollEvent:
 				intervalScrolls = append(intervalScrolls, ev)
+				window = &oracleTextWindow{Scroll: ev, LinePos: 1}
 			}
 		}
 		sounds.queueCycle(cycleSounds)
@@ -661,6 +739,23 @@ func oracleAdapterReplay(t *testing.T, scenario, world string, ops []oracleOp, c
 				step(PlayerInput{})
 			}
 		case "key":
+			// A key pressed while a text window is open belongs to the window,
+			// not to the game: vanilla is inside TextWindowSelect's modal loop
+			// (TXTWIND.PAS:273) and ElementPlayerTick never sees it. The engine
+			// has no modal loop — it emitted a ScrollEvent and kept running — so
+			// the adapter plays the client the fork expects (M1.3/M17.4): move
+			// the cursor, and on ENTER/ESC send the selection back through
+			// SubmitScrollReply, which is exactly what web/src does on dismiss.
+			if window != nil {
+				if closed := window.key(op.Key, op.Scan); closed {
+					E.SubmitScrollReply(window.Scroll.StatId, window.Hyperlink)
+					window = nil
+				}
+				for i := 0; i < 4; i++ {
+					step(PlayerInput{})
+				}
+				break
+			}
 			step(PlayerInput{Key: op.Key})
 			for i := 0; i < 3; i++ {
 				step(PlayerInput{})
@@ -714,8 +809,10 @@ func compareCheckpoint(cp *oracleCheckpoint, scrolls []ScrollEvent, title bool) 
 	// engine emitted ScrollEvent instead) compare by window content.
 	if len(scrolls) > 0 {
 		sc := scrolls[0]
-		for _, want := range sc.Lines {
-			want = strings.TrimSpace(want)
+		for _, line := range sc.Lines {
+			// A hyperlink line is stored raw (`!label;caption`) and drawn as its
+			// caption alone, so compare what the window actually shows.
+			want := strings.TrimSpace(oracleWindowCaption(line))
 			if want == "" {
 				continue
 			}
@@ -1038,5 +1135,61 @@ func TestOracleCounterComparisonFailsClosed(t *testing.T) {
 	}
 	if !strings.Contains(err.Error(), "counter Score") {
 		t.Fatalf("mismatch not pinned to the Score counter: %v", err)
+	}
+}
+
+// The M16.6 sweep scenarios: ZZT-OOP, scrolls, sound, and modals.
+
+// TestOracleParityTalkScenario covers the talking half of ZZT-OOP — labels and
+// #send, the three commands that rewrite another object's program (#zap,
+// #restore, #bind), #lock/#unlock, #restart, the 33-instruction budget, #play,
+// one-line messages vs. multi-line windows, an unknown command's ERR, and the
+// hyperlink selection that re-enters the program at a chosen label
+// (fixtures/oracle/talk.scn documents the design, including why every modal
+// window lives on a board with nothing else running).
+func TestOracleParityTalkScenario(t *testing.T) {
+	if err := oracleAdapterRun(t, "talk.scn", "talk.capture.txt", nil); err != nil {
+		t.Fatalf("oracle divergence: %v", err)
+	}
+}
+
+// TestOracleParityWalkScenario covers every ZZT-OOP direction word and the
+// commands that consume one: the eight compass names and their aliases, CW/CCW
+// /OPP as rotations of a name, IDLE as the object's own square, FLOW read back
+// out of a #walk, a SEEK forced onto one axis by pulling its lever from the
+// seeker's own row, and #go/#try//dir/?dir told apart by what each does with a
+// refused move. The four random directions are pinned by SET rather than by
+// draw — see fixtures/oracle/walk.scn for the chamber design and why the draw
+// itself cannot cross this seam.
+func TestOracleParityWalkScenario(t *testing.T) {
+	if err := oracleAdapterRun(t, "walk.scn", "walk.capture.txt", nil); err != nil {
+		t.Fatalf("oracle divergence: %v", err)
+	}
+}
+
+// TestOracleParityCondScenario covers what ZZT-OOP can ask and what it can
+// change: #set/#clear and the flag condition around them, #if with NOT,
+// ALLIGNED, CONTACT and ANY answered from both sides, ENERGIZED read after the
+// energizer wore off (so no checkpoint sits inside the flash), THEN skipped
+// before a label, and #give/#take over all six counters including a refusal
+// falling through to the rest of its line and the TIME counter spending a
+// timed board's remaining minute.
+func TestOracleParityCondScenario(t *testing.T) {
+	if err := oracleAdapterRun(t, "cond.scn", "cond.capture.txt", nil); err != nil {
+		t.Fatalf("oracle divergence: %v", err)
+	}
+}
+
+// TestOracleParityMorfScenario covers the ZZT-OOP commands that rewrite the
+// board and fire from it: #become and #die replacing the object's own square,
+// #char refusing 0 and 256, #put writing a neighbour (and erroring on a zero
+// direction), #change rewriting every matching tile at once, #shoot, a #play
+// carrying an octave shift, a rest and a drum, #cycle retiming a stat onto the
+// cycle gate, and #throwstar down the player's own row so the star's seek is
+// RNG-free. Phase-solved: `#cycle 4` makes the walker's position ride
+// CurrentTick, which vanilla picks with Random(100).
+func TestOracleParityMorfScenario(t *testing.T) {
+	if err := oracleAdapterRun(t, "morf.scn", "morf.capture.txt", nil); err != nil {
+		t.Fatalf("oracle divergence: %v", err)
 	}
 }

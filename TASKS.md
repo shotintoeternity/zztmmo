@@ -2391,7 +2391,7 @@ gap task has landed.
   PARITY.md §7's point-blank exclusion is lifted. See NOTES.md for the full
   account, including why the gun's approach must stay off its own row and column.
 
-- [ ] **M16.6 — ZZT-OOP, scroll, sound, and modal parity sweep.** Enumerate and
+- [x] **M16.6 — ZZT-OOP, scroll, sound, and modal parity sweep.** Enumerate and
   exercise every implemented OOP command, condition, direction, counter,
   `#send`/`#zap`/`#restore`/`#bind`, labels, locked objects, text windows,
   hyperlinks, `#play`, error handling, instruction budget, code position, and
@@ -2401,6 +2401,87 @@ gap task has landed.
   so a newly added command cannot be unlisted; all OOP rows are oracle-backed
   or carry a cited approved deviation; vendor/link and touch timing are covered
   without relying only on the historic TOWN replay.
+
+  Landed: four micro-worlds and four scenarios replayed through the real ZZT.EXE
+  (`fixtures/oracle/ORCL{TALK,WALK,COND,MORF}.zwd` + `{talk,walk,cond,morf}.scn`)
+  and through this engine (`TestOracleParity{Talk,Walk,Cond,Morf}Scenario`). All
+  73 assigned rows are `pass` except `oop.command.endgame`, which is the `gap`
+  behind M16.6a below. Every command, condition, direction, counter, `#send`
+  target form and structural form is oracle-backed: the instruction budget is
+  measured as eleven loop iterations per tick in the sidebar's own score, the
+  33rd instruction pinned by real ZZT; `#zap`/`#restore`/`#bind` are read off a
+  target object's glyph; a locked object refuses a bell that rings it every tick
+  until `#unlock` runs; `:ping2` answers a send of `ping` and `:pingz` does not,
+  which is `OopFindString`'s word-boundary rule; and `#send all/others/self`
+  are told apart by which of five listeners answered. The manifest's
+  interpreter cross-check now scans `lookup` and `objectMessage` as well as
+  `OopWord`, so the `ALL`/`OTHERS`/`SELF` targets and the reserved `RESTART`
+  message cannot go unlisted either — adding them reddened the build until they
+  had rows, which is the DoD's fail-closed clause demonstrated.
+  The adapter gained the client half of a de-modalized scroll (a line cursor,
+  ENTER/ESCAPE, `SubmitScrollReply`) and compares a `!label;text` line by the
+  caption vanilla actually draws, so hyperlink selection is compared end to end
+  rather than asserted internally.
+  **One simulation fix**, caught by ORCLTALK: `#zap` and `#restore` overwrote
+  the `\r` instead of the `:` (`Replace` indexes 1-based where OOP.PAS:706
+  advances a pointer 0-based), which hides itself under `#zap` and breaks
+  `#restore` outright. The TOWN replay hash did not move and all 19 earlier
+  oracle captures reproduce byte-identically, so no `DEVIATION:`.
+  **Two defects filed, both blocking M16.20**: M16.6a (`#endgame`) and M16.6b
+  (the walk click). The random OOP directions are compared by outcome set
+  rather than draw by draw — the one thing this seam cannot follow, documented
+  as a scenario-design exclusion in PARITY.md §7. See NOTES.md.
+
+- [ ] **M16.6a — `#endgame` leaves the player in limbo (M16.6 gap task; blocks
+  M16.20).** `#endgame` (`oop.go:659`, OOP.PAS:659) sets the acting player's
+  `Health` to 0 and does nothing else. Vanilla turns that into the game over on
+  the next `ElementPlayerTick` (ELEMENTS.PAS:1340): ' Game over  -  Press
+  ESCAPE', `TickTimeDuration := 0`, `SoundBlockQueueing := true`. This fork
+  replaced game over with a respawn (deviation `mp-respawn`), but the respawn
+  is armed by `DamageStat` setting `RespawnTicks`, which `#endgame` never
+  calls — so the player gets **neither**: `ElementPlayerTick`'s `Health <= 0`
+  branch (`elements.go:1408`) zeroes their input and returns, every tick,
+  forever. In a shared room that is a permanently bricked player, and
+  `#endgame` is how ZZT worlds have always written a losing ending; TOWN and
+  most Museum worlds use it. Pinned today by
+  `TestOopEndgameLeavesThePlayerInLimbo` (`engine/m16_6_test.go`), which fails
+  loudly once the behaviour changes.
+  Decide and write the policy in NOTES.md before implementing — the two
+  coherent readings are (a) `#endgame` is a death, so route it through the same
+  path `DamageStat` uses (score penalty, `DeathEvent`, respawn at the entry
+  point after `RESPAWN_TICKS`), or (b) `#endgame` ends that player's *session*,
+  emitting the M4.3 quit/high-score flow while the room keeps ticking for
+  everyone else. Whichever is chosen must not set `GamePlayExitRequested` in a
+  room engine (it halts the board for every other player — see
+  `GamePromptEndPlay`'s comment) and must not reintroduce vanilla's global
+  halt. DoD: `TestOopEndgameLeavesThePlayerInLimbo` is rewritten to assert the
+  chosen behaviour; a headless two-player test proves one player's `#endgame`
+  leaves the other untouched; the manifest row `oop.command.endgame` returns to
+  `pass`/`deviation` with the new evidence; replay fixture and every oracle
+  capture stay green.
+
+- [ ] **M16.6b — the walk click is never heard (M16.6 gap task; blocks
+  M16.20).** Vanilla pokes the PC speaker directly on every attempted player
+  step — `if SoundEnabled and not SoundIsPlaying then Sound(110)`, then
+  `NoSound` whether the step was taken or refused (ELEMENTS.PAS:1393-1402,
+  ported at `elements.go:1471`). The port's `Sound()`/`NoSound()` are TODO
+  stubs (`lib.go:124`), so no client ever hears it, and the oracle comparison
+  has to filter 110 Hz onsets out of every capture (PARITY.md §7
+  `oracle-walk-click`). It is the only sound vanilla makes that this fork does
+  not.
+  It cannot be expressed as a `SoundEvent`: those carry note bytes indexed into
+  `SoundFreqTable`, whose nearest entries are 107 and 114 Hz, and vanilla's
+  poke is arbitrated by the live `SoundIsPlaying` an event-based engine does
+  not have. So this needs a small presentation seam of its own — a raw-tone
+  event the client's WebAudio graph plays as a click and any queued melody
+  preempts — plus its protocol row and a manifest row for it. Keep it strictly
+  presentation-only: it must not enter `StateHash`, must not pass through
+  `SoundQueue`'s priority arbitration, and must not perturb the replay fixture.
+  DoD: the engine emits the click on every attempted step under the same
+  `SoundEnabled` gate vanilla uses; the oracle's 110 Hz filter is REMOVED from
+  `engine/oracle_parity_test.go` and every committed capture still matches with
+  the clicks compared (this is the real test — 20+ scenarios of walking);
+  the browser plays it; replay fixture unchanged.
 
 - [ ] **M16.7 — Vanilla world, title, and portable-file parity sweep.** Build a
   committed small corpus covering `.ZZT`, `.SAV`, and `.BRD` limits and oddities;

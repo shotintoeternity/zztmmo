@@ -1,0 +1,172 @@
+# ORCLCOND: what ZZT-OOP can ask and what it can change — every condition,
+# every counter, and the flag verbs (M16.6).
+#
+# The gallery pattern again: objects on row 12, the player walking east along
+# row 13 and knocking on each from below. Every object carries `cycle 1`, so
+# the world is phase-insensitive and declares no `phase`.
+#
+#   ask1 4     #if alpha / #if not alpha, before anything set it     -> N
+#   setter 6   #set alpha
+#   ask2 8     the same two lines, now that the flag exists          -> A
+#   clearer 10 #clear alpha
+#   ask3 12    and once more with it gone                            -> N
+#   gifts 16   #give health 5 / ammo 7 / gems 3 / torches 2 / score 11
+#   takes 18   the same five counters back down, then a #take the player
+#              cannot afford, whose refusal jumps to the rest of its line -> N
+#   any1 22    #if any gem, with a gem still lying at 24,13          -> A
+#   any2 26    the same line after the player walked over it         -> N
+#   allev 30   pulled from 30,13, it asks two objects the same question:
+#              alcol at 30,20 shares the player's column             -> A
+#              aloff at 35,20 shares neither row nor column          -> N
+#   conlev 34  #if contact is asked by the object being touched      -> A
+#              and by confar at 38,20, which is nowhere near         -> N
+#   nrg1 40    #if energized, one step after eating the energizer at 38,13
+#   nrg2 42    the same line once the 75 cycles have run out         -> N
+#   then1 46   #if contact then bump — THEN is skipped and the word after it
+#              is sent as a label                                    -> A
+#
+# No checkpoint is taken while the player is energized: the energized player's
+# own cell flashes off CurrentTick, which vanilla picks with Random(100), and
+# this scenario is otherwise phase-free. The glyph nrg1 set survives the wait,
+# so the answer is still readable after the flash has stopped.
+#
+# Cond Clock is a timed board, because the TIME counter is only observable
+# where the sidebar shows one: `#give time` spends the player's remaining time
+# and `#take time` buys it back (GAME.PAS counts Time: as limit - BoardTimeSec).
+world ORCLCOND
+seed 0
+boot 240
+capture title
+play
+# Cond Hub -> Cond Hall across the east edge.
+move right
+move right
+move right
+move right
+move right
+capture arrive-hall
+# The flag trio.
+move right
+move right
+move right
+move up
+settle 8
+capture flag-unset
+move right
+move right
+move up
+settle 8
+move right
+move right
+move up
+settle 8
+capture flag-set
+move right
+move right
+move up
+settle 8
+move right
+move right
+move up
+settle 8
+capture flag-cleared
+# The six counters, up and then down.
+move right
+move right
+move right
+move right
+move up
+settle 8
+capture counters-given
+move right
+move right
+move up
+settle 8
+capture counters-taken
+# #if any gem, on both sides of picking the gem up.
+move right
+move right
+move right
+move right
+move up
+settle 8
+capture any-present
+move right
+move right
+move right
+move right
+move up
+settle 8
+capture any-gone
+# alligned, asked of a column neighbour and of a stranger.
+move right
+move right
+move right
+move right
+move up
+settle 8
+capture alligned
+# contact, asked by the object touched and by one across the board.
+move right
+move right
+move right
+move right
+move up
+settle 8
+capture contact
+# Walk onto the energizer at 38,13, ask the question two squares on, and only
+# then wait out the 75 cycles: no checkpoint may fall inside the flash.
+move right
+move right
+move right
+move right
+move right
+move right
+move up
+settle 200
+capture energized
+# The same question with nothing left of it.
+move right
+move right
+move up
+settle 8
+capture not-energized
+# #if contact then bump.
+move right
+move right
+move right
+move right
+move up
+settle 8
+capture then-keyword
+# East to column 50, then down and off the south edge onto the timed board.
+move right
+move right
+move right
+move right
+move down
+move down
+move down
+move down
+move down
+move down
+move down
+move down
+move down
+move down
+move down
+move down
+move down
+capture arrive-clock
+# Down to the giver and spend twenty seconds of the board's minute.
+move down
+move down
+move down
+move down
+settle 8
+capture time-given
+move right
+move right
+move down
+settle 8
+capture time-taken
