@@ -15,19 +15,40 @@ const source = Buffer.from(output.outputFiles[0].contents).toString("base64");
 const { drawEditorSidebar, editorMessageIsForBoard } = await import(`data:text/javascript;base64,${source}`);
 
 // A fake sidebar surface that records the text written at each row, so a test
-// can assert the strings the sidebar paints without a canvas.
+// can assert the strings the sidebar paints without a canvas. Colours are
+// recorded per cell too, for the assertions that are about colour itself.
 function surface() {
   const rows = new Map();
-  const write = (x, y, _color, text) => {
+  const colors = new Map();
+  const write = (x, y, color, text) => {
     const line = rows.get(y) ?? "";
     // Pad to x then overlay text, mirroring absolute-column writes.
     const padded = line.padEnd(x, " ");
     rows.set(y, padded.slice(0, x) + text + padded.slice(x + text.length));
+    for (let i = 0; i < text.length; i += 1) {
+      colors.set(`${x + i},${y}`, color);
+    }
   };
   return {
     write,
     row: (y) => rows.get(y) ?? "",
     text: () => [...rows.values()].join("\n"),
+    colorAt: (x, y) => colors.get(`${x},${y}`),
+    // The screen row containing text, with its colour at each column, for
+    // asserting that a name is painted in one specific attribute.
+    colorOfText: (needle) => {
+      for (const [y, line] of rows) {
+        const x = line.indexOf(needle);
+        if (x >= 0) return colors.get(`${x},${y}`);
+      }
+      return undefined;
+    },
+    rowOfText: (needle) => {
+      for (const [y, line] of rows) {
+        if (line.includes(needle)) return y;
+      }
+      return -1;
+    },
   };
 }
 
@@ -197,6 +218,83 @@ const brush = { element: 21, character: 0xdb, color: 0x0e, copied: false };
   const s2 = surface();
   drawEditorSidebar(s2.write, own, brush, false, false);
   assert.ok(s2.text().includes("Bomb"), "a same-board diff still updates the sidebar");
+}
+
+// M17.10 — the collaborator legend. M17.9 took names off the board, so the only
+// thing identifying a collaborator is their cursor colour; the W panel is what
+// maps that colour back to a name. The board itself must stay free of names.
+{
+  // The command block advertises the key, otherwise the panel does not exist as
+  // far as anyone in the session is concerned.
+  const chrome = surface();
+  drawEditorSidebar(chrome.write, inspect, brush, false, false);
+  assert.ok(chrome.text().includes("Who's here"), "W command row advertises the legend");
+  assert.ok(chrome.text().includes(" W "), "W shortcut badge rendered");
+
+  const presence = {
+    here: [
+      { name: "Alice", color: 0x0f, self: true },
+      { name: "Bob", color: 0x0d, self: false },
+    ],
+    elsewhere: [{ name: "Carol", color: 0x0a, self: false }],
+  };
+  const s = surface();
+  drawEditorSidebar(s.write, inspect, brush, false, false, null, null, null, presence);
+  const all = s.text();
+  assert.ok(all.includes("Alice (you)"), "your own entry names you and says so");
+  assert.ok(all.includes("Bob"), "a collaborator on this board is named");
+  assert.ok(all.includes("Carol"), "a collaborator on another board is named");
+  assert.ok(all.includes("On this board:"), "visible cursors are sectioned as such");
+  assert.ok(all.includes("On other boards:"), "cursors you cannot see are sectioned apart");
+  assert.ok(!all.includes("Board Info"), "the panel overlays the command block, as the picker does");
+  assert.ok(all.includes("ZZT Editor"), "title row survives the legend overlay");
+  assert.ok(all.includes("Drawing off"), "mode row survives the legend overlay");
+
+  // The point of the whole feature: the name carries the colour of the cursor it
+  // belongs to. The palette is foreground-on-black so the cursor overlays the
+  // board tile; on the blue sidebar the same hue moves onto the blue background,
+  // exactly as the element picker does for dark glyphs.
+  assert.equal(s.colorOfText("Bob"), 0x1d, "Bob's name is drawn in Bob's cursor hue");
+  assert.equal(s.colorOfText("Carol"), 0x1a, "Carol's name is drawn in Carol's cursor hue");
+  assert.equal(s.colorOfText("Alice (you)"), 0x1f, "your own entry is the white local cursor");
+  // Each row is prefixed with the cursor glyph itself, in the same colour, so the
+  // legend shows the mark being matched rather than just describing it.
+  const bobRow = s.rowOfText("Bob");
+  assert.equal(s.row(bobRow)[62], "\xc5", "the legend row carries the editor cursor glyph");
+  assert.equal(s.colorAt(62, bobRow), 0x1d, "the glyph is in the collaborator's colour");
+
+  // Alone in a session: one line, no empty "other boards" heading.
+  const solo = surface();
+  drawEditorSidebar(solo.write, inspect, brush, false, false, null, null, null, {
+    here: [{ name: "Alice", color: 0x0f, self: true }],
+    elsewhere: [],
+  });
+  assert.ok(solo.text().includes("Alice (you)"), "solo editor still sees their own entry");
+  assert.ok(!solo.text().includes("On other boards:"), "no empty elsewhere section");
+
+  // A session bigger than the panel must not read as a smaller one: the
+  // overflow is counted rather than silently dropped.
+  const crowd = surface();
+  const many = Array.from({ length: 24 }, (_, i) => ({
+    name: `Member${i}`,
+    color: 0x0e,
+    self: false,
+  }));
+  drawEditorSidebar(crowd.write, inspect, brush, false, false, null, null, null, { here: many, elsewhere: [] });
+  const crowdText = crowd.text();
+  assert.ok(/\+\d+ more/.test(crowdText), "members past the panel's rows are counted, not dropped");
+  const listed = many.filter((member) => crowdText.includes(member.name)).length;
+  const missing = Number(/\+(\d+) more/.exec(crowdText)[1]);
+  assert.equal(listed + missing, many.length, "the overflow count accounts for exactly the unlisted members");
+  assert.ok(crowdText.includes("Drawing off"), "the panel never spills past its rows into the mode row");
+
+  // The element picker and the legend overlay the same rows; the picker wins, so
+  // a stale legend cannot bleed through the list you are choosing from.
+  const both = surface();
+  const menu = { title: "Item", items: [{ shortcut: "K", name: "Key", character: 0x0c, color: 0x09 }] };
+  drawEditorSidebar(both.write, inspect, brush, false, false, menu, null, null, presence);
+  assert.ok(both.text().includes("Key"), "the picker renders");
+  assert.ok(!both.text().includes("Bob"), "the legend does not overlap the open picker");
 }
 
 console.log("editor.test.mjs: all assertions passed");

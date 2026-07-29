@@ -24,8 +24,9 @@ the owner asks.
 1. M17.12 — per-board editing isolation (owner request 2026-07-20, URGENT).
    **Landed**: each member holds their own current board, and edit diffs,
    cursors, and sidebar state are all scoped to it. M17.11 (playing/editing
-   occupancy per world, plus a live server-wide total) has also landed. Next in
-   line is M17.10.
+   occupancy per world, plus a live server-wide total) and M17.10 (the W
+   colour↔name collaborator legend) have also landed, which closes the
+   collaborative-editor group. Next in line is M12.23.
 2. M17.9 — collaborator cursors in the editor (owner request 2026-07-20,
    URGENT). **Landed**, plus a follow-up fixing broadcast snapshots that
    hijacked another member's identity and cursor.
@@ -1947,17 +1948,47 @@ these are live breakage in front of the player.
   acceptance run is the owner's to make: this repo has no real-browser harness
   until M16.9.
 
-- [ ] **M17.10 — Collaborator colour↔name legend in the editor.** M17.9 removed
-  the on-board name label, so a collaborator's identity is now conveyed by
-  cursor colour alone and nothing maps colour back to a name: `EditorPresence`
-  carries `Name` over the wire (`protocol.go:114`) but the client consumes
-  `editorPresence` only in the cursor overlay (`main.ts:1820`). Fine for two
-  people; ambiguous for three or more. Add a compact presence list — editor
-  sidebar or the F-key panel — showing each member's name drawn in their cursor
-  colour, without returning text to the board. DoD: with three browsers in one
-  session, each can identify which colour belongs to which player; the board
-  itself stays free of name text; web test covers the list; replay fixture
-  untouched.
+- [x] **M17.10 — Collaborator colour↔name legend in the editor.** M17.9 removed
+  the on-board name label, so a collaborator's identity was conveyed by cursor
+  colour alone with nothing mapping colour back to a name: `EditorPresence`
+  carried `Name` over the wire but the client consumed `editorPresence` only in
+  the cursor overlay. Fine for two people; a guessing game for three or more.
+
+  A new editor key, **W ("Who's here")**, overlays sidebar rows 3-20 with the
+  legend, the same rows and idiom the F1/F2/F3 element picker uses, leaving the
+  title row and the selector/mode rows in place. Each member is one row: the
+  editor cursor glyph (0xC5) they draw on the board, then their name, both in
+  that cursor's colour. The palette is foreground-on-black so a remote cursor
+  can overlay a board tile; on the blue sidebar that reads as a hole, so the hue
+  moves onto the sidebar background exactly as `menuGlyphColor` already does for
+  dark element glyphs. No name text goes back onto the board.
+
+  `editorPresenceLegend` (`web/src/editor_cursor.ts`) builds the list;
+  `drawEditorSidebar` paints it. Three decisions are load-bearing: the viewer's
+  own row is white (`EDITOR_CURSOR_COLOR`), not their server-assigned colour,
+  because the local cursor is always drawn white and naming the server colour
+  would point at a cursor that is not on screen; the list is split into "On this
+  board" / "On other boards", because M17.12 draws cursors only for members on
+  the viewer's board and a flat list would name colours that are nowhere
+  visible; and entries are sorted by name, because `EditorSession.Presence()`
+  ranges a map and its order shuffles between broadcasts, which cursors do not
+  care about but a list does. A session larger than the panel reports `+N more`
+  rather than silently truncating.
+
+  The panel is not modal — arrows and edits keep working while it is up, so a
+  coloured cursor can be watched and named at once. Escape closes it before it
+  means "leave the editor"; opening the element picker or a sidebar menu closes
+  it, since they overlay the same rows.
+
+  Browser-only chrome, like "S World" (M5.6) and "T Transfer board" (M5.5):
+  `engine/editor.go`'s `EditorDrawSidebar` is untouched and stays a faithful
+  transcription of EDITOR.PAS:89-186. Client-only change — no engine, protocol,
+  or fixture edit, so no replay hash moved. `editor_cursor.test.mjs` covers the
+  legend builder (sectioning, self-as-white, order-independence, board switch,
+  boardless peers) and `editor.test.mjs` covers the rendering (names in their
+  cursor colours, the glyph prefix, the command row, overflow accounting, and
+  the picker taking precedence). The three-browser acceptance run is the
+  owner's: this repo has no real-browser harness until M16.9.
 
 - [x] **M17.13 — Dreaming a world salvages the boards that worked (owner-requested
   2026-07-20).** Previously any board that exhausted its paint attempts failed the

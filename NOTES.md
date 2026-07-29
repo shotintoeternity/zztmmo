@@ -2983,3 +2983,34 @@ deploy, rollback and teardown are documented in AWS.md (gitignored). The
 remaining M17.8 DoD item is the owner's real-browser check, deliberately not
 self-certified per the M17.3/M17.7 lesson. M17.8's TASKS.md box is therefore
 still unchecked.
+
+## 2026-07-28 — M17.10: a third browser-only editor key ("W  Who's here")
+
+M17.9 traded the on-board collaborator name label for colour-only cursors,
+which left nothing mapping colour back to a name. The legend needs a surface,
+and the sidebar has no free rows: rows 3-20 are the command block and rows
+21-24 the selector/mode chrome. So the legend reuses the F1/F2/F3 idiom —
+overlay rows 3-20, leave the title and the selector/mode rows in place — and
+gets its own key.
+
+That makes three sidebar commands the DOS editor does not have: "S World"
+folding in L Load (M5.6), "T Transfer board" (M5.5), and now "W Who's here".
+All three are browser-only chrome for a collaborative session that vanilla has
+no concept of; none changes what the editor does to a world, and none appears
+in `engine/editor.go`'s `EditorDrawSidebar`, which stays a faithful transcription
+of EDITOR.PAS:89-186 for the terminal path.
+
+Two details worth keeping:
+
+- The viewer's own row is listed as white (`EDITOR_CURSOR_COLOR`), not the
+  colour the server assigned them. Locally your cursor is always drawn white,
+  so naming your server colour would point at a cursor that is not on screen.
+- `EditorSession.Presence()` builds its slice by ranging a map, so broadcast
+  order shuffles. Cursors do not care, but a *list* does, so the legend sorts
+  by name client-side. Rule 2 is untouched: presence is presentation, never
+  simulation state.
+
+The panel is deliberately not modal — arrows and edits keep working while it is
+up, so you can watch a coloured cursor move and read its name at the same time.
+It is board-sectioned because M17.12 draws cursors only for members on your
+board; a flat list would name colours that are nowhere on screen.

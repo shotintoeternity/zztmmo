@@ -17,6 +17,7 @@ const {
   sameEditorCursor,
   editorCursorShown,
   editorCursorOverlay,
+  editorPresenceLegend,
   EDITOR_CURSOR_CHAR,
   EDITOR_CURSOR_COLOR,
 } = await import(`data:text/javascript;base64,${source}`);
@@ -102,5 +103,63 @@ assert.equal(unfiltered.length, 3, "omitting boardId keeps pre-M17.12 behaviour 
 
 const peerRevealed = editorCursorOverlay({ blink: 0, cursor, presence, selfId: "me", boardCols, rows });
 assert.deepEqual(peerRevealed, [], "collaborator cursors blink off with the local one");
+
+// M17.10 — the colour↔name legend. With names off the board, the only way to tell
+// three collaborators apart is to map their cursor colours back to names.
+{
+  const members = [
+    { id: "peer-2", name: "Carol", color: 0x0a, boardId: 2, x: 12, y: 9 },
+    { id: "me", name: "Alice", color: 0x0e, boardId: 1, x: 5, y: 5 },
+    { id: "peer-1", name: "Bob", color: 0x0d, boardId: 1, x: 10, y: 8 },
+  ];
+  const legend = editorPresenceLegend({ presence: members, selfId: "me", boardId: 1 });
+  assert.deepEqual(
+    legend.here.map((entry) => entry.name),
+    ["Alice", "Bob"],
+    "the viewer heads their own board's list, collaborators follow by name",
+  );
+  assert.deepEqual(
+    legend.elsewhere.map((entry) => entry.name),
+    ["Carol"],
+    "a member on another board is listed apart — their cursor is not on screen",
+  );
+  // The viewer's own cursor is drawn white locally, so the legend must name
+  // white, not the colour the server assigned them.
+  assert.equal(legend.here[0].color, EDITOR_CURSOR_COLOR, "your own entry is the white cursor you see");
+  assert.equal(legend.here[0].self, true, "your own entry is marked as yours");
+  assert.equal(legend.here[1].color, 0x0d, "a collaborator is listed in the colour their cursor draws in");
+  assert.equal(legend.here[1].self, false, "collaborators are not marked as you");
+
+  // Server presence is built by ranging a map, so its order shuffles between
+  // broadcasts; the legend must not reorder itself under the reader.
+  const shuffled = editorPresenceLegend({
+    presence: [members[1], members[2], members[0]],
+    selfId: "me",
+    boardId: 1,
+  });
+  assert.deepEqual(shuffled, legend, "legend order does not depend on the order presence arrives in");
+
+  // Switching boards re-sections the same session: Carol's cursor becomes
+  // visible and Bob's does not.
+  const fromBoard2 = editorPresenceLegend({ presence: members, selfId: "me", boardId: 2 });
+  assert.deepEqual(fromBoard2.here.map((entry) => entry.name), ["Alice", "Carol"], "board 2 sees Carol");
+  assert.deepEqual(fromBoard2.elsewhere.map((entry) => entry.name), ["Bob"], "board 2 does not see Bob");
+
+  // Alone in a session there is still an entry — a one-line legend that says the
+  // white cursor is yours, and no phantom "other boards" section.
+  const alone = editorPresenceLegend({ presence: [members[1]], selfId: "me", boardId: 1 });
+  assert.deepEqual(alone.here.map((entry) => entry.name), ["Alice"], "solo editor sees only themselves");
+  assert.deepEqual(alone.elsewhere, [], "no elsewhere section when nobody is elsewhere");
+
+  // Pre-M17.12 peers send no board at all; those cursors are all drawn, so the
+  // legend must class them all as visible rather than inventing an elsewhere.
+  const boardless = editorPresenceLegend({
+    presence: presence,
+    selfId: "me",
+    boardId: 1,
+  });
+  assert.deepEqual(boardless.elsewhere, [], "members without a board are never filed as elsewhere");
+  assert.equal(boardless.here.length, 3, "every boardless member is listed as visible");
+}
 
 console.log("editor_cursor.test.mjs: all assertions passed");

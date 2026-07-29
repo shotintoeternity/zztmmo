@@ -18,8 +18,8 @@ import { commandKey, isHandledKey, isMovementKey, movementMask, rawKey } from ".
 import { drawTitleSidebar, titleCommand, NO_OCCUPANCY, type ServerOccupancy } from "./title";
 import { soundNotesFromProtocol, ZztSound } from "./sound";
 import { DreamFailure, generationLines, retryDreamBoard, runDreamGeneration, type GenerationProgress } from "./dream";
-import { drawEditorSidebar, editorMessageIsForBoard, type EditorInspect, type SidebarActionMenu, type SidebarStatPrompt } from "./editor";
-import { editorReplyMatchesCursor, editorCursorOverlay, EDITOR_BLINK_PHASES } from "./editor_cursor";
+import { drawEditorSidebar, editorMessageIsForBoard, type EditorInspect, type SidebarActionMenu, type SidebarPresenceList, type SidebarStatPrompt } from "./editor";
+import { editorReplyMatchesCursor, editorCursorOverlay, editorPresenceLegend, EDITOR_BLINK_PHASES } from "./editor_cursor";
 import { optimisticEditorEraseCell, optimisticEditorTextCell } from "./editor_input";
 import {
   mergeWorldEntries,
@@ -614,6 +614,10 @@ let editorMenus: EditorElementMenu[] = [];
 // next keystroke selects an element by its shortcut instead of driving the board
 // (EDITOR.PAS:808-842).
 let editorCategoryMenu: EditorElementMenu | null = null;
+// M17.10: the W collaborator legend. It overlays the same sidebar rows as the
+// category picker but is not modal — the cursor keeps moving and editing while
+// it is up, so you can watch a coloured cursor and read its name at once.
+let editorPresencePanel = false;
 let editorSidebarMenu: EditorSidebarMenu | null = null;
 let editorStatPrompt: EditorStatPrompt | null = null;
 // Set when a menu selection placed a stat-backed element, so the diff reply
@@ -887,6 +891,7 @@ function startEditor() {
   activeEditorLease = null;
   retainEditorLeaseOnClose = false;
   editorCategoryMenu = null;
+  editorPresencePanel = false;
   editorSidebarMenu = null;
   editorStatPrompt = null;
   renderEditorSidebar();
@@ -1507,6 +1512,9 @@ function applyEditorInspect(message: EditorInspectMessage) {
 
 function applyEditorPresence(message: EditorPresenceMessage) {
   editorPresence = message.members;
+  // Only when the legend is up: presence arrives on every collaborator
+  // keystroke, and the rest of the sidebar has nothing to learn from it.
+  if (editorPresencePanel) renderEditorSidebar();
   paintOverlay();
   drawScreen();
 }
@@ -2578,7 +2586,16 @@ function renderEditorSidebar() {
         }
       }),
   } : null;
-  drawEditorSidebar(writeText, editorInspect, editorBrush, editorDrawing, editorTextMode, editorCategoryMenu, actionMenu, statPrompt);
+  // The legend is rebuilt on every sidebar draw so it tracks members joining,
+  // leaving, and switching boards while it is open (M17.10).
+  const presenceList: SidebarPresenceList | null = editorPresencePanel
+    ? editorPresenceLegend({
+        presence: editorPresence,
+        selfId: editorMemberId,
+        boardId: editorProperties.boardId,
+      })
+    : null;
+  drawEditorSidebar(writeText, editorInspect, editorBrush, editorDrawing, editorTextMode, editorCategoryMenu, actionMenu, statPrompt, presenceList);
 }
 
 // redrawEditor repaints the editor sidebar and board from local state, the
@@ -2658,6 +2675,15 @@ function handleEditorKey(event: KeyboardEvent) {
     return;
   }
   if (editorTextMode && handleEditorTextKey(event)) return;
+  // Escape closes the collaborator legend before it means "leave the editor" —
+  // the panel covers the command block, so dismissing it is what Escape reads as
+  // while it is up.
+  if (editorPresencePanel && event.code === "Escape") {
+    event.preventDefault();
+    editorPresencePanel = false;
+    redrawEditor();
+    return;
+  }
   let nextX = editorCursor.x;
   let nextY = editorCursor.y;
   switch (event.code) {
@@ -2690,6 +2716,11 @@ function handleEditorKey(event: KeyboardEvent) {
     case "KeyH":
       event.preventDefault();
       showHelp("EDITOR.HLP", "World editor help");
+      return;
+    case "KeyW":
+      event.preventDefault();
+      editorPresencePanel = !editorPresencePanel;
+      redrawEditor();
       return;
     case "ArrowUp":
     case "Numpad8":
@@ -2849,6 +2880,7 @@ function editorBoardName(id: number): string {
 
 function openEditorSidebarMenu(menu: Omit<EditorSidebarMenu, "selected"> & { selected?: number }) {
   editorCategoryMenu = null;
+  editorPresencePanel = false;
   editorSidebarMenu = { ...menu, selected: menu.selected ?? 0 };
   redrawEditor();
 }
@@ -2916,6 +2948,8 @@ function openEditorCategoryMenu(key: string) {
   const menu = editorMenus.find((candidate) => candidate.key.toLowerCase() === key.toLowerCase());
   if (!menu || menu.items.length === 0) return;
   editorCategoryMenu = menu;
+  // Both overlay sidebar rows 3-20; the picker is the one waiting on a key.
+  editorPresencePanel = false;
   redrawEditor();
 }
 

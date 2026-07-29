@@ -41,6 +41,64 @@ export type EditorPresenceCursor = {
   y: number;
 };
 
+export type EditorPresenceLegendEntry = {
+  name: string;
+  // The attribute the viewer actually sees for this member's cursor: their
+  // presence colour, or the local white cross for the viewer's own entry.
+  color: number;
+  self: boolean;
+};
+
+// A collaborator legend split by whether the member's cursor is visible to the
+// viewer at all. M17.12 draws cursors only for members on the viewer's board, so
+// a flat list would name colours that are nowhere on screen.
+export type EditorPresenceLegend = {
+  here: EditorPresenceLegendEntry[];
+  elsewhere: EditorPresenceLegendEntry[];
+};
+
+// editorPresenceLegend maps cursor colour back to a name (M17.10). M17.9 removed
+// the on-board name label, so colour became a collaborator's only identity, which
+// is unambiguous for two people and a guessing game for three or more. This
+// builds the legend the sidebar paints; nothing here returns text to the board.
+//
+// The viewer's own entry is white (EDITOR_CURSOR_COLOR), not the colour the
+// server assigned them: the local cursor is always drawn white, so listing the
+// server colour would name a cursor that is not on this screen.
+//
+// Entries are sorted by name because the server builds presence by ranging a map
+// (editor_session.go Presence), so its order shuffles between broadcasts and an
+// unsorted list would reorder itself under the reader on every cursor move.
+export function editorPresenceLegend(opts: {
+  presence: EditorPresenceCursor[];
+  selfId: string;
+  // The board the viewer is on. Left undefined, no member is classed as
+  // elsewhere — the pre-M17.12 behaviour, where every cursor was drawn.
+  boardId?: number;
+}): EditorPresenceLegend {
+  const here: EditorPresenceLegendEntry[] = [];
+  const elsewhere: EditorPresenceLegendEntry[] = [];
+  let self: EditorPresenceLegendEntry | null = null;
+  for (const member of opts.presence) {
+    if (member.id === opts.selfId) {
+      self = { name: member.name, color: EDITOR_CURSOR_COLOR, self: true };
+      continue;
+    }
+    const entry = { name: member.name, color: member.color, self: false };
+    const visible =
+      opts.boardId === undefined || member.boardId === undefined || member.boardId === opts.boardId;
+    (visible ? here : elsewhere).push(entry);
+  }
+  const byName = (a: EditorPresenceLegendEntry, b: EditorPresenceLegendEntry) =>
+    a.name < b.name ? -1 : a.name > b.name ? 1 : 0;
+  here.sort(byName);
+  elsewhere.sort(byName);
+  // The viewer heads their own board's list: the first colour anyone needs to
+  // place is the cursor they are driving.
+  if (self) here.unshift(self);
+  return { here, elsewhere };
+}
+
 // editorCursorOverlay builds the blink layer for paintOverlay's editor branch.
 // Board coordinates are 1-based (cursorX/Y); the screen overlay is 0-based, hence
 // the x-1/y-1 shift. On the tile-shown phase it returns nothing so the board cell

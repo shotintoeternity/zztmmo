@@ -5,6 +5,7 @@
 // browser controls below are transcribed from EditorDrawSidebar (editor.go).
 
 import { sidebarClearLine, type WriteText } from "./sidebar";
+import { EDITOR_CURSOR_CHAR } from "./editor_cursor";
 
 export type EditorInspect = {
   x: number;
@@ -52,6 +53,20 @@ export type SidebarCategoryItem = {
 export type SidebarCategoryMenu = {
   title: string;
   items: SidebarCategoryItem[];
+};
+
+// SidebarPresenceList is the M17.10 collaborator legend: the colour↔name map for
+// the cursors on the board. editor_cursor.ts builds it (it owns which cursor a
+// viewer actually sees); this module only paints it.
+export type SidebarPresenceEntry = {
+  name: string;
+  color: number;
+  self: boolean;
+};
+
+export type SidebarPresenceList = {
+  here: SidebarPresenceEntry[];
+  elsewhere: SidebarPresenceEntry[];
 };
 
 export type SidebarActionMenuItem = {
@@ -175,6 +190,64 @@ function renderSidebarStatPrompt(write: WriteText, prompt: SidebarStatPrompt) {
   }
 }
 
+// PRESENCE_ROW_LAST is the last sidebar row the collaborator panel may use: the
+// same rows 3-20 the F1/F2/F3 picker overlays, leaving the title above and the
+// selector/mode rows below in place.
+const PRESENCE_ROW_LAST = 20;
+
+// renderSidebarPresence paints the M17.10 colour↔name legend over the command
+// block. Each member is the cursor glyph they draw on the board plus their name,
+// both in that cursor's colour, so a colour on the board is read straight off
+// this list. Names never go back onto the board itself — that is what M17.9
+// removed.
+function renderSidebarPresence(write: WriteText, list: SidebarPresenceList) {
+  const total = list.here.length + list.elsewhere.length;
+  let rendered = paintPresenceRows(write, list, PRESENCE_ROW_LAST);
+  if (rendered < total) {
+    // Never let a full session read as a short one: give up the last row to a
+    // count of the members that did not fit, and repaint within the smaller
+    // budget so nothing is written under the note.
+    rendered = paintPresenceRows(write, list, PRESENCE_ROW_LAST - 1);
+    write(62, PRESENCE_ROW_LAST, 0x1e, `+${total - rendered} more`.slice(0, 17));
+  }
+}
+
+// paintPresenceRows draws the panel within lastRow and reports how many members
+// it managed to list.
+function paintPresenceRows(write: WriteText, list: SidebarPresenceList, lastRow: number): number {
+  for (let y = 3; y <= PRESENCE_ROW_LAST; y += 1) {
+    sidebarClearLine(write, y);
+  }
+  write(62, 3, 0x70, "  Who's here   ");
+  let y = 5;
+  let rendered = 0;
+  const section = (title: string, entries: SidebarPresenceEntry[]) => {
+    // A header with no room for an entry under it is worse than no header: it
+    // reads as an empty section rather than as an overflow.
+    if (entries.length === 0 || y >= lastRow) return;
+    write(62, y, 0x1e, title);
+    y += 1;
+    for (const entry of entries) {
+      if (y > lastRow) return;
+      // The presence palette is foreground-on-black (editor_session.go
+      // editorPresenceColor) so a remote cursor overlays the board tile. On the
+      // blue sidebar that reads as a hole, so the hue moves onto the sidebar
+      // background exactly as the element picker does for dark glyphs.
+      const color = menuGlyphColor(entry.color);
+      write(62, y, color, String.fromCharCode(EDITOR_CURSOR_CHAR));
+      write(64, y, color, (entry.self ? `${entry.name} (you)` : entry.name).slice(0, 15));
+      rendered += 1;
+      y += 1;
+    }
+  };
+  section("On this board:", list.here);
+  if (list.elsewhere.length > 0 && y < lastRow) {
+    y += 1;
+    section("On other boards:", list.elsewhere);
+  }
+  return rendered;
+}
+
 // editorMessageIsForBoard decides whether a board-shaped editor message applies
 // to the board this client is viewing (M17.12). Session members edit different
 // boards of one world, so an edit diff carries the board its cells belong to;
@@ -198,6 +271,7 @@ export function drawEditorSidebar(
   categoryMenu: SidebarCategoryMenu | null = null,
   actionMenu: SidebarActionMenu | null = null,
   statPrompt: SidebarStatPrompt | null = null,
+  presence: SidebarPresenceList | null = null,
 ) {
   for (let y = 0; y < 25; y += 1) {
     sidebarClearLine(write, y);
@@ -226,6 +300,10 @@ export function drawEditorSidebar(
   write(65, 7, 0x1f, " Switch boards");
   write(61, 8, 0x30, " I ");
   write(65, 8, 0x1f, " Board Info");
+  // M17.10, a browser-only command: a collaborator's identity is their cursor
+  // colour, so the session needs somewhere that maps colour back to a name.
+  write(61, 9, 0x70, " W ");
+  write(65, 9, 0x1f, " Who's here");
   write(61, 10, 0x70, "  f1   ");
   write(68, 10, 0x1f, " Item");
   write(61, 11, 0x30, "  f2   ");
@@ -300,6 +378,13 @@ export function drawEditorSidebar(
       write(78, i, menuGlyphColor(item.color), String.fromCharCode(item.character));
       i += 1;
     }
+  }
+
+  // The collaborator legend overlays the same rows as the category picker, so
+  // only one of the two is ever open (main.ts closes each when opening the
+  // other); the guard keeps them from painting over each other regardless.
+  if (presence && !categoryMenu) {
+    renderSidebarPresence(write, presence);
   }
 
   // SidebarPromptChoice(true, 3, ...), used by EditorTransferBoard: a horizontal
