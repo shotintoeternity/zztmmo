@@ -799,6 +799,12 @@ func (e *Engine) ElementBlinkWallTick(statId int16) {
 						if e.Board.Tiles[ix+1][iy].Element == E_EMPTY {
 							e.MoveStat(playerStatId, ix+1, iy)
 						} else if e.Board.Tiles[ix-1][iy].Element == E_EMPTY {
+							// ZZT-QUIRK: the fallback tests the square to the WEST and
+							// then moves the player EAST anyway (ELEMENTS.PAS:845-848),
+							// so a player squeezed by a north-south ray is pushed on top
+							// of whatever stands east of it, keeping it as their Under.
+							// Pinned against the real ZZT.EXE by ORCLBLNK's
+							// pushed-into-wall checkpoint (M16.4).
 							e.MoveStat(playerStatId, ix+1, iy)
 						}
 

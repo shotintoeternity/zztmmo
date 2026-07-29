@@ -1340,8 +1340,9 @@
       "contract": "V",
       "authority": "reference/reconstruction-of-zzt/SRC ELEMENTS.PAS; ANALYSIS.md",
       "parity": "exact",
-      "status": "unverified",
-      "assignedTask": "M16.4"
+      "test": "TestOracleParityBlinkScenario",
+      "fixture": "fixtures/oracle/blink.capture.txt",
+      "status": "pass"
     },
     {
       "id": "elem.blink-ray-ns",
@@ -1350,8 +1351,10 @@
       "contract": "V",
       "authority": "reference/reconstruction-of-zzt/SRC ELEMENTS.PAS; ANALYSIS.md",
       "parity": "exact",
-      "status": "unverified",
-      "assignedTask": "M16.4"
+      "test": "TestOracleParityBlinkScenario",
+      "fixture": "fixtures/oracle/blink.capture.txt",
+      "status": "pass",
+      "notes": "includes the ported ELEMENTS.PAS:845-848 push bug (ZZT-QUIRK in elements.go), pinned by the pushed-into-wall checkpoint"
     },
     {
       "id": "elem.blink-wall",
@@ -1360,8 +1363,9 @@
       "contract": "V",
       "authority": "reference/reconstruction-of-zzt/SRC ELEMENTS.PAS; ANALYSIS.md",
       "parity": "exact",
-      "status": "unverified",
-      "assignedTask": "M16.4"
+      "test": "TestOracleParityBlinkScenario",
+      "fixture": "fixtures/oracle/blink.capture.txt",
+      "status": "pass"
     },
     {
       "id": "elem.board-edge",

@@ -16,6 +16,7 @@
     "zzt_cfg": "<WORLD>\r\nREGISTERED\r\n"
   },
   "worlds": {
+    "ORCLBLNK.ZZT": "c000d8be264c20862def38af627eed975be8fcbdcaf833b74fa0ebb1d650135e",
     "ORCLDARK.ZZT": "6cf64ecd8b2acb65a1fb8def965b5b64d1745fcc0a845bcc951171a1faa48805",
     "ORCLDEV.ZZT": "9ae2bd4a8f40965b0813a7deb6d8038d887aabdb3311c7f254b24187fc6971b1",
     "ORCLITEM.ZZT": "cba615572360d471cd6f4bce61ae58dbfb41bfff41345b81f78e0f9302129ed3",
@@ -34,6 +35,7 @@
     "note": "Randomize() seeds from the fixed virtual clock; the compared path is RNG-free."
   },
   "scenarios": {
+    "blink.scn": "ffa7e524ed3ff9640217dfc76f036f3ab2a4a6451fdb1a72501808d958e4cade",
     "dark.scn": "0978e370ec0ea5138a6c139ee9102dcac89714dcb398f2dd67fff7b62ca0316d",
     "dev.scn": "00f90f96f25a692df9567e2f3abc0dfb5f7484ee728a0a339cbdea0bce15182d",
     "item.scn": "6e8857472fe0fcd1ff04617d81c4c82fcfc763297fdab965359fa090ec78f790",

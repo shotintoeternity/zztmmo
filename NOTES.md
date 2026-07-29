@@ -3278,3 +3278,51 @@ Every checkpoint is still an unconditioned prediction of three state machines.
 Still open for M16.4: blink wall + both rays, the conveyor and spinning-gun
 acting paths, and a status change for `elem.passage` (already covered by M16.3's
 ORCLPASS).
+
+## 2026-07-29 — M16.4: blink walls, and a ported bug the oracle confirmed
+
+`ORCLBLNK` + `blink.scn` cover `elem.blink-wall`, `elem.blink-ray-ns`, and
+`elem.blink-ray-ew`. Same board-edge staging as ORCLMECH (a blink wall's P3
+counter accumulates, so it cannot sit on the title board), but this scenario
+needs **no `phase` directive**: every stat on the board has cycle 1, so the gate
+`CurrentTick mod Cycle = statId mod Cycle` holds on every frame whatever
+CurrentTick is. The rhythm is therefore exact rather than solved — both walls
+carry P2 12, so each toggles every 25 frames, and P1 0 against P1 12 runs them
+half a period out of step so every checkpoint shows one ray out and the other
+withdrawn.
+
+The engine matched the real ZZT.EXE on all nine checkpoints with no engine
+change, including three things I had not designed for:
+
+- **A lit ray is a wall.** The player waits at 5,13 for a retraction; the ray is
+  not walkable, so the move into the column is simply refused while it is out.
+- **The ray damages before it pushes.** `BoardDamageTile` runs on every
+  Destructible tile in the ray's path, and a player is Destructible, so the
+  player loses 10 health *and then* gets shoved aside. Health 100 → 90 → 80
+  across the two push stations, compared against the oracle's sidebar.
+- **The gem in the east-west ray's path never comes back.** It is damaged away
+  on the first pass and the ray takes its square; later passes find empty ground.
+
+### The quirk
+
+`ElementBlinkWallTick`'s player-push branch is asymmetric, and the north-south
+half is a genuine ZZT bug the port carries faithfully (ELEMENTS.PAS:845-848):
+
+    if Board.Tiles[ix + 1][iy].Element = E_EMPTY then MoveStat(playerStatId, ix + 1, iy)
+    else if Board.Tiles[ix - 1][iy].Element = E_EMPTY then MoveStat(playerStatId, ix + 1, iy)
+
+The fallback tests the square to the **west** and then moves the player **east**
+anyway, on top of whatever stands there. The east-west half has no such bug (it
+tries north, then south, and moves where it looked). ORCLBLNK exercises both: at
+row 13 the square east of the ray column is solid and the square west is open, so
+the real ZZT.EXE pushes the player *into* the wall — it stands on the wall with
+the wall saved as its `Under`, and the wall reappears when it walks off. At row
+10 the square east is open, so the correct branch simply steps it aside. The Go
+site is now marked `// ZZT-QUIRK:` with a pointer to the checkpoint that pins it.
+
+This is the first M16 sweep to prove a *bug* rather than a behaviour, which is
+the point of an independent oracle: nothing here was read off the Pascal and
+asserted, it was recorded from the executable and then reproduced.
+
+Still open for M16.4: the conveyor and spinning-gun acting paths, and a status
+change for `elem.passage`.

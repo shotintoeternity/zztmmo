@@ -854,6 +854,17 @@ func TestOracleParityMechScenario(t *testing.T) {
 	}
 }
 
+// TestOracleParityBlinkScenario covers the blink wall and both blink rays,
+// including the asymmetric player-push branch and the vanilla bug in its
+// north-south half (fixtures/oracle/blink.scn documents the design). Every stat
+// on the board has cycle 1, so the scenario is phase-insensitive and declares no
+// `phase` directive.
+func TestOracleParityBlinkScenario(t *testing.T) {
+	if err := oracleAdapterRun(t, "blink.scn", "blink.capture.txt", nil); err != nil {
+		t.Fatalf("oracle divergence: %v", err)
+	}
+}
+
 // TestMonitorTickExitKeys pins ElementMonitorTick's semantics (ELEMENTS.PAS:
 // the title-screen monitor requests a play-loop exit for exactly the title
 // menu keys and consumes no other input). The monitor's on-screen behavior is

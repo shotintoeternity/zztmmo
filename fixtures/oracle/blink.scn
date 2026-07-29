@@ -1,0 +1,77 @@
+# ORCLBLNK: blink walls and both blink rays (M16.4).
+#
+# A blink wall is a metronome with a P3 counter, so like ORCLMECH's devices it
+# accumulates and cannot sit on the title board; Blink Bay is reached over a
+# board edge (see mech.scn for why that, and not a passage). Unlike ORCLMECH
+# this scenario needs no `phase` directive: every stat here has cycle 1, so the
+# gate `CurrentTick mod Cycle = statId mod Cycle` is satisfied on every frame
+# whatever CurrentTick happens to be, and the rhythm below is exact.
+#
+# ElementBlinkWallTick (ELEMENTS.PAS:802) does three things in one pass:
+#   P3 = 0      -> arm with P1 + 1, so P1 is a start delay
+#   P3 = 1      -> if the ray is already out, RETRACT it square by square;
+#                  otherwise LAY it, damaging every Destructible tile on the way
+#                  and stopping at the first thing it cannot pass
+#   otherwise   -> count down
+# Both walls carry P2 12, so each toggles every 25 frames; the north-south wall
+# has P1 0 and the east-west wall P1 12, so they run half a period apart and
+# every checkpoint below shows one ray out and the other withdrawn.
+#
+# The north-south wall at 6,3 fires down column 6 to a solid backstop at 6,20.
+# The east-west wall at 12,7 fires along row 7 to a backstop at 24,7, through a
+# gem at 18,7 — a gem is Destructible, so the first ray damages it away and then
+# occupies its square, and it never comes back.
+#
+# The player stations are the ray's player branch, which is not symmetric:
+#
+#   east-west ray   -> push the player one square NORTH, else one square SOUTH
+#   north-south ray -> push the player one square EAST, else ... one square EAST
+#
+# That second "else" is a real ZZT bug, faithfully ported: ELEMENTS.PAS:845-848
+# tests whether the square to the WEST is empty and then moves the player EAST
+# anyway, on top of whatever was there. Both branches are exercised here. At row
+# 13 the square east of the column is solid and the square west is open, so the
+# player is pushed INTO the wall and stands on it with the wall saved as their
+# Under; at row 10 the square east is open, so the correct branch simply steps
+# them aside.
+#
+# A lit ray is also a wall: the player waits at 5,13 while it is out and can
+# only enter the column during a retraction.
+world ORCLBLNK
+seed 0
+boot 240
+capture title
+play
+# Blink Hub: unpause and cross the east border opening at 60,13.
+move right
+move right
+move right
+move right
+move right
+capture arrive
+# Walk to 5,13. The north-south ray is lit, so 6,13 is closed.
+move right
+move right
+move right
+move right
+capture at-lit-gate
+# It retracts on frame 43; step into the column while it is withdrawn.
+settle 16
+capture gate-retracted
+move right
+capture in-column
+# It fires again on frame 68. East of 6,13 is solid, so this is the quirk push:
+# the player is moved east regardless, on top of the wall.
+settle 44
+capture pushed-into-wall
+# Climb to row 10, where the square east of the column is open.
+move up
+move up
+move up
+settle 24
+capture gate-retracted-again
+move left
+capture in-column-again
+# Fires again on frame 118: the correct branch just steps the player aside.
+settle 44
+capture pushed-aside
