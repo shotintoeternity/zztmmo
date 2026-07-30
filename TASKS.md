@@ -39,9 +39,17 @@ M12.23, M17.1–M17.7, M16.0–M16.8a — has fully landed.)
    + production Go server — the infrastructure slice of M16.9, WITHOUT the
    golden-image suite): the journey coverage doubles as the beta smoke test.
 4. M18.0–M18.4 — beta-readiness cleanup and operational gaps (specced below,
-   after M16).
-5. **Beta invite goes out** (owner action; desktop-browser scope in the copy).
-6. Resume certification in file order: M16.9/M16.10 golden suites, M16.12–
+   after M16). **Landed 2026-07-30.**
+5. M18.5 — carry M18.4's backup timer and generation ceiling to production.
+   Filed 2026-07-30: M18.4 verified both on the dev host only, so the guards
+   that protect the beta are not where the beta will be. Needs an owner
+   decision (the production ceiling) and owner confirmation before touching
+   the live host.
+6. **Beta invite goes out** (owner action; desktop-browser scope in the copy).
+7. M18.6 — back up player-created worlds, not just `saves/`. The one
+   data-loss hole M18.4 left open; it widens with every day of the beta, so
+   take it early rather than with the certification tail.
+8. Resume certification in file order: M16.9/M16.10 golden suites, M16.12–
    M16.15, M16.17, M16.18, M16.18a, M16.20.
 
 **Optional / deferred (bottom):**
@@ -3076,6 +3084,70 @@ lists. Every task: `cd engine && go build ./... && go test ./...` green,
   dev host (feedback pointer visible in a real browser, backup cron dry-run
   restores, generation limit observed by exceeding it in a test), documented
   in AWS.md/README as listed, replay fixture untouched.
+
+- [ ] **M18.5 — Carry M18.4's operational guards to production.** M18.4 landed
+  both new guards on the dev host only, so production is running without the
+  half of the work that actually protects the beta. Two installs, no code:
+  (a) install `deploy/zztmmo-backup.{sh,service,timer}` on
+  `44.222.174.192` — the copy-paste block is in AWS.md's
+  [Saved-Game Backups](#saved-game-backups) section, and it needs the
+  `/var/backups/zztmmo` directory created and owned by `ec2-user` before the
+  timer is enabled. (b) Add an explicit `ZZT_GENERATION_DAILY_MAX` to
+  `/opt/zztmmo/.env` and restart. Production currently inherits
+  `GenerationDailyMaxDefault` (25, `engine/generation.go`) implicitly, which is
+  a number nobody chose — **ask the owner for the production ceiling before
+  writing it**, and note that the guard is in-process, so a restart refills the
+  window. While there, confirm the deployed binary is new enough to have the
+  ceiling and the `X-Forwarded-For` client key at all: production predates
+  commit `0745214`, so a redeploy is part of this task, not a precondition.
+
+  Production is live, unlike dev. **Confirm with the owner before touching it**,
+  use the authorize-verify-revoke SSH procedure (AWS.md
+  [Security Group Management](#security-group-management)), and leave no ad hoc
+  `/32` standing. Do not probe the generation limits against production's real
+  API key — reuse M18.4's technique (a sidecar `zzt-server` on a spare port with
+  a dead `ANTHROPIC_API_URL`, NOTES.md 2026-07-30) so the observation costs
+  nothing. DoD: `systemctl list-timers zztmmo-backup.timer` shows a scheduled
+  run on prod, one manual run restores byte-identical into a scratch directory,
+  `/proc/<pid>/environ` shows the chosen ceiling, `https://zztmmo.com/` still
+  serves and `/api/worlds` still answers, and the SSH allowlist is back to its
+  starting set. Evidence in NOTES.md; replay fixture untouched.
+
+- [ ] **M18.6 — Back up player-created worlds, not just `saves/`.** M18.4's
+  backup covers `/opt/zztmmo/saves` (the `.SAV` files, `autosave/`, and
+  `chat.jsonl`) and deliberately stops there, because worlds players create land
+  in `/opt/zztmmo` itself, mixed in with the ~100 shipped `.ZZT` files, and a
+  path-based backup cannot tell them apart. That leaves the one class of tester
+  work that a host loss destroys outright. Two creation paths, both writing to
+  the same directory: `persistGeneratedWorld` (`engine/generation.go:3008`)
+  writes `NAME.ZZT` plus `NAME.prompt.txt`, `NAME.plan.md`, and `NAME.zwd` for
+  every dreamed world, and the editor publishes `.ZZT` into `WorldsDir`
+  (`engine/websocket_server.go:40-43`).
+
+  Pick the discriminator before writing any script — this is the whole task:
+  1. **Sibling-file rule.** A `.ZZT` with a matching `.zwd` beside it is
+     dreamed. Exact and needs no code, but blind to editor-published worlds,
+     which have no companion file.
+  2. **Shipped-world manifest** (recommended). Write the bundle's world list to
+     `/opt/zztmmo/SHIPPED_WORLDS` at unpack time — the deploy tar already
+     enumerates them — and back up every `.ZZT` not named there. Covers both
+     paths with one rule, and makes "what did this host gain since deploy?"
+     answerable. Costs one line in AWS.md's deploy block.
+  3. **Separate directory.** `ZZT_GENERATED_DIR` already redirects where
+     generation writes (`generation.go:245`), but `worldsDir()`
+     (`websocket_server.go:1288`) resolves a single hosting directory, so
+     splitting them un-lists the generated worlds until the picker unions both.
+     That is a code change to the world list, and the largest of the three.
+
+  Then extend `deploy/zztmmo-backup.sh` (or add a second timer) to cover the
+  selected set and the companion `.zwd`/`.plan.md`/`.prompt.txt` files, keeping
+  the existing shape: `.partial`-then-rename, read back with `tar -tzf` before
+  pruning, dated names, `RETENTION_DAYS`. Museum-cached worlds are out of scope
+  — they are re-downloadable from the archive. DoD: a world created through the
+  browser (dream or editor) on the dev host appears in the next archive, a
+  shipped world does not, the archive restores it playable, and AWS.md's
+  Saved-Game Backups section documents the rule chosen and why. Replay fixture
+  untouched.
 
 ## M14 — Rearchitecting for the service ZZTMMO is becoming
 
