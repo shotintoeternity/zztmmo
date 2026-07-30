@@ -2460,7 +2460,7 @@ gap task has landed.
   `pass`/`deviation` with the new evidence; replay fixture and every oracle
   capture stay green.
 
-- [ ] **M16.6b — the walk click is never heard (M16.6 gap task; blocks
+- [x] **M16.6b — the walk click is never heard (M16.6 gap task; blocks
   M16.20).** Vanilla pokes the PC speaker directly on every attempted player
   step — `if SoundEnabled and not SoundIsPlaying then Sound(110)`, then
   `NoSound` whether the step was taken or refused (ELEMENTS.PAS:1393-1402,

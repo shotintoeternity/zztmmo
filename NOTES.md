@@ -3733,3 +3733,101 @@ exactly the vanilla global halt this fork replaced `mp-respawn` to avoid).
 Manifest row `oop.command.endgame` moves from `status: gap` to `status: pass`;
 `parity` stays `deviation` (`mp-respawn`), since the fork still does not run
 vanilla's actual game-over screen.
+
+**Handoff.** M16.6a is landed and committed (`5460a61`, branch `dev`), tree
+clean, `go build ./... && go test ./...` green. Per TASKS.md's execution
+priority list, the next task is **M16.6b — the walk click is never heard**,
+still `[ ]` right below M16.6a in TASKS.md with its own full spec (vanilla's
+per-step `Sound(110)` has no counterpart because `Sound()`/`NoSound()` are TODO
+stubs and the click can't be expressed as today's note-indexed `SoundEvent`).
+It's a presentation-seam task, not a simulation one: read TASKS.md's M16.6b
+entry for the DoD (a new raw-tone event class, kept out of `StateHash` and
+`SoundQueue`'s priority arbitration, plus a protocol row and manifest row) and
+ANALYSIS.md/`lib.go:124` for the current `Sound`/`NoSound` stubs before
+touching anything — no policy call needed here, unlike M16.6a. Once M16.6b
+lands, M16.6's two gap tasks are both closed and M16.20 loses those two
+blockers; check what else M16.20 is still waiting on before assuming it's
+unblocked.
+
+## 2026-07-29 — M16.6b: the walk click, given its own event class
+
+No policy decision needed (per TASKS.md), so straight to the mechanical shape.
+`WalkClickEvent{StatId, FreqHz}` (`gamevars.go`) replaces the `Sound(110)` stub
+call at `elements.go:1477` (ELEMENTS.PAS:1393-1402's direct speaker poke,
+gated by `pState.SoundEnabled && !SoundIsPlaying`, unchanged — the port
+already had this exact gate wired to a no-op stub). It is not a `SoundEvent`:
+vanilla's poke bypasses `SoundQueue` entirely, so it carries its own
+`FreqHz` (110) rather than a `SoundFreqTable` note index, and it is never
+routed through `Engine.SoundQueue`'s priority arbitration.
+
+**Routing decided by precedent, not invented.** `WalkClickEvent` has no
+"room-wide" case: vanilla's `Sound(110)` has no equivalent to an object's own
+`#play`, so unlike `SoundEvent` (whose `StatId` can be `-1`), a walk click is
+always attributed to the mover and always routed privately in
+`room_manager.go`'s per-room event switch — the same `pendingPlayerEvents`
+path `SoundEvent`'s `StatId >= 0` branch already takes (deviation
+`per-player-sound`, M7.4). `TestWalkClickIsPrivateToTheMover` mirrors
+`TestM74PerPlayerSoundAttribution` to pin it.
+
+**The real proof is the oracle, not the new unit tests.** Deleting
+`oracle_parity_test.go`'s `if f == 110 { continue }` filter required the
+matcher to actually model vanilla's gate, not just stop excluding the byte.
+`oracleSoundMatcher.queueCycle` now takes the whole cycle's `[]Event` (both
+`SoundEvent` and `WalkClickEvent`) in true dispatch order instead of
+pre-filtered `[]SoundEvent`, because within one game cycle `m.playing` can
+flip true partway through (an earlier stat's accepted `SoundQueue` call) and
+a same-cycle click checked afterward must see that update — exactly as a
+real, later-dispatched player's `Sound(110)` would see `SoundIsPlaying` from
+an earlier stat's real-time `SoundQueue` call in the same Pascal tick. A
+click never mutates `m.playing`/`m.current`/`m.remaining` (`NoSound` cancels
+it before any ISR tick could observe it as "playing" — it never becomes the
+thing a later check in the same cycle sees as sounding), so it is resolved
+in place and appended to `m.melodies` as its own one-tone entry exactly where
+it falls in dispatch order, while a cycle's SoundEvent arbitration still
+defers its one deferred append to the end of the loop (unchanged from before
+M16.6b) — correct regardless, because a melody's own onsets never sound
+until a later cycle's ISR tick anyway. Ran cold against all 20 committed
+`.capture.txt` files with zero mismatches and zero regenerated captures —
+the model was right the first time, not fitted to the fixtures after the
+fact.
+
+Every other DoD line: replay fixture untouched (`fixtures/town.replay.json`
+unmodified — verified by `git status`, not assumed); `StateHash` unaffected
+(`TestWalkClickDoesNotAffectStateHash` runs the identical scripted move with
+and without the click firing and asserts identical hashes, rather than
+inferring it from `StateHash`'s source not mentioning `Events`); browser
+plays it (`sound.ts`'s new `click()` bypasses `queue()`'s buffer/priority
+state entirely — gated only by `!isPlaying`, reusing the existing
+`CLICK_RAMP_SEC` anti-artifact ramp — wired in `main.ts`'s `"walkClick"`
+case). Manifest: new row `proto.event.walkClick` (`status: pass`,
+`assignedTask: M16.6b`, scaffolded via `PARITY_SCAFFOLD=1` then hand-flipped
+with real test names, per the derived-protocol-dimension rule); `elem.player`'s
+notes updated to say the walk click is no longer excluded. PARITY.md §7's
+`oracle-walk-click` normalization row is deleted outright (not reworded to a
+deviation) — it was explicitly marked "not an approved deviation" and the
+click is now compared byte-for-byte like everything else, so there is
+nothing left to document as a normalization.
+
+One quirk found and left alone, out of scope: `ProtocolEvent.StatID` is
+`json:"statId,omitempty"`, so stat 0's own events (death, pause, sound, and
+now walkClick) silently drop `statId` from the wire — a pre-existing quirk
+across every event using that field, not introduced here.
+`TestProtocolWalkClickEvent` uses `StatId: 1` to test the field honestly
+rather than assert something false about stat 0. Client delivery doesn't
+need it anyway: per-player routing already scopes which client receives the
+event before it reaches JSON, matching the existing `"sound"` case's lack of
+`isMine` filtering.
+
+Verified: `go build ./... && go test -count=1 ./...` green (including
+`TestParityManifest` and all 20+ `TestOracleParity*Scenario`s with clicks
+compared for real), `npm run build` and `npm test` green in `engine/web`
+(three new `sound.test.mjs` cases for `click()`: plays when idle, preempted
+by a playing melody, silent when disabled). `fixtures/town.replay.json`
+diff is empty.
+
+**Handoff.** M16.6b is landed; M16.6's two gap tasks (M16.6a, M16.6b) are
+both closed. TASKS.md's next unchecked task is **M16.7 — Vanilla world,
+title, and portable-file parity sweep**. M16.20 is nowhere near unblocked
+yet regardless — it also needs M16.8–M16.19 (including the still-open gap
+task M16.18a, touch gameplay controls) with zero `unverified`/gap rows left
+in the manifest before its clean-clone certification can even be attempted.

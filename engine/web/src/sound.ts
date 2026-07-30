@@ -125,6 +125,26 @@ export class ZztSound {
     this.resume();
   }
 
+  // click plays vanilla's direct Sound(110)/NoSound footstep poke
+  // (ELEMENTS.PAS:1393-1402): unlike queue(), it never touches the melody
+  // buffer or its priority arbitration — it is gated purely by whether a
+  // melody is already sounding, exactly as SoundIsPlaying gated the original
+  // hardware call, so a currently-playing queue preempts it.
+  click(freqHz: number) {
+    if (!this.enabled || this.isPlaying || freqHz <= 0) {
+      return;
+    }
+    this.ensureAudio();
+    if (!this.ctx || !this.osc || !this.gain) {
+      return;
+    }
+    const now = this.ctx.currentTime;
+    this.osc.frequency.setValueAtTime(freqHz, now);
+    this.gateOn(now);
+    this.gateOff(now + CLICK_RAMP_SEC);
+    void this.ctx.resume();
+  }
+
   private ensureAudio() {
     if (this.ctx) {
       return;

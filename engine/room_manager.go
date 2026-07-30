@@ -521,6 +521,12 @@ func (rm *RoomManager) StepDiffs(inputs map[PlayerID]PlayerInput) map[PlayerID]D
 				} else {
 					roomEvents[boardID] = append(roomEvents[boardID], event)
 				}
+			case WalkClickEvent:
+				// Always attributed to the mover, same as a player's own pickup/shot
+				// sound (deviation per-player-sound) — never room-wide.
+				if playerID, found := rm.playerIDForStat(boardID, ev.StatId); found {
+					rm.pendingPlayerEvents[playerID] = append(rm.pendingPlayerEvents[playerID], ev)
+				}
 			case QuitEvent:
 				if playerID, found := rm.playerIDForStat(boardID, ev.StatId); found {
 					quitters = append(quitters, playerID)

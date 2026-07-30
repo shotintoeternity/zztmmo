@@ -164,6 +164,8 @@ type ProtocolEvent = {
   entryX?: number;
   entryY?: number;
   paused?: boolean;
+  /** Raw tone frequency on a "walkClick" event — bypasses SoundQueue entirely. */
+  freqHz?: number;
 };
 
 type SnapshotMessage = {
@@ -2290,6 +2292,12 @@ function handleProtocolEvent(event: ProtocolEvent) {
     case "sound":
       warnIfSoundUnplayable();
       zztSound.queue(event.priority ?? 0, soundNotesFromProtocol(event.notes));
+      break;
+    case "walkClick":
+      // Bypasses queue() entirely: a currently-playing melody preempts it, the
+      // way vanilla's SoundIsPlaying gated the original direct Sound(110) poke.
+      warnIfSoundUnplayable();
+      zztSound.click(event.freqHz ?? 0);
       break;
     case "transfer":
       appendLog(`transfer to board ${event.toBoard ?? "?"}`);

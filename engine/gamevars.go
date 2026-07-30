@@ -334,6 +334,17 @@ type (
 		Priority int16
 		StatId   int16
 	}
+	// WalkClickEvent is vanilla's direct speaker poke on every attempted player
+	// step (Sound(110) then NoSound, ELEMENTS.PAS:1393-1402) — the one sound in
+	// the whole game that bypasses SoundQueue entirely, so it carries its own
+	// frequency rather than a note index into SoundFreqTable. Its audibility is
+	// gated purely by whatever is already sounding (SoundIsPlaying), never by
+	// priority; the client models that the same way it already models a queued
+	// melody's own priority arbitration (M4.4's ZztSound).
+	WalkClickEvent struct {
+		StatId int16
+		FreqHz uint16
+	}
 	// DeathEvent is emitted when a player's health reaches 0. The engine will
 	// respawn the player automatically after RESPAWN_TICKS; this event lets the
 	// server notify the client (show death screen, etc.).

@@ -114,6 +114,33 @@ func TestProtocolSoundNotesAreBytes(t *testing.T) {
 	}
 }
 
+// TestProtocolWalkClickEvent pins the M16.6b wire shape: a raw-tone event
+// distinct from "sound", carrying its own frequency rather than a note index,
+// since 110 Hz has no close SoundFreqTable entry to encode as one. StatID is
+// informational only here (like "death"/"pause", it shares the wire's
+// pre-existing omitempty-hides-stat-0 quirk); private-per-player delivery
+// already scopes the event to the right client before it reaches JSON
+// (TestM166bWalkClickIsPrivateToTheMover), so the client trusts routing over
+// this field, matching the "sound" case's lack of isMine filtering.
+func TestProtocolWalkClickEvent(t *testing.T) {
+	events := ProtocolEvents([]Event{
+		WalkClickEvent{StatId: 1, FreqHz: 110},
+	})
+	if len(events) != 1 {
+		t.Fatalf("events len=%d, want 1", len(events))
+	}
+	if events[0].Type != "walkClick" || events[0].FreqHz != 110 || events[0].StatID != 1 {
+		t.Fatalf("walkClick event = %#v, want type=walkClick freqHz=110 statId=1", events[0])
+	}
+	data, err := json.Marshal(events[0])
+	if err != nil {
+		t.Fatalf("marshal walkClick event: %v", err)
+	}
+	if !strings.Contains(string(data), `"freqHz":110`) {
+		t.Fatalf("walkClick freqHz was not encoded: %s", data)
+	}
+}
+
 func TestRoomManagerSnapshotFromTown(t *testing.T) {
 	setup := NewEngine()
 	setup.Headless = true

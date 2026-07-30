@@ -156,6 +156,50 @@ const ONE_NOTE = Uint8Array.from([0x20, 8, 0]);
   console.log("sound.test.mjs: disabled synth stays silent");
 }
 
+// --- click() plays a raw tone (M16.6b's walk click) when nothing is sounding. ---
+{
+  const audio = mockAudio();
+  globalThis.window = audio.win;
+  const s = new ZztSound();
+  s.unlock();
+  s.setEnabled(true);
+  s.click(110);
+  const ons = gateOns(audio.events);
+  assert.ok(ons.length >= 1, "click() must gate the oscillator on");
+  const freqSet = audio.events.find((e) => e.node === "freq" && e.op === "set" && e.value === 110);
+  assert.ok(freqSet, "click() must set the oscillator to the requested frequency");
+  console.log("sound.test.mjs: click() plays a raw tone");
+}
+
+// --- click() is preempted by a currently-playing melody: the same gate vanilla's
+// SoundIsPlaying provided the original direct Sound(110) poke, applied client-side
+// since it never touches queue()'s priority buffer. ---
+{
+  const audio = mockAudio();
+  globalThis.window = audio.win;
+  const s = new ZztSound();
+  s.unlock();
+  s.setEnabled(true);
+  s.resume();
+  s.queue(0, ONE_NOTE);
+  const before = audio.events.length;
+  s.click(110);
+  assert.equal(audio.events.length, before, "click() must not sound while a melody is already queued/playing");
+  console.log("sound.test.mjs: click() is preempted by a playing melody");
+}
+
+// --- A disabled synth ignores click() too. ---
+{
+  const audio = mockAudio();
+  globalThis.window = audio.win;
+  const s = new ZztSound();
+  s.unlock();
+  s.setEnabled(false);
+  s.click(110);
+  assert.equal(gateOns(audio.events).length, 0, "a disabled synth must not click");
+  console.log("sound.test.mjs: disabled synth ignores click()");
+}
+
 // --- soundNotesFromProtocol maps the protocol's numeric note array to bytes. ---
 // Regression guard: the wire carries notes as number[] (protocol.go soundNoteBytes
 // -> []uint16 -> JSON array). A string here would & 0xff every char to NaN->0 and

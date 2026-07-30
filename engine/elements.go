@@ -1333,6 +1333,12 @@ func (e *Engine) GamePromptEndPlay(statId int16) {
 	InputKeyPressed = '\x00'
 }
 
+// walkClickFreqHz is vanilla's direct Sound(110) footstep poke
+// (ELEMENTS.PAS:1394) — a raw hardware frequency, not a SoundFreqTable note
+// index, so it is not itself close to any table entry (M16.6b: the nearest
+// table entries are 107 and 114 Hz).
+const walkClickFreqHz = 110
+
 func (e *Engine) ElementPlayerTick(statId int16) {
 	var (
 		i           int16
@@ -1470,7 +1476,7 @@ func (e *Engine) ElementPlayerTick(statId int16) {
 		}
 		if InputDeltaX != 0 || InputDeltaY != 0 {
 			if pState.SoundEnabled && !SoundIsPlaying {
-				Sound(110)
+				e.Events = append(e.Events, WalkClickEvent{StatId: statId, FreqHz: walkClickFreqHz})
 			}
 			targetX = int16(stat.X) + InputDeltaX
 			targetY = int16(stat.Y) + InputDeltaY

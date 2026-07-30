@@ -39,12 +39,6 @@ package zztgo
 //     over the board; the engine emits ScrollEvent (M1.3 deviation). A
 //     checkpoint taken while the oracle shows a window is compared by content:
 //     the window's text lines against the ScrollEvent's lines.
-//   - walk click: vanilla pokes the speaker directly (Sound(110),
-//     ELEMENTS.PAS:1395) on each attempted step. The port stubs
-//     Sound()/NoSound() (lib.go:124), so no event exists to compare; 110 Hz
-//     onsets are excluded from the sound comparison. NOT an approved deviation:
-//     M16.6 filed it as gap task M16.6b, whose DoD is deleting this filter and
-//     requiring every committed capture to still match.
 //   - modal hyperlink: vanilla draws a `!label;text` line as its caption alone
 //     and runs the chosen label inside the same modal OopExecute. The engine
 //     emits the raw line and re-enters on the reply, so a window checkpoint
@@ -357,7 +351,19 @@ func soundEventTicks(notes string) int {
 // None of this is leniency: it removes melodies the matcher would otherwise have
 // demanded the oracle play, using vanilla's own arbitration rather than a fudge.
 // What survives is still required, in order, by match's one-sided prefix rule.
-func (m *oracleSoundMatcher) queueCycle(events []SoundEvent) {
+//
+// A WalkClickEvent (M16.6b) rides alongside the cycle's SoundEvents in true
+// dispatch order but is not queued at all: ELEMENTS.PAS's Sound(110)/NoSound
+// is a direct hardware poke gated purely by SoundIsPlaying, never by priority,
+// and NoSound cancels it before the timer ISR could ever observe it as
+// "playing" — so it never itself becomes the thing a later check in the same
+// cycle sees as sounding. It is therefore resolved in place, reading m.playing
+// as of that point in the loop (aging carried over, plus any
+// earlier-in-this-cycle SoundEvent acceptance) without mutating any
+// arbitration state, and becomes its own one-tone melody entry when audible —
+// positioned correctly relative to same-cycle SoundEvents because a melody's
+// own onsets never sound until a later cycle's ISR tick regardless.
+func (m *oracleSoundMatcher) queueCycle(events []Event) {
 	if m.playing {
 		m.remaining -= oracleTicksPerCycle
 		if m.remaining <= 0 {
@@ -369,19 +375,26 @@ func (m *oracleSoundMatcher) queueCycle(events []SoundEvent) {
 		buffer   string
 		accepted bool
 	)
-	for _, ev := range events {
-		if m.playing && !((ev.Priority >= m.current && m.current != -1) || ev.Priority == -1) {
-			continue // refused: something more important is still sounding
+	for _, event := range events {
+		switch ev := event.(type) {
+		case SoundEvent:
+			if m.playing && !((ev.Priority >= m.current && m.current != -1) || ev.Priority == -1) {
+				continue // refused: something more important is still sounding
+			}
+			if ev.Priority >= 0 || !m.playing {
+				buffer, m.current, m.remaining = ev.Notes, ev.Priority, soundEventTicks(ev.Notes)
+			} else {
+				// A #play queues behind what is sounding rather than replacing it.
+				buffer += ev.Notes
+				m.remaining += soundEventTicks(ev.Notes)
+			}
+			m.playing = true
+			accepted = true
+		case WalkClickEvent:
+			if !m.playing {
+				m.melodies = append(m.melodies, []int{int(ev.FreqHz)})
+			}
 		}
-		if ev.Priority >= 0 || !m.playing {
-			buffer, m.current, m.remaining = ev.Notes, ev.Priority, soundEventTicks(ev.Notes)
-		} else {
-			// A #play queues behind what is sounding rather than replacing it.
-			buffer += ev.Notes
-			m.remaining += soundEventTicks(ev.Notes)
-		}
-		m.playing = true
-		accepted = true
 	}
 	if accepted {
 		m.melodies = append(m.melodies, soundEventFreqs(buffer))
@@ -681,17 +694,19 @@ func oracleAdapterReplay(t *testing.T, scenario, world string, ops []oracleOp, c
 	)
 
 	drainEvents := func() {
-		var cycleSounds []SoundEvent
+		var cycleEvents []Event
 		for _, ev := range E.Events {
 			switch ev := ev.(type) {
 			case SoundEvent:
-				cycleSounds = append(cycleSounds, ev)
+				cycleEvents = append(cycleEvents, ev)
+			case WalkClickEvent:
+				cycleEvents = append(cycleEvents, ev)
 			case ScrollEvent:
 				intervalScrolls = append(intervalScrolls, ev)
 				window = &oracleTextWindow{Scroll: ev, LinePos: 1}
 			}
 		}
-		sounds.queueCycle(cycleSounds)
+		sounds.queueCycle(cycleEvents)
 		E.Events = nil
 	}
 
@@ -778,14 +793,7 @@ func oracleAdapterReplay(t *testing.T, scenario, world string, ops []oracleOp, c
 			if err := compareCheckpoint(cp, intervalScrolls, inTitle); err != nil {
 				return fmt.Errorf("checkpoint %s: %w", cp.Label, err)
 			}
-			var oracleTones []int
-			for _, f := range cp.SoundOn {
-				if f == 110 {
-					continue // vanilla walk click: direct Sound(110), stubbed in the port
-				}
-				oracleTones = append(oracleTones, f)
-			}
-			if err := sounds.match(oracleTones); err != nil {
+			if err := sounds.match(cp.SoundOn); err != nil {
 				return fmt.Errorf("checkpoint %s: %w", cp.Label, err)
 			}
 			intervalScrolls = nil

@@ -570,6 +570,9 @@ type ProtocolEvent struct {
 	ToBoard  int16    `json:"toBoard,omitempty"`
 	EntryX   int16    `json:"entryX,omitempty"`
 	EntryY   int16    `json:"entryY,omitempty"`
+	// FreqHz is the raw tone frequency on a "walkClick" event — unlike "sound"'s
+	// Notes/Priority, a walk click bypasses SoundQueue entirely.
+	FreqHz uint16 `json:"freqHz,omitempty"`
 	// Paused is the new paused state on a "pause" event. Explicitly not
 	// omitempty: false is the unpause signal and must survive the wire.
 	Paused bool `json:"paused"`
@@ -616,6 +619,8 @@ func ProtocolEvents(events []Event) []ProtocolEvent {
 				event.StatID = ev.StatId
 			}
 			out = append(out, event)
+		case WalkClickEvent:
+			out = append(out, ProtocolEvent{Type: "walkClick", StatID: ev.StatId, FreqHz: ev.FreqHz})
 		case DeathEvent:
 			out = append(out, ProtocolEvent{Type: "death", StatID: ev.StatId})
 		case RespawnEvent:

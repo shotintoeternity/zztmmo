@@ -4,7 +4,7 @@
     {
       "id": "task.M0.1",
       "dimension": "task",
-      "subject": "Completed task M0.1 \u2014 its DoD still holds",
+      "subject": "Completed task M0.1 — its DoD still holds",
       "contract": "V",
       "authority": "TASKS.md M0.1",
       "parity": "exact",
@@ -15,7 +15,7 @@
     {
       "id": "task.M0.2",
       "dimension": "task",
-      "subject": "Completed task M0.2 \u2014 its DoD still holds",
+      "subject": "Completed task M0.2 — its DoD still holds",
       "contract": "V",
       "authority": "TASKS.md M0.2",
       "parity": "exact",
@@ -26,7 +26,7 @@
     {
       "id": "task.M0.3",
       "dimension": "task",
-      "subject": "Completed task M0.3 \u2014 its DoD still holds",
+      "subject": "Completed task M0.3 — its DoD still holds",
       "contract": "V",
       "authority": "TASKS.md M0.3",
       "parity": "exact",
@@ -37,7 +37,7 @@
     {
       "id": "task.M0.4",
       "dimension": "task",
-      "subject": "Completed task M0.4 \u2014 its DoD still holds",
+      "subject": "Completed task M0.4 — its DoD still holds",
       "contract": "V",
       "authority": "TASKS.md M0.4",
       "parity": "exact",
@@ -48,7 +48,7 @@
     {
       "id": "task.M0.5",
       "dimension": "task",
-      "subject": "Completed task M0.5 \u2014 its DoD still holds",
+      "subject": "Completed task M0.5 — its DoD still holds",
       "contract": "V",
       "authority": "TASKS.md M0.5",
       "parity": "exact",
@@ -59,7 +59,7 @@
     {
       "id": "task.M0.6",
       "dimension": "task",
-      "subject": "Completed task M0.6 \u2014 its DoD still holds",
+      "subject": "Completed task M0.6 — its DoD still holds",
       "contract": "V",
       "authority": "TASKS.md M0.6",
       "parity": "exact",
@@ -70,7 +70,7 @@
     {
       "id": "task.M1.1",
       "dimension": "task",
-      "subject": "Completed task M1.1 \u2014 its DoD still holds",
+      "subject": "Completed task M1.1 — its DoD still holds",
       "contract": "E",
       "authority": "TASKS.md M1.1",
       "parity": "exact",
@@ -81,7 +81,7 @@
     {
       "id": "task.M1.2",
       "dimension": "task",
-      "subject": "Completed task M1.2 \u2014 its DoD still holds",
+      "subject": "Completed task M1.2 — its DoD still holds",
       "contract": "E",
       "authority": "TASKS.md M1.2",
       "parity": "exact",
@@ -92,7 +92,7 @@
     {
       "id": "task.M1.3",
       "dimension": "task",
-      "subject": "Completed task M1.3 \u2014 its DoD still holds",
+      "subject": "Completed task M1.3 — its DoD still holds",
       "contract": "E",
       "authority": "TASKS.md M1.3",
       "parity": "exact",
@@ -103,7 +103,7 @@
     {
       "id": "task.M1.4",
       "dimension": "task",
-      "subject": "Completed task M1.4 \u2014 its DoD still holds",
+      "subject": "Completed task M1.4 — its DoD still holds",
       "contract": "E",
       "authority": "TASKS.md M1.4",
       "parity": "exact",
@@ -114,7 +114,7 @@
     {
       "id": "task.M1.5",
       "dimension": "task",
-      "subject": "Completed task M1.5 \u2014 its DoD still holds",
+      "subject": "Completed task M1.5 — its DoD still holds",
       "contract": "E",
       "authority": "TASKS.md M1.5",
       "parity": "exact",
@@ -125,7 +125,7 @@
     {
       "id": "task.M10.1",
       "dimension": "task",
-      "subject": "Completed task M10.1 \u2014 its DoD still holds",
+      "subject": "Completed task M10.1 — its DoD still holds",
       "contract": "E",
       "authority": "TASKS.md M10.1",
       "parity": "exact",
@@ -136,7 +136,7 @@
     {
       "id": "task.M10.2",
       "dimension": "task",
-      "subject": "Completed task M10.2 \u2014 its DoD still holds",
+      "subject": "Completed task M10.2 — its DoD still holds",
       "contract": "E",
       "authority": "TASKS.md M10.2",
       "parity": "exact",
@@ -147,7 +147,7 @@
     {
       "id": "task.M10.3",
       "dimension": "task",
-      "subject": "Completed task M10.3 \u2014 its DoD still holds",
+      "subject": "Completed task M10.3 — its DoD still holds",
       "contract": "E",
       "authority": "TASKS.md M10.3",
       "parity": "exact",
@@ -158,7 +158,7 @@
     {
       "id": "task.M10.4",
       "dimension": "task",
-      "subject": "Completed task M10.4 \u2014 its DoD still holds",
+      "subject": "Completed task M10.4 — its DoD still holds",
       "contract": "E",
       "authority": "TASKS.md M10.4",
       "parity": "exact",
@@ -169,7 +169,7 @@
     {
       "id": "task.M11.1",
       "dimension": "task",
-      "subject": "Completed task M11.1 \u2014 its DoD still holds",
+      "subject": "Completed task M11.1 — its DoD still holds",
       "contract": "E",
       "authority": "TASKS.md M11.1",
       "parity": "exact",
@@ -180,7 +180,7 @@
     {
       "id": "task.M11.2",
       "dimension": "task",
-      "subject": "Completed task M11.2 \u2014 its DoD still holds",
+      "subject": "Completed task M11.2 — its DoD still holds",
       "contract": "E",
       "authority": "TASKS.md M11.2",
       "parity": "exact",
@@ -191,7 +191,7 @@
     {
       "id": "task.M12.0",
       "dimension": "task",
-      "subject": "Completed task M12.0 \u2014 its DoD still holds",
+      "subject": "Completed task M12.0 — its DoD still holds",
       "contract": "E",
       "authority": "TASKS.md M12.0",
       "parity": "exact",
@@ -202,7 +202,7 @@
     {
       "id": "task.M12.1",
       "dimension": "task",
-      "subject": "Completed task M12.1 \u2014 its DoD still holds",
+      "subject": "Completed task M12.1 — its DoD still holds",
       "contract": "E",
       "authority": "TASKS.md M12.1",
       "parity": "exact",
@@ -213,7 +213,7 @@
     {
       "id": "task.M12.10",
       "dimension": "task",
-      "subject": "Completed task M12.10 \u2014 its DoD still holds",
+      "subject": "Completed task M12.10 — its DoD still holds",
       "contract": "E",
       "authority": "TASKS.md M12.10",
       "parity": "exact",
@@ -224,7 +224,7 @@
     {
       "id": "task.M12.11",
       "dimension": "task",
-      "subject": "Completed task M12.11 \u2014 its DoD still holds",
+      "subject": "Completed task M12.11 — its DoD still holds",
       "contract": "E",
       "authority": "TASKS.md M12.11",
       "parity": "exact",
@@ -235,7 +235,7 @@
     {
       "id": "task.M12.12",
       "dimension": "task",
-      "subject": "Completed task M12.12 \u2014 its DoD still holds",
+      "subject": "Completed task M12.12 — its DoD still holds",
       "contract": "E",
       "authority": "TASKS.md M12.12",
       "parity": "exact",
@@ -246,7 +246,7 @@
     {
       "id": "task.M12.13",
       "dimension": "task",
-      "subject": "Completed task M12.13 \u2014 its DoD still holds",
+      "subject": "Completed task M12.13 — its DoD still holds",
       "contract": "E",
       "authority": "TASKS.md M12.13",
       "parity": "exact",
@@ -257,7 +257,7 @@
     {
       "id": "task.M12.14",
       "dimension": "task",
-      "subject": "Completed task M12.14 \u2014 its DoD still holds",
+      "subject": "Completed task M12.14 — its DoD still holds",
       "contract": "E",
       "authority": "TASKS.md M12.14",
       "parity": "exact",
@@ -268,7 +268,7 @@
     {
       "id": "task.M12.15",
       "dimension": "task",
-      "subject": "Completed task M12.15 \u2014 its DoD still holds",
+      "subject": "Completed task M12.15 — its DoD still holds",
       "contract": "E",
       "authority": "TASKS.md M12.15",
       "parity": "exact",
@@ -279,7 +279,7 @@
     {
       "id": "task.M12.15a",
       "dimension": "task",
-      "subject": "Completed task M12.15a \u2014 its DoD still holds",
+      "subject": "Completed task M12.15a — its DoD still holds",
       "contract": "E",
       "authority": "TASKS.md M12.15a",
       "parity": "exact",
@@ -290,7 +290,7 @@
     {
       "id": "task.M12.15b",
       "dimension": "task",
-      "subject": "Completed task M12.15b \u2014 its DoD still holds",
+      "subject": "Completed task M12.15b — its DoD still holds",
       "contract": "E",
       "authority": "TASKS.md M12.15b",
       "parity": "exact",
@@ -301,7 +301,7 @@
     {
       "id": "task.M12.15c",
       "dimension": "task",
-      "subject": "Completed task M12.15c \u2014 its DoD still holds",
+      "subject": "Completed task M12.15c — its DoD still holds",
       "contract": "E",
       "authority": "TASKS.md M12.15c",
       "parity": "exact",
@@ -312,7 +312,7 @@
     {
       "id": "task.M12.16",
       "dimension": "task",
-      "subject": "Completed task M12.16 \u2014 its DoD still holds",
+      "subject": "Completed task M12.16 — its DoD still holds",
       "contract": "E",
       "authority": "TASKS.md M12.16",
       "parity": "exact",
@@ -323,7 +323,7 @@
     {
       "id": "task.M12.17",
       "dimension": "task",
-      "subject": "Completed task M12.17 \u2014 its DoD still holds",
+      "subject": "Completed task M12.17 — its DoD still holds",
       "contract": "E",
       "authority": "TASKS.md M12.17",
       "parity": "exact",
@@ -334,7 +334,7 @@
     {
       "id": "task.M12.18",
       "dimension": "task",
-      "subject": "Completed task M12.18 \u2014 its DoD still holds",
+      "subject": "Completed task M12.18 — its DoD still holds",
       "contract": "E",
       "authority": "TASKS.md M12.18",
       "parity": "exact",
@@ -345,7 +345,7 @@
     {
       "id": "task.M12.19",
       "dimension": "task",
-      "subject": "Completed task M12.19 \u2014 its DoD still holds",
+      "subject": "Completed task M12.19 — its DoD still holds",
       "contract": "E",
       "authority": "TASKS.md M12.19",
       "parity": "exact",
@@ -356,7 +356,7 @@
     {
       "id": "task.M12.2",
       "dimension": "task",
-      "subject": "Completed task M12.2 \u2014 its DoD still holds",
+      "subject": "Completed task M12.2 — its DoD still holds",
       "contract": "E",
       "authority": "TASKS.md M12.2",
       "parity": "exact",
@@ -367,7 +367,7 @@
     {
       "id": "task.M12.20",
       "dimension": "task",
-      "subject": "Completed task M12.20 \u2014 its DoD still holds",
+      "subject": "Completed task M12.20 — its DoD still holds",
       "contract": "E",
       "authority": "TASKS.md M12.20",
       "parity": "exact",
@@ -378,7 +378,7 @@
     {
       "id": "task.M12.21",
       "dimension": "task",
-      "subject": "Completed task M12.21 \u2014 its DoD still holds",
+      "subject": "Completed task M12.21 — its DoD still holds",
       "contract": "E",
       "authority": "TASKS.md M12.21",
       "parity": "exact",
@@ -389,7 +389,7 @@
     {
       "id": "task.M12.22",
       "dimension": "task",
-      "subject": "Completed task M12.22 \u2014 its DoD still holds",
+      "subject": "Completed task M12.22 — its DoD still holds",
       "contract": "E",
       "authority": "TASKS.md M12.22",
       "parity": "exact",
@@ -400,7 +400,7 @@
     {
       "id": "task.M12.23",
       "dimension": "task",
-      "subject": "Completed task M12.23 \u2014 its DoD still holds",
+      "subject": "Completed task M12.23 — its DoD still holds",
       "contract": "E",
       "authority": "TASKS.md M12.23",
       "parity": "exact",
@@ -411,7 +411,7 @@
     {
       "id": "task.M12.3",
       "dimension": "task",
-      "subject": "Completed task M12.3 \u2014 its DoD still holds",
+      "subject": "Completed task M12.3 — its DoD still holds",
       "contract": "E",
       "authority": "TASKS.md M12.3",
       "parity": "exact",
@@ -422,7 +422,7 @@
     {
       "id": "task.M12.3a",
       "dimension": "task",
-      "subject": "Completed task M12.3a \u2014 its DoD still holds",
+      "subject": "Completed task M12.3a — its DoD still holds",
       "contract": "E",
       "authority": "TASKS.md M12.3a",
       "parity": "exact",
@@ -433,7 +433,7 @@
     {
       "id": "task.M12.4",
       "dimension": "task",
-      "subject": "Completed task M12.4 \u2014 its DoD still holds",
+      "subject": "Completed task M12.4 — its DoD still holds",
       "contract": "E",
       "authority": "TASKS.md M12.4",
       "parity": "exact",
@@ -444,7 +444,7 @@
     {
       "id": "task.M12.5",
       "dimension": "task",
-      "subject": "Completed task M12.5 \u2014 its DoD still holds",
+      "subject": "Completed task M12.5 — its DoD still holds",
       "contract": "E",
       "authority": "TASKS.md M12.5",
       "parity": "exact",
@@ -455,7 +455,7 @@
     {
       "id": "task.M12.6",
       "dimension": "task",
-      "subject": "Completed task M12.6 \u2014 its DoD still holds",
+      "subject": "Completed task M12.6 — its DoD still holds",
       "contract": "E",
       "authority": "TASKS.md M12.6",
       "parity": "exact",
@@ -466,7 +466,7 @@
     {
       "id": "task.M12.7",
       "dimension": "task",
-      "subject": "Completed task M12.7 \u2014 its DoD still holds",
+      "subject": "Completed task M12.7 — its DoD still holds",
       "contract": "E",
       "authority": "TASKS.md M12.7",
       "parity": "exact",
@@ -477,7 +477,7 @@
     {
       "id": "task.M12.8",
       "dimension": "task",
-      "subject": "Completed task M12.8 \u2014 its DoD still holds",
+      "subject": "Completed task M12.8 — its DoD still holds",
       "contract": "E",
       "authority": "TASKS.md M12.8",
       "parity": "exact",
@@ -488,7 +488,7 @@
     {
       "id": "task.M12.9",
       "dimension": "task",
-      "subject": "Completed task M12.9 \u2014 its DoD still holds",
+      "subject": "Completed task M12.9 — its DoD still holds",
       "contract": "E",
       "authority": "TASKS.md M12.9",
       "parity": "exact",
@@ -499,7 +499,7 @@
     {
       "id": "task.M13.0",
       "dimension": "task",
-      "subject": "Completed task M13.0 \u2014 its DoD still holds",
+      "subject": "Completed task M13.0 — its DoD still holds",
       "contract": "E",
       "authority": "TASKS.md M13.0",
       "parity": "exact",
@@ -510,7 +510,7 @@
     {
       "id": "task.M13.1",
       "dimension": "task",
-      "subject": "Completed task M13.1 \u2014 its DoD still holds",
+      "subject": "Completed task M13.1 — its DoD still holds",
       "contract": "E",
       "authority": "TASKS.md M13.1",
       "parity": "exact",
@@ -521,7 +521,7 @@
     {
       "id": "task.M13.2",
       "dimension": "task",
-      "subject": "Completed task M13.2 \u2014 its DoD still holds",
+      "subject": "Completed task M13.2 — its DoD still holds",
       "contract": "E",
       "authority": "TASKS.md M13.2",
       "parity": "exact",
@@ -532,7 +532,7 @@
     {
       "id": "task.M13.3",
       "dimension": "task",
-      "subject": "Completed task M13.3 \u2014 its DoD still holds",
+      "subject": "Completed task M13.3 — its DoD still holds",
       "contract": "E",
       "authority": "TASKS.md M13.3",
       "parity": "exact",
@@ -543,7 +543,7 @@
     {
       "id": "task.M13.4",
       "dimension": "task",
-      "subject": "Completed task M13.4 \u2014 its DoD still holds",
+      "subject": "Completed task M13.4 — its DoD still holds",
       "contract": "E",
       "authority": "TASKS.md M13.4",
       "parity": "exact",
@@ -554,7 +554,7 @@
     {
       "id": "task.M14.0",
       "dimension": "task",
-      "subject": "Completed task M14.0 \u2014 its DoD still holds",
+      "subject": "Completed task M14.0 — its DoD still holds",
       "contract": "E",
       "authority": "TASKS.md M14.0",
       "parity": "exact",
@@ -565,7 +565,7 @@
     {
       "id": "task.M14.1",
       "dimension": "task",
-      "subject": "Completed task M14.1 \u2014 its DoD still holds",
+      "subject": "Completed task M14.1 — its DoD still holds",
       "contract": "E",
       "authority": "TASKS.md M14.1",
       "parity": "exact",
@@ -576,7 +576,7 @@
     {
       "id": "task.M14.2",
       "dimension": "task",
-      "subject": "Completed task M14.2 \u2014 its DoD still holds",
+      "subject": "Completed task M14.2 — its DoD still holds",
       "contract": "E",
       "authority": "TASKS.md M14.2",
       "parity": "exact",
@@ -587,7 +587,7 @@
     {
       "id": "task.M15.1",
       "dimension": "task",
-      "subject": "Completed task M15.1 \u2014 its DoD still holds",
+      "subject": "Completed task M15.1 — its DoD still holds",
       "contract": "E",
       "authority": "TASKS.md M15.1",
       "parity": "exact",
@@ -598,7 +598,7 @@
     {
       "id": "task.M17.1",
       "dimension": "task",
-      "subject": "Completed task M17.1 \u2014 its DoD still holds",
+      "subject": "Completed task M17.1 — its DoD still holds",
       "contract": "P",
       "authority": "TASKS.md M17.1",
       "parity": "exact",
@@ -609,7 +609,7 @@
     {
       "id": "task.M17.10",
       "dimension": "task",
-      "subject": "Completed task M17.10 \u2014 its DoD still holds",
+      "subject": "Completed task M17.10 — its DoD still holds",
       "contract": "P",
       "authority": "TASKS.md M17.10",
       "parity": "exact",
@@ -620,7 +620,7 @@
     {
       "id": "task.M17.11",
       "dimension": "task",
-      "subject": "Completed task M17.11 \u2014 its DoD still holds",
+      "subject": "Completed task M17.11 — its DoD still holds",
       "contract": "P",
       "authority": "TASKS.md M17.11",
       "parity": "exact",
@@ -631,7 +631,7 @@
     {
       "id": "task.M17.12",
       "dimension": "task",
-      "subject": "Completed task M17.12 \u2014 its DoD still holds",
+      "subject": "Completed task M17.12 — its DoD still holds",
       "contract": "P",
       "authority": "TASKS.md M17.12",
       "parity": "exact",
@@ -642,7 +642,7 @@
     {
       "id": "task.M17.13",
       "dimension": "task",
-      "subject": "Completed task M17.13 \u2014 its DoD still holds",
+      "subject": "Completed task M17.13 — its DoD still holds",
       "contract": "P",
       "authority": "TASKS.md M17.13",
       "parity": "exact",
@@ -653,7 +653,7 @@
     {
       "id": "task.M17.2",
       "dimension": "task",
-      "subject": "Completed task M17.2 \u2014 its DoD still holds",
+      "subject": "Completed task M17.2 — its DoD still holds",
       "contract": "P",
       "authority": "TASKS.md M17.2",
       "parity": "exact",
@@ -664,7 +664,7 @@
     {
       "id": "task.M17.3",
       "dimension": "task",
-      "subject": "Completed task M17.3 \u2014 its DoD still holds",
+      "subject": "Completed task M17.3 — its DoD still holds",
       "contract": "P",
       "authority": "TASKS.md M17.3",
       "parity": "exact",
@@ -675,7 +675,7 @@
     {
       "id": "task.M17.4",
       "dimension": "task",
-      "subject": "Completed task M17.4 \u2014 its DoD still holds",
+      "subject": "Completed task M17.4 — its DoD still holds",
       "contract": "P",
       "authority": "TASKS.md M17.4",
       "parity": "exact",
@@ -686,7 +686,7 @@
     {
       "id": "task.M17.5",
       "dimension": "task",
-      "subject": "Completed task M17.5 \u2014 its DoD still holds",
+      "subject": "Completed task M17.5 — its DoD still holds",
       "contract": "P",
       "authority": "TASKS.md M17.5",
       "parity": "exact",
@@ -697,7 +697,7 @@
     {
       "id": "task.M17.6",
       "dimension": "task",
-      "subject": "Completed task M17.6 \u2014 its DoD still holds",
+      "subject": "Completed task M17.6 — its DoD still holds",
       "contract": "P",
       "authority": "TASKS.md M17.6",
       "parity": "exact",
@@ -708,7 +708,7 @@
     {
       "id": "task.M17.7",
       "dimension": "task",
-      "subject": "Completed task M17.7 \u2014 its DoD still holds",
+      "subject": "Completed task M17.7 — its DoD still holds",
       "contract": "P",
       "authority": "TASKS.md M17.7",
       "parity": "exact",
@@ -719,7 +719,7 @@
     {
       "id": "task.M17.9",
       "dimension": "task",
-      "subject": "Completed task M17.9 \u2014 its DoD still holds",
+      "subject": "Completed task M17.9 — its DoD still holds",
       "contract": "P",
       "authority": "TASKS.md M17.9",
       "parity": "exact",
@@ -730,7 +730,7 @@
     {
       "id": "task.M2.1",
       "dimension": "task",
-      "subject": "Completed task M2.1 \u2014 its DoD still holds",
+      "subject": "Completed task M2.1 — its DoD still holds",
       "contract": "E",
       "authority": "TASKS.md M2.1",
       "parity": "exact",
@@ -741,7 +741,7 @@
     {
       "id": "task.M2.2",
       "dimension": "task",
-      "subject": "Completed task M2.2 \u2014 its DoD still holds",
+      "subject": "Completed task M2.2 — its DoD still holds",
       "contract": "E",
       "authority": "TASKS.md M2.2",
       "parity": "exact",
@@ -752,7 +752,7 @@
     {
       "id": "task.M2.3",
       "dimension": "task",
-      "subject": "Completed task M2.3 \u2014 its DoD still holds",
+      "subject": "Completed task M2.3 — its DoD still holds",
       "contract": "E",
       "authority": "TASKS.md M2.3",
       "parity": "exact",
@@ -763,7 +763,7 @@
     {
       "id": "task.M2.4",
       "dimension": "task",
-      "subject": "Completed task M2.4 \u2014 its DoD still holds",
+      "subject": "Completed task M2.4 — its DoD still holds",
       "contract": "E",
       "authority": "TASKS.md M2.4",
       "parity": "exact",
@@ -774,7 +774,7 @@
     {
       "id": "task.M2.5",
       "dimension": "task",
-      "subject": "Completed task M2.5 \u2014 its DoD still holds",
+      "subject": "Completed task M2.5 — its DoD still holds",
       "contract": "E",
       "authority": "TASKS.md M2.5",
       "parity": "exact",
@@ -785,7 +785,7 @@
     {
       "id": "task.M3.0",
       "dimension": "task",
-      "subject": "Completed task M3.0 \u2014 its DoD still holds",
+      "subject": "Completed task M3.0 — its DoD still holds",
       "contract": "E",
       "authority": "TASKS.md M3.0",
       "parity": "exact",
@@ -796,7 +796,7 @@
     {
       "id": "task.M3.1",
       "dimension": "task",
-      "subject": "Completed task M3.1 \u2014 its DoD still holds",
+      "subject": "Completed task M3.1 — its DoD still holds",
       "contract": "E",
       "authority": "TASKS.md M3.1",
       "parity": "exact",
@@ -807,7 +807,7 @@
     {
       "id": "task.M3.10",
       "dimension": "task",
-      "subject": "Completed task M3.10 \u2014 its DoD still holds",
+      "subject": "Completed task M3.10 — its DoD still holds",
       "contract": "E",
       "authority": "TASKS.md M3.10",
       "parity": "exact",
@@ -818,7 +818,7 @@
     {
       "id": "task.M3.11",
       "dimension": "task",
-      "subject": "Completed task M3.11 \u2014 its DoD still holds",
+      "subject": "Completed task M3.11 — its DoD still holds",
       "contract": "E",
       "authority": "TASKS.md M3.11",
       "parity": "exact",
@@ -829,7 +829,7 @@
     {
       "id": "task.M3.2",
       "dimension": "task",
-      "subject": "Completed task M3.2 \u2014 its DoD still holds",
+      "subject": "Completed task M3.2 — its DoD still holds",
       "contract": "E",
       "authority": "TASKS.md M3.2",
       "parity": "exact",
@@ -840,7 +840,7 @@
     {
       "id": "task.M3.3",
       "dimension": "task",
-      "subject": "Completed task M3.3 \u2014 its DoD still holds",
+      "subject": "Completed task M3.3 — its DoD still holds",
       "contract": "E",
       "authority": "TASKS.md M3.3",
       "parity": "exact",
@@ -851,7 +851,7 @@
     {
       "id": "task.M3.4",
       "dimension": "task",
-      "subject": "Completed task M3.4 \u2014 its DoD still holds",
+      "subject": "Completed task M3.4 — its DoD still holds",
       "contract": "E",
       "authority": "TASKS.md M3.4",
       "parity": "exact",
@@ -862,7 +862,7 @@
     {
       "id": "task.M3.5",
       "dimension": "task",
-      "subject": "Completed task M3.5 \u2014 its DoD still holds",
+      "subject": "Completed task M3.5 — its DoD still holds",
       "contract": "E",
       "authority": "TASKS.md M3.5",
       "parity": "exact",
@@ -873,7 +873,7 @@
     {
       "id": "task.M3.6",
       "dimension": "task",
-      "subject": "Completed task M3.6 \u2014 its DoD still holds",
+      "subject": "Completed task M3.6 — its DoD still holds",
       "contract": "E",
       "authority": "TASKS.md M3.6",
       "parity": "exact",
@@ -884,7 +884,7 @@
     {
       "id": "task.M3.7",
       "dimension": "task",
-      "subject": "Completed task M3.7 \u2014 its DoD still holds",
+      "subject": "Completed task M3.7 — its DoD still holds",
       "contract": "E",
       "authority": "TASKS.md M3.7",
       "parity": "exact",
@@ -895,7 +895,7 @@
     {
       "id": "task.M3.8",
       "dimension": "task",
-      "subject": "Completed task M3.8 \u2014 its DoD still holds",
+      "subject": "Completed task M3.8 — its DoD still holds",
       "contract": "E",
       "authority": "TASKS.md M3.8",
       "parity": "exact",
@@ -906,7 +906,7 @@
     {
       "id": "task.M3.9",
       "dimension": "task",
-      "subject": "Completed task M3.9 \u2014 its DoD still holds",
+      "subject": "Completed task M3.9 — its DoD still holds",
       "contract": "E",
       "authority": "TASKS.md M3.9",
       "parity": "exact",
@@ -917,7 +917,7 @@
     {
       "id": "task.M4.0",
       "dimension": "task",
-      "subject": "Completed task M4.0 \u2014 its DoD still holds",
+      "subject": "Completed task M4.0 — its DoD still holds",
       "contract": "P",
       "authority": "TASKS.md M4.0",
       "parity": "exact",
@@ -928,7 +928,7 @@
     {
       "id": "task.M4.1",
       "dimension": "task",
-      "subject": "Completed task M4.1 \u2014 its DoD still holds",
+      "subject": "Completed task M4.1 — its DoD still holds",
       "contract": "P",
       "authority": "TASKS.md M4.1",
       "parity": "exact",
@@ -939,7 +939,7 @@
     {
       "id": "task.M4.2",
       "dimension": "task",
-      "subject": "Completed task M4.2 \u2014 its DoD still holds",
+      "subject": "Completed task M4.2 — its DoD still holds",
       "contract": "P",
       "authority": "TASKS.md M4.2",
       "parity": "exact",
@@ -950,7 +950,7 @@
     {
       "id": "task.M4.3",
       "dimension": "task",
-      "subject": "Completed task M4.3 \u2014 its DoD still holds",
+      "subject": "Completed task M4.3 — its DoD still holds",
       "contract": "P",
       "authority": "TASKS.md M4.3",
       "parity": "exact",
@@ -961,7 +961,7 @@
     {
       "id": "task.M4.3a",
       "dimension": "task",
-      "subject": "Completed task M4.3a \u2014 its DoD still holds",
+      "subject": "Completed task M4.3a — its DoD still holds",
       "contract": "P",
       "authority": "TASKS.md M4.3a",
       "parity": "exact",
@@ -972,7 +972,7 @@
     {
       "id": "task.M4.3b",
       "dimension": "task",
-      "subject": "Completed task M4.3b \u2014 its DoD still holds",
+      "subject": "Completed task M4.3b — its DoD still holds",
       "contract": "P",
       "authority": "TASKS.md M4.3b",
       "parity": "exact",
@@ -983,7 +983,7 @@
     {
       "id": "task.M4.4",
       "dimension": "task",
-      "subject": "Completed task M4.4 \u2014 its DoD still holds",
+      "subject": "Completed task M4.4 — its DoD still holds",
       "contract": "P",
       "authority": "TASKS.md M4.4",
       "parity": "exact",
@@ -994,7 +994,7 @@
     {
       "id": "task.M4.5",
       "dimension": "task",
-      "subject": "Completed task M4.5 \u2014 its DoD still holds",
+      "subject": "Completed task M4.5 — its DoD still holds",
       "contract": "P",
       "authority": "TASKS.md M4.5",
       "parity": "exact",
@@ -1005,7 +1005,7 @@
     {
       "id": "task.M4.6",
       "dimension": "task",
-      "subject": "Completed task M4.6 \u2014 its DoD still holds",
+      "subject": "Completed task M4.6 — its DoD still holds",
       "contract": "P",
       "authority": "TASKS.md M4.6",
       "parity": "exact",
@@ -1016,7 +1016,7 @@
     {
       "id": "task.M5.0",
       "dimension": "task",
-      "subject": "Completed task M5.0 \u2014 its DoD still holds",
+      "subject": "Completed task M5.0 — its DoD still holds",
       "contract": "E",
       "authority": "TASKS.md M5.0",
       "parity": "exact",
@@ -1027,7 +1027,7 @@
     {
       "id": "task.M5.1",
       "dimension": "task",
-      "subject": "Completed task M5.1 \u2014 its DoD still holds",
+      "subject": "Completed task M5.1 — its DoD still holds",
       "contract": "E",
       "authority": "TASKS.md M5.1",
       "parity": "exact",
@@ -1038,7 +1038,7 @@
     {
       "id": "task.M5.10",
       "dimension": "task",
-      "subject": "Completed task M5.10 \u2014 its DoD still holds",
+      "subject": "Completed task M5.10 — its DoD still holds",
       "contract": "E",
       "authority": "TASKS.md M5.10",
       "parity": "exact",
@@ -1049,7 +1049,7 @@
     {
       "id": "task.M5.11",
       "dimension": "task",
-      "subject": "Completed task M5.11 \u2014 its DoD still holds",
+      "subject": "Completed task M5.11 — its DoD still holds",
       "contract": "E",
       "authority": "TASKS.md M5.11",
       "parity": "exact",
@@ -1060,7 +1060,7 @@
     {
       "id": "task.M5.12",
       "dimension": "task",
-      "subject": "Completed task M5.12 \u2014 its DoD still holds",
+      "subject": "Completed task M5.12 — its DoD still holds",
       "contract": "E",
       "authority": "TASKS.md M5.12",
       "parity": "exact",
@@ -1071,7 +1071,7 @@
     {
       "id": "task.M5.2",
       "dimension": "task",
-      "subject": "Completed task M5.2 \u2014 its DoD still holds",
+      "subject": "Completed task M5.2 — its DoD still holds",
       "contract": "E",
       "authority": "TASKS.md M5.2",
       "parity": "exact",
@@ -1082,7 +1082,7 @@
     {
       "id": "task.M5.3",
       "dimension": "task",
-      "subject": "Completed task M5.3 \u2014 its DoD still holds",
+      "subject": "Completed task M5.3 — its DoD still holds",
       "contract": "E",
       "authority": "TASKS.md M5.3",
       "parity": "exact",
@@ -1093,7 +1093,7 @@
     {
       "id": "task.M5.4",
       "dimension": "task",
-      "subject": "Completed task M5.4 \u2014 its DoD still holds",
+      "subject": "Completed task M5.4 — its DoD still holds",
       "contract": "E",
       "authority": "TASKS.md M5.4",
       "parity": "exact",
@@ -1104,7 +1104,7 @@
     {
       "id": "task.M5.5",
       "dimension": "task",
-      "subject": "Completed task M5.5 \u2014 its DoD still holds",
+      "subject": "Completed task M5.5 — its DoD still holds",
       "contract": "E",
       "authority": "TASKS.md M5.5",
       "parity": "exact",
@@ -1115,7 +1115,7 @@
     {
       "id": "task.M5.6",
       "dimension": "task",
-      "subject": "Completed task M5.6 \u2014 its DoD still holds",
+      "subject": "Completed task M5.6 — its DoD still holds",
       "contract": "E",
       "authority": "TASKS.md M5.6",
       "parity": "exact",
@@ -1126,7 +1126,7 @@
     {
       "id": "task.M5.7",
       "dimension": "task",
-      "subject": "Completed task M5.7 \u2014 its DoD still holds",
+      "subject": "Completed task M5.7 — its DoD still holds",
       "contract": "E",
       "authority": "TASKS.md M5.7",
       "parity": "exact",
@@ -1137,7 +1137,7 @@
     {
       "id": "task.M5.8",
       "dimension": "task",
-      "subject": "Completed task M5.8 \u2014 its DoD still holds",
+      "subject": "Completed task M5.8 — its DoD still holds",
       "contract": "E",
       "authority": "TASKS.md M5.8",
       "parity": "exact",
@@ -1148,7 +1148,7 @@
     {
       "id": "task.M5.9",
       "dimension": "task",
-      "subject": "Completed task M5.9 \u2014 its DoD still holds",
+      "subject": "Completed task M5.9 — its DoD still holds",
       "contract": "E",
       "authority": "TASKS.md M5.9",
       "parity": "exact",
@@ -1159,7 +1159,7 @@
     {
       "id": "task.M6.0",
       "dimension": "task",
-      "subject": "Completed task M6.0 \u2014 its DoD still holds",
+      "subject": "Completed task M6.0 — its DoD still holds",
       "contract": "E",
       "authority": "TASKS.md M6.0",
       "parity": "exact",
@@ -1170,7 +1170,7 @@
     {
       "id": "task.M6.1",
       "dimension": "task",
-      "subject": "Completed task M6.1 \u2014 its DoD still holds",
+      "subject": "Completed task M6.1 — its DoD still holds",
       "contract": "E",
       "authority": "TASKS.md M6.1",
       "parity": "exact",
@@ -1181,7 +1181,7 @@
     {
       "id": "task.M6.2",
       "dimension": "task",
-      "subject": "Completed task M6.2 \u2014 its DoD still holds",
+      "subject": "Completed task M6.2 — its DoD still holds",
       "contract": "E",
       "authority": "TASKS.md M6.2",
       "parity": "exact",
@@ -1192,7 +1192,7 @@
     {
       "id": "task.M6.3",
       "dimension": "task",
-      "subject": "Completed task M6.3 \u2014 its DoD still holds",
+      "subject": "Completed task M6.3 — its DoD still holds",
       "contract": "E",
       "authority": "TASKS.md M6.3",
       "parity": "exact",
@@ -1203,7 +1203,7 @@
     {
       "id": "task.M6.4",
       "dimension": "task",
-      "subject": "Completed task M6.4 \u2014 its DoD still holds",
+      "subject": "Completed task M6.4 — its DoD still holds",
       "contract": "E",
       "authority": "TASKS.md M6.4",
       "parity": "exact",
@@ -1214,7 +1214,7 @@
     {
       "id": "task.M7.1",
       "dimension": "task",
-      "subject": "Completed task M7.1 \u2014 its DoD still holds",
+      "subject": "Completed task M7.1 — its DoD still holds",
       "contract": "P",
       "authority": "TASKS.md M7.1",
       "parity": "exact",
@@ -1225,7 +1225,7 @@
     {
       "id": "task.M7.2",
       "dimension": "task",
-      "subject": "Completed task M7.2 \u2014 its DoD still holds",
+      "subject": "Completed task M7.2 — its DoD still holds",
       "contract": "P",
       "authority": "TASKS.md M7.2",
       "parity": "exact",
@@ -1236,7 +1236,7 @@
     {
       "id": "task.M7.3",
       "dimension": "task",
-      "subject": "Completed task M7.3 \u2014 its DoD still holds",
+      "subject": "Completed task M7.3 — its DoD still holds",
       "contract": "P",
       "authority": "TASKS.md M7.3",
       "parity": "exact",
@@ -1247,7 +1247,7 @@
     {
       "id": "task.M7.4",
       "dimension": "task",
-      "subject": "Completed task M7.4 \u2014 its DoD still holds",
+      "subject": "Completed task M7.4 — its DoD still holds",
       "contract": "P",
       "authority": "TASKS.md M7.4",
       "parity": "exact",
@@ -1258,7 +1258,7 @@
     {
       "id": "task.M7.5",
       "dimension": "task",
-      "subject": "Completed task M7.5 \u2014 its DoD still holds",
+      "subject": "Completed task M7.5 — its DoD still holds",
       "contract": "P",
       "authority": "TASKS.md M7.5",
       "parity": "exact",
@@ -1269,7 +1269,7 @@
     {
       "id": "task.M8.1",
       "dimension": "task",
-      "subject": "Completed task M8.1 \u2014 its DoD still holds",
+      "subject": "Completed task M8.1 — its DoD still holds",
       "contract": "E",
       "authority": "TASKS.md M8.1",
       "parity": "exact",
@@ -1280,7 +1280,7 @@
     {
       "id": "task.M8.2",
       "dimension": "task",
-      "subject": "Completed task M8.2 \u2014 its DoD still holds",
+      "subject": "Completed task M8.2 — its DoD still holds",
       "contract": "E",
       "authority": "TASKS.md M8.2",
       "parity": "exact",
@@ -1291,7 +1291,7 @@
     {
       "id": "task.M9.1",
       "dimension": "task",
-      "subject": "Completed task M9.1 \u2014 its DoD still holds",
+      "subject": "Completed task M9.1 — its DoD still holds",
       "contract": "E",
       "authority": "TASKS.md M9.1",
       "parity": "exact",
@@ -1302,7 +1302,7 @@
     {
       "id": "task.M9.2",
       "dimension": "task",
-      "subject": "Completed task M9.2 \u2014 its DoD still holds",
+      "subject": "Completed task M9.2 — its DoD still holds",
       "contract": "E",
       "authority": "TASKS.md M9.2",
       "parity": "exact",
@@ -1542,7 +1542,7 @@
       "fixture": "fixtures/oracle/nrg.capture.txt",
       "status": "pass",
       "assignedTask": "M16.3",
-      "notes": "pickup/warning melodies and post-expiry state; no checkpoint while energized (flash color derives from vanilla-randomized CurrentTick the engine pins \u2014 scenario-design exclusion)"
+      "notes": "pickup/warning melodies and post-expiry state; no checkpoint while energized (flash color derives from vanilla-randomized CurrentTick the engine pins — scenario-design exclusion)"
     },
     {
       "id": "elem.fake",
@@ -1633,7 +1633,7 @@
       "fixture": "fixtures/oracle/beast.capture.txt",
       "status": "pass",
       "assignedTask": "M16.5",
-      "notes": "P1 9 forces the seek half of `P1 < Random(10)`; charges and attacks down the player row (ORCLBEAST), flees the same row while the player is energized and is eaten for score (ORCLHUNT)"
+      "notes": "P1 9 forces the seek half of `P1 \u003c Random(10)`; charges and attacks down the player row (ORCLBEAST), flees the same row while the player is energized and is eaten for score (ORCLHUNT)"
     },
     {
       "id": "elem.message-timer",
@@ -1681,10 +1681,10 @@
       "contract": "V",
       "authority": "reference/reconstruction-of-zzt/SRC ELEMENTS.PAS; ANALYSIS.md",
       "parity": "exact",
-      "status": "pass",
-      "assignedTask": "M16.6",
       "test": "TestOracleParityTalkScenario,TestOracleParityWalkScenario,TestOracleParityCondScenario,TestOracleParityMorfScenario",
       "fixture": "fixtures/oracle/talk.capture.txt",
+      "status": "pass",
+      "assignedTask": "M16.6",
       "notes": "tick runs the program then the standing step order, which sends THUD when blocked"
     },
     {
@@ -1712,7 +1712,7 @@
       "fixture": "fixtures/oracle/main.capture.txt",
       "status": "pass",
       "assignedTask": "M16.5a",
-      "notes": "also subject to collision-pushout and friendly-fire-policy; single-player V behavior is exact"
+      "notes": "also subject to collision-pushout and friendly-fire-policy; single-player V behavior is exact, including the walk click (M16.6b, WalkClickEvent) — no more 110 Hz sound exclusion"
     },
     {
       "id": "elem.pusher",
@@ -1751,7 +1751,7 @@
       "fixture": "fixtures/oracle/beast.capture.txt",
       "status": "pass",
       "assignedTask": "M16.5",
-      "notes": "P1 8/P2 9 force both draws: marches, re-seeks on alignment, attacks, and stops dead when its step is walled. The rest-to-wake transition is gated by `(P2+8) <= Random(17)`, which no P2 can force, so it is the one branch here with no draw-free scenario"
+      "notes": "P1 8/P2 9 force both draws: marches, re-seeks on alignment, attacks, and stops dead when its step is walled. The rest-to-wake transition is gated by `(P2+8) \u003c= Random(17)`, which no P2 can force, so it is the one branch here with no draw-free scenario"
     },
     {
       "id": "elem.scroll",
@@ -1760,10 +1760,10 @@
       "contract": "V",
       "authority": "reference/reconstruction-of-zzt/SRC ELEMENTS.PAS; ANALYSIS.md",
       "parity": "exact",
-      "status": "pass",
-      "assignedTask": "M16.6",
       "test": "TestOracleParityTalkScenario,TestOracleParityScrollScenario",
       "fixture": "fixtures/oracle/talk.capture.txt",
+      "status": "pass",
+      "assignedTask": "M16.6",
       "notes": "runs its own program on touch, shimmers on tick, and is consumed when the reader answers"
     },
     {
@@ -1841,7 +1841,7 @@
       "fixture": "fixtures/oracle/ride.capture.txt",
       "status": "pass",
       "assignedTask": "M16.5a",
-      "notes": "rotation from ORCLDEV; both aim branches firing from ORCLRIDE, with p1 8 / p2 9 forcing both random draws so the outcome is RNG-free. M16.5a adds the third case, from ORCLFIRE's Blank Bay: a gun in the player's own ROW, whose vertical shot has delta Signum(0)=0 and lands on its own square. Vanilla refuses it and falls through to the horizontal shot, which point-blanks the player for 10 a tick while the gun survives (pb-point-blank, pb-gun-alive) \u2014 under the inverted ownership test the gun destroyed itself instead"
+      "notes": "rotation from ORCLDEV; both aim branches firing from ORCLRIDE, with p1 8 / p2 9 forcing both random draws so the outcome is RNG-free. M16.5a adds the third case, from ORCLFIRE's Blank Bay: a gun in the player's own ROW, whose vertical shot has delta Signum(0)=0 and lands on its own square. Vanilla refuses it and falls through to the horizontal shot, which point-blanks the player for 10 a tick while the gun survives (pb-point-blank, pb-gun-alive) — under the inverted ownership test the gun destroyed itself instead"
     },
     {
       "id": "elem.star",
@@ -2006,10 +2006,10 @@
       "contract": "V",
       "authority": "reference/reconstruction-of-zzt/SRC OOP.PAS; oop.go",
       "parity": "exact",
-      "status": "pass",
-      "assignedTask": "M16.6",
       "test": "TestOracleParityMorfScenario",
       "fixture": "fixtures/oracle/morf.capture.txt",
+      "status": "pass",
+      "assignedTask": "M16.6",
       "notes": "replaces the object with a coloured tile; the colour word is parsed by OopParseTile"
     },
     {
@@ -2019,10 +2019,10 @@
       "contract": "V",
       "authority": "reference/reconstruction-of-zzt/SRC OOP.PAS; oop.go",
       "parity": "exact",
-      "status": "pass",
-      "assignedTask": "M16.6",
       "test": "TestOracleParityTalkScenario",
       "fixture": "fixtures/oracle/talk.capture.txt",
+      "status": "pass",
+      "assignedTask": "M16.6",
       "notes": "copies another object's program, @name and all, so the bound object answers to that name"
     },
     {
@@ -2032,10 +2032,10 @@
       "contract": "V",
       "authority": "reference/reconstruction-of-zzt/SRC OOP.PAS; oop.go",
       "parity": "exact",
-      "status": "pass",
-      "assignedTask": "M16.6",
       "test": "TestOracleParityMorfScenario",
       "fixture": "fixtures/oracle/morf.capture.txt",
+      "status": "pass",
+      "assignedTask": "M16.6",
       "notes": "rewrites every matching tile on the board in one pass"
     },
     {
@@ -2045,10 +2045,10 @@
       "contract": "V",
       "authority": "reference/reconstruction-of-zzt/SRC OOP.PAS; oop.go",
       "parity": "exact",
-      "status": "pass",
-      "assignedTask": "M16.6",
       "test": "TestOracleParityTalkScenario,TestOracleParityMorfScenario",
       "fixture": "fixtures/oracle/morf.capture.txt",
+      "status": "pass",
+      "assignedTask": "M16.6",
       "notes": "refuses 0 and values above 255 (OOP.PAS)"
     },
     {
@@ -2058,10 +2058,10 @@
       "contract": "V",
       "authority": "reference/reconstruction-of-zzt/SRC OOP.PAS; oop.go",
       "parity": "exact",
-      "status": "pass",
-      "assignedTask": "M16.6",
       "test": "TestOracleParityCondScenario",
-      "fixture": "fixtures/oracle/cond.capture.txt"
+      "fixture": "fixtures/oracle/cond.capture.txt",
+      "status": "pass",
+      "assignedTask": "M16.6"
     },
     {
       "id": "oop.command.cycle",
@@ -2070,10 +2070,10 @@
       "contract": "V",
       "authority": "reference/reconstruction-of-zzt/SRC OOP.PAS; oop.go",
       "parity": "exact",
-      "status": "pass",
-      "assignedTask": "M16.6",
       "test": "TestOracleParityMorfScenario",
       "fixture": "fixtures/oracle/morf.capture.txt",
+      "status": "pass",
+      "assignedTask": "M16.6",
       "notes": "retimes the stat onto the cycle gate; phase-solved scenario"
     },
     {
@@ -2083,10 +2083,10 @@
       "contract": "V",
       "authority": "reference/reconstruction-of-zzt/SRC OOP.PAS; oop.go",
       "parity": "exact",
-      "status": "pass",
-      "assignedTask": "M16.6",
       "test": "TestOracleParityMorfScenario",
-      "fixture": "fixtures/oracle/morf.capture.txt"
+      "fixture": "fixtures/oracle/morf.capture.txt",
+      "status": "pass",
+      "assignedTask": "M16.6"
     },
     {
       "id": "oop.command.end",
@@ -2095,10 +2095,10 @@
       "contract": "V",
       "authority": "reference/reconstruction-of-zzt/SRC OOP.PAS; oop.go",
       "parity": "exact",
-      "status": "pass",
-      "assignedTask": "M16.6",
       "test": "TestOracleParityTalkScenario",
-      "fixture": "fixtures/oracle/talk.capture.txt"
+      "fixture": "fixtures/oracle/talk.capture.txt",
+      "status": "pass",
+      "assignedTask": "M16.6"
     },
     {
       "id": "oop.command.endgame",
@@ -2107,11 +2107,11 @@
       "contract": "V",
       "authority": "reference/reconstruction-of-zzt/SRC OOP.PAS; oop.go",
       "parity": "deviation",
+      "deviation": "mp-respawn",
+      "test": "TestOopEndgameLeavesThePlayerInLimbo,TestOopEndgameIsolatesOtherPlayers",
       "status": "pass",
       "assignedTask": "M16.6a",
-      "test": "TestOopEndgameLeavesThePlayerInLimbo,TestOopEndgameIsolatesOtherPlayers",
-      "notes": "Routes through the same death/respawn path DamageStat uses (Engine.killPlayer): score penalty, DeathEvent, RespawnTicks countdown \u2014 not vanilla's game over, which mp-respawn already replaces for every other death",
-      "deviation": "mp-respawn"
+      "notes": "Routes through the same death/respawn path DamageStat uses (Engine.killPlayer): score penalty, DeathEvent, RespawnTicks countdown — not vanilla's game over, which mp-respawn already replaces for every other death"
     },
     {
       "id": "oop.command.give",
@@ -2120,10 +2120,10 @@
       "contract": "V",
       "authority": "reference/reconstruction-of-zzt/SRC OOP.PAS; oop.go",
       "parity": "exact",
-      "status": "pass",
-      "assignedTask": "M16.6",
       "test": "TestOracleParityCondScenario,TestOracleParityTalkScenario",
       "fixture": "fixtures/oracle/cond.capture.txt",
+      "status": "pass",
+      "assignedTask": "M16.6",
       "notes": "all six counters"
     },
     {
@@ -2133,10 +2133,10 @@
       "contract": "V",
       "authority": "reference/reconstruction-of-zzt/SRC OOP.PAS; oop.go",
       "parity": "exact",
-      "status": "pass",
-      "assignedTask": "M16.6",
       "test": "TestOracleParityWalkScenario",
       "fixture": "fixtures/oracle/walk.capture.txt",
+      "status": "pass",
+      "assignedTask": "M16.6",
       "notes": "retries a refused move on the next tick"
     },
     {
@@ -2146,10 +2146,10 @@
       "contract": "V",
       "authority": "reference/reconstruction-of-zzt/SRC OOP.PAS; oop.go",
       "parity": "exact",
-      "status": "pass",
-      "assignedTask": "M16.6",
       "test": "TestOracleParityTalkScenario",
-      "fixture": "fixtures/oracle/talk.capture.txt"
+      "fixture": "fixtures/oracle/talk.capture.txt",
+      "status": "pass",
+      "assignedTask": "M16.6"
     },
     {
       "id": "oop.command.if",
@@ -2158,10 +2158,10 @@
       "contract": "V",
       "authority": "reference/reconstruction-of-zzt/SRC OOP.PAS; oop.go",
       "parity": "exact",
-      "status": "pass",
-      "assignedTask": "M16.6",
       "test": "TestOracleParityCondScenario",
       "fixture": "fixtures/oracle/cond.capture.txt",
+      "status": "pass",
+      "assignedTask": "M16.6",
       "notes": "true jumps to the rest of the line; false skips it"
     },
     {
@@ -2171,10 +2171,10 @@
       "contract": "V",
       "authority": "reference/reconstruction-of-zzt/SRC OOP.PAS; oop.go",
       "parity": "exact",
-      "status": "pass",
-      "assignedTask": "M16.6",
       "test": "TestOracleParityTalkScenario",
       "fixture": "fixtures/oracle/talk.capture.txt",
+      "status": "pass",
+      "assignedTask": "M16.6",
       "notes": "a locked object refuses #send and TOUCH alike"
     },
     {
@@ -2184,10 +2184,10 @@
       "contract": "V",
       "authority": "reference/reconstruction-of-zzt/SRC OOP.PAS; oop.go",
       "parity": "exact",
-      "status": "pass",
-      "assignedTask": "M16.6",
       "test": "TestOracleParityTalkScenario,TestOracleParityMorfScenario",
       "fixture": "fixtures/oracle/talk.capture.txt",
+      "status": "pass",
+      "assignedTask": "M16.6",
       "notes": "notes, octave shifts, a rest and a drum"
     },
     {
@@ -2197,10 +2197,10 @@
       "contract": "V",
       "authority": "reference/reconstruction-of-zzt/SRC OOP.PAS; oop.go",
       "parity": "exact",
-      "status": "pass",
-      "assignedTask": "M16.6",
       "test": "TestOracleParityMorfScenario",
       "fixture": "fixtures/oracle/morf.capture.txt",
+      "status": "pass",
+      "assignedTask": "M16.6",
       "notes": "writes a neighbour; a zero direction is an error"
     },
     {
@@ -2210,10 +2210,10 @@
       "contract": "V",
       "authority": "reference/reconstruction-of-zzt/SRC OOP.PAS; oop.go",
       "parity": "exact",
-      "status": "pass",
-      "assignedTask": "M16.6",
       "test": "TestOracleParityTalkScenario",
-      "fixture": "fixtures/oracle/talk.capture.txt"
+      "fixture": "fixtures/oracle/talk.capture.txt",
+      "status": "pass",
+      "assignedTask": "M16.6"
     },
     {
       "id": "oop.command.restore",
@@ -2222,10 +2222,10 @@
       "contract": "V",
       "authority": "reference/reconstruction-of-zzt/SRC OOP.PAS; oop.go",
       "parity": "exact",
-      "status": "pass",
-      "assignedTask": "M16.6",
       "test": "TestOracleParityTalkScenario,TestOopZapRestoreRewriteTheLabelColon",
       "fixture": "fixtures/oracle/talk.capture.txt",
+      "status": "pass",
+      "assignedTask": "M16.6",
       "notes": "M16.6 fixed the byte it overwrote (OOP.PAS:712-722)"
     },
     {
@@ -2235,10 +2235,10 @@
       "contract": "V",
       "authority": "reference/reconstruction-of-zzt/SRC OOP.PAS; oop.go",
       "parity": "exact",
-      "status": "pass",
-      "assignedTask": "M16.6",
       "test": "TestOracleParityTalkScenario",
-      "fixture": "fixtures/oracle/talk.capture.txt"
+      "fixture": "fixtures/oracle/talk.capture.txt",
+      "status": "pass",
+      "assignedTask": "M16.6"
     },
     {
       "id": "oop.command.set",
@@ -2247,10 +2247,10 @@
       "contract": "V",
       "authority": "reference/reconstruction-of-zzt/SRC OOP.PAS; oop.go",
       "parity": "exact",
-      "status": "pass",
-      "assignedTask": "M16.6",
       "test": "TestOracleParityCondScenario",
-      "fixture": "fixtures/oracle/cond.capture.txt"
+      "fixture": "fixtures/oracle/cond.capture.txt",
+      "status": "pass",
+      "assignedTask": "M16.6"
     },
     {
       "id": "oop.command.shoot",
@@ -2259,10 +2259,10 @@
       "contract": "V",
       "authority": "reference/reconstruction-of-zzt/SRC OOP.PAS; oop.go",
       "parity": "exact",
-      "status": "pass",
-      "assignedTask": "M16.6",
       "test": "TestOracleParityMorfScenario",
-      "fixture": "fixtures/oracle/morf.capture.txt"
+      "fixture": "fixtures/oracle/morf.capture.txt",
+      "status": "pass",
+      "assignedTask": "M16.6"
     },
     {
       "id": "oop.command.take",
@@ -2271,10 +2271,10 @@
       "contract": "V",
       "authority": "reference/reconstruction-of-zzt/SRC OOP.PAS; oop.go",
       "parity": "exact",
-      "status": "pass",
-      "assignedTask": "M16.6",
       "test": "TestOracleParityCondScenario,TestOracleParityTalkScenario",
       "fixture": "fixtures/oracle/cond.capture.txt",
+      "status": "pass",
+      "assignedTask": "M16.6",
       "notes": "a refused take falls through to the rest of its line"
     },
     {
@@ -2284,10 +2284,10 @@
       "contract": "V",
       "authority": "reference/reconstruction-of-zzt/SRC OOP.PAS; oop.go",
       "parity": "exact",
-      "status": "pass",
-      "assignedTask": "M16.6",
       "test": "TestOracleParityMorfScenario",
       "fixture": "fixtures/oracle/morf.capture.txt",
+      "status": "pass",
+      "assignedTask": "M16.6",
       "notes": "thrown along the player's row so the star's seek is RNG-free"
     },
     {
@@ -2297,10 +2297,10 @@
       "contract": "V",
       "authority": "reference/reconstruction-of-zzt/SRC OOP.PAS; oop.go",
       "parity": "exact",
-      "status": "pass",
-      "assignedTask": "M16.6",
       "test": "TestOracleParityWalkScenario",
       "fixture": "fixtures/oracle/walk.capture.txt",
+      "status": "pass",
+      "assignedTask": "M16.6",
       "notes": "a refused try continues the same line; a taken one skips it"
     },
     {
@@ -2310,10 +2310,10 @@
       "contract": "V",
       "authority": "reference/reconstruction-of-zzt/SRC OOP.PAS; oop.go",
       "parity": "exact",
-      "status": "pass",
-      "assignedTask": "M16.6",
       "test": "TestOracleParityTalkScenario",
-      "fixture": "fixtures/oracle/talk.capture.txt"
+      "fixture": "fixtures/oracle/talk.capture.txt",
+      "status": "pass",
+      "assignedTask": "M16.6"
     },
     {
       "id": "oop.command.walk",
@@ -2322,10 +2322,10 @@
       "contract": "V",
       "authority": "reference/reconstruction-of-zzt/SRC OOP.PAS; oop.go",
       "parity": "exact",
-      "status": "pass",
-      "assignedTask": "M16.6",
       "test": "TestOracleParityWalkScenario",
       "fixture": "fixtures/oracle/walk.capture.txt",
+      "status": "pass",
+      "assignedTask": "M16.6",
       "notes": "sets the standing step order read back by FLOW"
     },
     {
@@ -2335,10 +2335,10 @@
       "contract": "V",
       "authority": "reference/reconstruction-of-zzt/SRC OOP.PAS; oop.go",
       "parity": "exact",
-      "status": "pass",
-      "assignedTask": "M16.6",
       "test": "TestOracleParityTalkScenario,TestOopZapRestoreRewriteTheLabelColon",
       "fixture": "fixtures/oracle/talk.capture.txt",
+      "status": "pass",
+      "assignedTask": "M16.6",
       "notes": "M16.6 fixed the byte it overwrote (OOP.PAS:702-711)"
     },
     {
@@ -2348,10 +2348,10 @@
       "contract": "V",
       "authority": "reference/reconstruction-of-zzt/SRC OOP.PAS; oop.go",
       "parity": "exact",
-      "status": "pass",
-      "assignedTask": "M16.6",
       "test": "TestOracleParityCondScenario",
       "fixture": "fixtures/oracle/cond.capture.txt",
+      "status": "pass",
+      "assignedTask": "M16.6",
       "notes": "asked of a column neighbour and of a stranger"
     },
     {
@@ -2361,10 +2361,10 @@
       "contract": "V",
       "authority": "reference/reconstruction-of-zzt/SRC OOP.PAS; oop.go",
       "parity": "exact",
-      "status": "pass",
-      "assignedTask": "M16.6",
       "test": "TestOracleParityCondScenario",
       "fixture": "fixtures/oracle/cond.capture.txt",
+      "status": "pass",
+      "assignedTask": "M16.6",
       "notes": "asked with the gem present and after it was collected"
     },
     {
@@ -2374,10 +2374,10 @@
       "contract": "V",
       "authority": "reference/reconstruction-of-zzt/SRC OOP.PAS; oop.go",
       "parity": "exact",
-      "status": "pass",
-      "assignedTask": "M16.6",
       "test": "TestOracleParityWalkScenario",
       "fixture": "fixtures/oracle/walk.capture.txt",
+      "status": "pass",
+      "assignedTask": "M16.6",
       "notes": "also the probe the random-direction chambers use"
     },
     {
@@ -2387,10 +2387,10 @@
       "contract": "V",
       "authority": "reference/reconstruction-of-zzt/SRC OOP.PAS; oop.go",
       "parity": "exact",
-      "status": "pass",
-      "assignedTask": "M16.6",
       "test": "TestOracleParityCondScenario",
-      "fixture": "fixtures/oracle/cond.capture.txt"
+      "fixture": "fixtures/oracle/cond.capture.txt",
+      "status": "pass",
+      "assignedTask": "M16.6"
     },
     {
       "id": "oop.condition.energized",
@@ -2399,10 +2399,10 @@
       "contract": "V",
       "authority": "reference/reconstruction-of-zzt/SRC OOP.PAS; oop.go",
       "parity": "exact",
-      "status": "pass",
-      "assignedTask": "M16.6",
       "test": "TestOracleParityCondScenario",
       "fixture": "fixtures/oracle/cond.capture.txt",
+      "status": "pass",
+      "assignedTask": "M16.6",
       "notes": "read after the flash ended, so no checkpoint rides CurrentTick"
     },
     {
@@ -2412,10 +2412,10 @@
       "contract": "V",
       "authority": "reference/reconstruction-of-zzt/SRC OOP.PAS; oop.go",
       "parity": "exact",
-      "status": "pass",
-      "assignedTask": "M16.6",
       "test": "TestOracleParityCondScenario,TestOracleParityWalkScenario",
-      "fixture": "fixtures/oracle/cond.capture.txt"
+      "fixture": "fixtures/oracle/cond.capture.txt",
+      "status": "pass",
+      "assignedTask": "M16.6"
     },
     {
       "id": "oop.counter.ammo",
@@ -2424,10 +2424,10 @@
       "contract": "V",
       "authority": "reference/reconstruction-of-zzt/SRC OOP.PAS; oop.go",
       "parity": "exact",
-      "status": "pass",
-      "assignedTask": "M16.6",
       "test": "TestOracleParityCondScenario,TestOracleParityTalkScenario",
-      "fixture": "fixtures/oracle/cond.capture.txt"
+      "fixture": "fixtures/oracle/cond.capture.txt",
+      "status": "pass",
+      "assignedTask": "M16.6"
     },
     {
       "id": "oop.counter.gems",
@@ -2436,10 +2436,10 @@
       "contract": "V",
       "authority": "reference/reconstruction-of-zzt/SRC OOP.PAS; oop.go",
       "parity": "exact",
-      "status": "pass",
-      "assignedTask": "M16.6",
       "test": "TestOracleParityCondScenario",
-      "fixture": "fixtures/oracle/cond.capture.txt"
+      "fixture": "fixtures/oracle/cond.capture.txt",
+      "status": "pass",
+      "assignedTask": "M16.6"
     },
     {
       "id": "oop.counter.health",
@@ -2448,10 +2448,10 @@
       "contract": "V",
       "authority": "reference/reconstruction-of-zzt/SRC OOP.PAS; oop.go",
       "parity": "exact",
-      "status": "pass",
-      "assignedTask": "M16.6",
       "test": "TestOracleParityCondScenario",
-      "fixture": "fixtures/oracle/cond.capture.txt"
+      "fixture": "fixtures/oracle/cond.capture.txt",
+      "status": "pass",
+      "assignedTask": "M16.6"
     },
     {
       "id": "oop.counter.score",
@@ -2460,10 +2460,10 @@
       "contract": "V",
       "authority": "reference/reconstruction-of-zzt/SRC OOP.PAS; oop.go",
       "parity": "exact",
-      "status": "pass",
-      "assignedTask": "M16.6",
       "test": "TestOracleParityCondScenario,TestOracleParityTalkScenario",
-      "fixture": "fixtures/oracle/cond.capture.txt"
+      "fixture": "fixtures/oracle/cond.capture.txt",
+      "status": "pass",
+      "assignedTask": "M16.6"
     },
     {
       "id": "oop.counter.time",
@@ -2472,10 +2472,10 @@
       "contract": "V",
       "authority": "reference/reconstruction-of-zzt/SRC OOP.PAS; oop.go",
       "parity": "exact",
-      "status": "pass",
-      "assignedTask": "M16.6",
       "test": "TestOracleParityCondScenario",
       "fixture": "fixtures/oracle/cond.capture.txt",
+      "status": "pass",
+      "assignedTask": "M16.6",
       "notes": "observable only on a timed board: #give time spends the remaining minute"
     },
     {
@@ -2485,10 +2485,10 @@
       "contract": "V",
       "authority": "reference/reconstruction-of-zzt/SRC OOP.PAS; oop.go",
       "parity": "exact",
-      "status": "pass",
-      "assignedTask": "M16.6",
       "test": "TestOracleParityCondScenario",
-      "fixture": "fixtures/oracle/cond.capture.txt"
+      "fixture": "fixtures/oracle/cond.capture.txt",
+      "status": "pass",
+      "assignedTask": "M16.6"
     },
     {
       "id": "oop.direction.ccw",
@@ -2497,10 +2497,10 @@
       "contract": "V",
       "authority": "reference/reconstruction-of-zzt/SRC OOP.PAS; oop.go",
       "parity": "exact",
-      "status": "pass",
-      "assignedTask": "M16.6",
       "test": "TestOracleParityWalkScenario",
-      "fixture": "fixtures/oracle/walk.capture.txt"
+      "fixture": "fixtures/oracle/walk.capture.txt",
+      "status": "pass",
+      "assignedTask": "M16.6"
     },
     {
       "id": "oop.direction.cw",
@@ -2509,10 +2509,10 @@
       "contract": "V",
       "authority": "reference/reconstruction-of-zzt/SRC OOP.PAS; oop.go",
       "parity": "exact",
-      "status": "pass",
-      "assignedTask": "M16.6",
       "test": "TestOracleParityWalkScenario",
-      "fixture": "fixtures/oracle/walk.capture.txt"
+      "fixture": "fixtures/oracle/walk.capture.txt",
+      "status": "pass",
+      "assignedTask": "M16.6"
     },
     {
       "id": "oop.direction.e",
@@ -2521,10 +2521,10 @@
       "contract": "V",
       "authority": "reference/reconstruction-of-zzt/SRC OOP.PAS; oop.go",
       "parity": "exact",
-      "status": "pass",
-      "assignedTask": "M16.6",
       "test": "TestOracleParityWalkScenario",
-      "fixture": "fixtures/oracle/walk.capture.txt"
+      "fixture": "fixtures/oracle/walk.capture.txt",
+      "status": "pass",
+      "assignedTask": "M16.6"
     },
     {
       "id": "oop.direction.east",
@@ -2533,10 +2533,10 @@
       "contract": "V",
       "authority": "reference/reconstruction-of-zzt/SRC OOP.PAS; oop.go",
       "parity": "exact",
-      "status": "pass",
-      "assignedTask": "M16.6",
       "test": "TestOracleParityWalkScenario",
-      "fixture": "fixtures/oracle/walk.capture.txt"
+      "fixture": "fixtures/oracle/walk.capture.txt",
+      "status": "pass",
+      "assignedTask": "M16.6"
     },
     {
       "id": "oop.direction.flow",
@@ -2545,10 +2545,10 @@
       "contract": "V",
       "authority": "reference/reconstruction-of-zzt/SRC OOP.PAS; oop.go",
       "parity": "exact",
-      "status": "pass",
-      "assignedTask": "M16.6",
       "test": "TestOracleParityWalkScenario",
-      "fixture": "fixtures/oracle/walk.capture.txt"
+      "fixture": "fixtures/oracle/walk.capture.txt",
+      "status": "pass",
+      "assignedTask": "M16.6"
     },
     {
       "id": "oop.direction.i",
@@ -2557,10 +2557,10 @@
       "contract": "V",
       "authority": "reference/reconstruction-of-zzt/SRC OOP.PAS; oop.go",
       "parity": "exact",
-      "status": "pass",
-      "assignedTask": "M16.6",
       "test": "TestOracleParityWalkScenario",
-      "fixture": "fixtures/oracle/walk.capture.txt"
+      "fixture": "fixtures/oracle/walk.capture.txt",
+      "status": "pass",
+      "assignedTask": "M16.6"
     },
     {
       "id": "oop.direction.idle",
@@ -2569,10 +2569,10 @@
       "contract": "V",
       "authority": "reference/reconstruction-of-zzt/SRC OOP.PAS; oop.go",
       "parity": "exact",
-      "status": "pass",
-      "assignedTask": "M16.6",
       "test": "TestOracleParityWalkScenario",
-      "fixture": "fixtures/oracle/walk.capture.txt"
+      "fixture": "fixtures/oracle/walk.capture.txt",
+      "status": "pass",
+      "assignedTask": "M16.6"
     },
     {
       "id": "oop.direction.n",
@@ -2581,10 +2581,10 @@
       "contract": "V",
       "authority": "reference/reconstruction-of-zzt/SRC OOP.PAS; oop.go",
       "parity": "exact",
-      "status": "pass",
-      "assignedTask": "M16.6",
       "test": "TestOracleParityWalkScenario",
-      "fixture": "fixtures/oracle/walk.capture.txt"
+      "fixture": "fixtures/oracle/walk.capture.txt",
+      "status": "pass",
+      "assignedTask": "M16.6"
     },
     {
       "id": "oop.direction.north",
@@ -2593,10 +2593,10 @@
       "contract": "V",
       "authority": "reference/reconstruction-of-zzt/SRC OOP.PAS; oop.go",
       "parity": "exact",
-      "status": "pass",
-      "assignedTask": "M16.6",
       "test": "TestOracleParityWalkScenario",
-      "fixture": "fixtures/oracle/walk.capture.txt"
+      "fixture": "fixtures/oracle/walk.capture.txt",
+      "status": "pass",
+      "assignedTask": "M16.6"
     },
     {
       "id": "oop.direction.opp",
@@ -2605,10 +2605,10 @@
       "contract": "V",
       "authority": "reference/reconstruction-of-zzt/SRC OOP.PAS; oop.go",
       "parity": "exact",
-      "status": "pass",
-      "assignedTask": "M16.6",
       "test": "TestOracleParityWalkScenario",
-      "fixture": "fixtures/oracle/walk.capture.txt"
+      "fixture": "fixtures/oracle/walk.capture.txt",
+      "status": "pass",
+      "assignedTask": "M16.6"
     },
     {
       "id": "oop.direction.rnd",
@@ -2617,10 +2617,10 @@
       "contract": "V",
       "authority": "reference/reconstruction-of-zzt/SRC OOP.PAS; oop.go",
       "parity": "exact",
-      "status": "pass",
-      "assignedTask": "M16.6",
       "test": "TestOracleParityWalkScenario",
       "fixture": "fixtures/oracle/walk.capture.txt",
+      "status": "pass",
+      "assignedTask": "M16.6",
       "notes": "draw-invariant: chambers assert the outcome SET on every draw (walk.scn)"
     },
     {
@@ -2630,10 +2630,10 @@
       "contract": "V",
       "authority": "reference/reconstruction-of-zzt/SRC OOP.PAS; oop.go",
       "parity": "exact",
-      "status": "pass",
-      "assignedTask": "M16.6",
       "test": "TestOracleParityWalkScenario",
       "fixture": "fixtures/oracle/walk.capture.txt",
+      "status": "pass",
+      "assignedTask": "M16.6",
       "notes": "draw-invariant: chambers assert the outcome SET on every draw (walk.scn)"
     },
     {
@@ -2643,10 +2643,10 @@
       "contract": "V",
       "authority": "reference/reconstruction-of-zzt/SRC OOP.PAS; oop.go",
       "parity": "exact",
-      "status": "pass",
-      "assignedTask": "M16.6",
       "test": "TestOracleParityWalkScenario",
       "fixture": "fixtures/oracle/walk.capture.txt",
+      "status": "pass",
+      "assignedTask": "M16.6",
       "notes": "draw-invariant: chambers assert the outcome SET on every draw (walk.scn)"
     },
     {
@@ -2656,10 +2656,10 @@
       "contract": "V",
       "authority": "reference/reconstruction-of-zzt/SRC OOP.PAS; oop.go",
       "parity": "exact",
-      "status": "pass",
-      "assignedTask": "M16.6",
       "test": "TestOracleParityWalkScenario",
       "fixture": "fixtures/oracle/walk.capture.txt",
+      "status": "pass",
+      "assignedTask": "M16.6",
       "notes": "draw-invariant: chambers assert the outcome SET on every draw (walk.scn)"
     },
     {
@@ -2669,10 +2669,10 @@
       "contract": "V",
       "authority": "reference/reconstruction-of-zzt/SRC OOP.PAS; oop.go",
       "parity": "exact",
-      "status": "pass",
-      "assignedTask": "M16.6",
       "test": "TestOracleParityWalkScenario",
-      "fixture": "fixtures/oracle/walk.capture.txt"
+      "fixture": "fixtures/oracle/walk.capture.txt",
+      "status": "pass",
+      "assignedTask": "M16.6"
     },
     {
       "id": "oop.direction.seek",
@@ -2681,10 +2681,10 @@
       "contract": "V",
       "authority": "reference/reconstruction-of-zzt/SRC OOP.PAS; oop.go",
       "parity": "exact",
-      "status": "pass",
-      "assignedTask": "M16.6",
       "test": "TestOracleParityWalkScenario",
       "fixture": "fixtures/oracle/walk.capture.txt",
+      "status": "pass",
+      "assignedTask": "M16.6",
       "notes": "forced onto one axis so CalcDirectionSeek is RNG-free"
     },
     {
@@ -2694,10 +2694,10 @@
       "contract": "V",
       "authority": "reference/reconstruction-of-zzt/SRC OOP.PAS; oop.go",
       "parity": "exact",
-      "status": "pass",
-      "assignedTask": "M16.6",
       "test": "TestOracleParityWalkScenario",
-      "fixture": "fixtures/oracle/walk.capture.txt"
+      "fixture": "fixtures/oracle/walk.capture.txt",
+      "status": "pass",
+      "assignedTask": "M16.6"
     },
     {
       "id": "oop.direction.w",
@@ -2706,10 +2706,10 @@
       "contract": "V",
       "authority": "reference/reconstruction-of-zzt/SRC OOP.PAS; oop.go",
       "parity": "exact",
-      "status": "pass",
-      "assignedTask": "M16.6",
       "test": "TestOracleParityWalkScenario",
-      "fixture": "fixtures/oracle/walk.capture.txt"
+      "fixture": "fixtures/oracle/walk.capture.txt",
+      "status": "pass",
+      "assignedTask": "M16.6"
     },
     {
       "id": "oop.direction.west",
@@ -2718,10 +2718,10 @@
       "contract": "V",
       "authority": "reference/reconstruction-of-zzt/SRC OOP.PAS; oop.go",
       "parity": "exact",
-      "status": "pass",
-      "assignedTask": "M16.6",
       "test": "TestOracleParityWalkScenario",
-      "fixture": "fixtures/oracle/walk.capture.txt"
+      "fixture": "fixtures/oracle/walk.capture.txt",
+      "status": "pass",
+      "assignedTask": "M16.6"
     },
     {
       "id": "oop.keyword.then",
@@ -2730,10 +2730,10 @@
       "contract": "V",
       "authority": "reference/reconstruction-of-zzt/SRC OOP.PAS; oop.go",
       "parity": "exact",
-      "status": "pass",
-      "assignedTask": "M16.6",
       "test": "TestOracleParityCondScenario",
       "fixture": "fixtures/oracle/cond.capture.txt",
+      "status": "pass",
+      "assignedTask": "M16.6",
       "notes": "skipped, and the word after it sent as a label"
     },
     {
@@ -2743,10 +2743,10 @@
       "contract": "V",
       "authority": "reference/reconstruction-of-zzt/SRC OOP.PAS; oop.go",
       "parity": "exact",
-      "status": "pass",
-      "assignedTask": "M16.6",
       "test": "TestOracleParityTalkScenario",
       "fixture": "fixtures/oracle/talk.capture.txt",
+      "status": "pass",
+      "assignedTask": "M16.6",
       "notes": "reserved: rewinds the target to position 0 instead of searching for a label"
     },
     {
@@ -2756,10 +2756,10 @@
       "contract": "V",
       "authority": "reference/reconstruction-of-zzt/SRC OOP.PAS; oop.go",
       "parity": "exact",
-      "status": "pass",
-      "assignedTask": "M16.6",
       "test": "TestOracleParityTalkScenario",
       "fixture": "fixtures/oracle/talk.capture.txt",
+      "status": "pass",
+      "assignedTask": "M16.6",
       "notes": "includes the sender"
     },
     {
@@ -2769,10 +2769,10 @@
       "contract": "V",
       "authority": "reference/reconstruction-of-zzt/SRC OOP.PAS; oop.go",
       "parity": "exact",
-      "status": "pass",
-      "assignedTask": "M16.6",
       "test": "TestOracleParityTalkScenario",
       "fixture": "fixtures/oracle/talk.capture.txt",
+      "status": "pass",
+      "assignedTask": "M16.6",
       "notes": "excludes the sender, which carries the same label"
     },
     {
@@ -2782,10 +2782,10 @@
       "contract": "V",
       "authority": "reference/reconstruction-of-zzt/SRC OOP.PAS; oop.go",
       "parity": "exact",
-      "status": "pass",
-      "assignedTask": "M16.6",
       "test": "TestOracleParityTalkScenario",
       "fixture": "fixtures/oracle/talk.capture.txt",
+      "status": "pass",
+      "assignedTask": "M16.6",
       "notes": "reaches only the sender, though another object carries the label"
     },
     {
@@ -2795,10 +2795,10 @@
       "contract": "V",
       "authority": "reference/reconstruction-of-zzt/SRC OOP.PAS",
       "parity": "exact",
-      "status": "pass",
-      "assignedTask": "M16.6",
       "test": "TestOracleParityTalkScenario",
       "fixture": "fixtures/oracle/talk.capture.txt",
+      "status": "pass",
+      "assignedTask": "M16.6",
       "notes": "a bare word is text; an unknown # word is ERR: Bad command"
     },
     {
@@ -2808,10 +2808,10 @@
       "contract": "V",
       "authority": "reference/reconstruction-of-zzt/SRC OOP.PAS",
       "parity": "exact",
-      "status": "pass",
-      "assignedTask": "M16.6",
       "test": "TestOracleParityTalkScenario",
-      "fixture": "fixtures/oracle/talk.capture.txt"
+      "fixture": "fixtures/oracle/talk.capture.txt",
+      "status": "pass",
+      "assignedTask": "M16.6"
     },
     {
       "id": "oop-struct.hyperlink",
@@ -2820,10 +2820,10 @@
       "contract": "V",
       "authority": "reference/reconstruction-of-zzt/SRC OOP.PAS",
       "parity": "exact",
-      "status": "pass",
-      "assignedTask": "M16.6",
       "test": "TestOracleParityTalkScenario",
       "fixture": "fixtures/oracle/talk.capture.txt",
+      "status": "pass",
+      "assignedTask": "M16.6",
       "notes": "drawn as its caption, selected with ENTER, re-entered at the chosen label"
     },
     {
@@ -2833,10 +2833,10 @@
       "contract": "V",
       "authority": "reference/reconstruction-of-zzt/SRC OOP.PAS",
       "parity": "exact",
-      "status": "pass",
-      "assignedTask": "M16.6",
       "test": "TestOracleParityTalkScenario",
       "fixture": "fixtures/oracle/talk.capture.txt",
+      "status": "pass",
+      "assignedTask": "M16.6",
       "notes": "and OopFindString's word boundary: :ping2 answers a send of ping, :pingz does not"
     },
     {
@@ -2846,10 +2846,10 @@
       "contract": "V",
       "authority": "reference/reconstruction-of-zzt/SRC OOP.PAS",
       "parity": "exact",
-      "status": "pass",
-      "assignedTask": "M16.6",
       "test": "TestOracleParityWalkScenario",
       "fixture": "fixtures/oracle/walk.capture.txt",
+      "status": "pass",
+      "assignedTask": "M16.6",
       "notes": "/dir retries a refused move forever; ?dir gives up"
     },
     {
@@ -2859,10 +2859,10 @@
       "contract": "V",
       "authority": "reference/reconstruction-of-zzt/SRC OOP.PAS",
       "parity": "exact",
-      "status": "pass",
-      "assignedTask": "M16.6",
       "test": "TestOracleParityTalkScenario",
       "fixture": "fixtures/oracle/talk.capture.txt",
+      "status": "pass",
+      "assignedTask": "M16.6",
       "notes": "titles the window and names the object for #send/#bind"
     },
     {
@@ -2872,10 +2872,10 @@
       "contract": "V",
       "authority": "reference/reconstruction-of-zzt/SRC OOP.PAS",
       "parity": "exact",
-      "status": "pass",
-      "assignedTask": "M16.6",
       "test": "TestOracleParityTalkScenario,TestOracleParityMorfScenario",
       "fixture": "fixtures/oracle/morf.capture.txt",
+      "status": "pass",
+      "assignedTask": "M16.6",
       "notes": "#play with duration prefixes, octave shifts, a rest and a drum"
     },
     {
@@ -2885,10 +2885,10 @@
       "contract": "V",
       "authority": "reference/reconstruction-of-zzt/SRC OOP.PAS",
       "parity": "exact",
-      "status": "pass",
-      "assignedTask": "M16.6",
       "test": "TestOracleParityTalkScenario",
       "fixture": "fixtures/oracle/talk.capture.txt",
+      "status": "pass",
+      "assignedTask": "M16.6",
       "notes": "one line is a message, two or more are a window"
     },
     {
@@ -2924,7 +2924,7 @@
     {
       "id": "input.play-move",
       "dimension": "input",
-      "subject": "Arrow / numpad 8\u00b74\u00b76\u00b72 movement [play]",
+      "subject": "Arrow / numpad 8·4·6·2 movement [play]",
       "contract": "P",
       "authority": "elements.go ElementPlayerTick / game.go title / editor.go; web/src/keys.ts",
       "parity": "exact",
@@ -3111,7 +3111,7 @@
       "dimension": "protocol",
       "subject": "protocol event type \"death\"",
       "contract": "P",
-      "authority": "protocol.go; tasks M3.2\u2013M3.4",
+      "authority": "protocol.go; tasks M3.2–M3.4",
       "parity": "exact",
       "status": "unverified",
       "assignedTask": "M16.8"
@@ -3121,7 +3121,7 @@
       "dimension": "protocol",
       "subject": "protocol event type \"debugPrompt\"",
       "contract": "P",
-      "authority": "protocol.go; tasks M3.2\u2013M3.4",
+      "authority": "protocol.go; tasks M3.2–M3.4",
       "parity": "exact",
       "status": "unverified",
       "assignedTask": "M16.8"
@@ -3131,7 +3131,7 @@
       "dimension": "protocol",
       "subject": "protocol event type \"help\"",
       "contract": "P",
-      "authority": "protocol.go; tasks M3.2\u2013M3.4",
+      "authority": "protocol.go; tasks M3.2–M3.4",
       "parity": "exact",
       "status": "unverified",
       "assignedTask": "M16.8"
@@ -3141,7 +3141,7 @@
       "dimension": "protocol",
       "subject": "protocol event type \"highScoreEntry\"",
       "contract": "P",
-      "authority": "protocol.go; tasks M3.2\u2013M3.4",
+      "authority": "protocol.go; tasks M3.2–M3.4",
       "parity": "exact",
       "status": "unverified",
       "assignedTask": "M16.8"
@@ -3151,7 +3151,7 @@
       "dimension": "protocol",
       "subject": "protocol event type \"pause\"",
       "contract": "P",
-      "authority": "protocol.go; tasks M3.2\u2013M3.4",
+      "authority": "protocol.go; tasks M3.2–M3.4",
       "parity": "exact",
       "status": "unverified",
       "assignedTask": "M16.8"
@@ -3161,7 +3161,7 @@
       "dimension": "protocol",
       "subject": "protocol event type \"quit\"",
       "contract": "P",
-      "authority": "protocol.go; tasks M3.2\u2013M3.4",
+      "authority": "protocol.go; tasks M3.2–M3.4",
       "parity": "exact",
       "status": "unverified",
       "assignedTask": "M16.8"
@@ -3171,7 +3171,7 @@
       "dimension": "protocol",
       "subject": "protocol event type \"quitPrompt\"",
       "contract": "P",
-      "authority": "protocol.go; tasks M3.2\u2013M3.4",
+      "authority": "protocol.go; tasks M3.2–M3.4",
       "parity": "exact",
       "status": "unverified",
       "assignedTask": "M16.8"
@@ -3181,7 +3181,7 @@
       "dimension": "protocol",
       "subject": "protocol event type \"respawn\"",
       "contract": "P",
-      "authority": "protocol.go; tasks M3.2\u2013M3.4",
+      "authority": "protocol.go; tasks M3.2–M3.4",
       "parity": "exact",
       "status": "unverified",
       "assignedTask": "M16.8"
@@ -3191,7 +3191,7 @@
       "dimension": "protocol",
       "subject": "protocol event type \"savePrompt\"",
       "contract": "P",
-      "authority": "protocol.go; tasks M3.2\u2013M3.4",
+      "authority": "protocol.go; tasks M3.2–M3.4",
       "parity": "exact",
       "status": "unverified",
       "assignedTask": "M16.8"
@@ -3201,7 +3201,7 @@
       "dimension": "protocol",
       "subject": "protocol event type \"scroll\"",
       "contract": "P",
-      "authority": "protocol.go; tasks M3.2\u2013M3.4",
+      "authority": "protocol.go; tasks M3.2–M3.4",
       "parity": "exact",
       "status": "unverified",
       "assignedTask": "M16.8"
@@ -3211,7 +3211,7 @@
       "dimension": "protocol",
       "subject": "protocol event type \"sound\"",
       "contract": "P",
-      "authority": "protocol.go; tasks M3.2\u2013M3.4",
+      "authority": "protocol.go; tasks M3.2–M3.4",
       "parity": "exact",
       "status": "unverified",
       "assignedTask": "M16.8"
@@ -3221,17 +3221,29 @@
       "dimension": "protocol",
       "subject": "protocol event type \"transfer\"",
       "contract": "P",
-      "authority": "protocol.go; tasks M3.2\u2013M3.4",
+      "authority": "protocol.go; tasks M3.2–M3.4",
       "parity": "exact",
       "status": "unverified",
       "assignedTask": "M16.8"
+    },
+    {
+      "id": "proto.event.walkClick",
+      "dimension": "protocol",
+      "subject": "protocol event type \"walkClick\"",
+      "contract": "P",
+      "authority": "protocol.go; ELEMENTS.PAS:1393-1402; task M16.6b",
+      "parity": "exact",
+      "test": "TestProtocolWalkClickEvent,TestWalkClickEmittedOnAttemptedStep,TestWalkClickSuppressedWhenSoundDisabled,TestWalkClickNotEmittedWhenTouchProcBlocksMovement,TestWalkClickDoesNotAffectStateHash,TestWalkClickIsPrivateToTheMover,TestOracleParityMoveScenario",
+      "status": "pass",
+      "assignedTask": "M16.6b",
+      "notes": "raw-tone event bypassing SoundQueue (110 Hz, no close SoundFreqTable entry); always attributed to the mover (deviation per-player-sound); oracle's 20+ walk scenarios now compare the click for real (110 Hz filter removed from oracle_parity_test.go)"
     },
     {
       "id": "proto.msg.boardChange",
       "dimension": "protocol",
       "subject": "protocol message type \"boardChange\"",
       "contract": "P",
-      "authority": "protocol.go; tasks M3.2\u2013M3.4",
+      "authority": "protocol.go; tasks M3.2–M3.4",
       "parity": "exact",
       "status": "unverified",
       "assignedTask": "M16.8"
@@ -3241,7 +3253,7 @@
       "dimension": "protocol",
       "subject": "protocol message type \"debugCommand\"",
       "contract": "P",
-      "authority": "protocol.go; tasks M3.2\u2013M3.4",
+      "authority": "protocol.go; tasks M3.2–M3.4",
       "parity": "exact",
       "status": "unverified",
       "assignedTask": "M16.8"
@@ -3251,7 +3263,7 @@
       "dimension": "protocol",
       "subject": "protocol message type \"diff\"",
       "contract": "P",
-      "authority": "protocol.go; tasks M3.2\u2013M3.4",
+      "authority": "protocol.go; tasks M3.2–M3.4",
       "parity": "exact",
       "status": "unverified",
       "assignedTask": "M16.8"
@@ -3261,7 +3273,7 @@
       "dimension": "protocol",
       "subject": "protocol message type \"editorBoard\"",
       "contract": "P",
-      "authority": "protocol.go; tasks M3.2\u2013M3.4",
+      "authority": "protocol.go; tasks M3.2–M3.4",
       "parity": "exact",
       "status": "unverified",
       "assignedTask": "M16.14"
@@ -3271,7 +3283,7 @@
       "dimension": "protocol",
       "subject": "protocol message type \"editorBoardData\"",
       "contract": "P",
-      "authority": "protocol.go; tasks M3.2\u2013M3.4",
+      "authority": "protocol.go; tasks M3.2–M3.4",
       "parity": "exact",
       "status": "unverified",
       "assignedTask": "M16.14"
@@ -3281,7 +3293,7 @@
       "dimension": "protocol",
       "subject": "protocol message type \"editorDiff\"",
       "contract": "P",
-      "authority": "protocol.go; tasks M3.2\u2013M3.4",
+      "authority": "protocol.go; tasks M3.2–M3.4",
       "parity": "exact",
       "status": "unverified",
       "assignedTask": "M16.14"
@@ -3291,7 +3303,7 @@
       "dimension": "protocol",
       "subject": "protocol message type \"editorEdit\"",
       "contract": "P",
-      "authority": "protocol.go; tasks M3.2\u2013M3.4",
+      "authority": "protocol.go; tasks M3.2–M3.4",
       "parity": "exact",
       "status": "unverified",
       "assignedTask": "M16.14"
@@ -3301,7 +3313,7 @@
       "dimension": "protocol",
       "subject": "protocol message type \"editorEnter\"",
       "contract": "P",
-      "authority": "protocol.go; tasks M3.2\u2013M3.4",
+      "authority": "protocol.go; tasks M3.2–M3.4",
       "parity": "exact",
       "status": "unverified",
       "assignedTask": "M16.14"
@@ -3311,7 +3323,7 @@
       "dimension": "protocol",
       "subject": "protocol message type \"editorExit\"",
       "contract": "P",
-      "authority": "protocol.go; tasks M3.2\u2013M3.4",
+      "authority": "protocol.go; tasks M3.2–M3.4",
       "parity": "exact",
       "status": "unverified",
       "assignedTask": "M16.14"
@@ -3321,7 +3333,7 @@
       "dimension": "protocol",
       "subject": "protocol message type \"editorInspect\"",
       "contract": "P",
-      "authority": "protocol.go; tasks M3.2\u2013M3.4",
+      "authority": "protocol.go; tasks M3.2–M3.4",
       "parity": "exact",
       "status": "unverified",
       "assignedTask": "M16.14"
@@ -3331,7 +3343,7 @@
       "dimension": "protocol",
       "subject": "protocol message type \"editorLease\"",
       "contract": "P",
-      "authority": "protocol.go; tasks M3.2\u2013M3.4",
+      "authority": "protocol.go; tasks M3.2–M3.4",
       "parity": "exact",
       "status": "unverified",
       "assignedTask": "M16.14"
@@ -3341,7 +3353,7 @@
       "dimension": "protocol",
       "subject": "protocol message type \"editorPresence\"",
       "contract": "P",
-      "authority": "protocol.go; tasks M3.2\u2013M3.4",
+      "authority": "protocol.go; tasks M3.2–M3.4",
       "parity": "exact",
       "status": "unverified",
       "assignedTask": "M16.14"
@@ -3351,7 +3363,7 @@
       "dimension": "protocol",
       "subject": "protocol message type \"editorProgram\"",
       "contract": "P",
-      "authority": "protocol.go; tasks M3.2\u2013M3.4",
+      "authority": "protocol.go; tasks M3.2–M3.4",
       "parity": "exact",
       "status": "unverified",
       "assignedTask": "M16.14"
@@ -3361,7 +3373,7 @@
       "dimension": "protocol",
       "subject": "protocol message type \"editorProgramSave\"",
       "contract": "P",
-      "authority": "protocol.go; tasks M3.2\u2013M3.4",
+      "authority": "protocol.go; tasks M3.2–M3.4",
       "parity": "exact",
       "status": "unverified",
       "assignedTask": "M16.14"
@@ -3371,7 +3383,7 @@
       "dimension": "protocol",
       "subject": "protocol message type \"editorProgramText\"",
       "contract": "P",
-      "authority": "protocol.go; tasks M3.2\u2013M3.4",
+      "authority": "protocol.go; tasks M3.2–M3.4",
       "parity": "exact",
       "status": "unverified",
       "assignedTask": "M16.14"
@@ -3381,7 +3393,7 @@
       "dimension": "protocol",
       "subject": "protocol message type \"editorProperties\"",
       "contract": "P",
-      "authority": "protocol.go; tasks M3.2\u2013M3.4",
+      "authority": "protocol.go; tasks M3.2–M3.4",
       "parity": "exact",
       "status": "unverified",
       "assignedTask": "M16.14"
@@ -3391,7 +3403,7 @@
       "dimension": "protocol",
       "subject": "protocol message type \"editorProperty\"",
       "contract": "P",
-      "authority": "protocol.go; tasks M3.2\u2013M3.4",
+      "authority": "protocol.go; tasks M3.2–M3.4",
       "parity": "exact",
       "status": "unverified",
       "assignedTask": "M16.14"
@@ -3401,7 +3413,7 @@
       "dimension": "protocol",
       "subject": "protocol message type \"editorSaveResult\"",
       "contract": "P",
-      "authority": "protocol.go; tasks M3.2\u2013M3.4",
+      "authority": "protocol.go; tasks M3.2–M3.4",
       "parity": "exact",
       "status": "unverified",
       "assignedTask": "M16.14"
@@ -3411,7 +3423,7 @@
       "dimension": "protocol",
       "subject": "protocol message type \"editorSnapshot\"",
       "contract": "P",
-      "authority": "protocol.go; tasks M3.2\u2013M3.4",
+      "authority": "protocol.go; tasks M3.2–M3.4",
       "parity": "exact",
       "status": "unverified",
       "assignedTask": "M16.14"
@@ -3421,7 +3433,7 @@
       "dimension": "protocol",
       "subject": "protocol message type \"editorStat\"",
       "contract": "P",
-      "authority": "protocol.go; tasks M3.2\u2013M3.4",
+      "authority": "protocol.go; tasks M3.2–M3.4",
       "parity": "exact",
       "status": "unverified",
       "assignedTask": "M16.14"
@@ -3431,7 +3443,7 @@
       "dimension": "protocol",
       "subject": "protocol message type \"editorStatSettings\"",
       "contract": "P",
-      "authority": "protocol.go; tasks M3.2\u2013M3.4",
+      "authority": "protocol.go; tasks M3.2–M3.4",
       "parity": "exact",
       "status": "unverified",
       "assignedTask": "M16.14"
@@ -3441,7 +3453,7 @@
       "dimension": "protocol",
       "subject": "protocol message type \"editorTestPlay\"",
       "contract": "P",
-      "authority": "protocol.go; tasks M3.2\u2013M3.4",
+      "authority": "protocol.go; tasks M3.2–M3.4",
       "parity": "exact",
       "status": "unverified",
       "assignedTask": "M16.14"
@@ -3451,7 +3463,7 @@
       "dimension": "protocol",
       "subject": "protocol message type \"editorWorld\"",
       "contract": "P",
-      "authority": "protocol.go; tasks M3.2\u2013M3.4",
+      "authority": "protocol.go; tasks M3.2–M3.4",
       "parity": "exact",
       "status": "unverified",
       "assignedTask": "M16.14"
@@ -3461,7 +3473,7 @@
       "dimension": "protocol",
       "subject": "protocol message type \"editorWorldData\"",
       "contract": "P",
-      "authority": "protocol.go; tasks M3.2\u2013M3.4",
+      "authority": "protocol.go; tasks M3.2–M3.4",
       "parity": "exact",
       "status": "unverified",
       "assignedTask": "M16.14"
@@ -3471,7 +3483,7 @@
       "dimension": "protocol",
       "subject": "protocol message type \"event\"",
       "contract": "P",
-      "authority": "protocol.go; tasks M3.2\u2013M3.4",
+      "authority": "protocol.go; tasks M3.2–M3.4",
       "parity": "exact",
       "status": "unverified",
       "assignedTask": "M16.8"
@@ -3481,7 +3493,7 @@
       "dimension": "protocol",
       "subject": "protocol message type \"highScoreName\"",
       "contract": "P",
-      "authority": "protocol.go; tasks M3.2\u2013M3.4",
+      "authority": "protocol.go; tasks M3.2–M3.4",
       "parity": "exact",
       "status": "unverified",
       "assignedTask": "M16.8"
@@ -3491,7 +3503,7 @@
       "dimension": "protocol",
       "subject": "protocol message type \"input\"",
       "contract": "P",
-      "authority": "protocol.go; tasks M3.2\u2013M3.4",
+      "authority": "protocol.go; tasks M3.2–M3.4",
       "parity": "exact",
       "status": "unverified",
       "assignedTask": "M16.8"
@@ -3501,7 +3513,7 @@
       "dimension": "protocol",
       "subject": "protocol message type \"join\"",
       "contract": "P",
-      "authority": "protocol.go; tasks M3.2\u2013M3.4",
+      "authority": "protocol.go; tasks M3.2–M3.4",
       "parity": "exact",
       "status": "unverified",
       "assignedTask": "M16.8"
@@ -3511,7 +3523,7 @@
       "dimension": "protocol",
       "subject": "protocol message type \"quitReply\"",
       "contract": "P",
-      "authority": "protocol.go; tasks M3.2\u2013M3.4",
+      "authority": "protocol.go; tasks M3.2–M3.4",
       "parity": "exact",
       "status": "unverified",
       "assignedTask": "M16.8"
@@ -3521,7 +3533,7 @@
       "dimension": "protocol",
       "subject": "protocol message type \"saveFilename\"",
       "contract": "P",
-      "authority": "protocol.go; tasks M3.2\u2013M3.4",
+      "authority": "protocol.go; tasks M3.2–M3.4",
       "parity": "exact",
       "status": "unverified",
       "assignedTask": "M16.8"
@@ -3531,7 +3543,7 @@
       "dimension": "protocol",
       "subject": "protocol message type \"scrollReply\"",
       "contract": "P",
-      "authority": "protocol.go; tasks M3.2\u2013M3.4",
+      "authority": "protocol.go; tasks M3.2–M3.4",
       "parity": "exact",
       "status": "unverified",
       "assignedTask": "M16.8"
@@ -3541,7 +3553,7 @@
       "dimension": "protocol",
       "subject": "protocol message type \"snapshot\"",
       "contract": "P",
-      "authority": "protocol.go; tasks M3.2\u2013M3.4",
+      "authority": "protocol.go; tasks M3.2–M3.4",
       "parity": "exact",
       "status": "unverified",
       "assignedTask": "M16.8"
@@ -3896,7 +3908,7 @@
     {
       "id": "service.dream",
       "dimension": "service",
-      "subject": "Dream plan\u2192paint\u2192repair generation + host/join",
+      "subject": "Dream plan→paint→repair generation + host/join",
       "contract": "E",
       "authority": "completed task contracts (TASKS.md); NOTES.md",
       "parity": "deviation",
@@ -4033,7 +4045,7 @@
     },
     {
       "id": "omitted-game-speed",
-      "title": "The menu omits vanilla's S game-speed \u2014 the server owns the tick",
+      "title": "The menu omits vanilla's S game-speed — the server owns the tick",
       "contract": "E",
       "authority": "task M4.3"
     },
@@ -4065,7 +4077,7 @@
       "id": "presentation-additions",
       "title": "Presentation-only additions with no vanilla counterpart (name popup, picker, overlay, chat, sound UI, Dream, help/debug windows)",
       "contract": "E",
-      "authority": "tasks M3.8\u2013M3.10, M4.x, M6.x, M12.5"
+      "authority": "tasks M3.8–M3.10, M4.x, M6.x, M12.5"
     },
     {
       "id": "mobile-touch-gap",
