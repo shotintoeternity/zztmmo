@@ -2969,7 +2969,7 @@ upstream, it is converted and out of bounds beyond what a task explicitly
 lists. Every task: `cd engine && go build ./... && go test ./...` green,
 `npm test` green where web files change, replay fixture untouched.
 
-- [ ] **M18.0 — Repo-root hygiene sweep.** Remove or relocate the development
+- [x] **M18.0 — Repo-root hygiene sweep.** Remove or relocate the development
   debris a beta tester cloning the repo should not trip over: `test.txt`
   (stale M0.5 manual-test instructions), `conversion-approach.txt`,
   `ruzzt.txt`, `zeta.txt`, `fileformat.html` + `fileformat_files/` (reference
