@@ -511,6 +511,15 @@ func (rm *RoomManager) StepDiffs(inputs map[PlayerID]PlayerInput) map[PlayerID]D
 						sound := SoundEvent{Notes: ev.SoundNotes, Priority: ev.SoundPriority, StatId: ev.StatId}
 						rm.pendingPlayerEvents[playerID] = append(rm.pendingPlayerEvents[playerID], sound)
 					}
+					// M16.8a gap 2: unlike every sibling case, this used to stop here —
+					// the traveler's own TransferEvent was never queued, so the wire
+					// "transfer" ProtocolEvent (protocol.go's ProtocolEvents already
+					// converts it, and main.ts already has a case for it) was dead
+					// code. Queued here, it rides in the same BoardChangeMessage.Events
+					// the arriving snapshot already carries (DrainPlayerEvents is read
+					// into that message, never a separate one) — traveler-only, like
+					// the sound above.
+					rm.pendingPlayerEvents[playerID] = append(rm.pendingPlayerEvents[playerID], ev)
 					transfers = append(transfers, roomTransfer{playerID: playerID, event: ev})
 				}
 			case SoundEvent:

@@ -1347,10 +1347,10 @@ func (e *Engine) ElementPlayerTick(statId int16) {
 	stat := &e.Board.Stats[statId]
 	pState := e.PlayerFor(statId)
 	if pState.EnergizerTicks > 0 {
-		if ElementDefs[E_PLAYER].Character == '\x02' {
-			ElementDefs[E_PLAYER].Character = '\x01'
+		if e.PlayerCharacter == '\x02' {
+			e.PlayerCharacter = '\x01'
 		} else {
-			ElementDefs[E_PLAYER].Character = '\x02'
+			e.PlayerCharacter = '\x02'
 		}
 		if e.CurrentTick%2 != 0 {
 			e.Board.Tiles[stat.X][stat.Y].Color = 0x0F
@@ -1358,9 +1358,9 @@ func (e *Engine) ElementPlayerTick(statId int16) {
 			e.Board.Tiles[stat.X][stat.Y].Color = byte((e.CurrentTick%7+1)*16 + 0x0F)
 		}
 		e.BoardDrawTile(int16(stat.X), int16(stat.Y))
-	} else if e.Board.Tiles[stat.X][stat.Y].Color != 0x1F || ElementDefs[E_PLAYER].Character != '\x02' {
+	} else if e.Board.Tiles[stat.X][stat.Y].Color != 0x1F || e.PlayerCharacter != '\x02' {
 		e.Board.Tiles[stat.X][stat.Y].Color = 0x1F
-		ElementDefs[E_PLAYER].Character = '\x02'
+		e.PlayerCharacter = '\x02'
 		e.BoardDrawTile(int16(stat.X), int16(stat.Y))
 	}
 

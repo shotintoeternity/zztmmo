@@ -2691,7 +2691,7 @@ gap task has landed.
   `proto-event-transfer-unreachable` deviation-catalog entry recording the
   finding above.
 
-- [ ] **M16.8a — Two cross-engine/dead-protocol gaps M16.8 found (blocks
+- [x] **M16.8a — Two cross-engine/dead-protocol gaps M16.8 found (blocks
   M16.20).** Filed by M16.8, not fixed there (out of that task's remit — it
   proves equivalence, it doesn't change simulation or RoomManager behavior).
   Two independent, unrelated defects:
@@ -2731,6 +2731,55 @@ gap task has landed.
      `proto.event.transfer` manifest row are removed with the manifest
      regenerated; `go test ./...` green; replay fixture unchanged (this is
      presentation/protocol plumbing only, never simulation).
+
+  Landed, both gaps, in `engine/m16_8a_test.go`:
+  1. `Character` moved onto a new `Engine.PlayerCharacter` field
+     (`gamevars.go`, defaulting to `'\x02'` in `NewEngine`, matching
+     `InitElementDefs`'s original default). `ElementPlayerTick`
+     (`elements.go`) now toggles `e.PlayerCharacter` instead of the shared
+     table; `TileToColorAndChar` (`game.go`) gained an `E_PLAYER` case reading
+     it instead of `ElementDefs[tile.Element].Character`. Two more read sites
+     that would otherwise have silently frozen at the init default — the
+     terminal sidebar's static player icon and the pause-blink overlay
+     (`game.go`, both confirmed against `GAME.PAS:1436,1525` as genuine
+     vanilla behavior, not a bug, since single-player DOS ZZT only ever has
+     one `Engine`) — were updated to the same field, so terminal behavior is
+     byte-for-byte unchanged. No sibling `ElementDef` field mutates at
+     runtime (grepped every `ElementDefs[` write; all others are
+     `InitElementDefs`-time constants). `TestM168aEnergizerBlinkIsPerEngineNotSharedGlobal`
+     interleaves an energized and a non-energized `Engine`, asserting the
+     exact alternating `\x01`/`\x02` sequence for the first and a constant
+     `\x02` for the second; confirmed it fails on the pre-fix code (reverted
+     the three files locally and reran) before confirming it passes on the
+     fix.
+  2. Wired in, not removed: `main.ts` already had a `case "transfer":` waiting
+     for this event (it just logs `transfer to board N`), so completing the
+     missing queue line was smaller than deleting the type, the conversion in
+     `ProtocolEvents`, the client case, and the manifest row. `StepDiffs`'s
+     `TransferEvent` case (`room_manager.go`) now also appends the event to
+     `pendingPlayerEvents[playerID]`, alongside the sound it already queues;
+     since `DrainPlayerEvents` is read directly into the arriving
+     `BoardChangeMessage.Events` (`websocket_server.go`), it rides in that
+     same message, never a separate one.
+     `TestM168aTransferEventReachesOnlyTheTraveler` crosses one of two players
+     over `testEdgeWorld`'s board edge and asserts the mover's `boardChange`
+     carries a `"transfer"` event to board 2 while the player who stayed
+     behind sees none; confirmed it fails on the pre-fix `room_manager.go`
+     (same revert-and-rerun check as above).
+  `fixtures/parity/manifest.json`'s `proto.event.transfer` row flipped from
+  `gap`/`deviation` to `pass`/`exact`, citing the new test; its
+  `proto-event-transfer-unreachable` deviation-catalog entry was removed
+  (no longer describes reality). `TestParityManifest` green.
+  Also worth recording: M1.2's own DoD (`TASKS.md` M1.2) claimed interleaved
+  Engines have "no cross-talk" — gap 1 shows that was never quite true; not
+  reopening that already-shipped task over one shared-global field, but
+  noted here since a future side-by-side-engine test should expect this class
+  of bug and check for it, the way M16.8's own harness design (two full
+  passes, never interleaved) now does structurally.
+  Verified: `go build ./... && go vet ./... && go test -count=1 ./...` and
+  `go test -race -count=1 .` both green; replay fixture (`fixtures/town.
+  replay.json`) unchanged — this task touches presentation/protocol plumbing
+  only, never simulation inputs or outputs. See NOTES.md.
 
 - [ ] **M16.9 — Add a real-browser visual parity harness.** Introduce a pinned
   Playwright browser (Chromium first) that starts the production Go server,

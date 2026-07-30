@@ -3244,12 +3244,11 @@
       "subject": "protocol event type \"transfer\"",
       "contract": "P",
       "authority": "protocol.go; tasks M3.2–M3.4",
-      "parity": "deviation",
-      "status": "gap",
+      "parity": "exact",
+      "status": "pass",
       "assignedTask": "M16.8a",
-      "test": "",
-      "notes": "M16.8 finding: RoomManager.StepDiffs's TransferEvent case (room_manager.go) never appends to roomEvents or pendingPlayerEvents, so ProtocolEvents() never converts one onto the wire for any client — the type round-trips in isolation (protocol_test.go) but is dead in production traffic. The client currently infers a transfer solely from BoardChangeMessage plus the new position. Filed as gap task M16.8a; not fixed here (out of M16.8's remit).",
-      "deviation": "proto-event-transfer-unreachable"
+      "test": "TestM168aTransferEventReachesOnlyTheTraveler",
+      "notes": "M16.8a: RoomManager.StepDiffs's TransferEvent case (room_manager.go) used to stop after queuing the transfer itself, unlike every sibling case, so ProtocolEvents() never converted one onto the wire for any client (the type round-tripped only in isolation, protocol_test.go). Fixed by also queuing the traveler's own TransferEvent into pendingPlayerEvents, alongside the sound it already queues; it now rides the arriving BoardChangeMessage.Events, traveler-only."
     },
     {
       "id": "proto.event.walkClick",
@@ -4184,12 +4183,6 @@
       "title": "Mobile ships text entry only; touch gameplay is a filed gap task (M16.18a)",
       "contract": "E",
       "authority": "task M15.1; owner decision 2026-07-15"
-    },
-    {
-      "id": "proto-event-transfer-unreachable",
-      "title": "RoomManager.StepDiffs never surfaces a \"transfer\" ProtocolEvent to any client; the client infers a transfer from BoardChangeMessage plus a new position instead (M16.8 finding, filed as M16.8a)",
-      "contract": "P",
-      "authority": "room_manager.go StepDiffs's TransferEvent case; task M16.8a"
     }
   ]
 }

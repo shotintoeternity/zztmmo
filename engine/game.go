@@ -308,6 +308,10 @@ func (e *Engine) TileToColorAndChar(x, y int16) (color, char byte) {
 		} else if ElementDefs[tile.Element].HasDrawProc {
 			ElementDefs[tile.Element].DrawProc(e, x, y, &ch)
 			return tile.Color, ch
+		} else if tile.Element == E_PLAYER {
+			// M16.8a: the energizer-blink glyph is Engine-scoped state
+			// (e.PlayerCharacter), not the shared ElementDefs table.
+			return tile.Color, e.PlayerCharacter
 		} else if tile.Element < E_TEXT_MIN {
 			return tile.Color, ElementDefs[tile.Element].Character
 		} else {
@@ -1995,7 +1999,7 @@ func (e *Engine) GamePlayLoop(boardChanged bool) {
 			e.VideoWriteText(64, 10, 0x1E, "   Gems:")
 			e.VideoWriteText(64, 11, 0x1E, "  Score:")
 			e.VideoWriteText(64, 12, 0x1E, "   Keys:")
-			e.VideoWriteText(62, 7, 0x1F, string([]byte{ElementDefs[E_PLAYER].Character}))
+			e.VideoWriteText(62, 7, 0x1F, string([]byte{e.PlayerCharacter}))
 			e.VideoWriteText(62, 8, 0x1B, string([]byte{ElementDefs[E_AMMO].Character}))
 			e.VideoWriteText(62, 9, 0x16, string([]byte{ElementDefs[E_TORCH].Character}))
 			e.VideoWriteText(62, 10, 0x1B, string([]byte{ElementDefs[E_GEM].Character}))
@@ -2081,7 +2085,7 @@ func (e *Engine) GamePlayLoop(boardChanged bool) {
 				pauseBlink = !pauseBlink
 			}
 			if pauseBlink {
-				e.VideoWriteText(int16(e.Board.Stats[0].X)-1, int16(e.Board.Stats[0].Y)-1, ElementDefs[E_PLAYER].Color, string([]byte{ElementDefs[E_PLAYER].Character}))
+				e.VideoWriteText(int16(e.Board.Stats[0].X)-1, int16(e.Board.Stats[0].Y)-1, ElementDefs[E_PLAYER].Color, string([]byte{e.PlayerCharacter}))
 			} else {
 				if e.Board.Tiles[e.Board.Stats[0].X][e.Board.Stats[0].Y].Element == E_PLAYER {
 					e.VideoWriteText(int16(e.Board.Stats[0].X)-1, int16(e.Board.Stats[0].Y)-1, 0x0F, " ")

@@ -242,6 +242,15 @@ type (
 		// (RoomManager / server) handles the actual player transfer between engines.
 		// When false (default, single-player), the engine swaps the board as usual.
 		MultiRoom bool
+		// PlayerCharacter is the player glyph's energizer-blink toggle
+		// (ElementPlayerTick's flash between '\x01'/'\x02', and the steady-state
+		// '\x02' it settles back to). M1.1 originally left this on the
+		// package-level ElementDefs[E_PLAYER].Character, documented there as
+		// "immutable after init" — false: two Engines ticking a player in the
+		// same process (M16.8's side-by-side harness) stomped each other's
+		// rendered glyph. Scoped onto Engine instead (M16.8a); defaults to '\x02'
+		// in NewEngine, matching InitElementDefs' original default.
+		PlayerCharacter byte
 	}
 	Event       interface{}
 	ScrollEvent struct {
@@ -445,6 +454,7 @@ func NewEngine() *Engine {
 		Players:            make(map[int16]*PlayerState),
 		ActingPlayerStatId: -1,
 		FriendlyFire:       true,
+		PlayerCharacter:    '\x02',
 	}
 }
 

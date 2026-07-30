@@ -4283,3 +4283,83 @@ code, only test/manifest files.
 priority order, next is **M16.9** (real-browser visual parity harness) — but
 note M16.8a is a filed, unblocked gap task sitting just before it that could be
 picked up first if the owner wants the two findings above closed sooner.
+
+## 2026-07-30 — M16.8a: both gaps M16.8 filed, closed
+
+Picked up M16.8a per the priority order (it sits just before M16.9). Landed
+`engine/m16_8a_test.go` plus small fixes in `gamevars.go`/`elements.go`/
+`game.go`/`room_manager.go`. Full detail and DoD mapping is in TASKS.md's
+M16.8a entry; this note is the design-decision record.
+
+**Gap 1 fix choice: Engine-scoped field, not draw-time recomputation.** The
+task spec offered two options — move `Character` onto `Engine`-scoped state,
+or compute it at draw time from the ticking Engine's energizer state without
+storing anything. The second sounded more elegant, but the toggle is not a
+pure function of `EnergizerTicks`'s current value: it flips from whatever the
+*previous* character was, and the two activation sources (the energizer
+pickup's `pState.EnergizerTicks = 75`, and `RESPAWN_INVULN_TICKS = 50` after a
+respawn) are one odd, one even, so the phase relationship between "ticks
+remaining" and "which glyph is showing"
+differs by activation source. Reproducing the exact byte sequence
+(CLAUDE.md rule 1: port quirks faithfully; the oracle's `nrg.scn` scenario
+pins this exact blink pattern against real ZZT.EXE) requires *some* persisted
+toggle state across ticks — recomputing from current values alone cannot
+recover it. So: added `Engine.PlayerCharacter byte`, defaulting to `'\x02'` in
+`NewEngine` (mirroring `InitElementDefs`'s original default), and moved every
+read/write from `ElementDefs[E_PLAYER].Character` onto it.
+
+**Two more read sites the task spec's own surgical map did not name.**
+Grepping every `ElementDefs[E_PLAYER].Character`/`ElementDefs[4].Character`
+site (not just `ElementPlayerTick`) turned up two more in `game.go`: the
+terminal sidebar's static player icon (`GameUpdateSidebar`-equivalent block)
+and the interactive pause-blink overlay (`GamePlayLoop`'s per-tick pause
+draw). Checked both against the reference Pascal before touching them
+(`GAME.PAS:1436` and `:1525` both read `ElementDefs[E_PLAYER].Character`
+directly) — genuine vanilla behavior, not a latent bug, since single-player
+DOS ZZT only ever has one `Engine` so the "shared global" is simply "the
+global," no cross-talk possible. Left unfixed, these two sites would have
+silently frozen at the init default the moment `ElementPlayerTick` stopped
+writing to the table, breaking the terminal client's already-working
+energizer visuals. Updated both to read `e.PlayerCharacter` instead, keeping
+terminal output byte-identical.
+
+**Confirmed no sibling `ElementDef` field mutates at runtime.** Grepped every
+`ElementDefs[` write; every other hit lives in `InitElementDefs` (one-time
+setup) — `Character` was the only field mutated after init.
+
+**Verified the regression test actually regresses.** For both gap fixes,
+`git stash`ed the fix files, reran the new test, watched it fail with the
+expected message, then `git stash pop`ped and reran green — the same
+"prove the test would have caught the bug" discipline the M16 oracle/parity
+tests already use (`TestOracleComparisonFailsClosed`, `TestM168DroppedDirtyCellFailsClosed`).
+
+**Gap 2 fix choice: wire it in, not remove it.** The spec offered removal as
+the alternative. Checked the client first: `main.ts` already has
+`case "transfer": appendLog(...)` waiting for this exact event — so removal
+would mean deleting the type, `ProtocolEvents`'s conversion, the client case,
+*and* the manifest row, a strictly larger diff than adding the one missing
+`pendingPlayerEvents` append that `StepDiffs`'s sibling cases already all have.
+Wiring it in also matches CLAUDE.md's minimalism the other way: it completes
+an already-half-built feature rather than ripping out working, tested,
+client-ready plumbing because one server-side line was missing.
+
+**Manifest**: `proto.event.transfer` flipped `gap`/`deviation` →
+`pass`/`exact`, citing `TestM168aTransferEventReachesOnlyTheTraveler`; its
+`proto-event-transfer-unreachable` deviation-catalog entry removed (deviations
+describe standing reality, and this one no longer does). `TestParityManifest`
+green.
+
+**Aside, not reopened**: M1.2's own DoD claimed interleaved Engines have "no
+cross-talk" — gap 1 shows that was never quite true for this one field. Not
+worth reopening an already-shipped task over it, but worth remembering for
+any future side-by-side-engine test in this codebase (M16.8's own harness
+already adopted the structural fix: run engines to completion sequentially,
+never interleaved).
+
+Verified: `go build ./... && go vet ./... && go test -count=1 ./...` and
+`go test -race -count=1 .` both green. Replay fixture
+(`fixtures/town.replay.json`) untouched — both fixes are presentation/protocol
+plumbing (a rendered glyph, a wire event), never simulation inputs or state.
+
+**Handoff.** `dev`, tree has the above staged for commit. Not `[ADVISOR]`.
+Next per priority order is **M16.9** (real-browser visual parity harness).
