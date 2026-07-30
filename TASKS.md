@@ -51,7 +51,10 @@ M12.23, M17.1–M17.7, M16.0–M16.8a — has fully landed.)
 6. **Beta invite goes out** (owner action; desktop-browser scope in the copy).
 7. M18.6 — back up player-created worlds, not just `saves/`. The one
    data-loss hole M18.4 left open; it widens with every day of the beta, so
-   take it early rather than with the certification tail.
+   take it early rather than with the certification tail. **Landed 2026-07-30,
+   dev only — M18.10 carries it to production and is now the top open item
+   here, for the same reason M18.5 outranked the certification tail: the beta
+   runs on production, and production is the host still backing up no worlds.**
 8. M18.7 — the stray `à` at the cut of over-width "Dreaming a world" progress
    lines (owner-reported 2026-07-30). Cosmetic and a few lines, but it is on
    the screen testers watch for two minutes straight; take it before the
@@ -3126,7 +3129,7 @@ lists. Every task: `cd engine && go build ./... && go test ./...` green,
   serves and `/api/worlds` still answers, and the SSH allowlist is back to its
   starting set. Evidence in NOTES.md; replay fixture untouched.
 
-- [ ] **M18.6 — Back up player-created worlds, not just `saves/`.** M18.4's
+- [x] **M18.6 — Back up player-created worlds, not just `saves/`.** M18.4's
   backup covers `/opt/zztmmo/saves` (the `.SAV` files, `autosave/`, and
   `chat.jsonl`) and deliberately stops there, because worlds players create land
   in `/opt/zztmmo` itself, mixed in with the ~100 shipped `.ZZT` files, and a
@@ -3161,6 +3164,14 @@ lists. Every task: `cd engine && go build ./... && go test ./...` green,
   shipped world does not, the archive restores it playable, and AWS.md's
   Saved-Game Backups section documents the rule chosen and why. Replay fixture
   untouched.
+
+  DONE 2026-07-30 (NOTES.md): the manifest rule (option 2), plus a
+  companion-file override so a shipped name republished from the editor is
+  still archived, and `.access.json` alongside the three dream files so a
+  restored editor world keeps its owner. Verified on dev: 7 player-made worlds
+  and 15 companions archived (62K), nothing shipped in it, the restore is
+  byte-identical and a sidecar server joins it `101`. **Production still runs
+  the M18.4 script and has no manifest → M18.10.**
 
 - [x] **M18.7 — The "Dreaming a world" truncation marker is a stray `à`.**
   Reported by the owner 2026-07-30 with a screenshot: progress lines that hit
@@ -3294,6 +3305,25 @@ lists. Every task: `cd engine && go build ./... && go test ./...` green,
   typing still finds a `local` world by name; the M16.11 browser journeys still
   pass (they pick worlds by typing, so the search path must be untouched);
   `go test ./...` and `npm test` green; replay fixture untouched.
+
+- [ ] **M18.10 — Carry M18.6's world backup to production.** Filed 2026-07-30,
+  the same dev-only gap M18.5 had to close for M18.4: production runs the M18.4
+  backup script and has no `SHIPPED_WORLDS`, so its 68 `local` and 1 `dreamed`
+  worlds (the M18.9 deploy table) are backed up by nothing. The beta runs there.
+  No code: install `deploy/zztmmo-backup.sh` on `44.222.174.192` (the block is
+  in AWS.md's [Saved-Game Backups](#saved-game-backups)) and give the host a
+  manifest. Prefer a redeploy — the deploy block now writes `SHIPPED_WORLDS`
+  from the bundle's own file list, which is the only version that is exactly
+  right. If no redeploy is wanted, use the workstation-list shortcut documented
+  in the same section; do **not** freeze the host's current directory as
+  shipped, because production's 69 extra worlds would be frozen with it.
+  Production is live: **confirm with the owner first**, use the
+  authorize-verify-revoke SSH procedure, and leave no ad hoc `/32` standing.
+  DoD: a hand-run `systemctl start zztmmo-backup.service` writes both a
+  `saves-*` and a `worlds-*` archive, the worlds archive holds production's
+  dreamed and editor worlds and no shipped one, one restores byte-identical
+  into a scratch directory, `https://zztmmo.com/` still serves. Evidence in
+  NOTES.md.
 
 ## M14 — Rearchitecting for the service ZZTMMO is becoming
 

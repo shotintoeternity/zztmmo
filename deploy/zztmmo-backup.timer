@@ -1,5 +1,5 @@
 [Unit]
-Description=Take a daily zztmmo saved-game backup
+Description=Take a daily zztmmo backup (saved games and player-created worlds)
 
 [Timer]
 # 03:17 UTC: a quiet hour, and an off-the-hour minute so the run does not land

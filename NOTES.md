@@ -5394,3 +5394,73 @@ this morning — with no page errors, and typing still reaches the unlisted
 worlds.
 
 Both temporary port-22 rules revoked; allowlists back to their starting sets.
+
+## 2026-07-30 — M18.6: backing up the worlds players make
+
+M18.4's backup stopped at `saves/` because player-made worlds land in
+`/opt/zztmmo` itself, mixed in with the shipped ones, and a path cannot tell
+them apart. Picking that discriminator was the task.
+
+**Chose the shipped-world manifest** (TASKS.md option 2). The deploy now writes
+its own file list to `/opt/zztmmo/SHIPPED_WORLDS` — one line in each deploy
+block, generated from the same `*.ZZT` glob the tar takes, so the manifest and
+the bundle cannot disagree — and the backup archives every top-level `.ZZT` not
+named there. The `.zwd`-sibling rule (option 1) is exact for dreams but blind to
+editor-published worlds, which have no companion; a separate `ZZT_GENERATED_DIR`
+(option 3) would have un-listed the generated worlds, because `worldsDir()`
+resolves one hosting directory.
+
+Two refinements the code made necessary rather than the spec:
+
+- **A manifest hit is not the last word.** A world named in `SHIPPED_WORLDS` is
+  still archived if a companion (`.zwd`, `.plan.md`, `.prompt.txt`,
+  `.access.json`) sits beside it. `saveEditorWorld` can publish over a shipped
+  name, and the companion is the evidence a player did. `.access.json`
+  (`world_access.go`) is in that list and in the archive though the spec named
+  only the three dream files: it records who owns an editor world, and a world
+  restored without it comes back ownerless.
+- **Worlds whose names start with a dash.** The dev host hosts `-.ZZT`,
+  `--.ZZT`, `---.ZZT` and `----.ZZT`. Both `grep -Fxq` and GNU tar's `-T` list
+  file read those as options, and the first run on dev died with
+  `tar: /tmp/tmp.YU90dIRhVy:1: unrecognized option`. Members are now collected
+  into a bash array and passed after tar's `--`, and the manifest lookup is
+  `grep -Fxq --`. A local synthetic test had missed it entirely; the real
+  directory found it in one run.
+
+Shape kept from M18.4: `.partial`-then-rename, `tar -tzf` read-back before any
+pruning, dated names, `RETENTION_DAYS`. It is a second archive
+(`worlds-<same stamp>.tar.gz`) rather than a wider `saves-*`, so the documented
+saves restore and the existing archives on both hosts still mean what they said.
+Saves are archived first, so a worlds failure still leaves the day's saves
+backed up — which is exactly what the dash-named-world failure demonstrated.
+
+**Verified on dev** (`54.210.138.45`, deployed `bf528d7`), manifest seeded from
+the workstation's 119 `engine/*.ZZT` because the host has not been redeployed
+since this landed:
+
+- The run archives 7 worlds and 22 files, 62K against the saves archive's 381K:
+  the 5 dreamed worlds with all three companions each (HELLFORE, NEONUPLI,
+  RAVEBOUN, RESCUERA, WASHINGT) plus CAVERNS and MARIO2, which arrived by Museum
+  play. Nothing shipped is in it — TOWN, CAVES, MERC and `---.ZZT` all absent.
+- Restored into a scratch directory, all 22 files are byte-identical to the
+  live ones. A sidecar `zzt-server -worlds /tmp/restore-check` on port 8099
+  lists all 7, credits the 5 dreams as `kind: dreamed` (their `.zwd` came back
+  too), and `ws?world=HELLFORE` answers `101` — the restored file loads and
+  hosts an instance.
+- The browser-created world in that archive is a dream, not a fresh one made
+  for this task: RAVEBOUN was dreamed on dev at 20:06 UTC today, the other four
+  on 2026-07-20/21 and 07-30. No new generation was run, so no API spend.
+  `.access.json` handling is covered by the synthetic test, not by an
+  editor-published world on dev — there are none on the host.
+- Live server untouched: `zztmmo` active, `/api/worlds` `200`, timer next at
+  03:17 UTC. Temporary port-22 rule revoked; the dev allowlist is back to its
+  starting seven `/32`s.
+
+**Production still runs the M18.4 script and has no manifest**, so its 68 local
+and 1 dreamed worlds are still unbacked — the same dev-only gap M18.5 had to
+close for M18.4. Filed as M18.10; it needs a deploy (to write `SHIPPED_WORLDS`)
+or the seeded-list shortcut in AWS.md, plus owner confirmation before touching
+the live host.
+
+`go build`/`vet`/`test ./...` green. No engine code changed; replay fixture
+untouched.

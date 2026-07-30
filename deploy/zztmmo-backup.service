@@ -1,5 +1,5 @@
 [Unit]
-Description=zztmmo saved-game backup (dated tar of /opt/zztmmo/saves)
+Description=zztmmo backup (dated tars of /opt/zztmmo/saves and player-created worlds)
 # Backing up while the game server is stopped is fine and still correct — the
 # unit is ordered after it only so a boot-time catch-up run does not race the
 # autosave restore.
