@@ -5141,3 +5141,48 @@ proving a talkative board is repaired, is **not** stubbed, and ships clean.
 
 `go build ./...`, `go vet ./...`, `go test -count=1 ./...` green. No engine
 simulation code touched; replay fixture untouched.
+
+## 2026-07-30 — M17.8: owner browser verification, box ticked
+
+The dev environment itself landed 2026-07-20 (instance, EIP, DNS, Caddy,
+`/opt/zztmmo`, units, `/status` marker, and the AWS.md provision/deploy/
+rollback/teardown runbook). The box stayed unticked for ten days on purpose:
+after M17.3/M17.7 the rule is that an executor does not certify its own
+deployment, and the DoD's browser check is exactly the part no `curl` can
+stand in for.
+
+**Owner verified 2026-07-30** against deployed commit `0745214` (the M18.4
+revision; `/status` reports it): loaded `https://dev.zztmmo.com` in a real
+browser, joined a world, and generated one with **D** — the DoD's "verify from
+a browser with a generated local world". Ticked on that.
+
+Machine-checkable state observed alongside it, same day:
+
+| Check | Result |
+|---|---|
+| `GET https://dev.zztmmo.com/` | `200`, valid cert |
+| `GET /status` | `0745214e69d5e2ca2b8c91da4af4579c2dfa99c8` |
+| `GET /api/worlds` | world list, `TOWN` first |
+| `wss://dev.zztmmo.com/ws?world=TOWN` | `101 Switching Protocols` |
+| `GET https://zztmmo.com/` | `200` — production unaffected throughout |
+
+**A correction worth recording, because it nearly became folklore.** Earlier
+today I reported that AWS.md's documented `-> 101` for the WebSocket check was
+wrong, on the strength of getting `426 Upgrade Required` from both dev and
+production. The runbook was right and the check was wrong: `curl` negotiates
+HTTP/2 with Caddy over ALPN, and the WebSocket `Upgrade` handshake is
+HTTP/1.1-only, so a healthy server answers `426`. With `--http1.1` it is `101`.
+A second trap sits behind the first — a successful upgrade holds the socket
+open, so the command hangs without `-m` and exit code 28 accompanies the `101`.
+AWS.md's dev verify block now carries both flags and says why, so the next
+person reading a `426` does not go hunting for an outage that is not there.
+
+**The dev host is two commits behind HEAD** (`0745214` vs `41eaa76`): it does
+not carry M18.8's object-prelude audit. That does not affect this
+verification — M18.8 changes what future generations produce, not what the
+already-generated world does — but a dream taken on dev right now can still
+produce objects that talk at board load. Redeploy before using dev to
+demonstrate the fix.
+
+Remaining before the invite: M18.5 (production install of M18.4's backup timer
+and generation ceiling), which is now the top unchecked item.

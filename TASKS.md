@@ -29,6 +29,9 @@ M12.23, M17.1–M17.7, M16.0–M16.8a — has fully landed.)
    then check the box. Deploy, AWS.md docs, and NOTES.md evidence already
    landed; the box is deliberately owner-gated per NOTES.md 2026-07-20/30
    (the M17.3/M17.7 no-self-certification lesson).
+   **Verified and ticked by the owner 2026-07-30** against deployed commit
+   `0745214` — page, world join, and a Dream generation, all in a real
+   browser. Evidence in NOTES.md 2026-07-30.
 1. M16.16a — chat admission + Museum cache-commit hardening. Direct abuse
    surface the moment strangers join; small and fully specced.
 2. M16.19 — production-boundary, security, and load validation. The
@@ -1784,7 +1787,7 @@ these are live breakage in front of the player.
   `"running"`) and record the confirmation, since M17.3's gap was precisely the
   missing real-browser check; replay fixture untouched.
 
-- [ ] **M17.8 — Branch-backed AWS development environment (owner request
+- [x] **M17.8 — Branch-backed AWS development environment (owner request
   2026-07-20).** Provision a separate AWS EC2 environment for validating the
   newest committed revision of `feature/structured-world-generation` without
   touching the production `zztmmo.com` host. Use the existing deployment's
