@@ -3958,6 +3958,45 @@
       "assignedTask": "M16.16"
     },
     {
+      "id": "service.prompt-debug",
+      "dimension": "service",
+      "subject": "GameDebugPrompt / PromptString: the '?' 11-wide debug command field, applied via GameApplyDebugCommand",
+      "contract": "V",
+      "authority": "reference/reconstruction-of-zzt/SRC ELEMENTS.PAS (PlayerTick '?'), GAME.PAS GameDebugPrompt/PromptString/GameApplyDebugCommand",
+      "parity": "exact",
+      "test": "TestOracleParityPromptScenario",
+      "fixture": "fixtures/oracle/prompt.capture.txt",
+      "status": "pass",
+      "assignedTask": "M16.7a",
+      "notes": "Typing AMMO then ENTER is compared two ways: the typed text appears in the oracle's sidebar field (PARITY.md oracle-sidebar-prompt-line normalization) before submission, and the Ammo counter's +5 effect (GameApplyDebugCommand) is compared as an ordinary counter afterward — the field's rendering and the command's real effect both verified."
+    },
+    {
+      "id": "service.prompt-help",
+      "dimension": "service",
+      "subject": "'H' help window: TextWindowDisplayFile('GAME.HLP', 'Playing ZZT')",
+      "contract": "V",
+      "authority": "reference/reconstruction-of-zzt/SRC ELEMENTS.PAS:1448 (PlayerTick 'H'), TXTWIND.PAS TextWindowDisplayFile/TextWindowOpenFile/TextWindowDrawLine",
+      "parity": "exact",
+      "test": "TestOracleParityPromptScenario",
+      "fixture": "fixtures/oracle/prompt.capture.txt",
+      "status": "pass",
+      "assignedTask": "M16.7a",
+      "notes": "The engine's HelpEvent carries only a filename/title (M3.9); the adapter loads GAME.HLP itself via TextWindowOpenFile, the function the interactive path also calls, and compares its first page against the oracle's window (PARITY.md oracle-modal-scroll normalization). GAME.HLP's '$Getting Started.' heading line surfaced a real gap in oracleWindowCaption, which stripped only '!label;' captions — generalized to also strip a '$' heading and a ':label;' line per TXTWIND.PAS TextWindowDrawLine. The title screen's high-score LIST view (Engine.HighScoresDisplay) has no scenario here: it is drawn only by the terminal-only GameTitleLoop (engine/zzt.go), never by GameStepWithInputs or the protocol — confirmed by grep, see TestOracleParityPromptScenario's doc comment and NOTES.md. Its actually-reachable surfaces are already tracked separately: mode.modal-highscore (M16.9), input.title-highscores (M16.11), service.high-scores (M16.15)."
+    },
+    {
+      "id": "service.prompt-quit",
+      "dimension": "service",
+      "subject": "GamePromptEndPlay / SidebarPromptYesNo: the 'Q'/Escape \"End this game?\" yes/no prompt",
+      "contract": "V",
+      "authority": "reference/reconstruction-of-zzt/SRC ELEMENTS.PAS (PlayerTick 'Q'/Escape), GAME.PAS SidebarPromptYesNo",
+      "parity": "exact",
+      "test": "TestOracleParityPromptScenario",
+      "fixture": "fixtures/oracle/prompt.capture.txt",
+      "status": "pass",
+      "assignedTask": "M16.7a",
+      "notes": "Oracle-verified via the sidebar-prompt-line normalization (PARITY.md oracle-sidebar-prompt-line): the real ZZT's fixed \"End this game? \" line at (63,5) is asserted against the capture text, since the headless engine only emits QuitPromptEvent and draws nothing there itself. Declining with N is proven a no-op (SubmitQuitReply(false), matching its own doc comment) by a follow-up move that still succeeds with unchanged counters. Confirming with Y (GamePlayExitRequested/QuitEvent) is not re-verified here — that effect is unit-tested elsewhere, and the vanilla return-to-title screen it triggers is already oracle-certified as the boot/title checkpoint every M16.3-M16.7 scenario shares."
+    },
+    {
       "id": "service.reconnect",
       "dimension": "service",
       "subject": "Reconnect within/after grace; competing resume",

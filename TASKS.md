@@ -2579,7 +2579,7 @@ gap task has landed.
   regen` run twice, confirmed byte-for-byte reproducible before this task's
   one intentional capture change; replay fixture unchanged.
 
-- [ ] **M16.7a — Oracle-verify help, quit, high-score, and debug/cheat
+- [x] **M16.7a — Oracle-verify help, quit, high-score, and debug/cheat
   prompts (M16.7 gap task; blocks M16.20).** Extend the oracle adapter
   (`oracle_parity_test.go`) to compare three prompt shapes it does not model
   today, all confirmed against the reference Pascal by M16.7: (1) quit —
@@ -2601,6 +2601,29 @@ gap task has landed.
   one abstraction over shapes that differ), and the new coverage recorded
   against real rows (reuse `service.world-file-format` or add rows as the
   actual surfaces demand — decide during the task, not before).
+
+  Landed: one scenario (`prompt.scn`, world ORCLROOM) covers all three shapes.
+  Quit/debug close through `oracleYesNoPrompt`/`oracleDebugEntry`, mirroring
+  `oracleTextWindow`'s "hold vanilla's modal loop" idiom; both are asserted by
+  a new one-sided `compareCheckpoint` `promptLine` check against the oracle's
+  sidebar text alone (63,5 is outside the board-cell loop's `x < 60` range,
+  and the headless engine never draws these prompts itself). Help reuses the
+  scroll machinery unmodified — `TextWindowOpenFile` loads real `GAME.HLP`
+  content into a synthetic `ScrollEvent{StatId: -1}`, whose eventual
+  `SubmitScrollReply` is a guaranteed no-op. High-score *display* is confirmed
+  unreachable from `GameStepWithInputs`/the protocol (`HighScoresDisplay` is
+  called only by the terminal-only `GameTitleLoop`; the browser's own `H`
+  fetches `/api/highscores` directly) — no scenario for it, documented rather
+  than invented; its real surfaces stay tracked at `mode.modal-highscore`
+  (M16.9), `input.title-highscores` (M16.11), `service.high-scores` (M16.15).
+  A real bug fell out along the way: `oracleWindowCaption` (shared by every
+  scroll/window comparison) stripped only a `!label;` caption; GAME.HLP's
+  `$Getting Started.` line needed the `$`/`:` cases `TXTWIND.PAS`
+  `TextWindowDrawLine` also draws specially, now generalized for all of them.
+  New PARITY.md normalization `oracle-sidebar-prompt-line`; new manifest rows
+  `service.prompt-quit`/`service.prompt-debug`/`service.prompt-help` (contract
+  `V`, not a `service.world-file-format` reuse — that row is a different
+  surface). See NOTES.md.
 
 - [ ] **M16.8 — Prove engine → room → protocol equivalence.** Replay the M16.3–
   M16.7 scenarios through three paths: direct `Engine`, `RoomManager`, and a

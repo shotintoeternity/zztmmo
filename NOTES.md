@@ -4024,3 +4024,90 @@ Next unchecked task per TASKS.md's priority order is **M16.7a** (the gap task
 just filed, blocks M16.20) — read its DoD above before starting, it already
 names the three Pascal shapes and the exact procedures/fields involved. After
 M16.7a, the next fresh sweep is **M16.8** (engine→room→protocol equivalence).
+
+## 2026-07-29 — M16.7a: oracle-verifying the sidebar/window prompts
+
+Implemented the three shapes M16.7 identified, one new scenario
+(`fixtures/oracle/prompt.scn`, world ORCLROOM, reused from main.scn/scroll.scn
+rather than a new micro-world). `oracle_parity_test.go` gained:
+
+- `oracleYesNoPrompt`/`oracleDebugEntry`, the client halves of
+  `SidebarPromptYesNo`/`PromptString` (the same "someone has to hold vanilla's
+  modal loop" idiom `oracleTextWindow` already uses for scrolls). Keys route
+  to whichever prompt is open in `oracleAdapterReplay`'s `"key"` case, closing
+  through `SubmitQuitReply`/`SubmitDebugCommand` exactly like a scroll closes
+  through `SubmitScrollReply`.
+- A new `compareCheckpoint` parameter, `promptLine`: unlike a scroll (drawn on
+  the *board*, which the existing board-cell loop already covers), the quit
+  and debug prompts draw into the *sidebar* at (63,5), which that loop
+  explicitly skips (`x < 60`). There is nothing on the engine side to compare
+  cell-for-cell — the headless engine never draws these prompts itself
+  (M3.9/M3.11's whole point) — so `promptLine` is a one-sided assertion
+  against the oracle's own sidebar text alone, the same epistemic move the
+  existing counter checks already make. New PARITY.md row:
+  `oracle-sidebar-prompt-line`.
+- Help reuses the scroll machinery outright: on `HelpEvent`, the adapter calls
+  `TextWindowOpenFile` itself (the same function the interactive path's
+  `TextWindowDisplayFile` calls) to load `GAME.HLP`'s real content, wraps the
+  first 6 lines as a synthetic `ScrollEvent{StatId: -1}`, and lets the
+  existing scroll-content/close path do the rest — `StatId: -1` makes the
+  eventual `SubmitScrollReply` call a guaranteed no-op
+  (`reply.StatId < 0` is skipped in `GameStepWithInputs`), so no new close
+  path was needed. Only the first page is compared, not the whole file:
+  `compareCheckpoint`'s scroll branch demands every line it's given actually
+  be on screen, and GAME.HLP is far longer than one window page.
+
+**Real bug caught by this, not invented for it:** the help scenario failed
+its first run on `"$Getting Started."` — `oracleWindowCaption` (used by every
+scroll/window comparison, not just this task's) only stripped a `!label;`
+hyperlink caption. Reading `TXTWIND.PAS`'s `TextWindowDrawLine` (rule 1: never
+guess) showed two more line-prefix conventions it already draws specially: a
+`$heading` line drops the `$` and centers, and a `:label;text` line (no
+`;` present) falls back to drawing the whole line raw as ZZT's own malformed
+input tolerance. Generalized `oracleWindowCaption` to match all three
+(`$`/`:` are onto the same `Pos(';',...)` formula `!` already used, `$` is
+its own unconditional one-char strip) — this improves every existing
+scroll/talk/walk/cond/morf scenario's fidelity too, not just prompt.scn's,
+and none of them regressed (confirmed: `go test -count=1 ./...` green before
+committing).
+
+**High-score display, confirmed unreachable, not fixed.** `HighScoresDisplay`
+(`H` on the title screen) is called only from `GameTitleLoop`
+(`engine/zzt.go:50`, `cmd/zztgo`'s terminal entry point) — grepped every call
+site; `RoomManager`/`WebSocketServer` never invoke it. The browser's own `H`
+(`main.ts` `handleTitleKey`, `case "highScores"`) fetches `/api/highscores`
+directly — a ground-up REST reimplementation, not `TextWindowDrawOpen` run
+over this harness at all. So there is no `GameStepWithInputs` path to drive
+an oracle scenario through, for either implementation — recorded in the new
+test's doc comment and `service.prompt-help`'s manifest notes rather than
+invented. Its real, reachable surfaces were already tracked before this
+session and stay assigned where they were: `mode.modal-highscore` (M16.9),
+`input.title-highscores` (M16.11), `service.high-scores` (M16.15). High-score
+*name entry* (`PopupPromptString`, a fourth rendering shape — a popup at
+(10,22), not the (63,5) sidebar field either prompt in this task uses) was
+flagged by M16.7 as "presumably yet another shape, unconfirmed" but was never
+one of the DoD's three itemized prompts; left for whichever task actually
+needs it rather than folded in silently.
+
+**Manifest: three new `service` rows**, not a `service.world-file-format`
+reuse — that row is about portable-file bytes, a genuinely different surface,
+and reusing it would have made "pass" mean two unrelated things.
+`service.prompt-quit`/`service.prompt-debug`/`service.prompt-help`, contract
+`V` (this is vanilla-behavior parity, like `elem.*`, not the `E`-contract
+end-to-end `service.*` rows around them), `assignedTask M16.7a`, `status
+pass`, both citing `TestOracleParityPromptScenario` and
+`fixtures/oracle/prompt.capture.txt`. `TestParityManifest` green with the
+additions.
+
+Verified: `make oracle-regen` (the only sanctioned way to produce a capture,
+CLAUDE.md/oracle/README.md) run in full — all 24 existing scenarios
+byte-identical (`git diff` on every `*.capture.txt` but `prompt.capture.txt`
+is empty), `provenance.json` gained exactly the one new entry. `go build
+./... && go vet ./... && go test -count=1 ./... && go test -race ./...`
+green in `engine/`. Replay fixture (`fixtures/town.replay.json`) untouched —
+this task never touches simulation code, only the oracle test adapter and
+its fixtures.
+
+**Handoff.** `dev`, tree has the above staged for commit. Not `[ADVISOR]`.
+Next per TASKS.md's priority order is **M16.8** (prove engine → room →
+protocol equivalence).

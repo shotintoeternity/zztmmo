@@ -43,6 +43,17 @@ package zztgo
 //     and runs the chosen label inside the same modal OopExecute. The engine
 //     emits the raw line and re-enters on the reply, so a window checkpoint
 //     compares captions and oracleTextWindow below plays the client half.
+//   - sidebar prompt line: GamePromptEndPlay's SidebarPromptYesNo and
+//     GameDebugPrompt's PromptString (M3.9/M3.11 deviations) are, like a
+//     scroll, modal calls the engine never makes — it emits QuitPromptEvent/
+//     DebugPromptEvent and keeps ticking. Unlike a scroll, both draw into the
+//     SIDEBAR (63,5), which the board-cell loop below never inspects, so a
+//     checkpoint taken while one is open is asserted purely against the
+//     oracle's own sidebar text (see the `promptLine` parameter of
+//     compareCheckpoint) — a one-sided check proving the real ZZT.EXE draws
+//     what M3.9/M3.11's comments claim, the same way a counter check proves
+//     against the real sidebar without expecting the headless engine to have
+//     drawn matching pixels of its own.
 
 import (
 	"fmt"
@@ -488,14 +499,23 @@ func oracleHyperlinkLabel(line string) string {
 	return rest
 }
 
-// oracleWindowCaption is what the oracle DRAWS for one window line: a
-// `!label;text` line shows only the caption (TXTWIND.PAS TextWindowDrawLine
-// copies from the ';'), everything else shows verbatim.
+// oracleWindowCaption is what the oracle DRAWS for one window line
+// (TXTWIND.PAS TextWindowDrawLine): a `!label;text` or `:label;text` line
+// shows only the text after the ';'; a `$heading` line (GAME.HLP's section
+// headers, e.g. "$Getting Started.") shows the text after the '$', centered —
+// the centering is a position, not content, so untracked here; everything
+// else, including a `!`/`:` line with no ';', shows verbatim.
 func oracleWindowCaption(line string) string {
-	if strings.HasPrefix(line, "!") {
+	if line == "" {
+		return line
+	}
+	switch line[0] {
+	case '!', ':':
 		if i := strings.Index(line, ";"); i >= 0 {
 			return line[i+1:]
 		}
+	case '$':
+		return line[1:]
 	}
 	return line
 }
@@ -520,6 +540,52 @@ func (w *oracleTextWindow) key(ch, scan byte) bool {
 			w.Hyperlink = oracleHyperlinkLabel(w.Scroll.Lines[w.LinePos-1])
 		}
 		return true
+	}
+	return false
+}
+
+// oracleYesNoPrompt is the client half of a de-modalized GamePromptEndPlay
+// (M3.11/M4.3): the engine emits QuitPromptEvent and keeps ticking, so
+// something has to hold vanilla's SidebarPromptYesNo loop (GAME.PAS: waits on
+// Y/N/ESCAPE, ESCAPE defaulting to No exactly like any other non-Y key).
+type oracleYesNoPrompt struct {
+	StatId int16
+	Yes    bool
+}
+
+// key applies one keystroke and reports whether the prompt closed.
+func (p *oracleYesNoPrompt) key(ch byte) bool {
+	switch UpCase(ch) {
+	case 'Y':
+		p.Yes = true
+		return true
+	case 'N', KEY_ESCAPE:
+		p.Yes = false
+		return true
+	}
+	return false
+}
+
+// oracleDebugEntry is the client half of a de-modalized GameDebugPrompt
+// (M3.9/M4.2): the engine emits DebugPromptEvent and keeps ticking, so
+// something has to hold vanilla's PromptString(63, 5, 0x1E, 0x0F, 11,
+// PROMPT_ANY, ...) loop. Only what the prompt.scn scenario actually drives is
+// modeled — plain characters and ENTER/ESCAPE submission; PromptString's
+// backspace/left-arrow editing is untested here and left unmodeled.
+type oracleDebugEntry struct {
+	StatId int16
+	Buffer string
+}
+
+// oracleDebugPromptWidth is PromptString's width argument in GameDebugPrompt.
+const oracleDebugPromptWidth = 11
+
+func (d *oracleDebugEntry) key(ch byte) bool {
+	if ch == KEY_ENTER || ch == KEY_ESCAPE {
+		return true
+	}
+	if ch >= ' ' && ch < '\x80' && len(d.Buffer) < oracleDebugPromptWidth {
+		d.Buffer += string(ch)
 	}
 	return false
 }
@@ -691,6 +757,8 @@ func oracleAdapterReplay(t *testing.T, scenario, world string, ops []oracleOp, c
 		intervalScrolls []ScrollEvent // scroll events this interval
 		checkpointIdx   int
 		window          *oracleTextWindow
+		quitPrompt      *oracleYesNoPrompt
+		debugPrompt     *oracleDebugEntry
 	)
 
 	drainEvents := func() {
@@ -704,6 +772,27 @@ func oracleAdapterReplay(t *testing.T, scenario, world string, ops []oracleOp, c
 			case ScrollEvent:
 				intervalScrolls = append(intervalScrolls, ev)
 				window = &oracleTextWindow{Scroll: ev, LinePos: 1}
+			case QuitPromptEvent:
+				quitPrompt = &oracleYesNoPrompt{StatId: ev.StatId}
+			case DebugPromptEvent:
+				debugPrompt = &oracleDebugEntry{StatId: ev.StatId}
+			case HelpEvent:
+				// TextWindowDisplayFile's real content, loaded the same way the
+				// interactive terminal's HelpEvent handler does (game.go
+				// TextWindowDisplayFile -> TextWindowOpenFile). Only the first few
+				// lines are used for comparison: GAME.HLP is far longer than one
+				// window page, and compareCheckpoint's scroll-content check demands
+				// every line it is given actually be ON SCREEN, so feeding it the
+				// whole file would fail on the lines scrolled off the first page.
+				var helpState TTextWindowState
+				TextWindowOpenFile(ev.Filename, &helpState)
+				n := int(helpState.LineCount)
+				if n > 6 {
+					n = 6
+				}
+				sc := ScrollEvent{Title: ev.Title, Lines: append([]string{}, helpState.Lines[:n]...), StatId: -1}
+				intervalScrolls = append(intervalScrolls, sc)
+				window = &oracleTextWindow{Scroll: sc, LinePos: 1}
 			}
 		}
 		sounds.queueCycle(cycleEvents)
@@ -771,6 +860,30 @@ func oracleAdapterReplay(t *testing.T, scenario, world string, ops []oracleOp, c
 				}
 				break
 			}
+			// A key pressed while the quit or debug prompt is open likewise
+			// belongs to that modal, not to gameplay (GamePromptEndPlay's
+			// SidebarPromptYesNo / GameDebugPrompt's PromptString), and closes
+			// through the matching Submit* the same way M3.9/M3.11 documented.
+			if quitPrompt != nil {
+				if closed := quitPrompt.key(op.Key); closed {
+					E.SubmitQuitReply(quitPrompt.StatId, quitPrompt.Yes)
+					quitPrompt = nil
+				}
+				for i := 0; i < 4; i++ {
+					step(PlayerInput{})
+				}
+				break
+			}
+			if debugPrompt != nil {
+				if closed := debugPrompt.key(op.Key); closed {
+					E.SubmitDebugCommand(debugPrompt.StatId, debugPrompt.Buffer)
+					debugPrompt = nil
+				}
+				for i := 0; i < 4; i++ {
+					step(PlayerInput{})
+				}
+				break
+			}
 			step(PlayerInput{Key: op.Key})
 			for i := 0; i < 3; i++ {
 				step(PlayerInput{})
@@ -790,7 +903,16 @@ func oracleAdapterReplay(t *testing.T, scenario, world string, ops []oracleOp, c
 			if mutate != nil {
 				mutate(cp.Label)
 			}
-			if err := compareCheckpoint(cp, intervalScrolls, inTitle); err != nil {
+			// A prompt open at capture time is asserted by sidebar text — see
+			// the "sidebar prompt line" normalization at the top of this file.
+			promptLine := ""
+			switch {
+			case quitPrompt != nil:
+				promptLine = "End this game?"
+			case debugPrompt != nil && debugPrompt.Buffer != "":
+				promptLine = debugPrompt.Buffer
+			}
+			if err := compareCheckpoint(cp, intervalScrolls, inTitle, promptLine); err != nil {
 				return fmt.Errorf("checkpoint %s: %w", cp.Label, err)
 			}
 			if err := sounds.match(cp.SoundOn); err != nil {
@@ -812,7 +934,15 @@ func oracleAdapterReplay(t *testing.T, scenario, world string, ops []oracleOp, c
 // is the seam's entire diagnostic value. Title checkpoints (taken before
 // `play`) compare board cells only: the sidebar shows the title menu, not
 // counters.
-func compareCheckpoint(cp *oracleCheckpoint, scrolls []ScrollEvent, title bool) error {
+// promptLine, when non-empty, is text a de-modalized sidebar prompt
+// (QuitPromptEvent/DebugPromptEvent — see the "sidebar prompt line"
+// normalization above) is expected to have drawn into the oracle's sidebar
+// row 5 (VideoWriteText(63, 5, ...) in both SidebarPromptYesNo and
+// PromptString). This is checked against the oracle capture alone: the
+// headless engine never draws these prompts itself (M3.9/M3.11), so there is
+// nothing on the engine side to compare cell-for-cell, unlike the board loop
+// below.
+func compareCheckpoint(cp *oracleCheckpoint, scrolls []ScrollEvent, title bool, promptLine string) error {
 	// Modal scroll checkpoints (vanilla draws a window over the board; the
 	// engine emitted ScrollEvent instead) compare by window content.
 	if len(scrolls) > 0 {
@@ -848,6 +978,11 @@ func compareCheckpoint(cp *oracleCheckpoint, scrolls []ScrollEvent, title bool) 
 			}
 		}
 		return nil
+	}
+
+	if promptLine != "" && !strings.Contains(cp.sidebarText(5), promptLine) {
+		return fmt.Errorf("checkpoint %s: sidebar row 5 %q lacks prompt text %q",
+			cp.Label, cp.sidebarText(5), promptLine)
 	}
 
 	// Board cells, with the pause-blink normalization at the paused player.
@@ -1198,6 +1333,28 @@ func TestOracleParityCondScenario(t *testing.T) {
 // CurrentTick, which vanilla picks with Random(100).
 func TestOracleParityMorfScenario(t *testing.T) {
 	if err := oracleAdapterRun(t, "morf.scn", "morf.capture.txt", nil); err != nil {
+		t.Fatalf("oracle divergence: %v", err)
+	}
+}
+
+// The M16.7a gap-task scenario: sidebar and text-window prompts.
+
+// TestOracleParityPromptScenario covers the three modal prompt shapes this
+// fork keeps interactive-only (M1.4/M3.9/M3.11): GameDebugPrompt's text-entry
+// field ('?', typing AMMO, ENTER applying it), GamePromptEndPlay's yes/no
+// line ('Q', declining with N and confirming play resumes normally), and the
+// 'H' help window (TextWindowDisplayFile('GAME.HLP', 'Playing ZZT')). The
+// title screen's high-score list view ('H' on the monitor,
+// Engine.HighScoresDisplay) has no scenario here: it is drawn only by the
+// terminal-only GameTitleLoop (engine/zzt.go, the cmd/zztgo entry point),
+// never by GameStepWithInputs or reachable through the protocol — the
+// browser's high-score surfaces (highScoreEntry event, /api/highscores) are a
+// different, REST/event-driven implementation that does not run vanilla's
+// TextWindowDrawOpen over this harness at all, so there is nothing for an
+// oracle scenario to drive (fixtures/oracle/prompt.scn documents this too;
+// see NOTES.md for the M16.7a writeup).
+func TestOracleParityPromptScenario(t *testing.T) {
+	if err := oracleAdapterRun(t, "prompt.scn", "prompt.capture.txt", nil); err != nil {
 		t.Fatalf("oracle divergence: %v", err)
 	}
 }

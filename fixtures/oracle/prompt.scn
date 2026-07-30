@@ -1,0 +1,32 @@
+# ORCLROOM: quit/debug/help prompt parity (M16.7a). Oracle-verifies the three
+# modal prompt shapes this fork keeps interactive-only per M1.4/M3.9/M3.11:
+# GamePromptEndPlay's SidebarPromptYesNo line, GameDebugPrompt's PromptString
+# text-entry field, and the 'H' help window (TextWindowDisplayFile). See
+# NOTES.md/oracle_parity_test.go for why the title screen's high-score DISPLAY
+# ('H' on the monitor) has no scenario here: it is drawn only by the
+# terminal-only GameTitleLoop, never reached by GameStepWithInputs or the
+# protocol.
+world ORCLROOM
+seed 0
+boot 240
+play
+move right
+capture baseline
+key 63 35
+key 65 1E
+key 77 32
+key 77 32
+key 79 18
+capture debug_typed
+key 13 1C
+capture debug_applied
+key 81 10
+capture quit_open
+key 78 31
+capture quit_cancelled
+move right
+capture quit_resumes
+key 72 23
+capture help_open
+key 27 01
+capture help_closed
