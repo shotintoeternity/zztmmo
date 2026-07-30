@@ -2432,7 +2432,7 @@ gap task has landed.
   rather than draw by draw — the one thing this seam cannot follow, documented
   as a scenario-design exclusion in PARITY.md §7. See NOTES.md.
 
-- [ ] **M16.6a — `#endgame` leaves the player in limbo (M16.6 gap task; blocks
+- [x] **M16.6a — `#endgame` leaves the player in limbo (M16.6 gap task; blocks
   M16.20).** `#endgame` (`oop.go:659`, OOP.PAS:659) sets the acting player's
   `Health` to 0 and does nothing else. Vanilla turns that into the game over on
   the next `ElementPlayerTick` (ELEMENTS.PAS:1340): ' Game over  -  Press

@@ -244,8 +244,9 @@ M16.4 phase solver recovers it instead, so ORCLHUNT compares the energizer flash
 like any other cell.
 M16.6 adds two of its own. **No scenario runs `#endgame`**, which sets health to
 0 and therefore lands in the same `mp-respawn` territory death does
-(`TestOopEndgameLeavesThePlayerInLimbo` carries that branch, and gap task
-**M16.6a** owns the defect it pins). And **the four random OOP directions are
+(`TestOopEndgameLeavesThePlayerInLimbo` carries that branch; task **M16.6a**
+routed it through the same death/respawn path `DamageStat` uses). And **the
+four random OOP directions are
 compared by outcome SET, not draw by draw**: vanilla's `RandSeed` is seeded from
 its own boot clock and is not this engine's, so no exact-cell comparison can
 follow an individual `RND`/`RNDNS`/`RNDNE`/`RNDP` draw across the seam. What

@@ -3691,3 +3691,45 @@ deliberately in two classes — a command an object runs on itself and a message
 another object sends it reach different code.
 
 Advisor unavailable again this session (no `[ADVISOR]` tag on this task).
+
+## 2026-07-29 — M16.6a policy: `#endgame` routes through the death/respawn path
+
+Decision, taken before touching code as the task spec requires: reading (a).
+`#endgame` becomes a death — score penalty, `DeathEvent`, respawn at the entry
+point after `RESPAWN_TICKS` — the same path `DamageStat` already takes when a
+player's health reaches 0. Reading (b), a per-player session end via the M4.3
+quit/high-score flow, was rejected: `#endgame` is vanilla's way of writing a
+*losing* ending, and vanilla's own consequence for it (game over) is precisely
+the single-player-only branch this fork's `mp-respawn` deviation (PARITY.md §4)
+already replaces for every other death. Treating `#endgame` as a different kind
+of ending than `DamageStat`'s zero-health case would mean the fork has two
+incompatible answers to "the player died" depending on how health reached
+zero — worse parity, not better. `mp-respawn` already is the documented,
+owner-visible deviation; `#endgame` becomes one more caller of it rather than a
+second deviation.
+
+Mechanically: `DamageStat`'s health-reaches-zero branch (sound cue, score
+penalty floored at 0, `RespawnTicks = RESPAWN_TICKS`, `DeathEvent`) is pulled
+out into `Engine.killPlayer(statId)` so `#endgame` (`oop.go` `ENDGAME`) can call
+the identical sequence directly instead of going through health subtraction.
+`#endgame` still sets `Health = 0` and calls `GameUpdateSidebar` itself first —
+that mirrors exactly what `DamageStat` does before it reaches the same branch —
+then calls `killPlayer`. Both callers guard on `Health > 0` so a second
+`#endgame` (or `#endgame` on an already-dying player) is a no-op: no double
+score penalty, no restarted countdown, no duplicate `DeathEvent`.
+`activePlayer`'s target resolves via `NearestPlayer` exactly as `#give`/`#take`
+already do (M4.3 multiplayer generalization) — the player nearest the object
+that ran `#endgame`, not always stat 0.
+
+`TestOopEndgameLeavesThePlayerInLimbo` (`engine/m16_6_test.go`) is rewritten to
+assert the new behaviour instead of pinning the limbo: `RespawnTicks` gets set,
+a `DeathEvent` is emitted, and after `RESPAWN_TICKS` the player is back at their
+entry point with full health, exactly like any other death. A new headless
+two-player test proves the isolation half of the DoD: one player's `#endgame`
+must not touch the other's stat, health, or position, and must not set
+`GamePlayExitRequested` (that field halts `GameStepWithInputs`' stat loop for
+every player sharing the room — see `GamePromptEndPlay`'s comment — which is
+exactly the vanilla global halt this fork replaced `mp-respawn` to avoid).
+Manifest row `oop.command.endgame` moves from `status: gap` to `status: pass`;
+`parity` stays `deviation` (`mp-respawn`), since the fork still does not run
+vanilla's actual game-over screen.

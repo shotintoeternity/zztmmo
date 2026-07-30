@@ -86,20 +86,18 @@ func TestOopZapRestoreRewriteTheLabelColon(t *testing.T) {
 	}
 }
 
-// TestOopEndgameLeavesThePlayerInLimbo is a GAP test: it pins what the fork
-// does today so the defect cannot drift, and gap task M16.6a rewrites it to
-// assert the fixed behaviour.
-//
-// OOP.PAS:659 `#endgame` sets the player's health to 0 and nothing else.
-// Vanilla's next ElementPlayerTick (ELEMENTS.PAS:1340) turns that into the
-// game over: ' Game over  -  Press ESCAPE', TickTimeDuration 0, sound blocked,
-// and the board stops. This fork replaced game over with a respawn (deviation
-// `mp-respawn`), but the respawn is armed by DamageStat, which #endgame never
-// calls — so a player an object ends the game on gets NEITHER. Health sits at
-// 0, RespawnTicks is never set, and ElementPlayerTick's `Health <= 0` branch
-// zeroes their input and returns, every tick, forever. In a shared room that
-// is a permanently bricked player, and `#endgame` is how ZZT worlds have
-// always written a losing ending.
+// TestOopEndgameLeavesThePlayerInLimbo asserts M16.6a's fix: OOP.PAS:659
+// `#endgame` sets the player's health to 0 and, before this task, nothing
+// else. Vanilla's next ElementPlayerTick (ELEMENTS.PAS:1340) turns that into
+// the game over: ' Game over  -  Press ESCAPE', TickTimeDuration 0, sound
+// blocked, and the board stops. This fork replaced game over with a respawn
+// (deviation `mp-respawn`, PARITY.md §4), so `#endgame` now routes through the
+// same death path DamageStat's health-reaches-zero branch uses
+// (Engine.killPlayer, NOTES.md M16.6a): score penalty, DeathEvent, and a
+// RespawnTicks countdown that lands the player back at their entry point with
+// full health — instead of the permanent limbo this test used to pin
+// (Health=0, RespawnTicks=0, ElementPlayerTick's `Health <= 0` branch zeroing
+// input forever).
 func TestOopEndgameLeavesThePlayerInLimbo(t *testing.T) {
 	prevE := E
 	defer func() { E = prevE }()
@@ -112,37 +110,168 @@ func TestOopEndgameLeavesThePlayerInLimbo(t *testing.T) {
 	e.TickSpeed = 4
 	e.TickTimeDuration = int16(e.TickSpeed) * 2
 
+	p := e.PlayerFor(0)
+	p.Score = RESPAWN_SCORE_PENALTY + 5
+	e.SetReenterPoint(0, int16(e.Board.Stats[0].X), int16(e.Board.Stats[0].Y))
+
 	ender := oopTestObject(t, e, 20, 10, "@ender\r#endgame\r#end\r")
 	pos := int16(0)
 	e.OopExecute(ender, &pos, "Interaction")
 
-	p := e.PlayerFor(0)
 	if p.Health != 0 {
 		t.Fatalf("#endgame left Health=%d, want 0 (OOP.PAS:659)", p.Health)
 	}
+	if p.RespawnTicks != RESPAWN_TICKS {
+		t.Errorf("RespawnTicks=%d, want %d: #endgame must arm the same countdown "+
+			"DamageStat's death branch does", p.RespawnTicks, RESPAWN_TICKS)
+	}
+	if p.Score != 5 {
+		t.Errorf("Score=%d, want 5: #endgame must apply the same respawn score "+
+			"penalty as any other death", p.Score)
+	}
+	found := false
+	for _, ev := range e.Events {
+		if d, ok := ev.(DeathEvent); ok {
+			found = true
+			if d.StatId != 0 {
+				t.Errorf("DeathEvent.StatId=%d, want 0", d.StatId)
+			}
+		}
+	}
+	if !found {
+		t.Error("#endgame did not emit a DeathEvent")
+	}
 
-	// Vanilla's terminal state, which the fork deliberately does not enter.
+	// The room must keep ticking — #endgame must not reintroduce vanilla's
+	// single-player halt (GamePlayExitRequested would freeze the board for
+	// every other player sharing it; GamePromptEndPlay's comment explains why).
+	if e.TickTimeDuration == 0 || e.SoundBlockQueueing || e.GamePlayExitRequested {
+		t.Errorf("engine took vanilla's halt (TickTimeDuration=%d, SoundBlockQueueing=%v, "+
+			"GamePlayExitRequested=%v); a shared room must keep ticking",
+			e.TickTimeDuration, e.SoundBlockQueueing, e.GamePlayExitRequested)
+	}
+
+	// A second #endgame on an already-dying player must not double the score
+	// penalty, restart the countdown, or emit a second DeathEvent.
 	e.Events = nil
-	for i := 0; i < RESPAWN_TICKS*3; i++ {
-		e.ElementPlayerTick(0)
+	pos = int16(0)
+	e.OopExecute(ender, &pos, "Interaction")
+	if p.Score != 5 {
+		t.Errorf("second #endgame changed Score to %d, want 5 unchanged", p.Score)
 	}
-	if e.TickTimeDuration == 0 || e.SoundBlockQueueing {
-		t.Errorf("engine took vanilla's halt (TickTimeDuration=%d, SoundBlockQueueing=%v); "+
-			"a shared room must keep ticking", e.TickTimeDuration, e.SoundBlockQueueing)
-	}
-
-	// ...and the fork's own substitute, which it does not enter either.
-	if p.RespawnTicks != 0 || p.Health != 0 {
-		t.Fatalf("the limbo this test pins is gone (RespawnTicks=%d, Health=%d) — "+
-			"M16.6a has landed; rewrite this test to assert the fixed behaviour",
-			p.RespawnTicks, p.Health)
+	if p.RespawnTicks != RESPAWN_TICKS {
+		t.Errorf("second #endgame changed RespawnTicks to %d, want %d unchanged",
+			p.RespawnTicks, RESPAWN_TICKS)
 	}
 	for _, ev := range e.Events {
 		if _, ok := ev.(DeathEvent); ok {
-			t.Fatal("#endgame now emits DeathEvent — M16.6a has landed; rewrite this test")
+			t.Error("second #endgame on an already-dying player emitted another DeathEvent")
 		}
+	}
+
+	// Tick through the countdown: the player must actually come back, exactly
+	// like any other death.
+	e.Events = nil
+	e.CurrentTick = 1
+	for i := 0; i < RESPAWN_TICKS+2; i++ {
+		e.ElementPlayerTick(0)
+	}
+	if p.Health != 100 {
+		t.Errorf("Health=%d after the respawn countdown, want 100", p.Health)
+	}
+	respawned := false
+	for _, ev := range e.Events {
 		if _, ok := ev.(RespawnEvent); ok {
-			t.Fatal("#endgame now respawns — M16.6a has landed; rewrite this test")
+			respawned = true
 		}
+	}
+	if !respawned {
+		t.Error("no RespawnEvent after the countdown expired")
+	}
+}
+
+// TestOopEndgameIsolatesOtherPlayers is the multiplayer half of M16.6a's DoD:
+// one player's #endgame must not touch another player sharing the room, and
+// must not halt the board for them (GamePlayExitRequested is single-player-only
+// in a room engine — see GamePromptEndPlay's comment).
+func TestOopEndgameIsolatesOtherPlayers(t *testing.T) {
+	prevE := E
+	defer func() { E = prevE }()
+	E = NewEngine()
+	e := E
+	e.Headless = true
+	e.WorldCreate()
+	e.BoardCreate()
+	e.SetInputSource(&ScriptedInput{})
+	e.MultiRoom = true
+
+	// Clear interior tiles and remove BoardCreate's default stat-0 player.
+	for ix := int16(2); ix < BOARD_WIDTH; ix++ {
+		for iy := int16(2); iy < BOARD_HEIGHT; iy++ {
+			e.Board.Tiles[ix][iy] = TTile{Element: E_EMPTY}
+		}
+	}
+	e.Board.Tiles[e.Board.Stats[0].X][e.Board.Stats[0].Y] = TTile{Element: E_EMPTY}
+	e.Board.StatCount = -1
+
+	e.Board.Info.StartPlayerX = 10
+	e.Board.Info.StartPlayerY = 12
+	p1 := e.SpawnPlayer()
+
+	e.Board.Info.StartPlayerX = 40
+	e.Board.Info.StartPlayerY = 12
+	p2 := e.SpawnPlayer()
+
+	e.PlayerFor(p2).Ammo = 7
+	e.PlayerFor(p2).Gems = 3
+	e.PlayerFor(p2).Score = 500
+	e.PlayerFor(p2).Health = 100
+
+	e.PlayerFor(p1).Score = 200
+
+	// An object next to P1 (far from P2) resolves #endgame's NearestPlayer to P1.
+	ender := oopTestObject(t, e, 11, 12, "@ender\r#endgame\r#end\r")
+	pos := int16(0)
+	e.OopExecute(ender, &pos, "Interaction")
+
+	if e.PlayerFor(p1).Health != 0 {
+		t.Errorf("P1.Health=%d after #endgame, want 0", e.PlayerFor(p1).Health)
+	}
+	if e.PlayerFor(p1).RespawnTicks != RESPAWN_TICKS {
+		t.Errorf("P1.RespawnTicks=%d, want %d", e.PlayerFor(p1).RespawnTicks, RESPAWN_TICKS)
+	}
+	if e.PlayerFor(p1).Score != 100 {
+		t.Errorf("P1.Score=%d after #endgame, want 100 (200 - %d penalty)",
+			e.PlayerFor(p1).Score, RESPAWN_SCORE_PENALTY)
+	}
+
+	// P2 is untouched.
+	if e.PlayerFor(p2).Ammo != 7 || e.PlayerFor(p2).Gems != 3 ||
+		e.PlayerFor(p2).Score != 500 || e.PlayerFor(p2).Health != 100 ||
+		e.PlayerFor(p2).RespawnTicks != 0 {
+		t.Errorf("P2 changed by P1's #endgame: ammo=%d gems=%d score=%d health=%d respawnTicks=%d",
+			e.PlayerFor(p2).Ammo, e.PlayerFor(p2).Gems, e.PlayerFor(p2).Score,
+			e.PlayerFor(p2).Health, e.PlayerFor(p2).RespawnTicks)
+	}
+
+	// The room engine must not have taken the single-player halt.
+	if e.GamePlayExitRequested {
+		t.Error("#endgame set GamePlayExitRequested in a multi-room engine; " +
+			"that halts GameStepWithInputs for every player sharing the board")
+	}
+
+	// Tick the room forward: P2 must keep acting normally while P1 counts down.
+	e.CurrentTick = 1
+	e.CurrentStatTicked = 0
+	for step := 0; step < RESPAWN_TICKS+5; step++ {
+		e.GameStepWithInputs(map[int16]PlayerInput{})
+	}
+	if e.PlayerFor(p1).Health != 100 {
+		t.Errorf("P1.Health=%d after the respawn countdown, want 100", e.PlayerFor(p1).Health)
+	}
+	if e.PlayerFor(p2).Ammo != 7 || e.PlayerFor(p2).Gems != 3 ||
+		e.PlayerFor(p2).Score != 500 || e.PlayerFor(p2).Health != 100 {
+		t.Errorf("P2 changed after ticking through P1's respawn: ammo=%d gems=%d score=%d health=%d",
+			e.PlayerFor(p2).Ammo, e.PlayerFor(p2).Gems, e.PlayerFor(p2).Score, e.PlayerFor(p2).Health)
 	}
 }

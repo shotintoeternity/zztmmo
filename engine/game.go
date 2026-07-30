@@ -1274,6 +1274,29 @@ func (e *Engine) DisplayMessage(time int16, message string) {
 	}
 }
 
+// killPlayer starts statId's death: score penalty (floored at 0), a
+// DeathEvent, and the respawn countdown that places them back at their entry
+// point after RESPAWN_TICKS (ElementPlayerTick). Callers are responsible for
+// zeroing Health and calling GameUpdateSidebar first, and for guarding on
+// Health > 0 so a player already dying is not killed twice.
+//
+// Shared by DamageStat's health-reaches-zero branch and #endgame (oop.go
+// ENDGAME), which forces death directly rather than through health
+// subtraction. Both routes go through mp-respawn (PARITY.md §4) — this fork's
+// replacement for vanilla's single-player game-over — rather than each
+// inventing its own ending (NOTES.md M16.6a).
+func (e *Engine) killPlayer(statId int16) {
+	pState := e.PlayerFor(statId)
+	e.SoundQueue(5, " \x03#\x03'\x030\x03'\x03*\x032\x037\x035\x038\x03@\x03E\x03\x10\n")
+	if pState.Score >= RESPAWN_SCORE_PENALTY {
+		pState.Score -= RESPAWN_SCORE_PENALTY
+	} else {
+		pState.Score = 0
+	}
+	pState.RespawnTicks = RESPAWN_TICKS
+	e.Events = append(e.Events, DeathEvent{StatId: statId})
+}
+
 func (e *Engine) DamageStat(attackerStatId int16) {
 	var oldX, oldY int16
 	stat := &e.Board.Stats[attackerStatId]
@@ -1353,14 +1376,7 @@ func (e *Engine) DamageStat(attackerStatId int16) {
 				e.SoundQueue(4, "\x10\x01 \x01\x13\x01#\x01")
 			} else {
 				// Health reached 0: start respawn countdown instead of game-over.
-				e.SoundQueue(5, " \x03#\x03'\x030\x03'\x03*\x032\x037\x035\x038\x03@\x03E\x03\x10\n")
-				if pState.Score >= RESPAWN_SCORE_PENALTY {
-					pState.Score -= RESPAWN_SCORE_PENALTY
-				} else {
-					pState.Score = 0
-				}
-				pState.RespawnTicks = RESPAWN_TICKS
-				e.Events = append(e.Events, DeathEvent{StatId: attackerStatId})
+				e.killPlayer(attackerStatId)
 			}
 		}
 	} else {

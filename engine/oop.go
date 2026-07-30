@@ -503,7 +503,8 @@ func (e *Engine) OopExecute(statId int16, position *int16, name string) {
 	// Use the nearest player to the triggering stat so that in multiplayer,
 	// the player who walked into the object gets the inventory change — not
 	// always stat 0. In single-player this resolves to stat 0 as before.
-	activePlayer := e.PlayerFor(e.NearestPlayer(int16(stat.X), int16(stat.Y)))
+	activePlayerStatId := e.NearestPlayer(int16(stat.X), int16(stat.Y))
+	activePlayer := e.PlayerFor(activePlayerStatId)
 	TextWindowInitState(&textWindow)
 
 	textWindow.Selectable = false
@@ -657,7 +658,18 @@ func (e *Engine) OopExecute(statId int16, position *int16, name string) {
 					*position = -1
 					e.OopChar = '\x00'
 				} else if e.OopWord == "ENDGAME" {
-					activePlayer.Health = 0
+					// Route through the same death/respawn path DamageStat's
+					// health-reaches-zero branch uses (mp-respawn, NOTES.md
+					// M16.6a) instead of leaving Health at 0 with nothing
+					// armed to bring the player back. Guard on Health > 0 so
+					// a second #endgame, or one that fires on an already-dying
+					// player, does not restart the countdown or double the
+					// score penalty.
+					if activePlayer.Health > 0 {
+						activePlayer.Health = 0
+						e.GameUpdateSidebar()
+						e.killPlayer(activePlayerStatId)
+					}
 				} else if e.OopWord == "IDLE" {
 					stopRunning = true
 				} else if e.OopWord == "RESTART" {

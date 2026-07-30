@@ -2107,10 +2107,10 @@
       "contract": "V",
       "authority": "reference/reconstruction-of-zzt/SRC OOP.PAS; oop.go",
       "parity": "deviation",
-      "status": "gap",
+      "status": "pass",
       "assignedTask": "M16.6a",
-      "test": "TestOopEndgameLeavesThePlayerInLimbo",
-      "notes": "GAP: sets Health to 0 with neither vanilla game over nor the fork respawn \u2014 see M16.6a",
+      "test": "TestOopEndgameLeavesThePlayerInLimbo,TestOopEndgameIsolatesOtherPlayers",
+      "notes": "Routes through the same death/respawn path DamageStat uses (Engine.killPlayer): score penalty, DeathEvent, RespawnTicks countdown \u2014 not vanilla's game over, which mp-respawn already replaces for every other death",
       "deviation": "mp-respawn"
     },
     {
