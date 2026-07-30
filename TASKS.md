@@ -3098,7 +3098,7 @@ lists. Every task: `cd engine && go build ./... && go test ./...` green,
   restores, generation limit observed by exceeding it in a test), documented
   in AWS.md/README as listed, replay fixture untouched.
 
-- [ ] **M18.5 — Carry M18.4's operational guards to production.** M18.4 landed
+- [x] **M18.5 — Carry M18.4's operational guards to production.** M18.4 landed
   both new guards on the dev host only, so production is running without the
   half of the work that actually protects the beta. Two installs, no code:
   (a) install `deploy/zztmmo-backup.{sh,service,timer}` on

@@ -5186,3 +5186,61 @@ demonstrate the fix.
 
 Remaining before the invite: M18.5 (production install of M18.4's backup timer
 and generation ceiling), which is now the top unchecked item.
+
+## 2026-07-30 — M18.5: M18.4's guards carried to production
+
+Owner decisions at task start: production ceiling **10/day** (not the binary's
+25 — a smaller number for a small invite list), and redeploy now. Nobody was
+connected (no `journalctl` activity in the preceding 30 minutes), so the
+graceful 60-second save warning had no audience.
+
+**Order mattered.** The backup went in *first* and ran once *before* the
+deploy, so production's 3.3M of `saves/` had a verified safety net before
+anything else was touched. Restore dry-run: 29 members, extracted to a scratch
+directory, `diff -r` byte-identical to the live directory. The timer is enabled
+and scheduled for 03:17 UTC.
+
+**Deployed `c9345f14`**, not the `41eaa76` named when the redeploy was
+approved: HEAD advanced by one docs-only commit (M17.8's tick) between the
+question and the build. Code-identical, and the marker on the host is now
+truthful. The previous binary is kept at `/opt/zztmmo/zzt-server.prev` for a
+one-copy rollback; production had no `DEPLOYED_SHA` at all before this (its
+build dated from 2026-07-19).
+
+`ZZT_GENERATION_DAILY_MAX=10` appended to `/opt/zztmmo/.env` and confirmed in
+the running process's `/proc/<pid>/environ`. Written explicitly rather than
+left to the binary default, so the number someone chose is the number on disk.
+
+**Both guards observed on the production binary at zero API spend**, using
+M18.4's sidecar technique — a second `zzt-server` on port 8091 with
+`ANTHROPIC_API_URL` pointed at a closed port and `DAILY_MAX=2`. The live
+service and its real key were never involved:
+
+| Probe | Client (XFF) | Result |
+|---|---|---|
+| A | `198.51.100.11` | `422` — admitted, failed on the dead endpoint |
+| B | `198.51.100.11` again, immediately | `429` "generation rate limit" |
+| C | `203.0.113.22`, immediately | `422` — **admitted**, so the keys are distinct |
+| D | `192.0.2.55` | `429` "generation daily limit reached" |
+
+C is the one that matters: before this deploy production keyed the limit on
+`RemoteAddr`, which is loopback behind Caddy, so C would have shared B's
+cooldown and every player would have been sharing one global 60-second timer.
+
+**Post-deploy verification:** `https://zztmmo.com/` `200`, `/api/help?file=BETA.HLP`
+`200` (it was `404` before — the feedback pointer is now live in production),
+`wss://zztmmo.com/ws?world=TOWN` → `101` (with `--http1.1`, per the M17.8
+correction), all four units active.
+
+**One surprise worth recording.** The world list jumped from 65 entries to 134.
+Not a deploy defect: production's binary dated from 2026-07-19, and the world
+picker now lists local `.ZZT` files that have no Museum metadata entry
+(`worldListEntries` with `includeLocal`, `Author: "Local"`) alongside the 65
+metadata-known ones. 141 `.ZZT` files sit in `/opt/zztmmo`; 134 list. Dev
+already behaved this way. It does mean **the beta invite will land on a picker
+showing 134 worlds**, 69 of them unlabelled community files — worth an owner
+look at picker hygiene before the invite, but out of scope here.
+
+The temporary `174.29.5.212/32` port-22 rule on `sg-0c69577d6d95dd937` was
+revoked; the production allowlist is back to its original six `/32`s. Probe
+sidecar killed, `/tmp` cleaned, only the real service on 8080 remains.
