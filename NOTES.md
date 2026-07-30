@@ -4151,3 +4151,135 @@ M17.3/M17.7 self-certification lesson, the remaining DoD item — verifying from
 an actual browser with a generated local world — is the owner's to do, not
 mine to claim. AWS.md's dev section now records the last-redeployed commit and
 the merge history from `feature/structured-world-generation` into `dev`.
+
+## 2026-07-30 — M16.8: engine → room → protocol equivalence
+
+Landed `engine/m16_8_test.go`. `TestThreePathEngineRoomEquivalence` replays all
+24 M16.3–M16.7(a) oracle scenarios through a direct `Engine` and a
+`RoomManager`-wrapped `Engine`, comparing board cells, HUD, position,
+StateHash, and scroll/sound/prompt events at every checkpoint, plus a
+full-snapshot-vs-diff-only convergence check every checkpoint. A representative
+subset additionally drives a real dialed WebSocket client. Two fail-closed
+tests prove the comparison itself is sensitive (mirroring
+`TestOracleComparisonFailsClosed`'s perturbation idiom). Full detail and DoD
+mapping is in TASKS.md's M16.8 entry; this note is the design-decision record
+for future sessions.
+
+**Design decision: two full passes, not one interleaved loop.** The first
+draft of the harness stepped the direct Engine and the RoomManager engine
+tick-by-tick in a single loop, comparing at each checkpoint. Results were
+wrong in ways that had nothing to do with either engine's simulation being
+buggy — traced it to `ElementDefs[E_PLAYER].Character`
+(`elements.go:1349-1365`, `ElementPlayerTick`'s energizer-flash/steady-state
+toggle) being a **package-level global**, not `Engine`-scoped, despite
+`gamevars.go` documenting `ElementDefs` as "immutable after init" (M1.1) and
+M1.2's own DoD claiming interleaved Engines have "no cross-talk". Two Engines
+ticking a player in the same process — including this harness's own
+interleaved first draft — can stomp each other's rendered player glyph. Filed
+as **M16.8a** (blocks M16.20); not fixed in M16.8, which proves equivalence and
+must not change simulation/rendering behavior. The fix adopted instead: run
+the direct-Engine pass to full completion first (recording every checkpoint),
+then run the RoomManager pass to completion second. No two Engines ever tick
+in the same process at overlapping times, so the shared global is never
+contended. This is also just a better test design independent of the bug —
+worth remembering for any FUTURE side-by-side-engine test in this codebase.
+
+**Architectural discovery: each RoomManager room is an independently-seeded
+simulation, not a continuation of whatever came before it.** `ensureRoom`
+(`room_manager.go`) always builds a fresh `Engine` — `RandSeed`, `CurrentTick`,
+and `TimerTicks` all start at their Go zero value — while a bare `Engine` is
+one continuous simulation whose `RandSeed`/`CurrentTick`/`TimerTicks` evolve
+from whatever happened on every board it has ever visited, including the
+`boot` span before `play` (real board simulation, not just a title-screen
+animation — a device on the title board ticks during boot exactly as it would
+during play). Concretely, this meant:
+  - The instant a scenario crosses a board (most of the M16.4–M16.6 scenarios
+    do — a hub board leads into a dedicated feature board), the two paths'
+    RandSeed/CurrentTick diverge and stay diverged: StateHash, board-cell
+    content, and anything RNG-dependent (monster movement draws, device
+    animation phase, and — the two creature scenarios (fire.scn, pede.scn)
+    made this concrete — cumulative combat timing/damage once enough ticks
+    pass for the drift to change which frame a creature reaches the player)
+    are not expected to agree from that point on. This is a real,
+    load-bearing property of the current one-engine-per-board architecture,
+    not a bug. The harness compares full checkpoints (board+HUD+hash+events)
+    up through the first post-transfer checkpoint (deterministic: PlayerState
+    crosses by value copy, not simulation replay) and compares position/HUD
+    only — once — after that; StateHash/board/events are never compared again
+    for the rest of that scenario. A `phase`-declaring scenario (dev.scn: its
+    board's own devices tick during `boot`) is treated as tainted from the
+    very first post-`play` checkpoint, for the same underlying reason.
+  - `RoomManager.JoinPlayerWithID` always calls `ResetPlayerState` (M4.3a's own
+    documented "a joiner arrives fresh" decision) and a fresh room's
+    `TimerTicks` starts at 0, while the bare Engine bumps `TimerTicks` by 30 at
+    `play` (vanilla's own convention) plus whatever `boot` added. Left
+    unseeded, `time.scn`'s per-board time-limit countdown drifted out of phase
+    between the two paths — not a bug, just "boot span has no room analog"
+    again. Fixed by seeding the room's joining player from the direct Engine's
+    own post-`play` `PlayerState` (`ApplyPlayerState`) and its room Engine's
+    `TimerTicks`, rather than trusting the join defaults. This is a
+    test-fairness seed, not a claim about what a REAL joiner should see (a
+    real joiner legitimately gets ResetPlayerState's fresh-start semantics).
+  - A `RoomManager` room drawn via `TransitionDrawToBoard` on creation (whole
+    board redrawn at once) versus a bare Engine's single-player passage/edge
+    crossing (`TransitionDrawBoardChange`/`BoardPassageTeleport`, which reuse
+    the existing shuffle table and do NOT redraw the paused player's own
+    square — that's deferred to the client, same as vanilla's blink) produced
+    one, and only one, expected per-checkpoint mismatch: the paused player's
+    own square. Handled with the identical "pause-blink" exemption
+    `oracle_parity_test.go`'s `compareCheckpoint` already uses.
+  - Since `RoomManager` always runs `MultiRoom=true`, a passage/board-edge
+    touch there emits a `TransferEvent` and relocates the player to a
+    DIFFERENT `Engine`, unlike the bare Engine's direct in-place board swap.
+    The room-side diff-only board reconstruction must resync from a full
+    `Snapshot` the instant `PlayerLocation` reports a new board — the exact
+    same thing `WorldInstance.Tick` does with a `BoardChangeMessage`, just
+    reimplemented directly against `RoomManager` since this harness drives it
+    without going through `WorldInstance`.
+
+**Second gap filed alongside M16.8a, found while inventorying the protocol
+surface, not while debugging a mismatch:** `RoomManager.StepDiffs`'s
+`TransferEvent` case (`room_manager.go`, the per-room event-draining switch)
+resolves the traveler and queues the transfer, but — unlike every sibling case
+— never appends anything to `roomEvents`/`pendingPlayerEvents`. So the wire
+`"transfer"` `ProtocolEvent` is dead code: never sent to any client. The
+browser already works fine without it (it infers a transfer from
+`BoardChangeMessage` plus the new position), so this is a "decide whether to
+wire it in or remove it" gap, not an urgent bug — folded into M16.8a rather
+than filed separately since fixing either is a small, unrelated
+protocol-plumbing change with the same DoD shape (a test and nothing else
+changes).
+
+**Real WS-wire testing found two more, smaller pre-existing gaps, both
+closed directly in M16.8 (not filed) since they were one small test each:** no
+prior test constructed a wire `DebugCommandMessage` struct (existing debug-cheat
+coverage calls `RoomManager.SubmitDebugCommand` directly); no prior test
+converted `DeathEvent`/`RespawnEvent` through `RoomManager`/the protocol layer
+(existing coverage checks them on the bare Engine's own event list only).
+Closed with `TestWebSocketDebugCommandMessageOverWire` and
+`TestWebSocketDeathAndRespawnEvents`. Also worth recording: while mapping every
+M16.8-assigned manifest row to a test, `EventMessage` (the bare, non-diff
+"event" wire envelope) turned out to be the *only* delivery path for the
+`"quit"` and `"highScoreEntry"` events — they never ride inside
+`DiffMessage.Events`, unlike every other event type — which existing
+M4.3/M4.3a tests already exercise correctly; noted here only because it
+wasn't obvious from protocol.go alone and cost some time to pin down.
+
+`fixtures/parity/manifest.json`'s 24 `assignedTask: "M16.8"` rows are now
+`pass` (citing the tests above plus the substantial pre-existing WS-level
+coverage this session's research turned up: pause via M4.2, save/high-score
+via M4.3/M4.3a, scroll via M3.10/vendor tests), except `proto.event.transfer`,
+which is `gap`/`M16.8a` with a new `proto-event-transfer-unreachable`
+deviation-catalog entry. `parity_manifest_test.go`'s `validAssignedTask`
+allowlist gained `"M16.8a"`, the same registration every prior gap task
+required.
+
+Verified: `go build ./... && go vet ./... && go test -count=1 ./...` and
+`go test -race -count=1 .` (engine package) both green. Replay fixture
+(`fixtures/town.replay.json`) untouched — this task never touches simulation
+code, only test/manifest files.
+
+**Handoff.** `dev`, tree has the above staged for commit. Not `[ADVISOR]`. Per
+priority order, next is **M16.9** (real-browser visual parity harness) — but
+note M16.8a is a filed, unblocked gap task sitting just before it that could be
+picked up first if the owner wants the two findings above closed sooner.

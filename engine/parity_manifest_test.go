@@ -81,9 +81,11 @@ func validAssignedTask(id string) bool {
 	// M16.5a is the point-blank shot-ownership gap task filed by the M16.5
 	// creature/projectile sweep (NOTES.md 2026-07-29); M16.6a (#endgame limbo)
 	// and M16.6b (the unheard walk click) were filed by the M16.6 OOP/sound
-	// sweep.
+	// sweep. M16.8a (the unreachable "transfer" ProtocolEvent, and the
+	// cross-engine ElementDefs[E_PLAYER].Character global) was filed by the
+	// M16.8 engine/room/protocol equivalence sweep.
 	switch id {
-	case "M16.5a", "M16.6a", "M16.6b", "M16.16a", "M16.18a":
+	case "M16.5a", "M16.6a", "M16.6b", "M16.16a", "M16.18a", "M16.8a":
 		return true
 	}
 	m := regexp.MustCompile(`^M16\.(\d+)$`).FindStringSubmatch(id)

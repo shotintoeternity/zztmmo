@@ -1633,7 +1633,7 @@
       "fixture": "fixtures/oracle/beast.capture.txt",
       "status": "pass",
       "assignedTask": "M16.5",
-      "notes": "P1 9 forces the seek half of `P1 \u003c Random(10)`; charges and attacks down the player row (ORCLBEAST), flees the same row while the player is energized and is eaten for score (ORCLHUNT)"
+      "notes": "P1 9 forces the seek half of `P1 < Random(10)`; charges and attacks down the player row (ORCLBEAST), flees the same row while the player is energized and is eaten for score (ORCLHUNT)"
     },
     {
       "id": "elem.message-timer",
@@ -1751,7 +1751,7 @@
       "fixture": "fixtures/oracle/beast.capture.txt",
       "status": "pass",
       "assignedTask": "M16.5",
-      "notes": "P1 8/P2 9 force both draws: marches, re-seeks on alignment, attacks, and stops dead when its step is walled. The rest-to-wake transition is gated by `(P2+8) \u003c= Random(17)`, which no P2 can force, so it is the one branch here with no draw-free scenario"
+      "notes": "P1 8/P2 9 force both draws: marches, re-seeks on alignment, attacks, and stops dead when its step is walled. The rest-to-wake transition is gated by `(P2+8) <= Random(17)`, which no P2 can force, so it is the one branch here with no draw-free scenario"
     },
     {
       "id": "elem.scroll",
@@ -3113,8 +3113,10 @@
       "contract": "P",
       "authority": "protocol.go; tasks M3.2–M3.4",
       "parity": "exact",
-      "status": "unverified",
-      "assignedTask": "M16.8"
+      "status": "pass",
+      "assignedTask": "M16.8",
+      "test": "TestWebSocketDeathAndRespawnEvents",
+      "notes": "M16.8: no prior test converted DeathEvent through RoomManager/the protocol layer (m16_5/m16_6/game_test.go check it on the bare Engine only) — closed with a real-socket test forcing killPlayer and reading the wire \"death\" event."
     },
     {
       "id": "proto.event.debugPrompt",
@@ -3123,8 +3125,10 @@
       "contract": "P",
       "authority": "protocol.go; tasks M3.2–M3.4",
       "parity": "exact",
-      "status": "unverified",
-      "assignedTask": "M16.8"
+      "status": "pass",
+      "assignedTask": "M16.8",
+      "test": "TestDebugPromptKeyEmitsEventAndDoesNotBlock,TestThreePathEngineRoomEquivalence",
+      "notes": "M16.8's prompt.scn compares the debugPrompt ProtocolEvent (and the debug-entry reply flow) between the direct Engine and RoomManager at every checkpoint."
     },
     {
       "id": "proto.event.help",
@@ -3133,8 +3137,10 @@
       "contract": "P",
       "authority": "protocol.go; tasks M3.2–M3.4",
       "parity": "exact",
-      "status": "unverified",
-      "assignedTask": "M16.8"
+      "status": "pass",
+      "assignedTask": "M16.8",
+      "test": "TestHelpEventCarriesFileLines,TestThreePathEngineRoomEquivalence",
+      "notes": "M16.8's prompt.scn presses 'H'; the help ProtocolEvent's Filename/Title/Lines (HelpFileLines, a deterministic file read) are compared between the direct Engine and RoomManager."
     },
     {
       "id": "proto.event.highScoreEntry",
@@ -3143,8 +3149,10 @@
       "contract": "P",
       "authority": "protocol.go; tasks M3.2–M3.4",
       "parity": "exact",
-      "status": "unverified",
-      "assignedTask": "M16.8"
+      "status": "pass",
+      "assignedTask": "M16.8",
+      "test": "TestM43QuitAndHighScoreOverWebSocket",
+      "notes": "Pre-existing WS-level coverage, delivered via the bare EventMessage envelope (quitOutcome); M16.8 did not need to add to it."
     },
     {
       "id": "proto.event.pause",
@@ -3153,8 +3161,10 @@
       "contract": "P",
       "authority": "protocol.go; tasks M3.2–M3.4",
       "parity": "exact",
-      "status": "unverified",
-      "assignedTask": "M16.8"
+      "status": "pass",
+      "assignedTask": "M16.8",
+      "test": "TestM42CommandKeyOverWebSocket",
+      "notes": "Pre-existing WS-level coverage (M4.2); M16.8 did not need to add to it."
     },
     {
       "id": "proto.event.quit",
@@ -3163,8 +3173,10 @@
       "contract": "P",
       "authority": "protocol.go; tasks M3.2–M3.4",
       "parity": "exact",
-      "status": "unverified",
-      "assignedTask": "M16.8"
+      "status": "pass",
+      "assignedTask": "M16.8",
+      "test": "TestM43QuitWithoutScoreOverWebSocket",
+      "notes": "Pre-existing WS-level coverage, delivered via the bare EventMessage envelope (quitOutcome); M16.8 did not need to add to it."
     },
     {
       "id": "proto.event.quitPrompt",
@@ -3173,8 +3185,10 @@
       "contract": "P",
       "authority": "protocol.go; tasks M3.2–M3.4",
       "parity": "exact",
-      "status": "unverified",
-      "assignedTask": "M16.8"
+      "status": "pass",
+      "assignedTask": "M16.8",
+      "test": "TestM43QuitAndHighScoreOverWebSocket,TestThreePathEngineRoomEquivalence",
+      "notes": "M16.8's prompt.scn compares the quitPrompt ProtocolEvent between the direct Engine and RoomManager at every checkpoint, in addition to pre-existing WS-level coverage."
     },
     {
       "id": "proto.event.respawn",
@@ -3183,8 +3197,10 @@
       "contract": "P",
       "authority": "protocol.go; tasks M3.2–M3.4",
       "parity": "exact",
-      "status": "unverified",
-      "assignedTask": "M16.8"
+      "status": "pass",
+      "assignedTask": "M16.8",
+      "test": "TestWebSocketDeathAndRespawnEvents",
+      "notes": "M16.8: no prior test converted RespawnEvent through RoomManager/the protocol layer — closed alongside \"death\" in the same real-socket test."
     },
     {
       "id": "proto.event.savePrompt",
@@ -3193,8 +3209,10 @@
       "contract": "P",
       "authority": "protocol.go; tasks M3.2–M3.4",
       "parity": "exact",
-      "status": "unverified",
-      "assignedTask": "M16.8"
+      "status": "pass",
+      "assignedTask": "M16.8",
+      "test": "TestM43aSaveOverWebSocket",
+      "notes": "Pre-existing WS-level coverage (M4.3a); M16.8 did not need to add to it."
     },
     {
       "id": "proto.event.scroll",
@@ -3203,8 +3221,10 @@
       "contract": "P",
       "authority": "protocol.go; tasks M3.2–M3.4",
       "parity": "exact",
-      "status": "unverified",
-      "assignedTask": "M16.8"
+      "status": "pass",
+      "assignedTask": "M16.8",
+      "test": "TestWebSocketServerScrollReplyBuysFromVendor,TestThreePathEngineRoomEquivalence",
+      "notes": "M16.8's talk.scn (and prompt.scn's help-as-scroll path) compares the scroll ProtocolEvent's Title/Lines between the direct Engine and RoomManager, in addition to pre-existing WS-level coverage."
     },
     {
       "id": "proto.event.sound",
@@ -3213,8 +3233,10 @@
       "contract": "P",
       "authority": "protocol.go; tasks M3.2–M3.4",
       "parity": "exact",
-      "status": "unverified",
-      "assignedTask": "M16.8"
+      "status": "pass",
+      "assignedTask": "M16.8",
+      "test": "TestWebSocketServerMultiplayerSmokePickupTransferHUD,TestM74PerPlayerSoundAttribution,TestThreePathEngineRoomEquivalence",
+      "notes": "M16.8 compares sound ProtocolEvents (room-wide and per-player, via RoomManager.DrainPlayerEvents) between the direct Engine and RoomManager at every checkpoint of all 24 scenarios, in addition to pre-existing per-player-attribution and WS-level coverage."
     },
     {
       "id": "proto.event.transfer",
@@ -3222,9 +3244,12 @@
       "subject": "protocol event type \"transfer\"",
       "contract": "P",
       "authority": "protocol.go; tasks M3.2–M3.4",
-      "parity": "exact",
-      "status": "unverified",
-      "assignedTask": "M16.8"
+      "parity": "deviation",
+      "status": "gap",
+      "assignedTask": "M16.8a",
+      "test": "",
+      "notes": "M16.8 finding: RoomManager.StepDiffs's TransferEvent case (room_manager.go) never appends to roomEvents or pendingPlayerEvents, so ProtocolEvents() never converts one onto the wire for any client — the type round-trips in isolation (protocol_test.go) but is dead in production traffic. The client currently infers a transfer solely from BoardChangeMessage plus the new position. Filed as gap task M16.8a; not fixed here (out of M16.8's remit).",
+      "deviation": "proto-event-transfer-unreachable"
     },
     {
       "id": "proto.event.walkClick",
@@ -3245,8 +3270,10 @@
       "contract": "P",
       "authority": "protocol.go; tasks M3.2–M3.4",
       "parity": "exact",
-      "status": "unverified",
-      "assignedTask": "M16.8"
+      "status": "pass",
+      "assignedTask": "M16.8",
+      "test": "TestWebSocketServerBoardEdgeSendsBoardChange,TestWebSocketServerMultiplayerSmokePickupTransferHUD,TestThreePathEngineRoomEquivalence",
+      "notes": "M16.8's pass.scn/main.scn (and most M16.4-M16.6 hub-to-feature-board scenarios) exercise the same underlying resync (RoomManager.Snapshot after a board change) WorldInstance.Tick wraps as a BoardChangeMessage; the wire struct itself is pre-existing WS-level coverage."
     },
     {
       "id": "proto.msg.debugCommand",
@@ -3255,8 +3282,10 @@
       "contract": "P",
       "authority": "protocol.go; tasks M3.2–M3.4",
       "parity": "exact",
-      "status": "unverified",
-      "assignedTask": "M16.8"
+      "status": "pass",
+      "assignedTask": "M16.8",
+      "test": "TestWebSocketDebugCommandMessageOverWire",
+      "notes": "M16.8: no prior test constructed the wire DebugCommandMessage struct (debug_prompt_test.go's coverage calls RoomManager.SubmitDebugCommand directly) — closed by sending the \"ammo\" cheat over a real socket."
     },
     {
       "id": "proto.msg.diff",
@@ -3265,8 +3294,10 @@
       "contract": "P",
       "authority": "protocol.go; tasks M3.2–M3.4",
       "parity": "exact",
-      "status": "unverified",
-      "assignedTask": "M16.8"
+      "status": "pass",
+      "assignedTask": "M16.8",
+      "test": "TestThreePathEngineRoomEquivalence,TestWebSocketReconstructsAuthoritativeScreen,TestWebSocketServerJoinInputDiff",
+      "notes": "M16.8: DiffMessage.Cells/Players/HUD/Hash/Events reconstructed and compared to the direct Engine at every checkpoint of all 24 scenarios, plus over a real socket for move.scn."
     },
     {
       "id": "proto.msg.editorBoard",
@@ -3485,8 +3516,10 @@
       "contract": "P",
       "authority": "protocol.go; tasks M3.2–M3.4",
       "parity": "exact",
-      "status": "unverified",
-      "assignedTask": "M16.8"
+      "status": "pass",
+      "assignedTask": "M16.8",
+      "test": "TestM43QuitAndHighScoreOverWebSocket,TestM43QuitWithoutScoreOverWebSocket,TestM43aSaveOverWebSocket",
+      "notes": "Bare EventMessage envelope: used only for \"quit\"/\"highScoreEntry\" (quitOutcome, websocket_server.go) and the ad hoc \"saveResult\"/\"highScores\" events, all already covered pre-M16.8."
     },
     {
       "id": "proto.msg.highScoreName",
@@ -3495,8 +3528,10 @@
       "contract": "P",
       "authority": "protocol.go; tasks M3.2–M3.4",
       "parity": "exact",
-      "status": "unverified",
-      "assignedTask": "M16.8"
+      "status": "pass",
+      "assignedTask": "M16.8",
+      "test": "TestM43QuitAndHighScoreOverWebSocket",
+      "notes": "Pre-existing WS-level coverage; M16.8 did not need to add to it."
     },
     {
       "id": "proto.msg.input",
@@ -3505,8 +3540,10 @@
       "contract": "P",
       "authority": "protocol.go; tasks M3.2–M3.4",
       "parity": "exact",
-      "status": "unverified",
-      "assignedTask": "M16.8"
+      "status": "pass",
+      "assignedTask": "M16.8",
+      "test": "TestThreePathEngineRoomEquivalence,TestWebSocketReconstructsAuthoritativeScreen,TestWebSocketServerJoinInputDiff",
+      "notes": "M16.8: every scenario's move/shoot/key ops apply through RoomManager.StepDiffs and, for move.scn, a real InputMessage over the wire."
     },
     {
       "id": "proto.msg.join",
@@ -3515,8 +3552,10 @@
       "contract": "P",
       "authority": "protocol.go; tasks M3.2–M3.4",
       "parity": "exact",
-      "status": "unverified",
-      "assignedTask": "M16.8"
+      "status": "pass",
+      "assignedTask": "M16.8",
+      "test": "TestThreePathEngineRoomEquivalence,TestWebSocketReconstructsAuthoritativeScreen,TestWebSocketServerJoinInputDiff,TestReconnectResumeWithinGracePreservesRun",
+      "notes": "M16.8: engine↔RoomManager equivalence over all 24 M16.3-M16.7 oracle scenarios (TestThreePathEngineRoomEquivalence), plus a real dialed WS client (TestWebSocketReconstructsAuthoritativeScreen)."
     },
     {
       "id": "proto.msg.quitReply",
@@ -3525,8 +3564,10 @@
       "contract": "P",
       "authority": "protocol.go; tasks M3.2–M3.4",
       "parity": "exact",
-      "status": "unverified",
-      "assignedTask": "M16.8"
+      "status": "pass",
+      "assignedTask": "M16.8",
+      "test": "TestM43QuitAndHighScoreOverWebSocket,TestM43QuitWithoutScoreOverWebSocket,TestThreePathEngineRoomEquivalence",
+      "notes": "M16.8's prompt.scn drives a quit reply through RoomManager.SubmitQuitReply; the wire QuitReplyMessage struct itself is pre-existing WS-level coverage."
     },
     {
       "id": "proto.msg.saveFilename",
@@ -3535,8 +3576,10 @@
       "contract": "P",
       "authority": "protocol.go; tasks M3.2–M3.4",
       "parity": "exact",
-      "status": "unverified",
-      "assignedTask": "M16.8"
+      "status": "pass",
+      "assignedTask": "M16.8",
+      "test": "TestM43aSaveOverWebSocket,TestM43aSaveRejectedOverWebSocket,TestM43aSavesDisabledOverWebSocket",
+      "notes": "Pre-existing WS-level coverage (M4.3a); M16.8 did not need to add to it."
     },
     {
       "id": "proto.msg.scrollReply",
@@ -3545,8 +3588,10 @@
       "contract": "P",
       "authority": "protocol.go; tasks M3.2–M3.4",
       "parity": "exact",
-      "status": "unverified",
-      "assignedTask": "M16.8"
+      "status": "pass",
+      "assignedTask": "M16.8",
+      "test": "TestWebSocketServerScrollReplyBuysFromVendor,TestThreePathEngineRoomEquivalence",
+      "notes": "M16.8's talk.scn drives a scroll reply through RoomManager.SubmitScrollReply; the wire ScrollReplyMessage struct itself is pre-existing WS-level coverage (vendor purchase)."
     },
     {
       "id": "proto.msg.snapshot",
@@ -3555,8 +3600,10 @@
       "contract": "P",
       "authority": "protocol.go; tasks M3.2–M3.4",
       "parity": "exact",
-      "status": "unverified",
-      "assignedTask": "M16.8"
+      "status": "pass",
+      "assignedTask": "M16.8",
+      "test": "TestThreePathEngineRoomEquivalence,TestWebSocketReconstructsAuthoritativeScreen,TestRoomManagerSnapshotFromTown",
+      "notes": "M16.8: RoomManager.Snapshot's full-board dump is checked against the diff-only reconstruction at every checkpoint (full-snapshot-fallback-vs-diff-only convergence) and, over the wire, against the direct Engine's authoritative screen."
     },
     {
       "id": "route.api.auth.google.callback",
@@ -3715,8 +3762,10 @@
       "contract": "E",
       "authority": "web_api.go / websocket_server.go",
       "parity": "exact",
-      "status": "unverified",
-      "assignedTask": "M16.8"
+      "status": "pass",
+      "assignedTask": "M16.8",
+      "test": "TestWebSocketServerJoinInputDiff,TestWebSocketReconstructsAuthoritativeScreen,TestM42CommandKeyOverWebSocket",
+      "notes": "Dozens of pre-existing tests already dial a real WebSocket against this route; M16.8 adds one more (TestWebSocketReconstructsAuthoritativeScreen) that also reconstructs and verifies full state from it."
     },
     {
       "id": "mode.editor",
@@ -4135,6 +4184,12 @@
       "title": "Mobile ships text entry only; touch gameplay is a filed gap task (M16.18a)",
       "contract": "E",
       "authority": "task M15.1; owner decision 2026-07-15"
+    },
+    {
+      "id": "proto-event-transfer-unreachable",
+      "title": "RoomManager.StepDiffs never surfaces a \"transfer\" ProtocolEvent to any client; the client infers a transfer from BoardChangeMessage plus a new position instead (M16.8 finding, filed as M16.8a)",
+      "contract": "P",
+      "authority": "room_manager.go StepDiffs's TransferEvent case; task M16.8a"
     }
   ]
 }

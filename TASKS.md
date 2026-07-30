@@ -2625,7 +2625,7 @@ gap task has landed.
   `V`, not a `service.world-file-format` reuse — that row is a different
   surface). See NOTES.md.
 
-- [ ] **M16.8 — Prove engine → room → protocol equivalence.** Replay the M16.3–
+- [x] **M16.8 — Prove engine → room → protocol equivalence.** Replay the M16.3–
   M16.7 scenarios through three paths: direct `Engine`, `RoomManager`, and a
   real WebSocket client. Reconstruct each full screen from snapshot + dirty
   diffs and compare it, HUD, player position/state, board changes, scrolls,
@@ -2635,6 +2635,102 @@ gap task has landed.
   fallback and diff-only paths converge on identical state; a deliberately
   dropped dirty cell or misrouted per-player event makes the test fail at the
   producing tick.
+
+  Landed: `engine/m16_8_test.go`, `TestThreePathEngineRoomEquivalence` replays
+  all 24 M16.3–M16.7(a) oracle scenarios through a direct `Engine` and a
+  `RoomManager`-wrapped `Engine` side by side, comparing board cells, HUD,
+  position, StateHash, and scroll/sound/prompt events at every checkpoint, plus
+  a full-snapshot-vs-diff-only convergence check every checkpoint. A
+  representative subset (move.scn end to end, plus directed tests) additionally
+  drives a real dialed WebSocket client
+  (`TestWebSocketReconstructsAuthoritativeScreen`,
+  `TestWebSocketDeathAndRespawnEvents`,
+  `TestWebSocketDebugCommandMessageOverWire`,
+  `TestWebSocketUnrecognizedMessageIsIgnoredNotCrashed`,
+  `TestWebSocketInvalidJSONDetachesOnlyThatConnection`), closing the only
+  M16.8-assigned protocol surfaces (`fixtures/parity/manifest.json`) no
+  pre-existing test reached: the wire `DebugCommandMessage` struct, and the
+  `death`/`respawn` events through RoomManager. Two fail-closed tests
+  (`TestM168DroppedDirtyCellFailsClosed`, `TestM168MisroutedPerPlayerEventFailsClosed`)
+  prove the comparison seam itself is sensitive, mirroring
+  `TestOracleComparisonFailsClosed`'s perturbation idiom.
+
+  Two architectural facts the harness had to design around rather than paper
+  over (both documented at length in `m16_8_test.go`'s header and in NOTES.md):
+  each `RoomManager` room is a **freshly, independently seeded** `Engine`
+  (`RandSeed`/`CurrentTick`/`TimerTicks` all start at their zero value —
+  `room_manager.go`'s `ensureRoom`), never inheriting the single continuous
+  stream a bare `Engine` carries across its whole session (including any
+  `boot`-span board simulation, which a room has no equivalent of before its
+  first join) — so board-cell/hash/RNG-dependent comparisons are scoped to stay
+  valid rather than compared unconditionally past a board transfer or a
+  `phase`-sensitive world's very first tick; and `RoomManager.JoinPlayerWithID`
+  always resets a joiner's `PlayerState` to defaults (M4.3a's own documented
+  "a joiner arrives fresh" decision), so a fair comparison seeds the room
+  explicitly from the direct Engine's own post-`play` state via
+  `ApplyPlayerState`/`TimerTicks`, rather than trusting the join defaults.
+
+  **Two gap findings, filed as M16.8a below, not fixed here (out of this
+  task's remit):** `ElementDefs[E_PLAYER].Character` is a package-level mutable
+  global (elements.go's `ElementPlayerTick`, the energizer-flash/steady-state
+  toggle) that two `Engine`s ticking in the same process can stomp on each
+  other's behalf — discovered because this harness's first draft interleaved
+  the direct-Engine and RoomManager passes tick-by-tick and got corrupted
+  results; the fix was to run each path to full completion before the other
+  starts, not to interleave. And `RoomManager.StepDiffs`'s `TransferEvent` case
+  never appends to `roomEvents`/`pendingPlayerEvents`, so the wire `"transfer"`
+  `ProtocolEvent` — a real, round-trip-tested Go type — is never actually sent
+  to any client; the browser currently infers a transfer solely from
+  `BoardChangeMessage` plus the new position.
+
+  `fixtures/parity/manifest.json`'s 24 `assignedTask: "M16.8"` rows
+  (`proto.msg.*`, `proto.event.*`, `route./ws`) are `pass`, citing the tests
+  above plus substantial pre-existing WS-level coverage this task's research
+  turned up (pause: M4.2; save/high-score: M4.3/M4.3a; scroll: M3.10/vendor
+  tests) — except `proto.event.transfer`, which is `gap`/`M16.8a` with a new
+  `proto-event-transfer-unreachable` deviation-catalog entry recording the
+  finding above.
+
+- [ ] **M16.8a — Two cross-engine/dead-protocol gaps M16.8 found (blocks
+  M16.20).** Filed by M16.8, not fixed there (out of that task's remit — it
+  proves equivalence, it doesn't change simulation or RoomManager behavior).
+  Two independent, unrelated defects:
+  1. **`ElementDefs[E_PLAYER].Character` is a shared mutable global, not
+     per-`Engine` state.** `ElementPlayerTick` (`elements.go:1349-1365`)
+     toggles it to animate the energizer flash and to restore the steady-state
+     glyph/color — but `ElementDefs` is declared as a package-level
+     `var ElementDefs [MAX_ELEMENT+1]TElementDef` (`gamevars.go`), documented at
+     its M1.1 introduction as "immutable after init". It is not: two `Engine`s
+     ticking a player in the same process (two `RoomManager` rooms; a bare
+     `Engine` and a `RoomManager` room stepped back to back without an
+     intervening full pass, as M16.8's harness discovered) can each mutate the
+     other's rendered player glyph. Decide whether to move `Character` (and
+     confirm no sibling `ElementDef` field mutates similarly — grep every
+     write into `ElementDefs[`) onto `Engine`-scoped state, or compute the
+     blink character at draw time from the ticking `Engine`'s own
+     energizer/tick state instead of mutating the shared table. DoD: a
+     regression test interleaves two `Engine`s (one with an energized player,
+     one without) ticking back and forth and asserts neither's rendered player
+     glyph is affected by the other; `go test -race ./...` green.
+  2. **The `"transfer"` protocol event is dead code.** `RoomManager.StepDiffs`'s
+     `TransferEvent` case (`room_manager.go`, in the per-room event-draining
+     switch) resolves the traveling player's id and queues the transfer itself,
+     but — unlike every sibling case (`ScrollEvent`, `SoundEvent`, the
+     `default:` branch) — never appends anything to `roomEvents` or
+     `pendingPlayerEvents`. So `ProtocolEvents()` never converts a
+     `TransferEvent` into a wire `"transfer"` `ProtocolEvent` for any client;
+     the browser currently infers a transfer solely from `BoardChangeMessage`
+     plus the arriving snapshot's new position, and `protocol_test.go`'s
+     round-trip coverage is the type's only exercise. Decide whether to wire it
+     in (queued for the traveler alongside/just before their
+     `BoardChangeMessage`, e.g. to drive a client-side transition effect or a
+     transfer sound cue distinct from the passage/edge sound already carried on
+     the event) or remove the unused type and its manifest row. DoD: either a
+     test proves a client receives a `"transfer"` event exactly for the
+     traveler on the tick a passage/board-edge fires, or the dead type and its
+     `proto.event.transfer` manifest row are removed with the manifest
+     regenerated; `go test ./...` green; replay fixture unchanged (this is
+     presentation/protocol plumbing only, never simulation).
 
 - [ ] **M16.9 — Add a real-browser visual parity harness.** Introduce a pinned
   Playwright browser (Chromium first) that starts the production Go server,
