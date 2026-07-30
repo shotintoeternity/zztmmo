@@ -5284,3 +5284,33 @@ fixture untouched.
 
 **Not yet deployed.** Production and dev both run `c9345f14`, which predates
 this fix, so testers would still see the stray `à` until the next deploy.
+
+## 2026-07-30 — Deploy: both hosts to 72df76f (M18.7 + M18.8)
+
+Owner-approved redeploy so the two fixes filed and landed after M18.5 reach the
+hosts before the invite. Built from the immutable commit `72df76f`, one bundle
+deployed to both.
+
+- **Production** (`44.222.174.192`): pre-deploy backup taken first (the timer
+  M18.5 installed, run by hand — second archive of the day), nobody connected
+  (no journal activity in the preceding 20 minutes), previous binary rotated to
+  `zzt-server.prev`. `ZZT_GENERATION_DAILY_MAX=10` survived the redeploy, as
+  `.env` is not in the bundle.
+- **Dev** (`54.210.138.45`): same bundle, ceiling still 25, `/status` reports
+  `72df76f`.
+
+Verified on both: root `200`, `/api/help?file=BETA.HLP` `200`,
+`wss://…/ws?world=TOWN` → `101` (with `--http1.1`). The served bundle is
+`index-DDm9dSmT.js` on both hosts, and grepping it confirms the M18.7 fix
+actually shipped: no `\x85` anywhere, the three-period marker present. A real
+browser against production loads the title screen, shows the ` F  Feedback`
+row, and opens the beta window with the report address.
+
+What testers now get that they did not this morning: the feedback pointer
+(M18.4), a per-player rather than global generation cooldown plus a 10/day
+ceiling (M18.4 + M18.5), dreamed objects that wait to be touched instead of
+monologuing at board load (M18.8), and `...` rather than a stray `à` at the cut
+of a long progress line (M18.7).
+
+Both temporary port-22 rules revoked; both allowlists back to their starting
+sets (prod six `/32`s, dev seven).
