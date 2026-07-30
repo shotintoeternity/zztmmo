@@ -5464,3 +5464,84 @@ the live host.
 
 `go build`/`vet`/`test ./...` green. No engine code changed; replay fixture
 untouched.
+
+## 2026-07-30 — M18.10: M18.6's world backup carried to production
+
+Owner decisions at task start: **install without a redeploy**, using AWS.md's
+workstation-list shortcut rather than the spec's preferred full redeploy, and
+proceed immediately. The reasoning offered for the shortcut was that M18.6's
+commit touches no Go, client or `.ZZT` file, so a redeploy would restart a live
+server to install a byte-identical build. **Half that reasoning was wrong, and
+the host caught it** — see the manifest section below.
+
+Host state before the change: deployed `bf528d7`, the M18.4 saves-only script,
+**no `SHIPPED_WORLDS` at all**, 141 `.ZZT` files, 3 companion files, three
+`saves-*` archives from today and no `worlds-*` archive ever. No players
+connected (nothing in `journalctl -u zztmmo` for 30 minutes), and the live
+service was never stopped at any point in this task.
+
+### The manifest, and the check that saved it
+
+`engine/*.ZZT` is **not tracked in git** — `git ls-files 'engine/*.ZZT'` returns
+zero. So the docs-only diff between the deployed commit and HEAD, which is what
+justified skipping the redeploy, proves nothing whatsoever about which worlds
+the bundle ships; `engine/` is simply whatever the last build and the last local
+dream left on the workstation. Comparing the 119-name workstation list against
+the host's 141 worlds found two names production has never hosted:
+`ACCEPT.ZZT` (written locally at 15:54 today) and `NULLSIGN.ZZT`. Left in, each
+would have been a standing false exclusion — a player who ever named a world
+`ACCEPT` would have had it silently skipped by the backup.
+
+The manifest installed is therefore the **intersection** of the workstation list
+and the host's directory: 117 names. Intersecting only ever removes exclusions,
+so it cannot do what the spec forbids — freezing production's 24 extra worlds as
+"shipped". `comm` needs `LC_ALL=C sort` on both sides first: macOS and glibc
+collate the dash-named worlds (`-.ZZT`, `--.ZZT`, …) differently, and the first
+attempt returned nonsense counts with `comm: file 2 is not in sorted order`
+rather than failing outright. AWS.md now carries both cautions.
+
+### What the run produced
+
+`sudo systemctl start zztmmo-backup.service`, 22:33:16 UTC:
+
+- `saves-20260730T223316Z.tar.gz`, 836K — the fourth of the day, unchanged
+  behaviour.
+- `worlds-20260730T223316Z.tar.gz`, 681K, **27 members: 24 worlds + 3
+  companions.** The one dreamed world, SAGAOFTH, came back with all three of its
+  files (`.zwd`, `.plan.md`, `.prompt.txt`). The other 23 arrived by Museum play
+  (24HOZZT, ATTACK, JOURNEY, ZZTRIS…) and ride along by the documented rule.
+  TOWN, CAVES, MERC and `---.ZZT` are all absent: nothing shipped is in it.
+- **No editor-published world is in this archive because production has none** —
+  there is not a single `.access.json` on the host. That branch of the rule is
+  still covered only by M18.6's synthetic test, on production as on dev.
+
+### Restore proof
+
+Extracted into `/tmp/restore-check`: all 27 files `cmp`-identical to the live
+ones. A sidecar `zzt-server -worlds /tmp/restore-check` on `127.0.0.1:8099`
+(saves disabled, autosave off — the live service untouched on 8080) lists all
+24, credits SAGAOFTH as `kind: dreamed` because its `.zwd` came back too, and
+answers `101` to `ws?world=SAGAOFTH` and `ws?world=JOURNEY`: the restored files
+load and host instances, they are not just intact bytes.
+
+One self-inflicted detour worth recording: `pkill -f "Sec-WebSocket-Key"` killed
+the SSH session's own `bash -c`, whose command line contained the pattern. Kill
+by PID over SSH, or match something the invoking shell does not also contain.
+
+### Closing state
+
+Sidecar killed, scratch directories and every `/tmp` working file removed, timer
+enabled and next due 03:17 UTC. Live service `active` throughout;
+`https://zztmmo.com/` `200`, `/api/help?file=BETA.HLP` `200`,
+`wss://…/ws?world=TOWN` `101`, `/api/worlds` still 134 entries (65 classic, 68
+local, 1 dreamed) — the M18.9 picker unchanged. `/opt/zztmmo` still holds 141
+worlds; nothing was moved or deleted. The temporary `174.29.5.212/32` port-22
+rule on `sg-0c69577d6d95dd937` was revoked; the allowlist is back to its six
+`/32`s.
+
+Both hosts now back up worlds. Dev's manifest is still the untrimmed 119-name
+workstation list M18.6 seeded it with, so it may carry the same latent
+false-exclusion names — not checked here, and not worth an SSH round trip on
+dev, since the next dev deploy rewrites the manifest from the bundle.
+
+No code changed: AWS.md only. Replay fixture untouched.

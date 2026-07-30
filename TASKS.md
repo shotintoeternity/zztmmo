@@ -51,10 +51,9 @@ M12.23, M17.1–M17.7, M16.0–M16.8a — has fully landed.)
 6. **Beta invite goes out** (owner action; desktop-browser scope in the copy).
 7. M18.6 — back up player-created worlds, not just `saves/`. The one
    data-loss hole M18.4 left open; it widens with every day of the beta, so
-   take it early rather than with the certification tail. **Landed 2026-07-30,
-   dev only — M18.10 carries it to production and is now the top open item
-   here, for the same reason M18.5 outranked the certification tail: the beta
-   runs on production, and production is the host still backing up no worlds.**
+   take it early rather than with the certification tail. **Landed 2026-07-30
+   on dev; carried to production by M18.10 the same day (owner chose the
+   no-redeploy shortcut). Both hosts now archive player-made worlds daily.**
 8. M18.7 — the stray `à` at the cut of over-width "Dreaming a world" progress
    lines (owner-reported 2026-07-30). Cosmetic and a few lines, but it is on
    the screen testers watch for two minutes straight; take it before the
@@ -3306,7 +3305,7 @@ lists. Every task: `cd engine && go build ./... && go test ./...` green,
   pass (they pick worlds by typing, so the search path must be untouched);
   `go test ./...` and `npm test` green; replay fixture untouched.
 
-- [ ] **M18.10 — Carry M18.6's world backup to production.** Filed 2026-07-30,
+- [x] **M18.10 — Carry M18.6's world backup to production.** Filed 2026-07-30,
   the same dev-only gap M18.5 had to close for M18.4: production runs the M18.4
   backup script and has no `SHIPPED_WORLDS`, so its 68 `local` and 1 `dreamed`
   worlds (the M18.9 deploy table) are backed up by nothing. The beta runs there.
@@ -3324,6 +3323,14 @@ lists. Every task: `cd engine && go build ./... && go test ./...` green,
   dreamed and editor worlds and no shipped one, one restores byte-identical
   into a scratch directory, `https://zztmmo.com/` still serves. Evidence in
   NOTES.md.
+  **Landed 2026-07-30** by the shortcut, owner's call: no redeploy, live service
+  never stopped. 27 members archived (24 worlds + SAGAOFTH's three dream
+  companions), no shipped world among them, all 27 restored byte-identical and a
+  sidecar hosted them. Production has no editor-published world, so that half of
+  the DoD is unexercised there — as on dev, only M18.6's synthetic test covers
+  `.access.json`. The manifest is the *intersection* of the workstation list and
+  the host directory (117 of 119 names): `engine/*.ZZT` is untracked, so the
+  workstation list named two worlds production has never had.
 
 ## M14 — Rearchitecting for the service ZZTMMO is becoming
 
