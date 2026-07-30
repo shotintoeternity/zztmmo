@@ -3950,8 +3950,10 @@
       "contract": "E",
       "authority": "completed task contracts (TASKS.md); NOTES.md",
       "parity": "exact",
-      "status": "unverified",
-      "assignedTask": "M16.16"
+      "status": "pass",
+      "assignedTask": "M16.16",
+      "test": "TestM1616aChatAdmissionBoundary,TestM1616aChatRateLimiterRollingWindow,TestM1616aChatRefusalPersistsAndBroadcastsNothing,TestM1616aChatHistorySurvivesRestart",
+      "notes": "M16.16a: 120-byte printable-CP437 normalization, 5-per-10s rolling limit on the injected clock, refusals persist/broadcast nothing, history survives restart"
     },
     {
       "id": "service.dream",
@@ -4002,8 +4004,10 @@
       "contract": "E",
       "authority": "completed task contracts (TASKS.md); NOTES.md",
       "parity": "exact",
-      "status": "unverified",
-      "assignedTask": "M16.16"
+      "status": "pass",
+      "assignedTask": "M16.16",
+      "test": "TestM1616aMuseumRefusalsCreateNothing,TestM1616aMuseumChoicesThenSelectionCachesOnce,TestM1616aMuseumOccupiedReplayKeepsHostedFile,TestMuseumServicePlayDownloadsCachesValidatesAndHosts,TestMuseumAPIPlayThenWebSocketJoinsFetchedWorld",
+      "notes": "M16.16a: caching is a post-validation commit; every refusal creates no cache entry, hosted .ZZT, or instance"
     },
     {
       "id": "service.prompt-debug",

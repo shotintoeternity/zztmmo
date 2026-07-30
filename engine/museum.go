@@ -197,9 +197,18 @@ func (m *MuseumService) Play(ctx context.Context, req MuseumPlayRequest) (Museum
 		return MuseumPlayResponse{}, err
 	}
 
-	zipData, err := m.downloadZip(ctx, req.Letter, req.Filename)
+	zipData, fromCache, err := m.downloadZip(ctx, req.Letter, req.Filename)
 	if err != nil {
 		return MuseumPlayResponse{}, err
+	}
+	// Caching is a post-validation commit (M16.16a): a refused request — a
+	// corrupt ZIP, an unsafe entry, no .ZZT worlds, a missing selection, or an
+	// invalid selected world — must leave no cache entry behind. commitCache
+	// runs only at a success return (a choices list or a hosted world).
+	commitCache := func() {
+		if !fromCache {
+			m.commitZipCache(req.Letter, req.Filename, zipData)
+		}
 	}
 	worlds, err := zztFilesFromZip(zipData)
 	if err != nil {
@@ -213,6 +222,7 @@ func (m *MuseumService) Play(ctx context.Context, req MuseumPlayRequest) (Museum
 		for _, world := range worlds {
 			choices = append(choices, MuseumPlayChoice{Name: world.Name})
 		}
+		commitCache()
 		return MuseumPlayResponse{Choices: choices}, nil
 	}
 
@@ -244,12 +254,25 @@ func (m *MuseumService) Play(ctx context.Context, req MuseumPlayRequest) (Museum
 	if err := os.MkdirAll(dir, 0o755); err != nil {
 		return MuseumPlayResponse{}, err
 	}
-	if err := os.WriteFile(filepath.Join(dir, name+".ZZT"), selected.Data, 0o644); err != nil {
+	hostedPath := filepath.Join(dir, name+".ZZT")
+	// Remember whether the .ZZT pre-existed (e.g. a replay of an already-hosted
+	// world): a host failure must remove only a file this request created,
+	// never one an earlier successful Play legitimately left hosted.
+	_, statErr := os.Stat(hostedPath)
+	existedBefore := statErr == nil
+	if err := os.WriteFile(hostedPath, selected.Data, 0o644); err != nil {
+		if !existedBefore {
+			_ = os.Remove(hostedPath)
+		}
 		return MuseumPlayResponse{}, err
 	}
 	if err := m.Server.HostGeneratedWorld(name, world); err != nil {
+		if !existedBefore {
+			_ = os.Remove(hostedPath)
+		}
 		return MuseumPlayResponse{}, err
 	}
+	commitCache()
 	return MuseumPlayResponse{World: name}, nil
 }
 
@@ -308,47 +331,55 @@ func museumZipEntryBase(name string) (string, error) {
 	return strings.ToUpper(base), nil
 }
 
-func (m *MuseumService) downloadZip(ctx context.Context, letter, filename string) ([]byte, error) {
+// downloadZip fetches an archive from the cache (fromCache=true) or the
+// Museum. It never writes the cache itself: Play commits via commitZipCache
+// only after the archive passes validation (M16.16a).
+func (m *MuseumService) downloadZip(ctx context.Context, letter, filename string) (data []byte, fromCache bool, err error) {
 	if m.CacheDir != "" {
 		cachePath := filepath.Join(m.CacheDir, strings.ToLower(letter), filename)
 		if data, err := os.ReadFile(cachePath); err == nil {
-			return data, nil
+			return data, true, nil
 		}
 	}
 
 	u := strings.TrimRight(m.FilesBaseURL, "/") + "/" + letter + "/" + path.Base(url.PathEscape(filename))
 	req, err := http.NewRequestWithContext(ctx, http.MethodGet, u, nil)
 	if err != nil {
-		return nil, err
+		return nil, false, err
 	}
 	req.Header.Set("User-Agent", museumUserAgent)
 
 	if err := m.waitTurn(ctx); err != nil {
-		return nil, err
+		return nil, false, err
 	}
 	resp, err := m.httpClient().Do(req)
 	if err != nil {
-		return nil, err
+		return nil, false, err
 	}
 	defer resp.Body.Close()
 	if resp.StatusCode != http.StatusOK {
-		return nil, fmt.Errorf("GET %s: HTTP %d", u, resp.StatusCode)
+		return nil, false, fmt.Errorf("GET %s: HTTP %d", u, resp.StatusCode)
 	}
-	data, err := io.ReadAll(io.LimitReader(resp.Body, museumMaxZipBytes+1))
+	data, err = io.ReadAll(io.LimitReader(resp.Body, museumMaxZipBytes+1))
 	if err != nil {
-		return nil, err
+		return nil, false, err
 	}
 	if len(data) > museumMaxZipBytes {
-		return nil, fmt.Errorf("museum archive is too large")
+		return nil, false, fmt.Errorf("museum archive is too large")
 	}
+	return data, false, nil
+}
 
-	if m.CacheDir != "" {
-		cachePath := filepath.Join(m.CacheDir, strings.ToLower(letter), filename)
-		if err := os.MkdirAll(filepath.Dir(cachePath), 0o755); err == nil {
-			_ = os.WriteFile(cachePath, data, 0o644)
-		}
+// commitZipCache stores a validated archive so the next Play for the same
+// letter/filename is a cache hit.
+func (m *MuseumService) commitZipCache(letter, filename string, data []byte) {
+	if m.CacheDir == "" {
+		return
 	}
-	return data, nil
+	cachePath := filepath.Join(m.CacheDir, strings.ToLower(letter), filename)
+	if err := os.MkdirAll(filepath.Dir(cachePath), 0o755); err == nil {
+		_ = os.WriteFile(cachePath, data, 0o644)
+	}
 }
 
 func (m *MuseumService) getJSON(ctx context.Context, endpoint string, v interface{}) error {

@@ -55,6 +55,14 @@ type WebSocketServer struct {
 	RecordDir   string
 	recordStamp string
 
+	// Now is the injected non-simulation clock (M16.16a); nil means time.Now.
+	// It feeds only service-layer state like the chat rate limiter — never the
+	// simulation or the replay hash.
+	Now func() time.Time
+	// chatLimiter holds each connected player's rolling chat-admission window;
+	// it has its own lock and is not guarded by mu.
+	chatLimiter chatRateLimiter
+
 	mu sync.Mutex
 	// nextPlayerID mints process-unique PlayerIDs across every instance, so ids
 	// never collide between hosted worlds (M14.1). Guarded by mu.
@@ -461,7 +469,14 @@ func (s *WebSocketServer) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 			if err := json.Unmarshal(raw, &chat); err != nil {
 				continue
 			}
-			if strings.TrimSpace(chat.Text) == "" {
+			// Admission before any persistence or broadcast (M16.16a): a
+			// refused message — unprintable-only text or the sixth in a
+			// rolling ten-second window — creates no record and no broadcast.
+			text, ok := admitChatText(chat.Text)
+			if !ok {
+				continue
+			}
+			if !s.chatLimiter.allow(playerID, s.clockNow()) {
 				continue
 			}
 			inst.mu.Lock()
@@ -472,9 +487,9 @@ func (s *WebSocketServer) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 			}
 			inst.mu.Unlock()
 			if s.ChatDB != nil {
-				_, _ = s.ChatDB.AddMessage(name, chat.Text)
+				_, _ = s.ChatDB.AddMessage(name, text)
 			}
-			s.BroadcastGlobalChat(ctx, name, chat.Text)
+			s.BroadcastGlobalChat(ctx, name, text)
 		default:
 			var input InputMessage
 			if err := json.Unmarshal(raw, &input); err != nil {
@@ -1226,6 +1241,15 @@ func (s *WebSocketServer) GetOrCreateInstance(worldName string) (*WorldInstance,
 // HostGeneratedWorld installs an already-compiled, persisted world directly
 // into the instance table. Generation uses this instead of reloading its file:
 // the hosted bytes are exactly the ones that passed the compiler and M7.5 gate.
+// clockNow is the non-simulation clock (M16.16a): the injected Now seam when a
+// test set one, the wall clock otherwise. Simulation code must never call it.
+func (s *WebSocketServer) clockNow() time.Time {
+	if s.Now != nil {
+		return s.Now()
+	}
+	return time.Now()
+}
+
 func (s *WebSocketServer) HostGeneratedWorld(name string, world TWorld) error {
 	safe, err := SanitizeSaveName(name)
 	if err != nil {
@@ -1617,6 +1641,7 @@ func (s *WebSocketServer) tryResume(inst *WorldInstance, client *webSocketClient
 // reconnect can reclaim it) rather than removed. A connection that has already
 // been superseded by a newer one (newest-wins) owns nothing and just returns.
 func (s *WebSocketServer) handleReadLoopExit(inst *WorldInstance, client *webSocketClient, playerID PlayerID) {
+	s.chatLimiter.forget(playerID)
 	inst.mu.Lock()
 	if inst.Clients[playerID] != client {
 		// A newer connection took over this player; this stale socket must not

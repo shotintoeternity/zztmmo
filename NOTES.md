@@ -4402,3 +4402,77 @@ Decisions recorded from that conversation (all owner-approved):
   replacing the fully-landed 2026-07-14 list.
 
 No code changed; planning docs only. Replay fixture untouched.
+
+## 2026-07-30 — M16.16a: chat admission and Museum cache-commit hardening
+
+First beta-gate task from the 2026-07-30 priority list. Two independent
+contracts, both service-layer only — no simulation touch, replay fixture
+untouched.
+
+**Chat admission is one gate before persistence or broadcast.** New
+`engine/chat_admission.go`. `admitChatText` normalizes; `chatRateLimiter.allow`
+rate-limits; `websocket_server.go`'s `"chat"` case runs both *before*
+`ChatDB.AddMessage` and `BroadcastGlobalChat`, so a refusal creates no record
+and no broadcast — the DoD's "zero mutation" requirement is structural (there
+is no path from a refusal to either sink), not a check we remembered to add.
+
+**Normalization reuses `foldWordmark` rather than inventing a second CP437
+fold.** eval.go's `foldWordmark` already solved exactly this problem for title
+wordmarks: printable ASCII passes, typographic punctuation folds to ASCII,
+everything else drops. Reusing it means chat and title stamping share one byte
+space instead of drifting apart.
+
+**Extended CP437 (0x80-0xFF) is deliberately NOT admitted**, even though the
+spec says "printable CP437". The client renders chat with
+`charCodeAt(i) & 0xff` against the CP437 atlas (`main.ts:2188`), so only runes
+whose codepoint equals their CP437 byte — i.e. printable ASCII — display as the
+sender typed them. Admitting `é` (U+00E9) would render as CP437 0xE9 (`Θ`).
+Dropping it is the honest choice given the renderer; widening this needs a
+Unicode→CP437 table on both sides, which is a feature, not this task.
+
+**Rate limit: 5 accepted per rolling 10s, on an injected clock.** New
+`WebSocketServer.Now` seam (nil = `time.Now`), consulted via `clockNow()`. Only
+*accepted* messages consume slots — a refusal (normalization or rate) never
+does, so garbage input cannot exhaust a player's quota. Expiry is
+`now.Sub(t) < window`, so the message exactly one window after the first is
+admitted (the boundary is tested from both sides). `handleReadLoopExit` calls
+`forget` so the map only holds connected players. The limiter has its own mutex,
+not `WebSocketServer.mu` — it is consulted on read-loop goroutines that must not
+contend with instance bookkeeping.
+
+**Museum caching became a post-validation commit.** `downloadZip` no longer
+writes the cache and now returns a `fromCache` flag; `Play` calls
+`commitZipCache` only at its two success returns (a choices list, or a hosted
+world). Both are genuine successes: a choices response means the archive parsed
+and its entries are safe, so caching it makes the follow-up selection a cache
+hit (tested: one HTTP hit across both calls).
+
+**A failed host cleans up only a file that request created.** `Play` stats the
+hosted path before writing and removes it on host failure *only if it did not
+pre-exist* — otherwise replaying an occupied world would delete the `.ZZT` an
+earlier successful Play legitimately hosted. `TestM1616aMuseumOccupiedReplayKeepsHostedFile`
+covers exactly that: join TEEN over a real WebSocket, replay the Play, assert
+the error *and* that TEEN.ZZT and its cache entry survive.
+
+**Verified the tests actually regress** (the project's standing discipline).
+Neutered normalization → the raw `\x01\x02` message appeared in the broadcast.
+Neutered *only* the rate limit → a sixth message leaked into the DB, caught at
+the exact boundary. Neutered the cache-commit change (stashed museum.go) → all
+five refusal rows failed with "cache entries after refusal=1, want 0". All
+restored.
+
+**Test fence, no sleeps.** The end-to-end chat test injects a clock that counts
+its own calls; the handler consults it exactly once per normalization-admitted
+message, so waiting on the call count is a deterministic "server has processed
+this" fence instead of a timing guess.
+
+**Manifest**: `service.chat` and `service.museum` flipped `unverified` → `pass`
+with test citations. Re-dumped with `ensure_ascii=False` after a first pass
+escaped every em-dash in the file — the real diff is 12 lines, not 368.
+
+Verified: `go build ./...`, `go vet .`, `go test -count=1 ./...`, and
+`go test -race -count=1 .` all green. `fixtures/town.replay.json` untouched
+(the only changed fixture is the parity manifest).
+
+**Handoff.** Next per the priority list is **M16.19** (production-boundary,
+security, and load validation). M17.8's box remains owner-gated.

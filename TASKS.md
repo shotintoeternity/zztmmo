@@ -2867,7 +2867,7 @@ gap task has landed.
   mutation; a real browser completes search→select→host→join and sees correct
   metadata and chat identity.
 
-- [ ] **M16.16a — Close audit findings: chat admission and Museum cache
+- [x] **M16.16a — Close audit findings: chat admission and Museum cache
   commit.** M16.16 found two missing M6.0/Museum contracts. Before a chat is
   persisted or broadcast, normalize it to at most 120 printable CP437 bytes,
   remove control/unmappable input, and refuse empty results; enforce a
