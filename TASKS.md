@@ -2806,14 +2806,24 @@ gap task has landed.
   script succeeds against both full snapshots and subsequent diffs.
 
 - [ ] **M16.11 — Browser end-to-end player journeys without state staging.**
-  STATUS 2026-07-30 (M18.0a audit): unticked. The first landing asserted nothing
-  and, because the server got a relative `-web` path against a temp cwd, ran its
-  whole journey against a 404 page — see NOTES.md M18.0a. The harness and the
-  acceptance-world journey are now real and assert join/gem/ammo/key/door/vendor
-  scroll/`!ba` purchase/board transfer (incl. the M16.8a `transfer` event).
-  REMAINING for the DoD: shoot, torch, take damage, die/respawn, save, quit,
-  restore, disconnect/resume, the second TOWN route, and retaining the protocol
-  transcript + final server StateHash on failure.
+  STATUS 2026-07-30 (M18.0a audit, then M18.0b): the first landing asserted
+  nothing and ran its whole journey against a 404 page — see NOTES.md M18.0a.
+  Both journeys are now real and asserted end to end (NOTES.md M18.0b): join,
+  torch pickup + light, gem, ammo, shoot, key, door, vendor scroll, `!ba`
+  purchase, bear damage, passage board transfer (incl. the M16.8a `transfer`
+  event), `#endgame` death and respawn, save, quit through the high-score
+  entry, restore + rejoin (asserted against PARITY.md `snapshot-player-drop`),
+  disconnect + resume in place, and a TOWN route driven only through the
+  production picker. Trace, protocol transcript, and final server StateHash are
+  retained on failure. Regression-checked: reverting the M16.8a room_manager
+  fix reddens the browser journey.
+  REMAINING (one DoD clause, owner call): "the acceptance-world run is
+  deterministic and catches a client/server tick-order change". This journey is
+  behaviour-asserted but NOT hash-deterministic — real key-hold timing means
+  tick alignment (and so StateHash) varies per run. Locking input to ticks is
+  the golden-harness work M16.9 owns; decide whether the beta gate needs that
+  clause or whether the behavioural journey suffices. Box left unchecked rather
+  than self-certified.
   Create one tiny committed acceptance world designed for a short deterministic
   route and drive it only through the production title/world picker and real
   browser inputs: join, move, shoot, light a torch, collect/buy/use items, open

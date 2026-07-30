@@ -4609,3 +4609,67 @@ the PoC beta ranked in `7bcf4c8` is not currently satisfied.
 Verified: `go build ./...`, `go vet ./...`, `go test -count=1 ./...` and
 `go test -race -count=1 .` green. Replay fixture untouched; the only changed
 fixture is the parity manifest (+11 lines).
+
+## M18.0b (2026-07-30) — M16.11's journeys made real end to end
+
+Follow-on to M18.0a, which found M16.11's browser journey asserting nothing and
+running against a 404 page. The harness fix landed in `fc7b031`; this is the
+journey itself.
+
+**Acceptance world extended** (`fixtures/accept.zwd`). Three additions, each
+because a DoD item had no way to happen on the old board:
+- a Torch at (8,12) on board 1 — the board is already `dark true`, so the
+  torch is both collectable and meaningful;
+- a "reaper" Object at (10,12) on board 2 running `#endgame` on touch — a
+  deterministic death that also exercises M16.6a's routing of `#endgame`
+  through the shared death/respawn path, instead of grinding a bear for the
+  ten hits a 100-health player would otherwise need;
+- a Gem at (12,10) on board 2, off the reaper's row: death costs
+  `RESPAWN_SCORE_PENALTY` (100), which floors any realistic score at zero, so
+  without a post-respawn score the quit flow silently skips the high-score
+  entry and that path never gets tested.
+`fixtures/ACCEPT.ZZT` is a build artefact — `TestM1611CompileAcceptanceWorld`
+rewrites it from the `.zwd` on every run — so it changes alongside.
+
+**Now asserted, in one run:** join (board/spawn/health/HUD/resume token), torch
+pickup and lighting, gem (+score), ammo, shooting (spends ammo), key, door
+spending the key, the vendor scroll's contents, the `!ba` purchase (-1 gem/+5
+ammo), bear damage, the passage board transfer including the M16.8a `transfer`
+event, `#endgame` death, respawn at the announced square with health restored,
+save (`saveResult`, no error, right filename), quit through the high-score
+entry and table back to the title, restore + rejoin, disconnect + resume, and a
+TOWN route driven only through the production picker. Trace, protocol
+transcript, and final server StateHash are written to `test-results/` on
+failure.
+
+**Restore asserts a documented deviation, not an accident.** Rejoining a
+restored world gives a *fresh* player at the start square, not the saved run's
+inventory. That is PARITY.md `snapshot-player-drop` /
+`account-sidecar-restore` (World.Info carries one player's stats; per-player
+inventory lives in an account sidecar). The test asserts the fresh-joiner
+outcome and cites the deviation, so a future change either way is caught.
+
+**Traps worth keeping.** Beyond M18.0a's two (55ms input sampling; the vendor
+blocking row 12): modal-opening events arrive *before* the client draws the
+modal, so typing straight after the event races it — every prompt needs a
+settle; the quit flow stacks windows (name entry, then score table) and the
+client only drops its socket once actually back at the title; a page reload
+re-runs the launch name prompt, which itself opens the world picker, so
+pressing `W` after it just types "w" into the search box; and the bear lands
+its hit during the approach walk, so health must be sampled before leaving the
+vendor square, not after.
+
+**Regression-checked**: reverting M16.8a's `room_manager.go` transfer queueing
+reddens the browser journey with `the traveller must receive a "transfer"
+event`, so this is now a real end-to-end guard on server behaviour, not just a
+smoke test.
+
+**Box still unchecked.** One DoD clause is unmet: "the acceptance-world run is
+deterministic and catches a client/server tick-order change". The journey is
+behaviour-asserted but not hash-deterministic — real key-hold timing varies
+tick alignment, so StateHash differs run to run. Locking input to ticks is the
+golden-harness work M16.9 owns. Flagged for the owner rather than
+self-certified; the beta gate decision is theirs.
+
+Verified: `go build ./...`, `go vet ./...`, `go test -count=1 ./...` and
+`go test -race -count=1 .` green. Replay fixture untouched.

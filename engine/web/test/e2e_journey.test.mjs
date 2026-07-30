@@ -1,30 +1,30 @@
-// M16.11 — browser end-to-end player journey.
+// M16.11 — browser end-to-end player journeys, without state staging.
 //
-// This drives the real Vite-built client in headless Chromium against the real
-// zzt-server subprocess, and asserts on the protocol traffic that browser
-// actually exchanges (page.on("websocket") frames) plus the rendered canvas.
+// Drives the real Vite-built client in headless Chromium against the real
+// zzt-server subprocess, entirely through the production title screen and
+// world picker (never stageTownPlayer), and asserts on the protocol traffic
+// that browser actually exchanges (page.on("websocket")) plus the canvas.
 //
 // WHY THE PROTOCOL FRAMES: the client renders to a single <canvas> via the
 // CP437 atlas and exposes no DOM state, so there is nothing meaningful to
-// assert against in the page. The frames are the client's real observable
+// assert against in the page itself. The frames are its real observable
 // behaviour — a keystroke that never reached the server, or a server reply the
-// client never got, shows up here immediately. Asserting on them keeps the
-// test honest without adding test-only hooks to production code.
+// client never applied, shows up here immediately. This keeps the test honest
+// without adding test-only hooks to production code.
 //
-// TWO THINGS THIS TEST LEARNED THE HARD WAY, both of which silently produced a
-// "passing" test that never played the game at all:
+// FOUR THINGS THAT SILENTLY PRODUCE A "PASSING" TEST THAT NEVER PLAYS AT ALL:
 //
 //  1. Input is SAMPLED, not latched. connect() starts a 55ms timer that reads
-//     the currently-held key set (main.ts sendInput/currentMask). An
-//     instantaneous page.keyboard.press() is usually gone before the next
-//     sample, so movement never happens. Every movement here holds the key
-//     down across at least one sample — see step().
-//  2. The vendor Object at x=26 BLOCKS the corridor on row 12. The east half
-//     of the board (bear, passage) is only reachable by walking around it.
-//
-// NOT COVERED HERE (deliberately — see NOTES.md M16.11): save/quit/restore and
-// disconnect/resume. Those need their own modal-driven flows and are filed as
-// follow-up work rather than asserted loosely.
+//     the currently-held key set (main.ts sendInput/currentMask), so an
+//     instantaneous keyboard.press() is usually gone before the next sample
+//     and the player never moves. Movement and shooting hold the key down
+//     across at least one sample — see step().
+//  2. The vendor Object at x=26 BLOCKS row 12. The east half of board 1 (bear,
+//     passage) is only reachable by walking around it.
+//  3. Modal-opening events arrive BEFORE the client has drawn the modal, so
+//     typing immediately after the event races it. settle() after each.
+//  4. `go test` caches this test and the .mjs is not a tracked dependency —
+//     iterate with `-count=1` or you will read a stale pass.
 
 import assert from "node:assert/strict";
 import fs from "node:fs";
@@ -45,17 +45,27 @@ const page = await context.newPage();
 const pageErrors = [];
 const consoleErrors = [];
 const sockets = [];
-/** Latest server-authoritative view, as the client itself received it. */
+const transcript = []; // retained and dumped on failure (DoD: protocol transcript)
+
 const seen = {
   hud: null,
   you: null,
   boardId: null,
   resumeToken: null,
+  stateHash: null, // DoD: final server StateHash on failure
   events: [],
   snapshots: 0,
   boardChanges: 0,
   diffs: 0,
+  closes: 0,
 };
+
+function resetRunState() {
+  seen.events.length = 0;
+  seen.snapshots = 0;
+  seen.boardChanges = 0;
+  seen.diffs = 0;
+}
 
 page.on("pageerror", (err) => pageErrors.push(String(err)));
 page.on("console", (msg) => {
@@ -63,6 +73,12 @@ page.on("console", (msg) => {
 });
 page.on("websocket", (ws) => {
   sockets.push(ws.url());
+  transcript.push({ dir: "open", url: ws.url() });
+  ws.on("close", () => {
+    seen.closes++;
+    transcript.push({ dir: "close" });
+  });
+  ws.on("framesent", (f) => transcript.push({ dir: "send", payload: String(f.payload).slice(0, 400) }));
   ws.on("framereceived", (frame) => {
     let msg;
     try {
@@ -70,10 +86,17 @@ page.on("websocket", (ws) => {
     } catch {
       return;
     }
+    transcript.push({ dir: "recv", type: msg.type, payload: String(frame.payload).slice(0, 400) });
+
+    // "saveResult"/"highScoreEntry"/"highScores"/quit outcomes ride the bare
+    // EventMessage envelope, not a snapshot/diff events array.
+    if (msg.type === "event" && msg.event) seen.events.push(msg.event);
+
     const body = msg.type === "boardChange" ? msg.snapshot : msg;
     if (msg.type === "snapshot") seen.snapshots++;
     if (msg.type === "boardChange") seen.boardChanges++;
     if (msg.type === "diff") seen.diffs++;
+    if (typeof body.hash === "number") seen.stateHash = body.hash;
     if (body.hud) seen.hud = body.hud;
     if (body.you) seen.you = body.you;
     if (body.players?.length) {
@@ -89,28 +112,27 @@ page.on("websocket", (ws) => {
 // --- helpers ----------------------------------------------------------------
 
 const sleep = (ms) => page.waitForTimeout(ms);
+/** Give the client time to draw a modal the server has just announced (note 3). */
+const settle = () => sleep(700);
+const eventTypes = () => [...new Set(seen.events.map((e) => e.type))];
+const has = (type, match) => seen.events.some((e) => e.type === type && (!match || match(e)));
 
-/** Poll until pred() holds, or fail with what was actually observed. */
-async function waitFor(pred, describe, timeoutMs = 8000) {
+async function waitFor(pred, describe, timeoutMs = 10000) {
   const deadline = Date.now() + timeoutMs;
   for (;;) {
     if (pred()) return;
     if (Date.now() > deadline) {
       throw new Error(
         `timed out waiting for ${describe}\n  last seen: board=${seen.boardId} ` +
-          `pos=(${seen.you?.x},${seen.you?.y}) hp=${seen.you?.health} ` +
-          `hud=${JSON.stringify(seen.hud)}\n  events: ${JSON.stringify(eventTypes())}`,
+          `pos=(${seen.you?.x},${seen.you?.y}) hp=${seen.you?.health} hud=${JSON.stringify(seen.hud)}\n` +
+          `  events: ${JSON.stringify(eventTypes())}`,
       );
     }
     await sleep(60);
   }
 }
 
-const eventTypes = () => [...new Set(seen.events.map((e) => e.type))];
-const hasEvent = (type, match) =>
-  seen.events.some((e) => e.type === type && (!match || match(e)));
-
-/** Hold a key across at least one 55ms input sample (see header note 1). */
+/** Hold a key across at least one 55ms input sample (note 1). */
 async function step(code, holdMs = 95) {
   await page.keyboard.down(code);
   await sleep(holdMs);
@@ -118,11 +140,7 @@ async function step(code, holdMs = 95) {
   await sleep(70);
 }
 
-/**
- * Walk in one direction until `done()` is true. Returns when it is; throws if
- * the player stops making progress, so a blocked route fails loudly here
- * instead of silently sitting still for the rest of the journey.
- */
+/** Walk until done(); throws if the player stops making progress. */
 async function walkUntil(code, done, describe, maxSteps = 30) {
   let stalled = 0;
   for (let i = 0; i < maxSteps; i++) {
@@ -131,52 +149,66 @@ async function walkUntil(code, done, describe, maxSteps = 30) {
     await step(code);
     if (`${seen.you?.x},${seen.you?.y},${seen.boardId}` === before) {
       if (++stalled >= 4) {
-        throw new Error(
-          `stuck walking ${code} toward ${describe} at (${seen.you?.x},${seen.you?.y}) on board ${seen.boardId}`,
-        );
+        throw new Error(`stuck walking ${code} toward ${describe} at (${seen.you?.x},${seen.you?.y}) board ${seen.boardId}`);
       }
     } else {
       stalled = 0;
     }
   }
   if (!done()) {
-    throw new Error(
-      `never reached ${describe}; stopped at (${seen.you?.x},${seen.you?.y}) on board ${seen.boardId}`,
-    );
+    throw new Error(`never reached ${describe}; stopped at (${seen.you?.x},${seen.you?.y}) board ${seen.boardId}`);
   }
 }
 
 const atLeastX = (x) => () => (seen.you?.x ?? 0) >= x;
 
-// --- journey ----------------------------------------------------------------
+/**
+ * Title screen -> world picker -> Play, exactly as a player does it.
+ *
+ * Passing `name` means we are on a fresh page load, where the launch name
+ * prompt is showing: submitting it opens the world picker itself, so KeyW
+ * would only type a "w" into the picker's search box. Without `name` we are
+ * already at the title and have to open the picker ourselves.
+ */
+async function titleToPlay(worldFilter, { name } = {}) {
+  if (name) {
+    await page.keyboard.type(name);
+    await page.keyboard.press("Enter");
+    await settle();
+  } else {
+    await page.keyboard.press("KeyW");
+    await settle();
+  }
+  await page.keyboard.type(worldFilter);
+  await sleep(400);
+  await page.keyboard.press("Enter");
+  await settle();
+  await page.keyboard.press("KeyP");
+}
 
 try {
-  console.log(`=== JOURNEY: Acceptance World (ACCEPT.ZZT) against ${baseURL} ===`);
+  // =========================================================================
+  // JOURNEY 1 — the committed acceptance world (fixtures/accept.zwd)
+  // =========================================================================
+  console.log(`=== JOURNEY 1: Acceptance World (ACCEPT.ZZT) against ${baseURL} ===`);
 
   const response = await page.goto(baseURL);
   assert.equal(response?.status(), 200, "the client index must be served, not the build-me 404 page");
   await page.waitForLoadState("domcontentloaded");
-
-  // The client mounts exactly one screen canvas; if the bundle failed to boot
-  // this is where the journey stops rather than typing into the void.
   await page.waitForSelector("canvas[data-screen]", { timeout: 10000 });
   assert.equal(await page.locator("canvas[data-screen]").count(), 1, "screen canvas must be mounted");
 
-  // Title screen: name, then the world picker, then Play.
-  await sleep(700);
+  // The name prompt opens the world picker itself, so no KeyW on this first pass.
+  await sleep(800);
   await page.keyboard.type("AcceptTester");
   await page.keyboard.press("Enter");
-  await sleep(700);
-  console.log("  - named the player; world picker open");
-
+  await settle();
   await page.keyboard.type("ACCEPT");
   await sleep(400);
   await page.keyboard.press("Enter");
-  await sleep(700);
+  await settle();
   await page.keyboard.press("KeyP");
-  console.log("  - selected ACCEPT and pressed Play");
 
-  // Joining is what proves the title flow actually did something.
   await waitFor(() => seen.snapshots > 0, "the join snapshot");
   assert.ok(
     sockets.some((u) => u.includes("world=ACCEPT")),
@@ -191,9 +223,18 @@ try {
   assert.equal(seen.hud.gems, 0, "starts with no gems");
   assert.equal(seen.hud.ammo, 0, "starts with no ammo");
   assert.ok(seen.resumeToken, "join snapshot must carry a resume token (M13.2)");
+  const firstPlayerId = seen.you.id;
   console.log(`  - joined: board ${seen.boardId} at (${seen.you.x},${seen.you.y}), token issued`);
 
-  // Gem at x=10: +1 gem, +10 score, +1 health (vanilla ZZT).
+  // Torch at x=8, then light it (board 1 is dark).
+  await walkUntil("ArrowRight", atLeastX(8), "the torch at x=8");
+  await waitFor(() => seen.hud.torches === 1, "the torch to be collected");
+  await page.keyboard.press("KeyT");
+  await waitFor(() => seen.hud.torchTicks > 0, "the torch to be lit");
+  assert.equal(seen.hud.torches, 0, "lighting spends the carried torch");
+  console.log(`  - torch collected and lit: torchTicks=${seen.hud.torchTicks}`);
+
+  // Gem at x=10: +1 gem, +10 score.
   await walkUntil("ArrowRight", atLeastX(10), "the gem at x=10");
   await waitFor(() => seen.hud.gems === 1, "the gem to be collected");
   assert.equal(seen.hud.score, 10, "a gem scores 10");
@@ -204,33 +245,33 @@ try {
   await waitFor(() => seen.hud.ammo === 5, "the ammo to be collected");
   console.log(`  - ammo collected: ammo=${seen.hud.ammo}`);
 
-  // Key at x=18: the cyan key lights up in the HUD.
+  // Shoot: spends ammo. Held, like movement — a tap is missed by the sampler.
+  const ammoBeforeShot = seen.hud.ammo;
+  await step("Space", 120);
+  await waitFor(() => seen.hud.ammo < ammoBeforeShot, "a shot to spend ammo");
+  console.log(`  - shot fired: ammo ${ammoBeforeShot} -> ${seen.hud.ammo}`);
+
+  // Key at x=18, door at x=22 spends it.
   await walkUntil("ArrowRight", atLeastX(18), "the key at x=18");
   await waitFor(() => seen.hud.keys.some(Boolean), "the key to be collected");
-  const heldKey = seen.hud.keys.findIndex(Boolean);
-  console.log(`  - key collected: slot ${heldKey}`);
-
-  // Door at x=22: opening it spends the key.
+  console.log(`  - key collected: slot ${seen.hud.keys.findIndex(Boolean)}`);
   await walkUntil("ArrowRight", atLeastX(23), "past the door at x=22");
   await waitFor(() => !seen.hud.keys.some(Boolean), "the door to consume the key");
   console.log("  - door opened and the key was spent");
 
-  // Vendor Object at x=26: touching it sends a scroll to this player.
+  // Vendor Object at x=26: touching it sends this player a scroll.
   await walkUntil("ArrowRight", atLeastX(25), "the square west of the vendor");
   await step("ArrowRight", 150);
   await waitFor(
-    () => hasEvent("scroll", (e) => (e.lines || []).some((l) => l.includes("Acceptance Vendor"))),
+    () => has("scroll", (e) => (e.lines || []).some((l) => l.includes("Acceptance Vendor"))),
     "the vendor scroll",
   );
   const scroll = seen.events.find((e) => e.type === "scroll");
   assert.equal(scroll.playerStatId, 0, "the scroll belongs to the touching player");
-  assert.ok(
-    scroll.lines.some((l) => l.includes("!ba;")),
-    `vendor scroll must offer the !ba hyperlink, got ${JSON.stringify(scroll.lines)}`,
-  );
+  assert.ok(scroll.lines.some((l) => l.includes("!ba;")), "vendor scroll must offer the !ba hyperlink");
   console.log(`  - vendor scroll opened: ${JSON.stringify(scroll.title)}`);
 
-  // Buy: move onto the !ba hyperlink line and take it. #take gems 1 / #give ammo 5.
+  // Take the !ba hyperlink: #take gems 1 / #give ammo 5.
   const gemsBefore = seen.hud.gems;
   const ammoBefore = seen.hud.ammo;
   await page.keyboard.press("ArrowDown");
@@ -240,50 +281,230 @@ try {
   assert.equal(seen.hud.gems, gemsBefore - 1, "the purchase spends exactly one gem");
   console.log(`  - bought ammo: gems ${gemsBefore}->${seen.hud.gems}, ammo ${ammoBefore}->${seen.hud.ammo}`);
 
-  // The vendor blocks row 12, so the passage is reached around it (header note 2).
-  await step("ArrowUp", 150);
+  // Around the vendor (note 2), then take a hit from the bear at (30,12).
+  // The bear chases, so it often lands the hit during the approach itself —
+  // capture health BEFORE leaving the vendor square, and only go looking for
+  // the bear if the walk east did not already cost health.
+  const healthBeforeBear = seen.you.health;
+  await step("ArrowUp", 110);
   assert.ok(seen.you.y < 12, `stepping up must leave row 12, at y=${seen.you.y}`);
-  await walkUntil("ArrowRight", atLeastX(34), "the passage column");
-  console.log(`  - walked around the vendor to x=${seen.you.x}, y=${seen.you.y}`);
-
-  // Passage at (34,12): a board transfer. M16.8a made the "transfer" event
-  // reachable on the wire for the traveller; assert it actually arrives.
-  const boardBefore = seen.boardId;
-  await walkUntil("ArrowDown", () => seen.boardId !== boardBefore, "the passage board change", 8);
-  await waitFor(() => seen.boardChanges > 0, "a boardChange message");
-  assert.notEqual(seen.boardId, boardBefore, "the passage must move the player to another board");
+  await walkUntil("ArrowRight", atLeastX(30), "the bear's column");
+  for (let i = 0; i < 14 && seen.you.health === healthBeforeBear; i++) {
+    // Step onto the bear's row to touch it, then back off and try again.
+    await step("ArrowDown");
+    if (seen.you.health !== healthBeforeBear) break;
+    await step("ArrowUp");
+  }
   assert.ok(
-    hasEvent("transfer"),
-    `the traveller must receive a "transfer" event (M16.8a); saw ${JSON.stringify(eventTypes())}`,
+    seen.you.health < healthBeforeBear,
+    `the bear must damage the player; health stayed ${seen.you.health}`,
   );
+  console.log(`  - bear damage taken: health ${healthBeforeBear} -> ${seen.you.health}`);
+
+  // Passage at (34,12): a board transfer. M16.8a made "transfer" reachable.
+  // The bear loop may have left the player on row 12, in which case walking
+  // east crosses the passage directly; otherwise drop onto it at x=34.
+  const boardBefore = seen.boardId;
+  await walkUntil(
+    "ArrowRight",
+    () => seen.boardId !== boardBefore || (seen.you?.x ?? 0) >= 34,
+    "the passage column",
+  );
+  if (seen.boardId === boardBefore) {
+    await walkUntil("ArrowDown", () => seen.boardId !== boardBefore, "the passage board change", 8);
+  }
+  await waitFor(() => seen.boardChanges > 0, "a boardChange message");
+  assert.ok(has("transfer"), `the traveller must receive a "transfer" event (M16.8a); saw ${JSON.stringify(eventTypes())}`);
+  assert.equal(seen.hud.ammo, ammoBefore + 5, "ammo survives the board change");
   console.log(`  - passage taken: board ${boardBefore} -> ${seen.boardId}, transfer event delivered`);
 
-  // Inventory survives the transfer.
-  assert.equal(seen.hud.ammo, ammoBefore + 5, "ammo survives the board change");
+  // Reaper Object on board 2 runs #endgame on touch: death, then respawn.
+  // #endgame routes through the same death/respawn path as damage (M16.6a).
+  await walkUntil("ArrowRight", () => has("death"), "the reaper's #endgame death", 14);
+  await waitFor(() => has("death"), "the death event");
+  await waitFor(() => seen.you.health <= 0, "health to reach zero on death");
+  console.log("  - died to the reaper's #endgame");
+  await waitFor(() => has("respawn"), "the respawn event", 12000);
+  await waitFor(() => seen.you.health === 100, "health restored on respawn");
+  const respawn = seen.events.find((e) => e.type === "respawn");
+  assert.deepEqual(
+    { x: seen.you.x, y: seen.you.y },
+    { x: respawn.x, y: respawn.y },
+    "the player stands where the respawn event said",
+  );
+  console.log(`  - respawned at (${seen.you.x},${seen.you.y}) with health ${seen.you.health}`);
 
-  // The client kept streaming and never threw.
-  assert.ok(seen.diffs > 0, "the client must have received diff frames");
+  // Death costs RESPAWN_SCORE_PENALTY (100), which floors this run's score at
+  // zero. Score again on board 2's gem — off the reaper's row — so the quit
+  // below actually exercises the high-score entry instead of skipping it.
+  assert.equal(seen.hud.score, 0, "death zeroes the score (RESPAWN_SCORE_PENALTY)");
+  await walkUntil("ArrowUp", () => (seen.you?.y ?? 99) <= 10, "board 2's gem row", 6);
+  await walkUntil("ArrowRight", atLeastX(12), "the gem on board 2");
+  await waitFor(() => seen.hud.score > 0, "a score that qualifies for the high-score table");
+  console.log(`  - scored again after respawn: score=${seen.hud.score}`);
+
+  // --- save -----------------------------------------------------------------
+  await page.keyboard.press("KeyS");
+  await waitFor(() => has("savePrompt"), "the save prompt");
+  await settle();
+  await page.keyboard.type("ACCSAVE");
+  await sleep(300);
+  await page.keyboard.press("Enter");
+  await waitFor(() => has("saveResult"), "the save result");
+  const saveResult = seen.events.find((e) => e.type === "saveResult");
+  assert.ok(!saveResult.error, `save must succeed, got error ${JSON.stringify(saveResult.error)}`);
+  assert.equal(saveResult.filename, "ACCSAVE", "the save must use the typed name");
+  console.log(`  - saved as ${saveResult.filename}.SAV`);
+  await page.keyboard.press("Escape"); // dismiss the "Saving" window
+  await settle();
+
+  // --- quit, through the high-score flow, back to the title -----------------
+  await page.keyboard.press("KeyQ");
+  await waitFor(() => has("quitPrompt"), "the quit prompt");
+  await settle();
+  await page.keyboard.press("KeyY");
+  // A qualifying score opens the name entry first; a zero score goes straight
+  // back to the title. Handle both rather than assuming one.
+  await waitFor(() => has("highScoreEntry") || seen.closes > 0, "the quit outcome");
+  const scoreQualified = has("highScoreEntry");
+  if (scoreQualified) {
+    await settle();
+    await page.keyboard.type("ACC");
+    await sleep(400);
+    await page.keyboard.press("Enter");
+    await settle();
+  }
+  // The quit flow leaves a stack of windows (the score table, then notices);
+  // the client only drops its socket once it is actually back at the title.
+  for (let i = 0; i < 6 && seen.closes === 0; i++) {
+    await page.keyboard.press("Escape");
+    await sleep(600);
+  }
+  await waitFor(() => seen.closes > 0, "the socket to close on returning to the title");
+  if (scoreQualified) {
+    assert.ok(has("highScores"), `a recorded high score must show the table; saw ${JSON.stringify(eventTypes())}`);
+  }
+  await page.keyboard.press("Escape"); // ensure no window is left over the title
+  await settle();
+  console.log(`  - quit to title: high score ${scoreQualified ? "recorded" : "skipped (score 0)"}, socket closed`);
+
+  // --- restore --------------------------------------------------------------
+  // The title has no socket by design, so the restore is proven by rejoining
+  // the restored world rather than by reading the title screen.
+  resetRunState();
+  await page.keyboard.press("KeyR");
+  await sleep(1500); // /api/saves then the select list
+  await page.keyboard.press("Enter"); // take the single saved game
+  await sleep(2000); // /api/restore, then showTitle + the "Restore game" window
+  await page.keyboard.press("Escape");
+  await settle();
+  await page.keyboard.press("KeyP");
+  await waitFor(() => seen.snapshots > 0, "a snapshot after restoring and pressing Play");
+
+  // DEVIATION snapshot-player-drop / account-sidecar-restore (PARITY.md):
+  // World.Info carries one player's stats, so a joiner into a restored world
+  // arrives fresh at the start square rather than inheriting the saved run.
+  // Asserted as the documented contract, not as an accident.
+  assert.deepEqual(
+    { x: seen.you.x, y: seen.you.y, health: seen.you.health, ammo: seen.hud.ammo, gems: seen.hud.gems },
+    { x: 6, y: 12, health: 100, ammo: 0, gems: 0 },
+    "per PARITY.md snapshot-player-drop, a joiner into a restored world starts fresh at the start square",
+  );
+  assert.equal(seen.boardId, 1, "the restored world rejoins on board 1");
+  console.log("  - restored ACCSAVE.SAV and rejoined (fresh joiner, per snapshot-player-drop)");
+
+  // --- disconnect and resume ------------------------------------------------
+  // Move off the spawn square first, so a resumed run is distinguishable from
+  // a fresh join. Position is the discriminator here rather than inventory:
+  // the restored save already consumed board 1's pickups.
+  await walkUntil("ArrowRight", atLeastX(12), "a square well clear of the spawn");
+  const beforeReload = { x: seen.you.x, y: seen.you.y, health: seen.you.health };
+  assert.notEqual(beforeReload.x, 6, "must have left the start square before disconnecting");
+  const socketsBeforeReload = sockets.length;
+
+  await page.reload(); // hard disconnect; sessionStorage keeps the resume token
+  await page.waitForSelector("canvas[data-screen]", { timeout: 10000 });
+  resetRunState();
+  await sleep(900);
+  // A reload re-runs the launch sequence, name prompt and all.
+  await titleToPlay("ACCEPT", { name: "AcceptTester" });
+  await waitFor(() => seen.snapshots > 0, "the snapshot after reconnecting");
+  assert.ok(sockets.length > socketsBeforeReload, "the reload must open a new socket");
+  assert.deepEqual(
+    { x: seen.you.x, y: seen.you.y, health: seen.you.health },
+    beforeReload,
+    `resume must reclaim the run in place, not spawn a fresh player (was ${JSON.stringify(beforeReload)})`,
+  );
+  console.log(`  - disconnected and resumed in place at (${seen.you.x},${seen.you.y})`);
+
+  console.log("JOURNEY 1 PASSED");
+
+  // =========================================================================
+  // JOURNEY 2 — a shipped world, started normally (never stageTownPlayer)
+  // =========================================================================
+  console.log("=== JOURNEY 2: TOWN route without state staging ===");
+  resetRunState();
+  const townSocketsBefore = sockets.length;
+
+  // Leave the current run the way a player does, then pick TOWN from the picker.
+  await page.keyboard.press("KeyQ");
+  await waitFor(() => has("quitPrompt"), "the quit prompt leaving ACCEPT");
+  await settle();
+  await page.keyboard.press("KeyY");
+  await sleep(1500);
+  for (let i = 0; i < 4; i++) {
+    await page.keyboard.press("Escape"); // clear whatever score windows appeared
+    await sleep(400);
+  }
+  resetRunState();
+  await titleToPlay("TOWN");
+  await waitFor(() => seen.snapshots > 0, "the TOWN join snapshot", 15000);
+  assert.ok(
+    sockets.slice(townSocketsBefore).some((u) => u.includes("world=TOWN")),
+    `client must open a socket for TOWN, opened: ${JSON.stringify(sockets.slice(townSocketsBefore))}`,
+  );
+  assert.equal(seen.you.health, 100, "a fresh TOWN player starts at full health");
+  console.log(`  - joined TOWN at (${seen.you.x},${seen.you.y}) on board ${seen.boardId}`);
+
+  // Prove the shipped world is genuinely traversable under real input.
+  const townStart = { x: seen.you.x, y: seen.you.y };
+  let moved = false;
+  for (const dir of ["ArrowRight", "ArrowDown", "ArrowLeft", "ArrowUp"]) {
+    for (let i = 0; i < 6 && !moved; i++) {
+      await step(dir);
+      if (seen.you.x !== townStart.x || seen.you.y !== townStart.y) moved = true;
+    }
+    if (moved) break;
+  }
+  assert.ok(moved, `the TOWN player must be able to move from ${JSON.stringify(townStart)}`);
+  assert.ok(seen.diffs > 0, "TOWN must stream diffs to the client");
+  console.log(`  - TOWN traversed: (${townStart.x},${townStart.y}) -> (${seen.you.x},${seen.you.y})`);
+
+  console.log("JOURNEY 2 PASSED");
+
   assert.deepEqual(pageErrors, [], "the client must not raise page errors");
   assert.deepEqual(consoleErrors, [], "the client must not log console errors");
 
-  console.log(
-    `JOURNEY PASSED — ${seen.snapshots} snapshot(s), ${seen.diffs} diffs, ` +
-      `${seen.boardChanges} board change(s), events: ${JSON.stringify(eventTypes())}`,
-  );
-
+  console.log(`ALL JOURNEYS PASSED — sockets=${sockets.length}, final StateHash=${seen.stateHash}`);
   await context.tracing.stop();
   await browser.close();
   process.exit(0);
 } catch (err) {
   console.error("E2E journey FAILED:", err);
   console.error("observed:", JSON.stringify({ ...seen, events: eventTypes() }, null, 2));
+  console.error("final server StateHash:", seen.stateHash);
   console.error("pageErrors:", pageErrors);
   console.error("consoleErrors:", consoleErrors);
   const tracePath = path.join(resultsDir, "e2e_journey_trace.zip");
   const screenshotPath = path.join(resultsDir, "e2e_journey_failure.png");
+  const transcriptPath = path.join(resultsDir, "e2e_journey_transcript.json");
+  fs.writeFileSync(
+    transcriptPath,
+    JSON.stringify({ finalStateHash: seen.stateHash, sockets, transcript }, null, 2),
+  );
   await context.tracing.stop({ path: tracePath });
   await page.screenshot({ path: screenshotPath });
-  console.error(`Saved failure trace to ${tracePath} and screenshot to ${screenshotPath}`);
+  console.error(`Saved trace ${tracePath}, screenshot ${screenshotPath}, transcript ${transcriptPath}`);
   await browser.close();
   process.exit(1);
 }
