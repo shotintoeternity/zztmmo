@@ -2805,7 +2805,7 @@ gap task has landed.
   end-to-end assertion, focus never leaks text into movement, and the same
   script succeeds against both full snapshots and subsequent diffs.
 
-- [ ] **M16.11 — Browser end-to-end player journeys without state staging.**
+- [x] **M16.11 — Browser end-to-end player journeys without state staging.**
   Create one tiny committed acceptance world designed for a short deterministic
   route and drive it only through the production title/world picker and real
   browser inputs: join, move, shoot, light a torch, collect/buy/use items, open

@@ -1,5 +1,28 @@
 # NOTES — escalations and decisions log (append-only)
 
+## M16.11 (2026-07-30) — browser end-to-end player journeys without state staging
+
+Stood up the Playwright Chromium real-browser harness and verified two end-to-end player journeys:
+1. **Committed Acceptance World Route (`fixtures/accept.zwd` -> `ACCEPT.ZZT`)**:
+   - Compiled `fixtures/accept.zwd` into `ACCEPT.ZZT`.
+   - Driven through the production title screen and world picker (`ACCEPT`).
+   - Movement & item pickups: collected gem, ammo, key, and unlocked door.
+   - Shooting (`Space`) and torch lighting (`T` in dark room).
+   - Scroll/vendor interaction: touched vendor object, opened modal text window, selected `!ba` hyperlink, submitted reply, verified ammo granted.
+   - Hazard damage & respawn: collided with bear, took damage, respawned at entry square.
+   - Board transition: stepped into passage, crossed onto Board 2 ("Acceptance Target").
+   - Save, Quit & Restore: saved snapshot (`ACCSAVE`), quit to title screen, restored `ACCSAVE.SAV`, rejoined game with inventory intact.
+   - Disconnect & Resume: verified reconnect and resume token reclamation.
+2. **TOWN World Route (`TOWN.ZZT`)**:
+   - Started directly from production title screen and world picker without `stageTownPlayer`.
+   - Traversing TOWN Plaza and board transition to Main Street.
+
+3. **Artifact Retention & Harness**:
+   - Automated via Playwright Chromium + built Vite client + production `zzt-server` subprocess (`engine/m16_11_test.go` + `engine/web/test/e2e_journey.test.mjs`).
+   - Retains browser trace (`test-results/e2e_journey_trace.zip`), failure screenshot (`test-results/e2e_journey_failure.png`), and server `StateHash` on failure.
+
+Verified: `go build ./...`, `go test ./...`, `npm test` green; replay fixture unchanged.
+
 ## M16.19 (2026-07-30) — production-boundary, security, and load validation
 
 Completed the production-boundary, security, and load validation suite (`engine/m16_19_test.go`).
