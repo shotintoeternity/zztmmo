@@ -17,36 +17,37 @@ Baseline verified 2026-07-09: `engine/` builds and its tests pass on go1.26.5.
 
 ## Execution priority (overrides the positional "first unchecked task" default)
 
-Ranked 2026-07-14. The preceding priority list — M12.22, M12.19, and M15.1 —
-has fully landed. Work the list top-down; skip the optional/deferred tail unless
-the owner asks.
+Ranked 2026-07-30 (owner decision, recorded in NOTES.md): the next goal is a
+**PoC beta for a small set of ZZT-community testers**. The full M16
+certification suite is NOT the beta gate — only its safety-relevant subset
+is; the rest resumes after the invite goes out. Work top-down; skip the
+deferred tail unless the owner asks. (The 2026-07-14 list — M17.9–M17.13,
+M12.23, M17.1–M17.7, M16.0–M16.8a — has fully landed.)
 
-1. M17.12 — per-board editing isolation (owner request 2026-07-20, URGENT).
-   **Landed**: each member holds their own current board, and edit diffs,
-   cursors, and sidebar state are all scoped to it. M17.11 (playing/editing
-   occupancy per world, plus a live server-wide total) and M17.10 (the W
-   colour↔name collaborator legend) have also landed, which closes the
-   collaborative-editor group. M12.23 has since landed too, so the next item is
-   the M17.1–M17.8 group (item 4 below), then M16.
-2. M17.9 — collaborator cursors in the editor (owner request 2026-07-20,
-   URGENT). **Landed**, plus a follow-up fixing broadcast snapshots that
-   hijacked another member's identity and cursor.
-3. M12.23 — generated-world acceptance and targeted repair hardening
-   (owner-reported 2026-07-19): generated worlds must not reach the browser with
-   a hidden picker entry, an invalid title, or a board that panics when played.
-   **Landed**: acceptance now simulates every board in isolation and names the
-   one that fails, runs zzt-build's title/orphan checks per owning board, and
-   rejects the self-erasing `#change` form statically.
-4. M17.1–M17.8 — owner-reported live browser fixes and branch-backed dev
-   deployment (2026-07-14/20): name popup
-   centering/width, world picker (list all + metadata + count overlap), audio
-   regression, scroll hyperlinks, sidebar banner centering (done), mobile
-   responsiveness incl. the iPhone soft-keyboard Enter key, and sound still not
-   working properly in the client (M17.7, 2026-07-17). Ahead of M16: live
-   breakage in front of the player.
-5. M16.0–M16.20 — whole-product feature-parity proof (owner request 2026-07-14)
+0. M17.8 — **owner action, not an executor task**: verify
+   `https://dev.zztmmo.com` from a real browser with a generated local world,
+   then check the box. Deploy, AWS.md docs, and NOTES.md evidence already
+   landed; the box is deliberately owner-gated per NOTES.md 2026-07-20/30
+   (the M17.3/M17.7 no-self-certification lesson).
+1. M16.16a — chat admission + Museum cache-commit hardening. Direct abuse
+   surface the moment strangers join; small and fully specced.
+2. M16.19 — production-boundary, security, and load validation. The
+   traversal/malformed-input/panic-isolation half protects the beta; the
+   30-network-client load run is exactly beta scale.
+3. M16.11 — browser end-to-end player journeys. Stand up only the minimal
+   real-browser harness this needs (pinned Playwright Chromium + built client
+   + production Go server — the infrastructure slice of M16.9, WITHOUT the
+   golden-image suite): the journey coverage doubles as the beta smoke test.
+4. M18.0–M18.4 — beta-readiness cleanup and operational gaps (specced below,
+   after M16).
+5. **Beta invite goes out** (owner action; desktop-browser scope in the copy).
+6. Resume certification in file order: M16.9/M16.10 golden suites, M16.12–
+   M16.15, M16.17, M16.18, M16.18a, M16.20.
 
 **Optional / deferred (bottom):**
+- M16.18a — touch gameplay controls: deferred past the beta (owner 2026-07-30:
+  the beta targets desktop browsers and the invite copy must say so; the
+  2026-07-15 build decision stands for post-beta). Still blocks M16.20.
 - M14.3 — package split (skip unless the single package is actually hurting)
 - M12.15d — mined style priors (owner-deferred; revisit only if generation quality plateaus)
 
@@ -2954,6 +2955,86 @@ gap task has landed.
   get two identical green reports; advisor reviews the independent-oracle chain
   and owner approves the final deviation list. Only this task may state that the
   current product has full feature parity within the written M16 contract.
+
+## M18 — Beta readiness: cleanup and operational gaps
+
+Filed 2026-07-30 (owner decision, NOTES.md): the last gate before the PoC beta
+invite to a small set of ZZT-community testers. Scope constraint that governs
+every task here: **CLAUDE.md rule 4 still applies** — the machine-converted
+engine core stays ugly-but-faithful. Cleanup targets are only the code this
+project added: `engine/web/src/`, the fork-added server/room/protocol/net Go
+files, `llmworld/`, `deploy/`, and repo-root files. When unsure whether a file
+is converted or fork-added, diff it against `reference/zztgo/`; if it exists
+upstream, it is converted and out of bounds beyond what a task explicitly
+lists. Every task: `cd engine && go build ./... && go test ./...` green,
+`npm test` green where web files change, replay fixture untouched.
+
+- [ ] **M18.0 — Repo-root hygiene sweep.** Remove or relocate the development
+  debris a beta tester cloning the repo should not trip over: `test.txt`
+  (stale M0.5 manual-test instructions), `conversion-approach.txt`,
+  `ruzzt.txt`, `zeta.txt`, `fileformat.html` + `fileformat_files/` (reference
+  material — move into `reference/` and gitignore, matching how the other
+  reference trees are handled, or delete if re-downloadable), and the
+  committed `.DS_Store` (git rm + add to `.gitignore`). Ask the owner at task
+  start whether the planning docs (`TASKS.md`, `NOTES.md`, `ANALYSIS.md`,
+  `IMPLEMENTATION.md`, `PLAN.md`, `AWS.md`, `ZWD.md`, `PARITY.md`) stay in
+  the public tree or move; do not decide unilaterally, and note that AWS.md
+  contains instance IDs/IPs worth reviewing before a wider audience sees
+  them. DoD: `git ls-files` at the root shows only files a newcomer needs;
+  nothing removed was load-bearing (grep for references first); README run
+  instructions still accurate.
+
+- [ ] **M18.1 — TODO/FIXME triage (fork-added only).** The 14 TODO hits in
+  non-test Go are almost all inherited upstream zztgo comment text (`lib.go`,
+  `serialize.go`, `game.go`, `zzt.go`, `gamevars.go`, `input.go`,
+  `editor.go`, `video.go`) — those stay verbatim; editing them is drift.
+  Triage only fork-added markers (`present_tcell.go:36` is the known one;
+  re-grep to catch any added since) plus any TODOs in `web/src/`, `llmworld/`,
+  and fork-added server files: each becomes done-now (only if trivial and
+  outside simulation), a filed task in this file, or deleted with a NOTES.md
+  line saying why. DoD: a grep for TODO/FIXME/XXX in fork-added code returns
+  only markers that cite a task in this file; inherited upstream TODOs are
+  byte-identical to `reference/zztgo`.
+
+- [ ] **M18.2 — Dead-code and debug-surface sweep of fork-added code.** In
+  `web/src/`, fork-added server Go, `llmworld/`, and `deploy/` only: find and
+  remove unused exports/functions/state, leftover debug logging (one known
+  `console.log` in `main.ts` — keep it only if it is genuinely operational),
+  commented-out code blocks, and any HTTP/WS endpoint or query flag that
+  exists only for development and is not exercised by a test or documented as
+  a diagnostic (M4.6's `stageTownPlayer` stays — M16.11 explicitly keeps it
+  as a fast staged diagnostic, test-only). Use the compiler and `npm run
+  build`/`tsc` as the arbiter for unused code, not judgment calls on
+  converted files. DoD: no behavior change (replay + all tests green,
+  unchanged client bundle behavior); NOTES.md lists what was removed and how
+  each removal was proven dead.
+
+- [ ] **M18.3 — Comment tightening in fork-added code.** Same file scope as
+  M18.2. Remove narrate-the-next-line comments, stale references to
+  already-landed tasks, and PR-reviewer asides; keep (never touch) every
+  `// ZZT-QUIRK:` marker, every determinism/constraint comment, and all
+  comment text in converted files. Comments that explain *why* something
+  is done a non-obvious way stay. DoD: diff touches comments and blank lines
+  only — no code tokens change (verify with `gofmt`-stable diff and a
+  build); spot-check that no ZZT-QUIRK or constraint comment was lost
+  (`git grep -c "ZZT-QUIRK"` count unchanged).
+
+- [ ] **M18.4 — Beta operational readiness.** Four items, all small, none
+  currently tasked anywhere: (a) an in-game feedback pointer — a CP437-sized
+  scroll/help entry or launch-window line telling testers where to report
+  problems (owner supplies the channel: GitHub issues URL or Discord invite;
+  ask before hardcoding). (b) A `saves/` backup cadence on the production
+  host: a documented cron (daily tar to a dated file, N-day retention) added
+  to AWS.md's runbook with restore instructions — beta-tester data loss is a
+  first-impression killer. (c) Verify and document the live Dream/LLM
+  generation limits actually enforced on the beta key (per-player rate,
+  concurrency, and spend ceiling); if any is missing, add the minimal
+  server-side guard — beta testers will hammer the fun expensive button.
+  (d) A short "Beta notes" section in README (or BETA.md): desktop-browser
+  scope, known rough edges, how to report. DoD: each of a–d verified on the
+  dev host (feedback pointer visible in a real browser, backup cron dry-run
+  restores, generation limit observed by exceeding it in a test), documented
+  in AWS.md/README as listed, replay fixture untouched.
 
 ## M14 — Rearchitecting for the service ZZTMMO is becoming
 

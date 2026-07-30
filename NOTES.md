@@ -4363,3 +4363,42 @@ plumbing (a rendered glyph, a wire event), never simulation inputs or state.
 
 **Handoff.** `dev`, tree has the above staged for commit. Not `[ADVISOR]`.
 Next per priority order is **M16.9** (real-browser visual parity harness).
+
+## 2026-07-30 — Owner decision: beta-PoC gate, reprioritization, M18 filed
+
+Owner set the next goal: a PoC beta for a small set of ZZT-community testers.
+Decisions recorded from that conversation (all owner-approved):
+
+- **The full M16 certification suite is not the beta gate.** Only the
+  safety-relevant subset blocks the invite: M16.16a (chat admission + Museum
+  cache commit — abuse surface once strangers join), M16.19 (security/
+  boundary/load — its 30-client run is exactly beta scale), and M16.11 (real
+  E2E journeys — the beta smoke test). Certification depth (M16.9/M16.10
+  golden suites, M16.12–M16.15, M16.17, M16.18, M16.20) resumes after the
+  invite. Rationale: M16 proves parity with evidence; a small human beta is
+  itself a high-taste behavioral/visual check, and the tasks that protect
+  testers are separable from the tasks that certify claims.
+- **M16.11 harness scoping**: build only the infrastructure slice of M16.9 it
+  needs (pinned Playwright Chromium + built client + production Go server),
+  not the golden-image suite. Journey tests are cheap on that base; goldens
+  are the expensive part and wait.
+- **M16.18a (touch gameplay) deferred past the beta.** The beta targets
+  desktop browsers and the invite copy must say so. The 2026-07-15 decision
+  to build the control path stands for post-beta; M16.18a still blocks
+  M16.20.
+- **M17.8 stays owner-gated.** Redeploy/docs/evidence are all landed (see
+  2026-07-30 entry above); the remaining DoD item is the owner's own
+  real-browser check of dev.zztmmo.com, now item 0 of the priority list.
+- **M18 (beta readiness) filed**: M18.0 repo-root hygiene, M18.1 TODO triage
+  (13 of 14 Go TODO hits are inherited upstream zztgo text — those stay
+  verbatim; only fork-added markers get triaged), M18.2 dead-code/debug
+  sweep of fork-added code only, M18.3 comment tightening (ZZT-QUIRK markers
+  untouchable), M18.4 operational readiness (feedback pointer, saves/ backup
+  cron, Dream spend/rate limits verified, beta notes). Every M18 spec
+  restates CLAUDE.md rule 4: converted engine code stays ugly-but-faithful;
+  the arbiter for "converted vs fork-added" is a diff against
+  reference/zztgo.
+- New execution-priority list written into TASKS.md (ranked 2026-07-30),
+  replacing the fully-landed 2026-07-14 list.
+
+No code changed; planning docs only. Replay fixture untouched.
