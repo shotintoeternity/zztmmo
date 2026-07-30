@@ -5367,3 +5367,30 @@ journeys (they pick worlds by typing, so the search path had to stay intact);
 `npm test`, `npx tsc --noEmit`, `npm run build` green.
 
 **Not deployed.** Both hosts run `72df76f`, which predates this.
+
+## 2026-07-30 — Deploy: both hosts to bf528d7 (M18.9)
+
+Same procedure as the `72df76f` deploy: one bundle built from the immutable
+commit, pre-deploy backup on production (third archive of the day), no players
+connected, previous binaries rotated to `zzt-server.prev`, `.env` ceilings
+untouched (prod 10, dev 25).
+
+The picker's effect, measured on each host after the deploy:
+
+| Host | Worlds hosted | classic | dreamed | local | First screen |
+|---|---|---|---|---|---|
+| production | 134 | 65 | 1 | 68 | **66** (was 134) |
+| dev | 118 | 65 | 5 | 48 | **70** (was 118) |
+
+Production has only one dreamed world because most dreaming has happened on
+dev, which is where the `.zwd` sources sit. Nothing was removed from either
+host: the 68 and 48 `local` worlds are still hosted, still joinable, and still
+found by typing.
+
+Verified on both: root `200`, `/api/help?file=BETA.HLP` `200`, ws upgrade `101`.
+A real browser against production opens the picker on 66 titled and credited
+entries — "Adventures of Link 2 / by Bitbot 2015" where it read `by Local ????`
+this morning — with no page errors, and typing still reaches the unlisted
+worlds.
+
+Both temporary port-22 rules revoked; allowlists back to their starting sets.
