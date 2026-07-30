@@ -2,6 +2,7 @@ package zztgo // unit: Game
 
 import (
 	"errors"
+	"fmt"
 	"io"
 	"os"
 	"path/filepath"
@@ -595,6 +596,15 @@ func (e *Engine) WorldUnload() {
 // word is neither -1 nor a board count (GAME.PAS:722).
 var ErrWorldVersion = errors.New("you need a newer version of ZZT")
 
+// ErrWorldCorrupt is a world file whose header lies about its own shape (a
+// board count outside 0..MAX_BOARD, or a board whose bytes fail to decode —
+// see validateWorldBoards). Vanilla has no such guard (GAME.PAS trusts the
+// header unconditionally, since a bad file just crashes that one DOS
+// session); this fork refuses instead, because the same file can otherwise
+// panic a live multiplayer server goroutine outside any recover and take
+// every room down with it, not just the one player who loaded it.
+var ErrWorldCorrupt = errors.New("corrupt or truncated world file")
+
 // worldReadFrom parses a world file into e.World. It is WorldLoad's byte
 // reader, split out so that a caller which cannot show DisplayIOError's modal
 // window gets an error back instead: the window ends in TextWindowSelect, which
@@ -616,6 +626,10 @@ func (e *Engine) worldReadFrom(f io.Reader, titleOnly bool, progress func()) err
 			e.World.BoardCount = LoadInt16(ptr[:2])
 			ptr = ptr[2:]
 		}
+	}
+
+	if e.World.BoardCount < 0 || e.World.BoardCount > MAX_BOARD {
+		return ErrWorldCorrupt
 	}
 
 	LoadWorldInfo(ptr[:SizeOfWorldInfo], &e.World.Info)
@@ -657,6 +671,25 @@ func (e *Engine) worldReadFrom(f io.Reader, titleOnly bool, progress func()) err
 	return nil
 }
 
+// validateWorldBoards decodes every board in world once, under recover, so a
+// truncated or internally inconsistent board (a lying RLE run count, or a
+// StatCount past MAX_STAT) is refused here instead of panicking a later, real
+// BoardOpen — room creation and board transfers on the multiplayer path both
+// assume a board they open has already decoded cleanly once. It runs against
+// a disposable scratch engine (newSnapshotEngine, snapshot.go), never the
+// caller's live board, and reuses safeBoardOpen (editor_session.go), the same
+// recover idiom the .BRD import path already relies on.
+func validateWorldBoards(world TWorld) error {
+	scratch := newSnapshotEngine()
+	scratch.World = world
+	for boardID := int16(0); boardID <= world.BoardCount; boardID++ {
+		if !safeBoardOpen(scratch, boardID) {
+			return fmt.Errorf("%w: board %d", ErrWorldCorrupt, boardID)
+		}
+	}
+	return nil
+}
+
 func (e *Engine) WorldLoad(filename, extension string, titleOnly bool) (WorldLoad bool) {
 	var loadProgress int16
 	SidebarAnimateLoading := func() {
@@ -684,7 +717,17 @@ func (e *Engine) WorldLoad(filename, extension string, titleOnly bool) (WorldLoa
 			e.VideoWriteText(63, 6, 0x1E, " version of ZZT!")
 			return
 		}
+		if errors.Is(err, ErrWorldCorrupt) {
+			e.VideoWriteText(63, 5, 0x1E, "This world is damaged")
+			e.VideoWriteText(63, 6, 0x1E, "  and cannot be read.")
+			return
+		}
 		DisplayIOError(err)
+		return
+	}
+	if err := validateWorldBoards(e.World); err != nil {
+		e.VideoWriteText(63, 5, 0x1E, "This world is damaged")
+		e.VideoWriteText(63, 6, 0x1E, "  and cannot be read.")
 		return
 	}
 

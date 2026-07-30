@@ -3989,6 +3989,18 @@
       "assignedTask": "M16.15"
     },
     {
+      "id": "service.world-file-format",
+      "dimension": "service",
+      "subject": "Portable .ZZT/.SAV world-file round trip; malformed/truncated input is refused everywhere untrusted bytes reach the loader, never panics",
+      "contract": "E",
+      "authority": "completed task contracts (TASKS.md); NOTES.md",
+      "parity": "exact",
+      "status": "pass",
+      "assignedTask": "M16.7",
+      "test": "TestWorldReadFromRejectsCorruptBoardCount,TestLoadWorldBytesRejectsTruncatedBoard,TestLoadWorldBytesRejectsOversizedStatCount,TestRoomManagerLoadWorldRejectsCorruptFile,TestRoomManagerRestoreSnapshotRejectsCorruptFile,TestWorldLoadRejectsCorruptFileWithoutPanicking,TestVanillaSaveRoundTripPreservesDarknessAndTime",
+      "notes": "BoardOpen/worldReadFrom had no bounds checking (RLE run count, StatCount vs MAX_STAT, board count vs MAX_BOARD); LoadWorldBytes/LoadPristineWorld/RoomManager.LoadWorld/RestoreSnapshot and WorldLoad now validate every board once (validateWorldBoards, game.go) before it can reach a real BoardOpen, closing a live-server-crash gap on the multiplayer upload/host/restore path. .SAV is the same GameWorldSave routine as .ZZT (game.go) with darkness/torch/time state proven round-tripped. .BRD export/import + malformed-input refusal (editor_session_test.go, safeBoardOpen) predate this task and are exercised by service.editor-solo (M16.13); board re-entry/entry-point (elem.board-edge, M16.3) and title-screen animation (elem.monitor, M16.3) were already oracle-certified and only gained one strengthened return-trip checkpoint here (pass.scn)."
+    },
+    {
       "id": "service.world-picker",
       "dimension": "service",
       "subject": "World-picker listing + metadata",

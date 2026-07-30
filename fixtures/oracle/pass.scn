@@ -1,9 +1,15 @@
-# ORCLPASS: passage teleport, post-passage unpause, board-edge transfer (M16.3).
-# Board 0 "Pass Hub": player 30,13, cyan passage 32,13 -> "Pass Target".
-# "Pass Target": arrival passage 34,13, border gap 60,14, east exit ->
-# "Pass East" (entry gap 1,14). The arrival leaves the player paused ON the
-# passage tile; the next move must unpause via the stamp branch, leaving the
-# passage tile intact (the M16.2 finding this sweep covers and fixes).
+# ORCLPASS: passage teleport, post-passage unpause, board-edge transfer (M16.3
+# and M16.7's return trip). Board 0 "Pass Hub": player 30,13, cyan passage
+# 32,13 -> "Pass Target". "Pass Target": arrival passage 34,13, border gap
+# 60,14, east exit -> "Pass East" (entry gap 1,14). The arrival leaves the
+# player paused ON the passage tile; the next move must unpause via the stamp
+# branch, leaving the passage tile intact (the M16.2 finding this sweep
+# covers and fixes). M16.7 appends a return crossing: "Pass East"'s west exit
+# points back to "Pass Target" through the same gap row, so leaving via the
+# east edge and immediately crossing back west proves board re-entry lands at
+# the crossing edge's mirrored coordinate (ElementBoardEdgeTouch,
+# elements.go), not the board's own start-player square — vanilla only uses
+# StartPlayerX/Y for the very first title->play spawn or a zap re-enter.
 world ORCLPASS
 seed 0
 boot 240
@@ -46,3 +52,6 @@ move right
 capture atedge
 move right
 capture east
+# re-enter "Pass Target" through the same gap, from the opposite side
+move left
+capture backatpasstarget

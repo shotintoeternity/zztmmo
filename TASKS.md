@@ -2483,7 +2483,7 @@ gap task has landed.
   the clicks compared (this is the real test — 20+ scenarios of walking);
   the browser plays it; replay fixture unchanged.
 
-- [ ] **M16.7 — Vanilla world, title, and portable-file parity sweep.** Build a
+- [x] **M16.7 — Vanilla world, title, and portable-file parity sweep.** Build a
   committed small corpus covering `.ZZT`, `.SAV`, and `.BRD` limits and oddities;
   compare load/save semantics and, where vanilla promises it, bytes. Cover
   board enter/leave/re-enter, flags, entry point, title animation/menu, pause,
@@ -2493,6 +2493,114 @@ gap task has landed.
   absent. DoD: every world lifecycle, title command, and portable-format row is
   verified from committed provenance-locked input; round trips distinguish
   intentional normalization from data loss; malformed fixtures cannot panic.
+
+  Landed: this sweep's DoD line "malformed fixtures cannot panic" turned up a
+  real defect, not just missing tests. `BoardOpen`/`worldReadFrom` (game.go)
+  had zero bounds checking on RLE run counts, `StatCount` vs `MAX_STAT`, or
+  board count vs `MAX_BOARD` — proven by a negative control that a hand-
+  corrupted board really does panic `BoardOpen` unguarded. The `.BRD` import
+  path already had the fix pattern (`safeBoardOpen`, editor_session.go, from
+  M5.5), but `LoadWorldBytes`/`LoadPristineWorld` (an uploaded/hosted/museum
+  world), `RoomManager.LoadWorld`/`RestoreSnapshot` (the world-picker and
+  autosave-restore paths), and the terminal `WorldLoad` all ran outside any
+  recover — a malformed file reaching any of them could panic a live server
+  goroutine with nothing to catch it, which in Go crashes the whole process
+  (every room, every player), not just whoever loaded it. Fixed with
+  `validateWorldBoards` (game.go): it decodes every board once against a
+  disposable scratch engine via the existing `safeBoardOpen`, so a bad world
+  is refused with `ErrWorldCorrupt` before any live `BoardOpen` ever sees it;
+  `worldReadFrom` also gained a direct bounds check on the board-count header
+  field. Six new tests (`m16_7_test.go`) drive truncation, an oversized
+  `StatCount`, and out-of-range board counts (including the `-1`
+  extended-version encoding) through every one of those five entry points.
+  `.SAV` is confirmed the same `GameWorldSave`/`GameWorldLoad` routine as
+  `.ZZT` (game.go), distinct from `snapshot.go`'s engine-only JSON
+  persistence (already covered by M4.3a); `TestVanillaSaveRoundTripPreservesDarknessAndTime`
+  closes the one sub-topic with zero prior coverage — darkness and the
+  per-board timer surviving a save/reload round trip.
+
+  Board enter/leave/re-enter and entry point were already largely oracle-
+  certified by M16.3's `elem.board-edge` row (`TestOracleParityPassageScenario`);
+  this task strengthened the *same* test (no new world, no manifest change
+  needed) by appending a return crossing to `pass.scn` — leaving "Pass Target"
+  east into "Pass East" and immediately crossing back west — which passed on
+  the first try and confirms `ElementBoardEdgeTouch` (elements.go) computes
+  re-entry from the crossing edge's mirrored coordinate, never the board's own
+  `StartPlayerX/Y` (that field is read only on the very first title→play spawn
+  or a zap re-enter). Title *animation* is likewise already covered:
+  `GameStateElement` never gates tick scheduling (only the player's own tile
+  glyph and sidebar content), so board 0 ticking under `E_MONITOR` is the same
+  code path as any other board's tick, already exhaustively proven by
+  `elem.monitor` (M16.3) via every scenario's pre-play `title` checkpoint. A
+  two-checkpoint animation-over-time attempt (`dev.scn`, boot further before
+  `play`) was reverted: `oracleSolvePhases`'s title-phase search assumes
+  exactly one pre-play checkpoint, and generalizing that for one marginal
+  proof over already-certified ground was not worth destabilizing M16.4's
+  phase-solver machinery. Title **menu keys** (`W`/`R`/`H`/`A`/`S`/`E`/quit)
+  are out of `V` scope entirely, confirmed by reading `GameTitleLoop`
+  (game.go): it is a blocking, terminal-only loop (`SidebarPromptYesNo`,
+  `SidebarPromptSlider`, `EditorLoop`) never invoked by `RoomManager` or
+  `WebSocketServer` — the browser's title/world-picker is a from-scratch
+  reimplementation over HTTP routes, already the seeded `presentation-
+  additions` deviation (PARITY.md §4), not a headless port of vanilla's
+  keystroke state machine. Pause needed no new work either: the
+  `oracle-pause-blink` normalization (PARITY.md §7) and `per-player-modal-
+  freeze` deviation already cover it across all 20+ committed scenarios.
+  `.BRD` export/import and its malformed-input refusal (`editor_session_test.go`,
+  M5.5) were already thorough and are cited, not duplicated.
+
+  **Help/quit/high-score/debug are the one sub-topic not closed here.**
+  Reading the reference Pascal turned up three *different* rendering shapes,
+  not one: quit is a single sidebar line (`SidebarPromptYesNo` — "End this
+  game? " drawn at 63,5), debug is a sidebar text-entry prompt (`PromptString`
+  at 63,5, `DebugPromptEvent`), and help **and** high-score display are both
+  real `TTextWindowState` modals (`HighScoresDisplay`, EDITOR.PAS, uses the
+  same `TextWindowDrawOpen/Select/Close` as a scroll) while high-score *name
+  entry* is presumably its own sidebar prompt. The existing oracle adapter's
+  window comparison (`oracleTextWindow`/`compareCheckpoint`,
+  oracle_parity_test.go) is built specifically around `ScrollEvent`; comparing
+  the other three needs real generalization across at least two more shapes,
+  not a quick dispatch — filed as **M16.7a** (blocks M16.20) with these
+  findings recorded so that session does not repeat this reconnaissance.
+  Manifest: one new row, `service.world-file-format` (contract `E`, since
+  file-format round-trip fidelity and crash-safety are this system's own
+  service guarantees, not a claim about vanilla's Pascal, which has no such
+  guard at all — GAME.PAS trusts the header unconditionally because a bad
+  file just crashes that one DOS session). `curatedServiceRows()` fixes every
+  row's contract to `E` and each entry covers one broad capability (matching
+  `service.save-restore`/`service.high-scores`'s granularity), so this is one
+  row, not eight — `elem.board-edge` and `elem.monitor` stayed assigned to
+  M16.3, since M16.7 only strengthened their existing tests. Regenerating the
+  scaffold surfaced and required restoring an unrelated drop: it silently
+  clobbers hand-authored `notes`/`authority` prose on derived rows it doesn't
+  own (`elem.player` and `proto.event.walkClick` lost M16.6b's edits on this
+  regen) — worth a maintainer look, out of scope to fix here. Full backend
+  suite green (`go build ./... && go test -count=1 ./...`); `make oracle-
+  regen` run twice, confirmed byte-for-byte reproducible before this task's
+  one intentional capture change; replay fixture unchanged.
+
+- [ ] **M16.7a — Oracle-verify help, quit, high-score, and debug/cheat
+  prompts (M16.7 gap task; blocks M16.20).** Extend the oracle adapter
+  (`oracle_parity_test.go`) to compare three prompt shapes it does not model
+  today, all confirmed against the reference Pascal by M16.7: (1) quit —
+  `SidebarPromptYesNo` draws one fixed line ("End this game? " + cursor) at
+  63,5; the engine emits `QuitPromptEvent`/answers via `SubmitQuitReply`. (2)
+  debug — `PromptString` at 63,5 is an 11-character text-entry field; the
+  engine emits `DebugPromptEvent`/`SubmitDebugCommand`. (3) help and
+  high-score display — both real `TTextWindowState` modals
+  (`TextWindowDrawOpen/Select/Close`, same family as a scroll window); the
+  engine emits `HelpEvent` for help, but check whether anything is emitted for
+  `HighScoresDisplay` at all (the manifest's `proto.event.highScoreEntry` name
+  suggests only *name entry* after qualifying, not the list view, has a wired
+  event — confirm before assuming). Script each with the oracle's generic
+  `key CH SC` directive (no `frontend_oracle.c` changes needed — confirmed
+  this session). DoD: one oracle scenario per prompt type compared against
+  real ZZT.EXE, `oracleTextWindow`/`compareCheckpoint` generalized only as far
+  as each shape actually requires (a sidebar-line comparator for quit/debug is
+  not the same code as the existing modal-window comparator — do not force
+  one abstraction over shapes that differ), and the new coverage recorded
+  against real rows (reuse `service.world-file-format` or add rows as the
+  actual surfaces demand — decide during the task, not before).
 
 - [ ] **M16.8 — Prove engine → room → protocol equivalence.** Replay the M16.3–
   M16.7 scenarios through three paths: direct `Engine`, `RoomManager`, and a

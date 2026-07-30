@@ -3831,3 +3831,196 @@ title, and portable-file parity sweep**. M16.20 is nowhere near unblocked
 yet regardless — it also needs M16.8–M16.19 (including the still-open gap
 task M16.18a, touch gameplay controls) with zero `unverified`/gap rows left
 in the manifest before its clean-clone certification can even be attempted.
+
+## 2026-07-29 (HANDOFF — read before starting M16.7)
+
+State: `dev` at `f1ac03c`, tree clean, `go build ./... && go test -count=1
+./...` green in `engine/`, `npm run build && npm test` green in
+`engine/web/`. Not `[ADVISOR]`.
+
+**Next task is M16.7** (TASKS.md, right below M16.6b): "Vanilla world, title,
+and portable-file parity sweep." Read its full entry before starting — it's
+broader than M16.3–M16.6's oracle-walkthrough sweeps, since much of it
+(`.ZZT`/`.SAV`/`.BRD` round trips, corrupt-input refusal, Pascal
+string/RLE/stat/OOP limits) is byte-format work rather than gameplay-tick
+comparison, so the M16.3–M16.6 "author a `.zwd` micro-world, `make
+oracle-regen`, wrap it in `TestOracleParity<Topic>Scenario`" recipe
+(m16-parity-framework memory / M16.2 NOTES entry) covers only the title/pause/
+help/quit/high-score slice of it, not the file-format slice.
+
+Two things worth knowing before scoping the corpus:
+
+1. **CAVES/CITY are gitignored, not committed.** TASKS.md's M16.7 entry says
+   explicitly: "CAVES/CITY evidence may not silently skip because local
+   ignored files are absent." Existing tests already have this exact
+   footgun — `TestZWDRoundTripCAVES`/`CITY` (`zwd_decompile_test.go`,
+   NOTES.md 2026 entries around line 1663) `t.Skip` when those local-only
+   `.ZZT` files aren't present, which is fine for THOSE tests' own scope but
+   is precisely the pattern M16.7 must not repeat for its own DoD claims. A
+   small corpus that ships with the repo (synthetic or Museum-of-ZZT-licensed
+   `.ZZT`/`.SAV`/`.BRD` files, same provenance bar as `fixtures/TOWN.ZZT`) is
+   likely required rather than leaning on local ignored files at all.
+2. **Some of this may already be covered and just needs a manifest row,
+   not new code.** `WorldSave`/`WorldLoad` round trips, the save-filename
+   whitelist, and the header-zero-padding fix are already tested
+   (M3.11/M4.3a's `NOTES.md` entries, `m4_3a_test.go`) — check what M16.7
+   can point at before writing new fixtures/tests for ground already covered
+   by a differently-named test. Same caution for title/quit/high-score
+   (M4.3's `NOTES.md` entry) and pause/help (M4.1/M4.2).
+
+Standard M16 workflow reminder: after any manifest-affecting change, run
+`PARITY_SCAFFOLD=1 go test -count=1 -run TestParityManifestScaffold ./` from
+`engine/` to regenerate `fixtures/parity/manifest.json` (it merges in
+existing status/test/fixture edits — a `git diff` after regen should show
+only genuinely new/changed rows, verify with a quick python diff like M16.6b
+did, not just eyeball the line count), then hand-flip new rows from
+`unverified` to `pass`/`gap` with real test names once they're certified.
+`go test ./...` under plain `go test` (no `-count=1`) can hit the test cache
+on a manifest-only edit — always use `-count=1` for a standalone manifest
+audit (m16-parity-framework memory).
+
+## 2026-07-29 — M16.7: the load boundary that could take the whole server down
+
+M16.7's DoD line "malformed fixtures cannot panic" was the session's real
+finding, not boilerplate: `BoardOpen`/`worldReadFrom` (game.go) have zero
+bounds checking on RLE run counts, `StatCount` vs `MAX_STAT`, or a board count
+vs `MAX_BOARD`. A negative-control test (built, run, then discarded — not
+committed) confirmed a hand-corrupted board really does panic unguarded
+`BoardOpen` with `runtime error: slice bounds out of range`. The `.BRD` import
+path already had the fix — `safeBoardOpen` (editor_session.go, M5.5), a
+recover wrapper with a comment explaining exactly why an unguarded panic there
+is unsafe — but four multiplayer entry points did not: `LoadWorldBytes`/
+`LoadPristineWorld` (an uploaded, generated, or museum world reaching a live
+server goroutine), `RoomManager.LoadWorld`/`RestoreSnapshot` (world-picker
+load and autosave restore), and the terminal `WorldLoad`. None of those ran
+inside `stepRoom`'s or `safeStepDiffs`'s per-tick recover (room_manager.go,
+websocket_server.go) — those only guard the steady-state tick loop, not first
+load — so a malformed file at any of the four could panic a goroutine with
+nothing to catch it. In Go that crashes the whole process: every room, every
+player, not just whoever uploaded the bad file.
+
+Fixed by reusing the existing idiom rather than inventing a new one:
+`validateWorldBoards` (game.go) decodes every board in a `TWorld` once against
+a disposable `newSnapshotEngine()`, via `safeBoardOpen`, so a bad world is
+refused with the new `ErrWorldCorrupt` before any *live* `BoardOpen` ever
+touches it. `worldReadFrom` also gained a direct bounds check on the raw
+board-count header field (both the plain and the `-1`-extended-version
+encoding), which is cheap enough to catch before even attempting to allocate
+per-board buffers. Six new tests in `engine/m16_7_test.go` drive each of the
+five load-boundary functions through truncation, an oversized `StatCount`,
+and out-of-range board counts. `DisplayIOError`'s existing `err.Error()[:40]`
+slice (game.go) would itself panic on any error string under 40 characters —
+not touched, out of scope, but `ErrWorldCorrupt` is special-cased in
+`WorldLoad` exactly like the pre-existing `ErrWorldVersion` branch specifically
+to avoid ever routing through it.
+
+**Board re-entry, title animation, and pause needed no new machinery, just
+verification that they're already covered.** `elem.board-edge` (M16.3,
+`TestOracleParityPassageScenario`) already oracle-certifies board-edge
+transfer; this task strengthened the *same* test by appending a return
+crossing to `pass.scn` (leave "Pass Target" east into "Pass East", cross back
+west) rather than authoring a new world — it passed cold, confirming
+`ElementBoardEdgeTouch` (elements.go) computes the landing square from the
+crossing edge's mirrored coordinate every time, never `Board.Info.
+StartPlayerX/Y` (that field is read only for the very first title→play spawn,
+or a zap re-enter via `ReenterWhenZapped` — a different, already-tested
+mechanic, m3_11_test.go). Title animation: `GameStateElement` (grepped every
+use in game.go) never gates *tick scheduling*, only the player's own tile
+glyph and sidebar content — so board 0 ticking under `E_MONITOR` runs the
+identical code path as any other board's tick, already exhaustively proven by
+`elem.monitor` (M16.3) through every scenario's pre-play `title` checkpoint.
+I tried for a genuine two-checkpoint animation-over-time proof anyway (added
+a second `boot`+`capture` to `dev.scn`, before `play`, reusing its
+already-phase-solved devices) and hit a real limitation: `oracleSolvePhases`
+(oracle_parity_test.go) hardcodes `checkpoints[:1]` when searching for the
+title phase, assuming exactly one pre-play checkpoint — my second checkpoint
+broke that assumption ("captures more checkpoints than its capture holds").
+Generalizing the phase solver for one additional, already-otherwise-proven
+data point wasn't worth the risk to M16.4's delicate machinery, so the
+`dev.scn`/`dev.capture.txt` change was reverted (`git checkout`) rather than
+landed. Title **menu keys** (W/R/H/A/S/E/quit) are out of `V` scope, full
+stop: `GameTitleLoop` (game.go:2245) is a blocking terminal loop —
+`SidebarPromptYesNo`, `SidebarPromptSlider`, `EditorLoop` — never invoked by
+`RoomManager`/`WebSocketServer`. The browser's title/world-picker is a
+ground-up reimplementation over HTTP routes, already the seeded
+`presentation-additions` deviation (PARITY.md §4). Pause: already covered by
+the `oracle-pause-blink` normalization and `per-player-modal-freeze`
+deviation across all 20+ committed scenarios; nothing new needed.
+
+**`.SAV` and `.BRD`.** `.SAV` is confirmed the same `GameWorldSave`/
+`GameWorldLoad` routine as `.ZZT` (GAME.PAS:1660, game.go), completely
+distinct from `snapshot.go`'s engine-only JSON persistence (M4.3a's
+`TestM43aSaveRestoreRoundTrip` tests *that* mechanism, not vanilla bytes —
+this was the one sub-topic with literally zero prior coverage, confirmed by
+grepping "Torch"/"Time"/"Dark" across m4_3a_test.go and m3_11_test.go before
+writing anything new).
+`TestVanillaSaveRoundTripPreservesDarknessAndTime` (m16_7_test.go) closes it:
+darkness, torch ticks, and the per-board timer all round-trip a real
+`WorldSave(".SAV")`→`WorldLoad(".SAV")` cycle intact. `.BRD` export/import
+and its malformed-input refusal were already thorough
+(`editor_session_test.go`, M5.5's `safeBoardOpen`) — confirmed, cited, not
+duplicated.
+
+**Manifest: one new row, not eight.** `curatedServiceRows()`
+(parity_manifest_test.go) hardcodes every `service`-dimension row to contract
+`E`, and each existing entry covers one broad end-to-end capability
+(`service.save-restore`, `service.high-scores`, …), not a narrow sub-topic —
+so `service.world-file-format` (one row, `E`, `M16.7`, `pass`) is the right
+granularity for "portable .ZZT/.SAV round trip; malformed input refused
+everywhere untrusted bytes reach the loader." `elem.board-edge`/`elem.monitor`
+stayed assigned to M16.3 since M16.7 only strengthened their existing tests,
+not replaced them. Regenerating the scaffold (`PARITY_SCAFFOLD=1`) surfaced a
+real footgun worth flagging for whoever next touches the manifest: it
+silently overwrites hand-authored `notes`/`authority` prose on *derived* rows
+it doesn't template verbatim — `elem.player` lost M16.6b's "including the
+walk click" clause and `proto.event.walkClick` lost its M16.6b authority
+citation on this regen, both restored by hand (verified with a python diff
+against `git show HEAD:...`, same recipe M16.6b used). The scaffold's merge
+logic evidently preserves `status`/`test`/`fixture`/`parity`/`deviation` but
+not arbitrary prose edits beyond the template — not fixed here, out of scope,
+but the next manifest-touching session should diff before AND after, not just
+after.
+
+**What M16.7 does NOT close: help, quit, high-score, and debug/cheat
+oracle verification.** Reading the reference Pascal (not guessing, per rule
+1) found three genuinely different rendering shapes where the plan assumed
+one: quit is `SidebarPromptYesNo` — a single fixed sidebar line ("End this
+game? " at 63,5), not a modal window at all. Debug is `PromptString` at
+63,5 — an 11-character sidebar text-entry field. Help **and** high-score
+*display* are both real `TTextWindowState` modals (`HighScoresDisplay`,
+EDITOR.PAS:988, uses the exact same `TextWindowDrawOpen/Select/Close` as a
+scroll window) — but high-score *name entry* (after a qualifying quit) is
+presumably yet another sidebar prompt, unconfirmed. The existing oracle
+adapter's `oracleTextWindow`/`compareCheckpoint` (oracle_parity_test.go) is
+built specifically around `ScrollEvent`'s shape; genuinely comparing the
+other three needs real generalization across at least two more distinct UI
+shapes (sidebar line, sidebar text-entry, modal window), not the single
+dispatch-on-event-kind I'd sketched before actually reading the Pascal. Per
+the session's own pre-approved plan (land what's solid, split the rest
+per the M16.6→M16.6a/M16.6b precedent rather than force it), this is filed as
+**M16.7a** (TASKS.md, blocks M16.20) with all of the above recorded so that
+session starts from the Pascal reconnaissance already done, not from zero.
+Confirmed useful for that session: the oracle's `key CH SC` scenario
+directive already presses arbitrary raw keys — no `frontend_oracle.c` changes
+are needed for any of the four prompt types, only Go-side adapter work.
+
+**Housekeeping confirmed this session:** the oracle toolchain
+(`reference/oracle/bin/zeta_oracle`, `reference/oracle/zzt.zip`) is already
+fetched and built in this checkout; `make oracle-regen`/`sh oracle/regen.sh`
+ran twice with zero drift on unchanged inputs before this task touched
+anything, and a third time after the `pass.scn` change touched only
+`pass.capture.txt`/`pass.scn`/`provenance.json` — confirming the pipeline
+itself is healthy for whoever picks up M16.7a.
+
+Verified: `go build ./... && go test -count=1 ./...` green in `engine/`
+(including all new tests and `TestParityManifest`); `git status --short`
+clean except the intended `pass.scn`/`pass.capture.txt`/`provenance.json`/
+`m16_7_test.go`/`game.go`/`websocket_server.go`/`snapshot.go`/
+`parity_manifest_test.go`/`manifest.json`/`TASKS.md` changes. Replay fixture
+(`fixtures/town.replay.json`) untouched.
+
+**Handoff.** `dev`, tree has the above staged for commit. Not `[ADVISOR]`.
+Next unchecked task per TASKS.md's priority order is **M16.7a** (the gap task
+just filed, blocks M16.20) — read its DoD above before starting, it already
+names the three Pascal shapes and the exact procedures/fields involved. After
+M16.7a, the next fresh sweep is **M16.8** (engine→room→protocol equivalence).

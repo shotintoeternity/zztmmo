@@ -1422,10 +1422,17 @@ func randomTestPlayWorldName() (string, error) {
 	return "TP" + strings.ToUpper(hex.EncodeToString(nonce[:])), nil
 }
 
-// LoadWorldBytes parses vanilla .ZZT bytes into a TWorld without touching disk.
+// LoadWorldBytes parses vanilla .ZZT bytes into a TWorld without touching
+// disk. data is untrusted (an uploaded/generated/museum world reaching a live
+// server goroutine outside any per-tick recover), so every board is validated
+// here — see validateWorldBoards — rather than left to panic whenever a room
+// first opens one.
 func LoadWorldBytes(data []byte) (TWorld, error) {
 	scratch := newSnapshotEngine()
 	if err := scratch.worldReadFrom(bytes.NewReader(data), false, nil); err != nil {
+		return TWorld{}, err
+	}
+	if err := validateWorldBoards(scratch.World); err != nil {
 		return TWorld{}, err
 	}
 	return scratch.World, nil
@@ -1445,6 +1452,9 @@ func LoadPristineWorld(dir, name string) (TWorld, error) {
 
 	scratch := newSnapshotEngine()
 	if err := scratch.worldReadFrom(f, false, nil); err != nil {
+		return TWorld{}, err
+	}
+	if err := validateWorldBoards(scratch.World); err != nil {
 		return TWorld{}, err
 	}
 	return scratch.World, nil

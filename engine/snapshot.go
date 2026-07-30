@@ -219,6 +219,9 @@ func (rm *RoomManager) RestoreSnapshot(dir, name string) error {
 	if err := scratch.worldReadFrom(f, false, nil); err != nil {
 		return err
 	}
+	if err := validateWorldBoards(scratch.World); err != nil {
+		return err
+	}
 
 	rm.world = scratch.World
 	rm.rooms = make(map[int16]*Room)
@@ -248,6 +251,9 @@ func (rm *RoomManager) LoadWorld(dir, name string) error {
 
 	scratch := newSnapshotEngine()
 	if err := scratch.worldReadFrom(f, false, nil); err != nil {
+		return err
+	}
+	if err := validateWorldBoards(scratch.World); err != nil {
 		return err
 	}
 

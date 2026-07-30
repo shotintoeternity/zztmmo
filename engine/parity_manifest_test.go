@@ -776,6 +776,7 @@ func curatedServiceRows() []parityRow {
 		{"dream", "Dream plan→paint→repair generation + host/join", "M16.17", "presentation-additions"},
 		{"editor-collab", "Collaborative editor leases/presence/publish", "M16.14", ""},
 		{"editor-solo", "Solo editor + portable .ZZT/.BRD export", "M16.13", ""},
+		{"world-file-format", "Portable .ZZT/.SAV world-file round trip; malformed/truncated input is refused everywhere untrusted bytes reach the loader, never panics", "M16.7", ""},
 	}
 	var rows []parityRow
 	for _, it := range items {
