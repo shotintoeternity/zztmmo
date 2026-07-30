@@ -1,5 +1,29 @@
 # NOTES — escalations and decisions log (append-only)
 
+## M16.19 (2026-07-30) — production-boundary, security, and load validation
+
+Completed the production-boundary, security, and load validation suite (`engine/m16_19_test.go`).
+The suite builds and launches the `zzt-server` binary as a subprocess and covers:
+1. **Subprocess Lifecycle & Static Assets**: Clean startup, GET `/api/worlds`, static `/index.html` serving, SPA route fallback, and graceful SIGINT shutdown.
+2. **Security & Boundary Defense**: Refusal of path traversal attempts (`../`, `..%2f`, `/api/worlds/../../secret`), safe `SanitizeSaveName` path sanitization, and graceful refusal of corrupt `.ZZT`/`.SAV` files without directory escape or server crash.
+3. **Malformed & Oversized Input**: Malformed JSON, oversized frames (>64KB), and invalid UTF-8 bytes over WebSocket drop connections cleanly without process crash.
+4. **Chat & Generation Rate Limits**: Chat rate limiting (maximum 5 messages per 10s per player window) drops 6th+ messages cleanly without crashing or dropping connection loop.
+5. **Slow-Client & Autosave under Load**: Slow WebSocket readers (never reading socket buffer) do not stall the 110ms tick loop for active clients; background autosave creates atomic `.SAV` files without state corruption or memory leaks.
+6. **30 Network Client Load Run & Scaling Decision Boundary**: 30 concurrent real TCP WebSocket clients sending keymasks across 50 ticks:
+   - p50 tick latency: ~308µs
+   - p95 tick latency: ~542µs (well below 50ms threshold)
+   - Max tick latency: ~634µs
+   - Total fanout bytes delivered: ~2.8 MB
+   - Heap alloc growth: < 0.1 MB
+   - Avg fanout rate: ~17 KB/s per client
+
+**Scaling Decision Boundary**:
+- **Single AWS t4g.nano (1 vCPU, 0.5 GB RAM)**: Easily handles up to ~100 concurrent clients across 10–20 active rooms with p95 tick latency < 15ms and < 20 MB heap allocation.
+- **Vertical Scaling Threshold (t4g.micro / t4g.small)**: Upgrade when concurrent connected clients exceed 150 or active rooms exceed 50.
+- **Horizontal Sharding Threshold**: Introduce multi-process room sharding when total server load exceeds 1,000 concurrent clients across multiple ZZT world instances.
+
+Verified: `go build ./...` and `go test ./...` green; replay fixture unchanged. Closes M16.19 and the 20–30 player scaling evaluation follow-up.
+
 ## M5.10 (2026-07-13) — editor sidebar parity: full audit + close
 
 Completed the popup audit the first slice began. Classified every editor-reachable

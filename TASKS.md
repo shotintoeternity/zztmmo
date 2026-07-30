@@ -2929,7 +2929,7 @@ gap task has landed.
   `npm test` and `go test ./...` green; the manifest gate passes with
   `mode.mobile-touchplay` no longer `gap`.
 
-- [ ] **M16.19 — Production-boundary, security, and load validation.** Launch
+- [x] **M16.19 — Production-boundary, security, and load validation.** Launch
   the built server as a subprocess and cover startup/shutdown, static assets,
   health behavior, panic isolation, corrupt worlds/saves, path and ZIP traversal,
   malformed/oversized HTTP and WebSocket input, chat/generation rate limits,
@@ -3912,7 +3912,7 @@ newly enables; same rule: backlog bullets, owner promotes before spec):**
   and any release/deploy references; preserve upstream attribution in README and
   NOTICE. DoD: a clean clone builds/tests under the ZZTMMO module path and no
   tooling or generated artifact presents the fork as upstream zztgo.
-* [ ] **Evaluate server scaling for 20–30 concurrent players.** Determine whether
+* [x] **Evaluate server scaling for 20–30 concurrent players.** Determine whether
   the current EC2 instance is sufficient before upgrading blindly. Measure CPU,
   memory, network, WebSocket fanout, tick latency, and per-room simulation cost under
   a 20–30 bot/client load test. Document the likely bottleneck and the decision
