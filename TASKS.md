@@ -65,7 +65,8 @@ M12.23, M17.1–M17.7, M16.0–M16.8a — has fully landed.)
    the moment a board opens reads as broken rather than quirky — and a `#give`
    or `#endgame` in that prelude is not cosmetic at all.
 10. Resume certification in file order: M16.9/M16.10 golden suites, M16.12–
-   M16.15, M16.17, M16.18, M16.18a, M16.20.
+   M16.15, M16.17, M16.18, M16.18a, M16.20. **M16.9 landed 2026-07-30**, and
+   filed M16.9a (high-score placement window) on its way through.
 
 **Optional / deferred (bottom):**
 - M16.18a — touch gameplay controls: deferred past the beta (owner 2026-07-30:
@@ -2805,7 +2806,7 @@ gap task has landed.
   replay.json`) unchanged — this task touches presentation/protocol plumbing
   only, never simulation inputs or outputs. See NOTES.md.
 
-- [ ] **M16.9 — Add a real-browser visual parity harness.** Introduce a pinned
+- [x] **M16.9 — Add a real-browser visual parity harness.** Introduce a pinned
   Playwright browser (Chromium first) that starts the production Go server,
   serves the built client, and captures the actual canvas at fixed viewport,
   DPR, font atlas, and animation clock. Add reviewed pixel/cell goldens for the
@@ -2823,6 +2824,44 @@ gap task has landed.
   it: give the harness a tick-locked input path — inputs applied on named ticks
   rather than wall-clock holds — so an acceptance run has a stable StateHash and
   a tick-order change reddens it. See NOTES.md M18.0b.
+  LANDED 2026-07-30 (NOTES.md M16.9). `engine/m16_9_test.go` hosts the
+  production `WebSocketServer`/`WebAPI`/`web/dist` objects in-process with the
+  110ms ticker replaced by a test-only control listener, so every golden is of a
+  world at a named tick. `engine/web/test/lib/canvas.mjs` decodes the browser's
+  own canvas backing store into CP437 cells by matching each 8x14 block against
+  the client's own font atlas — nothing comes from `render_png.go`. Fifteen
+  reviewed goldens in `fixtures/browser-goldens/` cover the title, the board +
+  authentic sidebar, the CP437 0x00-0xFF sweep, all 256 DOS attributes, the
+  seven text-tile families, the dark board, the torch-lit radius, two
+  consecutive energizer ticks, the player-identity overlay with two browsers on
+  one board, the scroll/help/debug/save/quit/high-score windows, and the
+  board-transition end state; the sweeps also carry semantic assertions a
+  wrongly re-recorded golden would not satisfy. Animation is asserted as
+  invariants across frames (transition fill, pause blink, energizer), never as a
+  mid-fade golden — the fade's cell order is a local `Math.random` shuffle.
+  Sensitivity was demonstrated both ways: a one-cell client regression reddens
+  the suite with named-cell text plus actual/expected/diff PNGs, and delaying
+  input application by one tick reddens four checkpoints of the tick-locked run.
+  FOUND AND FILED: **M16.9a** (below) — the high-score placement window.
+
+- [ ] **M16.9a — The high-score placement window shows the wrong score
+  (M16.9 gap task).** Found by M16.9's browser goldens
+  (`fixtures/browser-goldens/window-highscore-placement.json`): when a quitting
+  player's score places, the browser's "New high score for <world>" window marks
+  the earned slot with vanilla's `-- You! --` but prints **the slot's existing
+  score** beside it — `-1` for an empty slot — instead of the score the player
+  just earned. `RoomManager.HighScoreLines` (`engine/room_manager.go:143-157`)
+  only renames a slot, where the terminal path (`engine/game.go:2216-2226`,
+  `GAME.PAS` HighScoresAdd) first shifts the list down from `ListPos` and writes
+  `Score = ev.Score`, then draws. The list is written correctly when the name
+  comes back (`RecordHighScore`), so this is a display-only divergence in one
+  window; the entry prompt and the final table are already goldens and correct.
+  Fix `HighScoreLines` (or its caller) to render the pending entry the way the
+  terminal path does, including the displaced rows. DoD: a focused Go test
+  proves the rendered lines for a placing score match the terminal path's list
+  for both an empty and a full table; re-record
+  `window-highscore-placement.json` and flip the manifest row
+  `mode.modal-highscore` from `gap` to `pass`; `go test ./...` and replay green.
 
 - [ ] **M16.10 — Add real-browser control, modal, and audio parity.** Drive
   actual `KeyboardEvent`, focus, composition/input, WebSocket, SSE, and a mocked

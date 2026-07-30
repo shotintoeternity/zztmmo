@@ -1,0 +1,55 @@
+{
+  "note": "M16.9's tick-locked acceptance run: the per-room StateHash at each checkpoint of the route in engine/web/test/tick_locked.test.mjs, driven through a real browser with one input frame per server tick. Re-record only with TICK_RUN_UPDATE=1, and justify the change (CLAUDE.md rule 3).",
+  "ticks": 43,
+  "checkpoints": [
+    {
+      "label": "joined",
+      "ticks": 0,
+      "hashes": {
+        "1": "0404f0b9f9c25f7d"
+      }
+    },
+    {
+      "label": "settled",
+      "ticks": 2,
+      "hashes": {
+        "1": "face90a92b5ad047"
+      }
+    },
+    {
+      "label": "torch",
+      "ticks": 6,
+      "hashes": {
+        "1": "ba2436010c204c25"
+      }
+    },
+    {
+      "label": "gem",
+      "ticks": 10,
+      "hashes": {
+        "1": "ecd25bceff8e95e1"
+      }
+    },
+    {
+      "label": "energised",
+      "ticks": 17,
+      "hashes": {
+        "1": "c95003ff6990123d"
+      }
+    },
+    {
+      "label": "transferred",
+      "ticks": 31,
+      "hashes": {
+        "2": "bd37bd3ce7b7e9c9"
+      }
+    },
+    {
+      "label": "torch-lit",
+      "ticks": 43,
+      "hashes": {
+        "2": "71c44d149dbefcd1"
+      }
+    }
+  ]
+}

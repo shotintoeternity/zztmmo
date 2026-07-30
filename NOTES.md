@@ -5545,3 +5545,145 @@ false-exclusion names — not checked here, and not worth an SSH round trip on
 dev, since the next dev deploy rewrites the manifest from the bundle.
 
 No code changed: AWS.md only. Replay fixture untouched.
+
+## M16.9 (2026-07-30) — the real-browser visual parity harness
+
+### Where the goldens come from, and why in-process
+
+The DoD's hard constraint is that goldens come from the browser canvas, not from
+Go's `render_png.go` — that renderer shares this repo's font and palette tables
+and would cheerfully agree with a client bug. So `engine/web/test/lib/canvas.mjs`
+reads the canvas backing store (640x350, one 8x14 EGA cell per character,
+blitted 1:1) and decodes it into CP437 cells by matching each 8x14 block against
+**the client's own font atlas**. Getting that atlas took one detour worth
+recording: Vite inlines `pc_ega.png` as a `data:` URL (it is 1535 bytes, under
+the 4KB limit), so there is no `/assets/*.png` resource to fetch — the harness
+wraps `window.Image` in an init script and reads the src the client itself
+loaded.
+
+The server runs **in-process**, wiring the same `WebSocketServer`, `WebAPI` mux
+and `web/dist` file server that `cmd/zzt-server`'s `main()` wires, and simply not
+starting the ticker. Ticks come from a control listener on a second port served
+only by the test binary. That is not a convenience: goldens of a *running* game
+are stable only if the tick is, and the 110ms wall-clock ticker moves objects,
+blinks energizers and animates the title board between the join and the capture.
+Nothing production-facing learned that the harness exists — the control listener
+lives entirely in `m16_9_test.go`, which is in `package zztgo` and can therefore
+read `inst.Inputs` under `inst.mu` directly.
+
+### Decoding is sound, not approximate
+
+A cell holds at most two colours. Decode maps every pixel to an EGA index (an
+unknown colour is an error, never a guess), tries both ink assignments, keeps the
+one whose 1-bit mask is a real glyph, and then **re-derives the mask from the
+decoded (char, fg, bg) and requires it to reproduce the cell**. That last step is
+what makes cell equality equivalent to pixel equality.
+
+Two ambiguities are reported rather than papered over:
+
+- **Uniform cells.** A blank glyph (0x00/0x20/0xFF) or the full block (0xDB) on
+  a flat background is one colour of pixels; which glyph painted it is
+  unknowable, so the decoder says `uniform` and records fg == bg. The suite
+  asserts that the set of glyph codes that decode uniform is exactly
+  `{0x00, 0x20, 0xDB, 0xFF}` — a property of the shipped font, checked rather
+  than assumed.
+- **Inverse pairs.** Some CP437 glyphs are each other's exact inverse (0x07 the
+  bullet, 0x08 the inverse bullet), so "white 0x08 on black" and "black 0x07 on
+  white" are the *same pixels*. The decoder reports the lower code and hands the
+  other reading back as `alt`, which the comparison accepts too. This surfaced as
+  a sweep failure ("7 !== 8") before it was understood, which is the right way
+  round.
+
+### What is asserted, beyond the fifteen goldens
+
+The goldens (`fixtures/browser-goldens/*.json`, cell truth in hex plus ASCII art
+for the reviewer) cover the title, the board + authentic sidebar, the dark board,
+the torch-lit radius, two consecutive energizer ticks, the player-identity
+overlay, scroll/help/debug/save/quit/high-score windows, and the transition end
+state. On top of them:
+
+- **Semantic checks a wrongly re-recorded golden would still fail**: the CP437
+  sweep really is 0x00..0xFF in order in Text-White; the colour sweep really is
+  all 256 DOS attributes on the Normal-wall glyph 0xB2, with exactly the 16
+  `fg == bg` attributes indistinguishable; each text-tile family really renders
+  `(element - E_TEXT_MIN + 1) * 16 + 0x0F`.
+- **Animation as invariants, not frames.** The board transition's cell order is a
+  local `Math.random` shuffle, so a mid-fade golden would pin noise: instead the
+  fade is stepped on Playwright's fake clock and asserted to be *showing* purple
+  fill without having taken the whole board, then run out and captured at its end
+  state. The pause blink is asserted as "the glyph alternates with a blank across
+  four 250ms clock advances while `Pausing...` never moves". The energizer blink
+  is asserted as "consecutive ticks differ, and the glyph stays 0x01/0x02".
+
+### The tick lock (M16.11's carried-over DoD clause)
+
+M16.11 shipped without "the acceptance-world run is deterministic and catches a
+client/server tick-order change" because real key-hold timing decides how many
+ticks a held arrow spans. The fix is not to inject input server-side — every
+keystroke here is still a real one in a real browser, sampled by the client's own
+55ms timer and sent over the real socket. What changed is that the page clock is
+a *fake* one (so the sampler fires only when the script advances it) and the
+server takes a tick only once the frame the browser sent for that tick has landed
+(`/control/step`'s `await`). One browser frame, one tick. An idle step refuses to
+run while a non-zero input is pending, so a lost frame is reported where it
+happened rather than as a hash mismatch later.
+
+`fixtures/browser-goldens/tick-locked-run.json` records seven checkpoints of a
+43-tick route. Hashes travel as **hex strings**: a uint64 StateHash does not
+survive `JSON.parse` in the browser script, and a silently rounded hash would
+compare equal to a different world.
+
+Sensitivity was demonstrated, not asserted:
+
+- Delaying input application by one tick in `WorldInstance.Tick` reddened four
+  checkpoints (`torch`, `gem`, `energised`, `transferred`) and the tick count;
+  reverted.
+- A one-cell client regression (perturbing a single cell in `drawScreen`,
+  rebuilt) reddened the suite with `(col 30, row 12): expected 0x20' ' colour
+  0x00, got 0x21'!' colour 0x1f` plus actual/expected/diff PNGs — the diff image
+  dims the screen and boxes the offending cell in magenta; reverted.
+
+### One trap this harness has that M16.11's does not
+
+A `boardChange` makes the client drop whatever key is held
+(`applyMessage` → `stopHeldInput`). Because `readGrid` is CPU-heavy in the page,
+the message can be *applied* later than the script expects, so a keydown issued
+just after a transfer could be cancelled by the zero frame that follows — the
+tick lock then waits ten seconds for a movement frame that will never come again.
+The route now waits for the new board to be drawn before pressing anything else.
+The failure was diagnosed from the retained websocket transcript (`seq 28
+keymask 8` immediately followed by `seq 29 keymask 0`), which is why that
+transcript is kept on failure.
+
+### Found and filed: M16.9a
+
+The "New high score for GOLDEN" placement window marks the earned slot with
+vanilla's `-- You! --` but prints **the slot's old score** beside it (`-1` for an
+empty slot) instead of the score just earned. `RoomManager.HighScoreLines` only
+renames a slot, where the terminal path (`game.go:2216-2226`, `GAME.PAS`
+HighScoresAdd) shifts the list down and writes `Score = ev.Score` before drawing.
+Display-only — `RecordHighScore` writes the list correctly, and the golden of the
+final table shows `10  GLD`. Filed as **M16.9a**; the manifest row
+`mode.modal-highscore` is `gap` pointing at it, and the golden is committed with
+the defect photographed and captioned so the fix has something to diff against.
+
+### Repaired on the way through: two missing manifest task rows
+
+`TestParityManifest` was **already red on HEAD**: `task.M18.6` and `task.M18.10`
+were checked off in TASKS.md without their derived inventory rows, so the gate
+had been failing since `e375034`/`1551bdb`. Both rows were hand-inserted
+byte-identically to what `deriveTaskRows` emits (the same handling NOTES.md M18.1
+describes, and for the same reason — `PARITY_SCAFFOLD=1` regeneration is
+destructive). Not this task's work, but this task cannot commit on a red gate.
+
+### CI
+
+A new `browser-goldens` job installs `node_modules` and a pinned Chromium, builds
+the client, runs `go test -run TestM169`, and uploads `engine/web/test-results/**`
+on failure — the cell diff, the trace, and the actual/expected/diff PNGs. The Go
+tests **skip** when `engine/web/node_modules/playwright` is absent, so the
+existing `engine` job (which installs no node) stays honest rather than red.
+
+Verified: `go build ./...`, `go vet ./...`, `go test -count=1 ./...`,
+`go test -race -count=1 .`. Replay fixture untouched — this task adds a test
+world and a browser harness and changes no simulation code.

@@ -56,6 +56,44 @@ jobs:
       - run: npm test
       - run: npm run build
 
+  browser-goldens:
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    # M16.9's real-browser visual parity harness. It has its own job because it
+    # needs node_modules and a pinned Chromium, which the `engine` job above
+    # deliberately does not install — the Go tests skip themselves when the
+    # harness is absent rather than reddening a checkout that never asked for a
+    # browser. On failure the cell diff and the actual/expected/diff PNGs are
+    # uploaded: a golden failure is a picture, and reading it as a log is
+    # hopeless.
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-go@v5
+        with:
+          go-version: '1.26.x'
+          cache-dependency-path: engine/go.sum
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 'lts/*'
+          cache: npm
+          cache-dependency-path: engine/web/package-lock.json
+      - run: npm ci
+        working-directory: engine/web
+      - run: npx playwright install --with-deps chromium
+        working-directory: engine/web
+      - run: npm run build
+        working-directory: engine/web
+      - run: go test -count=1 -run 'TestM169' -v ./...
+        working-directory: engine
+      - name: Upload golden diffs
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: browser-golden-artifacts
+          path: |
+            engine/web/test-results/**
+          if-no-files-found: ignore
+
   parity:
     runs-on: ubuntu-latest
     timeout-minutes: 40

@@ -83,9 +83,11 @@ func validAssignedTask(id string) bool {
 	// and M16.6b (the unheard walk click) were filed by the M16.6 OOP/sound
 	// sweep. M16.8a (the unreachable "transfer" ProtocolEvent, and the
 	// cross-engine ElementDefs[E_PLAYER].Character global) was filed by the
-	// M16.8 engine/room/protocol equivalence sweep.
+	// M16.8 engine/room/protocol equivalence sweep. M16.9a (the high-score
+	// placement window showing the slot's old score beside "-- You! --") was
+	// filed by the M16.9 browser visual-parity sweep.
 	switch id {
-	case "M16.5a", "M16.6a", "M16.6b", "M16.16a", "M16.18a", "M16.8a":
+	case "M16.5a", "M16.6a", "M16.6b", "M16.9a", "M16.16a", "M16.18a", "M16.8a":
 		return true
 	}
 	m := regexp.MustCompile(`^M16\.(\d+)$`).FindStringSubmatch(id)

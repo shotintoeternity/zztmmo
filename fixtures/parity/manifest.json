@@ -805,6 +805,17 @@
       "notes": "task-claim row; behavioral parity carried by the element/oop/protocol/input/service rows this task touched; reconciled at M16.20"
     },
     {
+      "id": "task.M18.6",
+      "dimension": "task",
+      "subject": "Completed task M18.6 — its DoD still holds",
+      "contract": "E",
+      "authority": "TASKS.md M18.6",
+      "parity": "exact",
+      "status": "unverified",
+      "assignedTask": "M16.20",
+      "notes": "task-claim row; behavioral parity carried by the element/oop/protocol/input/service rows this task touched; reconciled at M16.20"
+    },
+    {
       "id": "task.M18.7",
       "dimension": "task",
       "subject": "Completed task M18.7 — its DoD still holds",
@@ -832,6 +843,17 @@
       "subject": "Completed task M18.9 — its DoD still holds",
       "contract": "E",
       "authority": "TASKS.md M18.9",
+      "parity": "exact",
+      "status": "unverified",
+      "assignedTask": "M16.20",
+      "notes": "task-claim row; behavioral parity carried by the element/oop/protocol/input/service rows this task touched; reconciled at M16.20"
+    },
+    {
+      "id": "task.M18.10",
+      "dimension": "task",
+      "subject": "Completed task M18.10 — its DoD still holds",
+      "contract": "E",
+      "authority": "TASKS.md M18.10",
       "parity": "exact",
       "status": "unverified",
       "assignedTask": "M16.20",
@@ -3926,8 +3948,11 @@
       "contract": "P",
       "authority": "web/src/*.ts",
       "parity": "exact",
-      "status": "unverified",
-      "assignedTask": "M16.9"
+      "test": "TestM169BrowserCanvasGoldens",
+      "fixture": "fixtures/browser-goldens/window-debug.json",
+      "status": "pass",
+      "assignedTask": "M16.9",
+      "notes": "M16.9: captured from the real client canvas in headless Chromium (cell goldens decoded from the canvas backing store, not from Go's PNG renderer) against the production server objects with the tick loop under test control. GameDebugPrompt's bare 11-wide sidebar field, opened with '?'."
     },
     {
       "id": "mode.modal-dream",
@@ -3947,8 +3972,11 @@
       "contract": "P",
       "authority": "web/src/*.ts",
       "parity": "exact",
-      "status": "unverified",
-      "assignedTask": "M16.9"
+      "test": "TestM169BrowserCanvasGoldens",
+      "fixture": "fixtures/browser-goldens/window-help.json",
+      "status": "pass",
+      "assignedTask": "M16.9",
+      "notes": "M16.9: captured from the real client canvas in headless Chromium (cell goldens decoded from the canvas backing store, not from Go's PNG renderer) against the production server objects with the tick loop under test control. GAME.HLP, opened with H and served through /api/help."
     },
     {
       "id": "mode.modal-highscore",
@@ -3957,8 +3985,11 @@
       "contract": "P",
       "authority": "web/src/*.ts",
       "parity": "exact",
-      "status": "unverified",
-      "assignedTask": "M16.9"
+      "test": "TestM169BrowserCanvasGoldens",
+      "fixture": "fixtures/browser-goldens/window-highscore-placement.json",
+      "status": "gap",
+      "assignedTask": "M16.9a",
+      "notes": "M16.9: captured from the real client canvas in headless Chromium (cell goldens decoded from the canvas backing store, not from Go's PNG renderer) against the production server objects with the tick loop under test control. GAP found by this sweep and filed as M16.9a: the placement window ('New high score for ...') shows the SLOT's old score next to vanilla's '-- You! --' marker (-1 for an empty slot) instead of the quitting player's, because RoomManager.HighScoreLines only renames a slot where the terminal path (game.go:2216-2226, GAME.PAS HighScoresAdd) shifts the list down and writes the score first. The entry prompt and the final table are correct and are goldens too (window-highscore-entry.json, window-highscore-table.json)."
     },
     {
       "id": "mode.modal-museum",
@@ -3989,8 +4020,11 @@
       "contract": "P",
       "authority": "web/src/*.ts",
       "parity": "exact",
-      "status": "unverified",
-      "assignedTask": "M16.9"
+      "test": "TestM169BrowserCanvasGoldens",
+      "fixture": "fixtures/browser-goldens/window-quit.json",
+      "status": "pass",
+      "assignedTask": "M16.9",
+      "notes": "M16.9: captured from the real client canvas in headless Chromium (cell goldens decoded from the canvas backing store, not from Go's PNG renderer) against the production server objects with the tick loop under test control. GamePromptEndPlay's \"End this game? \" sidebar Yes/No."
     },
     {
       "id": "mode.modal-save",
@@ -4009,8 +4043,11 @@
       "contract": "P",
       "authority": "web/src/*.ts",
       "parity": "exact",
-      "status": "unverified",
-      "assignedTask": "M16.9"
+      "test": "TestM169BrowserCanvasGoldens",
+      "fixture": "fixtures/browser-goldens/window-scroll.json",
+      "status": "pass",
+      "assignedTask": "M16.9",
+      "notes": "M16.9: captured from the real client canvas in headless Chromium (cell goldens decoded from the canvas backing store, not from Go's PNG renderer) against the production server objects with the tick loop under test control. Opened by touching an object, so the window's contents come from the object's own ZZT-OOP."
     },
     {
       "id": "mode.playing",
@@ -4019,8 +4056,11 @@
       "contract": "P",
       "authority": "web/src/*.ts",
       "parity": "exact",
-      "status": "unverified",
-      "assignedTask": "M16.9"
+      "test": "TestM169BrowserCanvasGoldens",
+      "fixture": "fixtures/browser-goldens/playing-board.json",
+      "status": "pass",
+      "assignedTask": "M16.9",
+      "notes": "M16.9: captured from the real client canvas in headless Chromium (cell goldens decoded from the canvas backing store, not from Go's PNG renderer) against the production server objects with the tick loop under test control. The golden world sweeps CP437 0x00-0xFF as text tiles and all 256 DOS attributes; the suite also asserts the sweeps semantically, plus the dark board, the torch-lit radius, the energizer blink, the board-transition end state and the player-identity overlay with two browsers on one board."
     },
     {
       "id": "mode.title",
@@ -4029,8 +4069,11 @@
       "contract": "P",
       "authority": "web/src/*.ts",
       "parity": "exact",
-      "status": "unverified",
-      "assignedTask": "M16.9"
+      "test": "TestM169BrowserCanvasGoldens",
+      "fixture": "fixtures/browser-goldens/title.json",
+      "status": "pass",
+      "assignedTask": "M16.9",
+      "notes": "M16.9: captured from the real client canvas in headless Chromium (cell goldens decoded from the canvas backing store, not from Go's PNG renderer) against the production server objects with the tick loop under test control. Reached through the production name prompt and world picker, never staged."
     },
     {
       "id": "service.account-persistence",
