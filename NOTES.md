@@ -4673,3 +4673,11 @@ self-certified; the beta gate decision is theirs.
 
 Verified: `go build ./...`, `go vet ./...`, `go test -count=1 ./...` and
 `go test -race -count=1 .` green. Replay fixture untouched.
+
+**Owner decision 2026-07-30 (M16.11).** Box ticked. The behavioural journey is
+accepted as sufficient for the beta gate; the one unmet DoD clause —
+deterministic acceptance run catching a client/server tick-order change — is
+carried over to **M16.9**, whose spec now names it explicitly so it cannot
+lapse. M16 tasks are excluded from the manifest's derived task rows
+(`deriveTaskRows` skips milestone 16), so ticking this needs no manifest row;
+confirmed by running the gate.

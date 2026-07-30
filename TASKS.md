@@ -2793,6 +2793,13 @@ gap task has landed.
   frame guesses. DoD: goldens come from the browser canvas (not Go's PNG
   renderer), a one-cell glyph/color regression produces a useful diff artifact,
   and CI uploads actual/expected/diff images on failure.
+  CARRIED OVER FROM M16.11 (owner decision 2026-07-30): M16.11 shipped without
+  its "the acceptance-world run is deterministic and catches a client/server
+  tick-order change" clause, because a browser journey driven by real key-hold
+  timing cannot pin tick alignment (StateHash varies per run). This task owns
+  it: give the harness a tick-locked input path — inputs applied on named ticks
+  rather than wall-clock holds — so an acceptance run has a stable StateHash and
+  a tick-order change reddens it. See NOTES.md M18.0b.
 
 - [ ] **M16.10 — Add real-browser control, modal, and audio parity.** Drive
   actual `KeyboardEvent`, focus, composition/input, WebSocket, SSE, and a mocked
@@ -2805,7 +2812,7 @@ gap task has landed.
   end-to-end assertion, focus never leaks text into movement, and the same
   script succeeds against both full snapshots and subsequent diffs.
 
-- [ ] **M16.11 — Browser end-to-end player journeys without state staging.**
+- [x] **M16.11 — Browser end-to-end player journeys without state staging.**
   STATUS 2026-07-30 (M18.0a audit, then M18.0b): the first landing asserted
   nothing and ran its whole journey against a 404 page — see NOTES.md M18.0a.
   Both journeys are now real and asserted end to end (NOTES.md M18.0b): join,
@@ -2817,13 +2824,12 @@ gap task has landed.
   production picker. Trace, protocol transcript, and final server StateHash are
   retained on failure. Regression-checked: reverting the M16.8a room_manager
   fix reddens the browser journey.
-  REMAINING (one DoD clause, owner call): "the acceptance-world run is
-  deterministic and catches a client/server tick-order change". This journey is
-  behaviour-asserted but NOT hash-deterministic — real key-hold timing means
-  tick alignment (and so StateHash) varies per run. Locking input to ticks is
-  the golden-harness work M16.9 owns; decide whether the beta gate needs that
-  clause or whether the behavioural journey suffices. Box left unchecked rather
-  than self-certified.
+  OWNER DECISION 2026-07-30: ticked. One DoD clause is knowingly carried over —
+  "the acceptance-world run is deterministic and catches a client/server
+  tick-order change". This journey is behaviour-asserted but NOT
+  hash-deterministic: real key-hold timing varies tick alignment, so StateHash
+  differs run to run. Locking input to ticks is golden-harness work; it belongs
+  to **M16.9**, which must pick it up rather than let it lapse.
   Create one tiny committed acceptance world designed for a short deterministic
   route and drive it only through the production title/world picker and real
   browser inputs: join, move, shoot, light a torch, collect/buy/use items, open
