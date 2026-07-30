@@ -1259,12 +1259,6 @@ async function enterWorld(name: string) {
   }
 }
 
-// The old loadWorld POSTed /api/loadworld, swapping the server's single default
-// world for everybody — which the server rightly refused while anyone was in a
-// room. enterWorld replaces it: worlds are title-screen selections, so picking
-// one is a local choice and needs no server-wide reload or automatic join. The
-// endpoint remains for other callers.
-
 // showSavedGames is GameWorldLoad(".SAV"): the selectable "Saved Games" window.
 // Picking one restores it server-side, which is refused while anybody is still
 // in a room — a restore rewrites every board. See NOTES.md M4.3a.
@@ -2354,9 +2348,9 @@ function stopHeldInput() {
   sendInput(0);
 }
 
-// M4.0 removed the on-page event log: the page is the ZZT screen only. Events
-// that have no vanilla presentation yet (transfer, death, high score) go to the
-// devtools console until M4.1's text-window system gives them a real home.
+// The page is the ZZT screen only — there is no on-page event log. Events with
+// no vanilla presentation (transfer, death, respawn) go to the devtools console
+// instead.
 function appendLog(text: string) {
   console.debug("[zzt]", text);
 }

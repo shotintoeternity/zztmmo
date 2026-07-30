@@ -1,4 +1,5 @@
-// The ZZT CP437 text window: help screens now, scrolls (M3.10) next.
+// The ZZT CP437 text window: help screens, scrolls, and every other windowed
+// text the client draws.
 //
 // Transcribed from engine/txtwind.go (TextWindowInit / TextWindowDrawOpen /
 // TextWindowDraw / TextWindowDrawLine), itself converted from TXTWIND.PAS.

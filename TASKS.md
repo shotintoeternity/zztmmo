@@ -3050,7 +3050,7 @@ lists. Every task: `cd engine && go build ./... && go test ./...` green,
   unchanged client bundle behavior); NOTES.md lists what was removed and how
   each removal was proven dead.
 
-- [ ] **M18.3 — Comment tightening in fork-added code.** Same file scope as
+- [x] **M18.3 — Comment tightening in fork-added code.** Same file scope as
   M18.2. Remove narrate-the-next-line comments, stale references to
   already-landed tasks, and PR-reviewer asides; keep (never touch) every
   `// ZZT-QUIRK:` marker, every determinism/constraint comment, and all

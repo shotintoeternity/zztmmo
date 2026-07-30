@@ -1,8 +1,7 @@
 // M5.0 — browser editor chrome.
 //
-// This is intentionally not the play sidebar. Its title and command layout are
-// transcribed from EditorDrawSidebar (editor.go); the lower rows are the
-// browser controls below are transcribed from EditorDrawSidebar (editor.go).
+// This is intentionally not the play sidebar: it is transcribed from
+// EditorDrawSidebar (editor.go), row for row.
 
 import { sidebarClearLine, type WriteText } from "./sidebar";
 import { EDITOR_CURSOR_CHAR } from "./editor_cursor";

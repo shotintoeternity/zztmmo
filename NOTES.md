@@ -4872,3 +4872,81 @@ Ticking the box derives a `task.M18.2` inventory row, so `fixtures/parity/
 manifest.json` gained one — hand-inserted, byte-identical to what the deriver
 emits, an 11-line pure insertion. Same workaround as M18.1: `PARITY_SCAFFOLD=1`
 regeneration is still destructive (M16.20a). No replay hash was touched.
+
+## 2026-07-30 — M18.3: comment tightening in fork-added code
+
+Swept every comment in the M18.2 file scope (`web/src/`, the fork-added server
+Go, `llmworld/`, `deploy/`) against the three removal categories, and found the
+scope far cleaner than the task spec anticipated. The result is a seven-site
+diff, not a sweep. What that means, honestly: the fork's comments are mostly
+*why* comments already, and the spec's protected class ("comments that explain
+why something is done a non-obvious way stay") covers nearly all of them.
+
+**Stale references to already-landed tasks** — every one found, all fixed:
+- `editor_session.go:14` — "M10 raises the member cap ... M5.0 caps it at one."
+  Both halves are now false: multi-member sessions landed (M17.10/M17.12) and
+  nothing caps `Members` at one. Rewritten to state the invariant that is still
+  load-bearing: every mutation goes through `Apply`.
+- `editor_session.go:361` — "M5.0 is read-only, but later editor tasks must
+  make every world mutation inside this callback." The session mutates
+  extensively now; the imperative became the description.
+- `editor_session.go:58` ("an eventual M5.1 edit diff"), `:731` ("M10's
+  eventual multi-editor session"), `:797` ("remains bound until M5.4
+  implements the program editor" — M5.4's `ProgramText`/`SaveProgram` are 80
+  lines further down the same file).
+- `editor_session_test.go:382` — "what M5.6 will host from the saved session
+  world."
+- `web/src/textwindow.ts:1` — "help screens now, scrolls (M3.10) next."
+- `web/src/main.ts:2357` — `appendLog`'s comment, the one M18.2 explicitly
+  handed forward. It promised the events a home "until M4.1's text-window
+  system" arrived, and listed high score among the homeless; M4.1 landed and
+  `highScores` opens a real window. Now describes what the function does.
+
+**PR-reviewer aside** — one:
+- `web/src/main.ts:1262` — a five-line floating paragraph, attached to no
+  declaration, arguing why `enterWorld` replaced the old `loadWorld`. Its one
+  substantive claim (picking a world must not POST `/api/loadworld`) is
+  already stated in `enterWorld`'s own doc comment two lines above. Removed.
+
+**Two broken comments**, both stale in the stronger sense of describing code
+that is not there:
+- `web/src/editor.ts:4` — a botched edit had left "the lower rows are the
+  browser controls below are transcribed from EditorDrawSidebar (editor.go)",
+  a half-overwritten sentence naming the same source twice.
+- `generation.go:1198` — the other item M18.2 handed forward: a doc comment for
+  `extractMultipleBoards`, which M18.2 deleted, stranded above `var
+  boardHeaderRe`. Moved onto `extractMultipleBoardsSplitWithWarnings`, the
+  function it actually describes, and corrected for the warnings return.
+
+**Deliberately not removed.** The spec's first category, narrate-the-next-line,
+produced almost no true hits. The near-misses were checked and kept:
+- `generation.go`'s `preprocessZWDGridWithWarnings` is a ~500-line nested
+  loop, and its short markers ("Normalize gridRows to exactly 25 rows",
+  "Aligned stats block", "Find player positions in normalized gridRows") are
+  navigational — they name a stage of a pipeline whose stages are otherwise
+  indistinguishable. Same for `zwd_decompile.go`'s `-- Write grid --` /
+  `-- Write legend --` / `-- Write stats --` banners and `decompileBoard`'s
+  per-field labels. Removing them would cost more than it saved; that is a
+  drive-by refactor of readability, not a tightening (CLAUDE.md rule 4).
+- Test files' step narration ("Bob moves to board 2. Alice must not follow.")
+  names the scenario, not the next line.
+- Go doc comments that restate a short function's name are required style.
+- `parity_manifest_test.go:130`'s "may be extended by later tasks" is a live
+  forward statement, not a stale one; `main.ts:687`'s "(future touch controls,
+  M16.18a)" names a task that is deferred, not landed.
+
+`auth.go`, `chat_db.go`, and `world_access.go` carry zero comments. Adding
+doc comments is outside a task whose DoD is a comments-and-blank-lines-only
+diff; noted here rather than acted on.
+
+Verified against the DoD: `git diff` touches comment lines only (checked
+mechanically — every `+`/`-` line outside the file headers begins with `//`),
+`gofmt -l` lists no file this task edited, and `git grep -c ZZT-QUIRK` is
+unchanged at 7 across the same six files. `go build ./...`, `go vet ./...`,
+`go test -count=1 ./...` green; `npm run build` and `npm test` green. Replay
+fixture untouched.
+
+Ticking the box derives a `task.M18.3` inventory row, hand-inserted into
+`fixtures/parity/manifest.json` as an 11-line pure insertion byte-identical to
+the deriver's output — the M18.1/M18.2 workaround for M16.20a's destructive
+`PARITY_SCAFFOLD=1` regeneration.

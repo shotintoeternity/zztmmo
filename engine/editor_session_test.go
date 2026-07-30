@@ -379,10 +379,10 @@ func TestEditorSessionBoardAndWorldPropertiesRoundTripIntoLiveRoom(t *testing.T)
 		t.Fatalf("properties did not survive BoardClose/BoardOpen: %+v", p)
 	}
 
-	// A fresh RoomManager is what M5.6 will host from the saved session world.
-	// These assertions prove the three M5.2 gameplay-relevant settings survive
-	// that boundary: dark and time limit are visible to the room; the exit
-	// actually transfers a player to its selected board.
+	// A fresh RoomManager is what hosts a saved session world (M5.6). These
+	// assertions prove the three M5.2 gameplay-relevant settings survive that
+	// boundary: dark and time limit are visible to the room; the exit actually
+	// transfers a player to its selected board.
 	rm := NewRoomManager(saved)
 	playerID := rm.JoinPlayer(2, BOARD_WIDTH, BOARD_HEIGHT/2)
 	snapshot, ok := rm.Snapshot(playerID)

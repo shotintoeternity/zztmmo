@@ -11,10 +11,9 @@ import (
 // deliberately separate from RoomManager: opening an editor can neither join a
 // live room nor observe its mutable board state.
 //
-// Members is a set, rather than an owner field, because M10 raises the member
-// cap and fans updates out from this same session model. M5.0 caps it at one.
-// Every future edit must use Apply so mutations stay serialized when that cap
-// changes.
+// Members is a set: several people edit one world through this same session
+// model, and updates fan out from it. Every mutation must go through Apply so
+// they stay serialized against each other.
 type EditorSession struct {
 	mu sync.Mutex
 
@@ -55,7 +54,7 @@ func NewEditorSession(worldName string, world TWorld) *EditorSession {
 	e.GenerateTransitionTable()
 	e.TransitionDrawToBoard()
 	// An editor snapshot is always a complete frame; do not leak setup dirty
-	// cells into an eventual M5.1 edit diff.
+	// cells into a later edit diff.
 	e.DrainScreenDirty()
 
 	return &EditorSession{
@@ -358,8 +357,8 @@ func (s *EditorSession) hasCurrentStatLeaseLocked(member *webSocketClient, e *En
 	return s.leases[key] == member
 }
 
-// Apply is the sole serialized session boundary. M5.0 is read-only, but later
-// editor tasks must make every world mutation inside this callback.
+// Apply is the sole serialized session boundary: every world mutation happens
+// inside this callback.
 func (s *EditorSession) Apply(member *webSocketClient, fn func(*Engine)) error {
 	s.mu.Lock()
 	defer s.mu.Unlock()
@@ -729,7 +728,7 @@ func (s *EditorSession) Inspect(member *webSocketClient, x, y int16) (EditorInsp
 
 // Properties returns the currently-open board's editable metadata. This is
 // read through Apply even though it does not mutate: one serialized boundary
-// makes M10's eventual multi-editor session safe by construction.
+// makes a multi-editor session safe by construction.
 func (s *EditorSession) Properties(member *webSocketClient) (EditorPropertiesMessage, error) {
 	var reply EditorPropertiesMessage
 	err := s.Apply(member, func(e *Engine) {
@@ -794,8 +793,8 @@ func (s *EditorSession) SetProperty(member *webSocketClient, edit EditorProperty
 
 // SetStat changes one of EditorEditStat's parameters. It does not accept
 // follower/leader fields: vanilla's stat dialog leaves centipede chains alone.
-// Likewise it never reads or writes object Data/DataLen, so an object's bound
-// program remains bound until M5.4 implements the program editor.
+// Likewise it never reads or writes object Data/DataLen: program text is
+// ProgramText/SaveProgram's, and an object's bound program stays bound here.
 func (s *EditorSession) SetStat(member *webSocketClient, edit EditorStatMessage) (EditorStatSettingsMessage, error) {
 	var reply EditorStatSettingsMessage
 	err := s.Apply(member, func(e *Engine) {

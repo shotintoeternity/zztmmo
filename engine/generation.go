@@ -1195,10 +1195,11 @@ func translateZWDError(err error, plan Plan, sections map[string]string) error {
 	return err
 }
 
-// extractMultipleBoards extracts all boards defined in the LLM output.
-// It returns a map from board name to its raw ZWD section text.
 var boardHeaderRe = regexp.MustCompile(`(?m)^[ \t]*board\s+"([^"]+)"`)
 
+// extractMultipleBoardsSplitWithWarnings extracts every board defined in the
+// LLM output, returning board name -> raw ZWD section text alongside the
+// preprocessor warnings each section produced.
 func extractMultipleBoardsSplitWithWarnings(text string) (map[string]string, map[string][]string) {
 	matches := multiFencedBoardRe.FindAllStringSubmatch(text, -1)
 	var sections []string
