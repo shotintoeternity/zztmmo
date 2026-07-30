@@ -49,7 +49,11 @@ M12.23, M17.1–M17.7, M16.0–M16.8a — has fully landed.)
 7. M18.6 — back up player-created worlds, not just `saves/`. The one
    data-loss hole M18.4 left open; it widens with every day of the beta, so
    take it early rather than with the certification tail.
-8. Resume certification in file order: M16.9/M16.10 golden suites, M16.12–
+8. M18.7 — the stray `à` at the cut of over-width "Dreaming a world" progress
+   lines (owner-reported 2026-07-30). Cosmetic and a few lines, but it is on
+   the screen testers watch for two minutes straight; take it before the
+   invite if anything else delays that, since it costs almost nothing.
+9. Resume certification in file order: M16.9/M16.10 golden suites, M16.12–
    M16.15, M16.17, M16.18, M16.18a, M16.20.
 
 **Optional / deferred (bottom):**
@@ -3148,6 +3152,38 @@ lists. Every task: `cd engine && go build ./... && go test ./...` green,
   shipped world does not, the archive restores it playable, and AWS.md's
   Saved-Game Backups section documents the rule chosen and why. Replay fixture
   untouched.
+
+- [ ] **M18.7 — The "Dreaming a world" truncation marker is a stray `à`.**
+  Reported by the owner 2026-07-30 with a screenshot: progress lines that hit
+  the window width end in a garbled accented glyph —
+  `Painting board 6 of 8: Coat Check (attempà`. It is not a rendering or font
+  bug, and it is not the truncation itself; the truncation is correct and
+  deliberate. `clampProgressLine` (`engine/web/src/dream.ts:14-19`) appends
+  `"\x85"` with the comment `// CP437 ellipsis`, but **CP437 0x85 is `à`
+  (a-grave)** — CP437 has no horizontal-ellipsis glyph at all, so there was
+  nothing correct to reach for. Every over-width dream progress line has ended
+  in an `à` since the clamp landed.
+
+  Fix in `dream.ts` only — the converted `TextWindowDrawLine`
+  (`engine/txtwind.go:97`, and its faithful transcription
+  `web/src/textwindow.ts` `drawLine`) writes lines unclamped exactly as vanilla
+  does, and must not grow a width clamp: authored scrolls and `.HLP` files fit
+  by construction, and only these client-composed progress lines can overrun.
+  Use three ASCII periods, which is both the CP437-honest spelling of an
+  ellipsis and the house style already in this file (`"Imagining the
+  world..."`, `"Checking every board..."`, `dream.ts:119-121`). That costs
+  three columns rather than one, so `PROGRESS_LINE_WIDTH - 1` becomes
+  `PROGRESS_LINE_WIDTH - 3`; leave `PROGRESS_LINE_WIDTH` itself
+  (`TEXT_WINDOW_WIDTH - 8`) alone — the width arithmetic is right, text starts
+  at column X+4 and 42 characters stop clear of the right border.
+
+  `test/dream.test.mjs:36` and `:70` both assert the `\x85` ending and must be
+  updated with it; `:70`'s expected string is a literal clamped line, so
+  recompute it rather than pattern-matching. DoD: no `\x85` remains in
+  `web/src/` or `web/test/`; `npm test` and `npx tsc --noEmit` green; a
+  real-browser dream (or a unit case built from the reported event sequence —
+  a board name long enough to clamp, with an `attempt 2 of 3` suffix) shows
+  `...` at the cut. Engine untouched, replay fixture untouched.
 
 ## M14 — Rearchitecting for the service ZZTMMO is becoming
 
