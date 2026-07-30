@@ -356,39 +356,6 @@ func normalizePlanLinkTargets(boards []PlanBoard) {
 	}
 }
 
-// planArrowKind reports whether token f contains a link arrow and where. It
-// returns (bidir, byteIndexOfArrow) or (_, -1) when there is no arrow. The
-// bidirectional forms are "↔" and "<->"; the one-way forms are "→" and "->".
-func planArrowKind(f string) (bool, int) {
-	if i := strings.Index(f, "↔"); i >= 0 {
-		return true, i
-	}
-	if i := strings.Index(f, "<->"); i >= 0 {
-		return true, i
-	}
-	if i := strings.Index(f, "→"); i >= 0 {
-		return false, i
-	}
-	if i := strings.Index(f, "->"); i >= 0 {
-		return false, i
-	}
-	return false, -1
-}
-
-func arrowRuneLen(f string, at int) int {
-	switch {
-	case strings.HasPrefix(f[at:], "↔"):
-		return len("↔")
-	case strings.HasPrefix(f[at:], "<->"):
-		return 3
-	case strings.HasPrefix(f[at:], "→"):
-		return len("→")
-	case strings.HasPrefix(f[at:], "->"):
-		return 2
-	}
-	return 1
-}
-
 func parsePlanSpine(lines []string) []SpineStep {
 	sec, _ := sectionLines(lines, "progression spine")
 	if sec == nil {

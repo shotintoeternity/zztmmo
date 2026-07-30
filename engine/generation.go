@@ -899,21 +899,6 @@ func planRequest(premise, repair string) string {
 	return b.String()
 }
 
-func boardRequest(plan Plan, board PlanBoard, sections map[string]string, feedback, previous string, attempt, maxAttempts int) string {
-	var b strings.Builder
-	fmt.Fprintf(&b, "Paint exactly one board for the authoritative world plan given in the system prompt. Board id=%q, required board name=%q, concept=%q, dark=%t. Output exactly one fenced zwd block containing only that board section. It must contain its own start player and use exact board names in exits and passages. Grid rows are byte-oriented: use only one-byte ASCII legend keys in every raw grid row, never literal Unicode or CP437 artwork. Use the Grid Alignment Protocol (wrapping grid rows in '|' characters and using 60-character numbered rulers above and below the grid) to ensure every grid row is exactly 60 bytes.\n\n# Already-painted adjacent board edges\n%s", board.ID, board.Name, board.Concept, board.Dark, generatedEdgeContext(plan, board, sections))
-	if board.Index == 0 {
-		b.WriteString(titleScreenBrief)
-	}
-	if feedback != "" {
-		fmt.Fprintf(&b, "\n\n# Repair required (attempt %d of %d)\n%s", attempt, maxAttempts, feedback)
-		if previous != "" {
-			fmt.Fprintf(&b, "\n\n# Previous failed candidate\nEdit this exact candidate. Preserve valid content and fix the named defects; do not repaint from scratch.\n```zwd\n%s\n```", strings.TrimSpace(previous))
-		}
-	}
-	return b.String()
-}
-
 // blueprintBoardRequest replaces the brittle grid-writing request used by the
 // legacy path. Plan-owned facts are explicit, while composition remains the
 // model's job. The renderer will enforce the plan fields again after parsing.
@@ -1213,11 +1198,6 @@ func translateZWDError(err error, plan Plan, sections map[string]string) error {
 // extractMultipleBoards extracts all boards defined in the LLM output.
 // It returns a map from board name to its raw ZWD section text.
 var boardHeaderRe = regexp.MustCompile(`(?m)^[ \t]*board\s+"([^"]+)"`)
-
-func extractMultipleBoardsSplit(text string) map[string]string {
-	sections, _ := extractMultipleBoardsSplitWithWarnings(text)
-	return sections
-}
 
 func extractMultipleBoardsSplitWithWarnings(text string) (map[string]string, map[string][]string) {
 	matches := multiFencedBoardRe.FindAllStringSubmatch(text, -1)

@@ -237,26 +237,6 @@ func (cp *oracleCheckpoint) sidebarText(row int) string {
 	return b.String()
 }
 
-// counter parses the integer following `label` in the checkpoint's sidebar.
-func (cp *oracleCheckpoint) counter(t *testing.T, row int, label string) int {
-	t.Helper()
-	text := cp.sidebarText(row)
-	i := strings.Index(text, label)
-	if i < 0 {
-		t.Fatalf("checkpoint %s: sidebar row %d %q has no %q", cp.Label, row, text, label)
-	}
-	rest := strings.TrimLeft(text[i+len(label):], " ")
-	end := 0
-	for end < len(rest) && rest[end] >= '0' && rest[end] <= '9' {
-		end++
-	}
-	n, err := strconv.Atoi(rest[:end])
-	if err != nil {
-		t.Fatalf("checkpoint %s: cannot parse %s from %q", cp.Label, label, text)
-	}
-	return n
-}
-
 // rowText renders board columns of a capture row (for modal-content matching).
 func (cp *oracleCheckpoint) rowText(row int) string {
 	var b strings.Builder

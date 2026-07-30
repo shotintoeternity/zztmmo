@@ -3037,7 +3037,7 @@ lists. Every task: `cd engine && go build ./... && go test ./...` green,
   only markers that cite a task in this file; inherited upstream TODOs are
   byte-identical to `reference/zztgo`.
 
-- [ ] **M18.2 — Dead-code and debug-surface sweep of fork-added code.** In
+- [x] **M18.2 — Dead-code and debug-surface sweep of fork-added code.** In
   `web/src/`, fork-added server Go, `llmworld/`, and `deploy/` only: find and
   remove unused exports/functions/state, leftover debug logging (one known
   `console.log` in `main.ts` — keep it only if it is genuinely operational),

@@ -518,8 +518,6 @@ let retryTimer = 0;
 // prolonged outage backs off.
 let reconnectAttempt = 0;
 let connected = false;
-let lastMessageKey = "";
-let lastMessageAt = 0;
 const pressed = new Set<string>();
 const zztSound = new ZztSound();
 // Expose the synth for live diagnosis (M17.7): the M17.3 fix told the operator to
@@ -2241,7 +2239,6 @@ function handleProtocolEvent(event: ProtocolEvent) {
       if (isMine(event)) {
         openWindow(event.title ?? event.filename ?? "Help", event.lines ?? [], true);
       }
-      appendLogOnce(`help: ${event.title ?? event.filename ?? ""}`);
       break;
     case "debugPrompt":
       if (isMine(event)) {
@@ -2280,7 +2277,6 @@ function handleProtocolEvent(event: ProtocolEvent) {
           statId: event.statId ?? -1,
         });
       }
-      appendLogOnce(`scroll: ${event.title ?? ""}`);
       break;
     case "pause":
       // Pause is per-player: a PauseEvent for somebody else's stat must not
@@ -2363,16 +2359,6 @@ function stopHeldInput() {
 // devtools console until M4.1's text-window system gives them a real home.
 function appendLog(text: string) {
   console.debug("[zzt]", text);
-}
-
-function appendLogOnce(text: string) {
-  const now = Date.now();
-  if (text === lastMessageKey && now - lastMessageAt < 1000) {
-    return;
-  }
-  lastMessageKey = text;
-  lastMessageAt = now;
-  appendLog(text);
 }
 
 // routeModalKey consumes a key on behalf of the open modal. A modal swallows

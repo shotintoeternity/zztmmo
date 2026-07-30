@@ -4763,3 +4763,112 @@ regeneration that quietly deletes verified rows corrupts the certification
 record — and the damage is invisible unless someone diffs the row-id set, which
 is why it survived until now. Filed as **M16.20a** so it is fixed before M16.20
 consumes the manifest.
+
+## M18.2 (2026-07-30) — dead-code and debug-surface sweep, fork-added only
+
+**Method: tools as arbiter, not judgment.** Neither `go build` nor `go vet`
+reports unused package-level declarations, so the DoD's "use the compiler as
+the arbiter" needed real detectors. Installed two and ran both over the whole
+module with tests as roots:
+
+- `golang.org/x/tools/cmd/deadcode -test ./...` — call-graph reachability from
+  every `main` and every `Test*`. Catches unreachable functions and methods,
+  exported ones included.
+- `honnef.co/go/tools/cmd/staticcheck -checks=U1000 ./...` — unused unexported
+  identifiers, including struct fields. A probe file (one unused exported func,
+  type, var, and const, added and removed) proved staticcheck does **not** flag
+  exported identifiers even in `package main`, so U1000 alone would have missed
+  exported dead code; `deadcode` is what covers that half for functions.
+- Exported non-function declarations and exported struct fields are outside both
+  tools' reach, so a scratch script counted every identifier occurrence across
+  `engine/*.go` + `engine/cmd/**/*.go` and flagged any top-level `type`/`var`/
+  `const` (including const-group members) or exported struct field occurring
+  exactly once. **Zero hits** in fork-added Go.
+- TypeScript needed no new tool: `tsconfig.json` already sets `noUnusedLocals`
+  and `noUnusedParameters`, and a probe confirmed `tsc` flags unused
+  module-scope functions and consts (TS6133). Unused *exports* are the blind
+  spot, so the same occurrence-count script ran over `src/*.ts` + `test/*.mjs` +
+  `index.html`. **Zero unused exports.**
+
+**Removed — four functions in fork-added Go, each proven unreachable by both
+detectors and by a repo-wide `git grep` finding only the definition:**
+
+- `generation.go` `boardRequest` (14 lines) — the legacy "paint one board as a
+  fenced ZWD grid" request builder from M12.4. `blueprintBoardRequest` replaced
+  it at the single call site (`generation.go:626`); its own doc comment already
+  said it "replaces the brittle grid-writing request used by the legacy path".
+  No config toggle selects between the two — the legacy branch was deleted, not
+  disabled. `titleScreenBrief` and `generatedEdgeContext`, its only distinctive
+  callees, remain live via the blueprint path (re-checked after removal).
+- `generation.go` `extractMultipleBoardsSplit` (4 lines) — a wrapper that
+  discarded the warnings half of `extractMultipleBoardsSplitWithWarnings`. Every
+  caller wants the warnings.
+- `plan.go` `planArrowKind` and `arrowRuneLen` (33 lines) — link-arrow tokenizer
+  helpers superseded when board-graph link parsing moved to the six-column
+  table form. Nothing has called either since.
+- `oracle_parity_test.go` `(*oracleCheckpoint).counter` (20 lines) — an oracle
+  sidebar-counter parser no checkpoint assertion uses; `sidebarText`, the method
+  it wrapped, is still live.
+
+**Removed — leftover debug logging in `web/src/main.ts` (13 lines):** the two
+`appendLogOnce` breadcrumbs on the `help` and `scroll` protocol events, plus
+`appendLogOnce` itself and its `lastMessageKey`/`lastMessageAt` dedup state
+(both provably dead afterward — `tsc` would have failed the build otherwise).
+`appendLog`'s own comment explains the rule that decided this: console output
+was a stopgap "until M4.1's text-window system gives them a real home". Help and
+scroll now *have* that home — the same cases call `openWindow` and
+`enqueueScroll` two lines above — so the breadcrumb was duplicate narration of a
+fully presented event.
+
+**Kept, deliberately, as genuinely operational:**
+
+- `appendLog` for `transfer`, `death`, `respawn`, and the `default:` arm. These
+  are the *only* handling those events have; deleting the log would drop a real
+  protocol event with no trace at all, and the `default:` arm is how an unknown
+  event type becomes visible during the beta.
+- `console.warn` in `warnIfSoundUnplayable` (M17.7) — an explicitly-added
+  operator diagnostic for silent audio, not development residue.
+- M4.6's `stageTownPlayer` — test-only, kept per the spec and M16.11.
+
+**Nothing else was dead.** Recorded so the next sweep does not redo the search:
+
+- **No commented-out code.** A strict scan (comment bodies ending in `;`/`{`/`}`
+  or opening with a code keyword and closing a paren/bracket) over all fork-added
+  Go and all of `web/src/` returned 18 hits, every one a prose sentence whose
+  line happened to end in a semicolon. Zero real code blocks.
+- **No dev-only endpoints or query flags.** All fifteen `/api/*` routes plus
+  `/ws` are product surface; all eleven `zzt-server` flags and all nine query
+  parameters are operational. Nothing gated on a dev-only switch.
+- **No dead protocol surface.** Each of the 32 `MessageType*` constants in
+  `protocol.go` appears in `web/src/` as well — no message type the server
+  parses that the client never sends, and none the client sends that the server
+  ignores.
+- **No orphan modules or dead CSS.** Every `src/*.ts` except the `main.ts` entry
+  point is imported by another module; every `style.css` selector is reachable
+  (`.touch-btn-action` is a false positive — `touch_controls.ts:60` builds the
+  class name as `"touch-btn-" + spec.group`).
+- **`deploy/` and `llmworld/` are clean.** All four `deploy/` files are live
+  systemd/watchdog config. `llmworld/` is data (prompt corpus, eval baselines,
+  captions); its one script, `transcripts/build_archive.py`, is documented in
+  `llmworld/transcripts/ARCHIVE.md` and stays.
+
+**Left for M18.3 (comments, same file scope) rather than widened into here:**
+`generation.go:1198-1199` carries a doc comment for `extractMultipleBoards`, a
+function that does not exist under that name and did not before this task —
+it now sits above `var boardHeaderRe`. And `appendLog`'s comment still lists
+"high score" among the events without a home, though `highScores` opens a real
+window. Also stale but out of scope: `TASKS.md:1288,1406` name `boardRequest` inside
+the specs of landed tasks M12.17 and M12.21 — those are historical records of
+what was true then, so they stay.
+
+Verified: `go build ./...`, `go vet ./...`, `go test -count=1 ./...` green
+(the `-count=1` matters for the same reason M18.1 recorded). `npx tsc --noEmit`
+clean, `npm test` green, `npm run build` produces the bundle. Replay fixture
+untouched. `TestM1611BrowserEndToEndPlayerJourneys` re-run explicitly and
+passing (39s) — the real-browser journeys exercise the edited client, which is
+the DoD's "unchanged client bundle behavior" check.
+
+Ticking the box derives a `task.M18.2` inventory row, so `fixtures/parity/
+manifest.json` gained one — hand-inserted, byte-identical to what the deriver
+emits, an 11-line pure insertion. Same workaround as M18.1: `PARITY_SCAFFOLD=1`
+regeneration is still destructive (M16.20a). No replay hash was touched.
