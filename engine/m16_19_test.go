@@ -438,9 +438,14 @@ func TestM1619ThirtyNetworkClientLoadAndMetrics(t *testing.T) {
 	ctx, cancel := context.WithTimeout(context.Background(), 20*time.Second)
 	defer cancel()
 
+	// The reader goroutines below write these counters while the main
+	// goroutine reads them for the metrics assertions, so every access is
+	// guarded — an unsynchronized read here was a real race (`go test -race`).
 	type clientBot struct {
-		conn      *websocket.Conn
-		id        PlayerID
+		conn *websocket.Conn
+		id   PlayerID
+
+		mu        sync.Mutex
 		bytesRead int64
 		diffCount int
 		err       error
@@ -481,14 +486,18 @@ func TestM1619ThirtyNetworkClientLoadAndMetrics(t *testing.T) {
 			for {
 				typ, data, err := bot.conn.Read(ctx)
 				if err != nil {
+					bot.mu.Lock()
 					bot.err = err
+					bot.mu.Unlock()
 					return
 				}
 				if typ == websocket.MessageText {
+					bot.mu.Lock()
 					bot.bytesRead += int64(len(data))
 					if strings.Contains(string(data), `"type":"diff"`) {
 						bot.diffCount++
 					}
+					bot.mu.Unlock()
 				}
 			}
 		}(b)
@@ -504,8 +513,14 @@ func TestM1619ThirtyNetworkClientLoadAndMetrics(t *testing.T) {
 		wg.Wait()
 	}()
 
-	// Perform 50 load ticks sending input masks
-	tickLatencies := make([]time.Duration, 0, runTicks)
+	// Perform 50 load ticks sending input masks.
+	//
+	// NOTE ON WHAT THIS MEASURES: the timer below spans the client-side writes
+	// of one keymask per bot. It is the harness's own fan-out cost, NOT the
+	// server's tick duration and NOT a round-trip latency — a write returns
+	// once the frame is buffered. Server responsiveness is asserted separately,
+	// from the diffs each bot actually receives.
+	writeFanoutLatencies := make([]time.Duration, 0, runTicks)
 	for tick := 0; tick < runTicks; tick++ {
 		start := time.Now()
 		for i, b := range bots {
@@ -531,7 +546,7 @@ func TestM1619ThirtyNetworkClientLoadAndMetrics(t *testing.T) {
 			_ = wsjson.Write(ctx, b.conn, inputMsg)
 		}
 		elapsed := time.Since(start)
-		tickLatencies = append(tickLatencies, elapsed)
+		writeFanoutLatencies = append(writeFanoutLatencies, elapsed)
 		time.Sleep(110 * time.Millisecond)
 	}
 
@@ -542,38 +557,87 @@ func TestM1619ThirtyNetworkClientLoadAndMetrics(t *testing.T) {
 	var memAfter runtime.MemStats
 	runtime.ReadMemStats(&memAfter)
 
-	// Calculate metrics
+	// Collect per-bot counters under each bot's lock; the readers are still
+	// running at this point (they are stopped by the deferred cancel).
 	var totalBytes int64
-	for _, b := range bots {
-		totalBytes += b.bytesRead
+	var totalDiffs int
+	minDiffs := -1
+	for i, b := range bots {
+		b.mu.Lock()
+		bytesRead, diffCount, readErr := b.bytesRead, b.diffCount, b.err
+		b.mu.Unlock()
+
+		// A reader that died before the run finished means the server dropped
+		// a well-behaved client under load — the failure this test exists to
+		// catch, and one the latency number below cannot see.
+		if readErr != nil {
+			t.Errorf("bot %d (player %d) reader failed during the load run: %v", i, b.id, readErr)
+		}
+		// Fan-out must actually reach every client. Without this, a server
+		// that accepted 30 sockets and then delivered nothing would still
+		// post an excellent write-latency figure and pass.
+		if diffCount == 0 {
+			t.Errorf("bot %d (player %d) received no diff frames across %d ticks — fanout did not reach it", i, b.id, runTicks)
+		}
+		if minDiffs < 0 || diffCount < minDiffs {
+			minDiffs = diffCount
+		}
+		totalBytes += bytesRead
+		totalDiffs += diffCount
+	}
+	if totalBytes == 0 {
+		t.Fatalf("no bytes delivered to any of the %d clients", clientCount)
 	}
 
-	p50, p95, maxLat := calculateLatencyPercentiles(tickLatencies)
+	// Over runTicks ticks at the server's 110ms cadence every joined client
+	// should see diffs on the same order. The floor is deliberately loose —
+	// it is here to catch a stalled or starved fan-out, not to police jitter
+	// on a loaded CI box.
+	minExpectedDiffs := runTicks / 5
+	if minDiffs < minExpectedDiffs {
+		t.Errorf("slowest client received %d diff frames across %d ticks, want at least %d — fanout is starving clients under load",
+			minDiffs, runTicks, minExpectedDiffs)
+	}
+
+	p50, p95, maxLat := calculateLatencyPercentiles(writeFanoutLatencies)
 	memGrowthMB := float64(memAfter.Alloc-memBefore.Alloc) / (1024 * 1024)
 	if memGrowthMB < 0 {
 		memGrowthMB = 0
 	}
 
-	// Publish metrics summary
-	t.Logf("=== M16.19 30-NETWORK-CLIENT LOAD TEST METRICS ===")
+	// Publish metrics summary. Everything logged here is measured by this run
+	// on this machine; nothing is extrapolated to other client counts or to
+	// any particular host. See the scaling note at the end.
+	t.Logf("=== M16.19 30-NETWORK-CLIENT LOAD TEST METRICS (measured, this host) ===")
 	t.Logf("Clients: %d network WebSockets over TCP", clientCount)
-	t.Logf("Simulated Ticks: %d (at 110ms/tick)", runTicks)
-	t.Logf("Tick Latency p50: %v", p50)
-	t.Logf("Tick Latency p95: %v", p95)
-	t.Logf("Tick Latency Max: %v", maxLat)
-	t.Logf("Total Fanout Bytes Delivered: %d KB", totalBytes/1024)
-	t.Logf("Heap Alloc Growth: %.2f MB", memGrowthMB)
-	t.Logf("Avg Fanout Rate: %.2f KB/s per client", float64(totalBytes)/1024/5.5/clientCount)
+	t.Logf("Ticks driven: %d (input sent every 110ms)", runTicks)
+	t.Logf("Client-side write fanout p50: %v", p50)
+	t.Logf("Client-side write fanout p95: %v", p95)
+	t.Logf("Client-side write fanout max: %v", maxLat)
+	t.Logf("Diff frames delivered: %d total, %d to the slowest client", totalDiffs, minDiffs)
+	t.Logf("Total fanout bytes delivered: %d KB", totalBytes/1024)
+	t.Logf("Heap alloc growth: %.2f MB", memGrowthMB)
+	t.Logf("Avg fanout rate: %.2f KB/s per client", float64(totalBytes)/1024/5.5/clientCount)
 
-	// Decision boundary validation & documentation
-	t.Logf("=== SCALING DECISION BOUNDARY ===")
-	t.Logf("1. Single AWS t4g.nano (1 vCPU, 0.5GB RAM): handles up to ~100 concurrent clients across 10-20 rooms with p95 tick latency < 15ms and <20MB heap.")
-	t.Logf("2. Vertical scaling threshold (t4g.micro / t4g.small): trigger when concurrent clients exceed 150 or active rooms exceed 50.")
-	t.Logf("3. Horizontal sharding threshold: trigger when total server traffic exceeds 1,000 concurrent clients across multiple ZZT world instances.")
+	// Scaling: what this test does and does not establish.
+	//
+	// Established: %d concurrent real TCP WebSocket clients in one world are
+	// served without dropping a reader or starving any client's fan-out, at
+	// the numbers logged above, on whatever machine ran this test.
+	//
+	// NOT established: behaviour at any larger client count, on any specific
+	// host class, or across multiple rooms/worlds. Projecting a vertical- or
+	// horizontal-scaling threshold from a single 30-client dev-machine run is
+	// not something this test's evidence supports; that needs a staged run on
+	// the target instance with real world traffic. Deliberately not asserted
+	// or logged here as if it were a finding.
+	t.Logf("Scope: %d clients, one world, this host. No larger-scale or per-instance-class claim is made.", clientCount)
 
-	// Performance assertions: p95 latency must be well within the 110ms tick duration
+	// The write-fanout figure must stay well inside the 110ms tick cadence:
+	// if driving 30 clients' input costs more than that, the harness itself
+	// is the bottleneck and the diff assertions above mean much less.
 	if p95 > 50*time.Millisecond {
-		t.Errorf("p95 tick latency %v exceeded maximum threshold of 50ms", p95)
+		t.Errorf("p95 client-side write fanout %v exceeded 50ms — the harness could not keep %d clients fed inside the tick cadence", p95, clientCount)
 	}
 }
 

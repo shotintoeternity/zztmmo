@@ -66,9 +66,14 @@ func TestM1611BrowserEndToEndPlayerJourneys(t *testing.T) {
 		t.Fatalf("CompileZWD(fixtures/accept.zwd): %v", err)
 	}
 
-	// 2. Build browser web/dist if needed
+	// 2. Build browser web/dist if needed.
+	//
+	// The presence of the directory is not enough: an empty or partial dist
+	// makes the server answer every page with its "build the browser client"
+	// 404, which a browser test can easily mistake for a working client. Key
+	// the rebuild on index.html, the file the server actually serves.
 	webDistDir := filepath.Join("web", "dist")
-	if _, err := os.Stat(webDistDir); os.IsNotExist(err) {
+	if _, err := os.Stat(filepath.Join(webDistDir, "index.html")); err != nil {
 		cmdBuild := exec.Command("npm", "--prefix", "web", "run", "build")
 		if out, err := cmdBuild.CombinedOutput(); err != nil {
 			t.Fatalf("npm run build failed: %v\nOutput:\n%s", err, string(out))
@@ -80,7 +85,13 @@ func TestM1611BrowserEndToEndPlayerJourneys(t *testing.T) {
 
 	// 4. Set up temp directory structure
 	rootDir := t.TempDir()
-	spWebDir := filepath.Join("web", "dist") // serve built client
+	// Absolute: the server below runs with cmd.Dir = rootDir, so a relative
+	// "web/dist" would resolve inside the temp dir and silently serve the
+	// build-me 404 page instead of the client.
+	spWebDir, err := filepath.Abs(webDistDir)
+	if err != nil {
+		t.Fatalf("resolve %s: %v", webDistDir, err)
+	}
 	spSavesDir := filepath.Join(rootDir, "saves")
 	spWorldsDir := filepath.Join(rootDir, "worlds")
 

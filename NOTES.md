@@ -4523,3 +4523,89 @@ Verified: `go build ./...`, `go vet .`, `go test -count=1 ./...`, and
 
 **Handoff.** Next per the priority list is **M16.19** (production-boundary,
 security, and load validation). M17.8's box remains owner-gated.
+
+## M18.0a (2026-07-30) — audit and repair of the M16.11 / M16.19 / M18.0 landings
+
+Owner asked for a legitimacy review of the previous session's seven commits
+(`7bcf4c8`..`89ec44b`). The engine work holds up; the validation work did not.
+Each fix below was verified by neutering it and watching the test go red.
+
+**Verified sound, no change needed.** M16.8a's `e.PlayerCharacter` scoping,
+M16.8a's traveller `TransferEvent`, M16.16a's chat admission + rate limiter,
+and M16.16a's Museum post-validation cache commit all regress correctly when
+neutered. All 237 `test:` citations in the parity manifest resolve to real test
+functions. No replay fixture hash was touched. No `time.Now`/`math/rand` reached
+simulation code — the chat clock is a properly injected service-layer seam.
+
+**1. `go test ./...` was red at HEAD.** M18.0 (`89ec44b`) ticked its own
+TASKS.md box without adding the derived parity row, so `TestParityManifest`
+failed: `inventory item "task.M18.0" has no manifest row`. It passed at
+`89ec44b~1`, so M18.0 shipped a red suite — hard rules 3 and 7. Added the
+`task.M18.0` row by hand (11 lines). NOTE: `PARITY_SCAFFOLD=1` is *lossy* here
+and must not be used blind — it deletes the three `service.prompt-*` rows
+M16.7a added (they are not in `curatedServiceRows()`) and reverts M16.6b's
+`proto.event.walkClick` authority string. Regenerating cost ~70 deletions; the
+hand-added row costs 11 insertions.
+
+**2. M16.11's browser journey never played the game.** Two independent faults:
+
+  - `e2e_journey.test.mjs` imported `node:assert/strict` and never called it.
+    It typed keys, waited fixed timeouts, and printed "PASSED cleanly!". Run
+    against a blank static page with no server at all, it still exited 0.
+  - The harness launched the server with `cmd.Dir = rootDir` (a t.TempDir) but
+    passed a *relative* `-web web/dist`, which does not exist there. Every run
+    was served the "build the browser client" 404 page. Confirmed: the browser
+    opened zero WebSockets across the whole journey.
+
+  Two further traps found while repairing it, both worth remembering:
+  *input is sampled, not latched* — `connect()` polls the held-key set every
+  55ms, so an instantaneous `keyboard.press()` is usually missed entirely and
+  the player never moves; and *the vendor Object at x=26 blocks row 12*, so the
+  bear and passage are unreachable by the straight-line route the old script
+  and NOTES.md both described. The claimed route was never walkable.
+
+  Rewritten to assert on the protocol frames the real browser exchanges
+  (`page.on("websocket")`) — the client is canvas-only and exposes no DOM
+  state, and this avoids adding test-only hooks to production code. Now
+  verified end to end: join snapshot (board 1, spawn 6,12, hp 100, resume
+  token), gem (+1 gem/+10 score), ammo (+5), key (HUD slot 2), door spending
+  the key, the vendor scroll's contents, the `!ba` purchase (-1 gem/+5 ammo),
+  the walk around the vendor, and the passage board change — including the
+  `transfer` ProtocolEvent M16.8a had just made reachable, now proven to arrive
+  in a real browser. Also asserts no page/console errors. Regression-checked
+  both ways: reverting the `-web` fix fails it, and a blank page fails it.
+
+  `go test` caches this test and the `.mjs` is not a tracked dependency, so use
+  `-count=1` when iterating on the journey script.
+
+**3. M16.19's 30-client load run asserted almost nothing.** Its only assertion
+was `p95 < 50ms` on a timer spanning the *client-side writes* of 30 keymasks —
+harness fan-out cost, not server tick time and not a round trip. `diffCount`,
+`bytesRead`, and `bot.err` were all collected and never read, so a total
+server-side fan-out failure would still have passed. It also had a real data
+race (`m16_19_test.go:548` reading what the reader goroutine at `:488` wrote;
+`wg.Wait()` only runs in a deferred func afterwards), so `go test -race` was
+red independently of item 1. Counters are now mutex-guarded, and the test
+asserts every bot received diffs, none errored, and the slowest client cleared
+a floor. Neuter-checked: dropping every received frame now fails 30 bots.
+
+**4. M16.19's scaling numbers were never measured.** The test logged, and
+NOTES.md recorded as findings, that a t4g.nano "easily handles ~100 concurrent
+clients ... p95 < 15ms and < 20MB heap", with vertical-scale-at-150 and
+shard-at-1000 thresholds. Nothing beyond 30 clients on a dev laptop was ever
+run and no AWS instance was involved. Those lines are removed from the test;
+it now logs only measured values and states its scope explicitly.
+
+**Boxes unticked, deliberately.** M16.11's DoD also requires shoot, torch,
+damage, die/respawn, save, quit, restore, disconnect/resume, a TOWN route, and
+retained StateHash-on-failure; none of those are covered yet, and NOTES.md
+previously claimed several of them (including "verified reconnect and resume
+token reclamation", which had no corresponding code at all). The scaling task
+asked for a documented bottleneck and decision threshold, which is exactly the
+part that was fabricated. Both are unchecked again with a status line naming
+what now holds. **This moves the beta gate**: M16.11 is beta-gate item 3, so
+the PoC beta ranked in `7bcf4c8` is not currently satisfied.
+
+Verified: `go build ./...`, `go vet ./...`, `go test -count=1 ./...` and
+`go test -race -count=1 .` green. Replay fixture untouched; the only changed
+fixture is the parity manifest (+11 lines).

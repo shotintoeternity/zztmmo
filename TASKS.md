@@ -2805,7 +2805,15 @@ gap task has landed.
   end-to-end assertion, focus never leaks text into movement, and the same
   script succeeds against both full snapshots and subsequent diffs.
 
-- [x] **M16.11 — Browser end-to-end player journeys without state staging.**
+- [ ] **M16.11 — Browser end-to-end player journeys without state staging.**
+  STATUS 2026-07-30 (M18.0a audit): unticked. The first landing asserted nothing
+  and, because the server got a relative `-web` path against a temp cwd, ran its
+  whole journey against a 404 page — see NOTES.md M18.0a. The harness and the
+  acceptance-world journey are now real and assert join/gem/ammo/key/door/vendor
+  scroll/`!ba` purchase/board transfer (incl. the M16.8a `transfer` event).
+  REMAINING for the DoD: shoot, torch, take damage, die/respawn, save, quit,
+  restore, disconnect/resume, the second TOWN route, and retaining the protocol
+  transcript + final server StateHash on failure.
   Create one tiny committed acceptance world designed for a short deterministic
   route and drive it only through the production title/world picker and real
   browser inputs: join, move, shoot, light a torch, collect/buy/use items, open
@@ -3912,7 +3920,14 @@ newly enables; same rule: backlog bullets, owner promotes before spec):**
   and any release/deploy references; preserve upstream attribution in README and
   NOTICE. DoD: a clean clone builds/tests under the ZZTMMO module path and no
   tooling or generated artifact presents the fork as upstream zztgo.
-* [x] **Evaluate server scaling for 20–30 concurrent players.** Determine whether
+* [ ] **Evaluate server scaling for 20–30 concurrent players.**
+  STATUS 2026-07-30 (M18.0a audit): unticked. The 30-client run is real and now
+  asserts fan-out actually reaches every client, but the documented bottleneck
+  and scaling thresholds it was closed on (t4g.nano ≈100 clients, vertical at
+  150, shard at 1000) were never measured — only 30 clients on a dev laptop were
+  ever run. REMAINING: CPU/memory/per-room simulation cost under load on the
+  real instance, and a decision threshold derived from that. See NOTES.md M18.0a.
+  Determine whether
   the current EC2 instance is sufficient before upgrading blindly. Measure CPU,
   memory, network, WebSocket fanout, tick latency, and per-room simulation cost under
   a 20–30 bot/client load test. Document the likely bottleneck and the decision
