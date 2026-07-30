@@ -53,7 +53,13 @@ M12.23, M17.1–M17.7, M16.0–M16.8a — has fully landed.)
    lines (owner-reported 2026-07-30). Cosmetic and a few lines, but it is on
    the screen testers watch for two minutes straight; take it before the
    invite if anything else delays that, since it costs almost nothing.
-9. Resume certification in file order: M16.9/M16.10 golden suites, M16.12–
+9. M18.8 — dreamed objects firing their program at board load instead of on
+   `:touch` (owner-reported 2026-07-30). Ranked below M18.7 only because it is
+   the larger job; it is the more damaging of the two. Dreaming is the feature
+   testers will reach for first, and a world whose NPCs all monologue at once
+   the moment a board opens reads as broken rather than quirky — and a `#give`
+   or `#endgame` in that prelude is not cosmetic at all.
+10. Resume certification in file order: M16.9/M16.10 golden suites, M16.12–
    M16.15, M16.17, M16.18, M16.18a, M16.20.
 
 **Optional / deferred (bottom):**
@@ -3184,6 +3190,53 @@ lists. Every task: `cd engine && go build ./... && go test ./...` green,
   real-browser dream (or a unit case built from the reported event sequence —
   a board name long enough to clamp, with an `attempt 2 of 3` suffix) shows
   `...` at the cut. Engine untouched, replay fixture untouched.
+
+- [ ] **M18.8 — Dreamed objects run their program at board load instead of
+  waiting for `:touch`.** Owner-reported 2026-07-30: on generated worlds,
+  object dialogue fires the moment the board opens rather than when the player
+  touches the object.
+
+  **The engine is right; do not touch it.** `ElementObjectTick`
+  (`engine/elements.go:893-897`) runs `OopExecute` on every tick while
+  `stat.DataPos >= 0`, and a freshly loaded object has `DataPos == 0`, so its
+  program runs from line 1 immediately. `#end` is what parks it — it sets
+  `*position = -1` (`engine/oop.go:657-658`). There is no "wait for a message"
+  default in ZZT and never was; the leading `#end` *is* the mechanism. Adding
+  one in the engine would be a parity break and a replay break both.
+
+  So this is a generation defect: the model omits the leading `#end`, and
+  **nothing in the pipeline catches it.** The idiom is taught — STYLE.md:220-231
+  spells out `@npcname / #end / :touch / … / #end`, the embedded copy at
+  `engine/promptkit_assets/STYLE.md:221` is byte-identical, and the corpus
+  follows it (`llmworld/generated/NULLSIGN.zwd:116-127`). Prompt text alone has
+  already been tried, so prompt reinforcement is at best half the fix.
+
+  Detection belongs in the acceptance simulation that already exists.
+  `simulateGeneratedBoard` (`engine/generation.go:2939`) runs each compiled
+  board for 200 ticks **with nobody at the controls** and today notices only
+  panics. A board where an object speaks, `#give`s, `#play`s, or `#endgame`s
+  with no player input is by construction doing something it should not — that
+  behavioral test is why this check goes here rather than being a syntactic
+  "does the program start with `#end`" lint.
+
+  **Do not auto-insert `#end`, and do not flag every prelude.** Objects that
+  legitimately run at load are a real ZZT pattern — `#walk` patrollers,
+  `#cycle`/`#char` setup, timers, and `#send`-driven controllers all execute
+  before any touch. A blanket rule breaks them. Flag the player-visible and
+  irreversible class only: emitted text/scroll lines, `#give`/`#take`,
+  `#endgame`, `#play`. Route what you find through the existing
+  `generatedBoardFailure` → repair-attempt loop (the M12.22/M17.13 machinery,
+  `stubCrashingBoards` at `generation.go:572` for the give-up path) with a
+  message naming the object and the offending command, so the model rewrites
+  the program rather than the server rewriting it.
+
+  DoD: a regression fixture with two hand-written objects on one board — one
+  whose program lacks the leading `#end` and speaks, one that legitimately
+  `#walk`s at load — flags the first and not the second; the repair loop turns
+  a flagged board into a passing one; **every existing world in
+  `llmworld/generated/*.zwd` still passes with no new failures** (a false
+  positive here silently costs a repair attempt on every future dream); `go
+  test ./...` green; replay fixture untouched.
 
 ## M14 — Rearchitecting for the service ZZTMMO is becoming
 
