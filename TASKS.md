@@ -2980,6 +2980,23 @@ gap task has landed.
   and owner approves the final deviation list. Only this task may state that the
   current product has full feature parity within the written M16 contract.
 
+- [ ] **M16.20a — Make `PARITY_SCAFFOLD=1` regeneration non-destructive.**
+  Found during M18.1 (NOTES.md 2026-07-30). Regenerating
+  `fixtures/parity/manifest.json` deletes landed inventory: rows
+  `buildParityRows` cannot re-derive are dropped rather than merged forward
+  (M16.7a's `service.prompt-debug`, `service.prompt-help`,
+  `service.prompt-quit` vanish on every run, 371 → 369 rows), and the
+  advancement merge documented at `parity_manifest_test.go:16` misses fields it
+  claims to preserve (M16.6b's `elem.player` note and `proto.walk-click`
+  `authority` were clobbered). M18.1 worked around it by hand-inserting its one
+  row. Fix the merge to preserve every on-disk row and field not superseded by a
+  derived value, and make dropping a row require an explicit opt-in. DoD:
+  regenerating with no TASKS.md change is a **no-op diff**; a test asserts the
+  round-trip preserves a hand-added row and a hand-edited `notes`/`authority`;
+  the three M16.7a rows and M16.6b's edits survive a regeneration. Blocks
+  M16.20 — that task reconciles against this manifest, so it must not be
+  corruptible by the documented workflow.
+
 ## M18 — Beta readiness: cleanup and operational gaps
 
 Filed 2026-07-30 (owner decision, NOTES.md): the last gate before the PoC beta
@@ -3008,7 +3025,7 @@ lists. Every task: `cd engine && go build ./... && go test ./...` green,
   nothing removed was load-bearing (grep for references first); README run
   instructions still accurate.
 
-- [ ] **M18.1 — TODO/FIXME triage (fork-added only).** The 14 TODO hits in
+- [x] **M18.1 — TODO/FIXME triage (fork-added only).** The 14 TODO hits in
   non-test Go are almost all inherited upstream zztgo comment text (`lib.go`,
   `serialize.go`, `game.go`, `zzt.go`, `gamevars.go`, `input.go`,
   `editor.go`, `video.go`) — those stay verbatim; editing them is drift.

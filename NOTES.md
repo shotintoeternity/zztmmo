@@ -4681,3 +4681,85 @@ carried over to **M16.9**, whose spec now names it explicitly so it cannot
 lapse. M16 tasks are excluded from the manifest's derived task rows
 (`deriveTaskRows` skips milestone 16), so ticking this needs no manifest row;
 confirmed by running the gate.
+
+## M18.1 (2026-07-30) — TODO/FIXME triage, fork-added only
+
+**The 14 markers are 13 inherited + 1 fork-added, exactly as specced.** A
+case-insensitive sweep for `todo|fixme|xxx|hack` across every tracked file
+outside `reference/` and `fixtures/` found nothing beyond the known set:
+`engine/web/src/`, `llmworld/`, `deploy/`, and the fork-added server/room/
+protocol/net Go files carry **zero** markers. Nothing has accumulated since the
+spec was written.
+
+**The one fork-added marker: `present_tcell.go:36`.** Retired by deleting the
+TODO framing and keeping the explanation, not by filing a task and not by doing
+the work. Reasoning: the marker asked for `InputStartPoller` to move out of the
+presenter, but `InputStartPoller` lives in `input.go` — an inherited converted
+file that still takes a `tcell.Screen`. Moving it means editing converted code
+for purely architectural taste, which is precisely what CLAUDE.md rule 4
+forbids; filing it as a task would file work the project's own rules say not to
+do. The coupling is also bounded rather than latent: `presentInstall` runs only
+on the local single-player path and the server never reaches it. The replacement
+comment states *why* the coupling exists and that it is deliberate, which is the
+form M18.3 says to keep.
+
+**Two inherited TODOs are NOT byte-identical to `reference/zztgo`, and both
+should stay that way.** The DoD's byte-identity check is a drift detector, and
+in both cases the divergence is a landed fork change rather than drift:
+
+- `video.go` — upstream's `VideoInstall()` carried `// TODO: doesn't really
+  belong in "video" install, but oh well` above `InputStartPoller(screen)`.
+  M0.2/M0.3 moved tcell and the poller into `present_tcell.go`; the comment
+  moved with them and is the direct ancestor of the marker retired above. It did
+  not vanish, it emigrated.
+- `game.go:1489` — upstream's `// TODO: should wait till next TickTimeCounter/
+  TickTimeDuration up` annotated a `time.Sleep` in the main tick loop. M0 deleted
+  that sleep under CLAUDE.md rule 2 (determinism is sacred). The comment
+  described code that no longer exists.
+
+Restoring either would reintroduce a comment describing absent code, so the
+check is recorded as "explained", not "repaired". The remaining eleven markers
+in `editor.go`, `gamevars.go`, `input.go`, `lib.go`, `serialize.go`, `zzt.go`,
+and `game.go:1404` diff clean against upstream.
+
+**Considered and deliberately left alone:** `m16_6b_test.go:10` matches a TODO
+grep but is prose describing upstream's stubbed `Sound()`/`NoSound()`, not a
+marker. Its citation (`lib.go:124`) was re-verified and is still accurate.
+
+Verified: `go build ./...`, `go vet ./...`, `go test -count=1 ./...` green.
+Replay fixture untouched. The `-count=1` matters — `TestM1611BrowserEndToEnd
+PlayerJourneys` caches against a `.mjs` Go does not track as a dependency, so a
+plain `go test ./...` can serve a stale pass.
+
+**Finding (not M18.1's to fix): `PARITY_SCAFFOLD=1` regeneration is
+destructive.** Ticking this box derives a `task.M18.1` inventory row, so the
+manifest needed one. Running the documented regeneration to add it produced
+**42 insertions and 70 deletions** — it added the one row and then silently
+destroyed landed work:
+
+- **Three rows deleted outright**: `service.prompt-debug`, `service.prompt-help`,
+  `service.prompt-quit` — all added by **M16.7a** ("oracle-verify the quit,
+  debug, and help prompts", 78861d0). `buildParityRows` cannot re-derive them,
+  and rows it does not derive are dropped rather than preserved, so every future
+  regeneration deletes M16.7a's inventory again. Net row count 371 → 369.
+- **Landed `notes`/`authority` edits clobbered** on rows that *are* re-derived,
+  despite the scaffold header at `parity_manifest_test.go:16` promising the merge
+  "never discards a landed sweep's edits". The clearest casualty: `elem.player`
+  lost "including the walk click (M16.6b, WalkClickEvent) — no more 110 Hz sound
+  exclusion", and `proto.walk-click` lost its `authority` of
+  `ELEMENTS.PAS:1393-1402; task M16.6b`. The merge evidently covers only a subset
+  of fields, or only rows whose derived defaults are still empty.
+- Plus harmless churn: `test` reordered ahead of `status`, and `<` re-escaped as
+  `<`.
+
+**Handled by reverting the regeneration and hand-inserting the single
+`task.M18.1` row**, giving an 11-line pure insertion with nothing lost and the
+gate green. Rule 3 was not stretched — no hash was edited and no test deleted;
+this is the inventory document, and the added row is byte-identical to what the
+deriver itself emits.
+
+**This matters beyond M18.1.** M16.20 reconciles against this manifest, so a
+regeneration that quietly deletes verified rows corrupts the certification
+record — and the damage is invisible unless someone diffs the row-id set, which
+is why it survived until now. Filed as **M16.20a** so it is fixed before M16.20
+consumes the manifest.

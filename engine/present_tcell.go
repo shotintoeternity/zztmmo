@@ -33,8 +33,10 @@ func presentInstall() {
 		Background(tcell.ColorBlack))
 	screen.Clear()
 
-	// TODO (M0.3): input polling doesn't really belong in the presenter, but
-	// tcell owns the event source, so it starts here for now.
+	// Input polling starts here, not in input.go, because tcell owns the event
+	// source and this is the only file allowed to hold a tcell.Screen. The
+	// coupling is bounded: presentInstall runs only on the local single-player
+	// path, and the server never reaches it (M0.3).
 	InputStartPoller(screen)
 }
 
