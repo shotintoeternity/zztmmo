@@ -483,6 +483,21 @@ func (g *GenerationService) paintAndFinish(ctx context.Context, st *generationRe
 		for _, failure := range crashed {
 			problems[failure.Name] = append(problems[failure.Name], "board does not survive play: "+failure.Err)
 		}
+		// M18.8: objects that talk at board load rather than on touch. Repaired
+		// like any other board problem, but deliberately kept out of `crashed`:
+		// they must never stub a board — deleting a room over a misplaced #end
+		// trades a small defect for a large one — and must never fail the world
+		// at the final validateGeneratedZWD gate.
+		talkative, auditErr := auditObjectPreludes(data)
+		if auditErr != nil {
+			return GenerationResult{}, fmt.Errorf("assembled world did not validate: %w", auditErr)
+		}
+		for _, failure := range talkative {
+			if st.isStubbed(failure.Name) {
+				continue
+			}
+			problems[failure.Name] = append(problems[failure.Name], failure.Err)
+		}
 		if len(problems) == 0 {
 			break
 		}
@@ -2895,6 +2910,187 @@ type generatedBoardFailure struct {
 
 func (f generatedBoardFailure) String() string {
 	return fmt.Sprintf("board %d %q: %s", f.ID, f.Name, f.Err)
+}
+
+// M18.8 — objects that do their talking at board load instead of on touch.
+//
+// ZZT runs an object's program from line 1 on its first tick: ElementObjectTick
+// executes while stat.DataPos >= 0 (elements.go), and #end is what parks it by
+// setting DataPos to -1 (oop.go). There is no wait-for-a-message default, so
+// the leading #end above the first label IS the mechanism. That is vanilla and
+// stays vanilla; when a generated object omits it, every NPC on the board
+// monologues the moment it opens, and a #give or #endgame in that prelude does
+// real damage rather than just reading badly.
+//
+// The check is static and deliberately narrow, because the obvious wider
+// versions are both wrong:
+//
+//   - "the program must start with #end" flags every legitimate object that
+//     runs at load — patrollers that #walk, controllers that #cycle or #bind,
+//     objects that #restart themselves.
+//   - "nothing may happen during an unattended headless run" cannot tell this
+//     bug from an intentional board-entry cutscene, which fires unattended too
+//     and is supposed to.
+//
+// What separates them is whether the object HAS labels. An object with a
+// :touch (or any label) is event-driven by construction, so player-visible work
+// before that first label is happening at the wrong time. An object with no
+// labels at all is a one-shot — a sign that speaks once, a cutscene — and
+// running at load is the whole point of it, so it is never flagged.
+//
+// The offending set was measured, not guessed, against the 1920 labeled object
+// programs in the 134 community worlds under llmworld/examples: #endgame in a
+// prelude occurs 0 times, #give/#take 3 times (two of those a parse artifact),
+// and bare text 50 lines across a handful of objects. #play stays benign — 38
+// authored occurrences, the @maestro board-music pattern — as do #cycle (314),
+// #if (77), #restart (46), #char (35), #try (32) and the rest of the setup
+// vocabulary. Erring narrow matters: a false positive here silently burns a
+// repair attempt on every future dream.
+var oopPreludeOffenders = map[string]string{
+	"GIVE":    "#give",
+	"TAKE":    "#take",
+	"ENDGAME": "#endgame",
+}
+
+// oopPrelude returns the program lines an object runs at board load: those
+// after an optional @name and before either the first label or the #end that
+// parks it. It returns nil for a program with no label, which is the one-shot
+// case the check does not apply to.
+//
+// It must be given a PRISTINE program. #zap rewrites ":label" to "'label" in
+// stat.Data in place, so a program read after the board has ticked no longer
+// says where its labels were.
+func oopPrelude(data string) []string {
+	lines := strings.Split(data, "\r")
+	labeled := false
+	for _, line := range lines {
+		if strings.HasPrefix(strings.TrimSpace(line), ":") {
+			labeled = true
+			break
+		}
+	}
+	if !labeled {
+		return nil
+	}
+	start := 0
+	if len(lines) > 0 && strings.HasPrefix(lines[0], "@") {
+		start = 1
+	}
+	var prelude []string
+	for _, line := range lines[start:] {
+		trimmed := strings.TrimSpace(line)
+		// Whichever comes first ends the prelude: the label the object waits
+		// at, or the #end that parks it before reaching one. Everything past
+		// either is reachable only by message.
+		if strings.HasPrefix(trimmed, ":") || strings.EqualFold(oopCommandWord(trimmed), "END") {
+			break
+		}
+		prelude = append(prelude, trimmed)
+	}
+	return prelude
+}
+
+// oopCommandWord returns the bare command word of a "#word ..." line, or "".
+func oopCommandWord(line string) string {
+	if !strings.HasPrefix(line, "#") {
+		return ""
+	}
+	word := strings.TrimPrefix(line, "#")
+	if cut := strings.IndexAny(word, " \t"); cut >= 0 {
+		word = word[:cut]
+	}
+	return word
+}
+
+// oopPreludeOffence describes what is wrong with one prelude line, or "" when
+// the line is ordinary setup an object may legitimately run at load.
+func oopPreludeOffence(line string) string {
+	if line == "" {
+		return ""
+	}
+	if word := oopCommandWord(line); word != "" {
+		if offender, bad := oopPreludeOffenders[strings.ToUpper(word)]; bad {
+			return offender
+		}
+		return ""
+	}
+	switch line[0] {
+	case '\'', '/', '?', ':', '@':
+		// Comment, movement, label, name — none of these reach the player.
+		return ""
+	}
+	// Anything else on its own line is text ZZT shows the player: a bare line,
+	// a $centered line, or a !hyperlink menu item.
+	return "text " + strconv.Quote(truncateForPrompt(line, 40))
+}
+
+// truncateForPrompt keeps a quoted fragment short enough that a board with
+// several offending objects still produces a readable repair instruction.
+func truncateForPrompt(s string, max int) string {
+	if len(s) <= max {
+		return s
+	}
+	return s[:max] + "..."
+}
+
+// auditObjectPreludes reports every board holding an object that does
+// player-visible work before its first label. Findings are advisory: they feed
+// the repair loop, but unlike a crash they never stub a board and never fail a
+// world — an object talking at the wrong moment is a world worth shipping and
+// worth fixing, in that order.
+func auditObjectPreludes(data []byte) ([]generatedBoardFailure, error) {
+	e := NewEngine()
+	e.Headless = true
+	e.VideoInstall()
+	if err := e.worldReadFrom(strings.NewReader(string(data)), false, nil); err != nil {
+		return nil, fmt.Errorf("load compiled bytes: %w", err)
+	}
+	var failures []generatedBoardFailure
+	for boardID := int16(0); boardID <= e.World.BoardCount; boardID++ {
+		e.BoardOpen(boardID)
+		var offences []string
+		for i := int16(0); i <= e.Board.StatCount; i++ {
+			stat := e.Board.Stats[i]
+			if e.Board.Tiles[stat.X][stat.Y].Element != E_OBJECT || stat.Data == "" {
+				continue
+			}
+			var found []string
+			for _, line := range oopPrelude(stat.Data) {
+				if offence := oopPreludeOffence(line); offence != "" {
+					found = append(found, offence)
+				}
+			}
+			if len(found) == 0 {
+				continue
+			}
+			offences = append(offences, fmt.Sprintf("%s at %d,%d runs %s",
+				oopObjectLabel(stat.Data), stat.X, stat.Y, strings.Join(found, " and ")))
+		}
+		if len(offences) == 0 {
+			continue
+		}
+		failures = append(failures, generatedBoardFailure{
+			ID:   boardID,
+			Name: e.Board.Name,
+			Err: "objects act at board load instead of waiting to be touched — " +
+				strings.Join(offences, "; ") +
+				". Put #end immediately above the first label of each so the program parks until the player touches it",
+		})
+	}
+	return failures, nil
+}
+
+// oopObjectLabel names an object for a repair message: its @name when it has
+// one, "an unnamed object" otherwise.
+func oopObjectLabel(data string) string {
+	first := data
+	if cut := strings.Index(first, "\r"); cut >= 0 {
+		first = first[:cut]
+	}
+	if strings.HasPrefix(first, "@") && len(strings.TrimSpace(first)) > 1 {
+		return strconv.Quote(truncateForPrompt(strings.TrimSpace(first), 30))
+	}
+	return "an unnamed object"
 }
 
 // simulateGeneratedBoards ticks every board of a compiled world headlessly and

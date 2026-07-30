@@ -3191,7 +3191,7 @@ lists. Every task: `cd engine && go build ./... && go test ./...` green,
   a board name long enough to clamp, with an `attempt 2 of 3` suffix) shows
   `...` at the cut. Engine untouched, replay fixture untouched.
 
-- [ ] **M18.8 — Dreamed objects run their program at board load instead of
+- [x] **M18.8 — Dreamed objects run their program at board load instead of
   waiting for `:touch`.** Owner-reported 2026-07-30: on generated worlds,
   object dialogue fires the moment the board opens rather than when the player
   touches the object.
@@ -3237,6 +3237,19 @@ lists. Every task: `cd engine && go build ./... && go test ./...` green,
   `llmworld/generated/*.zwd` still passes with no new failures** (a false
   positive here silently costs a repair attempt on every future dream); `go
   test ./...` green; replay fixture untouched.
+
+  STATUS 2026-07-30 (landed): the detection method departs from this spec, and
+  the spec was wrong. A purely behavioral "nothing may happen unattended" test
+  cannot tell this bug from an intentional board-entry cutscene, which fires
+  unattended too and is supposed to. The landed rule is static and keys on
+  whether the object HAS labels — an object with a `:touch` is event-driven, so
+  player-visible work before its first label is mistimed by construction, while
+  a label-less one-shot is never flagged. The offending set was measured against
+  the community corpus rather than chosen, and flags 7 of 1920 authored labeled
+  programs (0.4%); `#play` was dropped from the offending list on that evidence
+  (38 authored occurrences, the `@maestro` board-music pattern). Findings are
+  also deliberately kept out of `crashed`, so they can never stub a board or
+  fail a world. See NOTES.md 2026-07-30.
 
 ## M14 — Rearchitecting for the service ZZTMMO is becoming
 

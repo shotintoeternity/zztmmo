@@ -5066,3 +5066,78 @@ were worked around rather than forced: multi-step compound deploy commands
 (hence the port-8091 sidecar for the limit probes). The temporary
 `174.29.5.212/32` port-22 rule on `sg-08859294bf38ac4c3` was revoked at the end;
 the allowlist is back to its original seven `/32`s.
+
+## 2026-07-30 — M18.8: dreamed objects talking at board load
+
+Owner-reported: on generated worlds, object dialogue fires when the board opens
+instead of when the player touches the object.
+
+**The engine was never wrong.** `ElementObjectTick` (`elements.go:893-897`) runs
+`OopExecute` while `stat.DataPos >= 0`, a freshly loaded object has `DataPos ==
+0`, and `#end` is what parks it by setting the position to `-1`
+(`oop.go:657-658`). ZZT has no wait-for-a-message default; the leading `#end`
+above the first label *is* the mechanism. Nothing in the engine changed, and
+nothing should: an engine-side "objects start parked" would be a parity break
+and a replay break at once.
+
+So this is a generation defect — and the uncomfortable part is that the model
+is already being told. STYLE.md:220-231 spells the idiom out, the embedded
+prompt copy at `promptkit_assets/STYLE.md:221` is byte-identical to it, and the
+corpus follows it (`NULLSIGN.zwd:116-127`). Prompt text was already the fix and
+it already failed, which is why this task added enforcement rather than more
+words.
+
+**The rule, and why it is this rule.** Two obvious versions are both wrong:
+
+- *"the program must start with `#end`"* flags every object that legitimately
+  runs at load — patrollers that `#walk`, controllers that `#cycle` or `#bind`,
+  objects that `#restart` themselves.
+- *"nothing may happen during an unattended headless run"* — which is what the
+  task spec originally proposed, reusing `simulateGeneratedBoard`'s 200 ticks —
+  **cannot tell this bug from an intentional board-entry cutscene**, which also
+  fires unattended and is supposed to. I found that while implementing and
+  changed the approach rather than shipping the spec's version.
+
+What separates them is whether the object *has labels*. An object with a
+`:touch` is event-driven by construction, so player-visible work before its
+first label is happening at the wrong time. An object with no labels is a
+one-shot — a sign that speaks once, a cutscene — and running at load is the
+entire point of it. It is never flagged.
+
+**The offending set was measured, not chosen.** Against the 1920 labeled object
+programs in the 134 community worlds under `llmworld/examples`: `#endgame` in a
+prelude occurs **0** times, `#give`/`#take` **3** (two of those a parse
+artifact), bare text **50 lines** across a handful of objects. `#play` stays
+benign — 38 authored occurrences, the `@maestro` board-music pattern — as do
+`#cycle` (314), `#if` (77), `#restart` (46), `#char` (35), `#try` (32). The
+final rule flags **7 of 1920 authored labeled programs (0.4%)**, and all seven
+are objects that really do speak on board entry. Erring narrow matters here: a
+false positive silently burns a repair attempt on every future dream.
+
+**Two traps worth recording.**
+
+1. *`#zap` rewrites the program in place.* It replaces `:label` with `'label`
+   inside `stat.Data`, so a program read after the board has ticked can have no
+   labels left and would wave its own prelude through. `auditObjectPreludes`
+   therefore loads its own pristine world rather than reusing the engine the
+   acceptance simulation has already ticked. `TestM188AuditReadsPristinePrograms`
+   pins this.
+2. *Findings must not reach `crashed`.* That slice feeds three things — the
+   repair loop, `stubCrashingBoards`, and the final `validateGeneratedZWD` gate.
+   Routing prelude findings through it would mean a board whose object talks too
+   early gets **deleted and replaced with an empty stub**, or the whole world
+   gets rejected. Both trade a small defect for a large one. The findings go
+   into `problems` only, so they are repaired if possible and shipped with the
+   world if not.
+
+**Landed:** `oopPrelude` / `oopPreludeOffence` / `auditObjectPreludes` in
+`generation.go`, wired into the existing repair loop beside the crash failures.
+`engine/m18_8_test.go` covers the prelude parser (label vs `#end` vs no-label),
+the narrowness of the offence set (24 benign forms, 8 offending), a two-object
+board where the talker is flagged and the `#walk` patroller is not, the `#zap`
+ordering trap, a false-positive gate over every committed
+`llmworld/generated/*.zwd`, and an end-to-end run through the real pipeline
+proving a talkative board is repaired, is **not** stubbed, and ships clean.
+
+`go build ./...`, `go vet ./...`, `go test -count=1 ./...` green. No engine
+simulation code touched; replay fixture untouched.
