@@ -5244,3 +5244,43 @@ look at picker hygiene before the invite, but out of scope here.
 The temporary `174.29.5.212/32` port-22 rule on `sg-0c69577d6d95dd937` was
 revoked; the production allowlist is back to its original six `/32`s. Probe
 sidecar killed, `/tmp` cleaned, only the real service on 8080 remains.
+
+## 2026-07-30 — M18.7: the truncation marker was an a-grave, not an ellipsis
+
+Owner-reported with a screenshot of the "Dreaming a world" window:
+`Painting board 6 of 8: Coat Check (attempà`.
+
+One wrong byte. `clampProgressLine` (`web/src/dream.ts`) appended `"\x85"`
+commented as `// CP437 ellipsis`. CP437 0x85 is `à` — and CP437 has no
+horizontal-ellipsis glyph at all, so there was never a correct single character
+to reach for. Every clamped dream progress line has ended in a stray accented
+letter since the clamp landed.
+
+Fixed with three ASCII periods, which also matches the copy already in that
+file ("Imagining the world...", "Checking every board..."). The marker costs
+three columns instead of one, so the slice is now
+`PROGRESS_LINE_WIDTH - PROGRESS_ELLIPSIS.length`. `PROGRESS_LINE_WIDTH`
+(`TEXT_WINDOW_WIDTH - 8` = 42) is unchanged — the width arithmetic was always
+right, only the marker was wrong.
+
+**Nothing else moved.** The truncation itself is correct and stays: the
+converted `TextWindowDrawLine` (`txtwind.go:97`) and its transcription in
+`web/src/textwindow.ts` both write lines unclamped exactly as vanilla does, and
+must keep doing so. Authored scrolls and `.HLP` files fit by construction; only
+these client-composed progress lines can overrun, so the clamp belongs where it
+already was.
+
+Two existing tests asserted the bug and moved with the fix: the
+`endsWith("\x85")` check, and a literal expected line
+`"Painting board 1 of 2: Morning Light (att\x85"` that had to be recomputed
+rather than pattern-matched. Added the owner's exact reported case as a
+regression — the same events, asserting
+`"Painting board 6 of 8: Coat Check (atte..."` at 42 columns — plus a guard
+that no `\x85` survives in a rendered line.
+
+`npm test`, `npx tsc --noEmit`, `npm run build` green; `go build`/`vet`/`test`
+green. The diff is `dream.ts` and its test only. Engine untouched, replay
+fixture untouched.
+
+**Not yet deployed.** Production and dev both run `c9345f14`, which predates
+this fix, so testers would still see the stray `à` until the next deploy.

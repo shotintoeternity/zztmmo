@@ -11,11 +11,18 @@ import { TEXT_WINDOW_WIDTH } from "./textwindow";
 // (unlike engine scroll lines, which arrive pre-wrapped), so we clamp them here.
 const PROGRESS_LINE_WIDTH = TEXT_WINDOW_WIDTH - 8;
 
+// Three ASCII periods, not a single ellipsis glyph: CP437 has no horizontal
+// ellipsis. This line used to append "\x85" commented as one, which the font
+// sheet draws as 'a' with a grave accent — every clamped progress line ended in
+// a stray accented letter (M18.7). Three periods also match the copy above
+// ("Imagining the world...").
+const PROGRESS_ELLIPSIS = "...";
+
 function clampProgressLine(line: string): string {
   if (line.length <= PROGRESS_LINE_WIDTH) {
     return line;
   }
-  return line.slice(0, PROGRESS_LINE_WIDTH - 1) + "\x85"; // CP437 ellipsis
+  return line.slice(0, PROGRESS_LINE_WIDTH - PROGRESS_ELLIPSIS.length) + PROGRESS_ELLIPSIS;
 }
 
 export type GenerationProgress = {

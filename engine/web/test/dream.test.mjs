@@ -33,7 +33,21 @@ const longName = generationLines([
 ]);
 assert.equal(longName.length, 1);
 assert.ok(longName[0].length <= 42, `progress line too wide: ${longName[0].length}`);
-assert.ok(longName[0].endsWith("\x85"), "over-width line should be truncated with a CP437 ellipsis");
+// M18.7: the cut is marked with three ASCII periods. CP437 has no horizontal
+// ellipsis glyph, and the single "\x85" this used to append draws as 'a' with a
+// grave accent — a stray letter on the screen testers watch while a world
+// generates. Assert the exact marker, and that no CP437-unmappable character
+// reached the line.
+assert.ok(longName[0].endsWith("..."), `over-width line should end in "...": ${longName[0]}`);
+assert.ok(!/\x85/.test(longName[0]), "the a-grave truncation marker is gone");
+
+// M18.7: the exact line from the owner's screenshot, which rendered as
+// "Painting board 6 of 8: Coat Check (attempà". Same events, same clamp.
+const reported = generationLines([
+  { stage: "painting", board: "Coat Check", index: 6, total: 8, attempt: 2, maxAttempts: 3 },
+]);
+assert.deepEqual(reported, ["Painting board 6 of 8: Coat Check (atte..."]);
+assert.equal(reported[0].length, 42);
 
 // M12.18: the server emits two wire events for one logical step (the world
 // loop's "painting" with index/total, then paintBoard's "painting" with only a
@@ -67,7 +81,7 @@ assert.deepEqual(fullLines, [
   "Imagining the world...",
   "Painting board 1 of 2: Morning Light",
   "Repairing Morning Light: attempt 2 of 3",
-  "Painting board 1 of 2: Morning Light (att\x85", // clamped to the window width
+  "Painting board 1 of 2: Morning Light (a...", // clamped to the window width
 
   "Painting board 2 of 2: Lunar Liftoff",
 ]);

@@ -3162,7 +3162,7 @@ lists. Every task: `cd engine && go build ./... && go test ./...` green,
   Saved-Game Backups section documents the rule chosen and why. Replay fixture
   untouched.
 
-- [ ] **M18.7 — The "Dreaming a world" truncation marker is a stray `à`.**
+- [x] **M18.7 — The "Dreaming a world" truncation marker is a stray `à`.**
   Reported by the owner 2026-07-30 with a screenshot: progress lines that hit
   the window width end in a garbled accented glyph —
   `Painting board 6 of 8: Coat Check (attempà`. It is not a rendering or font
