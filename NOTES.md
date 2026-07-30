@@ -4111,3 +4111,43 @@ its fixtures.
 **Handoff.** `dev`, tree has the above staged for commit. Not `[ADVISOR]`.
 Next per TASKS.md's priority order is **M16.8** (prove engine → room →
 protocol equivalence).
+
+## 2026-07-30 — M17.8 redeploy: dev host brought current, box still owner-gated
+
+Picked up M17.8 per the priority list. No new AWS resources were needed — the
+`dev.zztmmo.com` environment from 2026-07-20 already exists and is live
+(instance `i-06149a1a52a126f0c`, EIP `54.210.138.45`; confirmed via
+`aws ec2 describe-instances`, not just AWS.md's word for it). It was serving
+commit `ed1e641` (M17.13), 16 commits behind `dev` HEAD.
+
+`feature/structured-world-generation`, the branch the task spec names, is now
+an ancestor of `dev` (`git merge-base feature/structured-world-generation dev`
+== the feature branch's tip) — it was fully merged and `dev` is the active
+branch carrying it forward. Redeployed from `dev` HEAD accordingly.
+
+SSH (port 22) is allowlisted to specific workstation `/32`s and this session's
+egress IP wasn't one of them. Owner approved adding it temporarily
+(`sgr-0386097e55dec19f9`, `174.29.5.212/32`, `sg-08859294bf38ac4c3`); redeployed
+commit `78861d0` from an immutable `git archive` checkout (browser build +
+`GOOS=linux GOARCH=arm64` server, mirroring AWS.md's documented process
+exactly); then revoked the temporary rule immediately after — no ad hoc `/32`
+left standing, per the practice now written into AWS.md's Network Policy
+section.
+
+Verified from this machine (not a real browser): `https://dev.zztmmo.com/`
+200, `/status` reports `78861d0e826dfa8ba2b6e53c4a21d52715f7692a`, `/api/worlds`
+returns the local 118-world catalog, and the WS upgrade probe returns the
+*same* status code as production for both a bare `curl` (426, ALPN negotiates
+h2 and curl's synthetic Upgrade headers don't downgrade it) and
+`curl --http1.1` (405, same reason: curl's `-I`/HEAD-based probe isn't a real
+WebSocket client). No prod/dev behavioral difference, so this isn't a
+regression — it's the same curl-vs-real-client limitation prior M17.8 sessions
+already worked around by using a real WebSocket client for the actual DoD
+check. Production (`zztmmo.com`) confirmed unaffected throughout (still 200,
+untouched instance).
+
+Left TASKS.md's M17.8 box unchecked. Per the 2026-07-20 note and the
+M17.3/M17.7 self-certification lesson, the remaining DoD item — verifying from
+an actual browser with a generated local world — is the owner's to do, not
+mine to claim. AWS.md's dev section now records the last-redeployed commit and
+the merge history from `feature/structured-world-generation` into `dev`.
