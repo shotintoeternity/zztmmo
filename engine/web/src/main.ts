@@ -2427,6 +2427,9 @@ function handleTitleKey(event: KeyboardEvent) {
     case "editor":
       startEditor();
       break;
+    case "feedback":
+      showHelp("BETA.HLP", "ZZTMMO Beta");
+      break;
     case "restore":
       void showSavedGames();
       break;

@@ -1,0 +1,14 @@
+[Unit]
+Description=Take a daily zztmmo saved-game backup
+
+[Timer]
+# 03:17 UTC: a quiet hour, and an off-the-hour minute so the run does not land
+# in the same second as every other cron on the internet.
+OnCalendar=*-*-* 03:17:00 UTC
+# A stopped or rebooted instance takes its missed backup on the next boot
+# instead of silently skipping a day.
+Persistent=true
+AccuracySec=1m
+
+[Install]
+WantedBy=timers.target

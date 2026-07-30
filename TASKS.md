@@ -3060,7 +3060,7 @@ lists. Every task: `cd engine && go build ./... && go test ./...` green,
   build); spot-check that no ZZT-QUIRK or constraint comment was lost
   (`git grep -c "ZZT-QUIRK"` count unchanged).
 
-- [ ] **M18.4 — Beta operational readiness.** Four items, all small, none
+- [x] **M18.4 — Beta operational readiness.** Four items, all small, none
   currently tasked anywhere: (a) an in-game feedback pointer — a CP437-sized
   scroll/help entry or launch-window line telling testers where to report
   problems (owner supplies the channel: GitHub issues URL or Discord invite;

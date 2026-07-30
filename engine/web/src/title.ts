@@ -30,6 +30,7 @@ export type TitleAction =
   | "highScores"
   | "dream"
   | "editor"
+  | "feedback"
   | "none";
 
 /**
@@ -63,6 +64,7 @@ const TITLE_CODES: Record<string, TitleAction> = {
   KeyH: "highScores",
   KeyD: "dream",
   KeyE: "editor",
+  KeyF: "feedback",
 };
 
 /** titleCommand maps a key to a title-menu action, or "none". */
@@ -130,8 +132,13 @@ export function drawTitleSidebar(
   write(65, 19, 0x1f, " Dream a world");
   write(62, 20, 0x70, " E ");
   write(65, 20, 0x1f, " Board editor");
+  // M18.4: the beta feedback pointer. It sits with the other ZZTMMO-only rows
+  // rather than beside vanilla's About/High Scores pair, and the sign-in row
+  // moves down one to keep the blank separator above it.
+  write(62, 21, 0x30, " F ");
+  write(65, 21, 0x1e, " Feedback");
   if (authEnabled || accountName) {
-    write(62, 22, 0x30, " G ");
-    write(65, 22, 0x1e, accountName ? " " + accountName.slice(0, 13) : " Google sign-in");
+    write(62, 23, 0x30, " G ");
+    write(65, 23, 0x1e, accountName ? " " + accountName.slice(0, 13) : " Google sign-in");
   }
 }

@@ -215,10 +215,7 @@ func (a *WebAPI) handleGenerate(w http.ResponseWriter, r *http.Request) {
 		}
 		a.Generator = generator
 	}
-	client, _, err := net.SplitHostPort(r.RemoteAddr)
-	if err != nil {
-		client = r.RemoteAddr
-	}
+	client := generationClientKey(r)
 	if body.Async {
 		jobID := fmt.Sprintf("gen-%d", atomic.AddUint64(&a.generationSeq, 1))
 		a.generationMu.Lock()
@@ -237,7 +234,7 @@ func (a *WebAPI) handleGenerate(w http.ResponseWriter, r *http.Request) {
 	result, err := generator.Generate(r.Context(), client, body.Prompt, body.Name, a.Server, body.Ground)
 	if err != nil {
 		switch {
-		case strings.Contains(err.Error(), "rate limit"):
+		case strings.Contains(err.Error(), "rate limit"), errors.Is(err, ErrGenerationBudget):
 			http.Error(w, err.Error(), http.StatusTooManyRequests)
 		case errors.Is(err, ErrGenerationUnavailable):
 			http.Error(w, err.Error(), http.StatusServiceUnavailable)
@@ -249,6 +246,33 @@ func (a *WebAPI) handleGenerate(w http.ResponseWriter, r *http.Request) {
 	writeJSON(w, struct {
 		World string `json:"world"`
 	}{World: result.Name})
+}
+
+// generationClientKey names the caller that the per-client generation rate
+// limit paces. Production runs zzt-server on 127.0.0.1 behind Caddy, so
+// r.RemoteAddr is the loopback address on every request and a key taken from it
+// alone would turn the per-player cooldown into one global cooldown that any
+// single player could hold. Only for a loopback peer is X-Forwarded-For
+// consulted, and only its last hop — the address the proxy itself observed.
+// A header from a client that reached the server directly is ignored, so it
+// cannot be spoofed to shed the limit.
+func generationClientKey(r *http.Request) string {
+	host, _, err := net.SplitHostPort(r.RemoteAddr)
+	if err != nil {
+		host = r.RemoteAddr
+	}
+	if ip := net.ParseIP(host); ip == nil || !ip.IsLoopback() {
+		return host
+	}
+	forwarded := r.Header.Get("X-Forwarded-For")
+	if forwarded == "" {
+		return host
+	}
+	hops := strings.Split(forwarded, ",")
+	if last := strings.TrimSpace(hops[len(hops)-1]); last != "" {
+		return last
+	}
+	return host
 }
 
 func (a *WebAPI) runGenerationJob(id string, generator *GenerationService, client, prompt, name string, ground bool) {

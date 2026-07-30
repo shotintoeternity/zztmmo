@@ -1,0 +1,26 @@
+$ZZTMMO -- Public Beta
+- - - - -
+
+   Found a problem?  Please tell us:
+
+  github.com/shotintoeternity/zztmmo/issues
+
+   Say which world you were in, what you
+did, and what happened.  Thanks for
+testing -- the rough edges are the point.
+
+$Good to know
+
+   *  ZZTMMO is built for desktop
+      browsers with a keyboard.  Phones
+      and tablets are not supported yet.
+
+   *  Worlds run live on the server, so
+      a restart returns everyone to the
+      title screen.  Save with [S] and
+      come back with [R].
+
+   *  "Dream a world" asks a language
+      model for a new world and is rate
+      limited.  If it refuses, wait a
+      minute and try again.

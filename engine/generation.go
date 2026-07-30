@@ -35,6 +35,8 @@ type GenerationService struct {
 	sem          chan struct{}
 	mu           sync.Mutex
 	lastByClient map[string]time.Time
+	dailyMax     int
+	admittedDay  []time.Time
 	progress     func(GenerationProgress)
 	batchSize    int
 }
@@ -47,10 +49,14 @@ type GenerationConfig struct {
 	MaxAttempts   int
 	MaxConcurrent int
 	RateLimit     time.Duration
-	OutputDir     string
-	HTTPClient    *http.Client
-	Progress      func(GenerationProgress)
-	BatchSize     int
+	// DailyMax is the server-wide spend ceiling: at most this many generations
+	// are admitted in any rolling 24 hours, across every client. Zero takes
+	// GenerationDailyMaxDefault; negative disables the ceiling.
+	DailyMax   int
+	OutputDir  string
+	HTTPClient *http.Client
+	Progress   func(GenerationProgress)
+	BatchSize  int
 }
 
 // GenerationProgress is emitted at every durable boundary in the plan-then-
@@ -141,6 +147,21 @@ func (st *generationResume) isStubbed(name string) bool {
 // server has not been configured with its Anthropic credentials.
 var ErrGenerationUnavailable = fmt.Errorf("world generation is not configured")
 
+// ErrGenerationBudget is the spend ceiling (M18.4). The per-client rate limit
+// paces one player; nothing bounded what a room full of them could bill to the
+// API key in a day. It is deliberately in-process and coarse: a restart clears
+// the window, which is the honest trade for a guard with no state to persist.
+var ErrGenerationBudget = errors.New("generation daily limit reached: the server has generated all the worlds it will today")
+
+// GenerationDailyMaxDefault is the ceiling a server with no
+// ZZT_GENERATION_DAILY_MAX gets. Sized for the beta: a generation is a plan
+// call plus one call per board plus repairs, so the worst case is a few dollars
+// each — see AWS.md's "World Generation (Anthropic) Config".
+const GenerationDailyMaxDefault = 25
+
+// generationDailyWindow is the rolling span DailyMax counts over.
+const generationDailyWindow = 24 * time.Hour
+
 func NewGenerationService(c GenerationConfig) (*GenerationService, error) {
 	if c.APIKey == "" || c.Model == "" || c.MaxTokens <= 0 {
 		return nil, fmt.Errorf("%w: set ANTHROPIC_API_KEY, ANTHROPIC_MODEL, and ANTHROPIC_MAX_TOKENS", ErrGenerationUnavailable)
@@ -156,6 +177,9 @@ func NewGenerationService(c GenerationConfig) (*GenerationService, error) {
 	}
 	if c.RateLimit == 0 {
 		c.RateLimit = time.Minute
+	}
+	if c.DailyMax == 0 {
+		c.DailyMax = GenerationDailyMaxDefault
 	}
 	if c.OutputDir == "" {
 		c.OutputDir = "."
@@ -175,6 +199,7 @@ func NewGenerationService(c GenerationConfig) (*GenerationService, error) {
 		maxAttempts: c.MaxAttempts, outputDir: c.OutputDir, httpClient: c.HTTPClient,
 		promptKit: kit, rateLimit: c.RateLimit, sem: make(chan struct{}, c.MaxConcurrent),
 		lastByClient: make(map[string]time.Time),
+		dailyMax:     c.DailyMax,
 		progress:     c.Progress,
 		batchSize:    c.BatchSize,
 	}, nil
@@ -227,6 +252,12 @@ func GenerationServiceFromEnv() (*GenerationService, error) {
 	}
 	if seconds, err := strconv.Atoi(os.Getenv("ZZT_GENERATION_RATE_SECONDS")); err == nil && seconds >= 0 {
 		c.RateLimit = time.Duration(seconds) * time.Second
+	}
+	// Positive caps, negative removes the ceiling; unset (or 0, which is the
+	// zero value NewGenerationService cannot tell from "not configured") takes
+	// GenerationDailyMaxDefault.
+	if n, err := strconv.Atoi(os.Getenv("ZZT_GENERATION_DAILY_MAX")); err == nil && n != 0 {
+		c.DailyMax = n
 	}
 	if n, err := strconv.Atoi(os.Getenv("ZZT_GENERATION_BATCH_SIZE")); err == nil && n > 0 {
 		c.BatchSize = n
@@ -559,12 +590,30 @@ func (g *GenerationService) admit(ctx context.Context, client string) error {
 	if client == "" {
 		client = "unknown"
 	}
+	now := time.Now()
 	g.mu.Lock()
-	if last := g.lastByClient[client]; g.rateLimit > 0 && time.Since(last) < g.rateLimit {
+	if last := g.lastByClient[client]; g.rateLimit > 0 && now.Sub(last) < g.rateLimit {
 		g.mu.Unlock()
 		return fmt.Errorf("generation rate limit: try again later")
 	}
-	g.lastByClient[client] = time.Now()
+	// The spend ceiling is checked after the per-client pace and before the
+	// client's clock is stamped, so a refused request neither costs money nor
+	// starts that client's cooldown over.
+	if g.dailyMax > 0 {
+		kept := g.admittedDay[:0]
+		for _, at := range g.admittedDay {
+			if now.Sub(at) < generationDailyWindow {
+				kept = append(kept, at)
+			}
+		}
+		g.admittedDay = kept
+		if len(g.admittedDay) >= g.dailyMax {
+			g.mu.Unlock()
+			return ErrGenerationBudget
+		}
+		g.admittedDay = append(g.admittedDay, now)
+	}
+	g.lastByClient[client] = now
 	g.mu.Unlock()
 	select {
 	case g.sem <- struct{}{}:

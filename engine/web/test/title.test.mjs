@@ -23,6 +23,7 @@ assert.equal(titleCommand(key("KeyQ", "q")), "quit");
 assert.equal(titleCommand(key("Escape", "Escape")), "quit");
 assert.equal(titleCommand(key("KeyH", "h")), "highScores");
 assert.equal(titleCommand(key("KeyE", "e")), "editor");
+assert.equal(titleCommand(key("KeyF", "f")), "feedback");
 assert.equal(titleCommand(key("KeyS", "s")), "none");
 assert.equal(titleCommand(key("KeyA", "a", { ctrlKey: true })), "none");
 
@@ -32,6 +33,8 @@ const sidebarText = writes.map((write) => write.text).join("\n");
 assert.match(sidebarText, / About ZZT!/);
 assert.match(sidebarText, / High Scores/);
 assert.match(sidebarText, / Board editor/);
+// M18.4: the beta feedback pointer is always drawn, signed in or not.
+assert.match(sidebarText, / Feedback/);
 assert.doesNotMatch(sidebarText, /Google sign-in/);
 assert.doesNotMatch(sidebarText, /Game speed/);
 
@@ -39,6 +42,17 @@ const authWrites = [];
 drawTitleSidebar((x, y, color, text) => authWrites.push({ x, y, color, text }), "TOWN", "", true);
 const authSidebarText = authWrites.map((write) => write.text).join("\n");
 assert.match(authSidebarText, / Google sign-in/);
+// The feedback row must not overprint the sign-in row, and the blank separator
+// between the ZZTMMO block and sign-in stays.
+{
+  const feedback = authWrites.find((write) => write.text === " F ");
+  const signIn = authWrites.find((write) => write.text === " G ");
+  assert.ok(feedback, "the feedback hotkey box is drawn");
+  assert.ok(signIn.y > feedback.y + 1, "sign-in keeps a blank row above it");
+  for (const write of authWrites.filter((w) => w.y === feedback.y)) {
+    assert.ok(write.x >= 60 && write.x + write.text.length <= 80, `"${write.text}" leaves the sidebar`);
+  }
+}
 
 // M17.11: how busy the server is, before the player opens the picker. A quiet
 // server draws nothing rather than zeros, and neither count may reach into the

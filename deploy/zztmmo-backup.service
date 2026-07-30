@@ -1,0 +1,13 @@
+[Unit]
+Description=zztmmo saved-game backup (dated tar of /opt/zztmmo/saves)
+# Backing up while the game server is stopped is fine and still correct — the
+# unit is ordered after it only so a boot-time catch-up run does not race the
+# autosave restore.
+After=zztmmo.service
+
+[Service]
+Type=oneshot
+# Same user zzt-server writes saves as, so no root is needed. /var/backups/zztmmo
+# is created and chowned to ec2-user at install time (see AWS.md).
+User=ec2-user
+ExecStart=/opt/zztmmo/zztmmo-backup.sh

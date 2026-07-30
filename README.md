@@ -18,6 +18,21 @@ Explore classic `.ZZT` worlds in synchronized rooms, chat while you play, read s
 *   **Save the shared mess:** Room snapshots can be saved to disk and restored later, so a party can preserve puzzle progress instead of starting from a pristine world every session.
 *   **Play co-op first, PvP later:** The current game is honest multiplayer ZZT co-op. Combat, damage, bullets, and hazards are server-authoritative where implemented, but there are no PvP arenas, rankings, ownership rules, or duel systems yet.
 
+## Beta Notes
+
+ZZTMMO is in a small public beta. It is a real server running real ZZT worlds, and it is also a work in progress — the point of the beta is to find where it bends.
+
+**Scope.** Desktop browsers with a keyboard. Phones and tablets are not supported yet: ZZT is a keyboard game, and the on-screen control work is deliberately parked until after the beta.
+
+**Known rough edges.**
+
+*   Worlds run live on the server, so a restart returns everyone to the title screen. Save with **S** and come back with **R**. A planned restart warns connected players a minute ahead; an unplanned one does not.
+*   **D**, "Dream a world", asks a language model for a brand-new world. It is rate limited per player, and the server has a daily ceiling — if it refuses, that is the limit talking, not a crash. Generation takes a couple of minutes and can fail on a board or two; the failed rooms come back as empty stubs rather than sinking the world.
+*   Multiplayer changes some of ZZT's assumptions. Boards tick for everyone standing on them, so another player can spring a trap, take the item you were walking toward, or wander off the edge mid-scroll.
+*   Museum of ZZT worlds are community-authored and were written for one player. Some are wonderful; some will do something strange with several.
+
+**Reporting problems.** Press **F** on the title screen for the in-game pointer, or go straight to [GitHub issues](https://github.com/shotintoeternity/zztmmo/issues). The useful ones say which world you were in, what you did, and what happened — a screenshot of the board helps a lot.
+
 ## The ZZT Feel
 
 *   **Canvas CP437 renderer:** The browser draws the original 60x25 board plus 20x25 sidebar in DOS colors using pixel-perfect PNG font sheets from Adrian Siekierka's [Zeta](https://github.com/asiekierka/zeta).

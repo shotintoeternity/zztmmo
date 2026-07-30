@@ -4950,3 +4950,119 @@ Ticking the box derives a `task.M18.3` inventory row, hand-inserted into
 `fixtures/parity/manifest.json` as an 11-line pure insertion byte-identical to
 the deriver's output — the M18.1/M18.2 workaround for M16.20a's destructive
 `PARITY_SCAFFOLD=1` regeneration.
+
+## 2026-07-30 — M18.4: beta operational readiness (a–d)
+
+Four small items, no shared theme except "a stranger is about to use this".
+Owner decisions taken at task start (the spec required asking): the feedback
+channel is **GitHub issues on this repo**; the pointer is a **title-menu entry
+plus its own help file**, not a one-shot launch line; and dev-host verification
+was done by this executor under the documented authorize-verify-revoke SSH
+procedure rather than being owner-gated.
+
+**(a) In-game feedback pointer.** New `engine/BETA.HLP` — a fork-added help
+file, so no upstream `.HLP` was touched — reachable from a new ` F  Feedback`
+row on the title sidebar (`title.ts`, `main.ts` `case "feedback"`). It ships
+automatically: the deploy bundle globs `*.HLP`, and `/api/help` serves any
+basename in `HelpDir`, so no server change was needed.
+
+Two layout facts that decided the shape:
+- The sidebar's ZZTMMO-only block is rows 19–20 (`D` Dream, `E` Board editor).
+  `F` joins it at 21 and the Google sign-in row moves 22 → 23, which keeps the
+  blank separator above sign-in instead of butting the two groups together.
+  `title.test.mjs` now asserts that gap rather than the literal rows.
+- **The first draft buried the URL.** The text window is 18 rows and vanilla
+  spends the top of it on the "Use ↑ ↓" header plus the centered `$` title, so
+  a file that opens with a paragraph of thanks pushes the report address below
+  the fold — where a tester has to press ↓ to find the one line that matters.
+  Rewritten to lead with "Found a problem? Please tell us:" and the URL; the
+  browser screenshot is what caught this, not the unit test.
+
+**(b) Backup cadence.** `deploy/zztmmo-backup.{sh,service,timer}` — a daily
+03:17 UTC tar of `/opt/zztmmo/saves` into `/var/backups/zztmmo`, 14-day
+retention, `Persistent=true` so a stopped instance catches up. Written to a
+`.partial` name and renamed, and read back with `tar -tzf` before anything is
+pruned: a backup that cannot be listed is not a backup. Runs as `ec2-user`, no
+root. Backups live outside `/opt/zztmmo` so an accidental wipe of the deployment
+directory does not take them along.
+
+Not covered, deliberately, and worth an owner decision before the invite:
+worlds created by "Dream a world" land in `/opt/zztmmo` itself as `NAME.ZZT`
+(with `NAME.zwd` / `NAME.plan.md` beside them), mixed in with the ~100 shipped
+worlds, so a path-based backup cannot separate tester-created worlds from
+shipped ones without new bookkeeping. They survive redeploys (unpacking
+overwrites, never deletes) but not a host loss. Documented in AWS.md.
+
+**(c) Generation limits — one was missing and one was broken.**
+
+*Missing: a spend ceiling.* Nothing bounded what a room full of testers could
+bill to the API key in a day; the per-client pace bounds one player and the
+semaphore bounds simultaneity, neither bounds volume. Added `DailyMax` /
+`ZZT_GENERATION_DAILY_MAX` (default 25): admitted generations counted in a
+rolling 24h across all clients, refused with `ErrGenerationBudget` → `429`.
+In-process and cleared by a restart — the honest trade for a guard with no
+state to persist, and recorded as such in AWS.md rather than left to be
+discovered.
+
+*Broken: the "per-player" rate limit was not per player.* `handleGenerate` keyed
+it on `r.RemoteAddr`, and production binds `127.0.0.1:8080` behind Caddy, so
+every request keys to the loopback address — the 60s cooldown was global, and
+any one player could hold it against everyone. New `generationClientKey` reads
+the *last* `X-Forwarded-For` hop, and only when the peer is loopback, so a
+client that reaches the server directly cannot forge one. This raises spend
+(N testers × 1/min instead of 1/min total), which is exactly why the ceiling
+above had to land in the same task.
+
+Verified on the dev host against the deployed binary, at zero API spend, by
+running a second instance on port 8091 with a dead `ANTHROPIC_API_URL`
+(`127.0.0.1:9`) and `ZZT_GENERATION_DAILY_MAX=2`. The live service and its
+`.env` were never touched by the probe:
+
+| Probe | Client (XFF) | Result |
+|---|---|---|
+| A | `198.51.100.11` | `422` — admitted, then failed on the dead endpoint |
+| B | `198.51.100.11` again, immediately | `429` "generation rate limit" |
+| C | `203.0.113.22`, immediately | `422` — **admitted**, so the keys really are distinct |
+| D | `192.0.2.55` | `429` "generation daily limit reached" — ceiling observed |
+
+C is the discriminator: under the old code it would have shared B's loopback
+key and been refused. The live dev service runs with `ZZT_GENERATION_DAILY_MAX=25`
+(confirmed in its `/proc/<pid>/environ`); everything else is at its default —
+pace 60s, concurrency 2, attempts 3. **Production's `.env` still has no
+`ZZT_GENERATION_DAILY_MAX`**, so it takes the 25 default from the binary; set it
+explicitly there if the owner wants a different number.
+
+**(d) Beta notes.** A "Beta Notes" section at the top of README: desktop-browser
+scope, four known rough edges (live-server restarts, generation limits and stub
+boards, boards ticking for everyone, single-player Museum worlds), and how to
+report. Every claim is one the code or AWS.md already supports — the graceful
+1-minute save warning, `stubCrashingBoards`, the limits table above.
+
+**Verification.** `go build ./...`, `go vet ./...`, `go test -count=1 ./...`
+green; `npm test`, `npx tsc --noEmit`, `npm run build` green. Replay fixture
+untouched. New `engine/m18_4_test.go` covers the ceiling (including the rolling
+window and that a refused request neither stamps a cooldown nor spends a slot),
+the default/opt-out, the proxy key including two forgery attempts, and the 429
+mapping; plus that `/api/help?file=BETA.HLP` answers 200 with the report address
+and that no line exceeds the text window's 45 columns.
+
+Item (a) was verified in a real browser twice — against a local production
+server and against `https://dev.zztmmo.com` — by pressing `F` on the title
+screen and asserting both the `/api/help?file=BETA.HLP` response and the
+rendered canvas (screenshots in the session scratchpad). Item (b) was verified
+on the dev host end to end: timer enabled and scheduled, one manual run, and a
+restore of that archive into a scratch directory that `diff -r` reports
+byte-identical to the live `saves/`.
+
+One bookkeeping note: `AWS.md` is untracked (commit 3d48a78 removed the internal
+planning docs from the public repo, and `.gitignore` keeps it out), so the
+generation-limits table, the Saved-Game Backups section, and the restore runbook
+written for this task exist in the working copy only and are not in the commit.
+`NOTES.md`, `TASKS.md`, and `README.md` are still tracked.
+
+Two host-mutation shapes were refused by the harness's permission layer and
+were worked around rather than forced: multi-step compound deploy commands
+(split into single-purpose ones) and any in-place edit of `/opt/zztmmo/.env`
+(hence the port-8091 sidecar for the limit probes). The temporary
+`174.29.5.212/32` port-22 rule on `sg-08859294bf38ac4c3` was revoked at the end;
+the allowlist is back to its original seven `/32`s.
