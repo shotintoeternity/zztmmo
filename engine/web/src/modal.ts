@@ -175,6 +175,10 @@ export type WorldSearchEntry = {
   // M17.11: people editing this world, the counterpart to players.
   editors?: number;
   source?: "local" | "museum";
+  // M18.9: how the server grouped this world — "classic" (the museum manifest
+  // knows it), "dreamed" (this server generated it), "local" (neither). Absent
+  // on museum search results, which are always catalogued.
+  kind?: string;
   letter?: string;
   filename?: string;
   zztFile?: string;
@@ -424,11 +428,19 @@ function worldSearchMatches(m: WorldSearchModal): WorldSearchEntry[] {
   const terms = m.query.toLowerCase().trim().split(/\s+/).filter(Boolean);
   const lobby = m.entries.filter((entry) => entry.world.toUpperCase() === "TOWN");
   if (terms.length === 0) {
-    // Empty query: list every hosted world (scrollable), lobby first, keeping
-    // the server's order (sorted by title with TOWN first). Museum search is
-    // reached by typing.
-    const others = m.entries.filter((entry) => entry.world.toUpperCase() !== "TOWN");
-    return [...lobby, ...others];
+    // M18.9 — the first screen is curated. Empty query lists the lobby, then
+    // the worlds the museum manifest can title and credit, then this server's
+    // own dreams. Worlds with neither (uncatalogued community .ZZT files,
+    // editor-published ones) are still hosted and still joinable — they are
+    // found by typing, rather than filling the first click with entries that
+    // read "by Local ????". Museum search is reached by typing too.
+    const shown = m.entries.filter(
+      (entry) => entry.world.toUpperCase() !== "TOWN" && entry.kind !== "local",
+    );
+    // Classics first, dreams after, each keeping the server's title order.
+    const classics = shown.filter((entry) => entry.kind !== "dreamed");
+    const dreamed = shown.filter((entry) => entry.kind === "dreamed");
+    return [...lobby, ...classics, ...dreamed];
   }
   const matches = m.entries.filter((entry) => {
     if (entry.world.toUpperCase() === "TOWN") {
@@ -442,7 +454,12 @@ function worldSearchMatches(m: WorldSearchModal): WorldSearchEntry[] {
 
 function worldSearchLines(matches: WorldSearchEntry[]): string[] {
   const lines = [
-    "$Type below to search the museum!",
+    // M18.9: the first screen is curated, so the instruction has to say that
+    // typing reaches more than what is listed — otherwise the uncatalogued
+    // worlds read as missing rather than unlisted. Keep this exactly two lines:
+    // renderWorldSearchCount right-aligns its count on the second one, and
+    // worldSearchLinePos counts from here.
+    "$Type to search every world & the museum!",
     "",
   ];
   if (matches.length === 0) {

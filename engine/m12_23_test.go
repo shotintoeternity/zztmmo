@@ -235,8 +235,15 @@ func TestM1223GeneratedWorldIsListedAndSelectable(t *testing.T) {
 	if listed == nil {
 		t.Fatalf("generated world is missing from the picker: %+v", body.Worlds)
 	}
-	if listed.Title == "" || listed.Author != "Local" {
-		t.Fatalf("generated world listed as %+v, want a title and the Local author fallback", *listed)
+	// M18.9 changed the fallback: a world this server dreamed is credited as
+	// such and grouped apart from uncatalogued community files, which keep the
+	// "Local" label. The point of this assertion is unchanged — a generated
+	// world reaches the picker with a title and a sensible author.
+	if listed.Title == "" || listed.Author != "Dreamed here" {
+		t.Fatalf("generated world listed as %+v, want a title and the dreamed author fallback", *listed)
+	}
+	if listed.Kind != WorldKindDreamed {
+		t.Fatalf("generated world kind = %q, want %q — the .zwd beside it is what says so", listed.Kind, WorldKindDreamed)
 	}
 
 	recorder = httptest.NewRecorder()

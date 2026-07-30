@@ -1147,6 +1147,11 @@ function normalizeWorldEntries(entries: (WorldSearchEntry | string)[]): WorldSea
         players: entry.players || 0,
         editors: entry.editors || 0,
         source: "local",
+        // M18.9: the server's grouping. Left undefined by an older server or
+        // by the bare-string list below, and the picker treats "not local" as
+        // showable, so an unknown kind fails open — a world is never hidden
+        // because the server did not say what it was.
+        kind: entry.kind,
       };
     }
     const world = entry.split(" (")[0];

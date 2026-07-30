@@ -222,10 +222,13 @@ function scroll() {
   const writes = [];
   renderModal((x, y, color, text) => writes.push({ x, y, color, text }), m);
   const rendered = writes.map((write) => write.text).join(" ");
-  assert.match(rendered, /Type below to search the museum!/);
+  // M18.9 reworded this line — the first screen is curated now, so it has to
+  // say that typing reaches worlds the list is not showing.
+  assert.match(rendered, /Type to search every world & the museum!/);
   // The count sits on the blank line below the instruction (y=12), not on the
-  // instruction row (y=11) where it used to overprint "museum!" into "muse6 matches".
-  const instructionWrite = writes.find((write) => write.text === "Type below to search the museum!");
+  // instruction row (y=11) where it used to overprint the header into
+  // "…museum6 matches".
+  const instructionWrite = writes.find((write) => write.text === "Type to search every world & the museum!");
   assert.ok(instructionWrite && instructionWrite.y === 11);
   // All six fixture worlds are matched, not a featured subset.
   assert.ok(writes.some((write) => write.text === "6 matches" && write.x === 42 && write.y === 12));
@@ -387,3 +390,74 @@ console.log("modal.test.mjs: all assertions passed");
 }
 
 console.log("modal.test.mjs: M17.11 live occupancy passed");
+
+// M18.9 — the picker's first screen is curated. Production listed 134 worlds,
+// 69 of them uncatalogued files rendering as "by Local ????". Those are still
+// hosted and still joinable; they are reached by typing rather than filling the
+// first click.
+{
+  const entries = [
+    { world: "TOWN", id: "town", title: "TOWN (ZZTMMO Lobby)", author: "Tim Sweeney", created: "1991", kind: "classic" },
+    { world: "CAVES", id: "caves", title: "Caves of ZZT", author: "Tim Sweeney", created: "1991", kind: "classic" },
+    { world: "MOSSGATE", id: "mossgate", title: "MOSSGATE", author: "Dreamed here", created: "", kind: "dreamed" },
+    { world: "MERC", id: "merc", title: "MERC", author: "Local", created: "", kind: "local" },
+    { world: "PR0N4U", id: "pr0n4u", title: "PR0N4U", author: "Local", created: "", kind: "local" },
+  ];
+  const render = (query) => {
+    const m = { kind: "worldSearch", title: "Select a World", query, selected: 0, entries, onSelect() {}, onQuery() {} };
+    const writes = [];
+    renderModal((x, y, color, text) => writes.push({ x, y, color, text }), m);
+    return writes.map((w) => w.text).join("\n");
+  };
+
+  const firstScreen = render("");
+  assert.match(firstScreen, /TOWN \(ZZTMMO Lobby\)/, "the lobby leads the first screen");
+  assert.match(firstScreen, /Caves of ZZT/, "catalogued classics are listed");
+  assert.match(firstScreen, /MOSSGATE/, "worlds this server dreamed are listed");
+  assert.doesNotMatch(firstScreen, /MERC/, "uncatalogued worlds are left to search");
+  assert.doesNotMatch(firstScreen, /PR0N4U/, "…including ones whose names read badly on a first screen");
+  assert.match(firstScreen, /3 matches/, "the count reflects the curated list");
+
+  // Hidden is not gone: typing still finds them, which is the whole bargain.
+  const searched = render("merc");
+  assert.match(searched, /MERC/, "an uncatalogued world is still reachable by name");
+  // The lobby is appended to every search result, so a single hit reads as two.
+  assert.match(searched, /2 matches/);
+  assert.match(render("pr0n"), /PR0N4U/, "nothing is removed from the catalogue");
+
+  // The instruction has to say that typing reaches more than what is shown.
+  assert.match(firstScreen, /Type to search every world/);
+}
+
+// Classics come before dreams on the first screen, each keeping server order.
+{
+  const entries = [
+    { world: "TOWN", id: "town", title: "TOWN (ZZTMMO Lobby)", author: "Tim Sweeney", created: "1991", kind: "classic" },
+    { world: "ARCHIVE", id: "archive", title: "ARCHIVE", author: "Dreamed here", created: "", kind: "dreamed" },
+    { world: "CAVES", id: "caves", title: "Caves of ZZT", author: "Tim Sweeney", created: "1991", kind: "classic" },
+  ];
+  const m = { kind: "worldSearch", title: "Select a World", query: "", selected: 0, entries, onSelect() {}, onQuery() {} };
+  const writes = [];
+  renderModal((x, y, color, text) => writes.push({ x, y, color, text }), m);
+  const text = writes.map((w) => w.text).join("\n");
+  assert.ok(
+    text.indexOf("Caves of ZZT") < text.indexOf("ARCHIVE"),
+    "a catalogued classic sorts above a dreamed world",
+  );
+}
+
+// An entry with no kind at all — an older server, or the bare-string world
+// list — must still be shown. The filter fails open: a world is never hidden
+// because the server did not say what it was.
+{
+  const entries = [
+    { world: "TOWN", id: "town", title: "TOWN (ZZTMMO Lobby)", author: "Unknown", created: "" },
+    { world: "MYSTERY", id: "mystery", title: "Mystery", author: "Unknown", created: "" },
+  ];
+  const m = { kind: "worldSearch", title: "Select a World", query: "", selected: 0, entries, onSelect() {}, onQuery() {} };
+  const writes = [];
+  renderModal((x, y, color, text) => writes.push({ x, y, color, text }), m);
+  assert.match(writes.map((w) => w.text).join("\n"), /Mystery/, "an unclassified world stays visible");
+}
+
+console.log("modal.test.mjs: M18.9 curated world picker passed");

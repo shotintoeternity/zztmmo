@@ -5314,3 +5314,56 @@ of a long progress line (M18.7).
 
 Both temporary port-22 rules revoked; both allowlists back to their starting
 sets (prod six `/32`s, dev seven).
+
+## 2026-07-30 — M18.9: a curated world picker, and dreams kept apart
+
+Found during M18.5's deploy: production's picker jumped from 65 entries to 134
+when the host caught up to `dev`. `worldListEntries` lists every `.ZZT` in the
+directory and only the 65 the 78-entry `worlds.manifest.json` covers get a title
+and author, so 69 rendered as `by Local ????` — two lines each of nothing, on a
+tester's first click.
+
+Owner decisions: curate the first screen, split generated from shipped, and
+leave PR0N4U hosted (a genuine archive world; the catalogue stays honest).
+
+**Server.** `WorldListEntry` gained a `Kind`: `classic` (the manifest knows it),
+`dreamed` (a `NAME.zwd` sits beside `NAME.ZZT`), `local` (neither).
+`WorldListEntriesInDir` already took a directory and ignored it (`_ string`) —
+that unused parameter was the seam, and it now does the `os.Stat`. The
+discriminator is the ZWD `persistGeneratedWorld` writes, not a name pattern:
+production hosts a dream literally called `GEN6042D`, and a name rule would
+equally have caught a community world called GENESIS. `TestM189DreamedNeedsThe
+SiblingNotTheName` pins exactly that.
+
+**Client.** With an empty query the picker now lists the lobby, then classics,
+then dreams — and not `local`. Typing searches everything as before, local
+worlds included, plus the Museum. The header says so ("Type to search every
+world & the museum!") because otherwise the unlisted worlds read as missing
+rather than unlisted. The filter is `kind !== "local"`, so an entry with no kind
+at all — an older server, the legacy bare-string list — stays visible: a world
+is never hidden because the server did not say what it was.
+
+Measured on a local server against the real world directory: 112 worlds → 65
+classic, 43 local, 4 dreamed. First screen goes from 112 entries to 69, every
+one of them with a real title and author. Verified in a browser: the picker
+shows "Adventures of Link 2 / by Bitbot 2015" where it used to show `by Local
+????`, and typing `merc` still finds MERC in one keystroke, next to the Museum's
+own "Space Fighter: Mercenary".
+
+**One existing test moved with the change, deliberately.**
+`TestM1223GeneratedWorldIsListedAndSelectable` asserted a generated world lists
+with `Author == "Local"`. That is the behaviour this task changes — dreams are
+credited "Dreamed here" now — so the assertion was updated to the new fallback
+and extended to check the kind. Its intent (a generated world reaches the picker
+with a title and a sensible author, and can be selected) is unchanged. No replay
+fixture was touched.
+
+`modal.ts`'s header is still exactly two lines: `renderWorldSearchCount`
+right-aligns the match count on the second, and `worldSearchLinePos` counts from
+there — the drift the comment at `modal.ts:481` warns about.
+
+`go build`/`vet`/`test -count=1 ./...` green including the M16.11 browser
+journeys (they pick worlds by typing, so the search path had to stay intact);
+`npm test`, `npx tsc --noEmit`, `npm run build` green.
+
+**Not deployed.** Both hosts run `72df76f`, which predates this.

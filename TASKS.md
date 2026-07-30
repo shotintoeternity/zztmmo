@@ -3254,6 +3254,47 @@ lists. Every task: `cd engine && go build ./... && go test ./...` green,
   also deliberately kept out of `crashed`, so they can never stub a board or
   fail a world. See NOTES.md 2026-07-30.
 
+- [x] **M18.9 — World picker: a curated first screen, and dreamed worlds kept
+  apart from the classics.** Found during M18.5's production deploy: the picker
+  went from 65 entries to 134 when production caught up to `dev`, because
+  `worldListEntries` lists every `.ZZT` in the directory and only 65 match
+  `worlds.manifest.json`. The other 69 render as `by Local ????` — two lines
+  each of nothing, in front of a tester on their first click. They are three
+  different things wearing one label: real community worlds the 78-entry
+  manifest does not cover (BURGLAR1, MERC, MONSTER, MOON, RHYGAR1A, DARKCIT1-4,
+  ZZTRIS…), worlds this project dreamed (ARCHIVE, MOSSGATE, and the hash-named
+  GEN6042D), and a few test artifacts.
+
+  Owner decisions 2026-07-30: **curate the first screen** — the metadata-known
+  classics plus TOWN — with everything else still hosted and reachable by
+  typing; and **split generated from shipped** so dreams do not sit among the
+  classics. PR0N4U stays: it is a genuine archive world and the catalogue stays
+  honest.
+
+  Server (`world_metadata.go`): give `WorldListEntry` a `Kind` — `classic`
+  (Museum metadata found), `dreamed` (a `NAME.zwd` sits beside `NAME.ZZT`, the
+  same discriminator M18.8 established and M18.6 will reuse), `local`
+  (neither). `worldListEntries` must actually read the directory to see the
+  sibling: `WorldListEntriesInDir` already takes a dir and ignores it (`_
+  string`), which is the seam. Dreamed entries get an author fallback that says
+  so rather than "Local".
+
+  Client (`modal.ts` `worldSearchMatches`): with an empty query list TOWN, then
+  classics, then dreamed — and not `local`. A typed query searches everything
+  exactly as it does today, local worlds included, plus the Museum. Say so in
+  the header line so the hidden worlds are discoverable rather than lost.
+  **`worldSearchLinePos` must keep agreeing with `worldSearchLines`** — the
+  comment at `modal.ts:481` exists because the selection highlight drifts off
+  its entry the moment those two disagree; if the header changes height, both
+  change together.
+
+  DoD: `/api/worlds` reports a kind for every entry, and a dreamed world is
+  distinguished from an unlabelled community one by the `.zwd` sibling, not by
+  a name pattern; the empty-query picker shows only TOWN + classics + dreamed;
+  typing still finds a `local` world by name; the M16.11 browser journeys still
+  pass (they pick worlds by typing, so the search path must be untouched);
+  `go test ./...` and `npm test` green; replay fixture untouched.
+
 ## M14 — Rearchitecting for the service ZZTMMO is becoming
 
 Filed 2026-07-12 from a whole-repo review (NOTES.md): three structural debts

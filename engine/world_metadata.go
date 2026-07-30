@@ -3,6 +3,7 @@ package zztgo
 import (
 	_ "embed"
 	"encoding/json"
+	"os"
 	"path/filepath"
 	"sort"
 	"strconv"
@@ -23,8 +24,25 @@ type WorldListEntry struct {
 	// Editors mirrors Players for people editing the world rather than playing
 	// it (M17.11). omitempty keeps quiet worlds uncluttered and the JSON shape
 	// backward-compatible.
-	Editors int    `json:"editors,omitempty"`
+	Editors int `json:"editors,omitempty"`
+	// Kind is how the picker groups a world (M18.9):
+	//
+	//   classic — worlds.manifest.json knows it, so it has a real title/author
+	//   dreamed — this server generated it (a NAME.zwd sits beside NAME.ZZT)
+	//   local   — neither: a community .ZZT the manifest does not cover, or an
+	//             editor-published world
+	//
+	// The client shows classics and dreams on the empty-query first screen and
+	// leaves `local` to search, so a tester's first click is not 69 entries of
+	// "by Local ????".
+	Kind string `json:"kind,omitempty"`
 }
+
+const (
+	WorldKindClassic = "classic"
+	WorldKindDreamed = "dreamed"
+	WorldKindLocal   = "local"
+)
 
 type museumWorldManifest struct {
 	Worlds []museumWorldEntry `json:"worlds"`
@@ -46,24 +64,39 @@ var (
 )
 
 func WorldListEntries(worlds []string, playerCounts map[string]int) []WorldListEntry {
-	return worldListEntries(worlds, playerCounts, nil, false)
+	return worldListEntries("", worlds, playerCounts, nil, false)
 }
 
 // WorldListEntriesInDir includes every joinable local world. Museum metadata
 // enriches catalogued files, while generated and editor-published files use a
 // safe local fallback so the picker never hides a world it can load.
-func WorldListEntriesInDir(_ string, worlds []string, playerCounts map[string]int) []WorldListEntry {
-	return worldListEntries(worlds, playerCounts, nil, true)
+func WorldListEntriesInDir(dir string, worlds []string, playerCounts map[string]int) []WorldListEntry {
+	return worldListEntries(dir, worlds, playerCounts, nil, true)
 }
 
 // WorldListEntriesInDirWithEditors is WorldListEntriesInDir plus editor
 // occupancy (M17.11). The older signatures are kept so existing callers and
 // tests are untouched.
-func WorldListEntriesInDirWithEditors(_ string, worlds []string, playerCounts, editorCounts map[string]int) []WorldListEntry {
-	return worldListEntries(worlds, playerCounts, editorCounts, true)
+func WorldListEntriesInDirWithEditors(dir string, worlds []string, playerCounts, editorCounts map[string]int) []WorldListEntry {
+	return worldListEntries(dir, worlds, playerCounts, editorCounts, true)
 }
 
-func worldListEntries(worlds []string, playerCounts map[string]int, editorCounts map[string]int, includeLocal bool) []WorldListEntry {
+// worldIsDreamed reports whether dir holds the ZWD source persistGeneratedWorld
+// writes beside every world it generates (generation.go). It is the same
+// discriminator M18.8 uses to find generated content: a filename pattern would
+// misread a community world that happens to be called GEN-something, and the
+// .ZZT alone carries nothing that says where it came from.
+func worldIsDreamed(dir, world string) bool {
+	if dir == "" {
+		return false
+	}
+	if _, err := os.Stat(filepath.Join(dir, world+".zwd")); err == nil {
+		return true
+	}
+	return false
+}
+
+func worldListEntries(dir string, worlds []string, playerCounts map[string]int, editorCounts map[string]int, includeLocal bool) []WorldListEntry {
 	out := make([]WorldListEntry, 0, len(worlds))
 	for _, world := range worlds {
 		meta, ok := museumMetadataForWorld(world)
@@ -78,10 +111,17 @@ func worldListEntries(worlds []string, playerCounts map[string]int, editorCounts
 		}
 		if !ok {
 			entry.ID = strings.ToLower(world)
-			entry.Author = "Local"
+			if worldIsDreamed(dir, world) {
+				entry.Kind = WorldKindDreamed
+				entry.Author = "Dreamed here"
+			} else {
+				entry.Kind = WorldKindLocal
+				entry.Author = "Local"
+			}
 			out = append(out, entry)
 			continue
 		}
+		entry.Kind = WorldKindClassic
 		entry.ID = meta.ID
 		entry.Author = meta.Author
 		entry.Created = meta.Created
