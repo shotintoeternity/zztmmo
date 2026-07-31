@@ -7215,3 +7215,109 @@ task in the ranked list.
 green — the compile-beside-a-ticking-room test is exactly the write/read pair
 the detector used to report. `go build ./...`, `go vet ./...` and `gofmt` clean
 on the touched files. No fixture changed except the manifest row above.
+
+## M16.17b — the dream that overwrote the world it was refused (2026-07-31)
+
+The defect M16.17 pinned: `paintAndFinish` called `persistGeneratedWorld` —
+which writes `NAME.ZZT`, `NAME.zwd`, `NAME.plan.md` and `NAME.prompt.txt` — and
+only *then* `HostGeneratedWorld`, whose occupancy refusal comes too late to undo
+any of it. A dream aimed at a world people were playing answered "already
+occupied" with that world's file already replaced. The room kept playing the
+copy in memory and noticed nothing; the next restore-on-boot would have loaded
+somebody else's dream.
+
+### The fix, and where it asks
+
+`refuseIfOccupied` (generation.go) asks the editor's question — the one
+`saveEditorWorld` has always asked, "refuse before writing anything if the
+target world is occupied" — at two moments:
+
+- in `generate()`, as soon as the name is known, so an occupied name costs no
+  model spend beyond the plan call that named it; and
+- in `paintAndFinish`, immediately before the first write, because a generation
+  spans minutes and `RetryBoard` re-enters there without passing the first check
+  at all.
+
+The occupancy question itself moved into `WebSocketServer.WorldIsOccupied` /
+`worldIsOccupiedLocked`, extracted from `HostGeneratedWorld`, which now calls it.
+
+A window of a few milliseconds survives between the second check and the write,
+in which a player could join; `HostGeneratedWorld` still refuses there, so the
+worst case shrinks from "silently overwritten" to "overwritten and told about
+it". That is the trade `saveEditorWorld` already ships with, and closing it
+properly means holding `s.mu` across file I/O or reserving names against the
+join path — both larger than this defect.
+
+### The ownership half — an owner decision, taken
+
+The spec left `.access.json` to the owner ("if the owner decides generation
+should honour it"). **Owner decision 2026-07-31: enforce it now.** Generation
+was the one creation path that ignored the ownership the editor writes, so any
+name a tester could type was a name they could take, as long as nobody happened
+to be standing in it.
+
+- `GenerationRequest` is a new options struct carrying `Account`
+  (`AuthenticatedAccount`). `Generate`/`GenerateWithProgress` keep their
+  signatures and pass the zero account — a guest, which is exactly what the eval
+  harness, `run-generation` and the unit tests are. `/api/generate` uses
+  `GenerateRequest` and reads the account off the request cookie
+  (`WebAPI.requestAccount`, on the request goroutine, because the async job
+  outlives `r`).
+- `refuseIfNotOurs` asks `WorldAccess.CanEdit` — owner and invited
+  collaborators may dream over a world, nobody else may. **A world with no
+  access file belongs to nobody and stays open**, which is what keeps the ~100
+  shipped worlds and every pre-M16.17b dream reachable, and the only reason a
+  guest can dream at all.
+- `claimGeneratedWorld` gives a signed-in dreamer the ownership the editor's
+  publisher gets. An existing access file is never rewritten; a guest's dream
+  stays unowned. Both are `saveEditorWorld`'s rules.
+- The resume state carries the account, so a retry is checked against the
+  identity that started the generation.
+- `/api/generate` answers **409** for both refusals; nothing else changed about
+  the matrix.
+
+### Filed on the way through: M16.17d
+
+The browser never sends `{"name":...}` — the world's name comes from the plan.
+So a browser dream whose planner picks a name an owned world already has now
+*fails* where it used to overwrite. That is the right refusal on the wrong
+subject: the player did not choose the name and has nothing to fix. Filed as
+M16.17d (fall back to the hashed name when the name was derived rather than
+requested); it is a UX hole, not a data-loss one, and it needs an owner call
+about what the copy says.
+
+### Evidence
+
+- `TestM1617bDreamOverwritesAWorldItIsRefusedPermissionToHost` is INVERTED: the
+  refused generation moves no byte, writes no sidecar, paints no board and
+  leaves the room's clients where they were — and the same generation over the
+  now-empty world still lands.
+- `TestM1617bDreamHonoursTheOwnershipTheEditorWrites` walks the ownership
+  matrix: intruder and guest refused over Ada's world, her invited collaborator
+  and Ada herself allowed, her ownership not rewritten by either, a signed-in
+  dream owned on landing and refused to the next account, a guest's dream
+  unowned and open.
+- The route matrix gains two rows, both 409: a generation aimed at an occupied
+  world (no model call, no byte), and one aimed at another account's world with
+  a real signed cookie (`signedAuthCookie`, the M16.15 hermetic sign-in seam),
+  proving the identity reaches the route and that Ada's own dream is hers.
+- Manifest: `service.dream` leaves `gap` for `pass` (M16.17 said it would when
+  this landed) and `route.api.generate`'s note is updated. `mode.modal-dream`
+  stays `gap` — that is M16.17c's.
+
+### Verified
+
+`go build ./...`, `go vet ./...` and `gofmt` clean on the touched files.
+`go test ./...` green on one full run, and every browser suite green on a
+targeted `-run Browser` pass (M16.9, M16.10, M16.11, M16.13, M16.14, M16.17).
+
+Two other full runs failed, both inside the Playwright suites, and the one
+captured names **M16.14b's act 8** — "an ordered pair of edits on one cell
+leaves the later writer's tile", the contested cell timing out on the session's
+answer. That is the open, filed, `[ADVISOR]` diff-fan-out race, and TASKS.md
+already calls it "the one browser flake still open". It fails under load and
+passes alone, which is exactly how it is described; nothing in M16.17b touches
+the editor's fan-out, and the same suite passes on its own here. Recording it
+rather than rerunning until it is quiet: an executor who reruns a red suite
+until it goes green is the failure mode the replay-fixture rule exists to
+prevent.

@@ -216,6 +216,14 @@ func (a *WebAPI) handleGenerate(w http.ResponseWriter, r *http.Request) {
 		a.Generator = generator
 	}
 	client := generationClientKey(r)
+	// M16.17b: who is asking, so a dream cannot take a world another account
+	// owns — and so a signed-in dreamer's own world is owned once it lands. A
+	// guest is the zero account: unowned names only. Read here, on the request
+	// goroutine, because the async job outlives r.
+	req := GenerationRequest{
+		Client: client, Account: a.requestAccount(r), Premise: body.Prompt,
+		Name: body.Name, Server: a.Server, Ground: body.Ground,
+	}
 	if body.Async {
 		jobID := fmt.Sprintf("gen-%d", atomic.AddUint64(&a.generationSeq, 1))
 		a.generationMu.Lock()
@@ -224,20 +232,25 @@ func (a *WebAPI) handleGenerate(w http.ResponseWriter, r *http.Request) {
 		}
 		a.generationJobs[jobID] = &generationJob{Status: "running"}
 		a.generationMu.Unlock()
-		go a.runGenerationJob(jobID, generator, client, body.Prompt, body.Name, body.Ground)
+		go a.runGenerationJob(jobID, generator, req)
 		w.WriteHeader(http.StatusAccepted)
 		writeJSON(w, struct {
 			ID string `json:"id"`
 		}{ID: jobID})
 		return
 	}
-	result, err := generator.Generate(r.Context(), client, body.Prompt, body.Name, a.Server, body.Ground)
+	result, err := generator.GenerateRequest(r.Context(), req)
 	if err != nil {
 		switch {
 		case strings.Contains(err.Error(), "rate limit"), errors.Is(err, ErrGenerationBudget):
 			http.Error(w, err.Error(), http.StatusTooManyRequests)
 		case errors.Is(err, ErrGenerationUnavailable):
 			http.Error(w, err.Error(), http.StatusServiceUnavailable)
+		case errors.Is(err, ErrGeneratedWorldOccupied), errors.Is(err, ErrGeneratedWorldNotYours):
+			// M16.17b: a name conflict, not a failed generation. Nothing was
+			// written — and nothing will be until that world empties out, or
+			// never, if it is somebody else's.
+			http.Error(w, err.Error(), http.StatusConflict)
 		default:
 			http.Error(w, "generation failed: "+err.Error(), http.StatusUnprocessableEntity)
 		}
@@ -275,8 +288,23 @@ func generationClientKey(r *http.Request) string {
 	return host
 }
 
-func (a *WebAPI) runGenerationJob(id string, generator *GenerationService, client, prompt, name string, ground bool) {
-	result, err := generator.GenerateWithProgress(context.Background(), client, prompt, name, a.Server, a.jobProgress(id), ground)
+// requestAccount names the signed-in player behind a request, or the zero
+// account for a guest — which is also what a server running without auth
+// returns. Ownership decisions read it; nothing else about the request does.
+func (a *WebAPI) requestAccount(r *http.Request) AuthenticatedAccount {
+	if a.Server == nil {
+		return AuthenticatedAccount{}
+	}
+	account, ok := a.Server.authAccount(r)
+	if !ok {
+		return AuthenticatedAccount{}
+	}
+	return account
+}
+
+func (a *WebAPI) runGenerationJob(id string, generator *GenerationService, req GenerationRequest) {
+	req.Progress = a.jobProgress(id)
+	result, err := generator.GenerateRequest(context.Background(), req)
 	a.finishGenerationJob(id, generator, result, err)
 }
 

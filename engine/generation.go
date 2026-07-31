@@ -120,6 +120,10 @@ type generationResume struct {
 	sections map[string]string
 	attempts map[string]*int
 	server   *WebSocketServer
+	// account is the player the dream was requested by, carried so a retry
+	// (M12.22) is checked against the same identity the first attempt was.
+	// Empty is a guest: it owns nothing and can take no owned name.
+	account AuthenticatedAccount
 	// stubbed names the boards whose paint attempts were exhausted and which
 	// were salvaged with generatedStubBoard (M17.13), in generation order.
 	stubbed []string
@@ -146,6 +150,83 @@ func (st *generationResume) isStubbed(name string) bool {
 // ErrGenerationUnavailable is returned before making a network call when the
 // server has not been configured with its Anthropic credentials.
 var ErrGenerationUnavailable = fmt.Errorf("world generation is not configured")
+
+// ErrGeneratedWorldOccupied refuses a dream aimed at a world people are
+// currently playing (M16.17b). Its whole point is to be raised BEFORE the first
+// byte is written: persistGeneratedWorld replaces NAME.ZZT and its three
+// sidecars, and HostGeneratedWorld's own occupancy refusal comes too late to
+// undo that — the room keeps playing the copy in memory and notices nothing,
+// and the next restore-on-boot loads somebody else's dream. The API turns it
+// into a 409; nothing about it is retryable, because the answer changes only
+// when the last player leaves that world.
+var ErrGeneratedWorldOccupied = errors.New("already occupied")
+
+// refuseIfOccupied is the guard itself. It is asked twice per generation — once
+// as soon as the name is known, so an occupied name costs no model spend, and
+// again immediately before persistence, because a generation takes minutes and
+// somebody can walk into the target world during any of them. The editor's
+// publish path (saveEditorWorld) makes the same check the same way; like that
+// one, it leaves a window of a few milliseconds between the check and the write
+// in which a player could join. HostGeneratedWorld still refuses in that case,
+// so the worst outcome shrinks from "silently overwritten" to "overwritten and
+// told about it", which is the trade the editor already ships with.
+func refuseIfOccupied(server *WebSocketServer, name string) error {
+	if server == nil || !server.WorldIsOccupied(name) {
+		return nil
+	}
+	return fmt.Errorf("world %q is being played and cannot be overwritten: %w", name, ErrGeneratedWorldOccupied)
+}
+
+// ErrGeneratedWorldNotYours refuses a dream aimed at a name whose
+// .access.json names somebody else (M16.17b, owner decision 2026-07-31).
+// Generation used to be the one creation path that ignored the ownership the
+// editor writes: a tester could take any name they could type, and the world
+// under it was replaced. Like the occupancy refusal it is raised before the
+// first byte, and the API turns it into a 409.
+var ErrGeneratedWorldNotYours = errors.New("world belongs to another account")
+
+// refuseIfNotOurs is the ownership half of the guard. It reads the same
+// .access.json the editor writes and asks the same question saveEditorWorld
+// asks (WorldAccess.CanEdit): the owner and their collaborators may dream over
+// a world, nobody else may, and a world with no access file belongs to nobody
+// and stays open — which is what keeps the ~100 shipped worlds and every
+// pre-M16.17b dream reachable. An unauthenticated request is "nobody", so it
+// can still take an unowned name and can never take an owned one.
+func refuseIfNotOurs(dir, name string, account AuthenticatedAccount) error {
+	if dir == "" {
+		return nil
+	}
+	access, ok, err := loadWorldAccess(dir, name)
+	if err != nil {
+		return fmt.Errorf("read the ownership of world %q: %w", name, err)
+	}
+	if !ok || access.CanEdit(account.ID) {
+		return nil
+	}
+	owner := access.OwnerName
+	if owner == "" {
+		owner = "another player"
+	}
+	return fmt.Errorf("world %q belongs to %s: %w", name, owner, ErrGeneratedWorldNotYours)
+}
+
+// claimGeneratedWorld gives a signed-in dreamer the same ownership the editor
+// would have given them, so the world they just made is protected from the next
+// person who types its name. A world that already has an access file keeps it
+// (the check above has already established the dreamer may write here), and a
+// guest's dream stays unowned — exactly saveEditorWorld's rule.
+func claimGeneratedWorld(dir, name string, account AuthenticatedAccount) error {
+	if dir == "" || account.ID == "" {
+		return nil
+	}
+	if _, ok, err := loadWorldAccess(dir, name); err != nil || ok {
+		return err
+	}
+	return writeWorldAccess(dir, name, WorldAccess{
+		OwnerAccountID: account.ID,
+		OwnerName:      account.DisplayName(),
+	})
+}
 
 // ErrGenerationBudget is the spend ceiling (M18.4). The per-client rate limit
 // paces one player; nothing bounded what a room full of them could bill to the
@@ -265,18 +346,42 @@ func GenerationServiceFromEnv() (*GenerationService, error) {
 	return NewGenerationService(c)
 }
 
+// GenerationRequest is one dream, named by everything the pipeline needs to
+// decide whether it may happen: who is pacing it (Client, the rate-limit key),
+// who is asking for it (Account — empty for a guest, which owns nothing and can
+// take no owned name), and where it lands.
+type GenerationRequest struct {
+	Client   string
+	Account  AuthenticatedAccount
+	Premise  string
+	Name     string
+	Server   *WebSocketServer
+	Ground   bool
+	Progress func(GenerationProgress)
+}
+
+// GenerateRequest is the full-fidelity entry point. Generate and
+// GenerateWithProgress remain as they were for every caller that has no account
+// to offer (the eval harness, run-generation, the unit tests): an empty Account
+// is a guest, which is exactly what those callers are.
+func (g *GenerationService) GenerateRequest(ctx context.Context, req GenerationRequest) (GenerationResult, error) {
+	return g.generate(ctx, req)
+}
+
 func (g *GenerationService) Generate(ctx context.Context, client, premise, requestedName string, server *WebSocketServer, ground bool) (GenerationResult, error) {
-	return g.generate(ctx, client, premise, requestedName, server, ground, nil)
+	return g.generate(ctx, GenerationRequest{Client: client, Premise: premise, Name: requestedName, Server: server, Ground: ground})
 }
 
 // GenerateWithProgress runs the same production pipeline but adds a caller-
 // scoped observer. It is used by asynchronous HTTP jobs without mixing events
 // between concurrent clients.
 func (g *GenerationService) GenerateWithProgress(ctx context.Context, client, premise, requestedName string, server *WebSocketServer, progress func(GenerationProgress), ground bool) (GenerationResult, error) {
-	return g.generate(ctx, client, premise, requestedName, server, ground, progress)
+	return g.generate(ctx, GenerationRequest{Client: client, Premise: premise, Name: requestedName, Server: server, Ground: ground, Progress: progress})
 }
 
-func (g *GenerationService) generate(ctx context.Context, client, premise, requestedName string, server *WebSocketServer, ground bool, progress func(GenerationProgress)) (GenerationResult, error) {
+func (g *GenerationService) generate(ctx context.Context, req GenerationRequest) (GenerationResult, error) {
+	client, premise, requestedName := req.Client, req.Premise, req.Name
+	server, ground, progress := req.Server, req.Ground, req.Progress
 	if progress != nil {
 		ctx = context.WithValue(ctx, generationProgressContextKey{}, progress)
 	}
@@ -300,6 +405,16 @@ func (g *GenerationService) generate(ctx context.Context, client, premise, reque
 	if err != nil {
 		return GenerationResult{}, err
 	}
+	// M16.17b: the name is client-supplied and SanitizeSaveName has no opinion
+	// about whose world it already is. Refuse an occupied or someone else's one
+	// here, before a single board is painted, rather than after the model has
+	// been paid to paint a world that can never be persisted.
+	if err := refuseIfOccupied(server, name); err != nil {
+		return GenerationResult{}, err
+	}
+	if err := refuseIfNotOurs(g.outputDir, name, req.Account); err != nil {
+		return GenerationResult{}, err
+	}
 
 	sections := make(map[string]string, len(plan.Boards))
 	attempts := make(map[string]*int, len(plan.Boards))
@@ -309,7 +424,7 @@ func (g *GenerationService) generate(ctx context.Context, client, premise, reque
 	}
 	st := &generationResume{
 		premise: premise, planText: planText, plan: plan, name: name,
-		sections: sections, attempts: attempts, server: server,
+		sections: sections, attempts: attempts, server: server, account: req.Account,
 	}
 	return g.paintAndFinish(ctx, st, 0)
 }
@@ -557,8 +672,23 @@ func (g *GenerationService) paintAndFinish(ctx context.Context, st *generationRe
 		g.report(ctx, GenerationProgress{Stage: "validating", Detail: "passage reciprocity notes: " + strings.Join(notes, "; ")})
 	}
 
+	// M16.17b: the last gate before anything is written. The checks at the top of
+	// generate() cannot cover the minutes of painting that followed them, and
+	// RetryBoard re-enters here without passing them at all.
+	if err := refuseIfOccupied(st.server, name); err != nil {
+		return GenerationResult{}, err
+	}
+	if err := refuseIfNotOurs(g.outputDir, name, st.account); err != nil {
+		return GenerationResult{}, err
+	}
+
 	g.report(ctx, GenerationProgress{Stage: "persisting", Detail: "saving accepted world and sidecars"})
 	if err := persistGeneratedWorld(g.outputDir, name, st.premise, planText, full, data); err != nil {
+		return GenerationResult{}, err
+	}
+	// The dreamer owns what they dreamed, the way the editor's publisher owns
+	// what they published — so the next person to type this name is refused.
+	if err := claimGeneratedWorld(g.outputDir, name, st.account); err != nil {
 		return GenerationResult{}, err
 	}
 	if st.server != nil {

@@ -109,9 +109,14 @@ M12.23, M17.1–M17.7, M16.0–M16.8a — has fully landed.)
    unreachable from a browser. **M16.17a landed 2026-07-31** — the owner chose
    the narrow fix (nobody rewrites the table: it is built once at boot and the
    compile paths only read it), which closed the editor's `N` doing the same
-   thing on its way through. M16.17b is next (silent data loss of a world file,
-   reachable by any tester), then M16.17c (a visible dead end, but only after a
-   board fails to paint).
+   thing on its way through. **M16.17b landed 2026-07-31**, both halves: the
+   occupancy check now precedes the first byte, and — owner decision the same
+   day — generation honours the `.access.json` ownership the editor writes, so
+   it is no longer the one creation path that lets a tester take any name they
+   can type. It filed **M16.17d**: the browser never sends a name, so a
+   plan-derived collision with an owned world now fails where it used to
+   overwrite — a UX hole, not a data-loss one, and it ranks below M16.17c.
+   M16.17c is next (a visible dead end, but only after a board fails to paint).
    Next in file order after those is M16.18. The one
    browser flake still open is M16.14b's act 8,
    which is `[ADVISOR]` and still ranks below the certification tail.
@@ -3569,7 +3574,7 @@ gap task has landed.
   `pass` would drop the only manifest coverage of a still-open defect. It leaves
   `gap` when M16.17b lands.
 
-- [ ] **M16.17b — A refused dream has already overwritten the world it was
+- [x] **M16.17b — A refused dream has already overwritten the world it was
   refused (M16.17 gap task).** `paintAndFinish` (`generation.go`) calls
   `persistGeneratedWorld` — which writes `NAME.ZZT`, `NAME.zwd`, `NAME.plan.md`
   and `NAME.prompt.txt` — and only THEN `HostGeneratedWorld`, which refuses a
@@ -3590,6 +3595,52 @@ gap task has landed.
   refused generation moves no byte and writes no sidecar; a generation over an
   UNOCCUPIED existing name still behaves as it does today unless the owner says
   otherwise; `go test ./...` and the replay fixture green.
+
+  Landed 2026-07-31 (NOTES.md M16.17b), both halves — **the owner chose to
+  enforce `.access.json` now** rather than leave it. `refuseIfOccupied` and
+  `refuseIfNotOurs` (`generation.go`) ask the editor's questions at the editor's
+  moment: once in `generate()` as soon as the name is known, so a refused name
+  costs no paint spend, and again in `paintAndFinish` immediately before the
+  first write, because a generation spans minutes and `RetryBoard` re-enters
+  there without passing the first pair at all. The occupancy question moved into
+  `WebSocketServer.WorldIsOccupied`, extracted from `HostGeneratedWorld`.
+  Ownership follows `WorldAccess.CanEdit` — owner and invited collaborators may
+  dream over a world, nobody else may, and **a world with no access file belongs
+  to nobody and stays open** (the ~100 shipped worlds, every pre-M16.17b dream,
+  and every guest). `claimGeneratedWorld` gives a signed-in dreamer the
+  ownership the editor's publisher gets, never rewriting an existing one. The
+  identity rides in a new `GenerationRequest` struct (`Generate` and
+  `GenerateWithProgress` keep their signatures and pass the zero account, which
+  is what the eval harness, `run-generation` and the unit tests are);
+  `/api/generate` reads it off the session cookie and answers 409 for both
+  refusals. The pin is inverted, `…bDreamHonoursTheOwnershipTheEditorWrites`
+  walks the ownership matrix, the route matrix gains both 409 rows (one with a
+  real signed cookie), and `service.dream` leaves `gap` for `pass`. Filed on the
+  way through: **M16.17d** — the browser never sends a name, so a plan-derived
+  collision with an owned world now fails where it used to overwrite.
+  KNOWN AND ACCEPTED: a few milliseconds survive between the last check and the
+  write in which a player could join; `HostGeneratedWorld` still refuses there,
+  so the worst case is "overwritten and told about it" — the same trade
+  `saveEditorWorld` ships with. Closing it means I/O under `s.mu` or reserving
+  names against the join path, both larger than this defect.
+
+- [ ] **M16.17d — A dream can be refused a name its player never chose (M16.17b
+  gap task).** The browser sends `{"prompt":…}` and no `name`, so the world's
+  name comes from the planner (`generatedSaveName` → `plan.WorldName`). Since
+  M16.17b a dream whose planner picks a name an owned world already holds is
+  refused with "world X belongs to Ada" — the right refusal on the wrong
+  subject: the player did not choose the name, cannot see the conflict, and has
+  nothing to fix but "try again and hope". (Occupancy is not affected the same
+  way: an occupied world is transient, ownership is not.) The pieces are already
+  there — `generatedSaveName` has an FNV fallback (`GEN%05X`) for a name it
+  cannot use. Make the derived-name path fall back rather than refuse, keep a
+  client-SUPPLIED name refusing exactly as it does now (a player who typed a
+  name must be told it is taken, not quietly given another), and say which is
+  which in the progress log so the player knows the world they got is not the
+  world the plan named. Needs an owner call on the copy. DoD: a dream whose
+  derived name is owned by another account still lands, under a different name;
+  a dream that ASKS for an owned name is still 409; both covered beside
+  `…bDreamHonoursTheOwnershipTheEditorWrites`; `go test ./...` green.
 
 - [ ] **M16.17c — The salvaged dream's repaint offer has no client (M16.17 gap
   task).** M17.13's own spec: a salvaged async job is `complete` *and*

@@ -41,14 +41,15 @@ package zztgo
 // M16.13a/M16.14a/M16.15a convention). M16.17a has landed and its pin is
 // inverted (…aConcurrentGenerationsShareTheElementTableSafely, joined by
 // …aCompileBesideATickingRoomLeavesItUnmoved and …aElementTableIsBuiltAtBoot).
-// Still pinned: …bDreamOverwritesAWorldItIsRefusedPermissionToHost (M16.17b),
-// and — in the browser script — the absence of a repaint offer for a salvaged
-// world (M16.17c).
+// Still pinned: in the browser script, the absence of a repaint offer for a
+// salvaged world (M16.17c). …bDreamOverwritesAWorldItIsRefusedPermissionToHost
+// was inverted when M16.17b landed.
 
 import (
 	"bytes"
 	"context"
 	"encoding/json"
+	"errors"
 	"fmt"
 	"io"
 	"net"
@@ -732,6 +733,95 @@ func TestM1617GenerateRouteAnswersEveryDocumentedOutcome(t *testing.T) {
 		}
 		if rec := m1617Post(t, handler, `{"retry":"`+started.ID+`"}`); rec.Code != http.StatusConflict {
 			t.Errorf("retry of a job with no resume state = %d, want 409", rec.Code)
+		}
+	})
+
+	t.Run("a generation aimed at an occupied world is 409 and costs neither a model call nor a byte", func(t *testing.T) {
+		// ROUTEOK was generated, hosted and persisted by the first subtest.
+		// Somebody walks into it; a second dream then asks for its name.
+		inst := server.Instances["ROUTEOK"]
+		if inst == nil {
+			t.Fatal("ROUTEOK is not hosted")
+		}
+		inst.mu.Lock()
+		inst.Clients[PlayerID(7)] = &webSocketClient{}
+		inst.mu.Unlock()
+		defer func() {
+			inst.mu.Lock()
+			delete(inst.Clients, PlayerID(7))
+			inst.mu.Unlock()
+		}()
+
+		path := filepath.Join(outDir, "ROUTEOK.ZZT")
+		before, err := os.ReadFile(path)
+		if err != nil {
+			t.Fatal(err)
+		}
+		boards := model.callsFor("board", "")
+
+		rec := m1617Post(t, handler, `{"prompt":"`+m1617Premise+`","name":"ROUTEOK"}`)
+		if rec.Code != http.StatusConflict {
+			t.Errorf("generation over an occupied world = %d, want 409: %s", rec.Code, rec.Body.String())
+		}
+		after, err := os.ReadFile(path)
+		if err != nil {
+			t.Fatal(err)
+		}
+		if !bytes.Equal(after, before) {
+			t.Errorf("the refused generation rewrote ROUTEOK.ZZT: %d bytes became %d", len(before), len(after))
+		}
+		if got := model.callsFor("board", ""); got != boards {
+			t.Errorf("the refused generation painted %d boards, want %d — the refusal must precede the spend", got-boards, 0)
+		}
+	})
+
+	t.Run("a generation aimed at another account's world is 409, and the dreamer's own world is theirs", func(t *testing.T) {
+		// A hermetic sign-in: the production auth path only HMAC-verifies the
+		// session cookie, so a signed one is a complete browser identity
+		// (auth.go AccountFromRequest, the M16.15 journey's seam).
+		auth := NewAuthService("m1617-client-id", "", "", []byte("m1617-route-cookie-secret"))
+		server.Auth = auth
+		defer func() { server.Auth = nil }()
+		ada := AuthenticatedAccount{ID: "acct-ada", Name: "Ada"}
+		intruder := AuthenticatedAccount{ID: "acct-intruder", Name: "Intruder"}
+		post := func(account AuthenticatedAccount, body string) *httptest.ResponseRecorder {
+			t.Helper()
+			req := httptest.NewRequest(http.MethodPost, "/api/generate", strings.NewReader(body))
+			if account.ID != "" {
+				req.AddCookie(signedAuthCookie(t, auth, account))
+			}
+			rec := httptest.NewRecorder()
+			handler.ServeHTTP(rec, req)
+			return rec
+		}
+
+		if rec := post(ada, `{"prompt":"`+m1617Premise+`","name":"ADAWORLD"}`); rec.Code != http.StatusOK {
+			t.Fatalf("Ada's own dream = %d: %s", rec.Code, rec.Body.String())
+		}
+		access, ok, err := loadWorldAccess(outDir, "ADAWORLD")
+		if err != nil || !ok {
+			t.Fatalf("a signed-in dream through the route wrote no access sidecar: %v (present=%v)", err, ok)
+		}
+		if !access.IsOwner(ada.ID) {
+			t.Fatalf("ADAWORLD's owner = %+v, want Ada", access)
+		}
+
+		before, err := os.ReadFile(filepath.Join(outDir, "ADAWORLD.ZZT"))
+		if err != nil {
+			t.Fatal(err)
+		}
+		for _, who := range []AuthenticatedAccount{intruder, {}} {
+			rec := post(who, `{"prompt":"`+m1617Premise+`","name":"ADAWORLD"}`)
+			if rec.Code != http.StatusConflict {
+				t.Errorf("dream over Ada's world by %q = %d, want 409: %s", who.ID, rec.Code, rec.Body.String())
+			}
+			after, err := os.ReadFile(filepath.Join(outDir, "ADAWORLD.ZZT"))
+			if err != nil {
+				t.Fatal(err)
+			}
+			if !bytes.Equal(after, before) {
+				t.Errorf("the refusal for %q rewrote ADAWORLD.ZZT", who.ID)
+			}
 		}
 	})
 
@@ -1962,28 +2052,29 @@ func TestM1617PublishedAndDreamedWorldsShareOneHostingDirectory(t *testing.T) {
 	}
 }
 
-// TestM1617bDreamOverwritesAWorldItIsRefusedPermissionToHost PINS A DEFECT ON
-// PURPOSE, like the ElementDefs pin above: it asserts the WRONG behaviour so
-// the day M16.17b lands it goes red and gets inverted.
+// TestM1617bDreamOverwritesAWorldItIsRefusedPermissionToHost WAS a pinned
+// defect and is now INVERTED: M16.17b landed, so a generation aimed at a world
+// people are playing must move no byte and write no sidecar.
 //
-// THE DEFECT. paintAndFinish persists before it hosts (generation.go): it calls
-// persistGeneratedWorld — which writes NAME.ZZT and its three sidecars —
-// and only then HostGeneratedWorld, which refuses a world that people are
-// currently playing. So a generation aimed at an occupied name reports
-// "already occupied" to the caller with the occupied world's file ALREADY
-// REPLACED on disk. The players in the room keep playing the copy in memory
-// and notice nothing; the next restore-on-boot loads somebody's dream instead
-// of the world they were in.
+// THE DEFECT IT PINNED. paintAndFinish persisted before it hosted
+// (generation.go): it called persistGeneratedWorld — which writes NAME.ZZT and
+// its three sidecars — and only then HostGeneratedWorld, which refuses a world
+// that people are currently playing. So a generation aimed at an occupied name
+// reported "already occupied" to the caller with the occupied world's file
+// ALREADY REPLACED on disk. The players in the room kept playing the copy in
+// memory and noticed nothing; the next restore-on-boot loaded somebody's dream
+// instead of the world they were in.
 //
-// The editor's publish path gets the same decision right and is the model for
-// the fix: saveEditorWorld refuses "before writing anything if the target world
-// is occupied" (websocket_server.go).
+// The fix asks the editor's question at the editor's moment: saveEditorWorld
+// refuses "before writing anything if the target world is occupied", and
+// refuseIfOccupied now does the same for a dream — once when the name is known
+// and again in paintAndFinish, immediately before the first write.
 //
-// The name is client-supplied (`{"name":"..."}` on /api/generate) and only
-// passes through SanitizeSaveName, which keeps it inside the directory but has
-// no opinion about whether it already belongs to somebody. There is no
-// world-access check either, so this is also the one creation path that ignores
-// the .access.json ownership the editor writes.
+// The name is still client-supplied (`{"name":"..."}` on /api/generate) and
+// still only passes through SanitizeSaveName, which has no opinion about
+// whether it already belongs to somebody: an UNOCCUPIED world of that name is
+// still replaced, and generation still ignores the .access.json ownership the
+// editor writes (deliberate, pending an owner decision — NOTES.md 2026-07-31).
 func TestM1617bDreamOverwritesAWorldItIsRefusedPermissionToHost(t *testing.T) {
 	model := m1617ScriptedDream(t)
 	outDir := t.TempDir()
@@ -2007,28 +2098,161 @@ func TestM1617bDreamOverwritesAWorldItIsRefusedPermissionToHost(t *testing.T) {
 	}
 
 	_, err := service.Generate(context.Background(), "squatter", m1617Premise, "INHABIT", server, false)
-	if err == nil || !strings.Contains(err.Error(), "already occupied") {
-		t.Fatalf("generation over an occupied world = %v, want the occupancy refusal", err)
+	if err == nil || !errors.Is(err, ErrGeneratedWorldOccupied) {
+		t.Fatalf("generation over an occupied world = %v, want ErrGeneratedWorldOccupied", err)
 	}
 
 	after, readErr := os.ReadFile(path)
 	if readErr != nil {
 		t.Fatalf("read back the occupied world: %v", readErr)
 	}
-	if bytes.Equal(after, before) {
-		t.Fatalf("the refused generation left the occupied world's file alone.\n" +
-			"That is the CORRECT behaviour: M16.17b has landed. INVERT this test — a refused " +
-			"generation must move no byte and write no sidecar — and flip the manifest row " +
-			"service.dream off gap.")
+	if !bytes.Equal(after, before) {
+		t.Fatalf("the refused generation replaced the occupied world's file: %d bytes became %d", len(before), len(after))
 	}
-	var sidecars []string
 	for _, suffix := range []string{".zwd", ".plan.md", ".prompt.txt"} {
 		if _, err := os.Stat(filepath.Join(outDir, "INHABIT"+suffix)); err == nil {
-			sidecars = append(sidecars, suffix)
+			t.Errorf("the refused generation wrote the sidecar INHABIT%s beside the world it was refused", suffix)
 		}
 	}
-	t.Logf("PINNED DEFECT (M16.17b): the refused generation replaced INHABIT.ZZT (%d bytes became %d) "+
-		"and wrote the sidecars %v beside it", len(before), len(after), sidecars)
+
+	// Refused before the model was asked for a single board: the plan is paid
+	// for (the name is not known until it comes back) and nothing after it is.
+	if painted := model.callsFor("board", ""); painted != 0 {
+		t.Errorf("the refused generation painted %d board(s); want 0 — the refusal must come before the spend", painted)
+	}
+
+	// The room is untouched: the people in it are still in it, still playing the
+	// world they joined.
+	inst.mu.Lock()
+	clients := len(inst.Clients)
+	inst.mu.Unlock()
+	if clients != 1 {
+		t.Errorf("the occupied room holds %d clients after the refusal, want 1", clients)
+	}
+
+	// And the same generation over an UNOCCUPIED name still lands, so the guard
+	// is an occupancy refusal and not a ban on naming a world that exists.
+	inst.mu.Lock()
+	delete(inst.Clients, PlayerID(1))
+	inst.mu.Unlock()
+	if _, err := service.Generate(context.Background(), "squatter", m1617Premise, "INHABIT", server, false); err != nil {
+		t.Fatalf("generation over the now-empty world = %v, want it to succeed", err)
+	}
+	if after, err := os.ReadFile(path); err != nil {
+		t.Fatal(err)
+	} else if bytes.Equal(after, before) {
+		t.Fatal("the accepted generation left the unoccupied world's file alone; want it replaced")
+	}
+}
+
+// TestM1617bDreamHonoursTheOwnershipTheEditorWrites is the second half of
+// M16.17b, added by the owner's decision of 2026-07-31: generation was the one
+// creation path that ignored the .access.json the editor writes, so any name a
+// tester could type was a name they could take — as long as nobody happened to
+// be standing in it. It now asks WorldAccess.CanEdit the same question
+// saveEditorWorld asks, before the first byte, and a signed-in dreamer owns
+// what they dreamed.
+//
+// A world with no access file still belongs to nobody: that is what keeps the
+// ~100 shipped worlds and every dream made before this landed reachable, and
+// it is the only reason a guest can dream at all.
+func TestM1617bDreamHonoursTheOwnershipTheEditorWrites(t *testing.T) {
+	model := m1617ScriptedDream(t)
+	outDir := t.TempDir()
+	service := m1617Service(t, model, outDir, 1)
+	server := NewWebSocketServer(testEmptyWorld(t), 1)
+
+	ada := AuthenticatedAccount{ID: "acct-ada", Name: "Ada"}
+	friend := AuthenticatedAccount{ID: "acct-friend", Name: "Friend"}
+	intruder := AuthenticatedAccount{ID: "acct-intruder", Name: "Intruder"}
+	guest := AuthenticatedAccount{}
+
+	dream := func(account AuthenticatedAccount, name string) error {
+		_, err := service.GenerateRequest(context.Background(), GenerationRequest{
+			Client: "client-" + account.ID, Account: account,
+			Premise: m1617Premise, Name: name, Server: server,
+		})
+		return err
+	}
+
+	// Ada's world, published by the editor: bytes plus the access sidecar.
+	before := []byte("the world Ada published")
+	path := filepath.Join(outDir, "OWNED.ZZT")
+	if err := os.WriteFile(path, before, 0o644); err != nil {
+		t.Fatal(err)
+	}
+	access := WorldAccess{OwnerAccountID: ada.ID, OwnerName: ada.Name}
+	access.AddCollaborator(friend.ID)
+	if err := writeWorldAccess(outDir, "OWNED", access); err != nil {
+		t.Fatal(err)
+	}
+
+	for _, who := range []AuthenticatedAccount{intruder, guest} {
+		boards := model.callsFor("board", "")
+		err := dream(who, "OWNED")
+		if err == nil || !errors.Is(err, ErrGeneratedWorldNotYours) {
+			t.Fatalf("dream over Ada's world by %q = %v, want ErrGeneratedWorldNotYours", who.ID, err)
+		}
+		if after, readErr := os.ReadFile(path); readErr != nil {
+			t.Fatal(readErr)
+		} else if !bytes.Equal(after, before) {
+			t.Fatalf("the refusal for %q still rewrote OWNED.ZZT", who.ID)
+		}
+		for _, suffix := range []string{".zwd", ".plan.md", ".prompt.txt"} {
+			if _, err := os.Stat(filepath.Join(outDir, "OWNED"+suffix)); err == nil {
+				t.Errorf("the refusal for %q wrote the sidecar OWNED%s", who.ID, suffix)
+			}
+		}
+		if got := model.callsFor("board", ""); got != boards {
+			t.Errorf("the refusal for %q painted %d board(s); want 0", who.ID, got-boards)
+		}
+	}
+
+	// The people the editor lets edit it may dream over it: the collaborator
+	// Ada invited, and Ada herself.
+	for _, who := range []AuthenticatedAccount{friend, ada} {
+		if err := dream(who, "OWNED"); err != nil {
+			t.Fatalf("dream over Ada's world by %q = %v, want it to succeed", who.ID, err)
+		}
+	}
+	// And neither of them took it from her.
+	after, ok, err := loadWorldAccess(outDir, "OWNED")
+	if err != nil || !ok {
+		t.Fatalf("read back OWNED's access: %v (present=%v)", err, ok)
+	}
+	if after.OwnerAccountID != ada.ID || len(after.CollaboratorAccountIDs) != 1 {
+		t.Errorf("dreaming over an owned world rewrote its ownership: %+v", after)
+	}
+
+	// A signed-in dreamer owns the world they dream, so the next person to type
+	// its name is refused rather than obliged.
+	if err := dream(ada, "ADADREAM"); err != nil {
+		t.Fatal(err)
+	}
+	claimed, ok, err := loadWorldAccess(outDir, "ADADREAM")
+	if err != nil || !ok {
+		t.Fatalf("a signed-in dream wrote no access sidecar: %v (present=%v)", err, ok)
+	}
+	if !claimed.IsOwner(ada.ID) || claimed.OwnerName != ada.Name {
+		t.Errorf("the dreamed world's owner = %+v, want Ada", claimed)
+	}
+	if err := dream(intruder, "ADADREAM"); !errors.Is(err, ErrGeneratedWorldNotYours) {
+		t.Errorf("a second account's dream over ADADREAM = %v, want ErrGeneratedWorldNotYours", err)
+	}
+
+	// A guest's dream is unowned, exactly as an anonymous editor publish is:
+	// nothing to check it against later, and no account to name.
+	if err := dream(guest, "GUESTDRM"); err != nil {
+		t.Fatal(err)
+	}
+	if _, ok, err := loadWorldAccess(outDir, "GUESTDRM"); err != nil {
+		t.Fatal(err)
+	} else if ok {
+		t.Error("a guest's dream claimed ownership of its world")
+	}
+	if err := dream(intruder, "GUESTDRM"); err != nil {
+		t.Errorf("dream over an unowned world = %v, want it to succeed", err)
+	}
 }
 
 // ---------------------------------------------------------------------------

@@ -1325,13 +1325,8 @@ func (s *WebSocketServer) HostGeneratedWorld(name string, world TWorld) error {
 	if s.Instances == nil {
 		s.Instances = make(map[string]*WorldInstance)
 	}
-	if existing := s.Instances[safe]; existing != nil {
-		existing.mu.Lock()
-		occupied := len(existing.Clients) != 0
-		existing.mu.Unlock()
-		if occupied {
-			return fmt.Errorf("generated world %q is already occupied", safe)
-		}
+	if s.worldIsOccupiedLocked(safe) {
+		return fmt.Errorf("generated world %q is already occupied", safe)
 	}
 	rm := NewRoomManager(world)
 	inst := &WorldInstance{
@@ -1348,6 +1343,27 @@ func (s *WebSocketServer) HostGeneratedWorld(name string, world TWorld) error {
 	s.Instances[safe] = inst
 	s.attachRecorderLocked(inst)
 	return nil
+}
+
+// WorldIsOccupied reports whether a hosted world of this name currently has
+// players in it. It is the question every overwrite path has to ask before it
+// writes: the editor's publish asks it inline, and generation asks it through
+// this method before the first byte of a dream reaches the disk (M16.17b).
+func (s *WebSocketServer) WorldIsOccupied(name string) bool {
+	s.mu.Lock()
+	defer s.mu.Unlock()
+	return s.worldIsOccupiedLocked(name)
+}
+
+// worldIsOccupiedLocked is WorldIsOccupied with s.mu already held.
+func (s *WebSocketServer) worldIsOccupiedLocked(name string) bool {
+	existing := s.Instances[name]
+	if existing == nil {
+		return false
+	}
+	existing.mu.Lock()
+	defer existing.mu.Unlock()
+	return len(existing.Clients) != 0
 }
 
 // worldsDir resolves where published worlds live. An explicit WorldsDir wins;
