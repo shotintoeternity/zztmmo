@@ -242,15 +242,6 @@ type (
 		// (RoomManager / server) handles the actual player transfer between engines.
 		// When false (default, single-player), the engine swaps the board as usual.
 		MultiRoom bool
-		// PlayerCharacter is the player glyph's energizer-blink toggle
-		// (ElementPlayerTick's flash between '\x01'/'\x02', and the steady-state
-		// '\x02' it settles back to). M1.1 originally left this on the
-		// package-level ElementDefs[E_PLAYER].Character, documented there as
-		// "immutable after init" — false: two Engines ticking a player in the
-		// same process (M16.8's side-by-side harness) stomped each other's
-		// rendered glyph. Scoped onto Engine instead (M16.8a); defaults to '\x02'
-		// in NewEngine, matching InitElementDefs' original default.
-		PlayerCharacter byte
 	}
 	Event       interface{}
 	ScrollEvent struct {
@@ -390,6 +381,22 @@ type (
 		Keys           [7]bool
 		BoardTimeSec   int16
 		BoardTimeHsec  int16
+		// PlayerCharacter is THIS player's energizer-blink glyph phase:
+		// ElementPlayerTick's flash between '\x01' and '\x02' while energized,
+		// and the steady '\x02' it settles back to otherwise.
+		//
+		// Vanilla kept one byte for it — ElementDefs[E_PLAYER].Character, which
+		// M1.1 documented as "immutable after init" and M16.8a corrected to
+		// Engine.PlayerCharacter after two Engines in one process stomped each
+		// other's glyph. One byte per Engine is still one byte too few: with two
+		// players in a room, ElementPlayerTick runs for both, and the
+		// unenergized player's branch forces the byte back to '\x02' every tick,
+		// so the energized player's square never shows '\x01' and the blink that
+		// announces invincibility silently disappears (M16.12a). It is
+		// presentation state owned by one player, so it lives here beside
+		// TorchTicks and EnergizerTicks. Read it through PlayerGlyph(), which
+		// supplies the steady '\x02' for a state that has not ticked yet.
+		PlayerCharacter byte
 		// DirX/DirY is the player's last shoot direction (formerly Engine.PlayerDirX/Y).
 		// Stored per-player so each player retains their own aim independently.
 		DirX int16
@@ -454,7 +461,6 @@ func NewEngine() *Engine {
 		Players:            make(map[int16]*PlayerState),
 		ActingPlayerStatId: -1,
 		FriendlyFire:       true,
-		PlayerCharacter:    '\x02',
 	}
 }
 
@@ -465,12 +471,25 @@ func (e *Engine) PlayerFor(statId int16) *PlayerState {
 			e.Players = make(map[int16]*PlayerState)
 		}
 		ps = &PlayerState{
-			Health:       15,
-			SoundEnabled: true,
+			Health:          15,
+			SoundEnabled:    true,
+			PlayerCharacter: '\x02',
 		}
 		e.Players[statId] = ps
 	}
 	return ps
+}
+
+// PlayerGlyph is the character the player at statId is currently drawn with:
+// their own energizer-blink phase (M16.12a). A PlayerState that has not ticked
+// yet — or one restored from an account sidecar, which carries inventory rather
+// than presentation state — has a zero byte here and renders as the steady
+// '\x02' until ElementPlayerTick sets the phase.
+func (e *Engine) PlayerGlyph(statId int16) byte {
+	if ch := e.PlayerFor(statId).PlayerCharacter; ch != 0 {
+		return ch
+	}
+	return '\x02'
 }
 
 // ReenterPoint is where statId returns to on a ReenterWhenZapped hit or a death

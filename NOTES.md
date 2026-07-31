@@ -6010,3 +6010,78 @@ by this sitting; Part A's narrow `nrg` exemption and
 
 Verified: `go build ./...`, `go vet ./...`, `go test ./...` — all green. Replay
 fixture untouched.
+
+## M16.12a — the energizer blink a second player cancels (2026-07-30)
+
+The one gap M16.12's projection sweep found. Fixed, plus a second defect the
+fix un-masked (owner decision below).
+
+### The fix: the blink phase belongs to the player, not the Engine
+
+`Engine.PlayerCharacter` is gone. The blink phase is now
+`PlayerState.PlayerCharacter`, beside `TorchTicks` and `EnergizerTicks`, read
+through `Engine.PlayerGlyph(statId)`. `ElementPlayerTick` writes the acting
+player's own byte; `TileToColorAndChar`'s `E_PLAYER` case reads the phase of the
+player *standing on that square* — `NearestPlayer` already returns them, since a
+player tile is distance 0 from its own stat. A player tile with no stat under it
+(an authored board can carry one) has no phase to read and draws the steady
+`\x02`.
+
+This is a relocation, not a new concept: the fork already keeps per-player
+presentation state this way, and M16.8a had already moved the byte off the
+package-level `ElementDefs[E_PLAYER].Character` for the same class of reason —
+one byte shared by things that are not one. Nothing is retained globally, so
+there is no `// ZZT-QUIRK:` to mark; with a single player the behaviour is
+byte-for-byte vanilla's.
+
+The DoD's inversion landed: `TestM1612aEnergizedBlinkIsCancelledByCompany` now
+requires the *same* eight-tick glyph sequence `01 02 01 02 01 02 01 02` with one
+and with two other players as it does alone, and requires the bystanders' own
+squares to stay steady — the leak must not run the other way either. The `nrg`
+exemption is out of `m1612CompareProjection` (the parameter is gone, not merely
+unused) and `TestM1612ProjectionUnchangedByOtherPlayers` compares all 24
+scenarios exactly, glyph included.
+
+Checked from the other side before committing: reverting only the three engine
+files reddens both — the pinned test with `[2 2 2 2 2 2 2 2]`, and `nrg`'s
+projection at the subject's own square.
+
+### What it un-masked: newcomers were invisible to the room
+
+The M16.9 browser goldens went red on a cell that had nothing to do with the
+glyph: the *second* player vanished from player one's canvas.
+
+`RoomManager.Snapshot` called `room.Engine.DrainScreenDirty()`, and that list is
+the ROOM's, not the connection's. A newcomer's square is drawn between ticks, so
+their own arrival snapshot discarded the only notice the players already in the
+room would ever get. They never saw anyone arrive.
+
+It survived this long *because of* the bug above. With an energized player in
+the room, every other player's tick took `ElementPlayerTick`'s "force it back to
+`\x02`" branch — the shared byte kept being flipped away from it — and redrew
+their own square, restoring the dropped cell by accident. Per-player phases
+removed the accident and left the ghost on screen. Two goldens had recorded it:
+`identity-paused-player-one` had captured the second player as *absent* (drawn
+before the energizer ran), `energizer-tick-0` had captured them as present.
+
+OWNER DECISION 2026-07-30: fix it here rather than file it, so the regenerated
+golden is correct art rather than a committed defect. The drain is now
+conditioned on the recipient being the only player who could be owed those
+cells — a snapshot already carries the whole screen, so dropping the list is
+free for its recipient and only ever wrong for everyone else.
+`TestM1612aNewcomerSquareReachesTheRoom` holds it: a resident's diff must carry
+the newcomer's square. `DrainEvents` in the same function is the same shape and
+was deliberately left alone — no event is produced between ticks today, so
+there is nothing to lose yet.
+
+DEVIATION: three browser goldens regenerated (`GOLDEN_UPDATE=1`), each cell
+change accounted for. `energizer-tick-0` and `window-save`: one cell, the
+energized player's glyph, `01` → `02` — the blink now alternating rather than
+pinned. `identity-paused-player-one`: one cell gained, the second player at
+(4,18) appearing where the drop had hidden them. No other cell in any golden
+moved. The replay fixture is untouched: the blink phase is not in `StateHash`
+(it never was — the hashed tile colour cycle is unchanged), and the drain
+condition is server plumbing, outside the simulation.
+
+Verified: `go build ./...`, `go vet ./...`, `go test ./...` — all green,
+including the browser golden and journey suites.

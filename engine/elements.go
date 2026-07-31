@@ -1347,10 +1347,14 @@ func (e *Engine) ElementPlayerTick(statId int16) {
 	stat := &e.Board.Stats[statId]
 	pState := e.PlayerFor(statId)
 	if pState.EnergizerTicks > 0 {
-		if e.PlayerCharacter == '\x02' {
-			e.PlayerCharacter = '\x01'
+		// M16.12a: the blink phase is this player's own (PlayerState), not the
+		// Engine's. Vanilla had one player and one byte; with company, the
+		// other player's ordinary branch below reset the shared byte every tick
+		// and the blink never appeared.
+		if pState.PlayerCharacter == '\x02' {
+			pState.PlayerCharacter = '\x01'
 		} else {
-			e.PlayerCharacter = '\x02'
+			pState.PlayerCharacter = '\x02'
 		}
 		if e.CurrentTick%2 != 0 {
 			e.Board.Tiles[stat.X][stat.Y].Color = 0x0F
@@ -1358,9 +1362,9 @@ func (e *Engine) ElementPlayerTick(statId int16) {
 			e.Board.Tiles[stat.X][stat.Y].Color = byte((e.CurrentTick%7+1)*16 + 0x0F)
 		}
 		e.BoardDrawTile(int16(stat.X), int16(stat.Y))
-	} else if e.Board.Tiles[stat.X][stat.Y].Color != 0x1F || e.PlayerCharacter != '\x02' {
+	} else if e.Board.Tiles[stat.X][stat.Y].Color != 0x1F || pState.PlayerCharacter != '\x02' {
 		e.Board.Tiles[stat.X][stat.Y].Color = 0x1F
-		e.PlayerCharacter = '\x02'
+		pState.PlayerCharacter = '\x02'
 		e.BoardDrawTile(int16(stat.X), int16(stat.Y))
 	}
 

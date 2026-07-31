@@ -309,9 +309,18 @@ func (e *Engine) TileToColorAndChar(x, y int16) (color, char byte) {
 			ElementDefs[tile.Element].DrawProc(e, x, y, &ch)
 			return tile.Color, ch
 		} else if tile.Element == E_PLAYER {
-			// M16.8a: the energizer-blink glyph is Engine-scoped state
-			// (e.PlayerCharacter), not the shared ElementDefs table.
-			return tile.Color, e.PlayerCharacter
+			// M16.8a: the energizer-blink glyph is not the shared ElementDefs
+			// table. M16.12a: nor is it one byte per Engine — it belongs to the
+			// player standing here, so this square shows THEIR blink phase.
+			//
+			// pId is that player: a square holding an E_PLAYER tile is distance
+			// 0 from its own stat, so NearestPlayer above returns it. A player
+			// tile with no stat on it (an authored board can carry one) has no
+			// blink phase to read and draws steady.
+			if int16(pStat.X) == x && int16(pStat.Y) == y {
+				return tile.Color, e.PlayerGlyph(pId)
+			}
+			return tile.Color, '\x02'
 		} else if tile.Element < E_TEXT_MIN {
 			return tile.Color, ElementDefs[tile.Element].Character
 		} else {
@@ -1999,7 +2008,7 @@ func (e *Engine) GamePlayLoop(boardChanged bool) {
 			e.VideoWriteText(64, 10, 0x1E, "   Gems:")
 			e.VideoWriteText(64, 11, 0x1E, "  Score:")
 			e.VideoWriteText(64, 12, 0x1E, "   Keys:")
-			e.VideoWriteText(62, 7, 0x1F, string([]byte{e.PlayerCharacter}))
+			e.VideoWriteText(62, 7, 0x1F, string([]byte{e.PlayerGlyph(0)}))
 			e.VideoWriteText(62, 8, 0x1B, string([]byte{ElementDefs[E_AMMO].Character}))
 			e.VideoWriteText(62, 9, 0x16, string([]byte{ElementDefs[E_TORCH].Character}))
 			e.VideoWriteText(62, 10, 0x1B, string([]byte{ElementDefs[E_GEM].Character}))
@@ -2085,7 +2094,7 @@ func (e *Engine) GamePlayLoop(boardChanged bool) {
 				pauseBlink = !pauseBlink
 			}
 			if pauseBlink {
-				e.VideoWriteText(int16(e.Board.Stats[0].X)-1, int16(e.Board.Stats[0].Y)-1, ElementDefs[E_PLAYER].Color, string([]byte{e.PlayerCharacter}))
+				e.VideoWriteText(int16(e.Board.Stats[0].X)-1, int16(e.Board.Stats[0].Y)-1, ElementDefs[E_PLAYER].Color, string([]byte{e.PlayerGlyph(0)}))
 			} else {
 				if e.Board.Tiles[e.Board.Stats[0].X][e.Board.Stats[0].Y].Element == E_PLAYER {
 					e.VideoWriteText(int16(e.Board.Stats[0].X)-1, int16(e.Board.Stats[0].Y)-1, 0x0F, " ")

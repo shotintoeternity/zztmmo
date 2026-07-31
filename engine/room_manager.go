@@ -710,7 +710,26 @@ func (rm *RoomManager) Snapshot(playerID PlayerID) (SnapshotMessage, bool) {
 	players := make([]PlayerSnapshot, 0, len(room.players))
 	players = append(players, rm.playerSnapshotsForRoom(room)...)
 	snapshot := NewSnapshotMessage(room.Engine, room.BoardID, playerID, player.statID, players)
-	room.Engine.DrainScreenDirty()
+	// The dirty-cell list belongs to the ROOM, not to this connection, so it may
+	// only be discarded when nobody else could be owed it. A snapshot already
+	// carries the whole screen, which is why draining it here is free for the
+	// recipient — but the cells drawn between ticks (a newcomer's own square,
+	// an arriving traveler's) are the only notice the players already in the
+	// room ever get that someone appeared, and draining threw them away: the
+	// newcomer stayed invisible to everyone until something else happened to
+	// repaint that square.
+	//
+	// Found while landing M16.12a. The old engine-global player glyph hid it:
+	// an energized player flipped the shared byte, so every OTHER player's tick
+	// took ElementPlayerTick's "force it back" branch and redrew their own
+	// square, incidentally restoring the cell this drop had lost. Making the
+	// blink per-player removed that accidental repaint and left the ghost on
+	// screen (NOTES.md M16.12a).
+	if len(room.players) == 1 {
+		if _, alone := room.players[playerID]; alone {
+			room.Engine.DrainScreenDirty()
+		}
+	}
 	room.Engine.DrainEvents()
 	return snapshot, true
 }

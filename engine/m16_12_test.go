@@ -29,6 +29,7 @@ package zztgo
 // that produced them so a failure is reproducible rather than a story.
 
 import (
+	"bytes"
 	"fmt"
 	"os"
 	"path/filepath"
@@ -170,7 +171,7 @@ func TestM1612ProjectionUnchangedByOtherPlayers(t *testing.T) {
 							t.Fatalf("%s: checkpoint %d label %q vs %q",
 								scenarioFile, i, solo[i].Label, shared[i].Label)
 						}
-						m1612CompareProjection(t, scenarioFile, solo[i], shared[i], parked, name == "nrg")
+						m1612CompareProjection(t, scenarioFile, solo[i], shared[i], parked)
 					}
 				})
 			}
@@ -183,14 +184,12 @@ func TestM1612ProjectionUnchangedByOtherPlayers(t *testing.T) {
 // are standing, and seeing them is the whole of what multiplayer adds to this
 // board), and each exempted square must actually HOLD a player — otherwise the
 // exemption would be a licence to differ anywhere the test happened to park.
-// allowPlayerGlyphBlink exempts cells that differ ONLY by the player glyph
-// alternating between 0x01 and 0x02 at the same colour. That is the known gap
-// M16.12a: `Engine.PlayerCharacter` is engine-global, so a second player in the
-// room resets it every tick and the energised blink stops. Passed only for
-// nrg.scn, the one scenario that energises, and only for the glyph — every
-// other cell, the colour cycle included, is still compared exactly. Remove this
-// argument when M16.12a lands; the test tightens on its own.
-func m1612CompareProjection(t *testing.T, scenario string, solo, shared m168NamedCheckpoint, parked [][2]int16, allowPlayerGlyphBlink bool) {
+// The comparison is exact everywhere else, glyph included. It once carried an
+// allowPlayerGlyphBlink escape hatch for nrg.scn, the one scenario that
+// energises: the blink phase was one byte on the Engine, so a second player
+// reset it every tick and the subject's own square differed from solo. M16.12a
+// moved the phase onto PlayerState and the exemption came out with it.
+func m1612CompareProjection(t *testing.T, scenario string, solo, shared m168NamedCheckpoint, parked [][2]int16) {
 	t.Helper()
 
 	if solo.CP.Counters != shared.CP.Counters {
@@ -220,13 +219,8 @@ func m1612CompareProjection(t *testing.T, scenario string, solo, shared m168Name
 			if solo.CP.Board[x][y] == shared.CP.Board[x][y] {
 				continue
 			}
-			blink := allowPlayerGlyphBlink &&
-				solo.CP.Board[x][y].Color == shared.CP.Board[x][y].Color &&
-				isPlayerGlyph(solo.CP.Board[x][y].Ch) && isPlayerGlyph(shared.CP.Board[x][y].Ch)
-			if !blink {
-				t.Fatalf("%s checkpoint %s: board cell (%d,%d) = %+v, want %+v",
-					scenario, solo.Label, x, y, shared.CP.Board[x][y], solo.CP.Board[x][y])
-			}
+			t.Fatalf("%s checkpoint %s: board cell (%d,%d) = %+v, want %+v",
+				scenario, solo.Label, x, y, shared.CP.Board[x][y], solo.CP.Board[x][y])
 		}
 	}
 	for _, p := range parked {
@@ -243,63 +237,120 @@ func m1612CompareProjection(t *testing.T, scenario string, solo, shared m168Name
 	}
 }
 
-// isPlayerGlyph covers both phases of ElementPlayerTick's energised alternation.
-func isPlayerGlyph(ch byte) bool { return ch == 0x01 || ch == 0x02 }
-
 // ---------------------------------------------------------------------------
-// The gap this sweep found — pinned so its fix is detectable
+// The gap this sweep found, and its fix
 // ---------------------------------------------------------------------------
 
-// TestM1612aEnergizedBlinkIsCancelledByCompany pins M16.12a.
+// TestM1612aEnergizedBlinkIsCancelledByCompany covers M16.12a.
 //
-// `Engine.PlayerCharacter` is ONE byte on the Engine, and ElementPlayerTick
-// writes it on every player's tick: the energised branch flips it, and the
-// ordinary branch forces it back to 0x02. Vanilla had exactly one player, so a
-// global was harmless. Here a second, unenergised player in the same room
-// resets the byte every tick — and the energised player's blink, which vanilla
-// draws as an unmissable "you are invincible" signal, simply stops.
-//
-// The solo half of this test asserts the CORRECT behaviour and must never
-// change. The company half asserts the DEFECT, so that M16.12a's fix reddens it
-// rather than passing silently: when the blink is made per-player, invert it to
-// require both glyphs and drop the Part A exemption above.
+// The blink phase used to be ONE byte on the Engine, written by
+// ElementPlayerTick on every player's tick: the energised branch flipped it,
+// the ordinary branch forced it back to 0x02. Vanilla had exactly one player,
+// so a single byte was harmless. With company, the unenergised player reset it
+// every tick and the energised player's square sat on 0x02 — the unmissable
+// "you are invincible" signal simply stopped. M16.12a moved the phase onto
+// PlayerState, so this now asserts what vanilla shows: the same alternation
+// whether or not anyone else is in the room, and no blink on anyone else.
 func TestM1612aEnergizedBlinkIsCancelledByCompany(t *testing.T) {
-	blinkPhases := func(others int) map[byte]int {
+	// blinkPhases runs the subject energised for eight ticks with `others`
+	// unenergised players parked nearby, returning the subject's rendered glyph
+	// per tick and every glyph the bystanders rendered.
+	blinkPhases := func(others int) (subject []byte, bystanders []byte) {
 		rm := NewRoomManager(testEmptyWorld(t))
-		subject := rm.JoinPlayer(1, 10, 10)
+		subjectID := rm.JoinPlayer(1, 10, 10)
+		var otherIDs []PlayerID
 		for i := 0; i < others; i++ {
-			rm.JoinPlayer(1, 40, 20)
+			otherIDs = append(otherIDs, rm.JoinPlayer(1, int16(40+i*2), 20))
 		}
-		state, _ := rm.PlayerState(subject)
+		state, _ := rm.PlayerState(subjectID)
 		state.EnergizerTicks = 60
 
 		room, _ := rm.Room(1)
-		_, statID, _ := rm.PlayerLocation(subject)
-		seen := map[byte]int{}
-		for tick := 0; tick < 8; tick++ {
-			rm.StepDiffs(nil)
+		glyphOf := func(id PlayerID) byte {
+			_, statID, _ := rm.PlayerLocation(id)
 			stat := room.Engine.Board.Stats[statID]
 			_, ch := room.Engine.TileToColorAndChar(int16(stat.X), int16(stat.Y))
-			seen[ch]++
+			return ch
 		}
-		return seen
+		for tick := 0; tick < 8; tick++ {
+			rm.StepDiffs(nil)
+			subject = append(subject, glyphOf(subjectID))
+			for _, id := range otherIDs {
+				bystanders = append(bystanders, glyphOf(id))
+			}
+		}
+		return subject, bystanders
 	}
 
-	solo := blinkPhases(0)
-	if solo[0x01] == 0 || solo[0x02] == 0 {
-		t.Fatalf("solo: an energised player must alternate 0x01/0x02, saw %v", solo)
+	// Solo is vanilla's blink and must never change: strict alternation,
+	// starting from the steady 0x02 that the first energised tick flips.
+	solo, _ := blinkPhases(0)
+	want := []byte{0x01, 0x02, 0x01, 0x02, 0x01, 0x02, 0x01, 0x02}
+	if !bytes.Equal(solo, want) {
+		t.Fatalf("solo: energised glyph sequence = %v, want %v", solo, want)
 	}
 
-	// KNOWN GAP — M16.12a. Assert the defect exactly, so the fix cannot land
-	// unnoticed and so this test says what is wrong rather than merely failing.
-	withCompany := blinkPhases(1)
-	if withCompany[0x01] != 0 {
-		t.Fatalf("M16.12a appears to be FIXED (the blink survived company: %v) — "+
-			"invert this assertion to require both phases and drop the nrg exemption "+
-			"in m1612CompareProjection", withCompany)
+	for _, others := range []int{1, 2} {
+		withCompany, bystanders := blinkPhases(others)
+		if !bytes.Equal(withCompany, solo) {
+			t.Fatalf("with %d other player(s): energised glyph sequence = %v, want the solo %v — "+
+				"company must not cancel the energiser blink (M16.12a)", others, withCompany, solo)
+		}
+		for i, ch := range bystanders {
+			if ch != 0x02 {
+				t.Fatalf("with %d other player(s): unenergised bystander glyph %d = %#x, want the steady 0x02 — "+
+					"the subject's blink must not leak onto anyone else", others, i, ch)
+			}
+		}
 	}
-	if withCompany[0x02] == 0 {
-		t.Fatalf("with company: the player square should be stuck on 0x02, saw %v", withCompany)
+}
+
+// TestM1612aNewcomerSquareReachesTheRoom covers the defect M16.12a's fix
+// un-masked (owner decision 2026-07-30: fix it here rather than file it).
+//
+// RoomManager.Snapshot drained the room's screen-dirty list, and that list is
+// shared by everyone in the room. A newcomer's own square is drawn between
+// ticks, so their arrival snapshot threw away the one notice the players
+// already in the room would have got: they never saw the newcomer appear.
+//
+// It survived this long because ElementPlayerTick used to write an
+// Engine-global glyph byte: with an energized player in the room, every other
+// player's tick took the "force it back to \x02" branch and redrew their own
+// square, restoring the dropped cell by accident. That is exactly the M16.9
+// energizer golden's second player. Per-player blink phases removed the
+// accident; the drain is now conditioned on the recipient being the only
+// player who could be owed those cells.
+func TestM1612aNewcomerSquareReachesTheRoom(t *testing.T) {
+	rm := NewRoomManager(testEmptyWorld(t))
+	resident := rm.JoinPlayer(1, 10, 10)
+	if _, ok := rm.Snapshot(resident); !ok {
+		t.Fatal("resident snapshot")
+	}
+	rm.StepDiffs(nil) // settle: nothing is owed to anyone after this
+
+	newcomer := rm.JoinPlayer(1, 10, 10) // pushed out to a neighbouring square
+	if _, ok := rm.Snapshot(newcomer); !ok {
+		t.Fatal("newcomer snapshot")
+	}
+
+	room, _ := rm.Room(1)
+	_, newcomerStat, _ := rm.PlayerLocation(newcomer)
+	stat := room.Engine.Board.Stats[newcomerStat]
+	wantX, wantY := int16(stat.X)-1, int16(stat.Y)-1
+
+	diffs := rm.StepDiffs(nil)
+	var got *ScreenCell
+	for i, cell := range diffs[resident].Cells {
+		if cell.X == wantX && cell.Y == wantY {
+			got = &diffs[resident].Cells[i]
+		}
+	}
+	if got == nil {
+		t.Fatalf("the resident's diff (%d cells) never carried the newcomer's square (%d,%d) — "+
+			"a player already in the room cannot see anyone arrive", len(diffs[resident].Cells), wantX, wantY)
+	}
+	if got.Ch != 0x02 {
+		t.Fatalf("the newcomer's square arrived as %#x, want the player glyph 0x02", got.Ch)
 	}
 }
 

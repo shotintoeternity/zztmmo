@@ -68,7 +68,9 @@ M12.23, M17.1–M17.7, M16.0–M16.8a — has fully landed.)
    M16.15, M16.17, M16.18, M16.18a, M16.20. **M16.9, M16.9a, M16.10 and M16.12
    all landed 2026-07-30**; M16.9 filed M16.9a (high-score placement window) and
    M16.12 filed M16.12a (the energizer blink a second player cancels) on their
-   way through, and M16.10 found nothing to file. Next is M16.12a, then M16.13.
+   way through, and M16.10 found nothing to file. **M16.12a landed 2026-07-30**,
+   taking with it the newcomer-invisible-to-the-room bug its fix un-masked.
+   Next is M16.13.
 
 **Optional / deferred (bottom):**
 - M16.18a — touch gameplay controls: deferred past the beta (owner 2026-07-30:
@@ -2984,8 +2986,27 @@ gap task has landed.
   two-browser `identity-paused-player-one` golden plus the Part B/C routing
   tests.
 
-- [ ] **M16.12a — A second player in the room cancels the energizer blink
-  (M16.12 gap task).** Found by M16.12's projection sweep (`nrg.scn` was the one
+- [x] **M16.12a — A second player in the room cancels the energizer blink
+  (M16.12 gap task).** Landed 2026-07-30 (NOTES.md M16.12a).
+  `Engine.PlayerCharacter` is gone: the blink phase is `PlayerState`'s, read
+  through `Engine.PlayerGlyph(statId)`, and `TileToColorAndChar` draws each
+  player square with the phase of the player standing on it. The pinned test is
+  inverted (same eight-tick sequence alone, with one other player and with two;
+  bystanders' squares must stay steady, so the leak cannot run the other way)
+  and the `nrg` exemption is out of `m1612CompareProjection` — all 24 scenarios
+  now compare exactly, glyph included. Nothing is retained globally, so there is
+  no `// ZZT-QUIRK:` to mark.
+  FOUND AND FIXED HERE (owner decision 2026-07-30, rather than filed):
+  `RoomManager.Snapshot` drained the ROOM's screen-dirty list, so a newcomer's
+  own square — drawn between ticks — was discarded by their own arrival snapshot
+  and the players already in the room never saw anyone arrive. The old global
+  glyph had been hiding it: every unenergised player's tick redrew their own
+  square whenever an energised player had flipped the shared byte, restoring the
+  lost cell by accident. Fixed by draining only when the recipient is the only
+  player who could be owed those cells; `TestM1612aNewcomerSquareReachesTheRoom`
+  holds it. Three browser goldens regenerated, every changed cell accounted for
+  in NOTES.md.
+  Found by M16.12's projection sweep (`nrg.scn` was the one
   scenario of 24 whose board diverged). `Engine.PlayerCharacter` is a single
   byte on the Engine, and `ElementPlayerTick` (`engine/elements.go:1348-1360`)
   writes it on *every* player's tick: the energised branch flips it 0x02<->0x01,
