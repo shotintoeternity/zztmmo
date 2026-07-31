@@ -1559,8 +1559,7 @@ func preprocessZWDGridWithWarnings(zwdText string) (string, []string) {
 	// This preprocessor needs the same element metadata as the ZWD compiler to
 	// recognize a legend's stat-backed elements and to derive their default
 	// cycles.  Generation can call us before any world has been compiled.
-	init := NewEngine()
-	init.InitElementsGame()
+	ensureElementDefs()
 
 	lines := strings.Split(zwdText, "\n")
 	lines = deduplicateZWDLegendEntries(lines, &warnings)
@@ -2438,8 +2437,7 @@ func stampTitleWordmark(section, displayName string) (string, []string) {
 	// Parse the legend: which single-byte keys map to Text elements (strip
 	// targets), which are protected (player or stat-backed, never overwritten),
 	// the Empty key (the gap glyph), and the full set of used key bytes.
-	init := NewEngine()
-	init.InitElementsGame()
+	ensureElementDefs()
 	textKeys := map[byte]bool{}
 	protectedKeys := map[byte]bool{}
 	usedKeys := map[byte]bool{}

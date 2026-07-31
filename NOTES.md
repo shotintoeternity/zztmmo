@@ -7134,3 +7134,84 @@ at them.
 without them, like every other browser suite. Full `go test -count=1 ./...`
 green. `go build ./...`, `go vet ./...` and `gofmt` clean on the touched files.
 `fixtures/` is unchanged apart from the manifest.
+
+## M16.17a — the element table two dreams could not share (2026-07-31)
+
+`ElementDefs` is a package-level global (`gamevars.go`) that every live room
+reads on every tick. Every ZWD compile used to stand up a throwaway engine and
+call `InitElementsGame` → `InitElementDefs`, whose first act is to BLANK all 256
+entries — `Name = ""`, `Cycle = -1`, `TickProc = ElementDefaultTick` — before
+repopulating them. NOTES.md deferred that at M13.4 as "value-benign … the bytes
+are identical every time". They are identical only after the write finishes; the
+window in between is a table with no elements in it, and M16.17 measured what
+falls into it: 12 failures in 240 concurrent compiles of one VALID document
+(`unknown element name "Empty"`, and panics on a torn string inside
+`normalizeZWDName`), with no race detector involved. Production runs
+`ZZT_GENERATION_CONCURRENCY=2`, and an async generation runs on a goroutine
+whose panic is not recovered — so two testers dreaming at once could take the
+beta server down.
+
+### The fix: nobody rewrites the table
+
+Owner decision (the task was `[ADVISOR]`, and the three candidates were a mutex
+around initialization, moving `ElementDefs` onto the Engine, or the narrow one):
+**the compile paths do not re-initialize at all.** The table is a pure function
+of constants, so it is built once and then only read.
+
+- `gamevars.go` gains `ensureElementDefs()` — a `sync.Once` around the constant
+  table — and a package `init()` that runs it at boot, so the process has its
+  table before anything asks.
+- `InitElementDefs` is split (`elements.go`). The table half moved to
+  `initElementDefsTable`, reachable only through the once; the method keeps its
+  engine-local half, the five editor patterns. `InitElementsGame` and
+  `InitElementsEditor` are unchanged in what they mean for an engine —
+  `EditorElements` and `ForceDarknessOff` still flip, which is what carries the
+  vanilla quirks M16.13a modelled.
+- The six throwaway-engine primers — `CompileZWDWorld`, `newZWDParser`,
+  `decompileZWD`, `RenderBoardBlueprint`, and generation's two preprocessors —
+  call `ensureElementDefs()` instead.
+
+**Wider than "the compile paths", by one line, deliberately.** Because the
+method now ensures rather than rebuilds, `WorldCreate` and `InitElementsEditor`
+stopped rewriting the table too. That is the same defect met from the editor
+side (a collaborator pressing `N` blanked the table under every ticking room),
+and leaving it would have left the invariant the compile paths now rely on —
+"nobody writes this table" — untrue. The values are identical either way; no
+StateHash and no replay fixture moved.
+
+### Evidence
+
+- The pin is inverted: `TestM1617aConcurrentGenerationsShareTheElementTableSafely`
+  (240 concurrent compiles of a valid document, all must succeed) and it no
+  longer skips itself under `-race`. `m16_17_race_test.go`, which existed only to
+  make it skip, is deleted.
+- `TestM1617aCompileBesideATickingRoomLeavesItUnmoved` is the half that matters
+  to players who are not dreaming: TOWN is stepped 120 ticks alone and again
+  with three compile loops running flat out beside it, and both runs must end on
+  the same per-room StateHash. Restoring the old rewrite in `CompileZWDWorld`
+  alone fails it on both counts — `unknown element name "Player"` *and* a moved
+  board-0 hash (`55472ada…` vs `e268d0da…`).
+- `TestM1617aElementTableIsBuiltAtBoot` covers the other direction: a world
+  loaded from bytes and stepped with no compile, no `WorldCreate` and no
+  initializer call. `m1617InitElementTable`, the helper four tests needed for
+  exactly that reason, is deleted.
+- The shipped-binary journey now runs `ZZT_GENERATION_CONCURRENCY=2`, the
+  production value. M16.17 had to pin it at 1 to avoid reporting this defect.
+
+### Manifest — the row stays `gap`, and why
+
+The DoD says `service.dream` leaves `gap`. It does not, and the reason is in the
+manifest itself: `route.api.generate`'s notes hand M16.17b to this row ("a
+service-layer defect … carried by the `service.dream` row"), and M16.17b is
+still open and still pinned. Flipping the row to `pass` would have dropped the
+only manifest coverage of a defect that silently overwrites a world file. The
+row is instead reassigned `M16.17a` → `M16.17b`, its notes record M16.17a as
+landed with the fix, and it leaves `gap` when M16.17b lands — which is the next
+task in the ranked list.
+
+### Verified
+
+`go test -count=1 ./...` green, and `go test -race -run TestM1617 -count=1 .`
+green — the compile-beside-a-ticking-room test is exactly the write/read pair
+the detector used to report. `go build ./...`, `go vet ./...` and `gofmt` clean
+on the touched files. No fixture changed except the manifest row above.

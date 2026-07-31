@@ -464,6 +464,30 @@ var (
 	ElementDefs [MAX_ELEMENT + 1]TElementDef
 )
 
+// elementDefsOnce builds ElementDefs exactly once per process (M16.17a).
+//
+// ElementDefs is one table shared by every live room and by every ZWD compile.
+// Vanilla's InitElementDefs BLANKS all 256 entries — Name "", Cycle -1,
+// TickProc ElementDefaultTick — before repopulating them, and this fork used to
+// run that from a throwaway engine on each compile: a second compile reading
+// the table mid-rewrite failed with a nonsense `unknown element name "Empty"`
+// or panicked on a torn string, and a room ticking beside it read elements that
+// were momentarily not there. The table is a pure function of constants, so the
+// bytes are identical every time it is built; building it once makes every
+// later read a read of a table nobody writes.
+var elementDefsOnce sync.Once
+
+// ensureElementDefs guarantees the process has its element table. It is what
+// InitElementDefs now runs, and what the ZWD compile, decompile, blueprint and
+// generation paths call in place of standing up a throwaway engine to
+// re-initialize a table that is already correct.
+func ensureElementDefs() { elementDefsOnce.Do(initElementDefsTable) }
+
+// The table is built at boot rather than by whoever happens to need it first,
+// so a process whose first act is to load a world from bytes and step it finds
+// tick procs rather than nils (M16.17a).
+func init() { ensureElementDefs() }
+
 func NewEngine() *Engine {
 	return &Engine{
 		ActiveInput:        TcellInput{},

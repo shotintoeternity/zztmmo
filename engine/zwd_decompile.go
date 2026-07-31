@@ -46,8 +46,7 @@ func DecompileZWD(world *TWorld) string {
 // callers use DecompileZWDAuthorable so no public API emits non-compilable
 // source for malformed historical worlds.
 func decompileZWD(world *TWorld) string {
-	init := NewEngine()
-	init.InitElementsGame()
+	ensureElementDefs()
 
 	var b strings.Builder
 	b.WriteString("zwd 1\n")

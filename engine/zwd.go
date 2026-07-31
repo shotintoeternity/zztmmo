@@ -29,8 +29,10 @@ func CompileZWD(src string) ([]byte, error) {
 // serializer. It is exposed separately so tests and later services can inspect
 // the compiled world without round-tripping through bytes.
 func CompileZWDWorld(src string) (TWorld, error) {
-	init := NewEngine()
-	init.InitElementsGame()
+	// M16.17a: read the element table, never rebuild it. Two players dreaming
+	// at once is the shipped configuration (ZZT_GENERATION_CONCURRENCY=2), and
+	// a compile that re-initialized the shared table made the other one fail.
+	ensureElementDefs()
 	p := newZWDParser(src)
 	doc, err := p.parse()
 	if err != nil {
@@ -136,8 +138,7 @@ type zwdStat struct {
 }
 
 func newZWDParser(src string) *zwdParser {
-	init := NewEngine()
-	init.InitElementsGame()
+	ensureElementDefs()
 	src = strings.ReplaceAll(src, "\r\n", "\n")
 	src = strings.ReplaceAll(src, "\r", "\n")
 	return &zwdParser{lines: strings.Split(src, "\n")}

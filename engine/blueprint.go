@@ -134,8 +134,7 @@ func ParseBoardBlueprint(text string) (BoardBlueprint, error) {
 // board section. The returned source is parsed again by the normal generation
 // pipeline before it can enter a world.
 func RenderBoardBlueprint(bp BoardBlueprint, wantName string) (string, error) {
-	init := NewEngine()
-	init.InitElementsGame()
+	ensureElementDefs()
 
 	if bp.Version != 1 {
 		return "", fmt.Errorf("blueprint version must be 1")

@@ -1608,7 +1608,29 @@ func (e *Engine) ResetMessageNotShownFlags() {
 	}
 }
 
+// InitElementDefs is vanilla's ElementDefs initializer, split in two here
+// (M16.17a): the table half runs at most once per process (ensureElementDefs),
+// and only the engine-local half — the editor pattern palette below — runs on
+// every call. Vanilla could rebuild the table freely because it had one world
+// and one thread; this fork's ElementDefs is a package-level global that every
+// live room reads each tick, so rebuilding it blanked all 256 entries under
+// rooms that were ticking and under compiles that were reading. The values are
+// a pure function of constants, so building them once is byte-identical to
+// building them again.
 func (e *Engine) InitElementDefs() {
+	ensureElementDefs()
+	e.EditorPatternCount = 5
+	e.EditorPatterns[0] = E_SOLID
+	e.EditorPatterns[1] = E_NORMAL
+	e.EditorPatterns[2] = E_BREAKABLE
+	e.EditorPatterns[3] = E_EMPTY
+	e.EditorPatterns[4] = E_LINE
+}
+
+// initElementDefsTable writes the constant element table. It is called through
+// ensureElementDefs and never directly: nothing may rewrite ElementDefs after
+// the process has one.
+func initElementDefsTable() {
 	var i int16
 	for i = 0; i <= MAX_ELEMENT; i++ {
 		def := &ElementDefs[i]
@@ -1985,12 +2007,6 @@ func (e *Engine) InitElementDefs() {
 	ElementDefs[36].ParamTextName = "Edit Program"
 	ElementDefs[2].TickProc = (*Engine).ElementMessageTimerTick
 	ElementDefs[1].TouchProc = (*Engine).ElementBoardEdgeTouch
-	e.EditorPatternCount = 5
-	e.EditorPatterns[0] = E_SOLID
-	e.EditorPatterns[1] = E_NORMAL
-	e.EditorPatterns[2] = E_BREAKABLE
-	e.EditorPatterns[3] = E_EMPTY
-	e.EditorPatterns[4] = E_LINE
 }
 
 // EditorInvisibleChar is the glyph InitElementsEditor gives an invisible wall so

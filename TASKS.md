@@ -106,11 +106,12 @@ M12.23, M17.1–M17.7, M16.0–M16.8a — has fully landed.)
    playing replaces that world's file and only then reports "already occupied";
    **M16.17c** — a salvaged dream is `complete` and `retryable` with
    `stubbedBoards` and no client reads either field, so M12.22's repaint is
-   unreachable from a browser. **M16.17a ranks ABOVE the rest of the
-   certification tail and is `[ADVISOR]`**: it is the only open defect that can
-   take the beta server down, and it needs no unusual load to fire. M16.17b is
-   next (silent data loss of a world file, reachable by any tester), then
-   M16.17c (a visible dead end, but only after a board fails to paint).
+   unreachable from a browser. **M16.17a landed 2026-07-31** — the owner chose
+   the narrow fix (nobody rewrites the table: it is built once at boot and the
+   compile paths only read it), which closed the editor's `N` doing the same
+   thing on its way through. M16.17b is next (silent data loss of a world file,
+   reachable by any tester), then M16.17c (a visible dead end, but only after a
+   board fails to paint).
    Next in file order after those is M16.18. The one
    browser flake still open is M16.14b's act 8,
    which is `[ADVISOR]` and still ranks below the certification tail.
@@ -3514,7 +3515,7 @@ gap task has landed.
   one row ADDED — `input.title-dream`, a title key the curated inventory never
   listed.
 
-- [ ] **M16.17a — Two dreams at once corrupt the element table the whole server
+- [x] **M16.17a — Two dreams at once corrupt the element table the whole server
   reads (M16.17 gap task).** `ElementDefs` is a package-level global
   (`gamevars.go`). Every `CompileZWDWorld` builds a throwaway engine and calls
   `InitElementsGame` → `InitElementDefs` (`elements.go`), which BLANKS all 256
@@ -3544,6 +3545,29 @@ gap task has landed.
   in a fresh process can be stepped without a prior compile, so
   `m1617InitElementTable` is no longer needed; manifest row `service.dream`
   leaves `gap`; no replay fixture or StateHash moves.
+
+  Landed 2026-07-31 (NOTES.md M16.17a) with the owner's narrow option: nobody
+  rewrites the table. `gamevars.go` gains `ensureElementDefs()` — a `sync.Once`
+  around the constant table — run by a package `init()` at boot;
+  `InitElementDefs` keeps only its engine-local half (the five editor patterns)
+  and the table half moves behind that once; the six throwaway-engine primers
+  (`CompileZWDWorld`, `newZWDParser`, `decompileZWD`, `RenderBoardBlueprint` and
+  generation's two preprocessors) read the table instead of rebuilding it.
+  Because the method ensures rather than rebuilds, `WorldCreate` and
+  `InitElementsEditor` stopped rewriting it too — the same defect from the
+  editor side, and the invariant the compile paths now rest on. The pin is
+  inverted (`…aConcurrentGenerationsShareTheElementTableSafely`, no `-race`
+  skip; `m16_17_race_test.go` deleted), joined by
+  `…aCompileBesideATickingRoomLeavesItUnmoved` (TOWN stepped 120 ticks alone and
+  again beside three compile loops, same per-room StateHash — it fails on both
+  counts with the old rewrite restored) and `…aElementTableIsBuiltAtBoot` (a
+  world loaded from bytes and stepped with no initializer call), so
+  `m1617InitElementTable` and its four call sites are gone. The shipped-binary
+  journey now runs the production `ZZT_GENERATION_CONCURRENCY=2`. DEVIATION from
+  the DoD's last clause: `service.dream` STAYS `gap`, reassigned to M16.17b —
+  `route.api.generate`'s notes hand M16.17b to that row, so flipping it to
+  `pass` would drop the only manifest coverage of a still-open defect. It leaves
+  `gap` when M16.17b lands.
 
 - [ ] **M16.17b — A refused dream has already overwritten the world it was
   refused (M16.17 gap task).** `paintAndFinish` (`generation.go`) calls

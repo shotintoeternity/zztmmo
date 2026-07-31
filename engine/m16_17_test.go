@@ -36,13 +36,14 @@ package zztgo
 //                         …GenerationStagesAreAllRenderedByTheClient
 //   input.title-dream   — the same browser journey (the key that opens it)
 //
-// THREE DEFECTS ARE PINNED HERE ON PURPOSE, each asserting the wrong behaviour
+// THREE DEFECTS WERE PINNED HERE ON PURPOSE, each asserting the wrong behaviour
 // so that the day its fix lands the test goes red and gets inverted (the
-// M16.13a/M16.14a/M16.15a convention). Their names carry the gap task:
-// …aConcurrentGenerationsCorruptTheSharedElementTable (M16.17a),
-// …bDreamOverwritesAWorldItIsRefusedPermissionToHost (M16.17b), and — in the
-// browser script — the absence of a repaint offer for a salvaged world
-// (M16.17c).
+// M16.13a/M16.14a/M16.15a convention). M16.17a has landed and its pin is
+// inverted (…aConcurrentGenerationsShareTheElementTableSafely, joined by
+// …aCompileBesideATickingRoomLeavesItUnmoved and …aElementTableIsBuiltAtBoot).
+// Still pinned: …bDreamOverwritesAWorldItIsRefusedPermissionToHost (M16.17b),
+// and — in the browser script — the absence of a repaint offer for a salvaged
+// world (M16.17c).
 
 import (
 	"bytes"
@@ -377,9 +378,9 @@ func (m *m1617Model) holdAnswers() func() {
 // Four distinct clients, so the per-client pace can never be what queues them.
 // The planner answers junk and the attempt budget is one, so each generation is
 // exactly one model call and then a clean failure: nothing here compiles a
-// world, which keeps this test about admission alone (see
-// TestM1617aConcurrentGenerationsCorruptTheSharedElementTable for why that
-// matters).
+// world, which keeps this test about admission alone (the compiles those
+// generations would have run are covered by
+// TestM1617aConcurrentGenerationsShareTheElementTableSafely).
 func TestM1617ConcurrencySemaphoreAdmitsOnlyMaxConcurrent(t *testing.T) {
 	model := m1617NewModel(t)
 	model.planReplies("this is not a world plan, and never will be")
@@ -433,34 +434,34 @@ func TestM1617ConcurrencySemaphoreAdmitsOnlyMaxConcurrent(t *testing.T) {
 	}
 }
 
-// TestM1617aConcurrentGenerationsCorruptTheSharedElementTable PINS A DEFECT ON
-// PURPOSE. It asserts the WRONG behaviour so that the day M16.17a lands it goes
-// red and gets inverted (the M16.13a/M16.14a/M16.15a convention).
+// TestM1617aConcurrentGenerationsShareTheElementTableSafely is M16.17a,
+// inverted. M16.17 filed it as a PINNED DEFECT — it asserted the wrong
+// behaviour on purpose so that the day the compile paths stopped rewriting the
+// shared element table it would go red and be flipped (the
+// M16.13a/M16.14a/M16.15a convention). This is that flip.
 //
-// THE DEFECT. `ElementDefs` is a package-level global (gamevars.go). Every ZWD
-// compile builds a throwaway engine and calls `InitElementsGame` →
+// WHAT WAS WRONG. `ElementDefs` is a package-level global (gamevars.go). Every
+// ZWD compile built a throwaway engine and called `InitElementsGame` →
 // `InitElementDefs` (zwd.go CompileZWDWorld), which BLANKS all 256 entries —
 // `Name = ""`, `Cycle = -1`, `TickProc = ElementDefaultTick` — and only then
-// repopulates them. So a second compile running at the same time reads the
-// blanked table: it fails with a nonsense "unknown element name" for a
-// perfectly good board, or dereferences a torn string and panics.
+// repopulated them. So a second compile running at the same time read the
+// blanked table: it failed with a nonsense "unknown element name" for a
+// perfectly good board, or dereferenced a torn string and panicked. Measured
+// with no race detector involved: 12 failures in 240 compiles.
 //
 // NOTES.md recorded this race at M13.4 and deferred it as "value-benign
 // (InitElementDefs is a pure function of constants, so the bytes are identical
-// every time)". That is the part this test refutes: the bytes are identical
-// only AFTER the write finishes, and the window in between is a table with no
-// elements in it. This loop demonstrates it with no race detector involved.
+// every time)". The bytes are identical only AFTER the write finishes, and the
+// window in between was a table with no elements in it. The fix keeps the first
+// half of that sentence and drops the window: the table is built once, at boot
+// (gamevars.go ensureElementDefs), and no compile writes it again.
 //
 // WHY IT MATTERS BEYOND THIS TEST. /api/generate ships with MaxConcurrent 2 and
 // production runs ZZT_GENERATION_CONCURRENCY=2 (AWS.md), so two players
 // dreaming at once is the designed case, not an edge one. An async generation
 // runs on its own goroutine (web_api.go runGenerationJob), where a panic is not
 // recovered and takes the whole server with it.
-func TestM1617aConcurrentGenerationsCorruptTheSharedElementTable(t *testing.T) {
-	if m1617RaceDetector {
-		t.Skip("under -race this pin provokes exactly the write/read pair the detector reports; " +
-			"run without -race to see the defect fail the way a player would meet it")
-	}
+func TestM1617aConcurrentGenerationsShareTheElementTableSafely(t *testing.T) {
 	src := m1617MinimalWorldZWD("RACE")
 	if _, err := CompileZWDWorld(src); err != nil {
 		t.Fatalf("the source must compile when nothing else is compiling: %v", err)
@@ -468,56 +469,139 @@ func TestM1617aConcurrentGenerationsCorruptTheSharedElementTable(t *testing.T) {
 
 	// Deliberately NOT a t.Parallel loop: this is one process compiling one
 	// valid document from several goroutines, which is exactly what two players
-	// dreaming at the same time does. The burst is repeated until the window is
-	// hit rather than trusting one interleaving, so a quiet machine reports the
-	// defect too — and a machine on which it never fires within the budget is
-	// itself news, which is why the failure message says what to check.
-	const workers, rounds, bursts = 4, 60, 25
-	var (
-		got      []error
-		attempts int
-	)
-	for burst := 0; burst < bursts && len(got) == 0; burst++ {
-		failures := make(chan error, workers*rounds)
-		var wg sync.WaitGroup
-		for i := 0; i < workers; i++ {
-			wg.Add(1)
-			go func() {
-				defer wg.Done()
-				defer func() {
-					// A torn read of ElementDefs[i].Name panics inside
-					// normalizeZWDName. Catch it here so the pin reports the
-					// defect instead of taking the test binary down with it.
-					if r := recover(); r != nil {
-						failures <- fmt.Errorf("panic while compiling: %v", r)
-					}
-				}()
-				for j := 0; j < rounds; j++ {
-					if _, err := CompileZWDWorld(src); err != nil {
-						failures <- err
-					}
+	// dreaming at the same time does. The pin needed repeated bursts to catch
+	// the window; the inverted test needs volume, and every compile must
+	// succeed — the interleaving that used to fail is now no interleaving at
+	// all, because nothing writes the table.
+	const workers, rounds = 4, 60
+	failures := make(chan error, workers*rounds)
+	var wg sync.WaitGroup
+	for i := 0; i < workers; i++ {
+		wg.Add(1)
+		go func() {
+			defer wg.Done()
+			defer func() {
+				// A torn read of ElementDefs[i].Name panicked inside
+				// normalizeZWDName. Catch it so a regression is reported as a
+				// failure instead of taking the test binary down with it.
+				if r := recover(); r != nil {
+					failures <- fmt.Errorf("panic while compiling: %v", r)
 				}
 			}()
-		}
-		wg.Wait()
-		close(failures)
-		attempts += workers * rounds
-		for err := range failures {
-			got = append(got, err)
-		}
+			for j := 0; j < rounds; j++ {
+				if _, err := CompileZWDWorld(src); err != nil {
+					failures <- err
+				}
+			}
+		}()
 	}
-	if len(got) == 0 {
-		t.Fatalf("%d concurrent compiles of one valid ZWD document all succeeded.\n"+
-			"If CompileZWDWorld no longer rewrites the package-global ElementDefs, M16.17a has landed: "+
-			"INVERT this test — concurrent compiles must all succeed — and flip the manifest row "+
-			"service.dream off gap.", attempts)
+	wg.Wait()
+	close(failures)
+
+	var got []error
+	for err := range failures {
+		got = append(got, err)
 	}
-	t.Logf("PINNED DEFECT (M16.17a): %d of %d concurrent compiles of a valid document failed; first: %v",
-		len(got), attempts, got[0])
+	if len(got) > 0 {
+		t.Fatalf("%d of %d concurrent compiles of one valid ZWD document failed; first: %v.\n"+
+			"A compile must read the element table and never rebuild it (M16.17a).",
+			len(got), workers*rounds, got[0])
+	}
 }
 
-// m1617RaceDetector is true only in a -race build (m16_17_race_test.go).
-var m1617RaceDetector bool
+// TestM1617aCompileBesideATickingRoomLeavesItUnmoved is M16.17a's other half:
+// the table a compile used to blank is the one every live room reads each tick,
+// so the damage was never confined to the player who was dreaming. TOWN is
+// stepped twice — once alone, once with compiles running flat out beside it —
+// and both runs must end on the same per-room StateHash.
+//
+// Under -race this is also the test that proves the write is gone: it is
+// exactly the write/read pair the detector used to report, and the pin above
+// had to skip itself under -race to avoid it.
+func TestM1617aCompileBesideATickingRoomLeavesItUnmoved(t *testing.T) {
+	const ticks = 120
+	src := m1617MinimalWorldZWD("BESIDE")
+
+	step := func(rm *RoomManager, player PlayerID) map[int16]uint64 {
+		for i := 0; i < ticks; i++ {
+			dx := int16(1)
+			if i%2 == 1 {
+				dx = -1
+			}
+			rm.StepDiffs(map[PlayerID]PlayerInput{player: {DeltaX: dx}})
+		}
+		return rm.RoomStateHashes()
+	}
+
+	quiet := townRoomManager(t)
+	quietPlayer := quiet.JoinPlayer(0, 0, 0)
+	want := step(quiet, quietPlayer)
+
+	busy := townRoomManager(t)
+	busyPlayer := busy.JoinPlayer(0, 0, 0)
+	stop := make(chan struct{})
+	var compiles sync.WaitGroup
+	for i := 0; i < 3; i++ {
+		compiles.Add(1)
+		go func() {
+			defer compiles.Done()
+			for {
+				select {
+				case <-stop:
+					return
+				default:
+					if _, err := CompileZWDWorld(src); err != nil {
+						t.Errorf("a compile beside a ticking room failed: %v", err)
+						return
+					}
+				}
+			}
+		}()
+	}
+	got := step(busy, busyPlayer)
+	close(stop)
+	compiles.Wait()
+
+	if len(got) != len(want) {
+		t.Fatalf("room count with compiles running = %d, alone = %d", len(got), len(want))
+	}
+	for board, wantHash := range want {
+		if got[board] != wantHash {
+			t.Errorf("board %d after %d ticks: alone %016x, with compiles running beside it %016x.\n"+
+				"A generation must not move what a room already being played simulates (M16.17a).",
+				board, ticks, wantHash, got[board])
+		}
+	}
+}
+
+// TestM1617aElementTableIsBuiltAtBoot is the third leg: with the compile paths
+// no longer initializing anything, the table has to be there before any of them
+// runs. A process whose first act is to load a world from bytes and step it —
+// no compile, no WorldCreate, no InitElementsGame — must find tick procs rather
+// than the nils that made a fresh test process panic before this landed.
+func TestM1617aElementTableIsBuiltAtBoot(t *testing.T) {
+	if ElementDefs[E_PLAYER].Name == "" || ElementDefs[E_EMPTY].Name != "Empty" {
+		t.Fatalf("the element table is not populated at boot: player %q, empty %q",
+			ElementDefs[E_PLAYER].Name, ElementDefs[E_EMPTY].Name)
+	}
+
+	worldBase := filepath.Join("..", "fixtures", "TOWN")
+	requireFixture(t, worldBase+".ZZT")
+	e := NewEngine()
+	e.Headless = true
+	if !e.WorldLoad(worldBase, ".ZZT", false) {
+		t.Fatalf("loading required fixture %s.ZZT failed", worldBase)
+	}
+	e.BoardOpen(e.World.Info.CurrentBoard)
+	// Stepping is what needs the table: every stat on the board is dispatched
+	// through ElementDefs[...].TickProc.
+	for i := 0; i < 10; i++ {
+		e.GameStepWithInputs(nil)
+	}
+	if StateHash(e) == 0 {
+		t.Error("a world loaded from bytes and stepped without any element initializer hashed to zero")
+	}
+}
 
 // m1617MinimalWorldZWD is the smallest complete ZWD document: one board, one
 // player, nothing else. Used wherever a test needs a compile rather than a
@@ -1195,10 +1279,10 @@ type m1617Server struct {
 
 // m1617Start launches cmd/zzt-server with generation configured out of the
 // environment, exactly as the production unit does, but pointed at the scripted
-// model. ZZT_GENERATION_CONCURRENCY is deliberately 1: the shared-ElementDefs
-// defect this sweep filed as M16.17a makes two simultaneous compiles unsafe,
-// and a journey that tripped it would be reporting that defect rather than the
-// service contract it is here to certify.
+// model. ZZT_GENERATION_CONCURRENCY is 2, the value production runs (AWS.md).
+// M16.17 had to pin it at 1 because the shared-ElementDefs defect it filed as
+// M16.17a made two simultaneous compiles unsafe; M16.17a closed that, so the
+// journey now runs the configuration the beta runs.
 func m1617Start(t *testing.T, dirs m1617Dirs, model *m1617Model, extraEnv ...string) *m1617Server {
 	t.Helper()
 	bin := getM1619ServerBinary(t)
@@ -1228,7 +1312,7 @@ func m1617Start(t *testing.T, dirs m1617Dirs, model *m1617Model, extraEnv ...str
 		"ANTHROPIC_MODEL=m1617-scripted-model",
 		"ANTHROPIC_MAX_TOKENS=4096",
 		"ZZT_GENERATION_ATTEMPTS=1",
-		"ZZT_GENERATION_CONCURRENCY=1",
+		"ZZT_GENERATION_CONCURRENCY=2",
 		"ZZT_GENERATION_DAILY_MAX=-1",
 	)
 	cmd.Env = append(cmd.Env, extraEnv...)
@@ -1545,7 +1629,6 @@ func TestM1617DreamJourneyThroughTheShippedBinary(t *testing.T) {
 	if testing.Short() {
 		t.Skip("skipping the M16.17 subprocess journey in short mode")
 	}
-	m1617InitElementTable()
 
 	// The scripted model: a good plan, a title board that paints first time, and
 	// a START board that will not paint until it is retried.
@@ -1757,15 +1840,6 @@ func m1617AssertReplayed(t *testing.T, who string, board int16, live, replayed [
 	t.Logf("%s on board %d: all %d live (tick,StateHash) fingerprints reproduced by the replay", who, board, len(live))
 }
 
-// m1617InitElementTable fills the package-global ElementDefs the way the server
-// binary does at boot. Loading a world does NOT initialize it (game.go WorldLoad
-// re-inits nothing), so a test process whose first act is to load a .ZZT and
-// step it finds nil tick procs and panics — the same process-global lifecycle
-// M16.17a is filed against, met from the other direction.
-func m1617InitElementTable() {
-	NewEngine().InitElementsGame()
-}
-
 // m1617WalkUntilStopped keeps a connection pressing a direction until the
 // returned function is called, so a room is genuinely being played rather than
 // idling while something else happens on the server.
@@ -1805,7 +1879,6 @@ func m1617WalkUntilStopped(c *m1617Conn) func() {
 // which is the assumption the world picker, the backup script (AWS.md "Which
 // worlds are player-created") and M18.9's `dreamed` label all rest on.
 func TestM1617PublishedAndDreamedWorldsShareOneHostingDirectory(t *testing.T) {
-	m1617InitElementTable()
 	dir := t.TempDir()
 	world := testMultiplayerSmokeWorld(t)
 	world.Info.CurrentBoard = 1
@@ -1912,7 +1985,6 @@ func TestM1617PublishedAndDreamedWorldsShareOneHostingDirectory(t *testing.T) {
 // world-access check either, so this is also the one creation path that ignores
 // the .access.json ownership the editor writes.
 func TestM1617bDreamOverwritesAWorldItIsRefusedPermissionToHost(t *testing.T) {
-	m1617InitElementTable()
 	model := m1617ScriptedDream(t)
 	outDir := t.TempDir()
 	service := m1617Service(t, model, outDir, 1)
@@ -1983,7 +2055,6 @@ func TestM1617BrowserDreamJourney(t *testing.T) {
 	}
 	m169RequireBrowserHarness(t)
 	m169RequireClientBuild(t)
-	m1617InitElementTable()
 
 	model := m1617ScriptedDream(t, m1617Junk)
 	// Slow enough that the progress window is on screen for several client
