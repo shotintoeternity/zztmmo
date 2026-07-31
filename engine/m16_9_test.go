@@ -307,6 +307,9 @@ func (h *m169Harness) controlMux() http.Handler {
 		writeJSON(w, h.state())
 	})
 	mux.HandleFunc("/control/step", h.handleStep)
+	// M16.13 adds its editor-session routes here rather than standing up a
+	// second listener; they are defined in engine/m16_13_test.go.
+	h.editorControlRoutes(mux)
 	return mux
 }
 

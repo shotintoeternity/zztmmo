@@ -3030,8 +3030,10 @@
       "contract": "P",
       "authority": "elements.go ElementPlayerTick / game.go title / editor.go; web/src/keys.ts",
       "parity": "exact",
-      "status": "unverified",
-      "assignedTask": "M16.13"
+      "status": "pass",
+      "test": "TestM1613EditorCommandManifestHasNoUntestedKeyOrDialog,TestM1613BrowserEditorAndPortableOutput",
+      "fixture": "fixtures/editor.zwd",
+      "notes": "M16.13: every editor key and dialog is listed in m1613Commands (engine/m16_13_test.go), whose ids are scanned out of main.ts and the Go session/server so a new binding cannot go unlisted, and each one is pressed for real in engine/web/test/editor_solo.test.mjs."
     },
     {
       "id": "input.play-debug",
@@ -3209,8 +3211,10 @@
       "contract": "P",
       "authority": "elements.go ElementPlayerTick / game.go title / editor.go; web/src/keys.ts",
       "parity": "exact",
-      "status": "unverified",
-      "assignedTask": "M16.13"
+      "status": "pass",
+      "test": "TestM1613BrowserEditorAndPortableOutput",
+      "fixture": "fixtures/editor.zwd",
+      "notes": "M16.13: E on the title screen opens an isolated editor session; the live room gains no player and its StateHash does not move."
     },
     {
       "id": "input.title-highscores",
@@ -3941,8 +3945,10 @@
       "contract": "E",
       "authority": "web/src/*.ts",
       "parity": "exact",
-      "status": "unverified",
-      "assignedTask": "M16.13"
+      "status": "gap",
+      "assignedTask": "M16.13a",
+      "test": "TestM1613aEditorSessionNeverRunsInitElementsEditor,TestM1613aSwitchBoardsCannotReachTheTitleBoard,TestM1613aLeavingTheEditorNeverOffersToSave",
+      "notes": "M16.13 found three divergences from EditorLoop: the session never installs the editor element table (a dark board is edited dark and invisible walls stay invisible, where InitElementsEditor lights both), \"Switch boards\" omits board 0 so an author cannot return to a world's first board, and leaving the editor never offers to save because editorModified is never raised. Everything else in editor mode is exercised by TestM1613BrowserEditorAndPortableOutput."
     },
     {
       "id": "mode.identity-overlay",
@@ -4177,8 +4183,10 @@
       "contract": "E",
       "authority": "completed task contracts (TASKS.md); NOTES.md",
       "parity": "exact",
-      "status": "unverified",
-      "assignedTask": "M16.13"
+      "status": "pass",
+      "test": "TestM1613BrowserEditorAndPortableOutput",
+      "fixture": "fixtures/editor.zwd",
+      "notes": "M16.13: a browser authors a world from nothing, downloads it as .ZZT and one board as .BRD, and the bytes are read back by an independent vanilla-format reader (m1613ReadVanillaWorld) and compared field by field with the editor session. The .BRD is byte-identical to that board's record inside the .ZZT, the download re-uploads through the validation gate byte for byte, and test play leaves the editing world byte-identical."
     },
     {
       "id": "service.high-scores",

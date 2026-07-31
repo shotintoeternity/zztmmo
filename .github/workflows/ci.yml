@@ -83,7 +83,7 @@ jobs:
         working-directory: engine/web
       - run: npm run build
         working-directory: engine/web
-      - run: go test -count=1 -run 'TestM169|TestM1610' -v ./...
+      - run: go test -count=1 -run 'TestM169|TestM1610|TestM1613' -v ./...
         working-directory: engine
       - name: Upload browser artifacts
         if: always()

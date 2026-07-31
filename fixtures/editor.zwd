@@ -1,0 +1,148 @@
+zwd 1
+world "EDIT"
+
+# M16.13's solo-editor world.
+#
+# The browser opens the editor on World.Info.CurrentBoard, which is board 0 for
+# every ZWD-compiled world, so board 0 IS the draft board here rather than a
+# separate title screen. Where CONTROL (M16.10) exists to be walked through and
+# GOLDEN (M16.9) exists to be looked at, this world exists to be EDITED — so
+# every tile on the draft board is something one editor command has to be able
+# to read, change, or copy:
+#
+#   10,5  Object      — a bound ZZT-OOP program, for Enter -> stat editor ->
+#                       program editor -> save, and for the character parameter
+#   14,5  Lion        — a single slider parameter (Intelligence)
+#   18,5  Spinning Gun— two sliders, the Bullets/Stars choice, and a direction
+#   22,5  Passage     — a board parameter, so the stat prompt's board picker has
+#                       somewhere to point (board 1, "Edit Annex")
+#   26,5  Duplicator  — a slider and a direction
+#   9..16 x 8..12     — a sealed pocket of 18 Empty tiles, so X (flood fill) has
+#                       a boundary the vanilla fill rules must respect rather
+#                       than a whole board to swallow
+#   10..14,15         — a run of coloured Normal wall, the tile Enter copies
+#                       into the brush
+#   20,15             — a text tile, so the readout has a text element to name
+#
+# The player stands at 30,20, well clear of row 12 (where the editor cursor
+# starts) and of everything above, because BoardPrepareTileForPlacement refuses
+# to remove the player and a placement that silently did nothing would look like
+# a passing test.
+#
+# Board 1, "Edit Annex", is where B (switch boards) lands and where Z (clear
+# board) is exercised, so clearing destroys nothing the later route reads.
+
+board "Edit Draft"
+  start player at 30,20
+  max-shots 255
+  dark false
+  reenter false
+  time-limit 0
+  exits north none south none west none east none
+
+  grid
+############################################################
+#..........................................................#
+#..........................................................#
+#..........................................................#
+#........o...l...u...p...d.................................#
+#..........................................................#
+#..........................................................#
+#.......########...........................................#
+#.......#......#...........................................#
+#.......#......#...........................................#
+#.......#......#...........................................#
+#.......########...........................................#
+#..........................................................#
+#..........................................................#
+#........NNNNN.....T.......................................#
+#..........................................................#
+#..........................................................#
+#..........................................................#
+#..........................................................#
+#............................@.............................#
+#..........................................................#
+#..........................................................#
+#..........................................................#
+#..........................................................#
+############################################################
+  end
+
+  legend
+    # = Solid color 0x0E
+    . = Empty color 0x00
+    @ = Player color 0x1F under Empty color 0x00
+    N = Normal color 0x4E
+    T = Text-Yellow color 0x54
+    o = Object color 0x1B
+    l = Lion color 0x0C
+    u = SpinningGun color 0x0D
+    p = Passage color 0x1F to "Edit Annex"
+    d = Duplicator color 0x0F
+  end
+
+  stats
+    stat at 10,5 element Object cycle 3 p1 cp437:0x02 under Empty color 0x00
+    oop
+@greeter
+#end
+:touch
+The draft board says hello.
+#end
+    end
+    stat at 14,5 element Lion cycle 2 p1 4 under Empty color 0x00
+    stat at 18,5 element SpinningGun cycle 2 p1 3 p2 5 under Empty color 0x00
+    stat at 22,5 element Passage cycle 0 p3 board "Edit Annex" under Empty color 0x00
+    stat at 26,5 element Duplicator cycle 2 p1 3 under Empty color 0x00
+  end
+end
+
+board "Edit Annex"
+  start player at 30,20
+  max-shots 255
+  dark false
+  reenter false
+  time-limit 0
+  exits north none south none west none east none
+
+  grid
+############################################################
+#..........................................................#
+#..........................................................#
+#..........................................................#
+#..........................................................#
+#..........................................................#
+#..........................................................#
+#..........................................................#
+#..........................................................#
+#..........................................................#
+#..........................................................#
+#..........................ANNEX...........................#
+#..........................................................#
+#..........................................................#
+#..........................................................#
+#..........................................................#
+#..........................................................#
+#..........................................................#
+#..........................................................#
+#............................@.............................#
+#..........................................................#
+#..........................................................#
+#..........................................................#
+#..........................................................#
+############################################################
+  end
+
+  legend
+    # = Solid color 0x0E
+    . = Empty color 0x00
+    @ = Player color 0x1F under Empty color 0x00
+    A = Text-White color 0x41
+    N = Text-White color 0x4E
+    E = Text-White color 0x45
+    X = Text-White color 0x58
+  end
+
+  stats
+  end
+end

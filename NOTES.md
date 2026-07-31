@@ -6085,3 +6085,151 @@ condition is server plumbing, outside the simulation.
 
 Verified: `go build ./...`, `go vet ./...`, `go test ./...` — all green,
 including the browser golden and journey suites.
+## 2026-07-30 — M16.13: the solo browser editor, and the files it writes
+
+The editor is the only part of the product whose output outlives the server, so
+this sweep has two halves: every key and dialog driven for real in a browser, and
+the files that come out of it read back by something that is not this fork.
+
+### The command manifest, and why it is fail-closed
+
+`m1613Commands` (engine/m16_13_test.go) lists 90 editor surfaces — the title
+screen's E, every key in `handleEditorKey`, `handleEditorTextKey`,
+`handleEditorStatPromptKey`, `handleEditorSidebarMenuKey` and
+`handleEditorCategoryKey`, every `op` string `EditorSession.Edit`/`SetProperty`/
+`SetStat` and `serveEditorBoard`/`serveEditorWorld` accept, the two pointer
+paths, and the three editor messages that carry no op at all. The ids are **scanned out of the sources**, not typed:
+`TestM1613EditorCommandManifestHasNoUntestedKeyOrDialog` extracts the
+brace-balanced body of each of those functions and collects `case "X":` and
+`event.code === "X"`. Bind a new editor key or accept a new `op` and the test
+goes red until a row is added; delete one and the row goes stale and is reported.
+Twelve rows can't be derived (the title screen's E, a printable key, two
+shortcut lookups, a no-match fall-through, the two pointer branches, the three
+op-less messages) and are listed in `m1613CuratedIDs` with the branch each
+stands for.
+
+Coverage is the browser's own word: `editor_solo.test.mjs` records the id of
+every surface it actually drives, and the Go test requires the report to cover
+every row whose evidence is `browser` — and to name no id the manifest does not
+have. Exactly one row is not browser evidence: `op.stat.cycle`, a wire field the
+editor has no control for (vanilla's stat dialog has none either).
+
+### Two kinds of assertion, on purpose
+
+Chrome, dialogs and readouts are asserted on the decoded canvas; every world
+change is asserted against `/control/editor/board`, which reads the session
+engine's own tiles and stats. A client that drew a convincing tile it never sent
+satisfies the first and fails the second. It also means the run is not at the
+mercy of the canvas decoder's one documented ambiguity: a Solid wall is a full
+block on a flat background, which decodes as "uniform" (NOTES M16.9), so on
+screen it is indistinguishable from empty floor — and every wall this sweep
+draws is checked in the session instead.
+
+### The two orderings the DoD asks about
+
+**Rapid**: text entry types `ORDERED!` with `delay: 0`, eight websocket messages
+with nothing awaited between them, and the session must hold those eight
+characters left to right at 30..37,23.
+
+**Held**: the two walls that box the creature row in are drawn by holding
+Shift+Right — `keyboard.down` on an already-pressed key is what Playwright marks
+as auto-repeat, so this is the browser's own repeat path — 57 places and 57
+moves interleaved, and all 57 tiles must be the same element with 59,`row` still
+empty, because placement happens before the move.
+
+### The output
+
+Act 2 presses N and authors a world from nothing: two walls, all 37 placeable
+elements from the F1/F2/F3 pickers (checked against `ElementDefs`' own tables AND
+against the shortcuts the sidebar draws), a typed caption, the five patterns, a
+mouse drag, a board title and a world name. Then the browser downloads it.
+
+`m1613ReadVanillaWorld` reads those bytes from scratch against the published
+format (reference/fileformat.html): the 512-byte header field by field, each
+board's length prefix, the RLE tile stream including the count-of-zero-means-256
+quirk, the board property block, and every 33-byte stat record with its trailing
+program. It refuses anything that does not add up — a board that runs past the
+end of the file, a tile stream that decodes to the wrong count, bytes left over
+after the last stat. That is what "portable" is being tested as: conformance to
+the format, checked by a reader that shares no code with the one that wrote it.
+The parse is then compared field by field with the session's own live state.
+
+The `.BRD` gets a sharper check still: `EditorTransferBoard` exports a board as a
+2-byte length prefix plus the serialized board, which is exactly the record that
+sits inside the `.ZZT`, so the test requires the exported file to be byte-
+identical to that slice of the downloaded world.
+
+**What is NOT claimed**: nobody handed the file to the real ZZT.EXE. The M16.2
+oracle compares a whole board after a boot span it does not model cycle-for-cycle
+(fixtures/oracle/mech.scn documents this), and this world is deliberately full of
+creatures and devices, which have moved by then. Handing vanilla a *static*
+world this editor authored would close that last gap; it is worth a later task
+and is recorded as such rather than quietly skipped.
+
+### Test play
+
+`Test play together` hosts a copy and the browser joins it, plays it, then walks
+back to the editor the long way (reload → name → picker → E, the path a returning
+author actually walks). The editing world is serialized before and after and
+required to be byte-identical — and the copy really did run: the caption typed in
+the editor is on screen in play.
+
+### Found and filed: M16.13a
+
+Three divergences from `EditorLoop`, all filed rather than fixed:
+
+1. **The editor never installs the editor element table.** `EditorLoop`'s first
+   act is `InitElementsEditor` (editor.go:513) — `ForceDarknessOff` so a dark
+   board is edited *lit*, and `E_INVISIBLE` given the `0xB0` glyph so invisible
+   walls can be seen. `NewEditorSession` does neither: turning "Board is dark" on
+   in the browser covers all 1500 cells in darkness, and an invisible wall is
+   invisible to the person placing it. Measured, not inferred: 171 drawn cells
+   lit, 1500 dark.
+2. **"Switch boards" cannot reach the title board.** Vanilla passes
+   `titleScreenIsNone` FALSE for the switcher (editor.go:668-669), so board 0 is
+   listed by name; the browser's list comes from `editorProperties`, which names
+   board 0 "None" unconditionally, and `openEditorBoardList` then filters it out.
+   An author who leaves a world's first board can never return to it. The session
+   is not the problem — `SwitchBoard(0)` works.
+3. **Leaving the editor never offers to save.** `leaveEditor` transcribes
+   `EditorAskSaveChanged` faithfully — and `editorModified` is never raised
+   anywhere in the client. It is declared false, reset to false on entry and on a
+   successful save, and set true nowhere, so the "Save first?" branch is
+   unreachable: an author who edits a world and presses Q or Escape loses the
+   work in one keystroke. Vanilla raises `wasModified` in
+   `EditorPrepareModifyTile` (editor.go:169) and on board-info and stat edits
+   (242, 401). This one is not cosmetic; it is the only finding here that costs
+   somebody their work.
+
+All three are pinned from both sides (`TestM1613aEditorSessionNeverRunsInitElementsEditor`,
+`TestM1613aSwitchBoardsCannotReachTheTitleBoard`,
+`TestM1613aLeavingTheEditorNeverOffersToSave`): each requires the current
+behaviour and fails with instructions if the fix lands, so M16.13a cannot land
+unnoticed. The third is a source-level pin, because the defect IS the absence of
+a statement — there is no state to observe. The browser route is written around
+the second finding and asserts the third, in both cases with a comment naming the
+gap task rather than a silent detour.
+
+### Two things the run taught about the client, worth keeping
+
+* A `.ZZT` compiled from ZWD ends its OOP blocks without a final carriage
+  return, and `CopyStatDataToTextWindow` drops a trailing partial line — so the
+  program editor legitimately opens the fixture's object one line shorter than
+  the `.zwd` reads. The test edits an existing line rather than appending one,
+  which is why the assertion does not depend on that.
+* `WorldCreate` leaves board 0 named "Title screen"; the run reads the current
+  names out of the session instead of assuming "Untitled", so a rename in either
+  place does not become a mystery timeout.
+
+### Manifest and CI
+
+`input.editor-keys`, `input.title-editor` and `service.editor-solo` flip
+`unverified` → `pass`; `mode.editor` becomes `gap` against M16.13a — everything
+else in editor mode is exercised, and the three divergences are what is left.
+`validAssignedTask` learns M16.13a. CI's `browser-goldens` job runs
+`TestM169|TestM1610|TestM1613`.
+
+Verified: `go build ./...`, `go vet ./...`, `go test ./...` (the browser suites
+genuinely run here), `npm test` under `engine/web`. Replay fixture untouched —
+this task adds a fixture world, a browser harness route and tests, and changes
+no simulation code.

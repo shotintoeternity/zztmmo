@@ -70,7 +70,8 @@ M12.23, M17.1–M17.7, M16.0–M16.8a — has fully landed.)
    M16.12 filed M16.12a (the energizer blink a second player cancels) on their
    way through, and M16.10 found nothing to file. **M16.12a landed 2026-07-30**,
    taking with it the newcomer-invisible-to-the-room bug its fix un-masked.
-   Next is M16.13.
+   **M16.13 landed 2026-07-30** and filed M16.13a (three editor divergences
+   from vanilla's EditorLoop). Next is M16.14.
 
 **Optional / deferred (bottom):**
 - M16.18a — touch gameplay controls: deferred past the beta (owner 2026-07-30:
@@ -3026,7 +3027,7 @@ gap task has landed.
   concept — mark the vanilla original `// ZZT-QUIRK:` if the global is retained
   anywhere for single-player fidelity.
 
-- [ ] **M16.13 — Solo browser editor and portable-output parity.** Through a
+- [x] **M16.13 — Solo browser editor and portable-output parity.** Through a
   real browser, exercise the complete editor key/menu vocabulary and every
   placeable element family; movement/drawing/text mode; pattern, color, and
   sidebar menus; fill/clear; board/world properties; stat editing and OOP;
@@ -3036,6 +3037,83 @@ gap task has landed.
   manifest has no untested key/dialog, rapid and held input is ordered, exported
   files are portable rather than merely re-readable by this fork, and test play
   leaves the editing world byte-identical.
+
+  Landed 2026-07-30 (NOTES.md M16.13). `fixtures/editor.zwd` ("EDIT") is the
+  world to be edited; `engine/web/test/editor_solo.test.mjs` drives the whole
+  vocabulary in a pinned Chromium against the production server objects, and
+  `engine/m16_13_test.go` holds the manifest, the independent reader and the
+  file checks. The editor command manifest (`m1613Commands`, 90 rows) derives
+  its ids by scanning `main.ts`'s five editor key handlers and the Go session's
+  `op` strings, so a new key or op reddens the build until it is listed and
+  driven. Act 2 authors a world from nothing — two held-Shift walls, all 37
+  placeable elements from the F1/F2/F3 pickers, typed text, the five patterns, a
+  mouse drag — then downloads `.ZZT` and `.BRD`; `m1613ReadVanillaWorld` parses
+  them against reference/fileformat.html (not `worldReadFrom`) and compares
+  field by field with the session, the `.BRD` is required to be byte-identical
+  to that board's record inside the `.ZZT`, the download re-uploads through the
+  validation gate byte for byte, and test play leaves the editing world
+  byte-identical. Not claimed, and said so in NOTES: the real ZZT.EXE was never
+  handed the file — an oracle capture compares a board after an unmodelled boot
+  span and this world is full of creatures, so that needs a *static* authored
+  world and is left as a later task.
+  FOUND AND FILED: **M16.13a** (below) — three divergences from `EditorLoop`.
+
+- [ ] **M16.13a — Close audit findings: the browser editor vs. EditorLoop
+  (M16.13 gap task).** The M16.13 sweep found three places where the browser
+  editor diverges from `EditorLoop`. The first two make a board harder to edit
+  than vanilla makes it; the third loses work.
+
+  (a) **The editor never installs the editor element table.** `EditorLoop`'s
+  first act is `InitElementsEditor` (`engine/editor.go:513`): it sets
+  `ForceDarknessOff` so a dark board is *edited lit*, and gives `E_INVISIBLE` the
+  `0xB0` glyph and `COLOR_CHOICE_ON_BLACK` so invisible walls can be seen and
+  moved. `NewEditorSession` (`engine/editor_session.go:42`) does neither, so
+  turning "Board is dark" on in the browser covers all 1500 cells in darkness,
+  and an invisible wall is invisible to the person placing it. Note the
+  constraint that makes this more than a one-line call: `ElementDefs` is a
+  package-level table shared with every live room, so an editor session must not
+  simply call `InitElementsEditor` — decide where the two editor-only overrides
+  live (per-`Engine`, the way M16.8a and M16.12a relocated other wrongly-shared
+  bytes) and prove a room ticking beside an editor session still draws darkness
+  and invisible walls the vanilla way. DoD:
+  `TestM1613aEditorSessionNeverRunsInitElementsEditor` inverted to require a
+  dark board to keep drawing its tiles and an invisible wall to draw `0xB0`; a
+  new test drives a room and an editor session on the same server and requires
+  the room's darkness to be unaffected; `go test ./...` and the replay fixture
+  green.
+
+  (b) **"Switch boards" cannot reach the title board.** Vanilla's `B` is
+  `EditorSelectBoard("Switch boards", CurrentBoard, false)`
+  (`engine/editor.go:668-669`) — `titleScreenIsNone` is *false* there, so board 0
+  is listed under its own name and selects like any other. The browser builds
+  its list from `EditorProperties.Boards`, where `editorProperties`
+  (`engine/editor_session.go:1252`) names board 0 "None" unconditionally, and
+  `openEditorBoardList` (`engine/web/src/main.ts`) then filters it out entirely.
+  An author who switches away from a world's first board can never switch back
+  to it — `EditorSession.SwitchBoard(0)` works, it is only the list that cannot
+  express it. Keep "None" where it belongs (the exit picker and the passage
+  board picker, which are vanilla's `titleScreenIsNone` true call sites) and give
+  the switcher the board's real name. DoD:
+  `TestM1613aSwitchBoardsCannotReachTheTitleBoard` inverted; the M16.13 browser
+  route switches away from board 0 and back, and its comment about routing
+  around the gap is removed.
+
+  (c) **Leaving the editor never offers to save.** `leaveEditor`
+  (`engine/web/src/main.ts`) transcribes `EditorAskSaveChanged`
+  (`engine/editor.go:155-165`) faithfully — and its `editorModified` flag is
+  never raised anywhere in the client: it is declared false, reset to false when
+  the editor opens and when a save succeeds, and set true nowhere. So the "Save
+  first?" prompt is unreachable and an author who edits a world and presses Q or
+  Escape loses the work in one keystroke, with no question asked. Vanilla raises
+  `wasModified` in `EditorPrepareModifyTile` (`editor.go:169`), on a board-info
+  edit (`242`) and on a stat edit (`401`). Raise it on the same three classes of
+  change — every accepted `editorEdit`, `editorProperty` and `editorStat`/
+  `editorProgramSave` reply — rather than optimistically on the keystroke, so a
+  refused edit (read-only, or a placement the session declined) does not mark a
+  world dirty that never changed. DoD:
+  `TestM1613aLeavingTheEditorNeverOffersToSave` inverted; the M16.13 browser
+  route answers the prompt on the way out instead of asserting its absence; a
+  refused edit leaves the flag clear.
 
 - [ ] **M16.14 — Collaborative editor invariants in real browsers.** Use two
   authenticated fake accounts plus a guest to cover live diffs/cursors, local

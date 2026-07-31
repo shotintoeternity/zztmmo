@@ -86,8 +86,11 @@ func validAssignedTask(id string) bool {
 	// M16.8 engine/room/protocol equivalence sweep. M16.9a (the high-score
 	// placement window showing the slot's old score beside "-- You! --") was
 	// filed by the M16.9 browser visual-parity sweep.
+	// M16.13a (the browser editor skipping InitElementsEditor, and "Switch
+	// boards" omitting the title board) was filed by the M16.13 solo-editor
+	// sweep.
 	switch id {
-	case "M16.5a", "M16.6a", "M16.6b", "M16.9a", "M16.16a", "M16.18a", "M16.8a":
+	case "M16.5a", "M16.6a", "M16.6b", "M16.9a", "M16.13a", "M16.16a", "M16.18a", "M16.8a":
 		return true
 	}
 	m := regexp.MustCompile(`^M16\.(\d+)$`).FindStringSubmatch(id)
