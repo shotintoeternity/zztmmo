@@ -1,0 +1,237 @@
+zwd 1
+world "CONTROL"
+
+# M16.10's browser control/modal/audio parity world.
+#
+# Where GOLDEN (M16.9) exists to be LOOKED AT, this world exists to be DRIVEN.
+# Every feature here is the observable end of one key in the browser's play-mode
+# vocabulary, arranged on a single row so a tick-locked script can walk the whole
+# vocabulary in one deterministic route:
+#
+#   x=6  player start
+#   x=9  ammo      — five shots, so Shift+direction and Space have something to spend
+#   x=20 "target"  — an object that #dies when shot, so a bullet is proved to
+#                    have travelled and hit rather than merely been fired
+#   x=26 "lecture" — a 25-line scroll with a hyperlink, for Up/Down/PgUp/PgDn/
+#                    Enter/Escape navigation and for a link reply. Each line
+#                    carries its own number (CTRL-01 .. CTRL-25) so a test can
+#                    assert WHICH lines a navigation key brought into view, not
+#                    merely that the window moved.
+#   x=30 "band"    — #play cdefg: SoundQueue priority -1, the appending kind. The
+#                    melody deliberately stays inside one octave so that none of
+#                    its notes collides with the gem's first note (C-4), which is
+#                    what the priority test uses to tell the two melodies apart.
+#   x=34 gem       — SoundQueue priority 2
+#   x=36 energizer — SoundQueue priority 9, and long: the melody a lower-priority
+#                    sound must fail to interrupt
+#   x=40 passage   — to "Control Dark", which is what produces a fresh full
+#                    snapshot mid-session
+#
+# Board "Control Dark" carries the torch (T) and the passage back. It is dark so
+# that a board change is unmistakable on the canvas as well as in the protocol.
+
+board "Control Title"
+  start player at 30,13
+  max-shots 10
+  dark false
+  reenter false
+  time-limit 0
+  exits north none south none west none east none
+
+  grid
+############################################################
+#..........................................................#
+#..........................................................#
+#..........................................................#
+#..........................................................#
+#..........................................................#
+#..........................................................#
+#..........................................................#
+#..........................................................#
+#..........................................................#
+#..........................................................#
+#....................C.O.N.T.R.O.L.........................#
+#............................@.............................#
+#..........................................................#
+#..........................................................#
+#..........................................................#
+#..........................................................#
+#..........................................................#
+#..........................................................#
+#..........................................................#
+#..........................................................#
+#..........................................................#
+#..........................................................#
+#..........................................................#
+############################################################
+  end
+
+  legend
+    # = Solid color 0x01
+    . = Empty color 0x00
+    @ = Player color 0x1F under Empty color 0x00
+    C = Text-White color 0x1F
+    O = Text-White color 0x1F
+    N = Text-White color 0x1F
+    T = Text-White color 0x1F
+    R = Text-White color 0x1F
+    L = Text-White color 0x1F
+  end
+
+  stats
+  end
+end
+
+board "Control Field"
+  start player at 6,12
+  max-shots 10
+  dark false
+  reenter false
+  time-limit 0
+  exits north none south none west none east none
+
+  grid
+############################################################
+#..........................................................#
+#..........................................................#
+#..........................................................#
+#..........................................................#
+#..........................................................#
+#..........................................................#
+#..........................................................#
+#..........................................................#
+#..........................................................#
+#..........................................................#
+#....@..a..........X.....V...M...g.e...p...................#
+#..........................................................#
+#..........................................................#
+#..........................................................#
+#..........................................................#
+#..........................................................#
+#..........................................................#
+#..........................................................#
+#..........................................................#
+#..........................................................#
+#..........................................................#
+#..........................................................#
+#..........................................................#
+############################################################
+  end
+
+  legend
+    # = Solid color 0x01
+    . = Empty color 0x00
+    @ = Player color 0x1F under Empty color 0x00
+    a = Ammo color 0x03
+    g = Gem color 0x0B
+    e = Energizer color 0x05
+    X = Object color 0x1C
+    V = Object color 0x1E
+    M = Object color 0x1D
+    p = Passage color 0x1F to "Control Dark"
+  end
+
+  stats
+    stat at 20,12 element Object cycle 3 p1 cp437:0x0F under Empty color 0x00
+    oop
+@target
+#end
+:shot
+#die
+    end
+    stat at 26,12 element Object cycle 3 p1 cp437:0x02 under Empty color 0x00
+    oop
+@lecture
+#end
+:touch
+CTRL-01 the first lecture line
+CTRL-02 arrows move one line
+CTRL-03 page keys move fourteen
+CTRL-04 Escape closes the window
+CTRL-05
+CTRL-06
+CTRL-07
+CTRL-08
+CTRL-09
+CTRL-10
+CTRL-11
+CTRL-12
+CTRL-13
+CTRL-14
+CTRL-15
+CTRL-16
+CTRL-17
+CTRL-18
+CTRL-19
+CTRL-20
+CTRL-21
+CTRL-22
+CTRL-23
+CTRL-24
+CTRL-25 the last lecture line
+!encore;Hand me a torch
+#end
+:encore
+#give torches 1
+#end
+    end
+    stat at 30,12 element Object cycle 3 p1 cp437:0x0E under Empty color 0x00
+    oop
+@band
+#end
+:touch
+#play cdefg
+#end
+    end
+    stat at 40,12 element Passage cycle 0 p3 board "Control Dark" under Empty color 0x00
+  end
+end
+
+board "Control Dark"
+  start player at 6,12
+  max-shots 10
+  dark true
+  reenter false
+  time-limit 0
+  exits north none south none west none east none
+
+  grid
+############################################################
+#..........................................................#
+#..........................................................#
+#..........................................................#
+#..........................................................#
+#..........................................................#
+#..........................................................#
+#..........................................................#
+#..........................................................#
+#..........................................................#
+#..........................................................#
+#....@..t..........p.......................................#
+#..........................................................#
+#..........................................................#
+#..........................................................#
+#..........................................................#
+#..........................................................#
+#..........................................................#
+#..........................................................#
+#..........................................................#
+#..........................................................#
+#..........................................................#
+#..........................................................#
+#..........................................................#
+############################################################
+  end
+
+  legend
+    # = Solid color 0x01
+    . = Empty color 0x00
+    @ = Player color 0x1F under Empty color 0x00
+    t = Torch color 0x06
+    p = Passage color 0x1F to "Control Field"
+  end
+
+  stats
+    stat at 20,12 element Passage cycle 0 p3 board "Control Field" under Empty color 0x00
+  end
+end

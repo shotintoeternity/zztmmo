@@ -83,9 +83,9 @@ jobs:
         working-directory: engine/web
       - run: npm run build
         working-directory: engine/web
-      - run: go test -count=1 -run 'TestM169' -v ./...
+      - run: go test -count=1 -run 'TestM169|TestM1610' -v ./...
         working-directory: engine
-      - name: Upload golden diffs
+      - name: Upload browser artifacts
         if: always()
         uses: actions/upload-artifact@v4
         with:

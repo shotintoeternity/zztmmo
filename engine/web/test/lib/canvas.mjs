@@ -71,13 +71,18 @@ fs.mkdirSync(resultsDir, { recursive: true });
  * CSS does, but a DPR change would still alter what a screenshot captures),
  * animations under a fake clock, and a device-independent colour treatment.
  */
-export async function launchGoldenBrowser() {
+export async function launchGoldenBrowser({ hasTouch = false } = {}) {
   const browser = await chromium.launch({ headless: true });
   const context = await browser.newContext({
     viewport: { width: 1280, height: 720 },
     deviceScaleFactor: 1,
     colorScheme: "dark",
     reducedMotion: "no-preference",
+    // hasTouch raises navigator.maxTouchPoints, which is the ONLY thing that
+    // lets MobileTextInputBridge mount its hidden native control — and with it
+    // the composition/IME path (M16.10). Off by default: the goldens are of a
+    // desktop client, and a touch context would also mount the on-screen bar.
+    hasTouch,
   });
   await context.clock.install({ time: CLOCK_TIME });
   const page = await context.newPage();
@@ -662,17 +667,30 @@ export async function step(options = {}) {
 export async function serverState() {
   const response = await fetch(`${controlURL}/control/state`, { signal: AbortSignal.timeout(15000) });
   if (!response.ok) throw new Error(`control /state failed (${response.status})`);
-  return response.json();
+  const state = await response.json();
+  // Go marshals an empty slice as null; "no input is pending" is the assertion
+  // several M16.10 checks are built on, so normalize it to an array here rather
+  // than making every caller spell the difference.
+  state.pending = state.pending ?? [];
+  state.players = state.players ?? [];
+  return state;
 }
 
 // The server turns a movement keymask into a delta AND the scancode
 // ElementPlayerTick switches on (inputMessageToPlayerInput; input.go:17-21), so
 // the awaited input carries both.
+// The numeric keypad's 8/4/6/2 fold into the SAME mask bits as the arrows
+// (keys.ts movementMask), which is vanilla's own vocabulary — so they produce
+// byte-identical input frames and `walk` takes either name.
 const DIRECTIONS = {
   ArrowUp: { dx: 0, dy: -1, key: 0xc8 },
   ArrowDown: { dx: 0, dy: 1, key: 0xd0 },
   ArrowLeft: { dx: -1, dy: 0, key: 0xcb },
   ArrowRight: { dx: 1, dy: 0, key: 0xcd },
+  Numpad8: { dx: 0, dy: -1, key: 0xc8 },
+  Numpad2: { dx: 0, dy: 1, key: 0xd0 },
+  Numpad4: { dx: -1, dy: 0, key: 0xcb },
+  Numpad6: { dx: 1, dy: 0, key: 0xcd },
 };
 
 /**
@@ -698,6 +716,49 @@ export async function walk(page, code, n) {
 export async function command(page, code, keyByte) {
   await page.keyboard.press(code);
   await step({ await: { key: keyByte } });
+}
+
+/**
+ * Shift+direction: BoardShoot along that direction, which also becomes the
+ * player's facing (elements.go:1422-1425). Shift is released LAST so the final
+ * frame this leaves pending is the all-zero one; the shift-only frame in between
+ * would shoot again if a tick ever landed on it, and awaiting zero is what makes
+ * sure none does.
+ */
+export async function shootShift(page, code) {
+  const dir = DIRECTIONS[code];
+  assert.ok(dir, `shootShift() needs an arrow key, got ${code}`);
+  await page.keyboard.down("ShiftLeft");
+  await page.keyboard.down(code);
+  await step({ await: { dx: dir.dx, dy: dir.dy, key: dir.key, shift: true } });
+  await page.keyboard.up(code);
+  await page.keyboard.up("ShiftLeft");
+  await step({ await: { dx: 0, dy: 0 } });
+}
+
+/**
+ * Space: shoot along the last direction walked. The keymask's shoot bit reaches
+ * the engine as InputKeyPressed == ' ' with no delta (inputMessageToPlayerInput),
+ * which is the `pState.DirX/DirY` branch of ElementPlayerTick.
+ */
+export async function shootSpace(page) {
+  await page.keyboard.down("Space");
+  await step({ await: { key: 0x20, shift: true } });
+  await page.keyboard.up("Space");
+  await step({ await: { dx: 0, dy: 0 } });
+}
+
+/**
+ * Press a key that must reach the server as NOTHING — a removed binding, or a
+ * key the open modal owns. Returns the control listener's view so the caller can
+ * assert on `pending`, which is the only place a stray input frame could hide.
+ */
+export async function pressExpectingNoInput(page, code) {
+  await page.keyboard.press(code);
+  // The client sends on keydown, so a frame it decided to send is already in
+  // flight; give it a real chance to arrive before declaring the absence.
+  await page.waitForTimeout(50);
+  return serverState();
 }
 
 /** Take `n` ticks with no input at all. */

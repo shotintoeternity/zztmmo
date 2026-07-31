@@ -3040,8 +3040,11 @@
       "contract": "P",
       "authority": "elements.go ElementPlayerTick / game.go title / editor.go; web/src/keys.ts",
       "parity": "exact",
-      "status": "unverified",
-      "assignedTask": "M16.10"
+      "status": "pass",
+      "assignedTask": "M16.10",
+      "test": "TestM1610BrowserControlVocabulary",
+      "fixture": "engine/web/test/control_keys.test.mjs",
+      "notes": "M16.10: '?' (Shift+Slash, matched on the produced character rather than the physical code, so non-US layouts work) takes over GameDebugPrompt's sidebar rows; Escape submits the empty command, as vanilla's prompt does."
     },
     {
       "id": "input.play-help",
@@ -3050,8 +3053,11 @@
       "contract": "P",
       "authority": "elements.go ElementPlayerTick / game.go title / editor.go; web/src/keys.ts",
       "parity": "exact",
-      "status": "unverified",
-      "assignedTask": "M16.10"
+      "status": "pass",
+      "assignedTask": "M16.10",
+      "test": "TestM1610BrowserControlVocabulary",
+      "fixture": "engine/web/test/control_keys.test.mjs",
+      "notes": "M16.10: H opens GAME.HLP through /api/help and Escape closes it, driven by real key events. M16.9 owns the window's appearance (mode.modal-help golden); this row is the key that opens it."
     },
     {
       "id": "input.play-move",
@@ -3060,8 +3066,11 @@
       "contract": "P",
       "authority": "elements.go ElementPlayerTick / game.go title / editor.go; web/src/keys.ts",
       "parity": "exact",
-      "status": "unverified",
-      "assignedTask": "M16.10"
+      "status": "pass",
+      "assignedTask": "M16.10",
+      "test": "TestM1610BrowserControlVocabulary",
+      "fixture": "engine/web/test/control_keys.test.mjs",
+      "notes": "M16.10: real ArrowUp/Down/Left/Right AND Numpad8/4/6/2 KeyboardEvents on the built client's canvas, tick-locked so each keypress is the input frame one server tick consumes. Asserted on the server's own view of the player (position after every step) rather than on the canvas alone, and the arrow walk ends on the ammo tile so the whole chain keydown -> keymask -> inputMessageToPlayerInput -> ElementPlayerTick -> ElementAmmoTouch -> HUD is proved in one move. The keypad is vanilla's own vocabulary (INPUT.PAS:217-234) and must fold into the same mask bits, which the tick lock enforces by awaiting a byte-identical frame."
     },
     {
       "id": "input.play-pause",
@@ -3071,8 +3080,11 @@
       "authority": "elements.go ElementPlayerTick / game.go title / editor.go; web/src/keys.ts",
       "parity": "deviation",
       "deviation": "per-player-modal-freeze",
-      "status": "unverified",
-      "assignedTask": "M16.10"
+      "status": "pass",
+      "assignedTask": "M16.10",
+      "test": "TestM1610BrowserControlVocabulary",
+      "fixture": "engine/web/test/control_keys.test.mjs",
+      "notes": "M16.10: P raises the \"Pausing...\" overlay on the real canvas, and the pause is lifted by a MOVE rather than by a second P — vanilla's rule (game.go:1871-1900), and the one a reimplementation would most easily get wrong."
     },
     {
       "id": "input.play-quit",
@@ -3081,8 +3093,11 @@
       "contract": "P",
       "authority": "elements.go ElementPlayerTick / game.go title / editor.go; web/src/keys.ts",
       "parity": "exact",
-      "status": "unverified",
-      "assignedTask": "M16.10"
+      "status": "pass",
+      "assignedTask": "M16.10",
+      "test": "TestM1610BrowserControlVocabulary",
+      "fixture": "engine/web/test/control_keys.test.mjs",
+      "notes": "M16.10: Q raises GamePromptEndPlay's \"End this game?\" and Escape declines it, leaving the player in the room. The CONFIRMED path is M16.9's (the high-score placement, entry and table goldens) and M16.11's journey; this row is the key and the decline."
     },
     {
       "id": "input.play-save",
@@ -3091,8 +3106,11 @@
       "contract": "P",
       "authority": "elements.go ElementPlayerTick / game.go title / editor.go; web/src/keys.ts",
       "parity": "exact",
-      "status": "unverified",
-      "assignedTask": "M16.10"
+      "status": "pass",
+      "assignedTask": "M16.10",
+      "test": "TestM1610BrowserControlVocabulary",
+      "fixture": "engine/web/test/control_keys.test.mjs",
+      "notes": "M16.10: S opens SidebarPromptString(\"Save game:\", \".SAV\"). Unlike M16.9's golden, this TYPES into it: the name round-trips to \"Saved as CTRLSAVE.SAV\", exercising the modal's charset filter, its buffer, its Enter, and the server's save path."
     },
     {
       "id": "input.play-shoot-shift",
@@ -3101,8 +3119,11 @@
       "contract": "P",
       "authority": "elements.go ElementPlayerTick / game.go title / editor.go; web/src/keys.ts",
       "parity": "exact",
-      "status": "unverified",
-      "assignedTask": "M16.10"
+      "status": "pass",
+      "assignedTask": "M16.10",
+      "test": "TestM1610BrowserControlVocabulary",
+      "fixture": "engine/web/test/control_keys.test.mjs",
+      "notes": "M16.10: Shift held with ArrowRight, delivered as real key events; the awaited input frame carries shift=true with the direction, as inputMessageToPlayerInput builds it. Proved by arrival rather than by firing: the CONTROL world's target object eleven tiles east has a :shot label that runs #die, so its glyph leaving the board is the bullet having travelled. Ammo decrements on the sidebar."
     },
     {
       "id": "input.play-shoot-space",
@@ -3111,8 +3132,11 @@
       "contract": "P",
       "authority": "elements.go ElementPlayerTick / game.go title / editor.go; web/src/keys.ts",
       "parity": "exact",
-      "status": "unverified",
-      "assignedTask": "M16.10"
+      "status": "pass",
+      "assignedTask": "M16.10",
+      "test": "TestM1610BrowserControlVocabulary",
+      "fixture": "engine/web/test/control_keys.test.mjs",
+      "notes": "M16.10: Space reaches the engine as InputKeyPressed == ' ' with no delta, which is ElementPlayerTick's pState.DirX/DirY branch. The test walks SOUTH first and then presses Space, so what is asserted is that the bullet flies down the player's own column — a Space that reused a hard-coded direction, or the previous east-facing shot, would put it elsewhere."
     },
     {
       "id": "input.play-sound-toggle",
@@ -3122,8 +3146,11 @@
       "authority": "elements.go ElementPlayerTick / game.go title / editor.go; web/src/keys.ts",
       "parity": "deviation",
       "deviation": "per-player-sound",
-      "status": "unverified",
-      "assignedTask": "M16.10"
+      "status": "pass",
+      "assignedTask": "M16.10",
+      "test": "TestM1610BrowserControlVocabulary",
+      "fixture": "engine/web/test/control_keys.test.mjs",
+      "notes": "M16.10: B flips the sidebar between \"Be quiet\" and \"Be noisy\" and back, which is hud.soundEnabled round-tripping to the server and home again. The audible half is separately asserted in TestM1610BrowserAudioParity, where a muted client schedules no oscillator automation at all."
     },
     {
       "id": "input.play-torch",
@@ -3132,8 +3159,11 @@
       "contract": "P",
       "authority": "elements.go ElementPlayerTick / game.go title / editor.go; web/src/keys.ts",
       "parity": "exact",
-      "status": "unverified",
-      "assignedTask": "M16.10"
+      "status": "pass",
+      "assignedTask": "M16.10",
+      "test": "TestM1610BrowserControlVocabulary",
+      "fixture": "engine/web/test/control_keys.test.mjs",
+      "notes": "M16.10: T is pressed on the DARK board, because elements.go:1499 only spends a torch there — pressing it on a lit board would have proved only that the key routed. Torches goes 1 -> 0 on the sidebar and the count of unlit 0xB0 hatch cells on the canvas drops, so the lit radius is asserted as well as the inventory. The torch itself is earned earlier in the run, through a scroll hyperlink reply."
     },
     {
       "id": "input.play-wasd-removed",
@@ -3143,8 +3173,11 @@
       "authority": "elements.go ElementPlayerTick / game.go title / editor.go; web/src/keys.ts",
       "parity": "deviation",
       "deviation": "wasd-removed",
-      "status": "unverified",
-      "assignedTask": "M16.10"
+      "status": "pass",
+      "assignedTask": "M16.10",
+      "test": "TestM1610BrowserControlVocabulary",
+      "fixture": "engine/web/test/control_keys.test.mjs",
+      "notes": "M16.10: W, A and D are pressed for real and asserted inert ON THE WIRE — the control listener reports no pending input frame at all, which a client that sent one and a server that ignored it would fail. The other half of M4.2's decision is asserted alongside it: S opens the save prompt rather than walking south, which is why WASD had to go (ElementPlayerTick reads movement and commands out of one byte)."
     },
     {
       "id": "input.textwin-nav",
@@ -3153,8 +3186,11 @@
       "contract": "P",
       "authority": "elements.go ElementPlayerTick / game.go title / editor.go; web/src/keys.ts",
       "parity": "exact",
-      "status": "unverified",
-      "assignedTask": "M16.10"
+      "status": "pass",
+      "assignedTask": "M16.10",
+      "test": "TestM1610BrowserControlVocabulary",
+      "fixture": "engine/web/test/control_keys.test.mjs",
+      "notes": "M16.10: a 25-line scroll whose every line names itself (CTRL-01 .. CTRL-25), so each navigation key is asserted by WHICH line it brought under the window cursor rather than by the window merely moving. ArrowDown/ArrowUp move one, PageDown/PageUp move fourteen (TEXT_WINDOW_HEIGHT - 4), and both bounds clamp. Enter on the trailing \"!encore;\" hyperlink sends the scroll reply and the object's :encore label hands over a torch; Escape closes without one. Modal freeze is asserted at the wire in the same window: an arrow key produces no input frame at all."
     },
     {
       "id": "input.title-about",
@@ -4033,8 +4069,11 @@
       "contract": "E",
       "authority": "web/src/*.ts",
       "parity": "exact",
-      "status": "unverified",
-      "assignedTask": "M16.10"
+      "status": "pass",
+      "assignedTask": "M16.10",
+      "test": "TestM1610BrowserControlVocabulary",
+      "fixture": "engine/web/test/control_keys.test.mjs",
+      "notes": "M16.10: the save/name entry modal driven rather than photographed — opened with S, typed into, submitted with Enter, and confirmed by the server's \"Saved as CTRLSAVE.SAV\" reply, then dismissed. M16.9's window-save.json golden owns its appearance."
     },
     {
       "id": "mode.modal-scroll",

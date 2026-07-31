@@ -65,8 +65,9 @@ M12.23, M17.1–M17.7, M16.0–M16.8a — has fully landed.)
    the moment a board opens reads as broken rather than quirky — and a `#give`
    or `#endgame` in that prelude is not cosmetic at all.
 10. Resume certification in file order: M16.9/M16.10 golden suites, M16.12–
-   M16.15, M16.17, M16.18, M16.18a, M16.20. **M16.9 landed 2026-07-30**, and
-   filed M16.9a (high-score placement window) on its way through.
+   M16.15, M16.17, M16.18, M16.18a, M16.20. **M16.9, M16.9a and M16.10 all
+   landed 2026-07-30**; M16.9 filed M16.9a (high-score placement window) on its
+   way through and M16.10 found nothing to file. Next is M16.12.
 
 **Optional / deferred (bottom):**
 - M16.18a — touch gameplay controls: deferred past the beta (owner 2026-07-30:
@@ -2878,7 +2879,29 @@ gap task has landed.
   `window-highscore-placement.json` and flip the manifest row
   `mode.modal-highscore` from `gap` to `pass`; `go test ./...` and replay green.
 
-- [ ] **M16.10 — Add real-browser control, modal, and audio parity.** Drive
+- [x] **M16.10 — Add real-browser control, modal, and audio parity.**
+  LANDED 2026-07-30 (NOTES.md M16.10). A new world, `fixtures/control.zwd`, and
+  three Playwright scripts driven by `engine/m16_10_test.go` on M16.9's harness
+  (parameterized to host any world). `control_keys.test.mjs` walks the whole
+  play vocabulary with real KeyboardEvents — arrows and Numpad8/4/6/2, the
+  removed W/A/D asserted inert ON THE WIRE, Shift+direction and Space (shot
+  south, so "last direction" is what is checked), torch on the dark board,
+  pause lifted by a move, sound toggle, help, debug, a save prompt that is typed
+  into and confirmed, and a declined quit — plus 25 self-naming scroll lines for
+  Up/Down/PgUp/PgDn/Enter/Escape and a hyperlink reply, with modal freeze
+  asserted as "no input frame at all". It closes on the DoD's snapshot/diff
+  clause: the board rendered from accumulated diffs is compared cell for cell
+  against the same board rebuilt from a full snapshot after a passage round
+  trip. `audio_parity.test.mjs` replaces `window.AudioContext` with a recorder
+  before the page loads, leaving the real ZztSound in place: gesture unlock,
+  `#play cdefg` parsed to five tones with the right semitone steps, a second
+  `#play` at priority -1 appending to ten, a priority-2 gem refused while the
+  priority-9 energizer sounds, the 110Hz walk click, and the B toggle silencing
+  and restoring the synth. `focus_input.test.mjs` covers chat capture isolation,
+  IME composition commit/delete through the real hidden control in a touch
+  context, and a resumed client that still takes input. Thirteen manifest rows
+  flipped `unverified` to `pass`; CI's browser job now runs `TestM169|TestM1610`.
+  Drive
   actual `KeyboardEvent`, focus, composition/input, WebSocket, SSE, and a mocked
   observable `AudioContext` through the built application—no direct calls into
   pure helper modules as the only evidence. Cover the complete title/play key

@@ -110,7 +110,11 @@ func m169GoldenWorld(t *testing.T) TWorld {
 // ---------------------------------------------------------------------------
 
 type m169Harness struct {
-	t          *testing.T
+	t *testing.T
+	// worldName is the picker/instance name of the world being hosted. It is a
+	// field rather than the m169World constant because M16.10 hosts CONTROL on
+	// this same harness (engine/m16_10_test.go).
+	worldName  string
 	server     *WebSocketServer
 	ctx        context.Context
 	cancel     context.CancelFunc
@@ -123,10 +127,16 @@ type m169Harness struct {
 
 func m169NewHarness(t *testing.T) *m169Harness {
 	t.Helper()
+	return m169NewHarnessFor(t, m169World, m169GoldenWorld(t))
+}
+
+// m169NewHarnessFor hosts one world on the production server objects with the
+// tick loop under test control. Everything a browser can see is production; the
+// control listener on the second port is served only by this test binary.
+func m169NewHarnessFor(t *testing.T, worldName string, world TWorld) *m169Harness {
+	t.Helper()
 	m169RequireBrowserHarness(t)
 	m169RequireClientBuild(t)
-
-	world := m169GoldenWorld(t)
 
 	rootDir := t.TempDir()
 	savesDir := filepath.Join(rootDir, "saves")
@@ -138,8 +148,8 @@ func m169NewHarness(t *testing.T) *m169Harness {
 		t.Fatal(err)
 	}
 	// The world picker lists .ZZT files in -worlds, so the browser can only
-	// reach GOLDEN through the production picker if the file is really there.
-	m169WriteWorldFile(t, world, filepath.Join(worldsDir, m169World+".ZZT"))
+	// reach this world through the production picker if the file is really there.
+	m169WriteWorldFile(t, world, filepath.Join(worldsDir, worldName+".ZZT"))
 	// The client's very first /api/title call asks for its default world, TOWN,
 	// before the player has chosen anything. Without it the browser console
 	// carries a 500 the suite would either have to whitelist or ignore.
@@ -152,7 +162,7 @@ func m169NewHarness(t *testing.T) *m169Harness {
 	server := NewWebSocketServer(world, m169StartBoard)
 	server.SavesDir = savesDir
 	server.WorldsDir = worldsDir
-	server.RoomManager.HighScorePath = filepath.Join(rootDir, m169World+".HI")
+	server.RoomManager.HighScorePath = filepath.Join(rootDir, worldName+".HI")
 
 	api := &WebAPI{
 		RoomManager: server.RoomManager,
@@ -162,7 +172,7 @@ func m169NewHarness(t *testing.T) *m169Harness {
 	}
 
 	ctx, cancel := context.WithCancel(context.Background())
-	h := &m169Harness{t: t, server: server, ctx: ctx, cancel: cancel}
+	h := &m169Harness{t: t, worldName: worldName, server: server, ctx: ctx, cancel: cancel}
 
 	mux := http.NewServeMux()
 	mux.Handle("/ws", server)
@@ -388,7 +398,7 @@ func (h *m169Harness) pendingNonZero() []string {
 func (h *m169Harness) instance() *WorldInstance {
 	h.server.mu.Lock()
 	defer h.server.mu.Unlock()
-	if inst := h.server.Instances[m169World]; inst != nil {
+	if inst := h.server.Instances[h.worldName]; inst != nil {
 		return inst
 	}
 	return h.server.DefaultInstance

@@ -5732,3 +5732,119 @@ the defect. Manifest row `mode.modal-highscore`: `gap` → `pass`.
 Verified: `go build ./...`, `go test ./...` (browser goldens included — the
 harness is installed here, not skipped), `TestM169TickLockedAcceptanceRun` green.
 Replay fixture untouched: this is a display path, and no simulation code moved.
+
+## M16.10 — real-browser control, modal, and audio parity (2026-07-30)
+
+### What was actually missing
+
+`engine/web/test/*.test.mjs` bundle one client module with esbuild and call its
+exports under Node. That is a genuine unit net and it is not evidence that a key
+*works*: it cannot see a listener that never registered, a modal that swallowed
+the key before the router saw it, a `preventDefault` that never fired, a keymask
+the server decodes differently from the client that built it, or an
+`AudioContext` that was never unlocked. M16.10's whole job is to close that gap
+with real events on the built application.
+
+### The world
+
+`fixtures/control.zwd` — "CONTROL". Where GOLDEN exists to be looked at, this
+exists to be driven: one row of things to walk into, shoot, read and listen to,
+laid out so a tick-locked script can cross the whole vocabulary on one route.
+The two details that took a second pass:
+
+* The **lecture** object's 25 lines each name themselves (`CTRL-01`..`CTRL-25`)
+  so a navigation key is asserted by *which* line it brought under the window
+  cursor, not by the window having moved. The cursor line is always screen row
+  13 — `drawLine` puts `lpos === linePos` at `TEXT_WINDOW_Y + HEIGHT/2 + 1`.
+  The lines are bare OOP text rather than ZWD's `"quoted"` form, because the
+  quotes are passed through verbatim into the window (visible in M16.9's own
+  `window-scroll` golden) and pushed the text past the 45-column inner width.
+* The **band** plays `#play cdefg` and deliberately stops before `+c`: C-4 is
+  512Hz, which is also the gem melody's first note, and that note is what the
+  priority test uses to tell one melody from the other.
+
+### The harness
+
+`m169NewHarness` grew a sibling, `m169NewHarnessFor(t, worldName, world)`, and
+the hard-coded `m169World` in `instance()` became a field. That is the whole
+change to M16.9's file; the server objects, the tick lock, and the artifact
+handling are shared rather than reimplemented.
+
+`canvas.mjs` gained `shootShift`, `shootSpace`, `pressExpectingNoInput`, the
+four `Numpad*` directions, and a `hasTouch` option on `launchGoldenBrowser`.
+`shootShift` releases Shift **last** on purpose: the intermediate shift-only
+frame would shoot again if a tick ever landed on it, and awaiting the all-zero
+frame afterwards is what guarantees none does.
+
+### Three claims a browser had to make
+
+1. **The wire, not the screen.** "WASD is removed" and "a modal owns the
+   keyboard" are asserted as *no input frame reached the server at all*
+   (`/control/state`'s pending list), because a client that sent one and a
+   server that happened to ignore it would look perfectly correct.
+2. **Arrival, not firing.** Shift+Right is proved by the target object eleven
+   tiles east running `:shot` → `#die`; Space is fired *south* after a step
+   south, so "last direction" is what is actually under test rather than a
+   hard-coded east that would pass either way.
+3. **Snapshot equals diffs.** Every cell of the run arrives as a diff; crossing
+   a passage makes the client discard the board and rebuild it from a full
+   `SnapshotMessage`. Walking back to the same tile and comparing the 60-column
+   board region cell for cell is the DoD's "both full snapshots and subsequent
+   diffs" clause. Only the board region: the sidebar is painted from the HUD
+   rather than the cell stream. The route runs along row 13, one south of
+   everything collectable, and idles 260 ticks first so every `DisplayMessage`
+   (200 ticks each) has expired — a message live for one capture and gone for
+   the other would read as a divergence that is not one.
+
+### Audio
+
+`sound.ts` reaches Web Audio through exactly one door (`window.AudioContext ||
+window.webkitAudioContext` in `ensureAudio`), so replacing that constructor in
+an init script leaves the **real** `ZztSound` running — its scheduler, its
+priority arbitration, its note table — and records what it schedules. The mock's
+`currentTime` is derived from `Date.now()`, which Playwright's fake clock owns;
+that is what makes "how many notes were scheduled" a decision the script makes
+rather than a race it runs.
+
+Asserted: the context is created once and resumed by a real gesture (M17.3's
+bug, which M17.7 recorded as "not yet audibly confirmed in a real browser");
+`#play cdefg` schedules five tones whose ratios are 2,2,1,2 semitones — the
+interval pattern, so the assertion does not re-derive the frequency table; a
+second `#play` at priority -1 appends to ten rather than replacing; a
+priority-2 gem taken while the priority-9 energizer sounds is refused outright
+(no admission, and its 512Hz opening note never reaches the oscillator) while
+the energizer keeps scheduling; the 110Hz footstep click is heard (M16.6b); and
+'B' silences the synth completely and then restores it.
+
+### Two test-side mistakes worth recording
+
+* The first IME check split `compositionend` and the `input` event that follows
+  it across two `evaluate()` calls, and reported a double commit. No browser
+  produces that sequence — the guard (`skipCommittedText`) clears itself on a
+  microtask, so the two must be dispatched in the same task, as they are in life.
+  The corrected test asserts the commit lands exactly once.
+* After the touch overlay mounts it holds the focus, so `Escape` no longer
+  reaches the canvas handler. The fix is what a phone user does: aim the tap
+  back at the board first.
+
+### Reconnect
+
+`page.reload()` drops the socket, and the client then walks its normal launch
+sequence again (`promptNicknameOnLaunch` always runs) — it is the *join* that
+carries the stored resume token. So the test re-enters through name → world →
+P, which is the production path a returning player actually walks. M16.11 proved
+the resume lands in place; what this adds is pressing a key afterwards, because
+a client whose listeners did not survive the rejoin would look right and be
+unplayable.
+
+### Manifest and CI
+
+Thirteen rows flipped `unverified` → `pass`: `input.play-move`,
+`-wasd-removed`, `-shoot-shift`, `-shoot-space`, `-torch`, `-pause`,
+`-sound-toggle`, `-help`, `-debug`, `-save`, `-quit`, `input.textwin-nav`, and
+`mode.modal-save`. No new gap task: nothing in this sweep found a divergence.
+CI's `browser-goldens` job now runs `TestM169|TestM1610`.
+
+Verified: `go build ./...`, `go vet ./...`, `go test ./...` (all three browser
+tests genuinely run here, not skipped), and `npm test` under `engine/web`.
+Replay fixture untouched — no simulation code changed.
