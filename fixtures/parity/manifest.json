@@ -3952,8 +3952,10 @@
       "authority": "web/src/*.ts",
       "parity": "deviation",
       "deviation": "presentation-additions",
-      "status": "unverified",
-      "assignedTask": "M16.12"
+      "test": "TestM169BrowserCanvasGoldens,TestM1612PerPlayerEventsAndHUDDoNotCrossTalk,TestM1612RandomizedSchedules",
+      "status": "deviation",
+      "assignedTask": "M16.12",
+      "notes": "M16.12: the overlay is DiffMessage.Players plus \"which of them is me\". The browser golden \"identity-paused-player-one\" drives two real browsers onto one board and requires the pause overlay to mark only the viewer's own square; the M16.12 boundary tests require every per-player diff's roster and HUD to describe its own recipient, including across the stat-id reindexing a departure causes. Presentation addition with no vanilla counterpart."
     },
     {
       "id": "mode.mobile-textentry",

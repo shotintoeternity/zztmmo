@@ -65,9 +65,10 @@ M12.23, M17.1–M17.7, M16.0–M16.8a — has fully landed.)
    the moment a board opens reads as broken rather than quirky — and a `#give`
    or `#endgame` in that prelude is not cosmetic at all.
 10. Resume certification in file order: M16.9/M16.10 golden suites, M16.12–
-   M16.15, M16.17, M16.18, M16.18a, M16.20. **M16.9, M16.9a and M16.10 all
-   landed 2026-07-30**; M16.9 filed M16.9a (high-score placement window) on its
-   way through and M16.10 found nothing to file. Next is M16.12.
+   M16.15, M16.17, M16.18, M16.18a, M16.20. **M16.9, M16.9a, M16.10 and M16.12
+   all landed 2026-07-30**; M16.9 filed M16.9a (high-score placement window) and
+   M16.12 filed M16.12a (the energizer blink a second player cancels) on their
+   way through, and M16.10 found nothing to file. Next is M16.12a, then M16.13.
 
 **Optional / deferred (bottom):**
 - M16.18a — touch gameplay controls: deferred past the beta (owner 2026-07-30:
@@ -2941,9 +2942,19 @@ gap task has landed.
   is deterministic and catches a client/server tick-order change; M4.6 remains
   a fast staged diagnostic rather than the certification evidence.
 
-- [ ] **M16.12 — Multiplayer projection and invariants.**
-  PARTIAL 2026-07-30 (NOTES.md M16.12) — **box deliberately not ticked.** The
-  projection half has landed: `engine/m16_12_test.go`'s
+- [x] **M16.12 — Multiplayer projection and invariants.** Run the same committed
+  micro-world schedules solo and with 2–3 players. A chosen player's projected
+  `V` experience must match solo except manifest deviations. Cover independent
+  inputs/inventory/direction/pause/modals/sounds/events, nearest-player targeting,
+  collision and stat reindexing, death/respawn/invulnerability, friendly-fire
+  policy, passages/edges, shared flags, room freeze/thaw, join/leave/rejoin, and
+  simultaneous actions in stable order. Add deterministic randomized schedules
+  that record their seed. DoD: per-player screens/HUD/events cannot cross-talk;
+  each declared multiplayer deviation is tested at its boundary; replaying a
+  failed seed reproduces the same hashes and event order.
+
+  Landed 2026-07-30 in two sittings (NOTES.md M16.12 and M16.12 part 2).
+  **Part A, the projection half:** `engine/m16_12_test.go`'s
   `TestM1612ProjectionUnchangedByOtherPlayers` replays all 24 committed oracle
   schedules unchanged through M16.8's room driver (which grew an `afterJoin`
   hook) with one and then two extra players parked in the subject's own room,
@@ -2954,24 +2965,24 @@ gap task has landed.
   player, so seek behaviour is unchanged. StateHash is deliberately not compared
   (a second player IS a stat; a matching hash would mean they were not there).
   FOUND AND FILED: **M16.12a** (below) — the energizer blink.
-  STILL TO DO for this task: the same-room invariant boundary tests the DoD
-  lists (independent inputs/inventory/direction, nearest-player targeting,
-  collision and stat reindexing, death/respawn/invulnerability, friendly fire,
-  passages/edges, shared flags, room freeze/thaw, join/leave/rejoin,
-  simultaneous actions in stable order — several already have tests from
-  M2.x/M4.x/M7.x that need gathering and pinning here rather than rewriting),
-  and the deterministic randomized schedules that record their seed. The
-  manifest row `mode.identity-overlay` stays `unverified` until then.
-  Run the same committed
-  micro-world schedules solo and with 2–3 players. A chosen player's projected
-  `V` experience must match solo except manifest deviations. Cover independent
-  inputs/inventory/direction/pause/modals/sounds/events, nearest-player targeting,
-  collision and stat reindexing, death/respawn/invulnerability, friendly-fire
-  policy, passages/edges, shared flags, room freeze/thaw, join/leave/rejoin, and
-  simultaneous actions in stable order. Add deterministic randomized schedules
-  that record their seed. DoD: per-player screens/HUD/events cannot cross-talk;
-  each declared multiplayer deviation is tested at its boundary; replaying a
-  failed seed reproduces the same hashes and event order.
+  **Part B, the same-room boundaries:** six new RoomManager-level tests
+  (independent inputs/inventory/aim; per-player events, HUD and identity;
+  nearest-player retargeting; stat reindexing across a departure; death confined
+  to the dying player; passage and edge transfers; room freeze/thaw; and
+  simultaneous actions in a stable order), plus `m1612Invariants` /
+  `TestM1612InvariantCoverage`, which names the owning test for every listed
+  invariant — gathering the M2.x/M4.x/M7.x/M8.x proofs rather than rewriting
+  them — and fails the build if one is renamed away. **Part C:** six committed
+  seeds drive `TestM1612RandomizedSchedules` (3 players x 150 ticks of random
+  input), each replayed twice for an identical transcript of per-room
+  StateHashes, squares, HUDs and event order, with per-tick invariants (no two
+  players on a square, every diff's HUD and roster entry describes its own
+  recipient) checked throughout;
+  `TestM1612RandomizedScheduleComparisonFailsClosed` proves the comparison is
+  not vacuous. No simulation code changed; the replay fixture is untouched. The
+  manifest row `mode.identity-overlay` is now `deviation`, evidenced by M16.9's
+  two-browser `identity-paused-player-one` golden plus the Part B/C routing
+  tests.
 
 - [ ] **M16.12a — A second player in the room cancels the energizer blink
   (M16.12 gap task).** Found by M16.12's projection sweep (`nrg.scn` was the one

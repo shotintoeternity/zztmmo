@@ -5916,3 +5916,97 @@ colour cycle included, is still compared exactly.
 
 Verified: `go build ./...`, `go vet ./...`, `go test ./...`. Replay fixture
 untouched; no simulation code changed.
+
+## M16.12 part 2 — the same-room boundaries and the seeded schedules (2026-07-30)
+
+The half the first sitting left open. **Box now ticked.** No simulation code
+changed here either: the whole task is tests plus one manifest row.
+
+### Part B: the boundaries live at the RoomManager, not the Engine
+
+The Engine-level siblings already existed and are good
+(`TestTwoPlayersIndependentInput`, `TestDeathRespawnInventoryIsolation`,
+`TestTigerChasesNearestPlayer`): they prove the *simulation* keeps two players
+apart. What none of them touched is the layer above — the routing of stable
+`PlayerID`s onto stat ids that shift under them, and of one room's tick into
+per-player diffs, HUDs and event queues. That is where cross-talk would actually
+appear on a running server, so every new test drives `RoomManager`.
+
+The routing is not hypothetically fragile. Two perturbations were run to prove
+the new tests are not vacuous:
+
+- `reindexRoomPlayers` made a no-op →
+  `TestM1612StatReindexingKeepsEachPlayerTheirOwnState` fails with "the engine's
+  PlayerFor(3) holds 14 ammo, want player 3's 13" — exactly the silent inventory
+  swap it exists to catch.
+- `hudSnapshot(room.Engine, player.statID)` → `hudSnapshot(room.Engine, 0)` →
+  `TestM1612PerPlayerEventsAndHUDDoNotCrossTalk` and every randomized seed fail
+  on the first tick.
+
+One authored fixture (`m1612World`) serves Part B and Part C: a shared room with
+one of each pickup, a passage, and a live east edge, plus the two rooms they
+lead to. Every test names the square it means, and the shared fixture is what
+keeps those names true across tests.
+
+### The gathering, and what it deliberately does not claim
+
+Several DoD invariants were already pinned by M2.x/M4.x/M7.x/M8.x. Re-proving
+them here would add no evidence — but an invariant whose only proof is a test
+nobody remembers owns is one rename away from being unproven. So
+`m1612Invariants` names the owning test(s) for each listed invariant and
+`TestM1612InvariantCoverage` checks them against the parity validator's own
+`existingGoTestNames` scanner, turning a rename into a build failure.
+
+The PARITY.md §4 deviations *not* in that list are named in a comment with the
+task that does own them (snapshot-player-drop and account-sidecar-restore →
+M16.15; score-on-quit and omitted-game-speed → M4.3 via M16.9/M16.10;
+wasd-removed and scroll-removal-timing → M16.10 and M17.4; mobile-touch-gap →
+the open M16.18a). Listing them as covered here would have claimed evidence this
+task does not produce.
+
+### Part C: seeds are constants, and the comparison is proven to fail
+
+Six seeds, 3 players x 150 ticks of random input drawn from a vocabulary of
+walk/shoot/space/torch/pause/sound-toggle/idle. Quit and escape are excluded on
+purpose: they open a modal whose reply the schedule would have to invent, and
+`TestM43RoomQuitLeavesOthersUndisturbed` already owns that boundary.
+
+Three decisions worth keeping:
+
+- **The seeds are committed constants, not entropy.** A clock-seeded suite that
+  passes tells you nothing repeatable; the seed is in the subtest name, so a
+  failure prints the exact `-run` that reproduces it. `M1612_SEEDS=0x…` adds
+  more for a soak without changing what the committed suite covers.
+- **The schedule is generated up front, then played.** Drawing inside the run
+  would make the two passes identical by luck; drawing before makes them
+  identical by construction, so a divergence is the simulation's, not the
+  generator's.
+- **Replay equality alone would be worthless** — two identically-wrong runs
+  agree perfectly. So each tick also checks the invariants that must hold under
+  *any* schedule: no two players on one square, every stat standing on a player
+  tile, and every diff's HUD and roster entry describing its own recipient.
+  `TestM1612RandomizedScheduleComparisonFailsClosed` then turns one scheduled
+  step around and requires the transcript to move at that tick — the same
+  fail-closed idiom `TestM168DroppedDirtyCellFailsClosed` established.
+
+The schedule generator is a 5-line xorshift64* rather than `math/rand`: nothing
+in this package should reach for the global generator even in a test
+(CLAUDE.md rule 2), and the engine's own seeded RNG must not be perturbed by a
+harness that is meant to observe it.
+
+### The manifest
+
+`mode.identity-overlay` (the only row assigned to M16.12) moves `unverified` →
+`deviation`. Its evidence is not new browser work: M16.9's golden suite already
+drives *two* real browsers onto one board and requires the pause overlay to mark
+only the viewer's own square (`identity-paused-player-one`). What was missing
+underneath it was the server-side half — that the roster and HUD each browser is
+sent describe *that* browser's player, including across the stat-id reindexing a
+departure causes — which is what the Part B/C routing tests now hold.
+
+M16.12a (the energizer blink a second player cancels) remains open and unchanged
+by this sitting; Part A's narrow `nrg` exemption and
+`TestM1612aEnergizedBlinkIsCancelledByCompany` still pin it from both sides.
+
+Verified: `go build ./...`, `go vet ./...`, `go test ./...` — all green. Replay
+fixture untouched.
