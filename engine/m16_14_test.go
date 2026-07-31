@@ -459,17 +459,19 @@ func m1614NewHarness(t *testing.T) *m169Harness {
 	// writes, which m169WriteWorldFile leaves open on the harness's start board.
 	world := m1613EditorWorld(t)
 	world.Info.Name = m1614World
-	h := m169NewHarnessFor(t, m1614World, world,
+	return m169NewHarnessFor(t, m1614World, world,
 		func(h *m169Harness, server *WebSocketServer, api *WebAPI) {
 			server.Auth = auth
 			api.Auth = auth
 			h.auth = auth
+			// The endpoints have to be absolute — the browser is redirected to
+			// them — so they need the control listener's port. The harness binds
+			// both ports before it runs this option and only serves afterwards,
+			// so these writes happen before any handler goroutine can read them
+			// (M16.14c: filling them in after the harness was built raced).
+			auth.AuthEndpoint = h.controlURL + "/idp/authorize"
+			auth.TokenEndpoint = h.controlURL + "/idp/token"
 		})
-	// The endpoints can only be filled in once the control listener has a port:
-	// the browser is redirected to them, so they have to be absolute.
-	auth.AuthEndpoint = h.controlURL + "/idp/authorize"
-	auth.TokenEndpoint = h.controlURL + "/idp/token"
-	return h
 }
 
 func m1614OutDir(t *testing.T) string {

@@ -84,7 +84,13 @@ M12.23, M17.1–M17.7, M16.0–M16.8a — has fully landed.)
    trade something. M16.14a also verified `go test -race` for the first time
    since the sweep landed and found it RED on M16.14's own harness, filed as
    M16.14c and pre-existing at `c8c9552`: take that one FIRST, it is test-only
-   and a required CI job is red. Then M16.15.
+   and a required CI job is red. **M16.14c landed 2026-07-31** — the harness now
+   binds both ports before it serves, and the full `-race` suite reports no data
+   race. It filed **M16.14d** on its way through, and that one leads: a 1ms
+   margin in the browser harness's `pauseClock` makes ALL FOUR browser suites
+   (M16.9, M16.10, M16.13, M16.14) fail under load, on an unmodified checkout
+   too. Idle, they are green — but while it stands, no full-suite or `make
+   parity` result can be trusted, so take M16.14d before M16.15.
 
 **Optional / deferred (bottom):**
 - M16.18a — touch gameplay controls: deferred past the beta (owner 2026-07-30:
@@ -3253,7 +3259,7 @@ gap task has landed.
   so the wrong order is forced rather than waited for; M16.14's act 8 keeps its
   strict invariant and drops the comment naming this task.
 
-- [ ] **M16.14c — `go test -race` is red on the M16.14 browser harness.**
+- [x] **M16.14c — `go test -race` is red on the M16.14 browser harness.**
   Test-only; no product code is involved. `m1614NewHarness` fills in
   `auth.AuthEndpoint` and `auth.TokenEndpoint` AFTER `m169NewHarnessFor` has
   already started both listeners (`m16_9_test.go` calls the harness options, then
@@ -3276,6 +3282,44 @@ gap task has landed.
   on its own listener inside `m1614NewHarness` before the harness is built, whose
   URL is then known when the option runs. DoD: `go test -race -count=1 ./...`
   green in `engine/`, and `make parity` reporting no failed gate.
+
+  Landed 2026-07-31 (NOTES.md M16.14c) by the first route: `m169Serve` is split
+  into `m169Listen`/`m169ServeOn`, both ports are bound and `h.baseURL`/
+  `h.controlURL` filled in before the options run, and M16.14 sets its two
+  endpoints inside its option. All four harness users checked. Eight full
+  `go test -race -count=1 ./...` runs, zero data races in every one (two on
+  stashed HEAD in the same run); three came back completely green, including
+  `make parity`'s own race gate — **that gate now passes**, which was the point
+  of the task. Parity's `go test` gate is still red on M16.13's browser suite,
+  filed as **M16.14d**: a 1ms margin in `pauseClock` makes the browser suites
+  load-sensitive, and parity loads the machine its own browser gates need quiet.
+
+- [ ] **M16.14d — `pauseClock`'s one-millisecond margin (M16.14c gap task).**
+  `engine/web/test/lib/canvas.mjs:106`, `pauseClock`, reads the page's
+  `Date.now()` and calls `page.clock.pauseAt(now + 1)`. In the bundled clock
+  (`playwright-core/lib/coreBundle.js`), `pauseAt(time)` computes
+  `toConsume = time - this._now.time` and throws `Cannot fast-forward to the
+  past` exactly when that is negative — when the requested instant is behind the
+  clock's internal wall time. `_now.time` advances whenever `_syncRealTime()`
+  runs, and the clock's own real-time timer runs it on a schedule of
+  `min(firstPendingTimer.callAt, now + 100)`. So if that timer fires during the
+  one CDP round trip between the read and the pause, the pause is already in the
+  past. 1ms of headroom means it passes on luck, with the odds set by load.
+
+  Seen 2026-07-31 across M16.9's goldens and tick-locked run, all three M16.10
+  suites, M16.13 and M16.14 — but only while the machine was loaded (a `make
+  parity` and several back-to-back `-race` suites at once). On an idle machine
+  the whole suite is green, so this is a flake, not a permanent red; an earlier
+  reading of it as an `npm ci` environment break was wrong (NOTES.md M16.14c).
+
+  Rank it ABOVE M16.15: it is the reason a full-suite or `make parity` run
+  cannot be trusted, and it will only get worse on shared CI hardware. The fix is
+  a harness decision, not a one-liner — widening the margin advances the fake
+  clock and fires timers the visual goldens are pinned against, so whatever
+  margin (or retry, or pause-before-load ordering) is chosen has to leave every
+  recorded golden byte-identical. DoD: `pauseClock` cannot lose this race, proven
+  by a test that forces a slow round trip rather than by a suite that happens to
+  pass, and all four browser suites green with their fixtures unchanged.
 
 - [ ] **M16.15 — Persistence, reconnect, and replay service journey.** With
   temporary directories and the production server binary, cover manual save,

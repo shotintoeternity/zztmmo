@@ -6557,3 +6557,90 @@ genuinely run here, and the three-browser sweep was also run alone),
 `engine/web`. `go test -race ./...` is red on the pre-existing M16.14c harness
 race described above and on nothing else. Replay fixture untouched: no
 simulation code changed.
+
+## M16.14c — the harness race the IdP endpoints left open (2026-07-31)
+
+Test-only, exactly as filed: no product code is involved, and no simulation code
+changed, so the replay fixture is untouched.
+
+### The fix: bind, then hand out URLs, then serve
+
+`m169NewHarnessFor` used to create each listener and start accepting on it in
+one step (`m169Serve`), which meant the harness only learned its own URLs after
+two accept loops were already running. `m1614NewHarness` needs `h.controlURL` to
+build the absolute IdP endpoints a browser can be redirected to, so it wrote
+`auth.AuthEndpoint` and `auth.TokenEndpoint` after the constructor returned —
+after the handler goroutines that read them existed.
+
+`m169Serve` is now split into `m169Listen` (bind only) and `m169ServeOn` (accept
+on an already-bound listener), with `m169URL` naming the address. The harness
+binds both ports, fills in `h.baseURL`/`h.controlURL`, runs the options, and only
+then serves. M16.14's option sets the two endpoints where it sets `server.Auth`,
+which is now the only place anything a handler will read may be written. The
+option type's doc comment says so, so the next harness user does not rediscover
+this the way this task did.
+
+The other three users of the shared harness (M16.9, M16.10, M16.13) pass no
+options at all, so bind-then-serve is the whole of their change; all four were
+checked as the task asked.
+
+### Verified
+
+`go build ./...`, `go vet ./...`, `gofmt` clean. `go test -race -count=1 ./...`
+was run eight times over the full suite (six directly, twice as `make parity`'s
+race gate): **zero data races in all eight**, against two in the same run on
+stashed HEAD (`de26d7b`), which is the before/after the task wanted. Three came
+back completely green, M16.14's own sweep included — one of them on an idle
+machine and one of them as parity's own gate, which are the two that count.
+`go test -race -short ./...` green.
+
+`make parity`, run alone on an idle machine, reports **`go test -race` passed**
+— the gate this task existed to fix. One gate is still red: `go test`, on
+M16.13's browser suite, with the `pauseClock` error below. That is M16.14d, and
+it is unavoidable inside parity, which runs the browser suites twice over and an
+`npm ci` besides — parity loads the machine that its own browser gates need
+quiet.
+
+### Found on the way through, and filed: M16.14d
+
+The browser suites are load-sensitive, and the mechanism is a one-millisecond
+margin in `pauseClock` (`engine/web/test/lib/canvas.mjs:106`). Under a loaded
+machine any of them can fail immediately with
+
+    clock.pauseAt: Error: Cannot fast-forward to the past
+        at pauseClock (engine/web/test/lib/canvas.mjs:106)
+
+Read out of the bundled clock source (`playwright-core/lib/coreBundle.js`),
+`pauseAt(time)` computes `toConsume = time - this._now.time` and throws exactly
+when `toConsume < 0` — i.e. when the requested instant is behind the clock's
+internal wall time at that moment. `_now.time` moves forward whenever
+`_syncRealTime()` runs, which the clock's own real-time timer does on a schedule
+of `min(firstPendingTimer.callAt, now + 100)`. `pauseClock` reads the page's
+`Date.now()` and then asks to pause at `now + 1`, so if that timer fires in the
+window between the read and the pause — one CDP round trip — the pause is
+already in the past and throws. A busy machine widens the window; a busy page
+(the client's own render and sampler timers) shortens the fuse.
+
+So it is luck, with the odds set by load, which is why `go test ./...` has been
+green for this suite until now.
+
+Filed rather than fixed: rule 4, and the fix is a harness decision rather than a
+one-liner. Widening the margin advances the fake clock and fires timers the
+visual goldens are pinned against, so whatever margin (or retry, or reordering
+the pause relative to load) is chosen has to leave every recorded golden
+byte-identical.
+
+### A wrong turn, recorded so it is not repeated
+
+This entry first claimed the harness had been permanently broken by `make
+parity`'s own `npm ci` gate, on the evidence that every browser suite failed
+after it ran and kept failing on a stashed tree at `de26d7b`. **That was wrong.**
+The all-red runs were taken while parity's npm gates and several back-to-back
+`-race` suites were still loading the machine. Once it was idle the very same
+suites passed, and the full `go test -race -count=1 ./...` went green end to end.
+Playwright is 1.62.0 either way and the pinned Chromium was never re-fetched —
+there was no environment flip, only load.
+
+The lesson is narrow and worth keeping: on this machine a browser suite's result
+is not evidence unless nothing else is running, and "reproduced on stashed HEAD"
+only rules out the diff, not the load that both runs shared.

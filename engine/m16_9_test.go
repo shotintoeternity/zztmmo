@@ -141,9 +141,12 @@ func m169NewHarness(t *testing.T) *m169Harness {
 }
 
 // m169HarnessOption customizes the production objects after they are built and
-// before either listener starts. M16.14 uses it to give the same WebSocketServer
-// and WebAPI an AuthService, so a browser can sign in the way the product does;
-// nothing else about the harness changes.
+// before either listener starts serving. M16.14 uses it to give the same
+// WebSocketServer and WebAPI an AuthService, so a browser can sign in the way
+// the product does; nothing else about the harness changes. h.baseURL and
+// h.controlURL are already filled in when an option runs — both ports are bound
+// first — so an option may use them, and it is the ONLY safe place to write
+// anything a handler goroutine will read (M16.14c).
 type m169HarnessOption func(h *m169Harness, server *WebSocketServer, api *WebAPI)
 
 // m169NewHarnessFor hosts one world on the production server objects with the
@@ -192,6 +195,15 @@ func m169NewHarnessFor(t *testing.T, worldName string, world TWorld, options ...
 		t: t, worldName: worldName, server: server, ctx: ctx, cancel: cancel,
 		rootDir: rootDir, savesDir: savesDir, worldsDir: worldsDir,
 	}
+	// Bind both ports before anything is served, so an option that needs the
+	// harness's own URLs (M16.14 hands the AuthService absolute IdP endpoints)
+	// can write them while this goroutine is still the only one running. Filling
+	// them in after the accept loops had started was a data race (M16.14c).
+	baseListener := m169Listen(t)
+	controlListener := m169Listen(t)
+	h.baseURL = m169URL(baseListener)
+	h.controlURL = m169URL(controlListener)
+
 	for _, option := range options {
 		option(h, server, api)
 	}
@@ -201,8 +213,8 @@ func m169NewHarnessFor(t *testing.T, worldName string, world TWorld, options ...
 	mux.Handle("/api/", api.Handler())
 	mux.Handle("/", http.FileServer(http.Dir(m169ClientDir())))
 
-	h.baseURL = m169Serve(t, mux)
-	h.controlURL = m169Serve(t, h.controlMux())
+	m169ServeOn(t, baseListener, mux)
+	m169ServeOn(t, controlListener, h.controlMux())
 
 	t.Cleanup(func() {
 		cancel()
@@ -211,13 +223,26 @@ func m169NewHarnessFor(t *testing.T, worldName string, world TWorld, options ...
 	return h
 }
 
-// m169Serve starts an http.Server on a loopback port and returns its base URL.
-func m169Serve(t *testing.T, handler http.Handler) string {
+// m169Listen binds a loopback port without accepting on it yet. Splitting bind
+// from serve is what lets the harness know its own URLs before any handler
+// goroutine exists (M16.14c).
+func m169Listen(t *testing.T) net.Listener {
 	t.Helper()
 	l, err := net.Listen("tcp", "127.0.0.1:0")
 	if err != nil {
 		t.Fatalf("listen: %v", err)
 	}
+	// Serve's Shutdown closes the listener too; this only matters when the
+	// harness fails between binding and serving.
+	t.Cleanup(func() { _ = l.Close() })
+	return l
+}
+
+func m169URL(l net.Listener) string { return "http://" + l.Addr().String() }
+
+// m169ServeOn starts an http.Server on an already-bound listener.
+func m169ServeOn(t *testing.T, l net.Listener, handler http.Handler) {
+	t.Helper()
 	srv := &http.Server{Handler: handler}
 	go func() {
 		if err := srv.Serve(l); err != nil && !errors.Is(err, http.ErrServerClosed) {
@@ -229,7 +254,6 @@ func m169Serve(t *testing.T, handler http.Handler) string {
 		defer cancel()
 		_ = srv.Shutdown(shutdownCtx)
 	})
-	return "http://" + l.Addr().String()
 }
 
 func m169WriteWorldFile(t *testing.T, world TWorld, path string) {
