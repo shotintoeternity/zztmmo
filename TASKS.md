@@ -73,7 +73,11 @@ M12.23, M17.1–M17.7, M16.0–M16.8a — has fully landed.)
    **M16.13 landed 2026-07-30** and filed M16.13a (three editor divergences
    from vanilla's EditorLoop); **M16.13a landed 2026-07-30**, taking with it a
    vanilla quirk it uncovered (`N` inside the editor drops the editor element
-   table, EDITOR.PAS:777). Next is M16.14.
+   table, EDITOR.PAS:777). **M16.14 landed 2026-07-31** and filed M16.14a
+   (three collaborative divergences: board-scoped changes that reach only the
+   acting member, an invite the invitee's client never hears about, and a stat
+   lease stranded by another member's board switch). Next is M16.14a, then
+   M16.15.
 
 **Optional / deferred (bottom):**
 - M16.18a — touch gameplay controls: deferred past the beta (owner 2026-07-30:
@@ -3141,7 +3145,7 @@ gap task has landed.
   left alone (over-offering to save is the harmless direction) and recorded in
   NOTES.md.
 
-- [ ] **M16.14 — Collaborative editor invariants in real browsers.** Use two
+- [x] **M16.14 — Collaborative editor invariants in real browsers.** Use two
   authenticated fake accounts plus a guest to cover live diffs/cursors, local
   echo, out-of-order replies, per-stat/per-board leases, disconnect release,
   ownership/invites/read-only refusal, simultaneous last-write-wins cell edits,
@@ -3149,6 +3153,71 @@ gap task has landed.
   converge on one serialized world and matching screens after every schedule;
   unauthorized operations leave bytes unchanged; lease/presence cleanup is
   proven after abrupt disconnect.
+
+  Landed 2026-07-31 (NOTES.md M16.14). Three browsers share one session on
+  `fixtures/editor.zwd` hosted as COLLAB: Ada and Bob sign in for real (G on the
+  title screen, through a hermetic OIDC provider on the control listener that
+  checks its own PKCE challenge), the guest never does. Five convergence
+  checkpoints require every browser's 60x25 board region to be identical cell
+  for cell — read on the blink phase that hides cursors, since a local cursor is
+  white and a collaborator's is not — and the session's serialized `.ZZT` at
+  each one is re-parsed by M16.13's independent vanilla reader against the
+  landmarks all the browsers agreed on. Local echo is caught in the act: the
+  session's own lock is held for 1.5s, so the character is on the author's
+  screen while the server provably has not answered and no collaborator has it.
+  FOUND AND FILED: **M16.14a** (below) — three divergences.
+
+- [ ] **M16.14a — Close audit findings: the collaborative editor
+  (M16.14 gap task).** The M16.14 sweep found three places where a second
+  browser sees something the session does not say. All three are pinned in
+  their current form from both sides and each pin fails with instructions when
+  the fix lands.
+
+  (a) **Board- and world-scoped changes reach only the acting member.** A
+  per-cell `editorDiff` is broadcast to every member viewing that board
+  (`websocket_server.go` MessageTypeEditorEdit → `broadcastEditorBoard`, M10.1
+  and M17.12). Nothing else is: `serveEditorBoard`'s `add`, `switch`, `import`,
+  `clear` and `new` cases and the `MessageTypeEditorProperty` case all end in
+  `client.write(...)` to the acting client alone. So a collaborator watching a
+  board somebody else clears keeps every tile that is no longer there, and one
+  who was on the board when it was renamed keeps the old name in their switcher
+  and their Board Information. The session state is right in every case; only
+  the other screens are wrong. Fix: broadcast the repaint to the members
+  viewing the affected board (`MemberClientsOnBoard`) and the properties to the
+  whole session, rather than replying to one client — being careful that a
+  snapshot carries the ACTING member's cursor and inspect
+  (`applyEditorSnapshot`'s `forMe`, M17.9), so a broadcast snapshot must not
+  drag a collaborator's cursor. DoD:
+  `TestM1614aBoardScopedChangesReachOnlyTheActingMember` inverted; the M16.14
+  browser route requires the guest's screen and board list to follow a clear
+  and a rename instead of asserting they do not.
+
+  (b) **An invited collaborator stays read-only until they re-enter.**
+  `inviteEditorCollaborator` clears the invitee's server-side flag while they
+  are sitting in the session (`EditorSession.SetAccountReadOnly`) and sends them
+  nothing. The client's `editorReadOnly` is assigned from an `editorSnapshot`
+  and from nowhere else, and every editor key consults it before it sends — so
+  the newly-invited collaborator is refused by their own browser, with a
+  "Read-only" window, until they leave the editor and come back. Fix: tell the
+  member. DoD: `TestM1614aInvitedCollaboratorStaysReadOnlyUntilReentry`
+  inverted; the browser route edits straight after the invite.
+
+  (c) **A stat lease is stranded by another member's board switch.**
+  `EditorSession.leaseKeyLocked` resolves a `stat` key against
+  `s.engine.World.Info.CurrentBoard` — the board the ONE shared engine is
+  focused on, which is whichever member acted last (`Apply` →
+  `focusMemberBoardLocked`, M17.12) — not against the board the asker is on. So
+  a collaborator switching boards moves the key out from under a lease that is
+  already held: the holder's release resolves to no key and is dropped, leaving
+  a lease held by somebody who closed the dialog and walked away, and a fresh
+  request replies with nothing at all (the client only reacts to `granted` and
+  `refused`, so it silently does nothing). Only that member reconnecting, or
+  re-taking the lease while the engine happens to be back on their board,
+  clears it. The board lease has no such dependency — its key is the board that
+  was asked for — and that asymmetry is the shape of the fix. DoD:
+  `TestM1614aStatLeaseIsStrandedWhenAnotherMemberMovesTheEngine` inverted; the
+  browser route closes a stat dialog after a collaborator has switched boards
+  and requires the lease to be free.
 
 - [ ] **M16.15 — Persistence, reconnect, and replay service journey.** With
   temporary directories and the production server binary, cover manual save,

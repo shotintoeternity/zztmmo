@@ -6337,3 +6337,108 @@ genuinely run here — `TestM1613BrowserEditorAndPortableOutput` included), `npm
 test` and `npm run build` under `engine/web`. Replay fixture untouched: the
 editor element table is presentation state on a never-ticked engine, and nothing
 in `StateHash` moved.
+
+## M16.14 — the collaborative editor in three browsers (2026-07-31)
+
+Two people editing one world is the first claim in this product that no single
+browser can check. So this sweep runs three: Ada and Bob signed in, a guest
+signed out, all in the same `EditorSession` on COLLAB (`fixtures/editor.zwd`).
+
+### Signing in is the product's own path
+
+The browser presses `G` on the title screen — `title.ts`'s `login` action — and
+rides the whole OAuth redirect. The identity provider is served by the test
+binary on the control listener: `/idp/authorize` refuses a request without the
+harness client id, without `S256`, or without a challenge, remembers the
+challenge it was given, and `/idp/token` refuses a `code_verifier` that does not
+hash to it. No cookie is injected anywhere; the session cookie is the one
+`HandleCallback` set, and the title sidebar naming "Ada Lovelace" at (65,23) is
+the browser's own word that it worked. `TestM1614...` also asks the provider
+afterwards which accounts actually reached it, so a run that somehow skipped the
+flow could not pass by drawing the right sidebar.
+
+`m169NewHarnessFor` grew a variadic option for this — the only change to the
+M16.9 harness besides the three directory fields the new control routes read.
+
+### Three authorities, because one is not enough
+
+* **The canvas** of each browser: a stale screen, a missing collaborator cursor
+  or a refusal dialog that never opened shows up nowhere else.
+* **The session**, through `/control/editor/session`: members, read-only flags,
+  per-member boards and every held lease, read out of the server's own maps and
+  sorted, so "the lease was released" is never inferred from a closed dialog.
+* **The serialized world**, re-parsed at every checkpoint by M16.13's
+  independent vanilla-format reader, against the landmarks the browsers agreed
+  on. `m1614TileAt` indexes it the way the file is written.
+
+Five convergence checkpoints compare every browser's 60x25 board region cell for
+cell. They are read on the blink phase that HIDES cursors: the local cursor is
+white and a collaborator's is their own colour, so two browsers can never agree
+on a cell a cursor is sitting on — that difference is the overlay working, not
+the world diverging. `setCursorPhase` walks the frozen page clock to the phase
+it wants and fails loudly if it cannot get there.
+
+One decoder constraint decided the brush: the default pattern is Solid, a full
+block, which on a flat background decodes as a uniform cell indistinguishable
+from empty floor (NOTES M16.9). A wall drawn with it could only ever be checked
+in the session. One press of `P` moves both authors onto the Normal wall, whose
+`0xB2` is textured and therefore decodes as itself — which is what makes "Ada's
+edit arrived on Bob's screen" a statement about a glyph.
+
+### The local echo, caught in the act
+
+Convergence cannot tell a local echo from a fast round trip. So the control
+listener grows `/control/editor/hold`, which takes the session's own mutex for a
+named number of milliseconds and returns once it is held. Inside that window Bob
+types a character in text-entry mode: it is on his screen (`ch` 122) and on
+nobody else's, because the server has provably not looked at it yet. When the
+lock drops, the authoritative diff repaints the cell on every screen and the two
+must be the same cell — an echo that predicted the wrong colour would leave the
+author looking at something no one else has.
+
+### Found and filed: M16.14a
+
+1. **Board- and world-scoped changes reach only the acting member.** A per-cell
+   `editorDiff` is broadcast to everyone viewing that board (M10.1, M17.12).
+   Nothing else is: `serveEditorBoard`'s add/switch/import/clear/new and the
+   `editorProperty` case all reply to the acting client alone. The guest watched
+   Bob clear the annex and kept every tile; the guest's board switcher still
+   read "0: Edit Draft" after Bob renamed it. The session was right both times —
+   only the other screens were wrong, and only a board switch (which asks for a
+   snapshot) brings them back.
+2. **An invited collaborator stays read-only until they re-enter.** The invite
+   clears the server-side flag and tells the invitee nothing; the client's
+   `editorReadOnly` is assigned from a snapshot and from nowhere else, and every
+   editor key consults it before sending. Bob was refused by his own browser,
+   with a "Read-only" window, on a world he had just been given rights to.
+3. **A stat lease is stranded by another member's board switch.**
+   `leaseKeyLocked` resolves a `stat` key against the SHARED engine's current
+   board — whichever member acted last — not against the asker's board. Bob
+   switching to the annex moved the key out from under the lease Ada was
+   holding, so her release resolved to nothing and was dropped; she then could
+   not re-request it (the reply is empty, and the client only reacts to
+   `granted`/`refused`), and Bob was refused by name on a dialog she had closed.
+   This one is the reason the run's act 7 is written the way it is: the first
+   version of the route simply hung, and that is how the bug surfaced.
+
+All three are pinned from both sides and each pin fails with instructions when
+the fix lands. `service.editor-collab` is `gap` against M16.14a; the
+twenty-one `proto.msg.editor*` rows flip to `pass`, each naming the sweep that
+actually puts that message on the wire (M16.14 for the collaborative half,
+M16.13 for the program/transfer/download half it drove solo).
+
+### The other half: a client that does not censor itself
+
+Every editor key consults `editorReadOnly` before it sends, so a real browser
+never puts an unauthorized operation on the wire — which is the wrong way round
+to certify a server. `TestM1614ReadOnlyMemberCannotMoveAByte` drives the session
+directly with a read-only member through all fifteen mutating operations the
+protocol has and requires the serialized world to be byte-identical after each,
+and requires the refused lease to leave nothing held.
+
+### Verified
+
+`go build ./...`, `go vet ./...`, `go test ./...` (the browser suites genuinely
+run here), `npm test` and `npm run build` under `engine/web`. Replay fixture
+untouched: this task adds a browser route, control routes and tests, and changes
+no simulation code.

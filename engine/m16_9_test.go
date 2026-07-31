@@ -121,6 +121,16 @@ type m169Harness struct {
 	baseURL    string
 	controlURL string
 
+	// The directories the server was given. M16.14 reads the published .ZZT and
+	// its access sidecar straight off disk, which is where the ownership rules
+	// it certifies actually live.
+	rootDir   string
+	savesDir  string
+	worldsDir string
+	// auth is set by the M16.14 option below; nil keeps the server anonymous,
+	// which is what M16.9/M16.10/M16.13 want.
+	auth *AuthService
+
 	stepMu sync.Mutex
 	ticks  int
 }
@@ -130,10 +140,16 @@ func m169NewHarness(t *testing.T) *m169Harness {
 	return m169NewHarnessFor(t, m169World, m169GoldenWorld(t))
 }
 
+// m169HarnessOption customizes the production objects after they are built and
+// before either listener starts. M16.14 uses it to give the same WebSocketServer
+// and WebAPI an AuthService, so a browser can sign in the way the product does;
+// nothing else about the harness changes.
+type m169HarnessOption func(h *m169Harness, server *WebSocketServer, api *WebAPI)
+
 // m169NewHarnessFor hosts one world on the production server objects with the
 // tick loop under test control. Everything a browser can see is production; the
 // control listener on the second port is served only by this test binary.
-func m169NewHarnessFor(t *testing.T, worldName string, world TWorld) *m169Harness {
+func m169NewHarnessFor(t *testing.T, worldName string, world TWorld, options ...m169HarnessOption) *m169Harness {
 	t.Helper()
 	m169RequireBrowserHarness(t)
 	m169RequireClientBuild(t)
@@ -172,7 +188,13 @@ func m169NewHarnessFor(t *testing.T, worldName string, world TWorld) *m169Harnes
 	}
 
 	ctx, cancel := context.WithCancel(context.Background())
-	h := &m169Harness{t: t, worldName: worldName, server: server, ctx: ctx, cancel: cancel}
+	h := &m169Harness{
+		t: t, worldName: worldName, server: server, ctx: ctx, cancel: cancel,
+		rootDir: rootDir, savesDir: savesDir, worldsDir: worldsDir,
+	}
+	for _, option := range options {
+		option(h, server, api)
+	}
 
 	mux := http.NewServeMux()
 	mux.Handle("/ws", server)
@@ -308,8 +330,11 @@ func (h *m169Harness) controlMux() http.Handler {
 	})
 	mux.HandleFunc("/control/step", h.handleStep)
 	// M16.13 adds its editor-session routes here rather than standing up a
-	// second listener; they are defined in engine/m16_13_test.go.
+	// second listener; they are defined in engine/m16_13_test.go. M16.14 adds
+	// the collaboration routes and its hermetic identity provider the same way
+	// (engine/m16_14_test.go).
 	h.editorControlRoutes(mux)
+	h.collabControlRoutes(mux)
 	return mux
 }
 

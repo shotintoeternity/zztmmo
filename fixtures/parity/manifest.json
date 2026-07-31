@@ -3477,8 +3477,9 @@
       "contract": "P",
       "authority": "protocol.go; tasks M3.2–M3.4",
       "parity": "exact",
-      "status": "unverified",
-      "assignedTask": "M16.14"
+      "status": "pass",
+      "test": "TestM1614CollaborativeEditorInBrowsers,TestM1613BrowserEditorAndPortableOutput",
+      "notes": "M16.14: switch and clear, from two members on two boards; M16.13 drove add, export, import and new."
     },
     {
       "id": "proto.msg.editorBoardData",
@@ -3487,8 +3488,9 @@
       "contract": "P",
       "authority": "protocol.go; tasks M3.2–M3.4",
       "parity": "exact",
-      "status": "unverified",
-      "assignedTask": "M16.14"
+      "status": "pass",
+      "test": "TestM1613BrowserEditorAndPortableOutput",
+      "notes": "M16.13: the .BRD export, byte-identical to that board's record inside the .ZZT."
     },
     {
       "id": "proto.msg.editorDiff",
@@ -3497,8 +3499,9 @@
       "contract": "P",
       "authority": "protocol.go; tasks M3.2–M3.4",
       "parity": "exact",
-      "status": "unverified",
-      "assignedTask": "M16.14"
+      "status": "pass",
+      "test": "TestM1614CollaborativeEditorInBrowsers,TestM1613BrowserEditorAndPortableOutput",
+      "notes": "M16.14: an author's edit reaching both other browsers, addressed to its own board (M17.12) — an annex edit paints no cell on the draft board."
     },
     {
       "id": "proto.msg.editorEdit",
@@ -3507,8 +3510,9 @@
       "contract": "P",
       "authority": "protocol.go; tasks M3.2–M3.4",
       "parity": "exact",
-      "status": "unverified",
-      "assignedTask": "M16.14"
+      "status": "pass",
+      "test": "TestM1614CollaborativeEditorInBrowsers,TestM1613BrowserEditorAndPortableOutput",
+      "notes": "M16.14: place, erase and text edits from two authors, including two writes to one cell with nothing awaited between them."
     },
     {
       "id": "proto.msg.editorEnter",
@@ -3517,8 +3521,9 @@
       "contract": "P",
       "authority": "protocol.go; tasks M3.2–M3.4",
       "parity": "exact",
-      "status": "unverified",
-      "assignedTask": "M16.14"
+      "status": "pass",
+      "test": "TestM1614CollaborativeEditorInBrowsers,TestM1613BrowserEditorAndPortableOutput",
+      "notes": "M16.14: three browsers — two signed-in accounts and a guest — enter one session on the same world; M16.13 entered it solo."
     },
     {
       "id": "proto.msg.editorExit",
@@ -3527,8 +3532,9 @@
       "contract": "P",
       "authority": "protocol.go; tasks M3.2–M3.4",
       "parity": "exact",
-      "status": "unverified",
-      "assignedTask": "M16.14"
+      "status": "pass",
+      "test": "TestM1614CollaborativeEditorInBrowsers,TestM1613BrowserEditorAndPortableOutput",
+      "notes": "M16.14: sent when a member leaves the editor, and NOT sent by the browser that is killed mid-session — the disconnect path is proven without it."
     },
     {
       "id": "proto.msg.editorInspect",
@@ -3537,8 +3543,9 @@
       "contract": "P",
       "authority": "protocol.go; tasks M3.2–M3.4",
       "parity": "exact",
-      "status": "unverified",
-      "assignedTask": "M16.14"
+      "status": "pass",
+      "test": "TestM1614CollaborativeEditorInBrowsers,TestM1613BrowserEditorAndPortableOutput",
+      "notes": "M16.14: every cursor step, including eighteen with nothing awaited between them, whose stale replies the client drops."
     },
     {
       "id": "proto.msg.editorLease",
@@ -3547,8 +3554,9 @@
       "contract": "P",
       "authority": "protocol.go; tasks M3.2–M3.4",
       "parity": "exact",
-      "status": "unverified",
-      "assignedTask": "M16.14"
+      "status": "pass",
+      "test": "TestM1614CollaborativeEditorInBrowsers,TestM102EditorLeasesRefuseAndDisconnectRelease",
+      "notes": "M16.14: board and stat leases granted, refused by name, released on close and released by a browser that died without warning. The stranded-stat-lease case is M16.14a (c)."
     },
     {
       "id": "proto.msg.editorPresence",
@@ -3557,8 +3565,9 @@
       "contract": "P",
       "authority": "protocol.go; tasks M3.2–M3.4",
       "parity": "exact",
-      "status": "unverified",
-      "assignedTask": "M16.14"
+      "status": "pass",
+      "test": "TestM1614CollaborativeEditorInBrowsers,TestM101EditorSessionBroadcastsDiffsAndPresence",
+      "notes": "M16.14: collaborator cursors drawn in each member's own colour on the other screens, grouped by board in the 'Who's here' legend, and dropped on an abrupt disconnect."
     },
     {
       "id": "proto.msg.editorProgram",
@@ -3567,8 +3576,9 @@
       "contract": "P",
       "authority": "protocol.go; tasks M3.2–M3.4",
       "parity": "exact",
-      "status": "unverified",
-      "assignedTask": "M16.14"
+      "status": "pass",
+      "test": "TestM1613BrowserEditorAndPortableOutput",
+      "notes": "M16.13: the ZZT-OOP program read into the code editor, behind a stat lease."
     },
     {
       "id": "proto.msg.editorProgramSave",
@@ -3577,8 +3587,9 @@
       "contract": "P",
       "authority": "protocol.go; tasks M3.2–M3.4",
       "parity": "exact",
-      "status": "unverified",
-      "assignedTask": "M16.14"
+      "status": "pass",
+      "test": "TestM1613BrowserEditorAndPortableOutput",
+      "notes": "M16.13: an edited program written back to its stat."
     },
     {
       "id": "proto.msg.editorProgramText",
@@ -3587,8 +3598,9 @@
       "contract": "P",
       "authority": "protocol.go; tasks M3.2–M3.4",
       "parity": "exact",
-      "status": "unverified",
-      "assignedTask": "M16.14"
+      "status": "pass",
+      "test": "TestM1613BrowserEditorAndPortableOutput",
+      "notes": "M16.13: the program text reply."
     },
     {
       "id": "proto.msg.editorProperties",
@@ -3597,8 +3609,9 @@
       "contract": "P",
       "authority": "protocol.go; tasks M3.2–M3.4",
       "parity": "exact",
-      "status": "unverified",
-      "assignedTask": "M16.14"
+      "status": "pass",
+      "test": "TestM1614CollaborativeEditorInBrowsers,TestM1613BrowserEditorAndPortableOutput",
+      "notes": "M16.14: the accepted-change reply, which reaches only the acting member — M16.14a (a)."
     },
     {
       "id": "proto.msg.editorProperty",
@@ -3607,8 +3620,9 @@
       "contract": "P",
       "authority": "protocol.go; tasks M3.2–M3.4",
       "parity": "exact",
-      "status": "unverified",
-      "assignedTask": "M16.14"
+      "status": "pass",
+      "test": "TestM1614CollaborativeEditorInBrowsers,TestM1613BrowserEditorAndPortableOutput",
+      "notes": "M16.14: a board rename from one collaborator; M16.13 drove every field."
     },
     {
       "id": "proto.msg.editorSaveResult",
@@ -3617,8 +3631,9 @@
       "contract": "P",
       "authority": "protocol.go; tasks M3.2–M3.4",
       "parity": "exact",
-      "status": "unverified",
-      "assignedTask": "M16.14"
+      "status": "pass",
+      "test": "TestM1614CollaborativeEditorInBrowsers,TestM1613BrowserEditorAndPortableOutput",
+      "notes": "M16.14: the publish confirmation, the accepted invite, and the refusal when the target world is being played."
     },
     {
       "id": "proto.msg.editorSnapshot",
@@ -3627,8 +3642,9 @@
       "contract": "P",
       "authority": "protocol.go; tasks M3.2–M3.4",
       "parity": "exact",
-      "status": "unverified",
-      "assignedTask": "M16.14"
+      "status": "pass",
+      "test": "TestM1614CollaborativeEditorInBrowsers,TestM1613BrowserEditorAndPortableOutput",
+      "notes": "M16.14: the entry frame every member gets, and the repaint a board switch returns; it is also the only place the client learns it is read-only (see M16.14a)."
     },
     {
       "id": "proto.msg.editorStat",
@@ -3637,8 +3653,9 @@
       "contract": "P",
       "authority": "protocol.go; tasks M3.2–M3.4",
       "parity": "exact",
-      "status": "unverified",
-      "assignedTask": "M16.14"
+      "status": "pass",
+      "test": "TestM1613BrowserEditorAndPortableOutput",
+      "notes": "M16.13: every stat parameter the editor dialog offers. M16.14 opens the same dialog under a lease but sets no value."
     },
     {
       "id": "proto.msg.editorStatSettings",
@@ -3647,8 +3664,9 @@
       "contract": "P",
       "authority": "protocol.go; tasks M3.2–M3.4",
       "parity": "exact",
-      "status": "unverified",
-      "assignedTask": "M16.14"
+      "status": "pass",
+      "test": "TestM1613BrowserEditorAndPortableOutput",
+      "notes": "M16.13: the reply to an accepted stat edit, which also raises the client's modified flag (M16.13a)."
     },
     {
       "id": "proto.msg.editorTestPlay",
@@ -3657,8 +3675,9 @@
       "contract": "P",
       "authority": "protocol.go; tasks M3.2–M3.4",
       "parity": "exact",
-      "status": "unverified",
-      "assignedTask": "M16.14"
+      "status": "pass",
+      "test": "TestM1614CollaborativeEditorInBrowsers,TestM104EditorTestPlayUsesIsolatedTickingCopy",
+      "notes": "M16.14: broadcast to the whole session, so both browsers land in ONE isolated instance and the editing world is byte-identical afterwards."
     },
     {
       "id": "proto.msg.editorWorld",
@@ -3667,8 +3686,9 @@
       "contract": "P",
       "authority": "protocol.go; tasks M3.2–M3.4",
       "parity": "exact",
-      "status": "unverified",
-      "assignedTask": "M16.14"
+      "status": "pass",
+      "test": "TestM1614CollaborativeEditorInBrowsers,TestM1613BrowserEditorAndPortableOutput",
+      "notes": "M16.14: save and invite, including a save refused by the occupancy rule; M16.13 drove download and upload."
     },
     {
       "id": "proto.msg.editorWorldData",
@@ -3677,8 +3697,9 @@
       "contract": "P",
       "authority": "protocol.go; tasks M3.2–M3.4",
       "parity": "exact",
-      "status": "unverified",
-      "assignedTask": "M16.14"
+      "status": "pass",
+      "test": "TestM1613BrowserEditorAndPortableOutput",
+      "notes": "M16.13: the .ZZT download, read back by an independent vanilla-format reader."
     },
     {
       "id": "proto.msg.event",
@@ -4173,8 +4194,11 @@
       "contract": "E",
       "authority": "completed task contracts (TASKS.md); NOTES.md",
       "parity": "exact",
-      "status": "unverified",
-      "assignedTask": "M16.14"
+      "status": "gap",
+      "assignedTask": "M16.14a",
+      "test": "TestM1614CollaborativeEditorInBrowsers,TestM1614ReadOnlyMemberCannotMoveAByte,TestM1614PublishOverAnOccupiedWorldMovesNoBytes,TestM1614aBoardScopedChangesReachOnlyTheActingMember,TestM1614aInvitedCollaboratorStaysReadOnlyUntilReentry,TestM1614aStatLeaseIsStrandedWhenAnotherMemberMovesTheEngine",
+      "fixture": "fixtures/editor.zwd",
+      "notes": "M16.14 drove the whole collaborative contract through three real browsers — two accounts signed in through a hermetic OIDC provider plus a guest — on one session: live diffs and cursors, a local echo caught while the session's own lock was held, stale inspect replies dropped, per-board and per-stat leases with named refusals, release on an abrupt disconnect, ownership/invite/read-only refusal with the world's bytes unchanged, simultaneous same-cell edits converging, the publish occupancy refusal, and co-op test play in one isolated instance. It found three divergences, all filed as M16.14a and pinned from both sides: (a) board- and world-scoped changes (Clear board, Board Information, Add board, Import board, New world) reply only to the acting member, so a collaborator's screen goes stale; (b) an invited collaborator's client keeps refusing edits until they re-enter the editor; (c) a stat lease is stranded when another member switches boards first, because its key resolves against the shared engine's current board."
     },
     {
       "id": "service.editor-solo",
