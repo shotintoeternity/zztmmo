@@ -345,10 +345,13 @@ type EditorProperties = {
   boards: EditorBoardOption[];
 };
 
+// screen is absent for the members of the session looking at another board
+// (M16.14a): the properties still reach them for their board list and the world
+// name, but the frame belongs to the board the change was made on.
 type EditorPropertiesMessage = {
   type: typeof MessageTypeEditorProperties;
   properties: EditorProperties;
-  screen: ScreenCell[];
+  screen?: ScreenCell[];
 };
 
 type EditorStatSettingsMessage = {
@@ -1482,17 +1485,27 @@ function applyEditorSnapshot(message: EditorSnapshotMessage) {
   // take cursor-shaped state only from snapshots that are actually ours.
   const forMe = !editorMemberId || !message.memberId || message.memberId === editorMemberId;
   if (message.memberId && !editorMemberId) editorMemberId = message.memberId;
-  editorReadOnly = !!message.readOnly;
-  if (message.presence) editorPresence = message.presence;
+  // Read-only is per member, and a snapshot is now broadcast to everyone
+  // watching the board a change was made on (M16.14a): only one addressed to us
+  // may say what we are allowed to do. An invite arrives as exactly that, which
+  // is how a new collaborator's browser stops refusing their own edits.
   if (forMe) {
+    editorReadOnly = !!message.readOnly;
     editorInspect = message.inspect;
     editorCursor = { x: message.inspect.x, y: message.inspect.y };
-    editorProperties = message.properties;
   }
+  if (message.presence) editorPresence = message.presence;
+  adoptEditorProperties(message.properties, forMe);
   // Menus arrive only on the entry snapshot; board add/switch reuse this
   // message without them, so keep the tables already held.
   if (message.menus) editorMenus = message.menus;
-  replaceCells(message.screen);
+  // A broadcast frame belongs to one board, exactly like a diff (M17.12): the
+  // server addresses it to the members viewing that board, and this is the
+  // client re-checking, so a snapshot in flight across a board switch cannot
+  // land late on the wrong board.
+  if (forMe || editorMessageIsForBoard(message.properties.boardId, editorProperties.boardId)) {
+    replaceCells(message.screen);
+  }
   renderEditorSidebar();
   setEditorBlinking(true);
   paintOverlay();
@@ -1606,12 +1619,34 @@ function applyEditorProperties(message: EditorPropertiesMessage) {
   // The board-info half of vanilla's flag (editor.go:242): this message is only
   // ever sent for an ACCEPTED Board Information / world-name change — a refused
   // field returns before the reply is built (editor_session.go SetProperty).
+  // A collaborator's accepted change counts too, now that it reaches us
+  // (M16.14a): the world this browser would save has changed either way.
   editorModified = true;
-  editorProperties = message.properties;
-  replaceCells(message.screen);
+  adoptEditorProperties(message.properties, false);
+  // The frame rides only the copy sent to the members viewing that board.
+  if (message.screen && message.screen.length > 0) replaceCells(message.screen);
   renderEditorSidebar();
   paintOverlay();
   drawScreen();
+}
+
+// adoptEditorProperties takes only what a properties payload is entitled to
+// change (M16.14a). The board half — its name, darkness, exits, and the open
+// board's id — is ours to take when the payload is about the board we are
+// looking at, or when it is a snapshot addressed to us, which is what a board
+// switch is. From a collaborator editing another board it is not: it would
+// retitle our board, and it would move editorProperties.boardId, which is this
+// client's own record of where it is (M17.12).
+//
+// The world half is shared by everyone regardless of where they are standing:
+// the switcher's board list, which grows when anybody adds a board and is
+// renamed when anybody retitles one, and the world name.
+function adoptEditorProperties(properties: EditorProperties, forMe: boolean) {
+  if (forMe || properties.boardId === editorProperties.boardId) {
+    editorProperties = properties;
+    return;
+  }
+  editorProperties = { ...editorProperties, boards: properties.boards, worldName: properties.worldName };
 }
 
 function applyEditorStatSettings(message: EditorStatSettingsMessage) {

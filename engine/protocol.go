@@ -281,10 +281,15 @@ type EditorPropertyMessage struct {
 // EditorPropertiesMessage is returned after every property change. Screen is
 // a complete board frame because toggling darkness changes more than a local
 // tile; it also makes each property edit a self-contained browser repaint.
+//
+// It is omitted for the members of the session who are looking at a DIFFERENT
+// board (M16.14a (a)): the change still reaches them, because the board list
+// and the world name in Properties are world-scoped, but the frame is not
+// theirs to paint.
 type EditorPropertiesMessage struct {
 	Type       string           `json:"type"`
 	Properties EditorProperties `json:"properties"`
-	Screen     []ScreenCell     `json:"screen"`
+	Screen     []ScreenCell     `json:"screen,omitempty"`
 }
 
 // EditorStatMessage changes one stat setting. The server validates the stat

@@ -236,6 +236,18 @@ func TestM1712EditorsOnDifferentBoardsDoNotSeeEachOthersEdits(t *testing.T) {
 		t.Fatalf("B after add is on board %d, want 2", addedB.BoardID)
 	}
 
+	// M16.14a (a): A is told about the board B made, because the switcher's list
+	// is world-scoped — but is sent no frame of it, because A is not looking at
+	// it. That is the same split this test's diff claim rests on.
+	var addedForA EditorPropertiesMessage
+	readEditorMessage(t, ctx, connA, MessageTypeEditorProperties, &addedForA)
+	if len(addedForA.Screen) != 0 {
+		t.Fatalf("A was sent %d cells of the board B added and is not looking at", len(addedForA.Screen))
+	}
+	if len(addedForA.Properties.Boards) != 3 {
+		t.Fatalf("A's board list is %+v, want the board B added in it", addedForA.Properties.Boards)
+	}
+
 	// A edits board 1. Its diff is addressed to board 1.
 	if err := wsjson.Write(ctx, connA, EditorEditMessage{Type: MessageTypeEditorEdit, Op: "place", X: 12, Y: 10, Element: E_SOLID, Color: 0x0e}); err != nil {
 		t.Fatalf("write A edit: %v", err)

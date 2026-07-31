@@ -76,8 +76,15 @@ M12.23, M17.1–M17.7, M16.0–M16.8a — has fully landed.)
    table, EDITOR.PAS:777). **M16.14 landed 2026-07-31** and filed M16.14a
    (three collaborative divergences: board-scoped changes that reach only the
    acting member, an invite the invitee's client never hears about, and a stat
-   lease stranded by another member's board switch). Next is M16.14a, then
-   M16.15.
+   lease stranded by another member's board switch). **M16.14a landed
+   2026-07-31**, and filed M16.14b on its way through: the diff fan-out happens
+   outside the session's lock, so two members writing one cell can leave a third
+   screen holding the tile the session threw away. M16.14b is `[ADVISOR]` and
+   ranks BELOW M16.15 — it needs load to show at all, and both candidate fixes
+   trade something. M16.14a also verified `go test -race` for the first time
+   since the sweep landed and found it RED on M16.14's own harness, filed as
+   M16.14c and pre-existing at `c8c9552`: take that one FIRST, it is test-only
+   and a required CI job is red. Then M16.15.
 
 **Optional / deferred (bottom):**
 - M16.18a — touch gameplay controls: deferred past the beta (owner 2026-07-30:
@@ -3167,11 +3174,15 @@ gap task has landed.
   screen while the server provably has not answered and no collaborator has it.
   FOUND AND FILED: **M16.14a** (below) — three divergences.
 
-- [ ] **M16.14a — Close audit findings: the collaborative editor
+- [x] **M16.14a — Close audit findings: the collaborative editor
   (M16.14 gap task).** The M16.14 sweep found three places where a second
   browser sees something the session does not say. All three are pinned in
   their current form from both sides and each pin fails with instructions when
   the fix lands.
+
+  LANDED 2026-07-31. All three closed and every pin inverted (NOTES.md
+  2026-07-31). FOUND AND FILED on the way through: **M16.14b** (below) — the
+  diff fan-out is not ordered with the edits it reports.
 
   (a) **Board- and world-scoped changes reach only the acting member.** A
   per-cell `editorDiff` is broadcast to every member viewing that board
@@ -3218,6 +3229,53 @@ gap task has landed.
   `TestM1614aStatLeaseIsStrandedWhenAnotherMemberMovesTheEngine` inverted; the
   browser route closes a stat dialog after a collaborator has switched boards
   and requires the lease to be free.
+
+- [ ] **M16.14b [ADVISOR] — The editor diff fan-out is not ordered with the
+  edits it reports (M16.14a gap task).** `serveEditor`'s `MessageTypeEditorEdit`
+  case applies the edit under the session's lock (`EditorSession.Edit`) and
+  broadcasts the resulting diff AFTER releasing it. Two connections are two
+  goroutines, so the order the session applied the edits and the order they
+  reach a third browser's socket are independent: when two members write the
+  SAME cell, the screen that receives the two diffs backwards keeps the tile the
+  session threw away, permanently, until something asks for a repaint. Found by
+  M16.14's act 8 under full-suite load (NOTES.md 2026-07-31); under ordinary
+  timing the second edit's own work gives the first broadcaster enough head
+  start to hide it.
+
+  Not a routing bug — M16.14a fixed routing — so do not fix it by widening the
+  fan-out. The two candidate shapes both have costs worth an advisor: ordering
+  the writes with the session (which puts network I/O under a lock a stalled
+  client could hold for the write timeout, for every member), or stamping each
+  board-scoped message with a per-board sequence the client compares before it
+  applies (a protocol change, and every other board-scoped message wants the
+  same stamp). DoD: two members writing one cell concurrently leave every screen
+  and the session on the same tile, proven with the fan-out deliberately delayed
+  so the wrong order is forced rather than waited for; M16.14's act 8 keeps its
+  strict invariant and drops the comment naming this task.
+
+- [ ] **M16.14c — `go test -race` is red on the M16.14 browser harness.**
+  Test-only; no product code is involved. `m1614NewHarness` fills in
+  `auth.AuthEndpoint` and `auth.TokenEndpoint` AFTER `m169NewHarnessFor` has
+  already started both listeners (`m16_9_test.go` calls the harness options, then
+  `m169Serve`), so the two strings are written by the test goroutine and read by
+  an `http` handler goroutine with nothing between them. The detector reports two
+  races in `TestM1614CollaborativeEditorInBrowsers`
+  (`AuthService.HandleStart` / `exchangeCode` vs. `m1614NewHarness`), which fails
+  the `engine-race` CI job and `make parity`'s `go test -race` gate.
+
+  PRE-EXISTING at commit `c8c9552` (M16.14): verified 2026-07-31 by stashing
+  M16.14a's changes and re-running — same two races, so it came in with the sweep
+  that needed absolute IdP endpoints. `go test -race -short ./...` is green
+  (the browser harness skips itself in short mode), which is how it went
+  unnoticed. Rank it ABOVE M16.15: a required CI job is red.
+
+  Fix: give the endpoints a value before anything serves. Either split
+  `m169Serve` into bind-then-serve so `m169NewHarnessFor` can hand the harness
+  its URLs before the accept loops start (touches the harness M16.9, M16.10,
+  M16.13 and M16.14 all share, so check all four), or stand the hermetic IdP up
+  on its own listener inside `m1614NewHarness` before the harness is built, whose
+  URL is then known when the option runs. DoD: `go test -race -count=1 ./...`
+  green in `engine/`, and `make parity` reporting no failed gate.
 
 - [ ] **M16.15 — Persistence, reconnect, and replay service journey.** With
   temporary directories and the production server binary, cover manual save,

@@ -15,12 +15,14 @@
 //   * /control/editor/board + world  — the tiles and the serialized .ZZT, which
 //     engine/m16_14_test.go re-reads with an independent vanilla-format parser.
 //
-// WHAT IT FOUND. Three divergences, recorded rather than worked around, and
-// filed as gap task M16.14a. They are asserted HERE in their current (broken)
-// form, each with a comment naming the task, so the fix cannot land unnoticed:
-//   (a) board- and world-scoped changes reach only the member who made them;
-//   (b) an invited collaborator stays read-only until they re-enter the editor;
-//   (c) a stat lease is stranded when another member switches boards first.
+// WHAT IT FOUND, AND WHAT M16.14a DID ABOUT IT. Three divergences, recorded
+// rather than worked around, and filed as a gap task that has since closed them.
+// The acts that pinned each one in its broken form now require the fix:
+//   (a) board- and world-scoped changes reach every member they concern — the
+//       frame to those watching that board, the switcher's board list to all;
+//   (b) an invited collaborator edits without re-entering the editor;
+//   (c) a stat lease is given back however the shared engine has moved.
+// A run that records a finding is a run that found something NEW.
 
 import assert from "node:assert/strict";
 import fs from "node:fs";
@@ -62,6 +64,10 @@ const BOB_CELL = { x: 47, y: 3 };
 const RACE_CELL = { x: 50, y: 10 };
 const ANNEX_CELL = { x: 20, y: 20 };
 const PUBLISH_CELL = { x: 43, y: 3 };
+// The cell the freshly-invited collaborator draws on, before anybody has
+// changed their brush: it is checked in the session, not on a canvas, because
+// the default Solid brush decodes ambiguously (see E_NORMAL below).
+const INVITE_CELL = { x: 49, y: 3 };
 const ECHO_CELL = { x: 45, y: 12 };
 // Row 5 of the draft board: object, lion, spinning gun, passage, duplicator.
 const OBJECT_CELL = { x: 10, y: 5 };
@@ -635,24 +641,24 @@ try {
   await waitForMembers((s) => memberFor(s, { accountId: "google:bob" })?.readOnly === false,
     "the server to clear Bob's read-only flag");
 
-  // M16.14a (b): the server would take Bob's edits now, and his browser will not
-  // send them. editorReadOnly is only ever assigned from an editorSnapshot, and
-  // the invite sends none — so the invitee is refused by their own client until
-  // they leave the editor and come back. Asserted in its broken form on purpose.
-  await moveTo(bob, BOB_CELL.x, BOB_CELL.y);
+  // M16.14a (b), closed: the invite sends the invitee a snapshot addressed to
+  // them, which is the only thing their client's editorReadOnly is ever set
+  // from. So Bob draws NOW — no re-entry, no "Read-only" window — and the tile
+  // is read back out of the session rather than off his own canvas.
+  await moveTo(bob, INVITE_CELL.x, INVITE_CELL.y);
   await press(bob, "Space");
-  await screen(bob, (c) => hasText(c, "read-only for this account"),
-    "the read-only refusal an invited collaborator should no longer be getting");
-  await closeWindow(bob, "read-only for this account", "the stale read-only refusal");
-  finding("an invited collaborator's browser keeps refusing edits until they re-enter the editor: " +
-    "the server cleared their read-only flag, and nothing told the client");
-
-  await leaveEditor(bob);
-  await enterEditor(bob);
-  await waitForMembers((s) => s.members.length === 3 &&
-    memberFor(s, { accountId: "google:bob" })?.readOnly === false,
-    "Bob back in the session as a collaborator");
-  note("Bob re-entered the editor and the client finally learned he may edit");
+  await setLandmark(DRAFT_BOARD, INVITE_CELL, "the tile the invitee drew without re-entering",
+    (t) => t.element !== E_EMPTY);
+  {
+    const cells = await readGrid(bob.page);
+    assert.ok(!hasText(cells, "read-only for this account"),
+      "an invited collaborator's own browser must stop refusing them");
+  }
+  // And being told did not move him: the snapshot carries the cursor he last
+  // reported, not the middle of the board.
+  assert.ok(cursorAt(await readGrid(bob.page), INVITE_CELL.x, INVITE_CELL.y),
+    "the invite must not drag the invitee's cursor");
+  note("the invited collaborator edited straight away, without leaving the editor and coming back");
 
   // =========================================================================
   // Act 4 — live diffs and live cursors
@@ -841,14 +847,15 @@ try {
     "Bob's stat lease to be released");
 
   // =========================================================================
-  // Act 7 — a stat lease that cannot be given back (M16.14a (c))
+  // Act 7 — a stat lease given back after a collaborator moved the engine
+  //         (M16.14a (c), closed)
   // =========================================================================
-  // Ada is still holding the object's stat lease. A lease key for a stat is
-  // resolved against the SHARED ENGINE's current board, not against the board
-  // the asker is on (editor_session.go leaseKeyLocked), and the engine follows
-  // whichever member acted last (Apply -> focusMemberBoardLocked, M17.12). So a
-  // collaborator switching boards moves the key out from under a lease that is
-  // already held, and the release that follows resolves to nothing.
+  // Ada is still holding the object's stat lease. A lease key used to be
+  // resolved against the SHARED ENGINE's current board, which follows whichever
+  // member acted last (Apply -> focusMemberBoardLocked, M17.12), so a
+  // collaborator switching boards moved the key out from under a lease that was
+  // already held and the release that followed resolved to nothing. The key is
+  // now the board that was ASKED FOR, exactly as the board lease's always was.
   await press(bob, "KeyB");
   await screen(bob, (c) => boardListOpen(c), "Bob's board switcher");
   await pickFromList(bob, (line) => line.startsWith(`${ANNEX_BOARD}:`), "Bob switching to the annex");
@@ -858,39 +865,30 @@ try {
 
   await press(ada, "Escape");
   await screen(ada, (c) => isEditorChrome(c), "Ada's stat dialog to close");
-  await new Promise((resolve) => setTimeout(resolve, 250));
-  {
-    const state = await sessionState();
-    const stranded = state.leases.find((l) => l.kind === "stat" && l.holderName === "Ada Lovelace");
-    if (!stranded) {
-      throw new Error("closing the stat dialog released the lease even though another member had moved " +
-        "the shared engine — M16.14a (c) has landed; invert this assertion");
-    }
-    finding("a stat lease is stranded when another collaborator switches boards first: the release " +
-      "resolves its key against the shared engine's current board, finds none, and drops the message");
-  }
+  await waitForMembers((s) => s.leases.length === 0,
+    "the stat lease, given back although another member had moved the engine");
+  note("closing a stat dialog gives the lease back wherever the shared engine happens to be");
 
-  // It is not cosmetic. Bob comes back to the draft board and cannot take a stat
-  // whose owner has closed her dialog and walked away.
+  // And it really is free: Bob comes back to the draft board and takes the stat
+  // whose owner closed her dialog and walked away.
   await press(bob, "KeyB");
   await screen(bob, (c) => boardListOpen(c), "Bob's board switcher");
   await pickFromList(bob, (line) => line.startsWith(`${DRAFT_BOARD}:`), "Bob switching back");
   await screen(bob, (c) => isEditorChrome(c), "Bob's editor on the draft board");
   await moveTo(bob, OBJECT_CELL.x, OBJECT_CELL.y);
   await press(bob, "Enter");
-  await screen(bob, (c) => hasText(c, "Ada Lovelace is editing this stat."),
-    "the stranded lease still refusing a collaborator");
-  await closeWindow(bob, "is editing this stat", "the stranded-lease refusal");
-
-  // The way back, and the way this run gets its clean slate: the holder re-opens
-  // the dialog with the engine on her own board, and closes it there.
-  await press(ada, "Enter");
-  await screen(ada, (c) => !isEditorChrome(c), "Ada's stat dialog, reopened");
-  await press(ada, "Escape");
-  await screen(ada, (c) => isEditorChrome(c), "Ada's stat dialog to close for good");
-  await waitForMembers((s) => s.leases.length === 0, "the stranded stat lease, finally released");
-  note("the stranded lease is only recoverable by its holder, and only once the shared engine " +
-    "happens to be back on their board");
+  await screen(bob, (c) => !isEditorChrome(c), "Bob's stat dialog on the freed stat");
+  {
+    const cells = await readGrid(bob.page);
+    assert.ok(!hasText(cells, "is editing this stat"),
+      `the freed stat was refused to the next taker; the screen read:\n${gridToArt(cells)}`);
+  }
+  await waitForMembers((s) => s.leases.some((l) => l.kind === "stat" && l.holderName === "Bob Bones"),
+    "the freed stat lease, taken by Bob");
+  await press(bob, "Escape");
+  await screen(bob, (c) => isEditorChrome(c), "Bob's stat dialog to close");
+  await waitForMembers((s) => s.leases.length === 0, "Bob's stat lease to be released in turn");
+  note("the released stat lease was taken by the next member to ask for it");
 
   // =========================================================================
   // Act 7b — two collaborators on two boards
@@ -984,6 +982,13 @@ try {
   // Then genuinely simultaneous: both keystrokes go out with nothing awaited
   // between them. Which one wins is the server's business — that both browsers
   // and the session end up on the same answer is the invariant.
+  //
+  // KNOWN TO BE RACY, filed as M16.14b (NOTES.md 2026-07-31): the session
+  // serializes the two edits under its own lock, but each connection's goroutine
+  // broadcasts its diff AFTER releasing that lock, so under load the two diffs
+  // can reach a third browser in the opposite order and leave it permanently
+  // showing the loser's tile. If this wait times out on a colour the session
+  // does not hold, that is the race and not a new bug.
   await Promise.all([press(ada, "Space"), press(bob, "Space")]);
   await waitForQuiet(ada.page, 3000);
   await waitForQuiet(bob.page, 3000);
@@ -1045,11 +1050,13 @@ try {
   note("an abrupt disconnect released the lease and the presence entry, with no editorExit sent");
 
   // =========================================================================
-  // Act 10 — the changes that never leave the acting browser (M16.14a (a))
+  // Act 10 — board- and world-scoped changes, on every screen (M16.14a (a))
   // =========================================================================
-  // Every per-cell edit above reached the other screens. Nothing board-shaped
-  // does: serveEditorBoard and the editorProperty case reply to the acting
-  // client alone. Asserted here in its broken form, deliberately.
+  // Every per-cell edit above reached the other screens; nothing board-shaped
+  // used to, because serveEditorBoard and the editorProperty case replied to the
+  // acting client alone. They now fan out: the frame to the members watching
+  // that board, and the world-scoped half — the switcher's board list — to
+  // everybody.
   await press(bob, "KeyI");
   await screen(bob, (c) => hasText(c, "Board Information"), "Bob's Board Information");
   await pickFromList(bob, (line) => line.startsWith("Title: "), "the board title");
@@ -1061,14 +1068,10 @@ try {
   await screen(guest, (c) => boardListOpen(c), "the guest's board switcher");
   {
     const entries = await listEntries(guest);
-    if (entries.includes("0: Ada And Bob")) {
-      throw new Error("the board rename reached a collaborator's board list — M16.14a (a) has landed; " +
-        "invert this assertion and require every screen to follow a board-scoped change");
-    }
-    assert.ok(entries.includes("0: Edit Draft"),
-      `the guest's switcher shows ${JSON.stringify(entries)}, still naming the board by its old name`);
-    finding("a board rename reaches only the member who made it: the guest's board list still reads " +
-      '"0: Edit Draft" while the session has "Ada And Bob"');
+    assert.ok(entries.includes("0: Ada And Bob"),
+      `the guest's switcher shows ${JSON.stringify(entries)}; a rename another member made must reach it`);
+    assert.ok(!entries.includes("0: Edit Draft"), "and must not leave the old name beside the new one");
+    note("a board rename reached the collaborator's board list without them asking for anything");
   }
   await closeWindow(guest, boardListOpen, "the guest's board switcher");
 
@@ -1095,28 +1098,23 @@ try {
     what: "the annex cell, after the board was cleared",
   });
 
+  // The collaborator who was only watching has the cleared board on their screen,
+  // without touching anything: the wall Bob drew on the annex in Act 7b is gone
+  // from it, and their cursor stayed where they parked it.
   await moveTo(guest, guest.park.x, guest.park.y);
   const annexAfter = boardRegion(await setCursorPhase(guest, false));
-  if (JSON.stringify(annexAfter) !== JSON.stringify(annexBefore)) {
-    throw new Error("a cleared board reached the collaborator watching it — M16.14a (a) has landed; " +
-      "invert this assertion and let the checkpoint below cover it");
+  assert.notDeepEqual(annexAfter, annexBefore,
+    "a board somebody else cleared must not leave the collaborator watching it with the old tiles");
+  {
+    const cells = await setCursorPhase(guest, false);
+    const cleared = boardCell(cells, ANNEX_CELL.x, ANNEX_CELL.y);
+    assert.notEqual(cleared.ch, NORMAL_CHAR,
+      `the guest's screen still draws the wall the clear removed:\n${gridToArt(cells)}`);
+    assert.ok(cursorAt(cells, guest.park.x, guest.park.y),
+      "a broadcast repaint must not drag a collaborator's cursor to the acting member's");
   }
-  finding("Clear board empties the session and repaints only the acting browser: the collaborator " +
-    "watching the same board keeps every tile that is no longer there");
-
-  // The screen a collaborator can get back: anything that asks for a snapshot.
-  for (const ed of [bob, guest]) {
-    await press(ed, "KeyB");
-    await screen(ed, (c) => boardListOpen(c), "the board switcher");
-    await pickFromList(ed, (line) => line.startsWith(`${DRAFT_BOARD}:`), "switching to the draft board");
-    await screen(ed, (c) => isEditorChrome(c), "the editor on the draft board");
-    await press(ed, "KeyB");
-    await screen(ed, (c) => boardListOpen(c), "the board switcher");
-    await pickFromList(ed, (line) => line.startsWith(`${ANNEX_BOARD}:`), "switching to the annex again");
-    await screen(ed, (c) => isEditorChrome(c), "the editor on the annex again");
-  }
+  note("Clear board repainted the collaborator watching the same board, and left their cursor alone");
   await checkpoint("after the clear", [bob, guest]);
-  note("a board switch repaints from the session, which is how a diverged screen recovers today");
 
   for (const ed of [bob, guest]) {
     await press(ed, "KeyB");
@@ -1217,8 +1215,9 @@ try {
     );
     assert.deepEqual(unexpected, [], `${ed.label}: the page must log no console errors`);
   }
-  console.log(`\ncollaborative editor: ${checkpoints.length} convergence checkpoints, ` +
-    `${findings.length} divergence(s) filed as M16.14a`);
+  assert.deepEqual(findings, [],
+    "M16.14a closed every divergence this sweep filed; a new one is a new gap task, not a passing run");
+  console.log(`\ncollaborative editor: ${checkpoints.length} convergence checkpoints, no divergence`);
 } catch (err) {
   failed = true;
   for (const ed of editors) {

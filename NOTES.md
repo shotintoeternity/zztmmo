@@ -6442,3 +6442,118 @@ and requires the refused lease to leave nothing held.
 run here), `npm test` and `npm run build` under `engine/web`. Replay fixture
 untouched: this task adds a browser route, control routes and tests, and changes
 no simulation code.
+
+## M16.14a — the three collaborative divergences, closed (2026-07-31)
+
+The gap task M16.14 filed. All three fixes are on the wire, and the pins that
+recorded the breaks are now the tests that require the fixes.
+
+### (a) Board- and world-scoped changes reach every member they concern
+
+The shape the task named: the repaint to the members viewing the affected board,
+the properties to the whole session. Both halves ride one fan-out
+(`fanOutEditorBoardChange`): `MemberClientsOnBoard(boardID)` get the message with
+its frame, everybody else gets the same properties WITHOUT one. `Clear board`,
+`Add board`, `Import board` and `New world` broadcast a snapshot; the
+`editorProperty` case broadcasts its properties, whose `Screen` is now
+`omitempty` so a member on another board is genuinely not sent 1500 cells of a
+board they are not looking at. `switch` stays a private repaint — nothing
+changed but where one member is looking — but now broadcasts presence, because
+every other screen filters cursors by board and the legend names who is
+elsewhere (M17.10, M17.12).
+
+The client is the second half of the fix, and it is the delicate half. A
+broadcast snapshot carries the ACTING member's id, cursor, inspect and read-only
+flag, so `applyEditorSnapshot` had to be split by what a payload is entitled to
+change:
+
+* the cursor half (`editorInspect`, `editorCursor`) and now `editorReadOnly` are
+  taken ONLY when the snapshot is addressed to us (the `forMe` check M17.9 added
+  for exactly this reason — read-only joined it because a collaborator's edit
+  would otherwise hand a read-only guest edit rights in their own UI);
+* the frame is painted only when it is ours or it is for the board we are on —
+  the same re-check `applyEditorDiff` does, so a snapshot in flight across a
+  board switch cannot land late on the wrong board;
+* `adoptEditorProperties` splits the properties themselves: the board half (name,
+  darkness, exits, and `boardId`, which is this client's own record of where it
+  is) is taken only for our own board, and the world half — the switcher's board
+  list and the world name — always. That last line is what makes a rename or an
+  added board reach every switcher.
+
+`NewWorld` moves every member onto the only board the new world has before it
+replies, so the broadcast that follows is a repaint of the board each of them is
+actually on rather than of one that no longer exists.
+
+### (b) The invite tells the invitee
+
+`SetAccountReadOnly` now returns the members it changed, and
+`inviteEditorCollaborator` sends each of them a snapshot addressed to them.
+`MemberCursor` supplies the cell their browser last reported, so being told does
+not recentre their cursor — an unprompted repaint that moved the cursor would be
+its own bug. Nothing else could carry it: `editorReadOnly` is set from a
+snapshot and from nowhere else, which is precisely why the client had to start
+gating that assignment on `forMe` in the same task.
+
+### (c) A stat lease key is the board that was asked for
+
+`leaseKeyLocked` takes the member, resolves the board from the request (falling
+back to the ASKER's board, never the shared engine's), and drops the
+`boardID != CurrentBoard` guard that made the key move under a held lease.
+
+The one judgement call: the stat index used to be bounded by `Board.StatCount`,
+which is only knowable for the board that happens to be OPEN — the very
+dependency being removed. Rather than open a board to answer a lease request
+(which would mutate the shared engine, and its dirty list, on a release), the
+index is bounded by `MAX_STAT`. A lease key is a claim on a NAME, not an
+authority: `SetStat`, `ProgramText` and `SaveProgram` each re-check the index
+against the open board before touching anything, and the board lease has always
+claimed names the same way.
+
+### Found on the way through, and filed: M16.14b
+
+The first full-suite run of the finished work reddened act 8 — two writers, one
+cell — with the guest's screen permanently holding the LOSER's tile while the
+session and the two authors held the winner's. It is not a symptom of any of the
+above; the edit path is untouched by this task.
+
+`serveEditor`'s edit case applies the edit under the session's lock and then
+broadcasts the diff AFTER releasing it. Two connections are two goroutines, so
+the session's order and the wire order are independent: Bob's edit can land
+first in the session and second on a third browser's socket. The screen that
+receives them backwards keeps the tile the session threw away, and only a
+repaint (a board switch) recovers it. Under normal timing the second edit's own
+work gives the first broadcaster enough of a head start that it never shows;
+under full-suite load it showed once in three runs.
+
+Filed rather than fixed, because ordering the fan-out is a design decision and
+not a routing one: holding the session lock across the writes would put network
+I/O under it, and a sequence number the client can compare is a protocol change.
+Act 8 keeps the strict invariant and names the task in a comment, so a future
+red is recognised rather than re-investigated.
+
+### Also found, and also filed: M16.14c
+
+`make parity` runs a `go test -race` gate that this project had not run since
+M16.14 landed, and it is RED — on M16.14's own harness, not on anything M16.14a
+touched. `m1614NewHarness` fills in `auth.AuthEndpoint` and `auth.TokenEndpoint`
+after `m169NewHarnessFor` has already started both listeners, so those two
+strings are written by the test goroutine and read by an `http` handler
+goroutine with no synchronisation between them. Confirmed pre-existing by
+stashing this task's changes and re-running against `c8c9552`: the same two
+races. `go test -race -short ./...` is green, because the browser harness skips
+itself in short mode — which is how it went unnoticed.
+
+Filed rather than fixed here: the endpoints have to exist before anything
+serves, and both ways to arrange that (splitting `m169Serve` into bind-then-
+serve, or standing the IdP on its own listener) change harness structure that
+M16.9, M16.10 and M16.13 share. Ranked above M16.15 because `engine-race` is a
+required CI job.
+
+### Verified
+
+`go build ./...`, `go vet ./...`, `go test ./...` (green; the browser suites
+genuinely run here, and the three-browser sweep was also run alone),
+`go test -race -short ./...`, and `npm test` / `npm run build` under
+`engine/web`. `go test -race ./...` is red on the pre-existing M16.14c harness
+race described above and on nothing else. Replay fixture untouched: no
+simulation code changed.

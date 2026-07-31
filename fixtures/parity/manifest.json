@@ -3556,7 +3556,7 @@
       "parity": "exact",
       "status": "pass",
       "test": "TestM1614CollaborativeEditorInBrowsers,TestM102EditorLeasesRefuseAndDisconnectRelease",
-      "notes": "M16.14: board and stat leases granted, refused by name, released on close and released by a browser that died without warning. The stranded-stat-lease case is M16.14a (c)."
+      "notes": "M16.14: board and stat leases granted, refused by name, released on close and released by a browser that died without warning. M16.14a (c) made the stat key resolve against the board that was asked for, as the board key always did, so a collaborator's board switch can no longer strand a lease under the one shared engine (TestM1614aStatLeaseSurvivesAnotherMembersBoardSwitch)."
     },
     {
       "id": "proto.msg.editorPresence",
@@ -3611,7 +3611,7 @@
       "parity": "exact",
       "status": "pass",
       "test": "TestM1614CollaborativeEditorInBrowsers,TestM1613BrowserEditorAndPortableOutput",
-      "notes": "M16.14: the accepted-change reply, which reaches only the acting member — M16.14a (a)."
+      "notes": "M16.14: the accepted-change reply. Since M16.14a (a) it fans out: the members watching that board get it with the frame, and everyone else gets it without one, for the world-scoped half — the switcher's board list and the world name (TestM1614aBoardScopedChangesReachEveryMemberWatching)."
     },
     {
       "id": "proto.msg.editorProperty",
@@ -3644,7 +3644,7 @@
       "parity": "exact",
       "status": "pass",
       "test": "TestM1614CollaborativeEditorInBrowsers,TestM1613BrowserEditorAndPortableOutput",
-      "notes": "M16.14: the entry frame every member gets, and the repaint a board switch returns; it is also the only place the client learns it is read-only (see M16.14a)."
+      "notes": "M16.14: the entry frame every member gets, and the repaint a board switch returns. Since M16.14a it is also broadcast to the members watching a board that was cleared, imported over or reset, and sent unprompted to an invited collaborator — it remains the only place a client learns it may edit, so it carries the ACTING member's id and the client takes the cursor half only from one addressed to itself."
     },
     {
       "id": "proto.msg.editorStat",
@@ -4195,10 +4195,10 @@
       "authority": "completed task contracts (TASKS.md); NOTES.md",
       "parity": "exact",
       "status": "gap",
-      "assignedTask": "M16.14a",
-      "test": "TestM1614CollaborativeEditorInBrowsers,TestM1614ReadOnlyMemberCannotMoveAByte,TestM1614PublishOverAnOccupiedWorldMovesNoBytes,TestM1614aBoardScopedChangesReachOnlyTheActingMember,TestM1614aInvitedCollaboratorStaysReadOnlyUntilReentry,TestM1614aStatLeaseIsStrandedWhenAnotherMemberMovesTheEngine",
+      "assignedTask": "M16.14b",
+      "test": "TestM1614CollaborativeEditorInBrowsers,TestM1614ReadOnlyMemberCannotMoveAByte,TestM1614PublishOverAnOccupiedWorldMovesNoBytes,TestM1614aBoardScopedChangesReachEveryMemberWatching,TestM1614aInvitedCollaboratorEditsWithoutReentering,TestM1614aStatLeaseSurvivesAnotherMembersBoardSwitch",
       "fixture": "fixtures/editor.zwd",
-      "notes": "M16.14 drove the whole collaborative contract through three real browsers — two accounts signed in through a hermetic OIDC provider plus a guest — on one session: live diffs and cursors, a local echo caught while the session's own lock was held, stale inspect replies dropped, per-board and per-stat leases with named refusals, release on an abrupt disconnect, ownership/invite/read-only refusal with the world's bytes unchanged, simultaneous same-cell edits converging, the publish occupancy refusal, and co-op test play in one isolated instance. It found three divergences, all filed as M16.14a and pinned from both sides: (a) board- and world-scoped changes (Clear board, Board Information, Add board, Import board, New world) reply only to the acting member, so a collaborator's screen goes stale; (b) an invited collaborator's client keeps refusing edits until they re-enter the editor; (c) a stat lease is stranded when another member switches boards first, because its key resolves against the shared engine's current board."
+      "notes": "M16.14 drove the whole collaborative contract through three real browsers — two accounts signed in through a hermetic OIDC provider plus a guest — on one session: live diffs and cursors, a local echo caught while the session's own lock was held, stale inspect replies dropped, per-board and per-stat leases with named refusals, release on an abrupt disconnect, ownership/invite/read-only refusal with the world's bytes unchanged, simultaneous same-cell edits converging, the publish occupancy refusal, and co-op test play in one isolated instance. It found three divergences and M16.14a closed them: (a) Clear board, Board Information, Add board, Import board and New world now fan out — the members watching the affected board get the frame, and everyone else the world-scoped half (the switcher's board list and the world name) with no frame that would paint another board over theirs, the client taking only what a snapshot addressed to somebody else is entitled to change; (b) an invite sends the invitee a snapshot addressed to them, carrying the cursor they last reported, so their browser stops refusing their own edits without re-entering; (c) a stat lease key resolves against the board that was asked for, like the board lease always did, so a collaborator's board switch can no longer strand a lease under the shared engine. M16.14a then found the one thing left, filed as M16.14b and open: the diff fan-out happens outside the session's lock, so two members writing the same cell at once can have their two diffs reach a third browser in the opposite order, leaving that screen holding the tile the session threw away until something asks for a repaint."
     },
     {
       "id": "service.editor-solo",

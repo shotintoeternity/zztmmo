@@ -34,25 +34,31 @@ package zztgo
 // the token endpoint refuses a verifier that does not hash to it. No cookie is
 // injected into the browser — the session cookie is the one HandleCallback set.
 //
-// WHAT THIS SWEEP FOUND, AND DID NOT FIX. Three divergences, all filed as gap
-// task M16.14a and pinned from both sides here:
+// WHAT THIS SWEEP FOUND, AND WHAT M16.14a DID ABOUT IT. Three divergences, all
+// filed as a gap task that has since closed them. The tests at the foot of this
+// file were the pins; each now asserts the fix from the side it recorded the
+// break on.
 //
-//   a. Board- and world-scoped changes reach only the member who made them.
-//      editorDiff is broadcast to everyone viewing the board (M10.1/M17.12), but
-//      Clear board, Board Information, Add board, Import board and New world all
-//      reply to the acting client alone (websocket_server.go serveEditorBoard,
-//      and the editorProperty case). A collaborator watching the same board sees
-//      the old tiles until something else repaints them.
-//   b. An invited collaborator stays read-only until they re-enter the editor.
-//      inviteEditorCollaborator clears the server-side flag
-//      (EditorSession.SetAccountReadOnly) and sends the invitee nothing, and the
-//      client's own editorReadOnly — which every editor key consults before it
-//      sends anything — is only ever set from a snapshot.
-//   c. A stat lease is stranded when another member switches boards first. Its
-//      key is resolved against the ONE shared engine's current board, which
-//      follows whoever acted last, so the holder's release resolves to no key
-//      and is dropped — leaving a lease held by somebody who closed the dialog.
-//      The three-browser arrangement is what makes this reachable at all.
+//   a. Board- and world-scoped changes reached only the member who made them.
+//      editorDiff was broadcast to everyone viewing the board (M10.1/M17.12),
+//      but Clear board, Board Information, Add board, Import board and New world
+//      replied to the acting client alone, so a collaborator watching the same
+//      board kept the old tiles. They now fan out: the frame to the members
+//      watching that board, and the world-scoped half — the switcher's board
+//      list and the world name — to everyone else, with no frame that would
+//      paint another board over theirs.
+//   b. An invited collaborator stayed read-only until they re-entered the
+//      editor, because inviteEditorCollaborator cleared the server-side flag
+//      (EditorSession.SetAccountReadOnly) and sent the invitee nothing, while
+//      the client's own editorReadOnly — consulted by every editor key before it
+//      sends anything — is only ever set from a snapshot. The invite now sends
+//      them one, addressed to them and carrying the cursor they last reported.
+//   c. A stat lease was stranded when another member switched boards first: its
+//      key was resolved against the ONE shared engine's current board, which
+//      follows whoever acted last, so the holder's release resolved to no key
+//      and was dropped. The key is now the board that was asked for, as the
+//      board lease's always was. The three-browser arrangement is what made this
+//      reachable at all.
 
 import (
 	"bytes"
@@ -62,15 +68,20 @@ import (
 	"encoding/json"
 	"fmt"
 	"net/http"
+	"net/http/httptest"
 	"net/url"
 	"os"
 	"path/filepath"
+	"reflect"
 	"sort"
 	"strconv"
 	"strings"
 	"sync"
 	"testing"
 	"time"
+
+	"nhooyr.io/websocket"
+	"nhooyr.io/websocket/wsjson"
 )
 
 // The world the three browsers share. It is M16.13's fixture: one authored
@@ -636,8 +647,10 @@ func TestM1614CollaborativeEditorInBrowsers(t *testing.T) {
 		}
 	})
 
+	// M16.14a closed everything this sweep filed. A finding now is a NEW one, and
+	// it belongs in a new gap task rather than in a passing run.
 	if len(report.Findings) > 0 {
-		t.Logf("the run recorded %d divergence(s), filed as M16.14a:\n  %s",
+		t.Errorf("the run recorded %d divergence(s) M16.14a does not cover:\n  %s",
 			len(report.Findings), strings.Join(report.Findings, "\n  "))
 	}
 }
@@ -848,151 +861,386 @@ func TestM1614PublishOverAnOccupiedWorldMovesNoBytes(t *testing.T) {
 }
 
 // ---------------------------------------------------------------------------
-// What this sweep found, and gap task M16.14a will close
+// What this sweep found, and gap task M16.14a closed
+//
+// The three tests below replace the pins M16.14 left behind. Each one now
+// asserts the fixed behaviour from the same side the pin recorded the break on.
 // ---------------------------------------------------------------------------
 
-// TestM1614aBoardScopedChangesReachOnlyTheActingMember pins M16.14a's first
-// finding, and it is written to FAIL once the fix lands.
-//
-// A per-cell edit is broadcast to every member viewing that board
-// (websocket_server.go MessageTypeEditorEdit → broadcastEditorBoard, M10.1 and
-// M17.12). Nothing else is. Clear board, Board Information, Add board, Import
-// board and New world all reply to the acting client alone, so a collaborator
-// watching the same board keeps the tiles that are no longer there — the exact
-// divergence a session with one shared engine is supposed to make impossible.
-//
-// The observable here is the reply routing itself, because that IS the defect:
-// the session state is right, and only the other member's screen is wrong.
-func TestM1614aBoardScopedChangesReachOnlyTheActingMember(t *testing.T) {
-	source := m1613ReadSource(t, "websocket_server.go")
-	body := m1613FuncBody(t, source, "func (s *WebSocketServer) serveEditorBoard(", "session.AddBoard")
-	for _, op := range []string{"clear", "new", "import", "add"} {
-		marker := fmt.Sprintf("case %q:", op)
-		start := strings.Index(body, marker)
-		if start < 0 {
-			t.Fatalf("serveEditorBoard no longer has a %q case — M16.14a may have landed; invert this pin", op)
-		}
-		end := len(body)
-		for _, next := range []string{"\n\tcase \"", "\n\t}"} {
-			if idx := strings.Index(body[start:], next); idx > 0 && start+idx < end {
-				end = start + idx
-			}
-		}
-		branch := body[start:end]
-		if strings.Contains(branch, "broadcastEditor") {
-			t.Fatalf("serveEditorBoard's %q case now broadcasts to the session — M16.14a has landed. "+
-				"Invert this pin and let the browser route assert that a collaborator's screen follows.", op)
-		}
-		if !strings.Contains(branch, "client.write(") {
-			t.Fatalf("serveEditorBoard's %q case no longer replies to the acting client at all; "+
-				"this pin is looking at code that moved", op)
-		}
-	}
+// m1614EditorConn is one editor WebSocket, read the way a browser reads it.
+// Which member is handed which message is the whole claim of M16.14a (a), so
+// these tests are written against the wire rather than against the session.
+type m1614EditorConn struct {
+	t     *testing.T
+	ctx   context.Context
+	label string
+	conn  *websocket.Conn
+}
 
-	editorLoop := m1613FuncBody(t, source, "func (s *WebSocketServer) serveEditor(", "MessageTypeEditorLease")
-	property := strings.Index(editorLoop, "case MessageTypeEditorProperty:")
-	if property < 0 {
-		t.Fatal("the editor loop no longer handles editorProperty; this pin is looking at code that moved")
+// m1614DialEditor opens one editor connection on worldName, optionally signed
+// in, and returns it with its entry snapshot.
+func m1614DialEditor(t *testing.T, ctx context.Context, wsURL, label, worldName string, cookie *http.Cookie) (*m1614EditorConn, EditorSnapshotMessage) {
+	t.Helper()
+	opts := &websocket.DialOptions{}
+	if cookie != nil {
+		opts.HTTPHeader = http.Header{"Cookie": []string{cookie.String()}}
 	}
-	next := strings.Index(editorLoop[property+1:], "\n\t\tcase ")
-	if next < 0 {
-		t.Fatal("could not bound the editorProperty case")
+	conn, _, err := websocket.Dial(ctx, wsURL, opts)
+	if err != nil {
+		t.Fatalf("%s: dial editor: %v", label, err)
 	}
-	branch := editorLoop[property : property+1+next]
-	if strings.Contains(branch, "broadcastEditor") {
-		t.Fatal("editorProperty now broadcasts its repaint to the session — M16.14a has landed; invert this pin.")
-	}
-	if !strings.Contains(branch, "client.write(") {
-		t.Fatal("editorProperty no longer replies to the acting client; this pin is looking at code that moved")
+	t.Cleanup(func() { _ = conn.Close(websocket.StatusNormalClosure, "") })
+	conn.SetReadLimit(ServerReadLimit)
+	editor := &m1614EditorConn{t: t, ctx: ctx, label: label, conn: conn}
+	editor.send(EditorEnterMessage{Type: MessageTypeEditorEnter, World: worldName})
+	var snapshot EditorSnapshotMessage
+	editor.next(MessageTypeEditorSnapshot, &snapshot)
+	return editor, snapshot
+}
+
+func (c *m1614EditorConn) send(message interface{}) {
+	c.t.Helper()
+	if err := wsjson.Write(c.ctx, c.conn, message); err != nil {
+		c.t.Fatalf("%s: write %T: %v", c.label, message, err)
 	}
 }
 
-// TestM1614aInvitedCollaboratorStaysReadOnlyUntilReentry pins M16.14a's second
-// finding, and it too is written to FAIL once the fix lands.
+// next reads the next thing this browser is handed, skipping presence — which
+// rides along on every collaborator keystroke and says nothing about routing.
+// Any OTHER unexpected type fails rather than being skipped: which member is
+// told what, and which member is told nothing, is exactly what is being pinned.
+func (c *m1614EditorConn) next(wantType string, out interface{}) {
+	c.t.Helper()
+	for {
+		var raw json.RawMessage
+		if err := wsjson.Read(c.ctx, c.conn, &raw); err != nil {
+			c.t.Fatalf("%s: waiting for %s: %v", c.label, wantType, err)
+		}
+		var envelope struct {
+			Type string `json:"type"`
+		}
+		if json.Unmarshal(raw, &envelope) != nil {
+			c.t.Fatalf("%s: undecodable message %s", c.label, raw)
+		}
+		if envelope.Type == MessageTypeEditorPresence && wantType != MessageTypeEditorPresence {
+			continue
+		}
+		if envelope.Type != wantType {
+			c.t.Fatalf("%s was handed a %q where this run requires a %q: %s",
+				c.label, envelope.Type, wantType, m1614Head(raw))
+		}
+		if err := json.Unmarshal(raw, out); err != nil {
+			c.t.Fatalf("%s: decode %s: %v", c.label, wantType, err)
+		}
+		return
+	}
+}
+
+func m1614Head(raw []byte) string {
+	if len(raw) > 200 {
+		return string(raw[:200]) + "…"
+	}
+	return string(raw)
+}
+
+// m1614BoardRegion is the 60-column board half of a frame, keyed by cell, which
+// is what two members watching one board must agree on to the byte. The sidebar
+// is drawn locally by each browser and is not part of the claim.
+func m1614BoardRegion(cells []ScreenCell) map[[2]int16][2]byte {
+	region := make(map[[2]int16][2]byte, len(cells))
+	for _, cell := range cells {
+		if cell.X >= BOARD_WIDTH {
+			continue
+		}
+		region[[2]int16{cell.X, cell.Y}] = [2]byte{cell.Ch, cell.Color}
+	}
+	return region
+}
+
+func m1614BoardOption(properties EditorProperties, boardID int16) (EditorBoardOption, bool) {
+	for _, option := range properties.Boards {
+		if option.ID == boardID {
+			return option, true
+		}
+	}
+	return EditorBoardOption{}, false
+}
+
+// TestM1614aBoardScopedChangesReachEveryMemberWatching is M16.14a (a), inverted.
 //
-// inviteEditorCollaborator clears the invitee's server-side read-only flag while
-// they are sitting in the session (EditorSession.SetAccountReadOnly), and tells
-// them nothing. The client's own editorReadOnly is set from an editorSnapshot
-// and from nowhere else, and every editor key consults it before it sends: so an
-// invited collaborator is refused by their own browser, with a "Read-only"
-// window, until they leave the editor and come back.
-func TestM1614aInvitedCollaboratorStaysReadOnlyUntilReentry(t *testing.T) {
+// The pin it replaces recorded that a per-cell edit was broadcast to every
+// member viewing its board (M10.1, M17.12) and that nothing else was: Clear
+// board, Board Information, Add board, Import board and New world all replied to
+// the acting client alone, so a collaborator watching a board somebody else
+// cleared kept every tile that was no longer there, and one who was on the board
+// when it was renamed kept the old name in their switcher.
+//
+// Three connections share one session: two watching board 0 and one who has gone
+// to the annex. The claim is about ROUTING, so it is made on what each socket is
+// actually handed — the members watching the board get the frame, the member who
+// is elsewhere gets the world-scoped half and no frame that would paint another
+// board over theirs.
+func TestM1614aBoardScopedChangesReachEveryMemberWatching(t *testing.T) {
+	world := m1613EditorWorld(t)
+	// Hosting under the run's own name makes the default instance the one the
+	// editor enters, so the session is shared without a file on disk.
+	world.Info.Name = m1614World
+	server := NewWebSocketServer(world, 0)
+	httpServer := httptest.NewServer(server)
+	defer httpServer.Close()
+
+	ctx, cancel := context.WithTimeout(context.Background(), 30*time.Second)
+	defer cancel()
+	wsURL := "ws" + strings.TrimPrefix(httpServer.URL, "http")
+
+	ada, adaEntry := m1614DialEditor(t, ctx, wsURL, "Ada", m1614World, nil)
+	bob, bobEntry := m1614DialEditor(t, ctx, wsURL, "Bob", m1614World, nil)
+	carol, _ := m1614DialEditor(t, ctx, wsURL, "Carol", m1614World, nil)
+	if adaEntry.BoardID != 0 {
+		t.Fatalf("the session opened on board %d, want the fixture's board 0", adaEntry.BoardID)
+	}
+
+	// Carol leaves for the annex and stays there. Everything below happens on the
+	// draft board she is not looking at.
+	carol.send(EditorBoardMessage{Type: MessageTypeEditorBoard, Op: "switch", BoardID: 1})
+	var carolSwitch EditorSnapshotMessage
+	carol.next(MessageTypeEditorSnapshot, &carolSwitch)
+	if carolSwitch.BoardID != 1 {
+		t.Fatalf("Carol's switch put her on board %d, want the annex", carolSwitch.BoardID)
+	}
+
+	// Board-scoped operations need the board's lease once there is more than one
+	// member; Ada takes the draft board's.
+	ada.send(EditorLeaseMessage{Type: MessageTypeEditorLease, Op: "request", Kind: "board", BoardID: 0})
+	var lease EditorLeaseMessage
+	ada.next(MessageTypeEditorLease, &lease)
+	if lease.Op != "granted" {
+		t.Fatalf("Ada's board lease came back %+v, want granted", lease)
+	}
+
+	// --- Board Information: the rename every switcher has to follow -----------
+	ada.send(EditorPropertyMessage{Type: MessageTypeEditorProperty, Field: "boardTitle", Text: "Ada And Bob"})
+	var adaRename, bobRename, carolRename EditorPropertiesMessage
+	ada.next(MessageTypeEditorProperties, &adaRename)
+	bob.next(MessageTypeEditorProperties, &bobRename)
+	carol.next(MessageTypeEditorProperties, &carolRename)
+
+	for _, seen := range []struct {
+		who   string
+		reply EditorPropertiesMessage
+	}{{"Ada", adaRename}, {"Bob", bobRename}} {
+		if seen.reply.Properties.BoardName != "Ada And Bob" {
+			t.Errorf("%s, watching the renamed board, was told its name is %q, want \"Ada And Bob\"",
+				seen.who, seen.reply.Properties.BoardName)
+		}
+		if len(seen.reply.Screen) == 0 {
+			t.Errorf("%s, watching the renamed board, got no frame with the change", seen.who)
+		}
+	}
+	if len(carolRename.Screen) != 0 {
+		t.Errorf("Carol, on the annex, was sent %d cells of another board's frame", len(carolRename.Screen))
+	}
+	for _, seen := range []struct {
+		who   string
+		reply EditorPropertiesMessage
+	}{{"Bob", bobRename}, {"Carol", carolRename}} {
+		option, ok := m1614BoardOption(seen.reply.Properties, 0)
+		if !ok || option.Name != "Ada And Bob" {
+			t.Errorf("%s's board list names board 0 %+v, want the new title — a rename must reach every switcher",
+				seen.who, option)
+		}
+	}
+	// Carol is on the annex, and being told about board 0 must not move her there.
+	if carolRename.Properties.BoardID != 0 {
+		t.Fatalf("the properties Carol was sent are for board %d; this test assumes the acting member's",
+			carolRename.Properties.BoardID)
+	}
+
+	// --- Clear board: the whole frame, to everybody watching it ---------------
+	beforeClear := m1614BoardRegion(bobEntry.Screen)
+	ada.send(EditorBoardMessage{Type: MessageTypeEditorBoard, Op: "clear"})
+	var adaClear, bobClear EditorSnapshotMessage
+	ada.next(MessageTypeEditorSnapshot, &adaClear)
+	bob.next(MessageTypeEditorSnapshot, &bobClear)
+	var carolClear EditorPropertiesMessage
+	carol.next(MessageTypeEditorProperties, &carolClear)
+
+	if bobClear.BoardID != 0 {
+		t.Fatalf("Bob's repaint is for board %d, want the board that was cleared", bobClear.BoardID)
+	}
+	afterClear := m1614BoardRegion(bobClear.Screen)
+	if reflect.DeepEqual(beforeClear, afterClear) {
+		t.Error("the board a collaborator was watching was cleared and their frame did not change")
+	}
+	if !reflect.DeepEqual(afterClear, m1614BoardRegion(adaClear.Screen)) {
+		t.Error("the two members watching the cleared board were sent different frames")
+	}
+	if len(carolClear.Screen) != 0 {
+		t.Errorf("Carol, on the annex, was sent %d cells of the cleared board", len(carolClear.Screen))
+	}
+	// The frame Bob is sent is ADDRESSED TO ADA — it carries her id, her cursor
+	// and her read-only flag. That is why the client takes only the board half of
+	// a snapshot that is not its own (applyEditorSnapshot's forMe, M17.9): a
+	// broadcast repaint must not drag a collaborator's cursor.
+	if bobClear.MemberID != adaClear.MemberID {
+		t.Errorf("the broadcast frame reached Bob as %q and Ada as %q; it is one message",
+			bobClear.MemberID, adaClear.MemberID)
+	}
+	if bobClear.MemberID == bobEntry.MemberID {
+		t.Error("the broadcast frame claims to be Bob's own, so his client would adopt Ada's cursor from it")
+	}
+	// ZZT-QUIRK, and it has to reach the other switchers too: clearing a board
+	// runs BoardCreate (EDITOR.PAS:591-598), which resets its NAME along with its
+	// tiles. The title Ada gave it two operations ago is gone for everybody.
+	for _, seen := range []struct {
+		who   string
+		reply EditorProperties
+	}{{"Ada", adaClear.Properties}, {"Bob", bobClear.Properties}, {"Carol", carolClear.Properties}} {
+		if option, ok := m1614BoardOption(seen.reply, 0); !ok || option.Name != "Untitled" {
+			t.Errorf("%s's switcher names the cleared board %+v; BoardCreate emptied its name", seen.who, option)
+		}
+	}
+
+	// --- Add board: the frame to its author, the list to everyone -------------
+	ada.send(EditorBoardMessage{Type: MessageTypeEditorBoard, Op: "add", Name: "Ada Annex"})
+	var adaAdd EditorSnapshotMessage
+	ada.next(MessageTypeEditorSnapshot, &adaAdd)
+	var bobAdd, carolAdd EditorPropertiesMessage
+	bob.next(MessageTypeEditorProperties, &bobAdd)
+	carol.next(MessageTypeEditorProperties, &carolAdd)
+
+	if adaAdd.BoardID != 2 || adaAdd.Properties.BoardName != "Ada Annex" {
+		t.Fatalf("the board Ada added came back as %d/%q, want 2/\"Ada Annex\"",
+			adaAdd.BoardID, adaAdd.Properties.BoardName)
+	}
+	for _, seen := range []struct {
+		who   string
+		reply EditorPropertiesMessage
+	}{{"Bob", bobAdd}, {"Carol", carolAdd}} {
+		if len(seen.reply.Screen) != 0 {
+			t.Errorf("%s was sent %d cells of a board they are not on", seen.who, len(seen.reply.Screen))
+		}
+		option, ok := m1614BoardOption(seen.reply.Properties, 2)
+		if !ok || option.Name != "Ada Annex" {
+			t.Errorf("%s's switcher does not offer the board somebody else added: %+v",
+				seen.who, seen.reply.Properties.Boards)
+		}
+		if len(seen.reply.Properties.Boards) != 3 {
+			t.Errorf("%s's switcher offers %+v, want all three boards of the world",
+				seen.who, seen.reply.Properties.Boards)
+		}
+	}
+}
+
+// TestM1614aInvitedCollaboratorEditsWithoutReentering is M16.14a (b), inverted.
+//
+// The pin it replaces recorded that inviteEditorCollaborator cleared the
+// invitee's server-side flag while they sat in the session and told them
+// nothing, so their own browser — whose editorReadOnly is set from a snapshot
+// and from nowhere else, and which every editor key consults before it sends —
+// kept refusing them with a "Read-only" window until they left and came back.
+func TestM1614aInvitedCollaboratorEditsWithoutReentering(t *testing.T) {
 	dir := t.TempDir()
 	world := m1613EditorWorld(t)
+	world.Info.Name = m1614World
 	server := NewWebSocketServer(world, 0)
 	server.WorldsDir = dir
 	server.Auth = NewAuthService(m1614ClientID, "", "", []byte("m16-14-cookie-secret"))
+	// The world is Ada's, and Bob is nowhere in it.
+	if err := writeWorldAccess(dir, m1614World, WorldAccess{
+		OwnerAccountID: "google:ada",
+		OwnerName:      "Ada Lovelace",
+	}); err != nil {
+		t.Fatal(err)
+	}
+	httpServer := httptest.NewServer(server)
+	defer httpServer.Close()
 
-	session := server.editorSessionForWorld(m1614World, world)
-	owner := &webSocketClient{accountID: "google:ada", name: "Ada Lovelace"}
-	guest := &webSocketClient{accountID: "google:bob", name: "Bob Bones"}
-	if err := session.Enter(owner); err != nil {
-		t.Fatal(err)
+	ctx, cancel := context.WithTimeout(context.Background(), 30*time.Second)
+	defer cancel()
+	wsURL := "ws" + strings.TrimPrefix(httpServer.URL, "http")
+
+	ada, adaEntry := m1614DialEditor(t, ctx, wsURL, "Ada", m1614World,
+		signedAuthCookie(t, server.Auth, AuthenticatedAccount{ID: "google:ada", Email: "ada@example.test", Name: "Ada Lovelace"}))
+	bob, bobEntry := m1614DialEditor(t, ctx, wsURL, "Bob", m1614World,
+		signedAuthCookie(t, server.Auth, AuthenticatedAccount{ID: "google:bob", Email: "bob@example.test", Name: "Bob Bones"}))
+	if adaEntry.ReadOnly {
+		t.Fatal("the owner entered her own world read-only")
 	}
-	defer session.Exit(owner)
-	if _, err := server.saveEditorWorld(owner, session, m1614World); err != nil {
-		t.Fatalf("publish: %v", err)
-	}
-	if err := session.Enter(guest); err != nil {
-		t.Fatal(err)
-	}
-	defer session.Exit(guest)
-	session.SetMemberReadOnly(guest, !server.editorCanEdit(m1614World, guest.accountID))
-	if session.CanEdit(guest) {
+	if !bobEntry.ReadOnly {
 		t.Fatal("an uninvited account entered an owned world with edit rights")
 	}
 
-	if err := server.inviteEditorCollaborator(owner, session, guest.accountID); err != nil {
-		t.Fatalf("invite: %v", err)
+	ada.send(EditorWorldMessage{Type: MessageTypeEditorWorld, Op: "invite", AccountID: "google:bob"})
+
+	// The invitee is TOLD, unprompted and without leaving the editor.
+	var told EditorSnapshotMessage
+	bob.next(MessageTypeEditorSnapshot, &told)
+	if told.MemberID != bobEntry.MemberID {
+		t.Fatalf("the invite reached Bob as %q, but he is %q — a snapshot he does not recognise as his own "+
+			"is one his client will not take a read-only flag from", told.MemberID, bobEntry.MemberID)
 	}
-	if !session.CanEdit(guest) {
-		t.Fatal("the invite did not clear the server-side read-only flag")
+	if told.ReadOnly {
+		t.Error("the invitee was told he is still read-only")
+	}
+	// And it does not move him: an unprompted repaint that recentred his cursor
+	// would be its own bug.
+	if told.Inspect.X != bobEntry.Inspect.X || told.Inspect.Y != bobEntry.Inspect.Y {
+		t.Errorf("being invited moved Bob's cursor from (%d,%d) to (%d,%d)",
+			bobEntry.Inspect.X, bobEntry.Inspect.Y, told.Inspect.X, told.Inspect.Y)
+	}
+	if told.BoardID != bobEntry.BoardID {
+		t.Errorf("being invited moved Bob from board %d to board %d", bobEntry.BoardID, told.BoardID)
 	}
 
-	// The server would now accept the invitee's edits. The browser will not send
-	// them, because nothing told it: no snapshot is sent, and editorReadOnly is
-	// only ever assigned from one.
-	source := m1613ReadSource(t, "websocket_server.go")
-	invite := m1613FuncBody(t, source, "func (s *WebSocketServer) inviteEditorCollaborator(", "SetAccountReadOnly")
-	if strings.Contains(invite, "Snapshot(") || strings.Contains(invite, "broadcastEditor") {
-		t.Fatal("inviteEditorCollaborator now tells the session about the invite — M16.14a has landed; " +
-			"invert this pin and let the browser route edit without re-entering.")
+	var saved EditorSaveResultMessage
+	ada.next(MessageTypeEditorSaveResult, &saved)
+	if saved.Error != "" {
+		t.Fatalf("the owner's invite was refused: %s", saved.Error)
 	}
-	// The client side of the same claim: editorReadOnly is written in exactly
-	// three places — its declaration, the session reset, and the snapshot — so
-	// there is nowhere for an invite to land. A fourth write means something now
-	// updates it, which is what the fix looks like.
+
+	// The server takes his edit, which is what the flag was about.
+	bob.send(EditorEditMessage{Type: MessageTypeEditorEdit, Op: "place", X: 45, Y: 3, Element: E_NORMAL, Color: 0x0a})
+	var diff EditorDiffMessage
+	bob.next(MessageTypeEditorDiff, &diff)
+	if len(diff.Cells) == 0 {
+		t.Fatal("the invited collaborator's first edit changed nothing")
+	}
+	if diff.Inspect.Element != ElementDefs[E_NORMAL].Name {
+		t.Errorf("the cell the invitee drew on is %q, want %q", diff.Inspect.Element, ElementDefs[E_NORMAL].Name)
+	}
+
+	// The client half of the same claim. A snapshot is now broadcast to everyone
+	// watching a board (M16.14a (a)), and it carries the ACTING member's
+	// read-only flag — so the assignment has to be inside the branch that runs
+	// only for a snapshot addressed to us. Without that, a collaborator's edit
+	// would hand a read-only guest edit rights in their own UI.
 	client := m1613ReadSource(t, filepath.Join("web", "src", "main.ts"))
-	writes := strings.Count(client, "editorReadOnly = ")
-	fromMessage := strings.Count(client, "editorReadOnly = !!message.readOnly;")
-	toFalse := strings.Count(client, "editorReadOnly = false;")
-	if writes != 3 || fromMessage != 1 || toFalse != 2 {
-		t.Fatalf("main.ts writes editorReadOnly %d time(s): %d from a message and %d to false. This pin expects "+
-			"3/1/2 — the declaration, the session reset, and the entry snapshot. A write it does not know about "+
-			"means M16.14a may have landed; re-read the pin before changing the numbers.",
-			writes, fromMessage, toFalse)
+	if got := strings.Count(client, "editorReadOnly = !!message.readOnly;"); got != 1 {
+		t.Fatalf("main.ts takes editorReadOnly from a message %d time(s), want exactly 1", got)
+	}
+	apply := m1613FuncBody(t, client, "function applyEditorSnapshot(", "editorReadOnly = !!message.readOnly;")
+	guard := strings.Index(apply, "if (forMe) {")
+	assign := strings.Index(apply, "editorReadOnly = !!message.readOnly;")
+	if guard < 0 || assign < guard {
+		t.Error("applyEditorSnapshot assigns editorReadOnly outside its forMe guard: a broadcast frame " +
+			"carries the acting member's flag, not the recipient's")
 	}
 }
 
-// TestM1614aStatLeaseIsStrandedWhenAnotherMemberMovesTheEngine pins M16.14a's
-// third finding — the one the three-browser run turned up that no single-browser
-// sweep could — and it is written to FAIL once the fix lands.
+// TestM1614aStatLeaseSurvivesAnotherMembersBoardSwitch is M16.14a (c), inverted.
 //
-// A "stat" lease key is resolved against s.engine.World.Info.CurrentBoard
-// (EditorSession.leaseKeyLocked): the board the ONE shared engine happens to be
-// focused on, which is whichever member acted last (Apply →
-// focusMemberBoardLocked, M17.12). It is not resolved against the board the
-// asker is on. So a collaborator switching boards moves the key out from under a
-// lease that is already held, and:
+// The pin it replaces recorded that a "stat" lease key was resolved against
+// s.engine.World.Info.CurrentBoard — the board the ONE shared engine happened to
+// be focused on, which is whichever member acted last (Apply →
+// focusMemberBoardLocked, M17.12) — rather than against the board that was asked
+// for. A collaborator switching boards therefore moved the key out from under a
+// lease that was already held: the holder's release resolved to no key and was
+// dropped, and a fresh request replied with nothing at all, which the client,
+// reacting only to "granted" and "refused", answered with silence.
 //
-//   - the holder's release resolves to no key at all and is dropped, leaving the
-//     lease held by somebody who has closed the dialog and walked away;
-//   - a fresh request for the same stat replies with nothing, and the client —
-//     which only reacts to "granted" and "refused" — silently does nothing.
-//
-// The board lease has no such dependency: its key is the board that was asked
-// for. That asymmetry is the shape of the fix.
-func TestM1614aStatLeaseIsStrandedWhenAnotherMemberMovesTheEngine(t *testing.T) {
+// The board lease never had that dependency. This is the stat lease matching it.
+func TestM1614aStatLeaseSurvivesAnotherMembersBoardSwitch(t *testing.T) {
 	session := NewEditorSession(m1614World, m1613EditorWorld(t))
 	ada := &webSocketClient{name: "Ada"}
 	bob := &webSocketClient{name: "Bob"}
@@ -1005,8 +1253,8 @@ func TestM1614aStatLeaseIsStrandedWhenAnotherMemberMovesTheEngine(t *testing.T) 
 	}
 	defer session.Exit(bob)
 
-	// Ada takes the object's stat lease while the engine is on her board.
-	granted, err := session.AcquireLease(ada, EditorLeaseMessage{Kind: "stat", BoardID: 0, StatID: 1})
+	statLease := EditorLeaseMessage{Kind: "stat", BoardID: 0, StatID: 1}
+	granted, err := session.AcquireLease(ada, statLease)
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -1014,43 +1262,48 @@ func TestM1614aStatLeaseIsStrandedWhenAnotherMemberMovesTheEngine(t *testing.T) 
 		t.Fatalf("Ada's stat lease came back %+v, want granted", granted)
 	}
 
-	// Bob switches to the annex, which is all it takes to move the shared engine.
+	// Bob switches to the annex, which is all it ever took to move the engine.
 	if _, err := session.SwitchBoard(bob, 1); err != nil {
 		t.Fatal(err)
 	}
 
-	session.ReleaseLease(ada, granted)
-	if leases := m1614ReadSession(session).Leases; len(leases) != 1 {
-		t.Fatalf("Ada's release freed the lease while the engine was on another board — M16.14a (c) has "+
-			"landed; invert this pin and let the browser route assert that closing a dialog always gives "+
-			"the lease back. Leases: %+v", leases)
-	}
-
-	silent, err := session.AcquireLease(ada, EditorLeaseMessage{Kind: "stat", BoardID: 0, StatID: 1})
-	if err != nil {
-		t.Fatal(err)
-	}
-	if silent.Type != "" {
-		t.Fatalf("a stat lease request for a board the engine is not focused on replied %+v; this pin "+
-			"records that it replies with nothing at all", silent)
-	}
-
-	// Bob cannot have it either, once the engine is back where the key resolves.
-	if _, err := session.SwitchBoard(ada, 0); err != nil {
-		t.Fatal(err)
-	}
-	refused, err := session.AcquireLease(bob, EditorLeaseMessage{Kind: "stat", BoardID: 0, StatID: 1})
+	// A request from the other side, while the engine is on Bob's board, is
+	// answered — with a refusal that names the holder, not with silence.
+	refused, err := session.AcquireLease(bob, statLease)
 	if err != nil {
 		t.Fatal(err)
 	}
 	if refused.Op != "refused" || refused.HolderName != "Ada" {
-		t.Fatalf("the stranded lease came back %+v for the other member, want a refusal naming Ada", refused)
+		t.Fatalf("a stat lease held by Ada came back %+v for Bob, want a refusal naming her", refused)
 	}
 
-	// The board lease is not affected: its key is the board that was asked for.
-	if _, err := session.SwitchBoard(bob, 1); err != nil {
+	// And closing the dialog always gives it back, wherever the engine is.
+	session.ReleaseLease(ada, granted)
+	if leases := m1614ReadSession(session).Leases; len(leases) != 0 {
+		t.Fatalf("the holder's release left %d lease(s) behind while the engine was on another board: %+v",
+			len(leases), leases)
+	}
+	retaken, err := session.AcquireLease(bob, statLease)
+	if err != nil {
 		t.Fatal(err)
 	}
+	if retaken.Op != "granted" || retaken.BoardID != 0 || retaken.StatID != 1 {
+		t.Fatalf("the freed stat lease came back %+v for Bob, want granted for board 0 stat 1", retaken)
+	}
+
+	// The key is the stat that was asked for, on the board that was asked for:
+	// the same stat index on another board is a different lease.
+	elsewhere, err := session.AcquireLease(ada, EditorLeaseMessage{Kind: "stat", BoardID: 1, StatID: 1})
+	if err != nil {
+		t.Fatal(err)
+	}
+	if elsewhere.Op != "granted" || elsewhere.BoardID != 1 {
+		t.Fatalf("stat 1 of the annex came back %+v while Bob holds stat 1 of the draft board, want granted",
+			elsewhere)
+	}
+
+	// The board lease is unchanged: its key was always the board that was asked
+	// for, and it still is with the engine on board 1.
 	board, err := session.AcquireLease(ada, EditorLeaseMessage{Kind: "board", BoardID: 0})
 	if err != nil {
 		t.Fatal(err)

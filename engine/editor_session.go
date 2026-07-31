@@ -144,17 +144,26 @@ func (s *EditorSession) SetMemberReadOnly(member *webSocketClient, readOnly bool
 	}
 }
 
-func (s *EditorSession) SetAccountReadOnly(accountID string, readOnly bool) {
+// SetAccountReadOnly changes the edit rights of every member signed in as
+// accountID, and returns the members it changed so the caller can tell those
+// browsers (M16.14a (b)). A client's own read-only flag is set from a snapshot
+// and from nowhere else, and every editor key consults it before it sends
+// anything: a flag cleared here and never announced leaves an invited
+// collaborator refused by their own browser until they re-enter the editor.
+func (s *EditorSession) SetAccountReadOnly(accountID string, readOnly bool) []*webSocketClient {
 	if accountID == "" {
-		return
+		return nil
 	}
 	s.mu.Lock()
 	defer s.mu.Unlock()
+	var changed []*webSocketClient
 	for member := range s.Members {
 		if member.accountID == accountID {
 			s.readOnly[member] = readOnly
+			changed = append(changed, member)
 		}
 	}
+	return changed
 }
 
 func (s *EditorSession) CanEdit(member *webSocketClient) bool {
@@ -239,6 +248,20 @@ func (s *EditorSession) MemberClientsOnBoard(boardID int16) []*webSocketClient {
 	return out
 }
 
+// MemberCursor reports the cell a member's browser last told the session it was
+// inspecting (UpdatePresence). A snapshot the server sends unprompted — the
+// invite in M16.14a (b) — carries it, so telling a member something does not
+// drag their cursor back to the middle of the board.
+func (s *EditorSession) MemberCursor(member *webSocketClient) (int16, int16) {
+	s.mu.Lock()
+	defer s.mu.Unlock()
+	presence, ok := s.memberInfo[member]
+	if !ok {
+		return BOARD_WIDTH / 2, BOARD_HEIGHT / 2
+	}
+	return presence.X, presence.Y
+}
+
 // MemberBoard reports the board a member is editing, and whether they are a
 // member at all (M17.12).
 func (s *EditorSession) MemberBoard(member *webSocketClient) (int16, bool) {
@@ -284,7 +307,7 @@ func (s *EditorSession) AcquireLease(member *webSocketClient, request EditorLeas
 	if _, ok := s.Members[member]; !ok {
 		return EditorLeaseMessage{}, fmt.Errorf("editor session membership required")
 	}
-	key, ok := s.leaseKeyLocked(request)
+	key, ok := s.leaseKeyLocked(member, request)
 	if !ok {
 		return EditorLeaseMessage{}, nil
 	}
@@ -314,7 +337,7 @@ func (s *EditorSession) AcquireLease(member *webSocketClient, request EditorLeas
 func (s *EditorSession) ReleaseLease(member *webSocketClient, request EditorLeaseMessage) {
 	s.mu.Lock()
 	defer s.mu.Unlock()
-	key, ok := s.leaseKeyLocked(request)
+	key, ok := s.leaseKeyLocked(member, request)
 	if !ok {
 		return
 	}
@@ -323,16 +346,40 @@ func (s *EditorSession) ReleaseLease(member *webSocketClient, request EditorLeas
 	}
 }
 
-func (s *EditorSession) leaseKeyLocked(request EditorLeaseMessage) (editorLeaseKey, bool) {
-	boardID := s.engine.World.Info.CurrentBoard
+// leaseKeyLocked names the thing a lease request is about. Both kinds resolve
+// against the board that was ASKED FOR, falling back to the asker's own board —
+// never against the shared engine's current board, which is whichever board the
+// member who acted last was on (Apply → focusMemberBoardLocked, M17.12).
+//
+// M16.14a (c): the stat key used to be resolved and validated against the
+// engine, so a collaborator switching boards moved the key out from under a
+// lease that was already held. The holder's release then resolved to no key and
+// was dropped, stranding a lease held by somebody who had closed the dialog and
+// walked away; a fresh request replied with nothing at all, and the client,
+// which reacts only to "granted" and "refused", silently did nothing. The board
+// lease never had that dependency, and this is the stat lease matching it.
+//
+// The stat index is bounded by the stat table's own limit rather than by the
+// board's StatCount, because the stats of a board that is not open are not in
+// memory: a key is a claim on a NAME, not an authority. Every operation a lease
+// protects re-checks the index against the open board before it touches
+// anything (SetStat, ProgramText, SaveProgram).
+func (s *EditorSession) leaseKeyLocked(member *webSocketClient, request EditorLeaseMessage) (editorLeaseKey, bool) {
+	boardID, ok := s.memberBoard[member]
+	if !ok {
+		boardID = s.engine.World.Info.CurrentBoard
+	}
 	if request.BoardID >= 0 && request.BoardID <= s.engine.World.BoardCount {
 		boardID = request.BoardID
+	}
+	if boardID < 0 || boardID > s.engine.World.BoardCount {
+		return editorLeaseKey{}, false
 	}
 	switch request.Kind {
 	case "board":
 		return editorLeaseKey{kind: "board", boardID: boardID}, true
 	case "stat":
-		if boardID != s.engine.World.Info.CurrentBoard || request.StatID < 0 || request.StatID > s.engine.Board.StatCount {
+		if request.StatID < 0 || request.StatID > MAX_STAT {
 			return editorLeaseKey{}, false
 		}
 		return editorLeaseKey{kind: "stat", boardID: boardID, statID: request.StatID}, true
@@ -1106,6 +1153,13 @@ func (s *EditorSession) NewWorld(member *webSocketClient) (EditorSnapshotMessage
 		e.BoardOpen(e.World.Info.CurrentBoard)
 		e.GenerateTransitionTable()
 		e.TransitionDrawToBoard()
+		// M16.14a (a): a new world is world-scoped — the board every other
+		// member was looking at no longer exists. Put them all on the only board
+		// there is, so the repaint the server broadcasts is a repaint of the
+		// board each of them is on.
+		for other := range s.Members {
+			s.setMemberBoardLocked(other, e.World.Info.CurrentBoard)
+		}
 		reply = editorSnapshot(e, BOARD_WIDTH/2, BOARD_HEIGHT/2)
 	})
 	return reply, err

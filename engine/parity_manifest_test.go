@@ -91,9 +91,12 @@ func validAssignedTask(id string) bool {
 	// sweep. M16.14a (board- and world-scoped changes reaching only the acting
 	// member, an invite the invitee's client never hears about, and a stat lease
 	// stranded by another member's board switch) was filed by the M16.14
-	// collaborative-editor sweep.
+	// collaborative-editor sweep, and M16.14b (the diff fan-out happening
+	// outside the session's lock, so two members writing one cell can leave a
+	// third screen holding the tile the session threw away) by M16.14a closing
+	// it.
 	switch id {
-	case "M16.5a", "M16.6a", "M16.6b", "M16.9a", "M16.13a", "M16.14a", "M16.16a", "M16.18a", "M16.8a":
+	case "M16.5a", "M16.6a", "M16.6b", "M16.9a", "M16.13a", "M16.14a", "M16.14b", "M16.16a", "M16.18a", "M16.8a":
 		return true
 	}
 	m := regexp.MustCompile(`^M16\.(\d+)$`).FindStringSubmatch(id)

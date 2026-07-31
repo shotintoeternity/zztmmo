@@ -652,9 +652,14 @@ func (s *WebSocketServer) serveEditor(ctx context.Context, conn *websocket.Conn,
 			if err != nil {
 				return
 			}
-			if reply.Type != "" && client.write(ctx, reply) != nil {
-				return
+			if reply.Type == "" {
+				continue
 			}
+			// Board Information and the world name are not the acting member's
+			// private business (M16.14a (a)): the members watching that board get
+			// the repaint, and everyone else the world-scoped half, so a rename
+			// reaches every switcher rather than one screen.
+			s.broadcastEditorProperties(ctx, session, reply)
 		case MessageTypeEditorStat:
 			var stat EditorStatMessage
 			if json.Unmarshal(raw, &stat) != nil {
@@ -776,6 +781,47 @@ func (s *WebSocketServer) broadcastEditorBoard(ctx context.Context, session *Edi
 	}
 }
 
+// broadcastEditorSnapshot fans a board-scoped repaint out to the whole session
+// (M16.14a (a)). Clear board, Add board, Import board and New world used to
+// reply to the acting client alone, so a collaborator watching a board somebody
+// else cleared kept every tile that was no longer there.
+//
+// A snapshot carries the ACTING member's id, cursor, inspect and read-only flag
+// alongside the shared board frame, so it only goes to the members viewing that
+// board — the client takes the board half of it and leaves the cursor half
+// alone (applyEditorSnapshot's forMe, M17.9). Everybody else gets the
+// world-scoped half on its own: the switcher's board list and the world name,
+// which change when a board is added or renamed no matter who is looking where.
+func (s *WebSocketServer) broadcastEditorSnapshot(ctx context.Context, session *EditorSession, snapshot EditorSnapshotMessage) {
+	s.fanOutEditorBoardChange(ctx, session, snapshot.BoardID, snapshot,
+		EditorPropertiesMessage{Type: MessageTypeEditorProperties, Properties: snapshot.Properties})
+}
+
+// broadcastEditorProperties is the same fan-out for an accepted Board
+// Information or world-name change (M16.14a (a)). The frame rides only the copy
+// sent to the members viewing that board; the rest get the properties alone, of
+// which the client takes only what is world-scoped.
+func (s *WebSocketServer) broadcastEditorProperties(ctx context.Context, session *EditorSession, reply EditorPropertiesMessage) {
+	elsewhere := reply
+	elsewhere.Screen = nil
+	s.fanOutEditorBoardChange(ctx, session, reply.Properties.BoardID, reply, elsewhere)
+}
+
+// fanOutEditorBoardChange sends onBoard to the members viewing boardID and
+// elsewhere to every other member of the session.
+func (s *WebSocketServer) fanOutEditorBoardChange(ctx context.Context, session *EditorSession, boardID int16, onBoard, elsewhere interface{}) {
+	viewing := make(map[*webSocketClient]bool)
+	for _, member := range session.MemberClientsOnBoard(boardID) {
+		viewing[member] = true
+		_ = member.write(ctx, onBoard)
+	}
+	for _, member := range session.MemberClients() {
+		if !viewing[member] {
+			_ = member.write(ctx, elsewhere)
+		}
+	}
+}
+
 func (s *WebSocketServer) broadcastEditorPresence(ctx context.Context, session *EditorSession) {
 	s.broadcastEditor(ctx, session, EditorPresenceMessage{
 		Type:    MessageTypeEditorPresence,
@@ -853,7 +899,7 @@ func (s *WebSocketServer) serveEditorWorld(ctx context.Context, client *webSocke
 			return client.write(ctx, EditorSaveResultMessage{Type: MessageTypeEditorSaveResult, Error: "world is read-only for this account"})
 		}
 		reply := EditorSaveResultMessage{Type: MessageTypeEditorSaveResult, World: session.Name()}
-		if err := s.inviteEditorCollaborator(client, session, world.AccountID); err != nil {
+		if err := s.inviteEditorCollaborator(ctx, client, session, world.AccountID); err != nil {
 			reply.Error = err.Error()
 		}
 		return client.write(ctx, reply)
@@ -875,13 +921,26 @@ func (s *WebSocketServer) serveEditorBoard(ctx context.Context, client *webSocke
 		if reply.Type == "" {
 			return nil
 		}
-		return client.write(ctx, reply)
+		// The acting member is alone on the board they just made, so the frame
+		// reaches only them; everyone else learns of the board through the
+		// world-scoped half of the same fan-out, and of where its author went
+		// through presence.
+		s.broadcastEditorSnapshot(ctx, session, reply)
+		s.broadcastEditorPresence(ctx, session)
+		return nil
 	case "switch":
 		reply, err := session.SwitchBoard(client, board.BoardID)
 		if err != nil {
 			return nil
 		}
-		return client.write(ctx, reply)
+		// A switch changes nothing but where this member is looking, so it stays
+		// a private repaint — but every other screen filters cursors by board and
+		// the legend says who is elsewhere (M17.10, M17.12), so they are told.
+		if err := client.write(ctx, reply); err != nil {
+			return err
+		}
+		s.broadcastEditorPresence(ctx, session)
+		return nil
 	case "export":
 		reply, err := session.ExportBoard(client)
 		if err != nil {
@@ -900,7 +959,8 @@ func (s *WebSocketServer) serveEditorBoard(ctx context.Context, client *webSocke
 		if reply.Type == "" {
 			return nil
 		}
-		return client.write(ctx, reply)
+		s.broadcastEditorSnapshot(ctx, session, reply)
+		return nil
 	case "clear":
 		reply, err := session.ClearBoard(client)
 		if err != nil {
@@ -909,7 +969,8 @@ func (s *WebSocketServer) serveEditorBoard(ctx context.Context, client *webSocke
 		if reply.Type == "" {
 			return nil
 		}
-		return client.write(ctx, reply)
+		s.broadcastEditorSnapshot(ctx, session, reply)
+		return nil
 	case "new":
 		reply, err := session.NewWorld(client)
 		if err != nil {
@@ -918,7 +979,11 @@ func (s *WebSocketServer) serveEditorBoard(ctx context.Context, client *webSocke
 		if reply.Type == "" {
 			return nil
 		}
-		return client.write(ctx, reply)
+		// NewWorld has already moved every member onto the only board the new
+		// world has, so this repaints all of them.
+		s.broadcastEditorSnapshot(ctx, session, reply)
+		s.broadcastEditorPresence(ctx, session)
+		return nil
 	}
 	return nil
 }
@@ -1380,7 +1445,7 @@ func (s *WebSocketServer) saveEditorWorld(client *webSocketClient, session *Edit
 	return safe, nil
 }
 
-func (s *WebSocketServer) inviteEditorCollaborator(client *webSocketClient, session *EditorSession, accountID string) error {
+func (s *WebSocketServer) inviteEditorCollaborator(ctx context.Context, client *webSocketClient, session *EditorSession, accountID string) error {
 	if client.accountID == "" {
 		return fmt.Errorf("authentication required")
 	}
@@ -1406,7 +1471,21 @@ func (s *WebSocketServer) inviteEditorCollaborator(client *webSocketClient, sess
 	if err := writeWorldAccess(dir, worldName, access); err != nil {
 		return err
 	}
-	session.SetAccountReadOnly(strings.TrimSpace(accountID), false)
+	// M16.14a (b): tell the invitee, if they are sitting in the session. Their
+	// browser's editorReadOnly comes from a snapshot and from nowhere else, and
+	// every editor key consults it before it sends anything, so an invite the
+	// client never hears about leaves the new collaborator refused by their own
+	// browser — with a "Read-only" window — until they leave and come back. The
+	// snapshot is addressed to them and carries the cursor they last reported,
+	// so being told does not move it.
+	for _, member := range session.SetAccountReadOnly(strings.TrimSpace(accountID), false) {
+		x, y := session.MemberCursor(member)
+		snapshot, err := session.Snapshot(member, x, y)
+		if err != nil {
+			continue
+		}
+		_ = member.write(ctx, snapshot)
+	}
 	return nil
 }
 
