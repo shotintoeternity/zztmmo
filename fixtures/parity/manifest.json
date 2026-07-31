@@ -761,6 +761,17 @@
       "notes": "task-claim row; behavioral parity carried by the element/oop/protocol/input/service rows this task touched; reconciled at M16.20"
     },
     {
+      "id": "task.M18.10",
+      "dimension": "task",
+      "subject": "Completed task M18.10 — its DoD still holds",
+      "contract": "E",
+      "authority": "TASKS.md M18.10",
+      "parity": "exact",
+      "status": "unverified",
+      "assignedTask": "M16.20",
+      "notes": "task-claim row; behavioral parity carried by the element/oop/protocol/input/service rows this task touched; reconciled at M16.20"
+    },
+    {
       "id": "task.M18.2",
       "dimension": "task",
       "subject": "Completed task M18.2 — its DoD still holds",
@@ -843,17 +854,6 @@
       "subject": "Completed task M18.9 — its DoD still holds",
       "contract": "E",
       "authority": "TASKS.md M18.9",
-      "parity": "exact",
-      "status": "unverified",
-      "assignedTask": "M16.20",
-      "notes": "task-claim row; behavioral parity carried by the element/oop/protocol/input/service rows this task touched; reconciled at M16.20"
-    },
-    {
-      "id": "task.M18.10",
-      "dimension": "task",
-      "subject": "Completed task M18.10 — its DoD still holds",
-      "contract": "E",
-      "authority": "TASKS.md M18.10",
       "parity": "exact",
       "status": "unverified",
       "assignedTask": "M16.20",
@@ -3205,6 +3205,18 @@
       "assignedTask": "M16.11"
     },
     {
+      "id": "input.title-dream",
+      "dimension": "input",
+      "subject": "D dream a world [title]",
+      "contract": "E",
+      "authority": "web/src/title.ts TITLE_CODES; web/src/main.ts openDreamPrompt",
+      "parity": "deviation",
+      "deviation": "presentation-additions",
+      "test": "TestM1617BrowserDreamJourney",
+      "status": "pass",
+      "notes": "M16.17 added this row: the curated input inventory listed the title screen's W/P/R/Q/H/A/E and the omitted S, but not D — the key that opens the Dream flow. Certified by the browser journey, which presses it and reads the window it opens. Two more title keys are still unlisted, G (sign in) and F (feedback); they belong to M16.16 and M18's surfaces and are recorded in NOTES.md 2026-07-31 rather than claimed here."
+    },
+    {
       "id": "input.title-editor",
       "dimension": "input",
       "subject": "E editor [title]",
@@ -3846,8 +3858,9 @@
       "contract": "E",
       "authority": "web_api.go / websocket_server.go",
       "parity": "exact",
-      "status": "unverified",
-      "assignedTask": "M16.17"
+      "status": "pass",
+      "test": "TestM1617GenerateRouteAnswersEveryDocumentedOutcome,TestM1617DreamJourneyThroughTheShippedBinary",
+      "notes": "M16.17: the route's whole answer matrix — a premise that generates, hosts and persists; GET of an unknown job 404; a method that is neither GET nor POST 405; a malformed or over-16KiB body 400; an empty or over-8000-byte premise 422; retry of an unknown job 404 and of a job with no resume state 409; the per-client pace 429; an unconfigured server 503 — plus the async job, its progress and its retry driven through the shipped binary. A refused request is proven to cost no model call. The `name` field is client-supplied and passes only through SanitizeSaveName: the destructive collision it allows is a service-layer defect, filed as M16.17b and carried by the service.dream row."
     },
     {
       "id": "route.api.help",
@@ -4035,8 +4048,10 @@
       "authority": "web/src/*.ts",
       "parity": "deviation",
       "deviation": "presentation-additions",
-      "status": "unverified",
-      "assignedTask": "M16.17"
+      "status": "gap",
+      "assignedTask": "M16.17c",
+      "test": "TestM1617BrowserDreamJourney,TestM1617GenerationStagesAreAllRenderedByTheClient",
+      "notes": "M16.17: a real browser walked the flow — D on the title screen, the premise window (its title, its 'Enter: dream' affordance and the typed premise), the 'Dreaming a world' progress window rendering the server's stages as sentences clamped to the window's 42 columns, then the dreamed world's title screen and the world itself joined and played. Every stage generation.go can emit is scanned out of the code and required to have copy in web/src/dream.ts, so a new stage cannot reach the window as a raw token. GAP: the window has no repaint offer for a salvaged world (M16.17c) — the server marks the job retryable and names the stubbed boards, and the client reads neither, so a player is left standing in a stub room with nothing to ask."
     },
     {
       "id": "mode.modal-help",
@@ -4194,8 +4209,10 @@
       "authority": "completed task contracts (TASKS.md); NOTES.md",
       "parity": "deviation",
       "deviation": "presentation-additions",
-      "status": "unverified",
-      "assignedTask": "M16.17"
+      "status": "gap",
+      "assignedTask": "M16.17a",
+      "test": "TestM1617DreamJourneyThroughTheShippedBinary,TestM1617GeneratedWorldPassesTheGatesAuthoredWorldsDo,TestM1617AdversarialModelOutputNeverBecomesCodeOrFiles,TestM1617ZWDLimitsAreEnforcedWithANamedReason,TestM1617ConcurrencySemaphoreAdmitsOnlyMaxConcurrent,TestM1617PublishedAndDreamedWorldsShareOneHostingDirectory,TestM1617aConcurrentGenerationsCorruptTheSharedElementTable,TestM1617bDreamOverwritesAWorldItIsRefusedPermissionToHost",
+      "notes": "M16.17 drove the whole service through the shipped binary against a scripted model: a premise became a plan, boards, a salvaged stub, a retry-in-place that repainted it, a validated world persisted with its three sidecars into the production hosting directory, listed by the picker as a dream and joined and played over a real WebSocket — while a room already being played went on ticking and its recording replayed to the same per-tick StateHash it had put on the wire. Also certified: ZWD.md's limits table refused with a named reason, the decompile/recompile fixed point and the vanilla-reader gate on generated bytes, adversarial model output (no plan, no board, an upstream 500, a 2MB answer, a traversal world name) leaving no file and no instance, and the concurrency semaphore admitting only MaxConcurrent. THREE DEFECTS FOUND, all filed and pinned: M16.17a — every ZWD compile rewrites the process-global ElementDefs, so two dreams at once (the shipped ZZT_GENERATION_CONCURRENCY=2) make each other fail with a nonsense 'unknown element name' or panic on a torn string in an unrecovered goroutine, and the table is the one every live room reads each tick; M16.17b — a generation persists before it hosts, so one aimed at a world people are playing replaces that world's file and its sidecars and only then reports 'already occupied'; M16.17c — a salvaged job is complete+retryable with stubbedBoards and no client reads either field, so M12.22's targeted repaint is unreachable from a browser."
     },
     {
       "id": "service.editor-collab",

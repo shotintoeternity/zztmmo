@@ -6938,3 +6938,199 @@ Full `go test -count=1 ./...` green (275s); `go test -race -count=1` green on
 `TestM1615|TestSessionRecord|TestServerRecording|TestParityManifest`;
 `go build ./...` and `go vet ./...` clean. `fixtures/` is unchanged apart from
 the manifest row.
+
+## M16.17 — ZWD, publishing and Dream, through the shipped binary (2026-07-31)
+
+Everything the generation pipeline does had unit coverage before today: M12.4's
+plan/paint/repair loop, M12.5's browser flow module under Node, M12.19/M12.23's
+cross-board and crash repairs, M12.22's targeted retry, M17.13's salvage,
+M18.4's spend ceiling, M18.8's prelude audit. Every one of those drives a
+`GenerationService` or a `WebAPI` object in the test process against a flat
+queue of canned replies. None of them proves that the shipped binary —
+configured out of the environment, hosting into the directory the world picker
+actually reads, with a room ticking beside it — turns a premise into a world a
+second browser can join.
+
+`engine/m16_17_test.go` is that proof, plus `engine/web/test/dream_journey.test.mjs`
+for the browser half. It found three defects, all filed and all pinned.
+
+### The model is scripted by content, not by position
+
+`m1617Model` is an httptest endpoint that routes on what the pipeline asks for:
+the planner call is recognized by `planRequest`'s opening sentence, and a board
+call by the `Board id="…"` that `blueprintBoardRequest` writes. Replies are
+queued per key and the LAST one repeats, so a test says "this board fails, then
+succeeds" without predicting how many repair rounds the pipeline will run in
+between. That is what makes a retry-in-place scriptable at all: the retry asks
+for the same board again and gets the second answer.
+
+The journey also makes the model SLOW on purpose (`answerIn(200ms)`). A local
+scripted model answers in microseconds, so a generation would begin and end
+between two ticks and the "a dream does not disturb a live room" claim would be
+about nothing.
+
+### The journey
+
+`cmd/zzt-server` with the production flag set — `WorkingDirectory` equal to the
+hosting directory and no `-worlds`, exactly as `deploy/zztmmo.service` runs it,
+because a test that gave generation its own `ZZT_GENERATED_DIR` would host
+worlds the picker cannot see (AWS.md, "Which worlds are player-created").
+
+Ada joins TOWN and keeps walking. A premise goes to `/api/generate` as an async
+job; the progress stages arrive in order (planning → painting → validating →
+persisting → complete, with `salvaging` where the START board would not paint);
+the job completes salvaged and retryable; a retry re-requests only that board
+(one planner call for the whole journey, two calls for the failed board) and
+comes back with nothing stubbed. `DREAMED.ZZT`, `.zwd`, `.plan.md` and
+`.prompt.txt` are in the hosting directory, the picker lists the world as
+`dreamed`, and Bee joins it over a real WebSocket and plays. Then SIGINT, and
+the evidence: **all 40 (tick, StateHash) fingerprints TOWN put on Ada's wire
+while the dream ran are reproduced, in order, by an offline replay of TOWN's
+recording.**
+
+### What else is certified here
+
+- **ZWD.md's Limits table, row by row** — 15 documents that each break one
+  limit, each refused with a message that names it (`more than 101 boards`,
+  `more than 150 non-player stats`, `maximum is 20000`, `oop block exceeds
+  32767 bytes`, `within 1..60 and 1..25`, …), plus one document sitting on
+  every boundary that compiles and loads. Every documented limit is really
+  enforced; nothing silently truncates.
+- **A dreamed world passes the gates an authored one does** — the persisted
+  `.zwd` recompiles to bytes identical to the `.ZZT` beside it; the file parses
+  through M16.13's independent vanilla reader (not our own structs); it
+  survives `validateGeneratedZWD` and 200 headless steps; and decompile →
+  recompile is a fixed point board for board, so the source a player downloads
+  to edit is not a one-way trip.
+- **Adversarial model output** — a planner that never produces a plan, a model
+  whose every board is prose, an upstream 500, a 2MB answer, and a plan naming
+  the world `../../../etc/passwd`. Each is asserted against the FILESYSTEM and
+  the instance table rather than an error string, and a canary token in the
+  model's prose is grepped out of every persisted file: only compiled ZWD
+  reaches disk.
+- **The concurrency semaphore** — four clients, `MaxConcurrent` 2, a planner
+  that fails after one attempt so nothing compiles: exactly two reach the model,
+  and when they finish the other two are served rather than refused.
+- **The stage vocabulary, mechanically** — the stages are scanned out of
+  `generation.go` and the copy out of `web/src/dream.ts`, so a new stage makes
+  the test red until the browser knows how to say it. `complete` is the one
+  exception: `pollDreamJob` acts on it rather than rendering it.
+- **Publishing and dreaming share one shelf** — an editor publish and a dream
+  in one server land in the same directory, are both hosted, and the picker
+  tells them apart (`local` vs `dreamed`, on M18.9's `.zwd`-sibling rule).
+
+### FOUND AND FILED: M16.17a — a ZWD compile rewrites the table the sim reads
+
+`ElementDefs` is a package-level global. Every `CompileZWDWorld` builds a
+throwaway engine and calls `InitElementsGame` → `InitElementDefs`, which
+**blanks all 256 entries** — `Name = ""`, `Cycle = -1`,
+`TickProc = ElementDefaultTick` — and only then repopulates them.
+
+NOTES.md recorded this race at M13.4 and deferred it as "value-benign
+(InitElementDefs is a pure function of constants, so the bytes are identical
+every time)". **That is the part this sweep refutes.** The bytes are identical
+only after the write finishes; the window in between is a table with no
+elements in it. Measured three ways, and the first two need no race detector:
+
+1. Four goroutines compiling ONE valid document make each other fail — `line 37,
+   col 5: unknown element name "Empty"` — and sometimes panic with a nil
+   dereference in `normalizeZWDName` on a torn string. 12 failures in 240
+   compiles on this machine.
+2. Blanking the table the way `InitElementDefs`'s first loop does changes a
+   ticking TOWN room's StateHash (`f4dda3f4…` → `faeace29…`), so the live
+   simulation reads exactly what a compile is scribbling on.
+3. `go test -race` reports the pair directly: `InitElementDefs` ←
+   `CompileZWDWorld` writing while `GameStepWithInputs` reads.
+
+It matters at production settings, not in theory. `/api/generate` ships with
+`MaxConcurrent` 2 and production runs `ZZT_GENERATION_CONCURRENCY=2` (AWS.md),
+so two players dreaming at once is the designed case. An async generation runs
+on its own goroutine (`web_api.go runGenerationJob`) where a panic is **not**
+recovered and takes the whole server with it.
+
+Pinned by `TestM1617aConcurrentGenerationsCorruptTheSharedElementTable`, which
+asserts the wrong behaviour on purpose and says in its failure message what to
+do when it goes red. It skips under `-race` (a small `//go:build race` file sets
+`m1617RaceDetector`): provoking the pair there would turn the required race job
+red over a defect that is already filed and already pinned without it.
+
+The same global bit the sweep from the other side: a test process whose first
+act is to load a `.ZZT` and step it finds nil tick procs, because loading a
+world does not initialize the table and only compiling one does. That is why
+`m1617InitElementTable` exists.
+
+### FOUND AND FILED: M16.17b — a refused dream has already eaten the world
+
+`paintAndFinish` persists and then hosts: `persistGeneratedWorld` writes
+`NAME.ZZT` and its three sidecars, and only afterwards does
+`HostGeneratedWorld` refuse a world that people are currently playing. So a
+generation aimed at an occupied name returns "already occupied" to the caller
+with that world's file **already replaced on disk**. The players in the room
+keep playing the copy in memory and notice nothing; the next restore-on-boot
+loads somebody's dream instead of the world they were in.
+
+The name is client-supplied (`{"name":"…"}` on `/api/generate`) and passes only
+through `SanitizeSaveName`, which keeps it inside the directory but has no
+opinion about whether it already belongs to somebody — so any beta tester can
+overwrite a shipped world by naming it. Generation is also the one creation path
+that never consults the `.access.json` ownership the editor writes.
+
+The editor's publish path already gets this right and is the model for the fix:
+`saveEditorWorld` refuses "before writing anything if the target world is
+occupied". Pinned by
+`TestM1617bDreamOverwritesAWorldItIsRefusedPermissionToHost`.
+
+### FOUND AND FILED: M16.17c — the salvaged dream's repaint offer has no client
+
+M17.13's own spec: a salvaged async job is `complete` *and* `retryable`,
+reporting `stubbedBoards`, "so the client can repaint the missing rooms while
+the player is already in the world". The server half landed. The client half
+was never built:
+
+- `web/src/dream.ts` `pollDreamJob` surfaces `retryable`/`failedBoard` **only**
+  when the job status is `failed`, and returns immediately on `complete`;
+- nothing in `web/src` reads `stubbedBoards` at all;
+- and since M17.13 there is exactly one `&GenerationBoardError{}` literal left
+  in `generation.go` — on the SUCCESS path — so no failure the pipeline can
+  return is retryable any more.
+
+The two halves therefore miss each other completely: M12.22's targeted retry is
+**unreachable from a browser**. The route still works (the Go journey drives it
+directly), but a player whose dream lost a room is dropped into the stub with
+nothing to ask. The browser journey asserts that absence on purpose, in both
+places a repaint offer could appear, and the Go side asserts the server state
+that should have produced it.
+
+This is also why the DoD clause "one real-browser Dream journey covers success
+and retry-in-place" is delivered as success + a pinned absence: the browser
+cannot reach retry-in-place until M16.17c lands.
+
+### Manifest
+
+`route.api.generate` → **pass** (the whole answer matrix — 200/202/400/404/405/
+409/422/429/503 — plus the async job and retry through the binary; its notes
+name M16.17b as the service-level defect reachable through its `name` field).
+`service.dream` → **gap** against M16.17a, its notes carrying all three
+findings. `mode.modal-dream` → **gap** against M16.17c, with what the browser
+did certify recorded in the same row.
+
+One row was ADDED: `input.title-dream`. The curated input inventory listed the
+title screen's W/P/R/Q/H/A/E and the deliberately omitted S, but not D — the key
+that opens the whole Dream flow — so the surface this task certifies had no row
+to flip. It is added to `curatedInputRows` too, or a `PARITY_SCAFFOLD=1`
+regeneration would drop it again. Two more title keys are still unlisted, **G**
+(sign in) and **F** (feedback); they belong to M16.16's auth surface and M18's
+feedback pointer, and are recorded here rather than claimed by this sweep.
+
+The manifest was hand-edited, as at M16.15: `PARITY_SCAFFOLD=1` regeneration is
+still destructive (M16.20a). `validAssignedTask` in `parity_manifest_test.go`
+gained the three new gap-task ids, or the validator would refuse rows pointing
+at them.
+
+### Verified
+
+`go test -run TestM1617 -count=1 .` green (13s). The browser journey needs
+`npm ci` + `npx playwright install chromium` under `engine/web` and skips
+without them, like every other browser suite. Full `go test -count=1 ./...`
+green. `go build ./...`, `go vet ./...` and `gofmt` clean on the touched files.
+`fixtures/` is unchanged apart from the manifest.

@@ -97,8 +97,14 @@ func validAssignedTask(id string) bool {
 	// it. M16.15a (the account-sidecar inventory a returning signed-in player
 	// is joined with is not recorded, so replaying such a session diverges
 	// silently) was filed by the M16.15 persistence/replay sweep.
+	// The M16.17 ZWD/publishing/Dream sweep filed three: M16.17a (every ZWD
+	// compile rewrites the process-global ElementDefs, which two concurrent
+	// dreams and every ticking room read), M16.17b (a generation persists before
+	// it hosts, so one aimed at an occupied world replaces its file and only
+	// then refuses) and M16.17c (a salvaged dream's repaint offer has no client).
 	switch id {
-	case "M16.5a", "M16.6a", "M16.6b", "M16.9a", "M16.13a", "M16.14a", "M16.14b", "M16.15a", "M16.16a", "M16.18a", "M16.8a":
+	case "M16.5a", "M16.6a", "M16.6b", "M16.9a", "M16.13a", "M16.14a", "M16.14b", "M16.15a", "M16.16a", "M16.18a", "M16.8a",
+		"M16.17a", "M16.17b", "M16.17c":
 		return true
 	}
 	m := regexp.MustCompile(`^M16\.(\d+)$`).FindStringSubmatch(id)
@@ -709,6 +715,10 @@ func curatedInputRows() []parityRow {
 		{"title-highscores", "H high scores", "title", "M16.11", ""},
 		{"title-about", "A about", "title", "M16.11", ""},
 		{"title-editor", "E editor", "title", "M16.13", ""},
+		// M16.17: the title screen's D was missing from this inventory
+		// altogether. G (sign in) and F (feedback) still are — they belong to
+		// M16.16's auth surface and M18's feedback pointer.
+		{"title-dream", "D dream a world", "title", "M16.17", "presentation-additions"},
 		{"title-speed-omitted", "S game speed (omitted, server owns tick)", "title", "M16.11", "omitted-game-speed"},
 		{"textwin-nav", "Up/Down/PgUp/PgDn/Enter/Esc text-window navigation", "modal", "M16.10", ""},
 		{"editor-keys", "Editor key/menu vocabulary (draw, pattern, color, fill, properties, stat/OOP, test-play)", "editor", "M16.13", ""},
