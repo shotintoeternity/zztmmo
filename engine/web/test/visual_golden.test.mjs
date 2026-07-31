@@ -452,11 +452,17 @@ try {
     page,
     "window-highscore-placement",
     "The \"New high score for GOLDEN\" list shown when a quitting score places, with vanilla's " +
-      "\"-- You! --\" marker on the earned slot. KNOWN GAP (task M16.9a): the marked row shows the " +
-      "SLOT's old score (-1 for an empty slot) instead of the player's, because RoomManager." +
-      "HighScoreLines only renames a slot where game.go:2222 shifts the list and writes the score.",
+      "\"-- You! --\" marker on the earned slot, carrying the score the player just earned — " +
+      "HighScoresAdd shifts the list down and writes the score before it draws (M16.9a).",
   );
   assert.ok(hasText(placement, "-- You! --"), "the placement window marks the earned slot");
+  // M16.9a: the marked row must show this run's score, not the slot's old one
+  // (-1 for the empty list this world starts with). The sidebar above says 10.
+  assert.ok(hasText(placement, "Score:10"), "this run's score is 10");
+  assert.ok(
+    hasText(placement, "   10  -- You! --"),
+    "the marked row carries the earned score, not the empty slot's -1",
+  );
 
   // Dismissing the placement list is what opens the name prompt (main.ts
   // closeModal -> pendingHighScore -> openHighScoreName).

@@ -934,7 +934,7 @@ func (s *WebSocketServer) quitOutcome(rm *RoomManager, quit QuitResult) EventMes
 			Score:   quit.Score,
 			ListPos: quit.ListPos,
 			Title:   "New high score for " + rm.WorldName(),
-			Lines:   rm.HighScoreLines(quit.ListPos),
+			Lines:   rm.HighScoreLines(quit.ListPos, quit.Score),
 		}
 	}
 	return EventMessage{Type: MessageTypeEvent, Event: event}
@@ -966,7 +966,7 @@ func (s *WebSocketServer) submitHighScoreNameInInstance(ctx context.Context, ins
 	message := EventMessage{Type: MessageTypeEvent, Event: ProtocolEvent{
 		Type:  "highScores",
 		Title: "High scores for " + inst.RoomManager.WorldName(),
-		Lines: inst.RoomManager.HighScoreLines(0),
+		Lines: inst.RoomManager.HighScoreLines(0, 0),
 	}}
 	inst.mu.Unlock()
 

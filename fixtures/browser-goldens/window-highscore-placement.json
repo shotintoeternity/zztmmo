@@ -1,6 +1,6 @@
 {
   "name": "window-highscore-placement",
-  "note": "The \"New high score for GOLDEN\" list shown when a quitting score places, with vanilla's \"-- You! --\" marker on the earned slot. KNOWN GAP (task M16.9a): the marked row shows the SLOT's old score (-1 for an empty slot) instead of the player's, because RoomManager.HighScoreLines only renames a slot where game.go:2222 shifts the list and writes the score.",
+  "note": "The \"New high score for GOLDEN\" list shown when a quitting score places, with vanilla's \"-- You! --\" marker on the earned slot, carrying the score the player just earned — HighScoresAdd shifts the list down and writes the score before it draws (M16.9a).",
   "rows": [
     {
       "art": "····························································     -  -  -  -     ",
@@ -78,8 +78,8 @@
       "color": "0707070707000f11111e1e1e1e1e11111e1e1e1e1e1e1e1e1e1e1e1e1e1e1e1e1e1e1e1e1e1e1e1e1e1e1e1e1e1e1e1e1e1e11110f000707070707071111777077111f1f1f1f1f111111111111111111"
     },
     {
-      "art": "····· ·     -1  -- You! --                          · ······   B  Be quiet      ",
-      "ch": "b0b0b0b0b020b320202020202d3120202d2d20596f7521202d2d2020202020202020202020202020202020202020202020202020b320b0b0b0b0b0b02020204220204265207175696574202020202020",
+      "art": "····· ·     10  -- You! --                          · ······   B  Be quiet      ",
+      "ch": "b0b0b0b0b020b32020202020313020202d2d20596f7521202d2d2020202020202020202020202020202020202020202020202020b320b0b0b0b0b0b02020204220204265207175696574202020202020",
       "color": "0707070707000f11111111111e1e11111e1e111e1e1e1e111e1e11111111111111111111111111111111111111111111111111110f000707070707071111333033111f1f111f1f1f1f1f111111111111"
     },
     {

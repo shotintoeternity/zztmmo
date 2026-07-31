@@ -5687,3 +5687,48 @@ existing `engine` job (which installs no node) stays honest rather than red.
 Verified: `go build ./...`, `go vet ./...`, `go test -count=1 ./...`,
 `go test -race -count=1 .`. Replay fixture untouched — this task adds a test
 world and a browser harness and changes no simulation code.
+
+## M16.9a — the high-score placement window's score (2026-07-30)
+
+The defect M16.9 photographed, fixed. `RoomManager.HighScoreLines` renamed one
+slot to `-- You! --` and then printed **that slot's own score** next to it — `-1`
+for the empty list a fresh world starts with. The terminal path does something
+else entirely before it draws (EDITOR.PAS:1049-1052, mirrored at
+`engine/game.go:2222-2226`): it shifts the list down from the earned slot, writes
+the player's score into it, and only then calls `HighScoresInitTextWindow`. So
+the marked row carries the score just earned and the rows beneath it are the ones
+that entry displaces — including the thirtieth entry falling off the list.
+
+`HighScoreLines(highlightPos, highlightScore)` now does exactly that, on a **copy**
+of the array (`THighScoreList` is `[30]THighScoreEntry`, so assignment copies).
+The stored list is still written in one place only, `RecordHighScore`, when the
+name comes back — the display path must not commit a slot the player may still
+abandon by closing the socket (`DiscardPendingScore` exists for that case).
+
+### Why the test compares against the terminal path rather than a literal
+
+A hand-written expectation for this would encode the same misunderstanding twice.
+`engine/m16_9a_test.go` builds the oracle by running the terminal mutation on an
+`Engine` and calling the real `HighScoresInitTextWindow`, then requires
+`HighScoreLines` to produce those lines exactly — for an empty table, and for a
+full thirty-entry table at the top, middle, and last slot. A second test proves
+the window and the outcome agree: what `RecordHighScore` ends up storing is the
+placement window with one row renamed from `-- You! --` to the typed name.
+
+Sensitivity checked honestly by restoring the old body under the new signature:
+the empty-table case reddens on the score (`-1` vs `175`) and every full-table
+case reddens on both the score and all twenty-nine displaced rows.
+
+### The golden
+
+`window-highscore-placement.json` re-recorded with `GOLDEN_UPDATE=1`. Reviewed
+before committing: the only change in the whole 25-row screen is one cell run,
+`   -1  -- You! --` becoming `   10  -- You! --` — this run's score, matching the
+sidebar's `Score:10` and the already-correct final table's `10  GLD`. The other
+fourteen goldens re-recorded byte-identically. The browser script now asserts the
+row text as well as the marker, so a future re-record cannot quietly reintroduce
+the defect. Manifest row `mode.modal-highscore`: `gap` → `pass`.
+
+Verified: `go build ./...`, `go test ./...` (browser goldens included — the
+harness is installed here, not skipped), `TestM169TickLockedAcceptanceRun` green.
+Replay fixture untouched: this is a display path, and no simulation code moved.

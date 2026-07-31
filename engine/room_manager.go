@@ -139,18 +139,29 @@ func (rm *RoomManager) HighScores() THighScoreList {
 
 // HighScoreLines renders the list the way HighScoresInitTextWindow does, for a
 // client text window. highlightPos, when 1-based and in range, names the entry
-// the caller is about to write — it is shown as vanilla's "-- You! --".
-func (rm *RoomManager) HighScoreLines(highlightPos int16) []string {
+// the caller is about to write: the list is first shifted down from that slot
+// and highlightScore written into it, then shown as vanilla's "-- You! --".
+// That shift-then-write is what HighScoresAdd does before it draws (EDITOR.PAS
+// HighScoresAdd, mirrored at game.go's HighScoreEntryEvent), so the marked row
+// carries the score the player just earned and the rows below it are the ones
+// their entry displaces — not the untouched list with one slot renamed.
+// The shift is applied to a copy: the real list is written only when the name
+// comes back, in RecordHighScore.
+func (rm *RoomManager) HighScoreLines(highlightPos, highlightScore int16) []string {
+	list := rm.highScores
+	if highlightPos >= 1 && highlightPos <= HIGH_SCORE_COUNT {
+		for i := int16(HIGH_SCORE_COUNT - 1); i >= highlightPos; i-- {
+			list[i] = list[i-1]
+		}
+		list[highlightPos-1] = THighScoreEntry{Name: "-- You! --", Score: highlightScore}
+	}
+
 	lines := []string{"Score  Name", "-----  ----------------------------------"}
 	for i := 0; i < HIGH_SCORE_COUNT; i++ {
-		name := rm.highScores[i].Name
-		if int16(i)+1 == highlightPos {
-			name = "-- You! --"
-		}
-		if Length(name) == 0 {
+		if Length(list[i].Name) == 0 {
 			continue
 		}
-		lines = append(lines, StrWidth(rm.highScores[i].Score, 5)+"  "+name)
+		lines = append(lines, StrWidth(list[i].Score, 5)+"  "+list[i].Name)
 	}
 	return lines
 }

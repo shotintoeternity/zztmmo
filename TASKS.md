@@ -2844,8 +2844,23 @@ gap task has landed.
   input application by one tick reddens four checkpoints of the tick-locked run.
   FOUND AND FILED: **M16.9a** (below) — the high-score placement window.
 
-- [ ] **M16.9a — The high-score placement window shows the wrong score
-  (M16.9 gap task).** Found by M16.9's browser goldens
+- [x] **M16.9a — The high-score placement window shows the wrong score
+  (M16.9 gap task).** LANDED 2026-07-30 (NOTES.md M16.9a).
+  `RoomManager.HighScoreLines` now takes the pending score alongside the slot
+  and, for a placing entry, shifts a *copy* of the list down from that slot and
+  writes `{-- You! --, score}` into it before rendering — the same
+  shift-then-write `HighScoresAdd` does before it draws (EDITOR.PAS:1049-1052,
+  `engine/game.go:2222-2226`). The stored list is still written only by
+  `RecordHighScore`, when the name comes back.
+  `engine/m16_9a_test.go` compares the rendered lines against that terminal
+  path's own `HighScoresInitTextWindow` output — the oracle, not a hand-written
+  expectation — for an empty table and for a full one at the top, middle, and
+  last slot, and separately proves the placement window and the recorded list
+  agree row for row. Reverting the fix reddens it on both the score and the
+  displaced rows. `window-highscore-placement.json` re-recorded: exactly one
+  cell run changed, `-1` to `10`, this run's score. Manifest row
+  `mode.modal-highscore` flipped `gap` to `pass`.
+  Found by M16.9's browser goldens
   (`fixtures/browser-goldens/window-highscore-placement.json`): when a quitting
   player's score places, the browser's "New high score for <world>" window marks
   the earned slot with vanilla's `-- You! --` but prints **the slot's existing

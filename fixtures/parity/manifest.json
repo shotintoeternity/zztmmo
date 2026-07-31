@@ -3987,9 +3987,9 @@
       "parity": "exact",
       "test": "TestM169BrowserCanvasGoldens",
       "fixture": "fixtures/browser-goldens/window-highscore-placement.json",
-      "status": "gap",
+      "status": "pass",
       "assignedTask": "M16.9a",
-      "notes": "M16.9: captured from the real client canvas in headless Chromium (cell goldens decoded from the canvas backing store, not from Go's PNG renderer) against the production server objects with the tick loop under test control. GAP found by this sweep and filed as M16.9a: the placement window ('New high score for ...') shows the SLOT's old score next to vanilla's '-- You! --' marker (-1 for an empty slot) instead of the quitting player's, because RoomManager.HighScoreLines only renames a slot where the terminal path (game.go:2216-2226, GAME.PAS HighScoresAdd) shifts the list down and writes the score first. The entry prompt and the final table are correct and are goldens too (window-highscore-entry.json, window-highscore-table.json)."
+      "notes": "M16.9: captured from the real client canvas in headless Chromium (cell goldens decoded from the canvas backing store, not from Go's PNG renderer) against the production server objects with the tick loop under test control. The gap this sweep found — the placement window ('New high score for ...') printed the SLOT's old score next to vanilla's '-- You! --' marker, -1 for an empty slot, instead of the quitting player's — was closed by M16.9a: RoomManager.HighScoreLines now shifts a copy of the list down from the earned slot and writes the pending score before rendering, which is what the terminal path (game.go:2216-2226, EDITOR.PAS HighScoresAdd) does before it draws. TestM169aPlacementWindowMatchesTerminalPath compares the rendered lines against that terminal path's own HighScoresInitTextWindow output for an empty and a full table; the golden's marked row now reads '10  -- You! --', this run's score. The entry prompt and the final table are goldens too (window-highscore-entry.json, window-highscore-table.json)."
     },
     {
       "id": "mode.modal-museum",

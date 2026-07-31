@@ -336,13 +336,14 @@ func TestM43HighScoreListOrdering(t *testing.T) {
 		}
 	}
 
-	lines := rm.HighScoreLines(0)
+	lines := rm.HighScoreLines(0, 0)
 	if len(lines) != 5 || !strings.Contains(lines[2], "HIGH") {
 		t.Errorf("HighScoreLines = %q", lines)
 	}
-	// highlightPos is vanilla's "-- You! --" marker on the entry being written.
-	if lines := rm.HighScoreLines(2); !strings.Contains(lines[3], "-- You! --") {
-		t.Errorf("HighScoreLines(2) did not mark slot 2: %q", lines)
+	// highlightPos is vanilla's "-- You! --" marker on the entry being written,
+	// carrying the score that earned it (M16.9a).
+	if lines := rm.HighScoreLines(2, 250); !strings.Contains(lines[3], "  250  -- You! --") {
+		t.Errorf("HighScoreLines(2, 250) did not mark slot 2 with its score: %q", lines)
 	}
 }
 

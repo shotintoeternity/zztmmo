@@ -727,7 +727,7 @@ func (a *WebAPI) handleHighScores(w http.ResponseWriter, r *http.Request) {
 		Lines []string `json:"lines"`
 	}{
 		Title: "High scores for " + rm.WorldName(),
-		Lines: rm.HighScoreLines(0),
+		Lines: rm.HighScoreLines(0, 0),
 	})
 }
 
