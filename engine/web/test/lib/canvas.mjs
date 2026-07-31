@@ -102,8 +102,28 @@ export async function launchGoldenBrowser({ hasTouch = false } = {}) {
 export async function pauseClock(page) {
   // pauseAt refuses to travel backwards, and the page's timers have been
   // running since install() — so pause at wherever the fake clock has reached.
-  const now = await page.evaluate(() => Date.now());
-  await page.clock.pauseAt(now + 1);
+  //
+  // Reading the clock and pausing it are two round trips, and the clock keeps
+  // moving in between: Playwright re-syncs it to real time on a timer of at
+  // most 100ms, so a slow round trip can carry it past `now + 1` and pauseAt
+  // then throws "Cannot fast-forward to the past" (M16.14d — it used to take
+  // down whichever browser suite was unlucky under load).
+  //
+  // The retry cannot lose. pauseAt stops the clock BEFORE it checks the target
+  // (`_innerPause()` clears the real-time sync, and only then does it compare),
+  // so by the time the first attempt has thrown, the clock is already frozen:
+  // the second read is of a clock nothing can advance, and `now + 1` is
+  // necessarily in its future. One retry is enough, and a second failure means
+  // this reasoning has stopped being true — so it is raised, not swallowed.
+  for (let attempt = 0; ; attempt++) {
+    const now = await page.evaluate(() => Date.now());
+    try {
+      await page.clock.pauseAt(now + 1);
+      return;
+    } catch (e) {
+      if (attempt > 0 || !/fast-forward to the past/i.test(String(e))) throw e;
+    }
+  }
 }
 
 /** Advance the page's fake clock, firing every timer that comes due. */

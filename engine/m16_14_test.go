@@ -71,6 +71,7 @@ import (
 	"net/http/httptest"
 	"net/url"
 	"os"
+	"os/exec"
 	"path/filepath"
 	"reflect"
 	"sort"
@@ -1331,4 +1332,38 @@ func m1614TileAt(board m1613VanillaBoard, x, y int) ([2]int, bool) {
 		return [2]int{}, false
 	}
 	return board.Tiles[index], true
+}
+
+// ---------------------------------------------------------------------------
+// M16.14d — the golden library's own clock pause
+// ---------------------------------------------------------------------------
+
+// TestM1614dPauseClockCannotLoseItsRace covers the browser harness itself rather
+// than the product: web/test/lib/canvas.mjs's pauseClock, which every browser
+// suite calls before it reads a single cell.
+//
+// Freezing the page clock takes two round trips — read it, then pause one
+// millisecond later — and Playwright's fake clock re-syncs to real time on a
+// timer of at most 100ms, so a slow round trip carried it past the requested
+// instant and pauseAt threw "Cannot fast-forward to the past". It reddened
+// whichever suite was unlucky whenever the machine was loaded (NOTES.md
+// 2026-07-31).
+//
+// The script FORCES the losing case rather than hoping for it: it stalls every
+// clock read by 300ms of real time, requires the old one-shot pause to fail
+// under that harness (a test that cannot fail proves nothing about a race), and
+// then requires pauseClock to survive it and leave a genuinely stopped clock.
+//
+// It needs Chromium but no server and no client build, so it stands on its own
+// rather than on m169NewHarnessFor.
+func TestM1614dPauseClockCannotLoseItsRace(t *testing.T) {
+	m169RequireBrowserHarness(t)
+
+	cmd := exec.Command("node", filepath.Join("test", "pause_clock.test.mjs"))
+	cmd.Dir = "web"
+	out, err := cmd.CombinedOutput()
+	if err != nil {
+		t.Fatalf("pause_clock.test.mjs failed: %v\n--- script output ---\n%s", err, out)
+	}
+	t.Logf("pauseClock:\n%s", out)
 }

@@ -86,11 +86,12 @@ M12.23, M17.1–M17.7, M16.0–M16.8a — has fully landed.)
    M16.14c and pre-existing at `c8c9552`: take that one FIRST, it is test-only
    and a required CI job is red. **M16.14c landed 2026-07-31** — the harness now
    binds both ports before it serves, and the full `-race` suite reports no data
-   race. It filed **M16.14d** on its way through, and that one leads: a 1ms
-   margin in the browser harness's `pauseClock` makes ALL FOUR browser suites
-   (M16.9, M16.10, M16.13, M16.14) fail under load, on an unmodified checkout
-   too. Idle, they are green — but while it stands, no full-suite or `make
-   parity` result can be trusted, so take M16.14d before M16.15.
+   race. It filed **M16.14d** on its way through — a 1ms margin in the browser
+   harness's `pauseClock` that made ALL FOUR browser suites (M16.9, M16.10,
+   M16.13, M16.14) fail under load, on an unmodified checkout too — and
+   **M16.14d landed 2026-07-31** as well: the pause now retries once, which
+   cannot lose. Then M16.15. The one browser flake still open is M16.14b's act 8,
+   which is `[ADVISOR]` and still ranks below M16.15.
 
 **Optional / deferred (bottom):**
 - M16.18a — touch gameplay controls: deferred past the beta (owner 2026-07-30:
@@ -3294,7 +3295,7 @@ gap task has landed.
   filed as **M16.14d**: a 1ms margin in `pauseClock` makes the browser suites
   load-sensitive, and parity loads the machine its own browser gates need quiet.
 
-- [ ] **M16.14d — `pauseClock`'s one-millisecond margin (M16.14c gap task).**
+- [x] **M16.14d — `pauseClock`'s one-millisecond margin (M16.14c gap task).**
   `engine/web/test/lib/canvas.mjs:106`, `pauseClock`, reads the page's
   `Date.now()` and calls `page.clock.pauseAt(now + 1)`. In the bundled clock
   (`playwright-core/lib/coreBundle.js`), `pauseAt(time)` computes
@@ -3320,6 +3321,17 @@ gap task has landed.
   recorded golden byte-identical. DoD: `pauseClock` cannot lose this race, proven
   by a test that forces a slow round trip rather than by a suite that happens to
   pass, and all four browser suites green with their fixtures unchanged.
+
+  Landed 2026-07-31 (NOTES.md M16.14d) by retrying the pause once — which cannot
+  lose, because `pauseAt` stops the clock BEFORE it compares the target, so the
+  first failure leaves a frozen clock for the second read. The margin is
+  untouched, so the happy path pauses exactly where it always did and no golden
+  moved. `web/test/pause_clock.test.mjs` forces the losing case by stalling every
+  clock read 300ms, and REQUIRES the old one-shot pause to fail under that
+  harness before requiring the new one to survive it; it is reached from Go as
+  `TestM1614dPauseClockCannotLoseItsRace`, so CI's existing browser filter picks
+  it up. All four browser suites green together with `fixtures/` unchanged, plus
+  a green full `go test -count=1 ./...`.
 
 - [ ] **M16.15 — Persistence, reconnect, and replay service journey.** With
   temporary directories and the production server binary, cover manual save,

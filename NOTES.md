@@ -6644,3 +6644,68 @@ there was no environment flip, only load.
 The lesson is narrow and worth keeping: on this machine a browser suite's result
 is not evidence unless nothing else is running, and "reproduced on stashed HEAD"
 only rules out the diff, not the load that both runs shared.
+
+## M16.14d — pauseClock retries, and cannot lose (2026-07-31)
+
+Harness-only: `engine/web/test/lib/canvas.mjs` and a new test. No product code,
+no simulation code, no fixture moved.
+
+### The fix is one retry, and the retry is not a gamble
+
+`pauseClock` still reads the page clock and asks to pause at `now + 1`. What is
+new is that a failure is retried once — and that retry is guaranteed, not
+hopeful, which is the whole reason this shape was chosen over a wider margin:
+
+```js
+async pauseAt(time) {
+  await this._innerPause();                 // <- stops the clock FIRST
+  const toConsume = time - this._now.time;
+  await this._innerFastForwardTo(...);      // <- only then does it complain
+}
+```
+
+`_innerPause()` clears `_realTime`, and `_syncRealTime()` returns immediately
+without it. So by the time the first attempt has thrown, the page's clock is
+already frozen: nothing but an explicit `runFor`/`fastForward` can advance it,
+the second read returns exactly `_now.time`, and `now + 1` is necessarily in its
+future. One retry suffices, and a second failure would mean this reasoning had
+stopped holding — so it is raised rather than swallowed or looped over.
+
+Widening the margin was the obvious alternative and is the wrong one: the pause
+fast-forwards the fake clock by `time - _now.time`, so a bigger margin fires
+whatever timers fall in the gap, and the visual goldens are pinned to what the
+screen looks like after it. The retry leaves the happy path pausing at exactly
+the instant it always did — `fixtures/` is untouched, which is the check that
+matters.
+
+### The test refuses to be a test that happens to pass
+
+`web/test/pause_clock.test.mjs` wraps `page.evaluate` so every clock read is
+followed by 300ms of real time — comfortably past the clock's own 100ms re-sync
+— and then, before anything else, requires the OLD one-shot pause to fail under
+that harness. A race test that cannot fail proves nothing, so the forcing is
+asserted rather than assumed. Only then does it require `pauseClock` to survive
+the same treatment, and it goes on to prove the clock is genuinely stopped (no
+drift, no timer fired across a real 300ms) and still usable (`runFor(100)`
+advances by exactly 100 and fires the page's interval).
+
+Confirmed as a pin by reverting the fix: case 1 passes, case 2 dies with the
+production error.
+
+It reaches Go as `TestM1614dPauseClockCannotLoseItsRace`, which needs Chromium
+but neither a server nor a client build, so it stands on its own rather than on
+`m169NewHarnessFor`. It is deliberately NOT in `npm test`: that CI job installs
+node_modules without a browser (`e2e_journey.test.mjs` sits outside `npm test`
+for the same reason), while the `browser-goldens` job's existing
+`-run 'TestM169|TestM1610|TestM1613|TestM1614'` filter already selects it.
+
+### Verified
+
+All four browser suites green in one run with `fixtures/` unchanged; full
+`go test -count=1 ./...` green; `go test -race -count=1 ./...` with zero data
+races; `npm test` and `npm run build` green; `go vet` and `gofmt` clean.
+
+No `pauseClock` failure has been seen in any run since the fix, including the
+loaded ones. The remaining browser flake is M16.14b's act 8 — the contested
+cell, still `[ADVISOR]` and still unfixed — which showed once more here under a
+full `-race` suite and is a different bug entirely.
