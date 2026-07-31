@@ -4318,10 +4318,10 @@
       "contract": "E",
       "authority": "completed task contracts (TASKS.md); NOTES.md",
       "parity": "exact",
-      "test": "TestM1615PersistenceReconnectAndReplayJourney,TestM1615AccountRestoreIsMissingFromTheRecording",
-      "status": "gap",
+      "test": "TestM1615PersistenceReconnectAndReplayJourney,TestM1615AccountRestoreIsCarriedByTheRecording,TestM1615aReturningAccountReplaysThroughTheServer,TestSessionRecordRefusesAnOlderVersion",
+      "status": "pass",
       "assignedTask": "M16.15a",
-      "notes": "M16.15: for an unauthenticated or first-visit session the recording is exact — every (tick, StateHash) fingerprint the wire carried to four connections across two rooms, through a passage transfer, a drop, a resume and a quit, is reproduced in order by a replay, and the .SAV bytes match the replayed world at the save tick. GAP M16.15a: RoomManager.ApplyPlayerState — the account-sidecar inventory a returning signed-in player is joined with — is not recorded, so a replay of any session containing a returning account diverges from the first tick, silently. Pinned by TestM1615AccountRestoreIsMissingFromTheRecording, which must be inverted when M16.15a lands."
+      "notes": "M16.15: for an unauthenticated or first-visit session the recording is exact — every (tick, StateHash) fingerprint the wire carried to four connections across two rooms, through a passage transfer, a drop, a resume and a quit, is reproduced in order by a replay, and the .SAV bytes match the replayed world at the save tick. M16.15a closed the one stimulus that was missing: RoomManager.ApplyPlayerState — the account-sidecar inventory a returning signed-in player is joined with — now records a \"state\" op, so a session containing a returning account replays to the same inventory and the same per-room StateHash instead of diverging from the first tick, silently (TestM1615aReturningAccountReplaysThroughTheServer signs in, earns the inventory, drops and rejoins through the real join handler). recordVersion is 2 and a v1 file is refused rather than mis-replayed (TestSessionRecordRefusesAnOlderVersion)."
     },
     {
       "id": "service.world-file-format",

@@ -29,7 +29,15 @@ import (
 
 // recordVersion is the on-disk schema version, bumped when the line format
 // changes so playback can refuse a file it cannot read.
-const recordVersion = 1
+//
+// v2 (M16.15a) added the "state" op: the account-sidecar inventory a returning
+// signed-in player is joined with. A v1 file is refused rather than replayed,
+// because the two are indistinguishable from the inside — a v1 recording of a
+// returning account has no state op and no way to say one is missing, so this
+// reader would reproduce it as a freshly spawned player and report success.
+// Refusing is the only honest answer for a file recorded before the stimulus
+// was captured.
+const recordVersion = 2
 
 // recordChannelCap bounds the buffered write channel. Flush never blocks the
 // tick: a full channel drops the line and counts it (logged on Close) rather
@@ -51,21 +59,30 @@ type recHeader struct {
 }
 
 // recOp is one external stimulus applied before a tick's step: a join, a name,
-// a leave, or a submit (scroll reply, quit reply, debug command, save name,
-// high-score name). Consequences the simulation derives from these — transfers,
-// respawns, quit-driven removals — are NOT recorded; playback regenerates them.
+// a state restore, a leave, or a submit (scroll reply, quit reply, debug
+// command, save name, high-score name). Consequences the simulation derives
+// from these — transfers, respawns, quit-driven removals — are NOT recorded;
+// playback regenerates them.
+//
+// "state" is the one stimulus that does not originate at a keyboard: when a
+// signed-in player rejoins, the server hands the fresh run the inventory it
+// read out of that account's sidecar (ApplyPlayerState). It is external to the
+// simulation in exactly the way a join is — a value the room could not have
+// derived — so it is logged the same way, and State carries the whole struct
+// rather than a diff so playback needs no knowledge of what a fresh spawn holds.
 type recOp struct {
-	Op     string   `json:"op"`             // join | name | leave | submit
-	Kind   string   `json:"kind,omitempty"` // submit: scroll | quit | debug | save | highscore
-	Player PlayerID `json:"player"`
-	Board  int16    `json:"board,omitempty"`
-	X      int16    `json:"x,omitempty"`
-	Y      int16    `json:"y,omitempty"`
-	Name   string   `json:"name,omitempty"`
-	StatID int16    `json:"statID,omitempty"`
-	Label  string   `json:"label,omitempty"`
-	Text   string   `json:"text,omitempty"`
-	Quit   bool     `json:"quit,omitempty"`
+	Op     string       `json:"op"`             // join | name | state | leave | submit
+	Kind   string       `json:"kind,omitempty"` // submit: scroll | quit | debug | save | highscore
+	Player PlayerID     `json:"player"`
+	Board  int16        `json:"board,omitempty"`
+	X      int16        `json:"x,omitempty"`
+	Y      int16        `json:"y,omitempty"`
+	Name   string       `json:"name,omitempty"`
+	StatID int16        `json:"statID,omitempty"`
+	Label  string       `json:"label,omitempty"`
+	Text   string       `json:"text,omitempty"`
+	Quit   bool         `json:"quit,omitempty"`
+	State  *PlayerState `json:"state,omitempty"` // state: the applied PlayerState
 }
 
 // recTick is one simulation tick: the ops applied just before it and the input
@@ -290,6 +307,12 @@ func applyRecordedOp(rm *RoomManager, op recOp) {
 		rm.JoinPlayerWithID(op.Player, op.Board, op.X, op.Y)
 	case "name":
 		rm.SetPlayerName(op.Player, op.Name)
+	case "state":
+		// A malformed line (op without its payload) applies nothing rather than
+		// zeroing a live player's health.
+		if op.State != nil {
+			rm.ApplyPlayerState(op.Player, *op.State)
+		}
 	case "leave":
 		rm.LeavePlayer(op.Player)
 	case "submit":

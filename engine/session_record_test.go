@@ -2,6 +2,7 @@ package zztgo
 
 import (
 	"bytes"
+	"encoding/json"
 	"os"
 	"path/filepath"
 	"strings"
@@ -222,6 +223,50 @@ func TestSessionRecordReplayTransfer(t *testing.T) {
 
 	if boardID, _, ok := replayed.PlayerLocation(p1); !ok || boardID != 2 {
 		t.Fatalf("replay: P1 should be on board 2, got board %d (ok=%v)", boardID, ok)
+	}
+}
+
+// TestSessionRecordRefusesAnOlderVersion is the other half of M16.15a. Adding
+// the "state" op made every v1 recording unsafe to play back: a v1 file of a
+// session with a returning account carries no state op and no way to say one is
+// missing, so a v2 reader would reproduce it as a freshly spawned player and
+// report success — exactly the silent divergence M16.15a was filed for. The
+// header version is what stands between the two, so it has to refuse.
+func TestSessionRecordRefusesAnOlderVersion(t *testing.T) {
+	world := twoBoardPassageWorld(t)
+
+	var buf bytes.Buffer
+	rm, rec := recordedRoomManager(t, "PASSAGE", world, &buf)
+	p1 := rm.JoinPlayer(1, 9, 12)
+	for k := 0; k < 5; k++ {
+		rm.StepDiffs(map[PlayerID]PlayerInput{p1: {DeltaX: -1}})
+	}
+	rec.Close()
+
+	// The file as written plays back; only the version is changed below, so a
+	// failure afterwards can only be the version check.
+	if _, err := ReplaySession(bytes.NewReader(buf.Bytes()), nil); err != nil {
+		t.Fatalf("the recording this test downgrades does not replay as written: %v", err)
+	}
+
+	lines := strings.Split(strings.TrimRight(buf.String(), "\n"), "\n")
+	var header map[string]interface{}
+	if err := json.Unmarshal([]byte(lines[0]), &header); err != nil {
+		t.Fatalf("header: %v", err)
+	}
+	header["v"] = recordVersion - 1
+	downgraded, err := json.Marshal(header)
+	if err != nil {
+		t.Fatalf("marshal header: %v", err)
+	}
+	lines[0] = string(downgraded)
+
+	_, err = ReplaySession(strings.NewReader(strings.Join(lines, "\n")+"\n"), nil)
+	if err == nil {
+		t.Fatal("a recording written under an older schema replayed silently; it must be refused")
+	}
+	if !strings.Contains(err.Error(), "unsupported recording version") {
+		t.Errorf("refusal error = %q, want it to name the unsupported version", err)
 	}
 }
 

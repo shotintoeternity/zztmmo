@@ -643,12 +643,19 @@ func (rm *RoomManager) PlayerState(playerID PlayerID) (*PlayerState, bool) {
 	return player.state, true
 }
 
+// ApplyPlayerState overwrites a player's state wholesale. The server calls it on
+// the authenticated fresh-join path to hand a returning account the inventory
+// from its sidecar — a stimulus the room cannot derive, so it is recorded like a
+// join (M16.15a). Only a state that was actually applied is logged: a refused
+// call changes nothing here, and replaying it would change nothing there.
 func (rm *RoomManager) ApplyPlayerState(playerID PlayerID, state PlayerState) bool {
 	player := rm.players[playerID]
 	if player == nil || player.state == nil {
 		return false
 	}
 	*player.state = state
+	applied := state
+	rm.recorder.record(recOp{Op: "state", Player: playerID, State: &applied})
 	return true
 }
 

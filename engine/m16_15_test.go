@@ -23,8 +23,10 @@ package zztgo
 //   service.save-restore        — …Journey + …RestoreRoutesThroughTheBinary
 //   service.account-persistence — …Journey + …CrashRestart… + …GraceExpiry…
 //   service.reconnect           — …Journey (near side) + …GraceExpiry… (far side)
-//   service.session-replay      — …Journey; GAP M16.15a, pinned by
-//                                 …AccountRestoreIsMissingFromTheRecording
+//   service.session-replay      — …Journey; the account restore M16.15 found
+//                                 missing and M16.15a closed is held by
+//                                 …AccountRestoreIsCarriedByTheRecording and
+//                                 …aReturningAccountReplaysThroughTheServer
 //   service.high-scores         — …Journey (a death enters nothing; a quit does)
 //   route.api.saves/.restore/.loadworld — …RestoreRoutesThroughTheBinary
 //   input.title-restore         — those routes, plus M16.11's real-browser 'R'
@@ -1564,28 +1566,32 @@ func TestM1615GraceExpiryEndsTheRunButNotTheAccount(t *testing.T) {
 }
 
 // ---------------------------------------------------------------------------
-// A gap this sweep found: the recording does not carry an account restore
+// What M16.15 found and M16.15a closed: the recording carries an account restore
 // ---------------------------------------------------------------------------
 
-// TestM1615AccountRestoreIsMissingFromTheRecording PINS A DEFECT, filed as
-// M16.15a (NOTES.md 2026-07-31). It asserts the WRONG behaviour on purpose, so
-// that the day the recorder learns to carry an account restore this test goes
-// red and is inverted — the same convention M16.13a/M16.14a were filed under.
+// TestM1615AccountRestoreIsCarriedByTheRecording is M16.15a, inverted. It was
+// filed by M16.15 as a PINNED DEFECT — it asserted the wrong behaviour on
+// purpose so that the day the recorder learned to carry an account restore it
+// would go red and be flipped, the same convention M16.13a/M16.14a were filed
+// under. This is that flip; the name lost its "IsMissingFrom" too.
 //
-// What is wrong: the session recorder logs every external stimulus the server
-// applies to a room EXCEPT one. When a signed-in player rejoins, the server
-// calls RoomManager.ApplyPlayerState with the inventory read out of the account
-// sidecar (websocket_server.go, the authenticated fresh-join branch), and
-// nothing records it. A replay therefore re-runs the same session with a
+// What was wrong: the session recorder logged every external stimulus the
+// server applies to a room EXCEPT one. When a signed-in player rejoins, the
+// server calls RoomManager.ApplyPlayerState with the inventory read out of the
+// account sidecar (websocket_server.go, the authenticated fresh-join branch),
+// and nothing recorded it. A replay therefore re-ran the same session with a
 // freshly-spawned player: different ammo, different gems, different score, and
-// from the first tick a different StateHash. It fails silently — the replay
-// completes and reports success.
+// from the first tick a different StateHash — silently, because the replay
+// completed and reported success.
 //
-// It cannot happen on a server without auth, and it cannot happen to a player's
-// first visit, which is why the journey above (a fresh account on a fresh
-// server) replays exactly. It happens to every returning signed-in player on
-// the production host, which is where the recordings that matter come from.
-func TestM1615AccountRestoreIsMissingFromTheRecording(t *testing.T) {
+// It could not happen on a server without auth, and could not happen on a
+// player's first visit, which is why the journey above (a fresh account on a
+// fresh server) always replayed exactly. It happened to every returning
+// signed-in player on the production host, which is where the recordings that
+// matter come from. ApplyPlayerState now records a "state" op, so what is
+// asserted below is the inventory AND every room's StateHash surviving the
+// round trip.
+func TestM1615AccountRestoreIsCarriedByTheRecording(t *testing.T) {
 	world := m1615TestWorld(t)
 
 	var buf bytes.Buffer
@@ -1598,6 +1604,12 @@ func TestM1615AccountRestoreIsMissingFromTheRecording(t *testing.T) {
 	restored := PlayerState{Health: 100, Ammo: 25, Gems: 9, Torches: 3, Score: 250}
 	if !rm.ApplyPlayerState(returning, restored) {
 		t.Fatal("ApplyPlayerState refused a player who is in a room")
+	}
+	// The claim is only worth making if the restore reached the run: 25 ammo is
+	// not what a fresh spawn holds. Checked before the walk, which adds pickups
+	// of its own on top.
+	if joined, ok := rm.PlayerState(returning); !ok || joined.Ammo != restored.Ammo || joined.Gems != restored.Gems || joined.Score != restored.Score {
+		t.Fatalf("the joined run holds %+v, want the restored 9/25/250; the replay claim below would be vacuous", joined)
 	}
 	for i := 0; i < 12; i++ {
 		rm.StepDiffs(map[PlayerID]PlayerInput{returning: {DeltaX: 1}})
@@ -1619,23 +1631,141 @@ func TestM1615AccountRestoreIsMissingFromTheRecording(t *testing.T) {
 		t.Fatal("the replayed player vanished")
 	}
 
-	// PINNED DEFECT (invert all three when M16.15a lands).
-	if replayState.Gems == liveGems && replayState.Ammo == liveAmmo && replayState.Score == liveScore {
-		t.Fatalf("the replay now reproduces the account-restored inventory (gems=%d ammo=%d score=%d) — M16.15a is fixed; invert this test",
-			replayState.Gems, replayState.Ammo, replayState.Score)
+	if replayState.Gems != liveGems || replayState.Ammo != liveAmmo || replayState.Score != liveScore {
+		t.Errorf("the replay lost the account-restored inventory: live gems=%d ammo=%d score=%d, replayed gems=%d ammo=%d score=%d",
+			liveGems, liveAmmo, liveScore, replayState.Gems, replayState.Ammo, replayState.Score)
 	}
-	t.Logf("M16.15a: live inventory gems=%d ammo=%d score=%d, replayed gems=%d ammo=%d score=%d",
-		liveGems, liveAmmo, liveScore, replayState.Gems, replayState.Ammo, replayState.Score)
 
 	replayHashes := replayed.RoomStateHashes()
-	diverged := false
+	if len(replayHashes) != len(liveHashes) {
+		t.Fatalf("replay room count %d, live %d", len(replayHashes), len(liveHashes))
+	}
 	for board, live := range liveHashes {
 		if replayHashes[board] != live {
-			diverged = true
-			t.Logf("M16.15a: board %d live StateHash %016x, replayed %016x", board, live, replayHashes[board])
+			t.Errorf("board %d StateHash: live %016x, replayed %016x", board, live, replayHashes[board])
 		}
 	}
-	if !diverged {
-		t.Fatal("every room's StateHash now matches across the replay — M16.15a is fixed; invert this test")
+}
+
+// TestM1615aReturningAccountReplaysThroughTheServer proves the fix on the path
+// that actually has the defect. The test above calls ApplyPlayerState itself;
+// this one never mentions it — it signs in, earns an inventory, drops (which
+// writes the account sidecar), rejoins as a returning account through the real
+// WebSocket join handler, plays on, and requires the recording that server wrote
+// to reproduce every room's StateHash. In-process rather than through the
+// binary so the ticks are driven exactly and the session stays short.
+func TestM1615aReturningAccountReplaysThroughTheServer(t *testing.T) {
+	server := NewWebSocketServer(m1615TestWorld(t), m1615HallBoard)
+	server.Auth = NewAuthService("m1615a-test-client", "", "", []byte(m1615CookieSecret))
+	recordDir := t.TempDir()
+	if err := server.EnableRecording(recordDir); err != nil {
+		t.Fatalf("EnableRecording: %v", err)
+	}
+	httpServer := httptest.NewServer(server)
+	defer httpServer.Close()
+
+	ctx, cancel := context.WithTimeout(context.Background(), 60*time.Second)
+	defer cancel()
+	wsURL := "ws" + strings.TrimPrefix(httpServer.URL, "http")
+	inst := server.DefaultInstance
+	cookie := signedAuthCookie(t, server.Auth, AuthenticatedAccount{ID: m1615Account, Name: m1615AccountName})
+
+	// Walk east along the item row so the inventory is EARNED in the world:
+	// every stimulus behind it is an input the recording already carries, so
+	// only the restore itself is on trial below.
+	conn, snap := dialJoinWithCookie(t, ctx, wsURL, JoinMessage{Type: MessageTypeJoin, Name: "ignored-by-auth", Board: m1615HallBoard}, cookie)
+	firstID := snap.You.ID
+	for i := 0; i < 12; i++ {
+		if err := wsjson.Write(ctx, conn, InputMessage{Type: MessageTypeInput, PlayerID: firstID, Seq: uint64(i + 1), DeltaX: 1}); err != nil {
+			t.Fatalf("write input: %v", err)
+		}
+		waitFor(t, "the input to reach the instance", func() bool {
+			inst.mu.Lock()
+			defer inst.mu.Unlock()
+			_, queued := inst.Inputs[firstID]
+			return queued
+		})
+		server.Tick(ctx)
+	}
+
+	// The drop writes the sidecar. Everything after this is the returning half.
+	conn.Close(websocket.StatusAbnormalClosure, "wifi blip")
+	waitFor(t, "the detach", func() bool {
+		_, detached := detachedCount(server, firstID)
+		return detached
+	})
+	stored, ok, err := server.ChatDB.GetPlayerState(m1615Account, inst.Name)
+	if err != nil || !ok {
+		t.Fatalf("GetPlayerState after the drop = (%+v, %v, %v), want the run's state", stored, ok, err)
+	}
+	if stored.Gems == 0 && stored.Ammo == 0 && stored.Torches == 0 {
+		t.Fatalf("the first run earned nothing (%+v); a restore of an empty inventory proves nothing", stored)
+	}
+
+	// No resume token: this is the authenticated FRESH join, the branch that
+	// calls ApplyPlayerState with the sidecar state.
+	conn2, snap2 := dialJoinWithCookie(t, ctx, wsURL, JoinMessage{Type: MessageTypeJoin, Name: "ignored-by-auth", Board: m1615HallBoard}, cookie)
+	defer conn2.Close(websocket.StatusNormalClosure, "")
+	if snap2.You.ID == firstID {
+		t.Fatalf("the rejoin reclaimed player %d instead of joining fresh", firstID)
+	}
+	if snap2.HUD.Gems != stored.Gems || snap2.HUD.Ammo != stored.Ammo {
+		t.Fatalf("the returning account joined with gems=%d ammo=%d, want the sidecar's %d/%d",
+			snap2.HUD.Gems, snap2.HUD.Ammo, stored.Gems, stored.Ammo)
+	}
+
+	returningID := snap2.You.ID
+	for i := 0; i < 10; i++ {
+		if err := wsjson.Write(ctx, conn2, InputMessage{Type: MessageTypeInput, PlayerID: returningID, Seq: uint64(i + 1), DeltaX: 1}); err != nil {
+			t.Fatalf("write input: %v", err)
+		}
+		waitFor(t, "the returning player's input to reach the instance", func() bool {
+			inst.mu.Lock()
+			defer inst.mu.Unlock()
+			_, queued := inst.Inputs[returningID]
+			return queued
+		})
+		server.Tick(ctx)
+	}
+
+	inst.mu.Lock()
+	liveHashes := inst.RoomManager.RoomStateHashes()
+	liveState, hasState := inst.RoomManager.PlayerState(returningID)
+	var liveCopy PlayerState
+	if hasState {
+		liveCopy = *liveState
+	}
+	inst.mu.Unlock()
+	if !hasState {
+		t.Fatal("the returning player has no state")
+	}
+	server.CloseRecorders()
+
+	f, err := os.Open(m1615RecordingPath(t, recordDir))
+	if err != nil {
+		t.Fatalf("open recording: %v", err)
+	}
+	defer f.Close()
+	replayed, err := ReplaySession(f, nil)
+	if err != nil {
+		t.Fatalf("replay: %v", err)
+	}
+
+	replayState, ok := replayed.PlayerState(returningID)
+	if !ok {
+		t.Fatal("the replayed returning player vanished")
+	}
+	if replayState.Gems != liveCopy.Gems || replayState.Ammo != liveCopy.Ammo || replayState.Score != liveCopy.Score {
+		t.Errorf("the replayed returning player holds gems=%d ammo=%d score=%d, live gems=%d ammo=%d score=%d",
+			replayState.Gems, replayState.Ammo, replayState.Score, liveCopy.Gems, liveCopy.Ammo, liveCopy.Score)
+	}
+	replayHashes := replayed.RoomStateHashes()
+	if len(replayHashes) != len(liveHashes) {
+		t.Fatalf("replay room count %d, live %d", len(replayHashes), len(liveHashes))
+	}
+	for board, live := range liveHashes {
+		if replayHashes[board] != live {
+			t.Errorf("board %d StateHash: live %016x, replayed %016x", board, live, replayHashes[board])
+		}
 	}
 }

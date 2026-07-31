@@ -6861,3 +6861,80 @@ switcher) on a loaded machine. Re-running the full suite was green, and so was
 the full `-race` suite including that job. Nothing in M16.15 touches the editor
 or the browser harness; this is the known browser load-sensitivity around
 M16.14b, recorded here rather than left as a silent re-run.
+
+## M16.15a — the account restore the recorder could not see (2026-07-31)
+
+M16.15's gap task. The session recorder logged every external stimulus the
+server applies to a room except one: on the authenticated fresh-join branch
+(`websocket_server.go`, the `if !resumed` block) the server hands the new run the
+inventory it read out of the account sidecar via `RoomManager.ApplyPlayerState`,
+and that call recorded nothing. Replaying such a session re-ran it with a
+freshly spawned player — measured 10/30/260 live against 1/5/10 replayed — and
+diverged from the first tick while `ReplaySession` returned no error and the
+transcript looked complete.
+
+### The fix
+
+`ApplyPlayerState` now records a `state` op carrying the whole `PlayerState`,
+and `applyRecordedOp` re-applies it through the same entry point. Three choices
+worth writing down:
+
+- **The whole struct, not a diff.** Playback then needs no knowledge of what a
+  fresh spawn holds; it applies exactly what the live run applied.
+- **Only a state that was applied.** A refused call (no such player) changes
+  nothing live and would change nothing on playback, so logging it would be
+  noise. A `state` line whose payload is missing applies nothing rather than
+  zeroing a live player's health.
+- **Still a stimulus log.** Nothing new enters `StateHash`, serialization or the
+  simulation path; the recorder keeps only reading state, per M14.2's contract.
+
+`ApplyPlayerState` is the only external writer of player state — the two other
+non-test callers of `PlayerState` (`saveSnapshot`, the detach path) copy it out
+and never write back — so this closes the seam rather than one instance of it.
+
+### recordVersion 2, and why v1 is refused
+
+Adding an op makes older files unsafe, not merely older: a v1 recording of a
+returning account has no `state` op and no way to say one is missing, so a v2
+reader would reproduce it as a fresh spawn and report success — exactly the
+silent divergence being fixed. `recordVersion` goes to 2 and `ReplaySession`'s
+existing header check refuses v1. No recordings are committed under `fixtures/`
+(every test writes its own), so nothing on disk was invalidated.
+
+### Evidence
+
+`TestM1615AccountRestoreIsMissingFromTheRecording` is inverted and renamed
+`TestM1615AccountRestoreIsCarriedByTheRecording`: it now asserts the restored
+inventory AND every room's `StateHash` survive the round trip, with a vacuity
+guard taken right after the apply (25 ammo is not what a fresh spawn holds)
+because the walk that follows collects items of its own.
+
+`TestM1615aReturningAccountReplaysThroughTheServer` proves the fix on the path
+that actually had it, without naming `ApplyPlayerState` anywhere: sign in, earn
+an inventory by walking the item row (so every stimulus behind it is an input the
+recording already carries), drop the socket — which writes the sidecar — rejoin
+with no resume token through the real WebSocket join handler, play on, then
+replay the server's own recording and require the same inventory and the same
+per-room `StateHash`. In-process rather than through the binary so the ticks are
+exact and the session stays short.
+
+Both were run against a checkout with the one-line record removed and both fail
+there (replayed 0/0/0 against live 1/5/10; board 2 hash `3bcff66a9851a46b` live
+against `762e60304d48386f` replayed), so neither is a test that would pass
+either way. `TestSessionRecordRefusesAnOlderVersion` downgrades a recording it
+first proves replays as written, so the only thing left that can fail it is the
+version check.
+
+### Manifest
+
+`service.session-replay` flips `gap` → `pass`, naming the two account tests and
+the version refusal beside M16.15's journey, and its notes now record what
+closed rather than what is open. Hand-edited again (`PARITY_SCAFFOLD=1`
+regeneration is still destructive — M16.20a).
+
+### Verified
+
+Full `go test -count=1 ./...` green (275s); `go test -race -count=1` green on
+`TestM1615|TestSessionRecord|TestServerRecording|TestParityManifest`;
+`go build ./...` and `go vet ./...` clean. `fixtures/` is unchanged apart from
+the manifest row.

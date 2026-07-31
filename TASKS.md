@@ -93,9 +93,10 @@ M12.23, M17.1–M17.7, M16.0–M16.8a — has fully landed.)
    cannot lose. **M16.15 landed 2026-07-31** and filed **M16.15a**: the account
    sidecar inventory a returning signed-in player is joined with is never
    recorded, so replaying any production session that contains a returning
-   account diverges from the first tick — silently. M16.15a is small and
-   well-understood (one op in the recorder), and it is the next thing in this
-   list. Then M16.17. The one browser flake still open is M16.14b's act 8,
+   account diverges from the first tick — silently. **M16.15a landed
+   2026-07-31**: the restore is recorded as its own op, `recordVersion` is 2, and
+   a v1 recording is refused rather than mis-replayed. Next is M16.17. The one
+   browser flake still open is M16.14b's act 8,
    which is `[ADVISOR]` and still ranks below the certification tail.
 
 **Optional / deferred (bottom):**
@@ -3376,7 +3377,7 @@ gap task has landed.
   FOUND AND FILED: **M16.15a** (below) — the account restore the recorder
   cannot see.
 
-- [ ] **M16.15a — A returning account's inventory is missing from the session
+- [x] **M16.15a — A returning account's inventory is missing from the session
   recording (M16.15 gap task).** The recorder logs every external stimulus the
   server applies to a room except one. On the authenticated fresh-join branch
   (`websocket_server.go`, `ServeHTTP`'s `if !resumed` block) the server calls
@@ -3399,6 +3400,27 @@ gap task has landed.
   account reproduces every room's `StateHash`; `go test ./...` and the replay
   fixture green; manifest row `service.session-replay` flips from `gap` to
   `pass`.
+
+  Landed 2026-07-31 (NOTES.md M16.15a). `ApplyPlayerState` records a `state` op
+  carrying the whole `PlayerState` (a value copy, taken only when the state was
+  actually applied), and `applyRecordedOp` re-applies it through the same entry
+  point; a `state` line without its payload applies nothing rather than zeroing a
+  live player. The recorder stays a stimulus log — nothing new enters `StateHash`
+  or the simulation path. `recordVersion` is **2** and a v1 file is refused,
+  because the two are indistinguishable from the inside: a v1 recording of a
+  returning account has no state op and no way to say one is missing, so a v2
+  reader would reproduce it as a fresh spawn and report success
+  (`TestSessionRecordRefusesAnOlderVersion` downgrades a file that replays as
+  written, so only the version check can be what fails). The pinned test is
+  inverted and renamed `TestM1615AccountRestoreIsCarriedByTheRecording`; the new
+  `TestM1615aReturningAccountReplaysThroughTheServer` proves the fix on the path
+  that had the defect without naming `ApplyPlayerState` at all — it signs in,
+  earns an inventory in the world, drops (writing the sidecar), rejoins through
+  the real WebSocket join handler, plays on, and requires the server's own
+  recording to replay to the same inventory and the same per-room `StateHash`.
+  Both fail without the one-line record (measured: replayed 0/0/0 against live
+  1/5/10, and a board-2 hash mismatch). Full `go test ./...` green, `-race` clean
+  on the touched tests, `fixtures/` unchanged apart from the manifest row.
 
 - [ ] **M16.16 — Auth, chat, and Museum service journey.** Use hermetic OIDC and
   Museum HTTP fakes through the real HTTP/WebSocket server. Cover signed-in vs.
