@@ -3253,8 +3253,10 @@
       "contract": "P",
       "authority": "elements.go ElementPlayerTick / game.go title / editor.go; web/src/keys.ts",
       "parity": "exact",
-      "status": "unverified",
-      "assignedTask": "M16.15"
+      "test": "TestM1615RestoreRoutesThroughTheBinary,TestM1611BrowserEndToEndPlayerJourneys",
+      "status": "pass",
+      "assignedTask": "M16.15",
+      "notes": "M16.15: the browser half — pressing R on the title, choosing the save from the list and playing the restored world — is driven in a real browser by M16.11's e2e_journey (web/test/e2e_journey.test.mjs, the \"restore\" act). The server contract it stands on (/api/saves listing, /api/restore, and every refusal) is driven against the production binary by TestM1615RestoreRoutesThroughTheBinary. The title screen deliberately has no WebSocket, so the restore is proven by rejoining the restored world."
     },
     {
       "id": "input.title-speed-omitted",
@@ -3874,8 +3876,10 @@
       "contract": "E",
       "authority": "web_api.go / websocket_server.go",
       "parity": "exact",
-      "status": "unverified",
-      "assignedTask": "M16.15"
+      "test": "TestM1615RestoreRoutesThroughTheBinary",
+      "status": "pass",
+      "assignedTask": "M16.15",
+      "notes": "M16.15: 200 naming the hosted world, 400 for a traversing name."
     },
     {
       "id": "route.api.museum.play",
@@ -3904,8 +3908,10 @@
       "contract": "E",
       "authority": "web_api.go / websocket_server.go",
       "parity": "exact",
-      "status": "unverified",
-      "assignedTask": "M16.15"
+      "test": "TestM1615RestoreRoutesThroughTheBinary,TestM1615PersistenceReconnectAndReplayJourney",
+      "status": "pass",
+      "assignedTask": "M16.15",
+      "notes": "M16.15: 409 while anyone is still in a room, 200 once the world is empty, 404 for an unknown save, 400 for a name outside the save charset (traversal never reaches a path). Driven against the production binary."
     },
     {
       "id": "route.api.saves",
@@ -3914,8 +3920,10 @@
       "contract": "E",
       "authority": "web_api.go / websocket_server.go",
       "parity": "exact",
-      "status": "unverified",
-      "assignedTask": "M16.15"
+      "test": "TestM1615RestoreRoutesThroughTheBinary,TestM1615PersistenceReconnectAndReplayJourney",
+      "status": "pass",
+      "assignedTask": "M16.15",
+      "notes": "M16.15: listed empty on a fresh server, then listing exactly the name a wire save produced; it is the list the title screen's R offers."
     },
     {
       "id": "route.api.title",
@@ -4151,8 +4159,10 @@
       "authority": "completed task contracts (TASKS.md); NOTES.md",
       "parity": "deviation",
       "deviation": "account-sidecar-restore",
-      "status": "unverified",
-      "assignedTask": "M16.15"
+      "test": "TestM1615PersistenceReconnectAndReplayJourney,TestM1615CrashRestartRestoreFreshAndCorruptSkip,TestM1615GraceExpiryEndsTheRunButNotTheAccount",
+      "status": "deviation",
+      "assignedTask": "M16.15",
+      "notes": "M16.15: a signed-in player's state reaches saves/chat.jsonl.playerstate.json on every drop and beside the .SAV on every manual save; a guest never appears in either. The inventory returns on a fresh join after a process restart and after the reconnect grace has expired, while the run itself (PlayerID, stat, position) does not (DEVIATION account-sidecar-restore). -fresh resets the world, not the accounts."
     },
     {
       "id": "service.auth",
@@ -4220,8 +4230,10 @@
       "authority": "completed task contracts (TASKS.md); NOTES.md",
       "parity": "deviation",
       "deviation": "score-on-quit",
-      "status": "unverified",
-      "assignedTask": "M16.15"
+      "test": "TestM1615PersistenceReconnectAndReplayJourney",
+      "status": "deviation",
+      "assignedTask": "M16.15",
+      "notes": "M16.15: a death (#endgame, routed through the respawn path) offers no slot and writes no <WORLD>.HI at all; a confirmed quit at the same score produces highScoreEntry at list position 1, and the name submitted for it is persisted to <WORLD>.HI (DEVIATION score-on-quit)."
     },
     {
       "id": "service.museum",
@@ -4281,8 +4293,10 @@
       "contract": "E",
       "authority": "completed task contracts (TASKS.md); NOTES.md",
       "parity": "exact",
-      "status": "unverified",
-      "assignedTask": "M16.15"
+      "test": "TestM1615PersistenceReconnectAndReplayJourney,TestM1615GraceExpiryEndsTheRunButNotTheAccount",
+      "status": "pass",
+      "assignedTask": "M16.15",
+      "notes": "M16.15: through the production binary — a dropped socket resumed inside the grace window reclaims the same PlayerID, stat, square and inventory, and a second connection presenting the same token takes the run over while the server closes the displaced socket (newest-wins). Grace EXPIRY is 545 ticks of wall clock, so it is driven tick-by-tick in-process: the stat, the token and the reclaimable position are all gone, and the stale token falls through to a fresh join."
     },
     {
       "id": "service.save-restore",
@@ -4292,8 +4306,10 @@
       "authority": "completed task contracts (TASKS.md); NOTES.md",
       "parity": "deviation",
       "deviation": "snapshot-player-drop",
-      "status": "unverified",
-      "assignedTask": "M16.15"
+      "test": "TestM1615PersistenceReconnectAndReplayJourney,TestM1615RestoreRoutesThroughTheBinary",
+      "status": "deviation",
+      "assignedTask": "M16.15",
+      "notes": "M16.15: a manual save through the wire (S -> savePrompt -> saveFilename -> saveResult) writes SAVE01.SAV atomically; it unions the flag set on the far board, drops every player tile from both boards, and carries the saver's inventory in the vanilla one-player World.Info fields. A joiner into the restored world arrives fresh at the start square (DEVIATION snapshot-player-drop). The saved bytes are byte-identical to the world an independent replay of the same session produces at the same tick."
     },
     {
       "id": "service.session-replay",
@@ -4302,8 +4318,10 @@
       "contract": "E",
       "authority": "completed task contracts (TASKS.md); NOTES.md",
       "parity": "exact",
-      "status": "unverified",
-      "assignedTask": "M16.15"
+      "test": "TestM1615PersistenceReconnectAndReplayJourney,TestM1615AccountRestoreIsMissingFromTheRecording",
+      "status": "gap",
+      "assignedTask": "M16.15a",
+      "notes": "M16.15: for an unauthenticated or first-visit session the recording is exact — every (tick, StateHash) fingerprint the wire carried to four connections across two rooms, through a passage transfer, a drop, a resume and a quit, is reproduced in order by a replay, and the .SAV bytes match the replayed world at the save tick. GAP M16.15a: RoomManager.ApplyPlayerState — the account-sidecar inventory a returning signed-in player is joined with — is not recorded, so a replay of any session containing a returning account diverges from the first tick, silently. Pinned by TestM1615AccountRestoreIsMissingFromTheRecording, which must be inverted when M16.15a lands."
     },
     {
       "id": "service.world-file-format",

@@ -6709,3 +6709,155 @@ No `pauseClock` failure has been seen in any run since the fix, including the
 loaded ones. The remaining browser flake is M16.14b's act 8 — the contested
 cell, still `[ADVISOR]` and still unfixed — which showed once more here under a
 full `-race` suite and is a different bug entirely.
+
+## M16.15 — persistence, reconnect and replay, through the shipped binary (2026-07-31)
+
+Every seam this task certifies already had unit coverage: M4.3a save/restore,
+M13.2 reconnect grace, M13.3 autosave and restore-on-boot, M14.2 record/replay.
+All of it drives a `RoomManager` or a `WebSocketServer` **object**, in the test
+process. None of it proves that `cmd/zzt-server` — with its own flags, its own
+directories, its own boot order — puts the promised bytes on disk and hands them
+back after a crash. That gap is the whole reason M16.15 exists, so the journey
+runs the real binary as a subprocess and talks to it over real WebSockets.
+
+### The fixture, and why it has the shape it has
+
+`fixtures/persist.zwd` (compiled to `PERSIST.ZZT` into each test's temp dirs, so
+nothing binary is committed):
+
+- **two playable boards** joined by a colour-matched passage — a snapshot that
+  only ever saw one live room proves nothing about the union;
+- an **item row** (gem, ammo, torch) walked left to right, so inventory is
+  earned rather than injected;
+- a **keeper** on the FAR board whose `:touch` runs `#set BEACON` and
+  `#give gems 5`. The flag is set from a room the saving player is standing in
+  and the other player is not, which is exactly the case `snapshotFlags` unions
+  across live rooms; the gems make the touch observable on the wire, so the test
+  never has to guess whether the program ran;
+- a **reaper** whose `:touch` runs `#endgame`. That routes through the shared
+  death/respawn path (M16.6a), which is the boundary `score-on-quit` lives on:
+  a death must offer no high-score slot at all.
+
+### Hermetic sign-in without Google
+
+The account half needs an authenticated player through the production binary.
+`NewAuthServiceFromEnv` reads `ZZT_GOOGLE_CLIENT_ID` and
+`ZZT_AUTH_COOKIE_SECRET`, and `AccountFromRequest` only HMAC-verifies the
+session cookie — no network, no IdP. So the subprocess is started with a known
+secret and the test mints its own signed cookie. Nothing in this file can reach
+`accounts.google.com`, and `ANTHROPIC_API_KEY` is cleared so generation cannot
+be reached either.
+
+### What the replay evidence actually is
+
+Every `diff` frame carries the room's post-step `StateHash` and its
+`CurrentTick` (protocol.go). A replay's `onTick` reads the same two values from
+the same rooms. So the live wire and an offline replay produce directly
+comparable fingerprints, and the journey banks each connection's list **before
+that connection goes away** — Ada's first socket, the socket that displaced it,
+and the guest each contribute their own track. 75 (tick, StateHash) pairs across
+two rooms, four connections, a passage transfer, a drop, a resume and a quit,
+every one reproduced in order.
+
+Ordered subsequence rather than equality, because a connection only sees the
+ticks it was present for and its first frame on a board is a snapshot, not a
+diff. To keep that from going quietly vacuous, each board must contribute at
+least ten fingerprints or the test fails on the coverage itself.
+
+The strongest single assertion is separate: the recording names the tick its
+`save` submit arrived on, so the replay is stopped one tick earlier (ops
+recorded on tick K arrived after tick K-1 finished) and asked for
+`snapshotWorld(saver)`. Those bytes are compared to `SAVE01.SAV` itself —
+**byte-identical**, live server vs. independent replay.
+
+### Autosave atomicity, tested as a property rather than a code read
+
+The cadence runs at one second while both players move. Once the file appears
+the test reads and fully parses it fifteen times over ~1.2s: a torn `.SAV` would
+fail `LoadWorldBytes`. A `.tmp` mid-write is legitimate, so the assertion is
+that nothing partial is ever readable as the real file, plus no `.tmp` survives
+the run.
+
+The crash test does not sleep for a cadence either — it polls the autosave's
+**content** until the collected gem is demonstrably gone from it, and only then
+SIGKILLs the process. That is what makes "restart brings the progress back" a
+deterministic claim instead of a timing bet.
+
+### What `-fresh` does not reset
+
+`-fresh` skips `RestoreAutosaves` and nothing else. A signed-in player rejoining
+a `-fresh` server still gets their inventory back, because the account sidecar
+is `saves/chat.jsonl.playerstate.json` and has nothing to do with the autosave
+directory. That is correct — the flag resets the world, not the accounts — but
+it is the sort of thing an operator would assume the other way, so it is
+asserted rather than left implied.
+
+### Grace expiry is the one thing a subprocess cannot do
+
+`ReconnectGraceTicks` is 545 ticks — 60 seconds of wall clock. The near side of
+the boundary (resume inside the window, and a competing connection taking a live
+run over) runs through the binary in the journey; expiry is driven by calling
+`server.Tick` directly in-process, which makes it exact instead of slow. The
+pair it proves: the RUN is gone (no stat, no token, and the position is NOT
+handed back — the player respawns at the board's start square), while a
+signed-in player's INVENTORY is not, because it lives in the account. A guest
+doing exactly the same thing gets nothing back, which is the control.
+
+One trap worth writing down: during those 545 ticks no live socket may be
+attached, or the server spends up to a second per frame writing to a client
+nobody is reading. Ada's post-expiry connection is closed explicitly before the
+guest half runs.
+
+### FOUND AND FILED: M16.15a — the account restore the recorder cannot see
+
+`RoomManager.ApplyPlayerState` — the call that gives a returning signed-in
+player their sidecar inventory on join — records nothing. `SetPlayerName` and
+`SetPlayerIdentity` both log a `name` op; this one has no `rm.recorder.record`
+at all. A replay therefore re-runs the session with a freshly spawned player.
+Measured on the journey world: live gems/ammo/score 10/30/260, replayed 1/5/10,
+and the room's `StateHash` differs from the first tick.
+
+It fails **silently** — `ReplaySession` returns no error, the tick count
+matches, the transcript looks complete. It cannot happen without auth and cannot
+happen on a player's first visit, which is why M16.15's own journey (a fresh
+account on a fresh server) replays exactly; it happens to every returning
+signed-in player on the production host, which is where the recordings that
+matter come from.
+
+Pinned by `TestM1615AccountRestoreIsMissingFromTheRecording`, which asserts the
+wrong behaviour on purpose and says so in its name and its comment, so the day
+the recorder learns to carry the state the test goes red and gets inverted —
+the M16.13a/M16.14a convention. Manifest row `service.session-replay` is `gap`
+until then; the recording's exactness for unauthenticated sessions is recorded
+in the same row's notes rather than lost.
+
+### Manifest
+
+Nine rows advanced out of `unverified`: `service.save-restore`,
+`service.account-persistence` and `service.high-scores` to `deviation` (each
+pinned at its documented boundary — `snapshot-player-drop`,
+`account-sidecar-restore`, `score-on-quit`); `service.reconnect`,
+`input.title-restore`, `route.api.saves`, `route.api.restore` and
+`route.api.loadworld` to `pass`; `service.session-replay` to `gap` against
+M16.15a. `input.title-restore`'s browser half is M16.11's `KeyR` act in
+`e2e_journey.test.mjs` — the title screen has no socket by design, so pressing R
+is proven by rejoining the world it restored — and its server half is the route
+test here. The manifest was hand-edited: `PARITY_SCAFFOLD=1` regeneration is
+still destructive (M16.20a).
+
+### Verified
+
+`go test -run TestM1615 .` green; `go test -race -count=2 -run TestM1615` green
+with zero data races; the manifest gate green; `go build ./...`, `go vet ./...`
+and `gofmt` clean. Full `go test -count=1 ./...` green, and full
+`go test -race -count=1 ./...` green (310s, zero data races) — the race job
+M16.14c fixed stays fixed with these tests in it.
+
+Journey ~8s, restart matrix ~2s, routes ~1s, the two in-process tests <0.1s.
+
+One honest note: the FIRST full `go test ./...` run of the day failed in
+M16.14's `editor_collab.test.mjs` act 11 (`waitForGrid` timing out on the board
+switcher) on a loaded machine. Re-running the full suite was green, and so was
+the full `-race` suite including that job. Nothing in M16.15 touches the editor
+or the browser harness; this is the known browser load-sensitivity around
+M16.14b, recorded here rather than left as a silent re-run.

@@ -90,8 +90,13 @@ M12.23, M17.1–M17.7, M16.0–M16.8a — has fully landed.)
    harness's `pauseClock` that made ALL FOUR browser suites (M16.9, M16.10,
    M16.13, M16.14) fail under load, on an unmodified checkout too — and
    **M16.14d landed 2026-07-31** as well: the pause now retries once, which
-   cannot lose. Then M16.15. The one browser flake still open is M16.14b's act 8,
-   which is `[ADVISOR]` and still ranks below M16.15.
+   cannot lose. **M16.15 landed 2026-07-31** and filed **M16.15a**: the account
+   sidecar inventory a returning signed-in player is joined with is never
+   recorded, so replaying any production session that contains a returning
+   account diverges from the first tick — silently. M16.15a is small and
+   well-understood (one op in the recorder), and it is the next thing in this
+   list. Then M16.17. The one browser flake still open is M16.14b's act 8,
+   which is `[ADVISOR]` and still ranks below the certification tail.
 
 **Optional / deferred (bottom):**
 - M16.18a — touch gameplay controls: deferred past the beta (owner 2026-07-30:
@@ -3333,7 +3338,7 @@ gap task has landed.
   it up. All four browser suites green together with `fixtures/` unchanged, plus
   a green full `go test -count=1 ./...`.
 
-- [ ] **M16.15 — Persistence, reconnect, and replay service journey.** With
+- [x] **M16.15 — Persistence, reconnect, and replay service journey.** With
   temporary directories and the production server binary, cover manual save,
   account sidecar state, guest behavior, autosave atomicity, crash/restart
   restore, `-fresh`, corrupt-save skip, reconnect within/after grace, competing
@@ -3342,6 +3347,58 @@ gap task has landed.
   survives the promised boundaries exactly; restored/replayed StateHashes match
   live checkpoints; filesystem artifacts and player-dropping/account-restore
   deviations match the manifest.
+
+  Landed 2026-07-31 (NOTES.md M16.15). `engine/m16_15_test.go` runs five tests
+  over one new committed fixture, `fixtures/persist.zwd` (two playable boards
+  joined by a colour-matched passage, an item row worth an inventory, a keeper
+  that `#set`s a flag from the FAR board so a snapshot must union flags across
+  two live rooms, and a reaper whose `#endgame` kills without ending the run).
+  The journey drives the real `cmd/zzt-server` binary over real WebSockets with
+  hermetic Google auth (a signed cookie against a known `ZZT_AUTH_COOKIE_SECRET`
+  — nothing contacts Google): death→respawn with no high-score slot and no
+  `.HI` file, an inventory, a passage transfer, the flag, a guest in the other
+  room, a drop that writes the account sidecar (and does not write a guest's), a
+  resume inside grace that keeps id/stat/square/inventory, a competing token
+  that displaces the first socket, `S`→`SAVE01.SAV` + its `.playerstate.json`,
+  15 reads of the live autosave that must each parse, `Q`→highScoreEntry→name→
+  `PERSIST.HI`, then SIGINT and the evidence: **all 75 (tick, StateHash)
+  fingerprints the wire delivered to four connections across two rooms are
+  reproduced, in order, by a replay of the recording**, and `SAVE01.SAV` is
+  **byte-identical** to the world that replay produces at the save tick.
+  Restart matrix: crash (SIGKILL) → restore-on-boot brings the collected gem
+  back gone and the account brings the inventory back; `-fresh` starts pristine
+  but does NOT reset accounts; a corrupt autosave is skipped with a log line and
+  the boot survives. Routes: `/api/saves`, `/api/restore` (409 occupied / 200
+  empty / 404 missing / 400 unsafe), `/api/loadworld`. Grace EXPIRY is 545 ticks
+  of wall clock, so it is driven tick-by-tick in-process: run gone, token dead,
+  position not handed back, inventory returned from the account — and a guest
+  gets none of it. Nine manifest rows advanced. `go test -race` clean.
+  FOUND AND FILED: **M16.15a** (below) — the account restore the recorder
+  cannot see.
+
+- [ ] **M16.15a — A returning account's inventory is missing from the session
+  recording (M16.15 gap task).** The recorder logs every external stimulus the
+  server applies to a room except one. On the authenticated fresh-join branch
+  (`websocket_server.go`, `ServeHTTP`'s `if !resumed` block) the server calls
+  `RoomManager.ApplyPlayerState` with the inventory read out of the account
+  sidecar, and `ApplyPlayerState` records nothing (`room_manager.go`; compare
+  `SetPlayerName`/`SetPlayerIdentity`, which do). A replay therefore re-runs the
+  session with a freshly spawned player: different ammo, gems, score and
+  `StateHash` from the first tick — measured 10/30/260 live vs 1/5/10 replayed.
+  It fails silently: `ReplaySession` returns no error and the transcript looks
+  complete. Guests and first visits are unaffected, which is why M16.15's own
+  journey replays exactly; every returning signed-in player on the production
+  host is affected, which is where the recordings that matter come from.
+  Fix by recording the applied state as its own op (a new `recOp` kind carrying
+  `PlayerState`, applied by `applyRecordedOp`) — note `recordVersion` must go to
+  2 if the line format changes in a way playback cannot ignore, and old
+  recordings must still refuse rather than silently mis-replay. Keep it out of
+  the simulation's own path: this is a stimulus log, not game state. DoD:
+  `TestM1615AccountRestoreIsMissingFromTheRecording` inverted (it pins the
+  defect on purpose and says so); a replay of a session containing a returning
+  account reproduces every room's `StateHash`; `go test ./...` and the replay
+  fixture green; manifest row `service.session-replay` flips from `gap` to
+  `pass`.
 
 - [ ] **M16.16 — Auth, chat, and Museum service journey.** Use hermetic OIDC and
   Museum HTTP fakes through the real HTTP/WebSocket server. Cover signed-in vs.
