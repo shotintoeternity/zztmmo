@@ -2941,7 +2941,28 @@ gap task has landed.
   is deterministic and catches a client/server tick-order change; M4.6 remains
   a fast staged diagnostic rather than the certification evidence.
 
-- [ ] **M16.12 — Multiplayer projection and invariants.** Run the same committed
+- [ ] **M16.12 — Multiplayer projection and invariants.**
+  PARTIAL 2026-07-30 (NOTES.md M16.12) — **box deliberately not ticked.** The
+  projection half has landed: `engine/m16_12_test.go`'s
+  `TestM1612ProjectionUnchangedByOtherPlayers` replays all 24 committed oracle
+  schedules unchanged through M16.8's room driver (which grew an `afterJoin`
+  hook) with one and then two extra players parked in the subject's own room,
+  and requires the subject's board, HUD counters and events to match the
+  certified solo run cell for cell. Bystanders share the board rather than
+  sitting elsewhere because every oracle world plays on board 0 and ten have no
+  second board; parking them in the far corner keeps the subject the nearest
+  player, so seek behaviour is unchanged. StateHash is deliberately not compared
+  (a second player IS a stat; a matching hash would mean they were not there).
+  FOUND AND FILED: **M16.12a** (below) — the energizer blink.
+  STILL TO DO for this task: the same-room invariant boundary tests the DoD
+  lists (independent inputs/inventory/direction, nearest-player targeting,
+  collision and stat reindexing, death/respawn/invulnerability, friendly fire,
+  passages/edges, shared flags, room freeze/thaw, join/leave/rejoin,
+  simultaneous actions in stable order — several already have tests from
+  M2.x/M4.x/M7.x that need gathering and pinning here rather than rewriting),
+  and the deterministic randomized schedules that record their seed. The
+  manifest row `mode.identity-overlay` stays `unverified` until then.
+  Run the same committed
   micro-world schedules solo and with 2–3 players. A chosen player's projected
   `V` experience must match solo except manifest deviations. Cover independent
   inputs/inventory/direction/pause/modals/sounds/events, nearest-player targeting,
@@ -2951,6 +2972,27 @@ gap task has landed.
   that record their seed. DoD: per-player screens/HUD/events cannot cross-talk;
   each declared multiplayer deviation is tested at its boundary; replaying a
   failed seed reproduces the same hashes and event order.
+
+- [ ] **M16.12a — A second player in the room cancels the energizer blink
+  (M16.12 gap task).** Found by M16.12's projection sweep (`nrg.scn` was the one
+  scenario of 24 whose board diverged). `Engine.PlayerCharacter` is a single
+  byte on the Engine, and `ElementPlayerTick` (`engine/elements.go:1348-1360`)
+  writes it on *every* player's tick: the energised branch flips it 0x02<->0x01,
+  the ordinary branch forces it back to 0x02. With one player that is vanilla.
+  With two, the unenergised player resets the byte every tick and the energised
+  player's square is stuck on 0x02 — the blink that tells a player they are
+  invincible never happens. Measured: solo alternates four-and-four over eight
+  ticks; with one other player in the room, eight ticks of 0x02 and no 0x01 at
+  all. The colour cycle (`CurrentTick%7`) is per-tile and survives; only the
+  glyph is lost. Make the blink phase per-player (it is presentation state that
+  belongs with `PlayerState`, beside `TorchTicks` and `EnergizerTicks`) rather
+  than per-Engine. DoD: `TestM1612aEnergizedBlinkIsCancelledByCompany` inverted
+  to require both glyph phases with company; the `nrg` exemption removed from
+  `m1612CompareProjection` and `TestM1612ProjectionUnchangedByOtherPlayers`
+  still green; `go test ./...` and replay green. Note the fork already keeps
+  per-player presentation state this way, so this is a relocation, not a new
+  concept — mark the vanilla original `// ZZT-QUIRK:` if the global is retained
+  anywhere for single-player fidelity.
 
 - [ ] **M16.13 — Solo browser editor and portable-output parity.** Through a
   real browser, exercise the complete editor key/menu vocabulary and every

@@ -274,7 +274,7 @@ func runM168EngineRoomScenario(t *testing.T, scenarioFile string) {
 	world, ops, phaseSensitive := parseOracleScenario(t, filepath.Join("..", "fixtures", "oracle", scenarioFile))
 
 	initialState, initialTimerTicks, engCPs := runM168EnginePass(t, scenarioFile, world, ops)
-	roomCPs, err := runM168RoomPass(t, scenarioFile, world, ops, initialState, initialTimerTicks, nil)
+	roomCPs, err := runM168RoomPass(t, scenarioFile, world, ops, initialState, initialTimerTicks, nil, nil)
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -502,7 +502,11 @@ func runM168EnginePass(t *testing.T, scenarioFile, world string, ops []oracleOp)
 // the injection seam TestM168DroppedDirtyCellFailsClosed uses to prove a
 // dropped cell is caught rather than silently accepted. Pass nil for a normal
 // replay.
-func runM168RoomPass(t *testing.T, scenarioFile, world string, ops []oracleOp, initialState PlayerState, initialTimerTicks uint32, corruptCells func(tick int, cells []ScreenCell) []ScreenCell) ([]m168NamedCheckpoint, error) {
+// afterJoin, when non-nil, runs immediately after the subject player has joined
+// and been seeded. M16.12 uses it to put other players into the world without
+// having to re-implement this whole driver; a nil hook is byte-for-byte the
+// single-player pass M16.8 shipped.
+func runM168RoomPass(t *testing.T, scenarioFile, world string, ops []oracleOp, initialState PlayerState, initialTimerTicks uint32, corruptCells func(tick int, cells []ScreenCell) []ScreenCell, afterJoin func(rm *RoomManager, subject PlayerID, startBoard int16)) ([]m168NamedCheckpoint, error) {
 	t.Helper()
 
 	roomWorld := m168LoadWorld(t, world)
@@ -585,6 +589,9 @@ func runM168RoomPass(t *testing.T, scenarioFile, world string, ops []oracleOp, i
 			roomBoard = m168Board{}
 			roomBoard.apply(snap.Screen)
 			joined = true
+			if afterJoin != nil {
+				afterJoin(rm, pid, startBoard)
+			}
 
 		case "move", "shoot":
 			if !joined {
@@ -713,7 +720,7 @@ func TestM168DroppedDirtyCellFailsClosed(t *testing.T) {
 		return cells
 	}
 
-	_, err := runM168RoomPass(t, scenarioFile, world, ops, initialState, initialTimerTicks, corrupt)
+	_, err := runM168RoomPass(t, scenarioFile, world, ops, initialState, initialTimerTicks, corrupt, nil)
 	if !dropped {
 		t.Fatalf("setup broken: %s's first move never produced a player-glyph dirty cell to drop", scenarioFile)
 	}

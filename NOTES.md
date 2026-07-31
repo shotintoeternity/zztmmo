@@ -5848,3 +5848,71 @@ CI's `browser-goldens` job now runs `TestM169|TestM1610`.
 Verified: `go build ./...`, `go vet ./...`, `go test ./...` (all three browser
 tests genuinely run here, not skipped), and `npm test` under `engine/web`.
 Replay fixture untouched — no simulation code changed.
+
+## M16.12 (partial) — multiplayer projection, and the blink it found (2026-07-30)
+
+**The box is not ticked.** The projection half landed; the same-room invariant
+boundary tests and the seeded randomized schedules have not. TASKS.md carries
+the remaining list. What follows is what was decided and why, so the next
+session does not re-derive it.
+
+### The design that did not work, and why
+
+The first design put the extra players in *other rooms* of the same world, so
+the subject's projection would have to match solo with no exclusions at all —
+rooms being the isolation unit, any leak would show up immediately. It is not
+expressible against this corpus: every one of the 24 oracle worlds has
+`World.Info.CurrentBoard == 0`, so the schedule plays on the same board the
+title monitor sits on; ten of them have no second board; and the scenarios that
+*do* cross a passage (talk/walk/cond/morf) cross into precisely the boards a
+bystander would have been parked on — which is how the first run failed, with a
+player glyph appearing in the hall.
+
+### The design that did
+
+Bystanders stand on the subject's own board, parked at the last free floor tile
+scanning up from the bottom-right corner with ten tiles of clearance. Far corner
+on purpose: these are creature worlds, and the one thing a bystander must not do
+is become the nearest player, because vanilla's seek logic would then chase them
+and the divergence would be real rather than a fault.
+
+The claim is correspondingly sharper than "match solo": *another player standing
+in the room changes nothing the subject sees except the square they are standing
+on.* The comparison exempts exactly the parked squares — and then requires each
+exempted square to actually hold a player, so the exemption cannot become a
+licence to differ wherever the test happened to park.
+
+`StateHash` is deliberately not compared. It hashes the whole board including
+every stat, and a second player *is* a stat: a matching hash would mean the
+other player was not there. Board cells, HUD counters and event keys are what
+the subject experiences, and those are compared exactly.
+
+`runM168RoomPass` grew one parameter, `afterJoin`, so M16.12 could put players
+into the world without re-implementing 180 lines of driver. A nil hook is
+byte-for-byte the pass M16.8 shipped.
+
+### What it found: M16.12a
+
+`nrg.scn` was the one scenario of 24 whose board diverged, at the subject's own
+square, by exactly one bit of glyph. `Engine.PlayerCharacter` is a single byte
+on the Engine and `ElementPlayerTick` writes it on *every* player's tick — the
+energised branch flips it, the ordinary branch forces it back to 0x02. Measured
+directly, eight ticks with the subject energised:
+
+    alone:            0x01 x4, 0x02 x4     (vanilla's blink)
+    one other player: 0x02 x8, 0x01 never  (no blink at all)
+
+So a second person in the room silently removes the signal that tells a player
+they are invincible. The colour cycle is per-tile and survives; only the glyph
+is lost. Filed as **M16.12a**, not fixed here.
+
+It is pinned two ways rather than exempted away:
+`TestM1612aEnergizedBlinkIsCancelledByCompany` asserts the solo behaviour
+(correct, must never change) *and* the defective one, and fails loudly with
+instructions if the defect ever disappears — so M16.12a's fix cannot land
+unnoticed. Part A's exemption is narrow: only for `nrg`, only where the two
+cells differ solely by 0x01-vs-0x02 at the same colour. Every other cell,
+colour cycle included, is still compared exactly.
+
+Verified: `go build ./...`, `go vet ./...`, `go test ./...`. Replay fixture
+untouched; no simulation code changed.
