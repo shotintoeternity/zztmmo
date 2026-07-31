@@ -71,7 +71,9 @@ M12.23, M17.1–M17.7, M16.0–M16.8a — has fully landed.)
    way through, and M16.10 found nothing to file. **M16.12a landed 2026-07-30**,
    taking with it the newcomer-invisible-to-the-room bug its fix un-masked.
    **M16.13 landed 2026-07-30** and filed M16.13a (three editor divergences
-   from vanilla's EditorLoop). Next is M16.14.
+   from vanilla's EditorLoop); **M16.13a landed 2026-07-30**, taking with it a
+   vanilla quirk it uncovered (`N` inside the editor drops the editor element
+   table, EDITOR.PAS:777). Next is M16.14.
 
 **Optional / deferred (bottom):**
 - M16.18a — touch gameplay controls: deferred past the beta (owner 2026-07-30:
@@ -3058,7 +3060,7 @@ gap task has landed.
   world and is left as a later task.
   FOUND AND FILED: **M16.13a** (below) — three divergences from `EditorLoop`.
 
-- [ ] **M16.13a — Close audit findings: the browser editor vs. EditorLoop
+- [x] **M16.13a — Close audit findings: the browser editor vs. EditorLoop
   (M16.13 gap task).** The M16.13 sweep found three places where the browser
   editor diverges from `EditorLoop`. The first two make a board harder to edit
   than vanilla makes it; the third loses work.
@@ -3114,6 +3116,30 @@ gap task has landed.
   `TestM1613aLeavingTheEditorNeverOffersToSave` inverted; the M16.13 browser
   route answers the prompt on the way out instead of asserting its absence; a
   refused edit leaves the flag clear.
+
+  Landed 2026-07-30 (NOTES.md M16.13a). (a) The glyph override moved onto the
+  Engine — `EditorElements`, read through `Engine.ElementCharacter` — because
+  `ElementDefs` is shared; `InitElementsEditor` keeps its name and its
+  editor-only half is `InstallEditorElements`, which `NewEditorSession` calls.
+  `ElementDefs[28].Color = COLOR_CHOICE_ON_BLACK` turned out to be a no-op
+  (`InitElementDefs` already gives every element that colour), so only the glyph
+  and `ForceDarknessOff` are modelled.
+  `TestM1613aRoomKeepsGameElementsBesideAnEditorSession` drives a dark and a lit
+  room beside an editor session on one server and is mutation-checked against
+  putting the glyph back in the shared table. (b) The wire list now names board 0
+  (`editorBoardName`, the port of `EditorGetBoardName`); "None" is applied
+  client-side at vanilla's two `titleScreenIsNone`-true call sites. (c)
+  `editorModified` is raised on the reply to each accepted edit/property/stat
+  command, never on the keystroke.
+  FOUND, PORTED, NOT FIXED: `WorldCreate` runs `InitElementsGame`, and
+  `EditorLoop`'s `N` calls `WorldCreate` without leaving the editor
+  (EDITOR.PAS:777) — so in real ZZT a world made with `N` is edited with the GAME
+  table until the editor is re-entered. Marked `// ZZT-QUIRK:` on both sites and
+  reproduced faithfully; it is why the browser route proves the dark-board
+  behaviour in act 1 rather than after `N`. Vanilla also clears `wasModified`
+  there and the client does not — a fourth *clear* site the task did not name,
+  left alone (over-offering to save is the harmless direction) and recorded in
+  NOTES.md.
 
 - [ ] **M16.14 — Collaborative editor invariants in real browsers.** Use two
   authenticated fake accounts plus a guest to cover live diffs/cursors, local

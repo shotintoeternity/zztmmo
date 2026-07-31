@@ -1575,6 +1575,12 @@ function applyEditorDiff(message: EditorDiffMessage) {
   // viewing that board, but a diff can still be in flight while we switch, and
   // its cells would then paint the previous board's tiles onto this one.
   if (!editorMessageIsForBoard(message.boardId, editorProperties.boardId)) return;
+  // EditorPrepareModifyTile's `wasModified := true` (editor.go:169), moved to
+  // the reply (M16.13a). A refused edit — a read-only member, an unheld lease, a
+  // placement the session declined — sends no diff or an empty one, and so
+  // cannot dirty a world it never changed. A collaborator's edit counts too: the
+  // world this browser would save has changed either way.
+  if (message.cells.length > 0) editorModified = true;
   for (const cell of message.cells) setBoardCell(cell);
   if (!message.memberId || message.memberId === editorMemberId) {
     const inspectIsCurrent = editorReplyMatchesCursor(editorCursor, message.inspect);
@@ -1597,6 +1603,10 @@ function applyEditorDiff(message: EditorDiffMessage) {
 }
 
 function applyEditorProperties(message: EditorPropertiesMessage) {
+  // The board-info half of vanilla's flag (editor.go:242): this message is only
+  // ever sent for an ACCEPTED Board Information / world-name change — a refused
+  // field returns before the reply is built (editor_session.go SetProperty).
+  editorModified = true;
   editorProperties = message.properties;
   replaceCells(message.screen);
   renderEditorSidebar();
@@ -1605,6 +1615,12 @@ function applyEditorProperties(message: EditorPropertiesMessage) {
 }
 
 function applyEditorStatSettings(message: EditorStatSettingsMessage) {
+  // The stat half of vanilla's flag (editor.go:401), covering both an edited
+  // parameter and a saved ZZT-OOP program. As with a diff, a change always
+  // redraws the stat's tile, so cells are the proof one landed: a refused stat
+  // edit never reaches a reply, and a program the session declined to store
+  // redraws nothing.
+  if (message.cells.length > 0) editorModified = true;
   for (const cell of message.cells) setBoardCell(cell);
   editorInspect = message.inspect;
   editorCursor = { x: message.inspect.x, y: message.inspect.y };
@@ -2870,8 +2886,23 @@ function editorBool(value: boolean): string {
   return value ? "Yes" : "No";
 }
 
+// editorBoardName is EditorGetBoardName with titleScreenIsNone TRUE (editor.go:
+// 854): the board-edge rows and a passage's "Room:" readout call the title board
+// "None". The wire list carries board 0 under its real name so the board
+// SWITCHER — vanilla's one titleScreenIsNone-false caller — can still offer it.
 function editorBoardName(id: number): string {
+  if (id === 0) return "None";
   return editorProperties.boards.find((board) => board.id === id)?.name ?? "None";
+}
+
+// editorBoardEntries is EditorSelectBoard's list body (editor.go:875-877): every
+// board 0..BoardCount, named by EditorGetBoardName under the caller's own
+// titleScreenIsNone. The "id: " prefix is this client's, so a picked entry can
+// be resolved back to a board number.
+function editorBoardEntries(titleScreenIsNone: boolean): string[] {
+  return editorProperties.boards.map(
+    (board) => `${board.id}: ${titleScreenIsNone && board.id === 0 ? "None" : board.name}`,
+  );
 }
 
 function openEditorSidebarMenu(menu: Omit<EditorSidebarMenu, "selected"> & { selected?: number }) {
@@ -3053,7 +3084,7 @@ function openEditorNumber(label: string, current: number, maximum: number, field
 }
 
 function openEditorExitPicker(exit: number) {
-  const entries = editorProperties.boards.map((board) => `${board.id}: ${board.name}`);
+  const entries = editorBoardEntries(true);
   openSelectList(`Select Board ${"\u0018\u0019\u001b\u001a"[exit] ?? ""}`, entries, (entry) => {
     const target = Number(entry.slice(0, entry.indexOf(":")));
     if (Number.isInteger(target)) sendEditorProperty("exit", { exit, value: target });
@@ -3274,7 +3305,7 @@ function openEditorStatSettings(inspect: EditorInspect) {
 }
 
 function openEditorStatBoardPicker(title: string) {
-  const entries = editorProperties.boards.map((board) => `${board.id}: ${board.name}`);
+  const entries = editorBoardEntries(true);
   openSelectList(title, entries, (entry) => {
     const value = Number(entry.slice(0, entry.indexOf(":")));
     if (Number.isInteger(value)) sendEditorStat("p3", value);
@@ -3319,9 +3350,11 @@ function sendEditorBoard(values: { op: string; name?: string; boardId?: number; 
 // world's boards or append a new one. The reply to either is a full editor
 // snapshot, so applyEditorSnapshot repaints the new board.
 function openEditorBoardList() {
-  const entries = editorProperties.boards
-    .filter((board) => board.id !== 0)
-    .map((board) => `${board.id}: ${board.name}`);
+  // titleScreenIsNone is FALSE here (editor.go:668-669), so board 0 is listed
+  // under its own name and switches like any other. It used to be filtered out,
+  // which left an author who moved off a world's first board with no way back
+  // (M16.13a).
+  const entries = editorBoardEntries(false);
   entries.push("Add new board");
   openSelectList("Switch boards", entries, (entry) => {
     if (entry === "Add new board") {

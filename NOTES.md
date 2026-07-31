@@ -6233,3 +6233,107 @@ Verified: `go build ./...`, `go vet ./...`, `go test ./...` (the browser suites
 genuinely run here), `npm test` under `engine/web`. Replay fixture untouched —
 this task adds a fixture world, a browser harness route and tests, and changes
 no simulation code.
+
+## M16.13a — the browser editor vs. EditorLoop, three findings closed (2026-07-30)
+
+M16.13's three filed divergences, all fixed, all pins inverted.
+
+### (a) The editor element table, relocated off the shared `ElementDefs`
+
+`EditorLoop`'s first act is `InitElementsEditor` (editor.go:513). Vanilla's is
+two writes plus a flag:
+
+    ElementDefs[28].Character := #176;             { 0xB0 }
+    ElementDefs[28].Color     := COLOR_CHOICE_ON_BLACK;
+    ForceDarknessOff := true;
+
+The second write changes nothing — `InitElementDefs` already gives *every*
+element `COLOR_CHOICE_ON_BLACK` — so only the glyph and the flag are real. The
+flag was already per-`Engine` here; the glyph could not be, because `ElementDefs`
+is one package-level table shared with every live room, and an editor session
+must not reach into a world nobody is editing.
+
+So the glyph moved onto the Engine, the way M16.8a and M16.12a moved the player
+glyph: `Engine.EditorElements`, read through `Engine.ElementCharacter(element)`,
+which every draw site that the editor table can reach now goes through
+(`TileToColorAndChar`, and EditorLoop's three sidebar draws). `InitElementsEditor`
+keeps its name and its meaning; its editor-only half is `InstallEditorElements`,
+which `NewEditorSession` calls — *not* `InitElementsEditor`, because rebuilding
+the shared table under a ticking room is exactly the thing being avoided.
+
+`TestM1613aRoomKeepsGameElementsBesideAnEditorSession` is the other half of the
+claim: one server, a dark cellar and a lit hall as live rooms, an editor session
+opened on the same world and the same boards, the rooms' probe squares
+*repainted* (a snapshot serves the screen buffer, so an un-redrawn cell would
+prove nothing), and the rooms still drawing darkness as darkness and an invisible
+wall as a blank. Mutation-checked: putting the glyph back into `ElementDefs`
+reddens it.
+
+### The quirk this uncovered: `N` drops the editor table
+
+`WorldCreate` calls `InitElementsGame` (GAME.PAS:331), and `EditorLoop`'s `N`
+calls `WorldCreate` without leaving the editor (EDITOR.PAS:777). So in real ZZT a
+world made with `N` is edited with the *game* table until the editor is
+re-entered: its dark boards go dark on the editing screen and its invisible walls
+stop drawing `0xB0`. Ported faithfully and marked `// ZZT-QUIRK:` on
+`InitElementsGame` and on `EditorSession.NewWorld`. It is why the browser route
+proves the dark-board behaviour in act 1, on the authored draft board, rather
+than in act 2 after `N` — the first run of this test failed there, which is how
+the quirk surfaced.
+
+Not changed, and deliberately: vanilla also clears `wasModified` after that
+`WorldCreate`, and the client does not. The task named three raise sites and this
+is a fourth *clear* site; over-offering to save a world is the harmless
+direction, and it is recorded here rather than fixed on the way past.
+
+### (b) "Switch boards" reaches the title board
+
+Vanilla has one `EditorGetBoardName` with a `titleScreenIsNone` argument: TRUE at
+a board's four edges (editor.go:260) and at a passage's room (377, 393), FALSE
+for the switcher (668-669). The browser had folded the TRUE case into the wire
+format — `editorProperties` named board 0 "None" unconditionally — and then
+`openEditorBoardList` filtered the "None" row out, so an author who moved off a
+world's first board could not get back to it.
+
+The wire list now carries every board under its own name (`editorBoardName`, the
+Go port of `EditorGetBoardName`, reading the open board from `e.Board` rather
+than the not-yet-rewritten `BoardData` behind it). "None" is applied client-side
+by `editorBoardEntries(true)` at the two pickers that are vanilla's TRUE call
+sites, and by `editorBoardName(0)` in the readouts. The switcher passes FALSE.
+
+### (c) Leaving the editor offers to save
+
+`editorModified` was declared false, reset to false twice, and set true nowhere,
+so `leaveEditor`'s faithful transcription of `EditorAskSaveChanged` was dead code
+and Q threw the work away without a question.
+
+It is now raised on the REPLY to each of vanilla's three raise sites — every
+accepted `editorEdit` (169), `editorProperty` (242) and `editorStat` /
+`editorProgramSave` (401) — rather than on the keystroke. That is the deviation
+the task asked for and it is the right way round: a refusal (read-only member,
+unheld lease, a placement `BoardPrepareTileForPlacement` declined) produces
+either no reply at all or a reply with no dirty cells, so it cannot dirty a world
+it never changed. A collaborator's edit does raise it, which is correct — the
+world this browser would save has changed either way.
+
+### The browser route
+
+`editor_solo.test.mjs` no longer routes around any of it. Act 1 proves a dark
+board keeps every cell drawn (counting `{ch:0xB0, color:0x07}` darkness cells,
+with a pre-check that the lit board has none, so the count is a probe rather than
+an assertion by eye), then switches to the annex and back to board 0 *by name*.
+The tail re-arms the modified flag with a board-info toggle and its undo — an
+accepted change either way, and byte-neutral, which matters because the Go test
+compares the downloaded `.ZZT` against the session as it stands at the end of the
+run — then answers "Save first?" with yes and lets the save carry the exit
+through to the title screen.
+
+### Manifest
+
+`mode.editor` flips `gap` → `pass` and names the six tests that now hold it.
+
+Verified: `go build ./...`, `go vet ./...`, `go test ./...` (the browser suites
+genuinely run here — `TestM1613BrowserEditorAndPortableOutput` included), `npm
+test` and `npm run build` under `engine/web`. Replay fixture untouched: the
+editor element table is presentation state on a never-ticked engine, and nothing
+in `StateHash` moved.

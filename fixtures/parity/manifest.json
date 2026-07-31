@@ -3945,10 +3945,10 @@
       "contract": "E",
       "authority": "web/src/*.ts",
       "parity": "exact",
-      "status": "gap",
+      "status": "pass",
       "assignedTask": "M16.13a",
-      "test": "TestM1613aEditorSessionNeverRunsInitElementsEditor,TestM1613aSwitchBoardsCannotReachTheTitleBoard,TestM1613aLeavingTheEditorNeverOffersToSave",
-      "notes": "M16.13 found three divergences from EditorLoop: the session never installs the editor element table (a dark board is edited dark and invisible walls stay invisible, where InitElementsEditor lights both), \"Switch boards\" omits board 0 so an author cannot return to a world's first board, and leaving the editor never offers to save because editorModified is never raised. Everything else in editor mode is exercised by TestM1613BrowserEditorAndPortableOutput."
+      "test": "TestM1613BrowserEditorAndPortableOutput,TestM1613aEditorSessionInstallsTheEditorElementTable,TestM1613aRoomKeepsGameElementsBesideAnEditorSession,TestM1613aSwitchBoardsReachesTheTitleBoard,TestM1613aExitAndPassagePickersStillSayNone,TestM1613aLeavingTheEditorOffersToSave",
+      "notes": "M16.13 found three divergences from EditorLoop and M16.13a closed them: the session now installs InitElementsEditor's editor-only overrides (ForceDarknessOff, and E_INVISIBLE's 0xB0 glyph) on the Engine rather than the shared ElementDefs, so a dark board is edited lit and an invisible wall can be seen while a room ticking beside it keeps the game table; \"Switch boards\" lists board 0 under its own name (titleScreenIsNone false) while the exit and passage pickers still say \"None\"; and editorModified is raised on every accepted edit/board-info/stat reply, so leaving offers to save. The rest of editor mode is exercised by TestM1613BrowserEditorAndPortableOutput."
     },
     {
       "id": "mode.identity-overlay",

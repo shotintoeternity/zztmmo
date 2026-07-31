@@ -173,6 +173,15 @@ type (
 		// snapshotted, exactly like the real time-of-day it stands in for.
 		TimerTicks uint32
 		ForceDarknessOff       bool
+		// EditorElements is InitElementsEditor's element-table override,
+		// relocated off the shared ElementDefs table and onto the Engine
+		// (M16.13a). Vanilla has one table per process, so ELEMENTS.PAS's
+		// InitElementsEditor simply writes E_INVISIBLE's editing glyph into it;
+		// here ElementDefs is shared by every live room, and a room must keep
+		// drawing invisible walls the game way while somebody edits beside it.
+		// Read through ElementCharacter, never by reaching into ElementDefs.
+		// Runtime-only: not serialized, hashed or snapshotted.
+		EditorElements         bool
 		OopChar                byte
 		OopWord                string
 		OopValue               int16

@@ -646,23 +646,25 @@ func TestM1613EditorCommandManifestHasNoUntestedKeyOrDialog(t *testing.T) {
 }
 
 // ---------------------------------------------------------------------------
-// What this sweep found: gap task M16.13a
+// What this sweep found, and gap task M16.13a closed
 // ---------------------------------------------------------------------------
 
-// TestM1613aEditorSessionNeverRunsInitElementsEditor pins the first half of gap
-// task M16.13a, from both sides.
+// TestM1613aEditorSessionInstallsTheEditorElementTable is the inverted pin for
+// M16.13a's first finding.
 //
 // EditorLoop's very first act is InitElementsEditor (editor.go:513): it sets
-// ForceDarknessOff so a dark board is EDITED LIT, and gives E_INVISIBLE a
-// visible glyph so invisible walls can be seen and moved. NewEditorSession does
-// neither, so in the browser editor a board becomes unreadable the moment its
-// "Board is dark" is turned on, and an invisible wall is invisible to the person
-// placing it — you cannot edit what you cannot see.
+// ForceDarknessOff so a dark board is EDITED LIT, and gives E_INVISIBLE the
+// 0xB0 glyph so invisible walls can be seen and moved. NewEditorSession did
+// neither, so a board became unreadable the moment its "Board is dark" was
+// turned on, and an invisible wall was invisible to the person placing it — you
+// cannot edit what you cannot see.
 //
-// The assertions below are written the M16.12a way: the behaviour that is
-// CORRECT is required, the behaviour that is WRONG is also required, and the
-// failure message says what to do when the fix lands.
-func TestM1613aEditorSessionNeverRunsInitElementsEditor(t *testing.T) {
+// The override cannot be vanilla's write into ElementDefs: that table is shared
+// with every live room here. It rides the Engine instead (Engine.EditorElements,
+// read through Engine.ElementCharacter), and
+// TestM1613aRoomKeepsGameElementsBesideAnEditorSession is the other half of that
+// claim.
+func TestM1613aEditorSessionInstallsTheEditorElementTable(t *testing.T) {
 	session := NewEditorSession("EDIT", m1613EditorWorld(t))
 	member := &webSocketClient{}
 	if err := session.Enter(member); err != nil {
@@ -676,7 +678,8 @@ func TestM1613aEditorSessionNeverRunsInitElementsEditor(t *testing.T) {
 	}
 	// A lit board draws its tiles: most of the 60x25 field is empty floor, and
 	// the drawn furniture is a small minority. That is the shape to compare
-	// against, so "the board went dark" is measured rather than asserted by eye.
+	// against, so "the board went dark" would be measured rather than asserted
+	// by eye.
 	litDrawn := m1613DrawnBoardCells(lit.Screen)
 	if litDrawn == 0 || litDrawn >= BOARD_WIDTH*BOARD_HEIGHT {
 		t.Fatalf("the lit draft board drew %d of %d cells; the fixture is not what this test assumes",
@@ -687,28 +690,207 @@ func TestM1613aEditorSessionNeverRunsInitElementsEditor(t *testing.T) {
 	if err != nil {
 		t.Fatal(err)
 	}
-	darkDrawn := m1613DrawnBoardCells(dark.Screen)
-	if darkDrawn != BOARD_WIDTH*BOARD_HEIGHT {
-		t.Fatalf("M16.13a LOOKS FIXED: turning the board dark left %d of %d cells drawn rather than "+
-			"covering every one of them in darkness. If NewEditorSession now calls InitElementsEditor "+
-			"(or otherwise sets ForceDarknessOff), invert this test to require the board to stay LIT "+
-			"— which is what EditorLoop does (editor.go:513) — and close the gap task.",
-			darkDrawn, BOARD_WIDTH*BOARD_HEIGHT)
+	if darkDrawn := m1613DrawnBoardCells(dark.Screen); darkDrawn != litDrawn {
+		t.Errorf("turning the board dark drew %d of %d board cells, want the lit board's %d: "+
+			"the editor sets ForceDarknessOff (editor.go:513), so darkness must not reach the screen",
+			darkDrawn, BOARD_WIDTH*BOARD_HEIGHT, litDrawn)
+	}
+	// Stronger than the count: every board cell must be the cell it was.
+	if diffs := m1613BoardCellDiffs(lit.Screen, dark.Screen); len(diffs) > 0 {
+		t.Errorf("turning the board dark changed %d board cell(s), first: %s", len(diffs), diffs[0])
+	}
+
+	// An invisible wall, placed the way the browser places one, must be visible
+	// to the person who placed it.
+	const ix, iy = 5, 5
+	diff, err := session.Edit(member, EditorEditMessage{
+		Op: "element", X: ix, Y: iy, Element: E_INVISIBLE, Color: 0x0E,
+	})
+	if err != nil {
+		t.Fatal(err)
+	}
+	cell, ok := screenCell(diff.Cells, ix-1, iy-1)
+	if !ok {
+		t.Fatalf("placing an invisible wall dirtied no cell at (%d,%d); cells=%v", ix-1, iy-1, diff.Cells)
+	}
+	if cell.Ch != EditorInvisibleChar {
+		t.Errorf("an invisible wall drew %#02x in the editor, want %#02x (InitElementsEditor's glyph)",
+			cell.Ch, byte(EditorInvisibleChar))
 	}
 
 	err = session.Apply(member, func(e *Engine) {
-		if e.ForceDarknessOff {
-			t.Errorf("M16.13a LOOKS FIXED: the editor session now has ForceDarknessOff set. " +
-				"Invert this test and close the gap task.")
+		if !e.ForceDarknessOff {
+			t.Error("the editor session must set ForceDarknessOff, as InitElementsEditor does")
 		}
+		if !e.EditorElements {
+			t.Error("the editor session must have the editor element table installed")
+		}
+		// The shared table is NOT where the override went.
 		if ElementDefs[E_INVISIBLE].Character != ' ' {
-			t.Errorf("M16.13a LOOKS FIXED: an invisible wall now draws as %q rather than a blank. "+
-				"Invert this test and close the gap task.", ElementDefs[E_INVISIBLE].Character)
+			t.Errorf("ElementDefs[E_INVISIBLE].Character is %#02x: the editor override belongs on the "+
+				"Engine, not on the table every live room shares", ElementDefs[E_INVISIBLE].Character)
 		}
 	})
 	if err != nil {
 		t.Fatal(err)
 	}
+}
+
+// TestM1613aRoomKeepsGameElementsBesideAnEditorSession is the constraint that
+// made M16.13a's first finding more than a one-line call: ElementDefs is one
+// package-level table shared by every room, so installing the editor's element
+// overrides into it would reach into worlds nobody is editing. A room ticking
+// beside an editor session must still draw darkness as darkness and an invisible
+// wall as nothing at all.
+func TestM1613aRoomKeepsGameElementsBesideAnEditorSession(t *testing.T) {
+	world := m1613aDarkRoomWorld(t)
+	server := NewWebSocketServer(world, m1613aDarkBoard)
+
+	dweller := server.RoomManager.JoinPlayer(m1613aDarkBoard, BOARD_WIDTH/2, BOARD_HEIGHT/2)
+	visitor := server.RoomManager.JoinPlayer(m1613aLitBoard, BOARD_WIDTH/2, BOARD_HEIGHT/2)
+	m1613aRequireGameRoom(t, server, dweller, visitor, "before an editor session exists")
+
+	// The editor opens on the same world, on the same server, and on the same
+	// two boards — the arrangement vanilla never has to survive.
+	session := server.editorSessionForWorld("DARK", world)
+	member := &webSocketClient{}
+	if err := session.Enter(member); err != nil {
+		t.Fatal(err)
+	}
+	defer session.Exit(member)
+
+	dark, err := session.SwitchBoard(member, m1613aDarkBoard)
+	if err != nil {
+		t.Fatal(err)
+	}
+	// The editor sees the cellar LIT, walls and all.
+	solid, ok := screenCell(dark.Screen, m1613aSolidX-1, m1613aSolidY-1)
+	if !ok {
+		t.Fatal("the editor snapshot has no cell where the cellar's wall stands")
+	}
+	if solid.Color != m1613aWallColor {
+		t.Errorf("the editor drew the dark cellar's wall as {ch:%#02x color:%#02x}, want it lit at colour %#02x",
+			solid.Ch, solid.Color, byte(m1613aWallColor))
+	}
+
+	lit, err := session.SwitchBoard(member, m1613aLitBoard)
+	if err != nil {
+		t.Fatal(err)
+	}
+	// ...and it sees the invisible wall in the hall.
+	wall, ok := screenCell(lit.Screen, m1613aInvisibleX-1, m1613aInvisibleY-1)
+	if !ok {
+		t.Fatal("the editor snapshot has no cell where the invisible wall stands")
+	}
+	if wall.Ch != EditorInvisibleChar || wall.Color != m1613aWallColor {
+		t.Errorf("the editor drew the invisible wall as {ch:%#02x color:%#02x}, want {ch:%#02x color:%#02x}",
+			wall.Ch, wall.Color, byte(EditorInvisibleChar), byte(m1613aWallColor))
+	}
+
+	// The rooms, stepped while the editor session is alive, see none of it.
+	for i := 0; i < 4; i++ {
+		server.RoomManager.Step(map[PlayerID]PlayerInput{})
+	}
+	m1613aRequireGameRoom(t, server, dweller, visitor, "with an editor session open on the same world")
+}
+
+// m1613aRequireGameRoom asserts the two live rooms are drawn the GAME way: the
+// cellar is dark everywhere its player cannot see, and the hall's invisible wall
+// is a blank.
+func m1613aRequireGameRoom(t *testing.T, server *WebSocketServer, dweller, visitor PlayerID, when string) {
+	t.Helper()
+
+	// A snapshot serves the room's screen buffer, so the probes have to be
+	// REDRAWN to be a live reading of the element table rather than a recording
+	// of the entry paint. Repainting a square is ordinary room business: any
+	// tile change, any creature stepping past, any newcomer's arrival does it.
+	for _, boardID := range []int16{m1613aDarkBoard, m1613aLitBoard} {
+		room, ok := server.RoomManager.Room(boardID)
+		if !ok {
+			t.Fatalf("%s: board %d has no live room", when, boardID)
+		}
+		room.Engine.BoardDrawTile(m1613aInvisibleX, m1613aInvisibleY)
+		room.Engine.BoardDrawTile(m1613aSolidX, m1613aSolidY)
+	}
+
+	cellar, ok := server.RoomManager.Snapshot(dweller)
+	if !ok {
+		t.Fatalf("%s: the dark room did not snapshot", when)
+	}
+	for _, probe := range []struct {
+		x, y int16
+		what string
+	}{
+		{m1613aSolidX, m1613aSolidY, "a normal wall"},
+		{m1613aInvisibleX, m1613aInvisibleY, "the cellar's invisible wall"},
+	} {
+		cell, ok := screenCell(cellar.Screen, probe.x-1, probe.y-1)
+		if !ok {
+			t.Fatalf("%s: the cellar snapshot has no cell at (%d,%d)", when, probe.x, probe.y)
+		}
+		// TileToColorAndChar's darkness branch: 0xB0 on 0x07, whatever the tile.
+		if cell.Ch != '\xb0' || cell.Color != 0x07 {
+			t.Errorf("%s: %s drew {ch:%#02x color:%#02x}, want darkness {ch:0xb0 color:0x07} — "+
+				"the editor's ForceDarknessOff must not reach a live room",
+				when, probe.what, cell.Ch, cell.Color)
+		}
+	}
+
+	hall, ok := server.RoomManager.Snapshot(visitor)
+	if !ok {
+		t.Fatalf("%s: the lit room did not snapshot", when)
+	}
+	cell, ok := screenCell(hall.Screen, m1613aInvisibleX-1, m1613aInvisibleY-1)
+	if !ok {
+		t.Fatalf("%s: the hall snapshot has no cell where the invisible wall stands", when)
+	}
+	if cell.Ch != ' ' {
+		t.Errorf("%s: the hall's invisible wall drew %#02x, want a blank — the editor's element table "+
+			"must not reach a live room", when, cell.Ch)
+	}
+}
+
+const (
+	m1613aDarkBoard, m1613aLitBoard    = 1, 2
+	m1613aInvisibleX, m1613aInvisibleY = 10, 6
+	m1613aSolidX, m1613aSolidY         = 12, 6
+	m1613aWallColor                    = 0x0E
+)
+
+// m1613aDarkRoomWorld is a three-board world: board 1 is a dark cellar, board 2
+// a lit hall, and both hold an invisible wall and a normal one far enough from
+// the player's spawn that no torch could light them. Board 0 is the title board
+// WorldCreate leaves behind.
+func m1613aDarkRoomWorld(t *testing.T) TWorld {
+	t.Helper()
+	e := NewEngine()
+	e.Headless = true
+	e.VideoInstall()
+	e.WorldCreate()
+	e.World.Info.Name = "DARK"
+
+	for _, board := range []struct {
+		id   int16
+		name string
+		dark bool
+	}{
+		{m1613aDarkBoard, "Cellar", true},
+		{m1613aLitBoard, "Hall", false},
+	} {
+		// EditorAppendBoard's sequence (editor.go:21-28): close the open board,
+		// grow the count, point CurrentBoard at the new slot, then create it.
+		e.BoardClose()
+		e.World.BoardCount = board.id
+		e.World.Info.CurrentBoard = board.id
+		e.World.BoardLen[board.id] = 0
+		e.BoardCreate()
+		e.Board.Name = board.name
+		e.Board.Info.IsDark = board.dark
+		e.Board.Tiles[m1613aInvisibleX][m1613aInvisibleY] = TTile{Element: E_INVISIBLE, Color: m1613aWallColor}
+		e.Board.Tiles[m1613aSolidX][m1613aSolidY] = TTile{Element: E_SOLID, Color: m1613aWallColor}
+		e.BoardClose()
+	}
+	return e.World
 }
 
 // m1613DrawnBoardCells counts the board-area cells a snapshot paints with
@@ -728,20 +910,45 @@ func m1613DrawnBoardCells(screen []ScreenCell) int {
 	return drawn
 }
 
-// TestM1613aSwitchBoardsCannotReachTheTitleBoard pins the second half of gap
-// task M16.13a.
+// m1613BoardCellDiffs reports the board-area cells on which two full-screen
+// frames disagree, described for a failure message.
+func m1613BoardCellDiffs(want, got []ScreenCell) []string {
+	index := func(cells []ScreenCell) map[[2]int16]ScreenCell {
+		m := make(map[[2]int16]ScreenCell, len(cells))
+		for _, cell := range cells {
+			if cell.X < BOARD_WIDTH {
+				m[[2]int16{cell.X, cell.Y}] = cell
+			}
+		}
+		return m
+	}
+	a, b := index(want), index(got)
+	var diffs []string
+	for y := int16(0); y < BOARD_HEIGHT; y++ {
+		for x := int16(0); x < BOARD_WIDTH; x++ {
+			key := [2]int16{x, y}
+			if a[key] != b[key] {
+				diffs = append(diffs, fmt.Sprintf("(%d,%d) %+v vs %+v", x, y, a[key], b[key]))
+			}
+		}
+	}
+	return diffs
+}
+
+// TestM1613aSwitchBoardsReachesTheTitleBoard is the inverted pin for M16.13a's
+// second finding.
 //
 // Vanilla's 'B' is EditorSelectBoard("Switch boards", CurrentBoard, false)
 // (editor.go:668-669): titleScreenIsNone is FALSE there, so board 0 is listed
 // under its own name and can be selected like any other. The browser's list is
-// built from EditorProperties.Boards, where board 0 is unconditionally named
-// "None" (editorProperties), and main.ts openEditorBoardList then filters it out
-// entirely — so an author who switches away from the first board of a world can
-// never switch back to it.
+// built from EditorProperties.Boards, where board 0 used to be named "None"
+// unconditionally, and main.ts openEditorBoardList then filtered it out — so an
+// author who switched away from a world's first board could never switch back.
 //
-// The session itself is not the problem: SwitchBoard(0) works. Only the list the
-// browser is given cannot express it.
-func TestM1613aSwitchBoardsCannotReachTheTitleBoard(t *testing.T) {
+// The wire list now carries every board under its own name; "None" is applied by
+// the two client pickers that are vanilla's titleScreenIsNone-TRUE call sites
+// (a board's four edges, and a passage's target room).
+func TestM1613aSwitchBoardsReachesTheTitleBoard(t *testing.T) {
 	session := NewEditorSession("EDIT", m1613EditorWorld(t))
 	member := &webSocketClient{}
 	if err := session.Enter(member); err != nil {
@@ -759,58 +966,146 @@ func TestM1613aSwitchBoardsCannotReachTheTitleBoard(t *testing.T) {
 	if len(snapshot.Properties.Boards) == 0 || snapshot.Properties.Boards[0].ID != 0 {
 		t.Fatalf("board options do not start at board 0: %+v", snapshot.Properties.Boards)
 	}
-	if got := snapshot.Properties.Boards[0].Name; got != "None" {
-		t.Fatalf("M16.13a LOOKS FIXED: the board list now names board 0 %q rather than \"None\". "+
-			"If the browser can reach the title board again (EDITOR.PAS's EditorSelectBoard with "+
-			"titleScreenIsNone false), invert this test and close the gap task.", got)
+	if got := snapshot.Properties.Boards[0].Name; got != "Edit Draft" {
+		t.Errorf("the board list names board 0 %q, want its own name \"Edit Draft\" — "+
+			"EditorSelectBoard's switcher call passes titleScreenIsNone false (editor.go:668)", got)
 	}
 
-	// The capability is there; only the list withholds it.
-	if _, err := session.SwitchBoard(member, 1); err != nil {
+	// Away from the first board and back again, which is what the list has to be
+	// able to express.
+	away, err := session.SwitchBoard(member, 1)
+	if err != nil {
 		t.Fatal(err)
+	}
+	if away.Properties.BoardName != "Edit Annex" {
+		t.Fatalf("SwitchBoard(1) landed on %q, want Edit Annex", away.Properties.BoardName)
+	}
+	// The open board is named from e.Board, not from the not-yet-rewritten
+	// BoardData behind it, so board 1 keeps its name while it is the current one.
+	if got := away.Properties.Boards[1].Name; got != "Edit Annex" {
+		t.Errorf("the open board is listed as %q, want Edit Annex", got)
+	}
+	if got := away.Properties.Boards[0].Name; got != "Edit Draft" {
+		t.Errorf("board 0 is listed as %q from the annex, want Edit Draft", got)
 	}
 	back, err := session.SwitchBoard(member, 0)
 	if err != nil {
 		t.Fatal(err)
 	}
 	if back.Properties.BoardName != "Edit Draft" {
-		t.Fatalf("SwitchBoard(0) landed on %q, want Edit Draft — the session can reach board 0 even "+
-			"though the browser's list cannot offer it", back.Properties.BoardName)
+		t.Fatalf("SwitchBoard(0) landed on %q, want Edit Draft", back.Properties.BoardName)
 	}
 }
 
-// TestM1613aLeavingTheEditorNeverOffersToSave pins the third finding of gap
-// task M16.13a.
+// TestM1613aExitAndPassagePickersStillSayNone keeps the other half of the board
+// list honest: the wire names board 0, and the client substitutes "None" exactly
+// where vanilla passes titleScreenIsNone true — EditorGetBoardName at the board
+// edges (editor.go:260) and at a passage's room (editor.go:377,393).
+func TestM1613aExitAndPassagePickersStillSayNone(t *testing.T) {
+	main := m1613ReadSource(t, filepath.Join("web", "src", "main.ts"))
+	for _, want := range []string{
+		// editorBoardName is the readout; both pickers build their entries with
+		// titleScreenIsNone true.
+		`function editorBoardName(id: number): string {
+  if (id === 0) return "None";`,
+		"function openEditorExitPicker(exit: number) {\n  const entries = editorBoardEntries(true);",
+		"function openEditorStatBoardPicker(title: string) {\n  const entries = editorBoardEntries(true);",
+		// ...and the switcher does not.
+		"const entries = editorBoardEntries(false);",
+	} {
+		if !strings.Contains(main, want) {
+			t.Errorf("web/src/main.ts no longer contains:\n%s\n"+
+				"the title board must read \"None\" at vanilla's titleScreenIsNone-true call sites and "+
+				"by its own name in \"Switch boards\"", want)
+		}
+	}
+	if strings.Contains(main, ".filter((board) => board.id !== 0)") {
+		t.Error("the board list filters board 0 out again; that is M16.13a's second finding")
+	}
+}
+
+// TestM1613aLeavingTheEditorOffersToSave is the inverted pin for M16.13a's third
+// finding.
 //
 // `leaveEditor` (web/src/main.ts) is a faithful transcription of
 // EditorAskSaveChanged (editor.go:155-165): if the world was modified, offer
-// "Save first?" on the way out. But nothing in the client ever sets
-// `editorModified` to true — the flag is declared false, reset to false when the
-// editor opens and when a save succeeds, and never raised. Vanilla raises its
-// `wasModified` in EditorPrepareModifyTile (editor.go:169), on a board-info edit
-// (242) and on a stat edit (401), so the prompt is offered for real. Here the
-// branch is unreachable: an author who edits a world and presses Q or Escape
-// loses the work with no question asked.
+// "Save first?" on the way out. But nothing in the client ever set
+// `editorModified` to true — the flag was declared false, reset to false when the
+// editor opened and when a save succeeded, and never raised — so the branch was
+// unreachable and an author who edited a world and pressed Q or Escape lost the
+// work with no question asked.
 //
-// This is a source-level pin because the defect IS the absence of a statement.
-// The browser half is in engine/web/test/editor_solo.test.mjs, which leaves the
-// editor after an edit and requires the title screen, not the prompt.
-func TestM1613aLeavingTheEditorNeverOffersToSave(t *testing.T) {
+// Vanilla raises its `wasModified` in EditorPrepareModifyTile (editor.go:169),
+// on a board-info edit (242) and on a stat edit (401). The client raises it on
+// the REPLY to each of those three classes rather than on the keystroke, so a
+// refusal — a read-only member, an unheld lease, a placement the session
+// declined — cannot dirty a world it never changed.
+//
+// This is a source-level pin because the behaviour IS a statement's presence.
+// The browser half is in engine/web/test/editor_solo.test.mjs, which answers the
+// prompt on the way out.
+func TestM1613aLeavingTheEditorOffersToSave(t *testing.T) {
 	main := m1613ReadSource(t, filepath.Join("web", "src", "main.ts"))
 	if !strings.Contains(main, `openYesNo("Save first? "`) {
 		t.Fatal("leaveEditor no longer has an EditorAskSaveChanged prompt at all; " +
-			"if that was deliberate, rewrite this test and close M16.13a's third clause")
+			"if that was deliberate, rewrite this test")
 	}
-	if strings.Contains(main, "editorModified = true") {
-		t.Fatal("M16.13a LOOKS FIXED: the client now raises editorModified. Invert this test to " +
-			"require the flag to be set on every mutating command, make the browser route answer " +
-			"the \"Save first?\" prompt, and close the gap task.")
+	// One raise site per vanilla raise site, each inside the handler for that
+	// class of reply, and each gated so a refusal cannot reach it.
+	for _, want := range []struct{ handler, raise string }{
+		{"function applyEditorDiff(message: EditorDiffMessage) {", "if (message.cells.length > 0) editorModified = true;"},
+		{"function applyEditorProperties(message: EditorPropertiesMessage) {", "editorModified = true;"},
+		{"function applyEditorStatSettings(message: EditorStatSettingsMessage) {", "if (message.cells.length > 0) editorModified = true;"},
+	} {
+		body, ok := m1613FunctionBody(main, want.handler)
+		if !ok {
+			t.Errorf("web/src/main.ts no longer declares %q", want.handler)
+			continue
+		}
+		if !strings.Contains(body, want.raise) {
+			t.Errorf("%s does not raise editorModified (want %q): vanilla raises wasModified on this "+
+				"class of change (editor.go:169/242/401)", want.handler, want.raise)
+		}
 	}
-	// The flag is not merely unread — it is written, twice, and only ever false.
+	// The flag must not be raised optimistically on the keystroke: the senders
+	// fire before the session has accepted anything.
+	for _, sender := range []string{
+		"function sendEditorEdit(",
+		"function sendEditorProperty(",
+		"function sendEditorStat(",
+		"function sendEditorProgramSave(",
+	} {
+		body, ok := m1613FunctionBody(main, sender)
+		if !ok {
+			t.Errorf("web/src/main.ts no longer declares %q", sender)
+			continue
+		}
+		if strings.Contains(body, "editorModified = true") {
+			t.Errorf("%s raises editorModified before the session has accepted the change; a refused "+
+				"edit would then dirty a world it never changed", sender)
+		}
+	}
+	// Still cleared where vanilla clears it: on entering the editor, and on a
+	// successful save.
 	if strings.Count(main, "editorModified = false") < 2 {
-		t.Fatal("editorModified is no longer reset where this test expects; re-read leaveEditor " +
-			"and the save-result handler before trusting the pin above")
+		t.Fatal("editorModified is no longer reset where this test expects; re-read startEditor " +
+			"and applyEditorSaveResult")
 	}
+}
+
+// m1613FunctionBody returns the source between a function's opening line and the
+// next top-level "\n}" — enough to tell which handler a statement sits in.
+func m1613FunctionBody(source, header string) (string, bool) {
+	start := strings.Index(source, header)
+	if start < 0 {
+		return "", false
+	}
+	rest := source[start:]
+	end := strings.Index(rest, "\n}")
+	if end < 0 {
+		return rest, true
+	}
+	return rest[:end], true
 }
 
 // ---------------------------------------------------------------------------

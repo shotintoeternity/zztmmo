@@ -707,9 +707,31 @@ try {
   record("op.property.maxShots");
   await waitForSession((board) => board.properties.maxShots === 7, "the shot limit to become 7");
 
+  // M16.13a (a): the session installs InitElementsEditor's element table
+  // (editor.go:513), whose ForceDarknessOff keeps a dark board drawn cell for
+  // cell — otherwise turning darkness on blacks out the 1500 cells the author
+  // is trying to edit. TileToColorAndChar's darkness branch is exactly
+  // {ch:0xB0, color:0x07}, and the lit board has none of those, so counting them
+  // discriminates cleanly.
+  const darkenedCells = (cells) => {
+    let n = 0;
+    for (let row = 0; row < BOARD_ROWS; row += 1) {
+      for (let col = 0; col < BOARD_COLS; col += 1) {
+        const cell = cellAt(cells, col, row);
+        if (cell.ch === 0xb0 && cell.color === 0x07) n += 1;
+      }
+    }
+    return n;
+  };
+  assert.equal(darkenedCells(await readGrid(page)), 0,
+    "the lit draft board draws no darkness cells, which is what makes the count below a probe");
   await boardInfo(page, "Board is dark: No", "the darkness toggle");
   record("op.property.dark");
   await waitForSession((board) => board.properties.isDark === true, "the board to become dark");
+  assert.equal(darkenedCells(await readGrid(page)), 0,
+    "a dark board must still be EDITED LIT: InitElementsEditor's ForceDarknessOff keeps every cell " +
+    "drawn, and without it the editor covers the board it is editing in darkness");
+  note('turning "Board is dark" on left every cell drawn: a dark board is edited lit');
 
   await boardInfo(page, "Re-enter when zapped: No", "the re-enter toggle");
   record("op.property.reenter");
@@ -758,6 +780,18 @@ try {
     assert.equal(board.statCount, 0, "a cleared board keeps only the player stat");
     assert.equal(sessionTile(board, 30, 12).element, 4, "a cleared board puts the player back at its centre");
   }
+
+  // --- B again: back to board 0, which is a board like any other ----------
+  // "Switch boards" is EditorSelectBoard with titleScreenIsNone FALSE
+  // (editor.go:668-669): the world's first board is listed under its own name
+  // and selects like the rest. The browser used to call it "None" and then drop
+  // it from the list, so an author who moved off it was stranded (M16.13a).
+  await pressKey(page, "KeyB");
+  await waitForGrid(page, (cells) => hasText(cells, "Switch boards"), "the board switcher");
+  await pickFromList(page, "0: DRAFTED", "the title board");
+  await waitForSession((board) => board.properties.boardName === "DRAFTED",
+    "the switch back to the world's first board");
+  note('"Switch boards" listed board 0 under its own name and switched back to it');
 
   // =========================================================================
   // Act 2 — a new world, authored from nothing
@@ -984,12 +1018,7 @@ try {
 
   // --- T: export the authored board as .BRD, then import it back ----------
   // Board 0 is where everything above was authored, and it is where the run
-  // stays: the browser's "Switch boards" list omits board 0 (main.ts
-  // openEditorBoardList filters it out and editorProperties always names it
-  // "None"), so once an author leaves the first board there is no way back to
-  // it. Vanilla's EditorSelectBoard lists it by name and selects it happily
-  // (EDITOR.PAS via editor.go:668-669). That divergence is recorded as gap task
-  // M16.13a; the route below is written so the sweep does not depend on it.
+  // stays — this world has no other board yet.
   await pressKey(page, "KeyT");
   record("key.editor.KeyT");
   await waitForGrid(page, (cells) => hasText(cells, "Transfer board:"), "the transfer menu");
@@ -1201,21 +1230,35 @@ try {
   await pressKey(page, "Escape");
   await waitForGrid(page, (cells) => isEditorChrome(cells), "the confirmation to close");
 
-  // --- Q, and the "Save first?" prompt that never comes -------------------
-  // GAP M16.13a: leaveEditor transcribes EditorAskSaveChanged faithfully, but no
-  // code path in the client ever raises `editorModified`, so the prompt is
-  // unreachable and a world edited for the whole of this run is abandoned
-  // without a question. What follows asserts the behaviour as it IS, and
-  // TestM1613aLeavingTheEditorNeverOffersToSave pins the missing half, so the
-  // fix cannot land unnoticed on either side.
+  // --- re-arm the modified flag, without moving a byte --------------------
+  // The publish above cleared it, and the exit below needs it set. Vanilla
+  // raises wasModified on ANY accepted Board Information line (editor.go:242),
+  // so a toggle and its undo both count — and they leave the world exactly where
+  // it was, which matters because the checks in engine/m16_13_test.go compare
+  // the downloaded file against the session as it stands at the END of this run.
+  // The second pick is also the proof the first reply landed: its row label is
+  // built from the client's own copy of the properties.
+  await boardInfo(page, "Re-enter when zapped: No", "the re-entry toggle");
+  await waitForSession((board) => board.properties.reenterWhenZapped === true, "re-entry to come on");
+  await boardInfo(page, "Re-enter when zapped: Yes", "the re-entry toggle, back off again");
+  await waitForSession((board) => board.properties.reenterWhenZapped === false, "re-entry to go off");
+
+  // --- Q, and EditorAskSaveChanged's "Save first?" ------------------------
+  // leaveEditor transcribes EditorAskSaveChanged (editor.go:155-165). Until
+  // M16.13a nothing raised `editorModified`, so the prompt was unreachable and
+  // an edited world was abandoned in one keystroke; now every accepted edit,
+  // board-info change and stat change raises it, and Q asks. Answering yes runs
+  // the save and lets it carry the exit through.
   await pressKey(page, "KeyQ");
   record("key.editor.KeyQ");
-  const leaving = await waitForGrid(page, (cells) => hasText(cells, "E  Board editor"),
-    "the title screen after leaving the editor");
-  assert.ok(!hasText(leaving, "Save first?"),
-    "M16.13a LOOKS FIXED: Q now offers to save the modified world. Answer the prompt here and " +
-    "invert TestM1613aLeavingTheEditorNeverOffersToSave.");
-  note("Q left the editor immediately: the modified world was never offered a save (gap M16.13a)");
+  await waitForGrid(page, (cells) => hasText(cells, "Save first?"),
+    "EditorAskSaveChanged's prompt on the way out");
+  await pressKey(page, "KeyY");
+  await waitForGrid(page, (cells) => hasText(cells, "Save world as:"), "the save-on-exit prompt");
+  await replaceEntry(page, "ORCLEDIT");
+  await waitForGrid(page, (cells) => hasText(cells, "E  Board editor"),
+    "the title screen after saving on the way out");
+  note("Q offered to save the modified world, and answering yes saved it and left");
 
   // =========================================================================
   // The report

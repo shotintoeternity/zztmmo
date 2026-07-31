@@ -322,7 +322,10 @@ func (e *Engine) TileToColorAndChar(x, y int16) (color, char byte) {
 			}
 			return tile.Color, '\x02'
 		} else if tile.Element < E_TEXT_MIN {
-			return tile.Color, ElementDefs[tile.Element].Character
+			// M16.13a: the editor table's invisible-wall glyph is per-Engine,
+			// not the shared ElementDefs, so an editor session shows 0xB0 while
+			// a room ticking beside it still draws a blank.
+			return tile.Color, e.ElementCharacter(tile.Element)
 		} else {
 			if tile.Element == E_TEXT_WHITE {
 				return 0x0F, e.Board.Tiles[x][y].Color

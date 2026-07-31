@@ -44,6 +44,12 @@ func NewEditorSession(worldName string, world TWorld) *EditorSession {
 	e.Headless = true
 	e.MultiRoom = true
 	e.SetInputSource(&ScriptedInput{})
+	// EditorLoop's first act is InitElementsEditor (editor.go:513), and this is
+	// the editor (M16.13a): a dark board is edited LIT, and an invisible wall
+	// draws 0xB0 so it can be seen and moved. InstallEditorElements rather than
+	// InitElementsEditor — rebuilding the shared ElementDefs table here would
+	// reach into every room ticking beside this session.
+	e.InstallEditorElements()
 	e.World = cloneWorld(world)
 
 	boardID := e.World.Info.CurrentBoard
@@ -636,6 +642,16 @@ func editorResolveElementColor(element, cursorColor byte) int16 {
 	}
 }
 
+// editorElementCharacter is Engine.ElementCharacter for the menu builder, which
+// has no engine to ask: an F1/F2/F3 list is only ever shown to somebody editing,
+// and the editor element table is installed for all of them (M16.13a).
+func editorElementCharacter(element int16) byte {
+	if element == E_INVISIBLE {
+		return EditorInvisibleChar
+	}
+	return ElementDefs[element].Character
+}
+
 // editorElementMenus builds the three F1/F2/F3 category tables from ElementDefs,
 // mirroring EditorLoop's listing loop (EDITOR.PAS:702-726): every element in the
 // category, in element order, with its EditorShortcut key, glyph, and the
@@ -667,9 +683,13 @@ func editorElementMenus() []EditorElementMenu {
 				color = 0x0F
 			}
 			item := EditorElementItem{
-				ElementID:    byte(el),
-				Name:         def.Name,
-				Character:    def.Character,
+				ElementID: byte(el),
+				Name:      def.Name,
+				// This list only ever describes the editor, where the editor
+				// element table is installed, so the glyph is that table's
+				// (M16.13a) — an "Invisible" row that showed a blank would be
+				// the one row you could not see.
+				Character:    editorElementCharacter(el),
 				Color:        color,
 				CategoryName: def.CategoryName,
 			}
@@ -1076,6 +1096,11 @@ func (s *EditorSession) NewWorld(member *webSocketClient) (EditorSnapshotMessage
 		if !s.hasCurrentBoardLeaseLocked(member, e) {
 			return
 		}
+		// ZZT-QUIRK: WorldCreate runs InitElementsGame, so this drops the
+		// editor element table the session installed — a dark board made after
+		// N is edited dark, and its invisible walls stop showing. EditorLoop's
+		// 'N' (EDITOR.PAS:777) has exactly the same hole; re-entering the editor
+		// is what puts the table back, there and here.
 		e.WorldCreate()
 		e.BoardClose()
 		e.BoardOpen(e.World.Info.CurrentBoard)
@@ -1249,11 +1274,31 @@ func (s *EditorSession) UploadWorld(member *webSocketClient, data []byte) (Edito
 	return reply, gate, err
 }
 
+// editorBoardName is EditorGetBoardName (editor.go:854) with its
+// titleScreenIsNone argument dropped: the wire list carries every board under
+// its OWN name, and the client substitutes "None" for board 0 at the two call
+// sites where vanilla passes true (a board's four edges, and a passage's target
+// room). Calling it "None" here instead was M16.13a's second finding — it left
+// the "Switch boards" list, vanilla's one titleScreenIsNone-FALSE caller, with
+// no way to name the world's first board, and so no way back to it.
+//
+// The open board is read from e.Board, not BoardData: an edit that has not been
+// closed back into BoardData yet is still the board the author is looking at.
+func editorBoardName(e *Engine, boardID int16) string {
+	if boardID == e.World.Info.CurrentBoard {
+		return e.Board.Name
+	}
+	data := e.World.BoardData[boardID]
+	if len(data) < SizeOfBoardName {
+		return ""
+	}
+	return LoadString(data[:SizeOfBoardName])
+}
+
 func editorProperties(e *Engine) EditorProperties {
 	options := make([]EditorBoardOption, 0, e.World.BoardCount+1)
-	options = append(options, EditorBoardOption{ID: 0, Name: "None"})
-	for boardID := int16(1); boardID <= e.World.BoardCount; boardID++ {
-		name := LoadString(e.World.BoardData[boardID][:SizeOfBoardName])
+	for boardID := int16(0); boardID <= e.World.BoardCount; boardID++ {
+		name := editorBoardName(e, boardID)
 		if name == "" {
 			name = "Untitled"
 		}

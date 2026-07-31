@@ -1993,16 +1993,53 @@ func (e *Engine) InitElementDefs() {
 	e.EditorPatterns[4] = E_LINE
 }
 
+// EditorInvisibleChar is the glyph InitElementsEditor gives an invisible wall so
+// it can be seen — and therefore moved, filled over, or deleted — while editing.
+const EditorInvisibleChar = '\xb0'
+
 func (e *Engine) InitElementsEditor() {
 	e.InitElementDefs()
-	ElementDefs[28].Character = '\xb0'
-	ElementDefs[28].Color = COLOR_CHOICE_ON_BLACK
+	e.InstallEditorElements()
+}
+
+// InstallEditorElements is InitElementsEditor's editor-only half, without the
+// InitElementDefs that precedes it: this fork's ElementDefs is one table shared
+// by every live room, so a session cannot rebuild it under a room that is
+// ticking. Vanilla's two assignments were
+//
+//	ElementDefs[28].Character = 0xB0
+//	ElementDefs[28].Color     = COLOR_CHOICE_ON_BLACK
+//
+// The second changes nothing — InitElementDefs already gives every element
+// COLOR_CHOICE_ON_BLACK — so only the glyph is modelled, and it rides the Engine
+// (see EditorElements) rather than the table. ForceDarknessOff was already
+// per-Engine, and is what edits a dark board lit.
+func (e *Engine) InstallEditorElements() {
+	e.EditorElements = true
 	e.ForceDarknessOff = true
 }
 
+// ZZT-QUIRK: this un-installs the editor element table, and WorldCreate calls it
+// (GAME.PAS:331) — including the WorldCreate that EditorLoop's 'N' runs without
+// leaving the editor (EDITOR.PAS:777). So in real ZZT, a world made with N is
+// edited with the GAME table until the editor is re-entered: its dark boards go
+// dark on the editing screen and its invisible walls stop drawing 0xB0. Faithful
+// here for the same reason; see EditorSession.NewWorld.
 func (e *Engine) InitElementsGame() {
 	e.InitElementDefs()
+	e.EditorElements = false
 	e.ForceDarknessOff = false
+}
+
+// ElementCharacter is the glyph an element draws with under THIS engine's
+// element table (M16.13a) — the same relocation M16.8a and M16.12a made for the
+// player glyph. Everything that draws an element in a context the editor table
+// can reach must read it here rather than ElementDefs[...].Character.
+func (e *Engine) ElementCharacter(element byte) byte {
+	if e.EditorElements && element == E_INVISIBLE {
+		return EditorInvisibleChar
+	}
+	return ElementDefs[element].Character
 }
 
 func (e *Engine) InitEditorStatSettings() {
