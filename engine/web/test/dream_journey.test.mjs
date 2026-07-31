@@ -14,15 +14,20 @@
 //   service.dream     — the browser half of the journey: a premise becomes a
 //                       world this same browser plays
 //
-// AND FOR ONE PINNED DEFECT (M16.17c). The scripted model refuses to paint the
-// START board, so the server salvages it into a stub room and marks the job
-// `complete` AND `retryable` with `stubbedBoards: ["Start"]` — M17.13's
-// contract, whose stated purpose is "so the client can repaint the missing
-// rooms while the player is already in the world". The client never reads
-// either field: pollDreamJob only surfaces `retryable` when the job FAILED, and
-// no failure path constructs that state any more. So the player is dropped into
-// the failed room with no offer to repaint it. This script asserts that absence
-// on purpose; when M16.17c lands it goes red and gets inverted.
+// AND FOR THE SALVAGED DREAM'S REPAINT OFFER (M16.17c, landed). The scripted
+// model refuses to paint the START board on its first call, so the server
+// salvages it into a stub room and marks the job `complete` AND `retryable`
+// with `stubbedBoards: ["Start"]` — M17.13's contract, whose stated purpose is
+// "so the client can repaint the missing rooms". Acts 4 and 4b are the browser
+// half that was missing: the world arrives, the offer arrives with it, the
+// offer is accepted, and act 5 plays the room the repaint gave back.
+//
+// The offer is made at the world's title screen, BEFORE the player joins, and
+// that ordering is the fix rather than an accident of the script: a repaint
+// rewrites the world's file, and the server refuses to overwrite a world
+// anybody is playing (M16.17b's refuseIfOccupied, which RetryBoard re-enters).
+// A player who took the offer from inside the stub room would be the one
+// occupant blocking it.
 //
 // TWO THINGS THAT SILENTLY PRODUCE A "PASSING" TEST:
 //   1. "Dream a world" is ALSO the title sidebar's own menu row (title.ts).
@@ -243,12 +248,48 @@ assert.ok(
 );
 assert.ok(!onBoard(arrived, "Dream failed"), "the dream reported a failure");
 
-// M16.17c — PINNED DEFECT. The job that produced this world is `complete` and
-// `retryable` with one stubbed board (the Go test asserts that against the
-// server). Nothing offered to repaint it.
+// M16.17c. The job that produced this world is `complete` and `retryable` with
+// one stubbed board (the Go test asserts that against the server). The world is
+// here AND so is the offer to repaint the room it lost.
+const offer = await waitForBoard(
+  page,
+  (cells) => onBoard(cells, "Repaint the lost rooms"),
+  "the repaint offer for the salvaged board",
+);
 assert.ok(
-  !onBoard(arrived, "Repaint"),
-  "a repaint offer appeared: M16.17c has landed — INVERT this assertion and drive the offer",
+  onBoard(offer, "The dream lost: Start"),
+  "the offer must name the room the dream lost, or there is nothing to decide about",
+);
+assert.ok(
+  onBoard(offer, "Play the world as it is"),
+  "the offer must be refusable: the world is already playable",
+);
+assert.equal(
+  textAt(offer, 69, 8, WORLD.length),
+  WORLD,
+  "the offer arrives with the world, not instead of it — the title screen is still behind it",
+);
+
+// --- act 4b: the offer is accepted, and the repaint runs --------------------
+//
+// The cursor starts on the first entry (openSelectList), so Enter takes it.
+
+await page.keyboard.press("Enter");
+await waitForBoard(
+  page,
+  (cells) => onBoard(cells, "Dreaming a world"),
+  "the repaint's own progress window",
+);
+const repainted = await waitForBoard(
+  page,
+  (cells) => !onBoard(cells, "Dreaming a world") && textAt(cells, 69, 8, WORLD.length) === WORLD,
+  "the title screen after the repaint",
+  90000,
+);
+assert.ok(!onBoard(repainted, "Dream failed"), "the repaint failed");
+assert.ok(
+  !onBoard(repainted, "Repaint the lost rooms"),
+  "the repaint left rooms stubbed: the offer came back",
 );
 
 await page.keyboard.press("KeyP");
@@ -258,26 +299,16 @@ assert.ok(
   `the browser joined ${seen.sockets.join(", ")}, not the world it dreamed`,
 );
 
-// --- act 5: the room the dream lost, and the player standing in it ----------
-
-const room = await waitForBoard(
-  page,
-  (cells) => onBoard(cells, "THIS BOARD FAILED"),
-  "the stub room the salvaged board left behind",
-);
-assert.ok(
-  onBoard(room, "PLEASE PROCEED TO THE NEXT BOARD"),
-  "the stub must tell the player where to go",
-);
-assert.ok(
-  !onBoard(room, "Repaint"),
-  "a repaint offer appeared in the world: M16.17c has landed — INVERT this assertion",
-);
+// --- act 5: the room the repaint gave back, and the player standing in it ---
 
 // The player really is playing: hold a direction long enough for the client's
 // 55ms input sampler to see it (main.ts sendInput), and watch the wire.
+//
+// Down is tried first on purpose. The repainted room starts the player at 1,1
+// with the board's object immediately to its right, and that object's :touch is
+// `#endgame` — walking east would end the game and every later press with it.
 const before = { x: seen.you.x, y: seen.you.y };
-for (const code of ["ArrowRight", "ArrowLeft", "ArrowUp", "ArrowDown"]) {
+for (const code of ["ArrowDown", "ArrowUp", "ArrowLeft", "ArrowRight"]) {
   await page.keyboard.down(code);
   await page.waitForTimeout(400);
   await page.keyboard.up(code);
@@ -289,6 +320,16 @@ assert.ok(
 );
 assert.ok(seen.hud, "the dreamed world drew no sidebar HUD");
 
+// The room is the repainted one, not the stub the dream first left here. This
+// is asserted after the player has moved, so the board has certainly painted:
+// an absence read off an unpainted board would pass for the wrong reason.
+const room = await readGrid(page);
+assert.ok(
+  !onBoard(room, "THIS BOARD FAILED"),
+  `the accepted repaint left the stub room in place:\n${gridToArt(room)}`,
+);
+assert.ok(!onBoard(room, "PLEASE PROCEED TO THE NEXT BOARD"), "the stub's second line survived the repaint");
+
 // ---------------------------------------------------------------------------
 
 assert.deepEqual(pageErrors, [], "the page threw");
@@ -297,7 +338,7 @@ assert.deepEqual(consoleErrors, [], "the console carried errors");
 console.log(
   `M16.17 dream journey: D → premise → ${[...stageLines].length} progress lines → ${WORLD} entered and played` +
     `\n  progress window showed: ${[...stageLines].join(" | ")}` +
-    `\n  PINNED (M16.17c): the salvaged board was never offered for repaint`,
+    `\n  M16.17c: the salvaged room was offered for repaint, the offer was accepted, and the repainted room was played`,
 );
 
 await context.close();

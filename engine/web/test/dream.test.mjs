@@ -12,7 +12,7 @@ const output = await build({
   write: false,
 });
 const source = Buffer.from(output.outputFiles[0].contents).toString("base64");
-const { DreamFailure, generationLines, retryDreamBoard, runDreamGeneration } = await import(
+const { DreamFailure, generationLines, retryDreamBoard, runDreamGeneration, salvagedBoards } = await import(
   `data:text/javascript;base64,${source}`
 );
 
@@ -109,8 +109,13 @@ const successFetcher = async (url, init) => {
   successCalls.push({ url, init });
   return new Response(JSON.stringify(successReplies.shift()), { status: 200 });
 };
-const world = await runDreamGeneration("an underwater clockwork city", successFetcher, async () => {}, (next) => progress.push(next));
-assert.equal(world, "TIDECELLAR");
+const dream = await runDreamGeneration("an underwater clockwork city", successFetcher, async () => {}, (next) => progress.push(next));
+assert.equal(dream.world, "TIDECELLAR");
+// A dream that lost nothing carries no offer for the UI to make.
+assert.equal(dream.jobId, "gen-1");
+assert.equal(dream.retryable, false);
+assert.deepEqual(dream.stubbedBoards, []);
+assert.equal(salvagedBoards(dream), "");
 assert.equal(successCalls[0].url, "/api/generate");
 assert.equal(successCalls[0].init.method, "POST");
 assert.deepEqual(JSON.parse(successCalls[0].init.body), { prompt: "an underwater clockwork city", async: true, ground: false });
@@ -164,8 +169,9 @@ assert.ok(failure instanceof DreamFailure, `expected DreamFailure, got ${failure
 assert.equal(failure.retryable, true);
 assert.equal(failure.jobId, "gen-4");
 assert.equal(failure.failedBoard, "Lunar Liftoff");
-const retriedWorld = await retryDreamBoard(failure.jobId, retryFetcher, async () => {}, () => {});
-assert.equal(retriedWorld, "MOONWORLD");
+const retried = await retryDreamBoard(failure.jobId, retryFetcher, async () => {}, () => {});
+assert.equal(retried.world, "MOONWORLD");
+assert.equal(salvagedBoards(retried), "");
 assert.deepEqual(JSON.parse(retryCalls[2].init.body), { retry: "gen-4", async: true });
 assert.equal(retryCalls[3].url, "/api/generate?id=gen-4");
 // A non-retryable failure surfaces retryable=false so the UI skips the offer.
@@ -193,3 +199,54 @@ assert.deepEqual(
   generationLines([{ stage: "salvaging", detail: "2 of 9 boards failed" }]),
   ["Some rooms would not form..."],
 );
+
+// M16.17c: a salvaged dream is complete AND retryable. The world name must
+// arrive together with that state — the client enters the world and offers the
+// repaint, so dropping either field here is the whole defect.
+const salvageCalls = [];
+const salvageReplies = [
+  { id: "gen-6" },
+  { status: "running", progress: [{ stage: "salvaging", board: "Start", detail: "exhausted 1 attempt" }] },
+  {
+    status: "complete",
+    world: "DREAM",
+    retryable: true,
+    failedBoard: "Start",
+    stubbedBoards: ["Start"],
+    progress: [],
+  },
+];
+const salvageFetcher = async (url, init) => {
+  salvageCalls.push({ url, init });
+  return new Response(JSON.stringify(salvageReplies.shift()), { status: 200 });
+};
+const salvaged = await runDreamGeneration("a lighthouse", salvageFetcher, async () => {}, () => {});
+assert.equal(salvaged.world, "DREAM", "a salvaged dream still hosts its world");
+assert.equal(salvaged.jobId, "gen-6", "the offer resumes this job, not a fresh generation");
+assert.equal(salvaged.retryable, true);
+assert.deepEqual(salvaged.stubbedBoards, ["Start"]);
+assert.equal(salvagedBoards(salvaged), "Start");
+
+// Two lost rooms with no failedBoard name: the offer still says which rooms.
+assert.equal(
+  salvagedBoards({ world: "W", jobId: "gen-7", retryable: true, stubbedBoards: ["Attic", "Cellar"] }),
+  "Attic, Cellar",
+);
+// Retryable with nothing stubbed, or stubs on a job the server will not resume:
+// neither is an offer the client can make good on.
+assert.equal(salvagedBoards({ world: "W", jobId: "gen-8", retryable: true, stubbedBoards: [] }), "");
+assert.equal(salvagedBoards({ world: "W", jobId: "gen-9", retryable: false, stubbedBoards: ["Attic"] }), "");
+
+// The repaint resumes the SAME job id, and its answer is a plain complete job:
+// no offer left to make.
+const repaintReplies = [{ id: "gen-6" }, { status: "complete", world: "DREAM", progress: [] }];
+const repaintFetcher = async (url, init) => {
+  salvageCalls.push({ url, init });
+  return new Response(JSON.stringify(repaintReplies.shift()), { status: 200 });
+};
+const repainted = await retryDreamBoard(salvaged.jobId, repaintFetcher, async () => {}, () => {});
+assert.equal(repainted.world, "DREAM");
+assert.equal(salvagedBoards(repainted), "", "the repainted world has no rooms left to offer");
+assert.deepEqual(JSON.parse(salvageCalls.at(-2).init.body), { retry: "gen-6", async: true });
+
+console.log("M16.17c salvage offer: a complete-and-retryable dream carries its world and its lost rooms");

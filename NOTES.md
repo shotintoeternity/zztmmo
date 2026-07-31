@@ -7321,3 +7321,70 @@ the editor's fan-out, and the same suite passes on its own here. Recording it
 rather than rerunning until it is quiet: an executor who reruns a red suite
 until it goes green is the failure mode the replay-fixture rule exists to
 prevent.
+
+## M16.17c — the salvaged dream's repaint offer, wired to a client (2026-07-31)
+
+M17.13's contract said a salvaged async job is `complete` **and** `retryable`,
+reporting `stubbedBoards`, "so the client can repaint the missing rooms while
+the player is already in the world". The server half shipped; the browser half
+never did. `pollDreamJob` returned `job.world` the moment a job completed and
+looked at `retryable`/`failedBoard` only on the `failed` branch — and since
+M17.13 no failure path constructs that state any more, so M12.22's targeted
+retry was unreachable from a browser. A player whose dream lost a room was
+dropped into the stub with nothing to ask.
+
+### The client half
+
+- `pollDreamJob` now resolves to a `DreamResult` — `{world, jobId, retryable,
+  failedBoard, stubbedBoards}` — instead of a bare world name, so a complete
+  job's salvage state travels with the world instead of being dropped.
+  `runDreamGeneration` and `retryDreamBoard` return it; `salvagedBoards()` is
+  the single place that decides whether there is an offer to make (retryable
+  AND something stubbed — either half alone is an offer the client cannot make
+  good on).
+- `main.ts` enters the world first and *then* offers: a selectable window,
+  "Some rooms would not form", naming the rooms the dream lost, with "Repaint
+  the lost rooms now" / "Play the world as it is". Escape declines. Accepting
+  calls the existing `resumeDreamGeneration`, which resumes the same job id —
+  no second plan, no second world. A repaint that loses a room of its own is
+  offered again.
+- The failure path is untouched.
+
+### Why the offer is made at the title screen, not in the room
+
+M17.13's wording ("while the player is already in the world") cannot be taken
+literally against the shipped server: a repaint rewrites the world's file, and
+`refuseIfOccupied` — M16.17b, which `RetryBoard` re-enters immediately before
+the first write — refuses to overwrite a world anybody is playing. A player
+who accepted the offer from inside the stub room would be the one occupant
+blocking it, and the repaint would come back 409. So the offer arrives at the
+new world's title screen, after `enterWorld`, before the join: the world is
+delivered first and the offer comes *with* it rather than instead of it, which
+is the distinction M17.13 was drawing. The title screen holds no client (the
+title stream is SSE, not a room member), so the retry can persist and re-host.
+
+### Evidence
+
+- `web/test/dream_journey.test.mjs`: both pinned "no repaint offer" assertions
+  are inverted. Act 4 requires the offer on screen with the world's title
+  screen still behind it, naming the lost room; act 4b accepts it, watches the
+  repaint's own progress window, and requires the offer NOT to come back; act 5
+  joins, moves, and requires the stub's text to be gone from the room.
+  The movement probe now tries **down** first: the repainted room starts the
+  player next to an object whose `:touch` is `#endgame`, so walking east would
+  end the game and every later press with it.
+- `TestM1617BrowserDreamJourney` is inverted on the server side too: the job the
+  browser drove still carries the `salvaging` stage, and finishes with nothing
+  stubbed, nothing retryable, one planner call and two calls for the board that
+  would not form. Its scripted model now answers the *second* start-board call
+  with a good board — the retry the browser drives has to be able to succeed.
+- `web/test/dream.test.mjs` covers the module half: a salvaged complete job
+  carries world+jobId+stubbedBoards, `salvagedBoards` refuses the two
+  half-states, and the repaint POSTs `{retry: <same id>}` and comes back clean.
+- Manifest: `mode.modal-dream` leaves `gap` for `pass`; `service.dream`'s note
+  records M16.17c as landed.
+
+### Verified
+
+`go build ./...`, `go vet ./...`, `npm test` and `npm run build` clean;
+`go test ./...` green on a full run (209s).

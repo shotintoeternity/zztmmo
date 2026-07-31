@@ -116,8 +116,11 @@ M12.23, M17.1–M17.7, M16.0–M16.8a — has fully landed.)
    can type. It filed **M16.17d**: the browser never sends a name, so a
    plan-derived collision with an owned world now fails where it used to
    overwrite — a UX hole, not a data-loss one, and it ranks below M16.17c.
-   M16.17c is next (a visible dead end, but only after a board fails to paint).
-   Next in file order after those is M16.18. The one
+   **M16.17c landed 2026-07-31**: a complete job's salvage state now reaches the
+   browser, which enters the world and then offers to repaint the rooms the
+   dream lost — offered at the world's title screen, because a repaint cannot
+   overwrite a world its own player is occupying. M16.17d is the last of
+   M16.17's gap tasks still open. Next in file order after those is M16.18. The one
    browser flake still open is M16.14b's act 8,
    which is `[ADVISOR]` and still ranks below the certification tail.
 
@@ -3642,7 +3645,7 @@ gap task has landed.
   a dream that ASKS for an owned name is still 409; both covered beside
   `…bDreamHonoursTheOwnershipTheEditorWrites`; `go test ./...` green.
 
-- [ ] **M16.17c — The salvaged dream's repaint offer has no client (M16.17 gap
+- [x] **M16.17c — The salvaged dream's repaint offer has no client (M16.17 gap
   task).** M17.13's own spec: a salvaged async job is `complete` *and*
   `retryable`, reporting `stubbedBoards`, "so the client can repaint the missing
   rooms while the player is already in the world". The server half landed and
@@ -3661,6 +3664,21 @@ gap task has landed.
   repaint offer" assertions in `web/test/dream_journey.test.mjs` are INVERTED
   and the offer is accepted and driven to a repainted board; `npm test` and
   `go test ./...` green; manifest row `mode.modal-dream` leaves `gap`.
+  Landed 2026-07-31 (NOTES.md M16.17c). `pollDreamJob` resolves to a
+  `DreamResult` carrying `jobId`/`retryable`/`stubbedBoards`, so a complete
+  job's salvage state travels with the world instead of being dropped; the
+  client enters the world and then opens "Some rooms would not form", naming
+  the lost rooms, whose "Repaint the lost rooms now" resumes the same job id. A
+  repaint that loses a room of its own is offered again; the failure path is
+  untouched. **The offer is made at the world's title screen, before the join,
+  and that ordering is the fix rather than a detail**: a repaint rewrites the
+  world's file and M16.17b's `refuseIfOccupied` — which `RetryBoard` re-enters
+  — refuses to overwrite a world anybody is playing, so a player who took the
+  offer from inside the stub room would be the occupant blocking it. Both
+  pinned browser assertions are inverted (the offer is required on screen, then
+  accepted, then the repainted room is joined and played, with the stub's text
+  gone), and the Go harness's model now answers the second start-board call
+  with a good board so the retry the browser drives can succeed.
 
 - [ ] **M16.18 — Mobile and browser-platform contract.** Run the browser suite
   under supported desktop engines and touch emulation at portrait/landscape

@@ -2265,14 +2265,15 @@ func TestM1617bDreamHonoursTheOwnershipTheEditorWrites(t *testing.T) {
 // whole flow (D → premise → progress window → the world) without a line of it
 // being staged.
 //
-// It also carries this sweep's third finding. The scripted model refuses the
-// START board, so the server salvages it and marks the job complete AND
-// retryable with stubbedBoards — M17.13's contract, which exists (its own words)
-// "so the client can repaint the missing rooms while the player is already in
-// the world". No client reads either field, and no failure path produces a
-// retryable failure any more, so M12.22's targeted retry is unreachable from a
-// browser. This test asserts the server side of that state and the browser
-// script asserts the missing offer; both are inverted when M16.17c lands.
+// It also carries this sweep's third finding, now closed. The scripted model
+// refuses the START board on its first call, so the server salvages it and
+// marks the job complete AND retryable with stubbedBoards — M17.13's contract,
+// which exists (its own words) "so the client can repaint the missing rooms
+// while the player is already in the world". M16.17c built the browser half:
+// the world arrives, the offer to repaint the lost room arrives with it, and
+// the browser script accepts it and plays the room the repaint gave back. So
+// the model's second answer for that board is a good one — the retry the
+// browser drives has to be able to succeed.
 func TestM1617BrowserDreamJourney(t *testing.T) {
 	if testing.Short() {
 		t.Skip("skipping the M16.17 browser journey in short mode")
@@ -2280,7 +2281,7 @@ func TestM1617BrowserDreamJourney(t *testing.T) {
 	m169RequireBrowserHarness(t)
 	m169RequireClientBuild(t)
 
-	model := m1617ScriptedDream(t, m1617Junk)
+	model := m1617ScriptedDream(t, m1617Junk, generatedBoard("Start", false))
 	// Slow enough that the progress window is on screen for several client
 	// polls (the client polls every 500ms), which is the thing under test.
 	model.answerIn(900 * time.Millisecond)
@@ -2303,21 +2304,30 @@ func TestM1617BrowserDreamJourney(t *testing.T) {
 		"M1617_PREMISE="+m1617Premise, "M1617_WORLD=DREAM")
 	t.Logf("browser dream journey:\n%s", out)
 
-	// The server side of the pinned defect: the job the browser just watched is
-	// complete, playable, and still offering a repaint nobody asked it for.
+	// The server side of M16.17c, read after the browser has been through it.
+	// The job the browser watched was salvaged (its progress still carries the
+	// salvaging stage), and the browser took the offer: the same job id is
+	// complete with nothing left stubbed and nothing left to retry.
 	job := m1617PollJob(t, srv, "gen-1", 10*time.Second)
 	if job.Status != "complete" || job.World != "DREAM" {
 		t.Fatalf("the browser's job did not complete into DREAM: %+v", job)
 	}
-	if len(job.StubbedBoards) != 1 || job.StubbedBoards[0] != "Start" {
-		t.Fatalf("StubbedBoards = %v, want [Start] — the browser journey rests on a salvaged board", job.StubbedBoards)
+	if m1617FirstIndex(m1617JobStages(job), "salvaging") < 0 {
+		t.Fatalf("the browser's job was never salvaged, so it never carried a repaint offer: %v", m1617JobStages(job))
 	}
-	if !job.Retryable || job.FailedBoard != "Start" {
-		t.Fatalf("PINNED DEFECT (M16.17c) has changed shape: the salvaged job is %+v, "+
-			"and this test's premise is that the server offers a retry the client never reads", job)
+	if len(job.StubbedBoards) != 0 || job.Retryable || job.FailedBoard != "" {
+		t.Fatalf("the repaint the browser accepted did not clear the salvage state: %+v", job)
 	}
-	t.Logf("PINNED DEFECT (M16.17c): job gen-1 is complete, retryable, stubbedBoards=%v — "+
-		"and the browser was offered nothing", job.StubbedBoards)
+	// The offer resumed this job rather than dreaming a second world: one plan,
+	// two calls for the board that would not form.
+	if got := model.callsFor("plan", ""); got != 1 {
+		t.Errorf("the accepted repaint re-planned the world (%d planner calls); a retry resumes", got)
+	}
+	if got := model.callsFor("board", "start"); got < 2 {
+		t.Errorf("the accepted repaint made %d call(s) for the failed board, want a second attempt", got)
+	}
+	t.Logf("M16.17c: job gen-1 was salvaged, the browser was offered the repaint, took it, "+
+		"and the job finished with no stubbed boards after %d start-board calls", model.callsFor("board", "start"))
 }
 
 // m1617RunBrowserScript runs one Playwright script under engine/web against the

@@ -17,7 +17,15 @@ import { openHelp } from "./help";
 import { commandKey, isHandledKey, isMovementKey, movementMask, rawKey } from "./keys";
 import { drawTitleSidebar, titleCommand, NO_OCCUPANCY, type ServerOccupancy } from "./title";
 import { soundNotesFromProtocol, ZztSound } from "./sound";
-import { DreamFailure, generationLines, retryDreamBoard, runDreamGeneration, type GenerationProgress } from "./dream";
+import {
+  DreamFailure,
+  generationLines,
+  retryDreamBoard,
+  runDreamGeneration,
+  salvagedBoards,
+  type DreamResult,
+  type GenerationProgress,
+} from "./dream";
 import { drawEditorSidebar, editorMessageIsForBoard, type EditorInspect, type SidebarActionMenu, type SidebarPresenceList, type SidebarStatPrompt } from "./editor";
 import { editorReplyMatchesCursor, editorCursorOverlay, editorPresenceLegend, EDITOR_BLINK_PHASES } from "./editor_cursor";
 import { optimisticEditorEraseCell, optimisticEditorTextCell } from "./editor_input";
@@ -1206,17 +1214,61 @@ function showGenerationProgress(progress: GenerationProgress[]) {
 async function startDreamGeneration(prompt: string, ground = false) {
   showGenerationProgress([]);
   try {
-    const world = await runDreamGeneration(
+    const dream = await runDreamGeneration(
       prompt,
       fetch,
       () => new Promise((resolve) => window.setTimeout(resolve, 500)),
       showGenerationProgress,
       ground,
     );
-    await enterWorld(world);
+    await enterWorld(dream.world);
+    offerDreamRepaint(dream);
   } catch (error) {
     handleDreamFailure(error);
   }
+}
+
+// M16.17c — the salvaged dream's repaint offer.
+//
+// A dream that lost a room is complete AND retryable (M17.13): the world is
+// hosted and playable, the lost rooms are stub boards, and the server is still
+// holding the resume state that repaints them. The world comes first — the
+// offer arrives with it, not instead of it, which is what separates this from
+// handleDreamFailure below.
+//
+// It is offered at the world's title screen rather than from inside the world,
+// and that ordering is load-bearing: a repaint rewrites the world's file, and
+// the server refuses to overwrite a world anybody is playing (M16.17b's
+// refuseIfOccupied, which RetryBoard re-enters). A player who took the offer
+// while standing in the stub room would be the one occupant blocking it.
+const REPAINT_CHOICE = "Repaint the lost rooms now";
+const KEEP_CHOICE = "Play the world as it is";
+// The text window's inner span, matching dream.ts's own progress-line clamp:
+// a longer line bleeds past the border into the sidebar.
+const DREAM_OFFER_WIDTH = 42;
+
+function offerDreamRepaint(dream: DreamResult) {
+  const lost = salvagedBoards(dream);
+  if (!lost) {
+    return;
+  }
+  openSelectList(
+    "Some rooms would not form",
+    [REPAINT_CHOICE, KEEP_CHOICE],
+    (choice) => {
+      if (choice === REPAINT_CHOICE) {
+        void resumeDreamGeneration(dream.jobId);
+      }
+    },
+    [
+      "",
+      `The dream lost: ${lost}`.slice(0, DREAM_OFFER_WIDTH),
+      "",
+      "The world is yours to play now. Its lost",
+      "rooms are stubs until they are repainted.",
+      "",
+    ],
+  );
 }
 
 // When the server kept resumable state (a board exhausted its attempts but
@@ -1240,13 +1292,17 @@ function handleDreamFailure(error: unknown) {
 async function resumeDreamGeneration(jobId: string) {
   showGenerationProgress([]);
   try {
-    const world = await retryDreamBoard(
+    const dream = await retryDreamBoard(
       jobId,
       fetch,
       () => new Promise((resolve) => window.setTimeout(resolve, 500)),
       showGenerationProgress,
     );
-    await enterWorld(world);
+    await enterWorld(dream.world);
+    // A repaint can lose a room of its own: the retry answers with the same
+    // complete-and-retryable shape, so it is offered again rather than left
+    // for the player to discover by walking into it.
+    offerDreamRepaint(dream);
   } catch (error) {
     handleDreamFailure(error);
   }

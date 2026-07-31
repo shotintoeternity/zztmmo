@@ -41,8 +41,32 @@ export type GenerationJob = {
   error?: string;
   retryable?: boolean;
   failedBoard?: string;
+  // M17.13: the boards that would not paint and were salvaged into stub rooms.
+  // Set on a *complete* job — the world is playable but incomplete.
+  stubbedBoards?: string[];
   progress?: GenerationProgress[];
 };
+
+/**
+ * DreamResult is what a finished job hands back. A salvaged dream (M17.13) is
+ * complete AND retryable: it hosts a world whose lost rooms are stubs, and it
+ * keeps the resume state that repaints them. So the world name arrives together
+ * with the salvage state rather than instead of it — the caller enters the world
+ * and offers the repaint, which is the whole of M16.17c.
+ */
+export type DreamResult = {
+  world: string;
+  jobId: string;
+  retryable: boolean;
+  failedBoard?: string;
+  stubbedBoards: string[];
+};
+
+/** salvagedBoards names the rooms a completed dream lost, or "" if none. */
+export function salvagedBoards(dream: DreamResult): string {
+  if (!dream.retryable || dream.stubbedBoards.length === 0) return "";
+  return dream.failedBoard || dream.stubbedBoards.join(", ");
+}
 
 /**
  * DreamFailure carries the failed job's identity so the UI can offer a
@@ -142,7 +166,7 @@ export async function runDreamGeneration(
   wait: () => Promise<void>,
   onProgress: (progress: GenerationProgress[]) => void,
   ground = false,
-): Promise<string> {
+): Promise<DreamResult> {
   const response = await fetcher("/api/generate", {
     method: "POST",
     headers: { "Content-Type": "application/json" },
@@ -164,7 +188,7 @@ export async function retryDreamBoard(
   fetcher: Fetcher,
   wait: () => Promise<void>,
   onProgress: (progress: GenerationProgress[]) => void,
-): Promise<string> {
+): Promise<DreamResult> {
   const response = await fetcher("/api/generate", {
     method: "POST",
     headers: { "Content-Type": "application/json" },
@@ -179,14 +203,25 @@ async function pollDreamJob(
   fetcher: Fetcher,
   wait: () => Promise<void>,
   onProgress: (progress: GenerationProgress[]) => void,
-): Promise<string> {
+): Promise<DreamResult> {
   for (;;) {
     await wait();
     const statusResponse = await fetcher(`/api/generate?id=${encodeURIComponent(id)}`);
     if (!statusResponse.ok) throw new Error(await statusResponse.text());
     const job = (await statusResponse.json()) as GenerationJob;
     onProgress(job.progress ?? []);
-    if (job.status === "complete" && job.world) return job.world;
+    if (job.status === "complete" && job.world) {
+      // M16.17c: a complete job may still be retryable. Carry that out rather
+      // than dropping it on the floor — the server kept the resume state for
+      // exactly this job id, and it is the only way back to the lost rooms.
+      return {
+        world: job.world,
+        jobId: id,
+        retryable: !!job.retryable,
+        failedBoard: job.failedBoard,
+        stubbedBoards: job.stubbedBoards ?? [],
+      };
+    }
     if (job.status === "failed") {
       throw new DreamFailure(job.error || "generation failed", id, !!job.retryable, job.failedBoard);
     }
