@@ -329,6 +329,11 @@ type m169PlayerState struct {
 	Y       int16    `json:"y"`
 	Health  int16    `json:"health"`
 	Score   int16    `json:"score"`
+	// Ammo is the server's own count of shots left. The sidebar carries the same
+	// number, but the sidebar is a picture of a diff that has landed — so a script
+	// that wants to know whether a shot FIRED, as distinct from whether its frame
+	// has been painted yet, has to ask here (M16.10a).
+	Ammo int16 `json:"ammo"`
 	// ScrollOpen is the room-level read freeze: a player with a scroll open
 	// cannot move until the client's reply lands (RoomManager.SubmitScrollReply).
 	// The browser script waits on it rather than guessing when the reply arrived.
@@ -499,6 +504,7 @@ func (h *m169Harness) state() m169StateResponse {
 				ps := room.Engine.PlayerFor(statID)
 				entry.Health = ps.Health
 				entry.Score = ps.Score
+				entry.Ammo = ps.Ammo
 			}
 		}
 		state.Players = append(state.Players, entry)

@@ -8038,3 +8038,60 @@ end-of-run `pageErrors`/`consoleErrors` assertions in a full `go test ./...` —
 is the same shape and the same suite family, and that suite calls `pauseClock`
 per editor, so this fix covers it if the entry was the rewind; it recorded no
 error text at the time, so that cannot be claimed, only expected.
+
+## 2026-08-01 — M16.10a: `shootSpace` fired every time; the camera was late
+
+**What was wrong.** Nothing, in the engine. `TestM1610BrowserControlVocabulary`
+§4 shot Space, then read the canvas with a bare `readGrid` and asserted on the
+bullet it found there. Under a full `go test ./...` that read sometimes caught
+the frame *before* the shot: no bullet anywhere in column 9, and a sidebar still
+reading `Ammo:4`. Both symptoms are exactly what a shot that never fired would
+also produce, which is why the failure read as one.
+
+**Why the read can be early.** A tick's diff reaches the canvas when the socket
+delivers it. `/control/step` returns as soon as `WebSocketServer.Tick` has
+written the message (`webSocketClient.write` is synchronous into the socket), and
+Node's next CDP round trip races that delivery: in Chromium the frame goes
+through the network service and an IPC hop to the renderer, while the step's HTTP
+reply goes straight back to Node. Nothing in the harness orders those. Painting
+is not the delay — `applyDiff` draws synchronously on the message (`main.ts`), so
+there is no rAF to wait on and the frozen page clock is not implicated.
+
+**Measured, not reasoned.** With the machine loaded, the immediate read after
+`shootSpace` was one diff behind in **3 of 8 runs** — it photographed the bullet
+at row 15 when the settled canvas had it at row 16. Two diffs behind is the same
+thing one step further and gives the reported screen exactly. In every run the
+server's own ammo was 3: the shot fired.
+
+**Everything else was eliminated first**, against the three candidates the task
+spec named. `pState.DirX/DirY` cannot be zero — the preceding `assertAt(9,13)`
+passed, and only the movement branch that set it can move the player.
+`bulletCount` cannot cap — `fixtures/control.zwd` sets `max-shots 10` and the
+east bullet is gone by then (the target's `#die` is what §3 waits for). The input
+frame cannot be overwritten between the await and the tick: `WorldInstance.Tick`
+drains `inst.Inputs` every tick, so a zero entry needs a zero frame, and while
+Space is held the client's only zero-frame producers (`blur`, `stopHeldInput`)
+are not reachable and the 55ms sampler would resend mask 32, not zero.
+
+**The fix, in two halves.** Whether Space fired is now asked of the server —
+`m169PlayerState` carries `Ammo`, and §4 asserts it dropped to 3. Where the
+bullet went is still read off the canvas, but from the frame that carries the
+shot: `waitForGrid` on `Ammo:3`, which rides the same tick's diff as the bullet's
+first appearance. The bullet assertion itself is untouched — exactly one bullet,
+in column 9, strictly south of the player — because loosening it is what would
+empty the `input.play-shoot-space` row.
+
+**The mechanism is pinned, not waited for**
+(`TestM1610aStaleCanvasCannotPassTheShotAssertion`, following M16.18c's shape).
+`M1610_HOLD_DIFFS=1` parks the shot's two socket messages before the client can
+apply them and releases one per subsequent canvas read, so the first read after
+the shot is certainly stale. Inverted by restoring the bare `readGrid`, it fails
+with the reported text verbatim: `bullets found on rows []` over `Ammo:4`. The
+shim queues strictly — once anything is parked everything queues behind it, or an
+older diff would overwrite a newer one and the shim would be the bug.
+
+**Not fixed here.** `tickUntilGrid` ties the number of ticks taken to canvas
+latency, so a loaded run steps the world further than a quiet one. It is benign
+on CONTROL (a static board) and every use of it polls rather than photographs,
+but it is the same family and worth knowing before a world with movement is
+driven this way.

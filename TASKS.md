@@ -166,15 +166,16 @@ M12.23, M17.1–M17.7, M16.0–M16.8a — has fully landed.)
    `launchGoldenBrowser` about the one error it caused, on a one-shot credit
    matched to that exact string, and a test forces the losing attempt instead of
    waiting for load to supply one.
-   Next in file order after those is M16.20, whose remaining blocker is
-   M16.10a. The one
-   browser flake still open is M16.14b's act 8,
+   **M16.10a landed 2026-08-01** — `shootSpace` was firing every time; §4's
+   bare `readGrid` was photographing the frame before the shot, which reads
+   identically to a shot that never happened. The shot is now asserted at the
+   server and only its placement on the canvas, from the frame that carries it,
+   with the bullet assertion itself untouched.
+   Next in file order after those is M16.20, which no longer has a blocker. The
+   one browser flake still open is M16.14b's act 8,
    which is `[ADVISOR]` and still ranks below the certification tail.
 
 **Optional / deferred (bottom):**
-- M16.10a — `shootSpace` sometimes fires nothing under load (filed by M16.18a,
-  2026-08-01; reproduced on an unmodified checkout, so it is not that task's
-  doing). Ranks with the certification tail.
 - M14.3 — package split (skip unless the single package is actually hurting)
 - M12.15d — mined style priors (owner-deferred; revisit only if generation quality plateaus)
 
@@ -3946,7 +3947,7 @@ gap task has landed.
   vacuous pass M16.18a found in `modal-help`), an unprovoked rewind still
   landing, and a real page fault reported in full while a credit is outstanding.
 
-- [ ] **M16.10a — `shootSpace` sometimes fires nothing under load (M16.18a
+- [x] **M16.10a — `shootSpace` sometimes fires nothing under load (M16.18a
   observation).** `TestM1610BrowserControlVocabulary` failed twice during
   M16.18a's verification with "Space must shoot SOUTH down column 9 … bullets
   found on rows []" and `Ammo:4` on the sidebar — i.e. the Space shot did not
@@ -3963,6 +3964,20 @@ gap task has landed.
   mechanism is named and the suite survives a full-suite run repeatedly; do not
   fix it by loosening the bullet assertion, which is what makes the row
   `input.play-shoot-space` mean anything.
+  **LANDED 2026-08-01** (NOTES.md M16.10a). The shot fired every time; the
+  camera was late. §4 read the canvas with a bare `readGrid` immediately after
+  `shootSpace`, and a tick's diff reaches the canvas only when the socket
+  delivers it — which `/control/step`'s reply does not wait for. Measured under
+  load, that read was one diff behind in 3 of 8 runs; two behind gives the
+  reported screen exactly, and the server's ammo was 3 throughout. All three
+  candidates above were eliminated first (`max-shots 10` with no live bullet,
+  `DirY=1` proved by the passing `assertAt`, and `inst.Inputs` drained per tick
+  with no zero-frame producer reachable while Space is held). Whether Space
+  fired is now asked of the server (`m169PlayerState.Ammo`); only where the
+  bullet went is read off the canvas, and from the frame that carries the shot.
+  The bullet assertion is unchanged. `TestM1610aStaleCanvasCannotPassTheShotAssertion`
+  parks the shot's two socket messages and re-runs the whole script, so a wait
+  the previous frame could satisfy fails there rather than under load.
 
 - [x] **M16.19 — Production-boundary, security, and load validation.** Launch
   the built server as a subprocess and cover startup/shutdown, static assets,

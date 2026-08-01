@@ -3149,7 +3149,7 @@
       "fixture": "engine/web/test/control_keys.test.mjs",
       "status": "pass",
       "assignedTask": "M16.10",
-      "notes": "M16.10: Space reaches the engine as InputKeyPressed == ' ' with no delta, which is ElementPlayerTick's pState.DirX/DirY branch. The test walks SOUTH first and then presses Space, so what is asserted is that the bullet flies down the player's own column — a Space that reused a hard-coded direction, or the previous east-facing shot, would put it elsewhere."
+      "notes": "M16.10: Space reaches the engine as InputKeyPressed == ' ' with no delta, which is ElementPlayerTick's pState.DirX/DirY branch. The test walks SOUTH first and then presses Space, so what is asserted is that the bullet flies down the player's own column — a Space that reused a hard-coded direction, or the previous east-facing shot, would put it elsewhere. M16.10a: whether the shot happened is now asked of the server (the player's own ammo) and only its placement is read off the canvas, from the frame that carries the shot — a canvas one diff behind spelled 'fired nothing' identically to 'not painted yet', which is how this row failed twice under full-suite load. TestM1610aStaleCanvasCannotPassTheShotAssertion re-runs the whole script with the shot's two diffs parked, so a wait that the previous frame could satisfy fails there instead of waiting for a loaded machine."
     },
     {
       "id": "input.play-sound-toggle",

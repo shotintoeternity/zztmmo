@@ -77,6 +77,31 @@ func TestM1610BrowserControlVocabulary(t *testing.T) {
 	t.Logf("browser control vocabulary:\n%s", out)
 }
 
+// TestM1610aStaleCanvasCannotPassTheShotAssertion runs the same script with the
+// browser's socket delivery deliberately behind: the two ticks of the Space shot
+// are parked before the client can apply them, and released one per subsequent
+// canvas read.
+//
+// That is the mechanism M16.10a was filed for. A diff reaches the canvas when
+// the socket delivers it, and nothing in this harness makes that happen before
+// the next CDP round trip — Chromium alone routes the frame through the network
+// service and an IPC hop to the renderer, while /control/step's reply goes
+// straight back to Node. Measured under load on an unmodified checkout, the read
+// after the shot caught the previous frame in three runs out of eight; two
+// frames behind is the same thing one step further, and produces exactly what
+// M16.18a saw — "bullets found on rows []" over a sidebar still reading Ammo:4,
+// for a shot the server had already fired.
+//
+// Forcing it here is what keeps the fix from being the kind of vacuous pass
+// M16.18a found in `modal-help`: the script must now wait for the frame that
+// carries the shot, and a wait that could be satisfied by the frame before it
+// fails this test rather than waiting for a loaded machine to say so.
+func TestM1610aStaleCanvasCannotPassTheShotAssertion(t *testing.T) {
+	h := m1610NewHarness(t)
+	out := h.runBrowserScript("control_keys.test.mjs", "M1610_HOLD_DIFFS=1")
+	t.Logf("browser control vocabulary, canvas held two diffs behind:\n%s", out)
+}
+
 // TestM1610BrowserAudioParity replaces window.AudioContext with an observable
 // mock BEFORE the client loads, then makes the world produce sounds and asserts
 // on the automation events the real ZztSound scheduled: that #play parsed into

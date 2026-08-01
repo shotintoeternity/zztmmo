@@ -75,11 +75,80 @@ async function windowCursorLine(page) {
   return textAt(await readGrid(page), 0, WINDOW_CURSOR_ROW).trim();
 }
 
+// M16.10a. A tick's diff reaches the canvas over the socket, on the browser's
+// own schedule; nothing in this harness makes it land before the next CDP round
+// trip. Under a loaded machine it sometimes does not, which is how §4's Space
+// shot came to be photographed a tick before it happened.
+//
+// HOLD_DIFFS forces that ordering instead of waiting for load to supply it: with
+// it set, `holdDiffs(n)` parks the next n socket messages and each subsequent
+// readGrid releases one, so the first read after a step is guaranteed to be the
+// stale frame. Driven by TestM1610aStaleCanvasCannotPassTheShotAssertion.
+const HOLD_DIFFS = process.env.M1610_HOLD_DIFFS === "1";
+
+/**
+ * Park socket messages instead of delivering them. Must run before navigation:
+ * it wraps WebSocket.prototype.addEventListener, which is how the client
+ * subscribes (main.ts connect()).
+ */
+async function installDiffHold(page) {
+  await page.addInitScript(() => {
+    window.__m1610Held = [];
+    window.__m1610HoldCount = 0;
+    const originalAdd = WebSocket.prototype.addEventListener;
+    WebSocket.prototype.addEventListener = function (type, listener, options) {
+      if (type !== "message" || typeof listener !== "function") {
+        return originalAdd.call(this, type, listener, options);
+      }
+      return originalAdd.call(
+        this,
+        type,
+        (event) => {
+          // Once anything is parked, everything queues behind it: releasing out
+          // of order would let an older diff overwrite a newer one, which is a
+          // fault of the shim and not of anything under test.
+          if (window.__m1610HoldCount > 0 || window.__m1610Held.length > 0) {
+            if (window.__m1610HoldCount > 0) window.__m1610HoldCount -= 1;
+            window.__m1610Held.push(() => listener(event));
+            return;
+          }
+          listener(event);
+        },
+        options,
+      );
+    };
+  });
+}
+
+/**
+ * Release one held message per readGrid, AFTER that read has been taken. The
+ * release rides the decoder rather than a timer because the page clock is
+ * frozen: a setTimeout here would never fire.
+ */
+async function armDiffHoldRelease(page) {
+  await page.evaluate(() => {
+    const inner = window.__m169.readGrid.bind(window.__m169);
+    window.__m169.readGrid = () => {
+      const grid = inner();
+      const next = window.__m1610Held.shift();
+      if (next) next();
+      return grid;
+    };
+  });
+}
+
+async function holdDiffs(page, n) {
+  await page.evaluate((count) => {
+    window.__m1610HoldCount = count;
+  }, n);
+}
+
 const { browser, context, page, pageErrors, consoleErrors } = await launchGoldenBrowser();
 let failed = false;
 
 try {
   await installImageProbe(page);
+  if (HOLD_DIFFS) await installDiffHold(page);
   await context.tracing.start({ screenshots: true, snapshots: true });
   page.on("response", async (response) => {
     if (response.status() >= 400) {
@@ -94,6 +163,7 @@ try {
   assert.equal(response?.status(), 200, "the client index must be served, not the build-me 404 page");
   await page.waitForSelector("canvas[data-screen]", { timeout: 15000 });
   await installDecoder(page);
+  if (HOLD_DIFFS) await armDiffHoldRelease(page);
 
   await waitForGrid(page, (cells) => hasText(cells, "Type your name"), "the launch name prompt");
   await page.keyboard.type("Ctrl");
@@ -187,13 +257,31 @@ try {
   // in the wrong place.
   await walk(page, "ArrowDown", 1);
   await assertAt(9, 13, "one step south before the Space shot");
+  // Park the shooting tick's own diff, so the first read after the shot is
+  // certainly the frame before it (M16.10a).
+  if (HOLD_DIFFS) await holdDiffs(page, 2);
   await shootSpace(page);
-  // The bullet is already in flight by the time the grid can be read, so what is
-  // asserted is the COLUMN it is flying down, not a particular tile: south of
-  // the player, in the player's own column. A Space that reused the previous
-  // east-facing shot would put it on row 12 instead, and a Space that fired
-  // nothing would put it nowhere.
-  const afterSpace = await readGrid(page);
+  // WHETHER Space fired is asked of the server, not of the sidebar. The sidebar
+  // is a picture of a diff that has landed, and a diff lands when the socket
+  // delivers it — so a canvas that is a tick behind spells "did not fire" and
+  // "has not been painted yet" exactly alike. That confusion is M16.10a: under a
+  // full-suite load this read caught the frame BEFORE the shot, reported no
+  // bullet anywhere and Ammo:4, while the shot had in fact fired.
+  assert.equal((await me()).ammo, 3, "Space must fire, spending one of the four shots left");
+
+  // WHERE it went is still asked of the canvas — but of the frame that carries
+  // this shot rather than of whichever frame happens to be up. Ammo:3 rides the
+  // same tick's diff as the bullet's first appearance, so it is the marker that
+  // the photograph is of the tick being asserted. What is asserted on it is
+  // unchanged: the COLUMN the bullet is flying down, not a particular tile.
+  // South of the player, in the player's own column. A Space that reused the
+  // previous east-facing shot would put it on row 12 instead, and a Space that
+  // fired nothing would put it nowhere.
+  const afterSpace = await waitForGrid(
+    page,
+    (cells) => hasText(cells, "Ammo:3"),
+    "the Space shot's own frame to reach the canvas",
+  );
   const bulletRows = [];
   for (let row = 0; row < 25; row += 1) {
     if (cellAt(afterSpace, 9 - 1, row).ch === 0xf8) bulletRows.push(row + 1);
@@ -203,7 +291,6 @@ try {
     `Space must shoot SOUTH down column 9, the last direction walked; bullets found on rows ` +
       `${JSON.stringify(bulletRows)}\n${gridToArt(afterSpace)}`,
   );
-  await tickUntilGrid(page, (cells) => hasText(cells, "Ammo:3"), "the Space shot to be deducted from ammo");
   await walk(page, "ArrowUp", 1);
   await assertAt(9, 12, "back north after the Space shot");
 
