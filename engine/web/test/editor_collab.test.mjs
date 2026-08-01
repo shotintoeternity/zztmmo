@@ -983,12 +983,12 @@ try {
   // between them. Which one wins is the server's business — that both browsers
   // and the session end up on the same answer is the invariant.
   //
-  // KNOWN TO BE RACY, filed as M16.14b (NOTES.md 2026-07-31): the session
-  // serializes the two edits under its own lock, but each connection's goroutine
-  // broadcasts its diff AFTER releasing that lock, so under load the two diffs
-  // can reach a third browser in the opposite order and leave it permanently
-  // showing the loser's tile. If this wait times out on a colour the session
-  // does not hold, that is the race and not a new bug.
+  // This used to be racy under load (M16.14b): the session serialized the two
+  // edits under its own lock, but each connection's goroutine broadcast its diff
+  // AFTER releasing it, so the two diffs could reach a third browser in the
+  // opposite order and leave it permanently showing the loser's tile. The
+  // fan-out now goes out through the session's ordering gate, in the order the
+  // session applied the edits, so the invariant below is strict.
   await Promise.all([press(ada, "Space"), press(bob, "Space")]);
   await waitForQuiet(ada.page, 3000);
   await waitForQuiet(bob.page, 3000);

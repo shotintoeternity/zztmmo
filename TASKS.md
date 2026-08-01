@@ -171,9 +171,11 @@ M12.23, M17.1–M17.7, M16.0–M16.8a — has fully landed.)
    identically to a shot that never happened. The shot is now asserted at the
    server and only its placement on the canvas, from the frame that carries it,
    with the bullet assertion itself untouched.
-   Next in file order after those is M16.20, which no longer has a blocker. The
-   one browser flake still open is M16.14b's act 8,
-   which is `[ADVISOR]` and still ranks below the certification tail.
+   **M16.14b landed 2026-08-01** — the editor's diff fan-out now goes out
+   through the session's ordering gate, in the order the session applied the
+   edits, so two members writing one cell leave every screen and the session on
+   one tile; M16.14's act 8 is no longer a known flake.
+   Next in file order after those is M16.20, which no longer has a blocker.
 
 **Optional / deferred (bottom):**
 - M14.3 — package split (skip unless the single package is actually hurting)
@@ -3316,7 +3318,7 @@ gap task has landed.
   browser route closes a stat dialog after a collaborator has switched boards
   and requires the lease to be free.
 
-- [ ] **M16.14b [ADVISOR] — The editor diff fan-out is not ordered with the
+- [x] **M16.14b [ADVISOR] — The editor diff fan-out is not ordered with the
   edits it reports (M16.14a gap task).** `serveEditor`'s `MessageTypeEditorEdit`
   case applies the edit under the session's lock (`EditorSession.Edit`) and
   broadcasts the resulting diff AFTER releasing it. Two connections are two
@@ -3338,6 +3340,17 @@ gap task has landed.
   and the session on the same tile, proven with the fan-out deliberately delayed
   so the wrong order is forced rather than waited for; M16.14's act 8 keeps its
   strict invariant and drops the comment naming this task.
+
+  Landed 2026-08-01 (NOTES.md M16.14b). Owner chose the ordering gate over both
+  candidates in the spec: a fan-out ticket is issued inside the same `s.mu`
+  critical section that writes the tile, and `EditorSession.inOrder` serializes
+  the fan-outs into ticket order while holding no session lock across the
+  writes — so a stalled client delays the broadcasts behind it by its write
+  timeout and can block no edit, lease, inspect or entry snapshot, and no
+  protocol change is needed.
+  `TestM1614bContestedCellSettlesTheSameOnEveryScreen` forces the wrong order
+  with a hook that holds the first fan-out inside the gate; act 8's comment is
+  gone and its invariant is unchanged.
 
 - [x] **M16.14c — `go test -race` is red on the M16.14 browser harness.**
   Test-only; no product code is involved. `m1614NewHarness` fills in

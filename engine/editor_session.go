@@ -31,6 +31,28 @@ type EditorSession struct {
 	// their operation, which is why every vanilla-derived path can keep reading
 	// the implicit current board unchanged.
 	memberBoard map[*webSocketClient]int16
+
+	// fanTicket is the next fan-out ticket, handed out under mu at the instant
+	// an edit is applied (M16.14b). Guarded by mu, not by fanMu: it has to be
+	// issued inside the same critical section that applied the edit, or two
+	// connections could apply in one order and take tickets in the other.
+	fanTicket uint64
+
+	// The fan-out ordering gate (M16.14b). Two connections are two goroutines,
+	// so before this the order the session applied two edits and the order their
+	// diffs reached a third member's socket were independent: two members
+	// writing one cell could leave that third screen holding the tile the
+	// session threw away, permanently. inOrder serializes the fan-outs into
+	// ticket order without holding mu across the writes — a stalled client can
+	// delay the broadcasts behind it by its write timeout, but can never block
+	// an edit, a lease, an inspect or a newcomer's entry snapshot.
+	fanMu      sync.Mutex
+	fanCond    *sync.Cond
+	fanServing uint64
+	// fanHook, when set, runs as each fan-out enters the gate, before it waits
+	// for its turn. Test-only seam: it lets a test hold the earlier broadcaster
+	// so the wrong delivery order is forced rather than waited for.
+	fanHook func(ticket uint64)
 }
 
 type editorLeaseKey struct {
@@ -430,6 +452,66 @@ func (s *EditorSession) Apply(member *webSocketClient, fn func(*Engine)) error {
 	return nil
 }
 
+// issueFanTicketLocked takes the next fan-out ticket. Callers must hold s.mu,
+// and must hold it across the mutation the ticket orders (M16.14b).
+func (s *EditorSession) issueFanTicketLocked() uint64 {
+	ticket := s.fanTicket
+	s.fanTicket++
+	return ticket
+}
+
+// inOrder runs fn once every earlier ticket's fan-out has finished, so messages
+// reach the members in the order the session applied the changes behind them
+// (M16.14b). fn runs with no session lock held: the writes are network I/O with
+// a per-client timeout, and putting them under s.mu would let one stalled
+// client freeze every other member's editing for the length of that timeout.
+//
+// The ticket is always retired, including when fn panics, or one abandoned
+// fan-out would stall every later one for the life of the session.
+func (s *EditorSession) inOrder(ticket uint64, fn func()) {
+	s.fanMu.Lock()
+	hook := s.fanHook
+	cond := s.fanCondLocked()
+	s.fanMu.Unlock()
+	if hook != nil {
+		hook(ticket)
+	}
+
+	s.fanMu.Lock()
+	for s.fanServing != ticket {
+		cond.Wait()
+	}
+	s.fanMu.Unlock()
+
+	defer func() {
+		s.fanMu.Lock()
+		s.fanServing++
+		cond.Broadcast()
+		s.fanMu.Unlock()
+	}()
+	if fn != nil {
+		fn()
+	}
+}
+
+// fanCondLocked returns the gate's condition variable, building it on first use
+// so a zero-value EditorSession (tests construct them) still orders. Callers
+// must hold s.fanMu.
+func (s *EditorSession) fanCondLocked() *sync.Cond {
+	if s.fanCond == nil {
+		s.fanCond = sync.NewCond(&s.fanMu)
+	}
+	return s.fanCond
+}
+
+// SetFanOutHook installs a test seam that runs as each fan-out enters the
+// ordering gate. Tests only; production never sets it.
+func (s *EditorSession) SetFanOutHook(hook func(ticket uint64)) {
+	s.fanMu.Lock()
+	s.fanHook = hook
+	s.fanMu.Unlock()
+}
+
 // focusMemberBoardLocked points the shared engine at the acting member's own
 // board before their operation runs (M17.12). Members edit different boards of
 // one world, but the session holds a single engine whose converted-from-Pascal
@@ -500,10 +582,25 @@ func editorSnapshot(e *Engine, x, y int16) EditorSnapshotMessage {
 // It deliberately calls BoardPrepareTileForPlacement, which is where vanilla
 // removes an existing non-player stat and decides whether a tile may be
 // overwritten. The browser never writes board state directly.
+//
+// It takes and immediately retires a fan-out ticket, so a caller with nothing
+// to broadcast still holds its place in the order (M16.14b).
 func (s *EditorSession) Edit(member *webSocketClient, edit EditorEditMessage) (EditorDiffMessage, error) {
+	return s.EditAndFanOut(member, edit, nil)
+}
+
+// EditAndFanOut applies the edit and then runs broadcast in the order the
+// session applied it, relative to every other member's edit (M16.14b). The
+// broadcast runs outside the session lock. Callers must fan an edit diff out
+// through this rather than after a bare Edit: the ticket is issued in the same
+// critical section that wrote the tile, which is the whole ordering guarantee.
+func (s *EditorSession) EditAndFanOut(member *webSocketClient, edit EditorEditMessage, broadcast func(EditorDiffMessage)) (EditorDiffMessage, error) {
 	var reply EditorDiffMessage
+	var ticket uint64
+	var ticketed bool
 	memberID := s.MemberID(member)
 	err := s.Apply(member, func(e *Engine) {
+		ticket, ticketed = s.issueFanTicketLocked(), true
 		if !s.canEditLocked(member) {
 			return
 		}
@@ -544,6 +641,16 @@ func (s *EditorSession) Edit(member *webSocketClient, edit EditorEditMessage) (E
 			BoardID: e.World.Info.CurrentBoard,
 			Cells:   e.DrainScreenDirty(),
 			Inspect: editorTileInspect(e, x, y),
+		}
+	})
+	if !ticketed {
+		// Apply refused before the edit ran (a non-member), so no ticket was
+		// issued and there is no place in the order to hold.
+		return reply, err
+	}
+	s.inOrder(ticket, func() {
+		if broadcast != nil {
+			broadcast(reply)
 		}
 	})
 	return reply, err

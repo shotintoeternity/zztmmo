@@ -1367,3 +1367,227 @@ func TestM1614dPauseClockCannotLoseItsRace(t *testing.T) {
 	}
 	t.Logf("pauseClock:\n%s", out)
 }
+
+// ---------------------------------------------------------------------------
+// M16.14b — the diff fan-out, ordered with the edits it reports
+// ---------------------------------------------------------------------------
+
+// TestM1614bContestedCellSettlesTheSameOnEveryScreen is M16.14b, inverted.
+//
+// The session applied two edits to one cell under its own lock, in some order,
+// and then each connection's own goroutine broadcast its diff AFTER releasing
+// that lock. Two connections are two goroutines, so those two orders were
+// independent: a third member could be handed the later edit's diff first and
+// the earlier one second, and would then be left painting the tile the session
+// had already thrown away — permanently, until something asked for a repaint.
+// M16.14's act 8 saw exactly that under full-suite load (NOTES.md 2026-07-31).
+//
+// The wrong order is FORCED here rather than waited for. A test hook holds the
+// first fan-out inside the session's ordering gate, after the tile is written
+// and before a byte goes out; the second edit is sent while it is held, so the
+// only thing that can stop it overtaking is the gate. Before the fix there was
+// no gate: the second diff reached the third socket while the first was still
+// held, which is the assertion below that would fail.
+func TestM1614bContestedCellSettlesTheSameOnEveryScreen(t *testing.T) {
+	world := m1613EditorWorld(t)
+	world.Info.Name = m1614World
+	server := NewWebSocketServer(world, 0)
+	httpServer := httptest.NewServer(server)
+	defer httpServer.Close()
+
+	ctx, cancel := context.WithTimeout(context.Background(), 30*time.Second)
+	defer cancel()
+	wsURL := "ws" + strings.TrimPrefix(httpServer.URL, "http")
+
+	ada, adaEntry := m1614DialEditor(t, ctx, wsURL, "Ada", m1614World, nil)
+	bob, bobEntry := m1614DialEditor(t, ctx, wsURL, "Bob", m1614World, nil)
+	carol, carolEntry := m1614DialEditor(t, ctx, wsURL, "Carol", m1614World, nil)
+	if adaEntry.BoardID != 0 || bobEntry.BoardID != 0 || carolEntry.BoardID != 0 {
+		t.Fatalf("the three members entered on boards %d/%d/%d, want all three watching board 0",
+			adaEntry.BoardID, bobEntry.BoardID, carolEntry.BoardID)
+	}
+
+	session := server.editorSessionForWorld(m1614World, world)
+	if session == nil || session.MemberCount() != 3 {
+		t.Fatalf("the editor session for %q holds %v members, want the three that just entered",
+			m1614World, session)
+	}
+
+	// The hook runs as each fan-out enters the gate: after its edit is applied
+	// and its ticket taken, before its writes. The FIRST one to arrive is held
+	// there until this test lets it go.
+	entered := make(chan uint64, 8)
+	release := make(chan struct{})
+	var holdOnce, releaseOnce sync.Once
+	releaseFirst := func() { releaseOnce.Do(func() { close(release) }) }
+	defer releaseFirst()
+	session.SetFanOutHook(func(ticket uint64) {
+		hold := false
+		holdOnce.Do(func() { hold = true })
+		select {
+		case entered <- ticket:
+		case <-ctx.Done():
+			return
+		}
+		if !hold {
+			return
+		}
+		select {
+		case <-release:
+		case <-ctx.Done():
+		}
+	})
+	defer session.SetFanOutHook(nil)
+
+	// Read every connection in the background from here on. A bare read with a
+	// short deadline would cancel the socket, and "Carol has been handed
+	// nothing yet" is the claim this test turns on.
+	adaDiffs := m1614bPumpDiffs(ctx, ada.conn)
+	bobDiffs := m1614bPumpDiffs(ctx, bob.conn)
+	carolDiffs := m1614bPumpDiffs(ctx, carol.conn)
+
+	const cellX, cellY = 50, 10
+	ada.send(EditorEditMessage{Type: MessageTypeEditorEdit, Op: "place", X: cellX, Y: cellY, Element: E_SOLID, Color: 0x0e})
+	firstTicket := m1614bWaitTicket(t, ctx, entered, "Ada's fan-out")
+
+	// Ada's tile is written and her fan-out is held. Bob writes the same cell:
+	// the session takes his edit immediately — the gate holds no session lock —
+	// so the tile is now his, and his diff is the one every screen must end on.
+	bob.send(EditorEditMessage{Type: MessageTypeEditorEdit, Op: "place", X: cellX, Y: cellY, Element: E_SOLID, Color: 0x0c})
+	secondTicket := m1614bWaitTicket(t, ctx, entered, "Bob's fan-out")
+	if secondTicket != firstTicket+1 {
+		t.Fatalf("the session issued fan-out tickets %d then %d; this test needs the two edits adjacent",
+			firstTicket, secondTicket)
+	}
+
+	// The inversion. Bob's diff has been built and handed to the fan-out while
+	// Ada's is still held: without the gate it goes out now, and the screen that
+	// receives the two backwards keeps the tile the session threw away.
+	select {
+	case diff, ok := <-carolDiffs:
+		if ok {
+			t.Fatalf("Carol was handed a diff from member %q while the earlier edit's fan-out was still held — the later edit overtook it",
+				diff.MemberID)
+		}
+		t.Fatal("Carol's connection closed during the contested write")
+	case <-time.After(500 * time.Millisecond):
+	}
+	releaseFirst()
+
+	// Every screen, and the session, on one tile: the diffs arrive in the order
+	// the session applied them, so the last one each member paints is the tile
+	// the session holds.
+	var contested byte
+	for _, watcher := range []struct {
+		who    string
+		stream <-chan EditorDiffMessage
+	}{{"Ada", adaDiffs}, {"Bob", bobDiffs}, {"Carol", carolDiffs}} {
+		first := m1614bNextDiff(t, ctx, watcher.stream, watcher.who)
+		second := m1614bNextDiff(t, ctx, watcher.stream, watcher.who)
+		if first.MemberID != adaEntry.MemberID || second.MemberID != bobEntry.MemberID {
+			t.Fatalf("%s was handed the contested cell from %q then %q, want the order the session applied them (%q then %q)",
+				watcher.who, first.MemberID, second.MemberID, adaEntry.MemberID, bobEntry.MemberID)
+		}
+		earlier, ok := m1614bCellColor(first.Cells, cellX-1, cellY-1)
+		if !ok {
+			t.Fatalf("%s's first diff carries no cell for the contested square", watcher.who)
+		}
+		later, ok := m1614bCellColor(second.Cells, cellX-1, cellY-1)
+		if !ok {
+			t.Fatalf("%s's second diff carries no cell for the contested square", watcher.who)
+		}
+		if earlier == later {
+			t.Fatalf("%s was handed colour %#x twice; this test needs the two writes to be tellable apart",
+				watcher.who, earlier)
+		}
+		if contested != 0 && later != contested {
+			t.Fatalf("%s ends on colour %#x where another screen ends on %#x", watcher.who, later, contested)
+		}
+		contested = later
+	}
+
+	// And the tile the screens ended on is the session's own. The probe joins
+	// after the fan-out is done, so nothing is ever broadcast to it.
+	probe := &webSocketClient{}
+	if err := session.Enter(probe); err != nil {
+		t.Fatalf("probe member: %v", err)
+	}
+	defer session.Exit(probe)
+	snapshot, err := session.Snapshot(probe, cellX, cellY)
+	if err != nil {
+		t.Fatalf("session snapshot: %v", err)
+	}
+	held, ok := m1614bCellColor(snapshot.Screen, cellX-1, cellY-1)
+	if !ok {
+		t.Fatal("the session's own frame carries no cell for the contested square")
+	}
+	if held != contested {
+		t.Fatalf("the session holds colour %#x at the contested cell and every screen was left on %#x",
+			held, contested)
+	}
+}
+
+// m1614bPumpDiffs reads one editor connection in the background, handing on
+// every diff and dropping presence, which rides along on every keystroke.
+func m1614bPumpDiffs(ctx context.Context, conn *websocket.Conn) <-chan EditorDiffMessage {
+	diffs := make(chan EditorDiffMessage, 16)
+	go func() {
+		defer close(diffs)
+		for {
+			var raw json.RawMessage
+			if err := wsjson.Read(ctx, conn, &raw); err != nil {
+				return
+			}
+			var envelope struct {
+				Type string `json:"type"`
+			}
+			if json.Unmarshal(raw, &envelope) != nil || envelope.Type != MessageTypeEditorDiff {
+				continue
+			}
+			var diff EditorDiffMessage
+			if json.Unmarshal(raw, &diff) != nil {
+				continue
+			}
+			select {
+			case diffs <- diff:
+			case <-ctx.Done():
+				return
+			}
+		}
+	}()
+	return diffs
+}
+
+func m1614bWaitTicket(t *testing.T, ctx context.Context, entered <-chan uint64, what string) uint64 {
+	t.Helper()
+	select {
+	case ticket := <-entered:
+		return ticket
+	case <-ctx.Done():
+		t.Fatalf("%s never reached the ordering gate", what)
+	}
+	return 0
+}
+
+func m1614bNextDiff(t *testing.T, ctx context.Context, stream <-chan EditorDiffMessage, who string) EditorDiffMessage {
+	t.Helper()
+	select {
+	case diff, ok := <-stream:
+		if !ok {
+			t.Fatalf("%s's connection closed before the diff arrived", who)
+		}
+		return diff
+	case <-ctx.Done():
+		t.Fatalf("%s never received the diff", who)
+	}
+	return EditorDiffMessage{}
+}
+
+func m1614bCellColor(cells []ScreenCell, x, y int16) (byte, bool) {
+	for _, cell := range cells {
+		if cell.X == x && cell.Y == y {
+			return cell.Color, true
+		}
+	}
+	return 0, false
+}

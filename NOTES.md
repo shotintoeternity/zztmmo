@@ -8095,3 +8095,66 @@ latency, so a loaded run steps the world further than a quiet one. It is benign
 on CONTROL (a static board) and every use of it polls rather than photographs,
 but it is the same family and worth knowing before a world with movement is
 driven this way.
+
+## 2026-08-01 — M16.14b: the fan-out, ordered with the edits it reports
+
+**Advisor unavailable** (no advisor tool in this session, as at M16.0–M16.3 and
+M16.17a); this is an `[ADVISOR]` task, so the owner was consulted with the
+approach and the three candidate shapes before any edit, and chose the ordering
+gate. Recording the decision here in lieu of the consult, per the M16.0
+precedent.
+
+**The defect.** `serveEditor`'s `MessageTypeEditorEdit` case applied the edit
+under `EditorSession.mu` and broadcast the diff after releasing it. Two
+connections are two goroutines, so the order the session applied two edits and
+the order their diffs reached a third member's socket were independent. Two
+members writing the SAME cell could therefore leave that third screen holding
+the tile the session threw away — permanently, until something asked for a
+repaint. M16.14's act 8 caught it under full-suite load (NOTES.md 2026-07-31)
+and it was sighted twice more (M16.17b, M16.18a).
+
+**The fix: a fan-out ticket, taken where the tile is written.**
+`EditorSession` gains `fanTicket`, issued by `issueFanTicketLocked` inside the
+same `mu` critical section that applies the edit — that is the whole guarantee;
+a ticket taken anywhere else could be handed out in the opposite order to the
+one the edits landed in. `inOrder(ticket, fn)` then waits on a condvar gate
+until every earlier ticket's fan-out has finished, runs `fn`, and retires the
+ticket in a `defer` so an abandoned or panicking fan-out cannot stall the
+session for good. `Edit` keeps its signature (it takes and immediately retires a
+ticket, so a caller with nothing to broadcast still holds its place); the server
+goes through the new `EditAndFanOut`, which puts `broadcastEditorBoard` and
+`broadcastEditorPresence` inside the gate.
+
+**Why the gate and not the other two candidates.** The task named two shapes and
+both trade something:
+
+- *Broadcast under the session lock.* Same ordering, smallest diff, but it puts
+  network I/O under the lock every member needs — a client stalled on a write
+  freezes all editing in that session for the length of the 1s write timeout,
+  per write.
+- *Per-board sequence stamp.* Survives any server-side concurrency, but it is a
+  protocol change, every other board-scoped message wants the same stamp, and
+  the client needs a real reorder buffer with a timeout: a diff carries only its
+  dirty cells, so DROPPING an out-of-order one silently loses a cell paint.
+
+The gate holds no session lock while it writes. A stalled client delays the
+broadcasts behind it by its write timeout and can block no edit, no lease, no
+inspect and no newcomer's entry snapshot — and nothing on the wire changed.
+Cost, stated plainly: head-of-line blocking of that session's own broadcasts.
+
+**The wrong order is forced, not waited for.**
+`TestM1614bContestedCellSettlesTheSameOnEveryScreen` (wire-level, three editor
+connections on one session) installs `SetFanOutHook`, which runs as each fan-out
+enters the gate — after its tile is written and before a byte goes out. The
+first entrant is held there; Ada's edit is sent, and once the hook reports it
+holding, Bob's edit is sent to the same cell and the session takes it
+immediately. The inversion is the assertion that Carol's socket stays silent
+while the earlier fan-out is held: with no gate, Bob's diff goes out at that
+instant. Verified by neutering the gate's wait — it fails in 0.02s with "Carol
+was handed a diff from member \"editor-2\" while the earlier edit's fan-out was
+still held". After the release, all three sockets take Ada's diff then Bob's,
+their contested-cell colours differ and agree screen to screen, and a probe
+member entering afterwards finds the session's own frame on the same colour.
+
+**Act 8** drops the comment naming this task and keeps its invariant unchanged.
+`service.editor-collab` leaves `gap` for `pass`, with the new test named.

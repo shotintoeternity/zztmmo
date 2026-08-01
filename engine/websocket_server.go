@@ -615,17 +615,28 @@ func (s *WebSocketServer) serveEditor(ctx context.Context, conn *websocket.Conn,
 			if json.Unmarshal(raw, &edit) != nil {
 				continue
 			}
-			reply, err := session.Edit(client, edit)
+			// The diff goes out through the session's fan-out gate, in the order
+			// the session applied the edits (M16.14b). Broadcasting after the
+			// session lock was released left the two orders independent, so two
+			// members writing one cell could leave a third screen holding the
+			// tile the session threw away. The gate holds no session lock while
+			// it writes, so a stalled client delays the broadcasts behind it by
+			// its write timeout and nothing else.
+			reply, err := session.EditAndFanOut(client, edit, func(diff EditorDiffMessage) {
+				if diff.Type == "" {
+					return
+				}
+				session.UpdatePresence(client, edit.X, edit.Y)
+				// Only members viewing the edited board get its cells (M17.12).
+				s.broadcastEditorBoard(ctx, session, diff.BoardID, diff)
+				s.broadcastEditorPresence(ctx, session)
+			})
 			if err != nil {
 				return
 			}
 			if reply.Type == "" {
 				continue
 			}
-			session.UpdatePresence(client, edit.X, edit.Y)
-			// Only members viewing the edited board get its cells (M17.12).
-			s.broadcastEditorBoard(ctx, session, reply.BoardID, reply)
-			s.broadcastEditorPresence(ctx, session)
 		case MessageTypeEditorLease:
 			var lease EditorLeaseMessage
 			if json.Unmarshal(raw, &lease) != nil {

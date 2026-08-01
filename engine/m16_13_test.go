@@ -555,7 +555,10 @@ func m1613DerivedCommands(t *testing.T) map[string]string {
 
 	session := m1613ReadSource(t, "editor_session.go")
 	for _, fn := range []struct{ header, prefix, sentinel string }{
-		{"func (s *EditorSession) Edit(", "op.edit", "editorPlaceTile"},
+		// The edit switch moved into EditAndFanOut at M16.14b (Edit is now the
+		// no-broadcast caller of it); the dispatch it derives op.edit.* from is
+		// the same one.
+		{"func (s *EditorSession) EditAndFanOut(", "op.edit", "editorPlaceTile"},
 		{"func (s *EditorSession) SetProperty(", "op.property", "e.Board.Info.MaxShots"},
 		{"func (s *EditorSession) SetStat(", "op.stat", "EditorStatSettings"},
 	} {
