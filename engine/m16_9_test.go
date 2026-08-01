@@ -359,6 +359,9 @@ func (h *m169Harness) controlMux() http.Handler {
 	// (engine/m16_14_test.go).
 	h.editorControlRoutes(mux)
 	h.collabControlRoutes(mux)
+	// M16.16 adds the chat-record route its auth/Museum journey reads
+	// (engine/m16_16_test.go).
+	h.museumControlRoutes(mux)
 	return mux
 }
 

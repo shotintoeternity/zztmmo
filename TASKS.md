@@ -135,6 +135,9 @@ M12.23, M17.1–M17.7, M16.0–M16.8a — has fully landed.)
    the parity manifest no longer deletes landed rows or overwrites hand edits,
    and a test asserts the regeneration is a no-op diff, so M16.20 can reconcile
    against a manifest the documented workflow cannot corrupt.
+   **M16.16 landed 2026-08-01** — the auth/chat/Museum service journey its
+   2026-07-14 audit deferred, including the real-browser sign-in → picker →
+   Museum search → select → host → join → chat run; it filed nothing.
    Next in file order after those is M16.18. The one
    browser flake still open is M16.14b's act 8,
    which is `[ADVISOR]` and still ranks below the certification tail.
@@ -3462,7 +3465,7 @@ gap task has landed.
   1/5/10, and a board-2 hash mismatch). Full `go test ./...` green, `-race` clean
   on the touched tests, `fixtures/` unchanged apart from the manifest row.
 
-- [ ] **M16.16 — Auth, chat, and Museum service journey.** Use hermetic OIDC and
+- [x] **M16.16 — Auth, chat, and Museum service journey.** Use hermetic OIDC and
   Museum HTTP fakes through the real HTTP/WebSocket server. Cover signed-in vs.
   guest identity, cookie/session rejection, chat filtering/rate limit/history,
   restart persistence, Museum search/dedup/not-found, ZIP traversal/corruption,
@@ -3470,6 +3473,55 @@ gap task has landed.
   requires Google or museumofzzt.com; security refusal paths prove no state/file
   mutation; a real browser completes search→select→host→join and sees correct
   metadata and chat identity.
+
+  Landed 2026-08-01 (NOTES.md M16.16). `engine/m16_16_test.go` drives the same
+  mux `cmd/zzt-server` mounts (`/ws` on the WebSocketServer, `/api/` on the
+  WebAPI) against two hermetic fakes served by the test binary: an identity
+  provider that refuses an authorize call without this server's client id or an
+  S256 challenge and a token endpoint that refuses a verifier which does not
+  hash to the challenge it issued the code against, and a Museum of ZZT that
+  counts every field query and every archive it serves. Nothing reaches
+  accounts.google.com or museumofzzt.com. **Auth**: the whole redirect chain
+  through a cookie jar (start → provider → the real callback → the return path),
+  PKCE checked end to end from the provider's own record, `/api/auth/me` before
+  and after, and the point of it all — a signed-in join is given the Google
+  display name even though its client asked for another, while a guest is
+  whoever they typed, and logout puts them back. **Refusals**: eight callback
+  rows (no state cookie, a state cookie signed for another server, an expired
+  one, a state mismatch, a provider error, a missing code, a code the provider
+  never issued, an id_token nobody can verify) and nine cookie rows (garbage,
+  unsigned, foreign secret, one flipped payload byte, a signature lifted from
+  another payload, expired, no account id …), each proving the documented status
+  AND that a WebSocket join carrying whatever it left behind is still a guest,
+  with the whole matrix leaving world files, saves, cache, instances and chat
+  records unchanged. A guest-only server (no credentials) answers 503 on the
+  OAuth routes, `enabled:false` on `/api/auth/me`, and still joins guests.
+  **Chat**: the identity half M16.16a did not reach — a line is attributed to
+  the account on the wire, in the persisted record, and in the history a
+  restarted server replays to somebody who was never there. **Museum**: the
+  four-field search fan-out and its dedup, the year field a 4-digit query adds,
+  no-match, a blank query that never leaves the process, 502 when the Museum is
+  down, and twelve `/api/museum/play` refusal rows — six of them unsafe names
+  that must never reach the network at all — each creating no cache entry, no
+  hosted `.ZZT`, and no instance. Then the journey: a two-world archive answers
+  with choices, the selection is served from cache (one download for both
+  calls), only the selected world is written, `/api/worlds` lists it with its
+  metadata and then with live occupancy, and a real socket joins it. The
+  title-screen routes (`/api/title`, `/api/title/stream` — a real SSE frame off
+  the live `TitleSim`, `/api/highscores`, `/api/help`) are covered with their
+  traversal refusals. **Browser**: `TestM1616BrowserAuthAndMuseumJourney` +
+  `engine/web/test/museum_journey.test.mjs` — one Chromium presses G, signs in
+  through the provider (no cookie injected), presses W, types a query, sees the
+  Museum row's title/author/release-date/source, chooses one world out of the
+  archive, is hosted into it, joins with P, and chats — and the line comes back
+  as `<Ada Lovelace>`, which the server's own chat record confirms. Sixteen
+  manifest rows advanced (`service.auth`, `service.world-picker`, the four
+  `route.api.auth.*`, both `route.api.museum.*`, `route.api.worlds`,
+  `route.api.title`, `route.api.title.stream`, `route.api.highscores`,
+  `route.api.help`, `mode.modal-picker`, `mode.modal-museum`,
+  `input.title-world`), and `service.chat`/`service.museum` gained their
+  identity and browser citations. `go test ./...` green, `-race` clean on the
+  new tests; the only fixture touched is the parity manifest.
 
 - [x] **M16.16a — Close audit findings: chat admission and Museum cache
   commit.** M16.16 found two missing M6.0/Museum contracts. Before a chat is

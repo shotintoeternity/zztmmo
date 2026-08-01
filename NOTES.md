@@ -7556,3 +7556,112 @@ bytes. No web files changed, so `npm test` was not re-run. One unrelated flake o
 the first full run: `web/test/control_keys.test.mjs` failed its Space-shoots-last-
 direction assertion (no bullet on the board); the same test passed on both
 subsequent full runs. Nothing in this task touches the client or the engine.
+
+## 2026-08-01 — M16.16: auth, chat, and Museum service journey
+
+The certification the 2026-07-14 audit deferred. That audit found two real
+contract violations and filed them as M16.16a (landed 2026-07-30); what it left
+open was the journey itself and the browser half, which is this task. No
+production code changed: `engine/m16_16_test.go` and
+`engine/web/test/museum_journey.test.mjs` are new, `engine/m16_9_test.go` gains
+three lines mounting one control route, and the only fixture touched is the
+parity manifest.
+
+**The mux is the product's.** Every HTTP test drives `mux.Handle("/ws", server)`
++ `mux.Handle("/api/", api.Handler())` — the same two lines `cmd/zzt-server`
+mounts — through an `httptest` server. The WebSocket claims are made over real
+sockets, and the identity behind them is read out of `RoomManager.PlayerIdentity`
+rather than inferred from a response body.
+
+**Both fakes are checkers, not rubber stamps.** An identity provider that issued
+a token for any request would let a broken PKCE implementation certify itself,
+so `m1616IdP` refuses an authorize call without this server's client id or an
+S256 challenge, remembers the challenge each code was bound to, and its token
+endpoint refuses a verifier that does not hash to it. The Museum fake counts
+every field query and every archive it serves, so "the selection was a cache
+hit" and "that unsafe name never left the process" are counted rather than
+assumed. Nothing in the file can reach accounts.google.com or museumofzzt.com.
+
+**The refusal rows assert three things, not one.** A security refusal is only
+certified if it changed nothing, so each of the eight callback rows and nine
+forged-cookie rows checks the documented status, that no session cookie was set,
+AND that a real WebSocket join carrying whatever the refusal left behind is
+still a guest — with the whole matrix leaving world files, saves, the museum
+cache, the instance table and the chat records untouched. The twelve
+`/api/museum/play` rows do the same, and the six of them whose *name* is the
+problem additionally require the Museum's download count not to move.
+
+**One deliberate control.** `TestM1616ForgedSessionCookiesAuthenticateNobody`
+ends by checking that the untouched cookie those forgeries were cut from DOES
+authenticate. Without it every row would also pass on a server that rejected
+everything.
+
+**The chat half M16.16a could not reach.** M16.16a pinned WHAT may be said (the
+120-byte printable-CP437 normalization and the rolling 5-per-10s window, on the
+injected clock). M16.16 pins WHO it is from: a signed-in player's line carries
+the Google display name even though that connection's join message asked for
+another, on the wire, in the persisted record, and in the history a restarted
+server replays to somebody who was never there.
+
+**Two identity paths, so a single neuter cannot break it.** The server sets the
+account's display name twice — `join.Name = account.DisplayName()` in
+`ServeHTTP` and `SetPlayerIdentity(..., account.DisplayName())` in the join
+block. Neutering either alone leaves the tests green; neutering both reddens
+`TestM1616SignInJourneyThroughTheRealServer` (identity `"not-my-real-name"`) and
+`TestM1616ChatIdentityIsTheAccountAndSurvivesRestart` (broadcast from
+`"totally-ada-honest"`). Recorded because it is the kind of belt-and-braces that
+looks like an untested branch on a later reading.
+
+**Verified the tests regress** (the project's standing discipline). Neutering
+`AccountFromRequest`'s expiry/empty-id check → the `expired` and `no-account-id`
+rows fail with the server naming the account it just admitted. Deleting
+`validateMuseumDownloadName`'s filename clause → the traversal, absolute-path
+and backslash rows fail with "an unsafe name reached the Museum: 1 downloads".
+All restored; `git status` clean apart from this task's files.
+
+**The title board needed something that moves.** `/api/title/stream` is a
+changed-cell stream off the live `TitleSim`, which idles until somebody
+subscribes and emits nothing off a still board. The test world therefore carries
+a spinning gun on board 0 — deliberately NOT at (30,12), where `BoardCreate`
+puts stat 0 and the title engine paints `E_MONITOR` over it (GAME.PAS:1604); a
+gun under the monitor redraws the monitor's unchanging glyph and the stream
+looks dead when it is only quiet. The test then stands in for the server's tick
+loop while it reads one SSE frame.
+
+**The browser journey runs on M16.9's harness, not the real binary.** M16.17's
+Dream journey drives a `cmd/zzt-server` subprocess, which is the better proof
+where it is possible — but the binary builds its `MuseumService` with hard-wired
+museumofzzt.com URLs and has no flag or env seam for them, so a hermetic Museum
+journey through the subprocess is not reachable without adding production
+configuration this task has no mandate to add. The in-process harness gives the
+same production objects (`WebSocketServer`, `WebAPI`, the built client from
+`web/dist`) with the two fakes injected, and M16.14's hermetic identity provider
+is already served by its control listener. Filed nothing: this is a shape
+choice, not a gap. If a later task wants the subprocess, the seam it needs is a
+`-museum-api`/`-museum-files` pair on `cmd/zzt-server`.
+
+**One Go-side assertion had to move to the script.** "The instance held exactly
+this one client" is only true while the browser is open, and the Go test runs
+after Playwright has closed it. The claim lives in the script (act 6, through
+`/control/instances`); what Go checks afterwards is what survives a browser —
+the hosted instance, the world file, the single cached archive, and the chat
+record's attribution.
+
+**Manifest**: sixteen rows `unverified` → `pass` (`service.auth`,
+`service.world-picker`, the four `route.api.auth.*`, both `route.api.museum.*`,
+`route.api.worlds`, `route.api.title`, `route.api.title.stream`,
+`route.api.highscores`, `route.api.help`, `mode.modal-picker`,
+`mode.modal-museum`, `input.title-world`), and `service.chat` / `service.museum`
+gained their identity and browser citations on top of M16.16a's. Regenerated
+with `PARITY_SCAFFOLD=1` after the hand edit, because the canonical writer owns
+key order (M16.20a); the merge preserved every hand-edited field, and
+`TestParityManifestIsCanonical` is green.
+
+**Verified**: `go build ./...`, `go vet ./...`, `go test -count=1 ./...` green on
+a full run (278s), browser suites included; `go test -race -count=1 -run TestM1616`
+clean. `fixtures/town.replay.json` untouched — nothing here goes near the
+simulation.
+
+**Handoff.** Next in file order is **M16.18** (mobile and browser-platform
+contract), then **M16.20**. Still open behind them: M16.14b (`[ADVISOR]`, ranks
+below the certification tail) and M16.18a (owner-deferred past the beta).

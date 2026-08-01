@@ -3300,8 +3300,10 @@
       "authority": "elements.go ElementPlayerTick / game.go title / editor.go; web/src/keys.ts",
       "parity": "deviation",
       "deviation": "presentation-additions",
-      "status": "unverified",
-      "assignedTask": "M16.16"
+      "test": "TestM1616BrowserAuthAndMuseumJourney",
+      "status": "pass",
+      "assignedTask": "M16.16",
+      "notes": "M16.16: W on the title screen is what opens the picker, driven from a real browser"
     },
     {
       "id": "proto.event.death",
@@ -3829,8 +3831,10 @@
       "contract": "E",
       "authority": "web_api.go / websocket_server.go",
       "parity": "exact",
-      "status": "unverified",
-      "assignedTask": "M16.16"
+      "test": "TestM1616SignInJourneyThroughTheRealServer,TestM1616AuthRefusalsAdmitNobodyAndChangeNothing,TestM1616ForgedSessionCookiesAuthenticateNobody,TestM1616GuestOnlyServerOffersNoSignIn,TestM1616BrowserAuthAndMuseumJourney",
+      "status": "pass",
+      "assignedTask": "M16.16",
+      "notes": "M16.16: sets the session cookie only after a PKCE-bound exchange and a verified id_token; eight refusal rows admit nobody and change nothing"
     },
     {
       "id": "route.api.auth.google.start",
@@ -3839,8 +3843,10 @@
       "contract": "E",
       "authority": "web_api.go / websocket_server.go",
       "parity": "exact",
-      "status": "unverified",
-      "assignedTask": "M16.16"
+      "test": "TestM1616SignInJourneyThroughTheRealServer,TestM1616AuthRefusalsAdmitNobodyAndChangeNothing,TestM1616ForgedSessionCookiesAuthenticateNobody,TestM1616GuestOnlyServerOffersNoSignIn,TestM1616BrowserAuthAndMuseumJourney",
+      "status": "pass",
+      "assignedTask": "M16.16",
+      "notes": "M16.16: 302 to the provider with an S256 PKCE challenge and a signed state cookie; 503 without Google credentials"
     },
     {
       "id": "route.api.auth.logout",
@@ -3849,8 +3855,10 @@
       "contract": "E",
       "authority": "web_api.go / websocket_server.go",
       "parity": "exact",
-      "status": "unverified",
-      "assignedTask": "M16.16"
+      "test": "TestM1616SignInJourneyThroughTheRealServer,TestM1616AuthRefusalsAdmitNobodyAndChangeNothing,TestM1616ForgedSessionCookiesAuthenticateNobody,TestM1616GuestOnlyServerOffersNoSignIn,TestM1616BrowserAuthAndMuseumJourney",
+      "status": "pass",
+      "assignedTask": "M16.16",
+      "notes": "M16.16: clears the session cookie, and the next join is a guest again; 200 on a guest-only server too"
     },
     {
       "id": "route.api.auth.me",
@@ -3859,8 +3867,10 @@
       "contract": "E",
       "authority": "web_api.go / websocket_server.go",
       "parity": "exact",
-      "status": "unverified",
-      "assignedTask": "M16.16"
+      "test": "TestM1616SignInJourneyThroughTheRealServer,TestM1616AuthRefusalsAdmitNobodyAndChangeNothing,TestM1616ForgedSessionCookiesAuthenticateNobody,TestM1616GuestOnlyServerOffersNoSignIn,TestM1616BrowserAuthAndMuseumJourney",
+      "status": "pass",
+      "assignedTask": "M16.16",
+      "notes": "M16.16: enabled/authenticated/id/name/email, before and after sign-in, after logout, and for every forged cookie"
     },
     {
       "id": "route.api.generate",
@@ -3880,8 +3890,10 @@
       "contract": "E",
       "authority": "web_api.go / websocket_server.go",
       "parity": "exact",
-      "status": "unverified",
-      "assignedTask": "M16.16"
+      "test": "TestM1616TitleScreenRoutesServeAndRefuse",
+      "status": "pass",
+      "assignedTask": "M16.16",
+      "notes": "M16.16: a .HLP file by basename, 400 for a path/extension outside the contract, 404 for a missing file"
     },
     {
       "id": "route.api.highscores",
@@ -3890,8 +3902,10 @@
       "contract": "E",
       "authority": "web_api.go / websocket_server.go",
       "parity": "exact",
-      "status": "unverified",
-      "assignedTask": "M16.16"
+      "test": "TestM1616TitleScreenRoutesServeAndRefuse",
+      "status": "pass",
+      "assignedTask": "M16.16",
+      "notes": "M16.16: the vanilla heading and score lines; 400 for an unsafe world name"
     },
     {
       "id": "route.api.loadworld",
@@ -3912,8 +3926,10 @@
       "contract": "E",
       "authority": "web_api.go / websocket_server.go",
       "parity": "exact",
-      "status": "unverified",
-      "assignedTask": "M16.16"
+      "test": "TestM1616MuseumSearchDedupesAcrossFieldsAndReportsNoMatches,TestM1616MuseumSearchFailureIsABadGatewayAndCachesNothing,TestM1616MuseumRefusalsThroughTheRouteMutateNothing,TestM1616MuseumSearchSelectHostJoin,TestM1616BrowserAuthAndMuseumJourney",
+      "status": "pass",
+      "assignedTask": "M16.16",
+      "notes": "M16.16: choices then selection then host and join, twelve refusal rows that create no cache entry / .ZZT / instance, 405 on GET and 400 on a junk body"
     },
     {
       "id": "route.api.museum.search",
@@ -3922,8 +3938,10 @@
       "contract": "E",
       "authority": "web_api.go / websocket_server.go",
       "parity": "exact",
-      "status": "unverified",
-      "assignedTask": "M16.16"
+      "test": "TestM1616MuseumSearchDedupesAcrossFieldsAndReportsNoMatches,TestM1616MuseumSearchFailureIsABadGatewayAndCachesNothing,TestM1616MuseumRefusalsThroughTheRouteMutateNothing,TestM1616MuseumSearchSelectHostJoin,TestM1616BrowserAuthAndMuseumJourney",
+      "status": "pass",
+      "assignedTask": "M16.16",
+      "notes": "M16.16: the four-field fan-out and its dedup, the year field for a 4-digit query, an empty query that never leaves the process, no-match, 502 when the Museum is down, 405 on POST"
     },
     {
       "id": "route.api.restore",
@@ -3956,8 +3974,10 @@
       "contract": "E",
       "authority": "web_api.go / websocket_server.go",
       "parity": "exact",
-      "status": "unverified",
-      "assignedTask": "M16.16"
+      "test": "TestM1616TitleScreenRoutesServeAndRefuse",
+      "status": "pass",
+      "assignedTask": "M16.16",
+      "notes": "M16.16: the first paint of the title board, and 400 for a world name outside SanitizeSaveName"
     },
     {
       "id": "route.api.title.stream",
@@ -3966,8 +3986,10 @@
       "contract": "E",
       "authority": "web_api.go / websocket_server.go",
       "parity": "exact",
-      "status": "unverified",
-      "assignedTask": "M16.16"
+      "test": "TestM1616TitleScreenRoutesServeAndRefuse",
+      "status": "pass",
+      "assignedTask": "M16.16",
+      "notes": "M16.16: SSE headers and a changed-cell frame off the live TitleSim; 400 for an unsafe world name"
     },
     {
       "id": "route.api.worlds",
@@ -3976,8 +3998,10 @@
       "contract": "E",
       "authority": "web_api.go / websocket_server.go",
       "parity": "exact",
-      "status": "unverified",
-      "assignedTask": "M16.16"
+      "test": "TestM1616MuseumSearchSelectHostJoin,TestM1616BrowserAuthAndMuseumJourney",
+      "status": "pass",
+      "assignedTask": "M16.16",
+      "notes": "M16.16: the picker listing, its per-world metadata and kind, and live player occupancy after a join"
     },
     {
       "id": "route.ws",
@@ -4097,8 +4121,10 @@
       "authority": "web/src/*.ts",
       "parity": "deviation",
       "deviation": "presentation-additions",
-      "status": "unverified",
-      "assignedTask": "M16.16"
+      "test": "TestM1616BrowserAuthAndMuseumJourney",
+      "status": "pass",
+      "assignedTask": "M16.16",
+      "notes": "M16.16: the Museum result rows (title, author, release date, source) and the Choose World selection window, read off a real canvas"
     },
     {
       "id": "mode.modal-picker",
@@ -4108,8 +4134,10 @@
       "authority": "web/src/*.ts",
       "parity": "deviation",
       "deviation": "presentation-additions",
-      "status": "unverified",
-      "assignedTask": "M16.16"
+      "test": "TestM1616MuseumSearchSelectHostJoin,TestM1616BrowserAuthAndMuseumJourney",
+      "status": "pass",
+      "assignedTask": "M16.16",
+      "notes": "M16.16: the world picker window, its search instruction and its listing rows, read off a real canvas"
     },
     {
       "id": "mode.modal-quit",
@@ -4196,8 +4224,10 @@
       "contract": "E",
       "authority": "completed task contracts (TASKS.md); NOTES.md",
       "parity": "exact",
-      "status": "unverified",
-      "assignedTask": "M16.16"
+      "test": "TestM1616SignInJourneyThroughTheRealServer,TestM1616AuthRefusalsAdmitNobodyAndChangeNothing,TestM1616ForgedSessionCookiesAuthenticateNobody,TestM1616GuestOnlyServerOffersNoSignIn,TestM1616BrowserAuthAndMuseumJourney",
+      "status": "pass",
+      "assignedTask": "M16.16",
+      "notes": "M16.16: the whole OIDC round trip on the production routes against a hermetic provider that checks PKCE; guest vs signed-in join identity; the callback refusal matrix and the forged-cookie matrix, each proving no session and no state change; a guest-only server; and a real browser signing in with G"
     },
     {
       "id": "service.chat",
@@ -4206,10 +4236,10 @@
       "contract": "E",
       "authority": "completed task contracts (TASKS.md); NOTES.md",
       "parity": "exact",
-      "test": "TestM1616aChatAdmissionBoundary,TestM1616aChatRateLimiterRollingWindow,TestM1616aChatRefusalPersistsAndBroadcastsNothing,TestM1616aChatHistorySurvivesRestart",
+      "test": "TestM1616aChatAdmissionBoundary,TestM1616aChatRateLimiterRollingWindow,TestM1616aChatRefusalPersistsAndBroadcastsNothing,TestM1616aChatHistorySurvivesRestart,TestM1616ChatIdentityIsTheAccountAndSurvivesRestart,TestM1616BrowserAuthAndMuseumJourney",
       "status": "pass",
       "assignedTask": "M16.16",
-      "notes": "M16.16a: 120-byte printable-CP437 normalization, 5-per-10s rolling limit on the injected clock, refusals persist/broadcast nothing, history survives restart"
+      "notes": "M16.16a: 120-byte printable-CP437 normalization, 5-per-10s rolling limit on the injected clock, refusals persist/broadcast nothing, history survives restart; M16.16: a line is attributed to the signed-in account's display name (not the name the client claimed) on the wire, in the persisted record, in the history a restarted server replays, and on a real browser's screen"
     },
     {
       "id": "service.dream",
@@ -4268,10 +4298,10 @@
       "contract": "E",
       "authority": "completed task contracts (TASKS.md); NOTES.md",
       "parity": "exact",
-      "test": "TestM1616aMuseumRefusalsCreateNothing,TestM1616aMuseumChoicesThenSelectionCachesOnce,TestM1616aMuseumOccupiedReplayKeepsHostedFile,TestMuseumServicePlayDownloadsCachesValidatesAndHosts,TestMuseumAPIPlayThenWebSocketJoinsFetchedWorld",
+      "test": "TestM1616aMuseumRefusalsCreateNothing,TestM1616aMuseumChoicesThenSelectionCachesOnce,TestM1616aMuseumOccupiedReplayKeepsHostedFile,TestMuseumServicePlayDownloadsCachesValidatesAndHosts,TestMuseumAPIPlayThenWebSocketJoinsFetchedWorld,TestM1616MuseumSearchDedupesAcrossFieldsAndReportsNoMatches,TestM1616MuseumRefusalsThroughTheRouteMutateNothing,TestM1616MuseumSearchSelectHostJoin,TestM1616BrowserAuthAndMuseumJourney",
       "status": "pass",
       "assignedTask": "M16.16",
-      "notes": "M16.16a: caching is a post-validation commit; every refusal creates no cache entry, hosted .ZZT, or instance"
+      "notes": "M16.16a: caching is a post-validation commit; every refusal creates no cache entry, hosted .ZZT, or instance; M16.16: the same contracts through /api/museum/*, plus search dedup/not-found/upstream failure and a real browser completing search -> select -> host -> join"
     },
     {
       "id": "service.prompt-debug",
@@ -4369,8 +4399,10 @@
       "authority": "completed task contracts (TASKS.md); NOTES.md",
       "parity": "deviation",
       "deviation": "presentation-additions",
-      "status": "unverified",
-      "assignedTask": "M16.16"
+      "test": "TestM1616MuseumSearchSelectHostJoin,TestM1616BrowserAuthAndMuseumJourney",
+      "status": "pass",
+      "assignedTask": "M16.16",
+      "notes": "M16.16: /api/worlds lists a Museum-imported world with its metadata and live occupancy, and a real browser reaches it through the picker window"
     }
   ],
   "deviations": [
