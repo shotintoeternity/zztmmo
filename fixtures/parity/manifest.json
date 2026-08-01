@@ -779,6 +779,17 @@
       "notes": "task-claim row; behavioral parity carried by the element/oop/protocol/input/service rows this task touched; reconciled at M16.20 M16.20 reconciliation (2026-08-01): the named tests certify this task's DoD; behavioural parity is additionally carried by the element/oop/protocol/input/service rows this task touched."
     },
     {
+      "id": "task.M18.12",
+      "dimension": "task",
+      "subject": "Completed task M18.12 — its DoD still holds",
+      "contract": "E",
+      "authority": "TASKS.md M18.12",
+      "parity": "exact",
+      "test": "TestUndeclaredSkipBlocksCertification,TestDeclaredSkipDoesNotBlockButIsReported,TestBrowserTrackRunsBeforeTheGoGates,TestGoTestJSONArgsPutTheFlagAfterTheSubcommand",
+      "status": "pass",
+      "notes": "M18.12 (2026-08-01, owner decision): the eleven real-browser suites are opt-in for everyday runs (ZZT_BROWSER=1) and mandatory under `make certify`, which sets ZZT_PARITY_REQUIRE_BROWSER=1 on the go test gate alone. This is not a silent skip: every skip declares itself, cmd/zzt-parity records each by name and gate, and an undeclared skip blocks certification — so a run that did not execute them cannot certify. The named tests pin the rule from the report side; the go test gate itself is what proves the suites ran."
+    },
+    {
       "id": "task.M18.2",
       "dimension": "task",
       "subject": "Completed task M18.2 — its DoD still holds",

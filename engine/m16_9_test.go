@@ -274,14 +274,45 @@ func m169WriteWorldFile(t *testing.T, world TWorld, path string) {
 
 func m169ClientDir() string { return filepath.Join("web", "dist") }
 
-// m169RequireBrowserHarness skips rather than fails when the browser harness is
-// not installed. `go test ./...` on a bare checkout (CI's engine job) has no
-// web/node_modules; the browser goldens run in their own CI job, which installs
-// Playwright first. A skip there is honest; a red engine job would not be.
+// The two environment variables that decide whether the real-browser suites
+// run (owner decision 2026-08-01).
+//
+// The eleven Playwright suites live inside `go test ./...`, so before this every
+// one-line engine change paid 7-10 minutes of real browsers, and the race gate
+// paid them a second time for no finding — the races that matter are in the
+// server, and the wire-level tests cover those. They are now OPT-IN for everyday
+// work and MANDATORY for certification:
+//
+//	(neither set)                      declared skip — the fast everyday run
+//	ZZT_BROWSER=1                      run them; an absent harness still skips
+//	ZZT_PARITY_REQUIRE_BROWSER=1       run them; an absent harness is a FAILURE
+//
+// This is not the silent-skip hole M16.20 closed. The certification run sets the
+// second variable, `cmd/zzt-parity` records every skipped test by name with the
+// reason it printed, and a skip that does not declare itself blocks
+// certification — so a run that did not execute these suites cannot certify, and
+// the report says which ones sat out.
+const (
+	browserOptInEnv   = "ZZT_BROWSER"
+	browserRequireEnv = "ZZT_PARITY_REQUIRE_BROWSER"
+)
+
+func browserSuitesRequired() bool { return os.Getenv(browserRequireEnv) != "" }
+func browserSuitesRequested() bool {
+	return browserSuitesRequired() || os.Getenv(browserOptInEnv) != ""
+}
+
+// m169RequireBrowserHarness gates every real-browser suite. It skips rather than
+// fails when the harness is absent or the suites were not asked for; under the
+// certification run an absent harness is a hole in the claim, not an
+// environment fact, and m169BrowserAbsent fails instead.
 func m169RequireBrowserHarness(t *testing.T) {
 	t.Helper()
 	if testing.Short() {
-		t.Skip("skipping the browser golden harness in short mode")
+		t.Skip("declared skip: browser suites do not run in short mode")
+	}
+	if !browserSuitesRequested() {
+		t.Skipf("declared skip: the real-browser suites are opt-in — set %s=1, or run `make certify`, which requires them", browserOptInEnv)
 	}
 	if _, err := os.Stat(filepath.Join("web", "node_modules", "playwright")); err != nil {
 		m169BrowserAbsent(t, "browser harness unavailable: run `npm ci` in engine/web (and `npx playwright install chromium`)")
@@ -297,10 +328,10 @@ func m169RequireBrowserHarness(t *testing.T) {
 // prevent — so it fails instead.
 func m169BrowserAbsent(t *testing.T, reason string) {
 	t.Helper()
-	if os.Getenv("ZZT_PARITY_REQUIRE_BROWSER") != "" {
-		t.Fatalf("%s (ZZT_PARITY_REQUIRE_BROWSER is set: the certification run requires the real browser, not a skip)", reason)
+	if browserSuitesRequired() {
+		t.Fatalf("%s (%s is set: the certification run requires the real browser, not a skip)", reason, browserRequireEnv)
 	}
-	t.Skip(reason)
+	t.Skipf("declared skip: %s", reason)
 }
 
 // m169RequireClientBuild builds web/dist when it is missing. Keyed on

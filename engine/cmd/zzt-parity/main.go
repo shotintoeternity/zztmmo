@@ -209,9 +209,15 @@ func plannedGates(withRace, withBrowser bool) []gateResult {
 		gateResult{Name: "npm test", Command: "npm test", Dir: web},
 		gateResult{Name: "go build", Command: "go build ./...", Dir: engine},
 		gateResult{Name: "go vet", Command: "go vet ./...", Dir: engine},
-		gateResult{Name: "go test", Command: "go test -count=1 ./...", Dir: engine, goTest: true},
+		// The real-browser suites are mandatory here and nowhere else: this is
+		// the gate whose result the manifest's browser rows rest on.
+		gateResult{Name: "go test", Command: "go test -count=1 ./...", Dir: engine, goTest: true, requireBrowser: withBrowser},
 	)
 	if withRace {
+		// No requireBrowser: the race gate would otherwise re-run eleven
+		// Playwright suites, doubling the certification run for a class of
+		// finding the wire-level concurrency tests already cover. They
+		// declare-skip here and the report says so, gate by gate.
 		gates = append(gates, gateResult{
 			Name: "go test -race", Command: "go test -race -count=1 ./...", Dir: engine, goTest: true,
 		})
@@ -242,7 +248,7 @@ func runCleanGates(root string, withRace, withBrowser bool) ([]gateResult, []ski
 		if g.goTest {
 			var gateSkips []skipRecord
 			var metrics string
-			gateSkips, metrics, err = runGoTestJSON(dir, args, withBrowser)
+			gateSkips, metrics, err = runGoTestJSON(g.Name, dir, args, g.requireBrowser)
 			skips = append(skips, gateSkips...)
 			if metrics != "" && loadMetrics == "" {
 				loadMetrics = metrics
@@ -252,7 +258,7 @@ func runCleanGates(root string, withRace, withBrowser bool) ([]gateResult, []ski
 			cmd.Dir = dir
 			cmd.Stdout = os.Stdout
 			cmd.Stderr = os.Stderr
-			cmd.Env = gateEnv(withBrowser)
+			cmd.Env = gateEnv(false)
 			err = cmd.Run()
 		}
 		gates[i].Passed = err == nil
@@ -266,9 +272,12 @@ func runCleanGates(root string, withRace, withBrowser bool) ([]gateResult, []ski
 	return gates, skips, timings, loadMetrics
 }
 
-func gateEnv(withBrowser bool) []string {
+// gateEnv builds a gate's environment. requireBrowser makes the real-browser
+// suites mandatory for that gate; without it they are opt-in and declare-skip
+// (m169RequireBrowserHarness).
+func gateEnv(requireBrowser bool) []string {
 	env := os.Environ()
-	if withBrowser {
+	if requireBrowser {
 		env = append(env, requireBrowserEnv)
 	}
 	return env
@@ -278,11 +287,11 @@ func gateEnv(withBrowser bool) []string {
 // progress line per package and collecting (a) every skipped test with the
 // reason it printed and (b) the load run's measured metrics, which M16.19 emits
 // as test log lines and M16.20 publishes as an artifact.
-func runGoTestJSON(dir string, args []string, withBrowser bool) ([]skipRecord, string, error) {
+func runGoTestJSON(gate, dir string, args []string, requireBrowser bool) ([]skipRecord, string, error) {
 	jsonArgs := goTestJSONArgs(args)
 	cmd := exec.Command(jsonArgs[0], jsonArgs[1:]...)
 	cmd.Dir = dir
-	cmd.Env = gateEnv(withBrowser)
+	cmd.Env = gateEnv(requireBrowser)
 	cmd.Stderr = os.Stderr
 	stdout, err := cmd.StdoutPipe()
 	if err != nil {
@@ -322,7 +331,7 @@ func runGoTestJSON(dir string, args []string, withBrowser bool) ([]skipRecord, s
 			if ev.Test == "" {
 				continue // a package with no test files
 			}
-			skips = append(skips, skipRecord{Package: ev.Package, Test: ev.Test, Reason: lastMeaningfulLine(output[key])})
+			skips = append(skips, skipRecord{Gate: gate, Package: ev.Package, Test: ev.Test, Reason: lastMeaningfulLine(output[key])})
 			delete(output, key)
 		case "pass", "fail":
 			// A failing test's whole captured output is echoed: a certification

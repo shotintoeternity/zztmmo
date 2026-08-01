@@ -97,6 +97,11 @@ type deviceMatrix struct {
 // followed by the reason (M16.18's firefox-touch-portrait profile, whose
 // reason the device matrix already carries). Anything else is undeclared.
 type skipRecord struct {
+	// Gate is the clean gate that skipped it. The same suite can run under
+	// `go test` and sit out `go test -race` (the browser suites do, by owner
+	// decision 2026-08-01), and a record that did not say which gate it came
+	// from would read as "this never ran".
+	Gate    string `json:"gate"`
 	Package string `json:"package"`
 	Test    string `json:"test"`
 	Reason  string `json:"reason"`
@@ -120,10 +125,14 @@ type gateResult struct {
 	Skipped bool   `json:"skipped,omitempty"`
 
 	// goTest marks a gate the runner drives under `-json` so it can record the
-	// tests that skipped (task M16.20). Not serialized: it is how the gate is
-	// run, not a fact about the tree, and the report must stay a pure function
-	// of the tree.
-	goTest bool `json:"-"`
+	// tests that skipped (task M16.20). requireBrowser makes the real-browser
+	// suites mandatory for that gate rather than opt-in; only the plain
+	// `go test` gate sets it, so the race gate no longer re-runs eleven
+	// Playwright suites for a finding the wire-level tests already cover (owner
+	// decision 2026-08-01). Neither is serialized: they are how a gate is run,
+	// not facts about the tree, and the report must stay a pure function of it.
+	goTest         bool `json:"-"`
+	requireBrowser bool `json:"-"`
 }
 
 // ---------------------------------------------------------------------------
@@ -190,6 +199,9 @@ const reportSchemaVersion = 1
 func buildReport(m *manifest, manifestPath string, gates []gateResult, devices *deviceMatrix, skips []skipRecord) report {
 	sorted := append([]skipRecord(nil), skips...)
 	sort.Slice(sorted, func(i, j int) bool {
+		if sorted[i].Gate != sorted[j].Gate {
+			return sorted[i].Gate < sorted[j].Gate
+		}
 		if sorted[i].Package != sorted[j].Package {
 			return sorted[i].Package < sorted[j].Package
 		}
@@ -266,7 +278,7 @@ func certificationBlockers(m *manifest, gates []gateResult, devices *deviceMatri
 		if reason == "" {
 			reason = "no reason given"
 		}
-		blockers = append(blockers, fmt.Sprintf("test %s (%s) skipped without declaring itself: %s", s.Test, s.Package, reason))
+		blockers = append(blockers, fmt.Sprintf("test %s (%s, gate %q) skipped without declaring itself: %s", s.Test, s.Package, s.Gate, reason))
 	}
 
 	var unverified, gap, unknown, passNoTest int
@@ -453,13 +465,13 @@ func writeMarkdown(w io.Writer, r report) error {
 	if len(r.Skips) == 0 {
 		p("None — no test in the go gates skipped itself.\n\n")
 	} else {
-		p("| test | package | declared | reason |\n|---|---|---|---|\n")
+		p("| gate | test | package | declared | reason |\n|---|---|---|---|---|\n")
 		for _, s := range r.Skips {
 			declared := "**no**"
 			if s.declared() {
 				declared = "yes"
 			}
-			p("| `%s` | `%s` | %s | %s |\n", s.Test, s.Package, declared, s.Reason)
+			p("| %s | `%s` | `%s` | %s | %s |\n", s.Gate, s.Test, s.Package, declared, s.Reason)
 		}
 		p("\n")
 	}

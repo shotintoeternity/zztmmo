@@ -51,9 +51,10 @@ func TestM1611CompileAcceptanceWorld(t *testing.T) {
 }
 
 func TestM1611BrowserEndToEndPlayerJourneys(t *testing.T) {
-	if testing.Short() {
-		t.Skip("skipping browser E2E journey test in short mode")
-	}
+	// This suite builds its own server rather than using M16.9's harness, so it
+	// asks for the browser gate itself (owner decision 2026-08-01: the browser
+	// suites are opt-in for everyday runs and mandatory for certification).
+	m169RequireBrowserHarness(t)
 
 	// 1. Compile ACCEPT.ZZT
 	zwdPath := filepath.Join("..", "fixtures", "accept.zwd")

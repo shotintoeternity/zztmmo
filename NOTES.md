@@ -8325,3 +8325,41 @@ classifications above — read the two clean-clone reports, and tick the box. Un
 that happens **nothing in this repository may state that the product has full
 feature parity within the M16 contract**; the manifest says the rows are
 certified, which is a different sentence.
+
+## 2026-08-01 — M18.12: the browser suites stop taxing every run
+
+**Owner decision**, taken after M16.20's session spent most of its wall clock
+waiting: the eleven Playwright suites live inside `go test ./...`, so a one-line
+engine change paid 7-10 minutes of real browsers, and the `-race` gate paid them
+again for a class of finding the wire-level concurrency tests already cover.
+Worse than the time: three of the last four browser-suite failures (M16.14d,
+M16.18c, M16.10a) were load artifacts, each costing a session to prove innocent,
+and today's act-11 timeout is a fourth.
+
+**The gate.** `m169RequireBrowserHarness` now consults two variables:
+
+	(neither)                     declared skip — the everyday run
+	ZZT_BROWSER=1                 run them; an absent harness still skips
+	ZZT_PARITY_REQUIRE_BROWSER=1  run them; an absent harness is a FAILURE
+
+`make certify` sets the second, and only on the `go test` gate — the race gate
+deliberately lets them sit out. M16.11 asks for the gate itself (it builds its
+own server rather than using M16.9's harness, so nothing else would have gated
+it).
+
+**Why this is not the hole M16.20 closed this morning.** Every one of these skips
+declares itself, `cmd/zzt-parity` records each by name AND by gate, and an
+undeclared skip blocks certification. A certification run that did not execute
+the browser suites therefore cannot certify, and the report's skip table shows
+which gate they sat out rather than leaving a reader to infer it. The skip
+records gained a `Gate` field for exactly that reason: the same suite running
+under `go test` and skipping under `-race` must not read as "never ran".
+
+**Measured:** `go test -count=1 ./...` went from ~10 minutes to **50 seconds**,
+with 21 skips, all declared, every browser suite named. `ZZT_BROWSER=1 go test
+-run TestM169BrowserCanvasGoldens` still runs the real browser (18s).
+
+**The trade, stated plainly:** an everyday run no longer catches a regression only
+a real browser sees. CI's `browser-goldens` job runs them on every push (it now
+sets the opt-in explicitly, or it would have run and reported nothing), and
+`make certify` requires them. CLAUDE.md rule 3 and PARITY.md §8 carry the rule.

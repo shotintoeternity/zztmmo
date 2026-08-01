@@ -4077,6 +4077,28 @@ gap task has landed.
   M16.20 — that task reconciles against this manifest, so it must not be
   corruptible by the documented workflow.
 
+- [x] **M18.12 — The real-browser suites are opt-in for everyday runs.**
+  Owner decision 2026-08-01, after M16.20's session spent most of its wall clock
+  waiting on tests. The eleven Playwright suites live inside `go test ./...`, so
+  a one-line engine change paid 7-10 minutes of real browsers, and the `-race`
+  gate paid them a second time for a class of finding the wire-level concurrency
+  tests already cover. Three of the last four browser-suite failures
+  (M16.14d, M16.18c, M16.10a) were load artifacts rather than defects, so the
+  cost bought unreliable signal as well as time.
+  They are now gated on `ZZT_BROWSER=1`, with `make certify` setting
+  `ZZT_PARITY_REQUIRE_BROWSER=1` on the `go test` gate alone. **This is not the
+  silent-skip hole M16.20 closed**: every skip declares itself, `cmd/zzt-parity`
+  records each one by name and gate, and an undeclared skip still blocks
+  certification — so a certification run that did not execute them cannot pass,
+  and the report says which gate they sat out. `go test ./...` is 50s rather
+  than ~10min; CI's `browser-goldens` job sets the opt-in; CLAUDE.md rule 3 and
+  PARITY.md §8 record the rule.
+
+  **What this trades away, deliberately:** an everyday run no longer catches a
+  regression that only a real browser sees. Run with `ZZT_BROWSER=1` when
+  touching `engine/web/`, the protocol, or anything a browser reads — and CI
+  still runs them on every push.
+
 ## M18 — Beta readiness: cleanup and operational gaps
 
 Filed 2026-07-30 (owner decision, NOTES.md): the last gate before the PoC beta

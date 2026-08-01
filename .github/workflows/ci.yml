@@ -87,8 +87,14 @@ jobs:
         working-directory: engine/web
       - run: npm run build
         working-directory: engine/web
+      # ZZT_BROWSER=1 is what asks for the real-browser suites: they are opt-in
+      # for everyday runs (owner decision 2026-08-01) so a one-line engine change
+      # does not pay eleven Playwright suites, and mandatory under `make certify`.
+      # Without it this job would run and report nothing.
       - run: go test -count=1 -run 'TestM169|TestM1610|TestM1613|TestM1614|TestM1618' -v ./...
         working-directory: engine
+        env:
+          ZZT_BROWSER: '1'
       - name: Upload browser artifacts
         if: always()
         uses: actions/upload-artifact@v4
