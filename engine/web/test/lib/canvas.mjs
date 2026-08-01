@@ -32,7 +32,12 @@
 import assert from "node:assert/strict";
 import fs from "node:fs";
 import path from "node:path";
-import { chromium } from "playwright";
+import { chromium, firefox, webkit } from "playwright";
+
+// The three engines a desktop browser can be (M16.18). Chromium is the only one
+// the golden suites need — a golden is of the client, not of the engine — so the
+// other two are imported but launched only by the platform matrix.
+export const ENGINES = { chromium, firefox, webkit };
 
 export const COLS = 80;
 export const ROWS = 25;
@@ -70,12 +75,23 @@ fs.mkdirSync(resultsDir, { recursive: true });
  * viewport, deviceScaleFactor 1 (the canvas backing store is 640x350 whatever
  * CSS does, but a DPR change would still alter what a screenshot captures),
  * animations under a fake clock, and a device-independent colour treatment.
+ *
+ * M16.18 widened the signature so the platform matrix can ask for another engine
+ * or another screen without a second launcher: every default below is the
+ * golden suites' existing one, so their calls are unchanged.
  */
-export async function launchGoldenBrowser({ hasTouch = false } = {}) {
-  const browser = await chromium.launch({ headless: true });
+export async function launchGoldenBrowser({
+  hasTouch = false,
+  engine = "chromium",
+  viewport = { width: 1280, height: 720 },
+  deviceScaleFactor = 1,
+} = {}) {
+  const launcher = ENGINES[engine];
+  if (!launcher) throw new Error(`unknown browser engine ${engine}`);
+  const browser = await launcher.launch({ headless: true });
   const context = await browser.newContext({
-    viewport: { width: 1280, height: 720 },
-    deviceScaleFactor: 1,
+    viewport,
+    deviceScaleFactor,
     colorScheme: "dark",
     reducedMotion: "no-preference",
     // hasTouch raises navigator.maxTouchPoints, which is the ONLY thing that

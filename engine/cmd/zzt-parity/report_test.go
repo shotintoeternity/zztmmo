@@ -2,6 +2,7 @@ package main
 
 import (
 	"bytes"
+	"path/filepath"
 	"strings"
 	"testing"
 )
@@ -21,6 +22,27 @@ func sampleManifest() *manifest {
 	}
 }
 
+// sampleDeviceMatrix is a minimal well-formed M16.18 matrix: one covered
+// profile with evidence, one skipped profile that says why.
+func sampleDeviceMatrix() *deviceMatrix {
+	return &deviceMatrix{
+		Note:     "sample",
+		Surfaces: []string{"chat", "entry"},
+		Checks:   []string{"layout", "composition"},
+		Profiles: []deviceProfile{
+			{
+				ID: "chromium-desktop", Engine: "chromium", Status: "covered",
+				Evidence: "TestM1618PlatformMatrix/chromium-desktop",
+				Surfaces: []string{"chat", "entry"},
+			},
+			{
+				ID: "firefox-touch-portrait", Engine: "firefox", Touch: true, Status: "skipped",
+				Reason: "Playwright cannot emulate touch in Firefox",
+			},
+		},
+	}
+}
+
 func passingGates() []gateResult {
 	gates := plannedGates(true)
 	for i := range gates {
@@ -30,7 +52,7 @@ func passingGates() []gateResult {
 }
 
 func TestBuildReportTallies(t *testing.T) {
-	r := buildReport(sampleManifest(), "fixtures/parity/manifest.json", passingGates())
+	r := buildReport(sampleManifest(), "fixtures/parity/manifest.json", passingGates(), sampleDeviceMatrix())
 
 	if r.TotalRows != 6 {
 		t.Fatalf("TotalRows = %d, want 6", r.TotalRows)
@@ -55,7 +77,7 @@ func TestBuildReportTallies(t *testing.T) {
 }
 
 func TestCertificationBlockedByOpenRows(t *testing.T) {
-	r := buildReport(sampleManifest(), "m", passingGates())
+	r := buildReport(sampleManifest(), "m", passingGates(), sampleDeviceMatrix())
 	if r.Certified {
 		t.Fatal("manifest with unverified+gap rows must not be certified")
 	}
@@ -69,7 +91,7 @@ func TestCertificationRequiresPassRowsToNameTest(t *testing.T) {
 	m := &manifest{Rows: []manifestRow{
 		{ID: "a", Dimension: "element", Status: "pass", Test: ""},
 	}}
-	r := buildReport(m, "m", passingGates())
+	r := buildReport(m, "m", passingGates(), sampleDeviceMatrix())
 	if r.Certified {
 		t.Fatal("a pass row with no covering test must block certification")
 	}
@@ -84,7 +106,7 @@ func TestCertificationHappyPath(t *testing.T) {
 		{ID: "b", Dimension: "task", Status: "deviation"},
 		{ID: "c", Dimension: "service", Status: "out-of-scope"},
 	}}
-	r := buildReport(m, "m", passingGates())
+	r := buildReport(m, "m", passingGates(), sampleDeviceMatrix())
 	if !r.Certified {
 		t.Fatalf("all-terminal manifest with passing gates must certify, blockers: %v", r.Blockers)
 	}
@@ -94,7 +116,7 @@ func TestFailedGateBlocksCertification(t *testing.T) {
 	m := &manifest{Rows: []manifestRow{{ID: "a", Dimension: "element", Status: "pass", Test: "TestA"}}}
 	gates := passingGates()
 	gates[2].Passed = false // go test
-	r := buildReport(m, "m", gates)
+	r := buildReport(m, "m", gates, sampleDeviceMatrix())
 	if r.Certified {
 		t.Fatal("a failed clean gate must block certification")
 	}
@@ -107,7 +129,7 @@ func TestSkippedGateBlocksCertification(t *testing.T) {
 	m := &manifest{Rows: []manifestRow{{ID: "a", Dimension: "element", Status: "pass", Test: "TestA"}}}
 	gates := passingGates()
 	gates[0].Skipped = true
-	r := buildReport(m, "m", gates)
+	r := buildReport(m, "m", gates, sampleDeviceMatrix())
 	if r.Certified {
 		t.Fatal("a skipped clean gate must block certification (it was not actually run)")
 	}
@@ -119,7 +141,7 @@ func TestReportDeterminism(t *testing.T) {
 	m := sampleManifest()
 	var jsonA, jsonB, mdA, mdB bytes.Buffer
 
-	rA := buildReport(m, "m", passingGates())
+	rA := buildReport(m, "m", passingGates(), sampleDeviceMatrix())
 	if err := writeJSON(&jsonA, rA); err != nil {
 		t.Fatal(err)
 	}
@@ -128,7 +150,7 @@ func TestReportDeterminism(t *testing.T) {
 	}
 
 	// Rebuild from a fresh manifest value to catch any accidental input mutation.
-	rB := buildReport(sampleManifest(), "m", passingGates())
+	rB := buildReport(sampleManifest(), "m", passingGates(), sampleDeviceMatrix())
 	if err := writeJSON(&jsonB, rB); err != nil {
 		t.Fatal(err)
 	}
@@ -145,6 +167,89 @@ func TestReportDeterminism(t *testing.T) {
 	// The Markdown must not advertise a coverage percentage as parity.
 	if strings.Contains(mdA.String(), "% coverage") || strings.Contains(strings.ToLower(mdA.String()), "line coverage:") {
 		t.Error("report must not present line coverage as a parity claim")
+	}
+}
+
+// ---------------------------------------------------------------------------
+// Device/browser matrix (task M16.18)
+// ---------------------------------------------------------------------------
+
+func certifiableManifest() *manifest {
+	return &manifest{Rows: []manifestRow{
+		{ID: "a", Dimension: "element", Status: "pass", Test: "TestA"},
+	}}
+}
+
+// The DoD's central rule: a skip with no reason is a certification blocker, and
+// the same matrix with a reason is not.
+func TestUnexplainedDeviceSkipBlocksCertification(t *testing.T) {
+	devices := sampleDeviceMatrix()
+	devices.Profiles[1].Reason = ""
+	r := buildReport(certifiableManifest(), "m", passingGates(), devices)
+	if r.Certified {
+		t.Fatal("a device profile skipped with no reason must block certification")
+	}
+	if !strings.Contains(strings.Join(r.Blockers, "\n"), "skipped with no reason") {
+		t.Errorf("expected an unexplained-skip blocker, got %v", r.Blockers)
+	}
+
+	if r2 := buildReport(certifiableManifest(), "m", passingGates(), sampleDeviceMatrix()); !r2.Certified {
+		t.Errorf("an explained skip must not block certification, blockers: %v", r2.Blockers)
+	}
+}
+
+func TestCoveredDeviceProfileMustNameEvidence(t *testing.T) {
+	devices := sampleDeviceMatrix()
+	devices.Profiles[0].Evidence = ""
+	r := buildReport(certifiableManifest(), "m", passingGates(), devices)
+	if r.Certified {
+		t.Fatal("a covered device profile with no evidence must block certification")
+	}
+	if !strings.Contains(strings.Join(r.Blockers, "\n"), "names no evidence") {
+		t.Errorf("expected a no-evidence blocker, got %v", r.Blockers)
+	}
+}
+
+func TestMissingDeviceMatrixBlocksCertification(t *testing.T) {
+	r := buildReport(certifiableManifest(), "m", passingGates(), nil)
+	if r.Certified {
+		t.Fatal("a report with no device/browser matrix must not certify (task M16.18)")
+	}
+	if !strings.Contains(strings.Join(r.Blockers, "\n"), "no device/browser matrix") {
+		t.Errorf("expected a missing-matrix blocker, got %v", r.Blockers)
+	}
+}
+
+// The matrix has to be IN the report, not merely consulted by it: the DoD asks
+// for a device/browser matrix a reader can see.
+func TestMarkdownRendersTheDeviceMatrix(t *testing.T) {
+	var md bytes.Buffer
+	r := buildReport(sampleManifest(), "m", passingGates(), sampleDeviceMatrix())
+	if err := writeMarkdown(&md, r); err != nil {
+		t.Fatal(err)
+	}
+	out := md.String()
+	for _, want := range []string{
+		"## Device and browser matrix",
+		"chromium-desktop",
+		"firefox-touch-portrait",
+		"Playwright cannot emulate touch in Firefox",
+	} {
+		if !strings.Contains(out, want) {
+			t.Errorf("the report's device matrix section is missing %q", want)
+		}
+	}
+}
+
+// The real committed matrix must satisfy the same rules the synthetic ones do —
+// otherwise the gate only ever ran against test data.
+func TestCommittedDeviceMatrixHasNoUnexplainedSkip(t *testing.T) {
+	devices, err := loadDeviceMatrix(filepath.Join("..", "..", "..", "fixtures", "parity", "device-matrix.json"))
+	if err != nil {
+		t.Fatalf("the committed device/browser matrix must load: %v", err)
+	}
+	if blockers := deviceMatrixBlockers(devices); len(blockers) > 0 {
+		t.Errorf("the committed device/browser matrix is not certifiable: %v", blockers)
 	}
 }
 

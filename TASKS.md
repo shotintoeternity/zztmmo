@@ -138,7 +138,14 @@ M12.23, M17.1–M17.7, M16.0–M16.8a — has fully landed.)
    **M16.16 landed 2026-08-01** — the auth/chat/Museum service journey its
    2026-07-14 audit deferred, including the real-browser sign-in → picker →
    Museum search → select → host → join → chat run; it filed nothing.
-   Next in file order after those is M16.18. The one
+   **M16.18 landed 2026-08-01** — the device/browser matrix (Chromium, Firefox
+   and WebKit; desktop and phone screens at DPR 3), every text surface certified
+   on every covered profile, and the matrix itself rendered into the parity
+   report with an unexplained skip as a blocker. It filed **M16.18b** (the
+   on-screen control bar covers the bottom seven text rows on a landscape phone),
+   which ranks with M16.18a below the beta.
+   Next in file order after those is M16.20, whose remaining blockers are
+   M16.18a and M16.18b. The one
    browser flake still open is M16.14b's act 8,
    which is `[ADVISOR]` and still ranks below the certification tail.
 
@@ -146,6 +153,10 @@ M12.23, M17.1–M17.7, M16.0–M16.8a — has fully landed.)
 - M16.18a — touch gameplay controls: deferred past the beta (owner 2026-07-30:
   the beta targets desktop browsers and the invite copy must say so; the
   2026-07-15 build decision stands for post-beta). Still blocks M16.20.
+- M16.18b — the on-screen control bar covers text rows 18-24 on a landscape
+  phone (filed by M16.18, 2026-08-01). Same reasoning as M16.18a: it is touch-
+  surface work and the beta is desktop-scoped. Client-only layout fix; blocks
+  M16.20 only in the sense that its pinned declaration must reach zero.
 - M14.3 — package split (skip unless the single package is actually hurting)
 - M12.15d — mined style priors (owner-deferred; revisit only if generation quality plateaus)
 
@@ -3759,7 +3770,7 @@ gap task has landed.
   gone), and the Go harness's model now answers the second start-board call
   with a good board so the retry the browser drives can succeed.
 
-- [ ] **M16.18 — Mobile and browser-platform contract.** Run the browser suite
+- [x] **M16.18 — Mobile and browser-platform contract.** Run the browser suite
   under supported desktop engines and touch emulation at portrait/landscape
   sizes. Cover resize/DPR, focus, native keyboard activation, composition,
   deletion, and game/modal input isolation for every text surface. Resolve the
@@ -3769,6 +3780,47 @@ gap task has landed.
   in the parity report contains no unexplained skip; screenshots prove the
   80x25+sidebar/modal layout remains usable; touch gameplay is neither implied
   nor marked `pass` without a tested input path.
+  Landed 2026-08-01 (NOTES.md M16.18). The matrix is a committed declaration,
+  `fixtures/parity/device-matrix.json`: seven profiles across Chromium, Firefox
+  and WebKit, desktop 1280x720 and phone 390x844/844x390 at DPR 3, each naming
+  the text surfaces it exercises. `TestM1618PlatformMatrix` runs what it declares
+  and fails if a run covered less (or more); `cmd/zzt-parity` renders it into
+  report.json/report.md and treats a skip with no reason — or a covered profile
+  with no evidence — as a certification blocker, which is the DoD's "no
+  unexplained skip" as a property of the artifact rather than a promise about it.
+  All six editable modal kinds (`modalAcceptsTextInput`) are certified on every
+  covered profile: mount, gesture activation, IME composition committed exactly
+  once, deletion, and — asserted on the wire, not the screen — no play-mode key
+  escaping a text surface. The scope decision needed no new resolution: the owner
+  settled it twice (2026-07-15 file M16.18a; 2026-07-30 defer it past the beta
+  and scope the copy to desktop), so this task certifies text entry, leaves
+  `mode.mobile-touchplay` at `gap`, and pins the copy with
+  `TestM1618ProductCopyMakesNoTouchGameplayClaim` — which requires the README
+  disclaimer only while that row is `gap`, so M16.18a landing releases it.
+  Two platform facts came out of it. Playwright's **WebKit** delivers touch
+  events while reporting `navigator.maxTouchPoints` 0, so that profile certifies
+  the client's *other* touch gate — M15.1's `touchSeen` fallback, which mounts
+  the native control on the first touch the canvas sees — and the on-screen bar,
+  decided once at load, is correctly absent there. Playwright's **Firefox**
+  cannot emulate touch at all, which is the matrix's one skip and why it carries
+  a paragraph of reason. Filed **M16.18b** on the way through.
+
+- [ ] **M16.18b — The on-screen control bar covers the bottom of the screen on a
+  landscape phone (M16.18 gap task).** Found by M16.18's matrix and pinned by it:
+  at 844x390 the letterboxed canvas fills the viewport's height, so the fixed
+  `.touch-controls` bar (style.css) sits on text rows 18-24 — the bottom of the
+  board and the sidebar's `S Save game` / `P Pause` / `Q Quit` block. Portrait is
+  unaffected (the canvas is letterboxed into the middle and the bar sits in the
+  black below it). Text entry is unaffected on both. The fix is a layout one —
+  reserve the bar's height so the canvas letterboxes above it rather than under
+  it — and it is client-only: no protocol, no simulation, replay fixture
+  untouched. DoD: `fixtures/parity/device-matrix.json` declares
+  `touchBarCoveredRows` empty for `chromium-touch-landscape` and
+  `rotatedTouchBarCoveredRows` empty for `chromium-touch-portrait`, and
+  `TestM1618PlatformMatrix` — which asserts the observed rows equal the declared
+  ones — passes with those zeros; the same run's screenshots show the sidebar's
+  command block unobscured. Ranks with M16.18a: both are touch-surface work and
+  the beta is desktop-scoped.
 
 - [ ] **M16.18a — Touch gameplay controls (M16.0 gap task; blocks M16.20).**
   Filed by M16.0's scope resolution: M15.1 shipped mobile *text entry* (the

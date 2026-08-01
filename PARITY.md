@@ -188,6 +188,15 @@ approval or turned into gap tasks. Resolved:
   row for touch gameplay is `gap` (assigned to M16.18a) under deviation
   `mobile-touch-gap`; mobile **text entry** is a normal `E` row.
 
+  **Settled again on 2026-07-30 and certified by M16.18 (2026-08-01).** The owner
+  deferred M16.18a past the beta and scoped the product copy to desktop browsers
+  with a keyboard, so M16.18 certified mobile **text entry** —
+  `mode.mobile-textentry` is now `pass` — and left `mode.mobile-touchplay` at
+  `gap`. `TestM1618ProductCopyMakesNoTouchGameplayClaim` holds the two together:
+  while that row is `gap` the README must carry the desktop scope and must not
+  claim phone play, and when M16.18a lands the requirement lifts itself.
+  M16.18's own artifact is `fixtures/parity/device-matrix.json` (§7a).
+
 - **M17 live fixes are in scope.** M17.1–M17.4 (name-popup centering,
   world-picker metadata, audio regression, scroll-hyperlink consume) are checked
   shipped fixes the player relies on. Each gets a `task` row and a regression
@@ -216,6 +225,27 @@ fills `test`/`fixture`. When a sweep discovers a defect it files a small M16 gap
 task and sets the row to `gap`. The validator keeps everyone honest in between.
 
 ---
+
+## 6a. The device/browser matrix (M16.18)
+
+`fixtures/parity/device-matrix.json` is the platform half of the contract: which
+browser engines and screens the client is certified on, which text surfaces each
+one exercises, and the reason for anything it does not. It is authored by hand
+and reviewed, not written by a run.
+
+Two gates hold it to reality, from opposite sides. `TestM1618PlatformMatrix`
+runs every profile the file marks `covered` — a real Chromium, Firefox or WebKit
+at that viewport and deviceScaleFactor, driving the built client on M16.9's
+tick-locked harness — and fails if a run covered less, or more, than the profile
+declares. `cmd/zzt-parity` renders the file into `report.json`/`report.md` and
+refuses to certify while any profile is skipped with no reason, is covered with
+no evidence, or carries an unknown status. So "the matrix contains no unexplained
+skip" is a property of the artifact, and "the matrix describes what actually
+ran" is a property of the test.
+
+The inventory of text surfaces is derived from the client itself — the modal
+kinds `modalAcceptsTextInput` (`web/src/modal.ts`) accepts — so a seventh
+editable modal cannot be added without the matrix going red.
 
 ## 7. The vanilla oracle (M16.2)
 

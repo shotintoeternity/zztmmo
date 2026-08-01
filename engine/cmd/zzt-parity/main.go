@@ -65,7 +65,15 @@ func main() {
 		}
 	}
 
-	rep := buildReport(m, manifestRel, gates)
+	// M16.18's device/browser matrix travels with the report. A missing file is
+	// not fatal — the report says so and refuses to certify (deviceMatrixBlockers)
+	// rather than failing the command that was asked to write it.
+	devices, err := loadDeviceMatrix(filepath.Join(root, "fixtures", "parity", "device-matrix.json"))
+	if err != nil {
+		fmt.Fprintf(os.Stderr, "zzt-parity: %v\n", err)
+	}
+
+	rep := buildReport(m, manifestRel, gates, devices)
 
 	dir := *outDir
 	if dir == "" {
@@ -129,6 +137,21 @@ func loadManifest(path string) (*manifest, error) {
 		return nil, fmt.Errorf("decoding manifest %s: %w", path, err)
 	}
 	return &m, nil
+}
+
+// loadDeviceMatrix reads M16.18's device/browser matrix. A matrix that is not
+// there returns (nil, err) so the caller can report both: the report renders
+// "none recorded" and lists a blocker, which is stricter than a silent absence.
+func loadDeviceMatrix(path string) (*deviceMatrix, error) {
+	data, err := os.ReadFile(path)
+	if err != nil {
+		return nil, fmt.Errorf("reading the device/browser matrix: %w", err)
+	}
+	var matrix deviceMatrix
+	if err := json.Unmarshal(data, &matrix); err != nil {
+		return nil, fmt.Errorf("decoding %s: %w", path, err)
+	}
+	return &matrix, nil
 }
 
 // plannedGates is the fixed, ordered list of clean gates. `go test` runs with

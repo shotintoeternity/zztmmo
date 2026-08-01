@@ -46,6 +46,41 @@ type manifest struct {
 	Rows          []manifestRow `json:"rows"`
 }
 
+// ---------------------------------------------------------------------------
+// Device/browser matrix (task M16.18)
+// ---------------------------------------------------------------------------
+
+// The mirror of fixtures/parity/device-matrix.json the report consumes. The
+// file is authored by hand and enforced against real runs by
+// TestM1618PlatformMatrix; here it is rendered, and one rule is applied — a
+// profile the matrix does not cover must say why. An unexplained skip is a
+// certification blocker, which is what makes "the matrix contains no unexplained
+// skip" a property of the artifact rather than a promise about it.
+type deviceProfile struct {
+	ID          string `json:"id"`
+	Label       string `json:"label"`
+	Engine      string `json:"engine"`
+	Orientation string `json:"orientation"`
+	Touch       bool   `json:"touch"`
+	Viewport    struct {
+		Width  int `json:"width"`
+		Height int `json:"height"`
+	} `json:"viewport"`
+	DeviceScaleFactor float64  `json:"deviceScaleFactor"`
+	Status            string   `json:"status"`
+	Reason            string   `json:"reason,omitempty"`
+	Evidence          string   `json:"evidence,omitempty"`
+	Surfaces          []string `json:"surfaces,omitempty"`
+	Notes             string   `json:"notes,omitempty"`
+}
+
+type deviceMatrix struct {
+	Note     string          `json:"note"`
+	Surfaces []string        `json:"surfaces"`
+	Checks   []string        `json:"checks"`
+	Profiles []deviceProfile `json:"profiles"`
+}
+
 // gateResult is one clean gate (go build/vet/test/-race, npm ci/test/build).
 // Output is deliberately excluded from the report model: it is nondeterministic.
 // main.go streams gate output to the console; only the pass/fail verdict — which
@@ -97,6 +132,10 @@ type report struct {
 
 	Gates []gateResult `json:"gates"`
 
+	// DeviceMatrix is M16.18's device/browser matrix, rendered as part of the
+	// report so the platforms a claim covers travel with the claim.
+	DeviceMatrix *deviceMatrix `json:"deviceMatrix,omitempty"`
+
 	Certified bool     `json:"certified"`
 	Blockers  []string `json:"blockers"`
 }
@@ -110,13 +149,14 @@ const reportSchemaVersion = 1
 // buildReport composes the deterministic report from a manifest and the gate
 // results. It never mutates its inputs and never reads wall-clock or the
 // filesystem, so it is a pure function of (m, gates).
-func buildReport(m *manifest, manifestPath string, gates []gateResult) report {
+func buildReport(m *manifest, manifestPath string, gates []gateResult, devices *deviceMatrix) report {
 	r := report{
 		SchemaVersion: reportSchemaVersion,
 		ManifestPath:  manifestPath,
 		TotalRows:     len(m.Rows),
 		StatusTotals:  map[string]int{},
 		Gates:         gates,
+		DeviceMatrix:  devices,
 	}
 
 	dims := map[string]*dimensionSummary{}
@@ -160,7 +200,7 @@ func buildReport(m *manifest, manifestPath string, gates []gateResult) report {
 		return r.VerifiedRows[i].ID < r.VerifiedRows[j].ID
 	})
 
-	r.Blockers = certificationBlockers(m, gates)
+	r.Blockers = certificationBlockers(m, gates, devices)
 	r.Certified = len(r.Blockers) == 0
 	return r
 }
@@ -169,8 +209,9 @@ func buildReport(m *manifest, manifestPath string, gates []gateResult) report {
 // sorted for determinism. An empty slice means certified. The rules are
 // PARITY.md §2/§3: no non-terminal row status, every `pass` names a real test,
 // and every clean gate passes.
-func certificationBlockers(m *manifest, gates []gateResult) []string {
+func certificationBlockers(m *manifest, gates []gateResult, devices *deviceMatrix) []string {
 	var blockers []string
+	blockers = append(blockers, deviceMatrixBlockers(devices)...)
 
 	var unverified, gap, unknown, passNoTest int
 	for _, row := range m.Rows {
@@ -212,6 +253,38 @@ func certificationBlockers(m *manifest, gates []gateResult) []string {
 	}
 
 	sort.Strings(blockers)
+	return blockers
+}
+
+// deviceMatrixBlockers is M16.18's DoD, mechanised: the report must carry a
+// device/browser matrix, and that matrix must contain no unexplained skip. A
+// covered profile that names no evidence is the same failure wearing the other
+// hat — a claim with nothing behind it.
+func deviceMatrixBlockers(devices *deviceMatrix) []string {
+	if devices == nil {
+		return []string{"no device/browser matrix was recorded (fixtures/parity/device-matrix.json, task M16.18)"}
+	}
+	var blockers []string
+	if len(devices.Profiles) == 0 {
+		return []string{"the device/browser matrix declares no profiles (task M16.18)"}
+	}
+	for _, p := range devices.Profiles {
+		switch p.Status {
+		case "covered":
+			if strings.TrimSpace(p.Evidence) == "" {
+				blockers = append(blockers, fmt.Sprintf("device profile %q is covered but names no evidence", p.ID))
+			}
+			if len(p.Surfaces) == 0 {
+				blockers = append(blockers, fmt.Sprintf("device profile %q is covered but exercises no text surface", p.ID))
+			}
+		case "skipped":
+			if strings.TrimSpace(p.Reason) == "" {
+				blockers = append(blockers, fmt.Sprintf("device profile %q is skipped with no reason", p.ID))
+			}
+		default:
+			blockers = append(blockers, fmt.Sprintf("device profile %q carries an unknown status %q", p.ID, p.Status))
+		}
+	}
 	return blockers
 }
 
@@ -277,6 +350,44 @@ func writeMarkdown(w io.Writer, r report) error {
 		r.StatusTotals["deviation"], r.StatusTotals["gap"], r.StatusTotals["out-of-scope"])
 	_ = statuses
 	p("\n")
+
+	// Device/browser matrix (M16.18).
+	p("## Device and browser matrix\n\n")
+	if r.DeviceMatrix == nil {
+		p("None recorded — `fixtures/parity/device-matrix.json` is missing (task M16.18).\n\n")
+	} else {
+		p("%s\n\n", r.DeviceMatrix.Note)
+		p("Text surfaces: %s. Checks: %s.\n\n",
+			strings.Join(r.DeviceMatrix.Surfaces, ", "), strings.Join(r.DeviceMatrix.Checks, ", "))
+		p("| profile | engine | screen | touch | status | surfaces | evidence / reason |\n")
+		p("|---|---|---|---|---|---|---|\n")
+		for _, d := range r.DeviceMatrix.Profiles {
+			touch := "—"
+			if d.Touch {
+				touch = "yes"
+			}
+			status := d.Status
+			detail := d.Evidence
+			if d.Status == "skipped" {
+				status = "**skipped**"
+				detail = d.Reason
+			}
+			surfaces := "—"
+			if len(d.Surfaces) > 0 {
+				surfaces = fmt.Sprintf("%d/%d", len(d.Surfaces), len(r.DeviceMatrix.Surfaces))
+			}
+			p("| `%s` | %s | %dx%d @%gx | %s | %s | %s | %s |\n",
+				d.ID, d.Engine, d.Viewport.Width, d.Viewport.Height, d.DeviceScaleFactor,
+				touch, status, surfaces, detail)
+		}
+		p("\n")
+		for _, d := range r.DeviceMatrix.Profiles {
+			if d.Notes != "" {
+				p("- `%s`: %s\n", d.ID, d.Notes)
+			}
+		}
+		p("\n")
+	}
 
 	// Verified rows and their covering tests.
 	p("## Verified rows and covering tests\n\n")

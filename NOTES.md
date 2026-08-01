@@ -7665,3 +7665,96 @@ simulation.
 **Handoff.** Next in file order is **M16.18** (mobile and browser-platform
 contract), then **M16.20**. Still open behind them: M16.14b (`[ADVISOR]`, ranks
 below the certification tail) and M16.18a (owner-deferred past the beta).
+
+## 2026-08-01 — M16.18: the platforms, and the two the emulators would not be
+
+**What landed.** The device/browser matrix. `fixtures/parity/device-matrix.json`
+declares seven profiles — Chromium, Firefox and WebKit at 1280x720, and phone
+screens 390x844 / 844x390 at deviceScaleFactor 3 — and names, per profile, which
+of the client's six editable modal kinds it exercises. `TestM1618PlatformMatrix`
+runs each covered profile through `engine/web/test/platform_matrix.test.mjs` on
+M16.9's tick-locked harness; `cmd/zzt-parity` renders the matrix into the report
+and treats an unexplained skip (or a covered profile with no evidence) as a
+certification blocker.
+
+**Why a declaration and not a run log.** A run log answers "what did the machine
+do", which is exactly the question a certification artifact must not be allowed
+to answer for itself: a suite that quietly stopped running a profile would write
+a smaller log and look just as green. So the file is the claim, hand-written and
+reviewed, and the two gates close on it from opposite sides — the test fails if a
+run covered less *or more* than the claim, the report fails if the claim explains
+less than it skips. The surface inventory is not hand-written: it is read out of
+`modalAcceptsTextInput` in `web/src/modal.ts`, so a seventh editable modal
+reddens `TestM1618DeviceMatrixIsWellFormed` until the matrix accounts for it.
+
+**The scope decision needed no third resolution.** M16.0 left "are phones
+claimed playable?" for this task. The owner answered it on 2026-07-15 (build the
+controls: gap task M16.18a) and again on 2026-07-30 (defer them past the beta,
+scope the copy to desktop). So M16.18 certified what is shipped — text entry,
+`mode.mobile-textentry` → `pass` — and left `mode.mobile-touchplay` at `gap`.
+The DoD's "neither implied nor marked pass" is now a test rather than a habit:
+`TestM1618ProductCopyMakesNoTouchGameplayClaim` requires the README's desktop
+scope *only while that row is `gap`*, and refuses a set of phrases that would
+claim otherwise. When M16.18a lands, the row stops being `gap` and the test stops
+requiring the disclaimer — it pins the claim to the evidence in both directions
+instead of freezing one sentence.
+
+**Two platform facts the emulators taught us, both kept rather than papered
+over.**
+
+*WebKit reports no touch points and delivers touch events anyway.* Playwright's
+WebKit under `hasTouch` leaves `navigator.maxTouchPoints` at 0 while `ontouchstart`
+is present. The client gates on `maxTouchPoints` in two places, and they behave
+differently under that: `createTouchControls` decides once at load, so the
+on-screen bar is never built; `MobileTextInputBridge` also honours `touchSeen`,
+so the hidden native control mounts on the first touch the canvas sees. Rather
+than skip the profile, the matrix declares `"touchDetection": "gesture"` and the
+suite asserts exactly that shape — nothing mounted before the first touch,
+everything mounted after it, no control bar. That is M15.1's hybrid-device
+fallback, and this is the first thing that has ever exercised it. Real iOS Safari
+reports 5 and takes the same path Chromium does.
+
+*Firefox cannot be made to look like a touch device at all* — `hasTouch` leaves
+it with 0 touch points and no touch events — so a "firefox-touch-portrait" run
+would certify a path no Firefox build produces. It is the matrix's single skip,
+and it carries a paragraph saying so. Firefox is covered desktop-only.
+
+**Filed M16.18b.** At 844x390 the letterboxed canvas fills the viewport's height
+and the fixed `.touch-controls` bar lands on text rows 18-24 — the bottom of the
+board and the sidebar's `S Save game` / `P Pause` / `Q Quit` block
+(`platform-chromium-touch-landscape-playing.png`). Portrait is unaffected. The
+matrix pins the row list per profile rather than requiring it to be empty, so the
+fix shows up as those lists going to zero, and the assertion that compares them
+is what notices. Text entry is unaffected at both shapes.
+
+**One benign console message is recorded, not suppressed.** Leaving the editor
+for play closes the editor session's socket while the server closes its own end,
+and Chromium logs `Close received after close` for whichever side loses that
+race. The join that follows it succeeds — every later act depends on that — so
+the suite matches it exactly, records it in the profile's observation, and fails
+on anything else. Firefox and WebKit do not log it at all.
+
+**A screenshot caveat worth knowing before reading the artifacts.** A tall phone
+page is captured in slices, and a `position: fixed` bar can be drawn once per
+slice, so the control bar appears at the top of a portrait screenshot as well as
+at the bottom. It is not there: the suite measures the buttons' rects and asserts
+every one of them is in the bottom half of the viewport.
+
+**Not done here, deliberately.** The browser CI job's `-run` pattern was already
+missing `TestM1616` and `TestM1617`'s browser suites; this task added
+`TestM1618` and left the other two alone (CLAUDE.md rule 4). Someone should widen
+it — those two suites are not running in CI today.
+
+**Manifest**: `mode.mobile-textentry` `unverified` → `pass`, citing
+`TestM1618PlatformMatrix` and the matrix fixture; `mode.mobile-touchplay` stays
+`gap` with its notes updated to say what *is* shipped (a d-pad, Enter, a keyboard
+toggle and the title-menu World/Play keys — no shoot, torch or pause) and to cite
+the copy test. `TestParityManifestIsCanonical` green after the hand edit.
+
+**Verified**: `go build ./...`, `go vet ./...`, `go test -count=1 ./...` green
+including the six covered browser profiles (~60s for the matrix alone); `npm test`
+green. `fixtures/town.replay.json` untouched — nothing here goes near the
+simulation.
+
+**Handoff.** Next in file order is **M16.20**, whose remaining blockers are the
+two touch-surface gap tasks, M16.18a and M16.18b, plus M16.14b (`[ADVISOR]`).

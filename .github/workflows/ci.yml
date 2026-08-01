@@ -79,11 +79,15 @@ jobs:
           cache-dependency-path: engine/web/package-lock.json
       - run: npm ci
         working-directory: engine/web
-      - run: npx playwright install --with-deps chromium
+      # Firefox and WebKit are here for M16.18's device/browser matrix, which
+      # certifies the client on all three desktop engines. The golden suites use
+      # Chromium alone; installing the other two costs about a minute and is what
+      # keeps the matrix from being a matrix in name only.
+      - run: npx playwright install --with-deps chromium firefox webkit
         working-directory: engine/web
       - run: npm run build
         working-directory: engine/web
-      - run: go test -count=1 -run 'TestM169|TestM1610|TestM1613|TestM1614' -v ./...
+      - run: go test -count=1 -run 'TestM169|TestM1610|TestM1613|TestM1614|TestM1618' -v ./...
         working-directory: engine
       - name: Upload browser artifacts
         if: always()

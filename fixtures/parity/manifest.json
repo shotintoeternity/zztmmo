@@ -4047,8 +4047,10 @@
       "contract": "E",
       "authority": "web/src/*.ts",
       "parity": "exact",
-      "status": "unverified",
-      "assignedTask": "M16.18"
+      "test": "TestM1618PlatformMatrix, TestM1618DeviceMatrixIsWellFormed",
+      "fixture": "fixtures/parity/device-matrix.json",
+      "status": "pass",
+      "notes": "M16.18: all six editable modal kinds (modalAcceptsTextInput) certified on Chromium and WebKit touch profiles at portrait/landscape and DPR 3 — mount, gesture activation, IME composition, deletion, and no leak of a play-mode key to the wire — plus the same surfaces on Chromium/Firefox/WebKit desktop, where no native control mounts at all."
     },
     {
       "id": "mode.mobile-touchplay",
@@ -4058,9 +4060,10 @@
       "authority": "web/src/*.ts",
       "parity": "deviation",
       "deviation": "mobile-touch-gap",
+      "test": "TestM1618ProductCopyMakesNoTouchGameplayClaim",
       "status": "gap",
       "assignedTask": "M16.18a",
-      "notes": "touch gameplay not shipped; filed as gap task M16.18a (owner decision 2026-07-15)"
+      "notes": "touch gameplay not shipped; filed as gap task M16.18a (owner decision 2026-07-15). M16.18 measured what IS shipped: touch_controls.ts builds a d-pad (menu + movement), Enter, a keyboard toggle and the title-menu World/Play keys — no shoot, torch or pause — and only when navigator.maxTouchPoints is non-zero at load. The named test is what keeps the product copy from claiming otherwise while this row is `gap`. M16.18 also filed M16.18b: that bar covers text rows 18-24 on a landscape phone."
     },
     {
       "id": "mode.modal-debug",
