@@ -8363,3 +8363,46 @@ with 21 skips, all declared, every browser suite named. `ZZT_BROWSER=1 go test
 a real browser sees. CI's `browser-goldens` job runs them on every push (it now
 sets the opt-in explicitly, or it would have run and reported nothing), and
 `make certify` requires them. CLAUDE.md rule 3 and PARITY.md §8 carry the rule.
+
+## 2026-08-01 — M16.14e filed: the collaborator who lands on the title screen
+
+M16.20's clean-clone certification run could not go green twice. The first run
+found the untracked-TOWN dependency (fixed, see above); the run after that fix
+got through npm, Playwright, the build, `npm test`, `go build` and `go vet`, and
+then failed one test — M16.14's act 11, "test play, together":
+
+    timed out waiting for Guest: the test-play board
+
+**The screen is the clue.** The harness prints what the browser was showing, and
+it is not a half-loaded board — it is the **title screen of COLLAB**, the world
+that member was editing, menu and all. A client only draws that after
+`showTitle()`, and in the editor the one path that calls it without the player
+asking is the socket `close` listener (`web/src/main.ts:1421-1428`).
+
+**Blame, before hypotheses.** Six runs on an idle machine passed (3 at HEAD, 3 at
+`5667e1e`). With eight busy loops on a 10-core machine: HEAD failed 2 of 3,
+`5667e1e` failed 1 of 3. `5667e1e` predates M16.14b, so the fan-out gate is not
+the cause; three runs a side is far too few to read anything into 2/3 vs 1/3, and
+nothing here claims a rate. What it establishes is presence on the baseline.
+
+**What the evidence points at.** `webSocketClient.write`
+(`websocket_server.go:1832`) wraps every message in a **1-second** context
+timeout, and `coder/websocket` closes the connection when a write's context
+expires. `broadcastEditor` discards the error (`_ = member.write(...)`). So a
+browser that is slow for one second — which is what eight busy loops buy you —
+loses its editor socket, and its client draws the title screen of the world it
+was editing. Every observation fits: load-sensitive, whichever member was
+unlucky, and the editing world's title rather than the test world's.
+
+**Not concluded, deliberately.** Nobody has instrumented the broadcast to show
+the write failing, so this is a hypothesis with a mechanism, and M16.14e's first
+step is to establish which it is rather than to pick a fix. If it is confirmed it
+is a **product** defect — a collaborator silently ejected because one message
+could not be delivered inside a second — not a harness one, and
+`service.editor-collab` goes back to `gap`.
+
+Filed `[ADVISOR]` because the candidate fixes trade against each other: raise the
+timeout, give each client a bounded outbound queue with a slow-client policy
+(which would interact with M16.14b's ordering gate), or make a write timeout
+non-fatal and re-sync the client, which needs a resume path the editor does not
+have.

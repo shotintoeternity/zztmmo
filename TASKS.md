@@ -175,7 +175,11 @@ M12.23, M17.1–M17.7, M16.0–M16.8a — has fully landed.)
    through the session's ordering gate, in the order the session applied the
    edits, so two members writing one cell leave every screen and the session on
    one tile; M16.14's act 8 is no longer a known flake.
-   Next in file order after those is M16.20, which no longer has a blocker.
+   Next in file order after those is M16.20, whose executor work landed
+   2026-08-01 but which is **blocked on M16.14e** — a collaborator dropped to the
+   title screen when the server's write to it times out, found by the
+   clean-clone certification run, pre-existing, and the reason two identical
+   green reports are not obtainable yet.
 
 **Optional / deferred (bottom):**
 - M14.3 — package split (skip unless the single package is actually hurting)
@@ -3425,6 +3429,52 @@ gap task has landed.
   it up. All four browser suites green together with `fixtures/` unchanged, plus
   a green full `go test -count=1 ./...`.
 
+- [ ] **M16.14e [ADVISOR] — A collaborator is dropped to the title screen when
+  the server's write to it times out (M16.20 gap task; blocks M16.20).**
+  Found by M16.20's clean-clone certification run 2026-08-01, which cannot
+  produce the two identical green reports its DoD requires while this flakes.
+
+  **Symptom.** M16.14's act 11 ("test play, together") times out:
+  `timed out waiting for Bob: the test-play board` (or Guest —
+  `web/test/editor_collab.test.mjs:1140`, a 30s wait for `Health:`). The screen
+  the harness prints is not a half-loaded board: it is the **title screen of
+  COLLAB**, the world that member was editing.
+
+  **Reproduction and blame.** It needs load: 6/6 pass idle, and with eight busy
+  loops on a 10-core machine it failed 2/3 at HEAD and **1/3 at `5667e1e`**,
+  which predates M16.14b — so it is pre-existing, not the fan-out gate's doing
+  (NOTES.md 2026-08-01). Since M18.12 the suite needs `ZZT_BROWSER=1`.
+
+  **The mechanism this evidence points at** — a hypothesis, not a finding:
+  `webSocketClient.write` (`websocket_server.go:1832`) gives every message a
+  **1-second** context timeout, and `coder/websocket` CLOSES the connection when
+  a write's context expires. `broadcastEditor` ignores the error
+  (`_ = member.write(...)`, `:767`), so a member whose browser was slow for one
+  second loses its editor socket; the client's `close` listener calls
+  `showTitle()` (`web/src/main.ts:1421-1428`), which draws exactly the screen
+  above. That fits every observation: load-sensitive, hits whichever member was
+  unlucky, and lands on the editing world's title rather than the test world's.
+  **If it is confirmed, this is a product defect, not a harness one** — a
+  collaborator is silently ejected from a session because the server could not
+  hand them one message inside a second — and `service.editor-collab` goes back
+  to `gap` until it is fixed.
+
+  **First step is to decide which it is**, not to pick a fix: instrument the
+  broadcast (does the write actually fail, and with what?) and assert at the
+  server that every member received the test-play reply. The candidate fixes
+  trade against each other, which is why this is `[ADVISOR]`: raise the timeout
+  (how long is a browser allowed to stall a fan-out?), give each client a
+  bounded outbound queue and a slow-client policy (a real design change,
+  interacting with M16.14b's ordering gate), or treat a write timeout as
+  non-fatal and let the client re-sync (needs a resume path the editor does not
+  have).
+
+  DoD: the cause is established by evidence rather than argued; if it is the
+  write timeout, a fix that a loaded run cannot break, proven by a test that
+  forces a slow reader rather than waiting for load to supply one (M16.14b's and
+  M16.18c's shape); act 11 green in 5 consecutive loaded runs; and M16.20's two
+  clean-clone reports become obtainable.
+
 - [x] **M16.15 — Persistence, reconnect, and replay service journey.** With
   temporary directories and the production server binary, cover manual save,
   account sidecar state, guest behavior, autosave atomicity, crash/restart
@@ -4055,10 +4105,21 @@ gap task has landed.
     and §4 records the three approved deviations no row can name (a row carries
     one `deviation` id) with the tests that actually pin them.
 
+  **BLOCKED on M16.14e for the two green reports.** The clean-clone run found and
+  fixed one real defect (below) and then hit a second: M16.14's act 11 times out
+  under load — pre-existing, reproduced at `5667e1e` — so the run cannot be green
+  twice in a row until that lands. Everything else in this DoD is done.
+  The clean-clone run's own finding, already fixed here: four harnesses seeded
+  their worlds from the gitignored `engine/TOWN.ZZT` and copied it only when it
+  happened to exist, so on any clean checkout — including CI's `browser-goldens`
+  job — the client's first `/api/title` answered 500 and 24 tests across nine
+  suites failed. They now read the committed `fixtures/TOWN.ZZT` and fail closed.
+
   **Left for the owner:** approve the final deviation list (five `deviation`
   rows over four catalog ids, plus the nine `out-of-scope` classifications), read
-  the two clean-clone reports, and tick this box. The advisor half of the gate
-  is still unrun — the advisor tool has been unavailable since M16.0.
+  the two clean-clone reports once M16.14e unblocks them, and tick this box. The
+  advisor half of the gate is still unrun — the advisor tool has been unavailable
+  since M16.0.
 
 - [x] **M16.20a — Make `PARITY_SCAFFOLD=1` regeneration non-destructive.**
   Found during M18.1 (NOTES.md 2026-07-30). Regenerating
