@@ -7758,3 +7758,128 @@ simulation.
 
 **Handoff.** Next in file order is **M16.20**, whose remaining blockers are the
 two touch-surface gap tasks, M16.18a and M16.18b, plus M16.14b (`[ADVISOR]`).
+
+## 2026-08-01 — M16.18a: the phone gets a trigger
+
+**Task.** The gap M16.0 filed on 2026-07-15 and the owner deferred on 2026-07-30:
+M15.1 shipped mobile *text entry* but no touch **gameplay**, so a phone could
+type and could not move, shoot, light a torch or pause. The owner's choice then
+was to build the controls rather than narrow the claim. Built now.
+
+**The design decision that made this small.** Fire is the **space bar**, not a new
+idea. `ElementPlayerTick` shoots on `InputShiftPressed || InputKeyPressed == ' '`
+(elements.go:1424) and `inputMessageToPlayerInput` sets `Shift` for the shoot bit
+as well as the shift bit — so a single held button covers *both* of vanilla's
+firing shapes: alone it repeats along the player's facing, and held together with
+a pad direction it fires along that direction and swallows the step. That is why
+there is one Fire control and not a second four-way pad, and why nothing in this
+task reaches the simulation that a keyboard could not already produce. Torch is
+`T` and Pause is `P`; the whole client change is three more entries in
+`TOUCH_BUTTONS`.
+
+**Auto-repeat needed no work.** A finger produces no key repeat, so a held pad key
+would have moved exactly one square — except main.ts has re-sent `currentMask()`
+every 55ms since M4.2 (the `inputTimer`). Holding a touch control keeps the code
+in `pressed`, so the sampler already does what a keyboard's repeat does. Worth
+recording because the obvious fix (a repeat timer inside `touch_controls.ts`)
+would have been a second, redundant, clock-dependent input path.
+
+**`setMode` is the safety property, not the tidiness one.** Each control declares
+the modes it appears in, and `drawScreen` syncs the bar (`modal ? "modal" : mode`)
+because that is the one place every mode and modal change already passes through.
+Three things fall out of it:
+
+- Fire is a space, and behind an open text surface a space belongs in the buffer.
+  A control that is not on screen cannot leak a tap into the game.
+- `Play` and `Pause` are one key byte (`P`). Which of them is on screen is the
+  entire difference between the title menu's "start" and `GamePaused`, and the
+  player should not have to know they are the same key.
+- The bar's height stops depending on how many controls exist. In landscape the
+  direction pad's two rows dominate the action row, and at most five actions are
+  offered at once — so **M16.18b's covered-row numbers are exactly what M16.18
+  measured** (`[18..24]` landscape, `[]` portrait) and did not get worse. That
+  was checked, not assumed: the matrix asserts observed rows equal declared ones
+  at eight measurement points per profile.
+
+**Evidence.** The two Chromium touch profiles now declare `touchplay` in
+`fixtures/parity/device-matrix.json` and play the CONTROL world **with no
+keyboard at all**: ►×3 to the ammo, Fire alone to `#die` the target at 20,12,
+Fire+◄ to shoot west without stepping, Pause and a pad step to lift it, the pad
+east along row 13 and through the passage to Control Dark, west onto the torch,
+Torch to light it (`Torches` 1→0, 1498→1346 hatched cells), and back. Every act
+is tick-locked on the input frame the *server* received (`step({await: …})`), so
+a control that painted the right thing without reaching the wire fails. The
+focus/leak half runs behind the open chat composer: no gameplay control offered,
+no input frame sent, focus still on the hidden `<input>` — which is the soft
+keyboard staying up. `TestM1618DeviceMatrixIsWellFormed` fails if the matrix ever
+stops declaring a `touchplay` profile, and `m1618CheckObservation` fails a run
+that skipped an act *or* performed one it does not declare.
+
+**Found and fixed on the way through: `modal-help` was not measuring a modal.**
+M16.18's script pressed `KeyH` and waited for `hasText(cells, "Help")` — which
+matches the sidebar's own `H  Help` row, on screen whether or not the window ever
+opened. It also never took the tick that consumes the command byte, so the window
+could not have opened. The measurement labelled `modal-help` was a photograph of
+the plain board. Caught because the new mode gate made it visible: that layout
+recorded nine controls (play mode) where a modal must record six. Now
+`command(page, "KeyH", …)` plus `boardHasText(cells, "Playing ZZT")`, matching
+what M16.10's `control_keys.test.mjs` has always done.
+
+**Also fixed:** `measureLayout` collected *hidden* buttons, and a `display: none`
+element measures as a zero rect at the origin — which read as a control sitting
+on text row 0 and failed the "the bar belongs in the bottom half" assertion.
+
+**Manifest.** `mode.mobile-touchplay`: `gap` → `pass`, `parity` `deviation` →
+`exact`, `deviation: mobile-touch-gap` dropped, `assignedTask` cleared — the same
+shape its `mode.mobile-textentry` sibling has, since both are extensions with no
+vanilla counterpart. `TestM1618ProductCopyMakesNoTouchGameplayClaim` needed no
+edit: it required the desktop-only README disclaimer *only while the row was
+`gap`*, so landing the row released it, which is the property M16.18 wrote it
+for. The deviation catalog keeps `mobile-touch-gap` (it is code-owned by
+`seededDeviations()` and is the record of what was once approved, not a list of
+what is still true); PARITY.md §4 and §5 say so. `TestParityManifestIsCanonical`
+green after the hand edit.
+
+**README.** The scope paragraph now says a touchscreen can play rather than only
+type, and still names the one thing that is not fixed: hold the phone in
+portrait, because in landscape the bar sits over the bottom of the board
+(**M16.18b**, still open).
+
+**The browser suites are load-flaky in a full-suite run, and that is not this
+task's doing — checked, not asserted.** Three sightings while verifying, each
+green when its suite was re-run alone:
+
+1. Two full-`TestM1618` runs failed on **firefox-desktop** with
+   `pageErrors: ['Error: Cannot fast-forward to the past']`. That string has
+   exactly one source — Playwright's `clock.pauseAt`, whose failure M16.14d's
+   retry recovers — but the recovered first attempt appears to still reach the
+   page-error channel all eleven browser suites assert `deepEqual(…, [])` on.
+   Both were runs taking 132s and 187s against a stable 60s, and
+   `firefox-desktop` is the *second* subtest, before any M16.18a act. Five
+   consecutive full-matrix runs afterwards: green at ~60s.
+2. A full `go test ./...` failed `TestM1614CollaborativeEditorInBrowsers` at its
+   end-of-run `pageErrors`/`consoleErrors` assertions, after the progress log
+   had reached the last act. Same shape as (1).
+3. Another failed `TestM1610BrowserControlVocabulary`: "Space must shoot SOUTH
+   down column 9 … bullets found on rows []", with `Ammo:4` on the sidebar — the
+   Space shot did not fire at all.
+
+Then the check that matters: **`git stash` to an unmodified checkout, rebuild the
+client, and run the full `go test ./...` twice — run 1 green, run 2 failed
+`TestM1610BrowserControlVocabulary` in the same way.** So the flakiness is
+pre-existing and load-sensitive, not a regression from the touch acts (which in
+any case build no control bar on the desktop profiles those two suites use).
+Filed rather than swallowed: **M16.18c** for (1)/(2), whose fix belongs in
+`lib/canvas.mjs`'s `pauseClock` and not in one suite, and **M16.10a** for (3).
+
+**Verified**: `go build ./...`, `go vet ./...`, `go test -count=1 ./...` green
+(285s, including all six covered browser profiles) — with the pre-existing
+load flake above seen on later repeats, on an unmodified checkout too;
+`npm test` green including the new `test/touch_controls.test.mjs`; the full
+`TestM1618` matrix run five consecutive times, green each time at ~60s.
+`fixtures/town.replay.json` untouched — nothing here goes near the simulation,
+and no protocol message changed shape.
+
+**Handoff.** **M16.20**'s remaining blockers are now **M16.18b** (the landscape
+control bar over rows 18-24), **M16.14b** (`[ADVISOR]`), and the two flake tasks
+filed here, **M16.18c** and **M16.10a**.

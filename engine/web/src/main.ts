@@ -12,7 +12,7 @@ import {
   type WorldSearchEntry,
 } from "./modal";
 import { MobileTextInputBridge } from "./mobile_text_input";
-import { createTouchControls } from "./touch_controls";
+import { createTouchControls, type TouchControls } from "./touch_controls";
 import { openHelp } from "./help";
 import { commandKey, isHandledKey, isMovementKey, movementMask, rawKey } from "./keys";
 import { drawTitleSidebar, titleCommand, NO_OCCUPANCY, type ServerOccupancy } from "./title";
@@ -542,6 +542,11 @@ const zztSound = new ZztSound();
 // leaves.
 type Mode = "title" | "playing" | "editor";
 let mode: Mode = "title";
+// The on-screen control bar (M15.1, M16.18a), or null on anything without touch
+// points. Declared here rather than at its construction site because
+// syncTouchControls() below is reached from drawScreen(), which runs before that
+// site — a `const` there would be in its temporal dead zone for the first frame.
+let touchControls: TouchControls | null = null;
 let worldName = "Untitled";
 let titleFriendlyName = "Untitled";
 let nickname = "browser";
@@ -706,7 +711,7 @@ canvas.addEventListener(
 // On-screen controls for phones: ZZT is a keyboard game and a phone has none, so
 // the bar's buttons drive the same key handlers a physical key would. No-op on
 // desktop (createTouchControls returns null when there is no touch).
-createTouchControls(document, {
+touchControls = createTouchControls(document, {
   key(down, code, key) {
     const event = new KeyboardEvent(down ? "keydown" : "keyup", { code, key, bubbles: true, cancelable: true });
     if (down) {
@@ -719,6 +724,7 @@ createTouchControls(document, {
     mobileTextInput.toggleKeyboard();
   },
 });
+syncTouchControls();
 window.addEventListener("mouseup", () => { editorPointerDrawing = false; });
 canvas.addEventListener("keydown", handleKeyDown);
 canvas.addEventListener("keyup", handleKeyUp);
@@ -1882,7 +1888,19 @@ function setCell(cell: ScreenCell) {
   cells[cell.y * COLS + cell.x] = cell;
 }
 
+// The on-screen control bar mirrors the screen behind it: gameplay controls
+// (Fire/Torch/Pause) only while a room is being played, the title menu's World /
+// Play only on the title, and neither behind an open window — a Fire tap is a
+// space, and behind a text surface a space belongs in the buffer rather than in
+// the game. drawScreen is the one place every mode and modal change already
+// passes through, so hanging the sync here is what keeps the bar from falling
+// out of step with a screen it does not own. A no-op when there is no bar.
+function syncTouchControls() {
+  touchControls?.setMode(modal ? "modal" : mode);
+}
+
 function drawScreen() {
+  syncTouchControls();
   if (fontCanvases.length < 16) {
     return;
   }

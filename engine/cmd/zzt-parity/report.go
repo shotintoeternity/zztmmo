@@ -66,12 +66,17 @@ type deviceProfile struct {
 		Width  int `json:"width"`
 		Height int `json:"height"`
 	} `json:"viewport"`
-	DeviceScaleFactor float64  `json:"deviceScaleFactor"`
-	Status            string   `json:"status"`
-	Reason            string   `json:"reason,omitempty"`
-	Evidence          string   `json:"evidence,omitempty"`
-	Surfaces          []string `json:"surfaces,omitempty"`
-	Notes             string   `json:"notes,omitempty"`
+	DeviceScaleFactor float64 `json:"deviceScaleFactor"`
+	// TouchPlay: this profile plays the game through the on-screen controls with
+	// no keyboard (task M16.18a). It is the evidence behind the manifest row
+	// mode.mobile-touchplay, so the table names it rather than leaving a reader
+	// to infer it from "touch: yes", which only means the screen has a finger.
+	TouchPlay bool     `json:"touchplay,omitempty"`
+	Status    string   `json:"status"`
+	Reason    string   `json:"reason,omitempty"`
+	Evidence  string   `json:"evidence,omitempty"`
+	Surfaces  []string `json:"surfaces,omitempty"`
+	Notes     string   `json:"notes,omitempty"`
 }
 
 type deviceMatrix struct {
@@ -365,6 +370,9 @@ func writeMarkdown(w io.Writer, r report) error {
 			touch := "—"
 			if d.Touch {
 				touch = "yes"
+			}
+			if d.TouchPlay {
+				touch = "yes, gameplay"
 			}
 			status := d.Status
 			detail := d.Evidence

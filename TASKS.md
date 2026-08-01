@@ -144,19 +144,35 @@ M12.23, M17.1–M17.7, M16.0–M16.8a — has fully landed.)
    report with an unexplained skip as a blocker. It filed **M16.18b** (the
    on-screen control bar covers the bottom seven text rows on a landscape phone),
    which ranks with M16.18a below the beta.
+   **M16.18a landed 2026-08-01** — the touch gameplay controls the owner chose on
+   2026-07-15 to build rather than narrow the claim: Fire (the space bar, which is
+   why one button carries both of vanilla's firing shapes), Torch and Pause beside
+   the direction pad, each on screen only where it means something so a Fire tap
+   cannot put a space in an open text buffer. Certified by two Chromium touch
+   profiles that play CONTROL with no keyboard at all, and `mode.mobile-touchplay`
+   is `pass`. It found M16.18's `modal-help` measurement never opening a modal,
+   fixed that, and filed **M16.18c** (a load-sensitive `pauseClock` page-error that
+   all eleven browser suites assert on) and **M16.10a** (`shootSpace` firing
+   nothing under load) — both reproduced on an unmodified checkout, so neither is
+   M16.18a's doing.
    Next in file order after those is M16.20, whose remaining blockers are
-   M16.18a and M16.18b. The one
+   M16.18b, M16.18c and M16.10a. The one
    browser flake still open is M16.14b's act 8,
    which is `[ADVISOR]` and still ranks below the certification tail.
 
 **Optional / deferred (bottom):**
-- M16.18a — touch gameplay controls: deferred past the beta (owner 2026-07-30:
-  the beta targets desktop browsers and the invite copy must say so; the
-  2026-07-15 build decision stands for post-beta). Still blocks M16.20.
 - M16.18b — the on-screen control bar covers text rows 18-24 on a landscape
-  phone (filed by M16.18, 2026-08-01). Same reasoning as M16.18a: it is touch-
-  surface work and the beta is desktop-scoped. Client-only layout fix; blocks
+  phone (filed by M16.18, 2026-08-01). Touch-surface work while the beta is
+  desktop-scoped, so it stays here even though M16.18a has landed above it —
+  and M16.18a deliberately left its covered-row numbers untouched, so the fix
+  still shows up as this declaration going empty. Client-only layout fix; blocks
   M16.20 only in the sense that its pinned declaration must reach zero.
+- M16.18c — `pauseClock`'s recovered attempt still reaches `pageErrors` (filed
+  by M16.18a, 2026-08-01). Load-sensitive browser-harness flake; ranks with the
+  certification tail.
+- M16.10a — `shootSpace` sometimes fires nothing under load (filed by M16.18a,
+  2026-08-01; reproduced on an unmodified checkout, so it is not that task's
+  doing). Ranks with the certification tail.
 - M14.3 — package split (skip unless the single package is actually hurting)
 - M12.15d — mined style priors (owner-deferred; revisit only if generation quality plateaus)
 
@@ -3822,7 +3838,7 @@ gap task has landed.
   command block unobscured. Ranks with M16.18a: both are touch-surface work and
   the beta is desktop-scoped.
 
-- [ ] **M16.18a — Touch gameplay controls (M16.0 gap task; blocks M16.20).**
+- [x] **M16.18a — Touch gameplay controls (M16.0 gap task; blocks M16.20).**
   Filed by M16.0's scope resolution: M15.1 shipped mobile *text entry* (the
   on-screen keyboard for prompts/chat) but no touch **gameplay** controls, so a
   phone cannot move, shoot, light a torch, or pause. The owner chose to build
@@ -3844,6 +3860,69 @@ gap task has landed.
   controls with no keyboard; focus never leaks between a text modal and the pad;
   `npm test` and `go test ./...` green; the manifest gate passes with
   `mode.mobile-touchplay` no longer `gap`.
+  Landed 2026-08-01 (NOTES.md M16.18a). Fire is the **space bar**, which is why
+  one button carries both firing shapes: `ElementPlayerTick` shoots on
+  `InputShiftPressed || InputKeyPressed == ' '` and the keymask decode sets
+  `Shift` for the shoot bit, so Fire alone repeats along the facing and Fire held
+  with a pad direction fires along it and swallows the step. Torch is `T`, Pause
+  is `P`, and the whole client change is three more entries in `TOUCH_BUTTONS` —
+  no vocabulary reaches the simulation that a keyboard could not produce, and no
+  repeat timer was needed because main.ts's 55ms `inputTimer` already re-sends a
+  held mask. Each control declares the modes it appears in and `drawScreen` syncs
+  the bar, which is what makes the leak impossible rather than merely unlikely: a
+  Fire tap behind a text surface cannot put a space in the buffer because there
+  is no Fire on screen, and `Play`/`Pause` stop being one confusing key. It also
+  keeps the bar's height fixed, so **M16.18b's covered rows are unchanged** —
+  checked at eight measurement points per profile, not assumed. Evidence: the two
+  Chromium touch profiles declare `touchplay` in `device-matrix.json` and play
+  CONTROL with no keyboard at all, every act tick-locked on the input frame the
+  server received, plus the focus/leak check behind an open chat composer.
+  `TestM1618DeviceMatrixIsWellFormed` fails if no profile declares `touchplay`,
+  so the claim cannot outlive its run. Found and fixed on the way through:
+  M16.18's `modal-help` measurement never opened a modal (it matched the
+  sidebar's own `H  Help` row and took no tick), and `measureLayout` counted
+  hidden buttons as a control at row 0. Filed **M16.18c** on the way through.
+
+- [ ] **M16.18c — `pauseClock`'s recovered attempt still reaches `pageErrors`
+  (M16.18a observation).** Seen twice during M16.18a, on `firefox-desktop`:
+  `pageErrors: ['Error: Cannot fast-forward to the past']` at the end of a run
+  that otherwise passed. That string has exactly one source — Playwright's
+  `clock.pauseAt` — and M16.14d already made `pauseClock` retry it, on the
+  reasoning that the retry cannot lose. The retry does recover the *script*; what
+  it does not do is stop the failed first attempt reaching the page-error channel
+  that all eleven browser suites assert `deepEqual(…, [])` on. Both sightings
+  were on runs taking 132s and 187s against a stable 60s (a loaded machine), and
+  five consecutive runs afterwards were green, so it is load-sensitive rather
+  than deterministic. Confirm the mechanism before fixing it — the assumption
+  above is inferred from the error's only source, not observed in the injected
+  clock's code, and Playwright normally rejects the API promise rather than
+  raising a page error. The fix belongs in `web/test/lib/canvas.mjs` (`pauseClock`
+  and/or `launchGoldenBrowser`), not in one suite: a whitelist inside
+  `platform_matrix.test.mjs` would leave the other ten flaky. DoD: the mechanism
+  is named; a run whose `pauseAt` first attempt fails is green with no error
+  swallowed that a real fault could hide, and the reasoning is written where
+  M16.14d's is. Ranks with the certification tail — it does not block the beta.
+  A second sighting of the same shape: `TestM1614CollaborativeEditorInBrowsers`
+  failed its end-of-run `pageErrors`/`consoleErrors` assertions in a full
+  `go test ./...`, after its progress log had reached the last act.
+
+- [ ] **M16.10a — `shootSpace` sometimes fires nothing under load (M16.18a
+  observation).** `TestM1610BrowserControlVocabulary` failed twice during
+  M16.18a's verification with "Space must shoot SOUTH down column 9 … bullets
+  found on rows []" and `Ammo:4` on the sidebar — i.e. the Space shot did not
+  fire at all, not merely that its bullet was photographed in the wrong place.
+  Both times were inside a full `go test ./...`; the suite is green when re-run
+  alone. **Pre-existing**: reproduced on an unmodified checkout (stash, rebuild
+  the client, run the full suite — run 2 failed the same way), so it is not
+  M16.18a's doing, and that suite drives a desktop profile where no touch
+  control bar is built at all. Start from `shootSpace` in
+  `web/test/lib/canvas.mjs` and `control_keys.test.mjs` §4: the awaited frame
+  (`key 0x20, shift`) evidently arrived, so the question is what the tick that
+  consumed it saw — a `pState.DirX/DirY` still zero, a `bulletCount` that had
+  not dropped, or a frame overwritten between the await and the tick. DoD: the
+  mechanism is named and the suite survives a full-suite run repeatedly; do not
+  fix it by loosening the bullet assertion, which is what makes the row
+  `input.play-shoot-space` mean anything.
 
 - [x] **M16.19 — Production-boundary, security, and load validation.** Launch
   the built server as a subprocess and cover startup/shutdown, static assets,

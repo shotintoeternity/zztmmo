@@ -38,13 +38,19 @@
 // all six through the production launch flow, in the order the player meets
 // them, and certifies each with the same battery.
 //
-// NAVIGATION IS KEYBOARD-DRIVEN EVEN ON A TOUCH PROFILE, deliberately. Touch
-// *gameplay* controls are the open gap task M16.18a; what a touch profile
-// certifies here is text entry and layout, so the script uses real key events to
-// get from screen to screen and the touch path only where the touch path is the
-// thing under test. The one exception is the on-screen control bar, which is
-// measured (not driven) because it is what a phone player sees on top of the
-// board.
+// NAVIGATION IS KEYBOARD-DRIVEN EVEN ON A TOUCH PROFILE, deliberately. What a
+// touch profile certifies on the way from screen to screen is text entry and
+// layout, so the script uses real key events to get there and the touch path
+// only where the touch path is the thing under test.
+//
+// TOUCH GAMEPLAY (M16.18a) is where the touch path IS the thing under test. A
+// profile that declares `touchplay` runs certifyTouchGameplay below, which
+// plays the CONTROL world with NO keyboard at all: the pad walks, Fire shoots
+// both of vanilla's ways, a torch is carried to the dark board and lit, and the
+// game is paused and un-paused — every act tick-locked on the input frame the
+// server actually received, so what is proved is the wire and not the picture.
+// Only the Chromium touch profiles declare it: they are the ones where the bar
+// exists at all (WebKit reports maxTouchPoints 0 and correctly gets none).
 
 import assert from "node:assert/strict";
 import fs from "node:fs";
@@ -64,9 +70,12 @@ import {
   pauseClock,
   readGrid,
   resultsDir,
+  runClock,
   saveText,
   serverState,
+  step,
   textAt,
+  tickUntilGrid,
   waitForGrid,
   waitForQuiet,
 } from "./lib/canvas.mjs";
@@ -93,6 +102,9 @@ const wants = (id) => wanted.has(id);
 //     that path on the Safari engine is the point of the profile.
 const detection = profile.touch ? profile.touchDetection || "maxTouchPoints" : "none";
 const expectsTouchBar = detection === "maxTouchPoints";
+// Whether this profile certifies touch GAMEPLAY (M16.18a) as well as text entry.
+// Declared per profile in the matrix, and only meaningful where a bar is built.
+const wantsTouchPlay = !!profile.touchplay;
 // Set once the client has seen its first touch: from then on `touchSeen` makes
 // a gesture-gated engine behave like a maxTouchPoints one.
 let touchSeenByClient = false;
@@ -137,7 +149,11 @@ async function measureLayout(page) {
     const r = canvas.getBoundingClientRect();
     const round = (n) => Math.round(n * 100) / 100;
     const bar = document.querySelector(".touch-controls");
-    const buttons = bar ? Array.from(bar.querySelectorAll("button")) : [];
+    // Only the controls actually on screen. setMode hides the ones that mean
+    // nothing on the current screen (touch_controls.ts), and a display:none
+    // element measures as a zero rect at the origin — which would read as a
+    // control sitting on text row 0.
+    const buttons = bar ? Array.from(bar.querySelectorAll("button")).filter((b) => !b.hidden) : [];
     const rects = buttons.map((b) => b.getBoundingClientRect());
     // Which of the 25 text rows a control button covers. The canvas is scaled,
     // so a row is (button top - canvas top) / (canvas height / 25).
@@ -351,6 +367,271 @@ async function commit(page) {
   // submit path desktop Enter uses.
   await overlay(page).press("Enter");
   return "soft-keyboard-return";
+}
+
+// ---------------------------------------------------------------------------
+// Touch gameplay (M16.18a)
+// ---------------------------------------------------------------------------
+
+// The direction keys as the SERVER sees them once the keymask has been decoded
+// (inputMessageToPlayerInput): a delta plus the scancode ElementPlayerTick
+// switches on. Awaiting these is what makes each act a statement about the wire
+// rather than about the screen.
+const DIR = {
+  up: { dx: 0, dy: -1, key: 0xc8 },
+  down: { dx: 0, dy: 1, key: 0xd0 },
+  left: { dx: -1, dy: 0, key: 0xcb },
+  right: { dx: 1, dy: 0, key: 0xcd },
+};
+const KEY_SPACE = 0x20;
+const KEY_T = "T".charCodeAt(0);
+const KEY_P = "P".charCodeAt(0);
+
+/** One on-screen control, by its stable data-touch id (touch_controls.ts). */
+const control = (page, id) => page.locator(`.touch-controls button[data-touch="${id}"]`);
+
+/** Which controls the bar is offering right now — the mode gate, from outside. */
+async function visibleControls(page) {
+  return page.evaluate(() =>
+    Array.from(document.querySelectorAll(".touch-controls button"))
+      .filter((b) => !b.hidden && getComputedStyle(b).display !== "none")
+      .map((b) => b.getAttribute("data-touch")),
+  );
+}
+
+// A press and a release, as the browser's own pointer events. Held controls have
+// to be driven as two halves: the tick that consumes an input frame is taken by
+// this script, and a down-and-up inside one call would have overwritten the
+// frame with the zero one before any tick could see it.
+const holdControl = (page, id) => control(page, id).dispatchEvent("pointerdown");
+const releaseControl = (page, id) => control(page, id).dispatchEvent("pointerup");
+
+/** A real touchscreen tap — the gesture a phone actually makes. */
+const tapControl = (page, id) => control(page, id).tap();
+
+/**
+ * Walk `n` tiles by holding a pad key, one tile per tick.
+ *
+ * The shape is `walk()`'s from lib/canvas.mjs, with the pointer standing in for
+ * the keyboard: the press sends one frame, and each 60ms of the frozen clock
+ * fires main.ts's 55ms sampler to re-send the held mask. That sampler is why a
+ * held touch control keeps moving at all — a finger, unlike a keyboard, produces
+ * no auto-repeat of its own.
+ */
+async function touchWalk(page, id, n) {
+  const dir = DIR[id];
+  assert.ok(dir, `touchWalk needs a pad direction, got ${id}`);
+  await holdControl(page, id);
+  for (let i = 0; i < n; i += 1) {
+    await step({ await: { dx: dir.dx, dy: dir.dy, key: dir.key } });
+    if (i < n - 1) await runClock(page, 60);
+  }
+  await releaseControl(page, id);
+  // The release's zero frame is consumed by its own tick, so no straggler is
+  // left to land inside a later one.
+  await step({ await: { dx: 0, dy: 0 } });
+}
+
+/** Where the server says this profile's one player is. */
+async function playerAt(page, why) {
+  const p = await roomPlayer();
+  return { x: p.x, y: p.y, board: p.boardId, why };
+}
+
+/**
+ * Play the CONTROL world with no keyboard: the M16.18a definition of done.
+ *
+ * The route is chosen so that every act leaves visible, checkable evidence and
+ * the world is handed back in a state the remaining text-surface acts can use:
+ *
+ *   6,12  start          → ►×3 picks up the ammo (Ammo:5)          — MOVE
+ *   9,12  facing east    → Fire alone shoots along the facing and  — SHOOT
+ *                          the bullet #dies the target at 20,12
+ *                        → Fire+◄ shoots west WITHOUT stepping     — SHOOT (Shift+dir)
+ *                        → Pause freezes the game; a pad step lifts it — PAUSE
+ *   40,12 passage        → Control Dark, where a torch is lying at 9,12
+ *   9,12  (dark)         → Torch lights it: Torches 1→0 and the hatch retreats — TORCH
+ *   20,12 passage back   → Control Field, for the chat/save surfaces below
+ *
+ * Every step is tick-locked on the input frame the server received, so a control
+ * that painted the right thing on the canvas without ever reaching the wire
+ * fails here rather than passing.
+ */
+async function certifyTouchGameplay(page) {
+  const acts = {};
+
+  // The bar must be offering exactly the play-mode controls, and no others: the
+  // title menu's World/Play mean nothing in a room, and the whole reason Fire is
+  // absent behind a modal is that Fire is a space.
+  assert.deepEqual(
+    await visibleControls(page),
+    ["up", "left", "right", "down", "keyboard", "enter", "pause", "torch", "fire"],
+    "play mode must offer the pad, Enter, the keyboard toggle, Pause, Torch and Fire — and nothing else",
+  );
+
+  // --- MOVE -----------------------------------------------------------------
+  const start = await playerAt(page, "the CONTROL start position");
+  assert.deepEqual({ x: start.x, y: start.y }, { x: 6, y: 12 }, "the CONTROL start position");
+  await touchWalk(page, "right", 3);
+  const walked = await playerAt(page, "after three pad steps east");
+  assert.deepEqual({ x: walked.x, y: walked.y }, { x: 9, y: 12 }, "three ► presses on the pad must walk three tiles");
+  await tickUntilGrid(page, (cells) => hasText(cells, "Ammo:5"), "the ammo the pad walked onto");
+  acts.move = "► held for three ticks walked 6,12 → 9,12 and picked up the ammo (Ammo:5)";
+
+  // --- SHOOT, the Space shape: along the facing, no direction held -----------
+  const beforeShot = await readGrid(page);
+  assert.equal(
+    cellAt(beforeShot, 20 - 1, 12 - 1).ch,
+    0x0f,
+    "the target object should still be standing at 20,12 before the Fire control is used",
+  );
+  await holdControl(page, "fire");
+  // The shoot bit sets Shift on the server side too (inputMessageToPlayerInput),
+  // which is what lets ONE button carry both of vanilla's firing shapes.
+  await step({ await: { key: KEY_SPACE, shift: true } });
+  await releaseControl(page, "fire");
+  await step({ await: { dx: 0, dy: 0 } });
+  await tickUntilGrid(page, (cells) => hasText(cells, "Ammo:4"), "the Fire control to spend a shot");
+  // A bullet merely fired proves less than a bullet that arrives: the target's
+  // `:shot` label runs #die, so its glyph leaving the board is eleven tiles of
+  // travel and a hit.
+  await tickUntilGrid(
+    page,
+    (cells) => cellAt(cells, 20 - 1, 12 - 1).ch !== 0x0f,
+    "the bullet the Fire control launched to reach the target and #die it",
+    30,
+  );
+
+  // --- SHOOT, the Shift+direction shape: fire along a held pad key -----------
+  // Released direction-first so the last frame left pending is the all-zero one;
+  // the shoot-only frame in between would fire again if a tick landed on it.
+  await holdControl(page, "fire");
+  await holdControl(page, "left");
+  await step({ await: { dx: -1, dy: 0, key: DIR.left.key, shift: true } });
+  await releaseControl(page, "left");
+  await releaseControl(page, "fire");
+  await step({ await: { dx: 0, dy: 0 } });
+  await tickUntilGrid(page, (cells) => hasText(cells, "Ammo:3"), "Fire held with ◄ to spend a second shot");
+  const afterAimedShot = await playerAt(page, "after the aimed shot");
+  assert.deepEqual(
+    { x: afterAimedShot.x, y: afterAimedShot.y },
+    { x: 9, y: 12 },
+    "firing along a direction must shoot instead of stepping (ElementPlayerTick's shoot branch swallows the delta)",
+  );
+  acts.shoot =
+    "Fire alone shot east along the facing and #died the target at 20,12 (Ammo 5→4); " +
+    "Fire held with ◄ shot west without stepping (Ammo 4→3)";
+
+  // --- PAUSE ----------------------------------------------------------------
+  await tapControl(page, "pause");
+  await step({ await: { key: KEY_P } });
+  await tickUntilGrid(page, (cells) => hasText(cells, "Pausing..."), "the Pause control to pause the game");
+  // Vanilla lifts a pause on a MOVE, not on a second P (game.go:1871-1900), so
+  // the pad is what un-pauses.
+  await touchWalk(page, "down", 1);
+  await waitForGrid(page, (cells) => !hasText(cells, "Pausing..."), "a pad step to lift the pause");
+  acts.pause = "the Pause control raised Pausing... and a ▼ pad step lifted it, as a move does in vanilla";
+
+  // --- TORCH, where a torch actually does something -------------------------
+  // Row 13 is one south of everything collectable, so the long leg east cannot
+  // pick anything up or start a conversation.
+  const beforeLeg = await playerAt(page, "before the walk to the passage");
+  if (beforeLeg.y === 12) await touchWalk(page, "down", 1);
+  const onRow13 = await playerAt(page, "on the clear row");
+  assert.equal(onRow13.y, 13, "the leg east runs along row 13");
+  await touchWalk(page, "right", 40 - onRow13.x);
+  await touchWalk(page, "up", 1);
+
+  const tickUntilBoard = async (boardId, why, maxTicks = 40) => {
+    for (let i = 0; i < maxTicks; i += 1) {
+      const player = await playerAt(page, why);
+      if (player.board === boardId) return player;
+      await idle(1);
+    }
+    throw new Error(`${why}: never reached board ${boardId} within ${maxTicks} ticks`);
+  };
+
+  const onDark = await tickUntilBoard(2, "the passage the pad walked into");
+  assert.deepEqual({ x: onDark.x, y: onDark.y }, { x: 20, y: 12 }, "the passage lands on its counterpart");
+  // The board-change fade is client-side and clock-driven; finish it rather than
+  // reading a half-dissolved screen.
+  await runClock(page, 3000);
+  await waitForQuiet(page);
+
+  const unlit = await readGrid(page);
+  const hatched = (cells) => cells.filter((cell) => cell.ch === 0xb0).length;
+  assert.ok(hatched(unlit) > 100, "an unlit dark board is mostly the 0xB0 hatch");
+  await touchWalk(page, "left", 11);
+  await tickUntilGrid(page, (cells) => hasText(cells, "Torches:1"), "the pad to walk onto the torch");
+  await tapControl(page, "torch");
+  await step({ await: { key: KEY_T } });
+  await tickUntilGrid(page, (cells) => hasText(cells, "Torches:0"), "the Torch control to spend the torch");
+  const lit = await readGrid(page);
+  assert.ok(
+    hatched(lit) < hatched(unlit),
+    `the Torch control must reveal tiles: ${hatched(unlit)} → ${hatched(lit)} hatched cells`,
+  );
+  acts.torch =
+    `the pad carried the player to the torch on the dark board and the Torch control lit it ` +
+    `(Torches 1→0, ${hatched(unlit)} → ${hatched(lit)} hatched cells)`;
+  await screenshot(page, "touch-torch-lit");
+
+  // Hand the world back on Control Field, where the text-surface acts below run.
+  await touchWalk(page, "right", 11);
+  const back = await tickUntilBoard(1, "the return passage");
+  assert.deepEqual({ x: back.x, y: back.y }, { x: 40, y: 12 }, "the return passage lands on its counterpart");
+  await runClock(page, 3000);
+  await waitForQuiet(page);
+
+  observed.touchplay = acts;
+  note(`touch gameplay: ${Object.keys(acts).join(", ")} — all driven with no keyboard`);
+  console.log("  ✓ touch gameplay (move, shoot, torch, pause)");
+}
+
+/**
+ * The other half of M16.18a's DoD: focus never leaks between a text modal and
+ * the pad. Called with an editable modal open and its native control focused.
+ *
+ * Two separate claims, and both matter. The bar must not be OFFERING a gameplay
+ * control behind a text surface — Fire is a space, and a space belongs in the
+ * buffer. And the controls it does still offer (the pad drives the modal) must
+ * not send an input frame or drop the keyboard: a tap that blurred the hidden
+ * input would take the phone's keyboard down mid-sentence.
+ */
+async function certifyTouchModalIsolation(page, where) {
+  const offered = await visibleControls(page);
+  for (const gameplay of ["fire", "torch", "pause"]) {
+    assert.ok(
+      !offered.includes(gameplay),
+      `${where}: the ${gameplay} control must not be on screen behind a text surface, saw ${JSON.stringify(offered)}`,
+    );
+  }
+  // Put the phone back where a typing player leaves it: the canvas tap is the
+  // gesture that raises the soft keyboard, and it is the hidden native control —
+  // not the canvas — that must still hold focus after a control is tapped.
+  await tapCanvas(page);
+  const focusedBefore = await page.evaluate(() => document.activeElement?.tagName.toLowerCase() ?? "");
+  assert.ok(
+    focusedBefore === "input" || focusedBefore === "textarea",
+    `${where}: expected the native text control to hold focus before the tap, saw <${focusedBefore}>`,
+  );
+  await holdControl(page, "right");
+  await releaseControl(page, "right");
+  await page.waitForTimeout(60);
+  const state = await serverState();
+  assert.deepEqual(
+    state.pending,
+    [],
+    `${where}: a pad tap behind a text surface must send no input frame, saw ${JSON.stringify(state.pending)}`,
+  );
+  const focusedAfter = await page.evaluate(() => document.activeElement?.tagName.toLowerCase() ?? "");
+  assert.equal(
+    focusedAfter,
+    focusedBefore,
+    `${where}: tapping a control must not move focus off the native text control (the soft keyboard would drop)`,
+  );
+  observed.touchplay = { ...(observed.touchplay || {}), isolation: `${where}: the pad drove the modal, sent no input frame, and left focus on the <${focusedAfter}>` };
+  note(`touch isolation @ ${where}: no gameplay control offered, no input frame, focus kept on <${focusedAfter}>`);
 }
 
 // ---------------------------------------------------------------------------
@@ -776,6 +1057,14 @@ try {
     assert.notEqual(cellAt(cells, 79, 0).ch, undefined, "column 79 must decode — the screen is not clipped");
   }
 
+  // =========================================================================
+  // 6a. Touch gameplay (M16.18a), on the profiles that declare it
+  // =========================================================================
+  if (wantsTouchPlay) {
+    assert.ok(expectsTouchBar, `${profile.id} declares touchplay but builds no control bar to play with`);
+    await certifyTouchGameplay(page);
+  }
+
   if (wants("chat")) {
     await page.keyboard.press("KeyC");
     await waitForGrid(page, (cells) => hasText(cells, "Global Chat"), "the chat window");
@@ -788,6 +1077,10 @@ try {
       inRoom: true,
     });
     await screenshot(page, "chat");
+    // The chat composer is still open and its native control still focused: the
+    // hostile moment for M16.18a's "focus never leaks between a text modal and
+    // the pad".
+    if (wantsTouchPlay) await certifyTouchModalIsolation(page, "the chat composer");
     await page.locator("canvas[data-screen]").focus();
     await page.keyboard.press("Escape");
     await waitForGrid(page, (cells) => !hasText(cells, "Global Chat"), "the chat window to close");
@@ -820,9 +1113,17 @@ try {
 
   // A modal drawn over the board, at this screen size, with the sidebar intact:
   // the DoD's "modal layout remains usable" screenshot.
+  //
+  // H travels as a command byte, so the tick that runs it has to be one this
+  // script takes — and the window it opens has to be looked for on the BOARD.
+  // A plain `hasText(cells, "Help")` matches the sidebar's own "H  Help" row,
+  // which is on screen whether or not the window ever opened, so it would have
+  // photographed the un-modal'd board and called it modal-help (M16.18a found
+  // this while adding the touch acts: the bar was still offering the play-mode
+  // controls at a measurement labelled as a modal).
   await page.locator("canvas[data-screen]").focus();
-  await page.keyboard.press("KeyH");
-  await waitForGrid(page, (cells) => hasText(cells, "Help"), "the help window");
+  await command(page, "KeyH", "H".charCodeAt(0));
+  await tickUntilGrid(page, (cells) => boardHasText(cells, "Playing ZZT"), "H to open GAME.HLP over the board");
   await checkLayout(page, "modal-help");
   await screenshot(page, "modal-help");
   await page.keyboard.press("Escape");

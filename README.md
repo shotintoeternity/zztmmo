@@ -22,7 +22,7 @@ Explore classic `.ZZT` worlds in synchronized rooms, chat while you play, read s
 
 ZZTMMO is in a small public beta. It is a real server running real ZZT worlds, and it is also a work in progress — the point of the beta is to find where it bends.
 
-**Scope.** Desktop browsers with a keyboard. Phones and tablets are not supported yet: ZZT is a keyboard game, and the on-screen control work is deliberately parked until after the beta.
+**Scope.** Desktop browsers with a keyboard are what the beta is aimed at and where everything below is certified. A touchscreen can now play rather than only type: phones and tablets get an on-screen direction pad plus Fire, Torch and Pause, each driving the same keys a keyboard sends. Hold the phone in portrait — in landscape the control bar still sits over the bottom rows of the board and the sidebar's Save/Pause/Quit block.
 
 **Known rough edges.**
 

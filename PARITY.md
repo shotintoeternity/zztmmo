@@ -168,7 +168,7 @@ the owner-approval surface for M16.0.**
 | `per-player-sound` | Pickup/shot/damage sounds are attributed to the acting player; only `#play` from an object's own tick stays room-wide | E, P | task M7.4 |
 | `scroll-removal-timing` | A windowed scroll is consumed when its reply arrives, not the instant it is touched (de-modal design) | P | task M17.4 |
 | `presentation-additions` | Presentation-only additions with no vanilla counterpart: launch name popup, world picker, player-identity overlay, chat panel, sound-toggle UI, Dream flow, help/debug windows | P, E | tasks M3.8–M3.10, M4.x, M6.x, M12.5 |
-| `mobile-touch-gap` | Mobile ships text entry only; touch movement/shoot/torch/pause is a filed gap task, not shipped | E | task M15.1; owner decision 2026-07-15 (see §5) |
+| `mobile-touch-gap` | Mobile ships text entry only; touch movement/shoot/torch/pause is a filed gap task, not shipped | E | task M15.1; owner decision 2026-07-15 (see §5) — **resolved 2026-08-01: M16.18a built the controls, `mode.mobile-touchplay` is `pass` with `parity: exact`, and no row references this id any more. The catalog entry stays because the catalog is the owner-approval record of what was once approved, not a list of what is still true.** |
 
 Rows whose behavior is one of these divergences set `parity: "deviation"` and
 `deviation: "<id>"`, and get a focused projection/boundary test in their
@@ -196,6 +196,26 @@ approval or turned into gap tasks. Resolved:
   while that row is `gap` the README must carry the desktop scope and must not
   claim phone play, and when M16.18a lands the requirement lifts itself.
   M16.18's own artifact is `fixtures/parity/device-matrix.json` (§7a).
+
+  **Closed 2026-08-01 by M16.18a**, the way the 2026-07-15 decision said it
+  would be: by building the controls, not by narrowing the claim.
+  `touch_controls.ts` now offers Fire, Torch and Pause beside the direction pad,
+  each one a key the keyboard already sends — Fire *is* the space bar, which is
+  why one button covers both of vanilla's firing shapes (alone it repeats along
+  the facing; held with a pad direction it fires along that direction, because
+  the shoot bit sets `Shift` in `inputMessageToPlayerInput`). A control is only
+  on screen where it means something, so a Fire tap cannot put a space in an
+  open text buffer. `mode.mobile-touchplay` is now `pass` with `parity: exact`,
+  like its `mode.mobile-textentry` sibling, and the deviation `mobile-touch-gap`
+  is referenced by no row (§4). The evidence is the two Chromium touch profiles
+  in the device matrix, which declare `touchplay` and play the CONTROL world
+  with **no keyboard at all** — walk, shoot both ways, carry a torch to the dark
+  board and light it, pause and un-pause — every act tick-locked on the input
+  frame the server received, plus a focus/leak check behind an open chat
+  composer. `TestM1618DeviceMatrixIsWellFormed` fails if the matrix stops
+  declaring a `touchplay` profile, so the claim cannot outlive its run. The
+  README's scope paragraph moved with it, and still names the one thing that is
+  not fixed: **M16.18b**, the bar covering text rows 18-24 on a landscape phone.
 
 - **M17 live fixes are in scope.** M17.1–M17.4 (name-popup centering,
   world-picker metadata, audio regression, scroll-hyperlink consume) are checked
@@ -246,6 +266,16 @@ ran" is a property of the test.
 The inventory of text surfaces is derived from the client itself — the modal
 kinds `modalAcceptsTextInput` (`web/src/modal.ts`) accepts — so a seventh
 editable modal cannot be added without the matrix going red.
+
+A profile may also declare `touchplay` (M16.18a), which asks that run to play
+the world with no keyboard at all through the on-screen controls. Only a profile
+whose engine reports touch points can: the control bar is decided once at load
+from `navigator.maxTouchPoints`, so an engine that merely delivers touch events
+gets no bar and nothing to play with. The declaration is checked from both sides
+like the surface list — a run that skipped an act fails, a run that performed
+acts its profile does not declare fails, and a matrix with no `touchplay`
+profile at all fails because `mode.mobile-touchplay` would then be `pass` with
+nothing behind it.
 
 ## 7. The vanilla oracle (M16.2)
 

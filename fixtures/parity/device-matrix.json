@@ -1,5 +1,5 @@
 {
-  "note": "M16.18's device/browser matrix: the platforms the client is certified on, the text surfaces each one exercises, and the reason for anything it does not. Each covered profile is a real engine at a real screen, driven by TestM1618PlatformMatrix through engine/web/test/platform_matrix.test.mjs. This file is a claim, not a run log — the test fails if a profile covered less (or more) than it declares, and the parity report (cmd/zzt-parity) refuses to certify while a skipped profile carries no reason. Touch GAMEPLAY is not certified anywhere here: it is the open gap task M16.18a, and the manifest row mode.mobile-touchplay stays `gap` until it lands. Reading the screenshots in engine/web/test-results: a tall phone page is captured in slices and a `position: fixed` control bar can be drawn once per slice, so the bar may appear at the top of a portrait screenshot as well as at the bottom. Where it really is comes from the measured rects, which the suite asserts are entirely in the bottom half of the viewport.",
+  "note": "M16.18's device/browser matrix: the platforms the client is certified on, the text surfaces each one exercises, and the reason for anything it does not. Each covered profile is a real engine at a real screen, driven by TestM1618PlatformMatrix through engine/web/test/platform_matrix.test.mjs. This file is a claim, not a run log — the test fails if a profile covered less (or more) than it declares, and the parity report (cmd/zzt-parity) refuses to certify while a skipped profile carries no reason. Touch GAMEPLAY is certified by the profiles that set `touchplay` (M16.18a, landed 2026-08-01): those runs play the CONTROL world with no keyboard at all — the pad walks, Fire shoots both of vanilla's ways, a torch is carried to the dark board and lit, and the game is paused and un-paused — with every act tick-locked on the input frame the server received. Only the Chromium touch profiles declare it, because they are the only ones where the on-screen bar exists (see webkit-touch-portrait). Reading the screenshots in engine/web/test-results: a tall phone page is captured in slices and a `position: fixed` control bar can be drawn once per slice, so the bar may appear at the top of a portrait screenshot as well as at the bottom. Where it really is comes from the measured rects, which the suite asserts are entirely in the bottom half of the viewport.",
   "surfaces": [
     "entry",
     "popupEntry",
@@ -72,9 +72,10 @@
       "status": "covered",
       "evidence": "TestM1618PlatformMatrix/chromium-touch-portrait",
       "surfaces": ["popupEntry", "worldSearch", "multilineEntry", "programEditor", "chat", "entry"],
+      "touchplay": true,
       "touchBarCoveredRows": [],
       "rotatedTouchBarCoveredRows": [18, 19, 20, 21, 22, 23, 24],
-      "notes": "The 80-column screen is 4.88 CSS px per column here, and the whole grid including the sidebar is on it. Rotated to landscape the letterboxed canvas fills the viewport's height and the fixed control bar lands on the bottom seven text rows: gap task M16.18b."
+      "notes": "The 80-column screen is 4.88 CSS px per column here, and the whole grid including the sidebar is on it. Rotated to landscape the letterboxed canvas fills the viewport's height and the fixed control bar lands on the bottom seven text rows: gap task M16.18b. This is also one of the two profiles that certify touch GAMEPLAY (M16.18a): the bar's five play-mode controls fit one action row at this width, so the M16.18a controls did not make the bar any taller than the four it replaced — which is why the covered-row numbers here are unchanged by that task."
     },
     {
       "id": "chromium-touch-landscape",
@@ -87,9 +88,10 @@
       "status": "covered",
       "evidence": "TestM1618PlatformMatrix/chromium-touch-landscape",
       "surfaces": ["popupEntry", "worldSearch", "multilineEntry", "programEditor", "chat", "entry"],
+      "touchplay": true,
       "touchBarCoveredRows": [18, 19, 20, 21, 22, 23, 24],
       "rotatedTouchBarCoveredRows": [],
-      "notes": "Text entry is unaffected — every surface passes — but the on-screen control bar covers rows 18-24 at this shape, which is the bottom of the board and the sidebar's Save/Pause/Quit block. Pinned here so the M16.18b fix shows up as this list going empty."
+      "notes": "Text entry is unaffected — every surface passes — but the on-screen control bar covers rows 18-24 at this shape, which is the bottom of the board and the sidebar's Save/Pause/Quit block. Pinned here so the M16.18b fix shows up as this list going empty. The bar's height at this shape is the direction pad's two rows, not the action row's one, so M16.18a's Fire/Torch/Pause controls left these numbers exactly where M16.18 measured them."
     },
     {
       "id": "webkit-touch-portrait",
@@ -105,7 +107,7 @@
       "surfaces": ["popupEntry", "worldSearch", "multilineEntry", "programEditor", "chat", "entry"],
       "touchBarCoveredRows": [],
       "rotatedTouchBarCoveredRows": [],
-      "notes": "Playwright's WebKit delivers touch events but reports navigator.maxTouchPoints 0, so this profile certifies the client's OTHER touch gate: MobileTextInputBridge's `touchSeen` fallback, which mounts the native control on the first touch the canvas sees. That is the path a hybrid device with an unreliable maxTouchPoints takes. Real iOS Safari reports 5 and would take the maxTouchPoints path Chromium takes above; the on-screen control bar, decided once at load, is correctly absent here."
+      "notes": "Playwright's WebKit delivers touch events but reports navigator.maxTouchPoints 0, so this profile certifies the client's OTHER touch gate: MobileTextInputBridge's `touchSeen` fallback, which mounts the native control on the first touch the canvas sees. That is the path a hybrid device with an unreliable maxTouchPoints takes. Real iOS Safari reports 5 and would take the maxTouchPoints path Chromium takes above; the on-screen control bar, decided once at load, is correctly absent here — which is also why this profile does not declare `touchplay`: there are no controls here to play with, and the gameplay path it WOULD take on a real iPhone is the one the two Chromium touch profiles certify."
     },
     {
       "id": "firefox-touch-portrait",

@@ -11,16 +11,6 @@ const output = await build({
 const source = Buffer.from(output.outputFiles[0].contents).toString("base64");
 const { MobileTextInputBridge, handleModalTextInput, modalAcceptsTextInput } = await import(`data:text/javascript;base64,${source}`);
 
-const tcOutput = await build({
-  entryPoints: ["src/touch_controls.ts"],
-  bundle: true,
-  format: "esm",
-  platform: "node",
-  write: false,
-});
-const tcSource = Buffer.from(tcOutput.outputFiles[0].contents).toString("base64");
-const { createTouchControls, TOUCH_BUTTONS } = await import(`data:text/javascript;base64,${tcSource}`);
-
 class FakeElement {
   constructor(tag, host) {
     this.tag = tag;
@@ -231,46 +221,8 @@ bridge.toggleKeyboard();
 assert.equal(kbInput.focused, 2); // raised again
 bridge.close();
 
-// Touch controls: nothing is built on a non-touch device.
-assert.equal(createTouchControls(host, { key() {}, toggleKeyboard() {} }, 0), null);
-
-// On a touch device the bar drives the same key handlers a physical key would.
-const keyCalls = [];
-let kbToggles = 0;
-const bar = createTouchControls(host, {
-  key: (down, code, key) => keyCalls.push({ down, code, key }),
-  toggleKeyboard: () => { kbToggles += 1; },
-}, 1);
-assert.notEqual(bar, null);
-const buttons = bar.children.flatMap((group) => group.children);
-const byLabel = (label) => buttons.find((b) => b.textContent === label);
-assert.equal(buttons.length, TOUCH_BUTTONS.length);
-
-// A tapped menu key sends down then up in one press (W = world, P = play, Enter).
-byLabel("World").dispatch("pointerdown");
-assert.deepEqual(keyCalls.at(-2), { down: true, code: "KeyW", key: "w" });
-assert.deepEqual(keyCalls.at(-1), { down: false, code: "KeyW", key: "w" });
-byLabel("Play").dispatch("pointerdown");
-assert.deepEqual(keyCalls.at(-2), { down: true, code: "KeyP", key: "p" });
-byLabel("⏎").dispatch("pointerdown");
-assert.deepEqual(keyCalls.at(-2), { down: true, code: "Enter", key: "Enter" });
-
-// A held direction presses on pointerdown and releases on pointerup, so it keeps
-// moving while held in gameplay.
-keyCalls.length = 0;
-const up = byLabel("▲");
-up.dispatch("pointerdown");
-assert.deepEqual(keyCalls, [{ down: true, code: "ArrowUp", key: "ArrowUp" }]);
-up.dispatch("pointerup");
-assert.deepEqual(keyCalls.at(-1), { down: false, code: "ArrowUp", key: "ArrowUp" });
-
-// The ⌨ button toggles the soft keyboard instead of sending a key.
-const keysBefore = keyCalls.length;
-byLabel("⌨").dispatch("pointerdown");
-assert.equal(kbToggles, 1);
-assert.equal(keyCalls.length, keysBefore);
-
-// pointerdown preventDefaults so a control never steals focus from the input.
-assert.equal(byLabel("World").dispatch("pointerdown").defaultPrevented, true);
+// The ⌨ button's other end — the bar itself, its key mapping and its mode gate —
+// is engine/web/test/touch_controls.test.mjs. What belongs here is only that the
+// bar's toggle drives THIS bridge, which the toggleKeyboard block above covers.
 
 console.log("mobile_text_input.test.mjs: all assertions passed");

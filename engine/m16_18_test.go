@@ -21,14 +21,21 @@ package zztgo
 // less (or more) than the claim. Neither half can drift without the other going
 // red.
 //
-// THE M15 SCOPE DECISION (M16.0) IS RESOLVED, TWICE, AND NOT BY THIS TASK. The
-// owner chose on 2026-07-15 to build touch gameplay controls rather than narrow
-// the claim (gap task M16.18a), and on 2026-07-30 to defer that work past the
-// beta with the product copy narrowed to desktop browsers. So what M16.18
-// certifies is mobile TEXT ENTRY (manifest row mode.mobile-textentry) and the
-// layout it happens in; mode.mobile-touchplay stays `gap`, and
-// TestM1618ProductCopyMakesNoTouchGameplayClaim is what keeps the shipped copy
-// honest about it while it does.
+// THE M15 SCOPE DECISION (M16.0) WAS RESOLVED BY BUILDING THE CONTROLS, NOT BY
+// THIS TASK. The owner chose on 2026-07-15 to build touch gameplay controls
+// rather than narrow the claim (gap task M16.18a), and on 2026-07-30 to defer
+// that work past the beta with the product copy narrowed to desktop browsers.
+// M16.18 therefore certified mobile TEXT ENTRY (manifest row
+// mode.mobile-textentry) and the layout it happens in, and left
+// mode.mobile-touchplay at `gap`.
+//
+// M16.18a landed on 2026-08-01 and this file grew the other half. A profile that
+// declares `touchplay` now plays the game with no keyboard at all, and
+// m1618CheckObservation holds that run to the same claim-versus-evidence rule
+// the text surfaces get. TestM1618ProductCopyMakesNoTouchGameplayClaim needs no
+// change to follow: it required the desktop-only disclaimer only while the row
+// was `gap`, so the requirement lifted itself when the row did — which is the
+// property it was written for.
 
 import (
 	"encoding/json"
@@ -79,6 +86,13 @@ type m1618Profile struct {
 	// — why. Together they must account for every surface in the inventory.
 	Surfaces        []string          `json:"surfaces,omitempty"`
 	SurfacesOmitted map[string]string `json:"surfacesOmitted,omitempty"`
+
+	// TouchPlay declares that this profile certifies touch GAMEPLAY (M16.18a) —
+	// move, shoot, torch, pause through the on-screen bar with no keyboard —
+	// and not only text entry. It can only be true where a bar is built at all,
+	// which is the maxTouchPoints gate; the browser script runs
+	// certifyTouchGameplay exactly when it is set, and records what it did.
+	TouchPlay bool `json:"touchplay,omitempty"`
 
 	// The text rows the on-screen control bar covers, at this profile's shape and
 	// rotated 90 degrees. Declared rather than required-to-be-zero because on a
@@ -141,6 +155,7 @@ func TestM1618DeviceMatrixIsWellFormed(t *testing.T) {
 
 	seen := map[string]bool{}
 	engines := map[string]bool{}
+	touchPlayProfiles := 0
 	for _, p := range matrix.Profiles {
 		where := "profile " + p.ID
 		if p.ID == "" {
@@ -202,6 +217,32 @@ func TestM1618DeviceMatrixIsWellFormed(t *testing.T) {
 		if !p.Touch && (len(p.TouchBarCoveredRows) > 0 || len(p.RotatedTouchBarCoveredRows) > 0) {
 			t.Errorf("%s: a pointer-only profile has no on-screen control bar to cover rows with", where)
 		}
+
+		// Touch gameplay can only be claimed where the controls exist. The bar
+		// is decided once, from navigator.maxTouchPoints; an engine that reports
+		// zero touch points and merely delivers touch events (Playwright's
+		// WebKit, and the hybrid devices M15.1's `touchSeen` fallback exists
+		// for) gets no bar, so it has nothing to play with.
+		if p.TouchPlay {
+			if !p.Touch {
+				t.Errorf("%s: claims touch gameplay on a pointer-only profile", where)
+			}
+			if p.TouchDetection != "" && p.TouchDetection != "maxTouchPoints" {
+				t.Errorf("%s: claims touch gameplay with detection %q, which builds no control bar", where, p.TouchDetection)
+			}
+			if p.Status != "covered" {
+				t.Errorf("%s: claims touch gameplay but is %q, so nothing ran to prove it", where, p.Status)
+			}
+			touchPlayProfiles++
+		}
+	}
+
+	// M16.18a's row (mode.mobile-touchplay) is `pass` only because some profile
+	// here plays the game with no keyboard. A matrix that stopped declaring one
+	// would leave that claim with nothing behind it, so the absence is named
+	// here rather than discovered at M16.20.
+	if touchPlayProfiles == 0 {
+		t.Error("no profile declares `touchplay`: the mode.mobile-touchplay claim would have no covering run (task M16.18a)")
 	}
 
 	// The contract says "supported desktop engines", plural: a matrix that only
@@ -312,7 +353,8 @@ func m1618CheckObservation(t *testing.T, matrix m1618Matrix, profile m1618Profil
 			Kind   string            `json:"kind"`
 			Checks map[string]string `json:"checks"`
 		} `json:"surfaces"`
-		Screenshots []string `json:"screenshots"`
+		TouchPlay   map[string]string `json:"touchplay"`
+		Screenshots []string          `json:"screenshots"`
 	}
 	if err := json.Unmarshal(data, &observed); err != nil {
 		t.Fatalf("parse %s: %v", reportPath, err)
@@ -362,6 +404,20 @@ func m1618CheckObservation(t *testing.T, matrix m1618Matrix, profile m1618Profil
 	}
 	if len(observed.Screenshots) == 0 {
 		t.Errorf("%s: the run produced no screenshots — the DoD asks for the layout to be shown, not only asserted", profile.ID)
+	}
+
+	// Touch gameplay (M16.18a): every act the DoD names must have happened, and
+	// a profile that does not claim it must not have quietly done it either —
+	// the matrix is a declaration, and that rule runs in both directions here as
+	// it does for the text surfaces above.
+	if profile.TouchPlay {
+		for _, act := range []string{"move", "shoot", "torch", "pause", "isolation"} {
+			if strings.TrimSpace(observed.TouchPlay[act]) == "" {
+				t.Errorf("%s: touch gameplay act %q recorded nothing", profile.ID, act)
+			}
+		}
+	} else if len(observed.TouchPlay) > 0 {
+		t.Errorf("%s: recorded touch gameplay it does not declare: %v", profile.ID, observed.TouchPlay)
 	}
 }
 

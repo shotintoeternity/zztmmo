@@ -4058,12 +4058,11 @@
       "subject": "Mobile touch movement/shoot/torch/pause controls",
       "contract": "E",
       "authority": "web/src/*.ts",
-      "parity": "deviation",
-      "deviation": "mobile-touch-gap",
-      "test": "TestM1618ProductCopyMakesNoTouchGameplayClaim",
-      "status": "gap",
-      "assignedTask": "M16.18a",
-      "notes": "touch gameplay not shipped; filed as gap task M16.18a (owner decision 2026-07-15). M16.18 measured what IS shipped: touch_controls.ts builds a d-pad (menu + movement), Enter, a keyboard toggle and the title-menu World/Play keys — no shoot, torch or pause — and only when navigator.maxTouchPoints is non-zero at load. The named test is what keeps the product copy from claiming otherwise while this row is `gap`. M16.18 also filed M16.18b: that bar covers text rows 18-24 on a landscape phone."
+      "parity": "exact",
+      "test": "TestM1618PlatformMatrix, TestM1618DeviceMatrixIsWellFormed, TestM1618ProductCopyMakesNoTouchGameplayClaim",
+      "fixture": "fixtures/parity/device-matrix.json",
+      "status": "pass",
+      "notes": "M16.18a (2026-08-01) shipped the controls the owner chose on 2026-07-15 to build rather than narrow the claim: touch_controls.ts now offers Fire (the space bar — alone it repeats along the facing, held with a pad direction it fires along that direction), Torch and Pause alongside the pad, Enter and the keyboard toggle, with each control on screen only where it means something so a Fire tap cannot land a space in an open text buffer. No new vocabulary reaches the simulation: every control is a key the keyboard already sends. Certified by the two Chromium touch profiles in the device matrix, which play the CONTROL world with no keyboard at all — walk, shoot both of vanilla's ways, carry a torch to the dark board and light it, pause and un-pause — each act tick-locked on the input frame the server received. The copy test stays named here because it now pins the claim from the other side: the desktop-only disclaimer it required while this row was `gap` is released by the row passing. Still open at the touch surface: M16.18b, the bar covering text rows 18-24 on a landscape phone."
     },
     {
       "id": "mode.modal-debug",

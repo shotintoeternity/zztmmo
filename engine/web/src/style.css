@@ -107,6 +107,21 @@ canvas {
   min-width: 58px;
   font-size: 13px;
 }
+/* Fire is the one control held rather than poked, so it is the one that reads as
+   a trigger. */
+.touch-btn-fire {
+  color: #ffd0c0;
+  background: rgba(60, 0, 0, 0.6);
+  border-color: rgba(220, 120, 110, 0.6);
+}
 .touch-btn:active {
   background: rgba(70, 70, 170, 0.8);
+}
+.touch-btn-fire:active {
+  background: rgba(200, 60, 40, 0.85);
+}
+/* setMode hides the controls that mean nothing on the current screen. Spelled
+   out rather than left to the UA sheet, which the reset above can outrank. */
+.touch-controls [hidden] {
+  display: none;
 }
