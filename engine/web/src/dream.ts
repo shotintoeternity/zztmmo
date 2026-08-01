@@ -147,6 +147,12 @@ export function generationLines(progress: GenerationProgress[]): string[] {
     if (event.stage === "salvaging") {
       return event.board ? `Lost board: ${event.board}` : "Some rooms would not form...";
     }
+    // M16.17d: the plan's own name was a canonical world or another player's,
+    // so the world was minted one instead. The player chose neither name, so
+    // the line says only the thing they need — which world is theirs.
+    if (event.stage === "naming") {
+      return event.detail ? `Your world is called ${event.detail}` : "Naming the world...";
+    }
     if (event.stage === "planning") return "Imagining the world...";
     if (event.stage === "validating") return "Checking every board...";
     if (event.stage === "persisting") return "Saving the new world...";

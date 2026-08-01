@@ -250,3 +250,13 @@ assert.equal(salvagedBoards(repainted), "", "the repainted world has no rooms le
 assert.deepEqual(JSON.parse(salvageCalls.at(-2).init.body), { retry: "gen-6", async: true });
 
 console.log("M16.17c salvage offer: a complete-and-retryable dream carries its world and its lost rooms");
+
+// M16.17d: the plan's name was taken (a classic, or another account's), so the
+// world was minted one instead. The player chose neither name, so the line says
+// only the thing they need — which world is theirs.
+assert.deepEqual(
+  generationLines([{ stage: "naming", detail: "GEN0A3F" }]),
+  ["Your world is called GEN0A3F"],
+);
+assert.deepEqual(generationLines([{ stage: "naming" }]), ["Naming the world..."]);
+console.log("M16.17d naming line: the minted world name reaches the progress window");

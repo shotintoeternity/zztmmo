@@ -53,7 +53,12 @@ M12.23, M17.1–M17.7, M16.0–M16.8a — has fully landed.)
    one remaining way a tester destroys shipped content, the ~100 classics have
    no `.access.json` to protect them, and the backups deliberately do not cover
    them. Takes M16.17d with it — without the derived-name fallback the guard
-   refuses names the player never chose.
+   refuses names the player never chose. **Both landed 2026-08-01.** One piece
+   is still owner-gated: the dev and production hosting directories have not
+   been audited for a classic that was already replaced (the workstation was,
+   and is clean). Filed **M14.4** on the way through — the name is doing double
+   duty as identity and display title, which is what generates this whole class
+   of collision problem; that is the post-beta fix, not a pre-invite one.
 6. **Beta invite goes out** (owner action; desktop-browser scope in the copy).
 7. M18.6 — back up player-created worlds, not just `saves/`. The one
    data-loss hole M18.4 left open; it widens with every day of the beta, so
@@ -3633,7 +3638,7 @@ gap task has landed.
   `saveEditorWorld` ships with. Closing it means I/O under `s.mu` or reserving
   names against the join path, both larger than this defect.
 
-- [ ] **M16.17d — A dream can be refused a name its player never chose (M16.17b
+- [x] **M16.17d — A dream can be refused a name its player never chose (M16.17b
   gap task).** The browser sends `{"prompt":…}` and no `name`, so the world's
   name comes from the planner (`generatedSaveName` → `plan.WorldName`). Since
   M16.17b a dream whose planner picks a name an owned world already holds is
@@ -3650,6 +3655,18 @@ gap task has landed.
   derived name is owned by another account still lands, under a different name;
   a dream that ASKS for an owned name is still 409; both covered beside
   `…bDreamHonoursTheOwnershipTheEditorWrites`; `go test ./...` green.
+  Landed 2026-08-01 with M18.11 (NOTES.md), which needed it: protecting the
+  classics without this would refuse plan-derived names for a second reason the
+  player cannot fix. `resolveGeneratedName` is the one place the question is
+  asked — it resolves the two refusals a different name would satisfy
+  (ownership, and M18.11's canonical worlds) and raises them only for a name the
+  client TYPED. Occupancy is deliberately not resolved there: an occupied world
+  is transient, so the same name works once the last player leaves. The minted
+  name is `generatedFallbackSaveName`, extracted from `generatedSaveName`'s
+  existing FNV tail, so a retried dream lands on the same name. Copy (owner's
+  call, minimal on purpose): a new `naming` progress stage renders as "Your
+  world is called GEN0A3F" — the player chose neither name, so the line says
+  only the thing they need. `TestM1617dDerivedNameFallsBackWhereATypedNameIsRefused`.
 
 - [x] **M16.17c — The salvaged dream's repaint offer has no client (M16.17 gap
   task).** M17.13's own spec: a salvaged async job is `complete` *and*
@@ -4076,7 +4093,7 @@ lists. Every task: `cd engine && go build ./... && go test ./...` green,
   the host directory (117 of 119 names): `engine/*.ZZT` is untracked, so the
   workstation list named two worlds production has never had.
 
-- [ ] **M18.11 — A dream or a publish can overwrite a canonical Museum world.**
+- [x] **M18.11 — A dream or a publish can overwrite a canonical Museum world.**
   Owner decision 2026-07-31: **the canonical Museum of ZZT worlds are the main
   world, and player-authored content never overwrites one.** Today it can.
   M16.17b decided — deliberately — that a world with no `.access.json` "belongs
@@ -4117,6 +4134,19 @@ lists. Every task: `cd engine && go build ./... && go test ./...` green,
   owner — **not** silently repair — whether the dev and production hosting
   directories already hold a classic that a dream or publish replaced: one
   comparison against the manifest, reported in NOTES.md.
+  Landed 2026-08-01 with M16.17d (NOTES.md). `WorldIsCanonical`
+  (`world_metadata.go`) asks the embedded manifest, so it protects a classic
+  this server has never downloaded as surely as one on disk and cannot be
+  defeated by deleting a sidecar. `refuseIfCanonical` guards generation at both
+  gates (name resolution, and the last word before the first byte, which
+  `RetryBoard` re-enters); `saveEditorWorld` asks it before its own ownership
+  question, because the classics have no `.access.json` for that question to
+  read. `/api/generate` answers 409. `MuseumService.Play` is deliberately NOT
+  gated and a boundary test pins it — writing a classic's canonical bytes is the
+  cache doing its job. **Forensics: a workstation audit of 65 canonical worlds
+  found none carrying a dream or publish sidecar. The dev and production hosts
+  are NOT audited — that needs owner confirmation and the SSH procedure, and is
+  the one part of this DoD still open.**
 
 ## M14 — Rearchitecting for the service ZZTMMO is becoming
 
@@ -4239,6 +4269,38 @@ unchanged: these are ownership/plumbing changes, never simulation changes.
   --stat` shows moves and qualifier edits only; replay fixture unchanged.
   DoD (if skipped): a NOTES.md entry saying why the single package still
   isn't hurting, so the next audit doesn't re-litigate from scratch.
+
+- [ ] **M14.4 [ADVISOR] — Separate a world's identity from its display name
+  (post-beta; filed 2026-08-01 from M16.17d/M18.11).** A world's 8-character
+  DOS filename is doing two jobs: it is the primary key — the file path, the
+  `?world=` parameter, the `.access.json` sidecar key, the backup manifest
+  entry, the recording filename — *and* it is the name a player reads. One flat
+  namespace holds the ~78 manifest classics, editor publishes, guest content,
+  and dreams whose names a language model picks. Every collision defect in the
+  M16.17 family is downstream of that conflation, and each was closed with its
+  own patch on the same seam: **M16.17b** (a dream overwrote a world, because
+  names are identities and identities collide), **M16.17d** (a player refused
+  over a name they never chose, because the planner's *title* was used as an
+  *identity*), **M18.11** (the classics needed a carve-out, because player
+  content is minted into the namespace they live in). A fourth patch on this
+  seam should be read as a signal to do this instead. The shape: worlds get a
+  minted, collision-free id; the plan's `WorldName` becomes a **title**, which
+  is metadata and free to collide; the picker already carries `title`/`author`/
+  `kind` (M18.9), so the display half largely exists. Then a dream cannot
+  collide, the classics are simply not in the minting namespace, and M16.17d has
+  nothing left to explain. **One trap:** `generatedFallbackSaveName` is
+  `GEN%05X` — 20 bits, so at ~1000 worlds a birthday collision is near even
+  odds. Fine as today's rare fallback; as a primary minting scheme it needs a
+  uniqueness loop against the hosting directory. Scope is a migration, not a
+  refactor: persistence, the picker, `.access.json` keys, M18.6/M18.10's backup
+  manifests, and recording filenames all key on the name today, and existing
+  worlds must keep resolving under their current names. Deliberately ranked
+  **after the beta** (owner, 2026-08-01): the stopgaps hold, and this is not a
+  change to make days before an invite. DoD: a world's identity and its title
+  are separately addressable; an existing world resolves under its old name;
+  minting is collision-checked, not hash-and-hope; a dream whose plan names a
+  classic keeps the classic's bytes and needs no refusal to explain; backups and
+  recordings still round-trip; `go test ./...` green; replay fixture unchanged.
 
 ## M5 — Creation and full-featured ZZT tooling
 

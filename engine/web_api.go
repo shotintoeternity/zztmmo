@@ -246,10 +246,13 @@ func (a *WebAPI) handleGenerate(w http.ResponseWriter, r *http.Request) {
 			http.Error(w, err.Error(), http.StatusTooManyRequests)
 		case errors.Is(err, ErrGenerationUnavailable):
 			http.Error(w, err.Error(), http.StatusServiceUnavailable)
-		case errors.Is(err, ErrGeneratedWorldOccupied), errors.Is(err, ErrGeneratedWorldNotYours):
+		case errors.Is(err, ErrGeneratedWorldOccupied), errors.Is(err, ErrGeneratedWorldNotYours),
+			errors.Is(err, ErrGeneratedWorldIsCanonical):
 			// M16.17b: a name conflict, not a failed generation. Nothing was
 			// written — and nothing will be until that world empties out, or
-			// never, if it is somebody else's.
+			// never, if it is somebody else's or a classic (M18.11). Only a
+			// name the player typed reaches here: a name the plan chose was
+			// resolved to a minted one instead (M16.17d).
 			http.Error(w, err.Error(), http.StatusConflict)
 		default:
 			http.Error(w, "generation failed: "+err.Error(), http.StatusUnprocessableEntity)

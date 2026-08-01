@@ -1409,6 +1409,13 @@ func (s *WebSocketServer) saveEditorWorld(client *webSocketClient, session *Edit
 	if dir == "" {
 		return "", ErrSavesDisabled
 	}
+	// M18.11: the canonical Museum worlds are the main world and player-authored
+	// content never overwrites one. They carry no .access.json — to the check
+	// below they are unowned and open, which is the population M16.17b meant to
+	// keep open — so the carve-out has to be asked first and separately.
+	if WorldIsCanonical(safe) {
+		return "", fmt.Errorf("world %q is a Museum of ZZT classic and cannot be replaced", safe)
+	}
 	access, hasAccess, err := loadWorldAccess(dir, safe)
 	if err != nil {
 		return "", err

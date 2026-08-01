@@ -151,6 +151,34 @@ func museumMetadataForWorld(world string) (museumWorldEntry, bool) {
 	return meta, ok
 }
 
+// WorldIsCanonical reports whether a name belongs to a canonical Museum of ZZT
+// world — the population worlds.manifest.json knows, which the picker groups as
+// `classic`. It is the predicate behind M18.11 (owner decision 2026-07-31: the
+// canonical worlds are the main world, and player-authored content never
+// overwrites one).
+//
+// It exists because the ownership guard cannot answer this question. M16.17b
+// decided — deliberately — that a world with no .access.json belongs to nobody
+// and stays open, and the shipped classics are exactly that population: no
+// access file, so without this they are writable by any dream or publish that
+// lands on their name. This asks the manifest instead of the disk, so it is
+// true of a classic that has not been downloaded yet as well as one that has,
+// and it cannot be defeated by deleting a sidecar.
+//
+// The Museum's own cache-commit path is deliberately NOT gated on this: writing
+// a classic's canonical bytes into the hosting directory is that cache doing its
+// job, not a player overwriting anything (museum.go, MuseumService.Play).
+func WorldIsCanonical(name string) bool {
+	safe, err := SanitizeSaveName(name)
+	if err != nil {
+		// Not a name this server can host at all, so not a name that can
+		// collide with a classic. The write paths reject it on their own.
+		return false
+	}
+	_, ok := museumMetadataForWorld(safe)
+	return ok
+}
+
 func loadWorldMetadata() {
 	worldMetadataBy = make(map[string]museumWorldEntry)
 	var manifest museumWorldManifest

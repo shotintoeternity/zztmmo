@@ -2255,6 +2255,106 @@ func TestM1617bDreamHonoursTheOwnershipTheEditorWrites(t *testing.T) {
 	}
 }
 
+// m1617PlanNamed is m1617Plan with the plan's own world name replaced, which is
+// what generatedSaveName derives a dream's filename from when the client sends
+// no name — the production path, since the browser never sends one.
+func m1617PlanNamed(worldName string) string {
+	return strings.Replace(m1617Plan(), "# World Plan: Dream", "# World Plan: "+worldName, 1)
+}
+
+// TestM1617dDerivedNameFallsBackWhereATypedNameIsRefused is M16.17d.
+//
+// The browser sends a premise and no name, so the world's name comes from the
+// plan the model wrote. After M16.17b a plan that happened to name an owned
+// world was refused — the right refusal on the wrong subject: the player did
+// not choose the name, could not see the conflict, and had nothing to fix but
+// "try again and hope". A DERIVED name now falls back to the minted one; a name
+// the player TYPED is still refused, because they chose it and can choose
+// again.
+func TestM1617dDerivedNameFallsBackWhereATypedNameIsRefused(t *testing.T) {
+	model := m1617NewModel(t)
+	model.planReplies(m1617PlanNamed("OWNED"))
+	model.boardReplies("start", generatedBoard("Start", false))
+	model.boardReplies("title", generatedBoard("Title", false))
+
+	outDir := t.TempDir()
+	service := m1617Service(t, model, outDir, 1)
+	server := NewWebSocketServer(testEmptyWorld(t), 1)
+
+	ada := AuthenticatedAccount{ID: "acct-ada", Name: "Ada"}
+	intruder := AuthenticatedAccount{ID: "acct-intruder", Name: "Intruder"}
+
+	// Ada's world, and the bytes that must survive every dream below.
+	before := []byte("the world Ada published")
+	path := filepath.Join(outDir, "OWNED.ZZT")
+	if err := os.WriteFile(path, before, 0o644); err != nil {
+		t.Fatal(err)
+	}
+	if err := writeWorldAccess(outDir, "OWNED", WorldAccess{OwnerAccountID: ada.ID, OwnerName: ada.Name}); err != nil {
+		t.Fatal(err)
+	}
+
+	// The browser's request: a premise, no name. The plan names OWNED, which is
+	// Ada's, so the dream lands somewhere else instead of failing.
+	var progress []GenerationProgress
+	result, err := service.GenerateRequest(context.Background(), GenerationRequest{
+		Client: "client-intruder", Account: intruder, Premise: m1617Premise, Server: server,
+		Progress: func(event GenerationProgress) { progress = append(progress, event) },
+	})
+	if err != nil {
+		t.Fatalf("a dream whose DERIVED name is owned = %v, want it to land under another name", err)
+	}
+	if result.Name == "OWNED" {
+		t.Fatal("the dream took Ada's world after all")
+	}
+	if !strings.HasPrefix(result.Name, "GEN") {
+		t.Errorf("fallback name = %q, want the minted GEN%%05X form", result.Name)
+	}
+	if after, readErr := os.ReadFile(path); readErr != nil {
+		t.Fatal(readErr)
+	} else if !bytes.Equal(after, before) {
+		t.Fatal("the fallback still rewrote Ada's OWNED.ZZT")
+	}
+	if _, statErr := os.Stat(filepath.Join(outDir, result.Name+".ZZT")); statErr != nil {
+		t.Errorf("the dream did not persist under its fallback name %q: %v", result.Name, statErr)
+	}
+	// The player is told which world is theirs — they chose neither name.
+	named := ""
+	for _, event := range progress {
+		if event.Stage == "naming" {
+			named = event.Detail
+		}
+	}
+	if named != result.Name {
+		t.Errorf("the progress log said the world was called %q, want %q — "+
+			"the player cannot find a world nobody named", named, result.Name)
+	}
+
+	// Ada keeps her own world, under her own name: ownership is what fell back,
+	// not what was ignored.
+	if access, ok, accessErr := loadWorldAccess(outDir, "OWNED"); accessErr != nil {
+		t.Fatal(accessErr)
+	} else if !ok || access.OwnerAccountID != ada.ID {
+		t.Errorf("OWNED's ownership changed: %+v (present=%v)", access, ok)
+	}
+
+	// And the other half of M16.17d: a name the player TYPED is still refused.
+	// They chose it, so they are told it is taken rather than quietly handed a
+	// different world.
+	_, err = service.GenerateRequest(context.Background(), GenerationRequest{
+		Client: "client-intruder", Account: intruder, Premise: m1617Premise,
+		Name: "OWNED", Server: server,
+	})
+	if !errors.Is(err, ErrGeneratedWorldNotYours) {
+		t.Fatalf("a dream that ASKS for an owned name = %v, want ErrGeneratedWorldNotYours", err)
+	}
+	if after, readErr := os.ReadFile(path); readErr != nil {
+		t.Fatal(readErr)
+	} else if !bytes.Equal(after, before) {
+		t.Fatal("the refused dream rewrote Ada's OWNED.ZZT")
+	}
+}
+
 // ---------------------------------------------------------------------------
 // The browser
 // ---------------------------------------------------------------------------

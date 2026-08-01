@@ -7388,3 +7388,101 @@ title stream is SSE, not a room member), so the retry can persist and re-host.
 
 `go build ./...`, `go vet ./...`, `npm test` and `npm run build` clean;
 `go test ./...` green on a full run (209s).
+
+## M16.17d + M18.11 — the name that was doing two jobs (2026-08-01)
+
+Taken together because the second needs the first. Owner decision 2026-07-31:
+**the canonical Museum of ZZT worlds are the main world, and player-authored
+content never overwrites one.**
+
+### What was open
+
+M16.17b decided — deliberately — that a world with no `.access.json` "belongs
+to nobody and stays open". That is what keeps the ~78 manifest classics, every
+pre-M16.17b dream and every guest reachable. But the shipped classics *are*
+that population: no access file, so to the ownership guard they read as unowned
+and writable. A dream or an editor publish that landed on `TOWN` replaced the
+canonical bytes as soon as nobody was standing in that world. M18.6/M18.10's
+backups archive player-created worlds only, also on purpose, so the loss came
+back from a re-fetch or a redeploy and from nothing else.
+
+And the guard could not simply be added, because of the other half: the browser
+sends no name. A dream's name comes from the plan the model wrote, so refusing
+a plan-derived name refuses a choice the player did not make, cannot see and
+cannot fix — "try again and hope". Protecting ~78 common English words without
+M16.17d would have made that failure mode routine.
+
+### The shape
+
+- `WorldIsCanonical` (`world_metadata.go`) asks the embedded manifest, not the
+  disk, so it protects a classic this server has never downloaded as surely as
+  one sitting in the hosting directory, and it cannot be defeated by deleting a
+  sidecar. It is keyed by archive id, zip basename and every `.ZZT` filename, so
+  the second world of a two-disk release is covered too (`TP2DISC1`).
+- `resolveGeneratedName` (`generation.go`) is the one place the name question is
+  asked. It **resolves** the two refusals a different name would satisfy —
+  ownership and canonical status — and **raises** them only for a name the
+  client typed. Occupancy is deliberately not resolved there: an occupied world
+  is transient, so the same name works once the last player leaves.
+- `generatedFallbackSaveName` is `generatedSaveName`'s own FNV tail, extracted.
+  A retried dream lands on the same minted name.
+- `refuseIfCanonical` guards generation at both gates, the second because
+  `RetryBoard` re-enters `paintAndFinish` without passing the first.
+  `saveEditorWorld` asks it *before* its ownership question, since the classics
+  have no access file for that question to read. `/api/generate` answers 409.
+- `MuseumService.Play` is deliberately NOT gated. Writing a classic's canonical
+  bytes into the hosting directory is that cache doing its job, not a player
+  overwriting anything — a guard scoped to the name rather than to the writer
+  would break the feature that puts the classics on this server at all.
+- Copy, owner's call, minimal on purpose: a new `naming` stage renders as "Your
+  world is called GEN0A3F". The player chose neither name; the line says only
+  the thing they need. The reasoning was that any wording here explains a DOS
+  filename collision the player never opted into, so the less it teaches a
+  mental model M14.4 will delete, the better.
+
+### Forensics
+
+A workstation audit — every `.ZZT` whose basename the manifest knows, checked
+for a `.zwd`, `.plan.md`, `.prompt.txt` or `.access.json` beside it, which is
+what a dream or a publish leaves — scanned **65 canonical worlds and found none
+replaced**. The dev and production hosts are **not** audited: that needs owner
+confirmation and the authorize-verify-revoke SSH procedure, and it is the one
+part of M18.11's DoD still open.
+
+### Filed on the way through: M14.4
+
+Four defects on one seam is the seam talking. The world's 8-character filename
+is both the primary key and the display name, and M16.17b, M16.17d and M18.11
+are three patches on that single conflation. M14.4 is the structural fix —
+minted identity, title as free-to-collide metadata — deliberately ranked after
+the beta. It also records the trap: `GEN%05X` is 20 bits, near even odds of a
+birthday collision at ~1000 worlds, so as a primary minting scheme it needs a
+uniqueness loop rather than a bare hash.
+
+### Evidence
+
+- `TestM1617dDerivedNameFallsBackWhereATypedNameIsRefused` — a dream whose
+  DERIVED name is Ada's lands under the minted name, her bytes and her ownership
+  untouched, the progress log naming the world the player actually got; the same
+  dream ASKING for `OWNED` is still `ErrGeneratedWorldNotYours`.
+- `TestM1811WorldIsCanonicalKnowsTheShippedWorlds` — the predicate, including
+  case-insensitivity, a two-disk release's second world, player-made names, and
+  names this server could never host.
+- `TestM1811DreamNeverOverwritesACanonicalWorld` — typed `TOWN` refused with no
+  byte moved, no sidecar written and no board painted; plan-derived `TOWN`
+  falls back instead.
+- `TestM1811PublishNeverOverwritesACanonicalWorld` — the editor's half, plus a
+  `local` world publishing exactly as before.
+- `TestM1811MuseumCacheStillWritesCanonicalWorlds` — the boundary: the Museum
+  still downloads, hosts and re-hosts `TEEN`.
+- `web/test/dream.test.mjs` covers the `naming` line, including the no-detail
+  fallback. The mechanical stage scan
+  (`TestM1617GenerationStagesAreAllRenderedByTheClient`) already forces any new
+  stage to have client copy, and it passed only after `dream.ts` learned this one.
+- Manifest: `service.dream`, `route.api.generate` and `service.editor-solo` all
+  gain the new tests and notes. No row changed status; nothing was `gap`.
+
+### Verified
+
+`go build ./...`, `go vet ./...`, `gofmt`, `npm test` and `npm run build` clean.
+`go test ./...` green on a full run (272s), browser suites included.
