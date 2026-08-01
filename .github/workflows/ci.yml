@@ -100,14 +100,17 @@ jobs:
 
   parity:
     runs-on: ubuntu-latest
-    timeout-minutes: 40
-    # The single M16 certification command (task M16.1). It runs every clean
-    # gate and emits a deterministic report keyed by the parity manifest. The
-    # command fails only on a failed gate; "not yet certified" is expected until
-    # M16.20 and does not redden this job. The report is uploaded as an artifact
-    # and the tree is asserted clean — the command must write only gitignored
-    # files. Aggregate line coverage is deliberately never computed here: parity
-    # is proven row by row in the manifest, not by a coverage percentage.
+    timeout-minutes: 60
+    # The single M16 certification command (task M16.1, extended by M16.20). It
+    # runs every clean gate — including the real-browser track, which is why the
+    # Playwright engines are installed by the command itself rather than by a
+    # step here — and emits a deterministic report keyed by the parity manifest.
+    # `-require-certified` makes an uncertified manifest a failure: M16.20 has
+    # landed, so a row falling back to `unverified` or a suite skipping itself
+    # must redden this job rather than pass quietly. The tree is asserted clean:
+    # the command writes only gitignored files. Aggregate line coverage is
+    # deliberately never computed here — parity is proven row by row in the
+    # manifest, not by a coverage percentage.
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-go@v5
@@ -119,7 +122,12 @@ jobs:
           node-version: 'lts/*'
           cache: npm
           cache-dependency-path: engine/web/package-lock.json
-      - run: make parity
+      # The engines' OS dependencies only; the browsers themselves are installed
+      # by the parity command, which is what makes a clean clone's certification
+      # run self-contained.
+      - run: npx playwright install-deps chromium firefox webkit
+        working-directory: engine/web
+      - run: make certify
       - name: Assert clean tree
         run: |
           if [ -n "$(git status --short)" ]; then
@@ -127,11 +135,21 @@ jobs:
             git status --short
             exit 1
           fi
-      - name: Upload parity report
+      - name: Upload parity evidence
         if: always()
         uses: actions/upload-artifact@v4
         with:
           name: parity-report
+          # The manifest and the report are the claim; run.json carries the
+          # tool/environment hashes and per-gate timings, load-metrics.txt the
+          # bounded-load run's measured numbers, and test-results the browser
+          # diffs and traces (task M16.20).
           path: |
+            fixtures/parity/manifest.json
+            fixtures/parity/device-matrix.json
             fixtures/parity/report.json
             fixtures/parity/report.md
+            fixtures/parity/run.json
+            fixtures/parity/load-metrics.txt
+            engine/web/test-results/**
+          if-no-files-found: warn

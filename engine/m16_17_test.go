@@ -1348,11 +1348,7 @@ func m1617NewDirs(t *testing.T) m1617Dirs {
 	if err := os.WriteFile(filepath.Join(dirs.web, "index.html"), []byte("<!DOCTYPE html><html><body>M16.17</body></html>"), 0o644); err != nil {
 		t.Fatal(err)
 	}
-	town, err := os.ReadFile("TOWN.ZZT")
-	if err != nil {
-		t.Fatalf("read TOWN.ZZT: %v", err)
-	}
-	if err := os.WriteFile(filepath.Join(root, "TOWN.ZZT"), town, 0o644); err != nil {
+	if err := os.WriteFile(filepath.Join(root, "TOWN.ZZT"), committedTownBytes(t), 0o644); err != nil {
 		t.Fatal(err)
 	}
 	return dirs

@@ -433,10 +433,10 @@ func m1618RequireEngine(t *testing.T, engine string) {
 	cmd.Dir = "web"
 	out, err := cmd.Output()
 	if err != nil {
-		t.Skipf("playwright cannot resolve %s: %v", engine, err)
+		m169BrowserAbsent(t, fmt.Sprintf("playwright cannot resolve %s: %v", engine, err))
 	}
 	if _, err := os.Stat(strings.TrimSpace(string(out))); err != nil {
-		t.Skipf("%s is not installed: run `npx playwright install %s` in engine/web", engine, engine)
+		m169BrowserAbsent(t, fmt.Sprintf("%s is not installed: run `npx playwright install %s` in engine/web", engine, engine))
 	}
 }
 

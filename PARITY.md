@@ -174,6 +174,21 @@ Rows whose behavior is one of these divergences set `parity: "deviation"` and
 `deviation: "<id>"`, and get a focused projection/boundary test in their
 assigned sweep.
 
+**Deviations a row cannot name (M16.20 reconciliation, 2026-08-01).** A row
+carries at most one `deviation` id, so a surface that diverges twice can only
+name one, and three approved deviations end up referenced by no row at all.
+They are live, and each is pinned by name — listed here so the catalog is not
+read as "three approvals nobody uses":
+
+| deviation | where it actually lives | pinned by |
+|---|---|---|
+| `collision-pushout` | `elem.player` (which names `mp-respawn`), `task.M4.3b` | `TestM43bTwoPlayersReenterSameSquare`, `TestM43bTwoPlayersRespawnSameSquare`, `TestM43bNoOpenSquareStaysPut` |
+| `shared-world-flags` | `task.M2.1`, `task.M14.0`, the world-scope seam | `TestRoomManagerSharesWorldFlagsAcrossLiveRooms`, `TestRoomManagerFlagVisibleToLaterRoomSameTick`, `TestRoomManagerFlagSurvivesFreezeThaw` |
+| `scroll-removal-timing` | `task.M17.4`, the scroll/modal surface | `TestScrollHyperlinkReplyGrantsRewardThenConsumes`, `TestScrollDismissConsumesWithoutReward`, oracle normalization `oracle-modal-hyperlink` |
+
+`mobile-touch-gap` is referenced by no row for the other reason: M16.18a built
+the controls, so it is approved history rather than current behaviour (§5).
+
 ---
 
 ## 5. Resolved scope claims (owner decisions, 2026-07-15)
@@ -347,3 +362,60 @@ that differs is a defect):
 | `oracle-modal-scroll` | Vanilla freezes the sim inside a modal text window drawn over the board; the engine emits `ScrollEvent`. Checkpoints with an open window compare window text against the event's lines/title. | deviation `per-player-modal-freeze` (M1.3) |
 | `oracle-modal-hyperlink` | Vanilla draws a `!label;text` line as its caption alone (TXTWIND.PAS `TextWindowDrawLine` copies from the `;`) and runs the chosen label inside the same modal `OopExecute`; the engine emits the raw line in a `ScrollEvent` and re-enters on the reply. A window checkpoint compares captions, and the adapter plays the client the fork expects — cursor keys move a line cursor, ENTER/ESCAPE answer through `SubmitScrollReply`. | deviations `per-player-modal-freeze`, `scroll-removal-timing` |
 | `oracle-sidebar-prompt-line` | `GamePromptEndPlay`'s `SidebarPromptYesNo` ("End this game? ") and `GameDebugPrompt`'s `PromptString` (an 11-wide field) draw into the sidebar at (63,5), which the board-cell comparison (columns 0-59 only) never inspects; the engine emits `QuitPromptEvent`/`DebugPromptEvent` and keeps ticking. A checkpoint taken while one is open is asserted against the oracle's own sidebar text alone — there is no engine-drawn pixel to compare it to. | deviation `per-player-modal-freeze` (M3.9/M3.11) |
+
+---
+
+## 8. The certification run (M16.20)
+
+`make certify` is the whole gate in one command: `cmd/zzt-parity` with
+`-require-certified`, which turns "not yet certified" from an expected state
+into a failure. `make parity` is the same run without that gate.
+
+**The gate list, in order.** Order is part of the contract, not a convenience:
+
+| # | gate | dir | why here |
+|---|---|---|---|
+| 1 | `npm ci` | `engine/web` | the client's pinned dependencies |
+| 2 | `npx playwright install chromium firefox webkit` | `engine/web` | the three engines the device matrix (§6a) covers |
+| 3 | `npm run build` | `engine/web` | the built bundle the server serves and every browser suite drives |
+| 4 | `npm test` | `engine/web` | the TypeScript unit suites |
+| 5 | `go build ./...` | `engine` | |
+| 6 | `go vet ./...` | `engine` | |
+| 7 | `go test -count=1 ./...` | `engine` | includes the real-browser, service, security and bounded-load tracks |
+| 8 | `go test -race -count=1 ./...` | `engine` | the required race job |
+
+The browser track runs **first** because the real-browser suites live inside
+`go test ./...` and skip themselves when the harness is absent. Installing it
+afterwards — which is what the pre-M16.20 list did — let a clean clone certify
+itself with every browser suite silently skipped.
+
+**No silent skips.** The two go gates run under `go test -json`, and every
+skipped test is recorded by name with the reason it printed. A skip blocks
+certification unless the test declares itself by beginning its skip message with
+`declared skip:`. The run also exports `ZZT_PARITY_REQUIRE_BROWSER=1`, which
+turns the browser harness's own "not installed" skips into failures: by that
+point the engines have been installed, so an absent browser is a broken
+certification rather than an environment fact. The report lists every skip,
+declared or not, so a reader sees what did not run without reading a log.
+
+**What the run publishes** (all gitignored, all uploaded by the CI `parity` job):
+
+| file | contents | deterministic? |
+|---|---|---|
+| `fixtures/parity/manifest.json` | the claim itself (committed) | yes |
+| `fixtures/parity/device-matrix.json` | the platform claim (committed) | yes |
+| `fixtures/parity/report.json` / `.md` | rows, gates, skips, device matrix, blockers | **yes — byte-identical for one tree** |
+| `fixtures/parity/run.json` | commit, tree-dirty flag, OS/arch, go/node/npm/playwright versions, per-gate wall clock | no (that is the point) |
+| `fixtures/parity/load-metrics.txt` | M16.19's measured 30-client numbers, captured from the run | no |
+| `engine/web/test-results/**` | browser diffs, screens and traces | no |
+
+Timings and tool versions are deliberately kept **out** of the report: two runs
+of one tree must render the same report bytes, and a duration is a fact about
+the machine rather than about the tree.
+
+**Fail-closed.** The manifest gate is proven closed rather than assumed: point a
+row's `test` at a name that does not exist, or its `fixture` at a path that does
+not, and `TestParityManifest` fails; set a row to `pass` with no test, leave one
+`unverified`, or let a suite skip undeclared, and `certificationBlockers` refuses
+to certify. `cmd/zzt-parity/report_test.go` holds each of those as its own test,
+and the M16.20 session performed the perturbation live (NOTES.md 2026-08-01).

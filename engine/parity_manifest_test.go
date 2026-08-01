@@ -301,7 +301,10 @@ const parityScaffoldDropEnv = "PARITY_SCAFFOLD_DROP"
 
 func TestParityManifestScaffold(t *testing.T) {
 	if os.Getenv("PARITY_SCAFFOLD") == "" {
-		t.Skip("set PARITY_SCAFFOLD=1 to (re)generate fixtures/parity/manifest.json")
+		// "declared skip:" is what keeps this out of M16.20's undeclared-skip
+		// blockers: it is a maintainer generator, and TestParityManifestIsCanonical
+		// asserts on every run that the committed file is what it would write.
+		t.Skip("declared skip: set PARITY_SCAFFOLD=1 to (re)generate fixtures/parity/manifest.json; TestParityManifestIsCanonical covers the committed file")
 	}
 
 	prev, err := os.ReadFile(parityManifestPath)
@@ -1073,26 +1076,40 @@ func distinctMatches(re *regexp.Regexp, src string) []string {
 	return out
 }
 
-// existingGoTestNames scans every *_test.go in the engine dir for func Test…
+// existingGoTestNames scans every *_test.go under the engine module for
+// func Test…, including the commands under cmd/ (task M16.20: a row whose only
+// evidence is a command's test — zzt-validate's, for the M7.5 world gate — must
+// be nameable, and every name in the manifest must still be checked for
+// staleness).
 func existingGoTestNames(t *testing.T) map[string]bool {
 	t.Helper()
 	names := map[string]bool{}
-	entries, err := os.ReadDir(".")
-	if err != nil {
-		t.Fatal(err)
-	}
 	re := regexp.MustCompile(`(?m)^func (Test\w+)\(`)
-	for _, e := range entries {
-		if !strings.HasSuffix(e.Name(), "_test.go") {
-			continue
-		}
-		data, err := os.ReadFile(e.Name())
+	err := filepath.Walk(".", func(path string, info os.FileInfo, err error) error {
 		if err != nil {
-			continue
+			return err
+		}
+		if info.IsDir() {
+			// web/node_modules holds no Go and is enormous.
+			if info.Name() == "node_modules" {
+				return filepath.SkipDir
+			}
+			return nil
+		}
+		if !strings.HasSuffix(info.Name(), "_test.go") {
+			return nil
+		}
+		data, err := os.ReadFile(path)
+		if err != nil {
+			return nil
 		}
 		for _, m := range re.FindAllStringSubmatch(string(data), -1) {
 			names[m[1]] = true
 		}
+		return nil
+	})
+	if err != nil {
+		t.Fatal(err)
 	}
 	return names
 }

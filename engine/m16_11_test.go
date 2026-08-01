@@ -101,10 +101,9 @@ func TestM1611BrowserEndToEndPlayerJourneys(t *testing.T) {
 	// Copy ACCEPT.ZZT and TOWN.ZZT into spWorldsDir and rootDir
 	_ = os.WriteFile(filepath.Join(spWorldsDir, "ACCEPT.ZZT"), zztBytes, 0644)
 	_ = os.WriteFile(filepath.Join(rootDir, "ACCEPT.ZZT"), zztBytes, 0644)
-	if townBytes, err := os.ReadFile("TOWN.ZZT"); err == nil {
-		_ = os.WriteFile(filepath.Join(spWorldsDir, "TOWN.ZZT"), townBytes, 0644)
-		_ = os.WriteFile(filepath.Join(rootDir, "TOWN.ZZT"), townBytes, 0644)
-	}
+	townBytes := committedTownBytes(t)
+	_ = os.WriteFile(filepath.Join(spWorldsDir, "TOWN.ZZT"), townBytes, 0644)
+	_ = os.WriteFile(filepath.Join(rootDir, "TOWN.ZZT"), townBytes, 0644)
 
 	l, err := net.Listen("tcp", "127.0.0.1:0")
 	if err != nil {

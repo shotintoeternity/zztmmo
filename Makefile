@@ -1,12 +1,19 @@
 # Repo-level commands for ZZTMMO.
 #
 # `make parity` is the single M16 certification command: it runs the clean gates
-# (go build/vet/test/-race, npm ci/test/build) and writes a deterministic
-# JSON + Markdown report keyed by the parity manifest (fixtures/parity). It exits
-# non-zero when a gate fails or the manifest is not yet certified, and writes
-# only the gitignored report files, so a clean run leaves `git status` empty.
+# — npm ci, the pinned Playwright engines, the client build, npm test, then go
+# build/vet/test/-race with the real-browser suites required rather than
+# skippable — and writes a deterministic JSON + Markdown report keyed by the
+# parity manifest (fixtures/parity), plus a run record (run.json) carrying tool
+# versions, the commit and per-gate timings. It exits non-zero when a gate
+# fails, and writes only gitignored files, so a clean run leaves `git status`
+# empty.
+#
+# `make certify` is the same run under the M16.20 gate: an uncertified manifest
+# — any `unverified`/`gap` row, any `pass` naming no test, any undeclared test
+# skip — is a failure rather than an expected state.
 
-.PHONY: parity parity-report parity-canaries oracle-tools oracle-regen world
+.PHONY: parity certify parity-report parity-canaries oracle-tools oracle-regen world
 
 # Deterministic ZWD authoring gate. Example:
 #   make world SOURCE=llmworld/generated/NULLSIGN.zwd OUT=engine/NULLSIGN.ZZT
@@ -20,6 +27,10 @@ world:
 # Full certification run: gates + report.
 parity:
 	cd engine && go run ./cmd/zzt-parity -out ../fixtures/parity
+
+# The same run, gated: not-certified is a failure (task M16.20).
+certify:
+	cd engine && go run ./cmd/zzt-parity -require-certified -out ../fixtures/parity
 
 # Re-render the report from the current manifest without running the gates.
 parity-report:

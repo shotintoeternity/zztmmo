@@ -171,11 +171,11 @@ func m169NewHarnessFor(t *testing.T, worldName string, world TWorld, options ...
 	m169WriteWorldFile(t, world, filepath.Join(worldsDir, worldName+".ZZT"))
 	// The client's very first /api/title call asks for its default world, TOWN,
 	// before the player has chosen anything. Without it the browser console
-	// carries a 500 the suite would either have to whitelist or ignore.
-	if town, err := os.ReadFile("TOWN.ZZT"); err == nil {
-		if err := os.WriteFile(filepath.Join(worldsDir, "TOWN.ZZT"), town, 0o644); err != nil {
-			t.Fatal(err)
-		}
+	// carries a 500 the suite would either have to whitelist or ignore — which
+	// is what a clean clone got, because this used to read the gitignored
+	// engine/TOWN.ZZT and copy it only when it happened to be there (M16.20).
+	if err := os.WriteFile(filepath.Join(worldsDir, "TOWN.ZZT"), committedTownBytes(t), 0o644); err != nil {
+		t.Fatal(err)
 	}
 
 	server := NewWebSocketServer(world, m169StartBoard)
@@ -284,8 +284,23 @@ func m169RequireBrowserHarness(t *testing.T) {
 		t.Skip("skipping the browser golden harness in short mode")
 	}
 	if _, err := os.Stat(filepath.Join("web", "node_modules", "playwright")); err != nil {
-		t.Skip("browser harness unavailable: run `npm ci` in engine/web (and `npx playwright install chromium`)")
+		m169BrowserAbsent(t, "browser harness unavailable: run `npm ci` in engine/web (and `npx playwright install chromium`)")
 	}
+}
+
+// m169BrowserAbsent decides what an absent browser harness means. Ordinarily it
+// is an environment fact and the suite skips: a checkout that never asked for a
+// browser should not go red. Under the certification run (task M16.20) it is a
+// hole in the claim — `make parity` installs the pinned engines before the Go
+// gates precisely so these suites run, and a clean clone that certified itself
+// with every browser suite silently skipped is the failure M16.20 exists to
+// prevent — so it fails instead.
+func m169BrowserAbsent(t *testing.T, reason string) {
+	t.Helper()
+	if os.Getenv("ZZT_PARITY_REQUIRE_BROWSER") != "" {
+		t.Fatalf("%s (ZZT_PARITY_REQUIRE_BROWSER is set: the certification run requires the real browser, not a skip)", reason)
+	}
+	t.Skip(reason)
 }
 
 // m169RequireClientBuild builds web/dist when it is missing. Keyed on

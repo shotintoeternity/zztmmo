@@ -130,8 +130,10 @@ or future opt-in visual critique after deterministic validation.
 ```
 engine/              Headless Go ZZT simulation engine, websocket server, and commands
 engine/web/          Vite TypeScript browser client
-engine/fixtures/     Replay fixtures and deterministic verification data
 engine/saves/        Local saved-game snapshots and chat logs when enabled
+fixtures/            Replay, oracle, golden and parity fixtures (repository root)
+llmworld/            ZWD corpus, prompt kit assets, and generated worlds
+oracle/              Pinned vanilla ZZT oracle harness (maintainer tooling)
 reference/           Local reference checkouts, ignored by git
 ```
 

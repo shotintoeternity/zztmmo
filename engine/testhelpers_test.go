@@ -44,6 +44,27 @@ func townRoomManager(t *testing.T) *RoomManager {
 	return NewRoomManager(setup.World)
 }
 
+// committedTownBytes returns the vanilla TOWN world every harness seeds its
+// worlds directory with, read from the COMMITTED fixture (task M16.20).
+//
+// The harnesses used to read `engine/TOWN.ZZT` and copy it only `if err == nil`.
+// That file is gitignored like every other world, so on a clean clone there was
+// no TOWN: the client's first `/api/title` asked for its default world, the
+// server answered 500, and every browser suite failed on "the console must
+// carry no errors" — a dependency on the developer's own working tree, invisible
+// on the machine that wrote it. The bytes are committed at fixtures/TOWN.ZZT,
+// so read those and fail closed if they are gone.
+func committedTownBytes(t *testing.T) []byte {
+	t.Helper()
+	path := filepath.Join("..", "fixtures", "TOWN.ZZT")
+	requireFixture(t, path)
+	data, err := os.ReadFile(path)
+	if err != nil {
+		t.Fatalf("reading required fixture %s: %v", path, err)
+	}
+	return data
+}
+
 // findEvent scans a ProtocolEvent slice for the first event whose Type matches
 // and returns it plus a found flag — the same shape as a map lookup.
 func findEvent(events []ProtocolEvent, eventType string) (ProtocolEvent, bool) {

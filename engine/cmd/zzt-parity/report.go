@@ -86,6 +86,28 @@ type deviceMatrix struct {
 	Profiles []deviceProfile `json:"profiles"`
 }
 
+// skipRecord is one test the certification run skipped (task M16.20). A skip
+// is invisible in `go test`'s default output — a suite that skips itself
+// because a browser is not installed reports the same "ok" as one that ran —
+// which is exactly the "silent skip" M16.20's DoD forbids. The go test gates
+// therefore run under `-json`, every skip is recorded here by name, and a skip
+// that does not declare itself blocks certification.
+//
+// A declared skip says so in its own message: it begins with `declared skip:`
+// followed by the reason (M16.18's firefox-touch-portrait profile, whose
+// reason the device matrix already carries). Anything else is undeclared.
+type skipRecord struct {
+	Package string `json:"package"`
+	Test    string `json:"test"`
+	Reason  string `json:"reason"`
+}
+
+const declaredSkipMarker = "declared skip:"
+
+func (s skipRecord) declared() bool {
+	return strings.Contains(s.Reason, declaredSkipMarker)
+}
+
 // gateResult is one clean gate (go build/vet/test/-race, npm ci/test/build).
 // Output is deliberately excluded from the report model: it is nondeterministic.
 // main.go streams gate output to the console; only the pass/fail verdict — which
@@ -96,6 +118,12 @@ type gateResult struct {
 	Dir     string `json:"dir"`
 	Passed  bool   `json:"passed"`
 	Skipped bool   `json:"skipped,omitempty"`
+
+	// goTest marks a gate the runner drives under `-json` so it can record the
+	// tests that skipped (task M16.20). Not serialized: it is how the gate is
+	// run, not a fact about the tree, and the report must stay a pure function
+	// of the tree.
+	goTest bool `json:"-"`
 }
 
 // ---------------------------------------------------------------------------
@@ -141,6 +169,11 @@ type report struct {
 	// report so the platforms a claim covers travel with the claim.
 	DeviceMatrix *deviceMatrix `json:"deviceMatrix,omitempty"`
 
+	// Skips is every test the go test gates skipped, sorted (task M16.20).
+	// Deterministic: the same tree skips the same tests, and an undeclared skip
+	// is a blocker rather than a line nobody reads.
+	Skips []skipRecord `json:"skips"`
+
 	Certified bool     `json:"certified"`
 	Blockers  []string `json:"blockers"`
 }
@@ -154,7 +187,14 @@ const reportSchemaVersion = 1
 // buildReport composes the deterministic report from a manifest and the gate
 // results. It never mutates its inputs and never reads wall-clock or the
 // filesystem, so it is a pure function of (m, gates).
-func buildReport(m *manifest, manifestPath string, gates []gateResult, devices *deviceMatrix) report {
+func buildReport(m *manifest, manifestPath string, gates []gateResult, devices *deviceMatrix, skips []skipRecord) report {
+	sorted := append([]skipRecord(nil), skips...)
+	sort.Slice(sorted, func(i, j int) bool {
+		if sorted[i].Package != sorted[j].Package {
+			return sorted[i].Package < sorted[j].Package
+		}
+		return sorted[i].Test < sorted[j].Test
+	})
 	r := report{
 		SchemaVersion: reportSchemaVersion,
 		ManifestPath:  manifestPath,
@@ -162,6 +202,7 @@ func buildReport(m *manifest, manifestPath string, gates []gateResult, devices *
 		StatusTotals:  map[string]int{},
 		Gates:         gates,
 		DeviceMatrix:  devices,
+		Skips:         sorted,
 	}
 
 	dims := map[string]*dimensionSummary{}
@@ -205,7 +246,7 @@ func buildReport(m *manifest, manifestPath string, gates []gateResult, devices *
 		return r.VerifiedRows[i].ID < r.VerifiedRows[j].ID
 	})
 
-	r.Blockers = certificationBlockers(m, gates, devices)
+	r.Blockers = certificationBlockers(m, gates, devices, sorted)
 	r.Certified = len(r.Blockers) == 0
 	return r
 }
@@ -214,9 +255,19 @@ func buildReport(m *manifest, manifestPath string, gates []gateResult, devices *
 // sorted for determinism. An empty slice means certified. The rules are
 // PARITY.md §2/§3: no non-terminal row status, every `pass` names a real test,
 // and every clean gate passes.
-func certificationBlockers(m *manifest, gates []gateResult, devices *deviceMatrix) []string {
+func certificationBlockers(m *manifest, gates []gateResult, devices *deviceMatrix, skips []skipRecord) []string {
 	var blockers []string
 	blockers = append(blockers, deviceMatrixBlockers(devices)...)
+	for _, s := range skips {
+		if s.declared() {
+			continue
+		}
+		reason := strings.TrimSpace(s.Reason)
+		if reason == "" {
+			reason = "no reason given"
+		}
+		blockers = append(blockers, fmt.Sprintf("test %s (%s) skipped without declaring itself: %s", s.Test, s.Package, reason))
+	}
 
 	var unverified, gap, unknown, passNoTest int
 	for _, row := range m.Rows {
@@ -393,6 +444,22 @@ func writeMarkdown(w io.Writer, r report) error {
 			if d.Notes != "" {
 				p("- `%s`: %s\n", d.ID, d.Notes)
 			}
+		}
+		p("\n")
+	}
+
+	// Skipped tests (M16.20). A run with nothing here ran everything it built.
+	p("## Skipped tests\n\n")
+	if len(r.Skips) == 0 {
+		p("None — no test in the go gates skipped itself.\n\n")
+	} else {
+		p("| test | package | declared | reason |\n|---|---|---|---|\n")
+		for _, s := range r.Skips {
+			declared := "**no**"
+			if s.declared() {
+				declared = "yes"
+			}
+			p("| `%s` | `%s` | %s | %s |\n", s.Test, s.Package, declared, s.Reason)
 		}
 		p("\n")
 	}

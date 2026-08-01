@@ -8158,3 +8158,170 @@ member entering afterwards finds the session's own frame on the same colour.
 
 **Act 8** drops the comment naming this task and keeps its invariant unchanged.
 `service.editor-collab` leaves `gap` for `pass`, with the new test named.
+
+## 2026-08-01 — M16.20: the run that certifies, and the claims it had to fix
+
+**Advisor unavailable** (no advisor tool this session, as at M16.0–M16.3, M16.17a
+and M16.14b earlier today). M16.20 is `[ADVISOR]` and its DoD ends in an owner
+approval, so the owner was consulted with the scope before any edit and chose
+"do the full run; leave the box for me" — the M17.8 / no-self-certification
+precedent. **The box stays unchecked.** The advisor half of the gate — the
+independent-oracle chain review — is still unrun.
+
+### What the manifest looked like, and what it looks like now
+
+137 rows were open: 132 `task` rows carrying the boilerplate "reconciled at
+M16.20", and five title-screen `input` rows M16.11 left assigned to itself after
+it landed. Every one is now resolved:
+
+- **123 task rows are `pass`**, each naming the tests that certify that task's
+  DoD. Not one blanket citation: M0.4's row names `TestDelayHeadlessNoOp` and
+  `TestDelaySleepsWhenInteractive`, M12.22's names the three retry tests, M17.12's
+  names the two board-isolation tests plus the wire-level one. Where a task's
+  only automated evidence is a command's test (M7.5 and M12.8, both about
+  `cmd/zzt-validate`'s world gate), the manifest names it — which required
+  extending the validator, below.
+- **Nine task rows are `out-of-scope`** with contract `out-of-scope` and a
+  reason: `M13.1` (the CI configuration itself), `M17.8` (the dev/deploy
+  environment, owner-verified 2026-07-30), `M18.0`/`M18.2`/`M18.3` (repo
+  hygiene, dead code, comments), `M18.5`/`M18.6`/`M18.10` (production
+  operations), and `M18.7` (a client-side cosmetic clamp covered by
+  `web/test/dream.test.mjs` under `npm test`, which no Go test name can carry).
+  These make no product-behaviour parity claim; saying so is more honest than
+  citing a test that does not prove them.
+- **Four input rows are `pass`** (title play/quit/about/high-scores) and
+  `input.title-speed-omitted` is `deviation` — the `omitted-game-speed` catalog
+  entry, pinned where M16.12 said it lives: the browser goldens (the title frame
+  carries no game-speed line) and the browser control vocabulary.
+
+Totals: 356 `pass`, 5 `deviation`, 9 `out-of-scope`, **0 `unverified`, 0 `gap`,
+0 unknown**.
+
+### The hole the gate had
+
+`make parity` ran `go test ./...` BEFORE `npm ci`. The real-browser suites live
+inside that `go test`, and they skip themselves when the harness is absent
+(`m169RequireBrowserHarness`). So on a clean clone — exactly the case M16.20 is
+about — the certification gate ran with **every browser suite silently skipped**
+and then installed the browser afterwards. The DoD forbids silent skips by name;
+this was one, sitting in the command that exists to find them.
+
+Three changes, together:
+
+1. **Order.** `npm ci` → the pinned Playwright engines → `npm run build` →
+   `npm test` → `go build` → `go vet` → `go test` → `go test -race`. The browser
+   track is installed before the suites that need it.
+2. **Skips are recorded.** The two go gates run under `go test -json`; every
+   skipped test is collected with the reason it printed, sorted into
+   `report.json`, and rendered as its own table. A skip blocks certification
+   unless it declares itself by starting its message with `declared skip:`.
+   Two tests do: M16.18's `firefox-touch-portrait` profile (Playwright cannot
+   emulate touch in Firefox — the reason the device matrix already carried) and
+   the manifest scaffold generator, whose committed output
+   `TestParityManifestIsCanonical` checks on every run anyway.
+3. **The harness cannot skip under certification.** The run exports
+   `ZZT_PARITY_REQUIRE_BROWSER=1`, and `m169BrowserAbsent` turns "not installed"
+   into a failure when it is set. By then the engines are installed; an absent
+   browser is a broken certification, not an environment fact.
+
+### Artifacts, and why timings are not in the report
+
+`report.json`/`report.md` stay a pure function of the tree — that is what makes
+"two identical green reports" mean anything. Everything that is a fact about the
+machine went into a separate `run.json`: commit and tree-dirty flag, OS/arch,
+go/node/npm/playwright versions, and per-gate wall clock. M16.19's 30-client load
+run publishes its measured numbers as test log lines, so the runner captures them
+into `load-metrics.txt` rather than leaving them in a console nobody keeps. The
+CI `parity` job now runs `make certify` (`-require-certified`: an uncertified
+manifest is a failure now that M16.20 has landed) and uploads manifest, device
+matrix, report, run record, load metrics and the browser traces.
+
+### Fail-closed, performed rather than asserted
+
+Both perturbations were run live against the real manifest and then restored
+byte-identically (`diff -q` clean):
+
+- a `pass` row's `test` renamed to a test that does not exist →
+  `row task.M17.10: references non-existent Go test
+  "TestM1614CollaborativeEditorInBrowsersRenamed" (stale)`;
+- a required `fixture` pointed at a path that does not exist →
+  `row input.editor-keys: fixture "fixtures/editor-moved.zwd" does not exist
+  (stale)`.
+
+`cmd/zzt-parity/report_test.go` holds the report-level halves as tests: an
+undeclared skip blocks, a declared one does not but is still reported, skips are
+sorted for determinism, and the browser track must precede the go gates.
+
+**The first certification run failed on the runner itself.** `-json` is a flag
+of the `test` subcommand, and the splice put it after `go`, so both go gates ran
+`go -json test …` and got `go help` back — the run recorded two failed gates and
+refused to certify, which is the right behaviour for a broken gate but not a
+finding about the tree. Fixed (`goTestJSONArgs`) with
+`TestGoTestJSONArgsPutTheFlagAfterTheSubcommand` asserting the assembled command
+rather than trusting the splice. Recorded because a certification tool that has
+never been run against a clean clone is exactly the kind of claim this task
+exists to stop taking on trust. The same run showed `-json` had swallowed the
+failure detail — only the `--- FAIL` headers reached the console — so the runner
+now echoes a failing test's whole captured output.
+
+### What the clean clone found: nine suites depended on a file nobody ships
+
+The first honest clean-clone run failed 24 tests across M16.9, M16.10, M16.11,
+M16.13, M16.14, M16.16, M16.17, M16.18 and M16.19 — every real-browser suite and
+every subprocess suite. One cause: the harnesses seeded their worlds directory
+from **`engine/TOWN.ZZT`**, which is gitignored like every other world, and they
+copied it `if err == nil`. On the machine that wrote them the file is there; on a
+clean clone it is not, so the client's first `/api/title` asked for its default
+world, the server answered 500, and every suite failed its "the console must
+carry no errors" assertion. The M16.19 subprocess suites failed the same way
+through their own copy of the same conditional.
+
+The bytes have been committed at `fixtures/TOWN.ZZT` all along — `townRoomManager`
+already reads them. All four harnesses now go through `committedTownBytes`, which
+reads the fixture and fails closed (`requireFixture`) instead of shrugging.
+
+This is the finding that justifies the task: those suites are the evidence behind
+dozens of `pass` rows, the CI `browser-goldens` job runs five of them on a
+checkout with no untracked worlds, and nothing in the repository said they were
+only ever green on a developer's own tree.
+
+### The oracle chain: pinned, and now re-hashed
+
+The `V` claims rest on `fixtures/oracle/provenance.json` — the sha256 of the
+pinned ZZT.EXE/ZZT.DAT, the Zeta commit, the frontend that drove it, and every
+committed scenario and ORCL world. It was **written by `make oracle-regen` and
+believed**: nothing re-checked it. That is a mutable required fixture, which this
+DoD forbids by name — edit an ORCL world so a sweep agrees with the engine and
+every capture derived from it still reads as independent ground truth.
+`TestM1620OracleInputsMatchTheirPinnedHashes` re-hashes all of it, and
+`TestM1620EveryOracleCaptureHasAPinnedScenario` closes the other direction (a
+capture with no committed, pinned scenario behind it). Proven closed by flipping
+one nibble of a pinned hash: the test names the world and both digests.
+
+### Claims reconciled
+
+- README's directory map named `engine/fixtures/`, which does not exist —
+  committed fixtures are at the repository root. The map now names `fixtures/`,
+  `llmworld/` and `oracle/` where they are. That closes the standing README
+  follow-up box, which asked for exactly this.
+- PARITY.md gains §8, the certification run: the ordered gate list and why the
+  order is part of the contract, the declared-skip rule, the artifact table with
+  which files are deterministic, and the fail-closed statement.
+- PARITY.md §4 gains the three approved deviations that no row references —
+  `collision-pushout`, `shared-world-flags`, `scroll-removal-timing`. A row
+  carries at most one `deviation` id, so a doubly-divergent surface can only name
+  one; the table says where each actually lives and which tests pin it, so the
+  catalog is not read as three approvals nobody uses.
+- The validator's `existingGoTestNames` walked only the top-level engine
+  directory, so a row could not name a command's test. It now walks the module
+  (skipping `node_modules`), which makes the anti-stale check wider, not looser.
+
+### What the owner still has to do
+
+Approve the final deviation list — five `deviation` rows over four catalog ids
+(`omitted-game-speed`, `presentation-additions`, `account-sidecar-restore`,
+`score-on-quit`, `snapshot-player-drop`), plus the nine `out-of-scope`
+classifications above — read the two clean-clone reports, and tick the box. Until
+that happens **nothing in this repository may state that the product has full
+feature parity within the M16 contract**; the manifest says the rows are
+certified, which is a different sentence.

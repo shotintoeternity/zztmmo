@@ -44,7 +44,7 @@ func sampleDeviceMatrix() *deviceMatrix {
 }
 
 func passingGates() []gateResult {
-	gates := plannedGates(true)
+	gates := plannedGates(true, true)
 	for i := range gates {
 		gates[i].Passed = true
 	}
@@ -52,7 +52,7 @@ func passingGates() []gateResult {
 }
 
 func TestBuildReportTallies(t *testing.T) {
-	r := buildReport(sampleManifest(), "fixtures/parity/manifest.json", passingGates(), sampleDeviceMatrix())
+	r := buildReport(sampleManifest(), "fixtures/parity/manifest.json", passingGates(), sampleDeviceMatrix(), nil)
 
 	if r.TotalRows != 6 {
 		t.Fatalf("TotalRows = %d, want 6", r.TotalRows)
@@ -77,7 +77,7 @@ func TestBuildReportTallies(t *testing.T) {
 }
 
 func TestCertificationBlockedByOpenRows(t *testing.T) {
-	r := buildReport(sampleManifest(), "m", passingGates(), sampleDeviceMatrix())
+	r := buildReport(sampleManifest(), "m", passingGates(), sampleDeviceMatrix(), nil)
 	if r.Certified {
 		t.Fatal("manifest with unverified+gap rows must not be certified")
 	}
@@ -91,7 +91,7 @@ func TestCertificationRequiresPassRowsToNameTest(t *testing.T) {
 	m := &manifest{Rows: []manifestRow{
 		{ID: "a", Dimension: "element", Status: "pass", Test: ""},
 	}}
-	r := buildReport(m, "m", passingGates(), sampleDeviceMatrix())
+	r := buildReport(m, "m", passingGates(), sampleDeviceMatrix(), nil)
 	if r.Certified {
 		t.Fatal("a pass row with no covering test must block certification")
 	}
@@ -106,7 +106,7 @@ func TestCertificationHappyPath(t *testing.T) {
 		{ID: "b", Dimension: "task", Status: "deviation"},
 		{ID: "c", Dimension: "service", Status: "out-of-scope"},
 	}}
-	r := buildReport(m, "m", passingGates(), sampleDeviceMatrix())
+	r := buildReport(m, "m", passingGates(), sampleDeviceMatrix(), nil)
 	if !r.Certified {
 		t.Fatalf("all-terminal manifest with passing gates must certify, blockers: %v", r.Blockers)
 	}
@@ -115,8 +115,8 @@ func TestCertificationHappyPath(t *testing.T) {
 func TestFailedGateBlocksCertification(t *testing.T) {
 	m := &manifest{Rows: []manifestRow{{ID: "a", Dimension: "element", Status: "pass", Test: "TestA"}}}
 	gates := passingGates()
-	gates[2].Passed = false // go test
-	r := buildReport(m, "m", gates, sampleDeviceMatrix())
+	gates[goTestGateIndex(t, gates)].Passed = false
+	r := buildReport(m, "m", gates, sampleDeviceMatrix(), nil)
 	if r.Certified {
 		t.Fatal("a failed clean gate must block certification")
 	}
@@ -129,7 +129,7 @@ func TestSkippedGateBlocksCertification(t *testing.T) {
 	m := &manifest{Rows: []manifestRow{{ID: "a", Dimension: "element", Status: "pass", Test: "TestA"}}}
 	gates := passingGates()
 	gates[0].Skipped = true
-	r := buildReport(m, "m", gates, sampleDeviceMatrix())
+	r := buildReport(m, "m", gates, sampleDeviceMatrix(), nil)
 	if r.Certified {
 		t.Fatal("a skipped clean gate must block certification (it was not actually run)")
 	}
@@ -141,7 +141,7 @@ func TestReportDeterminism(t *testing.T) {
 	m := sampleManifest()
 	var jsonA, jsonB, mdA, mdB bytes.Buffer
 
-	rA := buildReport(m, "m", passingGates(), sampleDeviceMatrix())
+	rA := buildReport(m, "m", passingGates(), sampleDeviceMatrix(), nil)
 	if err := writeJSON(&jsonA, rA); err != nil {
 		t.Fatal(err)
 	}
@@ -150,7 +150,7 @@ func TestReportDeterminism(t *testing.T) {
 	}
 
 	// Rebuild from a fresh manifest value to catch any accidental input mutation.
-	rB := buildReport(sampleManifest(), "m", passingGates(), sampleDeviceMatrix())
+	rB := buildReport(sampleManifest(), "m", passingGates(), sampleDeviceMatrix(), nil)
 	if err := writeJSON(&jsonB, rB); err != nil {
 		t.Fatal(err)
 	}
@@ -185,7 +185,7 @@ func certifiableManifest() *manifest {
 func TestUnexplainedDeviceSkipBlocksCertification(t *testing.T) {
 	devices := sampleDeviceMatrix()
 	devices.Profiles[1].Reason = ""
-	r := buildReport(certifiableManifest(), "m", passingGates(), devices)
+	r := buildReport(certifiableManifest(), "m", passingGates(), devices, nil)
 	if r.Certified {
 		t.Fatal("a device profile skipped with no reason must block certification")
 	}
@@ -193,7 +193,7 @@ func TestUnexplainedDeviceSkipBlocksCertification(t *testing.T) {
 		t.Errorf("expected an unexplained-skip blocker, got %v", r.Blockers)
 	}
 
-	if r2 := buildReport(certifiableManifest(), "m", passingGates(), sampleDeviceMatrix()); !r2.Certified {
+	if r2 := buildReport(certifiableManifest(), "m", passingGates(), sampleDeviceMatrix(), nil); !r2.Certified {
 		t.Errorf("an explained skip must not block certification, blockers: %v", r2.Blockers)
 	}
 }
@@ -201,7 +201,7 @@ func TestUnexplainedDeviceSkipBlocksCertification(t *testing.T) {
 func TestCoveredDeviceProfileMustNameEvidence(t *testing.T) {
 	devices := sampleDeviceMatrix()
 	devices.Profiles[0].Evidence = ""
-	r := buildReport(certifiableManifest(), "m", passingGates(), devices)
+	r := buildReport(certifiableManifest(), "m", passingGates(), devices, nil)
 	if r.Certified {
 		t.Fatal("a covered device profile with no evidence must block certification")
 	}
@@ -211,7 +211,7 @@ func TestCoveredDeviceProfileMustNameEvidence(t *testing.T) {
 }
 
 func TestMissingDeviceMatrixBlocksCertification(t *testing.T) {
-	r := buildReport(certifiableManifest(), "m", passingGates(), nil)
+	r := buildReport(certifiableManifest(), "m", passingGates(), nil, nil)
 	if r.Certified {
 		t.Fatal("a report with no device/browser matrix must not certify (task M16.18)")
 	}
@@ -224,7 +224,7 @@ func TestMissingDeviceMatrixBlocksCertification(t *testing.T) {
 // for a device/browser matrix a reader can see.
 func TestMarkdownRendersTheDeviceMatrix(t *testing.T) {
 	var md bytes.Buffer
-	r := buildReport(sampleManifest(), "m", passingGates(), sampleDeviceMatrix())
+	r := buildReport(sampleManifest(), "m", passingGates(), sampleDeviceMatrix(), nil)
 	if err := writeMarkdown(&md, r); err != nil {
 		t.Fatal(err)
 	}
@@ -262,6 +262,143 @@ func TestSplitCommand(t *testing.T) {
 	for i := range want {
 		if got[i] != want[i] {
 			t.Errorf("splitCommand[%d] = %q, want %q", i, got[i], want[i])
+		}
+	}
+}
+
+// goTestGateIndex finds the `go test` gate rather than assuming its position:
+// M16.20 reordered the gate list so the browser track installs first, and a
+// test that hard-codes an index silently starts asserting about another gate.
+func goTestGateIndex(t *testing.T, gates []gateResult) int {
+	t.Helper()
+	for i, g := range gates {
+		if g.Name == "go test" {
+			return i
+		}
+	}
+	t.Fatal("no `go test` gate in the planned list")
+	return 0
+}
+
+// ---------------------------------------------------------------------------
+// M16.20 — silent skips
+// ---------------------------------------------------------------------------
+
+// TestUndeclaredSkipBlocksCertification is the mechanised half of M16.20's "no
+// silent skips": a real-browser suite that skipped itself because the harness
+// was absent must fail the certification, not ride along inside an "ok".
+func TestUndeclaredSkipBlocksCertification(t *testing.T) {
+	skips := []skipRecord{{
+		Package: "github.com/benhoyt/zztgo",
+		Test:    "TestM1614CollaborativeEditorInBrowsers",
+		Reason:  "browser harness unavailable: run `npm ci` in engine/web",
+	}}
+	r := buildReport(certifiableManifest(), "m", passingGates(), sampleDeviceMatrix(), skips)
+	if r.Certified {
+		t.Fatal("a test that skipped itself must block certification")
+	}
+	if !strings.Contains(strings.Join(r.Blockers, "\n"), "TestM1614CollaborativeEditorInBrowsers") {
+		t.Errorf("blockers do not name the skipped test: %v", r.Blockers)
+	}
+}
+
+// A skip that declares itself is evidence, not a hole: M16.18's Firefox touch
+// profile skips with the reason the device matrix carries, and the report says
+// so rather than pretending the run was complete.
+func TestDeclaredSkipDoesNotBlockButIsReported(t *testing.T) {
+	skips := []skipRecord{{
+		Package: "github.com/benhoyt/zztgo",
+		Test:    "TestM1618PlatformMatrix/firefox-touch-portrait",
+		Reason:  "declared skip: Playwright cannot emulate touch in Firefox",
+	}}
+	r := buildReport(certifiableManifest(), "m", passingGates(), sampleDeviceMatrix(), skips)
+	if !r.Certified {
+		t.Fatalf("a declared skip must not block certification, blockers: %v", r.Blockers)
+	}
+	if len(r.Skips) != 1 {
+		t.Fatalf("the report must still carry the skip: %+v", r.Skips)
+	}
+	var buf bytes.Buffer
+	if err := writeMarkdown(&buf, r); err != nil {
+		t.Fatal(err)
+	}
+	if !strings.Contains(buf.String(), "firefox-touch-portrait") {
+		t.Error("the rendered report does not name the skipped test")
+	}
+}
+
+// Skips are sorted, so two runs of the same tree render the same report.
+func TestSkipsAreSortedForDeterminism(t *testing.T) {
+	skips := []skipRecord{
+		{Package: "b", Test: "TestZ", Reason: "declared skip: z"},
+		{Package: "a", Test: "TestB", Reason: "declared skip: b"},
+		{Package: "a", Test: "TestA", Reason: "declared skip: a"},
+	}
+	r := buildReport(certifiableManifest(), "m", passingGates(), sampleDeviceMatrix(), skips)
+	got := []string{r.Skips[0].Test, r.Skips[1].Test, r.Skips[2].Test}
+	want := []string{"TestA", "TestB", "TestZ"}
+	for i := range want {
+		if got[i] != want[i] {
+			t.Fatalf("skips = %v, want %v", got, want)
+		}
+	}
+}
+
+// The browser track must be in the gate list and must run BEFORE the go gates:
+// the real-browser suites live inside `go test ./...` and skip themselves when
+// the harness is absent, so installing it afterwards certifies nothing (M16.20).
+func TestBrowserTrackRunsBeforeTheGoGates(t *testing.T) {
+	gates := plannedGates(true, true)
+	pos := map[string]int{}
+	for i, g := range gates {
+		pos[g.Name] = i
+	}
+	for _, name := range []string{"npm ci", "playwright install", "npm run build", "go test", "go test -race"} {
+		if _, ok := pos[name]; !ok {
+			t.Fatalf("gate %q is missing from the certification list: %+v", name, gates)
+		}
+	}
+	if pos["playwright install"] > pos["go test"] || pos["npm run build"] > pos["go test"] {
+		t.Errorf("the browser harness is installed after the suites that need it: %v", pos)
+	}
+	if pos["npm ci"] > pos["playwright install"] {
+		t.Errorf("playwright is installed before its node_modules: %v", pos)
+	}
+}
+
+// lastMeaningfulLine strips the file:line prefix `t.Skip` prints, so the reason
+// in the report reads as the reason and the declared-skip marker is found.
+func TestSkipReasonIsExtractedFromTestOutput(t *testing.T) {
+	got := lastMeaningfulLine([]string{
+		"=== RUN   TestM1618PlatformMatrix/firefox-touch-portrait",
+		"    m16_18_test.go:308: declared skip: Playwright cannot emulate touch in Firefox",
+		"",
+	})
+	want := "declared skip: Playwright cannot emulate touch in Firefox"
+	if got != want {
+		t.Fatalf("reason = %q, want %q", got, want)
+	}
+	if !(skipRecord{Reason: got}).declared() {
+		t.Error("a declared skip's reason must be recognised as declared")
+	}
+}
+
+// The go gates are driven under `go test -json`, and `-json` is a flag of the
+// `test` subcommand: `go -json test …` is not a command, which is how the first
+// M16.20 certification run failed (NOTES.md 2026-08-01). Assert the assembled
+// argument list rather than trusting the splice.
+func TestGoTestJSONArgsPutTheFlagAfterTheSubcommand(t *testing.T) {
+	for _, g := range plannedGates(true, true) {
+		if !g.goTest {
+			continue
+		}
+		args := splitCommand(g.Command)
+		got := goTestJSONArgs(args)
+		if len(got) < 3 || got[0] != "go" || got[1] != "test" || got[2] != "-json" {
+			t.Fatalf("gate %q assembled %v, want `go test -json …`", g.Name, got)
+		}
+		if strings.Join(got[3:], " ") != strings.Join(args[2:], " ") {
+			t.Errorf("gate %q lost or reordered its own flags: %v", g.Name, got)
 		}
 	}
 }

@@ -8,9 +8,9 @@
       "contract": "V",
       "authority": "TASKS.md M0.1",
       "parity": "exact",
-      "status": "unverified",
-      "assignedTask": "M16.20",
-      "notes": "task-claim row; behavioral parity carried by the element/oop/protocol/input/service rows this task touched; reconciled at M16.20"
+      "test": "TestRandom,TestTownReplayDeterminism",
+      "status": "pass",
+      "notes": "task-claim row; behavioral parity carried by the element/oop/protocol/input/service rows this task touched; reconciled at M16.20 M16.20 reconciliation (2026-08-01): the named tests certify this task's DoD; behavioural parity is additionally carried by the element/oop/protocol/input/service rows this task touched."
     },
     {
       "id": "task.M0.2",
@@ -19,9 +19,9 @@
       "contract": "V",
       "authority": "TASKS.md M0.2",
       "parity": "exact",
-      "status": "unverified",
-      "assignedTask": "M16.20",
-      "notes": "task-claim row; behavioral parity carried by the element/oop/protocol/input/service rows this task touched; reconciled at M16.20"
+      "test": "TestBoardDrawTileHeadless,TestVideoMoveRoundTrip",
+      "status": "pass",
+      "notes": "task-claim row; behavioral parity carried by the element/oop/protocol/input/service rows this task touched; reconciled at M16.20 M16.20 reconciliation (2026-08-01): the named tests certify this task's DoD; behavioural parity is additionally carried by the element/oop/protocol/input/service rows this task touched."
     },
     {
       "id": "task.M0.3",
@@ -30,9 +30,9 @@
       "contract": "V",
       "authority": "TASKS.md M0.3",
       "parity": "exact",
-      "status": "unverified",
-      "assignedTask": "M16.20",
-      "notes": "task-claim row; behavioral parity carried by the element/oop/protocol/input/service rows this task touched; reconciled at M16.20"
+      "test": "TestScriptedInput20Ticks",
+      "status": "pass",
+      "notes": "task-claim row; behavioral parity carried by the element/oop/protocol/input/service rows this task touched; reconciled at M16.20 M16.20 reconciliation (2026-08-01): the named tests certify this task's DoD; behavioural parity is additionally carried by the element/oop/protocol/input/service rows this task touched."
     },
     {
       "id": "task.M0.4",
@@ -41,9 +41,9 @@
       "contract": "V",
       "authority": "TASKS.md M0.4",
       "parity": "exact",
-      "status": "unverified",
-      "assignedTask": "M16.20",
-      "notes": "task-claim row; behavioral parity carried by the element/oop/protocol/input/service rows this task touched; reconciled at M16.20"
+      "test": "TestDelayHeadlessNoOp,TestDelaySleepsWhenInteractive",
+      "status": "pass",
+      "notes": "task-claim row; behavioral parity carried by the element/oop/protocol/input/service rows this task touched; reconciled at M16.20 M16.20 reconciliation (2026-08-01): the named tests certify this task's DoD; behavioural parity is additionally carried by the element/oop/protocol/input/service rows this task touched."
     },
     {
       "id": "task.M0.5",
@@ -52,9 +52,9 @@
       "contract": "V",
       "authority": "TASKS.md M0.5",
       "parity": "exact",
-      "status": "unverified",
-      "assignedTask": "M16.20",
-      "notes": "task-claim row; behavioral parity carried by the element/oop/protocol/input/service rows this task touched; reconciled at M16.20"
+      "test": "TestGameStepHeadlessLoop,TestGameStepStopsOnExitRequest",
+      "status": "pass",
+      "notes": "task-claim row; behavioral parity carried by the element/oop/protocol/input/service rows this task touched; reconciled at M16.20 M16.20 reconciliation (2026-08-01): the named tests certify this task's DoD; behavioural parity is additionally carried by the element/oop/protocol/input/service rows this task touched."
     },
     {
       "id": "task.M0.6",
@@ -63,9 +63,9 @@
       "contract": "V",
       "authority": "TASKS.md M0.6",
       "parity": "exact",
-      "status": "unverified",
-      "assignedTask": "M16.20",
-      "notes": "task-claim row; behavioral parity carried by the element/oop/protocol/input/service rows this task touched; reconciled at M16.20"
+      "test": "TestTownReplayDeterminism,TestOracleParityMainScenario",
+      "status": "pass",
+      "notes": "task-claim row; behavioral parity carried by the element/oop/protocol/input/service rows this task touched; reconciled at M16.20 M16.20 reconciliation (2026-08-01): the named tests certify this task's DoD; behavioural parity is additionally carried by the element/oop/protocol/input/service rows this task touched."
     },
     {
       "id": "task.M1.1",
@@ -74,9 +74,9 @@
       "contract": "E",
       "authority": "TASKS.md M1.1",
       "parity": "exact",
-      "status": "unverified",
-      "assignedTask": "M16.20",
-      "notes": "task-claim row; behavioral parity carried by the element/oop/protocol/input/service rows this task touched; reconciled at M16.20"
+      "test": "TestTwoEnginesOneProcess,TestM168aEnergizerBlinkIsPerEngineNotSharedGlobal",
+      "status": "pass",
+      "notes": "task-claim row; behavioral parity carried by the element/oop/protocol/input/service rows this task touched; reconciled at M16.20 M16.20 reconciliation (2026-08-01): the named tests certify this task's DoD; behavioural parity is additionally carried by the element/oop/protocol/input/service rows this task touched."
     },
     {
       "id": "task.M1.2",
@@ -85,9 +85,9 @@
       "contract": "E",
       "authority": "TASKS.md M1.2",
       "parity": "exact",
-      "status": "unverified",
-      "assignedTask": "M16.20",
-      "notes": "task-claim row; behavioral parity carried by the element/oop/protocol/input/service rows this task touched; reconciled at M16.20"
+      "test": "TestTwoEnginesOneProcess,TestM1617aCompileBesideATickingRoomLeavesItUnmoved",
+      "status": "pass",
+      "notes": "task-claim row; behavioral parity carried by the element/oop/protocol/input/service rows this task touched; reconciled at M16.20 M16.20 reconciliation (2026-08-01): the named tests certify this task's DoD; behavioural parity is additionally carried by the element/oop/protocol/input/service rows this task touched."
     },
     {
       "id": "task.M1.3",
@@ -96,9 +96,9 @@
       "contract": "E",
       "authority": "TASKS.md M1.3",
       "parity": "exact",
-      "status": "unverified",
-      "assignedTask": "M16.20",
-      "notes": "task-claim row; behavioral parity carried by the element/oop/protocol/input/service rows this task touched; reconciled at M16.20"
+      "test": "TestScrollEventAndReply,TestScrollFreezesReaderUntilDismissed,TestVendorScrollTargetsOnlyToucher",
+      "status": "pass",
+      "notes": "task-claim row; behavioral parity carried by the element/oop/protocol/input/service rows this task touched; reconciled at M16.20 M16.20 reconciliation (2026-08-01): the named tests certify this task's DoD; behavioural parity is additionally carried by the element/oop/protocol/input/service rows this task touched."
     },
     {
       "id": "task.M1.4",
@@ -107,9 +107,9 @@
       "contract": "E",
       "authority": "TASKS.md M1.4",
       "parity": "exact",
-      "status": "unverified",
-      "assignedTask": "M16.20",
-      "notes": "task-claim row; behavioral parity carried by the element/oop/protocol/input/service rows this task touched; reconciled at M16.20"
+      "test": "TestM43EscapeOpensQuitPrompt,TestM43QuitReplyRoutesByMode,TestOracleParityPromptScenario",
+      "status": "pass",
+      "notes": "task-claim row; behavioral parity carried by the element/oop/protocol/input/service rows this task touched; reconciled at M16.20 M16.20 reconciliation (2026-08-01): the named tests certify this task's DoD; behavioural parity is additionally carried by the element/oop/protocol/input/service rows this task touched."
     },
     {
       "id": "task.M1.5",
@@ -118,9 +118,9 @@
       "contract": "E",
       "authority": "TASKS.md M1.5",
       "parity": "exact",
-      "status": "unverified",
-      "assignedTask": "M16.20",
-      "notes": "task-claim row; behavioral parity carried by the element/oop/protocol/input/service rows this task touched; reconciled at M16.20"
+      "test": "TestGemPickupSoundEvent,TestProtocolSoundNotesAreBytes,TestSoundDrumTableFrozenForBrowser",
+      "status": "pass",
+      "notes": "task-claim row; behavioral parity carried by the element/oop/protocol/input/service rows this task touched; reconciled at M16.20 M16.20 reconciliation (2026-08-01): the named tests certify this task's DoD; behavioural parity is additionally carried by the element/oop/protocol/input/service rows this task touched."
     },
     {
       "id": "task.M10.1",
@@ -129,9 +129,9 @@
       "contract": "E",
       "authority": "TASKS.md M10.1",
       "parity": "exact",
-      "status": "unverified",
-      "assignedTask": "M16.20",
-      "notes": "task-claim row; behavioral parity carried by the element/oop/protocol/input/service rows this task touched; reconciled at M16.20"
+      "test": "TestM101EditorSessionBroadcastsDiffsAndPresence,TestM1614CollaborativeEditorInBrowsers",
+      "status": "pass",
+      "notes": "task-claim row; behavioral parity carried by the element/oop/protocol/input/service rows this task touched; reconciled at M16.20 M16.20 reconciliation (2026-08-01): the named tests certify this task's DoD; behavioural parity is additionally carried by the element/oop/protocol/input/service rows this task touched."
     },
     {
       "id": "task.M10.2",
@@ -140,9 +140,9 @@
       "contract": "E",
       "authority": "TASKS.md M10.2",
       "parity": "exact",
-      "status": "unverified",
-      "assignedTask": "M16.20",
-      "notes": "task-claim row; behavioral parity carried by the element/oop/protocol/input/service rows this task touched; reconciled at M16.20"
+      "test": "TestM102EditorSessionLeasesRefuseAndRelease,TestM102EditorLeasesRefuseAndDisconnectRelease",
+      "status": "pass",
+      "notes": "task-claim row; behavioral parity carried by the element/oop/protocol/input/service rows this task touched; reconciled at M16.20 M16.20 reconciliation (2026-08-01): the named tests certify this task's DoD; behavioural parity is additionally carried by the element/oop/protocol/input/service rows this task touched."
     },
     {
       "id": "task.M10.3",
@@ -151,9 +151,9 @@
       "contract": "E",
       "authority": "TASKS.md M10.3",
       "parity": "exact",
-      "status": "unverified",
-      "assignedTask": "M16.20",
-      "notes": "task-claim row; behavioral parity carried by the element/oop/protocol/input/service rows this task touched; reconciled at M16.20"
+      "test": "TestM103EditorOwnershipInvitesGateEdits,TestM1614aInvitedCollaboratorEditsWithoutReentering",
+      "status": "pass",
+      "notes": "task-claim row; behavioral parity carried by the element/oop/protocol/input/service rows this task touched; reconciled at M16.20 M16.20 reconciliation (2026-08-01): the named tests certify this task's DoD; behavioural parity is additionally carried by the element/oop/protocol/input/service rows this task touched."
     },
     {
       "id": "task.M10.4",
@@ -162,9 +162,9 @@
       "contract": "E",
       "authority": "TASKS.md M10.4",
       "parity": "exact",
-      "status": "unverified",
-      "assignedTask": "M16.20",
-      "notes": "task-claim row; behavioral parity carried by the element/oop/protocol/input/service rows this task touched; reconciled at M16.20"
+      "test": "TestM104EditorTestPlayUsesIsolatedTickingCopy,TestM1614CollaborativeEditorInBrowsers",
+      "status": "pass",
+      "notes": "task-claim row; behavioral parity carried by the element/oop/protocol/input/service rows this task touched; reconciled at M16.20 M16.20 reconciliation (2026-08-01): the named tests certify this task's DoD; behavioural parity is additionally carried by the element/oop/protocol/input/service rows this task touched."
     },
     {
       "id": "task.M11.1",
@@ -173,9 +173,9 @@
       "contract": "E",
       "authority": "TASKS.md M11.1",
       "parity": "exact",
-      "status": "unverified",
-      "assignedTask": "M16.20",
-      "notes": "task-claim row; behavioral parity carried by the element/oop/protocol/input/service rows this task touched; reconciled at M16.20"
+      "test": "TestMuseumServicePlayDownloadsCachesValidatesAndHosts,TestMuseumServicePlayRejectsTraversalFilenames,TestM1616MuseumSearchSelectHostJoin",
+      "status": "pass",
+      "notes": "task-claim row; behavioral parity carried by the element/oop/protocol/input/service rows this task touched; reconciled at M16.20 M16.20 reconciliation (2026-08-01): the named tests certify this task's DoD; behavioural parity is additionally carried by the element/oop/protocol/input/service rows this task touched."
     },
     {
       "id": "task.M11.2",
@@ -184,9 +184,9 @@
       "contract": "E",
       "authority": "TASKS.md M11.2",
       "parity": "exact",
-      "status": "unverified",
-      "assignedTask": "M16.20",
-      "notes": "task-claim row; behavioral parity carried by the element/oop/protocol/input/service rows this task touched; reconciled at M16.20"
+      "test": "TestM1616MuseumSearchSelectHostJoin,TestM1616BrowserAuthAndMuseumJourney",
+      "status": "pass",
+      "notes": "task-claim row; behavioral parity carried by the element/oop/protocol/input/service rows this task touched; reconciled at M16.20 M16.20 reconciliation (2026-08-01): the named tests certify this task's DoD; behavioural parity is additionally carried by the element/oop/protocol/input/service rows this task touched."
     },
     {
       "id": "task.M12.0",
@@ -195,9 +195,9 @@
       "contract": "E",
       "authority": "TASKS.md M12.0",
       "parity": "exact",
-      "status": "unverified",
-      "assignedTask": "M16.20",
-      "notes": "task-claim row; behavioral parity carried by the element/oop/protocol/input/service rows this task touched; reconciled at M16.20"
+      "test": "TestZWDExamplesCompileAndValidate,TestZWDRoundTripTOWN",
+      "status": "pass",
+      "notes": "task-claim row; behavioral parity carried by the element/oop/protocol/input/service rows this task touched; reconciled at M16.20 M16.20 reconciliation (2026-08-01): the named tests certify this task's DoD; behavioural parity is additionally carried by the element/oop/protocol/input/service rows this task touched."
     },
     {
       "id": "task.M12.1",
@@ -206,9 +206,9 @@
       "contract": "E",
       "authority": "TASKS.md M12.1",
       "parity": "exact",
-      "status": "unverified",
-      "assignedTask": "M16.20",
-      "notes": "task-claim row; behavioral parity carried by the element/oop/protocol/input/service rows this task touched; reconciled at M16.20"
+      "test": "TestZWDExamplesCompileAndValidate,TestZWDRejectsBadGridWithPreciseError,TestZWDNoPanicOnMalformedInputs",
+      "status": "pass",
+      "notes": "task-claim row; behavioral parity carried by the element/oop/protocol/input/service rows this task touched; reconciled at M16.20 M16.20 reconciliation (2026-08-01): the named tests certify this task's DoD; behavioural parity is additionally carried by the element/oop/protocol/input/service rows this task touched."
     },
     {
       "id": "task.M12.10",
@@ -217,9 +217,9 @@
       "contract": "E",
       "authority": "TASKS.md M12.10",
       "parity": "exact",
-      "status": "unverified",
-      "assignedTask": "M16.20",
-      "notes": "task-claim row; behavioral parity carried by the element/oop/protocol/input/service rows this task touched; reconciled at M16.20"
+      "test": "TestZWDObjectDefaultsAreZZTNeutral,TestPromptKitSystemPrompt",
+      "status": "pass",
+      "notes": "task-claim row; behavioral parity carried by the element/oop/protocol/input/service rows this task touched; reconciled at M16.20 M16.20 reconciliation (2026-08-01): the named tests certify this task's DoD; behavioural parity is additionally carried by the element/oop/protocol/input/service rows this task touched."
     },
     {
       "id": "task.M12.11",
@@ -228,9 +228,9 @@
       "contract": "E",
       "authority": "TASKS.md M12.11",
       "parity": "exact",
-      "status": "unverified",
-      "assignedTask": "M16.20",
-      "notes": "task-claim row; behavioral parity carried by the element/oop/protocol/input/service rows this task touched; reconciled at M16.20"
+      "test": "TestPreprocessProseInGridBecomesText,TestM124AsyncGenerationReportsProgress",
+      "status": "pass",
+      "notes": "task-claim row; behavioral parity carried by the element/oop/protocol/input/service rows this task touched; reconciled at M16.20 M16.20 reconciliation (2026-08-01): the named tests certify this task's DoD; behavioural parity is additionally carried by the element/oop/protocol/input/service rows this task touched."
     },
     {
       "id": "task.M12.12",
@@ -239,9 +239,9 @@
       "contract": "E",
       "authority": "TASKS.md M12.12",
       "parity": "exact",
-      "status": "unverified",
-      "assignedTask": "M16.20",
-      "notes": "task-claim row; behavioral parity carried by the element/oop/protocol/input/service rows this task touched; reconciled at M16.20"
+      "test": "TestInvalidDoorColorsDoNotPanicWhenTouched,TestZWDRejectsDoorsWithoutAKeyColor,TestRoomManagerIsolatesPanickedRoom",
+      "status": "pass",
+      "notes": "task-claim row; behavioral parity carried by the element/oop/protocol/input/service rows this task touched; reconciled at M16.20 M16.20 reconciliation (2026-08-01): the named tests certify this task's DoD; behavioural parity is additionally carried by the element/oop/protocol/input/service rows this task touched."
     },
     {
       "id": "task.M12.13",
@@ -250,9 +250,9 @@
       "contract": "E",
       "authority": "TASKS.md M12.13",
       "parity": "exact",
-      "status": "unverified",
-      "assignedTask": "M16.20",
-      "notes": "task-claim row; behavioral parity carried by the element/oop/protocol/input/service rows this task touched; reconciled at M16.20"
+      "test": "TestM1213PreprocessSynthesizesOrphanGlyphStats,TestPreprocessProseInGridBecomesText",
+      "status": "pass",
+      "notes": "task-claim row; behavioral parity carried by the element/oop/protocol/input/service rows this task touched; reconciled at M16.20 M16.20 reconciliation (2026-08-01): the named tests certify this task's DoD; behavioural parity is additionally carried by the element/oop/protocol/input/service rows this task touched."
     },
     {
       "id": "task.M12.14",
@@ -261,9 +261,9 @@
       "contract": "E",
       "authority": "TASKS.md M12.14",
       "parity": "exact",
-      "status": "unverified",
-      "assignedTask": "M16.20",
-      "notes": "task-claim row; behavioral parity carried by the element/oop/protocol/input/service rows this task touched; reconciled at M16.20"
+      "test": "TestM1214PreprocessRepairsRecurringDreamRejections",
+      "status": "pass",
+      "notes": "task-claim row; behavioral parity carried by the element/oop/protocol/input/service rows this task touched; reconciled at M16.20 M16.20 reconciliation (2026-08-01): the named tests certify this task's DoD; behavioural parity is additionally carried by the element/oop/protocol/input/service rows this task touched."
     },
     {
       "id": "task.M12.15",
@@ -272,9 +272,9 @@
       "contract": "E",
       "authority": "TASKS.md M12.15",
       "parity": "exact",
-      "status": "unverified",
-      "assignedTask": "M16.20",
-      "notes": "task-claim row; behavioral parity carried by the element/oop/protocol/input/service rows this task touched; reconciled at M16.20"
+      "test": "TestPromptKitRetrieval,TestLLMWorldExamplesCompile",
+      "status": "pass",
+      "notes": "task-claim row; behavioral parity carried by the element/oop/protocol/input/service rows this task touched; reconciled at M16.20 M16.20 reconciliation (2026-08-01): the named tests certify this task's DoD; behavioural parity is additionally carried by the element/oop/protocol/input/service rows this task touched."
     },
     {
       "id": "task.M12.15a",
@@ -283,9 +283,9 @@
       "contract": "E",
       "authority": "TASKS.md M12.15a",
       "parity": "exact",
-      "status": "unverified",
-      "assignedTask": "M16.20",
-      "notes": "task-claim row; behavioral parity carried by the element/oop/protocol/input/service rows this task touched; reconciled at M16.20"
+      "test": "TestTitleRetrievalContextPrefersTitleShots,TestPromptKitFewShotsCompile",
+      "status": "pass",
+      "notes": "task-claim row; behavioral parity carried by the element/oop/protocol/input/service rows this task touched; reconciled at M16.20 M16.20 reconciliation (2026-08-01): the named tests certify this task's DoD; behavioural parity is additionally carried by the element/oop/protocol/input/service rows this task touched."
     },
     {
       "id": "task.M12.15b",
@@ -294,9 +294,9 @@
       "contract": "E",
       "authority": "TASKS.md M12.15b",
       "parity": "exact",
-      "status": "unverified",
-      "assignedTask": "M16.20",
-      "notes": "task-claim row; behavioral parity carried by the element/oop/protocol/input/service rows this task touched; reconciled at M16.20"
+      "test": "TestPromptKitAssetsMatchSource,TestLoadPromptKit,TestPromptKitSystemPrompt",
+      "status": "pass",
+      "notes": "task-claim row; behavioral parity carried by the element/oop/protocol/input/service rows this task touched; reconciled at M16.20 M16.20 reconciliation (2026-08-01): the named tests certify this task's DoD; behavioural parity is additionally carried by the element/oop/protocol/input/service rows this task touched."
     },
     {
       "id": "task.M12.15c",
@@ -305,9 +305,9 @@
       "contract": "E",
       "authority": "TASKS.md M12.15c",
       "parity": "exact",
-      "status": "unverified",
-      "assignedTask": "M16.20",
-      "notes": "task-claim row; behavioral parity carried by the element/oop/protocol/input/service rows this task touched; reconciled at M16.20"
+      "test": "TestPromptKitRetrieval,TestPromptKitFewShotsCompile",
+      "status": "pass",
+      "notes": "task-claim row; behavioral parity carried by the element/oop/protocol/input/service rows this task touched; reconciled at M16.20 M16.20 reconciliation (2026-08-01): the named tests certify this task's DoD; behavioural parity is additionally carried by the element/oop/protocol/input/service rows this task touched."
     },
     {
       "id": "task.M12.16",
@@ -316,9 +316,9 @@
       "contract": "E",
       "authority": "TASKS.md M12.16",
       "parity": "exact",
-      "status": "unverified",
-      "assignedTask": "M16.20",
-      "notes": "task-claim row; behavioral parity carried by the element/oop/protocol/input/service rows this task touched; reconciled at M16.20"
+      "test": "TestZWDBucket1ProceduralRepair,TestZWDBucket2FallsThroughToLLM,TestZWDOrphanPassageDerivesTargetFromLegend",
+      "status": "pass",
+      "notes": "task-claim row; behavioral parity carried by the element/oop/protocol/input/service rows this task touched; reconciled at M16.20 M16.20 reconciliation (2026-08-01): the named tests certify this task's DoD; behavioural parity is additionally carried by the element/oop/protocol/input/service rows this task touched."
     },
     {
       "id": "task.M12.17",
@@ -327,9 +327,9 @@
       "contract": "E",
       "authority": "TASKS.md M12.17",
       "parity": "exact",
-      "status": "unverified",
-      "assignedTask": "M16.20",
-      "notes": "task-claim row; behavioral parity carried by the element/oop/protocol/input/service rows this task touched; reconciled at M16.20"
+      "test": "TestEvalGateFixtures,TestEvalJudgeRubricContainsEveryDimension,TestEvalDocEmbeddedMatchesSource",
+      "status": "pass",
+      "notes": "task-claim row; behavioral parity carried by the element/oop/protocol/input/service rows this task touched; reconciled at M16.20 M16.20 reconciliation (2026-08-01): the named tests certify this task's DoD; behavioural parity is additionally carried by the element/oop/protocol/input/service rows this task touched."
     },
     {
       "id": "task.M12.18",
@@ -338,9 +338,9 @@
       "contract": "E",
       "authority": "TASKS.md M12.18",
       "parity": "exact",
-      "status": "unverified",
-      "assignedTask": "M16.20",
-      "notes": "task-claim row; behavioral parity carried by the element/oop/protocol/input/service rows this task touched; reconciled at M16.20"
+      "test": "TestM124AsyncGenerationReportsProgress,TestM1617GenerationStagesAreAllRenderedByTheClient",
+      "status": "pass",
+      "notes": "task-claim row; behavioral parity carried by the element/oop/protocol/input/service rows this task touched; reconciled at M16.20 M16.20 reconciliation (2026-08-01): the named tests certify this task's DoD; behavioural parity is additionally carried by the element/oop/protocol/input/service rows this task touched."
     },
     {
       "id": "task.M12.19",
@@ -349,9 +349,9 @@
       "contract": "E",
       "authority": "TASKS.md M12.19",
       "parity": "exact",
-      "status": "unverified",
-      "assignedTask": "M16.20",
-      "notes": "task-claim row; behavioral parity carried by the element/oop/protocol/input/service rows this task touched; reconciled at M16.20"
+      "test": "TestM1219PreprocessAddsMissingDefaultEmptyLegend,TestM1219PreprocessClosesOOPBeforeFollowingStatAtLastColumn,TestM1219CrossBoardProblemsRequirePromisedReachableEndgame",
+      "status": "pass",
+      "notes": "task-claim row; behavioral parity carried by the element/oop/protocol/input/service rows this task touched; reconciled at M16.20 M16.20 reconciliation (2026-08-01): the named tests certify this task's DoD; behavioural parity is additionally carried by the element/oop/protocol/input/service rows this task touched."
     },
     {
       "id": "task.M12.2",
@@ -360,9 +360,9 @@
       "contract": "E",
       "authority": "TASKS.md M12.2",
       "parity": "exact",
-      "status": "unverified",
-      "assignedTask": "M16.20",
-      "notes": "task-claim row; behavioral parity carried by the element/oop/protocol/input/service rows this task touched; reconciled at M16.20"
+      "test": "TestZWDRoundTripTOWN,TestTOWNBoard1DecompiledFixture",
+      "status": "pass",
+      "notes": "task-claim row; behavioral parity carried by the element/oop/protocol/input/service rows this task touched; reconciled at M16.20 M16.20 reconciliation (2026-08-01): the named tests certify this task's DoD; behavioural parity is additionally carried by the element/oop/protocol/input/service rows this task touched."
     },
     {
       "id": "task.M12.20",
@@ -371,9 +371,9 @@
       "contract": "E",
       "authority": "TASKS.md M12.20",
       "parity": "exact",
-      "status": "unverified",
-      "assignedTask": "M16.20",
-      "notes": "task-claim row; behavioral parity carried by the element/oop/protocol/input/service rows this task touched; reconciled at M16.20"
+      "test": "TestStampTitleWordmarkMakesGatePass,TestEvalGateWordmarkMissing,TestStampTitleWordmarkPreservesPlayerAndObjects",
+      "status": "pass",
+      "notes": "task-claim row; behavioral parity carried by the element/oop/protocol/input/service rows this task touched; reconciled at M16.20 M16.20 reconciliation (2026-08-01): the named tests certify this task's DoD; behavioural parity is additionally carried by the element/oop/protocol/input/service rows this task touched."
     },
     {
       "id": "task.M12.21",
@@ -382,9 +382,9 @@
       "contract": "E",
       "authority": "TASKS.md M12.21",
       "parity": "exact",
-      "status": "unverified",
-      "assignedTask": "M16.20",
-      "notes": "task-claim row; behavioral parity carried by the element/oop/protocol/input/service rows this task touched; reconciled at M16.20"
+      "test": "TestM1221PlanIsCachedSystemBlock",
+      "status": "pass",
+      "notes": "task-claim row; behavioral parity carried by the element/oop/protocol/input/service rows this task touched; reconciled at M16.20 M16.20 reconciliation (2026-08-01): the named tests certify this task's DoD; behavioural parity is additionally carried by the element/oop/protocol/input/service rows this task touched."
     },
     {
       "id": "task.M12.22",
@@ -393,9 +393,9 @@
       "contract": "E",
       "authority": "TASKS.md M12.22",
       "parity": "exact",
-      "status": "unverified",
-      "assignedTask": "M16.20",
-      "notes": "task-claim row; behavioral parity carried by the element/oop/protocol/input/service rows this task touched; reconciled at M16.20"
+      "test": "TestM1222RetryBoardAfterExhaustion,TestM1222RetryEndpointResumesFailedJob,TestM1222PlanFailureIsNotRetryable",
+      "status": "pass",
+      "notes": "task-claim row; behavioral parity carried by the element/oop/protocol/input/service rows this task touched; reconciled at M16.20 M16.20 reconciliation (2026-08-01): the named tests certify this task's DoD; behavioural parity is additionally carried by the element/oop/protocol/input/service rows this task touched."
     },
     {
       "id": "task.M12.23",
@@ -404,9 +404,9 @@
       "contract": "E",
       "authority": "TASKS.md M12.23",
       "parity": "exact",
-      "status": "unverified",
-      "assignedTask": "M16.20",
-      "notes": "task-claim row; behavioral parity carried by the element/oop/protocol/input/service rows this task touched; reconciled at M16.20"
+      "test": "TestM1223MalformedOperationKindRepairsOnlyThatBoard,TestM1223CrashingBoardIsNamedAndRepaired,TestM1223GeneratedWorldIsListedAndSelectable",
+      "status": "pass",
+      "notes": "task-claim row; behavioral parity carried by the element/oop/protocol/input/service rows this task touched; reconciled at M16.20 M16.20 reconciliation (2026-08-01): the named tests certify this task's DoD; behavioural parity is additionally carried by the element/oop/protocol/input/service rows this task touched."
     },
     {
       "id": "task.M12.3",
@@ -415,9 +415,9 @@
       "contract": "E",
       "authority": "TASKS.md M12.3",
       "parity": "exact",
-      "status": "unverified",
-      "assignedTask": "M16.20",
-      "notes": "task-claim row; behavioral parity carried by the element/oop/protocol/input/service rows this task touched; reconciled at M16.20"
+      "test": "TestLoadPromptKit,TestPromptKitAssetsMatchSource",
+      "status": "pass",
+      "notes": "task-claim row; behavioral parity carried by the element/oop/protocol/input/service rows this task touched; reconciled at M16.20 M16.20 reconciliation (2026-08-01): the named tests certify this task's DoD; behavioural parity is additionally carried by the element/oop/protocol/input/service rows this task touched."
     },
     {
       "id": "task.M12.3a",
@@ -426,9 +426,9 @@
       "contract": "E",
       "authority": "TASKS.md M12.3a",
       "parity": "exact",
-      "status": "unverified",
-      "assignedTask": "M16.20",
-      "notes": "task-claim row; behavioral parity carried by the element/oop/protocol/input/service rows this task touched; reconciled at M16.20"
+      "test": "TestValidatePlanLASTLITE,TestValidatePlanReciprocity,TestParsePlanNormalizesPlannerStyleLinks",
+      "status": "pass",
+      "notes": "task-claim row; behavioral parity carried by the element/oop/protocol/input/service rows this task touched; reconciled at M16.20 M16.20 reconciliation (2026-08-01): the named tests certify this task's DoD; behavioural parity is additionally carried by the element/oop/protocol/input/service rows this task touched."
     },
     {
       "id": "task.M12.4",
@@ -437,9 +437,9 @@
       "contract": "E",
       "authority": "TASKS.md M12.4",
       "parity": "exact",
-      "status": "unverified",
-      "assignedTask": "M16.20",
-      "notes": "task-claim row; behavioral parity carried by the element/oop/protocol/input/service rows this task touched; reconciled at M16.20"
+      "test": "TestM124GenerateEndpointSuccessAndPersistence,TestM124BoardRepairThenSuccess,TestGenerationUsesSemanticBlueprintPath",
+      "status": "pass",
+      "notes": "task-claim row; behavioral parity carried by the element/oop/protocol/input/service rows this task touched; reconciled at M16.20 M16.20 reconciliation (2026-08-01): the named tests certify this task's DoD; behavioural parity is additionally carried by the element/oop/protocol/input/service rows this task touched."
     },
     {
       "id": "task.M12.5",
@@ -448,9 +448,9 @@
       "contract": "E",
       "authority": "TASKS.md M12.5",
       "parity": "exact",
-      "status": "unverified",
-      "assignedTask": "M16.20",
-      "notes": "task-claim row; behavioral parity carried by the element/oop/protocol/input/service rows this task touched; reconciled at M16.20"
+      "test": "TestM125AsyncGenerationProgressUsesBrowserJSON,TestM1617BrowserDreamJourney",
+      "status": "pass",
+      "notes": "task-claim row; behavioral parity carried by the element/oop/protocol/input/service rows this task touched; reconciled at M16.20 M16.20 reconciliation (2026-08-01): the named tests certify this task's DoD; behavioural parity is additionally carried by the element/oop/protocol/input/service rows this task touched."
     },
     {
       "id": "task.M12.6",
@@ -459,9 +459,9 @@
       "contract": "E",
       "authority": "TASKS.md M12.6",
       "parity": "exact",
-      "status": "unverified",
-      "assignedTask": "M16.20",
-      "notes": "task-claim row; behavioral parity carried by the element/oop/protocol/input/service rows this task touched; reconciled at M16.20"
+      "test": "TestDecompileZWDAuthorableRefusesUnrepresentableBoard,TestLLMWorldExamplesCompile",
+      "status": "pass",
+      "notes": "task-claim row; behavioral parity carried by the element/oop/protocol/input/service rows this task touched; reconciled at M16.20 M16.20 reconciliation (2026-08-01): the named tests certify this task's DoD; behavioural parity is additionally carried by the element/oop/protocol/input/service rows this task touched."
     },
     {
       "id": "task.M12.7",
@@ -470,9 +470,9 @@
       "contract": "E",
       "authority": "TASKS.md M12.7",
       "parity": "exact",
-      "status": "unverified",
-      "assignedTask": "M16.20",
-      "notes": "task-claim row; behavioral parity carried by the element/oop/protocol/input/service rows this task touched; reconciled at M16.20"
+      "test": "TestZWDRoundTripTOWN,TestTOWNBoard1DecompiledFixture",
+      "status": "pass",
+      "notes": "task-claim row; behavioral parity carried by the element/oop/protocol/input/service rows this task touched; reconciled at M16.20 M16.20 reconciliation (2026-08-01): the named tests certify this task's DoD; behavioural parity is additionally carried by the element/oop/protocol/input/service rows this task touched."
     },
     {
       "id": "task.M12.8",
@@ -481,9 +481,9 @@
       "contract": "E",
       "authority": "TASKS.md M12.8",
       "parity": "exact",
-      "status": "unverified",
-      "assignedTask": "M16.20",
-      "notes": "task-claim row; behavioral parity carried by the element/oop/protocol/input/service rows this task touched; reconciled at M16.20"
+      "test": "TestValidateRendersStaticTown,TestGeneratedZWDWorldsCompileAndValidate",
+      "status": "pass",
+      "notes": "task-claim row; behavioral parity carried by the element/oop/protocol/input/service rows this task touched; reconciled at M16.20 M16.20 reconciliation (2026-08-01): the named tests certify this task's DoD; behavioural parity is additionally carried by the element/oop/protocol/input/service rows this task touched."
     },
     {
       "id": "task.M12.9",
@@ -492,9 +492,9 @@
       "contract": "E",
       "authority": "TASKS.md M12.9",
       "parity": "exact",
-      "status": "unverified",
-      "assignedTask": "M16.20",
-      "notes": "task-claim row; behavioral parity carried by the element/oop/protocol/input/service rows this task touched; reconciled at M16.20"
+      "test": "TestZWDRejectsStatForNonStatBackedElement",
+      "status": "pass",
+      "notes": "task-claim row; behavioral parity carried by the element/oop/protocol/input/service rows this task touched; reconciled at M16.20 M16.20 reconciliation (2026-08-01): the named tests certify this task's DoD; behavioural parity is additionally carried by the element/oop/protocol/input/service rows this task touched."
     },
     {
       "id": "task.M13.0",
@@ -503,20 +503,19 @@
       "contract": "E",
       "authority": "TASKS.md M13.0",
       "parity": "exact",
-      "status": "unverified",
-      "assignedTask": "M16.20",
-      "notes": "task-claim row; behavioral parity carried by the element/oop/protocol/input/service rows this task touched; reconciled at M16.20"
+      "test": "TestGeneratedZWDWorldsCompileAndValidate",
+      "status": "pass",
+      "notes": "task-claim row; behavioral parity carried by the element/oop/protocol/input/service rows this task touched; reconciled at M16.20 M16.20 reconciliation (2026-08-01): the named tests certify this task's DoD; behavioural parity is additionally carried by the element/oop/protocol/input/service rows this task touched."
     },
     {
       "id": "task.M13.1",
       "dimension": "task",
       "subject": "Completed task M13.1 — its DoD still holds",
-      "contract": "E",
+      "contract": "out-of-scope",
       "authority": "TASKS.md M13.1",
       "parity": "exact",
-      "status": "unverified",
-      "assignedTask": "M16.20",
-      "notes": "task-claim row; behavioral parity carried by the element/oop/protocol/input/service rows this task touched; reconciled at M16.20"
+      "status": "out-of-scope",
+      "notes": "M16.20 reconciliation (2026-08-01): no product-behaviour parity claim — repository CI configuration (.github/workflows/ci.yml), not product behaviour: it runs the gates this manifest is keyed to rather than making a parity claim of its own. The gate results themselves travel in the report's `gates` section."
     },
     {
       "id": "task.M13.2",
@@ -525,9 +524,9 @@
       "contract": "E",
       "authority": "TASKS.md M13.2",
       "parity": "exact",
-      "status": "unverified",
-      "assignedTask": "M16.20",
-      "notes": "task-claim row; behavioral parity carried by the element/oop/protocol/input/service rows this task touched; reconciled at M16.20"
+      "test": "TestReconnectResumeWithinGracePreservesRun,TestReconnectGraceExpiryRemovesPlayer,TestM1615GraceExpiryEndsTheRunButNotTheAccount",
+      "status": "pass",
+      "notes": "task-claim row; behavioral parity carried by the element/oop/protocol/input/service rows this task touched; reconciled at M16.20 M16.20 reconciliation (2026-08-01): the named tests certify this task's DoD; behavioural parity is additionally carried by the element/oop/protocol/input/service rows this task touched."
     },
     {
       "id": "task.M13.3",
@@ -536,9 +535,9 @@
       "contract": "E",
       "authority": "TASKS.md M13.3",
       "parity": "exact",
-      "status": "unverified",
-      "assignedTask": "M16.20",
-      "notes": "task-claim row; behavioral parity carried by the element/oop/protocol/input/service rows this task touched; reconciled at M16.20"
+      "test": "TestM133AutosaveRestoreRoundTrip,TestM133FreshSkipsRestore,TestM133CorruptAutosaveSkipped",
+      "status": "pass",
+      "notes": "task-claim row; behavioral parity carried by the element/oop/protocol/input/service rows this task touched; reconciled at M16.20 M16.20 reconciliation (2026-08-01): the named tests certify this task's DoD; behavioural parity is additionally carried by the element/oop/protocol/input/service rows this task touched."
     },
     {
       "id": "task.M13.4",
@@ -547,9 +546,9 @@
       "contract": "E",
       "authority": "TASKS.md M13.4",
       "parity": "exact",
-      "status": "unverified",
-      "assignedTask": "M16.20",
-      "notes": "task-claim row; behavioral parity carried by the element/oop/protocol/input/service rows this task touched; reconciled at M16.20"
+      "test": "TestM1617aConcurrentGenerationsShareTheElementTableSafely,TestRoomManagerIsolatesPanickedRoom",
+      "status": "pass",
+      "notes": "task-claim row; behavioral parity carried by the element/oop/protocol/input/service rows this task touched; reconciled at M16.20 M16.20 reconciliation (2026-08-01): the named tests certify this task's DoD; behavioural parity is additionally carried by the element/oop/protocol/input/service rows this task touched."
     },
     {
       "id": "task.M14.0",
@@ -558,9 +557,9 @@
       "contract": "E",
       "authority": "TASKS.md M14.0",
       "parity": "exact",
-      "status": "unverified",
-      "assignedTask": "M16.20",
-      "notes": "task-claim row; behavioral parity carried by the element/oop/protocol/input/service rows this task touched; reconciled at M16.20"
+      "test": "TestRoomManagerSharesWorldFlagsAcrossLiveRooms,TestRoomManagerFlagVisibleToLaterRoomSameTick,TestRoomManagerFlagSurvivesFreezeThaw",
+      "status": "pass",
+      "notes": "task-claim row; behavioral parity carried by the element/oop/protocol/input/service rows this task touched; reconciled at M16.20 M16.20 reconciliation (2026-08-01): the named tests certify this task's DoD; behavioural parity is additionally carried by the element/oop/protocol/input/service rows this task touched."
     },
     {
       "id": "task.M14.1",
@@ -569,9 +568,9 @@
       "contract": "E",
       "authority": "TASKS.md M14.1",
       "parity": "exact",
-      "status": "unverified",
-      "assignedTask": "M16.20",
-      "notes": "task-claim row; behavioral parity carried by the element/oop/protocol/input/service rows this task touched; reconciled at M16.20"
+      "test": "TestServerScopedPlayerIDsAreDisjoint,TestM1711WorldsAPIReportsLiveEditingOccupancy",
+      "status": "pass",
+      "notes": "task-claim row; behavioral parity carried by the element/oop/protocol/input/service rows this task touched; reconciled at M16.20 M16.20 reconciliation (2026-08-01): the named tests certify this task's DoD; behavioural parity is additionally carried by the element/oop/protocol/input/service rows this task touched."
     },
     {
       "id": "task.M14.2",
@@ -580,9 +579,9 @@
       "contract": "E",
       "authority": "TASKS.md M14.2",
       "parity": "exact",
-      "status": "unverified",
-      "assignedTask": "M16.20",
-      "notes": "task-claim row; behavioral parity carried by the element/oop/protocol/input/service rows this task touched; reconciled at M16.20"
+      "test": "TestSessionRecordReplayVendorQuit,TestServerRecordingRoundTripsToDisk,TestM1615AccountRestoreIsCarriedByTheRecording",
+      "status": "pass",
+      "notes": "task-claim row; behavioral parity carried by the element/oop/protocol/input/service rows this task touched; reconciled at M16.20 M16.20 reconciliation (2026-08-01): the named tests certify this task's DoD; behavioural parity is additionally carried by the element/oop/protocol/input/service rows this task touched."
     },
     {
       "id": "task.M15.1",
@@ -591,9 +590,9 @@
       "contract": "E",
       "authority": "TASKS.md M15.1",
       "parity": "exact",
-      "status": "unverified",
-      "assignedTask": "M16.20",
-      "notes": "task-claim row; behavioral parity carried by the element/oop/protocol/input/service rows this task touched; reconciled at M16.20"
+      "test": "TestM1618PlatformMatrix,TestM1618DeviceMatrixIsWellFormed",
+      "status": "pass",
+      "notes": "task-claim row; behavioral parity carried by the element/oop/protocol/input/service rows this task touched; reconciled at M16.20 M16.20 reconciliation (2026-08-01): the named tests certify this task's DoD; behavioural parity is additionally carried by the element/oop/protocol/input/service rows this task touched."
     },
     {
       "id": "task.M17.1",
@@ -602,9 +601,9 @@
       "contract": "P",
       "authority": "TASKS.md M17.1",
       "parity": "exact",
-      "status": "unverified",
-      "assignedTask": "M16.20",
-      "notes": "task-claim row; behavioral parity carried by the element/oop/protocol/input/service rows this task touched; reconciled at M16.20"
+      "test": "TestM1618PlatformMatrix,TestM1611BrowserEndToEndPlayerJourneys",
+      "status": "pass",
+      "notes": "task-claim row; behavioral parity carried by the element/oop/protocol/input/service rows this task touched; reconciled at M16.20 M16.20 reconciliation (2026-08-01): the named tests certify this task's DoD; behavioural parity is additionally carried by the element/oop/protocol/input/service rows this task touched."
     },
     {
       "id": "task.M17.10",
@@ -613,9 +612,9 @@
       "contract": "P",
       "authority": "TASKS.md M17.10",
       "parity": "exact",
-      "status": "unverified",
-      "assignedTask": "M16.20",
-      "notes": "task-claim row; behavioral parity carried by the element/oop/protocol/input/service rows this task touched; reconciled at M16.20"
+      "test": "TestM1614CollaborativeEditorInBrowsers,TestM1613BrowserEditorAndPortableOutput",
+      "status": "pass",
+      "notes": "task-claim row; behavioral parity carried by the element/oop/protocol/input/service rows this task touched; reconciled at M16.20 M16.20 reconciliation (2026-08-01): the named tests certify this task's DoD; behavioural parity is additionally carried by the element/oop/protocol/input/service rows this task touched."
     },
     {
       "id": "task.M17.11",
@@ -624,9 +623,9 @@
       "contract": "P",
       "authority": "TASKS.md M17.11",
       "parity": "exact",
-      "status": "unverified",
-      "assignedTask": "M16.20",
-      "notes": "task-claim row; behavioral parity carried by the element/oop/protocol/input/service rows this task touched; reconciled at M16.20"
+      "test": "TestM1711WorldsAPIReportsLiveEditingOccupancy,TestWorldListEntriesReportEditors",
+      "status": "pass",
+      "notes": "task-claim row; behavioral parity carried by the element/oop/protocol/input/service rows this task touched; reconciled at M16.20 M16.20 reconciliation (2026-08-01): the named tests certify this task's DoD; behavioural parity is additionally carried by the element/oop/protocol/input/service rows this task touched."
     },
     {
       "id": "task.M17.12",
@@ -635,9 +634,9 @@
       "contract": "P",
       "authority": "TASKS.md M17.12",
       "parity": "exact",
-      "status": "unverified",
-      "assignedTask": "M16.20",
-      "notes": "task-claim row; behavioral parity carried by the element/oop/protocol/input/service rows this task touched; reconciled at M16.20"
+      "test": "TestM1712EditorsOnDifferentBoardsDoNotSeeEachOthersEdits,TestEditorSessionMembersEditDifferentBoards,TestEditorSessionDiffIsAddressedToItsOwnBoard",
+      "status": "pass",
+      "notes": "task-claim row; behavioral parity carried by the element/oop/protocol/input/service rows this task touched; reconciled at M16.20 M16.20 reconciliation (2026-08-01): the named tests certify this task's DoD; behavioural parity is additionally carried by the element/oop/protocol/input/service rows this task touched."
     },
     {
       "id": "task.M17.13",
@@ -646,9 +645,9 @@
       "contract": "P",
       "authority": "TASKS.md M17.13",
       "parity": "exact",
-      "status": "unverified",
-      "assignedTask": "M16.20",
-      "notes": "task-claim row; behavioral parity carried by the element/oop/protocol/input/service rows this task touched; reconciled at M16.20"
+      "test": "TestM1713FailedBoardIsSalvagedNotFatal,TestM1713StubBoardIsTraversableAndCompiles,TestM1713StubPassageTransportsPlayerToNextBoard",
+      "status": "pass",
+      "notes": "task-claim row; behavioral parity carried by the element/oop/protocol/input/service rows this task touched; reconciled at M16.20 M16.20 reconciliation (2026-08-01): the named tests certify this task's DoD; behavioural parity is additionally carried by the element/oop/protocol/input/service rows this task touched."
     },
     {
       "id": "task.M17.2",
@@ -657,9 +656,9 @@
       "contract": "P",
       "authority": "TASKS.md M17.2",
       "parity": "exact",
-      "status": "unverified",
-      "assignedTask": "M16.20",
-      "notes": "task-claim row; behavioral parity carried by the element/oop/protocol/input/service rows this task touched; reconciled at M16.20"
+      "test": "TestWorldListEntriesUsesMuseumMetadata,TestListWorldsExcludesJunkAndUnjoinable,TestM189WorldKindClassification",
+      "status": "pass",
+      "notes": "task-claim row; behavioral parity carried by the element/oop/protocol/input/service rows this task touched; reconciled at M16.20 M16.20 reconciliation (2026-08-01): the named tests certify this task's DoD; behavioural parity is additionally carried by the element/oop/protocol/input/service rows this task touched."
     },
     {
       "id": "task.M17.3",
@@ -668,9 +667,9 @@
       "contract": "P",
       "authority": "TASKS.md M17.3",
       "parity": "exact",
-      "status": "unverified",
-      "assignedTask": "M16.20",
-      "notes": "task-claim row; behavioral parity carried by the element/oop/protocol/input/service rows this task touched; reconciled at M16.20"
+      "test": "TestM1610BrowserAudioParity",
+      "status": "pass",
+      "notes": "task-claim row; behavioral parity carried by the element/oop/protocol/input/service rows this task touched; reconciled at M16.20 M16.20 reconciliation (2026-08-01): the named tests certify this task's DoD; behavioural parity is additionally carried by the element/oop/protocol/input/service rows this task touched."
     },
     {
       "id": "task.M17.4",
@@ -679,9 +678,9 @@
       "contract": "P",
       "authority": "TASKS.md M17.4",
       "parity": "exact",
-      "status": "unverified",
-      "assignedTask": "M16.20",
-      "notes": "task-claim row; behavioral parity carried by the element/oop/protocol/input/service rows this task touched; reconciled at M16.20"
+      "test": "TestScrollHyperlinkReplyGrantsRewardThenConsumes,TestScrollDismissConsumesWithoutReward",
+      "status": "pass",
+      "notes": "task-claim row; behavioral parity carried by the element/oop/protocol/input/service rows this task touched; reconciled at M16.20 M16.20 reconciliation (2026-08-01): the named tests certify this task's DoD; behavioural parity is additionally carried by the element/oop/protocol/input/service rows this task touched."
     },
     {
       "id": "task.M17.5",
@@ -690,9 +689,9 @@
       "contract": "P",
       "authority": "TASKS.md M17.5",
       "parity": "exact",
-      "status": "unverified",
-      "assignedTask": "M16.20",
-      "notes": "task-claim row; behavioral parity carried by the element/oop/protocol/input/service rows this task touched; reconciled at M16.20"
+      "test": "TestM169BrowserCanvasGoldens",
+      "status": "pass",
+      "notes": "task-claim row; behavioral parity carried by the element/oop/protocol/input/service rows this task touched; reconciled at M16.20 M16.20 reconciliation (2026-08-01): the named tests certify this task's DoD; behavioural parity is additionally carried by the element/oop/protocol/input/service rows this task touched."
     },
     {
       "id": "task.M17.6",
@@ -701,9 +700,9 @@
       "contract": "P",
       "authority": "TASKS.md M17.6",
       "parity": "exact",
-      "status": "unverified",
-      "assignedTask": "M16.20",
-      "notes": "task-claim row; behavioral parity carried by the element/oop/protocol/input/service rows this task touched; reconciled at M16.20"
+      "test": "TestM1618PlatformMatrix,TestM1618DeviceMatrixIsWellFormed",
+      "status": "pass",
+      "notes": "task-claim row; behavioral parity carried by the element/oop/protocol/input/service rows this task touched; reconciled at M16.20 M16.20 reconciliation (2026-08-01): the named tests certify this task's DoD; behavioural parity is additionally carried by the element/oop/protocol/input/service rows this task touched."
     },
     {
       "id": "task.M17.7",
@@ -712,20 +711,19 @@
       "contract": "P",
       "authority": "TASKS.md M17.7",
       "parity": "exact",
-      "status": "unverified",
-      "assignedTask": "M16.20",
-      "notes": "task-claim row; behavioral parity carried by the element/oop/protocol/input/service rows this task touched; reconciled at M16.20"
+      "test": "TestM1610BrowserAudioParity,TestSoundDrumTableFrozenForBrowser",
+      "status": "pass",
+      "notes": "task-claim row; behavioral parity carried by the element/oop/protocol/input/service rows this task touched; reconciled at M16.20 M16.20 reconciliation (2026-08-01): the named tests certify this task's DoD; behavioural parity is additionally carried by the element/oop/protocol/input/service rows this task touched."
     },
     {
       "id": "task.M17.8",
       "dimension": "task",
       "subject": "Completed task M17.8 — its DoD still holds",
-      "contract": "P",
+      "contract": "out-of-scope",
       "authority": "TASKS.md M17.8",
       "parity": "exact",
-      "status": "unverified",
-      "assignedTask": "M16.20",
-      "notes": "task-claim row; behavioral parity carried by the element/oop/protocol/input/service rows this task touched; reconciled at M16.20"
+      "status": "out-of-scope",
+      "notes": "M16.20 reconciliation (2026-08-01): no product-behaviour parity claim — development/deployment environment (deploy/, AWS.md). Owner-verified against the live host on 2026-07-30 (NOTES.md); it hosts the product rather than claiming any behaviour of it."
     },
     {
       "id": "task.M17.9",
@@ -734,20 +732,19 @@
       "contract": "P",
       "authority": "TASKS.md M17.9",
       "parity": "exact",
-      "status": "unverified",
-      "assignedTask": "M16.20",
-      "notes": "task-claim row; behavioral parity carried by the element/oop/protocol/input/service rows this task touched; reconciled at M16.20"
+      "test": "TestEditorPresenceColorsAreDistinctFromTheLocalCursor,TestM1614CollaborativeEditorInBrowsers",
+      "status": "pass",
+      "notes": "task-claim row; behavioral parity carried by the element/oop/protocol/input/service rows this task touched; reconciled at M16.20 M16.20 reconciliation (2026-08-01): the named tests certify this task's DoD; behavioural parity is additionally carried by the element/oop/protocol/input/service rows this task touched."
     },
     {
       "id": "task.M18.0",
       "dimension": "task",
       "subject": "Completed task M18.0 — its DoD still holds",
-      "contract": "E",
+      "contract": "out-of-scope",
       "authority": "TASKS.md M18.0",
       "parity": "exact",
-      "status": "unverified",
-      "assignedTask": "M16.20",
-      "notes": "task-claim row; behavioral parity carried by the element/oop/protocol/input/service rows this task touched; reconciled at M16.20"
+      "status": "out-of-scope",
+      "notes": "M16.20 reconciliation (2026-08-01): no product-behaviour parity claim — repo-root hygiene sweep — files moved and removed, no product behaviour claimed or changed; the gates below are what proves nothing broke."
     },
     {
       "id": "task.M18.1",
@@ -756,20 +753,19 @@
       "contract": "E",
       "authority": "TASKS.md M18.1",
       "parity": "exact",
-      "status": "unverified",
-      "assignedTask": "M16.20",
-      "notes": "task-claim row; behavioral parity carried by the element/oop/protocol/input/service rows this task touched; reconciled at M16.20"
+      "test": "TestM1618ProductCopyMakesNoTouchGameplayClaim",
+      "status": "pass",
+      "notes": "task-claim row; behavioral parity carried by the element/oop/protocol/input/service rows this task touched; reconciled at M16.20 M16.20 reconciliation (2026-08-01): the named tests certify this task's DoD; behavioural parity is additionally carried by the element/oop/protocol/input/service rows this task touched."
     },
     {
       "id": "task.M18.10",
       "dimension": "task",
       "subject": "Completed task M18.10 — its DoD still holds",
-      "contract": "E",
+      "contract": "out-of-scope",
       "authority": "TASKS.md M18.10",
       "parity": "exact",
-      "status": "unverified",
-      "assignedTask": "M16.20",
-      "notes": "task-claim row; behavioral parity carried by the element/oop/protocol/input/service rows this task touched; reconciled at M16.20"
+      "status": "out-of-scope",
+      "notes": "M16.20 reconciliation (2026-08-01): no product-behaviour parity claim — production operations — carrying M18.6's world backup to the live host."
     },
     {
       "id": "task.M18.11",
@@ -778,31 +774,29 @@
       "contract": "E",
       "authority": "TASKS.md M18.11",
       "parity": "exact",
-      "status": "unverified",
-      "assignedTask": "M16.20",
-      "notes": "task-claim row; behavioral parity carried by the element/oop/protocol/input/service rows this task touched; reconciled at M16.20"
+      "test": "TestM1811WorldIsCanonicalKnowsTheShippedWorlds,TestM1811DreamNeverOverwritesACanonicalWorld,TestM1811PublishNeverOverwritesACanonicalWorld",
+      "status": "pass",
+      "notes": "task-claim row; behavioral parity carried by the element/oop/protocol/input/service rows this task touched; reconciled at M16.20 M16.20 reconciliation (2026-08-01): the named tests certify this task's DoD; behavioural parity is additionally carried by the element/oop/protocol/input/service rows this task touched."
     },
     {
       "id": "task.M18.2",
       "dimension": "task",
       "subject": "Completed task M18.2 — its DoD still holds",
-      "contract": "E",
+      "contract": "out-of-scope",
       "authority": "TASKS.md M18.2",
       "parity": "exact",
-      "status": "unverified",
-      "assignedTask": "M16.20",
-      "notes": "task-claim row; behavioral parity carried by the element/oop/protocol/input/service rows this task touched; reconciled at M16.20"
+      "status": "out-of-scope",
+      "notes": "M16.20 reconciliation (2026-08-01): no product-behaviour parity claim — dead-code and debug-surface removal in fork-added code; no behaviour claimed, and what remained is claimed by the behavioural rows that cover those surfaces."
     },
     {
       "id": "task.M18.3",
       "dimension": "task",
       "subject": "Completed task M18.3 — its DoD still holds",
-      "contract": "E",
+      "contract": "out-of-scope",
       "authority": "TASKS.md M18.3",
       "parity": "exact",
-      "status": "unverified",
-      "assignedTask": "M16.20",
-      "notes": "task-claim row; behavioral parity carried by the element/oop/protocol/input/service rows this task touched; reconciled at M16.20"
+      "status": "out-of-scope",
+      "notes": "M16.20 reconciliation (2026-08-01): no product-behaviour parity claim — comment tightening in fork-added code; text only, no product behaviour."
     },
     {
       "id": "task.M18.4",
@@ -811,42 +805,39 @@
       "contract": "E",
       "authority": "TASKS.md M18.4",
       "parity": "exact",
-      "status": "unverified",
-      "assignedTask": "M16.20",
-      "notes": "task-claim row; behavioral parity carried by the element/oop/protocol/input/service rows this task touched; reconciled at M16.20"
+      "test": "TestM184FeedbackHelpFileIsServed,TestM184GenerationDailyCeiling,TestM184GenerationCeilingAnswers429",
+      "status": "pass",
+      "notes": "task-claim row; behavioral parity carried by the element/oop/protocol/input/service rows this task touched; reconciled at M16.20 M16.20 reconciliation (2026-08-01): the named tests certify this task's DoD; behavioural parity is additionally carried by the element/oop/protocol/input/service rows this task touched."
     },
     {
       "id": "task.M18.5",
       "dimension": "task",
       "subject": "Completed task M18.5 — its DoD still holds",
-      "contract": "E",
+      "contract": "out-of-scope",
       "authority": "TASKS.md M18.5",
       "parity": "exact",
-      "status": "unverified",
-      "assignedTask": "M16.20",
-      "notes": "task-claim row; behavioral parity carried by the element/oop/protocol/input/service rows this task touched; reconciled at M16.20"
+      "status": "out-of-scope",
+      "notes": "M16.20 reconciliation (2026-08-01): no product-behaviour parity claim — production operations — carrying M18.4's backup timer and generation ceiling to the live host. M18.4's behaviour is claimed by task.M18.4; this row is the deployment of it."
     },
     {
       "id": "task.M18.6",
       "dimension": "task",
       "subject": "Completed task M18.6 — its DoD still holds",
-      "contract": "E",
+      "contract": "out-of-scope",
       "authority": "TASKS.md M18.6",
       "parity": "exact",
-      "status": "unverified",
-      "assignedTask": "M16.20",
-      "notes": "task-claim row; behavioral parity carried by the element/oop/protocol/input/service rows this task touched; reconciled at M16.20"
+      "status": "out-of-scope",
+      "notes": "M16.20 reconciliation (2026-08-01): no product-behaviour parity claim — production operations — daily backup of player-created worlds on the live host, outside the simulation and its parity contract."
     },
     {
       "id": "task.M18.7",
       "dimension": "task",
       "subject": "Completed task M18.7 — its DoD still holds",
-      "contract": "E",
+      "contract": "out-of-scope",
       "authority": "TASKS.md M18.7",
       "parity": "exact",
-      "status": "unverified",
-      "assignedTask": "M16.20",
-      "notes": "task-claim row; behavioral parity carried by the element/oop/protocol/input/service rows this task touched; reconciled at M16.20"
+      "status": "out-of-scope",
+      "notes": "M16.20 reconciliation (2026-08-01): no product-behaviour parity claim — client-side cosmetic fix in web/src/dream.ts (a CP437-honest `...` at a clamped progress line). Covered by the TypeScript suite (web/test/dream.test.mjs) under the `npm test` gate, which is not a Go test this manifest can name."
     },
     {
       "id": "task.M18.8",
@@ -855,9 +846,9 @@
       "contract": "E",
       "authority": "TASKS.md M18.8",
       "parity": "exact",
-      "status": "unverified",
-      "assignedTask": "M16.20",
-      "notes": "task-claim row; behavioral parity carried by the element/oop/protocol/input/service rows this task touched; reconciled at M16.20"
+      "test": "TestM188OopPreludeStopsAtLabelOrEnd,TestM188TalkativeBoardIsRepairedNotStubbed,TestM188CommittedCorpusHasNoTalkativeObjects",
+      "status": "pass",
+      "notes": "task-claim row; behavioral parity carried by the element/oop/protocol/input/service rows this task touched; reconciled at M16.20 M16.20 reconciliation (2026-08-01): the named tests certify this task's DoD; behavioural parity is additionally carried by the element/oop/protocol/input/service rows this task touched."
     },
     {
       "id": "task.M18.9",
@@ -866,9 +857,9 @@
       "contract": "E",
       "authority": "TASKS.md M18.9",
       "parity": "exact",
-      "status": "unverified",
-      "assignedTask": "M16.20",
-      "notes": "task-claim row; behavioral parity carried by the element/oop/protocol/input/service rows this task touched; reconciled at M16.20"
+      "test": "TestM189WorldKindClassification,TestM189DreamedNeedsTheSiblingNotTheName,TestM189ClassificationSurvivesAnAbsentDirectory",
+      "status": "pass",
+      "notes": "task-claim row; behavioral parity carried by the element/oop/protocol/input/service rows this task touched; reconciled at M16.20 M16.20 reconciliation (2026-08-01): the named tests certify this task's DoD; behavioural parity is additionally carried by the element/oop/protocol/input/service rows this task touched."
     },
     {
       "id": "task.M2.1",
@@ -877,9 +868,9 @@
       "contract": "E",
       "authority": "TASKS.md M2.1",
       "parity": "exact",
-      "status": "unverified",
-      "assignedTask": "M16.20",
-      "notes": "task-claim row; behavioral parity carried by the element/oop/protocol/input/service rows this task touched; reconciled at M16.20"
+      "test": "TestDeathRespawnInventoryIsolation,TestRoomManagerSharesWorldFlagsAcrossLiveRooms",
+      "status": "pass",
+      "notes": "task-claim row; behavioral parity carried by the element/oop/protocol/input/service rows this task touched; reconciled at M16.20 M16.20 reconciliation (2026-08-01): the named tests certify this task's DoD; behavioural parity is additionally carried by the element/oop/protocol/input/service rows this task touched."
     },
     {
       "id": "task.M2.2",
@@ -888,9 +879,9 @@
       "contract": "E",
       "authority": "TASKS.md M2.2",
       "parity": "exact",
-      "status": "unverified",
-      "assignedTask": "M16.20",
-      "notes": "task-claim row; behavioral parity carried by the element/oop/protocol/input/service rows this task touched; reconciled at M16.20"
+      "test": "TestSpawnPlayerClampsOutOfRangeStart,TestM1612StatReindexingKeepsEachPlayerTheirOwnState",
+      "status": "pass",
+      "notes": "task-claim row; behavioral parity carried by the element/oop/protocol/input/service rows this task touched; reconciled at M16.20 M16.20 reconciliation (2026-08-01): the named tests certify this task's DoD; behavioural parity is additionally carried by the element/oop/protocol/input/service rows this task touched."
     },
     {
       "id": "task.M2.3",
@@ -899,9 +890,9 @@
       "contract": "E",
       "authority": "TASKS.md M2.3",
       "parity": "exact",
-      "status": "unverified",
-      "assignedTask": "M16.20",
-      "notes": "task-claim row; behavioral parity carried by the element/oop/protocol/input/service rows this task touched; reconciled at M16.20"
+      "test": "TestTwoPlayersIndependentInput,TestM1612IndependentInputsInventoryAndAim",
+      "status": "pass",
+      "notes": "task-claim row; behavioral parity carried by the element/oop/protocol/input/service rows this task touched; reconciled at M16.20 M16.20 reconciliation (2026-08-01): the named tests certify this task's DoD; behavioural parity is additionally carried by the element/oop/protocol/input/service rows this task touched."
     },
     {
       "id": "task.M2.4",
@@ -910,9 +901,9 @@
       "contract": "E",
       "authority": "TASKS.md M2.4",
       "parity": "exact",
-      "status": "unverified",
-      "assignedTask": "M16.20",
-      "notes": "task-claim row; behavioral parity carried by the element/oop/protocol/input/service rows this task touched; reconciled at M16.20"
+      "test": "TestPointBlankShotOwnership,TestM1612DeathIsConfinedToTheDyingPlayer,TestSinglePlayerDeathIsRespawnDeviation",
+      "status": "pass",
+      "notes": "task-claim row; behavioral parity carried by the element/oop/protocol/input/service rows this task touched; reconciled at M16.20 M16.20 reconciliation (2026-08-01): the named tests certify this task's DoD; behavioural parity is additionally carried by the element/oop/protocol/input/service rows this task touched."
     },
     {
       "id": "task.M2.5",
@@ -921,9 +912,9 @@
       "contract": "E",
       "authority": "TASKS.md M2.5",
       "parity": "exact",
-      "status": "unverified",
-      "assignedTask": "M16.20",
-      "notes": "task-claim row; behavioral parity carried by the element/oop/protocol/input/service rows this task touched; reconciled at M16.20"
+      "test": "TestRoomManagerPassageTransfer,TestM168aTransferEventReachesOnlyTheTraveler,TestM1612PassageAndEdgeMoveOnlyTheTraveler",
+      "status": "pass",
+      "notes": "task-claim row; behavioral parity carried by the element/oop/protocol/input/service rows this task touched; reconciled at M16.20 M16.20 reconciliation (2026-08-01): the named tests certify this task's DoD; behavioural parity is additionally carried by the element/oop/protocol/input/service rows this task touched."
     },
     {
       "id": "task.M3.0",
@@ -932,9 +923,9 @@
       "contract": "E",
       "authority": "TASKS.md M3.0",
       "parity": "exact",
-      "status": "unverified",
-      "assignedTask": "M16.20",
-      "notes": "task-claim row; behavioral parity carried by the element/oop/protocol/input/service rows this task touched; reconciled at M16.20"
+      "test": "TestThreePathEngineRoomEquivalence,TestTownReplayDeterminism",
+      "status": "pass",
+      "notes": "task-claim row; behavioral parity carried by the element/oop/protocol/input/service rows this task touched; reconciled at M16.20 M16.20 reconciliation (2026-08-01): the named tests certify this task's DoD; behavioural parity is additionally carried by the element/oop/protocol/input/service rows this task touched."
     },
     {
       "id": "task.M3.1",
@@ -943,9 +934,9 @@
       "contract": "E",
       "authority": "TASKS.md M3.1",
       "parity": "exact",
-      "status": "unverified",
-      "assignedTask": "M16.20",
-      "notes": "task-claim row; behavioral parity carried by the element/oop/protocol/input/service rows this task touched; reconciled at M16.20"
+      "test": "TestRoomManagerSnapshotFromTown,TestRoomManagerPassageTransfer,TestM1612RoomFreezeThawPreservesTheBoard",
+      "status": "pass",
+      "notes": "task-claim row; behavioral parity carried by the element/oop/protocol/input/service rows this task touched; reconciled at M16.20 M16.20 reconciliation (2026-08-01): the named tests certify this task's DoD; behavioural parity is additionally carried by the element/oop/protocol/input/service rows this task touched."
     },
     {
       "id": "task.M3.10",
@@ -954,9 +945,9 @@
       "contract": "E",
       "authority": "TASKS.md M3.10",
       "parity": "exact",
-      "status": "unverified",
-      "assignedTask": "M16.20",
-      "notes": "task-claim row; behavioral parity carried by the element/oop/protocol/input/service rows this task touched; reconciled at M16.20"
+      "test": "TestVendorScrollEventFromTouch,TestM1610BrowserControlVocabulary",
+      "status": "pass",
+      "notes": "task-claim row; behavioral parity carried by the element/oop/protocol/input/service rows this task touched; reconciled at M16.20 M16.20 reconciliation (2026-08-01): the named tests certify this task's DoD; behavioural parity is additionally carried by the element/oop/protocol/input/service rows this task touched."
     },
     {
       "id": "task.M3.11",
@@ -965,9 +956,9 @@
       "contract": "E",
       "authority": "TASKS.md M3.11",
       "parity": "exact",
-      "status": "unverified",
-      "assignedTask": "M16.20",
-      "notes": "task-claim row; behavioral parity carried by the element/oop/protocol/input/service rows this task touched; reconciled at M16.20"
+      "test": "TestM311PauseIsPerPlayer,TestM311SaveEmitsEventAndNeverBlocks,TestM311SoundToggleIsPerPlayer",
+      "status": "pass",
+      "notes": "task-claim row; behavioral parity carried by the element/oop/protocol/input/service rows this task touched; reconciled at M16.20 M16.20 reconciliation (2026-08-01): the named tests certify this task's DoD; behavioural parity is additionally carried by the element/oop/protocol/input/service rows this task touched."
     },
     {
       "id": "task.M3.2",
@@ -976,9 +967,9 @@
       "contract": "E",
       "authority": "TASKS.md M3.2",
       "parity": "exact",
-      "status": "unverified",
-      "assignedTask": "M16.20",
-      "notes": "task-claim row; behavioral parity carried by the element/oop/protocol/input/service rows this task touched; reconciled at M16.20"
+      "test": "TestProtocolMessageRoundTrips,TestProtocolEvents",
+      "status": "pass",
+      "notes": "task-claim row; behavioral parity carried by the element/oop/protocol/input/service rows this task touched; reconciled at M16.20 M16.20 reconciliation (2026-08-01): the named tests certify this task's DoD; behavioural parity is additionally carried by the element/oop/protocol/input/service rows this task touched."
     },
     {
       "id": "task.M3.3",
@@ -987,9 +978,9 @@
       "contract": "E",
       "authority": "TASKS.md M3.3",
       "parity": "exact",
-      "status": "unverified",
-      "assignedTask": "M16.20",
-      "notes": "task-claim row; behavioral parity carried by the element/oop/protocol/input/service rows this task touched; reconciled at M16.20"
+      "test": "TestM45DirtyDiffsCoverMovementWithoutFullSnapshot,TestM168DroppedDirtyCellFailsClosed",
+      "status": "pass",
+      "notes": "task-claim row; behavioral parity carried by the element/oop/protocol/input/service rows this task touched; reconciled at M16.20 M16.20 reconciliation (2026-08-01): the named tests certify this task's DoD; behavioural parity is additionally carried by the element/oop/protocol/input/service rows this task touched."
     },
     {
       "id": "task.M3.4",
@@ -998,9 +989,9 @@
       "contract": "E",
       "authority": "TASKS.md M3.4",
       "parity": "exact",
-      "status": "unverified",
-      "assignedTask": "M16.20",
-      "notes": "task-claim row; behavioral parity carried by the element/oop/protocol/input/service rows this task touched; reconciled at M16.20"
+      "test": "TestWebSocketServerJoinInputDiff,TestM1619ServerSubprocessLifecycleAndStaticAssets",
+      "status": "pass",
+      "notes": "task-claim row; behavioral parity carried by the element/oop/protocol/input/service rows this task touched; reconciled at M16.20 M16.20 reconciliation (2026-08-01): the named tests certify this task's DoD; behavioural parity is additionally carried by the element/oop/protocol/input/service rows this task touched."
     },
     {
       "id": "task.M3.5",
@@ -1009,9 +1000,9 @@
       "contract": "E",
       "authority": "TASKS.md M3.5",
       "parity": "exact",
-      "status": "unverified",
-      "assignedTask": "M16.20",
-      "notes": "task-claim row; behavioral parity carried by the element/oop/protocol/input/service rows this task touched; reconciled at M16.20"
+      "test": "TestM169BrowserCanvasGoldens,TestM1611BrowserEndToEndPlayerJourneys",
+      "status": "pass",
+      "notes": "task-claim row; behavioral parity carried by the element/oop/protocol/input/service rows this task touched; reconciled at M16.20 M16.20 reconciliation (2026-08-01): the named tests certify this task's DoD; behavioural parity is additionally carried by the element/oop/protocol/input/service rows this task touched."
     },
     {
       "id": "task.M3.6",
@@ -1020,9 +1011,9 @@
       "contract": "E",
       "authority": "TASKS.md M3.6",
       "parity": "exact",
-      "status": "unverified",
-      "assignedTask": "M16.20",
-      "notes": "task-claim row; behavioral parity carried by the element/oop/protocol/input/service rows this task touched; reconciled at M16.20"
+      "test": "TestWebSocketServerTwoClientsSeeAndFight,TestM1611BrowserEndToEndPlayerJourneys",
+      "status": "pass",
+      "notes": "task-claim row; behavioral parity carried by the element/oop/protocol/input/service rows this task touched; reconciled at M16.20 M16.20 reconciliation (2026-08-01): the named tests certify this task's DoD; behavioural parity is additionally carried by the element/oop/protocol/input/service rows this task touched."
     },
     {
       "id": "task.M3.7",
@@ -1031,9 +1022,9 @@
       "contract": "E",
       "authority": "TASKS.md M3.7",
       "parity": "exact",
-      "status": "unverified",
-      "assignedTask": "M16.20",
-      "notes": "task-claim row; behavioral parity carried by the element/oop/protocol/input/service rows this task touched; reconciled at M16.20"
+      "test": "TestWebSocketServerTwentyBotSoak,TestM1619ThirtyNetworkClientLoadAndMetrics",
+      "status": "pass",
+      "notes": "task-claim row; behavioral parity carried by the element/oop/protocol/input/service rows this task touched; reconciled at M16.20 M16.20 reconciliation (2026-08-01): the named tests certify this task's DoD; behavioural parity is additionally carried by the element/oop/protocol/input/service rows this task touched."
     },
     {
       "id": "task.M3.8",
@@ -1042,9 +1033,9 @@
       "contract": "E",
       "authority": "TASKS.md M3.8",
       "parity": "exact",
-      "status": "unverified",
-      "assignedTask": "M16.20",
-      "notes": "task-claim row; behavioral parity carried by the element/oop/protocol/input/service rows this task touched; reconciled at M16.20"
+      "test": "TestRoomEngineDoesNotTransmitLegacySidebar,TestM169BrowserCanvasGoldens",
+      "status": "pass",
+      "notes": "task-claim row; behavioral parity carried by the element/oop/protocol/input/service rows this task touched; reconciled at M16.20 M16.20 reconciliation (2026-08-01): the named tests certify this task's DoD; behavioural parity is additionally carried by the element/oop/protocol/input/service rows this task touched."
     },
     {
       "id": "task.M3.9",
@@ -1053,9 +1044,9 @@
       "contract": "E",
       "authority": "TASKS.md M3.9",
       "parity": "exact",
-      "status": "unverified",
-      "assignedTask": "M16.20",
-      "notes": "task-claim row; behavioral parity carried by the element/oop/protocol/input/service rows this task touched; reconciled at M16.20"
+      "test": "TestDebugPromptKeyEmitsEventAndDoesNotBlock,TestHelpEventCarriesFileLines,TestM1610BrowserControlVocabulary",
+      "status": "pass",
+      "notes": "task-claim row; behavioral parity carried by the element/oop/protocol/input/service rows this task touched; reconciled at M16.20 M16.20 reconciliation (2026-08-01): the named tests certify this task's DoD; behavioural parity is additionally carried by the element/oop/protocol/input/service rows this task touched."
     },
     {
       "id": "task.M4.0",
@@ -1064,9 +1055,9 @@
       "contract": "P",
       "authority": "TASKS.md M4.0",
       "parity": "exact",
-      "status": "unverified",
-      "assignedTask": "M16.20",
-      "notes": "task-claim row; behavioral parity carried by the element/oop/protocol/input/service rows this task touched; reconciled at M16.20"
+      "test": "TestM45TownLandmarkCellsMatchProtocolSnapshot,TestM169BrowserCanvasGoldens",
+      "status": "pass",
+      "notes": "task-claim row; behavioral parity carried by the element/oop/protocol/input/service rows this task touched; reconciled at M16.20 M16.20 reconciliation (2026-08-01): the named tests certify this task's DoD; behavioural parity is additionally carried by the element/oop/protocol/input/service rows this task touched."
     },
     {
       "id": "task.M4.1",
@@ -1075,9 +1066,9 @@
       "contract": "P",
       "authority": "TASKS.md M4.1",
       "parity": "exact",
-      "status": "unverified",
-      "assignedTask": "M16.20",
-      "notes": "task-claim row; behavioral parity carried by the element/oop/protocol/input/service rows this task touched; reconciled at M16.20"
+      "test": "TestM1610BrowserControlVocabulary,TestM1618PlatformMatrix",
+      "status": "pass",
+      "notes": "task-claim row; behavioral parity carried by the element/oop/protocol/input/service rows this task touched; reconciled at M16.20 M16.20 reconciliation (2026-08-01): the named tests certify this task's DoD; behavioural parity is additionally carried by the element/oop/protocol/input/service rows this task touched."
     },
     {
       "id": "task.M4.2",
@@ -1086,9 +1077,9 @@
       "contract": "P",
       "authority": "TASKS.md M4.2",
       "parity": "exact",
-      "status": "unverified",
-      "assignedTask": "M16.20",
-      "notes": "task-claim row; behavioral parity carried by the element/oop/protocol/input/service rows this task touched; reconciled at M16.20"
+      "test": "TestM42MovementKeymask,TestM42CommandKeysAreCaseInsensitive,TestM1610BrowserControlVocabulary",
+      "status": "pass",
+      "notes": "task-claim row; behavioral parity carried by the element/oop/protocol/input/service rows this task touched; reconciled at M16.20 M16.20 reconciliation (2026-08-01): the named tests certify this task's DoD; behavioural parity is additionally carried by the element/oop/protocol/input/service rows this task touched."
     },
     {
       "id": "task.M4.3",
@@ -1097,9 +1088,9 @@
       "contract": "P",
       "authority": "TASKS.md M4.3",
       "parity": "exact",
-      "status": "unverified",
-      "assignedTask": "M16.20",
-      "notes": "task-claim row; behavioral parity carried by the element/oop/protocol/input/service rows this task touched; reconciled at M16.20"
+      "test": "TestM43TitleScreenCells,TestM43QuitAndHighScoreOverWebSocket,TestM43HighScorePersistence",
+      "status": "pass",
+      "notes": "task-claim row; behavioral parity carried by the element/oop/protocol/input/service rows this task touched; reconciled at M16.20 M16.20 reconciliation (2026-08-01): the named tests certify this task's DoD; behavioural parity is additionally carried by the element/oop/protocol/input/service rows this task touched."
     },
     {
       "id": "task.M4.3a",
@@ -1108,9 +1099,9 @@
       "contract": "P",
       "authority": "TASKS.md M4.3a",
       "parity": "exact",
-      "status": "unverified",
-      "assignedTask": "M16.20",
-      "notes": "task-claim row; behavioral parity carried by the element/oop/protocol/input/service rows this task touched; reconciled at M16.20"
+      "test": "TestM43aSaveRestoreRoundTrip,TestM43aRestoreRefusedWhileOccupied,TestM1615CrashRestartRestoreFreshAndCorruptSkip",
+      "status": "pass",
+      "notes": "task-claim row; behavioral parity carried by the element/oop/protocol/input/service rows this task touched; reconciled at M16.20 M16.20 reconciliation (2026-08-01): the named tests certify this task's DoD; behavioural parity is additionally carried by the element/oop/protocol/input/service rows this task touched."
     },
     {
       "id": "task.M4.3b",
@@ -1119,9 +1110,9 @@
       "contract": "P",
       "authority": "TASKS.md M4.3b",
       "parity": "exact",
-      "status": "unverified",
-      "assignedTask": "M16.20",
-      "notes": "task-claim row; behavioral parity carried by the element/oop/protocol/input/service rows this task touched; reconciled at M16.20"
+      "test": "TestM43bTwoPlayersReenterSameSquare,TestM43bNoOpenSquareStaysPut",
+      "status": "pass",
+      "notes": "task-claim row; behavioral parity carried by the element/oop/protocol/input/service rows this task touched; reconciled at M16.20 M16.20 reconciliation (2026-08-01): the named tests certify this task's DoD; behavioural parity is additionally carried by the element/oop/protocol/input/service rows this task touched."
     },
     {
       "id": "task.M4.4",
@@ -1130,9 +1121,9 @@
       "contract": "P",
       "authority": "TASKS.md M4.4",
       "parity": "exact",
-      "status": "unverified",
-      "assignedTask": "M16.20",
-      "notes": "task-claim row; behavioral parity carried by the element/oop/protocol/input/service rows this task touched; reconciled at M16.20"
+      "test": "TestSoundDrumTableFrozenForBrowser,TestM1610BrowserAudioParity",
+      "status": "pass",
+      "notes": "task-claim row; behavioral parity carried by the element/oop/protocol/input/service rows this task touched; reconciled at M16.20 M16.20 reconciliation (2026-08-01): the named tests certify this task's DoD; behavioural parity is additionally carried by the element/oop/protocol/input/service rows this task touched."
     },
     {
       "id": "task.M4.5",
@@ -1141,9 +1132,9 @@
       "contract": "P",
       "authority": "TASKS.md M4.5",
       "parity": "exact",
-      "status": "unverified",
-      "assignedTask": "M16.20",
-      "notes": "task-claim row; behavioral parity carried by the element/oop/protocol/input/service rows this task touched; reconciled at M16.20"
+      "test": "TestRenderDrawCellUsesDOSPaletteAndCP437Atlas,TestM45TownLandmarkCellsMatchProtocolSnapshot,TestM169BrowserCanvasGoldens",
+      "status": "pass",
+      "notes": "task-claim row; behavioral parity carried by the element/oop/protocol/input/service rows this task touched; reconciled at M16.20 M16.20 reconciliation (2026-08-01): the named tests certify this task's DoD; behavioural parity is additionally carried by the element/oop/protocol/input/service rows this task touched."
     },
     {
       "id": "task.M4.6",
@@ -1152,9 +1143,9 @@
       "contract": "P",
       "authority": "TASKS.md M4.6",
       "parity": "exact",
-      "status": "unverified",
-      "assignedTask": "M16.20",
-      "notes": "task-claim row; behavioral parity carried by the element/oop/protocol/input/service rows this task touched; reconciled at M16.20"
+      "test": "TestM46TownProtocolPlaythroughSmoke,TestM169TickLockedAcceptanceRun",
+      "status": "pass",
+      "notes": "task-claim row; behavioral parity carried by the element/oop/protocol/input/service rows this task touched; reconciled at M16.20 M16.20 reconciliation (2026-08-01): the named tests certify this task's DoD; behavioural parity is additionally carried by the element/oop/protocol/input/service rows this task touched."
     },
     {
       "id": "task.M5.0",
@@ -1163,9 +1154,9 @@
       "contract": "E",
       "authority": "TASKS.md M5.0",
       "parity": "exact",
-      "status": "unverified",
-      "assignedTask": "M16.20",
-      "notes": "task-claim row; behavioral parity carried by the element/oop/protocol/input/service rows this task touched; reconciled at M16.20"
+      "test": "TestEditorSessionReadOnlySnapshotAndInspect,TestEditorSessionAllowsMembersAndRequiresMembership",
+      "status": "pass",
+      "notes": "task-claim row; behavioral parity carried by the element/oop/protocol/input/service rows this task touched; reconciled at M16.20 M16.20 reconciliation (2026-08-01): the named tests certify this task's DoD; behavioural parity is additionally carried by the element/oop/protocol/input/service rows this task touched."
     },
     {
       "id": "task.M5.1",
@@ -1174,9 +1165,9 @@
       "contract": "E",
       "authority": "TASKS.md M5.1",
       "parity": "exact",
-      "status": "unverified",
-      "assignedTask": "M16.20",
-      "notes": "task-claim row; behavioral parity carried by the element/oop/protocol/input/service rows this task touched; reconciled at M16.20"
+      "test": "TestEditorSessionEditsPlaceEraseFillAndRoundTrip,TestEditorSessionPlacementRemovesExistingStat",
+      "status": "pass",
+      "notes": "task-claim row; behavioral parity carried by the element/oop/protocol/input/service rows this task touched; reconciled at M16.20 M16.20 reconciliation (2026-08-01): the named tests certify this task's DoD; behavioural parity is additionally carried by the element/oop/protocol/input/service rows this task touched."
     },
     {
       "id": "task.M5.10",
@@ -1185,9 +1176,9 @@
       "contract": "E",
       "authority": "TASKS.md M5.10",
       "parity": "exact",
-      "status": "unverified",
-      "assignedTask": "M16.20",
-      "notes": "task-claim row; behavioral parity carried by the element/oop/protocol/input/service rows this task touched; reconciled at M16.20"
+      "test": "TestM1613BrowserEditorAndPortableOutput,TestM1613EditorCommandManifestHasNoUntestedKeyOrDialog",
+      "status": "pass",
+      "notes": "task-claim row; behavioral parity carried by the element/oop/protocol/input/service rows this task touched; reconciled at M16.20 M16.20 reconciliation (2026-08-01): the named tests certify this task's DoD; behavioural parity is additionally carried by the element/oop/protocol/input/service rows this task touched."
     },
     {
       "id": "task.M5.11",
@@ -1196,9 +1187,9 @@
       "contract": "E",
       "authority": "TASKS.md M5.11",
       "parity": "exact",
-      "status": "unverified",
-      "assignedTask": "M16.20",
-      "notes": "task-claim row; behavioral parity carried by the element/oop/protocol/input/service rows this task touched; reconciled at M16.20"
+      "test": "TestEditorPresenceColorsAreDistinctFromTheLocalCursor,TestM1613BrowserEditorAndPortableOutput",
+      "status": "pass",
+      "notes": "task-claim row; behavioral parity carried by the element/oop/protocol/input/service rows this task touched; reconciled at M16.20 M16.20 reconciliation (2026-08-01): the named tests certify this task's DoD; behavioural parity is additionally carried by the element/oop/protocol/input/service rows this task touched."
     },
     {
       "id": "task.M5.12",
@@ -1207,9 +1198,9 @@
       "contract": "E",
       "authority": "TASKS.md M5.12",
       "parity": "exact",
-      "status": "unverified",
-      "assignedTask": "M16.20",
-      "notes": "task-claim row; behavioral parity carried by the element/oop/protocol/input/service rows this task touched; reconciled at M16.20"
+      "test": "TestM512EditorHelpGraphResolves,TestM512MissingHelpFileIs404",
+      "status": "pass",
+      "notes": "task-claim row; behavioral parity carried by the element/oop/protocol/input/service rows this task touched; reconciled at M16.20 M16.20 reconciliation (2026-08-01): the named tests certify this task's DoD; behavioural parity is additionally carried by the element/oop/protocol/input/service rows this task touched."
     },
     {
       "id": "task.M5.2",
@@ -1218,9 +1209,9 @@
       "contract": "E",
       "authority": "TASKS.md M5.2",
       "parity": "exact",
-      "status": "unverified",
-      "assignedTask": "M16.20",
-      "notes": "task-claim row; behavioral parity carried by the element/oop/protocol/input/service rows this task touched; reconciled at M16.20"
+      "test": "TestEditorSessionBoardAndWorldPropertiesRoundTripIntoLiveRoom",
+      "status": "pass",
+      "notes": "task-claim row; behavioral parity carried by the element/oop/protocol/input/service rows this task touched; reconciled at M16.20 M16.20 reconciliation (2026-08-01): the named tests certify this task's DoD; behavioural parity is additionally carried by the element/oop/protocol/input/service rows this task touched."
     },
     {
       "id": "task.M5.3",
@@ -1229,9 +1220,9 @@
       "contract": "E",
       "authority": "TASKS.md M5.3",
       "parity": "exact",
-      "status": "unverified",
-      "assignedTask": "M16.20",
-      "notes": "task-claim row; behavioral parity carried by the element/oop/protocol/input/service rows this task touched; reconciled at M16.20"
+      "test": "TestEditorSessionStatSettingsPreserveVanillaStatSemantics",
+      "status": "pass",
+      "notes": "task-claim row; behavioral parity carried by the element/oop/protocol/input/service rows this task touched; reconciled at M16.20 M16.20 reconciliation (2026-08-01): the named tests certify this task's DoD; behavioural parity is additionally carried by the element/oop/protocol/input/service rows this task touched."
     },
     {
       "id": "task.M5.4",
@@ -1240,9 +1231,9 @@
       "contract": "E",
       "authority": "TASKS.md M5.4",
       "parity": "exact",
-      "status": "unverified",
-      "assignedTask": "M16.20",
-      "notes": "task-claim row; behavioral parity carried by the element/oop/protocol/input/service rows this task touched; reconciled at M16.20"
+      "test": "TestEditorSessionProgramTextEditRoundTrip",
+      "status": "pass",
+      "notes": "task-claim row; behavioral parity carried by the element/oop/protocol/input/service rows this task touched; reconciled at M16.20 M16.20 reconciliation (2026-08-01): the named tests certify this task's DoD; behavioural parity is additionally carried by the element/oop/protocol/input/service rows this task touched."
     },
     {
       "id": "task.M5.5",
@@ -1251,9 +1242,9 @@
       "contract": "E",
       "authority": "TASKS.md M5.5",
       "parity": "exact",
-      "status": "unverified",
-      "assignedTask": "M16.20",
-      "notes": "task-claim row; behavioral parity carried by the element/oop/protocol/input/service rows this task touched; reconciled at M16.20"
+      "test": "TestEditorSessionAddBoardAndCrossBoardsInPlay,TestEditorSessionBoardExportImportRoundTrip,TestWebSocketEditorBoardManagement",
+      "status": "pass",
+      "notes": "task-claim row; behavioral parity carried by the element/oop/protocol/input/service rows this task touched; reconciled at M16.20 M16.20 reconciliation (2026-08-01): the named tests certify this task's DoD; behavioural parity is additionally carried by the element/oop/protocol/input/service rows this task touched."
     },
     {
       "id": "task.M5.6",
@@ -1262,9 +1253,9 @@
       "contract": "E",
       "authority": "TASKS.md M5.6",
       "parity": "exact",
-      "status": "unverified",
-      "assignedTask": "M16.20",
-      "notes": "task-claim row; behavioral parity carried by the element/oop/protocol/input/service rows this task touched; reconciled at M16.20"
+      "test": "TestWebSocketServerEditorSavePublishesAndPlays,TestWebSocketServerEditorSaveRefusesOccupiedWorld,TestWebSocketServerEditorSaveRejectsTraversalName",
+      "status": "pass",
+      "notes": "task-claim row; behavioral parity carried by the element/oop/protocol/input/service rows this task touched; reconciled at M16.20 M16.20 reconciliation (2026-08-01): the named tests certify this task's DoD; behavioural parity is additionally carried by the element/oop/protocol/input/service rows this task touched."
     },
     {
       "id": "task.M5.7",
@@ -1273,9 +1264,9 @@
       "contract": "E",
       "authority": "TASKS.md M5.7",
       "parity": "exact",
-      "status": "unverified",
-      "assignedTask": "M16.20",
-      "notes": "task-claim row; behavioral parity carried by the element/oop/protocol/input/service rows this task touched; reconciled at M16.20"
+      "test": "TestOopAnalyzeUnknownCommandWarns,TestEditorSessionProgramAnalysisAndSaveSucceeds",
+      "status": "pass",
+      "notes": "task-claim row; behavioral parity carried by the element/oop/protocol/input/service rows this task touched; reconciled at M16.20 M16.20 reconciliation (2026-08-01): the named tests certify this task's DoD; behavioural parity is additionally carried by the element/oop/protocol/input/service rows this task touched."
     },
     {
       "id": "task.M5.8",
@@ -1284,9 +1275,9 @@
       "contract": "E",
       "authority": "TASKS.md M5.8",
       "parity": "exact",
-      "status": "unverified",
-      "assignedTask": "M16.20",
-      "notes": "task-claim row; behavioral parity carried by the element/oop/protocol/input/service rows this task touched; reconciled at M16.20"
+      "test": "TestEditorElementMenusExposeCategoriesAndShortcuts,TestM1613EditorCommandManifestHasNoUntestedKeyOrDialog,TestM1613BrowserEditorAndPortableOutput",
+      "status": "pass",
+      "notes": "task-claim row; behavioral parity carried by the element/oop/protocol/input/service rows this task touched; reconciled at M16.20 M16.20 reconciliation (2026-08-01): the named tests certify this task's DoD; behavioural parity is additionally carried by the element/oop/protocol/input/service rows this task touched."
     },
     {
       "id": "task.M5.9",
@@ -1295,9 +1286,9 @@
       "contract": "E",
       "authority": "TASKS.md M5.9",
       "parity": "exact",
-      "status": "unverified",
-      "assignedTask": "M16.20",
-      "notes": "task-claim row; behavioral parity carried by the element/oop/protocol/input/service rows this task touched; reconciled at M16.20"
+      "test": "TestEditorElementMenusExposeCategoriesAndShortcuts,TestEditorSessionPlaceMenuElement",
+      "status": "pass",
+      "notes": "task-claim row; behavioral parity carried by the element/oop/protocol/input/service rows this task touched; reconciled at M16.20 M16.20 reconciliation (2026-08-01): the named tests certify this task's DoD; behavioural parity is additionally carried by the element/oop/protocol/input/service rows this task touched."
     },
     {
       "id": "task.M6.0",
@@ -1306,9 +1297,9 @@
       "contract": "E",
       "authority": "TASKS.md M6.0",
       "parity": "exact",
-      "status": "unverified",
-      "assignedTask": "M16.20",
-      "notes": "task-claim row; behavioral parity carried by the element/oop/protocol/input/service rows this task touched; reconciled at M16.20"
+      "test": "TestM1616ChatIdentityIsTheAccountAndSurvivesRestart,TestM1616aChatAdmissionBoundary",
+      "status": "pass",
+      "notes": "task-claim row; behavioral parity carried by the element/oop/protocol/input/service rows this task touched; reconciled at M16.20 M16.20 reconciliation (2026-08-01): the named tests certify this task's DoD; behavioural parity is additionally carried by the element/oop/protocol/input/service rows this task touched."
     },
     {
       "id": "task.M6.1",
@@ -1317,9 +1308,9 @@
       "contract": "E",
       "authority": "TASKS.md M6.1",
       "parity": "exact",
-      "status": "unverified",
-      "assignedTask": "M16.20",
-      "notes": "task-claim row; behavioral parity carried by the element/oop/protocol/input/service rows this task touched; reconciled at M16.20"
+      "test": "TestM1616BrowserAuthAndMuseumJourney,TestM1616aChatRefusalPersistsAndBroadcastsNothing",
+      "status": "pass",
+      "notes": "task-claim row; behavioral parity carried by the element/oop/protocol/input/service rows this task touched; reconciled at M16.20 M16.20 reconciliation (2026-08-01): the named tests certify this task's DoD; behavioural parity is additionally carried by the element/oop/protocol/input/service rows this task touched."
     },
     {
       "id": "task.M6.2",
@@ -1328,9 +1319,9 @@
       "contract": "E",
       "authority": "TASKS.md M6.2",
       "parity": "exact",
-      "status": "unverified",
-      "assignedTask": "M16.20",
-      "notes": "task-claim row; behavioral parity carried by the element/oop/protocol/input/service rows this task touched; reconciled at M16.20"
+      "test": "TestM62GoogleOAuthCallbackSetsSignedSession,TestM1616ForgedSessionCookiesAuthenticateNobody,TestM1616SignInJourneyThroughTheRealServer",
+      "status": "pass",
+      "notes": "task-claim row; behavioral parity carried by the element/oop/protocol/input/service rows this task touched; reconciled at M16.20 M16.20 reconciliation (2026-08-01): the named tests certify this task's DoD; behavioural parity is additionally carried by the element/oop/protocol/input/service rows this task touched."
     },
     {
       "id": "task.M6.3",
@@ -1339,9 +1330,9 @@
       "contract": "E",
       "authority": "TASKS.md M6.3",
       "parity": "exact",
-      "status": "unverified",
-      "assignedTask": "M16.20",
-      "notes": "task-claim row; behavioral parity carried by the element/oop/protocol/input/service rows this task touched; reconciled at M16.20"
+      "test": "TestFileChatDatabase,TestM1616aChatHistorySurvivesRestart",
+      "status": "pass",
+      "notes": "task-claim row; behavioral parity carried by the element/oop/protocol/input/service rows this task touched; reconciled at M16.20 M16.20 reconciliation (2026-08-01): the named tests certify this task's DoD; behavioural parity is additionally carried by the element/oop/protocol/input/service rows this task touched."
     },
     {
       "id": "task.M6.4",
@@ -1350,9 +1341,9 @@
       "contract": "E",
       "authority": "TASKS.md M6.4",
       "parity": "exact",
-      "status": "unverified",
-      "assignedTask": "M16.20",
-      "notes": "task-claim row; behavioral parity carried by the element/oop/protocol/input/service rows this task touched; reconciled at M16.20"
+      "test": "TestM64SignedInPlayerStatePersistsAcrossServerRestart,TestM64SaveSnapshotWritesAccountStateSidecar,TestM1615aReturningAccountReplaysThroughTheServer",
+      "status": "pass",
+      "notes": "task-claim row; behavioral parity carried by the element/oop/protocol/input/service rows this task touched; reconciled at M16.20 M16.20 reconciliation (2026-08-01): the named tests certify this task's DoD; behavioural parity is additionally carried by the element/oop/protocol/input/service rows this task touched."
     },
     {
       "id": "task.M7.1",
@@ -1361,9 +1352,9 @@
       "contract": "P",
       "authority": "TASKS.md M7.1",
       "parity": "exact",
-      "status": "unverified",
-      "assignedTask": "M16.20",
-      "notes": "task-claim row; behavioral parity carried by the element/oop/protocol/input/service rows this task touched; reconciled at M16.20"
+      "test": "TestM71FakeStartSquareUsesAuthoredStart,TestM71SecondPlayerDisplacedFromOccupiedStart,TestM71ClobberedPlayerTileStillCountsOccupied",
+      "status": "pass",
+      "notes": "task-claim row; behavioral parity carried by the element/oop/protocol/input/service rows this task touched; reconciled at M16.20 M16.20 reconciliation (2026-08-01): the named tests certify this task's DoD; behavioural parity is additionally carried by the element/oop/protocol/input/service rows this task touched."
     },
     {
       "id": "task.M7.2",
@@ -1372,9 +1363,9 @@
       "contract": "P",
       "authority": "TASKS.md M7.2",
       "parity": "exact",
-      "status": "unverified",
-      "assignedTask": "M16.20",
-      "notes": "task-claim row; behavioral parity carried by the element/oop/protocol/input/service rows this task touched; reconciled at M16.20"
+      "test": "TestM72TorchLightArrivesWithTransferredPlayer,TestM72TorchLightArrivesWithFreshSpawn",
+      "status": "pass",
+      "notes": "task-claim row; behavioral parity carried by the element/oop/protocol/input/service rows this task touched; reconciled at M16.20 M16.20 reconciliation (2026-08-01): the named tests certify this task's DoD; behavioural parity is additionally carried by the element/oop/protocol/input/service rows this task touched."
     },
     {
       "id": "task.M7.3",
@@ -1383,9 +1374,9 @@
       "contract": "P",
       "authority": "TASKS.md M7.3",
       "parity": "exact",
-      "status": "unverified",
-      "assignedTask": "M16.20",
-      "notes": "task-claim row; behavioral parity carried by the element/oop/protocol/input/service rows this task touched; reconciled at M16.20"
+      "test": "TestPlayerInputPastBoardSentinelDoesNotPanic,TestWebSocketServerTwentyBotSoak",
+      "status": "pass",
+      "notes": "task-claim row; behavioral parity carried by the element/oop/protocol/input/service rows this task touched; reconciled at M16.20 M16.20 reconciliation (2026-08-01): the named tests certify this task's DoD; behavioural parity is additionally carried by the element/oop/protocol/input/service rows this task touched."
     },
     {
       "id": "task.M7.4",
@@ -1394,9 +1385,9 @@
       "contract": "P",
       "authority": "TASKS.md M7.4",
       "parity": "exact",
-      "status": "unverified",
-      "assignedTask": "M16.20",
-      "notes": "task-claim row; behavioral parity carried by the element/oop/protocol/input/service rows this task touched; reconciled at M16.20"
+      "test": "TestM74PerPlayerSoundAttribution,TestWalkClickIsPrivateToTheMover",
+      "status": "pass",
+      "notes": "task-claim row; behavioral parity carried by the element/oop/protocol/input/service rows this task touched; reconciled at M16.20 M16.20 reconciliation (2026-08-01): the named tests certify this task's DoD; behavioural parity is additionally carried by the element/oop/protocol/input/service rows this task touched."
     },
     {
       "id": "task.M7.5",
@@ -1405,9 +1396,9 @@
       "contract": "P",
       "authority": "TASKS.md M7.5",
       "parity": "exact",
-      "status": "unverified",
-      "assignedTask": "M16.20",
-      "notes": "task-claim row; behavioral parity carried by the element/oop/protocol/input/service rows this task touched; reconciled at M16.20"
+      "test": "TestValidateRendersStaticTown,TestListWorldsExcludesJunkAndUnjoinable",
+      "status": "pass",
+      "notes": "task-claim row; behavioral parity carried by the element/oop/protocol/input/service rows this task touched; reconciled at M16.20 M16.20 reconciliation (2026-08-01): the named tests certify this task's DoD; behavioural parity is additionally carried by the element/oop/protocol/input/service rows this task touched."
     },
     {
       "id": "task.M8.1",
@@ -1416,9 +1407,9 @@
       "contract": "E",
       "authority": "TASKS.md M8.1",
       "parity": "exact",
-      "status": "unverified",
-      "assignedTask": "M16.20",
-      "notes": "task-claim row; behavioral parity carried by the element/oop/protocol/input/service rows this task touched; reconciled at M16.20"
+      "test": "TestPointBlankRespectsTargetEnergizer,TestPointBlankNoDamageWithoutFriendlyFire,TestPointBlankNeverSelfDamage",
+      "status": "pass",
+      "notes": "task-claim row; behavioral parity carried by the element/oop/protocol/input/service rows this task touched; reconciled at M16.20 M16.20 reconciliation (2026-08-01): the named tests certify this task's DoD; behavioural parity is additionally carried by the element/oop/protocol/input/service rows this task touched."
     },
     {
       "id": "task.M8.2",
@@ -1427,9 +1418,9 @@
       "contract": "E",
       "authority": "TASKS.md M8.2",
       "parity": "exact",
-      "status": "unverified",
-      "assignedTask": "M16.20",
-      "notes": "task-claim row; behavioral parity carried by the element/oop/protocol/input/service rows this task touched; reconciled at M16.20"
+      "test": "TestResetMessageNotShownFlagsCoversAllPlayers,TestResetMessageNotShownFlagsEnsuresPlayerZero",
+      "status": "pass",
+      "notes": "task-claim row; behavioral parity carried by the element/oop/protocol/input/service rows this task touched; reconciled at M16.20 M16.20 reconciliation (2026-08-01): the named tests certify this task's DoD; behavioural parity is additionally carried by the element/oop/protocol/input/service rows this task touched."
     },
     {
       "id": "task.M9.1",
@@ -1438,9 +1429,9 @@
       "contract": "E",
       "authority": "TASKS.md M9.1",
       "parity": "exact",
-      "status": "unverified",
-      "assignedTask": "M16.20",
-      "notes": "task-claim row; behavioral parity carried by the element/oop/protocol/input/service rows this task touched; reconciled at M16.20"
+      "test": "TestWebSocketServerBoardEdgeSendsBoardChange,TestM1611BrowserEndToEndPlayerJourneys",
+      "status": "pass",
+      "notes": "task-claim row; behavioral parity carried by the element/oop/protocol/input/service rows this task touched; reconciled at M16.20 M16.20 reconciliation (2026-08-01): the named tests certify this task's DoD; behavioural parity is additionally carried by the element/oop/protocol/input/service rows this task touched."
     },
     {
       "id": "task.M9.2",
@@ -1449,9 +1440,9 @@
       "contract": "E",
       "authority": "TASKS.md M9.2",
       "parity": "exact",
-      "status": "unverified",
-      "assignedTask": "M16.20",
-      "notes": "task-claim row; behavioral parity carried by the element/oop/protocol/input/service rows this task touched; reconciled at M16.20"
+      "test": "TestM92TitleAboutHelpEndpoint,TestM43TitleScreenCells",
+      "status": "pass",
+      "notes": "task-claim row; behavioral parity carried by the element/oop/protocol/input/service rows this task touched; reconciled at M16.20 M16.20 reconciliation (2026-08-01): the named tests certify this task's DoD; behavioural parity is additionally carried by the element/oop/protocol/input/service rows this task touched."
     },
     {
       "id": "elem.ammo",
@@ -3212,8 +3203,9 @@
       "contract": "P",
       "authority": "elements.go ElementPlayerTick / game.go title / editor.go; web/src/keys.ts",
       "parity": "exact",
-      "status": "unverified",
-      "assignedTask": "M16.11"
+      "test": "TestM92TitleAboutHelpEndpoint,TestM1616TitleScreenRoutesServeAndRefuse",
+      "status": "pass",
+      "notes": "M16.20: A opens the About help file; the endpoint that serves it and the title routes' serve/refuse boundary are both pinned."
     },
     {
       "id": "input.title-dream",
@@ -3246,8 +3238,9 @@
       "contract": "P",
       "authority": "elements.go ElementPlayerTick / game.go title / editor.go; web/src/keys.ts",
       "parity": "exact",
-      "status": "unverified",
-      "assignedTask": "M16.11"
+      "test": "TestM43HighScoreListOrdering,TestM169aPlacementWindowMatchesTerminalPath",
+      "status": "pass",
+      "notes": "M16.20: H shows the high-score table; its ordering and the placement window the browser renders from the same list are pinned."
     },
     {
       "id": "input.title-play",
@@ -3256,8 +3249,9 @@
       "contract": "P",
       "authority": "elements.go ElementPlayerTick / game.go title / editor.go; web/src/keys.ts",
       "parity": "exact",
-      "status": "unverified",
-      "assignedTask": "M16.11"
+      "test": "TestM1611BrowserEndToEndPlayerJourneys,TestM43TitleScreenCells",
+      "status": "pass",
+      "notes": "M16.20: P on the title screen is driven in a real browser by M16.11's end-to-end journeys, and the title frame it acts on is pinned cell-for-cell by TestM43TitleScreenCells."
     },
     {
       "id": "input.title-quit",
@@ -3266,8 +3260,9 @@
       "contract": "P",
       "authority": "elements.go ElementPlayerTick / game.go title / editor.go; web/src/keys.ts",
       "parity": "exact",
-      "status": "unverified",
-      "assignedTask": "M16.11"
+      "test": "TestM1611BrowserEndToEndPlayerJourneys,TestM43QuitAndHighScoreOverWebSocket",
+      "status": "pass",
+      "notes": "M16.20: Q is pressed in a real browser at the end of M16.11's journey (quit to title, socket closed) and its server half — the quit prompt and the high-score entry it routes into — is pinned over the wire."
     },
     {
       "id": "input.title-restore",
@@ -3289,8 +3284,10 @@
       "authority": "elements.go ElementPlayerTick / game.go title / editor.go; web/src/keys.ts",
       "parity": "deviation",
       "deviation": "omitted-game-speed",
-      "status": "unverified",
-      "assignedTask": "M16.11"
+      "test": "TestM169BrowserCanvasGoldens,TestM1610BrowserControlVocabulary",
+      "status": "deviation",
+      "assignedTask": "M16.11",
+      "notes": "M16.20: the omitted-game-speed deviation on the title surface, pinned by the browser goldens (the title frame carries no game-speed line) and the browser control vocabulary (no S binding on the title screen). M16.12 records that this deviation is owned by the title/quit surface rather than the shared-room sweep."
     },
     {
       "id": "input.title-world",

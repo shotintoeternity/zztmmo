@@ -4019,6 +4019,47 @@ gap task has landed.
   and owner approves the final deviation list. Only this task may state that the
   current product has full feature parity within the written M16 contract.
 
+  **Executor work complete 2026-08-01; the box is OWNER-GATED** (the M17.3/M17.7
+  no-self-certification rule, and this task's own DoD ends in an owner approval).
+  What landed, in one commit:
+  - **Manifest reconciled.** All 137 open rows resolved: 132 `task` rows and the
+    five title-screen `input` rows M16.11 left behind. 123 task rows are `pass`
+    with the named tests that certify their DoD; nine are `out-of-scope` with a
+    reason (CI configuration, deployment/ops, repo hygiene, and M18.7's
+    client-side cosmetic fix, which the TypeScript suite covers and no Go test
+    can name). Zero `unverified`, zero `gap`, zero `unknown`.
+  - **The gate now runs what it certifies.** The browser track (npm ci, the
+    pinned Playwright engines, the client build) moved AHEAD of the Go gates,
+    because the real-browser suites live inside `go test ./...` and skip
+    themselves when the harness is absent — a clean clone used to certify itself
+    with every browser suite silently skipped. The go gates run under
+    `-json`, every skipped test is recorded by name, and a skip blocks
+    certification unless it declares itself (`declared skip:`).
+    `ZZT_PARITY_REQUIRE_BROWSER=1` turns the harness's own skips into failures.
+  - **Artifacts.** `run.json` (commit, OS/arch, go/node/npm/playwright versions,
+    per-gate wall clock), `load-metrics.txt` (M16.19's measured numbers, captured
+    from the run), plus the manifest, device matrix, report and browser
+    traces — all uploaded by the CI `parity` job, which now runs `make certify`.
+    Timings and tool versions stay OUT of `report.json` so two runs of one tree
+    render byte-identical reports.
+  - **Fail-closed, proven live** (NOTES.md 2026-08-01): a `test` pointing at a
+    renamed test and a `fixture` pointing at a moved file each turned
+    `TestParityManifest` red; both were restored byte-identically.
+    `TestM1620OracleInputsMatchTheirPinnedHashes` closes the "mutable required
+    fixture" hole in the oracle chain — every committed ORCL world, scenario and
+    the frontend that recorded them is re-hashed against
+    `fixtures/oracle/provenance.json`, which until now was written and believed.
+  - **Claims reconciled.** README's directory map named a fixture directory that
+    does not exist (`engine/fixtures/`); it now names `fixtures/`, `llmworld/`
+    and `oracle/` where they are. PARITY.md §8 documents the certification run,
+    and §4 records the three approved deviations no row can name (a row carries
+    one `deviation` id) with the tests that actually pin them.
+
+  **Left for the owner:** approve the final deviation list (five `deviation`
+  rows over four catalog ids, plus the nine `out-of-scope` classifications), read
+  the two clean-clone reports, and tick this box. The advisor half of the gate
+  is still unrun — the advisor tool has been unavailable since M16.0.
+
 - [x] **M16.20a — Make `PARITY_SCAFFOLD=1` regeneration non-destructive.**
   Found during M18.1 (NOTES.md 2026-07-30). Regenerating
   `fixtures/parity/manifest.json` deletes landed inventory: rows

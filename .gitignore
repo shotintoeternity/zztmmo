@@ -19,6 +19,11 @@ test.txt
 # committed manifest, not by this rendered report.
 fixtures/parity/report.json
 fixtures/parity/report.md
+# M16.20 run record: tool versions, the commit, per-gate wall clock, and the
+# load run's measured numbers. Deliberately outside the report so two runs of
+# one tree still render byte-identical reports; published as a CI artifact.
+fixtures/parity/run.json
+fixtures/parity/load-metrics.txt
 
 # M12.17 eval runs: keep reports, screenshots, and ZWD sidecars; never the
 # generated .ZZT binaries (fixtures are committed as ZWD text only).

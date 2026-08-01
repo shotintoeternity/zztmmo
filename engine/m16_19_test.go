@@ -85,11 +85,9 @@ func startServerSubprocess(t *testing.T, extraFlags ...string) (*serverSubproces
 
 	_ = os.WriteFile(filepath.Join(webDir, "index.html"), []byte("<!DOCTYPE html><html><body>ZZTMMO SPA TEST</body></html>"), 0644)
 
-	townBytes, err := os.ReadFile("TOWN.ZZT")
-	if err == nil {
-		_ = os.WriteFile(filepath.Join(worldsDir, "TOWN.ZZT"), townBytes, 0644)
-		_ = os.WriteFile(filepath.Join(rootDir, "TOWN.ZZT"), townBytes, 0644)
-	}
+	townBytes := committedTownBytes(t)
+	_ = os.WriteFile(filepath.Join(worldsDir, "TOWN.ZZT"), townBytes, 0644)
+	_ = os.WriteFile(filepath.Join(rootDir, "TOWN.ZZT"), townBytes, 0644)
 
 	args := []string{
 		"-addr", addr,
