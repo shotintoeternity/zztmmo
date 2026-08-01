@@ -74,8 +74,8 @@
       "surfaces": ["popupEntry", "worldSearch", "multilineEntry", "programEditor", "chat", "entry"],
       "touchplay": true,
       "touchBarCoveredRows": [],
-      "rotatedTouchBarCoveredRows": [18, 19, 20, 21, 22, 23, 24],
-      "notes": "The 80-column screen is 4.88 CSS px per column here, and the whole grid including the sidebar is on it. Rotated to landscape the letterboxed canvas fills the viewport's height and the fixed control bar lands on the bottom seven text rows: gap task M16.18b. This is also one of the two profiles that certify touch GAMEPLAY (M16.18a): the bar's five play-mode controls fit one action row at this width, so the M16.18a controls did not make the bar any taller than the four it replaced — which is why the covered-row numbers here are unchanged by that task."
+      "rotatedTouchBarCoveredRows": [],
+      "notes": "The 80-column screen is 4.88 CSS px per column here, and the whole grid including the sidebar is on it — the width binds in portrait, so reserving the control bar's height (M16.18b) moved the screen up without shrinking it. Rotated to landscape it used to be the other way round: the letterboxed canvas filled the viewport's height and the fixed bar lay on the bottom seven text rows. Both lists are zero as of M16.18b (2026-08-01), which is the fix's evidence: the bar publishes its measured height and the screen letterboxes above it. This is also one of the two profiles that certify touch GAMEPLAY (M16.18a): the bar's five play-mode controls wrap to two rows at this width, and the reservation is measured rather than assumed for exactly that reason."
     },
     {
       "id": "chromium-touch-landscape",
@@ -89,9 +89,9 @@
       "evidence": "TestM1618PlatformMatrix/chromium-touch-landscape",
       "surfaces": ["popupEntry", "worldSearch", "multilineEntry", "programEditor", "chat", "entry"],
       "touchplay": true,
-      "touchBarCoveredRows": [18, 19, 20, 21, 22, 23, 24],
+      "touchBarCoveredRows": [],
       "rotatedTouchBarCoveredRows": [],
-      "notes": "Text entry is unaffected — every surface passes — but the on-screen control bar covers rows 18-24 at this shape, which is the bottom of the board and the sidebar's Save/Pause/Quit block. Pinned here so the M16.18b fix shows up as this list going empty. The bar's height at this shape is the direction pad's two rows, not the action row's one, so M16.18a's Fire/Torch/Pause controls left these numbers exactly where M16.18 measured them."
+      "notes": "The shape that found M16.18b: the height binds here, so before the fix the letterboxed canvas filled all 390px of it and the fixed control bar covered rows 18-24 — the bottom of the board and the sidebar's Save/Pause/Quit block. Zero as of M16.18b (2026-08-01): the bar reserves its height (112px at this width, the direction pad's two rows, with the five play-mode controls on one action row) and the screen letterboxes into the 278px above it at 6.35 CSS px per column, which is still well over the legibility floor. Text entry was unaffected throughout — every surface passed before the fix as well."
     },
     {
       "id": "webkit-touch-portrait",

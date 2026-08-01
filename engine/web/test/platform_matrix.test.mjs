@@ -204,11 +204,14 @@ async function measureLayout(page) {
  * Assert the invariants that make a screen usable, and record the measurement.
  *
  * The touch bar's overlap is compared against the profile's DECLARED value
- * rather than required to be zero: on a landscape phone the letterboxed canvas
- * fills the viewport's height, so the fixed control bar genuinely sits on the
- * bottom rows. That is a defect with a filed gap task, and pinning the number
- * here is what makes the fix visible — when the bar stops covering the board the
- * declaration goes to zero and this assertion is what says so.
+ * rather than hard-coded as zero, which is what made M16.18b's fix visible: the
+ * landscape phone declared rows 18-24 while the fixed bar genuinely sat on the
+ * bottom of the board, and the fix showed up as that list going empty. The
+ * declaration stays the shape of the check so a future screen that cannot be
+ * fully letterboxed has somewhere honest to say so — but a covered row is now
+ * paired with the assertion below that the screen letterboxes ABOVE the bar,
+ * so a regression is named as the layout fault it is, not only as a number that
+ * disagrees with the fixture.
  */
 async function checkLayout(page, label) {
   const layout = await measureLayout(page);
@@ -266,6 +269,16 @@ async function checkLayout(page, label) {
     assert.ok(
       layout.touchBar.bottom <= viewport.height + 1,
       `${where}: an on-screen control ends at y=${layout.touchBar.bottom}, past the ${viewport.height}px viewport`,
+    );
+    // M16.18b: the bar is `position: fixed`, so the only thing keeping it off
+    // the board is style.css letterboxing the screen into the viewport MINUS
+    // the height touch_controls.ts publishes as `--touch-bar-h`. Assert the
+    // reservation itself, not just its consequence: if the property stops being
+    // published (or stops being subtracted) the screen grows back under the bar
+    // and this is the line that says which of the two broke.
+    assert.ok(
+      canvas.top + canvas.height <= layout.touchBar.top + 1,
+      `${where}: the screen ends at y=${canvas.top + canvas.height} but the control bar starts at y=${layout.touchBar.top} — the bar's height is not reserved, so it is drawn on the board (M16.18b)`,
     );
   }
 

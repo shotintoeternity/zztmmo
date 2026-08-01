@@ -19,8 +19,18 @@
 // A BUTTON IS ONLY ON SCREEN WHERE IT MEANS SOMETHING (`modes`). That is not
 // tidiness: Fire is a space, and behind an open text surface a space belongs in
 // the buffer, not in the game — a gameplay control that is not on screen cannot
-// leak a tap into it. It also keeps the bar the same height in every mode, which
-// is what stops the fix for one screen shape from covering another (M16.18b).
+// leak a tap into it.
+//
+// THE BAR RESERVES ITS OWN HEIGHT (M16.18b). It is `position: fixed`, so left to
+// itself it is drawn ON the board: on a landscape phone the letterboxed screen
+// fills the viewport's height and the controls land on the bottom seven text
+// rows — the end of the board and the sidebar's Save/Pause/Quit block. The bar
+// therefore publishes its measured height as the `--touch-bar-h` custom
+// property, which style.css subtracts from the screen's box so the screen
+// letterboxes ABOVE the bar. Measured rather than declared as a constant,
+// because the action row wraps at narrow widths (two rows on a 390px portrait
+// phone, one on an 844px landscape one) and `setMode` changes how many controls
+// are in it.
 
 export type TouchKeyHandler = (down: boolean, code: string, key: string) => void;
 
@@ -132,18 +142,59 @@ export function createTouchControls(
   bar.appendChild(action);
   host.body.appendChild(bar);
 
+  const publishHeight = reserveBarHeight(host, bar);
+
   const controls: TouchControls = {
     element: bar,
     setMode(mode: TouchControlMode) {
       for (const { button, spec } of built) {
         button.hidden = spec.modes.indexOf(mode) < 0;
       }
+      // Hiding a control can unwrap the action row, so the reservation is
+      // republished here as well as from the observer: a mode change must not
+      // leave the screen letterboxed against last mode's bar for a frame.
+      publishHeight();
     },
   };
   // The client opens on the title screen (main.ts), so start there rather than
   // showing every control for the first frame.
   controls.setMode("title");
   return controls;
+}
+
+/**
+ * reserveBarHeight publishes the bar's height as `--touch-bar-h` on the root
+ * element and keeps it current, returning the republish function so a caller
+ * that changes the bar's contents can settle the value in the same frame.
+ *
+ * It is a no-op against anything that is not a real DOM (the unit test's fake
+ * host measures nothing), which is safe: the property's declared default is
+ * `0px`, i.e. exactly today's un-reserved layout.
+ */
+function reserveBarHeight(host: Document, bar: HTMLElement): () => void {
+  const root = host.documentElement;
+  if (!root || typeof root.style?.setProperty !== "function" || typeof bar.getBoundingClientRect !== "function") {
+    return () => {};
+  }
+  let published = "";
+  const publish = () => {
+    // Round up: half a CSS pixel of under-reservation is half a pixel of board
+    // under a button.
+    const next = Math.ceil(bar.getBoundingClientRect().height) + "px";
+    if (next === published) {
+      return; // also what keeps the observer below from feeding itself
+    }
+    published = next;
+    root.style.setProperty("--touch-bar-h", next);
+  };
+  publish();
+  // Rotation, a soft keyboard resizing the viewport, and a wrapped action row
+  // all change the bar's box; the observer is what makes the reservation track
+  // them rather than freeze at load.
+  if (typeof ResizeObserver !== "undefined") {
+    new ResizeObserver(publish).observe(bar);
+  }
+  return publish;
 }
 
 // A per-control class only for the ones style.css singles out; the rest share

@@ -155,18 +155,17 @@ M12.23, M17.1–M17.7, M16.0–M16.8a — has fully landed.)
    all eleven browser suites assert on) and **M16.10a** (`shootSpace` firing
    nothing under load) — both reproduced on an unmodified checkout, so neither is
    M16.18a's doing.
+   **M16.18b landed 2026-08-01** — the control bar reserves its own height
+   (`--touch-bar-h`, measured and republished on rotation and mode change), so a
+   landscape phone letterboxes the whole screen above the bar instead of drawing
+   seven text rows under it; all four covered-row declarations are empty and the
+   matrix now asserts the reservation, not only the numbers.
    Next in file order after those is M16.20, whose remaining blockers are
-   M16.18b, M16.18c and M16.10a. The one
+   M16.18c and M16.10a. The one
    browser flake still open is M16.14b's act 8,
    which is `[ADVISOR]` and still ranks below the certification tail.
 
 **Optional / deferred (bottom):**
-- M16.18b — the on-screen control bar covers text rows 18-24 on a landscape
-  phone (filed by M16.18, 2026-08-01). Touch-surface work while the beta is
-  desktop-scoped, so it stays here even though M16.18a has landed above it —
-  and M16.18a deliberately left its covered-row numbers untouched, so the fix
-  still shows up as this declaration going empty. Client-only layout fix; blocks
-  M16.20 only in the sense that its pinned declaration must reach zero.
 - M16.18c — `pauseClock`'s recovered attempt still reaches `pageErrors` (filed
   by M16.18a, 2026-08-01). Load-sensitive browser-harness flake; ranks with the
   certification tail.
@@ -3821,7 +3820,7 @@ gap task has landed.
   cannot emulate touch at all, which is the matrix's one skip and why it carries
   a paragraph of reason. Filed **M16.18b** on the way through.
 
-- [ ] **M16.18b — The on-screen control bar covers the bottom of the screen on a
+- [x] **M16.18b — The on-screen control bar covers the bottom of the screen on a
   landscape phone (M16.18 gap task).** Found by M16.18's matrix and pinned by it:
   at 844x390 the letterboxed canvas fills the viewport's height, so the fixed
   `.touch-controls` bar (style.css) sits on text rows 18-24 — the bottom of the
@@ -3837,6 +3836,19 @@ gap task has landed.
   ones — passes with those zeros; the same run's screenshots show the sidebar's
   command block unobscured. Ranks with M16.18a: both are touch-surface work and
   the beta is desktop-scoped.
+  Landed 2026-08-01 (NOTES.md M16.18b). The bar now reserves its own height:
+  `touch_controls.ts` publishes the measured box as the `--touch-bar-h` custom
+  property and style.css subtracts it from both the `.canvas-wrap` box and the
+  canvas's own width formula, so the screen letterboxes ABOVE the bar. Measured
+  rather than declared constant, because the action row wraps at narrow widths
+  (114px on a 390px portrait phone, 112px on an 844px landscape one) and
+  `setMode` changes how many controls are in it — a `ResizeObserver` plus a
+  synchronous republish from `setMode` keeps it current through rotation and
+  mode changes both. Landscape now draws the whole 80x25 grid at 508x278 CSS px
+  (6.35 px/col, well over the legibility floor) above a 112px bar; portrait is
+  the same size it always was, moved up. All four declarations are empty and
+  `TestM1618PlatformMatrix` gained the assertion the numbers were standing in
+  for: with a bar on screen, the canvas must end above it.
 
 - [x] **M16.18a — Touch gameplay controls (M16.0 gap task; blocks M16.20).**
   Filed by M16.0's scope resolution: M15.1 shipped mobile *text entry* (the

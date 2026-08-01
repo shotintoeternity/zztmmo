@@ -214,8 +214,11 @@ approval or turned into gap tasks. Resolved:
   frame the server received, plus a focus/leak check behind an open chat
   composer. `TestM1618DeviceMatrixIsWellFormed` fails if the matrix stops
   declaring a `touchplay` profile, so the claim cannot outlive its run. The
-  README's scope paragraph moved with it, and still names the one thing that is
-  not fixed: **M16.18b**, the bar covering text rows 18-24 on a landscape phone.
+  README's scope paragraph moved with it. **M16.18b closed the same day**: the
+  bar publishes its measured height and the screen letterboxes above it rather
+  than under it, so the rows it used to cover on a landscape phone (18-24, the
+  end of the board and the sidebar's Save/Pause/Quit block) are declared empty
+  on every profile and the matrix asserts the reservation itself.
 
 - **M17 live fixes are in scope.** M17.1–M17.4 (name-popup centering,
   world-picker metadata, audio regression, scroll-hyperlink consume) are checked

@@ -7883,3 +7883,70 @@ and no protocol message changed shape.
 **Handoff.** **M16.20**'s remaining blockers are now **M16.18b** (the landscape
 control bar over rows 18-24), **M16.14b** (`[ADVISOR]`), and the two flake tasks
 filed here, **M16.18c** and **M16.10a**.
+
+## 2026-08-01 — M16.18b: the bar gets out of the board's way
+
+**Task.** M16.18's matrix found it and pinned it: on a landscape phone (844x390
+at DPR 3) the letterboxed screen filled all 390px of viewport height, so the
+`position: fixed` `.touch-controls` bar was drawn *on* text rows 18-24 — the
+bottom of the board and the sidebar's `S Save game` / `P Pause` / `Q Quit`
+block. Client-only layout; no protocol, no simulation, `fixtures/town.replay.json`
+untouched.
+
+**The fix is one number, published rather than assumed.** The bar now measures
+its own box and writes it to the root as `--touch-bar-h`; style.css subtracts
+that from the `.canvas-wrap` box *and* from the canvas's own width formula
+(`min(100vw, calc((100vh - var(--touch-bar-h)) * 640 / 350))`), so the screen
+letterboxes above the bar instead of under it. The property's declared default
+is `0px`, which is exactly the old layout — desktop and the WebKit-touch profile
+(no bar, `maxTouchPoints` 0) are byte-identical to before.
+
+**Why measured and not a constant.** The obvious version of this fix hard-codes
+112px (the direction pad's two 46px rows plus 8px padding either side) and is
+wrong on the screen the beta's testers are most likely to hold: at 390px the
+action group's `max-width: 55%` wraps five controls onto two rows, and the bar is
+**114px**, not 112. It also changes with `setMode`, since hiding controls unwraps
+the row. So: `getBoundingClientRect().height`, rounded up, republished by a
+`ResizeObserver` (rotation, soft keyboard, wrap changes) and synchronously from
+`setMode` so a mode change cannot leave the screen letterboxed against the
+previous bar for a frame. The publish is skipped when the value has not changed,
+which is also what keeps the observer from feeding itself.
+
+**What the screens look like now** (measured, `platform-matrix-*.json`):
+
+- `chromium-touch-landscape` 844x390: canvas **508.33x277.98** at 167.83,0 —
+  6.35 CSS px per column, well over the 4px legibility floor — with the 112px bar
+  below it. Was 713.14x389.98 with the bar on top of the last seven rows.
+- `chromium-touch-portrait` 390x844: canvas **390x213.28**, unchanged in size
+  (the width binds here), moved up by ~57px. Its `rotated` measurement is the
+  landscape one above.
+- Both rotate and restore cleanly; all four covered-row declarations in
+  `fixtures/parity/device-matrix.json` are now `[]`.
+
+**The declaration keeps its shape, and gained a spine.** `touchBarCoveredRows`
+stays a declared value rather than becoming a hard-coded zero — a future screen
+that genuinely cannot be fully letterboxed has somewhere honest to say so — but
+`checkLayout` now also asserts the *reservation*: with a bar present, the canvas
+must end at or above the bar's top. A number that disagrees with the fixture says
+"something moved"; this says which of the two mechanisms (publishing the property,
+or subtracting it) broke.
+
+**Screenshot evidence.** `platform-chromium-touch-landscape-playing.png` shows
+the whole sidebar including the Save/Pause/Quit block above the controls; the
+same shape at `-editor`, `-modal-help`, `-title`.
+
+**Claims moved with it.** README's scope paragraph no longer tells testers to
+hold the phone in portrait (it says the controls take their own strip and a
+landscape phone shows the screen smaller); PARITY.md §5 records M16.18b as closed
+the same day as M16.18a; the `mode.mobile-touchplay` row's notes no longer end
+with "still open at the touch surface". The parity report regenerates over all
+of it (`make parity-report`), and it is gitignored, so nothing to commit there.
+
+**Verified**: `go build ./...`, `go vet ./...`, `go test ./...` green; `npm test`
+green; `TestM1618PlatformMatrix` green on every covered profile with the four
+empty declarations. Nothing here goes near the simulation and no protocol message
+changed shape.
+
+**Handoff.** **M16.20**'s remaining blockers are now **M16.18c** and **M16.10a**
+(both load-sensitive browser flakes filed by M16.18a) plus **M16.14b**
+(`[ADVISOR]`). The touch surface itself has no open task.

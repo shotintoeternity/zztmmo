@@ -14,6 +14,12 @@
 :root {
   color-scheme: dark;
   background: #000;
+  /* Height the on-screen touch controls have taken out of the viewport. Zero
+     everywhere the bar is not built (desktop, and any engine reporting no touch
+     points); touch_controls.ts publishes the measured height where it is, and
+     the screen letterboxes into what is left — M16.18b, the fixed bar that used
+     to sit on the bottom seven text rows of a landscape phone. */
+  --touch-bar-h: 0px;
 }
 
 * {
@@ -32,21 +38,24 @@ body {
   height: 100%;
 }
 
-/* Center the screen, letterboxed, scaled to whichever axis binds first. */
+/* Center the screen, letterboxed, scaled to whichever axis binds first. The
+   control bar's height is taken off the box first, so the screen is centred in
+   what is left rather than centred under a bar drawn on top of it. */
 .canvas-wrap {
   display: flex;
   align-items: center;
   justify-content: center;
-  height: 100%;
+  height: calc(100% - var(--touch-bar-h));
   background: #000;
   position: relative;
 }
 
 canvas {
   display: block;
-  /* Widest the screen can be while its 64:35 height still fits the viewport.
-     Deterministic, unlike auto sizing under aspect-ratio + max-*. */
-  width: min(100vw, calc(100vh * 640 / 350));
+  /* Widest the screen can be while its 64:35 height still fits the viewport
+     minus whatever the control bar has reserved. Deterministic, unlike auto
+     sizing under aspect-ratio + max-*. */
+  width: min(100vw, calc((100vh - var(--touch-bar-h)) * 640 / 350));
   aspect-ratio: 640 / 350;
   /* Nearest-neighbour: CP437 glyphs must stay crisp, never resampled. */
   image-rendering: pixelated;
