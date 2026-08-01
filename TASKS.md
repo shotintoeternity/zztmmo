@@ -48,6 +48,12 @@ M12.23, M17.1–M17.7, M16.0–M16.8a — has fully landed.)
    that protect the beta are not where the beta will be. Needs an owner
    decision (the production ceiling) and owner confirmation before touching
    the live host.
+5a. M18.11 — canonical Museum worlds are never overwritten by a dream or a
+   publish (owner decision 2026-07-31). Ranked here, above the invite: it is the
+   one remaining way a tester destroys shipped content, the ~100 classics have
+   no `.access.json` to protect them, and the backups deliberately do not cover
+   them. Takes M16.17d with it — without the derived-name fallback the guard
+   refuses names the player never chose.
 6. **Beta invite goes out** (owner action; desktop-browser scope in the copy).
 7. M18.6 — back up player-created worlds, not just `saves/`. The one
    data-loss hole M18.4 left open; it widens with every day of the beta, so
@@ -4069,6 +4075,48 @@ lists. Every task: `cd engine && go build ./... && go test ./...` green,
   `.access.json`. The manifest is the *intersection* of the workstation list and
   the host directory (117 of 119 names): `engine/*.ZZT` is untracked, so the
   workstation list named two worlds production has never had.
+
+- [ ] **M18.11 — A dream or a publish can overwrite a canonical Museum world.**
+  Owner decision 2026-07-31: **the canonical Museum of ZZT worlds are the main
+  world, and player-authored content never overwrites one.** Today it can.
+  M16.17b decided — deliberately — that a world with no `.access.json` "belongs
+  to nobody and stays open", which is what keeps the ~100 shipped worlds, every
+  pre-M16.17b dream and every guest reachable. The shipped classics are exactly
+  that population: no access file, so a tester's dream or editor publish that
+  lands on `TOWN`, `CAVES`, `DUNGEONS` replaces the canonical bytes the moment
+  nobody is standing in that world. Occupancy is transient; the replacement is
+  not. M18.6/M18.10's backups archive *player-created* worlds only, on purpose,
+  so a clobbered classic comes back from a re-fetch or a redeploy and from
+  nothing else — and until someone notices, testers play a world that is not the
+  world its name claims. The predicate already exists and needs no new source of
+  truth: `museumMetadataForWorld` (`world_metadata.go:148`) answers off the
+  embedded `worlds.manifest.json`, keyed by ID, zip basename and every `.ZZT`
+  filename, each through `SanitizeSaveName` — exactly the names the picker calls
+  `classic` (`world_metadata.go:28-45`). Two write paths must refuse: the
+  generation gate (`generation.go:678-682`, beside `refuseIfOccupied` /
+  `refuseIfNotOurs`, which `RetryBoard` re-enters) and the editor's publish
+  (`saveEditorWorld`, `websocket_server.go:1412-1425`, beside the
+  `loadWorldAccess`/`CanEdit` check). Both refuse the way they refuse an
+  ownership conflict now: `/api/generate` answers 409, publish answers the
+  session's refusal. One path must **not** refuse — `MuseumService.Play`
+  (`museum.go:263`) writes a classic's own canonical bytes into the hosting
+  directory, which is the cache doing its job, not a player overwriting
+  anything; the refusal must be scoped to player-authored writes or it breaks
+  the feature it protects. **Ordering: M16.17d lands first or in the same
+  change.** The browser sends no `name`, so a dream's name comes from the
+  planner, and the classic namespace is ~100 ordinary English words; without
+  M16.17d's derived-name fallback this converts a plausible planner choice into
+  a refusal the player did not cause, cannot see and cannot fix. DoD: a dream
+  and a publish aimed at a classic name are both refused with the world's bytes
+  unchanged and no sidecar written; a dream whose DERIVED name hits a classic
+  still lands, under the fallback name; `MuseumService.Play` of that same
+  classic still writes and hosts it; a world the manifest does not know is
+  unaffected (an editor publish over a `local` world behaves exactly as it does
+  today); covered beside `TestM1617bDreamHonoursTheOwnershipTheEditorWrites` and
+  the publish suite; `go test ./...` green. Before closing, answer for the
+  owner — **not** silently repair — whether the dev and production hosting
+  directories already hold a classic that a dream or publish replaced: one
+  comparison against the manifest, reported in NOTES.md.
 
 ## M14 — Rearchitecting for the service ZZTMMO is becoming
 
