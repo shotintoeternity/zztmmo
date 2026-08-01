@@ -125,6 +125,25 @@ and every `fixture` names an existing file (no stale references); every
 `deviation` reference resolves to the catalog; every `assignedTask` is a real
 M16 task id.
 
+### Regenerating the manifest (task M16.20a)
+
+`PARITY_SCAFFOLD=1 go test -run TestParityManifestScaffold ./` rewrites the file
+from code. Regeneration is **additive**: it adds rows for new code surfaces and
+changes nothing else.
+
+- The deriver owns `id`, `dimension` and `subject` — the mechanical description
+  of a surface. Everything else is curator-owned: an on-disk value always wins,
+  **including an empty one** (a sweep that cleared `assignedTask` on a passing
+  row meant it). Derived values only populate rows new to the manifest.
+- Rows the deriver cannot re-derive — a curated row a later task hand-added — are
+  carried forward. Deleting one requires naming its id in `PARITY_SCAFFOLD_DROP`,
+  and the scaffold refuses ids that are still derived or not in the manifest.
+- The scaffold logs what it added, preserved, dropped, and where an on-disk value
+  overrode a differing derived one, so no merge decision is silent.
+- `TestParityManifestIsCanonical` asserts the committed file is byte-for-byte
+  what a regeneration writes. If it goes red, regenerate and commit — never
+  weaken the merge.
+
 ---
 
 ## 4. Seeded deviation catalog

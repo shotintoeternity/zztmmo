@@ -131,7 +131,11 @@ M12.23, M17.1–M17.7, M16.0–M16.8a — has fully landed.)
    browser, which enters the world and then offers to repaint the rooms the
    dream lost — offered at the world's title screen, because a repaint cannot
    overwrite a world its own player is occupying. M16.17d is the last of
-   M16.17's gap tasks still open. Next in file order after those is M16.18. The one
+   M16.17's gap tasks still open. **M16.20a landed 2026-08-01** — regenerating
+   the parity manifest no longer deletes landed rows or overwrites hand edits,
+   and a test asserts the regeneration is a no-op diff, so M16.20 can reconcile
+   against a manifest the documented workflow cannot corrupt.
+   Next in file order after those is M16.18. The one
    browser flake still open is M16.14b's act 8,
    which is `[ADVISOR]` and still ranks below the certification tail.
 
@@ -3764,7 +3768,7 @@ gap task has landed.
   and owner approves the final deviation list. Only this task may state that the
   current product has full feature parity within the written M16 contract.
 
-- [ ] **M16.20a — Make `PARITY_SCAFFOLD=1` regeneration non-destructive.**
+- [x] **M16.20a — Make `PARITY_SCAFFOLD=1` regeneration non-destructive.**
   Found during M18.1 (NOTES.md 2026-07-30). Regenerating
   `fixtures/parity/manifest.json` deletes landed inventory: rows
   `buildParityRows` cannot re-derive are dropped rather than merged forward

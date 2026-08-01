@@ -7486,3 +7486,73 @@ uniqueness loop rather than a bare hash.
 
 `go build ./...`, `go vet ./...`, `gofmt`, `npm test` and `npm run build` clean.
 `go test ./...` green on a full run (272s), browser suites included.
+
+## M16.20a (2026-08-01) — the regeneration that ate the inventory it merged
+
+M18.1 found `PARITY_SCAFFOLD=1` deleting landed rows (NOTES.md 2026-07-30) and
+worked around it by hand. This is the fix. The old merge rebuilt the manifest
+from the deriver and then copied a *subset* of the on-disk file back onto it:
+three fields conditionally (`status`, `test`, `fixture`), `notes` only where the
+derived note was empty, and nothing at all for `authority`, `contract` or a row
+the deriver cannot produce. Everything outside that subset was regenerated over.
+
+**The merge is now additive, with per-field ownership.** The deriver owns `id`,
+`dimension` and `subject` — the mechanical description of a code surface, which
+must follow the code. The curator owns every other field, and an on-disk value
+always wins, **including an empty one**: a sweep that cleared `assignedTask` on a
+row it marked `pass` meant it, and the old code read that emptiness as "unset"
+and put the deriver's default back. Derived values now only populate rows that
+are new to the manifest.
+
+**Dropping a row takes an explicit opt-in.** Rows the deriver cannot re-derive
+are carried forward; `PARITY_SCAFFOLD_DROP=<id>[,<id>]` is the only way to delete
+one, and it refuses an id that is still derived (the next run would re-add it) or
+absent from the manifest (a typo must not silently delete nothing). A preserved
+row in a *mechanical* dimension is called out in the scaffold's log, because
+`TestParityManifest` will then reject it as stale — that is the loud version of
+the failure, and the drop list is the answer to it.
+
+**Two sources of pure churn removed.** The manifest is now written through a
+`json.Encoder` with `SetEscapeHTML(false)`: notes quote ZZT source containing
+`<`, `>` and `&`, and `encoding/json`'s default escaping re-wrote those as
+backslash-u sequences on every run. The one-time key reordering (the hand-edited
+rows carried `status` before `test`) is in this commit's manifest diff — 83 lines
+moved, no content changed, verified by comparing the parsed row sets field by
+field: 370 rows before and after, none added, none dropped, no field different.
+
+**The scaffold now reports every decision** — added, preserved, dropped, stale,
+subject rewritten, and each on-disk value it kept over a differing derived one.
+On the real manifest that last list is five entries, and all five are the landed
+edits the old merge was destroying or would next destroy: `elem.player.notes`
+and `proto.event.walkClick.authority` (M16.6b), `oop.command.endgame.parity`
+(M16.6a), and `input.title-dream.contract`/`.authority` (M16.17).
+
+### Pinned by
+
+- `TestParityManifestIsCanonical` — the committed manifest is byte-for-byte what
+  a regeneration writes. This is the DoD's "no-op diff", asserted rather than
+  observed, and it runs under a plain `go test ./...`.
+- `TestM1620aScaffoldPreservesHandEdits` — a hand-added row survives, eight
+  hand-edited fields survive, a deliberately cleared `assignedTask` stays clear,
+  the derived subject still wins, and the overrides are reported.
+- `TestM1620aScaffoldIsIdempotent`, `TestM1620aScaffoldDropRequiresOptIn`,
+  `TestM1620aScaffoldDoesNotEscapeHTML`.
+- `TestM1620aScaffoldKeepsTheRowsItDestroyed` — the named casualties from
+  M18.1's finding, against the real manifest: `service.prompt-debug`,
+  `service.prompt-help`, `service.prompt-quit` come back `pass` with their tests,
+  and M16.6b's two edits are intact.
+
+Also removed the workaround marker M18.1 left in `task.M18.11`'s note ("Hand-
+inserted rather than regenerated…"), which described a defect that no longer
+exists; the row now carries the standard task-claim note the deriver emits.
+PARITY.md §3 gains the regeneration contract, so the ownership rules live with
+the schema rather than only in the test header.
+
+### Verified
+
+`go build ./...`, `go vet ./...`, `go test -count=1 ./...` green on a full run
+(266s), browser suites included. Two consecutive regenerations produce identical
+bytes. No web files changed, so `npm test` was not re-run. One unrelated flake on
+the first full run: `web/test/control_keys.test.mjs` failed its Space-shoots-last-
+direction assertion (no bullet on the board); the same test passed on both
+subsequent full runs. Nothing in this task touches the client or the engine.

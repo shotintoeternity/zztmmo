@@ -780,7 +780,7 @@
       "parity": "exact",
       "status": "unverified",
       "assignedTask": "M16.20",
-      "notes": "task-claim row; behavioral parity carried by the element/oop/protocol/input/service rows this task touched; reconciled at M16.20. Hand-inserted rather than regenerated: PARITY_SCAFFOLD=1 drops rows it cannot re-derive (M16.20a)."
+      "notes": "task-claim row; behavioral parity carried by the element/oop/protocol/input/service rows this task touched; reconciled at M16.20"
     },
     {
       "id": "task.M18.2",
@@ -3041,9 +3041,9 @@
       "contract": "P",
       "authority": "elements.go ElementPlayerTick / game.go title / editor.go; web/src/keys.ts",
       "parity": "exact",
-      "status": "pass",
       "test": "TestM1613EditorCommandManifestHasNoUntestedKeyOrDialog,TestM1613BrowserEditorAndPortableOutput",
       "fixture": "fixtures/editor.zwd",
+      "status": "pass",
       "notes": "M16.13: every editor key and dialog is listed in m1613Commands (engine/m16_13_test.go), whose ids are scanned out of main.ts and the Go session/server so a new binding cannot go unlisted, and each one is pressed for real in engine/web/test/editor_solo.test.mjs."
     },
     {
@@ -3053,10 +3053,10 @@
       "contract": "P",
       "authority": "elements.go ElementPlayerTick / game.go title / editor.go; web/src/keys.ts",
       "parity": "exact",
-      "status": "pass",
-      "assignedTask": "M16.10",
       "test": "TestM1610BrowserControlVocabulary",
       "fixture": "engine/web/test/control_keys.test.mjs",
+      "status": "pass",
+      "assignedTask": "M16.10",
       "notes": "M16.10: '?' (Shift+Slash, matched on the produced character rather than the physical code, so non-US layouts work) takes over GameDebugPrompt's sidebar rows; Escape submits the empty command, as vanilla's prompt does."
     },
     {
@@ -3066,10 +3066,10 @@
       "contract": "P",
       "authority": "elements.go ElementPlayerTick / game.go title / editor.go; web/src/keys.ts",
       "parity": "exact",
-      "status": "pass",
-      "assignedTask": "M16.10",
       "test": "TestM1610BrowserControlVocabulary",
       "fixture": "engine/web/test/control_keys.test.mjs",
+      "status": "pass",
+      "assignedTask": "M16.10",
       "notes": "M16.10: H opens GAME.HLP through /api/help and Escape closes it, driven by real key events. M16.9 owns the window's appearance (mode.modal-help golden); this row is the key that opens it."
     },
     {
@@ -3079,10 +3079,10 @@
       "contract": "P",
       "authority": "elements.go ElementPlayerTick / game.go title / editor.go; web/src/keys.ts",
       "parity": "exact",
-      "status": "pass",
-      "assignedTask": "M16.10",
       "test": "TestM1610BrowserControlVocabulary",
       "fixture": "engine/web/test/control_keys.test.mjs",
+      "status": "pass",
+      "assignedTask": "M16.10",
       "notes": "M16.10: real ArrowUp/Down/Left/Right AND Numpad8/4/6/2 KeyboardEvents on the built client's canvas, tick-locked so each keypress is the input frame one server tick consumes. Asserted on the server's own view of the player (position after every step) rather than on the canvas alone, and the arrow walk ends on the ammo tile so the whole chain keydown -> keymask -> inputMessageToPlayerInput -> ElementPlayerTick -> ElementAmmoTouch -> HUD is proved in one move. The keypad is vanilla's own vocabulary (INPUT.PAS:217-234) and must fold into the same mask bits, which the tick lock enforces by awaiting a byte-identical frame."
     },
     {
@@ -3093,10 +3093,10 @@
       "authority": "elements.go ElementPlayerTick / game.go title / editor.go; web/src/keys.ts",
       "parity": "deviation",
       "deviation": "per-player-modal-freeze",
-      "status": "pass",
-      "assignedTask": "M16.10",
       "test": "TestM1610BrowserControlVocabulary",
       "fixture": "engine/web/test/control_keys.test.mjs",
+      "status": "pass",
+      "assignedTask": "M16.10",
       "notes": "M16.10: P raises the \"Pausing...\" overlay on the real canvas, and the pause is lifted by a MOVE rather than by a second P — vanilla's rule (game.go:1871-1900), and the one a reimplementation would most easily get wrong."
     },
     {
@@ -3106,10 +3106,10 @@
       "contract": "P",
       "authority": "elements.go ElementPlayerTick / game.go title / editor.go; web/src/keys.ts",
       "parity": "exact",
-      "status": "pass",
-      "assignedTask": "M16.10",
       "test": "TestM1610BrowserControlVocabulary",
       "fixture": "engine/web/test/control_keys.test.mjs",
+      "status": "pass",
+      "assignedTask": "M16.10",
       "notes": "M16.10: Q raises GamePromptEndPlay's \"End this game?\" and Escape declines it, leaving the player in the room. The CONFIRMED path is M16.9's (the high-score placement, entry and table goldens) and M16.11's journey; this row is the key and the decline."
     },
     {
@@ -3119,10 +3119,10 @@
       "contract": "P",
       "authority": "elements.go ElementPlayerTick / game.go title / editor.go; web/src/keys.ts",
       "parity": "exact",
-      "status": "pass",
-      "assignedTask": "M16.10",
       "test": "TestM1610BrowserControlVocabulary",
       "fixture": "engine/web/test/control_keys.test.mjs",
+      "status": "pass",
+      "assignedTask": "M16.10",
       "notes": "M16.10: S opens SidebarPromptString(\"Save game:\", \".SAV\"). Unlike M16.9's golden, this TYPES into it: the name round-trips to \"Saved as CTRLSAVE.SAV\", exercising the modal's charset filter, its buffer, its Enter, and the server's save path."
     },
     {
@@ -3132,10 +3132,10 @@
       "contract": "P",
       "authority": "elements.go ElementPlayerTick / game.go title / editor.go; web/src/keys.ts",
       "parity": "exact",
-      "status": "pass",
-      "assignedTask": "M16.10",
       "test": "TestM1610BrowserControlVocabulary",
       "fixture": "engine/web/test/control_keys.test.mjs",
+      "status": "pass",
+      "assignedTask": "M16.10",
       "notes": "M16.10: Shift held with ArrowRight, delivered as real key events; the awaited input frame carries shift=true with the direction, as inputMessageToPlayerInput builds it. Proved by arrival rather than by firing: the CONTROL world's target object eleven tiles east has a :shot label that runs #die, so its glyph leaving the board is the bullet having travelled. Ammo decrements on the sidebar."
     },
     {
@@ -3145,10 +3145,10 @@
       "contract": "P",
       "authority": "elements.go ElementPlayerTick / game.go title / editor.go; web/src/keys.ts",
       "parity": "exact",
-      "status": "pass",
-      "assignedTask": "M16.10",
       "test": "TestM1610BrowserControlVocabulary",
       "fixture": "engine/web/test/control_keys.test.mjs",
+      "status": "pass",
+      "assignedTask": "M16.10",
       "notes": "M16.10: Space reaches the engine as InputKeyPressed == ' ' with no delta, which is ElementPlayerTick's pState.DirX/DirY branch. The test walks SOUTH first and then presses Space, so what is asserted is that the bullet flies down the player's own column — a Space that reused a hard-coded direction, or the previous east-facing shot, would put it elsewhere."
     },
     {
@@ -3159,10 +3159,10 @@
       "authority": "elements.go ElementPlayerTick / game.go title / editor.go; web/src/keys.ts",
       "parity": "deviation",
       "deviation": "per-player-sound",
-      "status": "pass",
-      "assignedTask": "M16.10",
       "test": "TestM1610BrowserControlVocabulary",
       "fixture": "engine/web/test/control_keys.test.mjs",
+      "status": "pass",
+      "assignedTask": "M16.10",
       "notes": "M16.10: B flips the sidebar between \"Be quiet\" and \"Be noisy\" and back, which is hud.soundEnabled round-tripping to the server and home again. The audible half is separately asserted in TestM1610BrowserAudioParity, where a muted client schedules no oscillator automation at all."
     },
     {
@@ -3172,10 +3172,10 @@
       "contract": "P",
       "authority": "elements.go ElementPlayerTick / game.go title / editor.go; web/src/keys.ts",
       "parity": "exact",
-      "status": "pass",
-      "assignedTask": "M16.10",
       "test": "TestM1610BrowserControlVocabulary",
       "fixture": "engine/web/test/control_keys.test.mjs",
+      "status": "pass",
+      "assignedTask": "M16.10",
       "notes": "M16.10: T is pressed on the DARK board, because elements.go:1499 only spends a torch there — pressing it on a lit board would have proved only that the key routed. Torches goes 1 -> 0 on the sidebar and the count of unlit 0xB0 hatch cells on the canvas drops, so the lit radius is asserted as well as the inventory. The torch itself is earned earlier in the run, through a scroll hyperlink reply."
     },
     {
@@ -3186,10 +3186,10 @@
       "authority": "elements.go ElementPlayerTick / game.go title / editor.go; web/src/keys.ts",
       "parity": "deviation",
       "deviation": "wasd-removed",
-      "status": "pass",
-      "assignedTask": "M16.10",
       "test": "TestM1610BrowserControlVocabulary",
       "fixture": "engine/web/test/control_keys.test.mjs",
+      "status": "pass",
+      "assignedTask": "M16.10",
       "notes": "M16.10: W, A and D are pressed for real and asserted inert ON THE WIRE — the control listener reports no pending input frame at all, which a client that sent one and a server that ignored it would fail. The other half of M4.2's decision is asserted alongside it: S opens the save prompt rather than walking south, which is why WASD had to go (ElementPlayerTick reads movement and commands out of one byte)."
     },
     {
@@ -3199,10 +3199,10 @@
       "contract": "P",
       "authority": "elements.go ElementPlayerTick / game.go title / editor.go; web/src/keys.ts",
       "parity": "exact",
-      "status": "pass",
-      "assignedTask": "M16.10",
       "test": "TestM1610BrowserControlVocabulary",
       "fixture": "engine/web/test/control_keys.test.mjs",
+      "status": "pass",
+      "assignedTask": "M16.10",
       "notes": "M16.10: a 25-line scroll whose every line names itself (CTRL-01 .. CTRL-25), so each navigation key is asserted by WHICH line it brought under the window cursor rather than by the window merely moving. ArrowDown/ArrowUp move one, PageDown/PageUp move fourteen (TEXT_WINDOW_HEIGHT - 4), and both bounds clamp. Enter on the trailing \"!encore;\" hyperlink sends the scroll reply and the object's :encore label hands over a torch; Escape closes without one. Modal freeze is asserted at the wire in the same window: an arrow key produces no input frame at all."
     },
     {
@@ -3234,9 +3234,9 @@
       "contract": "P",
       "authority": "elements.go ElementPlayerTick / game.go title / editor.go; web/src/keys.ts",
       "parity": "exact",
-      "status": "pass",
       "test": "TestM1613BrowserEditorAndPortableOutput",
       "fixture": "fixtures/editor.zwd",
+      "status": "pass",
       "notes": "M16.13: E on the title screen opens an isolated editor session; the live room gains no player and its StateHash does not move."
     },
     {
@@ -3310,9 +3310,9 @@
       "contract": "P",
       "authority": "protocol.go; tasks M3.2–M3.4",
       "parity": "exact",
+      "test": "TestWebSocketDeathAndRespawnEvents",
       "status": "pass",
       "assignedTask": "M16.8",
-      "test": "TestWebSocketDeathAndRespawnEvents",
       "notes": "M16.8: no prior test converted DeathEvent through RoomManager/the protocol layer (m16_5/m16_6/game_test.go check it on the bare Engine only) — closed with a real-socket test forcing killPlayer and reading the wire \"death\" event."
     },
     {
@@ -3322,9 +3322,9 @@
       "contract": "P",
       "authority": "protocol.go; tasks M3.2–M3.4",
       "parity": "exact",
+      "test": "TestDebugPromptKeyEmitsEventAndDoesNotBlock,TestThreePathEngineRoomEquivalence",
       "status": "pass",
       "assignedTask": "M16.8",
-      "test": "TestDebugPromptKeyEmitsEventAndDoesNotBlock,TestThreePathEngineRoomEquivalence",
       "notes": "M16.8's prompt.scn compares the debugPrompt ProtocolEvent (and the debug-entry reply flow) between the direct Engine and RoomManager at every checkpoint."
     },
     {
@@ -3334,9 +3334,9 @@
       "contract": "P",
       "authority": "protocol.go; tasks M3.2–M3.4",
       "parity": "exact",
+      "test": "TestHelpEventCarriesFileLines,TestThreePathEngineRoomEquivalence",
       "status": "pass",
       "assignedTask": "M16.8",
-      "test": "TestHelpEventCarriesFileLines,TestThreePathEngineRoomEquivalence",
       "notes": "M16.8's prompt.scn presses 'H'; the help ProtocolEvent's Filename/Title/Lines (HelpFileLines, a deterministic file read) are compared between the direct Engine and RoomManager."
     },
     {
@@ -3346,9 +3346,9 @@
       "contract": "P",
       "authority": "protocol.go; tasks M3.2–M3.4",
       "parity": "exact",
+      "test": "TestM43QuitAndHighScoreOverWebSocket",
       "status": "pass",
       "assignedTask": "M16.8",
-      "test": "TestM43QuitAndHighScoreOverWebSocket",
       "notes": "Pre-existing WS-level coverage, delivered via the bare EventMessage envelope (quitOutcome); M16.8 did not need to add to it."
     },
     {
@@ -3358,9 +3358,9 @@
       "contract": "P",
       "authority": "protocol.go; tasks M3.2–M3.4",
       "parity": "exact",
+      "test": "TestM42CommandKeyOverWebSocket",
       "status": "pass",
       "assignedTask": "M16.8",
-      "test": "TestM42CommandKeyOverWebSocket",
       "notes": "Pre-existing WS-level coverage (M4.2); M16.8 did not need to add to it."
     },
     {
@@ -3370,9 +3370,9 @@
       "contract": "P",
       "authority": "protocol.go; tasks M3.2–M3.4",
       "parity": "exact",
+      "test": "TestM43QuitWithoutScoreOverWebSocket",
       "status": "pass",
       "assignedTask": "M16.8",
-      "test": "TestM43QuitWithoutScoreOverWebSocket",
       "notes": "Pre-existing WS-level coverage, delivered via the bare EventMessage envelope (quitOutcome); M16.8 did not need to add to it."
     },
     {
@@ -3382,9 +3382,9 @@
       "contract": "P",
       "authority": "protocol.go; tasks M3.2–M3.4",
       "parity": "exact",
+      "test": "TestM43QuitAndHighScoreOverWebSocket,TestThreePathEngineRoomEquivalence",
       "status": "pass",
       "assignedTask": "M16.8",
-      "test": "TestM43QuitAndHighScoreOverWebSocket,TestThreePathEngineRoomEquivalence",
       "notes": "M16.8's prompt.scn compares the quitPrompt ProtocolEvent between the direct Engine and RoomManager at every checkpoint, in addition to pre-existing WS-level coverage."
     },
     {
@@ -3394,9 +3394,9 @@
       "contract": "P",
       "authority": "protocol.go; tasks M3.2–M3.4",
       "parity": "exact",
+      "test": "TestWebSocketDeathAndRespawnEvents",
       "status": "pass",
       "assignedTask": "M16.8",
-      "test": "TestWebSocketDeathAndRespawnEvents",
       "notes": "M16.8: no prior test converted RespawnEvent through RoomManager/the protocol layer — closed alongside \"death\" in the same real-socket test."
     },
     {
@@ -3406,9 +3406,9 @@
       "contract": "P",
       "authority": "protocol.go; tasks M3.2–M3.4",
       "parity": "exact",
+      "test": "TestM43aSaveOverWebSocket",
       "status": "pass",
       "assignedTask": "M16.8",
-      "test": "TestM43aSaveOverWebSocket",
       "notes": "Pre-existing WS-level coverage (M4.3a); M16.8 did not need to add to it."
     },
     {
@@ -3418,9 +3418,9 @@
       "contract": "P",
       "authority": "protocol.go; tasks M3.2–M3.4",
       "parity": "exact",
+      "test": "TestWebSocketServerScrollReplyBuysFromVendor,TestThreePathEngineRoomEquivalence",
       "status": "pass",
       "assignedTask": "M16.8",
-      "test": "TestWebSocketServerScrollReplyBuysFromVendor,TestThreePathEngineRoomEquivalence",
       "notes": "M16.8's talk.scn (and prompt.scn's help-as-scroll path) compares the scroll ProtocolEvent's Title/Lines between the direct Engine and RoomManager, in addition to pre-existing WS-level coverage."
     },
     {
@@ -3430,9 +3430,9 @@
       "contract": "P",
       "authority": "protocol.go; tasks M3.2–M3.4",
       "parity": "exact",
+      "test": "TestWebSocketServerMultiplayerSmokePickupTransferHUD,TestM74PerPlayerSoundAttribution,TestThreePathEngineRoomEquivalence",
       "status": "pass",
       "assignedTask": "M16.8",
-      "test": "TestWebSocketServerMultiplayerSmokePickupTransferHUD,TestM74PerPlayerSoundAttribution,TestThreePathEngineRoomEquivalence",
       "notes": "M16.8 compares sound ProtocolEvents (room-wide and per-player, via RoomManager.DrainPlayerEvents) between the direct Engine and RoomManager at every checkpoint of all 24 scenarios, in addition to pre-existing per-player-attribution and WS-level coverage."
     },
     {
@@ -3442,9 +3442,9 @@
       "contract": "P",
       "authority": "protocol.go; tasks M3.2–M3.4",
       "parity": "exact",
+      "test": "TestM168aTransferEventReachesOnlyTheTraveler",
       "status": "pass",
       "assignedTask": "M16.8a",
-      "test": "TestM168aTransferEventReachesOnlyTheTraveler",
       "notes": "M16.8a: RoomManager.StepDiffs's TransferEvent case (room_manager.go) used to stop after queuing the transfer itself, unlike every sibling case, so ProtocolEvents() never converted one onto the wire for any client (the type round-tripped only in isolation, protocol_test.go). Fixed by also queuing the traveler's own TransferEvent into pendingPlayerEvents, alongside the sound it already queues; it now rides the arriving BoardChangeMessage.Events, traveler-only."
     },
     {
@@ -3466,9 +3466,9 @@
       "contract": "P",
       "authority": "protocol.go; tasks M3.2–M3.4",
       "parity": "exact",
+      "test": "TestWebSocketServerBoardEdgeSendsBoardChange,TestWebSocketServerMultiplayerSmokePickupTransferHUD,TestThreePathEngineRoomEquivalence",
       "status": "pass",
       "assignedTask": "M16.8",
-      "test": "TestWebSocketServerBoardEdgeSendsBoardChange,TestWebSocketServerMultiplayerSmokePickupTransferHUD,TestThreePathEngineRoomEquivalence",
       "notes": "M16.8's pass.scn/main.scn (and most M16.4-M16.6 hub-to-feature-board scenarios) exercise the same underlying resync (RoomManager.Snapshot after a board change) WorldInstance.Tick wraps as a BoardChangeMessage; the wire struct itself is pre-existing WS-level coverage."
     },
     {
@@ -3478,9 +3478,9 @@
       "contract": "P",
       "authority": "protocol.go; tasks M3.2–M3.4",
       "parity": "exact",
+      "test": "TestWebSocketDebugCommandMessageOverWire",
       "status": "pass",
       "assignedTask": "M16.8",
-      "test": "TestWebSocketDebugCommandMessageOverWire",
       "notes": "M16.8: no prior test constructed the wire DebugCommandMessage struct (debug_prompt_test.go's coverage calls RoomManager.SubmitDebugCommand directly) — closed by sending the \"ammo\" cheat over a real socket."
     },
     {
@@ -3490,9 +3490,9 @@
       "contract": "P",
       "authority": "protocol.go; tasks M3.2–M3.4",
       "parity": "exact",
+      "test": "TestThreePathEngineRoomEquivalence,TestWebSocketReconstructsAuthoritativeScreen,TestWebSocketServerJoinInputDiff",
       "status": "pass",
       "assignedTask": "M16.8",
-      "test": "TestThreePathEngineRoomEquivalence,TestWebSocketReconstructsAuthoritativeScreen,TestWebSocketServerJoinInputDiff",
       "notes": "M16.8: DiffMessage.Cells/Players/HUD/Hash/Events reconstructed and compared to the direct Engine at every checkpoint of all 24 scenarios, plus over a real socket for move.scn."
     },
     {
@@ -3502,8 +3502,8 @@
       "contract": "P",
       "authority": "protocol.go; tasks M3.2–M3.4",
       "parity": "exact",
-      "status": "pass",
       "test": "TestM1614CollaborativeEditorInBrowsers,TestM1613BrowserEditorAndPortableOutput",
+      "status": "pass",
       "notes": "M16.14: switch and clear, from two members on two boards; M16.13 drove add, export, import and new."
     },
     {
@@ -3513,8 +3513,8 @@
       "contract": "P",
       "authority": "protocol.go; tasks M3.2–M3.4",
       "parity": "exact",
-      "status": "pass",
       "test": "TestM1613BrowserEditorAndPortableOutput",
+      "status": "pass",
       "notes": "M16.13: the .BRD export, byte-identical to that board's record inside the .ZZT."
     },
     {
@@ -3524,8 +3524,8 @@
       "contract": "P",
       "authority": "protocol.go; tasks M3.2–M3.4",
       "parity": "exact",
-      "status": "pass",
       "test": "TestM1614CollaborativeEditorInBrowsers,TestM1613BrowserEditorAndPortableOutput",
+      "status": "pass",
       "notes": "M16.14: an author's edit reaching both other browsers, addressed to its own board (M17.12) — an annex edit paints no cell on the draft board."
     },
     {
@@ -3535,8 +3535,8 @@
       "contract": "P",
       "authority": "protocol.go; tasks M3.2–M3.4",
       "parity": "exact",
-      "status": "pass",
       "test": "TestM1614CollaborativeEditorInBrowsers,TestM1613BrowserEditorAndPortableOutput",
+      "status": "pass",
       "notes": "M16.14: place, erase and text edits from two authors, including two writes to one cell with nothing awaited between them."
     },
     {
@@ -3546,8 +3546,8 @@
       "contract": "P",
       "authority": "protocol.go; tasks M3.2–M3.4",
       "parity": "exact",
-      "status": "pass",
       "test": "TestM1614CollaborativeEditorInBrowsers,TestM1613BrowserEditorAndPortableOutput",
+      "status": "pass",
       "notes": "M16.14: three browsers — two signed-in accounts and a guest — enter one session on the same world; M16.13 entered it solo."
     },
     {
@@ -3557,8 +3557,8 @@
       "contract": "P",
       "authority": "protocol.go; tasks M3.2–M3.4",
       "parity": "exact",
-      "status": "pass",
       "test": "TestM1614CollaborativeEditorInBrowsers,TestM1613BrowserEditorAndPortableOutput",
+      "status": "pass",
       "notes": "M16.14: sent when a member leaves the editor, and NOT sent by the browser that is killed mid-session — the disconnect path is proven without it."
     },
     {
@@ -3568,8 +3568,8 @@
       "contract": "P",
       "authority": "protocol.go; tasks M3.2–M3.4",
       "parity": "exact",
-      "status": "pass",
       "test": "TestM1614CollaborativeEditorInBrowsers,TestM1613BrowserEditorAndPortableOutput",
+      "status": "pass",
       "notes": "M16.14: every cursor step, including eighteen with nothing awaited between them, whose stale replies the client drops."
     },
     {
@@ -3579,8 +3579,8 @@
       "contract": "P",
       "authority": "protocol.go; tasks M3.2–M3.4",
       "parity": "exact",
-      "status": "pass",
       "test": "TestM1614CollaborativeEditorInBrowsers,TestM102EditorLeasesRefuseAndDisconnectRelease",
+      "status": "pass",
       "notes": "M16.14: board and stat leases granted, refused by name, released on close and released by a browser that died without warning. M16.14a (c) made the stat key resolve against the board that was asked for, as the board key always did, so a collaborator's board switch can no longer strand a lease under the one shared engine (TestM1614aStatLeaseSurvivesAnotherMembersBoardSwitch)."
     },
     {
@@ -3590,8 +3590,8 @@
       "contract": "P",
       "authority": "protocol.go; tasks M3.2–M3.4",
       "parity": "exact",
-      "status": "pass",
       "test": "TestM1614CollaborativeEditorInBrowsers,TestM101EditorSessionBroadcastsDiffsAndPresence",
+      "status": "pass",
       "notes": "M16.14: collaborator cursors drawn in each member's own colour on the other screens, grouped by board in the 'Who's here' legend, and dropped on an abrupt disconnect."
     },
     {
@@ -3601,8 +3601,8 @@
       "contract": "P",
       "authority": "protocol.go; tasks M3.2–M3.4",
       "parity": "exact",
-      "status": "pass",
       "test": "TestM1613BrowserEditorAndPortableOutput",
+      "status": "pass",
       "notes": "M16.13: the ZZT-OOP program read into the code editor, behind a stat lease."
     },
     {
@@ -3612,8 +3612,8 @@
       "contract": "P",
       "authority": "protocol.go; tasks M3.2–M3.4",
       "parity": "exact",
-      "status": "pass",
       "test": "TestM1613BrowserEditorAndPortableOutput",
+      "status": "pass",
       "notes": "M16.13: an edited program written back to its stat."
     },
     {
@@ -3623,8 +3623,8 @@
       "contract": "P",
       "authority": "protocol.go; tasks M3.2–M3.4",
       "parity": "exact",
-      "status": "pass",
       "test": "TestM1613BrowserEditorAndPortableOutput",
+      "status": "pass",
       "notes": "M16.13: the program text reply."
     },
     {
@@ -3634,8 +3634,8 @@
       "contract": "P",
       "authority": "protocol.go; tasks M3.2–M3.4",
       "parity": "exact",
-      "status": "pass",
       "test": "TestM1614CollaborativeEditorInBrowsers,TestM1613BrowserEditorAndPortableOutput",
+      "status": "pass",
       "notes": "M16.14: the accepted-change reply. Since M16.14a (a) it fans out: the members watching that board get it with the frame, and everyone else gets it without one, for the world-scoped half — the switcher's board list and the world name (TestM1614aBoardScopedChangesReachEveryMemberWatching)."
     },
     {
@@ -3645,8 +3645,8 @@
       "contract": "P",
       "authority": "protocol.go; tasks M3.2–M3.4",
       "parity": "exact",
-      "status": "pass",
       "test": "TestM1614CollaborativeEditorInBrowsers,TestM1613BrowserEditorAndPortableOutput",
+      "status": "pass",
       "notes": "M16.14: a board rename from one collaborator; M16.13 drove every field."
     },
     {
@@ -3656,8 +3656,8 @@
       "contract": "P",
       "authority": "protocol.go; tasks M3.2–M3.4",
       "parity": "exact",
-      "status": "pass",
       "test": "TestM1614CollaborativeEditorInBrowsers,TestM1613BrowserEditorAndPortableOutput",
+      "status": "pass",
       "notes": "M16.14: the publish confirmation, the accepted invite, and the refusal when the target world is being played."
     },
     {
@@ -3667,8 +3667,8 @@
       "contract": "P",
       "authority": "protocol.go; tasks M3.2–M3.4",
       "parity": "exact",
-      "status": "pass",
       "test": "TestM1614CollaborativeEditorInBrowsers,TestM1613BrowserEditorAndPortableOutput",
+      "status": "pass",
       "notes": "M16.14: the entry frame every member gets, and the repaint a board switch returns. Since M16.14a it is also broadcast to the members watching a board that was cleared, imported over or reset, and sent unprompted to an invited collaborator — it remains the only place a client learns it may edit, so it carries the ACTING member's id and the client takes the cursor half only from one addressed to itself."
     },
     {
@@ -3678,8 +3678,8 @@
       "contract": "P",
       "authority": "protocol.go; tasks M3.2–M3.4",
       "parity": "exact",
-      "status": "pass",
       "test": "TestM1613BrowserEditorAndPortableOutput",
+      "status": "pass",
       "notes": "M16.13: every stat parameter the editor dialog offers. M16.14 opens the same dialog under a lease but sets no value."
     },
     {
@@ -3689,8 +3689,8 @@
       "contract": "P",
       "authority": "protocol.go; tasks M3.2–M3.4",
       "parity": "exact",
-      "status": "pass",
       "test": "TestM1613BrowserEditorAndPortableOutput",
+      "status": "pass",
       "notes": "M16.13: the reply to an accepted stat edit, which also raises the client's modified flag (M16.13a)."
     },
     {
@@ -3700,8 +3700,8 @@
       "contract": "P",
       "authority": "protocol.go; tasks M3.2–M3.4",
       "parity": "exact",
-      "status": "pass",
       "test": "TestM1614CollaborativeEditorInBrowsers,TestM104EditorTestPlayUsesIsolatedTickingCopy",
+      "status": "pass",
       "notes": "M16.14: broadcast to the whole session, so both browsers land in ONE isolated instance and the editing world is byte-identical afterwards."
     },
     {
@@ -3711,8 +3711,8 @@
       "contract": "P",
       "authority": "protocol.go; tasks M3.2–M3.4",
       "parity": "exact",
-      "status": "pass",
       "test": "TestM1614CollaborativeEditorInBrowsers,TestM1613BrowserEditorAndPortableOutput",
+      "status": "pass",
       "notes": "M16.14: save and invite, including a save refused by the occupancy rule; M16.13 drove download and upload."
     },
     {
@@ -3722,8 +3722,8 @@
       "contract": "P",
       "authority": "protocol.go; tasks M3.2–M3.4",
       "parity": "exact",
-      "status": "pass",
       "test": "TestM1613BrowserEditorAndPortableOutput",
+      "status": "pass",
       "notes": "M16.13: the .ZZT download, read back by an independent vanilla-format reader."
     },
     {
@@ -3733,9 +3733,9 @@
       "contract": "P",
       "authority": "protocol.go; tasks M3.2–M3.4",
       "parity": "exact",
+      "test": "TestM43QuitAndHighScoreOverWebSocket,TestM43QuitWithoutScoreOverWebSocket,TestM43aSaveOverWebSocket",
       "status": "pass",
       "assignedTask": "M16.8",
-      "test": "TestM43QuitAndHighScoreOverWebSocket,TestM43QuitWithoutScoreOverWebSocket,TestM43aSaveOverWebSocket",
       "notes": "Bare EventMessage envelope: used only for \"quit\"/\"highScoreEntry\" (quitOutcome, websocket_server.go) and the ad hoc \"saveResult\"/\"highScores\" events, all already covered pre-M16.8."
     },
     {
@@ -3745,9 +3745,9 @@
       "contract": "P",
       "authority": "protocol.go; tasks M3.2–M3.4",
       "parity": "exact",
+      "test": "TestM43QuitAndHighScoreOverWebSocket",
       "status": "pass",
       "assignedTask": "M16.8",
-      "test": "TestM43QuitAndHighScoreOverWebSocket",
       "notes": "Pre-existing WS-level coverage; M16.8 did not need to add to it."
     },
     {
@@ -3757,9 +3757,9 @@
       "contract": "P",
       "authority": "protocol.go; tasks M3.2–M3.4",
       "parity": "exact",
+      "test": "TestThreePathEngineRoomEquivalence,TestWebSocketReconstructsAuthoritativeScreen,TestWebSocketServerJoinInputDiff",
       "status": "pass",
       "assignedTask": "M16.8",
-      "test": "TestThreePathEngineRoomEquivalence,TestWebSocketReconstructsAuthoritativeScreen,TestWebSocketServerJoinInputDiff",
       "notes": "M16.8: every scenario's move/shoot/key ops apply through RoomManager.StepDiffs and, for move.scn, a real InputMessage over the wire."
     },
     {
@@ -3769,9 +3769,9 @@
       "contract": "P",
       "authority": "protocol.go; tasks M3.2–M3.4",
       "parity": "exact",
+      "test": "TestThreePathEngineRoomEquivalence,TestWebSocketReconstructsAuthoritativeScreen,TestWebSocketServerJoinInputDiff,TestReconnectResumeWithinGracePreservesRun",
       "status": "pass",
       "assignedTask": "M16.8",
-      "test": "TestThreePathEngineRoomEquivalence,TestWebSocketReconstructsAuthoritativeScreen,TestWebSocketServerJoinInputDiff,TestReconnectResumeWithinGracePreservesRun",
       "notes": "M16.8: engine↔RoomManager equivalence over all 24 M16.3-M16.7 oracle scenarios (TestThreePathEngineRoomEquivalence), plus a real dialed WS client (TestWebSocketReconstructsAuthoritativeScreen)."
     },
     {
@@ -3781,9 +3781,9 @@
       "contract": "P",
       "authority": "protocol.go; tasks M3.2–M3.4",
       "parity": "exact",
+      "test": "TestM43QuitAndHighScoreOverWebSocket,TestM43QuitWithoutScoreOverWebSocket,TestThreePathEngineRoomEquivalence",
       "status": "pass",
       "assignedTask": "M16.8",
-      "test": "TestM43QuitAndHighScoreOverWebSocket,TestM43QuitWithoutScoreOverWebSocket,TestThreePathEngineRoomEquivalence",
       "notes": "M16.8's prompt.scn drives a quit reply through RoomManager.SubmitQuitReply; the wire QuitReplyMessage struct itself is pre-existing WS-level coverage."
     },
     {
@@ -3793,9 +3793,9 @@
       "contract": "P",
       "authority": "protocol.go; tasks M3.2–M3.4",
       "parity": "exact",
+      "test": "TestM43aSaveOverWebSocket,TestM43aSaveRejectedOverWebSocket,TestM43aSavesDisabledOverWebSocket",
       "status": "pass",
       "assignedTask": "M16.8",
-      "test": "TestM43aSaveOverWebSocket,TestM43aSaveRejectedOverWebSocket,TestM43aSavesDisabledOverWebSocket",
       "notes": "Pre-existing WS-level coverage (M4.3a); M16.8 did not need to add to it."
     },
     {
@@ -3805,9 +3805,9 @@
       "contract": "P",
       "authority": "protocol.go; tasks M3.2–M3.4",
       "parity": "exact",
+      "test": "TestWebSocketServerScrollReplyBuysFromVendor,TestThreePathEngineRoomEquivalence",
       "status": "pass",
       "assignedTask": "M16.8",
-      "test": "TestWebSocketServerScrollReplyBuysFromVendor,TestThreePathEngineRoomEquivalence",
       "notes": "M16.8's talk.scn drives a scroll reply through RoomManager.SubmitScrollReply; the wire ScrollReplyMessage struct itself is pre-existing WS-level coverage (vendor purchase)."
     },
     {
@@ -3817,9 +3817,9 @@
       "contract": "P",
       "authority": "protocol.go; tasks M3.2–M3.4",
       "parity": "exact",
+      "test": "TestThreePathEngineRoomEquivalence,TestWebSocketReconstructsAuthoritativeScreen,TestRoomManagerSnapshotFromTown",
       "status": "pass",
       "assignedTask": "M16.8",
-      "test": "TestThreePathEngineRoomEquivalence,TestWebSocketReconstructsAuthoritativeScreen,TestRoomManagerSnapshotFromTown",
       "notes": "M16.8: RoomManager.Snapshot's full-board dump is checked against the diff-only reconstruction at every checkpoint (full-snapshot-fallback-vs-diff-only convergence) and, over the wire, against the direct Engine's authoritative screen."
     },
     {
@@ -3869,8 +3869,8 @@
       "contract": "E",
       "authority": "web_api.go / websocket_server.go",
       "parity": "exact",
-      "status": "pass",
       "test": "TestM1617GenerateRouteAnswersEveryDocumentedOutcome,TestM1617DreamJourneyThroughTheShippedBinary,TestM1811DreamNeverOverwritesACanonicalWorld",
+      "status": "pass",
       "notes": "M16.17: the route's whole answer matrix — a premise that generates, hosts and persists; GET of an unknown job 404; a method that is neither GET nor POST 405; a malformed or over-16KiB body 400; an empty or over-8000-byte premise 422; retry of an unknown job 404 and of a job with no resume state 409; the per-client pace 429; an unconfigured server 503 — plus the async job, its progress and its retry driven through the shipped binary. A refused request is proven to cost no model call. The `name` field is client-supplied and passes only through SanitizeSaveName: the destructive collision it allowed was filed as M16.17b and LANDED 2026-07-31 — the matrix now also covers a generation aimed at a world people are playing, which answers 409, paints no board and leaves the occupied world's bytes alone. M18.11 adds a third 409 subject: a premise aimed at a canonical Museum world (ErrGeneratedWorldIsCanonical), refused before the first board is painted and costing no model call. Only a name the player TYPED reaches that 409 — since M16.17d a plan-derived collision resolves to a minted name instead of failing."
     },
     {
@@ -3986,9 +3986,9 @@
       "contract": "E",
       "authority": "web_api.go / websocket_server.go",
       "parity": "exact",
+      "test": "TestWebSocketServerJoinInputDiff,TestWebSocketReconstructsAuthoritativeScreen,TestM42CommandKeyOverWebSocket",
       "status": "pass",
       "assignedTask": "M16.8",
-      "test": "TestWebSocketServerJoinInputDiff,TestWebSocketReconstructsAuthoritativeScreen,TestM42CommandKeyOverWebSocket",
       "notes": "Dozens of pre-existing tests already dial a real WebSocket against this route; M16.8 adds one more (TestWebSocketReconstructsAuthoritativeScreen) that also reconstructs and verifies full state from it."
     },
     {
@@ -3998,9 +3998,9 @@
       "contract": "E",
       "authority": "web/src/*.ts",
       "parity": "exact",
+      "test": "TestM1613BrowserEditorAndPortableOutput,TestM1613aEditorSessionInstallsTheEditorElementTable,TestM1613aRoomKeepsGameElementsBesideAnEditorSession,TestM1613aSwitchBoardsReachesTheTitleBoard,TestM1613aExitAndPassagePickersStillSayNone,TestM1613aLeavingTheEditorOffersToSave",
       "status": "pass",
       "assignedTask": "M16.13a",
-      "test": "TestM1613BrowserEditorAndPortableOutput,TestM1613aEditorSessionInstallsTheEditorElementTable,TestM1613aRoomKeepsGameElementsBesideAnEditorSession,TestM1613aSwitchBoardsReachesTheTitleBoard,TestM1613aExitAndPassagePickersStillSayNone,TestM1613aLeavingTheEditorOffersToSave",
       "notes": "M16.13 found three divergences from EditorLoop and M16.13a closed them: the session now installs InitElementsEditor's editor-only overrides (ForceDarknessOff, and E_INVISIBLE's 0xB0 glyph) on the Engine rather than the shared ElementDefs, so a dark board is edited lit and an invisible wall can be seen while a room ticking beside it keeps the game table; \"Switch boards\" lists board 0 under its own name (titleScreenIsNone false) while the exit and passage pickers still say \"None\"; and editorModified is raised on every accepted edit/board-info/stat reply, so leaving offers to save. The rest of editor mode is exercised by TestM1613BrowserEditorAndPortableOutput."
     },
     {
@@ -4059,8 +4059,8 @@
       "authority": "web/src/*.ts",
       "parity": "deviation",
       "deviation": "presentation-additions",
-      "status": "pass",
       "test": "TestM1617BrowserDreamJourney,TestM1617GenerationStagesAreAllRenderedByTheClient",
+      "status": "pass",
       "notes": "M16.17: a real browser walked the flow — D on the title screen, the premise window (its title, its 'Enter: dream' affordance and the typed premise), the 'Dreaming a world' progress window rendering the server's stages as sentences clamped to the window's 42 columns, then the dreamed world's title screen and the world itself joined and played. Every stage generation.go can emit is scanned out of the code and required to have copy in web/src/dream.ts, so a new stage cannot reach the window as a raw token. The gap it left — no repaint offer for a salvaged world — LANDED as M16.17c 2026-07-31: pollDreamJob carries a complete job's retryable/stubbedBoards out as a DreamResult instead of dropping them, and the client enters the world and then offers 'Some rooms would not form' naming the lost rooms, whose repaint resumes the same job id (M12.22's retryDreamBoard). The browser journey now takes the offer and plays the room the repaint gave back. The offer is made at the world's title screen, BEFORE the player joins, because a repaint rewrites the world's file and the server refuses to overwrite a world anybody is playing (M16.17b) — a player who took it from inside the stub room would be the occupant blocking it."
     },
     {
@@ -4131,10 +4131,10 @@
       "contract": "E",
       "authority": "web/src/*.ts",
       "parity": "exact",
-      "status": "pass",
-      "assignedTask": "M16.10",
       "test": "TestM1610BrowserControlVocabulary",
       "fixture": "engine/web/test/control_keys.test.mjs",
+      "status": "pass",
+      "assignedTask": "M16.10",
       "notes": "M16.10: the save/name entry modal driven rather than photographed — opened with S, typed into, submitted with Enter, and confirmed by the server's \"Saved as CTRLSAVE.SAV\" reply, then dismissed. M16.9's window-save.json golden owns its appearance."
     },
     {
@@ -4206,9 +4206,9 @@
       "contract": "E",
       "authority": "completed task contracts (TASKS.md); NOTES.md",
       "parity": "exact",
+      "test": "TestM1616aChatAdmissionBoundary,TestM1616aChatRateLimiterRollingWindow,TestM1616aChatRefusalPersistsAndBroadcastsNothing,TestM1616aChatHistorySurvivesRestart",
       "status": "pass",
       "assignedTask": "M16.16",
-      "test": "TestM1616aChatAdmissionBoundary,TestM1616aChatRateLimiterRollingWindow,TestM1616aChatRefusalPersistsAndBroadcastsNothing,TestM1616aChatHistorySurvivesRestart",
       "notes": "M16.16a: 120-byte printable-CP437 normalization, 5-per-10s rolling limit on the injected clock, refusals persist/broadcast nothing, history survives restart"
     },
     {
@@ -4219,8 +4219,8 @@
       "authority": "completed task contracts (TASKS.md); NOTES.md",
       "parity": "deviation",
       "deviation": "presentation-additions",
-      "status": "pass",
       "test": "TestM1617DreamJourneyThroughTheShippedBinary,TestM1617GeneratedWorldPassesTheGatesAuthoredWorldsDo,TestM1617AdversarialModelOutputNeverBecomesCodeOrFiles,TestM1617ZWDLimitsAreEnforcedWithANamedReason,TestM1617ConcurrencySemaphoreAdmitsOnlyMaxConcurrent,TestM1617PublishedAndDreamedWorldsShareOneHostingDirectory,TestM1617aConcurrentGenerationsShareTheElementTableSafely,TestM1617aCompileBesideATickingRoomLeavesItUnmoved,TestM1617aElementTableIsBuiltAtBoot,TestM1617bDreamOverwritesAWorldItIsRefusedPermissionToHost,TestM1617dDerivedNameFallsBackWhereATypedNameIsRefused,TestM1811WorldIsCanonicalKnowsTheShippedWorlds,TestM1811DreamNeverOverwritesACanonicalWorld,TestM1811PublishNeverOverwritesACanonicalWorld,TestM1811MuseumCacheStillWritesCanonicalWorlds",
+      "status": "pass",
       "notes": "M16.17 drove the whole service through the shipped binary against a scripted model: a premise became a plan, boards, a salvaged stub, a retry-in-place that repainted it, a validated world persisted with its three sidecars into the production hosting directory, listed by the picker as a dream and joined and played over a real WebSocket — while a room already being played went on ticking and its recording replayed to the same per-tick StateHash it had put on the wire. Also certified: ZWD.md's limits table refused with a named reason, the decompile/recompile fixed point and the vanilla-reader gate on generated bytes, adversarial model output (no plan, no board, an upstream 500, a 2MB answer, a traversal world name) leaving no file and no instance, and the concurrency semaphore admitting only MaxConcurrent. THREE DEFECTS FOUND, all filed and pinned: M16.17a — every ZWD compile rewrote the process-global ElementDefs, so two dreams at once (the shipped ZZT_GENERATION_CONCURRENCY=2) made each other fail with a nonsense 'unknown element name' or panic on a torn string in an unrecovered goroutine, and the table is the one every live room reads each tick — LANDED 2026-07-31: the table is built once at boot (ensureElementDefs) and the ZWD compile, decompile, blueprint and generation paths read it instead of rebuilding it, the pin is inverted, and the journey now runs the production concurrency of 2; M16.17b — a generation persisted before it hosted, so one aimed at a world people are playing replaced that world's file and its sidecars and only then reported 'already occupied' — LANDED 2026-07-31: refuseIfOccupied asks the editor's question at the editor's moment, once as soon as the name is known (so an occupied name costs no model spend) and again immediately before the first write, the route answers 409, and the pin is inverted — a refused dream now moves no byte and writes no sidecar; M16.17c — a salvaged job is complete+retryable with stubbedBoards and no client read either field, so M12.22's targeted repaint was unreachable from a browser — LANDED 2026-07-31: the client carries a complete job's salvage state out of pollDreamJob, enters the world and offers the repaint of the rooms the dream lost, and the browser journey takes the offer and plays the repainted room (carried by the mode.modal-dream row, now pass). DELIBERATELY NOT CLOSED by M16.17b: generation still ignores the .access.json ownership the editor writes, so an UNOCCUPIED world of a name a tester supplies is still replaced — an owner decision, recorded in NOTES.md 2026-07-31. M16.17d and M18.11 LANDED 2026-08-01, together, because the second needs the first: the canonical Museum worlds (worlds.manifest.json, the population the picker calls `classic`) are now refused to every player-authored write — a dream and an editor publish both — which M16.17b's ownership guard could not do for them, since they carry no .access.json and read to it as unowned and open. The Museum's own cache is deliberately NOT gated: writing a classic's canonical bytes into the hosting directory is that cache doing its job, and a boundary test pins it. And because the browser sends no name, a dream's name comes from the plan: a plan-derived name that hits a classic or another account's world now falls back to the minted GEN%05X name and says so in the progress window, while a name the player TYPED still refuses with 409. A workstation audit of 65 canonical worlds found none carrying a dream or publish sidecar; the dev and production hosts need the same check, owner-gated."
     },
     {
@@ -4230,10 +4230,10 @@
       "contract": "E",
       "authority": "completed task contracts (TASKS.md); NOTES.md",
       "parity": "exact",
-      "status": "gap",
-      "assignedTask": "M16.14b",
       "test": "TestM1614CollaborativeEditorInBrowsers,TestM1614ReadOnlyMemberCannotMoveAByte,TestM1614PublishOverAnOccupiedWorldMovesNoBytes,TestM1614aBoardScopedChangesReachEveryMemberWatching,TestM1614aInvitedCollaboratorEditsWithoutReentering,TestM1614aStatLeaseSurvivesAnotherMembersBoardSwitch",
       "fixture": "fixtures/editor.zwd",
+      "status": "gap",
+      "assignedTask": "M16.14b",
       "notes": "M16.14 drove the whole collaborative contract through three real browsers — two accounts signed in through a hermetic OIDC provider plus a guest — on one session: live diffs and cursors, a local echo caught while the session's own lock was held, stale inspect replies dropped, per-board and per-stat leases with named refusals, release on an abrupt disconnect, ownership/invite/read-only refusal with the world's bytes unchanged, simultaneous same-cell edits converging, the publish occupancy refusal, and co-op test play in one isolated instance. It found three divergences and M16.14a closed them: (a) Clear board, Board Information, Add board, Import board and New world now fan out — the members watching the affected board get the frame, and everyone else the world-scoped half (the switcher's board list and the world name) with no frame that would paint another board over theirs, the client taking only what a snapshot addressed to somebody else is entitled to change; (b) an invite sends the invitee a snapshot addressed to them, carrying the cursor they last reported, so their browser stops refusing their own edits without re-entering; (c) a stat lease key resolves against the board that was asked for, like the board lease always did, so a collaborator's board switch can no longer strand a lease under the shared engine. M16.14a then found the one thing left, filed as M16.14b and open: the diff fan-out happens outside the session's lock, so two members writing the same cell at once can have their two diffs reach a third browser in the opposite order, leaving that screen holding the tile the session threw away until something asks for a repaint."
     },
     {
@@ -4243,9 +4243,9 @@
       "contract": "E",
       "authority": "completed task contracts (TASKS.md); NOTES.md",
       "parity": "exact",
-      "status": "pass",
       "test": "TestM1613BrowserEditorAndPortableOutput,TestM1811PublishNeverOverwritesACanonicalWorld",
       "fixture": "fixtures/editor.zwd",
+      "status": "pass",
       "notes": "M16.13: a browser authors a world from nothing, downloads it as .ZZT and one board as .BRD, and the bytes are read back by an independent vanilla-format reader (m1613ReadVanillaWorld) and compared field by field with the editor session. The .BRD is byte-identical to that board's record inside the .ZZT, the download re-uploads through the validation gate byte for byte, and test play leaves the editing world byte-identical. M18.11: the publish path also refuses a canonical Museum world by name, before the ownership question it already asked — the classics have no .access.json for that question to read. A world the manifest does not know publishes exactly as it did."
     },
     {
@@ -4268,9 +4268,9 @@
       "contract": "E",
       "authority": "completed task contracts (TASKS.md); NOTES.md",
       "parity": "exact",
+      "test": "TestM1616aMuseumRefusalsCreateNothing,TestM1616aMuseumChoicesThenSelectionCachesOnce,TestM1616aMuseumOccupiedReplayKeepsHostedFile,TestMuseumServicePlayDownloadsCachesValidatesAndHosts,TestMuseumAPIPlayThenWebSocketJoinsFetchedWorld",
       "status": "pass",
       "assignedTask": "M16.16",
-      "test": "TestM1616aMuseumRefusalsCreateNothing,TestM1616aMuseumChoicesThenSelectionCachesOnce,TestM1616aMuseumOccupiedReplayKeepsHostedFile,TestMuseumServicePlayDownloadsCachesValidatesAndHosts,TestMuseumAPIPlayThenWebSocketJoinsFetchedWorld",
       "notes": "M16.16a: caching is a post-validation commit; every refusal creates no cache entry, hosted .ZZT, or instance"
     },
     {
@@ -4356,9 +4356,9 @@
       "contract": "E",
       "authority": "completed task contracts (TASKS.md); NOTES.md",
       "parity": "exact",
+      "test": "TestWorldReadFromRejectsCorruptBoardCount,TestLoadWorldBytesRejectsTruncatedBoard,TestLoadWorldBytesRejectsOversizedStatCount,TestRoomManagerLoadWorldRejectsCorruptFile,TestRoomManagerRestoreSnapshotRejectsCorruptFile,TestWorldLoadRejectsCorruptFileWithoutPanicking,TestVanillaSaveRoundTripPreservesDarknessAndTime",
       "status": "pass",
       "assignedTask": "M16.7",
-      "test": "TestWorldReadFromRejectsCorruptBoardCount,TestLoadWorldBytesRejectsTruncatedBoard,TestLoadWorldBytesRejectsOversizedStatCount,TestRoomManagerLoadWorldRejectsCorruptFile,TestRoomManagerRestoreSnapshotRejectsCorruptFile,TestWorldLoadRejectsCorruptFileWithoutPanicking,TestVanillaSaveRoundTripPreservesDarknessAndTime",
       "notes": "BoardOpen/worldReadFrom had no bounds checking (RLE run count, StatCount vs MAX_STAT, board count vs MAX_BOARD); LoadWorldBytes/LoadPristineWorld/RoomManager.LoadWorld/RestoreSnapshot and WorldLoad now validate every board once (validateWorldBoards, game.go) before it can reach a real BoardOpen, closing a live-server-crash gap on the multiplayer upload/host/restore path. .SAV is the same GameWorldSave routine as .ZZT (game.go) with darkness/torch/time state proven round-tripped. .BRD export/import + malformed-input refusal (editor_session_test.go, safeBoardOpen) predate this task and are exercised by service.editor-solo (M16.13); board re-entry/entry-point (elem.board-edge, M16.3) and title-screen animation (elem.monitor, M16.3) were already oracle-certified and only gained one strengthened return-trip checkpoint here (pass.scn)."
     },
     {

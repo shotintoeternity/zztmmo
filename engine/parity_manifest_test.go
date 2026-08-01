@@ -13,12 +13,28 @@ package zztgo
 //
 // TestParityManifest             — the gate (runs under `go test ./...`).
 // TestParityManifestScaffold     — regenerates the manifest from code; run with
-//                                  PARITY_SCAFFOLD=1 to (re)write it, merging in
-//                                  any status/test/fixture advancements already
-//                                  recorded by later M16 tasks.
+//                                  PARITY_SCAFFOLD=1 to (re)write it, merging it
+//                                  into the manifest already on disk.
+// TestParityManifestIsCanonical  — proves that regeneration is a no-op diff, so
+//                                  the documented workflow cannot corrupt the
+//                                  certification record (task M16.20a).
+//
+// Merge ownership (task M16.20a). Regeneration is additive by default:
+//   - The deriver owns id, dimension and subject — the mechanical description of
+//     a code surface. A changed subject is reported when it overwrites a
+//     differing on-disk one, so it is never silent.
+//   - The curator owns everything else (contract, authority, parity, deviation,
+//     test, fixture, status, assignedTask, notes). An on-disk value always wins,
+//     including an empty one: a sweep that cleared assignedTask on a passing row
+//     meant it. Derived values only fill in rows that are new to the manifest.
+//   - Rows the deriver cannot re-derive (a curated row a later task hand-added)
+//     are carried forward, never dropped. Deleting one requires naming it in
+//     PARITY_SCAFFOLD_DROP.
 
 import (
+	"bytes"
 	"encoding/json"
+	"fmt"
 	"os"
 	"path/filepath"
 	"reflect"
@@ -235,53 +251,179 @@ func TestParityManifest(t *testing.T) {
 	}
 }
 
+// TestParityManifestIsCanonical proves the documented regeneration workflow is
+// non-destructive (task M16.20a): re-deriving the inventory and merging it into
+// the manifest already on disk must reproduce that file byte for byte. If this
+// fails, either a code surface changed (regenerate with PARITY_SCAFFOLD=1 and
+// commit the result) or a hand edit was written in a shape the scaffold does not
+// round-trip — never fix it by weakening the merge.
+func TestParityManifestIsCanonical(t *testing.T) {
+	onDisk, err := os.ReadFile(parityManifestPath)
+	if err != nil {
+		t.Fatalf("read %s: %v", parityManifestPath, err)
+	}
+	merged, report, err := mergeParityManifest(onDisk, buildParityRows(t), nil)
+	if err != nil {
+		t.Fatal(err)
+	}
+	out, err := marshalParityManifest(merged)
+	if err != nil {
+		t.Fatal(err)
+	}
+	if bytes.Equal(out, onDisk) {
+		return
+	}
+	t.Errorf("%s is not what PARITY_SCAFFOLD=1 would write — regenerate it (the merge preserves hand edits)", parityManifestPath)
+	if len(report.added) > 0 {
+		t.Errorf("  rows the manifest is missing: %s", strings.Join(report.added, ", "))
+	}
+	want, got := strings.Split(string(onDisk), "\n"), strings.Split(string(out), "\n")
+	for i := 0; i < len(want) && i < len(got); i++ {
+		if want[i] != got[i] {
+			t.Errorf("  first difference at line %d:\n    on disk:    %s\n    regenerated: %s", i+1, want[i], got[i])
+			break
+		}
+	}
+	if len(want) != len(got) {
+		t.Errorf("  line count: on disk %d, regenerated %d", len(want), len(got))
+	}
+}
+
 // ---------------------------------------------------------------------------
 // Scaffold / regeneration
 // ---------------------------------------------------------------------------
+
+// parityScaffoldDropEnv is the explicit opt-in a regeneration needs before it
+// may delete a row that is on disk but no longer derivable: a comma-separated
+// list of row ids. Without it, such rows are carried forward (M16.20a — three
+// M16.7a service rows were being silently deleted on every run).
+const parityScaffoldDropEnv = "PARITY_SCAFFOLD_DROP"
 
 func TestParityManifestScaffold(t *testing.T) {
 	if os.Getenv("PARITY_SCAFFOLD") == "" {
 		t.Skip("set PARITY_SCAFFOLD=1 to (re)generate fixtures/parity/manifest.json")
 	}
 
-	rows := buildParityRows(t)
+	prev, err := os.ReadFile(parityManifestPath)
+	if err != nil && !os.IsNotExist(err) {
+		t.Fatal(err)
+	}
 
-	// Merge in any advancements (status/test/fixture/notes/contract) already
-	// recorded on disk, so regeneration never discards a landed sweep's edits.
-	if prev, err := os.ReadFile(parityManifestPath); err == nil {
-		var old parityManifest
-		if err := json.Unmarshal(prev, &old); err == nil {
-			oldByID := map[string]parityRow{}
-			for _, r := range old.Rows {
-				oldByID[r.ID] = r
-			}
-			for i, r := range rows {
-				if o, ok := oldByID[r.ID]; ok {
-					if o.Status != "unverified" {
-						rows[i].Status = o.Status
-						// A landed sweep also owns which task closes the row:
-						// a gap task filed against it (M16.5a) is not derivable
-						// from the code, so regeneration must not reset it.
-						if o.AssignedTask != "" {
-							rows[i].AssignedTask = o.AssignedTask
-						}
-					}
-					// Never downgrade a recorded deviation to exact.
-					if o.Parity == "deviation" {
-						rows[i].Parity, rows[i].Deviation = o.Parity, o.Deviation
-					}
-					if o.Test != "" {
-						rows[i].Test = o.Test
-					}
-					if o.Fixture != "" {
-						rows[i].Fixture = o.Fixture
-					}
-					if o.Notes != "" && rows[i].Notes == "" {
-						rows[i].Notes = o.Notes
-					}
-				}
-			}
+	manifest, report, err := mergeParityManifest(prev, buildParityRows(t), splitList(os.Getenv(parityScaffoldDropEnv)))
+	if err != nil {
+		t.Fatal(err)
+	}
+	out, err := marshalParityManifest(manifest)
+	if err != nil {
+		t.Fatal(err)
+	}
+	if err := os.MkdirAll(filepath.Dir(parityManifestPath), 0o755); err != nil {
+		t.Fatal(err)
+	}
+	if err := os.WriteFile(parityManifestPath, out, 0o644); err != nil {
+		t.Fatal(err)
+	}
+	t.Logf("wrote %s: %d rows, %d deviations", parityManifestPath, len(manifest.Rows), len(manifest.Deviations))
+	for _, line := range report.lines() {
+		t.Log(line)
+	}
+}
+
+// mergeReport records what regeneration did beyond adding derived rows, so a
+// destructive or overriding merge shows up in the scaffold's own output instead
+// of only in the diff.
+type mergeReport struct {
+	added     []string // derived rows the manifest did not carry
+	preserved []string // on-disk rows the deriver cannot re-derive
+	stale     []string // preserved rows in a mechanical dimension — the gate rejects these
+	dropped   []string // on-disk rows deleted via the explicit opt-in
+	resubject []string // rows whose on-disk subject the deriver overwrote
+	overrode  []string // curator fields kept in place of a differing derived value
+}
+
+func (r mergeReport) lines() []string {
+	var out []string
+	for _, g := range []struct {
+		label string
+		ids   []string
+	}{
+		{"added", r.added}, {"preserved (not derivable)", r.preserved},
+		{"preserved but stale — the code no longer has this surface, so the gate " +
+			"will reject it until it is dropped via " + parityScaffoldDropEnv, r.stale},
+		{"dropped (" + parityScaffoldDropEnv + ")", r.dropped},
+		{"subject rewritten from code", r.resubject},
+		{"on-disk value kept over a differing derived one", r.overrode},
+	} {
+		if len(g.ids) > 0 {
+			out = append(out, fmt.Sprintf("%s: %d — %s", g.label, len(g.ids), strings.Join(g.ids, ", ")))
 		}
+	}
+	return out
+}
+
+// mergeParityManifest folds the derived inventory into the manifest bytes
+// already on disk (which may be empty on a first run). See the ownership rules
+// in the file header: derived rows are added, on-disk rows and their curated
+// fields are preserved, and a row is only deleted if its id is in drop.
+func mergeParityManifest(prev []byte, derived []parityRow, drop []string) (parityManifest, mergeReport, error) {
+	var report mergeReport
+
+	var old parityManifest
+	if len(bytes.TrimSpace(prev)) > 0 {
+		if err := json.Unmarshal(prev, &old); err != nil {
+			return parityManifest{}, report, fmt.Errorf("parse existing manifest: %w", err)
+		}
+	}
+	oldByID := map[string]parityRow{}
+	for _, r := range old.Rows {
+		oldByID[r.ID] = r
+	}
+
+	derivedByID := map[string]bool{}
+	for _, r := range derived {
+		derivedByID[r.ID] = true
+	}
+
+	dropByID := map[string]bool{}
+	for _, id := range drop {
+		switch {
+		case derivedByID[id]:
+			return parityManifest{}, report, fmt.Errorf("%s names %q, which the code still derives — a regeneration would re-add it; remove the surface instead", parityScaffoldDropEnv, id)
+		case oldByID[id].ID == "":
+			return parityManifest{}, report, fmt.Errorf("%s names %q, which is not in the manifest", parityScaffoldDropEnv, id)
+		}
+		dropByID[id] = true
+	}
+
+	rows := make([]parityRow, 0, len(derived)+len(old.Rows))
+	for _, d := range derived {
+		o, ok := oldByID[d.ID]
+		if !ok {
+			report.added = append(report.added, d.ID)
+			rows = append(rows, d)
+			continue
+		}
+		merged, notes := mergeParityRow(o, d)
+		if merged.Subject != o.Subject {
+			report.resubject = append(report.resubject, d.ID)
+		}
+		report.overrode = append(report.overrode, notes...)
+		rows = append(rows, merged)
+	}
+	// Carry forward every on-disk row the deriver has no counterpart for.
+	for _, o := range old.Rows {
+		if derivedByID[o.ID] {
+			continue
+		}
+		if dropByID[o.ID] {
+			report.dropped = append(report.dropped, o.ID)
+			continue
+		}
+		report.preserved = append(report.preserved, o.ID)
+		if mechanicalDims[o.Dimension] {
+			report.stale = append(report.stale, o.ID)
+		}
+		rows = append(rows, o)
 	}
 
 	sort.SliceStable(rows, func(i, j int) bool {
@@ -291,19 +433,64 @@ func TestParityManifestScaffold(t *testing.T) {
 		return rows[i].ID < rows[j].ID
 	})
 
-	manifest := parityManifest{SchemaVersion: 1, Rows: rows, Deviations: seededDeviations()}
-	out, err := json.MarshalIndent(manifest, "", "  ")
-	if err != nil {
-		t.Fatal(err)
+	// The deviation catalog is code-owned (seededDeviations); it has no curated
+	// half to preserve.
+	return parityManifest{SchemaVersion: 1, Rows: rows, Deviations: seededDeviations()}, report, nil
+}
+
+// mergeParityRow keeps the on-disk row and takes only the deriver-owned fields
+// from the freshly derived one, reporting each curator field where the two
+// disagree so the override is visible rather than silent.
+func mergeParityRow(disk, derived parityRow) (parityRow, []string) {
+	merged := disk
+	merged.Dimension = derived.Dimension
+	merged.Subject = derived.Subject
+
+	var notes []string
+	for _, f := range []struct {
+		name       string
+		disk, derv string
+	}{
+		{"contract", disk.Contract, derived.Contract},
+		{"authority", disk.Authority, derived.Authority},
+		{"parity", disk.Parity, derived.Parity},
+		{"deviation", disk.Deviation, derived.Deviation},
+		{"test", disk.Test, derived.Test},
+		{"fixture", disk.Fixture, derived.Fixture},
+		{"status", disk.Status, derived.Status},
+		{"assignedTask", disk.AssignedTask, derived.AssignedTask},
+		{"notes", disk.Notes, derived.Notes},
+	} {
+		if f.derv == "" || f.derv == f.disk {
+			continue
+		}
+		// Two disagreements are the design, not news: the deriver stamps every
+		// row "unverified" and names the sweep that should close it, so a row a
+		// sweep has since marked pass differs on both by construction.
+		if f.name == "status" && f.derv == "unverified" {
+			continue
+		}
+		if f.name == "assignedTask" && disk.Status != "unverified" {
+			continue
+		}
+		notes = append(notes, disk.ID+"."+f.name)
 	}
-	out = append(out, '\n')
-	if err := os.MkdirAll(filepath.Dir(parityManifestPath), 0o755); err != nil {
-		t.Fatal(err)
+	return merged, notes
+}
+
+// marshalParityManifest renders the manifest the one way the fixture is stored:
+// two-space indent, a trailing newline, and no HTML escaping — notes quote ZZT
+// source containing `<`, `>` and `&`, and re-escaping those to backslash-u
+// forms would make every regeneration a diff of its own.
+func marshalParityManifest(m parityManifest) ([]byte, error) {
+	var buf bytes.Buffer
+	enc := json.NewEncoder(&buf)
+	enc.SetEscapeHTML(false)
+	enc.SetIndent("", "  ")
+	if err := enc.Encode(m); err != nil {
+		return nil, err
 	}
-	if err := os.WriteFile(parityManifestPath, out, 0o644); err != nil {
-		t.Fatal(err)
-	}
-	t.Logf("wrote %s: %d rows, %d deviations", parityManifestPath, len(rows), len(manifest.Deviations))
+	return buf.Bytes(), nil
 }
 
 func dimOrder(dim string) int {
