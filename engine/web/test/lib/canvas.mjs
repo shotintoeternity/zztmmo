@@ -60,6 +60,21 @@ export const EGA = [
 // drift.
 const CLOCK_TIME = "2026-01-01T00:00:00.000Z";
 
+/**
+ * Where `launchGoldenBrowser` parks a page's recorded error channel, so
+ * `pauseClock` can account for the one page error the harness produces itself
+ * (M16.18c — the reasoning is at `pauseClock`). A property rather than a
+ * WeakMap: the suites wrap `page` to force timings, and a wrapper forwards a
+ * property where it cannot forward an identity.
+ */
+export const ERROR_CHANNEL = "__zztErrorChannel";
+
+// The exact text of that error. It has exactly one producer in this repo:
+// Playwright's injected clock, from `_innerFastForwardTo`, reached only by
+// `clock.pauseAt` and `clock.fastForward` — and the harness never calls
+// `fastForward`. So no client fault can wear this string.
+const CLOCK_REWIND_ERROR = "Error: Cannot fast-forward to the past";
+
 export const goldenDir = process.env.GOLDEN_DIR
   ? path.resolve(process.env.GOLDEN_DIR)
   : path.resolve("../../fixtures/browser-goldens");
@@ -104,11 +119,25 @@ export async function launchGoldenBrowser({
   const page = await context.newPage();
   const pageErrors = [];
   const consoleErrors = [];
-  page.on("pageerror", (err) => pageErrors.push(String(err)));
+  // Errors the harness provoked itself, moved aside rather than dropped, so a
+  // run can still be asked what it swallowed. Only `pauseClock` fills this —
+  // see the accounting below it for why one entry, and only one, may move.
+  const suppressed = [];
+  const channel = { pageErrors, consoleErrors, suppressed, owedClockRewinds: 0 };
+  page[ERROR_CHANNEL] = channel;
+  page.on("pageerror", (err) => {
+    const text = String(err);
+    if (channel.owedClockRewinds > 0 && text === CLOCK_REWIND_ERROR) {
+      channel.owedClockRewinds--;
+      suppressed.push(text);
+      return;
+    }
+    pageErrors.push(text);
+  });
   page.on("console", (msg) => {
     if (msg.type() === "error") consoleErrors.push(msg.text());
   });
-  return { browser, context, page, pageErrors, consoleErrors };
+  return { browser, context, page, pageErrors, consoleErrors, suppressed };
 }
 
 /**
@@ -131,6 +160,34 @@ export async function pauseClock(page) {
   // the second read is of a clock nothing can advance, and `now + 1` is
   // necessarily in its future. One retry is enough, and a second failure means
   // this reasoning has stopped being true — so it is raised, not swallowed.
+  //
+  // M16.18c: the retry recovers the script, but on Firefox the failed attempt
+  // ALSO lands in the page-error channel every browser suite asserts is empty,
+  // which is why a loaded machine could still redden a run that passed. The
+  // mechanism, confirmed against both sides:
+  //
+  //   Playwright runs `__pwClock.controller.pauseAt(t)` in the page and takes
+  //   its result back over the wire. Chromium and WebKit await the returned
+  //   promise through the protocol, which attaches a real handler to it.
+  //   Firefox's juggler instead watches it from outside, through the Debugger
+  //   API (`Runtime.js`, `_awaitPromise` / `onPromiseSettled`), so nothing in
+  //   the page ever handles the rejection. SpiderMonkey reports the unhandled
+  //   rejection to the console service as a script error carrying an exception,
+  //   and juggler turns exactly that into `Page.uncaughtError`
+  //   (`PageAgent.js`, `_onRuntimeError`) — Playwright's `pageerror` event.
+  //
+  // So on Firefox every rejected evaluate is reported twice: once to the caller
+  // and once to the page. The pause cannot be made race-free from here (the
+  // target instant has to be computed in Node, and widening the margin would
+  // fast-forward the fake clock by a load-dependent amount and move the
+  // goldens), so the failure is accounted for instead of avoided.
+  //
+  // The accounting is deliberately the narrowest thing that works: one credit
+  // per attempt we actually saw fail, spent only on a page error whose text is
+  // exactly CLOCK_REWIND_ERROR, and the spent error is kept in `suppressed`
+  // rather than dropped. A real fault cannot hide behind it — that string has
+  // no other producer (see above), an unprovoked one still lands, and a second
+  // one lands too.
   for (let attempt = 0; ; attempt++) {
     const now = await page.evaluate(() => Date.now());
     try {
@@ -138,8 +195,29 @@ export async function pauseClock(page) {
       return;
     } catch (e) {
       if (attempt > 0 || !/fast-forward to the past/i.test(String(e))) throw e;
+      expectClockRewindError(page);
     }
   }
+}
+
+/**
+ * Account for the page error the attempt that just failed is about to deposit.
+ * It arrives after the API rejection, not before — measured, five times out of
+ * five — so the ordinary case is to owe one and let the recorder spend it; the
+ * already-arrived case is handled too rather than assumed away.
+ *
+ * A page the caller built itself has no channel to reconcile, and asserts
+ * nothing about page errors either, so there is nothing to do for it.
+ */
+function expectClockRewindError(page) {
+  const channel = page[ERROR_CHANNEL];
+  if (!channel) return;
+  const arrived = channel.pageErrors.indexOf(CLOCK_REWIND_ERROR);
+  if (arrived !== -1) {
+    channel.suppressed.push(...channel.pageErrors.splice(arrived, 1));
+    return;
+  }
+  channel.owedClockRewinds++;
 }
 
 /** Advance the page's fake clock, firing every timer that comes due. */

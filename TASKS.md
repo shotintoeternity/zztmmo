@@ -160,15 +160,18 @@ M12.23, M17.1–M17.7, M16.0–M16.8a — has fully landed.)
    landscape phone letterboxes the whole screen above the bar instead of drawing
    seven text rows under it; all four covered-row declarations are empty and the
    matrix now asserts the reservation, not only the numbers.
-   Next in file order after those is M16.20, whose remaining blockers are
-   M16.18c and M16.10a. The one
+   **M16.18c landed 2026-08-01** — the failed first `pauseAt` reaches the
+   page-error channel only on Firefox, and as an unhandled promise rejection
+   rather than anything the injected clock raises; `pauseClock` now tells
+   `launchGoldenBrowser` about the one error it caused, on a one-shot credit
+   matched to that exact string, and a test forces the losing attempt instead of
+   waiting for load to supply one.
+   Next in file order after those is M16.20, whose remaining blocker is
+   M16.10a. The one
    browser flake still open is M16.14b's act 8,
    which is `[ADVISOR]` and still ranks below the certification tail.
 
 **Optional / deferred (bottom):**
-- M16.18c — `pauseClock`'s recovered attempt still reaches `pageErrors` (filed
-  by M16.18a, 2026-08-01). Load-sensitive browser-harness flake; ranks with the
-  certification tail.
 - M16.10a — `shootSpace` sometimes fires nothing under load (filed by M16.18a,
   2026-08-01; reproduced on an unmodified checkout, so it is not that task's
   doing). Ranks with the certification tail.
@@ -3895,7 +3898,7 @@ gap task has landed.
   sidebar's own `H  Help` row and took no tick), and `measureLayout` counted
   hidden buttons as a control at row 0. Filed **M16.18c** on the way through.
 
-- [ ] **M16.18c — `pauseClock`'s recovered attempt still reaches `pageErrors`
+- [x] **M16.18c — `pauseClock`'s recovered attempt still reaches `pageErrors`
   (M16.18a observation).** Seen twice during M16.18a, on `firefox-desktop`:
   `pageErrors: ['Error: Cannot fast-forward to the past']` at the end of a run
   that otherwise passed. That string has exactly one source — Playwright's
@@ -3917,6 +3920,31 @@ gap task has landed.
   A second sighting of the same shape: `TestM1614CollaborativeEditorInBrowsers`
   failed its end-of-run `pageErrors`/`consoleErrors` assertions in a full
   `go test ./...`, after its progress log had reached the last act.
+  Landed 2026-08-01 (NOTES.md M16.18c). The mechanism is **not** the one guessed
+  above: the error is raised in the page but reaches `pageerror` as an
+  **unhandled promise rejection**, and only on Firefox. Playwright evaluates the
+  pause in the page; Chromium and WebKit await the returned promise through the
+  protocol, which attaches a handler to it, while Firefox's juggler watches it
+  from outside through the Debugger API (`Runtime.js`, `_awaitPromise` /
+  `onPromiseSettled`), so nothing in the page ever handles the rejection —
+  SpiderMonkey reports it to the console service and juggler forwards it as
+  `Page.uncaughtError` (`PageAgent.js`, `_onRuntimeError`). Every rejected
+  evaluate is therefore reported twice on Firefox, and the page error arrives
+  *after* the API rejection (5 runs of 5), which rules out sweeping the array at
+  the catch. The pause cannot be made race-free from the harness — the target
+  instant is computed in Node, and a wider margin would fast-forward the fake
+  clock by a load-dependent amount — so the failure is accounted for instead:
+  `pauseClock` owes `launchGoldenBrowser` one credit per attempt it saw fail,
+  spendable only on that exact string, and the spent error is kept in
+  `suppressed` rather than dropped. Nothing real can hide behind it: the string
+  has one producer (`_innerFastForwardTo`, reachable only from `clock.pauseAt`
+  and a `fastForward` the harness never calls), no credit exists without a
+  failure, the credit is one-shot, and anything else lands untouched.
+  `web/test/pause_clock_errors.test.mjs` forces the losing attempt by shadowing
+  the page's `Date.now` to answer once from the past, and asserts all four:
+  green run, exactly one accounted-for entry (so the green cannot be the kind of
+  vacuous pass M16.18a found in `modal-help`), an unprovoked rewind still
+  landing, and a real page fault reported in full while a credit is outstanding.
 
 - [ ] **M16.10a — `shootSpace` sometimes fires nothing under load (M16.18a
   observation).** `TestM1610BrowserControlVocabulary` failed twice during

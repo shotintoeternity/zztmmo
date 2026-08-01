@@ -503,3 +503,48 @@ func TestM1618ProductCopyMakesNoTouchGameplayClaim(t *testing.T) {
 		}
 	}
 }
+
+// ---------------------------------------------------------------------------
+// M16.18c — the harness's own page error
+// ---------------------------------------------------------------------------
+
+// TestM1618cPauseClockAccountsForItsOwnPageError covers the browser harness
+// rather than the product, the way M16.14d's test does — and closes the hole
+// M16.14d left.
+//
+// M16.14d made web/test/lib/canvas.mjs's pauseClock retry the "Cannot
+// fast-forward to the past" that a slow round trip provokes, and the retry
+// cannot lose. What it did not do is stop the FAILED first attempt reaching
+// page.on("pageerror"), the channel every browser suite ends by asserting is
+// empty — so a loaded machine still reddened runs that had recovered (twice
+// during M16.18a, on firefox-desktop, at 132s and 187s against a stable 60s).
+//
+// The mechanism is Firefox-specific and now named. Playwright evaluates the
+// pause inside the page; Chromium and WebKit await the returned promise through
+// the protocol, which attaches a handler to it, while Firefox's juggler watches
+// it from outside through the Debugger API (Runtime.js, _awaitPromise /
+// onPromiseSettled). Nothing in the page ever handles the rejection, so
+// SpiderMonkey reports it to the console service as an unhandled rejection and
+// juggler forwards that as Page.uncaughtError (PageAgent.js, _onRuntimeError).
+// Every rejected evaluate is therefore reported twice on Firefox: once to the
+// caller and once to the page.
+//
+// The script forces the losing attempt instead of waiting for load to supply
+// one, and holds the fix to all four halves of the claim: the run is green, the
+// error was actually provoked (a green that provoked nothing would prove
+// nothing — M16.18a found exactly that kind of measurement), an unaccounted-for
+// rewind still lands, and a real page fault raised while the accounting is
+// outstanding still lands.
+//
+// It needs Firefox and Chromium but no server and no client build.
+func TestM1618cPauseClockAccountsForItsOwnPageError(t *testing.T) {
+	m169RequireBrowserHarness(t)
+
+	cmd := exec.Command("node", filepath.Join("test", "pause_clock_errors.test.mjs"))
+	cmd.Dir = "web"
+	out, err := cmd.CombinedOutput()
+	if err != nil {
+		t.Fatalf("pause_clock_errors.test.mjs failed: %v\n--- script output ---\n%s", err, out)
+	}
+	t.Logf("pauseClock page errors:\n%s", out)
+}

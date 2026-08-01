@@ -7950,3 +7950,91 @@ changed shape.
 **Handoff.** **M16.20**'s remaining blockers are now **M16.18c** and **M16.10a**
 (both load-sensitive browser flakes filed by M16.18a) plus **M16.14b**
 (`[ADVISOR]`). The touch surface itself has no open task.
+
+## 2026-08-01 — M16.18c: the error the harness raised at itself
+
+**The symptom, restated.** M16.14d taught `pauseClock` to retry the "Cannot
+fast-forward to the past" a slow round trip provokes, and that retry genuinely
+cannot lose — the clock is already frozen by the time the first attempt throws.
+What it did not do is stop the *failed* attempt from reaching
+`page.on("pageerror")`, the channel all eleven browser suites end by asserting
+`deepEqual(…, [])` on. M16.18a saw it twice on `firefox-desktop`, on runs of 132s
+and 187s against a stable 60s, with the run otherwise passing.
+
+**The mechanism, named — and it is not the one the task inferred.** The task
+guessed the injected clock was raising the error into the page. It is not: the
+error is raised inside the page but it reaches the page-error channel as an
+**unhandled promise rejection**, and only on Firefox.
+
+Playwright's `clock.pauseAt` evaluates `__pwClock.controller.pauseAt(t)` in the
+page and takes the result back over the wire
+(`playwright-core` `server/clock.ts` → `safeNonStallingEvaluateInAllFrames`).
+Chromium and WebKit await the returned promise through the protocol, which
+attaches a real handler to it. Firefox's juggler does not: it watches the promise
+from *outside*, through the Debugger API — `chrome/juggler/content/content/Runtime.js`,
+`_awaitPromise` registering `this._debugger.onPromiseSettled` — so nothing in the
+page ever handles the rejection. SpiderMonkey duly reports the unhandled
+rejection to the console service as a script error carrying an exception, and
+juggler's console listener forwards exactly that as `Page.uncaughtError`
+(`PageAgent.js`, `_onRuntimeError`), which Playwright emits as `pageerror`.
+
+So on Firefox **every rejected `page.evaluate` is reported twice**: once to the
+caller (where our retry catches it) and once to the page. Confirmed both ways —
+by reading juggler's source, and by a probe that provoked the failure
+deliberately on all three engines: Firefox recorded
+`Error: Cannot fast-forward to the past` in `pageErrors`, Chromium and WebKit
+recorded nothing. The page error also always arrives **after** the API rejection
+(5 runs out of 5), which rules out any fix that sweeps the array at the catch.
+
+**Why it is accounted for rather than avoided.** The pause cannot be made
+race-free from the harness. The target instant has to be computed in Node, and
+the clock keeps advancing between the read and the pause; widening the margin
+past `now + 1` would fast-forward the fake clock by a load-dependent amount,
+firing a load-dependent number of timers — which is exactly the nondeterminism
+the goldens exist to exclude. Freezing the clock from inside the page first would
+work, but only by reaching into `__pwClock.controller`, an undocumented internal,
+and by taking Playwright's own pause bookkeeping (the init-script replay log that
+keeps a reloaded document paused) out of the loop.
+
+**The fix, and why it hides nothing.** `launchGoldenBrowser` now owns the
+recording, and `pauseClock` tells it what it just caused: one credit per attempt
+it actually saw fail, spendable only on a page error whose text is *exactly*
+`Error: Cannot fast-forward to the past`, and the spent error is moved to a
+`suppressed` array rather than dropped. Four things keep a real fault from
+hiding behind it:
+
+- that string has exactly one producer — Playwright's injected clock, from
+  `_innerFastForwardTo`, reachable only via `clock.pauseAt` and
+  `clock.fastForward`, and the harness never calls `fastForward`. No client
+  fault can wear it;
+- nothing is moved aside speculatively: with no failed attempt there is no
+  credit, and Chromium/WebKit runs spend none;
+- the credit is one-shot, so a second rewind still lands;
+- anything that is not that exact string lands untouched, including a fault
+  raised while a credit is outstanding.
+
+**The test forces the failure rather than hoping for it**
+(`web/test/pause_clock_errors.test.mjs`, driven by
+`TestM1618cPauseClockAccountsForItsOwnPageError`). `Date.now` is shadowed in the
+page to answer *once* from the past — which is what a slow round trip does, and
+far more repeatable than arranging real load — so attempt 0 must fail and
+attempt 1 must recover. It then asserts all four halves: the run is green, and
+`suppressed` holds exactly one entry (green alone would also be what a test that
+never provoked the failure reports — M16.18a found one of those in `modal-help`);
+an unprovoked rewind still reaches `pageErrors`; a second one does too; and a
+genuine page fault raised while the accounting is outstanding is reported in
+full. Inverted by deleting the one accounting call, the script fails on the first
+assertion with `['Error: Cannot fast-forward to the past']`.
+
+**Verified**: `go build ./...`, `go vet ./...`, `go test ./...` green (408s, all
+eleven browser suites included); `npm test` green. Harness-only — no client
+source, no protocol, no simulation, no fixture touched, and no manifest row (the
+harness's own tests have never carried one, cf. M16.14d).
+
+**Handoff.** M16.20's remaining blockers are now **M16.10a** (`shootSpace` firing
+nothing under load) and **M16.14b** (`[ADVISOR]`). The second sighting recorded
+in M16.18c's spec — `TestM1614CollaborativeEditorInBrowsers` failing its
+end-of-run `pageErrors`/`consoleErrors` assertions in a full `go test ./...` —
+is the same shape and the same suite family, and that suite calls `pauseClock`
+per editor, so this fix covers it if the entry was the rewind; it recorded no
+error text at the time, so that cannot be claimed, only expected.
