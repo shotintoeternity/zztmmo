@@ -9043,3 +9043,55 @@ zip member as an alias) whose entries are separately joinable and must not be
 deduplicated away.
 
 No engine code changed in this session; `go test ./...` green.
+
+## 2026-08-03 — M18.13: the picker's key is now the join path's key
+
+The defect was one disagreement with two symptoms. `ListWorlds` matched the
+`.ZZT` suffix case-insensitively but listed the base name *verbatim*, while
+`LoadPristineWorld` runs the name through `SanitizeSaveName` and opens
+`<NAME>.ZZT`. So `TOWN.ZZT` and `town.zzt` listed as two cards that opened one
+file, and a directory holding only `town.zzt` listed a card that opened nothing
+at all on a case-sensitive filesystem.
+
+**The fix is the identity, not a deduplication pass.** `ListWorlds` now emits
+`SanitizeSaveName(base)` — one name per distinct result — so the picker's key
+*is* what the join opens. That collapses the duplicates by construction, and it
+closed a second thing nobody had filed: `handleWorlds` builds its player and
+editor counts from maps keyed on the sanitized instance name, which a card
+called `town` never matched, so such a world always reported zero players.
+
+**Joinability is a `stat`, not a scan.** The spec's survivor rule ("keep the one
+whose on-disk name already equals the key") does not arise once the entry *is*
+the key; what remains is whether anything answers to `<NAME>.ZZT`. Asking the
+filesystem rather than the directory listing is deliberate and is what keeps the
+DoD's no-regression clause true: where case is folded (APFS), `town.zzt` really
+does answer to `TOWN.ZZT` and the world stays listed. The entry is dropped only
+where the join would genuinely fail, and `reportUnjoinableWorld` logs it once
+per name per process — "reported, not silently listed", without one line per
+picker poll.
+
+**Testing the collision at all.** `joinableWorldNames` takes the joinability
+predicate as a parameter, so the tests state the case collision through a
+synthesized name list. A temp-directory test cannot: on APFS `TOWN.ZZT` and
+`town.zzt` are one file, which is exactly why the owner saw this on the Linux
+host and not on a workstation. Before the fix, the picker-level assertions fail
+with two `TOWN` cards and with the dreamed world collapsed onto its lower-case
+spelling; both were watched failing against a stashed tree.
+
+**Owner decision recorded: the Museum alias fan-out stays as it is.** The task
+asked only whether files sharing one manifest row (`RHYG3-1/2/3`, `TP2DISC1/2`)
+should show the shared curated title or their own name. They keep the shared
+title — it is the accurate answer for a multi-disk release, and the alternative
+would hide the curated metadata that is the point of the manifest. They remain
+separately listed and separately joinable, pinned by a test that passed before
+this change as well as after, so a later reader can see it is a no-regression
+pin rather than a claim this session introduced.
+
+One visible change beyond the defect: a community file spelled `frost.zzt` now
+lists as `FROST`. That is the name the join opens and the key its occupancy is
+counted under, so it is the honest one.
+
+`go test ./...`, `ZZT_BROWSER=1 go test ./...` (the eleven real-browser suites,
+run because `/api/worlds` is a payload a browser reads) and `npm test` all
+green; no simulation code touched and the replay fixtures are unchanged. Open
+owner action: confirm the duplicate is gone from the live picker after deploy.

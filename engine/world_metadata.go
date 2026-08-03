@@ -96,7 +96,41 @@ func worldIsDreamed(dir, world string) bool {
 	return false
 }
 
+// collapseWorldNames keeps one name per identity the join path would resolve
+// (M18.13). ListWorlds already emits sanitized names, so on the live picker
+// path this is a no-op; it matters for every other caller, because the picker
+// must not show two cards that open one file no matter who assembled the list.
+//
+// Where several names collapse, the one that already equals its identity wins
+// ("TOWN" over "town"): that is the name the join path opens, the key the
+// occupancy maps are built under, and the stem the sidecar lookups below want —
+// a dream writes GEN123.zwd and GEN123.meta.json beside GEN123.ZZT, so a
+// surviving "gen123" would reclassify the world as `local` and lose its title.
+// A name outside SanitizeSaveName's charset has no identity to collapse onto
+// and is passed through untouched, exactly as before.
+func collapseWorldNames(worlds []string) []string {
+	out := make([]string, 0, len(worlds))
+	at := make(map[string]int, len(worlds))
+	for _, world := range worlds {
+		identity, err := SanitizeSaveName(world)
+		if err != nil {
+			out = append(out, world)
+			continue
+		}
+		if i, seen := at[identity]; seen {
+			if world == identity {
+				out[i] = world
+			}
+			continue
+		}
+		at[identity] = len(out)
+		out = append(out, world)
+	}
+	return out
+}
+
 func worldListEntries(dir string, worlds []string, playerCounts map[string]int, editorCounts map[string]int, includeLocal bool) []WorldListEntry {
+	worlds = collapseWorldNames(worlds)
 	out := make([]WorldListEntry, 0, len(worlds))
 	for _, world := range worlds {
 		meta, ok := museumMetadataForWorld(world)

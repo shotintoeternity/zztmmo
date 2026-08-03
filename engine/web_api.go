@@ -5,6 +5,7 @@ import (
 	"encoding/json"
 	"errors"
 	"fmt"
+	"log"
 	"net"
 	"net/http"
 	"os"
@@ -693,12 +694,49 @@ func ListWorlds(dir string) []string {
 	if err != nil {
 		return nil
 	}
-	var worlds []string
+	fileNames := make([]string, 0, len(entries))
 	for _, entry := range entries {
 		if entry.IsDir() {
 			continue
 		}
-		name := entry.Name()
+		fileNames = append(fileNames, entry.Name())
+	}
+	return joinableWorldNames(fileNames, func(world string) bool {
+		info, err := os.Stat(filepath.Join(dir, world+".ZZT"))
+		return err == nil && !info.IsDir()
+	}, func(world, evidence string) {
+		reportUnjoinableWorld(dir, world, evidence)
+	})
+}
+
+// joinableWorldNames collapses a worlds directory's file names onto the world
+// identities a player can actually join (M18.13).
+//
+// The two halves used to disagree. This loop matched the .ZZT suffix
+// case-insensitively but listed the base name verbatim, while the join path
+// (LoadPristineWorld) resolves a name through SanitizeSaveName and opens
+// <NAME>.ZZT — so TOWN.ZZT and town.zzt listed as two entries that opened one
+// file, and a directory holding only town.zzt listed an entry that opened
+// nothing at all on a case-sensitive filesystem. The identity here is now the
+// one the join path uses: SanitizeSaveName(base), one entry per distinct
+// result. That also makes the name the picker reports the key the occupancy
+// maps in handleWorlds are built under (instances are keyed on the sanitized
+// name), which a lower-case duplicate never matched.
+//
+// joinable answers whether <NAME>.ZZT opens; it is a parameter so a test can
+// state a collision a temp directory cannot hold — on a case-insensitive
+// filesystem TOWN.ZZT and town.zzt are one file, which is exactly why this
+// defect reproduces on the Linux host and not on a macOS workstation. It is
+// also why the gate is a stat rather than a scan for an exactly-named file:
+// where the filesystem folds case, town.zzt really does answer to TOWN.ZZT and
+// the world stays listed.
+//
+// report names an identity dropped because nothing answers to it, so an
+// unjoinable file is reported rather than silently listed.
+func joinableWorldNames(fileNames []string, joinable func(world string) bool, report func(world, evidence string)) []string {
+	var worlds []string
+	seen := make(map[string]struct{}, len(fileNames))
+	for _, name := range fileNames {
 		if !strings.HasSuffix(strings.ToUpper(name), ".ZZT") {
 			continue
 		}
@@ -708,16 +746,40 @@ func ListWorlds(dir string) []string {
 		// so names outside that charset (e.g. "_DEATH_", "DOG!") are dead
 		// entries and are dropped. Pure-separator junk ("-", "--") passes the
 		// charset but has no real name, so also require an alphanumeric.
-		if _, err := SanitizeSaveName(base); err != nil {
+		world, err := SanitizeSaveName(base)
+		if err != nil {
 			continue
 		}
-		if !hasAlphanumeric(base) {
+		if !hasAlphanumeric(world) {
 			continue
 		}
-		worlds = append(worlds, base)
+		if _, dup := seen[world]; dup {
+			continue
+		}
+		seen[world] = struct{}{}
+		if joinable != nil && !joinable(world) {
+			if report != nil {
+				report(world, name)
+			}
+			continue
+		}
+		worlds = append(worlds, world)
 	}
 	sort.Strings(worlds)
 	return worlds
+}
+
+// unjoinableWorldsReported keeps the report above to one line per name per
+// process. The picker refetches every few seconds, and an operator needs to see
+// "this file is spelled wrong" once, not once per poll.
+var unjoinableWorldsReported sync.Map
+
+func reportUnjoinableWorld(dir, world, evidence string) {
+	if _, seen := unjoinableWorldsReported.LoadOrStore(dir+"/"+world, struct{}{}); seen {
+		return
+	}
+	log.Printf("zztgo: not listing world %q: %q is in %s but nothing answers to %s.ZZT, which is what joining it opens",
+		world, evidence, dir, world)
 }
 
 func hasAlphanumeric(s string) bool {

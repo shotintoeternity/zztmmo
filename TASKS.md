@@ -206,7 +206,11 @@ M12.23, M17.1–M17.7, M16.0–M16.8a — has fully landed.)
    the README verification: **M18.13** (one picker entry per joinable world —
    tester-visible, take it before or with the invite) and **M18.14** (a missing
    startup world deadlocks the server rather than reporting it —
-   contributor-facing, take it after). The beta invite is the open owner action.
+   contributor-facing, take it after). **M18.13 landed 2026-08-03** — the picker
+   is keyed on the identity the join path resolves, so the owner's duplicate
+   card is gone and a file only the wrong case of which exists is no longer
+   offered as joinable. The beta invite is the open owner action, and M18.14 is
+   the last open executor task in this file.
 
 **Optional / deferred (bottom):**
 - M14.3 — package split — **closed as skipped 2026-08-03**, see NOTES.md
@@ -4674,7 +4678,7 @@ lists. Every task: `cd engine && go build ./... && go test ./...` green,
   are NOT audited — that needs owner confirmation and the SSH procedure, and is
   the one part of this DoD still open.**
 
-- [ ] **M18.13 — One picker entry per world a player can actually join.**
+- [x] **M18.13 — One picker entry per world a player can actually join.**
   Promoted 2026-08-03 from the "World picker follow-ups" backlog (owner report
   2026-07-18) after the code was re-checked and the defect is still live. The
   picker's identity for a world is *the filename as written on disk*; the join
@@ -4733,6 +4737,30 @@ lists. Every task: `cd engine && go build ./... && go test ./...` green,
   before becomes unlistable without an explicit note in this task; `go test
   ./...` and `npm test` green; replay fixture untouched. Check the live picker
   after deploy — the owner's duplicate should be gone.
+  Landed 2026-08-03 (NOTES.md). The identity rule is implemented as written:
+  `ListWorlds` now emits `SanitizeSaveName(base)`, one name per distinct
+  result, so the picker's key IS what `LoadPristineWorld` opens. The survivor
+  question the spec anticipated ("keep `TOWN.ZZT` over `town.zzt`") therefore
+  does not arise — the entry is the identity, and the file the join opens is
+  whichever one answers to `<NAME>.ZZT`. Joinability is a `stat` of that exact
+  path rather than a scan for an exactly-named directory entry, deliberately:
+  where the filesystem folds case, `town.zzt` really does answer to `TOWN.ZZT`,
+  so **no world that was joinable before becomes unlistable** — the dead entry
+  is dropped only where the join would in fact fail (the Linux host), and is
+  logged once per name per process rather than dropped in silence. The collapse
+  is also repeated defensively in `worldListEntries` (preferring the name that
+  already equals its identity, so the `.zwd`/`.meta.json` lookups keep finding
+  the sidecars), which is what the DoD's synthesized-name test drives.
+  `joinableWorldNames` takes its joinability predicate as a parameter so the
+  case collision can be stated on APFS at all. The Museum alias fan-out is
+  untouched and pinned by a test that passed before the fix as well as after —
+  owner decision recorded in NOTES.md: those entries keep the shared curated
+  title. One visible change beyond the fix: a community file spelled
+  `frost.zzt` now lists as `FROST`, which is also the key the occupancy maps
+  are built under, so its player count works for the first time.
+  `go test ./...`, `ZZT_BROWSER=1 go test ./...` and `npm test` green; replay
+  fixture untouched. **Owner action still open: check the live picker after
+  deploy.**
 
 - [ ] **M18.14 — A missing startup world deadlocks the server instead of
   reporting it.** Found 2026-08-03 while verifying the README's Quick Start
