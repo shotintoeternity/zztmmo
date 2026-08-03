@@ -9585,3 +9585,47 @@ opens for the smiley color, since the only per-account store today is keyed
 alone probably means answering the identity question twice and building the
 account-preferences store twice. Recorded here so whoever specs the first one
 knows to look at the other two first.
+
+## 2026-08-03 — M19.3 widened to a preferences store; the identity question split
+
+Docs only, continuing the same session. No code changed.
+
+**M19.3 now builds the account-wide preferences store, with the color as its
+first key.** It was "persist the color"; the profiles bullet filed an hour
+earlier needs the identical thing, and the only per-account store that exists is
+keyed `(accountID, worldName)` — wrong for anything account-wide. Building that
+store twice is the expensive mistake, so the widening is cheaper now than the
+second implementation would be later.
+
+Two constraints written into the spec so the widening does not become
+speculative generality. It stores a **struct with named fields**, not a
+`map[string]string`: fields are typed and validated at the edge, and a profile
+then adds fields instead of adding conventions. And it must **not** add profile
+fields now — adding the shape that can hold them is the point, adding the fields
+themselves is exactly the drift CLAUDE.md rule 4 forbids. The DoD proves the
+shape with a throwaway second field in a test rather than by shipping one. One
+guard is required from day one: the store is account-keyed, so an empty
+`accountID` must be refused rather than becoming a shared bucket every guest
+writes into.
+
+**The identity question turned out to be two questions, and the code answers the
+cheaper one.** `PlayerID` is unique among everyone currently connected, and
+`accountID` is *already* carried on `roomPlayer` and readable through
+`PlayerIdentity` (`room_manager.go:301-315`, set at
+`websocket_server.go:493,523`). What `PlayerID` is not is durable: it is an
+in-memory counter (`mintPlayerID`, `websocket_server.go:1845-1850`) that restarts
+with the process. So:
+
+- **In-session PMs need no new identity concept at all.** Address by `PlayerID`,
+  pick the target off the room roster instead of typing a name, and guests work
+  the same as accounts.
+- **Durable PMs** — offline delivery, history surviving a restart, messaging
+  someone who is not here — need an account, and a *typed* target additionally
+  needs a unique claimed handle, which does not exist.
+
+That is worth recording because the first version of the PM bullet implied the
+whole feature was blocked on inventing handles, and it is not. If the owner ships
+the in-session half first, PM is unblocked entirely and the handle question moves
+to the profiles bullet, where it has to be answered anyway. The bullet now poses
+that as the explicit decision at promotion time rather than leaving an executor
+to infer it.

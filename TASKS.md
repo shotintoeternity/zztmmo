@@ -5031,18 +5031,38 @@ so no new glyph tinting is needed.
   lesson); it is reachable on a touch profile, since M15/M16.18a make phones a
   covered configuration; `npm test` green and the browser family green.
 
-- [ ] **M19.3 — Persist the color on the account.** The 2026-07-10 design says
-  the color is "later stored on their M6.2 account". Today the only per-account
-  store is `ChatDatabase.PutPlayerState/GetPlayerState`
+- [ ] **M19.3 — An account-wide preferences store, with the color as its first
+  key.** Widened 2026-08-03 (owner request) from "persist the color" to the
+  store itself, because the color is not the only thing that needs it and
+  building it twice is the expensive mistake. The 2026-07-10 design says the
+  color is "later stored on their M6.2 account"; the backlog's **player
+  profiles** bullet needs the same thing, and a profile is a second caller, not
+  a second store.
+  Today the only per-account store is
+  `ChatDatabase.PutPlayerState/GetPlayerState`
   (`engine/chat_db.go:65-85,165-182`), keyed by `(accountID, worldName)` — the
-  wrong key, because a color is account-wide, not per-world. Add an account
-  preferences pair to the `ChatDatabase` interface and implement it in **both**
-  `MemChatDatabase` and `FileChatDatabase` (the file impl is a JSON document
-  with a `writePlayerStatesLocked` flush, not SQL — follow its shape). A
-  signed-in player's stored color wins over `localStorage`; a guest keeps
-  `localStorage` only. DoD: a signed-in player's color follows them to a
-  different world and a different browser; a guest is unaffected; the file DB
-  round-trips across a server restart; `go test ./...` green.
+  wrong key, because a color (and a profile, and a handle) is account-wide, not
+  per-world. Add an account-preferences pair to the `ChatDatabase` interface and
+  implement it in **both** `MemChatDatabase` and `FileChatDatabase` (the file
+  impl is a JSON document with a `writePlayerStatesLocked` flush, not SQL —
+  follow its shape).
+  **Design it for the second caller without building the second caller.** Store
+  a struct with named fields (`Color` first), not a `map[string]string` — the
+  fields are typed, validated at the edge, and a profile adds fields rather than
+  conventions. Do **not** add profile fields here; adding the *shape* that can
+  hold them is the whole point, and speculatively adding the fields is the drift
+  CLAUDE.md rule 4 exists to prevent. One guard the store must carry from day
+  one: it is account-keyed, so a missing or empty `accountID` must be a refusal
+  and never a shared bucket every guest writes to.
+  A signed-in player's stored color wins over `localStorage`; a guest keeps
+  `localStorage` only, since a guest has no durable identity to key on (see the
+  Social layer backlog bullets).
+  DoD: a signed-in player's color follows them to a different world and a
+  different browser; a guest is unaffected; the file DB round-trips across a
+  server restart; an empty `accountID` is refused rather than stored; a test
+  demonstrates a second, unrelated preference field can be added and read
+  without touching the first (a throwaway field in the test, not shipped);
+  `go test ./...` green.
 
 ## M14 — Rearchitecting for the service ZZTMMO is becoming
 
@@ -5844,13 +5864,27 @@ tasks. Both were checked against the code the day they were filed):**
   recipient field, and `ChatRecord` (`chat_db.go:11-15`) plus
   `AddMessage(from, text)` have nowhere to put one. That plumbing is the easy
   half. **Two harder things sit under it, and both are really one question:**
-  - *There is nothing unique to address.* `join.Name` is arbitrary, a guest is
-    handed `"player" + random` (`web/src/main.ts:688`), and a signed-in player's
-    name is whatever `DisplayName()` returns from Google (`auth.go:48-56`).
-    Two players can hold the same name at the same time, so "PM Kevin" has no
-    unambiguous target. Needs either a unique claimed handle or addressing by
-    account ID with the roster as the picker — and a decision about whether
-    guests can be addressed at all, since they have no durable identity.
+  - *There is nothing unique to address by name.* `join.Name` is arbitrary, a
+    guest is handed `"player" + random` (`web/src/main.ts:688`), and a signed-in
+    player's name is whatever `DisplayName()` returns from Google
+    (`auth.go:48-56`). Two players can hold the same name at the same time, so
+    "PM Kevin" has no unambiguous target. **But the code already settles more of
+    this than it first appears** (checked 2026-08-03): `PlayerID` is unique among
+    everyone currently connected, and `accountID` is already carried on
+    `roomPlayer` and readable through `RoomManager.PlayerIdentity`
+    (`room_manager.go:301-315`, set at `websocket_server.go:493,523`). What
+    `PlayerID` is *not* is durable — it is an in-memory counter
+    (`mintPlayerID`, `websocket_server.go:1845-1850`) that restarts with the
+    process. So the feature splits, and the cheap half does not need the
+    expensive half:
+    **(a) in-session PMs** — address by `PlayerID`, pick the target off the room
+    roster rather than by typing a name, works for guests and accounts alike, and
+    needs no new identity concept at all; **(b) durable PMs** (offline delivery,
+    a history that survives a restart, "message a player who isn't here") —
+    needs an account, and for a *typed* target also a unique claimed handle,
+    which does not exist today. **Owner decision when this is promoted: is (a)
+    enough to ship first?** If it is, PM stops being gated on the handle system
+    and the handle question moves to the profiles bullet where it also belongs.
   - *There is nowhere to read one.* The entire chat UI is a single transient
     line at row 24 (`currentChatMessage`, `main.ts:2101`, painted at
     `main.ts:2144-2146`) that the next global message overwrites. A PM landing
@@ -5863,9 +5897,10 @@ tasks. Both were checked against the code the day they were filed):**
   others can open from inside the game. Needs durable per-account storage, and
   the only per-account store that exists is
   `ChatDatabase.PutPlayerState/GetPlayerState` keyed by `(accountID, worldName)`
-  — the wrong key for account-wide data. **M19.3 hits this exact gap for the
-  smiley color**, so if both are promoted they should share one account-
-  preferences store rather than each inventing its own. "Viewable in game" means
+  — the wrong key for account-wide data. **M19.3 was widened 2026-08-03 to build
+  that store rather than just persist a color**, precisely so this bullet is a
+  second caller and not a second store; a profile should add fields to it, not
+  invent its own. "Viewable in game" means
   a CP437 window (`textwindow.ts`) opened from the room roster, which is also
   where a PM would be initiated — and M19.1 puts `Name` on `PlayerSnapshot`, the
   natural anchor for both. Guests cannot have one, which is the same identity
