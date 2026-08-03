@@ -4975,7 +4975,7 @@ existing path: auto-contrast picks white or black by background luminance, and
 both are already pre-tinted font canvases (`fontCanvases[15]`, `fontCanvases[0]`),
 so no new glyph tinting is needed.
 
-- [ ] **M19.1 — The color on the wire and on the canvas.** The core of the
+- [x] **M19.1 — The color on the wire and on the canvas.** The core of the
   feature; M19.2 and M19.3 are the picker and the persistence and neither
   blocks this one (a color can arrive from a hardcoded test value until M19.2
   exists).
@@ -5016,6 +5016,39 @@ so no new glyph tinting is needed.
   (this is the M16.15a inverse and must be shown, not argued); `npm test` and
   `npm run build` green; `ZZT_BROWSER=1` browser family green (this touches the
   protocol and the renderer, so CLAUDE.md rule 3 requires it).
+  **Done 2026-08-03.** Every claim was watched failing before it was trusted,
+  which is the only reason to believe any of them:
+  * *the colour is not simulation state* — `SetPlayerColor` records no op, and
+    that is the one asymmetry with `SetPlayerName` worth remembering (a name
+    reaches the simulation as a high-score entry, a colour reaches only a
+    canvas). Proved by recording two identical sessions, one played in colour,
+    and comparing the **bytes**: identical, `recordVersion` still 2, and the
+    coloured recording replays to the live session's per-room hashes. Inverted
+    by making `SetPlayerColor` record a `name` op — the recordings then differ
+    by exactly the two colour lines. Two rooms differing only in colour also
+    hash identically for 200 ticks, and the replay fixtures are untouched.
+  * *the tint is derived, never reimplemented* — `playerTintCells`
+    (`engine/web/src/player_tint.ts`) yields a cell only where the roster puts
+    a player AND the cell the server drew is still char 2 in `0x1F`. Inverted
+    by dropping that second test: the dark-room case fails immediately, which
+    is the whole argument for deriving it. The blink and the absent-player
+    cases fall out of the same line.
+  * *the canvas actually shows it* — two Chromium instances, one room, ACCEPT
+    on the production binary (`engine/m19_1_browser_test.go` +
+    `web/test/player_color.test.mjs`). Raw corner pixels, not the M16.9 EGA
+    decoder, because a 24-bit tint is exactly what that decoder cannot express.
+    Inverted by disabling the tint in `drawScreen`: both players' squares read
+    `#0000aa`, vanilla blue.
+  Two things the spec did not name and this needed. The **foreground** is
+  auto-contrasted (Rec. 601 luma, threshold 0.55) onto the two font canvases
+  that already exist, or a white smiley disappears on a yellow pick. And the
+  colour has to come from somewhere before M19.2's picker exists, so it is read
+  from `localStorage` under `zzt-color` — the key M19.2 will write and M19.3
+  will demote to the guest fallback — re-read at **every** join, since a
+  reconnect reclaims a run but not a browser's current pick. Nothing defaults
+  to a colour: with no key set, every existing golden and matrix suite sees the
+  same white-on-blue player it saw before, which is why they are all still
+  green.
 
 - [ ] **M19.2 — The picker.** A CP437 window (the M4.1 window furniture, see
   `engine/web/src/textwindow.ts`) offering the 16 DOS colors as quick picks —

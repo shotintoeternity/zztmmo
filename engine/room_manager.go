@@ -72,6 +72,11 @@ type roomPlayer struct {
 	state     *PlayerState
 	name      string
 	accountID string
+	// color is the "#RRGGBB" background other browsers draw this player's ☻ on
+	// (M19.1). It rides the roster and nothing else: no element proc reads it,
+	// no tile carries it, and SetPlayerColor deliberately records no op — see
+	// there for why that is the correct asymmetry with SetPlayerName.
+	color string
 	// scrollOpen freezes this player while they read a scroll. Vanilla's text
 	// window blocks the whole game loop (TextWindowDrawOpen); here only the
 	// reader stops, so the rest of the room plays on. Without it the player
@@ -296,6 +301,26 @@ func (rm *RoomManager) SetPlayerName(playerID PlayerID, name string) {
 		player.name = name
 	}
 	rm.recorder.record(recOp{Op: "name", Player: playerID, Name: name})
+}
+
+// SetPlayerColor stores the presentation colour a player joined with. The
+// caller must have validated it (SanitizePlayerColor); an empty string is a
+// legitimate value meaning "vanilla white-on-blue".
+//
+// Nothing is recorded here, and that is the point of the whole milestone. A
+// name IS recorded (SetPlayerName above) because it reaches the simulation —
+// it is what a high-score entry is written under — so a replay that dropped it
+// would diverge. A colour reaches only the canvas of the browsers watching, so
+// recording it would make two sessions that differ in nothing the simulation
+// can observe produce two different recordings. This is the M16.15a decision
+// run in the other direction, and m19_1_test.go proves it rather than asserting
+// it: a session played with colours set replays byte-identically to one played
+// without, and recordVersion does not move.
+func (rm *RoomManager) SetPlayerColor(playerID PlayerID, color string) {
+	player := rm.players[playerID]
+	if player != nil {
+		player.color = color
+	}
 }
 
 func (rm *RoomManager) SetPlayerIdentity(playerID PlayerID, accountID, name string) {
@@ -717,6 +742,13 @@ func (rm *RoomManager) Snapshot(playerID PlayerID) (SnapshotMessage, bool) {
 	players := make([]PlayerSnapshot, 0, len(room.players))
 	players = append(players, rm.playerSnapshotsForRoom(room)...)
 	snapshot := NewSnapshotMessage(room.Engine, room.BoardID, playerID, player.statID, players)
+	// `you` is built from the engine, which has no idea who this player is, so
+	// the presentation fields are attached the same way the roster's are
+	// (M19.1). Without this a client would learn its own colour only from its
+	// entry in `players` — true today, but it is the same fact and it should
+	// not disagree with itself.
+	snapshot.You.Name = player.name
+	snapshot.You.Color = player.color
 	// The dirty-cell list belongs to the ROOM, not to this connection, so it may
 	// only be discarded when nobody else could be owed it. A snapshot already
 	// carries the whole screen, which is why draining it here is free for the
@@ -800,7 +832,13 @@ func (rm *RoomManager) playerSnapshotsForRoom(room *Room) []PlayerSnapshot {
 	for _, id := range rm.playerIDs() {
 		p := rm.players[id]
 		if p.boardID == room.BoardID {
-			players = append(players, playerSnapshot(room.Engine, id, p.statID))
+			snap := playerSnapshot(room.Engine, id, p.statID)
+			// Presentation only, and deliberately attached HERE rather than
+			// inside playerSnapshot: the engine knows where a player is, the
+			// room manager knows who they are (M19.1).
+			snap.Name = p.name
+			snap.Color = p.color
+			players = append(players, snap)
 		}
 	}
 	return players

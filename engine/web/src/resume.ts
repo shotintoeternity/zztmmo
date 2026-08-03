@@ -88,12 +88,37 @@ export function reconnectDelay(attempt: number, base = 500, cap = 8000): number 
 // buildJoinMessage assembles the join payload, attaching a resume token only
 // when one is stored. An empty token must be omitted so the server treats it as
 // a fresh join rather than an unknown-token lookup.
-export function buildJoinMessage(type: string, name: string, token: string): Record<string, unknown> {
+export function buildJoinMessage(
+  type: string,
+  name: string,
+  token: string,
+  color = "",
+): Record<string, unknown> {
   const message: Record<string, unknown> = { type, name };
   if (token) {
     message.resumeToken = token;
   }
+  // M19.1: omitted when unset, matching JoinMessage.Color's `omitempty` — an
+  // absent colour is the vanilla white-on-blue player, not a colour of "".
+  if (color) {
+    message.color = color;
+  }
   return message;
+}
+
+// The picked player colour (M19.1). Unlike the resume tokens above this is
+// localStorage rather than sessionStorage and is not keyed by world: it is a
+// property of the player, not of a run, and it should survive closing the tab.
+// M19.2 adds the picker that writes it; M19.3 moves a signed-in player's copy
+// to their account, where localStorage becomes the guest-only fallback.
+const COLOR_KEY = "zzt-color";
+
+export function loadPlayerColor(store: TokenStore): string {
+  return readToken(store, COLOR_KEY);
+}
+
+export function savePlayerColor(store: TokenStore, color: string): void {
+  writeToken(store, COLOR_KEY, color);
 }
 
 // buildEditorEnterMessage is buildJoinMessage's editor counterpart (M16.14f):

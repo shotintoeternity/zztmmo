@@ -469,6 +469,13 @@ func (s *WebSocketServer) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
+	// The colour is validated once, here, where the untrusted join is read —
+	// beside the name it sits next to on the wire (M19.1). Everything
+	// downstream stores and broadcasts whatever this returns, so anything that
+	// is not "#" plus six hex digits must become the empty string at this line
+	// and never later.
+	joinColor := SanitizePlayerColor(join.Color)
+
 	client := newWebSocketClient(conn, safeWorld)
 	defer client.stop()
 	account, authenticated := s.authAccount(r)
@@ -488,11 +495,21 @@ func (s *WebSocketServer) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 	if join.ResumeToken != "" {
 		if pid, snap, ok := s.tryResume(inst, client, join.ResumeToken); ok {
 			playerID, snapshot, resumed = pid, snap, true
+			inst.mu.Lock()
 			if authenticated {
-				inst.mu.Lock()
 				inst.RoomManager.SetPlayerIdentity(playerID, account.ID, account.DisplayName())
-				inst.mu.Unlock()
 			}
+			// A resumed run keeps its inventory but not its colour: the
+			// reclaimed roomPlayer predates this connection, and the colour is
+			// a property of the browser that is here now (M19.1). Re-applying
+			// it means a reconnect looks the same as it did before the drop.
+			// The snapshot tryResume already built is left alone — rebuilding
+			// it would drain the room's dirty cells a second time (see
+			// Snapshot) — so the colour reaches this client on the first diff
+			// instead, one tick later, which is how the roster reaches it
+			// every other time it changes.
+			inst.RoomManager.SetPlayerColor(playerID, joinColor)
+			inst.mu.Unlock()
 		}
 	}
 
@@ -527,6 +544,9 @@ func (s *WebSocketServer) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 			} else {
 				inst.RoomManager.SetPlayerName(playerID, join.Name)
 			}
+			// Set before the snapshot is built, so the joining client's own
+			// roster already carries it (M19.1).
+			inst.RoomManager.SetPlayerColor(playerID, joinColor)
 			client.playerID = playerID
 			inst.Clients[playerID] = client
 			token := inst.mintResumeTokenLocked(playerID)

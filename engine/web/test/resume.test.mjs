@@ -24,6 +24,8 @@ const {
   reconnectDelay,
   buildJoinMessage,
   buildEditorEnterMessage,
+  loadPlayerColor,
+  savePlayerColor,
 } = await import(`data:text/javascript;base64,${source}`);
 
 // A plain in-memory stand-in for sessionStorage.
@@ -105,6 +107,28 @@ function memStore() {
 
   const resume = buildJoinMessage("join", "browser", "abc");
   assert.deepEqual(resume, { type: "join", name: "browser", resumeToken: "abc" });
+
+  // M19.1 — the picked colour rides the join, and an unset one is OMITTED
+  // rather than sent as "": JoinMessage.Color is `omitempty`, and an absent
+  // colour is what the server reads as the vanilla white-on-blue player.
+  const uncolored = buildJoinMessage("join", "browser", "abc", "");
+  assert.ok(!("color" in uncolored), "an unset colour must not ride the join");
+  const colored = buildJoinMessage("join", "browser", "abc", "#a1b2c3");
+  assert.deepEqual(colored, { type: "join", name: "browser", resumeToken: "abc", color: "#a1b2c3" });
+}
+
+// The colour is stored under its own key, in localStorage rather than the
+// sessionStorage the tokens use: it is a property of the player, not of a run,
+// and it should survive closing the tab (M19.1; M19.2 writes it, M19.3 makes a
+// signed-in player's account copy win over it).
+{
+  const store = memStore();
+  assert.equal(loadPlayerColor(store), "", "no pick yet reads as no colour");
+  savePlayerColor(store, "#00c0ff");
+  assert.equal(loadPlayerColor(store), "#00c0ff");
+  savePlayerColor(store, "");
+  assert.equal(loadPlayerColor(store), "#00c0ff", "an empty write is ignored, as it is for a token");
+  assert.notEqual(tokenKey("TOWN"), "zzt-color");
 }
 
 // M16.14f — the editor's membership token is a SEPARATE key. A browser can be

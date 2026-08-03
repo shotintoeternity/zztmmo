@@ -9629,3 +9629,73 @@ the in-session half first, PM is unblocked entirely and the handle question move
 to the profiles bullet, where it has to be answered anyway. The bullet now poses
 that as the explicit decision at promotion time rather than leaving an executor
 to infer it.
+
+## 2026-08-03 — M19.1: the player colour rides the wire and stops at the canvas
+
+**Landed.** Every player was the same white-on-blue ☻; each one now picks a
+24-bit background and the ☻ itself never changes. The whole task is the
+constraint, not the feature: the colour must exist on the protocol and on the
+canvas and **nowhere** the simulation can see.
+
+**What I did not do, and why the asymmetry is the thing to remember.**
+`SetPlayerName` records a `name` op; `SetPlayerColor` records nothing. That is
+not an oversight to be tidied up later — a name reaches the simulation (it is
+what a high-score entry is written under), so a replay that dropped it would
+diverge. A colour reaches a canvas. Recording it would make two sessions that
+differ in nothing the simulation can observe produce two different recordings.
+This is M16.15a's decision run in the other direction, and M16.15a is exactly
+why it had to be *shown*: there, an account sidecar the player was joined with
+did change sim state, so it became a recorded op and `recordVersion` went to 2.
+Here two sessions — same inputs, one played in colour — record **byte for byte
+identically**, `recordVersion` stays 2, and the coloured recording replays to
+the live session's per-room hashes.
+
+**The tint rule is derived, not reimplemented, and that is what buys the three
+visibility cases.** `playerTintCells` yields a cell only where the roster places
+a player AND the cell the server drew there is still char 2 in `0x1F`. So a dark
+room hides the player (the server sent a different cell), the energizer blink
+wins (`ElementPlayerTick` writes `0x0F` and then the cycling attribute), and a
+dead player mid-respawn is not drawn at all — none of which the client knows
+anything about. Inverting that single attribute test makes the dark-room case
+fail on the first assertion, which is the argument for the rule in one line.
+
+**Four inversions, each watched failing and reverted:**
+1. `SetPlayerColor` records a `name` op → the two recordings differ by exactly
+   the two colour lines.
+2. the attribute half of the tint test removed → the dark-room case fails.
+3. the tint dropped from `drawScreen` (via `boardCols: 0`, which compiles) →
+   both browsers read `#0000aa` under both smileys.
+4. the server stops emitting `Color` on the roster → the snapshot/diff test
+   names the empty colour on every row.
+
+**Three things the spec did not name.**
+- **Auto-contrast.** A fixed white glyph vanishes on a yellow pick, so the
+  foreground is chosen by Rec. 601 luma (threshold 0.55) between the two font
+  canvases that already exist. No new glyph tinting.
+- **Where the colour comes from before M19.2.** `localStorage` under
+  `zzt-color`, read through `isPlayerColor` so a hand-edited key is read as no
+  pick rather than forwarded to other people's `fillStyle`. Re-read at **every**
+  join, including a reconnect: a resume reclaims a run, not a browser's current
+  pick. M19.2 writes this key; M19.3 demotes it to the guest fallback.
+- **Nothing defaults to a colour.** With no key set the client sends no `color`
+  and every golden, matrix and journey suite sees the same vanilla player it saw
+  before — which is why the whole opt-in browser family is still green rather
+  than needing regenerated goldens.
+
+**A deliberate one-tick gap on resume.** The resuming client's colour is applied
+before its first diff but after the snapshot `tryResume` already built. Rebuilding
+that snapshot would drain the room's dirty cells a second time (`Snapshot` only
+drains when the player is alone, and that guard exists because M16.12a lost a
+newcomer's square to exactly this), so the colour arrives on the next diff, ~110ms
+later, the same way every other roster change arrives.
+
+**On the browser suite being a twelfth.** It reads raw corner pixels rather than
+using the M16.9 EGA decoder, because a 24-bit tint is precisely what that decoder
+cannot express — it maps a background to the nearest of sixteen. The corners are
+also the honest measurement: "what colour is the square that player is standing
+on" is a question about pixels.
+
+`ZZT_BROWSER=1 go test ./...` green, replay fixtures untouched, `npm test` and
+`npm run build` green, and the parity manifest carries `task.M19.1` as a
+`presentation-additions` deviation — the same kind as `service.world-picker`,
+because vanilla has one player attribute and the simulation still does.

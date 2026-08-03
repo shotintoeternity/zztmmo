@@ -127,7 +127,7 @@ type gateResult struct {
 	// goTest marks a gate the runner drives under `-json` so it can record the
 	// tests that skipped (task M16.20). requireBrowser makes the real-browser
 	// suites mandatory for that gate rather than opt-in; only the plain
-	// `go test` gate sets it, so the race gate no longer re-runs eleven
+	// `go test` gate sets it, so the race gate no longer re-runs twelve
 	// Playwright suites for a finding the wire-level tests already cover (owner
 	// decision 2026-08-01). Neither is serialized: they are how a gate is run,
 	// not facts about the tree, and the report must stay a pure function of it.

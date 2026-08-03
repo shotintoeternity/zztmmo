@@ -87,6 +87,13 @@ type JoinMessage struct {
 	Name  string `json:"name"`
 	World string `json:"world,omitempty"`
 	Board int16  `json:"board,omitempty"`
+	// Color is the "#RRGGBB" background this player's ☻ is drawn on in every
+	// other player's browser (M19). It is presentation only: it never reaches
+	// Board.Tiles, StateHash or a recording, which is the whole reason a 24-bit
+	// colour is allowed to exist in a fork whose determinism is sacred. It
+	// arrives from the browser, so it is untrusted on the same footing as Name
+	// and is validated (SanitizePlayerColor) before it is stored.
+	Color string `json:"color,omitempty"`
 	// ResumeToken, when it names a detached (or live) player in the joined
 	// instance, reclaims that run instead of spawning a new player (M13.2). An
 	// unknown or expired token falls through to a normal fresh join.
@@ -546,6 +553,36 @@ type PlayerSnapshot struct {
 	X      int16    `json:"x"`
 	Y      int16    `json:"y"`
 	Health int16    `json:"health"`
+	// Name and Color are presentation fields (M19.1) that ride the roster on
+	// every snapshot and every diff. Both are `omitempty` deliberately: an
+	// absent Color means "vanilla white-on-blue", which is what an old client, a
+	// replayed session and a player who has not picked one all send. Neither is
+	// read by the simulation — a roster is drawn over the screen the server
+	// already sent, never into it.
+	Name  string `json:"name,omitempty"`
+	Color string `json:"color,omitempty"`
+}
+
+// SanitizePlayerColor accepts exactly "#" plus six hexadecimal digits and
+// returns it unchanged; everything else becomes the empty string, which the
+// client renders as vanilla white-on-blue. The value comes off the wire and is
+// broadcast to every other player's browser, so it is untrusted input: nothing
+// but a fixed-length hex triple may ever reach another client's fillStyle.
+func SanitizePlayerColor(color string) string {
+	if len(color) != 7 || color[0] != '#' {
+		return ""
+	}
+	for i := 1; i < 7; i++ {
+		c := color[i]
+		switch {
+		case c >= '0' && c <= '9':
+		case c >= 'a' && c <= 'f':
+		case c >= 'A' && c <= 'F':
+		default:
+			return ""
+		}
+	}
+	return color
 }
 
 // HUDSnapshot carries everything the client needs to draw the 20x25 ZZT

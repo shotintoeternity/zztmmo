@@ -277,7 +277,7 @@ func m169ClientDir() string { return filepath.Join("web", "dist") }
 // The two environment variables that decide whether the real-browser suites
 // run (owner decision 2026-08-01).
 //
-// The eleven Playwright suites live inside `go test ./...`, so before this every
+// The twelve Playwright suites live inside `go test ./...`, so before this every
 // one-line engine change paid 7-10 minutes of real browsers, and the race gate
 // paid them a second time for no finding — the races that matter are in the
 // server, and the wire-level tests cover those. They are now OPT-IN for everyday

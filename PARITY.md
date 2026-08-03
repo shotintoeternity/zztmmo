@@ -393,7 +393,7 @@ itself with every browser suite silently skipped.
 2026-08-01). They declare-skip unless `ZZT_BROWSER=1`, so an everyday
 `go test ./...` is under a minute instead of ten; the `go test` gate above sets
 `ZZT_PARITY_REQUIRE_BROWSER=1`, which makes them mandatory AND makes an absent
-harness a failure. The `go test -race` gate deliberately does not: racing eleven
+harness a failure. The `go test -race` gate deliberately does not: racing twelve
 Playwright suites doubled the certification run for a class of finding the
 wire-level concurrency tests already cover, and the report records — gate by
 gate — that they sat that one out.

@@ -43,11 +43,13 @@ import {
   clearEditorToken,
   clearResumeToken,
   loadEditorToken,
+  loadPlayerColor,
   loadResumeToken,
   reconnectDelay,
   saveEditorToken,
   saveResumeToken,
 } from "./resume";
+import { isPlayerColor, playerTintCells, playerTintForeground } from "./player_tint";
 import {
   boardCellIndices,
   cellSource,
@@ -140,6 +142,9 @@ type PlayerSnapshot = {
   x: number;
   y: number;
   health: number;
+  /** Both M19.1, both `omitempty` on the wire: absent means the vanilla player. */
+  name?: string;
+  color?: string;
 };
 
 type HudSnapshot = {
@@ -556,6 +561,13 @@ let touchControls: TouchControls | null = null;
 let worldName = "Untitled";
 let titleFriendlyName = "Untitled";
 let nickname = "browser";
+// The live roster, from the join snapshot and every diff. It is what
+// playerTintCells paints from, and it is per-board: the server only ever sends
+// the players on the board this client is looking at.
+let roster: PlayerSnapshot[] = [];
+// Screen-cell index -> the RGB behind a player's smiley there. Rebuilt whenever
+// the roster or the screen changes; consulted by drawScreen after the overlay.
+const playerTints = new Map<number, string>();
 let authStatus: AuthStatus = { enabled: false, authenticated: false };
 // leavingToTitle suppresses the reconnect that a dropped socket normally
 // triggers: a socket we closed on purpose must not come back.
@@ -804,6 +816,9 @@ async function showTitle() {
   mobileTextInput.close();
   playerId = 0;
   myStatId = -1;
+  // The room's roster does not survive leaving it (M19.1) — a stale one would
+  // tint squares of a board nobody in it is standing on.
+  roster = [];
   editorCursor = { x: 30, y: 12 };
   editorSidebarMenu = null;
   editorStatPrompt = null;
@@ -1409,7 +1424,12 @@ function connect() {
     // stored resume token reclaims a dropped run instead of spawning a new
     // player (M13.2); an unknown/expired token is treated as a fresh join.
     const token = loadResumeToken(window.sessionStorage, worldName);
-    socket.send(JSON.stringify(buildJoinMessage(MessageTypeJoin, nickname, token)));
+    // The "#RRGGBB" background this browser's ☻ is drawn on in everyone else's
+    // client (M19.1), re-read at every join including a reconnect: it is the
+    // browser's current pick, not a property of the run being reclaimed. A
+    // player who has never picked one joins as the vanilla white-on-blue smiley.
+    const color = readStoredPlayerColor();
+    socket.send(JSON.stringify(buildJoinMessage(MessageTypeJoin, nickname, token, color)));
     canvas.focus();
     inputTimer = window.setInterval(() => sendInput(currentMask()), 55);
   });
@@ -1860,6 +1880,10 @@ function applySnapshot(message: SnapshotMessage) {
   myStatId = message.you.statId;
   myX = message.you.x;
   myY = message.you.y;
+  // The roster arrives with the snapshot too, and it is the only one a client
+  // gets before the first diff — without this a newcomer sees the room in
+  // vanilla blue for a tick (M19.1).
+  trackMyStatId(message.players);
   replaceCells(message.screen);
   drawSidebar();
   updateSidebar(message.hud);
@@ -1940,6 +1964,9 @@ function trackMyStatId(players: PlayerSnapshot[] | undefined) {
   if (!players) {
     return;
   }
+  // M19.1: the same pass keeps the whole roster, not just our own row — every
+  // other player's square is what the colour tint is painted on.
+  roster = players;
   for (const player of players) {
     if (player.id === playerId) {
       myStatId = player.statId;
@@ -2032,12 +2059,24 @@ function drawScreen() {
       ch = base.ch;
       color = base.color;
     }
-    const fg = color & 0x0f;
+    let fg = color & 0x0f;
     const bg = (color >> 4) & 0x0f;
     const x = base.x * CELL_W;
     const y = base.y * CELL_H;
-    
-    screenCtx.fillStyle = ega[bg] ?? "#000000";
+
+    // M19.1: a player's 24-bit background cannot be expressed as a bg nibble,
+    // so it is consulted here, after the overlay has had its say, and only
+    // where the cell being painted is STILL the vanilla player — so a modal, a
+    // scroll or a fade drawn over that square suppresses the tint for free.
+    // The glyph stays on the existing path: auto-contrast picks one of the two
+    // font canvases that already exist.
+    const tint = playerTints.get(i);
+    if (tint !== undefined && ch === CHAR_PLAYER && color === COLOR_PLAYER) {
+      screenCtx.fillStyle = tint;
+      fg = playerTintForeground(tint);
+    } else {
+      screenCtx.fillStyle = ega[bg] ?? "#000000";
+    }
     screenCtx.fillRect(x, y, CELL_W, CELL_H);
 
     const col = ch % GLYPH_COLS;
@@ -2130,11 +2169,35 @@ function openChatWindow() {
   });
 }
 
+// readStoredPlayerColor is the browser's own pick (M19.1). A stored value that
+// is not a "#RRGGBB" triple — hand-edited, or written by a future version — is
+// read as no pick at all rather than sent on to other people's canvases. M19.2
+// adds the picker that writes this key; today it is set by hand or by a test.
+function readStoredPlayerColor(): string {
+  const stored = loadPlayerColor(window.localStorage);
+  return isPlayerColor(stored) ? stored : "";
+}
+
+// repaintPlayerTints rebuilds the M19.1 colour layer from the live roster and
+// the cells the server drew. It is rebuilt with the overlay because the two
+// have the same lifetime — one message changes both — and it is empty outside a
+// room, where there is no roster and the board is a title screen.
+function repaintPlayerTints() {
+  playerTints.clear();
+  if (mode !== "playing") {
+    return;
+  }
+  for (const tint of playerTintCells({ roster, cells, boardCols: BOARD_COLS })) {
+    playerTints.set(tint.y * COLS + tint.x, tint.rgb);
+  }
+}
+
 // paintOverlay rebuilds the modal layer from scratch each frame, so a modal
 // never has to restore what was underneath it. The pause layer goes underneath
 // the modal: a paused player can still have a scroll open over the board.
 function paintOverlay() {
   overlay.clear();
+  repaintPlayerTints();
   // Server announcements (the shutdown/save warning) sit at the very top in
   // white-on-red across every mode — losing this one is losing your game.
   if (serverAnnounce) {
