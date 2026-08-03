@@ -188,10 +188,12 @@ M12.23, M17.1–M17.7, M16.0–M16.8a — has fully landed.)
    with 8/8 gates green and rendered byte-identical reports, and the owner —
    reading them, approving the five deviations and nine out-of-scope rows, and
    waiving the advisor review the tool has made impossible since M16.0 — ticked
-   the box. **The certification milestone is closed.** Four unchecked tasks
-   remain in this file, none of them a parity claim: M16.14f (the editor socket
-   still has no reconnect — filed by M16.14e, post-beta), M14.4 (a world's
-   identity vs. its display name), and the optional/deferred M14.3 and M12.15d.
+   the box. **The certification milestone is closed.** **M16.14f landed
+   2026-08-02**: the editor socket reconnects with the game path's backoff and a
+   membership token, so a drop repaints the editor instead of the title screen.
+   Three unchecked tasks remain in this file, none of them a parity claim: M14.4
+   (a world's identity vs. its display name), and the optional/deferred M14.3 and
+   M12.15d.
 
 **Optional / deferred (bottom):**
 - M14.3 — package split (skip unless the single package is actually hurting)
@@ -3519,7 +3521,7 @@ gap task has landed.
   stops the server ejecting a collaborator, but the editor socket still has no
   recovery of any kind if it closes for some other reason.
 
-- [ ] **M16.14f — The editor socket has no reconnect; the game socket does.**
+- [x] **M16.14f — The editor socket has no reconnect; the game socket does.**
   Ranked BELOW the beta invite. Found by M16.14e (2026-08-02) while fixing the
   ejection, and left open because it is a separate change and the ejection was
   the bug.
@@ -3542,6 +3544,34 @@ gap task has landed.
   from a fresh snapshot without the player touching anything, the session sees one
   member rather than two, and a browser test closes the socket for real rather
   than simulating it.
+
+  Landed 2026-08-02 (NOTES.md M16.14f). `reconnectEditor` (`web/src/main.ts`)
+  reuses the game path's capped backoff, and the entry snapshot now carries a
+  **membership token** the browser stores under its own `zzt-editor:` key and
+  presents on `editorEnter`. The two open decisions, both recorded in NOTES.md:
+  the browser restores only what it owns (board and cursor, re-asked for around
+  the snapshot; brush and modes need no restoring), and closes anything holding a
+  lease rather than leaving it looking saveable; and **leases are handed back
+  when a membership ends**, as an abrupt disconnect leaves them today, moving to
+  the new connection only on a takeover — where the alternative is a member
+  refused its own lease by its own ghost. `EditorSession.EnterResuming` performs
+  that takeover (id, colour, board, cursor, leases) and the server closes the
+  socket it displaced, so a drop it has not noticed yet cannot leave two members
+  for one person. The token is continuity, never authority: read-only still comes
+  from the resuming connection's own account, and a token is honoured only for
+  the account it was issued to. `engine/m16_14f_test.go` pins the wire halves
+  (token issue, takeover with the lease transfer proven by a third browser being
+  refused and named the holder, an ended membership entering fresh with its lease
+  released, and no crossing of accounts); `web/test/editor_reconnect.test.mjs`
+  drops a real Chromium's socket from the SERVER with no handshake, then requires
+  the editor — not the title screen — to come back on the author's board with
+  their cursor, showing a wall painted into the session while it was away (only a
+  fresh snapshot can), and a keystroke afterwards to reach the session, with the
+  script counting keypresses so "untouched" is measured rather than claimed.
+  Against the restored old close listener that suite fails on the bug itself.
+  Also closed on the way through: the close listener now ignores a socket test
+  play has already superseded. `go test ./...`, `ZZT_BROWSER=1 go test ./...`,
+  `npm test` and a `-race` pass over the editor/WebSocket tests are green.
 
 - [x] **M16.15 — Persistence, reconnect, and replay service journey.** With
   temporary directories and the production server binary, cover manual save,

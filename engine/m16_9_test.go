@@ -410,6 +410,10 @@ func (h *m169Harness) controlMux() http.Handler {
 	// (engine/m16_14_test.go).
 	h.editorControlRoutes(mux)
 	h.collabControlRoutes(mux)
+	// M16.14f adds the routes its reconnect suite needs: who the session thinks
+	// is editing, a real socket close, and a change made while the browser is
+	// away (engine/m16_14f_test.go).
+	h.reconnectControlRoutes(mux)
 	// M16.16 adds the chat-record route its auth/Museum journey reads
 	// (engine/m16_16_test.go).
 	h.museumControlRoutes(mux)

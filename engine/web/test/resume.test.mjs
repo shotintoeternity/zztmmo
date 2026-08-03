@@ -17,8 +17,13 @@ const {
   loadResumeToken,
   saveResumeToken,
   clearResumeToken,
+  editorTokenKey,
+  loadEditorToken,
+  saveEditorToken,
+  clearEditorToken,
   reconnectDelay,
   buildJoinMessage,
+  buildEditorEnterMessage,
 } = await import(`data:text/javascript;base64,${source}`);
 
 // A plain in-memory stand-in for sessionStorage.
@@ -100,6 +105,64 @@ function memStore() {
 
   const resume = buildJoinMessage("join", "browser", "abc");
   assert.deepEqual(resume, { type: "join", name: "browser", resumeToken: "abc" });
+}
+
+// M16.14f — the editor's membership token is a SEPARATE key. A browser can be
+// holding a dropped run and a dropped editing session for one world at the same
+// time, and they name different things on the server; one prefix for both would
+// have the editor re-entering with a player's token and the reverse.
+{
+  const store = memStore();
+  saveResumeToken(store, "TOWN", "player");
+  saveEditorToken(store, "TOWN", "member");
+  assert.notEqual(tokenKey("TOWN"), editorTokenKey("TOWN"));
+  assert.equal(loadResumeToken(store, "TOWN"), "player");
+  assert.equal(loadEditorToken(store, "TOWN"), "member");
+
+  // Leaving the editor on purpose forgets the membership, and only that.
+  clearEditorToken(store, "TOWN");
+  assert.equal(loadEditorToken(store, "TOWN"), "");
+  assert.equal(loadResumeToken(store, "TOWN"), "player");
+}
+
+// The editor token is keyed by world, absent reads as empty, an empty one is
+// never written, and a hostile store cannot throw — the resume token's rules,
+// because it is the same storage on the same page.
+{
+  const store = memStore();
+  saveEditorToken(store, "EDIT", "one");
+  saveEditorToken(store, "OTHER", "two");
+  assert.equal(loadEditorToken(store, "EDIT"), "one");
+  assert.equal(loadEditorToken(store, "OTHER"), "two");
+  assert.equal(loadEditorToken(store, "NEVER"), "");
+  saveEditorToken(store, "BLANK", "");
+  assert.equal(store.size(), 2);
+
+  const hostile = {
+    getItem() {
+      throw new Error("blocked");
+    },
+    setItem() {
+      throw new Error("blocked");
+    },
+    removeItem() {
+      throw new Error("blocked");
+    },
+  };
+  assert.equal(loadEditorToken(hostile, "EDIT"), "");
+  assert.doesNotThrow(() => saveEditorToken(hostile, "EDIT", "one"));
+  assert.doesNotThrow(() => clearEditorToken(hostile, "EDIT"));
+}
+
+// editorEnter carries the membership token only when one is stored: an empty
+// one must be omitted, or the server reads a first entry as a lookup.
+{
+  const fresh = buildEditorEnterMessage("editorEnter", "EDIT", "");
+  assert.deepEqual(fresh, { type: "editorEnter", world: "EDIT" });
+  assert.ok(!("resumeToken" in fresh));
+
+  const resumed = buildEditorEnterMessage("editorEnter", "EDIT", "member");
+  assert.deepEqual(resumed, { type: "editorEnter", world: "EDIT", resumeToken: "member" });
 }
 
 console.log("resume.test.mjs: all assertions passed");

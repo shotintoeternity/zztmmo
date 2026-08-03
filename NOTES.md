@@ -8612,3 +8612,77 @@ after.
 Remaining open work is the post-beta tail and carries no parity claim: M16.14f
 (the editor socket still has no reconnect), M14.4, and the optional M14.3 and
 M12.15d.
+
+## 2026-08-02 — M16.14f: the editor socket comes back
+
+M16.14e stopped the *server* ejecting a collaborator. This is the other half:
+until now `connectEditor`'s close listener called `showTitle()` and stopped, so
+a close of any other kind — a blip, a server restart, a lid — dropped an author
+onto the title screen of the world they were editing and discarded whatever they
+had not saved. The game socket has had backoff and a resume token since M13.2.
+
+The recovery is a re-enter, as the task predicted: the session's world lives on
+the server and `editorEnter` answers with a full snapshot. `reconnectEditor`
+(`web/src/main.ts`) reuses the game path's capped backoff and its retry timer,
+and the entry snapshot now carries a **membership token** (`EditorSnapshotMessage
+.resumeToken`) that the browser stores under its own `zzt-editor:` key and
+presents on `editorEnter`.
+
+### The two decisions the task left open
+
+**What the browser restores.** Only what the browser owns. The world, the board
+contents and the membership come back in the snapshot; the board the author was
+on and their cursor are captured when the socket closes and re-asked for
+afterwards (a board switch when the session opened somewhere else, then an
+inspect). The brush, text mode and draw mode need no restoring — nothing resets
+them. Anything the SERVER owns is let go: an open dialog is closed, because its
+lease is gone and a dialog that looks like it can still save is a lie.
+
+**Leases.** A membership that *ends* hands its leases back, exactly as an abrupt
+disconnect leaves them today — no grace, because a lease held for a browser that
+may never return blocks a real collaborator and the editor has no timer to expire
+it. They move to the new connection only on a **takeover**, where the reconnect
+beat the server's noticing: there the alternative is a member refused its own
+board or program by its own ghost, which nothing would release until the dead
+socket's read loop finally errored.
+
+`EditorSession.EnterResuming` is where that lives. A token names a membership;
+presenting it hands id, colour, board, cursor and leases to the new connection
+and the displaced socket is closed by the server (`websocket.StatusNormalClosure`,
+the shape `tryResume` uses). A token whose membership already exited is simply a
+fresh entry. It is continuity, never authority: `serveEditor` still sets
+read-only from the *new* connection's account, and a token is honoured only for
+the account it was issued to, so a leaked one cannot wear a signed-in
+collaborator's name.
+
+### Evidence
+
+`engine/m16_14f_test.go` — the wire halves. Entry carries a token and two
+browsers are two memberships; a reconnect that arrives while the old connection
+is still open takes the membership over (same id, board 1, cursor 10,7, one
+member not two), the displaced socket is closed by the server, a third browser
+is refused the transferred lease and named its holder, while the resumed
+connection is granted it; a token whose membership ended enters fresh and finds
+the lease released; and a token does not cross accounts.
+
+`web/test/editor_reconnect.test.mjs` — the browser half, reached from
+`TestM1614fBrowserEditorReconnectsAfterItsSocketIsClosed`. The drop is real:
+`/control/editor/drop` closes the socket from the server with no handshake and no
+`editorExit`. Recovery is asserted three independent ways, because a frozen page
+satisfies any one alone — the canvas is the editor (not the title screen) on the
+author's board with the cursor where they left it; a wall painted into the
+session **while the browser was away** is on that canvas, which only a fresh
+snapshot can do; and a keystroke afterwards reaches the session. The script
+counts every keypress and the Go side requires zero between the drop and the
+repaint.
+
+Run against the restored old close listener, that suite fails on the bug itself
+— "the session holds 0 member(s), want 1" — rather than on a screen probe.
+
+One pre-existing hazard closed on the way through: the editor close listener now
+ignores a socket that has already been superseded (`ws !== socket`). Test play
+swaps in a game connection and then resets `leavingToTitle`, so the old handler
+could have run `showTitle()` on a connection nobody was using any more.
+
+`go test ./...`, `ZZT_BROWSER=1 go test ./...` (all eleven browser suites),
+`npm test`, and `go test -race` over the editor/WebSocket tests: green.

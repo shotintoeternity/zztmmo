@@ -38,10 +38,14 @@ import {
   type MuseumSearchResult,
 } from "./museum";
 import {
+  buildEditorEnterMessage,
   buildJoinMessage,
+  clearEditorToken,
   clearResumeToken,
+  loadEditorToken,
   loadResumeToken,
   reconnectDelay,
+  saveEditorToken,
   saveResumeToken,
 } from "./resume";
 import {
@@ -301,6 +305,8 @@ type EditorSnapshotMessage = {
 	properties: EditorProperties;
 	menus?: EditorElementMenu[];
 	presence?: EditorPresence[];
+	// The membership token, on the entry snapshot only (M16.14f).
+	resumeToken?: string;
 };
 
 type EditorInspectMessage = {
@@ -624,6 +630,12 @@ let editorReadOnly = false;
 let pendingEditorLease: { lease: EditorLeaseMessage; onGranted: () => void } | null = null;
 let activeEditorLease: EditorLeaseMessage | null = null;
 let retainEditorLeaseOnClose = false;
+// What the browser puts back around a reconnect's fresh snapshot (M16.14f), or
+// null when no reconnect is in flight. The session owns the world; these are
+// the things it does not own — the board this browser was looking at and where
+// its cursor was — captured when the socket closed. The brush, text mode and
+// draw mode need no capture: they are client-only and nothing resets them.
+let editorRestore: { boardId: number; x: number; y: number } | null = null;
 // The F1/F2/F3 element category tables, delivered once on the entry snapshot.
 let editorMenus: EditorElementMenu[] = [];
 // The category currently open on the sidebar (F1/F2/F3), or null. While set, the
@@ -907,6 +919,8 @@ function startEditor() {
   pendingEditorLease = null;
   activeEditorLease = null;
   retainEditorLeaseOnClose = false;
+  editorRestore = null;
+  reconnectAttempt = 0;
   editorCategoryMenu = null;
   editorPresencePanel = false;
   editorSidebarMenu = null;
@@ -947,7 +961,12 @@ function closeEditor() {
   connected = false;
   setEditorBlinking(false);
   editorExitAfterSave = false;
+  editorRestore = null;
   window.clearTimeout(retryTimer);
+  // Leaving on purpose ends the membership, so its token must not be presented
+  // by the next entry: that would be a browser asking to resume something it
+  // chose to leave (M16.14f, and leaveToTitle's clearResumeToken).
+  clearEditorToken(window.sessionStorage, worldName);
   if (ws && ws.readyState === WebSocket.OPEN) {
     ws.send(JSON.stringify({ type: MessageTypeEditorExit }));
     ws.close();
@@ -1408,28 +1427,77 @@ function connectEditor() {
   if (ws && ws.readyState === WebSocket.OPEN) {
     return;
   }
+  window.clearTimeout(retryTimer);
   const socket = new WebSocket(wsURL());
   ws = socket;
   socket.addEventListener("open", () => {
     connected = true;
-    socket.send(JSON.stringify({ type: MessageTypeEditorEnter, world: worldName }));
+    reconnectAttempt = 0;
+    // A stored membership token re-enters the session this browser was already
+    // in (M16.14f) rather than joining it a second time; an unknown or already
+    // ended one is treated as a first entry.
+    const token = loadEditorToken(window.sessionStorage, worldName);
+    socket.send(JSON.stringify(buildEditorEnterMessage(MessageTypeEditorEnter, worldName, token)));
     canvas.focus();
   });
   socket.addEventListener("message", (event) => {
     applyMessage(JSON.parse(String(event.data)) as ServerMessage);
   });
   socket.addEventListener("close", () => {
-    if (leavingToTitle) {
+    // A socket that has already been superseded has nothing to recover: test
+    // play and leaving the editor both put their own connection (or none) in
+    // ws before this event lands.
+    if (ws !== socket) {
       return;
     }
-    connected = false;
-    ws = null;
-    void showTitle();
-    drawConnectionNotice("Editor disconnected");
+    reconnectEditor();
   });
   socket.addEventListener("error", () => {
     // close owns the recovery so an error cannot race it into a game reconnect.
   });
+}
+
+// reconnectEditor is the editor's half of what the game socket has had since
+// M13.2. Before M16.14f a close of any kind — a blip, a server restart, a lid —
+// dropped the author onto the title screen of the world they were editing, and
+// threw away everything they had not saved; the session they were in was still
+// on the server the whole time, so the recovery is a re-enter with the same
+// capped backoff.
+//
+// It restores only what the browser owns. The world, the board contents and the
+// membership come back in the entry snapshot, and anything the SERVER owns is
+// let go here: the leases went with the old connection (the session releases
+// them the moment it notices the drop), so a dialog holding one is closed
+// rather than left looking like it can still save.
+function reconnectEditor() {
+  if (leavingToTitle || mode !== "editor") {
+    return;
+  }
+  connected = false;
+  ws = null;
+  pendingEditorLease = null;
+  activeEditorLease = null;
+  retainEditorLeaseOnClose = false;
+  if (modal) {
+    closeModal();
+  }
+  editorCategoryMenu = null;
+  editorSidebarMenu = null;
+  editorStatPrompt = null;
+  editorDrawing = false;
+  // The reconnect may be handed a different membership (a fresh entry when the
+  // server noticed the drop first), so the identity is dropped and re-claimed
+  // from the entry snapshot — applyEditorSnapshot only adopts one it is not
+  // already holding.
+  editorMemberId = "";
+  editorRestore = { boardId: editorProperties.boardId, x: editorCursor.x, y: editorCursor.y };
+  // Nothing may repaint over the notice while we are away, and the editor's
+  // idle cursor blink is the one thing that would.
+  setEditorBlinking(false);
+  drawConnectionNotice("Reconnecting...");
+  const delay = reconnectDelay(reconnectAttempt);
+  reconnectAttempt += 1;
+  retryTimer = window.setTimeout(connectEditor, delay);
 }
 
 function disconnect(reason: string) {
@@ -1537,6 +1605,12 @@ function applyMessage(message: ServerMessage) {
 
 function applyEditorSnapshot(message: EditorSnapshotMessage) {
   mode = "editor";
+  // The entry snapshot carries the token this browser comes back with if its
+  // socket closes (M16.14f). Only the entry snapshot has one, so a later
+  // broadcast frame cannot overwrite it.
+  if (message.resumeToken) {
+    saveEditorToken(window.sessionStorage, worldName, message.resumeToken);
+  }
   // EditorSnapshot is broadcast to every session member carrying the *acting*
   // member's id, cursor and inspect (editor_session.go:313, broadcast at
   // websocket_server.go:611). Only the board/screen half of it is shared state.
@@ -1568,10 +1642,39 @@ function applyEditorSnapshot(message: EditorSnapshotMessage) {
   if (forMe || editorMessageIsForBoard(message.properties.boardId, editorProperties.boardId)) {
     replaceCells(message.screen);
   }
+  if (forMe) {
+    restoreEditorAfterReconnect(message);
+  }
   renderEditorSidebar();
   setEditorBlinking(true);
   paintOverlay();
   drawScreen();
+}
+
+// restoreEditorAfterReconnect puts the browser's own state back around a
+// reconnect's snapshot (M16.14f). A resumed membership is already on the right
+// board and inspecting the right cell, and this changes nothing; a fresh entry
+// opens on the SESSION's current board — whichever board somebody acted on last
+// — with its cursor in the middle, so both are asked for again.
+function restoreEditorAfterReconnect(message: EditorSnapshotMessage) {
+  const restore = editorRestore;
+  if (!restore) {
+    return;
+  }
+  if (message.properties.boardId !== restore.boardId) {
+    // Ask once: the switch answers with a snapshot of its own, and this runs
+    // again for it with the board half already recorded as done. A switch the
+    // session refuses (the board was deleted while we were away) therefore
+    // leaves the browser on the board it was given rather than asking forever.
+    editorRestore = { ...restore, boardId: message.properties.boardId };
+    sendEditorBoard({ op: "switch", boardId: restore.boardId });
+    return;
+  }
+  editorRestore = null;
+  editorCursor = { x: restore.x, y: restore.y };
+  // The session's presence — the cursor other collaborators see — is moved by
+  // an inspect, and its reply refreshes the sidebar readout for this cell.
+  sendEditorInspect();
 }
 
 function applyEditorInspect(message: EditorInspectMessage) {
@@ -3635,7 +3738,11 @@ function applyEditorTestPlay(message: EditorTestPlayMessage) {
   }
   connected = false;
   leavingToTitle = true;
+  editorRestore = null;
   window.clearTimeout(retryTimer);
+  // Test play exits the session on purpose; its membership token goes with it
+  // (M16.14f), so returning to the editor afterwards enters fresh.
+  clearEditorToken(window.sessionStorage, worldName);
   if (ws && ws.readyState === WebSocket.OPEN) {
     ws.send(JSON.stringify({ type: MessageTypeEditorExit }));
     ws.close();

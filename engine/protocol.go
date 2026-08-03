@@ -99,6 +99,14 @@ type JoinMessage struct {
 type EditorEnterMessage struct {
 	Type  string `json:"type"`
 	World string `json:"world"`
+	// ResumeToken is the editor's counterpart to JoinMessage.ResumeToken
+	// (M16.14f). A browser whose editor socket closed re-enters with the token
+	// its entry snapshot carried; if the session still holds the member that
+	// token names, this connection takes that membership over — same id, colour,
+	// board, cursor and leases — and the stale socket is closed, so a drop the
+	// server has not noticed yet cannot leave the session holding two members
+	// for one person. An unknown or already-exited token enters fresh.
+	ResumeToken string `json:"resumeToken,omitempty"`
 }
 
 // EditorInspectMessage reports a client-local cursor position. The server does
@@ -204,6 +212,10 @@ type EditorSnapshotMessage struct {
 	Properties EditorProperties    `json:"properties"`
 	Menus      []EditorElementMenu `json:"menus,omitempty"`
 	Presence   []EditorPresence    `json:"presence,omitempty"`
+	// ResumeToken is set only on the entry snapshot (M16.14f), like the join
+	// snapshot's. The browser stores it and presents it when its editor socket
+	// closes under it; see EditorEnterMessage.ResumeToken.
+	ResumeToken string `json:"resumeToken,omitempty"`
 }
 
 // EditorEditMessage is one browser editor operation. Selection and cursor

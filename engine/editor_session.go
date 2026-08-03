@@ -2,8 +2,11 @@ package zztgo
 
 import (
 	"bytes"
+	"crypto/rand"
 	"encoding/base64"
+	"encoding/hex"
 	"fmt"
+	"log"
 	"sync"
 )
 
@@ -31,6 +34,14 @@ type EditorSession struct {
 	// their operation, which is why every vanilla-derived path can keep reading
 	// the implicit current board unchanged.
 	memberBoard map[*webSocketClient]int16
+
+	// memberToken/tokenMember are the editor's reconnect index (M16.14f). Each
+	// member is handed a random token with its entry snapshot; a browser whose
+	// socket closed presents it again, and EnterResuming hands that membership
+	// — id, colour, board, cursor and leases — to the new connection instead of
+	// creating a second one. They are two views of one mapping, guarded by mu.
+	memberToken map[*webSocketClient]string
+	tokenMember map[string]*webSocketClient
 
 	// fanTicket is the next fan-out ticket, handed out under mu at the instant
 	// an edit is applied (M16.14b). Guarded by mu, not by fanMu: it has to be
@@ -94,6 +105,8 @@ func NewEditorSession(worldName string, world TWorld) *EditorSession {
 		readOnly:    make(map[*webSocketClient]bool),
 		leases:      make(map[editorLeaseKey]*webSocketClient),
 		memberBoard: make(map[*webSocketClient]int16),
+		memberToken: make(map[*webSocketClient]string),
+		tokenMember: make(map[string]*webSocketClient),
 	}
 }
 
@@ -103,10 +116,34 @@ func (s *EditorSession) Enter(member *webSocketClient) error {
 }
 
 func (s *EditorSession) EnterNamed(member *webSocketClient, name string) (EditorPresence, error) {
+	presence, _, _, err := s.EnterResuming(member, name, "")
+	return presence, err
+}
+
+// EnterResuming is Enter with the editor's reconnect path (M16.14f). token is
+// what the browser was handed with its last entry snapshot, or "" for a first
+// entry. It returns the member's presence, the token this connection must be
+// given, and the connection it displaced, if any — the caller closes that one,
+// because a session with two members for one person shows a dead cursor and
+// counts an editor who is not there.
+//
+// A token is only continuity, never authority: the resuming connection's own
+// account decides what it may edit (serveEditor sets read-only from it straight
+// after this returns), and a token is honoured only for the same account it was
+// issued to, so a leaked token cannot wear a signed-in collaborator's name.
+//
+// When the token names nobody — the ordinary case, because the server usually
+// notices the drop before the browser has finished backing off — this is a
+// plain fresh entry: a new id, a new colour, and no leases, exactly as an
+// abrupt disconnect leaves things today.
+func (s *EditorSession) EnterResuming(member *webSocketClient, name, token string) (EditorPresence, string, *webSocketClient, error) {
 	s.mu.Lock()
 	defer s.mu.Unlock()
 	if _, ok := s.Members[member]; ok {
-		return s.memberInfo[member], nil
+		return s.memberInfo[member], s.memberToken[member], nil, nil
+	}
+	if displaced, presence, ok := s.resumeMemberLocked(member, name, token); ok {
+		return presence, token, displaced, nil
 	}
 	s.nextMember++
 	if name == "" {
@@ -128,7 +165,68 @@ func (s *EditorSession) EnterNamed(member *webSocketClient, name string) (Editor
 	s.memberInfo[member] = presence
 	s.readOnly[member] = false
 	s.memberBoard[member] = boardID
-	return presence, nil
+	fresh := editorMemberToken()
+	s.memberToken[member] = fresh
+	s.tokenMember[fresh] = member
+	return presence, fresh, nil, nil
+}
+
+// resumeMemberLocked hands the membership token names to member, if the token
+// names a membership this connection may have. Caller holds mu.
+func (s *EditorSession) resumeMemberLocked(member *webSocketClient, name, token string) (*webSocketClient, EditorPresence, bool) {
+	if token == "" {
+		return nil, EditorPresence{}, false
+	}
+	previous, ok := s.tokenMember[token]
+	if !ok || previous == member {
+		return nil, EditorPresence{}, false
+	}
+	// A token issued to a signed-in collaborator resumes only as that account.
+	// Anyone else re-enters as themselves rather than inheriting a name and a
+	// colour the session already attributes to somebody.
+	if previous.accountID != member.accountID {
+		return nil, EditorPresence{}, false
+	}
+	presence := s.memberInfo[previous]
+	if name != "" {
+		presence.Name = name
+	}
+	readOnly := s.readOnly[previous]
+	boardID := s.memberBoard[previous]
+
+	delete(s.Members, previous)
+	delete(s.memberInfo, previous)
+	delete(s.memberBoard, previous)
+	delete(s.readOnly, previous)
+	delete(s.memberToken, previous)
+	// The leases move with the membership. Releasing them here instead would
+	// lock the returning member out of the board or program it still holds:
+	// its own ghost would refuse it, and nothing would release that hold until
+	// the dead socket's read loop finally noticed.
+	for key, holder := range s.leases {
+		if holder == previous {
+			s.leases[key] = member
+		}
+	}
+
+	s.Members[member] = struct{}{}
+	s.memberInfo[member] = presence
+	s.readOnly[member] = readOnly
+	s.memberBoard[member] = boardID
+	s.memberToken[member] = token
+	s.tokenMember[token] = member
+	return previous, presence, true
+}
+
+// editorMemberToken mints a membership token. Same shape and same best-effort
+// stance as the game socket's resume token (mintResumeTokenLocked): it is a
+// session key, never a security boundary.
+func editorMemberToken() string {
+	var buf [16]byte
+	if _, err := rand.Read(buf[:]); err != nil {
+		log.Printf("zztgo: editor member token entropy unavailable: %v", err)
+	}
+	return hex.EncodeToString(buf[:])
 }
 
 func (s *EditorSession) Exit(member *webSocketClient) {
@@ -137,6 +235,15 @@ func (s *EditorSession) Exit(member *webSocketClient) {
 	delete(s.memberInfo, member)
 	delete(s.memberBoard, member)
 	delete(s.readOnly, member)
+	// A displaced connection's read loop ends here too, and by then its token
+	// belongs to the connection that took over — so the token index is only
+	// cleared when it still points at this member.
+	if token, ok := s.memberToken[member]; ok {
+		if s.tokenMember[token] == member {
+			delete(s.tokenMember, token)
+		}
+		delete(s.memberToken, member)
+	}
 	for key, holder := range s.leases {
 		if holder == member {
 			delete(s.leases, key)

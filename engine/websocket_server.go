@@ -706,9 +706,16 @@ func (s *WebSocketServer) serveEditor(ctx context.Context, conn *websocket.Conn,
 		client.name = account.DisplayName()
 	}
 	session := s.editorSessionForWorld(safeWorld, inst.SourceWorld)
-	presence, err := session.EnterNamed(client, client.name)
+	presence, memberToken, displaced, err := session.EnterResuming(client, client.name, enter.ResumeToken)
 	if err != nil {
 		return
+	}
+	// A reconnect that arrived before the server noticed the drop takes the
+	// membership over; the socket it took it from is closed here rather than
+	// left to be discovered, so the session never fans out to a connection
+	// nobody is reading (M16.14f).
+	if displaced != nil && displaced != client {
+		displaced.conn.Close(websocket.StatusNormalClosure, "editor resumed on a new connection")
 	}
 	session.SetMemberReadOnly(client, !s.editorCanEdit(safeWorld, client.accountID))
 	client.name = presence.Name
@@ -727,14 +734,19 @@ func (s *WebSocketServer) serveEditor(ctx context.Context, conn *websocket.Conn,
 	}()
 
 	// The cursor belongs to the browser. These are only the initial inspection
-	// coordinates sent with its full frame, never session state.
-	snapshot, err := session.Snapshot(client, BOARD_WIDTH/2, BOARD_HEIGHT/2)
+	// coordinates sent with its full frame, never session state — the middle of
+	// the board for a first entry, and for a resumed membership the cell that
+	// membership was last inspecting, so a reconnect does not drag the cursor
+	// back to the centre.
+	snapshot, err := session.Snapshot(client, presence.X, presence.Y)
 	if err != nil {
 		return
 	}
 	// The F1/F2/F3 element menus are static, so they ride the entry snapshot
 	// once rather than a request per keypress (M5.8).
 	snapshot.Menus = editorElementMenus()
+	// The token this connection must present if it has to come back (M16.14f).
+	snapshot.ResumeToken = memberToken
 	if client.write(ctx, snapshot) != nil {
 		return
 	}
