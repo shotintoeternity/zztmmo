@@ -266,10 +266,11 @@ const NORMAL_COLOR = 0x1e;
 const SELECTED_COLOR = 0x1f;
 const CURSOR_COLOR = 0x1c;
 const HINT_COLOR = 0x1a;
-// A small filled square with a black cell either side of it, so a swatch is
-// visible against the window whatever the color — including the dark blue the
-// window itself is drawn on.
-const SWATCH = " \xfe ";
+// A small filled square in a black tile: one cell, so the grid reads as a list
+// of colors rather than two black stripes, and the tile is what keeps BOTH ends
+// of the palette visible — black shows against the window's blue, dark blue
+// shows against the tile's black.
+const SWATCH = "\xfe";
 const CURSOR = "\x10";
 
 /** The player glyph the preview draws, and the attribute the M19.1 tint gates on. */
@@ -322,7 +323,7 @@ export function renderColorPicker(write: WriteText, m: ColorPickerModal) {
     // side of it so that dark blue — the window's own background — is still a
     // square you can see rather than a hole in the window.
     write(x + 2, y, i, SWATCH);
-    write(x + 6, y, m.selected === i ? SELECTED_COLOR : NORMAL_COLOR, DOS_PICKS[i].name);
+    write(x + 4, y, m.selected === i ? SELECTED_COLOR : NORMAL_COLOR, DOS_PICKS[i].name);
   }
 
   drawCursor(write, COLUMN_X[0], CUSTOM_ROW, m.selected === CUSTOM_INDEX);
