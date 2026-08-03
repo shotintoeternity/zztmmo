@@ -259,6 +259,9 @@ const VANILLA_ROW = CUSTOM_ROW + 1;
 const PREVIEW_ROW = LAST_ROW - 2;
 const HINT_ROW = LAST_ROW;
 
+// TextWindowInit's interior width, the same string drawLine fills a line with.
+const INNER_EMPTY = " ".repeat(TEXT_WINDOW_WIDTH - 5);
+
 const NORMAL_COLOR = 0x1e;
 const SELECTED_COLOR = 0x1f;
 const CURSOR_COLOR = 0x1c;
@@ -299,6 +302,13 @@ const PREVIEW_LABEL = "This is you:  ";
 /** renderColorPicker draws the window: frame, grid, typed field, and preview. */
 export function renderColorPicker(write: WriteText, m: ColorPickerModal) {
   renderTextWindowFrame(write, m.title);
+  // The interior, in the window's own blue. renderTextWindow gets this for free
+  // from drawLine, which fills every line before writing it; a window that lays
+  // out its own interior has to fill it, or the frame's black shows between the
+  // text and the picker is the one window on screen that does not match.
+  for (let y = FIRST_ROW; y <= LAST_ROW; y += 1) {
+    write(TEXT_WINDOW_X + 2, y, NORMAL_COLOR, INNER_EMPTY);
+  }
 
   write(TEXT_WINDOW_X + 4, FIRST_ROW, HINT_COLOR, "Pick a color for your smiley:");
 

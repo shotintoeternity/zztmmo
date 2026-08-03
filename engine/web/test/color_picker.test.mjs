@@ -296,6 +296,17 @@ assert.equal(DOS_PICKS[1].name, "Dark Blue");
     assert.ok(cell.y >= 3 && cell.y <= 21, `"${cell.text}" is drawn outside the window's rows`);
   }
 
+  // The interior is the window's own blue, filled before anything is written on
+  // it. renderTextWindow gets this from drawLine; a window that lays out its own
+  // interior has to do it, and the first version of this one did not — the
+  // frame's black showed between the text and the picker was the only window on
+  // screen that did not match the others.
+  for (let y = 6; y <= 20; y += 1) {
+    const fill = cells.find((cell) => cell.y === y && cell.x === 7 && cell.text.trim() === "" && cell.text.length > 40);
+    assert.ok(fill, `interior row ${y} is filled before it is written on`);
+    assert.equal(fill.color, 0x1e, `interior row ${y} is filled in the window's own attribute`);
+  }
+
   // The frame is drawn, and it is the shared one: strTop's corner piece.
   assert.ok(cells.some((cell) => cell.text.startsWith("\xc6\xd1")), "the window is the M4.1 CP437 frame");
 
