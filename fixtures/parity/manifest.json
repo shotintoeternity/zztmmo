@@ -855,6 +855,16 @@
       "notes": "task-claim row; behavioral parity carried by the element/oop/protocol/input/service rows this task touched. Reconciled at the task itself (2026-08-03), NOT at M16.20: M18.15 landed after the certification milestone closed, so no M16.20 run ever saw this row. The named tests certify its DoD directly — a 10-character error opens the window on the interactive path instead of panicking, and the 40-byte and longer titles are byte-identical to what the unclamped slice produced. The 40 itself is the machine conversion's invention, not ZZT's: GAME.PAS:664 titles the window with Str(IOResult, ...) — an error number — and truncates no message at all, so there is no vanilla behaviour on either side of the clamp to be faithful to. M18.15 changes no simulation behaviour — it is one title string in the error window, outside the tick — so it adds no element/oop/input row and disturbs none."
     },
     {
+      "id": "task.M18.16",
+      "dimension": "task",
+      "subject": "Completed task M18.16 — its DoD still holds",
+      "contract": "out-of-scope",
+      "authority": "TASKS.md M18.16",
+      "parity": "exact",
+      "status": "out-of-scope",
+      "notes": "M18.16 (2026-08-03): no product-behaviour parity claim — test-harness hygiene, the task.M13.1 family. Reconciled at the task itself, NOT at M16.20: M18.16 landed after the certification milestone closed, so no M16.20 run ever saw this row. A data race inside the M18.14 and M18.15 interactive tests, found by running `go test -race` while landing the Go module identity migration and pre-existing at bfd028a (reproduced there by stashing that work). Each test's ESC-feeder goroutine read the package-global keyChan that the test's own deferred restore writes, and `defer close(stop)` only signalled the goroutine instead of waiting for it — with both select cases ready Go picks at random, so the feeder could still be reading the global as it was reassigned. The feeders now send on a local channel and close a `fed` channel on return that the deferred stop waits on, so no global is restored while the goroutine can still touch it. Pre-fix `go test -race -count=20 -run TestDisplayIOErrorInteractive` exits 1 with 2 races (one per test); post-fix it exits 0 with 0, and the full `go test -race -count=1 ./...` is green. NO production code changed — the diff is two _test.go files — so this row adds no element/oop/input/service claim and disturbs none. What it restores is the required CI gate `go test -race ./...`, red since M18.15 landed; the parity claims of M18.14 and M18.15 themselves are unaffected and still carried by their own rows, whose named tests still assert exactly what they asserted before."
+    },
+    {
       "id": "task.M18.2",
       "dimension": "task",
       "subject": "Completed task M18.2 — its DoD still holds",

@@ -4849,7 +4849,7 @@ lists. Every task: `cd engine && go build ./... && go test ./...` green,
   manifest row, so `TestParityManifest` was red on arrival at HEAD; this commit
   adds both `task.M18.14` and `task.M18.15`.
 
-- [ ] **M18.16 — M18.15's own test races on `keyChan`, and `go test -race` is a
+- [x] **M18.16 — M18.15's own test races on `keyChan`, and `go test -race` is a
   required CI job.** Filed 2026-08-03 by the module-identity backlog item, which
   ran `-race` as part of its verification and found it red. **Pre-existing at
   `bfd028a`** and reproduced there by stashing that work — the module rename
@@ -4874,6 +4874,23 @@ lists. Every task: `cd engine && go build ./... && go test ./...` green,
   DoD: `go test -race -count=1 ./...` green on an unmodified checkout, the test
   still asserts what M18.15 wrote it to assert (a short error opens the window
   rather than panicking), and no production code changes.
+  **Done 2026-08-03**, and **M18.14's test had the same defect** — the filing
+  guessed it might and it did, which the single-test reproduction had not shown:
+  running both interactive tests together pre-fix reports **two** races, one per
+  test. Both are fixed the same way, and the fix is two changes, not one. The
+  feeder now sends on a **local** channel (`keys`), so it never reads the
+  `keyChan` global the deferred restore writes — that alone removes the reported
+  race. It also closes a `fed` channel on return, and the deferred
+  `close(stop)` waits on it, so the goroutine is provably gone before any global
+  is restored rather than merely signalled; that removes the leak the original
+  shape left behind on every run. Watched failing first and measured both ways:
+  pre-fix `go test -race -count=20 -run TestDisplayIOErrorInteractive` exits 1
+  with 2 races, post-fix the same command exits 0 with 0, and the full
+  `go test -race -count=1 ./...` is green end to end (75.8s, 0 races) for the
+  first time since M18.15 landed. No production code touched — the diff is two
+  test files. The known trap this leaves for the next executor: `go test | tail`
+  reports `tail`'s exit code, so a red suite reads as green; check the output,
+  not `$?`.
 
 ## M14 — Rearchitecting for the service ZZTMMO is becoming
 

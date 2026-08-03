@@ -95,13 +95,25 @@ func TestDisplayIOErrorInteractiveShortMessageOpensWindow(t *testing.T) {
 	screen = sim
 	E = e
 
-	keyChan = make(chan byte, 1)
+	// M18.16. The feeder sends on a local, never on the `keyChan` global the
+	// deferred restore above writes, and the restore waits for the goroutine to
+	// actually exit. `close(stop)` alone only signals: both select cases can be
+	// ready at once and Go picks between them at random, so the feeder could
+	// still be evaluating its send — reading the global — while the restore
+	// reassigned it. Defers run LIFO, so this one runs before the restore.
+	keys := make(chan byte, 1)
+	keyChan = keys
 	stop := make(chan struct{})
-	defer close(stop)
+	fed := make(chan struct{})
+	defer func() {
+		close(stop)
+		<-fed
+	}()
 	go func() {
+		defer close(fed)
 		for {
 			select {
-			case keyChan <- KEY_ESCAPE:
+			case keys <- KEY_ESCAPE:
 			case <-stop:
 				return
 			}

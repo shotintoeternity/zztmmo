@@ -9252,3 +9252,60 @@ were re-run *after* the TASKS.md edit (the M18.15 lesson) and stay green: the
 manifest scanner matches `^- [x] **M<n>.<n>`, and this is a `*` backlog bullet
 with no M number, so it needs no manifest row. The browser suites were not run —
 nothing here is reachable from a browser.
+
+## 2026-08-03 — M18.16: the required `-race` gate is green again
+
+Taken immediately after the module-identity commit that filed it, on the owner's
+"we need to fix the red". Pre-existing at `bfd028a`; the module rename only
+found it, by running `-race` as part of its verification.
+
+**The filing guessed M18.14's test might have the same shape. It did.** The
+single-test reproduction had only ever shown M18.15's, because that is the test
+that happened to lose the race first. Running both together pre-fix reports
+**two** races, one per test — the harness comment at `m18_15_test.go:81` saying
+it shares M18.14's harness was literally true, defect included. So the fix is
+two files, not one.
+
+**The mechanism.** Each test starts an ESC-feeder goroutine looping on
+`select { case keyChan <- KEY_ESCAPE: case <-stop: return }`, where `keyChan` is
+the *package global* the same test's deferred restore reassigns. `defer
+close(stop)` only signals; nothing waits. Defers run LIFO, so `close(stop)` does
+run before the restore — which is exactly why plain `go test ./...` never went
+red and only the race detector saw it. But a closed `stop` and a send that still
+fits in the 1-slot buffer are *both* ready cases, and Go picks between ready
+cases at random, so the feeder could take one more trip through the loop —
+reading the global — while the restore wrote it.
+
+**Two changes, and the first is the one that removes the reported race.** The
+feeder now sends on a **local** `keys` channel, so it never touches the global
+at all. Separately it closes a `fed` channel on return and the deferred
+`close(stop)` waits on that, so the goroutine is provably finished before any
+global is restored, rather than merely told to stop — that removes the goroutine
+leak the original shape left on every single run, which was a latent version of
+the same bug. The wait cannot hang: once `stop` is closed the feeder does at
+most one more send before the 1-slot buffer is full, after which only the `stop`
+case is ready.
+
+**Watched failing first, and measured both directions.** Pre-fix,
+`go test -race -count=20 -run TestDisplayIOErrorInteractive` exits 1 with 2
+races; post-fix the identical command exits 0 with 0 races. The 20 iterations
+matter — a race this timing-dependent could pass once by luck, and a single
+green run would have proved nothing. Full `go test -race -count=1 ./...` is now
+green end to end (75.8s, zero races), the first time since M18.15 landed. Plain
+suite, `go build`, `go vet` and `gofmt` all green as well.
+
+**No production code changed.** The diff is two `_test.go` files, so both tests
+still assert precisely what M18.14 and M18.15 wrote them to assert — the window
+opens, `TextWindowRejected` is set, the headless branch is not taken, and a
+10-character error does not panic. The parity claims of those two tasks are
+untouched and stay on their own rows; `task.M18.16` is an `out-of-scope` row
+(the `task.M13.1` CI-hygiene family), since restoring a green build gate is not
+a product-behaviour parity claim. Added with `PARITY_SCAFFOLD=1` and then
+hand-edited, and `TestParityManifestIsCanonical` confirms the hand edit
+round-trips.
+
+**The trap that hid this, worth repeating.** `go test ... | tail` reports
+`tail`'s exit code, not the suite's, so a red suite reads as green in `$?`. The
+first `-race` run in this session was reported as passing for exactly that
+reason and was only caught by reading the output. Redirect to a file and check
+the exit code before the pipe.

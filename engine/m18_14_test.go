@@ -101,13 +101,23 @@ func TestDisplayIOErrorInteractiveStillOpensWindow(t *testing.T) {
 	screen = sim
 	E = e // TextWindow* draw through the package-level video functions
 
-	keyChan = make(chan byte, 1)
+	// M18.16, same fix as the M18.15 test this harness is shared with: the feeder
+	// sends on a local rather than the `keyChan` global the deferred restore
+	// above writes, and the restore waits for the goroutine to exit instead of
+	// only signalling it.
+	keys := make(chan byte, 1)
+	keyChan = keys
 	stop := make(chan struct{})
-	defer close(stop)
+	fed := make(chan struct{})
+	defer func() {
+		close(stop)
+		<-fed
+	}()
 	go func() {
+		defer close(fed)
 		for {
 			select {
-			case keyChan <- KEY_ESCAPE:
+			case keys <- KEY_ESCAPE:
 			case <-stop:
 				return
 			}
