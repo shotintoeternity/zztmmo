@@ -427,4 +427,18 @@ row's `test` at a name that does not exist, or its `fixture` at a path that does
 not, and `TestParityManifest` fails; set a row to `pass` with no test, leave one
 `unverified`, or let a suite skip undeclared, and `certificationBlockers` refuses
 to certify. `cmd/zzt-parity/report_test.go` holds each of those as its own test,
-and the M16.20 session performed the perturbation live (NOTES.md 2026-08-01).
+and the M16.20 session performed the perturbation live (NOTES.md 2026-08-01),
+as did the certification session below (NOTES.md 2026-08-02).
+
+**The certification runs (2026-08-02, commit `95982bd`).** Two independent clean
+`git clone`s, each run through `make certify` sequentially — a clone carries no
+untracked world, no `node_modules` and no build cache, which is the point.
+Both: 8/8 gates PASS, `371 rows | verdict: CERTIFIED`, 357 `pass` /
+5 `deviation` / 9 `out-of-scope` / 0 `unverified` / 0 `gap`, 23 skips all
+declared, no blockers, `git status` empty afterwards. The reports are
+byte-identical between the two runs (`report.json` sha256 `27e95781…`,
+`report.md` sha256 `e88d57be…`); the two run records differ only in wall clock
+(384s and 413s). **The manifest saying "certified" is not the same sentence as
+the product having full feature parity within this contract** — only M16.20's
+box, which the owner ticks after approving the deviation and out-of-scope lists,
+carries that claim.

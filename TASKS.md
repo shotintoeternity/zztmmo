@@ -176,16 +176,18 @@ M12.23, M17.1–M17.7, M16.0–M16.8a — has fully landed.)
    edits, so two members writing one cell leave every screen and the session on
    one tile; M16.14's act 8 is no longer a known flake.
    Next in file order after those is M16.20, whose executor work landed
-   2026-08-01 but which was **blocked on M16.14e** — a collaborator dropped to the
+   2026-08-01 and was **blocked on M16.14e** — a collaborator dropped to the
    title screen when the server's write to it times out, found by the
    clean-clone certification run and pre-existing. **M16.14e landed 2026-08-02**:
    the cause was instrumented rather than argued (a write that runs past its
    one-second deadline closes the connection, so a browser busy for one second
    loses its editor socket), and every client now has a bounded outbound queue
    drained by its own writer goroutine, so no broadcast — and no tick — waits on
-   a browser. Act 11 is green 5 of 5 under the load that used to fail it, so
-   M16.20's two identical clean-clone reports are obtainable and M16.20 is
-   unblocked.
+   a browser. Act 11 is green 5 of 5 under the load that used to fail it.
+   **M16.20's executor work finished 2026-08-02**: two clean clones of `95982bd`
+   each certified with 8/8 gates green and rendered byte-identical reports. Its
+   box stays unchecked on purpose — it is owner-gated (deviation approval plus
+   the no-self-certification rule), and it is the last unchecked M16 task.
 
 **Optional / deferred (bottom):**
 - M14.3 — package split (skip unless the single package is actually hurting)
@@ -4167,21 +4169,31 @@ gap task has landed.
     and §4 records the three approved deviations no row can name (a row carries
     one `deviation` id) with the tests that actually pin them.
 
-  **BLOCKED on M16.14e for the two green reports.** The clean-clone run found and
-  fixed one real defect (below) and then hit a second: M16.14's act 11 times out
-  under load — pre-existing, reproduced at `5667e1e` — so the run cannot be green
-  twice in a row until that lands. Everything else in this DoD is done.
-  The clean-clone run's own finding, already fixed here: four harnesses seeded
+  The 2026-08-01 clean-clone run's own finding, fixed then: four harnesses seeded
   their worlds from the gitignored `engine/TOWN.ZZT` and copied it only when it
   happened to exist, so on any clean checkout — including CI's `browser-goldens`
   job — the client's first `/api/title` answered 500 and 24 tests across nine
   suites failed. They now read the committed `fixtures/TOWN.ZZT` and fail closed.
 
+  **The two green reports landed 2026-08-02**, once M16.14e unblocked them
+  (NOTES.md 2026-08-02). Two independent clean `git clone`s of `95982bd`, each
+  run through `make certify`, sequentially: **8/8 gates PASS in both**, both
+  `371 rows | verdict: CERTIFIED`, and `report.json`/`report.md`
+  **byte-identical** across the runs (`27e95781…` / `e88d57be…`). 357 `pass`,
+  5 `deviation`, 9 `out-of-scope`, 0 `unverified`, 0 `gap`, no blockers. 23
+  skips, every one declared, each recorded with the gate it sat out — the eleven
+  browser suites really ran under `go test` (5 minutes of real browsers, not the
+  50-second opt-out path) and sat out `-race` by design (M18.12). Both clones
+  ended with `git status` empty; the two `run.json`s differ only in wall clock.
+  Fail-closed was re-performed in this session rather than cited: a renamed
+  `test` and a moved required `fixture` each turned `TestParityManifest` red with
+  the row named, and both were restored byte-identically. This run found no new
+  defect — unlike the first, which is the difference the gate exists to make.
+
   **Left for the owner:** approve the final deviation list (five `deviation`
   rows over four catalog ids, plus the nine `out-of-scope` classifications), read
-  the two clean-clone reports once M16.14e unblocks them, and tick this box. The
-  advisor half of the gate is still unrun — the advisor tool has been unavailable
-  since M16.0.
+  the two clean-clone reports, and tick this box. The advisor half of the gate is
+  still unrun — the advisor tool has been unavailable since M16.0.
 
 - [x] **M16.20a — Make `PARITY_SCAFFOLD=1` regeneration non-destructive.**
   Found during M18.1 (NOTES.md 2026-07-30). Regenerating

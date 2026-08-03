@@ -8493,3 +8493,89 @@ socket has had backoff and a resume token since M13.2. It ranks below the beta
 invite: the state is already server-side (the session holds the world and
 `editorEnter` returns a full snapshot), so it is a small job, but it is a
 different one and the ejection was the bug.
+
+## 2026-08-02 — M16.20: the two clean-clone runs, and what they cost
+
+**Advisor unavailable** (no advisor tool in this environment — the same standing
+fallback as M16.0–M16.3, M16.17a, M16.14b, M16.20's first session and M16.14e).
+**The box stays unchecked**: this task's DoD ends in an owner approval and the
+M17.3/M17.7 no-self-certification rule applies to it more than to anything else
+in the file.
+
+M16.14e unblocked the half of M16.20 that could not be finished on 2026-08-01:
+two identical green certification reports from a clean clone.
+
+**How the runs were done.** Two independent `git clone`s of this repository at
+`95982bd` into a scratch directory — so neither carries the untracked worlds, the
+`reference/` checkouts, `node_modules`, a Go build cache entry for the tree, or
+anything else a developer's own tree accumulates — then `make certify` in each.
+**Sequentially, deliberately**: running them at once would have reproduced
+exactly the load artifacts (M16.14d, M16.18c, M16.10a) that cost three sessions,
+and a certification run is the last place to introduce one.
+
+**Both runs: 8/8 gates PASS, `manifest: 371 rows | verdict: CERTIFIED`.**
+
+| | run 1 | run 2 |
+|---|---|---|
+| `go test` (browsers required) | 301.1s | 330.0s |
+| `go test -race` | 76.2s | 75.3s |
+| total | 383.6s | 412.5s |
+| `report.json` sha256 | `27e95781…` | `27e95781…` |
+| `report.md` sha256 | `e88d57be…` | `e88d57be…` |
+
+`diff -q` is clean on both report files: **byte-identical**, which is what the
+report-vs-run-record split (2026-08-01) exists to make possible. The two
+`run.json`s agree on commit, `treeDirty: false`, OS/arch, tool versions
+(go1.26.5, node v26.5.0, npm 11.17.0, playwright 1.62.0) and the whole skip list,
+and disagree only where they are supposed to: wall clock.
+
+Row totals, identical in both: 357 `pass`, 5 `deviation`, 9 `out-of-scope`,
+**0 `unverified`, 0 `gap`, 0 unknown**, no blockers.
+
+**23 skips, every one declared**, and the report says which gate each sat out:
+two under `go test` (M16.18's `firefox-touch-portrait`, which Playwright cannot
+emulate, and the manifest scaffold generator) and 21 under `go test -race` — the
+eleven browser suites plus those two, which the race gate deliberately does not
+require (M18.12). A run that had quietly not executed the browser suites could
+not have certified: under `ZZT_PARITY_REQUIRE_BROWSER=1` an absent harness is a
+failure, and `go test` really did spend 5 minutes in real browsers rather than
+the 50 seconds an opt-out run takes.
+
+**Both clones ended with `git status --porcelain` empty.** The run writes only
+gitignored files; a certification that dirties the tree it certifies would make
+the second run's input a different tree from the first's.
+
+**Nothing new was found.** The 2026-08-01 clean clone found a real defect (nine
+suites seeded from the gitignored `engine/TOWN.ZZT`); this one found none — which
+is the difference between a clean-clone gate that has never been run and one that
+has.
+
+**Fail-closed, re-performed today** rather than cited from yesterday's session,
+in the throwaway clone so the real tree was never touched:
+
+- a `pass` row's `test` pointed at a name that does not exist →
+  `row task.M17.10: references non-existent Go test
+  "TestM1614CollaborativeEditorInBrowsersPerturbed" (stale)`;
+- a required `fixture` pointed at a moved path →
+  `row elem.ammo: fixture "fixtures/oracle/item.capture.moved.txt" does not
+  exist (stale)`.
+
+Both restored byte-identically (`git status` empty, and the clone's manifest
+sha256 `b7fd65d5…` matches the committed one), with `TestParityManifest` green
+again afterwards.
+
+**Load metrics captured from run 1** (`fixtures/parity/load-metrics.txt`, 30
+network clients over TCP, 50 ticks): fanout p50 415µs / p95 617µs / max 722µs,
+1650 diff frames, 2847 KB delivered, heap growth 0.23 MB. Scope is 30 clients on
+one world on this host; no larger claim is made.
+
+**What is still owed, and by whom.** The executor half of M16.20 is now complete:
+the manifest is reconciled, the gate runs what it certifies, the artifacts are
+published, the fail-closed proof is performed, and two clean clones produced the
+same green report. Left for the owner: approve the five `deviation` rows over
+four catalog ids (`omitted-game-speed`, `presentation-additions`,
+`account-sidecar-restore`, `score-on-quit`, `snapshot-player-drop`) and the nine
+`out-of-scope` classifications, read the two reports, and tick the box. The
+advisor half — the independent-oracle chain review — remains unrun for want of
+the tool. **Until the box is ticked, nothing in this repository may state that
+the product has full feature parity within the M16 contract.**
