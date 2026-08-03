@@ -9309,3 +9309,75 @@ round-trips.
 first `-race` run in this session was reported as passing for exactly that
 reason and was only caught by reading the output. Redirect to a file and check
 the exit code before the pipe.
+
+## 2026-08-03 — World picker: "open selected worlds to their title screen"
+
+Taken because the milestones are closed: `TASKS.md` has no unchecked `M<n>.<n>`
+task left, and the owner picked this bullet out of the three that remain at the
+foot of the file. Ranked ahead of the other two on purpose — the scaling
+evaluation needs the production host, and the co-op cutline needs an owner
+decision before any of it can be automated.
+
+**The behaviour was already there, and that is the finding.** Re-checking the
+code before writing any (the M18.13 precedent) turned up commit `715b498`,
+2026-07-13, and a NOTES entry the same day: `enterWorld` had already been
+changed to select the world and repaint its board 0 and *stop*, with
+`selectWorldForTitle` returning `startPlay: false` and P the only path into
+`startPlay`. Every route into a world funnels through `enterWorld` — the local
+picker (`selectWorldEntry`), a Museum row (`playMuseumWorld`), a finished dream,
+a repaint retry, a restore — so the pause is structural rather than per-path.
+The bullet was simply never ticked.
+
+**What was actually missing was the proof, and it was missing in a way that
+mattered.** The regression `715b498` left behind is `title_flow.test.mjs`: three
+lines asserting that a pure helper returns `{ startPlay: false }`. That helper is
+one `return` statement. It cannot see `enterWorld`, it cannot see
+`selectWorldEntry`, and it cannot see a WebSocket — so the exact regression the
+bullet exists to prevent (something calls `startPlay()` after selection) passes
+it. Meanwhile M16.11's journey, which is the suite that actually drives the
+local picker in a browser, walked select → Enter → P without ever asserting that
+anything happened in between.
+
+**What the Museum branch already had.** M16.16's `museum_journey` waits for "the
+title screen of the imported CAVERN1" before pressing P, which is a real
+assertion of the pause on that branch. Verified rather than assumed: making
+`playMuseumWorld` call `startPlay()` right after `enterWorld` — a defect
+confined to the Museum path — makes that wait time out, so the branch is
+covered. An extra "no socket yet" assertion was drafted there and then dropped:
+under every inversion tried, the existing wait fired first, so the addition
+would have been an assertion that cannot be shown to fail. The local-picker
+branch had nothing equivalent, and that is where the new coverage went.
+
+**The contract, as three claims.** M16.11's `titleToPlay` (and journey 1's
+inlined launch flow, which reaches a world the same way) now takes a mark before
+Enter and asserts after it: no socket opened, no snapshot arrived, and a request
+went to `/api/title?world=<the world just chosen>`. The third claim is the one
+that says it is *that world's* board 0 on screen and not the previous one — the
+title screen has no socket by design, so an HTTP request is the only wire
+evidence of whose board is showing. The counters are a before/after mark rather
+than a bare zero because the journeys run one after another in one page.
+
+**Watched failing first.** With `selectWorldForTitle` flipped to
+`startPlay: true` — literally the pre-`715b498` behaviour — and the client
+rebuilt, the suite fails in 5s: `selecting ACCEPT must stop at its title screen,
+not join a room; opened ["ws://127.0.0.1:63103/ws?world=ACCEPT"]`. Restored and
+rebuilt, it passes and logs the selection.
+
+**The bullet's other two clauses, checked rather than waved through.**
+*Join semantics after the player chooses to start*: P → `startPlay` →
+`connect()` → `wsURL()`, which sets `?world=` from the selected `worldName` —
+that parameter is what routes the join to the world's own instance
+(`GetOrCreateInstance`), and M16.11 already asserts the socket names the world
+it picked. *Direct links*: there is nothing to preserve, and it is worth
+recording why. `?world=` is a WebSocket parameter only; the client never reads
+`window.location.search` for a world, so a page URL cannot deep-link into one
+and the title-first flow cannot have broken a link that does not exist. If a
+shareable per-world link is ever wanted, it is a new feature, not a regression
+guard. *Reconnect*: `disconnect()` schedules `connect()` again on the unchanged
+`worldName` and presents the resume token stored per world
+(`loadResumeToken(sessionStorage, worldName)`), so a Wi-Fi blip after the
+title-first flow returns to the room the title screen chose.
+
+**No production code changed.** The diff is one browser test file. Nothing moves
+in the replay fixtures, and as a `*` backlog bullet with no M number it needs no
+parity manifest row (same reasoning as the module-identity bullet).

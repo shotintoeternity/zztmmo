@@ -45,6 +45,10 @@ const page = await context.newPage();
 const pageErrors = [];
 const consoleErrors = [];
 const sockets = [];
+// Every /api/title request the page makes, in order. The title screen has no
+// socket by design, so this is the only wire evidence of WHOSE board 0 is on
+// screen after a world is picked.
+const titleRequests = [];
 const transcript = []; // retained and dumped on failure (DoD: protocol transcript)
 
 const seen = {
@@ -70,6 +74,10 @@ function resetRunState() {
 page.on("pageerror", (err) => pageErrors.push(String(err)));
 page.on("console", (msg) => {
   if (msg.type() === "error") consoleErrors.push(msg.text());
+});
+page.on("request", (request) => {
+  const url = request.url();
+  if (url.includes("/api/title")) titleRequests.push(url);
 });
 page.on("websocket", (ws) => {
   sockets.push(ws.url());
@@ -163,6 +171,41 @@ async function walkUntil(code, done, describe, maxSteps = 30) {
 const atLeastX = (x) => () => (seen.you?.x ?? 0) >= x;
 
 /**
+ * The counters that must not move while a world is merely being selected.
+ * A mark rather than a bare zero: the journeys run one after another in one
+ * page, so by journey 2 both counters are already well past zero.
+ */
+const titleMark = () => ({ sockets: sockets.length, snapshots: seen.snapshots, titles: titleRequests.length });
+
+/**
+ * Selecting a world opens that world's title screen and joins NOTHING.
+ *
+ * This is the whole of the "open selected worlds to their title screen before
+ * play" contract, and it is three claims, not one: no socket, no snapshot, and
+ * the board now on screen came from /api/title for the world just chosen.
+ * main.ts enterWorld stops after showTitle because selectWorldForTitle returns
+ * `startPlay: false` (title_flow.ts) — pressing P is the only thing that joins.
+ */
+function expectTitleScreenPause(worldFilter, mark) {
+  const joined = sockets.slice(mark.sockets);
+  assert.equal(
+    joined.length,
+    0,
+    `selecting ${worldFilter} must stop at its title screen, not join a room; opened ${JSON.stringify(joined)}`,
+  );
+  assert.equal(
+    seen.snapshots,
+    mark.snapshots,
+    `selecting ${worldFilter} must not start play, but a snapshot arrived`,
+  );
+  const titles = titleRequests.slice(mark.titles);
+  assert.ok(
+    titles.some((url) => url.includes(`world=${worldFilter}`)),
+    `the title screen must be ${worldFilter}'s own board 0; /api/title since selection: ${JSON.stringify(titles)}`,
+  );
+}
+
+/**
  * Title screen -> world picker -> Play, exactly as a player does it.
  *
  * Passing `name` means we are on a fresh page load, where the launch name
@@ -181,8 +224,10 @@ async function titleToPlay(worldFilter, { name } = {}) {
   }
   await page.keyboard.type(worldFilter);
   await sleep(400);
+  const mark = titleMark();
   await page.keyboard.press("Enter");
   await settle();
+  expectTitleScreenPause(worldFilter, mark);
   await page.keyboard.press("KeyP");
 }
 
@@ -205,8 +250,14 @@ try {
   await settle();
   await page.keyboard.type("ACCEPT");
   await sleep(400);
+  const acceptMark = titleMark();
   await page.keyboard.press("Enter");
   await settle();
+  // The launch flow reaches a world the same way the picker does, so it owes
+  // the same pause: this is the first selection of the run, and nothing has
+  // been joined yet at all.
+  expectTitleScreenPause("ACCEPT", acceptMark);
+  console.log("  - selected ACCEPT: its title screen, no socket, no snapshot");
   await page.keyboard.press("KeyP");
 
   await waitFor(() => seen.snapshots > 0, "the join snapshot");

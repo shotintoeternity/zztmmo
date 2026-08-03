@@ -217,8 +217,15 @@ M12.23, M17.1–M17.7, M16.0–M16.8a — has fully landed.)
    so a shorter message panics the terminal build) — low-ranked, terminal-only,
    and the last open executor task in this file. **M18.15 landed 2026-08-03**:
    the title is clamped, so a short error opens the window instead of killing
-   the process, and no executor task in this file is open. The beta invite
-   remains the open owner action.
+   the process, and no executor task in this file is open. **M18.16 landed
+   2026-08-03** as well, filed by the module-identity backlog bullet that found
+   `go test -race` red on M18.15's own harness — and on M18.14's too. With the
+   milestones closed, execution continues out of the backlog bullets at the foot
+   of this file: **"Open selected worlds to their title screen before play"
+   landed 2026-08-03**, where the behaviour turned out to have shipped in
+   `715b498` and what actually landed is the proof that it stays — a picker
+   selection now has to show that world's own title board and join nothing.
+   The beta invite remains the open owner action.
 
 **Optional / deferred (bottom):**
 - M14.3 — package split — **closed as skipped 2026-08-03**, see NOTES.md
@@ -5851,11 +5858,43 @@ newly enables; same rule: backlog bullets, owner promotes before spec):**
   world servers.
 
 **World picker follow-ups:**
-* [ ] **Open selected worlds to their title screen before play.** When a player
+* [x] **Open selected worlds to their title screen before play.** When a player
   selects a world from the picker, show that world's native ZZT title/start screen
   first instead of immediately spawning into active gameplay. Preserve multiplayer
   join semantics after the player chooses to start, and make sure direct links or
   reconnects still land in the expected room/session.
+  **Done 2026-08-03**, and the code was re-checked first (the M18.13 precedent).
+  The behaviour itself **landed 2026-07-13** in `715b498` and the bullet was
+  never ticked: `enterWorld` selects the world, repaints its board 0 from
+  `/api/title`, and stops, because `selectWorldForTitle` returns
+  `startPlay: false` — P is the only thing that joins. Every route into a world
+  (the local picker, a Museum row, a dream, a restore) goes through that one
+  function, so the pause is not per-path.
+  What was missing was the **proof**. The only regression was
+  `title_flow.test.mjs`: three lines on a pure helper that cannot see
+  `enterWorld`, `selectWorldEntry`, or a socket. M16.16's `museum_journey`
+  already covers the Museum branch — verified by inverting only
+  `playMuseumWorld`, which makes its wait for "the title screen of the imported
+  CAVERN1" fire — but nothing asserted the **local picker** branch at all:
+  M16.11's journey walked select → P without ever claiming the pause existed,
+  so the bullet's own regression would have passed it. M16.11 now asserts the
+  contract as three claims at every picker selection — no socket opened, no
+  snapshot arrived, and the board on screen came from `/api/title?world=` the
+  world just chosen. Watched failing first: with `selectWorldForTitle` returning
+  `startPlay: true` (the pre-`715b498` behaviour) the suite fails in 5s on
+  `selecting ACCEPT must stop at its title screen, not join a room; opened
+  ws://…/ws?world=ACCEPT`.
+  The other two clauses were checked rather than assumed. Join semantics: P →
+  `startPlay` → `connect()` → `wsURL()` carries `?world=` for the selected
+  world, which is what gives each world its own instance, and the journey
+  already asserts the socket names the world it picked. Direct links: there is
+  no page-level `?world=` deep link to preserve — `?world=` is the WebSocket
+  parameter only and the client never reads `window.location.search` for a
+  world. Reconnect: a drop calls `connect()` again on the same `worldName` with
+  the per-world resume token, so it returns to the room the title screen chose.
+  No production code changed — the diff is one browser test file — so nothing
+  moves in the fixtures and, as a `*` bullet with no M number, it needs no
+  parity manifest row.
 
 **README follow-ups:**
 * [x] **Correct the fixture path in the directory map.** The README currently
