@@ -43,9 +43,10 @@ type EditorSession struct {
 	// diffs reached a third member's socket were independent: two members
 	// writing one cell could leave that third screen holding the tile the
 	// session threw away, permanently. inOrder serializes the fan-outs into
-	// ticket order without holding mu across the writes — a stalled client can
-	// delay the broadcasts behind it by its write timeout, but can never block
-	// an edit, a lease, an inspect or a newcomer's entry snapshot.
+	// ticket order without holding mu across the writes, so a fan-out can block
+	// no edit, lease, inspect or newcomer's entry snapshot. What it orders is
+	// the handover to each member's own writer (M16.14e), so a member whose
+	// browser has stalled no longer delays the broadcasts behind it either.
 	fanMu      sync.Mutex
 	fanCond    *sync.Cond
 	fanServing uint64
@@ -462,9 +463,10 @@ func (s *EditorSession) issueFanTicketLocked() uint64 {
 
 // inOrder runs fn once every earlier ticket's fan-out has finished, so messages
 // reach the members in the order the session applied the changes behind them
-// (M16.14b). fn runs with no session lock held: the writes are network I/O with
-// a per-client timeout, and putting them under s.mu would let one stalled
-// client freeze every other member's editing for the length of that timeout.
+// (M16.14b). fn runs with no session lock held: putting the fan-out under s.mu
+// would let whatever the writes are waiting on freeze every other member's
+// editing. Since M16.14e those writes only hand each message to that member's
+// own writer, so the gate waits on no browser at all.
 //
 // The ticket is always retired, including when fn panics, or one abandoned
 // fan-out would stall every later one for the life of the session.

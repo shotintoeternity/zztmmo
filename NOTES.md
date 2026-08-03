@@ -8406,3 +8406,90 @@ timeout, give each client a bounded outbound queue with a slow-client policy
 (which would interact with M16.14b's ordering gate), or make a write timeout
 non-fatal and re-sync the client, which needs a resume path the editor does not
 have.
+
+## 2026-08-02 — M16.14e: nobody waits on a browser any more
+
+**The hypothesis was right, and now it is instrumented.** A member that enters
+the editor and then stops reading — forced with a shrunk kernel receive buffer
+rather than waited for under load — produced exactly the predicted sequence:
+
+    write #60 took 1.001s err=... use of closed network connection
+    (~480 KB pushed)
+    MemberCount 2 -> 1
+
+So it is a **product** defect, not a harness one. `webSocketClient.write` gave
+every message a one-second context; `nhooyr.io/websocket` hands that context to
+`timeoutLoop` (`conn.go:173-195`), which CLOSES the connection when it expires.
+There is no "this message failed, the socket lives" path in the library, which
+also rules out the third candidate fix outright. The closed socket ends the read
+loop, `serveEditor`'s defer runs `session.Exit`, and the browser's `close`
+listener (`web/src/main.ts:1421-1428`) draws the title screen of the world that
+member was editing — the screen M16.20's run kept printing.
+
+Two things the investigation turned up that were not in the report:
+
+- The same one-second write sits in `WorldInstance.Tick`, which walks every
+  client of every hosted world serially on the single tick goroutine. One
+  browser that stopped reading could cost **every player of every world** up to
+  a second per tick. Same function, same fix, and beta-scale.
+- A broadcast passed the ACTING member's request context to the OTHER members'
+  writes. A member who had just left could therefore expire an innocent
+  recipient's deadline and close their socket.
+
+**Owner decision 2026-08-02** (advisor tool unavailable in this environment, the
+standing fallback): the per-client outbound queue, and on overflow disconnect the
+client with a log line rather than dropping messages or blocking the sender.
+
+**What landed.** Each `webSocketClient` gets a bounded queue (`clientOutboundQueue`
+= 256) drained by one writer goroutine that owns the connection. `write` hands
+the message over and returns; it never waits on the network, and an error from it
+now means the client is finished, never that one message was slow. The writer
+uses its own 30-second deadline — the client's, never the caller's — so the
+cross-member context hazard is gone too. Teardown drains what is queued for up to
+a second, which preserves what the synchronous write gave for free: a reply
+written just before a handler returns still goes out. Dropping messages was
+rejected on the merits: an editor diff is incremental, so a screen missing one is
+wrong until something asks for a repaint.
+
+M16.14b's ordering gate is unaffected in what it guarantees and strictly better
+in what it costs: it now orders the handover to each member's writer, so a
+stalled member does not delay the broadcasts behind it at all. The comments at
+`editor_session.go:41-48/464-468` and `websocket_server.go:773-779` that promised
+the old cost were updated rather than left to lie.
+
+**Evidence, both directions.** `m16_14e_test.go` forces the stall — the
+listener's send buffer and the client's receive buffer are both shrunk, the
+member reads its entry snapshot and then nothing — and every test refuses to pass
+unless the socket really blocked (the M16.18c lesson: a green that provoked
+nothing proves nothing). Against the pre-fix synchronous write, restored
+temporarily, all three fail on the bug itself:
+
+    probe 8 ... failed after 1.002s (use of closed network connection):
+    a busy browser must cost it latency, not its connection
+
+The three: the stalled collaborator keeps its session and its socket, the session
+serves everyone else at full speed meanwhile, and it is handed every message it
+missed in order when it reads again; a hopeless client (past the 256-message
+budget) is disconnected alone, refused at the queue rather than at the wire, with
+Ada still editing; and ten ticks with a stalled player on the board cost the tick
+goroutine nothing.
+
+**Act 11, the reason this was filed.** M16.14's browser suite ran 5 consecutive
+times under eight busy loops on a 10-core machine — the load that failed it 2 of
+3 at HEAD — and was green 5 of 5, at ~61s a run against ~45s idle, so the load
+was real. `go test ./...` and `go test -race ./...` are both green, and so is the
+whole opt-in browser set under `ZZT_BROWSER=1` (296s) — this changes what every
+browser reads, so all eleven suites were run rather than the collaborative one.
+
+`service.editor-collab` therefore stays `pass` rather than going back to `gap`,
+with the two editor tests added to its row and its claim about what a stalled
+client costs rewritten; `task.M3.7` carries the tick test.
+
+**Filed on the way through: M16.14f.** The fix stops the server ejecting a
+collaborator, but `connectEditor`'s close listener still has no reconnect, no
+backoff and no resume — so any other close (a blip, a restart, a lid) still drops
+that member to the title screen with their unsaved editing gone, where the game
+socket has had backoff and a resume token since M13.2. It ranks below the beta
+invite: the state is already server-side (the session holds the world and
+`editorEnter` returns a full snapshot), so it is a small job, but it is a
+different one and the ejection was the bug.

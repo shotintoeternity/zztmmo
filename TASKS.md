@@ -176,10 +176,16 @@ M12.23, M17.1–M17.7, M16.0–M16.8a — has fully landed.)
    edits, so two members writing one cell leave every screen and the session on
    one tile; M16.14's act 8 is no longer a known flake.
    Next in file order after those is M16.20, whose executor work landed
-   2026-08-01 but which is **blocked on M16.14e** — a collaborator dropped to the
+   2026-08-01 but which was **blocked on M16.14e** — a collaborator dropped to the
    title screen when the server's write to it times out, found by the
-   clean-clone certification run, pre-existing, and the reason two identical
-   green reports are not obtainable yet.
+   clean-clone certification run and pre-existing. **M16.14e landed 2026-08-02**:
+   the cause was instrumented rather than argued (a write that runs past its
+   one-second deadline closes the connection, so a browser busy for one second
+   loses its editor socket), and every client now has a bounded outbound queue
+   drained by its own writer goroutine, so no broadcast — and no tick — waits on
+   a browser. Act 11 is green 5 of 5 under the load that used to fail it, so
+   M16.20's two identical clean-clone reports are obtainable and M16.20 is
+   unblocked.
 
 **Optional / deferred (bottom):**
 - M14.3 — package split (skip unless the single package is actually hurting)
@@ -3429,7 +3435,7 @@ gap task has landed.
   it up. All four browser suites green together with `fixtures/` unchanged, plus
   a green full `go test -count=1 ./...`.
 
-- [ ] **M16.14e [ADVISOR] — A collaborator is dropped to the title screen when
+- [x] **M16.14e [ADVISOR] — A collaborator is dropped to the title screen when
   the server's write to it times out (M16.20 gap task; blocks M16.20).**
   Found by M16.20's clean-clone certification run 2026-08-01, which cannot
   produce the two identical green reports its DoD requires while this flakes.
@@ -3474,6 +3480,62 @@ gap task has landed.
   forces a slow reader rather than waiting for load to supply one (M16.14b's and
   M16.18c's shape); act 11 green in 5 consecutive loaded runs; and M16.20's two
   clean-clone reports become obtainable.
+
+  Landed 2026-08-02 (NOTES.md M16.14e). The hypothesis was confirmed by
+  instrumentation before anything was changed: a member that stops reading loses
+  its socket on the first write to run past a second (`write #60 took 1.001s ...
+  use of closed network connection`, `MemberCount 2 -> 1`), because the WebSocket
+  library closes a connection whose write context expires — which also rules out
+  "make the timeout non-fatal" outright. A **product** defect, so it was fixed
+  rather than worked around, and `service.editor-collab` stayed `pass`.
+  Owner decision 2026-08-02 (advisor tool unavailable, standing fallback): each
+  `webSocketClient` now has a bounded outbound queue (256) drained by its own
+  writer goroutine, so `write` hands a message over instead of waiting on a
+  browser — no tick, no fan-out, no chat broadcast waits on anyone — and the
+  writer bounds the wire with its own 30s deadline instead of the caller's
+  context, which also ends a departing member being able to close an innocent
+  recipient's socket. A client that has not read 256 messages is disconnected
+  deliberately and logged; dropping messages was rejected because an editor diff
+  is incremental and a screen missing one is wrong until something repaints it.
+  The same one-second write was in `WorldInstance.Tick`, which walks every client
+  of every hosted world serially on the one tick goroutine, so a single stalled
+  browser could cost every player of every world up to a second per tick — the
+  same fix closes it, and `TestM1614eStalledPlayerDoesNotStallTheTick` pins it on
+  `task.M3.7`. `engine/m16_14e_test.go` forces the stall (both kernel buffers
+  shrunk, the member reads its entry snapshot and then nothing) and every test
+  refuses to pass unless the socket really blocked; all three were run against the
+  restored synchronous write and fail there on the bug itself. Act 11 was green in
+  5 consecutive runs under eight busy loops on a 10-core machine — the load that
+  failed it 2 of 3 at HEAD — at ~61s a run against ~45s idle. `go test ./...` and
+  `go test -race ./...` green.
+
+  Filed **M16.14f** on the way through, and deliberately not taken here: the fix
+  stops the server ejecting a collaborator, but the editor socket still has no
+  recovery of any kind if it closes for some other reason.
+
+- [ ] **M16.14f — The editor socket has no reconnect; the game socket does.**
+  Ranked BELOW the beta invite. Found by M16.14e (2026-08-02) while fixing the
+  ejection, and left open because it is a separate change and the ejection was
+  the bug.
+
+  `connectEditor`'s `close` listener (`web/src/main.ts:1421-1428`) calls
+  `showTitle()` and stops. There is no reconnect, no backoff, and no resume — so
+  any close at all (a network blip, a server restart, a laptop lid) drops a
+  collaborator to the title screen of the world they were editing and discards
+  whatever they had not saved. The game socket has had backoff and a resume token
+  since M13.2 (`connect`, `main.ts:1377-1405`).
+
+  It should be a small job, because the state is in the right place already: the
+  session's world lives on the server, and `editorEnter` returns a full snapshot,
+  so a reconnect is a re-enter — the member rejoins the session it never really
+  left. What needs deciding is what the browser restores around it (cursor,
+  open window, brush) and whether a member whose socket dropped should keep its
+  leases across the gap or hand them back like an abrupt disconnect does today.
+
+  DoD: an editor socket closed underneath the browser reconnects and repaints
+  from a fresh snapshot without the player touching anything, the session sees one
+  member rather than two, and a browser test closes the socket for real rather
+  than simulating it.
 
 - [x] **M16.15 — Persistence, reconnect, and replay service journey.** With
   temporary directories and the production server binary, cover manual save,
