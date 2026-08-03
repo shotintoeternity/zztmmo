@@ -4905,6 +4905,137 @@ lists. Every task: `cd engine && go build ./... && go test ./...` green,
   reports `tail`'s exit code, so a red suite reads as green; check the output,
   not `$?`.
 
+## M19 — Tell players apart (RGB smiley backgrounds)
+
+Filed 2026-08-03 by promoting the idea-backlog bullet the owner designed
+2026-07-10 ("Tell players apart — RGB smiley backgrounds"), which stays at the
+foot of this file marked promoted. **Unranked**: the execution-priority list is
+owner-owned and this milestone is not in it — the owner ranks it against the
+beta invite before an executor starts.
+
+The problem, re-checked against the code at `3f1e736` and still live: every
+player is the identical white-on-blue ☻. `ElementPlayerTick`
+(`engine/elements.go:1365-1368`) re-asserts `Color = 0x1F` and glyph `'\x02'` on
+every tick for every un-energized player, so in a busy room nobody can tell
+which figure is theirs, let alone whose is whose.
+
+**The design (owner, 2026-07-10 — do not renegotiate it):** the glyph is
+**always char 2**. The ☻ is what everyone knows as the ZZT player and it never
+changes. What varies is an **arbitrary 24-bit RGB background** each player picks
+at join. This is only possible because the color lives in the protocol and the
+canvas and **never** in the sim.
+
+**The constraint that governs every task here.** The RGB color must never reach
+`Board.Tiles`. That is what keeps `StateHash`, the replay fixtures, the parity
+manifest, exported `.ZZT` files and the M14.2 session recordings untouched — and
+it is the difference between a presentation feature and a determinism break.
+M16.15a is the precedent in the other direction: an account sidecar the player
+was *joined with* changed sim state, so it had to become a recorded op and bump
+`recordVersion`. A background color changes no sim state, so it must ride the
+wire **without** being recorded — and each task below has to prove that rather
+than assert it.
+
+**What already exists** (checked 2026-08-03 — the 2026-07-10 bullet predates all
+of it and its `gamevars.go:467-471` / `main.ts:310` citations are stale):
+- The roster is already on the wire. `PlayerSnapshot`
+  (`engine/protocol.go:543-549`) carries `ID, StatID, X, Y, Health`, rides
+  `SnapshotMessage.Players` and **every** room diff
+  (`engine/room_manager.go:590-606` sets `Players` unconditionally), and the
+  client already tracks itself out of it (`trackMyStatId`,
+  `engine/web/src/main.ts:1938-1952`). No new message type is needed.
+- Names already exist server-side (`RoomManager.SetPlayerName`,
+  `engine/room_manager.go:293`, fed from `join.Name` /
+  `account.DisplayName()` at `engine/websocket_server.go:479,528`) but are **not**
+  in `PlayerSnapshot`.
+- A per-player client-side overlay drawn from roster coordinates is established
+  practice: the pause blink draws over `myX/myY`, and `editorCursorOverlay`
+  (`engine/web/src/editor_cursor.ts`, called from `paintOverlay`,
+  `main.ts:2148-2165`) is a pure, unit-tested function turning presence into
+  overlay cells. M19.1 follows that shape.
+- Per-member colors already have a precedent in the editor
+  (`editorPresenceColor`, `engine/editor_session.go:423-448`, guarded by
+  `TestEditorPresenceColorsAreDistinctFromTheLocalCursor`) — but those are
+  4-bit DOS attributes, which is exactly what M19.1 cannot reuse.
+
+**The one genuinely new rendering mechanism.** `drawScreen`
+(`engine/web/src/main.ts:2005-2054`) resolves every cell to a 4-bit `fg` and
+`bg` and paints the background with `screenCtx.fillStyle = ega[bg]`
+(`main.ts:2041`) — a 16-entry palette. A 24-bit background cannot be expressed
+as a `bg` nibble, so it cannot ride the existing `overlay` map (which carries
+`{ch, color}` attributes only). M19.1 adds a separate per-cell RGB override
+consulted in `drawScreen` after `overlay`. The **foreground** stays on the
+existing path: auto-contrast picks white or black by background luminance, and
+both are already pre-tinted font canvases (`fontCanvases[15]`, `fontCanvases[0]`),
+so no new glyph tinting is needed.
+
+- [ ] **M19.1 — The color on the wire and on the canvas.** The core of the
+  feature; M19.2 and M19.3 are the picker and the persistence and neither
+  blocks this one (a color can arrive from a hardcoded test value until M19.2
+  exists).
+  Server: add `Color string \`json:"color,omitempty"\`` (`"#RRGGBB"`) and
+  `Name string \`json:"name,omitempty"\`` to `PlayerSnapshot`
+  (`engine/protocol.go:543`), and `Color` to `JoinMessage`
+  (`engine/protocol.go:85-94`). Validate the color where the join is read
+  (`engine/websocket_server.go:479-528`, beside the existing `SetPlayerName`
+  call) — reject anything that is not exactly `#` plus six hex digits and fall
+  back to empty; the string reaches other players' browsers, so it is untrusted
+  input on the same footing as `join.Name`. Store it beside `player.name` on the
+  `RoomManager` player and emit it from `playerSnapshotsForRoom`. `omitempty` is
+  deliberate: an empty color means "vanilla white-on-blue", which is what an old
+  client, a replayed session, and a player who has not picked yet all send.
+  Client: maintain the live roster from `SnapshotMessage.Players` and every
+  `DiffMessage.Players` (extend `trackMyStatId`'s pass, or add one beside it —
+  it already runs on both paths), and add a pure
+  `playerTintCells({roster, cells, boardCols})` in its own module in the
+  `editor_cursor.ts` shape, returning `{x, y, rgb}` for each player to tint.
+  **The tint rule, which is the whole correctness of this task:** tint a cell
+  only where the roster places a player AND the cell currently on screen there
+  shows char 2 with attribute `0x1F`. Deriving it from what the server actually
+  drew — rather than from the roster alone — is what makes the three
+  visibility rules fall out for free instead of needing three special cases: a
+  dark room hides the player because the server sent a different cell, the
+  energizer blink wins because `ElementPlayerTick` writes `0x0F` and the
+  cycling attribute (`engine/elements.go:1359-1363`) so the attribute test
+  fails, and a dead player mid-respawn is not drawn at all. Do not reimplement
+  darkness or blink logic client-side.
+  DoD: two browsers in one room show two different backgrounds and each player
+  can point at their own ☻; a unit test on `playerTintCells` covers the three
+  yield cases (dark cell, blink attribute, player absent from the cell the
+  roster claims); an engine test asserts `StateHash` is byte-identical for two
+  rooms whose players differ only in color; `go test ./...` green with the
+  replay fixtures **unmodified**; a session recorded with colors set replays
+  identically to one recorded without, and `recordVersion` does **not** change
+  (this is the M16.15a inverse and must be shown, not argued); `npm test` and
+  `npm run build` green; `ZZT_BROWSER=1` browser family green (this touches the
+  protocol and the renderer, so CLAUDE.md rule 3 requires it).
+
+- [ ] **M19.2 — The picker.** A CP437 window (the M4.1 window furniture, see
+  `engine/web/src/textwindow.ts`) offering the 16 DOS colors as quick picks —
+  the owner named purists explicitly — plus arbitrary RGB entry. Owner decision
+  needed at task start, so ask rather than choose: **hex entry or sliders**, and
+  **where the picker sits** (before the first join, or reachable later from the
+  title screen so a color can be changed without a rejoin). Persist the choice
+  in `localStorage` for now, keyed like the resume token
+  (`engine/web/src/resume.ts`), and send it as `JoinMessage.Color`; the nickname
+  it sits beside is set at `main.ts:688`. DoD: a picked color survives a reload
+  and a reconnect; the window renders and keys like every other CP437 window
+  (Escape cancels, no keystroke leaks to the game — the M16.18a Fire-button
+  lesson); it is reachable on a touch profile, since M15/M16.18a make phones a
+  covered configuration; `npm test` green and the browser family green.
+
+- [ ] **M19.3 — Persist the color on the account.** The 2026-07-10 design says
+  the color is "later stored on their M6.2 account". Today the only per-account
+  store is `ChatDatabase.PutPlayerState/GetPlayerState`
+  (`engine/chat_db.go:65-85,165-182`), keyed by `(accountID, worldName)` — the
+  wrong key, because a color is account-wide, not per-world. Add an account
+  preferences pair to the `ChatDatabase` interface and implement it in **both**
+  `MemChatDatabase` and `FileChatDatabase` (the file impl is a JSON document
+  with a `writePlayerStatesLocked` flush, not SQL — follow its shape). A
+  signed-in player's stored color wins over `localStorage`; a guest keeps
+  `localStorage` only. DoD: a signed-in player's color follows them to a
+  different world and a different browser; a guest is unaffected; the file DB
+  round-trips across a server restart; `go test ./...` green.
+
 ## M14 — Rearchitecting for the service ZZTMMO is becoming
 
 Filed 2026-07-12 from a whole-repo review (NOTES.md): three structural debts
@@ -5641,7 +5772,11 @@ first, then features that exploit what this codebase is uniquely good at.
   the run. Hold the stat for ~60s under a resume token; rejoin reclaims it.
   Guests need this as much as accounts do.
 * **Tell players apart — RGB smiley backgrounds (owner-designed
-  2026-07-10).** Every player is the identical white-on-blue ☻
+  2026-07-10). Promoted 2026-08-03 to M19** (M19.1–M19.3), which carries the
+  specced version; the code was re-checked first and the gap is still live, but
+  note that the two file:line citations below are stale — the accurate surgery
+  map is in M19's preamble. Kept here for the owner's own design wording.
+  Every player is the identical white-on-blue ☻
   (`gamevars.go:467-471`); in a busy room nobody knows which one they are,
   let alone who's who. Presentation-only fix: snapshots gain a players list
   (statId, x, y, name, color); the client overlays it. Design decided with

@@ -9479,3 +9479,67 @@ scaling evaluation, which the M18.0a audit already reduced to "measure CPU,
 memory and per-room cost on the real instance and derive a threshold". That is an
 owner action, not an executor one — it needs the production host. The beta invite
 remains open beside it.
+
+## 2026-08-03 — M19 filed: tell players apart (RGB smiley backgrounds)
+
+Spec only, on the owner's pick from the three options offered when TASKS.md ran
+out of executor work. No code changed; the diff is the new M19 section, the
+backlog bullet marked promoted, and this entry.
+
+**Why this one.** With M16 certification closed and every `[ ]` box ticked but
+the owner-gated scaling bullet, the next work comes out of the idea backlog, and
+`CUTLINE.md`'s policy says pick what advances the shared-ZZT core. Three players
+in one room who cannot tell which ☻ is theirs is exactly that, and the design was
+already settled with the owner on 2026-07-10, so this needed a surgery map rather
+than a decision.
+
+**The 2026-07-10 bullet's citations had rotted, both of them.**
+`gamevars.go:467-471` is now the M16.17a `elementDefsOnce` block; the live site
+is `ElementPlayerTick` re-asserting `Color = 0x1F` and glyph `'\x02'` every tick
+at `elements.go:1365-1368`. `main.ts:310`'s name prompt is gone — the launch-text
+rewrite and sign-in replaced it, and the nickname is set at `main.ts:688`. Both
+are flagged as stale in the bullet rather than silently corrected, since the
+bullet is the owner's own wording.
+
+**Three things the bullet assumed were work that are already built**, which is
+most of why the spec is three tasks and not a milestone: the roster is already on
+the wire and already on every diff (`room_manager.go:590-606` sets `Players`
+unconditionally, so the client gets fresh positions every tick — no new message
+type); names already exist server-side via `SetPlayerName` but are simply absent
+from `PlayerSnapshot`; and a per-player overlay drawn from roster coordinates is
+established practice in `editorCursorOverlay` and the pause blink, so M19.1 has a
+shape to copy rather than invent.
+
+**The one thing that genuinely cannot reuse what exists.** `drawScreen` paints
+backgrounds with `ega[bg]` from a 16-entry palette (`main.ts:2041`), and the
+`overlay` map carries `{ch, color}` 4-bit attributes — so a 24-bit background
+cannot ride either. It needs its own per-cell RGB override. The editor's
+`editorPresenceColor` looks like a precedent and is not: those are DOS attributes.
+The foreground is the opposite case — auto-contrast to white or black lands on
+`fontCanvases[15]`/`[0]`, which already exist, so no new glyph tinting.
+
+**The tint rule is where the correctness lives, so the spec fixes it rather than
+leaving it to the executor.** Tint only where the roster places a player AND the
+cell on screen there still shows char 2 with attribute `0x1F`. Deriving it from
+what the server drew rather than from the roster alone makes all three visibility
+rules fall out for free: darkness (the server sent something else), the energizer
+blink (`elements.go:1359-1363` writes `0x0F` and a cycling attribute, so the
+attribute test fails and the blink wins, which is what the owner asked for), and a
+dead player mid-respawn. The alternative — reimplementing darkness and blink
+client-side — is three special cases that drift from the sim.
+
+**M16.15a, inverted, is the determinism argument.** There the account sidecar a
+returning player was *joined with* changed sim state, so it had to become a
+recorded op and bump `recordVersion`. A background color changes no sim state, so
+it must ride the wire *without* being recorded — and M19.1's DoD makes the
+executor demonstrate that (identical `StateHash` for rooms differing only in
+color, a recording that replays identically with colors set, `recordVersion`
+unchanged) rather than assert it. The color never touching `Board.Tiles` is what
+keeps the replay fixtures, the parity manifest and exported `.ZZT` files out of
+this feature entirely.
+
+**Left to the owner, deliberately.** M19 is **unranked** — the execution-priority
+list is owner-owned and the beta invite is still the open action above it. M19.2
+also carries two questions the spec refuses to answer for the owner: hex entry
+versus sliders, and whether the picker sits before the first join or stays
+reachable from the title screen so a color can change without a rejoin.
