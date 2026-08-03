@@ -4972,8 +4972,9 @@ so no new glyph tinting is needed.
   feature; M19.2 and M19.3 are the picker and the persistence and neither
   blocks this one (a color can arrive from a hardcoded test value until M19.2
   exists).
-  Server: add `Color string \`json:"color,omitempty"\`` (`"#RRGGBB"`) and
-  `Name string \`json:"name,omitempty"\`` to `PlayerSnapshot`
+  Server: add a `Color` string field, JSON-tagged `color,omitempty` and
+  carrying `"#RRGGBB"`, plus a `Name` string tagged `name,omitempty`, to
+  `PlayerSnapshot`
   (`engine/protocol.go:543`), and `Color` to `JoinMessage`
   (`engine/protocol.go:85-94`). Validate the color where the join is read
   (`engine/websocket_server.go:479-528`, beside the existing `SetPlayerName`
