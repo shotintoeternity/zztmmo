@@ -4,6 +4,7 @@ import (
 	"errors"
 	"fmt"
 	"io"
+	"log"
 	"os"
 	"path/filepath"
 )
@@ -577,7 +578,16 @@ func (e *Engine) PauseOnError() {
 	e.Delay(2000)
 }
 
-func DisplayIOError(err error) (DisplayIOError bool) {
+// DisplayIOError shows GAME.PAS's OS-error window and reports whether there
+// was an error at all. Headless there is nothing to show it on and — worse —
+// nothing to close it: the window ends in TextWindowSelect, which waits on
+// InputReadWaitKey, and a headless process has no key poller feeding that
+// channel, so the Go runtime aborts with "all goroutines are asleep" (M18.14).
+// Headless it therefore records the error and returns without drawing. The
+// bool is unchanged in both paths — true means "there was an error", which is
+// what WorldLoad and the rest read it for, so a headless caller still fails
+// where an interactive one does. The interactive path below is untouched.
+func (e *Engine) DisplayIOError(err error) (DisplayIOError bool) {
 	var (
 		textWindow TTextWindowState
 	)
@@ -586,6 +596,14 @@ func DisplayIOError(err error) (DisplayIOError bool) {
 		return
 	}
 	DisplayIOError = true
+	if e.Headless {
+		// The one place a swallowed error would otherwise stop: a headless
+		// save or load that fails has no window and no player to read it, so
+		// it goes to the log and stays on the engine for a caller to inspect.
+		e.LastIOError = err
+		log.Printf("zzt: I/O error with no window to show it in: %v", err)
+		return
+	}
 	textWindow.Title = err.Error()[:40]
 	textWindow.Title = "Error: " + textWindow.Title
 	TextWindowInitState(&textWindow)
@@ -721,7 +739,7 @@ func (e *Engine) WorldLoad(filename, extension string, titleOnly bool) (WorldLoa
 	e.VideoWriteText(62, 5, 0x1F, "Loading.....")
 
 	f, err := os.Open(filename + extension)
-	if DisplayIOError(err) {
+	if e.DisplayIOError(err) {
 		return
 	}
 	defer f.Close()
@@ -738,7 +756,7 @@ func (e *Engine) WorldLoad(filename, extension string, titleOnly bool) (WorldLoa
 			e.VideoWriteText(63, 6, 0x1E, "  and cannot be read.")
 			return
 		}
-		DisplayIOError(err)
+		e.DisplayIOError(err)
 		return
 	}
 	if err := validateWorldBoards(e.World); err != nil {
@@ -803,7 +821,7 @@ func (e *Engine) WorldSave(filename, extension string) {
 	e.VideoWriteText(63, 5, 0x1F, "Saving...")
 
 	f, err := os.Create(filename + extension)
-	if DisplayIOError(err) {
+	if e.DisplayIOError(err) {
 		return
 	}
 	defer f.Close()
@@ -820,7 +838,7 @@ func (e *Engine) WorldSave(filename, extension string) {
 	e.World.Info.BoardTimeSec = pState.BoardTimeSec
 	e.World.Info.BoardTimeHsec = pState.BoardTimeHsec
 
-	DisplayIOError(e.worldWriteTo(f))
+	e.DisplayIOError(e.worldWriteTo(f))
 }
 
 func (e *Engine) GameWorldSave(prompt string, filename *string, extension string) {
@@ -927,14 +945,14 @@ func (e *Engine) HighScoresLoad() {
 func (e *Engine) HighScoresSave() {
 	f, err := os.Create(e.World.Info.Name + ".HI")
 	if err != nil {
-		DisplayIOError(err)
+		e.DisplayIOError(err)
 		return
 	}
 	buf := make([]byte, SizeOfHighScoreList)
 	StoreHighScoreList(buf, e.HighScoreList[:])
 	_, err = f.Write(buf)
 	if err != nil {
-		DisplayIOError(err)
+		e.DisplayIOError(err)
 		return
 	}
 	f.Close()
@@ -2405,6 +2423,13 @@ func DamageStat(attackerStatId int16) {
 
 func DisplayMessage(time int16, message string) {
 	E.DisplayMessage(time, message)
+}
+
+// DisplayIOError kept its converted call shape (EDITOR.PAS still calls it that
+// way in the commented-out load/save block); M18.14 made it a method so it can
+// see the Headless flag, which lives on the Engine.
+func DisplayIOError(err error) bool {
+	return E.DisplayIOError(err)
 }
 
 func GameDebugPrompt() {

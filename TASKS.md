@@ -209,8 +209,14 @@ M12.23, M17.1–M17.7, M16.0–M16.8a — has fully landed.)
    contributor-facing, take it after). **M18.13 landed 2026-08-03** — the picker
    is keyed on the identity the join path resolves, so the owner's duplicate
    card is gone and a file only the wrong case of which exists is no longer
-   offered as joinable. The beta invite is the open owner action, and M18.14 is
-   the last open executor task in this file.
+   offered as joinable. **M18.14 landed 2026-08-03** — a missing startup world
+   now prints `load <NAME>.ZZT failed` and exits non-zero instead of aborting
+   with a runtime deadlock trace, because `DisplayIOError` records rather than
+   opens a window it cannot close when `Headless` is set. It filed **M18.15**
+   (that same window's title slices an error message to 40 bytes with no clamp,
+   so a shorter message panics the terminal build) — low-ranked, terminal-only,
+   and the last open executor task in this file. The beta invite remains the
+   open owner action.
 
 **Optional / deferred (bottom):**
 - M14.3 — package split — **closed as skipped 2026-08-03**, see NOTES.md
@@ -4762,7 +4768,7 @@ lists. Every task: `cd engine && go build ./... && go test ./...` green,
   fixture untouched. **Owner action still open: check the live picker after
   deploy.**
 
-- [ ] **M18.14 — A missing startup world deadlocks the server instead of
+- [x] **M18.14 — A missing startup world deadlocks the server instead of
   reporting it.** Found 2026-08-03 while verifying the README's Quick Start
   from a clean clone (the README half is done; this is the engine half).
   `cmd/zzt-server/main.go:39` calls `zztgo.WorldLoad`, which on failure calls
@@ -4790,6 +4796,43 @@ lists. Every task: `cd engine && go build ./... && go test ./...` green,
   first and watch it fail); `cmd/zzt-server` prints its `log.Fatalf` message and
   exits non-zero for a missing world; the interactive path is unchanged;
   `go test ./...` green; replay fixture untouched.
+  Landed 2026-08-03 (NOTES.md). `DisplayIOError` is now a method on `*Engine`
+  (that is where `Headless` lives; the package-level wrapper stays for the
+  converted call shape) with a headless branch that records the error and
+  returns before the window. **One spec correction:** the bool is unchanged in
+  both paths — the spec's "return false" contradicts its own DoD, since
+  `WorldLoad` reads `if DisplayIOError(err) { return }` and a false there would
+  carry it past the guard onto a nil file. True still means "there was an
+  error". Errors from the other headless callers (`WorldSave` on the `.SAV`
+  path, `HighScoresSave`) go to the log and to `e.LastIOError` rather than
+  nowhere. Four tests, all watched failing against a tree with the guard
+  removed: the missing-world load returns false inside 5s, the headless branch
+  draws nothing and still reports true, the interactive path still opens the
+  window and still waits for its key (driven through tcell's simulation screen,
+  because `presentInstall` exits where there is no terminal), and `zzt-server`
+  on a missing world exits non-zero printing `load MISSING.ZZT failed` with no
+  deadlock trace. `go test ./...` green; replay fixtures untouched. Filed
+  **M18.15** on the way through.
+
+- [ ] **M18.15 — `DisplayIOError` panics on error messages shorter than 40
+  characters.** Found 2026-08-03 while landing M18.14. The interactive title
+  line is `textWindow.Title = err.Error()[:40]` (`game.go`), which is a Go slice
+  with no clamp: any error whose message is shorter panics with a slice-bounds
+  runtime error instead of showing the window. `write TOWN.ZZT: no space left on
+  device` (38 bytes) is exactly the disk-full case the window's own text is
+  about. M18.14's deadlock report survived it only by coincidence — "open
+  TOWN.ZZT: no such file or directory" is exactly 40 characters.
+  **Not a vanilla quirk to preserve:** GAME.PAS:652 builds the title from
+  `Str(IOResult, ...)`, an error *number*, and never truncates a message at all
+  (`Copy` would have clamped in any case). The 40 is the machine conversion's
+  invention, so there is no ZZT behavior to be faithful to — but the fix is
+  still a clamp, not a redesign of the window.
+  Ranked low: after M18.14 the path is reachable only from the terminal build
+  (`cmd/zztgo`), since a headless caller now returns before this line.
+  DoD: a unit test that calls `DisplayIOError` with a 10-character error on the
+  interactive path and gets the window rather than a panic (inverted first);
+  the 40-character and longer cases render exactly as they do today; `go test
+  ./...` green; replay fixture untouched.
 
 ## M14 — Rearchitecting for the service ZZTMMO is becoming
 

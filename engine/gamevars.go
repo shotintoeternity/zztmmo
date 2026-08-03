@@ -196,6 +196,12 @@ type (
 		WorldFileDescValues    [10]string
 		Screen                 [80][25]struct{ Ch, Color byte }
 		Headless               bool
+		// LastIOError is where DisplayIOError puts the error it cannot show
+		// when Headless is set (M18.14): its text window ends in
+		// TextWindowSelect, which waits on a keypress no headless process
+		// feeds. Observability, not simulation state — never serialized,
+		// hashed or snapshotted, and the interactive path never sets it.
+		LastIOError error
 		videoDirty             []dirtyCell
 		screenDirty            []dirtyCell
 		ActiveInput            InputSource

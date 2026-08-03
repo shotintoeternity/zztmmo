@@ -9095,3 +9095,49 @@ counted under, so it is the honest one.
 run because `/api/worlds` is a payload a browser reads) and `npm test` all
 green; no simulation code touched and the replay fixtures are unchanged. Open
 owner action: confirm the duplicate is gone from the live picker after deploy.
+
+## 2026-08-03 — M18.14: a missing startup world is now reported, not a deadlock
+
+`cmd/zzt-server` on a world that is not on disk printed a Go runtime abort
+(`fatal error: all goroutines are asleep - deadlock!`) and a stack dump, and
+never reached the `log.Fatalf("load %s.ZZT failed")` sitting on the next line.
+The path is `WorldLoad` → `DisplayIOError` → `TextWindowSelect` →
+`InputReadWaitKey`, which receives on the key channel a headless process has no
+poller for. Same class as the `GameDebugPrompt` bug: an interactive vanilla path
+reached from a server.
+
+**The guard is at the headless boundary, as the task required.** `DisplayIOError`
+became a method on `*Engine` (the `Headless` flag lives there, and every call
+site in `game.go` is already inside an `e.`-scoped method; the package-level
+`DisplayIOError` wrapper stays for the converted call shape `EDITOR.PAS` uses).
+Headless it records the error and returns; the vanilla display block below it is
+byte-identical, and a test drives it — through tcell's simulation screen, since
+`presentInstall` `os.Exit(1)`s where there is no terminal — to prove the window
+still opens and still waits for the keypress that closes it.
+
+**The bool did not change, deliberately.** The task text says "return false";
+its own DoD says `WorldLoad` must return false, and those are opposite
+requirements — `WorldLoad` reads `if DisplayIOError(err) { return }`, so a false
+there would carry it past the guard into `defer f.Close()` on a nil file. The
+implemented contract is the existing one: true means "there was an error", in
+both paths, so a headless caller fails exactly where an interactive one does.
+
+**Errors are not swallowed.** The other headless callers — `WorldSave` on the
+`.SAV` path (`game.go:1822`, whose comment "cannot block the sim" was not true
+until now) and `HighScoresSave` — would have hung on the same window. Their
+errors now go to the log and stay on `e.LastIOError`, which is observability
+only: runtime-only, never serialized, hashed or snapshotted.
+
+Filed on the way through, not fixed (out of task scope): **M18.15**, the
+interactive title line `err.Error()[:40]` panics on any error message shorter
+than 40 bytes. Pascal built that title from `Str(IOResult)` — an error *number* —
+so the truncation is the conversion's invention and has no vanilla behavior to
+be faithful to. It is reachable only from the terminal build, which is why it
+ranks low; the reported deadlock survived it because "open TOWN.ZZT: no such
+file or directory" is exactly 40 characters.
+
+`go build ./...` and `go test ./...` green; the replay fixtures are untouched
+and no simulation code changed. All four new tests were watched failing against
+a tree with the guard removed (the two headless ones fail by panic in the test
+process, where the global `E` the window draws through is not headless; the
+server one by the deadlock abort it asserts against).
