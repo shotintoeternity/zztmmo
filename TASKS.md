@@ -198,12 +198,15 @@ M12.23, M17.1–M17.7, M16.0–M16.8a — has fully landed.)
    resolves unchanged — but a stem nobody chose is now MINTED against the
    hosting directory instead of derived from a title and hoped to be free, and
    the title moved to a `NAME.meta.json` sidecar the picker reads and no path
-   resolver ever will. M16.17d's 20-bit `GEN%05X` survives only as a seed. Two
-   unchecked tasks remain, both optional/deferred and neither a parity claim:
-   M14.3 (package split) and M12.15d (mined style priors).
+   resolver ever will. M16.17d's 20-bit `GEN%05X` survives only as a seed.
+   **M14.3 was closed as SKIPPED 2026-08-03** on the owner's decision and on
+   its own DoD-if-skipped path — measured, not asserted, and NOTES.md records
+   the three conditions that re-open it. **One unchecked task remains in this
+   file: M12.15d** (mined style priors), owner-deferred and not a parity
+   claim. The beta invite is the open owner action.
 
 **Optional / deferred (bottom):**
-- M14.3 — package split (skip unless the single package is actually hurting)
+- M14.3 — package split — **closed as skipped 2026-08-03**, see NOTES.md
 - M12.15d — mined style priors (owner-deferred; revisit only if generation quality plateaus)
 
 ---
@@ -4752,9 +4755,17 @@ unchanged: these are ownership/plumbing changes, never simulation changes.
   end; recording disabled changes nothing; `go test ./...` green; replay
   fixture unchanged.
 
-- [ ] **M14.3 — Package split, smallest honest cut (OPTIONAL — skip unless
+- [x] **M14.3 — Package split, smallest honest cut (OPTIONAL — skip unless
   the single package is actually hurting, and record the decision either
-  way).** Everything lives in one ~29k-line `package zztgo`: sim,
+  way).** **SKIPPED 2026-08-03** (owner decision), on the DoD-if-skipped path.
+  It is not hurting: 41 non-test files, 28,174 non-test LOC, a 7.8s cold build
+  and a 1.1s incremental one. The ~292s cost in the loop is the integration
+  test gate, which a split does not touch. And the cut's own stop signal fires
+  — ~48 top-level unexported identifiers cross the proposed `worldgen`
+  boundary in both directions (M14.4 added four more), so the boundary the
+  code wants is a world-storage/naming layer under both halves, not this one.
+  Measurements, the crossing list, and the three conditions that re-open it
+  are in NOTES.md 2026-08-03. Everything lives in one ~29k-line `package zztgo`: sim,
   serializer, ZWD compiler, generation service, prompt kit, room manager,
   WebSocket server, editor sessions, web API. The tempting cut — extract
   `worldgen` (zwd.go, zwd_decompile.go, generation.go, promptkit.go +

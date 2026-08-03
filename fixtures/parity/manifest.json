@@ -584,6 +584,16 @@
       "notes": "task-claim row; behavioral parity carried by the element/oop/protocol/input/service rows this task touched; reconciled at M16.20 M16.20 reconciliation (2026-08-01): the named tests certify this task's DoD; behavioural parity is additionally carried by the element/oop/protocol/input/service rows this task touched."
     },
     {
+      "id": "task.M14.3",
+      "dimension": "task",
+      "subject": "Completed task M14.3 — its DoD still holds",
+      "contract": "out-of-scope",
+      "authority": "TASKS.md M14.3",
+      "parity": "exact",
+      "status": "out-of-scope",
+      "notes": "Reconciled at the task itself (2026-08-03), NOT at M16.20: M14.3 was ticked after the certification milestone closed, so no M16.20 run ever saw this row. No product-behaviour parity claim — and uniquely among the out-of-scope rows, no product change of any kind: M14.3 is the OPTIONAL package split, and the owner closed it on its own DoD-if-skipped path. Nothing was moved, renamed or rebuilt; the DoD it satisfies is a NOTES.md decision record (2026-08-03) carrying the measurements — 7.8s cold build, 1.1s incremental, ~48 unexported identifiers crossing the proposed worldgen boundary — and the three conditions that re-open it. There is no behaviour to certify because there is no diff."
+    },
+    {
       "id": "task.M14.4",
       "dimension": "task",
       "subject": "Completed task M14.4 — its DoD still holds",

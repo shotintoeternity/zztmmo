@@ -8812,3 +8812,86 @@ right side of that trade.
 TASKS.md, both optional/deferred and neither a parity claim: M14.3 (package
 split — its DoD-if-skipped is a NOTES.md entry) and M12.15d (mined style
 priors, owner-deferred). The beta invite remains an owner action.
+
+## 2026-08-03 — M14.3: skipped, and the measurements that say so
+
+M14.3 is the OPTIONAL package split — "skip unless the single package is
+actually hurting, and record the decision either way." Owner asked for the
+skip path on 2026-08-03. This is that record, so the next audit starts from
+numbers instead of re-litigating from taste.
+
+### Is it hurting?
+
+Measured on the workstation at `bf49e51`, go1.26.5:
+
+| | |
+|---|---|
+| non-test files in `package zztgo` | 41 |
+| non-test LOC | 28,174 |
+| test files / test LOC | 91 / 37,230 |
+| cold `go build ./...` (after `go clean -cache`) | 7.8s wall |
+| incremental `go build ./...` after touching `generation.go` | 1.1s wall |
+| `go test -count=1 ./...` (the certify gate) | ~292s |
+
+The compiler is not the problem. A one-line edit anywhere in the 28k-line
+package rebuilds it in about a second, and a from-scratch build of the whole
+repository takes under eight. There is no build-latency argument for a split.
+
+What actually costs time is the ~292s test gate — and a package split does not
+touch it. Those are integration tests: they stand up an engine, a room manager,
+a WebSocket server and a generation service in one process and assert across
+all of them. Splitting the declarations into three directories leaves the same
+tests exercising the same seams for the same wall-clock. Cutting that number
+means changing what the tests do, which is not this task and is not obviously
+desirable — the integration breadth is why the suite catches what it catches.
+
+### The cut's own stop signal fires
+
+M14.3 says: "if the split forces exporting more than a handful of
+previously-unexported identifiers, STOP, revert, and record in NOTES.md that
+the cut is wrong — that friction is the package boundary telling you where it
+wants to be." That was worth checking before skipping on build times alone,
+because a clean boundary would be worth having even at no measured speedup.
+
+It is not clean. Counting top-level unexported identifiers that cross the
+proposed `worldgen` boundary (`zwd.go`, `zwd_decompile.go`, `generation.go`,
+`promptkit.go`, `plan.go`) in either direction gives **~48**, after discarding
+ambiguous short names. Both directions are heavily loaded:
+
+- the rest of the package into worldgen: `ensureElementDefs`,
+  `compileZWDBytesWithRepair`, `loadWorldAccess`/`writeWorldAccess`,
+  `worldReadFrom`/`worldWriteTo`, `saveEditorWorld`, the whole `eval*Problems`
+  family, and — new as of M14.4 — `mintWorldName`/`reserveWorldName`/
+  `releaseWorldName`/`writeWorldMeta`;
+- worldgen back out into the rest: `persistGeneratedWorld`,
+  `validateGeneratedZWD`, `generatedFallbackSaveName`, `elementByZWDName`,
+  `preprocessZWDGridWithWarnings`, `autoCloseZWDSections`,
+  `deduplicateZWDLegendEntries`, `dropUnknownZWDStatFields`, and the
+  `ErrGenerated*`/`ErrGeneration*` set.
+
+Forty-eight is not a handful. Exporting them would widen the fork's public
+surface by more than the split buys, and each one is a name the task forbids
+changing, so they would be exported *as they are* — a package API assembled by
+accident. Per the stop signal, the cut is wrong as specified.
+
+Worth naming why it got worse rather than better: M14.4 added four more
+crossings (the mint/reserve/release/meta set) because world naming is
+legitimately shared between the generation path and the editor's publish path.
+The boundary the code wants is not "worldgen vs. everything" — it is something
+like a world-storage/naming layer underneath both, which nobody has specified
+and which is a different task from the one this box describes.
+
+### What would change the answer
+
+Re-open this if any of these becomes true, and record the numbers again:
+
+1. incremental build after a one-file edit exceeds ~10s;
+2. a second binary or an external consumer needs to import the ZWD compiler or
+   the generation service *without* the sim — an actual import requirement, not
+   a tidiness preference;
+3. someone specifies the world-storage/naming layer above, in which case the
+   crossings become the design rather than the obstacle.
+
+Until one of those, one package is the honest shape. `go build ./...`,
+`go vet ./...` and `go test ./...` were green before and after this entry —
+no code was touched.
