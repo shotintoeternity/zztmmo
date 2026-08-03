@@ -5050,7 +5050,7 @@ so no new glyph tinting is needed.
   same white-on-blue player it saw before, which is why they are all still
   green.
 
-- [ ] **M19.2 — The picker.** A CP437 window (the M4.1 window furniture, see
+- [x] **M19.2 — The picker.** A CP437 window (the M4.1 window furniture, see
   `engine/web/src/textwindow.ts`) offering the 16 DOS colors as quick picks —
   the owner named purists explicitly — plus arbitrary RGB entry. Owner decision
   needed at task start, so ask rather than choose: **hex entry or sliders**, and
@@ -5063,6 +5063,64 @@ so no new glyph tinting is needed.
   (Escape cancels, no keystroke leaks to the game — the M16.18a Fire-button
   lesson); it is reachable on a touch profile, since M15/M16.18a make phones a
   covered configuration; `npm test` green and the browser family green.
+  **Done 2026-08-03.** Both owner decisions were taken at task start, as the spec
+  asks: **hex entry** (not sliders) and **the title screen only** (not the launch
+  flow).
+  * *the picker is a window, not a widget* — `engine/web/src/color_picker.ts` is
+    pure in the `player_tint.ts` shape (state + a KeyboardEvent-shaped value in,
+    a screen and a result out), so every rule is unit-testable under Node;
+    `modal.ts` stays the router and delegates to it. It draws the shared M4.1
+    frame — `renderTextWindowFrame`, which is `drawFrame` exported, the one
+    change to `textwindow.ts` — and lays out its own interior, because the 16
+    quick picks are a two-column grid whose rows have to be drawn in the colours
+    they offer and a text-window line cannot say that. The swatch is the colour
+    as FOREGROUND (attribute `i`, black background) rather than as a background
+    nibble, so dark blue is a square you can see rather than a hole in a window
+    drawn on dark blue.
+  * *the preview is the real paint path, and that was watched failing* — the
+    window draws a char 2 in `0x1F` and hands `main.ts` a cell to tint through
+    the SAME per-cell RGB override the board uses, so the smiley in the picker is
+    painted by the code that paints the smiley in the room. Inverted by tinting
+    the preview vanilla blue instead of the highlighted colour: the browser suite
+    fails on the pixels, which is the only way that claim can be believed.
+  * *no keystroke leaks* — inverted by letting `KeyP` past the modal router while
+    the picker is open; the suite then reports the game starting behind the
+    window (the M16.18a Fire lesson, re-proved rather than cited).
+  * *the way back to vanilla is a row, not the absence of one* — one addition the
+    spec did not name and the feature needs: "No colour (the vanilla ZZT player)"
+    submits `""`, and `clearPlayerColor` REMOVES the key rather than writing an
+    empty one, because `writeToken` deliberately ignores empty values. Inverted
+    by writing `""`: a player choosing vanilla keeps wearing the colour they just
+    took off.
+  * *reachable on a phone* — the whole vocabulary is arrows plus Enter plus
+    Escape plus hex digits, so M16.18a's pad drives it; a title-only `Colour`
+    button opens it (`KeyC`, which is free on the title menu and is chat in play
+    mode, which is exactly why it is bound in `title.ts`'s table and not in the
+    global handler). Certified by a Chromium touch profile that picks a colour
+    with taps alone.
+  Two consequences worth carrying forward. The title sidebar gained a ` C ` row
+  (above sign-in, which moved to row 24), so `fixtures/browser-goldens/title.json`
+  was **re-recorded** — the diff is 13 cells on row 23 and nothing else, read
+  before it was committed. And the picker is a SEVENTH text surface, which
+  `TestM1618DeviceMatrixIsWellFormed` catches: `device-matrix.json` now inventories
+  `colorPicker` and every covered profile explains it rather than exercising it,
+  because M16.18's battery types a fixed seed plus "X" and then s/t/b/q into a
+  field this one filters to hex digits. **M16.18d** is filed for that.
+
+- [ ] **M16.18d — teach the device matrix what a surface accepts, and certify the
+  colour picker on it.** Filed 2026-08-03 by M19.2. `modalAcceptsTextInput` now
+  names seven text surfaces; `platform_matrix.test.mjs` exercises six and the
+  seventh (`colorPicker`) is declared as omitted on every covered profile. The
+  reason is the battery, not the picker: `certifySurface` types a fixed
+  `seed + "X"` and then `s/t/b/q`, which assumes a field that accepts any
+  character, and the colour picker's accepts `[0-9a-f]` only. Give the battery a
+  per-surface alphabet (what it may type, and what that text looks like once the
+  surface has it), then exercise the picker on all six covered profiles — it is
+  a title-screen window, so it is reached BEFORE the world picker rather than
+  from the room. DoD: `colorPicker` moves from `surfacesOmitted` to `surfaces`
+  on every covered profile; the matrix's own well-formedness test still passes;
+  no other surface's coverage changes; the browser family green on all three
+  engines.
 
 - [ ] **M19.3 — An account-wide preferences store, with the color as its first
   key.** Widened 2026-08-03 (owner request) from "persist the color" to the

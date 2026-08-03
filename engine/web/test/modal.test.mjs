@@ -12,7 +12,7 @@ const output = await build({
   write: false,
 });
 const source = Buffer.from(output.outputFiles[0].contents).toString("base64");
-const { handleModalKey, renderModal, applyWorldOccupancy, worldOccupancyTotal } = await import(`data:text/javascript;base64,${source}`);
+const { handleModalKey, renderModal, applyWorldOccupancy, worldOccupancyTotal, modalAcceptsTextInput } = await import(`data:text/javascript;base64,${source}`);
 
 // modal.ts reads only event.code / event.key / the modifier flags at runtime.
 function key(code, k = "", opts = {}) {
@@ -458,6 +458,38 @@ console.log("modal.test.mjs: M17.11 live occupancy passed");
   const writes = [];
   renderModal((x, y, color, text) => writes.push({ x, y, color, text }), m);
   assert.match(writes.map((w) => w.text).join("\n"), /Mystery/, "an unclassified world stays visible");
+}
+
+// M19.2 — the colour picker is a modal like any other: the router renders it,
+// routes its keys, and swallows every key it does not use. The picker's own
+// rules live in color_picker.test.mjs; what is asserted here is that they are
+// wired to the one router, so nothing reaches the title menu underneath.
+{
+  const m = {
+    kind: "colorPicker",
+    title: "Your Player Colour",
+    selected: 17,
+    custom: "",
+    current: "",
+    submitted: undefined,
+    onSubmit(color) {
+      this.submitted = color;
+    },
+  };
+  const writes = [];
+  renderModal((x, y, color, text) => writes.push({ x, y, color, text }), m);
+  assert.match(writes.map((w) => w.text).join("\n"), /Your Player Colour/, "renderModal draws the picker");
+
+  assert.equal(handleModalKey(m, key("ArrowUp")), "redraw", "the router routes the picker's keys");
+  // 'P' would start the game if it reached the title menu behind this window.
+  assert.equal(handleModalKey(m, key("KeyP", "p")), "ignore");
+  assert.equal(m.submitted, undefined);
+  assert.equal(handleModalKey(m, key("Escape")), "close");
+  assert.equal(m.submitted, null, "Escape cancels rather than picking");
+
+  // The hex field is text input, so the soft keyboard can be raised over it.
+  assert.equal(modalAcceptsTextInput(m), true);
+  assert.equal(modalAcceptsTextInput(null), false);
 }
 
 console.log("modal.test.mjs: M18.9 curated world picker passed");

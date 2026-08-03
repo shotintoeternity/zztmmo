@@ -24,6 +24,7 @@ export type TitleAction =
   | "world"
   | "play"
   | "login"
+  | "color"
   | "restore"
   | "quit"
   | "about"
@@ -65,6 +66,10 @@ const TITLE_CODES: Record<string, TitleAction> = {
   KeyD: "dream",
   KeyE: "editor",
   KeyF: "feedback",
+  // M19.2: the colour picker. 'C' is free HERE and only here — in play mode it
+  // opens chat (main.ts) — which is why this table, and not the global key
+  // handler, is where it is bound.
+  KeyC: "color",
 };
 
 /** titleCommand maps a key to a title-menu action, or "none". */
@@ -79,6 +84,16 @@ export function titleCommand(event: KeyLike): TitleAction {
   return TITLE_CODES[event.code] ?? "none";
 }
 
+/**
+ * TITLE_COLOR_SWATCH is where the ' C ' row draws the player's own ☻ (M19.2).
+ * main.ts tints that one cell through the same per-cell RGB override the board
+ * uses, so the smiley on the menu is painted by the code that paints the real
+ * one — it cannot claim a colour the game would not give you.
+ */
+export const TITLE_COLOR_SWATCH = { x: 78, y: 23 };
+const CHAR_PLAYER = 0x02;
+const COLOR_PLAYER = 0x1f;
+
 /** drawTitleSidebar is GameDrawSidebar's GameStateElement = E_MONITOR branch. */
 export function drawTitleSidebar(
   write: WriteText,
@@ -86,6 +101,7 @@ export function drawTitleSidebar(
   accountName = "",
   authEnabled = false,
   occupancy: ServerOccupancy = NO_OCCUPANCY,
+  playerColor = "",
 ) {
   for (let y = 3; y <= 24; y += 1) {
     sidebarClearLine(write, y);
@@ -137,8 +153,18 @@ export function drawTitleSidebar(
   // moves down one to keep the blank separator above it.
   write(62, 21, 0x30, " F ");
   write(65, 21, 0x1e, " Feedback");
+  // M19.2: the colour picker, in the block that is about the player rather than
+  // about the world — directly above sign-in, which is the other row that says
+  // who you are. The swatch is drawn only once a colour has been picked: an
+  // unpicked player is the vanilla white-on-blue ☻, and a white-on-blue smiley
+  // sitting here would say "picked" when nothing has been.
+  write(62, 23, 0x70, " C ");
+  write(65, 23, 0x1e, " Your colour");
+  if (playerColor) {
+    write(TITLE_COLOR_SWATCH.x, TITLE_COLOR_SWATCH.y, COLOR_PLAYER, String.fromCharCode(CHAR_PLAYER));
+  }
   if (authEnabled || accountName) {
-    write(62, 23, 0x30, " G ");
-    write(65, 23, 0x1e, accountName ? " " + accountName.slice(0, 13) : " Google sign-in");
+    write(62, 24, 0x30, " G ");
+    write(65, 24, 0x1e, accountName ? " " + accountName.slice(0, 13) : " Google sign-in");
   }
 }

@@ -9699,3 +9699,73 @@ on" is a question about pixels.
 `npm run build` green, and the parity manifest carries `task.M19.1` as a
 `presentation-additions` deviation — the same kind as `service.world-picker`,
 because vanilla has one player attribute and the simulation still does.
+
+## 2026-08-03 — Dev host stopped when idle (owner decision)
+
+The owner's call, mid-session: **stop `dev.zztmmo.com` between uses rather than
+run it continuously, and keep the instance rather than terminate it.** Done the
+same day — `i-06149a1a52a126f0c` was stopped while serving `bf528d7` (M18.9,
+2026-07-30), and `aws ec2 describe-addresses` confirms `54.210.138.45` is still
+allocated and still associated with the stopped instance, so the Namecheap `A`
+record and Caddy's certificate need nothing.
+
+What made this safe to do at all is the asymmetry AWS.md already records and
+which is easy to forget in the other direction: **dev's public IP is a real
+Elastic IP and production's is not**. Stopping production would change its
+address and break `zztmmo.com` until DNS was re-pointed. The start/stop commands
+and the one unverified claim (whether every unit is enabled at boot — this
+workstation's IP is not authorized for SSH on the dev security group, so it is
+the provisioning steps' claim rather than a measurement) are in AWS.md under
+"Stopped When Idle".
+
+Also recorded, since it went looking: the dev host was **54 commits behind** the
+`dev` branch tip at the time it was stopped, and AWS.md's "last redeployed
+`78861d0`" line was itself stale — the host's own `/status` said `bf528d7`, which
+is exactly the failure mode `/status` was introduced to end. Production still has
+**no `/status` handler at all**, so its running revision cannot be read without
+SSH. Nothing from M19 is deployed to either host.
+
+## 2026-08-03 — M19.2: the colour picker (owner decisions, and one filed gap)
+
+Two decisions were the owner's, taken at task start because the spec says to ask
+rather than choose:
+
+- **Hex entry, not sliders.** It reuses the existing prompt-field machinery and
+  the M15.1 mobile overlay, so a phone can type a colour, and what you type is
+  the wire format `SanitizePlayerColor` already validates.
+- **The title screen only, not the launch flow.** A ' C  Your colour' row
+  (`KeyC`, free on the title menu and chat in play mode — which is why it is
+  bound in `title.ts`'s table rather than the global handler) plus a title-only
+  touch button. This is what the DoD's "changed without a rejoin" asks for, and
+  it leaves the launch sequence every browser suite walks untouched: putting the
+  picker between the name prompt and the world picker would have edited twelve
+  opt-in suites to say nothing new.
+
+**One addition the spec did not name.** A row that submits the empty colour —
+"No colour (the vanilla ZZT player)". Without it the feature is one-way: once you
+pick, nothing takes you back to the ZZT everybody knows. It needed
+`clearPlayerColor` to REMOVE the key rather than write `""`, because `writeToken`
+deliberately ignores empty values (an empty resume token is not a token); watched
+failing by writing `""` instead, where the player keeps wearing the colour they
+just took off.
+
+**The preview is the paint path, not a picture of it.** The window draws a char 2
+in `0x1F` and hands main.ts one cell to tint through the SAME per-cell RGB
+override the board uses. A separate preview renderer could promise a colour the
+room would not give you; this one cannot. Inverted by tinting the preview vanilla
+blue — the browser suite fails on the pixels.
+
+**What the title row cost.** The sidebar gained a row, so sign-in moved to row 24
+and `fixtures/browser-goldens/title.json` was re-recorded. The diff was read
+before it was committed: 13 cells on row 23, the ' C ' box and its label, and
+nothing else on any other row.
+
+**M16.18d filed on the way through.** `modalAcceptsTextInput` now names SEVEN
+text surfaces and `TestM1618DeviceMatrixIsWellFormed` caught it immediately — the
+matrix's inventory is derived from that function, which is exactly the guard
+working. `colorPicker` is inventoried and explained on every covered profile
+rather than exercised, because M16.18's battery types a fixed `seed + "X"` and
+then `s/t/b/q` into a field that accepts `[0-9a-f]` only; certifying it there
+means giving the battery a per-surface alphabet, which is M16.18d's job and not
+this task's. Until it lands the picker is certified on Chromium — keyboard and
+touch — by `TestM192ColorPickerJourney`.

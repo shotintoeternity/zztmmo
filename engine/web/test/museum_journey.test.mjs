@@ -138,13 +138,15 @@ async function reachTitle(playerName) {
 // --- act 0: a guest reaches the title screen --------------------------------
 
 const guestTitle = await reachTitle("Ada");
+// The sign-in row is row 24 as of M19.2: ' C  Your colour' took row 23, and the
+// two sit together as the menu's identity block (title.ts).
 assert.equal(
-  textAt(guestTitle, 62, 23, 3),
+  textAt(guestTitle, 62, 24, 3),
   " G ",
   "the title menu must offer G — Google sign-in (service.auth's only affordance)",
 );
 assert.equal(
-  textAt(guestTitle, 65, 23, 15).trim(),
+  textAt(guestTitle, 65, 24, 15).trim(),
   "Google sign-in",
   "before signing in the row invites a sign-in rather than naming somebody",
 );
@@ -177,10 +179,10 @@ await page.keyboard.press("Enter");
 
 const signedIn = await waitForBoard(
   page,
-  (c) => textAt(c, 65, 23, 15).trim() === DISPLAY_NAME,
+  (c) => textAt(c, 65, 24, 15).trim() === DISPLAY_NAME,
   `the title sidebar to name ${DISPLAY_NAME}`,
 );
-assert.equal(textAt(signedIn, 62, 23, 3), " G ", "the sign-in row keeps its badge once signed in");
+assert.equal(textAt(signedIn, 62, 24, 3), " G ", "the sign-in row keeps its badge once signed in");
 
 // --- act 2: W opens the picker, and typing reaches the Museum ---------------
 
@@ -228,7 +230,7 @@ const hosted = await waitForBoard(
 assert.ok(!onBoard(hosted, "Not playable"), `the import was refused:\n${gridToArt(hosted)}`);
 assert.ok(!onBoard(hosted, "Choose World"), "the selection window must close once a world is hosted");
 assert.equal(
-  textAt(hosted, 65, 23, 15).trim(),
+  textAt(hosted, 65, 24, 15).trim(),
   DISPLAY_NAME,
   "the import must not have signed the player out",
 );

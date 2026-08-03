@@ -33,10 +33,16 @@
 //     (S saves, T lights a torch, arrows walk). While a text surface is open,
 //     none of it may reach the server — asserted on the wire, not on the screen.
 //
-// EVERY TEXT SURFACE. modalAcceptsTextInput (modal.ts) names six: popupEntry,
-// worldSearch, multilineEntry, chat, entry, programEditor. This script reaches
-// all six through the production launch flow, in the order the player meets
-// them, and certifies each with the same battery.
+// EVERY TEXT SURFACE BUT ONE. modalAcceptsTextInput (modal.ts) names seven:
+// popupEntry, worldSearch, multilineEntry, chat, entry, programEditor, and —
+// since M19.2 — colorPicker. This script reaches the first six through the
+// production launch flow, in the order the player meets them, and certifies each
+// with the same battery. The seventh is declared as omitted in
+// device-matrix.json, with its reason: the battery types a fixed seed plus "X"
+// and then s/t/b/q, and the picker's field accepts hex digits only, so it needs
+// a battery that knows what a surface accepts. M16.18d is that task; until it
+// lands the picker is certified on Chromium (keyboard and touch) by
+// TestM192ColorPickerJourney instead.
 //
 // NAVIGATION IS KEYBOARD-DRIVEN EVEN ON A TOUCH PROFILE, deliberately. What a
 // touch profile certifies on the way from screen to screen is text entry and

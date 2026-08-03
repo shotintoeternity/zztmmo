@@ -127,6 +127,11 @@ assert.deepEqual(pressed("Play"), [
   { down: true, code: "KeyP", key: "p" },
   { down: false, code: "KeyP", key: "p" },
 ]);
+// M19.2: the colour picker's 'C', which is a title-menu key exactly like World.
+assert.deepEqual(pressed("Colour"), [
+  { down: true, code: "KeyC", key: "c" },
+  { down: false, code: "KeyC", key: "c" },
+]);
 assert.deepEqual(pressed("⏎"), [
   { down: true, code: "Enter", key: "Enter" },
   { down: false, code: "Enter", key: "Enter" },
@@ -185,7 +190,7 @@ byLabel("Fire").dispatch("pointerup");
 const KEYBOARD_CODES = new Set([
   "ArrowUp", "ArrowDown", "ArrowLeft", "ArrowRight", // keys.ts MOVEMENT_CODES
   "Space", "Enter",                                  // keys.ts isHandledKey
-  "KeyT", "KeyP", "KeyW",                            // keys.ts COMMAND_CODES / title menu
+  "KeyT", "KeyP", "KeyW", "KeyC",                    // keys.ts COMMAND_CODES / title menu
 ]);
 for (const spec of TOUCH_BUTTONS) {
   if (spec.kind !== "key") continue;
@@ -201,7 +206,7 @@ const DPAD = ["▲", "◄", "►", "▼"];
 
 // The client opens on the title screen, so the bar starts there rather than
 // showing every control for one frame.
-assert.deepEqual(visible(), [...DPAD, "⌨", "⏎", "World", "Play"], "the bar starts in title mode");
+assert.deepEqual(visible(), [...DPAD, "⌨", "⏎", "Colour", "World", "Play"], "the bar starts in title mode");
 
 controls.setMode("playing");
 assert.deepEqual(visible(), [...DPAD, "⌨", "⏎", "Pause", "Torch", "Fire"]);
@@ -218,7 +223,7 @@ controls.setMode("editor");
 assert.deepEqual(visible(), [...DPAD, "⌨", "⏎"]);
 
 controls.setMode("title");
-assert.deepEqual(visible(), [...DPAD, "⌨", "⏎", "World", "Play"], "modes are reversible");
+assert.deepEqual(visible(), [...DPAD, "⌨", "⏎", "Colour", "World", "Play"], "modes are reversible");
 
 // The direction pad is laid out as a cross by :nth-child (style.css), so it must
 // be present in EVERY mode — hiding one would silently re-letter the others.

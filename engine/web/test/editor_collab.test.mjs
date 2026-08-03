@@ -274,9 +274,9 @@ async function signIn(ed, account, displayName) {
   await ed.page.waitForSelector("canvas[data-screen]", { timeout: 20000 });
   await installDecoder(ed.page);
   await reachTitle(ed, ed.label);
-  const cells = await screen(ed, (c) => textAt(c, 65, 23, 15).trim() === displayName,
+  const cells = await screen(ed, (c) => textAt(c, 65, 24, 15).trim() === displayName,
     `the title sidebar to name ${displayName}`);
-  assert.equal(textAt(cells, 62, 23, 3), " G ", `${ed.label}: the sign-in row keeps its badge`);
+  assert.equal(textAt(cells, 62, 24, 3), " G ", `${ed.label}: the sign-in row keeps its badge`);
   note(`${ed.label} signed in through the identity provider as ${displayName}`);
 }
 
@@ -536,7 +536,9 @@ try {
   for (const ed of editors) await reachTitle(ed, ed.label);
   {
     const cells = await readGrid(guest.page);
-    assert.equal(textAt(cells, 65, 23, 15).trim(), "Google sign-in",
+    // Row 24, not 23: M19.2's ' C  Your colour' row took 23 and the sign-in row
+    // moved down beside it, the two of them being the menu's identity block.
+    assert.equal(textAt(cells, 65, 24, 15).trim(), "Google sign-in",
       "a signed-out browser is offered the sign-in row");
   }
   await signIn(ada, "ada", "Ada Lovelace");

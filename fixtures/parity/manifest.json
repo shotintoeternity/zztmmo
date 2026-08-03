@@ -960,6 +960,18 @@
       "notes": "task-claim row; reconciled at the task itself (2026-08-03), NOT at M16.20: M19.1 landed after the certification milestone closed, so no M16.20 run ever saw this row. A per-player 24-bit background behind the (unchanged) char-2 smiley: a presentation addition on the protocol and the canvas, which is why this row is a deviation of the same kind as service.world-picker and not an element/oop/input claim. Vanilla ZZT has one player glyph in one attribute and the simulation still does — the colour never reaches Board.Tiles, StateHash, an exported .ZZT or a recording, and the named tests prove that rather than assert it: two rooms differing only in colour hash identically for 200 ticks, and a session played with colours recorded byte-identically to one played without, with recordVersion unmoved (the M16.15a decision run in the other direction). The tint is derived from the cell the server drew — char 2 in 0x1F — so darkness, the energizer blink and a dead player mid-respawn each suppress it without any of that logic being reimplemented client-side."
     },
     {
+      "id": "task.M19.2",
+      "dimension": "task",
+      "subject": "Completed task M19.2 — its DoD still holds",
+      "contract": "E",
+      "authority": "TASKS.md M19.2",
+      "parity": "deviation",
+      "deviation": "presentation-additions",
+      "test": "TestM192ColorPickerJourney",
+      "status": "pass",
+      "notes": "task-claim row; reconciled at the task itself (2026-08-03), NOT at M16.20: M19.2 landed after the certification milestone closed, so no M16.20 run ever saw this row. The picker that writes M19.1’s colour — a CP437 window on the title menu offering the 16 DOS colours, an arbitrary hex field, and a row back to the vanilla white-on-blue player — so it is a deviation of the same presentation-additions kind as task.M19.1 and service.world-picker: vanilla ZZT has no such window, and the simulation still has one player attribute. Nothing here reaches the engine at all; the pick is a localStorage key read at join time, and the named browser test proves the window renders, swallows every key the title menu would otherwise take, previews through the same per-cell RGB override the board uses, survives a reload and a reconnect, and is drivable by an on-screen touch bar. The pure rules are covered under Node by web/test/color_picker.test.mjs. One consequence recorded rather than hidden: the picker is a seventh text surface, inventoried in device-matrix.json and explained on every covered profile rather than exercised by M16.18’s battery, which types characters this field filters out — M16.18d is the filed task."
+    },
+    {
       "id": "task.M2.1",
       "dimension": "task",
       "subject": "Completed task M2.1 — its DoD still holds",

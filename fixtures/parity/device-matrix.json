@@ -1,12 +1,13 @@
 {
-  "note": "M16.18's device/browser matrix: the platforms the client is certified on, the text surfaces each one exercises, and the reason for anything it does not. Each covered profile is a real engine at a real screen, driven by TestM1618PlatformMatrix through engine/web/test/platform_matrix.test.mjs. This file is a claim, not a run log — the test fails if a profile covered less (or more) than it declares, and the parity report (cmd/zzt-parity) refuses to certify while a skipped profile carries no reason. Touch GAMEPLAY is certified by the profiles that set `touchplay` (M16.18a, landed 2026-08-01): those runs play the CONTROL world with no keyboard at all — the pad walks, Fire shoots both of vanilla's ways, a torch is carried to the dark board and lit, and the game is paused and un-paused — with every act tick-locked on the input frame the server received. Only the Chromium touch profiles declare it, because they are the only ones where the on-screen bar exists (see webkit-touch-portrait). Reading the screenshots in engine/web/test-results: a tall phone page is captured in slices and a `position: fixed` control bar can be drawn once per slice, so the bar may appear at the top of a portrait screenshot as well as at the bottom. Where it really is comes from the measured rects, which the suite asserts are entirely in the bottom half of the viewport.",
+  "note": "M16.18's device/browser matrix: the platforms the client is certified on, the text surfaces each one exercises, and the reason for anything it does not. Each covered profile is a real engine at a real screen, driven by TestM1618PlatformMatrix through engine/web/test/platform_matrix.test.mjs. This file is a claim, not a run log — the test fails if a profile covered less (or more) than it declares, and the parity report (cmd/zzt-parity) refuses to certify while a skipped profile carries no reason. Touch GAMEPLAY is certified by the profiles that set `touchplay` (M16.18a, landed 2026-08-01): those runs play the CONTROL world with no keyboard at all — the pad walks, Fire shoots both of vanilla's ways, a torch is carried to the dark board and lit, and the game is paused and un-paused — with every act tick-locked on the input frame the server received. Only the Chromium touch profiles declare it, because they are the only ones where the on-screen bar exists (see webkit-touch-portrait). Reading the screenshots in engine/web/test-results: a tall phone page is captured in slices and a `position: fixed` control bar can be drawn once per slice, so the bar may appear at the top of a portrait screenshot as well as at the bottom. Where it really is comes from the measured rects, which the suite asserts are entirely in the bottom half of the viewport. The inventory gained a seventh surface on 2026-08-03 (M19.2’s colour picker); every covered profile explains it rather than exercising it, and M16.18d is the filed task that brings it into the battery.",
   "surfaces": [
     "entry",
     "popupEntry",
     "multilineEntry",
     "chat",
     "programEditor",
-    "worldSearch"
+    "worldSearch",
+    "colorPicker"
   ],
   "checks": [
     "layout",
@@ -29,6 +30,7 @@
       "status": "covered",
       "evidence": "TestM1618PlatformMatrix/chromium-desktop",
       "surfaces": ["popupEntry", "worldSearch", "multilineEntry", "programEditor", "chat", "entry"],
+      "surfacesOmitted": { "colorPicker": "exercised on this engine by TestM192ColorPickerJourney (M19.2): the window is opened from the title menu, driven with the arrows, typed into and escaped, and the pick is read back off the canvas and out of localStorage across a reload and a reconnect. Not run through this profile’s battery because the battery types a fixed seed plus \"X\" and then s/t/b/q, which assumes a field that accepts any character; the picker’s is filtered to hex digits, so certifying it here means parameterising the battery — filed as M16.18d." },
       "touchBarCoveredRows": [],
       "rotatedTouchBarCoveredRows": [],
       "notes": "The beta's stated platform (README: desktop browsers with a keyboard). No native text control is mounted at all here, which is itself asserted: on a pointer-only device the canvas takes the keys."
@@ -44,6 +46,7 @@
       "status": "covered",
       "evidence": "TestM1618PlatformMatrix/firefox-desktop",
       "surfaces": ["popupEntry", "worldSearch", "multilineEntry", "programEditor", "chat", "entry"],
+      "surfacesOmitted": { "colorPicker": "not certified on this engine: TestM192ColorPickerJourney (M19.2) runs Chromium only. It is a title-screen window built from the same M4.1 furniture as the six surfaces above, and its one engine-specific part is the hex field’s soft keyboard. Not run through this profile’s battery because the battery types a fixed seed plus \"X\" and then s/t/b/q, which assumes a field that accepts any character; the picker’s is filtered to hex digits, so certifying it here means parameterising the battery — filed as M16.18d." },
       "touchBarCoveredRows": [],
       "rotatedTouchBarCoveredRows": []
     },
@@ -58,6 +61,7 @@
       "status": "covered",
       "evidence": "TestM1618PlatformMatrix/webkit-desktop",
       "surfaces": ["popupEntry", "worldSearch", "multilineEntry", "programEditor", "chat", "entry"],
+      "surfacesOmitted": { "colorPicker": "not certified on this engine: TestM192ColorPickerJourney (M19.2) runs Chromium only. It is a title-screen window built from the same M4.1 furniture as the six surfaces above, and its one engine-specific part is the hex field’s soft keyboard. Not run through this profile’s battery because the battery types a fixed seed plus \"X\" and then s/t/b/q, which assumes a field that accepts any character; the picker’s is filtered to hex digits, so certifying it here means parameterising the battery — filed as M16.18d." },
       "touchBarCoveredRows": [],
       "rotatedTouchBarCoveredRows": []
     },
@@ -72,6 +76,7 @@
       "status": "covered",
       "evidence": "TestM1618PlatformMatrix/chromium-touch-portrait",
       "surfaces": ["popupEntry", "worldSearch", "multilineEntry", "programEditor", "chat", "entry"],
+      "surfacesOmitted": { "colorPicker": "exercised on a Chromium touch profile by TestM192ColorPickerJourney (M19.2), which opens the window by tapping the on-screen bar’s Colour button and picks a colour with the pad and Enter alone. Not run through this profile’s battery because the battery types a fixed seed plus \"X\" and then s/t/b/q, which assumes a field that accepts any character; the picker’s is filtered to hex digits, so certifying it here means parameterising the battery — filed as M16.18d." },
       "touchplay": true,
       "touchBarCoveredRows": [],
       "rotatedTouchBarCoveredRows": [],
@@ -88,6 +93,7 @@
       "status": "covered",
       "evidence": "TestM1618PlatformMatrix/chromium-touch-landscape",
       "surfaces": ["popupEntry", "worldSearch", "multilineEntry", "programEditor", "chat", "entry"],
+      "surfacesOmitted": { "colorPicker": "exercised on a Chromium touch profile by TestM192ColorPickerJourney (M19.2), which opens the window by tapping the on-screen bar’s Colour button and picks a colour with the pad and Enter alone. Not run through this profile’s battery because the battery types a fixed seed plus \"X\" and then s/t/b/q, which assumes a field that accepts any character; the picker’s is filtered to hex digits, so certifying it here means parameterising the battery — filed as M16.18d." },
       "touchplay": true,
       "touchBarCoveredRows": [],
       "rotatedTouchBarCoveredRows": [],
@@ -105,6 +111,7 @@
       "status": "covered",
       "evidence": "TestM1618PlatformMatrix/webkit-touch-portrait",
       "surfaces": ["popupEntry", "worldSearch", "multilineEntry", "programEditor", "chat", "entry"],
+      "surfacesOmitted": { "colorPicker": "not certified on this engine: TestM192ColorPickerJourney (M19.2) runs Chromium only. It is a title-screen window built from the same M4.1 furniture as the six surfaces above, and its one engine-specific part is the hex field’s soft keyboard. Not run through this profile’s battery because the battery types a fixed seed plus \"X\" and then s/t/b/q, which assumes a field that accepts any character; the picker’s is filtered to hex digits, so certifying it here means parameterising the battery — filed as M16.18d." },
       "touchBarCoveredRows": [],
       "rotatedTouchBarCoveredRows": [],
       "notes": "Playwright's WebKit delivers touch events but reports navigator.maxTouchPoints 0, so this profile certifies the client's OTHER touch gate: MobileTextInputBridge's `touchSeen` fallback, which mounts the native control on the first touch the canvas sees. That is the path a hybrid device with an unreliable maxTouchPoints takes. Real iOS Safari reports 5 and would take the maxTouchPoints path Chromium takes above; the on-screen control bar, decided once at load, is correctly absent here — which is also why this profile does not declare `touchplay`: there are no controls here to play with, and the gameplay path it WOULD take on a real iPhone is the one the two Chromium touch profiles certify."

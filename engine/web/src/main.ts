@@ -15,7 +15,8 @@ import { MobileTextInputBridge } from "./mobile_text_input";
 import { createTouchControls, type TouchControls } from "./touch_controls";
 import { openHelp } from "./help";
 import { commandKey, isHandledKey, isMovementKey, movementMask, rawKey } from "./keys";
-import { drawTitleSidebar, titleCommand, NO_OCCUPANCY, type ServerOccupancy } from "./title";
+import { drawTitleSidebar, titleCommand, NO_OCCUPANCY, TITLE_COLOR_SWATCH, type ServerOccupancy } from "./title";
+import { colorPickerPreview, newColorPickerModal } from "./color_picker";
 import { soundNotesFromProtocol, ZztSound } from "./sound";
 import {
   DreamFailure,
@@ -41,12 +42,14 @@ import {
   buildEditorEnterMessage,
   buildJoinMessage,
   clearEditorToken,
+  clearPlayerColor,
   clearResumeToken,
   loadEditorToken,
   loadPlayerColor,
   loadResumeToken,
   reconnectDelay,
   saveEditorToken,
+  savePlayerColor,
   saveResumeToken,
 } from "./resume";
 import { isPlayerColor, playerTintCells, playerTintForeground } from "./player_tint";
@@ -845,7 +848,7 @@ async function showTitle() {
     // Offline: keep whatever board is on screen and still draw the menu, so
     // the player can retry with 'P'.
   }
-  drawTitleSidebar(writeText, friendlyName, authDisplayName(), authStatus.enabled, serverOccupancy);
+  drawTitleSidebar(writeText, friendlyName, authDisplayName(), authStatus.enabled, serverOccupancy, readStoredPlayerColor());
   paintOverlay();
   drawScreen();
   canvas.focus();
@@ -866,7 +869,7 @@ async function refreshAuthStatus() {
     authStatus = { enabled: false, authenticated: false };
   }
   if (mode === "title") {
-    drawTitleSidebar(writeText, titleFriendlyName, authDisplayName(), authStatus.enabled, serverOccupancy);
+    drawTitleSidebar(writeText, titleFriendlyName, authDisplayName(), authStatus.enabled, serverOccupancy, readStoredPlayerColor());
     paintOverlay();
     drawScreen();
   }
@@ -1105,7 +1108,7 @@ async function refreshOccupancy() {
     // not always the ones the picker was opened with; update both.
     applyWorldOccupancy(modal.entries, worlds);
   }
-  drawTitleSidebar(writeText, titleFriendlyName, authDisplayName(), authStatus.enabled, serverOccupancy);
+  drawTitleSidebar(writeText, titleFriendlyName, authDisplayName(), authStatus.enabled, serverOccupancy, readStoredPlayerColor());
   paintOverlay();
   drawScreen();
 }
@@ -2178,12 +2181,61 @@ function readStoredPlayerColor(): string {
   return isPlayerColor(stored) ? stored : "";
 }
 
+// openColorPicker is the title menu's ' C ' (M19.2). It writes localStorage and
+// nothing else: the colour is read again at every join (see connect()), so a
+// pick made here reaches the room the next time P is pressed, and a pick made
+// after a drop reaches the reconnect — without a rejoin being anyone's problem.
+// M19.3 moves a signed-in player's copy to their account and leaves this as the
+// guest fallback.
+function openColorPicker() {
+  openModal(
+    newColorPickerModal(readStoredPlayerColor(), (color) => {
+      if (color === null) {
+        return; // Escape: the window closes and nothing has changed.
+      }
+      if (color) {
+        savePlayerColor(window.localStorage, color);
+      } else {
+        clearPlayerColor(window.localStorage);
+      }
+      // The menu row's swatch is drawn from the stored value, so redraw it.
+      if (mode === "title") {
+        drawTitleSidebar(
+          writeText,
+          titleFriendlyName,
+          authDisplayName(),
+          authStatus.enabled,
+          serverOccupancy,
+          readStoredPlayerColor(),
+        );
+      }
+    }),
+  );
+}
+
 // repaintPlayerTints rebuilds the M19.1 colour layer from the live roster and
 // the cells the server drew. It is rebuilt with the overlay because the two
 // have the same lifetime — one message changes both — and it is empty outside a
 // room, where there is no roster and the board is a title screen.
 function repaintPlayerTints() {
   playerTints.clear();
+  // M19.2: the title menu's ' C ' row and the picker's preview are the same
+  // paint as the board — a ☻ the server would have drawn (char 2 in 0x1F) with
+  // a 24-bit background over it. Going through the one override rather than a
+  // second drawing path is what stops a preview from promising a colour the
+  // game would not actually give you.
+  if (mode === "title") {
+    const stored = readStoredPlayerColor();
+    if (stored) {
+      playerTints.set(TITLE_COLOR_SWATCH.y * COLS + TITLE_COLOR_SWATCH.x, stored);
+    }
+  }
+  if (modal && modal.kind === "colorPicker") {
+    const preview = colorPickerPreview(modal);
+    if (preview) {
+      playerTints.set(preview.y * COLS + preview.x, preview.rgb);
+    }
+  }
   if (mode !== "playing") {
     return;
   }
@@ -2710,6 +2762,9 @@ function handleTitleKey(event: KeyboardEvent) {
       break;
     case "world":
       void showWorlds();
+      break;
+    case "color":
+      openColorPicker();
       break;
     case "about":
       showHelp("ABOUT.HLP", "About ZZT...");

@@ -26,6 +26,9 @@ import {
   TEXT_WINDOW_Y,
   type TextWindowState,
 } from "./textwindow";
+// M19.2: the colour picker keeps its own rules and its own screen in
+// color_picker.ts (the player_tint.ts shape) — modal.ts stays the router.
+import { colorPickerKey, renderColorPicker, type ColorPickerModal } from "./color_picker";
 
 export type WriteText = (x: number, y: number, color: number, text: string) => void;
 
@@ -253,7 +256,8 @@ export type Modal =
   | MultiLineEntryModal
   | ChatModal
   | ProgramEditorModal
-  | WorldSearchModal;
+  | WorldSearchModal
+  | ColorPickerModal;
 
 /** What the caller should do after routing a key. */
 export type KeyResult = "close" | "redraw" | "ignore";
@@ -266,7 +270,10 @@ export type ModalTextInput = {
 
 /** True when a modal has an editable buffer the mobile overlay can mirror. */
 export function modalAcceptsTextInput(m: Modal | null): boolean {
-  return m !== null && (m.kind === "entry" || m.kind === "popupEntry" || m.kind === "multilineEntry" || m.kind === "chat" || m.kind === "programEditor" || m.kind === "worldSearch");
+  // The colour picker is here for its hex field: a phone with no keyboard can
+  // still walk the quick picks with the d-pad, but typing a colour needs the
+  // soft keyboard the ⌨ button raises (M15.1).
+  return m !== null && (m.kind === "entry" || m.kind === "popupEntry" || m.kind === "multilineEntry" || m.kind === "chat" || m.kind === "programEditor" || m.kind === "worldSearch" || m.kind === "colorPicker");
 }
 
 // modalTextKey adapts a committed native character to the existing key router.
@@ -402,6 +409,9 @@ export function renderModal(write: WriteText, m: Modal) {
       return;
     case "programEditor":
       renderProgramEditor(write, m);
+      return;
+    case "colorPicker":
+      renderColorPicker(write, m);
       return;
     case "worldSearch":
       renderWorldSearch(write, m);
@@ -759,6 +769,8 @@ export function handleModalKey(m: Modal, event: KeyboardEvent): KeyResult {
       return programEditorKey(m, event);
     case "worldSearch":
       return worldSearchKey(m, event);
+    case "colorPicker":
+      return colorPickerKey(m, event);
   }
 }
 

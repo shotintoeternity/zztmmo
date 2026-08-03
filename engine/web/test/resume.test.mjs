@@ -26,6 +26,7 @@ const {
   buildEditorEnterMessage,
   loadPlayerColor,
   savePlayerColor,
+  clearPlayerColor,
 } = await import(`data:text/javascript;base64,${source}`);
 
 // A plain in-memory stand-in for sessionStorage.
@@ -129,6 +130,14 @@ function memStore() {
   savePlayerColor(store, "");
   assert.equal(loadPlayerColor(store), "#00c0ff", "an empty write is ignored, as it is for a token");
   assert.notEqual(tokenKey("TOWN"), "zzt-color");
+
+  // M19.2 — the picker's "No colour" row. It has to REMOVE the key: the empty
+  // write above is ignored by design, so a player choosing vanilla again would
+  // otherwise keep wearing the colour they just took off.
+  clearPlayerColor(store);
+  assert.equal(loadPlayerColor(store), "", "clearing takes the player back to vanilla");
+  clearPlayerColor(store);
+  assert.equal(loadPlayerColor(store), "", "and clearing an unpicked colour is not an error");
 }
 
 // M16.14f — the editor's membership token is a SEPARATE key. A browser can be

@@ -9,7 +9,7 @@ const output = await build({
   write: false,
 });
 const source = Buffer.from(output.outputFiles[0].contents).toString("base64");
-const { drawTitleSidebar, titleCommand, NO_OCCUPANCY } = await import(`data:text/javascript;base64,${source}`);
+const { drawTitleSidebar, titleCommand, NO_OCCUPANCY, TITLE_COLOR_SWATCH } = await import(`data:text/javascript;base64,${source}`);
 
 function key(code, k = "", opts = {}) {
   return { code, key: k, ctrlKey: false, metaKey: false, altKey: false, ...opts };
@@ -24,6 +24,9 @@ assert.equal(titleCommand(key("Escape", "Escape")), "quit");
 assert.equal(titleCommand(key("KeyH", "h")), "highScores");
 assert.equal(titleCommand(key("KeyE", "e")), "editor");
 assert.equal(titleCommand(key("KeyF", "f")), "feedback");
+// M19.2: the colour picker. 'C' is a title-menu key and only a title-menu key —
+// in play mode main.ts binds the same byte to chat.
+assert.equal(titleCommand(key("KeyC", "c")), "color");
 assert.equal(titleCommand(key("KeyS", "s")), "none");
 assert.equal(titleCommand(key("KeyA", "a", { ctrlKey: true })), "none");
 
@@ -94,6 +97,43 @@ assert.match(authSidebarText, / Google sign-in/);
   const editing = editorsOnly.find((write) => write.text.includes(" Editing:"));
   assert.ok(editing, "an editors-only server still reports them");
   assert.equal(editing.y, busy.find((write) => write.text.includes(" Playing:")).y);
+}
+
+// M19.2 — the ' C ' row, and the swatch that says what is picked.
+{
+  const draw = (color) => {
+    const writes = [];
+    drawTitleSidebar((x, y, color2, text) => writes.push({ x, y, color: color2, text }), "TOWN", "", true, NO_OCCUPANCY, color);
+    return writes;
+  };
+
+  const unpicked = draw("");
+  const picked = draw("#7f3fbf");
+  for (const writes of [unpicked, picked]) {
+    const text = writes.map((write) => write.text).join("\n");
+    assert.match(text, / Your colour/, "the colour row is always on the menu");
+    const box = writes.find((write) => write.text === " C ");
+    assert.ok(box, "the colour hotkey box is drawn");
+    // The identity block: colour directly above sign-in, both clear of Feedback.
+    const feedback = writes.find((write) => write.text === " F ");
+    const signIn = writes.find((write) => write.text === " G ");
+    assert.ok(box.y > feedback.y + 1, "the colour row keeps a blank row above it");
+    assert.equal(signIn.y, box.y + 1, "sign-in sits with the colour row, not apart from it");
+    for (const write of writes.filter((w) => w.y === box.y || w.y === signIn.y)) {
+      assert.ok(write.x >= 60, `sidebar row stays out of the board: ${write.x}`);
+      assert.ok(write.x + write.text.length <= 80, `"${write.text}" runs past column 79`);
+    }
+  }
+
+  // The swatch is the player glyph itself (char 2 in 0x1F), which is what
+  // main.ts's per-cell RGB override tints — and it is drawn ONLY once something
+  // is picked, since a white-on-blue smiley here would claim a pick that is not
+  // one.
+  const swatchOf = (writes) =>
+    writes.find((write) => write.x === TITLE_COLOR_SWATCH.x && write.y === TITLE_COLOR_SWATCH.y && write.text === "\x02");
+  assert.ok(swatchOf(picked), "a picked colour draws the smiley on the menu");
+  assert.equal(swatchOf(picked).color, 0x1f, "the swatch is the attribute the tint gate accepts");
+  assert.equal(swatchOf(unpicked), undefined, "an unpicked player gets no swatch");
 }
 
 // Occupancy is optional: every existing caller that omits it still draws.

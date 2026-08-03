@@ -121,6 +121,14 @@ export function savePlayerColor(store: TokenStore, color: string): void {
   writeToken(store, COLOR_KEY, color);
 }
 
+// clearPlayerColor is the picker's "No colour" row (M19.2). It has to remove the
+// key rather than write "": writeToken deliberately ignores an empty value (an
+// empty resume token is not a token), and an absent key is what every join path
+// already reads as the vanilla white-on-blue player.
+export function clearPlayerColor(store: TokenStore): void {
+  dropToken(store, COLOR_KEY);
+}
+
 // buildEditorEnterMessage is buildJoinMessage's editor counterpart (M16.14f):
 // the world instead of a nickname, and the membership token only when one is
 // stored, so a first entry is not read as a lookup of the empty token.
