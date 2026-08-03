@@ -9543,3 +9543,45 @@ list is owner-owned and the beta invite is still the open action above it. M19.2
 also carries two questions the spec refuses to answer for the owner: hex entry
 versus sliders, and whether the picker sits before the first join or stays
 reachable from the title screen so a color can change without a rejoin.
+
+## 2026-08-03 — Beta invite untracked; PM and profiles filed to the backlog
+
+Docs only, at the owner's request. No code changed.
+
+**The beta invite is out of TASKS.md.** The owner's words: "I know I need to do
+it." It was ranked item 6 in the execution-priority list and named again in the
+closing paragraph as the open owner action; both are gone. What is deliberately
+*not* gone: the several entries that rank other work "above the invite" or
+"below the beta invite" (M18.11's ranking, M16.14b's, M12.15d's). Those are the
+record of when those calls were made and why, and rewriting them to remove a
+landmark would falsify the history rather than tidy it. Item 6 now says so
+explicitly, so a reader who meets one of those phrases later is not confused by a
+reference to something the priority list no longer contains.
+
+**Private messages and player profiles are filed as idea-backlog bullets** under
+a new "Social layer" subsection — bullets, not tasks, per that section's own
+rule that executors must not pick them up until the owner promotes them. The
+owner's framing put "eventually" on profiles, so neither was specced.
+
+Both were checked against the code before being written down, and the check
+changed what they say. **The transport is the easy half of a PM and is not what
+will cost the time.** Two things underneath it are:
+
+1. *There is nothing unique to address.* `join.Name` is arbitrary, guests get
+   `"player" + random` (`main.ts:688`), and a signed-in name is whatever Google
+   returns via `DisplayName()`. Two players can hold one name simultaneously, so
+   "PM Kevin" has no unambiguous target. This needs a claimed handle or
+   account-ID addressing with the roster as the picker.
+2. *There is nowhere to read one.* The whole chat UI is one transient line at row
+   24 that the next global message overwrites. A PM delivered into it is lost the
+   instant anybody talks. A PM feature is therefore also a chat-window feature.
+
+**The finding worth acting on: PM and profiles are one design, not two.** Both
+are gated on the same identity question (what uniquely names a player, and
+whether guests participate at all), both want a CP437 window opened from the room
+roster, and profiles need an account-wide store — which is the *same* gap M19.3
+opens for the smiley color, since the only per-account store today is keyed
+`(accountID, worldName)` and account-wide data has no home. Promoting either
+alone probably means answering the identity question twice and building the
+account-preferences store twice. Recorded here so whoever specs the first one
+knows to look at the other two first.

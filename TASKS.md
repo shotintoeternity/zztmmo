@@ -59,7 +59,10 @@ M12.23, M17.1–M17.7, M16.0–M16.8a — has fully landed.)
    and is clean). Filed **M14.4** on the way through — the name is doing double
    duty as identity and display title, which is what generates this whole class
    of collision problem; that is the post-beta fix, not a pre-invite one.
-6. **Beta invite goes out** (owner action; desktop-browser scope in the copy).
+6. *(The beta invite used to be ranked here. Removed 2026-08-03 at the owner's
+   request — it is the owner's own action and does not need tracking in this
+   file. Later entries that rank work "above the invite" or "below the beta
+   invite" are preserved as the record of when those calls were made.)*
 7. M18.6 — back up player-created worlds, not just `saves/`. The one
    data-loss hole M18.4 left open; it widens with every day of the beta, so
    take it early rather than with the certification tail. **Landed 2026-07-30
@@ -230,8 +233,12 @@ M12.23, M17.1–M17.7, M16.0–M16.8a — has fully landed.)
    deliberately broken server, plus `CUTLINE.md` for the manual run and the
    policy that keeps it green. That leaves **one** unchecked bullet in this file
    — "Evaluate server scaling for 20–30 concurrent players", which needs
-   measurements on the real production instance and is therefore owner-gated —
-   and the beta invite, which remains the open owner action.
+   measurements on the real production instance and is therefore owner-gated.
+   **M19 was filed 2026-08-03** (tell players apart — RGB smiley backgrounds,
+   promoted from the idea backlog and specced as M19.1–M19.3) and is deliberately
+   **unranked**: the owner ranks it. Two idea-backlog entries were filed the same
+   day at the owner's request — private messages, and player profiles viewable in
+   game — and are not tasks until the owner promotes them.
 
 **Optional / deferred (bottom):**
 - M14.3 — package split — **closed as skipped 2026-08-03**, see NOTES.md
@@ -4910,8 +4917,8 @@ lists. Every task: `cd engine && go build ./... && go test ./...` green,
 Filed 2026-08-03 by promoting the idea-backlog bullet the owner designed
 2026-07-10 ("Tell players apart — RGB smiley backgrounds"), which stays at the
 foot of this file marked promoted. **Unranked**: the execution-priority list is
-owner-owned and this milestone is not in it — the owner ranks it against the
-beta invite before an executor starts.
+owner-owned and this milestone is not in it — the owner ranks it before an
+executor starts.
 
 The problem, re-checked against the code at `3f1e736` and still live: every
 player is the identical white-on-blue ☻. `ElementPlayerTick`
@@ -5828,6 +5835,42 @@ first, then features that exploit what this codebase is uniquely good at.
   glue for a small MMO.
 * **Achievements (post-M6.2).** Account-keyed firsts (beat TOWN, first
   purple key, 100 gems) surfaced in chat, stored via M6.3's interface.
+
+**Social layer (2026-08-03 — owner-requested; still backlog bullets, not
+tasks. Both were checked against the code the day they were filed):**
+* **Private messages between players.** Today there is no addressed message of
+  any kind: `BroadcastGlobalChat` (`websocket_server.go:2084-2109`) walks every
+  instance and every client, the wire message is `{type, from, text}` with no
+  recipient field, and `ChatRecord` (`chat_db.go:11-15`) plus
+  `AddMessage(from, text)` have nowhere to put one. That plumbing is the easy
+  half. **Two harder things sit under it, and both are really one question:**
+  - *There is nothing unique to address.* `join.Name` is arbitrary, a guest is
+    handed `"player" + random` (`web/src/main.ts:688`), and a signed-in player's
+    name is whatever `DisplayName()` returns from Google (`auth.go:48-56`).
+    Two players can hold the same name at the same time, so "PM Kevin" has no
+    unambiguous target. Needs either a unique claimed handle or addressing by
+    account ID with the roster as the picker — and a decision about whether
+    guests can be addressed at all, since they have no durable identity.
+  - *There is nowhere to read one.* The entire chat UI is a single transient
+    line at row 24 (`currentChatMessage`, `main.ts:2101`, painted at
+    `main.ts:2144-2146`) that the next global message overwrites. A PM landing
+    there is gone the moment anyone says anything. Wants a real CP437
+    chat/PM window (`web/src/textwindow.ts`) with per-conversation history.
+  Also: M16.16a's admission and rate limiting (`admitChatText`,
+  `chatRateLimiter`, `chat_admission.go`) must cover PMs, and a PM needs a
+  block/mute story that global chat — where everyone is watching — does not.
+* **Player profiles, viewable in game.** A signed-in player sets up a profile
+  others can open from inside the game. Needs durable per-account storage, and
+  the only per-account store that exists is
+  `ChatDatabase.PutPlayerState/GetPlayerState` keyed by `(accountID, worldName)`
+  — the wrong key for account-wide data. **M19.3 hits this exact gap for the
+  smiley color**, so if both are promoted they should share one account-
+  preferences store rather than each inventing its own. "Viewable in game" means
+  a CP437 window (`textwindow.ts`) opened from the room roster, which is also
+  where a PM would be initiated — and M19.1 puts `Name` on `PlayerSnapshot`, the
+  natural anchor for both. Guests cannot have one, which is the same identity
+  decision the PM bullet raises: **these two features are one design, and
+  promoting either alone probably means answering it twice.**
 
 **Moonshots (2026-07-10 — the most creative directions the architecture
 enables; each is feasible precisely because of a property we already built):**
