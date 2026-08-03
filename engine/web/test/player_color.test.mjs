@@ -36,7 +36,10 @@ const WORLD = "ACCEPT";
 const COLOR_KEY = "zzt-color";
 
 const ADA_COLOR = "#ff0000";
-const BO_COLOR = "#00c0ff";
+// Deliberately a LIGHT color: the glyph is always white (owner decision
+// 2026-08-03, reversing M19.1's auto-contrast), and a dark pick would pass that
+// assertion whichever rule were in force.
+const BO_COLOR = "#ffff55";
 
 const clients = [];
 
@@ -163,6 +166,28 @@ async function assertSquareIs(c, player, expected, describe) {
   }
 }
 
+/**
+ * What the glyph itself is inked in: the cell's pixels minus its background.
+ * The corners answer "what color is this player's square"; this answers "what
+ * color is the smiley drawn on it", which is the other half of the rule.
+ */
+async function glyphInk(c, col, row, background) {
+  return c.page.evaluate(
+    ([col, row, cellW, cellH, background]) => {
+      const ctx = document.querySelector("canvas[data-screen]").getContext("2d", { willReadFrequently: true });
+      const d = ctx.getImageData(col * cellW, row * cellH, cellW, cellH).data;
+      const seen = new Map();
+      for (let i = 0; i < d.length; i += 4) {
+        const hex = "#" + [d[i], d[i + 1], d[i + 2]].map((v) => v.toString(16).padStart(2, "0")).join("");
+        if (hex === background) continue;
+        seen.set(hex, (seen.get(hex) || 0) + 1);
+      }
+      return [...seen.entries()].sort((a, b) => b[1] - a[1]).map(([hex]) => hex);
+    },
+    [col, row, CELL_W, CELL_H, background],
+  );
+}
+
 async function dumpFailure(err) {
   console.error("M19.1 player-color suite FAILED:", err);
   for (const c of clients) {
@@ -251,6 +276,24 @@ try {
   // the color I picked, in my own browser.
   await assertSquareIs(ada, ada.you, ADA_COLOR, "Ada can point at her own smiley");
   await assertSquareIs(bo, bo.you, BO_COLOR, "Bo can point at his own smiley");
+
+  // THE GLYPH IS ALWAYS WHITE, whatever it is standing on (owner decision
+  // 2026-08-03, reversing M19.1's auto-contrast). The reason is identification:
+  // a white ☻ is the player and only the player, and a black one reads as some
+  // other element on boards full of dark-on-bright tiles. Bo's yellow is the
+  // case that tells the two rules apart — auto-contrast inks it black.
+  for (const viewer of clients) {
+    for (const [label, color] of [["Ada", ADA_COLOR], ["Bo", BO_COLOR]]) {
+      const entry = rosterOf(viewer, label);
+      const { col, row } = screenCellOf(entry);
+      const ink = await glyphInk(viewer, col, row, color);
+      assert.deepEqual(
+        ink,
+        ["#ffffff"],
+        `${viewer.label}: ${label}'s smiley must be drawn in white on ${color}, saw ${JSON.stringify(ink)}`,
+      );
+    }
+  }
 
   // The control: an ordinary board square is untouched by the tint, so this is
   // not a suite that would pass on a canvas painted red everywhere. The square

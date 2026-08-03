@@ -4971,9 +4971,12 @@ of it and its `gamevars.go:467-471` / `main.ts:310` citations are stale):
 as a `bg` nibble, so it cannot ride the existing `overlay` map (which carries
 `{ch, color}` attributes only). M19.1 adds a separate per-cell RGB override
 consulted in `drawScreen` after `overlay`. The **foreground** stays on the
-existing path: auto-contrast picks white or black by background luminance, and
-both are already pre-tinted font canvases (`fontCanvases[15]`, `fontCanvases[0]`),
-so no new glyph tinting is needed.
+existing path: the white font canvas (`fontCanvases[15]`), which already exists,
+so no new glyph tinting is needed. M19.1 shipped this as auto-contrast (white or
+black by background luminance) and the **owner reversed it on 2026-08-03**: the
+glyph is ALWAYS white, because a white ☻ is the player and only the player, and
+a black one reads as some other element on boards full of dark-on-bright tiles.
+The background says which player; the glyph says that it is a player.
 
 - [x] **M19.1 — The color on the wire and on the canvas.** The core of the
   feature; M19.2 and M19.3 are the picker and the persistence and neither
@@ -5041,7 +5044,8 @@ so no new glyph tinting is needed.
     `#0000aa`, vanilla blue.
   Two things the spec did not name and this needed. The **foreground** is
   auto-contrasted (Rec. 601 luma, threshold 0.55) onto the two font canvases
-  that already exist, or a white smiley disappears on a yellow pick. And the
+  that already exist, or a white smiley disappears on a yellow pick — *superseded
+  2026-08-03 by the owner: always white, see the preamble above.* And the
   color has to come from somewhere before M19.2's picker exists, so it is read
   from `localStorage` under `zzt-color` — the key M19.2 will write and M19.3
   will demote to the guest fallback — re-read at **every** join, since a

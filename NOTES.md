@@ -9830,3 +9830,24 @@ One thing the M19.2 browser suite could NOT do against dev: it is written for th
 ACCEPT fixture world, and dev hosts TOWN and the community worlds, so its later
 acts (which quit to the title menu) do not fit. Acts 1-9 passed against the live
 host before that; the rest was checked by hand from screenshots.
+
+## 2026-08-03 — The player glyph is always white (owner, reversing M19.1)
+
+M19.1 auto-contrasted the smiley (Rec. 601 luma, black glyph over a light pick)
+so a white ☻ would not vanish on yellow. The owner reversed it the same day, and
+the reason is a better one than the rule it replaces: **identification, not
+legibility.** A white ☻ is the player and only the player. A black one is a
+smiley that reads as some other element — ZZT boards are full of dark-on-bright
+tiles — so the auto-contrast bought contrast at the price of the one thing on
+screen that must never be ambiguous. The background says WHICH player; the glyph
+says that it is a player at all.
+
+The cost is real and stated rather than hidden: a near-white pick is a white
+smiley on a near-white square. The player who picked it is the one who sees it,
+and the picker is two keys away.
+
+`playerTintForeground` is now a constant, and the browser suite pins it where a
+unit test cannot: M19.1's second player was recolored from `#00c0ff` to
+`#ffff55` — deliberately LIGHT, because a dark pick passes under either rule —
+and the suite reads the glyph's own ink rather than the square's corners. Watched
+failing by restoring the luma version: `saw ["#000000"]`.

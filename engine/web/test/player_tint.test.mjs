@@ -152,13 +152,16 @@ const tint = (roster, cells) => playerTintCells({ roster, cells, boardCols: BOAR
   assert.deepEqual(tint([{ id: 1, x: 10, y: 0, color: "#ff0000" }], cells), []);
 }
 
-// --- auto-contrast ----------------------------------------------------------
+// --- the glyph's color ------------------------------------------------------
 
-assert.equal(playerTintForeground("#000000"), 0x0f, "white smiley on black");
-assert.equal(playerTintForeground("#0000aa"), 0x0f, "white smiley on the vanilla blue");
-assert.equal(playerTintForeground("#ffffff"), 0x00, "black smiley on white");
-assert.equal(playerTintForeground("#ffff00"), 0x00, "black smiley on yellow — the case a fixed white loses");
-assert.equal(playerTintForeground("#ff0000"), 0x0f, "red is dark to the eye: white smiley");
-assert.equal(playerTintForeground("garbage"), 0x0f, "an unusable color falls back to the vanilla white");
+// The glyph is ALWAYS white, whatever it is standing on (owner decision
+// 2026-08-03, reversing M19.1's auto-contrast). This is about identification
+// rather than contrast: a white ☻ is the player and only the player, and a black
+// one reads as some other element on boards that are full of dark-on-bright
+// tiles. The background says WHICH player; the glyph says that it is a player.
+for (const rgb of ["#000000", "#0000aa", "#ffffff", "#ffff00", "#ff0000", "#55ff55", "#7f3fbf"]) {
+  assert.equal(playerTintForeground(rgb), 0x0f, `the smiley stays white on ${rgb}`);
+}
+assert.equal(playerTintForeground("garbage"), 0x0f, "and an unusable color is the vanilla white too");
 
 console.log("player_tint tests passed");

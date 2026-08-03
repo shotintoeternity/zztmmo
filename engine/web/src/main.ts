@@ -2071,8 +2071,9 @@ function drawScreen() {
     // so it is consulted here, after the overlay has had its say, and only
     // where the cell being painted is STILL the vanilla player — so a modal, a
     // scroll or a fade drawn over that square suppresses the tint for free.
-    // The glyph stays on the existing path: auto-contrast picks one of the two
-    // font canvases that already exist.
+    // The glyph stays on the existing path: always the white font canvas, which
+    // already exists (playerTintForeground — a white ☻ is the player and only
+    // the player, whatever it is standing on).
     const tint = playerTints.get(i);
     if (tint !== undefined && ch === CHAR_PLAYER && color === COLOR_PLAYER) {
       screenCtx.fillStyle = tint;

@@ -101,21 +101,22 @@ export function playerTintCells({
 }
 
 /**
- * The DOS attribute to draw the glyph in over a tinted cell: white (0x0F) on a
- * dark background, black (0x00) on a light one. Both are already pre-tinted
- * font canvases in main.ts, so no new glyph tinting is needed.
+ * The DOS attribute to draw the glyph in over a tinted cell: ALWAYS white
+ * (0x0F), whatever the background. main.ts already has a white font canvas, so
+ * no new glyph tinting is needed.
  *
- * Rec. 601 luma, which is what the eye reads as brightness; the 0.55 threshold
- * keeps a saturated blue white-on and a saturated yellow black-on, which is the
- * pair that matters (the vanilla player is white on blue).
+ * Owner decision, 2026-08-03, reversing M19.1's auto-contrast (Rec. 601 luma,
+ * black glyph over a light pick). The reason is identification, not legibility:
+ * a WHITE ☻ is the player, and only the player. Recoloring the glyph to black
+ * on a light background makes a smiley that reads as some other element — ZZT
+ * boards are full of dark-on-bright tiles — so the one thing that must never be
+ * ambiguous becomes ambiguous, in exchange for contrast a player chose for
+ * themselves when they picked the color. The background carries the identity;
+ * the glyph carries the fact that it is a player at all.
+ *
+ * The cost, stated rather than hidden: a near-white pick is a white smiley on a
+ * near-white square, which the player who picked it will see and can change.
  */
-export function playerTintForeground(rgb: string): number {
-  if (!isPlayerColor(rgb)) {
-    return 0x0f;
-  }
-  const r = parseInt(rgb.slice(1, 3), 16) / 255;
-  const g = parseInt(rgb.slice(3, 5), 16) / 255;
-  const b = parseInt(rgb.slice(5, 7), 16) / 255;
-  const luma = 0.299 * r + 0.587 * g + 0.114 * b;
-  return luma > 0.55 ? 0x00 : 0x0f;
+export function playerTintForeground(_rgb: string): number {
+  return 0x0f;
 }
