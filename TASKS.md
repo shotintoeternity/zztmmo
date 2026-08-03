@@ -5018,14 +5018,14 @@ so no new glyph tinting is needed.
   protocol and the renderer, so CLAUDE.md rule 3 requires it).
   **Done 2026-08-03.** Every claim was watched failing before it was trusted,
   which is the only reason to believe any of them:
-  * *the colour is not simulation state* — `SetPlayerColor` records no op, and
+  * *the color is not simulation state* — `SetPlayerColor` records no op, and
     that is the one asymmetry with `SetPlayerName` worth remembering (a name
-    reaches the simulation as a high-score entry, a colour reaches only a
-    canvas). Proved by recording two identical sessions, one played in colour,
+    reaches the simulation as a high-score entry, a color reaches only a
+    canvas). Proved by recording two identical sessions, one played in color,
     and comparing the **bytes**: identical, `recordVersion` still 2, and the
-    coloured recording replays to the live session's per-room hashes. Inverted
+    colored recording replays to the live session's per-room hashes. Inverted
     by making `SetPlayerColor` record a `name` op — the recordings then differ
-    by exactly the two colour lines. Two rooms differing only in colour also
+    by exactly the two color lines. Two rooms differing only in color also
     hash identically for 200 ticks, and the replay fixtures are untouched.
   * *the tint is derived, never reimplemented* — `playerTintCells`
     (`engine/web/src/player_tint.ts`) yields a cell only where the roster puts
@@ -5042,11 +5042,11 @@ so no new glyph tinting is needed.
   Two things the spec did not name and this needed. The **foreground** is
   auto-contrasted (Rec. 601 luma, threshold 0.55) onto the two font canvases
   that already exist, or a white smiley disappears on a yellow pick. And the
-  colour has to come from somewhere before M19.2's picker exists, so it is read
+  color has to come from somewhere before M19.2's picker exists, so it is read
   from `localStorage` under `zzt-color` — the key M19.2 will write and M19.3
   will demote to the guest fallback — re-read at **every** join, since a
   reconnect reclaims a run but not a browser's current pick. Nothing defaults
-  to a colour: with no key set, every existing golden and matrix suite sees the
+  to a color: with no key set, every existing golden and matrix suite sees the
   same white-on-blue player it saw before, which is why they are all still
   green.
 
@@ -5072,8 +5072,8 @@ so no new glyph tinting is needed.
     `modal.ts` stays the router and delegates to it. It draws the shared M4.1
     frame — `renderTextWindowFrame`, which is `drawFrame` exported, the one
     change to `textwindow.ts` — and lays out its own interior, because the 16
-    quick picks are a two-column grid whose rows have to be drawn in the colours
-    they offer and a text-window line cannot say that. The swatch is the colour
+    quick picks are a two-column grid whose rows have to be drawn in the colors
+    they offer and a text-window line cannot say that. The swatch is the color
     as FOREGROUND (attribute `i`, black background) rather than as a background
     nibble, so dark blue is a square you can see rather than a hole in a window
     drawn on dark blue.
@@ -5081,22 +5081,22 @@ so no new glyph tinting is needed.
     window draws a char 2 in `0x1F` and hands `main.ts` a cell to tint through
     the SAME per-cell RGB override the board uses, so the smiley in the picker is
     painted by the code that paints the smiley in the room. Inverted by tinting
-    the preview vanilla blue instead of the highlighted colour: the browser suite
+    the preview vanilla blue instead of the highlighted color: the browser suite
     fails on the pixels, which is the only way that claim can be believed.
   * *no keystroke leaks* — inverted by letting `KeyP` past the modal router while
     the picker is open; the suite then reports the game starting behind the
     window (the M16.18a Fire lesson, re-proved rather than cited).
   * *the way back to vanilla is a row, not the absence of one* — one addition the
-    spec did not name and the feature needs: "No colour (the vanilla ZZT player)"
+    spec did not name and the feature needs: "No color (the vanilla ZZT player)"
     submits `""`, and `clearPlayerColor` REMOVES the key rather than writing an
     empty one, because `writeToken` deliberately ignores empty values. Inverted
-    by writing `""`: a player choosing vanilla keeps wearing the colour they just
+    by writing `""`: a player choosing vanilla keeps wearing the color they just
     took off.
   * *reachable on a phone* — the whole vocabulary is arrows plus Enter plus
-    Escape plus hex digits, so M16.18a's pad drives it; a title-only `Colour`
+    Escape plus hex digits, so M16.18a's pad drives it; a title-only `Color`
     button opens it (`KeyC`, which is free on the title menu and is chat in play
     mode, which is exactly why it is bound in `title.ts`'s table and not in the
-    global handler). Certified by a Chromium touch profile that picks a colour
+    global handler). Certified by a Chromium touch profile that picks a color
     with taps alone.
   Two consequences worth carrying forward. The title sidebar gained a ` C ` row
   (above sign-in, which moved to row 24), so `fixtures/browser-goldens/title.json`
@@ -5108,12 +5108,12 @@ so no new glyph tinting is needed.
   field this one filters to hex digits. **M16.18d** is filed for that.
 
 - [ ] **M16.18d — teach the device matrix what a surface accepts, and certify the
-  colour picker on it.** Filed 2026-08-03 by M19.2. `modalAcceptsTextInput` now
+  color picker on it.** Filed 2026-08-03 by M19.2. `modalAcceptsTextInput` now
   names seven text surfaces; `platform_matrix.test.mjs` exercises six and the
   seventh (`colorPicker`) is declared as omitted on every covered profile. The
   reason is the battery, not the picker: `certifySurface` types a fixed
   `seed + "X"` and then `s/t/b/q`, which assumes a field that accepts any
-  character, and the colour picker's accepts `[0-9a-f]` only. Give the battery a
+  character, and the color picker's accepts `[0-9a-f]` only. Give the battery a
   per-surface alphabet (what it may type, and what that text looks like once the
   surface has it), then exercise the picker on all six covered profiles — it is
   a title-screen window, so it is reached BEFORE the world picker rather than

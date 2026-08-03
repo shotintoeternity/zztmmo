@@ -65,13 +65,13 @@ const tint = (roster, cells) => playerTintCells({ roster, cells, boardCols: BOAR
   );
 }
 
-// A player who has picked no colour is the vanilla white-on-blue smiley: there
+// A player who has picked no color is the vanilla white-on-blue smiley: there
 // is nothing to paint, and the roster row must not become a black square.
 {
   const cells = blankScreen();
   drawCell(cells, 10, 12, PLAYER_TINT_CHAR, PLAYER_TINT_COLOR);
-  assert.deepEqual(tint([{ id: 1, x: 10, y: 12 }], cells), [], "no colour means no tint");
-  assert.deepEqual(tint([{ id: 1, x: 10, y: 12, color: "" }], cells), [], "an empty colour means no tint");
+  assert.deepEqual(tint([{ id: 1, x: 10, y: 12 }], cells), [], "no color means no tint");
+  assert.deepEqual(tint([{ id: 1, x: 10, y: 12, color: "" }], cells), [], "an empty color means no tint");
 }
 
 // --- the three yield cases, which are the point of deriving from the screen --
@@ -107,7 +107,7 @@ const tint = (roster, cells) => playerTintCells({ roster, cells, boardCols: BOAR
 
 // 3. THE ROSTER IS AHEAD OF THE SCREEN. A dead player mid-respawn, or a roster
 //    that arrived a tick before the cells did, claims a square that holds
-//    something else. Painting it would put a floating coloured block on the
+//    something else. Painting it would put a floating colored block on the
 //    board.
 {
   const cells = blankScreen();
@@ -136,10 +136,10 @@ const tint = (roster, cells) => playerTintCells({ roster, cells, boardCols: BOAR
     assert.deepEqual(
       tint([{ id: 1, x: 10, y: 12, color: bad }], cells),
       [],
-      `a malformed colour (${JSON.stringify(bad)}) never reaches the canvas`,
+      `a malformed color (${JSON.stringify(bad)}) never reaches the canvas`,
     );
   }
-  assert.equal(isPlayerColor("#A1b2C3"), true, "either case is a colour");
+  assert.equal(isPlayerColor("#A1b2C3"), true, "either case is a color");
   assert.equal(isPlayerColor("#a1b2c"), false);
   assert.equal(isPlayerColor(undefined), false);
 }
@@ -159,6 +159,6 @@ assert.equal(playerTintForeground("#0000aa"), 0x0f, "white smiley on the vanilla
 assert.equal(playerTintForeground("#ffffff"), 0x00, "black smiley on white");
 assert.equal(playerTintForeground("#ffff00"), 0x00, "black smiley on yellow — the case a fixed white loses");
 assert.equal(playerTintForeground("#ff0000"), 0x0f, "red is dark to the eye: white smiley");
-assert.equal(playerTintForeground("garbage"), 0x0f, "an unusable colour falls back to the vanilla white");
+assert.equal(playerTintForeground("garbage"), 0x0f, "an unusable color falls back to the vanilla white");
 
 console.log("player_tint tests passed");

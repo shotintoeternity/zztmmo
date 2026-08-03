@@ -9769,3 +9769,27 @@ then `s/t/b/q` into a field that accepts `[0-9a-f]` only; certifying it there
 means giving the battery a per-surface alphabet, which is M16.18d's job and not
 this task's. Until it lands the picker is certified on Chromium — keyboard and
 touch — by `TestM192ColorPickerJourney`.
+
+## 2026-08-03 — "color", not "colour" (owner)
+
+The owner's call right after M19.2 landed, and the right one: vanilla ZZT spells
+it `Color` — `ColorNames` (GAME.PAS:92), the editor's `Color:` row (EDITOR.PAS)
+— so a window that says "Your Colour" is the one piece of the screen not written
+in ZZT's own hand.
+
+Swept: every string a player reads (' C  Your color', the touch bar's `Color`
+button, "Your Player Color", "Pick a color for your smiley:", "Any color:", "No
+color (the vanilla ZZT player)"), the M19 source and test prose, TASKS.md's M19
+block, and the M19 rows of the parity manifest. One Go test was renamed with it
+(`TestM191AColouredSessionRecordsByteIdentically` →
+`…AColoredSessionRecords…`), which `TestParityManifest` immediately caught as a
+stale row reference — the manifest names its covering tests, so a rename is a
+manifest edit whether or not anyone remembers.
+
+**Deliberately NOT swept**, and worth knowing before someone "finishes the job":
+the editor-presence subsystem (`editor_cursor.ts`, `editor_session.go`, M17's
+task entries), the older milestones' prose in TASKS.md, and this log's earlier
+entries. None of it is player-visible text, and a repo-wide sweep of committed
+history is a bigger, noisier change than the product needed — CLAUDE.md rule 4.
+`fixtures/browser-goldens/title.json` was re-recorded a second time for the one
+word.

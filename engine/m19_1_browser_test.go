@@ -1,14 +1,14 @@
 package zztgo
 
 // M19.1's browser half: two real Chromium instances in one room, each with its
-// own picked colour, asserted on the canvas (web/test/player_color.test.mjs).
+// own picked color, asserted on the canvas (web/test/player_color.test.mjs).
 //
 // The same shape as the co-op cutline driver: the PRODUCTION zzt-server binary,
 // a temp worlds/saves directory and the real Vite-built client. The claim is
 // that two people can tell each other apart in the software we ship, so a
 // harness with a control listener would weaken it.
 //
-// Only ACCEPT is hosted. The colour is drawn over whatever the server sent for
+// Only ACCEPT is hosted. The color is drawn over whatever the server sent for
 // a player's square, so one deterministic board is enough — the interesting
 // cases (darkness, the energizer blink, a roster ahead of the screen) are the
 // pure rule's, and web/test/player_tint.test.mjs covers those without a browser.
@@ -112,15 +112,15 @@ func TestM191TwoBrowsersShowTwoDifferentPlayerColors(t *testing.T) {
 
 	outDir, err := filepath.Abs(filepath.Join("web", "test-results", "player-color"))
 	if err != nil {
-		t.Fatalf("resolve the player-colour output directory: %v", err)
+		t.Fatalf("resolve the player-color output directory: %v", err)
 	}
 	nodeCmd := exec.Command("node", filepath.Join("test", "player_color.test.mjs"))
 	nodeCmd.Dir = "web"
 	nodeCmd.Env = append(os.Environ(), "BASE_URL="+baseURL, "COLOR_OUT="+outDir)
 	out, err := nodeCmd.CombinedOutput()
 	if err != nil {
-		t.Fatalf("player-colour browser suite failed: %v\n--- script output ---\n%s\n--- server log ---\n%s",
+		t.Fatalf("player-color browser suite failed: %v\n--- script output ---\n%s\n--- server log ---\n%s",
 			err, string(out), logBuf.String())
 	}
-	t.Logf("player-colour browser suite output:\n%s", string(out))
+	t.Logf("player-color browser suite output:\n%s", string(out))
 }

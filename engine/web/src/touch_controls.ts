@@ -1,7 +1,7 @@
 // On-screen touch controls for phones. ZZT is a keyboard game and the client has
 // no physical keyboard on a phone, so this bar gives the essential keys as tap
 // targets: a direction pad (menu navigation AND in-game movement), Enter, an
-// explicit soft-keyboard toggle, the title-menu World / Play / Colour commands,
+// explicit soft-keyboard toggle, the title-menu World / Play / Color commands,
 // and — the
 // M16.18a half — the gameplay controls a phone had no way to reach at all: Fire,
 // Torch and Pause. Each button drives the SAME key handlers a physical key would
@@ -79,11 +79,11 @@ export const TOUCH_BUTTONS: ButtonSpec[] = [
   { id: "down", label: "▼", kind: "key", code: "ArrowDown", key: "ArrowDown", hold: true, group: "dpad", modes: EVERY_MODE },
   { id: "keyboard", label: "⌨", kind: "keyboard", group: "action", modes: EVERY_MODE },
   { id: "enter", label: "⏎", kind: "key", code: "Enter", key: "Enter", hold: false, group: "action", modes: EVERY_MODE },
-  // M19.2: the colour picker's 'C'. TITLE_ONLY is load-bearing, not tidiness —
+  // M19.2: the color picker's 'C'. TITLE_ONLY is load-bearing, not tidiness —
   // in play mode that same key byte opens chat, and the window this button is
   // for is only reachable from the title menu. Once it is open the picker is
   // driven by the d-pad and Enter, which are in EVERY_MODE.
-  { id: "color", label: "Colour", kind: "key", code: "KeyC", key: "c", hold: false, group: "action", modes: TITLE_ONLY },
+  { id: "color", label: "Color", kind: "key", code: "KeyC", key: "c", hold: false, group: "action", modes: TITLE_ONLY },
   { id: "world", label: "World", kind: "key", code: "KeyW", key: "w", hold: false, group: "action", modes: TITLE_ONLY },
   { id: "play", label: "Play", kind: "key", code: "KeyP", key: "p", hold: false, group: "action", modes: TITLE_ONLY },
   // Pause and Play are the same key byte ('P'); which of them is on screen is

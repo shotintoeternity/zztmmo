@@ -109,35 +109,35 @@ function memStore() {
   const resume = buildJoinMessage("join", "browser", "abc");
   assert.deepEqual(resume, { type: "join", name: "browser", resumeToken: "abc" });
 
-  // M19.1 — the picked colour rides the join, and an unset one is OMITTED
+  // M19.1 — the picked color rides the join, and an unset one is OMITTED
   // rather than sent as "": JoinMessage.Color is `omitempty`, and an absent
-  // colour is what the server reads as the vanilla white-on-blue player.
+  // color is what the server reads as the vanilla white-on-blue player.
   const uncolored = buildJoinMessage("join", "browser", "abc", "");
-  assert.ok(!("color" in uncolored), "an unset colour must not ride the join");
+  assert.ok(!("color" in uncolored), "an unset color must not ride the join");
   const colored = buildJoinMessage("join", "browser", "abc", "#a1b2c3");
   assert.deepEqual(colored, { type: "join", name: "browser", resumeToken: "abc", color: "#a1b2c3" });
 }
 
-// The colour is stored under its own key, in localStorage rather than the
+// The color is stored under its own key, in localStorage rather than the
 // sessionStorage the tokens use: it is a property of the player, not of a run,
 // and it should survive closing the tab (M19.1; M19.2 writes it, M19.3 makes a
 // signed-in player's account copy win over it).
 {
   const store = memStore();
-  assert.equal(loadPlayerColor(store), "", "no pick yet reads as no colour");
+  assert.equal(loadPlayerColor(store), "", "no pick yet reads as no color");
   savePlayerColor(store, "#00c0ff");
   assert.equal(loadPlayerColor(store), "#00c0ff");
   savePlayerColor(store, "");
   assert.equal(loadPlayerColor(store), "#00c0ff", "an empty write is ignored, as it is for a token");
   assert.notEqual(tokenKey("TOWN"), "zzt-color");
 
-  // M19.2 — the picker's "No colour" row. It has to REMOVE the key: the empty
+  // M19.2 — the picker's "No color" row. It has to REMOVE the key: the empty
   // write above is ignored by design, so a player choosing vanilla again would
-  // otherwise keep wearing the colour they just took off.
+  // otherwise keep wearing the color they just took off.
   clearPlayerColor(store);
   assert.equal(loadPlayerColor(store), "", "clearing takes the player back to vanilla");
   clearPlayerColor(store);
-  assert.equal(loadPlayerColor(store), "", "and clearing an unpicked colour is not an error");
+  assert.equal(loadPlayerColor(store), "", "and clearing an unpicked color is not an error");
 }
 
 // M16.14f — the editor's membership token is a SEPARATE key. A browser can be

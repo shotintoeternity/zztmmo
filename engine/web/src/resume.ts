@@ -99,14 +99,14 @@ export function buildJoinMessage(
     message.resumeToken = token;
   }
   // M19.1: omitted when unset, matching JoinMessage.Color's `omitempty` — an
-  // absent colour is the vanilla white-on-blue player, not a colour of "".
+  // absent color is the vanilla white-on-blue player, not a color of "".
   if (color) {
     message.color = color;
   }
   return message;
 }
 
-// The picked player colour (M19.1). Unlike the resume tokens above this is
+// The picked player color (M19.1). Unlike the resume tokens above this is
 // localStorage rather than sessionStorage and is not keyed by world: it is a
 // property of the player, not of a run, and it should survive closing the tab.
 // M19.2 adds the picker that writes it; M19.3 moves a signed-in player's copy
@@ -121,7 +121,7 @@ export function savePlayerColor(store: TokenStore, color: string): void {
   writeToken(store, COLOR_KEY, color);
 }
 
-// clearPlayerColor is the picker's "No colour" row (M19.2). It has to remove the
+// clearPlayerColor is the picker's "No color" row (M19.2). It has to remove the
 // key rather than write "": writeToken deliberately ignores an empty value (an
 // empty resume token is not a token), and an absent key is what every join path
 // already reads as the vanilla white-on-blue player.

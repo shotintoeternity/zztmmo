@@ -1,12 +1,12 @@
 package zztgo
 
-// M19.2's browser half: the colour picker in a real Chromium — opened from the
+// M19.2's browser half: the color picker in a real Chromium — opened from the
 // title menu, driven by the keyboard and (a second profile) by the on-screen
 // touch bar, and read back off the canvas (web/test/color_picker_journey.test.mjs).
 //
 // The same shape as M19.1's driver and the co-op cutline's: the PRODUCTION
 // zzt-server binary, a temp worlds/saves directory and the real Vite-built
-// client. The claim is that a player of the software we ship can pick a colour
+// client. The claim is that a player of the software we ship can pick a color
 // and keep it, so a harness with a control listener would weaken it.
 //
 // Only ACCEPT is hosted. The picker is a title-screen window and the world it
@@ -111,15 +111,15 @@ func TestM192ColorPickerJourney(t *testing.T) {
 
 	outDir, err := filepath.Abs(filepath.Join("web", "test-results", "color-picker"))
 	if err != nil {
-		t.Fatalf("resolve the colour-picker output directory: %v", err)
+		t.Fatalf("resolve the color-picker output directory: %v", err)
 	}
 	nodeCmd := exec.Command("node", filepath.Join("test", "color_picker_journey.test.mjs"))
 	nodeCmd.Dir = "web"
 	nodeCmd.Env = append(os.Environ(), "BASE_URL="+baseURL, "PICKER_OUT="+outDir)
 	out, err := nodeCmd.CombinedOutput()
 	if err != nil {
-		t.Fatalf("colour-picker browser suite failed: %v\n--- script output ---\n%s\n--- server log ---\n%s",
+		t.Fatalf("color-picker browser suite failed: %v\n--- script output ---\n%s\n--- server log ---\n%s",
 			err, string(out), logBuf.String())
 	}
-	t.Logf("colour-picker browser suite output:\n%s", string(out))
+	t.Logf("color-picker browser suite output:\n%s", string(out))
 }

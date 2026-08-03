@@ -1,4 +1,4 @@
-// M19.2 — the colour picker, in a real browser.
+// M19.2 — the color picker, in a real browser.
 //
 // Driven by engine/m19_2_browser_test.go, which hosts ACCEPT on the PRODUCTION
 // zzt-server binary and runs this script against it (the M19.1 shape: no control
@@ -8,9 +8,9 @@
 // rules; only a browser can show that the window is on the screen, that its keys
 // go to it and not to the title menu underneath, that the pick reaches
 // localStorage and survives a reload, and that the join the server reads carries
-// the colour the player chose. The 24-bit swatch is read as RAW PIXELS for the
+// the color the player chose. The 24-bit swatch is read as RAW PIXELS for the
 // M19.1 reason: the M16.9 decoder maps a background to the nearest EGA index,
-// which is exactly what an arbitrary colour is not.
+// which is exactly what an arbitrary color is not.
 //
 // THE TOUCH LEG is the DoD's "reachable on a touch profile". A phone reaches the
 // title menu's ' C ' through the on-screen bar (M16.18a) and then drives the
@@ -38,7 +38,7 @@ const COLOR_ROW = 23;
 const SWATCH_X = 78;
 
 const QUICK_PICK = "#ff5555"; // DOS "Red", picked with the arrows alone
-const TYPED_PICK = "#7f3fbf"; // and a colour no DOS palette has ever had
+const TYPED_PICK = "#7f3fbf"; // and a color no DOS palette has ever had
 
 const clients = [];
 
@@ -132,7 +132,7 @@ const wireOf = (c) =>
  * 24-bit tint is exactly what the M16.9 decoder maps no index onto, so the
  * library's readGrid throws on the very cells this feature exists to paint. The
  * cells it cannot read come back as '?' and are read as pixels instead — every
- * text assertion below is about ordinary text, and every colour assertion is
+ * text assertion below is about ordinary text, and every color assertion is
  * about pixels.
  */
 async function readCells(page) {
@@ -153,7 +153,7 @@ async function waitForCells(page, pred, describe, timeoutMs = 15000) {
   }
 }
 
-/** The colour of one cell's corners, which the ☻ glyph never inks (M19.1). */
+/** The color of one cell's corners, which the ☻ glyph never inks (M19.1). */
 async function cellCorners(c, col, row) {
   return c.page.evaluate(
     ([col, row, cellW, cellH]) => {
@@ -182,15 +182,15 @@ async function assertCellIs(c, col, row, expected, describe) {
   }
 }
 
-const pickerIsOpen = (cells) => hasText(cells, "Your Player Colour");
+const pickerIsOpen = (cells) => hasText(cells, "Your Player Color");
 
 async function openPicker(c) {
   await c.page.keyboard.press("KeyC");
-  await waitForCells(c.page, pickerIsOpen, `${c.label}'s colour picker to open`);
+  await waitForCells(c.page, pickerIsOpen, `${c.label}'s color picker to open`);
 }
 
 async function dumpFailure(err) {
-  console.error("M19.2 colour-picker suite FAILED:", err);
+  console.error("M19.2 color-picker suite FAILED:", err);
   for (const c of clients) {
     let wire = "unavailable";
     try {
@@ -209,7 +209,7 @@ async function dumpFailure(err) {
 }
 
 try {
-  console.log(`=== M19.2: the colour picker, against ${baseURL} ===`);
+  console.log(`=== M19.2: the color picker, against ${baseURL} ===`);
 
   // -------------------------------------------------------------------------
   // 1. The menu row, before anything is picked.
@@ -219,8 +219,8 @@ try {
 
   let cells = await readCells(ada.page);
   assert.equal(
-    textAt(cells, 62, COLOR_ROW, 15),
-    " C  Your colour",
+    textAt(cells, 62, COLOR_ROW, 20).trimEnd(),
+    " C  Your color",
     `the title menu must offer the picker; row ${COLOR_ROW} reads "${textAt(cells, 62, COLOR_ROW, 20)}"`,
   );
   assert.equal(cellAt(cells, SWATCH_X, COLOR_ROW).ch, 32, "an unpicked player gets no swatch on the menu");
@@ -231,7 +231,7 @@ try {
   // -------------------------------------------------------------------------
   await openPicker(ada);
   cells = await readCells(ada.page);
-  for (const needle of ["Dark Blue", "Yellow", "Any colour:", "No colour (the vanilla ZZT player)", "Esc cancels"]) {
+  for (const needle of ["Dark Blue", "Yellow", "Any color:", "No color (the vanilla ZZT player)", "Esc cancels"]) {
     assert.ok(hasText(cells, needle), `the picker must show "${needle}"`);
   }
 
@@ -274,15 +274,15 @@ try {
   assert.ok(previewX > 0, `the picker must preview the selection; row 18 reads "${textAt(cells, 0, 18)}"`);
   assert.equal(cellAt(cells, previewX, 18).ch, 0x02, "the preview is the player glyph itself");
   // The preview is painted by the same per-cell override the board uses, so
-  // this is the colour the room would give you — not a second drawing path.
-  await assertCellIs(ada, previewX, 18, QUICK_PICK, "the preview shows the highlighted colour");
+  // this is the color the room would give you — not a second drawing path.
+  await assertCellIs(ada, previewX, 18, QUICK_PICK, "the preview shows the highlighted color");
 
   await ada.page.keyboard.press("Enter");
   await waitForCells(ada.page, (cells) => !pickerIsOpen(cells), "the picker to close on Enter");
   assert.equal(await storedColor(ada), QUICK_PICK, "Enter stores the highlighted quick pick");
   cells = await readCells(ada.page);
   assert.equal(cellAt(cells, SWATCH_X, COLOR_ROW).ch, 0x02, "the menu now wears the player's own smiley");
-  await assertCellIs(ada, SWATCH_X, COLOR_ROW, QUICK_PICK, "the menu swatch is the picked colour");
+  await assertCellIs(ada, SWATCH_X, COLOR_ROW, QUICK_PICK, "the menu swatch is the picked color");
 
   // -------------------------------------------------------------------------
   // 6. It survives a reload: localStorage, not the run.
@@ -295,16 +295,16 @@ try {
   await assertCellIs(ada, SWATCH_X, COLOR_ROW, QUICK_PICK, "and the menu still wears it after a reload");
 
   // -------------------------------------------------------------------------
-  // 7. A typed colour — the half the 16 quick picks cannot express.
+  // 7. A typed color — the half the 16 quick picks cannot express.
   // -------------------------------------------------------------------------
   await openPicker(ada);
   await ada.page.keyboard.type(TYPED_PICK.slice(1).toUpperCase());
   await sleep(ada, 150);
   cells = await readCells(ada.page);
-  assert.ok(hasText(cells, "#" + TYPED_PICK.slice(1)), "the typed colour is shown in the field, in lower case");
+  assert.ok(hasText(cells, "#" + TYPED_PICK.slice(1)), "the typed color is shown in the field, in lower case");
   await ada.page.keyboard.press("Enter");
-  await waitForCells(ada.page, (cells) => !pickerIsOpen(cells), "the picker to close on the typed colour");
-  assert.equal(await storedColor(ada), TYPED_PICK, "a typed colour is stored like a quick pick");
+  await waitForCells(ada.page, (cells) => !pickerIsOpen(cells), "the picker to close on the typed color");
+  assert.equal(await storedColor(ada), TYPED_PICK, "a typed color is stored like a quick pick");
 
   // -------------------------------------------------------------------------
   // 8. The pick reaches the room: the join carries it and the board shows it.
@@ -317,11 +317,11 @@ try {
   await sleep(ada, 900);
   const you = (await wireOf(ada)).you;
   assert.ok(you, "the server told Ada which player is hers");
-  await assertCellIs(ada, you.x - 1, you.y - 1, TYPED_PICK, "Ada's own smiley wears the colour she typed");
+  await assertCellIs(ada, you.x - 1, you.y - 1, TYPED_PICK, "Ada's own smiley wears the color she typed");
 
   // -------------------------------------------------------------------------
-  // 9. And it survives a reconnect: the reclaimed run is joined in colour, the
-  //    colour being the browser's current pick rather than a property of the run.
+  // 9. And it survives a reconnect: the reclaimed run is joined in color, the
+  //    color being the browser's current pick rather than a property of the run.
   // -------------------------------------------------------------------------
   await ada.page.reload();
   await ada.page.waitForSelector("canvas[data-screen]", { timeout: 20000 });
@@ -343,12 +343,12 @@ try {
   await ada.page.keyboard.press("KeyY");
   await waitForCells(ada.page, (cells) => hasText(cells, "P  Play"), "Ada back at the title menu");
   await openPicker(ada);
-  // The window opens on the custom row holding her colour; the vanilla row is
+  // The window opens on the custom row holding her color; the vanilla row is
   // one below it.
   await ada.page.keyboard.press("ArrowDown");
   await ada.page.keyboard.press("Enter");
   await waitForCells(ada.page, (cells) => !pickerIsOpen(cells), "the picker to close on the vanilla row");
-  assert.equal(await storedColor(ada), null, "choosing no colour removes the key rather than writing an empty one");
+  assert.equal(await storedColor(ada), null, "choosing no color removes the key rather than writing an empty one");
   cells = await readCells(ada.page);
   assert.equal(cellAt(cells, SWATCH_X, COLOR_ROW).ch, 32, "and the menu stops claiming a pick");
 
@@ -362,7 +362,7 @@ try {
   const colorButton = pip.page.locator('[data-touch="color"]');
   await colorButton.waitFor({ state: "visible", timeout: 10000 });
   await colorButton.tap();
-  await waitForCells(pip.page, pickerIsOpen, "Pip's colour picker, opened by tapping the bar");
+  await waitForCells(pip.page, pickerIsOpen, "Pip's color picker, opened by tapping the bar");
 
   // A gameplay control must not be on screen over the window — a Fire tap is a
   // space, and this window has a text field (M16.18a).
@@ -376,14 +376,14 @@ try {
   }
   await pip.page.locator('[data-touch="enter"]').tap();
   await waitForCells(pip.page, (cells) => !pickerIsOpen(cells), "Pip's picker to close");
-  assert.equal(await storedColor(pip), "#aaaaaa", "a phone can pick a colour with the pad and Enter alone");
+  assert.equal(await storedColor(pip), "#aaaaaa", "a phone can pick a color with the pad and Enter alone");
   await assertCellIs(pip, SWATCH_X, COLOR_ROW, "#aaaaaa", "and the menu wears it on a touch profile");
 
   for (const c of clients) {
     assert.deepEqual(c.pageErrors, [], `${c.label} must reach this point with no page errors`);
   }
 
-  console.log("=== M19.2 colour picker: PASS ===");
+  console.log("=== M19.2 color picker: PASS ===");
 } catch (err) {
   await dumpFailure(err);
   process.exitCode = 1;

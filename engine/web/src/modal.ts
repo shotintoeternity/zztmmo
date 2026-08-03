@@ -26,7 +26,7 @@ import {
   TEXT_WINDOW_Y,
   type TextWindowState,
 } from "./textwindow";
-// M19.2: the colour picker keeps its own rules and its own screen in
+// M19.2: the color picker keeps its own rules and its own screen in
 // color_picker.ts (the player_tint.ts shape) — modal.ts stays the router.
 import { colorPickerKey, renderColorPicker, type ColorPickerModal } from "./color_picker";
 
@@ -270,8 +270,8 @@ export type ModalTextInput = {
 
 /** True when a modal has an editable buffer the mobile overlay can mirror. */
 export function modalAcceptsTextInput(m: Modal | null): boolean {
-  // The colour picker is here for its hex field: a phone with no keyboard can
-  // still walk the quick picks with the d-pad, but typing a colour needs the
+  // The color picker is here for its hex field: a phone with no keyboard can
+  // still walk the quick picks with the d-pad, but typing a color needs the
   // soft keyboard the ⌨ button raises (M15.1).
   return m !== null && (m.kind === "entry" || m.kind === "popupEntry" || m.kind === "multilineEntry" || m.kind === "chat" || m.kind === "programEditor" || m.kind === "worldSearch" || m.kind === "colorPicker");
 }

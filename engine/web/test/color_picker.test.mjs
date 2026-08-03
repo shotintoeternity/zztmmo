@@ -1,4 +1,4 @@
-// M19.2 — the colour picker's rules, without a browser.
+// M19.2 — the color picker's rules, without a browser.
 //
 // The picker is pure (src/color_picker.ts), so everything that decides what a
 // player ends up wearing is testable here: what each row means, what the arrows
@@ -58,7 +58,7 @@ const EGA = [
   "#000000", "#0000aa", "#00aa00", "#00aaaa", "#aa0000", "#aa00aa", "#aa5500", "#aaaaaa",
   "#555555", "#5555ff", "#55ff55", "#55ffff", "#ff5555", "#ff55ff", "#ffff55", "#ffffff",
 ];
-assert.equal(DOS_PICKS.length, 16, "all sixteen DOS colours are offered");
+assert.equal(DOS_PICKS.length, 16, "all sixteen DOS colors are offered");
 assert.deepEqual(DOS_PICKS.map((pick) => pick.hex), EGA, "the quick picks ARE the EGA palette");
 assert.equal(new Set(DOS_PICKS.map((pick) => pick.name)).size, 16, "every pick is named, and named once");
 // ZZT's own names for the bright half (ColorNames, GAME.PAS:92): in ZZT "Blue"
@@ -75,15 +75,15 @@ assert.equal(DOS_PICKS[1].name, "Dark Blue");
   assert.equal(picker("").selected, VANILLA_INDEX, "an unpicked player opens on the vanilla row");
 
   const quick = picker("#55ffff");
-  assert.equal(quick.selected, 11, "a DOS colour opens on its own quick pick");
+  assert.equal(quick.selected, 11, "a DOS color opens on its own quick pick");
   assert.equal(quick.custom, "", "and does not pre-fill the hex field");
 
   const custom = picker("#7F3FBF");
-  assert.equal(custom.selected, CUSTOM_INDEX, "an arbitrary colour opens on the hex field");
-  assert.equal(custom.custom, "7f3fbf", "with the colour in it, ready to be edited");
+  assert.equal(custom.selected, CUSTOM_INDEX, "an arbitrary color opens on the hex field");
+  assert.equal(custom.custom, "7f3fbf", "with the color in it, ready to be edited");
 
   const junk = picker("rebeccapurple");
-  assert.equal(junk.selected, VANILLA_INDEX, "a stored value that is not a colour is no pick at all");
+  assert.equal(junk.selected, VANILLA_INDEX, "a stored value that is not a color is no pick at all");
   assert.equal(junk.current, "");
 }
 
@@ -96,10 +96,10 @@ assert.equal(DOS_PICKS[1].name, "Dark Blue");
   m.selected = 0;
   assert.equal(colorPickerValue(m), "#000000");
   m.selected = VANILLA_INDEX;
-  assert.equal(colorPickerValue(m), "", "the vanilla row is the empty colour, not a colour");
+  assert.equal(colorPickerValue(m), "", "the vanilla row is the empty color, not a color");
   m.selected = CUSTOM_INDEX;
   m.custom = "ff88";
-  assert.equal(colorPickerValue(m), null, "four digits are not a colour yet");
+  assert.equal(colorPickerValue(m), null, "four digits are not a color yet");
   m.custom = "ff8800";
   assert.equal(colorPickerValue(m), "#ff8800");
 }
@@ -166,7 +166,7 @@ assert.equal(DOS_PICKS[1].name, "Dark Blue");
 }
 
 // ---------------------------------------------------------------------------
-// Typing a colour. A hex digit means the same thing wherever the cursor is —
+// Typing a color. A hex digit means the same thing wherever the cursor is —
 // the worldSearch precedent — and nothing else in this window is a shortcut.
 // ---------------------------------------------------------------------------
 {
@@ -177,7 +177,7 @@ assert.equal(DOS_PICKS[1].name, "Dark Blue");
   assert.equal(m.custom, "ff8800");
   assert.equal(colorPickerValue(m), "#ff8800");
 
-  // A seventh digit restarts: someone correcting a typo is retyping a colour,
+  // A seventh digit restarts: someone correcting a typo is retyping a color,
   // not appending to one.
   colorPickerKey(m, key("KeyA", "a"));
   assert.equal(m.custom, "a");
@@ -197,7 +197,7 @@ assert.equal(DOS_PICKS[1].name, "Dark Blue");
 
   assert.equal(colorPickerKey(m, key("Backspace")), "redraw");
   assert.equal(m.custom, "ff880");
-  assert.equal(colorPickerValue(m), null, "backspacing takes it back below a colour");
+  assert.equal(colorPickerValue(m), null, "backspacing takes it back below a color");
 
   // Not-a-hex-digit is ignored rather than swallowed into the field.
   const before = m.custom;
@@ -217,15 +217,15 @@ assert.equal(DOS_PICKS[1].name, "Dark Blue");
   const quick = picker("");
   quick.selected = 12;
   assert.equal(colorPickerKey(quick, key("Enter")), "close");
-  assert.equal(quick.submitted, "#ff5555", "a quick pick submits its own hex like any other colour");
+  assert.equal(quick.submitted, "#ff5555", "a quick pick submits its own hex like any other color");
 
   const typed = picker("");
   type(typed, "7f3fbf");
   assert.equal(colorPickerKey(typed, key("Enter")), "close");
   assert.equal(typed.submitted, "#7f3fbf");
 
-  // A half-typed hex is not a colour: Enter refuses and the window stays open,
-  // rather than closing on a colour nobody chose.
+  // A half-typed hex is not a color: Enter refuses and the window stays open,
+  // rather than closing on a color nobody chose.
   const half = picker("");
   type(half, "7f3");
   assert.equal(colorPickerKey(half, key("Enter")), "ignore");
@@ -236,7 +236,7 @@ assert.equal(DOS_PICKS[1].name, "Dark Blue");
   const off = picker("#ff0000");
   off.selected = VANILLA_INDEX;
   assert.equal(colorPickerKey(off, key("Enter")), "close");
-  assert.equal(off.submitted, "", "the vanilla row submits the empty colour");
+  assert.equal(off.submitted, "", "the vanilla row submits the empty color");
 
   const escaped = picker("#ff0000");
   escaped.selected = 3;
@@ -254,7 +254,7 @@ assert.equal(DOS_PICKS[1].name, "Dark Blue");
   const m = picker("");
   m.selected = 9;
   const preview = colorPickerPreview(m);
-  assert.ok(preview, "a selected colour previews");
+  assert.ok(preview, "a selected color previews");
   assert.equal(preview.rgb, "#5555ff");
 
   const cells = [];
@@ -273,7 +273,7 @@ assert.equal(DOS_PICKS[1].name, "Dark Blue");
 
 // ---------------------------------------------------------------------------
 // The window on screen: the M4.1 furniture, inside its own frame, naming every
-// colour it offers.
+// color it offers.
 // ---------------------------------------------------------------------------
 {
   const m = picker("#00aaaa");
@@ -284,8 +284,8 @@ assert.equal(DOS_PICKS[1].name, "Dark Blue");
   for (const pick of DOS_PICKS) {
     assert.ok(cells.some((cell) => cell.text === pick.name), `${pick.name} is on the window`);
   }
-  assert.match(text, /Any colour: /, "the hex field is on the window");
-  assert.match(text, /No colour \(the vanilla ZZT player\)/, "so is the way back");
+  assert.match(text, /Any color: /, "the hex field is on the window");
+  assert.match(text, /No color \(the vanilla ZZT player\)/, "so is the way back");
   assert.match(text, /Esc cancels/, "and the window says how to leave it");
 
   // Nothing may leave the window: the board keeps running underneath (the M1.3
@@ -299,11 +299,11 @@ assert.equal(DOS_PICKS[1].name, "Dark Blue");
   // The frame is drawn, and it is the shared one: strTop's corner piece.
   assert.ok(cells.some((cell) => cell.text.startsWith("\xc6\xd1")), "the window is the M4.1 CP437 frame");
 
-  // Each swatch is its colour as FOREGROUND (attribute i, background black), so
-  // the block reads as the colour and dark blue does not vanish into the window.
+  // Each swatch is its color as FOREGROUND (attribute i, background black), so
+  // the block reads as the color and dark blue does not vanish into the window.
   for (let i = 0; i < DOS_PICKS.length; i += 1) {
     const swatch = cells.find((cell) => cell.color === i && cell.text.includes("\xfe"));
-    assert.ok(swatch, `${DOS_PICKS[i].name} has a swatch in its own colour`);
+    assert.ok(swatch, `${DOS_PICKS[i].name} has a swatch in its own color`);
   }
 }
 

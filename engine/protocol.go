@@ -90,7 +90,7 @@ type JoinMessage struct {
 	// Color is the "#RRGGBB" background this player's ☻ is drawn on in every
 	// other player's browser (M19). It is presentation only: it never reaches
 	// Board.Tiles, StateHash or a recording, which is the whole reason a 24-bit
-	// colour is allowed to exist in a fork whose determinism is sacred. It
+	// color is allowed to exist in a fork whose determinism is sacred. It
 	// arrives from the browser, so it is untrusted on the same footing as Name
 	// and is validated (SanitizePlayerColor) before it is stored.
 	Color string `json:"color,omitempty"`
@@ -109,7 +109,7 @@ type EditorEnterMessage struct {
 	// ResumeToken is the editor's counterpart to JoinMessage.ResumeToken
 	// (M16.14f). A browser whose editor socket closed re-enters with the token
 	// its entry snapshot carried; if the session still holds the member that
-	// token names, this connection takes that membership over — same id, colour,
+	// token names, this connection takes that membership over — same id, color,
 	// board, cursor and leases — and the stale socket is closed, so a drop the
 	// server has not noticed yet cannot leave the session holding two members
 	// for one person. An unknown or already-exited token enters fresh.

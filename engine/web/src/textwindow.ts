@@ -75,8 +75,8 @@ function drawTitle(write: WriteText, color: number, title: string) {
 // open animation's Delay(25) dropped.
 //
 // Exported as renderTextWindowFrame for the one window that lays out its own
-// interior instead of feeding renderTextWindow a line list (the M19.2 colour
-// picker, whose rows have to be drawn in the colours they offer): the frame is
+// interior instead of feeding renderTextWindow a line list (the M19.2 color
+// picker, whose rows have to be drawn in the colors they offer): the frame is
 // still this frame, so every window on screen is the same window.
 export function renderTextWindowFrame(write: WriteText, title: string) {
   drawFrame(write, title);

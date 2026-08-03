@@ -469,7 +469,7 @@ func (s *WebSocketServer) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	// The colour is validated once, here, where the untrusted join is read —
+	// The color is validated once, here, where the untrusted join is read —
 	// beside the name it sits next to on the wire (M19.1). Everything
 	// downstream stores and broadcasts whatever this returns, so anything that
 	// is not "#" plus six hex digits must become the empty string at this line
@@ -499,13 +499,13 @@ func (s *WebSocketServer) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 			if authenticated {
 				inst.RoomManager.SetPlayerIdentity(playerID, account.ID, account.DisplayName())
 			}
-			// A resumed run keeps its inventory but not its colour: the
-			// reclaimed roomPlayer predates this connection, and the colour is
+			// A resumed run keeps its inventory but not its color: the
+			// reclaimed roomPlayer predates this connection, and the color is
 			// a property of the browser that is here now (M19.1). Re-applying
 			// it means a reconnect looks the same as it did before the drop.
 			// The snapshot tryResume already built is left alone — rebuilding
 			// it would drain the room's dirty cells a second time (see
-			// Snapshot) — so the colour reaches this client on the first diff
+			// Snapshot) — so the color reaches this client on the first diff
 			// instead, one tick later, which is how the roster reaches it
 			// every other time it changes.
 			inst.RoomManager.SetPlayerColor(playerID, joinColor)

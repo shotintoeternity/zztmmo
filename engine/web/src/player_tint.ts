@@ -18,7 +18,7 @@
 //   * a dead player mid-respawn is not drawn at all, so again there is nothing
 //     to tint.
 //
-// The colour never touches Board.Tiles, StateHash or a recording; it is a paint
+// The color never touches Board.Tiles, StateHash or a recording; it is a paint
 // pass over a screen the server already decided.
 
 export const PLAYER_TINT_CHAR = 0x02;
@@ -45,7 +45,7 @@ export type TintCell = { x: number; y: number; rgb: string };
 const HEX_COLOR = /^#[0-9a-fA-F]{6}$/;
 
 /**
- * True for the one wire format a colour may take. The server validates the same
+ * True for the one wire format a color may take. The server validates the same
  * shape at the join (SanitizePlayerColor), so this is the second of two gates
  * rather than the only one — but it is the gate closest to the fillStyle, and a
  * roster is other people's input.

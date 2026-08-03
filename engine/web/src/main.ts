@@ -1968,7 +1968,7 @@ function trackMyStatId(players: PlayerSnapshot[] | undefined) {
     return;
   }
   // M19.1: the same pass keeps the whole roster, not just our own row — every
-  // other player's square is what the colour tint is painted on.
+  // other player's square is what the color tint is painted on.
   roster = players;
   for (const player of players) {
     if (player.id === playerId) {
@@ -2182,7 +2182,7 @@ function readStoredPlayerColor(): string {
 }
 
 // openColorPicker is the title menu's ' C ' (M19.2). It writes localStorage and
-// nothing else: the colour is read again at every join (see connect()), so a
+// nothing else: the color is read again at every join (see connect()), so a
 // pick made here reaches the room the next time P is pressed, and a pick made
 // after a drop reaches the reconnect — without a rejoin being anyone's problem.
 // M19.3 moves a signed-in player's copy to their account and leaves this as the
@@ -2213,7 +2213,7 @@ function openColorPicker() {
   );
 }
 
-// repaintPlayerTints rebuilds the M19.1 colour layer from the live roster and
+// repaintPlayerTints rebuilds the M19.1 color layer from the live roster and
 // the cells the server drew. It is rebuilt with the overlay because the two
 // have the same lifetime — one message changes both — and it is empty outside a
 // room, where there is no roster and the board is a title screen.
@@ -2222,7 +2222,7 @@ function repaintPlayerTints() {
   // M19.2: the title menu's ' C ' row and the picker's preview are the same
   // paint as the board — a ☻ the server would have drawn (char 2 in 0x1F) with
   // a 24-bit background over it. Going through the one override rather than a
-  // second drawing path is what stops a preview from promising a colour the
+  // second drawing path is what stops a preview from promising a color the
   // game would not actually give you.
   if (mode === "title") {
     const stored = readStoredPlayerColor();

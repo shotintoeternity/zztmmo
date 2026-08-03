@@ -24,7 +24,7 @@ assert.equal(titleCommand(key("Escape", "Escape")), "quit");
 assert.equal(titleCommand(key("KeyH", "h")), "highScores");
 assert.equal(titleCommand(key("KeyE", "e")), "editor");
 assert.equal(titleCommand(key("KeyF", "f")), "feedback");
-// M19.2: the colour picker. 'C' is a title-menu key and only a title-menu key —
+// M19.2: the color picker. 'C' is a title-menu key and only a title-menu key —
 // in play mode main.ts binds the same byte to chat.
 assert.equal(titleCommand(key("KeyC", "c")), "color");
 assert.equal(titleCommand(key("KeyS", "s")), "none");
@@ -111,14 +111,14 @@ assert.match(authSidebarText, / Google sign-in/);
   const picked = draw("#7f3fbf");
   for (const writes of [unpicked, picked]) {
     const text = writes.map((write) => write.text).join("\n");
-    assert.match(text, / Your colour/, "the colour row is always on the menu");
+    assert.match(text, / Your color/, "the color row is always on the menu");
     const box = writes.find((write) => write.text === " C ");
-    assert.ok(box, "the colour hotkey box is drawn");
-    // The identity block: colour directly above sign-in, both clear of Feedback.
+    assert.ok(box, "the color hotkey box is drawn");
+    // The identity block: color directly above sign-in, both clear of Feedback.
     const feedback = writes.find((write) => write.text === " F ");
     const signIn = writes.find((write) => write.text === " G ");
-    assert.ok(box.y > feedback.y + 1, "the colour row keeps a blank row above it");
-    assert.equal(signIn.y, box.y + 1, "sign-in sits with the colour row, not apart from it");
+    assert.ok(box.y > feedback.y + 1, "the color row keeps a blank row above it");
+    assert.equal(signIn.y, box.y + 1, "sign-in sits with the color row, not apart from it");
     for (const write of writes.filter((w) => w.y === box.y || w.y === signIn.y)) {
       assert.ok(write.x >= 60, `sidebar row stays out of the board: ${write.x}`);
       assert.ok(write.x + write.text.length <= 80, `"${write.text}" runs past column 79`);
@@ -131,7 +131,7 @@ assert.match(authSidebarText, / Google sign-in/);
   // one.
   const swatchOf = (writes) =>
     writes.find((write) => write.x === TITLE_COLOR_SWATCH.x && write.y === TITLE_COLOR_SWATCH.y && write.text === "\x02");
-  assert.ok(swatchOf(picked), "a picked colour draws the smiley on the menu");
+  assert.ok(swatchOf(picked), "a picked color draws the smiley on the menu");
   assert.equal(swatchOf(picked).color, 0x1f, "the swatch is the attribute the tint gate accepts");
   assert.equal(swatchOf(unpicked), undefined, "an unpicked player gets no swatch");
 }

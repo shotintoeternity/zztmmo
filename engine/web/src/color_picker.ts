@@ -9,13 +9,13 @@
 // THE WINDOW IS THE M4.1 CP437 FURNITURE (textwindow.ts), like every other
 // window this client draws, but it lays out its own interior instead of feeding
 // renderTextWindow a line list: the 16 quick picks are a two-column grid and
-// each row has to be drawn in the colour it offers, which a text-window line
+// each row has to be drawn in the color it offers, which a text-window line
 // cannot say.
 //
 // THE SWATCH IS THE COLOUR AS FOREGROUND, NOT AS BACKGROUND. Drawn as a filled
 // square (0xFE) in attribute `i`, its background nibble is black — so one write
-// per row stands for all sixteen colours, and the black cells either side keep
-// the one colour that IS the window's background (dark blue) from vanishing
+// per row stands for all sixteen colors, and the black cells either side keep
+// the one color that IS the window's background (dark blue) from vanishing
 // into it.
 //
 // WHY THE 16 QUICK PICKS AT ALL. The owner's 2026-07-10 design names purists:
@@ -48,7 +48,7 @@ export type ColorPick = { name: string; hex: string };
 
 /**
  * The DOS 16, in palette order, with the EGA hex main.ts already paints them
- * with (`ega`) — a quick pick has to be the colour the player has been looking
+ * with (`ega`) — a quick pick has to be the color the player has been looking
  * at since 1991, not a fresh approximation of it.
  *
  * The names for 9..15 are ZZT's own (ColorNames, GAME.PAS:92), which is why the
@@ -74,7 +74,7 @@ export const DOS_PICKS: readonly ColorPick[] = [
   { name: "White", hex: "#ffffff" },
 ];
 
-/** The two rows past the grid: the typed colour, then the way back to vanilla. */
+/** The two rows past the grid: the typed color, then the way back to vanilla. */
 export const CUSTOM_INDEX = DOS_PICKS.length;
 export const VANILLA_INDEX = DOS_PICKS.length + 1;
 
@@ -84,7 +84,7 @@ const HEX_DIGITS = 6;
 export type ColorPickerModal = {
   kind: "colorPicker";
   title: string;
-  /** 0..15 a quick pick, CUSTOM_INDEX the typed field, VANILLA_INDEX no colour. */
+  /** 0..15 a quick pick, CUSTOM_INDEX the typed field, VANILLA_INDEX no color. */
   selected: number;
   /** The typed hex digits, without the '#' — the window draws that. */
   custom: string;
@@ -104,7 +104,7 @@ const HEX_DIGIT = /^[0-9a-fA-F]$/;
 export function newColorPickerModal(
   current: string,
   onSubmit: (color: string | null) => void,
-  title = "Your Player Colour",
+  title = "Your Player Color",
 ): ColorPickerModal {
   const normalized = HEX_COLOR.test(current) ? current.toLowerCase() : "";
   const quick = DOS_PICKS.findIndex((pick) => pick.hex === normalized);
@@ -121,9 +121,9 @@ export function newColorPickerModal(
 }
 
 /**
- * The colour the selected row stands for: a quick pick's hex, the typed field
+ * The color the selected row stands for: a quick pick's hex, the typed field
  * once it holds six digits, "" on the vanilla row, and null while a half-typed
- * hex is not yet a colour (which is also what makes Enter refuse it).
+ * hex is not yet a color (which is also what makes Enter refuse it).
  */
 export function colorPickerValue(m: ColorPickerModal): string | null {
   if (m.selected === VANILLA_INDEX) {
@@ -163,7 +163,7 @@ export function colorPickerKey(m: ColorPickerModal, event: ColorKeyLike): ColorP
     case "Enter": {
       const value = colorPickerValue(m);
       if (value === null) {
-        // A half-typed hex is not a colour; refusing here keeps a window open
+        // A half-typed hex is not a color; refusing here keeps a window open
         // that the player is plainly still filling in.
         return "ignore";
       }
@@ -205,7 +205,7 @@ export function colorPickerKey(m: ColorPickerModal, event: ColorKeyLike): ColorP
       }
       m.selected = CUSTOM_INDEX;
       // A seventh digit restarts rather than being dropped in silence: someone
-      // correcting a typo is retyping the colour, not appending to it.
+      // correcting a typo is retyping the color, not appending to it.
       m.custom = (m.custom.length >= HEX_DIGITS ? "" : m.custom) + event.key.toLowerCase();
       return "redraw";
     }
@@ -264,7 +264,7 @@ const SELECTED_COLOR = 0x1f;
 const CURSOR_COLOR = 0x1c;
 const HINT_COLOR = 0x1a;
 // A small filled square with a black cell either side of it, so a swatch is
-// visible against the window whatever the colour — including the dark blue the
+// visible against the window whatever the color — including the dark blue the
 // window itself is drawn on.
 const SWATCH = " \xfe ";
 const CURSOR = "\x10";
@@ -274,12 +274,12 @@ export const PREVIEW_CHAR = 0x02;
 export const PREVIEW_COLOR = 0x1f;
 
 /**
- * Where the preview ☻ is drawn, and what colour it should be tinted. main.ts
+ * Where the preview ☻ is drawn, and what color it should be tinted. main.ts
  * feeds this to the same per-cell RGB override the board uses, so the smiley in
  * this window is painted by the code that paints the real one — the preview
  * cannot drift from the thing it previews.
  *
- * Returns null while the selection has no colour (a half-typed hex, or vanilla),
+ * Returns null while the selection has no color (a half-typed hex, or vanilla),
  * where the untinted 0x1F cell is already the right answer.
  */
 export function colorPickerPreview(m: ColorPickerModal): { x: number; y: number; rgb: string } | null {
@@ -300,15 +300,15 @@ const PREVIEW_LABEL = "This is you:  ";
 export function renderColorPicker(write: WriteText, m: ColorPickerModal) {
   renderTextWindowFrame(write, m.title);
 
-  write(TEXT_WINDOW_X + 4, FIRST_ROW, HINT_COLOR, "Pick a colour for your smiley:");
+  write(TEXT_WINDOW_X + 4, FIRST_ROW, HINT_COLOR, "Pick a color for your smiley:");
 
   for (let i = 0; i < DOS_PICKS.length; i += 1) {
     const column = Math.floor(i / GRID_ROWS);
     const x = COLUMN_X[column];
     const y = GRID_TOP + (i % GRID_ROWS);
     drawCursor(write, x, y, m.selected === i);
-    // The swatch is the colour as FOREGROUND (attribute `i`, so its background
-    // nibble is black): a filled square in the colour, with a black cell either
+    // The swatch is the color as FOREGROUND (attribute `i`, so its background
+    // nibble is black): a filled square in the color, with a black cell either
     // side of it so that dark blue — the window's own background — is still a
     // square you can see rather than a hole in the window.
     write(x + 2, y, i, SWATCH);
@@ -317,7 +317,7 @@ export function renderColorPicker(write: WriteText, m: ColorPickerModal) {
 
   drawCursor(write, COLUMN_X[0], CUSTOM_ROW, m.selected === CUSTOM_INDEX);
   const typed = "#" + m.custom.padEnd(HEX_DIGITS, "\xfa");
-  write(COLUMN_X[0] + 2, CUSTOM_ROW, m.selected === CUSTOM_INDEX ? SELECTED_COLOR : NORMAL_COLOR, "Any colour: ");
+  write(COLUMN_X[0] + 2, CUSTOM_ROW, m.selected === CUSTOM_INDEX ? SELECTED_COLOR : NORMAL_COLOR, "Any color: ");
   write(COLUMN_X[0] + 14, CUSTOM_ROW, m.selected === CUSTOM_INDEX ? 0x70 : NORMAL_COLOR, typed);
 
   drawCursor(write, COLUMN_X[0], VANILLA_ROW, m.selected === VANILLA_INDEX);
@@ -325,7 +325,7 @@ export function renderColorPicker(write: WriteText, m: ColorPickerModal) {
     COLUMN_X[0] + 2,
     VANILLA_ROW,
     m.selected === VANILLA_INDEX ? SELECTED_COLOR : NORMAL_COLOR,
-    "No colour (the vanilla ZZT player)",
+    "No color (the vanilla ZZT player)",
   );
 
   // The preview is the real thing: char 2 in 0x1F, which is exactly what the

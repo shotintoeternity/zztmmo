@@ -6,15 +6,15 @@
 // storage per player, and no throttled timers in a background tab.
 //
 // WHAT THIS SUITE PROVES, and why it has to be a browser at all. The Go tests
-// prove the negative — that a colour reaches no tile, no hash and no recording.
+// prove the negative — that a color reaches no tile, no hash and no recording.
 // Only a canvas can prove the positive: that the pixels behind one player's ☻
-// are that player's colour, in BOTH players' browsers, and that they differ. The
+// are that player's color, in BOTH players' browsers, and that they differ. The
 // glyph never changes; the whole feature is the background.
 //
 // READING THE CANVAS. The M16.9 decoder maps a background to the nearest EGA
 // index, which is exactly what a 24-bit tint is not, so this suite reads raw
 // pixels instead: the corners of a cell, which the ☻ glyph never inks. That is
-// also the honest measurement — "what colour is the square that player is
+// also the honest measurement — "what color is the square that player is
 // standing on" is a question about pixels.
 //
 // THE COLOUR ARRIVES FROM localStorage (the M19.2 picker writes it; until then a
@@ -124,7 +124,7 @@ async function joinWorld(c, world) {
 }
 
 /**
- * The colour of one cell, read from the canvas backing store. Sampled at the
+ * The color of one cell, read from the canvas backing store. Sampled at the
  * corners, which the ☻ never inks — a mid-cell sample would read the glyph.
  */
 async function cellCorners(c, col, row) {
@@ -164,7 +164,7 @@ async function assertSquareIs(c, player, expected, describe) {
 }
 
 async function dumpFailure(err) {
-  console.error("M19.1 player-colour suite FAILED:", err);
+  console.error("M19.1 player-color suite FAILED:", err);
   for (const c of clients) {
     console.error(
       `--- ${c.label}: you=${JSON.stringify(c.you)} roster=${JSON.stringify(c.roster)} ` +
@@ -182,7 +182,7 @@ async function dumpFailure(err) {
 let ada, bo;
 
 try {
-  console.log(`=== M19.1: two coloured players in one room, against ${baseURL} ===`);
+  console.log(`=== M19.1: two colored players in one room, against ${baseURL} ===`);
 
   ada = await openClient("Ada", "Ada", ADA_COLOR);
   bo = await openClient("Bo", "Bo", BO_COLOR);
@@ -196,7 +196,7 @@ try {
     assert.equal(c.joins.length, 1, `${c.label} must have sent exactly one join`);
     assert.ok(
       c.joins[0].includes(`"color":"${c.color}"`),
-      `${c.label}'s join must carry the stored colour, sent: ${c.joins[0]}`,
+      `${c.label}'s join must carry the stored color, sent: ${c.joins[0]}`,
     );
   }
 
@@ -209,11 +209,11 @@ try {
     assert.equal(
       new Set(Object.values(colors)).size,
       2,
-      `${c.label}'s roster must carry two different colours, got ${JSON.stringify(colors)}`,
+      `${c.label}'s roster must carry two different colors, got ${JSON.stringify(colors)}`,
     );
     assert.ok(
       Object.values(colors).includes(ADA_COLOR) && Object.values(colors).includes(BO_COLOR),
-      `${c.label}'s roster must carry both picked colours, got ${JSON.stringify(colors)}`,
+      `${c.label}'s roster must carry both picked colors, got ${JSON.stringify(colors)}`,
     );
     assert.ok(
       Object.values(names).includes("Ada") && Object.values(names).includes("Bo"),
@@ -241,14 +241,14 @@ try {
       screenCellOf(boEntry),
       `${viewer.label}: the two players must be on different squares to be told apart`,
     );
-    await assertSquareIs(viewer, adaEntry, ADA_COLOR, "Ada's smiley sits on Ada's colour");
-    await assertSquareIs(viewer, boEntry, BO_COLOR, "Bo's smiley sits on Bo's colour");
+    await assertSquareIs(viewer, adaEntry, ADA_COLOR, "Ada's smiley sits on Ada's color");
+    await assertSquareIs(viewer, boEntry, BO_COLOR, "Bo's smiley sits on Bo's color");
   }
 
   console.log("  both browsers draw both players, each on their own 24-bit background");
 
   // Each player can point at their own ☻: the square the server says is MINE is
-  // the colour I picked, in my own browser.
+  // the color I picked, in my own browser.
   await assertSquareIs(ada, ada.you, ADA_COLOR, "Ada can point at her own smiley");
   await assertSquareIs(bo, bo.you, BO_COLOR, "Bo can point at his own smiley");
 
@@ -264,8 +264,8 @@ try {
     assert.ok(probe, `${viewer.label}: no empty probe square found`);
     const corners = await cellCorners(viewer, probe.x - 1, probe.y - 1);
     for (const corner of corners) {
-      assert.notEqual(corner, ADA_COLOR, `${viewer.label}: an empty square must not carry a player's colour`);
-      assert.notEqual(corner, BO_COLOR, `${viewer.label}: an empty square must not carry a player's colour`);
+      assert.notEqual(corner, ADA_COLOR, `${viewer.label}: an empty square must not carry a player's color`);
+      assert.notEqual(corner, BO_COLOR, `${viewer.label}: an empty square must not carry a player's color`);
     }
   }
 
@@ -273,7 +273,7 @@ try {
     assert.deepEqual(c.pageErrors, [], `${c.label} must reach this point with no page errors`);
   }
 
-  console.log("=== M19.1 player colour: PASS ===");
+  console.log("=== M19.1 player color: PASS ===");
 } catch (err) {
   await dumpFailure(err);
   process.exitCode = 1;

@@ -7,19 +7,19 @@ import (
 	"testing"
 )
 
-// M19.1 — the player colour on the wire.
+// M19.1 — the player color on the wire.
 //
 // The milestone's governing constraint is that a 24-bit background must never
 // reach the simulation: not Board.Tiles, not StateHash, not a recording. These
 // tests are the proof of that constraint rather than a demonstration of the
-// feature — the feature itself (a smiley drawn on a coloured square) is proved
+// feature — the feature itself (a smiley drawn on a colored square) is proved
 // on a canvas, by web/test/player_color.test.mjs.
 //
 // The inverse of M16.15a is the thing to keep in view. There, an account
 // sidecar the player was JOINED WITH changed simulation state, so it had to
-// become a recorded op and recordVersion had to move. A colour changes nothing
+// become a recorded op and recordVersion had to move. A color changes nothing
 // the simulation can observe, so it must ride the wire WITHOUT being recorded —
-// and TestM191AColouredSessionRecordsByteIdenticallyIsTheProof.
+// and TestM191AColoredSessionRecordsByteIdenticallyIsTheProof.
 
 func TestM191SanitizePlayerColorAcceptsOnlySixHexDigits(t *testing.T) {
 	for _, tc := range []struct {
@@ -27,7 +27,7 @@ func TestM191SanitizePlayerColorAcceptsOnlySixHexDigits(t *testing.T) {
 		want string
 		why  string
 	}{
-		{"#000000", "#000000", "black is a colour, not an absence"},
+		{"#000000", "#000000", "black is a color, not an absence"},
 		{"#ffffff", "#ffffff", "lowercase hex"},
 		{"#A1B2C3", "#A1B2C3", "uppercase hex, passed through unchanged"},
 		{"#aF09bE", "#aF09bE", "mixed case"},
@@ -38,11 +38,11 @@ func TestM191SanitizePlayerColorAcceptsOnlySixHexDigits(t *testing.T) {
 		{"1234567", "", "no leading #"},
 		{"#12345g", "", "not hex"},
 		{"#12345 ", "", "trailing space"},
-		{"red", "", "a colour keyword is not accepted"},
+		{"red", "", "a color keyword is not accepted"},
 		{"rgb(1,2,3)", "", "a CSS function is not accepted"},
 		{"#12345\"", "", "a quote must never reach another browser's fillStyle"},
 		{"#123456;background:url(x)", "", "no injection through the style"},
-		{"\x00#123456", "", "a NUL prefix is not a colour"},
+		{"\x00#123456", "", "a NUL prefix is not a color"},
 	} {
 		if got := SanitizePlayerColor(tc.in); got != tc.want {
 			t.Errorf("SanitizePlayerColor(%q) = %q, want %q (%s)", tc.in, got, tc.want, tc.why)
@@ -50,7 +50,7 @@ func TestM191SanitizePlayerColorAcceptsOnlySixHexDigits(t *testing.T) {
 	}
 }
 
-// An absent colour must be absent on the wire, not an empty string: "" is what
+// An absent color must be absent on the wire, not an empty string: "" is what
 // an old client, a replayed session and a player who has not picked one all
 // send, and the client reads a missing field as vanilla white-on-blue.
 func TestM191ColorAndNameAreOmittedWhenUnset(t *testing.T) {
@@ -59,20 +59,20 @@ func TestM191ColorAndNameAreOmittedWhenUnset(t *testing.T) {
 		t.Fatalf("marshal bare snapshot: %v", err)
 	}
 	if strings.Contains(string(bare), "color") || strings.Contains(string(bare), "name") {
-		t.Errorf("an unset colour/name must be omitted from the roster, got %s", bare)
+		t.Errorf("an unset color/name must be omitted from the roster, got %s", bare)
 	}
 
 	set, err := json.Marshal(PlayerSnapshot{ID: 1, Health: 100, Name: "Ada", Color: "#a1b2c3"})
 	if err != nil {
-		t.Fatalf("marshal coloured snapshot: %v", err)
+		t.Fatalf("marshal colored snapshot: %v", err)
 	}
 	if !strings.Contains(string(set), `"color":"#a1b2c3"`) || !strings.Contains(string(set), `"name":"Ada"`) {
-		t.Errorf("a set colour/name must ride the roster, got %s", set)
+		t.Errorf("a set color/name must ride the roster, got %s", set)
 	}
 }
 
 // The roster is the only carrier, and it has to be BOTH carriers: the snapshot a
-// player joins on and every diff after it. A colour that rode only the snapshot
+// player joins on and every diff after it. A color that rode only the snapshot
 // would show a newcomer in vanilla blue to everyone already in the room.
 func TestM191ColorRidesTheSnapshotAndEveryDiff(t *testing.T) {
 	rm := NewRoomManager(townWorld(t))
@@ -89,7 +89,7 @@ func TestM191ColorRidesTheSnapshotAndEveryDiff(t *testing.T) {
 		t.Fatal("Ada's join snapshot")
 	}
 	if snapshot.You.Color != "#ff0000" || snapshot.You.Name != "Ada" {
-		t.Errorf("`you` must carry the joining player's own colour and name, got %+v", snapshot.You)
+		t.Errorf("`you` must carry the joining player's own color and name, got %+v", snapshot.You)
 	}
 	assertRosterColors(t, "the join snapshot", snapshot.Players, map[PlayerID]string{ada: "#ff0000", bo: "#00ff00"})
 
@@ -106,13 +106,13 @@ func assertRosterColors(t *testing.T, where string, roster []PlayerSnapshot, wan
 	}
 	for id, color := range want {
 		if got[id] != color {
-			t.Errorf("%s: player %d colour = %q, want %q (roster: %+v)", where, id, got[id], color, roster)
+			t.Errorf("%s: player %d color = %q, want %q (roster: %+v)", where, id, got[id], color, roster)
 		}
 	}
 }
 
 // The whole feature is only allowed to exist because of this: two rooms whose
-// players differ in nothing but colour are the same simulation, tick for tick.
+// players differ in nothing but color are the same simulation, tick for tick.
 func TestM191ColorNeverChangesStateHash(t *testing.T) {
 	world := townWorld(t)
 
@@ -152,7 +152,7 @@ func TestM191ColorNeverChangesStateHash(t *testing.T) {
 		}
 		for board, want := range ph {
 			if got := qh[board]; got != want {
-				t.Fatalf("tick %d board %d: a colour changed the simulation — %016x (plain) vs %016x (coloured)",
+				t.Fatalf("tick %d board %d: a color changed the simulation — %016x (plain) vs %016x (colored)",
 					k, board, want, got)
 			}
 		}
@@ -160,13 +160,13 @@ func TestM191ColorNeverChangesStateHash(t *testing.T) {
 }
 
 // The M16.15a inverse, shown rather than argued. Two sessions identical except
-// that one's players picked colours must produce byte-identical recordings: a
-// colour is not a stimulus, so nothing about it may be captured, and the
+// that one's players picked colors must produce byte-identical recordings: a
+// color is not a stimulus, so nothing about it may be captured, and the
 // on-disk schema must not move for it.
-func TestM191AColouredSessionRecordsByteIdentically(t *testing.T) {
+func TestM191AColoredSessionRecordsByteIdentically(t *testing.T) {
 	if recordVersion != 2 {
 		t.Fatalf("recordVersion is %d: M19.1 adds no recorded op, so it must stay at 2 "+
-			"(a bump here means a colour reached the recording)", recordVersion)
+			"(a bump here means a color reached the recording)", recordVersion)
 	}
 
 	world := townWorld(t)
@@ -206,16 +206,16 @@ func TestM191AColouredSessionRecordsByteIdentically(t *testing.T) {
 	coloredBytes, coloredLive := play(true)
 
 	if !bytes.Equal(plainBytes, coloredBytes) {
-		t.Fatalf("a colour reached the recording: %d bytes plain vs %d coloured\nplain:   %s\ncoloured: %s",
+		t.Fatalf("a color reached the recording: %d bytes plain vs %d colored\nplain:   %s\ncolored: %s",
 			len(plainBytes), len(coloredBytes),
 			firstDifferingLine(plainBytes, coloredBytes), firstDifferingLine(coloredBytes, plainBytes))
 	}
 	if bytes.Contains(coloredBytes, []byte("#ff0000")) || bytes.Contains(coloredBytes, []byte("#00c0ff")) {
-		t.Error("a recording must not contain a player colour anywhere")
+		t.Error("a recording must not contain a player color anywhere")
 	}
 	assertCheckpointsEqual(t, plainLive, coloredLive)
 
-	// And it still replays: the recording of the coloured session reproduces
+	// And it still replays: the recording of the colored session reproduces
 	// the live session's per-room hashes exactly.
 	var replay []sessCheckpoint
 	var lastTick int
@@ -224,7 +224,7 @@ func TestM191AColouredSessionRecordsByteIdentically(t *testing.T) {
 		recordCheckpoint(&replay, tick, rm)
 	})
 	if err != nil {
-		t.Fatalf("replay the coloured session: %v", err)
+		t.Fatalf("replay the colored session: %v", err)
 	}
 	replay = append(replay, sessCheckpoint{tick: lastTick, hashes: replayed.RoomStateHashes()})
 	assertCheckpointsEqual(t, coloredLive, replay)

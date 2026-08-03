@@ -127,8 +127,8 @@ assert.deepEqual(pressed("Play"), [
   { down: true, code: "KeyP", key: "p" },
   { down: false, code: "KeyP", key: "p" },
 ]);
-// M19.2: the colour picker's 'C', which is a title-menu key exactly like World.
-assert.deepEqual(pressed("Colour"), [
+// M19.2: the color picker's 'C', which is a title-menu key exactly like World.
+assert.deepEqual(pressed("Color"), [
   { down: true, code: "KeyC", key: "c" },
   { down: false, code: "KeyC", key: "c" },
 ]);
@@ -206,7 +206,7 @@ const DPAD = ["▲", "◄", "►", "▼"];
 
 // The client opens on the title screen, so the bar starts there rather than
 // showing every control for one frame.
-assert.deepEqual(visible(), [...DPAD, "⌨", "⏎", "Colour", "World", "Play"], "the bar starts in title mode");
+assert.deepEqual(visible(), [...DPAD, "⌨", "⏎", "Color", "World", "Play"], "the bar starts in title mode");
 
 controls.setMode("playing");
 assert.deepEqual(visible(), [...DPAD, "⌨", "⏎", "Pause", "Torch", "Fire"]);
@@ -223,7 +223,7 @@ controls.setMode("editor");
 assert.deepEqual(visible(), [...DPAD, "⌨", "⏎"]);
 
 controls.setMode("title");
-assert.deepEqual(visible(), [...DPAD, "⌨", "⏎", "Colour", "World", "Play"], "modes are reversible");
+assert.deepEqual(visible(), [...DPAD, "⌨", "⏎", "Color", "World", "Play"], "modes are reversible");
 
 // The direction pad is laid out as a cross by :nth-child (style.css), so it must
 // be present in EVERY mode — hiding one would silently re-letter the others.
