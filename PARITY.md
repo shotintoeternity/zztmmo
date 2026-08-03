@@ -438,7 +438,17 @@ Both: 8/8 gates PASS, `371 rows | verdict: CERTIFIED`, 357 `pass` /
 declared, no blockers, `git status` empty afterwards. The reports are
 byte-identical between the two runs (`report.json` sha256 `27e95781…`,
 `report.md` sha256 `e88d57be…`); the two run records differ only in wall clock
-(384s and 413s). **The manifest saying "certified" is not the same sentence as
-the product having full feature parity within this contract** — only M16.20's
-box, which the owner ticks after approving the deviation and out-of-scope lists,
-carries that claim.
+(384s and 413s).
+
+**Certified 2026-08-02.** The owner read both reports, approved the five
+`deviation` rows and the nine `out-of-scope` rows, and ticked M16.20. The
+product therefore has full feature parity **within this contract** — meaning
+this document's 371-row manifest, with those five approved deviations and nine
+out-of-scope rows, on the platforms §6a covers. It does not mean bug-for-bug
+identity with vanilla ZZT in the abstract, and it is a claim about the tree at
+`95982bd`: it survives only as long as `make certify` keeps passing, which is
+why CI runs it on every push. One half of the gate was **waived rather than
+met** — the advisor's independent review of the oracle chain, for want of the
+tool since M16.0; `TestM1620OracleInputsMatchTheirPinnedHashes` and
+`TestM1620EveryOracleCaptureHasAPinnedScenario` are what mechanically stands in
+its place.

@@ -8577,5 +8577,38 @@ four catalog ids (`omitted-game-speed`, `presentation-additions`,
 `account-sidecar-restore`, `score-on-quit`, `snapshot-player-drop`) and the nine
 `out-of-scope` classifications, read the two reports, and tick the box. The
 advisor half — the independent-oracle chain review — remains unrun for want of
-the tool. **Until the box is ticked, nothing in this repository may state that
-the product has full feature parity within the M16 contract.**
+the tool.
+
+### Owner decision, 2026-08-02: the box is ticked
+
+The owner read the two reports, approved the deviation list as presented (the
+five `deviation` rows over four catalog ids and the nine `out-of-scope`
+classifications), and ticked M16.20. **M16's certification gate is closed.**
+
+Three things this record should keep straight, because a ticked box is the kind
+of artifact people later read as broader than it was:
+
+1. **Scope.** The claim is parity *within the written M16 contract* — PARITY.md's
+   371-row manifest, its five approved deviations, its nine out-of-scope rows,
+   on the platforms §6a covers. Not bug-for-bug identity with vanilla ZZT in the
+   abstract.
+2. **Tense.** It is a claim about the tree at `95982bd`, kept true by CI running
+   `make certify` on every push — not a permanent property of the project.
+3. **The waived half.** The DoD asks for an advisor review of the
+   independent-oracle chain. That never happened: the advisor tool has been
+   unavailable since M16.0, and the owner waived it rather than met it. The
+   mechanical substitute is real but narrower —
+   `TestM1620OracleInputsMatchTheirPinnedHashes` re-hashes every pinned oracle
+   input and `TestM1620EveryOracleCaptureHasAPinnedScenario` closes the reverse
+   direction — so what is unreviewed is the *reasoning* behind the chain, not its
+   integrity.
+
+Ticking the box changed no row, by design: `deriveTaskRows`
+(`parity_manifest_test.go:543`) skips milestone 16 entirely, because M16 is the
+certification milestone and a certification task that certifies itself is the
+circularity this whole file exists to avoid. Checked before ticking rather than
+after.
+
+Remaining open work is the post-beta tail and carries no parity claim: M16.14f
+(the editor socket still has no reconnect), M14.4, and the optional M14.3 and
+M12.15d.

@@ -184,10 +184,14 @@ M12.23, M17.1–M17.7, M16.0–M16.8a — has fully landed.)
    loses its editor socket), and every client now has a bounded outbound queue
    drained by its own writer goroutine, so no broadcast — and no tick — waits on
    a browser. Act 11 is green 5 of 5 under the load that used to fail it.
-   **M16.20's executor work finished 2026-08-02**: two clean clones of `95982bd`
-   each certified with 8/8 gates green and rendered byte-identical reports. Its
-   box stays unchecked on purpose — it is owner-gated (deviation approval plus
-   the no-self-certification rule), and it is the last unchecked M16 task.
+   **M16.20 landed 2026-08-02**: two clean clones of `95982bd` each certified
+   with 8/8 gates green and rendered byte-identical reports, and the owner —
+   reading them, approving the five deviations and nine out-of-scope rows, and
+   waiving the advisor review the tool has made impossible since M16.0 — ticked
+   the box. **The certification milestone is closed.** Four unchecked tasks
+   remain in this file, none of them a parity claim: M16.14f (the editor socket
+   still has no reconnect — filed by M16.14e, post-beta), M14.4 (a world's
+   identity vs. its display name), and the optional/deferred M14.3 and M12.15d.
 
 **Optional / deferred (bottom):**
 - M14.3 — package split (skip unless the single package is actually hurting)
@@ -4119,7 +4123,7 @@ gap task has landed.
   the unchecked 20–30-player scaling follow-up below—check that folded box in
   the same commit so it cannot be executed twice.
 
-- [ ] **M16.20 [ADVISOR] — Clean-clone certification and claim reconciliation.**
+- [x] **M16.20 [ADVISOR] — Clean-clone certification and claim reconciliation.**
   Run the entire required parity gate from a clean clone twice, including race,
   real-browser, service, security, and bounded-load tracks. The manifest must
   contain zero `unverified`, `unknown`, open gaps, silent skips, mutable required
@@ -4133,9 +4137,10 @@ gap task has landed.
   and owner approves the final deviation list. Only this task may state that the
   current product has full feature parity within the written M16 contract.
 
-  **Executor work complete 2026-08-01; the box is OWNER-GATED** (the M17.3/M17.7
+  **Executor work complete 2026-08-01, certified 2026-08-02, ticked by the owner
+  2026-08-02** — the box was owner-gated throughout (the M17.3/M17.7
   no-self-certification rule, and this task's own DoD ends in an owner approval).
-  What landed, in one commit:
+  What landed 2026-08-01, in one commit:
   - **Manifest reconciled.** All 137 open rows resolved: 132 `task` rows and the
     five title-screen `input` rows M16.11 left behind. 123 task rows are `pass`
     with the named tests that certify their DoD; nine are `out-of-scope` with a
@@ -4190,10 +4195,23 @@ gap task has landed.
   the row named, and both were restored byte-identically. This run found no new
   defect — unlike the first, which is the difference the gate exists to make.
 
-  **Left for the owner:** approve the final deviation list (five `deviation`
-  rows over four catalog ids, plus the nine `out-of-scope` classifications), read
-  the two clean-clone reports, and tick this box. The advisor half of the gate is
-  still unrun — the advisor tool has been unavailable since M16.0.
+  **Owner approval, 2026-08-02.** The owner read the two clean-clone reports and
+  approved the final deviation list — the five `deviation` rows over four catalog
+  ids (`omitted-game-speed`, `presentation-additions`, `account-sidecar-restore`,
+  `score-on-quit`, `snapshot-player-drop`) and the nine `out-of-scope`
+  classifications (M13.1, M17.8, M18.0, M18.2, M18.3, M18.5, M18.6, M18.7,
+  M18.10) — and ticked this box. **The advisor half of the gate was waived, not
+  met**: the advisor tool has been unavailable since M16.0, so the
+  independent-oracle chain review named in this DoD was never performed by a
+  second party. What stands in its place is mechanical — `TestM1620Oracle-
+  InputsMatchTheirPinnedHashes` re-hashes every pinned oracle input and
+  `TestM1620EveryOracleCaptureHasAPinnedScenario` closes the other direction —
+  and the record says so rather than reading the waiver as a pass.
+
+  With this box ticked, the repository may state that the product has full
+  feature parity **within the written M16 contract** (PARITY.md) — that contract,
+  not vanilla ZZT in the abstract, and as measured by the 371-row manifest with
+  its five approved deviations and nine out-of-scope rows.
 
 - [x] **M16.20a — Make `PARITY_SCAFFOLD=1` regeneration non-destructive.**
   Found during M18.1 (NOTES.md 2026-07-30). Regenerating
