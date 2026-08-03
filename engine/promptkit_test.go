@@ -88,8 +88,11 @@ func TestBlueprintPromptIsSemanticAndBounded(t *testing.T) {
 			t.Errorf("blueprint system prompt still teaches renderer-owned syntax %q", unwanted)
 		}
 	}
-	if len(system) > 18_000 {
-		t.Fatalf("blueprint system prompt is %d bytes; expected <=18000", len(system))
+	// The ceiling rose from 18000 with M12.15d: the corpus-mined style priors
+	// add ~4KB of measured palette/architecture/OOP numbers to this cached
+	// block. It stays a ceiling — the per-request material is still separate.
+	if len(system) > 20_000 {
+		t.Fatalf("blueprint system prompt is %d bytes; expected <=20000", len(system))
 	}
 	retrieval := kit.BlueprintRetrievalContext("icy relay", "a dark machine room", false)
 	if !strings.Contains(retrieval, "# Retrieved corpus examples") || !strings.Contains(retrieval, "Technique:") {
@@ -166,6 +169,61 @@ func TestPromptKitAssetsMatchSource(t *testing.T) {
 		t.Fatalf("read embedded retrieval metadata: %v", err)
 	}
 	assertMatchesFile(t, "fewshot_metadata.json", string(metadata), filepath.Join("..", "llmworld", "fewshot_metadata.json"))
+	priors, err := promptKitFS.ReadFile("promptkit_assets/style_priors.json")
+	if err != nil {
+		t.Fatalf("read embedded style priors: %v", err)
+	}
+	assertMatchesFile(t, "style_priors.json", string(priors), filepath.Join("..", "llmworld", "style_priors.json"))
+}
+
+// TestPromptKitCarriesStylePriors is the M12.15d exposure gate: the mined
+// artifact loads with the kit and reaches every generation prompt that has a
+// use for it — board painting, the legacy ZWD path, and the planner — while
+// staying out of the per-request block that would move the cache key.
+func TestPromptKitCarriesStylePriors(t *testing.T) {
+	kit, err := LoadPromptKit()
+	if err != nil {
+		t.Fatal(err)
+	}
+	priors := kit.Priors
+	if priors.Version != stylePriorsVersion || priors.Corpus.Boards == 0 {
+		t.Fatalf("kit loaded no style priors: %+v", priors.Corpus)
+	}
+	// The embedded artifact must be the one mining the corpus produces, so the
+	// prompt can never quote a number the corpus no longer supports.
+	mined, err := MineStylePriorsFromCorpus(corpusExamplesDir, corpusTopologyPth)
+	if err != nil {
+		t.Fatal(err)
+	}
+	if priors.PromptBlock() != mined.PromptBlock() {
+		t.Fatal("embedded style priors differ from mining the corpus; re-run ZZT_MINE_PRIORS=1")
+	}
+
+	block := priors.PromptBlock()
+	for name, prompt := range map[string]string{
+		"blueprint system prompt": kit.BlueprintSystemPrompt(),
+		"legacy system prompt":    kit.SystemPrompt(),
+	} {
+		if !strings.Contains(prompt, block) {
+			t.Errorf("%s does not carry the mined style priors", name)
+		}
+	}
+	planner := kit.PlannerSystemPrompt()
+	if !strings.Contains(planner, priors.ArchitectureBlock()) {
+		t.Error("planner system prompt does not carry the mined architecture priors")
+	}
+	if !strings.Contains(planner, "compact, mechanically checkable ZZT world plans") {
+		t.Error("planner system prompt lost its own instructions")
+	}
+	if strings.Contains(planner, "## ZZT-OOP idioms") {
+		t.Error("planner prompt should carry topology norms only, not the whole priors block")
+	}
+	// Per-request material must stay free of the priors: they are cached system
+	// context, and duplicating them per board would re-bill them every call.
+	retrieval := kit.BlueprintRetrievalContext("a drowned lighthouse", "the lamp room", false)
+	if strings.Contains(retrieval, "Corpus-mined") {
+		t.Error("retrieval context leaked the cached style priors into a per-request block")
+	}
 }
 
 func TestPromptKitRetrieval(t *testing.T) {

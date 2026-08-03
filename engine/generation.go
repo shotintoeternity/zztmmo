@@ -902,9 +902,9 @@ func (g *GenerationService) makePlan(ctx context.Context, premise string, ground
 		var text string
 		var err error
 		if ground {
-			text, err = g.callGrounded(ctx, plannerSystemPrompt, request)
+			text, err = g.callGrounded(ctx, g.promptKit.PlannerSystemPrompt(), request)
 		} else {
-			text, err = g.call(ctx, plannerSystemPrompt, request)
+			text, err = g.call(ctx, g.promptKit.PlannerSystemPrompt(), request)
 		}
 		if err != nil {
 			return "", Plan{}, err

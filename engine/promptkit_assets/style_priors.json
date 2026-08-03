@@ -1,0 +1,518 @@
+{
+  "version": 1,
+  "corpus": {
+    "boards": 134,
+    "worlds": 95,
+    "topologyWorlds": 117,
+    "cells": 201000,
+    "legendEntries": 7026,
+    "stats": 9684,
+    "oopPrograms": 3015,
+    "oopLines": 37813
+  },
+  "palette": {
+    "fillPerMille": 663,
+    "tiles": [
+      {
+        "element": "Solid",
+        "perMille": 236,
+        "boardPerMille": 753,
+        "colors": [
+          {
+            "color": "0x08",
+            "perMille": 147
+          },
+          {
+            "color": "0x0F",
+            "perMille": 111
+          }
+        ]
+      },
+      {
+        "element": "Fake",
+        "perMille": 222,
+        "boardPerMille": 485,
+        "colors": [
+          {
+            "color": "0x20",
+            "perMille": 93
+          },
+          {
+            "color": "0x02",
+            "perMille": 77
+          }
+        ]
+      },
+      {
+        "element": "Normal",
+        "perMille": 170,
+        "boardPerMille": 679,
+        "colors": [
+          {
+            "color": "0x0C",
+            "perMille": 136
+          },
+          {
+            "color": "0x08",
+            "perMille": 133
+          }
+        ]
+      },
+      {
+        "element": "Breakable",
+        "perMille": 89,
+        "boardPerMille": 500,
+        "colors": [
+          {
+            "color": "0x03",
+            "perMille": 195
+          },
+          {
+            "color": "0x0C",
+            "perMille": 166
+          }
+        ]
+      },
+      {
+        "element": "Water",
+        "perMille": 68,
+        "boardPerMille": 432,
+        "colors": [
+          {
+            "color": "0x19",
+            "perMille": 106
+          },
+          {
+            "color": "0x78",
+            "perMille": 99
+          }
+        ]
+      },
+      {
+        "element": "Object",
+        "perMille": 63,
+        "boardPerMille": 820,
+        "colors": [
+          {
+            "color": "0x0F",
+            "perMille": 117
+          },
+          {
+            "color": "0x07",
+            "perMille": 61
+          }
+        ]
+      },
+      {
+        "element": "Line",
+        "perMille": 46,
+        "boardPerMille": 335,
+        "colors": [
+          {
+            "color": "0x09",
+            "perMille": 272
+          },
+          {
+            "color": "0x0F",
+            "perMille": 169
+          }
+        ]
+      },
+      {
+        "element": "Gem",
+        "perMille": 20,
+        "boardPerMille": 149,
+        "colors": [
+          {
+            "color": "0x0F",
+            "perMille": 635
+          },
+          {
+            "color": "0x09",
+            "perMille": 166
+          }
+        ]
+      },
+      {
+        "element": "Boulder",
+        "perMille": 19,
+        "boardPerMille": 179,
+        "colors": [
+          {
+            "color": "0x08",
+            "perMille": 513
+          },
+          {
+            "color": "0x09",
+            "perMille": 212
+          }
+        ]
+      },
+      {
+        "element": "Forest",
+        "perMille": 16,
+        "boardPerMille": 37,
+        "colors": [
+          {
+            "color": "0x20",
+            "perMille": 998
+          },
+          {
+            "color": "0x80",
+            "perMille": 1
+          }
+        ]
+      },
+      {
+        "element": "Invisible",
+        "perMille": 10,
+        "boardPerMille": 67,
+        "colors": [
+          {
+            "color": "0x09",
+            "perMille": 264
+          },
+          {
+            "color": "0x0E",
+            "perMille": 235
+          }
+        ]
+      },
+      {
+        "element": "Passage",
+        "perMille": 7,
+        "boardPerMille": 507,
+        "colors": [
+          {
+            "color": "0x1F",
+            "perMille": 196
+          },
+          {
+            "color": "0x7F",
+            "perMille": 33
+          }
+        ]
+      }
+    ],
+    "colors": [
+      {
+        "color": "0x08",
+        "perMille": 100
+      },
+      {
+        "color": "0x0F",
+        "perMille": 71
+      },
+      {
+        "color": "0x09",
+        "perMille": 63
+      },
+      {
+        "color": "0x0C",
+        "perMille": 58
+      },
+      {
+        "color": "0x07",
+        "perMille": 45
+      },
+      {
+        "color": "0x20",
+        "perMille": 38
+      },
+      {
+        "color": "0x0E",
+        "perMille": 38
+      },
+      {
+        "color": "0x0A",
+        "perMille": 36
+      },
+      {
+        "color": "0x0D",
+        "perMille": 32
+      },
+      {
+        "color": "0x78",
+        "perMille": 31
+      }
+    ],
+    "shadingPairs": [
+      {
+        "a": "Fake 0x02",
+        "b": "Fake 0x22",
+        "count": 891
+      },
+      {
+        "a": "Breakable 0x0C",
+        "b": "Normal 0x0C",
+        "count": 811
+      },
+      {
+        "a": "Breakable 0x78",
+        "b": "Water 0x78",
+        "count": 699
+      },
+      {
+        "a": "Solid 0x07",
+        "b": "Water 0x78",
+        "count": 582
+      },
+      {
+        "a": "Normal 0x78",
+        "b": "Solid 0x78",
+        "count": 540
+      },
+      {
+        "a": "Fake 0x10",
+        "b": "Fake 0x70",
+        "count": 507
+      },
+      {
+        "a": "Breakable 0x78",
+        "b": "Normal 0x78",
+        "count": 440
+      },
+      {
+        "a": "Line 0x0E",
+        "b": "Solid 0x68",
+        "count": 440
+      },
+      {
+        "a": "Breakable 0x27",
+        "b": "Normal 0x27",
+        "count": 422
+      },
+      {
+        "a": "Fake 0x02",
+        "b": "Fake 0x20",
+        "count": 390
+      }
+    ],
+    "lettering": [
+      {
+        "element": "Text-Blue",
+        "cells": 8834,
+        "boards": 46,
+        "blankPerMille": 692
+      },
+      {
+        "element": "Text-White",
+        "cells": 7112,
+        "boards": 47,
+        "blankPerMille": 507
+      },
+      {
+        "element": "Text-Cyan",
+        "cells": 3072,
+        "boards": 24,
+        "blankPerMille": 847
+      },
+      {
+        "element": "Text-Red",
+        "cells": 2938,
+        "boards": 32,
+        "blankPerMille": 823
+      }
+    ],
+    "letteringBoards": 97
+  },
+  "architecture": {
+    "boardsP25": 14,
+    "boardsMedian": 30,
+    "boardsP75": 47,
+    "boardsMax": 101,
+    "degreePerMille": [
+      623,
+      168,
+      131,
+      45,
+      30
+    ],
+    "reciprocityPerMille": 773,
+    "darkBoardPerMille": 52,
+    "reachablePerMille": 811,
+    "hubWorldPerMille": 418,
+    "passagesPerWorldMedian": 34,
+    "objectsPerBoardPerTen": 231,
+    "statsPerBoardPerTen": 308
+  },
+  "oop": {
+    "linesPerProgramPerTen": 125,
+    "commands": [
+      {
+        "command": "#end",
+        "count": 2954,
+        "programPerMille": 433
+      },
+      {
+        "command": "#char",
+        "count": 2143,
+        "programPerMille": 247
+      },
+      {
+        "command": "#if",
+        "count": 1918,
+        "programPerMille": 150
+      },
+      {
+        "command": "#zap",
+        "count": 908,
+        "programPerMille": 88
+      },
+      {
+        "command": "#play",
+        "count": 841,
+        "programPerMille": 76
+      },
+      {
+        "command": "#bind",
+        "count": 714,
+        "programPerMille": 236
+      },
+      {
+        "command": "#take",
+        "count": 591,
+        "programPerMille": 41
+      },
+      {
+        "command": "#give",
+        "count": 485,
+        "programPerMille": 48
+      },
+      {
+        "command": "#clear",
+        "count": 447,
+        "programPerMille": 24
+      },
+      {
+        "command": "#cycle",
+        "count": 403,
+        "programPerMille": 117
+      },
+      {
+        "command": "#die",
+        "count": 365,
+        "programPerMille": 119
+      },
+      {
+        "command": "#endgame",
+        "count": 365,
+        "programPerMille": 75
+      }
+    ],
+    "sequences": [
+      {
+        "first": "#end",
+        "then": "#char",
+        "count": 744
+      },
+      {
+        "first": "#char",
+        "then": "#end",
+        "count": 561
+      },
+      {
+        "first": "#take",
+        "then": "#give",
+        "count": 195
+      },
+      {
+        "first": "#give",
+        "then": "#take",
+        "count": 181
+      },
+      {
+        "first": "#end",
+        "then": "#if",
+        "count": 179
+      },
+      {
+        "first": "#end",
+        "then": "#lock",
+        "count": 175
+      },
+      {
+        "first": "#take",
+        "then": "#endgame",
+        "count": 155
+      },
+      {
+        "first": "#end",
+        "then": "#take",
+        "count": 149
+      }
+    ],
+    "labels": [
+      {
+        "label": ":touch",
+        "count": 718
+      },
+      {
+        "label": ":hp",
+        "count": 482
+      },
+      {
+        "label": ":a",
+        "count": 266
+      },
+      {
+        "label": ":c",
+        "count": 261
+      },
+      {
+        "label": ":b",
+        "count": 233
+      },
+      {
+        "label": ":z",
+        "count": 184
+      },
+      {
+        "label": ":x",
+        "count": 171
+      },
+      {
+        "label": ":shot",
+        "count": 166
+      }
+    ],
+    "rituals": [
+      {
+        "name": ":touch handler",
+        "perMille": 203
+      },
+      {
+        "name": "#play as the first act of a handler",
+        "perMille": 47
+      },
+      {
+        "name": "#give then #die pickup",
+        "perMille": 14
+      },
+      {
+        "name": "#zap progressive dialogue",
+        "perMille": 88
+      },
+      {
+        "name": "#if gate",
+        "perMille": 150
+      },
+      {
+        "name": "!label; choice menu",
+        "perMille": 22
+      },
+      {
+        "name": "#send to another object",
+        "perMille": 58
+      },
+      {
+        "name": "#label as a goto",
+        "perMille": 148
+      },
+      {
+        "name": "spoken flavor text",
+        "perMille": 482
+      }
+    ]
+  }
+}

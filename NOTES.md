@@ -8895,3 +8895,98 @@ Re-open this if any of these becomes true, and record the numbers again:
 Until one of those, one package is the honest shape. `go build ./...`,
 `go vet ./...` and `go test ./...` were green before and after this entry —
 no code was touched.
+
+## 2026-08-03 — M12.15d: the priors are measured, not asserted
+
+The owner asked for the deferred M12.15d slice (deferred 2026-07-12 as
+"optional; revisit if generation quality plateaus" — this is the revisit). It
+is the last piece of the M12.15 world-style adapter: the offline equivalent of
+LoRA weights, computed from real worlds instead of trained.
+
+**Advisor.** `[ADVISOR]`-tagged, and the advisor tool remains unavailable in
+this environment (unchanged since M16.0 and before). Recorded here per the
+standing fallback rather than blocking; the owner's direct request to work the
+task is the sign-off.
+
+### What landed
+
+Two committed artifacts and one miner, in the repo's existing two-stage shape
+(a `canary` generator that needs untracked worlds; a required-path consumer
+that needs only tracked files):
+
+- `llmworld/topology.json` (36 KB, 117 worlds) — whole-world architecture
+  reduced to counts: boards, dark boards, stats, objects, passages, edge links,
+  reciprocal edge links, boards reachable from the world's own start board, and
+  the 0–4 edge-exit degree histogram. Written by `TestGenWorldTopology`
+  (`engine/gen_world_topology_test.go`, `canary`) from the 119 untracked `.ZZT`
+  worlds in `engine/`; STREK1 and WEIRD01 fail `WorldLoad` and are skipped, the
+  same two the M12.3 corpus dropped.
+- `llmworld/style_priors.json` (9.4 KB) + an embedded copy under
+  `engine/promptkit_assets/` — the mined artifact itself, versioned
+  (`stylePriorsVersion = 1`). Mined by `engine/stylepriors.go` from the 134
+  committed boards in `llmworld/examples/` plus the topology file above.
+  Regenerate with `ZZT_MINE_PRIORS=1 go test -run
+  TestStylePriorsRegenerateFromCorpus`.
+
+Three artifact families, as the task named them:
+
+1. **Palette/tile** — per-element share of painted cells, the colors each
+   element actually wears, the overall color ranking, and the top adjacent
+   pairings of two *different* tiles (the corpus's shading mechanism: `Fake
+   0x02 + Fake 0x22`, `Breakable 0x78 + Water 0x78`, `Solid 0x07 + Water
+   0x78`). Boards paint 66.3% of their cells.
+2. **World architecture** — worlds hold 14–47 boards (median 30, largest 101);
+   62.3% of boards wire no edge exit at all and only 3.0% wire all four; 77.3%
+   of edge exits are reciprocal; 81.1% of playable boards are reachable from
+   the start board; 5.2% of boards are dark.
+3. **ZZT-OOP idioms** — command frequencies, consecutive-command pairs, the
+   labels authors define, and eight named rituals measured as a share of the
+   3,015 corpus programs (`:touch` handler 20.3%, `#if` gate 15.0%, `#zap`
+   progressive dialogue 8.8%, spoken flavor text 48.2%).
+
+### Two judgement calls worth recording
+
+**Text elements are not terrain.** A Text element's color byte is the CP437
+glyph it draws, not a palette color, so ranking `Text-Blue 0x20` beside `Solid
+0x08` would teach the model that `0x20` is a color. Text is excluded from the
+tile/color rankings and measured on its own terms instead — including
+`blankPerMille`, the share of a Text element's cells that are a blank `0x20`
+block rather than a glyph. It is high (Text-Cyan 84.7%), which is its own
+finding: the corpus uses Text as flat color paint at least as often as
+lettering.
+
+**`#b` is not a command.** ZZT-OOP dispatches a fixed vocabulary and sends
+everything else as a message, so an unfiltered n-gram ranked `#b`, `#z` and
+`#c` among the commands — exactly the tokens a model must not emit as commands.
+The miner now splits the two using the vocabulary `OopExecute` actually
+dispatches on (`oop.go`), and reports the message-send form as its own ritual
+(`#label as a goto`, 14.8% of programs). Self-pairs (`#play` then `#play`) are
+dropped from the n-grams for the same reason: they were the top four pairs and
+taught nothing.
+
+### Exposure
+
+The rendered block (3.8 KB) goes into the **cached** system prompts, never the
+per-request block — `BlueprintSystemPrompt` (the live painter),
+`SystemPrompt` (the legacy ZWD path), and a new `PlannerSystemPrompt`, which
+gets the architecture section only, since board count/hubs/reciprocal wiring
+is what the plan step decides. A test asserts the retrieval context does not
+contain it, so the prompt-cache key cannot move.
+
+`TestBlueprintPromptIsSemanticAndBounded`'s ceiling on the cached blueprint
+prompt was raised 18000 → 20000 bytes; measured, it went 13,170 → 17,048.
+
+### The tests that keep it honest
+
+`engine/stylepriors_test.go`: mining the committed corpus reproduces the
+committed artifact byte-for-byte; mining is order-independent and reproducible
+within a run (map iteration cannot leak in); every element, color, command and
+label the artifact names is found in the corpus text, and every named ritual
+measures above zero; all 134 corpus boards parse to a 60×25 grid whose every
+key has a legend entry; malformed legend shapes are rejected rather than
+skipped. `promptkit_test.go` adds the source/embedded drift check and the
+exposure gate.
+
+No simulation code was touched; `go build ./...`, `go vet ./...` (with and
+without `-tags canary`) and `go test ./...` are green, replay fixtures
+unchanged.

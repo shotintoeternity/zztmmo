@@ -201,13 +201,13 @@ M12.23, M17.1–M17.7, M16.0–M16.8a — has fully landed.)
    resolver ever will. M16.17d's 20-bit `GEN%05X` survives only as a seed.
    **M14.3 was closed as SKIPPED 2026-08-03** on the owner's decision and on
    its own DoD-if-skipped path — measured, not asserted, and NOTES.md records
-   the three conditions that re-open it. **One unchecked task remains in this
-   file: M12.15d** (mined style priors), owner-deferred and not a parity
-   claim. The beta invite is the open owner action.
+   the three conditions that re-open it. **M12.15d landed 2026-08-03** on the
+   owner's request, which closes the last unchecked task in this file. The beta
+   invite is the open owner action.
 
 **Optional / deferred (bottom):**
 - M14.3 — package split — **closed as skipped 2026-08-03**, see NOTES.md
-- M12.15d — mined style priors (owner-deferred; revisit only if generation quality plateaus)
+- M12.15d — mined style priors — **landed 2026-08-03**, see NOTES.md
 
 ---
 
@@ -1275,9 +1275,9 @@ the corpus/style work builds on. The specs below are unchanged.)
   curated worlds into corpus-derived priors + retrieval few-shots (a LoRA we
   can't train, done as offline RAG).** (Landed via slices a/b/c: curation-first
   title-screen few-shots, static visual caption sidecars, and deterministic
-  few-shot metadata + retrieval. Slice **d** — mined style priors — DEFERRED
-  2026-07-12 by owner call as optional; retrieval few-shots already cover the
-  prompt. See M12.15d below.) Owner framing (2026-07-11): we cannot
+  few-shot metadata + retrieval. Slice **d** — mined style priors — was deferred
+  2026-07-12 by owner call as optional and landed 2026-08-03 when the owner
+  asked for it. See M12.15d below.) Owner framing (2026-07-11): we cannot
   fine-tune a closed API model, so the offline, no-LLM equivalent of a LoRA is
   *corpus-mined priors + retrieval-augmented few-shots* — everything a LoRA would
   bake into weights, we instead compute deterministically from real worlds and
@@ -1428,18 +1428,30 @@ the corpus/style work builds on. The specs below are unchanged.)
   relevance for lettering/art/gameplay premises, budget enforcement, and the
   no-LLM runtime boundary.
 
-- [ ] **M12.15d [ADVISOR] — Mined style priors (the offline adapter weights)
-  (DEFERRED 2026-07-12 — later; optional/recommended, skip unless the owner
-  asks for it). Owner call: unclear this is needed yet; retrieval few-shots
-  (M12.15c) already cover the generation prompt, and mined priors would only
-  regenerate STYLE.md's quantitative claims from data. Revisit if generation
-  quality plateaus.**
+- [x] **M12.15d [ADVISOR] — Mined style priors (the offline adapter weights)
+  (deferred 2026-07-12 as optional — "skip unless the owner asks for it";
+  the owner asked on 2026-08-03, and it landed the same day).**
   Mine deterministic compact artifacts from the authorable whole-world corpus:
   palette/tile frequencies and shading pairings, world-architecture/topology
   norms, and OOP command idioms. Version and embed the artifacts, expose them
   to the generation prompt as stable context, and test that each artifact is
   non-empty, data-grounded, deterministic, and regenerated from the corpus.
   No sim changes, no runtime LLM calls, replay fixture unchanged.
+  **Landed 2026-08-03** as two committed artifacts in the repo's existing
+  two-stage shape: `llmworld/topology.json` (117 whole worlds reduced to
+  architecture counts, written by the `canary` `TestGenWorldTopology` from the
+  untracked `.ZZT` worlds) and `llmworld/style_priors.json` + its embedded copy
+  (mined by `engine/stylepriors.go` from the 134 committed corpus boards plus
+  that topology file; re-mine with `ZZT_MINE_PRIORS=1 go test -run
+  TestStylePriorsRegenerateFromCorpus`). The 3.8 KB rendered block sits in the
+  cached system prompts only — `BlueprintSystemPrompt`, `SystemPrompt`, and a
+  new `PlannerSystemPrompt` that gets the architecture section alone — with a
+  test asserting the per-request retrieval block never carries it. Two mining
+  decisions are recorded in NOTES.md 2026-08-03: Text elements are measured
+  separately from terrain (their color byte is a glyph, not a color) and
+  `#label` message-sends are separated from the dispatched command vocabulary,
+  so the prompt cannot teach `#b` as a command. The advisor tool was
+  unavailable again; the owner's request to work the task is the sign-off.
 
 - [x] **M12.17 [ADVISOR] — Generation prompting-quality evaluation harness.**
   The generation prompts have grown — planner (`plannerSystemPrompt`), board

@@ -1,0 +1,2111 @@
+{
+  "version": 1,
+  "worlds": [
+    {
+      "name": "-",
+      "boards": 2,
+      "darkBoards": 0,
+      "stats": 27,
+      "objects": 27,
+      "passages": 0,
+      "edgeLinks": 0,
+      "reciprocalEdgeLinks": 0,
+      "reachableBoards": 1,
+      "degrees": [
+        2,
+        0,
+        0,
+        0,
+        0
+      ]
+    },
+    {
+      "name": "--",
+      "boards": 2,
+      "darkBoards": 0,
+      "stats": 42,
+      "objects": 42,
+      "passages": 0,
+      "edgeLinks": 0,
+      "reciprocalEdgeLinks": 0,
+      "reachableBoards": 1,
+      "degrees": [
+        2,
+        0,
+        0,
+        0,
+        0
+      ]
+    },
+    {
+      "name": "---",
+      "boards": 3,
+      "darkBoards": 0,
+      "stats": 55,
+      "objects": 55,
+      "passages": 0,
+      "edgeLinks": 2,
+      "reciprocalEdgeLinks": 0,
+      "reachableBoards": 2,
+      "degrees": [
+        2,
+        0,
+        1,
+        0,
+        0
+      ]
+    },
+    {
+      "name": "----",
+      "boards": 3,
+      "darkBoards": 0,
+      "stats": 200,
+      "objects": 198,
+      "passages": 0,
+      "edgeLinks": 0,
+      "reciprocalEdgeLinks": 0,
+      "reachableBoards": 1,
+      "degrees": [
+        3,
+        0,
+        0,
+        0,
+        0
+      ]
+    },
+    {
+      "name": "1ENCY3C",
+      "boards": 101,
+      "darkBoards": 0,
+      "stats": 1608,
+      "objects": 1161,
+      "passages": 140,
+      "edgeLinks": 3,
+      "reciprocalEdgeLinks": 2,
+      "reachableBoards": 72,
+      "degrees": [
+        98,
+        3,
+        0,
+        0,
+        0
+      ]
+    },
+    {
+      "name": "2ENCY3C",
+      "boards": 101,
+      "darkBoards": 4,
+      "stats": 1622,
+      "objects": 670,
+      "passages": 360,
+      "edgeLinks": 17,
+      "reciprocalEdgeLinks": 8,
+      "reachableBoards": 88,
+      "degrees": [
+        84,
+        17,
+        0,
+        0,
+        0
+      ]
+    },
+    {
+      "name": "AAG2",
+      "boards": 44,
+      "darkBoards": 0,
+      "stats": 566,
+      "objects": 412,
+      "passages": 48,
+      "edgeLinks": 25,
+      "reciprocalEdgeLinks": 24,
+      "reachableBoards": 40,
+      "degrees": [
+        27,
+        12,
+        3,
+        1,
+        1
+      ]
+    },
+    {
+      "name": "ACCEPT",
+      "boards": 3,
+      "darkBoards": 1,
+      "stats": 4,
+      "objects": 2,
+      "passages": 1,
+      "edgeLinks": 0,
+      "reciprocalEdgeLinks": 0,
+      "reachableBoards": 2,
+      "degrees": [
+        3,
+        0,
+        0,
+        0,
+        0
+      ]
+    },
+    {
+      "name": "ADVLINK2",
+      "boards": 60,
+      "darkBoards": 3,
+      "stats": 1449,
+      "objects": 1213,
+      "passages": 45,
+      "edgeLinks": 86,
+      "reciprocalEdgeLinks": 64,
+      "reachableBoards": 59,
+      "degrees": [
+        12,
+        22,
+        17,
+        6,
+        3
+      ]
+    },
+    {
+      "name": "ALLIEBRD",
+      "boards": 2,
+      "darkBoards": 1,
+      "stats": 17,
+      "objects": 16,
+      "passages": 1,
+      "edgeLinks": 0,
+      "reciprocalEdgeLinks": 0,
+      "reachableBoards": 1,
+      "degrees": [
+        2,
+        0,
+        0,
+        0,
+        0
+      ]
+    },
+    {
+      "name": "ANDYSPEC",
+      "boards": 29,
+      "darkBoards": 0,
+      "stats": 637,
+      "objects": 501,
+      "passages": 25,
+      "edgeLinks": 30,
+      "reciprocalEdgeLinks": 28,
+      "reachableBoards": 28,
+      "degrees": [
+        9,
+        11,
+        8,
+        1,
+        0
+      ]
+    },
+    {
+      "name": "APPARITI",
+      "boards": 14,
+      "darkBoards": 0,
+      "stats": 376,
+      "objects": 298,
+      "passages": 44,
+      "edgeLinks": 0,
+      "reciprocalEdgeLinks": 0,
+      "reachableBoards": 9,
+      "degrees": [
+        14,
+        0,
+        0,
+        0,
+        0
+      ]
+    },
+    {
+      "name": "ARCHIVE",
+      "boards": 1,
+      "darkBoards": 0,
+      "stats": 3,
+      "objects": 2,
+      "passages": 0,
+      "edgeLinks": 0,
+      "reciprocalEdgeLinks": 0,
+      "reachableBoards": 0,
+      "degrees": [
+        1,
+        0,
+        0,
+        0,
+        0
+      ]
+    },
+    {
+      "name": "ATOMIC",
+      "boards": 68,
+      "darkBoards": 4,
+      "stats": 2446,
+      "objects": 2219,
+      "passages": 146,
+      "edgeLinks": 36,
+      "reciprocalEdgeLinks": 12,
+      "reachableBoards": 65,
+      "degrees": [
+        50,
+        12,
+        0,
+        0,
+        6
+      ]
+    },
+    {
+      "name": "AUSTNET",
+      "boards": 23,
+      "darkBoards": 0,
+      "stats": 724,
+      "objects": 529,
+      "passages": 126,
+      "edgeLinks": 8,
+      "reciprocalEdgeLinks": 8,
+      "reachableBoards": 14,
+      "degrees": [
+        19,
+        0,
+        4,
+        0,
+        0
+      ]
+    },
+    {
+      "name": "BADAPPLE",
+      "boards": 49,
+      "darkBoards": 0,
+      "stats": 3986,
+      "objects": 3939,
+      "passages": 0,
+      "edgeLinks": 94,
+      "reciprocalEdgeLinks": 0,
+      "reachableBoards": 48,
+      "degrees": [
+        2,
+        0,
+        47,
+        0,
+        0
+      ]
+    },
+    {
+      "name": "BAKERY",
+      "boards": 6,
+      "darkBoards": 0,
+      "stats": 30,
+      "objects": 25,
+      "passages": 5,
+      "edgeLinks": 6,
+      "reciprocalEdgeLinks": 6,
+      "reachableBoards": 5,
+      "degrees": [
+        2,
+        3,
+        0,
+        1,
+        0
+      ]
+    },
+    {
+      "name": "BEACH",
+      "boards": 1,
+      "darkBoards": 0,
+      "stats": 60,
+      "objects": 59,
+      "passages": 1,
+      "edgeLinks": 0,
+      "reciprocalEdgeLinks": 0,
+      "reachableBoards": 0,
+      "degrees": [
+        1,
+        0,
+        0,
+        0,
+        0
+      ]
+    },
+    {
+      "name": "BOKOJAM",
+      "boards": 1,
+      "darkBoards": 0,
+      "stats": 52,
+      "objects": 33,
+      "passages": 1,
+      "edgeLinks": 0,
+      "reciprocalEdgeLinks": 0,
+      "reachableBoards": 0,
+      "degrees": [
+        1,
+        0,
+        0,
+        0,
+        0
+      ]
+    },
+    {
+      "name": "BURGERJ",
+      "boards": 24,
+      "darkBoards": 0,
+      "stats": 1305,
+      "objects": 1070,
+      "passages": 132,
+      "edgeLinks": 0,
+      "reciprocalEdgeLinks": 0,
+      "reachableBoards": 10,
+      "degrees": [
+        24,
+        0,
+        0,
+        0,
+        0
+      ]
+    },
+    {
+      "name": "BURGLAR1",
+      "boards": 30,
+      "darkBoards": 1,
+      "stats": 959,
+      "objects": 877,
+      "passages": 78,
+      "edgeLinks": 4,
+      "reciprocalEdgeLinks": 4,
+      "reachableBoards": 20,
+      "degrees": [
+        26,
+        4,
+        0,
+        0,
+        0
+      ]
+    },
+    {
+      "name": "BURGLAR2",
+      "boards": 30,
+      "darkBoards": 0,
+      "stats": 1143,
+      "objects": 1028,
+      "passages": 107,
+      "edgeLinks": 4,
+      "reciprocalEdgeLinks": 2,
+      "reachableBoards": 21,
+      "degrees": [
+        26,
+        4,
+        0,
+        0,
+        0
+      ]
+    },
+    {
+      "name": "CAT_TRAP",
+      "boards": 2,
+      "darkBoards": 0,
+      "stats": 132,
+      "objects": 113,
+      "passages": 1,
+      "edgeLinks": 0,
+      "reciprocalEdgeLinks": 0,
+      "reachableBoards": 1,
+      "degrees": [
+        2,
+        0,
+        0,
+        0,
+        0
+      ]
+    },
+    {
+      "name": "CAVES",
+      "boards": 42,
+      "darkBoards": 11,
+      "stats": 930,
+      "objects": 68,
+      "passages": 5,
+      "edgeLinks": 79,
+      "reciprocalEdgeLinks": 78,
+      "reachableBoards": 39,
+      "degrees": [
+        4,
+        9,
+        22,
+        2,
+        5
+      ]
+    },
+    {
+      "name": "CDSZZT20",
+      "boards": 29,
+      "darkBoards": 18,
+      "stats": 1486,
+      "objects": 1361,
+      "passages": 54,
+      "edgeLinks": 5,
+      "reciprocalEdgeLinks": 2,
+      "reachableBoards": 25,
+      "degrees": [
+        24,
+        5,
+        0,
+        0,
+        0
+      ]
+    },
+    {
+      "name": "CITY",
+      "boards": 30,
+      "darkBoards": 1,
+      "stats": 664,
+      "objects": 109,
+      "passages": 14,
+      "edgeLinks": 50,
+      "reciprocalEdgeLinks": 50,
+      "reachableBoards": 29,
+      "degrees": [
+        5,
+        7,
+        12,
+        5,
+        1
+      ]
+    },
+    {
+      "name": "CLOCKTOM",
+      "boards": 9,
+      "darkBoards": 1,
+      "stats": 60,
+      "objects": 45,
+      "passages": 4,
+      "edgeLinks": 14,
+      "reciprocalEdgeLinks": 14,
+      "reachableBoards": 8,
+      "degrees": [
+        2,
+        2,
+        3,
+        2,
+        0
+      ]
+    },
+    {
+      "name": "COLOR",
+      "boards": 23,
+      "darkBoards": 0,
+      "stats": 724,
+      "objects": 483,
+      "passages": 167,
+      "edgeLinks": 0,
+      "reciprocalEdgeLinks": 0,
+      "reachableBoards": 18,
+      "degrees": [
+        23,
+        0,
+        0,
+        0,
+        0
+      ]
+    },
+    {
+      "name": "COTS2",
+      "boards": 14,
+      "darkBoards": 1,
+      "stats": 274,
+      "objects": 157,
+      "passages": 15,
+      "edgeLinks": 0,
+      "reciprocalEdgeLinks": 0,
+      "reachableBoards": 9,
+      "degrees": [
+        14,
+        0,
+        0,
+        0,
+        0
+      ]
+    },
+    {
+      "name": "COTS24HR",
+      "boards": 35,
+      "darkBoards": 0,
+      "stats": 1180,
+      "objects": 1045,
+      "passages": 32,
+      "edgeLinks": 9,
+      "reciprocalEdgeLinks": 2,
+      "reachableBoards": 28,
+      "degrees": [
+        26,
+        9,
+        0,
+        0,
+        0
+      ]
+    },
+    {
+      "name": "CUTLASS",
+      "boards": 34,
+      "darkBoards": 3,
+      "stats": 1842,
+      "objects": 1107,
+      "passages": 19,
+      "edgeLinks": 39,
+      "reciprocalEdgeLinks": 36,
+      "reachableBoards": 26,
+      "degrees": [
+        13,
+        8,
+        9,
+        3,
+        1
+      ]
+    },
+    {
+      "name": "CWARS10",
+      "boards": 35,
+      "darkBoards": 3,
+      "stats": 939,
+      "objects": 858,
+      "passages": 19,
+      "edgeLinks": 32,
+      "reciprocalEdgeLinks": 26,
+      "reachableBoards": 28,
+      "degrees": [
+        15,
+        12,
+        4,
+        4,
+        0
+      ]
+    },
+    {
+      "name": "CWARS10B",
+      "boards": 23,
+      "darkBoards": 1,
+      "stats": 779,
+      "objects": 759,
+      "passages": 11,
+      "edgeLinks": 5,
+      "reciprocalEdgeLinks": 0,
+      "reachableBoards": 15,
+      "degrees": [
+        18,
+        5,
+        0,
+        0,
+        0
+      ]
+    },
+    {
+      "name": "CWARS13",
+      "boards": 48,
+      "darkBoards": 3,
+      "stats": 834,
+      "objects": 731,
+      "passages": 52,
+      "edgeLinks": 36,
+      "reciprocalEdgeLinks": 36,
+      "reachableBoards": 40,
+      "degrees": [
+        26,
+        13,
+        6,
+        1,
+        2
+      ]
+    },
+    {
+      "name": "DAMAGED5",
+      "boards": 28,
+      "darkBoards": 0,
+      "stats": 1243,
+      "objects": 1111,
+      "passages": 26,
+      "edgeLinks": 0,
+      "reciprocalEdgeLinks": 0,
+      "reachableBoards": 16,
+      "degrees": [
+        28,
+        0,
+        0,
+        0,
+        0
+      ]
+    },
+    {
+      "name": "DARKCIT1",
+      "boards": 20,
+      "darkBoards": 0,
+      "stats": 1121,
+      "objects": 1066,
+      "passages": 46,
+      "edgeLinks": 0,
+      "reciprocalEdgeLinks": 0,
+      "reachableBoards": 19,
+      "degrees": [
+        20,
+        0,
+        0,
+        0,
+        0
+      ]
+    },
+    {
+      "name": "DARKCIT2",
+      "boards": 22,
+      "darkBoards": 0,
+      "stats": 1390,
+      "objects": 1326,
+      "passages": 64,
+      "edgeLinks": 0,
+      "reciprocalEdgeLinks": 0,
+      "reachableBoards": 21,
+      "degrees": [
+        22,
+        0,
+        0,
+        0,
+        0
+      ]
+    },
+    {
+      "name": "DARKCIT3",
+      "boards": 22,
+      "darkBoards": 0,
+      "stats": 1201,
+      "objects": 1132,
+      "passages": 51,
+      "edgeLinks": 0,
+      "reciprocalEdgeLinks": 0,
+      "reachableBoards": 21,
+      "degrees": [
+        22,
+        0,
+        0,
+        0,
+        0
+      ]
+    },
+    {
+      "name": "DARKCIT4",
+      "boards": 22,
+      "darkBoards": 0,
+      "stats": 1290,
+      "objects": 1159,
+      "passages": 65,
+      "edgeLinks": 0,
+      "reciprocalEdgeLinks": 0,
+      "reachableBoards": 21,
+      "degrees": [
+        22,
+        0,
+        0,
+        0,
+        0
+      ]
+    },
+    {
+      "name": "DOG!",
+      "boards": 2,
+      "darkBoards": 0,
+      "stats": 12,
+      "objects": 6,
+      "passages": 1,
+      "edgeLinks": 0,
+      "reciprocalEdgeLinks": 0,
+      "reachableBoards": 1,
+      "degrees": [
+        2,
+        0,
+        0,
+        0,
+        0
+      ]
+    },
+    {
+      "name": "DUNGEONS",
+      "boards": 28,
+      "darkBoards": 0,
+      "stats": 878,
+      "objects": 78,
+      "passages": 3,
+      "edgeLinks": 55,
+      "reciprocalEdgeLinks": 54,
+      "reachableBoards": 26,
+      "degrees": [
+        4,
+        3,
+        12,
+        8,
+        1
+      ]
+    },
+    {
+      "name": "DWEIRD",
+      "boards": 26,
+      "darkBoards": 0,
+      "stats": 427,
+      "objects": 249,
+      "passages": 16,
+      "edgeLinks": 30,
+      "reciprocalEdgeLinks": 16,
+      "reachableBoards": 25,
+      "degrees": [
+        6,
+        14,
+        4,
+        0,
+        2
+      ]
+    },
+    {
+      "name": "DWOODS",
+      "boards": 68,
+      "darkBoards": 2,
+      "stats": 2061,
+      "objects": 1688,
+      "passages": 88,
+      "edgeLinks": 67,
+      "reciprocalEdgeLinks": 66,
+      "reachableBoards": 60,
+      "degrees": [
+        31,
+        12,
+        20,
+        5,
+        0
+      ]
+    },
+    {
+      "name": "DYINGSTA",
+      "boards": 9,
+      "darkBoards": 1,
+      "stats": 28,
+      "objects": 23,
+      "passages": 4,
+      "edgeLinks": 12,
+      "reciprocalEdgeLinks": 12,
+      "reachableBoards": 8,
+      "degrees": [
+        2,
+        4,
+        2,
+        0,
+        1
+      ]
+    },
+    {
+      "name": "ESPFILE1",
+      "boards": 34,
+      "darkBoards": 0,
+      "stats": 1838,
+      "objects": 1713,
+      "passages": 124,
+      "edgeLinks": 4,
+      "reciprocalEdgeLinks": 4,
+      "reachableBoards": 33,
+      "degrees": [
+        31,
+        2,
+        1,
+        0,
+        0
+      ]
+    },
+    {
+      "name": "ESPFILE2",
+      "boards": 33,
+      "darkBoards": 0,
+      "stats": 1822,
+      "objects": 1634,
+      "passages": 56,
+      "edgeLinks": 1,
+      "reciprocalEdgeLinks": 0,
+      "reachableBoards": 23,
+      "degrees": [
+        32,
+        1,
+        0,
+        0,
+        0
+      ]
+    },
+    {
+      "name": "ESPFILE3",
+      "boards": 24,
+      "darkBoards": 0,
+      "stats": 673,
+      "objects": 608,
+      "passages": 46,
+      "edgeLinks": 0,
+      "reciprocalEdgeLinks": 0,
+      "reachableBoards": 17,
+      "degrees": [
+        24,
+        0,
+        0,
+        0,
+        0
+      ]
+    },
+    {
+      "name": "ESPFILE4",
+      "boards": 38,
+      "darkBoards": 0,
+      "stats": 1923,
+      "objects": 1730,
+      "passages": 67,
+      "edgeLinks": 0,
+      "reciprocalEdgeLinks": 0,
+      "reachableBoards": 28,
+      "degrees": [
+        38,
+        0,
+        0,
+        0,
+        0
+      ]
+    },
+    {
+      "name": "FAUXAMIS",
+      "boards": 49,
+      "darkBoards": 24,
+      "stats": 2236,
+      "objects": 2013,
+      "passages": 72,
+      "edgeLinks": 75,
+      "reciprocalEdgeLinks": 66,
+      "reachableBoards": 46,
+      "degrees": [
+        12,
+        15,
+        12,
+        4,
+        6
+      ]
+    },
+    {
+      "name": "FAUXBETA",
+      "boards": 46,
+      "darkBoards": 20,
+      "stats": 2047,
+      "objects": 1863,
+      "passages": 32,
+      "edgeLinks": 70,
+      "reciprocalEdgeLinks": 64,
+      "reachableBoards": 44,
+      "degrees": [
+        11,
+        15,
+        11,
+        3,
+        6
+      ]
+    },
+    {
+      "name": "FAUXUNUS",
+      "boards": 18,
+      "darkBoards": 1,
+      "stats": 537,
+      "objects": 380,
+      "passages": 16,
+      "edgeLinks": 15,
+      "reciprocalEdgeLinks": 9,
+      "reachableBoards": 15,
+      "degrees": [
+        9,
+        6,
+        1,
+        1,
+        1
+      ]
+    },
+    {
+      "name": "FLIMTOWN",
+      "boards": 95,
+      "darkBoards": 3,
+      "stats": 2035,
+      "objects": 1372,
+      "passages": 63,
+      "edgeLinks": 230,
+      "reciprocalEdgeLinks": 188,
+      "reachableBoards": 91,
+      "degrees": [
+        6,
+        13,
+        36,
+        15,
+        25
+      ]
+    },
+    {
+      "name": "FORELISE",
+      "boards": 24,
+      "darkBoards": 0,
+      "stats": 1809,
+      "objects": 1704,
+      "passages": 86,
+      "edgeLinks": 4,
+      "reciprocalEdgeLinks": 4,
+      "reachableBoards": 23,
+      "degrees": [
+        21,
+        2,
+        1,
+        0,
+        0
+      ]
+    },
+    {
+      "name": "FREE",
+      "boards": 3,
+      "darkBoards": 0,
+      "stats": 5,
+      "objects": 4,
+      "passages": 0,
+      "edgeLinks": 1,
+      "reciprocalEdgeLinks": 1,
+      "reachableBoards": 1,
+      "degrees": [
+        2,
+        1,
+        0,
+        0,
+        0
+      ]
+    },
+    {
+      "name": "FREEDOM",
+      "boards": 49,
+      "darkBoards": 0,
+      "stats": 1320,
+      "objects": 1261,
+      "passages": 49,
+      "edgeLinks": 0,
+      "reciprocalEdgeLinks": 0,
+      "reachableBoards": 21,
+      "degrees": [
+        49,
+        0,
+        0,
+        0,
+        0
+      ]
+    },
+    {
+      "name": "FROST1",
+      "boards": 35,
+      "darkBoards": 0,
+      "stats": 2289,
+      "objects": 2154,
+      "passages": 39,
+      "edgeLinks": 16,
+      "reciprocalEdgeLinks": 16,
+      "reachableBoards": 29,
+      "degrees": [
+        26,
+        3,
+        5,
+        1,
+        0
+      ]
+    },
+    {
+      "name": "GEMHUNTR",
+      "boards": 46,
+      "darkBoards": 8,
+      "stats": 594,
+      "objects": 432,
+      "passages": 44,
+      "edgeLinks": 76,
+      "reciprocalEdgeLinks": 60,
+      "reachableBoards": 1,
+      "degrees": [
+        10,
+        12,
+        14,
+        4,
+        6
+      ]
+    },
+    {
+      "name": "GEN6042D",
+      "boards": 9,
+      "darkBoards": 1,
+      "stats": 56,
+      "objects": 41,
+      "passages": 4,
+      "edgeLinks": 14,
+      "reciprocalEdgeLinks": 14,
+      "reachableBoards": 8,
+      "degrees": [
+        2,
+        2,
+        3,
+        2,
+        0
+      ]
+    },
+    {
+      "name": "KEEPLITE",
+      "boards": 7,
+      "darkBoards": 2,
+      "stats": 37,
+      "objects": 29,
+      "passages": 8,
+      "edgeLinks": 8,
+      "reciprocalEdgeLinks": 8,
+      "reachableBoards": 6,
+      "degrees": [
+        2,
+        2,
+        3,
+        0,
+        0
+      ]
+    },
+    {
+      "name": "KING-ZZT",
+      "boards": 99,
+      "darkBoards": 3,
+      "stats": 1860,
+      "objects": 1679,
+      "passages": 88,
+      "edgeLinks": 75,
+      "reciprocalEdgeLinks": 74,
+      "reachableBoards": 77,
+      "degrees": [
+        55,
+        14,
+        29,
+        1,
+        0
+      ]
+    },
+    {
+      "name": "KUDZU",
+      "boards": 24,
+      "darkBoards": 0,
+      "stats": 566,
+      "objects": 465,
+      "passages": 26,
+      "edgeLinks": 37,
+      "reciprocalEdgeLinks": 36,
+      "reachableBoards": 21,
+      "degrees": [
+        6,
+        6,
+        6,
+        5,
+        1
+      ]
+    },
+    {
+      "name": "LLAMA1",
+      "boards": 27,
+      "darkBoards": 0,
+      "stats": 553,
+      "objects": 142,
+      "passages": 30,
+      "edgeLinks": 1,
+      "reciprocalEdgeLinks": 0,
+      "reachableBoards": 24,
+      "degrees": [
+        26,
+        1,
+        0,
+        0,
+        0
+      ]
+    },
+    {
+      "name": "LLAMA2",
+      "boards": 36,
+      "darkBoards": 1,
+      "stats": 545,
+      "objects": 245,
+      "passages": 32,
+      "edgeLinks": 11,
+      "reciprocalEdgeLinks": 6,
+      "reachableBoards": 35,
+      "degrees": [
+        27,
+        7,
+        2,
+        0,
+        0
+      ]
+    },
+    {
+      "name": "MERC",
+      "boards": 26,
+      "darkBoards": 2,
+      "stats": 722,
+      "objects": 685,
+      "passages": 37,
+      "edgeLinks": 14,
+      "reciprocalEdgeLinks": 14,
+      "reachableBoards": 25,
+      "degrees": [
+        16,
+        6,
+        4,
+        0,
+        0
+      ]
+    },
+    {
+      "name": "MONSTER",
+      "boards": 14,
+      "darkBoards": 0,
+      "stats": 843,
+      "objects": 0,
+      "passages": 15,
+      "edgeLinks": 0,
+      "reciprocalEdgeLinks": 0,
+      "reachableBoards": 9,
+      "degrees": [
+        14,
+        0,
+        0,
+        0,
+        0
+      ]
+    },
+    {
+      "name": "MOON",
+      "boards": 61,
+      "darkBoards": 8,
+      "stats": 2473,
+      "objects": 2101,
+      "passages": 48,
+      "edgeLinks": 66,
+      "reciprocalEdgeLinks": 62,
+      "reachableBoards": 57,
+      "degrees": [
+        22,
+        19,
+        14,
+        5,
+        1
+      ]
+    },
+    {
+      "name": "MOSSGATE",
+      "boards": 1,
+      "darkBoards": 0,
+      "stats": 6,
+      "objects": 2,
+      "passages": 0,
+      "edgeLinks": 0,
+      "reciprocalEdgeLinks": 0,
+      "reachableBoards": 0,
+      "degrees": [
+        1,
+        0,
+        0,
+        0,
+        0
+      ]
+    },
+    {
+      "name": "NEATZZT",
+      "boards": 27,
+      "darkBoards": 3,
+      "stats": 1836,
+      "objects": 1497,
+      "passages": 69,
+      "edgeLinks": 9,
+      "reciprocalEdgeLinks": 6,
+      "reachableBoards": 26,
+      "degrees": [
+        23,
+        1,
+        2,
+        0,
+        1
+      ]
+    },
+    {
+      "name": "NEWWORLD",
+      "boards": 2,
+      "darkBoards": 0,
+      "stats": 1,
+      "objects": 1,
+      "passages": 0,
+      "edgeLinks": 0,
+      "reciprocalEdgeLinks": 0,
+      "reachableBoards": 1,
+      "degrees": [
+        2,
+        0,
+        0,
+        0,
+        0
+      ]
+    },
+    {
+      "name": "NULLSIGN",
+      "boards": 6,
+      "darkBoards": 1,
+      "stats": 18,
+      "objects": 5,
+      "passages": 2,
+      "edgeLinks": 6,
+      "reciprocalEdgeLinks": 6,
+      "reachableBoards": 5,
+      "degrees": [
+        2,
+        2,
+        2,
+        0,
+        0
+      ]
+    },
+    {
+      "name": "OBELISK",
+      "boards": 63,
+      "darkBoards": 3,
+      "stats": 2765,
+      "objects": 2362,
+      "passages": 83,
+      "edgeLinks": 76,
+      "reciprocalEdgeLinks": 74,
+      "reachableBoards": 61,
+      "degrees": [
+        36,
+        4,
+        5,
+        10,
+        8
+      ]
+    },
+    {
+      "name": "OBSERV",
+      "boards": 2,
+      "darkBoards": 0,
+      "stats": 5,
+      "objects": 3,
+      "passages": 2,
+      "edgeLinks": 0,
+      "reciprocalEdgeLinks": 0,
+      "reachableBoards": 1,
+      "degrees": [
+        2,
+        0,
+        0,
+        0,
+        0
+      ]
+    },
+    {
+      "name": "ONAMOON",
+      "boards": 51,
+      "darkBoards": 0,
+      "stats": 4186,
+      "objects": 3845,
+      "passages": 22,
+      "edgeLinks": 113,
+      "reciprocalEdgeLinks": 28,
+      "reachableBoards": 46,
+      "degrees": [
+        14,
+        5,
+        4,
+        12,
+        16
+      ]
+    },
+    {
+      "name": "OWN",
+      "boards": 40,
+      "darkBoards": 7,
+      "stats": 940,
+      "objects": 163,
+      "passages": 35,
+      "edgeLinks": 70,
+      "reciprocalEdgeLinks": 62,
+      "reachableBoards": 37,
+      "degrees": [
+        9,
+        9,
+        10,
+        7,
+        5
+      ]
+    },
+    {
+      "name": "PIZZAMAN",
+      "boards": 30,
+      "darkBoards": 0,
+      "stats": 301,
+      "objects": 264,
+      "passages": 18,
+      "edgeLinks": 18,
+      "reciprocalEdgeLinks": 10,
+      "reachableBoards": 27,
+      "degrees": [
+        17,
+        10,
+        1,
+        2,
+        0
+      ]
+    },
+    {
+      "name": "PLI2",
+      "boards": 39,
+      "darkBoards": 0,
+      "stats": 1641,
+      "objects": 1112,
+      "passages": 192,
+      "edgeLinks": 0,
+      "reciprocalEdgeLinks": 0,
+      "reachableBoards": 38,
+      "degrees": [
+        39,
+        0,
+        0,
+        0,
+        0
+      ]
+    },
+    {
+      "name": "PR0N4U",
+      "boards": 23,
+      "darkBoards": 0,
+      "stats": 1624,
+      "objects": 1469,
+      "passages": 37,
+      "edgeLinks": 0,
+      "reciprocalEdgeLinks": 0,
+      "reachableBoards": 13,
+      "degrees": [
+        23,
+        0,
+        0,
+        0,
+        0
+      ]
+    },
+    {
+      "name": "RAEKUUL",
+      "boards": 2,
+      "darkBoards": 0,
+      "stats": 36,
+      "objects": 0,
+      "passages": 1,
+      "edgeLinks": 0,
+      "reciprocalEdgeLinks": 0,
+      "reachableBoards": 1,
+      "degrees": [
+        2,
+        0,
+        0,
+        0,
+        0
+      ]
+    },
+    {
+      "name": "RHYG3-1",
+      "boards": 100,
+      "darkBoards": 1,
+      "stats": 1720,
+      "objects": 1297,
+      "passages": 253,
+      "edgeLinks": 42,
+      "reciprocalEdgeLinks": 38,
+      "reachableBoards": 87,
+      "degrees": [
+        74,
+        12,
+        12,
+        2,
+        0
+      ]
+    },
+    {
+      "name": "RHYG3-2",
+      "boards": 70,
+      "darkBoards": 4,
+      "stats": 1321,
+      "objects": 994,
+      "passages": 210,
+      "edgeLinks": 21,
+      "reciprocalEdgeLinks": 14,
+      "reachableBoards": 13,
+      "degrees": [
+        57,
+        7,
+        4,
+        2,
+        0
+      ]
+    },
+    {
+      "name": "RHYG3-3",
+      "boards": 13,
+      "darkBoards": 0,
+      "stats": 445,
+      "objects": 342,
+      "passages": 0,
+      "edgeLinks": 0,
+      "reciprocalEdgeLinks": 0,
+      "reachableBoards": 1,
+      "degrees": [
+        13,
+        0,
+        0,
+        0,
+        0
+      ]
+    },
+    {
+      "name": "RHYGAR2",
+      "boards": 95,
+      "darkBoards": 9,
+      "stats": 1600,
+      "objects": 1052,
+      "passages": 337,
+      "edgeLinks": 66,
+      "reciprocalEdgeLinks": 64,
+      "reachableBoards": 74,
+      "degrees": [
+        65,
+        7,
+        13,
+        7,
+        3
+      ]
+    },
+    {
+      "name": "RHYGAR2X",
+      "boards": 44,
+      "darkBoards": 8,
+      "stats": 839,
+      "objects": 520,
+      "passages": 191,
+      "edgeLinks": 32,
+      "reciprocalEdgeLinks": 32,
+      "reachableBoards": 38,
+      "degrees": [
+        28,
+        6,
+        5,
+        4,
+        1
+      ]
+    },
+    {
+      "name": "RUINS",
+      "boards": 19,
+      "darkBoards": 1,
+      "stats": 429,
+      "objects": 295,
+      "passages": 17,
+      "edgeLinks": 14,
+      "reciprocalEdgeLinks": 12,
+      "reachableBoards": 16,
+      "degrees": [
+        11,
+        4,
+        3,
+        0,
+        1
+      ]
+    },
+    {
+      "name": "RXNIGHT",
+      "boards": 28,
+      "darkBoards": 0,
+      "stats": 1494,
+      "objects": 1296,
+      "passages": 41,
+      "edgeLinks": 0,
+      "reciprocalEdgeLinks": 0,
+      "reachableBoards": 22,
+      "degrees": [
+        28,
+        0,
+        0,
+        0,
+        0
+      ]
+    },
+    {
+      "name": "SELECTOR",
+      "boards": 3,
+      "darkBoards": 0,
+      "stats": 12,
+      "objects": 11,
+      "passages": 0,
+      "edgeLinks": 0,
+      "reciprocalEdgeLinks": 0,
+      "reachableBoards": 1,
+      "degrees": [
+        3,
+        0,
+        0,
+        0,
+        0
+      ]
+    },
+    {
+      "name": "SEWERS",
+      "boards": 61,
+      "darkBoards": 8,
+      "stats": 1930,
+      "objects": 1057,
+      "passages": 151,
+      "edgeLinks": 67,
+      "reciprocalEdgeLinks": 50,
+      "reachableBoards": 43,
+      "degrees": [
+        25,
+        19,
+        9,
+        2,
+        6
+      ]
+    },
+    {
+      "name": "SHOOBY",
+      "boards": 3,
+      "darkBoards": 0,
+      "stats": 49,
+      "objects": 48,
+      "passages": 1,
+      "edgeLinks": 0,
+      "reciprocalEdgeLinks": 0,
+      "reachableBoards": 2,
+      "degrees": [
+        3,
+        0,
+        0,
+        0,
+        0
+      ]
+    },
+    {
+      "name": "SIGNAL",
+      "boards": 34,
+      "darkBoards": 1,
+      "stats": 346,
+      "objects": 272,
+      "passages": 33,
+      "edgeLinks": 20,
+      "reciprocalEdgeLinks": 16,
+      "reachableBoards": 1,
+      "degrees": [
+        20,
+        9,
+        4,
+        1,
+        0
+      ]
+    },
+    {
+      "name": "SIM",
+      "boards": 34,
+      "darkBoards": 1,
+      "stats": 679,
+      "objects": 546,
+      "passages": 56,
+      "edgeLinks": 4,
+      "reciprocalEdgeLinks": 0,
+      "reachableBoards": 30,
+      "degrees": [
+        30,
+        4,
+        0,
+        0,
+        0
+      ]
+    },
+    {
+      "name": "SMLLSPCS",
+      "boards": 84,
+      "darkBoards": 0,
+      "stats": 2058,
+      "objects": 1949,
+      "passages": 13,
+      "edgeLinks": 96,
+      "reciprocalEdgeLinks": 48,
+      "reachableBoards": 81,
+      "degrees": [
+        11,
+        54,
+        15,
+        4,
+        0
+      ]
+    },
+    {
+      "name": "SMSPOLD",
+      "boards": 84,
+      "darkBoards": 0,
+      "stats": 2058,
+      "objects": 1949,
+      "passages": 13,
+      "edgeLinks": 96,
+      "reciprocalEdgeLinks": 48,
+      "reachableBoards": 81,
+      "degrees": [
+        11,
+        54,
+        15,
+        4,
+        0
+      ]
+    },
+    {
+      "name": "SPACEFTR",
+      "boards": 28,
+      "darkBoards": 0,
+      "stats": 1071,
+      "objects": 947,
+      "passages": 25,
+      "edgeLinks": 2,
+      "reciprocalEdgeLinks": 0,
+      "reachableBoards": 26,
+      "degrees": [
+        26,
+        2,
+        0,
+        0,
+        0
+      ]
+    },
+    {
+      "name": "STARGEN",
+      "boards": 5,
+      "darkBoards": 1,
+      "stats": 13,
+      "objects": 11,
+      "passages": 2,
+      "edgeLinks": 6,
+      "reciprocalEdgeLinks": 6,
+      "reachableBoards": 4,
+      "degrees": [
+        1,
+        2,
+        2,
+        0,
+        0
+      ]
+    },
+    {
+      "name": "STREK2",
+      "boards": 31,
+      "darkBoards": 0,
+      "stats": 251,
+      "objects": 85,
+      "passages": 28,
+      "edgeLinks": 8,
+      "reciprocalEdgeLinks": 4,
+      "reachableBoards": 4,
+      "degrees": [
+        26,
+        3,
+        1,
+        1,
+        0
+      ]
+    },
+    {
+      "name": "TEEN",
+      "boards": 72,
+      "darkBoards": 0,
+      "stats": 1143,
+      "objects": 998,
+      "passages": 142,
+      "edgeLinks": 12,
+      "reciprocalEdgeLinks": 12,
+      "reachableBoards": 58,
+      "degrees": [
+        62,
+        8,
+        2,
+        0,
+        0
+      ]
+    },
+    {
+      "name": "TIMEPORT",
+      "boards": 66,
+      "darkBoards": 10,
+      "stats": 2121,
+      "objects": 246,
+      "passages": 362,
+      "edgeLinks": 51,
+      "reciprocalEdgeLinks": 44,
+      "reachableBoards": 61,
+      "degrees": [
+        26,
+        30,
+        9,
+        1,
+        0
+      ]
+    },
+    {
+      "name": "TOWN",
+      "boards": 34,
+      "darkBoards": 7,
+      "stats": 757,
+      "objects": 66,
+      "passages": 15,
+      "edgeLinks": 66,
+      "reciprocalEdgeLinks": 62,
+      "reachableBoards": 32,
+      "degrees": [
+        5,
+        8,
+        9,
+        8,
+        4
+      ]
+    },
+    {
+      "name": "TP2DISC1",
+      "boards": 47,
+      "darkBoards": 0,
+      "stats": 873,
+      "objects": 677,
+      "passages": 94,
+      "edgeLinks": 4,
+      "reciprocalEdgeLinks": 2,
+      "reachableBoards": 38,
+      "degrees": [
+        43,
+        4,
+        0,
+        0,
+        0
+      ]
+    },
+    {
+      "name": "TP2DISC2",
+      "boards": 58,
+      "darkBoards": 0,
+      "stats": 1164,
+      "objects": 936,
+      "passages": 128,
+      "edgeLinks": 11,
+      "reciprocalEdgeLinks": 10,
+      "reachableBoards": 54,
+      "degrees": [
+        48,
+        9,
+        1,
+        0,
+        0
+      ]
+    },
+    {
+      "name": "TWEIRD",
+      "boards": 47,
+      "darkBoards": 0,
+      "stats": 542,
+      "objects": 388,
+      "passages": 26,
+      "edgeLinks": 41,
+      "reciprocalEdgeLinks": 28,
+      "reachableBoards": 46,
+      "degrees": [
+        16,
+        21,
+        10,
+        0,
+        0
+      ]
+    },
+    {
+      "name": "VOMIT2",
+      "boards": 37,
+      "darkBoards": 0,
+      "stats": 610,
+      "objects": 426,
+      "passages": 81,
+      "edgeLinks": 31,
+      "reciprocalEdgeLinks": 26,
+      "reachableBoards": 26,
+      "degrees": [
+        20,
+        8,
+        6,
+        1,
+        2
+      ]
+    },
+    {
+      "name": "WAKK",
+      "boards": 63,
+      "darkBoards": 0,
+      "stats": 1556,
+      "objects": 1433,
+      "passages": 81,
+      "edgeLinks": 0,
+      "reciprocalEdgeLinks": 0,
+      "reachableBoards": 55,
+      "degrees": [
+        63,
+        0,
+        0,
+        0,
+        0
+      ]
+    },
+    {
+      "name": "WARANIA",
+      "boards": 27,
+      "darkBoards": 1,
+      "stats": 269,
+      "objects": 84,
+      "passages": 17,
+      "edgeLinks": 30,
+      "reciprocalEdgeLinks": 22,
+      "reachableBoards": 26,
+      "degrees": [
+        10,
+        8,
+        6,
+        2,
+        1
+      ]
+    },
+    {
+      "name": "WARTORN",
+      "boards": 93,
+      "darkBoards": 0,
+      "stats": 1723,
+      "objects": 1385,
+      "passages": 235,
+      "edgeLinks": 20,
+      "reciprocalEdgeLinks": 16,
+      "reachableBoards": 80,
+      "degrees": [
+        78,
+        10,
+        5,
+        0,
+        0
+      ]
+    },
+    {
+      "name": "WARTORNX",
+      "boards": 46,
+      "darkBoards": 0,
+      "stats": 1119,
+      "objects": 831,
+      "passages": 183,
+      "edgeLinks": 0,
+      "reciprocalEdgeLinks": 0,
+      "reachableBoards": 33,
+      "degrees": [
+        46,
+        0,
+        0,
+        0,
+        0
+      ]
+    },
+    {
+      "name": "WEIRD03",
+      "boards": 16,
+      "darkBoards": 2,
+      "stats": 171,
+      "objects": 136,
+      "passages": 15,
+      "edgeLinks": 11,
+      "reciprocalEdgeLinks": 4,
+      "reachableBoards": 15,
+      "degrees": [
+        9,
+        4,
+        2,
+        1,
+        0
+      ]
+    },
+    {
+      "name": "XZR",
+      "boards": 36,
+      "darkBoards": 0,
+      "stats": 485,
+      "objects": 412,
+      "passages": 73,
+      "edgeLinks": 24,
+      "reciprocalEdgeLinks": 22,
+      "reachableBoards": 34,
+      "degrees": [
+        22,
+        7,
+        4,
+        3,
+        0
+      ]
+    },
+    {
+      "name": "XZR2",
+      "boards": 56,
+      "darkBoards": 0,
+      "stats": 1159,
+      "objects": 1007,
+      "passages": 152,
+      "edgeLinks": 60,
+      "reciprocalEdgeLinks": 54,
+      "reachableBoards": 55,
+      "degrees": [
+        24,
+        8,
+        20,
+        4,
+        0
+      ]
+    },
+    {
+      "name": "XZR3",
+      "boards": 25,
+      "darkBoards": 0,
+      "stats": 597,
+      "objects": 514,
+      "passages": 83,
+      "edgeLinks": 10,
+      "reciprocalEdgeLinks": 6,
+      "reachableBoards": 24,
+      "degrees": [
+        19,
+        4,
+        0,
+        2,
+        0
+      ]
+    },
+    {
+      "name": "YAAAY",
+      "boards": 53,
+      "darkBoards": 0,
+      "stats": 678,
+      "objects": 275,
+      "passages": 34,
+      "edgeLinks": 127,
+      "reciprocalEdgeLinks": 108,
+      "reachableBoards": 52,
+      "degrees": [
+        2,
+        4,
+        22,
+        21,
+        4
+      ]
+    },
+    {
+      "name": "ZFILES1",
+      "boards": 37,
+      "darkBoards": 0,
+      "stats": 3542,
+      "objects": 1365,
+      "passages": 572,
+      "edgeLinks": 0,
+      "reciprocalEdgeLinks": 0,
+      "reachableBoards": 1,
+      "degrees": [
+        37,
+        0,
+        0,
+        0,
+        0
+      ]
+    },
+    {
+      "name": "ZFILES2",
+      "boards": 38,
+      "darkBoards": 0,
+      "stats": 4095,
+      "objects": 1681,
+      "passages": 573,
+      "edgeLinks": 0,
+      "reciprocalEdgeLinks": 0,
+      "reachableBoards": 1,
+      "degrees": [
+        38,
+        0,
+        0,
+        0,
+        0
+      ]
+    },
+    {
+      "name": "ZFILES3",
+      "boards": 34,
+      "darkBoards": 0,
+      "stats": 3047,
+      "objects": 1238,
+      "passages": 334,
+      "edgeLinks": 0,
+      "reciprocalEdgeLinks": 0,
+      "reachableBoards": 1,
+      "degrees": [
+        34,
+        0,
+        0,
+        0,
+        0
+      ]
+    },
+    {
+      "name": "ZZKEY",
+      "boards": 2,
+      "darkBoards": 0,
+      "stats": 117,
+      "objects": 83,
+      "passages": 1,
+      "edgeLinks": 0,
+      "reciprocalEdgeLinks": 0,
+      "reachableBoards": 1,
+      "degrees": [
+        2,
+        0,
+        0,
+        0,
+        0
+      ]
+    },
+    {
+      "name": "ZZTHIN",
+      "boards": 40,
+      "darkBoards": 0,
+      "stats": 972,
+      "objects": 950,
+      "passages": 0,
+      "edgeLinks": 2,
+      "reciprocalEdgeLinks": 2,
+      "reachableBoards": 1,
+      "degrees": [
+        38,
+        2,
+        0,
+        0,
+        0
+      ]
+    },
+    {
+      "name": "_DEATH_",
+      "boards": 47,
+      "darkBoards": 6,
+      "stats": 2321,
+      "objects": 2058,
+      "passages": 160,
+      "edgeLinks": 2,
+      "reciprocalEdgeLinks": 2,
+      "reachableBoards": 39,
+      "degrees": [
+        45,
+        2,
+        0,
+        0,
+        0
+      ]
+    }
+  ]
+}

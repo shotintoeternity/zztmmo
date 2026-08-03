@@ -33,6 +33,7 @@ import (
 //go:embed promptkit_assets/fewshots/*.zwd
 //go:embed promptkit_assets/captions/*.json
 //go:embed promptkit_assets/fewshot_metadata.json
+//go:embed promptkit_assets/style_priors.json
 var promptKitFS embed.FS
 
 // fewShotArchetypes labels each embedded few-shot by the board archetype it
@@ -110,6 +111,9 @@ type PromptKit struct {
 	FewShots       []FewShot
 	Captions       map[string]BoardCaption    // keyed by FewShot.Name
 	Metadata       map[string]FewShotMetadata // keyed by FewShot.Name
+	// Priors is the M12.15d corpus-mined artifact: the palette, architecture
+	// and ZZT-OOP numbers measured from real worlds (stylepriors.go).
+	Priors StylePriors
 }
 
 // LoadPromptKit reads the embedded assets into a PromptKit. It errors rather
@@ -199,6 +203,20 @@ func LoadPromptKit() (*PromptKit, error) {
 			return nil, fmt.Errorf("promptkit: metadata for unknown few-shot %q", name)
 		}
 	}
+	priorsBytes, err := promptKitFS.ReadFile("promptkit_assets/style_priors.json")
+	if err != nil {
+		return nil, fmt.Errorf("promptkit: read style priors: %w", err)
+	}
+	if err := json.Unmarshal(priorsBytes, &kit.Priors); err != nil {
+		return nil, fmt.Errorf("promptkit: parse style priors: %w", err)
+	}
+	if kit.Priors.Version != stylePriorsVersion {
+		return nil, fmt.Errorf("promptkit: style priors are version %d, want %d", kit.Priors.Version, stylePriorsVersion)
+	}
+	if kit.Priors.Corpus.Boards == 0 || len(kit.Priors.Palette.Tiles) == 0 ||
+		len(kit.Priors.OOP.Commands) == 0 || kit.Priors.Architecture.BoardsMedian == 0 {
+		return nil, fmt.Errorf("promptkit: style priors are empty; re-mine them (see stylepriors.go)")
+	}
 	return kit, nil
 }
 
@@ -214,6 +232,8 @@ func (k *PromptKit) SystemPrompt() string {
 	b.WriteString("\n\n# House style\n\n")
 	b.WriteString("How good ZZT boards actually look and read. Follow these idioms; they are what separates a composed scene from tile soup.\n\n")
 	b.WriteString(k.Style)
+	b.WriteString("\n\n")
+	b.WriteString(k.Priors.PromptBlock())
 	b.WriteString("\n")
 	b.WriteString(promptOutputContract)
 	return b.String()
@@ -230,7 +250,18 @@ func (k *PromptKit) BlueprintSystemPrompt() string {
 	b.WriteString("\n\n# House style\n\n")
 	b.WriteString("Use this corpus-derived guidance for composition, palette, pacing, and voice.\n\n")
 	b.WriteString(k.BlueprintStyle)
+	// The mined priors (M12.15d) are stable for the life of the build, so they
+	// belong in the cached system block rather than the per-request retrieval.
+	b.WriteString("\n\n")
+	b.WriteString(k.Priors.PromptBlock())
 	return b.String()
+}
+
+// PlannerSystemPrompt is the world planner's cacheable system prompt: the
+// planner's own instructions plus the mined architecture norms, which are what
+// the plan step decides against (board count, hubs, reciprocal wiring).
+func (k *PromptKit) PlannerSystemPrompt() string {
+	return plannerSystemPrompt + "\n\n" + k.Priors.ArchitectureBlock()
 }
 
 // BlueprintRetrievalContext carries the same authentic corpus knowledge as
