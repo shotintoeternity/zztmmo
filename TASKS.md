@@ -215,8 +215,10 @@ M12.23, M17.1–M17.7, M16.0–M16.8a — has fully landed.)
    opens a window it cannot close when `Headless` is set. It filed **M18.15**
    (that same window's title slices an error message to 40 bytes with no clamp,
    so a shorter message panics the terminal build) — low-ranked, terminal-only,
-   and the last open executor task in this file. The beta invite remains the
-   open owner action.
+   and the last open executor task in this file. **M18.15 landed 2026-08-03**:
+   the title is clamped, so a short error opens the window instead of killing
+   the process, and no executor task in this file is open. The beta invite
+   remains the open owner action.
 
 **Optional / deferred (bottom):**
 - M14.3 — package split — **closed as skipped 2026-08-03**, see NOTES.md
@@ -4814,7 +4816,7 @@ lists. Every task: `cd engine && go build ./... && go test ./...` green,
   deadlock trace. `go test ./...` green; replay fixtures untouched. Filed
   **M18.15** on the way through.
 
-- [ ] **M18.15 — `DisplayIOError` panics on error messages shorter than 40
+- [x] **M18.15 — `DisplayIOError` panics on error messages shorter than 40
   characters.** Found 2026-08-03 while landing M18.14. The interactive title
   line is `textWindow.Title = err.Error()[:40]` (`game.go`), which is a Go slice
   with no clamp: any error whose message is shorter panics with a slice-bounds
@@ -4833,6 +4835,19 @@ lists. Every task: `cd engine && go build ./... && go test ./...` green,
   interactive path and gets the window rather than a panic (inverted first);
   the 40-character and longer cases render exactly as they do today; `go test
   ./...` green; replay fixture untouched.
+  Landed 2026-08-03 (NOTES.md). The title line moved into
+  `displayIOErrorTitle(err)` — `if len(msg) > 40 { msg = msg[:40] }`, the clamp
+  the slice always needed — so the window's own text about a full disk can
+  finally be shown for a full disk. Both tests were watched failing first
+  against the unclamped body, and the failure was not a red test but the test
+  binary dying: `panic: runtime error: slice bounds out of range [:0] with
+  length 10`, which is exactly what a player's terminal did. Messages of 40
+  bytes and longer are byte-identical to before (pinned by the exactly-40 case,
+  the 53-byte case, and a 200-byte message asserted to cut at 40). `go test
+  ./...` green; replay fixtures untouched; no simulation code touched.
+  **One repair carried in:** M18.14 checked its box without adding its parity
+  manifest row, so `TestParityManifest` was red on arrival at HEAD; this commit
+  adds both `task.M18.14` and `task.M18.15`.
 
 ## M14 — Rearchitecting for the service ZZTMMO is becoming
 

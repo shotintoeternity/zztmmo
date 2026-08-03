@@ -9141,3 +9141,45 @@ and no simulation code changed. All four new tests were watched failing against
 a tree with the guard removed (the two headless ones fail by panic in the test
 process, where the global `E` the window draws through is not headless; the
 server one by the deadlock abort it asserts against).
+
+## 2026-08-03 — M18.15: the error window can finally show a short error
+
+The interactive title line was `textWindow.Title = err.Error()[:40]` — a Go
+slice with no clamp, so every error message shorter than 40 bytes panicked with
+`slice bounds out of range` instead of opening the window. The window's own text
+is about a full disk; `write TOWN.ZZT: no space left on device` is 38 bytes. The
+one message that ever reached it intact was M18.14's `open TOWN.ZZT: no such
+file or directory`, which is exactly 40 characters by coincidence.
+
+**Nothing here is vanilla, on either side of the clamp.** `GAME.PAS:664` builds
+the title with `Str(IOResult, textWindow.Title)` — an error *number* — and
+truncates no message at all (Pascal's `Copy` would have clamped anyway; a Go
+slice does not). The 40 is `reference/zztgo/game.go:546`, the machine
+conversion's own invention, so there is no ZZT behavior to be faithful to. The
+fix is therefore the clamp the slice always needed and not a redesign: the title
+moved into `displayIOErrorTitle(err)`, `if len(msg) > 40 { msg = msg[:40] }`,
+and messages of 40 bytes and longer come out byte-identical to before.
+
+**Watched failing first, and the failure is the point.** Against the unclamped
+body the two new tests did not go red — they took the test binary down:
+`panic: runtime error: slice bounds out of range [:0] with length 10`. That is
+precisely what a player's terminal did. The interactive test recovers the panic
+in its goroutine so the failure reports as a test failure rather than a process
+abort. Coverage: a 10-character error opens the window (through tcell's
+simulation screen, the M18.14 harness, since `presentInstall` exits where there
+is no terminal), the empty message, the disk-full message, the exactly-40
+boundary, a 53-byte message asserted character-for-character, and a 200-byte one
+asserted to cut at 40.
+
+**One repair carried in, and it is not scope creep — it is the gate.** M18.14
+checked its box without adding its parity manifest row, so `TestParityManifest`
+and `TestParityManifestIsCanonical` were already red at HEAD (verified by
+stashing this work and running them on the commit as pushed). `go test ./...`
+cannot be green for this commit without it, so this commit adds both
+`task.M18.14` and `task.M18.15`, each reconciled at the task itself rather than
+at M16.20 — the M18.13 precedent, since both landed after certification closed.
+
+`go build ./...`, `go vet ./...` and `go test ./...` green; replay fixtures
+untouched; no simulation code changed. The browser suites were not run: nothing
+here is reachable from a browser — after M18.14 this line is terminal-build-only
+(`cmd/zztgo`), since a headless caller returns before it.

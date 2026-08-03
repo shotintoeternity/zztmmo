@@ -587,6 +587,22 @@ func (e *Engine) PauseOnError() {
 // bool is unchanged in both paths — true means "there was an error", which is
 // what WorldLoad and the rest read it for, so a headless caller still fails
 // where an interactive one does. The interactive path below is untouched.
+// displayIOErrorTitle is the window's title line. The 40-byte truncation is the
+// machine conversion's own invention, not ZZT's: GAME.PAS:664 builds the title
+// with Str(IOResult, ...) from an error *number* and truncates no message at
+// all. The conversion wrote it as an unclamped Go slice, so every message
+// shorter than 40 bytes panicked instead of opening the window — including
+// "write TOWN.ZZT: no space left on device" (38), the disk-full case this
+// window's own text is about (M18.15). Long messages still cut at 40 exactly as
+// before; there is no vanilla behavior here to be faithful to either way.
+func displayIOErrorTitle(err error) string {
+	msg := err.Error()
+	if len(msg) > 40 {
+		msg = msg[:40]
+	}
+	return "Error: " + msg
+}
+
 func (e *Engine) DisplayIOError(err error) (DisplayIOError bool) {
 	var (
 		textWindow TTextWindowState
@@ -604,8 +620,7 @@ func (e *Engine) DisplayIOError(err error) (DisplayIOError bool) {
 		log.Printf("zzt: I/O error with no window to show it in: %v", err)
 		return
 	}
-	textWindow.Title = err.Error()[:40]
-	textWindow.Title = "Error: " + textWindow.Title
+	textWindow.Title = displayIOErrorTitle(err)
 	TextWindowInitState(&textWindow)
 	TextWindowAppend(&textWindow, "OS Error:")
 	TextWindowAppend(&textWindow, "")

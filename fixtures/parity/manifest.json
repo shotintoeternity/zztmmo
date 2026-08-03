@@ -833,6 +833,28 @@
       "notes": "task-claim row; behavioral parity carried by the element/oop/protocol/input/service rows this task touched. Reconciled at the task itself (2026-08-03), NOT at M16.20: M18.13 landed after the certification milestone closed, so no M16.20 run ever saw this row. The named tests certify its DoD directly — the collapse onto the identity the join path resolves, its independence from directory read order, the dead entry dropped and reported, the case-folding filesystem keeping what it can still open, the dreamed survivor keeping its kind and .meta.json title, and the Museum alias fan-out left separately joinable. M18.13 changes no simulation behaviour — it is the world picker's key, outside the tick — so it adds no element/oop/input row and disturbs none."
     },
     {
+      "id": "task.M18.14",
+      "dimension": "task",
+      "subject": "Completed task M18.14 — its DoD still holds",
+      "contract": "E",
+      "authority": "TASKS.md M18.14",
+      "parity": "exact",
+      "test": "TestWorldLoadMissingHeadlessReturnsFalseWithoutBlocking,TestDisplayIOErrorHeadlessRecordsInsteadOfDrawing,TestDisplayIOErrorInteractiveStillOpensWindow,TestServerMissingStartupWorldReportsAndExits",
+      "status": "pass",
+      "notes": "task-claim row; behavioral parity carried by the element/oop/protocol/input/service rows this task touched. Reconciled at the task itself (2026-08-03), NOT at M16.20: M18.14 landed after the certification milestone closed, so no M16.20 run ever saw this row. The row is added by M18.15's commit — M18.14 checked its box without it, which left TestParityManifest red. The named tests certify its DoD directly — a missing world's load returns false inside 5s instead of aborting the process, the headless branch draws nothing and still reports true, the interactive window still opens and still waits for its key, and zzt-server on a missing world exits non-zero printing its own load failure with no deadlock trace. M18.14 changes no simulation behaviour — it is an error-display seam, outside the tick — so it adds no element/oop/input row and disturbs none."
+    },
+    {
+      "id": "task.M18.15",
+      "dimension": "task",
+      "subject": "Completed task M18.15 — its DoD still holds",
+      "contract": "E",
+      "authority": "TASKS.md M18.15",
+      "parity": "exact",
+      "test": "TestDisplayIOErrorTitleClampsShortMessages,TestDisplayIOErrorInteractiveShortMessageOpensWindow",
+      "status": "pass",
+      "notes": "task-claim row; behavioral parity carried by the element/oop/protocol/input/service rows this task touched. Reconciled at the task itself (2026-08-03), NOT at M16.20: M18.15 landed after the certification milestone closed, so no M16.20 run ever saw this row. The named tests certify its DoD directly — a 10-character error opens the window on the interactive path instead of panicking, and the 40-byte and longer titles are byte-identical to what the unclamped slice produced. The 40 itself is the machine conversion's invention, not ZZT's: GAME.PAS:664 titles the window with Str(IOResult, ...) — an error number — and truncates no message at all, so there is no vanilla behaviour on either side of the clamp to be faithful to. M18.15 changes no simulation behaviour — it is one title string in the error window, outside the tick — so it adds no element/oop/input row and disturbs none."
+    },
+    {
       "id": "task.M18.2",
       "dimension": "task",
       "subject": "Completed task M18.2 — its DoD still holds",
