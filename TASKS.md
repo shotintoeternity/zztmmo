@@ -225,7 +225,13 @@ M12.23, M17.1–M17.7, M16.0–M16.8a — has fully landed.)
    landed 2026-08-03**, where the behaviour turned out to have shipped in
    `715b498` and what actually landed is the proof that it stays — a picker
    selection now has to show that world's own title board and join nothing.
-   The beta invite remains the open owner action.
+   **"Set and protect the co-op product cutline" landed 2026-08-03** as well:
+   three browsers, one shared world, four claims each watched failing against a
+   deliberately broken server, plus `CUTLINE.md` for the manual run and the
+   policy that keeps it green. That leaves **one** unchecked bullet in this file
+   — "Evaluate server scaling for 20–30 concurrent players", which needs
+   measurements on the real production instance and is therefore owner-gated —
+   and the beta invite, which remains the open owner action.
 
 **Optional / deferred (bottom):**
 - M14.3 — package split — **closed as skipped 2026-08-03**, see NOTES.md
@@ -5802,7 +5808,7 @@ newly enables; same rule: backlog bullets, owner promotes before spec):**
   one world yields exactly one picker entry, covered by a unit test; the live
   duplicate disappears; no world that was joinable before becomes unlistable
   without an explicit exclusion note.
-* [ ] **Set and protect the co-op product cutline.** Before promoting another
+* [x] **Set and protect the co-op product cutline.** Before promoting another
   roadmap system (Dream, Museum, auth, editor collaboration, ghosts, or
   live-DM), define one automated and manually repeatable acceptance journey:
   a small group starts a classic world, completes a meaningful multi-board
@@ -5810,6 +5816,33 @@ newly enables; same rule: backlog bullets, owner promotes before spec):**
   authoritative result. Keep this journey green while M16 closes fidelity gaps;
   use it to decide whether an otherwise attractive feature advances the core
   shared-ZZT experience.
+  **Done 2026-08-03**, on the owner's 2026-08-03 shape: **three** players, and
+  **both** worlds — the ACCEPT fixture carries the full contract because its
+  route is deterministic enough to stay green, and a TOWN leg carries the
+  "classic world" clause, because a fixture built to be provable is not evidence
+  that a shipped ZZT world is playable by a group.
+  The journey is `engine/web/test/coop_journey.test.mjs`, driven by
+  `engine/coop_cutline_test.go` (three separate Chromium instances — not tabs,
+  whose timers are throttled below the client's 55ms input sampler — against the
+  production `zzt-server` binary and the built client, with no staged state).
+  `CUTLINE.md` is the same journey by hand plus the policy, and is in CLAUDE.md's
+  doc map. Four claims, each pinned and each **watched failing** against a
+  deliberately broken server before being trusted: one world, not three copies
+  (a pickup Ada takes is gone when Bo walks the same square, and the door she
+  unlocks passes him with no key); one authoritative result (same `StateHash` on
+  the same tick — compared as the raw digits from the frame, since a `uint64`
+  through `JSON.parse` loses its low bits, and the inversion that proved this
+  differed by exactly 1); the group survives a reconnect (resume in place, same
+  id, no fourth figure in anybody's roster); and the group survives save/restore
+  (409 while occupied, then a restore that puts the torch and gem Ada spent back
+  on their squares for everyone). The TOWN leg adds three players meeting in Room
+  One and one of them leaving through a board edge while the other two watch.
+  The four inversions: a per-client hash, a resume token the server ignores, the
+  dropped `ErrWorldOccupied` guard, and a roster truncated to one — each caught,
+  each reverted. No production code changed; the diff is two new test files and
+  two docs, so nothing moves in the fixtures and, as a `*` bullet with no M
+  number, it needs no parity manifest row. Green 4 runs out of 4, and the whole
+  opt-in browser family is green beside it.
 * [x] **Give the fork its own Go module identity.** The repository is
   `github.com/shotintoeternity/zztmmo`, but `engine/go.mod` still declares
   `github.com/benhoyt/zztgo`. Plan a deliberate import-path migration after the

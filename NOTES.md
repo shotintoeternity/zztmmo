@@ -9381,3 +9381,101 @@ title-first flow returns to the room the title screen chose.
 **No production code changed.** The diff is one browser test file. Nothing moves
 in the replay fixtures, and as a `*` backlog bullet with no M number it needs no
 parity manifest row (same reasoning as the module-identity bullet).
+
+## 2026-08-03 — The co-op product cutline
+
+Taken because it is the first unchecked bullet left in `TASKS.md` that an
+executor can take at all: the only other one, the 20–30 player scaling
+evaluation, needs measurements on the production instance. The previous session
+parked this one as needing an owner decision, and it did — two of them, asked
+before any code was written and both answered on 2026-08-03: **three** players
+rather than two, and **ACCEPT primary with a TOWN leg** rather than either alone.
+
+**What the bullet was really asking for.** Not another test. Every browser suite
+in the repository drives one player, or drives three through the *editor*.
+Nothing anywhere asserted that a group can PLAY a world together — which is the
+product. So the deliverable is one journey that says so, in two forms: automated
+(`engine/web/test/coop_journey.test.mjs`, driven by `engine/coop_cutline_test.go`)
+and by hand (`CUTLINE.md`, which also carries the policy the bullet asked for and
+is now in CLAUDE.md's doc map).
+
+**Three browsers, not three tabs.** Chromium throttles timers in background
+tabs, and `main.ts` samples held keys on a 55ms interval — so two of three
+players in one browser would simply stop walking, and the failure would read as
+a stuck world rather than as a test artefact. Three separate `chromium.launch()`
+instances also give each player their own `sessionStorage`, which is where the
+per-world resume token lives; without that, act 5's reconnect has nothing to
+reclaim. This mirrors what M16.14 already does for the collaborative editor.
+
+**The four claims, and the four inversions that prove they are load-bearing.**
+Each was watched failing against a deliberately broken server, then reverted:
+
+  1. *One world, not three copies.* Ada walks ACCEPT's row of pickups and opens
+     the cyan door; Bo then walks the same squares and collects nothing, and
+     passes the door having never held a key. Inversion: `playerSnapshotsForRoom`
+     truncated to one entry — "timed out waiting for Ada to see all three players
+     in the room, roster: [1]".
+  2. *One authoritative result.* Clients in one room must report the same
+     `StateHash` on the same tick. Inversion: `Hash: StateHash(...) + playerID`
+     in the diff — caught at tick 3, `5253326231112623566` vs `...567`. That
+     one-bit difference is exactly why the hash is scraped out of the raw frame
+     text with a regex instead of read off `JSON.parse`: a `uint64` through a
+     double loses its low bits, and the inversion would have compared equal.
+  3. *The group survives a reconnect.* Cy reloads, resumes in place with the same
+     player id, and nobody else's roster grows a fourth figure. Inversion:
+     `if false && join.ResumeToken != ""` — "Cy must reclaim the same run in
+     place, not spawn a fresh player".
+  4. *The group survives save/restore.* A restore is refused while anyone is in
+     the world, and once taken it rolls the shared world back for everyone — the
+     torch and gem Ada spent are on their squares again, which is the exact
+     experiment Bo failed in act 3. Inversion: the `ErrWorldOccupied` guard
+     dropped from `RestoreSnapshot` — "must be refused with 409, got 200".
+
+**Two things the journey had to learn about the client, both of which had eaten
+a run before they were understood.**
+
+*Room events are broadcast, and stat 0 is invisible.* `quitPrompt`, `savePrompt`
+and `highScoreEntry` all ride the room's event array, so every player in the room
+sees the prompt one player raised; a script that waits for "a savePrompt" answers
+a dialog that is not on its screen. They carry the raising player's stat id — but
+`ProtocolEvent.StatID` is `omitempty`, so stat 0 (the first joiner, who claims the
+board's existing player stat) arrives as no field at all, and the obvious filter
+excludes precisely the player most likely to be driving the dialog. `hasMine`
+normalises both sides.
+
+*"Am I at a clean title screen?" has no DOM answer, but it has an HTTP one.*
+Quitting leaves a variable stack of windows behind — the high-score table when
+the score qualified, a notice when it did not — and `handleKeyDown` routes to the
+open modal before the title menu, so every one of them swallows the next
+keystroke. Guessing the number of Escapes fails in both directions: one too few
+leaves a window up and the R that follows does nothing at all (this is what
+silently skipped the restore and left the journey testing the world it was
+already in), and one too many is read by the TITLE as `quit`, which opens a modal
+of its own. `ensureCleanTitle` asks instead: R at a clean title always calls
+`/api/saves`, R swallowed by a window calls nothing, so one HTTP request answers
+the question the canvas cannot. `/api/saves` and not `/api/worlds` — the title
+polls the latter every five seconds for its occupancy line (M17.11), so a probe
+keyed on it would report success for a keystroke that went nowhere.
+
+**Also worth recording: players are solid tiles.** Three players queued on one
+row read as a wall to whoever is behind, and joiners after the first are placed
+by `FindPlacement` on whatever square near the start is free — which on ACCEPT
+is the row ABOVE the pickups the journey exists to test. Both cost a run each.
+The script now aligns each player onto row 12 explicitly and parks the three of
+them on squares of their own.
+
+**Verification.** `go build`, `go vet` and `gofmt` clean (the pre-existing
+unformatted files are untouched); `go test -count=1 ./...` green; the full opt-in
+browser family green in one `ZZT_BROWSER=1` sweep (355s, every suite passing,
+this one at 72.9s); `go test -race -count=1 ./...` green with zero races. The
+co-op suite itself is 4 for 4 across separate runs. No production code changed —
+the diff is two new test files, `CUTLINE.md`, one line in CLAUDE.md's doc map and
+the TASKS.md tick — so nothing moves in the replay fixtures, and as a `*` backlog
+bullet with no M number it needs no parity manifest row (the M14.4-era precedent
+the module-identity and world-picker bullets both used).
+
+**What is left in TASKS.md.** One unchecked bullet: the 20–30 concurrent player
+scaling evaluation, which the M18.0a audit already reduced to "measure CPU,
+memory and per-room cost on the real instance and derive a threshold". That is an
+owner action, not an executor one — it needs the production host. The beta invite
+remains open beside it.
