@@ -9793,3 +9793,40 @@ entries. None of it is player-visible text, and a repo-wide sweep of committed
 history is a bigger, noisier change than the product needed — CLAUDE.md rule 4.
 `fixtures/browser-goldens/title.json` was re-recorded a second time for the one
 word.
+
+## 2026-08-03 — M19.2 deployed to dev, and what deploying showed
+
+`dev.zztmmo.com` serves `0978449` (the color picker). The host was woken from
+the stop it had been put into an hour earlier, which measured the one thing
+AWS.md could only claim: all four units came back `enabled` and both services
+`active` on boot, with no SSH and no DNS change. The stop/start policy is now
+backed by a measurement.
+
+SSH from this workstation needed a temporary `/32` on port 22
+(`sgr-044413f8403f00161`), **revoked after the deploy** — port 22 is back to the
+seven standing entries.
+
+**Two defects that only a deployed page showed, both mine, both fixed before
+handing it over.** Neither was reachable from a test, because both tests and
+suite assertions read TEXT, and these were about what the window LOOKS like:
+
+1. The picker never filled its interior. `renderTextWindow` fills each line
+   before writing it (`drawLine`), so a ZZT window is blue inside a white frame;
+   a window that lays out its own interior has to do that itself, and this one
+   did not — blue text patches on the frame's black, the only window on screen
+   that did not match the others. The unit test now asserts the fill and was
+   watched failing without it.
+2. Three-cell swatches drew two heavy black stripes down the window. One cell
+   reads as a list of colors, and the black tile still does the job both ends of
+   the palette need (black shows on the window's blue, dark blue shows on the
+   tile's black).
+
+The lesson worth keeping: eleven browser suites and a golden agreed the picker
+was correct, and they were right — every assertion was about text and cells, and
+every one of them held. "It renders" and "it looks like the rest of ZZT" are
+different claims, and only the second one needs eyes.
+
+One thing the M19.2 browser suite could NOT do against dev: it is written for the
+ACCEPT fixture world, and dev hosts TOWN and the community worlds, so its later
+acts (which quit to the title menu) do not fit. Acts 1-9 passed against the live
+host before that; the rest was checked by hand from screenshots.
