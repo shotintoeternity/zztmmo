@@ -419,9 +419,20 @@ func (g *GenerationService) generate(ctx context.Context, req GenerationRequest)
 	if err != nil {
 		return GenerationResult{}, err
 	}
-	name, err := g.resolveGeneratedName(ctx, req, plan.WorldName, premise)
+	name, minted, err := g.resolveGeneratedName(ctx, req, plan.WorldName, premise)
 	if err != nil {
 		return GenerationResult{}, err
+	}
+	// M14.4: a minted name is held until this dream persists it or gives up, so
+	// a second dream painting at the same time cannot mint the same one. On the
+	// success path the world's file blocks the name from here on anyway.
+	//
+	// Only a MINTED name is released here. A typed name was never reserved, and
+	// releasing one would hand back a reservation this dream does not hold — if
+	// a player typed exactly the stem another dream had just minted, that dream
+	// would lose its hold on it.
+	if minted {
+		defer releaseWorldName(g.outputDir, name)
 	}
 	// M16.17b: the name is client-supplied and SanitizeSaveName has no opinion
 	// about whose world it already is. Refuse an occupied one here, before a
@@ -446,63 +457,65 @@ func (g *GenerationService) generate(ctx context.Context, req GenerationRequest)
 	return g.paintAndFinish(ctx, st, 0)
 }
 
-// resolveGeneratedName picks the name a dream is persisted under, and is where
-// M16.17d and M18.11 meet.
+// resolveGeneratedName picks the identity a dream is persisted under. It is
+// where M16.17d and M18.11 met, and after M14.4 it is where they stop being
+// questions at all.
 //
-// The browser sends no name: it sends a premise, and the name comes from the
-// plan the model wrote (generatedSaveName → plan.WorldName). So a refusal aimed
-// at that name is aimed at a choice the player did not make, cannot see and has
-// no way to fix — "try again and hope". Both of the refusals that a different
-// name would satisfy are therefore resolved here rather than raised:
+// The browser sends no name: it sends a premise, and the plan the model wrote
+// carries a WorldName. Before M14.4 that title WAS the identity, so a plan that
+// happened to name an owned world or a classic produced a refusal aimed at a
+// choice the player did not make, could not see and had no way to fix — and
+// M16.17d answered it with a 20-bit hash and a hope. Now the title is a title
+// (recorded in the world's meta sidecar) and the identity is MINTED: the title
+// only seeds a family of stems, and minting takes the first member nothing else
+// has a claim on. So a dream cannot collide with anything — not a classic, not
+// another account's world, not a concurrent dream — and there is nothing left
+// for either refusal to be raised about.
 //
-//   - a name whose .access.json names somebody else (M16.17b), and
-//   - a canonical Museum world (M18.11), which has no access file to speak for
-//     it and which no dream may ever replace.
+// A name the PLAYER typed is not minted and keeps refusing exactly as it did.
+// They chose it, the conflict is legible to them, and quietly handing them a
+// different world under a different name would be the worse answer. Occupancy
+// is never resolved here for either path: an occupied world is transient — the
+// same name works once the last player leaves — while ownership and canonical
+// status are not.
 //
-// A name the PLAYER typed keeps refusing exactly as it did. They chose it, the
-// conflict is legible to them, and quietly handing them a different world under
-// a different name would be the worse answer. Occupancy is not resolved here at
-// all: an occupied world is transient — the same name works once the last
-// player leaves — while ownership and canonical status are not.
-func (g *GenerationService) resolveGeneratedName(ctx context.Context, req GenerationRequest, planName, premise string) (string, error) {
-	name, err := generatedSaveName(req.Name, planName, premise)
-	if err != nil {
-		return "", err
-	}
-	// The two refusals a different name would satisfy, asked as one question.
-	refuse := func(candidate string) error {
-		if err := refuseIfCanonical(candidate); err != nil {
-			return err
-		}
-		return refuseIfNotOurs(g.outputDir, candidate, req.Account)
-	}
-	refusal := refuse(name)
-	if refusal == nil {
-		return name, nil
-	}
+// The second return reports whether the name was minted. A minted name is
+// reserved until the dream persists or fails and the caller must
+// releaseWorldName it; a typed name is not reserved and must not be released.
+func (g *GenerationService) resolveGeneratedName(ctx context.Context, req GenerationRequest, planName, premise string) (string, bool, error) {
 	if req.Name != "" {
-		return "", refusal
+		name, err := SanitizeSaveName(req.Name)
+		if err != nil {
+			return "", false, err
+		}
+		if err := refuseIfCanonical(name); err != nil {
+			return "", false, err
+		}
+		if err := refuseIfNotOurs(g.outputDir, name, req.Account); err != nil {
+			return "", false, err
+		}
+		return name, false, nil
 	}
 
-	// The plan's name is unusable, so mint one. generatedSaveName already keeps
-	// this fallback for a plan name it cannot clean into a DOS filename; here it
-	// answers the other reason a plan name cannot be used.
-	fallback, err := generatedFallbackSaveName(planName, premise)
+	// Nobody named this world, so mint it. The plan's title is only the seed:
+	// the stem it cleans down to is tried first, so a dream of "Castle Blue"
+	// still lands on CASTLEBL when that is free and the file layout still reads
+	// like something a person chose.
+	seed, err := generatedNameSeed(planName, premise)
 	if err != nil {
-		return "", refusal
+		return "", false, err
 	}
-	if fallback == name {
-		return "", refusal
+	name, err := mintWorldName(g.outputDir, seed, req.Server)
+	if err != nil {
+		return "", false, err
 	}
-	if err := refuse(fallback); err != nil {
-		// Vanishingly unlikely — a previous dream of the same plan and premise
-		// was claimed by another account — but it is the minted name that
-		// blocked this dream, so it is the one to say so.
-		return "", err
+	if name != seed {
+		// The player never chose either name. All they need is the one to look
+		// for — the picker shows them the title, but the world's own screens and
+		// its high-score table are still the stem.
+		g.report(ctx, GenerationProgress{Stage: "naming", Detail: name})
 	}
-	// The player never chose either name. All they need is the one to look for.
-	g.report(ctx, GenerationProgress{Stage: "naming", Detail: fallback})
-	return fallback, nil
+	return name, true, nil
 }
 
 // RetryBoard resumes a generation that failed with a GenerationBoardError
@@ -527,6 +540,14 @@ func (g *GenerationService) RetryBoard(ctx context.Context, boardErr *Generation
 	}
 	defer func() { <-g.sem }()
 	st := boardErr.resume
+	// M14.4: the first attempt released this world's name when it returned the
+	// failure being retried. Re-hold it for the same reason it was held then —
+	// the retry is going to persist under it. Best-effort: if another dream has
+	// taken it since, the persist-time guards are the same last word they were
+	// before minting existed.
+	if reserveWorldName(g.outputDir, st.name) {
+		defer releaseWorldName(g.outputDir, st.name)
+	}
 	for _, name := range boardErr.retryBoards {
 		if counter := st.attempts[name]; counter != nil {
 			*counter = 0
@@ -767,6 +788,16 @@ func (g *GenerationService) paintAndFinish(ctx context.Context, st *generationRe
 
 	g.report(ctx, GenerationProgress{Stage: "persisting", Detail: "saving accepted world and sidecars"})
 	if err := persistGeneratedWorld(g.outputDir, name, st.premise, planText, full, data); err != nil {
+		return GenerationResult{}, err
+	}
+	// M14.4: the plan's WorldName is the world's TITLE, not its identity. It is
+	// recorded here so the picker can show what the model actually called the
+	// world — which is the whole reason the stem no longer has to carry it, and
+	// the reason minting a different stem costs the player nothing to read.
+	if err := writeWorldMeta(g.outputDir, name, WorldMeta{
+		Title:  plan.WorldName,
+		Author: st.account.DisplayName(),
+	}); err != nil {
 		return GenerationResult{}, err
 	}
 	// The dreamer owns what they dreamed, the way the editor's publisher owns
@@ -3382,12 +3413,14 @@ func validateGeneratedZWD(data []byte) error {
 	return errors.New(strings.Join(parts, "; "))
 }
 
-func generatedSaveName(requested, planName, premise string) (string, error) {
-	if requested != "" {
-		return SanitizeSaveName(requested)
-	}
-
-	// Attempt to clean and format the planName into an 8-character DOS-safe string
+// generatedNameSeed is the stem minting starts from for a world nobody named:
+// the plan's title cleaned down to the DOS charset, or — when the title carries
+// nothing that survives that (M14.4 also requires an alphanumeric, since the
+// picker drops names without one) — the hash below.
+//
+// It is only a seed. Whether the stem is free is mintWorldName's question, and
+// the answer is a different member of the same family, never a refusal.
+func generatedNameSeed(planName, premise string) (string, error) {
 	var clean []byte
 	for i := 0; i < len(planName); i++ {
 		c := UpCase(planName[i])
@@ -3395,26 +3428,24 @@ func generatedSaveName(requested, planName, premise string) (string, error) {
 			clean = append(clean, c)
 		}
 	}
-
 	if len(clean) > SaveNameMaxLength {
 		clean = clean[:SaveNameMaxLength]
 	}
-
-	if len(clean) > 0 {
+	if len(clean) > 0 && hasAlphanumeric(string(clean)) {
 		if sanitized, err := SanitizeSaveName(string(clean)); err == nil {
 			return sanitized, nil
 		}
 	}
-
-	// Fallback to FNV hash if the cleaned name is empty or invalid
 	return generatedFallbackSaveName(planName, premise)
 }
 
-// generatedFallbackSaveName mints the name a dream gets when the plan's own
-// name cannot be used — because it does not clean into a DOS filename, or
-// (M16.17d) because it is a canonical world or belongs to another account. It
-// is a pure function of the plan and premise, so the same dream retried lands
-// on the same name.
+// generatedFallbackSaveName is the seed a dream gets when the plan's own title
+// does not clean into a DOS filename. It is a pure function of the plan and
+// premise, so the same dream retried starts from the same place.
+//
+// M14.4: this is 20 bits, so as a NAME it was a near-even-odds birthday
+// collision at ~1000 worlds. It is safe as a seed and unsafe as an identity,
+// which is the whole distinction — mintWorldName checks the family it opens.
 func generatedFallbackSaveName(planName, premise string) (string, error) {
 	h := fnv.New32a()
 	_, _ = h.Write([]byte(planName + "\n" + premise))

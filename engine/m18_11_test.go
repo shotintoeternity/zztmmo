@@ -124,8 +124,14 @@ func TestM1811DreamNeverOverwritesACanonicalWorld(t *testing.T) {
 	if result.Name == "TOWN" {
 		t.Fatal("the dream took TOWN after all")
 	}
-	if !strings.HasPrefix(result.Name, "GEN") {
-		t.Errorf("fallback name = %q, want the minted GEN%%05X form", result.Name)
+	// M14.4 changed the SHAPE of that name and not the protection above it.
+	// Until then the fallback was generatedFallbackSaveName's GEN%05X hash;
+	// now the plan's title only seeds a family and minting takes the first free
+	// member, so a plan naming TOWN lands on TOWN2 — checked against the
+	// directory rather than hashed and hoped. TOWN's bytes are what matters, and
+	// they are asserted either way.
+	if !strings.HasPrefix(result.Name, "TOWN") || result.Name == "TOWN" {
+		t.Errorf("minted name = %q, want a free member of TOWN's family", result.Name)
 	}
 	if after, readErr := os.ReadFile(path); readErr != nil {
 		t.Fatal(readErr)

@@ -8686,3 +8686,129 @@ could have run `showTitle()` on a connection nobody was using any more.
 
 `go test ./...`, `ZZT_BROWSER=1 go test ./...` (all eleven browser suites),
 `npm test`, and `go test -race` over the editor/WebSocket tests: green.
+
+## 2026-08-03 — M14.4: a world's identity stops being its name
+
+The last substantive task in TASKS.md, and the one three earlier tasks kept
+pointing at. The 8-character DOS stem was doing two jobs — primary key (file
+path, `?world=`, the `Instances` map key, `.access.json`, `.SAV`, `.HI`, the
+recording filename, the backup manifest entry) and the name a player reads —
+and every collision defect in the M16.17 family was downstream of that: M16.17b
+(a dream overwrote a world), M16.17d (a player refused over a name they never
+chose), M18.11 (the classics needed a carve-out). Three patches on one seam.
+
+**Advisor unavailable** (no advisor tool in this environment — the same standing
+situation as M16.0 onward). M14.4 is `[ADVISOR]`, so the owner was consulted
+with the approach before any edit, per the M16.17a/M16.14b/M16.20 precedent.
+
+### Owner decisions, 2026-08-02
+
+1. **Start it now**, though it is the explicitly post-beta task and the invite
+   has not gone out. The stopgaps stay in place while it lands, so nothing
+   regresses if it takes a session.
+2. **The identity stays the 8-character stem.** The alternative — an opaque
+   minted id with a name→path resolver — was rejected: `.SAV` and `.HI` are
+   vanilla-format DOS filenames, so it would need a mapping table plus a
+   migration of every existing world, sidecar, recording and backup archive.
+   Keeping the stem means **nothing on disk moves**, which is how the DoD's
+   "an existing world resolves under its old name" is satisfied by construction
+   rather than by a migration that has to be got right.
+3. **The title lives in a new `NAME.meta.json` sidecar.** Extending
+   `.access.json` was rejected because M16.17b decided a world with no access
+   file belongs to nobody and stays open — giving an untitled-but-owned world an
+   access record would flip it, and three tasks depend on that rule. Putting the
+   title in the `.ZZT` itself was rejected because vanilla sets `Info.Name` to
+   the filename on load and builds the `.HI` path from it (`game.go:910`), so a
+   title there renames the high-score file.
+
+### What changed
+
+**`engine/world_title.go`** (new). `WorldMeta{Title, Author}` and its atomic
+sidecar, plus `mintWorldName`. Minting walks a deterministic family — `SEED`,
+`SEED2`, `SEED3`, … with the stem truncated so every member stays a legal
+8-character name — and takes the first member no world file, orphaned
+`.access.json`, classic, live instance or **in-flight mint** has a claim on.
+
+That last one is the half the birthday problem hid. Two dreams painting at once
+(the shipped `ZZT_GENERATION_CONCURRENCY=2`) can carry the same plan title, and
+neither writes a file for the other to see for the minutes they spend painting —
+so checking only the directory would still hand both the same name and let the
+second overwrite the first. Names are therefore *reserved* from mint until the
+dream persists or gives up. Only a **minted** name is released: a typed name is
+never reserved, and releasing one would hand back a reservation the caller does
+not hold, which is a live bug if a player happens to type the exact stem another
+dream just minted.
+
+**`generation.go`.** `resolveGeneratedName` splits cleanly in two. A name the
+player TYPED is unchanged — still refused if canonical or owned, because they
+chose it and the conflict is legible to them. A name nobody chose is MINTED, so
+M16.17d's fallback and M18.11's refusal have nothing left to be raised about.
+`generatedFallbackSaveName`'s `GEN%05X` survives only as a *seed* — 20 bits is
+safe to start from and unsafe to trust, which is the whole distinction.
+`persistGeneratedWorld` is followed by the title write: the plan's `WorldName`
+is now metadata.
+
+**`websocket_server.go`.** The editor's publish captures the authored title
+before `WorldBytes` writes the save stem over it — the dialog lets an author
+call a world "The Salt Cellar" and publishing it as SALTCELL used to destroy
+that, because the stem was the only name a world had. A republish that takes
+the title back off removes the sidecar rather than leaving a stale one. The
+`.ZZT` bytes are untouched — vanilla's conflation there (`GameWorldSave` writes
+the stem into `Info.Name`) is faithful and stays, and a test asserts the
+published file still carries the stem.
+
+**`world_metadata.go`.** The picker reads the sidecar for non-classic worlds. A
+classic's title stays the Museum's: a sidecar dropped beside `TOWN.ZZT` cannot
+relabel shipped content, which is asserted.
+
+**`deploy/zztmmo-backup.sh`.** `.meta.json` joins the companion set. A backup
+that copied the world and not its sidecar would restore a world nobody can name.
+
+### Evidence
+
+`engine/m14_4_test.go`. Four of them were verified to invert on the fix rather
+than merely pass: removing the reservation check makes
+`TestM144ConcurrentMintsNeverAgree` report two racers minting `HARBOUR`;
+dropping the title write makes the dream journey report `present=false`;
+dropping the picker's sidecar read makes titles fall back to stems; dropping
+the editor's title capture makes the publish journey report `present=false`.
+
+`go build`, `go vet`, `go test ./...`, `go test -race ./...`, `ZZT_BROWSER=1 go
+test ./...` (all eleven browser suites) and `make certify` — green, verdict
+CERTIFIED at 372 rows.
+
+### Two tests changed shape, and why that is not a fixture edit
+
+`TestM1617dDerivedNameFallsBackWhereATypedNameIsRefused` and
+`TestM1811DreamNeverOverwritesACanonicalWorld` each asserted the fallback name
+had the `GEN` prefix. That is the behaviour M14.4 is specified to replace, so
+the assertion — and only that assertion — now requires a free member of the
+seed's family (`OWNED2`, `TOWN2`). **Every protective assertion in both tests is
+untouched and still passes**: Ada's bytes and ownership survive, TOWN's bytes
+survive, a typed name is still refused, and a refusal still costs no model
+spend. No replay fixture was touched and no hash was edited.
+
+### The parity manifest
+
+Ticking the box adds a derived `task.M14.4` row (`deriveTaskRows` skips only
+milestone 16). Regenerating with `PARITY_SCAFFOLD=1` added it and nothing else —
+11 insertions, 0 deletions — and the hand-written reconciliation survived a
+second regeneration unchanged, which is M16.20a's no-op-diff property doing its
+job. The row's note says plainly that it was reconciled **at the task, not at
+M16.20**: M14.4 landed after the certification milestone closed, so no M16.20
+run ever saw it, and a note claiming otherwise would be the kind of thing this
+file exists to prevent.
+
+### What this does not do
+
+It does not renumber or rename a single existing world, and it does not make
+titles addressable — you still join a world by its stem, and the sidecar is
+read by the picker and by nothing that resolves a path. Repeated dreams whose
+plans share a title now accumulate as `CASTLE`, `CASTLE2`, `CASTLE3` rather
+than overwriting each other, which is what "collision-free" costs and is the
+right side of that trade.
+
+**Handoff.** `dev`, tree has the above staged for commit. Two tasks remain in
+TASKS.md, both optional/deferred and neither a parity claim: M14.3 (package
+split — its DoD-if-skipped is a NOTES.md entry) and M12.15d (mined style
+priors, owner-deferred). The beta invite remains an owner action.

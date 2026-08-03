@@ -191,9 +191,16 @@ M12.23, M17.1–M17.7, M16.0–M16.8a — has fully landed.)
    the box. **The certification milestone is closed.** **M16.14f landed
    2026-08-02**: the editor socket reconnects with the game path's backoff and a
    membership token, so a drop repaints the editor instead of the title screen.
-   Three unchecked tasks remain in this file, none of them a parity claim: M14.4
-   (a world's identity vs. its display name), and the optional/deferred M14.3 and
-   M12.15d.
+   **M14.4 landed 2026-08-03** — the last substantive task in this file, and the
+   one the M16.17 family kept pointing at. On the owner's 2026-08-02 shape: the
+   identity stays the 8-character stem, so nothing on disk moves and every
+   existing world, save, high-score file, recording, backup and `?world=` URL
+   resolves unchanged — but a stem nobody chose is now MINTED against the
+   hosting directory instead of derived from a title and hoped to be free, and
+   the title moved to a `NAME.meta.json` sidecar the picker reads and no path
+   resolver ever will. M16.17d's 20-bit `GEN%05X` survives only as a seed. Two
+   unchecked tasks remain, both optional/deferred and neither a parity claim:
+   M14.3 (package split) and M12.15d (mined style priors).
 
 **Optional / deferred (bottom):**
 - M14.3 — package split (skip unless the single package is actually hurting)
@@ -4771,7 +4778,7 @@ unchanged: these are ownership/plumbing changes, never simulation changes.
   DoD (if skipped): a NOTES.md entry saying why the single package still
   isn't hurting, so the next audit doesn't re-litigate from scratch.
 
-- [ ] **M14.4 [ADVISOR] — Separate a world's identity from its display name
+- [x] **M14.4 [ADVISOR] — Separate a world's identity from its display name
   (post-beta; filed 2026-08-01 from M16.17d/M18.11).** A world's 8-character
   DOS filename is doing two jobs: it is the primary key — the file path, the
   `?world=` parameter, the `.access.json` sidecar key, the backup manifest

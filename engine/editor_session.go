@@ -314,6 +314,22 @@ func (s *EditorSession) SetWorldName(name string) {
 	s.WorldName = name
 }
 
+// WorldTitle is the 20-character name the world-property dialog sets
+// (SetProperty → World.Info.Name), read before a publish overwrites it with the
+// save stem. Vanilla conflates the two — GameWorldSave writes the filename into
+// Info.Name and the .HI path is built from it (game.go:910) — so M14.4 does not
+// change what goes into the .ZZT bytes. It captures the authored title on its
+// way past and records it in the world's meta sidecar, where the picker can
+// read it and no path resolver ever will.
+func (s *EditorSession) WorldTitle() string {
+	s.mu.Lock()
+	defer s.mu.Unlock()
+	if s.engine == nil {
+		return ""
+	}
+	return s.engine.World.Info.Name
+}
+
 func (s *EditorSession) canEditLocked(member *webSocketClient) bool {
 	if _, ok := s.Members[member]; !ok {
 		return false

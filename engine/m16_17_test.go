@@ -2303,8 +2303,13 @@ func TestM1617dDerivedNameFallsBackWhereATypedNameIsRefused(t *testing.T) {
 	if result.Name == "OWNED" {
 		t.Fatal("the dream took Ada's world after all")
 	}
-	if !strings.HasPrefix(result.Name, "GEN") {
-		t.Errorf("fallback name = %q, want the minted GEN%%05X form", result.Name)
+	// M14.4 changed the shape of the fallback and not this test's subject: the
+	// plan's title now seeds a family and minting takes the first free member,
+	// so the dream lands on OWNED2 rather than a GEN%05X hash. What M16.17d
+	// asserts — that a DERIVED name falls back where a TYPED one is refused, and
+	// that Ada's bytes and ownership survive both — is unchanged below.
+	if !strings.HasPrefix(result.Name, "OWNED") || result.Name == "OWNED" {
+		t.Errorf("minted name = %q, want a free member of OWNED's family", result.Name)
 	}
 	if after, readErr := os.ReadFile(path); readErr != nil {
 		t.Fatal(readErr)

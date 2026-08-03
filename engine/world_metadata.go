@@ -118,6 +118,19 @@ func worldListEntries(dir string, worlds []string, playerCounts map[string]int, 
 				entry.Kind = WorldKindLocal
 				entry.Author = "Local"
 			}
+			// M14.4: a world made here has a title of its own — what the plan
+			// called it, or what the editor's world-property dialog says — and
+			// the stem is only its identity. Where a sidecar records one, it is
+			// what the picker shows. The manifest's own titles are handled
+			// below and are not overridden: a classic's title is the Museum's.
+			if meta, hasMeta, err := loadWorldMeta(dir, world); err == nil && hasMeta {
+				if meta.Title != "" {
+					entry.Title = meta.Title
+				}
+				if meta.Author != "" {
+					entry.Author = meta.Author
+				}
+			}
 			out = append(out, entry)
 			continue
 		}

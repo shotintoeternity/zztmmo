@@ -1609,6 +1609,12 @@ func (s *WebSocketServer) saveEditorWorld(client *webSocketClient, session *Edit
 		hasAccess = true
 	}
 
+	// M14.4: read the authored title before WorldBytes writes the save stem over
+	// it. The dialog lets an author call a world "The Salt Cellar"; publishing it
+	// as SALTCELL used to throw that away, because the stem was the only name a
+	// world had.
+	title := session.WorldTitle()
+
 	data, err := session.WorldBytes(client, safe)
 	if err != nil {
 		return "", err
@@ -1633,6 +1639,16 @@ func (s *WebSocketServer) saveEditorWorld(client *webSocketClient, session *Edit
 		if err := writeWorldAccess(dir, safe, access); err != nil {
 			return "", err
 		}
+	}
+	// The title only earns a sidecar when it says something the stem does not —
+	// and a republish that takes the title back off removes the stale one, so
+	// the picker never shows a name the author has stopped using.
+	if title != "" && title != safe {
+		if err := writeWorldMeta(dir, safe, WorldMeta{Title: title, Author: client.name}); err != nil {
+			return "", err
+		}
+	} else if err := os.Remove(worldMetaPath(dir, safe)); err != nil && !errors.Is(err, os.ErrNotExist) {
+		return "", err
 	}
 
 	world, err := LoadWorldBytes(data)

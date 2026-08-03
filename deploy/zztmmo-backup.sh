@@ -4,8 +4,9 @@
 # saves/ holds players' .SAV files, autosave/ and chat.jsonl. The deployment
 # directory itself holds the worlds players make: "Dream a world" writes
 # NAME.ZZT plus NAME.zwd / NAME.plan.md / NAME.prompt.txt, and the editor
-# publishes NAME.ZZT (plus NAME.access.json, which records who owns it). Both
-# land beside the ~100 shipped worlds that come out of the deployment bundle, so
+# publishes NAME.ZZT (plus NAME.access.json, which records who owns it, and
+# NAME.meta.json, which records its title). Both land beside the ~100 shipped
+# worlds that come out of the deployment bundle, so
 # telling them apart takes a manifest — see "Which worlds" below. Losing either
 # is a beta-ending first impression, so this runs unattended once a day
 # (zztmmo-backup.timer) and keeps a rolling window of dated archives.
@@ -43,9 +44,11 @@ RETENTION_DAYS=${RETENTION_DAYS:-14}
 MANIFEST="$SRC_DIR/SHIPPED_WORLDS"
 
 # Companion files a player-created world can have beside its .ZZT: the three
-# "Dream a world" writes (generation.go persistGeneratedWorld) and the editor's
-# ownership record (world_access.go).
-COMPANION_EXTS=(.zwd .plan.md .prompt.txt .access.json)
+# "Dream a world" writes (generation.go persistGeneratedWorld), the editor's
+# ownership record (world_access.go), and the world's title (world_title.go —
+# M14.4 moved a world's display name out of its 8-character filename, so the
+# sidecar is the only place the name a player reads exists).
+COMPANION_EXTS=(.zwd .plan.md .prompt.txt .access.json .meta.json)
 
 if [ ! -d "$SRC_DIR/saves" ]; then
 	echo "zztmmo-backup: no $SRC_DIR/saves directory — nothing to back up" >&2
