@@ -109,24 +109,25 @@ assert.equal(DOS_PICKS[1].name, "Dark Blue");
 // M16.18a's d-pad sends exactly these codes and nothing else.
 // ---------------------------------------------------------------------------
 {
+  // Top to bottom: the vanilla default, the grid, the hex field.
   const m = picker("");
-  m.selected = 0;
+  assert.equal(m.selected, VANILLA_INDEX, "the window opens on the default, at the top");
   colorPickerKey(m, key("ArrowUp"));
-  assert.equal(m.selected, 0, "the top of a column does not wrap off it");
+  assert.equal(m.selected, VANILLA_INDEX, "the top row is the top row");
+  colorPickerKey(m, key("ArrowDown"));
+  assert.equal(m.selected, 0, "down from the default is the grid's top-left");
+  colorPickerKey(m, key("ArrowUp"));
+  assert.equal(m.selected, VANILLA_INDEX, "and up from the grid's top row is the default again");
 
-  // Down the left column, into the two rows below the grid, and no further.
+  colorPickerKey(m, key("ArrowDown"));
   for (let i = 0; i < 7; i += 1) colorPickerKey(m, key("ArrowDown"));
   assert.equal(m.selected, 7, "the left column is eight rows");
   colorPickerKey(m, key("ArrowDown"));
   assert.equal(m.selected, CUSTOM_INDEX, "the hex field is the row below the grid");
   colorPickerKey(m, key("ArrowDown"));
-  assert.equal(m.selected, VANILLA_INDEX);
-  colorPickerKey(m, key("ArrowDown"));
-  assert.equal(m.selected, VANILLA_INDEX, "the last row is the last row");
+  assert.equal(m.selected, CUSTOM_INDEX, "the last row is the last row");
   colorPickerKey(m, key("ArrowUp"));
-  assert.equal(m.selected, CUSTOM_INDEX, "and the way back up is the way down reversed");
-  colorPickerKey(m, key("ArrowUp"));
-  assert.equal(m.selected, 7, "which lands back on the foot of the grid");
+  assert.equal(m.selected, 7, "and the way back up lands on the foot of the grid");
 
   // Columns. The grid is two columns of eight: 0..7 dark, 8..15 bright.
   m.selected = 3;
@@ -285,7 +286,7 @@ assert.equal(DOS_PICKS[1].name, "Dark Blue");
     assert.ok(cells.some((cell) => cell.text === pick.name), `${pick.name} is on the window`);
   }
   assert.match(text, /Any color: /, "the hex field is on the window");
-  assert.match(text, /No color \(the vanilla ZZT player\)/, "so is the way back");
+  assert.match(text, /Default \(white on blue\)/, "so is the way back to the vanilla player");
   assert.match(text, /Esc cancels/, "and the window says how to leave it");
 
   // Nothing may leave the window: the board keeps running underneath (the M1.3

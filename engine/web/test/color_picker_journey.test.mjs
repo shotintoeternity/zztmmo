@@ -261,11 +261,12 @@ try {
 
   // -------------------------------------------------------------------------
   // 5. A quick pick, with the arrows alone — the pad-only path a phone uses.
-  //    The window opens on the vanilla row: up to the hex row, up again to the
-  //    foot of the dark column (Grey), right to White, then up three to Red.
+  //    The window opens on the default row at the top: down into the grid's
+  //    top-left (Black), right to the bright column (Dark Grey), then down four
+  //    to Red.
   // -------------------------------------------------------------------------
   await openPicker(ada);
-  for (const code of ["ArrowUp", "ArrowUp", "ArrowRight", "ArrowUp", "ArrowUp", "ArrowUp"]) {
+  for (const code of ["ArrowDown", "ArrowRight", "ArrowDown", "ArrowDown", "ArrowDown", "ArrowDown"]) {
     await ada.page.keyboard.press(code);
     await sleep(ada, 60);
   }
@@ -343,9 +344,9 @@ try {
   await ada.page.keyboard.press("KeyY");
   await waitForCells(ada.page, (cells) => hasText(cells, "P  Play"), "Ada back at the title menu");
   await openPicker(ada);
-  // The window opens on the custom row holding her color; the vanilla row is
-  // one below it.
-  await ada.page.keyboard.press("ArrowDown");
+  // The window opens on the custom row holding her color; the default is the top
+  // row, reached by going up through the grid's left column.
+  for (let i = 0; i < 9; i += 1) await ada.page.keyboard.press("ArrowUp");
   await ada.page.keyboard.press("Enter");
   await waitForCells(ada.page, (cells) => !pickerIsOpen(cells), "the picker to close on the vanilla row");
   assert.equal(await storedColor(ada), null, "choosing no color removes the key rather than writing an empty one");

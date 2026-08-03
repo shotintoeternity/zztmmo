@@ -212,19 +212,25 @@ export function colorPickerKey(m: ColorPickerModal, event: ColorKeyLike): ColorP
   }
 }
 
+// The rows top to bottom are: the vanilla default, the 16-color grid, the hex
+// field. The default is FIRST because it is where the window opens and where a
+// player who has not picked anything already is.
 function moveUp(selected: number): number {
   if (selected === VANILLA_INDEX) {
-    return CUSTOM_INDEX;
+    return VANILLA_INDEX; // the top row is the top row
   }
   if (selected === CUSTOM_INDEX) {
     return GRID_ROWS - 1; // the foot of the left column
   }
-  return selected % GRID_ROWS === 0 ? selected : selected - 1;
+  return selected % GRID_ROWS === 0 ? VANILLA_INDEX : selected - 1;
 }
 
 function moveDown(selected: number): number {
-  if (selected >= CUSTOM_INDEX) {
-    return Math.min(VANILLA_INDEX, selected + 1);
+  if (selected === VANILLA_INDEX) {
+    return 0; // into the grid, top-left
+  }
+  if (selected === CUSTOM_INDEX) {
+    return CUSTOM_INDEX;
   }
   return selected % GRID_ROWS === GRID_ROWS - 1 ? CUSTOM_INDEX : selected + 1;
 }
@@ -253,10 +259,10 @@ function moveRight(selected: number): number {
 const FIRST_ROW = TEXT_WINDOW_Y + 3;
 const LAST_ROW = TEXT_WINDOW_Y + TEXT_WINDOW_HEIGHT - 1;
 const COLUMN_X = [TEXT_WINDOW_X + 4, TEXT_WINDOW_X + 25];
-const GRID_TOP = FIRST_ROW + 1;
-const CUSTOM_ROW = GRID_TOP + GRID_ROWS + 1;
-const VANILLA_ROW = CUSTOM_ROW + 1;
-const PREVIEW_ROW = LAST_ROW - 2;
+const VANILLA_ROW = FIRST_ROW + 1;
+const GRID_TOP = VANILLA_ROW + 2;
+const CUSTOM_ROW = GRID_TOP + GRID_ROWS;
+const PREVIEW_ROW = LAST_ROW - 1;
 const HINT_ROW = LAST_ROW;
 
 // TextWindowInit's interior width, the same string drawLine fills a line with.
@@ -313,6 +319,17 @@ export function renderColorPicker(write: WriteText, m: ColorPickerModal) {
 
   write(TEXT_WINDOW_X + 4, FIRST_ROW, HINT_COLOR, "Pick a color for your smiley:");
 
+  // The default, at the top and where the window opens: the vanilla ZZT player,
+  // shown as the thing itself — char 2 in 0x1F, white on blue, untinted.
+  drawCursor(write, COLUMN_X[0], VANILLA_ROW, m.selected === VANILLA_INDEX);
+  write(COLUMN_X[0] + 2, VANILLA_ROW, PREVIEW_COLOR, String.fromCharCode(PREVIEW_CHAR));
+  write(
+    COLUMN_X[0] + 4,
+    VANILLA_ROW,
+    m.selected === VANILLA_INDEX ? SELECTED_COLOR : NORMAL_COLOR,
+    "Default (white on blue)",
+  );
+
   for (let i = 0; i < DOS_PICKS.length; i += 1) {
     const column = Math.floor(i / GRID_ROWS);
     const x = COLUMN_X[column];
@@ -330,14 +347,6 @@ export function renderColorPicker(write: WriteText, m: ColorPickerModal) {
   const typed = "#" + m.custom.padEnd(HEX_DIGITS, "\xfa");
   write(COLUMN_X[0] + 2, CUSTOM_ROW, m.selected === CUSTOM_INDEX ? SELECTED_COLOR : NORMAL_COLOR, "Any color: ");
   write(COLUMN_X[0] + 14, CUSTOM_ROW, m.selected === CUSTOM_INDEX ? 0x70 : NORMAL_COLOR, typed);
-
-  drawCursor(write, COLUMN_X[0], VANILLA_ROW, m.selected === VANILLA_INDEX);
-  write(
-    COLUMN_X[0] + 2,
-    VANILLA_ROW,
-    m.selected === VANILLA_INDEX ? SELECTED_COLOR : NORMAL_COLOR,
-    "No color (the vanilla ZZT player)",
-  );
 
   // The preview is the real thing: char 2 in 0x1F, which is exactly what the
   // server draws for a player and exactly what the M19.1 tint gate accepts.
