@@ -4,7 +4,7 @@ import (
 	"strings"
 	"testing"
 
-	"github.com/benhoyt/zztgo"
+	zztgo "github.com/shotintoeternity/zztmmo/engine"
 )
 
 func TestWriteReport(t *testing.T) {

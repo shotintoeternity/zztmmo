@@ -8,7 +8,7 @@ import (
 	"os"
 	"strings"
 
-	"github.com/benhoyt/zztgo"
+	zztgo "github.com/shotintoeternity/zztmmo/engine"
 )
 
 func loadEnv() {

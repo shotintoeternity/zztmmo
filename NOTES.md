@@ -9183,3 +9183,72 @@ at M16.20 — the M18.13 precedent, since both landed after certification closed
 untouched; no simulation code changed. The browser suites were not run: nothing
 here is reachable from a browser — after M18.14 this line is terminal-build-only
 (`cmd/zztgo`), since a headless caller returns before it.
+
+## 2026-08-03 — The fork builds under its own module path
+
+The backlog item "Give the fork its own Go module identity", taken because the
+ranked list is exhausted and this was the one open bullet whose precondition —
+"after the current parity baseline is green" — M16.20 satisfied on 2026-08-02.
+Owner picked it from the four remaining bullets.
+
+**The path is `github.com/shotintoeternity/zztmmo/engine`, not `.../zztmmo`.**
+The `go.mod` lives in `engine/`, so the module root is `engine/`, and the repo
+path alone would be a spelling `go get` cannot resolve: it would look for a
+`go.mod` at the repository root, where there is none. The subdirectory is part
+of the module path or the path is a lie.
+
+**The package identifier stays `zztgo`, deliberately.** The module path is what
+claimed to be upstream; the package name is a local identifier and renaming it
+would touch every file in the fork — precisely the drift CLAUDE.md rule 4 exists
+to prevent, and the task lists imports, commands, docs and deploy references,
+not the package. The consequence is that the package name no longer matches the
+final path element, so all ten self-imports in `engine/cmd/*` now carry an
+explicit `zztgo "github.com/shotintoeternity/zztmmo/engine"` alias rather than
+leaving readers (and linters) to infer it.
+
+**Ten self-imports, not nine.** `cmd/zztgo/main.go` uses the single-line
+`import "…"` form and was missed by the first sweep, which only matched the
+tab-indented block form; it turned up in the re-grep after the bulk edit. Worth
+remembering that a repo-root grep and a module-root grep did not agree here.
+
+**Nothing in release or deploy needed touching.** The Makefile,
+`.github/workflows/ci.yml`, `deploy/*` and AWS.md all build by relative path
+(`go build ./cmd/zzt-server`), so the rename is invisible to them.
+
+**The generated parity artifacts were left alone, on purpose.**
+`fixtures/parity/report.json`, `report.md` and `run.json` still say
+`github.com/benhoyt/zztgo`, but all three are gitignored local run outputs whose
+package strings come straight from `go test -json`; the next `make parity`
+renders them under the new path. Hand-editing a generated artifact would be the
+wrong shape of fix. The two hand-written sample skip records inside
+`cmd/zzt-parity/report_test.go` are source, and were updated.
+
+**Attribution is untouched**, which the task required: README.md, NOTICE.md and
+LICENSE keep their zztgo credits, and `engine/LICENSE.txt` still carries Ben
+Hoyt's license verbatim. The one doc that did change is `engine/README.md` —
+it was upstream's README in Ben's first person ("I created it using a
+Pascal-to-Go converter that I wrote"), which read as upstream rather than as a
+fork. It now says what the directory is and quotes Ben's description as a quote,
+with every one of his links intact.
+
+**`go test -race` is red, and it was red before this.** Running it as part of
+verification is what found it: `TestDisplayIOErrorInteractiveShortMessageOpensWindow`
+races on the package global `keyChan` between its feeder goroutine
+(`m18_15_test.go:104`) and the deferred global restore (`:78`), because
+`defer close(stop)` signals the goroutine without waiting for it. Stashing this
+work and re-running the single test at `bfd028a` reproduces it under the *old*
+module path, which settles authorship: a module rename cannot introduce a data
+race. Filed as **M18.16** and deliberately not fixed here — it is test-harness
+surgery inside M18.15's test, `go test ./...` is green without touching it, and
+the M16.14c precedent is to file a pre-existing red required job as its own task
+rather than absorb it. Worth noting for the next executor: this was nearly
+missed, because the background command piped `-race` output through `tail`, so
+the shell reported `tail`'s exit code (0) and not the suite's.
+
+`go build ./...`, `go vet ./...` and `go test -count=1 ./...` green; the replay
+fixtures are untouched and no
+simulation code changed. `TestParityManifest`/`TestParityManifestIsCanonical`
+were re-run *after* the TASKS.md edit (the M18.15 lesson) and stay green: the
+manifest scanner matches `^- [x] **M<n>.<n>`, and this is a `*` backlog bullet
+with no M number, so it needs no manifest row. The browser suites were not run —
+nothing here is reachable from a browser.

@@ -5,7 +5,7 @@ import (
 	"io"
 	"strings"
 
-	"github.com/benhoyt/zztgo"
+	zztgo "github.com/shotintoeternity/zztmmo/engine"
 )
 
 type shotRef struct {

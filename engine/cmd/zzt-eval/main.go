@@ -28,7 +28,7 @@ import (
 	"strings"
 	"time"
 
-	"github.com/benhoyt/zztgo"
+	zztgo "github.com/shotintoeternity/zztmmo/engine"
 )
 
 // defaultPremises mirrors the documented premise set in llmworld/EVAL.md:

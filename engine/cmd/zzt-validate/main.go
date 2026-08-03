@@ -19,7 +19,7 @@ import (
 	"runtime/debug"
 	"strings"
 
-	"github.com/benhoyt/zztgo"
+	zztgo "github.com/shotintoeternity/zztmmo/engine"
 )
 
 func main() {

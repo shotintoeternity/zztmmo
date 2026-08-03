@@ -1,6 +1,6 @@
 package main
 
-import "github.com/benhoyt/zztgo"
+import zztgo "github.com/shotintoeternity/zztmmo/engine"
 
 func main() {
 	zztgo.Run()

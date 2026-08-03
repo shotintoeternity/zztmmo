@@ -1,4 +1,4 @@
-module github.com/benhoyt/zztgo
+module github.com/shotintoeternity/zztmmo/engine
 
 go 1.16
 

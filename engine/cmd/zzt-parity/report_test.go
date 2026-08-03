@@ -289,7 +289,7 @@ func goTestGateIndex(t *testing.T, gates []gateResult) int {
 // was absent must fail the certification, not ride along inside an "ok".
 func TestUndeclaredSkipBlocksCertification(t *testing.T) {
 	skips := []skipRecord{{
-		Package: "github.com/benhoyt/zztgo",
+		Package: "github.com/shotintoeternity/zztmmo/engine",
 		Test:    "TestM1614CollaborativeEditorInBrowsers",
 		Reason:  "browser harness unavailable: run `npm ci` in engine/web",
 	}}
@@ -307,7 +307,7 @@ func TestUndeclaredSkipBlocksCertification(t *testing.T) {
 // so rather than pretending the run was complete.
 func TestDeclaredSkipDoesNotBlockButIsReported(t *testing.T) {
 	skips := []skipRecord{{
-		Package: "github.com/benhoyt/zztgo",
+		Package: "github.com/shotintoeternity/zztmmo/engine",
 		Test:    "TestM1618PlatformMatrix/firefox-touch-portrait",
 		Reason:  "declared skip: Playwright cannot emulate touch in Firefox",
 	}}

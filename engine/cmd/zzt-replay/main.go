@@ -12,7 +12,7 @@ import (
 	"os"
 	"sort"
 
-	"github.com/benhoyt/zztgo"
+	zztgo "github.com/shotintoeternity/zztmmo/engine"
 )
 
 func main() {

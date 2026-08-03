@@ -4849,6 +4849,32 @@ lists. Every task: `cd engine && go build ./... && go test ./...` green,
   manifest row, so `TestParityManifest` was red on arrival at HEAD; this commit
   adds both `task.M18.14` and `task.M18.15`.
 
+- [ ] **M18.16 — M18.15's own test races on `keyChan`, and `go test -race` is a
+  required CI job.** Filed 2026-08-03 by the module-identity backlog item, which
+  ran `-race` as part of its verification and found it red. **Pre-existing at
+  `bfd028a`** and reproduced there by stashing that work — the module rename
+  cannot cause a data race, and the failure reproduces under the old module path.
+  This is the M16.14c situation again: test-only, but a required CI job is red,
+  so it should be taken before anything that needs a green gate.
+  `TestDisplayIOErrorInteractiveShortMessageOpensWindow`
+  (`engine/m18_15_test.go:76`) starts a feeder goroutine that loops on
+  `case keyChan <- KEY_ESCAPE` (`:104`), reading the **package global** `keyChan`
+  every iteration. Its `defer close(stop)` (`:100`) only *signals* the goroutine;
+  nothing waits for it to exit, and when both select cases are ready Go picks one
+  at random, so the feeder can still be reading `keyChan` after `close(stop)`
+  returns. The deferred global restore at `:78`
+  (`E, keyChan, TextWindowRejected = prevE, prevKeyChan, prevRejected`) then
+  writes what the feeder is reading. Defers run LIFO, so `close(stop)` does run
+  first — that is why the plain `go test ./...` stays green and only `-race`
+  catches it. Fix: make the feeder's exit observable and wait for it (a `done`
+  channel the goroutine closes on return, or a `sync.WaitGroup` waited on) before
+  the globals are restored; the restore must not run while the goroutine can
+  still touch `keyChan`. Check whether M18.14's interactive test, which
+  `m18_15_test.go:81` says it shares a harness with, has the same shape.
+  DoD: `go test -race -count=1 ./...` green on an unmodified checkout, the test
+  still asserts what M18.15 wrote it to assert (a short error opens the window
+  rather than panicking), and no production code changes.
+
 ## M14 — Rearchitecting for the service ZZTMMO is becoming
 
 Filed 2026-07-12 from a whole-repo review (NOTES.md): three structural debts
@@ -5760,13 +5786,38 @@ newly enables; same rule: backlog bullets, owner promotes before spec):**
   authoritative result. Keep this journey green while M16 closes fidelity gaps;
   use it to decide whether an otherwise attractive feature advances the core
   shared-ZZT experience.
-* [ ] **Give the fork its own Go module identity.** The repository is
+* [x] **Give the fork its own Go module identity.** The repository is
   `github.com/shotintoeternity/zztmmo`, but `engine/go.mod` still declares
   `github.com/benhoyt/zztgo`. Plan a deliberate import-path migration after the
   current parity baseline is green: update self-imports, commands, documentation,
   and any release/deploy references; preserve upstream attribution in README and
   NOTICE. DoD: a clean clone builds/tests under the ZZTMMO module path and no
   tooling or generated artifact presents the fork as upstream zztgo.
+  **Done 2026-08-03**, on the precondition the task names: M16.20 closed the
+  parity baseline green on 2026-08-02. The module is now
+  `github.com/shotintoeternity/zztmmo/engine` — the repository path plus the
+  subdirectory the `go.mod` actually sits in, which is the only spelling `go get`
+  can resolve. Ten self-imports across `engine/cmd/*` carry an explicit `zztgo`
+  alias, because the package name and the final path element no longer match.
+  The **package identifier stays `zztgo`**: renaming it touches every file in the
+  fork for no import-path gain, and the task lists imports, commands, docs and
+  deploy references, not the package (CLAUDE.md rule 4). `engine/README.md` was
+  upstream's README in Ben's first-person voice, which is the one doc that read as
+  upstream rather than as a fork; it now says what it is and quotes Ben's own
+  description as a quote. Attribution is untouched in README.md, NOTICE.md and
+  LICENSE, and `engine/LICENSE.txt` still carries his license verbatim. No
+  release/deploy reference needed changing — the Makefile, `.github/workflows/ci.yml`,
+  `deploy/*` and AWS.md all build by relative path (`./cmd/zzt-server`). The parity
+  `report.json`/`report.md`/`run.json` do carry the old path, but they are gitignored
+  local run outputs that `go test -json` repopulates, so the next `make parity`
+  renders them under the new path; the two hardcoded sample skip records in
+  `cmd/zzt-parity/report_test.go` were updated. Verified: `go build`, `go vet` and
+  `go test -count=1 ./...` green, and a throwaway clean clone builds and tests under
+  the new path. `go test -race -count=1 ./...` is **red, and was already red at
+  `bfd028a`** — M18.15's own test races on the `keyChan` global; reproduced at HEAD
+  by stashing this work, and filed as **M18.16** rather than fixed here, since a
+  module rename cannot cause a data race and the fix is test-harness surgery in
+  someone else's task.
 * [ ] **Evaluate server scaling for 20–30 concurrent players.**
   STATUS 2026-07-30 (M18.0a audit): unticked. The 30-client run is real and now
   asserts fan-out actually reaches every client, but the documented bottleneck
