@@ -78,12 +78,21 @@ All commands are run from the `engine/` directory.
     > stale UI. The server logs a `STALE build` warning at startup if `web/dist`
     > is older than `web/src`.
 
-3.  **Launch the MMO server:**
+3.  **Put a world where the server can load it:**
+    ```bash
+    cp ../fixtures/TOWN.ZZT .
+    ```
+    > `.ZZT` files in `engine/` are gitignored, so a fresh clone has none. The
+    > server loads its startup world from the directory it runs in, and `TOWN`
+    > ships as a committed fixture. Add any other worlds the same way; the
+    > picker lists everything in the `-worlds` directory.
+
+4.  **Launch the MMO server:**
     ```bash
     go run ./cmd/zzt-server -world TOWN -web web/dist -help . -saves saves
     ```
 
-4.  Open **[http://127.0.0.1:8080](http://127.0.0.1:8080)** in multiple browser tabs.
+5.  Open **[http://127.0.0.1:8080](http://127.0.0.1:8080)** in multiple browser tabs.
 
 ### Useful Server Flags
 

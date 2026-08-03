@@ -202,8 +202,11 @@ M12.23, M17.1–M17.7, M16.0–M16.8a — has fully landed.)
    **M14.3 was closed as SKIPPED 2026-08-03** on the owner's decision and on
    its own DoD-if-skipped path — measured, not asserted, and NOTES.md records
    the three conditions that re-open it. **M12.15d landed 2026-08-03** on the
-   owner's request, which closes the last unchecked task in this file. The beta
-   invite is the open owner action.
+   owner's request. Two tasks were filed the same day out of the backlog and
+   the README verification: **M18.13** (one picker entry per joinable world —
+   tester-visible, take it before or with the invite) and **M18.14** (a missing
+   startup world deadlocks the server rather than reporting it —
+   contributor-facing, take it after). The beta invite is the open owner action.
 
 **Optional / deferred (bottom):**
 - M14.3 — package split — **closed as skipped 2026-08-03**, see NOTES.md
@@ -4671,6 +4674,95 @@ lists. Every task: `cd engine && go build ./... && go test ./...` green,
   are NOT audited — that needs owner confirmation and the SSH procedure, and is
   the one part of this DoD still open.**
 
+- [ ] **M18.13 — One picker entry per world a player can actually join.**
+  Promoted 2026-08-03 from the "World picker follow-ups" backlog (owner report
+  2026-07-18) after the code was re-checked and the defect is still live. The
+  picker's identity for a world is *the filename as written on disk*; the join
+  path's identity is *that name uppercased*. Those two disagree, in two ways:
+
+  1. **Duplicates.** `ListWorlds` (`engine/web_api.go:688`) matches the suffix
+     case-insensitively (`strings.ToUpper(name)` has suffix `.ZZT`) but appends
+     the base name verbatim, one entry per file. So `TOWN.ZZT` and `town.zzt`
+     list as two entries, `TOWN` and `town`. `museumMetadataForWorld`
+     (`world_metadata.go:161`) uppercases its lookup, so both match the same
+     manifest row and render as two identical `classic` cards — same title,
+     same author, same ID. `LoadPristineWorld`
+     (`websocket_server.go:1761`) then sends both to `SanitizeSaveName`, which
+     uppercases, so both open the same `TOWN.ZZT`.
+  2. **Entries that cannot be joined at all.** If only `town.zzt` exists, the
+     picker still lists `town`, but the join path opens `TOWN.ZZT` and there is
+     no such file. On the production Linux host that is a dead entry; on a
+     case-insensitive filesystem (macOS dev) the same two names are one file,
+     which is exactly why this reproduces on the host and not on a workstation.
+     **A unit test must therefore drive `worldListEntries` with a synthesized
+     name list, as the M18.9 tests do — a temp-directory test cannot express
+     the collision on APFS.**
+
+  There is a second, distinct collapse the owner report also names, and it is
+  NOT the same bug: `loadWorldMetadata` (`world_metadata.go:194`) registers the
+  manifest ID, the zip basename, and *every* `.ZZT` member of the zip as
+  aliases for one entry, so genuinely different files (`DARKCIT1`, `DARKCIT2`)
+  can each resolve to one manifest row and repeat its curated title. That is
+  metadata fan-out, not a duplicate world, and those files are separately
+  joinable — **do not "fix" it by dropping entries.** Decide only whether such
+  entries should show the shared Museum title or their own name.
+
+  Identity rule to implement (decide with the owner if it does not survive
+  contact): **one entry per name the join path would resolve to** — i.e. key
+  the picker on `SanitizeSaveName(base)`, exactly what `LoadPristineWorld`
+  will use. When several files collapse onto one key, keep the one whose
+  on-disk name already equals the key (`TOWN.ZZT` over `town.zzt`), since that
+  is the file the join will actually open; if none does, the entry is
+  unjoinable on a case-sensitive filesystem and must either be dropped or
+  reported, not silently listed.
+
+  Surgery: `ListWorlds` is the natural place (it is where the per-file loop
+  lives and it already drops names `SanitizeSaveName` rejects), but note its
+  callers pass the result to `WorldListEntriesInDirWithEditors`
+  (`web_api.go:600,627`), and `worldIsDreamed`/`loadWorldMeta` look for
+  `<name>.zwd` and `<name>.meta.json` siblings — so whichever name survives
+  must be the one those sidecar lookups use, or a dreamed world silently
+  reclassifies as `local` and M14.4's title sidecar stops being found.
+
+  DoD: a worlds listing containing case variants of one world yields exactly
+  one entry, keyed on what the join path resolves, pinned by a unit test that
+  synthesizes the names (per the note above) plus one that proves the surviving
+  entry keeps its `dreamed` kind and its `.meta.json` title; a name that
+  resolves to no loadable file does not appear as a joinable entry; the Museum
+  alias fan-out is left working and a test says so; no world that was joinable
+  before becomes unlistable without an explicit note in this task; `go test
+  ./...` and `npm test` green; replay fixture untouched. Check the live picker
+  after deploy — the owner's duplicate should be gone.
+
+- [ ] **M18.14 — A missing startup world deadlocks the server instead of
+  reporting it.** Found 2026-08-03 while verifying the README's Quick Start
+  from a clean clone (the README half is done; this is the engine half).
+  `cmd/zzt-server/main.go:39` calls `zztgo.WorldLoad`, which on failure calls
+  `DisplayIOError` (`game.go:601`) → `TextWindowSelect` (`txtwind.go:173`) →
+  `InputReadWaitKey` (`input.go:127`), which in a headless process blocks on a
+  nil channel. The Go runtime then aborts the process with `fatal error: all
+  goroutines are asleep - deadlock!` and a stack dump. The `log.Fatalf("load
+  %s.ZZT failed")` on the next line is unreachable, so the one clear message
+  the code already has is never printed.
+  This is the same class as the `GameDebugPrompt` bug (`debug_prompt_test.go`):
+  an interactive vanilla path reached from a headless server. It is a real
+  first-run experience — a new contributor following the README verbatim gets a
+  runtime panic trace instead of "TOWN.ZZT not found".
+  Fix at the headless boundary, not by special-casing the server: when
+  `Headless` is set, `DisplayIOError` must record the error and return false
+  rather than open a text window. Mind that `WorldLoad`'s callers read its
+  bool, and that `DisplayIOError` has other callers in the same file — a
+  headless *client* path that today shows the window must not start silently
+  swallowing errors, so route them somewhere observable.
+  **ZZT-QUIRK caution:** `DisplayIOError` is converted code (`GAME.PAS`); the
+  change must be a headless guard, not a rewrite of the vanilla display path,
+  and the interactive path must stay byte-identical.
+  DoD: a test that loads a missing world with `Headless = true` returns false
+  without blocking (it must fail by timeout/panic today, so write it inverted
+  first and watch it fail); `cmd/zzt-server` prints its `log.Fatalf` message and
+  exits non-zero for a missing world; the interactive path is unchanged;
+  `go test ./...` green; replay fixture untouched.
+
 ## M14 — Rearchitecting for the service ZZTMMO is becoming
 
 Filed 2026-07-12 from a whole-repo review (NOTES.md): three structural debts
@@ -5555,7 +5647,9 @@ newly enables; same rule: backlog bullets, owner promotes before spec):**
   world picker you walk through; TOWN goes back to being a game you beat.
 
 **Architecture follow-ups:**
-* [ ] **Deduplicate the world catalog.** Owner report (2026-07-18): the world
+* [x] **Deduplicate the world catalog.** **Promoted 2026-08-03 to M18.13**,
+  which carries the specced version (the code was re-checked first: still
+  live). Kept here for the report's own wording. Owner report (2026-07-18): the world
   picker shows the same ZZT world multiple times. Likely vectors, to be
   confirmed against the live worlds directory: `ListWorlds` accepts any
   case variant of the `.ZZT` suffix and base name, so `TOWN.ZZT`/`town.zzt`
@@ -5610,10 +5704,21 @@ newly enables; same rule: backlog bullets, owner promotes before spec):**
   reconnects still land in the expected room/session.
 
 **README follow-ups:**
-* [ ] **Correct the fixture path in the directory map.** The README currently
+* [x] **Correct the fixture path in the directory map.** The README currently
   calls the fixture directory `engine/fixtures/`; committed fixtures live at
   repository-root `fixtures/`. Make the map and any associated local-run wording
   accurate, then verify the documented commands from a clean clone.
+  **Done 2026-08-03.** The directory map had already been corrected — it reads
+  `fixtures/ … (repository root)` — so the remaining half was the verification,
+  and that is what found something: run from a clean clone, the Quick Start's
+  own launch command **cannot work**. `.ZZT` files are gitignored, so a fresh
+  clone has no `engine/TOWN.ZZT`, and `-world TOWN` resolves against the
+  process's working directory. Added a step that copies the committed
+  `fixtures/TOWN.ZZT` in, and said why. Verified end to end in a throwaway
+  clone: `go test ./...` green, `npm install && npm run build` green, server up,
+  `/` returns 200 and `/api/worlds` lists TOWN as a `classic` by Tim Sweeney.
+  The failure mode that verification exposed — a missing startup world
+  deadlocks the server instead of reporting it — is filed as M18.14.
 * [x] **Add capnkev to the README greetz list.** Keep the list alphabetical,
   names only, and preserve the README's no-emoji style.
 

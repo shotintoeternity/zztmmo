@@ -8990,3 +8990,56 @@ exposure gate.
 No simulation code was touched; `go build ./...`, `go vet ./...` (with and
 without `-tags canary`) and `go test ./...` are green, replay fixtures
 unchanged.
+
+## 2026-08-03 — The README verification found something; two tasks filed
+
+Follow-up to the "what's next" sweep. Two corrections to my own earlier answer
+are worth recording, because both changed what the next session should do.
+
+**The task list was not empty.** I reported "no unchecked executor tasks" after
+grepping `- [ ]`. Six open items are written with `* [ ]` — the "Architecture /
+World picker / README follow-ups" groups at the end of the file. They sit under
+the "Idea backlog — NOT tasks; owner picks, then each gets an M7-style spec"
+heading, so the framing was right (they need a spec before execution) but the
+count was wrong.
+
+**The README follow-up was half stale and half worse than filed.** The
+directory map it describes had already been corrected (`fixtures/ … repository
+root`). The other half of its DoD — "verify the documented commands from a
+clean clone" — had not been done, and doing it broke immediately: `.ZZT` files
+are gitignored, so a fresh clone has no `engine/TOWN.ZZT`, and `-world TOWN`
+resolves against the process's working directory. The Quick Start's own launch
+command cannot work on the machine of anyone following it.
+
+Verified in a throwaway clone of this repo: `go test ./...` green (which also
+confirms M12.15d's artifacts are properly tracked — the miner's inputs are all
+committed files), `npm install && npm run build` green, and with
+`cp ../fixtures/TOWN.ZZT .` added the server comes up, `/` returns 200 and
+`/api/worlds` reports TOWN as `classic` by Tim Sweeney. README now carries that
+step and says why. (Noted in passing, not chased: `go test ./...` leaves an
+`ACCEPT.ZZT` behind in `engine/`.)
+
+**M18.14, filed from that failure.** Before the world is copied in, the clean
+clone does not print "load TOWN.ZZT failed" — it dies with `fatal error: all
+goroutines are asleep - deadlock!` and a stack dump. `WorldLoad` → 
+`DisplayIOError` (`game.go:601`) → `TextWindowSelect` → `InputReadWaitKey`
+blocks on a nil channel in a headless process, so `main.go:39`'s `log.Fatalf`
+is unreachable. Same class as the `GameDebugPrompt` bug: an interactive vanilla
+path reached from a headless server. The fix belongs at the headless boundary
+in `DisplayIOError`, and `DisplayIOError` is converted code, so it must be a
+guard rather than a rewrite.
+
+**M18.13, promoted from the backlog after re-checking the code.** The owner's
+2026-07-18 duplicate-catalog report is still live: `ListWorlds` keys the picker
+on the filename verbatim while `LoadPristineWorld` keys the join on that name
+uppercased, so `TOWN.ZZT` + `town.zzt` list twice and both open one file — and
+a lone `town.zzt` lists an entry that cannot be joined at all. Two things the
+spec pins down that were not obvious from the report: this reproduces on the
+production Linux host but *cannot* be reproduced by a temp-directory test on
+case-insensitive APFS (so the test must synthesize the name list, as M18.9's
+tests do), and the report's second symptom — several files sharing one curated
+Museum title — is a *different* mechanism (`loadWorldMetadata` registers every
+zip member as an alias) whose entries are separately joinable and must not be
+deduplicated away.
+
+No engine code changed in this session; `go test ./...` green.
