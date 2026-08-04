@@ -250,7 +250,11 @@ M12.23, M17.1–M17.7, M16.0–M16.8a — has fully landed.)
    2026-08-04**: Ada's last eastward leg now ends on the empty detour row rather
    than on the vendor's own row, so the walk has nothing to overshoot into, and
    the cutline is green in the full browser family. It filed nothing. **M16.11c
-   is the next task in this file.**
+   landed 2026-08-04**: journey 1's `walkOnto` carries the growing hold too, so
+   the swing that was only ever watched in the cutline's copy is closed in both.
+   It filed **M16.11e** at the owner's request — the four M16.11a–d entries are
+   four fixes to one cause, and M16.11e is the cause: drive the walks by observed
+   movement instead of by guessing the hold. Unranked; not beta-gating.
 
 **Optional / deferred (bottom):**
 - M14.3 — package split — **closed as skipped 2026-08-03**, see NOTES.md
@@ -5313,7 +5317,7 @@ The background says which player; the glyph says that it is a player.
   from one exact square — not impossible, but not the two-tile step that was
   enough at x=25, which is why this leg was the one that failed.
 
-- [ ] **M16.11c — journey 1's `walkOnto` can swing across its target forever.**
+- [x] **M16.11c — journey 1's `walkOnto` can swing across its target forever.**
   Filed 2026-08-04 by M16.11b, which found the mechanism while forcing its own
   fix and fixed it only in the file it was working in (rule 4). A step covers a
   number of tiles that is a deterministic function of the hold — a forced 330ms
@@ -5335,6 +5339,107 @@ The background says which player; the glyph says that it is a player.
   up sharing the helper stated in a comment rather than left to be discovered a
   third time; `TestM1611BrowserEndToEndPlayerJourneys` and
   `TestCoopCutlineThreePlayerAcceptanceJourney` both green under `ZZT_BROWSER=1`.
+  **Done 2026-08-04.** Watched first, exactly as the DoD asked: with `hold: 330`
+  forced on the one call site and no fix, the run fails `never stood on board 2's
+  gem (12,10); stopped at (6,12) board 2` in 25s. The spec's `9 → 13 → 9` is the
+  right mechanism at the wrong coordinates — the respawn is `(6,12)` and the swing
+  is `12 → 9 → 12`, so the walk never clears the vertical leg and the x in the
+  error never moves off 6 at all. With the growing hold added, the same forced run
+  passes (44s), and the shipped form (no forcing) is green in both suites in one
+  command: cutline 83s, journey 1 44s.
+  The two files stay separate, which is now written in both of them rather than in
+  one: they are separate drivers over separate observed state (`coop`'s is
+  per-client, journey 1's is page-global), so neither can import the other's
+  helper — the shape is shared, the code is not, and a fix to one is owed to the
+  other by hand. That sentence is the whole reason this was a task instead of a
+  line in M16.11b.
+  One shape change beyond the fix, so the "same helper" claim is true rather than
+  approximate: journey 1's `walkOnto` took `maxSteps` positionally, and now takes
+  the `{ maxSteps, hold }` bag the cutline's copy takes. `until` was NOT carried
+  over — journey 1 has no walk that ends on a board change, and adding the
+  parameter for the symmetry would be the drift rule 4 forbids.
+
+- [ ] **M16.11e [ADVISOR] — drive the journeys by observed movement instead of by
+  guessing the hold.** Filed 2026-08-04 (owner request) out of M16.11c's session.
+  Four tasks — M16.11a, M16.11b, M16.11c, M16.11d — have now been spent on one
+  sentence: *a step is not one tile*. Each fixed a site; none fixed the reason.
+  **The mechanism, stated exactly, because both files currently state it wrong.**
+  The server latches input: `setInput` stores into `inst.Inputs[playerID]`
+  (`engine/websocket_server.go:1909`) and nothing clears it, so it re-applies the
+  latched direction on every tick until a new input message overwrites it, at
+  `ServerTickDuration = 110ms` (`engine/websocket_server.go:24`). The client sends
+  on the key EDGES — `handleKeyDown` and `handleKeyUp` both call
+  `sendInput(currentMask())` immediately (`engine/web/src/main.ts:2871,2882`) —
+  and the 55ms `inputTimer` (`main.ts:1451`) only re-sends the same mask. So tiles
+  moved = server ticks spanned by the nonzero latch, which is why a 330ms hold
+  moves exactly three tiles and why the count is a steady answer rather than a
+  coin flip.
+  Both suites' header notes say the release waits for the next 55ms sample
+  ("the client samples the held key, but the SERVER latches that mask until the
+  key-up sample arrives" — `e2e_journey.test.mjs` note 5, and the same claim in
+  `coop_journey.test.mjs`). The latch half is right; the sample half is not.
+  Correcting it belongs to this task, because the wrong model is what makes
+  "pick a hold and hope" look like the only available design.
+  **The change.** Hold the key until the *observed* position moves one tile, then
+  release. The driver already has position continuously — `seen.you` and `c.you`
+  are updated from every snapshot and diff — so the walk can close the loop
+  instead of predicting it.
+  **What that does and does not buy, so the next executor does not over-trust it.**
+  It buys a step that costs about one tick instead of a fixed 165ms
+  (95ms hold + 70ms settle), and one that tracks load rather than assuming it. It
+  does NOT buy a guaranteed one-tile step: between the tick that moved the player
+  and the zero mask landing there is a window (server broadcast → the driver's
+  socket listener → its poll → CDP keyup → server), and when that window crosses
+  the next tick boundary the player takes a second tile. Under steady load that
+  window is steady — which is the residue-class trap again, at k=2. **So the
+  growing hold stays.** It is the only part that guarantees the walk terminates,
+  and this task must not remove it while rewriting around it.
+  **Prior art, and why it cannot simply be imported.** `web/test/lib/canvas.mjs`
+  already does this, better: its `walk` (line 815) holds the key and takes each
+  tick with `step({ await: { dx, dy, key } })`, waiting for the browser's own
+  input frame to land before the tick that consumes it, and its comment at 824
+  already knows the hazard this family kept rediscovering — *"the keyup's zero
+  frame is consumed by its own tick, so no straggler is left to land inside a
+  later one."* But that `step` posts to `${controlURL}/control/step` (line 771)
+  and the clock is `page.clock.runFor` (line 224): it needs the M16.10 harness's
+  **tick-locked control server and faked page clock**. The M16.11 journeys run
+  the production `zzt-server` binary at real 110ms ticks on purpose — that is
+  what makes them end-to-end — so they have no `/control` endpoint to step and
+  cannot adopt the lib as-is. What transfers is the principle (wait for the
+  observable, never for the clock) and the analogue: the journeys' observable is
+  the diff stream they already parse into `seen.you`/`c.you`, not a control
+  response. Do not start by trying to import `canvas.mjs`; the first honest step
+  is to confirm this constraint still holds.
+  **One decision for the advisor: extract, or write it by hand a third time.**
+  The two drivers differ only in their observer — the cutline's `c` is already
+  `{page, you, boardId, label}`, and journey 1's is a page-global `seen` plus
+  `page`, which fits behind the same shape with a small adapter. A shared module
+  under `web/test/lib/` (the convention `canvas.mjs` already establishes) would
+  end the by-hand carry that produced this family.
+  Against it: rule 4, and CUTLINE.md's policy protects the cutline's driver.
+  The recommendation in this spec is to extract *as part of* this task, on the
+  grounds that the alternative is writing the closed loop twice by hand, which is
+  precisely how the family reached four entries — but it is the advisor's call,
+  and either answer must end up stated in a comment (the M16.11c rule).
+  DoD: `step`/`walkOnto` release on observed movement in both journey files; the
+  growing hold retained; the forced-uniform-step regression still passes in both
+  (`hold: 330` on journey 1's `walkOnto(12,10)` and on the cutline's ACT 3/4 legs
+  must still reach their targets — that forcing is the guard that proves the
+  escape hatch survived the rewrite); both suites' notes describe the latch
+  correctly; `TestM1611BrowserEndToEndPlayerJourneys` and
+  `TestCoopCutlineThreePlayerAcceptanceJourney` green under `ZZT_BROWSER=1`, plus
+  the full browser family (this touches `engine/web/`); and the wall-clock for
+  both suites recorded in this entry before and after, so the speed claim is
+  measured rather than asserted — **today's baseline is journey 1 at 44s and the
+  cutline at 83s** (2026-08-04, shipped form, this workstation).
+  Not beta-gating: it is test-harness hygiene, and the suites are green as they
+  stand. Deliberately **unranked** — the owner ranks it.
+  One unverified thing found on the way in, recorded so it is not re-derived:
+  `handleKeyUp` returns early when a modal is open (`main.ts:2875`), so a key
+  released *while* a modal is up may never send its zero mask, leaving the
+  server's latch nonzero. `sendInput` refuses nonzero masks under a modal, so
+  this may be unreachable — it was not chased, and it is not this task's job
+  unless it turns out to be the reason a walk that ends on a scroll misbehaves.
 
 - [x] **M16.18d — teach the device matrix what a surface accepts, and certify the
   color picker on it.** Filed 2026-08-03 by M19.2. `modalAcceptsTextInput` now

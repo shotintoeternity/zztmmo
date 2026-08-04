@@ -284,9 +284,12 @@ const ids = (c) => c.roster.map((p) => p.id).sort();
  * walk that is making progress: the hold only grows after a step that failed to.
  *
  * e2e_journey.test.mjs carries the same helper, added by M16.11a for the same
- * cause one row and one journey away. The two files are separate drivers with
- * separate observed state (this one is per-client, that one page-global), so
- * the shape is shared and the code is not.
+ * cause one row and one journey away — including the growing hold, carried over
+ * by M16.11c after that copy was watched swinging 12, 9, 12 past board 2's gem.
+ * The two files are separate drivers with separate observed state (this one is
+ * per-client, that one page-global), so neither can import the other's: the
+ * shape is shared and the code is not, and a fix to one is owed to the other by
+ * hand.
  */
 async function walkOnto(c, tx, ty, describe, { maxSteps = 24, hold = 95, until = null } = {}) {
   let stalled = 0;

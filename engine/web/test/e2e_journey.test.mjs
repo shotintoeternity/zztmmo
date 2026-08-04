@@ -187,15 +187,44 @@ const atLeastX = (x) => () => (seen.you?.x ?? 0) >= x;
  *
  * Vertical first, then horizontal: the caller's target is reached by clearing
  * the starting row before travelling along the target's own row.
+ *
+ * AND WHY THE HOLD GROWS AFTER A STEP THAT DID NOT CLOSE THE DISTANCE.
+ * Re-aiming alone is not enough. How many tiles a step covers is a function of
+ * where the hold falls across the server's 110ms tick, so under steady
+ * conditions it is a steady ANSWER, not a coin flip — a forced 330ms hold moves
+ * exactly three tiles, every time, which is how this was measured. While the
+ * step size k does not change, every square this walk stands on stays in one
+ * residue class mod k, so a target in another class is not merely missed, it is
+ * unreachable: k=3 from the respawn at (6,12) visits 12, 9, 12, 9 and never row
+ * 10, and this helper was watched doing exactly that until its steps ran out
+ * (M16.11c). So a step that did not close the distance holds ~110ms longer next
+ * time — one more server tick with the key latched, so a different k and a
+ * different class — capped by `% 330` so it cycles rather than grows. Nothing
+ * changes for a walk that is making progress: the hold only grows after a step
+ * that failed to.
+ *
+ * `hold` is here so a run can FORCE that uniform step size instead of waiting
+ * for load to supply it; no caller needs it in the shipped form.
+ *
+ * coop_journey.test.mjs carries the same helper — same shape, separate code.
+ * The two are separate drivers over separate observed state (that one is
+ * per-client, this one page-global), so neither can import the other's; a fix
+ * to one is owed to the other by hand, which is how M16.11b's fix came to be
+ * filed as this task rather than applied in both places at once.
  */
-async function walkOnto(tx, ty, describe, maxSteps = 24) {
+async function walkOnto(tx, ty, describe, { maxSteps = 24, hold = 95 } = {}) {
   let stalled = 0;
+  let extra = 0; // added to the hold after a step that did not close the distance
   for (let i = 0; i < maxSteps; i++) {
     const { x, y } = seen.you ?? {};
     if (x === tx && y === ty) return;
+    const vertical = y !== ty;
+    const was = vertical ? Math.abs(y - ty) : Math.abs(x - tx);
     const before = `${x},${y},${seen.boardId}`;
-    if (y !== ty) await step(y > ty ? "ArrowUp" : "ArrowDown");
-    else await step(x > tx ? "ArrowLeft" : "ArrowRight");
+    if (vertical) await step(y > ty ? "ArrowUp" : "ArrowDown", hold + extra);
+    else await step(x > tx ? "ArrowLeft" : "ArrowRight", hold + extra);
+    const now = vertical ? Math.abs((seen.you?.y ?? y) - ty) : Math.abs((seen.you?.x ?? x) - tx);
+    extra = now > 0 && now >= was ? (extra + 110) % 330 : 0;
     if (`${seen.you?.x},${seen.you?.y},${seen.boardId}` === before) {
       if (++stalled >= 4) {
         throw new Error(
@@ -434,7 +463,7 @@ try {
   // so this is the journey's only two-axis walk. walkOnto, not two one-way
   // walkUntils: the row leg has to land ON row 10, and a step that covers two
   // tiles overshoots it (note 5).
-  await walkOnto(12, 10, "board 2's gem", 16);
+  await walkOnto(12, 10, "board 2's gem", { maxSteps: 16 });
   await waitFor(() => seen.hud.score > 0, "a score that qualifies for the high-score table");
   console.log(`  - scored again after respawn: score=${seen.hud.score}`);
 
