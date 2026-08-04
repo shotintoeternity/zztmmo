@@ -10467,3 +10467,32 @@ One inversion is still green and stays so: the block window falling back to the
 board roster alone. The browser suite cannot catch it because both its players
 share a board; the chat-only path is covered by `web/test/blocks.test.mjs`
 instead, and neither the suite's own header nor this note claims otherwise.
+
+## 2026-08-04 — dev.zztmmo.com redeployed to `5aecdfe` (M21.1)
+
+The dev host was serving `17cb7e9` (M19.2, the picker opening top-left). It now
+serves `5aecdfe`, eighteen commits later: M19.2a and M19.3 (the preferences
+store), the six M16 cutline and journey fixes, M20.1 (`/play/<world>`), and M21.1
+(block). `go test ./...` was green before the build.
+
+Built the documented way — `git archive` of the commit into a scratch tree, so
+nothing uncommitted could ride along — and verified over HTTPS: `/` 200,
+`/status` `5aecdfe…`, `/api/worlds` populated, `/play/TOWN` 200 (M20.1's own
+path), and the WebSocket upgrade 101 with curl exiting 28, which is the pass
+pair AWS.md records.
+
+Two things worth keeping:
+
+1. **The deploy workstation's IP had moved off the SSH allowlist.** `174.29.5.212`
+   was not among the seven `/32`s on `sg-08859294bf38ac4c3`. Authorized for the
+   deploy, revoked immediately after, allowlist confirmed back at its original
+   seven. No ad hoc `/32` is standing.
+2. **AWS.md's "Last redeployed" line was stale for the second time**, claiming
+   `0978449` while the host served `17cb7e9` — the same failure its own warning
+   describes. That line is hand-written after a deploy and `/status` is written
+   by the deploy, which is why only one of them can be trusted; the warning now
+   says so, and lists both misses. AWS.md is gitignored, so this note is the
+   tracked record.
+
+The instance is left **running**. Stop it (`aws ec2 stop-instances --region
+us-east-1 --instance-ids i-06149a1a52a126f0c`) when M21.1 has been looked at.
