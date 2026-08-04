@@ -5441,7 +5441,7 @@ The background says which player; the glyph says that it is a player.
   this may be unreachable — it was not chased, and it is not this task's job
   unless it turns out to be the reason a walk that ends on a scroll misbehaves.
 
-- [ ] **M16.8b — the manually-ticked websocket tests sleep 5ms and hope the input
+- [x] **M16.8b — the manually-ticked websocket tests sleep 5ms and hope the input
   landed.** Filed 2026-08-04 from M16.11c's rule-3 full-family run, which came
   back red on a test that change does not touch:
   `TestWebSocketReconstructsAuthoritativeScreen`, `m16_8_test.go:962`, with
@@ -5486,6 +5486,38 @@ The background says which player; the glyph says that it is a player.
   Ranked by the owner. Suggested: above M16.11e — this one has actually gone red
   in a real run, twice-observed families notwithstanding, and it degrades the
   breadth check that has now filed three tasks in this family.
+  **Done 2026-08-04, and the spec above was wrong about the scope in a way worth
+  recording.** "Convert every site the grep finds" would have been eleven
+  conversions and ten of them churn. The grep does find eleven
+  `time.Sleep(5 * time.Millisecond)` (`generation_test.go:534,562`,
+  `m16_17_test.go:412`, `m16_8a_test.go:153`, `m4_3_test.go:549`,
+  `websocket_server_test.go:1558,1570`, `m16_8_test.go:891,1112,1190,1248`) — but
+  reading each one shows **exactly one** is load-bearing. Every other site sits
+  in a bounded loop that keeps ticking (or keeps polling) until it sees what it
+  wants, so a late input costs an iteration, not the answer. That includes three
+  of the four in this very file: 1112, 1190 and 1248 are all
+  `for time.Now().Before(deadline) { sleep; Tick; read }`. Only `step` at 891
+  takes **exactly one tick per input**, which is what makes a late input
+  unrecoverable there and nowhere else — and is why m16_8 is the only suite that
+  went red.
+  Watched failing first: with that sleep forced to `0`, the test fails 5/5, and
+  the failures are the predicted class rather than noise — `checkpoint push: X:8
+  … want X:9`, `checkpoint water: X:9 … want X:8`, and a diverged board cell at
+  (15,24). The zero input that ENDS a move is the one that bites: `Inputs` is a
+  latch the server re-applies every tick until overwritten, so a tick taken
+  before the zero lands repeats the move.
+  `waitForLatchedInput` (bottom of `m16_8_test.go`) polls the instance's latch
+  until it equals the value just written, then returns; if it already equals it,
+  it returns at once, which is correct rather than a shortcut — the following
+  tick applies that value either way, and one connection's inputs are ordered,
+  so nothing can overtake the write being waited on.
+  Green 20/20 clean and 10/10 under eight spinning CPUs, which is the condition
+  that produced the original red. Plain `go test ./...` green (56s), and the
+  full browser family green under `ZZT_BROWSER=1`.
+  A side effect worth knowing: it is also **~4× faster**. The old sleep cost 5ms
+  per step across hundreds of scripted steps; the latch wait returns in
+  microseconds, taking the suite from ~0.57s to ~0.13s per run. Waiting on the
+  observable is cheaper than guessing at it, not more expensive.
 
 - [x] **M16.18d — teach the device matrix what a surface accepts, and certify the
   color picker on it.** Filed 2026-08-03 by M19.2. `modalAcceptsTextInput` now

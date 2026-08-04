@@ -884,11 +884,9 @@ func TestWebSocketReconstructsAuthoritativeScreen(t *testing.T) {
 		if err := wsjson.Write(ctx, conn, msg); err != nil {
 			t.Fatalf("write input: %v", err)
 		}
-		// Give the server's read-loop goroutine time to apply the input before
-		// this test drives the tick itself — the same pattern every other
-		// manually-ticked WS test in this package uses (see
-		// readUntilScrollEvent).
-		time.Sleep(5 * time.Millisecond)
+		// Wait for the server's read-loop goroutine to actually latch this input
+		// before driving the tick that consumes it (M16.8b).
+		waitForLatchedInput(t, server, playerID, input, 5*time.Second)
 		server.Tick(ctx)
 
 		readCtx, cancelRead := context.WithTimeout(ctx, time.Second)
@@ -1259,4 +1257,58 @@ func TestWebSocketDebugCommandMessageOverWire(t *testing.T) {
 		}
 	}
 	t.Fatal("the \"ammo\" debug command sent as a wire DebugCommandMessage never credited the player")
+}
+
+// waitForLatchedInput blocks until the server's read-loop goroutine has stored
+// `want` as playerID's latched input, so the caller's next Tick consumes the
+// input it just wrote rather than whatever the latch still held.
+//
+// WHY THIS EXISTS (M16.8b). It replaces a `time.Sleep(5 * time.Millisecond)`
+// that guessed the goroutine had run by then. The guess held on an idle
+// workstation and failed under the load of a full browser-family run, where it
+// took `TestWebSocketReconstructsAuthoritativeScreen` red with the player two
+// tiles from where the engine pass left it. The input that bites is the ZERO
+// one that ends a move: `Inputs` is a latch the server re-applies every tick
+// until something overwrites it (setInput, websocket_server.go), so a tick
+// taken before the zero lands repeats the move and the player travels further
+// than the scenario says. Forced by setting that sleep to 0, the failure
+// reproduces 5/5 as an off-by-one position and a diverged board cell.
+//
+// Returning as soon as the latch already equals `want` is correct rather than a
+// shortcut: the tick that follows applies `want` either way, and inputs on one
+// connection are ordered, so no later write can overtake the one being waited
+// for. That also makes a repeated identical input free.
+//
+// m16_9_test.go's waitForInput is the same idea for the browser harness, and
+// says so in its own comment: "the tick that consumes it is taken only once it
+// has arrived". It matches on a DESCRIPTION of the wanted frame because a real
+// keystroke produced it; here the caller wrote the value itself, so it compares
+// against the value directly.
+//
+// Deliberately NOT applied to the package's other `sleep 5ms; Tick` sites
+// (m16_8a_test.go, m4_3_test.go, websocket_server_test.go, and lines 1112/1190/
+// 1248 in this file): every one of those sits in a loop that keeps ticking
+// until it sees what it wants, so a late input costs an iteration instead of
+// the answer. This site takes exactly one tick per input, which is what makes
+// it the only load-bearing one.
+func waitForLatchedInput(t *testing.T, server *WebSocketServer, playerID PlayerID, want PlayerInput, timeout time.Duration) {
+	t.Helper()
+	server.mu.Lock()
+	inst := server.DefaultInstance
+	server.mu.Unlock()
+
+	deadline := time.Now().Add(timeout)
+	for {
+		inst.mu.Lock()
+		got := inst.Inputs[playerID]
+		inst.mu.Unlock()
+		if got == want {
+			return
+		}
+		if time.Now().After(deadline) {
+			t.Fatalf("timed out after %s waiting for player %d's input to latch: have %+v, want %+v",
+				timeout, playerID, got, want)
+		}
+		time.Sleep(time.Millisecond)
+	}
 }
