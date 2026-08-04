@@ -13,6 +13,7 @@ import (
 	"net/http"
 	"os"
 	"path/filepath"
+	"sort"
 	"strings"
 	"sync"
 	"time"
@@ -63,6 +64,10 @@ type WebSocketServer struct {
 	// chatLimiter holds each connected player's rolling chat-admission window;
 	// it has its own lock and is not guarded by mu.
 	chatLimiter chatRateLimiter
+	// chatBlocks holds who each connected player has asked not to hear (M21.1).
+	// Its own lock too, and never held with mu or inst.mu: it is consulted once
+	// per recipient inside the chat fan-out.
+	chatBlocks chatBlocks
 
 	mu sync.Mutex
 	// nextPlayerID mints process-unique PlayerIDs across every instance, so ids
@@ -569,6 +574,13 @@ func (s *WebSocketServer) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 		}
 	}
 
+	// M21.1: a signed-in player's stored blocks go live before the chat backlog
+	// below is replayed. The other order would make the first act of a durable
+	// block handing back the fifty lines it exists to suppress.
+	if authenticated {
+		s.seedAccountBlocks(playerID, account.ID)
+	}
+
 	if err := client.write(ctx, snapshot); err != nil {
 		// The connection never got its first frame; detach (or tidy up if the
 		// player is already gone) exactly as a mid-game drop would.
@@ -580,16 +592,26 @@ func (s *WebSocketServer) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 		recs, dbErr := s.ChatDB.GetRecentMessages(50)
 		if dbErr == nil {
 			for _, rec := range recs {
+				// A block applies to the backlog too, or reconnecting would hand
+				// the blocked lines straight back (M21.1). The record's PlayerID
+				// is only trustworthy in the process that wrote it — the loader
+				// clears the ones read from disk — so across a restart this is
+				// the AccountID's job alone.
+				if s.chatBlocks.suppresses(playerID, rec.PlayerID, rec.AccountID) {
+					continue
+				}
 				msg := struct {
-					Type    string `json:"type"`
-					From    string `json:"from"`
-					Text    string `json:"text"`
-					History bool   `json:"history"`
+					Type     string   `json:"type"`
+					From     string   `json:"from"`
+					PlayerID PlayerID `json:"playerId,omitempty"`
+					Text     string   `json:"text"`
+					History  bool     `json:"history"`
 				}{
-					Type:    "chat",
-					From:    rec.From,
-					Text:    rec.Text,
-					History: true,
+					Type:     "chat",
+					From:     rec.From,
+					PlayerID: rec.PlayerID,
+					Text:     rec.Text,
+					History:  true,
 				}
 				_ = client.write(ctx, msg)
 			}
@@ -664,10 +686,22 @@ func (s *WebSocketServer) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 				name = player.name
 			}
 			inst.mu.Unlock()
+			// M21.1: the line now travels with something addressable. The
+			// PlayerID is this connection's, not anything the client claimed,
+			// and the accountID stays server-side — it is what makes a
+			// signed-in recipient's block outlive the connection, and it is
+			// not another player's to see.
+			author := ChatAuthor{Name: name, PlayerID: playerID, AccountID: client.accountID}
 			if s.ChatDB != nil {
-				_, _ = s.ChatDB.AddMessage(name, text)
+				_, _ = s.ChatDB.AddMessage(author, text)
 			}
-			s.BroadcastGlobalChat(ctx, name, text)
+			s.BroadcastGlobalChat(ctx, author, text)
+		case MessageTypeBlock:
+			var req BlockMessage
+			if err := json.Unmarshal(raw, &req); err != nil {
+				continue
+			}
+			s.submitChatBlock(ctx, client, playerID, req)
 		default:
 			var input InputMessage
 			if err := json.Unmarshal(raw, &input); err != nil {
@@ -2014,6 +2048,10 @@ func (s *WebSocketServer) tryResume(inst *WorldInstance, client *webSocketClient
 // been superseded by a newer one (newest-wins) owns nothing and just returns.
 func (s *WebSocketServer) handleReadLoopExit(inst *WorldInstance, client *webSocketClient, playerID PlayerID) {
 	s.chatLimiter.forget(playerID)
+	// A guest's blocks were only ever promised for the session, and a signed-in
+	// player's are already written down: either way this id is never minted
+	// again, so keeping its set would be a leak rather than a memory (M21.1).
+	s.chatBlocks.forget(playerID)
 	inst.mu.Lock()
 	if inst.Clients[playerID] != client {
 		// A newer connection took over this player; this stale socket must not
@@ -2157,7 +2195,19 @@ func (s *WebSocketServer) LoadWorld(name string) error {
 	return s.RoomManager.LoadWorld(dir, name)
 }
 
-func (s *WebSocketServer) BroadcastGlobalChat(ctx context.Context, from, text string) {
+// BroadcastGlobalChat sends one line to every connected player, EXCEPT those who
+// have asked not to hear this author (M21.1).
+//
+// The filter is here, at the fan-out, and deliberately not in the client: a
+// client-side filter is bypassable, and it would still deliver the text to the
+// machine of the person who asked not to receive it. It is per-recipient, so it
+// changes nothing about what anybody else is sent, and the author is told
+// nothing at all — a block that announces itself invites the retaliation it
+// exists to prevent.
+//
+// Server announcements do not come through here (AnnounceMessage has its own
+// fan-out), so a shutdown warning can never be suppressed by a block.
+func (s *WebSocketServer) BroadcastGlobalChat(ctx context.Context, author ChatAuthor, text string) {
 	s.mu.Lock()
 	var clients []*webSocketClient
 	for _, inst := range s.Instances {
@@ -2170,17 +2220,134 @@ func (s *WebSocketServer) BroadcastGlobalChat(ctx context.Context, from, text st
 	s.mu.Unlock()
 
 	msg := struct {
-		Type string `json:"type"`
-		From string `json:"from"`
-		Text string `json:"text"`
+		Type     string   `json:"type"`
+		From     string   `json:"from"`
+		PlayerID PlayerID `json:"playerId,omitempty"`
+		Text     string   `json:"text"`
 	}{
-		Type: "chat",
-		From: from,
-		Text: text,
+		Type:     "chat",
+		From:     author.Name,
+		PlayerID: author.PlayerID,
+		Text:     text,
 	}
 
 	for _, client := range clients {
+		if s.chatBlocks.suppresses(client.playerID, author.PlayerID, author.AccountID) {
+			continue
+		}
 		_ = client.write(ctx, msg)
+	}
+}
+
+// submitChatBlock records one player's block (or lifts it) and tells only them.
+//
+// The target is resolved through the server's own instances rather than trusted
+// from the request: the client names a PlayerID, and what that id's account is —
+// the thing durability depends on — is not the client's to say. A target that has
+// already gone is a no-op with an explanation, not an error: the roster a player
+// read a moment ago is always slightly out of date.
+func (s *WebSocketServer) submitChatBlock(ctx context.Context, client *webSocketClient, blocker PlayerID, req BlockMessage) {
+	if req.PlayerID == 0 || req.PlayerID == blocker {
+		return // nothing to address, or the player themselves
+	}
+	targetAccount, targetName, found := s.identifyPlayer(req.PlayerID)
+	if !found {
+		_ = client.write(ctx, BlockResultMessage{
+			Type:     MessageTypeBlockResult,
+			PlayerID: req.PlayerID,
+			Blocked:  false,
+			Text:     "That player has already left.",
+		})
+		return
+	}
+	if targetName == "" {
+		targetName = "that player"
+	}
+
+	durable := s.chatBlocks.set(blocker, req.PlayerID, targetAccount, req.Blocked)
+	// Durability follows identity, and the two halves are separate on purpose: a
+	// guest blocker has nowhere to store anything, and a guest TARGET has no id
+	// to be stored. Either way the block is live for this session; only the
+	// account-to-account case is written down.
+	durable = durable && client.accountID != ""
+	if durable {
+		s.persistBlockedAccounts(client.accountID, blocker)
+	}
+
+	text := "Blocked " + targetName + " for this session."
+	if req.Blocked && durable {
+		text = "Blocked " + targetName + "."
+	} else if !req.Blocked {
+		text = "Unblocked " + targetName + "."
+	}
+	_ = client.write(ctx, BlockResultMessage{
+		Type:     MessageTypeBlockResult,
+		PlayerID: req.PlayerID,
+		Name:     targetName,
+		Blocked:  req.Blocked,
+		Durable:  durable,
+		Text:     text,
+	})
+}
+
+// identifyPlayer answers who a PlayerID belongs to, across every hosted world:
+// global chat is server-wide, so the person a player wants to blocked may not be
+// in their room, or even in their world.
+func (s *WebSocketServer) identifyPlayer(playerID PlayerID) (accountID, name string, found bool) {
+	s.mu.Lock()
+	instances := make([]*WorldInstance, 0, len(s.Instances))
+	for _, inst := range s.Instances {
+		instances = append(instances, inst)
+	}
+	s.mu.Unlock()
+
+	for _, inst := range instances {
+		inst.mu.Lock()
+		account, playerName, ok := inst.RoomManager.PlayerIdentity(playerID)
+		inst.mu.Unlock()
+		if ok {
+			return account, playerName, true
+		}
+	}
+	return "", "", false
+}
+
+// seedAccountBlocks loads a signed-in player's stored blocks into their live set
+// for this connection. A read failure is logged and dropped rather than refusing
+// the join: a player who cannot be told who they blocked should still be able to
+// play, and the session-scoped half of their blocks still works.
+func (s *WebSocketServer) seedAccountBlocks(playerID PlayerID, accountID string) {
+	if s.ChatDB == nil || accountID == "" {
+		return
+	}
+	prefs, ok, err := s.ChatDB.GetAccountPreferences(accountID)
+	if err != nil {
+		log.Printf("zztgo: failed to load blocks for account %q: %v", accountID, err)
+		return
+	}
+	if !ok {
+		return
+	}
+	s.chatBlocks.seedAccounts(playerID, prefs.BlockedAccounts)
+}
+
+// persistBlockedAccounts writes a signed-in blocker's durable half back to the
+// M19.3 preferences store — a field on the document that store was shaped to
+// grow, not a store of its own. A read-modify-write of the whole document
+// because that is what the store's shape is: one document per account.
+func (s *WebSocketServer) persistBlockedAccounts(accountID string, blocker PlayerID) {
+	if s.ChatDB == nil || accountID == "" {
+		return
+	}
+	prefs, _, err := s.ChatDB.GetAccountPreferences(accountID)
+	if err != nil {
+		log.Printf("zztgo: failed to read preferences for account %q while blocking: %v", accountID, err)
+		return
+	}
+	prefs.BlockedAccounts = s.chatBlocks.blockedAccounts(blocker)
+	sort.Strings(prefs.BlockedAccounts)
+	if err := s.ChatDB.PutAccountPreferences(accountID, prefs); err != nil {
+		log.Printf("zztgo: failed to store blocks for account %q: %v", accountID, err)
 	}
 }
 

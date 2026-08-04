@@ -70,6 +70,7 @@ import {
   type TransitionState,
 } from "./transition";
 import { selectWorldForTitle } from "./title_flow";
+import { blockCandidates, blockRowLabel, blockWindowHeader } from "./blocks";
 import {
   deepLinkPath,
   deepLinkRefusalLines,
@@ -127,6 +128,12 @@ const MessageTypeEditorSaveResult = "editorSaveResult";
 const MessageTypeEditorTestPlay = "editorTestPlay";
 const MessageTypeChat = "chat";
 const MessageTypeAnnounce = "announce";
+// M21.1: "stop showing me this player" — sent by the roster window, answered
+// only to the sender. The suppression itself happens on the server, at the chat
+// fan-out; nothing here filters a line, because a client-side filter is
+// bypassable and would still deliver the text to this machine.
+const MessageTypeBlock = "block";
+const MessageTypeBlockResult = "blockResult";
 
 // GameDebugPrompt's PromptString(63, 5, 0x1E, 0x0F, 11, PROMPT_ANY, ...).
 // The rest of that geometry lives in modal.ts, which owns every prompt's layout.
@@ -240,6 +247,22 @@ type BoardChangeMessage = {
 type ChatMessage = {
   type: typeof MessageTypeChat;
   from: string;
+  /**
+   * The sender's PlayerID (M21.1), absent from an older server's lines and from
+   * anything the server says on its own behalf. It is what makes a chat line
+   * addressable — `from` is a display name, and display names are neither unique
+   * nor claimed.
+   */
+  playerId?: number;
+  text: string;
+};
+
+type BlockResultMessage = {
+  type: typeof MessageTypeBlockResult;
+  playerId: number;
+  name?: string;
+  blocked: boolean;
+  durable: boolean;
   text: string;
 };
 
@@ -437,7 +460,7 @@ type EditorTestPlayMessage = {
   error?: string;
 };
 
-type ServerMessage = SnapshotMessage | DiffMessage | EventMessage | BoardChangeMessage | ChatMessage | AnnounceMessage | EditorSnapshotMessage | EditorInspectMessage | EditorPresenceMessage | EditorLeaseMessage | EditorDiffMessage | EditorPropertiesMessage | EditorStatSettingsMessage | EditorProgramTextMessage | EditorBoardDataMessage | EditorWorldDataMessage | EditorSaveResultMessage | EditorTestPlayMessage;
+type ServerMessage = SnapshotMessage | DiffMessage | EventMessage | BoardChangeMessage | ChatMessage | AnnounceMessage | BlockResultMessage | EditorSnapshotMessage | EditorInspectMessage | EditorPresenceMessage | EditorLeaseMessage | EditorDiffMessage | EditorPropertiesMessage | EditorStatSettingsMessage | EditorProgramTextMessage | EditorBoardDataMessage | EditorWorldDataMessage | EditorSaveResultMessage | EditorTestPlayMessage;
 
 type InputMessage = {
   type: typeof MessageTypeInput;
@@ -906,6 +929,13 @@ async function showTitle() {
   // The room's roster does not survive leaving it (M19.1) — a stale one would
   // tint squares of a board nobody in it is standing on.
   roster = [];
+  // Nor does the block mirror (M21.1). It only ever holds what THIS connection
+  // confirmed: the server is the authority, a guest's blocks are forgotten when
+  // their connection ends, and a durable block made in an earlier session shows
+  // as unmarked until the player acts on it again — blocking twice is
+  // idempotent, so the safe default is to claim no knowledge rather than a stale
+  // one.
+  blockedPlayerIds = new Set<number>();
   editorCursor = { x: 30, y: 12 };
   editorSidebarMenu = null;
   editorStatPrompt = null;
@@ -1680,6 +1710,9 @@ function applyMessage(message: ServerMessage) {
     case MessageTypeAnnounce:
       handleAnnounceMessage(message);
       break;
+    case MessageTypeBlockResult:
+      handleBlockResultMessage(message);
+      break;
     case MessageTypeEditorSnapshot:
       applyEditorSnapshot(message);
       break;
@@ -2202,7 +2235,11 @@ function writeOverlay(x: number, y: number, color: number, text: string) {
   }
 }
 
-let chatMessages: { from: string; text: string }[] = [];
+let chatMessages: { from: string; playerId?: number; text: string }[] = [];
+// M21.1: the ids this player has asked not to hear, as the server has confirmed
+// them. It is a mirror of the server's own set, never the authority: the roster
+// window reads it to decide whether a row offers "block" or "unblock".
+let blockedPlayerIds = new Set<number>();
 let currentChatMessage = "";
 let currentChatTimer = 0;
 
@@ -2228,8 +2265,8 @@ function handleAnnounceMessage(message: { text: string; seconds?: number }) {
   drawScreen();
 }
 
-function handleChatMessage(message: { from: string; text: string }) {
-  chatMessages.push({ from: message.from, text: message.text });
+function handleChatMessage(message: { from: string; playerId?: number; text: string }) {
+  chatMessages.push({ from: message.from, playerId: message.playerId, text: message.text });
   if (chatMessages.length > 50) {
     chatMessages.shift();
   }
@@ -2264,6 +2301,66 @@ function openChatWindow() {
       }
     },
   });
+}
+
+// openBlockWindow is 'L' in play mode (M21.1): who is here, who has spoken, and
+// which of them this player has stopped hearing.
+//
+// The candidates are the union of the board roster and the recent chat senders,
+// because global chat crosses boards and worlds while the roster does not — the
+// server only sends the players on the board this client is looking at, so the
+// roster alone cannot offer the person who just said something from elsewhere
+// (blocks.ts).
+function openBlockWindow() {
+  const candidates = blockCandidates({
+    roster,
+    chat: chatMessages,
+    blocked: blockedPlayerIds,
+    self: playerId,
+  });
+  const byLabel = new Map(candidates.map((candidate) => [blockRowLabel(candidate), candidate]));
+  const header = blockWindowHeader(candidates);
+  if (candidates.length === 0) {
+    openWindow("Players", header, true);
+    return;
+  }
+  openSelectList(
+    "Players",
+    [...byLabel.keys()],
+    (label) => {
+      const candidate = byLabel.get(label);
+      if (!candidate) {
+        return;
+      }
+      const verb = candidate.blocked ? "Unblock" : "Block";
+      openYesNo(`${verb} ${candidate.name}? `, (yes) => {
+        if (yes) {
+          sendBlock(candidate.id, !candidate.blocked);
+        }
+      });
+    },
+    header,
+  );
+}
+
+function sendBlock(targetId: number, blocked: boolean) {
+  if (ws && ws.readyState === WebSocket.OPEN) {
+    ws.send(JSON.stringify({ type: MessageTypeBlock, playerId: targetId, blocked }));
+  }
+}
+
+// The block's confirmation, and the only message either party gets: the blocked
+// player is told nothing at all. The server writes the line because the server is
+// what knows which outcome happened — in particular whether the block is durable,
+// which it is not when the target is a guest, and which the player must be told
+// rather than left to discover tomorrow.
+function handleBlockResultMessage(message: BlockResultMessage) {
+  if (message.blocked) {
+    blockedPlayerIds.add(message.playerId);
+  } else {
+    blockedPlayerIds.delete(message.playerId);
+  }
+  openWindow("Players", ["", `  ${message.text}`, ""], true);
 }
 
 // readStoredPlayerColor is this browser's answer to "what color is my ☻": the
@@ -2934,6 +3031,18 @@ function handleKeyDown(event: KeyboardEvent) {
     event.preventDefault();
     stopHeldInput();
     openChatWindow();
+    return;
+  }
+
+  // M21.1: 'L' lists the people you could stop hearing. Handled here, like 'C',
+  // so it never reaches the engine's key switch — and 'L' specifically because
+  // it is the one letter this decision could take: W/A/D are inert by an
+  // explicit decision the M16.10 vocabulary asserts (input.play-wasd-removed),
+  // and every other letter on the sidebar is vanilla's.
+  if (event.code === "KeyL") {
+    event.preventDefault();
+    stopHeldInput();
+    openBlockWindow();
     return;
   }
 

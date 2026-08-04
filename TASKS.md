@@ -5891,7 +5891,7 @@ counter that restarts with the process (`mintPlayerID`,
 signed-in players, already carried on `roomPlayer` and readable through
 `RoomManager.PlayerIdentity` (`room_manager.go:301-315`).
 
-- [ ] **M21.1 — Block: a player can stop hearing another player.** Self-serve,
+- [x] **M21.1 — Block: a player can stop hearing another player.** Self-serve,
   no operator required, and the half that does not need a decision from anybody.
   Add the sender's `PlayerID` to the chat wire message and to `ChatRecord`, so a
   received line carries something addressable; blocking is then "suppress this
@@ -5920,6 +5920,88 @@ signed-in players, already carried on `roomPlayer` and readable through
   shutdown warning is not chat. New wire field and new preference field both get
   their `fixtures/parity/manifest.json` rows (`PARITY_SCAFFOLD=1`, curated
   fields filled in). `go test ./...` green; the chat browser suite green.
+  **Done 2026-08-04.** Twelve inversions, each watched failing before the claim
+  was trusted — eight of the server, four of the built client.
+  * *the line became addressable, and the account did not* — `ChatAuthor{Name,
+    PlayerID, AccountID}` replaces the bare `from string` through `AddMessage`
+    and the fan-out. `playerId` rides the chat message and `ChatRecord`; the
+    account id is persisted and NEVER on the wire, asserted by scanning every
+    frame another player's browser receives. Inverted by putting it on the wire.
+  * *filtered at fan-out, per recipient, and silently* —
+    `chatBlocks.suppresses` is consulted once per recipient inside
+    `BroadcastGlobalChat`. A blocks B, B talks, C receives it, B receives their
+    own copy and is told nothing at all, and A receives nothing. The negative is
+    proved by a FENCE rather than a timeout — a read whose context expires closes
+    the socket under this websocket library, and a timeout is a flake waiting for
+    a loaded machine. Inverted by dropping the filter.
+  * *durability follows identity, and the player is told which they got* — a
+    signed-in blocker's durable half is a new `BlockedAccounts` field on the
+    M19.3 document (the second caller, a field not a store); a guest's block is
+    keyed on `PlayerID` and forgotten with the connection. One test carries both
+    halves because the claim is the CONTRAST: across a restart, a fresh process
+    and freshly minted ids, Bob is still blocked and the guest is heard again.
+    Inverted three ways: never persisting, claiming durability for a guest
+    target, and ignoring the account in the filter.
+  * *the backlog is covered too* — the fifty-line history replay is filtered by
+    the same rule, or reconnecting would hand back exactly the lines a block
+    exists to suppress. Across a restart that is the account's job alone: the
+    loader CLEARS a record's `PlayerID`, because a later process re-mints those
+    numbers for different people and a stale id would suppress an innocent line.
+    Inverted both ways.
+  * *an announcement can never be blocked* — structural, not defended:
+    `AnnounceMessage` has its own fan-out, and an unaddressable sender (no id, no
+    account) is unsuppressible by construction. A blocker with everything blocked
+    still receives a shutdown warning.
+  * *a player can actually do it* — 'L' opens a "Players" window listing the
+    board roster AND the recent chat senders (global chat crosses boards; the
+    roster does not), each row carrying the id because a display name is not an
+    address. `TestM211BlockJourney` drives two real Chromium instances through
+    it: the row, the confirmation, the session-only wording, the blocked lines
+    absent from Ada's chat window and present in Bo's, and the same row lifting
+    it again. Inverted by unbinding the key, by aiming the pick at the wrong id,
+    and by dropping the session-only wording.
+  Three things worth recording that the spec did not name.
+  1. **An unblock exists.** The spec described only blocking; a durable action
+     with no way back is a permanent consequence of a mis-picked row, so the wire
+     field is `blocked: true|false` (explicit, never a client-computed toggle)
+     and the same row lifts it. That is the one deliberate addition here.
+  2. **The window is on 'L', and it is not on the sidebar.** ' C  Chat' has a row
+     because vanilla left row 17 blank; every remaining row is vanilla's, and
+     adding one would rewrite ten browser golden fixtures — a fixture change this
+     spec does not authorize (CLAUDE.md rule 3). So the key is undiscoverable
+     until it is advertised. **Filed as M21.3.**
+  3. **The client's "[blocked]" marker is per-connection.** It mirrors only what
+     this connection confirmed, so a durable block made in an earlier session
+     shows unmarked until the player acts on it again (blocking twice is
+     idempotent). The alternative — the server listing a joiner's blocks back to
+     them — is more wire surface than this task asked for. **Filed as M21.4.**
+
+- [ ] **M21.3 — the block window has no way in but a key nobody is told about.**
+  Filed 2026-08-04 by M21.1. 'L' opens the "Players" window in play mode and
+  nothing on screen says so. The obvious fix is a sidebar row beside ' C  Chat'
+  (`web/src/sidebar.ts`), and the reason M21.1 did not take it is that the play
+  sidebar appears in ten `fixtures/browser-goldens/*.json` files, so a new row is
+  a golden regeneration (`GOLDEN_UPDATE=1`) — an intentional fixture change,
+  which CLAUDE.md rule 3 says must be authorized by the task spec that makes it.
+  This task is that authorization if the owner wants the row; the alternative is
+  a line in the chat window, which costs no goldens.
+  DoD: the block window is reachable without prior knowledge; if the sidebar row
+  is taken, every regenerated golden is committed in the same commit with a
+  `DEVIATION:` line, and `mode.playing`'s parity row notes the added row.
+
+- [ ] **M21.4 — a returning player is not told who they have blocked.**
+  Filed 2026-08-04 by M21.1. A signed-in player's blocks are durable server-side
+  and enforced from the moment they join, but the client learns of them only by
+  making one: the roster's "[blocked]" marker starts empty on every connection,
+  so a block made last week shows unmarked. Nothing is broken — blocking twice is
+  idempotent and the enforcement is server-side either way — but the window
+  misreports state the server knows.
+  The fix is a field on the join snapshot (or the first roster diff) listing
+  which of the players this client can currently SEE are blocked — computed
+  server-side from the account set, never the raw stored list, which would leak
+  account ids the recipient has no other way to see. DoD: a signed-in player who
+  blocked an account last session sees that player's roster row marked on the
+  first frame; no account id reaches the wire; a guest is unaffected.
 
 - [ ] **M21.2 — Operator actions: mute, kick, and refuse.** The half that needs
   an owner decision first, which is why it is second.

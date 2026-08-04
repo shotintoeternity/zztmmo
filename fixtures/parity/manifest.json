@@ -1062,6 +1062,18 @@
       "notes": "task-claim row; reconciled at the task itself (2026-08-04), NOT at M16.20: M20.1 landed after the certification milestone closed, so no M16.20 run ever saw this row. A URL that lands a visitor on a world's title screen — /play/<world>, served by the SPA fallback that already existed, resolved through /api/worlds so it inherits M18.13's identity, and hooked into enterWorld so it inherits M16.11's title-screen pause rather than re-implementing it. It is a deviation of the same presentation-additions kind as task.M19.1–M19.3: vanilla ZZT has no addresses at all. Nothing reaches the engine — no protocol message, no route, no simulation state — so the replay fixtures are untouched and this row adds no element/oop/input claim. The named tests prove the browser half (the title screen with no socket and no snapshot, P joining that world and no other, the dead link refused in a window in front of a usable picker, /play/town and /play/TOWN both asking the server for world=TOWN, the picker's selection left in the address bar and reloadable, and the path reset on leaving) and the one server half a deep link changes: a /play/<world> return path survives the signed OAuth state cookie, including the two hostile spellings HandleStart's prefix guard exists for. The pure rules are covered under Node by web/test/deep_link.test.mjs."
     },
     {
+      "id": "task.M21.1",
+      "dimension": "task",
+      "subject": "Completed task M21.1 — its DoD still holds",
+      "contract": "E",
+      "authority": "TASKS.md M21.1",
+      "parity": "deviation",
+      "deviation": "presentation-additions",
+      "test": "TestM211BlockedLineIsDroppedAtFanOutForOneRecipient,TestM211SignedInBlockSurvivesARestartAndAGuestBlockDoesNot,TestM211BlockNeverSuppressesAServerAnnouncement,TestM211UnknownTargetIsANoOpNotAnError,TestM211BlocksAreNeverASharedBucket,TestM211BlockRegistryRules,TestM211ChatRecordCarriesTheAuthorButNotAcrossProcessesForTheID,TestM211AccountIDNeverReachesAnotherPlayersBrowser,TestM211PickingAColourDoesNotDeleteYourBlocks,TestM211BlockJourney",
+      "status": "pass",
+      "notes": "task-claim row; reconciled at the task itself (2026-08-04), NOT at M16.20: M21.1 landed after the certification milestone closed, so no M16.20 run ever saw this row. The first thing in the tree that acts on a PERSON rather than on a message: a per-recipient chat block, filtered at the fan-out on the server (BroadcastGlobalChat) and never in the client, because a client-side filter is bypassable and would still deliver the text to the machine of the person who asked not to receive it. It is a deviation of the presentation-additions kind, like task.M19.1-M19.3: vanilla ZZT has no chat, no accounts and no second player. Nothing reaches the engine — no element, no op, no recorded input — so the replay fixtures are untouched. The named tests carry: the blocked line dropped for one recipient while a third party still receives it and the speaker is told nothing; the durability split (a signed-in blocker's block keyed on the target's accountID in the M19.3 document survives a restart, a fresh process and freshly minted ids, while a guest's does not, and the player is told which they got); the backlog filtered by the same rule, with a loaded record's PlayerID deliberately cleared because a later process re-mints those numbers for different people; an announcement unsuppressible by construction; an account id never on the wire; a vanished target a no-op; and the browser half — 'L', the row, the confirmation, the session-only wording, and the lines absent from one screen and present in the other. Two limits are filed rather than hidden: the window's key is unadvertised (M21.3) and the client's blocked marker is per-connection (M21.4). One defect in the store this task reused was found and fixed on the way through: PUT /api/preferences wrote a whole fresh document, so picking a colour deleted every block a player held."
+    },
+    {
       "id": "task.M3.0",
       "dimension": "task",
       "subject": "Completed task M3.0 — its DoD still holds",
@@ -3604,6 +3616,30 @@
       "notes": "raw-tone event bypassing SoundQueue (110 Hz, no close SoundFreqTable entry); always attributed to the mover (deviation per-player-sound); oracle's 20+ walk scenarios now compare the click for real (110 Hz filter removed from oracle_parity_test.go)"
     },
     {
+      "id": "proto.msg.block",
+      "dimension": "protocol",
+      "subject": "protocol message type \"block\"",
+      "contract": "P",
+      "authority": "protocol.go; tasks M3.2–M3.4",
+      "parity": "exact",
+      "test": "TestM211BlockedLineIsDroppedAtFanOutForOneRecipient,TestM211UnknownTargetIsANoOpNotAnError,TestM211BlockJourney",
+      "status": "pass",
+      "assignedTask": "M21.1",
+      "notes": "M21.1: the client asks not to hear a player, naming them by the PlayerID that rides every chat line and every roster row — a display name would not do, since names are neither unique nor claimed. `blocked` is explicit rather than a toggle, so the two ends cannot disagree about which way to flip, and the same message lifts a block. The target's account (which decides durability) is resolved server-side across every hosted world, never trusted from the request; self and id-0 targets are refused at the write."
+    },
+    {
+      "id": "proto.msg.blockResult",
+      "dimension": "protocol",
+      "subject": "protocol message type \"blockResult\"",
+      "contract": "P",
+      "authority": "protocol.go; tasks M3.2–M3.4",
+      "parity": "exact",
+      "test": "TestM211BlockedLineIsDroppedAtFanOutForOneRecipient,TestM211SignedInBlockSurvivesARestartAndAGuestBlockDoesNot,TestM211BlockJourney",
+      "status": "pass",
+      "assignedTask": "M21.1",
+      "notes": "M21.1: the blocker's own confirmation, and the only message either party gets — the blocked player is never told, because a block that announces itself invites the retaliation it exists to prevent. `durable` says whether the block outlives the session (it cannot when the target is a guest: there is no id to key it on), and the server writes the displayed line because the server is what knows which of the four outcomes happened."
+    },
+    {
       "id": "proto.msg.boardChange",
       "dimension": "protocol",
       "subject": "protocol message type \"boardChange\"",
@@ -4092,10 +4128,10 @@
       "contract": "E",
       "authority": "web_api.go / websocket_server.go",
       "parity": "exact",
-      "test": "TestM193PreferencesEndpointIsTheWritePath,TestM193SignedInColorFollowsToAnotherWorldAndAnotherBrowser",
+      "test": "TestM193PreferencesEndpointIsTheWritePath,TestM193SignedInColorFollowsToAnotherWorldAndAnotherBrowser,TestM211PickingAColourDoesNotDeleteYourBlocks",
       "status": "pass",
       "assignedTask": "M19.3",
-      "notes": "M19.3: the account-wide preferences store's read/write route — a guest GET answers {authenticated:false} rather than failing, a guest PUT is 401 and writes nothing, PUT then GET round-trips the color, a junk color is sanitized to the vanilla player before it is stored, a malformed or over-1KiB body is 400, any other method is 405; an explicitly stored empty color beats a stale browser pick at the next join"
+      "notes": "M19.3: the account-wide preferences store's read/write route — a guest GET answers {authenticated:false} rather than failing, a guest PUT is 401 and writes nothing, PUT then GET round-trips the color, a junk color is sanitized to the vanilla player before it is stored, a malformed or over-1KiB body is 400, any other method is 405; an explicitly stored empty color beats a stale browser pick at the next join M21.1: BlockedAccounts is the store's second field — the second caller it was shaped for, added as a field rather than a store. PUT here owns only the colour and now read-modify-writes the document, because writing a fresh AccountPreferences{Color} deleted every block a player held the moment they picked a colour (the loss M19.3's notes predicted for a field arriving later)."
     },
     {
       "id": "route.api.restore",
@@ -4405,10 +4441,10 @@
       "contract": "E",
       "authority": "completed task contracts (TASKS.md); NOTES.md",
       "parity": "exact",
-      "test": "TestM1616aChatAdmissionBoundary,TestM1616aChatRateLimiterRollingWindow,TestM1616aChatRefusalPersistsAndBroadcastsNothing,TestM1616aChatHistorySurvivesRestart,TestM1616ChatIdentityIsTheAccountAndSurvivesRestart,TestM1616BrowserAuthAndMuseumJourney",
+      "test": "TestM1616aChatAdmissionBoundary,TestM1616aChatRateLimiterRollingWindow,TestM1616aChatRefusalPersistsAndBroadcastsNothing,TestM1616aChatHistorySurvivesRestart,TestM1616ChatIdentityIsTheAccountAndSurvivesRestart,TestM1616BrowserAuthAndMuseumJourney,TestM211BlockedLineIsDroppedAtFanOutForOneRecipient,TestM211SignedInBlockSurvivesARestartAndAGuestBlockDoesNot,TestM211BlockJourney",
       "status": "pass",
       "assignedTask": "M16.16",
-      "notes": "M16.16a: 120-byte printable-CP437 normalization, 5-per-10s rolling limit on the injected clock, refusals persist/broadcast nothing, history survives restart; M16.16: a line is attributed to the signed-in account's display name (not the name the client claimed) on the wire, in the persisted record, in the history a restarted server replays, and on a real browser's screen"
+      "notes": "M16.16a: 120-byte printable-CP437 normalization, 5-per-10s rolling limit on the injected clock, refusals persist/broadcast nothing, history survives restart; M16.16: a line is attributed to the signed-in account's display name (not the name the client claimed) on the wire, in the persisted record, in the history a restarted server replays, and on a real browser's screen M21.1: a chat line now carries the sender's PlayerID, and BroadcastGlobalChat drops it for any recipient who has blocked that sender — per-recipient, silent, and covering the fifty-line history replay too. The sender's accountID is persisted on the ChatRecord (so a durable block still filters the backlog after a restart) and is never on the wire."
     },
     {
       "id": "service.dream",

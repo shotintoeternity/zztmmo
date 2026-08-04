@@ -10390,3 +10390,80 @@ world's *display* name, not its filename (`ACCEPT.ZZT` calls itself
 names off `/api/title` and refuses to run if its two worlds display the same
 title — the startup world is TOWN and the deep link's target is ACCEPT precisely
 so a boot with no deep link cannot satisfy the assertions.
+
+## 2026-08-04 — M21.1: the first thing in the tree that acts on a person
+
+Blocking landed as specced, and the shape of it is the part worth keeping: the
+suppression is at the chat fan-out, on the server, per recipient, and silent. A
+client-side filter would have been bypassable AND would still have delivered the
+text to the machine of the person who asked not to receive it, which is the whole
+thing they asked to stop.
+
+What the wire needed first. A chat line was `{type, from, text}` where `from` is
+a display name, and display names are neither unique nor claimed — so nothing
+addressable travelled with a chat line at all. `ChatAuthor{Name, PlayerID,
+AccountID}` now goes through `AddMessage` and the fan-out; `playerId` rides the
+message, and the account id is persisted and never on the wire. Both halves are
+asserted: a line must carry the sender's id, and a scan of every frame another
+player's browser receives must contain no account id.
+
+Durability follows identity, and the split is the M19.3 one: a signed-in
+blocker's block is keyed on the target's `accountID` and stored as a new
+`BlockedAccounts` field on the preferences document — the second caller that
+store was shaped for, a field and not a store — while a guest's is keyed on
+`PlayerID` and forgotten with the connection. The player is told which one they
+got, because a block that will quietly evaporate is worse than one that is
+refused.
+
+Three things the spec did not name, and one defect it flushed out.
+
+1. **The backlog is part of the claim.** The fifty-line history replay had to be
+   filtered by the same rule, or reconnecting hands back exactly the lines a
+   block exists to suppress. Across a restart that is the account's job alone, so
+   the loader now CLEARS a record's `PlayerID`: a later process re-mints those
+   numbers for different people, and a stale id would suppress an innocent line.
+   That is the second time in two tasks that an id's lifetime was the load-bearing
+   detail (M21.1's PlayerID, M18.13's world identity).
+2. **An unblock exists, deliberately.** The spec described only blocking. A
+   durable action with no way back makes a mis-picked row permanent, so the wire
+   field is `blocked: true|false` — explicit, never a client-computed toggle,
+   because a toggle inverts the wrong way whenever the two ends disagree and the
+   person who stopped hearing somebody by accident never finds out.
+3. **Global chat crosses boards; the roster does not.** The spec named the roster
+   as the entry point, and the roster is per-board — the server only sends the
+   players on the board this client is looking at. So the person who just said
+   something from another world is not in it. The window offers the union of the
+   roster and the recent chat senders, which is the first thing the new `playerId`
+   on the wire is actually good for.
+4. **PUT /api/preferences deleted every block a player held.** It wrote a fresh
+   `AccountPreferences{Color: ...}`, so the first colour picked after a block
+   erased the blocks. M19.3's own notes predicted this shape of loss "for the way
+   a field actually arrives"; the field arrived four days later. Now a
+   read-modify-write, and any future field is preserved for free because only the
+   field that endpoint owns is assigned.
+
+Two limits are filed rather than hidden. **M21.3**: the window is on 'L' and
+nothing says so. The obvious fix is a sidebar row beside ' C  Chat', and the
+reason this task did not take it is that the play sidebar appears in ten
+`fixtures/browser-goldens/*.json` files — a golden regeneration is an intentional
+fixture change, and CLAUDE.md rule 3 says the task spec has to authorize one.
+**M21.4**: the client's "[blocked]" marker only mirrors what the current
+connection confirmed, so a durable block made last session shows unmarked until
+the player acts on it again (blocking twice is idempotent, so nothing breaks —
+the window just misreports state the server knows).
+
+Twelve inversions, each watched failing before the claim was trusted: eight of
+the server (no filter, account ignored, never persisted, a guest block claiming
+durability, the backlog unfiltered, a loaded record keeping its stale id, the
+account id on the wire, the self/unaddressable guards) and four of the built
+client (the key unbound, the pick aimed at the wrong id, the window offering only
+the roster, the session-only wording dropped). Two of those inversions were
+GREEN at first and the tests had to be strengthened rather than believed — the
+registry-guard claims held for a registry with no guards at all, because the
+state they were asserted against never reached the guard. That is the same
+lesson M16.18a filed under "vacuous pass", and it is cheap to make again.
+
+One inversion is still green and stays so: the block window falling back to the
+board roster alone. The browser suite cannot catch it because both its players
+share a board; the chat-only path is covered by `web/test/blocks.test.mjs`
+instead, and neither the suite's own header nor this note claims otherwise.

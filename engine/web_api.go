@@ -177,7 +177,15 @@ func (a *WebAPI) handlePreferences(w http.ResponseWriter, r *http.Request) {
 		// is not "#" plus six hex digits becomes "", which is the vanilla
 		// player rather than a rejection — the picker's "No color" row sends
 		// exactly that.
-		prefs := AccountPreferences{Color: SanitizePlayerColor(body.Color)}
+		// Read-modify-write, NOT a fresh document (M21.1). The store now holds a
+		// second field — the accounts whose chat this player has blocked — and
+		// this endpoint knows nothing about it; writing `AccountPreferences{Color}`
+		// would delete every block a player holds the moment they picked a colour.
+		// M19.3 predicted this shape of loss for a field arriving later; the field
+		// arrived. Anything added to the document from now on is preserved here
+		// for free, because only the field this endpoint owns is assigned.
+		prefs, _ := a.storedPreferences(account.ID)
+		prefs.Color = SanitizePlayerColor(body.Color)
 		if err := a.Server.ChatDB.PutAccountPreferences(account.ID, prefs); err != nil {
 			http.Error(w, "could not store preferences", http.StatusInternalServerError)
 			return

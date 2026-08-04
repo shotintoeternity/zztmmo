@@ -38,7 +38,41 @@ const (
 	MessageTypeEditorWorldData    = "editorWorldData"
 	MessageTypeEditorSaveResult   = "editorSaveResult"
 	MessageTypeEditorTestPlay     = "editorTestPlay"
+	// MessageTypeBlock is a player asking not to hear another player's chat
+	// (M21.1), and MessageTypeBlockResult is what they are told back. Only the
+	// blocker ever receives the result: the blocked player is never told.
+	MessageTypeBlock       = "block"
+	MessageTypeBlockResult = "blockResult"
 )
+
+// BlockMessage is the client's block/unblock request. The target is named by the
+// PlayerID that rides every chat line and every roster row (M21.1) — a display
+// name would not do, since names are neither unique nor claimed.
+//
+// Blocked is explicit rather than a toggle: a toggle computed on the client
+// would invert the wrong way whenever the two disagreed, and the recipient of a
+// mis-toggled block never finds out that they stopped hearing somebody.
+type BlockMessage struct {
+	Type     string   `json:"type"`
+	PlayerID PlayerID `json:"playerId"`
+	Blocked  bool     `json:"blocked"`
+}
+
+// BlockResultMessage is the blocker's own confirmation. Durable says whether the
+// block outlives this session, which the UI must say out loud: a block on a
+// guest cannot be made durable — there is no id to key it on — and a player who
+// thinks they are done with someone should not be surprised tomorrow.
+type BlockResultMessage struct {
+	Type     string   `json:"type"`
+	PlayerID PlayerID `json:"playerId"`
+	Name     string   `json:"name,omitempty"`
+	Blocked  bool     `json:"blocked"`
+	Durable  bool     `json:"durable"`
+	// Text is the one line the client shows. The server writes it because the
+	// server is what knows which of the four outcomes happened (blocked or
+	// lifted, durable or session-only, or a player who has already gone).
+	Text string `json:"text"`
+}
 
 // HelpDir is where HelpFileLines looks for .HLP files. The terminal client
 // resolves them relative to the working directory; the server may run from

@@ -11,7 +11,7 @@ func TestMemChatDatabase(t *testing.T) {
 	db := NewMemChatDatabase()
 	defer db.Close()
 
-	rec1, err := db.AddMessage("alice", "hello")
+	rec1, err := db.AddMessage(ChatAuthor{Name: "alice"}, "hello")
 	if err != nil {
 		t.Fatalf("AddMessage failed: %v", err)
 	}
@@ -19,7 +19,7 @@ func TestMemChatDatabase(t *testing.T) {
 		t.Errorf("Unexpected record content: %+v", rec1)
 	}
 
-	_, err = db.AddMessage("bob", "hi")
+	_, err = db.AddMessage(ChatAuthor{Name: "bob"}, "hi")
 	if err != nil {
 		t.Fatalf("AddMessage failed: %v", err)
 	}
@@ -61,11 +61,11 @@ func TestFileChatDatabase(t *testing.T) {
 		t.Fatalf("NewFileChatDatabase failed: %v", err)
 	}
 
-	_, err = db.AddMessage("alice", "hello")
+	_, err = db.AddMessage(ChatAuthor{Name: "alice"}, "hello")
 	if err != nil {
 		t.Fatalf("AddMessage failed: %v", err)
 	}
-	_, err = db.AddMessage("bob", "hi")
+	_, err = db.AddMessage(ChatAuthor{Name: "bob"}, "hi")
 	if err != nil {
 		t.Fatalf("AddMessage failed: %v", err)
 	}

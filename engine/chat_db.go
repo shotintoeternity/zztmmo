@@ -10,10 +10,41 @@ import (
 	"time"
 )
 
+// ChatAuthor is who said a line, in the three names a chat line can be
+// addressed by (M21.1). Before this, a line carried a display name and nothing
+// else — and display names are neither unique nor claimed, so nothing
+// addressable travelled with a chat line at all.
+//
+// Which of the two ids is usable depends on how long you need it for:
+//
+//   - PlayerID is unique among everyone connected, and only for as long as the
+//     process lives (mintPlayerID is an in-memory counter). It is what a guest's
+//     block keys on, and it is the id that rides the wire — an account id must
+//     never reach another player's browser.
+//   - AccountID is durable and exists only for a signed-in player. It is what a
+//     signed-in blocker's block keys on, so their block survives a restart and a
+//     different browser.
+type ChatAuthor struct {
+	Name      string
+	PlayerID  PlayerID
+	AccountID string
+}
+
 type ChatRecord struct {
 	From      string    `json:"from"`
 	Text      string    `json:"text"`
 	Timestamp time.Time `json:"timestamp"`
+	// PlayerID is the author's connection id (M21.1), so a replayed history line
+	// can be suppressed for a recipient who blocked that player. It is
+	// process-scoped: the loader below deliberately CLEARS it on records read
+	// from disk, because a later process re-mints the same numbers for different
+	// people, and a stale id would suppress an innocent line.
+	PlayerID PlayerID `json:"playerId,omitempty"`
+	// AccountID is the author's durable id when they were signed in, and is the
+	// only thing that can filter history across a restart. It is persisted and
+	// never sent to a client: a block is per-recipient and silent, and another
+	// player's account id is not theirs to see.
+	AccountID string `json:"accountId,omitempty"`
 }
 
 // AccountPreferences is what one signed-in player has chosen, once, for every
@@ -35,6 +66,15 @@ type AccountPreferences struct {
 	// the way back to the vanilla white-on-blue player, and it must beat a
 	// stale localStorage pick exactly as a non-empty color does.
 	Color string `json:"color,omitempty"`
+	// BlockedAccounts are the accounts whose chat this player has asked not to
+	// receive (M21.1) — the second caller this store was shaped for, and a field
+	// rather than a new store. Only durable identities can live here: a block on
+	// a guest has no id to key on and stays in memory for the session.
+	//
+	// It is per-RECIPIENT, so it never affects what anyone else sees, and the
+	// blocked player is never told — a block that announces itself invites the
+	// retaliation it exists to prevent.
+	BlockedAccounts []string `json:"blockedAccounts,omitempty"`
 }
 
 // ErrNoAccountID refuses a preferences read or write that has no account to key
@@ -55,7 +95,7 @@ func accountPreferencesKey(accountID string) (string, error) {
 }
 
 type ChatDatabase interface {
-	AddMessage(from, text string) (ChatRecord, error)
+	AddMessage(author ChatAuthor, text string) (ChatRecord, error)
 	GetRecentMessages(limit int) ([]ChatRecord, error)
 	PutPlayerState(accountID, worldName string, state PlayerState) error
 	GetPlayerState(accountID, worldName string) (PlayerState, bool, error)
@@ -75,14 +115,16 @@ func NewMemChatDatabase() *MemChatDatabase {
 	return &MemChatDatabase{}
 }
 
-func (db *MemChatDatabase) AddMessage(from, text string) (ChatRecord, error) {
+func (db *MemChatDatabase) AddMessage(author ChatAuthor, text string) (ChatRecord, error) {
 	db.mu.Lock()
 	defer db.mu.Unlock()
 
 	rec := ChatRecord{
-		From:      from,
+		From:      author.Name,
 		Text:      text,
 		Timestamp: time.Now(),
+		PlayerID:  author.PlayerID,
+		AccountID: author.AccountID,
 	}
 	db.messages = append(db.messages, rec)
 	return rec, nil
@@ -190,6 +232,11 @@ func NewFileChatDatabase(filepath string) (*FileChatDatabase, error) {
 			}
 			continue
 		}
+		// A PlayerID does not survive the process that minted it (mintPlayerID is
+		// a counter that restarts), so a loaded record's id would name whoever
+		// happens to hold that number next. Cleared rather than trusted: history
+		// suppression across a restart is the AccountID's job (M21.1).
+		rec.PlayerID = 0
 		db.messages = append(db.messages, rec)
 	}
 	db.loadPlayerStates()
@@ -198,14 +245,16 @@ func NewFileChatDatabase(filepath string) (*FileChatDatabase, error) {
 	return db, nil
 }
 
-func (db *FileChatDatabase) AddMessage(from, text string) (ChatRecord, error) {
+func (db *FileChatDatabase) AddMessage(author ChatAuthor, text string) (ChatRecord, error) {
 	db.mu.Lock()
 	defer db.mu.Unlock()
 
 	rec := ChatRecord{
-		From:      from,
+		From:      author.Name,
 		Text:      text,
 		Timestamp: time.Now(),
+		PlayerID:  author.PlayerID,
+		AccountID: author.AccountID,
 	}
 
 	data, err := json.Marshal(rec)
