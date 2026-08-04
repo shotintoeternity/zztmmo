@@ -224,13 +224,21 @@ async function step(c, code, holdMs = 95) {
   await sleep(c, 70);
 }
 
-/** Walk until done(); throws if the player stops making progress. */
-async function walkUntil(c, code, done, describe, maxSteps = 40) {
+/**
+ * Walk until done(); throws if the player stops making progress.
+ *
+ * `hold` is here so a run can FORCE the long hold that makes a step cover
+ * several tiles at once: a 330ms hold moves exactly three tiles, deterministically
+ * (see walkOnto). That is how M16.11a, M16.11b and M16.11d were each watched
+ * failing before their fix was trusted, instead of waiting for load to supply the
+ * overshoot. No caller needs it in the shipped form.
+ */
+async function walkUntil(c, code, done, describe, maxSteps = 40, hold = 95) {
   let stalled = 0;
   for (let i = 0; i < maxSteps; i++) {
     if (done()) return;
     const before = `${c.you?.x},${c.you?.y},${c.boardId}`;
-    await step(c, code);
+    await step(c, code, hold);
     if (`${c.you?.x},${c.you?.y},${c.boardId}` === before) {
       if (++stalled >= 5) throw new Error(`${c.label} is stuck walking ${code} toward ${describe} at ${at(c)}`);
     } else {
@@ -598,12 +606,32 @@ try {
   console.log(`  - Ada collected torch, gem, ammo and key: ${JSON.stringify(ada.hud)}`);
 
   // The door at x=22 spends her key and stays open — for everybody. She then
-  // walks on to the square west of the vendor: a player is a solid tile, and
-  // three players queued on one row would read as a wall to whoever is behind.
-  // Each of the three ends this act on a square of their own.
+  // walks on out of the way: a player is a solid tile, and three players queued
+  // on one row would read as a wall to whoever is behind. Each of the three ends
+  // this act on a square of their own.
+  //
+  // AND SHE LEAVES ROW 12 TO DO IT (M16.11d). A step is not one tile, and
+  // `walkUntil` stops as soon as the player is SEEN at its target — so aiming an
+  // eastward walk at row 12's x=25 means the step that arrives there may have two
+  // tiles left in it, and the second one walks INTO the vendor at (26,12). The
+  // vendor is a solid Object, so she does not move; she touches it, its scroll
+  // opens, and from then on every arrow goes to the text window instead of to the
+  // game — ACT 4 then reports Ada stuck at (25,12) with the vendor's window over
+  // her screen. So this leg ends on the detour row instead, where nothing east of
+  // her is touchable for the board's whole width, and `walkOnto` re-aims an
+  // overshoot there into a correction. It is also exactly the tile ACT 4's
+  // crossMainBoard aims at first, so nothing is walked twice.
+  //
+  // ACT 3's OTHER eastward walks are not this: they end beside PICKUPS (torch,
+  // gem, ammo, key), which vanish the moment they are touched, so an overshoot
+  // through one collects it and walks on — which is the whole point of the walk.
+  // Only the vendor is permanently solid, and only this leg finishes next to it.
+  // Bo's and Cy's walks stop at x>=24 and x>=23, two and three tiles short of it,
+  // so reaching the vendor would take a step of three tiles or more from one
+  // exact square rather than the two-tile step that suffices here.
   await walkUntil(ada, "ArrowRight", atLeastX(ada, DOOR_X + 1), "past the door");
   await waitFor(ada, () => !ada.hud.keys.some(Boolean), "the door to consume Ada's key");
-  await walkUntil(ada, "ArrowRight", atLeastX(ada, VENDOR_X - 1), "the square west of the vendor");
+  await walkOnto(ada, VENDOR_X - 1, ROW - 1, "the square above and west of the vendor");
   console.log("  - Ada unlocked the door, spent the key, and walked on");
 
   // Bo walks the same row. Every square Ada emptied is empty for him, and the

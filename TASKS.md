@@ -245,9 +245,12 @@ M12.23, M17.1–M17.7, M16.0–M16.8a — has fully landed.)
    of explained away, and no profile omits any surface. It filed **M16.11d** on
    the way through, from its own rule-3 full-suite run: ACT 3 of the co-op
    cutline can walk Ada into the vendor, whose scroll then eats every arrow the
-   rest of the journey needs. M16.11d is the next task in this file and ranks
-   above M16.11c, because CUTLINE.md's policy covers the cutline suite and not
-   journey 1's.
+   rest of the journey needs. M16.11d ranked above M16.11c, because CUTLINE.md's
+   policy covers the cutline suite and not journey 1's. **M16.11d landed
+   2026-08-04**: Ada's last eastward leg now ends on the empty detour row rather
+   than on the vendor's own row, so the walk has nothing to overshoot into, and
+   the cutline is green in the full browser family. It filed nothing. **M16.11c
+   is the next task in this file.**
 
 **Optional / deferred (bottom):**
 - M14.3 — package split — **closed as skipped 2026-08-03**, see NOTES.md
@@ -5251,7 +5254,7 @@ The background says which player; the glyph says that it is a player.
   shells apiece, still burning CPU four hours later. Whoever runs a browser
   suite on this machine has been running it under load without knowing.
 
-- [ ] **M16.11d — the cutline's walk to the vendor can open the vendor's scroll,
+- [x] **M16.11d — the cutline's walk to the vendor can open the vendor's scroll,
   and an open scroll eats every arrow after it.** Filed 2026-08-04 by M16.18d's
   rule-3 full-suite run, where `TestCoopCutlineThreePlayerAcceptanceJourney`
   failed once under the load of the whole browser family and then went green 3/3
@@ -5283,6 +5286,32 @@ The background says which player; the glyph says that it is a player.
   saying while there: ACT 3's other eastward walks end beside PICKUPS, which
   vanish when touched, and that is why this is the only site — write it down so
   the next reader does not re-derive it.
+  **Done 2026-08-04.** Reproduced first, on the first run, by forcing that one
+  call to a 330ms hold: it left the three positions the filing predicted — Ada
+  (25,12) hp=101, Bo (24,12), Cy (23,12) — with `scroll` in the event list and
+  the vendor's window covering Ada's failure screenshot.
+  The fix takes the spec's first option, the one that cannot be raced: **the walk
+  ends on the detour row instead of beside the vendor.** `walkUntil` east to
+  x>=25 on row 12 is replaced by `walkOnto(ada, VENDOR_X - 1, ROW - 1, …)`, and
+  row 11 is empty for the board's whole width, so there is nothing an overshoot
+  can touch — and `walkOnto` re-aims one back into a correction. Dismissing the
+  scroll afterwards was the alternative, and it is strictly worse here: it leaves
+  the touch happening and only cleans up after it, and the touch is what ACT 3 is
+  measuring the world with. The tile chosen is also the one ACT 4's
+  `crossMainBoard` aims at first, so Ada walks nothing twice and ACT 4 is
+  unchanged.
+  Verified under the same forcing before it was trusted: with the long hold
+  forced on BOTH replacement legs the suite passes (81s), and the shipped form is
+  green in the whole browser family in one command — `ZZT_BROWSER=1 go test
+  ./...`, 608s, every suite ok — plus plain `go test ./...` green.
+  Two things written down rather than left to be re-derived. `walkUntil` gained
+  the `hold` parameter `walkOnto` already had, documented as the way each of
+  M16.11a/b/d was watched failing rather than as something a caller needs. And
+  the spec's "the other eastward walks end beside pickups" is recorded with its
+  edge stated: Bo's and Cy's walks stop at x>=24 and x>=23, two and three tiles
+  short of the vendor, so reaching it would take a step of three tiles or more
+  from one exact square — not impossible, but not the two-tile step that was
+  enough at x=25, which is why this leg was the one that failed.
 
 - [ ] **M16.11c — journey 1's `walkOnto` can swing across its target forever.**
   Filed 2026-08-04 by M16.11b, which found the mechanism while forcing its own
