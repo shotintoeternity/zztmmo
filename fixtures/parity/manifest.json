@@ -983,6 +983,18 @@
       "notes": "task-claim row; behavioral parity carried by the element/oop/protocol/input/service rows this task touched; reconciled at M16.20"
     },
     {
+      "id": "task.M19.2b",
+      "dimension": "task",
+      "subject": "Completed task M19.2b — its DoD still holds",
+      "contract": "E",
+      "authority": "TASKS.md M19.2b",
+      "parity": "deviation",
+      "deviation": "presentation-additions",
+      "test": "TestM192ColorPickerJourney",
+      "status": "pass",
+      "notes": "task-claim row; reconciled at the task itself (2026-08-04), NOT at M16.20: M19.2b landed after the certification milestone closed, so no M16.20 run ever saw this row. A presentation change inside task.M19.2's own window, and a deviation of the same presentation-additions kind: every quick-pick row now draws the player glyph in the color it offers instead of a filled block, so the window answers \"what would I look like\" on seventeen rows at once and the separate \"This is you:\" preview line retires. Only the typed-hex row still carries a preview cell — no EGA attribute can express a 24-bit background — and it is still painted through the same per-cell RGB override the board uses, which is the claim task.M19.2 made and this task had to keep. Nothing reaches the engine; no golden fixture contains the picker window, so none moved. The named browser test follows the cursor to the selected row (it read a row number before M19.2a and a label before this) and reads the typed row's glyph as pixels, since a 24-bit background maps onto no EGA index the M16.9 decoder can name; the pure rules are covered under Node by web/test/color_picker.test.mjs."
+    },
+    {
       "id": "task.M19.3",
       "dimension": "task",
       "subject": "Completed task M19.3 — its DoD still holds",
