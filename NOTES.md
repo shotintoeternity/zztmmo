@@ -10207,3 +10207,64 @@ sending its zero mask — is unreachable. `openModal` calls `stopHeldInput()`
 set, and `handleKeyDown` routes to the modal handler while one is up, so the
 pressed set cannot refill. Worth chasing rather than inheriting, because closing
 the loop on observed movement holds keys longer than the old fixed 95ms did.
+
+## 2026-08-04 — Idea-backlog reconciliation; M20 filed (deep links)
+
+Owner asked to go through the idea backlog. With every executor task in TASKS.md
+closed, the backlog is where the next work comes from, so the first job was
+finding out how much of it is still true: most of it was written 2026-07-10 and
+five milestones have landed since. Every "verified gap" was re-checked against
+the code before it was believed, on the M18.13 precedent.
+
+**Six bullets were asserting gaps that no longer exist**, and are now annotated
+in place rather than deleted (the file's convention — the closure is dated and
+says what closed it):
+
+* *Autosave and crash recovery* — landed as M13.3.
+* *Reconnect grace* — shipped. `Detached`/`ResumeTokens`/`TokensByPlayer`
+  (`websocket_server.go:90`) and `expireDetached` (`:2052-2096`); the co-op
+  cutline's third claim pins it.
+* *CI, "no workflows exist"* — `.github/workflows/ci.yml`, with `-race` as a
+  required job. M16.14c and M18.16 were both filed *because* it went red.
+* *Tell players apart* — all of M19 has landed (M19.1, M19.2, M19.2a, M19.3).
+  The bullet's own rendering rule is also now wrong in one place: the owner
+  reversed the luminance-contrasted foreground to always-white on 2026-08-03,
+  and the bullet now says so, since it is the version anybody reading it copies.
+* *Touch controls* — landed as M16.18a, with M16.18b's reserved bar height.
+* *Prompt-to-world* — this is the shipped Dream feature (M12). The six
+  second-batch moonshots that build *on* generation are all still open, and the
+  bullet now distinguishes them, because "prompt-to-world is done" reads as if
+  the whole batch were.
+
+**One bullet was half true, which is the more useful correction.** *Replay
+recording and playback*: `SessionRecorder` and `ReplaySession` exist
+(`session_record.go:116,249`) from M14.2, hardened by M16.15a. But
+`ReplaySession` hands each tick to a Go callback and nothing pumps that into the
+snapshot stream a browser reads — so a replay cannot be *watched*. The bullet is
+rewritten to that remainder, and it matters beyond itself: *ghost racing* says
+"replays make it free", and it is not free until this exists.
+
+**One correction in the other direction.** The PvP arena bullet says it needs an
+engine decision first. That decision was made and built: `Engine.FriendlyFire`
+(`gamevars.go:250-254`) is honoured by bullets (`elements.go:281-288`) and by
+point-blank (`game.go:1551-1557`). What is missing is only the wiring — no
+per-world room config sets it, so nothing outside a test turns it on — plus the
+world. The bullet was overstating its own cost.
+
+**M20 filed — deep links**, promoted from the backlog and re-verified open the
+same day: the client reads the location exactly once, for the OAuth return
+(`main.ts:2793`), and `?world=` is the WebSocket parameter only. Nothing a
+player can send someone else names a world. Two intervening milestones made it
+cheaper than the bullet reads: `spaFileServer`
+(`cmd/zzt-server/main.go:232-251`) already falls back to the app for any
+non-file path, so `/play/TOWN` needs no new server route; and `enterWorld`
+(`main.ts:1374-1381`) is the single funnel every route into a world already goes
+through. M20.1 hooks there specifically so a deep link cannot become the one
+path that skips the title screen — the contract M16.11 asserts at every picker
+selection. The bullet's `/watch/NAME` half is explicitly NOT in M20: there is no
+read-only client anywhere, and spectating is a protocol and permission job, not
+a URL job. It stays a bullet.
+
+Docs only — TASKS.md and this file. No production code, so nothing moves in the
+fixtures, and as backlog housekeeping plus one unstarted `[ ]` spec it needs no
+parity manifest row (M20.1's own DoD carries the row it will add when it lands).

@@ -5743,6 +5743,67 @@ The background says which player; the glyph says that it is a player.
   `PARITY_SCAFFOLD=1`, curated fields filled in), which is how the M16 framework
   noticed the new surface before a human did.
 
+## M20 — Deep links: a URL that lands you in a world
+
+Filed 2026-08-04, promoted from the idea backlog's "Deep links" bullet after
+re-checking the code (the M18.13/M19 precedent: re-check before promoting, and
+say what moved). The bullet is from 2026-07-10 and is **still accurate** — the
+client reads the location exactly once, for the OAuth return
+(`web/src/main.ts:2793`), and `?world=` is the WebSocket parameter only. Nothing
+a player can send someone else names a world.
+
+Two things the intervening milestones made this cheaper than the bullet reads:
+`spaFileServer` (`cmd/zzt-server/main.go:232-251`) already falls back to the app
+for any path that is not a file, so `/play/TOWN` **already serves the client**
+and no new server route is needed; and every route into a world — local picker,
+Museum row, dream, restore — funnels through one function, `enterWorld`
+(`web/src/main.ts:1374-1381`), so a deep link has exactly one seam to hook.
+
+**Scope note:** the bullet's `/watch/NAME` half is NOT in this milestone. There
+is no read-only client anywhere in the tree, and spectating is a protocol and
+permission job, not a URL job. It stays a backlog bullet.
+
+- [ ] **M20.1 — `/play/<world>` lands a visitor on that world's title screen.**
+  On boot the client reads `window.location.pathname`; a `/play/<name>` path
+  selects that world and shows its title screen **instead of** opening the
+  picker. It must not join. The title-screen pause is a contract M16.11 now
+  asserts at every picker selection ("no socket opened, no snapshot arrived,
+  the board came from `/api/title?world=` the world just chosen"), and a deep
+  link must not become the one path that bypasses it — `enterWorld` already
+  gets this right for free, which is the reason to hook there and nowhere else.
+  P still starts play, exactly as from the picker.
+  **Resolve the name the way the join path resolves it, not by string.**
+  M18.13 made the picker key on the identity the join path would load; a deep
+  link takes the same route (`/api/worlds`), so `/play/town` and `/play/TOWN`
+  land on one world and a name that is not joinable is refused *before* a
+  socket, not after. An unknown or unlistable name opens a CP437 window saying
+  so and drops the visitor into the normal picker — never a blank screen, never
+  a server error, never a silent fall-through to `Untitled`.
+  **Keep the address bar shareable.** Selecting a world in the picker calls
+  `history.replaceState` to `/play/<name>`, so the URL a player copies out of
+  the address bar at any moment is the URL that works. `replaceState`, not
+  `pushState`: Back should leave the app, not walk a history of title screens.
+  Leaving a world puts the path back to `/`.
+  **Order of operations:** the guest name prompt (`main.ts:310`) still comes
+  first — a deep link changes which world the visitor lands on, not who the
+  server thinks they are — and the OAuth return path must survive, since it
+  round-trips `window.location.pathname + search` and will now carry `/play/…`
+  (`main.ts:2793`): signing in from a deep-linked title screen must come back to
+  that same title screen.
+  DoD, all of it in the opt-in browser family (`ZZT_BROWSER=1`, CLAUDE.md rule
+  3), each claim watched failing before it is trusted: visiting `/play/ACCEPT`
+  shows ACCEPT's title board with no socket opened and no snapshot received;
+  pressing P from there joins ACCEPT's instance and no other; `/play/nosuch`
+  refuses in a window and leaves the visitor in a usable picker; `/play/town`
+  and `/play/TOWN` resolve to the same single entry M18.13 lists; selecting a
+  world in the picker leaves `/play/<name>` in the address bar and reloading it
+  returns to the same title screen; a sign-in started from a deep-linked title
+  screen returns to it. No engine change and no protocol change, so nothing
+  moves in the replay fixtures; the new client-visible surface gets its
+  `fixtures/parity/manifest.json` row regenerated with `PARITY_SCAFFOLD=1` and
+  the curated fields filled in (M19.3's `route.api.preferences` is the
+  precedent). `go test ./...` green, and the browser family green beside it.
+
 ## M14 — Rearchitecting for the service ZZTMMO is becoming
 
 Filed 2026-07-12 from a whole-repo review (NOTES.md): three structural debts
@@ -6469,18 +6530,30 @@ into a milestone.)
 Plain bullets on purpose: executors must not pick these up. Verified gaps
 first, then features that exploit what this codebase is uniquely good at.
 
-**Verified gaps (checked against the code 2026-07-10):**
+**Verified gaps (checked against the code 2026-07-10; re-checked 2026-08-04 and
+the closed ones dated — see the closure lines):**
 * **Autosave and crash recovery.** A server crash or restart loses every live
   room — nothing snapshots automatically (`SaveSnapshot` is manual, M4.3a).
   Periodic background snapshot of occupied worlds + restore-on-boot. The
   single worst UX event the service can produce is currently unguarded.
+  **CLOSED — promoted and landed as M13.3** (autosave and restore-on-boot).
 * **Reconnect grace.** A dropped WebSocket calls `LeavePlayer` immediately
   (`websocket_server.go:655,664`) — a browser refresh or Wi-Fi blip deletes
   the run. Hold the stat for ~60s under a resume token; rejoin reclaims it.
   Guests need this as much as accounts do.
+  **CLOSED — shipped.** `Detached`/`ResumeTokens`/`TokensByPlayer`
+  (`websocket_server.go:90`), the per-tick countdown in `expireDetached`
+  (`websocket_server.go:312,2052-2096`), and it is pinned: the co-op cutline's
+  third claim is that the group survives a reconnect — resume in place, same
+  id, no fourth figure in anybody's roster (`CUTLINE.md`).
 * **Tell players apart — RGB smiley backgrounds (owner-designed
   2026-07-10). Promoted 2026-08-03 to M19** (M19.1–M19.3), which carries the
-  specced version; the code was re-checked first and the gap is still live, but
+  specced version. **CLOSED 2026-08-04: all of M19 has landed** — M19.1 (the
+  color on the wire and on the canvas), M19.2 + M19.2a (the picker), M19.3 (the
+  account-wide preferences store). Note the owner reversed one rule below on
+  2026-08-03: the glyph's foreground is **always white**, not luminance-
+  contrasted (NOTES.md, same day).
+  The code was re-checked before promotion and the gap was still live, but
   note that the two file:line citations below are stale — the accurate surgery
   map is in M19's preamble. Kept here for the owner's own design wording.
   Every player is the identical white-on-blue ☻
@@ -6502,9 +6575,20 @@ first, then features that exploit what this codebase is uniquely good at.
 * **CI.** No workflows exist. GitHub Actions: `go build`, `go vet`,
   `go test ./...`, plus `go test -race` once M7.3 lands, and the node-driven
   TS checks. The replay fixture only protects commits that run it.
+  **CLOSED — `.github/workflows/ci.yml` exists** and `-race` is a required job
+  (M16.14c and M18.16 were both filed *because* that job went red).
 * **Deep links.** `/play/TOWN` style URLs that land a visitor in a world
   (and `/watch/TOWN` read-only spectator links). Sharing is the growth loop
   and today there is nothing to share.
+  **STILL OPEN, re-verified 2026-08-04.** The client never reads
+  `window.location.search` or the path for a world — its one use of the
+  location is the OAuth return (`web/src/main.ts:2793`); `?world=` is the
+  **WebSocket** parameter only. Two things are already free: `spaFileServer`
+  (`cmd/zzt-server/main.go:122`) already serves the app under any path, so
+  `/play/NAME` needs no new route; and every route into a world funnels through
+  one function (`selectWorldForTitle`, the M18 title-screen work), so a deep
+  link has exactly one place to hook. The `/watch` half is a separate,
+  much larger job — there is no read-only client anywhere.
 
 **The determinism dividend (features the M0 work already paid for):**
 * **Replay recording and playback.** Seeded RNG + input-driven steps means a
@@ -6513,6 +6597,15 @@ first, then features that exploit what this codebase is uniquely good at.
   stream (a replay is a room nobody controls). Shareable replay URLs.
   Synergy: M7.3's lock centralizes every submit path, which is exactly the
   event log a recorder needs.
+  **HALF CLOSED, re-checked 2026-08-04 — the recorder shipped, the product did
+  not.** `SessionRecorder` and `ReplaySession` both exist
+  (`session_record.go:116,249`) from M14.2, hardened by M16.15a (`recordVersion`
+  is 2 and a v1 recording is refused rather than mis-replayed). What remains is
+  the *viewer*: `ReplaySession` hands each tick to a Go callback, and nothing
+  pumps that into the snapshot stream a browser reads, so a replay cannot be
+  watched. The remainder — and the precondition for **ghost racing**, which the
+  bullets below assume is free — is: play a recording back into an instance
+  nobody controls, and a URL that opens it.
 * **Daily challenge.** Same world + same seed for everyone each day,
   server-verified completion time, one leaderboard. Determinism makes it
   trivial and it is the strongest known retention mechanic in its class.
@@ -6528,6 +6621,11 @@ first, then features that exploit what this codebase is uniquely good at.
   cheap, optional, and the single biggest "feels like 1991" multiplier.
 * **Touch controls.** A D-pad + shoot overlay for phones/tablets; the whole
   client is one canvas, so reach is currently keyboard-only.
+  **CLOSED — landed as M16.18a**: direction pad plus Fire, Torch and Pause,
+  each on screen only where it means something, certified by two Chromium touch
+  profiles that play CONTROL with no keyboard at all
+  (`mode.mobile-touchplay` is `pass`). M16.18b then gave the bar its own
+  reserved height so it stops covering text rows on a landscape phone.
 * **Party instances.** Private copies of a world for a group ("play TOWN
   with just us") — `Instances` already keys by name; key by name+party.
 * **Discord presence bridge.** "3 players in TOWN" + chat relay; community
@@ -6621,6 +6719,11 @@ enables; each is feasible precisely because of a property we already built):**
   gate, hosted instantly, disposable. ZZT-OOP is tiny, textual, and
   well-documented — it is close to the ideal LLM target language, and the
   editor/publish pipeline (M5.6) already handles the rest.
+  **CLOSED — this is the shipped Dream feature** (M12): generation, the ZWD
+  compiler and its validation gate, hosting on the fly, and the browser flow the
+  owner verified on dev 2026-07-30. The moonshot bullets below that build *on*
+  generation (Endless Dungeon, critique flywheel, Dream Machine, style séances,
+  Daily Dreamed Challenge, AI DM) are all still open.
 * **Tournament nights.** Scheduled PvP arena brackets (PvP world + party
   instances + spectator links + verified results from the authoritative
   server), with the bracket itself rendered as a ZZT board in the lobby.
@@ -6669,7 +6772,14 @@ newly enables; same rule: backlog bullets, owner promotes before spec):**
   harmless to players *by design*, so PvP requires an explicit opt-in —
   a per-world server flag (set at load, deterministic, part of the room
   config not the world file) that re-enables player↔player bullet damage
-  and point-blank shots on that world only. Death already respawns (M2.4),
+  and point-blank shots on that world only.
+  **UPDATE 2026-08-04 — that engine decision has already been made and built.**
+  `Engine.FriendlyFire` exists (`gamevars.go:250-254`) and both halves honour
+  it: bullets (`elements.go:281-288`) and point-blank (`game.go:1551-1557`,
+  which also exempts the shooter). What is missing is only the *wiring* — no
+  per-world room config sets it, so nothing outside a test ever turns it on —
+  plus the arena world itself. Smaller than this bullet reads.
+  Death already respawns (M2.4),
   which is exactly right for an arena. Build the world itself in the M5
   editor once it exists — first-party dogfooding.
 * **A purpose-built lobby world to replace TOWN as the default hangout.**
