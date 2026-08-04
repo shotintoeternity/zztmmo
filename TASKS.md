@@ -239,6 +239,15 @@ M12.23, M17.1–M17.7, M16.0–M16.8a — has fully landed.)
    **unranked**: the owner ranks it. Two idea-backlog entries were filed the same
    day at the owner's request — private messages, and player profiles viewable in
    game — and are not tasks until the owner promotes them.
+   **M16.11b landed 2026-08-04**, filing **M16.11c**; **M16.18d landed
+   2026-08-04** as well — the device matrix's battery now knows what each surface
+   accepts, so the color picker is exercised on all six covered profiles instead
+   of explained away, and no profile omits any surface. It filed **M16.11d** on
+   the way through, from its own rule-3 full-suite run: ACT 3 of the co-op
+   cutline can walk Ada into the vendor, whose scroll then eats every arrow the
+   rest of the journey needs. M16.11d is the next task in this file and ranks
+   above M16.11c, because CUTLINE.md's policy covers the cutline suite and not
+   journey 1's.
 
 **Optional / deferred (bottom):**
 - M14.3 — package split — **closed as skipped 2026-08-03**, see NOTES.md
@@ -5242,6 +5251,39 @@ The background says which player; the glyph says that it is a player.
   shells apiece, still burning CPU four hours later. Whoever runs a browser
   suite on this machine has been running it under load without knowing.
 
+- [ ] **M16.11d — the cutline's walk to the vendor can open the vendor's scroll,
+  and an open scroll eats every arrow after it.** Filed 2026-08-04 by M16.18d's
+  rule-3 full-suite run, where `TestCoopCutlineThreePlayerAcceptanceJourney`
+  failed once under the load of the whole browser family and then went green 3/3
+  alone and 2/2 in the family. Not caused by M16.18d: that task touched
+  `platform_matrix.test.mjs` and `fixtures/parity/device-matrix.json`, neither of
+  which this suite reads.
+  **Ranks above M16.11c**: this is the cutline, and CUTLINE.md's policy is that
+  it must be green before another roadmap system is promoted.
+  ACT 3's `walkUntil(ada, "ArrowRight", atLeastX(ada, VENDOR_X - 1), …)` stops as
+  soon as Ada is *seen* at 25, but a step is not one tile (M16.11a/b): a step
+  taken from x=24 that covers two lands her on 25 and spends its second tile
+  walking INTO the vendor at (26,12). The vendor is a solid Object, so she does
+  not move — she touches it, and its scroll opens. From then on every arrow goes
+  to the text window instead of to the game, so ACT 4's `crossMainBoard` →
+  `walkOnto(VENDOR_X - 1, ROW - 1, …)` stalls in place and reports `Ada is stuck
+  walking onto the square above and west of the vendor (25,11) at Ada board=1
+  pos=(25,12)`. M16.11b's re-aiming neither helps nor could: the player is not
+  missing the target, the keys are not reaching the player.
+  Watched, not argued. Forcing that one call to a 330ms hold reproduces it on the
+  first run, leaving the same three positions the load failure left behind — Ada
+  (25,12) hp=101, Bo (24,12), Cy (23,12) — with `scroll` in Ada's event list and
+  the vendor's window in her failure screenshot.
+  DoD: the failure reproduced first by forcing the long hold on that call, the
+  way M16.11a and M16.11b were; a walk that ends beside something touchable no
+  longer risks touching it (approach from a tile it cannot overshoot into, or
+  dismiss what the touch opened before the next act needs the arrows — the
+  executor's call, stated in a comment either way); the whole browser family
+  green in one command under `ZZT_BROWSER=1`; `go test ./...` green. Worth
+  saying while there: ACT 3's other eastward walks end beside PICKUPS, which
+  vanish when touched, and that is why this is the only site — write it down so
+  the next reader does not re-derive it.
+
 - [ ] **M16.11c — journey 1's `walkOnto` can swing across its target forever.**
   Filed 2026-08-04 by M16.11b, which found the mechanism while forcing its own
   fix and fixed it only in the file it was working in (rule 4). A step covers a
@@ -5265,7 +5307,7 @@ The background says which player; the glyph says that it is a player.
   third time; `TestM1611BrowserEndToEndPlayerJourneys` and
   `TestCoopCutlineThreePlayerAcceptanceJourney` both green under `ZZT_BROWSER=1`.
 
-- [ ] **M16.18d — teach the device matrix what a surface accepts, and certify the
+- [x] **M16.18d — teach the device matrix what a surface accepts, and certify the
   color picker on it.** Filed 2026-08-03 by M19.2. `modalAcceptsTextInput` now
   names seven text surfaces; `platform_matrix.test.mjs` exercises six and the
   seventh (`colorPicker`) is declared as omitted on every covered profile. The
@@ -5279,6 +5321,42 @@ The background says which player; the glyph says that it is a player.
   on every covered profile; the matrix's own well-formedness test still passes;
   no other surface's coverage changes; the browser family green on all three
   engines.
+  **Done 2026-08-04.** The alphabet is four options on `certifySurface`, three of
+  which already existed: `seed` and `shows` were per-surface from M16.18, and
+  `isolationEcho` since the save prompt's `alphanum` charset upper-cased what it
+  accepted. The one genuinely new thing is `extra` — the single character typed
+  with the seed and deleted again, which was the hard-coded `"X"` the task named.
+  Both halves were watched failing before they were trusted, and each named the
+  picker's filter rather than anything about the platform:
+  * *the composition character* — with `extra: "X"` the run times out on
+    `colorPicker: "a1cX" on screen` while the field on the failure art reads
+    `#a1c···`: the X never arrived, which is precisely why the picker was
+    declared omitted rather than exercised.
+  * *the isolation echo* — with the fixed `"stbq"` the run times out on `the
+    play-mode letters to land in the buffer instead of the game`, the field
+    holding `#a1cb`. Only the b is a hex digit, so only the b is kept — and the
+    wire assertion beside it, which passed in both inversions, is what says the
+    other three were swallowed by the modal rather than taken by the game.
+  Two things the spec did not know, found by building it. The field is six
+  digits wide and a seventh **restarts** it, so the battery has a ceiling here
+  it has nowhere else: `seed`(3) + `extra`(1) + the `b`(1) is five, and a sixth
+  digit would complete a color — which paints the 24-bit preview `readGrid`
+  refuses to decode (the M19.1 observation). And the isolation `ArrowUp` moves
+  the picker's selection off the hex row onto Grey, whose `#aaaaaa` preview is
+  exactly EGA 7 and therefore still decodes; that is luck rather than design,
+  and the comment says which digits may be typed so the next editor keeps it.
+  One deviation from the spec's parenthetical, stated rather than quietly taken:
+  the act runs at the CONTROL **title screen**, which in the shipped launch flow
+  comes AFTER the world picker, not before it (`main.ts` promptNicknameOnLaunch
+  → showWorlds → title). "Reached before the world picker" is not reachable
+  without escaping the launch picker and re-opening it; "reached from the title
+  menu and never from the room" — the part that matters, since `C` is chat in
+  play mode — is what landed, in the same place the Dream prompt and the editor
+  are certified.
+  All six covered profiles now cover seven surfaces each: three engines, desktop
+  and phone, DPR 3, and both touch gates. No other surface's coverage changed,
+  `TestM1618DeviceMatrixIsWellFormed` passes, and the `surfacesOmitted` key is
+  gone from the file entirely — the matrix no longer explains away anything.
 
 - [x] **M19.3 — An account-wide preferences store, with the color as its first
   key.** Widened 2026-08-03 (owner request) from "persist the color" to the

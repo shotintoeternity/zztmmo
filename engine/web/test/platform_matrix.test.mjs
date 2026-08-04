@@ -33,16 +33,19 @@
 //     (S saves, T lights a torch, arrows walk). While a text surface is open,
 //     none of it may reach the server — asserted on the wire, not on the screen.
 //
-// EVERY TEXT SURFACE BUT ONE. modalAcceptsTextInput (modal.ts) names seven:
-// popupEntry, worldSearch, multilineEntry, chat, entry, programEditor, and —
-// since M19.2 — colorPicker. This script reaches the first six through the
-// production launch flow, in the order the player meets them, and certifies each
-// with the same battery. The seventh is declared as omitted in
-// device-matrix.json, with its reason: the battery types a fixed seed plus "X"
-// and then s/t/b/q, and the picker's field accepts hex digits only, so it needs
-// a battery that knows what a surface accepts. M16.18d is that task; until it
-// lands the picker is certified on Chromium (keyboard and touch) by
-// TestM192ColorPickerJourney instead.
+// EVERY TEXT SURFACE, EACH WITH ITS OWN ALPHABET. modalAcceptsTextInput
+// (modal.ts) names seven: popupEntry, worldSearch, multilineEntry, chat, entry,
+// programEditor, and — since M19.2 — colorPicker. This script reaches all seven
+// through the production launch flow, in the order the player meets them, and
+// certifies each with the same battery.
+//
+// M16.18d is why "the same battery" is now true of the seventh. It used to type
+// a fixed seed plus "X" and then s/t/b/q, which assumes a field that accepts any
+// character — and the color picker's accepts `[0-9a-f]` and nothing else, so the
+// picker was declared as omitted rather than exercised. A surface now says what
+// it may type and what that text looks like once it has it (certifySurface's
+// seed/extra/shows/isolationEcho), which is a property of the surface and not of
+// the platform, so every profile certifies every surface.
 //
 // NAVIGATION IS KEYBOARD-DRIVEN EVEN ON A TOUCH PROFILE, deliberately. What a
 // touch profile certifies on the way from screen to screen is text entry and
@@ -660,11 +663,26 @@ async function certifyTouchModalIsolation(page, where) {
 /**
  * Certify one open text surface and record what was checked.
  *
- * `seed` is typed with one extra trailing character, which the deletion check
- * then removes — so composition and deletion are proven against the same buffer
- * and the surface is left holding exactly `seed`.
+ * THE SURFACE'S ALPHABET (M16.18d). A text surface is not a free-text field: the
+ * save prompt's `alphanum` charset upper-cases what it accepts, and the color
+ * picker's hex field takes `[0-9a-f]` and drops everything else. What the
+ * battery types, and what it then expects to see, is therefore declared per
+ * surface — the platform question underneath (does a composed character arrive
+ * exactly once, does a deletion delete one, does any of it reach the game) is
+ * the same for all seven:
+ *
+ *   seed          — the text to type, in characters this surface accepts
+ *   extra         — one more of them, typed with the seed and removed by the
+ *                   deletion check, so composition and deletion are proven
+ *                   against the same buffer and the surface is left holding
+ *                   exactly `seed`
+ *   shows(text)   — what `text` looks like once the surface has it (the chat
+ *                   composer draws a "> " prompt in front of it; the picker
+ *                   draws the '#' its field never stores)
+ *   isolationEcho — what the play-mode letters below look like once the surface
+ *                   has them, which is what a surface that filters them keeps
  */
-async function certifySurface(page, { id, kind, expectTag, seed, shows, inRoom, isolationEcho = "stbq" }) {
+async function certifySurface(page, { id, kind, expectTag, seed, extra = "X", shows, inRoom, isolationEcho = "stbq" }) {
   const checks = {};
   const record = (name, detail) => {
     checks[name] = detail;
@@ -713,20 +731,20 @@ async function certifySurface(page, { id, kind, expectTag, seed, shows, inRoom, 
   }
 
   // --- composition (or typing) ---------------------------------------------
-  const method = await typeText(page, seed + "X");
-  await waitForGrid(page, (cells) => hasText(cells, shows(seed + "X")), `${id}: ${JSON.stringify(seed + "X")} on screen`);
+  const method = await typeText(page, seed + extra);
+  await waitForGrid(page, (cells) => hasText(cells, shows(seed + extra)), `${id}: ${JSON.stringify(seed + extra)} on screen`);
   const once = await readGrid(page);
   assert.ok(
-    !hasText(once, shows(seed + "X" + seed)),
+    !hasText(once, shows(seed + extra + seed)),
     `${id}: the committed text was delivered twice:\n${gridToArt(once)}`,
   );
-  record("composition", `${method} committed ${JSON.stringify(seed + "X")} exactly once`);
+  record("composition", `${method} committed ${JSON.stringify(seed + extra)} exactly once`);
 
   // --- deletion -------------------------------------------------------------
   const how = await deleteOne(page);
   await waitForGrid(
     page,
-    (cells) => hasText(cells, shows(seed)) && !hasText(cells, shows(seed + "X")),
+    (cells) => hasText(cells, shows(seed)) && !hasText(cells, shows(seed + extra)),
     `${id}: ${how} to erase one character`,
   );
   record("deletion", `${how} erased one character`);
@@ -739,13 +757,16 @@ async function certifySurface(page, { id, kind, expectTag, seed, shows, inRoom, 
   // Every letter below is also a play-mode binding — s saves, t lights a torch,
   // b toggles sound, q quits — and the proof that the modal took them rather
   // than the game is twofold: no input frame reached the server (the wire), and
-  // the four characters landed in the buffer (the screen). Up is the one arrow
-  // every text surface leaves the buffer alone for — left is an erase key in
-  // some of them, and down moves a line cursor in others.
+  // whatever the surface keeps of them landed in the buffer (the screen). Up is
+  // the one arrow every text surface leaves the buffer alone for — left is an
+  // erase key in some of them, and down moves a line cursor in others.
   await page.locator("canvas[data-screen]").focus();
   const before = inRoom ? await roomPlayer() : null;
-  // What those four letters look like once the surface has them: the save
-  // prompt's `alphanum` charset upper-cases what it accepts (modal.ts).
+  // What those four letters look like once the surface has them, which is the
+  // surface's alphabet rather than the platform's: the save prompt's `alphanum`
+  // charset upper-cases what it accepts (modal.ts) and the color picker's hex
+  // field keeps only the "b" (color_picker.ts). Either way the claim is the
+  // same one — the modal took the keystroke and the game never saw it.
   const typed = isolationEcho;
   for (const code of ["KeyS", "KeyT", "KeyB", "KeyQ", "ArrowUp"]) {
     await page.keyboard.press(code);
@@ -980,6 +1001,46 @@ try {
     await page.waitForTimeout(120);
     await checkLayout(page, "restored");
     note(`rotation to ${rotated.width}x${rotated.height} and back re-letterboxed the screen`);
+  }
+
+  // =========================================================================
+  // 3a. colorPicker — the title menu's ' C ' (M19.2), certified here since
+  //     M16.18d gave the battery an alphabet
+  // =========================================================================
+  // A title-screen window, so it is reached from the title menu and never from
+  // the room: in play mode 'C' is chat (main.ts), and the two are different
+  // surfaces that happen to share a key.
+  if (wants("colorPicker")) {
+    await page.locator("canvas[data-screen]").focus();
+    await page.keyboard.press("KeyC");
+    await waitForGrid(page, (cells) => boardHasText(cells, "Your Player Color"), "the color picker");
+    await certifySurface(page, {
+      id: "colorPicker",
+      kind: "Player color picker (hex field)",
+      expectTag: "input",
+      // The picker's alphabet is hex, and its field is six digits wide. Five is
+      // the ceiling the battery may reach: seed(3) + extra(1) + the "b" the
+      // isolation letters leave behind. A sixth digit would complete a color,
+      // and a complete color paints a 24-bit preview the EGA decoder cannot
+      // read (the M19.1 observation readGrid throws on); a seventh would restart
+      // the field rather than be dropped (color_picker.ts).
+      seed: "a1c",
+      extra: "f",
+      // s, t and q are not hex digits, so the field takes only the b — which is
+      // the picker filtering them, not the game taking them: the wire assertion
+      // beside this one is what tells those two apart.
+      isolationEcho: "b",
+      // The '#' is drawn by the window and never stored, so the field on screen
+      // is always one character wider than the buffer.
+      shows: (text) => "#" + text,
+      inRoom: false,
+    });
+    await screenshot(page, "color-picker");
+    // Escape, not Enter: the matrix certifies the text entry, and a run that
+    // picked a color would hand the next act a client wearing one.
+    await page.locator("canvas[data-screen]").focus();
+    await page.keyboard.press("Escape");
+    await waitForGrid(page, (cells) => !boardHasText(cells, "Your Player Color"), "the color picker to close");
   }
 
   // =========================================================================

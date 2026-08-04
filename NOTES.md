@@ -10012,3 +10012,80 @@ then has been running it under load without knowing — which is one plausible
 reason these two flakes surfaced when they did. A load harness must kill its
 spinners by PID captured at spawn (`$!` per loop), not by `jobs -p` from a
 pipeline's subshell, which is what silently failed here.
+
+## 2026-08-04 — M16.18d: a surface's alphabet is not the platform's
+
+The color picker was the one text surface M16.18's device matrix inventoried and
+did not exercise, and the reason was never about the picker. The battery typed a
+fixed `seed + "X"` and then `s/t/b/q` into every surface, which quietly assumes a
+field that accepts any character. The picker's takes `[0-9a-f]` and drops the
+rest, so the run would sit waiting for an "X" that the field had thrown away.
+
+**The fix is four options, of which three already existed.** `seed` and `shows`
+were per-surface from M16.18, and `isolationEcho` since the save prompt's
+`alphanum` charset upper-cased what it accepted. Only `extra` — the one character
+typed with the seed and then deleted — was hard-coded. Naming the group "the
+surface's alphabet" is what makes the split legible: what a surface accepts is a
+property of the surface, and the platform question underneath (does a composed
+character arrive exactly once, does a deletion delete one, does any of it reach
+the game) is the same for all seven.
+
+**Both halves watched failing.** With `extra: "X"` the run times out on
+`colorPicker: "a1cX" on screen` while the failure art shows the field reading
+`#a1c···` — the X never arrived, which is the omission's own reason, reproduced.
+With the fixed `"stbq"` echo it times out on `the play-mode letters to land in
+the buffer instead of the game`, the field holding `#a1cb`: only the b is a hex
+digit. The wire assertion beside it passed in both inversions, which is what
+separates "the surface filtered them" from "the game took them".
+
+**Two things the filed task did not know.** The hex field is six digits wide and
+a seventh RESTARTS it, so the battery has a ceiling here it has nowhere else:
+seed(3) + extra(1) + the surviving b(1) is five, and a sixth digit would complete
+a color — which paints the 24-bit preview `readGrid` refuses to decode (the M19.1
+observation). Separately, the isolation `ArrowUp` moves the picker's selection
+off the hex row onto Grey, and Grey's `#aaaaaa` preview is exactly EGA 7, so it
+still decodes. That is luck, not design; the comment in the act says which digits
+may be typed so the next editor keeps the ceiling.
+
+**One deviation from the task text, taken deliberately.** The spec said the
+picker "is reached BEFORE the world picker rather than from the room". It is not:
+`main.ts` runs `showTitle()` and then `promptNicknameOnLaunch()`, and committing
+the name opens the world picker immediately, so the only title menu a player can
+press `C` on is the one AFTER a world is selected. The act therefore runs at
+CONTROL's title screen, beside the Dream prompt and the editor. The half of that
+sentence that matters — from the title menu and never from the room, where `C` is
+chat — is what landed.
+
+All six covered profiles now cover seven surfaces each (Chromium, Firefox and
+WebKit; desktop, portrait and landscape phone at DPR 3; both touch gates), no
+other surface's coverage moved, and `surfacesOmitted` is gone from
+device-matrix.json entirely — the matrix explains nothing away any more.
+
+### Found on the way through: the cutline can walk Ada into the vendor
+
+`go test ./...` under `ZZT_BROWSER=1` failed ONCE, in
+`TestCoopCutlineThreePlayerAcceptanceJourney`, with the whole browser family
+running; the same command was green on the next two runs and the suite is green
+3/3 alone. Not M16.18d's doing — it touched `platform_matrix.test.mjs` and
+`device-matrix.json`, and this suite reads neither.
+
+Rather than log it as noise it was forced, M16.11b's way, and it reproduced on
+the first run. ACT 3's `walkUntil(ada, "ArrowRight", atLeastX(ada, VENDOR_X - 1))`
+stops as soon as Ada is *seen* at 25. A step is not one tile: taken from x=24 and
+covering two, it lands her on 25 and spends its second tile walking into the
+vendor at (26,12). The vendor is a solid Object, so she does not move — she
+touches it, and its scroll opens. Every arrow after that goes to the text window,
+so ACT 4's `crossMainBoard` stalls in place:
+
+```
+CO-OP cutline journey FAILED: Error: Ada is stuck walking onto the square above
+and west of the vendor (25,11) at Ada board=1 pos=(25,12) hp=101
+--- Ada: … events=["savePrompt","saveResult","walkClick","sound","scroll"]
+--- Bo:  Bo board=1 pos=(24,12)      --- Cy: Cy board=1 pos=(23,12)
+```
+
+which is the load failure's dump to the tile, `scroll` included, and its saved
+screenshot shows the vendor's window open over Ada's board. M16.11b's re-aiming
+neither helps nor could: the player is not missing the target, the keys are not
+reaching the player. Left alone under rule 4 and filed as **M16.11d**, ranked
+above M16.11c because CUTLINE.md's policy covers this suite and not journey 1's.
