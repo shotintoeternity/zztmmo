@@ -9950,3 +9950,65 @@ Filed rather than fixed here (CLAUDE.md rule 4, and the M16.14c precedent).
 The pattern under both: `crossMainBoard` is a near-copy of journey 1's passage
 crossing. One wrong assumption about `step()`, copied once, produced two bugs in
 two suites — and the copy is why fixing one did not fix the other.
+
+## 2026-08-04 — M16.11b: the cutline's passage, and a second way for a re-aiming walk to be wrong
+
+The filed diagnosis was right and was confirmed by forcing rather than by
+waiting. A 330ms hold on the one step the task names — `crossMainBoard`'s
+`step(c, "ArrowDown", 110)` after rounding the vendor — reproduced the filed
+failure on the first run: `Ada never reached the passage board change; stopped
+at Ada board=1 pos=(34,22)`. The passage is `(34,12)`, so she was standing in
+its column, ten rows below it, having been walked further away by the
+`ArrowDown` fallback that exists for a player left *above* row 12.
+
+**The fix names every tile.** `crossMainBoard` now walks
+`(25,11) → (28,11) → (34,12)` through `walkOnto`, M16.11a's shape, and the
+fallback is deleted rather than kept: with the row no longer guessed at there is
+nothing for it to recover from, and a fallback that can walk a player away from
+the target is worse than a clear failure. `walkOnto` is **copied**, not shared —
+the task left that to the executor, and the two drivers hold their observed state
+differently (this one per-client, journey 1's page-global), so sharing the code
+would mean rewriting both files to fix one. The comment in each says the other
+exists.
+
+**What forcing taught, which the filed task did not know.** How many tiles a step
+covers is a *deterministic function of the hold*, not a coin flip: a forced 330ms
+hold moves exactly three tiles, every time, on an idle machine. That has a
+consequence for `walkOnto` itself. While the step size `k` does not change, every
+square the walk stands on stays in one residue class mod `k`, so a target in
+another class is not merely missed — it is unreachable. Forced against the first
+version of the fix, `k` was 3, and Ada swung `12 → 9 → 12 → 9` for all 24 steps
+before failing with `never stood on the square above and west of the vendor`:
+row 11 is simply not in `{…, 9, 12, 15, …}`. That is a second way to be red, and
+it would have been the next flake rather than a theoretical one, because the real
+step size (one tile or two) is just as steady under steady load.
+
+So a step that fails to close the distance now holds ~110ms longer next time —
+one more server tick with the mask latched, therefore a different `k` and a
+different class — cycling `+0/+110/+220` so the hold cannot grow without bound. A walk that is making progress is untouched: the escalation
+only arms after a step that failed. Forced at 330ms the log now reads
+
+```
+Ada -> (25,11) at (25,12) hold=330      # 3 tiles up   -> 9
+Ada -> (25,11) at (25,9)  hold=440      # 4 tiles down -> 13
+Ada -> (25,11) at (25,13) hold=550      # 5 tiles up   -> 8
+Ada -> (25,11) at (25,8)  hold=330      # 3 tiles down -> 11, arrived
+```
+
+and all three players cross the passage under a regime three times harsher than
+any load produces. Green in the shipped form, green again under ten spinning
+cores, green in the whole browser family in one command.
+
+**Journey 1's copy does not carry the escalation.** Its `walkOnto(12,10)` can
+swing `9 → 13 → 9` past board 2's gem the same way, which is M16.11a's bug
+wearing a different error message. Not touched here (rule 4, and it is a
+different suite); filed as **M16.11c** with the reproduction recipe.
+
+**Environmental, and worth more than it looks.** Two earlier sessions' load
+harnesses leaked their spinners: twenty orphaned `while :; do :; done` shells
+were still burning CPU, ten of them for nearly four hours, parented to init and
+invisible to `jobs`. Anyone running a browser suite on this workstation since
+then has been running it under load without knowing — which is one plausible
+reason these two flakes surfaced when they did. A load harness must kill its
+spinners by PID captured at spawn (`$!` per loop), not by `jobs -p` from a
+pipeline's subshell, which is what silently failed here.

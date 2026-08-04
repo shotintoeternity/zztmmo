@@ -244,6 +244,69 @@ const atLeastX = (c, x) => () => (c.you?.x ?? 0) >= x;
 const ids = (c) => c.roster.map((p) => p.id).sort();
 
 /**
+ * Walk onto one exact tile, recomputing the direction after every step.
+ *
+ * A step is NOT one tile. The client samples the held key every 55ms, but the
+ * server latches that mask until the key-up sample arrives, so one hold spans
+ * one server tick or two depending on load — one move or two. Along a row that
+ * is harmless: an extra tile still passes THROUGH whatever was being collected,
+ * which is why the eastward walks in this file can stay one-way inequalities.
+ * Across rows it is not. A detour that assumes "one step up, then one step back
+ * down" lands a row low under load, and every step taken afterwards along the
+ * assumed row happens on the wrong one. Re-aiming after every step turns an
+ * overshoot into a correction instead of a miss (M16.11b).
+ *
+ * Vertical first, then horizontal: the caller's target is reached by clearing
+ * the starting row before travelling along the target's own row.
+ *
+ * `until` ends the walk on something other than arrival, because walking onto a
+ * passage changes the board and the coordinates on the far side are not this
+ * walk's coordinates.
+ *
+ * AND WHY THE HOLD GROWS AFTER AN OVERSHOOT. How many tiles a step covers is a
+ * function of where the hold falls across the server's 110ms tick, so under
+ * steady conditions it is a steady ANSWER, not a coin flip — a forced 330ms hold
+ * moves exactly three tiles, every time, which is how this was measured. While
+ * the step size k does not change, every square this walk stands on stays in one
+ * residue class mod k, so a target in another class is not merely missed, it is
+ * unreachable: k=3 from row 12 visits 12, 9, 12, 9 and never 11, which is what
+ * this helper was watched doing until its steps ran out. So a step that did not
+ * close the distance holds ~110ms longer next time — one more server tick with
+ * the key latched, so a different k and a different class. Nothing changes for a
+ * walk that is making progress: the hold only grows after a step that failed to.
+ *
+ * e2e_journey.test.mjs carries the same helper, added by M16.11a for the same
+ * cause one row and one journey away. The two files are separate drivers with
+ * separate observed state (this one is per-client, that one page-global), so
+ * the shape is shared and the code is not.
+ */
+async function walkOnto(c, tx, ty, describe, { maxSteps = 24, hold = 95, until = null } = {}) {
+  let stalled = 0;
+  let extra = 0; // added to the hold after a step that did not close the distance
+  for (let i = 0; i < maxSteps; i++) {
+    if (until?.()) return;
+    const { x, y } = c.you ?? {};
+    if (x === tx && y === ty) return;
+    const vertical = y !== ty;
+    const was = vertical ? Math.abs(y - ty) : Math.abs(x - tx);
+    const before = `${x},${y},${c.boardId}`;
+    if (vertical) await step(c, y > ty ? "ArrowUp" : "ArrowDown", hold + extra);
+    else await step(c, x > tx ? "ArrowLeft" : "ArrowRight", hold + extra);
+    const now = vertical ? Math.abs((c.you?.y ?? y) - ty) : Math.abs((c.you?.x ?? x) - tx);
+    extra = now > 0 && now >= was ? (extra + 110) % 330 : 0;
+    if (`${c.you?.x},${c.you?.y},${c.boardId}` === before) {
+      if (++stalled >= 5) {
+        throw new Error(`${c.label} is stuck walking onto ${describe} (${tx},${ty}) at ${at(c)}`);
+      }
+    } else {
+      stalled = 0;
+    }
+  }
+  if (until?.()) return;
+  throw new Error(`${c.label} never stood on ${describe} (${tx},${ty}); stopped at ${at(c)}`);
+}
+
+/**
  * Put a player on `row`.
  *
  * Joiners do NOT all land on the start square: the first one claims the board's
@@ -420,23 +483,27 @@ async function agreeOnWorld(group, describe) {
   return compared;
 }
 
-/** Walk east along row 12 of ACCEPT's main board, around the vendor (note 2). */
+/**
+ * Walk east along row 12 of ACCEPT's main board and out through the passage at
+ * (PASSAGE_X, ROW), rounding the vendor on the row above it (note 2).
+ *
+ * Every leg names the tile it ends on. This detour used to be a bare step up, an
+ * eastward walk and a bare step down, which assumed a step is one tile: under
+ * load the step down covered two, the eastward walk then travelled the row BELOW
+ * the passage, and the down-step fallback that existed for a player left ABOVE
+ * row 12 walked them further from it until its steps ran out — M16.11b, filed
+ * from a run that ended eight rows past the passage and still walking away.
+ * There is no fallback now, because there is no longer a row to guess at.
+ */
 async function crossMainBoard(c) {
-  await walkUntil(c, "ArrowRight", atLeastX(c, VENDOR_X - 1), "the square west of the vendor");
-  await step(c, "ArrowUp", 110);
-  assert.ok(c.you.y < ROW, `${c.label}: stepping up must leave row ${ROW}, at y=${c.you.y}`);
-  await walkUntil(c, "ArrowRight", atLeastX(c, VENDOR_X + 2), "past the vendor");
-  await step(c, "ArrowDown", 110);
   const boardBefore = c.boardId;
-  await walkUntil(
-    c,
-    "ArrowRight",
-    () => c.boardId !== boardBefore || (c.you?.x ?? 0) >= PASSAGE_X,
-    "the passage column",
-  );
-  if (c.boardId === boardBefore) {
-    await walkUntil(c, "ArrowDown", () => c.boardId !== boardBefore, "the passage board change", 8);
-  }
+  const detour = ROW - 1; // empty for the board's whole width (fixtures/accept.zwd)
+  await walkOnto(c, VENDOR_X - 1, detour, "the square above and west of the vendor");
+  await walkOnto(c, VENDOR_X + 2, detour, "the square above and east of the vendor");
+  await walkOnto(c, PASSAGE_X, ROW, "the passage", {
+    maxSteps: 30,
+    until: () => c.boardId !== boardBefore,
+  });
   await waitFor(c, () => c.boardId !== boardBefore, `${c.label}'s board change through the passage`);
   return boardBefore;
 }

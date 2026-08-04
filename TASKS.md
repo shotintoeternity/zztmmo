@@ -5189,7 +5189,7 @@ The background says which player; the glyph says that it is a player.
   `PARITY_SCAFFOLD=1` (a no-op-diff merge since M16.20a), which adds the missing
   `task.M19.2a` row along with this task's own.
 
-- [ ] **M16.11b — the co-op cutline walks past the passage the same way M16.11a
+- [x] **M16.11b — the co-op cutline walks past the passage the same way M16.11a
   walked past the gem.** Filed 2026-08-03 by M16.11a's rule-3 full-suite run.
   `TestCoopCutlineThreePlayerAcceptanceJourney` failed twice under load with
   `Ada never reached the passage board change; stopped at Ada board=1
@@ -5214,6 +5214,56 @@ The background says which player; the glyph says that it is a player.
   including a run of the whole family in one command; `go test ./...` green.
   Worth a look while there: `crossMainBoard` is a near-copy of journey 1's
   passage crossing, which is why one cause produced two bugs.
+  **Done 2026-08-04.** Watched failing first, exactly as the DoD asks: a 330ms
+  hold on the one step the task names reproduced the filed failure on the first
+  run — `Ada never reached the passage board change; stopped at Ada board=1
+  pos=(34,22)`, the passage column, ten rows below the passage and walking away.
+  `crossMainBoard` now names every tile it ends on (`walkOnto`, M16.11a's shape,
+  copied rather than shared — the two drivers keep their observed state
+  differently, one per-client and one page-global), and the `ArrowDown` fallback
+  is deleted rather than kept, because there is no longer a row to guess at.
+  Forcing the fix taught one thing the filed task did not know, and it is the
+  reason this landed as more than a copy. **How many tiles a step covers is a
+  deterministic function of the hold**, not a coin flip: a forced 330ms hold
+  moves exactly three tiles, every time. While the step size `k` holds still,
+  every square the walk stands on stays in one residue class mod `k`, so a target
+  in another class is unreachable rather than merely missed — watched swinging
+  `12 → 9 → 12 → 9` for all 24 steps, because row 11 is not in `{9, 12, 15}`.
+  That is a second way to be red and would have been the next flake. So a step
+  that fails to close the distance holds ~110ms longer next time (one more server
+  tick with the mask latched, so a different `k` and a different class), and
+  the forced log now reads `12 →3↑ 9 →4↓ 13 →5↑ 8 →3↓ 11` and arrives. Nothing
+  changes for a walk that is making progress.
+  Green in the shipped form, green again under ten spinning cores, and green in
+  the whole browser family in one command. Journey 1's `walkOnto` does **not**
+  carry the escalation — left alone under rule 4 and filed as **M16.11c**.
+  One environmental finding, in NOTES.md because it will bite the next executor:
+  two earlier sessions' load harnesses leaked ten orphaned `while :; do :; done`
+  shells apiece, still burning CPU four hours later. Whoever runs a browser
+  suite on this machine has been running it under load without knowing.
+
+- [ ] **M16.11c — journey 1's `walkOnto` can swing across its target forever.**
+  Filed 2026-08-04 by M16.11b, which found the mechanism while forcing its own
+  fix and fixed it only in the file it was working in (rule 4). A step covers a
+  number of tiles that is a deterministic function of the hold — a forced 330ms
+  hold moves exactly three tiles, every time — so under steady load the step
+  size is steady, and while it holds still every square a re-aiming walk stands
+  on stays in one residue class mod that size — a target in another class is
+  unreachable, not merely missed: `e2e_journey.test.mjs`'s `walkOnto(12,10)` would
+  swing `9 → 13 → 9` past board 2's gem and fail with `never stood on board 2's
+  gem`, which is M16.11a's bug wearing a different error message. Watched in the
+  cutline's copy before its escalation was added; NOT yet watched in journey 1's,
+  which is the first thing to do. `coop_journey.test.mjs`'s `walkOnto` carries
+  the fix: a step that does not close the distance holds ~110ms longer next time
+  (one more server tick with the mask latched, hence a different tile count and
+  the other parity), capped by `% 330` so it cycles rather than grows.
+  Ranks below M16.18d: journey 1 is not the cutline, and this is a flake that
+  has not been seen in the wild yet — the parity that bites depends on where the
+  walk starts. DoD: the swing reproduced in journey 1 by forcing a uniform step
+  size (the 330ms hold is how M16.11b did it); whichever way the two files end
+  up sharing the helper stated in a comment rather than left to be discovered a
+  third time; `TestM1611BrowserEndToEndPlayerJourneys` and
+  `TestCoopCutlineThreePlayerAcceptanceJourney` both green under `ZZT_BROWSER=1`.
 
 - [ ] **M16.18d — teach the device matrix what a surface accepts, and certify the
   color picker on it.** Filed 2026-08-03 by M19.2. `modalAcceptsTextInput` now
