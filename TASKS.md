@@ -5126,7 +5126,7 @@ The background says which player; the glyph says that it is a player.
   no other surface's coverage changes; the browser family green on all three
   engines.
 
-- [ ] **M19.3 — An account-wide preferences store, with the color as its first
+- [x] **M19.3 — An account-wide preferences store, with the color as its first
   key.** Widened 2026-08-03 (owner request) from "persist the color" to the
   store itself, because the color is not the only thing that needs it and
   building it twice is the expensive mistake. The 2026-07-10 design says the
@@ -5158,6 +5158,55 @@ The background says which player; the glyph says that it is a player.
   demonstrates a second, unrelated preference field can be added and read
   without touching the first (a throwaway field in the test, not shipped);
   `go test ./...` green.
+  **Done 2026-08-03.** Each claim was watched failing before it was trusted.
+  * *the store is account-keyed and refuses to invent a key* —
+    `PutAccountPreferences`/`GetAccountPreferences` on the `ChatDatabase`
+    interface, in both `MemChatDatabase` and `FileChatDatabase`, the file impl a
+    JSON document of its own (`<chat>.accountprefs.json`) with a
+    `writeAccountPreferencesLocked` flush in `writePlayerStatesLocked`'s shape.
+    An empty or whitespace id is `ErrNoAccountID` on **both** calls, and the test
+    checks the harder half too: a real account's write must not be readable
+    through the empty key, and no `""` entry may reach the disk. Inverted by
+    dropping the guard — the document then contains a `""` bucket holding
+    another account's color, which is the shared bucket the spec forbids.
+    Nothing new is needed for backups: the sidecar lands in `saves/`, which
+    `deploy/zztmmo-backup.sh` already tars whole.
+  * *the color follows the player where localStorage cannot go* — two servers
+    hosting two differently-named worlds share one database, which is a
+    different world AND a different process; the joins that carry no color, or a
+    stale one, are the different browser. Inverted by letting a non-empty join
+    color win: the stale-pick case and the vanilla case both fail immediately.
+    A guest is untouched — their color still rides the join, and a guest join
+    writes zero documents.
+  * *the store grew a shape, not a field* — `AccountPreferences` is a struct
+    with `Color` and nothing speculative. Both extension directions are tested
+    with a throwaway `m193FuturePreferences` (declared in the test, never
+    shipped): today's reader keeps the color out of a document carrying a field
+    it does not know, and a reader that knows the field decodes today's
+    document. The limit is stated in the test rather than discovered later —
+    today's writer rewrites with today's struct, so it would drop an unknown
+    field, which is fine for the way a field actually arrives and is why the
+    field belongs in the struct rather than in a loose map.
+  * *the M19.1 invariant survived the widening* — a color that now comes from an
+    account is still not simulation state: two rooms whose players differ only
+    in stored color hash identically, `SetPlayerColor` still records no op, and
+    the replay fixtures are untouched.
+  One thing the spec did not name and the feature could not work without.
+  "A signed-in player's stored color wins over `localStorage`" makes the picker
+  useless if the join is the only write path: a join carrying no color is
+  indistinguishable from a browser that has none, so "No color" could never be
+  said and the account's color could never be changed — the M19.2 "way back to
+  vanilla" lesson, one layer down. So the write path is an endpoint,
+  `GET|PUT /api/preferences` (401 for a guest, `SanitizePlayerColor` at the edge
+  because a stored color now outlives the connection that sent it), the picker
+  writes through it when signed in and to `localStorage` when not, and
+  `preferences.ts` holds the precedence rule as pure logic in the
+  `player_tint.ts` shape. The join keeps ONE write of its own — a first signed-in
+  join with no stored document adopts the browser's pick, so nobody who picked a
+  color before this landed has to pick it again. `route.api.preferences` is a
+  new row in `fixtures/parity/manifest.json` (regenerated with
+  `PARITY_SCAFFOLD=1`, curated fields filled in), which is how the M16 framework
+  noticed the new surface before a human did.
 
 ## M14 — Rearchitecting for the service ZZTMMO is becoming
 

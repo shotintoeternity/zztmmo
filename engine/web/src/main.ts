@@ -52,7 +52,13 @@ import {
   savePlayerColor,
   saveResumeToken,
 } from "./resume";
-import { isPlayerColor, playerTintCells, playerTintForeground } from "./player_tint";
+import { playerTintCells, playerTintForeground } from "./player_tint";
+import {
+  effectivePlayerColor,
+  fetchAccountPreferences,
+  saveAccountColor,
+  type AccountPreferences,
+} from "./preferences";
 import {
   boardCellIndices,
   cellSource,
@@ -572,6 +578,10 @@ let roster: PlayerSnapshot[] = [];
 // the roster or the screen changes; consulted by drawScreen after the overlay.
 const playerTints = new Map<number, string>();
 let authStatus: AuthStatus = { enabled: false, authenticated: false };
+// The signed-in player's account-wide preferences (M19.3), or null for a guest,
+// a signed-in player who has never chosen anything, and a read that failed.
+// null is what sends readStoredPlayerColor back to localStorage.
+let accountPrefs: AccountPreferences | null = null;
 // leavingToTitle suppresses the reconnect that a dropped socket normally
 // triggers: a socket we closed on purpose must not come back.
 let leavingToTitle = false;
@@ -868,6 +878,10 @@ async function refreshAuthStatus() {
   } catch {
     authStatus = { enabled: false, authenticated: false };
   }
+  // Sign-in state and preferences are read together because the second only
+  // means anything given the first: signing out must put this browser back on
+  // its own localStorage pick in the same breath (M19.3).
+  accountPrefs = authStatus.authenticated ? await fetchAccountPreferences(fetch) : null;
   if (mode === "title") {
     drawTitleSidebar(writeText, titleFriendlyName, authDisplayName(), authStatus.enabled, serverOccupancy, readStoredPlayerColor());
     paintOverlay();
@@ -2173,28 +2187,46 @@ function openChatWindow() {
   });
 }
 
-// readStoredPlayerColor is the browser's own pick (M19.1). A stored value that
-// is not a "#RRGGBB" triple — hand-edited, or written by a future version — is
-// read as no pick at all rather than sent on to other people's canvases. M19.2
-// adds the picker that writes this key; today it is set by hand or by a test.
+// readStoredPlayerColor is this browser's answer to "what color is my ☻": the
+// account's, for a signed-in player who has chosen one, and this browser's own
+// localStorage pick otherwise (M19.1, then M19.3). Everything that needs the
+// color reads it through here — the join, the title swatch, and the picker's
+// starting row — so the three cannot drift apart. A stored value that is not a
+// "#RRGGBB" triple, from either source, is read as no pick at all rather than
+// sent on to other people's canvases.
 function readStoredPlayerColor(): string {
-  const stored = loadPlayerColor(window.localStorage);
-  return isPlayerColor(stored) ? stored : "";
+  return effectivePlayerColor({ account: accountPrefs, local: loadPlayerColor(window.localStorage) });
 }
 
-// openColorPicker is the title menu's ' C ' (M19.2). It writes localStorage and
-// nothing else: the color is read again at every join (see connect()), so a
-// pick made here reaches the room the next time P is pressed, and a pick made
-// after a drop reaches the reconnect — without a rejoin being anyone's problem.
-// M19.3 moves a signed-in player's copy to their account and leaves this as the
-// guest fallback.
+// openColorPicker is the title menu's ' C ' (M19.2). The pick is stored and
+// nothing else happens: the color is read again at every join (see connect()),
+// so it reaches the room the next time P is pressed, and a pick made after a
+// drop reaches the reconnect — without a rejoin being anyone's problem.
+//
+// Where it is stored is M19.3's half. A signed-in player's pick goes to their
+// account, so it is waiting for them in the next world and the next browser; a
+// guest keeps localStorage, having no durable identity to key on. The two are
+// deliberately not written together: a signed-in player who signs out falls
+// back to whatever this browser picked as a guest, rather than to a copy of an
+// account preference they may no longer want.
 function openColorPicker() {
   openModal(
     newColorPickerModal(readStoredPlayerColor(), (color) => {
       if (color === null) {
         return; // Escape: the window closes and nothing has changed.
       }
-      if (color) {
+      if (authStatus.authenticated) {
+        // Held optimistically so the swatch and the next join reflect the pick
+        // immediately; the server's answer replaces it when it lands, and a
+        // failed write leaves the optimistic value rather than silently
+        // reverting under the player.
+        accountPrefs = { authenticated: true, stored: true, color };
+        void saveAccountColor(fetch, color).then((stored) => {
+          if (stored) {
+            accountPrefs = stored;
+          }
+        });
+      } else if (color) {
         savePlayerColor(window.localStorage, color);
       } else {
         clearPlayerColor(window.localStorage);

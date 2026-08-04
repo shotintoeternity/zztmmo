@@ -485,6 +485,10 @@ func (s *WebSocketServer) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 		client.accountID = account.ID
 		join.Name = account.DisplayName()
 		storedState, hasStoredState = s.loadAccountPlayerState(account.ID, safeWorld)
+		// The account, not this browser, is where a signed-in player's color
+		// lives (M19.3). Resolved here so both the fresh join and the resume
+		// below see one already-decided value.
+		joinColor = s.resolveAccountPlayerColor(account.ID, joinColor)
 	}
 
 	// Resume first: a valid token reclaims the dropped run (same PlayerID/statID,
@@ -700,6 +704,58 @@ func (s *WebSocketServer) persistAccountPlayerState(accountID, worldName string,
 	}
 	if err := s.ChatDB.PutPlayerState(accountID, worldName, state); err != nil {
 		log.Printf("zztgo: failed to persist player state for account %q in %q: %v", accountID, worldName, err)
+	}
+}
+
+// resolveAccountPlayerColor decides which color a signed-in player's ☻ is drawn
+// on: the account's, if that account has ever expressed one, and otherwise
+// whatever this browser sent (M19.3).
+//
+// The stored preference wins over the join even when the join carries a color,
+// which is what "account-wide" means — the same player is the same color in a
+// second world and in a second browser, and a pick left behind in some other
+// browser's localStorage does not follow them around. It also means an EXISTING
+// document whose Color is empty wins: that document is the picker's "No color"
+// row, and the way back to the vanilla player has to beat a stale local pick
+// the same way a red one does (the M19.2 lesson, one layer down).
+//
+// The one write here is the adoption of a first pick: a player who chose a
+// color before this store existed (or before they signed in) has it in
+// localStorage only, and their first signed-in join moves it to the account
+// rather than making them pick it again. Every later change comes through
+// /api/preferences, where "no color" can be said out loud.
+//
+// Nothing here reaches the simulation — SetPlayerColor records no op, which is
+// the M19.1 invariant this task must not spend.
+func (s *WebSocketServer) resolveAccountPlayerColor(accountID, joinColor string) string {
+	prefs, ok := s.loadAccountPreferences(accountID)
+	if ok {
+		return prefs.Color
+	}
+	if joinColor != "" {
+		s.persistAccountPreferences(accountID, AccountPreferences{Color: joinColor})
+	}
+	return joinColor
+}
+
+func (s *WebSocketServer) loadAccountPreferences(accountID string) (AccountPreferences, bool) {
+	if s.ChatDB == nil || accountID == "" {
+		return AccountPreferences{}, false
+	}
+	prefs, ok, err := s.ChatDB.GetAccountPreferences(accountID)
+	if err != nil {
+		log.Printf("zztgo: failed to load preferences for account %q: %v", accountID, err)
+		return AccountPreferences{}, false
+	}
+	return prefs, ok
+}
+
+func (s *WebSocketServer) persistAccountPreferences(accountID string, prefs AccountPreferences) {
+	if s.ChatDB == nil || accountID == "" {
+		return
+	}
+	if err := s.ChatDB.PutAccountPreferences(accountID, prefs); err != nil {
+		log.Printf("zztgo: failed to persist preferences for account %q: %v", accountID, err)
 	}
 }
 

@@ -87,11 +87,93 @@ func (a *WebAPI) Handler() http.Handler {
 	mux.HandleFunc("/api/generate", a.handleGenerate)
 	mux.HandleFunc("/api/museum/search", a.handleMuseumSearch)
 	mux.HandleFunc("/api/museum/play", a.handleMuseumPlay)
+	mux.HandleFunc("/api/preferences", a.handlePreferences)
 	mux.HandleFunc("/api/auth/me", a.handleAuthMe)
 	mux.HandleFunc("/api/auth/logout", a.handleAuthLogout)
 	mux.HandleFunc("/api/auth/google/start", a.handleAuthStart)
 	mux.HandleFunc("/api/auth/google/callback", a.handleAuthCallback)
 	return mux
+}
+
+// preferencesResponse is what the title screen reads its own settings from
+// (M19.3). Authenticated says whether an account was found at all; Stored says
+// whether that account has a preferences document, which the client needs
+// separately from Color because an existing document with an empty Color is a
+// deliberate "no color" and an absent one is "never chose".
+type preferencesResponse struct {
+	Authenticated bool   `json:"authenticated"`
+	Stored        bool   `json:"stored"`
+	Color         string `json:"color,omitempty"`
+}
+
+// handlePreferences reads and writes the signed-in player's account-wide
+// preferences. A guest is not an error: GET answers {authenticated:false} so
+// the client falls back to localStorage without a failed request to interpret,
+// and PUT is refused, because a preference with no account to key on has
+// nowhere to go (ErrNoAccountID, one layer down).
+func (a *WebAPI) handlePreferences(w http.ResponseWriter, r *http.Request) {
+	account, authenticated := a.authenticatedAccount(r)
+	switch r.Method {
+	case http.MethodGet:
+		if !authenticated {
+			writeJSON(w, preferencesResponse{})
+			return
+		}
+		prefs, stored := a.storedPreferences(account.ID)
+		writeJSON(w, preferencesResponse{Authenticated: true, Stored: stored, Color: prefs.Color})
+	case http.MethodPut:
+		if !authenticated {
+			http.Error(w, "sign in to store preferences", http.StatusUnauthorized)
+			return
+		}
+		if a.Server == nil || a.Server.ChatDB == nil {
+			http.Error(w, "preferences are unavailable", http.StatusServiceUnavailable)
+			return
+		}
+		var body struct {
+			Color string `json:"color"`
+		}
+		// Capped like every other body this API decodes (handleGenerate): the
+		// whole document is a seven-character color, so a kilobyte is generous.
+		if err := json.NewDecoder(http.MaxBytesReader(w, r.Body, 1<<10)).Decode(&body); err != nil {
+			http.Error(w, "bad request body", http.StatusBadRequest)
+			return
+		}
+		// Validated here, at the edge, exactly as the join validates it
+		// (SanitizePlayerColor): this value is broadcast to other players'
+		// browsers, and it now also outlives the connection that sent it, so a
+		// junk color stored once would be junk broadcast forever. Anything that
+		// is not "#" plus six hex digits becomes "", which is the vanilla
+		// player rather than a rejection — the picker's "No color" row sends
+		// exactly that.
+		prefs := AccountPreferences{Color: SanitizePlayerColor(body.Color)}
+		if err := a.Server.ChatDB.PutAccountPreferences(account.ID, prefs); err != nil {
+			http.Error(w, "could not store preferences", http.StatusInternalServerError)
+			return
+		}
+		writeJSON(w, preferencesResponse{Authenticated: true, Stored: true, Color: prefs.Color})
+	default:
+		http.Error(w, "use GET or PUT", http.StatusMethodNotAllowed)
+	}
+}
+
+func (a *WebAPI) authenticatedAccount(r *http.Request) (AuthenticatedAccount, bool) {
+	if a.Auth == nil {
+		return AuthenticatedAccount{}, false
+	}
+	return a.Auth.AccountFromRequest(r)
+}
+
+func (a *WebAPI) storedPreferences(accountID string) (AccountPreferences, bool) {
+	if a.Server == nil || a.Server.ChatDB == nil {
+		return AccountPreferences{}, false
+	}
+	prefs, ok, err := a.Server.ChatDB.GetAccountPreferences(accountID)
+	if err != nil {
+		log.Printf("zztgo: failed to read preferences for account %q: %v", accountID, err)
+		return AccountPreferences{}, false
+	}
+	return prefs, ok
 }
 
 func (a *WebAPI) handleAuthMe(w http.ResponseWriter, r *http.Request) {
