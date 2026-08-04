@@ -83,6 +83,12 @@ export function drawSidebar(write: WriteText) {
   write(72, 18, 0x1f, " Move");
   write(61, 19, 0x70, " Shift \x18\x19\x1a\x1b ");
   write(72, 19, 0x1f, " Shoot");
+  // M21.3: row 20 is the other row vanilla leaves blank (GAME.PAS:1441-1455
+  // writes 14-19 and 21-23), which is the whole reason the Players window can be
+  // advertised at all — 'L' opened it and nothing on screen said so. Like ' C '
+  // above, it is handled client-side and never reaches the engine's key switch.
+  write(62, 20, 0x30, " L ");
+  write(65, 20, 0x1f, " Players");
   write(62, 21, 0x70, " S ");
   write(65, 21, 0x1f, " Save game");
   write(62, 22, 0x30, " P ");

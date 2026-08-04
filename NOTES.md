@@ -10496,3 +10496,62 @@ Two things worth keeping:
 
 The instance is left **running**. Stop it (`aws ec2 stop-instances --region
 us-east-1 --instance-ids i-06149a1a52a126f0c`) when M21.1 has been looked at.
+
+## 2026-08-04 — M21.3: the Players window gets a sidebar row, and fourteen goldens move
+
+M21.1 shipped a window on 'L' that nothing on screen mentioned, and filed the
+reason: the play sidebar is in the browser goldens, and CLAUDE.md rule 3 says an
+intentional fixture change has to be authorized by the spec that makes it. M21.3
+was that authorization. The owner chose the sidebar row over the cheaper
+chat-window line, so the regeneration happened.
+
+Three things worth keeping.
+
+1. **Row 20 was read, not guessed.** `GAME.PAS:1441-1455` writes sidebar rows
+   14-19 and 21-23, so vanilla leaves exactly two blank. M6.1 took 17 for
+   ' C  Chat'; 20 is the only one left, and after it there is no third. The chip
+   is `0x30` and the label `0x1f`, which is what ' P  Pause' two rows down
+   already uses, so the row reads as one of vanilla's.
+
+2. **It was fourteen goldens, not the ten the filing estimated.** Every
+   `fixtures/browser-goldens/*.json` except `title.json` (monitor sidebar) and
+   `tick-locked-run.json` (hashes, no cells) carries the play sidebar. Each diff
+   is three lines — the `art`, `ch` and `color` of row 20 — and nothing else
+   moved in any of the fourteen. The art was read before committing, which is
+   what `visual_golden.test.mjs`'s own header asks for.
+
+3. **The advertisement would have made the journey pass vacuously.** M21.1's
+   block journey waited on `hasText(cells, "Players")` to decide the window was
+   open — and the new sidebar row contains that word, on screen from the moment
+   the player joins. Left alone, act 2 would have "opened the window" without a
+   key being pressed and then failed on the row assertions for reasons that had
+   nothing to do with the truth. The predicate now searches columns 0-59, where
+   every CP437 window is drawn. This is the vacuous-pass lesson M16.18a filed and
+   M21.1 filed again, hit for the third time one commit later; it is worth
+   assuming that any new on-screen string collides with some suite's predicate.
+
+The journey now derives the key from the sidebar instead of typing `KeyL`: it
+reads the three-cell chip left of ' Players' and presses that letter. Watched
+failing both ways — the row deleted (fails at "the play sidebar must advertise
+the Players window") and the chip changed to ' K ' (presses K, times out on a
+window that never opens). A row naming a key that does not work is the same
+failure to a player as no row at all, and only deriving it catches that.
+
+**M21.5 filed**: on a real touch device neither this window nor chat can be
+opened. Both are letter keys in `main.ts`'s play-mode branch, the M16.18a control
+bar offers neither, and `MobileTextInputBridge.toggleKeyboard` is "a no-op when
+no editable modal is open" — so the keyboard that would type the letter needs a
+modal that only the letter can open. The device matrix misses it because it
+presses `KeyC` even on its touch profiles, which is a synthetic hardware key a
+phone has not got. Pre-existing (chat's gap since M6.1); M21.3 only makes it
+visible by advertising a key a phone cannot press.
+
+**A process miss worth recording, from this session's earlier commit.** M19.2b —
+the color-picker change that was already in the working tree, unfiled, when the
+session opened — was verified green and committed, and the tick of its own box
+turned `go test ./...` red: `parity_manifest_test.go:530` derives an inventory
+row from every checked `- [x]` in TASKS.md, so a checked task with no
+`fixtures/parity/manifest.json` row fails `TestParityManifest` and
+`TestParityManifestIsCanonical`. The suite had run before the box existed. The
+rule that avoids it: tick the box and scaffold the row BEFORE the verification
+run, not after. Fixed in `39f9b9a`.

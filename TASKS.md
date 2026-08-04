@@ -6001,7 +6001,7 @@ signed-in players, already carried on `roomPlayer` and readable through
      idempotent). The alternative — the server listing a joiner's blocks back to
      them — is more wire surface than this task asked for. **Filed as M21.4.**
 
-- [ ] **M21.3 — the block window has no way in but a key nobody is told about.**
+- [x] **M21.3 — the block window has no way in but a key nobody is told about.**
   Filed 2026-08-04 by M21.1. 'L' opens the "Players" window in play mode and
   nothing on screen says so. The obvious fix is a sidebar row beside ' C  Chat'
   (`web/src/sidebar.ts`), and the reason M21.1 did not take it is that the play
@@ -6013,6 +6013,57 @@ signed-in players, already carried on `roomPlayer` and readable through
   DoD: the block window is reachable without prior knowledge; if the sidebar row
   is taken, every regenerated golden is committed in the same commit with a
   `DEVIATION:` line, and `mode.playing`'s parity row notes the added row.
+  **Done 2026-08-04.** The owner took the sidebar row, so this task exercised
+  the authorization it was filed to carry.
+  * *the row is on the second blank row, and that was read rather than assumed*
+    — `GAME.PAS:1441-1455` writes sidebar rows 14-19 and 21-23, so vanilla
+    leaves exactly two blank: 17, which M6.1 gave to ' C  Chat', and 20, which
+    is now ' L  Players'. The chip is `0x30` and the label `0x1f`, which is what
+    the ' P  Pause' row two below it already uses, so the addition reads as one
+    of vanilla's rather than as something bolted on.
+  * *the fixture change is the authorized one, and it is one row* —
+    `GOLDEN_UPDATE=1` re-recorded **fourteen** goldens, not the ten the filing
+    estimated (`tick-locked-run.json` and `title.json` are the two that carry no
+    play sidebar). Every diff is three lines — the `art`, `ch` and `color` of row
+    20 — and nothing else moved in any of them; the art was read before the
+    commit, as `visual_golden.test.mjs`'s own header demands.
+  * *the advertisement has to be true, and the test derives the key from it* —
+    the journey no longer types `KeyL`. It finds ` Players` on the sidebar
+    (columns 60+), reads the three-cell chip to its left, and presses THAT
+    letter, because a row naming a key that does not open the window is the same
+    failure to a player as no row at all. Watched failing both ways: with the row
+    deleted it fails at "the play sidebar must advertise the Players window", and
+    with the chip changed to ' K ' it presses K and times out waiting for a window
+    that never opens.
+  * *the window and its advertisement are now told apart* — `hasText(cells,
+    "Players")` was the journey's own predicate for "the window is open", and the
+    sidebar row would have satisfied it before a key was ever pressed. The
+    predicate now searches columns 0-59 only, which is where every CP437 window is
+    drawn (`TEXT_WINDOW_X = 5`, width 50). Left as it was, this task would have
+    made act 2 pass vacuously — the M16.18a lesson, one commit after M21.1 filed
+    it again.
+  `mode.playing`'s parity row records the added row, and `task.M21.3` is a
+  `presentation-additions` deviation like the rest of the M19/M21 family.
+  One limit found and filed rather than fixed here: **M21.5** — on a real touch
+  device neither this window nor chat can be opened at all.
+
+- [ ] **M21.5 — chat and the Players window are unreachable on a phone.**
+  Filed 2026-08-04 by M21.3, and pre-existing: it is chat's gap first, inherited
+  by M21.1's window. Both are opened by a letter key ('C', 'L') handled in
+  `main.ts`'s play-mode branch; M16.18a's touch bar offers Fire, Torch and Pause
+  in play mode and no way to reach either window; and `MobileTextInputBridge`'s
+  ⌨ button is "a no-op when no editable modal is open", so the soft keyboard
+  cannot be raised to type the letter that would open one. A phone player can
+  therefore read chat lines arriving and neither answer them nor block their
+  sender. The device matrix does not catch this because it presses `KeyC` even on
+  its touch profiles — a synthetic hardware key, which a real phone has not got.
+  M21.3 makes the gap visible rather than causing it: the sidebar now advertises
+  a key a phone cannot press, exactly as ' C  Chat' has since M6.1.
+  DoD: a touch profile opens both windows with taps alone, and the matrix asserts
+  it that way rather than with `keyboard.press`; the play-mode bar stays legible
+  on the narrowest covered screen (M16.18b's reserved height is the constraint);
+  no new button appears in a mode where its key means something else (the
+  M19.2/`TITLE_ONLY` lesson).
 
 - [ ] **M21.4 — a returning player is not told who they have blocked.**
   Filed 2026-08-04 by M21.1. A signed-in player's blocks are durable server-side

@@ -1086,6 +1086,18 @@
       "notes": "task-claim row; reconciled at the task itself (2026-08-04), NOT at M16.20: M21.1 landed after the certification milestone closed, so no M16.20 run ever saw this row. The first thing in the tree that acts on a PERSON rather than on a message: a per-recipient chat block, filtered at the fan-out on the server (BroadcastGlobalChat) and never in the client, because a client-side filter is bypassable and would still deliver the text to the machine of the person who asked not to receive it. It is a deviation of the presentation-additions kind, like task.M19.1-M19.3: vanilla ZZT has no chat, no accounts and no second player. Nothing reaches the engine — no element, no op, no recorded input — so the replay fixtures are untouched. The named tests carry: the blocked line dropped for one recipient while a third party still receives it and the speaker is told nothing; the durability split (a signed-in blocker's block keyed on the target's accountID in the M19.3 document survives a restart, a fresh process and freshly minted ids, while a guest's does not, and the player is told which they got); the backlog filtered by the same rule, with a loaded record's PlayerID deliberately cleared because a later process re-mints those numbers for different people; an announcement unsuppressible by construction; an account id never on the wire; a vanished target a no-op; and the browser half — 'L', the row, the confirmation, the session-only wording, and the lines absent from one screen and present in the other. Two limits are filed rather than hidden: the window's key is unadvertised (M21.3) and the client's blocked marker is per-connection (M21.4). One defect in the store this task reused was found and fixed on the way through: PUT /api/preferences wrote a whole fresh document, so picking a colour deleted every block a player held."
     },
     {
+      "id": "task.M21.3",
+      "dimension": "task",
+      "subject": "Completed task M21.3 — its DoD still holds",
+      "contract": "E",
+      "authority": "TASKS.md M21.3",
+      "parity": "deviation",
+      "deviation": "presentation-additions",
+      "test": "TestM211BlockJourney,TestM169BrowserCanvasGoldens",
+      "status": "pass",
+      "notes": "task-claim row; reconciled at the task itself (2026-08-04), NOT at M16.20: M21.3 landed after the certification milestone closed, so no M16.20 run ever saw this row. The advertisement for task.M21.1's window, and a deviation of the same presentation-additions kind as the row it sits beside: ' L  Players' on sidebar row 20, which is the second of the two rows GAME.PAS:1441-1455 leaves blank (the first, row 17, is ' C  Chat' from M6.1). The chip is 0x30 and the label 0x1f, matching the ' P  Pause' row below it. Nothing reaches the engine — the key is handled in the client's play-mode branch and never leaves it — so the replay fixtures are untouched; the fourteen browser goldens that contain the play sidebar were re-recorded under this task's own authorization (CLAUDE.md rule 3), each diff being row 20 alone. The journey no longer types the key: it reads the chip off the sidebar and presses that letter, so a row naming a key that does not open the window fails, and its window-open predicate was narrowed to columns 0-59 so the advertisement can no longer satisfy it. One limit filed rather than hidden: on a real touch device neither this window nor chat can be opened at all (M21.5)."
+    },
+    {
       "id": "task.M3.0",
       "dimension": "task",
       "subject": "Completed task M3.0 — its DoD still holds",
@@ -4406,7 +4418,7 @@
       "fixture": "fixtures/browser-goldens/playing-board.json",
       "status": "pass",
       "assignedTask": "M16.9",
-      "notes": "M16.9: captured from the real client canvas in headless Chromium (cell goldens decoded from the canvas backing store, not from Go's PNG renderer) against the production server objects with the tick loop under test control. The golden world sweeps CP437 0x00-0xFF as text tiles and all 256 DOS attributes; the suite also asserts the sweeps semantically, plus the dark board, the torch-lit radius, the energizer blink, the board-transition end state and the player-identity overlay with two browsers on one board."
+      "notes": "M16.9: captured from the real client canvas in headless Chromium (cell goldens decoded from the canvas backing store, not from Go's PNG renderer) against the production server objects with the tick loop under test control. The golden world sweeps CP437 0x00-0xFF as text tiles and all 256 DOS attributes; the suite also asserts the sweeps semantically, plus the dark board, the torch-lit radius, the energizer blink, the board-transition end state and the player-identity overlay with two browsers on one board. M21.3 (2026-08-04): the play sidebar carries a SECOND row vanilla has not got — ' L  Players' on row 20, beside ' C  Chat' on row 17 from M6.1 — these being the only two rows GAME.PAS:1441-1455 leaves blank. The addition was authorized by task M21.3 (CLAUDE.md rule 3) and re-recorded the fourteen goldens that contain the play sidebar, each diff row 20 alone; both rows are covered by the presentation-additions deviation, since vanilla ZZT has neither chat nor a second player to block."
     },
     {
       "id": "mode.title",

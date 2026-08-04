@@ -20,7 +20,7 @@
 
 import assert from "node:assert/strict";
 import { chromium } from "playwright";
-import { gridToArt, hasText, installDecoder, installImageProbe, readGrid, textAt } from "./lib/canvas.mjs";
+import { findText, gridToArt, hasText, installDecoder, installImageProbe, readGrid, textAt } from "./lib/canvas.mjs";
 
 const baseURL = process.env.BASE_URL || "http://127.0.0.1:8080";
 const WORLD = "ACCEPT";
@@ -119,6 +119,19 @@ async function say(c, text) {
   await screen(c, (cells) => !hasText(cells, "Global Chat"), "the chat window to close on Enter");
 }
 
+/**
+ * The Players WINDOW, told apart from the sidebar row that advertises it (M21.3).
+ * Both carry the word, and columns 0-59 are the board — every CP437 window is
+ * drawn inside x=5..55 — so a whole-screen search would find the advertisement
+ * and report the window open before a key was ever pressed.
+ */
+const blockWindowIsOpen = (cells) => {
+  for (let row = 0; row < 25; row += 1) {
+    if (textAt(cells, 0, row, 60).includes("Players")) return true;
+  }
+  return false;
+};
+
 /** The chat window's own contents, as one string. */
 async function chatWindowText(c) {
   await c.page.keyboard.press("KeyC");
@@ -151,10 +164,27 @@ try {
   console.log("  - Bo's line reached Ada, carrying Bo's player id");
 
   // -------------------------------------------------------------------------
-  // 2. 'L' lists the people Ada could stop hearing, and Bo is on it.
+  // 2. The sidebar says the window is there, and says which key opens it (M21.3
+  //    — before this, 'L' worked and nothing on screen mentioned it). The key
+  //    pressed below is READ OFF the sidebar rather than typed in here: a row
+  //    advertising a letter that does not open the window is the same failure as
+  //    no row at all, and only deriving it can catch that.
   // -------------------------------------------------------------------------
-  await ada.page.keyboard.press("KeyL");
-  const list = await screen(ada, (cells) => hasText(cells, "Players"), "the Players window");
+  const playing = await readGrid(ada.page);
+  const advert = findText(playing, " Players");
+  assert.ok(
+    advert && advert.x >= 60,
+    `the play sidebar must advertise the Players window:\n${gridToArt(playing)}`,
+  );
+  const chip = textAt(playing, advert.x - 3, advert.y, 3);
+  assert.match(chip, /^ [A-Z] $/, `the advertised row must name a key, got ${JSON.stringify(chip)}`);
+  console.log(`  - the sidebar offers "${chip} ${" Players".trim()}" on row ${advert.y}`);
+
+  // -------------------------------------------------------------------------
+  //    That key lists the people Ada could stop hearing, and Bo is on it.
+  // -------------------------------------------------------------------------
+  await ada.page.keyboard.press(`Key${chip.trim()}`);
+  const list = await screen(ada, blockWindowIsOpen, "the Players window");
   assert.ok(
     hasText(list, `Bo #${bo.you.id}`),
     `the window must offer Bo by name AND id:\n${gridToArt(list)}`,
