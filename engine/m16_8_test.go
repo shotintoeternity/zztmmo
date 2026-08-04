@@ -884,7 +884,7 @@ func TestWebSocketReconstructsAuthoritativeScreen(t *testing.T) {
 		if err := wsjson.Write(ctx, conn, msg); err != nil {
 			t.Fatalf("write input: %v", err)
 		}
-		// Wait for the server's read-loop goroutine to actually latch this input
+		// Wait for the server's read-loop goroutine to actually store this input
 		// before driving the tick that consumes it (M16.8b).
 		waitForLatchedInput(t, server, playerID, input, 5*time.Second)
 		server.Tick(ctx)
@@ -1260,24 +1260,40 @@ func TestWebSocketDebugCommandMessageOverWire(t *testing.T) {
 }
 
 // waitForLatchedInput blocks until the server's read-loop goroutine has stored
-// `want` as playerID's latched input, so the caller's next Tick consumes the
-// input it just wrote rather than whatever the latch still held.
+// `want` as playerID's pending input, so the caller's next Tick consumes the
+// input it just wrote instead of finding nothing there.
 //
 // WHY THIS EXISTS (M16.8b). It replaces a `time.Sleep(5 * time.Millisecond)`
 // that guessed the goroutine had run by then. The guess held on an idle
 // workstation and failed under the load of a full browser-family run, where it
 // took `TestWebSocketReconstructsAuthoritativeScreen` red with the player two
-// tiles from where the engine pass left it. The input that bites is the ZERO
-// one that ends a move: `Inputs` is a latch the server re-applies every tick
-// until something overwrites it (setInput, websocket_server.go), so a tick
-// taken before the zero lands repeats the move and the player travels further
-// than the scenario says. Forced by setting that sleep to 0, the failure
-// reproduces 5/5 as an off-by-one position and a diverged board cell.
+// tiles from where the engine pass left it. Forced by setting that sleep to 0,
+// the failure reproduces 5/5 as an off-by-one position and a diverged board
+// cell.
 //
-// Returning as soon as the latch already equals `want` is correct rather than a
-// shortcut: the tick that follows applies `want` either way, and inputs on one
+// THE MECHANISM, corrected by M16.11e — an earlier version of this comment said
+// `Inputs` was a latch the server re-applied every tick until overwritten, and
+// that the ZERO input ending a move was the one that bit. Both are wrong.
+// WorldInstance.Tick takes the pending map and replaces it with a fresh one
+// (websocket_server.go:361-362), so each written input is consumed by exactly
+// one tick and then gone. What bites is a NONZERO input that has not arrived
+// when its tick runs: that tick moves nobody, the late input is consumed by the
+// NEXT tick instead, and every scripted step from there on is applied one step
+// late — which is how the run ends two tiles from where the engine pass ended.
+//
+// Returning as soon as the map already holds `want` is correct rather than a
+// shortcut: the tick that follows consumes `want` either way, and inputs on one
 // connection are ordered, so no later write can overtake the one being waited
-// for. That also makes a repeated identical input free.
+// for.
+//
+// A CONSEQUENCE OF THE ABOVE, since the code does not say it out loud: for
+// `want == PlayerInput{}` this returns immediately, because a consumed map has
+// no entry for the player and a missing entry reads as the zero value. That is
+// not a hole. A tick that finds no entry and a tick that finds an explicit zero
+// do the same nothing, so the zero steps this test scripts get the outcome they
+// asked for whether or not the frame has landed; and a stale zero cannot
+// survive into a later step, because the next nonzero write overwrites it and
+// IS waited for.
 //
 // m16_9_test.go's waitForInput is the same idea for the browser harness, and
 // says so in its own comment: "the tick that consumes it is taken only once it

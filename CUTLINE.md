@@ -45,7 +45,7 @@ ZZT_BROWSER=1 go test -count=1 -run TestCoopCutlineThreePlayerAcceptanceJourney 
 
 Three real Chromium browsers, the production `zzt-server` binary, the Vite-built
 client, and no staged state: every player starts at the title screen and types
-their own name. It takes roughly 75 seconds.
+their own name. It takes roughly 65 seconds.
 
 - `-count=1` matters. `go test` caches the Go driver, and the `.mjs` script is
   not a tracked dependency, so a cached pass can outlive the code it passed on.
@@ -56,6 +56,9 @@ their own name. It takes roughly 75 seconds.
 
 The script is `engine/web/test/coop_journey.test.mjs`; its driver is
 `engine/coop_cutline_test.go`. Both carry the reasoning behind the assertions.
+The three players are walked by `engine/web/test/lib/walk.mjs`, shared with the
+M16.11 journeys (M16.11e); its header is where the input/tick mechanism that
+makes a step land is written down.
 
 ## Running it by hand
 

@@ -33,8 +33,12 @@
 //
 // FOUR THINGS THAT SILENTLY PRODUCE A "PASSING" TEST THAT NEVER PLAYS AT ALL —
 // inherited from e2e_journey.test.mjs, and all four still bite here:
-//  1. Input is SAMPLED, not latched: an instantaneous keyboard.press() is
-//     usually gone before the next 55ms sample. Movement holds the key down.
+//  1. An instantaneous keyboard.press() usually moves nobody. The client sends
+//     a frame on the key edges and re-sends the held mask every 55ms, and the
+//     server consumes each frame on one tick (110ms) and clears it — so a press
+//     that is over before a tick boundary is simply never seen. Movement holds
+//     the key down until the tile is observed to land: lib/walk.mjs, whose
+//     header states the mechanism in full.
 //  2. The vendor Object at x=26 BLOCKS row 12 of ACCEPT's main board; the east
 //     half is only reachable by walking around it.
 //  3. Modal-opening events arrive BEFORE the client has drawn the modal, so
@@ -51,6 +55,7 @@ import assert from "node:assert/strict";
 import fs from "node:fs";
 import path from "node:path";
 import { chromium } from "playwright";
+import { at, step, walkOnto, walkUntil, assertObserver } from "./lib/walk.mjs";
 
 const baseURL = process.env.BASE_URL || "http://127.0.0.1:8080";
 const resultsDir = path.resolve(process.env.COOP_OUT || "test-results/coop");
@@ -104,7 +109,14 @@ async function openClient(label, name) {
     // {tick, hash} in arrival order, trimmed: see agreeOnWorld for why the
     // window has to stay short.
     hashes: [],
+    // This client IS lib/walk.mjs's observer bag (page + live you/boardId +
+    // label). Three contending players need more room than the single-player
+    // journey: one more stall before a blocked walk is called stuck, and longer
+    // walkUntil legs, because another player standing on the next square is
+    // ordinary here and merely costs steps.
+    walkDefaults: { maxSteps: 40, stallLimit: 5 },
   };
+  assertObserver(c);
   clients.push(c);
 
   page.on("pageerror", (err) => c.pageErrors.push(String(err)));
@@ -199,7 +211,6 @@ const has = (c, type, match) => c.events.some((e) => e.type === type && (!match 
  * dialog would never match it.
  */
 const hasMine = (c, type) => has(c, type, (e) => (e.statId ?? 0) === (c.you?.statId ?? 0));
-const at = (c) => `${c.label} board=${c.boardId} pos=(${c.you?.x},${c.you?.y}) hp=${c.you?.health}`;
 
 async function waitFor(c, pred, describe, timeoutMs = 12000) {
   const deadline = Date.now() + timeoutMs;
@@ -216,106 +227,8 @@ async function waitFor(c, pred, describe, timeoutMs = 12000) {
   }
 }
 
-/** Hold a key across at least one 55ms input sample (note 1). */
-async function step(c, code, holdMs = 95) {
-  await c.page.keyboard.down(code);
-  await sleep(c, holdMs);
-  await c.page.keyboard.up(code);
-  await sleep(c, 70);
-}
-
-/**
- * Walk until done(); throws if the player stops making progress.
- *
- * `hold` is here so a run can FORCE the long hold that makes a step cover
- * several tiles at once: a 330ms hold moves exactly three tiles, deterministically
- * (see walkOnto). That is how M16.11a, M16.11b and M16.11d were each watched
- * failing before their fix was trusted, instead of waiting for load to supply the
- * overshoot. No caller needs it in the shipped form.
- */
-async function walkUntil(c, code, done, describe, maxSteps = 40, hold = 95) {
-  let stalled = 0;
-  for (let i = 0; i < maxSteps; i++) {
-    if (done()) return;
-    const before = `${c.you?.x},${c.you?.y},${c.boardId}`;
-    await step(c, code, hold);
-    if (`${c.you?.x},${c.you?.y},${c.boardId}` === before) {
-      if (++stalled >= 5) throw new Error(`${c.label} is stuck walking ${code} toward ${describe} at ${at(c)}`);
-    } else {
-      stalled = 0;
-    }
-  }
-  if (!done()) throw new Error(`${c.label} never reached ${describe}; stopped at ${at(c)}`);
-}
-
 const atLeastX = (c, x) => () => (c.you?.x ?? 0) >= x;
 const ids = (c) => c.roster.map((p) => p.id).sort();
-
-/**
- * Walk onto one exact tile, recomputing the direction after every step.
- *
- * A step is NOT one tile. The client samples the held key every 55ms, but the
- * server latches that mask until the key-up sample arrives, so one hold spans
- * one server tick or two depending on load — one move or two. Along a row that
- * is harmless: an extra tile still passes THROUGH whatever was being collected,
- * which is why the eastward walks in this file can stay one-way inequalities.
- * Across rows it is not. A detour that assumes "one step up, then one step back
- * down" lands a row low under load, and every step taken afterwards along the
- * assumed row happens on the wrong one. Re-aiming after every step turns an
- * overshoot into a correction instead of a miss (M16.11b).
- *
- * Vertical first, then horizontal: the caller's target is reached by clearing
- * the starting row before travelling along the target's own row.
- *
- * `until` ends the walk on something other than arrival, because walking onto a
- * passage changes the board and the coordinates on the far side are not this
- * walk's coordinates.
- *
- * AND WHY THE HOLD GROWS AFTER AN OVERSHOOT. How many tiles a step covers is a
- * function of where the hold falls across the server's 110ms tick, so under
- * steady conditions it is a steady ANSWER, not a coin flip — a forced 330ms hold
- * moves exactly three tiles, every time, which is how this was measured. While
- * the step size k does not change, every square this walk stands on stays in one
- * residue class mod k, so a target in another class is not merely missed, it is
- * unreachable: k=3 from row 12 visits 12, 9, 12, 9 and never 11, which is what
- * this helper was watched doing until its steps ran out. So a step that did not
- * close the distance holds ~110ms longer next time — one more server tick with
- * the key latched, so a different k and a different class. Nothing changes for a
- * walk that is making progress: the hold only grows after a step that failed to.
- *
- * e2e_journey.test.mjs carries the same helper, added by M16.11a for the same
- * cause one row and one journey away — including the growing hold, carried over
- * by M16.11c after that copy was watched swinging 12, 9, 12 past board 2's gem.
- * The two files are separate drivers with separate observed state (this one is
- * per-client, that one page-global), so neither can import the other's: the
- * shape is shared and the code is not, and a fix to one is owed to the other by
- * hand.
- */
-async function walkOnto(c, tx, ty, describe, { maxSteps = 24, hold = 95, until = null } = {}) {
-  let stalled = 0;
-  let extra = 0; // added to the hold after a step that did not close the distance
-  for (let i = 0; i < maxSteps; i++) {
-    if (until?.()) return;
-    const { x, y } = c.you ?? {};
-    if (x === tx && y === ty) return;
-    const vertical = y !== ty;
-    const was = vertical ? Math.abs(y - ty) : Math.abs(x - tx);
-    const before = `${x},${y},${c.boardId}`;
-    if (vertical) await step(c, y > ty ? "ArrowUp" : "ArrowDown", hold + extra);
-    else await step(c, x > tx ? "ArrowLeft" : "ArrowRight", hold + extra);
-    const now = vertical ? Math.abs((c.you?.y ?? y) - ty) : Math.abs((c.you?.x ?? x) - tx);
-    extra = now > 0 && now >= was ? (extra + 110) % 330 : 0;
-    if (`${c.you?.x},${c.you?.y},${c.boardId}` === before) {
-      if (++stalled >= 5) {
-        throw new Error(`${c.label} is stuck walking onto ${describe} (${tx},${ty}) at ${at(c)}`);
-      }
-    } else {
-      stalled = 0;
-    }
-  }
-  if (until?.()) return;
-  throw new Error(`${c.label} never stood on ${describe} (${tx},${ty}); stopped at ${at(c)}`);
-}
 
 /**
  * Put a player on `row`.
@@ -675,7 +588,7 @@ try {
   // ==========================================================================
   // ACT 5 — the group survives a reconnect (claim 3)
   // ==========================================================================
-  await walkUntil(cy, "ArrowUp", () => (cy.you?.y ?? 99) <= 10, "a square Cy can be recognised by", 8);
+  await walkUntil(cy, "ArrowUp", () => (cy.you?.y ?? 99) <= 10, "a square Cy can be recognised by", { maxSteps: 8 });
   const cyBefore = { id: cy.you.id, x: cy.you.x, y: cy.you.y, board: cy.boardId };
   const cySockets = cy.sockets.length;
 
@@ -783,7 +696,7 @@ try {
   // One player's movement is visible to the others as the server's account of
   // where she is, not as a guess each client draws for itself.
   const adaWas = { x: ada.you.x, y: ada.you.y };
-  await walkUntil(ada, "ArrowDown", () => ada.you.x !== adaWas.x || ada.you.y !== adaWas.y, "any square Ada can reach", 8);
+  await walkUntil(ada, "ArrowDown", () => ada.you.x !== adaWas.x || ada.you.y !== adaWas.y, "any square Ada can reach", { maxSteps: 8 });
   for (const c of [bo, cy]) {
     await waitFor(
       c,
@@ -801,7 +714,7 @@ try {
   let crossed = false;
   for (const dir of ["ArrowDown", "ArrowLeft", "ArrowRight", "ArrowUp"]) {
     try {
-      await walkUntil(ada, dir, () => ada.boardId !== townBoard, `a board edge going ${dir}`, 14);
+      await walkUntil(ada, dir, () => ada.boardId !== townBoard, `a board edge going ${dir}`, { maxSteps: 14 });
     } catch {
       // A wall or an unwalkable edge in that direction: try the next one.
     }

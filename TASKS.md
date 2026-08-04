@@ -5359,7 +5359,7 @@ The background says which player; the glyph says that it is a player.
   over — journey 1 has no walk that ends on a board change, and adding the
   parameter for the symmetry would be the drift rule 4 forbids.
 
-- [ ] **M16.11e [ADVISOR] — drive the journeys by observed movement instead of by
+- [x] **M16.11e [ADVISOR] — drive the journeys by observed movement instead of by
   guessing the hold.** Filed 2026-08-04 (owner request) out of M16.11c's session.
   Four tasks — M16.11a, M16.11b, M16.11c, M16.11d — have now been spent on one
   sentence: *a step is not one tile*. Each fixed a site; none fixed the reason.
@@ -5441,6 +5441,91 @@ The background says which player; the glyph says that it is a player.
   this may be unreachable — it was not chased, and it is not this task's job
   unless it turns out to be the reason a walk that ends on a scroll misbehaves.
 
+  **Done 2026-08-04. The spec's stated mechanism was wrong, and correcting it is
+  the most valuable thing in this task.** `[ADVISOR]`: the advisor tool is
+  unavailable in this environment, so the owner was consulted directly and
+  approved both taking the task now and the extraction (recorded in NOTES.md,
+  the documented fallback).
+
+  **THE LATCH DOES NOT EXIST.** The spec says `setInput` stores into
+  `inst.Inputs[playerID]` "and nothing clears it, so it re-applies the latched
+  direction on every tick until a new input message overwrites it". It is
+  cleared, on every tick, by the tick itself: `WorldInstance.Tick` takes the map
+  and replaces it with a fresh one (`websocket_server.go:361-362`), so each
+  input message is consumed by exactly one tick and then gone. What actually
+  makes a held key keep moving is the CLIENT: `connect` starts a 55ms
+  `inputTimer` that re-sends the current mask (`main.ts:1451`), on top of the
+  edge sends. Tiles moved = server ticks that fell inside the hold.
+  Both models predict "a forced 330ms hold moves exactly three tiles", which is
+  the measurement the family made — which is exactly why a wrong model survived
+  four tasks. It was caught here only by reading the tick path rather than the
+  input path.
+  Corrected in all three places that asserted it: note 5 in `e2e_journey`, note 1
+  in `coop_journey`, and — outside this task's files, deliberately — the
+  `waitForLatchedInput` comment M16.8b landed hours earlier, which named the ZERO
+  input as the one that bites. The opposite is true: a zero input and a missing
+  entry are indistinguishable to a tick, so zeros are the one case that needs no
+  wait at all (that helper returns immediately for them, which is now stated).
+  What bites is a NONZERO input that misses its tick: that tick moves nobody, the
+  next tick consumes the late input, and every scripted step after it lands one
+  step late. M16.8b's code was right; only its reason was wrong.
+
+  **Extract, per the owner's call.** `engine/web/test/lib/walk.mjs` now holds
+  `step`/`walkUntil`/`walkOnto` once, walking an observer bag
+  (`page` + live `you`/`boardId` + `label`). The cutline's per-client object was
+  already that shape; journey 1 passes an adapter whose `you`/`boardId` are
+  getters over its page-global `seen`. Per-driver tolerances stay per-driver
+  (`c.walkDefaults`): the cutline keeps `maxSteps: 40, stallLimit: 5` for three
+  contending players, journey 1 keeps `30`/`4`. Unifying those would have been a
+  behaviour change to the protected cutline driver, not a refactor.
+
+  **The closed loop, and what stayed.** `step` holds the key until the observed
+  position (or board) changes, then releases and waits for the position to go
+  quiet before the caller re-aims — so a step costs about one tick instead of a
+  fixed 95+70ms, and stretches under load instead of failing. The growing hold
+  STAYED, as the spec required: it is now "after the move is seen, hold `extra`
+  longer", which buys one more tick with the key down and so a different residue
+  class, still cycling mod 330. An explicit `hold` still forces a fixed hold —
+  that is both the regression guard and how non-movement keys are driven, since
+  a shot and a touch of the solid vendor move nobody and give the loop nothing to
+  close on (journey 1's `Space`/vendor steps keep their forced holds and now say
+  why). Journey 1's `step("ArrowUp", 110)` before the bear became observed: that
+  step must cover exactly one row or the down/up loop oscillates above the bear's
+  row and never touches it, which a fixed 110ms only usually achieves.
+
+  **The forced-uniform-step regression passes**, which is the evidence the
+  escape hatch survived: with `hold: 330` on journey 1's `walkOnto(12,10)` and on
+  the cutline's ACT 3 vendor leg and all three ACT 4 `crossMainBoard` legs, both
+  suites still reach every target and pass (journey 1 38.7s, cutline 94.9s — the
+  cutline pays 26s for the forcing, which is the corrections being made). Then
+  reverted to the shipped form.
+
+  **Wall-clock, measured rather than asserted — and the first pair had to be
+  thrown away.** Halfway through, `uptime` showed a load average of 43 on an idle
+  machine: sixteen orphaned `(while :; do :; done)` shells, eight of them leaked
+  38 minutes earlier by M16.8b's own load run and eight by mine, all from a
+  `LOADPIDS=$(jobs -p)` that returns nothing in this non-interactive shell, so the
+  `kill` at the end killed nothing. Every timing taken before that point was taken
+  under eight spinning CPUs. Killed them, waited for the load average to fall
+  under 8, and re-measured both forms back to back, running the NEW form first so
+  the still-decaying load worked against it:
+  **journey 1 38.4s → 35.6s, cutline 75.7s → 66.3s** (2026-08-04, this
+  workstation). The spec's "44s and 83s" baseline is not comparable — different
+  machine conditions, and quite possibly the same spinners.
+  Waiting on the observable is cheaper than guessing at it, which is the same
+  result M16.8b measured (~4x there, where the guess was 5ms per scripted step).
+
+  **The unverified modal note above is answered: it is unreachable.** `openModal`
+  calls `stopHeldInput()` (`main.ts:2377`), which clears the pressed set and
+  sends the zero mask before `modal` is set — so the zero does go out — and
+  `handleKeyDown` routes to the modal handler while one is up, so the pressed set
+  cannot refill. A key released under a modal therefore has nothing left to
+  release. Worth having chased rather than inherited: this change holds keys
+  longer, so a step that opens a scroll mid-hold is likelier than it was.
+
+  Verified: `go build ./...`, `go vet ./...`, `go test ./...` green; both journeys
+  green under `ZZT_BROWSER=1`; the full twelve-suite browser family green (393s).
+
 - [x] **M16.8b — the manually-ticked websocket tests sleep 5ms and hope the input
   landed.** Filed 2026-08-04 from M16.11c's rule-3 full-family run, which came
   back red on a test that change does not touch:
@@ -5503,9 +5588,15 @@ The background says which player; the glyph says that it is a player.
   Watched failing first: with that sleep forced to `0`, the test fails 5/5, and
   the failures are the predicted class rather than noise — `checkpoint push: X:8
   … want X:9`, `checkpoint water: X:9 … want X:8`, and a diverged board cell at
-  (15,24). The zero input that ENDS a move is the one that bites: `Inputs` is a
+  (15,24). ~~The zero input that ENDS a move is the one that bites: `Inputs` is a
   latch the server re-applies every tick until overwritten, so a tick taken
-  before the zero lands repeats the move.
+  before the zero lands repeats the move.~~ **Struck 2026-08-04 by M16.11e: there
+  is no latch.** `WorldInstance.Tick` replaces the pending map every tick
+  (`websocket_server.go:361-362`), so an input is consumed once and gone, and a
+  zero is indistinguishable from no entry at all. What bites is a NONZERO input
+  that misses its tick — that tick moves nobody and the late input is consumed by
+  the next one, so every scripted step after it lands one step late. The fix and
+  the 5/5 evidence stand; only this sentence was wrong. See M16.11e.
   `waitForLatchedInput` (bottom of `m16_8_test.go`) polls the instance's latch
   until it equals the value just written, then returns; if it already equals it,
   it returns at once, which is correct rather than a shortcut — the following

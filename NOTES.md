@@ -10140,3 +10140,70 @@ on the clock instead of on the observable, and the answer is stable until load
 changes it.** It is worth saying plainly that the expensive breadth run keeps
 earning its cost — M16.11b, M16.11d and now M16.8b were each filed by a
 full-family run finding something in a file the task never touched.
+
+## 2026-08-04 — M16.11e: there is no input latch, and four tasks believed there was
+
+PROCESS: `[ADVISOR]` task, and the advisor tool is unavailable in this
+environment (same as every prior session since 2026-07-09). The owner was
+consulted directly and gave explicit approval on both open questions — take
+M16.11e now, and extract the walk driver into `web/test/lib/` rather than write
+the closed loop by hand a third time. That is the documented fallback used for
+M5.0, M12.0, M14.0 and others.
+
+### The correction, which is the real content of this task
+
+M16.11e's own spec stated the mechanism "exactly", and was wrong. It said
+`inst.Inputs` is a latch that "nothing clears", re-applied every tick until a
+new message overwrites it. `WorldInstance.Tick` clears it — it takes the map and
+substitutes a fresh one (`websocket_server.go:361-362`). One input message is
+consumed by exactly one tick and is then gone.
+
+What keeps a held key moving is the client, not the server: `connect` starts a
+55ms `inputTimer` re-sending the current mask (`main.ts:1451`), on top of the
+edge sends in `handleKeyDown`/`handleKeyUp`. So tiles moved = server ticks that
+fell inside the hold.
+
+**Why it survived four tasks (M16.11a–d) unchallenged:** both models predict the
+same measurement. "A forced 330ms hold moves exactly three tiles, every time" is
+true under either, and that measurement is what the family kept citing as
+evidence for the latch. A model that explains the observation is not thereby the
+right model. It was caught only by reading the tick path — the consumer — rather
+than `setInput`, the producer, which is where the family kept looking.
+
+The same false sentence had reached three places: note 5 in `e2e_journey`, note 1
+in `coop_journey`, and the `waitForLatchedInput` comment M16.8b landed *hours
+earlier this same day*, which named the ZERO input as the one that bites. The
+truth is the reverse: a zero input and a missing map entry are indistinguishable
+to a tick, so zeros are the one case needing no wait — and that helper does in
+fact return immediately for them, which its comment now says out loud. What bites
+is a nonzero input that misses its tick. M16.8b's code was right; its reason was
+not. All three corrected.
+
+### A measurement hazard worth not repeating
+
+Mid-task, `uptime` reported a load average of 43 on a machine doing nothing:
+sixteen orphaned `(while :; do :; done)` shells. Eight were mine; eight had been
+leaked 38 minutes earlier by M16.8b's own load run. Both used
+`LOADPIDS=$(jobs -p)`, which returns nothing in this non-interactive shell — so
+the load was applied, `wc -w` said "0 spinners", and the closing `kill` killed
+nothing. They then burn CPU indefinitely and silently corrupt the timing of
+every later session on the box.
+
+Every wall-clock in this task's first pass was taken under that load and was
+thrown away. After killing them and waiting for the load average to fall below
+8, both forms were re-measured back to back, new form first so the still-decaying
+load worked against it: journey 1 38.4s → 35.6s, cutline 75.7s → 66.3s. The
+spec's "44s and 83s" baseline is not comparable and may well have been measured
+under the same spinners.
+
+If a future session wants CPU load: capture each PID as it is started
+(`(while :; do :; done) & pids="$pids $!"`), and verify with `ps` that they died.
+
+### Also resolved, so it is not re-derived
+
+The spec's flagged-but-unchased worry — a key released while a modal is up never
+sending its zero mask — is unreachable. `openModal` calls `stopHeldInput()`
+(`main.ts:2377`), clearing the pressed set and sending the zero before `modal` is
+set, and `handleKeyDown` routes to the modal handler while one is up, so the
+pressed set cannot refill. Worth chasing rather than inheriting, because closing
+the loop on observed movement holds keys longer than the old fixed 95ms did.

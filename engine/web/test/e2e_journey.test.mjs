@@ -14,27 +14,33 @@
 //
 // FIVE THINGS THAT SILENTLY PRODUCE A "PASSING" TEST THAT NEVER PLAYS AT ALL:
 //
-//  1. Input is SAMPLED, not latched. connect() starts a 55ms timer that reads
-//     the currently-held key set (main.ts sendInput/currentMask), so an
-//     instantaneous keyboard.press() is usually gone before the next sample
-//     and the player never moves. Movement and shooting hold the key down
-//     across at least one sample — see step().
+//  1. An instantaneous keyboard.press() usually moves nobody. The client sends
+//     a frame on the key edges (handleKeyDown/handleKeyUp) and re-sends the
+//     held mask every 55ms (connect's inputTimer); the server consumes each
+//     frame on exactly one 110ms tick and clears it. A press that begins and
+//     ends between two tick boundaries is therefore simply never seen.
+//     Movement and shooting hold the key down — see lib/walk.mjs.
 //  2. The vendor Object at x=26 BLOCKS row 12. The east half of board 1 (bear,
 //     passage) is only reachable by walking around it.
 //  3. Modal-opening events arrive BEFORE the client has drawn the modal, so
 //     typing immediately after the event races it. settle() after each.
 //  4. `go test` caches this test and the .mjs is not a tracked dependency —
 //     iterate with `-count=1` or you will read a stale pass.
-//  5. step() is NOT one tile. The client samples the held key, but the SERVER
-//     latches that mask until the key-up sample arrives, so one 95ms hold
-//     spans one server tick or two depending on load — one move or two. Any
-//     walk whose target is a single tile must re-aim after every step
-//     (walkOnto), never satisfy a one-way inequality (M16.11a).
+//  5. step() is NOT one tile. Tiles moved = server ticks that fell inside the
+//     hold, so a hold that spans two boundaries moves two tiles. step() now
+//     ends its hold when the tile is OBSERVED to land instead of after a fixed
+//     95ms (M16.11e), which makes one tile the common case — but not a
+//     guarantee, because the release still races the next boundary. Any walk
+//     whose target is a single tile must re-aim after every step (walkOnto),
+//     never satisfy a one-way inequality (M16.11a). The mechanism is stated in
+//     full at the top of lib/walk.mjs; earlier versions of this note said the
+//     server latched the mask, which it does not.
 
 import assert from "node:assert/strict";
 import fs from "node:fs";
 import path from "node:path";
 import { chromium } from "playwright";
+import { at, step, walkOnto, walkUntil, assertObserver } from "./lib/walk.mjs";
 
 const baseURL = process.env.BASE_URL || "http://127.0.0.1:8080";
 const resultsDir = path.resolve("test-results");
@@ -145,100 +151,30 @@ async function waitFor(pred, describe, timeoutMs = 10000) {
   }
 }
 
-/** Hold a key across at least one 55ms input sample (note 1). */
-async function step(code, holdMs = 95) {
-  await page.keyboard.down(code);
-  await sleep(holdMs);
-  await page.keyboard.up(code);
-  await sleep(70);
-}
-
-/** Walk until done(); throws if the player stops making progress. */
-async function walkUntil(code, done, describe, maxSteps = 30) {
-  let stalled = 0;
-  for (let i = 0; i < maxSteps; i++) {
-    if (done()) return;
-    const before = `${seen.you?.x},${seen.you?.y},${seen.boardId}`;
-    await step(code);
-    if (`${seen.you?.x},${seen.you?.y},${seen.boardId}` === before) {
-      if (++stalled >= 4) {
-        throw new Error(`stuck walking ${code} toward ${describe} at (${seen.you?.x},${seen.you?.y}) board ${seen.boardId}`);
-      }
-    } else {
-      stalled = 0;
-    }
-  }
-  if (!done()) {
-    throw new Error(`never reached ${describe}; stopped at (${seen.you?.x},${seen.you?.y}) board ${seen.boardId}`);
-  }
-}
+/**
+ * This journey's state is page-global (`seen`, rebuilt from the frames above),
+ * but lib/walk.mjs walks an observer BAG. `you` and `boardId` are getters so the
+ * helpers read the live values rather than a copy taken when this was built.
+ *
+ * coop_journey.test.mjs's per-client object is already this shape, which is what
+ * lets both journeys share one walk implementation instead of carrying a copy
+ * each (M16.11e). The defaults below are this driver's own: one player, no
+ * contention, so a blocked walk is called stuck sooner than in the cutline.
+ */
+const player = {
+  label: "the player",
+  page,
+  get you() {
+    return seen.you;
+  },
+  get boardId() {
+    return seen.boardId;
+  },
+  walkDefaults: { maxSteps: 30, stallLimit: 4 },
+};
+assertObserver(player);
 
 const atLeastX = (x) => () => (seen.you?.x ?? 0) >= x;
-
-/**
- * Walk onto one exact tile, recomputing the direction after every step.
- *
- * walkUntil() with a one-way inequality assumes step() covers exactly one
- * tile, and step() does not (note 5). Along a row that is harmless — an extra
- * tile still passes THROUGH whatever was being collected. Across rows it is
- * not: a walk that stops at "y <= 10" can stop on row 9, and everything the
- * journey then does along row 9 misses row 10 entirely. Recomputing the
- * direction turns an overshoot into a correction instead of a miss.
- *
- * Vertical first, then horizontal: the caller's target is reached by clearing
- * the starting row before travelling along the target's own row.
- *
- * AND WHY THE HOLD GROWS AFTER A STEP THAT DID NOT CLOSE THE DISTANCE.
- * Re-aiming alone is not enough. How many tiles a step covers is a function of
- * where the hold falls across the server's 110ms tick, so under steady
- * conditions it is a steady ANSWER, not a coin flip — a forced 330ms hold moves
- * exactly three tiles, every time, which is how this was measured. While the
- * step size k does not change, every square this walk stands on stays in one
- * residue class mod k, so a target in another class is not merely missed, it is
- * unreachable: k=3 from the respawn at (6,12) visits 12, 9, 12, 9 and never row
- * 10, and this helper was watched doing exactly that until its steps ran out
- * (M16.11c). So a step that did not close the distance holds ~110ms longer next
- * time — one more server tick with the key latched, so a different k and a
- * different class — capped by `% 330` so it cycles rather than grows. Nothing
- * changes for a walk that is making progress: the hold only grows after a step
- * that failed to.
- *
- * `hold` is here so a run can FORCE that uniform step size instead of waiting
- * for load to supply it; no caller needs it in the shipped form.
- *
- * coop_journey.test.mjs carries the same helper — same shape, separate code.
- * The two are separate drivers over separate observed state (that one is
- * per-client, this one page-global), so neither can import the other's; a fix
- * to one is owed to the other by hand, which is how M16.11b's fix came to be
- * filed as this task rather than applied in both places at once.
- */
-async function walkOnto(tx, ty, describe, { maxSteps = 24, hold = 95 } = {}) {
-  let stalled = 0;
-  let extra = 0; // added to the hold after a step that did not close the distance
-  for (let i = 0; i < maxSteps; i++) {
-    const { x, y } = seen.you ?? {};
-    if (x === tx && y === ty) return;
-    const vertical = y !== ty;
-    const was = vertical ? Math.abs(y - ty) : Math.abs(x - tx);
-    const before = `${x},${y},${seen.boardId}`;
-    if (vertical) await step(y > ty ? "ArrowUp" : "ArrowDown", hold + extra);
-    else await step(x > tx ? "ArrowLeft" : "ArrowRight", hold + extra);
-    const now = vertical ? Math.abs((seen.you?.y ?? y) - ty) : Math.abs((seen.you?.x ?? x) - tx);
-    extra = now > 0 && now >= was ? (extra + 110) % 330 : 0;
-    if (`${seen.you?.x},${seen.you?.y},${seen.boardId}` === before) {
-      if (++stalled >= 4) {
-        throw new Error(
-          `stuck walking onto ${describe} (${tx},${ty}) at (${seen.you?.x},${seen.you?.y}) board ${seen.boardId}`,
-        );
-      }
-    } else {
-      stalled = 0;
-    }
-  }
-  throw new Error(
-    `never stood on ${describe} (${tx},${ty}); stopped at (${seen.you?.x},${seen.you?.y}) board ${seen.boardId}`,
-  );
-}
 
 /**
  * The counters that must not move while a world is merely being selected.
@@ -348,7 +284,7 @@ try {
   console.log(`  - joined: board ${seen.boardId} at (${seen.you.x},${seen.you.y}), token issued`);
 
   // Torch at x=8, then light it (board 1 is dark).
-  await walkUntil("ArrowRight", atLeastX(8), "the torch at x=8");
+  await walkUntil(player, "ArrowRight", atLeastX(8), "the torch at x=8");
   await waitFor(() => seen.hud.torches === 1, "the torch to be collected");
   await page.keyboard.press("KeyT");
   await waitFor(() => seen.hud.torchTicks > 0, "the torch to be lit");
@@ -356,33 +292,38 @@ try {
   console.log(`  - torch collected and lit: torchTicks=${seen.hud.torchTicks}`);
 
   // Gem at x=10: +1 gem, +10 score.
-  await walkUntil("ArrowRight", atLeastX(10), "the gem at x=10");
+  await walkUntil(player, "ArrowRight", atLeastX(10), "the gem at x=10");
   await waitFor(() => seen.hud.gems === 1, "the gem to be collected");
   assert.equal(seen.hud.score, 10, "a gem scores 10");
   console.log(`  - gem collected: gems=${seen.hud.gems} score=${seen.hud.score}`);
 
   // Ammo at x=14: +5 shots.
-  await walkUntil("ArrowRight", atLeastX(14), "the ammo at x=14");
+  await walkUntil(player, "ArrowRight", atLeastX(14), "the ammo at x=14");
   await waitFor(() => seen.hud.ammo === 5, "the ammo to be collected");
   console.log(`  - ammo collected: ammo=${seen.hud.ammo}`);
 
-  // Shoot: spends ammo. Held, like movement — a tap is missed by the sampler.
+  // Shoot: spends ammo. Held, like movement — a tap that ends between two tick
+  // boundaries is never seen (note 1). The hold is FORCED here rather than
+  // closed on observed movement, because a shot moves nobody: there is no
+  // movement for step() to wait on.
   const ammoBeforeShot = seen.hud.ammo;
-  await step("Space", 120);
+  await step(player, "Space", { hold: 120 });
   await waitFor(() => seen.hud.ammo < ammoBeforeShot, "a shot to spend ammo");
   console.log(`  - shot fired: ammo ${ammoBeforeShot} -> ${seen.hud.ammo}`);
 
   // Key at x=18, door at x=22 spends it.
-  await walkUntil("ArrowRight", atLeastX(18), "the key at x=18");
+  await walkUntil(player, "ArrowRight", atLeastX(18), "the key at x=18");
   await waitFor(() => seen.hud.keys.some(Boolean), "the key to be collected");
   console.log(`  - key collected: slot ${seen.hud.keys.findIndex(Boolean)}`);
-  await walkUntil("ArrowRight", atLeastX(23), "past the door at x=22");
+  await walkUntil(player, "ArrowRight", atLeastX(23), "past the door at x=22");
   await waitFor(() => !seen.hud.keys.some(Boolean), "the door to consume the key");
   console.log("  - door opened and the key was spent");
 
-  // Vendor Object at x=26: touching it sends this player a scroll.
-  await walkUntil("ArrowRight", atLeastX(25), "the square west of the vendor");
-  await step("ArrowRight", 150);
+  // Vendor Object at x=26: touching it sends this player a scroll. The hold is
+  // FORCED, like the shot above: the vendor blocks row 12, so this step touches
+  // it without moving anybody and there is no movement to close the loop on.
+  await walkUntil(player, "ArrowRight", atLeastX(25), "the square west of the vendor");
+  await step(player, "ArrowRight", { hold: 150 });
   await waitFor(
     () => has("scroll", (e) => (e.lines || []).some((l) => l.includes("Acceptance Vendor"))),
     "the vendor scroll",
@@ -407,14 +348,19 @@ try {
   // capture health BEFORE leaving the vendor square, and only go looking for
   // the bear if the walk east did not already cost health.
   const healthBeforeBear = seen.you.health;
-  await step("ArrowUp", 110);
+  // Exactly one row up, and it matters: the loop below touches the bear on row
+  // 12 by stepping down from row 11, so a step that covered two rows would
+  // oscillate between 10 and 11 and never reach it. A closed loop is what makes
+  // that one row rather than the old fixed 110ms, which under load could span
+  // two tick boundaries.
+  await step(player, "ArrowUp");
   assert.ok(seen.you.y < 12, `stepping up must leave row 12, at y=${seen.you.y}`);
-  await walkUntil("ArrowRight", atLeastX(30), "the bear's column");
+  await walkUntil(player, "ArrowRight", atLeastX(30), "the bear's column");
   for (let i = 0; i < 14 && seen.you.health === healthBeforeBear; i++) {
     // Step onto the bear's row to touch it, then back off and try again.
-    await step("ArrowDown");
+    await step(player, "ArrowDown");
     if (seen.you.health !== healthBeforeBear) break;
-    await step("ArrowUp");
+    await step(player, "ArrowUp");
   }
   assert.ok(
     seen.you.health < healthBeforeBear,
@@ -427,12 +373,13 @@ try {
   // east crosses the passage directly; otherwise drop onto it at x=34.
   const boardBefore = seen.boardId;
   await walkUntil(
+    player,
     "ArrowRight",
     () => seen.boardId !== boardBefore || (seen.you?.x ?? 0) >= 34,
     "the passage column",
   );
   if (seen.boardId === boardBefore) {
-    await walkUntil("ArrowDown", () => seen.boardId !== boardBefore, "the passage board change", 8);
+    await walkUntil(player, "ArrowDown", () => seen.boardId !== boardBefore, "the passage board change", { maxSteps: 8 });
   }
   await waitFor(() => seen.boardChanges > 0, "a boardChange message");
   assert.ok(has("transfer"), `the traveller must receive a "transfer" event (M16.8a); saw ${JSON.stringify(eventTypes())}`);
@@ -441,7 +388,7 @@ try {
 
   // Reaper Object on board 2 runs #endgame on touch: death, then respawn.
   // #endgame routes through the same death/respawn path as damage (M16.6a).
-  await walkUntil("ArrowRight", () => has("death"), "the reaper's #endgame death", 14);
+  await walkUntil(player, "ArrowRight", () => has("death"), "the reaper's #endgame death", { maxSteps: 14 });
   await waitFor(() => has("death"), "the death event");
   await waitFor(() => seen.you.health <= 0, "health to reach zero on death");
   console.log("  - died to the reaper's #endgame");
@@ -463,7 +410,7 @@ try {
   // so this is the journey's only two-axis walk. walkOnto, not two one-way
   // walkUntils: the row leg has to land ON row 10, and a step that covers two
   // tiles overshoots it (note 5).
-  await walkOnto(12, 10, "board 2's gem", { maxSteps: 16 });
+  await walkOnto(player, 12, 10, "board 2's gem", { maxSteps: 16 });
   await waitFor(() => seen.hud.score > 0, "a score that qualifies for the high-score table");
   console.log(`  - scored again after respawn: score=${seen.hud.score}`);
 
@@ -541,7 +488,7 @@ try {
   // Move off the spawn square first, so a resumed run is distinguishable from
   // a fresh join. Position is the discriminator here rather than inventory:
   // the restored save already consumed board 1's pickups.
-  await walkUntil("ArrowRight", atLeastX(12), "a square well clear of the spawn");
+  await walkUntil(player, "ArrowRight", atLeastX(12), "a square well clear of the spawn");
   const beforeReload = { x: seen.you.x, y: seen.you.y, health: seen.you.health };
   assert.notEqual(beforeReload.x, 6, "must have left the start square before disconnecting");
   const socketsBeforeReload = sockets.length;
@@ -595,7 +542,7 @@ try {
   let moved = false;
   for (const dir of ["ArrowRight", "ArrowDown", "ArrowLeft", "ArrowUp"]) {
     for (let i = 0; i < 6 && !moved; i++) {
-      await step(dir);
+      await step(player, dir);
       if (seen.you.x !== townStart.x || seen.you.y !== townStart.y) moved = true;
     }
     if (moved) break;
