@@ -5441,6 +5441,52 @@ The background says which player; the glyph says that it is a player.
   this may be unreachable — it was not chased, and it is not this task's job
   unless it turns out to be the reason a walk that ends on a scroll misbehaves.
 
+- [ ] **M16.8b — the manually-ticked websocket tests sleep 5ms and hope the input
+  landed.** Filed 2026-08-04 from M16.11c's rule-3 full-family run, which came
+  back red on a test that change does not touch:
+  `TestWebSocketReconstructsAuthoritativeScreen`, `m16_8_test.go:962`, with
+  `ws counters = {… X:2 Y:11}, want {… X:1 Y:13}` — the websocket pass ended two
+  tiles from where the engine pass ended.
+  **Cause, and it is not the engine.** The test is deliberate about determinism:
+  it sets `server.TickDuration = time.Hour` so nothing auto-ticks and drives
+  every tick itself. But `step` (`m16_8_test.go:884-892`) writes the input frame
+  down the socket, sleeps `5 * time.Millisecond`, and ticks:
+  the sleep is a guess that the server's read-loop **goroutine** has applied the
+  input by then. Under the load of a full browser-family run it has not, so the
+  tick consumes no input, the player skips that move, and every later checkpoint
+  is off by it. Rule 2 is intact — this is harness nondeterminism, not simulation
+  nondeterminism — but an authoritative-screen reconstruction test is exactly
+  the one that must be trustworthy, because a flaky one can mask the real
+  determinism regression it exists to catch.
+  Four sites: `m16_8_test.go:891,1112,1190,1248`. The comment at 887-890 claims
+  this is "the same pattern every other manually-ticked WS test in this package
+  uses", so **grep before assuming four** — the blast radius is whatever that
+  sentence is actually true of.
+  **The right primitive already exists, in this package, in Go.**
+  `m169Harness.waitForInput` (`m16_9_test.go:459`) blocks until the input frame
+  has landed in the instance's pending map, with a timeout and a failure that
+  names the frame; `handleStep`'s `pendingNonZero` branch (`m16_9_test.go:445`)
+  catches the inverse — an idle step that finds an input pending, which is the
+  same desync one tick earlier. Share that mechanism rather than writing a fifth
+  copy of the wait; M16.9's own comment already states the principle ("the tick
+  that consumes it is taken only once it has arrived").
+  **Sibling of M16.11e, not a duplicate.** Same root cause — wait on the clock
+  instead of on the observable — but a different language and harness, so one
+  executor cannot sensibly do both: this is Go against an in-process server with
+  a pending map to consult; M16.11e is browser JS against a production server
+  with no control endpoint at all.
+  DoD: watched failing first, the way M16.11c was — force it by setting the
+  sleep to `0` (or otherwise starving the read-loop goroutine) and show the
+  checkpoint mismatch, then show the same forcing passes once the wait replaces
+  the sleep; every site the grep finds converted, sharing M16.9's wait; the
+  inverse guard (`pendingNonZero`) at least considered in writing, since an
+  input arriving a tick late fails just as silently as one arriving never;
+  `go test ./...` green including `-count=5`; and the full browser family green
+  under `ZZT_BROWSER=1`, since that is the only place this has been seen.
+  Ranked by the owner. Suggested: above M16.11e — this one has actually gone red
+  in a real run, twice-observed families notwithstanding, and it degrades the
+  breadth check that has now filed three tasks in this family.
+
 - [x] **M16.18d — teach the device matrix what a surface accepts, and certify the
   color picker on it.** Filed 2026-08-03 by M19.2. `modalAcceptsTextInput` now
   names seven text surfaces; `platform_matrix.test.mjs` exercises six and the

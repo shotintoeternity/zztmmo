@@ -10089,3 +10089,54 @@ screenshot shows the vendor's window open over Ada's board. M16.11b's re-aiming
 neither helps nor could: the player is not missing the target, the keys are not
 reaching the player. Left alone under rule 4 and filed as **M16.11d**, ranked
 above M16.11c because CUTLINE.md's policy covers this suite and not journey 1's.
+
+---
+
+## 2026-08-04 — M16.11c's full-family runs went red twice, for two unrelated reasons
+
+Rule 3's browser-family run after M16.11c (`ZZT_BROWSER=1 go test ./...`) failed
+on BOTH runs, each time on a suite the change does not touch. Neither is
+M16.11c's doing: plain `go test ./...` is green (54s), both journey suites are
+green in the shipped form (cutline 83s, journey 1 44s), and the commit touches
+only the two journey `.mjs` drivers.
+
+### Run 1 (724s) — `control_keys.test.mjs:455`, NOT reproduced
+
+`TestM1610BrowserControlVocabulary` died with an uncaught throw (the trailing
+`Node.js v26.5.0` in the output is node itself printing an unhandled rejection,
+not an assertion failure) at `await walk(page, "ArrowUp", 1)`. Both its Go tests
+pass in isolation (42s), and run 2 did not mention `control_keys` at all.
+
+Two things worth recording so the next sighting is not diagnosed from zero.
+The error text is **gone**: the run was piped through `tail -25`, which ate
+everything above the stack frame — do not pipe a family run through `tail` if
+the point is to learn why it failed. And the saved
+`test-results/control-keys-trace.zip` carries **no error record**; scanning the
+trace for an `error` field yields nothing, so a Playwright trace is not a
+substitute for the stderr in this harness.
+
+### Run 2 (606s) — `TestWebSocketReconstructsAuthoritativeScreen`, diagnosed
+
+```
+--- FAIL: TestWebSocketReconstructsAuthoritativeScreen (0.57s)
+    m16_8_test.go:962: checkpoint edge: ws counters = {… X:2 Y:11},
+                                            want {… X:1 Y:13}
+```
+
+25/25 in isolation. The cause is in the test, not the engine. It sets
+`server.TickDuration = time.Hour` so nothing auto-ticks, then `step`
+(`m16_8_test.go:884-892`) writes the input frame, sleeps `5 * time.Millisecond`
+and ticks — the sleep being a guess that the server's read-loop *goroutine* has
+applied the input by then. Under a full-family run's load it has not: the tick
+consumes no input, the player skips that move, and the checkpoint lands two
+tiles out. Filed as **M16.8b**, with the note that the fix primitive already
+exists in the same package — `m169Harness.waitForInput` (`m16_9_test.go:459`)
+waits for the frame to reach the instance's pending map instead of guessing.
+
+### The through-line
+
+This is the same fault as the whole M16.11a–e family, in a third harness: **wait
+on the clock instead of on the observable, and the answer is stable until load
+changes it.** It is worth saying plainly that the expensive breadth run keeps
+earning its cost — M16.11b, M16.11d and now M16.8b were each filed by a
+full-family run finding something in a file the task never touched.
