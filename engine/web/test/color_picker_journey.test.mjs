@@ -22,7 +22,7 @@ import assert from "node:assert/strict";
 import fs from "node:fs";
 import path from "node:path";
 import { chromium } from "playwright";
-import { cellAt, hasText, installDecoder, installImageProbe, textAt } from "./lib/canvas.mjs";
+import { cellAt, findText, hasText, installDecoder, installImageProbe, textAt } from "./lib/canvas.mjs";
 
 const baseURL = process.env.BASE_URL || "http://127.0.0.1:8080";
 const resultsDir = path.resolve(process.env.PICKER_OUT || "test-results/color-picker");
@@ -231,7 +231,10 @@ try {
   // -------------------------------------------------------------------------
   await openPicker(ada);
   cells = await readCells(ada.page);
-  for (const needle of ["Dark Blue", "Yellow", "Any color:", "No color (the vanilla ZZT player)", "Esc cancels"]) {
+  // "Default (white on blue)" is the vanilla row's label as 17cb7e9 renamed it —
+  // that commit moved the row to the top and updated this suite's navigation but
+  // not this needle, which is the whole of M19.2a.
+  for (const needle of ["Dark Blue", "Yellow", "Any color:", "Default (white on blue)", "Esc cancels"]) {
     assert.ok(hasText(cells, needle), `the picker must show "${needle}"`);
   }
 
@@ -271,12 +274,17 @@ try {
     await sleep(ada, 60);
   }
   cells = await readCells(ada.page);
-  const previewX = textAt(cells, 0, 18).indexOf("This is you:") + "This is you:  ".length;
-  assert.ok(previewX > 0, `the picker must preview the selection; row 18 reads "${textAt(cells, 0, 18)}"`);
-  assert.equal(cellAt(cells, previewX, 18).ch, 0x02, "the preview is the player glyph itself");
+  // The preview is found by its label rather than at a row number: the window's
+  // interior has been re-laid-out twice already (M19.2's own follow-ups), and a
+  // hardcoded row makes a moved line look like a missing preview (M19.2a).
+  const previewLabel = findText(cells, "This is you:");
+  assert.ok(previewLabel, "the picker must label its preview");
+  const previewX = previewLabel.x + "This is you:  ".length;
+  const previewRow = previewLabel.y;
+  assert.equal(cellAt(cells, previewX, previewRow).ch, 0x02, "the preview is the player glyph itself");
   // The preview is painted by the same per-cell override the board uses, so
   // this is the color the room would give you — not a second drawing path.
-  await assertCellIs(ada, previewX, 18, QUICK_PICK, "the preview shows the highlighted color");
+  await assertCellIs(ada, previewX, previewRow, QUICK_PICK, "the preview shows the highlighted color");
 
   await ada.page.keyboard.press("Enter");
   await waitForCells(ada.page, (cells) => !pickerIsOpen(cells), "the picker to close on Enter");
@@ -370,9 +378,13 @@ try {
   assert.equal(await pip.page.locator('[data-touch="fire"]').isVisible(), false, "no Fire button over the picker");
   assert.equal(await colorButton.isVisible(), false, "and the title-only controls step aside too");
 
-  // Up twice reaches the foot of the dark column: Grey, #aaaaaa.
-  for (let i = 0; i < 2; i += 1) {
-    await pip.page.locator('[data-touch="up"]').tap();
+  // The window opens on the default row at the TOP (17cb7e9), so the pad route
+  // to Grey — the foot of the dark column, #aaaaaa — is one Down into the grid's
+  // top-left and seven more down the column. Up from the top row is a no-op,
+  // which is what this leg used to rely on when the default sat at the bottom
+  // (M19.2a).
+  for (let i = 0; i < 8; i += 1) {
+    await pip.page.locator('[data-touch="down"]').tap();
     await sleep(pip, 80);
   }
   await pip.page.locator('[data-touch="enter"]').tap();

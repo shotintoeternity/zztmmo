@@ -5111,7 +5111,7 @@ The background says which player; the glyph says that it is a player.
   because M16.18's battery types a fixed seed plus "X" and then s/t/b/q into a
   field this one filters to hex digits. **M16.18d** is filed for that.
 
-- [ ] **M19.2a — the picker journey asserts a row label M19.2 renamed.** Filed
+- [x] **M19.2a — the picker journey asserts a row label M19.2 renamed.** Filed
   2026-08-03 by M19.3's rule-3 browser run, and reproduced on a stashed-clean
   tree at `17cb7e9`, so it is not M19.3's. Commit `17cb7e9` renamed the window's
   vanilla row to `Default (white on blue)` and updated
@@ -5123,6 +5123,21 @@ The background says which player; the glyph says that it is a player.
   to the same suite family and should not start from a red one. DoD:
   `TestM192ColorPickerJourney` green under `ZZT_BROWSER=1`; the label in the test
   and the label in `color_picker.ts` say the same thing; `npm test` green.
+  **Done 2026-08-03.** The one stale string was three, and the other two were
+  hidden behind it — a suite stops at its first failure, so "one label" was only
+  ever the first thing the run could see:
+  * the needle list at line 234, now `Default (white on blue)`;
+  * the preview assertion, which read row **18** by number and found a space
+    where the ☻ used to be, because the interior was re-laid-out twice by
+    M19.2's own follow-ups. It now finds the row by its `This is you:` label
+    (`findText`), so the next layout move cannot make a shifted line look like a
+    missing preview;
+  * the touch leg, which tapped **Up twice** to reach Grey from a default row
+    that used to sit at the bottom. Up from the top row is a no-op, so a phone
+    picked nothing and the assertion read `null`; the route is now one Down into
+    the grid and seven down the dark column.
+  Nothing in `color_picker.ts` changed — the picker was right the whole time,
+  which is what the failure screenshot showed before any of this was edited.
 
 - [ ] **M16.11a — journey 1 times out waiting for a qualifying high score.**
   Filed 2026-08-03 alongside M19.2a, from the same run and reproduced the same
