@@ -5763,7 +5763,7 @@ Museum row, dream, restore — funnels through one function, `enterWorld`
 is no read-only client anywhere in the tree, and spectating is a protocol and
 permission job, not a URL job. It stays a backlog bullet.
 
-- [ ] **M20.1 — `/play/<world>` lands a visitor on that world's title screen.**
+- [x] **M20.1 — `/play/<world>` lands a visitor on that world's title screen.**
   On boot the client reads `window.location.pathname`; a `/play/<name>` path
   selects that world and shows its title screen **instead of** opening the
   picker. It must not join. The title-screen pause is a contract M16.11 now
@@ -5803,6 +5803,69 @@ permission job, not a URL job. It stays a backlog bullet.
   `fixtures/parity/manifest.json` row regenerated with `PARITY_SCAFFOLD=1` and
   the curated fields filled in (M19.3's `route.api.preferences` is the
   precedent). `go test ./...` green, and the browser family green beside it.
+  **Done 2026-08-04.** Every claim was watched failing before it was trusted, by
+  reverting the piece that makes it true and rebuilding the real client.
+  * *a deep link lands on the world, and does not join it* — `deep_link.ts` holds
+    the rules (parse, resolve, address, refusal) as pure logic; `main.ts` hooks
+    them in exactly two places: the launch prompt's continuation
+    (`openLaunchDestination`) and `enterWorld`. The title-screen pause is
+    therefore inherited rather than re-implemented, and
+    `TestM201DeepLinkJourney` asserts M16.11's three claims at the deep link too
+     — no socket, no snapshot, and the board came from `/api/title?world=ACCEPT`.
+    Inverted twice: routing the launch through the picker instead
+    (`deepLinkWorldName("/")`) never reaches ACCEPT's title screen, and calling
+    `startPlay()` after `enterWorld` loses it too.
+  * *the name is resolved the way the join path resolves it* — resolution is a
+    lookup in `/api/worlds` (M18.13's identity), so `/play/town` and `/play/TOWN`
+    both ask the server for `world=TOWN`. That request, not the screen, is what
+    the test asserts: the startup world is TOWN, so a boot with no deep link
+    already shows TOWN's board and the screen alone would prove nothing.
+    Inverted by passing the requested name through instead — the client then asks
+    for `world=town`, which is the M18.13 bug one layer up.
+  * *a dead link is refused, in front of the player, before any socket* —
+    `/play/nosuch` opens a CP437 window naming the name that failed and then
+    drops the visitor into the normal picker (`showWorldsOnClose`, the shape
+    `returnToTitleOnClose` already had). Inverted by falling through to the
+    picker silently: the window never appears, which is the "never a blank
+    screen, never a silent fall-through" half of the spec.
+  * *the address bar is the link* — `enterWorld` calls `history.replaceState`
+    after `showTitle`, so the URL names what the client actually landed on
+    (`showTitle` adopts `/api/title`'s filename) rather than what was asked for,
+    and Back still leaves the app. Reloading what the picker left in the bar
+    returns to the same title screen. Inverted by dropping the call, and again by
+    dropping the `/` reset on quit.
+  * *signing in comes back to the deep link* — the client already round-trips
+    `pathname + search`, so the only new question was whether the server carries
+    a path with a segment through the signed state cookie.
+    `TestM201SignInReturnsToTheDeepLinkedTitleScreen` pins the whole round trip,
+    including the two hostile spellings `HandleStart`'s prefix guard exists for;
+    inverted by emptying `returnTo`. The browser suite asserts the client's half
+    — `return=%2Fplay%2FTOWN` — and that arriving back there lands on the same
+    title screen, with Google's own endpoint stubbed at the browser (M16.16's
+    identity provider is the only place a real exchange is exercised).
+  Two things the spec did not name. The title sidebar shows a world's *display*
+  name, not its filename (`ACCEPT.ZZT` calls itself `ACCEPTANCE`), so the suite
+  reads both names off `/api/title` and refuses to run if the two worlds it uses
+  display the same title — otherwise "landed on the right world" would hold with
+  the feature gone. And the deep link needs no server route, as the spec
+  predicted, but the test asserts that anyway (`GET /play/ACCEPT` answers 200
+  with the client): if `spaFileServer` ever stops falling back, the failure
+  should name the server rather than look like a client bug.
+  **What the spec did not predict, both the same shape — the address bar is now
+  state, and everything that reloads the page reads it** (NOTES.md 2026-08-04):
+  the SPA fallback was `cmd/zzt-server`'s private detail, so the M16.9 harness
+  (a plain `http.FileServer` under a header claiming "the same web/dist file
+  server") could no longer reload the page its browser was on; it is now
+  `SPAFileServer` in `web_api.go`, used by both and pinned in the everyday gate.
+  And "name prompt, then picker" stopped being unconditional: six suites reload
+  or sign back in after choosing a world, and those loads now land on its title
+  screen — DoD item 5, working. Their launch helpers were taught the condition
+  (`launchOpensPicker` in `lib/canvas.mjs`, which asks the URL because the
+  sidebar is painted under the name prompt either way), never softened. A
+  seventh, M19.2's colour picker, was **passing while doing the wrong thing** —
+  it typed the world name blind, so after a reload `A` opened About over the
+  swatch it then read; it passed only because a window covers the board and not
+  the sidebar.
 
 ## M21 — Moderation: act on a person, not just a message
 

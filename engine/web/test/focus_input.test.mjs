@@ -31,6 +31,7 @@ import {
   installDecoder,
   installImageProbe,
   launchGoldenBrowser,
+  launchOpensPicker,
   pauseClock,
   pressExpectingNoInput,
   readGrid,
@@ -55,11 +56,20 @@ async function joinAndPlay(page, name) {
   await waitForGrid(page, (cells) => hasText(cells, "Type your name"), "the launch name prompt");
   await page.keyboard.type(name);
   await page.keyboard.press("Enter");
-  await waitForGrid(page, (cells) => hasText(cells, "Choose a World"), "the world picker");
-  await page.keyboard.type("CONTROL");
-  await waitForGrid(page, (cells) => hasText(cells, "CONTROL"), "the picker to match CONTROL");
-  await page.keyboard.press("Enter");
-  await waitForGrid(page, (cells) => hasText(cells, "P  Play"), "the title screen for CONTROL");
+  // M20.1: the picker only opens when the URL does not already name a world —
+  // after the reload below the address bar says /play/CONTROL, and this load
+  // lands on CONTROL's title screen directly.
+  if (launchOpensPicker(page)) {
+    await waitForGrid(page, (cells) => hasText(cells, "Choose a World"), "the world picker");
+    await page.keyboard.type("CONTROL");
+    await waitForGrid(page, (cells) => hasText(cells, "CONTROL"), "the picker to match CONTROL");
+    await page.keyboard.press("Enter");
+  }
+  await waitForGrid(
+    page,
+    (cells) => hasText(cells, "P  Play") && !hasText(cells, "Type your name") && !hasText(cells, "Choose a World"),
+    "the title screen for CONTROL",
+  );
   await pauseClock(page);
   await page.keyboard.press("KeyP");
   await waitForGrid(page, (cells) => hasText(cells, "Health:100"), "the joined board");

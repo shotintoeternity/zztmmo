@@ -95,6 +95,37 @@ func (a *WebAPI) Handler() http.Handler {
 	return mux
 }
 
+// SPAFileServer serves the built browser client, falling back to the app for any
+// path that is not a file on disk.
+//
+// That fallback is what makes a client-side address a real URL: /play/TOWN
+// (M20.1) is not a file and never will be, so without it a deep link 404s and a
+// reload of one lands on nothing. Which is why this lives here rather than in
+// cmd/zzt-server, where it started: the client writes /play/<world> into the
+// address bar, so every server that serves that client owes the fallback, and a
+// test harness mounting a plain http.FileServer was a harness that could not
+// reload the page the browser was on (found by M20.1).
+func SPAFileServer(root http.FileSystem) http.Handler {
+	files := http.FileServer(root)
+	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		path := filepath.Clean(r.URL.Path)
+		if path == "." || path == string(filepath.Separator) {
+			files.ServeHTTP(w, r)
+			return
+		}
+
+		file, err := root.Open(path)
+		if err == nil {
+			_ = file.Close()
+			files.ServeHTTP(w, r)
+			return
+		}
+
+		r.URL.Path = "/"
+		files.ServeHTTP(w, r)
+	})
+}
+
 // preferencesResponse is what the title screen reads its own settings from
 // (M19.3). Authenticated says whether an account was found at all; Stored says
 // whether that account has a preferences document, which the client needs

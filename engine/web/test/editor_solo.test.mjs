@@ -34,6 +34,7 @@ import {
   installDecoder,
   installImageProbe,
   launchGoldenBrowser,
+  launchOpensPicker,
   pauseClock,
   readGrid,
   saveText,
@@ -1194,11 +1195,19 @@ try {
   await waitForGrid(page, (cells) => hasText(cells, "Type your name"), "the launch name prompt");
   await page.keyboard.type("Edna");
   await pressKey(page, "Enter");
-  await waitForGrid(page, (cells) => hasText(cells, "Choose a World"), "the world picker");
-  await page.keyboard.type("EDIT");
-  await waitForGrid(page, (cells) => hasText(cells, "EDIT"), "the picker to match EDIT");
-  await pressKey(page, "Enter");
-  await waitForGrid(page, (cells) => hasText(cells, "E  Board editor"), "the title screen");
+  // M20.1: this reload starts at /play/EDIT — enterWorld left the world in the
+  // address bar — so the launch flow selects EDIT itself and no picker opens.
+  if (launchOpensPicker(page)) {
+    await waitForGrid(page, (cells) => hasText(cells, "Choose a World"), "the world picker");
+    await page.keyboard.type("EDIT");
+    await waitForGrid(page, (cells) => hasText(cells, "EDIT"), "the picker to match EDIT");
+    await pressKey(page, "Enter");
+  }
+  await waitForGrid(
+    page,
+    (cells) => hasText(cells, "E  Board editor") && !hasText(cells, "Choose a World"),
+    "the title screen",
+  );
   await pauseClock(page);
   await pressKey(page, "KeyE");
   await waitForGrid(page, (cells) => isEditorChrome(cells), "the editor sidebar again");

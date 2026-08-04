@@ -214,8 +214,8 @@ func plannedGates(withRace, withBrowser bool) []gateResult {
 		gateResult{Name: "go test", Command: "go test -count=1 ./...", Dir: engine, goTest: true, requireBrowser: withBrowser},
 	)
 	if withRace {
-		// No requireBrowser: the race gate would otherwise re-run twelve
-		// Playwright suites, doubling the certification run for a class of
+		// No requireBrowser: the race gate would otherwise re-run every
+		// Playwright suite, doubling the certification run for a class of
 		// finding the wire-level concurrency tests already cover. They
 		// declare-skip here and the report says so, gate by gate.
 		gates = append(gates, gateResult{

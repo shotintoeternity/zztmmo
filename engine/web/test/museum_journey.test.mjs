@@ -42,6 +42,7 @@ import {
   installDecoder,
   installImageProbe,
   launchGoldenBrowser,
+  launchOpensPicker,
   readGrid,
   saveText,
   textAt,
@@ -172,10 +173,15 @@ await installDecoder(page);
 await waitForBoard(page, (c) => onBoard(c, "Type your name"), "the launch prompt after the sign-in redirect");
 await page.keyboard.type("Ada", { delay: 8 });
 await page.keyboard.press("Enter");
-await waitForBoard(page, (c) => onBoard(c, "Choose a World"), "the world picker after signing in");
-await page.keyboard.type(LOCAL_WORLD, { delay: 8 });
-await waitForBoard(page, (c) => onBoard(c, LOCAL_WORLD), `the picker to match ${LOCAL_WORLD}`);
-await page.keyboard.press("Enter");
+// M20.1: the sign-in returned to the path the client was on, which is the deep
+// link enterWorld left in the address bar — so this load selects the world itself
+// and no picker opens. Before M20.1 the return was always "/".
+if (launchOpensPicker(page)) {
+  await waitForBoard(page, (c) => onBoard(c, "Choose a World"), "the world picker after signing in");
+  await page.keyboard.type(LOCAL_WORLD, { delay: 8 });
+  await waitForBoard(page, (c) => onBoard(c, LOCAL_WORLD), `the picker to match ${LOCAL_WORLD}`);
+  await page.keyboard.press("Enter");
+}
 
 const signedIn = await waitForBoard(
   page,

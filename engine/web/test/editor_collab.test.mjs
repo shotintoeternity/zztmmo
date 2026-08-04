@@ -38,6 +38,7 @@ import {
   installDecoder,
   installImageProbe,
   launchGoldenBrowser,
+  launchOpensPicker,
   pauseClock,
   readGrid,
   runClock,
@@ -245,11 +246,16 @@ async function reachTitle(ed, playerName) {
   await screen(ed, (c) => hasText(c, "Type your name"), "the launch name prompt");
   await ed.page.keyboard.type(playerName);
   await press(ed, "Enter");
-  await screen(ed, (c) => hasText(c, "Choose a World"), "the world picker");
-  await ed.page.keyboard.type(WORLD);
-  await screen(ed, (c) => hasText(c, WORLD), `the picker to match ${WORLD}`);
-  await press(ed, "Enter");
-  await screen(ed, (c) => hasText(c, "E  Board editor"), "the title screen");
+  // M20.1: after the sign-in round trip below, the return path is the deep link
+  // enterWorld put in the address bar, so that load lands on the world's title
+  // screen and opens no picker. A fresh load still opens one.
+  if (launchOpensPicker(ed.page)) {
+    await screen(ed, (c) => hasText(c, "Choose a World"), "the world picker");
+    await ed.page.keyboard.type(WORLD);
+    await screen(ed, (c) => hasText(c, WORLD), `the picker to match ${WORLD}`);
+    await press(ed, "Enter");
+  }
+  await screen(ed, (c) => hasText(c, "E  Board editor") && !hasText(c, "Choose a World"), "the title screen");
   // From here the page clock is frozen. The editor's cursor blink is a 3-phase
   // 150ms interval, so a running clock would make every canvas read a coin toss;
   // the run advances it deliberately when it wants a particular phase.

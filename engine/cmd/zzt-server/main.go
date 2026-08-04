@@ -119,7 +119,7 @@ func main() {
 	mux.Handle("/ws", server)
 	mux.Handle("/api/", api.Handler())
 	if _, err := os.Stat(*webDir); err == nil {
-		mux.Handle("/", spaFileServer(http.Dir(*webDir)))
+		mux.Handle("/", zztgo.SPAFileServer(http.Dir(*webDir)))
 		log.Printf("serving browser client from %s", *webDir)
 		warnIfClientStale(*webDir)
 	} else {
@@ -227,25 +227,4 @@ func newestModTime(dir string) (time.Time, bool) {
 		return nil
 	})
 	return newest, found
-}
-
-func spaFileServer(root http.FileSystem) http.Handler {
-	files := http.FileServer(root)
-	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-		path := filepath.Clean(r.URL.Path)
-		if path == "." || path == string(filepath.Separator) {
-			files.ServeHTTP(w, r)
-			return
-		}
-
-		file, err := root.Open(path)
-		if err == nil {
-			_ = file.Close()
-			files.ServeHTTP(w, r)
-			return
-		}
-
-		r.URL.Path = "/"
-		files.ServeHTTP(w, r)
-	})
 }

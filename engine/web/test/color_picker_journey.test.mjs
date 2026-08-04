@@ -22,7 +22,15 @@ import assert from "node:assert/strict";
 import fs from "node:fs";
 import path from "node:path";
 import { chromium } from "playwright";
-import { cellAt, findText, hasText, installDecoder, installImageProbe, textAt } from "./lib/canvas.mjs";
+import {
+  cellAt,
+  findText,
+  hasText,
+  installDecoder,
+  installImageProbe,
+  launchOpensPicker,
+  textAt,
+} from "./lib/canvas.mjs";
 
 const baseURL = process.env.BASE_URL || "http://127.0.0.1:8080";
 const resultsDir = path.resolve(process.env.PICKER_OUT || "test-results/color-picker");
@@ -91,13 +99,20 @@ const settle = (c) => sleep(c, 700);
 
 /** The launch flow up to the title menu of `world` — name, then world, no play. */
 async function reachTitle(c, name, world) {
+  // M20.1: the two reloads below start at /play/<world> (enterWorld leaves the
+  // world in the address bar), so those loads select it in the launch flow and no
+  // picker opens. Typing the world name blind would then land on the title MENU —
+  // 'A' opens About over the swatch this suite reads — so the leg is conditional.
+  const deepLinked = !launchOpensPicker(c.page);
   await c.page.keyboard.type(name);
   await c.page.keyboard.press("Enter");
   await settle(c);
-  await c.page.keyboard.type(world);
-  await sleep(c, 400);
-  await c.page.keyboard.press("Enter");
-  await settle(c);
+  if (!deepLinked) {
+    await c.page.keyboard.type(world);
+    await sleep(c, 400);
+    await c.page.keyboard.press("Enter");
+    await settle(c);
+  }
   await waitForCells(c.page, (cells) => hasText(cells, "P  Play"), `${c.label}'s title menu for ${world}`);
 }
 

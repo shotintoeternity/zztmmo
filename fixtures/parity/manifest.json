@@ -1050,6 +1050,18 @@
       "notes": "task-claim row; behavioral parity carried by the element/oop/protocol/input/service rows this task touched; reconciled at M16.20 M16.20 reconciliation (2026-08-01): the named tests certify this task's DoD; behavioural parity is additionally carried by the element/oop/protocol/input/service rows this task touched."
     },
     {
+      "id": "task.M20.1",
+      "dimension": "task",
+      "subject": "Completed task M20.1 — its DoD still holds",
+      "contract": "E",
+      "authority": "TASKS.md M20.1",
+      "parity": "deviation",
+      "deviation": "presentation-additions",
+      "test": "TestM201DeepLinkJourney,TestM201SignInReturnsToTheDeepLinkedTitleScreen",
+      "status": "pass",
+      "notes": "task-claim row; reconciled at the task itself (2026-08-04), NOT at M16.20: M20.1 landed after the certification milestone closed, so no M16.20 run ever saw this row. A URL that lands a visitor on a world's title screen — /play/<world>, served by the SPA fallback that already existed, resolved through /api/worlds so it inherits M18.13's identity, and hooked into enterWorld so it inherits M16.11's title-screen pause rather than re-implementing it. It is a deviation of the same presentation-additions kind as task.M19.1–M19.3: vanilla ZZT has no addresses at all. Nothing reaches the engine — no protocol message, no route, no simulation state — so the replay fixtures are untouched and this row adds no element/oop/input claim. The named tests prove the browser half (the title screen with no socket and no snapshot, P joining that world and no other, the dead link refused in a window in front of a usable picker, /play/town and /play/TOWN both asking the server for world=TOWN, the picker's selection left in the address bar and reloadable, and the path reset on leaving) and the one server half a deep link changes: a /play/<world> return path survives the signed OAuth state cookie, including the two hostile spellings HandleStart's prefix guard exists for. The pure rules are covered under Node by web/test/deep_link.test.mjs."
+    },
+    {
       "id": "task.M3.0",
       "dimension": "task",
       "subject": "Completed task M3.0 — its DoD still holds",
@@ -4156,6 +4168,19 @@
       "status": "pass",
       "assignedTask": "M16.8",
       "notes": "Dozens of pre-existing tests already dial a real WebSocket against this route; M16.8 adds one more (TestWebSocketReconstructsAuthoritativeScreen) that also reconstructs and verifies full state from it."
+    },
+    {
+      "id": "mode.deep-link",
+      "dimension": "browser-mode",
+      "subject": "Deep-link entry (/play/<world>) to a world's title screen",
+      "contract": "E",
+      "authority": "web/src/*.ts",
+      "parity": "deviation",
+      "deviation": "presentation-additions",
+      "test": "TestM201DeepLinkJourney",
+      "status": "pass",
+      "assignedTask": "M20.1",
+      "notes": "M20.1: /play/<world> as a client mode — the deep link lands on that world's title screen instead of the picker, refuses a name /api/worlds does not list (a CP437 window that names it, then the picker), and keeps history.replaceState pointing at whatever title screen is on show so the address bar is always the share link. Read off a real canvas against the production binary. The title-screen pause is inherited from enterWorld, which is why this row is assigned to M16.11 and asserted with M16.11's own three claims."
     },
     {
       "id": "mode.editor",

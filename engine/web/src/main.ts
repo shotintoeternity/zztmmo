@@ -70,6 +70,12 @@ import {
   type TransitionState,
 } from "./transition";
 import { selectWorldForTitle } from "./title_flow";
+import {
+  deepLinkPath,
+  deepLinkRefusalLines,
+  deepLinkWorldName,
+  resolveDeepLinkWorld,
+} from "./deep_link";
 
 const COLS = 80;
 // The server streams board columns 0..59 only. Columns 60..79 are the sidebar,
@@ -613,6 +619,10 @@ let editorBlinkTimer = 0;
 // name popup, then the finished list. Each opens as the previous one closes.
 let pendingHighScore = false;
 let returnToTitleOnClose = false;
+// M20.1: set while the "Deep link" refusal window is up, so closing it drops the
+// visitor into the world picker instead of leaving them at a title screen they
+// did not ask for. Same shape as returnToTitleOnClose above.
+let showWorldsOnClose = false;
 let highScoreTimer = 0;
 let myX = 0;
 let myY = 0;
@@ -702,6 +712,11 @@ const WORLD_SEARCH_TITLE = "Choose a World";
 
 // The launch sequence: name, then world, then play. Nothing joins a room until
 // a world is chosen, so the animated title board keeps running underneath.
+//
+// M20.1: the name prompt still comes first on a deep link. /play/<world> changes
+// which world the visitor lands on, not who the server thinks they are, and the
+// OAuth return round-trips this same path — so a visitor who signs in from a
+// deep-linked title screen comes back through here and lands there again.
 function promptNicknameOnLaunch() {
   if (hasPromptedNameOnLaunch) {
     return;
@@ -711,10 +726,69 @@ function promptNicknameOnLaunch() {
     LAUNCH_NAME_PROMPT,
     (name) => {
       nickname = name && name.trim() ? name.trim() : "player" + Math.floor(Math.random() * 1000);
-      void showWorlds();
+      void openLaunchDestination();
     },
     POPUP_Y_CENTERED,
   );
+}
+
+// openLaunchDestination is where a page load lands once the visitor has a name:
+// the world their URL names, or the picker.
+//
+// It resolves the name through /api/worlds rather than trusting the URL, so the
+// deep link inherits M18.13's identity — the name the join path would open —
+// and a name that is not joinable is refused here, before any socket exists.
+async function openLaunchDestination() {
+  const requested = deepLinkWorldName(window.location.pathname);
+  if (!requested) {
+    await showWorlds();
+    return;
+  }
+  let entries: WorldSearchEntry[];
+  try {
+    entries = await fetchWorldEntries();
+  } catch {
+    refuseDeepLink(requested, "the server did not answer");
+    return;
+  }
+  const world = resolveDeepLinkWorld(requested, entries);
+  if (!world) {
+    refuseDeepLink(requested);
+    return;
+  }
+  // enterWorld and nothing else: a deep link must take the same seam the picker
+  // takes, which is what stops it becoming the one path that skips the title
+  // screen and joins straight into a room.
+  await enterWorld(world);
+}
+
+// A dead link leaves the visitor in a working client: the window says which name
+// failed, and closing it opens the picker (showWorldsOnClose, read by closeModal).
+function refuseDeepLink(requested: string, reason = "") {
+  showWorldsOnClose = true;
+  openWindow("Deep link", deepLinkRefusalLines(requested, reason), true);
+}
+
+// rememberWorldInPath keeps the address bar shareable: whatever title screen is
+// on show, the URL is the link that reaches it. replaceState, not pushState —
+// Back should leave the app, not walk a history of title screens.
+function rememberWorldInPath() {
+  if (worldName === "" || worldName === "Untitled") {
+    return;
+  }
+  const path = deepLinkPath(worldName);
+  if (window.location.pathname !== path) {
+    window.history.replaceState(null, "", path + window.location.search);
+  }
+}
+
+// Leaving the world puts the path back to the app root, so a reload after
+// quitting starts where a first-time visitor starts rather than re-entering the
+// world the player just left.
+function forgetWorldInPath() {
+  if (window.location.pathname !== "/") {
+    window.history.replaceState(null, "", "/" + window.location.search);
+  }
 }
 
 drawScreen();
@@ -1375,6 +1449,11 @@ async function enterWorld(name: string) {
   const selection = selectWorldForTitle(name);
   worldName = selection.worldName;
   await showTitle();
+  // M20.1: every route into a world funnels through here — picker, Museum row,
+  // dream, restore — so this one line is what makes the address bar the link
+  // that works. It runs AFTER showTitle because showTitle adopts the filename
+  // /api/title answers with, and the path must name what we actually landed on.
+  rememberWorldInPath();
   if (selection.startPlay) {
     startPlay();
   }
@@ -2521,6 +2600,11 @@ function closeModal() {
     leaveToTitle();
     return;
   }
+  if (showWorldsOnClose) {
+    showWorldsOnClose = false;
+    void showWorlds();
+    return;
+  }
   // Repaint rather than clear: the pause layer may still be underneath.
   paintOverlay();
   drawScreen();
@@ -2820,6 +2904,7 @@ function handleTitleKey(event: KeyboardEvent) {
     case "quit":
       openYesNo("Quit ZZT? ", (yes) => {
         if (yes) {
+          forgetWorldInPath();
           drawConnectionNotice("Thanks for playing ZZT!");
         }
       });

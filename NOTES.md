@@ -10332,3 +10332,61 @@ any of it, and deletion of a chat backlog others have read is a design question
 before it is a code one).
 
 Docs only again — TASKS.md and this file.
+
+## 2026-08-04 — M20.1: the address bar became state, and six suites found out first
+
+M20.1 landed as specced: `/play/<world>` lands a visitor on that world's title
+screen, resolved through `/api/worlds` (M18.13's identity) so `/play/town` and
+`/play/TOWN` are one world, refused in a CP437 window in front of a usable picker
+when nothing answers to the name, and reflected back into the address bar by
+`history.replaceState` so the URL a player copies is the URL that works. The
+pure rules live in `web/src/deep_link.ts` and `main.ts` hooks them in exactly two
+places — the launch prompt's continuation and `enterWorld` — which is what makes
+the title-screen pause inherited rather than reimplemented.
+
+Two things the spec did not predict, both of them the same shape: **the address
+bar is now state, and everything that reloads the page reads it.**
+
+1. **The SPA fallback was one binary's private detail.** `spaFileServer` lived in
+   `cmd/zzt-server/main.go`, so `/play/TOWN` was served by production and by
+   nothing else. The moment the client started writing that path into the address
+   bar, every suite built on the M16.9 harness — which mounts a plain
+   `http.FileServer` while its own header claims "the same web/dist file server"
+   — could no longer reload the page its browser was on: `page.reload()` 404'd
+   and the canvas never appeared. Moved to `SPAFileServer` in `web_api.go` and
+   used by both, with `TestM201SPAFileServerServesTheAppForADeepLink` pinning it
+   in the everyday gate rather than only in the opt-in browser family — a deep
+   link that 404s should redden the fast run.
+2. **"Name prompt, then picker" stopped being unconditional.** Six suites
+   (`coop_cutline`, M16.10 focus/protocol, M16.11 e2e, M16.13 editor-solo, M16.14
+   collab, M16.16 auth/museum) reload or sign back in *after* choosing a world,
+   and those loads now land on that world's title screen with no picker at all.
+   That is the feature working — it is DoD item 5 — so the launch helpers were
+   taught the condition rather than the behaviour being softened. They ask the
+   URL, via a new `launchOpensPicker(page)` in `lib/canvas.mjs`, and not the
+   screen: the title sidebar is already painted under the name prompt, so
+   "P  Play" is on screen either way and cannot tell the two apart. `e2e` and
+   `coop` also had to take their title-screen-pause mark *before* the name
+   submit, because on a deep-linked load the selection happens at the submit.
+
+A seventh suite, M19.2's colour picker, was **passing while doing the wrong
+thing** — a symptom worth recording, because nothing was red. Its `reachTitle`
+typed the world name blind rather than waiting for a picker, so after a reload
+those keystrokes went to the title *menu*: `A` opened About over the very swatch
+the suite then read out of the sidebar. It passed because the window covers the
+board and not the sidebar. Now conditional like the rest.
+
+Every claim was watched failing first. Client-side, six inversions of the real
+built client: routing the launch through the picker anyway, joining after
+`enterWorld`, falling through to the picker silently instead of refusing,
+passing the requested name through instead of resolving it (`world=town` — the
+M18.13 bug one layer up), dropping the `replaceState`, and dropping the `/`
+reset on quit. Server-side, emptying `HandleStart`'s `returnTo`. Plus the
+fallback removed from `SPAFileServer`, which 404s three of five paths.
+
+One more trap the suite had to be built around: the title sidebar shows a
+world's *display* name, not its filename (`ACCEPT.ZZT` calls itself
+`ACCEPTANCE`), and the deep link is keyed on the filename. The journey reads both
+names off `/api/title` and refuses to run if its two worlds display the same
+title — the startup world is TOWN and the deep link's target is ACCEPT precisely
+so a boot with no deep link cannot satisfy the assertions.

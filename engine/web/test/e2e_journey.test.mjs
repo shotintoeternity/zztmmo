@@ -41,6 +41,7 @@ import fs from "node:fs";
 import path from "node:path";
 import { chromium } from "playwright";
 import { at, step, walkOnto, walkUntil, assertObserver } from "./lib/walk.mjs";
+import { launchOpensPicker } from "./lib/canvas.mjs";
 
 const baseURL = process.env.BASE_URL || "http://127.0.0.1:8080";
 const resultsDir = path.resolve("test-results");
@@ -220,6 +221,13 @@ function expectTitleScreenPause(worldFilter, mark) {
  * already at the title and have to open the picker ourselves.
  */
 async function titleToPlay(worldFilter, { name } = {}) {
+  // M20.1: a load whose address bar already names a world (the reload below —
+  // enterWorld left /play/ACCEPT there) selects it in the launch flow itself, so
+  // there is no picker to type into and the selection to watch happens at the
+  // name submit rather than after it. The mark is therefore taken up front in
+  // both cases, which only widens the window the pause is asserted over.
+  const deepLinked = Boolean(name) && !launchOpensPicker(page);
+  const mark = titleMark();
   if (name) {
     await page.keyboard.type(name);
     await page.keyboard.press("Enter");
@@ -228,11 +236,12 @@ async function titleToPlay(worldFilter, { name } = {}) {
     await page.keyboard.press("KeyW");
     await settle();
   }
-  await page.keyboard.type(worldFilter);
-  await sleep(400);
-  const mark = titleMark();
-  await page.keyboard.press("Enter");
-  await settle();
+  if (!deepLinked) {
+    await page.keyboard.type(worldFilter);
+    await sleep(400);
+    await page.keyboard.press("Enter");
+    await settle();
+  }
   expectTitleScreenPause(worldFilter, mark);
   await page.keyboard.press("KeyP");
 }

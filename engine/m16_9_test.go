@@ -211,7 +211,12 @@ func m169NewHarnessFor(t *testing.T, worldName string, world TWorld, options ...
 	mux := http.NewServeMux()
 	mux.Handle("/ws", server)
 	mux.Handle("/api/", api.Handler())
-	mux.Handle("/", http.FileServer(http.Dir(m169ClientDir())))
+	// The SAME file server production mounts, not a plain one: the client now
+	// writes /play/<world> into the address bar (M20.1), so a harness without the
+	// SPA fallback cannot reload the page the browser is actually on — which is
+	// how six suites went red the moment the address bar started tracking the
+	// world.
+	mux.Handle("/", SPAFileServer(http.Dir(m169ClientDir())))
 
 	m169ServeOn(t, baseListener, mux)
 	m169ServeOn(t, controlListener, h.controlMux())
@@ -277,7 +282,7 @@ func m169ClientDir() string { return filepath.Join("web", "dist") }
 // The two environment variables that decide whether the real-browser suites
 // run (owner decision 2026-08-01).
 //
-// The twelve Playwright suites live inside `go test ./...`, so before this every
+// The thirteen Playwright suites live inside `go test ./...`, so before this every
 // one-line engine change paid 7-10 minutes of real browsers, and the race gate
 // paid them a second time for no finding — the races that matter are in the
 // server, and the wire-level tests cover those. They are now OPT-IN for everyday

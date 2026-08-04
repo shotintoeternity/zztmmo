@@ -950,6 +950,10 @@ func curatedBrowserModeRows() []parityRow {
 		{"modal-museum", "Museum search/select window", "E", "M16.16", "presentation-additions"},
 		{"identity-overlay", "Per-player identity overlay", "E", "M16.12", "presentation-additions"},
 		{"mobile-textentry", "Mobile on-screen keyboard for text surfaces", "E", "M16.18", ""},
+		// M20.1: /play/<world>. Assigned to M16.11 because the contract it must
+		// not break is M16.11's — the title-screen pause asserted at every world
+		// selection — and a deep link is one more selection route.
+		{"deep-link", "Deep-link entry (/play/<world>) to a world's title screen", "E", "M16.11", "presentation-additions"},
 		{"mobile-touchplay", "Mobile touch movement/shoot/torch/pause controls", "E", "M16.18a", "mobile-touch-gap"},
 	}
 	var rows []parityRow
