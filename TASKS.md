@@ -5804,6 +5804,92 @@ permission job, not a URL job. It stays a backlog bullet.
   the curated fields filled in (M19.3's `route.api.preferences` is the
   precedent). `go test ./...` green, and the browser family green beside it.
 
+## M21 — Moderation: act on a person, not just a message
+
+Filed 2026-08-04 from a whole-tree check. M16.16a hardened chat *text* —
+`admitChatText` and `chatRateLimiter` (`chat_admission.go`) admit, trim and rate
+limit what is said. Nothing anywhere acts on the person saying it: the tree
+contains no mute, no block, no kick, no ban, and no operator concept at all.
+The one abuse response available today is stopping the server.
+
+This is beta-relevant in a way most of the backlog is not — it is the only gap
+on the list whose cost is paid by a *tester* rather than by us — and the PM
+backlog bullet already names it as a precondition ("a PM needs a block/mute
+story that global chat, where everyone is watching, does not").
+
+One protocol fact shapes both tasks: the chat wire message is `{type, from,
+text}` (`main.ts:234-236`) where `from` is a display name, and display names are
+neither unique nor claimed (`join.Name` is arbitrary; a guest gets
+`"player" + random`, `main.ts:688`). **Nothing addressable travels with a chat
+line today**, so a block cannot key on anything the client currently receives.
+What does exist: `PlayerID`, unique among everyone connected but an in-memory
+counter that restarts with the process (`mintPlayerID`,
+`websocket_server.go:1845-1850`), and `accountID`, durable but only for
+signed-in players, already carried on `roomPlayer` and readable through
+`RoomManager.PlayerIdentity` (`room_manager.go:301-315`).
+
+- [ ] **M21.1 — Block: a player can stop hearing another player.** Self-serve,
+  no operator required, and the half that does not need a decision from anybody.
+  Add the sender's `PlayerID` to the chat wire message and to `ChatRecord`, so a
+  received line carries something addressable; blocking is then "suppress this
+  id for me". **Filter at fan-out on the server** (`BroadcastGlobalChat`,
+  `websocket_server.go:2160-2185`), not in the client — a client-side filter is
+  bypassable and, worse, still delivers the text to the machine of the person
+  who asked not to receive it.
+  Blocks are per-*recipient*, so they never affect what anyone else sees, and
+  the blocked player is never told — a block that announces itself invites the
+  retaliation it exists to prevent.
+  Durability follows identity, and this is the same split the PM bullet draws:
+  a guest's block lasts the session (keyed on `PlayerID`); a signed-in player's
+  block is keyed on the target's `accountID` and stored in the M19.3 account
+  preferences store, which is **exactly the second caller that store was shaped
+  for** — add a field, do not add a store. A block on a guest target cannot be
+  made durable at all (there is no durable id to key on), and the UI must say so
+  rather than silently forgetting it.
+  Entry point is the room roster — the same place M19.1's `Name` on
+  `PlayerSnapshot` put the anchor, and the same place a PM would start from —
+  so nobody has to type a name that is not unique anyway.
+  DoD: A blocks B, B talks, A does not receive the line and C does; the server,
+  not the client, dropped it; B is not told; a signed-in A's block survives a
+  restart and a different browser; a guest A's block does not, and A was told
+  that when they made it; blocking an id that is gone is a no-op, not an error;
+  a block never suppresses server announcements (`AnnounceMessage`) — a
+  shutdown warning is not chat. New wire field and new preference field both get
+  their `fixtures/parity/manifest.json` rows (`PARITY_SCAFFOLD=1`, curated
+  fields filled in). `go test ./...` green; the chat browser suite green.
+
+- [ ] **M21.2 — Operator actions: mute, kick, and refuse.** The half that needs
+  an owner decision first, which is why it is second.
+  **Owner decision required before this is specced further: who is an
+  operator?** There is no operator, admin or moderator concept anywhere in the
+  tree — the closest thing is per-world ownership in `.access.json`, which is
+  about editing a world, not about people. The recommendation is the cheapest
+  thing that is still auditable: an environment allowlist of account IDs
+  (`ZZT_MODERATOR_ACCOUNTS`, following `auth.go:77-95`'s existing env-config
+  pattern), so operator status is deployment configuration rather than a new
+  persisted role system, and it cannot be granted from inside the game.
+  Three actions, in increasing severity: **mute** (the server refuses that
+  player's chat and tells them they are muted — unlike a block, a mute is
+  announced to its target, because it is a sanction rather than a preference),
+  **kick** (disconnect; they may return), and **refuse** (kick plus a standing
+  refusal to admit them again).
+  **The honest limit, which the spec must state rather than discover later:**
+  refuse can only bind to an `accountID`. A guest has no durable identity, so a
+  refused guest returns by reloading the page. The alternatives are IP-based
+  (we hold no IPs today and holding them is its own decision) or account-only
+  guest admission (a product decision, not a moderation one). Ship the honest
+  version and say so in the operator's own UI.
+  Every operator action writes an audit line — who, whom, which action, which
+  world, and the tick — because an unlogged moderation power is one nobody can
+  review afterwards.
+  DoD: a muted player's chat is refused and they are told; an unmuted one is
+  not; a kicked player's socket closes and the room loses them by the normal
+  leave path (not a new one); a refused account cannot rejoin and a refused
+  guest demonstrably can, with a test that asserts that limit rather than
+  hiding it; a non-operator account is refused every one of the three, and so
+  is an operator allowlist that is empty or unset; every action appears in the
+  audit log. `go test ./...` green.
+
 ## M14 — Rearchitecting for the service ZZTMMO is becoming
 
 Filed 2026-07-12 from a whole-repo review (NOTES.md): three structural debts
@@ -6662,11 +6748,19 @@ tasks. Both were checked against the code the day they were filed):**
     which does not exist today. **Owner decision when this is promoted: is (a)
     enough to ship first?** If it is, PM stops being gated on the handle system
     and the handle question moves to the profiles bullet where it also belongs.
-  - *There is nowhere to read one.* The entire chat UI is a single transient
-    line at row 24 (`currentChatMessage`, `main.ts:2101`, painted at
-    `main.ts:2144-2146`) that the next global message overwrites. A PM landing
-    there is gone the moment anyone says anything. Wants a real CP437
-    chat/PM window (`web/src/textwindow.ts`) with per-conversation history.
+  - *There is nowhere to read one.* **CORRECTED 2026-08-04 — this claim was
+    wrong when it was written, and the corrected version is smaller.** There is
+    already a CP437 chat window: `openChatWindow` (`main.ts:2176`), opened with
+    `C` (`:2851`), backed by a 50-message client buffer (`chatMessages`,
+    `:2126,2152-2155`), and the server replays history to a joining client
+    (`GetRecentMessages(50)`, `websocket_server.go:580`) from a store that
+    already persists every line (`AddMessage`, `:668`). The transient line at
+    row 24 (`currentChatMessage`, `:2127`, painted at `:2292-2293`) is a *toast*
+    on top of that window, not the whole UI.
+    What is actually missing for a PM is narrower: the window is a single global
+    stream with no per-conversation view, and its buffer is dropped on leaving a
+    world (`:910`) rather than being per-conversation state. That is PM design
+    work, not a chat-window milestone.
   Also: M16.16a's admission and rate limiting (`admitChatText`,
   `chatRateLimiter`, `chat_admission.go`) must cover PMs, and a PM needs a
   block/mute story that global chat — where everyone is watching — does not.
@@ -6892,6 +6986,60 @@ newly enables; same rule: backlog bullets, owner promotes before spec):**
   threshold for vertical scaling (larger EC2 instance) versus architectural work
   such as room sharding, process supervision, external persistence, or load-balanced
   world servers.
+* **World instances are created and never released.** Filed 2026-08-04 from a
+  whole-tree check. `s.Instances` is written in two places
+  (`websocket_server.go:292,1555`) and nothing anywhere deletes from it: every
+  world any visitor has ever opened keeps its `WorldInstance` and its whole
+  `RoomManager` — an engine per board — resident for the life of the process,
+  and `Tick` walks the full map every tick (`:327-337`). A tester who browses
+  twenty Museum worlds leaves twenty resident. Empty rooms do not *step*, so
+  this is memory and per-tick bookkeeping rather than simulation cost, which is
+  why it has not been noticed. Wants an eviction rule with three things thought
+  through before any code: an instance holding a detached player inside their
+  reconnect grace must not be evicted (M13.2), nor one mid-autosave
+  (`:1390-1400`), and eviction must be deterministic — a timer that varies with
+  wall-clock is exactly what CLAUDE.md rule 2 forbids in the sim, so tick counts,
+  not `time.Now()`. **This is the measurable half of the scaling bullet above**:
+  it can be demonstrated on a workstation, where the rest of that bullet needs
+  the production host.
+* **Nothing reports that the service is alive, or how busy it is.** Filed
+  2026-08-04. The routes are `/ws`, `/api/*` and `/`
+  (`cmd/zzt-server/main.go:119-126`); there is no health or liveness endpoint,
+  no player or instance count, and no metrics of any kind. M18.4–M18.10 gave the
+  hosts backups and timers, so the *data* is looked after, but nothing answers
+  "is it up" without opening a browser and playing it, and nothing answers "how
+  many people are on" at all — including for the scaling bullet, which needs
+  exactly that number. Smallest useful version: one unauthenticated endpoint
+  reporting up/uptime and the counts, and one authenticated (or loopback-only)
+  endpoint with the detail. Keep it outside the tick goroutine's lock.
+* **Nothing identifies which build is running.** Filed 2026-08-04. Neither the
+  server logs nor the client reports a version or commit; `warnIfClientStale`
+  (`cmd/zzt-server/main.go:124`) compares client build freshness and is the
+  closest thing that exists. A tester's report therefore cannot be tied to a
+  revision, which is the first question every one of those reports raises.
+  Cheapest form: `-ldflags -X` a commit stamp into the binary, log it at boot,
+  return it from the health endpoint above, and show it in the client's help or
+  title corner so a screenshot carries it.
+
+**Owner-gated (measurements or a policy call, not executor work):**
+* **The restore has never been rehearsed.** Filed 2026-08-04. `AWS.md:517-544`
+  documents the restore procedure and `deploy/zztmmo-backup.sh` writes the
+  archives, but nothing has ever executed a restore from one — the procedure is
+  written, not proven. A backup that has not been restored is a belief, and the
+  cheapest possible time to discover it is wrong is before it is needed. Wants
+  one deliberate drill on a throwaway host: take a production archive, restore
+  it per the documented steps, and confirm the world list answers and a player's
+  save appears under R. Owner-gated because it touches production data.
+* **A signed-in player cannot remove or export their data.** Filed 2026-08-04.
+  Sign-in is real Google identity (`auth.go`), and three stores are keyed on the
+  resulting `accountID` — chat lines carrying a display name (`AddMessage`),
+  per-world player state, and account preferences (`chat_db.go`). There is no
+  path that deletes or exports any of it. How much this matters is a policy call
+  about how public the beta becomes, not an engineering judgement, which is why
+  it sits here: a closed tester group and an open sign-up page are different
+  answers. Note that deletion is not purely a delete — a chat backlog is a
+  shared artifact others have read, so the design question is whether a
+  deletion redacts the name or removes the lines.
 
 **World picker follow-ups:**
 * [x] **Open selected worlds to their title screen before play.** When a player

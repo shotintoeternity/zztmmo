@@ -10268,3 +10268,67 @@ a URL job. It stays a bullet.
 Docs only — TASKS.md and this file. No production code, so nothing moves in the
 fixtures, and as backlog housekeeping plus one unstarted `[ ]` spec it needs no
 parity manifest row (M20.1's own DoD carries the row it will add when it lands).
+
+## 2026-08-04 — M21 filed (moderation); five gaps filed; one of my own claims was wrong
+
+Follow-on from the backlog reconciliation earlier today. Owner asked what else
+belongs on the list; seven candidates were proposed, and checking them before
+filing changed two of them.
+
+**The correction, first, because it is the more useful half.** I proposed "a
+chat window with history" as a gap, on the strength of the PM backlog bullet's
+own wording ("the entire chat UI is a single transient line at row 24") and a
+grep that found exactly that line. Both were true and neither was the whole
+picture: `openChatWindow` (`main.ts:2176`) is a CP437 chat window opened with
+`C` (`:2851`), `chatMessages` (`:2126,2152-2155`) is a 50-line client buffer,
+the server persists every line (`AddMessage`, `websocket_server.go:668`) and
+replays 50 to a joining client (`GetRecentMessages`, `:580`). Row 24 is a toast
+*on top of* that window. The PM bullet has been corrected in place rather than
+left to mislead the next reader, and what it actually needs is narrower: a
+per-conversation view instead of one global stream, and a buffer that is not
+dropped on leaving a world (`:910`). No milestone was filed for it — it is PM
+design work. **Lesson worth keeping: a backlog bullet's own description of the
+code is not evidence, even when a grep agrees with it.** The grep agreed
+because it was searching for what the bullet said, which is not the same as
+searching for what is there.
+
+**M21 filed — moderation**, and it is the one item on this list whose cost is
+paid by a tester rather than by us. M16.16a hardened chat *text* (`admitChatText`,
+`chatRateLimiter`); nothing anywhere acts on the *person* — no mute, no block, no
+kick, no ban, and no operator concept in the tree at all. The only abuse response
+available today is stopping the server. Split so the half needing no decision
+ships first:
+* **M21.1 — block**, self-serve and per-recipient. Needs the sender's `PlayerID`
+  on the chat wire message, because `{type, from, text}` carries a display name
+  and display names are neither unique nor claimed — nothing addressable travels
+  with a chat line today. Filtered at fan-out on the server, not in the client:
+  a client-side filter is bypassable and still delivers the text to the machine
+  of the person who asked not to receive it. Durable for accounts via the M19.3
+  preferences store (the second caller it was shaped for), session-only for
+  guests, and the UI has to say which one you got.
+* **M21.2 — operator mute/kick/refuse**, which is blocked on an owner decision:
+  who is an operator? Recommendation is an env allowlist of account IDs, so the
+  role is deployment config and cannot be granted from inside the game. Its
+  honest limit is written into the spec rather than left to be discovered — a
+  refusal binds to an `accountID`, so a refused guest returns by reloading, and
+  the test asserts that limit instead of hiding it.
+
+**Three gaps filed as architecture bullets**, each verified today:
+* *Instances are created and never released.* `s.Instances` is only ever written
+  (`:292,1555`); nothing deletes. Every world anyone opens stays resident with
+  its whole `RoomManager`, and `Tick` walks the map every tick (`:327-337`).
+  Empty rooms do not step, which is why nobody has noticed. This is the half of
+  the open scaling bullet that can be measured on a workstation.
+* *Nothing reports liveness or load.* No health endpoint, no counts, no metrics
+  — and the scaling bullet needs exactly the number nothing produces.
+* *Nothing identifies the running build.* No stamp in logs or client, so a
+  tester's report cannot be tied to a revision.
+
+**Two filed as owner-gated**, because they are policy or production calls: the
+restore has never been rehearsed (AWS.md documents it; nothing has run it — a
+backup that has not been restored is a belief), and a signed-in player cannot
+delete or export their data (three stores key on `accountID`; no path removes
+any of it, and deletion of a chat backlog others have read is a design question
+before it is a code one).
+
+Docs only again — TASKS.md and this file.
