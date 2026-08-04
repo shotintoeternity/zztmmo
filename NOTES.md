@@ -9851,3 +9851,33 @@ unit test cannot: M19.1's second player was recolored from `#00c0ff` to
 `#ffff55` — deliberately LIGHT, because a dark pick passes under either rule —
 and the suite reads the glyph's own ink rather than the square's corners. Watched
 failing by restoring the luma version: `saw ["#000000"]`.
+
+## 2026-08-03 — Two browser suites are red at 17cb7e9, found by M19.3's rule-3 run
+
+M19.3 touched the API surface and the client, so CLAUDE.md rule 3 required the
+`ZZT_BROWSER=1` family. It came back with two failures. Both were then
+reproduced on a **stashed-clean tree at `17cb7e9`** — before M19.3 exists — so
+neither is M19.3's, and both are filed rather than fixed inside someone else's
+task (the M16.14c precedent: a pre-existing red is its own task, taken first).
+
+**`TestM192ColorPickerJourney`** — the assertion is stale, not the picker. Commit
+`17cb7e9` renamed the window's vanilla row to `Default (white on blue)` and
+updated that test's *navigation* steps, but left the needle list at
+`color_picker_journey.test.mjs:234` asserting the old
+`No color (the vanilla ZZT player)`. The failure screenshot shows the window
+rendering correctly with the new label. Filed as **M19.2a**.
+
+**`TestM1611BrowserEndToEndPlayerJourneys`** — journey 1 gets through fifteen
+steps (torch, gem, ammo, shot, key, door, vendor purchase, bear damage, passage,
+death, respawn) and then times out "waiting for a score that qualifies for the
+high-score table" with `score: 0`. The score reads 0 *after* the respawn, so the
+suspicion is the death penalty against a score the journey then expects to
+qualify — but that is a suspicion, not a finding, and the task is to diagnose it
+rather than to adjust the wait. Filed as **M16.11a**.
+
+The reason both landed unnoticed is worth keeping: the browser suites are
+opt-in (owner decision 2026-08-01), so `go test ./...` stays green while they
+rot. That is still the right trade — ten minutes of browsers per engine
+one-liner is worse — but it means the family has to be run deliberately when the
+client, the protocol or the API changes, and a task that does not touch those
+will not catch a break in them.

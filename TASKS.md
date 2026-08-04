@@ -5111,6 +5111,35 @@ The background says which player; the glyph says that it is a player.
   because M16.18's battery types a fixed seed plus "X" and then s/t/b/q into a
   field this one filters to hex digits. **M16.18d** is filed for that.
 
+- [ ] **M19.2a — the picker journey asserts a row label M19.2 renamed.** Filed
+  2026-08-03 by M19.3's rule-3 browser run, and reproduced on a stashed-clean
+  tree at `17cb7e9`, so it is not M19.3's. Commit `17cb7e9` renamed the window's
+  vanilla row to `Default (white on blue)` and updated
+  `color_picker_journey.test.mjs`'s navigation steps, but left the needle list at
+  line 234 asserting the old `No color (the vanilla ZZT player)`. The picker
+  itself is fine — the failure screenshot shows the window rendering with the new
+  label — so this is one stale string, and the only judgement in it is which
+  label the owner wants to keep. Take it before M16.18d: that task adds coverage
+  to the same suite family and should not start from a red one. DoD:
+  `TestM192ColorPickerJourney` green under `ZZT_BROWSER=1`; the label in the test
+  and the label in `color_picker.ts` say the same thing; `npm test` green.
+
+- [ ] **M16.11a — journey 1 times out waiting for a qualifying high score.**
+  Filed 2026-08-03 alongside M19.2a, from the same run and reproduced the same
+  way at `17cb7e9`. `TestM1611BrowserEndToEndPlayerJourneys` completes fifteen
+  steps of the acceptance journey — torch, gem, ammo, a shot, a key, a door, the
+  vendor purchase, bear damage, a passage, death, respawn — and then times out
+  "waiting for a score that qualifies for the high-score table" with `score: 0`
+  in the HUD. The score reads 0 *after* the respawn, so the death penalty against
+  the score the journey then expects to qualify is the first thing to look at —
+  but that is a suspicion and the task is to find the cause, NOT to lengthen the
+  wait or lower the bar the journey asks for. This is the beta smoke test
+  (execution-priority item 3), so a red one matters beyond its own suite. DoD:
+  the cause named in NOTES.md; whichever of the two is wrong (the client's score
+  or the journey's expectation) fixed at the cause; `TestM1611BrowserEndToEndPlayerJourneys`
+  green under `ZZT_BROWSER=1`; `go test ./...` green with the replay fixtures
+  unmodified.
+
 - [ ] **M16.18d — teach the device matrix what a surface accepts, and certify the
   color picker on it.** Filed 2026-08-03 by M19.2. `modalAcceptsTextInput` now
   names seven text surfaces; `platform_matrix.test.mjs` exercises six and the
