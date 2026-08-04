@@ -5155,6 +5155,31 @@ The background says which player; the glyph says that it is a player.
   Nothing in `color_picker.ts` changed — the picker was right the whole time,
   which is what the failure screenshot showed before any of this was edited.
 
+- [x] **M19.2b — every picker row shows the smiley it is offering.** Filed
+  2026-08-04 to put a change on the record that was already written and verified
+  in the working tree, unfiled, when the session opened. M19.2 drew each quick
+  pick as a filled block (`0xFE`) and answered "what would I look like" once, at
+  the foot of the window, on a `This is you:` line that previewed only the row
+  the cursor was on. The change makes the swatch the ☻ itself, in the same
+  attribute the block used, so all seventeen rows answer that question at once
+  and the separate preview line retires. Only the typed-hex row still needs a
+  preview cell of its own — no EGA attribute can express a 24-bit background —
+  and it is drawn beside the field it stands for, tinted through the same
+  per-cell override the board uses, so M19.2's "the preview is the real paint
+  path" claim survives intact on the one row that still depends on it.
+  `colorPickerPreview` therefore keys on the FIELD rather than the selection: the
+  hex row keeps its color while the cursor is elsewhere, exactly as the quick
+  picks keep theirs, and it returns null until the field holds a whole color so a
+  half-typed hex previews nothing rather than something wrong.
+  The unit test asserts a ☻ in each of the sixteen attributes and that neither
+  the old block nor the retired label is drawn anywhere; the journey — which
+  M19.2a taught not to read the preview at a row number, and which now cannot
+  read it by a label either — follows the CURSOR instead, and reads the typed
+  row's ☻ as pixels, since a 24-bit background maps onto no EGA index the M16.9
+  decoder can name. Verified before the commit: `go build ./... && go test ./...`
+  green, `npm test` green, and `TestM192ColorPickerJourney` green under
+  `ZZT_BROWSER=1`. No golden fixture contains the picker window, so none moved.
+
 - [x] **M16.11a — journey 1 times out waiting for a qualifying high score.**
   Filed 2026-08-03 alongside M19.2a, from the same run and reproduced the same
   way at `17cb7e9`. `TestM1611BrowserEndToEndPlayerJourneys` completes fifteen

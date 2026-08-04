@@ -199,6 +199,20 @@ async function assertCellIs(c, col, row, expected, describe) {
 
 const pickerIsOpen = (cells) => hasText(cells, "Your Player Color");
 
+/**
+ * The picker's cursor (char 0x10), searched inside the window's own rows and
+ * columns so nothing painted on the screen underneath can be mistaken for it.
+ * The selected row's swatch is two cells to its right and its label is four.
+ */
+function findCursor(cells) {
+  for (let row = 4; row <= 21; row += 1) {
+    for (let col = 5; col <= 55; col += 1) {
+      if (cellAt(cells, col, row).ch === 0x10) return { x: col, y: row };
+    }
+  }
+  return null;
+}
+
 async function openPicker(c) {
   await c.page.keyboard.press("KeyC");
   await waitForCells(c.page, pickerIsOpen, `${c.label}'s color picker to open`);
@@ -289,17 +303,18 @@ try {
     await sleep(ada, 60);
   }
   cells = await readCells(ada.page);
-  // The preview is found by its label rather than at a row number: the window's
-  // interior has been re-laid-out twice already (M19.2's own follow-ups), and a
-  // hardcoded row makes a moved line look like a missing preview (M19.2a).
-  const previewLabel = findText(cells, "This is you:");
-  assert.ok(previewLabel, "the picker must label its preview");
-  const previewX = previewLabel.x + "This is you:  ".length;
-  const previewRow = previewLabel.y;
-  assert.equal(cellAt(cells, previewX, previewRow).ch, 0x02, "the preview is the player glyph itself");
-  // The preview is painted by the same per-cell override the board uses, so
-  // this is the color the room would give you — not a second drawing path.
-  await assertCellIs(ada, previewX, previewRow, QUICK_PICK, "the preview shows the highlighted color");
+  // Every row previews itself now, so the preview is found by following the
+  // CURSOR rather than a label or a row number: the window's interior has been
+  // re-laid-out three times (M19.2's own follow-ups), and a hardcoded row makes
+  // a moved line look like a missing preview (M19.2a).
+  const cursor = findCursor(cells);
+  assert.ok(cursor, "the picker must point at the row it has selected");
+  const swatch = cellAt(cells, cursor.x + 2, cursor.y);
+  assert.equal(swatch.ch, 0x02, "the selected row's swatch is the player glyph itself");
+  // A quick pick is an EGA attribute, so the decoder can read it outright: the
+  // color as foreground on black, which is the same red the room would give you.
+  assert.equal(swatch.color, 12, "and it is drawn in the DOS color that row offers");
+  assert.equal(textAt(cells, cursor.x + 4, cursor.y, 3), "Red", "the arrows must have landed on Red");
 
   await ada.page.keyboard.press("Enter");
   await waitForCells(ada.page, (cells) => !pickerIsOpen(cells), "the picker to close on Enter");
@@ -325,7 +340,18 @@ try {
   await ada.page.keyboard.type(TYPED_PICK.slice(1).toUpperCase());
   await sleep(ada, 150);
   cells = await readCells(ada.page);
-  assert.ok(hasText(cells, "#" + TYPED_PICK.slice(1)), "the typed color is shown in the field, in lower case");
+  const field = findText(cells, "#" + TYPED_PICK.slice(1));
+  assert.ok(field, "the typed color is shown in the field, in lower case");
+  // The one row a DOS attribute cannot draw: its ☻ is painted by the same
+  // per-cell override the board uses, so this is the color the room would give
+  // you — not a second drawing path. Read as pixels, since the M16.9 decoder
+  // maps a 24-bit background onto no EGA index at all.
+  const typedPreviewX = field.x + "#7f3fbf".length + 1;
+  assert.ok(
+    cellAt(cells, typedPreviewX, field.y).undecoded,
+    "the hex row's ☻ must be a color no EGA index can express — a decodable cell here means the tint never landed",
+  );
+  await assertCellIs(ada, typedPreviewX, field.y, TYPED_PICK, "the hex row's ☻ wears the typed color");
   await ada.page.keyboard.press("Enter");
   await waitForCells(ada.page, (cells) => !pickerIsOpen(cells), "the picker to close on the typed color");
   assert.equal(await storedColor(ada), TYPED_PICK, "a typed color is stored like a quick pick");

@@ -246,17 +246,20 @@ assert.equal(DOS_PICKS[1].name, "Dark Blue");
 }
 
 // ---------------------------------------------------------------------------
-// The preview is the real paint path: char 2 in 0x1F with a 24-bit background
-// over it, which is exactly what the board draws and exactly what M19.1's tint
-// gate accepts. A preview that could not be tinted would be a promise the game
-// does not keep.
+// Every row shows the ☻ it is offering, so there is no separate preview line:
+// the sixteen quick picks and the vanilla row draw theirs with an EGA attribute,
+// and only the typed hex — the one color no attribute can express — needs the
+// tint. That cell is the real paint path: char 2 in 0x1F with a 24-bit
+// background over it, which is exactly what the board draws and exactly what
+// M19.1's tint gate accepts. A preview that could not be tinted would be a
+// promise the game does not keep.
 // ---------------------------------------------------------------------------
 {
   const m = picker("");
-  m.selected = 9;
+  type(m, "7f3fbf");
   const preview = colorPickerPreview(m);
-  assert.ok(preview, "a selected color previews");
-  assert.equal(preview.rgb, "#5555ff");
+  assert.ok(preview, "a whole typed color previews");
+  assert.equal(preview.rgb, "#7f3fbf");
 
   const cells = [];
   renderColorPicker((x, y, color, text) => cells.push({ x, y, color, text }), m);
@@ -264,12 +267,29 @@ assert.equal(DOS_PICKS[1].name, "Dark Blue");
   assert.ok(at, "the preview cell is drawn where colorPickerPreview says it is");
   assert.equal(at.text, String.fromCharCode(PREVIEW_CHAR), "the preview glyph is the player, char 2");
   assert.equal(at.color, PREVIEW_COLOR, "in the one attribute the M19.1 tint gate accepts");
+  // It sits on the hex row itself, beside the color it stands for.
+  const field = cells.find((cell) => cell.text === "#7f3fbf");
+  assert.ok(field && field.y === preview.y, "the typed color's ☻ is on the row with the hex");
 
-  m.selected = VANILLA_INDEX;
-  assert.equal(colorPickerPreview(m), null, "the vanilla row previews an untinted 0x1F ☻, which is vanilla");
-  m.selected = CUSTOM_INDEX;
-  m.custom = "abc";
-  assert.equal(colorPickerPreview(m), null, "a half-typed hex previews nothing rather than something wrong");
+  // The tint belongs to the FIELD, not the selection: the hex row keeps showing
+  // the color it holds while the cursor is somewhere else, exactly as the
+  // sixteen quick picks keep showing theirs.
+  m.selected = 9;
+  assert.deepEqual(colorPickerPreview(m), preview, "the typed row's ☻ stays its own color when the cursor leaves it");
+  const quick = picker("");
+  quick.selected = 9;
+  assert.equal(colorPickerPreview(quick), null, "a quick pick needs no tint: its row draws its own ☻ in EGA");
+  assert.equal(colorPickerPreview(picker("")), null, "and the vanilla row is an untinted 0x1F ☻, which is vanilla");
+
+  const half = picker("");
+  type(half, "abc");
+  assert.equal(colorPickerPreview(half), null, "a half-typed hex previews nothing rather than something wrong");
+  const halfCells = [];
+  renderColorPicker((x, y, color, text) => halfCells.push({ x, y, color, text }), half);
+  assert.ok(
+    !halfCells.some((cell) => cell.color === PREVIEW_COLOR && cell.text === String.fromCharCode(PREVIEW_CHAR) && cell.x > 20),
+    "and draws no untinted smiley the hex beside it does not stand for",
+  );
 }
 
 // ---------------------------------------------------------------------------
@@ -311,12 +331,15 @@ assert.equal(DOS_PICKS[1].name, "Dark Blue");
   // The frame is drawn, and it is the shared one: strTop's corner piece.
   assert.ok(cells.some((cell) => cell.text.startsWith("\xc6\xd1")), "the window is the M4.1 CP437 frame");
 
-  // Each swatch is its color as FOREGROUND (attribute i, background black), so
-  // the block reads as the color and dark blue does not vanish into the window.
+  // Each swatch is the player glyph in its color as FOREGROUND (attribute i,
+  // background black), so every row shows the smiley it offers and dark blue
+  // does not vanish into the window.
   for (let i = 0; i < DOS_PICKS.length; i += 1) {
-    const swatch = cells.find((cell) => cell.color === i && cell.text.includes("\xfe"));
-    assert.ok(swatch, `${DOS_PICKS[i].name} has a swatch in its own color`);
+    const swatch = cells.find((cell) => cell.color === i && cell.text === String.fromCharCode(PREVIEW_CHAR));
+    assert.ok(swatch, `${DOS_PICKS[i].name} has a ☻ in its own color`);
   }
+  assert.ok(!/\xfe/.test(text), "no row still draws the old block swatch");
+  assert.ok(!/This is you/.test(text), "and the separate preview line is gone: every row is its own preview");
 }
 
 console.log("color_picker.test.mjs: all assertions passed");

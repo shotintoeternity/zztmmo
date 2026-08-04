@@ -12,11 +12,15 @@
 // each row has to be drawn in the color it offers, which a text-window line
 // cannot say.
 //
-// THE SWATCH IS THE COLOUR AS FOREGROUND, NOT AS BACKGROUND. Drawn as a filled
-// square (0xFE) in attribute `i`, its background nibble is black — so one write
-// per row stands for all sixteen colors, and the black cells either side keep
-// the one color that IS the window's background (dark blue) from vanishing
-// into it.
+// THE SWATCH IS THE PLAYER GLYPH, IN THE COLOUR AS FOREGROUND. Each row draws
+// char 2 — the ☻ the row is offering to paint — in attribute `i`, so its
+// background nibble is black: one write per row stands for all sixteen colors,
+// and the black cells either side keep the one color that IS the window's
+// background (dark blue) from vanishing into it. Showing the smiley on every row
+// is what retired the single "This is you:" preview line: the answer to "what
+// would I look like" is now on the row you are pointing at, not at the foot of
+// the window. Only the typed color still needs a preview cell of its own, since
+// no attribute can express a 24-bit background.
 //
 // WHY THE 16 QUICK PICKS AT ALL. The owner's 2026-07-10 design names purists:
 // somebody who wants to be DOS light-cyan should not have to know that is
@@ -262,8 +266,9 @@ const COLUMN_X = [TEXT_WINDOW_X + 4, TEXT_WINDOW_X + 25];
 const VANILLA_ROW = FIRST_ROW + 1;
 const GRID_TOP = VANILLA_ROW + 2;
 const CUSTOM_ROW = GRID_TOP + GRID_ROWS;
-const PREVIEW_ROW = LAST_ROW - 1;
 const HINT_ROW = LAST_ROW;
+// The typed color's ☻, one cell past the "#ffffff" field it previews.
+const CUSTOM_PREVIEW_X = COLUMN_X[0] + 22;
 
 // TextWindowInit's interior width, the same string drawLine fills a line with.
 const INNER_EMPTY = " ".repeat(TEXT_WINDOW_WIDTH - 5);
@@ -272,11 +277,6 @@ const NORMAL_COLOR = 0x1e;
 const SELECTED_COLOR = 0x1f;
 const CURSOR_COLOR = 0x1c;
 const HINT_COLOR = 0x1a;
-// A small filled square in a black tile: one cell, so the grid reads as a list
-// of colors rather than two black stripes, and the tile is what keeps BOTH ends
-// of the palette visible — black shows against the window's blue, dark blue
-// shows against the tile's black.
-const SWATCH = "\xfe";
 const CURSOR = "\x10";
 
 /** The player glyph the preview draws, and the attribute the M19.1 tint gates on. */
@@ -284,27 +284,22 @@ export const PREVIEW_CHAR = 0x02;
 export const PREVIEW_COLOR = 0x1f;
 
 /**
- * Where the preview ☻ is drawn, and what color it should be tinted. main.ts
- * feeds this to the same per-cell RGB override the board uses, so the smiley in
- * this window is painted by the code that paints the real one — the preview
- * cannot drift from the thing it previews.
+ * Where the typed color's ☻ is drawn, and what color it should be tinted.
+ * main.ts feeds this to the same per-cell RGB override the board uses, so the
+ * smiley on the hex row is painted by the code that paints the real one — the
+ * preview cannot drift from the thing it previews.
  *
- * Returns null while the selection has no color (a half-typed hex, or vanilla),
- * where the untinted 0x1F cell is already the right answer.
+ * Only the hex row needs this: the sixteen quick picks and the vanilla default
+ * are EGA attributes, so their rows draw their own ☻ with no override at all.
+ * Returns null until the field holds a whole color, so a half-typed hex previews
+ * nothing rather than something wrong.
  */
 export function colorPickerPreview(m: ColorPickerModal): { x: number; y: number; rgb: string } | null {
-  const value = colorPickerValue(m);
-  if (!value) {
+  if (m.custom.length !== HEX_DIGITS) {
     return null;
   }
-  return { x: previewX(), y: PREVIEW_ROW, rgb: value };
+  return { x: CUSTOM_PREVIEW_X, y: CUSTOM_ROW, rgb: "#" + m.custom.toLowerCase() };
 }
-
-function previewX(): number {
-  return TEXT_WINDOW_X + 4 + PREVIEW_LABEL.length;
-}
-
-const PREVIEW_LABEL = "This is you:  ";
 
 /** renderColorPicker draws the window: frame, grid, typed field, and preview. */
 export function renderColorPicker(write: WriteText, m: ColorPickerModal) {
@@ -335,11 +330,11 @@ export function renderColorPicker(write: WriteText, m: ColorPickerModal) {
     const x = COLUMN_X[column];
     const y = GRID_TOP + (i % GRID_ROWS);
     drawCursor(write, x, y, m.selected === i);
-    // The swatch is the color as FOREGROUND (attribute `i`, so its background
-    // nibble is black): a filled square in the color, with a black cell either
-    // side of it so that dark blue — the window's own background — is still a
-    // square you can see rather than a hole in the window.
-    write(x + 2, y, i, SWATCH);
+    // The swatch is the player himself in the color as FOREGROUND (attribute
+    // `i`, so its background nibble is black), with a black cell either side of
+    // it so that dark blue — the window's own background — is still a ☻ you can
+    // see rather than a hole in the window.
+    write(x + 2, y, i, String.fromCharCode(PREVIEW_CHAR));
     write(x + 4, y, m.selected === i ? SELECTED_COLOR : NORMAL_COLOR, DOS_PICKS[i].name);
   }
 
@@ -347,11 +342,13 @@ export function renderColorPicker(write: WriteText, m: ColorPickerModal) {
   const typed = "#" + m.custom.padEnd(HEX_DIGITS, "\xfa");
   write(COLUMN_X[0] + 2, CUSTOM_ROW, m.selected === CUSTOM_INDEX ? SELECTED_COLOR : NORMAL_COLOR, "Any color: ");
   write(COLUMN_X[0] + 14, CUSTOM_ROW, m.selected === CUSTOM_INDEX ? 0x70 : NORMAL_COLOR, typed);
-
-  // The preview is the real thing: char 2 in 0x1F, which is exactly what the
-  // server draws for a player and exactly what the M19.1 tint gate accepts.
-  write(TEXT_WINDOW_X + 4, PREVIEW_ROW, NORMAL_COLOR, PREVIEW_LABEL);
-  write(previewX(), PREVIEW_ROW, PREVIEW_COLOR, String.fromCharCode(PREVIEW_CHAR));
+  // The typed row's ☻ is the real thing: char 2 in 0x1F, which is exactly what
+  // the server draws for a player and exactly what the M19.1 tint gate accepts.
+  // It appears only once the field holds a color, so the row never shows a
+  // vanilla smiley that the hex beside it does not stand for.
+  if (m.custom.length === HEX_DIGITS) {
+    write(CUSTOM_PREVIEW_X, CUSTOM_ROW, PREVIEW_COLOR, String.fromCharCode(PREVIEW_CHAR));
+  }
 
   const hint = "\x18\x19\x1b\x1a move   Enter picks   Esc cancels";
   write(TEXT_WINDOW_X + Math.trunc((TEXT_WINDOW_WIDTH - hint.length) / 2), HINT_ROW, HINT_COLOR, hint);
