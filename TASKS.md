@@ -5139,7 +5139,7 @@ The background says which player; the glyph says that it is a player.
   Nothing in `color_picker.ts` changed — the picker was right the whole time,
   which is what the failure screenshot showed before any of this was edited.
 
-- [ ] **M16.11a — journey 1 times out waiting for a qualifying high score.**
+- [x] **M16.11a — journey 1 times out waiting for a qualifying high score.**
   Filed 2026-08-03 alongside M19.2a, from the same run and reproduced the same
   way at `17cb7e9`. `TestM1611BrowserEndToEndPlayerJourneys` completes fifteen
   steps of the acceptance journey — torch, gem, ammo, a shot, a key, a door, the
@@ -5154,6 +5154,66 @@ The background says which player; the glyph says that it is a player.
   or the journey's expectation) fixed at the cause; `TestM1611BrowserEndToEndPlayerJourneys`
   green under `ZZT_BROWSER=1`; `go test ./...` green with the replay fixtures
   unmodified.
+  **Done 2026-08-03.** The suspicion was wrong and the recorded transcript said
+  so before anything was edited: the score is right at every step — the gem
+  scores 10, the death penalty zeroes it, and nothing after the respawn ever
+  scores because **the gem is never collected**. The failing run ends at exactly
+  `(12,9)`; board 2's gem is the tile `(12,10)`. One row.
+  The cause is `step()`, which is not the one-tile primitive every walk assumes.
+  The client samples the held key every 55ms, but the **server latches that mask
+  until the key-up sample arrives**, so a single 95ms hold spans one server tick
+  or two depending on load — one move or two. Along a row that is harmless: an
+  extra tile still passes THROUGH the pickup, which is why the other eleven
+  `walkUntil`s never showed it. This is the journey's only two-axis walk, and
+  there the two one-way predicates (`y <= 10`, then `x >= 12`) only ever meet on
+  the gem when the row leg lands *exactly* on 10. Under load it lands on 9, and
+  the east leg then walks the row above the gem to `(12,9)` — the recorded
+  failure, to the tile.
+  Fixed at the cause, not at the bar: `walkOnto(12,10)` re-aims after every
+  step, so an overshoot becomes a correction instead of a miss. The waited-for
+  condition (`score > 0`) and its timeout are untouched.
+  Watched failing first, and watched working after. The flake would not come on
+  demand — three idle runs and one under ten spinning cores all landed on row 10
+  and passed — so the mechanism was forced instead: a 330ms hold guarantees the
+  extra ticks load supplies only sometimes. Forced against the old code it
+  reproduced the filed failure exactly (`pos=(12,9)`, `score: 0`, same timeout
+  message); forced against `walkOnto` the log reads
+  `(6,9) → (6,13) → (6,10) → (9,10) → (12,10)`, score 10 — it overshoots the row,
+  over-corrects past it, and still ends on the gem. Note 5 in the file header
+  records the trap for the next reader.
+  One thing found on the way through, NOT caused by this task: `go test ./...`
+  was already red at `41a8cdf` — that commit landed M19.2a without regenerating
+  `fixtures/parity/manifest.json`, so `TestParityManifest` and
+  `TestParityManifestIsCanonical` both failed on an untouched checkout. Verified
+  by stashing to a clean tree. Regenerated here with the documented
+  `PARITY_SCAFFOLD=1` (a no-op-diff merge since M16.20a), which adds the missing
+  `task.M19.2a` row along with this task's own.
+
+- [ ] **M16.11b — the co-op cutline walks past the passage the same way M16.11a
+  walked past the gem.** Filed 2026-08-03 by M16.11a's rule-3 full-suite run.
+  `TestCoopCutlineThreePlayerAcceptanceJourney` failed twice under load with
+  `Ada never reached the passage board change; stopped at Ada board=1
+  pos=(34,20)` — the passage is `(34,12)`, so Ada was eight rows below it and
+  walking further away. Not caused by M16.11a: it is a different file
+  (`coop_journey.test.mjs`), it runs BEFORE `m16_11_test.go` in the package, and
+  the same command went green on the same tree once the machine was quiet.
+  Same cause as M16.11a, second site. `crossMainBoard` rounds the vendor with a
+  bare `step(c, "ArrowDown", 110)` and assumes it lands back on row 12; a step
+  that covers two tiles lands on 13 instead. The eastward walk then travels the
+  row *below* the passage, and the `ArrowDown` fallback — which exists for the
+  case where the player is above row 12 — walks Ada from 13 down to 20, away
+  from the passage, until its 8 steps run out. The `assert.ok(c.you.y < ROW)`
+  above it cannot catch this: it guards the up-step, not the down-step.
+  This is the cutline suite, so CUTLINE.md's policy applies: it must be green
+  before another roadmap system is promoted. DoD: the vendor detour lands on a
+  named row rather than assuming one (M16.11a's `walkOnto` is the shape, and
+  whether it is shared between the two journey files or copied is the executor's
+  call — they are separate drivers today); the failure reproduced first by
+  forcing the long hold the way M16.11a did, not by waiting for load;
+  `TestCoopCutlineThreePlayerAcceptanceJourney` green under `ZZT_BROWSER=1`,
+  including a run of the whole family in one command; `go test ./...` green.
+  Worth a look while there: `crossMainBoard` is a near-copy of journey 1's
+  passage crossing, which is why one cause produced two bugs.
 
 - [ ] **M16.18d — teach the device matrix what a surface accepts, and certify the
   color picker on it.** Filed 2026-08-03 by M19.2. `modalAcceptsTextInput` now

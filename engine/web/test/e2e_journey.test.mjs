@@ -12,7 +12,7 @@
 // client never applied, shows up here immediately. This keeps the test honest
 // without adding test-only hooks to production code.
 //
-// FOUR THINGS THAT SILENTLY PRODUCE A "PASSING" TEST THAT NEVER PLAYS AT ALL:
+// FIVE THINGS THAT SILENTLY PRODUCE A "PASSING" TEST THAT NEVER PLAYS AT ALL:
 //
 //  1. Input is SAMPLED, not latched. connect() starts a 55ms timer that reads
 //     the currently-held key set (main.ts sendInput/currentMask), so an
@@ -25,6 +25,11 @@
 //     typing immediately after the event races it. settle() after each.
 //  4. `go test` caches this test and the .mjs is not a tracked dependency —
 //     iterate with `-count=1` or you will read a stale pass.
+//  5. step() is NOT one tile. The client samples the held key, but the SERVER
+//     latches that mask until the key-up sample arrives, so one 95ms hold
+//     spans one server tick or two depending on load — one move or two. Any
+//     walk whose target is a single tile must re-aim after every step
+//     (walkOnto), never satisfy a one-way inequality (M16.11a).
 
 import assert from "node:assert/strict";
 import fs from "node:fs";
@@ -169,6 +174,42 @@ async function walkUntil(code, done, describe, maxSteps = 30) {
 }
 
 const atLeastX = (x) => () => (seen.you?.x ?? 0) >= x;
+
+/**
+ * Walk onto one exact tile, recomputing the direction after every step.
+ *
+ * walkUntil() with a one-way inequality assumes step() covers exactly one
+ * tile, and step() does not (note 5). Along a row that is harmless — an extra
+ * tile still passes THROUGH whatever was being collected. Across rows it is
+ * not: a walk that stops at "y <= 10" can stop on row 9, and everything the
+ * journey then does along row 9 misses row 10 entirely. Recomputing the
+ * direction turns an overshoot into a correction instead of a miss.
+ *
+ * Vertical first, then horizontal: the caller's target is reached by clearing
+ * the starting row before travelling along the target's own row.
+ */
+async function walkOnto(tx, ty, describe, maxSteps = 24) {
+  let stalled = 0;
+  for (let i = 0; i < maxSteps; i++) {
+    const { x, y } = seen.you ?? {};
+    if (x === tx && y === ty) return;
+    const before = `${x},${y},${seen.boardId}`;
+    if (y !== ty) await step(y > ty ? "ArrowUp" : "ArrowDown");
+    else await step(x > tx ? "ArrowLeft" : "ArrowRight");
+    if (`${seen.you?.x},${seen.you?.y},${seen.boardId}` === before) {
+      if (++stalled >= 4) {
+        throw new Error(
+          `stuck walking onto ${describe} (${tx},${ty}) at (${seen.you?.x},${seen.you?.y}) board ${seen.boardId}`,
+        );
+      }
+    } else {
+      stalled = 0;
+    }
+  }
+  throw new Error(
+    `never stood on ${describe} (${tx},${ty}); stopped at (${seen.you?.x},${seen.you?.y}) board ${seen.boardId}`,
+  );
+}
 
 /**
  * The counters that must not move while a world is merely being selected.
@@ -389,8 +430,11 @@ try {
   // zero. Score again on board 2's gem — off the reaper's row — so the quit
   // below actually exercises the high-score entry instead of skipping it.
   assert.equal(seen.hud.score, 0, "death zeroes the score (RESPAWN_SCORE_PENALTY)");
-  await walkUntil("ArrowUp", () => (seen.you?.y ?? 99) <= 10, "board 2's gem row", 6);
-  await walkUntil("ArrowRight", atLeastX(12), "the gem on board 2");
+  // Board 2's gem is one specific tile, (12,10), and the respawn is at (6,12),
+  // so this is the journey's only two-axis walk. walkOnto, not two one-way
+  // walkUntils: the row leg has to land ON row 10, and a step that covers two
+  // tiles overshoots it (note 5).
+  await walkOnto(12, 10, "board 2's gem", 16);
   await waitFor(() => seen.hud.score > 0, "a score that qualifies for the high-score table");
   console.log(`  - scored again after respawn: score=${seen.hud.score}`);
 

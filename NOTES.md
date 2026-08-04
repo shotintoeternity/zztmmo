@@ -9881,3 +9881,72 @@ rot. That is still the right trade — ten minutes of browsers per engine
 one-liner is worse — but it means the family has to be run deliberately when the
 client, the protocol or the API changes, and a task that does not touch those
 will not catch a break in them.
+
+## 2026-08-03 — M16.11a: the journey missed the gem by one row; the score was never wrong
+
+The suspicion filed with the task (the death penalty eating a score the journey
+then expects to qualify) was wrong, and the transcript recorded with the failure
+said so before anything was edited. The score is correct at every step: the gem
+scores 10, `RESPAWN_SCORE_PENALTY` zeroes it on death, and nothing after the
+respawn ever scores because **the gem is never collected**. The failing run ends
+at exactly `(12,9)`; board 2's gem is the tile `(12,10)`.
+
+**Cause: `step()` is not the one-tile primitive every walk in the file assumes.**
+The client samples the held key every 55ms (`main.ts` `sendInput`/`currentMask`)
+*and* sends once on keydown, but the server latches that movement mask until the
+key-up sample arrives — so one 95ms hold spans one server tick or two depending
+on load, which is one move or two. Along a row that is harmless: an extra tile
+still passes THROUGH the pickup, which is why the other eleven `walkUntil`s in
+the journey never showed it. The walk to board 2's gem is the journey's only
+two-axis walk, and its two one-way predicates (`ArrowUp` until `y <= 10`, then
+`ArrowRight` until `x >= 12`) only meet on the gem when the row leg stops
+*exactly* on row 10. Under load it stops on row 9; the east leg then walks the
+row above the gem and halts at `(12,9)` — the recorded failure, to the tile.
+
+**Fixed at the cause, not at the bar.** `walkOnto(tx,ty)` re-aims after every
+step, so an overshoot becomes a correction instead of a miss. The waited-for
+condition (`score > 0`) and its timeout are untouched, per the task's warning.
+
+**Both directions were watched.** The flake would not come on demand — three
+idle runs and one under ten spinning cores all landed on row 10 and passed — so
+rather than argue from the transcript alone the mechanism was forced: a 330ms
+hold guarantees the extra ticks that load supplies only sometimes. Forced
+against the old code it reproduced the filed failure exactly (`pos=(12,9)`,
+`score: 0`, the same timeout message). Forced against `walkOnto` the walk logs
+`(6,9) → (6,13) → (6,10) → (9,10) → (12,10)` and scores 10: it overshoots the
+row, over-corrects past it, and still ends standing on the gem. Note 5 in the
+file header now records the trap, because the next single-tile target will hit
+it too.
+
+**Found on the way through, not caused here:** `go test ./...` was already red at
+`41a8cdf`. That commit landed M19.2a without regenerating
+`fixtures/parity/manifest.json`, so `TestParityManifest` and
+`TestParityManifestIsCanonical` both fail on an untouched checkout — verified by
+stashing to a clean tree. Regenerated with the documented `PARITY_SCAFFOLD=1`
+(a no-op-diff merge since M16.20a), which adds the missing `task.M19.2a` row
+alongside this task's own. Worth noting the pattern: this is the second
+consecutive commit whose completed-task row went missing, and the manifest gate
+is in the everyday `go test ./...` while the browser suites that filed the task
+are not — so the manifest is the thing that will keep catching a forgotten
+regeneration one commit late.
+
+**Filed on the way through: M16.11b — the same cause, one file over.** Rule 3
+says run the browser family when `engine/web/` is touched, so the whole suite
+was run with `ZZT_BROWSER=1`. `TestCoopCutlineThreePlayerAcceptanceJourney`
+failed twice with `Ada never reached the passage board change; stopped at Ada
+board=1 pos=(34,20)` — the passage is `(34,12)`. `crossMainBoard` rounds the
+vendor with a bare `step(c, "ArrowDown", 110)` and assumes it lands back on row
+12; a step that covers two tiles lands on 13, the eastward walk then travels the
+row below the passage, and the `ArrowDown` fallback walks Ada from 13 down to 20
+— away from it — until its 8 steps run out.
+
+It is **not** M16.11a's doing, and this was checked rather than assumed: it is a
+different driver file (`coop_journey.test.mjs`), `coop_cutline_test.go` runs
+BEFORE `m16_11_test.go` in the package, and the sequence was 2 failures with the
+change, 2 clean-tree passes with it stashed, then a third run WITH the change
+fully green — including the cutline. The variable is machine load, not the diff.
+Filed rather than fixed here (CLAUDE.md rule 4, and the M16.14c precedent).
+
+The pattern under both: `crossMainBoard` is a near-copy of journey 1's passage
+crossing. One wrong assumption about `step()`, copied once, produced two bugs in
+two suites — and the copy is why fixing one did not fix the other.
