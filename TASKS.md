@@ -6047,7 +6047,7 @@ signed-in players, already carried on `roomPlayer` and readable through
   One limit found and filed rather than fixed here: **M21.5** — on a real touch
   device neither this window nor chat can be opened at all.
 
-- [ ] **M21.5 — chat and the Players window are unreachable on a phone.**
+- [x] **M21.5 — chat and the Players window are unreachable on a phone.**
   Filed 2026-08-04 by M21.3, and pre-existing: it is chat's gap first, inherited
   by M21.1's window. Both are opened by a letter key ('C', 'L') handled in
   `main.ts`'s play-mode branch; M16.18a's touch bar offers Fire, Torch and Pause
@@ -6064,6 +6064,39 @@ signed-in players, already carried on `roomPlayer` and readable through
   on the narrowest covered screen (M16.18b's reserved height is the constraint);
   no new button appears in a mode where its key means something else (the
   M19.2/`TITLE_ONLY` lesson).
+  **Done 2026-08-04.** Five controls, not two: opening a window a phone cannot
+  then close would be a worse trap than the one being fixed, and the confirmation
+  the Players window exists to reach takes neither Enter nor the pad.
+  * *the two windows* — ' Chat' (KeyC) and ' Players' (KeyL), both `PLAYING_ONLY`
+    for M19.2's reason rather than for tidiness: on the title screen 'C' is the
+    color picker, which already has its own `TITLE_ONLY` button, and behind an
+    open window 'c' and 'l' are two more letters that belong in the buffer. They
+    joined `certifyTouchModalIsolation`'s "must not be offered" list beside Fire.
+  * *the way back out* — ' Esc', offered in both window modes. Enter closes a
+    plain window but a picker with a header ignores it (`requireSelection`,
+    modal.ts), and no window closes on the pad, so without this the Players
+    window is one-way on a phone.
+  * *the answers* — a yes/no prompt takes Y, N and Escape and nothing else
+    (`yesNoKey` mirrors SidebarPromptYesNo), so blocking a sender was still
+    impossible with a finger. `TouchControlMode` gained a fifth member,
+    `prompt` — the one modal told apart from the rest — and ' Yes' / ' No' live
+    only there, where 'y' and 'n' cannot land in anyone's text buffer.
+  * *proved by tap, never by key* — the two Chromium touch profiles now open the
+    Players window and close it with Esc, open chat with the Chat control (the
+    surface battery's `keyboard.press("KeyC")` is kept only for the profiles that
+    have no bar), and answer a real end-game prompt No and then Yes. A
+    `keyboard.press` would have passed on a phone that still could not reach any
+    of it, which is exactly how this gap survived the device matrix until now.
+    `m16_18_test.go` requires the two new acts of every `touchplay` profile.
+    Watched failing three ways: the window controls moved out of play mode, the
+    Esc control taken away (the window will not close), and the Yes control wired
+    to the wrong key (the game never ends).
+  * *legibility* — measured, not assumed. Play mode's seven action controls wrap
+    to three rows on the 390px portrait phone (a 166px reservation, up from 112)
+    and to two at 844px landscape (114px, up from 112). The portrait screen is
+    width-bound so it is unchanged at 4.88px/col; the landscape one goes 6.35 →
+    6.31px/col, both far above the 4px floor, and every profile's declared
+    covered-row list is still empty.
 
 - [ ] **M21.4 — a returning player is not told who they have blocked.**
   Filed 2026-08-04 by M21.1. A signed-in player's blocks are durable server-side

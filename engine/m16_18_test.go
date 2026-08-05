@@ -36,6 +36,12 @@ package zztgo
 // change to follow: it required the desktop-only disclaimer only while the row
 // was `gap`, so the requirement lifted itself when the row did — which is the
 // property it was written for.
+//
+// M21.5 (2026-08-04) added the acts a MULTIPLAYER phone needs: the same profiles
+// now open and close the Players window and answer a yes/no prompt with taps
+// alone. They are declared here rather than in the surface list because neither
+// is a text surface — the point is which controls exist, not what can be typed
+// into them.
 
 import (
 	"encoding/json"
@@ -411,7 +417,9 @@ func m1618CheckObservation(t *testing.T, matrix m1618Matrix, profile m1618Profil
 	// the matrix is a declaration, and that rule runs in both directions here as
 	// it does for the text surfaces above.
 	if profile.TouchPlay {
-		for _, act := range []string{"move", "shoot", "torch", "pause", "isolation"} {
+		// windows and prompt are M21.5's: the Players window opened and closed,
+		// and a yes/no prompt answered, entirely by tap.
+		for _, act := range []string{"move", "shoot", "torch", "pause", "isolation", "windows", "prompt"} {
 			if strings.TrimSpace(observed.TouchPlay[act]) == "" {
 				t.Errorf("%s: touch gameplay act %q recorded nothing", profile.ID, act)
 			}

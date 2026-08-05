@@ -8,6 +8,10 @@
 // (see main.ts), so there is one input path, not two, and no vocabulary reaches
 // the simulation that a keyboard could not already produce.
 //
+// M21.5 adds the multiplayer half of the same gap: Chat and Players open the two
+// windows that were on letter keys a phone cannot press, and Esc / Yes / No are
+// what a window and its confirmation answer to once one is open.
+//
 // FIRE IS THE SPACE BAR, not a new idea. ElementPlayerTick shoots on
 // `InputShiftPressed || InputKeyPressed == ' '` (elements.go:1424), and the
 // server's keymask decode sets Shift for the shoot bit too
@@ -29,9 +33,10 @@
 // therefore publishes its measured height as the `--touch-bar-h` custom
 // property, which style.css subtracts from the screen's box so the screen
 // letterboxes ABOVE the bar. Measured rather than declared as a constant,
-// because the action row wraps at narrow widths (two rows on a 390px portrait
-// phone, one on an 844px landscape one) and `setMode` changes how many controls
-// are in it.
+// because the action row wraps at narrow widths and `setMode` changes how many
+// controls are in it: play mode's seven wrap to three rows on a 390px portrait
+// phone (a 150px bar, against 96px for the two the title screen needs) and stay
+// on one at 844px landscape.
 
 export type TouchKeyHandler = (down: boolean, code: string, key: string) => void;
 
@@ -44,12 +49,18 @@ export type TouchControlHandlers = {
 };
 
 // What the player is looking at. `modal` wins over the others: an open window
-// owns the keys whichever screen it is drawn over.
-export type TouchControlMode = "title" | "playing" | "editor" | "modal";
+// owns the keys whichever screen it is drawn over. `prompt` is the one modal told
+// apart from the rest (M21.5), because a yes/no prompt answers to three keys and
+// none of them is Enter — see PROMPT_ONLY below.
+export type TouchControlMode = "title" | "playing" | "editor" | "modal" | "prompt";
 
-const EVERY_MODE: readonly TouchControlMode[] = ["title", "playing", "editor", "modal"];
+const EVERY_MODE: readonly TouchControlMode[] = ["title", "playing", "editor", "modal", "prompt"];
 const PLAYING_ONLY: readonly TouchControlMode[] = ["playing"];
 const TITLE_ONLY: readonly TouchControlMode[] = ["title"];
+// Every window, of either shape. Escape closes a text window and answers "no" to
+// a prompt (modal.ts), so the one control means the same thing in both.
+const ANY_WINDOW: readonly TouchControlMode[] = ["modal", "prompt"];
+const PROMPT_ONLY: readonly TouchControlMode[] = ["prompt"];
 
 type ButtonSpec =
   | {
@@ -86,6 +97,12 @@ export const TOUCH_BUTTONS: ButtonSpec[] = [
   { id: "color", label: "Color", kind: "key", code: "KeyC", key: "c", hold: false, group: "action", modes: TITLE_ONLY },
   { id: "world", label: "World", kind: "key", code: "KeyW", key: "w", hold: false, group: "action", modes: TITLE_ONLY },
   { id: "play", label: "Play", kind: "key", code: "KeyP", key: "p", hold: false, group: "action", modes: TITLE_ONLY },
+  // M21.5: the two windows a phone had no way to open. Both are letter keys
+  // main.ts handles in its play-mode branch and nowhere else — 'C' is the color
+  // picker on the title screen, which is why Chat is PLAYING_ONLY like Pause
+  // rather than sharing the Color button above.
+  { id: "chat", label: "Chat", kind: "key", code: "KeyC", key: "c", hold: false, group: "action", modes: PLAYING_ONLY },
+  { id: "players", label: "Players", kind: "key", code: "KeyL", key: "l", hold: false, group: "action", modes: PLAYING_ONLY },
   // Pause and Play are the same key byte ('P'); which of them is on screen is
   // the whole difference between the title menu's "start" and play mode's
   // GamePaused, and the player should not have to know they are one key.
@@ -94,6 +111,16 @@ export const TOUCH_BUTTONS: ButtonSpec[] = [
   // hold: the shoot bit must still be set when the tick that consumes it runs,
   // and holding is also how Space repeats — one shot per tick while ammo lasts.
   { id: "fire", label: "Fire", kind: "key", code: "Space", key: " ", hold: true, group: "action", modes: PLAYING_ONLY },
+  // M21.5, the way back out. A window a phone can open and not close is worse
+  // than one it cannot open: Enter closes a plain window but a picker with a
+  // header ignores it (modal.ts requireSelection), and no window closes on the
+  // pad. Escape closes every one of them, and at a prompt it is the "no" answer.
+  { id: "esc", label: "Esc", kind: "key", code: "Escape", key: "Escape", hold: false, group: "action", modes: ANY_WINDOW },
+  // A yes/no prompt takes Y, N or Escape and nothing else (yesNoKey mirrors
+  // SidebarPromptYesNo) — so without these two a phone reaches the block
+  // confirmation the Players window opens and can only decline it.
+  { id: "yes", label: "Yes", kind: "key", code: "KeyY", key: "y", hold: false, group: "action", modes: PROMPT_ONLY },
+  { id: "no", label: "No", kind: "key", code: "KeyN", key: "n", hold: false, group: "action", modes: PROMPT_ONLY },
 ];
 
 export type TouchControls = {

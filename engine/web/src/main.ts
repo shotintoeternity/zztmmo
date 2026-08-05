@@ -2154,8 +2154,11 @@ function setCell(cell: ScreenCell) {
 // the game. drawScreen is the one place every mode and modal change already
 // passes through, so hanging the sync here is what keeps the bar from falling
 // out of step with a screen it does not own. A no-op when there is no bar.
+//
+// A yes/no prompt is its own mode (M21.5): it is the one window that answers to
+// neither Enter nor the pad, so it is where the bar offers Yes and No instead.
 function syncTouchControls() {
-  touchControls?.setMode(modal ? "modal" : mode);
+  touchControls?.setMode(modal ? (modal.kind === "yesno" ? "prompt" : "modal") : mode);
 }
 
 function drawScreen() {

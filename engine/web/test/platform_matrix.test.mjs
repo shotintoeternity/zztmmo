@@ -487,8 +487,8 @@ async function certifyTouchGameplay(page) {
   // absent behind a modal is that Fire is a space.
   assert.deepEqual(
     await visibleControls(page),
-    ["up", "left", "right", "down", "keyboard", "enter", "pause", "torch", "fire"],
-    "play mode must offer the pad, Enter, the keyboard toggle, Pause, Torch and Fire — and nothing else",
+    ["up", "left", "right", "down", "keyboard", "enter", "chat", "players", "pause", "torch", "fire"],
+    "play mode must offer the pad, Enter, the keyboard toggle, Chat, Players, Pause, Torch and Fire — and nothing else",
   );
 
   // --- MOVE -----------------------------------------------------------------
@@ -611,6 +611,100 @@ async function certifyTouchGameplay(page) {
 }
 
 /**
+ * M21.5 — the two multiplayer windows, opened and closed with taps alone.
+ *
+ * Chat and the Players window were on letter keys ('C' and 'L', main.ts's
+ * play-mode branch) that a phone has no way to press: the bar offered neither,
+ * and the soft keyboard that would type the letter is raised only for an already
+ * open editable modal. This act is the proof that a finger can now do it, which
+ * is why nothing here presses a key — a `keyboard.press("KeyL")` would pass on a
+ * phone that still cannot reach the window, which is exactly how the gap
+ * survived the device matrix until now.
+ *
+ * The Players window is opened rather than the chat one because chat is opened
+ * by the surface battery below (also by tap, on a bar profile). The window is
+ * closed by tapping Esc: a window a phone can open and not close would be a
+ * worse trap than the one this task is fixing, and no other control closes this
+ * one — Enter is ignored while the header line is under the cursor, and the pad
+ * only moves it.
+ */
+async function certifyTouchWindows(page) {
+  await tapControl(page, "players");
+  const opened = await waitForGrid(
+    page,
+    (cells) => boardHasText(cells, "Players"),
+    "the Players control to open the Players window",
+  );
+  // The run has one player, so the list is empty and the window is its header —
+  // which is the line that proves the window itself opened rather than the
+  // sidebar row that advertises it (M21.3) being read off columns 60+.
+  assert.ok(
+    boardHasText(opened, "Nobody else is here"),
+    `the Players window must explain an empty list:\n${gridToArt(opened)}`,
+  );
+  const offered = await visibleControls(page);
+  assert.ok(
+    offered.includes("esc") && !offered.includes("players") && !offered.includes("chat"),
+    `an open window must offer Esc and neither of the window keys, saw ${JSON.stringify(offered)}`,
+  );
+  await tapControl(page, "esc");
+  await waitForGrid(
+    page,
+    (cells) => !boardHasText(cells, "Players"),
+    "the Esc control to close the Players window",
+  );
+  observed.touchplay = {
+    ...(observed.touchplay || {}),
+    windows: "the Players control opened the window (empty list, its own header) and the Esc control closed it — no key pressed",
+  };
+  note("touch windows: Players opened and closed with taps alone");
+}
+
+/**
+ * M21.5 — the answers a yes/no prompt takes, tapped rather than typed.
+ *
+ * SidebarPromptYesNo answers to Y, N and Escape and to nothing else (modal.ts
+ * yesNoKey), so a phone that can open the Players window and reach its "Block
+ * X?" confirmation could still not answer it. This certifies both buttons on a
+ * real prompt that crosses the wire: 'Q' is a command byte, the server replies
+ * with GamePromptEndPlay's quitPrompt, and the two answers are the ones a player
+ * can least afford to get wrong — No leaves the game running, Yes ends it.
+ *
+ * It runs last in the file for that reason: after Yes the client is on the title
+ * screen, which nothing after this act needs it not to be.
+ */
+async function certifyTouchPrompt(page) {
+  const openPrompt = async (why) => {
+    await page.locator("canvas[data-screen]").focus();
+    await command(page, "KeyQ", "Q".charCodeAt(0));
+    await tickUntilGrid(page, (cells) => hasText(cells, "End this game?"), why);
+    const offered = await visibleControls(page);
+    assert.deepEqual(
+      offered,
+      ["up", "left", "right", "down", "keyboard", "enter", "esc", "yes", "no"],
+      "a yes/no prompt must offer Yes and No — and no gameplay control behind it",
+    );
+  };
+
+  await openPrompt("Q to raise the end-game prompt");
+  await tapControl(page, "no");
+  await waitForGrid(page, (cells) => !hasText(cells, "End this game?"), "the No control to decline the prompt");
+  await waitForGrid(page, (cells) => hasText(cells, "Health:"), "the game to still be running after No");
+
+  await openPrompt("Q to raise the end-game prompt a second time");
+  await tapControl(page, "yes");
+  // The reply crosses the wire and the room drops the player on a tick, so this
+  // waits by TICKING rather than by wall clock — the matrix froze the clock at
+  // the title screen and nothing else here would advance it.
+  await tickUntilGrid(page, (cells) => hasText(cells, "P  Play"), "the Yes control to end the game", 40);
+  observed.touchplay = {
+    ...(observed.touchplay || {}),
+    prompt: "the No control declined the end-game prompt and left the game running; the Yes control ended it and returned to the title screen",
+  };
+  note("touch prompt: Yes and No answered a real SidebarPromptYesNo by tap");
+}
+
+/**
  * The other half of M16.18a's DoD: focus never leaks between a text modal and
  * the pad. Called with an editable modal open and its native control focused.
  *
@@ -622,7 +716,9 @@ async function certifyTouchGameplay(page) {
  */
 async function certifyTouchModalIsolation(page, where) {
   const offered = await visibleControls(page);
-  for (const gameplay of ["fire", "torch", "pause"]) {
+  // chat and players joined this list with M21.5: their letters are 'c' and 'l',
+  // which behind a text surface belong in the buffer exactly as Fire's space does.
+  for (const gameplay of ["fire", "torch", "pause", "chat", "players"]) {
     assert.ok(
       !offered.includes(gameplay),
       `${where}: the ${gameplay} control must not be on screen behind a text surface, saw ${JSON.stringify(offered)}`,
@@ -1143,11 +1239,22 @@ try {
   if (wantsTouchPlay) {
     assert.ok(expectsTouchBar, `${profile.id} declares touchplay but builds no control bar to play with`);
     await certifyTouchGameplay(page);
+    await certifyTouchWindows(page);
   }
 
   if (wants("chat")) {
-    await page.keyboard.press("KeyC");
-    await waitForGrid(page, (cells) => hasText(cells, "Global Chat"), "the chat window");
+    // Tapped where there is a bar to tap (M21.5), pressed where there is not:
+    // what opens chat is the platform's question here, and on a phone the answer
+    // used to be "nothing does".
+    let openedChatBy = "KeyC";
+    if (expectsTouchBar) {
+      openedChatBy = "the Chat control";
+      await tapControl(page, "chat");
+    } else {
+      await page.keyboard.press("KeyC");
+    }
+    await waitForGrid(page, (cells) => hasText(cells, "Global Chat"), `${openedChatBy} to open the chat window`);
+    note(`chat opened by ${openedChatBy}`);
     await certifySurface(page, {
       id: "chat",
       kind: "Global chat composer",
@@ -1211,6 +1318,12 @@ try {
   // The client is still playable when the matrix is done with it.
   await page.locator("canvas[data-screen]").focus();
   await waitForGrid(page, (cells) => hasText(cells, "Health:100"), "the board after the modal");
+
+  // M21.5's second half, last because its own last act ends the game: the two
+  // answers a yes/no prompt takes, tapped rather than typed.
+  if (wantsTouchPlay) {
+    await certifyTouchPrompt(page);
+  }
 
   const covered = observed.surfaces.map((s) => s.id);
   assert.deepEqual(

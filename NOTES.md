@@ -10555,3 +10555,55 @@ row from every checked `- [x]` in TASKS.md, so a checked task with no
 `TestParityManifestIsCanonical`. The suite had run before the box existed. The
 rule that avoids it: tick the box and scaffold the row BEFORE the verification
 run, not after. Fixed in `39f9b9a`.
+
+## 2026-08-04 — M21.5: a phone gets the two windows, and the three keys they answer to
+
+The filing was two buttons' worth of work: 'C' and 'L' open chat and the Players
+window in main.ts's play-mode branch, the M16.18a control bar offered neither,
+and the soft keyboard that would type the letter only mounts for a modal that
+only the letter can open. Following the flow through to its end turned two
+controls into five.
+
+1. **A window a phone can open and not close is a worse trap than one it cannot
+   open.** Enter closes a plain text window, but a picker with a header ignores
+   it (`requireSelection`, modal.ts) and the pad only moves the cursor — so the
+   Players window, opened by a new button, would have been one-way. ' Esc' is
+   offered in both window modes for that reason.
+
+2. **The Players window exists to reach a confirmation a phone could not
+   answer.** `yesNoKey` mirrors SidebarPromptYesNo: Y, N and Escape, nothing
+   else. Without ' Yes' and ' No' a phone player could open the list, pick a
+   sender, and only decline the block. That is why `TouchControlMode` gained a
+   fifth member, `prompt` — the one modal told apart from the rest — instead of
+   the two answers being offered behind every window, where 'y' and 'n' are two
+   more letters that would land in a text buffer.
+
+3. **The device matrix missed the gap because it presses keys.** Every touch
+   profile reached chat with `keyboard.press("KeyC")`, a synthetic hardware key a
+   phone has not got, so the suite was green while the feature was unreachable.
+   The acts added here tap and never press: the Players window opened and closed
+   with taps, chat opened by its control wherever a bar exists, and a real
+   end-game prompt answered No and then Yes. `m16_18_test.go` requires both new
+   acts (`windows`, `prompt`) of every profile declaring `touchplay`, in the same
+   both-directions way the surfaces are held to the declaration.
+
+Watched failing three ways, on the portrait profile: the window controls moved
+out of play mode (fails at "play mode must offer … Chat, Players …"), the Esc
+control taken away (fails at "an open window must offer Esc", with the window
+still on screen), and the Yes control wired to KeyN (the game never ends and the
+tick loop times out on the title screen). The unit test's mode gate and mapping
+were inverted the same way at the line that declares them.
+
+**Legibility was measured, not argued.** Play mode now has seven action controls.
+On the 390px portrait phone they wrap to three rows — a 166px reservation, up
+from 112 — and because that screen is width-bound it did not change size at all
+(4.88 CSS px per column, as before). On the 844px landscape one they wrap to two:
+114px reserved, 6.35 → 6.31px per column. Both are far above the 4px floor, and
+every profile's declared covered-row list is still empty, so M16.18b's
+reservation is still doing its job with a taller bar.
+
+One thing deliberately NOT built: nothing raises the soft keyboard when a tap
+opens the chat composer. The ⌨ control and a tap on the board both do it, and
+both are certified; focusing inside the button's own gesture would be a change to
+M15.1's "a cold open waits for the first tap" rule, which this task had no reason
+to make.

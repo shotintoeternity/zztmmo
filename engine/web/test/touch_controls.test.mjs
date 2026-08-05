@@ -151,6 +151,32 @@ assert.deepEqual(pressed("Pause"), [
   { down: false, code: "KeyP", key: "p" },
 ]);
 
+// M21.5's two windows. Both are letters main.ts handles in its play-mode branch
+// before the key reaches the engine, so they are taps like Torch rather than
+// anything new on the wire.
+assert.deepEqual(pressed("Chat"), [
+  { down: true, code: "KeyC", key: "c" },
+  { down: false, code: "KeyC", key: "c" },
+]);
+assert.deepEqual(pressed("Players"), [
+  { down: true, code: "KeyL", key: "l" },
+  { down: false, code: "KeyL", key: "l" },
+]);
+
+// The way out of a window, and the two answers a prompt takes.
+assert.deepEqual(pressed("Esc"), [
+  { down: true, code: "Escape", key: "Escape" },
+  { down: false, code: "Escape", key: "Escape" },
+]);
+assert.deepEqual(pressed("Yes"), [
+  { down: true, code: "KeyY", key: "y" },
+  { down: false, code: "KeyY", key: "y" },
+]);
+assert.deepEqual(pressed("No"), [
+  { down: true, code: "KeyN", key: "n" },
+  { down: false, code: "KeyN", key: "n" },
+]);
+
 // Fire is the space bar and it is HELD: the shoot bit has to still be set when
 // the tick that consumes it runs, and holding is also how Space repeats.
 assert.deepEqual(pressed("Fire"), [{ down: true, code: "Space", key: " " }]);
@@ -191,6 +217,8 @@ const KEYBOARD_CODES = new Set([
   "ArrowUp", "ArrowDown", "ArrowLeft", "ArrowRight", // keys.ts MOVEMENT_CODES
   "Space", "Enter",                                  // keys.ts isHandledKey
   "KeyT", "KeyP", "KeyW", "KeyC",                    // keys.ts COMMAND_CODES / title menu
+  "KeyL",                                            // main.ts play-mode branch (M21.1)
+  "Escape", "KeyY", "KeyN",                          // modal.ts textWindowKey / yesNoKey
 ]);
 for (const spec of TOUCH_BUTTONS) {
   if (spec.kind !== "key") continue;
@@ -209,13 +237,21 @@ const DPAD = ["▲", "◄", "►", "▼"];
 assert.deepEqual(visible(), [...DPAD, "⌨", "⏎", "Color", "World", "Play"], "the bar starts in title mode");
 
 controls.setMode("playing");
-assert.deepEqual(visible(), [...DPAD, "⌨", "⏎", "Pause", "Torch", "Fire"]);
+assert.deepEqual(visible(), [...DPAD, "⌨", "⏎", "Chat", "Players", "Pause", "Torch", "Fire"]);
 
 // The whole point of the gate: behind an open window there is no Fire to tap,
 // so a space cannot land in the game instead of the text buffer — and no Torch
-// or Pause either, which would be a command byte sent from behind a modal.
+// or Pause either, which would be a command byte sent from behind a modal. Chat
+// and Players are gated for the same reason from M21.5 on: their letters would
+// land in the buffer of the very window they opened.
 controls.setMode("modal");
-assert.deepEqual(visible(), [...DPAD, "⌨", "⏎"]);
+assert.deepEqual(visible(), [...DPAD, "⌨", "⏎", "Esc"]);
+
+// A yes/no prompt answers to Y, N and Escape only (yesNoKey), so it is the one
+// window that offers its answers — and it must not offer them anywhere else,
+// where 'y' and 'n' are two more letters that would land in a text buffer.
+controls.setMode("prompt");
+assert.deepEqual(visible(), [...DPAD, "⌨", "⏎", "Esc", "Yes", "No"]);
 
 // The editor has its own key vocabulary; the pad and Enter navigate it, and the
 // play/title commands mean nothing there.
@@ -227,7 +263,7 @@ assert.deepEqual(visible(), [...DPAD, "⌨", "⏎", "Color", "World", "Play"], "
 
 // The direction pad is laid out as a cross by :nth-child (style.css), so it must
 // be present in EVERY mode — hiding one would silently re-letter the others.
-for (const mode of ["title", "playing", "editor", "modal"]) {
+for (const mode of ["title", "playing", "editor", "modal", "prompt"]) {
   controls.setMode(mode);
   for (const label of DPAD) {
     assert.equal(byLabel(label).hidden, false, `the ${label} pad key must exist in ${mode} mode`);
