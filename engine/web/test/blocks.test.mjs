@@ -22,7 +22,7 @@ const output = await build({
   write: false,
 });
 const source = Buffer.from(output.outputFiles[0].contents).toString("base64");
-const { blockCandidates, blockRowLabel, blockWindowHeader } = await import(
+const { blockCandidates, blockRowLabel, blockWindowHeader, mergeServerBlocks } = await import(
   `data:text/javascript;base64,${source}`
 );
 
@@ -180,4 +180,55 @@ const none = new Set();
   }
 }
 
-console.log("blocks.test.mjs: candidates, addressability, row labels and header passed");
+// --- what the join snapshot tells us (M21.4) ------------------------------
+//
+// The mirror used to start empty on every connection, so a durable block made
+// last week showed as unmarked. The server now names the blocked people among
+// the roster it is already sending; what is pinned here is that the client folds
+// that in WITHOUT ever letting it take a mark away.
+
+{
+  // The headline: a returning player's row reads "[blocked]" on the first frame,
+  // having done nothing at all this session.
+  const blocked = mergeServerBlocks(new Set(), [2]);
+  const [bob] = blockCandidates({
+    roster: [{ id: 2, name: "Bob" }],
+    chat: [],
+    blocked,
+    self: 1,
+  });
+  assert.equal(bob.blocked, true, "a block the server reported must mark its row");
+  assert.ok(blockRowLabel(bob).includes("[blocked]"));
+}
+
+{
+  // Additive, never authoritative. The server's list covers only the players in
+  // that snapshot, so an id it omits means "not in your roster" — reading it as
+  // "not blocked" would unmark somebody who had walked off the board.
+  const merged = mergeServerBlocks(new Set([7]), [2]);
+  assert.deepEqual([...merged].sort((a, b) => a - b), [2, 7]);
+}
+
+{
+  // An absent list changes nothing: a board-change snapshot carries no answer,
+  // and neither does an older server.
+  const merged = mergeServerBlocks(new Set([7]), undefined);
+  assert.deepEqual([...merged], [7], "a snapshot with no list must not clear the mirror");
+  assert.deepEqual([...mergeServerBlocks(new Set([7]), [])], [7]);
+}
+
+{
+  // Id 0 addresses nobody. Admitting it would mark every row the window builds
+  // from a chat line whose id the server cleared.
+  assert.deepEqual([...mergeServerBlocks(new Set(), [0, 3])], [3]);
+}
+
+{
+  // The input set is not mutated: main.ts reassigns, and a function that also
+  // wrote through would make the two disagree about which one is the mirror.
+  const before = new Set([1]);
+  mergeServerBlocks(before, [9]);
+  assert.deepEqual([...before], [1], "mergeServerBlocks must not write through its argument");
+}
+
+console.log("blocks.test.mjs: candidates, addressability, row labels, header and server merge passed");

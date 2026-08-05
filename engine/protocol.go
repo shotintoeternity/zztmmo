@@ -549,6 +549,22 @@ type SnapshotMessage struct {
 	// ResumeToken is set only on the join/resume snapshot (M13.2). The client
 	// stores it keyed by world name and presents it to reclaim a dropped run.
 	ResumeToken string `json:"resumeToken,omitempty"`
+	// BlockedPlayers names which of the players in THIS snapshot's roster the
+	// recipient has already blocked (M21.4). A signed-in player's blocks are
+	// durable and enforced from the moment they join, but until this field the
+	// client learned of one only by making it, so a block made last week showed
+	// as unmarked in the Players window.
+	//
+	// It carries PlayerIDs and nothing else, deliberately: the durable half of a
+	// block is keyed on the target's accountID, and listing accounts back would
+	// hand the recipient ids they have no other way to see. So the answer is
+	// computed per visible player — "is this person, whom you can already see,
+	// blocked for you" — rather than by shipping the stored list.
+	//
+	// Set only on the join/resume snapshot, like ResumeToken. The client merges
+	// it into its mirror and never clears from it, because a roster-scoped list
+	// can add knowledge and can never withdraw it.
+	BlockedPlayers []PlayerID `json:"blockedPlayers,omitempty"`
 }
 
 type DiffMessage struct {

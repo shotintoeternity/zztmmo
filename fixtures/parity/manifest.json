@@ -1098,6 +1098,18 @@
       "notes": "task-claim row; reconciled at the task itself (2026-08-04), NOT at M16.20: M21.3 landed after the certification milestone closed, so no M16.20 run ever saw this row. The advertisement for task.M21.1's window, and a deviation of the same presentation-additions kind as the row it sits beside: ' L  Players' on sidebar row 20, which is the second of the two rows GAME.PAS:1441-1455 leaves blank (the first, row 17, is ' C  Chat' from M6.1). The chip is 0x30 and the label 0x1f, matching the ' P  Pause' row below it. Nothing reaches the engine — the key is handled in the client's play-mode branch and never leaves it — so the replay fixtures are untouched; the fourteen browser goldens that contain the play sidebar were re-recorded under this task's own authorization (CLAUDE.md rule 3), each diff being row 20 alone. The journey no longer types the key: it reads the chip off the sidebar and presses that letter, so a row naming a key that does not open the window fails, and its window-open predicate was narrowed to columns 0-59 so the advertisement can no longer satisfy it. One limit filed rather than hidden: on a real touch device neither this window nor chat can be opened at all (M21.5)."
     },
     {
+      "id": "task.M21.4",
+      "dimension": "task",
+      "subject": "Completed task M21.4 — its DoD still holds",
+      "contract": "E",
+      "authority": "TASKS.md M21.4",
+      "parity": "deviation",
+      "deviation": "presentation-additions",
+      "test": "TestM214ReturningPlayerSeesTheirBlocksOnTheFirstFrame,TestM214BlockedRosterIsScopedToWhoIsVisible",
+      "status": "pass",
+      "notes": "task-claim row; reconciled at the task itself (2026-08-05), NOT at M16.20: M21.4 landed after the certification milestone closed, so no M16.20 run ever saw this row. The last of task.M21.1's two filed limits (the other was task.M21.3): a signed-in player's blocks were durable and enforced from the moment they joined, but the client learned of one only by MAKING it, so a block made last week showed as unmarked in the Players window. A deviation of the same presentation-additions kind as the rest of the M19/M21 family — vanilla ZZT has no chat, no accounts and no second player — and nothing reaches the engine, so the replay fixtures are untouched. `blockedPlayers` on the join/resume snapshot names which of the players in THAT snapshot's roster are blocked for the recipient, computed by asking chatBlocks.suppresses once per visible player rather than by shipping the stored list, which is a set of accountIDs the recipient has no other way to see; the whole join frame is scanned for `google:` rather than the one field. The roster is the whole visible set and not an approximation: the window's other rows come from recent chat senders, and a blocked sender's lines reach the socket from neither the live fan-out nor the history replay. The computation runs AFTER seedAccountBlocks — the inversion that runs it before is right only for a player who has never blocked anybody, and was watched failing, as were dropping it entirely and answering with every visible id. The client half is web/test/blocks.test.mjs (in the certified path via the npm test gate): mergeServerBlocks only ADDS, because the list covers one snapshot's roster and reading it as authoritative would unmark somebody who had walked off the board, and an absent list (a board-change snapshot, an older server) must change nothing; inverted by making it an assignment. One limit recorded rather than filed: the answer is roster-scoped and sent once, so a blocked account who joins the room later in the same session shows unmarked until the player acts on them again — blocking twice is idempotent and the enforcement is server-side either way, so the cost is a row reading \"Block\" where it could read \"Unblock\"."
+    },
+    {
       "id": "task.M21.5",
       "dimension": "task",
       "subject": "Completed task M21.5 — its DoD still holds",
@@ -4033,10 +4045,10 @@
       "contract": "P",
       "authority": "protocol.go; tasks M3.2–M3.4",
       "parity": "exact",
-      "test": "TestThreePathEngineRoomEquivalence,TestWebSocketReconstructsAuthoritativeScreen,TestRoomManagerSnapshotFromTown",
+      "test": "TestThreePathEngineRoomEquivalence,TestWebSocketReconstructsAuthoritativeScreen,TestRoomManagerSnapshotFromTown,TestM214ReturningPlayerSeesTheirBlocksOnTheFirstFrame",
       "status": "pass",
       "assignedTask": "M16.8",
-      "notes": "M16.8: RoomManager.Snapshot's full-board dump is checked against the diff-only reconstruction at every checkpoint (full-snapshot-fallback-vs-diff-only convergence) and, over the wire, against the direct Engine's authoritative screen."
+      "notes": "M16.8: RoomManager.Snapshot's full-board dump is checked against the diff-only reconstruction at every checkpoint (full-snapshot-fallback-vs-diff-only convergence) and, over the wire, against the direct Engine's authoritative screen. M21.4 (2026-08-05): the join/resume snapshot gained `blockedPlayers`, which names which of the same message's `players` the recipient has already blocked — set only on the first frame of a connection, like `resumeToken`, and omitted entirely when the answer is empty. It carries PlayerIDs only: the durable half of a block is keyed on the target's accountID, so the answer is computed per visible player rather than shipped from the stored list, which would hand the recipient account ids they have no other way to see. The client merges it and never assigns from it, since a roster-scoped list can add knowledge and must not be able to withdraw any."
     },
     {
       "id": "route.api.auth.google.callback",

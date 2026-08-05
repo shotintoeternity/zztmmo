@@ -103,6 +103,35 @@ export function blockRowLabel(candidate: BlockCandidate): string {
   return label.slice(0, ROW_WIDTH);
 }
 
+/**
+ * mergeServerBlocks folds the join snapshot's `blockedPlayers` into this
+ * client's mirror (M21.4).
+ *
+ * It only ever ADDS. The server's list is scoped to the players this client can
+ * currently see, so an id missing from it means "not in your roster", not "not
+ * blocked" — treating the list as authoritative would quietly unmark somebody
+ * who walked off the board. Removal has exactly one source, and it is the same
+ * one that adds: a `blockResult` the player asked for.
+ *
+ * An absent list (a board-change snapshot, or an older server) changes nothing,
+ * which is why this is a merge and not an assignment.
+ */
+export function mergeServerBlocks(
+  known: ReadonlySet<number>,
+  reported: readonly number[] | undefined,
+): Set<number> {
+  const merged = new Set(known);
+  for (const id of reported ?? []) {
+    // A zero id addresses nobody; it can only have come from a server that put
+    // something unaddressable on the list, and adding it would mark every row
+    // the window builds from a chat line whose id was cleared.
+    if (id) {
+      merged.add(id);
+    }
+  }
+  return merged;
+}
+
 /** The header the window opens with, so an empty list still explains itself. */
 export function blockWindowHeader(candidates: BlockCandidate[]): string[] {
   if (candidates.length === 0) {

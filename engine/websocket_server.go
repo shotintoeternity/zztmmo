@@ -581,6 +581,13 @@ func (s *WebSocketServer) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 		s.seedAccountBlocks(playerID, account.ID)
 	}
 
+	// M21.4: and the very first frame says which of the people already in the
+	// room this player has blocked. It has to run AFTER the seeding above, which
+	// is what puts a returning player's stored blocks into their live set — the
+	// other order would compute the answer from an empty one and be right only
+	// for a player who has never blocked anybody.
+	snapshot.BlockedPlayers = s.blockedInRoster(playerID, inst, snapshot.Players)
+
 	if err := client.write(ctx, snapshot); err != nil {
 		// The connection never got its first frame; detach (or tidy up if the
 		// player is already gone) exactly as a mid-game drop would.
@@ -2288,6 +2295,52 @@ func (s *WebSocketServer) submitChatBlock(ctx context.Context, client *webSocket
 		Durable:  durable,
 		Text:     text,
 	})
+}
+
+// blockedInRoster names which of the people this client can currently SEE are
+// blocked for them (M21.4), so a returning player's Players window opens marked
+// instead of claiming no knowledge.
+//
+// The roster is the whole visible set, and that is not an approximation: the
+// window's other source of rows is the recent chat senders, and a blocked
+// sender's lines never reach this socket at all — neither the live fan-out nor
+// the history replay writes them — so nobody blockable can be offered from
+// there.
+//
+// Only ids go out. The durable half of a block is keyed on the target's
+// accountID, and answering with the stored list would hand the recipient
+// account ids they have no other way to see; asking the question once per
+// visible player answers exactly what the window needs and leaks nothing.
+//
+// The accounts are read under inst.mu and the block set is consulted after it is
+// released: chat blocks are service state, and their lock is never held with a
+// world's (chat_blocks.go).
+func (s *WebSocketServer) blockedInRoster(recipient PlayerID, inst *WorldInstance, roster []PlayerSnapshot) []PlayerID {
+	if len(roster) == 0 {
+		return nil
+	}
+	type rosterMember struct {
+		id      PlayerID
+		account string
+	}
+	members := make([]rosterMember, 0, len(roster))
+	inst.mu.Lock()
+	for _, player := range roster {
+		if player.ID == 0 || player.ID == recipient {
+			continue
+		}
+		account, _, _ := inst.RoomManager.PlayerIdentity(player.ID)
+		members = append(members, rosterMember{id: player.ID, account: account})
+	}
+	inst.mu.Unlock()
+
+	var blocked []PlayerID
+	for _, member := range members {
+		if s.chatBlocks.suppresses(recipient, member.id, member.account) {
+			blocked = append(blocked, member.id)
+		}
+	}
+	return blocked
 }
 
 // identifyPlayer answers who a PlayerID belongs to, across every hosted world:

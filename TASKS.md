@@ -6098,7 +6098,7 @@ signed-in players, already carried on `roomPlayer` and readable through
     6.31px/col, both far above the 4px floor, and every profile's declared
     covered-row list is still empty.
 
-- [ ] **M21.4 — a returning player is not told who they have blocked.**
+- [x] **M21.4 — a returning player is not told who they have blocked.**
   Filed 2026-08-04 by M21.1. A signed-in player's blocks are durable server-side
   and enforced from the moment they join, but the client learns of them only by
   making one: the roster's "[blocked]" marker starts empty on every connection,
@@ -6111,6 +6111,46 @@ signed-in players, already carried on `roomPlayer` and readable through
   account ids the recipient has no other way to see. DoD: a signed-in player who
   blocked an account last session sees that player's roster row marked on the
   first frame; no account id reaches the wire; a guest is unaffected.
+  **Done 2026-08-05.** `blockedPlayers` on the join/resume snapshot, and four
+  inversions watched failing before any of it was believed.
+  * *the answer is about people, not about a set* — `blockedInRoster`
+    (`websocket_server.go`) asks `chatBlocks.suppresses` once per player already
+    in the recipient's roster and returns the ids that come back true. The stored
+    list is never consulted directly and never shaped into a reply, which is what
+    keeps another player's `accountID` off the wire: the whole join frame is
+    scanned for `google:` rather than the one field, because a leak's nature is
+    being somewhere nobody looked. Inverted by answering with every visible id.
+  * *the roster IS the visible set* — the window's other source of rows is the
+    recent chat senders, and a blocked sender's lines reach this socket from
+    neither the live fan-out nor the history replay (M21.1), so nobody blockable
+    can be offered from there. An id outside the roster stays out of the answer;
+    a client that received one could only ignore it.
+  * *after the seeding, never before* — the computation runs after
+    `seedAccountBlocks`, which is what puts a returning player's stored blocks
+    into their live set. The other order is right only for a player who has never
+    blocked anybody, and it is the inversion a careless refactor reaches for, so
+    it was run: the frame comes back empty and the test names the reason.
+  * *the client merges and never assigns* — `mergeServerBlocks` (`blocks.ts`)
+    only adds. The server's list covers one snapshot's roster, so an id it omits
+    means "not in your roster", not "not blocked"; an authoritative read would
+    unmark somebody who had walked off the board, and an absent list (a
+    board-change snapshot, or an older server) has to change nothing at all.
+    Inverted by making it an assignment. The one comment in `main.ts` that
+    documented this gap as permanent — in `showTitle`, beside the mirror it
+    clears — now says what re-states it instead.
+  * *the proof is a restart with fresh ids* — `TestM214...OnTheFirstFrame` blocks
+    Bob in one process, reopens the store in a fresh one, lets Bob and a
+    never-blocked Cy join FIRST, and then joins Ada: her first frame names Bob's
+    NEW id and nothing else, and the guest who follows is told nothing and is
+    sent no field at all.
+  One limit recorded rather than hidden: the answer is roster-scoped and sent
+  once, so a blocked account who joins the room LATER in the same session shows
+  unmarked until the player acts on them again. That is the same shape as the bug
+  this task closed, one case narrower — the spec named the join snapshot, and
+  covering an arrival means either per-recipient work in the tick fan-out or a
+  new push message, neither of which this task authorizes. It is not filed as a
+  task: blocking twice is idempotent and the enforcement is server-side either
+  way, so the cost is a row that reads "Block" where it could read "Unblock".
 
 - [ ] **M21.2 — Operator actions: mute, kick, and refuse.** The half that needs
   an owner decision first, which is why it is second.

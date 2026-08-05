@@ -70,7 +70,7 @@ import {
   type TransitionState,
 } from "./transition";
 import { selectWorldForTitle } from "./title_flow";
-import { blockCandidates, blockRowLabel, blockWindowHeader } from "./blocks";
+import { blockCandidates, blockRowLabel, blockWindowHeader, mergeServerBlocks } from "./blocks";
 import {
   deepLinkPath,
   deepLinkRefusalLines,
@@ -219,6 +219,12 @@ type SnapshotMessage = {
   screen: ScreenCell[];
   events?: ProtocolEvent[];
   resumeToken?: string;
+  /**
+   * Which of `players` this client has already blocked (M21.4), on the
+   * join/resume snapshot only. Absent from an older server and from a
+   * board-change snapshot, which is why it is merged rather than assigned.
+   */
+  blockedPlayers?: number[];
 };
 
 type DiffMessage = {
@@ -929,12 +935,11 @@ async function showTitle() {
   // The room's roster does not survive leaving it (M19.1) — a stale one would
   // tint squares of a board nobody in it is standing on.
   roster = [];
-  // Nor does the block mirror (M21.1). It only ever holds what THIS connection
-  // confirmed: the server is the authority, a guest's blocks are forgotten when
-  // their connection ends, and a durable block made in an earlier session shows
-  // as unmarked until the player acts on it again — blocking twice is
-  // idempotent, so the safe default is to claim no knowledge rather than a stale
-  // one.
+  // Nor does the block mirror (M21.1). The server is the authority and this is
+  // only ever a mirror of it, so leaving the title screen claims no knowledge
+  // rather than a stale one; the next join's snapshot re-states which of the
+  // people in the room are blocked (M21.4), which is what stops "no knowledge"
+  // from reading on screen as "nobody is blocked".
   blockedPlayerIds = new Set<number>();
   editorCursor = { x: 30, y: 12 };
   editorSidebarMenu = null;
@@ -2013,6 +2018,10 @@ function applySnapshot(message: SnapshotMessage) {
   // gets before the first diff — without this a newcomer sees the room in
   // vanilla blue for a tick (M19.1).
   trackMyStatId(message.players);
+  // And with it, which of that roster this player had already blocked (M21.4).
+  // Merged, never assigned: the server's list only covers the players in this
+  // snapshot, so it can add knowledge and must not be able to withdraw any.
+  blockedPlayerIds = mergeServerBlocks(blockedPlayerIds, message.blockedPlayers);
   replaceCells(message.screen);
   drawSidebar();
   updateSidebar(message.hud);
