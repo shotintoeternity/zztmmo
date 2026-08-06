@@ -845,6 +845,17 @@ func TestM1615PersistenceReconnectAndReplayJourney(t *testing.T) {
 	}
 
 	// --- act 7: the socket drops; the account keeps the run ----------------
+	// The sidecar's claim is that it mirrors THIS run, so it is checked against
+	// what the run's own HUD said at the moment the socket went away — not
+	// against act 3's sample, which the walks since have made stale (M16.15b:
+	// act 5's bound is only a lower one, so a gem crossed on the way, or one
+	// overshot into before the check next fires, leaves an act-3 expectation
+	// short — and only under load).
+	// The sample point needs no quiescence wait: act 5's queued walk inputs can
+	// land a step or two late, but act 6 dials and walks the guest across many
+	// ticks with Ada idle, so by here the server has stopped changing her
+	// inventory and the client's frames have caught up.
+	atDrop := ada.state()
 	bank(ada)
 	ada.drop()
 	m1615WaitForFile(t, dirs.accountSidecarPath(), "the account sidecar after a drop", 10*time.Second)
@@ -853,9 +864,17 @@ func TestM1615PersistenceReconnectAndReplayJourney(t *testing.T) {
 	if !ok {
 		t.Fatalf("account sidecar has no entry for %s in %s: keys %v", m1615Account, m1615World, m1615SidecarKeys(states))
 	}
-	if stored.Gems != afterPickups.HUD.Gems+5 || stored.Ammo != afterPickups.HUD.Ammo {
-		t.Errorf("account sidecar stored gems=%d ammo=%d, want gems=%d ammo=%d",
-			stored.Gems, stored.Ammo, afterPickups.HUD.Gems+5, afterPickups.HUD.Ammo)
+	// The run has to have earned something worth persisting, or the equality
+	// below would hold over an empty inventory: act 3's pickups plus the
+	// keeper's five gems are the floor the acts claim. The floor is a bound;
+	// the sidecar itself is checked exactly, against the drop-time HUD.
+	if atDrop.HUD.Gems < afterPickups.HUD.Gems+5 || atDrop.HUD.Ammo < 5 || atDrop.HUD.Torches < 1 {
+		t.Fatalf("at the drop Ada held gems=%d ammo=%d torches=%d, want at least gems=%d ammo=5 torches=1 from acts 3 and 5",
+			atDrop.HUD.Gems, atDrop.HUD.Ammo, atDrop.HUD.Torches, afterPickups.HUD.Gems+5)
+	}
+	if stored.Gems != atDrop.HUD.Gems || stored.Ammo != atDrop.HUD.Ammo {
+		t.Errorf("account sidecar stored gems=%d ammo=%d, want the run's own gems=%d ammo=%d as its HUD read at the drop",
+			stored.Gems, stored.Ammo, atDrop.HUD.Gems, atDrop.HUD.Ammo)
 	}
 	if len(states) != 1 {
 		t.Errorf("account sidecar holds %d entries (%v), want only the signed-in player's — a guest must never be persisted",

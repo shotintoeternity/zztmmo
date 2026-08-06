@@ -10971,3 +10971,52 @@ One trap for whoever asserts on a displaced socket next: it can still hand you a
 message that was queued for it *before* it was superseded, so a single `Read`
 returning nil is not evidence the socket is open. The editor half failed that way
 on the first draft. `m1817ExpectClosed` drains until the read fails instead.
+
+## 2026-08-06 — M16.15b: the sidecar is checked against the run, not against act 3
+
+M16.15's journey asserted that the account sidecar written at the drop equals
+`afterPickups.HUD.Gems+5` — a sample taken back in **act 3**, three acts and two
+walks before the drop. Act 5's walk at the keeper is bounded only from below
+(`st.HUD.Gems >= beforeKeeper+5`), so every gem crossed on the way and every one
+overshot into before the check next fires makes act 3's number stale. Under
+whole-suite `-race` load that is exactly what happened: `gems=11` against a
+`want gems=6`, which is one extra keeper's worth of pickups and not a persistence
+bug. Act 7 now samples `atDrop := ada.state()` on the line before `ada.drop()`
+and requires the sidecar to equal that.
+
+**Why that sample point is the claim.** The sidecar is written from the
+server-side `PlayerState` copied under `inst.mu` at detach
+(`websocket_server.go:2409`), so "the sidecar mirrors the run" *is* an equality
+against the run's own HUD at the drop. It stayed an equality: nothing was
+weakened to `>=`, because a bound would pass against a sidecar holding the wrong
+number. What was added beside it is a floor — `atDrop` holds at least act 3's
+pickups plus the keeper's five gems, and the ammo and torch act 3 waited for — so
+the exact check cannot pass vacuously over an empty inventory if a later change
+stops the walks earning anything.
+
+**No quiescence wait, deliberately.** Act 5's queued walk inputs can land a step
+or two after the predicate fires, which is the whole bug; but act 6 dials the
+guest and walks it across many ticks with Ada idle, so by act 7 the server has
+stopped changing her inventory and the client's frames have caught up. The
+comment says so at the sample, because the next reader's instinct will be to add
+a sleep and a sleep would only hide the next version of this.
+
+The rest of the journey was scanned for the same shape and has none: act 8's
+`dropped`, act 10's save sidecar and act 12's `quitScore` all sample live,
+immediately before use. Act 7 was the only site.
+
+Verified: targeted `-count=3` green, `go test ./...` green, and the DoD's
+`go test -race -count=10 -timeout 90m ./` green in **639.7s** with no races and
+no failures (the 17-minute figure M22.1a recorded is now ~10.5, which is M18.17's
+ten seconds a run compounding). Nothing filed.
+
+**Found on the way through, and fixed: the parity manifest was red at `4ab6c7a`.**
+`TestParityManifest` and `TestParityManifestIsCanonical` fail on an unmodified
+checkout — verified by stashing — because M18.17 landed without the
+`PARITY_SCAFFOLD=1` regeneration a newly checked box needs, leaving the
+inventory's `task.M18.17` row missing. Regenerating added exactly that one row
+(M16.\* tasks are excluded from the task dimension by `deriveTaskRows`, so
+M16.15b itself needs none). Worth the note twice over: it is the second time in
+three days that a required gate was left red by the commit before, and the check
+that catches it is `go test ./...` on a clean tree BEFORE the session's own edit
+— which is what the executor protocol's step 3 is for.

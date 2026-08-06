@@ -286,7 +286,16 @@ M12.23, M17.1–M17.7, M16.0–M16.8a — has fully landed.)
    on the socket it displaces (5.0s → 0.02s, timed by test on both paths), and
    `go test -count=1 .` drops from ~55.5s to 45.7s. It filed nothing. That leaves
    **M16.15b** as the next ranked executor task, with M22 and M23 still unranked
-   pending the owner.
+   pending the owner. **M16.15b landed 2026-08-06**: the account sidecar is
+   checked against the run's own HUD at the moment of the drop instead of a
+   sample taken four acts earlier, so the assertion stays exact and stops
+   depending on how far a guessed hold walked. It filed nothing, and it
+   regenerated the parity manifest, which M18.17 had left missing its own row —
+   `TestParityManifest` was red at `4ab6c7a`. **No ranked executor task is open.**
+   Execution continues out of the backlog bullets at the foot of this file
+   (the one unchecked bullet there, 20–30-player scaling, is owner-gated on
+   production measurements), with M19, M22 and M23 still unranked pending the
+   owner.
 
 **Optional / deferred (bottom):**
 - M14.3 — package split — **closed as skipped 2026-08-03**, see NOTES.md
@@ -3761,7 +3770,7 @@ gap task has landed.
   1/5/10, and a board-2 hash mismatch). Full `go test ./...` green, `-race` clean
   on the touched tests, `fixtures/` unchanged apart from the manifest row.
 
-- [ ] **M16.15b — M16.15's journey pins an exact gem count on a walk whose
+- [x] **M16.15b — M16.15's journey pins an exact gem count on a walk whose
   length is a guess (filed 2026-08-05 by M22.1a).** Test-only, load-sensitive,
   and it intermittently reddens the required `go test -race ./...` gate.
   `TestM1615PersistenceReconnectAndReplayJourney` failed one of M22.1a's
@@ -3786,6 +3795,28 @@ gap task has landed.
   DoD: the assertion names the state it mirrors; the journey survives a
   full-suite `-race -count=10` run; the claim about what the sidecar must hold is
   not narrowed to make it pass.
+
+  **Landed 2026-08-06.** Act 7 now samples `atDrop := ada.state()` on the line
+  before the socket goes away and requires the sidecar to equal THAT — the run's
+  own HUD at the moment the server copied it — instead of act 3's four-acts-old
+  `afterPickups.HUD.Gems+5`. The equality is still an equality: nothing became a
+  bound. What was added beside it is a floor (`atDrop` holds at least act 3's
+  pickups plus the keeper's five gems, and the ammo and torch act 3 waited for),
+  so the exact check cannot pass vacuously over an empty inventory if a future
+  change stops the walks earning anything. No quiescence wait was needed and none
+  was added: act 6 dials and walks the guest across many ticks with Ada idle, so
+  by the sample the server has stopped changing her inventory and the client's
+  frames have caught up — the reason the sample point is right is in the comment,
+  because the next reader's instinct will be to add a sleep. The rest of the
+  journey was scanned for the same shape and has none: act 8's `dropped`, act
+  10's save sidecar and act 12's `quitScore` all sample live, immediately before
+  use. Verified `-count=3` targeted, `go test ./...`, and the DoD's full-suite
+  `go test -race -count=10 -timeout 90m ./` green in 17m35s. It filed nothing.
+  **One thing it fixed on the way through, out of scope but blocking:** the
+  parity manifest was missing `task.M18.17`, so `TestParityManifest` and
+  `TestParityManifestIsCanonical` were RED at `4ab6c7a` on an unmodified
+  checkout — M18.17 landed without the `PARITY_SCAFFOLD=1` regeneration its box
+  needs. Regenerating for M16.15b's own row picked up both.
 
 - [x] **M16.16 — Auth, chat, and Museum service journey.** Use hermetic OIDC and
   Museum HTTP fakes through the real HTTP/WebSocket server. Cover signed-in vs.
