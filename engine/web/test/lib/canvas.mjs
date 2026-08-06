@@ -554,16 +554,16 @@ export function hasText(cells, needle) {
  * Whether this page load will open the world picker after the name prompt.
  *
  * M20.1 made that conditional. The client reads window.location.pathname on
- * boot, so a load whose address bar already names a world — `/play/<world>`,
- * which enterWorld's history.replaceState leaves there the moment one is chosen
- * — goes straight to that world's title screen and opens no picker. Both are the
- * production launch flow; which one a suite gets depends on the URL the load
+ * boot, so a load whose address bar already names a world — `/play/<world>` or
+ * `/watch/<world>` — goes straight to that world and opens no picker. Both are
+ * the production launch flow; which one a suite gets depends on the URL the load
  * started from, which is why a launch helper has to ask the URL rather than the
  * screen: the title sidebar is already painted under the name prompt, so
  * "P  Play" is on screen either way and cannot tell the two apart.
  */
 export function launchOpensPicker(page) {
-  return !new URL(page.url()).pathname.startsWith("/play/");
+  const pathname = new URL(page.url()).pathname;
+  return !pathname.startsWith("/play/") && !pathname.startsWith("/watch/");
 }
 
 /** Poll the canvas until `pred(cells)` holds; throws with the screen on timeout. */

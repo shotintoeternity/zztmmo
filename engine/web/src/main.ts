@@ -78,6 +78,8 @@ import {
   deepLinkRefusalLines,
   deepLinkWorldName,
   resolveDeepLinkWorld,
+  watchLinkPath,
+  watchLinkWorldName,
 } from "./deep_link";
 
 const COLS = 80;
@@ -826,8 +828,18 @@ function promptNicknameOnLaunch() {
 // It resolves the name through /api/worlds rather than trusting the URL, so the
 // deep link inherits M18.13's identity — the name the join path would open —
 // and a name that is not joinable is refused here, before any socket exists.
+type LaunchDestination = "play" | "watch";
+
 async function openLaunchDestination() {
-  const requested = deepLinkWorldName(window.location.pathname);
+  let destination: LaunchDestination = "play";
+  let requested = deepLinkWorldName(window.location.pathname);
+  const watchRequested = watchLinkWorldName(window.location.pathname);
+  if (watchRequested) {
+    destination = "watch";
+    requested = watchRequested;
+  } else if (requested && watchRequestedByQuery()) {
+    destination = "watch";
+  }
   if (!requested) {
     await showWorlds();
     return;
@@ -847,19 +859,12 @@ async function openLaunchDestination() {
   // enterWorld and nothing else: a deep link must take the same seam the picker
   // takes, which is what stops it becoming the one path that skips the title
   // screen and joins straight into a room.
-  await enterWorld(world);
-  // M22.1: ...except a link that asked to WATCH, which is a room and not a
-  // title screen. `?spectate=1` is the door this task gives the read-only
-  // client; M22.2 puts a `/watch/<world>` path on the front of it, resolved
-  // through the same /api/worlds identity the line above just used.
-  if (watchRequested()) {
-    startWatch();
-  }
+  await enterWorld(world, destination);
 }
 
-// watchRequested reads the one query parameter that means "render this room, do
-// not join it".
-function watchRequested(): boolean {
+// watchRequestedByQuery keeps M22.1's temporary door working long enough for old
+// links to arrive, but M22.2's canonical address is /watch/<world>.
+function watchRequestedByQuery(): boolean {
   return new URLSearchParams(window.location.search).get("spectate") === "1";
 }
 
@@ -873,13 +878,14 @@ function refuseDeepLink(requested: string, reason = "") {
 // rememberWorldInPath keeps the address bar shareable: whatever title screen is
 // on show, the URL is the link that reaches it. replaceState, not pushState —
 // Back should leave the app, not walk a history of title screens.
-function rememberWorldInPath() {
+function rememberWorldInPath(destination: LaunchDestination = "play") {
   if (worldName === "" || worldName === "Untitled") {
     return;
   }
-  const path = deepLinkPath(worldName);
+  const path = destination === "watch" ? watchLinkPath(worldName) : deepLinkPath(worldName);
   if (window.location.pathname !== path) {
-    window.history.replaceState(null, "", path + window.location.search);
+    const search = destination === "watch" ? "" : window.location.search;
+    window.history.replaceState(null, "", path + search);
   }
 }
 
@@ -1582,7 +1588,7 @@ async function resumeDreamGeneration(jobId: string) {
 // and is refused while anyone is playing. Each world already has its own
 // RoomManager server-side (WebSocketServer.GetOrCreateInstance), reached by the
 // ?world= parameter wsURL sends — which is what makes worlds independent.
-async function enterWorld(name: string) {
+async function enterWorld(name: string, destination: LaunchDestination = "play") {
   const selection = selectWorldForTitle(name);
   worldName = selection.worldName;
   await showTitle();
@@ -1590,8 +1596,10 @@ async function enterWorld(name: string) {
   // dream, restore — so this one line is what makes the address bar the link
   // that works. It runs AFTER showTitle because showTitle adopts the filename
   // /api/title answers with, and the path must name what we actually landed on.
-  rememberWorldInPath();
-  if (selection.startPlay) {
+  rememberWorldInPath(destination);
+  if (destination === "watch") {
+    startWatch();
+  } else if (selection.startPlay) {
     startPlay();
   }
 }

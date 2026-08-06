@@ -295,7 +295,11 @@ M12.23, M17.1–M17.7, M16.0–M16.8a — has fully landed.)
    Execution continues out of the backlog bullets at the foot of this file
    (the one unchecked bullet there, 20–30-player scaling, is owner-gated on
    production measurements), with M19, M22 and M23 still unranked pending the
-   owner.
+   owner. **M22.2 landed 2026-08-06** after the owner asked to continue work on
+   TASKS.md: `/watch/<world>` is now the canonical shareable spectator route,
+   resolving through the same `/api/worlds` identity as `/play/<world>` and
+   proving in Chromium that a watcher can open an idle world, watch a live player
+   move, and leave picker occupancy unchanged.
 
 **Optional / deferred (bottom):**
 - M14.3 — package split — **closed as skipped 2026-08-03**, see NOTES.md
@@ -6681,7 +6685,7 @@ the recording today, and adding it is a consent question, not plumbing).
   rest of the output, which cost a whole 17-minute re-run to learn the name of
   the test that had failed. Redirect to a file.
 
-- [ ] **M22.2 — `/watch/<world>`: a shareable link that opens a room
+- [x] **M22.2 — `/watch/<world>`: a shareable link that opens a room
   read-only.** The `/watch` half of the deep-links bullet, buildable the
   moment M22.1 exists. Same name-resolution rules as M20.1's `/play/<world>`
   (case, Museum names, the not-found fallback — reuse them, do not
@@ -6692,6 +6696,27 @@ the recording today, and adding it is a consent question, not plumbing).
   with no join and no occupancy change in the picker; the link works for a
   hosted-but-empty world; a browser test drives a player and a watcher from
   two Chromium instances and the watcher sees the player move.
+  **Done 2026-08-06.** The old M22.1 `?spectate=1` door now has its real front:
+  `deep_link.ts` parses and writes `/watch/<world>` beside `/play/<world>`, and
+  `openLaunchDestination` sends that route through the same `/api/worlds`
+  resolution before `enterWorld(..., "watch")` starts the read-only join. The
+  address bar is canonical too: `/watch/town` becomes `/watch/TOWN`, and the
+  temporary `/play/TOWN?spectate=1` shape is upgraded rather than preserved as a
+  second share URL.
+  * *the link is a URL, not a mode flag* — `TestM222WatchLinkJourney` launches
+    the production `zzt-server`, asserts `GET /watch/TOWN` falls through to the
+    SPA, then drives fresh Chromium instances from the address bar. No client
+    state is injected past the launch name prompt.
+  * *idle is still true* — `/watch/ACCEPT` opens a hosted-but-empty world,
+    receives a spectator snapshot, shows "Watching" and "1 watching", and
+    `/api/worlds` still reports `players: 0`.
+  * *live stays read-only* — a player joins TOWN, the watcher joins with exactly
+    `{type:"join", spectate:true}`, the picker remains at one player, and the
+    watcher keeps the watch sidebar (no HUD) while its received room roster moves
+    with the live player.
+  Verified with `npm test`, `npm run build`, `cd engine && go build ./... &&
+  go test ./...`, and focused `ZZT_BROWSER=1 go test -count=1 -run
+  TestM222WatchLinkJourney ./`.
 
 - [ ] **M22.3 — the replay viewer: play a recording back into a room nobody
   controls.** The missing pump. Feed `ReplaySession`'s per-tick callback into

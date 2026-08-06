@@ -18,7 +18,7 @@ const output = await build({
   write: false,
 });
 const source = Buffer.from(output.outputFiles[0].contents).toString("base64");
-const { deepLinkWorldName, deepLinkPath, resolveDeepLinkWorld, deepLinkRefusalLines } = await import(
+const { deepLinkWorldName, deepLinkPath, watchLinkWorldName, watchLinkPath, resolveDeepLinkWorld, deepLinkRefusalLines } = await import(
   `data:text/javascript;base64,${source}`
 );
 
@@ -31,6 +31,10 @@ const { deepLinkWorldName, deepLinkPath, resolveDeepLinkWorld, deepLinkRefusalLi
   assert.equal(deepLinkWorldName("/play/TOWN/"), "TOWN");
   // Percent-escapes round-trip, so a name with a space survives a copy-paste.
   assert.equal(deepLinkWorldName("/play/MY%20WORLD"), "MY WORLD");
+  assert.equal(watchLinkWorldName("/watch/ACCEPT"), "ACCEPT");
+  assert.equal(watchLinkWorldName("/watch/town"), "town");
+  assert.equal(watchLinkWorldName("/watch/TOWN/"), "TOWN");
+  assert.equal(watchLinkWorldName("/watch/MY%20WORLD"), "MY WORLD");
 }
 
 {
@@ -39,12 +43,16 @@ const { deepLinkWorldName, deepLinkPath, resolveDeepLinkWorld, deepLinkRefusalLi
   for (const path of ["/", "", "/play", "/play/", "/play///", "/watch/TOWN", "/playground/TOWN"]) {
     assert.equal(deepLinkWorldName(path), "", `${JSON.stringify(path)} must not be a deep link`);
   }
+  for (const path of ["/", "", "/watch", "/watch/", "/watch///", "/play/TOWN", "/watchtower/TOWN"]) {
+    assert.equal(watchLinkWorldName(path), "", `${JSON.stringify(path)} must not be a watch link`);
+  }
 }
 
 {
   // A malformed escape is still a link the player typed: it comes back as text
   // so they can be told, rather than vanishing into the picker.
   assert.equal(deepLinkWorldName("/play/%E0%A4%A"), "%E0%A4%A");
+  assert.equal(watchLinkWorldName("/watch/%E0%A4%A"), "%E0%A4%A");
 }
 
 // --- resolution: the join path's identity, not the URL's spelling ---------
@@ -78,9 +86,12 @@ const listing = [{ world: "ACCEPT" }, { world: "TOWN" }, { world: "CAVES" }];
 {
   assert.equal(deepLinkPath("TOWN"), "/play/TOWN");
   assert.equal(deepLinkPath("MY WORLD"), "/play/MY%20WORLD");
+  assert.equal(watchLinkPath("TOWN"), "/watch/TOWN");
+  assert.equal(watchLinkPath("MY WORLD"), "/watch/MY%20WORLD");
   // Round trip: what the address bar shows resolves back to the same world.
   for (const name of ["TOWN", "MY WORLD", "A+B"]) {
     assert.equal(deepLinkWorldName(deepLinkPath(name)), name);
+    assert.equal(watchLinkWorldName(watchLinkPath(name)), name);
   }
 }
 

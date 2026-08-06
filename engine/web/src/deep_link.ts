@@ -1,4 +1,4 @@
-// deep_link.ts — the /play/<world> deep link (M20.1).
+// deep_link.ts — the /play/<world> and /watch/<world> deep links.
 //
 // A URL a player can send someone else, which lands them on that world's title
 // screen. Everything here is pure — a function of a path string and the world
@@ -6,7 +6,8 @@
 // owns when the location is read, when history is rewritten, and what is drawn.
 //
 // The server needs no route: spaFileServer (cmd/zzt-server/main.go) already
-// serves the client for any path that is not a file, so /play/TOWN is the app.
+// serves the client for any path that is not a file, so /play/TOWN and
+// /watch/TOWN are the app.
 //
 // The resolution rule is the load-bearing part. A deep link must name a world
 // the way the JOIN path names it, not by string: M18.13 made /api/worlds emit
@@ -15,8 +16,10 @@
 // server as typed, which is what makes /play/town and /play/TOWN one world and
 // what refuses an unjoinable name BEFORE a socket rather than after.
 
-/** The one path prefix that names a world. */
+/** The path prefix that names a world to play. */
 export const DEEP_LINK_PREFIX = "/play/";
+/** The path prefix that names a world to watch read-only. */
+export const WATCH_LINK_PREFIX = "/watch/";
 
 /** The subset of an /api/worlds entry this module reads. */
 export type DeepLinkCandidate = { world: string };
@@ -33,10 +36,19 @@ export type DeepLinkCandidate = { world: string };
  * fall-through to the default world.
  */
 export function deepLinkWorldName(pathname: string): string {
-  if (!pathname.startsWith(DEEP_LINK_PREFIX)) {
+  return worldNameFromPrefixedPath(pathname, DEEP_LINK_PREFIX);
+}
+
+/** watchLinkWorldName is deepLinkWorldName's read-only twin (M22.2). */
+export function watchLinkWorldName(pathname: string): string {
+  return worldNameFromPrefixedPath(pathname, WATCH_LINK_PREFIX);
+}
+
+function worldNameFromPrefixedPath(pathname: string, prefix: string): string {
+  if (!pathname.startsWith(prefix)) {
     return "";
   }
-  let rest = pathname.slice(DEEP_LINK_PREFIX.length);
+  let rest = pathname.slice(prefix.length);
   while (rest.endsWith("/")) {
     rest = rest.slice(0, -1);
   }
@@ -56,6 +68,11 @@ export function deepLinkWorldName(pathname: string): string {
 /** deepLinkPath is the shareable address for a world the client is showing. */
 export function deepLinkPath(worldName: string): string {
   return DEEP_LINK_PREFIX + encodeURIComponent(worldName);
+}
+
+/** watchLinkPath is the shareable read-only address for a world. */
+export function watchLinkPath(worldName: string): string {
+  return WATCH_LINK_PREFIX + encodeURIComponent(worldName);
 }
 
 /**
