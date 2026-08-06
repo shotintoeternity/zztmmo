@@ -281,7 +281,12 @@ M12.23, M17.1–M17.7, M16.0–M16.8a — has fully landed.)
    are 10 of the 52 seconds `go test ./...` costs, and chasing the seconds found
    the stall rather than a test to trim. Ranked above M16.15b and the open
    M22/M23 work because it is product latency on the path M13.2 exists to make
-   fast, and its fix pays the suite back on every run.
+   fast, and its fix pays the suite back on every run. **M18.17 landed
+   2026-08-06**: both displaced closes are `CloseNow()`, a resume no longer waits
+   on the socket it displaces (5.0s → 0.02s, timed by test on both paths), and
+   `go test -count=1 .` drops from ~55.5s to 45.7s. It filed nothing. That leaves
+   **M16.15b** as the next ranked executor task, with M22 and M23 still unranked
+   pending the owner.
 
 **Optional / deferred (bottom):**
 - M14.3 — package split — **closed as skipped 2026-08-03**, see NOTES.md
@@ -4981,7 +4986,7 @@ lists. Every task: `cd engine && go build ./... && go test ./...` green,
   reports `tail`'s exit code, so a red suite reads as green; check the output,
   not `$?`.
 
-- [ ] **M18.17 — a displaced socket's close handshake stalls the reconnect that
+- [x] **M18.17 — a displaced socket's close handshake stalls the reconnect that
   displaced it.** Filed 2026-08-06 out of the owner's question about test
   runtime, and ranked next by the owner the same day (NOTES.md 2026-08-06).
   Two paths close a connection they have just superseded, and both close it
@@ -5017,6 +5022,34 @@ lists. Every task: `cd engine && go build ./... && go test ./...` green,
   ~5s to well under one; `go test ./...` and `go test -race ./...` green; and
   `ZZT_BROWSER=1` for the editor half, since M16.14f's takeover is one of the
   covered browser suites and this changes how its socket dies.
+  **Done 2026-08-06**, and the cheap fix was the right one: the filing's own
+  condition held on re-verification — neither close listener in `web/src/main.ts`
+  takes an event argument, and a repo-wide grep finds the two reason strings
+  nowhere but the two lines that write them, so the polite close frame was
+  costing five seconds to deliver something no client has ever read. Both sites
+  are now `CloseNow()`, matching the reasoning `fail()` already documents at
+  `websocket_server.go:280`. Not `stop()` and not `endConnection`: both block up
+  to `clientDrainTimeout`, which is the same bug in a smaller size on the same
+  path. The goroutine variant was not taken, because the reason string it exists
+  to preserve turned out not to be worth keeping.
+  Watched failing first: `m18_17_test.go` times **only** the displacing join, on
+  both paths, with nobody reading the displaced socket — which is what makes it a
+  real displaced socket, since nhooyr answers a close frame from its read loop
+  and a peer nobody reads never answers at all. Pre-fix both measured 5.01–5.04s
+  against a two-second budget; post-fix 0.02s and 0.01s. The named tests moved
+  the same way: 5.05s → 0.03s and 5.03s → 0.02s. Whole-suite, on a settled
+  machine, `go test -count=1 .` is **55.9/55.4s pre-fix and 45.70s twice
+  post-fix** — the ten seconds those two tests were holding, and nothing else.
+  `go test -race -count=1 ./...` green, 0 races. All fourteen browser suites run
+  green under `ZZT_BROWSER=1` (466s), which is stronger evidence than it looks:
+  M16.14f's own harness already drops its editor sockets with `CloseNow()`
+  (`m16_14f_test.go:376`), so the browser recovering from an abrupt close was
+  already the thing that suite proves — the takeover path now dies the way the
+  suite has always dropped it.
+  One trap for the next executor, found while writing the assertion: a displaced
+  editor socket can still hand you a message that was queued for it before it was
+  superseded, so a single `Read` returning nil is not evidence the socket is
+  open. `m1817ExpectClosed` drains until the read fails.
 
 ## M19 — Tell players apart (RGB smiley backgrounds)
 

@@ -10927,3 +10927,47 @@ the drop that brought them back. Filed as **M18.17** and ranked next by the owne
 The lesson to keep: a test that is slow for no visible reason is worth one
 measurement before it is worth trimming. Trimming this one would have hidden a
 five-second stall on the reconnect path.
+
+## 2026-08-06 — M18.17: the displaced socket is dropped, not shown out
+
+The five-second stall the runtime measurement found is gone, and the fix is two
+lines. Both resume paths now call `CloseNow()` on the connection they supersede:
+`websocket_server.go` in the game resume (M13.2's newest-wins) and in the
+editor's re-enter (M16.14f).
+
+The filing left the choice open — abrupt close, or hand the graceful one to a
+goroutine — on the condition that nothing observes the close code or the reason.
+Re-verified: neither listener in `web/src/main.ts` takes an event argument (the
+game socket shows "Disconnected", the editor reconnects unless it superseded
+itself), and a repo-wide grep finds `"resumed on a new connection"` and
+`"editor resumed on a new connection"` nowhere but the two lines that wrote them.
+The polite close frame was costing five seconds to deliver a string no client has
+ever read, so the goroutine variant was not taken. `fail()` already documents the
+same reasoning a few hundred lines up; this matches it rather than inventing it.
+`stop()` and `endConnection` were both rejected for the same reason the graceful
+close was: they block up to `clientDrainTimeout` on a path a returning player is
+sitting on.
+
+**Measured, and watched failing first.** `m18_17_test.go` times only the
+displacing join, on both paths, with nobody reading the displaced socket — which
+is what makes it a *displaced* socket rather than a cooperative one, since nhooyr
+answers a close frame from its read loop and a peer nobody reads never answers.
+Pre-fix 5.01s and 5.04s against a two-second budget; post-fix 0.02s and 0.01s.
+The two named tests: 5.05s → 0.03s, 5.03s → 0.02s. Whole package on a settled
+machine, `go test -count=1 .`: **55.9s / 55.4s pre-fix, 45.70s twice post-fix**.
+That is the ten seconds those two tests were holding and nothing else — worth
+recording, because the first measurements of the day ranged 45–101s on the same
+tree and the difference was machine load, not the change. `-race -count=1 ./...`
+green with 0 races; all fourteen browser suites green under `ZZT_BROWSER=1`.
+
+The browser evidence is stronger than the run time suggests. M16.14f's own
+harness has always dropped its editor sockets with `CloseNow()` — its
+`/control/editor/drop` endpoint, deliberately, "the way a lost connection does" —
+so the browser recovering from an abrupt close is the very thing that suite
+exists to prove. The takeover path now dies the way the covered suite has been
+dropping it all along.
+
+One trap for whoever asserts on a displaced socket next: it can still hand you a
+message that was queued for it *before* it was superseded, so a single `Read`
+returning nil is not evidence the socket is open. The editor half failed that way
+on the first draft. `m1817ExpectClosed` drains until the read fails instead.

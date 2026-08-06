@@ -1130,8 +1130,14 @@ func (s *WebSocketServer) serveEditor(ctx context.Context, conn *websocket.Conn,
 	// membership over; the socket it took it from is closed here rather than
 	// left to be discovered, so the session never fans out to a connection
 	// nobody is reading (M16.14f).
+	//
+	// CloseNow, not Close: this is the RESUMING collaborator's own entry path,
+	// and a graceful close waits up to five seconds for a close frame from the
+	// peer least likely to send one (M18.17). Nothing is lost by dropping it —
+	// the browser's close listener takes no event, so neither the code nor the
+	// reason was ever read (web/src/main.ts).
 	if displaced != nil && displaced != client {
-		displaced.conn.Close(websocket.StatusNormalClosure, "editor resumed on a new connection")
+		_ = displaced.conn.CloseNow()
 	}
 	session.SetMemberReadOnly(client, !s.editorCanEdit(safeWorld, client.accountID))
 	client.name = presence.Name
@@ -2339,8 +2345,14 @@ func (s *WebSocketServer) tryResume(inst *WorldInstance, client *webSocketClient
 	}
 	inst.mu.Unlock()
 
+	// CloseNow, not Close: the displaced socket is closed on the RESUMING
+	// player's own join, before their snapshot is written, and a graceful close
+	// waits up to five seconds for a close frame the displaced peer — a browser
+	// that has lost the network, or a tab nobody is reading — is the least
+	// likely of any to answer with (M18.17). The client's close listener takes
+	// no event, so the code and the reason were never read.
 	if old != nil && old != client {
-		old.conn.Close(websocket.StatusNormalClosure, "resumed on a new connection")
+		_ = old.conn.CloseNow()
 	}
 	if !snapOK {
 		// The player existed a moment ago, so this should not happen; treat it as
