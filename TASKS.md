@@ -6152,7 +6152,7 @@ signed-in players, already carried on `roomPlayer` and readable through
   task: blocking twice is idempotent and the enforcement is server-side either
   way, so the cost is a row that reads "Block" where it could read "Unblock".
 
-- [ ] **M21.2 — Operator actions: mute, kick, and refuse.** The half that needs
+- [x] **M21.2 — Operator actions: mute, kick, and refuse.** The half that needs
   an owner decision first, which is why it is second.
   **Owner decision required before this is specced further: who is an
   operator?** There is no operator, admin or moderator concept anywhere in the
@@ -6183,6 +6183,96 @@ signed-in players, already carried on `roomPlayer` and readable through
   hiding it; a non-operator account is refused every one of the three, and so
   is an operator allowlist that is empty or unset; every action appears in the
   audit log. `go test ./...` green.
+  **Done 2026-08-05**, on the owner's two decisions taken the same day: an
+  operator is an account on `ZZT_MODERATOR_ACCOUNTS` (the recommendation), and a
+  refusal is written to disk rather than kept in memory.
+  * *the allowlist fails closed, three ways* — `isOperator` is
+    `accountID != "" && s.Moderators[accountID]`, so a guest (no account) can
+    never match, an empty allowlist matches nobody, and an unset one is an empty
+    map rather than a nil check somebody can invert. `parseModeratorAccounts`
+    drops empty fields for the reason that matters rather than for tidiness: a
+    trailing comma putting `""` in the set would match the empty accountID every
+    guest carries and hand the server to everybody. All three cases are a
+    subtest, and each asserts the *effect* — the target still speaks and is still
+    connected — not just the refusal.
+  * *the target is told; that is what makes it a sanction* — a block is silent by
+    design (M21.1); a mute announces itself, on the mute and again on every line
+    it refuses, because a player whose messages silently vanish learns only that
+    the game is broken. The refusal is checked before admission and before the
+    rate limiter, so being muted costs the muted player nothing.
+  * *kick reuses the leave path rather than adding one* — the notice goes out,
+    the socket is closed, and the read loop's own `handleReadLoopExit` does the
+    rest: detach, reconnect grace, removal on the tick that trips the boundary.
+    The test asserts the grace boundary specifically, because "they are gone" is
+    also what a second, private removal path would look like. The drain-and-close
+    runs on its own goroutine: the caller is another player's read loop, and no
+    connection may be made to wait on another browser (M16.14e).
+  * *and the client honours the end of the session* — without that, the browser's
+    own reconnect backoff walks a kicked player back into the room half a second
+    later, presenting the resume token that reclaims the run they were removed
+    from. `moderationNotice` carries `ended`, and the client runs the same
+    `leaveToTitle` an intentional exit runs, which is what clears that token.
+  * *refusal binds to an account, and the limit is shipped rather than hidden* —
+    a refused guest can come back by reloading, and the test asserts that they
+    CAN, beside the assertion that a refused account cannot (including with a
+    valid resume token: the door is checked before the resume). The operator's
+    own UI says it twice — the action row reads "Refuse (guests can return)" and
+    the window header states what a refusal holds against — and the server's
+    reply to refusing a guest says it a third time.
+  * *durable means it survives the thing that would lift it* —
+    `RefusalStore` writes through a temp file and a rename, and the test proves a
+    refusal across a genuinely fresh store and a second server, because the beta
+    host restarts routinely and a sanction a reboot undoes is not a sanction.
+    There is deliberately no lift-from-inside-the-game: a refusal is addressed by
+    accountID, an account id never reaches another player's browser (M21.1), and
+    a refused account is by definition not connected to be picked out of a
+    roster — so lifting one is editing the document and restarting, exactly like
+    granting operator status. **M21.6 is filed** for the operator console that
+    would do it without a restart.
+  * *the audit is written before the operator is told anything* — so there is no
+    outcome an operator can have seen that the record does not contain. Each line
+    carries who, whom, which action, which world and the tick (read from the
+    target's own room engine), and denials are recorded too, since "who tried to
+    moderate and was told no" is the question an audit gets read for. The audit
+    is bounded against its own abuse: moderation requests share chat's rate
+    limit, so a stranger cannot use the denial path to write to the operator's
+    record, and a refused account's rejected reconnect is logged but not audited
+    for the same reason.
+  * *the inversions were watched failing* — the mute check disabled (the muted
+    line reaches the room), `isOperator` made to accept any account (the
+    non-operator subtests fail on the snapshot flag alone), and the door check
+    disabled (the refused account rejoins with a snapshot, in the same process
+    and after a restart).
+  Three limits recorded rather than hidden. A **mute ends with the process** by
+  decision — it is the correctable sanction, refusal is the durable one — and a
+  guest's ends with their connection, which is what the operator's reply says.
+  The **allowlist needs a restart to change**, which is the point of it being
+  deployment configuration. And **`ZZT_MODERATOR_ACCOUNTS` is unset in
+  production**: nothing changes for the beta until the owner sets it, which is
+  the safest possible default for a power that cannot be granted from inside the
+  game.
+
+- [ ] **M21.6 — an operator console: list and lift refusals without a restart.**
+  Filed 2026-08-05 by M21.2, which shipped the refusals and left exactly one hole
+  in them. A refusal is addressed by `accountID`; an account id never reaches
+  another player's browser (M21.1), and a refused account is not connected to be
+  picked out of a roster — so nothing in the game can name one to lift it, and
+  today lifting means editing `saves/refused.json` and restarting the server.
+  That is survivable (it is the same shape as granting operator status) and it is
+  wrong in one specific case: a mis-aimed refusal is permanent until the next
+  restart, which is exactly when an operator most wants it gone.
+  The shape this wants is an operator-only surface that can LIST the standing
+  refusals (they carry who imposed them, when, and in which world) and lift one
+  by account id, plus a read of the audit tail — `ModerationAudit.Entries` and a
+  `RefusalStore` lift already exist or are one method away. It is not a game
+  window: the identities involved must not reach a player's browser, so it wants
+  an authenticated HTTP route gated on the same allowlist, with its own audit
+  line for the lift.
+  DoD: an operator can list refusals and lift one without restarting; a
+  non-operator and a guest get nothing from the route; the lift is audited; the
+  account can rejoin immediately afterwards, proved over a socket rather than
+  asserted against the store. Not beta-gating — M21.2's refusals work, this is
+  their maintenance — so it ranks below anything a tester can hit.
 
 ## M14 — Rearchitecting for the service ZZTMMO is becoming
 

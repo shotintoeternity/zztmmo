@@ -71,6 +71,7 @@ import {
 } from "./transition";
 import { selectWorldForTitle } from "./title_flow";
 import { blockCandidates, blockRowLabel, blockWindowHeader, mergeServerBlocks } from "./blocks";
+import { moderationChoices, moderationHeader } from "./moderation";
 import {
   deepLinkPath,
   deepLinkRefusalLines,
@@ -134,6 +135,14 @@ const MessageTypeAnnounce = "announce";
 // bypassable and would still deliver the text to this machine.
 const MessageTypeBlock = "block";
 const MessageTypeBlockResult = "blockResult";
+// M21.2: an operator acting on a person for everybody — mute, kick, refuse.
+// Where a block is answered only to the sender and never mentioned to its
+// target, a sanction is announced to the person it lands on: that is what
+// moderationNotice carries, and a notice that ends the session is what stops the
+// reconnect backoff from quietly undoing a kick half a second later.
+const MessageTypeModerate = "moderate";
+const MessageTypeModerateResult = "moderateResult";
+const MessageTypeModerationNotice = "moderationNotice";
 
 // GameDebugPrompt's PromptString(63, 5, 0x1E, 0x0F, 11, PROMPT_ANY, ...).
 // The rest of that geometry lives in modal.ts, which owns every prompt's layout.
@@ -225,6 +234,12 @@ type SnapshotMessage = {
    * board-change snapshot, which is why it is merged rather than assigned.
    */
   blockedPlayers?: number[];
+  /**
+   * Whether this connection's account is on the server's moderator allowlist
+   * (M21.2). It only decides what the Players window OFFERS: the server checks
+   * the allowlist again on every action, so setting it here buys nothing.
+   */
+  operator?: boolean;
 };
 
 type DiffMessage = {
@@ -276,6 +291,27 @@ type AnnounceMessage = {
   type: typeof MessageTypeAnnounce;
   text: string;
   seconds?: number;
+};
+
+type ModerateResultMessage = {
+  type: typeof MessageTypeModerateResult;
+  action: string;
+  playerId: number;
+  name?: string;
+  applied: boolean;
+  durable: boolean;
+  text: string;
+};
+
+// What a moderated PLAYER is told. `ended` marks the sanctions that finish this
+// session — a kick, a refusal, and a refused account's rejected reconnect — and
+// the client has to honour it, or the reconnect backoff walks the player it just
+// removed straight back into the room.
+type ModerationNoticeMessage = {
+  type: typeof MessageTypeModerationNotice;
+  action: string;
+  text: string;
+  ended?: boolean;
 };
 
 type AuthStatus = {
@@ -466,7 +502,7 @@ type EditorTestPlayMessage = {
   error?: string;
 };
 
-type ServerMessage = SnapshotMessage | DiffMessage | EventMessage | BoardChangeMessage | ChatMessage | AnnounceMessage | BlockResultMessage | EditorSnapshotMessage | EditorInspectMessage | EditorPresenceMessage | EditorLeaseMessage | EditorDiffMessage | EditorPropertiesMessage | EditorStatSettingsMessage | EditorProgramTextMessage | EditorBoardDataMessage | EditorWorldDataMessage | EditorSaveResultMessage | EditorTestPlayMessage;
+type ServerMessage = SnapshotMessage | DiffMessage | EventMessage | BoardChangeMessage | ChatMessage | AnnounceMessage | BlockResultMessage | ModerateResultMessage | ModerationNoticeMessage | EditorSnapshotMessage | EditorInspectMessage | EditorPresenceMessage | EditorLeaseMessage | EditorDiffMessage | EditorPropertiesMessage | EditorStatSettingsMessage | EditorProgramTextMessage | EditorBoardDataMessage | EditorWorldDataMessage | EditorSaveResultMessage | EditorTestPlayMessage;
 
 type InputMessage = {
   type: typeof MessageTypeInput;
@@ -941,6 +977,9 @@ async function showTitle() {
   // people in the room are blocked (M21.4), which is what stops "no knowledge"
   // from reading on screen as "nobody is blocked".
   blockedPlayerIds = new Set<number>();
+  // Nor does operator status (M21.2). It comes back on the next join's snapshot,
+  // from the allowlist, which is the only thing that decides it.
+  isOperator = false;
   editorCursor = { x: 30, y: 12 };
   editorSidebarMenu = null;
   editorStatPrompt = null;
@@ -1718,6 +1757,12 @@ function applyMessage(message: ServerMessage) {
     case MessageTypeBlockResult:
       handleBlockResultMessage(message);
       break;
+    case MessageTypeModerateResult:
+      handleModerateResultMessage(message);
+      break;
+    case MessageTypeModerationNotice:
+      handleModerationNoticeMessage(message);
+      break;
     case MessageTypeEditorSnapshot:
       applyEditorSnapshot(message);
       break;
@@ -2022,6 +2067,14 @@ function applySnapshot(message: SnapshotMessage) {
   // Merged, never assigned: the server's list only covers the players in this
   // snapshot, so it can add knowledge and must not be able to withdraw any.
   blockedPlayerIds = mergeServerBlocks(blockedPlayerIds, message.blockedPlayers);
+  // Whether this account may moderate (M21.2). The server sets it on the
+  // join/resume frame only, like the resume token, so a frame that omits the
+  // field leaves the answer standing rather than revoking it — a board change
+  // must not quietly take an operator's actions away, and an older server that
+  // never mentions it leaves the window with exactly its M21.1 shape.
+  if (message.operator !== undefined) {
+    isOperator = message.operator;
+  }
   replaceCells(message.screen);
   drawSidebar();
   updateSidebar(message.hud);
@@ -2252,6 +2305,10 @@ let chatMessages: { from: string; playerId?: number; text: string }[] = [];
 // them. It is a mirror of the server's own set, never the authority: the roster
 // window reads it to decide whether a row offers "block" or "unblock".
 let blockedPlayerIds = new Set<number>();
+// Whether the server told this connection it may moderate (M21.2). It decides
+// only what the Players window offers; the allowlist behind it is checked again
+// on the server for every action, so this is a display flag and nothing more.
+let isOperator = false;
 let currentChatMessage = "";
 let currentChatTimer = 0;
 
@@ -2344,12 +2401,41 @@ function openBlockWindow() {
       if (!candidate) {
         return;
       }
-      const verb = candidate.blocked ? "Unblock" : "Block";
-      openYesNo(`${verb} ${candidate.name}? `, (yes) => {
-        if (yes) {
-          sendBlock(candidate.id, !candidate.blocked);
-        }
-      });
+      // An operator gets a menu of actions; everybody else keeps M21.1's single
+      // question, because an extra keystroke for every player is too much to
+      // charge for a power almost none of them have (moderation.ts).
+      const choices = moderationChoices(candidate, isOperator);
+      if (choices.length === 0) {
+        const verb = candidate.blocked ? "Unblock" : "Block";
+        openYesNo(`${verb} ${candidate.name}? `, (yes) => {
+          if (yes) {
+            sendBlock(candidate.id, !candidate.blocked);
+          }
+        });
+        return;
+      }
+      const byAction = new Map(choices.map((choice) => [choice.label, choice]));
+      openSelectList(
+        "Players",
+        [...byAction.keys()],
+        (picked) => {
+          const choice = byAction.get(picked);
+          if (!choice) {
+            return;
+          }
+          openYesNo(choice.confirm, (yes) => {
+            if (!yes) {
+              return;
+            }
+            if (choice.action === "block" || choice.action === "unblock") {
+              sendBlock(candidate.id, choice.action === "block");
+              return;
+            }
+            sendModerate(candidate.id, choice.action);
+          });
+        },
+        moderationHeader(candidate),
+      );
     },
     header,
   );
@@ -2373,6 +2459,35 @@ function handleBlockResultMessage(message: BlockResultMessage) {
     blockedPlayerIds.delete(message.playerId);
   }
   openWindow("Players", ["", `  ${message.text}`, ""], true);
+}
+
+function sendModerate(targetId: number, action: string) {
+  if (ws && ws.readyState === WebSocket.OPEN) {
+    ws.send(JSON.stringify({ type: MessageTypeModerate, playerId: targetId, action }));
+  }
+}
+
+// An operator's confirmation, and only the operator's: the server writes the
+// line because the server is what knows which outcome happened — in particular
+// whether a refusal actually bound to anything, which it does not for a guest.
+function handleModerateResultMessage(message: ModerateResultMessage) {
+  openWindow("Players", ["", `  ${message.text}`, ""], true);
+}
+
+// The other side of the same action, on the screen of the person it landed on. A
+// sanction announces itself — that is what separates a mute from a block — and a
+// notice that ended the session ends it here too, rather than letting the
+// reconnect backoff walk a kicked player straight back in.
+function handleModerationNoticeMessage(message: ModerationNoticeMessage) {
+  // The announce banner: white-on-red at the top of every mode, so it survives
+  // the trip back to the title screen below and is still there to be read.
+  handleAnnounceMessage({ text: message.text, seconds: 20 });
+  if (message.ended) {
+    leaveToTitle();
+    return;
+  }
+  paintOverlay();
+  drawScreen();
 }
 
 // readStoredPlayerColor is this browser's answer to "what color is my ☻": the

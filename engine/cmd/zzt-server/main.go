@@ -58,6 +58,24 @@ func main() {
 			server.ChatDB = chatDB
 		}
 	}
+	// Moderation (M21.2). Operator status is deployment configuration — an
+	// allowlist of account ids in ZZT_MODERATOR_ACCOUNTS — so it cannot be granted
+	// from inside the game, and an unset variable means there are no operators
+	// rather than any. The refusals a moderator imposes and the audit of every
+	// action they take live beside the other durable service state; without a
+	// saves directory both are memory-only, and the log records that, because a
+	// server whose sanctions quietly evaporate on restart should say so out loud.
+	server.Moderators = zztgo.ModeratorAccountsFromEnv()
+	if *savesDir != "" {
+		server.Refusals = zztgo.NewRefusalStore(filepath.Join(*savesDir, "refused.json"))
+		server.Audit = zztgo.NewModerationAudit(filepath.Join(*savesDir, "moderation.jsonl"))
+		log.Printf("moderation: %d operator account(s), refusals and audit under %s",
+			len(server.Moderators), *savesDir)
+	} else {
+		log.Printf("moderation: %d operator account(s); no saves directory, so refusals and the audit are memory-only",
+			len(server.Moderators))
+	}
+
 	auth, err := zztgo.NewAuthServiceFromEnv()
 	if err != nil {
 		log.Printf("google auth disabled: %v", err)

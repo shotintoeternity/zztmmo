@@ -43,7 +43,54 @@ const (
 	// blocker ever receives the result: the blocked player is never told.
 	MessageTypeBlock       = "block"
 	MessageTypeBlockResult = "blockResult"
+	// MessageTypeModerate is an operator acting on a person (M21.2), and
+	// MessageTypeModerateResult is what the operator is told back. The TARGET of
+	// a mute is told too — through MessageTypeModerationNotice, because a mute is
+	// a sanction rather than a preference, and a player who has silently stopped
+	// being heard learns nothing from it.
+	MessageTypeModerate         = "moderate"
+	MessageTypeModerateResult   = "moderateResult"
+	MessageTypeModerationNotice = "moderationNotice"
 )
+
+// ModerateMessage is an operator's request. Like BlockMessage it names its
+// target by PlayerID — the only addressable thing on a chat line — and states
+// the action rather than toggling one, so the server never has to guess which
+// way a disagreement should resolve.
+type ModerateMessage struct {
+	Type     string   `json:"type"`
+	Action   string   `json:"action"`
+	PlayerID PlayerID `json:"playerId"`
+}
+
+// ModerateResultMessage is the operator's confirmation, and only ever reaches
+// the operator.
+//
+// Durable is the honest limit made visible: a refusal binds to an accountID, so
+// refusing a guest kicks them and nothing more, and the operator is told that in
+// the same breath rather than discovering it when the guest walks back in.
+type ModerateResultMessage struct {
+	Type     string   `json:"type"`
+	Action   string   `json:"action"`
+	PlayerID PlayerID `json:"playerId"`
+	Name     string   `json:"name,omitempty"`
+	Applied  bool     `json:"applied"`
+	Durable  bool     `json:"durable"`
+	// Text is the one line the client shows; the server writes it because the
+	// server is what knows which outcome happened.
+	Text string `json:"text"`
+}
+
+// ModerationNoticeMessage is what a moderated PLAYER is told. Ended marks the
+// sanctions that finish this session (kick, refuse, and a refused account's
+// rejected reconnect), which is what stops the browser's reconnect backoff from
+// quietly undoing a kick half a second after it lands.
+type ModerationNoticeMessage struct {
+	Type   string `json:"type"`
+	Action string `json:"action"`
+	Text   string `json:"text"`
+	Ended  bool   `json:"ended,omitempty"`
+}
 
 // BlockMessage is the client's block/unblock request. The target is named by the
 // PlayerID that rides every chat line and every roster row (M21.1) — a display
@@ -565,6 +612,15 @@ type SnapshotMessage struct {
 	// it into its mirror and never clears from it, because a roster-scoped list
 	// can add knowledge and can never withdraw it.
 	BlockedPlayers []PlayerID `json:"blockedPlayers,omitempty"`
+	// Operator says this connection's account is on the moderator allowlist
+	// (M21.2), which is what makes the Players window offer mute, kick and
+	// refuse. It is presentation only: the server checks the allowlist again on
+	// every action, so a client that sets this on itself gains nothing.
+	//
+	// Set on the join/resume snapshot, like ResumeToken and BlockedPlayers. The
+	// allowlist is deployment configuration and cannot change under a running
+	// player, so a frame that omits it is silence rather than a revocation.
+	Operator bool `json:"operator,omitempty"`
 }
 
 type DiffMessage struct {

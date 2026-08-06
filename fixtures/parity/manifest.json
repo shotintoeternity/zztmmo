@@ -1086,6 +1086,18 @@
       "notes": "task-claim row; reconciled at the task itself (2026-08-04), NOT at M16.20: M21.1 landed after the certification milestone closed, so no M16.20 run ever saw this row. The first thing in the tree that acts on a PERSON rather than on a message: a per-recipient chat block, filtered at the fan-out on the server (BroadcastGlobalChat) and never in the client, because a client-side filter is bypassable and would still deliver the text to the machine of the person who asked not to receive it. It is a deviation of the presentation-additions kind, like task.M19.1-M19.3: vanilla ZZT has no chat, no accounts and no second player. Nothing reaches the engine — no element, no op, no recorded input — so the replay fixtures are untouched. The named tests carry: the blocked line dropped for one recipient while a third party still receives it and the speaker is told nothing; the durability split (a signed-in blocker's block keyed on the target's accountID in the M19.3 document survives a restart, a fresh process and freshly minted ids, while a guest's does not, and the player is told which they got); the backlog filtered by the same rule, with a loaded record's PlayerID deliberately cleared because a later process re-mints those numbers for different people; an announcement unsuppressible by construction; an account id never on the wire; a vanished target a no-op; and the browser half — 'L', the row, the confirmation, the session-only wording, and the lines absent from one screen and present in the other. Two limits are filed rather than hidden: the window's key is unadvertised (M21.3) and the client's blocked marker is per-connection (M21.4). One defect in the store this task reused was found and fixed on the way through: PUT /api/preferences wrote a whole fresh document, so picking a colour deleted every block a player held."
     },
     {
+      "id": "task.M21.2",
+      "dimension": "task",
+      "subject": "Completed task M21.2 — its DoD still holds",
+      "contract": "E",
+      "authority": "TASKS.md M21.2",
+      "parity": "deviation",
+      "deviation": "presentation-additions",
+      "test": "TestM212MuteRefusesTheirChatAndTellsThem,TestM212KickEndsTheSessionByTheNormalLeavePath,TestM212RefusedAccountCannotRejoinAndARefusedGuestCan,TestM212RefusalSurvivesARestart,TestM212NonOperatorsAreRefusedEveryAction,TestM212EveryActionIsAudited,TestM212ModeratorAllowlistParsing,moderation.test.mjs",
+      "status": "pass",
+      "notes": "task-claim row; reconciled at the task itself (2026-08-05), NOT at M16.20: M21.2 landed after the certification milestone closed, so no M16.20 run ever saw this row. The second half of the M21 family — where task.M21.1's block acts on a person for ONE recipient, this acts on them for everybody — and a deviation of the same presentation-additions kind: vanilla ZZT has no chat, no accounts, no second player and no operator. Nothing reaches the engine: no element, no op, no recorded input, so the replay fixtures are untouched, and no golden changes either, since the extra actions appear only for an account on the allowlist and no parity profile is on one. Operator status is deployment configuration (ZZT_MODERATOR_ACCOUNTS, the auth.go env pattern, owner decision 2026-08-05), so it cannot be granted from inside the game, and the check fails closed three ways — a guest has no account, an empty allowlist matches nobody, and a trailing comma cannot put the empty accountID in the set. Mute refuses the line before admission and TELLS its target, on the mute and again on every refusal; kick closes the socket and lets the read loop's own handleReadLoopExit detach-and-expire it, the same path a closed tab takes, asserted at the grace boundary so a private second path would fail; refuse is written to disk (owner decision the same day) and checked at the door before a join, a resume or an editor entry. The guest limit is shipped rather than hidden: a refused guest CAN return, the test asserts that they can beside the assertion that a refused account cannot, and the operator's UI says so twice before they choose. Every action and every denial is audited with who, whom, which action, which world and the tick, written before the operator is told anything; the denial path is rate-limited on chat's policy so a stranger cannot write to the record. Three inversions were watched failing: the mute check disabled, isOperator made to accept any account, and the door check disabled. One hole is filed rather than improvised: a refusal cannot be lifted from inside the game (an accountID is not addressable from a browser, and a refused account is not connected to be picked), so lifting one means editing the document and restarting — M21.6."
+    },
+    {
       "id": "task.M21.3",
       "dimension": "task",
       "subject": "Completed task M21.3 — its DoD still holds",
@@ -4001,6 +4013,42 @@
       "status": "pass",
       "assignedTask": "M16.8",
       "notes": "M16.8: engine↔RoomManager equivalence over all 24 M16.3-M16.7 oracle scenarios (TestThreePathEngineRoomEquivalence), plus a real dialed WS client (TestWebSocketReconstructsAuthoritativeScreen)."
+    },
+    {
+      "id": "proto.msg.moderate",
+      "dimension": "protocol",
+      "subject": "protocol message type \"moderate\"",
+      "contract": "P",
+      "authority": "protocol.go; tasks M3.2–M3.4",
+      "parity": "exact",
+      "test": "TestM212MuteRefusesTheirChatAndTellsThem,TestM212KickEndsTheSessionByTheNormalLeavePath,TestM212NonOperatorsAreRefusedEveryAction",
+      "status": "pass",
+      "assignedTask": "M21.2",
+      "notes": "M21.2: an operator asking for mute, unmute, kick or refuse. It names its target by the PlayerID that rides every chat line and every roster row, like block, and states the action rather than toggling one, so the two ends cannot disagree about which way to flip. Authority is never taken from the request: the server re-checks the ZZT_MODERATOR_ACCOUNTS allowlist on every message, so the snapshot's `operator` flag decides only what the window OFFERS. An unknown action is dropped, self-targeting is refused, and the whole message is rate-limited on chat's policy so the audit's denial path cannot be used to write to the operator's own record."
+    },
+    {
+      "id": "proto.msg.moderateResult",
+      "dimension": "protocol",
+      "subject": "protocol message type \"moderateResult\"",
+      "contract": "P",
+      "authority": "protocol.go; tasks M3.2–M3.4",
+      "parity": "exact",
+      "test": "TestM212MuteRefusesTheirChatAndTellsThem,TestM212RefusedAccountCannotRejoinAndARefusedGuestCan,TestM212NonOperatorsAreRefusedEveryAction",
+      "status": "pass",
+      "assignedTask": "M21.2",
+      "notes": "M21.2: the operator's own confirmation, and only the operator's. `durable` is the honest limit made visible — a refusal binds to an accountID, so refusing a guest kicks them and nothing more, and a guest's mute ends with their connection — and the server writes the displayed line because the server is what knows which outcome happened. A denied action (not on the allowlist, self-targeting, or a target who has already left) comes back as `applied: false` with an explanation rather than as silence or an error."
+    },
+    {
+      "id": "proto.msg.moderationNotice",
+      "dimension": "protocol",
+      "subject": "protocol message type \"moderationNotice\"",
+      "contract": "P",
+      "authority": "protocol.go; tasks M3.2–M3.4",
+      "parity": "exact",
+      "test": "TestM212MuteRefusesTheirChatAndTellsThem,TestM212KickEndsTheSessionByTheNormalLeavePath,TestM212RefusedAccountCannotRejoinAndARefusedGuestCan",
+      "status": "pass",
+      "assignedTask": "M21.2",
+      "notes": "M21.2: what the moderated PLAYER is told, and the one message in the M21 family addressed to the person acted upon — a block is silent by design, a sanction announces itself, or a player whose lines vanish learns only that the game is broken. `ended` marks the sanctions that finish the session (kick, refuse, and a refused account's rejected reconnect at the door), and the client has to honour it: without that the reconnect backoff walks a kicked player back in half a second later, presenting the resume token that reclaims the run they were removed from."
     },
     {
       "id": "proto.msg.quitReply",

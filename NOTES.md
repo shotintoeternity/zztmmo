@@ -10607,3 +10607,85 @@ opens the chat composer. The ⌨ control and a tap on the board both do it, and
 both are certified; focusing inside the button's own gesture would be a change to
 M15.1's "a cold open waits for the first tap" rule, which this task had no reason
 to make.
+
+## 2026-08-05 — M21.2: the first thing in the tree that acts on a person for everybody
+
+Two owner decisions opened the task, both taken at the top of the session because
+the spec refused to be written without them. **Who is an operator:** an account on
+`ZZT_MODERATOR_ACCOUNTS`, the recommendation — deployment configuration, so
+operator status cannot be granted, escalated or stolen from inside the game, and
+changing it costs a restart. **How long a refusal lasts:** written to disk. The
+beta host restarts routinely, and a sanction a reboot lifts is not a sanction.
+
+M21.1 filtered chat for one recipient. This is the other half: mute, kick and
+refuse change what everybody hears, so almost every design choice inverts the one
+M21.1 made.
+
+1. **A block is silent; a sanction announces itself.** A block that told its
+   target would invite the retaliation it exists to prevent. A mute that did NOT
+   tell its target is indistinguishable, from inside, from a server that has
+   started dropping your messages — so the mute is announced when it lands and
+   again on every line it refuses, and the refusal happens before admission and
+   before the rate limiter, so being muted costs the muted player nothing.
+
+2. **The client had to be taught to accept being kicked.** This is the one that
+   would have shipped broken. The browser reconnects on any close with a capped
+   backoff (M13.2) and presents the resume token that reclaims the run — so a
+   server-side kick self-heals in about half a second, and the tests that only
+   watched the socket close would all have passed. `moderationNotice` carries
+   `ended`, and the client runs the same `leaveToTitle` an intentional exit runs,
+   which is what clears the token. The lesson is M16.18a's again, from a new
+   angle: the server-side assertion was true and the feature did not work.
+
+3. **Refuse is honest or it is nothing.** It binds to an `accountID`; a guest has
+   no durable identity and comes back by reloading the page. The alternatives are
+   IP-based (we hold no IPs, and holding them is its own decision) or account-only
+   admission (a product decision, not a moderation one). So the limit is asserted
+   — a test proves the refused guest CAN return, beside the one proving the
+   refused account cannot — and stated three times in the operator's own path:
+   the action row, the window header, and the server's reply.
+
+4. **No second removal path.** A kick closes the socket and stops there; the read
+   loop's own `handleReadLoopExit` detaches with the usual reconnect grace and the
+   tick that trips the boundary removes the player, exactly as a closed tab does.
+   The test asserts the boundary specifically, because "they are gone" is also
+   what a private path would look like. The drain-and-close runs on its own
+   goroutine: the caller is another player's read loop, and no connection may be
+   made to wait on another browser (M16.14e).
+
+5. **The audit is written before the operator is told anything**, so there is no
+   outcome an operator saw that the record does not hold — who, whom, which
+   action, which world, and the tick, read from the target's own room engine.
+   Denials are recorded too: "who tried to moderate and was told no" is the
+   question an audit gets read for. That makes the denial path a write primitive
+   for strangers, so moderation requests share chat's rate limit, and a refused
+   account's rejected reconnect is logged rather than audited — its browser
+   retries on a backoff nobody here controls.
+
+Three inversions were watched failing before any of it was believed: the mute
+check disabled (the muted line reaches the room and the fence proves it), the
+allowlist made to accept any signed-in account (all three non-operator subtests
+fail, the first on the snapshot flag alone), and the door check disabled (the
+refused account rejoins with a snapshot, in the same process and after a restart).
+
+**One hole is filed rather than improvised — M21.6.** A refusal cannot be lifted
+from inside the game, and the reason is structural rather than lazy: a refusal is
+addressed by `accountID`, an account id never reaches another player's browser
+(M21.1's rule, which this task did not want to break for a maintenance action),
+and a refused account is by definition not connected to be picked out of a roster.
+So lifting one today means editing `saves/refused.json` and restarting — the same
+lifecycle as granting operator status, which is at least coherent, and wrong in
+exactly one case: a mis-aimed refusal is permanent until the next restart, which
+is when an operator most wants it gone. M21.6 is the operator-only HTTP surface
+that lists and lifts them, gated on the same allowlist and audited.
+
+**Nothing changes in production until the owner sets the variable.**
+`ZZT_MODERATOR_ACCOUNTS` is unset there, so the server has no operators and every
+action fails closed — the safest default for a power that cannot be granted from
+inside the game. The refusals document and the audit live beside the other durable
+service state (`saves/refused.json`, `saves/moderation.jsonl`); without a saves
+directory both are memory-only and the boot log says so.
+
+The parity manifest lesson from `39f9b9a` was applied rather than re-learned: the
+box was ticked and the four rows (three `proto.msg.*`, one `task.M21.2`)
+scaffolded and curated BEFORE the verification run, not after.
