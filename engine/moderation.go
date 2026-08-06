@@ -37,6 +37,7 @@ import (
 	"encoding/json"
 	"log"
 	"os"
+	"sort"
 	"strings"
 	"sync"
 	"time"
@@ -44,13 +45,15 @@ import (
 
 // The things an operator can ask for, in increasing severity. Mute has an
 // inverse because it is the correctable sanction; kick needs none, since the
-// kicked player returns by reconnecting; refuse is lifted by editing the store
-// (see RefusalStore) rather than over the wire.
+// kicked player returns by reconnecting; refuse is lifted from the operator
+// console (M21.6) rather than from inside the game, for the reason RefusalStore
+// gives — nothing in a room can name the account a refusal is addressed to.
 const (
 	ModerationActionMute   = "mute"
 	ModerationActionUnmute = "unmute"
 	ModerationActionKick   = "kick"
 	ModerationActionRefuse = "refuse"
+	ModerationActionLift   = "lift"
 )
 
 // ModeratorAccountsEnv is the one place operator status comes from.
@@ -159,10 +162,10 @@ type RefusedAccount struct {
 // There is deliberately no lift-from-inside-the-game: a refusal is addressed by
 // accountID, an account id never reaches another player's browser (M21.1), and a
 // refused account is by definition not connected to be picked from a roster. So
-// a refusal is lifted the way operator status is granted — by editing deployment
-// configuration (this document) and restarting. An operator console that can list
-// and lift refusals without a restart is filed as M21.6 rather than improvised
-// here.
+// the one screen that can lift a refusal is the one screen that must show account
+// ids, and it cannot be a game window. M21.6 makes it an operator-only HTTP route
+// instead (web_api.go), built on List and Lift below; hand-editing this document
+// and restarting still works and is still the fallback when the process is down.
 type RefusalStore struct {
 	mu       sync.Mutex
 	path     string
@@ -231,6 +234,65 @@ func (s *RefusalStore) Refuse(rec RefusedAccount) error {
 	return s.writeLocked()
 }
 
+// List returns every standing refusal, so an operator can see what is being held
+// against whom without reading the document off the host (M21.6).
+//
+// Account is filled from the map key rather than trusted from the record. The
+// document is hand-editable by design — Refuses tests membership, not the field —
+// so an entry somebody added by hand without the redundant "account" field must
+// still name the account it refuses, or the console would offer a row that cannot
+// be lifted.
+func (s *RefusalStore) List() []RefusedAccount {
+	if s == nil {
+		return nil
+	}
+	s.mu.Lock()
+	defer s.mu.Unlock()
+	out := make([]RefusedAccount, 0, len(s.accounts))
+	for id, rec := range s.accounts {
+		rec.Account = id
+		out = append(out, rec)
+	}
+	// Map order is not an order. Oldest first, ties broken by account, so two
+	// reads of the console agree with each other and a hand-written entry with no
+	// timestamp still lands somewhere stable instead of shuffling each request.
+	sort.Slice(out, func(i, j int) bool {
+		if !out[i].At.Equal(out[j].At) {
+			return out[i].At.Before(out[j].At)
+		}
+		return out[i].Account < out[j].Account
+	})
+	return out
+}
+
+// Lift removes one refusal and rewrites the document, returning the record it
+// removed so the audit line for the lift can name who imposed the refusal and
+// when — a lift with no reference to what it undid is half a record.
+//
+// A failed write puts the entry back, which is the opposite of what Refuse does
+// with its failure, and deliberately so: there the fail-safe direction is keeping
+// the sanction, here it is keeping the server and the document agreeing. An
+// operator told the lift failed must not be left with a process that admits the
+// account until the next restart and refuses them after it.
+func (s *RefusalStore) Lift(accountID string) (RefusedAccount, bool, error) {
+	if s == nil || accountID == "" {
+		return RefusedAccount{}, false, nil
+	}
+	s.mu.Lock()
+	defer s.mu.Unlock()
+	rec, ok := s.accounts[accountID]
+	if !ok {
+		return RefusedAccount{}, false, nil
+	}
+	rec.Account = accountID
+	delete(s.accounts, accountID)
+	if err := s.writeLocked(); err != nil {
+		s.accounts[accountID] = rec
+		return RefusedAccount{}, false, err
+	}
+	return rec, true, nil
+}
+
 // writeLocked persists through a temporary file and a rename, the shape
 // FileChatDatabase already uses: a half-written refusals document that loaded as
 // empty would silently readmit everyone.
@@ -282,11 +344,13 @@ const (
 	ModerationResultFailed  = "failed"
 )
 
-// moderationAuditTail is how many entries are kept in memory. The FILE is the
-// record; this is a tail so a test — and, later, an operator-facing view — can
-// read the last actions without parsing the document, and it is bounded so a
-// client hammering the wire cannot grow the server without limit.
-const moderationAuditTail = 256
+// ModerationAuditTail is how many entries are kept in memory. The FILE is the
+// record; this is a tail so a test and the operator console (M21.6) can read the
+// last actions without parsing the document, and it is bounded so a client
+// hammering the wire cannot grow the server without limit. The console reports it
+// alongside the entries, so an operator can tell "these are all the actions" from
+// "these are the last 256".
+const ModerationAuditTail = 256
 
 // ModerationAudit appends one JSON line per action. An empty path keeps the tail
 // only, which is what tests get; a configured path is append-only, because an
@@ -311,8 +375,8 @@ func (a *ModerationAudit) Record(entry ModerationAuditEntry) {
 	}
 	a.mu.Lock()
 	a.entries = append(a.entries, entry)
-	if len(a.entries) > moderationAuditTail {
-		a.entries = a.entries[len(a.entries)-moderationAuditTail:]
+	if len(a.entries) > ModerationAuditTail {
+		a.entries = a.entries[len(a.entries)-ModerationAuditTail:]
 	}
 	path := a.path
 	a.mu.Unlock()

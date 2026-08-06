@@ -255,6 +255,18 @@ M12.23, M17.1–M17.7, M16.0–M16.8a — has fully landed.)
    It filed **M16.11e** at the owner's request — the four M16.11a–d entries are
    four fixes to one cause, and M16.11e is the cause: drive the walks by observed
    movement instead of by guessing the hold. Unranked; not beta-gating.
+   **M22 and M23 were filed 2026-08-05** at the owner's request for the next
+   round of features: M22 (spectate live, watch a recording back, share a
+   moment as a GIF postcard — the viewer the determinism backlog has wanted
+   since the recorder shipped without one) and M23 (the newcomer's first five
+   minutes: multiplayer-vocabulary hints, a first-party welcome world, and a
+   first-visit landing). Both deliberately **unranked**: the owner ranks them.
+   Four backlog bullets were filed with them as the third batch —
+   friends/presence, the picker front page, comfort/access, and ZZT TV — and
+   are not tasks until the owner promotes them. A **fourth batch of
+   moonshots** followed the same day — fork-the-timeline, gravestone ghosts,
+   the robot arena, the ZZT Gazette, the treasure hunt, dream duels, the
+   relay run, hide-and-seek, and the TAS workbench — same rule.
 
 **Optional / deferred (bottom):**
 - M14.3 — package split — **closed as skipped 2026-08-03**, see NOTES.md
@@ -6252,7 +6264,7 @@ signed-in players, already carried on `roomPlayer` and readable through
   the safest possible default for a power that cannot be granted from inside the
   game.
 
-- [ ] **M21.6 — an operator console: list and lift refusals without a restart.**
+- [x] **M21.6 — an operator console: list and lift refusals without a restart.**
   Filed 2026-08-05 by M21.2, which shipped the refusals and left exactly one hole
   in them. A refusal is addressed by `accountID`; an account id never reaches
   another player's browser (M21.1), and a refused account is not connected to be
@@ -6273,6 +6285,221 @@ signed-in players, already carried on `roomPlayer` and readable through
   account can rejoin immediately afterwards, proved over a socket rather than
   asserted against the store. Not beta-gating — M21.2's refusals work, this is
   their maintenance — so it ranks below anything a tester can hit.
+  **Done 2026-08-05.** Three operator-only routes on the existing API mux —
+  `GET /api/moderation/refusals`, `POST /api/moderation/refusals/lift`,
+  `GET /api/moderation/audit` — built on two new `RefusalStore` methods.
+  * *the lift changes the document, not just the process* — `Lift` writes through
+    the same temp-file-and-rename `Refuse` uses, and a failed write puts the entry
+    BACK, which is the opposite of what `Refuse` does with its failure and
+    deliberately so: there the fail-safe direction is keeping the sanction, here it
+    is keeping the process and the file agreeing. An operator told the lift failed
+    must not be left with a server that admits the account until the next restart
+    and refuses them after it. The test reads the document with a genuinely fresh
+    store, because a memory-only lift passes every other assertion in this task.
+  * *and the proof is a socket* — the DoD asked for it in those words and it is
+    the right ask: the claim is that the account can PLAY again, so the test dials,
+    joins and requires a snapshot, in the same process, with the refusal shown to
+    be in force over a socket first. "The store no longer contains him" would have
+    passed for a build where the door check cached its answer.
+  * *404, not 403, and the cost is named rather than hidden* — the console is the
+    one screen that must show account ids, which M21.1 keeps out of every player's
+    browser, so it does not confirm its own existence to a stranger and does not
+    tell a signed-in non-operator that there is an allowlist they are not on —
+    which is the first half of learning who is on it. The price is that an operator
+    with a mistyped allowlist entry gets a 404 and may blame the build; the server
+    log answers them, and logs the account that asked for exactly that reason. Four
+    subtests, each over all three routes: a guest, a signed-in non-operator, an
+    operator's own cookie against an empty allowlist, and a server with no auth
+    service at all — and each asserts the refusal still stands and no id leaked.
+  * *denials are logged and deliberately NOT audited* — M21.2 audits a denied
+    socket action because that path sits behind chat's rate limiter. This route
+    sits behind nothing, so auditing its denials would let anyone holding the URL
+    append to the operator's own record until it is unreadable. Same reasoning as
+    `refusedAtTheDoor`; the test asserts an unauthorized request writes no `lift`
+    line.
+  * *the lift is audited before the operator is told, and it joins up* — M21.2's
+    order unchanged. The entry carries the refusal's own world and target name and
+    names who imposed what it undid, so the refuse line and the lift line read as
+    one story; the test asserts the two entries agree on account and world and that
+    the file holds both. Lifting an account with no standing refusal is an audited
+    no-op rather than an error — the list an operator read is already a moment out
+    of date, and two operators reaching for the same row is the normal case — while
+    an empty account is a 400, since an audit line pointing at nobody is one that
+    matches the empty accountID every guest carries.
+  * *the console must not shuffle* — `List` fills `Account` from the map key
+    (`Refuses` tests membership, not the field, so a hand-written entry that omits
+    the redundant field really does refuse somebody and must still be liftable) and
+    sorts oldest-first with ties broken by account. Map order is not an order, and
+    a console whose rows move between reads is one you cannot click.
+  * *the inversions were watched failing* — the operator gate forced open (all
+    four denial subtests fail), the lift made memory-only (both document
+    assertions fail), the lift's audit line dropped, and the sort removed (the
+    order assertion fails on Go's randomized map iteration).
+  One limit worth recording: **imposing** a refusal is still only possible against
+  a connected player from the game. A route that refuses an account id typed into a
+  text field is a route that refuses a typo, and the console has no way to check
+  the id names anybody. Lifting is safe in a way imposing is not, which is why only
+  half of the pair moved here.
+
+## M22 — Eyes on the game: spectate live, watch it back, share the moment
+
+Filed 2026-08-05 (owner asked for the next round of moonshots). Deliberately
+**unranked**: the owner ranks it. This is the milestone the determinism
+backlog has been circling for a month: the recorder shipped and the product
+did not. `SessionRecorder` and `ReplaySession` both exist
+(`session_record.go:101,249`, hardened by M16.15a's `recordVersion` 2), but
+`ReplaySession` hands each tick to a Go callback and nothing pumps that into a
+snapshot stream a browser reads — so a complete, kilobytes-sized, perfectly
+faithful recording of every session exists and no human being can watch one.
+The same absence blocks the other half: there is no read-only client, so
+`/watch` links (named inside the deep-links bullet since 2026-07-10) have
+nowhere to land. This milestone is also the precondition the backlog keeps
+assuming is free — ghost racing, daily challenges, crowd-controlled runs and
+ZZT TV all start from "a browser can render a room it is not playing in."
+
+The substrate is better than the backlog remembers. The read-only stream
+pattern already shipped in miniature: the title screen is an isolated engine
+ticked from the server loop only while a browser is watching, with changed
+cells pushed over `/api/title/stream` SSE to a page that has **no WebSocket at
+all** (`title_sim.go`, `web_api.go:81`, `main.ts:929-938`). A spectator is
+that idea grown up — full snapshot stream, live room; a replay is its twin —
+the same stream, driven by `ReplaySession` instead of by players. And M20.1
+already proved `spaFileServer` serves the app under any path and that every
+route into a world funnels through one function, so `/watch/<world>` and
+`/replay/<id>` each have exactly one place to hook.
+
+One owner decision shapes the milestone, named now so it is not improvised
+later: **is watching visible?** A watcher count in the room ("3 watching") is
+honest and cheap; invisible spectators are a stalking tool, and M21 just spent
+a whole milestone refusing to build those. Default in these specs: a visible
+count, no watcher names. A party/private instance (if that bullet is ever
+promoted) is never watchable. Second decision, cheaper: whether a shared
+replay includes the chat said during it — default here is NO (chat is not in
+the recording today, and adding it is a consent question, not plumbing).
+
+- [ ] **M22.1 — a read-only client: the browser can render a room it is not
+  in.** The client already renders purely from snapshots, so this is a join
+  mode, not a renderer. Server: a `spectate: true` join that subscribes the
+  connection to the instance's snapshot fan-out but never creates a stat,
+  never appears in the player roster, and whose input messages are dropped on
+  the floor server-side — asserted, not assumed; a spectator who can nudge
+  the sim is a cheat client. Client: suppress the input sampler and the
+  player-only sidebar affordances; paint a "watching" line where the health
+  bar goes. Spectator presence must be invisible to the sim by construction:
+  no stat, no StateHash change, no fixture change — only the watcher count,
+  which rides the snapshot the way M19.1's `PlayerSnapshot` list does and
+  gets its `fixtures/parity/manifest.json` row (`PARITY_SCAFFOLD=1`, curated
+  fields filled in).
+  DoD: a spectator and a player watching the same room render the same board;
+  the spectator's arrival and departure change no state hash on any tick of a
+  scripted run; spectator input is provably discarded; the watcher count
+  reaches players and other watchers; replay fixtures untouched;
+  `go test ./...` green.
+
+- [ ] **M22.2 — `/watch/<world>`: a shareable link that opens a room
+  read-only.** The `/watch` half of the deep-links bullet, buildable the
+  moment M22.1 exists. Same name-resolution rules as M20.1's `/play/<world>`
+  (case, Museum names, the not-found fallback — reuse them, do not
+  re-derive), but the destination is the live room as a spectator, not the
+  title screen. An idle world is still watchable — it shows the board sitting
+  still, which is what is true.
+  DoD: pasting `/watch/TOWN` into a fresh browser shows the live TOWN board
+  with no join and no occupancy change in the picker; the link works for a
+  hosted-but-empty world; a browser test drives a player and a watcher from
+  two Chromium instances and the watcher sees the player move.
+
+- [ ] **M22.3 — the replay viewer: play a recording back into a room nobody
+  controls.** The missing pump. Feed `ReplaySession`'s per-tick callback into
+  the same snapshot encoder a live instance uses, paced from the server loop
+  — pacing is presentation, so wall-clock lives outside the sim exactly as
+  `title_sim.go` already does, and CLAUDE.md rule 2 is untouched — and let
+  M22.1's read-only client render it. A playback is an instance under a
+  reserved name that can never collide with a hostable world and is never
+  joinable, only watchable. Scrubbing falls out of determinism — seeking to
+  tick N is re-simulating 0..N from a kilobytes-scale input log — but start
+  with pause and restart-from-zero and add seek only if it measures cheap.
+  A v1 recording stays refused (M16.15a), and a recording naming a world file
+  the server no longer has fails with a message, not a panic.
+  DoD: `/replay/<id>` opens a recorded session and plays it to the end in a
+  real browser; the final tick's StateHash equals the recording's — the
+  viewer is the replay harness with a face; two watchers of one replay see
+  the same frames; a replay instance is excluded from the picker, occupancy
+  counts, and autosave; `go test ./...` green.
+
+- [ ] **M22.4 — the postcard: share the moment itself, not the homework.**
+  The growth loop. A death, a win, or a button in the replay viewer offers
+  "share this moment": the server renders the surrounding seconds of the
+  recording to an animated GIF — `cmd/zzt-shot` already draws boards to PNG;
+  a GIF is that in a loop over replayed ticks — behind a URL that also
+  carries the `/replay/<id>` and `/play/<world>` links. The image is the
+  hook; the links are the door. Scope honestly: one GIF endpoint with a
+  bounded tick range, rate-limited (the M16.16a limiter pattern), cached by
+  recording id + range so a popular moment renders once. No social cards, no
+  editing. Owner decision to record in NOTES.md when this lands: sharing your
+  own session's moment is taken as consent for the players who appear in it —
+  or it is not, and postcards are single-player-session only for the beta.
+  DoD: from a finished run, one action yields a URL whose GIF animates the
+  chosen moment in CP437 fidelity; range cap, rate limit and cache are each
+  asserted; an unknown recording id 404s; `go test ./...` green.
+
+## M23 — The first five minutes: a newcomer who has never seen ZZT
+
+Filed 2026-08-05, deliberately **unranked**: the owner ranks it. The beta
+testers are ZZT community — they know T lights a torch and that the dark is a
+room state, not a bug. The next cohort will not. Today a first visit is: name
+prompt → a picker of a hundred worlds with no signal which is a good first
+one → a 1991 game that explains nothing because its explanations were a paper
+manual. Vanilla itself knows how to teach — the one-shot per-player hint
+already exists and already survived the multiplayer conversion
+(`MessageHintTorchNotShown`, `game.go:1626-1628`: fires once, per player).
+What vanilla cannot teach is everything this fork added: chat is C, the
+Players window is L (M21.3 had to buy a sidebar row for exactly this
+discoverability problem), another smiley is a *person*, death is a respawn
+rather than an ending, and R restores a save the whole group shares.
+
+- [ ] **M23.1 — first-time hints for the multiplayer vocabulary.** One-shot
+  hints in vanilla's own register (terse, bottom-row, slightly wry), fired on
+  the first occurrence of each multiplayer event: the first time another
+  player's smiley is on your board ("That other face is a real person — C
+  chats"), the first death ("You respawn. Your things stay yours."), the
+  first chat line that arrives while the window is closed. Client-side, not
+  sim-side: the sim's hint flags live in `pState` and touching them is
+  fixture churn this task does not need — these fire off events the snapshot
+  already carries (M19.1's players list, the death flow, the chat toast), so
+  no state hash moves anywhere. Seen-flags are per-account fields on the
+  M19.3 preferences store — its next caller; a field, not a store — so an
+  account is never re-taught. A guest's flags are session-local, and that is
+  fine: a guest who returns is still new.
+  DoD: each hint fires exactly once per account, across restarts and
+  browsers, at the triggering moment; a veteran whose flags are set sees
+  nothing; fixtures and StateHash untouched; the hint strings go past the
+  owner before shipping (the launch-copy precedent).
+
+- [ ] **M23.2 — a welcome world that teaches by being played.** First-party
+  content, built in the shipped M5 editor — the dogfooding the first-party
+  bullets keep promising. Three to five boards that teach movement, torches
+  and the dark, keys and doors, shooting, and — the part no classic world can
+  teach — each other: a scroll that says "press C and say hello", a spot
+  where two players are visibly better than one, a final passage that lands
+  the player back at the picker knowing what they are looking at. Small
+  enough to finish in five minutes; honest enough to survive three players
+  doing it at once (the cutline's TOWN-leg standard: real world, real group,
+  no staged state).
+  DoD: the world ships in the hosting directory as canonical content,
+  protected by M18.11's guard like any classic; a three-browser run completes
+  it together; every teaching beat lands without a wiki.
+
+- [ ] **M23.3 — the first visit lands somewhere designed for it.** Wire
+  M23.2 in: a browser that has never been here (no account, no local flag)
+  lands on the welcome world's title screen instead of the full picker;
+  returning visitors keep exactly today's flow. The picker gains one line of
+  signal for newcomers who skip ahead: the welcome world pinned first with a
+  "start here" marker — and no other reordering; shelves are the front-page
+  bullet's job, not this one's.
+  DoD: fresh profile → welcome world title screen, and P plays it; second
+  visit → today's flow, asserted in a browser test with a cleared and a warm
+  profile; deep links (M20.1) are NOT intercepted — a shared link always wins
+  over the welcome flow; `go test ./...` green.
 
 ## M14 — Rearchitecting for the service ZZTMMO is becoming
 
@@ -7241,6 +7468,114 @@ newly enables; same rule: backlog bullets, owner promotes before spec):**
   leases — drops monsters, rewrites the vendor's lines, opens a wall. Every
   action rides the same compiled/validated seams as a human editor, so
   determinism and the security boundary are untouched.
+
+**Features, third batch (2026-08-05 — filed alongside M22/M23; same rule:
+backlog bullets, owner promotes before spec):**
+* **Friends and presence — "play where my friends are."** The picker already
+  counts players per world (M17.11, `web_api.go:938`); nothing says *who*,
+  and nothing follows a person across visits. Shape when promoted: a
+  `FollowedAccounts` field on the M19.3 preferences store (the same
+  add-a-field discipline as blocks and hints); follow/unfollow from the M21
+  Players window, where the account id is already the row's spine; the world
+  list gains "friends here" for followed accounts that opted in. Two
+  decisions at promotion, both already familiar: identity (following needs a
+  durable target, so accounts only — the PM/profiles identity question
+  again) and consent (presence is broadcast today only as a count; making it
+  name-level for followers needs an opt-in, not a default — the M21 lesson
+  applied to location).
+* **The front page — favorites, most-played, and a shelf worth browsing.** A
+  hundred hosted worlds and the picker's only order is the directory's.
+  Shape when promoted: a favorites star per account (an M19.3 field), a
+  server-side play tally per world (counted at join, stored beside the
+  world, no per-player tracking needed), and the picker sorted into shelves
+  — your favorites, what people are playing now, recently dreamed, the
+  classics. Thumbnails are nearly free: the title frame `/api/title` already
+  composes is the thumbnail, rendered once and cached. Composes with M23.3's
+  "start here" pin, and makes dreamed worlds discoverable — today they are
+  discoverable only by knowing their name.
+* **Comfort and access — remappable keys, calmer flashing, palettes.**
+  Presentation-only, zero sim change, all M19.3 fields. The keymap is
+  hardcoded in the client's `handleKeyDown`; a remap layer (vanilla's map as
+  the immovable default preset) serves non-QWERTY keyboards and one-handed
+  play. A "reduce flashing" toggle tones down the energizer blink and
+  dark-room strobe at the canvas — the sim still blinks, the renderer
+  declines to, the same layering as the RGB smiley overlay. A
+  colorblind-assist palette swaps the 16 DOS colors for a distinguishable
+  set at render time — per-viewer, never on the wire, purists keep vanilla.
+  Worth doing because a text-mode game is *almost* accessible already; these
+  are the cheap last miles, not a rebuild.
+* **ZZT TV — the channel that is always on.** M22 stretch, filed so it is
+  not lost: one `/watch/live` URL that cycles the busiest occupied rooms and
+  the best recent replay moments, embeddable. The game advertising itself by
+  being watched. Needs nothing M22 does not already build except the cycling
+  policy.
+
+**Moonshots, fourth batch (2026-08-05 — the strange tier: things only a
+deterministic, recordable, server-authoritative ZZT with a compiler in-tree
+could offer. Same rule: backlog bullets, owner promotes before spec):**
+* **Fork the timeline.** Determinism means a room's past is not gone — a
+  recording re-simulated to tick N *is* the room as it stood at tick N, and
+  `SaveSnapshot` already proves a live room's state can be captured and
+  rehosted (`websocket_server.go:1423,1529`). So: fork a live session into a
+  parallel instance at any past moment. A group that wiped votes "rewind
+  thirty seconds"; a stuck party branches "what if we'd gone left" and keeps
+  both; puzzle worlds get designed *around* branching. No other multiplayer
+  game can offer this for free — the only new machinery is the lifecycle of
+  forked instances, which is the instance-eviction bullet's question asked
+  on purpose.
+* **Gravestones, and the ghosts of the fallen.** A death leaves a gravestone
+  where it happened — a presentation overlay like the RGB smiley, never in
+  the sim, never in StateHash — and touching it plays that player's last ten
+  seconds as a translucent ghost through M22.3's replay pump. Dark Souls's
+  bloodstains, a decade before Dark Souls, in the medium it always belonged
+  to. The room quietly fills with the history of everyone who tried.
+* **The robot arena — ZZT-OOP as a spectator sport.** Players write ONE
+  object's ZZT-OOP program and enter it; the server compiles it through the
+  M12 gate, drops the entrants into an arena board with `FriendlyFire` on
+  (`gamevars.go:250-254` — built, never yet wired), and the last object
+  standing wins. Every match is a deterministic, replayable kilobyte —
+  disputes are settled by scrubbing, and M22 makes the bracket watchable.
+  RoboCode in 1991's own language. Needs an entry path (the validation gate
+  plus a resource cap so a `#send`-storm cannot eat the tick) and borrows
+  the bracket half from the tournament-nights bullet.
+* **The ZZT Gazette.** A daily newspaper board in the lobby, written by the
+  LLM from the day's *real* happenings — worlds beaten, notable deaths,
+  dreams dreamed, scores set — in ZZT's terse, slightly wrong register, and
+  compiled through the same ZWD path as any dream. The service's event
+  stream becomes the town's memory, posted where people loiter. Names
+  appear only for signed-in players who opted in; deeds without names
+  otherwise (the M21 lesson, applied to fame).
+* **The great treasure hunt.** Once a week the server hides one singular
+  item in one board of one Museum world — placed deterministically from the
+  weekly seed through the editor apply path at hosting — and announces only
+  a riddle. First finder enters the Gazette. A hundred hosted worlds stop
+  being a list and become a landscape someone is searching; drives exactly
+  the archive exploration the front-page bullet serves, but with a reason.
+* **Dream duels.** Two players, one prompt, ten minutes: each dreams a
+  world, the room plays both, the room votes. Winner takes the Gazette and
+  — the flywheel's human edition — entry into the retrieval corpus, so
+  winning a duel literally teaches the generator taste. Iron Chef for world
+  generation, riding machinery (generation, party play, voting-by-being-
+  present) of which only the vote is new.
+* **The relay run.** One save of one long classic, owned by everybody: claim
+  the baton, play until you stop or die, and the save advances for the whole
+  community — a months-long playthrough no one player could finish, with
+  the runner roster on a hall-of-fame scroll. Async co-op with no
+  scheduling. Needs a baton lock (the occupancy refusal is the precedent,
+  `websocket_server.go:1524`) and one rule for an abandoned baton.
+* **Hide and seek, across a whole world.** Server-refereed party modes on
+  any world, starting with the oldest one: one player is It, hiders scatter
+  through the boards, It gets warm/cold hints at board granularity. The
+  referee reads snapshots and writes nothing — mode logic stays outside the
+  sim entirely, so fixtures never move and any world is already a map. The
+  cheapest possible new way to be together in ZZT.
+* **The TAS workbench.** A recording is an input log, so let the obsessives
+  edit one: a browser workbench (the replay viewer's scrubber grown a
+  keyboard) that builds a run tick by tick, submitted to a separate
+  "assisted" leaderboard beside the live one — and verified by
+  re-simulation, so a TAS is *provable*, which no speedrun site on earth can
+  say. The ZZT community already speedruns; this makes ZZTMMO the only
+  venue where perfection is a first-class artifact.
 
 **First-party worlds (owner 2026-07-10 — "later on in the roadmap"):**
 * **A purpose-built PvP arena world.** A ZZT world designed for

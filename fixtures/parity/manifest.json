@@ -1134,6 +1134,18 @@
       "notes": "task-claim row; reconciled at the task itself (2026-08-04), NOT at M16.20: M21.5 landed after the certification milestone closed, so no M16.20 run ever saw this row. The touch half of the M21 family, and a deviation of the same presentation-additions kind as task.M21.1 and task.M21.3 — vanilla ZZT has neither chat nor a second player, and nothing here reaches the engine: every control dispatches a key main.ts already handles, so the replay fixtures are untouched. Five controls join touch_controls.ts's bar. Chat (KeyC) and Players (KeyL) are PLAYING_ONLY, because on the title screen 'C' is M19.2's color picker and behind an open window both letters belong in a text buffer — they are on certifyTouchModalIsolation's must-not-be-offered list beside Fire. Esc is offered in both window modes, since Enter does not close a picker that has a header (modal.ts requireSelection) and nothing else closes a window at all. Yes and No live in a new fifth mode, `prompt`, which is the one modal told apart from the rest: SidebarPromptYesNo answers to Y, N and Escape only, so without them a phone could open the Players window, reach its \"Block X?\" confirmation, and only decline it. The two Chromium touch profiles certify all of it by tap — the Players window opened and closed, chat opened by its control rather than by keyboard.press (which is how this gap survived the device matrix until now), and a real end-game prompt answered No and then Yes — and m16_18_test.go requires the two new acts, `windows` and `prompt`, of every profile that declares touchplay. Legibility was measured rather than assumed: the play-mode row wraps to three rows on the 390px portrait phone (166px reserved, the width-bound screen unchanged at 4.88px/col) and to two at 844px landscape (114px, 6.35 → 6.31px/col), and every profile's covered-row list is still empty."
     },
     {
+      "id": "task.M21.6",
+      "dimension": "task",
+      "subject": "Completed task M21.6 — its DoD still holds",
+      "contract": "E",
+      "authority": "TASKS.md M21.6",
+      "parity": "deviation",
+      "deviation": "presentation-additions",
+      "test": "TestM216ListAndLiftWithoutARestart,TestM216LiftingWhatIsNotThereIsNotAnError,TestM216ConsoleAnswersNobodyButAnOperator,TestM216LiftIsAudited,TestM216AuditTailIsReadableFromTheConsole,TestM216RefusalStoreListAndLift",
+      "status": "pass",
+      "notes": "task-claim row; reconciled at the task itself (2026-08-05), NOT at M16.20: M21.6 landed after the certification milestone closed, so no M16.20 run ever saw this row. The maintenance half of task.M21.2's refusals — the one hole that task filed: a refusal is addressed by accountID, an account id never reaches another player's browser (M21.1), and a refused account is not connected to be picked from a roster, so lifting one meant editing saves/refused.json and restarting the server. A deviation of the same presentation-additions kind as the rest of the M19/M21 family — vanilla ZZT has no accounts, no operator and no HTTP API — and nothing reaches the engine: no element, no op, no recorded input, so the replay fixtures are untouched. Three operator-only routes on the API mux (list the standing refusals, lift one, read the audit tail; the route.api.moderation.* rows), gated on the same ZZT_MODERATOR_ACCOUNTS allowlist as the socket actions and answering 404 rather than 403 to everyone else, so the console neither confirms it exists to a stranger nor tells a signed-in non-operator there is an allowlist they are not on; the named cost — an operator with a mistyped allowlist entry sees a 404 and may blame the build — is paid in the server log, which records the account that asked for exactly that reason. The lift rewrites the document through the same temp-file-and-rename Refuse uses, and a failed write puts the entry BACK — the opposite of Refuse's failure direction, because here the fail-safe is the process and the file agreeing — and the proof is a socket, as the DoD asked: the refused account joins and receives a snapshot in the same process, with the refusal shown in force over a socket first, because \"the store no longer contains him\" would pass for a build whose door check cached its answer. The lift is audited before the operator is told, carrying the refusal's own world and target name and naming who imposed what it undid, so the refuse line and the lift line read as one story; lifting an account with no standing refusal is an audited no-op rather than an error (the list an operator read is already a moment out of date, and two operators reaching for the same row is the normal case), an empty account is 400, and a denial is logged but deliberately NOT audited — this route sits behind no rate limiter, so an audited denial would let anyone holding the URL append to the operator's record until it is unreadable, the refusedAtTheDoor reasoning. List fills Account from the map key (Refuses tests membership, not the field, so a hand-written entry that omits the redundant field must still be liftable) and sorts oldest-first with ties broken by account, because map order is not an order and a console whose rows move between reads is one you cannot click. Four inversions were watched failing: the operator gate forced open, the lift made memory-only, the lift's audit line dropped, and the sort removed. One limit recorded rather than hidden: imposing a refusal is still only possible from inside the game against a connected player — a route that refuses an account id typed into a text field is a route that refuses a typo, and only the safe half of the pair moved here."
+    },
+    {
       "id": "task.M3.0",
       "dimension": "task",
       "subject": "Completed task M3.0 — its DoD still holds",
@@ -4192,6 +4204,42 @@
       "status": "pass",
       "assignedTask": "M16.15",
       "notes": "M16.15: 200 naming the hosted world, 400 for a traversing name."
+    },
+    {
+      "id": "route.api.moderation.audit",
+      "dimension": "route",
+      "subject": "HTTP/WS route /api/moderation/audit",
+      "contract": "E",
+      "authority": "web_api.go / websocket_server.go",
+      "parity": "exact",
+      "test": "TestM216AuditTailIsReadableFromTheConsole,TestM216ConsoleAnswersNobodyButAnOperator",
+      "status": "pass",
+      "assignedTask": "M21.6",
+      "notes": "M21.6: the operator console's read of the in-memory audit tail, oldest first, with the tail size reported alongside so a complete record is distinguishable from a truncated one (the file is the record); ?limit=N is the last N and a mistyped limit shows the whole tail rather than nothing; any method but GET is 405. A guest, a signed-in non-operator, an operator against an empty allowlist and a server with no auth service each get 404 rather than 403 — the console must not confirm it exists, and must not tell a non-operator there is an allowlist they are not on."
+    },
+    {
+      "id": "route.api.moderation.refusals",
+      "dimension": "route",
+      "subject": "HTTP/WS route /api/moderation/refusals",
+      "contract": "E",
+      "authority": "web_api.go / websocket_server.go",
+      "parity": "exact",
+      "test": "TestM216ListAndLiftWithoutARestart,TestM216ConsoleAnswersNobodyButAnOperator,TestM216RefusalStoreListAndLift",
+      "status": "pass",
+      "assignedTask": "M21.6",
+      "notes": "M21.6: lists the standing refusals M21.2 imposes, each carrying who imposed it, when and in which world, oldest first with ties broken by account so two reads agree; the Account field is filled from the map key, because the document is hand-editable by design (Refuses tests membership, not the field) and a row that cannot be named cannot be lifted. Operator-gated on the same ZZT_MODERATOR_ACCOUNTS allowlist as the socket actions, 404 to everyone else, and any method but GET is 405."
+    },
+    {
+      "id": "route.api.moderation.refusals.lift",
+      "dimension": "route",
+      "subject": "HTTP/WS route /api/moderation/refusals/lift",
+      "contract": "E",
+      "authority": "web_api.go / websocket_server.go",
+      "parity": "exact",
+      "test": "TestM216ListAndLiftWithoutARestart,TestM216LiftingWhatIsNotThereIsNotAnError,TestM216LiftIsAudited,TestM216ConsoleAnswersNobodyButAnOperator",
+      "status": "pass",
+      "assignedTask": "M21.6",
+      "notes": "M21.6: the hole M21.2 left — POST {\"account\"} lifts a refusal in the running process, and the account rejoins over a socket immediately afterwards (proved with a snapshot, not against the store). The lift reaches the document too, so the next restart does not re-impose it, and a failed write puts the entry back rather than leaving the process and the file disagreeing. Audited before the operator is told, carrying the refusal's own world and who imposed it; an account with no standing refusal is an audited no-op rather than an error (two operators reaching for the same row is normal), an empty account is 400, any method but POST is 405, and a denial is logged but never audited — this route is behind no rate limiter, so an audit a stranger could append to at will is one nobody can read."
     },
     {
       "id": "route.api.museum.play",

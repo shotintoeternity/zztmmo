@@ -11,6 +11,7 @@ import (
 	"os"
 	"path/filepath"
 	"sort"
+	"strconv"
 	"strings"
 	"sync"
 	"sync/atomic"
@@ -88,6 +89,9 @@ func (a *WebAPI) Handler() http.Handler {
 	mux.HandleFunc("/api/museum/search", a.handleMuseumSearch)
 	mux.HandleFunc("/api/museum/play", a.handleMuseumPlay)
 	mux.HandleFunc("/api/preferences", a.handlePreferences)
+	mux.HandleFunc("/api/moderation/refusals", a.handleModerationRefusals)
+	mux.HandleFunc("/api/moderation/refusals/lift", a.handleModerationLift)
+	mux.HandleFunc("/api/moderation/audit", a.handleModerationAudit)
 	mux.HandleFunc("/api/auth/me", a.handleAuthMe)
 	mux.HandleFunc("/api/auth/logout", a.handleAuthLogout)
 	mux.HandleFunc("/api/auth/google/start", a.handleAuthStart)
@@ -213,6 +217,199 @@ func (a *WebAPI) storedPreferences(accountID string) (AccountPreferences, bool) 
 		return AccountPreferences{}, false
 	}
 	return prefs, ok
+}
+
+// --- the operator console (M21.6) -------------------------------------------
+//
+// M21.2 shipped refusals and left exactly one hole in them: a refusal is
+// addressed by accountID, an account id never reaches another player's browser
+// (M21.1), and a refused account is by definition not connected to be picked out
+// of a roster — so nothing inside the game can name one to lift it, and lifting
+// meant editing saves/refused.json and restarting. That is survivable for
+// granting operator status, which nobody does in a hurry, and wrong for a
+// mis-aimed refusal, which is exactly when an operator most wants it gone.
+//
+// So the console is an HTTP surface, and that is the decision the rest follows
+// from: the one screen that has to show account ids cannot be a screen inside the
+// game. It is served to an operator's own browser or curl, gated on the same
+// allowlist the socket actions are gated on, and it deliberately does the two
+// things a restart used to do and nothing more — list the standing refusals, lift
+// one — plus a read of the audit tail, because "what has been done here" is the
+// question somebody opening a moderation console is usually asking.
+//
+// Imposing a refusal is NOT here. That happens against a connected player from
+// the game, where the operator can see who they are acting on; a route that
+// refuses an account id typed into a text field is a route that refuses a typo.
+
+// moderationRefusalsResponse is the standing refusals, oldest first. Each carries
+// who imposed it, when, and in which world, which is the whole reason the record
+// holds more than a set of ids.
+type moderationRefusalsResponse struct {
+	Refusals []RefusedAccount `json:"refusals"`
+}
+
+// moderationLiftResponse reports what the lift did. Was is the record that was
+// removed, so an operator who lifted the wrong one has what they need to put it
+// back rather than only the id they typed.
+type moderationLiftResponse struct {
+	Lifted  bool            `json:"lifted"`
+	Account string          `json:"account"`
+	Was     *RefusedAccount `json:"was,omitempty"`
+	Text    string          `json:"text"`
+}
+
+// moderationAuditResponse carries the in-memory tail. Tail is reported alongside
+// it because the FILE is the record: an operator has to be able to tell "this is
+// everything" from "this is the last ModerationAuditTail entries, read
+// saves/moderation.jsonl for the rest".
+type moderationAuditResponse struct {
+	Entries []ModerationAuditEntry `json:"entries"`
+	Tail    int                    `json:"tail"`
+}
+
+// moderationOperator gates every console route, and writes the denial itself.
+//
+// A denial is a 404 rather than a 403, and that is a choice: a 403 confirms the
+// console exists to anybody who guesses the path, and tells a signed-in
+// non-operator that there is an allowlist — which is the first half of learning
+// who is on it. The cost is real and worth naming: an operator whose allowlist
+// entry is mistyped gets a 404 and may conclude the build has no console. The
+// server log below is what answers them, and it is why the log records the
+// account that asked.
+//
+// Denials are logged and deliberately NOT audited. M21.2 records a denied socket
+// action because that path is behind chat's rate limiter; this route is behind
+// nothing, so auditing its denials would let anyone holding the URL append to the
+// operator's own record until it is unreadable. That is the same reasoning that
+// keeps refusedAtTheDoor out of the audit.
+func (a *WebAPI) moderationOperator(w http.ResponseWriter, r *http.Request) (AuthenticatedAccount, bool) {
+	account, authenticated := a.authenticatedAccount(r)
+	if a.Server == nil || !authenticated || !a.Server.isOperator(account.ID) {
+		log.Printf("zztgo: refusing the operator console to %s %s (authenticated=%v account=%q)",
+			r.Method, r.URL.Path, authenticated, account.ID)
+		http.NotFound(w, r)
+		return AuthenticatedAccount{}, false
+	}
+	return account, true
+}
+
+func (a *WebAPI) handleModerationRefusals(w http.ResponseWriter, r *http.Request) {
+	if _, ok := a.moderationOperator(w, r); !ok {
+		return
+	}
+	if r.Method != http.MethodGet {
+		http.Error(w, "use GET to list refusals, or POST to /api/moderation/refusals/lift", http.StatusMethodNotAllowed)
+		return
+	}
+	writeJSON(w, moderationRefusalsResponse{Refusals: a.Server.Refusals.List()})
+}
+
+// handleModerationLift is the whole point of the console: the refusal goes away
+// now, not at the next restart.
+//
+// The order is M21.2's, unchanged, because it is the property that makes the
+// audit worth keeping: authority first, then the action, then the audit, then the
+// operator's confirmation — so there is no outcome an operator can have seen that
+// the record does not contain.
+func (a *WebAPI) handleModerationLift(w http.ResponseWriter, r *http.Request) {
+	operator, ok := a.moderationOperator(w, r)
+	if !ok {
+		return
+	}
+	if r.Method != http.MethodPost {
+		http.Error(w, "use POST", http.StatusMethodNotAllowed)
+		return
+	}
+	var body struct {
+		Account string `json:"account"`
+	}
+	// Capped like every other body this API decodes (handlePreferences): the whole
+	// document is one account id.
+	if err := json.NewDecoder(http.MaxBytesReader(w, r.Body, 1<<12)).Decode(&body); err != nil {
+		http.Error(w, "bad request body", http.StatusBadRequest)
+		return
+	}
+	accountID := strings.TrimSpace(body.Account)
+	if accountID == "" {
+		http.Error(w, "name the account whose refusal to lift", http.StatusBadRequest)
+		return
+	}
+
+	audit := ModerationAuditEntry{
+		At:            a.Server.clockNow(),
+		Action:        ModerationActionLift,
+		Operator:      operator.ID,
+		OperatorName:  operator.DisplayName(),
+		TargetAccount: accountID,
+	}
+
+	rec, lifted, err := a.Server.Refusals.Lift(accountID)
+	switch {
+	case err != nil:
+		// The document did not change, so neither did the server (RefusalStore.Lift
+		// puts the entry back). Telling the operator it worked would leave them
+		// expecting somebody who is still refused.
+		audit.Result = ModerationResultFailed
+		audit.Detail = err.Error()
+		a.Server.Audit.Record(audit)
+		log.Printf("zztgo: lift of the refusal on account %q not recorded: %v", accountID, err)
+		http.Error(w, "could not record the lift", http.StatusInternalServerError)
+		return
+
+	case !lifted:
+		// Not an error. The list an operator read a moment ago is already slightly
+		// out of date, and a second operator lifting the same refusal must be told
+		// what is true rather than that something broke — submitModeration takes the
+		// same view of a target who has already left.
+		audit.Result = ModerationResultNoOp
+		audit.Detail = "no standing refusal for that account"
+		a.Server.Audit.Record(audit)
+		writeJSON(w, moderationLiftResponse{
+			Account: accountID,
+			Text:    "No standing refusal for that account.",
+		})
+		return
+	}
+
+	// The lift carries the refusal's own world and target name, so the two lines
+	// read as one story: this account was refused there, by them, and this is who
+	// undid it.
+	audit.Result = ModerationResultApplied
+	audit.TargetName = rec.Name
+	audit.World = rec.World
+	if rec.By != "" {
+		audit.Detail = "lifting a refusal imposed by " + rec.By
+	}
+	a.Server.Audit.Record(audit)
+
+	writeJSON(w, moderationLiftResponse{
+		Lifted:  true,
+		Account: accountID,
+		Was:     &rec,
+		Text:    "Lifted the refusal on " + accountID + ". They can rejoin.",
+	})
+}
+
+func (a *WebAPI) handleModerationAudit(w http.ResponseWriter, r *http.Request) {
+	if _, ok := a.moderationOperator(w, r); !ok {
+		return
+	}
+	if r.Method != http.MethodGet {
+		http.Error(w, "use GET", http.StatusMethodNotAllowed)
+		return
+	}
+	entries := a.Server.Audit.Entries()
+	// ?limit=N is the last N, because the interesting end of an audit is the
+	// recent one. A limit that is not a number, or is bigger than the tail, is the
+	// whole tail rather than an error: this is a console an operator drives by
+	// hand, and refusing to show them anything over a mistyped query string would
+	// be the wrong kind of strict.
+	if raw := r.URL.Query().Get("limit"); raw != "" {
+		if n, err := strconv.Atoi(raw); err == nil && n >= 0 && n < len(entries) {
+			entries = entries[len(entries)-n:]
+		}
+	}
+	writeJSON(w, moderationAuditResponse{Entries: entries, Tail: ModerationAuditTail})
 }
 
 func (a *WebAPI) handleAuthMe(w http.ResponseWriter, r *http.Request) {
