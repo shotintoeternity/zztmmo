@@ -10822,3 +10822,69 @@ the player, a watcher registered as a client, and the watcher's frame draining t
 room a second time. The box was ticked and `task.M22.1` scaffolded and curated
 before the verification run, per the `39f9b9a` lesson; no `proto.msg.*` row was
 added, because a spectate is a field on `join` and not a message of its own.
+
+## 2026-08-05 — M22.1a: the race was one write, and the sweep it asked for says so
+
+Test-only, pre-existing, and closed the way M18.16 and M16.14c were: a required
+CI gate is red, so it goes before anything that needs a green one.
+
+`TestWebSocketServerTwoClientsSeeAndFight` gave p1 ammo to shoot with by pulling
+the `*PlayerState` out of a **ticking** instance and writing through it. The tick
+goroutine reads that same struct through `StateHash` on every tick, under
+`inst.mu`, which the test was not holding. The fix takes that lock, through a new
+`withLiveRoomManager(t, inst, func(rm *RoomManager))`.
+
+**Why a helper for one line.** Two reasons that outlive this call site. The
+dangerous shape is not "a write" — it is *take a pointer out of the manager and
+write through it*, which at the call site reads like local setup and is not; a
+named helper is where that can be said once. And the file's existing pattern
+(hand-rolled `inst.mu.Lock()` … `inst.mu.Unlock()` before every `t.Fatalf` in
+between) has to be got right at each exit, and a missed one wedges the tick
+goroutine on a failed test's lock — a deferred unlock inside the helper cannot be
+missed.
+
+**The filing guessed "several socket tests"; the sweep found one.** Worth
+recording, because "we fixed the one the detector named" and "we checked the
+class" are different claims and only the second one closes a task like this.
+`runServerAsync` is the only thing in the package's Go tests that starts a tick
+goroutine — two files use it, across five tests. Every other test that reaches
+into a `RoomManager` calls `server.Tick` itself, on its own goroutine, where
+there is nothing to race. And the reach-ins that ARE concurrent elsewhere — the
+20-bot soak's room hashes, `m16_16`'s `joinIdentity`, `m21_2`, `m21_4`, `m22_1`,
+`reconnect_test` — were already taking `inst.mu`. So the population of unlocked
+concurrent writes was exactly the one the detector named. The helper's comment
+carries the rule in both directions: take it on a `runServerAsync` server, and do
+NOT take it in a test that ticks itself, because taking it there would say
+something untrue about why it is there.
+
+Measured at each step, with a control. Pre-fix `-race -count=10 -run
+TestWebSocketServerTwoClientsSeeAndFight` names the race at
+`websocket_server_test.go:667` against `StateHash` and fails; post-fix it is
+green; `-count=30` across the socket tests is green (170s). The control is the
+DoD's own command on a stashed tree: unmodified, `go test -race -count=10
+-timeout 90m ./` fails with that same race at full-suite scale; with the fix, the
+same command is green end to end.
+
+**The DoD's "run more than once" came back two-green-one-red, and the red is
+somebody else's.** `TestM1615PersistenceReconnectAndReplayJourney` failed one of
+the three full runs with `account sidecar stored gems=11 ammo=5, want gems=6
+ammo=5` — no race, an equality against a HUD sample taken four acts earlier while
+the walk in between is bounded only from below. Under load Ada covers more ground
+per check and picks up a keeper's worth of extra gems, and the stale expectation
+misses. It cannot be this fix's doing: the diff is one test function and a helper
+nothing else calls. It also does not reproduce by repetition —
+`-race -count=20 -run TestM1615PersistenceReconnectAndReplayJourney` on an
+unmodified checkout is green — so it needs the whole suite's load to show, which
+is why it has gone unnoticed. Filed as **M16.15b**, the M16.11e family in another
+suite: an exact assertion resting on a guessed walk length. Recorded here rather
+than re-run until green, because "it passed the third time" is not a measurement.
+
+**A trap the next executor will otherwise fall into.** `-count=10` of `engine/`
+under `-race` takes ~17 minutes, and `go test`'s default timeout is 10. The first
+full run died at 600s dumping every goroutine, with `TestM1619ThirtyNetworkClient
+LoadAndMetrics` on top of the stack — it reads exactly like a hang in the load
+test and is nothing but the clock. Pass `-timeout 90m`. And do not pipe a
+17-minute run through `tail`: the next attempt's `--- FAIL` line went out with
+the discarded output, so the name of the test that failed cost a full re-run to
+recover. Redirect to a file. (Alongside M18.16's trap, still true: `go test |
+tail` reports `tail`'s exit code, so read the output, not `$?`.)

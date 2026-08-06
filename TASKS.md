@@ -267,6 +267,11 @@ M12.23, M17.1–M17.7, M16.0–M16.8a — has fully landed.)
    moonshots** followed the same day — fork-the-timeline, gravestone ghosts,
    the robot arena, the ZZT Gazette, the treasure hunt, dream duels, the
    relay run, hide-and-seek, and the TAS workbench — same rule.
+   **M22.1a landed 2026-08-05**, so the required `go test -race ./...` gate is
+   green again on the one write the detector named. It filed **M16.15b** on its
+   way through: a load-sensitive exact-count assertion in M16.15's journey that
+   reddens the same gate intermittently under `-count>1`, unrelated to the race
+   and of the M16.11e family — an assertion resting on a guessed walk length.
 
 **Optional / deferred (bottom):**
 - M14.3 — package split — **closed as skipped 2026-08-03**, see NOTES.md
@@ -3741,6 +3746,32 @@ gap task has landed.
   1/5/10, and a board-2 hash mismatch). Full `go test ./...` green, `-race` clean
   on the touched tests, `fixtures/` unchanged apart from the manifest row.
 
+- [ ] **M16.15b — M16.15's journey pins an exact gem count on a walk whose
+  length is a guess (filed 2026-08-05 by M22.1a).** Test-only, load-sensitive,
+  and it intermittently reddens the required `go test -race ./...` gate.
+  `TestM1615PersistenceReconnectAndReplayJourney` failed one of M22.1a's
+  full-suite `-race -count=10` runs with
+  `m16_15_test.go:857: account sidecar stored gems=11 ammo=5, want gems=6
+  ammo=5`. Act 7 asserts the sidecar equals `afterPickups.HUD.Gems+5`, where
+  `afterPickups` was sampled back in **act 3**; between the two, act 4 walks Ada
+  to a passage and act 5 walks her at the keeper under a bound that is only a
+  LOWER one (`st.HUD.Gems >= beforeKeeper+5`). Every gem she crosses on the way,
+  and every gem she overshoots into before the check next fires, makes the
+  act-3 expectation stale — eleven against six is one keeper's worth of extra
+  pickups, not a persistence bug. This is the M16.11a–e family in another suite:
+  an exact assertion resting on a walk driven by a guessed hold rather than by
+  observed movement, so it passes at rest and fails under load.
+  Reproduction is by whole-suite load, not by repetition: `go test -race
+  -count=20 -run TestM1615PersistenceReconnectAndReplayJourney ./` on an
+  unmodified checkout is green, so a targeted `-count` will not show it.
+  Fix by comparing the sidecar against what the run's own HUD said at the moment
+  of the drop — that IS the claim, "the sidecar mirrors the run" — rather than
+  against a sample taken four acts earlier. Do not weaken it to `>=`: a bound
+  would pass against a sidecar that stored the wrong number.
+  DoD: the assertion names the state it mirrors; the journey survives a
+  full-suite `-race -count=10` run; the claim about what the sidecar must hold is
+  not narrowed to make it pass.
+
 - [x] **M16.16 — Auth, chat, and Museum service journey.** Use hermetic OIDC and
   Museum HTTP fakes through the real HTTP/WebSocket server. Cover signed-in vs.
   guest identity, cookie/session rejection, chat filtering/rate limit/history,
@@ -6474,7 +6505,7 @@ the recording today, and adding it is a consent question, not plumbing).
   M22.3 may revisit; following somebody is a different feature from watching a
   room, and it is the one that needs the consent question asked again.
 
-- [ ] **M22.1a — `go test -race` is red on a multiplayer socket test.**
+- [x] **M22.1a — `go test -race` is red on a multiplayer socket test.**
   Test-only; no product code is involved, and it is **PRE-EXISTING** — verified
   2026-08-05 by stashing M22.1's changes and re-running: `go test -race
   -count=10 -run TestWebSocketServerTwoClientsSeeAndFight` on an unmodified
@@ -6496,6 +6527,48 @@ the recording today, and adding it is a consent question, not plumbing).
   DoD: `go test -race -count=10 ./` green in `engine/`, run more than once; the
   setup writes each named and taken under the lock that guards the manager they
   reach into, rather than the test being made to tick less.
+  **Done 2026-08-05.** The write is taken under `inst.mu` — the lock
+  `WorldInstance.Tick` holds across `safeStepDiffs`, so the tick goroutine and
+  the test are now mutually exclusive on that `PlayerState` — through a new
+  `withLiveRoomManager(t, inst, func(rm *RoomManager))` helper. A helper and not
+  one lock at one line for two reasons that outlive this site: the dangerous
+  shape is *take a pointer out of the manager and write through it*, which reads
+  as harmless at the call site and is not; and the helper's `defer` unlocks on a
+  `t.Fatal` inside the closure, where the hand-rolled Lock/Unlock pattern already
+  in the file has to unlock before every `t.Fatalf` and would wedge the tick
+  goroutine if one were missed. The test still ticks exactly as it did.
+  **The filing's "several socket tests" was checked and is one.** Only
+  `runServerAsync` starts a tick goroutine anywhere in the package's Go tests
+  (two files use it, and it starts five tests' servers); every other test that
+  reaches into a `RoomManager` drives `server.Tick` from its own goroutine, so
+  there is no second goroutine to race — and the reach-ins that ARE concurrent
+  elsewhere (the 20-bot soak's room hashes, `m16_16`'s `joinIdentity`, `m21_2`,
+  `m21_4`, `m22_1`, `reconnect_test`) already take `inst.mu`. So the sweep the
+  filing expected found one unlocked write, which is the one the detector named;
+  that is recorded here rather than left looking unexamined. The helper's doc
+  comment says when to use it, and says the other half too: a test that ticks
+  itself does not need the lock, and taking it there would say something untrue
+  about why.
+  Measured, not argued, with a control: pre-fix `go test -race -count=10 -run
+  TestWebSocketServerTwoClientsSeeAndFight ./` reports the DATA RACE at
+  `websocket_server_test.go:667` vs `StateHash` and fails; post-fix the same
+  command is green, and `-count=30` across all the socket tests is green (170s).
+  The control is the whole DoD command on a **stashed** tree: `go test -race
+  -count=10 -timeout 90m ./` on the unmodified checkout fails with that same race
+  at full-suite scale, and the same command with the fix is green end to end.
+  **One honest caveat on the DoD's "run more than once":** of three full
+  `-count=10` runs with the fix, two are green and one failed on
+  `TestM1615PersistenceReconnectAndReplayJourney` — no race, an exact gem-count
+  assertion in an unrelated journey that only misses under whole-suite load. It
+  is not this fix's doing (the diff is one test function plus a helper nothing
+  else calls) and it is filed as **M16.15b** rather than quietly re-run away.
+  Two traps for the next executor. `-count=10` of this package under `-race` runs
+  ~17 minutes, past `go test`'s **default 10-minute timeout** — the first attempt
+  died at 600s with a goroutine dump that reads like a hang inside M16.19's load
+  test and is nothing of the kind; pass `-timeout`. And do not pipe a run that
+  long through `tail`: the second attempt's failure line was thrown away with the
+  rest of the output, which cost a whole 17-minute re-run to learn the name of
+  the test that had failed. Redirect to a file.
 
 - [ ] **M22.2 — `/watch/<world>`: a shareable link that opens a room
   read-only.** The `/watch` half of the deep-links bullet, buildable the

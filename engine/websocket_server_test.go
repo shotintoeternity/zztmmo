@@ -660,11 +660,16 @@ func TestWebSocketServerTwoClientsSeeAndFight(t *testing.T) {
 	waitForPlayers(t, ctx, conn1, 2)
 	waitForPlayers(t, ctx, conn2, 2)
 
-	p1State, ok := server.RoomManager.PlayerState(snap1.You.ID)
-	if !ok {
-		t.Fatal("missing p1 state")
-	}
-	p1State.Ammo = 5
+	// p1 needs ammo to shoot with. The write goes through the instance lock: the
+	// server is ticking, and this same PlayerState is read by StateHash on every
+	// one of those ticks (M22.1a).
+	withLiveRoomManager(t, server.DefaultInstance, func(rm *RoomManager) {
+		p1State, ok := rm.PlayerState(snap1.You.ID)
+		if !ok {
+			t.Fatal("missing p1 state")
+		}
+		p1State.Ammo = 5
+	})
 
 	if err := wsjson.Write(ctx, conn1, InputMessage{
 		Type:     MessageTypeInput,
@@ -948,6 +953,29 @@ func runServerAsync(t *testing.T, ctx context.Context, server *WebSocketServer) 
 		server.Run(ctx)
 	}()
 	t.Cleanup(func() { <-done })
+}
+
+// withLiveRoomManager runs fn under the lock that guards a ticking instance's
+// RoomManager. WorldInstance.Tick holds inst.mu across safeStepDiffs, so the
+// tick goroutine is reading every player's state, every room's engine and the
+// player table while it steps; a test that reaches in for setup is a second
+// goroutine touching the same memory and must take the same lock. That is
+// M22.1a: `p1State.Ammo = 5` in TestWebSocketServerTwoClientsSeeAndFight raced
+// StateHash's read of the same PlayerState, and the shape (grab a pointer out
+// of the manager, write through it) is the reason this is a helper instead of
+// one lock at one line.
+//
+// Only servers started with runServerAsync need it. A test that calls
+// server.Tick itself has no second goroutine to race, and taking the lock there
+// would say something untrue about why.
+//
+// fn may call t.Fatal: the unlock is deferred, so the tick goroutine is not
+// left blocked on a failed test's lock.
+func withLiveRoomManager(t *testing.T, inst *WorldInstance, fn func(rm *RoomManager)) {
+	t.Helper()
+	inst.mu.Lock()
+	defer inst.mu.Unlock()
+	fn(inst.RoomManager)
 }
 
 func joinTestClient(t *testing.T, ctx context.Context, serverURL, name string) (*websocket.Conn, SnapshotMessage) {
