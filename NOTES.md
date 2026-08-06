@@ -10888,3 +10888,42 @@ test and is nothing but the clock. Pass `-timeout 90m`. And do not pipe a
 the discarded output, so the name of the test that failed cost a full re-run to
 recover. Redirect to a file. (Alongside M18.16's trap, still true: `go test |
 tail` reports `tail`'s exit code, so read the output, not `$?`.)
+
+## 2026-08-06 — why the runs take so long, and the product bug at the bottom of it
+
+The owner asked whether the testing is too extensive. Measured rather than
+guessed, and the answer is no.
+
+`go test ./...` — the gate CLAUDE.md rule 3 requires before every commit — is
+**52 seconds**. There are 594 top-level tests; **494 of them run in under 50ms**
+and only **13 take longer than a second**, and those 13 are essentially the whole
+52. Test code is 42k lines against 31.5k of product code. None of that is the
+problem.
+
+What made 2026-08-05 feel endless was **M22.1a's DoD**, not the suite: "full
+package, `-race -count=10`, run more than once" is ~16 minutes per run, and the
+session paid four of them plus one that died on `go test`'s default 10-minute
+timeout — about 75 minutes. The same race would have been caught by a targeted
+`-run <test> -count=30` (170s) plus one full `-race -count=1` (105s): under five
+minutes, and the unmodified-tree control failed at both scales. **A norm worth
+adopting for future race-fix DoDs**, and an owner call rather than an executor
+one, so it is recorded here rather than instituted.
+
+**Chasing the remaining seconds found a product bug, which is the part worth
+keeping.** Two tests take exactly 5.06s each — `TestReconnectSecondConnectionWins`
+and `TestM1614fReconnectTakesOverTheMembershipItLeft`, 10 of the gate's 52
+seconds. The obvious suspect was the tests' own socket cleanup, so that was
+eliminated first: swapping the *test's* deferred close on the displaced conn to
+`CloseNow()` changes nothing (5.02s). The wait is the server's. Both resume paths
+— `websocket_server.go:2343` (game, M13.2's newest-wins) and `:1134` (editor,
+M16.14f) — close the socket they have just superseded with
+`Close(StatusNormalClosure, reason)`, which blocks until the peer answers or
+nhooyr's five-second timeout expires, and a displaced socket is the one least
+likely to answer. It is correctly outside `inst.mu` (M16.14e's rule holds, no
+tick waits) but it is on the **resuming** connection's join path, before its
+snapshot goes out: a returning player can pay five seconds of blank screen for
+the drop that brought them back. Filed as **M18.17** and ranked next by the owner.
+
+The lesson to keep: a test that is slow for no visible reason is worth one
+measurement before it is worth trimming. Trimming this one would have hidden a
+five-second stall on the reconnect path.

@@ -273,6 +273,16 @@ M12.23, M17.1–M17.7, M16.0–M16.8a — has fully landed.)
    reddens the same gate intermittently under `-count>1`, unrelated to the race
    and of the M16.11e family — an assertion resting on a guessed walk length.
 
+11. **M18.17 — the next task (owner decision 2026-08-06).** A displaced socket is
+   closed gracefully on the resume path, so the server waits up to five seconds
+   for a close frame from a connection that has already gone away — on the
+   RESUMING player's own join, before their first frame. Filed out of the owner's
+   question about why test runs take so long: the two tests that sit in that wait
+   are 10 of the 52 seconds `go test ./...` costs, and chasing the seconds found
+   the stall rather than a test to trim. Ranked above M16.15b and the open
+   M22/M23 work because it is product latency on the path M13.2 exists to make
+   fast, and its fix pays the suite back on every run.
+
 **Optional / deferred (bottom):**
 - M14.3 — package split — **closed as skipped 2026-08-03**, see NOTES.md
 - M12.15d — mined style priors — **landed 2026-08-03**, see NOTES.md
@@ -4970,6 +4980,43 @@ lists. Every task: `cd engine && go build ./... && go test ./...` green,
   test files. The known trap this leaves for the next executor: `go test | tail`
   reports `tail`'s exit code, so a red suite reads as green; check the output,
   not `$?`.
+
+- [ ] **M18.17 — a displaced socket's close handshake stalls the reconnect that
+  displaced it.** Filed 2026-08-06 out of the owner's question about test
+  runtime, and ranked next by the owner the same day (NOTES.md 2026-08-06).
+  Two paths close a connection they have just superseded, and both close it
+  **gracefully**: `websocket_server.go:2343` (the game resume path — M13.2's
+  newest-wins) and `:1134` (the editor's, M16.14f). `Close(StatusNormalClosure,
+  reason)` does not return until the peer answers with a close frame of its own
+  or nhooyr's five-second timeout expires
+  (`nhooyr.io/websocket@v1.8.17/close.go:197`) — and a displaced socket is
+  precisely the one least likely to answer: a browser that has already lost the
+  network, or a tab nobody is reading.
+  It is correctly OUTSIDE `inst.mu`, so M16.14e's rule holds and no tick waits on
+  a browser. But it sits on the **resuming** connection's own join path, before
+  that connection's snapshot is returned and written. A returning player can
+  therefore pay up to five seconds of blank screen for the drop that brought them
+  back — the exact case M13.2 exists to make fast.
+  Measured, with the obvious suspect eliminated first.
+  `TestReconnectSecondConnectionWins` and
+  `TestM1614fReconnectTakesOverTheMembershipItLeft` take **5.06s** each — 10 of
+  the 52 seconds `go test ./...` costs — and swapping the *test's* own deferred
+  close on the displaced conn to `CloseNow()` changes nothing (5.02s). The wait
+  is the server's, not test hygiene, and that measurement is why this is a
+  product task and not a test cleanup.
+  The polite close frame is buying nothing a browser can observe: neither client
+  handler reads the code or the reason (`web/src/main.ts:1684` and `:1708` both
+  take no event argument — the game socket shows "Disconnected", the editor
+  re-enters unless it superseded itself). Re-verify that before choosing between
+  the two fixes, because it is what makes the cheap one safe.
+  Fix shape: `CloseNow()` on a displaced connection, or hand the graceful close
+  to its own goroutine so the resuming join never waits on it. Take the goroutine
+  only if the reason string turns out to be worth keeping.
+  DoD: a resume does not wait on the socket it displaces, asserted by a test that
+  **times the join** rather than by reading the code; both named tests drop from
+  ~5s to well under one; `go test ./...` and `go test -race ./...` green; and
+  `ZZT_BROWSER=1` for the editor half, since M16.14f's takeover is one of the
+  covered browser suites and this changes how its socket dies.
 
 ## M19 — Tell players apart (RGB smiley backgrounds)
 
