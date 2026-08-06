@@ -10689,3 +10689,136 @@ directory both are memory-only and the boot log says so.
 The parity manifest lesson from `39f9b9a` was applied rather than re-learned: the
 box was ticked and the four rows (three `proto.msg.*`, one `task.M21.2`)
 scaffolded and curated BEFORE the verification run, not after.
+
+## 2026-08-05 — M22.1: a connection that receives a room without joining it
+
+The milestone's framing was right and worth restating: the recorder shipped and
+the viewer did not, and the reason nobody could build the viewer is that there
+was no way for a connection to receive a room without joining it. This task is
+that way, and it is a join MODE rather than a renderer — the client already draws
+purely from snapshots, so the whole question was what a connection with no stat
+is sent.
+
+**The design decision that made everything else fall out: which table a watcher
+is in.** `inst.Spectators`, not `inst.Clients`. Everything that walks a world's
+players walks `Clients` — the roster, the picker's occupancy, `WorldIsOccupied`
+(which every overwrite path asks before it writes), the chat fan-out, the resume
+tokens, the detach countdown, autosave, the shutdown announcement. Registering a
+watcher there and excluding it at each site would have worked at six of them and
+been missed at the seventh; a separate table makes "invisible" a property of the
+shape rather than of remembering. The DoD's "no StateHash change" is then not
+something the code achieves, it is something it cannot do: nothing in
+`serveSpectator` reaches `RoomManager` except to read a board frame.
+
+Two consequences are recorded rather than hidden, because both are real:
+
+- **A watched-but-unplayed world still reads as free.** `WorldIsOccupied` counts
+  players, so a dream or an editor publish can take the name of a world somebody
+  is watching. That is the right answer — a watcher holds no claim on a world,
+  and the alternative is a stranger able to freeze a name by opening a tab — but
+  it is a decision, not an oversight, and a test asserts it.
+- **A watcher is pinned to the board it opened**, resolved by the same rule
+  pressing Play uses (`resolveJoinBoard`, extracted verbatim so the two answers
+  cannot drift — a `/watch/<world>` that opened a different board from `/play`
+  would be the first thing anyone noticed). It does not follow a player through
+  a passage. Following somebody is a different feature from watching a room, and
+  it is the one that needs the consent question asked again.
+
+**Three things were nearly wrong.**
+
+1. *One drain, two audiences.* The dirty-cell list belongs to the ROOM. A
+   watcher rendered from its own pass over the engine would agree on every tick
+   boundary and disagree only about cells drawn BETWEEN ticks — precisely the
+   ghost M16.12a spent a task on from the other side. So `StepDiffsWithBoards`
+   builds the per-board frame from the same drain the per-player diffs use. The
+   inversion (a second `DrainScreenDirty` for the watcher) fails at tick 0 of a
+   walk.
+2. *A room is born and dies under the watcher.* The first player on a board
+   builds its engine; the last one out freezes it back into the world and
+   destroys it. An incremental diff stream has no past to build on across that
+   boundary — and worse, the arriving player's own `Snapshot` DRAINS the room's
+   opening cells when they are alone (the M16.12a comment, again). A watcher fed
+   only diffs would render the frozen picture forever with nobody in it. So the
+   engine pointer is compared each tick and a change re-sends a whole screen.
+3. *"The room did not move" is not a proof that input was dropped.* It is also
+   what a build that never read the socket looks like — and that build wedges on
+   the first message instead. The read loop therefore counts what it discards,
+   and the test asserts the count, having sent everything a client can say:
+   movement, a shot, a chat line, an operator action, a save filename.
+
+**The event channel stays shut, all the way.** A watcher receives no events at
+all. Every event is addressed to somebody who can answer it — a scroll wants a
+reply, a save prompt a filename, a high score a name — and a room-wide `#play`
+is the one safe member of the set. Half-opening a channel for the safe member is
+how the rest gets let through six months later, so it is closed and the client
+keeps sound off for a watcher. If M22.3's replay viewer wants room audio it can
+open it deliberately, for a stream where there is nobody to be answered.
+
+**An idle board is watchable.** Rendered from the frozen world on a throwaway
+engine that is never ticked, `cloneWorld`-deep exactly as `TitleSim`'s is, so a
+read-only render cannot write through to a board somebody is playing. It is what
+is true — the board sitting still — and it is load-bearing for the determinism
+claim: watching cannot make a world simulate. M22.2's DoD asks for this by name
+and now rests on something instead of filing it. The count-only diff exists for
+the same board: nothing is running there, so without it two watchers of a quiet
+room would each read "1 watching" forever.
+
+**The client suppresses the sampler twice, and `watching` is not `mode`.** The
+55ms interval is never started AND `sendInput` returns early, because the server
+drops what a watcher sends: a sampler left running would be invisible from the
+server side and cost a message every 55ms forever. The intent (`watching`) is
+deliberately separate from the screen (`mode`) — they come apart on a reconnect,
+and the intent is what stops a dropped watcher's retry from quietly walking into
+the room as a player. That is M21.2's lesson from a new angle: the browser's
+backoff will undo a server-side decision unless the client is taught the
+decision too.
+
+The sidebar keeps the banner, writes "Watching" on the health row — an empty row
+reads as a player with none — the count, and the way out. Everything else goes,
+including Chat and Players: a watcher has no PlayerID to be addressed, blocked or
+moderated by, so those windows would open onto nothing and the server would drop
+what they sent. On a phone the bar shows one button, Leave.
+
+**The milestone's owner decision was taken at its stated default:** watching is
+VISIBLE, as a count and never as names. "3 watching" rides the snapshot and every
+diff the way M19.1's roster does, reaching the players in the room and the other
+watchers alike. Naming watchers is the stalking tool M21 spent a milestone
+refusing to build, and nothing here makes it one step easier.
+
+The door for now is `?spectate=1`, resolved through the same `/api/worlds`
+identity `/play/<world>` uses, and it is named in the task record as temporary:
+M22.2 puts the `/watch/<world>` path on the front of it. A mode with no way into
+it is not "the browser can render a room it is not in".
+
+**Verified in two real browsers by hand, because the DoD's proof is a
+server-side one.** Every claim above is asserted over sockets in Go, which is
+right — they are claims about what the server sends — but none of them would
+have caught a client that failed to draw. So a scratch run: a real `zzt-server`
+over TOWN, two Chromium contexts, one on `/play/TOWN` pressing P and one on
+`/play/TOWN?spectate=1`. The board halves of the two canvases hash IDENTICALLY
+pixel for pixel, neither page logged a console error, and the watcher's sidebar
+reads "Watching / 1 watching / Q Leave" beside the player's full one. The
+automated version of that run is M22.2's DoD by name and is left to it, since it
+wants the `/watch/<world>` path this task deliberately did not build.
+
+**One thing was found on the way past and filed rather than fixed — M22.1a.**
+`go test -race` is red on `TestWebSocketServerTwoClientsSeeAndFight`: the test
+writes `p1State.Ammo` from its own goroutine while the tick goroutine reads that
+`PlayerState` through `StateHash`. It is **pre-existing** — stashing this task's
+changes and running `-count=10` on the unmodified checkout reproduces it — and it
+had gone unnoticed because one run is usually not enough to hit it. M22.1's own
+change narrowed the window instead of widening it: the room's StateHash is now
+computed once per BOARD rather than once per recipient, which it always could
+have been (every frame carried the same value; the room stepped once), so a
+two-player room makes one call where it made two. The modified tree survives
+`-count=10` where the unmodified one does not, and still fails at `-count=30`.
+That is a mitigation, not the fix, and the fix is somebody else's task: several
+socket tests reach into a live `RoomManager` for setup while `runServerAsync` is
+ticking, and each of those writes wants the instance lock.
+
+Five inversions were watched failing before any of it was believed: the watcher's
+input dispatched, the wake-up whole-screen frame dropped, the count withheld from
+the player, a watcher registered as a client, and the watcher's frame draining the
+room a second time. The box was ticked and `task.M22.1` scaffolded and curated
+before the verification run, per the `39f9b9a` lesson; no `proto.msg.*` row was
+added, because a spectate is a field on `join` and not a message of its own.

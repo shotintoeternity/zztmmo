@@ -129,6 +129,17 @@ export function clearPlayerColor(store: TokenStore): void {
   dropToken(store, COLOR_KEY);
 }
 
+// buildWatchMessage is buildJoinMessage's read-only counterpart (M22.1): the
+// same join, marked as a spectate.
+//
+// It carries neither a name, a color nor a resume token, and that is the point
+// rather than an omission — a watcher has nobody on the board to name or color,
+// and no run to reclaim. Sending them anyway would be a client claiming an
+// identity the server has already decided it will not give it.
+export function buildWatchMessage(type: string): Record<string, unknown> {
+  return { type, spectate: true };
+}
+
 // buildEditorEnterMessage is buildJoinMessage's editor counterpart (M16.14f):
 // the world instead of a nickname, and the membership token only when one is
 // stored, so a first entry is not read as a lookup of the empty token.

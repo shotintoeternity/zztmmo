@@ -179,6 +179,19 @@ type JoinMessage struct {
 	// instance, reclaims that run instead of spawning a new player (M13.2). An
 	// unknown or expired token falls through to a normal fresh join.
 	ResumeToken string `json:"resumeToken,omitempty"`
+	// Spectate asks to WATCH the world rather than play it (M22.1). It is a join
+	// mode rather than a message of its own, because everything a watcher is
+	// given — the board frame, the roster drawn over it — is what a player is
+	// given, minus a stat.
+	//
+	// A spectating connection never reaches RoomManager: no player is minted, no
+	// stat is spawned, no input is read from it, and it is absent from
+	// inst.Clients, which is what keeps it out of the roster, the occupancy the
+	// picker shows, the chat fan-out and the resume-token table alike. Board is
+	// the only other field it reads, and a Board of 0 defaults the same way a
+	// player's join does; Name, Color and ResumeToken are ignored, because a
+	// watcher has nobody on the board to name or color and no run to reclaim.
+	Spectate bool `json:"spectate,omitempty"`
 }
 
 // EditorEnterMessage opens an isolated editing copy of World. It is the first
@@ -621,6 +634,25 @@ type SnapshotMessage struct {
 	// allowlist is deployment configuration and cannot change under a running
 	// player, so a frame that omits it is silence rather than a revocation.
 	Operator bool `json:"operator,omitempty"`
+	// Spectator marks a frame addressed to a WATCHER rather than a player
+	// (M22.1). It is what puts the client into its read-only mode, and it is said
+	// out loud rather than inferred from an empty `you`: a client that guessed
+	// would guess wrong exactly once — on a frame that arrived malformed — and
+	// the wrong guess is a browser sampling input into a room it is not in.
+	//
+	// A spectator frame carries no `you`, no HUD and no events; see
+	// RoomManager.SpectatorSnapshot for why the event channel stays shut.
+	Spectator bool `json:"spectator,omitempty"`
+	// Watchers is how many people are watching THIS board, counting the
+	// recipient (M22.1). It rides the snapshot and every diff the way M19.1's
+	// roster does — presentation drawn over the screen the server already sent,
+	// never into it — so it reaches players and watchers alike and never reaches
+	// Board.Tiles, StateHash or a recording.
+	//
+	// Unlike Operator above, an absent value here means zero rather than
+	// silence: this field is on every frame, so the only way a client sees none
+	// is that nobody is watching.
+	Watchers int `json:"watchers,omitempty"`
 }
 
 type DiffMessage struct {
@@ -632,6 +664,10 @@ type DiffMessage struct {
 	Players []PlayerSnapshot `json:"players,omitempty"`
 	HUD     *HUDSnapshot     `json:"hud,omitempty"`
 	Events  []ProtocolEvent  `json:"events,omitempty"`
+	// Watchers is SnapshotMessage.Watchers on the per-tick frame: how many people
+	// are watching this board (M22.1). Both a player's diff and a watcher's carry
+	// it, which is what makes "3 watching" true on every screen in the room.
+	Watchers int `json:"watchers,omitempty"`
 }
 
 type EventMessage struct {

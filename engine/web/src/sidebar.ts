@@ -97,6 +97,42 @@ export function drawSidebar(write: WriteText) {
   write(65, 23, 0x1f, " Quit");
 }
 
+// watchersLine is the count a watched room shows, in the room's own words. It
+// is deliberately the same sentence a player's sidebar gets (M22.1): "3
+// watching" is the honest thing to say, and it is a COUNT and never a list —
+// naming watchers is the stalking tool M21 spent a milestone refusing to build.
+export function watchersLine(watchers: number): string {
+  const count = watchers > 0 ? watchers : 0;
+  return `${count} watching`;
+}
+
+// drawWatchSidebar is the sidebar a read-only watcher gets (M22.1). It is
+// drawSidebar minus everything a watcher cannot do — no health, ammo, torches,
+// gems, score or keys, because those are one player's and a watcher is not a
+// player; no Move/Shoot/Torch/Pause/Save, because the input sampler is off and a
+// control that does nothing is worse than no control; no Chat or Players,
+// because a watcher has no PlayerID to be addressed, blocked or moderated by,
+// and the server drops anything it says.
+//
+// What is left is what is true: which room this is, that you are watching it,
+// how many others are, and the way out.
+export function drawWatchSidebar(write: WriteText, watchers: number) {
+  for (let y = 0; y <= 24; y += 1) {
+    sidebarClearLine(write, y);
+  }
+  write(61, 0, 0x1f, "    -  -  -  -     ");
+  write(63, 1, 0x70, "    ZZTMMO     ");
+  write(61, 2, 0x1f, "    -  -  -  -     ");
+  // Row 7 is where the health bar goes. A watcher has no health, and leaving the
+  // row blank would read as a player with none rather than as somebody who is
+  // not playing.
+  write(62, 7, 0x1f, String.fromCharCode(CHAR_PLAYER));
+  write(64, 7, 0x1e, "Watching");
+  write(64, 9, 0x1e, watchersLine(watchers).padEnd(15, " "));
+  write(62, 23, 0x70, " Q ");
+  write(65, 23, 0x1f, " Leave");
+}
+
 // updateSidebar is GameUpdateSidebar: the live counters, redrawn whenever the
 // server sends a HUD.
 export function updateSidebar(write: WriteText, hud: SidebarHud) {

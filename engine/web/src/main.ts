@@ -1,5 +1,5 @@
 import "./style.css";
-import { drawSidebar as paintSidebar, updateSidebar as paintSidebarHud } from "./sidebar";
+import { drawSidebar as paintSidebar, drawWatchSidebar as paintWatchSidebar, updateSidebar as paintSidebarHud } from "./sidebar";
 import {
   applyWorldOccupancy,
   renderModal,
@@ -41,6 +41,7 @@ import {
 import {
   buildEditorEnterMessage,
   buildJoinMessage,
+  buildWatchMessage,
   clearEditorToken,
   clearPlayerColor,
   clearResumeToken,
@@ -240,6 +241,16 @@ type SnapshotMessage = {
    * the allowlist again on every action, so setting it here buys nothing.
    */
   operator?: boolean;
+  /**
+   * This frame is addressed to a WATCHER, not a player (M22.1). It carries no
+   * `you`, no HUD and no events; it is what puts this client into read-only
+   * mode. Said by the server rather than inferred here, because the one time a
+   * guess would be wrong is a malformed frame — and the wrong guess is a
+   * browser sampling input into a room it is not in.
+   */
+  spectator?: boolean;
+  /** How many people are watching this board, counting us (M22.1). */
+  watchers?: number;
 };
 
 type DiffMessage = {
@@ -251,6 +262,11 @@ type DiffMessage = {
   players?: PlayerSnapshot[];
   hud?: HudSnapshot;
   events?: ProtocolEvent[];
+  /**
+   * How many people are watching this board (M22.1). It rides every frame, so
+   * an absent value means nobody rather than "unchanged".
+   */
+  watchers?: number;
 };
 
 type EventMessage = {
@@ -631,8 +647,15 @@ const zztSound = new ZztSound();
 // — no socket, no player, the monitor sidebar over a static board 0. "playing"
 // is GamePlayLoop: joined to a room, streaming diffs. 'P' enters, quitting
 // leaves.
-type Mode = "title" | "playing" | "editor";
+// M22.1 adds "watching": a room this browser renders and does not play.
+type Mode = "title" | "playing" | "editor" | "watching";
 let mode: Mode = "title";
+// `watching` is the INTENT and `mode` is the screen. They come apart on a
+// reconnect: a dropped socket puts the screen on a notice, and the intent is
+// what makes the retry send another spectate join instead of quietly walking
+// into the room as a player.
+let watching = false;
+let watcherCount = 0;
 // The on-screen control bar (M15.1, M16.18a), or null on anything without touch
 // points. Declared here rather than at its construction site because
 // syncTouchControls() below is reached from drawScreen(), which runs before that
@@ -825,6 +848,19 @@ async function openLaunchDestination() {
   // takes, which is what stops it becoming the one path that skips the title
   // screen and joins straight into a room.
   await enterWorld(world);
+  // M22.1: ...except a link that asked to WATCH, which is a room and not a
+  // title screen. `?spectate=1` is the door this task gives the read-only
+  // client; M22.2 puts a `/watch/<world>` path on the front of it, resolved
+  // through the same /api/worlds identity the line above just used.
+  if (watchRequested()) {
+    startWatch();
+  }
+}
+
+// watchRequested reads the one query parameter that means "render this room, do
+// not join it".
+function watchRequested(): boolean {
+  return new URLSearchParams(window.location.search).get("spectate") === "1";
 }
 
 // A dead link leaves the visitor in a working client: the window says which name
@@ -980,6 +1016,10 @@ async function showTitle() {
   // Nor does operator status (M21.2). It comes back on the next join's snapshot,
   // from the allowlist, which is the only thing that decides it.
   isOperator = false;
+  // Nor does watching (M22.1): the title screen is not a room, and leaving one
+  // must not leave the reconnect holding an intent to re-enter it.
+  watching = false;
+  watcherCount = 0;
   editorCursor = { x: 30, y: 12 };
   editorSidebarMenu = null;
   editorStatPrompt = null;
@@ -1070,8 +1110,31 @@ function startPlay() {
   zztSound.setEnabled(true);
   zztSound.resume();
   leavingToTitle = false;
+  watching = false;
   reconnectAttempt = 0;
   drawSidebar();
+  drawScreen();
+  connect();
+}
+
+// startWatch is startPlay's read-only twin (M22.1): the same socket to the same
+// world, joined as a spectator.
+//
+// Sound stays off. A watcher receives no events at all — the server shuts that
+// channel rather than half-opening it for the one safe member (a room-wide
+// #play) — so a watcher with sound enabled would be a client waiting for notes
+// that are never sent.
+function startWatch() {
+  closeTitleStream();
+  stopOccupancyPolling();
+  clearScrolls();
+  zztSound.setEnabled(false);
+  leavingToTitle = false;
+  watching = true;
+  watcherCount = 0;
+  reconnectAttempt = 0;
+  mode = "watching";
+  drawWatchSidebar();
   drawScreen();
   connect();
 }
@@ -1590,6 +1653,15 @@ function connect() {
   socket.addEventListener("open", () => {
     connected = true;
     reconnectAttempt = 0;
+    // M22.1: a watcher's join is the same message marked as a spectate, and the
+    // input sampler below is never started for one. Two gates rather than one,
+    // deliberately: the server drops what a watcher sends, so a sampler left
+    // running would be invisible here and cost a message every 55ms forever.
+    if (watching) {
+      socket.send(JSON.stringify(buildWatchMessage(MessageTypeJoin)));
+      canvas.focus();
+      return;
+    }
     // No board: the server picks its configured default (zzt-server -board). A
     // stored resume token reclaims a dropped run instead of spawning a new
     // player (M13.2); an unknown/expired token is treated as a fresh join.
@@ -2048,6 +2120,12 @@ function applyEditorProgramText(message: EditorProgramTextMessage) {
 }
 
 function applySnapshot(message: SnapshotMessage) {
+  // M22.1: a frame the server marked as a watcher's is a different screen, not
+  // a player's screen with the parts we happen to have missing.
+  if (message.spectator) {
+    applyWatchSnapshot(message);
+    return;
+  }
   mode = "playing";
   setEditorBlinking(false);
   // The join/resume snapshot carries our resume token; keep it so a later drop
@@ -2079,6 +2157,50 @@ function applySnapshot(message: SnapshotMessage) {
   drawSidebar();
   updateSidebar(message.hud);
   renderEvents(message.events);
+  paintOverlay();
+  drawScreen();
+}
+
+// applyWatchSnapshot renders a whole board this browser is not in (M22.1).
+//
+// The server sends one of these at the join and again whenever the room is
+// created or replaced under us — the first player arriving on a board builds it
+// and the last one leaving freezes it away — because an incremental diff stream
+// has no past to build on across that boundary.
+//
+// Everything a player's snapshot claims is deliberately dropped: no resume token
+// (a watcher has no run to reclaim), no playerId or statId (no stat), no HUD (no
+// inventory), no events (nothing a watcher could answer). The roster IS kept:
+// it is what the M19.1 tints are painted from, and a watcher sees the room's
+// people exactly as the people in it do.
+function applyWatchSnapshot(message: SnapshotMessage) {
+  mode = "watching";
+  watching = true;
+  setEditorBlinking(false);
+  playerId = 0;
+  myStatId = -1;
+  roster = message.players ?? [];
+  watcherCount = message.watchers ?? 0;
+  replaceCells(message.screen);
+  drawWatchSidebar();
+  paintOverlay();
+  drawScreen();
+}
+
+function applyWatchDiff(message: DiffMessage) {
+  // trackMyStatId keeps the roster the tints are drawn from; it looks for a
+  // player id we do not have and simply finds none, which is what a watcher is.
+  trackMyStatId(message.players);
+  if (message.cells) {
+    for (const cell of message.cells) {
+      setBoardCell(cell);
+    }
+  }
+  // An absent count means nobody, not "unchanged": this field rides every frame
+  // (M22.1), and the one message that carries nothing else is the one that
+  // exists to say the count moved on a board where nothing is running.
+  watcherCount = message.watchers ?? 0;
+  drawWatchSidebar();
   paintOverlay();
   drawScreen();
 }
@@ -2169,6 +2291,10 @@ function trackMyStatId(players: PlayerSnapshot[] | undefined) {
 }
 
 function applyDiff(message: DiffMessage) {
+  if (mode === "watching") {
+    applyWatchDiff(message);
+    return;
+  }
   trackMyStatId(message.players);
   if (message.cells) {
     for (const cell of message.cells) {
@@ -2879,6 +3005,10 @@ function updateSidebar(hud: HudSnapshot) {
   paintSidebarHud(writeText, hud);
 }
 
+function drawWatchSidebar() {
+  paintWatchSidebar(writeText, watcherCount);
+}
+
 // M17.7: the first time an in-game sound arrives that the browser cannot voice,
 // say why in the console instead of failing silently. "not running" means the
 // AudioContext never unlocked (autoplay policy / no gesture reached unlock);
@@ -3154,6 +3284,19 @@ function handleKeyDown(event: KeyboardEvent) {
     return;
   }
 
+  // M22.1: a watcher answers to one key. Everything else returns here rather
+  // than falling through, so no command byte, no movement mask and no letter
+  // window can be reached from a screen whose whole claim is that it changes
+  // nothing — the server would drop them, and a control that is silently
+  // ignored is how a watcher learns the client is broken.
+  if (mode === "watching") {
+    if (event.code === "Escape" || event.code === "KeyQ") {
+      event.preventDefault();
+      leaveToTitle();
+    }
+    return;
+  }
+
   if (event.code === "KeyC") {
     event.preventDefault();
     stopHeldInput();
@@ -3194,7 +3337,7 @@ function handleKeyDown(event: KeyboardEvent) {
 }
 
 function handleKeyUp(event: KeyboardEvent) {
-  if (modal || mode === "title" || mode === "editor") {
+  if (modal || mode === "title" || mode === "editor" || mode === "watching") {
     return;
   }
   const handled = updatePressed(event, false);
@@ -4318,6 +4461,12 @@ function currentMask(): number {
 }
 
 function sendInput(mask: number, key = 0) {
+  // M22.1: said out loud rather than left to `playerId === 0` below, which is
+  // true of a watcher only by accident. A watcher's input is dropped by the
+  // server; this is the client agreeing not to send it in the first place.
+  if (watching) {
+    return;
+  }
   if (!connected || !ws || ws.readyState !== WebSocket.OPEN || playerId === 0) {
     return;
   }

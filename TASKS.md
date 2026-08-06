@@ -6377,7 +6377,7 @@ promoted) is never watchable. Second decision, cheaper: whether a shared
 replay includes the chat said during it — default here is NO (chat is not in
 the recording today, and adding it is a consent question, not plumbing).
 
-- [ ] **M22.1 — a read-only client: the browser can render a room it is not
+- [x] **M22.1 — a read-only client: the browser can render a room it is not
   in.** The client already renders purely from snapshots, so this is a join
   mode, not a renderer. Server: a `spectate: true` join that subscribes the
   connection to the instance's snapshot fan-out but never creates a stat,
@@ -6395,6 +6395,107 @@ the recording today, and adding it is a consent question, not plumbing).
   scripted run; spectator input is provably discarded; the watcher count
   reaches players and other watchers; replay fixtures untouched;
   `go test ./...` green.
+  **Done 2026-08-05.** A join mode, as the spec said: `JoinMessage.Spectate`
+  branches out of `ServeHTTP` before a stat, a color, a stored state or a resume
+  token is touched, into `serveSpectator`, and a watcher is registered in
+  `inst.Spectators` rather than `inst.Clients`.
+  * *invisible by construction, not by exclusion* — the table it is NOT in is
+    the point. Everything that walks a world's players walks `inst.Clients`: the
+    roster, the picker's occupancy, `WorldIsOccupied` (which every overwrite path
+    asks before it writes), the chat fan-out, the resume tokens, the detach
+    countdown, autosave. A watcher in that map would have had to be excluded at
+    each of them, and the seventh place would have been missed. A test asserts
+    all of them at once, including the consequence worth stating rather than
+    hiding: **a watched-but-unplayed world still reads as free**, so a dream or a
+    publish can take its name. A watcher holds no claim on a world.
+  * *one step, one drain, two audiences* — `StepDiffsWithBoards` returns the
+    per-player diffs and the same tick's per-BOARD frame from one pass.
+    A watcher rendered from a second pass would agree on every tick boundary and
+    disagree about the cells drawn between them, which is the class of bug
+    M16.12a spent a whole task on from the other side; the inversion (a second
+    `DrainScreenDirty` for the watcher's frame) was watched failing at tick 0.
+  * *the board frame is the player frame minus what only a participant has* —
+    no HUD, because a HUD is one player's inventory, and **no events at all**.
+    Every event is addressed to somebody who can answer it — a scroll wants a
+    reply, a save prompt a filename, a high score a name — and a room-wide
+    `#play` is the one safe member of the set. Half-opening the channel for it is
+    how the other half gets let through later, so it stays shut and the client
+    keeps sound off for a watcher.
+  * *a room is born and dies under the watcher* — the first player on a board
+    builds its engine and the last one out freezes and destroys it, so an
+    incremental diff stream has no past to build on across that boundary. A
+    watcher gets a WHOLE SCREEN whenever the engine it is rendering from changes.
+    That is not belt-and-braces: the arriving player's own `Snapshot` drains the
+    room's opening dirty cells when they are alone (`room_manager.go`, the
+    M16.12a comment), so a watcher fed only diffs would render the frozen picture
+    forever. Dropping the wake-up snapshot was watched failing.
+  * *an idle board is watchable* — rendered from the frozen world on a throwaway
+    engine that is never ticked, `cloneWorld`-deep exactly as `TitleSim`'s is, so
+    a read-only render cannot write through to a board somebody is playing. It
+    is the honest thing to show and it is load-bearing for claim 2: **watching
+    does not start a room**, so it cannot make a world simulate. M22.2's DoD
+    asks for this by name and now rests on something rather than filing it.
+  * *the count is a count* — "3 watching" rides the snapshot and every diff the
+    way M19.1's roster does, reaching the players in the room and the other
+    watchers. No names, ever: the milestone's own default, and the thing M21
+    spent a milestone refusing to build. An idle board produces no diffs at all,
+    so a watcher there is sent a count-only diff when the number moves — without
+    it, two watchers of a quiet room would each read "1 watching" forever.
+  * *dropped on the floor, and proved to have arrived* — the read loop reads and
+    discards, and counts what it discarded. A test that only checked the room did
+    not move would pass just as well against a build that never read the socket,
+    so the assertion is `SpectatorDrops`, and the messages sent are everything a
+    client can say: movement, a shot, a chat line, an operator action, a save
+    filename. A refused account is refused here too — watching is a door into the
+    same server, and the branch sits after `refusedAtTheDoor` for that reason.
+  * *the client suppresses the sampler twice* — `watching` gates `sendInput` and
+    the 55ms interval is never started. Two gates because the server drops what
+    a watcher sends, so a sampler left running would be invisible from here and
+    cost a message every 55ms forever. `watching` (the intent) is deliberately
+    separate from `mode` (the screen): they come apart on a reconnect, and the
+    intent is what stops a dropped watcher's retry from walking into the room as
+    a player.
+  * *and the sidebar says what is true* — `drawWatchSidebar` keeps the banner,
+    writes "Watching" on the health row (an empty row would read as a player with
+    none), the count, and the way out. Everything else goes: health, ammo,
+    torches, gems, score, keys, Move, Shoot, Torch, Pause, Save, Chat, Players —
+    a watcher has no PlayerID to be addressed, blocked or moderated by, so a
+    control that is silently ignored is only how a watcher learns the client is
+    broken. On a phone the bar shows one button, Leave; a room you can enter and
+    not leave is worse than one you cannot enter.
+  * *the door for now is `?spectate=1`* — resolved through the same
+    `/api/worlds` identity `/play/<world>` uses, and named as the temporary one:
+    M22.2 puts the `/watch/<world>` path on the front of it. A mode with no way
+    into it is not a browser rendering a room it is not in.
+  One limit recorded rather than hidden: **a watcher is pinned to the board it
+  opened** — the world's current board, resolved by the extracted
+  `resolveJoinBoard` so it is the board pressing Play would have opened. It does
+  not follow a player through a passage. That is a product decision M22.2 or
+  M22.3 may revisit; following somebody is a different feature from watching a
+  room, and it is the one that needs the consent question asked again.
+
+- [ ] **M22.1a — `go test -race` is red on a multiplayer socket test.**
+  Test-only; no product code is involved, and it is **PRE-EXISTING** — verified
+  2026-08-05 by stashing M22.1's changes and re-running: `go test -race
+  -count=10 -run TestWebSocketServerTwoClientsSeeAndFight` on an unmodified
+  checkout reports the same race, so this came in long before M22.1 and had
+  simply never been run enough times in one go to surface.
+  `websocket_server_test.go:667` writes `p1State.Ammo = 5` from the test
+  goroutine while the tick goroutine reads that same `PlayerState` through
+  `StateHash`. It is not a rare shape: several socket tests reach into a live
+  `RoomManager` for setup while `runServerAsync` is already ticking, so the fix
+  probably wants a helper rather than one lock at one line — every one of those
+  writes belongs under the instance's `mu`, the way `TestReconnect...` already
+  takes it.
+  M22.1 narrowed rather than widened the window on its way past: the room's
+  StateHash is now computed ONCE per board instead of once per recipient (it was
+  always the same value — the room stepped once), so a two-player room makes one
+  call where it made two, and the modified tree survives `-count=10` where the
+  unmodified one does not. That is a mitigation and not the fix; the race is
+  still there at `-count=30`.
+  DoD: `go test -race -count=10 ./` green in `engine/`, run more than once; the
+  setup writes each named and taken under the lock that guards the manager they
+  reach into, rather than the test being made to tick less.
 
 - [ ] **M22.2 — `/watch/<world>`: a shareable link that opens a room
   read-only.** The `/watch` half of the deep-links bullet, buildable the

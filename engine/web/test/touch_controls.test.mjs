@@ -258,11 +258,22 @@ assert.deepEqual(visible(), [...DPAD, "⌨", "⏎", "Esc", "Yes", "No"]);
 controls.setMode("editor");
 assert.deepEqual(visible(), [...DPAD, "⌨", "⏎"]);
 
+// M22.1: a watcher's bar. It is the one mode with no direction pad and no
+// Enter: the client's input sampler is off and the server drops anything a
+// watcher sends, so every one of those would be a button that does nothing.
+// What is left is the way out, which a room a phone can enter and not leave
+// would otherwise lack.
+controls.setMode("watching");
+assert.deepEqual(visible(), ["Leave"]);
+
 controls.setMode("title");
 assert.deepEqual(visible(), [...DPAD, "⌨", "⏎", "Color", "World", "Play"], "modes are reversible");
 
 // The direction pad is laid out as a cross by :nth-child (style.css), so it must
-// be present in EVERY mode — hiding one would silently re-letter the others.
+// be present in every mode that HAS one — hiding a single arrow would silently
+// re-letter the others. "watching" is deliberately absent from this list: it
+// hides all four together, which is a bar without a pad rather than a broken
+// one.
 for (const mode of ["title", "playing", "editor", "modal", "prompt"]) {
   controls.setMode(mode);
   for (const label of DPAD) {

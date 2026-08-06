@@ -491,6 +491,21 @@ func (rm *RoomManager) Step(inputs map[PlayerID]PlayerInput) {
 }
 
 func (rm *RoomManager) StepDiffs(inputs map[PlayerID]PlayerInput) map[PlayerID]DiffMessage {
+	diffs, _ := rm.StepDiffsWithBoards(inputs)
+	return diffs
+}
+
+// StepDiffsWithBoards is StepDiffs plus the same tick's frame addressed to a
+// BOARD rather than to a player (M22.1) — what a read-only watcher of that room
+// is sent.
+//
+// The two share one step and one dirty-cell drain, deliberately: a watcher that
+// re-rendered the room from a second pass could disagree with the players in it,
+// and a watcher that drained its own cells would take them from the players. So
+// the board frame is the player frame minus the two things only a participant
+// has — the HUD, which is one player's inventory, and the events, which are
+// addressed to somebody who can answer them.
+func (rm *RoomManager) StepDiffsWithBoards(inputs map[PlayerID]PlayerInput) (map[PlayerID]DiffMessage, map[int16]DiffMessage) {
 	// Record this tick before stepping: the buffered ops are exactly the
 	// external stimuli that arrived since the last step, and inputs is what the
 	// step consumes. Quit/transfer removals happen below and are deliberately
@@ -605,6 +620,7 @@ func (rm *RoomManager) StepDiffs(inputs map[PlayerID]PlayerInput) map[PlayerID]D
 	rm.syncPlayerStatIDs()
 
 	diffs := make(map[PlayerID]DiffMessage)
+	boardDiffs := make(map[int16]DiffMessage)
 	for _, boardID := range rm.roomIDs() {
 		room := rm.rooms[boardID]
 		if room == nil || len(room.players) == 0 {
@@ -613,6 +629,18 @@ func (rm *RoomManager) StepDiffs(inputs map[PlayerID]PlayerInput) map[PlayerID]D
 		cells := room.Engine.DrainScreenDirty()
 		events := ProtocolEvents(roomEvents[boardID])
 		players := rm.playerSnapshotsForRoom(room)
+		// One hash for the room, not one per recipient. Every frame built below
+		// carries the same value — it is the room's state, and the room stepped
+		// once — and the watcher's frame added here is the third audience for it.
+		hash := StateHash(room.Engine)
+		boardDiffs[room.BoardID] = DiffMessage{
+			Type:    MessageTypeDiff,
+			BoardID: room.BoardID,
+			Tick:    room.Engine.CurrentTick,
+			Hash:    hash,
+			Cells:   cells,
+			Players: players,
+		}
 		for _, playerID := range rm.playerIDs() {
 			player := rm.players[playerID]
 			if player.boardID != room.BoardID {
@@ -623,7 +651,7 @@ func (rm *RoomManager) StepDiffs(inputs map[PlayerID]PlayerInput) map[PlayerID]D
 				Type:    MessageTypeDiff,
 				BoardID: room.BoardID,
 				Tick:    room.Engine.CurrentTick,
-				Hash:    StateHash(room.Engine),
+				Hash:    hash,
 				Cells:   cells,
 				Players: players,
 				HUD:     &hud,
@@ -631,7 +659,7 @@ func (rm *RoomManager) StepDiffs(inputs map[PlayerID]PlayerInput) map[PlayerID]D
 			}
 		}
 	}
-	return diffs
+	return diffs, boardDiffs
 }
 
 // stepRoom contains a simulation panic to the room that caused it.  Engines
@@ -771,6 +799,72 @@ func (rm *RoomManager) Snapshot(playerID PlayerID) (SnapshotMessage, bool) {
 	}
 	room.Engine.DrainEvents()
 	return snapshot, true
+}
+
+// SpectatorSnapshot is the whole-screen frame a read-only watcher of boardID
+// gets (M22.1), plus the room engine it was rendered from — nil when that board
+// has nobody in it. The server compares that engine against the one it rendered
+// last, which is how a watcher is re-sent a full frame when a board it is
+// watching comes back to life under a new engine.
+//
+// It is deliberately NOT Snapshot with the player parts blanked. Snapshot does
+// two things a watcher must not do: it drains the room's dirty cells (they are
+// the only notice the players already in the room get that someone appeared —
+// see there), and it drains the engine's events. A watcher takes nothing from
+// the room; it reads the screen the room has already drawn.
+//
+// The event channel stays shut for the same reason the HUD does. Every event is
+// addressed to somebody who can answer it — a scroll wants a reply, a save
+// prompt wants a filename, a high score wants a name — and a watcher can answer
+// none of them; a room-wide #play would be the one safe member of the set, and
+// half-opening the channel for it is how the other half gets let through later.
+//
+// An idle board is rendered from the frozen world on a throwaway engine, which
+// is what "the board sitting still" is: BoardOpen paints the stored bytes, and
+// nothing ticks it. The copy is cloneWorld's, exactly as TitleSim's is, so a
+// read-only render can never write through to the boards the rooms are playing.
+func (rm *RoomManager) SpectatorSnapshot(boardID int16) (SnapshotMessage, *Engine) {
+	room := rm.rooms[boardID]
+	if room == nil {
+		engine := newSpectatorEngine(rm.world, boardID)
+		return SnapshotMessage{
+			Type:      MessageTypeSnapshot,
+			BoardID:   boardID,
+			Spectator: true,
+			// A watcher has no stat, and stat 0 is a real one: -1 is the same
+			// "nobody" ProtocolEvent.PlayerStatID already uses.
+			You:    PlayerSnapshot{StatID: -1},
+			Screen: screenCells(engine),
+		}, nil
+	}
+	return SnapshotMessage{
+		Type:      MessageTypeSnapshot,
+		BoardID:   room.BoardID,
+		Tick:      room.Engine.CurrentTick,
+		Seed:      room.Engine.RandSeed,
+		Hash:      StateHash(room.Engine),
+		Spectator: true,
+		You:       PlayerSnapshot{StatID: -1},
+		Players:   rm.playerSnapshotsForRoom(room),
+		Screen:    screenCells(room.Engine),
+	}, room.Engine
+}
+
+// newSpectatorEngine renders one board of a world and is never ticked. It is
+// ensureRoom's opening without the room: same headless multi-room engine, same
+// BoardOpen/TransitionDrawToBoard paint, on a deep copy so nothing it touches is
+// shared with a live room.
+func newSpectatorEngine(world TWorld, boardID int16) *Engine {
+	engine := NewEngine()
+	engine.Headless = true
+	engine.MultiRoom = true
+	engine.GameStateElement = E_PLAYER
+	engine.SetInputSource(&ScriptedInput{})
+	engine.World = cloneWorld(world)
+	engine.BoardOpen(boardID)
+	engine.GenerateTransitionTable()
+	engine.TransitionDrawToBoard()
+	return engine
 }
 
 func (rm *RoomManager) ensureRoom(boardID int16) *Room {

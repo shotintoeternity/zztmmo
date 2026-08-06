@@ -52,7 +52,12 @@ export type TouchControlHandlers = {
 // owns the keys whichever screen it is drawn over. `prompt` is the one modal told
 // apart from the rest (M21.5), because a yes/no prompt answers to three keys and
 // none of them is Enter — see PROMPT_ONLY below.
-export type TouchControlMode = "title" | "playing" | "editor" | "modal" | "prompt";
+//
+// `watching` is the read-only room (M22.1). It is the one mode with no direction
+// pad: a watcher's input sampler is off and the server drops anything it sends,
+// so every movement control would be a button that does nothing — and a bar full
+// of dead buttons is how a phone learns to distrust the whole bar.
+export type TouchControlMode = "title" | "playing" | "editor" | "modal" | "prompt" | "watching";
 
 const EVERY_MODE: readonly TouchControlMode[] = ["title", "playing", "editor", "modal", "prompt"];
 const PLAYING_ONLY: readonly TouchControlMode[] = ["playing"];
@@ -61,6 +66,7 @@ const TITLE_ONLY: readonly TouchControlMode[] = ["title"];
 // a prompt (modal.ts), so the one control means the same thing in both.
 const ANY_WINDOW: readonly TouchControlMode[] = ["modal", "prompt"];
 const PROMPT_ONLY: readonly TouchControlMode[] = ["prompt"];
+const WATCHING_ONLY: readonly TouchControlMode[] = ["watching"];
 
 type ButtonSpec =
   | {
@@ -121,6 +127,11 @@ export const TOUCH_BUTTONS: ButtonSpec[] = [
   // confirmation the Players window opens and can only decline it.
   { id: "yes", label: "Yes", kind: "key", code: "KeyY", key: "y", hold: false, group: "action", modes: PROMPT_ONLY },
   { id: "no", label: "No", kind: "key", code: "KeyN", key: "n", hold: false, group: "action", modes: PROMPT_ONLY },
+  // M22.1: the only control a watcher gets, and the only one it needs. A room
+  // you can enter on a phone and not leave is a dead end, and Escape is what
+  // main.ts's watching branch answers to — the same key that closes a window,
+  // because both mean "put me back where I was".
+  { id: "leave", label: "Leave", kind: "key", code: "Escape", key: "Escape", hold: false, group: "action", modes: WATCHING_ONLY },
 ];
 
 export type TouchControls = {
