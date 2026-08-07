@@ -6839,7 +6839,7 @@ rather than an ending, and R restores a save the whole group shares.
   review path before deploy. Verified with `npm test`, `npm run build`,
   `cd engine && go build ./...`, and `cd engine && go test ./...`.
 
-- [ ] **M23.2 — a welcome world that teaches by being played.** First-party
+- [x] **M23.2 — a welcome world that teaches by being played.** First-party
   content, built in the shipped M5 editor — the dogfooding the first-party
   bullets keep promising. Three to five boards that teach movement, torches
   and the dark, keys and doors, shooting, and — the part no classic world can
@@ -6852,6 +6852,17 @@ rather than an ending, and R restores a save the whole group shares.
   DoD: the world ships in the hosting directory as canonical content,
   protected by M18.11's guard like any classic; a three-browser run completes
   it together; every teaching beat lands without a wiki.
+  **Done 2026-08-07.** `fixtures/welcome.zwd` is the first-party source and
+  `fixtures/WELCOME.ZZT` is its compiled shipped fixture; the test also writes
+  the gitignored `engine/WELCOME.ZZT` local hosting artifact for deploy bundles
+  built from the workstation directory. `WELCOME` is in `worlds.manifest.json`,
+  so `WorldIsCanonical("WELCOME")` protects it from dream/editor overwrites
+  through M18.11's existing guard. The route is five playable boards after the
+  title: guide scroll + C chat, dark room + torch, one key opening a shared
+  door for all three players, a shooting range whose target is removed by
+  Space, and a final "press Q, then W" board. `TestM232WelcomeWorldThreeBrowserJourney`
+  hosts the production server and drives three Chromium instances through the
+  whole world from the real title/picker flow, with no staged state.
 
 - [ ] **M23.3 — the first visit lands somewhere designed for it.** Wire
   M23.2 in: a browser that has never been here (no account, no local flag)

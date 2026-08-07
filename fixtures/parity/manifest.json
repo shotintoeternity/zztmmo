@@ -1214,6 +1214,29 @@
       "notes": "task-claim row; behavioral parity carried by the element/oop/protocol/input/service rows this task touched; reconciled at M16.20"
     },
     {
+      "id": "task.M23.1",
+      "dimension": "task",
+      "subject": "Completed task M23.1 — its DoD still holds",
+      "contract": "E",
+      "authority": "TASKS.md M23.1",
+      "parity": "exact",
+      "status": "unverified",
+      "assignedTask": "M16.20",
+      "notes": "task-claim row; behavioral parity carried by the element/oop/protocol/input/service rows this task touched; reconciled at M16.20"
+    },
+    {
+      "id": "task.M23.2",
+      "dimension": "task",
+      "subject": "Completed task M23.2 — its DoD still holds",
+      "contract": "E",
+      "authority": "TASKS.md M23.2",
+      "parity": "exact",
+      "test": "TestM232WelcomeWorldCompilesShipsAndIsCanonical,TestM232WelcomeWorldThreeBrowserJourney",
+      "fixture": "fixtures/welcome.zwd",
+      "status": "pass",
+      "notes": "task-claim row; reconciled at the task itself (2026-08-07), NOT at M16.20: M23.2 landed after the certification milestone closed, so no M16.20 run ever saw this row. WELCOME is first-party content rather than a vanilla parity surface: fixtures/welcome.zwd is compiled to fixtures/WELCOME.ZZT, listed in worlds.manifest.json, and therefore protected by WorldIsCanonical through M18.11's existing dream/publish guard. TestM232WelcomeWorldCompilesShipsAndIsCanonical proves the world compiles, validates, writes the local hosting artifact, has the expected board count, and is canonical. TestM232WelcomeWorldThreeBrowserJourney launches the production zzt-server binary and drives three Chromium clients through the whole route from the real title/picker flow: guide scroll plus chat, dark room plus torch, a shared key door, shooting, final return instructions, quit, and reopening the picker. No simulation fixture moved beyond the new authored world."
+    },
+    {
       "id": "task.M3.0",
       "dimension": "task",
       "subject": "Completed task M3.0 — its DoD still holds",
