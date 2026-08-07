@@ -701,6 +701,7 @@ let leavingToTitle = false;
 // title screen and per-world for the picker. Server-observed presentation state
 // — it never enters the simulation. See refreshOccupancy.
 let serverOccupancy: ServerOccupancy = NO_OCCUPANCY;
+let serverBuildCommit = "";
 let worldPickerEntries: WorldSearchEntry[] = [];
 let occupancyTimer = 0;
 
@@ -1112,7 +1113,16 @@ async function showTitle() {
     // Offline: keep whatever board is on screen and still draw the menu, so
     // the player can retry with 'P'.
   }
-  drawTitleSidebar(writeText, friendlyName, authDisplayName(), authStatus.enabled, serverOccupancy, readStoredPlayerColor());
+  await refreshServiceHealth(false);
+  drawTitleSidebar(
+    writeText,
+    friendlyName,
+    authDisplayName(),
+    authStatus.enabled,
+    serverOccupancy,
+    readStoredPlayerColor(),
+    serverBuildCommit,
+  );
   paintOverlay();
   drawScreen();
   canvas.focus();
@@ -1139,7 +1149,15 @@ async function refreshAuthStatus() {
   accountPrefs = authStatus.authenticated ? await fetchAccountPreferences(fetch) : null;
   accountPrefsLoaded = true;
   if (mode === "title") {
-    drawTitleSidebar(writeText, titleFriendlyName, authDisplayName(), authStatus.enabled, serverOccupancy, readStoredPlayerColor());
+    drawTitleSidebar(
+      writeText,
+      titleFriendlyName,
+      authDisplayName(),
+      authStatus.enabled,
+      serverOccupancy,
+      readStoredPlayerColor(),
+      serverBuildCommit,
+    );
     paintOverlay();
     drawScreen();
   }
@@ -1358,6 +1376,33 @@ async function fetchWorldEntries(): Promise<WorldSearchEntry[]> {
   return normalizeWorldEntries(data.worlds ?? []);
 }
 
+async function refreshServiceHealth(redraw = true) {
+  try {
+    const response = await fetch("/api/health");
+    if (!response.ok) {
+      throw new Error(String(response.status));
+    }
+    const data = (await response.json()) as { build?: { short?: string; commit?: string } };
+    const stamp = data.build?.short || data.build?.commit || "";
+    serverBuildCommit = stamp === "dev" ? "" : stamp;
+  } catch {
+    serverBuildCommit = "";
+  }
+  if (redraw && mode === "title") {
+    drawTitleSidebar(
+      writeText,
+      titleFriendlyName,
+      authDisplayName(),
+      authStatus.enabled,
+      serverOccupancy,
+      readStoredPlayerColor(),
+      serverBuildCommit,
+    );
+    paintOverlay();
+    drawScreen();
+  }
+}
+
 async function showWorlds() {
   let worlds: WorldSearchEntry[] = [];
   try {
@@ -1433,7 +1478,15 @@ async function refreshOccupancy() {
     // not always the ones the picker was opened with; update both.
     applyWorldOccupancy(modal.entries, worlds);
   }
-  drawTitleSidebar(writeText, titleFriendlyName, authDisplayName(), authStatus.enabled, serverOccupancy, readStoredPlayerColor());
+  drawTitleSidebar(
+    writeText,
+    titleFriendlyName,
+    authDisplayName(),
+    authStatus.enabled,
+    serverOccupancy,
+    readStoredPlayerColor(),
+    serverBuildCommit,
+  );
   paintOverlay();
   drawScreen();
 }
@@ -2863,6 +2916,7 @@ function openColorPicker() {
           authStatus.enabled,
           serverOccupancy,
           readStoredPlayerColor(),
+          serverBuildCommit,
         );
       }
     }),

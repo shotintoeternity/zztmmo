@@ -110,16 +110,18 @@ func (a *WebAPI) handleHealth(w http.ResponseWriter, r *http.Request) {
 	}
 	if a.Server == nil {
 		writeJSON(w, struct {
-			Status string `json:"status"`
-		}{Status: "ok"})
+			Status string               `json:"status"`
+			Build  ServiceBuildSnapshot `json:"build"`
+		}{Status: "ok", Build: ServiceBuildSnapshot{Commit: BuildCommitID(), Short: BuildCommitShort()}})
 		return
 	}
 	status := a.Server.ServiceStatus()
 	writeJSON(w, struct {
-		Status        string        `json:"status"`
-		UptimeSeconds int64         `json:"uptimeSeconds"`
-		Totals        ServiceTotals `json:"totals"`
-	}{Status: status.Status, UptimeSeconds: status.UptimeSeconds, Totals: status.Totals})
+		Status        string               `json:"status"`
+		Build         ServiceBuildSnapshot `json:"build"`
+		UptimeSeconds int64                `json:"uptimeSeconds"`
+		Totals        ServiceTotals        `json:"totals"`
+	}{Status: status.Status, Build: status.Build, UptimeSeconds: status.UptimeSeconds, Totals: status.Totals})
 }
 
 func (a *WebAPI) handleMetrics(w http.ResponseWriter, r *http.Request) {

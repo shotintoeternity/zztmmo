@@ -311,7 +311,10 @@ M12.23, M17.1–M17.7, M16.0–M16.8a — has fully landed.)
    first-time multiplayer hints and the canonical WELCOME world. **M23.3 landed
    2026-08-07**: a fresh guest root visit opens WELCOME's title screen and marks
    the profile warm; a warm root visit keeps the picker; `/play/<world>` still
-   wins over the welcome flow.
+   wins over the welcome flow. **M18.20 landed 2026-08-07**: server builds now
+   carry a commit stamp into boot logs, public health and the title sidebar. It
+   filed **M23.1a** on its browser check: the first-time player hint changed a
+   committed visual golden and the fixture was never moved.
 
 **Optional / deferred (bottom):**
 - M14.3 — package split — **closed as skipped 2026-08-03**, see NOTES.md
@@ -6845,6 +6848,20 @@ rather than an ending, and R restores a save the whole group shares.
   review path before deploy. Verified with `npm test`, `npm run build`,
   `cd engine && go build ./...`, and `cd engine && go test ./...`.
 
+- [ ] **M23.1a — `identity-paused-player-one` still expects the pre-hint bottom
+  row.** Filed 2026-08-07 by M18.20's required browser check after touching
+  `web/src`: `ZZT_BROWSER=1 go test -count=1 -run TestM169BrowserCanvasGoldens
+  ./` passed `golden title` and `golden playing-board`, then failed
+  `identity-paused-player-one` because row 24 now contains M23.1's first-player
+  hint ("That other face is a real person - C chats") while the committed fixture
+  expects blanks. This is a fixture/evidence gap, not M18.20's build stamp: the
+  title golden was already past the only screen this task can change, and the
+  failing text is M23.1's own hint copy. DoD: re-run the visual golden in
+  update mode only for this intentional M23.1 presentation change, review the
+  fixture art, commit the updated `fixtures/browser-goldens/identity-paused-player-one.json`,
+  and then show `ZZT_BROWSER=1 go test -count=1 -run TestM169BrowserCanvasGoldens
+  ./` green.
+
 - [x] **M23.2 — a welcome world that teaches by being played.** First-party
   content, built in the shipped M5 editor — the dogfooding the first-party
   bullets keep promising. Three to five boards that teach movement, torches
@@ -8144,7 +8161,7 @@ could offer. Same rule: backlog bullets, owner promotes before spec):**
   proxy with a public `X-Forwarded-For` client is not local, so production does
   not publish instance timing, memory counters, or replay/editor detail to
   every browser.
-* **Nothing identifies which build is running.** Filed 2026-08-04. Neither the
+* [x] **Nothing identifies which build is running.** Filed 2026-08-04. Neither the
   server logs nor the client reports a version or commit; `warnIfClientStale`
   (`cmd/zzt-server/main.go:124`) compares client build freshness and is the
   closest thing that exists. A tester's report therefore cannot be tied to a
@@ -8152,6 +8169,13 @@ could offer. Same rule: backlog bullets, owner promotes before spec):**
   Cheapest form: `-ldflags -X` a commit stamp into the binary, log it at boot,
   return it from the health endpoint above, and show it in the client's help or
   title corner so a screenshot carries it.
+  **Done 2026-08-07 as M18.20.** `BuildCommit` is stamped with
+  `go build -ldflags "-X github.com/shotintoeternity/zztmmo/engine.BuildCommit=<commit>"`;
+  local unstamped builds report `dev`. `zzt-server` logs the commit before any
+  load can fail, `/api/health` and `/api/metrics` return `{build:{commit,short}}`,
+  and the title sidebar shows the short stamp for real commit builds so a title
+  screenshot carries the revision. The literal local `dev` stamp is hidden from
+  the title screen to keep everyday local/browser-golden runs stable.
 
 **Owner-gated (measurements or a policy call, not executor work):**
 * **The restore has never been rehearsed.** Filed 2026-08-04. `AWS.md:517-544`

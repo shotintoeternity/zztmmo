@@ -102,6 +102,7 @@ export function drawTitleSidebar(
   authEnabled = false,
   occupancy: ServerOccupancy = NO_OCCUPANCY,
   playerColor = "",
+  buildCommit = "",
 ) {
   for (let y = 3; y <= 24; y += 1) {
     sidebarClearLine(write, y);
@@ -128,6 +129,9 @@ export function drawTitleSidebar(
   if (occupancy.editors > 0) {
     write(65, occupancyRow, 0x1e, " Editing:");
     write(75, occupancyRow, 0x1f, String(occupancy.editors));
+  }
+  if (buildCommit) {
+    write(70, 3, 0x08, buildCommit.slice(0, 9));
   }
 
   write(62, 7, 0x30, " W ");

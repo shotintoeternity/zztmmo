@@ -11127,3 +11127,38 @@ important case: Go sees Caddy as `127.0.0.1`, so a loopback check alone would
 publish metrics to everyone. The gate treats a loopback peer with a public
 `X-Forwarded-For` last hop as public, not local; direct local curl/SSH calls have
 no forwarded public client and still work.
+
+## 2026-08-07 — M18.20: every report can name the build
+
+The server now has one build identity seam: `zztgo.BuildCommit`, defaulting to
+`dev` and stamped by production builds with
+`go build -ldflags "-X github.com/shotintoeternity/zztmmo/engine.BuildCommit=<commit>"`.
+`zzt-server` logs it before loading the startup world, so even a bad deploy that
+cannot boot the configured world still says which binary failed.
+
+The same identity rides the service status: `ServiceStatus.Build` carries the
+full commit and a seven-character short form, `/api/metrics` inherits that, and
+the public `/api/health` returns the same `build` object beside its aggregate
+counts. M18.19's privacy boundary stays intact: health still has no memory,
+instance, replay or editor detail.
+
+The browser reads `/api/health` on the title screen and draws the short stamp in
+the sidebar corner for real stamped builds, so a title screenshot can be tied to
+a revision. The literal local default `dev` is not drawn on the title screen:
+health and logs still report it truthfully, but hiding it keeps ordinary local
+and browser-golden runs from changing a fixture just because the binary was not
+stamped.
+
+Verified in three ways: `TestM1820HealthReportsBuildCommit` pins public health,
+`TestM1820ServerBinaryLogsLdflagsBuildCommit` builds a binary with the ldflags
+stamp and proves the boot log contains it before a deliberate missing-world
+failure, and `web/test/title.test.mjs` pins the title-sidebar placement.
+
+The required browser check after touching `web/src` found one pre-existing
+visual-golden miss and filed it as **M23.1a** rather than fixing it inside build
+identity. `ZZT_BROWSER=1 go test -count=1 -run TestM169BrowserCanvasGoldens ./`
+passed `golden title` and `golden playing-board`, then failed
+`identity-paused-player-one`: row 24 now shows M23.1's first-time player hint,
+"That other face is a real person - C chats", while the committed fixture still
+expects blanks. That is M23.1 presentation evidence, not a build-stamp change;
+the title golden had already passed.

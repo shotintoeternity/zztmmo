@@ -31,6 +31,8 @@ func main() {
 	shutdownGrace := flag.Duration("shutdown-grace", 60*time.Second, "on SIGINT/SIGTERM, warn connected players and wait this long before stopping so they can save; 0 stops immediately")
 	flag.Parse()
 
+	log.Printf("zztmmo build commit=%s", zztgo.BuildCommitID())
+
 	zztgo.HelpDir = *helpDir
 
 	e := zztgo.NewEngine()

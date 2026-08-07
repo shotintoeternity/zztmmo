@@ -31,6 +31,7 @@ type serviceInstanceTiming struct {
 
 type ServiceStatus struct {
 	Status        string                  `json:"status"`
+	Build         ServiceBuildSnapshot    `json:"build"`
 	StartedAt     string                  `json:"startedAt"`
 	UptimeSeconds int64                   `json:"uptimeSeconds"`
 	Totals        ServiceTotals           `json:"totals"`
@@ -39,6 +40,11 @@ type ServiceStatus struct {
 	Instances     []ServiceInstanceStatus `json:"instances"`
 	Replays       []ServiceReplayStatus   `json:"replays,omitempty"`
 	Editors       []ServiceEditorStatus   `json:"editors,omitempty"`
+}
+
+type ServiceBuildSnapshot struct {
+	Commit string `json:"commit"`
+	Short  string `json:"short"`
 }
 
 type ServiceTotals struct {
@@ -193,6 +199,7 @@ func (s *WebSocketServer) ServiceStatus() ServiceStatus {
 	runtime.ReadMemStats(&mem)
 	status := ServiceStatus{
 		Status:        "ok",
+		Build:         ServiceBuildSnapshot{Commit: BuildCommitID(), Short: BuildCommitShort()},
 		StartedAt:     startedAt.UTC().Format(time.RFC3339),
 		UptimeSeconds: int64(now.Sub(startedAt).Seconds()),
 		Tick:          serverTick,

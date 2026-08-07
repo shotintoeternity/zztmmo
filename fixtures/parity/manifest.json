@@ -4302,9 +4302,9 @@
       "contract": "E",
       "authority": "web_api.go / websocket_server.go",
       "parity": "exact",
-      "test": "TestM1619ServerSubprocessLifecycleAndStaticAssets",
+      "test": "TestM1619ServerSubprocessLifecycleAndStaticAssets,TestM1820HealthReportsBuildCommit",
       "status": "pass",
-      "notes": "Scaling observability: the subprocess server exposes liveness and aggregate load counts at /api/health, and the test decodes an ok response with at least one hosted instance."
+      "notes": "Scaling observability: the subprocess server exposes liveness and aggregate load counts at /api/health, and the test decodes an ok response with at least one hosted instance. M18.20 adds build identity to the same public summary: commit plus short stamp, without leaking M18.19's protected memory, instance, replay or editor detail."
     },
     {
       "id": "route.api.help",
@@ -4695,11 +4695,11 @@
       "contract": "P",
       "authority": "web/src/*.ts",
       "parity": "exact",
-      "test": "TestM169BrowserCanvasGoldens",
+      "test": "TestM169BrowserCanvasGoldens,web/test/title.test.mjs",
       "fixture": "fixtures/browser-goldens/title.json",
       "status": "pass",
       "assignedTask": "M16.9",
-      "notes": "M16.9: captured from the real client canvas in headless Chromium (cell goldens decoded from the canvas backing store, not from Go's PNG renderer) against the production server objects with the tick loop under test control. Reached through the production name prompt and world picker, never staged."
+      "notes": "M16.9: captured from the real client canvas in headless Chromium (cell goldens decoded from the canvas backing store, not from Go's PNG renderer) against the production server objects with the tick loop under test control. Reached through the production name prompt and world picker, never staged. M18.20 adds an optional short build stamp in the title sidebar for real stamped builds so screenshots carry the revision; the local default `dev` is hidden, so the committed golden stays stable while web/test/title.test.mjs pins the stamp placement."
     },
     {
       "id": "service.account-persistence",
