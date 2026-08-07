@@ -6848,7 +6848,7 @@ rather than an ending, and R restores a save the whole group shares.
   review path before deploy. Verified with `npm test`, `npm run build`,
   `cd engine && go build ./...`, and `cd engine && go test ./...`.
 
-- [ ] **M23.1a — `identity-paused-player-one` still expects the pre-hint bottom
+- [x] **M23.1a — `identity-paused-player-one` still expects the pre-hint bottom
   row.** Filed 2026-08-07 by M18.20's required browser check after touching
   `web/src`: `ZZT_BROWSER=1 go test -count=1 -run TestM169BrowserCanvasGoldens
   ./` passed `golden title` and `golden playing-board`, then failed
@@ -6861,6 +6861,12 @@ rather than an ending, and R restores a save the whole group shares.
   fixture art, commit the updated `fixtures/browser-goldens/identity-paused-player-one.json`,
   and then show `ZZT_BROWSER=1 go test -count=1 -run TestM169BrowserCanvasGoldens
   ./` green.
+  **Done 2026-08-07.** Re-recorded the identity golden with the reviewed M23.1
+  first-player hint on row 24. The visual harness now advances the fake clock
+  after that owned capture so the six-second hint ages off before unrelated
+  window, energizer, and dark-board goldens; those fixtures keep proving their
+  own bottom rows. Verified with the required browser golden and the full
+  `go build ./... && go test ./...` gate.
 
 - [x] **M23.2 — a welcome world that teaches by being played.** First-party
   content, built in the shipped M5 editor — the dogfooding the first-party

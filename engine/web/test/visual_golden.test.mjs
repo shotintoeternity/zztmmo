@@ -63,6 +63,7 @@ const KEY_T = "T".charCodeAt(0);
 const KEY_P = "P".charCodeAt(0);
 const KEY_Q = "Q".charCodeAt(0);
 const KEY_S = "S".charCodeAt(0);
+const FIRST_PLAYER_HINT = "That other face is a real person - C chats";
 
 const { browser, context, page, pageErrors, consoleErrors } = await launchGoldenBrowser();
 let failed = false;
@@ -258,6 +259,12 @@ try {
     [...blinkGlyphs].sort((a, b) => a - b),
     [0x02, 0x20],
     `the paused player's square must alternate glyph and blank, saw ${[...blinkGlyphs]}`,
+  );
+  await runClock(page, 6000);
+  await waitForGrid(
+    page,
+    (cells) => !hasText(cells, FIRST_PLAYER_HINT),
+    "the first-player hint to age off before unrelated goldens",
   );
 
   // Vanilla unpauses on a MOVE, not on a second P (GAME.PAS's paused branch,
