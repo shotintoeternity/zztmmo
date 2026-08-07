@@ -397,6 +397,7 @@ console.log("modal.test.mjs: M17.11 live occupancy passed");
 // first click.
 {
   const entries = [
+    { world: "WELCOME", id: "welcome", title: "Welcome to ZZTMMO", author: "ZZTMMO", created: "2026", kind: "classic" },
     { world: "TOWN", id: "town", title: "TOWN (ZZTMMO Lobby)", author: "Tim Sweeney", created: "1991", kind: "classic" },
     { world: "CAVES", id: "caves", title: "Caves of ZZT", author: "Tim Sweeney", created: "1991", kind: "classic" },
     { world: "MOSSGATE", id: "mossgate", title: "MOSSGATE", author: "Dreamed here", created: "", kind: "dreamed" },
@@ -411,12 +412,14 @@ console.log("modal.test.mjs: M17.11 live occupancy passed");
   };
 
   const firstScreen = render("");
+  assert.match(firstScreen, /Welcome to ZZTMMO/, "the welcome world leads the first screen");
+  assert.match(firstScreen, /Start here/, "the welcome world is marked for newcomers");
   assert.match(firstScreen, /TOWN \(ZZTMMO Lobby\)/, "the lobby leads the first screen");
   assert.match(firstScreen, /Caves of ZZT/, "catalogued classics are listed");
   assert.match(firstScreen, /MOSSGATE/, "worlds this server dreamed are listed");
   assert.doesNotMatch(firstScreen, /MERC/, "uncatalogued worlds are left to search");
   assert.doesNotMatch(firstScreen, /PR0N4U/, "…including ones whose names read badly on a first screen");
-  assert.match(firstScreen, /3 matches/, "the count reflects the curated list");
+  assert.match(firstScreen, /4 matches/, "the count reflects the curated list");
 
   // Hidden is not gone: typing still finds them, which is the whole bargain.
   const searched = render("merc");

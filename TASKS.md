@@ -305,7 +305,13 @@ M12.23, M17.1–M17.7, M16.0–M16.8a — has fully landed.)
    rendered by the same spectator client M22.1 built; two Chromium viewers reach
    the final recorded tick together, replay controls stay replay-only, and a
    recording whose named world is no longer hosted fails as a message instead of
-   a panic.
+   a panic. **M22.4 landed 2026-08-07**: `/api/replay/postcard.gif` renders a
+   bounded single-player replay range to a cached CP437 GIF with replay/play link
+   headers and rate limiting. **M23.1 and M23.2 landed 2026-08-07**, adding
+   first-time multiplayer hints and the canonical WELCOME world. **M23.3 landed
+   2026-08-07**: a fresh guest root visit opens WELCOME's title screen and marks
+   the profile warm; a warm root visit keeps the picker; `/play/<world>` still
+   wins over the welcome flow.
 
 **Optional / deferred (bottom):**
 - M14.3 — package split — **closed as skipped 2026-08-03**, see NOTES.md
@@ -6864,7 +6870,7 @@ rather than an ending, and R restores a save the whole group shares.
   hosts the production server and drives three Chromium instances through the
   whole world from the real title/picker flow, with no staged state.
 
-- [ ] **M23.3 — the first visit lands somewhere designed for it.** Wire
+- [x] **M23.3 — the first visit lands somewhere designed for it.** Wire
   M23.2 in: a browser that has never been here (no account, no local flag)
   lands on the welcome world's title screen instead of the full picker;
   returning visitors keep exactly today's flow. The picker gains one line of
@@ -6875,6 +6881,16 @@ rather than an ending, and R restores a save the whole group shares.
   visit → today's flow, asserted in a browser test with a cleared and a warm
   profile; deep links (M20.1) are NOT intercepted — a shared link always wins
   over the welcome flow; `go test ./...` green.
+  **Done 2026-08-07.** The client now treats WELCOME as the first-visit guest
+  destination only after `/play`, `/watch`, and `/replay` have had their say. A
+  fresh root visit resolves WELCOME through `/api/worlds`, paints its title
+  screen, stores `zzt-first-visit-welcome=1`, and still waits for `P` before
+  opening a socket. A warm root visit falls through to the existing picker flow.
+  The picker extracts WELCOME from the current curated order, pins it first, and
+  marks its byline with "Start here" without otherwise reshuffling the list.
+  `TestM233FirstVisitWelcomeJourney` drives fresh, warm, and fresh deep-link
+  Chromium profiles against the production server binary; the pure
+  `title_flow.ts` and `modal.ts` tests pin the flag and picker rules.
 
 ## M14 — Rearchitecting for the service ZZTMMO is becoming
 

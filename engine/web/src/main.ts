@@ -73,7 +73,7 @@ import {
   TRANSITION_FILL_COLOR,
   type TransitionState,
 } from "./transition";
-import { selectWorldForTitle } from "./title_flow";
+import { WELCOME_WORLD, hasSeenWelcome, markWelcomeSeen, selectWorldForTitle, shouldOpenWelcomeFirstVisit } from "./title_flow";
 import { blockCandidates, blockRowLabel, blockWindowHeader, mergeServerBlocks } from "./blocks";
 import { moderationChoices, moderationHeader } from "./moderation";
 import {
@@ -839,7 +839,7 @@ function promptNicknameOnLaunch() {
 }
 
 // openLaunchDestination is where a page load lands once the visitor has a name:
-// the world their URL names, or the picker.
+// the world their URL names, the first-visit welcome world, or the picker.
 //
 // It resolves the name through /api/worlds rather than trusting the URL, so the
 // deep link inherits M18.13's identity — the name the join path would open —
@@ -863,7 +863,7 @@ async function openLaunchDestination() {
     destination = "watch";
   }
   if (!requested) {
-    await showWorlds();
+    await openDefaultLaunchDestination();
     return;
   }
   let entries: WorldSearchEntry[];
@@ -882,6 +882,34 @@ async function openLaunchDestination() {
   // takes, which is what stops it becoming the one path that skips the title
   // screen and joins straight into a room.
   await enterWorld(world, destination);
+}
+
+async function openDefaultLaunchDestination() {
+  let entries: WorldSearchEntry[];
+  try {
+    entries = await fetchWorldEntries();
+  } catch {
+    openWindow("ZZT Worlds", ["", "  Not available: the server did not answer.", ""], true);
+    return;
+  }
+  if (entries.length === 0) {
+    openWindow("ZZT Worlds", ["", "  There are no ZZT worlds.", ""], true);
+    return;
+  }
+  if (!accountPrefsLoaded) {
+    await refreshAuthStatus();
+  }
+  const welcome = resolveDeepLinkWorld(WELCOME_WORLD, entries);
+  if (shouldOpenWelcomeFirstVisit({
+    authenticated: authStatus.authenticated,
+    hasSeenWelcome: hasSeenWelcome(window.localStorage),
+    welcomeHosted: welcome !== "",
+  })) {
+    markWelcomeSeen(window.localStorage);
+    await enterWorld(welcome);
+    return;
+  }
+  showWorldEntries(entries);
 }
 
 // watchRequestedByQuery keeps M22.1's temporary door working long enough for old
@@ -1344,6 +1372,10 @@ async function showWorlds() {
     return;
   }
 
+  showWorldEntries(worlds);
+}
+
+function showWorldEntries(worlds: WorldSearchEntry[]) {
   serverOccupancy = worldOccupancyTotal(worlds);
   // The picker's own local entries, kept so a later refresh can update the
   // counts the museum-search closure will fall back to (M17.11).
