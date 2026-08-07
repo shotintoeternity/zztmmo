@@ -249,9 +249,10 @@ func SPAFileServer(root http.FileSystem) http.Handler {
 // separately from Color because an existing document with an empty Color is a
 // deliberate "no color" and an absent one is "never chose".
 type preferencesResponse struct {
-	Authenticated bool   `json:"authenticated"`
-	Stored        bool   `json:"stored"`
-	Color         string `json:"color,omitempty"`
+	Authenticated bool                   `json:"authenticated"`
+	Stored        bool                   `json:"stored"`
+	Color         string                 `json:"color,omitempty"`
+	Hints         AccountHintPreferences `json:"hints,omitempty"`
 }
 
 // handlePreferences reads and writes the signed-in player's account-wide
@@ -268,7 +269,7 @@ func (a *WebAPI) handlePreferences(w http.ResponseWriter, r *http.Request) {
 			return
 		}
 		prefs, stored := a.storedPreferences(account.ID)
-		writeJSON(w, preferencesResponse{Authenticated: true, Stored: stored, Color: prefs.Color})
+		writeJSON(w, preferencesResponse{Authenticated: true, Stored: stored, Color: prefs.Color, Hints: prefs.Hints})
 	case http.MethodPut:
 		if !authenticated {
 			http.Error(w, "sign in to store preferences", http.StatusUnauthorized)
@@ -279,7 +280,8 @@ func (a *WebAPI) handlePreferences(w http.ResponseWriter, r *http.Request) {
 			return
 		}
 		var body struct {
-			Color string `json:"color"`
+			Color *string                 `json:"color"`
+			Hints *AccountHintPreferences `json:"hints"`
 		}
 		// Capped like every other body this API decodes (handleGenerate): the
 		// whole document is a seven-character color, so a kilobyte is generous.
@@ -302,12 +304,19 @@ func (a *WebAPI) handlePreferences(w http.ResponseWriter, r *http.Request) {
 		// arrived. Anything added to the document from now on is preserved here
 		// for free, because only the field this endpoint owns is assigned.
 		prefs, _ := a.storedPreferences(account.ID)
-		prefs.Color = SanitizePlayerColor(body.Color)
+		if body.Color != nil {
+			prefs.Color = SanitizePlayerColor(*body.Color)
+		}
+		if body.Hints != nil {
+			prefs.Hints.Players = prefs.Hints.Players || body.Hints.Players
+			prefs.Hints.Death = prefs.Hints.Death || body.Hints.Death
+			prefs.Hints.Chat = prefs.Hints.Chat || body.Hints.Chat
+		}
 		if err := a.Server.ChatDB.PutAccountPreferences(account.ID, prefs); err != nil {
 			http.Error(w, "could not store preferences", http.StatusInternalServerError)
 			return
 		}
-		writeJSON(w, preferencesResponse{Authenticated: true, Stored: true, Color: prefs.Color})
+		writeJSON(w, preferencesResponse{Authenticated: true, Stored: true, Color: prefs.Color, Hints: prefs.Hints})
 	default:
 		http.Error(w, "use GET or PUT", http.StatusMethodNotAllowed)
 	}

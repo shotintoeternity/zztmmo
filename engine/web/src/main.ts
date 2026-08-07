@@ -57,9 +57,12 @@ import { playerTintCells, playerTintForeground } from "./player_tint";
 import {
   effectivePlayerColor,
   fetchAccountPreferences,
+  saveAccountHint,
   saveAccountColor,
+  type AccountHintKey,
   type AccountPreferences,
 } from "./preferences";
+import { FIRST_TIME_HINTS, hintAlreadySeen, loadGuestHints, saveGuestHint } from "./first_time_hints";
 import {
   boardCellIndices,
   cellSource,
@@ -690,6 +693,7 @@ let authStatus: AuthStatus = { enabled: false, authenticated: false };
 // a signed-in player who has never chosen anything, and a read that failed.
 // null is what sends readStoredPlayerColor back to localStorage.
 let accountPrefs: AccountPreferences | null = null;
+let accountPrefsLoaded = false;
 // leavingToTitle suppresses the reconnect that a dropped socket normally
 // triggers: a socket we closed on purpose must not come back.
 let leavingToTitle = false;
@@ -1094,6 +1098,7 @@ async function showTitle() {
 }
 
 async function refreshAuthStatus() {
+  accountPrefsLoaded = false;
   try {
     const response = await fetch("/api/auth/me");
     authStatus = (await response.json()) as AuthStatus;
@@ -1104,10 +1109,14 @@ async function refreshAuthStatus() {
   // means anything given the first: signing out must put this browser back on
   // its own localStorage pick in the same breath (M19.3).
   accountPrefs = authStatus.authenticated ? await fetchAccountPreferences(fetch) : null;
+  accountPrefsLoaded = true;
   if (mode === "title") {
     drawTitleSidebar(writeText, titleFriendlyName, authDisplayName(), authStatus.enabled, serverOccupancy, readStoredPlayerColor());
     paintOverlay();
     drawScreen();
+  }
+  if (mode === "playing") {
+    tryShowFirstTimeHint("players");
   }
 }
 
@@ -1130,6 +1139,7 @@ function leaveToTitle() {
   // again starts a fresh player rather than reclaiming a room we chose to leave.
   clearResumeToken(window.sessionStorage, worldName);
   chatMessages = [];
+  currentHintMessage = "";
   if (ws) {
     ws.close();
     ws = null;
@@ -2353,6 +2363,9 @@ function trackMyStatId(players: PlayerSnapshot[] | undefined) {
   // M19.1: the same pass keeps the whole roster, not just our own row — every
   // other player's square is what the color tint is painted on.
   roster = players;
+  if (mode === "playing") {
+    tryShowFirstTimeHint("players");
+  }
   for (const player of players) {
     if (player.id === playerId) {
       myStatId = player.statId;
@@ -2510,6 +2523,8 @@ let blockedPlayerIds = new Set<number>();
 let isOperator = false;
 let currentChatMessage = "";
 let currentChatTimer = 0;
+let currentHintMessage = "";
+let currentHintTimer = 0;
 
 // A server announcement (currently the shutdown/save warning). Unlike chat it is
 // a persistent banner across every mode — the player must not miss it — that
@@ -2552,9 +2567,58 @@ function handleChatMessage(message: { from: string; playerId?: number; text: str
     paintOverlay();
     drawScreen();
   } else {
+    if (message.playerId !== undefined && message.playerId !== playerId) {
+      tryShowFirstTimeHint("chat");
+    }
     paintOverlay();
     drawScreen();
   }
+}
+
+function seenHintsForThisBrowser() {
+  if (authStatus.authenticated) {
+    return accountPrefs?.hints ?? null;
+  }
+  return loadGuestHints(window.sessionStorage);
+}
+
+function tryShowFirstTimeHint(hint: AccountHintKey) {
+  if (!accountPrefsLoaded) {
+    return;
+  }
+  if (hint === "players" && !roster.some((player) => player.id !== playerId)) {
+    return;
+  }
+  if (hintAlreadySeen(seenHintsForThisBrowser(), hint)) {
+    return;
+  }
+  if (authStatus.authenticated) {
+    const nextHints = { ...(accountPrefs?.hints ?? {}), [hint]: true };
+    accountPrefs = {
+      authenticated: true,
+      stored: true,
+      color: accountPrefs?.color ?? "",
+      hints: {
+        players: nextHints.players === true,
+        death: nextHints.death === true,
+        chat: nextHints.chat === true,
+      },
+    };
+    void saveAccountHint(fetch, hint).then((stored) => {
+      if (stored) accountPrefs = stored;
+    });
+  } else {
+    saveGuestHint(window.sessionStorage, hint);
+  }
+  currentHintMessage = FIRST_TIME_HINTS[hint];
+  window.clearTimeout(currentHintTimer);
+  currentHintTimer = window.setTimeout(() => {
+    currentHintMessage = "";
+    paintOverlay();
+    drawScreen();
+  }, 6000);
+  paintOverlay();
+  drawScreen();
 }
 
 function openChatWindow() {
@@ -2747,7 +2811,7 @@ function openColorPicker() {
         // immediately; the server's answer replaces it when it lands, and a
         // failed write leaves the optimistic value rather than silently
         // reverting under the player.
-        accountPrefs = { authenticated: true, stored: true, color };
+        accountPrefs = { authenticated: true, stored: true, color, hints: accountPrefs?.hints ?? { players: false, death: false, chat: false } };
         void saveAccountColor(fetch, color).then((stored) => {
           if (stored) {
             accountPrefs = stored;
@@ -2816,7 +2880,9 @@ function paintOverlay() {
     writeOverlay(0, 0, 0x4f, serverAnnounce.slice(0, 60).padEnd(60, " "));
   }
   if (mode === "playing") {
-    if (currentChatMessage) {
+    if (currentHintMessage) {
+      writeOverlay(0, 24, 0x1e, currentHintMessage.slice(0, 60).padEnd(60, " "));
+    } else if (currentChatMessage) {
       writeOverlay(0, 24, 0x1e, currentChatMessage.slice(0, 60).padEnd(60, " "));
     }
   }
@@ -3210,6 +3276,9 @@ function handleProtocolEvent(event: ProtocolEvent) {
       appendLog(`transfer to board ${event.toBoard ?? "?"}`);
       break;
     case "death":
+      if (isMine(event)) {
+        tryShowFirstTimeHint("death");
+      }
       appendLog("death");
       break;
     case "respawn":

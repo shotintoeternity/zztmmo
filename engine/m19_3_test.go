@@ -315,6 +315,9 @@ func TestM193PreferencesEndpointIsTheWritePath(t *testing.T) {
 	if code, _ := m193PutPreferences(t, httpServer.URL, cookie, `{"color":"#a1b2c3"}`); code != http.StatusOK {
 		t.Fatalf("re-PUT after the bad body = %d, want 200", code)
 	}
+	if code, body := m193PutPreferences(t, httpServer.URL, cookie, `{"hints":{"players":true,"death":true}}`); code != http.StatusOK || body.Color != "#a1b2c3" || !body.Hints.Players || !body.Hints.Death || body.Hints.Chat {
+		t.Fatalf("PUT of hints = %d %+v, want hints merged without clearing color", code, body)
+	}
 
 	// "No color" — the way back to the vanilla white-on-blue player. The
 	// account says it explicitly, and a browser still holding the old pick in

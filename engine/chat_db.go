@@ -75,6 +75,17 @@ type AccountPreferences struct {
 	// blocked player is never told — a block that announces itself invites the
 	// retaliation it exists to prevent.
 	BlockedAccounts []string `json:"blockedAccounts,omitempty"`
+	// Hints are the one-shot newcomer lessons the browser has already shown
+	// this account (M23.1). They live beside Color and BlockedAccounts because
+	// they are account-wide presentation state, not simulation state and not a
+	// property of any one world run.
+	Hints AccountHintPreferences `json:"hints,omitempty"`
+}
+
+type AccountHintPreferences struct {
+	Players bool `json:"players,omitempty"`
+	Death   bool `json:"death,omitempty"`
+	Chat    bool `json:"chat,omitempty"`
 }
 
 // ErrNoAccountID refuses a preferences read or write that has no account to key

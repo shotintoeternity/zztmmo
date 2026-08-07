@@ -6812,7 +6812,7 @@ Players window is L (M21.3 had to buy a sidebar row for exactly this
 discoverability problem), another smiley is a *person*, death is a respawn
 rather than an ending, and R restores a save the whole group shares.
 
-- [ ] **M23.1 — first-time hints for the multiplayer vocabulary.** One-shot
+- [x] **M23.1 — first-time hints for the multiplayer vocabulary.** One-shot
   hints in vanilla's own register (terse, bottom-row, slightly wry), fired on
   the first occurrence of each multiplayer event: the first time another
   player's smiley is on your board ("That other face is a real person — C
@@ -6829,6 +6829,15 @@ rather than an ending, and R restores a save the whole group shares.
   browsers, at the triggering moment; a veteran whose flags are set sees
   nothing; fixtures and StateHash untouched; the hint strings go past the
   owner before shipping (the launch-copy precedent).
+  **Done 2026-08-07.** The browser now teaches the three multiplayer-only beats
+  from the bottom row and marks them without touching the sim: another player in
+  the roster, this player's death event, and an incoming chat toast while chat is
+  closed. Signed-in players store the booleans on the M19.3 account preferences
+  document (`hints.players`, `hints.death`, `hints.chat`) with partial PUTs that
+  preserve color and durable blocks; guests keep the same flags in sessionStorage
+  only. The visible strings live in `first_time_hints.ts` for the launch-copy
+  review path before deploy. Verified with `npm test`, `npm run build`,
+  `cd engine && go build ./...`, and `cd engine && go test ./...`.
 
 - [ ] **M23.2 — a welcome world that teaches by being played.** First-party
   content, built in the shipped M5 editor — the dogfooding the first-party

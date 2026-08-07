@@ -14,7 +14,12 @@ export interface AccountPreferences {
   authenticated: boolean;
   stored: boolean;
   color: string;
+  hints: AccountHintPreferences;
 }
+
+export type AccountHintKey = "players" | "death" | "chat";
+export type AccountHintPreferences = Record<AccountHintKey, boolean>;
+export const EMPTY_ACCOUNT_HINTS: AccountHintPreferences = { players: false, death: false, chat: false };
 
 const PREFERENCES_URL = "/api/preferences";
 
@@ -28,10 +33,16 @@ export type FetchLike = (input: string, init?: { method?: string; headers?: Reco
 function readPreferences(value: unknown): AccountPreferences {
   const doc = (value ?? {}) as Partial<AccountPreferences>;
   const color = isPlayerColor(doc.color) ? doc.color : "";
+  const hints = (doc.hints ?? {}) as Partial<AccountHintPreferences>;
   return {
     authenticated: doc.authenticated === true,
     stored: doc.stored === true,
     color,
+    hints: {
+      players: hints.players === true,
+      death: hints.death === true,
+      chat: hints.chat === true,
+    },
   };
 }
 
@@ -63,6 +74,22 @@ export async function saveAccountColor(fetchFn: FetchLike, color: string): Promi
       method: "PUT",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({ color: wanted }),
+    });
+    if (!response.ok) {
+      return null;
+    }
+    return readPreferences(await response.json());
+  } catch {
+    return null;
+  }
+}
+
+export async function saveAccountHint(fetchFn: FetchLike, hint: AccountHintKey): Promise<AccountPreferences | null> {
+  try {
+    const response = await fetchFn(PREFERENCES_URL, {
+      method: "PUT",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ hints: { [hint]: true } }),
     });
     if (!response.ok) {
       return null;
