@@ -100,4 +100,13 @@ drawWatchSidebar(one, 1);
 assert.ok(one.all().includes("1 watching"));
 assert.ok(!one.all().includes("3 watching"));
 
+// A live watcher does not get Share: there is no recording id to render. A
+// replay watcher does, and it is the one extra action M22.4 adds to the
+// read-only sidebar.
+assert.ok(!watcherText.includes("Share"), "a live watcher was offered replay sharing");
+const replay = recorder();
+drawWatchSidebar(replay, 2, true);
+assert.ok(replay.all().includes("Share"), "a replay watcher was not offered Share");
+assert.ok(replay.row(21).includes(" S "), "the Share action must name its key");
+
 console.log("watch.test.mjs: all assertions passed");

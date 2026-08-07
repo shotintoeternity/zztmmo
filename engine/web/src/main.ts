@@ -669,6 +669,7 @@ let watching = false;
 let replaying = false;
 let watcherCount = 0;
 let replayID = "";
+let replayTick = 0;
 // The on-screen control bar (M15.1, M16.18a), or null on anything without touch
 // points. Declared here rather than at its construction site because
 // syncTouchControls() below is reached from drawScreen(), which runs before that
@@ -1051,6 +1052,7 @@ async function showTitle() {
   watching = false;
   replaying = false;
   replayID = "";
+  replayTick = 0;
   watcherCount = 0;
   editorCursor = { x: 30, y: 12 };
   editorSidebarMenu = null;
@@ -1145,6 +1147,7 @@ function startPlay() {
   watching = false;
   replaying = false;
   replayID = "";
+  replayTick = 0;
   reconnectAttempt = 0;
   drawSidebar();
   drawScreen();
@@ -1166,6 +1169,7 @@ function startWatch() {
   leavingToTitle = false;
   watching = true;
   replaying = false;
+  replayTick = 0;
   watcherCount = 0;
   reconnectAttempt = 0;
   mode = "watching";
@@ -1184,6 +1188,7 @@ function startReplay(id: string) {
   replaying = true;
   watcherCount = 0;
   replayID = id;
+  replayTick = 0;
   reconnectAttempt = 0;
   mode = "watching";
   rememberReplayInPath(id);
@@ -2238,6 +2243,9 @@ function applySnapshot(message: SnapshotMessage) {
 function applyWatchSnapshot(message: SnapshotMessage) {
   mode = "watching";
   watching = true;
+  if (replaying) {
+    replayTick = message.tick ?? replayTick;
+  }
   setEditorBlinking(false);
   playerId = 0;
   myStatId = -1;
@@ -2250,6 +2258,9 @@ function applyWatchSnapshot(message: SnapshotMessage) {
 }
 
 function applyWatchDiff(message: DiffMessage) {
+  if (replaying) {
+    replayTick = message.tick ?? replayTick;
+  }
   // trackMyStatId keeps the roster the tints are drawn from; it looks for a
   // player id we do not have and simply finds none, which is what a watcher is.
   trackMyStatId(message.players);
@@ -2688,6 +2699,21 @@ function handleReplayErrorMessage(message: ReplayErrorMessage) {
   }
 }
 
+function openReplayPostcard() {
+  if (!replaying || !replayID) {
+    return;
+  }
+  const ticks = 30;
+  const start = Math.max(0, replayTick - Math.floor(ticks / 2));
+  const url = new URL("/api/replay/postcard.gif", window.location.href);
+  url.searchParams.set("id", replayID);
+  url.searchParams.set("start", String(start));
+  url.searchParams.set("ticks", String(ticks));
+  url.searchParams.set("board", "1");
+  url.searchParams.set("replay", replayLinkPath(replayID));
+  window.open(url.toString(), "_blank", "noopener");
+}
+
 // readStoredPlayerColor is this browser's answer to "what color is my ☻": the
 // account's, for a signed-in player who has chosen one, and this browser's own
 // localStorage pick otherwise (M19.1, then M19.3). Everything that needs the
@@ -3078,7 +3104,7 @@ function updateSidebar(hud: HudSnapshot) {
 }
 
 function drawWatchSidebar() {
-  paintWatchSidebar(writeText, watcherCount);
+  paintWatchSidebar(writeText, watcherCount, replaying);
 }
 
 // M17.7: the first time an in-game sound arrives that the browser cannot voice,
@@ -3371,6 +3397,9 @@ function handleKeyDown(event: KeyboardEvent) {
     } else if (replaying && event.code === "KeyR") {
       event.preventDefault();
       ws?.send(JSON.stringify({ type: MessageTypeReplayControl, op: "restart" }));
+    } else if (replaying && event.code === "KeyS") {
+      event.preventDefault();
+      openReplayPostcard();
     }
     return;
   }

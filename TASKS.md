@@ -6766,7 +6766,7 @@ the recording today, and adding it is a consent question, not plumbing).
   -count=1 -run TestM223ReplayViewerJourney ./`, `go build ./...`, and
   `go test ./...`.
 
-- [ ] **M22.4 — the postcard: share the moment itself, not the homework.**
+- [x] **M22.4 — the postcard: share the moment itself, not the homework.**
   The growth loop. A death, a win, or a button in the replay viewer offers
   "share this moment": the server renders the surrounding seconds of the
   recording to an animated GIF — `cmd/zzt-shot` already draws boards to PNG;
@@ -6781,6 +6781,21 @@ the recording today, and adding it is a consent question, not plumbing).
   DoD: from a finished run, one action yields a URL whose GIF animates the
   chosen moment in CP437 fidelity; range cap, rate limit and cache are each
   asserted; an unknown recording id 404s; `go test ./...` green.
+  **Done 2026-08-07.** `/api/replay/postcard.gif?id=...&start=...&ticks=...`
+  renders a bounded replay range into an animated CP437 GIF using the same
+  snapshot cells the read-only replay viewer paints; it returns replay/play link
+  headers, caps ranges at `PostcardMaxTicks`, rate-limits by HTTP client, and
+  caches by recording id + range + board so a repeated share is served from
+  memory. Unknown ids 404.
+  * *the replay viewer has the action* — replay watchers see `S Share`, and
+    pressing `S` opens the GIF URL around the last replay tick the browser saw;
+    live watchers do not get Share because they have no recording id.
+  * *the consent posture is conservative* — recorded in NOTES.md: beta postcards
+    are single-player only, and recordings with more than one recorded player are
+    refused until multiplayer opt-in consent is designed.
+  Verified with `npm test`, `npm run build`, focused
+  `ZZT_BROWSER=1 go test -count=1 -run TestM223ReplayViewerJourney ./`,
+  `go build ./...`, and `go test ./...`.
 
 ## M23 — The first five minutes: a newcomer who has never seen ZZT
 

@@ -12,11 +12,12 @@ import (
 // code and the deterministic replay path is still just recorded stimuli in,
 // RoomManager out.
 type ReplayPlayback struct {
-	header  recHeader
-	scanner bufioScanner
-	rm      *RoomManager
-	done    bool
-	last    int
+	header      recHeader
+	scanner     bufioScanner
+	rm          *RoomManager
+	done        bool
+	last        int
+	seenPlayers map[PlayerID]struct{}
 }
 
 type bufioScanner interface {
@@ -32,10 +33,11 @@ func NewReplayPlayback(r io.Reader) (*ReplayPlayback, error) {
 		return nil, err
 	}
 	return &ReplayPlayback{
-		header:  header,
-		scanner: scanner,
-		rm:      NewRoomManager(world),
-		last:    -1,
+		header:      header,
+		scanner:     scanner,
+		rm:          NewRoomManager(world),
+		last:        -1,
+		seenPlayers: make(map[PlayerID]struct{}),
 	}, nil
 }
 
@@ -71,6 +73,13 @@ func (p *ReplayPlayback) RoomStateHashes() map[int16]uint64 {
 	return p.rm.RoomStateHashes()
 }
 
+func (p *ReplayPlayback) PlayerCountEver() int {
+	if p == nil {
+		return 0
+	}
+	return len(p.seenPlayers)
+}
+
 // Step applies one recorded tick and returns the board-addressed frames for the
 // viewer. Once it reports done, later calls are stable no-ops.
 func (p *ReplayPlayback) Step() (int, map[int16]DiffMessage, bool, error) {
@@ -95,6 +104,9 @@ func (p *ReplayPlayback) Step() (int, map[int16]DiffMessage, bool, error) {
 		return p.last, nil, true, fmt.Errorf("bad tick line: %w", err)
 	}
 	for _, op := range rec.Ops {
+		if op.Op == "join" {
+			p.seenPlayers[op.Player] = struct{}{}
+		}
 		applyRecordedOp(p.rm, op)
 	}
 	_, boardDiffs := p.rm.StepDiffsWithBoards(rec.Inputs)

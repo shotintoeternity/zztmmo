@@ -11020,3 +11020,13 @@ M16.15b itself needs none). Worth the note twice over: it is the second time in
 three days that a required gate was left red by the commit before, and the check
 that catches it is `go test ./...` on a clean tree BEFORE the session's own edit
 — which is what the executor protocol's step 3 is for.
+
+## 2026-08-07 — M22.4 consent posture for postcards
+
+The beta postcard surface is single-player only. Sharing a GIF of a recording is
+media publication, not just a replay link, and the product has not yet asked the
+multiplayer consent question in a room. So the first endpoint refuses any
+recording with more than one recorded player and says so plainly. That is the
+conservative answer to TASKS.md's M22.4 decision fork: sharing your own session
+is consent for your own player only, and multiplayer postcards wait until a
+later task designs opt-in consent instead of inheriting it silently.

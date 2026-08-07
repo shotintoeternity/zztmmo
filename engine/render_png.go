@@ -66,6 +66,28 @@ func RenderBoardImage(e *Engine) (*image.RGBA, error) {
 	return out, nil
 }
 
+// RenderScreenCellsImage renders protocol cells into the same CP437 pixels as
+// the browser canvas. It is for presentation captures of snapshot streams; cells
+// outside cols x rows are ignored, so callers can pass full 80-column snapshots
+// and ask for the 60-column playfield.
+func RenderScreenCellsImage(cells []ScreenCell, cols, rows int16) (*image.RGBA, error) {
+	font, err := png.Decode(bytes.NewReader(renderPCEGA))
+	if err != nil {
+		return nil, fmt.Errorf("decode embedded CP437 atlas: %w", err)
+	}
+	if font.Bounds().Dx() != renderGlyphCols*renderCellWidth || font.Bounds().Dy() != 8*renderCellHeight {
+		return nil, fmt.Errorf("unexpected CP437 atlas dimensions %dx%d", font.Bounds().Dx(), font.Bounds().Dy())
+	}
+	out := image.NewRGBA(image.Rect(0, 0, int(cols)*renderCellWidth, int(rows)*renderCellHeight))
+	for _, cell := range cells {
+		if cell.X < 0 || cell.X >= cols || cell.Y < 0 || cell.Y >= rows {
+			continue
+		}
+		renderDrawCell(out, font, int(cell.X)*renderCellWidth, int(cell.Y)*renderCellHeight, cell.Color, cell.Ch)
+	}
+	return out, nil
+}
+
 // WriteBoardPNG renders the engine's currently open board as PNG bytes.
 func WriteBoardPNG(e *Engine, w io.Writer) error {
 	img, err := RenderBoardImage(e)

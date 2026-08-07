@@ -8,6 +8,7 @@ import (
 	"log"
 	"net"
 	"net/http"
+	"net/url"
 	"os"
 	"path/filepath"
 	"sort"
@@ -88,6 +89,7 @@ func (a *WebAPI) Handler() http.Handler {
 	mux.HandleFunc("/api/generate", a.handleGenerate)
 	mux.HandleFunc("/api/museum/search", a.handleMuseumSearch)
 	mux.HandleFunc("/api/museum/play", a.handleMuseumPlay)
+	mux.HandleFunc("/api/replay/postcard.gif", a.handleReplayPostcard)
 	mux.HandleFunc("/api/preferences", a.handlePreferences)
 	mux.HandleFunc("/api/moderation/refusals", a.handleModerationRefusals)
 	mux.HandleFunc("/api/moderation/refusals/lift", a.handleModerationLift)
@@ -97,6 +99,117 @@ func (a *WebAPI) Handler() http.Handler {
 	mux.HandleFunc("/api/auth/google/start", a.handleAuthStart)
 	mux.HandleFunc("/api/auth/google/callback", a.handleAuthCallback)
 	return mux
+}
+
+func (a *WebAPI) handleReplayPostcard(w http.ResponseWriter, r *http.Request) {
+	if r.Method != http.MethodGet {
+		http.Error(w, "use GET", http.StatusMethodNotAllowed)
+		return
+	}
+	if a.Server == nil {
+		http.Error(w, "replay postcards are unavailable", http.StatusServiceUnavailable)
+		return
+	}
+	id, err := sanitizeReplayID(r.URL.Query().Get("id"))
+	if err != nil {
+		http.Error(w, "invalid replay id", http.StatusBadRequest)
+		return
+	}
+	opt, err := replayPostcardOptionsFromQuery(r.URL.Query())
+	if err != nil {
+		http.Error(w, err.Error(), http.StatusBadRequest)
+		return
+	}
+	client := postcardClientKey(r)
+	if !a.Server.postcardLimiter.allow(client, a.Server.clockNow()) {
+		http.Error(w, "postcard rate limit: try again later", http.StatusTooManyRequests)
+		return
+	}
+
+	key := replayPostcardKey{ID: id, Start: opt.StartTick, Ticks: opt.Ticks, Board: opt.BoardID}
+	postcard, ok := a.Server.postcardCache.get(key)
+	if !ok {
+		path, err := replayPath(a.Server.ReplayDir, id)
+		if err != nil {
+			http.Error(w, "replay postcards are disabled", http.StatusServiceUnavailable)
+			return
+		}
+		f, err := os.Open(path)
+		if err != nil {
+			if errors.Is(err, os.ErrNotExist) {
+				http.NotFound(w, r)
+				return
+			}
+			http.Error(w, "could not open recording", http.StatusInternalServerError)
+			return
+		}
+		postcard, err = RenderReplayPostcardGIF(f, opt)
+		_ = f.Close()
+		if err != nil {
+			status := http.StatusBadRequest
+			if strings.Contains(err.Error(), "unsupported recording version") || strings.Contains(err.Error(), "bad ") {
+				status = http.StatusUnprocessableEntity
+			}
+			http.Error(w, err.Error(), status)
+			return
+		}
+		if _, err := LoadPristineWorld(a.Server.worldsDir(), postcard.WorldName); err != nil {
+			http.Error(w, "recorded world is not hosted", http.StatusNotFound)
+			return
+		}
+		a.Server.postcardCache.put(key, postcard)
+	}
+
+	replayLink := "/replay/" + url.PathEscape(id)
+	playLink := "/play/" + url.PathEscape(postcard.WorldName)
+	w.Header().Set("Content-Type", "image/gif")
+	w.Header().Set("Cache-Control", "public, max-age=86400, immutable")
+	w.Header().Set("Link", fmt.Sprintf("<%s>; rel=\"replay\", <%s>; rel=\"play\"", replayLink, playLink))
+	w.Header().Set("X-ZZT-Replay", replayLink)
+	w.Header().Set("X-ZZT-Play", playLink)
+	w.WriteHeader(http.StatusOK)
+	_, _ = w.Write(postcard.GIF)
+}
+
+func replayPostcardOptionsFromQuery(q url.Values) (ReplayPostcardOptions, error) {
+	start, err := queryInt(q, "start", 0)
+	if err != nil || start < 0 {
+		return ReplayPostcardOptions{}, fmt.Errorf("start must be a non-negative integer")
+	}
+	ticks, err := queryInt(q, "ticks", PostcardDefaultTicks)
+	if err != nil || ticks <= 0 {
+		return ReplayPostcardOptions{}, fmt.Errorf("ticks must be a positive integer")
+	}
+	if ticks > PostcardMaxTicks {
+		return ReplayPostcardOptions{}, fmt.Errorf("ticks exceeds cap %d", PostcardMaxTicks)
+	}
+	board, err := queryInt(q, "board", 1)
+	if err != nil {
+		return ReplayPostcardOptions{}, fmt.Errorf("board must be an integer")
+	}
+	if board < 0 || board > 32767 {
+		return ReplayPostcardOptions{}, fmt.Errorf("board out of range")
+	}
+	return ReplayPostcardOptions{StartTick: start, Ticks: ticks, BoardID: int16(board)}, nil
+}
+
+func queryInt(q url.Values, name string, fallback int) (int, error) {
+	raw := strings.TrimSpace(q.Get(name))
+	if raw == "" {
+		return fallback, nil
+	}
+	return strconv.Atoi(raw)
+}
+
+func postcardClientKey(r *http.Request) string {
+	host, _, err := net.SplitHostPort(r.RemoteAddr)
+	if err == nil && host != "" {
+		return host
+	}
+	if r.RemoteAddr != "" {
+		return r.RemoteAddr
+	}
+	return "unknown"
 }
 
 // SPAFileServer serves the built browser client, falling back to the app for any

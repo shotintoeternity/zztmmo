@@ -61,6 +61,11 @@ type WebSocketServer struct {
 	// joinable, never shown in the picker, never counted as occupancy, and never
 	// autosaved.
 	ReplayDir string
+	// Postcards are generated GIFs over bounded replay ranges (M22.4). They are
+	// service-layer presentation state: cached by recording id + range, and
+	// rate-limited by HTTP client, never by the simulation.
+	postcardCache   replayPostcardCache
+	postcardLimiter postcardRateLimiter
 
 	// Now is the injected non-simulation clock (M16.16a); nil means time.Now.
 	// It feeds only service-layer state like the chat rate limiter — never the

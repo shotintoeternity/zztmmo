@@ -97,6 +97,16 @@ try {
   );
   console.log(`  - /replay/${REPLAY_ID}: playback reached final tick ${FINAL_TICK}`);
 
+  const popupPromise = a.context.waitForEvent("page");
+  await a.page.keyboard.press("KeyS");
+  const postcard = await popupPromise;
+  await postcard.waitForURL((url) => url.pathname === "/api/replay/postcard.gif" && url.searchParams.get("id") === REPLAY_ID, { timeout: 10000 });
+  const postcardURL = new URL(postcard.url());
+  assert.equal(postcardURL.searchParams.get("ticks"), "30", "the postcard is a bounded GIF range");
+  assert.ok(Number(postcardURL.searchParams.get("start")) >= 0, "the postcard range must not start before tick 0");
+  await postcard.close();
+  console.log("  - replay Share opened a bounded postcard GIF URL");
+
   await a.page.keyboard.press("KeyP");
   await waitFor(() => a.sent.some((m) => m && m.type === "replayControl" && m.op === "pause"), "pause control to reach the socket");
   await a.page.keyboard.press("KeyR");
