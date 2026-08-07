@@ -108,6 +108,7 @@ type WebSocketServer struct {
 	EditorWorldSessions map[string]*EditorSession
 	ChatDB              ChatDatabase
 	Auth                *AuthService
+	metrics             *serverMetrics
 }
 
 type WorldInstance struct {
@@ -367,6 +368,7 @@ func NewWebSocketServer(world TWorld, defaultBoard int16) *WebSocketServer {
 		// a test never writes an audit line or a refusal to disk (M21.2).
 		Refusals: NewRefusalStore(""),
 		Audit:    NewModerationAudit(""),
+		metrics:  newServerMetrics(time.Now()),
 	}
 	s.DefaultInstance = inst
 	s.Instances[name] = inst
@@ -390,6 +392,10 @@ func (s *WebSocketServer) Run(ctx context.Context) {
 }
 
 func (s *WebSocketServer) Tick(ctx context.Context) {
+	start := time.Now()
+	defer func() {
+		s.metrics.recordServerTick(time.Since(start))
+	}()
 	// Advance reconnect-grace countdowns before stepping, so an expired player is
 	// removed on this same tick goroutine (M13.2).
 	s.expireDetached()
@@ -445,10 +451,14 @@ func (s *WebSocketServer) maybeAutosave() {
 }
 
 func (inst *WorldInstance) Tick(ctx context.Context, s *WebSocketServer) {
+	tickStart := time.Now()
+	var stepDuration time.Duration
 	inst.mu.Lock()
 	inputs := inst.Inputs
 	inst.Inputs = make(map[PlayerID]PlayerInput)
+	stepStart := time.Now()
 	diffs, boardDiffs := safeStepDiffs(inst.Name, inst.RoomManager, inputs)
+	stepDuration = time.Since(stepStart)
 	watchers := inst.watcherCountsLocked()
 	clients := make(map[PlayerID]*webSocketClient, len(inst.Clients))
 	messages := make(map[PlayerID]interface{}, len(diffs))
@@ -494,6 +504,7 @@ func (inst *WorldInstance) Tick(ctx context.Context, s *WebSocketServer) {
 	for _, delivery := range watched {
 		_ = delivery.client.write(ctx, delivery.message)
 	}
+	s.metrics.recordInstanceTick(inst.Name, stepDuration, time.Since(tickStart))
 }
 
 func (replay *ReplayInstance) Tick(ctx context.Context) {

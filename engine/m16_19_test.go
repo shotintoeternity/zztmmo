@@ -167,7 +167,44 @@ func TestM1619ServerSubprocessLifecycleAndStaticAssets(t *testing.T) {
 	}
 	_ = resp.Body.Close()
 
-	// 2. GET / (static index.html)
+	// 2. GET /api/health exposes liveness and aggregate load.
+	var health struct {
+		Status string `json:"status"`
+		Totals struct {
+			Instances int `json:"instances"`
+			Players   int `json:"players"`
+		} `json:"totals"`
+	}
+	resp, err = http.Get(sp.baseURL + "/api/health")
+	if err != nil || resp.StatusCode != http.StatusOK {
+		t.Fatalf("GET /api/health = %v, err %v", resp.StatusCode, err)
+	}
+	if err := json.NewDecoder(resp.Body).Decode(&health); err != nil {
+		t.Fatalf("decode /api/health: %v", err)
+	}
+	_ = resp.Body.Close()
+	if health.Status != "ok" || health.Totals.Instances < 1 {
+		t.Fatalf("/api/health = %+v, want ok with at least one instance", health)
+	}
+
+	// 3. GET /api/metrics exposes timing and resource counters for scaling runs.
+	var metrics ServiceStatus
+	resp, err = http.Get(sp.baseURL + "/api/metrics")
+	if err != nil || resp.StatusCode != http.StatusOK {
+		t.Fatalf("GET /api/metrics = %v, err %v", resp.StatusCode, err)
+	}
+	if err := json.NewDecoder(resp.Body).Decode(&metrics); err != nil {
+		t.Fatalf("decode /api/metrics: %v", err)
+	}
+	_ = resp.Body.Close()
+	if metrics.Status != "ok" || metrics.Totals.Instances < 1 || len(metrics.Instances) == 0 {
+		t.Fatalf("/api/metrics = %+v, want ok with instance detail", metrics)
+	}
+	if metrics.Memory.HeapSysBytes == 0 || metrics.Memory.Goroutines == 0 {
+		t.Fatalf("/api/metrics memory = %+v, want runtime counters", metrics.Memory)
+	}
+
+	// 4. GET / (static index.html)
 	resp, err = http.Get(sp.baseURL + "/")
 	if err != nil || resp.StatusCode != http.StatusOK {
 		t.Fatalf("GET / = %v, err %v", resp.StatusCode, err)
@@ -178,7 +215,7 @@ func TestM1619ServerSubprocessLifecycleAndStaticAssets(t *testing.T) {
 		t.Errorf("GET / body = %q, want SPA html", string(body))
 	}
 
-	// 3. GET /spa/client/route (SPA fallback)
+	// 5. GET /spa/client/route (SPA fallback)
 	resp, err = http.Get(sp.baseURL + "/play/TOWN")
 	if err != nil || resp.StatusCode != http.StatusOK {
 		t.Fatalf("GET /play/TOWN = %v, err %v", resp.StatusCode, err)
@@ -189,7 +226,7 @@ func TestM1619ServerSubprocessLifecycleAndStaticAssets(t *testing.T) {
 		t.Errorf("GET /play/TOWN body = %q, want SPA fallback", string(body))
 	}
 
-	// 4. Graceful SIGINT shutdown
+	// 6. Graceful SIGINT shutdown
 	if err := sp.cmd.Process.Signal(syscall.SIGINT); err != nil {
 		t.Fatalf("signal SIGINT: %v", err)
 	}

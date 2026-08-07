@@ -78,6 +78,8 @@ type generationJob struct {
 // Handler mounts the title-screen endpoints under /api/.
 func (a *WebAPI) Handler() http.Handler {
 	mux := http.NewServeMux()
+	mux.HandleFunc("/api/health", a.handleHealth)
+	mux.HandleFunc("/api/metrics", a.handleMetrics)
 	mux.HandleFunc("/api/title", a.handleTitle)
 	mux.HandleFunc("/api/title/stream", a.handleTitleStream)
 	mux.HandleFunc("/api/worlds", a.handleWorlds)
@@ -99,6 +101,37 @@ func (a *WebAPI) Handler() http.Handler {
 	mux.HandleFunc("/api/auth/google/start", a.handleAuthStart)
 	mux.HandleFunc("/api/auth/google/callback", a.handleAuthCallback)
 	return mux
+}
+
+func (a *WebAPI) handleHealth(w http.ResponseWriter, r *http.Request) {
+	if r.Method != http.MethodGet {
+		http.Error(w, "use GET", http.StatusMethodNotAllowed)
+		return
+	}
+	if a.Server == nil {
+		writeJSON(w, struct {
+			Status string `json:"status"`
+		}{Status: "ok"})
+		return
+	}
+	status := a.Server.ServiceStatus()
+	writeJSON(w, struct {
+		Status        string        `json:"status"`
+		UptimeSeconds int64         `json:"uptimeSeconds"`
+		Totals        ServiceTotals `json:"totals"`
+	}{Status: status.Status, UptimeSeconds: status.UptimeSeconds, Totals: status.Totals})
+}
+
+func (a *WebAPI) handleMetrics(w http.ResponseWriter, r *http.Request) {
+	if r.Method != http.MethodGet {
+		http.Error(w, "use GET", http.StatusMethodNotAllowed)
+		return
+	}
+	if a.Server == nil {
+		http.Error(w, "metrics are unavailable", http.StatusServiceUnavailable)
+		return
+	}
+	writeJSON(w, a.Server.ServiceStatus())
 }
 
 func (a *WebAPI) handleReplayPostcard(w http.ResponseWriter, r *http.Request) {

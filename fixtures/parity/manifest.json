@@ -4296,6 +4296,17 @@
       "notes": "M16.17: the route's whole answer matrix — a premise that generates, hosts and persists; GET of an unknown job 404; a method that is neither GET nor POST 405; a malformed or over-16KiB body 400; an empty or over-8000-byte premise 422; retry of an unknown job 404 and of a job with no resume state 409; the per-client pace 429; an unconfigured server 503 — plus the async job, its progress and its retry driven through the shipped binary. A refused request is proven to cost no model call. The `name` field is client-supplied and passes only through SanitizeSaveName: the destructive collision it allowed was filed as M16.17b and LANDED 2026-07-31 — the matrix now also covers a generation aimed at a world people are playing, which answers 409, paints no board and leaves the occupied world's bytes alone. M18.11 adds a third 409 subject: a premise aimed at a canonical Museum world (ErrGeneratedWorldIsCanonical), refused before the first board is painted and costing no model call. Only a name the player TYPED reaches that 409 — since M16.17d a plan-derived collision resolves to a minted name instead of failing."
     },
     {
+      "id": "route.api.health",
+      "dimension": "route",
+      "subject": "HTTP/WS route /api/health",
+      "contract": "E",
+      "authority": "web_api.go / websocket_server.go",
+      "parity": "exact",
+      "test": "TestM1619ServerSubprocessLifecycleAndStaticAssets",
+      "status": "pass",
+      "notes": "Scaling observability: the subprocess server exposes liveness and aggregate load counts at /api/health, and the test decodes an ok response with at least one hosted instance."
+    },
+    {
       "id": "route.api.help",
       "dimension": "route",
       "subject": "HTTP/WS route /api/help",
@@ -4330,6 +4341,17 @@
       "status": "pass",
       "assignedTask": "M16.15",
       "notes": "M16.15: 200 naming the hosted world, 400 for a traversing name."
+    },
+    {
+      "id": "route.api.metrics",
+      "dimension": "route",
+      "subject": "HTTP/WS route /api/metrics",
+      "contract": "E",
+      "authority": "web_api.go / websocket_server.go",
+      "parity": "exact",
+      "test": "TestM1619ServerSubprocessLifecycleAndStaticAssets",
+      "status": "pass",
+      "notes": "Scaling observability: the subprocess server exposes /api/metrics with instance detail plus runtime memory and goroutine counters for production load runs."
     },
     {
       "id": "route.api.moderation.audit",

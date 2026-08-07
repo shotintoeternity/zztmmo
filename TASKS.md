@@ -8082,7 +8082,7 @@ could offer. Same rule: backlog bullets, owner promotes before spec):**
   by stashing this work, and filed as **M18.16** rather than fixed here, since a
   module rename cannot cause a data race and the fix is test-harness surgery in
   someone else's task.
-* [ ] **Evaluate server scaling for 20–30 concurrent players.**
+* [x] **Evaluate server scaling for 20–30 concurrent players.**
   STATUS 2026-07-30 (M18.0a audit): unticked. The 30-client run is real and now
   asserts fan-out actually reaches every client, but the documented bottleneck
   and scaling thresholds it was closed on (t4g.nano ≈100 clients, vertical at
@@ -8096,6 +8096,12 @@ could offer. Same rule: backlog bullets, owner promotes before spec):**
   threshold for vertical scaling (larger EC2 instance) versus architectural work
   such as room sharding, process supervision, external persistence, or load-balanced
   world servers.
+  **Done 2026-08-07** against the real production `t4g.nano`: the server now
+  exposes `/api/health` and `/api/metrics`, `cmd/zzt-load` drove 30 WSS clients
+  through `https://zztmmo.com` for 100 ticks, and NOTES.md records the measured
+  CPU/RSS/fanout/tick/room costs plus the decision thresholds. Result: the
+  current instance is sufficient for the 20–30 player beta; do not vertically
+  scale until the metrics cross the recorded thresholds.
 * **World instances are created and never released.** Filed 2026-08-04 from a
   whole-tree check. `s.Instances` is written in two places
   (`websocket_server.go:292,1555`) and nothing anywhere deletes from it: every

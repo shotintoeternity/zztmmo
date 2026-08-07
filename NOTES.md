@@ -10333,6 +10333,87 @@ before it is a code one).
 
 Docs only again — TASKS.md and this file.
 
+## 2026-08-07 — 20-30 player production scaling measurement
+
+Closed the last unchecked TASKS.md bullet with production evidence rather than the
+old dev-laptop extrapolation M18.0a rejected.
+
+**What changed to make the measurement real.** The production server now exposes
+two service-side observability routes:
+
+* `/api/health` — public liveness plus aggregate counts: instances, rooms,
+  active rooms, players, detached players, spectators, replays and editor members.
+* `/api/metrics` — the same counts plus runtime memory/goroutine counters and a
+  rolling timing window for the whole server tick and each hosted instance's
+  simulation step/tick. These are service metrics only; they do not enter replay
+  state or simulation hashes.
+
+Added `cmd/zzt-load`, a repeatable WSS load driver. It joins N real WebSocket
+clients through the public URL, sends one input frame per client per 110ms tick,
+counts delivered diff frames/bytes, and samples `/api/metrics` before/during/after.
+
+**Production setup.** Deployed the metrics build to the real EC2 instance
+(`i-08106835cc5495abc`, `t4g.nano`) at `https://zztmmo.com` on 2026-08-07 around
+21:15 UTC. The current workstation IP (`136.179.21.74/32`) was added to the SSH
+allowlist to upload the bundle. Verified after restart:
+
+* `GET /api/health` returned `status:"ok"` with zero players.
+* `GET /api/metrics` returned tick and instance timings.
+* `GET /` returned 200 through Caddy.
+
+**Load run.** After one warmup run and reconnect-grace expiry, ran:
+
+`/tmp/zzt-load -url https://zztmmo.com -world TOWN -clients 30 -ticks 100 -metrics-interval 1s`
+
+Measured result:
+
+* 30 clients, 100 input ticks against TOWN over public HTTPS/WSS.
+* WebSocket input write fanout from the workstation: p50 0.74ms, p95 1.13ms,
+  max 3.31ms.
+* Diff fanout: 5,442 total diff frames; slowest client received 110; delivered
+  payload read by clients was 10,926.2 KiB over an 11.9s run (~0.9 MiB/s total,
+  ~30 KiB/s per client).
+* Server totals before: players=0, rooms=0, activeRooms=0, instances=26,
+  heap=13.6 MiB.
+* Server totals after the clients closed: players=0, rooms=1, activeRooms=1,
+  instances=26, heap=21.1 MiB. Reconnect grace temporarily reports detached
+  players for about a minute; after grace, `/api/health` returned players=0,
+  detached=0, rooms=0.
+* Server tick after the run: avg 0.12ms, p95 0.27ms, max 2.93ms.
+* TOWN instance timing after the run: simulation step avg 0.01ms, p95 0.11ms,
+  max 0.23ms; instance tick avg 0.02ms, p95 0.16ms, max 0.94ms.
+* Direct process samples during the load (`ps` over SSH): `%CPU` 0.2-0.3,
+  RSS 36,788-37,304 KiB, `%MEM` 8.5-8.7, `nlwp` 10. `ps %CPU` is lifetime
+  averaged, so the more useful live pressure signal is the server's tick timing;
+  both agreed there was no CPU pressure.
+* CloudWatch did not return datapoints for the short 5-minute window, so it was
+  not used as evidence for this close.
+
+**Finding.** At beta scale the bottleneck is not simulation CPU or memory on the
+current `t4g.nano`. One active TOWN room with 30 public WSS clients keeps the
+server tick hundreds of times below the 110ms cadence, with under 40 MiB RSS and
+roughly 11 MiB of app payload delivered to clients over the run. The only visible
+cost is fanout/network bytes, and even that is small at 30 clients.
+
+**Decision thresholds.** Keep the `t4g.nano` for the 20-30 player beta. Re-measure
+before upgrading blindly. Scale vertically only if production metrics show any of:
+
+* server tick p95 sustained above 25ms for five minutes,
+* an active world instance tick p95 above 25ms for five minutes,
+* RSS above 350 MiB or sustained host CPU above 60% during ordinary play,
+* fanout delivery starvation, defined as any well-behaved client receiving no
+  diffs for a 10-second window while others do.
+
+Treat room sharding/load-balanced world servers as architectural work, not the
+next resize, only if a larger single instance still shows active-instance tick
+p95 above 50ms, or if live usage regularly exceeds about 50 active rooms and the
+per-tick walk over resident instances becomes the measured cost. The separate
+"instances are created and never released" backlog item remains relevant for
+memory/bookkeeping hygiene, but it was not the beta-scale bottleneck in this run.
+
+Verification before docs close: `cd engine && go build ./...`, `cd engine &&
+go test ./...`, and the production load run above.
+
 ## 2026-08-04 — M20.1: the address bar became state, and six suites found out first
 
 M20.1 landed as specced: `/play/<world>` lands a visitor on that world's title
