@@ -77,6 +77,8 @@ import {
   deepLinkPath,
   deepLinkRefusalLines,
   deepLinkWorldName,
+  replayLinkID,
+  replayLinkPath,
   resolveDeepLinkWorld,
   watchLinkPath,
   watchLinkWorldName,
@@ -146,6 +148,8 @@ const MessageTypeBlockResult = "blockResult";
 const MessageTypeModerate = "moderate";
 const MessageTypeModerateResult = "moderateResult";
 const MessageTypeModerationNotice = "moderationNotice";
+const MessageTypeReplayControl = "replayControl";
+const MessageTypeReplayError = "replayError";
 
 // GameDebugPrompt's PromptString(63, 5, 0x1E, 0x0F, 11, PROMPT_ANY, ...).
 // The rest of that geometry lives in modal.ts, which owns every prompt's layout.
@@ -330,6 +334,11 @@ type ModerationNoticeMessage = {
   action: string;
   text: string;
   ended?: boolean;
+};
+
+type ReplayErrorMessage = {
+  type: typeof MessageTypeReplayError;
+  text: string;
 };
 
 type AuthStatus = {
@@ -520,7 +529,7 @@ type EditorTestPlayMessage = {
   error?: string;
 };
 
-type ServerMessage = SnapshotMessage | DiffMessage | EventMessage | BoardChangeMessage | ChatMessage | AnnounceMessage | BlockResultMessage | ModerateResultMessage | ModerationNoticeMessage | EditorSnapshotMessage | EditorInspectMessage | EditorPresenceMessage | EditorLeaseMessage | EditorDiffMessage | EditorPropertiesMessage | EditorStatSettingsMessage | EditorProgramTextMessage | EditorBoardDataMessage | EditorWorldDataMessage | EditorSaveResultMessage | EditorTestPlayMessage;
+type ServerMessage = SnapshotMessage | DiffMessage | EventMessage | BoardChangeMessage | ChatMessage | AnnounceMessage | BlockResultMessage | ModerateResultMessage | ModerationNoticeMessage | ReplayErrorMessage | EditorSnapshotMessage | EditorInspectMessage | EditorPresenceMessage | EditorLeaseMessage | EditorDiffMessage | EditorPropertiesMessage | EditorStatSettingsMessage | EditorProgramTextMessage | EditorBoardDataMessage | EditorWorldDataMessage | EditorSaveResultMessage | EditorTestPlayMessage;
 
 type InputMessage = {
   type: typeof MessageTypeInput;
@@ -657,7 +666,9 @@ let mode: Mode = "title";
 // what makes the retry send another spectate join instead of quietly walking
 // into the room as a player.
 let watching = false;
+let replaying = false;
 let watcherCount = 0;
+let replayID = "";
 // The on-screen control bar (M15.1, M16.18a), or null on anything without touch
 // points. Declared here rather than at its construction site because
 // syncTouchControls() below is reached from drawScreen(), which runs before that
@@ -831,6 +842,12 @@ function promptNicknameOnLaunch() {
 type LaunchDestination = "play" | "watch";
 
 async function openLaunchDestination() {
+  const replayRequested = replayLinkID(window.location.pathname);
+  if (replayRequested) {
+    startReplay(replayRequested);
+    return;
+  }
+
   let destination: LaunchDestination = "play";
   let requested = deepLinkWorldName(window.location.pathname);
   const watchRequested = watchLinkWorldName(window.location.pathname);
@@ -886,6 +903,13 @@ function rememberWorldInPath(destination: LaunchDestination = "play") {
   if (window.location.pathname !== path) {
     const search = destination === "watch" ? "" : window.location.search;
     window.history.replaceState(null, "", path + search);
+  }
+}
+
+function rememberReplayInPath(id: string) {
+  const path = replayLinkPath(id);
+  if (window.location.pathname !== path) {
+    window.history.replaceState(null, "", path);
   }
 }
 
@@ -1025,6 +1049,8 @@ async function showTitle() {
   // Nor does watching (M22.1): the title screen is not a room, and leaving one
   // must not leave the reconnect holding an intent to re-enter it.
   watching = false;
+  replaying = false;
+  replayID = "";
   watcherCount = 0;
   editorCursor = { x: 30, y: 12 };
   editorSidebarMenu = null;
@@ -1117,6 +1143,8 @@ function startPlay() {
   zztSound.resume();
   leavingToTitle = false;
   watching = false;
+  replaying = false;
+  replayID = "";
   reconnectAttempt = 0;
   drawSidebar();
   drawScreen();
@@ -1137,9 +1165,28 @@ function startWatch() {
   zztSound.setEnabled(false);
   leavingToTitle = false;
   watching = true;
+  replaying = false;
   watcherCount = 0;
   reconnectAttempt = 0;
   mode = "watching";
+  drawWatchSidebar();
+  drawScreen();
+  connect();
+}
+
+function startReplay(id: string) {
+  closeTitleStream();
+  stopOccupancyPolling();
+  clearScrolls();
+  zztSound.setEnabled(false);
+  leavingToTitle = false;
+  watching = true;
+  replaying = true;
+  watcherCount = 0;
+  replayID = id;
+  reconnectAttempt = 0;
+  mode = "watching";
+  rememberReplayInPath(id);
   drawWatchSidebar();
   drawScreen();
   connect();
@@ -1801,7 +1848,11 @@ function drawConnectionNotice(reason: string) {
 function wsURL(): string {
   const url = new URL("/ws", window.location.href);
   url.protocol = url.protocol === "https:" ? "wss:" : "ws:";
-  url.searchParams.set("world", worldName);
+  if (replaying) {
+    url.searchParams.set("replay", replayID);
+  } else {
+    url.searchParams.set("world", worldName);
+  }
   return url.toString();
 }
 
@@ -1842,6 +1893,9 @@ function applyMessage(message: ServerMessage) {
       break;
     case MessageTypeModerationNotice:
       handleModerationNoticeMessage(message);
+      break;
+    case MessageTypeReplayError:
+      handleReplayErrorMessage(message);
       break;
     case MessageTypeEditorSnapshot:
       applyEditorSnapshot(message);
@@ -2624,6 +2678,16 @@ function handleModerationNoticeMessage(message: ModerationNoticeMessage) {
   drawScreen();
 }
 
+function handleReplayErrorMessage(message: ReplayErrorMessage) {
+  handleAnnounceMessage({ text: message.text, seconds: 20 });
+  leavingToTitle = true;
+  window.clearTimeout(retryTimer);
+  if (ws) {
+    ws.close();
+    ws = null;
+  }
+}
+
 // readStoredPlayerColor is this browser's answer to "what color is my ☻": the
 // account's, for a signed-in player who has chosen one, and this browser's own
 // localStorage pick otherwise (M19.1, then M19.3). Everything that needs the
@@ -3301,6 +3365,12 @@ function handleKeyDown(event: KeyboardEvent) {
     if (event.code === "Escape" || event.code === "KeyQ") {
       event.preventDefault();
       leaveToTitle();
+    } else if (replaying && event.code === "KeyP") {
+      event.preventDefault();
+      ws?.send(JSON.stringify({ type: MessageTypeReplayControl, op: "pause" }));
+    } else if (replaying && event.code === "KeyR") {
+      event.preventDefault();
+      ws?.send(JSON.stringify({ type: MessageTypeReplayControl, op: "restart" }));
     }
     return;
   }

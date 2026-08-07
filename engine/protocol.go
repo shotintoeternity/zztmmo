@@ -51,6 +51,8 @@ const (
 	MessageTypeModerate         = "moderate"
 	MessageTypeModerateResult   = "moderateResult"
 	MessageTypeModerationNotice = "moderationNotice"
+	MessageTypeReplayControl    = "replayControl"
+	MessageTypeReplayError      = "replayError"
 )
 
 // ModerateMessage is an operator's request. Like BlockMessage it names its
@@ -90,6 +92,16 @@ type ModerationNoticeMessage struct {
 	Action string `json:"action"`
 	Text   string `json:"text"`
 	Ended  bool   `json:"ended,omitempty"`
+}
+
+type ReplayControlMessage struct {
+	Type string `json:"type"`
+	Op   string `json:"op"`
+}
+
+type ReplayErrorMessage struct {
+	Type string `json:"type"`
+	Text string `json:"text"`
 }
 
 // BlockMessage is the client's block/unblock request. The target is named by the

@@ -246,37 +246,48 @@ func newSessionHeader(name string, world TWorld) (recHeader, []byte, error) {
 // (JoinPlayerWithID, SetPlayerName, Submit*, LeavePlayer, StepDiffs). onTick, if
 // non-nil, is called after each step with the tick number and the manager, so a
 // caller can checkpoint per-room StateHash. It returns the final manager.
-func ReplaySession(r io.Reader, onTick func(tick int, rm *RoomManager)) (*RoomManager, error) {
+func newRecordingScanner(r io.Reader) *bufio.Scanner {
 	scanner := bufio.NewScanner(r)
 	scanner.Buffer(make([]byte, 0, 64*1024), 16*1024*1024)
+	return scanner
+}
 
+func readRecordingStart(scanner *bufio.Scanner) (recHeader, TWorld, error) {
 	if !scanner.Scan() {
 		if err := scanner.Err(); err != nil {
-			return nil, err
+			return recHeader{}, TWorld{}, err
 		}
-		return nil, fmt.Errorf("empty recording: missing header")
+		return recHeader{}, TWorld{}, fmt.Errorf("empty recording: missing header")
 	}
 	var header recHeader
 	if err := json.Unmarshal(scanner.Bytes(), &header); err != nil {
-		return nil, fmt.Errorf("bad header: %w", err)
+		return recHeader{}, TWorld{}, fmt.Errorf("bad header: %w", err)
 	}
 	if header.V != recordVersion {
-		return nil, fmt.Errorf("unsupported recording version %d (want %d)", header.V, recordVersion)
+		return recHeader{}, TWorld{}, fmt.Errorf("unsupported recording version %d (want %d)", header.V, recordVersion)
 	}
 	data, err := base64.StdEncoding.DecodeString(header.WorldBytes)
 	if err != nil {
-		return nil, fmt.Errorf("bad world bytes: %w", err)
+		return recHeader{}, TWorld{}, fmt.Errorf("bad world bytes: %w", err)
 	}
 	h := fnv.New64a()
 	_, _ = h.Write(data)
 	if got := h.Sum64(); got != header.WorldHash {
-		return nil, fmt.Errorf("world hash mismatch: header %d, bytes %d", header.WorldHash, got)
+		return recHeader{}, TWorld{}, fmt.Errorf("world hash mismatch: header %d, bytes %d", header.WorldHash, got)
 	}
 	world, err := LoadWorldBytes(data)
 	if err != nil {
-		return nil, fmt.Errorf("load world: %w", err)
+		return recHeader{}, TWorld{}, fmt.Errorf("load world: %w", err)
 	}
+	return header, world, nil
+}
 
+func ReplaySession(r io.Reader, onTick func(tick int, rm *RoomManager)) (*RoomManager, error) {
+	scanner := newRecordingScanner(r)
+	_, world, err := readRecordingStart(scanner)
+	if err != nil {
+		return nil, err
+	}
 	rm := NewRoomManager(world)
 
 	for scanner.Scan() {

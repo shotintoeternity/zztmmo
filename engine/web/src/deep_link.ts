@@ -1,4 +1,4 @@
-// deep_link.ts — the /play/<world> and /watch/<world> deep links.
+// deep_link.ts — the /play/<world>, /watch/<world> and /replay/<id> deep links.
 //
 // A URL a player can send someone else, which lands them on that world's title
 // screen. Everything here is pure — a function of a path string and the world
@@ -7,7 +7,7 @@
 //
 // The server needs no route: spaFileServer (cmd/zzt-server/main.go) already
 // serves the client for any path that is not a file, so /play/TOWN and
-// /watch/TOWN are the app.
+// /watch/TOWN and /replay/TOWN-20260807-120000 are the app.
 //
 // The resolution rule is the load-bearing part. A deep link must name a world
 // the way the JOIN path names it, not by string: M18.13 made /api/worlds emit
@@ -20,6 +20,8 @@
 export const DEEP_LINK_PREFIX = "/play/";
 /** The path prefix that names a world to watch read-only. */
 export const WATCH_LINK_PREFIX = "/watch/";
+/** The path prefix that names a recording to watch read-only (M22.3). */
+export const REPLAY_LINK_PREFIX = "/replay/";
 
 /** The subset of an /api/worlds entry this module reads. */
 export type DeepLinkCandidate = { world: string };
@@ -42,6 +44,11 @@ export function deepLinkWorldName(pathname: string): string {
 /** watchLinkWorldName is deepLinkWorldName's read-only twin (M22.2). */
 export function watchLinkWorldName(pathname: string): string {
   return worldNameFromPrefixedPath(pathname, WATCH_LINK_PREFIX);
+}
+
+/** replayLinkID returns the replay id a path asks for, or "" outside /replay. */
+export function replayLinkID(pathname: string): string {
+  return worldNameFromPrefixedPath(pathname, REPLAY_LINK_PREFIX);
 }
 
 function worldNameFromPrefixedPath(pathname: string, prefix: string): string {
@@ -73,6 +80,11 @@ export function deepLinkPath(worldName: string): string {
 /** watchLinkPath is the shareable read-only address for a world. */
 export function watchLinkPath(worldName: string): string {
   return WATCH_LINK_PREFIX + encodeURIComponent(worldName);
+}
+
+/** replayLinkPath is the shareable read-only address for a recording. */
+export function replayLinkPath(id: string): string {
+  return REPLAY_LINK_PREFIX + encodeURIComponent(id);
 }
 
 /**

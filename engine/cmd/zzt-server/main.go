@@ -27,6 +27,7 @@ func main() {
 	autosaveSecs := flag.Int("autosave", 60, "seconds between autosaves of occupied rooms; 0 disables")
 	fresh := flag.Bool("fresh", false, "skip restoring autosaves at boot for a deliberately clean start")
 	recordDir := flag.String("record", "", "directory for deterministic session recordings; empty disables recording")
+	replayDir := flag.String("replay", "", "directory for deterministic session recordings served by /replay/<id>; empty uses -record when set")
 	shutdownGrace := flag.Duration("shutdown-grace", 60*time.Second, "on SIGINT/SIGTERM, warn connected players and wait this long before stopping so they can save; 0 stops immediately")
 	flag.Parse()
 
@@ -101,6 +102,11 @@ func main() {
 		if err := server.EnableRecording(*recordDir); err != nil {
 			log.Printf("session recording disabled: %v", err)
 		}
+	}
+	if *replayDir != "" {
+		server.ReplayDir = *replayDir
+	} else if *recordDir != "" {
+		server.ReplayDir = *recordDir
 	}
 
 	// ctx stops the tick loop and HTTP server. It is deliberately NOT wired

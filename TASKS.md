@@ -299,7 +299,13 @@ M12.23, M17.1–M17.7, M16.0–M16.8a — has fully landed.)
    TASKS.md: `/watch/<world>` is now the canonical shareable spectator route,
    resolving through the same `/api/worlds` identity as `/play/<world>` and
    proving in Chromium that a watcher can open an idle world, watch a live player
-   move, and leave picker occupancy unchanged.
+   move, and leave picker occupancy unchanged. **M22.3 landed 2026-08-07**:
+   `/replay/<id>` now opens a deterministic session recording as a read-only
+   playback instance outside hostable worlds, paced by the server tick loop and
+   rendered by the same spectator client M22.1 built; two Chromium viewers reach
+   the final recorded tick together, replay controls stay replay-only, and a
+   recording whose named world is no longer hosted fails as a message instead of
+   a panic.
 
 **Optional / deferred (bottom):**
 - M14.3 — package split — **closed as skipped 2026-08-03**, see NOTES.md
@@ -6718,7 +6724,7 @@ the recording today, and adding it is a consent question, not plumbing).
   go test ./...`, and focused `ZZT_BROWSER=1 go test -count=1 -run
   TestM222WatchLinkJourney ./`.
 
-- [ ] **M22.3 — the replay viewer: play a recording back into a room nobody
+- [x] **M22.3 — the replay viewer: play a recording back into a room nobody
   controls.** The missing pump. Feed `ReplaySession`'s per-tick callback into
   the same snapshot encoder a live instance uses, paced from the server loop
   — pacing is presentation, so wall-clock lives outside the sim exactly as
@@ -6735,6 +6741,30 @@ the recording today, and adding it is a consent question, not plumbing).
   viewer is the replay harness with a face; two watchers of one replay see
   the same frames; a replay instance is excluded from the picker, occupancy
   counts, and autosave; `go test ./...` green.
+  **Done 2026-08-07.** The pump is a one-tick-at-a-time `ReplayPlayback` over the
+  same v2 recording reader `ReplaySession` uses, and the server ticks it from a
+  separate replay registry rather than `Instances`. That reserved namespace is
+  the guardrail: a replay has watchers but no clients, no hostable world name, no
+  picker entry, no occupancy claim and no autosave target.
+  * *the browser door is a replay URL, not a world* — `/replay/<id>` is served by
+    the SPA fallback, `main.ts` opens `/ws?replay=<id>` with a spectate join, and
+    `zzt-server -replay DIR` chooses the directory explicitly (falling back to
+    `-record` when both are the same archive).
+  * *the final hash is the replay harness's* — `TestM223ReplayPlaybackMatchesReplaySessionFinalHash`
+    drives the incremental playback and `ReplaySession` over the same bytes and
+    compares the final per-room `StateHash` to the live recording.
+  * *two viewers see one stream* — `TestM223TwoWatchersSeeTheSameReplayFrames`
+    and `TestM223ReplayViewerJourney` keep two watchers cell-identical through
+    playback; the browser journey reaches the final recorded tick in Chromium.
+  * *viewer controls are not gameplay input* — a replay watcher still sends no
+    movement, but `P` and `R` send `replayControl` pause/restart to the replay
+    instance only.
+  * *bad recordings fail closed* — v1 files still refuse through the shared
+    reader, malformed or missing ids become load errors, and a recording whose
+    `world` is not hosted yields `replayError` rather than booting a phantom room.
+  Verified with `npm test`, `npm run build`, focused `ZZT_BROWSER=1 go test
+  -count=1 -run TestM223ReplayViewerJourney ./`, `go build ./...`, and
+  `go test ./...`.
 
 - [ ] **M22.4 — the postcard: share the moment itself, not the homework.**
   The growth loop. A death, a win, or a button in the replay viewer offers

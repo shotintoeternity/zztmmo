@@ -56,6 +56,11 @@ type WebSocketServer struct {
 	// recordStamp once so a restart does not clobber a prior run's files.
 	RecordDir   string
 	recordStamp string
+	// ReplayDir is where /replay/<id> loads deterministic session recordings
+	// from (M22.3). Replays are intentionally NOT WorldInstances: they are never
+	// joinable, never shown in the picker, never counted as occupancy, and never
+	// autosaved.
+	ReplayDir string
 
 	// Now is the injected non-simulation clock (M16.16a); nil means time.Now.
 	// It feeds only service-layer state like the chat rate limiter — never the
@@ -92,6 +97,7 @@ type WebSocketServer struct {
 	// never collide between hosted worlds (M14.1). Guarded by mu.
 	nextPlayerID        PlayerID
 	Instances           map[string]*WorldInstance
+	ReplayInstances     map[string]*ReplayInstance
 	DefaultInstance     *WorldInstance
 	EditorSessions      map[*webSocketClient]*EditorSession
 	EditorWorldSessions map[string]*EditorSession
@@ -131,6 +137,18 @@ type WorldInstance struct {
 	// arrived, and "arrived and was dropped" is the claim.
 	spectatorDrops int
 	mu             sync.Mutex
+}
+
+type ReplayInstance struct {
+	ID         string
+	path       string
+	playback   *ReplayPlayback
+	file       *os.File
+	Spectators map[*webSocketClient]*spectator
+	Paused     bool
+	done       bool
+	err        error
+	mu         sync.Mutex
 }
 
 // spectator is one watching connection.
@@ -336,6 +354,7 @@ func NewWebSocketServer(world TWorld, defaultBoard int16) *WebSocketServer {
 		TickDuration:        ServerTickDuration,
 		OriginHosts:         []string{"localhost:*", "127.0.0.1:*"},
 		Instances:           make(map[string]*WorldInstance),
+		ReplayInstances:     make(map[string]*ReplayInstance),
 		EditorSessions:      make(map[*webSocketClient]*EditorSession),
 		EditorWorldSessions: make(map[string]*EditorSession),
 		ChatDB:              NewMemChatDatabase(),
@@ -357,6 +376,7 @@ func (s *WebSocketServer) Run(ctx context.Context) {
 		select {
 		case <-ctx.Done():
 			s.CloseRecorders()
+			s.CloseReplays()
 			return
 		case <-ticker.C:
 			s.Tick(ctx)
@@ -379,6 +399,7 @@ func (s *WebSocketServer) Tick(ctx context.Context) {
 	// RoomManager are mutually exclusive.
 	s.mu.Lock()
 	var instances []*WorldInstance
+	var replays []*ReplayInstance
 	var titles []*TitleSim
 	for _, inst := range s.Instances {
 		if inst.Title != nil {
@@ -386,10 +407,16 @@ func (s *WebSocketServer) Tick(ctx context.Context) {
 		}
 		instances = append(instances, inst)
 	}
+	for _, replay := range s.ReplayInstances {
+		replays = append(replays, replay)
+	}
 	s.mu.Unlock()
 
 	for _, inst := range instances {
 		inst.Tick(ctx, s)
+	}
+	for _, replay := range replays {
+		replay.Tick(ctx)
 	}
 	for _, title := range titles {
 		title.Tick()
@@ -464,6 +491,65 @@ func (inst *WorldInstance) Tick(ctx context.Context, s *WebSocketServer) {
 	}
 }
 
+func (replay *ReplayInstance) Tick(ctx context.Context) {
+	replay.mu.Lock()
+	if replay.Paused || replay.done || replay.err != nil {
+		replay.mu.Unlock()
+		return
+	}
+	_, boardDiffs, done, err := replay.playback.Step()
+	replay.done = done
+	replay.err = err
+	watchers := replay.watcherCountsLocked()
+	watched := replay.spectatorMessagesLocked(boardDiffs, watchers)
+	if done && err == nil {
+		watched = append(watched, replay.finalMessagesLocked(watchers)...)
+	}
+	replay.mu.Unlock()
+
+	for _, delivery := range watched {
+		_ = delivery.client.write(ctx, delivery.message)
+	}
+}
+
+func (replay *ReplayInstance) Close() {
+	replay.mu.Lock()
+	file := replay.file
+	replay.file = nil
+	replay.mu.Unlock()
+	if file != nil {
+		_ = file.Close()
+	}
+}
+
+func (replay *ReplayInstance) Restart() error {
+	f, err := os.Open(replay.path)
+	if err != nil {
+		return err
+	}
+	playback, err := NewReplayPlayback(f)
+	if err != nil {
+		_ = f.Close()
+		return err
+	}
+
+	replay.mu.Lock()
+	old := replay.file
+	replay.file = f
+	replay.playback = playback
+	replay.Paused = false
+	replay.done = false
+	replay.err = nil
+	for _, sub := range replay.Spectators {
+		sub.engine = nil
+	}
+	replay.mu.Unlock()
+	if old != nil {
+		_ = old.Close()
+	}
+	return nil
+}
+
 // watcherCountsLocked is how many watchers each board has. Caller holds inst.mu.
 func (inst *WorldInstance) watcherCountsLocked() map[int16]int {
 	if len(inst.Spectators) == 0 {
@@ -471,6 +557,17 @@ func (inst *WorldInstance) watcherCountsLocked() map[int16]int {
 	}
 	counts := make(map[int16]int, len(inst.Spectators))
 	for _, sub := range inst.Spectators {
+		counts[sub.boardID]++
+	}
+	return counts
+}
+
+func (replay *ReplayInstance) watcherCountsLocked() map[int16]int {
+	if len(replay.Spectators) == 0 {
+		return nil
+	}
+	counts := make(map[int16]int, len(replay.Spectators))
+	for _, sub := range replay.Spectators {
 		counts[sub.boardID]++
 	}
 	return counts
@@ -548,6 +645,70 @@ func (inst *WorldInstance) spectatorMessagesLocked(boardDiffs map[int16]DiffMess
 	return deliveries
 }
 
+func (replay *ReplayInstance) spectatorMessagesLocked(boardDiffs map[int16]DiffMessage, watchers map[int16]int) []spectatorDelivery {
+	if len(replay.Spectators) == 0 || replay.playback == nil || replay.playback.RoomManager() == nil {
+		return nil
+	}
+	rm := replay.playback.RoomManager()
+	deliveries := make([]spectatorDelivery, 0, len(replay.Spectators))
+	for _, sub := range replay.Spectators {
+		count := watchers[sub.boardID]
+		var engine *Engine
+		if room, live := rm.Room(sub.boardID); live {
+			engine = room.Engine
+		}
+
+		if engine != sub.engine {
+			sub.engine = engine
+			snapshot, _ := rm.SpectatorSnapshot(sub.boardID)
+			snapshot.Watchers = count
+			sub.sentWatchers = count
+			deliveries = append(deliveries, spectatorDelivery{client: sub.client, message: snapshot})
+			continue
+		}
+		if engine != nil {
+			diff, stepped := boardDiffs[sub.boardID]
+			if !stepped {
+				continue
+			}
+			diff.Watchers = count
+			sub.sentWatchers = count
+			deliveries = append(deliveries, spectatorDelivery{client: sub.client, message: diff})
+			continue
+		}
+		if count != sub.sentWatchers {
+			sub.sentWatchers = count
+			deliveries = append(deliveries, spectatorDelivery{
+				client:  sub.client,
+				message: DiffMessage{Type: MessageTypeDiff, BoardID: sub.boardID, Watchers: count},
+			})
+		}
+	}
+	return deliveries
+}
+
+func (replay *ReplayInstance) finalMessagesLocked(watchers map[int16]int) []spectatorDelivery {
+	if len(replay.Spectators) == 0 || replay.playback == nil || replay.playback.RoomManager() == nil {
+		return nil
+	}
+	hashes := replay.playback.RoomStateHashes()
+	deliveries := make([]spectatorDelivery, 0, len(replay.Spectators))
+	for _, sub := range replay.Spectators {
+		hash := hashes[sub.boardID]
+		deliveries = append(deliveries, spectatorDelivery{
+			client: sub.client,
+			message: DiffMessage{
+				Type:     MessageTypeDiff,
+				BoardID:  sub.boardID,
+				Tick:     int16(replay.playback.LastTick()),
+				Hash:     hash,
+				Watchers: watchers[sub.boardID],
+			},
+		})
+	}
+	return deliveries
+}
+
 // RoomManager.StepDiffs isolates simulation panics per room.  This outer guard
 // keeps a future panic in room routing or diff construction from escaping the
 // instance tick goroutine and taking down other hosted worlds.
@@ -563,6 +724,11 @@ func safeStepDiffs(worldName string, rm *RoomManager, inputs map[PlayerID]Player
 }
 
 func (s *WebSocketServer) ServeHTTP(w http.ResponseWriter, r *http.Request) {
+	if replayID := r.URL.Query().Get("replay"); replayID != "" {
+		s.serveReplayHTTP(w, r, replayID)
+		return
+	}
+
 	worldName := r.URL.Query().Get("world")
 	var inst *WorldInstance
 	var safeWorld string
@@ -902,6 +1068,46 @@ func (s *WebSocketServer) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 		}
 	}
 	s.handleReadLoopExit(inst, client, playerID)
+}
+
+func (s *WebSocketServer) serveReplayHTTP(w http.ResponseWriter, r *http.Request, replayID string) {
+	id, err := sanitizeReplayID(replayID)
+	if err != nil {
+		http.Error(w, "invalid replay id", http.StatusBadRequest)
+		return
+	}
+
+	conn, err := websocket.Accept(w, r, &websocket.AcceptOptions{OriginPatterns: s.OriginHosts})
+	if err != nil {
+		return
+	}
+	defer conn.Close(websocket.StatusNormalClosure, "")
+	conn.SetReadLimit(ServerReadLimit)
+
+	ctx := r.Context()
+	var raw json.RawMessage
+	if err := wsjson.Read(ctx, conn, &raw); err != nil {
+		return
+	}
+	var join JoinMessage
+	if err := json.Unmarshal(raw, &join); err != nil || join.Type != MessageTypeJoin || !join.Spectate {
+		return
+	}
+
+	client := newWebSocketClient(conn, "replay:"+id)
+	defer client.stop()
+	account, authenticated := s.authAccount(r)
+	if notice, refused := s.refusedAtTheDoor(account, authenticated); refused {
+		_ = client.write(ctx, notice)
+		return
+	}
+
+	replay, err := s.GetOrCreateReplayInstance(id)
+	if err != nil {
+		_ = client.write(ctx, ReplayErrorMessage{Type: MessageTypeReplayError, Text: "Replay unavailable: " + err.Error()})
+		return
+	}
+	s.serveReplaySpectator(ctx, conn, client, replay, join)
 }
 
 // resolveJoinBoard is the board a join lands on when it names none: the world's
@@ -1864,6 +2070,19 @@ func (s *WebSocketServer) CloseRecorders() {
 	}
 }
 
+func (s *WebSocketServer) CloseReplays() {
+	s.mu.Lock()
+	replays := make([]*ReplayInstance, 0, len(s.ReplayInstances))
+	for _, replay := range s.ReplayInstances {
+		replays = append(replays, replay)
+	}
+	s.ReplayInstances = make(map[string]*ReplayInstance)
+	s.mu.Unlock()
+	for _, replay := range replays {
+		replay.Close()
+	}
+}
+
 func (s *WebSocketServer) GetOrCreateInstance(worldName string) (*WorldInstance, error) {
 	s.mu.Lock()
 	defer s.mu.Unlock()
@@ -1902,6 +2121,158 @@ func (s *WebSocketServer) GetOrCreateInstance(worldName string) (*WorldInstance,
 	s.Instances[worldName] = inst
 	s.attachRecorderLocked(inst)
 	return inst, nil
+}
+
+func sanitizeReplayID(id string) (string, error) {
+	id = strings.TrimSuffix(filepath.Base(strings.TrimSpace(id)), ".jsonl")
+	if id == "" || id == "." || id == ".." || len(id) > 128 {
+		return "", ErrInvalidSaveName
+	}
+	for i := 0; i < len(id); i++ {
+		c := id[i]
+		switch {
+		case c >= 'A' && c <= 'Z', c >= 'a' && c <= 'z', c >= '0' && c <= '9', c == '-', c == '_':
+		default:
+			return "", ErrInvalidSaveName
+		}
+	}
+	return id, nil
+}
+
+func replayPath(dir, id string) (string, error) {
+	if dir == "" {
+		return "", fmt.Errorf("replay viewing is disabled")
+	}
+	safe, err := sanitizeReplayID(id)
+	if err != nil {
+		return "", err
+	}
+	path := filepath.Join(dir, safe+".jsonl")
+	if filepath.Dir(path) != filepath.Clean(dir) {
+		return "", ErrInvalidSaveName
+	}
+	return path, nil
+}
+
+func (s *WebSocketServer) GetOrCreateReplayInstance(id string) (*ReplayInstance, error) {
+	safe, err := sanitizeReplayID(id)
+	if err != nil {
+		return nil, err
+	}
+
+	s.mu.Lock()
+	if s.ReplayInstances == nil {
+		s.ReplayInstances = make(map[string]*ReplayInstance)
+	}
+	if replay := s.ReplayInstances[safe]; replay != nil {
+		s.mu.Unlock()
+		return replay, nil
+	}
+	s.mu.Unlock()
+
+	path, err := replayPath(s.ReplayDir, safe)
+	if err != nil {
+		return nil, err
+	}
+	f, err := os.Open(path)
+	if err != nil {
+		return nil, err
+	}
+	playback, err := NewReplayPlayback(f)
+	if err != nil {
+		_ = f.Close()
+		return nil, err
+	}
+	if _, err := LoadPristineWorld(s.worldsDir(), playback.WorldName()); err != nil {
+		_ = f.Close()
+		return nil, fmt.Errorf("recorded world %q is not hosted: %w", playback.WorldName(), err)
+	}
+
+	replay := &ReplayInstance{
+		ID:         safe,
+		path:       path,
+		file:       f,
+		playback:   playback,
+		Spectators: make(map[*webSocketClient]*spectator),
+	}
+
+	s.mu.Lock()
+	defer s.mu.Unlock()
+	if existing := s.ReplayInstances[safe]; existing != nil {
+		replay.Close()
+		return existing, nil
+	}
+	s.ReplayInstances[safe] = replay
+	return replay, nil
+}
+
+func (s *WebSocketServer) serveReplaySpectator(ctx context.Context, conn *websocket.Conn, client *webSocketClient, replay *ReplayInstance, join JoinMessage) {
+	boardID := s.DefaultBoard
+	if join.Board != 0 {
+		boardID = join.Board
+	}
+	if boardID == 0 {
+		boardID = 1
+	}
+
+	replay.mu.Lock()
+	sub := &spectator{client: client, boardID: boardID}
+	replay.Spectators[client] = sub
+	snapshot, engine := replay.playback.RoomManager().SpectatorSnapshot(boardID)
+	sub.engine = engine
+	snapshot.Watchers = replay.watcherCountsLocked()[boardID]
+	sub.sentWatchers = snapshot.Watchers
+	replay.mu.Unlock()
+
+	defer func() {
+		replay.mu.Lock()
+		delete(replay.Spectators, client)
+		replay.mu.Unlock()
+	}()
+
+	if err := client.write(ctx, snapshot); err != nil {
+		return
+	}
+
+	for {
+		var raw json.RawMessage
+		if err := wsjson.Read(ctx, conn, &raw); err != nil {
+			return
+		}
+		var envelope struct {
+			Type string `json:"type"`
+		}
+		if err := json.Unmarshal(raw, &envelope); err != nil {
+			continue
+		}
+		if envelope.Type != MessageTypeReplayControl {
+			continue
+		}
+		var control ReplayControlMessage
+		if err := json.Unmarshal(raw, &control); err != nil {
+			continue
+		}
+		switch control.Op {
+		case "pause":
+			replay.mu.Lock()
+			replay.Paused = !replay.Paused
+			replay.mu.Unlock()
+		case "restart":
+			if err := replay.Restart(); err != nil {
+				_ = client.write(ctx, ReplayErrorMessage{Type: MessageTypeReplayError, Text: "Replay restart failed: " + err.Error()})
+				return
+			}
+			replay.mu.Lock()
+			snapshot, engine := replay.playback.RoomManager().SpectatorSnapshot(boardID)
+			sub.engine = engine
+			snapshot.Watchers = replay.watcherCountsLocked()[boardID]
+			sub.sentWatchers = snapshot.Watchers
+			replay.mu.Unlock()
+			if err := client.write(ctx, snapshot); err != nil {
+				return
+			}
+		}
+	}
 }
 
 // HostGeneratedWorld installs an already-compiled, persisted world directly

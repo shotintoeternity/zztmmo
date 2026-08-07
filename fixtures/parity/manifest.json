@@ -1191,6 +1191,18 @@
       "notes": "task-claim row; reconciled at the task itself (2026-08-06), NOT at M16.20: M22.2 landed after the certification milestone closed, so no M16.20 run ever saw this row. The /watch/<world> route is the URL front door for task.M22.1's read-only join mode, and a deviation of the same presentation-additions kind: vanilla ZZT has no shareable browser address and no spectators. Nothing reaches the simulation: the browser still sends JoinMessage.Spectate, no PlayerID is minted, no stat is spawned, no op is recorded and picker occupancy continues to count only players. The route resolves through the exact /api/worlds identity M20.1's /play route uses, so /watch/town and /watch/TOWN open one listed TOWN rather than trusting URL spelling; the old /play/TOWN?spectate=1 door is canonicalized to /watch/TOWN rather than becoming a second share shape. TestM222WatchLinkJourney launches the production zzt-server binary, first asserts GET /watch/TOWN falls through to the SPA, then drives separate Chromium instances from the real address bar: /watch/ACCEPT opens a hosted-but-empty world and leaves /api/worlds at players=0, /play/TOWN joins one player, /watch/TOWN sends exactly {type:\"join\", spectate:true}, keeps the picker at one player, keeps the watcher sidebar (no HUD), and the watcher's received room roster moves with the live player. The pure parser/address rules are covered by web/test/deep_link.test.mjs; the existing read-only join/sidebar invariants remain covered by task.M22.1."
     },
     {
+      "id": "task.M22.3",
+      "dimension": "task",
+      "subject": "Completed task M22.3 — its DoD still holds",
+      "contract": "E",
+      "authority": "TASKS.md M22.3",
+      "parity": "exact",
+      "test": "TestM223ReplayPlaybackMatchesReplaySessionFinalHash,TestM223TwoWatchersSeeTheSameReplayFrames,TestM223ReplayInstanceIsNotAHostableWorld,TestM223ReplayMissingHostedWorldIsAPlainError,TestM223ReplayViewerJourney",
+      "status": "pass",
+      "assignedTask": "M22.3",
+      "notes": "task-claim row; reconciled at the task itself (2026-08-07), NOT at M16.20: M22.3 landed after the certification milestone closed, so no M16.20 run ever saw this row. The replay viewer is a presentation surface over the deterministic session recorder, not a new simulation path: ReplayPlayback reads the same v2 recording format ReplaySession reads, applies the same recorded joins/names/submits/inputs through RoomManager, and is paced by the server tick loop outside the sim. The reserved replay registry is deliberately separate from WebSocketServer.Instances, so a playback is never joinable, never offered in /api/worlds, never counted by WorldIsOccupied and never autosaved. TestM223ReplayPlaybackMatchesReplaySessionFinalHash compares the incremental viewer pump to ReplaySession and to the live recording's final per-room StateHash; TestM223TwoWatchersSeeTheSameReplayFrames keeps two watch sockets cell-identical through playback; TestM223ReplayInstanceIsNotAHostableWorld proves the namespace and autosave exclusions; TestM223ReplayMissingHostedWorldIsAPlainError pins the ordinary not-hosted load failure; and TestM223ReplayViewerJourney launches the production zzt-server binary with -replay and drives two Chromium viewers from /replay/<id> to the final recorded tick. The browser keeps the M22.1 read-only join shape, with replay-only P/R controls carried by proto.msg.replayControl and load refusal carried by proto.msg.replayError."
+    },
+    {
       "id": "task.M3.0",
       "dimension": "task",
       "subject": "Completed task M3.0 — its DoD still holds",
@@ -4118,6 +4130,30 @@
       "status": "pass",
       "assignedTask": "M16.8",
       "notes": "M16.8's prompt.scn drives a quit reply through RoomManager.SubmitQuitReply; the wire QuitReplyMessage struct itself is pre-existing WS-level coverage."
+    },
+    {
+      "id": "proto.msg.replayControl",
+      "dimension": "protocol",
+      "subject": "protocol message type \"replayControl\"",
+      "contract": "P",
+      "authority": "protocol.go; tasks M3.2–M3.4",
+      "parity": "exact",
+      "test": "TestM223ReplayViewerJourney",
+      "status": "pass",
+      "assignedTask": "M22.3",
+      "notes": "M22.3: a replay watcher may send only viewer controls, never gameplay input. The browser journey asserts P and R send replayControl pause/restart messages from /replay/<id>; the server handles them on the replay instance, outside hostable worlds."
+    },
+    {
+      "id": "proto.msg.replayError",
+      "dimension": "protocol",
+      "subject": "protocol message type \"replayError\"",
+      "contract": "P",
+      "authority": "protocol.go; tasks M3.2–M3.4",
+      "parity": "exact",
+      "test": "TestM223ReplayMissingHostedWorldIsAPlainError",
+      "status": "pass",
+      "assignedTask": "M22.3",
+      "notes": "M22.3: a recording whose named world is no longer hosted fails as an ordinary replay load error instead of panicking or joining a room. The WebSocket branch writes replayError before closing; the unit test pins the not-hosted failure at the loader seam."
     },
     {
       "id": "proto.msg.saveFilename",
