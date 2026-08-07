@@ -8126,7 +8126,7 @@ could offer. Same rule: backlog bullets, owner promotes before spec):**
   row, so the leak does not move from `s.Instances` to file descriptors or
   metrics. `TestM1818...` pins the idle eviction and each guard, all driven by
   explicit ticks rather than sleeps.
-* **Nothing reports that the service is alive, or how busy it is.** Filed
+* [x] **Nothing reports that the service is alive, or how busy it is.** Filed
   2026-08-04. The routes are `/ws`, `/api/*` and `/`
   (`cmd/zzt-server/main.go:119-126`); there is no health or liveness endpoint,
   no player or instance count, and no metrics of any kind. M18.4–M18.10 gave the
@@ -8136,6 +8136,14 @@ could offer. Same rule: backlog bullets, owner promotes before spec):**
   exactly that number. Smallest useful version: one unauthenticated endpoint
   reporting up/uptime and the counts, and one authenticated (or loopback-only)
   endpoint with the detail. Keep it outside the tick goroutine's lock.
+  **Done 2026-08-07 as M18.19.** M16.19 had already supplied the service
+  counters, `/api/health`, and `/api/metrics`; M18.19 closes the unfinished
+  access boundary. `/api/health` stays public and aggregate-only, while
+  `/api/metrics` is hidden unless the request is a true local maintenance call
+  or an authenticated operator. A request arriving through the loopback Caddy
+  proxy with a public `X-Forwarded-For` client is not local, so production does
+  not publish instance timing, memory counters, or replay/editor detail to
+  every browser.
 * **Nothing identifies which build is running.** Filed 2026-08-04. Neither the
   server logs nor the client reports a version or commit; `warnIfClientStale`
   (`cmd/zzt-server/main.go:124`) compares client build freshness and is the

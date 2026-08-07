@@ -11111,3 +11111,19 @@ recording with more than one recorded player and says so plainly. That is the
 conservative answer to TASKS.md's M22.4 decision fork: sharing your own session
 is consent for your own player only, and multiplayer postcards wait until a
 later task designs opt-in consent instead of inheriting it silently.
+
+## 2026-08-07 — M18.19: health stays public, metrics become local/operator detail
+
+The scaling close (M16.19) had already built `/api/health`, `/api/metrics`, and
+`ServiceStatus`, but the backlog bullet's second half said the detail endpoint
+must be authenticated or loopback-only. It was not: production's public Caddy
+route could read full instance timing, memory counters, replay ids and editor
+membership detail.
+
+M18.19 keeps `/api/health` public and aggregate-only (`status`, uptime and
+counts). `/api/metrics` is now hidden unless the caller is an authenticated
+operator or a true local maintenance request. Production's proxy shape is the
+important case: Go sees Caddy as `127.0.0.1`, so a loopback check alone would
+publish metrics to everyone. The gate treats a loopback peer with a public
+`X-Forwarded-For` last hop as public, not local; direct local curl/SSH calls have
+no forwarded public client and still work.

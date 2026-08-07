@@ -123,6 +123,12 @@ func (a *WebAPI) handleHealth(w http.ResponseWriter, r *http.Request) {
 }
 
 func (a *WebAPI) handleMetrics(w http.ResponseWriter, r *http.Request) {
+	if !a.metricsReader(r) {
+		log.Printf("zztgo: refusing service metrics to %s %s from %s (forwarded=%q)",
+			r.Method, r.URL.Path, r.RemoteAddr, r.Header.Get("X-Forwarded-For"))
+		http.NotFound(w, r)
+		return
+	}
 	if r.Method != http.MethodGet {
 		http.Error(w, "use GET", http.StatusMethodNotAllowed)
 		return
@@ -132,6 +138,38 @@ func (a *WebAPI) handleMetrics(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	writeJSON(w, a.Server.ServiceStatus())
+}
+
+func (a *WebAPI) metricsReader(r *http.Request) bool {
+	if requestIsLocalMaintenance(r) {
+		return true
+	}
+	account, authenticated := a.authenticatedAccount(r)
+	return a.Server != nil && authenticated && a.Server.isOperator(account.ID)
+}
+
+func requestIsLocalMaintenance(r *http.Request) bool {
+	host, _, err := net.SplitHostPort(r.RemoteAddr)
+	if err != nil {
+		host = r.RemoteAddr
+	}
+	if ip := net.ParseIP(host); ip == nil || !ip.IsLoopback() {
+		return false
+	}
+	forwarded := strings.TrimSpace(r.Header.Get("X-Forwarded-For"))
+	if forwarded == "" {
+		return true
+	}
+	hops := strings.Split(forwarded, ",")
+	last := strings.TrimSpace(hops[len(hops)-1])
+	if last == "" {
+		return false
+	}
+	if forwardedHost, _, err := net.SplitHostPort(last); err == nil {
+		last = forwardedHost
+	}
+	ip := net.ParseIP(last)
+	return ip != nil && ip.IsLoopback()
 }
 
 func (a *WebAPI) handleReplayPostcard(w http.ResponseWriter, r *http.Request) {
