@@ -119,6 +119,15 @@ func (m *serverMetrics) recordInstanceTick(name string, step, tick time.Duration
 	m.mu.Unlock()
 }
 
+func (m *serverMetrics) forgetInstance(name string) {
+	if m == nil {
+		return
+	}
+	m.mu.Lock()
+	delete(m.instances, name)
+	m.mu.Unlock()
+}
+
 func recordServiceTiming(t *serviceTiming, d time.Duration) {
 	t.Count++
 	t.Last = d

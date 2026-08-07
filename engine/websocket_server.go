@@ -30,6 +30,12 @@ const ServerReadLimit = 1 << 20
 // deterministically. 545 ticks ≈ 60s at the 110ms server tick (M13.2).
 const ReconnectGraceTicks = 545
 
+// DefaultInstanceEvictIdleTicks is how long a non-default hosted world may sit
+// with no players, detached reconnects, spectators, title subscribers or
+// autosave before the server releases its RoomManager. Counted in ticks so the
+// rule is deterministic and testable on the same clock as reconnect grace.
+const DefaultInstanceEvictIdleTicks = 2727 // about five minutes at 110ms/tick
+
 type WebSocketServer struct {
 	RoomManager  *RoomManager
 	DefaultBoard int16
@@ -50,6 +56,10 @@ type WebSocketServer struct {
 	// never autosave unless they set the seam.
 	AutosaveEveryTicks int
 	autosaveTicks      int // countdown accumulator; touched only on the tick goroutine
+	// InstanceEvictIdleTicks, when >0, evicts non-default instances after this
+	// many idle ticks. NewWebSocketServer sets the production default; tests may
+	// lower it to make the rule observable without sleeping.
+	InstanceEvictIdleTicks int
 
 	// RecordDir, when non-empty, is where per-instance session recordings are
 	// written (M14.2). Set it through EnableRecording, which also stamps
@@ -142,6 +152,8 @@ type WorldInstance struct {
 	// only checks the room did not move passes just as well when its input never
 	// arrived, and "arrived and was dropped" is the claim.
 	spectatorDrops int
+	idleTicks      int
+	autosaving     bool
 	mu             sync.Mutex
 }
 
@@ -355,15 +367,16 @@ func NewWebSocketServer(world TWorld, defaultBoard int16) *WebSocketServer {
 		Spectators:     make(map[*webSocketClient]*spectator),
 	}
 	s := &WebSocketServer{
-		RoomManager:         rm,
-		DefaultBoard:        defaultBoard,
-		TickDuration:        ServerTickDuration,
-		OriginHosts:         []string{"localhost:*", "127.0.0.1:*"},
-		Instances:           make(map[string]*WorldInstance),
-		ReplayInstances:     make(map[string]*ReplayInstance),
-		EditorSessions:      make(map[*webSocketClient]*EditorSession),
-		EditorWorldSessions: make(map[string]*EditorSession),
-		ChatDB:              NewMemChatDatabase(),
+		RoomManager:            rm,
+		DefaultBoard:           defaultBoard,
+		TickDuration:           ServerTickDuration,
+		OriginHosts:            []string{"localhost:*", "127.0.0.1:*"},
+		InstanceEvictIdleTicks: DefaultInstanceEvictIdleTicks,
+		Instances:              make(map[string]*WorldInstance),
+		ReplayInstances:        make(map[string]*ReplayInstance),
+		EditorSessions:         make(map[*webSocketClient]*EditorSession),
+		EditorWorldSessions:    make(map[string]*EditorSession),
+		ChatDB:                 NewMemChatDatabase(),
 		// Memory-only until cmd/zzt-server points them at the saves directory, so
 		// a test never writes an audit line or a refusal to disk (M21.2).
 		Refusals: NewRefusalStore(""),
@@ -434,6 +447,7 @@ func (s *WebSocketServer) Tick(ctx context.Context) {
 	}
 
 	s.maybeAutosave()
+	s.evictIdleInstances()
 }
 
 // maybeAutosave counts ticks toward the autosave cadence and fires Autosave when
@@ -448,6 +462,72 @@ func (s *WebSocketServer) maybeAutosave() {
 	}
 	s.autosaveTicks = 0
 	s.Autosave()
+}
+
+func (s *WebSocketServer) evictIdleInstances() {
+	if s.InstanceEvictIdleTicks <= 0 {
+		return
+	}
+
+	var recorders []*SessionRecorder
+	var evicted []string
+
+	s.mu.Lock()
+	for name, inst := range s.Instances {
+		if inst == nil || inst == s.DefaultInstance {
+			continue
+		}
+		recorder, ok := inst.advanceIdleEvictionLocked(s.InstanceEvictIdleTicks)
+		if !ok {
+			continue
+		}
+		delete(s.Instances, name)
+		evicted = append(evicted, name)
+		if recorder != nil {
+			recorders = append(recorders, recorder)
+		}
+	}
+	s.mu.Unlock()
+
+	for _, name := range evicted {
+		s.metrics.forgetInstance(name)
+	}
+	for _, recorder := range recorders {
+		recorder.Close()
+	}
+}
+
+func (inst *WorldInstance) advanceIdleEvictionLocked(limit int) (*SessionRecorder, bool) {
+	inst.mu.Lock()
+	defer inst.mu.Unlock()
+	if !inst.evictableIdleLocked() {
+		inst.idleTicks = 0
+		return nil, false
+	}
+	inst.idleTicks++
+	if inst.idleTicks < limit {
+		return nil, false
+	}
+	recorder := inst.RoomManager.recorder
+	inst.RoomManager.SetRecorder(nil)
+	return recorder, true
+}
+
+func (inst *WorldInstance) evictableIdleLocked() bool {
+	if len(inst.Clients) != 0 ||
+		len(inst.Inputs) != 0 ||
+		len(inst.Detached) != 0 ||
+		len(inst.Spectators) != 0 ||
+		inst.autosaving {
+		return false
+	}
+	if inst.Title != nil && inst.Title.SubscriberCount() != 0 {
+		return false
+	}
+	if inst.RoomManager == nil || len(inst.RoomManager.players) != 0 {
+		return false
+	}
+	return true
 }
 
 func (inst *WorldInstance) Tick(ctx context.Context, s *WebSocketServer) {
@@ -1928,6 +2008,7 @@ func (s *WebSocketServer) Autosave() {
 	}
 
 	type autosaveJob struct {
+		inst  *WorldInstance
 		name  string
 		world TWorld
 	}
@@ -1958,15 +2039,19 @@ func (s *WebSocketServer) Autosave() {
 			log.Printf("zztgo: skipping autosave of instance %q: %v", inst.Name, err)
 			continue
 		}
+		inst.autosaving = true
 		world := inst.RoomManager.snapshotWorldNoSaver()
 		inst.mu.Unlock()
-		jobs = append(jobs, autosaveJob{name: name, world: world})
+		jobs = append(jobs, autosaveJob{inst: inst, name: name, world: world})
 	}
 
 	for _, job := range jobs {
 		if _, err := writeWorldSnapshot(dir, job.name, job.world); err != nil {
 			log.Printf("zztgo: autosave of %q failed: %v", job.name, err)
 		}
+		job.inst.mu.Lock()
+		job.inst.autosaving = false
+		job.inst.mu.Unlock()
 	}
 }
 

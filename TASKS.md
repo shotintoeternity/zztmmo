@@ -8102,7 +8102,7 @@ could offer. Same rule: backlog bullets, owner promotes before spec):**
   CPU/RSS/fanout/tick/room costs plus the decision thresholds. Result: the
   current instance is sufficient for the 20–30 player beta; do not vertically
   scale until the metrics cross the recorded thresholds.
-* **World instances are created and never released.** Filed 2026-08-04 from a
+* [x] **World instances are created and never released.** Filed 2026-08-04 from a
   whole-tree check. `s.Instances` is written in two places
   (`websocket_server.go:292,1555`) and nothing anywhere deletes from it: every
   world any visitor has ever opened keeps its `WorldInstance` and its whole
@@ -8118,6 +8118,14 @@ could offer. Same rule: backlog bullets, owner promotes before spec):**
   not `time.Now()`. **This is the measurable half of the scaling bullet above**:
   it can be demonstrated on a workstation, where the rest of that bullet needs
   the production host.
+  **Done 2026-08-07 as M18.18.** Non-default instances now evict after
+  `DefaultInstanceEvictIdleTicks` (2727 ticks, about five minutes) with no
+  players, detached reconnects, in-room spectators, title-stream subscribers,
+  pending input or autosave in progress. The boot/default instance is never
+  evicted. Eviction closes any session recorder and forgets the instance timing
+  row, so the leak does not move from `s.Instances` to file descriptors or
+  metrics. `TestM1818...` pins the idle eviction and each guard, all driven by
+  explicit ticks rather than sleeps.
 * **Nothing reports that the service is alive, or how busy it is.** Filed
   2026-08-04. The routes are `/ws`, `/api/*` and `/`
   (`cmd/zzt-server/main.go:119-126`); there is no health or liveness endpoint,

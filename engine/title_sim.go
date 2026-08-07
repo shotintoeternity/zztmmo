@@ -104,6 +104,12 @@ func (t *TitleSim) Subscribe() (*titleSub, func()) {
 	}
 }
 
+func (t *TitleSim) SubscriberCount() int {
+	t.mu.Lock()
+	defer t.mu.Unlock()
+	return len(t.subs)
+}
+
 // Signal fires whenever cells are waiting.
 func (s *titleSub) Signal() <-chan struct{} { return s.signal }
 
