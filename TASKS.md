@@ -356,8 +356,10 @@ M12.23, M17.1–M17.7, M16.0–M16.8a — has fully landed.)
    future work. **M26.1 landed 2026-08-09**: signed-in players can follow other
    signed-in accounts from the Players window, and opted-in followed accounts
    appear as "friends here" in the picker without account-id leakage. **M27.1
-   was filed 2026-08-09** from ranked roadmap #4 and is the next unchecked
-   executor task.
+   landed 2026-08-09**: the picker is now a browseable front page with
+   favorites, presence/activity shelves, play counts and title thumbnails.
+   **M28.1 was filed 2026-08-09** from ranked roadmap #5 and is the next
+   unchecked executor task.
 
 **Optional / deferred (bottom):**
 - M14.3 — package split — **closed as skipped 2026-08-03**, see NOTES.md
@@ -7251,6 +7253,65 @@ not increment a play count.
   build`, `go test -count=1 -run 'TestM271' ./`, `ZZT_BROWSER=1 go test
   -count=1 -run TestM1611BrowserEndToEndPlayerJourneys ./`, `git diff
   --check`, and `cd engine && go build ./... && go test ./...`.
+
+## M28 — ZZT TV: the channel that is always on
+
+Filed 2026-08-09 from the owner-promoted roadmap queue's fifth ranked line.
+M22 made read-only live watching, replay playback and postcard rendering real;
+M27 made the picker show activity, friends and popularity. This milestone turns
+those pieces into one ambient public channel: a URL someone can open, leave on a
+second monitor, embed, and watch the game advertise itself by being played.
+
+Three boundaries are decided here before code. **The channel is read-only
+presentation, not a participant**: it must never create a player stat, send
+gameplay input, increment play counts, hold a world-occupancy claim, affect
+autosave, or enter `StateHash`/recordings. **Watching stays visible by count,
+not by name**: while the channel is tuned to a live room, its viewers count as
+watchers on that board just like `/watch/<world>`; watcher names and account ids
+never appear. **`/watch/live` is a reserved channel route**: a world whose
+identity is `LIVE` remains playable via `/play/LIVE` and searchable in the
+picker, but the exact watch URL belongs to the channel rather than to that
+world.
+
+- [ ] **M28.1 — `/watch/live`: cycle busy rooms and replay moments.**
+  Add the smallest channel surface that can be useful: a server-produced lineup
+  and a client route that reuses the existing M22 viewers. A lineup entry is
+  either a live room (`/watch/<world>` semantics, current board only) or a replay
+  moment (`/replay/<id>` semantics, optionally fast-forwarded to a bounded start
+  tick and board). The client should not gain a second renderer; it should close
+  the previous read-only connection and open the next existing watch/replay path
+  on a timer, with a manual Next control and the same Leave path watchers already
+  have. Replay-only controls (`P`, `R`, `S`) keep their M22.3/M22.4 meanings
+  while the channel is showing a replay.
+
+  The lineup policy should be conservative and deterministic enough to test.
+  Live candidates are occupied, publicly watchable worlds sorted by player count
+  and a stable tie-breaker; editor sessions, replay instances, title previews,
+  private/party-only instances if that later exists, and refused/unloadable
+  worlds are excluded. Replay candidates are recent, valid v2 recordings that
+  satisfy the M22.4 consent posture for postcards; for the first cut, a "strong
+  moment" may be the final bounded window of a single-player replay rather than
+  a new scoring system. Cap directory scans and lineup size so a full replay
+  archive cannot make the front door slow.
+
+  The `/watch/live` page should feel like the existing ZZT shell, not a marketing
+  landing page. Show which world or replay is currently on, enough status to make
+  cycling legible, and no in-app instructional prose beyond the existing compact
+  watcher controls. An embed mode such as `/watch/live?embed=1` should render the
+  channel without account menus, picker chrome, or write-capable affordances, but
+  it must use the same read-only server paths and the same privacy rules.
+
+  DoD: API/server tests prove the lineup order, candidate exclusions, replay
+  consent filter, bounded scans, and absence of account ids or per-player records
+  in marshaled channel data; live channel viewers count as watchers but do not
+  change player occupancy, play counts, autosave, or `StateHash`; replay entries
+  play from their selected bounded window and remain excluded from picker/world
+  activity. Node tests cover `/watch/live` route precedence over `/watch/<world>`,
+  cycling, manual Next/Leave, embed mode, and reuse of existing watch/replay
+  entry points. Add focused Chromium coverage if the visible watcher journey or
+  deep-link launch flow changes. Verify with `npm test`, `npm run build`,
+  focused Go tests for M28.1, `git diff --check`, and the session gate
+  `cd engine && go build ./... && go test ./...`.
 
 ## M14 — Rearchitecting for the service ZZTMMO is becoming
 

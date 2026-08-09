@@ -11278,3 +11278,23 @@ are signed-in account preferences keyed by sanitized world identities, not guest
 localStorage state. Popularity is aggregate world activity: successful active
 play joins increment a world count, while watch/replay/title/editor surfaces do
 not, and the store must contain no account ids or per-player log.
+
+## 2026-08-09 — M28.1 spec filed for ZZT TV
+
+Expanded ranked roadmap item #5 into `TASKS.md` as M28.1. This is documentation
+and product-boundary work only: no engine or browser code changed, and the task
+is left unchecked for implementation.
+
+The spec keeps ZZT TV on the M22 substrate instead of inventing a third renderer:
+`/watch/live` is a channel controller over existing `/watch/<world>` and
+`/replay/<id>` read-only streams. Channel viewers never become players, never
+send gameplay input, never increment play counts, never hold occupancy, and never
+enter StateHash or recordings.
+
+Three decisions are recorded before code. `/watch/live` is a reserved exact
+route, so a world named `LIVE` remains playable through `/play/LIVE` but cannot
+claim the channel URL. Live channel viewers count as anonymous watchers on the
+tuned room, matching M22.1's visible-count/no-name rule. Replay moments inherit
+M22.4's conservative beta consent posture: the first cut may use bounded final
+windows of single-player v2 recordings, with no multiplayer postcards or TV
+moments until a later task designs opt-in consent.
