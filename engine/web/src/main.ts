@@ -156,6 +156,8 @@ const MessageTypeModerateResult = "moderateResult";
 const MessageTypeModerationNotice = "moderationNotice";
 const MessageTypeProfileRequest = "profileRequest";
 const MessageTypeProfileResult = "profileResult";
+const MessageTypePrivateMessage = "privateMessage";
+const MessageTypePrivateResult = "privateMessageResult";
 const MessageTypeReplayControl = "replayControl";
 const MessageTypeReplayError = "replayError";
 
@@ -307,6 +309,24 @@ type ChatMessage = {
    * nor claimed.
    */
   playerId?: number;
+  text: string;
+};
+
+type PrivateMessage = {
+  type: typeof MessageTypePrivateMessage;
+  from?: string;
+  fromId?: number;
+  to?: string;
+  toId?: number;
+  playerId?: number;
+  text: string;
+  outgoing?: boolean;
+};
+
+type PrivateResultMessage = {
+  type: typeof MessageTypePrivateResult;
+  playerId?: number;
+  delivered: boolean;
   text: string;
 };
 
@@ -547,7 +567,7 @@ type EditorTestPlayMessage = {
   error?: string;
 };
 
-type ServerMessage = SnapshotMessage | DiffMessage | EventMessage | BoardChangeMessage | ChatMessage | AnnounceMessage | BlockResultMessage | ModerateResultMessage | ModerationNoticeMessage | ProfileResultMessage | ReplayErrorMessage | EditorSnapshotMessage | EditorInspectMessage | EditorPresenceMessage | EditorLeaseMessage | EditorDiffMessage | EditorPropertiesMessage | EditorStatSettingsMessage | EditorProgramTextMessage | EditorBoardDataMessage | EditorWorldDataMessage | EditorSaveResultMessage | EditorTestPlayMessage;
+type ServerMessage = SnapshotMessage | DiffMessage | EventMessage | BoardChangeMessage | ChatMessage | PrivateMessage | PrivateResultMessage | AnnounceMessage | BlockResultMessage | ModerateResultMessage | ModerationNoticeMessage | ProfileResultMessage | ReplayErrorMessage | EditorSnapshotMessage | EditorInspectMessage | EditorPresenceMessage | EditorLeaseMessage | EditorDiffMessage | EditorPropertiesMessage | EditorStatSettingsMessage | EditorProgramTextMessage | EditorBoardDataMessage | EditorWorldDataMessage | EditorSaveResultMessage | EditorTestPlayMessage;
 
 type InputMessage = {
   type: typeof MessageTypeInput;
@@ -2009,6 +2029,12 @@ function applyMessage(message: ServerMessage) {
     case MessageTypeChat:
       handleChatMessage(message);
       break;
+    case MessageTypePrivateMessage:
+      handlePrivateMessage(message);
+      break;
+    case MessageTypePrivateResult:
+      handlePrivateResultMessage(message);
+      break;
     case MessageTypeAnnounce:
       handleAnnounceMessage(message);
       break;
@@ -2627,7 +2653,7 @@ function writeOverlay(x: number, y: number, color: number, text: string) {
   }
 }
 
-let chatMessages: { from: string; playerId?: number; text: string }[] = [];
+let chatMessages: { from: string; playerId?: number; text: string; private?: boolean; outgoing?: boolean; to?: string }[] = [];
 // M21.1: the ids this player has asked not to hear, as the server has confirmed
 // them. It is a mirror of the server's own set, never the authority: the roster
 // window reads it to decide whether a row offers "block" or "unblock".
@@ -2663,13 +2689,28 @@ function handleAnnounceMessage(message: { text: string; seconds?: number }) {
   drawScreen();
 }
 
+function chatLineText(message: { from: string; text: string; private?: boolean; outgoing?: boolean; to?: string }): string {
+  if (message.private) {
+    return message.outgoing ? `[PM to ${message.to || "player"}] ${message.text}` : `[PM from ${message.from}] ${message.text}`;
+  }
+  return `<${message.from}> ${message.text}`;
+}
+
+function refreshOpenChatWindow() {
+  if (modal && modal.kind === "chat") {
+    modal.messages = chatMessages.map(chatLineText);
+    paintOverlay();
+    drawScreen();
+  }
+}
+
 function handleChatMessage(message: { from: string; playerId?: number; text: string }) {
   chatMessages.push({ from: message.from, playerId: message.playerId, text: message.text });
   if (chatMessages.length > 50) {
     chatMessages.shift();
   }
 
-  currentChatMessage = `<${message.from}> ${message.text}`;
+  currentChatMessage = chatLineText(message);
   window.clearTimeout(currentChatTimer);
   currentChatTimer = window.setTimeout(() => {
     currentChatMessage = "";
@@ -2678,13 +2719,39 @@ function handleChatMessage(message: { from: string; playerId?: number; text: str
   }, 5000);
 
   if (modal && modal.kind === "chat") {
-    modal.messages = chatMessages.map((message) => `<${message.from}> ${message.text}`);
-    paintOverlay();
-    drawScreen();
+    refreshOpenChatWindow();
   } else {
     if (message.playerId !== undefined && message.playerId !== playerId) {
       tryShowFirstTimeHint("chat");
     }
+    paintOverlay();
+    drawScreen();
+  }
+}
+
+function handlePrivateMessage(message: PrivateMessage) {
+  const line = {
+    from: message.from || "player",
+    playerId: message.fromId,
+    text: message.text,
+    private: true,
+    outgoing: message.outgoing === true,
+    to: message.to,
+  };
+  chatMessages.push(line);
+  if (chatMessages.length > 50) {
+    chatMessages.shift();
+  }
+  currentChatMessage = chatLineText(line);
+  window.clearTimeout(currentChatTimer);
+  currentChatTimer = window.setTimeout(() => {
+    currentChatMessage = "";
+    paintOverlay();
+    drawScreen();
+  }, 5000);
+  if (modal && modal.kind === "chat") {
+    refreshOpenChatWindow();
+  } else {
     paintOverlay();
     drawScreen();
   }
@@ -2741,7 +2808,7 @@ function openChatWindow() {
   openModal({
     kind: "chat",
     title: "Global Chat",
-    messages: chatMessages.map((message) => `<${message.from}> ${message.text}`),
+    messages: chatMessages.map(chatLineText),
     buffer: "",
     onSubmit: (text) => {
       if (ws && ws.readyState === WebSocket.OPEN) {
@@ -2783,6 +2850,7 @@ function openBlockWindow() {
       const blockVerb = candidate.blocked ? "Unblock" : "Block";
       const choices = [
         { label: "View profile", action: "profile", confirm: "" },
+        { label: "Private message", action: "pm", confirm: "" },
         ...(isOperator ? [] : [{ label: blockVerb, action: candidate.blocked ? "unblock" : "block", confirm: `${blockVerb} ${candidate.name}? ` }]),
         ...moderationChoices(candidate, isOperator),
       ];
@@ -2797,6 +2865,10 @@ function openBlockWindow() {
           }
           if (choice.action === "profile") {
             sendProfileRequest(candidate.id);
+            return;
+          }
+          if (choice.action === "pm") {
+            openPrivateMessagePrompt(candidate.id, candidate.handle ? `@${candidate.handle}` : candidate.name);
             return;
           }
           openYesNo(choice.confirm, (yes) => {
@@ -2827,6 +2899,26 @@ function sendProfileRequest(targetId: number) {
   if (ws && ws.readyState === WebSocket.OPEN) {
     ws.send(JSON.stringify({ type: MessageTypeProfileRequest, playerId: targetId }));
   }
+}
+
+function openPrivateMessagePrompt(targetId: number, label: string) {
+  openPopupEntry(`PM ${label}:`, (text) => {
+    if (text === null) return;
+    sendPrivateMessage(targetId, text);
+  });
+}
+
+function sendPrivateMessage(targetId: number, text: string) {
+  if (ws && ws.readyState === WebSocket.OPEN) {
+    ws.send(JSON.stringify({ type: MessageTypePrivateMessage, playerId: targetId, text }));
+  }
+}
+
+function handlePrivateResultMessage(message: PrivateResultMessage) {
+  if (message.delivered) {
+    return;
+  }
+  openWindow("Private Message", ["", `  ${message.text}`, ""], true);
 }
 
 // The block's confirmation, and the only message either party gets: the blocked

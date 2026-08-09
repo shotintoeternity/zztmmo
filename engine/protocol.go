@@ -53,6 +53,8 @@ const (
 	MessageTypeModerationNotice = "moderationNotice"
 	MessageTypeProfileRequest   = "profileRequest"
 	MessageTypeProfileResult    = "profileResult"
+	MessageTypePrivateMessage   = "privateMessage"
+	MessageTypePrivateResult    = "privateMessageResult"
 	MessageTypeReplayControl    = "replayControl"
 	MessageTypeReplayError      = "replayError"
 )
@@ -117,6 +119,28 @@ type ProfileResultMessage struct {
 	Name     string   `json:"name,omitempty"`
 	Handle   string   `json:"handle,omitempty"`
 	Lines    []string `json:"lines"`
+}
+
+// PrivateMessage is an in-session, roster-addressed whisper (M25.1). The client
+// sends PlayerID+Text; the server fills the author fields on delivery. It is
+// deliberately session-only: a PlayerID names a live connection, not an account,
+// and durable/offline PMs wait for the handle-addressed design.
+type PrivateMessage struct {
+	Type     string   `json:"type"`
+	PlayerID PlayerID `json:"playerId,omitempty"`
+	From     string   `json:"from,omitempty"`
+	FromID   PlayerID `json:"fromId,omitempty"`
+	To       string   `json:"to,omitempty"`
+	ToID     PlayerID `json:"toId,omitempty"`
+	Text     string   `json:"text"`
+	Outgoing bool     `json:"outgoing,omitempty"`
+}
+
+type PrivateResultMessage struct {
+	Type      string   `json:"type"`
+	PlayerID  PlayerID `json:"playerId,omitempty"`
+	Delivered bool     `json:"delivered"`
+	Text      string   `json:"text"`
 }
 
 // BlockMessage is the client's block/unblock request. The target is named by the

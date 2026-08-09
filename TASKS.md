@@ -349,7 +349,11 @@ M12.23, M17.1–M17.7, M16.0–M16.8a — has fully landed.)
        but intentionally behind the core social/discovery queue.
    **M24.1 landed 2026-08-08**: signed-in accounts now have public profile
    fields and optional claimed handles; profiles are opened from the Players
-   window by live PlayerID, with account ids kept server-only.
+   window by live PlayerID, with account ids kept server-only. **M25.1 landed
+   2026-08-09**: the Players window now sends in-session private messages by
+   live PlayerID, with chat admission/rate/mute/block policy enforced on the
+   server and no global history persistence; durable/offline handle PMs remain
+   future work.
 
 **Optional / deferred (bottom):**
 - M14.3 — package split — **closed as skipped 2026-08-03**, see NOTES.md
@@ -7030,6 +7034,54 @@ claimed handle or it does not exist.
   `cd engine && go test ./...`. No new Chromium harness was added; the browser
   UI pieces are covered by Node UI tests and the profile journey is exercised at
   the real HTTP/WebSocket boundary in Go.
+
+## M25 — Private messages v1: say something to one live player
+
+Filed 2026-08-09 from the owner-promoted roadmap queue's second ranked line.
+M24.1 supplied durable handles, but the backlog split is still the right one:
+the cheap, useful first slice is an in-session PM addressed by current
+`PlayerID` from the Players window. A live PlayerID is already on roster rows and
+chat lines, and it is enough to whisper to somebody who is here now. It is NOT
+enough to message a player who is offline, to keep a durable inbox, or to type
+`@handle` into a new command line; those are the durable-handle half and wait for
+a later task.
+
+- [x] **M25.1 — roster-initiated in-session private messages.** Add a
+  `privateMessage` client request carrying `{playerId,text}` and a server-filled
+  delivery carrying the sender/recipient presentation names and live ids. The
+  sender sees their own outgoing PM as confirmation; the recipient sees the
+  incoming PM; nobody else receives either frame. PMs are session presentation,
+  not global chat history: do not persist them through `ChatDB.AddMessage`, do
+  not replay them in the 50-line global backlog, and do not put account ids on
+  the wire.
+
+  Policy is inherited from chat, not re-invented. Normalize/admit text with
+  `admitChatText`; share the same per-player chat rate limiter so a player
+  cannot bypass M16.16a by switching windows; a moderated mute refuses PMs with
+  the same notice as chat; and a recipient's block suppresses delivery on the
+  server before the target socket sees anything. If the target has left or is
+  unavailable, the sender gets a generic refusal window; the recipient is never
+  told that a blocked PM was attempted.
+
+  UI entry is the existing `L Players` window, beside View profile and Block:
+  choose a row, choose Private message, type one line, and the result lands in
+  the existing chat scrollback with an explicit PM label. No new durable
+  conversation list, inbox, unread counts, or offline delivery in this task.
+
+  DoD: a three-socket test proves A's PM to B reaches A and B and not C; PMs do
+  not enter persisted global chat history; B blocking A suppresses A's PM to B
+  without notifying B; the shared rate limiter refuses the sixth chat/PM in the
+  window; a muted player cannot PM; protocol round trips cover the new message
+  shapes; `npm test`, `npm run build`, `cd engine && go build ./...`, and
+  `cd engine && go test ./...` green.
+  **Done 2026-08-09.** `privateMessage` is now a live PlayerID request and a
+  server-authored delivery. `submitPrivateMessage` resolves the sender and
+  target on the server, applies the shared chat admission/rate/mute rules, checks
+  the recipient's block set at fan-out time, writes the incoming frame only to
+  the target and the outgoing confirmation only to the sender, and never calls
+  `ChatDB.AddMessage`. The browser adds Private message to the Players action
+  list and renders PM lines in the existing chat scrollback as `[PM from ...]`
+  or `[PM to ...]`. Verified with focused socket tests and the full session gate.
 
 ## M14 — Rearchitecting for the service ZZTMMO is becoming
 

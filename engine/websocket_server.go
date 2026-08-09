@@ -1113,24 +1113,8 @@ func (s *WebSocketServer) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 			if err := json.Unmarshal(raw, &chat); err != nil {
 				continue
 			}
-			// A mute is checked before admission and before the rate limiter
-			// (M21.2), so a muted player's messages cost them nothing and are
-			// simply refused. Unlike a block, the refusal is ANNOUNCED to them:
-			// a mute is a sanction, and a player whose lines silently vanish
-			// learns only that the game is broken.
-			if s.mutes.muted(playerID, client.accountID) {
-				s.tellPlayer(ctx, client, ModerationActionMute,
-					"You are muted by a moderator. Your message was not sent.", false)
-				continue
-			}
-			// Admission before any persistence or broadcast (M16.16a): a
-			// refused message — unprintable-only text or the sixth in a
-			// rolling ten-second window — creates no record and no broadcast.
-			text, ok := admitChatText(chat.Text)
+			text, ok := s.admitPlayerChatLikeText(ctx, client, playerID, chat.Text, false)
 			if !ok {
-				continue
-			}
-			if !s.chatLimiter.allow(playerID, s.clockNow()) {
 				continue
 			}
 			inst.mu.Lock()
@@ -1150,6 +1134,12 @@ func (s *WebSocketServer) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 				_, _ = s.ChatDB.AddMessage(author, text)
 			}
 			s.BroadcastGlobalChat(ctx, author, text)
+		case MessageTypePrivateMessage:
+			var pm PrivateMessage
+			if err := json.Unmarshal(raw, &pm); err != nil {
+				continue
+			}
+			s.submitPrivateMessage(ctx, client, playerID, pm)
 		case MessageTypeBlock:
 			var req BlockMessage
 			if err := json.Unmarshal(raw, &req); err != nil {
@@ -3080,6 +3070,97 @@ func (s *WebSocketServer) BroadcastGlobalChat(ctx context.Context, author ChatAu
 		}
 		_ = client.write(ctx, msg)
 	}
+}
+
+func (s *WebSocketServer) admitPlayerChatLikeText(ctx context.Context, client *webSocketClient, playerID PlayerID, raw string, reportRate bool) (string, bool) {
+	// A mute is checked before admission and before the rate limiter (M21.2), so
+	// a muted player's attempted PM costs them nothing and is announced exactly
+	// like a refused global chat line.
+	if s.mutes.muted(playerID, client.accountID) {
+		s.tellPlayer(ctx, client, ModerationActionMute,
+			"You are muted by a moderator. Your message was not sent.", false)
+		return "", false
+	}
+	text, ok := admitChatText(raw)
+	if !ok {
+		return "", false
+	}
+	if !s.chatLimiter.allow(playerID, s.clockNow()) {
+		if reportRate {
+			_ = client.write(ctx, PrivateResultMessage{
+				Type:      MessageTypePrivateResult,
+				Delivered: false,
+				Text:      "You are sending messages too quickly.",
+			})
+		}
+		return "", false
+	}
+	return text, true
+}
+
+func (s *WebSocketServer) submitPrivateMessage(ctx context.Context, client *webSocketClient, sender PlayerID, req PrivateMessage) {
+	if req.PlayerID == 0 || req.PlayerID == sender {
+		return
+	}
+	text, ok := s.admitPlayerChatLikeText(ctx, client, sender, req.Text, true)
+	if !ok {
+		return
+	}
+	target, found := s.locatePlayer(req.PlayerID)
+	if !found || target.client == nil {
+		_ = client.write(ctx, PrivateResultMessage{
+			Type:      MessageTypePrivateResult,
+			PlayerID:  req.PlayerID,
+			Delivered: false,
+			Text:      "That player has already left.",
+		})
+		return
+	}
+
+	senderName := "browser"
+	senderAccount := client.accountID
+	if source, ok := s.locatePlayer(sender); ok {
+		if source.name != "" {
+			senderName = source.name
+		}
+		if source.account != "" {
+			senderAccount = source.account
+		}
+	}
+	targetName := target.name
+	if targetName == "" {
+		targetName = "that player"
+	}
+	if s.chatBlocks.suppresses(req.PlayerID, sender, senderAccount) {
+		_ = client.write(ctx, PrivateResultMessage{
+			Type:      MessageTypePrivateResult,
+			PlayerID:  req.PlayerID,
+			Delivered: false,
+			Text:      "That player is not available.",
+		})
+		return
+	}
+
+	incoming := PrivateMessage{
+		Type:   MessageTypePrivateMessage,
+		From:   senderName,
+		FromID: sender,
+		To:     targetName,
+		ToID:   req.PlayerID,
+		Text:   text,
+	}
+	outgoing := incoming
+	outgoing.Outgoing = true
+	if err := target.client.write(ctx, incoming); err != nil {
+		_ = client.write(ctx, PrivateResultMessage{
+			Type:      MessageTypePrivateResult,
+			PlayerID:  req.PlayerID,
+			Delivered: false,
+			Text:      "That player is not available.",
+		})
+		return
+	}
+	_ = client.write(ctx, outgoing)
 }
 
 // submitChatBlock records one player's block (or lifts it) and tells only them.

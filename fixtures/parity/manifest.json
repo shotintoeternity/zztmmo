@@ -1259,6 +1259,28 @@
       "notes": "task-claim row; reconciled at the task itself (2026-08-07), NOT at M16.20: M23.3 landed after the certification milestone closed, so no M16.20 run ever saw this row. TestM233FirstVisitWelcomeJourney launches the production zzt-server binary and drives Chromium through the first-visit contract: a fresh guest root visit resolves WELCOME through /api/worlds, opens its title screen without joining, marks the profile warm, and joins WELCOME only after P; the same warmed profile returns to the ordinary picker on /; and a fresh /play/ACCEPT deep link lands on ACCEPT rather than being intercepted by welcome. The pure web tests pin the local flag and picker ordering/marker rules."
     },
     {
+      "id": "task.M24.1",
+      "dimension": "task",
+      "subject": "Completed task M24.1 — its DoD still holds",
+      "contract": "E",
+      "authority": "TASKS.md M24.1",
+      "parity": "exact",
+      "test": "TestM241AccountProfileHandleUniquenessAndPersistence,TestM241FileDBRebuildsHandleIndexOnRestart,TestM241PreferencesEndpointSavesProfileAndPreservesFields,TestM241ProfileRequestUsesPlayerIDAndDoesNotLeakAccountID",
+      "status": "pass",
+      "notes": "task-claim row; reconciled at the task itself (2026-08-08), NOT at M16.20: M24.1 landed after the certification milestone closed, so no M16.20 run ever saw this row. The tests cover profile-field round trips, handle uniqueness/release/conflict/persistence in both memory and file stores, partial /api/preferences updates preserving color/blocks/hints, guest refusal and conflict status, and a real WebSocket profile request by live PlayerID that returns only public profile fields and fails if an account id reaches another browser."
+    },
+    {
+      "id": "task.M25.1",
+      "dimension": "task",
+      "subject": "Completed task M25.1 — its DoD still holds",
+      "contract": "E",
+      "authority": "TASKS.md M25.1",
+      "parity": "exact",
+      "test": "TestM251PrivateMessageOnlyReachesSenderAndRecipient,TestM251PrivateMessageHonorsRecipientBlock,TestM251PrivateMessageSharesChatRateLimit,TestM251MutedPlayerCannotSendPrivateMessages",
+      "status": "pass",
+      "notes": "task-claim row; reconciled at the task itself (2026-08-09), NOT at M16.20: M25.1 landed after the certification milestone closed, so no M16.20 run ever saw this row. The socket tests prove PMs are live PlayerID messages delivered only to sender and recipient, not persisted in global chat history, suppressed by a recipient block before the target socket sees them, refused by the shared chat rate limiter, and refused for muted senders with the existing moderation notice."
+    },
+    {
       "id": "task.M3.0",
       "dimension": "task",
       "subject": "Completed task M3.0 — its DoD still holds",
@@ -4174,6 +4196,30 @@
       "status": "pass",
       "assignedTask": "M21.2",
       "notes": "M21.2: what the moderated PLAYER is told, and the one message in the M21 family addressed to the person acted upon — a block is silent by design, a sanction announces itself, or a player whose lines vanish learns only that the game is broken. `ended` marks the sanctions that finish the session (kick, refuse, and a refused account's rejected reconnect at the door), and the client has to honour it: without that the reconnect backoff walks a kicked player back in half a second later, presenting the resume token that reclaims the run they were removed from."
+    },
+    {
+      "id": "proto.msg.privateMessage",
+      "dimension": "protocol",
+      "subject": "protocol message type \"privateMessage\"",
+      "contract": "P",
+      "authority": "protocol.go; tasks M3.2–M3.4",
+      "parity": "exact",
+      "test": "TestProtocolMessageRoundTrips,TestM251PrivateMessageOnlyReachesSenderAndRecipient,TestM251PrivateMessageHonorsRecipientBlock",
+      "status": "pass",
+      "assignedTask": "M25.1",
+      "notes": "M25.1: the client sends `privateMessage` with a live target PlayerID and text; the server-authored delivery fills sender and recipient presentation names and live ids. The sender receives an outgoing copy as confirmation, the recipient receives the incoming copy, and a third socket is fenced to prove it receives no PM frame. Account ids never appear in the message."
+    },
+    {
+      "id": "proto.msg.privateMessageResult",
+      "dimension": "protocol",
+      "subject": "protocol message type \"privateMessageResult\"",
+      "contract": "P",
+      "authority": "protocol.go; tasks M3.2–M3.4",
+      "parity": "exact",
+      "test": "TestProtocolMessageRoundTrips,TestM251PrivateMessageHonorsRecipientBlock,TestM251PrivateMessageSharesChatRateLimit",
+      "status": "pass",
+      "assignedTask": "M25.1",
+      "notes": "M25.1: the sender's generic refusal for a PM that cannot be delivered. It covers a target who left, a recipient block, and the shared chat/PM rate limit; the blocked recipient is not notified, preserving M21.1's silent-block boundary."
     },
     {
       "id": "proto.msg.profileRequest",

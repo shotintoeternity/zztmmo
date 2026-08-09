@@ -62,6 +62,9 @@ func TestProtocolMessageRoundTrips(t *testing.T) {
 	}, &DiffMessage{})
 	roundTrip(t, EventMessage{Type: MessageTypeEvent, BoardID: 1, Tick: 44, Event: ProtocolEvent{Type: "death", StatID: 2}}, &EventMessage{})
 	roundTrip(t, BoardChangeMessage{Type: MessageTypeBoardChange, Snapshot: snapshot}, &BoardChangeMessage{})
+	roundTrip(t, PrivateMessage{Type: MessageTypePrivateMessage, PlayerID: 8, Text: "hello"}, &PrivateMessage{})
+	roundTrip(t, PrivateMessage{Type: MessageTypePrivateMessage, From: "Ada", FromID: 7, To: "Bo", ToID: 8, Text: "hello", Outgoing: true}, &PrivateMessage{})
+	roundTrip(t, PrivateResultMessage{Type: MessageTypePrivateResult, PlayerID: 8, Delivered: false, Text: "That player is not available."}, &PrivateResultMessage{})
 }
 
 func TestProtocolEvents(t *testing.T) {
