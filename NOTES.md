@@ -11298,3 +11298,23 @@ tuned room, matching M22.1's visible-count/no-name rule. Replay moments inherit
 M22.4's conservative beta consent posture: the first cut may use bounded final
 windows of single-player v2 recordings, with no multiplayer postcards or TV
 moments until a later task designs opt-in consent.
+
+## 2026-08-09 — M30.1 spec filed for the first-party PvP arena
+
+Expanded ranked roadmap item #7 into `TASKS.md` as M30.1. This is
+documentation and product-boundary work only: no engine or browser code changed,
+and the task is left unchecked for implementation.
+
+The spec deliberately resolves the stale friendly-fire wording rather than
+copying it forward. M8.1 records that `Engine.FriendlyFire` defaults true and
+that bullets/point-blank shots already honor it; the later PvP backlog note says
+nothing turns it on outside tests. The implementation task now has to make the
+policy explicit per resolved world identity: ARENA opts in, ordinary co-op
+worlds opt out, and authored data cannot smuggle an opt-in through ZZT-OOP,
+metadata, saves, dreams, editor publishes or Museum imports.
+
+The first cut is scoped to the thing players can actually enter: a canonical
+`ARENA.ZZT`, first-party metadata, a LOBBY gate, and tests proving player-owned
+damage works there and not elsewhere. Rankings, brackets, durable match history
+and tournament-night structure are intentionally deferred until the arena itself
+has been played.

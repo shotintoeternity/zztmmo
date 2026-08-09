@@ -364,7 +364,9 @@ M12.23, M17.1–M17.7, M16.0–M16.8a — has fully landed.)
    replay viewers without creating players, play counts, autosaves or identity
    leakage. **M29 was filed 2026-08-09** from the ranked roadmap queue's sixth
    line: replace TOWN as the default hangout with a first-party lobby world and
-   server-interpreted cross-world passages.
+   server-interpreted cross-world passages. **M30 was filed 2026-08-09** from
+   the seventh line: a first-party PvP arena, with friendly-fire policy made
+   explicit per world before the arena can ship.
 
 **Optional / deferred (bottom):**
 - M14.3 — package split — **closed as skipped 2026-08-03**, see NOTES.md
@@ -7406,6 +7408,72 @@ smuggle a cross-world transfer by naming a board or writing OOP.
   server-interpreted LOBBY transit gates that preserve live/account identity
   across a gate into TOWN. Verified with `npm test`, `npm run build`,
   focused M29.1 Go tests, focused `ZZT_BROWSER=1` lobby-browser coverage,
+  `git diff --check`, and the session gate `cd engine && go build ./... &&
+  go test ./...`.
+
+## M30 — First-party PvP arena
+
+Filed 2026-08-09 from the owner-promoted roadmap queue's seventh ranked line.
+The server can already simulate player-vs-player damage: M8.1 reconciled
+point-blank shots with bullet ownership and both paths read `Engine.FriendlyFire`.
+What does not exist is a product boundary around it. Every ordinary ZZT world is
+still sold as co-op; a player entering TOWN, a Museum world, a dream, WELCOME or
+LOBBY should not have to know whether another player's bullet can hurt them
+because of a constructor default. PvP belongs in a first-party arena that opts in
+deliberately and visibly.
+
+Two decisions are fixed before code. **Friendly fire is a per-world server
+policy, not ZZT-OOP state**: authored worlds, editor publishes, dreams, saves
+and Museum imports cannot turn it on by script, flag, title text, passage target
+or metadata sidecar. **The first cut is a room, not a league**: no rankings,
+brackets, seasons, wagers or durable match history yet. The arena may have
+in-world scoring affordances and high scores if the existing ZZT mechanics make
+that useful, but tournament-night structure waits until players have actually
+played the arena and found the fun part.
+
+- [ ] **M30.1 — ARENA world with explicit friendly-fire opt-in.**
+  Build and ship a canonical first-party `ARENA.ZZT` through the same committed
+  source path as WELCOME and LOBBY: keep an editable source artifact if
+  practical, commit `fixtures/ARENA.ZZT`, write the local `engine/ARENA.ZZT`
+  hosting artifact for deploy bundles, add ARENA to `worlds.manifest.json`, and
+  make `WorldIsCanonical("ARENA")` protect it from dream/editor overwrites. The
+  world should be a real ZZT arena: separated spawn approaches, readable combat
+  lanes, safe reset/return space, ammo and health/energizer pressure, a few
+  object-driven rules or scorekeepers if they stay terse, and a clear exit back
+  to LOBBY. Do not turn the board into a browser help screen; use ZZT signage,
+  scrolls and layout.
+
+  Add the smallest explicit friendly-fire policy seam. The server should decide
+  the policy from the resolved world identity before any room engine steps, apply
+  it to every engine a `RoomManager` opens for that world, and keep it stable
+  across board transitions, freezes/thaws, reconnects, restores, title previews,
+  recording and replay. ARENA opts in. Non-arena worlds opt out unless a later
+  task creates another first-party allowlist entry. The policy must not be
+  derivable from the world file itself, `.meta.json`, `.access.json`, editor
+  fields, OOP flags, object text, generated plans, or Museum metadata.
+
+  Wire discovery without disturbing the lobby/picker contracts. ARENA should be
+  listed with first-party metadata, reachable from the picker, deep links,
+  `/watch/ARENA`, ZZT TV when occupied, and a visible LOBBY transit gate. A
+  player walking from LOBBY into ARENA joins active gameplay directly like other
+  M29 gates; a player choosing ARENA from the picker or `/play/ARENA` still sees
+  ARENA's title screen before pressing P. Leaving, quitting, reconnecting,
+  saving/restoring and account sidecar state should behave like any other world,
+  with the one difference that player-owned bullets and point-blank shots can
+  damage other players inside ARENA and cannot do so elsewhere.
+
+  DoD: Go tests prove ARENA is canonical, listed with metadata, protected from
+  dream/editor overwrites, and configured friendly-fire-on in every opened room;
+  TOWN, LOBBY, WELCOME, a Museum/local world, a dream/editor-published world and
+  a restored save are friendly-fire-off; no authored data path can opt in; bullets
+  and point-blank shots damage another player in ARENA, never the shooter, and do
+  not damage another player in non-arena worlds; policy survives board transfer,
+  room freeze/thaw, reconnect and replay. Browser/Node coverage proves the picker
+  and `/play/ARENA` title pause, the LOBBY gate into ARENA, visible arena entry,
+  and at least one real Chromium two-player PvP hit. Update README and deploy docs
+  to stop saying there are no PvP arenas, but keep them honest about no rankings
+  or tournament layer yet. Verify with `npm test`, `npm run build`, focused Go
+  tests for M30.1, focused `ZZT_BROWSER=1` arena-browser coverage,
   `git diff --check`, and the session gate `cd engine && go build ./... &&
   go test ./...`.
 
