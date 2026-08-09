@@ -56,6 +56,13 @@ type recHeader struct {
 	WorldHash  uint64 `json:"worldHash"`
 	WorldBytes string `json:"worldBytes"`
 	Seed       uint32 `json:"seed"`
+	// ChallengeID and ChallengeVersion say which challenge definition a run was
+	// recorded under (M32.1). They are omitempty and deliberately do NOT bump
+	// recordVersion: they add a fact about the recording rather than changing
+	// how its stimuli replay, and a bump would refuse every recording and
+	// fixture written before them.
+	ChallengeID      string `json:"challengeId,omitempty"`
+	ChallengeVersion int    `json:"challengeVersion,omitempty"`
 }
 
 // recOp is one external stimulus applied before a tick's step: a join, a name,

@@ -377,7 +377,23 @@ M12.23, M17.1–M17.7, M16.0–M16.8a — has fully landed.)
    key remaps, reduced flashing and local palette filters without changing the
    wire protocol, replay state or another viewer's canvas. **M32 was filed
    2026-08-09** from the ninth ranked roadmap line: a deterministic replay-backed
-   daily challenge, leaderboard and ghost-racing layer.
+   daily challenge, leaderboard and ghost-racing layer. **M32.1 landed
+   2026-08-09**: `/challenge` and `/challenge/<id>` open a server-owned catalogue
+   inside the playable client; a run is an isolated, always-recorded instance
+   keyed by a string `SanitizeSaveName` refuses, so no `?world=` reaches it and
+   the picker, occupancy, ZZT TV, autosave, play counts, friends-here presence
+   and the account sidecar cannot see it; completion is observed by the server
+   from in-sim counters; a signed-in result becomes one bounded durable row whose
+   evidence re-verifies against its own recording; and a ghost is positions
+   replayed out of a stored row, drawn as one local overlay cell that sends
+   nothing. Cheat prompts, saves and transit gates are refused inside a run, and
+   a guest plays the same run without creating a public row. It shipped the
+   first-party GEMDASH course, and filed **M33.1** on its way through: its rule-3
+   full `ZZT_BROWSER=1` run found SEVEN browser suites red — including the co-op
+   cutline — and a stashed clean tree at `bd859b0` reproduces every one of them,
+   so they are pre-existing rather than M32.1's. M33.1 is the next task, because
+   CUTLINE.md's policy keeps the cutline green before another roadmap system is
+   promoted.
 
 **Optional / deferred (bottom):**
 - M14.3 — package split — **closed as skipped 2026-08-03**, see NOTES.md
@@ -7593,7 +7609,7 @@ viewer/client layer and never joins the authoritative room, blocks tiles, takes
 damage, triggers OOP, appears in chat/presence, increments play counts, or enters
 StateHash.
 
-- [ ] **M32.1 — daily challenge runs with replay-verified leaderboards and ghosts.**
+- [x] **M32.1 — daily challenge runs with replay-verified leaderboards and ghosts.**
   Add a small challenge catalogue that maps a challenge id/date to a resolved
   world identity, start rules, completion rule and ranking formula. The first
   cut may use one committed daily challenge entry rather than a calendar of
@@ -7651,6 +7667,40 @@ StateHash.
   Go tests for M32.1, focused `ZZT_BROWSER=1` challenge-browser coverage,
   `git diff --check`, and the session gate
   `cd engine && go build ./... && go test ./...`.
+
+## M33 — The browser suites are red before anything new lands
+
+Filed 2026-08-09 by M32.1's rule-3 full `ZZT_BROWSER=1` run, and **reproduced on
+a clean stashed tree at `bd859b0`**, so it is pre-existing and not M32.1's doing.
+Ranked as the next task: one of the seven is the co-op cutline, and CUTLINE.md's
+policy is that the cutline stays green before another roadmap system is promoted.
+
+- [ ] **M33.1 — find the one cause behind seven failing browser suites.**
+  Red on an unmodified checkout with a freshly built `web/dist`:
+  `TestCoopCutlineThreePlayerAcceptanceJourney`,
+  `TestM1611BrowserEndToEndPlayerJourneys`,
+  `TestM1614CollaborativeEditorInBrowsers`,
+  `TestM1616BrowserAuthAndMuseumJourney`, `TestM201DeepLinkJourney`,
+  `TestM211BlockJourney`, `TestM232WelcomeWorldThreeBrowserJourney`.
+
+  Two symptoms are recorded in NOTES.md 2026-08-09: "selecting WELCOME must not
+  open a socket" — a picker selection opening a socket where the M20.1 rule says
+  the title screen must pause first — and "timed out waiting for the block
+  confirmation". Seven suites sharing the launch/title/picker path is the shape
+  of ONE client-side regression, so start by bisecting that path rather than by
+  repairing suites one at a time; the assertions themselves are the ones that
+  were green when each suite landed, and the last commit that had them green is
+  the first thing to find (`git log` over `engine/web/src`, and the M16.11e
+  family is NOT this — these are not guessed-walk flakes, they reproduce every
+  run).
+
+  DoD: name the cause and the commit that introduced it; fix the client (never
+  the assertions — a suite whose claim is edited to pass has stopped making it);
+  all seven suites green under `ZZT_BROWSER=1 go test ./...`, run twice to show
+  it is not load-sensitive; if any single failure turns out to be a genuinely
+  separate fault, file it rather than folding it in. Verify with `npm test`,
+  `npm run build`, `ZZT_BROWSER=1 go test ./...`, `git diff --check`, and the
+  session gate `cd engine && go build ./... && go test ./...`.
 
 ## M14 — Rearchitecting for the service ZZTMMO is becoming
 

@@ -71,6 +71,17 @@ type WebSocketServer struct {
 	// joinable, never shown in the picker, never counted as occupancy, and never
 	// autosaved.
 	ReplayDir string
+	// ChallengeStore is the durable challenge leaderboard (M32.1). Nil means the
+	// service has no leaderboard: runs still play and still report their result
+	// to the player who made them, but nothing becomes public.
+	ChallengeStore *ChallengeStore
+	// challengeSeq mints the per-run suffix that makes each attempt's instance
+	// key and recording id unique. Guarded by mu.
+	challengeSeq int64
+	// ghostCache holds extracted ghost tracks by recording id (M32.1). Its own
+	// lock: a ghost is presentation state read off finished recordings, so it is
+	// never touched from a tick.
+	ghostCache challengeGhostCache
 	// Postcards are generated GIFs over bounded replay ranges (M22.4). They are
 	// service-layer presentation state: cached by recording id + range, and
 	// rate-limited by HTTP client, never by the simulation.
@@ -155,7 +166,18 @@ type WorldInstance struct {
 	spectatorDrops int
 	idleTicks      int
 	autosaving     bool
-	mu             sync.Mutex
+	// Challenge is set only on a challenge run's instance (M32.1). Its presence
+	// is what makes this instance measured, always-recorded, and closed to the
+	// things that would let a run be gamed or leak into the source world.
+	Challenge *ChallengeRun
+	// RecordWorld and RecordID split what attachRecorderLocked used to take from
+	// Name alone: the recording's HEADER world (which /replay resolves against
+	// the hosting directory) and the recording's file stem (which must pass
+	// sanitizeReplayID). An ordinary instance leaves both empty and is recorded
+	// exactly as before.
+	RecordWorld string
+	RecordID    string
+	mu          sync.Mutex
 }
 
 type ReplayInstance struct {
@@ -560,7 +582,7 @@ func (inst *WorldInstance) Tick(ctx context.Context, s *WebSocketServer) {
 		if client.boardID != 0 && client.boardID != diff.BoardID {
 			snapshot, ok := inst.RoomManager.Snapshot(playerID)
 			if ok {
-				snapshot.World = inst.Name
+				snapshot.World = inst.publicWorldName()
 				client.boardID = snapshot.BoardID
 				snapshot.Events = append(snapshot.Events, ProtocolEvents(inst.RoomManager.DrainPlayerEvents(playerID))...)
 				snapshot.Watchers = watchers[snapshot.BoardID]
@@ -582,6 +604,12 @@ func (inst *WorldInstance) Tick(ctx context.Context, s *WebSocketServer) {
 	}
 	watched := inst.spectatorMessagesLocked(boardDiffs, watchers)
 	transits = append(transits, inst.RoomManager.DrainWorldTransits()...)
+	// M32.1: a challenge run counts its own tick and is asked whether the goal
+	// is met, under the same lock the step just ran beneath — so the count can
+	// never drift from the simulation it measures. The completion itself is
+	// carried out of the lock: closing the recording and writing a leaderboard
+	// row are file work, and the tick does not wait on either.
+	completion := inst.advanceChallengeLocked()
 	inst.mu.Unlock()
 
 	for playerID, message := range messages {
@@ -595,6 +623,15 @@ func (inst *WorldInstance) Tick(ctx context.Context, s *WebSocketServer) {
 	}
 	for _, transit := range transits {
 		s.completeWorldTransit(ctx, inst, transit)
+	}
+	if completion != nil {
+		result := s.finishChallengeRun(inst, completion)
+		inst.mu.Lock()
+		client := inst.Clients[completion.run.PlayerID]
+		inst.mu.Unlock()
+		if client != nil {
+			_ = client.write(ctx, result)
+		}
 	}
 	s.metrics.recordInstanceTick(inst.Name, stepDuration, time.Since(tickStart))
 }
@@ -855,13 +892,24 @@ func (s *WebSocketServer) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
+	// M32.1: a challenge join names a catalogue id (start a fresh attempt) or a
+	// run key (reclaim the attempt this browser is already in). Both resolve
+	// AFTER the socket is accepted and the account is known — the instance a run
+	// gets is minted per attempt and per player, so there is nothing to resolve
+	// until we know who is asking.
+	challengeID := strings.TrimSpace(r.URL.Query().Get("challenge"))
+	challengeRunRequested := strings.TrimSpace(r.URL.Query().Get("run"))
+
 	worldName := r.URL.Query().Get("world")
 	var inst *WorldInstance
 	var safeWorld string
-	if worldName == "" {
+	switch {
+	case challengeID != "" || challengeRunRequested != "":
+		// Resolved below, once the join message and the account have been read.
+	case worldName == "":
 		inst = s.DefaultInstance
 		safeWorld = inst.Name
-	} else {
+	default:
 		var err error
 		safeWorld, err = SanitizeSaveName(worldName)
 		if err != nil {
@@ -936,6 +984,29 @@ func (s *WebSocketServer) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
+	// M32.1: the challenge run this connection is playing, or nil. Resolved
+	// here — after the refusal, like watching — because a challenge is a door
+	// into the same server, and a refused account must not walk through the one
+	// that happens to hand out leaderboard rows.
+	var challengeRun *ChallengeRun
+	if challengeID != "" || challengeRunRequested != "" {
+		if join.Spectate {
+			// A run is one player's measured attempt, and it is not addressable
+			// by anyone else: there is no watch route to it, and asking for one
+			// here would be the only way to reach another player's run.
+			_ = client.write(ctx, ChallengeErrorMessage{Type: MessageTypeChallengeError, ChallengeID: challengeID, Reason: "A challenge run cannot be watched."})
+			return
+		}
+		var err error
+		inst, challengeRun, err = s.resolveChallengeJoin(challengeID, challengeRunRequested, account, authenticated)
+		if err != nil {
+			_ = client.write(ctx, ChallengeErrorMessage{Type: MessageTypeChallengeError, ChallengeID: challengeID, Reason: challengeRefusalText(err)})
+			return
+		}
+		safeWorld = inst.Name
+		client.setWorldName(inst.Name)
+	}
+
 	// M22.1: a watcher takes none of the paths below — no stored state, no color,
 	// no resume, no stat, no read of anything they typed. It branches here, after
 	// the refusal, because watching is a door into the same server and a refused
@@ -988,8 +1059,30 @@ func (s *WebSocketServer) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 		}
 	}
 
+	// M32.1: a `?run=` join RECLAIMS an attempt and may never start a player in
+	// one. Without this, a token-less run key fresh-joins a second player into
+	// somebody's measured run — and run keys are sequential, so they can be
+	// guessed. The refusal is the same one an ended run gets, because from the
+	// outside those are the same fact: this browser is not in that run.
+	if challengeRunRequested != "" && !resumed {
+		// Nothing to tidy: no id has been minted and no stat spawned — the
+		// refusal happens before the fresh-join path below, which is the point.
+		_ = client.write(ctx, ChallengeErrorMessage{
+			Type:        MessageTypeChallengeError,
+			ChallengeID: challengeID,
+			Reason:      "That run has ended.",
+		})
+		return
+	}
+
 	if !resumed {
 		join.Board = s.resolveJoinBoard(inst, join.Board)
+		if challengeRun != nil {
+			// The start board is the catalogue's, not the client's: a challenge
+			// that could be entered on a board of the player's choosing is a
+			// challenge whose route is the player's choosing too.
+			join.Board = challengeRun.Def.Board
+		}
 
 		// Mint a process-unique id before taking inst.mu; the two locks are never
 		// held together (M14.1).
@@ -1023,7 +1116,7 @@ func (s *WebSocketServer) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 			var snapOK bool
 			snapshot, snapOK = inst.RoomManager.Snapshot(playerID)
 			if snapOK {
-				snapshot.World = inst.Name
+				snapshot.World = inst.publicWorldName()
 				snapshot.ResumeToken = token
 				client.boardID = snapshot.BoardID
 			}
@@ -1032,8 +1125,25 @@ func (s *WebSocketServer) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 
 		if !ok {
 			s.removeClientFromInstance(inst, playerID)
+			if challengeRun != nil {
+				// A run whose player never spawned measures nothing; take its
+				// instance and its recording down rather than leaving an empty
+				// attempt on the server.
+				s.discardChallengeRun(challengeRun.Key)
+			}
 			return
 		}
+	}
+
+	if challengeRun != nil {
+		// The run's one player. It is set on both the fresh join and the resume,
+		// because a reconnect inside the grace reclaims the SAME PlayerID and the
+		// completion check reads it every tick.
+		inst.mu.Lock()
+		challengeRun.PlayerID = playerID
+		inst.mu.Unlock()
+		snapshot.Challenge = challengeRun.Def.ID
+		snapshot.ChallengeRun = challengeRun.Key
 	}
 
 	// M21.1: a signed-in player's stored blocks go live before the chat backlog
@@ -1063,7 +1173,10 @@ func (s *WebSocketServer) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 		s.handleReadLoopExit(inst, client, playerID)
 		return
 	}
-	if !resumed && s.Activity != nil {
+	// M32.1: a challenge run is not a play of the source world. Counting it would
+	// put the popularity shelf — and the front page built on it — under the
+	// control of whoever cares to restart a challenge.
+	if !resumed && challengeRun == nil && s.Activity != nil {
 		if err := s.Activity.IncrementPlay(safeWorld); err != nil {
 			log.Printf("zztgo: failed to record play for %s: %v", safeWorld, err)
 		}
@@ -1389,6 +1502,14 @@ func (s *WebSocketServer) loadAccountPlayerState(accountID, worldName string) (P
 	if s.ChatDB == nil || accountID == "" {
 		return PlayerState{}, false
 	}
+	// M32.1: a challenge run starts from the world's pristine state for
+	// everybody. Handing a returning account its saved inventory would make two
+	// runs of the same challenge measure different games, so the sidecar is
+	// neither read nor written on a run — here rather than at each call site, so
+	// a later caller cannot reintroduce it by forgetting.
+	if isChallengeRunKey(worldName) {
+		return PlayerState{}, false
+	}
 	state, ok, err := s.ChatDB.GetPlayerState(accountID, worldName)
 	if err != nil {
 		log.Printf("zztgo: failed to load player state for account %q in %q: %v", accountID, worldName, err)
@@ -1399,6 +1520,12 @@ func (s *WebSocketServer) loadAccountPlayerState(accountID, worldName string) (P
 
 func (s *WebSocketServer) persistAccountPlayerState(accountID, worldName string, state PlayerState) {
 	if s.ChatDB == nil || accountID == "" {
+		return
+	}
+	// The write half of the rule above (M32.1): what a player picked up inside a
+	// challenge run is the run's, and must not follow them back into the world
+	// the challenge was measured on.
+	if isChallengeRunKey(worldName) {
 		return
 	}
 	if err := s.ChatDB.PutPlayerState(accountID, worldName, state); err != nil {
@@ -2009,6 +2136,11 @@ func (s *WebSocketServer) submitQuitReplyInInstance(inst *WorldInstance, playerI
 	if _, ok := inst.Clients[playerID]; !ok {
 		return
 	}
+	// M32.1: quitting a challenge run is allowed and IS the abandon: vanilla's
+	// Q takes the player out of the game, the run's player leaves the room with
+	// it, and a run with nobody in it can never complete (advanceChallengeLocked
+	// finds no player state). So an abandoned attempt simply produces no result
+	// — it is not refused, and it is not scored.
 	inst.RoomManager.SubmitQuitReply(playerID, quit)
 }
 
@@ -2052,6 +2184,18 @@ func (s *WebSocketServer) submitSaveFilenameInInstance(ctx context.Context, inst
 	}
 	if name == "" {
 		inst.mu.Unlock()
+		return
+	}
+	// M32.1: a challenge run cannot be saved. A save is a mid-run checkpoint the
+	// player could restore from, which is the same hole as the cheat prompt by a
+	// different door — and the run's world is not one a .SAV could be restored
+	// into anyway. Refused out loud so the player is not left waiting on a reply.
+	if inst.Challenge != nil {
+		inst.mu.Unlock()
+		_ = client.write(ctx, EventMessage{Type: MessageTypeEvent, Event: ProtocolEvent{
+			Type:  "saveResult",
+			Error: "a challenge run cannot be saved",
+		}})
 		return
 	}
 	accountID, _, _ := inst.RoomManager.PlayerIdentity(playerID)
@@ -2116,6 +2260,14 @@ func (s *WebSocketServer) Autosave() {
 	// The default instance is registered in s.Instances (NewWebSocketServer), so
 	// iterating the map already covers it.
 	for _, inst := range instances {
+		// M32.1: a challenge run is never autosaved. Its instance is one
+		// player's measured attempt at a world it does not own, and an autosave
+		// of it would be a snapshot nobody can restore under a name no world
+		// answers to. (SanitizeSaveName below would refuse the key anyway; this
+		// says so on purpose rather than leaving the rule to a log line.)
+		if inst.Challenge != nil {
+			continue
+		}
 		inst.mu.Lock()
 		if len(inst.Clients) == 0 {
 			// Empty rooms are already frozen into rm.world with nothing new to say.
@@ -2223,12 +2375,33 @@ func (s *WebSocketServer) attachRecorderLocked(inst *WorldInstance) {
 	}
 	// FrozenWorld is the manager's authoritative world; before the first client
 	// or tick it is the pristine starting state playback must begin from.
-	header, _, err := newSessionHeader(inst.Name, inst.RoomManager.FrozenWorld())
+	//
+	// The header names a WORLD and the file is named by the instance, and for a
+	// challenge run those are two different strings (M32.1): the run's key is not
+	// a name any directory answers to, and /replay/<id> refuses a recording whose
+	// header world it cannot load.
+	headerWorld := inst.Name
+	if inst.RecordWorld != "" {
+		headerWorld = inst.RecordWorld
+	}
+	header, _, err := newSessionHeader(headerWorld, inst.RoomManager.FrozenWorld())
 	if err != nil {
 		log.Printf("zztgo: session recording disabled for %q: %v", inst.Name, err)
 		return
 	}
-	path := filepath.Join(s.RecordDir, inst.Name+"-"+s.recordStamp+".jsonl")
+	if inst.Challenge != nil {
+		// The recording says what it is a recording OF (M32.1). These are added
+		// fields rather than a recordVersion bump: an unknown key is ignored on
+		// unmarshal, so every existing recording and fixture still reads, and a
+		// bump would refuse them all to record something nothing old needs.
+		header.ChallengeID = inst.Challenge.Def.ID
+		header.ChallengeVersion = inst.Challenge.Def.Version
+	}
+	recordID := inst.Name + "-" + s.recordStamp
+	if inst.RecordID != "" {
+		recordID = inst.RecordID
+	}
+	path := filepath.Join(s.RecordDir, recordID+".jsonl")
 	f, err := os.Create(path)
 	if err != nil {
 		log.Printf("zztgo: session recording disabled for %q: %v", inst.Name, err)
@@ -2787,6 +2960,13 @@ func (s *WebSocketServer) submitDebugCommandInInstance(inst *WorldInstance, play
 	if _, ok := inst.Clients[playerID]; !ok {
 		return
 	}
+	// M32.1: vanilla's `?` cheat prompt is refused inside a challenge run. It is
+	// a server-created stimulus that replays faithfully, so a cheated run would
+	// not merely score — it would VERIFY, and replay verification would confirm
+	// a time nobody played. The one place to stop that is before it is applied.
+	if inst.Challenge != nil {
+		return
+	}
 	inst.RoomManager.SubmitDebugCommand(playerID, text)
 }
 
@@ -2841,6 +3021,15 @@ func (inst *WorldInstance) setInput(playerID PlayerID, input PlayerInput) {
 }
 
 func (s *WebSocketServer) completeWorldTransit(ctx context.Context, source *WorldInstance, transit WorldTransit) {
+	// M32.1: a challenge run does not lead anywhere. Walking a transit gate out
+	// of a measured attempt would carry the run's inventory into a live world
+	// and leave the attempt running with nobody in it, so the gate is refused
+	// and the player stays in the run they started.
+	if source != nil && source.Challenge != nil {
+		s.refuseWorldTransit(ctx, source, transit.PlayerID, transit.DestinationWorld,
+			fmt.Errorf("a challenge run stays in its own world"))
+		return
+	}
 	destination, err := SanitizeSaveName(transit.DestinationWorld)
 	if err != nil {
 		s.refuseWorldTransit(ctx, source, transit.PlayerID, transit.DestinationWorld, err)
@@ -3059,7 +3248,7 @@ func (s *WebSocketServer) tryResume(inst *WorldInstance, client *webSocketClient
 	inst.RoomManager.DrainPlayerEvents(playerID)
 	snapshot, snapOK := inst.RoomManager.Snapshot(playerID)
 	if snapOK {
-		snapshot.World = inst.Name
+		snapshot.World = inst.publicWorldName()
 		snapshot.ResumeToken = token
 		client.boardID = snapshot.BoardID
 	}
@@ -3690,6 +3879,13 @@ func (s *WebSocketServer) friendPresenceByWorld(accountID string) map[string][]F
 
 	var live []liveAccountLocation
 	for _, inst := range instances {
+		// M32.1: a challenge run is not a place friends can be seen. Its key is
+		// not a world anyone can join, so reporting it would put an unreachable
+		// location in the picker — and it would tell followers that someone is
+		// mid-attempt, which is a run's business and not the roster's.
+		if inst.Challenge != nil {
+			continue
+		}
 		inst.mu.Lock()
 		ids := inst.RoomManager.playerIDs()
 		for _, playerID := range ids {

@@ -68,6 +68,14 @@ func main() {
 		} else {
 			server.Activity = activity
 		}
+		// The challenge leaderboard (M32.1). Without it runs still play and
+		// still report their own result; what is missing is the public row.
+		challenges, err := zztgo.NewChallengeStore(zztgo.ChallengeStorePath(*savesDir))
+		if err != nil {
+			log.Printf("failed to initialize challenge leaderboard: %v", err)
+		} else {
+			server.ChallengeStore = challenges
+		}
 	}
 	// Moderation (M21.2). Operator status is deployment configuration — an
 	// allowlist of account ids in ZZT_MODERATOR_ACCOUNTS — so it cannot be granted

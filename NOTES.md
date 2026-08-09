@@ -11358,3 +11358,54 @@ are signed-in only. Stored rows expose public handle/display summaries and repla
 ids, not account ids. Ghost racing is presentation-only: the ghost is a replay
 overlay or viewer aid and never joins a room, blocks tiles, triggers OOP, speaks
 in chat, changes presence/play counts, or enters StateHash.
+
+## 2026-08-09 — M32.1 landed, and seven browser suites are red BEFORE it
+
+M32.1 shipped the challenge layer (see TASKS.md for the claim). Two things are
+worth recording beyond the task itself.
+
+**Implementation decision: a run is an instance keyed by a name no world can
+have.** A challenge run is a `WorldInstance` in `s.Instances`, keyed
+`!challenge:<id>:<n>` — a string `SanitizeSaveName` rejects. That single fact is
+the isolation: `?world=` cannot reach a run, no file resolves to it, and every
+surface that walks hosted worlds by their directory names (the picker and its
+occupancy, ZZT TV, favorites, thumbnails) cannot see one without being taught
+to. Keeping runs in `s.Instances` rather than a second map is what makes the
+tick loop, reconnect grace, idle eviction, moderation and shutdown work on them
+unchanged; the three places that must NOT see a run — autosave, friends-here
+presence, and the join path's play counter — exclude it explicitly, and M32.1's
+tests assert each exclusion. The recorder's header world and its file stem had
+to come apart for this (`WorldInstance.RecordWorld` / `RecordID`), because
+`/replay/<id>` resolves the header's world against the hosting directory.
+
+Two `omitempty` header fields (`challengeId`, `challengeVersion`) record what a
+run was an attempt AT. `recordVersion` was deliberately NOT bumped: unknown JSON
+keys are ignored on unmarshal, so every existing recording and fixture still
+replays, and the v1→v2 precedent was for a stimulus whose absence could be
+mis-replayed silently, which this is not.
+
+**Pre-existing red, filed rather than fixed: seven real-browser suites fail on
+`dev` at `bd859b0`, before M32.1.** Found by M32.1's rule-3 full
+`ZZT_BROWSER=1` run and then reproduced on a STASHED tree — clean checkout,
+rebuilt `web/dist`, same failures:
+
+- `TestCoopCutlineThreePlayerAcceptanceJourney`
+- `TestM1611BrowserEndToEndPlayerJourneys`
+- `TestM1614CollaborativeEditorInBrowsers`
+- `TestM1616BrowserAuthAndMuseumJourney`
+- `TestM201DeepLinkJourney`
+- `TestM211BlockJourney`
+- `TestM232WelcomeWorldThreeBrowserJourney`
+
+Two symptoms seen so far: "selecting WELCOME must not open a socket" (a picker
+selection opens a socket where the M20.1/title-screen-pause rule says it must
+not) and "timed out waiting for the block confirmation". Both are the shape of
+a client-side regression on the shared title/picker path rather than seven
+unrelated faults, so they are likely one cause. This is filed as **M33.1**;
+CUTLINE.md's policy names the cutline suite specifically, and the cutline is one
+of the seven, so this is the next task rather than a backlog note.
+
+M32.1's own suites — `TestM321*` and the challenge browser journey — are green,
+and the non-browser `go test ./...` is green, which is why M32.1 was committed
+rather than held: it neither caused nor worsened the red, and holding it would
+have hidden the finding inside an unlanded change.

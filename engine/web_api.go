@@ -96,6 +96,11 @@ func (a *WebAPI) Handler() http.Handler {
 	mux.HandleFunc("/api/museum/search", a.handleMuseumSearch)
 	mux.HandleFunc("/api/museum/play", a.handleMuseumPlay)
 	mux.HandleFunc("/api/replay/postcard.gif", a.handleReplayPostcard)
+	// M32.1: one handler for /api/challenge, /api/challenge/<id> and
+	// /api/challenge/ghost. The subtree pattern is what makes an id addressable
+	// without a route per catalogue row.
+	mux.HandleFunc("/api/challenge", a.handleChallenge)
+	mux.HandleFunc("/api/challenge/", a.handleChallenge)
 	mux.HandleFunc("/api/preferences", a.handlePreferences)
 	mux.HandleFunc("/api/moderation/refusals", a.handleModerationRefusals)
 	mux.HandleFunc("/api/moderation/refusals/lift", a.handleModerationLift)

@@ -97,9 +97,12 @@ import { WELCOME_WORLD, hasSeenWelcome, markWelcomeSeen, selectWorldForTitle, sh
 import { blockCandidates, blockRowLabel, blockWindowHeader, mergeServerBlocks } from "./blocks";
 import { moderationChoices, moderationHeader } from "./moderation";
 import {
+  challengeLinkID,
+  challengePath,
   deepLinkPath,
   deepLinkRefusalLines,
   deepLinkWorldName,
+  isChallengePath,
   replayLinkID,
   replayLinkPath,
   resolveDeepLinkWorld,
@@ -107,6 +110,21 @@ import {
   watchLinkPath,
   watchLinkWorldName,
 } from "./deep_link";
+import {
+  challengeLandingLines,
+  challengeLeaderboardLines,
+  challengeResultLines,
+  challengeRowActionLines,
+  ghostOverlayCell,
+  ghostStatusLine,
+  ghostTrackMatches,
+  postcardURLForRun,
+  type ChallengeErrorMessage,
+  type ChallengeGhostTrack,
+  type ChallengeLeaderboardRow,
+  type ChallengeResponse,
+  type ChallengeResultMessage,
+} from "./challenge";
 import { WATCH_LIVE_CYCLE_MS, nextWatchLiveIndex, watchLiveEmbedMode, watchLiveEntryLabel, watchLiveEntryTarget, type WatchLiveLineupEntry } from "./watch_live";
 
 const COLS = 80;
@@ -181,6 +199,8 @@ const MessageTypeFollow = "follow";
 const MessageTypeFollowResult = "followResult";
 const MessageTypeReplayControl = "replayControl";
 const MessageTypeReplayError = "replayError";
+const MessageTypeChallengeResult = "challengeResult";
+const MessageTypeChallengeError = "challengeError";
 
 // GameDebugPrompt's PromptString(63, 5, 0x1E, 0x0F, 11, PROMPT_ANY, ...).
 // The rest of that geometry lives in modal.ts, which owns every prompt's layout.
@@ -282,6 +302,13 @@ type SnapshotMessage = {
    * the allowlist again on every action, so setting it here buys nothing.
    */
   operator?: boolean;
+  /**
+   * The challenge this frame belongs to and the run's server-minted key
+   * (M32.1). The key is not a world name and cannot be derived by the client,
+   * so it is stored and presented on a reconnect to reclaim THIS attempt.
+   */
+  challenge?: string;
+  challengeRun?: string;
   /**
    * This frame is addressed to a WATCHER, not a player (M22.1). It carries no
    * `you`, no HUD and no events; it is what puts this client into read-only
@@ -598,7 +625,7 @@ type EditorTestPlayMessage = {
   error?: string;
 };
 
-type ServerMessage = SnapshotMessage | DiffMessage | EventMessage | BoardChangeMessage | ChatMessage | PrivateMessage | PrivateResultMessage | AnnounceMessage | BlockResultMessage | FollowResultMessage | ModerateResultMessage | ModerationNoticeMessage | ProfileResultMessage | ReplayErrorMessage | EditorSnapshotMessage | EditorInspectMessage | EditorPresenceMessage | EditorLeaseMessage | EditorDiffMessage | EditorPropertiesMessage | EditorStatSettingsMessage | EditorProgramTextMessage | EditorBoardDataMessage | EditorWorldDataMessage | EditorSaveResultMessage | EditorTestPlayMessage;
+type ServerMessage = SnapshotMessage | DiffMessage | EventMessage | BoardChangeMessage | ChatMessage | PrivateMessage | PrivateResultMessage | AnnounceMessage | BlockResultMessage | FollowResultMessage | ModerateResultMessage | ModerationNoticeMessage | ProfileResultMessage | ReplayErrorMessage | EditorSnapshotMessage | EditorInspectMessage | EditorPresenceMessage | EditorLeaseMessage | EditorDiffMessage | EditorPropertiesMessage | EditorStatSettingsMessage | EditorProgramTextMessage | EditorBoardDataMessage | EditorWorldDataMessage | EditorSaveResultMessage | EditorTestPlayMessage | ChallengeResultMessage | ChallengeErrorMessage;
 
 type InputMessage = {
   type: typeof MessageTypeInput;
@@ -751,6 +778,23 @@ let watchLiveTimer = 0;
 let watchLiveSwitching = false;
 let watchLiveLabel = "";
 let watchLiveEmbed = false;
+// M32.1 challenge state. `challengeID` is the catalogue id this browser is
+// playing or looking at, and `challengeRun` is the server-minted run key a
+// reconnect presents — the key is not a world name, so it cannot be derived and
+// must be remembered. `challengeGhost` is a LOCAL overlay track and
+// `challengeElapsed` is how many ticks this attempt has drawn, which is what the
+// ghost is indexed by.
+let challengeMode = false;
+let challengeID = "";
+let challengeRun = "";
+let challengeLanding: ChallengeResponse | null = null;
+let challengeGhost: ChallengeGhostTrack | null = null;
+let challengeElapsed = 0;
+let challengeFinished = false;
+// The board this browser is standing on, from the last frame. Only the ghost
+// reads it: a track carries board ids, and a ghost from another board must not
+// be drawn onto this one.
+let playBoardId = 0;
 // The on-screen control bar (M15.1, M16.18a), or null on anything without touch
 // points. Declared here rather than at its construction site because
 // syncTouchControls() below is reached from drawScreen(), which runs before that
@@ -941,6 +985,15 @@ async function openLaunchDestination() {
   const replayRequested = replayLinkID(window.location.pathname);
   if (replayRequested) {
     startReplay(replayRequested);
+    return;
+  }
+
+  // M32.1: /challenge is today's and /challenge/<id> is a named one. The route
+  // is checked BEFORE the world deep links, so a challenge id can never be read
+  // as a world name — and an empty id is a real answer here (the server picks
+  // today's from its own clock), so it is not treated as a dead link.
+  if (isChallengePath(window.location.pathname)) {
+    await openChallengeLanding(challengeLinkID(window.location.pathname), { rememberPath: false });
     return;
   }
 
@@ -1300,7 +1353,14 @@ function leaveToTitle() {
   void showTitle();
 }
 
-function startPlay() {
+// startPlay's `challenge` option is the one caller that keeps the challenge
+// state: startChallengeRun. Every other route into play LEAVES a challenge
+// (M32.1) — without that, the socket for the next world would still carry the
+// finished run's key instead of `world=`.
+function startPlay(options: { challenge?: boolean } = {}) {
+  if (!options.challenge) {
+    leaveChallenge();
+  }
   closeTitleStream();
   stopOccupancyPolling();
   clearScrolls();
@@ -1327,6 +1387,7 @@ function startPlay() {
 // #play) — so a watcher with sound enabled would be a client waiting for notes
 // that are never sent.
 function startWatch(options: { channel?: boolean } = {}) {
+  leaveChallenge();
   closeTitleStream();
   stopOccupancyPolling();
   clearScrolls();
@@ -1348,6 +1409,7 @@ function startWatch(options: { channel?: boolean } = {}) {
 }
 
 function startReplay(id: string, options: { rememberPath?: boolean; startTick?: number; channel?: boolean } = {}) {
+  leaveChallenge();
   closeTitleStream();
   stopOccupancyPolling();
   clearScrolls();
@@ -1994,6 +2056,7 @@ async function resumeDreamGeneration(jobId: string) {
 // RoomManager server-side (WebSocketServer.GetOrCreateInstance), reached by the
 // ?world= parameter wsURL sends — which is what makes worlds independent.
 async function enterWorld(name: string, destination: LaunchDestination = "play") {
+  leaveChallenge();
   const selection = selectWorldForTitle(name);
   worldName = selection.worldName;
   await showTitle();
@@ -2078,7 +2141,7 @@ function connect() {
     // No board: the server picks its configured default (zzt-server -board). A
     // stored resume token reclaims a dropped run instead of spawning a new
     // player (M13.2); an unknown/expired token is treated as a fresh join.
-    const token = loadResumeToken(window.sessionStorage, worldName);
+    const token = loadResumeToken(window.sessionStorage, challengeMode && challengeRun ? challengeRun : worldName);
     // The "#RRGGBB" background this browser's ☻ is drawn on in everyone else's
     // client (M19.1), re-read at every join including a reconnect: it is the
     // browser's current pick, not a property of the run being reclaimed. A
@@ -2221,6 +2284,15 @@ function wsURL(): string {
     if (replayStartTick > 0) {
       url.searchParams.set("start", String(replayStartTick));
     }
+  } else if (challengeMode) {
+    // A run key reclaims the attempt this browser is already in; a bare id
+    // starts a new one. Both go to the same socket the picker uses — a
+    // challenge is play, not a second protocol.
+    if (challengeRun) {
+      url.searchParams.set("run", challengeRun);
+    } else {
+      url.searchParams.set("challenge", challengeID);
+    }
   } else {
     url.searchParams.set("world", worldName);
   }
@@ -2279,6 +2351,12 @@ function applyMessage(message: ServerMessage) {
       break;
     case MessageTypeReplayError:
       handleReplayErrorMessage(message);
+      break;
+    case MessageTypeChallengeResult:
+      handleChallengeResult(message);
+      break;
+    case MessageTypeChallengeError:
+      handleChallengeError(message);
       break;
     case MessageTypeEditorSnapshot:
       applyEditorSnapshot(message);
@@ -2580,7 +2658,21 @@ function applySnapshot(message: SnapshotMessage) {
   // The join/resume snapshot carries our resume token; keep it so a later drop
   // can reclaim this run (M13.2).
   if (message.resumeToken) {
-    saveResumeToken(window.sessionStorage, worldName, message.resumeToken);
+    saveResumeToken(window.sessionStorage, challengeMode && challengeRun ? challengeRun : worldName, message.resumeToken);
+  }
+  // M32.1: a challenge frame names its run. The elapsed counter restarts here
+  // and nowhere else — it is what the ghost is indexed by, so it must count the
+  // ticks of THIS attempt, and a reconnect inside the grace resumes the count
+  // rather than restarting the race.
+  playBoardId = message.boardId;
+  if (message.challenge) {
+    challengeMode = true;
+    challengeID = message.challenge;
+    if (message.challengeRun !== challengeRun) {
+      challengeRun = message.challengeRun ?? "";
+      challengeElapsed = 0;
+      challengeFinished = false;
+    }
   }
   playerId = message.you.id;
   myStatId = message.you.statId;
@@ -2753,6 +2845,10 @@ function applyDiff(message: DiffMessage) {
   if (mode === "watching") {
     applyWatchDiff(message);
     return;
+  }
+  playBoardId = message.boardId;
+  if (challengeMode && !challengeFinished) {
+    challengeElapsed += 1;
   }
   trackMyStatId(message.players);
   if (message.cells) {
@@ -3243,6 +3339,239 @@ function handleReplayErrorMessage(message: ReplayErrorMessage) {
   }
 }
 
+// ---------------------------------------------------------------------------
+// M32.1 — the daily challenge
+// ---------------------------------------------------------------------------
+
+// openChallengeLanding is /challenge and /challenge/<id>: the landing, inside
+// the playable client. It is a CP437 window over the title screen rather than a
+// page of its own, because starting a run should feel like pressing P.
+async function openChallengeLanding(id: string, options: { rememberPath?: boolean } = {}) {
+  let resp: ChallengeResponse;
+  try {
+    const response = await fetch(id ? "/api/challenge/" + encodeURIComponent(id) : "/api/challenge");
+    if (!response.ok) {
+      showWorldsOnClose = true;
+      openWindow("Daily Challenge", ["", `  No challenge named "${id.slice(0, 20)}".`, "", "  Choose a world instead.", ""], true);
+      return;
+    }
+    resp = (await response.json()) as ChallengeResponse;
+  } catch {
+    showWorldsOnClose = true;
+    openWindow("Daily Challenge", ["", "  Not available: the server did not answer.", ""], true);
+    return;
+  }
+  challengeLanding = resp;
+  challengeID = resp.challenge.id;
+  if (options.rememberPath !== false) {
+    rememberChallengeInPath(resp.challenge.id);
+  }
+  if (!accountPrefsLoaded) {
+    await refreshAuthStatus();
+  }
+  showChallengeLanding();
+}
+
+function showChallengeLanding() {
+  const resp = challengeLanding;
+  if (!resp) {
+    return;
+  }
+  const lines = challengeLandingLines(resp, {
+    signedIn: authStatus.authenticated,
+    hasGhost: ghostTrackMatches(challengeGhost, resp.challenge),
+  });
+  openSelectListIfActions("Daily Challenge", lines, (choice) => {
+    if (choice === "start") {
+      startChallengeRun();
+    } else if (choice === "board") {
+      showChallengeLeaderboard();
+    } else if (choice === "ghost") {
+      startChallengeRun();
+    }
+  });
+}
+
+// openSelectListIfActions shows a window whose selectable rows are the "!key;"
+// lines the challenge helpers build. A landing with no actions (an unavailable
+// challenge) is a plain window, so Enter closes it instead of waiting for a
+// selection that cannot be made.
+function openSelectListIfActions(title: string, lines: string[], onPick: (choice: string) => void) {
+  const firstAction = lines.findIndex((line) => line.startsWith("!"));
+  if (firstAction < 0) {
+    openWindow(title, lines, true);
+    return;
+  }
+  openModal({
+    kind: "text",
+    // The cursor opens ON the first action, not on the prose above it: the text
+    // window draws a viewport around linePos, so a cursor left at the top would
+    // scroll the actions off the bottom of the frame — which is exactly what the
+    // first run of the browser journey found.
+    state: { title, lines, linePos: firstAction + 1, viewingFile: false },
+    baseTitle: title,
+    moved: false,
+    selectable: true,
+    requireSelection: true,
+    onSelect: onPick,
+  });
+}
+
+function showChallengeLeaderboard() {
+  const rows = challengeLanding?.leaderboard ?? [];
+  const lines = challengeLeaderboardLines(rows);
+  openSelectListIfActions("Challenge Times", lines, (recordingId) => {
+    const row = rows.find((entry) => entry.recordingId === recordingId);
+    if (row) {
+      showChallengeRow(row);
+    }
+  });
+}
+
+function showChallengeRow(row: ChallengeLeaderboardRow) {
+  openSelectListIfActions("Run", challengeRowActionLines(row), (choice) => {
+    if (!row.recordingId) {
+      return;
+    }
+    if (choice === "watch") {
+      // Leave the room first. connect() will not replace a socket that is still
+      // open, so watching a replay from inside a run would show the replay
+      // shell with no replay in it — and would leave the player standing in
+      // their own attempt while they watched somebody else's.
+      closeModal();
+      disconnectSocket();
+      startReplay(row.recordingId);
+    } else if (choice === "postcard") {
+      window.open(postcardURLForRun(row.recordingId), "_blank", "noopener");
+    } else if (choice === "ghost") {
+      void loadChallengeGhost(row.recordingId);
+    }
+  });
+}
+
+// loadChallengeGhost fetches a track and keeps it LOCAL. Nothing about it is
+// told to the server, and a track the server refuses (a run from an older
+// definition, or one no row cites) leaves the browser with no ghost rather than
+// with a stale one.
+async function loadChallengeGhost(recordingId: string) {
+  try {
+    const response = await fetch(
+      "/api/challenge/ghost?challenge=" + encodeURIComponent(challengeID) + "&recording=" + encodeURIComponent(recordingId),
+    );
+    if (!response.ok) {
+      challengeGhost = null;
+      openWindow("Ghost", ["", "  " + ((await response.text()).trim() || "Ghost unavailable.").slice(0, 42), ""], true);
+      return;
+    }
+    const track = (await response.json()) as ChallengeGhostTrack;
+    challengeGhost = ghostTrackMatches(track, challengeLanding?.challenge ?? null) ? track : null;
+  } catch {
+    challengeGhost = null;
+  }
+  if (!challengeGhost) {
+    openWindow("Ghost", ["", "  Ghost unavailable.", ""], true);
+    return;
+  }
+  openSelectListIfActions(
+    "Ghost",
+    ["", "  " + ghostStatusLine(challengeGhost), "", "!start;Race it now", "!board;Back to the times", ""],
+    (choice) => {
+      if (choice === "start") {
+        startChallengeRun();
+      } else if (choice === "board") {
+        showChallengeLeaderboard();
+      }
+    },
+  );
+}
+
+// startChallengeRun joins a fresh attempt. It is deliberately the same connect()
+// every other kind of play uses: the challenge is a query on the socket, not a
+// second client.
+function startChallengeRun() {
+  if (!challengeLanding || !challengeLanding.challenge.available) {
+    return;
+  }
+  closeModal();
+  challengeMode = true;
+  challengeRun = "";
+  challengeElapsed = 0;
+  challengeFinished = false;
+  challengeID = challengeLanding.challenge.id;
+  worldName = challengeLanding.challenge.world;
+  disconnectSocket();
+  startPlay({ challenge: true });
+}
+
+function handleChallengeResult(message: ChallengeResultMessage) {
+  challengeFinished = true;
+  // Refresh the landing so the leaderboard behind the result is the one this
+  // run just changed, rather than the copy fetched before it started.
+  void refreshChallengeLanding();
+  openSelectListIfActions("Challenge Result", challengeResultLines(message), (choice) => {
+    if (choice === "again") {
+      startChallengeRun();
+    } else if (choice === "board") {
+      showChallengeLeaderboard();
+    }
+  });
+}
+
+async function refreshChallengeLanding() {
+  if (!challengeID) {
+    return;
+  }
+  try {
+    const response = await fetch("/api/challenge/" + encodeURIComponent(challengeID));
+    if (response.ok) {
+      challengeLanding = (await response.json()) as ChallengeResponse;
+    }
+  } catch {
+    // A landing we could not refresh is stale, not wrong: the result window
+    // above is the server's own word on this run either way.
+  }
+}
+
+function handleChallengeError(message: ChallengeErrorMessage) {
+  challengeMode = false;
+  challengeRun = "";
+  leavingToTitle = true;
+  window.clearTimeout(retryTimer);
+  disconnectSocket();
+  showWorldsOnClose = true;
+  openWindow("Daily Challenge", ["", "  " + message.reason.slice(0, 42), ""], true);
+}
+
+// leaveChallenge forgets the run this browser was in. The ghost goes with it:
+// a track is loaded for a challenge, and carrying one into ordinary play would
+// draw a stranger's path over a world it was never recorded in.
+//
+// A full page reload orphans a run for the same reason — the run key lives only
+// here — and that is the intended rule: the run idles out and is evicted, and
+// nothing was scored, exactly as an abandon.
+function leaveChallenge() {
+  challengeMode = false;
+  challengeRun = "";
+  challengeGhost = null;
+  challengeElapsed = 0;
+  challengeFinished = false;
+}
+
+function disconnectSocket() {
+  if (ws) {
+    const socket = ws;
+    ws = null;
+    socket.close();
+  }
+}
+
+function rememberChallengeInPath(id: string) {
+  const path = challengePath(id);
+  if (window.location.pathname !== path) {
+    window.history.replaceState(null, "", path);
+  }
+}
+
 function openReplayPostcard() {
   if (!replaying || !replayID) {
     return;
@@ -3555,6 +3884,19 @@ function paintOverlay() {
       writeOverlay(0, 24, 0x1e, currentHintMessage.slice(0, 60).padEnd(60, " "));
     } else if (currentChatMessage) {
       writeOverlay(0, 24, 0x1e, currentChatMessage.slice(0, 60).padEnd(60, " "));
+    }
+    // M32.1: the ghost. It is one overlay cell drawn over this browser's canvas
+    // at the position the recorded run held after the same number of ticks —
+    // local, read-only, and invisible to everyone else in the room, because it
+    // is painted here rather than sent anywhere.
+    if (challengeMode && challengeGhost) {
+      const ghost = ghostOverlayCell(challengeGhost, challengeElapsed, playBoardId);
+      // Never over this browser's own ☻: a ghost standing where you are (the
+      // shared spawn tile, every run) would hide you rather than race you.
+      const onMe = ghost !== null && ghost.x + 1 === myX && ghost.y + 1 === myY;
+      if (ghost && !onMe && ghost.x >= 0 && ghost.x < BOARD_COLS) {
+        overlay.set(ghost.y * COLS + ghost.x, { ch: ghost.ch, color: ghost.color });
+      }
     }
   }
   if (mode === "editor") {

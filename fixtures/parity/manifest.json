@@ -1468,6 +1468,28 @@
       "notes": "task-claim row; behavioral parity carried by the element/oop/protocol/input/service rows this task touched; reconciled at M16.20"
     },
     {
+      "id": "task.M31.1",
+      "dimension": "task",
+      "subject": "Completed task M31.1 — its DoD still holds",
+      "contract": "E",
+      "authority": "TASKS.md M31.1",
+      "parity": "exact",
+      "status": "unverified",
+      "assignedTask": "M16.20",
+      "notes": "task-claim row; behavioral parity carried by the element/oop/protocol/input/service rows this task touched; reconciled at M16.20"
+    },
+    {
+      "id": "task.M32.1",
+      "dimension": "task",
+      "subject": "Completed task M32.1 — its DoD still holds",
+      "contract": "E",
+      "authority": "TASKS.md M32.1",
+      "parity": "exact",
+      "status": "unverified",
+      "assignedTask": "M16.20",
+      "notes": "task-claim row; behavioral parity carried by the element/oop/protocol/input/service rows this task touched; reconciled at M16.20"
+    },
+    {
       "id": "task.M4.0",
       "dimension": "task",
       "subject": "Completed task M4.0 — its DoD still holds",
@@ -3914,6 +3936,30 @@
       "notes": "M16.8's pass.scn/main.scn (and most M16.4-M16.6 hub-to-feature-board scenarios) exercise the same underlying resync (RoomManager.Snapshot after a board change) WorldInstance.Tick wraps as a BoardChangeMessage; the wire struct itself is pre-existing WS-level coverage."
     },
     {
+      "id": "proto.msg.challengeError",
+      "dimension": "protocol",
+      "subject": "protocol message type \"challengeError\"",
+      "contract": "P",
+      "authority": "protocol.go; tasks M3.2–M3.4",
+      "parity": "exact",
+      "test": "TestM321UnlistedMissingAndOwnedWorldsAreRefused,TestM321ReconnectReclaimsTheRunAndAStrangerCannot",
+      "status": "pass",
+      "assignedTask": "M32.1",
+      "notes": "M32.1: an honest refusal on the challenge path — an unlisted id, an unavailable or player-owned world, a run that has ended or belongs to somebody else, or a server with recording switched off."
+    },
+    {
+      "id": "proto.msg.challengeResult",
+      "dimension": "protocol",
+      "subject": "protocol message type \"challengeResult\"",
+      "contract": "P",
+      "authority": "protocol.go; tasks M3.2–M3.4",
+      "parity": "exact",
+      "test": "TestProtocolMessageRoundTrips,TestM321CompletionWritesOneDurableRowAndVerifiesFromItsRecording,TestM321GuestRunsPlayButDoNotPersist",
+      "status": "pass",
+      "assignedTask": "M32.1",
+      "notes": "M32.1: the server's own verdict on a run it observed complete — deterministic tick count and in-sim counters, whether the result became a durable row, and its rank. It is never requested by a client and carries no account id."
+    },
+    {
       "id": "proto.msg.debugCommand",
       "dimension": "protocol",
       "subject": "protocol message type \"debugCommand\"",
@@ -4439,6 +4485,30 @@
       "status": "pass",
       "assignedTask": "M16.16",
       "notes": "M16.16: enabled/authenticated/id/name/email, before and after sign-in, after logout, and for every forged cookie"
+    },
+    {
+      "id": "route.api.challenge",
+      "dimension": "route",
+      "subject": "HTTP/WS route /api/challenge",
+      "contract": "E",
+      "authority": "web_api.go / websocket_server.go",
+      "parity": "exact",
+      "test": "TestM321APIRoutesAndPrecedence,TestM321ChallengeBrowserJourney",
+      "status": "pass",
+      "assignedTask": "M32.1",
+      "notes": "M32.1: today's challenge landing plus its leaderboard, chosen from the injected service clock; GET only, so no client can report a time."
+    },
+    {
+      "id": "route.api.challenge.",
+      "dimension": "route",
+      "subject": "HTTP/WS route /api/challenge/",
+      "contract": "E",
+      "authority": "web_api.go / websocket_server.go",
+      "parity": "exact",
+      "test": "TestM321APIRoutesAndPrecedence,TestM321GhostIsALocalTrackOfAStoredRunOnly",
+      "status": "pass",
+      "assignedTask": "M32.1",
+      "notes": "M32.1: /api/challenge/<id> resolves a catalogue row (404 for an unlisted id or a deeper path) and /api/challenge/ghost serves the local overlay track of a stored leaderboard row only, refusing an arbitrary recording and a stale definition."
     },
     {
       "id": "route.api.generate",

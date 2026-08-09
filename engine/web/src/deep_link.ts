@@ -24,6 +24,10 @@ export const WATCH_LINK_PREFIX = "/watch/";
 export const REPLAY_LINK_PREFIX = "/replay/";
 /** The reserved ambient channel route (M28.1). */
 export const WATCH_LIVE_PATH = "/watch/live";
+/** The daily challenge route (M32.1). /challenge is today's; /challenge/<id> is
+ * a named one. Both are the same client — a challenge is played in the ZZT
+ * shell, not on a page about it. */
+export const CHALLENGE_LINK_PREFIX = "/challenge";
 
 /** The subset of an /api/worlds entry this module reads. */
 export type DeepLinkCandidate = { world: string };
@@ -53,6 +57,30 @@ export function watchLinkWorldName(pathname: string): string {
 
 export function isWatchLivePath(pathname: string): boolean {
   return pathname === WATCH_LIVE_PATH || pathname === WATCH_LIVE_PATH + "/";
+}
+
+/**
+ * isChallengePath reports whether a path is the challenge route at all, and
+ * challengeLinkID says which challenge it names ("" for today's).
+ *
+ * They are two functions rather than one because "no id" is a real answer here:
+ * /challenge is the daily one, which the SERVER picks from its own UTC clock, so
+ * an empty id must reach the server rather than being treated as a dead link.
+ */
+export function isChallengePath(pathname: string): boolean {
+  return pathname === CHALLENGE_LINK_PREFIX || pathname.startsWith(CHALLENGE_LINK_PREFIX + "/");
+}
+
+export function challengeLinkID(pathname: string): string {
+  if (!isChallengePath(pathname)) {
+    return "";
+  }
+  return worldNameFromPrefixedPath(pathname, CHALLENGE_LINK_PREFIX + "/");
+}
+
+/** challengePath is the shareable address for a challenge. */
+export function challengePath(id = ""): string {
+  return id ? CHALLENGE_LINK_PREFIX + "/" + encodeURIComponent(id) : CHALLENGE_LINK_PREFIX;
 }
 
 /** replayLinkID returns the replay id a path asks for, or "" outside /replay. */

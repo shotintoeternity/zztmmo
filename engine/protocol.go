@@ -59,7 +59,42 @@ const (
 	MessageTypeFollowResult     = "followResult"
 	MessageTypeReplayControl    = "replayControl"
 	MessageTypeReplayError      = "replayError"
+	// MessageTypeChallengeResult is the server's verdict on a challenge run
+	// (M32.1): it is sent when the SERVER observed the goal met, never asked for
+	// by a client, and it says whether the result became a durable leaderboard
+	// row or stayed the player's own local business.
+	MessageTypeChallengeResult = "challengeResult"
+	// MessageTypeChallengeError is an honest refusal on the challenge path — an
+	// unknown id, an unavailable world, a run that no longer exists, or a server
+	// with recording switched off.
+	MessageTypeChallengeError = "challengeError"
 )
+
+// ChallengeResultMessage is what a finished run tells its own player.
+//
+// Rank and Durable are separate deliberately: a guest completes a run and sees
+// their ticks (Durable false, Rank 0), and a signed-in player sees where the row
+// landed. Nothing here is taken from the client — Ticks and the counters are the
+// server's own count of the run it hosted.
+type ChallengeResultMessage struct {
+	Type        string `json:"type"`
+	ChallengeID string `json:"challengeId"`
+	Version     int    `json:"version"`
+	Ticks       int    `json:"ticks"`
+	Score       int    `json:"score"`
+	Gems        int    `json:"gems"`
+	Durable     bool   `json:"durable"`
+	Rank        int    `json:"rank,omitempty"`
+	RecordingID string `json:"recordingId,omitempty"`
+	Reason      string `json:"reason,omitempty"`
+}
+
+// ChallengeErrorMessage is a refusal the browser can show as a window.
+type ChallengeErrorMessage struct {
+	Type        string `json:"type"`
+	ChallengeID string `json:"challengeId,omitempty"`
+	Reason      string `json:"reason"`
+}
 
 // ModerateMessage is an operator's request. Like BlockMessage it names its
 // target by PlayerID — the only addressable thing on a chat line — and states
@@ -725,6 +760,13 @@ type SnapshotMessage struct {
 	// silence: this field is on every frame, so the only way a client sees none
 	// is that nobody is watching.
 	Watchers int `json:"watchers,omitempty"`
+	// Challenge and ChallengeRun mark a frame belonging to a challenge run
+	// (M32.1). ChallengeRun is the run's instance key, which is what a
+	// reconnect presents to reclaim THIS run instead of starting a fresh one —
+	// the key is not a world name, so `?world=` cannot reach it and the client
+	// has no way to derive it.
+	Challenge    string `json:"challenge,omitempty"`
+	ChallengeRun string `json:"challengeRun,omitempty"`
 }
 
 type DiffMessage struct {

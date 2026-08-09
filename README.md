@@ -16,7 +16,8 @@ Explore classic `.ZZT` worlds in synchronized rooms, chat while you play, read s
 *   **Keep the world moving:** Board transfers, passages, active-room ticks, frozen empty rooms, dark rooms, torches, high scores, help screens, pause, quit, and title-screen flows are all handled server-side.
 *   **Chat like it is 1995 with better sockets:** Browser clients get global chat, with optional JSONL persistence when saves are enabled.
 *   **Save the shared mess:** Room snapshots can be saved to disk and restored later, so a party can preserve puzzle progress instead of starting from a pristine world every session.
-*   **Play co-op first, PvP deliberately:** Ordinary worlds stay co-op: player bullets do not hurt other players. The first-party ARENA world is the explicit PvP opt-in; there are still no rankings, brackets, wagers, or tournament systems yet.
+*   **Play co-op first, PvP deliberately:** Ordinary worlds stay co-op: player bullets do not hurt other players. The first-party ARENA world is the explicit PvP opt-in; there are still no brackets, wagers, or tournament systems yet.
+*   **Race the daily challenge:** `/challenge` opens a timed first-party course inside the same client. Every run is a recorded, isolated session, so a time is measured in simulation ticks, checkable by replaying the recording it cites, and raceable as a ghost that is drawn on your own screen and nowhere else. Signing in posts a time; a guest can still run it and see their own.
 
 ## Beta Notes
 
@@ -48,8 +49,8 @@ ZZTMMO is already playable as a shared ZZT server, but the long game is stranger
 *   **Museum search-and-play:** Keep turning the Museum of ZZT archive into a walkable universe where old community worlds are a few keystrokes away.
 *   **Player identity:** Add account-backed names, persistent player state, invites, parties, and cleaner ownership for worlds and saves.
 *   **Party instances:** Make it easy for a group to spin up a private run, continue later, and invite more players into the same adventure.
-*   **Replays and daily challenges:** Record runs, replay them deterministically, publish daily seeds, and let players race the same strange little board.
-*   **Ghost racing:** Show prior runs as ghosts so players can speedrun ZZT boards against friends without needing everyone online at once.
+*   **Replays and daily challenges:** The first cut has shipped — `/challenge`, replay-verified times, and ghosts. Still ahead: a calendar of hand-authored seasons rather than one committed course.
+*   **Ghost racing:** Ghosts race a stored leaderboard run today. Still ahead: racing a specific friend's run, and ghosts outside the challenge layer.
 *   **Live-DM tools:** Explore possession, moderation, and “dungeon master” style control for running events inside classic ZZT worlds.
 *   **Community publishing:** Grow the browser editor into a collaborative way to build, test, publish, and share worlds without leaving the page.
 
