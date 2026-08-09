@@ -362,7 +362,9 @@ M12.23, M17.1–M17.7, M16.0–M16.8a — has fully landed.)
    channel lineup of busy watchable rooms and consent-filtered replay moments,
    with a reserved client route that cycles through the existing M22 watcher and
    replay viewers without creating players, play counts, autosaves or identity
-   leakage.
+   leakage. **M29 was filed 2026-08-09** from the ranked roadmap queue's sixth
+   line: replace TOWN as the default hangout with a first-party lobby world and
+   server-interpreted cross-world passages.
 
 **Optional / deferred (bottom):**
 - M14.3 — package split — **closed as skipped 2026-08-03**, see NOTES.md
@@ -7322,6 +7324,82 @@ world.
   with `N`, leaves with `Q`, and opens every entry through the existing
   `/watch/<world>` or replay WebSocket path with `start=N`. Manifest row
   `route.api.watch.live` is covered by M28.1.
+
+## M29 — The lobby: a world where the service lives
+
+Filed 2026-08-09 from the owner-promoted roadmap queue's sixth ranked line.
+TOWN has been carrying two jobs since the server became useful: it is a classic
+world players should be able to actually play, and it is the default hangout
+where people arrive, chat, branch out, and discover the rest of the service.
+Those jobs fight each other. This milestone gives the service its own first-party
+social world and turns "pick a world" into something that can happen on a ZZT
+board without making TOWN absorb every product affordance.
+
+Three boundaries are decided here before code. **WELCOME remains the first-visit
+tutorial**: M23.3's fresh guest root visit still opens WELCOME, because the lobby
+is where people gather after they know the vocabulary, not the five-minute
+teaching route. **TOWN returns to being a classic**: it stays in the picker,
+deep links, shelves, watch routes, metadata and tests, but it is no longer the
+server's default hangout when a warm visitor chooses "go play with people."
+**Cross-world passages are a server feature, not a ZZT rule change**: only
+explicit lobby transit tiles configured by the server may leave one world for
+another. Ordinary Passage elements in ordinary worlds keep vanilla intra-world
+semantics, replay fixtures stay in-world, and a player-authored world cannot
+smuggle a cross-world transfer by naming a board or writing OOP.
+
+- [ ] **M29.1 — first-party lobby world and server-interpreted transit gates.**
+  Build and ship a canonical `LOBBY.ZZT` created through the same source path as
+  WELCOME: keep a committed source artifact if practical, commit
+  `fixtures/LOBBY.ZZT`, write the local `engine/LOBBY.ZZT` hosting artifact for
+  deploy bundles, add LOBBY to `worlds.manifest.json`, and make
+  `WorldIsCanonical("LOBBY")` protect it from dream/editor overwrites. The world
+  should be a real playable social space, not a menu drawn in a board: room for
+  a crowd, signs/scrolls for chat, friends, watch/live, profiles and dreaming,
+  and visible transit gates to a small curated set of joinable worlds such as
+  WELCOME, TOWN, and the current front-page favorites/classics the server can
+  resolve. Keep any NPC/scripted copy terse and ZZT-native; do not add browser
+  instructional prose to compensate for unclear world design.
+
+  Add the narrowest server-side transit table needed for the first cut. A lobby
+  transit gate is keyed by the source world identity `LOBBY`, source board, and
+  source tile or passage stat; it resolves a destination world through the same
+  `SanitizeSaveName`/`ListWorlds`/`LoadPristineWorld` identity path as `/play`
+  and `/api/worlds`. If the target is missing, refused, corrupt, canonically
+  protected from overwrite, or otherwise unjoinable, the player stays in the
+  lobby and receives a scroll/window explaining the refusal. If the target is
+  joinable, the server removes the player from the lobby instance and joins the
+  destination instance as a normal player with the same live `PlayerID`, account
+  identity, display color/profile summary, blocks/follows context, resume-token
+  handling, and account sidecar inventory semantics that a WebSocket join would
+  have used. This is a gameplay transit: unlike the browser picker, it does not
+  stop on the destination title screen first, because the player deliberately
+  walked through an in-world gate. Deep links and menu picker selections keep
+  M18's title-screen pause.
+
+  Replace the default hangout without breaking the newcomer or local-dev paths.
+  The production/startup default should be LOBBY once the file is present, while
+  command-line `-world` still overrides it and a missing startup world still
+  fails with M18.14's clean error. A fresh guest root visit still lands on
+  WELCOME; a warm root visit, account-return visit, or "leave to lobby" path
+  should make LOBBY the obvious gathering place. `/play/TOWN`, `/watch/TOWN`,
+  picker shelves, play counts, favorites, friends-here, ZZT TV, replays,
+  restores, Museum imports and editor-published worlds must continue to use
+  world identities exactly as they do now.
+
+  DoD: Go tests prove LOBBY is canonical and listed with metadata, startup
+  defaults to LOBBY when no `-world` override is supplied, WELCOME still wins
+  for first-visit guests, ordinary non-lobby passages cannot cross worlds, a
+  configured lobby gate transfers a signed-in player into TOWN with identity,
+  color/profile, block/follow context, inventory restore and resume-token
+  behavior intact, a missing/refused target leaves the player in LOBBY with an
+  honest message, play counts and presence move from LOBBY to the destination
+  exactly once, and StateHash/replay fixtures for existing worlds do not move.
+  Browser/Node coverage should prove the root/leave-to-lobby flow, visible lobby
+  launch, and at least one real Chromium walk through a lobby gate into TOWN.
+  Update README/deploy docs if the documented local launch world changes.
+  Verify with `npm test`, `npm run build`, focused Go tests for M29.1, focused
+  `ZZT_BROWSER=1` coverage for the lobby journey, `git diff --check`, and the
+  session gate `cd engine && go build ./... && go test ./...`.
 
 ## M14 — Rearchitecting for the service ZZTMMO is becoming
 
