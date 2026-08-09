@@ -11338,3 +11338,23 @@ store the comfort choices as another field on the M19.3 account preferences
 document, preserving every existing preference field. Guests may keep local-only
 settings for one browser, but the browser must say that boundary honestly and
 never sync guest preferences through the server.
+
+## 2026-08-09 — M32.1 spec filed for the replay competition layer
+
+Expanded ranked roadmap item #9 into `TASKS.md` as M32.1. This is documentation
+and product-boundary work only: no engine or browser code changed, and the task
+is left unchecked for implementation.
+
+The spec uses the determinism stack that already exists instead of inventing a
+score-trust path. Public leaderboard rows can only come from server-created,
+server-recorded challenge instances; clients never submit their own elapsed
+time, score, or uploaded recording. The ranking clock is deterministic tick
+count plus any server-observed secondary fields, while date selection for
+"today's" challenge stays at the web/API boundary.
+
+Three privacy/simulation boundaries are recorded before implementation. Guests
+may play a challenge and see a local result, but durable public leaderboard rows
+are signed-in only. Stored rows expose public handle/display summaries and replay
+ids, not account ids. Ghost racing is presentation-only: the ghost is a replay
+overlay or viewer aid and never joins a room, blocks tiles, triggers OOP, speaks
+in chat, changes presence/play counts, or enters StateHash.

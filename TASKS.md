@@ -375,7 +375,9 @@ M12.23, M17.1–M17.7, M16.0–M16.8a — has fully landed.)
    remappable keys, calmer flashing and alternate palettes. **M31.1 landed
    2026-08-09**: account and guest-local comfort preferences now cover client-side
    key remaps, reduced flashing and local palette filters without changing the
-   wire protocol, replay state or another viewer's canvas.
+   wire protocol, replay state or another viewer's canvas. **M32 was filed
+   2026-08-09** from the ninth ranked roadmap line: a deterministic replay-backed
+   daily challenge, leaderboard and ghost-racing layer.
 
 **Optional / deferred (bottom):**
 - M14.3 — package split — **closed as skipped 2026-08-03**, see NOTES.md
@@ -7567,6 +7569,86 @@ animation.
   must be unchanged. Regenerate/curate any parity manifest rows for the new
   presentation-only surfaces. Verify with `npm test`, `npm run build`, focused Go
   tests for M31.1, focused `ZZT_BROWSER=1` coverage for the comfort journey,
+  `git diff --check`, and the session gate
+  `cd engine && go build ./... && go test ./...`.
+
+## M32 — Replay competition layer: daily challenge, boards, and ghosts
+
+Filed 2026-08-09 from the owner-promoted roadmap queue's ninth ranked line.
+M14.2 made authoritative sessions cheap to record, M22.3 made those recordings
+watchable in the browser, and M22.4 made bounded replay moments shareable. The
+missing product layer is a competitive path that treats the recording as the
+source of truth: a daily challenge, a leaderboard entry that can be replayed,
+and a ghost a player can race without changing the live simulation.
+
+Three boundaries are decided here before code. **Only server-created runs count**:
+the leaderboard never accepts an uploaded JSONL recording, a client-authored time,
+or a browser-reported score; it records a result only from a live challenge
+instance the server started and recorded itself. **The challenge clock is service
+time, not sim time**: choosing today's challenge may use UTC dates at the web/API
+boundary, but once a run starts its measured result is deterministic tick count
+and in-sim counters, never wall-clock latency. **Ghosts are presentation, not
+players**: a ghost replays cells/positions from an existing recording in the
+viewer/client layer and never joins the authoritative room, blocks tiles, takes
+damage, triggers OOP, appears in chat/presence, increments play counts, or enters
+StateHash.
+
+- [ ] **M32.1 — daily challenge runs with replay-verified leaderboards and ghosts.**
+  Add a small challenge catalogue that maps a challenge id/date to a resolved
+  world identity, start rules, completion rule and ranking formula. The first
+  cut may use one committed daily challenge entry rather than a calendar of
+  hand-authored seasons, but the shape must be date/id-addressable so `/challenge`
+  and `/challenge/<id>` can link to the same run. Resolve worlds through the same
+  identity path as `/play` and refuse missing/corrupt/private worlds honestly.
+  Do not let a challenge be defined by a player-authored world file, metadata
+  sidecar, OOP text, or client route parameter without passing through this
+  server catalogue.
+
+  Starting a challenge creates an isolated play instance with session recording
+  forced on, challenge metadata attached to the recorder, and normal player
+  identity/profile/color preferences applied. The run should not disturb ordinary
+  world occupancy, favorites, play counts, friends-here presence, ZZT TV busy-room
+  candidates, autosaves, or account sidecar inventory for the source world. A
+  signed-in player may submit to the public leaderboard; a guest may play and see
+  their local result but does not create a durable public entry. Abandoning,
+  reconnecting inside the existing resume grace, quitting, dying/respawning, and
+  replaying the finished run must all have explicit rules in code and tests.
+
+  Record leaderboard results from server-observed run completion only. A result
+  stores the challenge id, account key privately, public handle/display summary,
+  deterministic tick count, secondary score fields if the formula needs them,
+  recording id, final hash/checkpoint evidence, and enough version metadata to
+  reject stale recordings after the challenge definition changes. Sorting must be
+  stable and deterministic; ties use documented secondary fields and then an
+  opaque server order, not account ids on the wire. Keep the durable store atomic,
+  restart-safe, bounded per challenge, and free of raw IPs or per-input personal
+  logs beyond the recording that already exists for replay verification.
+
+  Add browser surfaces that reuse the existing ZZT shell. `/challenge` opens the
+  current challenge landing inside the playable client, with start, leaderboard,
+  watch replay, race ghost and share postcard affordances using CP437 windows and
+  compact status text. `/challenge/<id>` opens a specific challenge. Starting a
+  run should feel like play, not a marketing page. A leaderboard row can open the
+  M22 replay viewer, request the M22.4 postcard GIF for a bounded moment, or set
+  that run as the local ghost for a new attempt. Ghost display must remain local
+  and read-only, work with reduced-flashing/palette preferences from M31, and
+  degrade cleanly if the referenced recording is missing or from an incompatible
+  challenge version.
+
+  DoD: Go tests prove challenge catalogue resolution, refusal of unlisted/missing
+  worlds, isolated challenge instance creation, forced recording, completion
+  detection, signed-in leaderboard write, guest non-persistence, deterministic
+  sorting/tie handling, restart persistence, stale-version rejection, no account
+  id leakage in marshaled rows, no play-count/presence/autosave/source-world
+  mutation, and replay verification from the stored recording id. Node tests
+  cover `/challenge` and `/challenge/<id>` route precedence, start/abandon flows,
+  leaderboard windows, replay/postcard links, ghost selection, and ghost rendering
+  as a local overlay that sends no gameplay input. Focused Chromium coverage
+  should prove a signed-in player completes a challenge, sees the row, opens the
+  replay, and starts a second attempt against that ghost. StateHash and existing
+  replay fixtures must be unchanged. Regenerate/curate parity manifest rows for
+  the new routes and task claim. Verify with `npm test`, `npm run build`, focused
+  Go tests for M32.1, focused `ZZT_BROWSER=1` challenge-browser coverage,
   `git diff --check`, and the session gate
   `cd engine && go build ./... && go test ./...`.
 
