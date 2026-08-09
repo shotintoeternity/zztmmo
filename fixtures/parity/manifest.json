@@ -1281,6 +1281,17 @@
       "notes": "task-claim row; reconciled at the task itself (2026-08-09), NOT at M16.20: M25.1 landed after the certification milestone closed, so no M16.20 run ever saw this row. The socket tests prove PMs are live PlayerID messages delivered only to sender and recipient, not persisted in global chat history, suppressed by a recipient block before the target socket sees them, refused by the shared chat rate limiter, and refused for muted senders with the existing moderation notice."
     },
     {
+      "id": "task.M26.1",
+      "dimension": "task",
+      "subject": "Completed task M26.1 — its DoD still holds",
+      "contract": "E",
+      "authority": "TASKS.md M26.1",
+      "parity": "exact",
+      "status": "unverified",
+      "assignedTask": "M16.20",
+      "notes": "task-claim row; behavioral parity carried by the element/oop/protocol/input/service rows this task touched; reconciled at M16.20"
+    },
+    {
       "id": "task.M3.0",
       "dimension": "task",
       "subject": "Completed task M3.0 — its DoD still holds",
@@ -4124,6 +4135,26 @@
       "status": "pass",
       "assignedTask": "M16.8",
       "notes": "Bare EventMessage envelope: used only for \"quit\"/\"highScoreEntry\" (quitOutcome, websocket_server.go) and the ad hoc \"saveResult\"/\"highScores\" events, all already covered pre-M16.8."
+    },
+    {
+      "id": "proto.msg.follow",
+      "dimension": "protocol",
+      "subject": "protocol message type \"follow\"",
+      "contract": "P",
+      "authority": "protocol.go; tasks M3.2–M3.4",
+      "parity": "exact",
+      "status": "unverified",
+      "assignedTask": "M16.8"
+    },
+    {
+      "id": "proto.msg.followResult",
+      "dimension": "protocol",
+      "subject": "protocol message type \"followResult\"",
+      "contract": "P",
+      "authority": "protocol.go; tasks M3.2–M3.4",
+      "parity": "exact",
+      "status": "unverified",
+      "assignedTask": "M16.8"
     },
     {
       "id": "proto.msg.highScoreName",

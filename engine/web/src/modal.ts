@@ -177,6 +177,7 @@ export type WorldSearchEntry = {
   players?: number;
   // M17.11: people editing this world, the counterpart to players.
   editors?: number;
+  friendsHere?: { name: string; handle?: string }[];
   source?: "local" | "museum";
   // M18.9: how the server grouped this world — "classic" (the museum manifest
   // knows it), "dreamed" (this server generated it), "local" (neither). Absent
@@ -220,10 +221,12 @@ export function applyWorldOccupancy(entries: WorldSearchEntry[], fresh: WorldSea
       }
       entry.players = 0;
       entry.editors = 0;
+      entry.friendsHere = [];
       continue;
     }
     entry.players = update.players ?? 0;
     entry.editors = update.editors ?? 0;
+    entry.friendsHere = update.friendsHere ?? [];
   }
 }
 
@@ -489,6 +492,10 @@ function worldSearchLines(matches: WorldSearchEntry[]): string[] {
     if (playerText) {
       lines.push(fitText(`  ${playerText}`, WORLD_DETAIL_WIDTH));
     }
+    const friendsText = worldSearchFriendsText(entry.friendsHere ?? []);
+    if (friendsText) {
+      lines.push(fitText(`  ${friendsText}`, WORLD_DETAIL_WIDTH));
+    }
   }
   return lines;
 }
@@ -508,11 +515,27 @@ function worldSearchPlayerText(players: number, editors = 0): string {
   return ` (${parts.join(", ")})`;
 }
 
-// worldSearchHasOccupancy decides whether an entry gets its extra occupancy
-// line. worldSearchLinePos must agree with renderWorldSearch here or the
-// selection highlight drifts off the entry it belongs to.
-function worldSearchHasOccupancy(entry: WorldSearchEntry): boolean {
-  return (entry.players ?? 0) > 0 || (entry.editors ?? 0) > 0;
+function worldSearchFriendsText(friends: { name: string; handle?: string }[]): string {
+  if (friends.length === 0) {
+    return "";
+  }
+  const names = friends.slice(0, 3).map((friend) => friend.handle ? `@${friend.handle}` : friend.name);
+  const more = friends.length > names.length ? ` +${friends.length - names.length}` : "";
+  return `Friends here: ${names.join(", ")}${more}`;
+}
+
+// worldSearchExtraLineCount decides how many optional detail lines an entry gets.
+// worldSearchLinePos must agree with renderWorldSearch here or the selection
+// highlight drifts off the entry it belongs to.
+function worldSearchExtraLineCount(entry: WorldSearchEntry): number {
+  let lines = 0;
+  if ((entry.players ?? 0) > 0 || (entry.editors ?? 0) > 0) {
+    lines += 1;
+  }
+  if ((entry.friendsHere?.length ?? 0) > 0) {
+    lines += 1;
+  }
+  return lines;
 }
 
 function worldSearchLinePos(selected: number, matches: WorldSearchEntry[]): number {
@@ -522,7 +545,7 @@ function worldSearchLinePos(selected: number, matches: WorldSearchEntry[]): numb
   const clamped = Math.min(Math.max(0, selected), matches.length - 1);
   let pos = 3;
   for (let i = 0; i < clamped; i += 1) {
-    pos += worldSearchHasOccupancy(matches[i]) ? 3 : 2;
+    pos += 2 + worldSearchExtraLineCount(matches[i]);
   }
   return pos;
 }

@@ -55,6 +55,8 @@ const (
 	MessageTypeProfileResult    = "profileResult"
 	MessageTypePrivateMessage   = "privateMessage"
 	MessageTypePrivateResult    = "privateMessageResult"
+	MessageTypeFollow           = "follow"
+	MessageTypeFollowResult     = "followResult"
 	MessageTypeReplayControl    = "replayControl"
 	MessageTypeReplayError      = "replayError"
 )
@@ -141,6 +143,20 @@ type PrivateResultMessage struct {
 	PlayerID  PlayerID `json:"playerId,omitempty"`
 	Delivered bool     `json:"delivered"`
 	Text      string   `json:"text"`
+}
+
+type FollowMessage struct {
+	Type     string   `json:"type"`
+	PlayerID PlayerID `json:"playerId"`
+	Follow   bool     `json:"follow"`
+}
+
+type FollowResultMessage struct {
+	Type     string   `json:"type"`
+	PlayerID PlayerID `json:"playerId,omitempty"`
+	Name     string   `json:"name,omitempty"`
+	Followed bool     `json:"followed"`
+	Text     string   `json:"text"`
 }
 
 // BlockMessage is the client's block/unblock request. The target is named by the
@@ -676,6 +692,10 @@ type SnapshotMessage struct {
 	// it into its mirror and never clears from it, because a roster-scoped list
 	// can add knowledge and can never withdraw it.
 	BlockedPlayers []PlayerID `json:"blockedPlayers,omitempty"`
+	// FollowedPlayers mirrors BlockedPlayers for M26.1: among the players this
+	// browser can already see, which signed-in accounts it follows. It is scoped
+	// to live PlayerIDs so the durable account ids stay server-only.
+	FollowedPlayers []PlayerID `json:"followedPlayers,omitempty"`
 	// Operator says this connection's account is on the moderator allowlist
 	// (M21.2), which is what makes the Players window offer mute, kick and
 	// refuse. It is presentation only: the server checks the allowlist again on

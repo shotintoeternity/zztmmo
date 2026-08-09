@@ -36,6 +36,14 @@ type WorldListEntry struct {
 	// leaves `local` to search, so a tester's first click is not 69 entries of
 	// "by Local ????".
 	Kind string `json:"kind,omitempty"`
+	// FriendsHere is a per-recipient M26.1 presence summary. It contains public
+	// names only for followed accounts that opted in to sharing their location.
+	FriendsHere []FriendPresenceSummary `json:"friendsHere,omitempty"`
+}
+
+type FriendPresenceSummary struct {
+	Name   string `json:"name"`
+	Handle string `json:"handle,omitempty"`
 }
 
 const (

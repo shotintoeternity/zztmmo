@@ -26,6 +26,7 @@ export type BlockCandidate = {
   /** On this board, so the roster knows them; otherwise chat is the only trace. */
   here: boolean;
   blocked: boolean;
+  followed: boolean;
 };
 
 const UNKNOWN_NAME = "player";
@@ -42,6 +43,7 @@ export function blockCandidates(input: {
   roster: { id: number; name?: string; handle?: string; hasProfile?: boolean }[];
   chat: { from: string; playerId?: number }[];
   blocked: ReadonlySet<number>;
+  followed?: ReadonlySet<number>;
   self: number;
 }): BlockCandidate[] {
   const byID = new Map<number, BlockCandidate>();
@@ -60,6 +62,7 @@ export function blockCandidates(input: {
       hasProfile: player.hasProfile === true,
       here: true,
       blocked: input.blocked.has(player.id),
+      followed: input.followed?.has(player.id) === true,
     });
   }
 
@@ -78,6 +81,7 @@ export function blockCandidates(input: {
       hasProfile: false,
       here: false,
       blocked: input.blocked.has(id),
+      followed: false,
     });
   }
 
@@ -103,6 +107,8 @@ export function blockRowLabel(candidate: BlockCandidate): string {
   let label = candidate.handle ? `@${candidate.handle} #${candidate.id}` : `${candidate.name} #${candidate.id}`;
   if (candidate.blocked) {
     label += " [blocked]";
+  } else if (candidate.followed) {
+    label += " [followed]";
   } else if (candidate.hasProfile) {
     label += " [profile]";
   } else if (!candidate.here) {

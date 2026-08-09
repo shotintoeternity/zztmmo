@@ -60,6 +60,7 @@ import {
   saveAccountHint,
   saveAccountColor,
   saveAccountProfile,
+  saveShareLocationWithFollowers,
   type AccountHintKey,
   type AccountProfilePreferences,
   type AccountPreferences,
@@ -158,6 +159,8 @@ const MessageTypeProfileRequest = "profileRequest";
 const MessageTypeProfileResult = "profileResult";
 const MessageTypePrivateMessage = "privateMessage";
 const MessageTypePrivateResult = "privateMessageResult";
+const MessageTypeFollow = "follow";
+const MessageTypeFollowResult = "followResult";
 const MessageTypeReplayControl = "replayControl";
 const MessageTypeReplayError = "replayError";
 
@@ -253,6 +256,7 @@ type SnapshotMessage = {
    * board-change snapshot, which is why it is merged rather than assigned.
    */
   blockedPlayers?: number[];
+  followedPlayers?: number[];
   /**
    * Whether this connection's account is on the server's moderator allowlist
    * (M21.2). It only decides what the Players window OFFERS: the server checks
@@ -336,6 +340,14 @@ type BlockResultMessage = {
   name?: string;
   blocked: boolean;
   durable: boolean;
+  text: string;
+};
+
+type FollowResultMessage = {
+  type: typeof MessageTypeFollowResult;
+  playerId?: number;
+  name?: string;
+  followed: boolean;
   text: string;
 };
 
@@ -567,7 +579,7 @@ type EditorTestPlayMessage = {
   error?: string;
 };
 
-type ServerMessage = SnapshotMessage | DiffMessage | EventMessage | BoardChangeMessage | ChatMessage | PrivateMessage | PrivateResultMessage | AnnounceMessage | BlockResultMessage | ModerateResultMessage | ModerationNoticeMessage | ProfileResultMessage | ReplayErrorMessage | EditorSnapshotMessage | EditorInspectMessage | EditorPresenceMessage | EditorLeaseMessage | EditorDiffMessage | EditorPropertiesMessage | EditorStatSettingsMessage | EditorProgramTextMessage | EditorBoardDataMessage | EditorWorldDataMessage | EditorSaveResultMessage | EditorTestPlayMessage;
+type ServerMessage = SnapshotMessage | DiffMessage | EventMessage | BoardChangeMessage | ChatMessage | PrivateMessage | PrivateResultMessage | AnnounceMessage | BlockResultMessage | FollowResultMessage | ModerateResultMessage | ModerationNoticeMessage | ProfileResultMessage | ReplayErrorMessage | EditorSnapshotMessage | EditorInspectMessage | EditorPresenceMessage | EditorLeaseMessage | EditorDiffMessage | EditorPropertiesMessage | EditorStatSettingsMessage | EditorProgramTextMessage | EditorBoardDataMessage | EditorWorldDataMessage | EditorSaveResultMessage | EditorTestPlayMessage;
 
 type InputMessage = {
   type: typeof MessageTypeInput;
@@ -1112,6 +1124,7 @@ async function showTitle() {
   // people in the room are blocked (M21.4), which is what stops "no knowledge"
   // from reading on screen as "nobody is blocked".
   blockedPlayerIds = new Set<number>();
+  followedPlayerIds = new Set<number>();
   // Nor does operator status (M21.2). It comes back on the next join's snapshot,
   // from the allowlist, which is the only thing that decides it.
   isOperator = false;
@@ -2041,6 +2054,9 @@ function applyMessage(message: ServerMessage) {
     case MessageTypeBlockResult:
       handleBlockResultMessage(message);
       break;
+    case MessageTypeFollowResult:
+      handleFollowResultMessage(message);
+      break;
     case MessageTypeModerateResult:
       handleModerateResultMessage(message);
       break;
@@ -2363,6 +2379,7 @@ function applySnapshot(message: SnapshotMessage) {
   // Merged, never assigned: the server's list only covers the players in this
   // snapshot, so it can add knowledge and must not be able to withdraw any.
   blockedPlayerIds = mergeServerBlocks(blockedPlayerIds, message.blockedPlayers);
+  followedPlayerIds = mergeServerBlocks(followedPlayerIds, message.followedPlayers);
   // Whether this account may moderate (M21.2). The server sets it on the
   // join/resume frame only, like the resume token, so a frame that omits the
   // field leaves the answer standing rather than revoking it — a board change
@@ -2658,6 +2675,7 @@ let chatMessages: { from: string; playerId?: number; text: string; private?: boo
 // them. It is a mirror of the server's own set, never the authority: the roster
 // window reads it to decide whether a row offers "block" or "unblock".
 let blockedPlayerIds = new Set<number>();
+let followedPlayerIds = new Set<number>();
 // Whether the server told this connection it may moderate (M21.2). It decides
 // only what the Players window offers; the allowlist behind it is checked again
 // on the server for every action, so this is a display flag and nothing more.
@@ -2781,6 +2799,7 @@ function tryShowFirstTimeHint(hint: AccountHintKey) {
       stored: true,
       color: accountPrefs?.color ?? "",
       profile: accountPrefs?.profile ?? EMPTY_ACCOUNT_PROFILE,
+      shareLocationWithFollowers: accountPrefs?.shareLocationWithFollowers === true,
       hints: {
         players: nextHints.players === true,
         death: nextHints.death === true,
@@ -2831,6 +2850,7 @@ function openBlockWindow() {
     roster,
     chat: chatMessages,
     blocked: blockedPlayerIds,
+    followed: followedPlayerIds,
     self: playerId,
   });
   const byLabel = new Map(candidates.map((candidate) => [blockRowLabel(candidate), candidate]));
@@ -2848,9 +2868,11 @@ function openBlockWindow() {
         return;
       }
       const blockVerb = candidate.blocked ? "Unblock" : "Block";
+      const followVerb = candidate.followed ? "Unfollow" : "Follow";
       const choices = [
         { label: "View profile", action: "profile", confirm: "" },
         { label: "Private message", action: "pm", confirm: "" },
+        ...(candidate.here ? [{ label: followVerb, action: candidate.followed ? "unfollow" : "follow", confirm: `${followVerb} ${candidate.name}? ` }] : []),
         ...(isOperator ? [] : [{ label: blockVerb, action: candidate.blocked ? "unblock" : "block", confirm: `${blockVerb} ${candidate.name}? ` }]),
         ...moderationChoices(candidate, isOperator),
       ];
@@ -2879,6 +2901,10 @@ function openBlockWindow() {
               sendBlock(candidate.id, choice.action === "block");
               return;
             }
+            if (choice.action === "follow" || choice.action === "unfollow") {
+              sendFollow(candidate.id, choice.action === "follow");
+              return;
+            }
             sendModerate(candidate.id, choice.action);
           });
         },
@@ -2892,6 +2918,12 @@ function openBlockWindow() {
 function sendBlock(targetId: number, blocked: boolean) {
   if (ws && ws.readyState === WebSocket.OPEN) {
     ws.send(JSON.stringify({ type: MessageTypeBlock, playerId: targetId, blocked }));
+  }
+}
+
+function sendFollow(targetId: number, follow: boolean) {
+  if (ws && ws.readyState === WebSocket.OPEN) {
+    ws.send(JSON.stringify({ type: MessageTypeFollow, playerId: targetId, follow }));
   }
 }
 
@@ -2931,6 +2963,17 @@ function handleBlockResultMessage(message: BlockResultMessage) {
     blockedPlayerIds.add(message.playerId);
   } else {
     blockedPlayerIds.delete(message.playerId);
+  }
+  openWindow("Players", ["", `  ${message.text}`, ""], true);
+}
+
+function handleFollowResultMessage(message: FollowResultMessage) {
+  if (message.playerId) {
+    if (message.followed) {
+      followedPlayerIds.add(message.playerId);
+    } else {
+      followedPlayerIds.delete(message.playerId);
+    }
   }
   openWindow("Players", ["", `  ${message.text}`, ""], true);
 }
@@ -2994,7 +3037,8 @@ function openReplayPostcard() {
 }
 
 function openAccountMenu() {
-  const entries = ["Edit profile", "Sign out"];
+  const sharing = accountPrefs?.shareLocationWithFollowers === true;
+  const entries = ["Edit profile", sharing ? "Hide my location" : "Share my location", "Sign out"];
   openSelectList("Account", entries, (entry) => {
     if (entry === "Sign out") {
       void fetch("/api/auth/logout", { method: "POST" }).then(() => refreshAuthStatus());
@@ -3002,6 +3046,18 @@ function openAccountMenu() {
     }
     if (entry === "Edit profile") {
       openProfileEditor();
+      return;
+    }
+    if (entry === "Share my location" || entry === "Hide my location") {
+      const next = entry === "Share my location";
+      void saveShareLocationWithFollowers(fetch, next).then((stored) => {
+        if (!stored) {
+          openWindow("Account", ["", "  Location setting was not saved.", ""], true);
+          return;
+        }
+        accountPrefs = stored;
+        openWindow("Account", ["", `  Friend location ${next ? "shared" : "hidden"}.`, ""], true);
+      });
     }
   });
 }
@@ -3080,6 +3136,7 @@ function openColorPicker() {
           color,
           hints: accountPrefs?.hints ?? { players: false, death: false, chat: false },
           profile: accountPrefs?.profile ?? EMPTY_ACCOUNT_PROFILE,
+          shareLocationWithFollowers: accountPrefs?.shareLocationWithFollowers === true,
         };
         void saveAccountColor(fetch, color).then((stored) => {
           if (stored) {

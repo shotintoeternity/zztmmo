@@ -1018,6 +1018,7 @@ func (s *WebSocketServer) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 	// other order would compute the answer from an empty one and be right only
 	// for a player who has never blocked anybody.
 	snapshot.BlockedPlayers = s.blockedInRoster(playerID, inst, snapshot.Players)
+	snapshot.FollowedPlayers = s.followedInRoster(playerID, inst, snapshot.Players)
 
 	// M21.2: and whether this connection may moderate, which is what makes the
 	// same window offer mute, kick and refuse. It is told once, at the join,
@@ -1140,6 +1141,12 @@ func (s *WebSocketServer) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 				continue
 			}
 			s.submitPrivateMessage(ctx, client, playerID, pm)
+		case MessageTypeFollow:
+			var req FollowMessage
+			if err := json.Unmarshal(raw, &req); err != nil {
+				continue
+			}
+			s.submitFollow(ctx, client, playerID, req)
 		case MessageTypeBlock:
 			var req BlockMessage
 			if err := json.Unmarshal(raw, &req); err != nil {
@@ -3258,6 +3265,104 @@ func (s *WebSocketServer) submitProfileRequest(ctx context.Context, client *webS
 	})
 }
 
+func (s *WebSocketServer) submitFollow(ctx context.Context, client *webSocketClient, follower PlayerID, req FollowMessage) {
+	result := FollowResultMessage{
+		Type:     MessageTypeFollowResult,
+		PlayerID: req.PlayerID,
+	}
+	reply := func(text string) {
+		result.Text = text
+		_ = client.write(ctx, result)
+	}
+	if client.accountID == "" || s.ChatDB == nil {
+		reply("Sign in to follow players.")
+		return
+	}
+	if req.PlayerID == 0 || req.PlayerID == follower {
+		reply("You cannot follow yourself.")
+		return
+	}
+	target, found := s.locatePlayer(req.PlayerID)
+	if !found {
+		reply("That player has already left.")
+		return
+	}
+	if target.account == "" {
+		result.Name = target.name
+		reply("Guests cannot be followed.")
+		return
+	}
+	if target.account == client.accountID {
+		result.Name = target.name
+		reply("You cannot follow yourself.")
+		return
+	}
+
+	prefs, _, err := s.ChatDB.GetAccountPreferences(client.accountID)
+	if err != nil {
+		log.Printf("zztgo: failed to read preferences for account %q while following: %v", client.accountID, err)
+		reply("Could not update follows.")
+		return
+	}
+	if req.Follow {
+		prefs.FollowedAccounts = addAccountID(prefs.FollowedAccounts, target.account)
+	} else {
+		prefs.FollowedAccounts = removeAccountID(prefs.FollowedAccounts, target.account)
+	}
+	if err := s.ChatDB.PutAccountPreferences(client.accountID, prefs); err != nil {
+		log.Printf("zztgo: failed to store follows for account %q: %v", client.accountID, err)
+		reply("Could not update follows.")
+		return
+	}
+	result.Name = target.name
+	result.Followed = req.Follow
+	name := publicAccountName(target.name, target.account, s.loadAccountPreferences)
+	if req.Follow {
+		reply("Following " + name + ".")
+	} else {
+		reply("Unfollowed " + name + ".")
+	}
+}
+
+func addAccountID(accounts []string, account string) []string {
+	account = strings.TrimSpace(account)
+	if account == "" {
+		return sanitizeFollowedAccounts(accounts, "")
+	}
+	for _, existing := range accounts {
+		if existing == account {
+			return sanitizeFollowedAccounts(accounts, "")
+		}
+	}
+	return sanitizeFollowedAccounts(append(accounts, account), "")
+}
+
+func removeAccountID(accounts []string, account string) []string {
+	out := accounts[:0]
+	for _, existing := range accounts {
+		if existing != account {
+			out = append(out, existing)
+		}
+	}
+	return sanitizeFollowedAccounts(out, "")
+}
+
+func publicAccountName(fallback, accountID string, load func(string) (AccountPreferences, bool)) string {
+	prefs, ok := load(accountID)
+	if ok {
+		if prefs.Profile.Handle != "" {
+			return "@" + prefs.Profile.Handle
+		}
+		if prefs.Profile.DisplayName != "" {
+			return prefs.Profile.DisplayName
+		}
+	}
+	if strings.TrimSpace(fallback) != "" {
+		return fallback
+	}
+	return "that player"
+}
+
 // blockedInRoster names which of the people this client can currently SEE are
 // blocked for them (M21.4), so a returning player's Players window opens marked
 // instead of claiming no knowledge.
@@ -3302,6 +3407,145 @@ func (s *WebSocketServer) blockedInRoster(recipient PlayerID, inst *WorldInstanc
 		}
 	}
 	return blocked
+}
+
+func (s *WebSocketServer) followedInRoster(recipient PlayerID, inst *WorldInstance, roster []PlayerSnapshot) []PlayerID {
+	if len(roster) == 0 || s.ChatDB == nil {
+		return nil
+	}
+	var recipientAccount string
+	type rosterMember struct {
+		id      PlayerID
+		account string
+	}
+	members := make([]rosterMember, 0, len(roster))
+	inst.mu.Lock()
+	recipientAccount, _, _ = inst.RoomManager.PlayerIdentity(recipient)
+	for _, player := range roster {
+		if player.ID == 0 || player.ID == recipient {
+			continue
+		}
+		account, _, _ := inst.RoomManager.PlayerIdentity(player.ID)
+		if account != "" {
+			members = append(members, rosterMember{id: player.ID, account: account})
+		}
+	}
+	inst.mu.Unlock()
+	if recipientAccount == "" {
+		return nil
+	}
+	prefs, ok, err := s.ChatDB.GetAccountPreferences(recipientAccount)
+	if err != nil {
+		log.Printf("zztgo: failed to read follows for account %q: %v", recipientAccount, err)
+		return nil
+	}
+	if !ok || len(prefs.FollowedAccounts) == 0 {
+		return nil
+	}
+	followedAccounts := make(map[string]struct{}, len(prefs.FollowedAccounts))
+	for _, account := range prefs.FollowedAccounts {
+		followedAccounts[account] = struct{}{}
+	}
+	var followed []PlayerID
+	for _, member := range members {
+		if _, ok := followedAccounts[member.account]; ok {
+			followed = append(followed, member.id)
+		}
+	}
+	return followed
+}
+
+type liveAccountLocation struct {
+	account string
+	name    string
+	world   string
+}
+
+func (s *WebSocketServer) friendPresenceByWorld(accountID string) map[string][]FriendPresenceSummary {
+	if accountID == "" || s.ChatDB == nil {
+		return nil
+	}
+	prefs, ok, err := s.ChatDB.GetAccountPreferences(accountID)
+	if err != nil {
+		log.Printf("zztgo: failed to read follows for /api/worlds account %q: %v", accountID, err)
+		return nil
+	}
+	if !ok || len(prefs.FollowedAccounts) == 0 {
+		return nil
+	}
+	followed := make(map[string]struct{}, len(prefs.FollowedAccounts))
+	for _, account := range prefs.FollowedAccounts {
+		followed[account] = struct{}{}
+	}
+
+	s.mu.Lock()
+	instances := make([]*WorldInstance, 0, len(s.Instances))
+	for _, inst := range s.Instances {
+		instances = append(instances, inst)
+	}
+	s.mu.Unlock()
+
+	var live []liveAccountLocation
+	for _, inst := range instances {
+		inst.mu.Lock()
+		ids := inst.RoomManager.playerIDs()
+		for _, playerID := range ids {
+			account, name, ok := inst.RoomManager.PlayerIdentity(playerID)
+			if !ok || account == "" {
+				continue
+			}
+			if _, want := followed[account]; !want {
+				continue
+			}
+			live = append(live, liveAccountLocation{account: account, name: name, world: inst.Name})
+		}
+		inst.mu.Unlock()
+	}
+	if len(live) == 0 {
+		return nil
+	}
+
+	seen := make(map[string]map[string]struct{})
+	out := make(map[string][]FriendPresenceSummary)
+	for _, loc := range live {
+		targetPrefs, ok, err := s.ChatDB.GetAccountPreferences(loc.account)
+		if err != nil {
+			log.Printf("zztgo: failed to read presence preference for account %q: %v", loc.account, err)
+			continue
+		}
+		if !ok || !targetPrefs.ShareLocationWithFollowers {
+			continue
+		}
+		if seen[loc.world] == nil {
+			seen[loc.world] = make(map[string]struct{})
+		}
+		if _, dup := seen[loc.world][loc.account]; dup {
+			continue
+		}
+		seen[loc.world][loc.account] = struct{}{}
+		name := targetPrefs.Profile.DisplayName
+		if name == "" {
+			name = loc.name
+		}
+		if name == "" && targetPrefs.Profile.Handle != "" {
+			name = "@" + targetPrefs.Profile.Handle
+		}
+		if name == "" {
+			name = "Player"
+		}
+		out[loc.world] = append(out[loc.world], FriendPresenceSummary{Name: name, Handle: targetPrefs.Profile.Handle})
+	}
+	for world := range out {
+		sort.SliceStable(out[world], func(i, j int) bool {
+			a := out[world][i]
+			b := out[world][j]
+			if a.Handle != "" || b.Handle != "" {
+				return a.Handle < b.Handle
+			}
+			return strings.ToUpper(a.Name) < strings.ToUpper(b.Name)
+		})
+	}
+	return out
 }
 
 // identifyPlayer answers who a PlayerID belongs to, across every hosted world:

@@ -7100,7 +7100,7 @@ opt-in and follower-scoped**: the default is private, and a followed account tha
 has not opted in is indistinguishable from one that is offline for every picker
 and roster surface. Do not add "online but hidden" hints.
 
-- [ ] **M26.1 — follow accounts and show opted-in friend location.** Extend
+- [x] **M26.1 — follow accounts and show opted-in friend location.** Extend
   `AccountPreferences` with the narrowest fields needed: a durable
   `FollowedAccounts []string` and a presentation/privacy setting such as
   `ShareLocationWithFollowers bool`. Validate and store them through the existing
@@ -7144,6 +7144,17 @@ and roster surface. Do not add "online but hidden" hints.
   Verify with `npm test`, `npm run build`, focused Go tests for M26.1,
   `git diff --check`, and the session gate
   `cd engine && go build ./... && go test ./...`.
+  **Done 2026-08-09.** Signed-in account preferences now carry a durable
+  account-id follow list plus an explicit `ShareLocationWithFollowers` privacy
+  flag; `/api/preferences` can save the flag without returning the raw follow
+  list. The Players window sends follow/unfollow by live PlayerID, and the
+  server resolves that to a signed-in target account, refusing guests, self,
+  stale targets and unsigned callers with window text while keeping account ids
+  off the wire. Join snapshots report only followed live PlayerIDs, and
+  `/api/worlds` adds per-recipient `friendsHere` summaries only for followed
+  accounts that opted in and are currently in listed worlds. The browser adds
+  Follow/Unfollow actions, a location-sharing account row, followed roster
+  labels, and picker "Friends here" lines.
 
 ## M14 — Rearchitecting for the service ZZTMMO is becoming
 

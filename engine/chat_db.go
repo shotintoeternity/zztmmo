@@ -86,6 +86,13 @@ type AccountPreferences struct {
 	// public subset, with Handle uniqueness enforced by the ChatDatabase before
 	// the document is written.
 	Profile AccountProfilePreferences `json:"profile,omitempty"`
+	// FollowedAccounts are durable account ids this player follows (M26.1).
+	// They are stored here because they are account-wide presentation/social
+	// state, but they must never be returned raw to a browser.
+	FollowedAccounts []string `json:"followedAccounts,omitempty"`
+	// ShareLocationWithFollowers lets followed accounts see the world this
+	// account is currently playing. The zero value is deliberately private.
+	ShareLocationWithFollowers bool `json:"shareLocationWithFollowers,omitempty"`
 }
 
 type AccountHintPreferences struct {
@@ -427,6 +434,7 @@ func putAccountPreferencesLocked(prefs map[string]AccountPreferences, handleOwne
 		return err
 	}
 	next.Profile = profile
+	next.FollowedAccounts = sanitizeFollowedAccounts(next.FollowedAccounts, accountID)
 	oldHandle := prefs[accountID].Profile.Handle
 	newHandle := next.Profile.Handle
 	if newHandle != "" {
@@ -442,6 +450,37 @@ func putAccountPreferencesLocked(prefs map[string]AccountPreferences, handleOwne
 	}
 	prefs[accountID] = next
 	return nil
+}
+
+func sanitizeFollowedAccounts(accounts []string, self string) []string {
+	if len(accounts) == 0 {
+		return nil
+	}
+	seen := make(map[string]struct{}, len(accounts))
+	out := make([]string, 0, len(accounts))
+	for _, account := range accounts {
+		account = strings.TrimSpace(account)
+		if account == "" || account == self || len(account) > 256 {
+			continue
+		}
+		valid := true
+		for _, r := range account {
+			if r < 32 || r == 127 {
+				valid = false
+				break
+			}
+		}
+		if !valid {
+			continue
+		}
+		if _, ok := seen[account]; ok {
+			continue
+		}
+		seen[account] = struct{}{}
+		out = append(out, account)
+	}
+	sort.Strings(out)
+	return out
 }
 
 func (db *FileChatDatabase) writeAccountPreferencesLocked() error {

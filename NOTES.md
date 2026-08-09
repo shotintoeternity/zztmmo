@@ -11237,3 +11237,26 @@ drive browser actions by live `PlayerID` plus public profile summaries. The
 first discovery surface is `/api/worlds`: per-recipient "friends here" rows for
 followed, opted-in accounts on each visible world, with no account ids in
 snapshots, diffs, picker payloads, or Players-window messages.
+
+## 2026-08-09 — M26.1: friends and presence
+
+Landed the third promoted roadmap item. `AccountPreferences` now has
+`FollowedAccounts` and `ShareLocationWithFollowers`; the former is sanitized and
+stored only server-side, while `/api/preferences` exposes only the signed-in
+player's own sharing flag. Follow/unfollow is a WebSocket action from the
+Players window by live `PlayerID`; the server resolves the target to an account,
+persists the caller's follow list, and refuses unsigned callers, self-follow,
+guest targets and stale targets with ordinary window text.
+
+The picker gets the first presence surface through `/api/worlds`: a signed-in
+recipient sees `friendsHere` only for followed accounts that opted in and are
+currently in a listed world. Guests receive no friend summaries, opt-out is
+indistinguishable from offline, and tests marshal the responses to keep account
+ids off the wire. The browser adds Follow/Unfollow rows, a signed-in account
+location-sharing row, followed labels in Players, and "Friends here" picker
+detail lines.
+
+Verification before commit: `npm test`, `npm run build`,
+`go test -count=1 -run TestM261 ./`, `go test -count=1 -run 'TestM24|TestM25|TestM19|TestWorldList|TestParityManifest' ./`,
+`git diff --check`, `cd engine && go build ./...`, and
+`cd engine && go test ./...`.

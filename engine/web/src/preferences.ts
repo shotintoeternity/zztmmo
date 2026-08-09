@@ -16,6 +16,7 @@ export interface AccountPreferences {
   color: string;
   hints: AccountHintPreferences;
   profile: AccountProfilePreferences;
+  shareLocationWithFollowers: boolean;
 }
 
 export type AccountHintKey = "players" | "death" | "chat";
@@ -59,6 +60,7 @@ function readPreferences(value: unknown): AccountPreferences {
       displayName: typeof profileDoc.displayName === "string" ? profileDoc.displayName : "",
       about,
     },
+    shareLocationWithFollowers: doc.shareLocationWithFollowers === true,
   };
 }
 
@@ -122,6 +124,22 @@ export async function saveAccountProfile(fetchFn: FetchLike, profile: AccountPro
       method: "PUT",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({ profile }),
+    });
+    if (!response.ok) {
+      return null;
+    }
+    return readPreferences(await response.json());
+  } catch {
+    return null;
+  }
+}
+
+export async function saveShareLocationWithFollowers(fetchFn: FetchLike, shareLocationWithFollowers: boolean): Promise<AccountPreferences | null> {
+  try {
+    const response = await fetchFn(PREFERENCES_URL, {
+      method: "PUT",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ shareLocationWithFollowers }),
     });
     if (!response.ok) {
       return null;

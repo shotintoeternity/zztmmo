@@ -322,11 +322,12 @@ func SPAFileServer(root http.FileSystem) http.Handler {
 // separately from Color because an existing document with an empty Color is a
 // deliberate "no color" and an absent one is "never chose".
 type preferencesResponse struct {
-	Authenticated bool                      `json:"authenticated"`
-	Stored        bool                      `json:"stored"`
-	Color         string                    `json:"color,omitempty"`
-	Hints         AccountHintPreferences    `json:"hints,omitempty"`
-	Profile       AccountProfilePreferences `json:"profile,omitempty"`
+	Authenticated              bool                      `json:"authenticated"`
+	Stored                     bool                      `json:"stored"`
+	Color                      string                    `json:"color,omitempty"`
+	Hints                      AccountHintPreferences    `json:"hints,omitempty"`
+	Profile                    AccountProfilePreferences `json:"profile,omitempty"`
+	ShareLocationWithFollowers bool                      `json:"shareLocationWithFollowers,omitempty"`
 }
 
 // handlePreferences reads and writes the signed-in player's account-wide
@@ -343,7 +344,7 @@ func (a *WebAPI) handlePreferences(w http.ResponseWriter, r *http.Request) {
 			return
 		}
 		prefs, stored := a.storedPreferences(account.ID)
-		writeJSON(w, preferencesResponse{Authenticated: true, Stored: stored, Color: prefs.Color, Hints: prefs.Hints, Profile: prefs.Profile})
+		writeJSON(w, preferencesResponse{Authenticated: true, Stored: stored, Color: prefs.Color, Hints: prefs.Hints, Profile: prefs.Profile, ShareLocationWithFollowers: prefs.ShareLocationWithFollowers})
 	case http.MethodPut:
 		if !authenticated {
 			http.Error(w, "sign in to store preferences", http.StatusUnauthorized)
@@ -354,9 +355,10 @@ func (a *WebAPI) handlePreferences(w http.ResponseWriter, r *http.Request) {
 			return
 		}
 		var body struct {
-			Color   *string                    `json:"color"`
-			Hints   *AccountHintPreferences    `json:"hints"`
-			Profile *AccountProfilePreferences `json:"profile"`
+			Color                      *string                    `json:"color"`
+			Hints                      *AccountHintPreferences    `json:"hints"`
+			Profile                    *AccountProfilePreferences `json:"profile"`
+			ShareLocationWithFollowers *bool                      `json:"shareLocationWithFollowers"`
 		}
 		// Capped like every other body this API decodes (handleGenerate): a
 		// profile is still only a handle, a display line and a few bio lines.
@@ -395,6 +397,9 @@ func (a *WebAPI) handlePreferences(w http.ResponseWriter, r *http.Request) {
 			}
 			prefs.Profile = profile
 		}
+		if body.ShareLocationWithFollowers != nil {
+			prefs.ShareLocationWithFollowers = *body.ShareLocationWithFollowers
+		}
 		if err := a.Server.ChatDB.PutAccountPreferences(account.ID, prefs); err != nil {
 			if errors.Is(err, ErrProfileHandleTaken) {
 				http.Error(w, "handle already claimed", http.StatusConflict)
@@ -408,7 +413,7 @@ func (a *WebAPI) handlePreferences(w http.ResponseWriter, r *http.Request) {
 			return
 		}
 		a.Server.refreshAccountProfile(account.ID, prefs.Profile)
-		writeJSON(w, preferencesResponse{Authenticated: true, Stored: true, Color: prefs.Color, Hints: prefs.Hints, Profile: prefs.Profile})
+		writeJSON(w, preferencesResponse{Authenticated: true, Stored: true, Color: prefs.Color, Hints: prefs.Hints, Profile: prefs.Profile, ShareLocationWithFollowers: prefs.ShareLocationWithFollowers})
 	default:
 		http.Error(w, "use GET or PUT", http.StatusMethodNotAllowed)
 	}
@@ -1155,9 +1160,16 @@ func (a *WebAPI) handleWorlds(w http.ResponseWriter, r *http.Request) {
 		editorCounts = a.Server.EditorCounts()
 	}
 
+	entries := WorldListEntriesInDirWithEditors(dir, worlds, counts, editorCounts)
+	if account, authenticated := a.authenticatedAccount(r); authenticated && a.Server != nil {
+		friendsByWorld := a.Server.friendPresenceByWorld(account.ID)
+		for i := range entries {
+			entries[i].FriendsHere = friendsByWorld[entries[i].World]
+		}
+	}
 	writeJSON(w, struct {
 		Worlds []WorldListEntry `json:"worlds"`
-	}{Worlds: WorldListEntriesInDirWithEditors(dir, worlds, counts, editorCounts)})
+	}{Worlds: entries})
 }
 
 func (a *WebAPI) handleLoadWorld(w http.ResponseWriter, r *http.Request) {

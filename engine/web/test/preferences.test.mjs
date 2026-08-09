@@ -15,7 +15,7 @@ const output = await build({
   write: false,
 });
 const source = Buffer.from(output.outputFiles[0].contents).toString("base64");
-const { effectivePlayerColor, fetchAccountPreferences, saveAccountColor, saveAccountHint, saveAccountProfile } = await import(
+const { effectivePlayerColor, fetchAccountPreferences, saveAccountColor, saveAccountHint, saveAccountProfile, saveShareLocationWithFollowers } = await import(
   `data:text/javascript;base64,${source}`
 );
 
@@ -26,6 +26,7 @@ const defaultPrefs = (overrides) => ({
   color: "",
   hints: { players: false, death: false, chat: false },
   profile: emptyProfile,
+  shareLocationWithFollowers: false,
   ...overrides,
 });
 
@@ -129,9 +130,11 @@ function jsonResponse(body, { ok = true, status = 200 } = {}) {
       authenticated: true,
       stored: true,
       profile: { handle: "ada", displayName: "Ada", about: ["First line", 7, "Second line"] },
+      shareLocationWithFollowers: true,
     })).fetchFn,
   );
   assert.deepEqual(prefs.profile, { handle: "ada", displayName: "Ada", about: ["First line", "Second line"] });
+  assert.equal(prefs.shareLocationWithFollowers, true);
 }
 
 // --- writing the account --------------------------------------------------
@@ -194,6 +197,17 @@ function jsonResponse(body, { ok = true, status = 200 } = {}) {
   const saved = await saveAccountProfile(fetchFn, profile);
   assert.deepEqual(JSON.parse(calls[0].init.body), { profile });
   assert.deepEqual(saved.profile, profile);
+}
+
+{
+  const { fetchFn, calls } = stubFetch((_url, init) => jsonResponse({
+    authenticated: true,
+    stored: true,
+    shareLocationWithFollowers: JSON.parse(init.body).shareLocationWithFollowers,
+  }));
+  const saved = await saveShareLocationWithFollowers(fetchFn, true);
+  assert.deepEqual(JSON.parse(calls[0].init.body), { shareLocationWithFollowers: true });
+  assert.equal(saved.shareLocationWithFollowers, true);
 }
 
 console.log("preferences.test.mjs: ok");
