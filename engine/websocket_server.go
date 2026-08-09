@@ -351,10 +351,12 @@ func (c *webSocketClient) queued() int {
 }
 
 func NewWebSocketServer(world TWorld, defaultBoard int16) *WebSocketServer {
-	rm := NewRoomManager(world)
+	rm := NewRoomManagerForWorld(world, world.Info.Name)
 	name := rm.WorldName()
 	if name == "Untitled" || name == "" {
 		name = "TOWN"
+		rm.WorldIdentity = name
+		rm.FriendlyFire = friendlyFireForWorldIdentity(name)
 	}
 	inst := &WorldInstance{
 		Name:           name,
@@ -2293,7 +2295,7 @@ func (s *WebSocketServer) GetOrCreateInstance(worldName string) (*WorldInstance,
 	}
 	dir := s.worldsDir()
 
-	rm := NewRoomManager(world)
+	rm := NewRoomManagerForWorld(world, worldName)
 	rm.HighScorePath = filepath.Join(dir, worldName+".HI")
 	rm.LoadHighScores()
 
@@ -2503,7 +2505,7 @@ func (s *WebSocketServer) HostGeneratedWorld(name string, world TWorld) error {
 	if s.worldIsOccupiedLocked(safe) {
 		return fmt.Errorf("generated world %q is already occupied", safe)
 	}
-	rm := NewRoomManager(world)
+	rm := NewRoomManagerForWorld(world, safe)
 	inst := &WorldInstance{
 		Name:           safe,
 		SourceWorld:    cloneWorld(world),

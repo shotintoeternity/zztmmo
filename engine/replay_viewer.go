@@ -35,7 +35,7 @@ func NewReplayPlayback(r io.Reader) (*ReplayPlayback, error) {
 	return &ReplayPlayback{
 		header:      header,
 		scanner:     scanner,
-		rm:          NewRoomManager(world),
+		rm:          NewRoomManagerForWorld(world, header.World),
 		last:        -1,
 		seenPlayers: make(map[PlayerID]struct{}),
 	}, nil

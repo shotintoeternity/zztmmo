@@ -16,7 +16,7 @@ Explore classic `.ZZT` worlds in synchronized rooms, chat while you play, read s
 *   **Keep the world moving:** Board transfers, passages, active-room ticks, frozen empty rooms, dark rooms, torches, high scores, help screens, pause, quit, and title-screen flows are all handled server-side.
 *   **Chat like it is 1995 with better sockets:** Browser clients get global chat, with optional JSONL persistence when saves are enabled.
 *   **Save the shared mess:** Room snapshots can be saved to disk and restored later, so a party can preserve puzzle progress instead of starting from a pristine world every session.
-*   **Play co-op first, PvP later:** The current game is honest multiplayer ZZT co-op. Combat, damage, bullets, and hazards are server-authoritative where implemented, but there are no PvP arenas, rankings, ownership rules, or duel systems yet.
+*   **Play co-op first, PvP deliberately:** Ordinary worlds stay co-op: player bullets do not hurt other players. The first-party ARENA world is the explicit PvP opt-in; there are still no rankings, brackets, wagers, or tournament systems yet.
 
 ## Beta Notes
 

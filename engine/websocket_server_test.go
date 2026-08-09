@@ -635,6 +635,7 @@ func TestWebSocketServerBoardEdgeSendsBoardChange(t *testing.T) {
 
 func TestWebSocketServerTwoClientsSeeAndFight(t *testing.T) {
 	world := testFightWorld(t)
+	world.Info.Name = ArenaWorldName
 	server := NewWebSocketServer(world, 1)
 	server.TickDuration = 10 * time.Millisecond
 

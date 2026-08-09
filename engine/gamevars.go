@@ -501,7 +501,7 @@ func NewEngine() *Engine {
 		ActiveInput:        TcellInput{},
 		Players:            make(map[int16]*PlayerState),
 		ActingPlayerStatId: -1,
-		FriendlyFire:       true,
+		FriendlyFire:       false,
 	}
 }
 

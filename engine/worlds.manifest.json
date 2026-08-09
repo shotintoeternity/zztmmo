@@ -56,6 +56,7 @@
     {"id": "andyspec",    "letter": "m", "zip": "andyspec.zip",             "title": "The Magical Adventures of Andy Chapter 1: SE",       "author": "Silas Burdick",   "year": 2000, "zzt_files": []},
 
     {"id": "lobby",       "zip": "",                                        "title": "ZZTMMO Lobby",                                      "author": "ZZTMMO",          "year": 2026, "zzt_files": ["LOBBY.ZZT"]},
+    {"id": "arena",       "zip": "",                                        "title": "ZZTMMO Arena",                                      "author": "ZZTMMO",          "year": 2026, "zzt_files": ["ARENA.ZZT"]},
     {"id": "town",        "zip": "",                                        "title": "",                                                  "author": "Tim Sweeney",     "year": 1991, "zzt_files": ["TOWN.ZZT"]},
     {"id": "welcome",     "zip": "",                                        "title": "Welcome to ZZTMMO",                                  "author": "ZZTMMO",          "year": 2026, "zzt_files": ["WELCOME.ZZT"]},
     {"id": "caves",       "zip": "",                                        "title": "Caves of ZZT",                                       "author": "Tim Sweeney",     "year": 1991, "zzt_files": ["CAVES.ZZT"]},

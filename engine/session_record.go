@@ -284,11 +284,11 @@ func readRecordingStart(scanner *bufio.Scanner) (recHeader, TWorld, error) {
 
 func ReplaySession(r io.Reader, onTick func(tick int, rm *RoomManager)) (*RoomManager, error) {
 	scanner := newRecordingScanner(r)
-	_, world, err := readRecordingStart(scanner)
+	header, world, err := readRecordingStart(scanner)
 	if err != nil {
 		return nil, err
 	}
-	rm := NewRoomManager(world)
+	rm := NewRoomManagerForWorld(world, header.World)
 
 	for scanner.Scan() {
 		var rec recTick

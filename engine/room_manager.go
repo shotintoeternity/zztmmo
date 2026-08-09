@@ -15,10 +15,15 @@ type RoomManager struct {
 	rooms        map[int16]*Room
 	players      map[PlayerID]*roomPlayer
 	nextPlayerID PlayerID
+	// WorldIdentity is the server-resolved DOS stem for this instance. It is
+	// deliberately separate from the world file's display name: first-party
+	// policy, including friendly fire, is deployment-owned rather than authored.
+	WorldIdentity string
 	// TransitGates is the server-owned cross-world gate table (M29.1). Empty
-	// means vanilla/MMO intra-world passage behavior. Only first-party LOBBY
-	// instances populate it; authored worlds cannot opt in through ZZT data.
+	// means vanilla/MMO intra-world passage behavior. Only first-party LOBBY and
+	// ARENA instances populate it; authored worlds cannot opt in through ZZT data.
 	TransitGates map[TransitGateKey]string
+	FriendlyFire bool
 
 	// HighScorePath, when non-empty, is the file the world's high-score list is
 	// read from and written to. Empty keeps the list in memory only, which is
@@ -116,10 +121,20 @@ type WorldTransit struct {
 }
 
 func NewRoomManager(world TWorld) *RoomManager {
+	return NewRoomManagerForWorld(world, world.Info.Name)
+}
+
+func NewRoomManagerForWorld(world TWorld, identity string) *RoomManager {
+	safe, err := SanitizeSaveName(identity)
+	if err != nil {
+		safe = ""
+	}
 	rm := &RoomManager{
 		world:               world,
 		rooms:               make(map[int16]*Room),
 		players:             make(map[PlayerID]*roomPlayer),
+		WorldIdentity:       safe,
+		FriendlyFire:        friendlyFireForWorldIdentity(safe),
 		pendingScores:       make(map[PlayerID]QuitResult),
 		pendingPlayerEvents: make(map[PlayerID][]Event),
 	}
@@ -934,6 +949,7 @@ func (rm *RoomManager) ensureRoom(boardID int16) *Room {
 	engine := NewEngine()
 	engine.Headless = true
 	engine.MultiRoom = true
+	engine.FriendlyFire = rm.FriendlyFire
 	engine.TickSpeed = 4
 	engine.TickTimeDuration = int16(engine.TickSpeed) * 2
 	engine.GameStateElement = E_PLAYER

@@ -366,7 +366,11 @@ M12.23, M17.1–M17.7, M16.0–M16.8a — has fully landed.)
    line: replace TOWN as the default hangout with a first-party lobby world and
    server-interpreted cross-world passages. **M30 was filed 2026-08-09** from
    the seventh line: a first-party PvP arena, with friendly-fire policy made
-   explicit per world before the arena can ship.
+   explicit per world before the arena can ship. **M30.1 landed 2026-08-09**:
+   ARENA is a canonical first-party world, LOBBY has a visible gate into it, and
+   friendly fire is now an explicit resolved-identity policy: ARENA opts in,
+   ordinary worlds, dreams, editor publishes, saves and replays stay co-op unless
+   their server identity is ARENA.
 
 **Optional / deferred (bottom):**
 - M14.3 — package split — **closed as skipped 2026-08-03**, see NOTES.md
@@ -7431,7 +7435,7 @@ in-world scoring affordances and high scores if the existing ZZT mechanics make
 that useful, but tournament-night structure waits until players have actually
 played the arena and found the fun part.
 
-- [ ] **M30.1 — ARENA world with explicit friendly-fire opt-in.**
+- [x] **M30.1 — ARENA world with explicit friendly-fire opt-in.**
   Build and ship a canonical first-party `ARENA.ZZT` through the same committed
   source path as WELCOME and LOBBY: keep an editable source artifact if
   practical, commit `fixtures/ARENA.ZZT`, write the local `engine/ARENA.ZZT`
