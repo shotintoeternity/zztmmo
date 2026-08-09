@@ -11217,3 +11217,23 @@ new sidebar row or profile-only modal type was added. Verification was
 `cd engine && go test ./...`. One caveat recorded honestly: no new Chromium
 journey was added; the UI logic is covered by Node tests and the product profile
 journey is covered at the HTTP/WebSocket boundary in Go.
+
+## 2026-08-09 — M26.1 spec filed for friends and presence
+
+Expanded ranked roadmap item #3 into `TASKS.md` as M26.1. This is documentation
+and product-boundary work only: no engine or browser code changed, and the task
+is left unchecked for implementation.
+
+The spec makes the two social-presence decisions that need to be stable before
+the picker/front-page work uses them. Following is signed-in, account-keyed, and
+one-way; guests have no durable identity to follow or be followed by. Location
+sharing is opt-in and follower-scoped; a followed account that has not opted in
+must be indistinguishable from one that is offline, so the UI never gets an
+"online but hidden" signal.
+
+The implementation shape follows M19.3/M24.1: add fields to
+`AccountPreferences`, store account ids only inside the server/database, and
+drive browser actions by live `PlayerID` plus public profile summaries. The
+first discovery surface is `/api/worlds`: per-recipient "friends here" rows for
+followed, opted-in accounts on each visible world, with no account ids in
+snapshots, diffs, picker payloads, or Players-window messages.

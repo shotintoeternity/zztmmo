@@ -7083,6 +7083,68 @@ a later task.
   list and renders PM lines in the existing chat scrollback as `[PM from ...]`
   or `[PM to ...]`. Verified with focused socket tests and the full session gate.
 
+## M26 — Friends and presence: play where my friends are
+
+Filed 2026-08-09 from the owner-promoted roadmap queue's third ranked line.
+M24.1 answered the durable-identity question with optional signed-in handles,
+and M25.1 proved the Players window can address a live player without putting an
+account id on the wire. This task buys the next social primitive: a signed-in
+player can follow another signed-in account from the live roster, and a player
+who opts in can let followers see which world they are in.
+
+Two boundaries are decided here. **Following is account-only and one-way**: a
+guest cannot follow, cannot be followed durably, and does not get a local-only
+shadow list. This is not a mutual friend request system, not an inbox, and not a
+permission grant; it is "I want to find this public account again." **Location is
+opt-in and follower-scoped**: the default is private, and a followed account that
+has not opted in is indistinguishable from one that is offline for every picker
+and roster surface. Do not add "online but hidden" hints.
+
+- [ ] **M26.1 — follow accounts and show opted-in friend location.** Extend
+  `AccountPreferences` with the narrowest fields needed: a durable
+  `FollowedAccounts []string` and a presentation/privacy setting such as
+  `ShareLocationWithFollowers bool`. Validate and store them through the existing
+  preferences seam, preserving Color, BlockedAccounts, Hints, and Profile.
+  Because the stored follow list contains account ids, never return it raw to a
+  browser; expose only public summaries such as handle/display name and the
+  target's current world when the target has opted in.
+
+  Following starts in the existing `L Players` window. Add Follow/Unfollow beside
+  View profile, Private message, and Block only when the server can map the row's
+  live `PlayerID` to a signed-in account that is not the caller. The client sends
+  the live player id; the server resolves it, updates the caller's durable
+  `FollowedAccounts`, and replies with honest window text for guest targets,
+  self-follow, departed players, and persistence errors. If the target later
+  changes handle or display name, the follow still resolves because the stored
+  key is the account id; the browser still sees only the public profile summary.
+
+  Add a signed-in account control for location sharing in the same title/account
+  path M24.1 added. The setting must be explicit, durable, and default false.
+  A player who turns it on may appear to their followers in discovery surfaces;
+  a player who turns it off disappears from those surfaces without notifying the
+  followers. Do not make blocking a location-sharing primitive: blocks still
+  control received chat/PMs, and if a privacy conflict is found during
+  implementation, file it instead of folding a new policy into this task.
+
+  The world picker gains a per-recipient "friends here" line for followed,
+  opted-in accounts currently playing that world, using the same `/api/worlds`
+  identity resolution the picker already trusts. Guests and signed-out browsers
+  receive no friend names. Signed-in browsers see only followed accounts that
+  opted in, only public names/handles, and only the world identity already visible
+  in the picker. The Players window may mark a visible roster row as followed,
+  but snapshots and diffs must still omit account ids.
+
+  DoD: account-preference tests prove follows and the sharing flag round-trip
+  without disturbing Color, BlockedAccounts, Hints or Profile; API/WebSocket tests
+  cover follow, unfollow, guest refusal, self refusal, target-left refusal, handle
+  rename survival, opt-in visibility, opt-out/offline indistinguishability, and
+  no account-id leakage in marshaled frames; `/api/worlds` tests show friend
+  presence is per-recipient, absent for guests, and scoped to the current world
+  list entries; Node UI tests cover the Players actions and picker labels.
+  Verify with `npm test`, `npm run build`, focused Go tests for M26.1,
+  `git diff --check`, and the session gate
+  `cd engine && go build ./... && go test ./...`.
+
 ## M14 — Rearchitecting for the service ZZTMMO is becoming
 
 Filed 2026-07-12 from a whole-repo review (NOTES.md): three structural debts
