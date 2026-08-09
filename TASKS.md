@@ -370,7 +370,9 @@ M12.23, M17.1–M17.7, M16.0–M16.8a — has fully landed.)
    ARENA is a canonical first-party world, LOBBY has a visible gate into it, and
    friendly fire is now an explicit resolved-identity policy: ARENA opts in,
    ordinary worlds, dreams, editor publishes, saves and replays stay co-op unless
-   their server identity is ARENA.
+   their server identity is ARENA. **M31 was filed 2026-08-09** from the eighth
+   ranked roadmap line: presentation-only comfort/access preferences for
+   remappable keys, calmer flashing and alternate palettes.
 
 **Optional / deferred (bottom):**
 - M14.3 — package split — **closed as skipped 2026-08-03**, see NOTES.md
@@ -7480,6 +7482,90 @@ played the arena and found the fun part.
   tests for M30.1, focused `ZZT_BROWSER=1` arena-browser coverage,
   `git diff --check`, and the session gate `cd engine && go build ./... &&
   go test ./...`.
+
+## M31 — Comfort and access: make the text-mode shell easier to inhabit
+
+Filed 2026-08-09 from the owner-promoted roadmap queue's eighth ranked line.
+M19.3 created the account-wide preferences document and the later social/discovery
+tasks have kept widening it field-by-field. This milestone uses the same seam for
+the presentation preferences that help people actually play: remappable keys,
+calmer flashing, and alternate palettes. These are per-viewer choices. They must
+not change simulation state, replay bytes, recordings, authored worlds, protocol
+cell attributes, title thumbnails, postcards, or another player's view.
+
+Three boundaries are decided here before code. **Vanilla remains the default**:
+a fresh browser, a guest with no local settings, and a signed-in account with no
+comfort fields keep the existing ZZT key vocabulary, blink behaviour and EGA
+palette. **The server stores preferences but does not interpret input maps**:
+clients translate physical keys into the existing movement mask and command bytes
+before the wire, and the server continues to see the protocol M4.2 built.
+**Palette and flashing changes are render-time filters**: board cells, sidebar
+cells, recordings and screenshots that certify vanilla parity still carry
+`{ch,color}`; only the local canvas chooses a different final RGB or a steadier
+animation.
+
+- [ ] **M31.1 — account comfort preferences, client remaps, reduced flashing and
+  alternate palettes.** Extend `AccountPreferences` and `/api/preferences` with
+  a compact `Comfort` field containing the narrowest useful settings: a keymap
+  preset or explicit bindings, a `ReduceFlashing` boolean, and a palette choice
+  such as `vanilla` / `high-contrast` / `colorblind-assist`. Signed-in writes are
+  durable and partial, preserving Color, Hints, Profile, BlockedAccounts,
+  FollowedAccounts, ShareLocationWithFollowers and FavoriteWorlds. Guest settings
+  may live in localStorage/sessionStorage for this browser only, but the UI must
+  say that boundary honestly and never sync them through the server.
+
+  Keep remapping strictly client-side. Factor the hardcoded play-mode vocabulary
+  in `web/src/keys.ts` into a pure remap layer whose default preset is byte-for-
+  byte today's behavior: arrows/numpad movement, Shift, Space shoot, Enter,
+  Escape, and ZZT command bytes for Torch, Pause, Sound, Save, Quit and Help.
+  Custom bindings may add ergonomic alternatives for non-QWERTY and one-handed
+  play, but they must resolve to the same existing movement mask / raw key /
+  command byte output. Do not let a binding make one physical key emit both a
+  movement mask and a command byte on the same event; reject conflicts that would
+  leak through modals, text entry, the title menu, editor mode, watcher mode or
+  replay controls.
+
+  Add a compact account/comfort window reachable from the signed-in title/account
+  path, with guest-local access from the same place when signed out. It should use
+  the existing CP437 modal furniture and keyboard routing: rows for key preset,
+  key binding reset/edit, reduce flashing, and palette. Every row must be
+  reachable by keyboard and by the mobile touch surfaces that already expose
+  account/Players windows; no gameplay keystroke may leak while a remap prompt is
+  open, and Escape must abandon an in-progress binding without changing the
+  stored map.
+
+  Reduced flashing applies only to presentation. Tone down or freeze the
+  client-side pause/editor/collaborator cursor blink and the server-sent energizer
+  color alternation as rendered on this browser, while keeping enough visible
+  state to tell pause, cursor ownership and energizer from ordinary play.
+  Dark-room strobe/fade and transition effects should choose the calmer frame
+  cadence or static equivalent locally. The server's cells and snapshots remain
+  unchanged, so another player without the setting still sees vanilla motion.
+
+  Alternate palettes are local RGB lookup tables over the same 16 DOS attribute
+  indexes. Keep the existing EGA table as `vanilla`; add at least one
+  high-contrast or colorblind-assist table with stable names, deterministic
+  mapping and legible sidebar/window text. Player RGB smiley backgrounds from
+  M19.1 stay true RGB and should not be reinterpreted as DOS palette entries.
+  Offline renderers used for parity, title thumbnails, Dream evaluation and
+  postcards keep the vanilla table unless a later task deliberately adds
+  per-viewer export options.
+
+  DoD: account-preference tests prove the comfort fields round-trip, validate,
+  reject conflicts and preserve every existing preference field; `/api/preferences`
+  tests cover signed-in persistence, guest refusal for server writes, partial
+  update preservation and malformed keymap/palette errors; Node tests cover the
+  pure key remap layer, modal routing/no-leak behavior, guest-local settings,
+  palette lookup, reduced-flashing rendering decisions, and default vanilla
+  equivalence. Focused browser coverage should prove a real Chromium player can
+  remap movement and Torch, use the new bindings in play, reset to vanilla, toggle
+  reduce flashing and a palette, and keep the settings across a reconnect/sign-in
+  refresh. StateHash, replay fixtures, recordings, postcards and title thumbnails
+  must be unchanged. Regenerate/curate any parity manifest rows for the new
+  presentation-only surfaces. Verify with `npm test`, `npm run build`, focused Go
+  tests for M31.1, focused `ZZT_BROWSER=1` coverage for the comfort journey,
+  `git diff --check`, and the session gate
+  `cd engine && go build ./... && go test ./...`.
 
 ## M14 — Rearchitecting for the service ZZTMMO is becoming
 

@@ -11318,3 +11318,23 @@ The first cut is scoped to the thing players can actually enter: a canonical
 damage works there and not elsewhere. Rankings, brackets, durable match history
 and tournament-night structure are intentionally deferred until the arena itself
 has been played.
+
+## 2026-08-09 — M31.1 spec filed for comfort and access
+
+Expanded ranked roadmap item #8 into `TASKS.md` as M31.1. This is documentation
+and product-boundary work only: no engine or browser code changed, and the task
+is left unchecked for implementation.
+
+The spec keeps the cheap-accessibility idea in the presentation layer where the
+backlog placed it. Remappable keys translate physical input into the existing
+M4.2 movement mask and command bytes before the wire; the server does not learn
+a second control protocol. Reduced flashing and alternate palettes are local
+canvas/render choices over cells that still carry the same `{ch,color}` bytes,
+so StateHash, recordings, replay fixtures, postcards, title thumbnails and
+another viewer's screen do not move.
+
+Two persistence boundaries are recorded before implementation. Signed-in players
+store the comfort choices as another field on the M19.3 account preferences
+document, preserving every existing preference field. Guests may keep local-only
+settings for one browser, but the browser must say that boundary honestly and
+never sync guest preferences through the server.
