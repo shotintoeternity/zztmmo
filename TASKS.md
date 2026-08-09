@@ -315,6 +315,41 @@ M12.23, M17.1–M17.7, M16.0–M16.8a — has fully landed.)
    carry a commit stamp into boot logs, public health and the title sidebar. It
    filed **M23.1a** on its browser check: the first-time player hint changed a
    committed visual golden and the fixture was never moved.
+   **Owner-promoted roadmap queue, 2026-08-08.** The ideas below are promoted
+   out of the plain backlog and ranked, but they are **not implementation-ready
+   until the first task in each line is expanded into an M-style spec** with
+   DoD, owner decisions, and verification. Work the queue top-down when the
+   owner asks for roadmap implementation; do not pick the old backlog bullets
+   directly.
+   1. **Profiles and handles.** Foundation for account-visible identity:
+      profile fields on the M19.3 account preferences store, viewable in a
+      CP437 roster window, with the handle/guest boundary decided here.
+   2. **Private messages v1.** Ship the cheap, useful half first if the spec
+      confirms it: in-session, roster-initiated PMs addressed by current
+      `PlayerID`, with admission/rate limits and block/mute semantics; durable
+      offline PM waits on claimed handles from rank 1.
+   3. **Friends and presence.** Followed accounts, opt-in location visibility,
+      and "friends here" in the picker/Players window. Depends on rank 1's
+      account target and consent shape.
+   4. **The front page.** Favorites, most-played, active-now shelves, recent
+      dreams, and cached title thumbnails so the hundred-world picker becomes
+      browseable.
+   5. **ZZT TV.** `/watch/live`: a channel cycling busy rooms and strong replay
+      moments, using M22's spectator/replay substrate.
+   6. **Purpose-built lobby world.** Replace TOWN as the default hangout with a
+      first-party social hub and server-interpreted cross-world passages.
+   7. **Purpose-built PvP arena.** Wire per-world `FriendlyFire`, build the
+      arena world, then tournament-night brackets if the first cut proves fun.
+   8. **Comfort and access.** Remappable keys, reduce-flashing, and alternate
+      palettes; presentation-only M19.3 fields.
+   9. **Replay competition layer.** Daily challenge, speedrun leaderboards, and
+      ghost racing as one deterministic/replay-backed product family.
+   10. **Community-event moonshots.** ZZT Gazette, treasure hunt, dream duels,
+       relay run, hide-and-seek, TAS workbench, and robot arena stay promoted
+       but intentionally behind the core social/discovery queue.
+   **M24.1 landed 2026-08-08**: signed-in accounts now have public profile
+   fields and optional claimed handles; profiles are opened from the Players
+   window by live PlayerID, with account ids kept server-only.
 
 **Optional / deferred (bottom):**
 - M14.3 — package split — **closed as skipped 2026-08-03**, see NOTES.md
@@ -6911,9 +6946,90 @@ rather than an ending, and R restores a save the whole group shares.
   opening a socket. A warm root visit falls through to the existing picker flow.
   The picker extracts WELCOME from the current curated order, pins it first, and
   marks its byline with "Start here" without otherwise reshuffling the list.
-  `TestM233FirstVisitWelcomeJourney` drives fresh, warm, and fresh deep-link
-  Chromium profiles against the production server binary; the pure
-  `title_flow.ts` and `modal.ts` tests pin the flag and picker rules.
+   `TestM233FirstVisitWelcomeJourney` drives fresh, warm, and fresh deep-link
+   Chromium profiles against the production server binary; the pure
+   `title_flow.ts` and `modal.ts` tests pin the flag and picker rules.
+
+## M24 — Profiles and handles: an account-visible person behind the smiley
+
+Filed 2026-08-08 from the owner-promoted roadmap queue's first ranked line.
+M19.1 made players visually distinct, M19.3 gave signed-in accounts an
+account-wide preferences document, and M21 made the Players window the place
+where a person can be acted on. The missing foundation is a public, account-keyed
+profile that can be opened from that roster, plus the first claimed name that
+future private messages and friends/presence can target without asking anyone to
+type a non-unique display name.
+
+Two boundaries are decided here so the following roadmap items do not answer
+them again. **Handles are signed-in only**: a guest keeps the current transient
+display name and may be viewed as "Guest, no profile", but cannot claim a durable
+target. **Handles are optional, public and unique case-insensitively**: the
+canonical stored form is lowercase `[a-z0-9_]{3,16}`, displayed as `@handle`.
+Display names remain presentation, not identity; a typed future PM target uses a
+claimed handle or it does not exist.
+
+- [x] **M24.1 — profile fields, claimed handles, and a roster profile view.**
+  Add a profile field to `AccountPreferences`, not a second store:
+  `Profile AccountProfilePreferences` with at least `Handle`, `DisplayName`,
+  and a short `About`/bio shaped for a CP437 text window. Validate every string
+  at the edge: no controls, bounded length, lines that fit the window, and no
+  client-authored account id. A signed-in player edits their own profile through
+  the existing account/title path (`G` when authenticated opens an account menu
+  with Sign out and Edit profile) and `/api/preferences` partial PUTs; guests
+  get a refusal rather than a hidden local-only profile.
+
+  Handle uniqueness needs one extra persistence seam beside the preference
+  document, because `PutAccountPreferences(accountID, prefs)` alone cannot know
+  what another account claimed. Add the narrowest `ChatDatabase` support needed
+  for an atomic claim/release/update in both `MemChatDatabase` and
+  `FileChatDatabase`; the file implementation may use a JSON handle-index
+  sidecar in the existing accountprefs flush style. A no-op save of your current
+  handle succeeds, changing case normalizes to lowercase, clearing your handle
+  releases it, and claiming somebody else's handle returns a conflict without
+  changing either profile. Do not put account ids on the wire.
+
+  Viewing starts from the existing `L Players` window. The roster row gains a
+  View Profile action before Block/Moderate, and the client requests the target
+  by current `PlayerID`; the server maps that `PlayerID` to its account,
+  loads only public profile fields, and answers with a CP437 window payload. A
+  guest target, a signed-in target with no public profile, and a player who left
+  all produce honest window text rather than an error toast. Include a compact
+  public profile summary on `PlayerSnapshot` only if the roster needs it for
+  labels; the full profile should be request/response so snapshots do not carry
+  bios every tick.
+
+  DoD: account preference tests prove profile fields round-trip without
+  disturbing Color, BlockedAccounts or Hints; Mem/File DB tests prove handle
+  uniqueness, release, conflict and restart persistence; `/api/preferences`
+  tests cover signed-in edit, guest refusal, partial update preservation and
+  handle conflict; a two-browser journey has Ada set a handle/profile, Bo open
+  Ada from the Players window, and a guest row show the no-profile boundary; no
+  account id reaches another browser; StateHash and replay fixtures are
+  untouched. Regenerate and curate any parity manifest rows for the widened
+  preferences route or new protocol messages. Verify with `npm test`,
+  `npm run build`, focused `ZZT_BROWSER=1` browser coverage for the profile
+  journey, and the session gate `cd engine && go build ./... && go test ./...`.
+  **Done 2026-08-08.** `AccountPreferences.Profile` now carries the public
+  profile fields (`Handle`, `DisplayName`, `About`) and the account-preferences
+  store enforces handle uniqueness at the persistence boundary: handles
+  normalize to lowercase, conflicts fail without writing, clearing a handle
+  releases it, and `FileChatDatabase` rebuilds the handle index on restart.
+  `/api/preferences` remains a partial read-modify-write route, so saving a
+  profile preserves color, blocks and first-time hints; guest writes are 401,
+  malformed profile text is 400, and a taken handle is 409.
+
+  The live roster carries only the public summary (`handle`, `hasProfile`);
+  full profile text is requested on demand with `profileRequest {playerId}` and
+  answered with `profileResult` window lines. The server maps that PlayerID to
+  an account privately and the test marshals the reply to prove `accountID`
+  never reaches another browser. The title `G` row now opens an account menu
+  for signed-in players (Edit profile / Sign out), and the existing `L Players`
+  window offers View profile before Block/Moderate actions. Verified with
+  `npm test`, `npm run build`, focused `go test -count=1 -run 'TestParityManifest|TestM241' ./`,
+  `git diff --check`, `cd engine && go build ./...`, and
+  `cd engine && go test ./...`. No new Chromium harness was added; the browser
+  UI pieces are covered by Node UI tests and the profile journey is exercised at
+  the real HTTP/WebSocket boundary in Go.
 
 ## M14 — Rearchitecting for the service ZZTMMO is becoming
 
@@ -7717,14 +7833,17 @@ the closed ones dated — see the closure lines):**
   watched. The remainder — and the precondition for **ghost racing**, which the
   bullets below assume is free — is: play a recording back into an instance
   nobody controls, and a URL that opens it.
-* **Daily challenge.** Same world + same seed for everyone each day,
+* **Daily challenge.** **PROMOTED 2026-08-08 as part of ranked roadmap #9.**
+  Same world + same seed for everyone each day,
   server-verified completion time, one leaderboard. Determinism makes it
   trivial and it is the strongest known retention mechanic in its class.
-* **Speedrun leaderboards.** Per-world verified times — the server is
+* **Speedrun leaderboards.** **PROMOTED 2026-08-08 as part of ranked roadmap
+  #9.** Per-world verified times — the server is
   authoritative, so runs are cheat-proof by construction, something even
   dedicated speedrun sites cannot offer. Pairs with M11: any Museum world
   becomes a race.
-* **Ghost racing.** Render a prior run's player positions as a translucent
+* **Ghost racing.** **PROMOTED 2026-08-08 as part of ranked roadmap #9.**
+  Render a prior run's player positions as a translucent
   ghost cursor while you play the same world+seed. Replays make it free.
 
 **Vibe and reach:**
@@ -7744,9 +7863,11 @@ the closed ones dated — see the closure lines):**
 * **Achievements (post-M6.2).** Account-keyed firsts (beat TOWN, first
   purple key, 100 gems) surfaced in chat, stored via M6.3's interface.
 
-**Social layer (2026-08-03 — owner-requested; still backlog bullets, not
-tasks. Both were checked against the code the day they were filed):**
-* **Private messages between players.** Today there is no addressed message of
+**Social layer (2026-08-03 — owner-requested; promoted 2026-08-08 into the
+ranked roadmap queue above, but each still needs an M-style spec before
+implementation. Both were checked against the code the day they were filed):**
+* **Private messages between players.** **PROMOTED 2026-08-08 as ranked
+  roadmap #2.** Today there is no addressed message of
   any kind: `BroadcastGlobalChat` (`websocket_server.go:2084-2109`) walks every
   instance and every client, the wire message is `{type, from, text}` with no
   recipient field, and `ChatRecord` (`chat_db.go:11-15`) plus
@@ -7770,9 +7891,10 @@ tasks. Both were checked against the code the day they were filed):**
     needs no new identity concept at all; **(b) durable PMs** (offline delivery,
     a history that survives a restart, "message a player who isn't here") —
     needs an account, and for a *typed* target also a unique claimed handle,
-    which does not exist today. **Owner decision when this is promoted: is (a)
-    enough to ship first?** If it is, PM stops being gated on the handle system
-    and the handle question moves to the profiles bullet where it also belongs.
+    which does not exist today. **PROMOTION UPDATE 2026-08-08:** answer whether
+    (a) is enough to ship first in the M-style spec before implementation; the
+    ranked queue assumes the in-session half can precede durable offline PM if
+    the spec confirms it.
   - *There is nowhere to read one.* **CORRECTED 2026-08-04 — this claim was
     wrong when it was written, and the corrected version is smaller.** There is
     already a CP437 chat window: `openChatWindow` (`main.ts:2176`), opened with
@@ -7789,7 +7911,8 @@ tasks. Both were checked against the code the day they were filed):**
   Also: M16.16a's admission and rate limiting (`admitChatText`,
   `chatRateLimiter`, `chat_admission.go`) must cover PMs, and a PM needs a
   block/mute story that global chat — where everyone is watching — does not.
-* **Player profiles, viewable in game.** A signed-in player sets up a profile
+* **Player profiles, viewable in game.** **PROMOTED 2026-08-08 as ranked
+  roadmap #1.** A signed-in player sets up a profile
   others can open from inside the game. Needs durable per-account storage, and
   the only per-account store that exists is
   `ChatDatabase.PutPlayerState/GetPlayerState` keyed by `(accountID, worldName)`
@@ -7801,7 +7924,7 @@ tasks. Both were checked against the code the day they were filed):**
   where a PM would be initiated — and M19.1 puts `Name` on `PlayerSnapshot`, the
   natural anchor for both. Guests cannot have one, which is the same identity
   decision the PM bullet raises: **these two features are one design, and
-  promoting either alone probably means answering it twice.**
+  implementing either alone probably means answering it twice.**
 
 **Moonshots (2026-07-10 — the most creative directions the architecture
 enables; each is feasible precisely because of a property we already built):**
@@ -7883,21 +8006,24 @@ newly enables; same rule: backlog bullets, owner promotes before spec):**
   action rides the same compiled/validated seams as a human editor, so
   determinism and the security boundary are untouched.
 
-**Features, third batch (2026-08-05 — filed alongside M22/M23; same rule:
-backlog bullets, owner promotes before spec):**
-* **Friends and presence — "play where my friends are."** The picker already
+**Features, third batch (2026-08-05 — filed alongside M22/M23; promoted
+2026-08-08 where named in the ranked roadmap queue, but each promoted item still
+needs an M-style spec before implementation):**
+* **Friends and presence — "play where my friends are."** **PROMOTED
+  2026-08-08 as ranked roadmap #3.** The picker already
   counts players per world (M17.11, `web_api.go:938`); nothing says *who*,
   and nothing follows a person across visits. Shape when promoted: a
   `FollowedAccounts` field on the M19.3 preferences store (the same
   add-a-field discipline as blocks and hints); follow/unfollow from the M21
   Players window, where the account id is already the row's spine; the world
   list gains "friends here" for followed accounts that opted in. Two
-  decisions at promotion, both already familiar: identity (following needs a
+  decisions at spec time, both already familiar: identity (following needs a
   durable target, so accounts only — the PM/profiles identity question
   again) and consent (presence is broadcast today only as a count; making it
   name-level for followers needs an opt-in, not a default — the M21 lesson
   applied to location).
-* **The front page — favorites, most-played, and a shelf worth browsing.** A
+* **The front page — favorites, most-played, and a shelf worth browsing.**
+  **PROMOTED 2026-08-08 as ranked roadmap #4.** A
   hundred hosted worlds and the picker's only order is the directory's.
   Shape when promoted: a favorites star per account (an M19.3 field), a
   server-side play tally per world (counted at join, stored beside the
@@ -7908,6 +8034,7 @@ backlog bullets, owner promotes before spec):**
   "start here" pin, and makes dreamed worlds discoverable — today they are
   discoverable only by knowing their name.
 * **Comfort and access — remappable keys, calmer flashing, palettes.**
+  **PROMOTED 2026-08-08 as ranked roadmap #8.**
   Presentation-only, zero sim change, all M19.3 fields. The keymap is
   hardcoded in the client's `handleKeyDown`; a remap layer (vanilla's map as
   the immovable default preset) serves non-QWERTY keyboards and one-handed
@@ -7918,7 +8045,8 @@ backlog bullets, owner promotes before spec):**
   set at render time — per-viewer, never on the wire, purists keep vanilla.
   Worth doing because a text-mode game is *almost* accessible already; these
   are the cheap last miles, not a rebuild.
-* **ZZT TV — the channel that is always on.** M22 stretch, filed so it is
+* **ZZT TV — the channel that is always on.** **PROMOTED 2026-08-08 as ranked
+  roadmap #5.** M22 stretch, filed so it is
   not lost: one `/watch/live` URL that cycles the busiest occupied rooms and
   the best recent replay moments, embeddable. The game advertising itself by
   being watched. Needs nothing M22 does not already build except the cycling
@@ -7926,7 +8054,9 @@ backlog bullets, owner promotes before spec):**
 
 **Moonshots, fourth batch (2026-08-05 — the strange tier: things only a
 deterministic, recordable, server-authoritative ZZT with a compiler in-tree
-could offer. Same rule: backlog bullets, owner promotes before spec):**
+could offer. Promoted 2026-08-08 as ranked roadmap #10, intentionally behind
+the core social/discovery queue; each still needs an M-style spec before
+implementation):**
 * **Fork the timeline.** Determinism means a room's past is not gone — a
   recording re-simulated to tick N *is* the room as it stood at tick N, and
   `SaveSnapshot` already proves a live room's state can be captured and
@@ -7992,7 +8122,8 @@ could offer. Same rule: backlog bullets, owner promotes before spec):**
   venue where perfection is a first-class artifact.
 
 **First-party worlds (owner 2026-07-10 — "later on in the roadmap"):**
-* **A purpose-built PvP arena world.** A ZZT world designed for
+* **A purpose-built PvP arena world.** **PROMOTED 2026-08-08 as ranked roadmap
+  #7.** A ZZT world designed for
   player-vs-player: arena boards, ammo/energizer spawns via ZZT-OOP
   restore/duplicator tricks, spawn points spread apart, score kept in
   flags. Needs one engine decision first: M2.4/M8.1 make player bullets
@@ -8010,6 +8141,7 @@ could offer. Same rule: backlog bullets, owner promotes before spec):**
   which is exactly right for an arena. Build the world itself in the M5
   editor once it exists — first-party dogfooding.
 * **A purpose-built lobby world to replace TOWN as the default hangout.**
+  **PROMOTED 2026-08-08 as ranked roadmap #6.**
   A social hub designed for loitering: a plaza sized for crowds, signs
   (scrolls) teaching controls and chat, high-score hall, and — the
   interesting mechanic — **cross-world passages**: passage tiles the

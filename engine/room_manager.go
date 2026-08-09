@@ -77,6 +77,11 @@ type roomPlayer struct {
 	// no tile carries it, and SetPlayerColor deliberately records no op — see
 	// there for why that is the correct asymmetry with SetPlayerName.
 	color string
+	// handle/hasProfile are the public profile summary (M24.1). They are
+	// presentation-only like color: the full profile stays in ChatDatabase and is
+	// requested on demand by PlayerID, never stored in the simulation.
+	handle     string
+	hasProfile bool
 	// scrollOpen freezes this player while they read a scroll. Vanilla's text
 	// window blocks the whole game loop (TextWindowDrawOpen); here only the
 	// reader stops, so the rest of the room plays on. Without it the player
@@ -320,6 +325,14 @@ func (rm *RoomManager) SetPlayerColor(playerID PlayerID, color string) {
 	player := rm.players[playerID]
 	if player != nil {
 		player.color = color
+	}
+}
+
+func (rm *RoomManager) SetPlayerProfileSummary(playerID PlayerID, handle string, hasProfile bool) {
+	player := rm.players[playerID]
+	if player != nil {
+		player.handle = handle
+		player.hasProfile = hasProfile
 	}
 }
 
@@ -932,6 +945,8 @@ func (rm *RoomManager) playerSnapshotsForRoom(room *Room) []PlayerSnapshot {
 			// room manager knows who they are (M19.1).
 			snap.Name = p.name
 			snap.Color = p.color
+			snap.Handle = p.handle
+			snap.HasProfile = p.hasProfile
 			players = append(players, snap)
 		}
 	}

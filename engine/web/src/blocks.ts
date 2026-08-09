@@ -21,6 +21,8 @@
 export type BlockCandidate = {
   id: number;
   name: string;
+  handle: string;
+  hasProfile: boolean;
   /** On this board, so the roster knows them; otherwise chat is the only trace. */
   here: boolean;
   blocked: boolean;
@@ -37,7 +39,7 @@ const UNKNOWN_NAME = "player";
  * silently blocking the wrong person.
  */
 export function blockCandidates(input: {
-  roster: { id: number; name?: string }[];
+  roster: { id: number; name?: string; handle?: string; hasProfile?: boolean }[];
   chat: { from: string; playerId?: number }[];
   blocked: ReadonlySet<number>;
   self: number;
@@ -54,6 +56,8 @@ export function blockCandidates(input: {
     byID.set(player.id, {
       id: player.id,
       name: (player.name || "").trim() || UNKNOWN_NAME,
+      handle: (player.handle || "").trim(),
+      hasProfile: player.hasProfile === true,
       here: true,
       blocked: input.blocked.has(player.id),
     });
@@ -70,6 +74,8 @@ export function blockCandidates(input: {
     byID.set(id, {
       id,
       name: (line.from || "").trim() || UNKNOWN_NAME,
+      handle: "",
+      hasProfile: false,
       here: false,
       blocked: input.blocked.has(id),
     });
@@ -94,9 +100,11 @@ const ROW_WIDTH = 40;
  * rows, and what lets main.ts map a pick back to an address.
  */
 export function blockRowLabel(candidate: BlockCandidate): string {
-  let label = `${candidate.name} #${candidate.id}`;
+  let label = candidate.handle ? `@${candidate.handle} #${candidate.id}` : `${candidate.name} #${candidate.id}`;
   if (candidate.blocked) {
     label += " [blocked]";
+  } else if (candidate.hasProfile) {
+    label += " [profile]";
   } else if (!candidate.here) {
     label += " (elsewhere)";
   }

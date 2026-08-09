@@ -927,6 +927,7 @@ func (s *WebSocketServer) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 		// below see one already-decided value.
 		joinColor = s.resolveAccountPlayerColor(account.ID, joinColor)
 	}
+	profileHandle, hasProfile := s.accountProfileSummary(account.ID)
 
 	// Resume first: a valid token reclaims the dropped run (same PlayerID/statID,
 	// inventory intact). An unknown or expired token falls through to a fresh join.
@@ -950,6 +951,9 @@ func (s *WebSocketServer) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 			// instead, one tick later, which is how the roster reaches it
 			// every other time it changes.
 			inst.RoomManager.SetPlayerColor(playerID, joinColor)
+			if authenticated {
+				inst.RoomManager.SetPlayerProfileSummary(playerID, profileHandle, hasProfile)
+			}
 			inst.mu.Unlock()
 		}
 	}
@@ -980,6 +984,9 @@ func (s *WebSocketServer) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 			// Set before the snapshot is built, so the joining client's own
 			// roster already carries it (M19.1).
 			inst.RoomManager.SetPlayerColor(playerID, joinColor)
+			if authenticated {
+				inst.RoomManager.SetPlayerProfileSummary(playerID, profileHandle, hasProfile)
+			}
 			client.playerID = playerID
 			inst.Clients[playerID] = client
 			token := inst.mintResumeTokenLocked(playerID)
@@ -1155,6 +1162,12 @@ func (s *WebSocketServer) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 				continue
 			}
 			s.submitModeration(ctx, client, playerID, req)
+		case MessageTypeProfileRequest:
+			var req ProfileRequestMessage
+			if err := json.Unmarshal(raw, &req); err != nil {
+				continue
+			}
+			s.submitProfileRequest(ctx, client, req)
 		default:
 			var input InputMessage
 			if err := json.Unmarshal(raw, &input); err != nil {
@@ -1398,6 +1411,41 @@ func (s *WebSocketServer) persistAccountPreferences(accountID string, prefs Acco
 	}
 	if err := s.ChatDB.PutAccountPreferences(accountID, prefs); err != nil {
 		log.Printf("zztgo: failed to persist preferences for account %q: %v", accountID, err)
+	}
+}
+
+func (s *WebSocketServer) accountProfileSummary(accountID string) (string, bool) {
+	prefs, ok := s.loadAccountPreferences(accountID)
+	if !ok {
+		return "", false
+	}
+	return prefs.Profile.Handle, accountProfileHasPublicFields(prefs.Profile)
+}
+
+func accountProfileHasPublicFields(profile AccountProfilePreferences) bool {
+	return profile.Handle != "" || profile.DisplayName != "" || len(profile.About) > 0
+}
+
+func (s *WebSocketServer) refreshAccountProfile(accountID string, profile AccountProfilePreferences) {
+	if accountID == "" {
+		return
+	}
+	handle := profile.Handle
+	hasProfile := accountProfileHasPublicFields(profile)
+	s.mu.Lock()
+	instances := make([]*WorldInstance, 0, len(s.Instances))
+	for _, inst := range s.Instances {
+		instances = append(instances, inst)
+	}
+	s.mu.Unlock()
+	for _, inst := range instances {
+		inst.mu.Lock()
+		for playerID, player := range inst.RoomManager.players {
+			if player.accountID == accountID {
+				inst.RoomManager.SetPlayerProfileSummary(playerID, handle, hasProfile)
+			}
+		}
+		inst.mu.Unlock()
 	}
 }
 
@@ -3082,6 +3130,50 @@ func (s *WebSocketServer) submitChatBlock(ctx context.Context, client *webSocket
 		Blocked:  req.Blocked,
 		Durable:  durable,
 		Text:     text,
+	})
+}
+
+func (s *WebSocketServer) submitProfileRequest(ctx context.Context, client *webSocketClient, req ProfileRequestMessage) {
+	if req.PlayerID == 0 {
+		return
+	}
+	target, found := s.locatePlayer(req.PlayerID)
+	if !found {
+		_ = client.write(ctx, ProfileResultMessage{
+			Type:     MessageTypeProfileResult,
+			PlayerID: req.PlayerID,
+			Lines:    []string{"", "  That player has already left.", ""},
+		})
+		return
+	}
+	if target.account == "" || s.ChatDB == nil {
+		lines := PublicProfileLines(target.name, AccountProfilePreferences{}, false)
+		_ = client.write(ctx, ProfileResultMessage{
+			Type:     MessageTypeProfileResult,
+			PlayerID: req.PlayerID,
+			Name:     target.name,
+			Lines:    lines,
+		})
+		return
+	}
+	prefs, ok, err := s.ChatDB.GetAccountPreferences(target.account)
+	if err != nil {
+		log.Printf("zztgo: failed to read profile for player %d: %v", req.PlayerID, err)
+		_ = client.write(ctx, ProfileResultMessage{
+			Type:     MessageTypeProfileResult,
+			PlayerID: req.PlayerID,
+			Name:     target.name,
+			Lines:    []string{"", "  Profile unavailable.", ""},
+		})
+		return
+	}
+	lines := PublicProfileLines(target.name, prefs.Profile, ok && accountProfileHasPublicFields(prefs.Profile))
+	_ = client.write(ctx, ProfileResultMessage{
+		Type:     MessageTypeProfileResult,
+		PlayerID: req.PlayerID,
+		Name:     target.name,
+		Handle:   prefs.Profile.Handle,
+		Lines:    lines,
 	})
 }
 

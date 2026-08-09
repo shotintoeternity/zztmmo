@@ -5,6 +5,7 @@ import (
 	"errors"
 	"io"
 	"os"
+	"sort"
 	"strings"
 	"sync"
 	"time"
@@ -80,6 +81,11 @@ type AccountPreferences struct {
 	// they are account-wide presentation state, not simulation state and not a
 	// property of any one world run.
 	Hints AccountHintPreferences `json:"hints,omitempty"`
+	// Profile is the public, account-visible identity opened from the Players
+	// window (M24.1). The account id remains private; this is the deliberately
+	// public subset, with Handle uniqueness enforced by the ChatDatabase before
+	// the document is written.
+	Profile AccountProfilePreferences `json:"profile,omitempty"`
 }
 
 type AccountHintPreferences struct {
@@ -120,6 +126,7 @@ type MemChatDatabase struct {
 	messages     []ChatRecord
 	playerStates map[string]PlayerState
 	accountPrefs map[string]AccountPreferences
+	handleOwners map[string]string
 }
 
 func NewMemChatDatabase() *MemChatDatabase {
@@ -188,7 +195,9 @@ func (db *MemChatDatabase) PutAccountPreferences(accountID string, prefs Account
 	if db.accountPrefs == nil {
 		db.accountPrefs = make(map[string]AccountPreferences)
 	}
-	db.accountPrefs[key] = prefs
+	if err := putAccountPreferencesLocked(db.accountPrefs, &db.handleOwners, key, prefs); err != nil {
+		return err
+	}
 	return nil
 }
 
@@ -218,6 +227,7 @@ type FileChatDatabase struct {
 	messages     []ChatRecord
 	playerStates map[string]PlayerState
 	accountPrefs map[string]AccountPreferences
+	handleOwners map[string]string
 }
 
 func NewFileChatDatabase(filepath string) (*FileChatDatabase, error) {
@@ -232,6 +242,7 @@ func NewFileChatDatabase(filepath string) (*FileChatDatabase, error) {
 		prefsPath:    filepath + ".accountprefs.json",
 		playerStates: make(map[string]PlayerState),
 		accountPrefs: make(map[string]AccountPreferences),
+		handleOwners: make(map[string]string),
 	}
 
 	dec := json.NewDecoder(file)
@@ -325,7 +336,9 @@ func (db *FileChatDatabase) PutAccountPreferences(accountID string, prefs Accoun
 	if db.accountPrefs == nil {
 		db.accountPrefs = make(map[string]AccountPreferences)
 	}
-	db.accountPrefs[key] = prefs
+	if err := putAccountPreferencesLocked(db.accountPrefs, &db.handleOwners, key, prefs); err != nil {
+		return err
+	}
 	return db.writeAccountPreferencesLocked()
 }
 
@@ -371,6 +384,64 @@ func (db *FileChatDatabase) loadAccountPreferences() {
 	if db.accountPrefs == nil {
 		db.accountPrefs = make(map[string]AccountPreferences)
 	}
+	db.rebuildHandleOwnersLocked()
+}
+
+func (db *FileChatDatabase) rebuildHandleOwnersLocked() {
+	db.handleOwners = make(map[string]string)
+	accounts := make([]string, 0, len(db.accountPrefs))
+	for account := range db.accountPrefs {
+		accounts = append(accounts, account)
+	}
+	sort.Strings(accounts)
+	for _, account := range accounts {
+		prefs := db.accountPrefs[account]
+		handle, err := NormalizeProfileHandle(prefs.Profile.Handle)
+		if err != nil || handle == "" {
+			prefs.Profile.Handle = ""
+			db.accountPrefs[account] = prefs
+			continue
+		}
+		if owner := db.handleOwners[handle]; owner != "" && owner != account {
+			prefs.Profile.Handle = ""
+			db.accountPrefs[account] = prefs
+			continue
+		}
+		prefs.Profile.Handle = handle
+		db.accountPrefs[account] = prefs
+		db.handleOwners[handle] = account
+	}
+}
+
+func putAccountPreferencesLocked(prefs map[string]AccountPreferences, handleOwners *map[string]string, accountID string, next AccountPreferences) error {
+	if *handleOwners == nil {
+		*handleOwners = make(map[string]string)
+		for account, pref := range prefs {
+			if pref.Profile.Handle != "" {
+				(*handleOwners)[pref.Profile.Handle] = account
+			}
+		}
+	}
+	profile, err := SanitizeAccountProfile(next.Profile)
+	if err != nil {
+		return err
+	}
+	next.Profile = profile
+	oldHandle := prefs[accountID].Profile.Handle
+	newHandle := next.Profile.Handle
+	if newHandle != "" {
+		if owner := (*handleOwners)[newHandle]; owner != "" && owner != accountID {
+			return ErrProfileHandleTaken
+		}
+	}
+	if oldHandle != "" && oldHandle != newHandle {
+		delete(*handleOwners, oldHandle)
+	}
+	if newHandle != "" {
+		(*handleOwners)[newHandle] = accountID
+	}
+	prefs[accountID] = next
+	return nil
 }
 
 func (db *FileChatDatabase) writeAccountPreferencesLocked() error {

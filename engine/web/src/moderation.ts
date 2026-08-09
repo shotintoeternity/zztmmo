@@ -13,9 +13,9 @@
 //
 // Two things this file exists to say out loud:
 //
-//  1. **A non-operator's window is unchanged.** moderationChoices returns an
-//     empty list for them, and main.ts keeps M21.1's straight-to-yes/no path.
-//     An operator's extra level must not cost everybody else a keystroke.
+//  1. **A non-operator gets no sanctions.** moderationChoices returns an empty
+//     list for them; main.ts may still open an action menu for profile/block
+//     choices, but the operator-only rows never appear.
 //  2. **Refuse is honest about its limit.** A refusal binds to an account, and
 //     the client cannot tell a signed-in player from a guest — so the row says
 //     what refuse does and does not reach, rather than promising a guest is gone

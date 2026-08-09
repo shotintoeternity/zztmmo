@@ -137,6 +137,16 @@ const none = new Set();
 }
 
 {
+  const [ada] = blockCandidates({
+    roster: [{ id: 2, name: "Ada Lovelace", handle: "ada", hasProfile: true }],
+    chat: [],
+    blocked: none,
+    self: 1,
+  });
+  assert.equal(blockRowLabel(ada), "@ada #2 [profile]");
+}
+
+{
   const [far] = blockCandidates({
     roster: [],
     chat: [{ from: "Far", playerId: 9, text: "hi" }],

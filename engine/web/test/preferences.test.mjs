@@ -15,9 +15,19 @@ const output = await build({
   write: false,
 });
 const source = Buffer.from(output.outputFiles[0].contents).toString("base64");
-const { effectivePlayerColor, fetchAccountPreferences, saveAccountColor, saveAccountHint } = await import(
+const { effectivePlayerColor, fetchAccountPreferences, saveAccountColor, saveAccountHint, saveAccountProfile } = await import(
   `data:text/javascript;base64,${source}`
 );
+
+const emptyProfile = { handle: "", displayName: "", about: [] };
+const defaultPrefs = (overrides) => ({
+  authenticated: true,
+  stored: true,
+  color: "",
+  hints: { players: false, death: false, chat: false },
+  profile: emptyProfile,
+  ...overrides,
+});
 
 // --- which color this browser wears --------------------------------------
 
@@ -75,7 +85,7 @@ function jsonResponse(body, { ok = true, status = 200 } = {}) {
 {
   const { fetchFn, calls } = stubFetch(() => jsonResponse({ authenticated: true, stored: true, color: "#a1b2c3" }));
   const prefs = await fetchAccountPreferences(fetchFn);
-  assert.deepEqual(prefs, { authenticated: true, stored: true, color: "#a1b2c3", hints: { players: false, death: false, chat: false } });
+  assert.deepEqual(prefs, defaultPrefs({ color: "#a1b2c3" }));
   assert.equal(calls[0].url, "/api/preferences");
   assert.equal(calls[0].init, undefined, "the read is a plain GET");
 }
@@ -102,7 +112,7 @@ function jsonResponse(body, { ok = true, status = 200 } = {}) {
   const prefs = await fetchAccountPreferences(
     stubFetch(() => jsonResponse({ authenticated: true, stored: true, color: "not-a-color" })).fetchFn,
   );
-  assert.deepEqual(prefs, { authenticated: true, stored: true, color: "", hints: { players: false, death: false, chat: false } });
+  assert.deepEqual(prefs, defaultPrefs({ color: "" }));
 }
 
 {
@@ -111,6 +121,17 @@ function jsonResponse(body, { ok = true, status = 200 } = {}) {
     stubFetch(() => jsonResponse({ authenticated: true, stored: true, hints: { players: true, death: "yes", chat: true } })).fetchFn,
   );
   assert.deepEqual(prefs.hints, { players: true, death: false, chat: true });
+}
+
+{
+  const prefs = await fetchAccountPreferences(
+    stubFetch(() => jsonResponse({
+      authenticated: true,
+      stored: true,
+      profile: { handle: "ada", displayName: "Ada", about: ["First line", 7, "Second line"] },
+    })).fetchFn,
+  );
+  assert.deepEqual(prefs.profile, { handle: "ada", displayName: "Ada", about: ["First line", "Second line"] });
 }
 
 // --- writing the account --------------------------------------------------
@@ -122,7 +143,7 @@ function jsonResponse(body, { ok = true, status = 200 } = {}) {
     color: JSON.parse(init.body).color,
   }));
   const saved = await saveAccountColor(fetchFn, "#0088ff");
-  assert.deepEqual(saved, { authenticated: true, stored: true, color: "#0088ff", hints: { players: false, death: false, chat: false } });
+  assert.deepEqual(saved, defaultPrefs({ color: "#0088ff" }));
   assert.equal(calls[0].init.method, "PUT");
   assert.deepEqual(JSON.parse(calls[0].init.body), { color: "#0088ff" });
 }
@@ -134,7 +155,7 @@ function jsonResponse(body, { ok = true, status = 200 } = {}) {
   const { fetchFn, calls } = stubFetch(() => jsonResponse({ authenticated: true, stored: true }));
   const saved = await saveAccountColor(fetchFn, "");
   assert.deepEqual(JSON.parse(calls[0].init.body), { color: "" });
-  assert.deepEqual(saved, { authenticated: true, stored: true, color: "", hints: { players: false, death: false, chat: false } });
+  assert.deepEqual(saved, defaultPrefs({ color: "" }));
 }
 
 {
@@ -161,6 +182,18 @@ function jsonResponse(body, { ok = true, status = 200 } = {}) {
   const saved = await saveAccountHint(fetchFn, "chat");
   assert.deepEqual(JSON.parse(calls[0].init.body), { hints: { chat: true } });
   assert.deepEqual(saved.hints, { players: false, death: false, chat: true });
+}
+
+{
+  const profile = { handle: "ada", displayName: "Ada", about: ["Hi"] };
+  const { fetchFn, calls } = stubFetch((_url, init) => jsonResponse({
+    authenticated: true,
+    stored: true,
+    profile: JSON.parse(init.body).profile,
+  }));
+  const saved = await saveAccountProfile(fetchFn, profile);
+  assert.deepEqual(JSON.parse(calls[0].init.body), { profile });
+  assert.deepEqual(saved.profile, profile);
 }
 
 console.log("preferences.test.mjs: ok");

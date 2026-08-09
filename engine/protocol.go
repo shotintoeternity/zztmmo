@@ -51,6 +51,8 @@ const (
 	MessageTypeModerate         = "moderate"
 	MessageTypeModerateResult   = "moderateResult"
 	MessageTypeModerationNotice = "moderationNotice"
+	MessageTypeProfileRequest   = "profileRequest"
+	MessageTypeProfileResult    = "profileResult"
 	MessageTypeReplayControl    = "replayControl"
 	MessageTypeReplayError      = "replayError"
 )
@@ -102,6 +104,19 @@ type ReplayControlMessage struct {
 type ReplayErrorMessage struct {
 	Type string `json:"type"`
 	Text string `json:"text"`
+}
+
+type ProfileRequestMessage struct {
+	Type     string   `json:"type"`
+	PlayerID PlayerID `json:"playerId"`
+}
+
+type ProfileResultMessage struct {
+	Type     string   `json:"type"`
+	PlayerID PlayerID `json:"playerId"`
+	Name     string   `json:"name,omitempty"`
+	Handle   string   `json:"handle,omitempty"`
+	Lines    []string `json:"lines"`
 }
 
 // BlockMessage is the client's block/unblock request. The target is named by the
@@ -713,8 +728,10 @@ type PlayerSnapshot struct {
 	// replayed session and a player who has not picked one all send. Neither is
 	// read by the simulation — a roster is drawn over the screen the server
 	// already sent, never into it.
-	Name  string `json:"name,omitempty"`
-	Color string `json:"color,omitempty"`
+	Name       string `json:"name,omitempty"`
+	Color      string `json:"color,omitempty"`
+	Handle     string `json:"handle,omitempty"`
+	HasProfile bool   `json:"hasProfile,omitempty"`
 }
 
 // SanitizePlayerColor accepts exactly "#" plus six hexadecimal digits and

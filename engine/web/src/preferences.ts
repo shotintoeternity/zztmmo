@@ -15,11 +15,18 @@ export interface AccountPreferences {
   stored: boolean;
   color: string;
   hints: AccountHintPreferences;
+  profile: AccountProfilePreferences;
 }
 
 export type AccountHintKey = "players" | "death" | "chat";
 export type AccountHintPreferences = Record<AccountHintKey, boolean>;
 export const EMPTY_ACCOUNT_HINTS: AccountHintPreferences = { players: false, death: false, chat: false };
+export type AccountProfilePreferences = {
+  handle: string;
+  displayName: string;
+  about: string[];
+};
+export const EMPTY_ACCOUNT_PROFILE: AccountProfilePreferences = { handle: "", displayName: "", about: [] };
 
 const PREFERENCES_URL = "/api/preferences";
 
@@ -34,6 +41,10 @@ function readPreferences(value: unknown): AccountPreferences {
   const doc = (value ?? {}) as Partial<AccountPreferences>;
   const color = isPlayerColor(doc.color) ? doc.color : "";
   const hints = (doc.hints ?? {}) as Partial<AccountHintPreferences>;
+  const profileDoc = (doc.profile ?? {}) as Partial<AccountProfilePreferences>;
+  const about = Array.isArray(profileDoc.about)
+    ? profileDoc.about.filter((line): line is string => typeof line === "string")
+    : [];
   return {
     authenticated: doc.authenticated === true,
     stored: doc.stored === true,
@@ -42,6 +53,11 @@ function readPreferences(value: unknown): AccountPreferences {
       players: hints.players === true,
       death: hints.death === true,
       chat: hints.chat === true,
+    },
+    profile: {
+      handle: typeof profileDoc.handle === "string" ? profileDoc.handle : "",
+      displayName: typeof profileDoc.displayName === "string" ? profileDoc.displayName : "",
+      about,
     },
   };
 }
@@ -90,6 +106,22 @@ export async function saveAccountHint(fetchFn: FetchLike, hint: AccountHintKey):
       method: "PUT",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({ hints: { [hint]: true } }),
+    });
+    if (!response.ok) {
+      return null;
+    }
+    return readPreferences(await response.json());
+  } catch {
+    return null;
+  }
+}
+
+export async function saveAccountProfile(fetchFn: FetchLike, profile: AccountProfilePreferences): Promise<AccountPreferences | null> {
+  try {
+    const response = await fetchFn(PREFERENCES_URL, {
+      method: "PUT",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ profile }),
     });
     if (!response.ok) {
       return null;

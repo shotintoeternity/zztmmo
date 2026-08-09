@@ -322,10 +322,11 @@ func SPAFileServer(root http.FileSystem) http.Handler {
 // separately from Color because an existing document with an empty Color is a
 // deliberate "no color" and an absent one is "never chose".
 type preferencesResponse struct {
-	Authenticated bool                   `json:"authenticated"`
-	Stored        bool                   `json:"stored"`
-	Color         string                 `json:"color,omitempty"`
-	Hints         AccountHintPreferences `json:"hints,omitempty"`
+	Authenticated bool                      `json:"authenticated"`
+	Stored        bool                      `json:"stored"`
+	Color         string                    `json:"color,omitempty"`
+	Hints         AccountHintPreferences    `json:"hints,omitempty"`
+	Profile       AccountProfilePreferences `json:"profile,omitempty"`
 }
 
 // handlePreferences reads and writes the signed-in player's account-wide
@@ -342,7 +343,7 @@ func (a *WebAPI) handlePreferences(w http.ResponseWriter, r *http.Request) {
 			return
 		}
 		prefs, stored := a.storedPreferences(account.ID)
-		writeJSON(w, preferencesResponse{Authenticated: true, Stored: stored, Color: prefs.Color, Hints: prefs.Hints})
+		writeJSON(w, preferencesResponse{Authenticated: true, Stored: stored, Color: prefs.Color, Hints: prefs.Hints, Profile: prefs.Profile})
 	case http.MethodPut:
 		if !authenticated {
 			http.Error(w, "sign in to store preferences", http.StatusUnauthorized)
@@ -353,12 +354,13 @@ func (a *WebAPI) handlePreferences(w http.ResponseWriter, r *http.Request) {
 			return
 		}
 		var body struct {
-			Color *string                 `json:"color"`
-			Hints *AccountHintPreferences `json:"hints"`
+			Color   *string                    `json:"color"`
+			Hints   *AccountHintPreferences    `json:"hints"`
+			Profile *AccountProfilePreferences `json:"profile"`
 		}
-		// Capped like every other body this API decodes (handleGenerate): the
-		// whole document is a seven-character color, so a kilobyte is generous.
-		if err := json.NewDecoder(http.MaxBytesReader(w, r.Body, 1<<10)).Decode(&body); err != nil {
+		// Capped like every other body this API decodes (handleGenerate): a
+		// profile is still only a handle, a display line and a few bio lines.
+		if err := json.NewDecoder(http.MaxBytesReader(w, r.Body, 1<<12)).Decode(&body); err != nil {
 			http.Error(w, "bad request body", http.StatusBadRequest)
 			return
 		}
@@ -385,11 +387,28 @@ func (a *WebAPI) handlePreferences(w http.ResponseWriter, r *http.Request) {
 			prefs.Hints.Death = prefs.Hints.Death || body.Hints.Death
 			prefs.Hints.Chat = prefs.Hints.Chat || body.Hints.Chat
 		}
+		if body.Profile != nil {
+			profile, err := SanitizeAccountProfile(*body.Profile)
+			if err != nil {
+				http.Error(w, "invalid profile", http.StatusBadRequest)
+				return
+			}
+			prefs.Profile = profile
+		}
 		if err := a.Server.ChatDB.PutAccountPreferences(account.ID, prefs); err != nil {
+			if errors.Is(err, ErrProfileHandleTaken) {
+				http.Error(w, "handle already claimed", http.StatusConflict)
+				return
+			}
+			if errors.Is(err, ErrInvalidProfileHandle) || errors.Is(err, ErrInvalidProfileText) {
+				http.Error(w, "invalid profile", http.StatusBadRequest)
+				return
+			}
 			http.Error(w, "could not store preferences", http.StatusInternalServerError)
 			return
 		}
-		writeJSON(w, preferencesResponse{Authenticated: true, Stored: true, Color: prefs.Color, Hints: prefs.Hints})
+		a.Server.refreshAccountProfile(account.ID, prefs.Profile)
+		writeJSON(w, preferencesResponse{Authenticated: true, Stored: true, Color: prefs.Color, Hints: prefs.Hints, Profile: prefs.Profile})
 	default:
 		http.Error(w, "use GET or PUT", http.StatusMethodNotAllowed)
 	}

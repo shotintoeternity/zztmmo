@@ -4176,6 +4176,30 @@
       "notes": "M21.2: what the moderated PLAYER is told, and the one message in the M21 family addressed to the person acted upon — a block is silent by design, a sanction announces itself, or a player whose lines vanish learns only that the game is broken. `ended` marks the sanctions that finish the session (kick, refuse, and a refused account's rejected reconnect at the door), and the client has to honour it: without that the reconnect backoff walks a kicked player back in half a second later, presenting the resume token that reclaims the run they were removed from."
     },
     {
+      "id": "proto.msg.profileRequest",
+      "dimension": "protocol",
+      "subject": "protocol message type \"profileRequest\"",
+      "contract": "P",
+      "authority": "protocol.go; tasks M3.2–M3.4",
+      "parity": "exact",
+      "test": "TestM241ProfileRequestUsesPlayerIDAndDoesNotLeakAccountID",
+      "status": "pass",
+      "assignedTask": "M24.1",
+      "notes": "M24.1: the browser asks for a public profile by current PlayerID, never by display name or account id. The server resolves the live player, maps to the account privately, and the test asserts the request returns Ada's profile without exposing google:ada."
+    },
+    {
+      "id": "proto.msg.profileResult",
+      "dimension": "protocol",
+      "subject": "protocol message type \"profileResult\"",
+      "contract": "P",
+      "authority": "protocol.go; tasks M3.2–M3.4",
+      "parity": "exact",
+      "test": "TestM241ProfileRequestUsesPlayerIDAndDoesNotLeakAccountID",
+      "status": "pass",
+      "assignedTask": "M24.1",
+      "notes": "M24.1: the profile reply carries only the public window lines plus the claimed handle; account ids stay server-only. The test marshals the reply and fails if the target account id appears anywhere on the wire."
+    },
+    {
       "id": "proto.msg.quitReply",
       "dimension": "protocol",
       "subject": "protocol message type \"quitReply\"",
@@ -4431,10 +4455,10 @@
       "contract": "E",
       "authority": "web_api.go / websocket_server.go",
       "parity": "exact",
-      "test": "TestM193PreferencesEndpointIsTheWritePath,TestM193SignedInColorFollowsToAnotherWorldAndAnotherBrowser,TestM211PickingAColourDoesNotDeleteYourBlocks",
+      "test": "TestM193PreferencesEndpointIsTheWritePath,TestM193SignedInColorFollowsToAnotherWorldAndAnotherBrowser,TestM211PickingAColourDoesNotDeleteYourBlocks,TestM241PreferencesEndpointSavesProfileAndPreservesFields",
       "status": "pass",
       "assignedTask": "M19.3",
-      "notes": "M19.3: the account-wide preferences store's read/write route — a guest GET answers {authenticated:false} rather than failing, a guest PUT is 401 and writes nothing, PUT then GET round-trips the color, a junk color is sanitized to the vanilla player before it is stored, a malformed or over-1KiB body is 400, any other method is 405; an explicitly stored empty color beats a stale browser pick at the next join M21.1: BlockedAccounts is the store's second field — the second caller it was shaped for, added as a field rather than a store. PUT here owns only the colour and now read-modify-writes the document, because writing a fresh AccountPreferences{Color} deleted every block a player held the moment they picked a colour (the loss M19.3's notes predicted for a field arriving later)."
+      "notes": "M19.3: the account-wide preferences store's read/write route — a guest GET answers {authenticated:false} rather than failing, a guest PUT is 401 and writes nothing, PUT then GET round-trips the color, a junk color is sanitized to the vanilla player before it is stored, a malformed or oversized body is 400, any other method is 405; an explicitly stored empty color beats a stale browser pick at the next join. M21.1: BlockedAccounts is the store's second field — the second caller it was shaped for, added as a field rather than a store. M24.1: Profile is the next field; the route keeps read-modify-writing, refuses guest profile writes, normalizes a claimed handle, returns 409 on handle conflict, and preserves Color/Hints while saving profile."
     },
     {
       "id": "route.api.restore",

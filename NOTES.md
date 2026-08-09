@@ -11162,3 +11162,58 @@ passed `golden title` and `golden playing-board`, then failed
 "That other face is a real person - C chats", while the committed fixture still
 expects blanks. That is M23.1 presentation evidence, not a build-stamp change;
 the title golden had already passed.
+
+## 2026-08-08 — owner-promoted roadmap queue after M22/M23
+
+The owner promoted and ranked the next roadmap ideas before implementation,
+instead of leaving executors to pull from the idea backlog. `TASKS.md` now names
+the queue explicitly: profiles/handles first, then in-session private messages,
+friends/presence, front-page discovery, ZZT TV, the purpose-built lobby world,
+the PvP arena, comfort/access, replay competition, and the larger community-event
+moonshots.
+
+This is a ranking and promotion decision only. Each line still needs an M-style
+spec with DoD, owner decisions and verification before any implementation starts;
+the old backlog bullets remain the source notes, not executable tasks by
+themselves.
+
+## 2026-08-08 — M24.1 spec filed for profiles and handles
+
+Expanded ranked roadmap item #1 into `TASKS.md` as M24.1. This is still
+documentation/spec work only: no product code changed, and the task is left
+unchecked for the next executor to implement.
+
+The spec makes the two identity decisions the social roadmap would otherwise
+keep rediscovering: durable handles are signed-in only, optional, public, and
+case-insensitively unique; guests keep transient display names and can be viewed
+honestly as guests but cannot claim a durable target. The implementation shape is
+a profile field on the existing M19.3 `AccountPreferences` document plus a
+narrow handle-uniqueness seam in `ChatDatabase`, with viewing from the existing
+M21 Players window and editing from the existing signed-in title/account path.
+
+## 2026-08-08 — M24.1: profiles and handles
+
+Landed the first promoted roadmap item. Signed-in accounts now have a public
+`AccountPreferences.Profile` field (`Handle`, `DisplayName`, `About`) and an
+optional claimed handle. Handles normalize to lowercase `[a-z0-9_]{3,16}` and
+are enforced below the API in the chat database, so a direct caller cannot bypass
+the conflict rule: a duplicate claim returns `ErrProfileHandleTaken` without
+writing, clearing releases the handle, and `FileChatDatabase` rebuilds the
+handle-owner map from the account preferences document on restart.
+
+The profile route stayed a partial preferences write. `PUT /api/preferences`
+can save `profile` without deleting `Color`, `BlockedAccounts` or `Hints`; a
+guest write is 401, bad profile text is 400, and a taken handle is 409. The live
+roster carries only `handle` and `hasProfile`; full profile text is fetched on
+demand with `profileRequest {playerId}` and answered by `profileResult` window
+lines. The server resolves the current `PlayerID` to an account privately, and
+the test marshals the reply to prove the target `accountID` is not on the wire.
+
+Client shape: signed-in `G` opens an Account window with Edit profile / Sign out;
+the existing `L Players` window offers View profile before Block/Moderate. No
+new sidebar row or profile-only modal type was added. Verification was
+`npm test`, `npm run build`, `go test -count=1 -run 'TestParityManifest|TestM241' ./`,
+`git diff --check`, `cd engine && go build ./...`, and
+`cd engine && go test ./...`. One caveat recorded honestly: no new Chromium
+journey was added; the UI logic is covered by Node tests and the product profile
+journey is covered at the HTTP/WebSocket boundary in Go.

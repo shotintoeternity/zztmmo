@@ -59,8 +59,11 @@ import {
   fetchAccountPreferences,
   saveAccountHint,
   saveAccountColor,
+  saveAccountProfile,
   type AccountHintKey,
+  type AccountProfilePreferences,
   type AccountPreferences,
+  EMPTY_ACCOUNT_PROFILE,
 } from "./preferences";
 import { FIRST_TIME_HINTS, hintAlreadySeen, loadGuestHints, saveGuestHint } from "./first_time_hints";
 import {
@@ -151,6 +154,8 @@ const MessageTypeBlockResult = "blockResult";
 const MessageTypeModerate = "moderate";
 const MessageTypeModerateResult = "moderateResult";
 const MessageTypeModerationNotice = "moderationNotice";
+const MessageTypeProfileRequest = "profileRequest";
+const MessageTypeProfileResult = "profileResult";
 const MessageTypeReplayControl = "replayControl";
 const MessageTypeReplayError = "replayError";
 
@@ -186,6 +191,8 @@ type PlayerSnapshot = {
   /** Both M19.1, both `omitempty` on the wire: absent means the vanilla player. */
   name?: string;
   color?: string;
+  handle?: string;
+  hasProfile?: boolean;
 };
 
 type HudSnapshot = {
@@ -337,6 +344,14 @@ type ModerationNoticeMessage = {
   action: string;
   text: string;
   ended?: boolean;
+};
+
+type ProfileResultMessage = {
+  type: typeof MessageTypeProfileResult;
+  playerId: number;
+  name?: string;
+  handle?: string;
+  lines: string[];
 };
 
 type ReplayErrorMessage = {
@@ -532,7 +547,7 @@ type EditorTestPlayMessage = {
   error?: string;
 };
 
-type ServerMessage = SnapshotMessage | DiffMessage | EventMessage | BoardChangeMessage | ChatMessage | AnnounceMessage | BlockResultMessage | ModerateResultMessage | ModerationNoticeMessage | ReplayErrorMessage | EditorSnapshotMessage | EditorInspectMessage | EditorPresenceMessage | EditorLeaseMessage | EditorDiffMessage | EditorPropertiesMessage | EditorStatSettingsMessage | EditorProgramTextMessage | EditorBoardDataMessage | EditorWorldDataMessage | EditorSaveResultMessage | EditorTestPlayMessage;
+type ServerMessage = SnapshotMessage | DiffMessage | EventMessage | BoardChangeMessage | ChatMessage | AnnounceMessage | BlockResultMessage | ModerateResultMessage | ModerationNoticeMessage | ProfileResultMessage | ReplayErrorMessage | EditorSnapshotMessage | EditorInspectMessage | EditorPresenceMessage | EditorLeaseMessage | EditorDiffMessage | EditorPropertiesMessage | EditorStatSettingsMessage | EditorProgramTextMessage | EditorBoardDataMessage | EditorWorldDataMessage | EditorSaveResultMessage | EditorTestPlayMessage;
 
 type InputMessage = {
   type: typeof MessageTypeInput;
@@ -1171,6 +1186,18 @@ function authDisplayName(): string {
     return "";
   }
   return authStatus.name || authStatus.email || "";
+}
+
+function redrawTitleSidebar() {
+  drawTitleSidebar(
+    writeText,
+    titleFriendlyName,
+    authDisplayName(),
+    authStatus.enabled,
+    serverOccupancy,
+    readStoredPlayerColor(),
+    serverBuildCommit,
+  );
 }
 
 // leaveToTitle ends this player's game: the room already dropped them, so all
@@ -1994,6 +2021,9 @@ function applyMessage(message: ServerMessage) {
     case MessageTypeModerationNotice:
       handleModerationNoticeMessage(message);
       break;
+    case MessageTypeProfileResult:
+      handleProfileResultMessage(message);
+      break;
     case MessageTypeReplayError:
       handleReplayErrorMessage(message);
       break;
@@ -2683,6 +2713,7 @@ function tryShowFirstTimeHint(hint: AccountHintKey) {
       authenticated: true,
       stored: true,
       color: accountPrefs?.color ?? "",
+      profile: accountPrefs?.profile ?? EMPTY_ACCOUNT_PROFILE,
       hints: {
         players: nextHints.players === true,
         death: nextHints.death === true,
@@ -2749,19 +2780,12 @@ function openBlockWindow() {
       if (!candidate) {
         return;
       }
-      // An operator gets a menu of actions; everybody else keeps M21.1's single
-      // question, because an extra keystroke for every player is too much to
-      // charge for a power almost none of them have (moderation.ts).
-      const choices = moderationChoices(candidate, isOperator);
-      if (choices.length === 0) {
-        const verb = candidate.blocked ? "Unblock" : "Block";
-        openYesNo(`${verb} ${candidate.name}? `, (yes) => {
-          if (yes) {
-            sendBlock(candidate.id, !candidate.blocked);
-          }
-        });
-        return;
-      }
+      const blockVerb = candidate.blocked ? "Unblock" : "Block";
+      const choices = [
+        { label: "View profile", action: "profile", confirm: "" },
+        ...(isOperator ? [] : [{ label: blockVerb, action: candidate.blocked ? "unblock" : "block", confirm: `${blockVerb} ${candidate.name}? ` }]),
+        ...moderationChoices(candidate, isOperator),
+      ];
       const byAction = new Map(choices.map((choice) => [choice.label, choice]));
       openSelectList(
         "Players",
@@ -2769,6 +2793,10 @@ function openBlockWindow() {
         (picked) => {
           const choice = byAction.get(picked);
           if (!choice) {
+            return;
+          }
+          if (choice.action === "profile") {
+            sendProfileRequest(candidate.id);
             return;
           }
           openYesNo(choice.confirm, (yes) => {
@@ -2792,6 +2820,12 @@ function openBlockWindow() {
 function sendBlock(targetId: number, blocked: boolean) {
   if (ws && ws.readyState === WebSocket.OPEN) {
     ws.send(JSON.stringify({ type: MessageTypeBlock, playerId: targetId, blocked }));
+  }
+}
+
+function sendProfileRequest(targetId: number) {
+  if (ws && ws.readyState === WebSocket.OPEN) {
+    ws.send(JSON.stringify({ type: MessageTypeProfileRequest, playerId: targetId }));
   }
 }
 
@@ -2838,6 +2872,10 @@ function handleModerationNoticeMessage(message: ModerationNoticeMessage) {
   drawScreen();
 }
 
+function handleProfileResultMessage(message: ProfileResultMessage) {
+  openWindow("Profile", message.lines.length > 0 ? message.lines : ["", "  No profile.", ""], true);
+}
+
 function handleReplayErrorMessage(message: ReplayErrorMessage) {
   handleAnnounceMessage({ text: message.text, seconds: 20 });
   leavingToTitle = true;
@@ -2861,6 +2899,54 @@ function openReplayPostcard() {
   url.searchParams.set("board", "1");
   url.searchParams.set("replay", replayLinkPath(replayID));
   window.open(url.toString(), "_blank", "noopener");
+}
+
+function openAccountMenu() {
+  const entries = ["Edit profile", "Sign out"];
+  openSelectList("Account", entries, (entry) => {
+    if (entry === "Sign out") {
+      void fetch("/api/auth/logout", { method: "POST" }).then(() => refreshAuthStatus());
+      return;
+    }
+    if (entry === "Edit profile") {
+      openProfileEditor();
+    }
+  });
+}
+
+function openProfileEditor() {
+  if (!authStatus.authenticated) {
+    openWindow("Profile", ["", "  Sign in to keep a profile.", ""], true);
+    return;
+  }
+  const current = accountPrefs?.profile ?? EMPTY_ACCOUNT_PROFILE;
+  openPopupEntry(`Handle @${current.handle || ""}:`, (handle) => {
+    if (handle === null) return;
+    openPopupEntry(`Name ${current.displayName || authDisplayName()}:`, (displayName) => {
+      if (displayName === null) return;
+      openPopupEntry(`About ${current.about[0] || ""}:`, (about) => {
+        if (about === null) return;
+        const profile: AccountProfilePreferences = {
+          handle: handle.trim(),
+          displayName: displayName.trim(),
+          about: about.trim() ? [about.trim()] : [],
+        };
+        void saveAccountProfile(fetch, profile).then((stored) => {
+          if (!stored) {
+            openWindow("Profile", ["", "  Profile was not saved.", "  That handle may be taken.", ""], true);
+            return;
+          }
+          accountPrefs = stored;
+          if (mode === "title") {
+            redrawTitleSidebar();
+            paintOverlay();
+            drawScreen();
+          }
+          openWindow("Profile", ["", "  Profile saved.", ""], true);
+        });
+      });
+    });
+  });
 }
 
 // readStoredPlayerColor is this browser's answer to "what color is my ☻": the
@@ -2896,7 +2982,13 @@ function openColorPicker() {
         // immediately; the server's answer replaces it when it lands, and a
         // failed write leaves the optimistic value rather than silently
         // reverting under the player.
-        accountPrefs = { authenticated: true, stored: true, color, hints: accountPrefs?.hints ?? { players: false, death: false, chat: false } };
+        accountPrefs = {
+          authenticated: true,
+          stored: true,
+          color,
+          hints: accountPrefs?.hints ?? { players: false, death: false, chat: false },
+          profile: accountPrefs?.profile ?? EMPTY_ACCOUNT_PROFILE,
+        };
         void saveAccountColor(fetch, color).then((stored) => {
           if (stored) {
             accountPrefs = stored;
@@ -3479,7 +3571,7 @@ function handleTitleKey(event: KeyboardEvent) {
       break;
     case "login":
       if (authStatus.authenticated) {
-        void fetch("/api/auth/logout", { method: "POST" }).then(() => refreshAuthStatus());
+        openAccountMenu();
       } else if (authStatus.enabled) {
         window.location.href = "/api/auth/google/start?return=" + encodeURIComponent(window.location.pathname + window.location.search);
       }
