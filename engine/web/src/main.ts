@@ -89,9 +89,11 @@ import {
   replayLinkID,
   replayLinkPath,
   resolveDeepLinkWorld,
+  isWatchLivePath,
   watchLinkPath,
   watchLinkWorldName,
 } from "./deep_link";
+import { WATCH_LIVE_CYCLE_MS, nextWatchLiveIndex, watchLiveEmbedMode, watchLiveEntryLabel, watchLiveEntryTarget, type WatchLiveLineupEntry } from "./watch_live";
 
 const COLS = 80;
 // The server streams board columns 0..59 only. Columns 60..79 are the sidebar,
@@ -722,6 +724,14 @@ let replaying = false;
 let watcherCount = 0;
 let replayID = "";
 let replayTick = 0;
+let replayStartTick = 0;
+let watchLive = false;
+let watchLiveEntries: WatchLiveLineupEntry[] = [];
+let watchLiveIndex = -1;
+let watchLiveTimer = 0;
+let watchLiveSwitching = false;
+let watchLiveLabel = "";
+let watchLiveEmbed = false;
 // The on-screen control bar (M15.1, M16.18a), or null on anything without touch
 // points. Declared here rather than at its construction site because
 // syncTouchControls() below is reached from drawScreen(), which runs before that
@@ -878,6 +888,11 @@ function promptNicknameOnLaunch() {
   if (hasPromptedNameOnLaunch) {
     return;
   }
+  if (isWatchLivePath(window.location.pathname)) {
+    hasPromptedNameOnLaunch = true;
+    void openLaunchDestination();
+    return;
+  }
   hasPromptedNameOnLaunch = true;
   openPopupEntry(
     LAUNCH_NAME_PROMPT,
@@ -898,6 +913,11 @@ function promptNicknameOnLaunch() {
 type LaunchDestination = "play" | "watch";
 
 async function openLaunchDestination() {
+  if (isWatchLivePath(window.location.pathname)) {
+    await startWatchLive();
+    return;
+  }
+
   const replayRequested = replayLinkID(window.location.pathname);
   if (replayRequested) {
     startReplay(replayRequested);
@@ -1137,6 +1157,8 @@ async function showTitle() {
   replaying = false;
   replayID = "";
   replayTick = 0;
+  replayStartTick = 0;
+  stopWatchLive();
   watcherCount = 0;
   editorCursor = { x: 30, y: 12 };
   editorSidebarMenu = null;
@@ -1240,6 +1262,7 @@ function redrawTitleSidebar() {
 // that remains is to close the socket without tripping the reconnect.
 function leaveToTitle() {
   leavingToTitle = true;
+  stopWatchLive();
   window.clearInterval(inputTimer);
   window.clearTimeout(retryTimer);
   connected = false;
@@ -1267,6 +1290,8 @@ function startPlay() {
   replaying = false;
   replayID = "";
   replayTick = 0;
+  replayStartTick = 0;
+  stopWatchLive();
   reconnectAttempt = 0;
   drawSidebar();
   drawScreen();
@@ -1280,15 +1305,19 @@ function startPlay() {
 // channel rather than half-opening it for the one safe member (a room-wide
 // #play) — so a watcher with sound enabled would be a client waiting for notes
 // that are never sent.
-function startWatch() {
+function startWatch(options: { channel?: boolean } = {}) {
   closeTitleStream();
   stopOccupancyPolling();
   clearScrolls();
   zztSound.setEnabled(false);
   leavingToTitle = false;
+  if (!options.channel) {
+    stopWatchLive();
+  }
   watching = true;
   replaying = false;
   replayTick = 0;
+  replayStartTick = 0;
   watcherCount = 0;
   reconnectAttempt = 0;
   mode = "watching";
@@ -1297,23 +1326,122 @@ function startWatch() {
   connect();
 }
 
-function startReplay(id: string) {
+function startReplay(id: string, options: { rememberPath?: boolean; startTick?: number; channel?: boolean } = {}) {
   closeTitleStream();
   stopOccupancyPolling();
   clearScrolls();
   zztSound.setEnabled(false);
   leavingToTitle = false;
+  if (!options.channel) {
+    stopWatchLive();
+  }
   watching = true;
   replaying = true;
   watcherCount = 0;
   replayID = id;
   replayTick = 0;
+  replayStartTick = options.startTick ?? 0;
   reconnectAttempt = 0;
   mode = "watching";
-  rememberReplayInPath(id);
+  if (options.rememberPath !== false) {
+    rememberReplayInPath(id);
+  }
   drawWatchSidebar();
   drawScreen();
   connect();
+}
+
+async function startWatchLive() {
+  closeTitleStream();
+  stopOccupancyPolling();
+  clearScrolls();
+  zztSound.setEnabled(false);
+  leavingToTitle = false;
+  watchLive = true;
+  watchLiveEmbed = watchLiveEmbedMode(window.location.search);
+  if (watchLiveEmbed) {
+    document.body.dataset.zztEmbed = "watch-live";
+  } else {
+    delete document.body.dataset.zztEmbed;
+  }
+  watching = true;
+  replaying = false;
+  replayID = "";
+  replayTick = 0;
+  replayStartTick = 0;
+  watcherCount = 0;
+  reconnectAttempt = 0;
+  mode = "watching";
+  watchLiveLabel = "TV tuning";
+  drawWatchSidebar();
+  drawScreen();
+  try {
+    const response = await fetch("/api/watch/live");
+    const data = (await response.json()) as { entries?: WatchLiveLineupEntry[] };
+    watchLiveEntries = (data.entries ?? []).filter((entry) => entry.kind === "live" || entry.kind === "replay");
+  } catch {
+    watchLiveEntries = [];
+  }
+  if (!watchLive) {
+    return;
+  }
+  if (watchLiveEntries.length === 0) {
+    watchLiveLabel = "TV no signal";
+    drawWatchSidebar();
+    drawScreen();
+    return;
+  }
+  tuneWatchLive(0);
+}
+
+function stopWatchLive() {
+  window.clearTimeout(watchLiveTimer);
+  watchLiveTimer = 0;
+  watchLive = false;
+  watchLiveEntries = [];
+  watchLiveIndex = -1;
+  watchLiveSwitching = false;
+  watchLiveLabel = "";
+  watchLiveEmbed = false;
+  delete document.body.dataset.zztEmbed;
+}
+
+function tuneWatchLive(index: number) {
+  if (!watchLive || watchLiveEntries.length === 0) {
+    return;
+  }
+  const next = ((index % watchLiveEntries.length) + watchLiveEntries.length) % watchLiveEntries.length;
+  const entry = watchLiveEntries[next];
+  const target = watchLiveEntryTarget(entry);
+  if (!target) {
+    return;
+  }
+  watchLiveIndex = next;
+  watchLiveLabel = watchLiveEntryLabel(entry, next, watchLiveEntries.length);
+  window.clearTimeout(watchLiveTimer);
+  watchLiveSwitching = true;
+  if (ws) {
+    const old = ws;
+    ws = null;
+    old.close();
+  }
+  watchLiveSwitching = false;
+  if (target.kind === "replay") {
+    startReplay(target.replayId, { rememberPath: false, startTick: target.startTick, channel: true });
+  } else {
+    worldName = target.world;
+    startWatch({ channel: true });
+  }
+  if (watchLiveEntries.length > 1) {
+    watchLiveTimer = window.setTimeout(nextWatchLive, WATCH_LIVE_CYCLE_MS);
+  }
+}
+
+function nextWatchLive() {
+  if (!watchLive || watchLiveEntries.length === 0) {
+    return;
+  }
+  tuneWatchLive(nextWatchLiveIndex(watchLiveIndex, watchLiveEntries.length));
 }
 
 // startEditor deliberately opens a different kind of WebSocket. The server
@@ -1945,8 +2073,18 @@ function connect() {
     applyMessage(message);
   });
 
-  socket.addEventListener("close", () => disconnect("Disconnected"));
-  socket.addEventListener("error", () => disconnect("Connection error"));
+  socket.addEventListener("close", () => {
+    if (ws !== socket || watchLiveSwitching) {
+      return;
+    }
+    disconnect("Disconnected");
+  });
+  socket.addEventListener("error", () => {
+    if (ws !== socket || watchLiveSwitching) {
+      return;
+    }
+    disconnect("Connection error");
+  });
 }
 
 function connectEditor() {
@@ -2059,6 +2197,9 @@ function wsURL(): string {
   url.protocol = url.protocol === "https:" ? "wss:" : "ws:";
   if (replaying) {
     url.searchParams.set("replay", replayID);
+    if (replayStartTick > 0) {
+      url.searchParams.set("start", String(replayStartTick));
+    }
   } else {
     url.searchParams.set("world", worldName);
   }
@@ -3561,7 +3702,7 @@ function updateSidebar(hud: HudSnapshot) {
 }
 
 function drawWatchSidebar() {
-  paintWatchSidebar(writeText, watcherCount, replaying);
+  paintWatchSidebar(writeText, watcherCount, replaying, watchLiveLabel);
 }
 
 // M17.7: the first time an in-game sound arrives that the browser cannot voice,
@@ -3851,6 +3992,9 @@ function handleKeyDown(event: KeyboardEvent) {
     if (event.code === "Escape" || event.code === "KeyQ") {
       event.preventDefault();
       leaveToTitle();
+    } else if (watchLive && event.code === "KeyN") {
+      event.preventDefault();
+      nextWatchLive();
     } else if (replaying && event.code === "KeyP") {
       event.preventDefault();
       ws?.send(JSON.stringify({ type: MessageTypeReplayControl, op: "pause" }));

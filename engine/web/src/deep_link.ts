@@ -22,6 +22,8 @@ export const DEEP_LINK_PREFIX = "/play/";
 export const WATCH_LINK_PREFIX = "/watch/";
 /** The path prefix that names a recording to watch read-only (M22.3). */
 export const REPLAY_LINK_PREFIX = "/replay/";
+/** The reserved ambient channel route (M28.1). */
+export const WATCH_LIVE_PATH = "/watch/live";
 
 /** The subset of an /api/worlds entry this module reads. */
 export type DeepLinkCandidate = { world: string };
@@ -43,7 +45,14 @@ export function deepLinkWorldName(pathname: string): string {
 
 /** watchLinkWorldName is deepLinkWorldName's read-only twin (M22.2). */
 export function watchLinkWorldName(pathname: string): string {
+  if (isWatchLivePath(pathname)) {
+    return "";
+  }
   return worldNameFromPrefixedPath(pathname, WATCH_LINK_PREFIX);
+}
+
+export function isWatchLivePath(pathname: string): boolean {
+  return pathname === WATCH_LIVE_PATH || pathname === WATCH_LIVE_PATH + "/";
 }
 
 /** replayLinkID returns the replay id a path asks for, or "" outside /replay. */

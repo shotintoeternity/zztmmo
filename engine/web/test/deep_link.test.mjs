@@ -18,7 +18,7 @@ const output = await build({
   write: false,
 });
 const source = Buffer.from(output.outputFiles[0].contents).toString("base64");
-const { deepLinkWorldName, deepLinkPath, watchLinkWorldName, watchLinkPath, replayLinkID, replayLinkPath, resolveDeepLinkWorld, deepLinkRefusalLines } = await import(
+const { deepLinkWorldName, deepLinkPath, watchLinkWorldName, watchLinkPath, isWatchLivePath, replayLinkID, replayLinkPath, resolveDeepLinkWorld, deepLinkRefusalLines } = await import(
   `data:text/javascript;base64,${source}`
 );
 
@@ -35,6 +35,12 @@ const { deepLinkWorldName, deepLinkPath, watchLinkWorldName, watchLinkPath, repl
   assert.equal(watchLinkWorldName("/watch/town"), "town");
   assert.equal(watchLinkWorldName("/watch/TOWN/"), "TOWN");
   assert.equal(watchLinkWorldName("/watch/MY%20WORLD"), "MY WORLD");
+  assert.equal(watchLinkWorldName("/watch/live"), "", "/watch/live is the reserved channel route, not world LIVE");
+  assert.equal(watchLinkWorldName("/watch/live/"), "", "/watch/live/ is the reserved channel route");
+  assert.equal(watchLinkWorldName("/watch/LIVE"), "LIVE", "a world whose identity is LIVE stays watchable by its exact world URL");
+  assert.equal(isWatchLivePath("/watch/live"), true);
+  assert.equal(isWatchLivePath("/watch/live/"), true);
+  assert.equal(isWatchLivePath("/watch/LIVE"), false);
   assert.equal(replayLinkID("/replay/TOWN-20260807-120000"), "TOWN-20260807-120000");
   assert.equal(replayLinkID("/replay/session_one/"), "session_one");
 }

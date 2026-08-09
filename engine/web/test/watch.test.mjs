@@ -109,4 +109,10 @@ drawWatchSidebar(replay, 2, true);
 assert.ok(replay.all().includes("Share"), "a replay watcher was not offered Share");
 assert.ok(replay.row(21).includes(" S "), "the Share action must name its key");
 
+const channel = recorder();
+drawWatchSidebar(channel, 4, false, "TV 1/2 TOWN");
+assert.ok(channel.all().includes("TV 1/2 TOWN"), "a live channel watcher was not shown its channel status");
+assert.ok(channel.all().includes("Next"), "a live channel watcher needs a manual next control");
+assert.ok(channel.row(19).includes(" N "), "the Next action must name its key");
+
 console.log("watch.test.mjs: all assertions passed");

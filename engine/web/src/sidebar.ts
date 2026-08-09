@@ -116,7 +116,7 @@ export function watchersLine(watchers: number): string {
 //
 // What is left is what is true: which room this is, that you are watching it,
 // how many others are, and the way out.
-export function drawWatchSidebar(write: WriteText, watchers: number, replaying = false) {
+export function drawWatchSidebar(write: WriteText, watchers: number, replaying = false, channelLabel = "") {
   for (let y = 0; y <= 24; y += 1) {
     sidebarClearLine(write, y);
   }
@@ -128,6 +128,11 @@ export function drawWatchSidebar(write: WriteText, watchers: number, replaying =
   // not playing.
   write(62, 7, 0x1f, String.fromCharCode(CHAR_PLAYER));
   write(64, 7, 0x1e, "Watching");
+  if (channelLabel) {
+    write(64, 5, 0x1e, channelLabel.padEnd(15, " "));
+    write(62, 19, 0x70, " N ");
+    write(65, 19, 0x1f, " Next");
+  }
   write(64, 9, 0x1e, watchersLine(watchers).padEnd(15, " "));
   if (replaying) {
     write(62, 21, 0x70, " S ");

@@ -86,6 +86,7 @@ func (a *WebAPI) Handler() http.Handler {
 	mux.HandleFunc("/api/title", a.handleTitle)
 	mux.HandleFunc("/api/title/stream", a.handleTitleStream)
 	mux.HandleFunc("/api/worlds", a.handleWorlds)
+	mux.HandleFunc("/api/watch/live", a.handleWatchLive)
 	mux.HandleFunc("/api/highscores", a.handleHighScores)
 	mux.HandleFunc("/api/help", a.handleHelp)
 	mux.HandleFunc("/api/saves", a.handleSaves)

@@ -161,6 +161,7 @@ type WorldInstance struct {
 type ReplayInstance struct {
 	ID         string
 	path       string
+	startTick  int
 	playback   *ReplayPlayback
 	file       *os.File
 	Spectators map[*webSocketClient]*spectator
@@ -620,14 +621,32 @@ func (replay *ReplayInstance) Close() {
 	}
 }
 
-func (replay *ReplayInstance) Restart() error {
-	f, err := os.Open(replay.path)
+func newReplayPlaybackFromPath(path string, startTick int) (*ReplayPlayback, *os.File, error) {
+	f, err := os.Open(path)
 	if err != nil {
-		return err
+		return nil, nil, err
 	}
 	playback, err := NewReplayPlayback(f)
 	if err != nil {
 		_ = f.Close()
+		return nil, nil, err
+	}
+	for startTick > 0 && playback.LastTick() < startTick-1 {
+		_, _, done, err := playback.Step()
+		if err != nil {
+			_ = f.Close()
+			return nil, nil, err
+		}
+		if done {
+			break
+		}
+	}
+	return playback, f, nil
+}
+
+func (replay *ReplayInstance) Restart() error {
+	playback, f, err := newReplayPlaybackFromPath(replay.path, replay.startTick)
+	if err != nil {
 		return err
 	}
 
@@ -1189,6 +1208,11 @@ func (s *WebSocketServer) serveReplayHTTP(w http.ResponseWriter, r *http.Request
 		http.Error(w, "invalid replay id", http.StatusBadRequest)
 		return
 	}
+	startTick, err := queryInt(r.URL.Query(), "start", 0)
+	if err != nil || startTick < 0 {
+		http.Error(w, "invalid replay start", http.StatusBadRequest)
+		return
+	}
 
 	conn, err := websocket.Accept(w, r, &websocket.AcceptOptions{OriginPatterns: s.OriginHosts})
 	if err != nil {
@@ -1215,7 +1239,7 @@ func (s *WebSocketServer) serveReplayHTTP(w http.ResponseWriter, r *http.Request
 		return
 	}
 
-	replay, err := s.GetOrCreateReplayInstance(id)
+	replay, err := s.GetOrCreateReplayInstanceAt(id, startTick)
 	if err != nil {
 		_ = client.write(ctx, ReplayErrorMessage{Type: MessageTypeReplayError, Text: "Replay unavailable: " + err.Error()})
 		return
@@ -2308,16 +2332,31 @@ func replayPath(dir, id string) (string, error) {
 }
 
 func (s *WebSocketServer) GetOrCreateReplayInstance(id string) (*ReplayInstance, error) {
+	return s.GetOrCreateReplayInstanceAt(id, 0)
+}
+
+func replayInstanceKey(id string, startTick int) string {
+	if startTick <= 0 {
+		return id
+	}
+	return fmt.Sprintf("%s@%d", id, startTick)
+}
+
+func (s *WebSocketServer) GetOrCreateReplayInstanceAt(id string, startTick int) (*ReplayInstance, error) {
+	if startTick < 0 {
+		return nil, fmt.Errorf("replay start tick must be >= 0")
+	}
 	safe, err := sanitizeReplayID(id)
 	if err != nil {
 		return nil, err
 	}
+	key := replayInstanceKey(safe, startTick)
 
 	s.mu.Lock()
 	if s.ReplayInstances == nil {
 		s.ReplayInstances = make(map[string]*ReplayInstance)
 	}
-	if replay := s.ReplayInstances[safe]; replay != nil {
+	if replay := s.ReplayInstances[key]; replay != nil {
 		s.mu.Unlock()
 		return replay, nil
 	}
@@ -2327,13 +2366,8 @@ func (s *WebSocketServer) GetOrCreateReplayInstance(id string) (*ReplayInstance,
 	if err != nil {
 		return nil, err
 	}
-	f, err := os.Open(path)
+	playback, f, err := newReplayPlaybackFromPath(path, startTick)
 	if err != nil {
-		return nil, err
-	}
-	playback, err := NewReplayPlayback(f)
-	if err != nil {
-		_ = f.Close()
 		return nil, err
 	}
 	if _, err := LoadPristineWorld(s.worldsDir(), playback.WorldName()); err != nil {
@@ -2344,6 +2378,7 @@ func (s *WebSocketServer) GetOrCreateReplayInstance(id string) (*ReplayInstance,
 	replay := &ReplayInstance{
 		ID:         safe,
 		path:       path,
+		startTick:  startTick,
 		file:       f,
 		playback:   playback,
 		Spectators: make(map[*webSocketClient]*spectator),
@@ -2351,11 +2386,11 @@ func (s *WebSocketServer) GetOrCreateReplayInstance(id string) (*ReplayInstance,
 
 	s.mu.Lock()
 	defer s.mu.Unlock()
-	if existing := s.ReplayInstances[safe]; existing != nil {
+	if existing := s.ReplayInstances[key]; existing != nil {
 		replay.Close()
 		return existing, nil
 	}
-	s.ReplayInstances[safe] = replay
+	s.ReplayInstances[key] = replay
 	return replay, nil
 }
 

@@ -358,8 +358,11 @@ M12.23, M17.1–M17.7, M16.0–M16.8a — has fully landed.)
    appear as "friends here" in the picker without account-id leakage. **M27.1
    landed 2026-08-09**: the picker is now a browseable front page with
    favorites, presence/activity shelves, play counts and title thumbnails.
-   **M28.1 was filed 2026-08-09** from ranked roadmap #5 and is the next
-   unchecked executor task.
+   **M28.1 landed 2026-08-09**: `/watch/live` now serves a deterministic public
+   channel lineup of busy watchable rooms and consent-filtered replay moments,
+   with a reserved client route that cycles through the existing M22 watcher and
+   replay viewers without creating players, play counts, autosaves or identity
+   leakage.
 
 **Optional / deferred (bottom):**
 - M14.3 — package split — **closed as skipped 2026-08-03**, see NOTES.md
@@ -7273,7 +7276,7 @@ identity is `LIVE` remains playable via `/play/LIVE` and searchable in the
 picker, but the exact watch URL belongs to the channel rather than to that
 world.
 
-- [ ] **M28.1 — `/watch/live`: cycle busy rooms and replay moments.**
+- [x] **M28.1 — `/watch/live`: cycle busy rooms and replay moments.**
   Add the smallest channel surface that can be useful: a server-produced lineup
   and a client route that reuses the existing M22 viewers. A lineup entry is
   either a live room (`/watch/<world>` semantics, current board only) or a replay
@@ -7312,6 +7315,13 @@ world.
   deep-link launch flow changes. Verify with `npm test`, `npm run build`,
   focused Go tests for M28.1, `git diff --check`, and the session gate
   `cd engine && go build ./... && go test ./...`.
+  **Done 2026-08-09.** `/api/watch/live` returns a capped aggregate lineup:
+  occupied public rooms first, then recent single-player v2 replay windows that
+  pass the postcard consent rule. `/watch/live` skips player identity prompts,
+  shows compact TV status in the watcher sidebar, cycles on a timer, advances
+  with `N`, leaves with `Q`, and opens every entry through the existing
+  `/watch/<world>` or replay WebSocket path with `start=N`. Manifest row
+  `route.api.watch.live` is covered by M28.1.
 
 ## M14 — Rearchitecting for the service ZZTMMO is becoming
 
