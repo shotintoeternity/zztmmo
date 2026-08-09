@@ -333,6 +333,7 @@ type preferencesResponse struct {
 	Profile                    AccountProfilePreferences `json:"profile,omitempty"`
 	ShareLocationWithFollowers bool                      `json:"shareLocationWithFollowers,omitempty"`
 	FavoriteWorlds             []string                  `json:"favoriteWorlds,omitempty"`
+	Comfort                    ComfortPreferences        `json:"comfort,omitempty"`
 }
 
 // handlePreferences reads and writes the signed-in player's account-wide
@@ -349,7 +350,7 @@ func (a *WebAPI) handlePreferences(w http.ResponseWriter, r *http.Request) {
 			return
 		}
 		prefs, stored := a.storedPreferences(account.ID)
-		writeJSON(w, preferencesResponse{Authenticated: true, Stored: stored, Color: prefs.Color, Hints: prefs.Hints, Profile: prefs.Profile, ShareLocationWithFollowers: prefs.ShareLocationWithFollowers, FavoriteWorlds: prefs.FavoriteWorlds})
+		writeJSON(w, preferencesResponse{Authenticated: true, Stored: stored, Color: prefs.Color, Hints: prefs.Hints, Profile: prefs.Profile, ShareLocationWithFollowers: prefs.ShareLocationWithFollowers, FavoriteWorlds: prefs.FavoriteWorlds, Comfort: prefs.Comfort})
 	case http.MethodPut:
 		if !authenticated {
 			http.Error(w, "sign in to store preferences", http.StatusUnauthorized)
@@ -367,6 +368,7 @@ func (a *WebAPI) handlePreferences(w http.ResponseWriter, r *http.Request) {
 			FavoriteWorlds             *[]string                  `json:"favoriteWorlds"`
 			FavoriteWorld              *string                    `json:"favoriteWorld"`
 			Favorite                   *bool                      `json:"favorite"`
+			Comfort                    *ComfortPreferences        `json:"comfort"`
 		}
 		// Capped like every other body this API decodes (handleGenerate): a
 		// profile is still only a handle, a display line and a few bio lines.
@@ -420,6 +422,14 @@ func (a *WebAPI) handlePreferences(w http.ResponseWriter, r *http.Request) {
 			want := body.Favorite == nil || *body.Favorite
 			prefs.FavoriteWorlds = toggleFavoriteWorld(prefs.FavoriteWorlds, safe, want)
 		}
+		if body.Comfort != nil {
+			comfort, err := SanitizeComfortPreferences(*body.Comfort)
+			if err != nil {
+				http.Error(w, "invalid comfort preferences", http.StatusBadRequest)
+				return
+			}
+			prefs.Comfort = comfort
+		}
 		if err := a.Server.ChatDB.PutAccountPreferences(account.ID, prefs); err != nil {
 			if errors.Is(err, ErrProfileHandleTaken) {
 				http.Error(w, "handle already claimed", http.StatusConflict)
@@ -429,11 +439,15 @@ func (a *WebAPI) handlePreferences(w http.ResponseWriter, r *http.Request) {
 				http.Error(w, "invalid profile", http.StatusBadRequest)
 				return
 			}
+			if errors.Is(err, ErrInvalidComfort) {
+				http.Error(w, "invalid comfort preferences", http.StatusBadRequest)
+				return
+			}
 			http.Error(w, "could not store preferences", http.StatusInternalServerError)
 			return
 		}
 		a.Server.refreshAccountProfile(account.ID, prefs.Profile)
-		writeJSON(w, preferencesResponse{Authenticated: true, Stored: true, Color: prefs.Color, Hints: prefs.Hints, Profile: prefs.Profile, ShareLocationWithFollowers: prefs.ShareLocationWithFollowers, FavoriteWorlds: prefs.FavoriteWorlds})
+		writeJSON(w, preferencesResponse{Authenticated: true, Stored: true, Color: prefs.Color, Hints: prefs.Hints, Profile: prefs.Profile, ShareLocationWithFollowers: prefs.ShareLocationWithFollowers, FavoriteWorlds: prefs.FavoriteWorlds, Comfort: prefs.Comfort})
 	default:
 		http.Error(w, "use GET or PUT", http.StatusMethodNotAllowed)
 	}

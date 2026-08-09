@@ -15,11 +15,12 @@ const output = await build({
   write: false,
 });
 const source = Buffer.from(output.outputFiles[0].contents).toString("base64");
-const { effectivePlayerColor, fetchAccountPreferences, saveAccountColor, saveAccountHint, saveAccountProfile, saveShareLocationWithFollowers, saveFavoriteWorld } = await import(
+const { effectivePlayerColor, effectiveComfort, fetchAccountPreferences, saveAccountColor, saveAccountHint, saveAccountProfile, saveShareLocationWithFollowers, saveFavoriteWorld, saveAccountComfort } = await import(
   `data:text/javascript;base64,${source}`
 );
 
 const emptyProfile = { handle: "", displayName: "", about: [] };
+const defaultComfort = { keyPreset: "vanilla", keyBindings: {}, reduceFlashing: false, palette: "vanilla" };
 const defaultPrefs = (overrides) => ({
   authenticated: true,
   stored: true,
@@ -28,6 +29,7 @@ const defaultPrefs = (overrides) => ({
   profile: emptyProfile,
   shareLocationWithFollowers: false,
   favoriteWorlds: [],
+  comfort: defaultComfort,
   ...overrides,
 });
 
@@ -133,11 +135,18 @@ function jsonResponse(body, { ok = true, status = 200 } = {}) {
       profile: { handle: "ada", displayName: "Ada", about: ["First line", 7, "Second line"] },
       shareLocationWithFollowers: true,
       favoriteWorlds: ["ALPHA", 7, "BETA"],
+      comfort: { keyPreset: "custom", keyBindings: { up: ["KeyI"], torch: ["KeyO"] }, reduceFlashing: true, palette: "colorblind-assist" },
     })).fetchFn,
   );
   assert.deepEqual(prefs.profile, { handle: "ada", displayName: "Ada", about: ["First line", "Second line"] });
   assert.equal(prefs.shareLocationWithFollowers, true);
   assert.deepEqual(prefs.favoriteWorlds, ["ALPHA", "BETA"]);
+  assert.deepEqual(prefs.comfort, {
+    keyPreset: "custom",
+    keyBindings: { up: ["KeyI"], torch: ["KeyO"] },
+    reduceFlashing: true,
+    palette: "colorblind-assist",
+  });
 }
 
 // --- writing the account --------------------------------------------------
@@ -222,6 +231,27 @@ function jsonResponse(body, { ok = true, status = 200 } = {}) {
   const saved = await saveFavoriteWorld(fetchFn, "ALPHA", true);
   assert.deepEqual(JSON.parse(calls[0].init.body), { favoriteWorld: "ALPHA", favorite: true });
   assert.deepEqual(saved.favoriteWorlds, ["ALPHA"]);
+}
+
+{
+  const comfort = { keyPreset: "custom", keyBindings: { up: ["KeyI"], torch: ["KeyO"] }, reduceFlashing: true, palette: "high-contrast" };
+  const { fetchFn, calls } = stubFetch((_url, init) => jsonResponse({
+    authenticated: true,
+    stored: true,
+    color: "#112233",
+    comfort: JSON.parse(init.body).comfort,
+  }));
+  const saved = await saveAccountComfort(fetchFn, comfort);
+  assert.deepEqual(JSON.parse(calls[0].init.body), { comfort });
+  assert.deepEqual(saved.comfort, comfort);
+  assert.equal(saved.color, "#112233");
+}
+
+{
+  const local = { keyPreset: "one-handed", keyBindings: {}, reduceFlashing: true, palette: "colorblind-assist" };
+  assert.deepEqual(effectiveComfort({ account: null, local }), local);
+  assert.deepEqual(effectiveComfort({ account: { authenticated: true, stored: true, comfort: defaultComfort }, local }), defaultComfort);
+  assert.deepEqual(effectiveComfort({ account: { authenticated: true, stored: false, comfort: defaultComfort }, local }), local);
 }
 
 console.log("preferences.test.mjs: ok");

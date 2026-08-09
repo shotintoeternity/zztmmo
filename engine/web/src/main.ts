@@ -62,12 +62,26 @@ import {
   saveAccountColor,
   saveFavoriteWorld,
   saveAccountProfile,
+  saveAccountComfort,
   saveShareLocationWithFollowers,
   type AccountHintKey,
   type AccountProfilePreferences,
   type AccountPreferences,
+  effectiveComfort,
   EMPTY_ACCOUNT_PROFILE,
 } from "./preferences";
+import {
+  DEFAULT_COMFORT,
+  effectiveKeyBindings,
+  loadGuestComfort,
+  normalizeComfortPreferences,
+  paletteColor,
+  reducedBlinkOn,
+  saveGuestComfort,
+  validateComfortPreferences,
+  type ComfortPreferences,
+  type KeyAction,
+} from "./comfort";
 import { FIRST_TIME_HINTS, hintAlreadySeen, loadGuestHints, saveGuestHint } from "./first_time_hints";
 import {
   boardCellIndices,
@@ -594,25 +608,6 @@ type InputMessage = {
   key?: number;
 };
 
-const ega = [
-  "#000000",
-  "#0000aa",
-  "#00aa00",
-  "#00aaaa",
-  "#aa0000",
-  "#aa00aa",
-  "#aa5500",
-  "#aaaaaa",
-  "#555555",
-  "#5555ff",
-  "#55ff55",
-  "#55ffff",
-  "#ff5555",
-  "#ff55ff",
-  "#ffff55",
-  "#ffffff",
-];
-
 // Zeta's 8x14 EGA font (fonts/pc_ega.png upstream): 256 glyphs as 32 columns by
 // 8 rows, CP437 order, so glyph N sits at (N%32, N/32). Character codes go to
 // the sheet directly — there is no Unicode round trip.
@@ -622,7 +617,41 @@ const GLYPH_COLS = 32;
 
 const fontImg = new Image();
 fontImg.src = pcEgaUrl;
-const fontCanvases: HTMLCanvasElement[] = [];
+let fontCanvases: HTMLCanvasElement[] = [];
+let fontSourceCanvas: HTMLCanvasElement | null = null;
+const fontCanvasCache = new Map<string, HTMLCanvasElement[]>();
+
+function buildFontCanvases(palette: string): HTMLCanvasElement[] {
+  if (!fontSourceCanvas) {
+    return [];
+  }
+  const cached = fontCanvasCache.get(palette);
+  if (cached) {
+    return cached;
+  }
+  const canvases: HTMLCanvasElement[] = [];
+  for (let i = 0; i < 16; i++) {
+    const canvas = document.createElement("canvas");
+    canvas.width = fontSourceCanvas.width;
+    canvas.height = fontSourceCanvas.height;
+    const ctx = canvas.getContext("2d");
+    if (ctx) {
+      ctx.imageSmoothingEnabled = false;
+      ctx.drawImage(fontSourceCanvas, 0, 0);
+      ctx.globalCompositeOperation = "source-in";
+      ctx.fillStyle = paletteColor(palette as ComfortPreferences["palette"], i);
+      ctx.fillRect(0, 0, canvas.width, canvas.height);
+    }
+    canvases.push(canvas);
+  }
+  fontCanvasCache.set(palette, canvases);
+  return canvases;
+}
+
+function refreshFontPalette() {
+  const comfort = readEffectiveComfort();
+  fontCanvases = buildFontCanvases(comfort.palette);
+}
 
 fontImg.onload = () => {
   const tempCanvas = document.createElement("canvas");
@@ -652,20 +681,9 @@ fontImg.onload = () => {
 
   // One pre-tinted sheet per EGA foreground colour, so drawing a cell is a
   // single blit with no per-frame compositing.
-  for (let i = 0; i < 16; i++) {
-    const canvas = document.createElement("canvas");
-    canvas.width = tempCanvas.width;
-    canvas.height = tempCanvas.height;
-    const ctx = canvas.getContext("2d");
-    if (ctx) {
-      ctx.imageSmoothingEnabled = false;
-      ctx.drawImage(tempCanvas, 0, 0);
-      ctx.globalCompositeOperation = "source-in";
-      ctx.fillStyle = ega[i];
-      ctx.fillRect(0, 0, canvas.width, canvas.height);
-    }
-    fontCanvases.push(canvas);
-  }
+  fontSourceCanvas = tempCanvas;
+  fontCanvasCache.set("vanilla", buildFontCanvases("vanilla"));
+  refreshFontPalette();
   drawScreen();
 };
 
@@ -771,6 +789,7 @@ let occupancyTimer = 0;
 // the board keeps updating underneath and the modal is painted as an overlay
 // rather than by saving/restoring cells.
 let modal: Modal | null = null;
+let bindingCaptureAction: KeyAction | "" = "";
 const mobileTextInput = new MobileTextInputBridge(document);
 // Per-player pause (M3.11): the server tells us via PauseEvent whether OUR stat
 // is paused. The room keeps running for everyone else, so this is presentation
@@ -1222,6 +1241,7 @@ async function refreshAuthStatus() {
   // its own localStorage pick in the same breath (M19.3).
   accountPrefs = authStatus.authenticated ? await fetchAccountPreferences(fetch) : null;
   accountPrefsLoaded = true;
+  refreshFontPalette();
   if (mode === "title") {
     drawTitleSidebar(
       writeText,
@@ -2793,6 +2813,7 @@ function drawScreen() {
   if (fontCanvases.length < 16) {
     return;
   }
+  const comfort = readEffectiveComfort();
   for (let i = 0; i < cells.length; i += 1) {
     const base = cells[i];
     const over = overlay.get(i);
@@ -2818,6 +2839,10 @@ function drawScreen() {
       ch = base.ch;
       color = base.color;
     }
+    if (comfort.reduceFlashing && (ch === 0x01 || ch === CHAR_PLAYER)) {
+      ch = CHAR_PLAYER;
+      color = COLOR_PLAYER;
+    }
     let fg = color & 0x0f;
     const bg = (color >> 4) & 0x0f;
     const x = base.x * CELL_W;
@@ -2835,7 +2860,7 @@ function drawScreen() {
       screenCtx.fillStyle = tint;
       fg = playerTintForeground(tint);
     } else {
-      screenCtx.fillStyle = ega[bg] ?? "#000000";
+      screenCtx.fillStyle = paletteColor(comfort.palette, bg);
     }
     screenCtx.fillRect(x, y, CELL_W, CELL_H);
 
@@ -2996,6 +3021,7 @@ function tryShowFirstTimeHint(hint: AccountHintKey) {
       profile: accountPrefs?.profile ?? EMPTY_ACCOUNT_PROFILE,
       shareLocationWithFollowers: accountPrefs?.shareLocationWithFollowers === true,
       favoriteWorlds: accountPrefs?.favoriteWorlds ?? [],
+      comfort: accountPrefs?.comfort ?? DEFAULT_COMFORT,
       hints: {
         players: nextHints.players === true,
         death: nextHints.death === true,
@@ -3233,9 +3259,19 @@ function openReplayPostcard() {
 }
 
 function openAccountMenu() {
+  if (!authStatus.authenticated) {
+    openSelectList("Account", ["Comfort settings", "Sign in"], (entry) => {
+      if (entry === "Comfort settings") {
+        openComfortMenu();
+      } else if (authStatus.enabled) {
+        window.location.href = "/api/auth/google/start?return=" + encodeURIComponent(window.location.pathname + window.location.search);
+      }
+    }, ["  Guest settings stay in this browser."]);
+    return;
+  }
   const sharing = accountPrefs?.shareLocationWithFollowers === true;
   const favorite = accountPrefs?.favoriteWorlds.includes(worldName) === true;
-  const entries = [favorite ? "Unfavorite this world" : "Favorite this world", "Edit profile", sharing ? "Hide my location" : "Share my location", "Sign out"];
+  const entries = [favorite ? "Unfavorite this world" : "Favorite this world", "Edit profile", "Comfort settings", sharing ? "Hide my location" : "Share my location", "Sign out"];
   openSelectList("Account", entries, (entry) => {
     if (entry === "Sign out") {
       void fetch("/api/auth/logout", { method: "POST" }).then(() => refreshAuthStatus());
@@ -3257,6 +3293,10 @@ function openAccountMenu() {
       openProfileEditor();
       return;
     }
+    if (entry === "Comfort settings") {
+      openComfortMenu();
+      return;
+    }
     if (entry === "Share my location" || entry === "Hide my location") {
       const next = entry === "Share my location";
       void saveShareLocationWithFollowers(fetch, next).then((stored) => {
@@ -3269,6 +3309,59 @@ function openAccountMenu() {
       });
     }
   });
+}
+
+function comfortLines(comfort: ComfortPreferences): string[] {
+  return [
+    `Key preset: ${comfort.keyPreset}`,
+    "Bind Up key",
+    "Bind Torch key",
+    "Reset bindings",
+    `Reduce flashing: ${comfort.reduceFlashing ? "on" : "off"}`,
+    `Palette: ${comfort.palette}`,
+  ];
+}
+
+function openComfortMenu() {
+  const comfort = readEffectiveComfort();
+  openSelectList("Comfort", comfortLines(comfort), (entry) => {
+    const next = normalizeComfortPreferences(comfort);
+    if (entry.startsWith("Key preset:")) {
+      next.keyPreset = next.keyPreset === "vanilla" ? "one-handed" : next.keyPreset === "one-handed" ? "custom" : "vanilla";
+      if (next.keyPreset !== "custom") {
+        next.keyBindings = {};
+      }
+      writeEffectiveComfort(next);
+      openComfortMenu();
+      return;
+    }
+    if (entry === "Bind Up key") {
+      openBindingPrompt("up");
+      return;
+    }
+    if (entry === "Bind Torch key") {
+      openBindingPrompt("torch");
+      return;
+    }
+    if (entry === "Reset bindings") {
+      next.keyPreset = "vanilla";
+      next.keyBindings = {};
+      writeEffectiveComfort(next);
+      openComfortMenu();
+      return;
+    }
+    if (entry.startsWith("Reduce flashing:")) {
+      next.reduceFlashing = !next.reduceFlashing;
+      writeEffectiveComfort(next);
+      openComfortMenu();
+      return;
+    }
+    if (entry.startsWith("Palette:")) {
+      next.palette = next.palette === "vanilla" ? "high-contrast" : next.palette === "high-contrast" ? "colorblind-assist" : "vanilla";
+      writeEffectiveComfort(next);
+      openComfortMenu();
+    }
+  }, authStatus.authenticated ? [] : ["  Guest settings stay in this browser."]);
 }
 
 function openProfileEditor() {
@@ -3317,6 +3410,46 @@ function readStoredPlayerColor(): string {
   return effectivePlayerColor({ account: accountPrefs, local: loadPlayerColor(window.localStorage) });
 }
 
+function readEffectiveComfort(): ComfortPreferences {
+  return effectiveComfort({ account: accountPrefs, local: loadGuestComfort(window.localStorage) });
+}
+
+function writeEffectiveComfort(next: ComfortPreferences) {
+  const comfort = normalizeComfortPreferences(next);
+  const invalid = validateComfortPreferences(comfort);
+  if (invalid) {
+    openWindow("Comfort", ["", "  Key binding conflict.", ""], true);
+    return;
+  }
+  if (authStatus.authenticated) {
+    accountPrefs = {
+      authenticated: true,
+      stored: true,
+      color: accountPrefs?.color ?? "",
+      hints: accountPrefs?.hints ?? { players: false, death: false, chat: false },
+      profile: accountPrefs?.profile ?? EMPTY_ACCOUNT_PROFILE,
+      shareLocationWithFollowers: accountPrefs?.shareLocationWithFollowers === true,
+      favoriteWorlds: accountPrefs?.favoriteWorlds ?? [],
+      comfort,
+    };
+    void saveAccountComfort(fetch, comfort).then((stored) => {
+      if (stored) {
+        accountPrefs = stored;
+        refreshFontPalette();
+        paintOverlay();
+        drawScreen();
+      }
+    });
+  } else {
+    saveGuestComfort(window.localStorage, comfort);
+  }
+  refreshFontPalette();
+  setPaused(paused);
+  setEditorBlinking(mode === "editor");
+  paintOverlay();
+  drawScreen();
+}
+
 // openColorPicker is the title menu's ' C ' (M19.2). The pick is stored and
 // nothing else happens: the color is read again at every join (see connect()),
 // so it reaches the room the next time P is pressed, and a pick made after a
@@ -3347,6 +3480,7 @@ function openColorPicker() {
           profile: accountPrefs?.profile ?? EMPTY_ACCOUNT_PROFILE,
           shareLocationWithFollowers: accountPrefs?.shareLocationWithFollowers === true,
           favoriteWorlds: accountPrefs?.favoriteWorlds ?? [],
+          comfort: accountPrefs?.comfort ?? DEFAULT_COMFORT,
         };
         void saveAccountColor(fetch, color).then((stored) => {
           if (stored) {
@@ -3473,11 +3607,13 @@ function setPaused(next: boolean) {
   pauseTimer = 0;
   if (paused) {
     pauseBlink = true;
-    pauseTimer = window.setInterval(() => {
-      pauseBlink = !pauseBlink;
-      paintOverlay();
-      drawScreen();
-    }, PAUSE_BLINK_MS);
+    if (!reducedBlinkOn(readEffectiveComfort())) {
+      pauseTimer = window.setInterval(() => {
+        pauseBlink = !pauseBlink;
+        paintOverlay();
+        drawScreen();
+      }, PAUSE_BLINK_MS);
+    }
   }
   paintOverlay();
   drawScreen();
@@ -3491,6 +3627,7 @@ function setEditorBlinking(on: boolean) {
   if (on) {
     if (editorBlinkTimer) return;
     editorBlink = EDITOR_BLINK_PHASES - 1; // start on a cursor-shown phase
+    if (reducedBlinkOn(readEffectiveComfort())) return;
     editorBlinkTimer = window.setInterval(() => {
       editorBlink = (editorBlink + 1) % EDITOR_BLINK_PHASES;
       paintOverlay();
@@ -3509,6 +3646,41 @@ function openModal(next: Modal) {
   mobileTextInput.sync(modal, routeMobileModalInput);
   paintOverlay();
   drawScreen();
+}
+
+function openBindingPrompt(action: KeyAction) {
+  bindingCaptureAction = action;
+  openWindow("Comfort", ["", `  Press a key for ${action}.`, "", "  Esc cancels.", ""], true);
+}
+
+function routeBindingCapture(event: KeyboardEvent): boolean {
+  if (!bindingCaptureAction) {
+    return false;
+  }
+  event.preventDefault();
+  if (event.code === "Escape") {
+    bindingCaptureAction = "";
+    closeModal();
+    openComfortMenu();
+    return true;
+  }
+  if (!event.code || event.ctrlKey || event.metaKey || event.altKey) {
+    return true;
+  }
+  const comfort = normalizeComfortPreferences(readEffectiveComfort());
+  comfort.keyPreset = "custom";
+  comfort.keyBindings = { ...comfort.keyBindings, [bindingCaptureAction]: [event.code] };
+  const invalid = validateComfortPreferences(comfort);
+  const action = bindingCaptureAction;
+  bindingCaptureAction = "";
+  closeModal();
+  if (invalid) {
+    openWindow("Comfort", ["", `  ${event.code} conflicts.`, ""], true);
+    return true;
+  }
+  writeEffectiveComfort(comfort);
+  openWindow("Comfort", ["", `  ${action} bound to ${event.code}.`, ""], true);
+  return true;
 }
 
 function openWindow(title: string, lines: string[], viewingFile: boolean, replyStatId = -1) {
@@ -3611,6 +3783,7 @@ function clearScrolls() {
 }
 
 function closeModal() {
+  bindingCaptureAction = "";
   const scrollStatId = openScrollStatId;
   const replySent = scrollReplySent;
   openScrollStatId = -1;
@@ -3929,10 +4102,8 @@ function handleTitleKey(event: KeyboardEvent) {
       startPlay();
       break;
     case "login":
-      if (authStatus.authenticated) {
+      if (authStatus.authenticated || authStatus.enabled) {
         openAccountMenu();
-      } else if (authStatus.enabled) {
-        window.location.href = "/api/auth/google/start?return=" + encodeURIComponent(window.location.pathname + window.location.search);
       }
       break;
     case "world":
@@ -3972,6 +4143,10 @@ function handleTitleKey(event: KeyboardEvent) {
 
 function handleKeyDown(event: KeyboardEvent) {
   zztSound.resume();
+
+  if (routeBindingCapture(event)) {
+    return;
+  }
 
   if (modal) {
     routeModalKey(event);
@@ -4032,12 +4207,13 @@ function handleKeyDown(event: KeyboardEvent) {
     return;
   }
 
-  if (event.repeat && !isMovementKey(event.code)) {
+  const bindings = effectiveKeyBindings(readEffectiveComfort());
+  if (event.repeat && !isMovementKey(event.code, bindings)) {
     return;
   }
 
   // Command keys travel as a raw key byte, not a movement mask.
-  const command = commandKey(event);
+  const command = commandKey(event, bindings);
   if (command !== 0) {
     event.preventDefault();
     stopHeldInput();
@@ -4048,7 +4224,7 @@ function handleKeyDown(event: KeyboardEvent) {
   const handled = updatePressed(event, true);
   if (handled) {
     event.preventDefault();
-    sendInput(currentMask(), rawKey(event.code));
+    sendInput(currentMask(), rawKey(event.code, bindings));
   }
 }
 
@@ -5161,7 +5337,7 @@ function sendHighScoreName(name: string) {
 }
 
 function updatePressed(event: KeyboardEvent, down: boolean): boolean {
-  if (!isHandledKey(event.code)) {
+  if (!isHandledKey(event.code, effectiveKeyBindings(readEffectiveComfort()))) {
     return false;
   }
   if (down) {
@@ -5173,7 +5349,7 @@ function updatePressed(event: KeyboardEvent, down: boolean): boolean {
 }
 
 function currentMask(): number {
-  return movementMask(pressed);
+  return movementMask(pressed, effectiveKeyBindings(readEffectiveComfort()));
 }
 
 function sendInput(mask: number, key = 0) {

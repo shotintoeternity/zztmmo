@@ -97,6 +97,10 @@ type AccountPreferences struct {
 	// They are world identities, not titles, and are sanitized before storage so
 	// a favorite can be fed back into the same join path as /api/worlds.
 	FavoriteWorlds []string `json:"favoriteWorlds,omitempty"`
+	// Comfort is per-viewer presentation state (M31.1): remapped client keys,
+	// calmer flashing and an alternate render palette. The server stores and
+	// validates it, but never interprets it as simulation input.
+	Comfort ComfortPreferences `json:"comfort,omitempty"`
 }
 
 type AccountHintPreferences struct {
@@ -440,6 +444,11 @@ func putAccountPreferencesLocked(prefs map[string]AccountPreferences, handleOwne
 	next.Profile = profile
 	next.FollowedAccounts = sanitizeFollowedAccounts(next.FollowedAccounts, accountID)
 	next.FavoriteWorlds = sanitizeFavoriteWorlds(next.FavoriteWorlds)
+	comfort, err := SanitizeComfortPreferences(next.Comfort)
+	if err != nil {
+		return err
+	}
+	next.Comfort = comfort
 	oldHandle := prefs[accountID].Profile.Handle
 	newHandle := next.Profile.Handle
 	if newHandle != "" {

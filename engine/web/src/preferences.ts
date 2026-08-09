@@ -4,6 +4,7 @@
 // main.ts owns when these are fetched and what is redrawn afterwards.
 
 import { isPlayerColor } from "./player_tint";
+import { DEFAULT_COMFORT, normalizeComfortPreferences, type ComfortPreferences } from "./comfort";
 
 // What /api/preferences answers. `stored` is separate from `color` on purpose:
 // an account WITH a document whose color is empty has chosen the vanilla
@@ -18,6 +19,7 @@ export interface AccountPreferences {
   profile: AccountProfilePreferences;
   shareLocationWithFollowers: boolean;
   favoriteWorlds: string[];
+  comfort: ComfortPreferences;
 }
 
 export type AccountHintKey = "players" | "death" | "chat";
@@ -65,6 +67,7 @@ function readPreferences(value: unknown): AccountPreferences {
     favoriteWorlds: Array.isArray(doc.favoriteWorlds)
       ? doc.favoriteWorlds.filter((world): world is string => typeof world === "string")
       : [],
+    comfort: normalizeComfortPreferences(doc.comfort ?? DEFAULT_COMFORT),
   };
 }
 
@@ -170,6 +173,22 @@ export async function saveFavoriteWorld(fetchFn: FetchLike, world: string, favor
   }
 }
 
+export async function saveAccountComfort(fetchFn: FetchLike, comfort: ComfortPreferences): Promise<AccountPreferences | null> {
+  try {
+    const response = await fetchFn(PREFERENCES_URL, {
+      method: "PUT",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ comfort: normalizeComfortPreferences(comfort) }),
+    });
+    if (!response.ok) {
+      return null;
+    }
+    return readPreferences(await response.json());
+  } catch {
+    return null;
+  }
+}
+
 // effectivePlayerColor is the whole of "a signed-in player's stored color wins
 // over localStorage; a guest keeps localStorage only" (M19.3), in one place so
 // the join, the title swatch and the picker's own starting value cannot drift
@@ -186,4 +205,12 @@ export function effectivePlayerColor(sources: { account: AccountPreferences | nu
     return isPlayerColor(account.color) ? account.color : "";
   }
   return isPlayerColor(local) ? local : "";
+}
+
+export function effectiveComfort(sources: { account: AccountPreferences | null; local: ComfortPreferences }): ComfortPreferences {
+  const { account, local } = sources;
+  if (account && account.authenticated && account.stored) {
+    return normalizeComfortPreferences(account.comfort);
+  }
+  return normalizeComfortPreferences(local);
 }

@@ -372,7 +372,10 @@ M12.23, M17.1–M17.7, M16.0–M16.8a — has fully landed.)
    ordinary worlds, dreams, editor publishes, saves and replays stay co-op unless
    their server identity is ARENA. **M31 was filed 2026-08-09** from the eighth
    ranked roadmap line: presentation-only comfort/access preferences for
-   remappable keys, calmer flashing and alternate palettes.
+   remappable keys, calmer flashing and alternate palettes. **M31.1 landed
+   2026-08-09**: account and guest-local comfort preferences now cover client-side
+   key remaps, reduced flashing and local palette filters without changing the
+   wire protocol, replay state or another viewer's canvas.
 
 **Optional / deferred (bottom):**
 - M14.3 — package split — **closed as skipped 2026-08-03**, see NOTES.md
@@ -7504,7 +7507,7 @@ cells, recordings and screenshots that certify vanilla parity still carry
 `{ch,color}`; only the local canvas chooses a different final RGB or a steadier
 animation.
 
-- [ ] **M31.1 — account comfort preferences, client remaps, reduced flashing and
+- [x] **M31.1 — account comfort preferences, client remaps, reduced flashing and
   alternate palettes.** Extend `AccountPreferences` and `/api/preferences` with
   a compact `Comfort` field containing the narrowest useful settings: a keymap
   preset or explicit bindings, a `ReduceFlashing` boolean, and a palette choice
