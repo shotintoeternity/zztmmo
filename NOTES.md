@@ -11260,3 +11260,21 @@ Verification before commit: `npm test`, `npm run build`,
 `go test -count=1 -run TestM261 ./`, `go test -count=1 -run 'TestM24|TestM25|TestM19|TestWorldList|TestParityManifest' ./`,
 `git diff --check`, `cd engine && go build ./...`, and
 `cd engine && go test ./...`.
+
+## 2026-08-09 — M27.1 spec filed for front-page discovery
+
+Expanded ranked roadmap item #4 into `TASKS.md` as M27.1. This is documentation
+and product-boundary work only: no engine or browser code changed, and the task
+is left unchecked for implementation.
+
+The spec keeps the current authority seams: `/api/worlds` remains the list of
+joinable world identities, and shelf selections must still pass through the
+same title-stop path as search. The new first screen is browseable rather than
+only searchable: WELCOME/start-here, signed-in favorites, friends/active-now,
+recent dreams, most-played worlds, and classics/curated entries.
+
+Two privacy/identity decisions are recorded before implementation. Favorites
+are signed-in account preferences keyed by sanitized world identities, not guest
+localStorage state. Popularity is aggregate world activity: successful active
+play joins increment a world count, while watch/replay/title/editor surfaces do
+not, and the store must contain no account ids or per-player log.

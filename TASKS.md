@@ -353,7 +353,11 @@ M12.23, M17.1–M17.7, M16.0–M16.8a — has fully landed.)
    2026-08-09**: the Players window now sends in-session private messages by
    live PlayerID, with chat admission/rate/mute/block policy enforced on the
    server and no global history persistence; durable/offline handle PMs remain
-   future work.
+   future work. **M26.1 landed 2026-08-09**: signed-in players can follow other
+   signed-in accounts from the Players window, and opted-in followed accounts
+   appear as "friends here" in the picker without account-id leakage. **M27.1
+   was filed 2026-08-09** from ranked roadmap #4 and is the next unchecked
+   executor task.
 
 **Optional / deferred (bottom):**
 - M14.3 — package split — **closed as skipped 2026-08-03**, see NOTES.md
@@ -7155,6 +7159,83 @@ and roster surface. Do not add "online but hidden" hints.
   accounts that opted in and are currently in listed worlds. The browser adds
   Follow/Unfollow actions, a location-sharing account row, followed roster
   labels, and picker "Friends here" lines.
+
+## M27 — Front page and discovery: a shelf worth browsing
+
+Filed 2026-08-09 from the owner-promoted roadmap queue's fourth ranked line.
+M18.9 made the empty-query picker curated instead of a raw directory dump,
+M23.3 pinned WELCOME as the newcomer route, and M26.1 gave `/api/worlds`
+per-recipient friend presence. The remaining problem is scale: a hundred worlds
+plus generated dreams are still mostly discoverable by already knowing what to
+type. This milestone turns the first world-selection surface into a browseable
+front page while keeping `/api/worlds` the authority for what a player can open.
+
+Two boundaries are decided here. **Favorites are signed-in account state**:
+guests do not get a fake local durable list, and favorite identities are
+validated world ids, not titles or handles. **Popularity is aggregate world
+activity, not player tracking**: count successful play joins by world identity,
+with no account id, IP address, session id, or timestamped per-player log.
+Watching, replay viewing, title-screen previewing, editing, and Museum search do
+not increment a play count.
+
+- [ ] **M27.1 — favorites, shelves, play counts, and title thumbnails.**
+  Extend `AccountPreferences` with `FavoriteWorlds []string`, stored as
+  sanitized world identities and capped to a small bounded list. The signed-in
+  account menu and the world picker can toggle the current world's favorite
+  state; guest attempts get honest window text rather than a local-only shadow
+  favorite. Saving favorites must preserve Color, BlockedAccounts, Hints,
+  Profile, FollowedAccounts, and ShareLocationWithFollowers.
+
+  Add the narrowest server-side world activity persistence needed for aggregate
+  discovery. A successful active play join increments that world's play count
+  once for that join; reconnects, spectators, replay viewers, title previews,
+  editor sessions, and failed joins do not. The store is keyed by the same
+  canonical world identity `/api/worlds` returns, writes atomically, survives a
+  server restart, and contains no per-player records. If the implementation
+  needs a clock for "recently played" or "recently dreamed", keep it outside the
+  simulation and never let it affect `StateHash` or replay fixtures.
+
+  Widen the `/api/worlds` response without breaking existing clients: keep the
+  flat `worlds` list for search and add a front-page structure such as `shelves`
+  whose entries reference those same world identities. The first screen should
+  include, in this order where populated: WELCOME/"Start here", Favorites
+  (signed-in only), Friends here / Active now, Recent dreams, Most played, and
+  Classics or other curated worlds. Search remains global and exact enough to
+  reach every joinable world, including locals that no first-screen shelf shows.
+  A world may appear in more than one shelf, but selecting any shelf card must
+  pass through the same `selectWorldEntry`/`enterWorld` path as search, so it
+  still stops at that world's title screen before play.
+
+  Add cached title thumbnails sourced from the same board-0 render path as
+  `/api/title`: a cache miss renders the current title frame, a cache hit does
+  not instantiate or tick a live room, and a broken thumbnail falls back to the
+  existing text-only picker row. Thumbnails are presentation evidence only; they
+  must not change the join path, the title stream, or title-board simulation.
+  Keep the cache bounded or file-backed with a deterministic key on world
+  identity plus enough source metadata to invalidate after a dream/editor
+  publish replaces the world.
+
+  Client UI should make the existing first surface richer, not create a
+  marketing landing page. The root/warm title flow still opens the playable
+  ZZT shell, first-visit guests still land on WELCOME before the picker, and
+  `/play/<world>`, `/watch/<world>`, and `/replay/<id>` keep their current
+  precedence. The picker/front page may use shelves, favorite stars, active
+  badges, friend labels, and thumbnails, but every control must remain reachable
+  by keyboard and must fit in the CP437/text-window layout on desktop and phone.
+
+  DoD: account-preference tests prove favorites validate, cap, toggle, persist
+  across restart, and preserve every existing preference field; world-activity
+  tests prove active joins increment and non-play surfaces do not; `/api/worlds`
+  tests prove shelves are per-recipient, favorite/friend data is absent for
+  guests, all shelf references resolve to flat `worlds` entries, WELCOME keeps
+  its start-here priority, and no account ids or per-player records marshal to a
+  browser; thumbnail tests cover cache hit, cache invalidation after a world
+  file/meta change, and text fallback on render failure; Node UI tests cover
+  shelf rendering, favorite toggles, search still reaching unshelved worlds, and
+  selection through the existing title-stop path. Run focused browser coverage
+  if the visible picker journey changes. Verify with `npm test`, `npm run build`,
+  focused Go tests for M27.1, `git diff --check`, and the session gate
+  `cd engine && go build ./... && go test ./...`.
 
 ## M14 — Rearchitecting for the service ZZTMMO is becoming
 
