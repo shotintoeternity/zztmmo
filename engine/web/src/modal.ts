@@ -441,6 +441,7 @@ const WORLD_TITLE_WIDTH = 38;
 const WORLD_DETAIL_WIDTH = 42;
 const WORLD_SEARCH_ROW = TEXT_WINDOW_Y + TEXT_WINDOW_HEIGHT - 2;
 const WELCOME_WORLD = "WELCOME";
+const LOBBY_WORLD = "LOBBY";
 
 function fitText(text: string, width: number): string {
   if (text.length <= width) {
@@ -459,7 +460,7 @@ type WorldSearchSection = {
 
 function worldSearchSections(m: WorldSearchModal): WorldSearchSection[] {
   const terms = m.query.toLowerCase().trim().split(/\s+/).filter(Boolean);
-  const lobby = m.entries.filter((entry) => entry.world.toUpperCase() === "TOWN");
+  const lobby = m.entries.filter((entry) => entry.world.toUpperCase() === LOBBY_WORLD);
   const welcome = m.entries.filter((entry) => entry.world.toUpperCase() === WELCOME_WORLD);
   if (terms.length === 0) {
     if (m.shelves && m.shelves.length > 0) {
@@ -478,7 +479,7 @@ function worldSearchSections(m: WorldSearchModal): WorldSearchSection[] {
     // found by typing, rather than filling the first click with entries that
     // read "by Local ????". Museum search is reached by typing too.
     const shown = m.entries.filter(
-      (entry) => entry.world.toUpperCase() !== "TOWN" && entry.world.toUpperCase() !== WELCOME_WORLD && entry.kind !== "local",
+      (entry) => entry.world.toUpperCase() !== LOBBY_WORLD && entry.world.toUpperCase() !== WELCOME_WORLD && entry.kind !== "local",
     );
     // Classics first, dreams after, each keeping the server's title order.
     const classics = shown.filter((entry) => entry.kind !== "dreamed");
@@ -486,7 +487,7 @@ function worldSearchSections(m: WorldSearchModal): WorldSearchSection[] {
     return [{ title: "", entries: [...welcome, ...lobby, ...classics, ...dreamed] }];
   }
   const matches = m.entries.filter((entry) => {
-    if (entry.world.toUpperCase() === "TOWN") {
+    if (entry.world.toUpperCase() === LOBBY_WORLD) {
       return false;
     }
     const haystack = [entry.world, entry.id, entry.title, entry.author, entry.created].join(" ").toLowerCase();

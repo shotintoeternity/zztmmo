@@ -244,6 +244,7 @@ type ProtocolEvent = {
 
 type SnapshotMessage = {
   type: typeof MessageTypeSnapshot;
+  world?: string;
   boardId: number;
   tick: number;
   seed: number;
@@ -1559,7 +1560,7 @@ function showHelp(file: string, title: string) {
 
 // LOBBY_WORLD is the world everyone lands in by default and nobody has to
 // finish: the hangout. Every other world is a game you bring people to.
-const LOBBY_WORLD = "TOWN";
+const LOBBY_WORLD = "LOBBY";
 
 async function fetchWorldEntries(): Promise<WorldSearchEntry[]> {
   const response = await fetch("/api/worlds");
@@ -2552,6 +2553,10 @@ function applySnapshot(message: SnapshotMessage) {
   }
   mode = "playing";
   setEditorBlinking(false);
+  if (message.world && message.world !== worldName) {
+    worldName = message.world;
+    rememberWorldInPath("play");
+  }
   // The join/resume snapshot carries our resume token; keep it so a later drop
   // can reclaim this run (M13.2).
   if (message.resumeToken) {

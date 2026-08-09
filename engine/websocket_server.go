@@ -368,6 +368,7 @@ func NewWebSocketServer(world TWorld, defaultBoard int16) *WebSocketServer {
 		TokensByPlayer: make(map[PlayerID]string),
 		Spectators:     make(map[*webSocketClient]*spectator),
 	}
+	configureLobbyTransits(inst)
 	s := &WebSocketServer{
 		RoomManager:            rm,
 		DefaultBoard:           defaultBoard,
@@ -536,6 +537,7 @@ func (inst *WorldInstance) evictableIdleLocked() bool {
 func (inst *WorldInstance) Tick(ctx context.Context, s *WebSocketServer) {
 	tickStart := time.Now()
 	var stepDuration time.Duration
+	var transits []WorldTransit
 	inst.mu.Lock()
 	inputs := inst.Inputs
 	inst.Inputs = make(map[PlayerID]PlayerInput)
@@ -556,6 +558,7 @@ func (inst *WorldInstance) Tick(ctx context.Context, s *WebSocketServer) {
 		if client.boardID != 0 && client.boardID != diff.BoardID {
 			snapshot, ok := inst.RoomManager.Snapshot(playerID)
 			if ok {
+				snapshot.World = inst.Name
 				client.boardID = snapshot.BoardID
 				snapshot.Events = append(snapshot.Events, ProtocolEvents(inst.RoomManager.DrainPlayerEvents(playerID))...)
 				snapshot.Watchers = watchers[snapshot.BoardID]
@@ -576,6 +579,7 @@ func (inst *WorldInstance) Tick(ctx context.Context, s *WebSocketServer) {
 		messages[quit.PlayerID] = s.quitOutcome(inst.RoomManager, quit)
 	}
 	watched := inst.spectatorMessagesLocked(boardDiffs, watchers)
+	transits = append(transits, inst.RoomManager.DrainWorldTransits()...)
 	inst.mu.Unlock()
 
 	for playerID, message := range messages {
@@ -586,6 +590,9 @@ func (inst *WorldInstance) Tick(ctx context.Context, s *WebSocketServer) {
 	}
 	for _, delivery := range watched {
 		_ = delivery.client.write(ctx, delivery.message)
+	}
+	for _, transit := range transits {
+		s.completeWorldTransit(ctx, inst, transit)
 	}
 	s.metrics.recordInstanceTick(inst.Name, stepDuration, time.Since(tickStart))
 }
@@ -1014,6 +1021,7 @@ func (s *WebSocketServer) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 			var snapOK bool
 			snapshot, snapOK = inst.RoomManager.Snapshot(playerID)
 			if snapOK {
+				snapshot.World = inst.Name
 				snapshot.ResumeToken = token
 				client.boardID = snapshot.BoardID
 			}
@@ -1094,6 +1102,10 @@ func (s *WebSocketServer) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 		if err := wsjson.Read(ctx, conn, &raw); err != nil {
 			break
 		}
+		activeInst := s.instanceForClient(client)
+		if activeInst == nil {
+			break
+		}
 
 		var envelope struct {
 			Type string `json:"type"`
@@ -1108,31 +1120,31 @@ func (s *WebSocketServer) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 			if err := json.Unmarshal(raw, &cmd); err != nil {
 				continue
 			}
-			s.submitDebugCommandInInstance(inst, playerID, cmd.Text)
+			s.submitDebugCommandInInstance(activeInst, playerID, cmd.Text)
 		case MessageTypeScrollReply:
 			var reply ScrollReplyMessage
 			if err := json.Unmarshal(raw, &reply); err != nil {
 				continue
 			}
-			s.submitScrollReplyInInstance(inst, playerID, reply.StatID, reply.Label)
+			s.submitScrollReplyInInstance(activeInst, playerID, reply.StatID, reply.Label)
 		case MessageTypeQuitReply:
 			var reply QuitReplyMessage
 			if err := json.Unmarshal(raw, &reply); err != nil {
 				continue
 			}
-			s.submitQuitReplyInInstance(inst, playerID, reply.Quit)
+			s.submitQuitReplyInInstance(activeInst, playerID, reply.Quit)
 		case MessageTypeHighScoreName:
 			var entry HighScoreNameMessage
 			if err := json.Unmarshal(raw, &entry); err != nil {
 				continue
 			}
-			s.submitHighScoreNameInInstance(ctx, inst, playerID, entry.Name)
+			s.submitHighScoreNameInInstance(ctx, activeInst, playerID, entry.Name)
 		case MessageTypeSaveFilename:
 			var save SaveFilenameMessage
 			if err := json.Unmarshal(raw, &save); err != nil {
 				continue
 			}
-			s.submitSaveFilenameInInstance(ctx, inst, playerID, save.Name)
+			s.submitSaveFilenameInInstance(ctx, activeInst, playerID, save.Name)
 		case "chat":
 			var chat struct {
 				Text string `json:"text"`
@@ -1144,13 +1156,13 @@ func (s *WebSocketServer) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 			if !ok {
 				continue
 			}
-			inst.mu.Lock()
+			activeInst.mu.Lock()
 			name := "browser"
-			player := inst.RoomManager.players[playerID]
+			player := activeInst.RoomManager.players[playerID]
 			if player != nil && player.name != "" {
 				name = player.name
 			}
-			inst.mu.Unlock()
+			activeInst.mu.Unlock()
 			// M21.1: the line now travels with something addressable. The
 			// PlayerID is this connection's, not anything the client claimed,
 			// and the accountID stays server-side — it is what makes a
@@ -1196,10 +1208,12 @@ func (s *WebSocketServer) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 			if err := json.Unmarshal(raw, &input); err != nil {
 				continue
 			}
-			inst.setInput(playerID, inputMessageToPlayerInput(input))
+			activeInst.setInput(playerID, inputMessageToPlayerInput(input))
 		}
 	}
-	s.handleReadLoopExit(inst, client, playerID)
+	if activeInst := s.instanceForClient(client); activeInst != nil {
+		s.handleReadLoopExit(activeInst, client, playerID)
+	}
 }
 
 func (s *WebSocketServer) serveReplayHTTP(w http.ResponseWriter, r *http.Request, replayID string) {
@@ -2295,6 +2309,7 @@ func (s *WebSocketServer) GetOrCreateInstance(worldName string) (*WorldInstance,
 		TokensByPlayer: make(map[PlayerID]string),
 		Spectators:     make(map[*webSocketClient]*spectator),
 	}
+	configureLobbyTransits(inst)
 	s.Instances[worldName] = inst
 	s.attachRecorderLocked(inst)
 	return inst, nil
@@ -2823,6 +2838,149 @@ func (inst *WorldInstance) setInput(playerID PlayerID, input PlayerInput) {
 	inst.mu.Unlock()
 }
 
+func (s *WebSocketServer) completeWorldTransit(ctx context.Context, source *WorldInstance, transit WorldTransit) {
+	destination, err := SanitizeSaveName(transit.DestinationWorld)
+	if err != nil {
+		s.refuseWorldTransit(ctx, source, transit.PlayerID, transit.DestinationWorld, err)
+		return
+	}
+	dest, err := s.GetOrCreateInstance(destination)
+	if err != nil {
+		s.refuseWorldTransit(ctx, source, transit.PlayerID, destination, err)
+		return
+	}
+
+	var client *webSocketClient
+	var accountID, name, color, handle string
+	var hasProfile bool
+	var sourceState PlayerState
+	var hasSourceState bool
+
+	source.mu.Lock()
+	client = source.Clients[transit.PlayerID]
+	if client == nil || source.RoomManager.players[transit.PlayerID] == nil {
+		source.mu.Unlock()
+		return
+	}
+	accountID, name, _ = source.RoomManager.PlayerIdentity(transit.PlayerID)
+	if state, ok := source.RoomManager.PlayerState(transit.PlayerID); ok {
+		sourceState = *state
+		hasSourceState = true
+	}
+	if player := source.RoomManager.players[transit.PlayerID]; player != nil {
+		color = player.color
+		handle = player.handle
+		hasProfile = player.hasProfile
+	}
+	delete(source.Clients, transit.PlayerID)
+	delete(source.Inputs, transit.PlayerID)
+	source.deleteResumeTokenLocked(transit.PlayerID)
+	delete(source.Detached, transit.PlayerID)
+	source.RoomManager.LeavePlayer(transit.PlayerID)
+	source.RoomManager.DiscardPendingScore(transit.PlayerID)
+	source.mu.Unlock()
+
+	if accountID != "" && hasSourceState {
+		s.persistAccountPlayerState(accountID, source.Name, sourceState)
+	}
+
+	var storedState PlayerState
+	hasStoredState := false
+	if accountID != "" {
+		storedState, hasStoredState = s.loadAccountPlayerState(accountID, destination)
+		handle, hasProfile = s.accountProfileSummary(accountID)
+	}
+
+	dest.mu.Lock()
+	board := s.resolveJoinBoard(dest, 0)
+	dest.RoomManager.JoinPlayerWithID(transit.PlayerID, board, 0, 0)
+	if accountID != "" {
+		dest.RoomManager.SetPlayerIdentity(transit.PlayerID, accountID, name)
+		if hasStoredState {
+			dest.RoomManager.ApplyPlayerState(transit.PlayerID, storedState)
+		}
+	} else {
+		dest.RoomManager.SetPlayerName(transit.PlayerID, name)
+	}
+	dest.RoomManager.SetPlayerColor(transit.PlayerID, color)
+	if accountID != "" {
+		dest.RoomManager.SetPlayerProfileSummary(transit.PlayerID, handle, hasProfile)
+	}
+	client.playerID = transit.PlayerID
+	client.setWorldName(destination)
+	dest.Clients[transit.PlayerID] = client
+	token := dest.mintResumeTokenLocked(transit.PlayerID)
+	snapshot, snapOK := dest.RoomManager.Snapshot(transit.PlayerID)
+	if snapOK {
+		snapshot.World = dest.Name
+		snapshot.ResumeToken = token
+		client.boardID = snapshot.BoardID
+	}
+	dest.mu.Unlock()
+
+	if !snapOK {
+		s.removeClientFromInstance(dest, transit.PlayerID)
+		return
+	}
+
+	snapshot.BlockedPlayers = s.blockedInRoster(transit.PlayerID, dest, snapshot.Players)
+	snapshot.FollowedPlayers = s.followedInRoster(transit.PlayerID, dest, snapshot.Players)
+	snapshot.Operator = s.isOperator(accountID)
+	if s.Activity != nil {
+		if err := s.Activity.IncrementPlay(destination); err != nil {
+			log.Printf("zztgo: failed to record play for %s: %v", destination, err)
+		}
+	}
+	if err := client.write(ctx, snapshot); err != nil {
+		s.handleReadLoopExit(dest, client, transit.PlayerID)
+	}
+}
+
+func (s *WebSocketServer) refuseWorldTransit(ctx context.Context, source *WorldInstance, playerID PlayerID, destination string, err error) {
+	source.mu.Lock()
+	client := source.Clients[playerID]
+	source.mu.Unlock()
+	if client == nil {
+		return
+	}
+	lines := []string{
+		"",
+		"  That gate is closed.",
+		"  " + destination + " is not joinable right now.",
+	}
+	if err != nil {
+		lines = append(lines, "  "+err.Error())
+	}
+	_ = client.write(ctx, EventMessage{Type: MessageTypeEvent, Event: ProtocolEvent{
+		Type:         "scroll",
+		PlayerStatID: -1,
+		Title:        "Transit",
+		Lines:        lines,
+	}})
+}
+
+func (c *webSocketClient) currentWorldName() string {
+	c.mu.Lock()
+	defer c.mu.Unlock()
+	return c.worldName
+}
+
+func (c *webSocketClient) setWorldName(worldName string) {
+	c.mu.Lock()
+	c.worldName = worldName
+	c.mu.Unlock()
+}
+
+func (s *WebSocketServer) instanceForClient(client *webSocketClient) *WorldInstance {
+	if client == nil {
+		return nil
+	}
+	worldName := client.currentWorldName()
+	s.mu.Lock()
+	defer s.mu.Unlock()
+	return s.Instances[worldName]
+}
+
 // mintPlayerID returns the next process-unique PlayerID. It locks only s.mu and
 // never inst.mu, so it is safe to call before taking an instance lock.
 func (s *WebSocketServer) mintPlayerID() PlayerID {
@@ -2899,6 +3057,7 @@ func (s *WebSocketServer) tryResume(inst *WorldInstance, client *webSocketClient
 	inst.RoomManager.DrainPlayerEvents(playerID)
 	snapshot, snapOK := inst.RoomManager.Snapshot(playerID)
 	if snapOK {
+		snapshot.World = inst.Name
 		snapshot.ResumeToken = token
 		client.boardID = snapshot.BoardID
 	}

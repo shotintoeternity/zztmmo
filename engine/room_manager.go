@@ -15,6 +15,10 @@ type RoomManager struct {
 	rooms        map[int16]*Room
 	players      map[PlayerID]*roomPlayer
 	nextPlayerID PlayerID
+	// TransitGates is the server-owned cross-world gate table (M29.1). Empty
+	// means vanilla/MMO intra-world passage behavior. Only first-party LOBBY
+	// instances populate it; authored worlds cannot opt in through ZZT data.
+	TransitGates map[TransitGateKey]string
 
 	// HighScorePath, when non-empty, is the file the world's high-score list is
 	// read from and written to. Empty keeps the list in memory only, which is
@@ -29,9 +33,10 @@ type RoomManager struct {
 	// quits and pendingScores carry a confirmed quit out of StepDiffs. The
 	// player is gone from their room by then, so they get no diff and the
 	// server must deliver the outcome to them directly.
-	quits               []QuitResult
-	pendingScores       map[PlayerID]QuitResult
-	pendingPlayerEvents map[PlayerID][]Event
+	quits                []QuitResult
+	pendingScores        map[PlayerID]QuitResult
+	pendingPlayerEvents  map[PlayerID][]Event
+	pendingWorldTransits []WorldTransit
 
 	// recorder, when non-nil, logs the external stimuli this manager applies —
 	// joins, leaves, submits, and per-tick inputs — for deterministic replay
@@ -94,6 +99,20 @@ type roomPlayer struct {
 type roomTransfer struct {
 	playerID PlayerID
 	event    TransferEvent
+}
+
+type TransitGateKey struct {
+	BoardID int16
+	X       int16
+	Y       int16
+}
+
+type WorldTransit struct {
+	PlayerID         PlayerID
+	DestinationWorld string
+	SourceBoard      int16
+	SourceX          int16
+	SourceY          int16
 }
 
 func NewRoomManager(world TWorld) *RoomManager {
@@ -571,6 +590,16 @@ func (rm *RoomManager) StepDiffsWithBoards(inputs map[PlayerID]PlayerInput) (map
 			switch ev := event.(type) {
 			case TransferEvent:
 				if playerID, found := rm.playerIDForStat(boardID, ev.StatId); found {
+					if destination, ok := rm.worldTransitDestination(boardID, ev); ok {
+						rm.pendingWorldTransits = append(rm.pendingWorldTransits, WorldTransit{
+							PlayerID:         playerID,
+							DestinationWorld: destination,
+							SourceBoard:      boardID,
+							SourceX:          ev.SourceX,
+							SourceY:          ev.SourceY,
+						})
+						continue
+					}
 					if ev.SoundNotes != "" {
 						sound := SoundEvent{Notes: ev.SoundNotes, Priority: ev.SoundPriority, StatId: ev.StatId}
 						rm.pendingPlayerEvents[playerID] = append(rm.pendingPlayerEvents[playerID], sound)
@@ -673,6 +702,23 @@ func (rm *RoomManager) StepDiffsWithBoards(inputs map[PlayerID]PlayerInput) (map
 		}
 	}
 	return diffs, boardDiffs
+}
+
+func (rm *RoomManager) worldTransitDestination(boardID int16, transfer TransferEvent) (string, bool) {
+	if len(rm.TransitGates) == 0 {
+		return "", false
+	}
+	destination := rm.TransitGates[TransitGateKey{BoardID: boardID, X: transfer.SourceX, Y: transfer.SourceY}]
+	if destination == "" {
+		return "", false
+	}
+	return destination, true
+}
+
+func (rm *RoomManager) DrainWorldTransits() []WorldTransit {
+	transits := rm.pendingWorldTransits
+	rm.pendingWorldTransits = nil
+	return transits
 }
 
 // stepRoom contains a simulation panic to the room that caused it.  Engines

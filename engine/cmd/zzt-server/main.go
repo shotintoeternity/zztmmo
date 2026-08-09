@@ -10,6 +10,7 @@ import (
 	"os"
 	"os/signal"
 	"path/filepath"
+	"strings"
 	"syscall"
 	"time"
 
@@ -18,7 +19,7 @@ import (
 
 func main() {
 	addr := flag.String("addr", ":8080", "listen address")
-	worldName := flag.String("world", "TOWN", "world basename to load")
+	worldName := flag.String("world", zztgo.LobbyWorldName, "world basename to load")
 	boardID := flag.Int("board", 1, "default board id")
 	webDir := flag.String("web", "web/dist", "built browser client directory")
 	helpDir := flag.String("help", ".", "directory holding the .HLP help files")
@@ -42,6 +43,7 @@ func main() {
 	if !zztgo.WorldLoad(*worldName, ".ZZT", false) {
 		log.Fatalf("load %s.ZZT failed", *worldName)
 	}
+	zztgo.E.World.Info.Name = strings.ToUpper(*worldName)
 
 	server := zztgo.NewWebSocketServer(zztgo.E.World, int16(*boardID))
 	// Vanilla keeps <world>.HI beside the world file. Empty would keep the list

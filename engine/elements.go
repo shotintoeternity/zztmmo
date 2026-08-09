@@ -1082,6 +1082,8 @@ func (e *Engine) ElementPassageTouch(x, y int16, sourceStatId int16, deltaX, del
 		}
 		e.Events = append(e.Events, TransferEvent{
 			StatId:        sourceStatId,
+			SourceX:       x,
+			SourceY:       y,
 			ToBoard:       destBoard,
 			EntryX:        entryX,
 			EntryY:        entryY,
@@ -1239,6 +1241,8 @@ func (e *Engine) ElementBoardEdgeTouch(x, y int16, sourceStatId int16, deltaX, d
 			// actual stat transfer. No board swap occurs.
 			e.Events = append(e.Events, TransferEvent{
 				StatId:  sourceStatId,
+				SourceX: x,
+				SourceY: y,
 				ToBoard: int16(e.Board.Info.NeighborBoards[neighborId]),
 				EntryX:  entryX,
 				EntryY:  entryY,

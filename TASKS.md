@@ -7347,7 +7347,7 @@ another. Ordinary Passage elements in ordinary worlds keep vanilla intra-world
 semantics, replay fixtures stay in-world, and a player-authored world cannot
 smuggle a cross-world transfer by naming a board or writing OOP.
 
-- [ ] **M29.1 — first-party lobby world and server-interpreted transit gates.**
+- [x] **M29.1 — first-party lobby world and server-interpreted transit gates.**
   Build and ship a canonical `LOBBY.ZZT` created through the same source path as
   WELCOME: keep a committed source artifact if practical, commit
   `fixtures/LOBBY.ZZT`, write the local `engine/LOBBY.ZZT` hosting artifact for
@@ -7400,6 +7400,14 @@ smuggle a cross-world transfer by naming a board or writing OOP.
   Verify with `npm test`, `npm run build`, focused Go tests for M29.1, focused
   `ZZT_BROWSER=1` coverage for the lobby journey, `git diff --check`, and the
   session gate `cd engine && go build ./... && go test ./...`.
+
+  **Done 2026-08-09.** Added the committed LOBBY source/world fixture, canonical
+  metadata, default startup wiring, lobby shelf/client launch behavior, and
+  server-interpreted LOBBY transit gates that preserve live/account identity
+  across a gate into TOWN. Verified with `npm test`, `npm run build`,
+  focused M29.1 Go tests, focused `ZZT_BROWSER=1` lobby-browser coverage,
+  `git diff --check`, and the session gate `cd engine && go build ./... &&
+  go test ./...`.
 
 ## M14 — Rearchitecting for the service ZZTMMO is becoming
 

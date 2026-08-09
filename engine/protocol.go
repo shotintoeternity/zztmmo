@@ -664,6 +664,7 @@ type SaveFilenameMessage struct {
 
 type SnapshotMessage struct {
 	Type    string           `json:"type"`
+	World   string           `json:"world,omitempty"`
 	BoardID int16            `json:"boardId"`
 	Tick    int16            `json:"tick"`
 	Seed    uint32           `json:"seed"`

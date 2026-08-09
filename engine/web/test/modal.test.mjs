@@ -43,7 +43,8 @@ function worldSearch() {
     query: "",
     selected: 0,
     entries: [
-      { world: "TOWN", id: "TOWN", title: "TOWN (ZZTMMO Lobby)", author: "Unknown", created: "" },
+      { world: "LOBBY", id: "lobby", title: "ZZTMMO Lobby", author: "ZZTMMO", created: "2026", kind: "classic" },
+      { world: "TOWN", id: "TOWN", title: "Town of ZZT", author: "Tim Sweeney", created: "1991", kind: "classic" },
       { world: "RHYGAR1", id: "rhygar1", title: "Rhygar", author: "Saxxon Pike", created: "1997", players: 1 },
       { world: "CASTLE", id: "castle", title: "Castle", author: "Unknown", created: "1999", players: 2 },
       { world: "TEEN", id: "teen", title: "Teen Priest", author: "Draco", created: "1998" },
@@ -229,10 +230,10 @@ function scroll() {
   // instruction row (y=11) where it used to overprint the header.
   const instructionWrite = writes.find((write) => write.text === "Type to search all/Museum; shelves");
   assert.ok(instructionWrite && instructionWrite.y === 11);
-  // All six fixture worlds are matched, not a featured subset.
-  assert.ok(writes.some((write) => write.text === "6 matches" && write.x === 42 && write.y === 12));
+  // All seven fixture worlds are matched, not a featured subset.
+  assert.ok(writes.some((write) => write.text === "7 matches" && write.x === 42 && write.y === 12));
   assert.ok(writes.some((write) => write.color === 0x70 && write.text.startsWith("Type to search: ")));
-  assert.match(rendered, /TOWN \(ZZTMMO Lobby\)/);
+  assert.match(rendered, /ZZTMMO Lobby/);
   assert.match(rendered, /Rhygar/);
   assert.match(rendered, /by Saxxon Pike/);
   assert.doesNotMatch(rendered, /id:/);
@@ -244,7 +245,7 @@ function scroll() {
 // A world with players online shows its live player count in the list.
 {
   const m = worldSearch();
-  m.selected = 1; // RHYGAR1, the first occupied world after the lobby
+  m.selected = 2; // RHYGAR1, the first occupied world after the lobby and TOWN
   const writes = [];
   renderModal((x, y, color, text) => writes.push({ x, y, color, text }), m);
   assert.match(writes.map((write) => write.text).join(" "), /\(1 player currently online\)/);
@@ -397,14 +398,15 @@ console.log("modal.test.mjs: M17.11 live occupancy passed");
 {
   const entries = [
     { world: "WELCOME", id: "welcome", title: "Welcome to ZZTMMO", author: "ZZTMMO", created: "2026", kind: "classic" },
-    { world: "TOWN", id: "town", title: "TOWN (ZZTMMO Lobby)", author: "Tim Sweeney", created: "1991", kind: "classic" },
+    { world: "LOBBY", id: "lobby", title: "ZZTMMO Lobby", author: "ZZTMMO", created: "2026", kind: "classic" },
+    { world: "TOWN", id: "town", title: "Town of ZZT", author: "Tim Sweeney", created: "1991", kind: "classic" },
     { world: "CAVES", id: "caves", title: "Caves of ZZT", author: "Tim Sweeney", created: "1991", kind: "classic" },
     { world: "MOSSGATE", id: "mossgate", title: "MOSSGATE", author: "Dreamed here", created: "", kind: "dreamed" },
     { world: "MERC", id: "merc", title: "MERC", author: "Local", created: "", kind: "local" },
     { world: "PR0N4U", id: "pr0n4u", title: "PR0N4U", author: "Local", created: "", kind: "local" },
   ];
-  const render = (query) => {
-    const m = { kind: "worldSearch", title: "Select a World", query, selected: 0, entries, onSelect() {}, onQuery() {} };
+  const render = (query, selected = 0) => {
+    const m = { kind: "worldSearch", title: "Select a World", query, selected, entries, onSelect() {}, onQuery() {} };
     const writes = [];
     renderModal((x, y, color, text) => writes.push({ x, y, color, text }), m);
     return writes.map((w) => w.text).join("\n");
@@ -413,12 +415,12 @@ console.log("modal.test.mjs: M17.11 live occupancy passed");
   const firstScreen = render("");
   assert.match(firstScreen, /Welcome to ZZTMMO/, "the welcome world leads the first screen");
   assert.match(firstScreen, /Start here/, "the welcome world is marked for newcomers");
-  assert.match(firstScreen, /TOWN \(ZZTMMO Lobby\)/, "the lobby leads the first screen");
+  assert.match(firstScreen, /ZZTMMO Lobby/, "the lobby leads the first screen");
   assert.match(firstScreen, /Caves of ZZT/, "catalogued classics are listed");
-  assert.match(firstScreen, /MOSSGATE/, "worlds this server dreamed are listed");
   assert.doesNotMatch(firstScreen, /MERC/, "uncatalogued worlds are left to search");
   assert.doesNotMatch(firstScreen, /PR0N4U/, "…including ones whose names read badly on a first screen");
-  assert.match(firstScreen, /4 matches/, "the count reflects the curated list");
+  assert.match(firstScreen, /5 matches/, "the count reflects the curated list");
+  assert.match(render("", 4), /MOSSGATE/, "worlds this server dreamed are listed in the curated set");
 
   // Hidden is not gone: typing still finds them, which is the whole bargain.
   const searched = render("merc");
@@ -436,7 +438,8 @@ console.log("modal.test.mjs: M17.11 live occupancy passed");
 {
   const entries = [
     { world: "WELCOME", id: "welcome", title: "Welcome to ZZTMMO", author: "ZZTMMO", created: "2026", kind: "classic" },
-    { world: "TOWN", id: "town", title: "TOWN (ZZTMMO Lobby)", author: "Tim Sweeney", created: "1991", kind: "classic" },
+    { world: "LOBBY", id: "lobby", title: "ZZTMMO Lobby", author: "ZZTMMO", created: "2026", kind: "classic" },
+    { world: "TOWN", id: "town", title: "Town of ZZT", author: "Tim Sweeney", created: "1991", kind: "classic" },
     { world: "ALPHA", id: "alpha", title: "Alpha Keep", author: "Ada", created: "2026", favorite: true, playCount: 3 },
     { world: "HIDDEN", id: "hidden", title: "Hidden Local", author: "Local", created: "", kind: "local" },
   ];
@@ -446,10 +449,11 @@ console.log("modal.test.mjs: M17.11 live occupancy passed");
     kind: "worldSearch",
     title: "Select a World",
     query: "",
-    selected: 1,
+    selected: 2,
     entries,
     shelves: [
       { id: "start", title: "Start here", worlds: ["WELCOME"] },
+      { id: "lobby", title: "Lobby", worlds: ["LOBBY"] },
       { id: "favorites", title: "Favorites", worlds: ["ALPHA"] },
       { id: "classics", title: "Classics", worlds: ["TOWN"] },
     ],
@@ -470,7 +474,7 @@ console.log("modal.test.mjs: M17.11 live occupancy passed");
 
   assert.equal(handleModalKey(m, key("Tab", "Tab")), "redraw");
   assert.deepEqual(toggles, [["ALPHA", false]]);
-  assert.equal(entries[2].favorite, false);
+  assert.equal(entries[3].favorite, false);
   assert.equal(handleModalKey(m, key("Enter", "Enter")), "close");
   assert.deepEqual(picked, ["ALPHA"]);
 
@@ -488,7 +492,8 @@ console.log("modal.test.mjs: M17.11 live occupancy passed");
 // Classics come before dreams on the first screen, each keeping server order.
 {
   const entries = [
-    { world: "TOWN", id: "town", title: "TOWN (ZZTMMO Lobby)", author: "Tim Sweeney", created: "1991", kind: "classic" },
+    { world: "LOBBY", id: "lobby", title: "ZZTMMO Lobby", author: "ZZTMMO", created: "2026", kind: "classic" },
+    { world: "TOWN", id: "town", title: "Town of ZZT", author: "Tim Sweeney", created: "1991", kind: "classic" },
     { world: "ARCHIVE", id: "archive", title: "ARCHIVE", author: "Dreamed here", created: "", kind: "dreamed" },
     { world: "CAVES", id: "caves", title: "Caves of ZZT", author: "Tim Sweeney", created: "1991", kind: "classic" },
   ];
@@ -507,7 +512,7 @@ console.log("modal.test.mjs: M17.11 live occupancy passed");
 // because the server did not say what it was.
 {
   const entries = [
-    { world: "TOWN", id: "town", title: "TOWN (ZZTMMO Lobby)", author: "Unknown", created: "" },
+    { world: "LOBBY", id: "lobby", title: "ZZTMMO Lobby", author: "ZZTMMO", created: "2026", kind: "classic" },
     { world: "MYSTERY", id: "mystery", title: "Mystery", author: "Unknown", created: "" },
   ];
   const m = { kind: "worldSearch", title: "Select a World", query: "", selected: 0, entries, onSelect() {}, onQuery() {} };

@@ -80,16 +80,17 @@ All commands are run from the `engine/` directory.
 
 3.  **Put a world where the server can load it:**
     ```bash
-    cp ../fixtures/TOWN.ZZT .
+    cp ../fixtures/LOBBY.ZZT ../fixtures/TOWN.ZZT .
     ```
     > `.ZZT` files in `engine/` are gitignored, so a fresh clone has none. The
-    > server loads its startup world from the directory it runs in, and `TOWN`
-    > ships as a committed fixture. Add any other worlds the same way; the
+    > server loads its startup world from the directory it runs in, and the
+    > first-party lobby plus classic TOWN ship as committed fixtures. Add any
+    > other worlds the same way; the
     > picker lists everything in the `-worlds` directory.
 
 4.  **Launch the MMO server:**
     ```bash
-    go run ./cmd/zzt-server -world TOWN -web web/dist -help . -saves saves
+    go run ./cmd/zzt-server -world LOBBY -web web/dist -help . -saves saves
     ```
 
 5.  Open **[http://127.0.0.1:8080](http://127.0.0.1:8080)** in multiple browser tabs.
@@ -97,7 +98,7 @@ All commands are run from the `engine/` directory.
 ### Useful Server Flags
 
 *   `-addr :8080` sets the HTTP/WebSocket listen address.
-*   `-world TOWN` chooses the starting `.ZZT` world basename.
+*   `-world LOBBY` chooses the starting `.ZZT` world basename.
 *   `-board 1` chooses the default starting board.
 *   `-web web/dist` points at the built browser client.
 *   `-help .` points at the directory containing ZZT `.HLP` files.

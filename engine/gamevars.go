@@ -171,8 +171,8 @@ type (
 		// this models does not wrap hourly (its minute wrap is the mod 6000
 		// in BoardTimeElapsed). Runtime-only: never serialized, hashed, or
 		// snapshotted, exactly like the real time-of-day it stands in for.
-		TimerTicks uint32
-		ForceDarknessOff       bool
+		TimerTicks       uint32
+		ForceDarknessOff bool
 		// EditorElements is InitElementsEditor's element-table override,
 		// relocated off the shared ElementDefs table and onto the Engine
 		// (M16.13a). Vanilla has one table per process, so ELEMENTS.PAS's
@@ -181,39 +181,39 @@ type (
 		// drawing invisible walls the game way while somebody edits beside it.
 		// Read through ElementCharacter, never by reaching into ElementDefs.
 		// Runtime-only: not serialized, hashed or snapshotted.
-		EditorElements         bool
-		OopChar                byte
-		OopWord                string
-		OopValue               int16
-		DebugEnabled           bool
-		HighScoreList          THighScoreList
-		ConfigRegistration     string
-		ConfigWorldFile        string
-		EditorEnabled          bool
-		JustStarted            bool
-		WorldFileDescCount     int16
-		WorldFileDescKeys      [10]string
-		WorldFileDescValues    [10]string
-		Screen                 [80][25]struct{ Ch, Color byte }
-		Headless               bool
+		EditorElements      bool
+		OopChar             byte
+		OopWord             string
+		OopValue            int16
+		DebugEnabled        bool
+		HighScoreList       THighScoreList
+		ConfigRegistration  string
+		ConfigWorldFile     string
+		EditorEnabled       bool
+		JustStarted         bool
+		WorldFileDescCount  int16
+		WorldFileDescKeys   [10]string
+		WorldFileDescValues [10]string
+		Screen              [80][25]struct{ Ch, Color byte }
+		Headless            bool
 		// LastIOError is where DisplayIOError puts the error it cannot show
 		// when Headless is set (M18.14): its text window ends in
 		// TextWindowSelect, which waits on a keypress no headless process
 		// feeds. Observability, not simulation state — never serialized,
 		// hashed or snapshotted, and the interactive path never sets it.
-		LastIOError error
-		videoDirty             []dirtyCell
-		screenDirty            []dirtyCell
-		ActiveInput            InputSource
-		RandSeed               uint32
-		InputDeltaX            int16
-		InputDeltaY            int16
-		InputShiftPressed      bool
-		InputKeyPressed        byte
-		InputLastDeltaX        int16
-		InputLastDeltaY        int16
-		InputKeyBuffer         string
-		Events                 []Event
+		LastIOError       error
+		videoDirty        []dirtyCell
+		screenDirty       []dirtyCell
+		ActiveInput       InputSource
+		RandSeed          uint32
+		InputDeltaX       int16
+		InputDeltaY       int16
+		InputShiftPressed bool
+		InputKeyPressed   byte
+		InputLastDeltaX   int16
+		InputLastDeltaY   int16
+		InputKeyBuffer    string
+		Events            []Event
 		// pendingInputMu guards only the presentation/network reply queues
 		// below. GameStepWithInputs swaps them out under this mutex, then
 		// processes them unlocked so simulation state is never mutated while
@@ -379,6 +379,8 @@ type (
 	// this engine and spawning them on the destination engine at (EntryX, EntryY).
 	TransferEvent struct {
 		StatId        int16  // the player stat being transferred
+		SourceX       int16  // source tile X, for server-interpreted lobby gates
+		SourceY       int16  // source tile Y, for server-interpreted lobby gates
 		ToBoard       int16  // destination board index (into World.BoardData)
 		EntryX        int16  // entry tile X on the destination board
 		EntryY        int16  // entry tile Y on the destination board

@@ -1294,6 +1294,7 @@ func buildWorldShelves(entries []WorldListEntry, authenticated bool, favorites [
 	}
 
 	addShelf("start", "Start here", []string{"WELCOME"})
+	addShelf("lobby", "Lobby", []string{LobbyWorldName})
 	if authenticated {
 		addShelf("favorites", "Favorites", favorites)
 	}
@@ -1338,7 +1339,7 @@ func buildWorldShelves(entries []WorldListEntry, authenticated bool, favorites [
 
 	classics := make([]string, 0)
 	for _, entry := range entries {
-		if entry.Kind == WorldKindClassic && entry.World != "WELCOME" {
+		if entry.Kind == WorldKindClassic && entry.World != "WELCOME" && entry.World != LobbyWorldName {
 			classics = append(classics, entry.World)
 		}
 	}
