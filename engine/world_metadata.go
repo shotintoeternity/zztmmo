@@ -15,12 +15,15 @@ import (
 var worldManifestJSON []byte
 
 type WorldListEntry struct {
-	World   string `json:"world"`
-	ID      string `json:"id"`
-	Title   string `json:"title"`
-	Author  string `json:"author"`
-	Created string `json:"created"`
-	Players int    `json:"players,omitempty"`
+	World     string               `json:"world"`
+	ID        string               `json:"id"`
+	Title     string               `json:"title"`
+	Author    string               `json:"author"`
+	Created   string               `json:"created"`
+	Favorite  bool                 `json:"favorite,omitempty"`
+	PlayCount int                  `json:"playCount,omitempty"`
+	Thumbnail *WorldTitleThumbnail `json:"thumbnail,omitempty"`
+	Players   int                  `json:"players,omitempty"`
 	// Editors mirrors Players for people editing the world rather than playing
 	// it (M17.11). omitempty keeps quiet worlds uncluttered and the JSON shape
 	// backward-compatible.
@@ -39,6 +42,17 @@ type WorldListEntry struct {
 	// FriendsHere is a per-recipient M26.1 presence summary. It contains public
 	// names only for followed accounts that opted in to sharing their location.
 	FriendsHere []FriendPresenceSummary `json:"friendsHere,omitempty"`
+}
+
+type WorldTitleThumbnail struct {
+	Key   string       `json:"key"`
+	Cells []ScreenCell `json:"cells"`
+}
+
+type WorldShelf struct {
+	ID     string   `json:"id"`
+	Title  string   `json:"title"`
+	Worlds []string `json:"worlds"`
 }
 
 type FriendPresenceSummary struct {

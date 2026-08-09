@@ -7178,7 +7178,7 @@ with no account id, IP address, session id, or timestamped per-player log.
 Watching, replay viewing, title-screen previewing, editing, and Museum search do
 not increment a play count.
 
-- [ ] **M27.1 — favorites, shelves, play counts, and title thumbnails.**
+- [x] **M27.1 — favorites, shelves, play counts, and title thumbnails.**
   Extend `AccountPreferences` with `FavoriteWorlds []string`, stored as
   sanitized world identities and capped to a small bounded list. The signed-in
   account menu and the world picker can toggle the current world's favorite
@@ -7236,6 +7236,21 @@ not increment a play count.
   if the visible picker journey changes. Verify with `npm test`, `npm run build`,
   focused Go tests for M27.1, `git diff --check`, and the session gate
   `cd engine && go build ./... && go test ./...`.
+  **Done 2026-08-09.** Signed-in account preferences now carry capped,
+  sanitized favorite world identities; `/api/preferences` toggles a validated
+  favorite without losing color, blocks, hints, profile, follows or location
+  sharing. A file-backed aggregate activity store records only successful fresh
+  play joins, keyed by world identity, and skips resumes, watchers and title
+  previews. `/api/worlds` now returns flat entries plus shelves in the requested
+  order, per-recipient favorites/friend presence for signed-in players only,
+  play counts, and metadata-keyed cached title thumbnails rendered from board 0
+  without creating live rooms. The browser picker renders the shelves, favorite
+  stars and play counts, keeps global search, and sends every selection through
+  the existing title-stop path; Tab toggles the selected favorite and guest
+  attempts get an honest sign-in window. Verified with `npm test`, `npm run
+  build`, `go test -count=1 -run 'TestM271' ./`, `ZZT_BROWSER=1 go test
+  -count=1 -run TestM1611BrowserEndToEndPlayerJourneys ./`, `git diff
+  --check`, and `cd engine && go build ./... && go test ./...`.
 
 ## M14 — Rearchitecting for the service ZZTMMO is becoming
 

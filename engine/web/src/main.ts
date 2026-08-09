@@ -10,6 +10,7 @@ import {
   type Modal,
   type ModalTextInput,
   type WorldSearchEntry,
+  type WorldShelf,
 } from "./modal";
 import { MobileTextInputBridge } from "./mobile_text_input";
 import { createTouchControls, type TouchControls } from "./touch_controls";
@@ -59,6 +60,7 @@ import {
   fetchAccountPreferences,
   saveAccountHint,
   saveAccountColor,
+  saveFavoriteWorld,
   saveAccountProfile,
   saveShareLocationWithFollowers,
   type AccountHintKey,
@@ -750,6 +752,7 @@ let leavingToTitle = false;
 let serverOccupancy: ServerOccupancy = NO_OCCUPANCY;
 let serverBuildCommit = "";
 let worldPickerEntries: WorldSearchEntry[] = [];
+let worldPickerShelves: WorldShelf[] = [];
 let occupancyTimer = 0;
 
 // While a modal is up, gameplay keys are swallowed (M4.1: handleModalKey is the
@@ -1432,7 +1435,8 @@ const LOBBY_WORLD = "TOWN";
 
 async function fetchWorldEntries(): Promise<WorldSearchEntry[]> {
   const response = await fetch("/api/worlds");
-  const data = (await response.json()) as { worlds?: (WorldSearchEntry | string)[] };
+  const data = (await response.json()) as { worlds?: (WorldSearchEntry | string)[]; shelves?: WorldShelf[] };
+  worldPickerShelves = normalizeWorldShelves(data.shelves ?? []);
   return normalizeWorldEntries(data.worlds ?? []);
 }
 
@@ -1492,8 +1496,10 @@ function showWorldEntries(worlds: WorldSearchEntry[]) {
     query: "",
     selected: 0,
     entries: worlds,
+    shelves: worldPickerShelves,
     onSelect: (entry) => void selectWorldEntry(entry),
     onQuery: (query) => scheduleMuseumSearch(query, worlds),
+    onFavorite: (entry, favorite) => toggleWorldFavorite(entry, favorite),
   });
 }
 
@@ -1537,6 +1543,7 @@ async function refreshOccupancy() {
     // Museum results are merged into a fresh array, so the entries on screen are
     // not always the ones the picker was opened with; update both.
     applyWorldOccupancy(modal.entries, worlds);
+    modal.shelves = worldPickerShelves;
   }
   drawTitleSidebar(
     writeText,
@@ -1560,6 +1567,7 @@ function scheduleMuseumSearch(query: string, localEntries: WorldSearchEntry[]) {
   if (trimmed.length < 2) {
     if (modal && modal.kind === "worldSearch") {
       modal.entries = localEntries;
+      modal.shelves = worldPickerShelves;
     }
     return;
   }
@@ -1580,6 +1588,7 @@ async function updateMuseumSearch(query: string, localEntries: WorldSearchEntry[
       return;
     }
     modal.entries = mergeWorldEntries(localEntries, museumResultsToEntries(data.results ?? []));
+    modal.shelves = [];
     modal.selected = 0;
     paintOverlay();
     drawScreen();
@@ -1637,7 +1646,11 @@ function normalizeWorldEntries(entries: (WorldSearchEntry | string)[]): WorldSea
         author: entry.author || "Unknown",
         created: entry.created || "",
         players: entry.players || 0,
+        favorite: entry.favorite === true,
+        playCount: entry.playCount || 0,
+        thumbnail: entry.thumbnail,
         editors: entry.editors || 0,
+        friendsHere: entry.friendsHere ?? [],
         source: "local",
         // M18.9: the server's grouping. Left undefined by an older server or
         // by the bare-string list below, and the picker treats "not local" as
@@ -1658,6 +1671,42 @@ function normalizeWorldEntries(entries: (WorldSearchEntry | string)[]): WorldSea
       source: "local",
     };
   });
+}
+
+function normalizeWorldShelves(shelves: WorldShelf[]): WorldShelf[] {
+  return shelves
+    .map((shelf) => ({
+      id: typeof shelf.id === "string" ? shelf.id : "",
+      title: typeof shelf.title === "string" ? shelf.title : "",
+      worlds: Array.isArray(shelf.worlds) ? shelf.worlds.filter((world): world is string => typeof world === "string") : [],
+    }))
+    .filter((shelf) => shelf.id && shelf.title && shelf.worlds.length > 0);
+}
+
+function toggleWorldFavorite(entry: WorldSearchEntry, favorite: boolean): boolean {
+  if (!authStatus.authenticated) {
+    openWindow("Favorites", ["", "  Sign in to keep favorite worlds.", ""], true);
+    return false;
+  }
+  void saveFavoriteWorld(fetch, entry.world, favorite).then((stored) => {
+    if (!stored) {
+      entry.favorite = !favorite;
+      openWindow("Favorites", ["", "  Favorite was not saved.", ""], true);
+      return;
+    }
+    accountPrefs = stored;
+    for (const world of worldPickerEntries) {
+      world.favorite = stored.favoriteWorlds.includes(world.world);
+    }
+    if (modal && modal.kind === "worldSearch") {
+      for (const world of modal.entries) {
+        world.favorite = stored.favoriteWorlds.includes(world.world);
+      }
+      paintOverlay();
+      drawScreen();
+    }
+  });
+  return true;
 }
 
 function openDreamPrompt() {
@@ -2800,6 +2849,7 @@ function tryShowFirstTimeHint(hint: AccountHintKey) {
       color: accountPrefs?.color ?? "",
       profile: accountPrefs?.profile ?? EMPTY_ACCOUNT_PROFILE,
       shareLocationWithFollowers: accountPrefs?.shareLocationWithFollowers === true,
+      favoriteWorlds: accountPrefs?.favoriteWorlds ?? [],
       hints: {
         players: nextHints.players === true,
         death: nextHints.death === true,
@@ -3038,10 +3088,23 @@ function openReplayPostcard() {
 
 function openAccountMenu() {
   const sharing = accountPrefs?.shareLocationWithFollowers === true;
-  const entries = ["Edit profile", sharing ? "Hide my location" : "Share my location", "Sign out"];
+  const favorite = accountPrefs?.favoriteWorlds.includes(worldName) === true;
+  const entries = [favorite ? "Unfavorite this world" : "Favorite this world", "Edit profile", sharing ? "Hide my location" : "Share my location", "Sign out"];
   openSelectList("Account", entries, (entry) => {
     if (entry === "Sign out") {
       void fetch("/api/auth/logout", { method: "POST" }).then(() => refreshAuthStatus());
+      return;
+    }
+    if (entry === "Favorite this world" || entry === "Unfavorite this world") {
+      const next = entry === "Favorite this world";
+      void saveFavoriteWorld(fetch, worldName, next).then((stored) => {
+        if (!stored) {
+          openWindow("Account", ["", "  Favorite was not saved.", ""], true);
+          return;
+        }
+        accountPrefs = stored;
+        openWindow("Account", ["", `  ${next ? "Favorited" : "Unfavorited"} ${worldName}.`, ""], true);
+      });
       return;
     }
     if (entry === "Edit profile") {
@@ -3137,6 +3200,7 @@ function openColorPicker() {
           hints: accountPrefs?.hints ?? { players: false, death: false, chat: false },
           profile: accountPrefs?.profile ?? EMPTY_ACCOUNT_PROFILE,
           shareLocationWithFollowers: accountPrefs?.shareLocationWithFollowers === true,
+          favoriteWorlds: accountPrefs?.favoriteWorlds ?? [],
         };
         void saveAccountColor(fetch, color).then((stored) => {
           if (stored) {

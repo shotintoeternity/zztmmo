@@ -17,6 +17,7 @@ export interface AccountPreferences {
   hints: AccountHintPreferences;
   profile: AccountProfilePreferences;
   shareLocationWithFollowers: boolean;
+  favoriteWorlds: string[];
 }
 
 export type AccountHintKey = "players" | "death" | "chat";
@@ -61,6 +62,9 @@ function readPreferences(value: unknown): AccountPreferences {
       about,
     },
     shareLocationWithFollowers: doc.shareLocationWithFollowers === true,
+    favoriteWorlds: Array.isArray(doc.favoriteWorlds)
+      ? doc.favoriteWorlds.filter((world): world is string => typeof world === "string")
+      : [],
   };
 }
 
@@ -140,6 +144,22 @@ export async function saveShareLocationWithFollowers(fetchFn: FetchLike, shareLo
       method: "PUT",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({ shareLocationWithFollowers }),
+    });
+    if (!response.ok) {
+      return null;
+    }
+    return readPreferences(await response.json());
+  } catch {
+    return null;
+  }
+}
+
+export async function saveFavoriteWorld(fetchFn: FetchLike, world: string, favorite: boolean): Promise<AccountPreferences | null> {
+  try {
+    const response = await fetchFn(PREFERENCES_URL, {
+      method: "PUT",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ favoriteWorld: world, favorite }),
     });
     if (!response.ok) {
       return null;

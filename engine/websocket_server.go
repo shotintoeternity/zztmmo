@@ -117,6 +117,7 @@ type WebSocketServer struct {
 	EditorSessions      map[*webSocketClient]*EditorSession
 	EditorWorldSessions map[string]*EditorSession
 	ChatDB              ChatDatabase
+	Activity            *WorldActivityStore
 	Auth                *AuthService
 	metrics             *serverMetrics
 }
@@ -377,6 +378,7 @@ func NewWebSocketServer(world TWorld, defaultBoard int16) *WebSocketServer {
 		EditorSessions:         make(map[*webSocketClient]*EditorSession),
 		EditorWorldSessions:    make(map[string]*EditorSession),
 		ChatDB:                 NewMemChatDatabase(),
+		Activity:               &WorldActivityStore{counts: make(map[string]int)},
 		// Memory-only until cmd/zzt-server points them at the saves directory, so
 		// a test never writes an audit line or a refusal to disk (M21.2).
 		Refusals: NewRefusalStore(""),
@@ -1031,6 +1033,11 @@ func (s *WebSocketServer) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 		// player is already gone) exactly as a mid-game drop would.
 		s.handleReadLoopExit(inst, client, playerID)
 		return
+	}
+	if !resumed && s.Activity != nil {
+		if err := s.Activity.IncrementPlay(safeWorld); err != nil {
+			log.Printf("zztgo: failed to record play for %s: %v", safeWorld, err)
+		}
 	}
 
 	if s.ChatDB != nil {

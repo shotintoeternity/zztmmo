@@ -93,6 +93,10 @@ type AccountPreferences struct {
 	// ShareLocationWithFollowers lets followed accounts see the world this
 	// account is currently playing. The zero value is deliberately private.
 	ShareLocationWithFollowers bool `json:"shareLocationWithFollowers,omitempty"`
+	// FavoriteWorlds are the signed-in player's discovery shortcuts (M27.1).
+	// They are world identities, not titles, and are sanitized before storage so
+	// a favorite can be fed back into the same join path as /api/worlds.
+	FavoriteWorlds []string `json:"favoriteWorlds,omitempty"`
 }
 
 type AccountHintPreferences struct {
@@ -435,6 +439,7 @@ func putAccountPreferencesLocked(prefs map[string]AccountPreferences, handleOwne
 	}
 	next.Profile = profile
 	next.FollowedAccounts = sanitizeFollowedAccounts(next.FollowedAccounts, accountID)
+	next.FavoriteWorlds = sanitizeFavoriteWorlds(next.FavoriteWorlds)
 	oldHandle := prefs[accountID].Profile.Handle
 	newHandle := next.Profile.Handle
 	if newHandle != "" {
@@ -450,6 +455,31 @@ func putAccountPreferencesLocked(prefs map[string]AccountPreferences, handleOwne
 	}
 	prefs[accountID] = next
 	return nil
+}
+
+const MaxFavoriteWorlds = 32
+
+func sanitizeFavoriteWorlds(worlds []string) []string {
+	if len(worlds) == 0 {
+		return nil
+	}
+	seen := make(map[string]struct{}, len(worlds))
+	out := make([]string, 0, len(worlds))
+	for _, world := range worlds {
+		safe, err := SanitizeSaveName(world)
+		if err != nil {
+			continue
+		}
+		if _, ok := seen[safe]; ok {
+			continue
+		}
+		seen[safe] = struct{}{}
+		out = append(out, safe)
+		if len(out) >= MaxFavoriteWorlds {
+			break
+		}
+	}
+	return out
 }
 
 func sanitizeFollowedAccounts(accounts []string, self string) []string {

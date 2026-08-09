@@ -222,13 +222,12 @@ function scroll() {
   const writes = [];
   renderModal((x, y, color, text) => writes.push({ x, y, color, text }), m);
   const rendered = writes.map((write) => write.text).join(" ");
-  // M18.9 reworded this line — the first screen is curated now, so it has to
-  // say that typing reaches worlds the list is not showing.
-  assert.match(rendered, /Type to search every world & the museum!/);
+  // M27.1 reworded this line again — the first screen is shelves now, while
+  // typing remains the way to reach worlds the first screen does not show.
+  assert.match(rendered, /Type to search all\/Museum; shelves/);
   // The count sits on the blank line below the instruction (y=12), not on the
-  // instruction row (y=11) where it used to overprint the header into
-  // "…museum6 matches".
-  const instructionWrite = writes.find((write) => write.text === "Type to search every world & the museum!");
+  // instruction row (y=11) where it used to overprint the header.
+  const instructionWrite = writes.find((write) => write.text === "Type to search all/Museum; shelves");
   assert.ok(instructionWrite && instructionWrite.y === 11);
   // All six fixture worlds are matched, not a featured subset.
   assert.ok(writes.some((write) => write.text === "6 matches" && write.x === 42 && write.y === 12));
@@ -429,7 +428,61 @@ console.log("modal.test.mjs: M17.11 live occupancy passed");
   assert.match(render("pr0n"), /PR0N4U/, "nothing is removed from the catalogue");
 
   // The instruction has to say that typing reaches more than what is shown.
-  assert.match(firstScreen, /Type to search every world/);
+  assert.match(firstScreen, /Type to search all/);
+}
+
+// M27.1 — when /api/worlds supplies shelves, the empty picker shows those shelf
+// titles in server order; typing still searches the flat list.
+{
+  const entries = [
+    { world: "WELCOME", id: "welcome", title: "Welcome to ZZTMMO", author: "ZZTMMO", created: "2026", kind: "classic" },
+    { world: "TOWN", id: "town", title: "TOWN (ZZTMMO Lobby)", author: "Tim Sweeney", created: "1991", kind: "classic" },
+    { world: "ALPHA", id: "alpha", title: "Alpha Keep", author: "Ada", created: "2026", favorite: true, playCount: 3 },
+    { world: "HIDDEN", id: "hidden", title: "Hidden Local", author: "Local", created: "", kind: "local" },
+  ];
+  const picked = [];
+  const toggles = [];
+  const m = {
+    kind: "worldSearch",
+    title: "Select a World",
+    query: "",
+    selected: 1,
+    entries,
+    shelves: [
+      { id: "start", title: "Start here", worlds: ["WELCOME"] },
+      { id: "favorites", title: "Favorites", worlds: ["ALPHA"] },
+      { id: "classics", title: "Classics", worlds: ["TOWN"] },
+    ],
+    onSelect(entry) { picked.push(entry.world); },
+    onFavorite(entry, favorite) {
+      toggles.push([entry.world, favorite]);
+      return true;
+    },
+  };
+  const writes = [];
+  renderModal((x, y, color, text) => writes.push({ x, y, color, text }), m);
+  const firstScreen = writes.map((w) => w.text).join("\n");
+  assert.match(firstScreen, /Start here/);
+  assert.match(firstScreen, /Favorites/);
+  assert.match(firstScreen, /\* Alpha Keep/);
+  assert.match(firstScreen, /3 plays/);
+  assert.doesNotMatch(firstScreen, /Hidden Local/);
+
+  assert.equal(handleModalKey(m, key("Tab", "Tab")), "redraw");
+  assert.deepEqual(toggles, [["ALPHA", false]]);
+  assert.equal(entries[2].favorite, false);
+  assert.equal(handleModalKey(m, key("Enter", "Enter")), "close");
+  assert.deepEqual(picked, ["ALPHA"]);
+
+  const guest = { ...m, selected: 0, onFavorite() { return false; } };
+  assert.equal(handleModalKey(guest, key("Tab", "Tab")), "redraw");
+  assert.equal(entries[0].favorite, undefined, "a refused guest toggle stays uncommitted");
+
+  m.query = "hidden";
+  m.selected = 0;
+  const searched = [];
+  renderModal((x, y, color, text) => searched.push({ x, y, color, text }), m);
+  assert.match(searched.map((w) => w.text).join("\n"), /Hidden Local/, "search still reaches an unshelved world");
 }
 
 // Classics come before dreams on the first screen, each keeping server order.

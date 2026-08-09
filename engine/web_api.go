@@ -50,11 +50,14 @@ type WebAPI struct {
 	Museum *MuseumService
 	// Auth serves browser-facing Google OAuth endpoints. Nil keeps the server in
 	// guest-only mode.
-	Auth *AuthService
-
+	Auth           *AuthService
 	generationMu   sync.Mutex
 	generationJobs map[string]*generationJob
 	generationSeq  uint64
+
+	thumbnailMu    sync.Mutex
+	thumbnailCache map[string]WorldTitleThumbnail
+	thumbnailOrder []string
 }
 
 type generationJob struct {
@@ -328,6 +331,7 @@ type preferencesResponse struct {
 	Hints                      AccountHintPreferences    `json:"hints,omitempty"`
 	Profile                    AccountProfilePreferences `json:"profile,omitempty"`
 	ShareLocationWithFollowers bool                      `json:"shareLocationWithFollowers,omitempty"`
+	FavoriteWorlds             []string                  `json:"favoriteWorlds,omitempty"`
 }
 
 // handlePreferences reads and writes the signed-in player's account-wide
@@ -344,7 +348,7 @@ func (a *WebAPI) handlePreferences(w http.ResponseWriter, r *http.Request) {
 			return
 		}
 		prefs, stored := a.storedPreferences(account.ID)
-		writeJSON(w, preferencesResponse{Authenticated: true, Stored: stored, Color: prefs.Color, Hints: prefs.Hints, Profile: prefs.Profile, ShareLocationWithFollowers: prefs.ShareLocationWithFollowers})
+		writeJSON(w, preferencesResponse{Authenticated: true, Stored: stored, Color: prefs.Color, Hints: prefs.Hints, Profile: prefs.Profile, ShareLocationWithFollowers: prefs.ShareLocationWithFollowers, FavoriteWorlds: prefs.FavoriteWorlds})
 	case http.MethodPut:
 		if !authenticated {
 			http.Error(w, "sign in to store preferences", http.StatusUnauthorized)
@@ -359,6 +363,9 @@ func (a *WebAPI) handlePreferences(w http.ResponseWriter, r *http.Request) {
 			Hints                      *AccountHintPreferences    `json:"hints"`
 			Profile                    *AccountProfilePreferences `json:"profile"`
 			ShareLocationWithFollowers *bool                      `json:"shareLocationWithFollowers"`
+			FavoriteWorlds             *[]string                  `json:"favoriteWorlds"`
+			FavoriteWorld              *string                    `json:"favoriteWorld"`
+			Favorite                   *bool                      `json:"favorite"`
 		}
 		// Capped like every other body this API decodes (handleGenerate): a
 		// profile is still only a handle, a display line and a few bio lines.
@@ -400,6 +407,18 @@ func (a *WebAPI) handlePreferences(w http.ResponseWriter, r *http.Request) {
 		if body.ShareLocationWithFollowers != nil {
 			prefs.ShareLocationWithFollowers = *body.ShareLocationWithFollowers
 		}
+		if body.FavoriteWorlds != nil {
+			prefs.FavoriteWorlds = a.validFavoriteWorlds(*body.FavoriteWorlds)
+		}
+		if body.FavoriteWorld != nil {
+			safe, err := SanitizeSaveName(*body.FavoriteWorld)
+			if err != nil || !a.joinableWorldSet()[safe] {
+				http.Error(w, "invalid favorite world", http.StatusBadRequest)
+				return
+			}
+			want := body.Favorite == nil || *body.Favorite
+			prefs.FavoriteWorlds = toggleFavoriteWorld(prefs.FavoriteWorlds, safe, want)
+		}
 		if err := a.Server.ChatDB.PutAccountPreferences(account.ID, prefs); err != nil {
 			if errors.Is(err, ErrProfileHandleTaken) {
 				http.Error(w, "handle already claimed", http.StatusConflict)
@@ -413,7 +432,7 @@ func (a *WebAPI) handlePreferences(w http.ResponseWriter, r *http.Request) {
 			return
 		}
 		a.Server.refreshAccountProfile(account.ID, prefs.Profile)
-		writeJSON(w, preferencesResponse{Authenticated: true, Stored: true, Color: prefs.Color, Hints: prefs.Hints, Profile: prefs.Profile, ShareLocationWithFollowers: prefs.ShareLocationWithFollowers})
+		writeJSON(w, preferencesResponse{Authenticated: true, Stored: true, Color: prefs.Color, Hints: prefs.Hints, Profile: prefs.Profile, ShareLocationWithFollowers: prefs.ShareLocationWithFollowers, FavoriteWorlds: prefs.FavoriteWorlds})
 	default:
 		http.Error(w, "use GET or PUT", http.StatusMethodNotAllowed)
 	}
@@ -436,6 +455,56 @@ func (a *WebAPI) storedPreferences(accountID string) (AccountPreferences, bool) 
 		return AccountPreferences{}, false
 	}
 	return prefs, ok
+}
+
+func (a *WebAPI) validFavoriteWorlds(worlds []string) []string {
+	joinable := a.joinableWorldSet()
+	if len(joinable) == 0 {
+		return nil
+	}
+	filtered := make([]string, 0, len(worlds))
+	for _, world := range worlds {
+		safe, err := SanitizeSaveName(world)
+		if err != nil || !joinable[safe] {
+			continue
+		}
+		filtered = append(filtered, safe)
+	}
+	return sanitizeFavoriteWorlds(filtered)
+}
+
+func (a *WebAPI) joinableWorldSet() map[string]bool {
+	dir, worlds := a.worldDirectoryAndNames()
+	entries := WorldListEntriesInDirWithEditors(dir, worlds, nil, nil)
+	out := make(map[string]bool, len(entries))
+	for _, entry := range entries {
+		out[entry.World] = true
+	}
+	return out
+}
+
+func toggleFavoriteWorld(worlds []string, world string, favorite bool) []string {
+	current := sanitizeFavoriteWorlds(worlds)
+	out := current[:0]
+	found := false
+	for _, existing := range current {
+		if existing == world {
+			found = true
+			if favorite {
+				out = append(out, existing)
+			}
+			continue
+		}
+		out = append(out, existing)
+	}
+	if favorite && !found {
+		if len(out) >= MaxFavoriteWorlds {
+			copy(out, out[1:])
+			out = out[:len(out)-1]
+		}
+		out = append(out, world)
+	}
+	return sanitizeFavoriteWorlds(out)
 }
 
 // --- the operator console (M21.6) -------------------------------------------
@@ -1129,16 +1198,7 @@ func (a *WebAPI) handleTitleStream(w http.ResponseWriter, r *http.Request) {
 
 // handleWorlds lists the worlds a client may join.
 func (a *WebAPI) handleWorlds(w http.ResponseWriter, r *http.Request) {
-	dir := "."
-	if a.Server != nil {
-		dir = a.Server.worldsDir()
-	} else if E != nil && E.LoadedGameFileName != "" {
-		dir = filepath.Dir(E.LoadedGameFileName)
-	}
-	worlds := ListWorlds(dir)
-	if len(worlds) == 0 {
-		worlds = []string{a.RoomManager.WorldName()}
-	}
+	dir, worlds := a.worldDirectoryAndNames()
 
 	counts := make(map[string]int, len(worlds))
 	for _, name := range worlds {
@@ -1161,15 +1221,128 @@ func (a *WebAPI) handleWorlds(w http.ResponseWriter, r *http.Request) {
 	}
 
 	entries := WorldListEntriesInDirWithEditors(dir, worlds, counts, editorCounts)
-	if account, authenticated := a.authenticatedAccount(r); authenticated && a.Server != nil {
+	playCounts := map[string]int(nil)
+	if a.Server != nil && a.Server.Activity != nil {
+		playCounts = a.Server.Activity.Counts()
+	}
+	account, authenticated := a.authenticatedAccount(r)
+	var prefs AccountPreferences
+	if authenticated {
+		prefs, _ = a.storedPreferences(account.ID)
+	}
+	favoriteSet := make(map[string]bool, len(prefs.FavoriteWorlds))
+	for _, world := range prefs.FavoriteWorlds {
+		favoriteSet[world] = true
+	}
+	if authenticated && a.Server != nil {
 		friendsByWorld := a.Server.friendPresenceByWorld(account.ID)
 		for i := range entries {
 			entries[i].FriendsHere = friendsByWorld[entries[i].World]
 		}
 	}
+	for i := range entries {
+		entries[i].PlayCount = playCounts[entries[i].World]
+		if authenticated {
+			entries[i].Favorite = favoriteSet[entries[i].World]
+		}
+		entries[i].Thumbnail = a.titleThumbnail(dir, entries[i].World)
+	}
+	shelves := buildWorldShelves(entries, authenticated, prefs.FavoriteWorlds)
 	writeJSON(w, struct {
-		Worlds []WorldListEntry `json:"worlds"`
-	}{Worlds: entries})
+		Worlds  []WorldListEntry `json:"worlds"`
+		Shelves []WorldShelf     `json:"shelves,omitempty"`
+	}{Worlds: entries, Shelves: shelves})
+}
+
+func (a *WebAPI) worldDirectoryAndNames() (string, []string) {
+	dir := "."
+	if a.Server != nil {
+		dir = a.Server.worldsDir()
+	} else if E != nil && E.LoadedGameFileName != "" {
+		dir = filepath.Dir(E.LoadedGameFileName)
+	}
+	worlds := ListWorlds(dir)
+	if len(worlds) == 0 && a.RoomManager != nil {
+		worlds = []string{a.RoomManager.WorldName()}
+	}
+	return dir, worlds
+}
+
+func buildWorldShelves(entries []WorldListEntry, authenticated bool, favorites []string) []WorldShelf {
+	byWorld := make(map[string]WorldListEntry, len(entries))
+	for _, entry := range entries {
+		byWorld[entry.World] = entry
+	}
+	var shelves []WorldShelf
+	addShelf := func(id, title string, worlds []string) {
+		seen := make(map[string]struct{}, len(worlds))
+		out := make([]string, 0, len(worlds))
+		for _, world := range worlds {
+			if _, ok := byWorld[world]; !ok {
+				continue
+			}
+			if _, dup := seen[world]; dup {
+				continue
+			}
+			seen[world] = struct{}{}
+			out = append(out, world)
+		}
+		if len(out) > 0 {
+			shelves = append(shelves, WorldShelf{ID: id, Title: title, Worlds: out})
+		}
+	}
+
+	addShelf("start", "Start here", []string{"WELCOME"})
+	if authenticated {
+		addShelf("favorites", "Favorites", favorites)
+	}
+
+	active := make([]string, 0)
+	for _, entry := range entries {
+		if len(entry.FriendsHere) > 0 || entry.Players > 0 {
+			active = append(active, entry.World)
+		}
+	}
+	sort.SliceStable(active, func(i, j int) bool {
+		a, b := byWorld[active[i]], byWorld[active[j]]
+		if len(a.FriendsHere) != len(b.FriendsHere) {
+			return len(a.FriendsHere) > len(b.FriendsHere)
+		}
+		return a.Players > b.Players
+	})
+	addShelf("active", "Friends here / Active now", active)
+
+	dreams := make([]string, 0)
+	for _, entry := range entries {
+		if entry.Kind == WorldKindDreamed {
+			dreams = append(dreams, entry.World)
+		}
+	}
+	addShelf("dreams", "Recent dreams", dreams)
+
+	played := make([]string, 0)
+	for _, entry := range entries {
+		if entry.PlayCount > 0 {
+			played = append(played, entry.World)
+		}
+	}
+	sort.SliceStable(played, func(i, j int) bool {
+		a, b := byWorld[played[i]], byWorld[played[j]]
+		if a.PlayCount != b.PlayCount {
+			return a.PlayCount > b.PlayCount
+		}
+		return strings.ToUpper(a.Title) < strings.ToUpper(b.Title)
+	})
+	addShelf("played", "Most played", played)
+
+	classics := make([]string, 0)
+	for _, entry := range entries {
+		if entry.Kind == WorldKindClassic && entry.World != "WELCOME" {
+			classics = append(classics, entry.World)
+		}
+	}
+	addShelf("classics", "Classics", classics)
+	return shelves
 }
 
 func (a *WebAPI) handleLoadWorld(w http.ResponseWriter, r *http.Request) {
@@ -1418,4 +1591,90 @@ func TitleScreenCells(world TWorld) []ScreenCell {
 	e.BoardDrawTile(int16(stat.X), int16(stat.Y))
 
 	return screenCells(e)
+}
+
+const maxTitleThumbnailCacheEntries = 128
+
+func (a *WebAPI) titleThumbnail(dir, world string) *WorldTitleThumbnail {
+	key, ok := titleThumbnailKey(dir, world)
+	if !ok {
+		return nil
+	}
+	a.thumbnailMu.Lock()
+	if cached, hit := a.thumbnailCache[key]; hit {
+		a.thumbnailMu.Unlock()
+		thumb := cached
+		return &thumb
+	}
+	a.thumbnailMu.Unlock()
+
+	pristine, err := LoadPristineWorld(dir, world)
+	if err != nil {
+		return nil
+	}
+	cells, ok := safeTitleScreenCells(pristine)
+	if !ok {
+		return nil
+	}
+	thumb := WorldTitleThumbnail{Key: key, Cells: titleThumbnailCells(cells)}
+
+	a.thumbnailMu.Lock()
+	if a.thumbnailCache == nil {
+		a.thumbnailCache = make(map[string]WorldTitleThumbnail)
+	}
+	if _, exists := a.thumbnailCache[key]; !exists {
+		a.thumbnailOrder = append(a.thumbnailOrder, key)
+	}
+	a.thumbnailCache[key] = thumb
+	for len(a.thumbnailOrder) > maxTitleThumbnailCacheEntries {
+		old := a.thumbnailOrder[0]
+		copy(a.thumbnailOrder, a.thumbnailOrder[1:])
+		a.thumbnailOrder = a.thumbnailOrder[:len(a.thumbnailOrder)-1]
+		delete(a.thumbnailCache, old)
+	}
+	a.thumbnailMu.Unlock()
+	return &thumb
+}
+
+func titleThumbnailKey(dir, world string) (string, bool) {
+	safe, err := SanitizeSaveName(world)
+	if err != nil || dir == "" {
+		return "", false
+	}
+	path := filepath.Join(dir, safe+".ZZT")
+	stat, err := os.Stat(path)
+	if err != nil {
+		return "", false
+	}
+	metaPart := "nometa"
+	if metaStat, err := os.Stat(worldMetaPath(dir, safe)); err == nil {
+		metaPart = fmt.Sprintf("%d:%d", metaStat.Size(), metaStat.ModTime().UnixNano())
+	}
+	return fmt.Sprintf("%s:%d:%d:%s", safe, stat.Size(), stat.ModTime().UnixNano(), metaPart), true
+}
+
+func safeTitleScreenCells(world TWorld) (cells []ScreenCell, ok bool) {
+	defer func() {
+		if recover() != nil {
+			cells = nil
+			ok = false
+		}
+	}()
+	return TitleScreenCells(world), true
+}
+
+func titleThumbnailCells(cells []ScreenCell) []ScreenCell {
+	out := make([]ScreenCell, 0, 20*9)
+	for _, cell := range cells {
+		if cell.X%3 != 0 || cell.Y%3 != 0 {
+			continue
+		}
+		out = append(out, ScreenCell{
+			X:     cell.X / 3,
+			Y:     cell.Y / 3,
+			Ch:    cell.Ch,
+			Color: cell.Color,
+		})
+	}
+	return out
 }

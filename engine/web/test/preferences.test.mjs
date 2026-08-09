@@ -15,7 +15,7 @@ const output = await build({
   write: false,
 });
 const source = Buffer.from(output.outputFiles[0].contents).toString("base64");
-const { effectivePlayerColor, fetchAccountPreferences, saveAccountColor, saveAccountHint, saveAccountProfile, saveShareLocationWithFollowers } = await import(
+const { effectivePlayerColor, fetchAccountPreferences, saveAccountColor, saveAccountHint, saveAccountProfile, saveShareLocationWithFollowers, saveFavoriteWorld } = await import(
   `data:text/javascript;base64,${source}`
 );
 
@@ -27,6 +27,7 @@ const defaultPrefs = (overrides) => ({
   hints: { players: false, death: false, chat: false },
   profile: emptyProfile,
   shareLocationWithFollowers: false,
+  favoriteWorlds: [],
   ...overrides,
 });
 
@@ -131,10 +132,12 @@ function jsonResponse(body, { ok = true, status = 200 } = {}) {
       stored: true,
       profile: { handle: "ada", displayName: "Ada", about: ["First line", 7, "Second line"] },
       shareLocationWithFollowers: true,
+      favoriteWorlds: ["ALPHA", 7, "BETA"],
     })).fetchFn,
   );
   assert.deepEqual(prefs.profile, { handle: "ada", displayName: "Ada", about: ["First line", "Second line"] });
   assert.equal(prefs.shareLocationWithFollowers, true);
+  assert.deepEqual(prefs.favoriteWorlds, ["ALPHA", "BETA"]);
 }
 
 // --- writing the account --------------------------------------------------
@@ -208,6 +211,17 @@ function jsonResponse(body, { ok = true, status = 200 } = {}) {
   const saved = await saveShareLocationWithFollowers(fetchFn, true);
   assert.deepEqual(JSON.parse(calls[0].init.body), { shareLocationWithFollowers: true });
   assert.equal(saved.shareLocationWithFollowers, true);
+}
+
+{
+  const { fetchFn, calls } = stubFetch((_url, init) => jsonResponse({
+    authenticated: true,
+    stored: true,
+    favoriteWorlds: [JSON.parse(init.body).favoriteWorld],
+  }));
+  const saved = await saveFavoriteWorld(fetchFn, "ALPHA", true);
+  assert.deepEqual(JSON.parse(calls[0].init.body), { favoriteWorld: "ALPHA", favorite: true });
+  assert.deepEqual(saved.favoriteWorlds, ["ALPHA"]);
 }
 
 console.log("preferences.test.mjs: ok");

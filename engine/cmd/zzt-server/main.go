@@ -60,6 +60,12 @@ func main() {
 		} else {
 			server.ChatDB = chatDB
 		}
+		activity, err := zztgo.NewWorldActivityStore(filepath.Join(*savesDir, "world_activity.json"))
+		if err != nil {
+			log.Printf("failed to initialize world activity store: %v", err)
+		} else {
+			server.Activity = activity
+		}
 	}
 	// Moderation (M21.2). Operator status is deployment configuration — an
 	// allowlist of account ids in ZZT_MODERATOR_ACCOUNTS — so it cannot be granted

@@ -175,6 +175,9 @@ export type WorldSearchEntry = {
   author: string;
   created: string;
   players?: number;
+  favorite?: boolean;
+  playCount?: number;
+  thumbnail?: { key: string; cells: { x: number; y: number; ch: number; color: number }[] };
   // M17.11: people editing this world, the counterpart to players.
   editors?: number;
   friendsHere?: { name: string; handle?: string }[];
@@ -186,6 +189,12 @@ export type WorldSearchEntry = {
   letter?: string;
   filename?: string;
   zztFile?: string;
+};
+
+export type WorldShelf = {
+  id: string;
+  title: string;
+  worlds: string[];
 };
 
 /**
@@ -227,6 +236,9 @@ export function applyWorldOccupancy(entries: WorldSearchEntry[], fresh: WorldSea
     entry.players = update.players ?? 0;
     entry.editors = update.editors ?? 0;
     entry.friendsHere = update.friendsHere ?? [];
+    entry.favorite = update.favorite === true;
+    entry.playCount = update.playCount ?? 0;
+    entry.thumbnail = update.thumbnail;
   }
 }
 
@@ -236,8 +248,10 @@ export type WorldSearchModal = {
   query: string;
   selected: number;
   entries: WorldSearchEntry[];
+  shelves?: WorldShelf[];
   onSelect: (entry: WorldSearchEntry) => void;
   onQuery?: (query: string) => void;
+  onFavorite?: (entry: WorldSearchEntry, favorite: boolean) => boolean;
 };
 
 // TextWindowEdit's derived limits with TextWindowWidth == 50 (game.go's
@@ -438,11 +452,25 @@ function fitText(text: string, width: number): string {
   return text.slice(0, width - 1) + "\x1a";
 }
 
-function worldSearchMatches(m: WorldSearchModal): WorldSearchEntry[] {
+type WorldSearchSection = {
+  title: string;
+  entries: WorldSearchEntry[];
+};
+
+function worldSearchSections(m: WorldSearchModal): WorldSearchSection[] {
   const terms = m.query.toLowerCase().trim().split(/\s+/).filter(Boolean);
   const lobby = m.entries.filter((entry) => entry.world.toUpperCase() === "TOWN");
   const welcome = m.entries.filter((entry) => entry.world.toUpperCase() === WELCOME_WORLD);
   if (terms.length === 0) {
+    if (m.shelves && m.shelves.length > 0) {
+      const byWorld = new Map(m.entries.map((entry) => [entry.world.toUpperCase(), entry]));
+      return m.shelves
+        .map((shelf) => ({
+          title: shelf.title,
+          entries: shelf.worlds.map((world) => byWorld.get(world.toUpperCase())).filter((entry): entry is WorldSearchEntry => entry !== undefined),
+        }))
+        .filter((section) => section.entries.length > 0);
+    }
     // M18.9 — the first screen is curated. Empty query lists the lobby, then
     // the worlds the museum manifest can title and credit, then this server's
     // own dreams. Worlds with neither (uncatalogued community .ZZT files,
@@ -455,7 +483,7 @@ function worldSearchMatches(m: WorldSearchModal): WorldSearchEntry[] {
     // Classics first, dreams after, each keeping the server's title order.
     const classics = shown.filter((entry) => entry.kind !== "dreamed");
     const dreamed = shown.filter((entry) => entry.kind === "dreamed");
-    return [...welcome, ...lobby, ...classics, ...dreamed];
+    return [{ title: "", entries: [...welcome, ...lobby, ...classics, ...dreamed] }];
   }
   const matches = m.entries.filter((entry) => {
     if (entry.world.toUpperCase() === "TOWN") {
@@ -464,17 +492,23 @@ function worldSearchMatches(m: WorldSearchModal): WorldSearchEntry[] {
     const haystack = [entry.world, entry.id, entry.title, entry.author, entry.created].join(" ").toLowerCase();
     return terms.every((term) => haystack.includes(term));
   });
-  return [...matches, ...lobby].slice(0, WORLD_SEARCH_LIMIT);
+  return [{ title: "", entries: [...matches, ...lobby].slice(0, WORLD_SEARCH_LIMIT) }];
 }
 
-function worldSearchLines(matches: WorldSearchEntry[]): string[] {
+function worldSearchMatches(m: WorldSearchModal): WorldSearchEntry[] {
+  return worldSearchSections(m).flatMap((section) => section.entries);
+}
+
+function worldSearchLines(m: WorldSearchModal): string[] {
+  const sections = worldSearchSections(m);
+  const matches = sections.flatMap((section) => section.entries);
   const lines = [
     // M18.9: the first screen is curated, so the instruction has to say that
     // typing reaches more than what is listed — otherwise the uncatalogued
     // worlds read as missing rather than unlisted. Keep this exactly two lines:
     // renderWorldSearchCount right-aligns its count on the second one, and
     // worldSearchLinePos counts from here.
-    "$Type to search every world & the museum!",
+    "$Type to search all/Museum; shelves",
     "",
   ];
   if (matches.length === 0) {
@@ -482,19 +516,27 @@ function worldSearchLines(matches: WorldSearchEntry[]): string[] {
     lines.push("  Try a title, author, year, or id.");
     return lines;
   }
-  for (let i = 0; i < matches.length; i += 1) {
-    const entry = matches[i];
-    const playerText = worldSearchPlayerText(entry.players ?? 0, entry.editors ?? 0);
-    const sourceText = entry.source === "museum" ? "  Museum" : "";
-    lines.push(`!${String(i)};${fitText(entry.title || entry.world, WORLD_TITLE_WIDTH)}`);
-    const startText = entry.world.toUpperCase() === WELCOME_WORLD ? "  Start here" : "";
-    lines.push(fitText(`  by ${entry.author || "Unknown"}  ${entry.created || "????"}${sourceText}${startText}`, WORLD_DETAIL_WIDTH));
-    if (playerText) {
-      lines.push(fitText(`  ${playerText}`, WORLD_DETAIL_WIDTH));
+  let index = 0;
+  for (const section of sections) {
+    if (section.title) {
+      lines.push(fitText(`$${section.title}`, WORLD_DETAIL_WIDTH));
     }
-    const friendsText = worldSearchFriendsText(entry.friendsHere ?? []);
-    if (friendsText) {
-      lines.push(fitText(`  ${friendsText}`, WORLD_DETAIL_WIDTH));
+    for (const entry of section.entries) {
+      const playerText = worldSearchPlayerText(entry.players ?? 0, entry.editors ?? 0);
+      const sourceText = entry.source === "museum" ? "  Museum" : "";
+      const favoriteText = entry.favorite ? "* " : "  ";
+      lines.push(`!${String(index)};${fitText(favoriteText + (entry.title || entry.world), WORLD_TITLE_WIDTH)}`);
+      const startText = entry.world.toUpperCase() === WELCOME_WORLD ? "  Start here" : "";
+      const playedText = (entry.playCount ?? 0) > 0 ? `  ${entry.playCount} plays` : "";
+      lines.push(fitText(`  by ${entry.author || "Unknown"}  ${entry.created || "????"}${sourceText}${startText}${playedText}`, WORLD_DETAIL_WIDTH));
+      if (playerText) {
+        lines.push(fitText(`  ${playerText}`, WORLD_DETAIL_WIDTH));
+      }
+      const friendsText = worldSearchFriendsText(entry.friendsHere ?? []);
+      if (friendsText) {
+        lines.push(fitText(`  ${friendsText}`, WORLD_DETAIL_WIDTH));
+      }
+      index += 1;
     }
   }
   return lines;
@@ -550,15 +592,39 @@ function worldSearchLinePos(selected: number, matches: WorldSearchEntry[]): numb
   return pos;
 }
 
+function worldSearchLinePosForModal(m: WorldSearchModal): number {
+  const sections = worldSearchSections(m);
+  const matches = sections.flatMap((section) => section.entries);
+  if (matches.length === 0) {
+    return 6;
+  }
+  const clamped = Math.min(Math.max(0, m.selected), matches.length - 1);
+  let pos = 3;
+  let index = 0;
+  for (const section of sections) {
+    if (section.title) {
+      pos += 1;
+    }
+    for (const entry of section.entries) {
+      if (index === clamped) {
+        return pos;
+      }
+      pos += 2 + worldSearchExtraLineCount(entry);
+      index += 1;
+    }
+  }
+  return pos;
+}
+
 function renderWorldSearch(write: WriteText, m: WorldSearchModal) {
   const matches = worldSearchMatches(m);
   if (matches.length > 0 && m.selected >= matches.length) {
     m.selected = matches.length - 1;
   }
-  const linePos = worldSearchLinePos(m.selected, matches);
+  const linePos = m.shelves && m.shelves.length > 0 && m.query.trim() === "" ? worldSearchLinePosForModal(m) : worldSearchLinePos(m.selected, matches);
   renderTextWindow(write, {
     title: m.title,
-    lines: worldSearchLines(matches),
+    lines: worldSearchLines(m),
     linePos,
     viewingFile: false,
   });
@@ -822,6 +888,19 @@ function worldSearchKey(m: WorldSearchModal, event: KeyboardEvent): KeyResult {
       return "redraw";
     case "PageDown":
       m.selected = Math.min(Math.max(0, matches.length - 1), m.selected + TEXT_WINDOW_PAGE);
+      return "redraw";
+    case "Tab":
+      if (matches.length === 0 || !m.onFavorite) {
+        return "ignore";
+      }
+      {
+        const entry = matches[Math.min(Math.max(0, m.selected), matches.length - 1)];
+        const next = entry.favorite !== true;
+        if (!m.onFavorite(entry, next)) {
+          return "redraw";
+        }
+        entry.favorite = next;
+      }
       return "redraw";
     case "Backspace":
       if (m.query.length === 0) {
