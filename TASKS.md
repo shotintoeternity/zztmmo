@@ -7795,6 +7795,161 @@ policy is that the cutline stays green before another roadmap system is promoted
   report from a genuine gate failure; `make parity` green; the session gate
   `cd engine && go build ./... && go test ./...` green.
 
+  **Landed 2026-08-10** (`d24088a`; the working notes were written the evening
+  before, so they file under NOTES.md's 2026-08-09 heading). The filing was too
+  kind to itself: `make parity` on an
+  unmodified `5b16a60` was already being KILLED at 600.88s on the default
+  ten-minute package timeout and reporting it as `clean gate "go test" failed`,
+  which is the sentence a genuinely red suite produces. Both go gates now carry
+  `-timeout 30m` — ~2.8x the measured 635.5s browser gate and the same number
+  `make browser` already used, so the two agree rather than drift — and the
+  filing's guess that `-race` was the slower gate is corrected by measurement:
+  it is the faster by a wide margin (87.9s), because it declare-skips the
+  browser family that is the whole cost. A timeout is now distinguishable from a
+  failure, which took finding out that `go test -json` emits no test-level fail
+  event on one: `isTimeoutPanic` is checked against every output event, the
+  report renders `**TIMEOUT** (wall clock, no verdict)`, and `run.json` records
+  the timeout beside the tool versions. `gateResult.TimedOut` is `omitempty`, so
+  a green run's report stays byte-identical and M16.20's two-clone property is
+  untouched. Full record in NOTES.md 2026-08-09 ("M33.3: the certification gates
+  get an explicit timeout").
+
+## M34 — The ZZT Gazette: the town's memory, posted where people loiter
+
+Filed 2026-08-10 from the owner-promoted roadmap queue's tenth and last ranked
+line, "community-event moonshots". That line names seven ideas and does not rank
+them internally; this executor reads its **listed** order as its ranking, which
+puts the ZZT Gazette first. That is also the structural order rather than merely
+the lexical one — the treasure hunt announces its first finder *in* the Gazette,
+and dream duels award it — so the Gazette is the substrate two of its siblings
+already assume. The owner can re-rank cheaply by saying so; nothing below
+depends on the Gazette being first except the order the siblings get specced in.
+
+The idea-backlog bullet asks for a daily newspaper board in the lobby, written
+by the LLM from the day's *real* happenings — worlds beaten, notable deaths,
+dreams dreamed, scores set — in ZZT's terse, slightly wrong register, compiled
+through the same ZWD path as any dream, with names shown only for signed-in
+players who opted in and deeds without names otherwise (the M21 lesson, applied
+to fame). Nothing in this repo records a happening today: `WorldActivityStore`
+is aggregate play counts with no time dimension (M27.1), `ChallengeStore` holds
+one best row per account per challenge and deliberately no timestamps (M32.1),
+and M28.1's "moments" are re-derived from replay files on every request. The
+newspaper's first problem is therefore not prose; it is that there is no ledger
+to write from.
+
+Four boundaries are decided here before code.
+
+**The ledger is not the simulation.** Nothing in the ledger is read by sim code,
+enters `StateHash`, or moves a replay fixture; the ledger is written from the
+server layer only, from events the sim already emits or from server-side
+completions the sim never sees. A newspaper needs a wall clock and the sim may
+not have one (CLAUDE.md rule 2), so the clock is injected at the ledger's
+boundary and lives nowhere else.
+
+**The day is UTC.** A newspaper needs one calendar, and the service has no
+player timezone to prefer. Same call M32.1 made for choosing today's challenge:
+UTC dates at the web/API boundary, never inside a run.
+
+**A name is a profile, not a new opt-in flag.** M24.1 already made the deliberate
+public subset of an account — handle and display name — and a player who has set
+neither has not asked to be visible. So the consent rule is: an actor is named in
+the ledger only if they are signed in AND their profile carries a handle or a
+display name; every other deed is recorded without a name and reads as a
+stranger's. No second opt-in flag, no toggle to keep in sync with M26.1's
+`ShareLocationWithFollowers`, and account ids never leave the process.
+
+The rule is applied when the edition is *read*, not when the deed is recorded,
+and the ledger stores no name at all — only the account key `ChallengeStore`
+already keeps server-side. That is the cheaper design in two ways that both
+matter: the tick goroutine does not read the preferences store to write down a
+death, and the only name that ever reaches disk is one a profile consented to,
+rather than the Google display name an account happens to carry.
+
+**A private run is not news.** A challenge run (M32.1), an editor test-play copy
+(M10.4), a replay instance (M22.3) and a title sim are all instances nobody
+chose to be public in. Three of those four are already excluded by construction
+— a replay and a title sim have no room drain to record from, and a challenge
+run is keyed by a string `SanitizeSaveName` refuses, which the ledger's own
+admission re-checks. The fourth is not: `randomTestPlayWorldName`
+(`websocket_server.go:2910`) mints `TP` + 6 hex, which passes sanitizing
+cleanly, so a play-test death would be printed as news about a world nobody can
+visit. Test-play instances are therefore marked private where they are created,
+and the ledger refuses them by that mark rather than by their name shape.
+
+M34.2 (the LLM's edition: the ledger written up in ZZT's register and compiled
+through the ZWD path) and M34.3 (the board itself, posted in the lobby) are the
+intended follow-ups and are deliberately **not** specced here — what an edition
+should say is a question M34.1's real ledger answers better than this preamble
+can guess.
+
+- [ ] **M34.1 — the day's ledger: bounded, consent-filtered, and readable.**
+  Add a durable `GazetteLedger`: the service's own record of what happened
+  today, in the shape an edition can be written from. It is the whole task —
+  there is no LLM here, no prose, and no board.
+
+  Record four kinds of happening, each from the place the server already knows
+  it happened, and each nil-safe so a server without a ledger is unaffected:
+  a **dream** dreamed (a generation that completed — recorded from
+  `runGenerationJob` and the synchronous path beside it, not from
+  `finishGenerationJob`, which is the one site that has the result but not the
+  `GenerationRequest.Account` who asked for it),
+  a **challenge** result posted (a durable leaderboard row, `finishChallengeRun`),
+  a **score** set (a high-score entry named, `submitHighScoreNameInInstance`),
+  and a **death** (the `DeathEvent` the sim already emits, resolved to a stable
+  `PlayerID` in the room drain the way `TransferEvent` and `QuitEvent` already
+  are, then to an account outside the instance lock). That drain's `default:`
+  arm is what currently forwards a `DeathEvent` into `roomEvents` and so onto
+  the wire as the `"death"` `ProtocolEvent` the client and M23.1's death hint
+  both read: a new `case DeathEvent:` that only records the happening would
+  silently delete a shipped client behaviour, which is the M33.1 class of
+  breakage. The new arm must record AND forward, and a test must hold the wire
+  event down. "Worlds beaten" is
+  deliberately absent: this fork replaced vanilla's game-over with mp-respawn
+  (PARITY.md §4, NOTES.md M16.6a), so there is no win signal to read, and
+  inventing one is a simulation change this task may not make. Say so in the
+  spec rather than quietly shipping three kinds.
+
+  The ledger is bounded in every dimension, because it is written by the public.
+  One row per (kind, actor, world) per day with a count — a player who dies forty
+  times in TOWN is one row saying forty, which is both the flood control and the
+  better copy — plus a cap on rows per kind per day, a cap on rows per day, and a
+  retention window in days. Guests aggregate into one unnamed row per (kind,
+  world), which is the consent rule producing the right journalism for free.
+  Ordering is deterministic and never map iteration order; the on-disk write is
+  atomic (temp + rename, the `ChallengeStore` pattern) so a crash mid-write
+  leaves yesterday's paper intact rather than a truncated one; the envelope
+  carries a version and a file from a future version is refused rather than
+  half-read.
+
+  Recording is memory-only. Deaths are the one high-frequency kind and they
+  arrive on the tick goroutine, so `Record` must never write a file: the ledger
+  marks itself dirty and is flushed on a tick cadence of its own beside
+  `maybeAutosave` (`websocket_server.go:483`), which is where this server already
+  chose to pay for file work. Losing a few minutes of counts to a crash is the
+  right trade for a newspaper; losing a tick to a disk write is not (M16.14e).
+
+  Serve it at `GET /api/gazette` as a public projection with no account key in
+  any marshaled field, optionally addressing a retained day. The projection is
+  what M34.2 will hand an LLM and what M34.3 will render, so it must be complete
+  enough to write from — kind, world, name-or-blank, count — and no more.
+
+  DoD: Go tests prove each of the four record paths, the (kind, actor, world)
+  aggregation and its count, every bound (per kind, per day, retention) evicting
+  what it says it evicts, deterministic ordering across repeated marshals, atomic
+  restart persistence, refusal of a future envelope version, the consent rule in
+  all three states (named profile, signed-in without one, guest), that a world
+  identity `SanitizeSaveName` refuses records nothing — the challenge-run case,
+  asserted against a real challenge instance rather than a hand-written string —
+  that a test-play instance records nothing either, that the wire `"death"`
+  event still reaches a player after the drain arm changes,
+  and that no account id appears in the marshaled projection. `StateHash` and the
+  replay fixtures must be unchanged, and a test should say so rather than leaving
+  it to the fixture. No client change is in scope, so `make browser` is not owed;
+  if that turns out to be wrong, rule 3 applies and the run is not optional.
+  Regenerate the parity manifest for the new route and task claim. Verify with
+  focused Go tests for M34.1, `go test -race`, `git diff --check`, and the
+  session gate `cd engine && go build ./... && go test ./...`.
+
 ## M14 — Rearchitecting for the service ZZTMMO is becoming
 
 Filed 2026-07-12 from a whole-repo review (NOTES.md): three structural debts
