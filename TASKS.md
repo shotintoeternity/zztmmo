@@ -425,6 +425,14 @@ M12.23, M17.1–M17.7, M16.0–M16.8a — has fully landed.)
    `runGenerationJob` — exactly once per job, credited to whoever asked for the
    dream rather than to whoever POSTed the retry — and a clean shutdown files
    the paper instead of losing up to a flush cadence of counts to a deploy.
+   **M34.2 was filed 2026-08-10** now that there is a real ledger to write from:
+   the edition itself — a day turned into a headline and a few short lines, with
+   the model never shown a name (the prompt and the stored edition carry opaque
+   actor tokens, and the consented name is substituted at read time), a
+   deterministic server-written fallback so a refused reply is never an outage,
+   renderability proven by the ZWD text machinery rather than a second list of
+   rules, and spend bounded by fingerprint, interval, per-day cap and the fact
+   that a past day is written once. M34.3, the lobby board, stays unspecced.
 
 **Optional / deferred (bottom):**
 - M14.3 — package split — **closed as skipped 2026-08-03**, see NOTES.md
@@ -8041,6 +8049,107 @@ can guess.
   mutation (drop the retry record, drop the dedup guard, drop the shutdown
   flush — each reddens exactly the test that claims it), `go test -race ./...`
   green, no client source touched. Full record in NOTES.md 2026-08-10.
+
+- [ ] **M34.2 — the edition: the day's ledger written up, in a register the
+  board can post.** M34.1 built the ledger and deliberately left this unspecced
+  until there was something real to write from. There is now: a day is a list of
+  `GazetteItem{Kind, Subject, Name, Count}`, deterministically ordered, bounded,
+  and consent-filtered. This task turns a day into an *edition* — a headline and
+  a few short story lines in ZZT's terse, slightly wrong register — and serves
+  it. The board that posts it in the lobby stays M34.3, still unspecced for the
+  same reason: what the board should show is a question a real edition answers
+  better than a spec can guess.
+
+  **The reading of the preamble this task takes, so the owner can veto it
+  cheaply.** M34's preamble hangs "compiled through the ZWD path" on M34.2 and
+  "the board itself" on M34.3. That is honoured here as *renderability is proven
+  by the ZWD text machinery, not by a second list of rules*: an accepted edition
+  is wrapped and checked by the compiler boundary this repo already has
+  (`wrapZWDTextWindowLines` and `wrapZWDText`, zwd.go:955 — 42 columns, the
+  OOP-significant leading bytes `@ # : ' / ? $ !`, printable text), because a
+  private copy of those rules is exactly what `admitGazetteSubject`'s comment
+  refuses to keep in sync. Authoring an actual board is M34.3's job and no
+  `.ZWD` file or world is written here.
+
+  Five boundaries are decided before code.
+
+  **The model is never shown a name, and no name is written down.** The prompt
+  carries kinds, subjects, counts, and an opaque actor token per row — `[P1]`,
+  `[P2]` — and nothing else about a person. The edition is *stored* tokenized
+  too, with the token→account-key map kept server-side beside it, and the
+  consented name is substituted when the edition is READ, through the same
+  resolver `/api/gazette` already uses. Substituting at write time would quietly
+  break both of the invariants M34.1 established one task ago: no name reaches
+  disk, and a player who sets a display name this afternoon is named in this
+  morning's deeds. It also means a display name — an arbitrary, player-supplied
+  string — never leaves this process to a third party's API. The prompt's whole
+  surface is therefore server-owned text, a catalogue id, a count, and an 8-char
+  `SanitizeSaveName` survivor; there is no attacker-controlled byte in it.
+
+  **A refused edition is a fallback, never an outage.** The server can always
+  write the day itself: a deterministic edition composed from the items, in the
+  same shape, needing no model and no key. It is what a server without Anthropic
+  credentials serves, what a model failure or a refused reply falls back to, and
+  what M34.3 can rely on always existing. A failed model attempt must not poison
+  the cache — the next eligible refresh tries again.
+
+  **The prose is not fact-checked, and that is the product.** "Slightly wrong
+  register" is what the idea asked for. The guarantees here are structural —
+  which names may appear (only consented ones, only by substitution), how long a
+  line may be, which bytes it may start with, how much it may cost — and
+  emphatically not whether the copy is accurate about what happened. Say so
+  rather than growing a verifier nobody asked for.
+
+  **Spend is bounded four ways, and never on the tick goroutine.** An edition is
+  written at most once per (day, item-fingerprint): an unchanged day costs
+  nothing. A changed day is refreshed no more often than a minimum interval, and
+  a day is refreshed at most a small fixed number of times. A past day is
+  written once and never rewritten. The author gets its own small `max_tokens`
+  rather than inheriting the world-painting ceiling (`callBlocks` hardcodes
+  `g.maxTokens`, which is sized for a board), and it does not pass through
+  `Generate`'s `DailyMax` admission, which counts worlds. The HTTP handler serves
+  what is cached and kicks a single-flight background refresh; a synchronous
+  `Refresh`-shaped seam exists for tests. Nothing here runs on the tick loop.
+
+  Shape: a `GazetteEditor` beside the ledger, holding the cache in
+  `gazette-editions.json` — its own versioned envelope, atomic temp+rename, a
+  future version refused rather than half-read, retention matching the ledger's
+  seven days, and the clock injected exactly as `NewGazetteLedger` takes it. The
+  author is a narrow interface (`WriteGazetteEdition(ctx, system, user string)`)
+  that `*GenerationService` satisfies by delegating to its existing `call`, so
+  tests use a fake and one test proves the real wiring against a stub HTTP
+  server. Serve `GET /api/gazette/edition[?day=]` returning the day, the
+  headline, the substituted lines, and which source wrote it; no account key and
+  no token in any marshaled field. Reuse `/api/generate`'s lazy env init so
+  credentials alone are enough to turn the model on.
+
+  Parsing the reply is strict: a headline plus at most a fixed number of story
+  lines, each within the wrapper's width once tokens are counted, every `[Pn]`
+  known, no stray `[`, no unprintable byte, no empty headline. Anything else is
+  refused whole — there is no partial edition. Substitution re-sanitizes the
+  name it splices (a stored profile predating `sanitizeProfileLine` is not
+  trusted), re-wraps the finished line through `wrapZWDText`, and guarantees no
+  rendered line begins with an OOP-significant byte — `GazetteConsentedName`
+  returns handles as `@handle`, which is a text-window title if it lands first.
+
+  DoD: the fallback edition renders every day shape (no items, one item, a
+  full day) deterministically across repeated calls; a well-formed model reply
+  is accepted and each refusal above is proven to fall back rather than serve
+  half a paper, including a failure that leaves the cache retryable; the prompt
+  handed to the author contains no consented name and no account key even when
+  the day's rows carry both; the editions file on disk contains neither; an
+  account that sets a display name *after* the edition was written is named when
+  it is read, and one with no profile reads unnamed; each of the four spend
+  bounds is asserted by counting author calls; restart persistence, future-
+  version refusal and retention; a substituted long name cannot write through
+  the 42-column border and a handle cannot start a line; no account key in the
+  marshaled response. `StateHash` and the replay fixtures are untouched — no sim
+  file is in scope, and the test that says so is the existing fixture. No client
+  change is in scope, so `make browser` is not owed; if that turns out to be
+  wrong, rule 3 applies and the run is not optional. Regenerate the parity
+  manifest for the new route and task claim. Verify with focused Go tests for
+  M34.2, `go test -race`, `git diff --check`, and the session gate
+  `cd engine && go build ./... && go test ./...`.
 
 ## M14 — Rearchitecting for the service ZZTMMO is becoming
 
