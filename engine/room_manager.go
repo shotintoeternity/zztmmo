@@ -42,6 +42,12 @@ type RoomManager struct {
 	pendingScores        map[PlayerID]QuitResult
 	pendingPlayerEvents  map[PlayerID][]Event
 	pendingWorldTransits []WorldTransit
+	// pendingNotables carries deeds the Gazette's ledger may want out of the
+	// step (M34.1), resolved to stable PlayerIDs here for the same reason
+	// transfers and quits are: the stat ids the engine used are about to be
+	// reindexed. It is drained by the server, which is the layer that knows an
+	// account, a world identity, and whether this instance is public at all.
+	pendingNotables []RoomNotable
 
 	// recorder, when non-nil, logs the external stimuli this manager applies —
 	// joins, leaves, submits, and per-tick inputs — for deterministic replay
@@ -648,6 +654,21 @@ func (rm *RoomManager) StepDiffsWithBoards(inputs map[PlayerID]PlayerInput) (map
 				if playerID, found := rm.playerIDForStat(boardID, ev.StatId); found {
 					quitters = append(quitters, playerID)
 				}
+			case DeathEvent:
+				// Records the deed AND forwards the event, in that order. The
+				// forward is not optional and is not decoration: until M34.1 this
+				// case did not exist and the `default:` arm below carried a
+				// DeathEvent into roomEvents, which is how it becomes the wire
+				// "death" ProtocolEvent that the client and M23.1's death hint
+				// both read. A case that only recorded would delete a shipped
+				// behaviour silently — the M33.1 class of breakage.
+				if playerID, found := rm.playerIDForStat(boardID, ev.StatId); found {
+					rm.pendingNotables = append(rm.pendingNotables, RoomNotable{
+						PlayerID: playerID,
+						Kind:     GazetteKindDeath,
+					})
+				}
+				roomEvents[boardID] = append(roomEvents[boardID], event)
 			case ScrollEvent:
 				// PlayerStatId < 0 is an object talking to the whole board, not a
 				// touch: nobody is reading it, so nobody freezes.
@@ -734,6 +755,21 @@ func (rm *RoomManager) DrainWorldTransits() []WorldTransit {
 	transits := rm.pendingWorldTransits
 	rm.pendingWorldTransits = nil
 	return transits
+}
+
+// RoomNotable is one deed this manager saw, named by the player it belongs to
+// rather than by the stat id it arrived as. The Kind is a Gazette kind (M34.1);
+// the room deliberately does not know the world identity or the account, which
+// are the server's to supply.
+type RoomNotable struct {
+	PlayerID PlayerID
+	Kind     string
+}
+
+func (rm *RoomManager) DrainNotables() []RoomNotable {
+	notables := rm.pendingNotables
+	rm.pendingNotables = nil
+	return notables
 }
 
 // stepRoom contains a simulation panic to the room that caused it.  Engines

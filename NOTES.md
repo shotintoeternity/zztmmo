@@ -11630,3 +11630,95 @@ gates green, `go test` 635.5s, `-race` 87.9s, `run.json` carrying
 `"goTestTimeout": "30m"`, and the only remaining blocker the pre-existing 16
 `unverified` rows that both runs report. The classification itself is unit-
 tested against synthetic panic lines rather than by spending a real timeout.
+
+## 2026-08-10 — M34.1: the Gazette's ledger, and the four things reading the code changed about it
+
+The roadmap queue's tenth and last ranked line is community-event moonshots.
+It names seven ideas and ranks none of them internally, so the executor read
+its listed order as its ranking: the ZZT Gazette first. That is also the
+structural order — the treasure hunt announces its first finder *in* the
+Gazette and dream duels award it — so it is the substrate two siblings already
+assume. Recorded here so the owner can re-rank in one sentence if the reading
+is wrong.
+
+**The newspaper's first problem is not prose.** The bullet asks for an LLM to
+write up the day's real happenings. Nothing in this repo records a happening:
+`WorldActivityStore` is aggregate play counts with no time dimension (M27.1),
+`ChallengeStore` keeps one best row per account per challenge and deliberately
+no timestamps (M32.1), and M28.1's "moments" are re-derived from replay files
+on every request. So M34.1 is the ledger and nothing else — no LLM, no prose,
+no board. M34.2 and M34.3 are deliberately left unspecced: what an edition
+should say is a question a real ledger answers better than a preamble guesses.
+
+**Four boundaries were decided before code, and reading the code changed three
+of them.**
+
+*The clock.* A newspaper needs a wall clock and simulation may not have one
+(rule 2), so it is injected at the ledger's constructor and lives nowhere else
+in the feature. `NewWebSocketServer` hands it `s.clockNow`, so the Now seam
+M16.16a already built moves the day the paper is filed under.
+
+*The day is UTC*, the same call M32.1 made for choosing today's challenge: one
+calendar, and the service has no player timezone to prefer. ISO day keys sort
+lexically, which is also what lets retention evict days without parsing a date.
+
+*Consent is M24.1's profile, applied at READ time.* The first design resolved
+the name when the deed was recorded. Reading the death path killed that: a
+death arrives on the tick goroutine, and naming it there means the tick reads
+the preferences store. So the ledger stores the account key `ChallengeStore`
+already keeps server-side and NO name, and `/api/gazette` names an edition when
+it renders one. Two things fall out that are better than the original: the only
+name that ever reaches disk is one a profile consented to, rather than whatever
+display name an OAuth provider handed us — pinned by a test that greps the
+written file — and a player who claims a handle this afternoon is named in this
+morning's deeds, which is right, because the name IS the consent and nothing
+was published before they gave it. No second opt-in flag was added; there is
+nothing to keep in sync with M26.1's `ShareLocationWithFollowers`.
+
+*A private run is not news — and only three of the four kinds were already
+safe.* A replay and a title sim have no room drain to record from, and a
+challenge run's instance is keyed by a string `SanitizeSaveName` refuses, so the
+ledger's own admission excludes it (asserted against a real run, whose key is
+`!challenge:gem-dash:1`). The fourth was not safe: `randomTestPlayWorldName`
+mints `TP` + 6 hex, which sanitizes exactly as cleanly as TOWN, so an M10.4
+play-test death would have been printed as news about a world nobody can visit.
+`WorldInstance.Private` is that mark, carried into the instance's construction
+by `hostGeneratedWorld` rather than stamped afterwards so there is no window in
+which the copy exists un-marked. Verified by mutation: with the gate removed the
+test goes red naming the row (`{death TPFD3029 1}`).
+
+**Two hazards the obvious implementation walks straight into.** The dream hook
+cannot live in `finishGenerationJob` — that is the one site in the path with the
+RESULT and not the `GenerationRequest.Account` who asked for it, so it lives in
+`runGenerationJob` and beside the synchronous path, both of which have the
+request in hand. And the room drain's new `case DeathEvent:` must record AND
+forward: until now the `default:` arm carried a DeathEvent into `roomEvents`,
+which is how it becomes the wire `"death"` ProtocolEvent the client and M23.1's
+death hint read. An arm that only recorded would have deleted a shipped client
+behaviour in silence — the M33.1 class of breakage. Also verified by mutation:
+dropping the forward reddens both the new test and M16.8's
+`TestWebSocketDeathAndRespawnEvents`.
+
+**Bounds refuse, retention evicts.** One row per (kind, subject, account) per
+day with a count — forty deaths in TOWN is one row saying forty, which is both
+the flood control and the better copy — capped at 40 rows per kind and 120 per
+day, retained 7 days. The caps REFUSE new rows rather than evicting old ones, so
+a busy day degrades into "the first forty worlds anyone died in, with honest
+counts" instead of a churning window that under-reports everybody; a row that
+already exists keeps counting after its day is full. The DoD's word was
+"evicting", which is accurate for retention and wrong for the caps; the
+distinction is asserted either way.
+
+**Recording never writes a file.** Deaths are the one high-frequency kind and
+they arrive on the tick goroutine, so `Record` mutates memory and marks the
+ledger dirty. `maybeFlushGazette` sits beside `maybeAutosave` — the place this
+server already decided may pay for disk — on a 30-second cadence off the tick
+clock. Thirty seconds of counts is what a crash costs, which is the right price
+for a newspaper and the wrong price for a tick (M16.14e). The cadence is 0 on a
+`NewWebSocketServer`, so no test writes a paper it did not ask for.
+
+**Verification.** 20 focused tests, including the two mutation checks above;
+`go test -count=1 ./...` and `go test -race -count=1 ./...` green; StateHash
+proven unmoved by running the same death with a ledger and without one and
+comparing; the parity manifest regenerated for `route.api.gazette` and its row
+curated. No client source was touched, so `make browser` is not owed (rule 3).

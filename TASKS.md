@@ -402,7 +402,25 @@ M12.23, M17.1–M17.7, M16.0–M16.8a — has fully landed.)
    start as returning guests, and walk menus to the row they want instead of
    counting arrow presses. The cutline is green again, so the roadmap queue is
    unblocked. It filed **M33.2**: make that class of rot visible without making
-   the whole browser family mandatory again.
+   the whole browser family mandatory again. **M33.2 landed 2026-08-09**
+   (`engine/m33_2_test.go` plus `make browser` and rule 3's new instruction) and
+   filed **M33.3**, which **landed 2026-08-10**: the parity gates carry
+   `-timeout 30m`, and a wall clock is now reported as a clock rather than as a
+   verdict.
+   **M34 was filed 2026-08-10** from the roadmap queue's tenth and last ranked
+   line, community-event moonshots, taking that line's listed order as its
+   ranking — which puts the ZZT Gazette first, and is also the order the
+   treasure hunt and dream duels assume, since both award it. **M34.1 landed
+   2026-08-10**: the day's ledger the newspaper has to be written from, because
+   nothing in this service recorded a happening. Four kinds (a dream dreamed, a
+   challenge row posted, a score named, a death), one row per (kind, subject,
+   account) per day with a count, bounded and retained for seven UTC days,
+   served at `/api/gazette`. Consent is M24.1's profile rather than a new flag
+   and is applied when an edition is READ, so the tick goroutine never reads the
+   preferences store and no unconsented name reaches disk; recording is
+   memory-only and the ledger is flushed beside the autosave. It filed nothing,
+   and left M34.2 (the LLM's edition) and M34.3 (the lobby board) deliberately
+   unspecced until there was a real ledger to write from.
 
 **Optional / deferred (bottom):**
 - M14.3 — package split — **closed as skipped 2026-08-03**, see NOTES.md
@@ -7882,7 +7900,7 @@ intended follow-ups and are deliberately **not** specced here — what an editio
 should say is a question M34.1's real ledger answers better than this preamble
 can guess.
 
-- [ ] **M34.1 — the day's ledger: bounded, consent-filtered, and readable.**
+- [x] **M34.1 — the day's ledger: bounded, consent-filtered, and readable.**
   Add a durable `GazetteLedger`: the service's own record of what happened
   today, in the shape an edition can be written from. It is the whole task —
   there is no LLM here, no prose, and no board.
@@ -7949,6 +7967,21 @@ can guess.
   Regenerate the parity manifest for the new route and task claim. Verify with
   focused Go tests for M34.1, `go test -race`, `git diff --check`, and the
   session gate `cd engine && go build ./... && go test ./...`.
+
+  **Landed 2026-08-10**, and the two hazards this spec wrote down are both real:
+  the dream hook lives in `runGenerationJob` and beside the synchronous path,
+  because `finishGenerationJob` is the one site with the result and not the
+  requester; and the room drain's new `case DeathEvent:` records AND forwards,
+  verified by mutation — dropping the forward reddens both the new test and
+  M16.8's `TestWebSocketDeathAndRespawnEvents`. The test-play mark is real too,
+  and also mutation-verified: with the gate removed, a play-test death prints as
+  `{death TPFD3029 1}`. One wording correction: the caps REFUSE new rows rather
+  than evicting old ones (a row that exists keeps counting after its day is
+  full), while retention evicts whole days — the DoD's "evicting" was accurate
+  for one of the two, and both are now asserted for what they actually do.
+  20 focused tests, `go test -race ./...` green, StateHash proven unmoved by
+  running the same death with a ledger and without, no client source touched.
+  Full record in NOTES.md 2026-08-10.
 
 ## M14 — Rearchitecting for the service ZZTMMO is becoming
 

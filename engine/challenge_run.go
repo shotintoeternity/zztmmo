@@ -395,6 +395,11 @@ func (s *WebSocketServer) finishChallengeRun(inst *WorldInstance, completion *ch
 	}
 	msg.Durable = true
 	msg.Rank = rank
+	// M34.1: a durable row is the only challenge outcome that is public, so it
+	// is the only one the Gazette hears about. The subject is the challenge id
+	// rather than the world — the run happened in an instance nobody could
+	// visit, and printing that world would be news about the wrong thing.
+	s.recordGazette(GazetteKindChallenge, result.ChallengeID, run.AccountID)
 	return msg
 }
 

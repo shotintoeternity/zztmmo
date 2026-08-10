@@ -76,7 +76,19 @@ func main() {
 		} else {
 			server.ChallengeStore = challenges
 		}
+		// The Gazette's ledger (M34.1): what the service saw happen today.
+		// Without a saves directory it stays memory-only, so the paper is
+		// yesterday's news on every restart rather than a file nobody asked for.
+		gazette, err := zztgo.NewGazetteLedger(filepath.Join(*savesDir, "gazette.json"), nil)
+		if err != nil {
+			log.Printf("failed to initialize gazette ledger: %v", err)
+		} else {
+			server.Gazette = gazette
+		}
 	}
+	// Recording a deed is memory-only, so the ledger is written on its own
+	// cadence off the same tick clock the autosave uses.
+	server.GazetteFlushEveryTicks = zztgo.DefaultGazetteFlushSeconds * 1000 / int(zztgo.ServerTickDuration/time.Millisecond)
 	// Moderation (M21.2). Operator status is deployment configuration — an
 	// allowlist of account ids in ZZT_MODERATOR_ACCOUNTS — so it cannot be granted
 	// from inside the game, and an unset variable means there are no operators

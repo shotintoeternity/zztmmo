@@ -87,6 +87,7 @@ func (a *WebAPI) Handler() http.Handler {
 	mux.HandleFunc("/api/title/stream", a.handleTitleStream)
 	mux.HandleFunc("/api/worlds", a.handleWorlds)
 	mux.HandleFunc("/api/watch/live", a.handleWatchLive)
+	mux.HandleFunc("/api/gazette", a.handleGazette)
 	mux.HandleFunc("/api/highscores", a.handleHighScores)
 	mux.HandleFunc("/api/help", a.handleHelp)
 	mux.HandleFunc("/api/saves", a.handleSaves)
@@ -886,9 +887,24 @@ func (a *WebAPI) handleGenerate(w http.ResponseWriter, r *http.Request) {
 		}
 		return
 	}
+	a.recordDream(req.Account, result)
 	writeJSON(w, struct {
 		World string `json:"world"`
 	}{World: result.Name})
+}
+
+// recordDream files a finished dream in the Gazette's ledger (M34.1).
+//
+// It lives here rather than in finishGenerationJob because that function is the
+// one site in this path that has the RESULT but not the account that asked for
+// it: the job carries status and world, and GenerationRequest carries who. A
+// dream that produced no world — a failure, or a salvage that named nothing —
+// is not news, and the ledger's own admission would refuse it anyway.
+func (a *WebAPI) recordDream(account AuthenticatedAccount, result GenerationResult) {
+	if a == nil || a.Server == nil || result.Name == "" {
+		return
+	}
+	a.Server.recordGazette(GazetteKindDream, result.Name, account.ID)
 }
 
 // generationClientKey names the caller that the per-client generation rate
@@ -936,6 +952,9 @@ func (a *WebAPI) runGenerationJob(id string, generator *GenerationService, req G
 	req.Progress = a.jobProgress(id)
 	result, err := generator.GenerateRequest(context.Background(), req)
 	a.finishGenerationJob(id, generator, result, err)
+	if err == nil {
+		a.recordDream(req.Account, result)
+	}
 }
 
 func (a *WebAPI) jobProgress(id string) func(GenerationProgress) {
