@@ -450,6 +450,12 @@ func (s *WebSocketServer) Run(ctx context.Context) {
 		case <-ctx.Done():
 			s.CloseRecorders()
 			s.CloseReplays()
+			// M34.1a: the day's paper goes out with the recordings. Thirty
+			// seconds of counts is what a CRASH costs (the trade
+			// DefaultGazetteFlushSeconds documents); a planned restart should
+			// cost nothing, and this branch is exactly what cmd/zzt-server's
+			// signal goroutine fires when it cancels the tick context.
+			s.flushGazetteNow()
 			return
 		case <-ticker.C:
 			s.Tick(ctx)
@@ -531,6 +537,17 @@ func (s *WebSocketServer) maybeFlushGazette() {
 		return
 	}
 	s.gazetteTicks = 0
+	s.flushGazetteNow()
+}
+
+// flushGazetteNow writes the ledger regardless of where it is in its cadence.
+// The cadence says how often a RUNNING server pays for the file; whether there
+// is a file at all is the ledger's own path, which is why a shutdown flush does
+// not consult GazetteFlushEveryTicks. A memory-only ledger still writes nothing.
+func (s *WebSocketServer) flushGazetteNow() {
+	if s == nil || s.Gazette == nil {
+		return
+	}
 	if err := s.Gazette.Flush(); err != nil {
 		log.Printf("zztgo: gazette ledger not written: %v", err)
 	}

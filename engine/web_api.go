@@ -76,6 +76,19 @@ type generationJob struct {
 
 	resume    *GenerationBoardError
 	generator *GenerationService
+	// account is who asked for this dream, captured on the request goroutine
+	// that started the job because the job outlives the request. The Gazette
+	// credits it (M34.1a), and it is deliberately the ORIGINAL requester rather
+	// than whoever POSTs a retry: nothing authorizes a retry against a job id,
+	// and the world itself is owned by, claimed for, and refused on behalf of
+	// this account (refuseIfNotOurs, claimGeneratedWorld) no matter who asks for
+	// the repaint. News about a world must name the person who owns it.
+	account AuthenticatedAccount
+	// recorded is set once this job's world has been filed in the Gazette. A
+	// salvaged job is "complete" and still retryable (M17.13), so it has already
+	// been news before its retry runs — and a retry may salvage again, so the
+	// flag is the direct evidence rather than an inference from Status.
+	recorded bool
 }
 
 // Handler mounts the title-screen endpoints under /api/.
@@ -858,7 +871,7 @@ func (a *WebAPI) handleGenerate(w http.ResponseWriter, r *http.Request) {
 		if a.generationJobs == nil {
 			a.generationJobs = make(map[string]*generationJob)
 		}
-		a.generationJobs[jobID] = &generationJob{Status: "running"}
+		a.generationJobs[jobID] = &generationJob{Status: "running", account: req.Account}
 		a.generationMu.Unlock()
 		go a.runGenerationJob(jobID, generator, req)
 		w.WriteHeader(http.StatusAccepted)
@@ -900,6 +913,11 @@ func (a *WebAPI) handleGenerate(w http.ResponseWriter, r *http.Request) {
 // it: the job carries status and world, and GenerationRequest carries who. A
 // dream that produced no world — a failure, or a salvage that named nothing —
 // is not news, and the ledger's own admission would refuse it anyway.
+//
+// The synchronous path calls this directly, because a request that answers with
+// a world has no job to record against. Every asynchronous path goes through
+// recordJobDream, which is the same call with the job's once-only guard in
+// front of it (M34.1a).
 func (a *WebAPI) recordDream(account AuthenticatedAccount, result GenerationResult) {
 	if a == nil || a.Server == nil || result.Name == "" {
 		return
@@ -953,8 +971,33 @@ func (a *WebAPI) runGenerationJob(id string, generator *GenerationService, req G
 	result, err := generator.GenerateRequest(context.Background(), req)
 	a.finishGenerationJob(id, generator, result, err)
 	if err == nil {
-		a.recordDream(req.Account, result)
+		a.recordJobDream(id, result)
 	}
+}
+
+// recordJobDream files an async job's world in the Gazette at most once, no
+// matter which of this job's paths finished it (M34.1a). Both callers —
+// runGenerationJob and the retry goroutine — call it unconditionally on
+// success; the once-only decision lives here rather than at either call site,
+// so a third path that finishes a job cannot be the one that forgets, or the
+// one that prints the same world twice.
+func (a *WebAPI) recordJobDream(id string, result GenerationResult) {
+	if a == nil || result.Name == "" {
+		// A generation that produced no world is not news, and it must not
+		// spend the job's one recording either: a later retry may still name a
+		// world.
+		return
+	}
+	a.generationMu.Lock()
+	job := a.generationJobs[id]
+	if job == nil || job.recorded {
+		a.generationMu.Unlock()
+		return
+	}
+	job.recorded = true
+	account := job.account
+	a.generationMu.Unlock()
+	a.recordDream(account, result)
 }
 
 func (a *WebAPI) jobProgress(id string) func(GenerationProgress) {
@@ -1032,6 +1075,15 @@ func (a *WebAPI) handleGenerationRetry(w http.ResponseWriter, id string) {
 	go func() {
 		result, err := generator.RetryBoard(context.Background(), resume, a.jobProgress(id))
 		a.finishGenerationJob(id, generator, result, err)
+		if err == nil {
+			// M34.1a: a retry that rescues a job which never landed a world is
+			// the moment that world became news. A retry that repaints a
+			// salvaged job's stub rooms is not — that world was already news
+			// when it was salvaged — and recordJobDream is what tells the two
+			// apart, so this call is the same unconditional one runGenerationJob
+			// makes.
+			a.recordJobDream(id, result)
+		}
 	}()
 	w.WriteHeader(http.StatusAccepted)
 	writeJSON(w, struct {

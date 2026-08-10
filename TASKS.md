@@ -418,9 +418,13 @@ M12.23, M17.1–M17.7, M16.0–M16.8a — has fully landed.)
    served at `/api/gazette`. Consent is M24.1's profile rather than a new flag
    and is applied when an edition is READ, so the tick goroutine never reads the
    preferences store and no unconsented name reaches disk; recording is
-   memory-only and the ledger is flushed beside the autosave. It filed nothing,
-   and left M34.2 (the LLM's edition) and M34.3 (the lobby board) deliberately
-   unspecced until there was a real ledger to write from.
+   memory-only and the ledger is flushed beside the autosave. It left M34.2 (the
+   LLM's edition) and M34.3 (the lobby board) deliberately unspecced until there
+   was a real ledger to write from, and it filed **M34.1a**, which **landed
+   2026-08-10**: the dream hook now covers the retry goroutine as well as
+   `runGenerationJob` — exactly once per job, credited to whoever asked for the
+   dream rather than to whoever POSTed the retry — and a clean shutdown files
+   the paper instead of losing up to a flush cadence of counts to a deploy.
 
 **Optional / deferred (bottom):**
 - M14.3 — package split — **closed as skipped 2026-08-03**, see NOTES.md
@@ -7984,7 +7988,7 @@ can guess.
   Full record in NOTES.md 2026-08-10. Filed **M34.1a** on its way out: the dream
   hook has one uncovered caller and the ledger is never flushed on shutdown.
 
-- [ ] **M34.1a — the dream that was retried is never news, and the paper is not
+- [x] **M34.1a — the dream that was retried is never news, and the paper is not
   filed on the way out.** Two gaps found by reviewing M34.1 after it landed;
   neither is a defect in what it proved, and both are in the same two functions.
 
@@ -8013,6 +8017,30 @@ can guess.
   flushes the ledger, proven by a test that drives the same path rather than by
   the comment. Verify with focused Go tests, `go test -race`, `git diff --check`,
   and the session gate `cd engine && go build ./... && go test ./...`.
+
+  **Landed 2026-08-10.** The once-only decision is a job field and a single
+  funnel, not a second call site: `generationJob` now carries `account` (captured
+  on the request goroutine that starts the job) and `recorded`, and both async
+  callers go through `recordJobDream`, so a third path that finishes a job cannot
+  be the one that forgets or the one that prints twice. The account credited is
+  the ORIGINAL requester's rather than the retrier's — the retry endpoint
+  authorizes nobody and the file is claimed for the original account either way,
+  so crediting the POSTer would print news about a world someone else owns; the
+  test retries anonymously and still gets Ada's row. Two spec hazards were real
+  in the other direction: the "previously-failed and retryable" job shape is
+  unreachable through `GenerateRequest` today (M17.13 salvages instead of
+  failing, and the salvage path is the only site that constructs a
+  `GenerationBoardError`), so the test manufactures it from a REAL salvaged
+  retry handle; and a retry can salvage AGAIN, which is why `recorded` is a fact
+  the job carries rather than an inference from `complete`. One departure from
+  the spec's literal pointer, owned rather than silent: the shutdown flush went
+  into `WebSocketServer.Run`'s `ctx.Done()` branch beside `CloseRecorders` —
+  which is precisely what `cmd/zzt-server`'s signal goroutine fires when it
+  cancels the tick context — because that seam is testable in-package and covers
+  every embedder; `cmd/` is unchanged. Three focused tests, each verified by
+  mutation (drop the retry record, drop the dedup guard, drop the shutdown
+  flush — each reddens exactly the test that claims it), `go test -race ./...`
+  green, no client source touched. Full record in NOTES.md 2026-08-10.
 
 ## M14 — Rearchitecting for the service ZZTMMO is becoming
 

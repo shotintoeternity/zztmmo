@@ -11734,3 +11734,54 @@ second call would print one world as two dreams. And nothing flushes the ledger
 on shutdown, though `cmd/zzt-server` has the signal path to hang it on — so a
 planned restart currently costs up to a cadence of counts, which is not the
 trade that was documented (that one was about a crash).
+
+## 2026-08-10 — M34.1a: the two callers, the once-only fact, and the paper on the way out
+
+**The retry goroutine now records, and it records once.** `generationJob` gained
+two unexported fields — `account`, captured on the request goroutine that starts
+the job because the job outlives the request, and `recorded` — and both async
+finishers (`runGenerationJob` and `handleGenerationRetry`'s goroutine) call one
+funnel, `recordJobDream`, unconditionally on success. The check-and-set lives
+inside the funnel, so a third path that finishes a job cannot be the one that
+forgets or the one that prints the same world twice. M34.1's hook did NOT move
+into `finishGenerationJob`: that placement is a landed decision with three
+comments explaining it, and the funnel buys the same structural guarantee
+without rewriting them.
+
+**Whose dream it is: the requester's, not the retrier's.** `handleGenerationRetry`
+authorizes nobody against a job id, ids are guessable `gen-N`, and every
+ownership decision about the file — `refuseIfNotOurs`, `claimGeneratedWorld` —
+is taken on behalf of the account the job started with, no matter who asks for
+the repaint. Crediting the POSTer would print news about a world someone else
+owns. The test retries anonymously and still gets Ada's row; `resume.account`
+carries the same value, which is the consistency proof.
+
+**Both of the spec's hazards were real, and each pointed the other way than it
+reads.** First: the "failed and retryable" job shape the retry endpoint was
+built for (M12.22) is unreachable through `GenerateRequest` today — M17.13
+salvages instead of failing, and the salvage path at `generation.go:816` is the
+ONLY site that constructs a `GenerationBoardError`. So the test manufactures
+that state by feeding `finishGenerationJob` a real salvaged `result.Retry` as
+its error, rather than by hand-building the resume state. Second: a retry can
+salvage AGAIN (`paintAndFinish` re-stubs and returns `err == nil` with a fresh
+`Retry`), so "complete implies recorded" is not a safe inference — which is why
+`recorded` is a fact the job carries. The first test walks exactly that: fail →
+retry salvages and records → retry repaints and records nothing.
+
+**Departure from the spec's literal pointer, and why.** The spec named
+`cmd/zzt-server`'s signal goroutine as the place to flush on shutdown. The flush
+went into `WebSocketServer.Run`'s `ctx.Done()` branch instead, beside
+`CloseRecorders`/`CloseReplays` — which is precisely what that goroutine's
+`cancel()` fires, so it drives the same path — because the engine seam is
+testable in-package and covers every embedder, not only this one binary. `cmd/`
+is unchanged. `flushGazetteNow` deliberately ignores `GazetteFlushEveryTicks`:
+the cadence says how often a RUNNING server pays for the file, while whether
+there is a file at all is the ledger's own path, and a memory-only ledger still
+writes nothing.
+
+**Verification.** Three focused tests, each verified by mutation — dropping the
+retry's record reddens the rescue test, dropping the `recorded` guard reddens
+both dream tests, dropping the shutdown flush reddens the shutdown test.
+`go test ./...` and `go test -race ./...` green; `git diff --check` clean; the
+`/api/generate?id=` JSON shape is unchanged (both new fields are unexported), so
+no client source was touched and `make browser` is not owed (rule 3).
