@@ -11785,3 +11785,57 @@ both dream tests, dropping the shutdown flush reddens the shutdown test.
 `go test ./...` and `go test -race ./...` green; `git diff --check` clean; the
 `/api/generate?id=` JSON shape is unchanged (both new fields are unexported), so
 no client source was touched and `make browser` is not owed (rule 3).
+
+## 2026-08-10 — M34.2: the edition, and an author who is never told who anybody is
+
+**The model is never shown a name, and neither is the file.** The prompt carries
+kinds, 8-character subjects, counts and opaque actor tokens (`[P1]`); the stored
+edition carries the same tokens plus the token→account-key map the ledger beside
+it already stores; the consented name is spliced in when the edition is READ,
+through the resolver `/api/gazette` already had. That was chosen over the
+obvious "substitute at write time" because substituting early quietly breaks
+both invariants M34.1 landed one task earlier — no name reaches disk, and a
+player who sets a display name this afternoon is named in this morning's deeds —
+and because it means a player-supplied string never leaves this process to a
+third party's API. What is left in the prompt is server-owned text, a UTC date,
+a catalogue id, a count and a `SanitizeSaveName` survivor: there is no
+attacker-controlled byte in it, which is the whole prompt-injection story.
+
+**The width guarantee is split across two places on purpose.** The parser
+refuses a raw line wider than the 41 columns the prompt asks for; the renderer
+re-wraps through `wrapZWDText` AFTER substitution. Only the second can be the
+guarantee — a token is four characters and a display name is up to twenty-five —
+and the reserved 42nd column is what lets the OOP-markup guard prefix its space
+without writing through the text window's border. The guard exists because
+`GazetteConsentedName` returns a claimed handle as `@bogart`, and a line that
+starts with `@` is an OOP title, not prose. Renderability is otherwise proven by
+the ZWD text machinery rather than a private copy of its rules, which is the
+same reasoning `admitGazetteSubject` records.
+
+**A refused reply is a fallback, not an outage — and not a poisoned cache.** The
+server writes its own deterministic edition from the same rows, so a missing API
+key, a failed call and a reply the parser will not print all still produce a
+paper for M34.3 to post. The fingerprint is recorded only on success, so a
+failure costs an attempt and clears; the attempt COUNTER is what is persisted,
+so a restart cannot buy a second day's budget, while the interval clock is not,
+which forgives a deploy.
+
+**Spend.** Four bounds, each asserted by counting author calls: an unchanged
+day's fingerprint, a minimum interval, a per-day ceiling, and a past day written
+once. An empty day never calls at all. The author gets its own 700-token ceiling
+through a new `callBlocksWithTokens` — `callBlocks` hardcoded the world-painting
+budget, which is sized for a board and wrong for six short lines — and does not
+pass through `Generate`'s `DailyMax`, which counts worlds, not papers. The HTTP
+route serves the cache and kicks a single-flight background refresh, so no
+request and no tick ever waits on a model.
+
+**Verification.** Fourteen focused tests, three of them verified by mutation:
+accepting an unknown actor token reddens both the parse table and the
+cache-not-poisoned test; dropping the markup guard reddens the overflow test
+with `"@bogart took the gate."`; dropping the fingerprint gate turns one author
+call into three. `go test ./...` and `go test -race ./...` green,
+`git diff --check` clean, parity manifest regenerated (it was also missing
+M34.1a's task row, which M34.1a had left behind). No client source touched, so
+`make browser` is not owed (rule 3). `cmd/` is unchanged: the editor builds
+itself on first use from the ledger's own directory and whatever author the
+environment already offers.

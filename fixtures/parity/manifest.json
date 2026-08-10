@@ -1534,6 +1534,28 @@
       "notes": "task-claim row; behavioral parity carried by the element/oop/protocol/input/service rows this task touched; reconciled at M16.20"
     },
     {
+      "id": "task.M34.1a",
+      "dimension": "task",
+      "subject": "Completed task M34.1a — its DoD still holds",
+      "contract": "E",
+      "authority": "TASKS.md M34.1a",
+      "parity": "exact",
+      "status": "unverified",
+      "assignedTask": "M16.20",
+      "notes": "task-claim row; behavioral parity carried by the element/oop/protocol/input/service rows this task touched; reconciled at M16.20"
+    },
+    {
+      "id": "task.M34.2",
+      "dimension": "task",
+      "subject": "Completed task M34.2 — its DoD still holds",
+      "contract": "E",
+      "authority": "TASKS.md M34.2",
+      "parity": "exact",
+      "status": "unverified",
+      "assignedTask": "M16.20",
+      "notes": "task-claim row; behavioral parity carried by the element/oop/protocol/input/service rows this task touched; reconciled at M16.20"
+    },
+    {
       "id": "task.M4.0",
       "dimension": "task",
       "subject": "Completed task M4.0 — its DoD still holds",
@@ -4565,6 +4587,18 @@
       "status": "pass",
       "assignedTask": "M34.1",
       "notes": "M34.1: the day's ledger as a public projection; GET only, the consent rule applied at read time, and no account key in any marshaled field."
+    },
+    {
+      "id": "route.api.gazette.edition",
+      "dimension": "route",
+      "subject": "HTTP/WS route /api/gazette/edition",
+      "contract": "E",
+      "authority": "web_api.go / websocket_server.go",
+      "parity": "exact",
+      "test": "TestM342EditionRouteServesAPaperAndLeaksNoAccountKey,TestM342ServerWrittenEditionCoversEveryDayShapeDeterministically",
+      "status": "pass",
+      "assignedTask": "M34.2",
+      "notes": "M34.2: the day written up. GET only; serves the cached edition (the author's if one was bought, the server's own otherwise) and kicks a bounded single-flight refresh, so a request never waits on a model. Names are substituted at read time from stored actor tokens; no account key and no token is marshaled."
     },
     {
       "id": "route.api.generate",

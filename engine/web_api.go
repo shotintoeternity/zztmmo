@@ -50,7 +50,13 @@ type WebAPI struct {
 	Museum *MuseumService
 	// Auth serves browser-facing Google OAuth endpoints. Nil keeps the server in
 	// guest-only mode.
-	Auth           *AuthService
+	Auth *AuthService
+	// GazetteEditor writes and caches the day's edition (M34.2). Nil is built
+	// on first use from the ledger and whatever author the environment offers,
+	// so cmd/ needs no wiring and a server without credentials still has a
+	// paper.
+	GazetteEditor  *GazetteEditor
+	gazetteMu      sync.Mutex
 	generationMu   sync.Mutex
 	generationJobs map[string]*generationJob
 	generationSeq  uint64
@@ -101,6 +107,7 @@ func (a *WebAPI) Handler() http.Handler {
 	mux.HandleFunc("/api/worlds", a.handleWorlds)
 	mux.HandleFunc("/api/watch/live", a.handleWatchLive)
 	mux.HandleFunc("/api/gazette", a.handleGazette)
+	mux.HandleFunc("/api/gazette/edition", a.handleGazetteEdition)
 	mux.HandleFunc("/api/highscores", a.handleHighScores)
 	mux.HandleFunc("/api/help", a.handleHelp)
 	mux.HandleFunc("/api/saves", a.handleSaves)

@@ -432,7 +432,13 @@ M12.23, M17.1–M17.7, M16.0–M16.8a — has fully landed.)
    deterministic server-written fallback so a refused reply is never an outage,
    renderability proven by the ZWD text machinery rather than a second list of
    rules, and spend bounded by fingerprint, interval, per-day cap and the fact
-   that a past day is written once. M34.3, the lobby board, stays unspecced.
+   that a past day is written once. **M34.2 landed 2026-08-10** as specced:
+   `/api/gazette/edition` serves the day written up, from an author when one is
+   configured and from the server itself otherwise, and the width guarantee is
+   split on purpose between a parser that refuses an over-wide raw line and a
+   renderer that re-wraps after a name is substituted. M34.3, the lobby board,
+   stays unspecced for the third time — it now has a real edition to be written
+   from.
 
 **Optional / deferred (bottom):**
 - M14.3 — package split — **closed as skipped 2026-08-03**, see NOTES.md
@@ -8050,7 +8056,7 @@ can guess.
   flush — each reddens exactly the test that claims it), `go test -race ./...`
   green, no client source touched. Full record in NOTES.md 2026-08-10.
 
-- [ ] **M34.2 — the edition: the day's ledger written up, in a register the
+- [x] **M34.2 — the edition: the day's ledger written up, in a register the
   board can post.** M34.1 built the ledger and deliberately left this unspecced
   until there was something real to write from. There is now: a day is a list of
   `GazetteItem{Kind, Subject, Name, Count}`, deterministically ordered, bounded,
@@ -8150,6 +8156,30 @@ can guess.
   manifest for the new route and task claim. Verify with focused Go tests for
   M34.2, `go test -race`, `git diff --check`, and the session gate
   `cd engine && go build ./... && go test ./...`.
+
+  **Landed 2026-08-10.** `GazetteEditor` (engine/gazette_edition.go) holds the
+  cache, the spend rules and the parser; `/api/gazette/edition` serves it and
+  kicks the single-flight refresh; the ledger grew `dayEntries` so the naming
+  reader and the tokenizing writer cannot disagree about what a day looked like.
+  The width guarantee ended up deliberately split across two places, which is
+  worth saying because it reads like a duplicate: the parser refuses a raw line
+  wider than the 41 columns the prompt asks for, and the renderer re-wraps
+  through `wrapZWDText` AFTER substitution, because a token is four characters
+  and a display name is up to twenty-five — only the second half can be the
+  guarantee, and the reserved 42nd column is what lets the OOP-markup guard
+  prefix its space without overflowing. Three claims verified by mutation:
+  accepting an unknown actor token reddens the parse table and the
+  does-not-poison-the-cache test, dropping the markup guard reddens the overflow
+  test with `"@bogart took the gate."`, and dropping the fingerprint gate turns
+  one author call into three. The only line changed outside the Gazette's own
+  files is `callBlocks` delegating to a new `callBlocksWithTokens`, which is how
+  an edition stops billing a board's ceiling; `cmd/` is untouched, because the
+  editor builds itself on first use from the ledger's own directory and whatever
+  author the environment already offers. It filed nothing. M34.3 — the board
+  itself, posted in the lobby — stays deliberately unspecced for the third time
+  and for the same reason each time: it now has a real edition to be written
+  from, and what a board should show is a question that edition answers better
+  than a spec can guess.
 
 ## M14 — Rearchitecting for the service ZZTMMO is becoming
 

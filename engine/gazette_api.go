@@ -13,6 +13,7 @@ package zztgo
 // nothing was published before they gave it.
 
 import (
+	"log"
 	"net/http"
 	"strings"
 )
@@ -42,6 +43,67 @@ func (a *WebAPI) handleGazette(w http.ResponseWriter, r *http.Request) {
 		Days  []string      `json:"days"`
 		Items []GazetteItem `json:"items"`
 	}{Day: edition.Day, Days: a.Server.Gazette.Days(), Items: edition.Items})
+}
+
+// handleGazetteEdition serves the day written up (M34.2). It answers from the
+// cache — the author's edition if one has been bought, the server's own if not
+// — and then kicks a single-flight background refresh. A request never waits on
+// a model, and the refresh is bounded by the editor's own spend rules rather
+// than by how often somebody reloads the page.
+func (a *WebAPI) handleGazetteEdition(w http.ResponseWriter, r *http.Request) {
+	if r.Method != http.MethodGet {
+		http.Error(w, "use GET", http.StatusMethodNotAllowed)
+		return
+	}
+	if a == nil || a.Server == nil || a.Server.Gazette == nil {
+		http.Error(w, "the gazette is unavailable", http.StatusServiceUnavailable)
+		return
+	}
+	day := strings.TrimSpace(r.URL.Query().Get("day"))
+	if day != "" && len(day) != gazetteDayParamLen {
+		http.Error(w, "invalid day", http.StatusBadRequest)
+		return
+	}
+	editor := a.gazetteEditor()
+	edition := editor.Edition(day, a.gazetteNameResolver())
+	editor.RefreshAsync(edition.Day)
+	writeJSON(w, edition)
+}
+
+// gazetteEditor builds the editor once, on first use, the way /api/generate
+// builds its generator: a server that has Anthropic credentials in its
+// environment gets an author without any further wiring, and one that does not
+// gets an editor that only ever serves the server-written edition. The cache
+// file sits beside the ledger's own, so a server with no saves directory keeps
+// its editions in memory and buys them again after a restart.
+func (a *WebAPI) gazetteEditor() *GazetteEditor {
+	a.gazetteMu.Lock()
+	defer a.gazetteMu.Unlock()
+	if a.GazetteEditor != nil {
+		return a.GazetteEditor
+	}
+	ledger := a.Server.Gazette
+	author := a.Generator
+	if author == nil {
+		if generator, err := GenerationServiceFromEnv(); err == nil {
+			a.Generator = generator
+			author = generator
+		}
+	}
+	// A nil *GenerationService in a GazetteAuthor interface is not a nil
+	// interface, and an editor that thinks it has an author will spend a
+	// refresh discovering otherwise on every request.
+	var writer GazetteAuthor
+	if author != nil {
+		writer = author
+	}
+	editor, err := NewGazetteEditor(ledger, writer, ledger.editionsPath())
+	if err != nil {
+		log.Printf("gazette editions unavailable: %v", err)
+		editor, _ = NewGazetteEditor(ledger, writer, "")
+	}
+	a.GazetteEditor = editor
+	return editor
 }
 
 // gazetteNameResolver reads each account's consented name once per key it is

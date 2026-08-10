@@ -1002,6 +1002,17 @@ func (g *GenerationService) callWithPlan(ctx context.Context, system, planText, 
 }
 
 func (g *GenerationService) callBlocks(ctx context.Context, system []systemBlock, user string) (string, error) {
+	return g.callBlocksWithTokens(ctx, system, user, g.maxTokens)
+}
+
+// callBlocksWithTokens is callBlocks with the reply ceiling named by the
+// caller. Every generation path wants g.maxTokens, which is sized for painting
+// a board; the Gazette's edition (M34.2) is a headline and six short lines and
+// says so instead of billing a board's budget for a paragraph.
+func (g *GenerationService) callBlocksWithTokens(ctx context.Context, system []systemBlock, user string, maxTokens int) (string, error) {
+	if maxTokens <= 0 {
+		maxTokens = g.maxTokens
+	}
 	body, err := json.Marshal(struct {
 		Model     string        `json:"model"`
 		MaxTokens int           `json:"max_tokens"`
@@ -1011,7 +1022,7 @@ func (g *GenerationService) callBlocks(ctx context.Context, system []systemBlock
 			Content string `json:"content"`
 		} `json:"messages"`
 	}{
-		Model: g.model, MaxTokens: g.maxTokens,
+		Model: g.model, MaxTokens: maxTokens,
 		System: system,
 		Messages: []struct {
 			Role    string `json:"role"`

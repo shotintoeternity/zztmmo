@@ -271,6 +271,28 @@ func (g *GazetteLedger) Edition(day string, resolveName func(accountKey string) 
 	if g == nil {
 		return GazetteEdition{Day: day}
 	}
+	day, entries := g.dayEntries(day)
+
+	items := make([]GazetteItem, 0, len(entries))
+	for _, entry := range entries {
+		item := GazetteItem{Kind: entry.Kind, Subject: entry.Subject, Count: entry.Count}
+		if entry.AccountKey != "" && resolveName != nil {
+			item.Name = resolveName(entry.AccountKey)
+		}
+		items = append(items, item)
+	}
+	return GazetteEdition{Day: day, Items: items}
+}
+
+// dayEntries is one day's rows in the order every reader of this ledger sees
+// them, with the account keys still attached. Edition names them; the edition
+// writer (M34.2) tokenizes them instead, which is why the ordering lives here
+// rather than in either caller: two papers about one day must not disagree
+// about what the day looked like.
+func (g *GazetteLedger) dayEntries(day string) (string, []GazetteEntry) {
+	if g == nil {
+		return day, nil
+	}
 	g.mu.Lock()
 	if day == "" {
 		day = g.now().UTC().Format(gazetteDayFormat)
@@ -290,16 +312,17 @@ func (g *GazetteLedger) Edition(day string, resolveName func(accountKey string) 
 		}
 		return entries[i].Seq < entries[j].Seq
 	})
+	return day, entries
+}
 
-	items := make([]GazetteItem, 0, len(entries))
-	for _, entry := range entries {
-		item := GazetteItem{Kind: entry.Kind, Subject: entry.Subject, Count: entry.Count}
-		if entry.AccountKey != "" && resolveName != nil {
-			item.Name = resolveName(entry.AccountKey)
-		}
-		items = append(items, item)
+// editionsPath is where the day's written-up editions live: beside the ledger,
+// in their own file, because they have their own writer, their own mutex and
+// their own cadence (M34.2).
+func (g *GazetteLedger) editionsPath() string {
+	if g == nil || g.path == "" {
+		return ""
 	}
-	return GazetteEdition{Day: day, Items: items}
+	return filepath.Join(filepath.Dir(g.path), "gazette-editions.json")
 }
 
 // Days lists the retained day keys, newest first.
