@@ -2,7 +2,7 @@
 
 import assert from "node:assert/strict";
 import { chromium } from "playwright";
-import { baseURL, gridToArt, hasText, installDecoder, installImageProbe, readGrid, saveText, textAt } from "./lib/canvas.mjs";
+import { baseURL, gridToArt, hasText, installDecoder, installImageProbe, markProfileWarm, readGrid, saveText, textAt } from "./lib/canvas.mjs";
 
 const WORLD = "TOWN";
 const EMPTY_WORLD = "ACCEPT";
@@ -72,6 +72,7 @@ async function playersIn(world) {
 async function openClient(label, path) {
   const browser = await chromium.launch({ headless: true });
   const context = await browser.newContext({ viewport: { width: 1280, height: 720 } });
+  await markProfileWarm(context);
   const page = await context.newPage();
   const c = { label, browser, context, page, pageErrors: [], consoleErrors: [], sent: [], received: [] };
   page.on("pageerror", (err) => c.pageErrors.push(String(err)));

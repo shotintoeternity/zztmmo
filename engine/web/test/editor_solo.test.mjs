@@ -35,6 +35,7 @@ import {
   installImageProbe,
   launchGoldenBrowser,
   launchOpensPicker,
+  markProfileWarm,
   pauseClock,
   readGrid,
   saveText,
@@ -253,6 +254,7 @@ async function replaceEntry(page, text, prefillLength = 24) {
 }
 
 const { browser, context, page, pageErrors, consoleErrors } = await launchGoldenBrowser();
+await markProfileWarm(context);
 let failed = false;
 
 try {

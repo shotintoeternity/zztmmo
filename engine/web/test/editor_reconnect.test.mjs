@@ -34,6 +34,7 @@ import {
   installDecoder,
   installImageProbe,
   launchGoldenBrowser,
+  markProfileWarm,
   readGrid,
   saveText,
   textAt,
@@ -171,6 +172,7 @@ async function moveCursor(page, code, x, y) {
 }
 
 const { browser, context, page, pageErrors, consoleErrors } = await launchGoldenBrowser();
+await markProfileWarm(context);
 let failed = false;
 
 try {

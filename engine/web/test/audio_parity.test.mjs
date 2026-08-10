@@ -35,6 +35,7 @@ import {
   installDecoder,
   installImageProbe,
   launchGoldenBrowser,
+  markProfileWarm,
   pauseClock,
   readGrid,
   runClock,
@@ -58,6 +59,7 @@ const SEMITONES_BETWEEN_CDEFG = [2, 2, 1, 2];
 const SEMITONE = Math.pow(2, 1 / 12);
 
 const { browser, context, page, pageErrors, consoleErrors } = await launchGoldenBrowser();
+await markProfileWarm(context);
 let failed = false;
 
 try {

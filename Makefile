@@ -12,8 +12,11 @@
 # `make certify` is the same run under the M16.20 gate: an uncertified manifest
 # — any `unverified`/`gap` row, any `pass` naming no test, any undeclared test
 # skip — is a failure rather than an expected state.
+#
+# `make browser` is the everyday half of that: the opt-in real-browser family and
+# nothing else around it. CLAUDE.md rule 3 sends client work here (M33.2).
 
-.PHONY: parity certify parity-report parity-canaries oracle-tools oracle-regen world
+.PHONY: parity certify browser parity-report parity-canaries oracle-tools oracle-regen world
 
 # Deterministic ZWD authoring gate. Example:
 #   make world SOURCE=llmworld/generated/NULLSIGN.zwd OUT=engine/NULLSIGN.ZZT
@@ -31,6 +34,23 @@ parity:
 # The same run, gated: not-certified is a failure (task M16.20).
 certify:
 	cd engine && go run ./cmd/zzt-parity -require-certified -out ../fixtures/parity
+
+# The opt-in real-browser family, run on purpose (task M33.2). This is what
+# CLAUDE.md rule 3 means by "run the browser suites": it builds the client the
+# suites load — a stale web/dist is the M18.0a failure, and the suites cannot
+# tell it from a working one — and then runs the Go tests with the browser
+# family requested rather than skipped. Ten minutes, and the price of moving a
+# menu three journeys walk. `make certify` still runs everything else.
+#
+# -timeout is not decoration: with the family running, the engine package takes
+# most of ten minutes, and `go test`'s default IS ten minutes — M33.1's run
+# finished with eight seconds to spare and M33.2's first run died on the wall
+# clock with a suite three seconds in. A timeout panic reads exactly like a
+# hung suite, so the margin is spent here rather than in the next executor's
+# afternoon (M33.3 carries the same fix to the certification run).
+browser:
+	cd engine/web && npm run build
+	cd engine && ZZT_BROWSER=1 go test -timeout 30m -count=1 ./...
 
 # Re-render the report from the current manifest without running the gates.
 parity-report:

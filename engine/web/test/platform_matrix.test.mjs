@@ -76,6 +76,7 @@ import {
   installDecoder,
   installImageProbe,
   launchGoldenBrowser,
+  markProfileWarm,
   pauseClock,
   readGrid,
   resultsDir,
@@ -1002,6 +1003,7 @@ const { browser, context, page, pageErrors, consoleErrors } = await launchGolden
   viewport: profile.viewport,
   deviceScaleFactor: profile.deviceScaleFactor,
 });
+await markProfileWarm(context);
 let failed = false;
 
 try {

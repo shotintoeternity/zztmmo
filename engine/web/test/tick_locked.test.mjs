@@ -33,6 +33,7 @@ import {
   installDecoder,
   installImageProbe,
   launchGoldenBrowser,
+  markProfileWarm,
   pauseClock,
   readGrid,
   runClock,
@@ -46,6 +47,7 @@ import {
 } from "./lib/canvas.mjs";
 
 const { browser, context, page, pageErrors, consoleErrors } = await launchGoldenBrowser();
+await markProfileWarm(context);
 const checkpoints = [];
 // Retained and dumped on failure: when a tick-locked run desynchronises, the
 // question is always "what did the browser actually put on the wire", and this

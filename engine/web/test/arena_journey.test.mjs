@@ -3,7 +3,7 @@
 import assert from "node:assert/strict";
 import { chromium } from "playwright";
 import { at, step, walkOnto, assertObserver } from "./lib/walk.mjs";
-import { gridToArt, hasText, installDecoder, installImageProbe, readGrid } from "./lib/canvas.mjs";
+import { gridToArt, hasText, installDecoder, installImageProbe, markProfileWarm, readGrid } from "./lib/canvas.mjs";
 
 const baseURL = process.env.BASE_URL || "http://127.0.0.1:8080";
 
@@ -30,6 +30,7 @@ async function waitForPage(c, pred, describe, timeoutMs = 20000) {
 async function openClient(label, path) {
   const browser = await chromium.launch({ headless: true });
   const context = await browser.newContext({ viewport: { width: 1280, height: 720 } });
+  await markProfileWarm(context);
   const page = await context.newPage();
   const c = {
     label,

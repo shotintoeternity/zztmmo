@@ -32,6 +32,7 @@ import {
   installImageProbe,
   launchGoldenBrowser,
   launchOpensPicker,
+  markProfileWarm,
   pauseClock,
   pressExpectingNoInput,
   readGrid,
@@ -81,6 +82,7 @@ async function joinAndPlay(page, name) {
 // control (shouldUseOverlay reads navigator.maxTouchPoints), which is the whole
 // composition path.
 const { browser, context, page, pageErrors, consoleErrors } = await launchGoldenBrowser({ hasTouch: true });
+await markProfileWarm(context);
 let failed = false;
 
 try {

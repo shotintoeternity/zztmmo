@@ -36,6 +36,7 @@ import {
   installDecoder,
   installImageProbe,
   launchGoldenBrowser,
+  markProfileWarm,
   pauseClock,
   readGrid,
   resultsDir,
@@ -66,6 +67,7 @@ const KEY_S = "S".charCodeAt(0);
 const FIRST_PLAYER_HINT = "That other face is a real person - C chats";
 
 const { browser, context, page, pageErrors, consoleErrors } = await launchGoldenBrowser();
+await markProfileWarm(context);
 let failed = false;
 
 try {

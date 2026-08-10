@@ -29,6 +29,7 @@ import {
   installDecoder,
   installImageProbe,
   launchOpensPicker,
+  markProfileWarm,
   textAt,
 } from "./lib/canvas.mjs";
 
@@ -53,6 +54,7 @@ const clients = [];
 async function openClient(label, { hasTouch = false } = {}) {
   const browser = await chromium.launch({ headless: true });
   const context = await browser.newContext({ viewport: { width: 1280, height: 720 }, hasTouch });
+  await markProfileWarm(context);
   const page = await context.newPage();
   const c = { label, browser, context, page, pageErrors: [] };
   clients.push(c);

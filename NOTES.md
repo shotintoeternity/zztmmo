@@ -11470,3 +11470,116 @@ browser suite run and none of them skipped, including the cold-context
 alone — plus `npm test`, `npm run build`, `git diff --check` and the session
 gate. The parity manifest was regenerated for M33.1's own task row, the way
 M16.20a made safe and M16.15b had to for M18.17's.
+
+## 2026-08-09 — M33.2: the design choice, recorded before it was built
+
+M33.2's spec says to design the cheapest thing that would have caught M33.1's
+rot and to record the choice BEFORE building. This is that record; the code
+below it was written afterwards.
+
+**Chosen: a habits lint that runs in the everyday `go test ./...`, plus a
+`make browser` target the rule points client work at.** Two halves, because
+the five causes are two different animals:
+
+- **The lint (`engine/m33_2_test.go`, no browser, milliseconds).** It does not
+  look at the client; it looks at the harnesses, and forbids the two habits that
+  let a shipped change move a suite silently.
+  - *Check A — name your world.* Every Go test that launches the shipped binary
+    (`getM1619ServerBinary`) must pass `-world`. Inheriting the server's default
+    is what M29.1 broke, in three harnesses at once.
+  - *Check B — say which visitor you are.* Every browser script that navigates
+    to the site ROOT must either call `markProfileWarm` or be named in the
+    cold-visit allowlist. The launch flow's shape depends on whether the visitor
+    has met WELCOME (`title_flow.ts shouldOpenWelcomeFirstVisit`), so a suite
+    that starts at the root and does not say which visitor it is has left the
+    thing it is about up to a product decision made elsewhere. That is M23.3.
+- **`make browser` + CLAUDE.md rule 3.** The lint cannot see a REWORDED line
+  (M27.1) or a row that moves inside a menu (M24.1/M25.1/M26.1/M31.1) — those
+  need the client rendered. The rule now says a change under `engine/web/src`
+  runs `make browser` before the commit, and `make browser` is the one command
+  that means it. The 2026-08-01 opt-in is untouched: the family stays skipped in
+  the everyday run and required under `make certify`; what changes is that
+  client work is told, in the hard rules, to pay for it.
+
+**Why not the alternatives.** The DoD's own revert test does most of the
+deciding — the mechanism has to go red on a tree with M33.1's harness fixes
+reverted, and only something that reads or runs the harnesses can:
+
+- *A `-short`-able browser smoke inside `go test ./...`* — rejected twice over.
+  It passes on the reverted tree (a smoke that names its own world and warms its
+  own profile is green while every older suite rots), so it fails the DoD; and
+  the cheapest honest launch-to-play smoke is a real Chromium, which puts
+  browsers back in the everyday run through a side door.
+- *A client-side surface inventory under `npm test`* — a checked-in list of the
+  Account menu's rows, the action list's rows and the picker's search line, so
+  the commit that moves one goes red where it was made. Genuinely attractive:
+  it is the only candidate that catches the wording class without a browser, and
+  it runs in the loop client tasks already use. Rejected because it also passes
+  on the reverted tree (the client is unchanged there) and because it is a
+  second copy of the client's own strings, which rots the way every duplicate
+  does. Worth reopening if `make browser` proves too slow to be run.
+- *Making the whole browser family mandatory again* — out of scope by the
+  spec's own words; the 2026-08-01 decision is not reopened here.
+- *A third lint check, "walk menus, never count arrow presses"* — dropped after
+  grepping for it. Arrow keys drive the BOARD in these scripts (`walk`, `step`,
+  `walkUntil`) and a colour grid in `color_picker_journey`, so no crisp static
+  rule separates a counted menu from a walked player; and two suites still count
+  legitimately-ish today (`comfort_journey.test.mjs:89`,
+  `challenge_journey.test.mjs:162`), so the check would have failed on this tree
+  as well as the reverted one. It is written into rule 3's habit list instead,
+  where `pickListRow` is named.
+
+**What the lint costs today.** Check A passes on every binary-launching harness
+except `m16_19_test.go`, which is allowlisted by name: it is the
+production-boundary harness, it deliberately runs the shipped defaults, and
+M29.1 kept it green by shipping a `LOBBY.ZZT` into its fixture directory rather
+than by naming a world. Check B needed fifteen scripts to declare themselves —
+they reach the launch flow but were never warmed, and they are green today only
+because their servers do not host WELCOME. That is exactly the accident this
+check exists to stop: hosting WELCOME is the harness's decision, made in a
+different file, and the suite should not depend on it silently.
+
+**Two details the checks turned on.** Check B asks the URL the same question
+`launchOpensPicker` asks: a `/play/` or `/watch/` deep link bypasses the launch
+flow, and every other route reaches it — `/replay/` and `/challenge` included,
+which is why the count is fifteen rather than the eleven that navigate a bare
+root. And a destination the lint cannot read is treated as reaching the flow,
+not as exempt; only a plain string literal that never names `baseURL` is skipped,
+which is how `page.goto("about:blank")` in the two pause-clock suites stays out
+without opening a hole. Both allowlists are checked for staleness in the same
+pass: an allowlisted harness that starts naming its world, or a cold-visit suite
+that starts warming, fails the lint rather than sitting there as a lie.
+
+**Verification.** The DoD's revert test was run rather than argued: a scratch
+worktree at this commit with `engine/coop_cutline_test.go`,
+`engine/m16_11_test.go` and `engine/web/test/` checked out from `e95d374~1` —
+the tree as it was before M33.1 — fails both checks, naming exactly
+`coop_cutline_test.go` and `m16_11_test.go` for the world and twenty-two scripts
+for the visit. On this tree both pass in 0.01s each. The fifteen newly-declaring
+scripts were then re-run for real: `npm test`, `npm run build`, and the whole
+opt-in family, plus the session gate.
+
+**Rule 3's new text, recorded here because CLAUDE.md is not in the repository**
+(`.gitignore:38` — the planning docs were removed from the public repo at
+`3d48a78`, and unlike NOTES.md and TASKS.md, CLAUDE.md was untracked rather than
+kept). The workstation copy now reads: the real-browser suites stay opt-in, **a
+change under `engine/web/src` runs `make browser` before its commit** — not
+optional for client work, because M33.1 found seven suites rotted across nine
+commits of exactly that kind — and three habits keep the suites honest, of which
+`engine/m33_2_test.go` enforces the first two in the everyday run: a harness
+NAMES ITS WORLD rather than inheriting the server default; a browser script SAYS
+WHICH VISITOR IT IS (`markProfileWarm`) rather than inheriting first-visit
+behaviour; a menu row is WALKED TO BY NAME (`pickListRow`) rather than counted in
+arrow presses. Anyone restoring a CLAUDE.md from scratch should carry that
+paragraph across.
+
+**The run found something on its way through, and it is not a suite.** The first
+full-family run died at exactly ten minutes with `TestM222WatchLinkJourney`
+three seconds in: `go test`'s DEFAULT package timeout, not a failure. M33.1's
+run came in at 592s of that 600s budget, so the family has been passing on eight
+seconds of margin and nobody knew. `make browser` therefore ships with
+`-timeout 30m`. The same hole is open in the certification run — `cmd/zzt-parity`
+builds both its gates without a `-timeout`, and the `-race` gate is the slower
+one — which is filed as **M33.3** rather than fixed here. A timeout panic reads
+exactly like a hung suite, which is the worst way for a run whose job is to be
+believed to fail.

@@ -25,6 +25,7 @@ import assert from "node:assert/strict";
 import fs from "node:fs";
 import path from "node:path";
 import { chromium } from "playwright";
+import { markProfileWarm } from "./lib/canvas.mjs";
 
 const baseURL = process.env.BASE_URL || "http://127.0.0.1:8080";
 const resultsDir = path.resolve(process.env.COLOR_OUT || "test-results/player-color");
@@ -46,6 +47,7 @@ const clients = [];
 async function openClient(label, name, color) {
   const browser = await chromium.launch({ headless: true });
   const context = await browser.newContext({ viewport: { width: 1280, height: 720 } });
+  await markProfileWarm(context);
   const page = await context.newPage();
   if (color) {
     await page.addInitScript(

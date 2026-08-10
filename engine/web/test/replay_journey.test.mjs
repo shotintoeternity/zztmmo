@@ -2,7 +2,7 @@
 
 import assert from "node:assert/strict";
 import { chromium } from "playwright";
-import { baseURL, gridToArt, hasText, installDecoder, installImageProbe, readGrid, saveText } from "./lib/canvas.mjs";
+import { baseURL, gridToArt, hasText, installDecoder, installImageProbe, markProfileWarm, readGrid, saveText } from "./lib/canvas.mjs";
 
 const REPLAY_ID = process.env.REPLAY_ID || "TOWN-20260807-120000";
 const FINAL_TICK = Number(process.env.REPLAY_FINAL_TICK || "47");
@@ -34,6 +34,7 @@ async function waitFor(pred, describe, timeoutMs = 20000) {
 async function openReplayClient(label) {
   const browser = await chromium.launch({ headless: true });
   const context = await browser.newContext({ viewport: { width: 1280, height: 720 } });
+  await markProfileWarm(context);
   const page = await context.newPage();
   const c = { label, browser, context, page, pageErrors: [], consoleErrors: [], sent: [], received: [] };
   page.on("pageerror", (err) => c.pageErrors.push(String(err)));

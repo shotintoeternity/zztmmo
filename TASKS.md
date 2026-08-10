@@ -7734,7 +7734,7 @@ policy is that the cutline stays green before another roadmap system is promoted
   M27.1's capital M moved. All seven green twice under `ZZT_BROWSER=1 go test
   ./...`. Filed **M33.2** on the way through.
 
-- [ ] **M33.2 — make browser-suite rot visible without paying for browsers.**
+- [x] **M33.2 — make browser-suite rot visible without paying for browsers.**
   M33.1's finding is not that seven suites broke; it is that they broke across
   nine commits and nothing said so. Rule 3's opt-in is the right trade for an
   engine one-liner, but this run of client product work is exactly the case it
@@ -7754,6 +7754,46 @@ policy is that the cutline stays green before another roadmap system is promoted
   fails on a tree with M33.1's harness fixes reverted and passes on this one;
   CLAUDE.md rule 3 updated if the rule changes; `cd engine && go build ./... &&
   go test ./...` green.
+
+  **Landed 2026-08-09: a habits lint in the everyday run, plus `make browser`
+  and a rule that sends client work there.** The choice was recorded in NOTES.md
+  before it was built, with the two alternatives the DoD's own revert test kills
+  — a browser smoke and a client-side surface inventory both pass on a tree where
+  every older suite has rotted, because each is self-contained. What survives is
+  `engine/m33_2_test.go`: no browser, no client source, milliseconds, inside
+  `go test ./...`. It enforces the two habits a shipped change can break
+  silently — a harness that launches the server names its `-world` (M29.1's
+  class; `m16_19_test.go` is allowlisted by name and reason), and a browser
+  script that navigates the launch flow says which visitor it is (M23.3's class;
+  `first_visit_journey.test.mjs` is the allowlisted cold one). Both allowlists
+  fail when they go stale. Fifteen scripts were navigating the root without
+  declaring, green only because their harness happens not to host WELCOME; they
+  now declare. The third habit — walk menus, never count arrow presses — is in
+  rule 3's text rather than the lint, because arrows drive the board here too
+  and no crisp static rule separates the two (evidence in NOTES.md). The
+  wording/menu-order classes the lint cannot see are covered by `make browser`
+  and rule 3's new instruction that a change under `engine/web/src` runs it. The
+  2026-08-01 opt-in decision is untouched. Verified by reverting M33.1's harness
+  fixes in a scratch worktree, where both checks go red and name exactly the two
+  harnesses and the un-declaring scripts.
+
+- [ ] **M33.3 — the certification run has no timeout margin either.**
+  Filed 2026-08-09 by M33.2's own verification run, which died on `go test`'s
+  DEFAULT ten-minute package timeout with a browser suite three seconds in — not
+  a failure, a wall clock. M33.1's run finished at 592s of a 600s budget, so the
+  family has been passing on eight seconds of margin. `make browser` now passes
+  `-timeout 30m`; nothing else does. `cmd/zzt-parity` builds its gates as
+  `go test -count=1 ./...` and `go test -race -count=1 ./...`
+  (`cmd/zzt-parity/main.go:214`, `:222`) with no `-timeout`, and the race gate is
+  the slower of the two — so `make certify` is one added suite away from
+  reporting a timeout panic as a gate failure, on the run whose whole job is to
+  be believed.
+
+  DoD: the parity gates carry an explicit `-timeout` (and the report records it,
+  the way it records tool versions), chosen with headroom over the measured
+  browser+race duration rather than guessed; a timeout is distinguishable in the
+  report from a genuine gate failure; `make parity` green; the session gate
+  `cd engine && go build ./... && go test ./...` green.
 
 ## M14 — Rearchitecting for the service ZZTMMO is becoming
 

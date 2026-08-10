@@ -43,6 +43,7 @@ import {
   gridToArt,
   installDecoder,
   installImageProbe,
+  markProfileWarm,
   readGrid,
   saveText,
   textAt,
@@ -86,6 +87,7 @@ async function waitForBoard(page, pred, describe, timeoutMs = 30000) {
 
 const browser = await chromium.launch({ headless: true });
 const context = await browser.newContext({ viewport: { width: 1280, height: 720 }, deviceScaleFactor: 1 });
+await markProfileWarm(context);
 const page = await context.newPage();
 
 const pageErrors = [];

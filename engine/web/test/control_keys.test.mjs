@@ -28,6 +28,7 @@ import {
   installDecoder,
   installImageProbe,
   launchGoldenBrowser,
+  markProfileWarm,
   pauseClock,
   pressExpectingNoInput,
   readGrid,
@@ -144,6 +145,7 @@ async function holdDiffs(page, n) {
 }
 
 const { browser, context, page, pageErrors, consoleErrors } = await launchGoldenBrowser();
+await markProfileWarm(context);
 let failed = false;
 
 try {
