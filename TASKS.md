@@ -7981,7 +7981,38 @@ can guess.
   for one of the two, and both are now asserted for what they actually do.
   20 focused tests, `go test -race ./...` green, StateHash proven unmoved by
   running the same death with a ledger and without, no client source touched.
-  Full record in NOTES.md 2026-08-10.
+  Full record in NOTES.md 2026-08-10. Filed **M34.1a** on its way out: the dream
+  hook has one uncovered caller and the ledger is never flushed on shutdown.
+
+- [ ] **M34.1a — the dream that was retried is never news, and the paper is not
+  filed on the way out.** Two gaps found by reviewing M34.1 after it landed;
+  neither is a defect in what it proved, and both are in the same two functions.
+
+  `handleGenerationRetry`'s goroutine calls `generator.RetryBoard` and then
+  `finishGenerationJob` directly (`web_api.go:1032`) — it is not
+  `runGenerationJob`, which is where M34.1 put the dream hook. So a generation
+  that failed with a board error and succeeded only on retry produces a world
+  nobody's Gazette hears about. The fix is not simply another `recordDream`
+  call, and that is the whole reason this is a task rather than a line: a
+  *salvaged* job is already `complete` and still `Retryable` (M17.13), so it has
+  ALREADY been recorded, and retrying it a second time would print the same
+  world as two dreams. The retry path must distinguish "this job never recorded"
+  from "this job is repainting a world it already recorded", and the account is
+  available where the request is, not in the goroutine.
+
+  Nothing calls `GazetteLedger.Flush` on the way down. `cmd/zzt-server` already
+  has the shutdown path to hang it on — the signal goroutine that runs
+  `drainAndAnnounce`, cancels the tick context and shuts the HTTP server down
+  (`cmd/zzt-server/main.go:186-193`) — so a deploy currently costs up to one
+  flush cadence of counts for no reason. Thirty seconds lost to a *crash* is the
+  documented trade; thirty seconds lost to a planned restart is not.
+
+  DoD: a retried board that completes a previously-failed job records exactly
+  one dream; a retried board on an already-recorded salvaged job records none;
+  both pinned by tests that would pass today only by accident. A clean shutdown
+  flushes the ledger, proven by a test that drives the same path rather than by
+  the comment. Verify with focused Go tests, `go test -race`, `git diff --check`,
+  and the session gate `cd engine && go build ./... && go test ./...`.
 
 ## M14 — Rearchitecting for the service ZZTMMO is becoming
 

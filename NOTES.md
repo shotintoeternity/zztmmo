@@ -11722,3 +11722,15 @@ for a newspaper and the wrong price for a tick (M16.14e). The cadence is 0 on a
 proven unmoved by running the same death with a ledger and without one and
 comparing; the parity manifest regenerated for `route.api.gazette` and its row
 curated. No client source was touched, so `make browser` is not owed (rule 3).
+
+**Two gaps found reviewing M34.1 after it landed, filed as M34.1a.** Neither
+is a defect in what M34.1 proved; both are callers it did not read. The dream
+hook sits in `runGenerationJob` and the synchronous path, but
+`handleGenerationRetry`'s goroutine calls `RetryBoard` and `finishGenerationJob`
+directly — so a world that failed on a board and succeeded only on retry is
+never news. That one does not fix by adding a call: a salvaged job is already
+`complete` and still `Retryable` (M17.13), so it has already recorded, and a
+second call would print one world as two dreams. And nothing flushes the ledger
+on shutdown, though `cmd/zzt-server` has the signal path to hang it on — so a
+planned restart currently costs up to a cadence of counts, which is not the
+trade that was documented (that one was about a crash).

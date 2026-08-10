@@ -60,7 +60,9 @@ type WebSocketServer struct {
 	// ticks from the tick loop (M34.1). It sits beside AutosaveEveryTicks on
 	// purpose: Record is memory-only, and this is the one place the ledger is
 	// allowed to cost a tick a disk write. Zero disables the cadence; Flush is
-	// still callable directly, which is what tests and shutdown use.
+	// still callable directly, which is what tests use. Nothing calls it on
+	// shutdown yet, so a restart costs up to one cadence of counts — filed as
+	// M34.1a rather than left as a comment that says otherwise.
 	GazetteFlushEveryTicks int
 	// InstanceEvictIdleTicks, when >0, evicts non-default instances after this
 	// many idle ticks. NewWebSocketServer sets the production default; tests may
