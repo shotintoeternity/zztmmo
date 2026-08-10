@@ -180,6 +180,23 @@ func loadDeviceMatrix(path string) (*deviceMatrix, error) {
 	return &matrix, nil
 }
 
+// goTestTimeout is the wall clock each `go test` gate is given, and it exists
+// because `go test`'s DEFAULT is ten minutes per package (task M33.3). The
+// engine package runs the whole real-browser family inside this gate: M33.1's
+// run finished at 592s of that 600s budget, and M33.2's verification run died
+// on the clock with a browser suite three seconds in. A timeout panic is
+// indistinguishable, at a glance, from a hung suite — so the certification run,
+// whose entire job is to be believed, must not be one added suite away from
+// reporting a wall clock as a gate failure — it was already past it. Measured
+// on this workstation, 2026-08-09: the baseline run WAS killed at 600.88s with
+// no verdict, and with the timeout below the same gate PASSES at 635.5s. The
+// `-race` gate, which M33.2 filed as the slower of the two, is in fact the
+// faster by a wide margin (87.9s): it declare-skips the browser family, and the
+// family is the whole cost. 30m is ~2.8x the measured browser gate, matches the
+// `make browser` target so the two agree, and is still short enough that a
+// genuinely hung suite ends the run rather than the afternoon.
+const goTestTimeout = "30m"
+
 // plannedGates is the fixed, ordered list of clean gates. `go test` runs with
 // -count=1 because the parity manifest validator reads files Go's test cache
 // does not track (NOTES.md 2026-07-15), so a cached pass could otherwise mask a
@@ -211,7 +228,7 @@ func plannedGates(withRace, withBrowser bool) []gateResult {
 		gateResult{Name: "go vet", Command: "go vet ./...", Dir: engine},
 		// The real-browser suites are mandatory here and nowhere else: this is
 		// the gate whose result the manifest's browser rows rest on.
-		gateResult{Name: "go test", Command: "go test -count=1 ./...", Dir: engine, goTest: true, requireBrowser: withBrowser},
+		gateResult{Name: "go test", Command: "go test -timeout " + goTestTimeout + " -count=1 ./...", Dir: engine, goTest: true, requireBrowser: withBrowser},
 	)
 	if withRace {
 		// No requireBrowser: the race gate would otherwise re-run every
@@ -219,7 +236,7 @@ func plannedGates(withRace, withBrowser bool) []gateResult {
 		// finding the wire-level concurrency tests already cover. They
 		// declare-skip here and the report says so, gate by gate.
 		gates = append(gates, gateResult{
-			Name: "go test -race", Command: "go test -race -count=1 ./...", Dir: engine, goTest: true,
+			Name: "go test -race", Command: "go test -race -timeout " + goTestTimeout + " -count=1 ./...", Dir: engine, goTest: true,
 		})
 	}
 	return gates
@@ -248,8 +265,10 @@ func runCleanGates(root string, withRace, withBrowser bool) ([]gateResult, []ski
 		if g.goTest {
 			var gateSkips []skipRecord
 			var metrics string
-			gateSkips, metrics, err = runGoTestJSON(g.Name, dir, args, g.requireBrowser)
+			var timedOut bool
+			gateSkips, metrics, timedOut, err = runGoTestJSON(g.Name, dir, args, g.requireBrowser)
 			skips = append(skips, gateSkips...)
+			gates[i].TimedOut = timedOut
 			if metrics != "" && loadMetrics == "" {
 				loadMetrics = metrics
 			}
@@ -262,8 +281,14 @@ func runCleanGates(root string, withRace, withBrowser bool) ([]gateResult, []ski
 			err = cmd.Run()
 		}
 		gates[i].Passed = err == nil
-		timings = append(timings, gateTiming{Name: g.Name, Seconds: time.Since(started).Seconds(), Passed: err == nil})
+		timings = append(timings, gateTiming{Name: g.Name, Seconds: time.Since(started).Seconds(), Passed: err == nil, TimedOut: gates[i].TimedOut})
 		if err != nil {
+			if gates[i].TimedOut {
+				// Named as a wall clock, not a verdict: a gate that ran out of
+				// time has proved nothing about the tree, and a certification
+				// run that cannot tell the two apart is the M33.3 hazard.
+				fmt.Printf("=== gate %s TIMED OUT after %s — no verdict, not a test failure ===\n", g.Name, goTestTimeout)
+			}
 			fmt.Printf("=== gate %s FAILED: %v ===\n", g.Name, err)
 		} else {
 			fmt.Printf("=== gate %s passed ===\n", g.Name)
@@ -287,7 +312,7 @@ func gateEnv(requireBrowser bool) []string {
 // progress line per package and collecting (a) every skipped test with the
 // reason it printed and (b) the load run's measured metrics, which M16.19 emits
 // as test log lines and M16.20 publishes as an artifact.
-func runGoTestJSON(gate, dir string, args []string, requireBrowser bool) ([]skipRecord, string, error) {
+func runGoTestJSON(gate, dir string, args []string, requireBrowser bool) ([]skipRecord, string, bool, error) {
 	jsonArgs := goTestJSONArgs(args)
 	cmd := exec.Command(jsonArgs[0], jsonArgs[1:]...)
 	cmd.Dir = dir
@@ -295,10 +320,10 @@ func runGoTestJSON(gate, dir string, args []string, requireBrowser bool) ([]skip
 	cmd.Stderr = os.Stderr
 	stdout, err := cmd.StdoutPipe()
 	if err != nil {
-		return nil, "", err
+		return nil, "", false, err
 	}
 	if err := cmd.Start(); err != nil {
-		return nil, "", err
+		return nil, "", false, err
 	}
 
 	type event struct {
@@ -310,6 +335,7 @@ func runGoTestJSON(gate, dir string, args []string, requireBrowser bool) ([]skip
 	}
 	var skips []skipRecord
 	var loadMetrics strings.Builder
+	var timedOut bool
 	output := map[string][]string{}
 	scanner := bufio.NewScanner(stdout)
 	scanner.Buffer(make([]byte, 0, 1024*1024), 16*1024*1024)
@@ -321,6 +347,16 @@ func runGoTestJSON(gate, dir string, args []string, requireBrowser bool) ([]skip
 		key := ev.Package + "\x00" + ev.Test
 		switch ev.Action {
 		case "output":
+			// Checked on EVERY output event, whatever it is attributed to: the
+			// panic the test binary prints when it exceeds -timeout arrives
+			// against the running test on some runs and against the package on
+			// others, and it is echoed here because the fail branch below only
+			// prints test-attributed output — a timeout would otherwise be a
+			// bare "FAIL" with nothing said about why (task M33.3).
+			if isTimeoutPanic(ev.Output) {
+				timedOut = true
+				fmt.Printf("--- TIMEOUT: %s (%s)\n", strings.TrimRight(ev.Output, "\n"), ev.Package)
+			}
 			if ev.Test != "" {
 				output[key] = append(output[key], strings.TrimRight(ev.Output, "\n"))
 			}
@@ -353,7 +389,15 @@ func runGoTestJSON(gate, dir string, args []string, requireBrowser bool) ([]skip
 	if scanErr := scanner.Err(); scanErr != nil && waitErr == nil {
 		waitErr = scanErr
 	}
-	return skips, loadMetrics.String(), waitErr
+	return skips, loadMetrics.String(), timedOut, waitErr
+}
+
+// isTimeoutPanic recognises the panic `go test` prints when a package outlives
+// its -timeout: `panic: test timed out after 10m0s`, sometimes followed by
+// `running tests:` and the suite it killed. It is deliberately a pure function
+// of one line so the classification is tested without spending a real timeout.
+func isTimeoutPanic(line string) bool {
+	return strings.HasPrefix(strings.TrimSpace(line), "panic: test timed out after ")
 }
 
 // goTestJSONArgs splices `-json` in as a flag of the `test` subcommand, which
@@ -442,6 +486,9 @@ type gateTiming struct {
 	Name    string  `json:"name"`
 	Seconds float64 `json:"seconds"`
 	Passed  bool    `json:"passed"`
+	// TimedOut says the seconds beside it are the -timeout, not the work: the
+	// gate was killed rather than finished (task M33.3).
+	TimedOut bool `json:"timedOut,omitempty"`
 }
 
 // runRecord is the environment half of the certification evidence (M16.20):
@@ -454,10 +501,14 @@ type runRecord struct {
 	OS            string            `json:"os"`
 	Arch          string            `json:"arch"`
 	Tools         map[string]string `json:"tools"`
-	Gates         []gateTiming      `json:"gates"`
-	TotalSeconds  float64           `json:"totalSeconds"`
-	Skips         []skipRecord      `json:"skips"`
-	LoadMetrics   string            `json:"loadMetricsFile,omitempty"`
+	// GoTestTimeout is the wall clock the go gates were given. It sits beside
+	// the tool versions because it is the same kind of fact: what this run was
+	// run with, next to the timings it has to be read against (task M33.3).
+	GoTestTimeout string       `json:"goTestTimeout"`
+	Gates         []gateTiming `json:"gates"`
+	TotalSeconds  float64      `json:"totalSeconds"`
+	Skips         []skipRecord `json:"skips"`
+	LoadMetrics   string       `json:"loadMetricsFile,omitempty"`
 }
 
 func writeRunRecord(dir, root string, rep report, timings []gateTiming, loadMetrics string) error {
@@ -474,8 +525,9 @@ func writeRunRecord(dir, root string, rep report, timings []gateTiming, loadMetr
 			"npm":        toolVersion(root, "npm", "--version"),
 			"playwright": toolVersion(filepath.Join(root, "engine", "web"), "npx", "playwright", "--version"),
 		},
-		Gates: timings,
-		Skips: rep.Skips,
+		GoTestTimeout: goTestTimeout,
+		Gates:         timings,
+		Skips:         rep.Skips,
 	}
 	for _, t := range timings {
 		rec.TotalSeconds += t.Seconds
@@ -521,6 +573,11 @@ func printSummary(rep report, dir string) {
 		verdict = "CERTIFIED"
 	}
 	fmt.Printf("manifest: %d rows | verdict: %s\n", rep.TotalRows, verdict)
+	for _, g := range rep.Gates {
+		if g.TimedOut {
+			fmt.Printf("gate %q reached NO VERDICT: it timed out after %s. This is a wall clock, not a red suite.\n", g.Name, goTestTimeout)
+		}
+	}
 	if len(rep.Blockers) > 0 {
 		fmt.Printf("blockers (%d):\n", len(rep.Blockers))
 		for _, b := range rep.Blockers {

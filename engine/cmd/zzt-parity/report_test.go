@@ -2,9 +2,12 @@ package main
 
 import (
 	"bytes"
+	"encoding/json"
+	"os"
 	"path/filepath"
 	"strings"
 	"testing"
+	"time"
 )
 
 // synthetic manifest exercising every status the report distinguishes.
@@ -400,5 +403,128 @@ func TestGoTestJSONArgsPutTheFlagAfterTheSubcommand(t *testing.T) {
 		if strings.Join(got[3:], " ") != strings.Join(args[2:], " ") {
 			t.Errorf("gate %q lost or reordered its own flags: %v", g.Name, got)
 		}
+	}
+}
+
+// Every go gate carries an explicit -timeout, and it beats `go test`'s default
+// ten minutes by a margin (task M33.3). The default is the whole bug: the
+// engine package runs the real-browser family inside the `go test` gate, which
+// M33.1 measured at 592s of that 600s budget, so the certification run was one
+// added suite away from reporting a wall clock as a gate failure.
+func TestGoGatesCarryATimeoutBeyondTheDefault(t *testing.T) {
+	const goDefaultTimeout = 10 * time.Minute
+	seen := 0
+	for _, g := range plannedGates(true, true) {
+		if !g.goTest {
+			continue
+		}
+		seen++
+		args := splitCommand(g.Command)
+		idx := -1
+		for i, a := range args {
+			if a == "-timeout" {
+				idx = i
+			}
+		}
+		if idx < 0 || idx+1 >= len(args) {
+			t.Fatalf("gate %q has no -timeout: %q", g.Name, g.Command)
+		}
+		d, err := time.ParseDuration(args[idx+1])
+		if err != nil {
+			t.Fatalf("gate %q has an unparseable -timeout %q: %v", g.Name, args[idx+1], err)
+		}
+		if d <= goDefaultTimeout {
+			t.Errorf("gate %q asks for %s, which is no better than go test's default %s", g.Name, d, goDefaultTimeout)
+		}
+	}
+	if seen != 2 {
+		t.Fatalf("expected both go gates to be checked, saw %d", seen)
+	}
+}
+
+// The panic `go test` prints when a package outlives its -timeout is recognised
+// as a timeout, and ordinary output — including a test named "timed out" and a
+// panic of any other kind — is not (task M33.3).
+func TestTimeoutPanicIsRecognised(t *testing.T) {
+	yes := []string{
+		"panic: test timed out after 10m0s\n",
+		"panic: test timed out after 30m0s\n",
+		"\tpanic: test timed out after 1h0m0s\n",
+	}
+	for _, line := range yes {
+		if !isTimeoutPanic(line) {
+			t.Errorf("isTimeoutPanic(%q) = false, want true", line)
+		}
+	}
+	no := []string{
+		"panic: runtime error: index out of range [3]\n",
+		"    m33_3_test.go:12: timed out waiting for the block confirmation\n",
+		"--- FAIL: TestSomethingTimedOut (0.03s)\n",
+		"",
+	}
+	for _, line := range no {
+		if isTimeoutPanic(line) {
+			t.Errorf("isTimeoutPanic(%q) = true, want false", line)
+		}
+	}
+}
+
+// A gate that ran out of wall clock blocks certification, but says so as a
+// clock rather than as a verdict on the tree: the report must not read as a red
+// suite when nothing was proved either way (task M33.3).
+func TestTimedOutGateIsDistinguishableFromAFailure(t *testing.T) {
+	timedOut := passingGates()
+	failed := passingGates()
+	var idx int
+	for i, g := range timedOut {
+		if g.Name == "go test" {
+			idx = i
+		}
+	}
+	timedOut[idx].Passed, timedOut[idx].TimedOut = false, true
+	failed[idx].Passed = false
+
+	timeoutRep := buildReport(sampleManifest(), "m.json", timedOut, sampleDeviceMatrix(), nil)
+	failRep := buildReport(sampleManifest(), "m.json", failed, sampleDeviceMatrix(), nil)
+
+	joined := strings.Join(timeoutRep.Blockers, "\n")
+	if !strings.Contains(joined, "ran out of wall clock") || !strings.Contains(joined, "no verdict") {
+		t.Fatalf("a timed-out gate must be blocked as a clock, got: %v", timeoutRep.Blockers)
+	}
+	if strings.Contains(joined, `clean gate "go test" failed`) {
+		t.Errorf("a timed-out gate must not also be reported as a failure: %v", timeoutRep.Blockers)
+	}
+	if failJoined := strings.Join(failRep.Blockers, "\n"); !strings.Contains(failJoined, `clean gate "go test" failed`) || strings.Contains(failJoined, "wall clock") {
+		t.Errorf("a genuinely failed gate must still read as a failure: %v", failRep.Blockers)
+	}
+
+	var md bytes.Buffer
+	if err := writeMarkdown(&md, timeoutRep); err != nil {
+		t.Fatal(err)
+	}
+	if !strings.Contains(md.String(), "**TIMEOUT**") {
+		t.Error("the markdown gate table must mark the timeout as such")
+	}
+}
+
+// The timeout is recorded with the run the way the tool versions are: a reader
+// comparing two runs' gate timings needs the clock they were measured against
+// (task M33.3).
+func TestRunRecordCarriesTheGoTestTimeout(t *testing.T) {
+	dir := t.TempDir()
+	rep := buildReport(sampleManifest(), "m.json", passingGates(), sampleDeviceMatrix(), nil)
+	if err := writeRunRecord(dir, dir, rep, []gateTiming{{Name: "go test", Seconds: 1, Passed: true}}, ""); err != nil {
+		t.Fatal(err)
+	}
+	data, err := os.ReadFile(filepath.Join(dir, "run.json"))
+	if err != nil {
+		t.Fatal(err)
+	}
+	var rec runRecord
+	if err := json.Unmarshal(data, &rec); err != nil {
+		t.Fatal(err)
+	}
+	if rec.GoTestTimeout != goTestTimeout {
+		t.Fatalf("run record says goTestTimeout=%q, gates were run with %q", rec.GoTestTimeout, goTestTimeout)
 	}
 }

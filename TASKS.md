@@ -7777,7 +7777,7 @@ policy is that the cutline stays green before another roadmap system is promoted
   fixes in a scratch worktree, where both checks go red and name exactly the two
   harnesses and the un-declaring scripts.
 
-- [ ] **M33.3 — the certification run has no timeout margin either.**
+- [x] **M33.3 — the certification run has no timeout margin either.**
   Filed 2026-08-09 by M33.2's own verification run, which died on `go test`'s
   DEFAULT ten-minute package timeout with a browser suite three seconds in — not
   a failure, a wall clock. M33.1's run finished at 592s of a 600s budget, so the

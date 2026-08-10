@@ -124,6 +124,13 @@ type gateResult struct {
 	Passed  bool   `json:"passed"`
 	Skipped bool   `json:"skipped,omitempty"`
 
+	// TimedOut marks a gate that ran out of wall clock rather than failing on
+	// the tree (task M33.3): `go test` panicked with "test timed out after …".
+	// It is `omitempty` on purpose — a green run never carries the field, so
+	// M16.20's two-clone byte-identical-report property is untouched, and a run
+	// that does carry it has already failed certification on the gate itself.
+	TimedOut bool `json:"timedOut,omitempty"`
+
 	// goTest marks a gate the runner drives under `-json` so it can record the
 	// tests that skipped (task M16.20). requireBrowser makes the real-browser
 	// suites mandatory for that gate rather than opt-in; only the plain
@@ -315,6 +322,13 @@ func certificationBlockers(m *manifest, gates []gateResult, devices *deviceMatri
 			blockers = append(blockers, fmt.Sprintf("clean gate %q was skipped, not run", g.Name))
 			continue
 		}
+		if g.TimedOut {
+			// A timeout is a blocker like any other — but it is a fact about
+			// the wall clock, not about the tree, and the report says which it
+			// is so nobody reads it as a red suite (task M33.3).
+			blockers = append(blockers, fmt.Sprintf("clean gate %q ran out of wall clock: `go test` timed out, so the gate reached no verdict (raise its -timeout or find what hung)", g.Name))
+			continue
+		}
 		if !g.Passed {
 			blockers = append(blockers, fmt.Sprintf("clean gate %q failed", g.Name))
 		}
@@ -396,6 +410,8 @@ func writeMarkdown(w io.Writer, r report) error {
 		switch {
 		case g.Skipped:
 			result = "**SKIPPED**"
+		case g.TimedOut:
+			result = "**TIMEOUT** (wall clock, no verdict)"
 		case !g.Passed:
 			result = "**FAIL**"
 		}

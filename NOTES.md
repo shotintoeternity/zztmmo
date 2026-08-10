@@ -11583,3 +11583,50 @@ builds both its gates without a `-timeout`, and the `-race` gate is the slower
 one — which is filed as **M33.3** rather than fixed here. A timeout panic reads
 exactly like a hung suite, which is the worst way for a run whose job is to be
 believed to fail.
+
+## 2026-08-09 — M33.3: the certification gates get an explicit timeout, and the measurement corrects the filing
+
+M33.2 filed this from the outside: `cmd/zzt-parity` builds both its gates
+without a `-timeout`, so `make certify` was "one added suite away" from
+reporting a wall clock as a gate failure. The baseline run says it is not one
+suite away — **it is already there**. `make parity` on an unmodified tree at
+`5b16a60` was KILLED at 600.88s on `go test`'s default ten-minute package
+timeout, and the run reported it as `clean gate "go test" failed`, which is the
+same sentence a genuinely red suite produces. With `-timeout 30m` the identical
+gate PASSES at 635.5s. Nothing about the tree changed between those two runs;
+the first one simply never got to finish.
+
+**The filing's one wrong guess, corrected by measurement.** M33.2 recorded that
+"the race gate is the slower of the two". It is the faster by a wide margin —
+`go test` 635.5s against `go test -race` 87.9s — because the race gate does not
+set `ZZT_PARITY_REQUIRE_BROWSER=1` (owner decision 2026-08-01), so the whole
+real-browser family declare-skips inside it. The family is essentially the
+entire cost of the slow gate, which is why the `-race` multiplier never showed
+up. 30m is therefore sized against the browser gate: ~2.8x measured, and the
+same number `make browser` already carries so the two agree rather than drift.
+
+**A timeout is now distinguishable from a failure, which took finding out how
+`go test -json` reports one.** It does not report a test-level `fail` event at
+all: on a timeout the stream carries the panic as an `output` event (attributed
+to the running test) and then a package-level `fail`, so the runner's echo path
+— which only prints output for test-attributed failures — buffered the panic
+and dropped it. That is exactly why the baseline log above contains no "timed
+out" text anywhere. `isTimeoutPanic` is therefore checked against EVERY output
+event rather than only test-attributed ones, and the line is echoed as it
+arrives. A timed-out gate now says so three times: on the console as it
+happens, in the report's gate table as `**TIMEOUT** (wall clock, no verdict)`,
+and as a blocker that names it a clock rather than a verdict.
+
+**Recorded with the run, not with the report.** `-timeout 30m` goes in
+`run.json` beside the tool versions — it is the same kind of fact, what this run
+was run WITH, and gate timings cannot be read without it. `gateResult.TimedOut`
+is `omitempty` so a green run's report is byte-identical to before, preserving
+M16.20's two-clone property; a run that carries the field has already failed
+certification on the gate itself.
+
+**Verification.** Baseline `make parity` at `5b16a60`: `go test` killed at
+600.88s, `-race` 96.2s, blocker `clean gate "go test" failed`. After: all eight
+gates green, `go test` 635.5s, `-race` 87.9s, `run.json` carrying
+`"goTestTimeout": "30m"`, and the only remaining blocker the pre-existing 16
+`unverified` rows that both runs report. The classification itself is unit-
+tested against synthetic panic lines rather than by spending a real timeout.
