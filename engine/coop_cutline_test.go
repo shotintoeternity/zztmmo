@@ -82,6 +82,12 @@ func TestCoopCutlineThreePlayerAcceptanceJourney(t *testing.T) {
 	_ = l.Close()
 
 	cmd := exec.Command(binPath,
+		// -world names the suite's own world (M33.1). It used to be omitted, which
+		// meant the server's DEFAULT world — and M29.1 changed that default to
+		// LOBBY, a world this harness does not ship, so the server exited before
+		// its first request. A suite should name the world it is about rather
+		// than inherit whichever one the product currently starts with.
+		"-world", "TOWN",
 		"-addr", addr,
 		"-web", webDir,
 		"-saves", savesDir,

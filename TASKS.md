@@ -393,7 +393,16 @@ M12.23, M17.1–M17.7, M16.0–M16.8a — has fully landed.)
    cutline — and a stashed clean tree at `bd859b0` reproduces every one of them,
    so they are pre-existing rather than M32.1's. M33.1 is the next task, because
    CUTLINE.md's policy keeps the cutline green before another roadmap system is
-   promoted.
+   promoted. **M33.1 landed 2026-08-09** and corrected its own premise: the seven
+   were not one client regression but five shipped product changes — the default
+   world (M29.1), the first-visit welcome (M23.3), the Account menu and the
+   player action list (M24.1/M25.1/M26.1/M31.1) and the picker's reworded search
+   line (M27.1) — each of which added a journey for itself and ran none of the
+   suites it moved. No client source changed; the suites now name their world,
+   start as returning guests, and walk menus to the row they want instead of
+   counting arrow presses. The cutline is green again, so the roadmap queue is
+   unblocked. It filed **M33.2**: make that class of rot visible without making
+   the whole browser family mandatory again.
 
 **Optional / deferred (bottom):**
 - M14.3 — package split — **closed as skipped 2026-08-03**, see NOTES.md
@@ -7675,7 +7684,7 @@ a clean stashed tree at `bd859b0`**, so it is pre-existing and not M32.1's doing
 Ranked as the next task: one of the seven is the co-op cutline, and CUTLINE.md's
 policy is that the cutline stays green before another roadmap system is promoted.
 
-- [ ] **M33.1 — find the one cause behind seven failing browser suites.**
+- [x] **M33.1 — find the one cause behind seven failing browser suites.**
   Red on an unmodified checkout with a freshly built `web/dist`:
   `TestCoopCutlineThreePlayerAcceptanceJourney`,
   `TestM1611BrowserEndToEndPlayerJourneys`,
@@ -7701,6 +7710,50 @@ policy is that the cutline stays green before another roadmap system is promoted
   separate fault, file it rather than folding it in. Verify with `npm test`,
   `npm run build`, `ZZT_BROWSER=1 go test ./...`, `git diff --check`, and the
   session gate `cd engine && go build ./... && go test ./...`.
+
+  **Landed 2026-08-09, with the premise corrected: there are FIVE causes and no
+  client regression.** The one-cause hypothesis does not survive the evidence —
+  and neither does "fix the client, never the assertions", because every cause is
+  behaviour the owner asked for and shipped. M29.1 (`4148db9`) changed the
+  server's default `-world` to LOBBY, which two harnesses had been inheriting;
+  M23.3 (`14ceb83`) gave a fresh guest's root visit WELCOME instead of the
+  picker, and every suite opens a brand-new browser context, so every suite
+  silently became a first visit; M24.1 (`74886d5`) put an Account menu behind G
+  and an action list in front of Block; M25.1 (`e6ed0f8`) and M26.1 (`fd52342`)
+  added rows above Block; M31.1 (`256a7de`) added one above Sign in; M27.1
+  (`c7c8ffa`) reworded the picker's search line. Each of those commits added its
+  own new browser journey and updated its own unit tests, and none of them ran
+  the existing suites — because the real-browser family is opt-in (rule 3). No
+  client source is touched here. The two harnesses now NAME their world, a
+  `markProfileWarm` seeds the returning-guest key the client itself writes (the
+  first-visit suite deliberately does not warm), and both menus are WALKED to the
+  row that says what the suite wants — `pickListRow`, modelled on M16.14's
+  `pickFromList` — instead of counted in arrow presses, which is the M16.11e
+  mistake in menu form. Exactly one claim was loosened, and it is named in
+  NOTES.md: M16.16 reads the picker's Museum line case-blind, because only
+  M27.1's capital M moved. All seven green twice under `ZZT_BROWSER=1 go test
+  ./...`. Filed **M33.2** on the way through.
+
+- [ ] **M33.2 — make browser-suite rot visible without paying for browsers.**
+  M33.1's finding is not that seven suites broke; it is that they broke across
+  nine commits and nothing said so. Rule 3's opt-in is the right trade for an
+  engine one-liner, but this run of client product work is exactly the case it
+  does not cover: each task added a journey for its own feature, ran `npm test`,
+  and never learned that it had moved a menu three other journeys walk.
+
+  Design the cheapest thing that would have caught it, and record the choice
+  before building: candidates are a `make` target the client-touching tasks are
+  told to run (docs-only, no new machinery), a rule that a commit touching
+  `engine/web/src` must run the browser family, or a `-short`-able smoke subset
+  (launch → picker → title → play, plus each menu the suites walk) cheap enough
+  to sit inside the everyday `go test ./...`. Do NOT make the whole family
+  mandatory again — that decision was taken on 2026-08-01 and this task does not
+  reopen it.
+
+  DoD: the choice and its rejected alternatives in NOTES.md; whatever it is, it
+  fails on a tree with M33.1's harness fixes reverted and passes on this one;
+  CLAUDE.md rule 3 updated if the rule changes; `cd engine && go build ./... &&
+  go test ./...` green.
 
 ## M14 — Rearchitecting for the service ZZTMMO is becoming
 

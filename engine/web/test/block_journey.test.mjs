@@ -20,7 +20,7 @@
 
 import assert from "node:assert/strict";
 import { chromium } from "playwright";
-import { findText, gridToArt, hasText, installDecoder, installImageProbe, readGrid, textAt } from "./lib/canvas.mjs";
+import { findText, gridToArt, hasText, installDecoder, installImageProbe, markProfileWarm, pickListRow, readGrid, textAt } from "./lib/canvas.mjs";
 
 const baseURL = process.env.BASE_URL || "http://127.0.0.1:8080";
 const WORLD = "ACCEPT";
@@ -33,6 +33,7 @@ const clients = [];
 async function openClient(label, name) {
   const browser = await chromium.launch({ headless: true });
   const context = await browser.newContext({ viewport: { width: 1280, height: 720 } });
+  await markProfileWarm(context);
   const page = await context.newPage();
   const c = { label, name, browser, context, page, pageErrors: [], snapshots: 0, you: null, chat: [] };
   clients.push(c);
@@ -195,8 +196,13 @@ try {
   );
   console.log(`  - L listed "Bo #${bo.you.id}"`);
 
-  // Take the row, confirm, and read what the server said back.
+  // Take the row, confirm, and read what the server said back. Taking Bo's row
+  // no longer blocks Bo: M24.1, M25.1 and M26.1 put View profile, Private
+  // message and Follow in front of Block, so the pick is walked to the row that
+  // says Block rather than assumed to be the first one (M33.1).
   await ada.page.keyboard.press("Enter");
+  await screen(ada, (cells) => hasText(cells, "View profile"), "Bo's action list");
+  await pickListRow(ada.page, "Block", "Ada blocking Bo");
   const confirm = await screen(ada, (cells) => hasText(cells, "Block Bo?"), "the block confirmation");
   assert.ok(confirm, "the pick must ask before blocking");
   await ada.page.keyboard.press("KeyY");
@@ -245,6 +251,8 @@ try {
   const marked = await screen(ada, (cells) => hasText(cells, "[blocked]"), "the row marked as blocked");
   assert.ok(hasText(marked, `Bo #${bo.you.id}`), "the blocked row is still Bo's");
   await ada.page.keyboard.press("Enter");
+  await screen(ada, (cells) => hasText(cells, "View profile"), "Bo's action list");
+  await pickListRow(ada.page, "Unblock", "Ada unblocking Bo");
   await screen(ada, (cells) => hasText(cells, "Unblock Bo?"), "the unblock confirmation");
   await ada.page.keyboard.press("KeyY");
   await screen(ada, (cells) => hasText(cells, "Unblocked Bo"), "the unblock result");

@@ -11409,3 +11409,64 @@ M32.1's own suites — `TestM321*` and the challenge browser journey — are gre
 and the non-browser `go test ./...` is green, which is why M32.1 was committed
 rather than held: it neither caused nor worsened the red, and holding it would
 have hidden the finding inside an unlanded change.
+
+## 2026-08-09 — M33.1: seven red browser suites, five causes, none of them a bug
+
+M33.1 was filed on the hypothesis that seven suites failing together was ONE
+client-side regression on the shared launch/title/picker path, and its DoD said
+to fix the client and never the assertions. The premise is wrong, and it is
+recorded here rather than quietly worked around: there is no client regression.
+The seven failures are FIVE deliberate product changes, each of which moved a
+surface a suite drives, and none of which re-ran the suites that watch it.
+
+| cause | commit | what moved | suites it reddened |
+| --- | --- | --- | --- |
+| M29.1 | `4148db9` | the server's default `-world`, TOWN to LOBBY | cutline, M16.11 |
+| M23.3 | `14ceb83` | a fresh guest's root visit opens WELCOME, not the picker | cutline, M16.11, M20.1, M21.1, M23.2, M16.14, M16.16 |
+| M24.1 | `74886d5` | G opens an Account menu; a player row opens an action list | M16.14, M16.16, M20.1, M21.1 |
+| M25.1, M26.1 | `e6ed0f8`, `fd52342` | Private message and Follow, above Block | M21.1 |
+| M31.1 | `256a7de` | Comfort settings, above Sign in | M16.14, M16.16, M20.1 |
+| M27.1 | `c7c8ffa` | the picker's search line reworded; "the museum" became "Museum" | M16.16 |
+
+The pattern is the part worth keeping. Every one of those commits added its OWN
+browser journey — `lobby_journey`, `first_visit_journey`, `comfort_journey` —
+and updated its OWN unit tests, and none of them ran the existing suites,
+because CLAUDE.md rule 3 makes the real-browser family opt-in (owner decision
+2026-08-01, so an engine one-liner does not pay ten minutes of browsers). That
+opt-in is still the right trade for an engine one-liner. What it does not
+survive is a run of product work on the client, where seven suites can rot
+across nine commits and nothing says so until somebody sets `ZZT_BROWSER=1`.
+Filed as **M33.2**, deliberately without reopening the 2026-08-01 decision.
+
+**What changed, and why none of it edits a claim.** No client source was
+touched: "fix the client" would have meant reverting behaviour the owner asked
+for.
+
+- The two harnesses that had been inheriting the default world now NAME the
+  world they are about (`-world TOWN`). M29.1 had already fixed the third such
+  harness, `m16_19_test.go`, by shipping LOBBY into it; this is the same fix
+  taken the other way, for suites whose subject is TOWN and ACCEPT.
+- `markProfileWarm` (in `web/test/lib/canvas.mjs`) seeds the
+  `zzt-first-visit-welcome` key the client itself writes, before any page script
+  runs, so a suite about a returning player is run as a returning player. The
+  first-visit behaviour keeps its own suite, `first_visit_journey.test.mjs`,
+  which deliberately does not warm.
+- The Account menu and the player action list are now WALKED to the row that
+  says what the suite wants — `pickListRow`, modelled on M16.14's `pickFromList`
+  and using the same column-14/row-13 cursor probe — instead of counted in arrow
+  presses. Counting is the M16.11e mistake in menu form: the next row anyone
+  inserts silently redirects a suite onto a different command, where walking
+  fails at the menu and names the rows it was offered.
+- One claim was loosened, and only one. M16.16's "the picker must say that
+  typing searches the Museum, or nobody will type" is now read case-blind:
+  M18.9 wrote it against a lower-case "the museum", M27.1's front page says
+  "Type to search all/Museum; shelves", and only the capital M moved. The claim
+  is asked of the words rather than of the casing.
+
+Verification: the seven green together, then the whole opt-in browser family
+under `ZZT_BROWSER=1 go test -count=1 ./...` twice — 688 passing tests, every
+browser suite run and none of them skipped, including the cold-context
+`TestM233FirstVisitWelcomeJourney` this task's warming deliberately leaves
+alone — plus `npm test`, `npm run build`, `git diff --check` and the session
+gate. The parity manifest was regenerated for M33.1's own task row, the way
+M16.20a made safe and M16.15b had to for M18.17's.

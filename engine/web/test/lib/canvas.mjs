@@ -566,6 +566,89 @@ export function launchOpensPicker(page) {
   return !pathname.startsWith("/play/") && !pathname.startsWith("/watch/");
 }
 
+/**
+ * The key the client writes when it has shown someone the welcome world
+ * (title_flow.ts FIRST_VISIT_WELCOME_KEY). Duplicated here rather than imported
+ * because these suites run against the BUILT client, not the sources.
+ */
+export const FIRST_VISIT_WELCOME_KEY = "zzt-first-visit-welcome";
+
+/**
+ * markProfileWarm makes a context a RETURNING guest before any page script runs
+ * (M33.1).
+ *
+ * M23.3 gave a fresh guest's root visit WELCOME's title screen instead of the
+ * picker. Every suite opens a brand-new context, so every suite silently became
+ * a first visit, and the ones that navigate through the picker were left typing
+ * a world name at a title screen instead of into the picker's search box.
+ *
+ * Seeding the key the client itself writes puts those suites back in the
+ * scenario they are actually about — someone who has already met the welcome
+ * world — without touching a single claim they make. The first-visit behaviour
+ * has its own suite (first_visit_journey.test.mjs), which deliberately does not
+ * call this.
+ */
+export async function markProfileWarm(context) {
+  await context.addInitScript((key) => {
+    try {
+      window.localStorage.setItem(key, "1");
+    } catch {
+      // A context with storage disabled is a first visit forever; the suites
+      // that care assert on the screen, not on this.
+    }
+  }, FIRST_VISIT_WELCOME_KEY);
+}
+
+// A select list draws its entries as hyperlinks whose caption starts at column
+// 14, and the selected line is always screen row 13 (M16.10/M16.13's probe;
+// editor_collab.test.mjs, editor_solo.test.mjs and control_keys.test.mjs each
+// measure it the same way).
+export const WINDOW_CURSOR_ROW = 13;
+
+export const windowCursorLine = (cells) => textAt(cells, 14, WINDOW_CURSOR_ROW, 37).trimEnd();
+
+/**
+ * Walk an open select list to the first entry `want` accepts and press Enter
+ * (M33.1).
+ *
+ * Counting arrow presses instead is the M16.11e mistake in menu form: a menu
+ * that grows a row — M31.1 put "Comfort settings" above "Sign in", M24.1 and
+ * M25.1 put three actions above "Block" — silently redirects a suite onto a
+ * different command rather than failing where the change was made. The list is
+ * walked rather than read off one screenshot because a text window shows only
+ * the lines around its cursor, so an entry further down is genuinely not on
+ * screen yet; the cursor refusing to move is the end of the list.
+ */
+export async function pickListRow(page, want, describe, maxRows = 40) {
+  const matches = typeof want === "function" ? want : (line) => line === want;
+  let cells = await readGrid(page);
+  const seen = [];
+  for (let i = 0; i < maxRows; i += 1) {
+    const line = windowCursorLine(cells);
+    if (matches(line)) {
+      await page.keyboard.press("Enter");
+      return line;
+    }
+    seen.push(line);
+    await page.keyboard.press("ArrowDown");
+    const deadline = Date.now() + 2000;
+    let moved = false;
+    while (Date.now() < deadline) {
+      cells = await readGrid(page);
+      if (windowCursorLine(cells) !== line) {
+        moved = true;
+        break;
+      }
+      await page.waitForTimeout(60);
+    }
+    if (!moved) break; // the cursor clamps at the last entry
+  }
+  saveText(`picklist-${describe.replace(/\W+/g, "-")}.txt`, gridToArt(cells));
+  throw new Error(
+    `${describe}: no row matched; the list offered ${JSON.stringify(seen)} and the screen was:\n${gridToArt(cells)}`,
+  );
+}
+
 /** Poll the canvas until `pred(cells)` holds; throws with the screen on timeout. */
 export async function waitForGrid(page, pred, describe, timeoutMs = 15000) {
   const deadline = Date.now() + timeoutMs;

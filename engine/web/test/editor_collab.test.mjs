@@ -39,6 +39,7 @@ import {
   installImageProbe,
   launchGoldenBrowser,
   launchOpensPicker,
+  markProfileWarm,
   pauseClock,
   readGrid,
   runClock,
@@ -201,6 +202,7 @@ const boardListOpen = (cells) => /^\d+: /.test(windowCursorLine(cells));
 
 async function openBrowser(label) {
   const { browser, context, page, pageErrors, consoleErrors } = await launchGoldenBrowser();
+  await markProfileWarm(context);
   const ed = { label, browser, context, page, pageErrors, consoleErrors, closed: false, park: PARKS[label] };
   await installImageProbe(page);
   page.on("response", async (response) => {
@@ -274,6 +276,12 @@ async function signIn(ed, account, displayName) {
     window.__m1614BeforeLogin = true;
   });
   await press(ed, "KeyG");
+  // M24.1 made G open the Account menu rather than redirect, and M31.1 put a
+  // row above the sign-in one (M33.1). pickFromList walks to the row instead of
+  // counting keys, so the next row anyone adds fails here rather than silently
+  // choosing a different command.
+  await screen(ed, (c) => hasText(c, "Sign in"), `${ed.label}: the guest account menu`);
+  await pickFromList(ed, "Sign in", `${ed.label}: the guest account menu`);
   // A fresh window means the whole redirect chain completed and the client
   // reloaded; the marker cannot survive a navigation.
   await ed.page.waitForFunction(() => !window.__m1614BeforeLogin, null, { timeout: 30000 });

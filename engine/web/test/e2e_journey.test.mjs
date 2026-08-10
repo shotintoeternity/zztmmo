@@ -41,7 +41,7 @@ import fs from "node:fs";
 import path from "node:path";
 import { chromium } from "playwright";
 import { at, step, walkOnto, walkUntil, assertObserver } from "./lib/walk.mjs";
-import { launchOpensPicker } from "./lib/canvas.mjs";
+import { launchOpensPicker, markProfileWarm } from "./lib/canvas.mjs";
 
 const baseURL = process.env.BASE_URL || "http://127.0.0.1:8080";
 const resultsDir = path.resolve("test-results");
@@ -49,6 +49,7 @@ fs.mkdirSync(resultsDir, { recursive: true });
 
 const browser = await chromium.launch({ headless: true });
 const context = await browser.newContext({ viewport: { width: 1280, height: 720 } });
+await markProfileWarm(context);
 await context.tracing.start({ screenshots: true, snapshots: true });
 const page = await context.newPage();
 

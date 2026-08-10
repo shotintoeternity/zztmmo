@@ -39,10 +39,13 @@ import {
   baseURL,
   controlURL,
   gridToArt,
+  hasText,
   installDecoder,
   installImageProbe,
   launchGoldenBrowser,
   launchOpensPicker,
+  markProfileWarm,
+  pickListRow,
   readGrid,
   saveText,
   textAt,
@@ -71,6 +74,13 @@ function findOnBoard(cells, needle) {
 
 const onBoard = (cells, needle) => findOnBoard(cells, needle) !== null;
 
+/** The whole board area as one lower-cased string, for a case-blind read. */
+function boardTextLower(cells) {
+  let text = "";
+  for (let row = 0; row < 25; row += 1) text += boardText(cells, row) + "\n";
+  return text.toLowerCase();
+}
+
 async function waitForBoard(page, pred, describe, timeoutMs = 30000) {
   const deadline = Date.now() + timeoutMs;
   for (;;) {
@@ -93,6 +103,7 @@ async function control(route) {
 // ---------------------------------------------------------------------------
 
 const { browser, context, page, pageErrors, consoleErrors } = await launchGoldenBrowser();
+await markProfileWarm(context);
 
 // The client is a canvas; the live join is only observable on the wire.
 const seen = { you: null, sockets: [] };
@@ -164,6 +175,11 @@ await page.evaluate(() => {
   window.__m1616BeforeLogin = true;
 });
 await page.keyboard.press("KeyG");
+// M24.1 made G open the Account menu rather than redirect, and M31.1 put a row
+// above the sign-in one (M33.1). The Sign in row is walked to rather than
+// counted; everything after this is the same claim.
+await waitForBoard(page, (c) => hasText(c, "Sign in"), "the guest account menu");
+await pickListRow(page, "Sign in", "the guest account menu");
 // A fresh window means the whole redirect chain completed and the client
 // reloaded; the marker cannot survive a navigation.
 await page.waitForFunction(() => !window.__m1616BeforeLogin, null, { timeout: 30000 });
@@ -195,7 +211,12 @@ assert.equal(textAt(signedIn, 62, 24, 3), " G ", "the sign-in row keeps its badg
 await page.keyboard.press("KeyW");
 const picker = await waitForBoard(page, (c) => onBoard(c, "Type to search"), "the world picker window");
 assert.ok(
-  onBoard(picker, "museum"),
+  // Read case-insensitively (M33.1). The claim is that the picker tells a
+  // player typing reaches the Museum; it was written against M18.9's lower-case
+  // "the museum", and M27.1's front page reworded the same line to "Type to
+  // search all/Museum; shelves". Only the capital M moved, so the claim is
+  // asked of the words rather than of the casing.
+  boardTextLower(picker).includes("museum"),
   "the picker must say that typing searches the Museum, or nobody will type",
 );
 

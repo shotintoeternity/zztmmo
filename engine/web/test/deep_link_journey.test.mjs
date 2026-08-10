@@ -34,7 +34,7 @@
 
 import assert from "node:assert/strict";
 import { chromium } from "playwright";
-import { baseURL, gridToArt, installDecoder, installImageProbe, readGrid, saveText, textAt } from "./lib/canvas.mjs";
+import { baseURL, gridToArt, hasText, installDecoder, installImageProbe, markProfileWarm, pickListRow, readGrid, saveText, textAt } from "./lib/canvas.mjs";
 
 const TARGET = "ACCEPT"; // deep-linked to; NOT the server's startup world
 const STARTUP = "TOWN"; // the server's -world, so a bare load lands here
@@ -102,6 +102,7 @@ async function waitForBoard(page, pred, describe, timeoutMs = 30000) {
 
 const browser = await chromium.launch({ headless: true });
 const context = await browser.newContext({ viewport: { width: 1280, height: 720 } });
+await markProfileWarm(context);
 const page = await context.newPage();
 
 const pageErrors = [];
@@ -317,7 +318,15 @@ try {
   await page.evaluate(() => {
     window.__m201BeforeLogin = true;
   });
+  // M24.1 made G open the Account menu instead of redirecting straight to the
+  // provider (M33.1 found this suite still expecting the old shape), and M31.1
+  // then put "Comfort settings" above the sign-in row. The menu is opened and
+  // the Sign in row is WALKED to rather than counted, so the next row anyone
+  // adds fails here instead of quietly choosing something else; the claim below
+  // — that the round trip returns to this path — is untouched.
   await page.keyboard.press("KeyG");
+  await waitForBoard(page, (c) => hasText(c, "Sign in"), "the guest account menu");
+  await pickListRow(page, "Sign in", "the guest account menu");
   await page.waitForFunction(() => !window.__m201BeforeLogin, null, { timeout: 30000 });
   await page.waitForSelector("canvas[data-screen]", { timeout: 20000 });
   await installDecoder(page);
