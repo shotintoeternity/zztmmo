@@ -446,7 +446,15 @@ M12.23, M17.1–M17.7, M16.0–M16.8a — has fully landed.)
    Everything else is ticked, including the 20–30-player scaling bullet the entry
    at the head of this list still describes as open (it landed 2026-08-07), and
    the roadmap queue's ten ranked lines are spent. After M34.3a, the next
-   session's work has to come from the owner.
+   session's work has to come from the owner. **M34.3a landed 2026-08-10**: an
+   unnamed title fetch is answered from the world the server was actually
+   started with rather than from a second hardcoded name, and a world nobody
+   hosts is a 404 with a message instead of a 500 carrying a filesystem path.
+   It filed **M34.3b** — the same stale TOWN default and the same 500 survive
+   in `handleRestore` and `handleHighScores`, which no shipped client reaches
+   unnamed — and that is now the only unchecked box in this file. It is a
+   latent copy of a bug already fixed, not a ranked one; the owner still owns
+   what comes next.
 
 **Optional / deferred (bottom):**
 - M14.3 — package split — **closed as skipped 2026-08-03**, see NOTES.md
@@ -8318,7 +8326,7 @@ can guess.
   from `/api/title`, which turned out to be a default M29.1 left behind rather
   than anything the board did. M34's own work is closed.
 
-- [ ] **M34.3a — an unnamed title fetch still defaults to TOWN.** Found by
+- [x] **M34.3a — an unnamed title fetch still defaults to TOWN.** Found by
   M34.3's browser act, on an unmodified checkout, and unrelated to the board:
   `handleTitle` and `handleTitleStream` answer a request with no `?world` from a
   hardcoded `"TOWN"` (web_api.go:1188,1241). M29.1 made LOBBY the server's
@@ -8341,6 +8349,49 @@ can guess.
   rather than a 500; the M34.3 browser harness drops the TOWN.ZZT it only hosts
   to satisfy this default, and its comment goes with it. Verify with focused Go
   tests, `make browser`, and the session gate.
+
+  **Landed 2026-08-10** on the DoD's own answer to the open decision — the
+  world the server was actually started with, not a second name to go stale.
+  `WebAPI.defaultWorldName` is that name (`Server.DefaultInstance.Name`, the
+  same default `serveEditor` has always used, falling back to the
+  `RoomManager`'s already-sanitized `WorldIdentity` on the Server-less test
+  path), and there is deliberately no `"TOWN"` left at the end of it: a
+  hardcoded fallback is the bug this task exists to kill. `writeWorldLoadError`
+  is the 404 — a world nobody hosts is the client asking for something absent,
+  not a server fault — and it names only the sanitized world, where the 500 it
+  replaces pasted the failed absolute path into the response. Both mutations
+  redden by name: putting `"TOWN"` back reddens all three default tests
+  (404 "no such world: TOWN" where the default world's board belongs), and
+  dropping the `os.ErrNotExist` branch reddens both 404 tests with the 500 and
+  its leaked path. The unnamed test also pins the invariant that made this
+  worth checking rather than assuming — `Instances` is keyed by
+  `DefaultInstance.Name` raw while the handler sanitizes, so the test asserts
+  the request resolved the booted instance rather than loading a second copy of
+  the same world off disk. M34.3's harness dropped TOWN.ZZT and the comment
+  that explained it, and `make browser` was run and owed, since this moves an
+  answer the client's first paint reads: the whole family is green, including
+  the co-op cutline, and no visual golden moved — M33.1's rule that a suite
+  names its world means almost nothing takes the bare path in the first place.
+  The only red in that run was the parity manifest wanting a row for this task's
+  own checked box, regenerated here with `PARITY_SCAFFOLD=1` as M16.20a made
+  safe. Filed on the way through: **M34.3b**, the same stale `"TOWN"` in the
+  other two handlers that carry this default.
+
+- [ ] **M34.3b — the same stale TOWN default in restore and high scores.**
+  Filed by M34.3a 2026-08-10, which fixed only the two handlers its DoD named.
+  `handleRestore` (web_api.go:1141) and `handleHighScores` (web_api.go:1615)
+  default an absent world to the same hardcoded `"TOWN"` M29.1 left behind, and
+  both still answer a world nobody hosts with a 500 that pastes the failed
+  absolute path into the response body. Lower-ranked than M34.3a was, because
+  the shipped client always names the world at both call sites
+  (main.ts:2100,4461) — this is reachable by a direct API caller, not by a
+  player, so it is a latent copy of a fixed bug rather than a live one.
+
+  DoD: both handlers take their unnamed default from `defaultWorldName()` and
+  their missing-world answer from `writeWorldLoadError()` — the seams M34.3a
+  already built — with a focused test per handler that reddens if either is put
+  back. No client change; the session gate is enough, since no browser reads
+  either path unnamed.
 
 ## M14 — Rearchitecting for the service ZZTMMO is becoming
 

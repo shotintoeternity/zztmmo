@@ -1181,11 +1181,39 @@ func writeJSON(w http.ResponseWriter, value interface{}) {
 	_ = json.NewEncoder(w).Encode(value)
 }
 
+// defaultWorldName is the world a request with no `?world` means: the one this
+// server was actually started with. M34.3a: this used to be a second hardcoded
+// "TOWN" in each title handler, which M29.1 left stale when it made LOBBY the
+// server's default — so the client's very first paint (main.ts sends a bare
+// /api/title while its world is still "Untitled") asked for a world the
+// deployment may not host at all. serveEditor already defaults this way
+// (websocket_server.go); a name that cannot go stale is the point.
+func (a *WebAPI) defaultWorldName() string {
+	if a.Server != nil && a.Server.DefaultInstance != nil && a.Server.DefaultInstance.Name != "" {
+		return a.Server.DefaultInstance.Name
+	}
+	if a.RoomManager != nil {
+		return a.RoomManager.WorldIdentity
+	}
+	return ""
+}
+
+// writeWorldLoadError answers a world that could not be opened. A world nobody
+// hosts is the client asking for something absent, not a server fault, so it is
+// a 404 with a message rather than the 500 this used to be (M34.3a).
+func writeWorldLoadError(w http.ResponseWriter, worldName string, err error) {
+	if errors.Is(err, os.ErrNotExist) {
+		http.Error(w, "no such world: "+worldName, http.StatusNotFound)
+		return
+	}
+	http.Error(w, "failed to load world: "+err.Error(), http.StatusInternalServerError)
+}
+
 // handleTitle renders board 0 the way ZZT's title screen shows it.
 func (a *WebAPI) handleTitle(w http.ResponseWriter, r *http.Request) {
 	worldName := r.URL.Query().Get("world")
 	if worldName == "" {
-		worldName = "TOWN"
+		worldName = a.defaultWorldName()
 	}
 	safeWorld, err := SanitizeSaveName(worldName)
 	if err != nil {
@@ -1199,7 +1227,7 @@ func (a *WebAPI) handleTitle(w http.ResponseWriter, r *http.Request) {
 	if a.Server != nil {
 		inst, err := a.Server.GetOrCreateInstance(safeWorld)
 		if err != nil {
-			http.Error(w, "failed to load world: "+err.Error(), http.StatusInternalServerError)
+			writeWorldLoadError(w, safeWorld, err)
 			return
 		}
 		rm = inst.RoomManager
@@ -1238,7 +1266,7 @@ func (a *WebAPI) handleTitleStream(w http.ResponseWriter, r *http.Request) {
 	}
 	worldName := r.URL.Query().Get("world")
 	if worldName == "" {
-		worldName = "TOWN"
+		worldName = a.defaultWorldName()
 	}
 	safeWorld, err := SanitizeSaveName(worldName)
 	if err != nil {
@@ -1247,7 +1275,7 @@ func (a *WebAPI) handleTitleStream(w http.ResponseWriter, r *http.Request) {
 	}
 	inst, err := a.Server.GetOrCreateInstance(safeWorld)
 	if err != nil {
-		http.Error(w, "failed to load world: "+err.Error(), http.StatusInternalServerError)
+		writeWorldLoadError(w, safeWorld, err)
 		return
 	}
 	if inst.Title == nil {

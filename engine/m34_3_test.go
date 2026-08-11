@@ -527,14 +527,6 @@ func TestM343GazetteBoardBrowserJourney(t *testing.T) {
 
 	lobbyBytes := m291LobbyWorldBytes(t)
 	welcomeBytes := m232WelcomeWorldBytes(t)
-	// TOWN is hosted because the CLIENT asks for it, not because this journey
-	// visits it: an unnamed title fetch (`/api/title` with no ?world, which
-	// main.ts sends while the world is still "Untitled") is answered from a
-	// hardcoded TOWN — web_api.go:1188, a default M29.1 did not move when it
-	// made LOBBY the server's. A harness without TOWN takes a 500 on the
-	// client's first paint. Filed as M34.3a; hosted here rather than worked
-	// around silently.
-	townBytes := committedTownBytes(t)
 
 	m169RequireClientBuild(t)
 	binPath := getM1619ServerBinary(t)
@@ -554,7 +546,6 @@ func TestM343GazetteBoardBrowserJourney(t *testing.T) {
 	for _, dir := range []string{worldsDir, rootDir} {
 		for name, data := range map[string][]byte{
 			"LOBBY.ZZT":   lobbyBytes,
-			"TOWN.ZZT":    townBytes,
 			"WELCOME.ZZT": welcomeBytes,
 		} {
 			if err := os.WriteFile(filepath.Join(dir, name), data, 0o644); err != nil {
