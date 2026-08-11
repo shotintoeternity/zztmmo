@@ -93,8 +93,8 @@ board "Central Hall"
 #..........................................................#
 #..............CHAT..........FRIENDS........WATCH.TV.......#
 #..........................................................#
-#..........................................................#
-#..........................................................#
+#....THE.ZZT.GAZETTE.......................................#
+#...........n..............................................#
 #............TOUCH.A.GATE.TO.JOIN.A.WORLD..................#
 #..........................................................#
 #..........................................................#
@@ -109,6 +109,7 @@ board "Central Hall"
     p = Passage color 0x1F to "Central Hall"
     q = Passage color 0x1E to "Central Hall"
     r = Passage color 0x1D to "Central Hall"
+    n = Object color 0x0F
     A = Text-White color 0x41
     B = Text-White color 0x42
     C = Text-White color 0x43
@@ -137,5 +138,15 @@ board "Central Hall"
     stat at 12,9 element Passage cycle 0 p3 board "Central Hall" under Empty color 0x00
     stat at 30,9 element Passage cycle 0 p3 board "Central Hall" under Empty color 0x00
     stat at 48,9 element Passage cycle 0 p3 board "Central Hall" under Empty color 0x00
+    stat at 13,20 element Object cycle 3 p1 cp437:0xF0 under Empty color 0x00
+    oop
+@The ZZT Gazette
+#end
+:touch
+The ZZT Gazette
+Nobody is printing a paper
+here today.
+#end
+    end
   end
 end

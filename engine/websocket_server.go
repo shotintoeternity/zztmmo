@@ -145,7 +145,14 @@ type WebSocketServer struct {
 	// gazetteTicks counts toward GazetteFlushEveryTicks. Touched only on the
 	// tick goroutine, like autosaveTicks.
 	gazetteTicks int
-	metrics      *serverMetrics
+	// gazetteEditor is the ONE editor this process writes editions with
+	// (M34.3). It lives here rather than on WebAPI because the lobby's
+	// newsstand and the HTTP route must share a cache file and — more to the
+	// point — a spend budget: two editors would quietly buy two days' worth of
+	// author calls a day.
+	gazetteEditor   *GazetteEditor
+	gazetteEditorMu sync.Mutex
+	metrics         *serverMetrics
 }
 
 type WorldInstance struct {
@@ -675,6 +682,11 @@ func (inst *WorldInstance) Tick(ctx context.Context, s *WebSocketServer) {
 	}
 	watched := inst.spectatorMessagesLocked(boardDiffs, watchers)
 	transits = append(transits, inst.RoomManager.DrainWorldTransits()...)
+	// M34.3: touches of a server-owned notice tile. Drained here because the
+	// manager must not accumulate them, answered after the unlock and off this
+	// goroutine because composing the day's paper reads the preferences store
+	// once per named account.
+	notices := inst.RoomManager.DrainNotices()
 	// M34.1: the deeds this step produced, resolved to accounts here while the
 	// clients map is in hand and filed after the unlock. A challenge run and an
 	// editor test-play copy are instances nobody chose to make public, so they
@@ -714,6 +726,9 @@ func (inst *WorldInstance) Tick(ctx context.Context, s *WebSocketServer) {
 	}
 	for _, transit := range transits {
 		s.completeWorldTransit(ctx, inst, transit)
+	}
+	for _, notice := range notices {
+		go s.postNotice(ctx, inst, notice)
 	}
 	for _, notable := range notables {
 		s.recordGazette(notable.Kind, notable.Subject, notable.AccountKey)

@@ -11866,3 +11866,90 @@ ledger and `/api/gazette/edition` returns the server-written edition, `{"source"
 a host with no day yet recorded should print. The host's day was already
 2026-08-11 UTC, which is the ledger choosing one calendar rather than the
 workstation's.
+
+## 2026-08-10 — M34.3: the board, and why a newspaper in ZZT is a scroll rather than a wall
+
+The last task of M34, and the third time it was picked up after being left
+unspecced on purpose. The reason held each time: what a board should show is a
+question a real edition answers better than a spec can guess, and there was no
+real edition until this morning.
+
+**The reading of "board", stated because it is the one veto-able call.** The
+idea backlog asked for "a daily newspaper board in the lobby". A ZZT board is
+static tiles and an edition changes during the day, so posting it as text in the
+grid would mean the server rewriting a live board's tiles — which is a
+simulation change in everything but name. It would move what a recording
+replays and what a watcher's frame carries, for a feature whose first boundary
+(M34's preamble) is that the ledger is not the simulation. So "board" is read as
+*a thing you walk up to and read*: a newsstand object in LOBBY whose window the
+server writes.
+
+**The mechanism, and the one detail it all hangs on.** The lobby's Central Hall
+grew a sign — THE ZZT GAZETTE — and an Object under it at 13,20, in the lower
+left, deliberately off every square the lobby and arena browser journeys walk
+(M16.11d's lesson: a scroll on a walked square eats the arrows the rest of a
+journey needs). `RoomManager.NoticeTiles` is a server-owned table keyed exactly
+as M29.1's `TransitGates` are, installed only for the LOBBY identity. When a
+touch's `ScrollEvent` names an object standing on a noticed tile, the step
+freezes the reader as any scroll does, suppresses the world's own window, and
+queues a `RoomNotice`; the server composes the day's edition off the tick
+goroutine and unicasts it.
+
+The detail: the pushed scroll carries the OBJECT's stat id, not the transit
+refusal's ownerless `-1`. That is what makes the client's ordinary dismissal
+(`closeModal` → `scrollReply`) land where the engine expects it and unfreeze the
+reader. It is the reason no client source changed, and the reason there is no
+second freeze protocol to keep in sync.
+
+**Two traps found by reading the code rather than by guessing.** First, a
+one-line text body is `DisplayMessage`, not a `ScrollEvent` (oop.go's
+`LineCount == 1` branch) — so a stand whose fallback copy was one line would
+emit no event and the entire notice path would be dead. The stand's fallback is
+two lines and a test asserts it. Second, composing the paper is not tick work:
+`Edition` resolves a consented name per row, and that is a preferences read per
+row. Notices are drained under the step's lock and answered from a goroutine
+(M16.14e: a tick waits on nothing).
+
+**One editor, moved to the server.** M34.2 built the editor lazily on `WebAPI`,
+which the tick loop cannot reach. Two editors would have been two caches racing
+one file and two `DailyWrites` budgets — the one spend bound a restart does not
+forgive — so the lazy construction moved to `WebSocketServer` and `WebAPI`
+delegates, still offering the generator `cmd/` configured. `/api/gazette/edition`
+is unchanged, 503 included.
+
+**Verification.** Nine focused Go tests, and two mutations run against them.
+Dropping the `continue` in the interception broadcasts the world's own window
+again, and the suppression test reddens by name. Building a private editor
+inside `postNotice` reddens the no-ledger fallback — and, after one correction,
+the board's own window too. That correction is the useful part of the record:
+the first shared-editor test asserted that the two ACCESSORS return one editor,
+which the mutation walked straight past, because `postNotice` reaching for its
+own editor is not something an accessor can see. The claim is now watched where
+it is made — the shared editor is seeded with an edition an author wrote, and a
+private editor posts the server's fallback headline instead, which the test
+names.
+`go test ./...` and `go test -race ./...` green — the race detector caught one
+thing, and it was in the test: M34.2's fake author is written by the refresh
+goroutine, so M34.3 counts calls under its own lock. `make browser` was run and
+was owed even though no client source changed: LOBBY.ZZT is the default world
+every browser journey loads, which is rule 3's "anything else a browser reads"
+and exactly M33.1's class of rot. M34.3 ships its own Chromium act
+(`web/test/gazette_journey.test.mjs`): it walks to the stand by observed
+movement, reads the paper, asserts the stand's fallback copy is NOT what
+appeared, asserts an arrow moves nobody while the scroll is open, and asserts
+the reader walks away after dismissing it.
+
+**What the browser act found, which is not the board.** Its first real-browser
+run went red on a console error, and the error was a 500 from `/api/title`.
+`handleTitle` answers a request with no `?world` from a hardcoded `"TOWN"`
+(web_api.go:1188) — a default M29.1 did not move when it made LOBBY the
+server's — and main.ts sends exactly that bare request while its world is still
+`"Untitled"` (main.ts:1250). So a host that ships first-party worlds and no TOWN
+serves a 500 on the client's first paint. Production hosts TOWN, which is why
+nobody has seen it. Filed as **M34.3a** rather than fixed here: which world an
+unnamed title fetch should answer from is a decision (the server's actual
+default, presumably) and not a line to change in passing. M34.3's harness hosts
+TOWN.ZZT in the meantime, with a comment saying it is the client's requirement
+rather than the journey's.
+
+M34's own work is closed.

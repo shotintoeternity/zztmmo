@@ -436,9 +436,17 @@ M12.23, M17.1–M17.7, M16.0–M16.8a — has fully landed.)
    `/api/gazette/edition` serves the day written up, from an author when one is
    configured and from the server itself otherwise, and the width guarantee is
    split on purpose between a parser that refuses an over-wide raw line and a
-   renderer that re-wraps after a name is substituted. M34.3, the lobby board,
-   stays unspecced for the third time — it now has a real edition to be written
-   from.
+   renderer that re-wraps after a name is substituted. **M34.3 landed
+   2026-08-10**, and with it M34 is closed: the lobby has a newsstand under a
+   sign, touching it opens the day's paper in an ordinary ZZT text window, and
+   the world's own scroll is suppressed by a server-owned tile table keyed
+   exactly as M29.1's transit gates are. It filed **M34.3a** — an unnamed title
+   fetch is still answered from a hardcoded TOWN, which 500s on a host that does
+   not have one — and that is the only unchecked box left anywhere in this file.
+   Everything else is ticked, including the 20–30-player scaling bullet the entry
+   at the head of this list still describes as open (it landed 2026-08-07), and
+   the roadmap queue's ten ranked lines are spent. After M34.3a, the next
+   session's work has to come from the owner.
 
 **Optional / deferred (bottom):**
 - M14.3 — package split — **closed as skipped 2026-08-03**, see NOTES.md
@@ -8181,7 +8189,7 @@ can guess.
   from, and what a board should show is a question that edition answers better
   than a spec can guess.
 
-- [ ] **M34.3 — the board: the paper posted where people loiter.** M34.1 built
+- [x] **M34.3 — the board: the paper posted where people loiter.** M34.1 built
   the ledger and M34.2 wrote the day up; both deliberately left this unspecced
   until there was a real edition to post. There is now: `GazetteEditor.Edition`
   returns a headline and a handful of already-wrapped, already-named lines for
@@ -8280,6 +8288,59 @@ can guess.
   parity manifest for the task claim. Verify with focused Go tests for M34.3,
   `go test -race`, `make browser`, `git diff --check`, and the session gate
   `cd engine && go build ./... && go test ./...`.
+
+  **Landed 2026-08-10.** The lobby's Central Hall has a newsstand under a sign
+  that reads THE ZZT GAZETTE, and touching it opens the day's paper.
+  `RoomManager.NoticeTiles` is the server-owned table (`engine/lobby.go` names
+  the one tile), `RoomNotice`/`DrainNotices` carry the touch out of the step,
+  and `engine/gazette_board.go` composes and unicasts the window off the tick
+  goroutine. Two things are worth saying because they read like accidents and
+  are not. The stand's own program is deliberately a working two-line fallback
+  — a one-line body would be `DisplayMessage` rather than a `ScrollEvent`, and
+  the notice path would never fire at all; a test asserts the body's length for
+  exactly that reason. And the pushed scroll carries the OBJECT's stat id
+  rather than the transit refusal's ownerless `-1`, which is what makes the
+  client's ordinary dismissal unfreeze the reader — no client source changed.
+  The editor's lazy construction moved from `WebAPI` to `WebSocketServer` so
+  the route and the board share one cache and one `DailyWrites` budget. Two
+  mutations, both reddening by name: dropping the `continue` in the
+  interception broadcasts the world's own window again, and building a private
+  editor inside `postNotice` reddens the no-ledger fallback and the board's own
+  window. That second assertion was added because the first version of it did
+  not hold — asserting the two accessors return one editor left the mutation
+  green — so the board is now watched at the window instead: the shared editor
+  is seeded with an edition an author wrote, and a private editor would post
+  the server's fallback headline. `make
+  browser` was run and owed — LOBBY.ZZT is the default world every journey
+  loads — and M34.3 ships its own Chromium act, which reads the paper, proves
+  the fallback copy is not what appears, and proves the reader is frozen until
+  they close it. That act is also what filed **M34.3a**: it went red on a 500
+  from `/api/title`, which turned out to be a default M29.1 left behind rather
+  than anything the board did. M34's own work is closed.
+
+- [ ] **M34.3a — an unnamed title fetch still defaults to TOWN.** Found by
+  M34.3's browser act, on an unmodified checkout, and unrelated to the board:
+  `handleTitle` and `handleTitleStream` answer a request with no `?world` from a
+  hardcoded `"TOWN"` (web_api.go:1188,1241). M29.1 made LOBBY the server's
+  default world and did not move this one, so the client's first paint — which
+  main.ts sends as a bare `/api/title` while its world is still `"Untitled"`
+  (main.ts:1250) — asks for a world the deployment may not host, and takes a 500
+  where it should get a title board. Production hosts TOWN, so today this is
+  invisible there and fatal only on a host that ships first-party worlds alone;
+  M34.3's own harness had to add TOWN.ZZT to get a clean run.
+
+  The fix is one line in two handlers, but which line is a decision the owner
+  may want: the honest default is the world the server was actually started
+  with (`Server.DefaultInstance.Name`), not a second hardcoded name that can go
+  stale the same way. Whatever is chosen, a missing default world should answer
+  as a 404 with a message rather than a 500 — a client that asks for a world
+  nobody hosts is not a server error.
+
+  DoD: an unnamed `/api/title` and `/api/title/stream` answer from the server's
+  own default world; a server whose default world is absent answers a message
+  rather than a 500; the M34.3 browser harness drops the TOWN.ZZT it only hosts
+  to satisfy this default, and its comment goes with it. Verify with focused Go
+  tests, `make browser`, and the session gate.
 
 ## M14 — Rearchitecting for the service ZZTMMO is becoming
 

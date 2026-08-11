@@ -13,7 +13,6 @@ package zztgo
 // nothing was published before they gave it.
 
 import (
-	"log"
 	"net/http"
 	"strings"
 )
@@ -70,40 +69,30 @@ func (a *WebAPI) handleGazetteEdition(w http.ResponseWriter, r *http.Request) {
 	writeJSON(w, edition)
 }
 
-// gazetteEditor builds the editor once, on first use, the way /api/generate
-// builds its generator: a server that has Anthropic credentials in its
-// environment gets an author without any further wiring, and one that does not
-// gets an editor that only ever serves the server-written edition. The cache
-// file sits beside the ledger's own, so a server with no saves directory keeps
-// its editions in memory and buys them again after a restart.
+// gazetteEditor answers with the process's single edition writer. The lazy
+// construction itself moved to the server in M34.3 — the lobby's newsstand
+// reaches it from the tick loop, which cannot see a WebAPI, and two editors
+// would be two caches racing one file and two spend budgets. What stays here
+// is this route's preference: the generator cmd/ already configured is offered
+// as the author rather than making the server discover its own.
+//
+// The explicit GazetteEditor field still wins, because a test that sets one
+// means it.
 func (a *WebAPI) gazetteEditor() *GazetteEditor {
 	a.gazetteMu.Lock()
 	defer a.gazetteMu.Unlock()
 	if a.GazetteEditor != nil {
 		return a.GazetteEditor
 	}
-	ledger := a.Server.Gazette
-	author := a.Generator
-	if author == nil {
-		if generator, err := GenerationServiceFromEnv(); err == nil {
-			a.Generator = generator
-			author = generator
-		}
-	}
 	// A nil *GenerationService in a GazetteAuthor interface is not a nil
 	// interface, and an editor that thinks it has an author will spend a
 	// refresh discovering otherwise on every request.
 	var writer GazetteAuthor
-	if author != nil {
-		writer = author
+	if a.Generator != nil {
+		writer = a.Generator
 	}
-	editor, err := NewGazetteEditor(ledger, writer, ledger.editionsPath())
-	if err != nil {
-		log.Printf("gazette editions unavailable: %v", err)
-		editor, _ = NewGazetteEditor(ledger, writer, "")
-	}
-	a.GazetteEditor = editor
-	return editor
+	a.GazetteEditor = a.Server.GazetteEditions(writer)
+	return a.GazetteEditor
 }
 
 // gazetteNameResolver reads each account's consented name once per key it is
