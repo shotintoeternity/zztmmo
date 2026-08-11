@@ -407,7 +407,6 @@ func NewWebSocketServer(world TWorld, defaultBoard int16) *WebSocketServer {
 	if name == "Untitled" || name == "" {
 		name = "TOWN"
 		rm.WorldIdentity = name
-		rm.FriendlyFire = friendlyFireForWorldIdentity(name)
 	}
 	inst := &WorldInstance{
 		Name:           name,
@@ -421,7 +420,6 @@ func NewWebSocketServer(world TWorld, defaultBoard int16) *WebSocketServer {
 		TokensByPlayer: make(map[PlayerID]string),
 		Spectators:     make(map[*webSocketClient]*spectator),
 	}
-	configureLobbyTransits(inst)
 	s := &WebSocketServer{
 		RoomManager:            rm,
 		DefaultBoard:           defaultBoard,
@@ -2602,7 +2600,6 @@ func (s *WebSocketServer) GetOrCreateInstance(worldName string) (*WorldInstance,
 		TokensByPlayer: make(map[PlayerID]string),
 		Spectators:     make(map[*webSocketClient]*spectator),
 	}
-	configureLobbyTransits(inst)
 	s.Instances[worldName] = inst
 	s.attachRecorderLocked(inst)
 	return inst, nil

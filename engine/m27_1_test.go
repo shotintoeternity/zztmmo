@@ -179,7 +179,7 @@ func TestM271WorldsShelvesArePerRecipientAndReferenceFlatWorlds(t *testing.T) {
 	}
 	server, wsURL := m193Server(t, "TOWN", db, secret)
 	server.WorldsDir = t.TempDir()
-	for _, name := range []string{"WELCOME", "TOWN", "ALPHA", "BETA", "CAVES", "DREAM"} {
+	for _, name := range []string{"TOWN", "ALPHA", "BETA", "CAVES", "DREAM"} {
 		m1616WriteWorldFile(t, testEmptyWorld(t), filepath.Join(server.WorldsDir, name+".ZZT"))
 	}
 	if err := os.WriteFile(filepath.Join(server.WorldsDir, "DREAM.zwd"), []byte("world DREAM\n"), 0o644); err != nil {
@@ -205,12 +205,30 @@ func TestM271WorldsShelvesArePerRecipientAndReferenceFlatWorlds(t *testing.T) {
 	if friends := flat["BETA"].FriendsHere; len(friends) != 1 || friends[0].Handle != "bob" {
 		t.Fatalf("friend presence = %+v, want Bo on BETA", friends)
 	}
-	if len(adaResp.Shelves) == 0 || adaResp.Shelves[0].ID != "start" || len(adaResp.Shelves[0].Worlds) != 1 || adaResp.Shelves[0].Worlds[0] != "WELCOME" {
-		t.Fatalf("start shelf did not lead with WELCOME: %+v", adaResp.Shelves)
-	}
-	for _, want := range []string{"favorites", "active", "dreams", "played", "classics"} {
+	for _, want := range []string{"favorites", "active", "played", "classics", "dreams"} {
 		if !m271HasShelf(adaResp.Shelves, want) {
 			t.Fatalf("missing shelf %q in %+v", want, adaResp.Shelves)
+		}
+	}
+	// The archive outranks the day's dreaming (owner 2026-08-11). Asserted as
+	// relative position rather than as an index, so adding a shelf between them
+	// does not read as a regression.
+	classicsAt, dreamsAt := -1, -1
+	for i, shelf := range adaResp.Shelves {
+		switch shelf.ID {
+		case "classics":
+			classicsAt = i
+		case "dreams":
+			dreamsAt = i
+		}
+	}
+	if classicsAt < 0 || dreamsAt < 0 || classicsAt > dreamsAt {
+		t.Fatalf("Classics must sit above Recent dreams, got classics=%d dreams=%d in %+v", classicsAt, dreamsAt, adaResp.Shelves)
+	}
+	// Nothing pins a first-party world to the top of the picker any more.
+	for _, shelf := range adaResp.Shelves {
+		if shelf.ID == "start" || shelf.ID == "lobby" || shelf.ID == "arena" {
+			t.Fatalf("removed shelf %q is still served: %+v", shelf.ID, adaResp.Shelves)
 		}
 	}
 	for _, shelf := range adaResp.Shelves {

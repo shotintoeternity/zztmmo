@@ -203,18 +203,6 @@ func worldListEntries(dir string, worlds []string, playerCounts map[string]int, 
 		out = append(out, entry)
 	}
 	sort.SliceStable(out, func(i, j int) bool {
-		if out[i].World == LobbyWorldName {
-			return true
-		}
-		if out[j].World == LobbyWorldName {
-			return false
-		}
-		if out[i].World == ArenaWorldName {
-			return true
-		}
-		if out[j].World == ArenaWorldName {
-			return false
-		}
 		if out[i].World == "TOWN" {
 			return true
 		}

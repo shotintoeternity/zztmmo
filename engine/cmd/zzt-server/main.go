@@ -19,7 +19,7 @@ import (
 
 func main() {
 	addr := flag.String("addr", ":8080", "listen address")
-	worldName := flag.String("world", zztgo.LobbyWorldName, "world basename to load")
+	worldName := flag.String("world", "TOWN", "world basename to load")
 	boardID := flag.Int("board", 1, "default board id")
 	webDir := flag.String("web", "web/dist", "built browser client directory")
 	helpDir := flag.String("help", ".", "directory holding the .HLP help files")

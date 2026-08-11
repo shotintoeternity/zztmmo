@@ -440,8 +440,6 @@ const WORLD_SEARCH_LIMIT = 50;
 const WORLD_TITLE_WIDTH = 38;
 const WORLD_DETAIL_WIDTH = 42;
 const WORLD_SEARCH_ROW = TEXT_WINDOW_Y + TEXT_WINDOW_HEIGHT - 2;
-const WELCOME_WORLD = "WELCOME";
-const LOBBY_WORLD = "LOBBY";
 
 function fitText(text: string, width: number): string {
   if (text.length <= width) {
@@ -460,8 +458,6 @@ type WorldSearchSection = {
 
 function worldSearchSections(m: WorldSearchModal): WorldSearchSection[] {
   const terms = m.query.toLowerCase().trim().split(/\s+/).filter(Boolean);
-  const lobby = m.entries.filter((entry) => entry.world.toUpperCase() === LOBBY_WORLD);
-  const welcome = m.entries.filter((entry) => entry.world.toUpperCase() === WELCOME_WORLD);
   if (terms.length === 0) {
     if (m.shelves && m.shelves.length > 0) {
       const byWorld = new Map(m.entries.map((entry) => [entry.world.toUpperCase(), entry]));
@@ -472,28 +468,23 @@ function worldSearchSections(m: WorldSearchModal): WorldSearchSection[] {
         }))
         .filter((section) => section.entries.length > 0);
     }
-    // M18.9 — the first screen is curated. Empty query lists the lobby, then
-    // the worlds the museum manifest can title and credit, then this server's
-    // own dreams. Worlds with neither (uncatalogued community .ZZT files,
-    // editor-published ones) are still hosted and still joinable — they are
-    // found by typing, rather than filling the first click with entries that
-    // read "by Local ????". Museum search is reached by typing too.
-    const shown = m.entries.filter(
-      (entry) => entry.world.toUpperCase() !== LOBBY_WORLD && entry.world.toUpperCase() !== WELCOME_WORLD && entry.kind !== "local",
-    );
+    // M18.9 — the first screen is curated. Empty query lists the worlds the
+    // museum manifest can title and credit, then this server's own dreams.
+    // Worlds with neither (uncatalogued community .ZZT files, editor-published
+    // ones) are still hosted and still joinable — they are found by typing,
+    // rather than filling the first click with entries that read
+    // "by Local ????". Museum search is reached by typing too.
+    const shown = m.entries.filter((entry) => entry.kind !== "local");
     // Classics first, dreams after, each keeping the server's title order.
     const classics = shown.filter((entry) => entry.kind !== "dreamed");
     const dreamed = shown.filter((entry) => entry.kind === "dreamed");
-    return [{ title: "", entries: [...welcome, ...lobby, ...classics, ...dreamed] }];
+    return [{ title: "", entries: [...classics, ...dreamed] }];
   }
   const matches = m.entries.filter((entry) => {
-    if (entry.world.toUpperCase() === LOBBY_WORLD) {
-      return false;
-    }
     const haystack = [entry.world, entry.id, entry.title, entry.author, entry.created].join(" ").toLowerCase();
     return terms.every((term) => haystack.includes(term));
   });
-  return [{ title: "", entries: [...matches, ...lobby].slice(0, WORLD_SEARCH_LIMIT) }];
+  return [{ title: "", entries: matches.slice(0, WORLD_SEARCH_LIMIT) }];
 }
 
 function worldSearchMatches(m: WorldSearchModal): WorldSearchEntry[] {
@@ -527,9 +518,8 @@ function worldSearchLines(m: WorldSearchModal): string[] {
       const sourceText = entry.source === "museum" ? "  Museum" : "";
       const favoriteText = entry.favorite ? "* " : "  ";
       lines.push(`!${String(index)};${fitText(favoriteText + (entry.title || entry.world), WORLD_TITLE_WIDTH)}`);
-      const startText = entry.world.toUpperCase() === WELCOME_WORLD ? "  Start here" : "";
       const playedText = (entry.playCount ?? 0) > 0 ? `  ${entry.playCount} plays` : "";
-      lines.push(fitText(`  by ${entry.author || "Unknown"}  ${entry.created || "????"}${sourceText}${startText}${playedText}`, WORLD_DETAIL_WIDTH));
+      lines.push(fitText(`  by ${entry.author || "Unknown"}  ${entry.created || "????"}${sourceText}${playedText}`, WORLD_DETAIL_WIDTH));
       if (playerText) {
         lines.push(fitText(`  ${playerText}`, WORLD_DETAIL_WIDTH));
       }

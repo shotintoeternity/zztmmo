@@ -635,8 +635,11 @@ func TestWebSocketServerBoardEdgeSendsBoardChange(t *testing.T) {
 
 func TestWebSocketServerTwoClientsSeeAndFight(t *testing.T) {
 	world := testFightWorld(t)
-	world.Info.Name = ArenaWorldName
 	server := NewWebSocketServer(world, 1)
+	// Friendly fire used to follow from the world being ARENA. That world is
+	// gone (owner 2026-08-11) and nothing sets the flag by identity any more,
+	// so this fight test turns the surviving mechanism on directly.
+	server.RoomManager.FriendlyFire = true
 	server.TickDuration = 10 * time.Millisecond
 
 	ctx, cancel := context.WithCancel(context.Background())

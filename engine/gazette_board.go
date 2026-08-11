@@ -88,6 +88,14 @@ func (s *WebSocketServer) gazetteNameResolver() func(string) string {
 	}
 }
 
+// GazetteNoticeKind is the notice a newsstand tile posts. It lived in lobby.go
+// beside the tile that placed it until the lobby was removed (owner
+// 2026-08-11); the placement is gone, the mechanism is not, so a future world
+// can stand a newsstand on a tile by naming this kind in NoticeTiles. Nothing
+// populates NoticeTiles today, so postNotice is currently unreachable in
+// production and is exercised only by its tests.
+const GazetteNoticeKind = "gazette"
+
 // postNotice answers one touch of a server-owned tile. It runs off the tick
 // goroutine and is the only thing that ever writes a notice window.
 func (s *WebSocketServer) postNotice(ctx context.Context, inst *WorldInstance, notice RoomNotice) {

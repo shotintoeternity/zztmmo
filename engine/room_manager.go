@@ -152,7 +152,6 @@ func NewRoomManagerForWorld(world TWorld, identity string) *RoomManager {
 		rooms:               make(map[int16]*Room),
 		players:             make(map[PlayerID]*roomPlayer),
 		WorldIdentity:       safe,
-		FriendlyFire:        friendlyFireForWorldIdentity(safe),
 		pendingScores:       make(map[PlayerID]QuitResult),
 		pendingPlayerEvents: make(map[PlayerID][]Event),
 	}

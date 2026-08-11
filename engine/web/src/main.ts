@@ -93,7 +93,7 @@ import {
   TRANSITION_FILL_COLOR,
   type TransitionState,
 } from "./transition";
-import { WELCOME_WORLD, hasSeenWelcome, markWelcomeSeen, selectWorldForTitle, shouldOpenWelcomeFirstVisit } from "./title_flow";
+import { selectWorldForTitle } from "./title_flow";
 import { blockCandidates, blockRowLabel, blockWindowHeader, mergeServerBlocks } from "./blocks";
 import { moderationChoices, moderationHeader } from "./moderation";
 import {
@@ -1043,16 +1043,6 @@ async function openDefaultLaunchDestination() {
   if (!accountPrefsLoaded) {
     await refreshAuthStatus();
   }
-  const welcome = resolveDeepLinkWorld(WELCOME_WORLD, entries);
-  if (shouldOpenWelcomeFirstVisit({
-    authenticated: authStatus.authenticated,
-    hasSeenWelcome: hasSeenWelcome(window.localStorage),
-    welcomeHosted: welcome !== "",
-  })) {
-    markWelcomeSeen(window.localStorage);
-    await enterWorld(welcome);
-    return;
-  }
   showWorldEntries(entries);
 }
 
@@ -1640,10 +1630,6 @@ function showHelp(file: string, title: string) {
   openHelp(file, title, { fetchLines: fetchHelpLines, openModal });
 }
 
-// LOBBY_WORLD is the world everyone lands in by default and nobody has to
-// finish: the hangout. Every other world is a game you bring people to.
-const LOBBY_WORLD = "LOBBY";
-
 async function fetchWorldEntries(): Promise<WorldSearchEntry[]> {
   const response = await fetch("/api/worlds");
   const data = (await response.json()) as { worlds?: (WorldSearchEntry | string)[]; shelves?: WorldShelf[] };
@@ -1853,7 +1839,7 @@ function normalizeWorldEntries(entries: (WorldSearchEntry | string)[]): WorldSea
       return {
         world: entry.world,
         id: entry.id || entry.world,
-        title: entry.world === LOBBY_WORLD && entry.title === entry.world ? `${entry.title} (ZZTMMO Lobby)` : entry.title || entry.world,
+        title: entry.title || entry.world,
         author: entry.author || "Unknown",
         created: entry.created || "",
         players: entry.players || 0,
@@ -1874,7 +1860,7 @@ function normalizeWorldEntries(entries: (WorldSearchEntry | string)[]): WorldSea
     return {
       world,
       id: world,
-      title: world === LOBBY_WORLD ? `${world} (ZZTMMO Lobby)` : world,
+      title: world,
       author: "Unknown",
       created: "",
       players: 0,

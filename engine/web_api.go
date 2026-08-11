@@ -1418,9 +1418,6 @@ func buildWorldShelves(entries []WorldListEntry, authenticated bool, favorites [
 		}
 	}
 
-	addShelf("start", "Start here", []string{"WELCOME"})
-	addShelf("lobby", "Lobby", []string{LobbyWorldName})
-	addShelf("arena", "Arena", []string{ArenaWorldName})
 	if authenticated {
 		addShelf("favorites", "Favorites", favorites)
 	}
@@ -1440,14 +1437,6 @@ func buildWorldShelves(entries []WorldListEntry, authenticated bool, favorites [
 	})
 	addShelf("active", "Friends here / Active now", active)
 
-	dreams := make([]string, 0)
-	for _, entry := range entries {
-		if entry.Kind == WorldKindDreamed {
-			dreams = append(dreams, entry.World)
-		}
-	}
-	addShelf("dreams", "Recent dreams", dreams)
-
 	played := make([]string, 0)
 	for _, entry := range entries {
 		if entry.PlayCount > 0 {
@@ -1463,13 +1452,23 @@ func buildWorldShelves(entries []WorldListEntry, authenticated bool, favorites [
 	})
 	addShelf("played", "Most played", played)
 
+	// Classics sit above Recent dreams (owner 2026-08-11): the archive is what
+	// the picker is for, and a day of dreaming used to push it under the fold.
 	classics := make([]string, 0)
 	for _, entry := range entries {
-		if entry.Kind == WorldKindClassic && entry.World != "WELCOME" && entry.World != LobbyWorldName && entry.World != ArenaWorldName {
+		if entry.Kind == WorldKindClassic {
 			classics = append(classics, entry.World)
 		}
 	}
 	addShelf("classics", "Classics", classics)
+
+	dreams := make([]string, 0)
+	for _, entry := range entries {
+		if entry.Kind == WorldKindDreamed {
+			dreams = append(dreams, entry.World)
+		}
+	}
+	addShelf("dreams", "Recent dreams", dreams)
 	return shelves
 }
 

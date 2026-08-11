@@ -474,6 +474,30 @@ M12.23, M17.1–M17.7, M16.0–M16.8a — has fully landed.)
    currently accepts stimuli that a player-submitted log must not be allowed to
    carry. A `*` bullet went into Architecture follow-ups the day before,
    2026-08-10, about the production auth cookie secret.
+   **Owner decision 2026-08-11 — the three first-party worlds are removed.**
+   WELCOME, LOBBY and ARENA are deleted, classics sort above recent dreams in
+   the picker, and the server always starts on TOWN. This reverts the shipped
+   product half of **M23.2, M23.3, M29.1, M30.1 and M34.3**, whose boxes now read
+   `[removed 2026-08-11]` rather than `[x]` — their DoDs no longer hold, and the
+   parity manifest is regenerated without their five task rows. What went: the
+   three `.zwd` sources and `.ZZT` builds, `engine/lobby.go` whole (transit gate
+   tables, notice tiles, `friendlyFireForWorldIdentity`), the three pinned picker
+   shelves, the client's welcome first-visit flow and LOBBY labelling, and the
+   `-world LOBBY` default in `cmd/zzt-server`, `deploy/zztmmo.service` and AWS.md.
+   What deliberately stayed: `Engine.FriendlyFire` and
+   `RoomManager.TransitGates`/`NoticeTiles` are engine capability rather than
+   world content, so they survive **unwired** — the pre-M30.1 state — and
+   `GazetteNoticeKind` moved to `gazette_board.go` beside the `postNotice` that
+   reads it. M34.1 and M34.2 are untouched: `/api/gazette` and
+   `/api/gazette/edition` still write and serve the day. **Two consequences worth
+   naming rather than burying.** `postNotice` is now unreachable in production
+   (nothing populates `NoticeTiles`) and lost its coverage with `m34_3_test.go`:
+   its eight surviving unit tests each needed a world with an object standing on
+   a keyed tile, which only LOBBY had, and building a replacement fixture would
+   have been adding a world in a task about removing them. And the Gazette has no
+   in-game reader at all now — the paper exists, the newsstand does not. Verified
+   `go test -count=1 ./...` and the full `make browser` family green, the co-op
+   cutline included.
 
 **Optional / deferred (bottom):**
 - M14.3 — package split — **closed as skipped 2026-08-03**, see NOTES.md
@@ -7027,7 +7051,7 @@ rather than an ending, and R restores a save the whole group shares.
   own bottom rows. Verified with the required browser golden and the full
   `go build ./... && go test ./...` gate.
 
-- [x] **M23.2 — a welcome world that teaches by being played.** First-party
+- [removed 2026-08-11] **M23.2 — a welcome world that teaches by being played.** First-party
   content, built in the shipped M5 editor — the dogfooding the first-party
   bullets keep promising. Three to five boards that teach movement, torches
   and the dark, keys and doors, shooting, and — the part no classic world can
@@ -7052,7 +7076,7 @@ rather than an ending, and R restores a save the whole group shares.
   hosts the production server and drives three Chromium instances through the
   whole world from the real title/picker flow, with no staged state.
 
-- [x] **M23.3 — the first visit lands somewhere designed for it.** Wire
+- [removed 2026-08-11] **M23.3 — the first visit lands somewhere designed for it.** Wire
   M23.2 in: a browser that has never been here (no account, no local flag)
   lands on the welcome world's title screen instead of the full picker;
   returning visitors keep exactly today's flow. The picker gains one line of
@@ -7456,7 +7480,7 @@ another. Ordinary Passage elements in ordinary worlds keep vanilla intra-world
 semantics, replay fixtures stay in-world, and a player-authored world cannot
 smuggle a cross-world transfer by naming a board or writing OOP.
 
-- [x] **M29.1 — first-party lobby world and server-interpreted transit gates.**
+- [removed 2026-08-11] **M29.1 — first-party lobby world and server-interpreted transit gates.**
   Build and ship a canonical `LOBBY.ZZT` created through the same source path as
   WELCOME: keep a committed source artifact if practical, commit
   `fixtures/LOBBY.ZZT`, write the local `engine/LOBBY.ZZT` hosting artifact for
@@ -7538,7 +7562,7 @@ in-world scoring affordances and high scores if the existing ZZT mechanics make
 that useful, but tournament-night structure waits until players have actually
 played the arena and found the fun part.
 
-- [x] **M30.1 — ARENA world with explicit friendly-fire opt-in.**
+- [removed 2026-08-11] **M30.1 — ARENA world with explicit friendly-fire opt-in.**
   Build and ship a canonical first-party `ARENA.ZZT` through the same committed
   source path as WELCOME and LOBBY: keep an editable source artifact if
   practical, commit `fixtures/ARENA.ZZT`, write the local `engine/ARENA.ZZT`
@@ -8216,7 +8240,7 @@ can guess.
   from, and what a board should show is a question that edition answers better
   than a spec can guess.
 
-- [x] **M34.3 — the board: the paper posted where people loiter.** M34.1 built
+- [removed 2026-08-11] **M34.3 — the board: the paper posted where people loiter.** M34.1 built
   the ledger and M34.2 wrote the day up; both deliberately left this unspecced
   until there was a real edition to post. There is now: `GazetteEditor.Edition`
   returns a headline and a handful of already-wrapped, already-named lines for
