@@ -8181,6 +8181,106 @@ can guess.
   from, and what a board should show is a question that edition answers better
   than a spec can guess.
 
+- [ ] **M34.3 — the board: the paper posted where people loiter.** M34.1 built
+  the ledger and M34.2 wrote the day up; both deliberately left this unspecced
+  until there was a real edition to post. There is now: `GazetteEditor.Edition`
+  returns a headline and a handful of already-wrapped, already-named lines for
+  any day the ledger retains. This task puts that paper in front of a player
+  standing in the lobby, in ZZT's own vocabulary, and it is the last task of
+  M34.
+
+  **The reading of the idea this task takes, so the owner can veto it cheaply.**
+  The backlog asked for "a daily newspaper board in the lobby". A ZZT board is
+  static tiles, and an edition changes during the day — so "board" is read here
+  as *a thing you walk up to and read*, not as text painted into the grid.
+  Painting it into the grid would mean the server rewriting a live board's
+  tiles, which is a simulation change in everything but name: it would move
+  what a recording replays and what a watcher's frame carries, for a feature
+  whose first boundary (M34's preamble) is that the ledger is not the
+  simulation. So the Gazette becomes a **newsstand object** in LOBBY whose
+  scroll the server writes.
+
+  Four boundaries are decided before code.
+
+  **The stand is a real ZZT object, and the server replaces its window.** The
+  lobby world gains one Object with an ordinary `:touch` program, and a
+  server-owned table — keyed exactly as M29.1's transit gates are, by
+  `TransitGateKey{BoardID, X, Y}` and installed only for the `LOBBY` identity —
+  names that tile as a notice. When the touch's `ScrollEvent` names an object
+  standing on a noticed tile, the room suppresses the world's own window,
+  freezes the reader the way any scroll does, and queues the notice for the
+  server, which unicasts the day's edition instead. The pushed scroll carries
+  the OBJECT's stat id and the READER's stat id, so the client's ordinary
+  dismissal path (`closeModal` → `scrollReply`) is what unfreezes the reader:
+  no client change, and no second freeze protocol to keep in sync.
+
+  The object's own program is therefore a **fallback for a lobby nobody is
+  serving** — LOBBY.ZZT opened in vanilla, or a fixture in a test with no
+  notice table — and it must be at least two text lines long, because a
+  one-line body is `DisplayMessage` and never emits a `ScrollEvent` at all
+  (oop.go's `LineCount == 1` branch). That is an authoring trap worth a test,
+  not a comment.
+
+  **Reading the paper in the lobby is what buys tomorrow's.** A touch serves
+  what is cached and kicks the same single-flight `RefreshAsync` the HTTP route
+  kicks, under the same four spend bounds M34.2 established. A service whose
+  players never open a browser tab still prints a paper; a service whose lobby
+  is busy does not pay per reader.
+
+  **One editor, owned by the server.** M34.2 built the editor lazily on the
+  `WebAPI`, which the tick loop cannot reach. Two editors would be two caches
+  racing one file and two `DailyWrites` budgets, which would silently double
+  the only spend bound that is not forgiven by a restart. So the lazy
+  construction moves to `WebSocketServer` — the ledger's own owner — and
+  `WebAPI.gazetteEditor()` delegates, passing the generator it already has when
+  it has one. Behaviour of `/api/gazette/edition` is unchanged, including its
+  503 when there is no ledger.
+
+  **Composing the window is not tick work.** Notices are drained under the same
+  lock the step ran beneath (cheap), and the paper is composed and written off
+  the tick goroutine: `Edition` resolves a consented name per account row, and
+  that is a preferences read per row — the thing M16.14e exists to keep off the
+  tick. The client write is queue-backed, so nothing waits on a browser.
+
+  Shape: `RoomManager` gains `NoticeTiles` beside `TransitGates`, a
+  `pendingNotices` queue and `DrainNotices`, all nil-safe so every world
+  without a table behaves exactly as today. `lobby.go` gains the LOBBY notice
+  table and installs it where it installs the transit gates.
+  `fixtures/lobby.zwd` gains the stand and its signage, and the existing M29.1
+  test rewrites `fixtures/LOBBY.ZZT` and `engine/LOBBY.ZZT` from it. The
+  server's `postGazetteNotice` composes title-from-headline, the edition's
+  lines, and a short server-written dateline, and unicasts it.
+
+  Placement is a walk hazard, not a decoration: M16.11d spent a task on a
+  vendor whose scroll ate every arrow of a journey. The stand goes in the
+  lower-left of Central Hall, off every square the lobby and arena journeys
+  walk (column 30 and column 48 between y=9 and y=13, and row 13 between
+  them), and a Go test asserts the keyed tile is the stand rather than trusting
+  the coordinates to stay true.
+
+  DoD: touching the stand in LOBBY delivers a scroll whose title is the day's
+  headline and whose body is the day's edition, and delivers the world's own
+  fallback window to nobody; the same touch in a world with no notice table
+  still shows the object's own scroll; the reader is frozen while reading and
+  unfrozen by the ordinary scroll reply; a signed-in reader and a guest reader
+  see the same paper, and a consented name appears in it while an unconsented
+  account reads as a stranger; a server with no author still posts the
+  server-written edition; every rendered line fits the 42-column text window
+  and none begins with an OOP-significant byte, dateline included; the HTTP
+  route and the board share one editor, proven by counting author calls across
+  both paths; the keyed tile holds the stand and the stand's fallback body is
+  at least two lines. `StateHash` and the replay fixtures are untouched — the
+  notice is derived from a `ScrollEvent` the sim already emitted, and the
+  unfreeze is the `scroll` submit op the recorder already writes, so a replay
+  reproduces both without ever seeing the edition. **`make browser` is owed**
+  even though no client source changes: LOBBY.ZZT is the default world every
+  browser journey loads, which is exactly the "anything else a browser reads"
+  half of rule 3 and exactly the class of rot M33.1 found. Ship a browser act
+  that walks a real Chromium to the stand and reads the paper. Regenerate the
+  parity manifest for the task claim. Verify with focused Go tests for M34.3,
+  `go test -race`, `make browser`, `git diff --check`, and the session gate
+  `cd engine && go build ./... && go test ./...`.
+
 ## M14 — Rearchitecting for the service ZZTMMO is becoming
 
 Filed 2026-07-12 from a whole-repo review (NOTES.md): three structural debts
