@@ -11839,3 +11839,30 @@ M34.1a's task row, which M34.1a had left behind). No client source touched, so
 `make browser` is not owed (rule 3). `cmd/` is unchanged: the editor builds
 itself on first use from the ledger's own directory and whatever author the
 environment already offers.
+
+## 2026-08-10 — dev.zztmmo.com redeployed to `1c1ced2` (M34.2)
+
+Owner request, at the end of the M34.2 session. The host had been serving
+`5aecdfe` (M21.1) since 2026-08-04, so this deploy carries twelve milestones'
+worth of work — M22 through M34 — not only the Gazette.
+
+Built from the immutable commit into a scratch tree (`git archive`), never from
+the worktree, exactly as AWS.md's dev block says: `npm ci && npm run build`,
+`GOOS=linux GOARCH=arm64`, `.ZZT` worlds copied from the checkout because they
+are gitignored, `DEPLOYED_SHA` and `SHIPPED_WORLDS` written into the bundle.
+
+One deviation from a clean run, and it is the documented one: this workstation's
+public IP (`64.234.113.36`) is not on the dev security group's port-22 list, so
+SSH timed out. Per AWS.md's network policy the `/32` was authorized for the
+deploy (`sgr-05918d3bc308162d7`) and revoked the moment it landed; the rule list
+is back to the same seven `/32`s it had before, with no ad hoc entry standing.
+
+Verified from outside: `/` 200 over HTTP/2 with a valid cert, `/status` reports
+`1c1ced2599a3fecf6f504aee048af9f0241f6182`, `/api/worlds` serves the picker with
+LOBBY first, and the `wss` upgrade returns 101 with curl exit 28 (that pair is
+the pass). The new routes answer too — `/api/gazette` returns today's empty
+ledger and `/api/gazette/edition` returns the server-written edition, `{"source":
+"server", "lines":["No news today. The town is quiet."]}`, which is exactly what
+a host with no day yet recorded should print. The host's day was already
+2026-08-11 UTC, which is the ledger choosing one calendar rather than the
+workstation's.
