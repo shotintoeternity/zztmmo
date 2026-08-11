@@ -347,6 +347,15 @@ M12.23, M17.1–M17.7, M16.0–M16.8a — has fully landed.)
    10. **Community-event moonshots.** ZZT Gazette, treasure hunt, dream duels,
        relay run, hide-and-seek, TAS workbench, and robot arena stay promoted
        but intentionally behind the core social/discovery queue.
+       **Re-ranked by the owner 2026-08-11: the TAS workbench goes first**, ahead
+       of the treasure hunt, dream duels, the relay run, hide-and-seek and the
+       robot arena, which keep their order behind it. M34 read this line's
+       listed order as its ranking and said the owner could re-rank cheaply by
+       saying so; this is that. The Gazette (M34) was the only item that order
+       had already closed, and nothing below it depended on the rest of the
+       sequence. **Not being built yet** — the owner ranked it without opening
+       it, so the next executor session still needs an M-style spec first, and
+       still needs the owner to ask for one.
    **M24.1 landed 2026-08-08**: signed-in accounts now have public profile
    fields and optional claimed handles; profiles are opened from the Players
    window by live PlayerID, with account ids kept server-only. **M25.1 landed
@@ -455,6 +464,16 @@ M12.23, M17.1–M17.7, M16.0–M16.8a — has fully landed.)
    unnamed — and that is now the only unchecked box in this file. It is a
    latent copy of a bug already fixed, not a ranked one; the owner still owns
    what comes next.
+   **Owner decision 2026-08-11 — the TAS workbench is the top of the
+   community-event line**, recorded at ranked line 10 above. It is a ranking,
+   **not a start**: nothing is specced, nothing is being built, and the next
+   executor session does not pick it up without the owner asking for the spec.
+   Two facts were checked while ranking it and are recorded on its backlog
+   bullet so they are not rediscovered at spec time: the re-simulation verifier
+   it needs already exists as `VerifyChallengeResult`, and `ReplaySession`
+   currently accepts stimuli that a player-submitted log must not be allowed to
+   carry. A `*` bullet went into Architecture follow-ups the day before,
+   2026-08-10, about the production auth cookie secret.
 
 **Optional / deferred (bottom):**
 - M14.3 — package split — **closed as skipped 2026-08-03**, see NOTES.md
@@ -9482,6 +9501,42 @@ implementation):**
   re-simulation, so a TAS is *provable*, which no speedrun site on earth can
   say. The ZZT community already speedruns; this makes ZZTMMO the only
   venue where perfection is a first-class artifact.
+  **RE-RANKED 2026-08-11 to the head of ranked roadmap line #10**, ahead of the
+  treasure hunt, dream duels, the relay run, hide-and-seek and the robot arena.
+  **Still a backlog bullet: not specced, not started**, and it needs an M-style
+  spec plus the owner's go-ahead before any session opens it. Three findings
+  from the read that ranked it, so the spec starts from code rather than from
+  this bullet's prose:
+  * **The substrate is real.** `recTick` is `{Tick, Ops, Inputs}`
+    (`session_record.go:99-103`) — a recording is literally an input log, not
+    frames — and `ReplaySession` (`session_record.go:292`) feeds it back
+    through the same `RoomManager` entry points the live session used.
+    "Verified by re-simulation" is already a shipped function:
+    `VerifyChallengeResult` (`challenge_run.go:419`) re-runs a stored recording
+    and compares the evidence its leaderboard row carries, so the TAS verifier
+    is a **second caller** of that idea, and an "assisted" division is a field
+    on M32.1's `ChallengeStore` rather than a second store.
+  * **The scrubber does not exist.** This bullet says "the replay viewer's
+    scrubber grown a keyboard", but `replayControl` handles exactly two ops —
+    `pause` (a toggle) and `restart` (`websocket_server.go:2751-2769`). There is
+    no seek. Seek in an input-log model is a re-simulation from tick 0 to N,
+    which is cheap and clean but is new work the bullet assumed was free.
+  * **`ReplaySession` trusts its input, because only the server has ever
+    produced one.** A submitted run is the first hostile recording, and three
+    accepted stimuli must not survive admission: `recHeader.WorldBytes` carries
+    the world itself, and its FNV check proves only that the bytes match the
+    header's *own* hash — self-consistency, not identity, so a submission can
+    bring an edited world and verify perfectly; `recOp{Op:"state"}` injects a
+    whole `PlayerState` (M16.15a's account sidecar), so a log can grant itself
+    health, ammo and keys and then re-simulate honestly; and `recOp{Op:"join"}`
+    spawns at an arbitrary board and X/Y. So the real work is an **admission
+    filter on stimuli** — canonical world pinned by challenge id rather than
+    read from the header, no `state` ops, join only at the challenge start, one
+    player, plus a tick ceiling and rate limit so an unbounded re-simulation is
+    not a free CPU faucet. That is the same instinct as M32.1's key that
+    `SanitizeSaveName` refuses: decide what cannot enter, rather than checking
+    what did. It also means this is a trust-boundary task wearing a UI task's
+    clothes, which is the opposite of how the bullet above reads.
 
 **First-party worlds (owner 2026-07-10 — "later on in the roadmap"):**
 * **A purpose-built PvP arena world.** **PROMOTED 2026-08-08 as ranked roadmap
@@ -9696,6 +9751,33 @@ implementation):**
   answers. Note that deletion is not purely a delete — a chat backlog is a
   shared artifact others have read, so the design question is whether a
   deletion redacts the name or removes the lines.
+* **The production auth cookie secret is probably unset, so every redeploy signs
+  everyone out.** Filed 2026-08-10, out of an owner question about the test
+  literal `m1615CookieSecret` (`m16_15_test.go:65`) being public on GitHub. It is
+  not a leak, and that was checked before this bullet was written: every
+  `ZZT_AUTH_COOKIE_SECRET` in the tree is either `os.Getenv` (`auth.go:88`) or a
+  test literal (`m16_15_test.go:245`, `m31_1_browser_test.go:73`,
+  `m32_1_browser_test.go:78`), `git log --all -S` finds no committed production
+  value, no `.env` was ever committed (`.gitignore:8`), and no credential-shaped
+  string is tracked. The real finding is the adjacent one. `NewAuthServiceFromEnv`
+  (`auth.go:88-94`) generates a random 32 bytes when the variable is empty —
+  fail-safe rather than forgeable, but **regenerated at every boot**, so a
+  redeploy invalidates every live session. AWS.md:148 describes
+  `/opt/zztmmo/.env` as supplying "the Anthropic credentials" and lists only the
+  three `ANTHROPIC_*` names; the auth variables are undocumented there, though
+  `ZZT_GOOGLE_CLIENT_ID` must be present since sign-in works on dev. Nothing in
+  this repo can tell which is true on the box:
+  `sudo tr '\0' '\n' < /proc/$(systemctl show -p MainPID --value zztmmo)/environ
+  | grep -c ZZT_AUTH_COOKIE_SECRET`. Worth care because `AccountFromRequest` only
+  HMAC-verifies the cookie with no Google round trip — which is exactly what
+  makes the M16.15 sign-in hermetic, and equally means anyone holding the real
+  secret could mint a session for any account id. So the value wants to be
+  stable, 32 random bytes, and never committed. DoD: the variable is set in
+  `/opt/zztmmo/.env` (mode `600`, as the Anthropic keys already are), AWS.md's
+  env section names the auth variables beside them, and the note records that
+  setting it for the first time signs everyone out once — the same thing an
+  unset secret has been doing at every redeploy. Owner-gated: it touches
+  production and it logs the beta testers out.
 
 **World picker follow-ups:**
 * [x] **Open selected worlds to their title screen before play.** When a player
