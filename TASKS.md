@@ -8512,7 +8512,7 @@ can guess.
   is never evaluated — an unfalsifiable excuse, which is the one thing M33.2
   exists to forbid.
 
-- [ ] **M34.5 — an allowlist entry outlived the file it excuses.** Filed
+- [x] **M34.5 — an allowlist entry outlived the file it excuses.** Filed
   2026-08-19 by M34.4's evidence sweep, which went looking for what certifies
   M33.2 and found a name with nothing behind it. `m332ColdVisitAllowed`
   (`engine/m33_2_test.go:42-44`) exempts `first_visit_journey.test.mjs` from
@@ -8552,6 +8552,28 @@ can guess.
   when they were written, and this file does not rewrite its own history.
   `cd engine && go build ./... && go test ./...` green; no client change, so
   rule 3's browser run is not owed.
+
+  **Done 2026-08-19.** Both allowlists now carry the staleness check, built on
+  one mechanism rather than two: each walk records the keys it actually
+  consulted at its existing lookup site, and `m332ReportStaleAllowlist` fails
+  for every key the walk never reached. That covers the DoD's case — a key with
+  no file on disk, reported as "there is no such file in web/test" — and the
+  same defect wearing a different hat, a key whose file still exists but is no
+  longer reached (it stopped launching the shipped server, or stopped
+  navigating the launch flow), which is equally unevaluated and equally
+  unfalsifiable. Keys are sorted so the failures are stable, and the report
+  runs before the `seen == 0` fatal so a stale key still names itself when the
+  marker has moved.
+
+  Fail-closed proved by running it, not by reading it: four bogus keys, one per
+  arm per map (`bogus_gone_journey.test.mjs` and `title_flow.test.mjs` in the
+  cold map, `m_bogus_test.go` and `gamevars.go` in the default-world map) each
+  reddened its own test with the message meant for it, and all four were
+  removed. `m332ColdVisitAllowed` is now empty; the map and its comment stay per
+  the DoD, with the comment recording why it emptied so the next cold-visit
+  suite finds the seam and not a puzzle. The historical prose is untouched:
+  `TASKS.md:7882` and `web/test/lib/canvas.mjs:588` still mention the deleted
+  script as the record of what was true when they were written.
 
 ## M14 — Rearchitecting for the service ZZTMMO is becoming
 

@@ -1545,6 +1545,17 @@
       "notes": "task-claim row; this task IS the claim-reconciliation sweep, so its own row is closed by the manifest tests it had to keep green: TestParityManifest checks every cited Go test still exists, TestParityManifestIsCanonical checks the hand edits round-trip through the scaffold byte for byte, and TestM1620aScaffoldKeepsTheRowsItDestroyed checks a regeneration does not throw the curated evidence away. M34.4 reconciliation (2026-08-19)."
     },
     {
+      "id": "task.M34.5",
+      "dimension": "task",
+      "subject": "Completed task M34.5 — its DoD still holds",
+      "contract": "E",
+      "authority": "TASKS.md M34.5",
+      "parity": "exact",
+      "test": "TestM332BrowserHarnessesNameTheirWorld,TestM332BrowserScriptsDeclareTheirVisit",
+      "status": "pass",
+      "notes": "task-claim row; this task hardens the M33.2 drift lint itself, so its own row is closed by the two checks it changed: both now record the allowlist keys they consulted and fail for any key the walk never reached, proved fail-closed with four bogus keys before they were removed. M34.5 (2026-08-19)."
+    },
+    {
       "id": "task.M4.0",
       "dimension": "task",
       "subject": "Completed task M4.0 — its DoD still holds",

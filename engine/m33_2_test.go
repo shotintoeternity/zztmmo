@@ -23,6 +23,7 @@ package zztgo
 import (
 	"os"
 	"path/filepath"
+	"sort"
 	"strings"
 	"testing"
 )
@@ -39,9 +40,14 @@ var m332DefaultWorldAllowed = map[string]string{
 
 // The browser scripts that are deliberately about a COLD visitor and must not
 // warm their profile.
-var m332ColdVisitAllowed = map[string]string{
-	"first_visit_journey.test.mjs": "M23.3's own suite: a fresh guest's first visit is its subject",
-}
+//
+// Empty since M34.5. Its one entry excused first_visit_journey.test.mjs, a
+// script 918c9da deleted (owner instruction 2026-08-11) along with the WELCOME
+// world it was about; check B iterates the scripts on disk, so the entry was
+// never reached and never evaluated after that. The map and this comment stay:
+// the next cold-visit suite needs the seam, and an empty allowlist is a claim
+// (nothing is excused) rather than an absence.
+var m332ColdVisitAllowed = map[string]string{}
 
 // TestM332BrowserHarnessesNameTheirWorld — check A.
 //
@@ -56,6 +62,7 @@ func TestM332BrowserHarnessesNameTheirWorld(t *testing.T) {
 		t.Fatalf("glob test files: %v", err)
 	}
 	seen := 0
+	consulted := map[string]bool{}
 	for _, file := range files {
 		src, err := os.ReadFile(file)
 		if err != nil {
@@ -68,6 +75,7 @@ func TestM332BrowserHarnessesNameTheirWorld(t *testing.T) {
 		// Allowlist first, so its staleness is checked even for the file that
 		// defines the helper.
 		if reason, ok := m332DefaultWorldAllowed[file]; ok {
+			consulted[file] = true
 			if strings.Contains(text, `"-world"`) {
 				t.Errorf("%s names its world now, so its allowlist entry (%q) is stale — delete it from m332DefaultWorldAllowed", file, reason)
 			}
@@ -84,6 +92,8 @@ func TestM332BrowserHarnessesNameTheirWorld(t *testing.T) {
 				"If inheriting the default really is what this suite tests, add it to m332DefaultWorldAllowed with the reason.", file)
 		}
 	}
+	m332ReportStaleAllowlist(t, "m332DefaultWorldAllowed", m332DefaultWorldAllowed, consulted,
+		".", "the engine package", "it no longer launches the shipped server (getM1619ServerBinary)")
 	if seen == 0 {
 		t.Fatal("no binary-launching harness was inspected: the lint's marker (getM1619ServerBinary) has moved and this check is watching nothing")
 	}
@@ -106,6 +116,7 @@ func TestM332BrowserScriptsDeclareTheirVisit(t *testing.T) {
 		t.Fatalf("read %s: %v", dir, err)
 	}
 	seen := 0
+	consulted := map[string]bool{}
 	for _, entry := range entries {
 		name := entry.Name()
 		if entry.IsDir() || !strings.HasSuffix(name, ".test.mjs") {
@@ -141,6 +152,7 @@ func TestM332BrowserScriptsDeclareTheirVisit(t *testing.T) {
 		}
 		warm := strings.Contains(text, "markProfileWarm(")
 		if reason, ok := m332ColdVisitAllowed[name]; ok {
+			consulted[name] = true
 			if warm {
 				t.Errorf("%s warms its profile but is allowlisted as a cold-visit suite (%q) — the allowlist entry and the script disagree", name, reason)
 			}
@@ -153,8 +165,45 @@ func TestM332BrowserScriptsDeclareTheirVisit(t *testing.T) {
 				"M23.3 made a fresh guest's root visit open WELCOME instead of the picker; a script that does not declare this only passes while its harness happens not to host WELCOME (see NOTES.md 2026-08-09).", name)
 		}
 	}
+	m332ReportStaleAllowlist(t, "m332ColdVisitAllowed", m332ColdVisitAllowed, consulted,
+		dir, "web/test", "it no longer navigates the launch flow")
 	if seen == 0 {
 		t.Fatal("no launch-flow browser script was inspected: this check is watching nothing")
+	}
+}
+
+// m332ReportStaleAllowlist fails for every allowlist key the walk above never
+// consulted (task M34.5).
+//
+// Both checks iterate the files on disk and look the allowlist up as they go,
+// so an entry naming a file that is gone is never reached and never evaluated.
+// That entry is unfalsifiable — the one property this file exists to deny its
+// subjects — and it goes on excusing whatever is next given the name. M34.5 was
+// filed on exactly that: m332ColdVisitAllowed still excused
+// first_visit_journey.test.mjs nine days after 918c9da deleted it.
+//
+// A key that is present but unreached is the same defect wearing a different
+// hat (the file no longer does the thing the excuse is about), so it is
+// reported too, with the reason it was not reached.
+func m332ReportStaleAllowlist(t *testing.T, mapName string, allow map[string]string, consulted map[string]bool, dir, where, unreached string) {
+	t.Helper()
+	var stale []string
+	for name := range allow {
+		if !consulted[name] {
+			stale = append(stale, name)
+		}
+	}
+	sort.Strings(stale)
+	for _, name := range stale {
+		if _, err := os.Stat(filepath.Join(dir, name)); err != nil {
+			t.Errorf("%s excuses %s (%q), but there is no such file in %s.\n"+
+				"This check iterates the files on disk, so an entry whose file is gone is never evaluated: it excuses nothing today and silently excuses whatever is given that name tomorrow.\n"+
+				"Delete the entry, or correct the name if the file moved.", mapName, name, allow[name], where)
+			continue
+		}
+		t.Errorf("%s excuses %s (%q), but this check never reached it: %s.\n"+
+			"An entry the check never evaluates excuses nothing.\n"+
+			"Delete the entry, or correct the name if the subject moved.", mapName, name, allow[name], unreached)
 	}
 }
 
