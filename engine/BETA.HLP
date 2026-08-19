@@ -1,4 +1,4 @@
-$ZZTMMO -- Public Beta
+$ZZTMMO Public Beta
 - - - - -
 
    Found a problem?  Please tell us:
@@ -6,14 +6,15 @@ $ZZTMMO -- Public Beta
   github.com/shotintoeternity/zztmmo/issues
 
    Say which world you were in, what you
-did, and what happened.  Thanks for
-testing -- the rough edges are the point.
+did, and what happened.
 
 $Good to know
 
-   *  ZZTMMO is built for desktop
-      browsers with a keyboard.  Phones
-      and tablets are not supported yet.
+   *  ZZTMMO is built for a desktop
+      browser and a keyboard.  Phones
+      and tablets can play with the
+      on-screen buttons, but they get
+      less testing.
 
    *  Worlds run live on the server, so
       a restart returns everyone to the
