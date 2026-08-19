@@ -27,8 +27,8 @@ import (
 )
 
 const (
-	baseURL   = "https://museumofzzt.com/zgames"
-	userAgent = "zztmmo-fetch/1.0 (github.com/shotintoeternity/zztmmo)"
+	baseURL    = "https://museumofzzt.com/zgames"
+	userAgent  = "zztmmo-fetch/1.0 (github.com/shotintoeternity/zztmmo)"
 	fetchDelay = 300 * time.Millisecond
 )
 

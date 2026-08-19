@@ -6,3 +6,13 @@ zztgo
 *.hex
 *.HI
 ZZT.DAT
+
+# Locally generated worlds. persistGeneratedWorld (generation.go) writes four
+# siblings per world — NAME.ZZT plus the prompt, plan and ZWD it was built from
+# — into whatever directory it is pointed at, and `cmd/run-generation` points it
+# here. `*.ZZT` above only caught the first of the four, so ten of the other
+# three leaked into the tree. Anchored to this directory so the committed
+# fixtures under testdata/ and promptkit_assets/fewshots/ are unaffected.
+/*.plan.md
+/*.prompt.txt
+/*.zwd

@@ -33,13 +33,18 @@ llmworld/eval/**/*.ZZT
 llmworld/previews/
 
 # Local agent/project planning notes; keep out of the public repository.
+#
+# TASKS.md is deliberately NOT in this list even though it is the same kind of
+# document. The parity certification tests parse its checked boxes as the
+# authority the manifest is verified against (deriveTaskRows in
+# engine/parity_manifest_test.go), so three tests fail on a clone that does not
+# have it. It ships; see the header at the top of the file.
 /ANALYSIS.md
 /AWS.md
 /CLAUDE.md
 /IMPLEMENTATION.md
 /NOTES.md
 /PLAN.md
-/TASKS.md
 /conversion-approach.txt
 /ruzzt.txt
 /zeta.txt

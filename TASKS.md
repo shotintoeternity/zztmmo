@@ -1,5 +1,24 @@
 # TASKS — executor protocol and task list
 
+This file is the project's engineering ledger: one dated spec per task, with a
+checked box when its definition-of-done was met. It is long because the project
+is built one small, verified task at a time, and nothing is deleted once it is
+done.
+
+It is also a **test input, not just a record.** The parity certification suite
+parses the `- [x] **M<n>.<n>` boxes below and derives one row per completed task,
+then checks those rows against the committed manifest in
+`fixtures/parity/manifest.json` — see `deriveTaskRows` in
+`engine/parity_manifest_test.go`. That is why this file is committed rather than
+kept local like the other planning notes: without it,
+`TestParityManifest`, `TestParityManifestIsCanonical` and
+`TestM1620aScaffoldKeepsTheRowsItDestroyed` fail. The manifest is the claim; this
+file is the authority it is checked against.
+
+Consequence for editors: the checkbox lines are parsed by a line-anchored regexp.
+Prose around them is free, but do not reformat a `- [x] **M…` line, and do not
+tick a box for work that was not done — the certification gate reads it.
+
 ## Protocol (every session)
 
 1. Find the first unchecked task below. Read its spec here, plus the ANALYSIS.md

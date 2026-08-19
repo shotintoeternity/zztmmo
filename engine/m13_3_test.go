@@ -219,6 +219,6 @@ func TestM133AutosaveDisabledWithoutSavesDir(t *testing.T) {
 	server := NewWebSocketServer(testEmptyWorld(t), 1)
 	// SavesDir left empty.
 	occupyDefaultInstance(t, server)
-	server.Autosave()        // no panic, no directory to write to
+	server.Autosave()         // no panic, no directory to write to
 	server.RestoreAutosaves() // no-op
 }

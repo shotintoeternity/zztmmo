@@ -1121,15 +1121,15 @@ func m1613FunctionBody(source, header string) (string, bool) {
 // and reusing worldReadFrom here could not tell those two things apart.
 
 type m1613VanillaStat struct {
-	X, Y                 int
-	StepX, StepY         int
-	Cycle                int
-	P1, P2, P3           int
-	Follower, Leader     int
-	UnderID, UnderColor  int
-	CurrentInstruction   int
-	Length               int
-	Program              string
+	X, Y                int
+	StepX, StepY        int
+	Cycle               int
+	P1, P2, P3          int
+	Follower, Leader    int
+	UnderID, UnderColor int
+	CurrentInstruction  int
+	Length              int
+	Program             string
 }
 
 type m1613VanillaBoard struct {
@@ -1393,7 +1393,7 @@ func m1613SessionView(t *testing.T, s *EditorSession) *m1613VanillaWorld {
 				Cycle: int(stat.Cycle),
 				P1:    int(stat.P1), P2: int(stat.P2), P3: int(stat.P3),
 				Follower: int(stat.Follower), Leader: int(stat.Leader),
-				UnderID:  int(stat.Under.Element), UnderColor: int(stat.Under.Color),
+				UnderID: int(stat.Under.Element), UnderColor: int(stat.Under.Color),
 				CurrentInstruction: int(stat.DataPos),
 				Length:             int(stat.DataLen),
 			}

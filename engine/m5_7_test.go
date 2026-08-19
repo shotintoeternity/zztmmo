@@ -89,7 +89,7 @@ func TestOopAnalyzeMissingSendWarns(t *testing.T) {
 	program := strings.Join([]string{
 		"@obj",
 		":touch",
-		"#send here",   // resolves
+		"#send here",    // resolves
 		"#send nowhere", // does not
 		":here",
 		"#end",
@@ -117,8 +117,8 @@ func TestOopAnalyzeZapRestoreAndHyperlink(t *testing.T) {
 	program := strings.Join([]string{
 		"@obj",
 		":shot",
-		"#zap shot",     // resolves (self)
-		"#restore gone", // missing
+		"#zap shot",      // resolves (self)
+		"#restore gone",  // missing
 		"#become object", // known command, no warning
 		"!buy;Buy this",  // hyperlink to missing :buy
 		"#end",

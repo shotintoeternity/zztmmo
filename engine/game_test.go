@@ -451,7 +451,7 @@ func TestSpawnPlayerClampsOutOfRangeStart(t *testing.T) {
 	cases := []struct{ x, y byte }{
 		{211, 12}, // the observed crash value
 		{10, 211},
-		{0, 0},   // the long-standing zero case still centres
+		{0, 0}, // the long-standing zero case still centres
 		{255, 255},
 	}
 	for _, tc := range cases {

@@ -341,12 +341,12 @@ func m1618CheckObservation(t *testing.T, matrix m1618Matrix, profile m1618Profil
 		t.Fatalf("the browser script wrote no observation at %s: %v", reportPath, err)
 	}
 	var observed struct {
-		Profile  string `json:"profile"`
-		Engine   string `json:"engine"`
-		Layouts  []struct {
-			Label      string  `json:"label"`
-			PxPerCell  float64 `json:"pxPerCell"`
-			Canvas     struct {
+		Profile string `json:"profile"`
+		Engine  string `json:"engine"`
+		Layouts []struct {
+			Label     string  `json:"label"`
+			PxPerCell float64 `json:"pxPerCell"`
+			Canvas    struct {
 				Width         float64 `json:"width"`
 				Height        float64 `json:"height"`
 				BackingWidth  int     `json:"backingWidth"`
