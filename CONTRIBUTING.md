@@ -55,7 +55,7 @@ All commands are run from the `engine/` directory.
 *   `-fresh` skips restoring autosaves at boot, for a deliberately clean start.
 *   `-record <dir>` writes deterministic session recordings; empty disables recording.
 *   `-replay <dir>` is where `/replay/<id>` loads recordings from; empty uses `-record` when set.
-*   `-friendly-fire` lets player bullets damage other players in every world the server hosts. Off by default. This is the only way to turn PvP on — no world file can do it.
+*   `-friendly-fire` lets player bullets damage other players in every world the server hosts. On by default; pass `-friendly-fire=false` for a co-op server. This is the only control over PvP, and no world file can override it.
 *   `-shutdown-grace 60s` warns connected players on SIGINT/SIGTERM and waits this long before stopping so they can save; `0` stops immediately.
 
 ## Testing

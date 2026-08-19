@@ -190,20 +190,25 @@ func TestFriendlyFireRoundTripsThroughARecording(t *testing.T) {
 // are created lazily long afterwards. Assigning RoomManager.FriendlyFire alone
 // reaches neither — ensureRoom copies the flag onto each Engine as the room is
 // made, so a room that already exists keeps the old policy forever.
+//
+// Both directions are driven here. Friendly fire is the default (owner
+// 2026-08-19), so the interesting propagation is turning it OFF for a co-op
+// deployment, which is exactly the case a "set the field" implementation gets
+// wrong.
 func TestSetFriendlyFireReachesLiveRoomsAndLaterInstances(t *testing.T) {
 	server := NewWebSocketServer(testFightWorld(t), 1)
-	if server.FriendlyFire {
-		t.Fatal("NewWebSocketServer must default to co-op (friendly fire off)")
+	if !server.FriendlyFire {
+		t.Fatal("NewWebSocketServer must default to friendly fire ON")
 	}
 
-	// A room built BEFORE the policy is set.
+	// A room built BEFORE the policy is changed, and inheriting the default.
 	server.RoomManager.JoinPlayer(1, 0, 0)
 	room, ok := server.RoomManager.Room(1)
 	if !ok || room == nil || room.Engine == nil {
 		t.Fatal("joining board 1 made no room")
 	}
-	if room.Engine.FriendlyFire {
-		t.Fatal("a fresh room must start with friendly fire off")
+	if !room.Engine.FriendlyFire {
+		t.Fatal("a fresh room must inherit the server default")
 	}
 
 	server.WorldsDir = t.TempDir()
@@ -211,24 +216,24 @@ func TestSetFriendlyFireReachesLiveRoomsAndLaterInstances(t *testing.T) {
 		t.Fatalf("seeding worlds dir: %v", err)
 	}
 
-	server.SetFriendlyFire(true)
-
-	if !server.FriendlyFire {
-		t.Error("server.FriendlyFire = false, want true")
+	// Turning it off has to reach the room that already exists.
+	server.SetFriendlyFire(false)
+	if server.FriendlyFire {
+		t.Error("server.FriendlyFire = true, want false")
 	}
-	if !server.RoomManager.FriendlyFire {
+	if server.RoomManager.FriendlyFire {
 		t.Error("default instance manager did not take the policy")
 	}
-	if !room.Engine.FriendlyFire {
+	if room.Engine.FriendlyFire {
 		t.Error("a room that already existed did not take the policy")
 	}
 
-	// An instance created after the policy was set inherits it, engine included.
+	// An instance created afterwards inherits it, engine included.
 	inst, err := server.GetOrCreateInstance("TOWN")
 	if err != nil {
 		t.Fatalf("GetOrCreateInstance: %v", err)
 	}
-	if !inst.RoomManager.FriendlyFire {
+	if inst.RoomManager.FriendlyFire {
 		t.Fatal("a later hosted instance did not inherit the policy")
 	}
 	inst.RoomManager.JoinPlayer(1, 0, 0)
@@ -236,13 +241,13 @@ func TestSetFriendlyFireReachesLiveRoomsAndLaterInstances(t *testing.T) {
 	if !ok || later == nil || later.Engine == nil {
 		t.Fatal("joining the hosted instance made no room")
 	}
-	if !later.Engine.FriendlyFire {
+	if later.Engine.FriendlyFire {
 		t.Error("a room in a later instance did not take the policy")
 	}
 
-	// And it turns back off everywhere, so a deployment can flip it either way.
-	server.SetFriendlyFire(false)
-	if room.Engine.FriendlyFire || inst.RoomManager.FriendlyFire || later.Engine.FriendlyFire {
-		t.Error("SetFriendlyFire(false) left the policy on somewhere")
+	// And back on everywhere, so a deployment can flip it either way.
+	server.SetFriendlyFire(true)
+	if !room.Engine.FriendlyFire || !inst.RoomManager.FriendlyFire || !later.Engine.FriendlyFire {
+		t.Error("SetFriendlyFire(true) left the policy off somewhere")
 	}
 }

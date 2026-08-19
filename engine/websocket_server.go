@@ -447,8 +447,10 @@ func NewWebSocketServer(world TWorld, defaultBoard int16) *WebSocketServer {
 		TokensByPlayer: make(map[PlayerID]string),
 		Spectators:     make(map[*webSocketClient]*spectator),
 	}
+	rm.FriendlyFire = true
 	s := &WebSocketServer{
 		RoomManager:            rm,
+		FriendlyFire:           true,
 		DefaultBoard:           defaultBoard,
 		TickDuration:           ServerTickDuration,
 		OriginHosts:            []string{"localhost:*", "127.0.0.1:*"},

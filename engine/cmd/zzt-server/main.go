@@ -29,7 +29,7 @@ func main() {
 	fresh := flag.Bool("fresh", false, "skip restoring autosaves at boot for a deliberately clean start")
 	recordDir := flag.String("record", "", "directory for deterministic session recordings; empty disables recording")
 	replayDir := flag.String("replay", "", "directory for deterministic session recordings served by /replay/<id>; empty uses -record when set")
-	friendlyFire := flag.Bool("friendly-fire", false, "let player bullets damage other players in every world this server hosts; off is the co-op default")
+	friendlyFire := flag.Bool("friendly-fire", true, "let player bullets damage other players in every world this server hosts; pass -friendly-fire=false for co-op")
 	shutdownGrace := flag.Duration("shutdown-grace", 60*time.Second, "on SIGINT/SIGTERM, warn connected players and wait this long before stopping so they can save; 0 stops immediately")
 	flag.Parse()
 
@@ -59,9 +59,11 @@ func main() {
 	// it on, and it applies to every instance the server hosts. M30.1 shipped the
 	// engine capability against first-party ARENA; 918c9da removed that world and
 	// with it the only thing that set the flag, leaving the switch unreachable.
+	server.SetFriendlyFire(*friendlyFire)
 	if *friendlyFire {
-		server.SetFriendlyFire(true)
-		log.Printf("friendly fire ENABLED: player bullets damage other players")
+		log.Printf("friendly fire ON: player bullets damage other players")
+	} else {
+		log.Printf("friendly fire OFF: co-op, player bullets pass through players")
 	}
 	if *savesDir != "" {
 		_ = os.MkdirAll(*savesDir, 0755)

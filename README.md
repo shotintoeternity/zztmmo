@@ -16,7 +16,7 @@ Explore classic `.ZZT` worlds in synchronized rooms, chat while you play, read s
 *   **Keep the world moving:** The server runs all of it. Board transfers, passages, dark rooms and torches, high scores, help screens, pause, quit, the title-screen flows. Rooms with nobody in them freeze until somebody arrives.
 *   **Chat like it's 1999 with better sockets:** Browser clients get global chat. Turn saves on and it persists to JSONL.
 *   **Save the shared mess:** You can write room snapshots to disk and restore them later, so a party keeps its puzzle progress instead of starting from a pristine world every session.
-*   **Play co-op, not PvP:** Player bullets don't hurt other players. Friendly fire is a deployment setting (`-friendly-fire`), never something a world file can turn on, so a world you downloaded can't decide to make your party hostile. There's no first-party PvP world running right now.
+*   **Friendly fire is on:** Player bullets hurt other players, in every world. Whoever runs the server decides that, not the world file, so a world you downloaded can't make your party hostile and can't protect you from each other either. Run a co-op server with `-friendly-fire=false`.
 *   **Race the daily challenge:** `/challenge` opens a timed first-party course inside the same client. Every run is a recorded, isolated session, so a time is measured in simulation ticks and you can check it by replaying the recording it cites. You can race it as a ghost too, drawn on your own screen and nowhere else. Signing in posts a time; a guest can still run the course and see their own.
 
 ## The ZZT Feel
