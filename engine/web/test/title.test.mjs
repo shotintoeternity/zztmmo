@@ -143,23 +143,4 @@ assert.match(authSidebarText, / Google sign-in/);
   assert.ok(writes.some((write) => write.text === " W "));
 }
 
-// M18.20: a build stamp in the title sidebar gives screenshots a revision.
-{
-  const writes = [];
-  drawTitleSidebar(
-    (x, y, color, text) => writes.push({ x, y, color, text }),
-    "TOWN",
-    "",
-    false,
-    NO_OCCUPANCY,
-    "",
-    "abcdef123456",
-  );
-  const stamp = writes.find((write) => write.text === "abcdef123");
-  assert.ok(stamp, "the title sidebar includes the short build stamp");
-  assert.equal(stamp.x, 70);
-  assert.equal(stamp.y, 3);
-  assert.ok(stamp.x + stamp.text.length <= 80, "the build stamp stays inside the sidebar");
-}
-
 console.log("title.test.mjs: title actions, sidebar menu, and occupancy passed");

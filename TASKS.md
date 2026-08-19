@@ -9894,6 +9894,12 @@ implementation):**
   and the title sidebar shows the short stamp for real commit builds so a title
   screenshot carries the revision. The literal local `dev` stamp is hidden from
   the title screen to keep everyday local/browser-golden runs stable.
+  **The title-screen half was removed 2026-08-19 on the owner's instruction.**
+  The stamp is still logged at boot and still served by `/api/health` and
+  `/api/metrics`, which is where an operator reads it; what went is the sidebar
+  write and the client plumbing that fed it (`refreshServiceHealth` and the
+  `buildCommit` argument to `drawTitleSidebar`), plus the node assertion that
+  watched it. A title screenshot no longer carries the revision.
 
 **Owner-gated (measurements or a policy call, not executor work):**
 * **The restore has never been rehearsed.** Filed 2026-08-04. `AWS.md:517-544`
