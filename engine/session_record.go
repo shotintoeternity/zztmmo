@@ -63,6 +63,14 @@ type recHeader struct {
 	// fixture written before them.
 	ChallengeID      string `json:"challengeId,omitempty"`
 	ChallengeVersion int    `json:"challengeVersion,omitempty"`
+	// FriendlyFire is the room manager's projectile/contact policy at the moment
+	// the recording started. It used to be re-derived at playback from the world
+	// identity; that derivation is gone (owner 2026-08-11), so a recording that
+	// does not carry the flag has no way to say the session was played under it.
+	// Recorded on the same terms as the challenge fields above — omitempty, no
+	// recordVersion bump. A recording written before this field replays with the
+	// policy off, which is what an absent flag has always meant everywhere else.
+	FriendlyFire bool `json:"friendlyFire,omitempty"`
 }
 
 // recOp is one external stimulus applied before a tick's step: a join, a name,
@@ -296,6 +304,7 @@ func ReplaySession(r io.Reader, onTick func(tick int, rm *RoomManager)) (*RoomMa
 		return nil, err
 	}
 	rm := NewRoomManagerForWorld(world, header.World)
+	rm.FriendlyFire = header.FriendlyFire
 
 	for scanner.Scan() {
 		var rec recTick

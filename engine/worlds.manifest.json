@@ -55,11 +55,8 @@
     {"id": "ruins",       "letter": "r", "zip": "RUINS.zip",                "title": "Ruins of ZZT",                                       "author": "Dr. Dos",         "year": 2016, "zzt_files": []},
     {"id": "andyspec",    "letter": "m", "zip": "andyspec.zip",             "title": "The Magical Adventures of Andy Chapter 1: SE",       "author": "Silas Burdick",   "year": 2000, "zzt_files": []},
 
-    {"id": "lobby",       "zip": "",                                        "title": "ZZTMMO Lobby",                                      "author": "ZZTMMO",          "year": 2026, "zzt_files": ["LOBBY.ZZT"]},
-    {"id": "arena",       "zip": "",                                        "title": "ZZTMMO Arena",                                      "author": "ZZTMMO",          "year": 2026, "zzt_files": ["ARENA.ZZT"]},
     {"id": "challenge",   "zip": "",                                        "title": "ZZTMMO Gem Dash",                                   "author": "ZZTMMO",          "year": 2026, "zzt_files": ["GEMDASH.ZZT"]},
     {"id": "town",        "zip": "",                                        "title": "",                                                  "author": "Tim Sweeney",     "year": 1991, "zzt_files": ["TOWN.ZZT"]},
-    {"id": "welcome",     "zip": "",                                        "title": "Welcome to ZZTMMO",                                  "author": "ZZTMMO",          "year": 2026, "zzt_files": ["WELCOME.ZZT"]},
     {"id": "caves",       "zip": "",                                        "title": "Caves of ZZT",                                       "author": "Tim Sweeney",     "year": 1991, "zzt_files": ["CAVES.ZZT"]},
     {"id": "city",        "zip": "",                                        "title": "City of ZZT",                                        "author": "Tim Sweeney",     "year": 1991, "zzt_files": ["CITY.ZZT"]},
     {"id": "dungeons",    "zip": "",                                        "title": "Dungeons of ZZT",                                    "author": "Tim Sweeney",     "year": 1991, "zzt_files": ["DUNGEONS.ZZT"]},

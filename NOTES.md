@@ -11953,3 +11953,48 @@ TOWN.ZZT in the meantime, with a comment saying it is the client's requirement
 rather than the journey's.
 
 M34's own work is closed.
+
+## 2026-08-19 — the review of `918c9da`, and the one decision inside it
+
+A code review of the world-removal commit found six things. Two were the same
+kind of miss and are the reason this entry exists: `918c9da` deleted exports and
+filters from `engine/web/src` and did not run the node unit suite, so
+`title_flow.test.mjs` imported two names that no longer existed and
+`modal.test.mjs` asserted three behaviours the same diff removed. `npm test` is
+a certification gate (`cmd/zzt-parity`), so `make parity` and `make certify`
+were both red on that commit. The commit message says the browser family ran
+green, and it did — the browser family is not the node suite, and rule 3's
+"`make browser` before a client commit" reads as covering client verification
+when it does not. Nothing here changes the rule; it is worth knowing that the
+cheap gate is the one that was skipped.
+
+**The decision: friendly fire now travels in the recording.** Before
+`918c9da`, `NewRoomManagerForWorld` re-derived the policy at playback from the
+world identity (`friendlyFireForWorldIdentity`, ARENA only). That derivation was
+deleted with the world, and nothing replaced it, so a session recorded under
+friendly fire replayed with player bullets doing nothing and no error anywhere.
+`recHeader` now carries `friendlyFire`, on exactly M32.1's terms — omitempty, no
+`recordVersion` bump — because it adds a fact about a recording rather than
+changing how its stimuli replay, and a bump would refuse every recording and
+fixture written before it. **No back-compat shim was added.** Mapping
+`world == "ARENA"` to true at playback would re-encode the identity rule the
+owner deliberately deleted, to serve recordings no fixture in this repo
+contains; recordings written before this field replay with the policy off, which
+is what an absent flag means everywhere else. Recordings written after it carry
+the truth.
+
+The other four were coverage and staleness: the friendly-fire deviation is still
+declared live in the parity manifest while the only tests of its moving-bullet
+branch and its per-room propagation went out with `m30_1_test.go`
+(`engine/friendly_fire_test.go` now drives all three surfaces by setting the
+flag, which is how anything sets it now); `postNotice` is dispatched on every
+drained notice and had no tests at all, its comment claiming otherwise
+(`engine/gazette_board_test.go` restores the four world-agnostic claims on a
+newsstand world compiled in the test file — the object, its tile and its
+two-line fallback program copied verbatim out of the deleted `fixtures/lobby.zwd`
+so the ZZT-OOP facts are not re-derived); and `worlds.manifest.json` still
+listed `lobby`, `arena` and `welcome`, which made three deleted worlds
+`WorldKindClassic` on any host that still had the files, promoting "ZZTMMO
+Lobby" onto the Classics shelf with its transit gates unpopulated. Those rows
+are gone, so `WorldIsCanonical("LOBBY")` is false and a leftover LOBBY.ZZT is an
+ordinary overwritable world — correct for deleted first-party content.

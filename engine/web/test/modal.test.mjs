@@ -43,7 +43,6 @@ function worldSearch() {
     query: "",
     selected: 0,
     entries: [
-      { world: "LOBBY", id: "lobby", title: "ZZTMMO Lobby", author: "ZZTMMO", created: "2026", kind: "classic" },
       { world: "TOWN", id: "TOWN", title: "Town of ZZT", author: "Tim Sweeney", created: "1991", kind: "classic" },
       { world: "RHYGAR1", id: "rhygar1", title: "Rhygar", author: "Saxxon Pike", created: "1997", players: 1 },
       { world: "CASTLE", id: "castle", title: "Castle", author: "Unknown", created: "1999", players: 2 },
@@ -215,8 +214,8 @@ function scroll() {
   assert.equal(m.linePos, 1);
 }
 
-// Empty world search lists every hosted world (scrollable), lobby first, with a
-// match count that reflects all of them. The count is separate from the centered
+// Empty world search lists every hosted world (scrollable) with a match count
+// that reflects all of them. The count is separate from the centered
 // instruction. Museum search is reached by typing.
 {
   const m = worldSearch();
@@ -230,10 +229,10 @@ function scroll() {
   // instruction row (y=11) where it used to overprint the header.
   const instructionWrite = writes.find((write) => write.text === "Type to search all/Museum; shelves");
   assert.ok(instructionWrite && instructionWrite.y === 11);
-  // All seven fixture worlds are matched, not a featured subset.
-  assert.ok(writes.some((write) => write.text === "7 matches" && write.x === 42 && write.y === 12));
+  // All six fixture worlds are matched, not a featured subset.
+  assert.ok(writes.some((write) => write.text === "6 matches" && write.x === 42 && write.y === 12));
   assert.ok(writes.some((write) => write.color === 0x70 && write.text.startsWith("Type to search: ")));
-  assert.match(rendered, /ZZTMMO Lobby/);
+  assert.match(rendered, /Town of ZZT/);
   assert.match(rendered, /Rhygar/);
   assert.match(rendered, /by Saxxon Pike/);
   assert.doesNotMatch(rendered, /id:/);
@@ -245,7 +244,7 @@ function scroll() {
 // A world with players online shows its live player count in the list.
 {
   const m = worldSearch();
-  m.selected = 2; // RHYGAR1, the first occupied world after the lobby and TOWN
+  m.selected = 1; // RHYGAR1, the first occupied world after TOWN
   const writes = [];
   renderModal((x, y, color, text) => writes.push({ x, y, color, text }), m);
   assert.match(writes.map((write) => write.text).join(" "), /\(1 player currently online\)/);
@@ -397,8 +396,8 @@ console.log("modal.test.mjs: M17.11 live occupancy passed");
 // first click.
 {
   const entries = [
-    { world: "WELCOME", id: "welcome", title: "Welcome to ZZTMMO", author: "ZZTMMO", created: "2026", kind: "classic" },
-    { world: "LOBBY", id: "lobby", title: "ZZTMMO Lobby", author: "ZZTMMO", created: "2026", kind: "classic" },
+    { world: "CITY", id: "city", title: "City of ZZT", author: "Tim Sweeney", created: "1991", kind: "classic" },
+    { world: "DUNGEONS", id: "dungeons", title: "Dungeons of ZZT", author: "Tim Sweeney", created: "1991", kind: "classic" },
     { world: "TOWN", id: "town", title: "Town of ZZT", author: "Tim Sweeney", created: "1991", kind: "classic" },
     { world: "CAVES", id: "caves", title: "Caves of ZZT", author: "Tim Sweeney", created: "1991", kind: "classic" },
     { world: "MOSSGATE", id: "mossgate", title: "MOSSGATE", author: "Dreamed here", created: "", kind: "dreamed" },
@@ -413,9 +412,7 @@ console.log("modal.test.mjs: M17.11 live occupancy passed");
   };
 
   const firstScreen = render("");
-  assert.match(firstScreen, /Welcome to ZZTMMO/, "the welcome world leads the first screen");
-  assert.match(firstScreen, /Start here/, "the welcome world is marked for newcomers");
-  assert.match(firstScreen, /ZZTMMO Lobby/, "the lobby leads the first screen");
+  assert.match(firstScreen, /City of ZZT/, "catalogued classics lead the first screen");
   assert.match(firstScreen, /Caves of ZZT/, "catalogued classics are listed");
   assert.doesNotMatch(firstScreen, /MERC/, "uncatalogued worlds are left to search");
   assert.doesNotMatch(firstScreen, /PR0N4U/, "…including ones whose names read badly on a first screen");
@@ -425,8 +422,9 @@ console.log("modal.test.mjs: M17.11 live occupancy passed");
   // Hidden is not gone: typing still finds them, which is the whole bargain.
   const searched = render("merc");
   assert.match(searched, /MERC/, "an uncatalogued world is still reachable by name");
-  // The lobby is appended to every search result, so a single hit reads as two.
-  assert.match(searched, /2 matches/);
+  // Nothing is appended to a search any more (owner 2026-08-11 removed the
+  // lobby that used to ride along), so one hit reads as one.
+  assert.match(searched, /1 match\b/);
   assert.match(render("pr0n"), /PR0N4U/, "nothing is removed from the catalogue");
 
   // The instruction has to say that typing reaches more than what is shown.

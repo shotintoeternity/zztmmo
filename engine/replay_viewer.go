@@ -32,10 +32,15 @@ func NewReplayPlayback(r io.Reader) (*ReplayPlayback, error) {
 	if err != nil {
 		return nil, err
 	}
+	rm := NewRoomManagerForWorld(world, header.World)
+	// The policy travels in the recording, not in the world's name (M30.1's
+	// identity rule went with the ARENA world it served). Set before any room is
+	// thawed so every engine the playback creates is created under it.
+	rm.FriendlyFire = header.FriendlyFire
 	return &ReplayPlayback{
 		header:      header,
 		scanner:     scanner,
-		rm:          NewRoomManagerForWorld(world, header.World),
+		rm:          rm,
 		last:        -1,
 		seenPlayers: make(map[PlayerID]struct{}),
 	}, nil

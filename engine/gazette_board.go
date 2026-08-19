@@ -93,7 +93,8 @@ func (s *WebSocketServer) gazetteNameResolver() func(string) string {
 // 2026-08-11); the placement is gone, the mechanism is not, so a future world
 // can stand a newsstand on a tile by naming this kind in NoticeTiles. Nothing
 // populates NoticeTiles today, so postNotice is currently unreachable in
-// production and is exercised only by its tests.
+// production; gazette_board_test.go is what keeps it and the suppression rule
+// it depends on from rotting until some world stands a stand again.
 const GazetteNoticeKind = "gazette"
 
 // postNotice answers one touch of a server-owned tile. It runs off the tick

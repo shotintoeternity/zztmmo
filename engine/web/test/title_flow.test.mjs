@@ -9,15 +9,17 @@ const output = await build({
   write: false,
 });
 const source = Buffer.from(output.outputFiles[0].contents).toString("base64");
-const { FIRST_VISIT_WELCOME_KEY, WELCOME_WORLD, hasSeenWelcome, markWelcomeSeen, selectWorldForTitle, shouldOpenWelcomeFirstVisit } = await import(`data:text/javascript;base64,${source}`);
+const { FIRST_VISIT_WELCOME_KEY, hasSeenWelcome, markWelcomeSeen, selectWorldForTitle } = await import(`data:text/javascript;base64,${source}`);
 
 {
   const selection = selectWorldForTitle("CAVES");
   assert.deepEqual(selection, { worldName: "CAVES", startPlay: false });
 }
 
+// The WELCOME world is gone (owner 2026-08-11) but its storage key is not: the
+// browser suites' markProfileWarm writes it to declare which visitor a script
+// is (M33.2), so the key and its two accessors are still load-bearing.
 {
-  assert.equal(WELCOME_WORLD, "WELCOME");
   assert.equal(FIRST_VISIT_WELCOME_KEY, "zzt-first-visit-welcome");
   const storage = new Map();
   const shim = {
@@ -33,11 +35,4 @@ const { FIRST_VISIT_WELCOME_KEY, WELCOME_WORLD, hasSeenWelcome, markWelcomeSeen,
   assert.equal(hasSeenWelcome(shim), true);
 }
 
-{
-  assert.equal(shouldOpenWelcomeFirstVisit({ authenticated: false, hasSeenWelcome: false, welcomeHosted: true }), true);
-  assert.equal(shouldOpenWelcomeFirstVisit({ authenticated: true, hasSeenWelcome: false, welcomeHosted: true }), false);
-  assert.equal(shouldOpenWelcomeFirstVisit({ authenticated: false, hasSeenWelcome: true, welcomeHosted: true }), false);
-  assert.equal(shouldOpenWelcomeFirstVisit({ authenticated: false, hasSeenWelcome: false, welcomeHosted: false }), false);
-}
-
-console.log("title_flow.test.mjs: world selection and first-visit welcome passed");
+console.log("title_flow.test.mjs: world selection and the first-visit key passed");

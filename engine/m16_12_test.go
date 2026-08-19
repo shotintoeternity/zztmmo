@@ -1184,6 +1184,9 @@ var m1612Invariants = []struct {
 		"TestPointBlankNoDamageWithoutFriendlyFire",
 		"TestPointBlankNeverSelfDamage",
 		"TestPointBlankCreatureVsEnergizedPlayer",
+		"TestFriendlyFireGatesMovingBulletDamage",
+		"TestFriendlyFireReachesEveryRoomTheManagerMakes",
+		"TestFriendlyFireRoundTripsThroughARecording",
 	}},
 	{"passages and board edges", []string{
 		"TestM1612PassageAndEdgeMoveOnlyTheTraveler",

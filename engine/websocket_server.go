@@ -2513,6 +2513,9 @@ func (s *WebSocketServer) attachRecorderLocked(inst *WorldInstance) {
 		header.ChallengeID = inst.Challenge.Def.ID
 		header.ChallengeVersion = inst.Challenge.Def.Version
 	}
+	// Friendly fire is set on the manager rather than derived from the world
+	// name, so the recording has to carry it or playback silently diverges.
+	header.FriendlyFire = inst.RoomManager.FriendlyFire
 	recordID := inst.Name + "-" + s.recordStamp
 	if inst.RecordID != "" {
 		recordID = inst.RecordID
