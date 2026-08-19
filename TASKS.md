@@ -8420,7 +8420,7 @@ can guess.
   safe. Filed on the way through: **M34.3b**, the same stale `"TOWN"` in the
   other two handlers that carry this default.
 
-- [ ] **M34.3b — the same stale TOWN default in restore and high scores.**
+- [x] **M34.3b — the same stale TOWN default in restore and high scores.**
   Filed by M34.3a 2026-08-10, which fixed only the two handlers its DoD named.
   `handleRestore` (web_api.go:1141) and `handleHighScores` (web_api.go:1615)
   default an absent world to the same hardcoded `"TOWN"` M29.1 left behind, and

@@ -1138,7 +1138,7 @@ func (a *WebAPI) handleRestore(w http.ResponseWriter, r *http.Request) {
 
 	worldName := body.World
 	if worldName == "" {
-		worldName = "TOWN"
+		worldName = a.defaultWorldName()
 	}
 	safeWorld, err := SanitizeSaveName(worldName)
 	if err != nil {
@@ -1150,7 +1150,7 @@ func (a *WebAPI) handleRestore(w http.ResponseWriter, r *http.Request) {
 	if a.Server != nil {
 		inst, err := a.Server.GetOrCreateInstance(safeWorld)
 		if err != nil {
-			http.Error(w, "failed to load world: "+err.Error(), http.StatusInternalServerError)
+			writeWorldLoadError(w, safeWorld, err)
 			return
 		}
 		rm = inst.RoomManager
@@ -1187,7 +1187,9 @@ func writeJSON(w http.ResponseWriter, value interface{}) {
 // server's default — so the client's very first paint (main.ts sends a bare
 // /api/title while its world is still "Untitled") asked for a world the
 // deployment may not host at all. serveEditor already defaults this way
-// (websocket_server.go); a name that cannot go stale is the point.
+// (websocket_server.go); a name that cannot go stale is the point. M34.3b
+// brought the last two copies here — handleRestore and handleHighScores, which
+// no player reaches unnamed but a direct API caller does.
 func (a *WebAPI) defaultWorldName() string {
 	if a.Server != nil && a.Server.DefaultInstance != nil && a.Server.DefaultInstance.Name != "" {
 		return a.Server.DefaultInstance.Name
@@ -1639,7 +1641,7 @@ func hasAlphanumeric(s string) bool {
 func (a *WebAPI) handleHighScores(w http.ResponseWriter, r *http.Request) {
 	worldName := r.URL.Query().Get("world")
 	if worldName == "" {
-		worldName = "TOWN"
+		worldName = a.defaultWorldName()
 	}
 	safeWorld, err := SanitizeSaveName(worldName)
 	if err != nil {
@@ -1651,7 +1653,7 @@ func (a *WebAPI) handleHighScores(w http.ResponseWriter, r *http.Request) {
 	if a.Server != nil {
 		inst, err := a.Server.GetOrCreateInstance(safeWorld)
 		if err != nil {
-			http.Error(w, "failed to load world: "+err.Error(), http.StatusInternalServerError)
+			writeWorldLoadError(w, safeWorld, err)
 			return
 		}
 		rm = inst.RoomManager
