@@ -1,3 +1,14 @@
+// editor_cursor.ts — the editor's blinking cursor and the presence overlay that
+// shows where everybody else's cursor is.
+//
+// Split out from main.ts because it is pure: given a cursor, a blink phase and
+// the other editors' positions, it returns the cells to draw. That makes the
+// overlay testable under node without a canvas — see ../test/editor_cursor.test.mjs.
+//
+// editorReplyMatchesCursor is the interesting one. A cursor move is optimistic,
+// so a reply from the server may arrive after the player has moved on; it is
+// only applied if it still matches where the cursor actually is.
+
 export type EditorCursor = {
   x: number;
   y: number;

@@ -1,3 +1,13 @@
+// museum.ts — the client half of Museum of ZZT search.
+//
+// The server proxies the Museum's API (it holds the network access and the
+// rate limiting); this file turns what comes back into rows for the world
+// picker and merges them with the worlds already hosted locally, so a title
+// that exists in both appears once. The failure lines are here rather than
+// inline because a search that finds nothing, a Museum that is down and a world
+// that refuses to load are three different messages, and a player deserves to
+// be told which one happened.
+
 import type { WorldSearchEntry } from "./modal";
 
 export type MuseumSearchResult = {

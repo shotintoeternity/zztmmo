@@ -1,3 +1,13 @@
+// comfort.ts — accessibility preferences: the palette a player reads the board
+// through and the keys they play it with.
+//
+// Both are stored per player rather than applied to the world, because the
+// world is shared: a colorblind-assist palette changes what one person sees and
+// nothing about what the server simulates or what anybody else is looking at.
+// Rebinding is the same idea — bindings are resolved to ZZT's own key vocabulary
+// before anything reaches the wire, so the server never learns that a player
+// moved with a one-handed preset.
+
 export type ComfortPalette = "vanilla" | "high-contrast" | "colorblind-assist";
 export type ComfortKeyPreset = "vanilla" | "one-handed" | "custom";
 export type KeyAction =

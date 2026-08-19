@@ -1,3 +1,25 @@
+// main.ts — the browser client's shell: the canvas, the socket, and the state
+// machine that moves between title, play, watch, replay and editor.
+//
+// The client is a dumb terminal by design. It owns no game state and simulates
+// nothing: it sends what the player did (a keymask, a command byte, a menu
+// choice) and draws what the server says is there. Every rule about what
+// happens next lives in the Go engine. When something looks wrong on screen the
+// question is almost always what the server sent, not what this file decided.
+//
+// It is the largest file in the client, and the reason is the seam it sits on:
+// this is where the DOM, the WebSocket and the render loop meet, and all three
+// are awkward to test. So the parts that CAN be tested were moved out into the
+// modules imported below — modal.ts, sidebar.ts, keys.ts, title.ts, sound.ts,
+// museum.ts, resume.ts and the rest — each of which is pure enough to exercise
+// under node, and each of which has a matching suite in ../test. What is left
+// here is the impure remainder plus the wiring between them. That split is why
+// the module list is long, and it is the direction to keep pushing: a new
+// behavior belongs in a module with a test, not in another function here.
+//
+// Layout constants at the top are ZZT's, not choices: an 80x25 text screen, a
+// 60-column board with a 20-column sidebar, drawn with an 8x14 CP437 font.
+
 import "./style.css";
 import { drawSidebar as paintSidebar, drawWatchSidebar as paintWatchSidebar, updateSidebar as paintSidebarHud } from "./sidebar";
 import {

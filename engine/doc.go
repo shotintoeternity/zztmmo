@@ -8,10 +8,10 @@
 // non-test lines — was not written by hand. It arrived by machine conversion:
 // Adrian Siekierka reconstructed ZZT's original Turbo Pascal source from the
 // 1991 binary, and Ben Hoyt ran that through his pas2go converter to produce
-// zztgo. ZZTMMO is a fork of zztgo. The converted files still carry
-// their Pascal unit name in the package clause (`package zztgo // unit: Game`),
-// still use the original identifiers down to the capitalization, and still
-// carry Ben's TODOs. Each one opens with a header saying where it came from.
+// zztgo. ZZTMMO is a fork of zztgo. The converted files still carry their
+// Pascal unit name in the package clause (`package zztgo // unit: Game`), still
+// use the original identifiers down to the capitalization, and still carry
+// Ben's TODOs. Each one opens with a header saying where it came from.
 //
 // That shape is deliberate and it is load-bearing. The contract of this project
 // is that a 1991 world behaves the way it behaved in 1991, so the original's

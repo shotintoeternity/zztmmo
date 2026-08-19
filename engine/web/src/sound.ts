@@ -1,3 +1,19 @@
+// sound.ts — the PC speaker, rebuilt in the browser.
+//
+// The server sends ZZT's own note stream, unchanged from what the 1991 engine
+// produced (see sounds.go). This file plays it: one square-wave oscillator
+// gated by a gain node — no envelope, because a PC speaker had none — stepping
+// through notes on ZZT's clock. TICK_SEC is 1/18.2065, the DOS timer tick, so a
+// tune runs at the speed it ran at on a 386 rather than at whatever a modern
+// audio API would prefer.
+//
+// Two browser facts shape the rest. A Web Audio context starts suspended until
+// a user gesture resumes it, so the oscillator is created once and left running
+// with the gain at zero rather than started per note. And priority is ZZT's own:
+// queue() will not let a low-priority tune interrupt a higher-priority one that
+// is still playing, which is what stops an ambient loop from stepping on the
+// sound of the player being shot.
+
 const TICK_SEC = 1 / 18.2065;
 const LOOKAHEAD_SEC = 0.05;
 const SCHED_MS = 25;

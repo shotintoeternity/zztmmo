@@ -6,6 +6,12 @@ Ben Hoyt, MIT licensed. It builds as the Go module
 `zztgo`, after the project it came from. See `../NOTICE.md` for full provenance
 and `LICENSE.txt` for Ben's original license text.
 
+`doc.go` is the place to start reading: it covers which files are machine
+converted and which were written for ZZTMMO, why the converted ones are left
+Pascal-shaped rather than tidied, the determinism rules the simulation is held
+to, and a map of the layers. Every substantial file opens with a header saying
+what it owns.
+
 Ben's description of the upstream project, in his own words:
 
 > `zztgo` is a (not exactly finished) port of Adrian Siekierka’s source code [reconstruction of ZZT](https://github.com/asiekierka/reconstruction-of-zzt/) to Go. I created it using a [Pascal-to-Go converter](https://github.com/benhoyt/pas2go) that I wrote, as well as the [tcell](https://github.com/gdamore/tcell) terminal library for graphics.

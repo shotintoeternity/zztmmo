@@ -1,3 +1,13 @@
+// watch_live.ts — the spectator channel: a lineup of worlds somebody is
+// currently playing, cycled like a TV channel.
+//
+// The rotation is the point. With no target chosen, it advances through the
+// lineup every WATCH_LIVE_CYCLE_MS so an idle screen keeps showing somebody
+// playing rather than a still frame of an empty board. Embed mode drops the
+// surrounding chrome for a page that only wants the board.
+//
+// Pure index and label maths, so the cycling is testable without a socket.
+
 export type WatchLiveLineupEntry = {
   kind: "live" | "replay";
   world?: string;

@@ -1,3 +1,13 @@
+// title_flow.ts — the small decisions the title screen makes: which world a
+// selection opens, and whether this browser has been here before.
+//
+// Kept out of title.ts and main.ts because these are exactly the branches that
+// used to get walked by accident. A first visit and a return visit see
+// different screens, so a browser test that does not say which one it is
+// silently tests whichever the default happens to be that month — the failure
+// mode M33.2 exists to prevent. Small, pure and separately tested for that
+// reason.
+
 export type WorldSelectionTransition = {
   worldName: string;
   startPlay: boolean;

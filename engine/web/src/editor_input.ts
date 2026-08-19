@@ -1,3 +1,14 @@
+// editor_input.ts — optimistic local echo for editor typing.
+//
+// Typing a character or pressing delete draws the result immediately rather
+// than waiting for the server to confirm it, so the editor feels like a text
+// field instead of a telegraph. The server's own reply follows and wins; these
+// functions only decide what to paint in the gap.
+//
+// Pure by design, so ../test/editor_input.test.mjs can check the painted cell
+// without a DOM. The EditorCursor type is declared here as well as in
+// editor_cursor.ts so neither module has to import the other.
+
 export type EditorCursor = {
   x: number;
   y: number;

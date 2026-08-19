@@ -1,3 +1,11 @@
+// first_time_hints.ts — the one-time nudges a player sees the first time they
+// meet a piece of the interface, and the record of which ones they have seen.
+//
+// A signed-in player carries that record on their account so it follows them
+// between browsers; a guest carries it in localStorage. Both go through the same
+// functions here, which is what keeps a hint from reappearing for a guest who
+// then signs in.
+
 import { EMPTY_ACCOUNT_HINTS, type AccountHintKey, type AccountHintPreferences } from "./preferences";
 
 export const FIRST_TIME_HINTS: Record<AccountHintKey, string> = {

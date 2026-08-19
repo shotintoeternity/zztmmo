@@ -16,7 +16,7 @@ Explore classic `.ZZT` worlds in synchronized rooms, chat while you play, read s
 *   **Keep the world moving:** Board transfers, passages, active-room ticks, frozen empty rooms, dark rooms, torches, high scores, help screens, pause, quit, and title-screen flows are all handled server-side.
 *   **Chat like it is 1995 with better sockets:** Browser clients get global chat, with optional JSONL persistence when saves are enabled.
 *   **Save the shared mess:** Room snapshots can be saved to disk and restored later, so a party can preserve puzzle progress instead of starting from a pristine world every session.
-*   **Play co-op first, PvP deliberately:** Ordinary worlds stay co-op: player bullets do not hurt other players. The first-party ARENA world is the explicit PvP opt-in; there are still no brackets, wagers, or tournament systems yet.
+*   **Play co-op, not PvP:** Player bullets do not hurt other players in any world that ships today. Friendly fire is a per-instance server setting rather than something a world file can turn on, so a downloaded world cannot decide to make your party hostile. No first-party PvP world is currently hosted.
 *   **Race the daily challenge:** `/challenge` opens a timed first-party course inside the same client. Every run is a recorded, isolated session, so a time is measured in simulation ticks, checkable by replaying the recording it cites, and raceable as a ghost that is drawn on your own screen and nowhere else. Signing in posts a time; a guest can still run it and see their own.
 
 ## Beta Notes
@@ -81,17 +81,16 @@ All commands are run from the `engine/` directory.
 
 3.  **Put a world where the server can load it:**
     ```bash
-    cp ../fixtures/LOBBY.ZZT ../fixtures/TOWN.ZZT .
+    cp ../fixtures/TOWN.ZZT .
     ```
     > `.ZZT` files in `engine/` are gitignored, so a fresh clone has none. The
-    > server loads its startup world from the directory it runs in, and the
-    > first-party lobby plus classic TOWN ship as committed fixtures. Add any
-    > other worlds the same way; the
+    > server loads its startup world from the directory it runs in, and classic
+    > TOWN ships as a committed fixture. Add any other worlds the same way; the
     > picker lists everything in the `-worlds` directory.
 
 4.  **Launch the MMO server:**
     ```bash
-    go run ./cmd/zzt-server -world LOBBY -web web/dist -help . -saves saves
+    go run ./cmd/zzt-server -world TOWN -web web/dist -help . -saves saves
     ```
 
 5.  Open **[http://127.0.0.1:8080](http://127.0.0.1:8080)** in multiple browser tabs.
@@ -99,7 +98,7 @@ All commands are run from the `engine/` directory.
 ### Useful Server Flags
 
 *   `-addr :8080` sets the HTTP/WebSocket listen address.
-*   `-world LOBBY` chooses the starting `.ZZT` world basename.
+*   `-world TOWN` chooses the starting `.ZZT` world basename (this is also the default).
 *   `-board 1` chooses the default starting board.
 *   `-web web/dist` points at the built browser client.
 *   `-help .` points at the directory containing ZZT `.HLP` files.
@@ -145,6 +144,7 @@ engine/saves/        Local saved-game snapshots and chat logs when enabled
 fixtures/            Replay, oracle, golden and parity fixtures (repository root)
 llmworld/            ZWD corpus, prompt kit assets, and generated worlds
 oracle/              Pinned vanilla ZZT oracle harness (maintainer tooling)
+deploy/              systemd units and scripts for the hosted server
 reference/           Local reference checkouts, ignored by git
 ```
 
