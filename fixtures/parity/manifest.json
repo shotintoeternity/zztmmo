@@ -871,9 +871,9 @@
       "contract": "E",
       "authority": "TASKS.md M18.17",
       "parity": "exact",
-      "status": "unverified",
-      "assignedTask": "M16.20",
-      "notes": "task-claim row; behavioral parity carried by the element/oop/protocol/input/service rows this task touched; reconciled at M16.20"
+      "test": "TestM1817GameResumeDoesNotWaitOnTheSocketItDisplaces,TestM1817EditorResumeDoesNotWaitOnTheSocketItDisplaces",
+      "status": "pass",
+      "notes": "task-claim row; behavioral parity carried by the element/oop/protocol/input/service rows this task touched; reconciled at M16.20 M34.4 reconciliation (2026-08-19): the named tests certify this task's DoD; behavioural parity is additionally carried by the element/oop/protocol/input/service rows this task touched."
     },
     {
       "id": "task.M18.2",
@@ -989,9 +989,9 @@
       "contract": "E",
       "authority": "TASKS.md M19.2a",
       "parity": "exact",
-      "status": "unverified",
-      "assignedTask": "M16.20",
-      "notes": "task-claim row; behavioral parity carried by the element/oop/protocol/input/service rows this task touched; reconciled at M16.20"
+      "test": "TestM192ColorPickerJourney",
+      "status": "pass",
+      "notes": "task-claim row; behavioral parity carried by the element/oop/protocol/input/service rows this task touched; reconciled at M16.20 M34.4 reconciliation (2026-08-19): the named tests certify this task's DoD; behavioural parity is additionally carried by the element/oop/protocol/input/service rows this task touched."
     },
     {
       "id": "task.M19.2b",
@@ -1209,9 +1209,9 @@
       "contract": "E",
       "authority": "TASKS.md M22.4",
       "parity": "exact",
-      "status": "unverified",
-      "assignedTask": "M16.20",
-      "notes": "task-claim row; behavioral parity carried by the element/oop/protocol/input/service rows this task touched; reconciled at M16.20"
+      "test": "TestM224ReplayPostcardGIFEndpoint,TestM224ReplayPostcardBoundsRateLimitAndMissingID,TestM224PostcardsAreBetaLimitedToSinglePlayerRecordings",
+      "status": "pass",
+      "notes": "task-claim row; behavioral parity carried by the element/oop/protocol/input/service rows this task touched; reconciled at M16.20 M34.4 reconciliation (2026-08-19): the named tests certify this task's DoD; behavioural parity is additionally carried by the element/oop/protocol/input/service rows this task touched."
     },
     {
       "id": "task.M23.1",
@@ -1220,9 +1220,9 @@
       "contract": "E",
       "authority": "TASKS.md M23.1",
       "parity": "exact",
-      "status": "unverified",
-      "assignedTask": "M16.20",
-      "notes": "task-claim row; behavioral parity carried by the element/oop/protocol/input/service rows this task touched; reconciled at M16.20"
+      "test": "first_time_hints.test.mjs,TestM169BrowserCanvasGoldens",
+      "status": "pass",
+      "notes": "task-claim row; behavioral parity carried by the element/oop/protocol/input/service rows this task touched; reconciled at M16.20 M34.4 reconciliation (2026-08-19): M23.1 is client-side by its own DoD - the hint flags and copy live in web/src, and the node suite first_time_hints.test.mjs certifies fire-once-per-account across restarts, while the identity golden certifies the bottom row it writes."
     },
     {
       "id": "task.M23.1a",
@@ -1231,9 +1231,10 @@
       "contract": "E",
       "authority": "TASKS.md M23.1a",
       "parity": "exact",
-      "status": "unverified",
-      "assignedTask": "M16.20",
-      "notes": "task-claim row; behavioral parity carried by the element/oop/protocol/input/service rows this task touched; reconciled at M16.20"
+      "test": "TestM169BrowserCanvasGoldens",
+      "fixture": "fixtures/browser-goldens/identity-paused-player-one.json",
+      "status": "pass",
+      "notes": "task-claim row; behavioral parity carried by the element/oop/protocol/input/service rows this task touched; reconciled at M16.20 M34.4 reconciliation (2026-08-19): the task re-recorded fixtures/browser-goldens/identity-paused-player-one.json for M23.1's hint row; TestM169BrowserCanvasGoldens is the suite that reads it."
     },
     {
       "id": "task.M24.1",
@@ -1264,9 +1265,9 @@
       "contract": "E",
       "authority": "TASKS.md M26.1",
       "parity": "exact",
-      "status": "unverified",
-      "assignedTask": "M16.20",
-      "notes": "task-claim row; behavioral parity carried by the element/oop/protocol/input/service rows this task touched; reconciled at M16.20"
+      "test": "TestM261PreferencesRoundTripPreservesExistingFields,TestM261FollowUnfollowAndNoAccountIDLeak,TestM261PreferencesEndpointStoresSharingWithoutReturningFollowIDs,TestM261FollowSurvivesHandleRenameAndSnapshotMarksFollowedPlayer,TestM261WorldsFriendPresenceIsPerRecipientAndOptIn",
+      "status": "pass",
+      "notes": "task-claim row; behavioral parity carried by the element/oop/protocol/input/service rows this task touched; reconciled at M16.20 M34.4 reconciliation (2026-08-19): the named tests certify this task's DoD; behavioural parity is additionally carried by the element/oop/protocol/input/service rows this task touched."
     },
     {
       "id": "task.M27.1",
@@ -1275,9 +1276,9 @@
       "contract": "E",
       "authority": "TASKS.md M27.1",
       "parity": "exact",
-      "status": "unverified",
-      "assignedTask": "M16.20",
-      "notes": "task-claim row; behavioral parity carried by the element/oop/protocol/input/service rows this task touched; reconciled at M16.20"
+      "test": "TestM271FavoritePreferencesValidateCapTogglePersistAndPreserveFields,TestM271WorldActivityCountsOnlyFreshActiveJoinsAndPersists,TestM271WorldsShelvesArePerRecipientAndReferenceFlatWorlds,TestM271TitleThumbnailCacheHitInvalidationAndFallback",
+      "status": "pass",
+      "notes": "task-claim row; behavioral parity carried by the element/oop/protocol/input/service rows this task touched; reconciled at M16.20 M34.4 reconciliation (2026-08-19): the named tests certify this task's DoD; behavioural parity is additionally carried by the element/oop/protocol/input/service rows this task touched."
     },
     {
       "id": "task.M28.1",
@@ -1286,9 +1287,9 @@
       "contract": "E",
       "authority": "TASKS.md M28.1",
       "parity": "exact",
-      "status": "unverified",
-      "assignedTask": "M16.20",
-      "notes": "task-claim row; behavioral parity carried by the element/oop/protocol/input/service rows this task touched; reconciled at M16.20"
+      "test": "TestM281WatchLiveLineupOrderExclusionsReplayConsentAndPrivacy,TestM281WatchLiveReplayScanIsBounded,TestM281ReplayStartTickOpensSelectedWindow,TestM281LiveChannelViewerIsStillOnlyAWatcher",
+      "status": "pass",
+      "notes": "task-claim row; behavioral parity carried by the element/oop/protocol/input/service rows this task touched; reconciled at M16.20 M34.4 reconciliation (2026-08-19): the named tests certify this task's DoD; behavioural parity is additionally carried by the element/oop/protocol/input/service rows this task touched."
     },
     {
       "id": "task.M3.0",
@@ -1429,9 +1430,9 @@
       "contract": "E",
       "authority": "TASKS.md M31.1",
       "parity": "exact",
-      "status": "unverified",
-      "assignedTask": "M16.20",
-      "notes": "task-claim row; behavioral parity carried by the element/oop/protocol/input/service rows this task touched; reconciled at M16.20"
+      "test": "TestM311ComfortPreferencesRoundTripValidateAndPreserveFields,TestM311ComfortPreferencesRejectMalformedPaletteAndConflicts,TestM311PreferencesEndpointStoresComfortAndPreservesDocument,TestM311ComfortPreferencesBrowserJourney",
+      "status": "pass",
+      "notes": "task-claim row; behavioral parity carried by the element/oop/protocol/input/service rows this task touched; reconciled at M16.20 M34.4 reconciliation (2026-08-19): the named tests certify this task's DoD; behavioural parity is additionally carried by the element/oop/protocol/input/service rows this task touched."
     },
     {
       "id": "task.M32.1",
@@ -1440,9 +1441,9 @@
       "contract": "E",
       "authority": "TASKS.md M32.1",
       "parity": "exact",
-      "status": "unverified",
-      "assignedTask": "M16.20",
-      "notes": "task-claim row; behavioral parity carried by the element/oop/protocol/input/service rows this task touched; reconciled at M16.20"
+      "test": "TestM321ChallengeWorldCompilesShipsIsCanonicalAndListed,TestM321CatalogueResolutionAndRefusals,TestM321RunIsIsolatedRecordedAndLeavesTheSourceWorldAlone,TestM321CompletionWritesOneDurableRowAndVerifiesFromItsRecording,TestM321ReconnectReclaimsTheRunAndAStrangerCannot,TestM321LeaderboardSortingTiesStalenessAndRestart,TestM321ChallengeBrowserJourney",
+      "status": "pass",
+      "notes": "task-claim row; behavioral parity carried by the element/oop/protocol/input/service rows this task touched; reconciled at M16.20 M34.4 reconciliation (2026-08-19): the named tests certify this task's DoD; behavioural parity is additionally carried by the element/oop/protocol/input/service rows this task touched."
     },
     {
       "id": "task.M33.1",
@@ -1451,9 +1452,9 @@
       "contract": "E",
       "authority": "TASKS.md M33.1",
       "parity": "exact",
-      "status": "unverified",
-      "assignedTask": "M16.20",
-      "notes": "task-claim row; behavioral parity carried by the element/oop/protocol/input/service rows this task touched; reconciled at M16.20"
+      "test": "TestCoopCutlineThreePlayerAcceptanceJourney,TestM1611BrowserEndToEndPlayerJourneys,TestM1614CollaborativeEditorInBrowsers,TestM1616BrowserAuthAndMuseumJourney,TestM201DeepLinkJourney,TestM211BlockJourney",
+      "status": "pass",
+      "notes": "task-claim row; behavioral parity carried by the element/oop/protocol/input/service rows this task touched; reconciled at M16.20 M34.4 reconciliation (2026-08-19): the named suites are six of the seven M33.1 found red and repaired; each fails on a tree with its harness fixes reverted. The seventh, TestM232WelcomeWorldThreeBrowserJourney, was deleted with the WELCOME world itself by 918c9da (owner instruction 2026-08-11), so it is not citable and its claim no longer exists."
     },
     {
       "id": "task.M33.2",
@@ -1462,9 +1463,9 @@
       "contract": "E",
       "authority": "TASKS.md M33.2",
       "parity": "exact",
-      "status": "unverified",
-      "assignedTask": "M16.20",
-      "notes": "task-claim row; behavioral parity carried by the element/oop/protocol/input/service rows this task touched; reconciled at M16.20"
+      "test": "TestM332BrowserHarnessesNameTheirWorld,TestM332BrowserScriptsDeclareTheirVisit",
+      "status": "pass",
+      "notes": "task-claim row; behavioral parity carried by the element/oop/protocol/input/service rows this task touched; reconciled at M16.20 M34.4 reconciliation (2026-08-19): the named tests certify this task's DoD; behavioural parity is additionally carried by the element/oop/protocol/input/service rows this task touched."
     },
     {
       "id": "task.M33.3",
@@ -1473,9 +1474,9 @@
       "contract": "E",
       "authority": "TASKS.md M33.3",
       "parity": "exact",
-      "status": "unverified",
-      "assignedTask": "M16.20",
-      "notes": "task-claim row; behavioral parity carried by the element/oop/protocol/input/service rows this task touched; reconciled at M16.20"
+      "test": "TestGoGatesCarryATimeoutBeyondTheDefault,TestTimeoutPanicIsRecognised,TestRunRecordCarriesTheGoTestTimeout",
+      "status": "pass",
+      "notes": "task-claim row; behavioral parity carried by the element/oop/protocol/input/service rows this task touched; reconciled at M16.20 M34.4 reconciliation (2026-08-19): the named tests certify the gates carry an explicit -timeout, that a timeout panic is reported as a wall clock rather than a red suite, and that run.json records it."
     },
     {
       "id": "task.M34.1",
@@ -1484,9 +1485,9 @@
       "contract": "E",
       "authority": "TASKS.md M34.1",
       "parity": "exact",
-      "status": "unverified",
-      "assignedTask": "M16.20",
-      "notes": "task-claim row; behavioral parity carried by the element/oop/protocol/input/service rows this task touched; reconciled at M16.20"
+      "test": "TestM341LedgerAggregatesByKindSubjectAndAccount,TestM341BoundsRefuseRowsAndRetentionEvictsDays,TestM341FlushIsTheOnlyWriterAndReloadsExactly,TestM341ConsentNamesOnlyProfilesThatAskedToBeNamed,TestM341LedgerFileCarriesNoName,TestM341GazetteRouteNamesByConsentAndLeaksNoAccountID,TestM341RecordingMovesNoStateHash",
+      "status": "pass",
+      "notes": "task-claim row; behavioral parity carried by the element/oop/protocol/input/service rows this task touched; reconciled at M16.20 M34.4 reconciliation (2026-08-19): the named tests certify this task's DoD; behavioural parity is additionally carried by the element/oop/protocol/input/service rows this task touched."
     },
     {
       "id": "task.M34.1a",
@@ -1495,9 +1496,9 @@
       "contract": "E",
       "authority": "TASKS.md M34.1a",
       "parity": "exact",
-      "status": "unverified",
-      "assignedTask": "M16.20",
-      "notes": "task-claim row; behavioral parity carried by the element/oop/protocol/input/service rows this task touched; reconciled at M16.20"
+      "test": "TestM341ARetryThatRescuesAFailedJobIsNewsExactlyOnce,TestM341ARepaintOfASalvagedDreamIsNotNewsAgain,TestM341AShutdownFlushesTheLedger",
+      "status": "pass",
+      "notes": "task-claim row; behavioral parity carried by the element/oop/protocol/input/service rows this task touched; reconciled at M16.20 M34.4 reconciliation (2026-08-19): the named tests certify this task's DoD; behavioural parity is additionally carried by the element/oop/protocol/input/service rows this task touched."
     },
     {
       "id": "task.M34.2",
@@ -1506,9 +1507,9 @@
       "contract": "E",
       "authority": "TASKS.md M34.2",
       "parity": "exact",
-      "status": "unverified",
-      "assignedTask": "M16.20",
-      "notes": "task-claim row; behavioral parity carried by the element/oop/protocol/input/service rows this task touched; reconciled at M16.20"
+      "test": "TestM342ServerWrittenEditionCoversEveryDayShapeDeterministically,TestM342AuthorPromptCarriesTokensAndNeitherNameNorAccountKey,TestM342StoredEditionCarriesNoName,TestM342NameIsSubstitutedAtReadTime,TestM342ARefusedEditionFallsBackAndDoesNotPoisonTheCache,TestM342SpendIsBoundedFourWays,TestM342EditionRouteServesAPaperAndLeaksNoAccountKey",
+      "status": "pass",
+      "notes": "task-claim row; behavioral parity carried by the element/oop/protocol/input/service rows this task touched; reconciled at M16.20 M34.4 reconciliation (2026-08-19): the named tests certify this task's DoD; behavioural parity is additionally carried by the element/oop/protocol/input/service rows this task touched."
     },
     {
       "id": "task.M34.3a",
@@ -1517,9 +1518,9 @@
       "contract": "E",
       "authority": "TASKS.md M34.3a",
       "parity": "exact",
-      "status": "unverified",
-      "assignedTask": "M16.20",
-      "notes": "task-claim row; behavioral parity carried by the element/oop/protocol/input/service rows this task touched; reconciled at M16.20"
+      "test": "TestM343AUnnamedTitleAnswersFromTheServersOwnDefaultWorld,TestM343AUnnamedTitleStreamAnswersFromTheServersOwnDefaultWorld,TestM343AAbsentWorldIsANotFoundWithAMessage,TestM343AAbsentDefaultWorldIsAMessageRatherThanA500",
+      "status": "pass",
+      "notes": "task-claim row; behavioral parity carried by the element/oop/protocol/input/service rows this task touched; reconciled at M16.20 M34.4 reconciliation (2026-08-19): the named tests certify this task's DoD; behavioural parity is additionally carried by the element/oop/protocol/input/service rows this task touched."
     },
     {
       "id": "task.M34.3b",
@@ -1528,9 +1529,20 @@
       "contract": "E",
       "authority": "TASKS.md M34.3b",
       "parity": "exact",
-      "status": "unverified",
-      "assignedTask": "M16.20",
-      "notes": "task-claim row; behavioral parity carried by the element/oop/protocol/input/service rows this task touched; reconciled at M16.20"
+      "test": "TestM343BUnnamedHighScoresAnswerFromTheServersOwnDefaultWorld,TestM343BUnnamedRestoreAnswersFromTheServersOwnDefaultWorld,TestM343BAbsentWorldIsANotFoundNamingIt",
+      "status": "pass",
+      "notes": "task-claim row; behavioral parity carried by the element/oop/protocol/input/service rows this task touched; reconciled at M16.20 M34.4 reconciliation (2026-08-19): the named tests certify this task's DoD; behavioural parity is additionally carried by the element/oop/protocol/input/service rows this task touched."
+    },
+    {
+      "id": "task.M34.4",
+      "dimension": "task",
+      "subject": "Completed task M34.4 — its DoD still holds",
+      "contract": "E",
+      "authority": "TASKS.md M34.4",
+      "parity": "exact",
+      "test": "TestParityManifest,TestParityManifestIsCanonical,TestM1620aScaffoldKeepsTheRowsItDestroyed",
+      "status": "pass",
+      "notes": "task-claim row; this task IS the claim-reconciliation sweep, so its own row is closed by the manifest tests it had to keep green: TestParityManifest checks every cited Go test still exists, TestParityManifestIsCanonical checks the hand edits round-trip through the scaffold byte for byte, and TestM1620aScaffoldKeepsTheRowsItDestroyed checks a regeneration does not throw the curated evidence away. M34.4 reconciliation (2026-08-19)."
     },
     {
       "id": "task.M4.0",
@@ -4276,8 +4288,9 @@
       "contract": "P",
       "authority": "protocol.go; tasks M3.2–M3.4",
       "parity": "exact",
-      "status": "unverified",
-      "assignedTask": "M16.8"
+      "test": "TestM261FollowUnfollowAndNoAccountIDLeak,TestM261FollowSurvivesHandleRenameAndSnapshotMarksFollowedPlayer",
+      "status": "pass",
+      "notes": "M34.4 reconciliation (2026-08-19): the follow/unfollow round trip is exercised over a real websocket at engine/m26_1_test.go:243-256, including the no-account-ID-leak and rename-survival claims."
     },
     {
       "id": "proto.msg.followResult",
@@ -4286,8 +4299,9 @@
       "contract": "P",
       "authority": "protocol.go; tasks M3.2–M3.4",
       "parity": "exact",
-      "status": "unverified",
-      "assignedTask": "M16.8"
+      "test": "TestM261FollowUnfollowAndNoAccountIDLeak,TestM261FollowSurvivesHandleRenameAndSnapshotMarksFollowedPlayer",
+      "status": "pass",
+      "notes": "M34.4 reconciliation (2026-08-19): the followResult reply is read back off the socket at engine/m26_1_test.go:256, including the no-account-ID-leak and rename-survival claims."
     },
     {
       "id": "proto.msg.highScoreName",

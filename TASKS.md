@@ -8455,6 +8455,104 @@ can guess.
   back. No client change; the session gate is enough, since no browser reads
   either path unnamed.
 
+- [x] **M34.4 — the twenty claim rows that certification left behind.** Filed
+  2026-08-19 by a `make certify` run: every clean gate passed (npm ci, the
+  pinned Playwright engines, the client build, `npm test`, go build/vet, and
+  `go test`/`-race` with the real-browser family required), and the verdict was
+  still NOT CERTIFIED on one blocker — 20 of 440 manifest rows still
+  `unverified`. Eighteen are task-claim rows for work that landed AFTER M16.20's
+  sweep closed the M0–M15 set (M18.17, M19.2a, M22.4, M23.1, M23.1a, M26.1,
+  M27.1, M28.1, M31.1, M32.1, M33.1, M33.2, M33.3, M34.1, M34.1a, M34.2,
+  M34.3a, M34.3b); two are the `follow`/`followResult` protocol rows M16.8
+  assigned to itself and never closed. None of them is a missing test: each
+  task shipped with its own `mXX_Y_test.go`, and the rows were simply never
+  moved off the deriver's default stamp — the scaffold stamps every new row
+  `unverified` by construction (`mergeParityRow`), so a task that does not
+  curate its own row leaves one behind. This is bookkeeping debt, not a
+  parity gap, and it is the only thing standing between the tree and a
+  certified verdict.
+
+  Note what the row-per-task derivation means for THIS task: ticking the box
+  below derives a `task.M34.4` row, so the sweep has to close its own claim
+  too — cited to the manifest tests that check the work.
+
+  DoD: every row named above is `pass` with a `test` naming evidence that
+  genuinely certifies that task's DoD — read the DoD in this file and read the
+  test before citing it, since `report.go` only checks the string is non-empty
+  and `TestParityManifest` only checks a `Test*` name is not stale. A row whose
+  evidence is a node suite cites the suite (the M21.2/M21.5/`mode.title`
+  precedent); a row whose evidence no longer exists says so in its notes rather
+  than citing something adjacent. `TestParityManifest`,
+  `TestParityManifestIsCanonical` and `TestM1620aScaffoldKeepsTheRowsItDestroyed`
+  green — the last of these proves the hand edits round-trip through the
+  scaffold byte for byte — and `make certify` reports CERTIFIED.
+
+  **Done 2026-08-19.** All 20 rows closed; the manifest is 423 `pass`, 12
+  `out-of-scope`, 5 `deviation`, zero `unverified`. Three rows needed more than
+  a lookup:
+  - **M19.2a** cites `TestM192ColorPickerJourney` rather than the
+    `color_picker_journey.test.mjs` it edited, because that Go test is what
+    execs the script (`m19_2_browser_test.go:116`) — the Go name is the one the
+    staleness check can hold.
+  - **M23.1** is client-side by its own DoD, so it cites the node suite
+    `first_time_hints.test.mjs` (which `npm test` runs) plus
+    `TestM169BrowserCanvasGoldens` for the bottom row it writes.
+  - **M33.1** cites SIX of the seven suites its filing names. The seventh,
+    `TestM232WelcomeWorldThreeBrowserJourney`, was deleted with the WELCOME
+    world by `918c9da` (owner instruction 2026-08-11) along with M23.2's and
+    M23.3's own task boxes; citing an adjacent suite would have been the
+    dishonest fix, so the row says where it went. The staleness check found
+    this — it went red on the name before this paragraph was written, which is
+    the fail-closed behaviour M16.20 proved deliberately.
+
+  Filed **M34.5** on the way through: the same sweep looked for what certifies
+  M33.2 and found `m332ColdVisitAllowed` still excusing
+  `first_visit_journey.test.mjs`, a script `918c9da` deleted. Check B iterates
+  the files on disk, so a deleted one is never reached and its allowlist entry
+  is never evaluated — an unfalsifiable excuse, which is the one thing M33.2
+  exists to forbid.
+
+- [ ] **M34.5 — an allowlist entry outlived the file it excuses.** Filed
+  2026-08-19 by M34.4's evidence sweep, which went looking for what certifies
+  M33.2 and found a name with nothing behind it. `m332ColdVisitAllowed`
+  (`engine/m33_2_test.go:42-44`) exempts `first_visit_journey.test.mjs` from
+  check B's `markProfileWarm` requirement, on the grounds that a fresh guest's
+  first visit is its subject. That script was deleted by `918c9da` (owner
+  instruction 2026-08-11) along with the WELCOME world it was about, and the
+  entry stayed.
+
+  Nothing is red today, and the reason is exactly the reason this is worth
+  filing: check B iterates `web/test/*.test.mjs` **on disk**, so a deleted file
+  is never reached and its allowlist entry is never evaluated. The entry is
+  therefore unfalsifiable — the one property M33.2 was written to deny its
+  subjects. Compare its sibling: `m332DefaultWorldAllowed` carries a comment
+  saying its allowlist is consulted *before* the skip precisely so the entry's
+  staleness is checked, and check A honours that by looking the file up as it
+  walks. Check B has no equivalent, and cannot get one by accident.
+
+  Two live consequences, in the order they are likely to bite:
+  1. A future suite that happens to be named `first_visit_journey.test.mjs` —
+     a plausible name for a first-visit journey somebody re-adds — is silently
+     exempted from the check, inheriting an excuse written for a script it has
+     no relationship to.
+  2. The entry documents a claim about the product ("a fresh guest's first
+     visit opens WELCOME") that `918c9da` deliberately reversed. Read as
+     documentation, which is what an allowlist reason is, it is now false.
+
+  DoD: `m332ColdVisitAllowed` names only scripts that exist. Add the staleness
+  check check B is missing — an allowlist key with no file in `web/test` fails
+  the test naming the key, in the same voice as the existing failures — and
+  prove it fails closed by adding a bogus key, watching it redden, and removing
+  it. Then drop the dead `first_visit_journey.test.mjs` entry; if that empties
+  the map, keep the map and its comment rather than deleting the seam, since
+  the next cold-visit suite needs it. Consider the same check for
+  `m332DefaultWorldAllowed`, whose entry is live today but rots the same way.
+  Leave the historical prose alone: `TASKS.md:7882` and the comment in
+  `web/test/lib/canvas.mjs:588` mention the script as a record of what was true
+  when they were written, and this file does not rewrite its own history.
+  `cd engine && go build ./... && go test ./...` green; no client change, so
+  rule 3's browser run is not owed.
+
 ## M14 — Rearchitecting for the service ZZTMMO is becoming
 
 Filed 2026-07-12 from a whole-repo review (NOTES.md): three structural debts
