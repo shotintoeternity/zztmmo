@@ -1,3 +1,15 @@
+// The HTTP surface beside the WebSocket: health and metrics for the operator,
+// the world search and museum proxies, account preferences, replay postcards,
+// and the static file server that hands the browser its client.
+//
+// SPAFileServer is the one to know about — it serves the built client and falls
+// back to index.html so a deep link into the app reaches the router instead of
+// a 404.
+//
+// Long-running work started here (world generation, above all) does not block a
+// request: it becomes a generationJob the client polls, so a two-minute dream
+// does not sit on an open connection.
+
 package zztgo
 
 import (

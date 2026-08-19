@@ -1,3 +1,17 @@
+// Collaborative world editing: several people in one world's editor at once.
+//
+// An EditorSession sits beside the RoomManager for a world and tracks who is
+// editing, what each of them may touch, and who currently holds a lease on a
+// board. Leases are how two cursors on the same board avoid writing over each
+// other; read-only membership is how a spectator or a moderated account gets to
+// watch without editing.
+//
+// Membership survives a dropped connection. EnterResuming lets a reconnecting
+// client reclaim its identity with a token rather than reappearing as a
+// stranger, which matters because a refresh mid-edit is common and losing your
+// lease to yourself is maddening. The converted single-player editor in
+// editor.go is untouched by any of this.
+
 package zztgo
 
 import (

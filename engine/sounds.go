@@ -1,3 +1,8 @@
+// SOUNDS.PAS, machine-converted by pas2go: ZZT's PC-speaker priority queue and
+// its drum tables. The engine still produces the original note stream, note for
+// note; what changed is the far end, where the browser client synthesizes it
+// instead of a speaker port being toggled. See doc.go.
+
 package zztgo // unit: Sounds
 
 type TDrumData struct {

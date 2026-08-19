@@ -1,3 +1,9 @@
+// OOP.PAS, machine-converted by pas2go: the interpreter for ZZT-OOP, the
+// #-command language every object in a world is scripted in. Community worlds
+// depend on its exact parsing including the way it fails, so a malformed
+// command has to keep misbehaving the way it did in 1991 rather than being
+// diagnosed. See doc.go.
+
 package zztgo // unit: Oop
 
 // interface uses: GameVars

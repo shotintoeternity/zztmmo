@@ -1,3 +1,21 @@
+// World generation: turning a sentence typed by a player into a playable .ZZT.
+//
+// GenerationService runs the pipeline — premise to plan (plan.go), plan to
+// per-board ZWD source from a language model, ZWD to a compiled world
+// (zwd.go), then validation. It is written to survive a model that returns
+// nonsense: a board that will not compile or will not validate is retried, and
+// then stubbed rather than allowed to sink the world around it, which is why
+// generationResume tracks stubs instead of failing the whole run.
+//
+// Nothing here is in the simulation's determinism envelope — a model's output
+// is not reproducible — but everything downstream of it is: the ZWD compiler is
+// deterministic, and the world it produces is an ordinary .ZZT file that the
+// engine cannot distinguish from a 1991 one.
+//
+// The refuse* helpers near the top are the guardrails: generation may not
+// overwrite an occupied world, a world owned by somebody else, or a canonical
+// first-party name.
+
 package zztgo
 
 import (

@@ -1,4 +1,10 @@
-// ZZT ported to Go
+// ZZT.PAS, machine-converted by pas2go: the program entry point, which in the
+// original set up the world-file descriptions and started the game. Run() below
+// is the classic single-player terminal build, still here and still working;
+// the server entry point is cmd/zzt-server. See doc.go.
+//
+// The TODO block below is Ben Hoyt's, describing what the terminal port left
+// unfinished. It is kept as provenance rather than tidied away.
 
 /*
 TODO:

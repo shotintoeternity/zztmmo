@@ -1,3 +1,9 @@
+// GAMEVARS.PAS, machine-converted by pas2go: the world, board and stat records
+// that every other file reads. These layouts are not free to tidy — they mirror
+// the on-disk .ZZT format that serialize.go reads and writes byte for byte, so
+// field order and widths are part of the file format rather than a style
+// choice. Fields ZZTMMO added for multiplayer sit at the end. See doc.go.
+
 package zztgo // unit: GameVars
 
 import "sync"

@@ -1,3 +1,17 @@
+// The wire format between the Go server and the browser client.
+//
+// Every message the client can send and every message the server can push is
+// declared here as a JSON struct, and this file is the single place the two
+// sides agree. The client's mirror of these shapes lives in web/src; changing a
+// field on one side without the other is the failure this file exists to make
+// obvious, and the browser suites under web/test are what catch it.
+//
+// The traffic is deliberately asymmetric. Clients send intent — a keymask, a
+// command byte, a menu choice — and never game state. The server sends what
+// changed: board diffs, HUD updates, sounds, modal events. A client that
+// invents state is wrong by construction, because it has no simulation to
+// invent it from.
+
 package zztgo
 
 import (

@@ -1,4 +1,7 @@
-// Serialization functions
+// The Turbo Pascal on-disk representations: length-prefixed strings, RLE tiles
+// and fixed-width records, read and written byte for byte so a world saved here
+// still opens in the 1991 executable and vice versa. Not a ZZT source unit; the
+// layouts it encodes are declared in gamevars.go. See doc.go.
 
 package zztgo
 

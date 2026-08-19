@@ -1,5 +1,8 @@
 package zztgo
 
+// VIDEO.PAS in origin, but the one converted unit deliberately rewritten rather
+// than ported: upstream it drove a terminal directly, and a server cannot.
+//
 // video.go is the headless screen buffer. Every Video* call the simulation
 // makes lands here — in the 80x25 e.Screen array, never in a terminal. The
 // tcell presenter (present_tcell.go) reads e.Screen and draws it, and only when

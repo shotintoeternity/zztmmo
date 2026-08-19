@@ -1,3 +1,9 @@
+// TXTWIND.PAS, machine-converted by pas2go: the text-window widget behind
+// ZZT's blue bordered panels — scrolls, help files, prompts and file pickers.
+// Kept intact so paging, the selection cursor and line wrapping land exactly
+// where they used to; the browser client redraws this output rather than
+// reimplementing the widget. See doc.go.
+
 package zztgo // unit: TxtWind
 
 import (

@@ -1,3 +1,13 @@
+// The Turbo Pascal runtime routines the converted units call: string helpers,
+// Random, Delay, and the PC-speaker stubs. This is not a ZZT source unit — it
+// exists so the converted code can compile unchanged, which is what keeps the
+// diff against the Pascal readable.
+//
+// The `// TODO` stubs below are Ben Hoyt's, and they are kept: Sound and
+// NoSound do nothing because the terminal build never implemented them. ZZTMMO
+// does not go through here for audio — the engine emits the note stream and the
+// browser client synthesizes it. See doc.go.
+
 package zztgo
 
 import (

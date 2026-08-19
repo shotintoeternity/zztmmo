@@ -1,3 +1,22 @@
+// The WebSocket server: everything between a browser and a running world.
+//
+// A WebSocketServer owns a set of WorldInstances, each one a hosted world with
+// its own RoomManager, its own tick and the lock that serializes access to it.
+// Gameplay never runs on a connection's goroutine — a client goroutine parses a
+// message and hands it to the instance, and the instance's tick is the only
+// thing that touches engine state. That is what keeps the simulation
+// deterministic while several sockets talk to it at once.
+//
+// A webSocketClient is one connection: a write loop behind a bounded queue. A
+// client that falls far enough behind is disconnected rather than stalling the
+// world everybody else is standing in — and disconnected rather than having its
+// messages dropped, because a client that misses a diff is left drawing tiles
+// the world no longer has.
+//
+// Instances are evicted when nothing is left holding them — players, detached
+// reconnects, spectators, title subscribers or a pending autosave — counted in
+// ticks rather than wall-clock so the rule stays deterministic and testable.
+
 package zztgo
 
 import (

@@ -1,3 +1,13 @@
+// INPUT.PAS, machine-converted by pas2go. Upstream this read a DOS keyboard;
+// in ZZTMMO the server sets the same globals from keymasks sent by browser
+// clients, so the simulation below cannot tell the difference.
+//
+// InputDeltaX and InputDeltaY are the trap in this file. They are the player's
+// movement for the tick, and they are ALSO reused as throwaway out-params for
+// TouchProc calls in elements.go, which take a delta pair they do not use.
+// Renaming or repurposing them breaks call sites that look unrelated. See
+// doc.go.
+
 package zztgo // unit: Input
 
 import (

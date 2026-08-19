@@ -1,3 +1,9 @@
+// GAME.PAS, machine-converted by pas2go, and the largest of the converted
+// files: the game loop, world load and save, board transitions, the sidebar,
+// death and respawn, and the title-screen flow. Work for several players on
+// one board is added around the original procedures instead of replacing them,
+// so the shape of the 1991 control flow is still visible. See doc.go.
+
 package zztgo // unit: Game
 
 import (

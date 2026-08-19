@@ -1,3 +1,9 @@
+// EDITOR.PAS, machine-converted by pas2go. This is ZZT's original
+// single-player world editor, kept Pascal-shaped on purpose. ZZTMMO's
+// collaborative editing is a layer above it in editor_session.go rather than a
+// rewrite of this file, so the two can disagree about nothing. See doc.go for
+// why converted code is left reading the way it reads.
+
 package zztgo // unit: Editor
 
 import (

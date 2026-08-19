@@ -1,3 +1,15 @@
+// Saving and restoring a shared world.
+//
+// A snapshot is an ordinary .ZZT file plus a small JSON sidecar. That split is
+// the point: the world a party saves is still a real ZZT world that opens in
+// the 1991 executable, and the things ZZT had no concept of — which account
+// saved it, per-player state — live beside it rather than corrupting the
+// format.
+//
+// SanitizeSaveName is a security boundary, not a formatting helper. Save names
+// arrive from clients, and snapshotPath refuses anything that would escape the
+// configured saves directory.
+
 package zztgo
 
 import (

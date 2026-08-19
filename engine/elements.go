@@ -1,3 +1,10 @@
+// ELEMENTS.PAS, machine-converted by pas2go. Every element's tick, touch and
+// draw behavior lives here, which makes this the file where fidelity is won or
+// lost: the evaluation order, the off-by-ones and the surprising interactions
+// below are the 1991 ones, ported rather than corrected and marked
+// `// ZZT-QUIRK:` where a reader would otherwise assume a bug. Multiplayer
+// behavior is added alongside the converted procedures. See doc.go.
+
 package zztgo // unit: Elements
 
 // interface uses: GameVars

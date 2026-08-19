@@ -1,3 +1,20 @@
+// RoomManager: one hosted world, and the players standing in it.
+//
+// This is the layer that turns single-player ZZT into something several people
+// can occupy. The engine below knows about one player; a RoomManager keeps a
+// Room per board, tracks who is on which, and advances only the boards that
+// have somebody on them — an empty board is frozen, which is both faithful to
+// ZZT (where only the current board ticks) and what makes a large world
+// affordable to host.
+//
+// PlayerID exists because engine stat ids are not stable: removing a stat
+// shifts the ones after it, so anything that has to remember a player across
+// ticks holds a PlayerID rather than an index.
+//
+// This type does no locking of its own. The caller — the WorldInstance in
+// websocket_server.go — holds the instance lock around every entry point here,
+// which is what makes the tick a single-threaded region.
+
 package zztgo
 
 import (
