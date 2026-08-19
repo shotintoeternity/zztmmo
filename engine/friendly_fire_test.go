@@ -10,6 +10,9 @@ package zztgo // unit: the friendly-fire policy, from the flag to the recording
 //     created lazily: it has to reach a room thawed long after the manager was
 //     built, and a room the player walks into through a passage.
 //  3. A recording has to carry it, because playback rebuilds the manager.
+//  4. The deployment has to be able to SET it. -friendly-fire is the only way
+//     in now, and it has to reach a room that already exists and an instance
+//     made later, not just the field.
 //
 // M30.1 owned all three through the ARENA world, whose identity implied the
 // policy. That world and its tests were deleted on 2026-08-11; the mechanism
@@ -19,6 +22,8 @@ package zztgo // unit: the friendly-fire policy, from the flag to the recording
 
 import (
 	"bytes"
+	"os"
+	"path/filepath"
 	"testing"
 )
 
@@ -174,5 +179,70 @@ func TestFriendlyFireRoundTripsThroughARecording(t *testing.T) {
 		if got := rm.FriendlyFire; got != friendlyFire {
 			t.Errorf("ReplaySession FriendlyFire = %v, want %v", got, friendlyFire)
 		}
+	}
+}
+
+// TestSetFriendlyFireReachesLiveRoomsAndLaterInstances covers surface 4.
+//
+// M30.1 set the policy by world identity at construction, so nothing ever had
+// to change it on a running server. -friendly-fire does: it is applied after
+// NewWebSocketServer has already built the default instance, and hosted worlds
+// are created lazily long afterwards. Assigning RoomManager.FriendlyFire alone
+// reaches neither — ensureRoom copies the flag onto each Engine as the room is
+// made, so a room that already exists keeps the old policy forever.
+func TestSetFriendlyFireReachesLiveRoomsAndLaterInstances(t *testing.T) {
+	server := NewWebSocketServer(testFightWorld(t), 1)
+	if server.FriendlyFire {
+		t.Fatal("NewWebSocketServer must default to co-op (friendly fire off)")
+	}
+
+	// A room built BEFORE the policy is set.
+	server.RoomManager.JoinPlayer(1, 0, 0)
+	room, ok := server.RoomManager.Room(1)
+	if !ok || room == nil || room.Engine == nil {
+		t.Fatal("joining board 1 made no room")
+	}
+	if room.Engine.FriendlyFire {
+		t.Fatal("a fresh room must start with friendly fire off")
+	}
+
+	server.WorldsDir = t.TempDir()
+	if err := os.WriteFile(filepath.Join(server.WorldsDir, "TOWN.ZZT"), committedTownBytes(t), 0644); err != nil {
+		t.Fatalf("seeding worlds dir: %v", err)
+	}
+
+	server.SetFriendlyFire(true)
+
+	if !server.FriendlyFire {
+		t.Error("server.FriendlyFire = false, want true")
+	}
+	if !server.RoomManager.FriendlyFire {
+		t.Error("default instance manager did not take the policy")
+	}
+	if !room.Engine.FriendlyFire {
+		t.Error("a room that already existed did not take the policy")
+	}
+
+	// An instance created after the policy was set inherits it, engine included.
+	inst, err := server.GetOrCreateInstance("TOWN")
+	if err != nil {
+		t.Fatalf("GetOrCreateInstance: %v", err)
+	}
+	if !inst.RoomManager.FriendlyFire {
+		t.Fatal("a later hosted instance did not inherit the policy")
+	}
+	inst.RoomManager.JoinPlayer(1, 0, 0)
+	later, ok := inst.RoomManager.Room(1)
+	if !ok || later == nil || later.Engine == nil {
+		t.Fatal("joining the hosted instance made no room")
+	}
+	if !later.Engine.FriendlyFire {
+		t.Error("a room in a later instance did not take the policy")
+	}
+
+	// And it turns back off everywhere, so a deployment can flip it either way.
+	server.SetFriendlyFire(false)
+	if room.Engine.FriendlyFire || inst.RoomManager.FriendlyFire || later.Engine.FriendlyFire {
+		t.Error("SetFriendlyFire(false) left the policy on somewhere")
 	}
 }

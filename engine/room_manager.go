@@ -1082,6 +1082,22 @@ func (rm *RoomManager) ensureRoom(boardID int16) *Room {
 	return room
 }
 
+// SetFriendlyFire sets the world's projectile policy and pushes it into every
+// room this manager has already made. Assigning the field alone only reaches
+// rooms created afterwards (ensureRoom copies it onto each new Engine), which is
+// fine at boot but silently partial once anybody is playing.
+//
+// The walk runs in sorted board order (roomIDs), so it touches no map in an
+// order that could affect game state — CLAUDE.md rule 2.
+func (rm *RoomManager) SetFriendlyFire(on bool) {
+	rm.FriendlyFire = on
+	for _, boardID := range rm.roomIDs() {
+		if room := rm.rooms[boardID]; room != nil && room.Engine != nil {
+			room.Engine.FriendlyFire = on
+		}
+	}
+}
+
 func (rm *RoomManager) roomIDs() []int16 {
 	ids := make([]int16, 0, len(rm.rooms))
 	for boardID := range rm.rooms {

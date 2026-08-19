@@ -68,6 +68,14 @@ type WebSocketServer struct {
 	// world picker lists them (M5.6). Empty falls back to the loaded world's
 	// directory, then the working directory — the picker's historical behavior.
 	WorldsDir string
+	// FriendlyFire is the deployment's projectile policy for every instance this
+	// server hosts. It is server-owned rather than authored — the same split
+	// RoomManager.WorldIdentity documents — so a downloaded world can never
+	// decide to make a party hostile. Set it through SetFriendlyFire, which also
+	// reaches instances that already exist. cmd/zzt-server sets it from
+	// -friendly-fire; NewWebSocketServer leaves it false, the co-op default every
+	// hosted world has shipped with.
+	FriendlyFire bool
 	// AutosaveEveryTicks, when >0, snapshots every occupied instance every this
 	// many ticks from the tick loop (M13.3). Zero disables. cmd/zzt-server sets it
 	// from -autosave seconds via seconds*1000/tickMillis, so it shares the tick
@@ -2587,6 +2595,38 @@ func (s *WebSocketServer) CloseReplays() {
 	}
 }
 
+// SetFriendlyFire applies the deployment's projectile policy to this server and
+// to every instance it has already made.
+//
+// Replay and challenge room managers are deliberately not reached: a replay's
+// policy is whatever its recording header stamped (session_record.go), and
+// changing it would make the playback disagree with the run it cites; a
+// challenge run is a solo timed course with nobody to shoot.
+func (s *WebSocketServer) SetFriendlyFire(on bool) {
+	s.mu.Lock()
+	defer s.mu.Unlock()
+	s.FriendlyFire = on
+	if s.RoomManager != nil {
+		s.RoomManager.SetFriendlyFire(on)
+	}
+	for _, name := range s.instanceNamesLocked() {
+		if inst := s.Instances[name]; inst != nil && inst.RoomManager != nil {
+			inst.RoomManager.SetFriendlyFire(on)
+		}
+	}
+}
+
+// instanceNamesLocked returns the instance keys in sorted order so any walk over
+// them is deterministic. Callers must hold s.mu.
+func (s *WebSocketServer) instanceNamesLocked() []string {
+	names := make([]string, 0, len(s.Instances))
+	for name := range s.Instances {
+		names = append(names, name)
+	}
+	sort.Strings(names)
+	return names
+}
+
 func (s *WebSocketServer) GetOrCreateInstance(worldName string) (*WorldInstance, error) {
 	s.mu.Lock()
 	defer s.mu.Unlock()
@@ -2607,6 +2647,7 @@ func (s *WebSocketServer) GetOrCreateInstance(worldName string) (*WorldInstance,
 	dir := s.worldsDir()
 
 	rm := NewRoomManagerForWorld(world, worldName)
+	rm.FriendlyFire = s.FriendlyFire
 	rm.HighScorePath = filepath.Join(dir, worldName+".HI")
 	rm.LoadHighScores()
 
@@ -2823,6 +2864,7 @@ func (s *WebSocketServer) hostGeneratedWorld(name string, world TWorld, private 
 		return fmt.Errorf("generated world %q is already occupied", safe)
 	}
 	rm := NewRoomManagerForWorld(world, safe)
+	rm.FriendlyFire = s.FriendlyFire
 	inst := &WorldInstance{
 		Name:           safe,
 		SourceWorld:    cloneWorld(world),
