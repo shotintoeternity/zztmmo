@@ -507,7 +507,10 @@ func NewEngine() *Engine {
 		ActiveInput:        TcellInput{},
 		Players:            make(map[int16]*PlayerState),
 		ActingPlayerStatId: -1,
-		FriendlyFire:       false,
+		// Friendly fire is the default everywhere, engine template included
+		// (owner 2026-08-19). A deployment opts out with -friendly-fire=false;
+		// nothing else, and no world file, gets a say.
+		FriendlyFire: true,
 	}
 }
 

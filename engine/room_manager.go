@@ -165,10 +165,17 @@ func NewRoomManagerForWorld(world TWorld, identity string) *RoomManager {
 		safe = ""
 	}
 	rm := &RoomManager{
-		world:               world,
-		rooms:               make(map[int16]*Room),
-		players:             make(map[PlayerID]*roomPlayer),
-		WorldIdentity:       safe,
+		world:         world,
+		rooms:         make(map[int16]*Room),
+		players:       make(map[PlayerID]*roomPlayer),
+		WorldIdentity: safe,
+		// On by default, like NewEngine and NewWebSocketServer (owner
+		// 2026-08-19), so no construction path starts a world in co-op by
+		// accident. The two callers that must not inherit it — replay playback
+		// and ReplaySession — assign the recording header's value straight
+		// after, because a replay has to honour the policy its run was recorded
+		// under rather than today's default.
+		FriendlyFire:        true,
 		pendingScores:       make(map[PlayerID]QuitResult),
 		pendingPlayerEvents: make(map[PlayerID][]Event),
 	}
