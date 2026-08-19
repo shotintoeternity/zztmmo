@@ -38,9 +38,17 @@ certify:
 # The opt-in real-browser family, run on purpose (task M33.2). This is what
 # CLAUDE.md rule 3 means by "run the browser suites": it builds the client the
 # suites load — a stale web/dist is the M18.0a failure, and the suites cannot
-# tell it from a working one — and then runs the Go tests with the browser
-# family requested rather than skipped. Ten minutes, and the price of moving a
-# menu three journeys walk. `make certify` still runs everything else.
+# tell it from a working one — runs the client's own node unit suite, and then
+# runs the Go tests with the browser family requested rather than skipped. Ten
+# minutes, and the price of moving a menu three journeys walk. `make certify`
+# still runs everything else.
+#
+# `npm test` is in here because rule 3 sends client work to this target and to
+# nothing else, and 918c9da shipped with it unrun: that commit deleted exports
+# and filters under web/src, ran this family green, and left two node suites
+# importing names that no longer existed — red in `make parity` and `make
+# certify`, which is where it was found. It sits before the Go tests on
+# purpose: it fails in seconds, and the family it guards costs ten minutes.
 #
 # -timeout is not decoration: with the family running, the engine package takes
 # most of ten minutes, and `go test`'s default IS ten minutes — M33.1's run
@@ -50,6 +58,7 @@ certify:
 # afternoon (M33.3 carries the same fix to the certification run).
 browser:
 	cd engine/web && npm run build
+	cd engine/web && npm test
 	cd engine && ZZT_BROWSER=1 go test -timeout 30m -count=1 ./...
 
 # Re-render the report from the current manifest without running the gates.
