@@ -25,6 +25,7 @@ You need a ZZTMMO server. From a checkout of that repository:
 
 ```sh
 cd engine
+cp ../fixtures/TOWN.ZZT .
 go build -o zzt-server ./cmd/zzt-server
 ./zzt-server -addr 127.0.0.1:8080 -world TOWN -help . -web /path/to/zztmmo-3d/dist
 ```
@@ -88,7 +89,7 @@ text windows. `npm run build` type-checks and bundles.
 ## Not here yet
 
 Sound, chat, the world picker, the editor, watching and replays, and the
-challenge course. All of those exist in the 2D client, and this one connects
+challenge course. A reload joins as a new player: resume tokens are not kept. All of those exist in the 2D client, and this one connects
 to the same server, so nothing stops them being added.
 
 ## Credits
