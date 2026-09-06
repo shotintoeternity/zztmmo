@@ -1,0 +1,21 @@
+{
+  "name": "zztmmo-3d",
+  "private": true,
+  "type": "module",
+  "version": "0.1.0",
+  "scripts": {
+    "dev": "vite --host 127.0.0.1",
+    "build": "tsc && vite build",
+    "test": "node test/classify.test.mjs && node test/input.test.mjs && node test/textwindow.test.mjs",
+    "preview": "vite preview --host 127.0.0.1"
+  },
+  "dependencies": {
+    "three": "0.185.1"
+  },
+  "devDependencies": {
+    "@types/three": "0.185.4",
+    "esbuild": "^0.28.0",
+    "typescript": "^5.8.3",
+    "vite": "^8.2.2"
+  }
+}
