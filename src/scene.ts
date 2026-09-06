@@ -19,8 +19,14 @@ import { hexRGB, paletteRGB } from "./palette";
 import { BOARD_COLS, COLS, ROWS } from "./overlay";
 import type { PlayerSnapshot, ScreenCell } from "./protocol";
 
-/** A sprite card keeps the 8:14 glyph aspect, so it stands taller than a tile is wide. */
-export const SPRITE_HEIGHT = CELL_H / CELL_W;
+/**
+ * A sprite card is one tile tall. A card with no background keeps the 8:14
+ * glyph aspect, so it is narrower than its tile; a card with a background (a
+ * player, a letter of text) fills the tile's width so neighbours read as a
+ * row. Taller cards looked grand and hid the row behind them.
+ */
+export const SPRITE_HEIGHT = 1;
+export const SPRITE_WIDTH = CELL_W / CELL_H;
 const FLOOR_DOT = 0xfa;
 const WATER_DEPTH = -0.08;
 
@@ -174,6 +180,12 @@ export type SceneBuildOptions = {
   roster: readonly PlayerSnapshot[];
   /** A 0-based screen cell whose sprite is not drawn: the viewer's own, in first person. */
   hide: { x: number; y: number } | null;
+  /**
+   * Cell indices (y * COLS + x) that are text drawn at the bottom of the screen
+   * instead: they become a patch of floor in the sign's color, so the sign is
+   * still somewhere.
+   */
+  textCells: ReadonlySet<number>;
 };
 
 export class BoardScene {
@@ -239,7 +251,12 @@ export class BoardScene {
     for (let y = 0; y < ROWS; y += 1) {
       for (let x = 0; x < BOARD_COLS; x += 1) {
         const cell = cells[y * COLS + x];
-        shapes[y * BOARD_COLS + x] = classify(cell.ch, cell.color);
+        const shape = classify(cell.ch, cell.color);
+        if (shape.kind === "sprite" && options.textCells.has(y * COLS + x)) {
+          shapes[y * BOARD_COLS + x] = { ...shape, kind: "floor", opaqueBg: true };
+        } else {
+          shapes[y * BOARD_COLS + x] = shape;
+        }
       }
     }
     const tints = new Map<number, RGB>();
@@ -333,6 +350,7 @@ export class BoardScene {
             const cx = x + 0.5;
             const cz = y + 0.5;
             const center: [number, number, number] = [cx, 0, cz];
+            const half = opaque ? 0.5 : SPRITE_WIDTH / 2;
             cards.quad(
               [center, center, center, center],
               shape.glyph,
@@ -340,7 +358,7 @@ export class BoardScene {
               cardBg,
               opaque,
               SHADE_TOP,
-              [[-0.5, SPRITE_HEIGHT], [0.5, SPRITE_HEIGHT], [0.5, 0], [-0.5, 0]],
+              [[-half, SPRITE_HEIGHT], [half, SPRITE_HEIGHT], [half, 0], [-half, 0]],
             );
             break;
           }

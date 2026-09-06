@@ -4,11 +4,17 @@
 // the pause label are written over the board columns and only their own cells
 // are painted, so the 3D world shows through everywhere else. Two layers: the
 // base (sidebar chrome and HUD counters, which persist) and the top (modals
-// and messages, rebuilt from scratch each time something changes).
+// and messages, rebuilt from scratch each time something changes). In the
+// classic view a third layer underneath draws the board cells themselves, and
+// the overlay becomes the regular ZZTMMO screen.
 
 import { CELL_H, CELL_W, GLYPH_COLS, type Font } from "./font";
 import { paletteColor } from "./palette";
 import type { WriteText } from "./sidebar";
+import type { ScreenCell } from "./protocol";
+
+const CHAR_PLAYER = 0x02;
+const COLOR_PLAYER = 0x1f;
 
 export const COLS = 80;
 export const ROWS = 25;
@@ -21,6 +27,8 @@ type Cell = { ch: number; color: number };
 export class Overlay {
   private readonly base = new Map<number, Cell>();
   private readonly top = new Map<number, Cell>();
+  private board: readonly ScreenCell[] | null = null;
+  private tints = new Map<number, string>();
   private dirty = true;
 
   constructor(private readonly canvas: HTMLCanvasElement) {
@@ -37,6 +45,16 @@ export class Overlay {
   readonly writeTop: WriteText = (x, y, color, text) => {
     this.put(this.top, x, y, color, text);
   };
+
+  /**
+   * setBoard shows (or, with null, hides) the board cells under the layers,
+   * with each player's ☻ on their chosen color, as the 2D client paints it.
+   */
+  setBoard(cells: readonly ScreenCell[] | null, tints: Map<number, string>) {
+    this.board = cells;
+    this.tints = tints;
+    this.dirty = true;
+  }
 
   clearTop() {
     if (this.top.size > 0) {
@@ -69,7 +87,8 @@ export class Overlay {
     ctx.imageSmoothingEnabled = false;
     ctx.clearRect(0, 0, WIDTH, HEIGHT);
     for (let i = 0; i < COLS * ROWS; i += 1) {
-      const cell = this.top.get(i) ?? this.base.get(i);
+      const over = this.top.get(i) ?? this.base.get(i);
+      const cell = over ?? (this.board && i % COLS < BOARD_COLS ? this.board[i] : undefined);
       if (!cell) {
         continue;
       }
@@ -77,7 +96,8 @@ export class Overlay {
       const y = Math.floor(i / COLS) * CELL_H;
       const fg = cell.color & 0x0f;
       const bg = (cell.color >> 4) & 0x0f;
-      ctx.fillStyle = paletteColor(bg);
+      const tint = !over && cell.ch === CHAR_PLAYER && cell.color === COLOR_PLAYER ? this.tints.get(i) : undefined;
+      ctx.fillStyle = tint ?? paletteColor(bg);
       ctx.fillRect(x, y, CELL_W, CELL_H);
       const col = cell.ch % GLYPH_COLS;
       const row = Math.floor(cell.ch / GLYPH_COLS);

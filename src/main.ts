@@ -5,7 +5,7 @@
 // says is there, only with depth. When something looks wrong the question is
 // what the server sent, not what this file decided.
 //
-// Query parameters: ?world=TOWN&name=You&color=%23ff8800&view=chase&board=1
+// Query parameters: ?world=TOWN&name=You&color=%23ff8800&view=overhead&board=1
 
 import "./style.css";
 import { CameraRig, VIEW_MODES, type ViewMode } from "./camera";
@@ -35,6 +35,7 @@ import {
 } from "./protocol";
 import { BoardScene } from "./scene";
 import { drawSidebar, sidebarClearLine, updateSidebar } from "./sidebar";
+import { boardText, groupSigns, nearestSigns, type BoardText, type SignGroup } from "./text_runs";
 
 const params = new URLSearchParams(window.location.search);
 const worldName = params.get("world") || "TOWN";
@@ -81,6 +82,10 @@ let announce = "";
 let announceTimer = 0;
 let sceneDirty = true;
 let gameOver = false;
+// The words on the board, drawn at the bottom of the screen in the 3D views.
+let text: BoardText = { signs: [], message: null };
+let signGroups: SignGroup[] = [];
+let textCells = new Set<number>();
 
 type PendingScroll = { title: string; lines: string[]; statId: number };
 let scrollQueue: PendingScroll[] = [];
@@ -420,11 +425,80 @@ function writeViewLabel() {
   overlay.writeBase(71, 17, 0x1e, rig.mode.padEnd(8, " "));
 }
 
+// applyView settles everything that depends on the camera mode. The classic
+// view is the text screen: the board is drawn by the overlay and the 3D
+// canvas is hidden underneath it.
+function applyView() {
+  writeViewLabel();
+  glCanvas.style.visibility = rig.mode === "classic" ? "hidden" : "";
+  if (rig.mode !== "classic") {
+    overlay.setBoard(null, new Map());
+  }
+  sceneDirty = true;
+}
+
+function playerTints(): Map<number, string> {
+  const tints = new Map<number, string>();
+  for (const player of roster) {
+    if (typeof player.color === "string" && /^#[0-9a-fA-F]{6}$/.test(player.color)) {
+      tints.set((player.y - 1) * COLS + (player.x - 1), player.color);
+    }
+  }
+  return tints;
+}
+
+// refreshText re-reads the board's words. In a 3D view they leave the scene
+// and are written along the bottom of the screen: the board message on row 24,
+// where ZZT puts it, and the nearest signs on the rows above.
+function refreshText() {
+  if (rig.mode === "classic") {
+    text = { signs: [], message: null };
+    signGroups = [];
+    textCells = new Set();
+    return;
+  }
+  text = boardText(cells, COLS, BOARD_COLS, ROWS);
+  signGroups = groupSigns(text.signs, COLS);
+  const next = new Set<number>();
+  for (const run of text.signs) {
+    for (const i of run.cells) next.add(i);
+  }
+  if (text.message) {
+    for (const i of text.message.cells) next.add(i);
+  }
+  textCells = next;
+}
+
+function writeBoardText() {
+  if (rig.mode === "classic") {
+    return;
+  }
+  // The nearest signs, as many as fit in the four rows above the message line.
+  const lines: { text: string; color: number }[] = [];
+  for (const group of nearestSigns(signGroups, myX - 1, myY - 1)) {
+    if (lines.length + group.lines.length > 4) {
+      if (lines.length === 0) {
+        for (const line of group.lines.slice(0, 4)) lines.push({ text: line, color: group.color });
+      }
+      break;
+    }
+    for (const line of group.lines) lines.push({ text: line, color: group.color });
+  }
+  lines.forEach((line, i) => {
+    const t = line.text.slice(0, BOARD_COLS);
+    overlay.writeTop(Math.floor((BOARD_COLS - t.length) / 2), 24 - lines.length + i, line.color, t);
+  });
+  if (text.message && !chatLine) {
+    overlay.writeTop(text.message.x, text.message.y, text.message.color, text.message.text);
+  }
+}
+
 function redrawTop() {
   overlay.clearTop();
   if (announce) {
     overlay.writeTop(0, 0, 0x4f, announce.slice(0, 60).padEnd(60, " "));
   }
+  writeBoardText();
   if (chatLine) {
     overlay.writeTop(0, 24, 0x1e, chatLine.slice(0, 60).padEnd(60, " "));
   }
@@ -483,8 +557,7 @@ function handleKeyDown(event: KeyboardEvent) {
     event.preventDefault();
     stopHeldInput();
     rig.cycle();
-    writeViewLabel();
-    sceneDirty = true;
+    applyView();
     return;
   }
   if (event.repeat && !isMovementKey(event.code)) {
@@ -583,10 +656,21 @@ function frame(now: number) {
   if (scene && font) {
     const hide = rig.mode === "first" && myX > 0 ? { x: myX - 1, y: myY - 1 } : null;
     const hideKey = hide ? `${hide.x},${hide.y}` : "";
+    if (rig.mode === "classic") {
+      if (sceneDirty) {
+        overlay.setBoard(cells, playerTints());
+        sceneDirty = false;
+      }
+      overlay.draw(font);
+      window.requestAnimationFrame(frame);
+      return;
+    }
     if (sceneDirty || hideKey !== lastHide) {
-      scene.build(cells, { roster, hide });
+      refreshText();
+      scene.build(cells, { roster, hide, textCells });
       sceneDirty = false;
       lastHide = hideKey;
+      redrawTop();
     }
     rig.update(dt, myX - 0.5, myY - 0.5);
     const fog = rig.fog();
@@ -601,7 +685,7 @@ async function start() {
   font = await loadFont();
   scene = new BoardScene(glCanvas, font);
   drawSidebar(overlay.writeBase);
-  writeViewLabel();
+  applyView();
   new ResizeObserver(resize).observe(screenEl);
   resize();
   setNotice(`Connecting to ${worldName}...`);
