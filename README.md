@@ -11,8 +11,10 @@ It speaks the same WebSocket protocol, receives the same cells, and draws them
 as a world instead of a text screen. Nothing in the main repository changes,
 and the server never learns which client you are using.
 
-Every square becomes what its glyph says it is. A `▓` wall is a block with
-yellow `▓` on every face. A `☻` is a white smiley on a blue card that always
+Every square becomes what its glyph says it is, at the glyph's true
+proportions: a text cell is 8 pixels wide and 14 tall, so a tile is 1 wide and
+1.75 deep, a wall is 1.75 tall, and a card is 1 by 1.75, and no glyph is ever
+stretched. A `▓` wall is a block with yellow `▓` on every face. A `☻` is a white smiley on a blue card that always
 faces you. A fake wall looks exactly like a wall, because it is drawn with the
 wall's glyph, which is the joke working. Other players stand on the board as
 their own cards, in the color they picked.
@@ -70,11 +72,12 @@ ZZT's own text windows over the 3D view.
   does, with depth.
 - **classic** is the regular ZZTMMO screen: the board drawn flat as text.
 
-In the 3D views the words on a board leave the world and are written along
-the bottom of the screen instead: the board message on the bottom row, where
-ZZT puts it, and the nearest signs (text elements, read across or downwards)
-on the rows above, in their own colors. The sign's tiles stay behind as a
-patch of floor in its color, so you can still see where it was.
+In the 3D views the game's message line, the text ZZT writes over the bottom
+row of the board when you touch something, is written on the bottom row of the
+screen instead, where ZZT puts it. Signs are part of the board and stay in the
+world.
+
+![First person, meeting a lion](docs/first.png)
 
 ![A scroll over the board](docs/scroll.png)
 
@@ -89,8 +92,9 @@ patch of floor in its color, so you can still see where it was.
 - `src/scene.ts` rebuilds the board geometry when cells change and draws it
   through one pair of shaders that read the CP437 font atlas: a texel is
   foreground where the glyph has ink and background elsewhere.
-- `src/text_runs.ts` finds the signs and the board message in the cells so
-  the 3D views can write them at the bottom of the screen. Pure and tested.
+- `src/text_runs.ts` finds the board message (and the signs) in the cells so
+  the 3D views can write the message at the bottom of the screen. Pure and
+  tested.
 - `src/camera.ts` is the five views. `src/overlay.ts`, `src/sidebar.ts`,
   `src/textwindow.ts` and `src/modals.ts` are the 80x25 text layer on top.
 

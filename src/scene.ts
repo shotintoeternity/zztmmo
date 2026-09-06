@@ -20,13 +20,13 @@ import { BOARD_COLS, COLS, ROWS } from "./overlay";
 import type { PlayerSnapshot, ScreenCell } from "./protocol";
 
 /**
- * A sprite card is one tile tall. A card with no background keeps the 8:14
- * glyph aspect, so it is narrower than its tile; a card with a background (a
- * player, a letter of text) fills the tile's width so neighbours read as a
- * row. Taller cards looked grand and hid the row behind them.
+ * A text cell is 8 pixels wide and 14 tall, and the world keeps that ratio
+ * everywhere so a glyph is never stretched: a tile is 1 wide and 1.75 deep, a
+ * wall is 1.75 tall, and a sprite card is 1 wide and 1.75 tall. Seen from
+ * straight above, the board has exactly the proportions of the text screen.
  */
-export const SPRITE_HEIGHT = 1;
-export const SPRITE_WIDTH = CELL_W / CELL_H;
+export const TILE_DEPTH = CELL_H / CELL_W;
+export const SPRITE_HEIGHT = TILE_DEPTH;
 const FLOOR_DOT = 0xfa;
 const WATER_DEPTH = -0.08;
 
@@ -120,10 +120,13 @@ class QuadBuffer {
    * quad appends four vertices in top-left, top-right, bottom-right,
    * bottom-left order, textured with one glyph.
    */
-  quad(points: [number, number, number][], glyph: number, fg: RGB, bg: RGB, opaque: boolean, shade: number, corners?: [number, number][]) {
-    const u0 = (glyph % GLYPH_COLS) / GLYPH_COLS;
+  quad(points: [number, number, number][], glyph: number, fg: RGB, bg: RGB, opaque: boolean, shade: number, corners?: [number, number][], span: [number, number] = [0, 1]) {
+    // span clips the glyph horizontally (fractions of its width), for a face
+    // wider than one glyph that shows a second, partial one.
+    const g0 = (glyph % GLYPH_COLS) / GLYPH_COLS;
     const v0 = Math.floor(glyph / GLYPH_COLS) / GLYPH_ROWS;
-    const u1 = u0 + 1 / GLYPH_COLS;
+    const u0 = g0 + span[0] / GLYPH_COLS;
+    const u1 = g0 + span[1] / GLYPH_COLS;
     const v1 = v0 + 1 / GLYPH_ROWS;
     const uv = [u0, v0, u1, v0, u1, v1, u0, v1];
     for (let i = 0; i < 4; i += 1) {
@@ -166,7 +169,11 @@ const SHADE_NORTH = 0.58;
 
 const FLOOR_BG: RGB = [0.03, 0.03, 0.04];
 const FLOOR_DOT_FG: RGB = [0.17, 0.17, 0.2];
+// A dark room's unseen squares: ZZT fills them with a grey ▒, and so does the
+// floor here, dimly, so a dark board is a floor you cannot see across rather
+// than nothing at all.
 const FOG_BG: RGB = [0, 0, 0];
+const FOG_FG: RGB = [0.13, 0.13, 0.15];
 const GROUND_BG: RGB = [0.012, 0.012, 0.018];
 const RIM_TOP: RGB = [0.22, 0.22, 0.26];
 const RIM_SIDE: RGB = [0.14, 0.14, 0.17];
@@ -181,9 +188,9 @@ export type SceneBuildOptions = {
   /** A 0-based screen cell whose sprite is not drawn: the viewer's own, in first person. */
   hide: { x: number; y: number } | null;
   /**
-   * Cell indices (y * COLS + x) that are text drawn at the bottom of the screen
-   * instead: they become a patch of floor in the sign's color, so the sign is
-   * still somewhere.
+   * Cell indices (y * COLS + x) of the board message, which is written at the
+   * bottom of the screen instead and would otherwise stand in the world twice.
+   * They are drawn as plain floor.
    */
   textCells: ReadonlySet<number>;
 };
@@ -253,7 +260,7 @@ export class BoardScene {
         const cell = cells[y * COLS + x];
         const shape = classify(cell.ch, cell.color);
         if (shape.kind === "sprite" && options.textCells.has(y * COLS + x)) {
-          shapes[y * BOARD_COLS + x] = { ...shape, kind: "floor", opaqueBg: true };
+          shapes[y * BOARD_COLS + x] = { ...shape, kind: "empty", opaqueBg: false };
         } else {
           shapes[y * BOARD_COLS + x] = shape;
         }
@@ -286,15 +293,16 @@ export class BoardScene {
         const bg = paletteRGB(shape.bg);
         const x0 = x;
         const x1 = x + 1;
-        const z0 = y;
-        const z1 = y + 1;
+        const z0 = y * TILE_DEPTH;
+        const z1 = (y + 1) * TILE_DEPTH;
+        const zm = z0 + 1; // one glyph's width along a side face
 
         switch (shape.kind) {
           case "empty":
             solid.quad([[x0, 0, z0], [x1, 0, z0], [x1, 0, z1], [x0, 0, z1]], FLOOR_DOT, FLOOR_DOT_FG, FLOOR_BG, true, SHADE_TOP);
             break;
           case "fog":
-            solid.quad([[x0, 0, z0], [x1, 0, z0], [x1, 0, z1], [x0, 0, z1]], 0x20, BLACK, FOG_BG, true, SHADE_TOP);
+            solid.quad([[x0, 0, z0], [x1, 0, z0], [x1, 0, z1], [x0, 0, z1]], shape.glyph, FOG_FG, FOG_BG, true, SHADE_TOP);
             break;
           case "floor":
             solid.quad([[x0, 0, z0], [x1, 0, z0], [x1, 0, z1], [x0, 0, z1]], FLOOR_DOT, dim(bg, 0.8), dim(bg, 0.55), true, SHADE_TOP);
@@ -313,23 +321,28 @@ export class BoardScene {
           case "low":
           case "forest":
           case "gate": {
-            const h = shape.height;
+            const h = shape.height * TILE_DEPTH;
             // A block is always opaque: a see-through wall is a hole, and a
             // black background is what the text screen shows there too.
             solid.quad([[x0, h, z0], [x1, h, z0], [x1, h, z1], [x0, h, z1]], shape.glyph, fg, bg, true, SHADE_TOP);
-            if (blockAt(x, y + 1) < h) {
+            if (blockAt(x, y + 1) < shape.height) {
               solid.quad([[x0, h, z1], [x1, h, z1], [x1, 0, z1], [x0, 0, z1]], shape.glyph, fg, bg, true, SHADE_SOUTH);
             }
-            if (blockAt(x, y - 1) < h) {
+            if (blockAt(x, y - 1) < shape.height) {
               solid.quad([[x1, h, z0], [x0, h, z0], [x0, 0, z0], [x1, 0, z0]], shape.glyph, fg, bg, true, SHADE_NORTH);
             }
-            if (blockAt(x + 1, y) < h) {
-              solid.quad([[x1, h, z1], [x1, h, z0], [x1, 0, z0], [x1, 0, z1]], shape.glyph, fg, bg, true, SHADE_EAST);
+            // The east and west faces are a tile deep, 1.75 glyphs wide: a
+            // whole glyph and then three quarters of another, so the pattern
+            // keeps its true proportions instead of stretching to fit.
+            if (blockAt(x + 1, y) < shape.height) {
+              solid.quad([[x1, h, z1], [x1, h, zm], [x1, 0, zm], [x1, 0, z1]], shape.glyph, fg, bg, true, SHADE_EAST);
+              solid.quad([[x1, h, zm], [x1, h, z0], [x1, 0, z0], [x1, 0, zm]], shape.glyph, fg, bg, true, SHADE_EAST, undefined, [0, TILE_DEPTH - 1]);
             }
-            if (blockAt(x - 1, y) < h) {
-              solid.quad([[x0, h, z0], [x0, h, z1], [x0, 0, z1], [x0, 0, z0]], shape.glyph, fg, bg, true, SHADE_WEST);
+            if (blockAt(x - 1, y) < shape.height) {
+              solid.quad([[x0, h, z0], [x0, h, zm], [x0, 0, zm], [x0, 0, z0]], shape.glyph, fg, bg, true, SHADE_WEST);
+              solid.quad([[x0, h, zm], [x0, h, z1], [x0, 0, z1], [x0, 0, zm]], shape.glyph, fg, bg, true, SHADE_WEST, undefined, [0, TILE_DEPTH - 1]);
             }
-            if (h < 1) {
+            if (shape.height < 1) {
               // A short block stands on a visible floor.
               solid.quad([[x0, 0, z0], [x1, 0, z0], [x1, 0, z1], [x0, 0, z1]], FLOOR_DOT, FLOOR_DOT_FG, FLOOR_BG, true, SHADE_TOP);
             }
@@ -348,9 +361,8 @@ export class BoardScene {
               opaque = true;
             }
             const cx = x + 0.5;
-            const cz = y + 0.5;
+            const cz = (y + 0.5) * TILE_DEPTH;
             const center: [number, number, number] = [cx, 0, cz];
-            const half = opaque ? 0.5 : SPRITE_WIDTH / 2;
             cards.quad(
               [center, center, center, center],
               shape.glyph,
@@ -358,7 +370,7 @@ export class BoardScene {
               cardBg,
               opaque,
               SHADE_TOP,
-              [[-half, SPRITE_HEIGHT], [half, SPRITE_HEIGHT], [half, 0], [-half, 0]],
+              [[-0.5, SPRITE_HEIGHT], [0.5, SPRITE_HEIGHT], [0.5, 0], [-0.5, 0]],
             );
             break;
           }
@@ -373,10 +385,11 @@ export class BoardScene {
   // and column 60, and a horizon there reads better than a void. A dark ground
   // plane far past the edge, and a low rim marking the edge itself.
   private surroundings(solid: QuadBuffer) {
-    const G = 80;
+    const G = 120;
+    const D = ROWS * TILE_DEPTH;
     const groundY = -0.02;
-    solid.quad([[-G, groundY, -G], [BOARD_COLS + G, groundY, -G], [BOARD_COLS + G, groundY, ROWS + G], [-G, groundY, ROWS + G]], 0x20, BLACK, GROUND_BG, true, SHADE_TOP);
-    const rim = 0.14;
+    solid.quad([[-G, groundY, -G], [BOARD_COLS + G, groundY, -G], [BOARD_COLS + G, groundY, D + G], [-G, groundY, D + G]], 0x20, BLACK, GROUND_BG, true, SHADE_TOP);
+    const rim = 0.2;
     const rimW = 0.5;
     const box = (x0: number, x1: number, z0: number, z1: number) => {
       solid.quad([[x0, rim, z0], [x1, rim, z0], [x1, rim, z1], [x0, rim, z1]], 0x20, BLACK, RIM_TOP, true, SHADE_TOP);
@@ -386,9 +399,9 @@ export class BoardScene {
       solid.quad([[x0, rim, z0], [x0, rim, z1], [x0, 0, z1], [x0, 0, z0]], 0x20, BLACK, RIM_SIDE, true, SHADE_WEST);
     };
     box(-rimW, BOARD_COLS + rimW, -rimW, 0);
-    box(-rimW, BOARD_COLS + rimW, ROWS, ROWS + rimW);
-    box(-rimW, 0, 0, ROWS);
-    box(BOARD_COLS, BOARD_COLS + rimW, 0, ROWS);
+    box(-rimW, BOARD_COLS + rimW, D, D + rimW);
+    box(-rimW, 0, 0, D);
+    box(BOARD_COLS, BOARD_COLS + rimW, 0, D);
   }
 
   private replace(solid: QuadBuffer, cards: QuadBuffer) {

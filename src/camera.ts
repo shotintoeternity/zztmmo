@@ -14,6 +14,7 @@
 // yaw of 0 looks north.
 
 import * as THREE from "three";
+import { TILE_DEPTH } from "./scene";
 
 export type ViewMode = "overhead" | "chase" | "first" | "diorama" | "classic";
 export const VIEW_MODES: readonly ViewMode[] = ["overhead", "chase", "first", "diorama", "classic"];
@@ -21,11 +22,30 @@ export const VIEW_MODES: readonly ViewMode[] = ["overhead", "chase", "first", "d
 /** Facing as a compass index: 0 north, 1 east, 2 south, 3 west. */
 export type Facing = 0 | 1 | 2 | 3;
 
-const CHASE = { pitch: 0.95, dist: 12.5, minDist: 3, maxDist: 30 };
-const OVERHEAD = { pitch: 1.12, dist: 21, minDist: 8, maxDist: 40 };
-const DIORAMA = { pitch: 0.95, dist: 46, minDist: 20, maxDist: 90 };
-const EYE_HEIGHT = 0.72;
-const BOARD_CENTER = new THREE.Vector3(30, 0, 12.5);
+const CHASE = { pitch: 0.95, dist: 15, minDist: 3, maxDist: 34 };
+const OVERHEAD = { pitch: 1.12, dist: 27, minDist: 8, maxDist: 50 };
+const DIORAMA = { pitch: 0.95, dist: 60, minDist: 20, maxDist: 110 };
+// Eye height against 1.75-tall walls: a little over half, the Wolfenstein
+// proportion, so a corridor reads as a corridor and a boulder as a boulder.
+const EYE_HEIGHT = 0.95;
+const FOV_DEFAULT = 58;
+const FOV_FIRST = 66;
+const BOARD_W = 60;
+const BOARD_D = 25 * TILE_DEPTH;
+const BOARD_CENTER = new THREE.Vector3(BOARD_W / 2, 0, BOARD_D / 2);
+
+/**
+ * clampTarget keeps a following camera from looking off the board: when the
+ * player nears an edge the view stops scrolling rather than showing half a
+ * screen of nothing, the way a scrolling map does. The margin is what the
+ * view covers, roughly, from its distance.
+ */
+function clampTarget(goal: THREE.Vector3, dist: number) {
+  const mx = Math.min(dist * 0.5, BOARD_W / 2);
+  const mz = Math.min(dist * 0.36, BOARD_D / 2);
+  goal.x = THREE.MathUtils.clamp(goal.x, mx, BOARD_W - mx);
+  goal.z = THREE.MathUtils.clamp(goal.z, mz, BOARD_D - mz);
+}
 
 function lerpAngle(a: number, b: number, t: number): number {
   let d = (b - a) % (Math.PI * 2);
@@ -109,14 +129,14 @@ export class CameraRig {
   fog(): { near: number; far: number } {
     switch (this.mode) {
       case "first":
-        return { near: 8, far: 26 };
+        return { near: 34, far: 95 };
       case "chase":
-        return { near: 16, far: 42 };
+        return { near: 22, far: 60 };
       case "overhead":
-        return { near: 40, far: 90 };
+        return { near: 50, far: 120 };
       case "diorama":
       case "classic":
-        return { near: 120, far: 240 };
+        return { near: 160, far: 320 };
     }
   }
 
@@ -128,6 +148,11 @@ export class CameraRig {
 
     const facingYaw = (this.facing * Math.PI) / 2;
     this.lookYaw = lerpAngle(this.lookYaw, facingYaw, turnK);
+    const fov = this.mode === "first" ? FOV_FIRST : FOV_DEFAULT;
+    if (this.camera.fov !== fov) {
+      this.camera.fov = fov;
+      this.camera.updateProjectionMatrix();
+    }
 
     if (this.mode === "diorama" || this.mode === "classic") {
       this.target.lerp(BOARD_CENTER, k);
@@ -136,6 +161,11 @@ export class CameraRig {
     }
 
     const goal = new THREE.Vector3(playerX, 0, playerZ);
+    if (this.mode === "overhead") {
+      clampTarget(goal, this.overheadDist);
+    } else if (this.mode === "chase") {
+      clampTarget(goal, this.dist);
+    }
     this.target.lerp(goal, k);
 
     if (this.mode === "first") {
@@ -143,7 +173,7 @@ export class CameraRig {
       this.camera.position.copy(this.eye);
       const look = new THREE.Vector3(
         this.eye.x + Math.sin(this.lookYaw),
-        EYE_HEIGHT - 0.05,
+        EYE_HEIGHT - 0.03,
         this.eye.z - Math.cos(this.lookYaw),
       );
       this.camera.lookAt(look);
@@ -154,7 +184,7 @@ export class CameraRig {
       this.place(this.overheadYaw, this.overheadPitch, this.overheadDist, 0);
       return;
     }
-    this.place(this.yaw, this.pitch, this.dist, 0.4);
+    this.place(this.yaw, this.pitch, this.dist, 0.6);
   }
 
   private place(yaw: number, pitch: number, dist: number, lookHeight: number) {
