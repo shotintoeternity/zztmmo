@@ -82,11 +82,38 @@ never three things -- one camera at three distances, with the wheel already
 moving between them -- so they are distances now, and `?view=` still names
 them.
 
+**G** leaves your body. See below.
+
 First person is the one that earns being a state rather than an angle, because
 the controls change there: left and right turn instead of walking, up walks the
 way you face, down walks backwards, A and D step sideways, and Space+up shoots
 straight ahead. Zooming in and out across that line lets go of any key you are
 holding, so a key held across it cannot mean two things.
+
+### Ghosting
+
+**G** steps out of your body. Your `☻` stays exactly where it was standing --
+it is still on the board, and the board is still ticking -- while the camera
+drifts off on its own, through walls, into sealed rooms, over the water. The
+keys keep whatever meaning the view already gave them: in an orbit view the
+arrows are board directions, and in first person left and right still turn
+while A and D fly you sideways. G brings you home, and so does V or walking
+through a passage, because a ghost is a place on this board.
+
+A ghost is a way of looking and never a way of reaching. The client sends
+**nothing at all** while you are out there -- not a single input frame -- which
+is why any player can turn it on and it is not a cheat: you cannot open a door,
+take a gem, or step past a locked one, because none of you is there to do it.
+It also costs something real. The world does not pause while you are away, so
+whatever is walking toward the body you left is still walking.
+
+This is the version of ghosting that this client can honestly have. The server
+is authoritative and resolves every step, so walking a *player* through a wall
+would be a server change, not a client one; the camera, on the other hand, was
+always ours. One limit falls out of the same fact: a ghost sees only what the
+server already sent, so drifting into an unlit room still shows you the dark.
+
+![A ghost inside the Armory, with the body it left standing outside](docs/ghost.png)
 
 ### Reading, in a world you are standing in
 
@@ -104,7 +131,9 @@ But a sign is a row of letters lying flat across the floor, and from inside the
 world, at eye height, a row of letters is edge-on and unreadable -- in first
 person a sign is a colored wall and nothing more. So the sign you are standing
 at reads itself out just above the message line, in its own colors, and only
-that one: walk up to it and it appears, walk away and it is gone. Every sign on
+that one: walk up to it and it appears, walk away and it is gone. A ghost
+reads them too, from wherever it has drifted to, because reading is something
+eyes do and a ghost took them with it. Every sign on
 the board written out at once would be noise; one sign that arrives as you
 reach it is a sign you read.
 
@@ -130,7 +159,7 @@ reach it is a sign you read.
   enough to read. Pure and tested.
 - `src/input.ts` is the key vocabulary. The strafes are two pseudo-bits above
   the server's six, resolved against your facing or dropped, so they can never
-  be sent. Pure and tested.
+  be sent; it also says which way a held key flies a ghost. Pure and tested.
 - `src/zoom.ts` is the single axis the 3D view moves along, and the hysteresis
   that keeps the first-person boundary from flickering. Pure and tested.
 - `src/camera.ts` is the two views and the blend between orbit and eye height. `src/overlay.ts`, `src/sidebar.ts`,

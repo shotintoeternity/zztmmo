@@ -10,7 +10,7 @@
 import "./style.css";
 import { CameraRig } from "./camera";
 import { loadFont, type Font } from "./font";
-import { commandKey, facingMask, facingOfMask, isMovementKey, movementMask, wireMask } from "./input";
+import { commandKey, facingMask, facingOfMask, ghostDrift, isMovementKey, movementMask, wireMask } from "./input";
 import { modalKey, newTextModal, renderModal, type Modal } from "./modals";
 import { Client } from "./net";
 import { BOARD_COLS, COLS, Overlay, ROWS } from "./overlay";
@@ -117,6 +117,20 @@ function inFirstPerson(): boolean {
   return rig.mode === "world" && rig.firstPerson;
 }
 
+/** The world point your body stands on. */
+function bodyX(): number {
+  return myX - 0.5;
+}
+function bodyZ(): number {
+  return (myY - 0.5) * TILE_DEPTH;
+}
+
+// leaveGhost brings the camera home. A board change and the V key both do it:
+// a ghost is a place on this board, and neither survives leaving it.
+function leaveGhost() {
+  rig.setGhost(false, bodyX(), bodyZ());
+}
+
 let font: Font | null = null;
 let scene: BoardScene | null = null;
 
@@ -162,6 +176,7 @@ function applyMessage(message: ServerMessage) {
       break;
     case MessageTypeBoardChange:
       stopHeldInput();
+      leaveGhost();
       closeModal(true);
       applySnapshot((message as BoardChangeMessage).snapshot);
       rig.snap();
@@ -434,7 +449,8 @@ function setNotice(text: string) {
 }
 
 function writeViewLabel() {
-  overlay.writeBase(71, 17, 0x1e, (rig.mode === "classic" ? "classic" : "3D").padEnd(8, " "));
+  const label = rig.mode === "classic" ? "classic" : rig.ghost ? "3D ghost" : "3D";
+  overlay.writeBase(71, 17, 0x1e, label.padEnd(8, " "));
   // Row 20 is blank in vanilla's sidebar, so the one binding that exists only
   // inside the first-person view is announced there, and only there.
   if (inFirstPerson()) {
@@ -442,6 +458,18 @@ function writeViewLabel() {
     overlay.writeBase(68, 20, 0x1f, " Strafe");
   } else {
     sidebarClearLine(overlay.writeBase, 20);
+  }
+  // Row 24 is blank in vanilla too. In first person the sidebar is the only
+  // thing that can tell you whether you are your body or not, so it says so
+  // in the colour as well as the word.
+  if (rig.mode === "world") {
+    overlay.writeBase(62, 24, rig.ghost ? 0x2f : 0x30, " G ");
+    // Padded to a common width for the reason sidebar.ts gives: a shorter word
+    // written over a longer one leaves the longer one's tail behind, and
+    // " Body" over " Ghost" reads "Bodyt".
+    overlay.writeBase(65, 24, 0x1f, (rig.ghost ? " Body" : " Ghost").padEnd(6, " "));
+  } else {
+    sidebarClearLine(overlay.writeBase, 24);
   }
 }
 
@@ -493,6 +521,16 @@ function refreshText() {
   signGroups = groupSigns(text.signs, COLS);
 }
 
+// eyeCell is the board square you are reading from: where you are standing,
+// or where you have drifted to, because reading is something eyes do and a
+// ghost took them with it.
+function eyeCell(): { x: number; y: number } | null {
+  if (rig.ghost) {
+    return { x: Math.floor(rig.ghostAt.x), y: Math.floor(rig.ghostAt.z / TILE_DEPTH) };
+  }
+  return myX > 0 ? { x: myX - 1, y: myY - 1 } : null;
+}
+
 // How close you must stand to read a sign, in the weighted cells signDistance
 // counts: eight columns to the side of one, or four rows off it.
 const SIGN_RANGE = 8;
@@ -514,10 +552,11 @@ function writeBoardText() {
 // the sign's own colors, so it reads as that sign speaking rather than as
 // chrome. It is centered on the board the way the message line is.
 function writeNearbySign() {
-  if (modal || notice || myX <= 0) {
+  const eye = eyeCell();
+  if (modal || notice || !eye) {
     return;
   }
-  const group = signInRange(signGroups, myX - 1, myY - 1, COLS, SIGN_RANGE);
+  const group = signInRange(signGroups, eye.x, eye.y, COLS, SIGN_RANGE);
   if (!group) {
     return;
   }
@@ -559,7 +598,8 @@ function redrawTop() {
 // --- keyboard --------------------------------------------------------------------
 
 function currentMask(): number {
-  if (modal) {
+  // A ghost's keys fly the camera, so the body is holding nothing down.
+  if (modal || rig.ghost) {
     return 0;
   }
   const raw = movementMask(pressed);
@@ -597,7 +637,22 @@ function handleKeyDown(event: KeyboardEvent) {
   if (event.code === "KeyV" && !event.ctrlKey && !event.metaKey && !event.altKey) {
     event.preventDefault();
     stopHeldInput();
+    leaveGhost();
     rig.cycle();
+    applyView();
+    return;
+  }
+  // G steps out of your body. Your ☻ stays where it is -- it is still on the
+  // board, and the board is still ticking -- while the camera drifts off
+  // through the walls. Nothing is sent while you are out there, so a ghost is
+  // a way of looking and never a way of reaching.
+  if (event.code === "KeyG" && !event.ctrlKey && !event.metaKey && !event.altKey) {
+    event.preventDefault();
+    if (rig.mode !== "world") {
+      return;
+    }
+    stopHeldInput();
+    rig.setGhost(!rig.ghost, bodyX(), bodyZ());
     applyView();
     return;
   }
@@ -706,12 +761,15 @@ function resize() {
 
 let lastFrame = performance.now();
 let lastHide = "";
+let lastEye = "";
 
 function frame(now: number) {
   const dt = Math.min(0.1, (now - lastFrame) / 1000);
   lastFrame = now;
   if (scene && font) {
-    const hide = inFirstPerson() && myX > 0 ? { x: myX - 1, y: myY - 1 } : null;
+    // Your own card is only in the way when you are behind your own eyes; a
+    // ghost wants to see the body it left.
+    const hide = inFirstPerson() && !rig.ghost && myX > 0 ? { x: myX - 1, y: myY - 1 } : null;
     const hideKey = hide ? `${hide.x},${hide.y}` : "";
     if (rig.mode === "classic") {
       if (sceneDirty) {
@@ -722,14 +780,25 @@ function frame(now: number) {
       window.requestAnimationFrame(frame);
       return;
     }
+    if (rig.ghost) {
+      const drift = ghostDrift(movementMask(pressed), rig.firstPerson);
+      rig.driftGhost(drift.dx, drift.dz, dt);
+    }
+    const eye = eyeCell();
+    const eyeKey = eye ? `${eye.x},${eye.y}` : "";
     if (sceneDirty || hideKey !== lastHide) {
       refreshText();
       scene.build(cells, { roster, hide, textCells });
       sceneDirty = false;
       lastHide = hideKey;
       redrawTop();
+    } else if (eyeKey !== lastEye) {
+      // The board has not changed, so the geometry stands: only the words at
+      // the bottom need to catch up with where the ghost has got to.
+      redrawTop();
     }
-    rig.update(dt, myX - 0.5, (myY - 0.5) * TILE_DEPTH);
+    lastEye = eyeKey;
+    rig.update(dt, bodyX(), bodyZ());
     const fog = rig.fog();
     scene.setFog(fog.near, fog.far);
     scene.render(rig.camera);

@@ -5,7 +5,7 @@ const out = await build({ entryPoints: ["src/input.ts"], bundle: true, format: "
 const {
   InputMaskUp, InputMaskDown, InputMaskLeft, InputMaskRight, InputMaskShift, InputMaskShoot,
   InputMaskStrafeLeft, InputMaskStrafeRight,
-  commandKey, isMovementKey, movementMask, facingMask, facingOfMask, wireMask, KeyEnter, KeyEscape,
+  commandKey, isMovementKey, movementMask, facingMask, facingOfMask, wireMask, ghostDrift, KeyEnter, KeyEscape,
 } = await import(`data:text/javascript;base64,${Buffer.from(out.outputFiles[0].contents).toString("base64")}`);
 
 // The vanilla vocabulary on the wire, and nothing more: no V, and no W or S
@@ -75,5 +75,20 @@ assert.equal(facingOfMask(0), null);
 assert.equal(facingOfMask(InputMaskRight), 1);
 assert.equal(facingOfMask(InputMaskDown | InputMaskShoot), 2);
 assert.equal(facingOfMask(InputMaskStrafeLeft), null, "a strafe never turns you");
+
+// A ghost's keys fly the camera, keeping the meaning the view already gave
+// them: arrows are board directions in orbit, and in first person left and
+// right are still turns, so the strafes are what move you sideways.
+assert.deepEqual(ghostDrift(InputMaskUp, false), { dx: 0, dz: 1 });
+assert.deepEqual(ghostDrift(InputMaskDown, false), { dx: 0, dz: -1 });
+assert.deepEqual(ghostDrift(InputMaskLeft, false), { dx: -1, dz: 0 });
+assert.deepEqual(ghostDrift(InputMaskUp | InputMaskRight, false), { dx: 1, dz: 1 }, "diagonals fly");
+assert.deepEqual(ghostDrift(InputMaskLeft | InputMaskRight, false), { dx: 0, dz: 0 }, "opposites cancel");
+assert.deepEqual(ghostDrift(InputMaskStrafeLeft, false), { dx: 0, dz: 0 }, "orbit steers with the arrows");
+assert.deepEqual(ghostDrift(InputMaskStrafeLeft, true), { dx: -1, dz: 0 });
+assert.deepEqual(ghostDrift(InputMaskStrafeRight, true), { dx: 1, dz: 0 });
+assert.deepEqual(ghostDrift(InputMaskLeft, true), { dx: 0, dz: 0 }, "in first person left is a turn, not a drift");
+assert.deepEqual(ghostDrift(InputMaskUp | InputMaskStrafeRight, true), { dx: 1, dz: 1 });
+assert.deepEqual(ghostDrift(InputMaskShoot | InputMaskShift, true), { dx: 0, dz: 0 }, "shooting is not flying");
 
 console.log("input ok");

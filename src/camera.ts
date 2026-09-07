@@ -51,6 +51,10 @@ const FOV_FIRST = 66;
 const BLEND_SECONDS = 0.35;
 const BOARD_W = 60;
 const BOARD_D = 25 * TILE_DEPTH;
+// How fast a ghost drifts, in world units a second. It is a speed through the
+// world rather than a number of cells a second, so crossing a row -- which is
+// 1.75 deep -- honestly takes longer than crossing a column.
+const GHOST_SPEED = 14;
 
 /**
  * clampTarget keeps a following camera from looking off the board: when the
@@ -128,6 +132,38 @@ export class CameraRig {
     this.blend = preset.firstPerson ? 1 : 0;
     this.snapNext = true;
     return true;
+  }
+
+  /**
+   * setGhost leaves your body where it stands and takes the camera with you,
+   * or brings it back. Coming back is deliberately not a snap: the camera
+   * glides home, so you can see where your body was all along.
+   */
+  setGhost(on: boolean, playerX: number, playerZ: number) {
+    if (on === this.ghost) {
+      return;
+    }
+    this.ghost = on;
+    if (on) {
+      this.ghostAt.set(playerX, 0, playerZ);
+    }
+  }
+
+  /**
+   * driftGhost flies the camera itself. dx is right and dz is forward, each
+   * -1..1, in the frame the player is looking through. It stops at the edges
+   * of the board: there is nothing outside them to haunt.
+   */
+  driftGhost(dx: number, dz: number, dt: number) {
+    if (!this.ghost || (dx === 0 && dz === 0)) {
+      return;
+    }
+    const yaw = this.firstPerson ? this.lookYaw : this.yaw;
+    const sin = Math.sin(yaw);
+    const cos = Math.cos(yaw);
+    const step = GHOST_SPEED * dt;
+    this.ghostAt.x = THREE.MathUtils.clamp(this.ghostAt.x + (sin * dz + cos * dx) * step, 0, BOARD_W);
+    this.ghostAt.z = THREE.MathUtils.clamp(this.ghostAt.z + (-cos * dz + sin * dx) * step, 0, BOARD_D);
   }
 
   /** snap skips the smoothing on the next update: a new board, not a walk. */

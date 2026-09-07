@@ -132,6 +132,30 @@ export function facingMask(mask: number, facing: Facing): number {
   return wireMask(out);
 }
 
+/**
+ * ghostDrift is the direction a held mask flies a ghost, in the frame of
+ * whatever the player is looking through: dz is forward, dx is right.
+ *
+ * A ghost is the camera, not the body, so the keys keep the meaning the view
+ * already gave them. In first person left and right are still turns, so the
+ * strafes are what move you sideways; everywhere else the arrows are board
+ * directions and they simply fly instead of walk.
+ */
+export function ghostDrift(mask: number, firstPerson: boolean): { dx: number; dz: number } {
+  let dx = 0;
+  let dz = 0;
+  if (mask & InputMaskUp) dz += 1;
+  if (mask & InputMaskDown) dz -= 1;
+  if (firstPerson) {
+    if (mask & InputMaskStrafeLeft) dx -= 1;
+    if (mask & InputMaskStrafeRight) dx += 1;
+  } else {
+    if (mask & InputMaskLeft) dx -= 1;
+    if (mask & InputMaskRight) dx += 1;
+  }
+  return { dx, dz };
+}
+
 /** facingOfMask is the compass index a held direction points at, or null when none is held. */
 export function facingOfMask(mask: number): Facing | null {
   if (mask & InputMaskUp) return 0;
