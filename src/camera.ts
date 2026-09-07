@@ -238,10 +238,14 @@ export class CameraRig {
     }
 
     // A ghost is already where it wants to be; only a body needs following.
+    // The clamp is for a camera looking *at* you from a distance -- it stops
+    // the view scrolling off the board. At eye level there is no distance and
+    // no scrolling: the camera is you, and clamping it would stand you several
+    // rows from your own body in a corner of the board.
     const goal = this.ghost
       ? this.ghostAt.clone()
       : new THREE.Vector3(playerX, 0, playerZ);
-    if (!this.ghost) {
+    if (!this.ghost && !this.firstPerson) {
       clampTarget(goal, this.zoomState.dist);
     }
     this.target.lerp(goal, this.ghost ? 1 : k);

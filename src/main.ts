@@ -451,6 +451,15 @@ function setNotice(text: string) {
 function writeViewLabel() {
   const label = rig.mode === "classic" ? "classic" : rig.ghost ? "3D ghost" : "3D";
   overlay.writeBase(71, 17, 0x1e, label.padEnd(8, " "));
+  // Row 13 is blank in vanilla. F is the way to eye level and back, and it has
+  // to be said somewhere: V used to arrive at first person after a couple of
+  // taps, and now nothing does.
+  if (rig.mode === "world") {
+    overlay.writeBase(62, 13, 0x30, " F ");
+    overlay.writeBase(65, 13, 0x1f, (rig.firstPerson ? " Back out" : " Eye level").padEnd(10, " "));
+  } else {
+    sidebarClearLine(overlay.writeBase, 13);
+  }
   // Row 20 is blank in vanilla's sidebar, so the one binding that exists only
   // inside the first-person view is announced there, and only there.
   if (inFirstPerson()) {
