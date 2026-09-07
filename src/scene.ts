@@ -265,7 +265,7 @@ export class BoardScene {
     for (let y = 0; y < ROWS; y += 1) {
       for (let x = 0; x < BOARD_COLS; x += 1) {
         const cell = cells[y * COLS + x];
-        const shape = classify(cell.ch, cell.color);
+        const shape = classify(cell.ch, cell.color, cell.element ?? 0);
         if (shape.kind === "sprite" && options.textCells.has(y * COLS + x)) {
           shapes[y * BOARD_COLS + x] = { ...shape, kind: "empty", opaqueBg: false };
         } else {
@@ -307,6 +307,11 @@ export class BoardScene {
         switch (shape.kind) {
           case "empty":
             solid.quad([[x0, 0, z0], [x1, 0, z0], [x1, 0, z1], [x0, 0, z1]], FLOOR_DOT, FLOOR_DOT_FG, FLOOR_BG, true, SHADE_TOP);
+            break;
+          case "fake":
+            // The wall's own pattern, lying down. Nothing stands up and
+            // nothing hides its neighbours: you walk over it.
+            solid.quad([[x0, 0, z0], [x1, 0, z0], [x1, 0, z1], [x0, 0, z1]], shape.glyph, fg, bg, true, SHADE_TOP);
             break;
           case "fog":
             solid.quad([[x0, 0, z0], [x1, 0, z0], [x1, 0, z1], [x0, 0, z1]], shape.glyph, FOG_FG, FOG_BG, true, SHADE_TOP);
@@ -399,7 +404,11 @@ export class BoardScene {
   private surroundings(solid: QuadBuffer) {
     const G = 120;
     const D = ROWS * TILE_DEPTH;
-    const groundY = -0.02;
+    // Below the water, not above it. This plane is opaque and covers the whole
+    // board, so at its old height it sat over every recessed water tile and
+    // painted every lake in the world black -- which is why water has never
+    // been seen here.
+    const groundY = WATER_DEPTH - 0.04;
     solid.quad([[-G, groundY, -G], [BOARD_COLS + G, groundY, -G], [BOARD_COLS + G, groundY, D + G], [-G, groundY, D + G]], 0x20, BLACK, GROUND_BG, true, SHADE_TOP);
     const rim = 0.2;
     const rimW = 0.5;

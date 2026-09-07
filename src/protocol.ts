@@ -24,6 +24,13 @@ export type ScreenCell = {
   y: number;
   ch: number;
   color: number;
+  /**
+   * The element the server says is showing here (gamevars.go's E_* numbers),
+   * absent when it is empty or when the board is hiding it -- a dark room
+   * discloses nothing. It exists because a glyph does not always name its
+   * element: a fake wall is drawn with the normal wall's own character.
+   */
+  element?: number;
 };
 
 /** A player on the board. x and y are 1-based board coordinates. */

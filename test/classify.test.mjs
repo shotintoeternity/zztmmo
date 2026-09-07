@@ -53,4 +53,20 @@ assert.equal(lion.opaqueBg, false);
 // A text element is a letter on a colored card.
 assert.equal(classify("A".charCodeAt(0), 0x1f).opaqueBg, true);
 
+
+// The fake wall: the one shape the glyph cannot name. ElementDefs draws E_FAKE
+// with the normal wall's own 0xB2, so without the server saying so this is a
+// wall -- and with it, it is the floor it behaves like.
+assert.equal(classify(0xb2, 0x0e).kind, "wall", "no element named: the glyph is all there is");
+assert.equal(classify(0xb2, 0x0e, 22).kind, "wall", "a normal wall stays a wall");
+assert.equal(classify(0xb2, 0x0e, 27).kind, "fake", "a fake lies down");
+assert.equal(classify(0xb2, 0x0e, 27).height, 0, "and nothing stands up on it");
+assert.equal(classify(0xb2, 0x0e, 27).glyph, 0xb2, "keeping the pattern it was drawn with");
+assert.equal(classify(0xb2, 0x0e, 27).fg, 0x0e, "and its colour");
+// A fake can be any colour, and can hold any glyph an editor put there.
+assert.equal(classify(0xdb, 0x0c, 27).kind, "fake", "including one drawn as a solid");
+// Everything else is still read off the screen, element or no element.
+assert.equal(classify(0xdb, 0x0c, 21).kind, "wall");
+assert.equal(classify(0x20, 0x0f, 0).kind, "empty");
+
 console.log("classify ok");

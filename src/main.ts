@@ -67,6 +67,7 @@ const cells: ScreenCell[] = Array.from({ length: COLS * ROWS }, (_, i) => ({
   // An empty square is black (0x0F, ' '), which is what the server sends for
   // one; a blue default here would paint the client's guess, not the board.
   color: 0x0f,
+  element: 0,
 }));
 let roster: PlayerSnapshot[] = [];
 let myStatId = -1;
@@ -204,6 +205,7 @@ function applySnapshot(message: SnapshotMessage) {
   for (const cell of cells) {
     cell.ch = 0x20;
     cell.color = 0x0f;
+    cell.element = 0;
   }
   for (const cell of message.screen) {
     setBoardCell(cell);
@@ -255,6 +257,8 @@ function setBoardCell(cell: ScreenCell) {
   const mine = cells[cell.y * COLS + cell.x];
   mine.ch = cell.ch;
   mine.color = cell.color;
+  // Absent means empty, or a square a dark room is keeping to itself.
+  mine.element = cell.element ?? 0;
 }
 
 // --- events --------------------------------------------------------------------

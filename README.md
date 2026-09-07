@@ -94,6 +94,29 @@ way you face, down walks backwards, A and D step sideways, and Space+up shoots
 straight ahead. Zooming in and out across that line lets go of any key you are
 holding, so a key held across it cannot mean two things.
 
+### What the glyph cannot say
+
+Every square in this client is read from the byte the server drew there, which
+is the whole idea: a wall is a wall because it is drawn with a wall's glyph.
+One element defeats that. ZZT has two floor materials, the empty and the
+**fake**, and they are the only elements every creature moves through freely --
+but `ElementDefs` gives the fake the *normal wall's* character on purpose, so a
+fake wall and a real one arrive here as the same two bytes. Most fakes in
+practice are floor decoration rather than secret passages, and standing all of
+them up as walls made rooms out of open ground.
+
+So the server now names it. `ScreenCell` carries an `element` field, and the
+client draws a fake as the pattern it was drawn with, lying down: the exact
+colours and glyph of the wall it imitates, as floor you walk over. Everything
+else is still inferred from the glyph.
+
+The field says what the screen is *showing*, never what the board is holding
+back. A dark room discloses nothing, and neither does an invisible wall, which
+draws as a blank until you walk into it. Older servers simply omit the field
+and this client behaves exactly as it did before.
+
+![The Three Lakes, which were three black holes until the horizon plane stopped covering them](docs/water.png)
+
 ### Ghosting
 
 **G** steps out of your body. Your `☻` stays exactly where it was standing --

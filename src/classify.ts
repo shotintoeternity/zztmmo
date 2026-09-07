@@ -24,6 +24,7 @@ export type CellKind =
   | "water" // a recessed blue plane
   | "fog" // a dark room's unseen square
   | "gate" // door or passage: full height, glyph on a colored face
+  | "fake" // a wall's pattern lying down: floor you walk through
   | "sprite"; // a standing card
 
 export type CellShape = {
@@ -39,6 +40,16 @@ export type CellShape = {
   /** Whether the background color is painted behind the glyph. */
   opaqueBg: boolean;
 };
+
+/**
+ * E_FAKE, from the engine's gamevars.go. The fake is one of ZZT's two floor
+ * materials -- it and the empty are the only elements every creature moves
+ * through freely -- but ElementDefs draws it with the normal wall's own
+ * character, so it is the one shape no terminal can read off the screen. The
+ * server names it in ScreenCell.element; without that this is a wall, which is
+ * what it looked like here before.
+ */
+export const E_FAKE = 27;
 
 export const WALL_HEIGHT = 1;
 export const LOW_HEIGHT = 0.6;
@@ -64,10 +75,17 @@ const CH_DOOR = 0x0a;
 export const FOG_COLOR = 0x07;
 export const FOG_GLYPH = CH_SHADE;
 
-export function classify(ch: number, color: number): CellShape {
+export function classify(ch: number, color: number, element = 0): CellShape {
   const fg = color & 0x0f;
   const bg = (color >> 4) & 0x0f;
   const shape = (kind: CellKind, height: number, opaqueBg: boolean): CellShape => ({ kind, height, glyph: ch, fg, bg, opaqueBg });
+
+  // Asked before the glyph is read, because the glyph would lie. A fake keeps
+  // the exact pattern it was drawn with -- it is simply lying down, which is
+  // what a floor is.
+  if (element === E_FAKE) {
+    return shape("fake", 0, bg !== 0);
+  }
 
   if (ch === 0x20 || ch === 0x00 || ch === 0xff) {
     return bg !== 0 ? shape("floor", 0, true) : shape("empty", 0, false);
