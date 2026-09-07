@@ -153,7 +153,7 @@ func (e *Engine) DrainScreenDirty() []ScreenCell {
 		for x := int16(0); x < width; x++ {
 			if dirty[x][y] {
 				screenCell := e.Screen[x][y]
-				cells = append(cells, ScreenCell{X: x, Y: y, Ch: screenCell.Ch, Color: screenCell.Color})
+				cells = append(cells, ScreenCell{X: x, Y: y, Ch: screenCell.Ch, Color: screenCell.Color, Element: e.disclosedElement(x, y)})
 			}
 		}
 	}

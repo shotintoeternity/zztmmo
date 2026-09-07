@@ -815,6 +815,10 @@ type ScreenCell struct {
 	Y     int16 `json:"y"`
 	Ch    byte  `json:"ch"`
 	Color byte  `json:"color"`
+	// Element is the element the screen is SHOWING here, or 0 when the board
+	// is holding it back. See (*Engine).disclosedElement. Omitted when zero,
+	// so a client that does not know the field is unaffected.
+	Element byte `json:"element,omitempty"`
 }
 
 type PlayerSnapshot struct {
@@ -969,13 +973,52 @@ func soundNoteBytes(notes string) []uint16 {
 	return out
 }
 
+// disclosedElement is the element a client is allowed to know sits at a screen
+// position: what the screen is SHOWING there, never what the board is holding
+// back.
+//
+// It exists because two elements can be drawn with the same byte. A fake wall
+// is E_FAKE drawn with the normal wall's 0xB2 -- ElementDefs gives 22 and 27
+// the same Character on purpose -- so no terminal can tell them apart from the
+// glyph, and a client that draws the board in three dimensions has to stand a
+// walkable floor up as a wall. Naming the element lets it draw a fake as the
+// floor it behaves like.
+//
+// What must not leak is everything the board hides deliberately:
+//
+//   - A dark room. TileToColorAndChar draws an unlit square as 0xB0 on 0x07,
+//     and that fog is all any client may know; naming what stands underneath
+//     would make a torch pointless. The fog is read back off the drawn screen
+//     rather than by re-running the darkness test, because that test is per
+//     player -- it asks NearestPlayer for a torch -- while DrainScreenDirty
+//     produces one frame broadcast to a whole room.
+//   - Anything drawn as a blank that is not empty: the invisible wall, which
+//     draws ' ' until it is touched and then becomes E_NORMAL. The rule is
+//     written in terms of what was drawn rather than as a list of elements, so
+//     an element that hides itself the same way is covered without anyone
+//     having to remember this function exists.
+func (e *Engine) disclosedElement(sx, sy int16) byte {
+	if sx < 0 || sx >= BOARD_WIDTH || sy < 0 || sy >= BOARD_HEIGHT {
+		return 0
+	}
+	screen := e.Screen[sx][sy]
+	if screen.Ch == '\xb0' && screen.Color == 0x07 {
+		return 0
+	}
+	element := e.Board.Tiles[sx+1][sy+1].Element
+	if element != E_EMPTY && screen.Ch == ' ' {
+		return 0
+	}
+	return element
+}
+
 func screenCells(e *Engine) []ScreenCell {
 	width := e.netScreenWidth()
 	cells := make([]ScreenCell, 0, int(width)*25)
 	for y := int16(0); y < 25; y++ {
 		for x := int16(0); x < width; x++ {
 			cell := e.Screen[x][y]
-			cells = append(cells, ScreenCell{X: x, Y: y, Ch: cell.Ch, Color: cell.Color})
+			cells = append(cells, ScreenCell{X: x, Y: y, Ch: cell.Ch, Color: cell.Color, Element: e.disclosedElement(x, y)})
 		}
 	}
 	return cells
