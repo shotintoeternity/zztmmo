@@ -10,7 +10,7 @@
 import "./style.css";
 import { CameraRig, VIEW_MODES, type ViewMode } from "./camera";
 import { loadFont, type Font } from "./font";
-import { commandKey, facingMask, facingOfMask, isMovementKey, movementMask } from "./input";
+import { commandKey, facingMask, facingOfMask, isMovementKey, movementMask, wireMask } from "./input";
 import { modalKey, newTextModal, renderModal, type Modal } from "./modals";
 import { Client } from "./net";
 import { BOARD_COLS, COLS, Overlay, ROWS } from "./overlay";
@@ -35,7 +35,7 @@ import {
 } from "./protocol";
 import { BoardScene, TILE_DEPTH } from "./scene";
 import { drawSidebar, sidebarClearLine, updateSidebar } from "./sidebar";
-import { boardText, type BoardText } from "./text_runs";
+import { boardText, groupSigns, signInRange, type BoardText, type SignGroup } from "./text_runs";
 
 const params = new URLSearchParams(window.location.search);
 const worldName = params.get("world") || "TOWN";
@@ -82,9 +82,12 @@ let announce = "";
 let announceTimer = 0;
 let sceneDirty = true;
 let gameOver = false;
-// The board message, drawn at the bottom of the screen in the 3D views.
+// The board message, drawn at the bottom of the screen in the 3D views, and
+// the board's signs, grouped so the one you are standing at can read itself
+// out at the bottom too.
 let text: BoardText = { signs: [], message: null };
 let textCells = new Set<number>();
+let signGroups: SignGroup[] = [];
 
 type PendingScroll = { title: string; lines: string[]; statId: number };
 let scrollQueue: PendingScroll[] = [];
@@ -422,6 +425,14 @@ function setNotice(text: string) {
 
 function writeViewLabel() {
   overlay.writeBase(71, 17, 0x1e, rig.mode.padEnd(8, " "));
+  // Row 20 is blank in vanilla's sidebar, so the one binding that exists only
+  // inside the first-person view is announced there, and only there.
+  if (rig.mode === "first") {
+    overlay.writeBase(63, 20, 0x30, " A D ");
+    overlay.writeBase(68, 20, 0x1f, " Strafe");
+  } else {
+    sidebarClearLine(overlay.writeBase, 20);
+  }
 }
 
 // applyView settles everything that depends on the camera mode. The classic
@@ -446,20 +457,38 @@ function playerTints(): Map<number, string> {
   return tints;
 }
 
-// refreshText re-reads the board's message: the line the game writes over the
-// bottom row (a touch, a warning, an object's #say). In a 3D view it leaves
-// the scene and is written on row 24 of the overlay, where ZZT puts it, so it
-// reads as text rather than as a row of cards. Signs (text elements) stay in
-// the world: they are part of the board.
+// refreshText re-reads the words on the board. Two kinds, and in a 3D view
+// they are read two different ways.
+//
+// The message (a touch, a warning, an object's #say) is a line the engine
+// writes over the bottom row of the board. It leaves the scene and is written
+// on row 24 of the overlay, where ZZT puts it, so it reads as text rather than
+// as a row of standing cards.
+//
+// Signs (text elements) are part of the board and stay in the world -- they
+// are walls you can read, and a board with its signs taken out is not the
+// board. But a sign is a row of letters lying on the floor, and from inside
+// the world, at eye height, a row of letters is edge-on and unreadable. So the
+// sign you are standing at reads itself out at the bottom of the screen, and
+// only that one: see signInRange.
 function refreshText() {
   if (rig.mode === "classic") {
     text = { signs: [], message: null };
     textCells = new Set();
+    signGroups = [];
     return;
   }
   text = boardText(cells, COLS, BOARD_COLS, ROWS);
   textCells = new Set(text.message ? text.message.cells : []);
+  signGroups = groupSigns(text.signs, COLS);
 }
+
+// How close you must stand to read a sign, in the weighted cells signDistance
+// counts: eight columns to the side of one, or four rows off it.
+const SIGN_RANGE = 8;
+// A sign taller than this is a wall of text; the first lines are the ones that
+// name the place.
+const SIGN_MAX_LINES = 3;
 
 function writeBoardText() {
   if (rig.mode === "classic") {
@@ -467,6 +496,28 @@ function writeBoardText() {
   }
   if (text.message && !chatLine) {
     overlay.writeTop(text.message.x, text.message.y, text.message.color, text.message.text);
+  }
+  writeNearbySign();
+}
+
+// writeNearbySign writes the sign you are at just above the message line, in
+// the sign's own colors, so it reads as that sign speaking rather than as
+// chrome. It is centered on the board the way the message line is.
+function writeNearbySign() {
+  if (modal || notice || myX <= 0) {
+    return;
+  }
+  const group = signInRange(signGroups, myX - 1, myY - 1, COLS, SIGN_RANGE);
+  if (!group) {
+    return;
+  }
+  const lines = group.lines.slice(0, SIGN_MAX_LINES);
+  let y = 24 - lines.length;
+  for (const line of lines) {
+    const label = ` ${line.slice(0, BOARD_COLS - 2)} `;
+    const x = Math.max(0, Math.floor((BOARD_COLS - label.length) / 2));
+    overlay.writeTop(x, y, group.color, label);
+    y += 1;
   }
 }
 
@@ -502,7 +553,10 @@ function currentMask(): number {
     return 0;
   }
   const raw = movementMask(pressed);
-  return rig.mode === "first" ? facingMask(raw, rig.facing) : raw;
+  // Outside first person a strafe has no meaning -- the arrows are already
+  // absolute board directions -- so the pseudo-bits are dropped rather than
+  // sent. facingMask does its own dropping.
+  return rig.mode === "first" ? facingMask(raw, rig.facing) : wireMask(raw);
 }
 
 function stopHeldInput() {

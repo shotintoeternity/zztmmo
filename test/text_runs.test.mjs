@@ -2,7 +2,7 @@ import assert from "node:assert/strict";
 import { build } from "esbuild";
 
 const out = await build({ entryPoints: ["src/text_runs.ts"], bundle: true, format: "esm", platform: "node", write: false });
-const { boardText, nearestSigns, groupSigns } = await import(`data:text/javascript;base64,${Buffer.from(out.outputFiles[0].contents).toString("base64")}`);
+const { boardText, groupSigns, signDistance, signInRange } = await import(`data:text/javascript;base64,${Buffer.from(out.outputFiles[0].contents).toString("base64")}`);
 
 const COLS = 80, BOARD = 60, ROWS = 25;
 const grid = () => Array.from({ length: COLS * ROWS }, () => ({ ch: 0x20, color: 0x0f }));
@@ -56,7 +56,19 @@ const put = (cells, x, y, text, color) => { for (let i = 0; i < text.length; i++
   assert.ok(groups.some((g) => g.lines[0] === "X"), "the lone letter is its own sign");
   const sign = groups.find((g) => g.color === 0x6f);
   assert.deepEqual(sign.lines, ["The Town of ZZT", "Copyright 1991", "Epic MegaGames"]);
-  assert.equal(nearestSigns(groups, 45, 21)[0], sign);
-  assert.equal(nearestSigns(groups, 12, 12)[0], bank);
+  // The readout's gate. Distance is to the sign's nearest square, so standing
+  // at the tail of a fifteen-column sign is standing at it.
+  assert.equal(signDistance(sign, 40, 21, COLS), 0, "standing on the sign's first column");
+  assert.equal(signDistance(sign, 54, 20, COLS), 0, "standing on the last column of its longest line");
+  assert.equal(signDistance(sign, 56, 21, COLS), 3, "three columns past the end of that row's line");
+  assert.equal(signDistance(sign, 45, 18, COLS), 4, "two rows above its top line, counted double");
+
+  assert.equal(signInRange(groups, 45, 21, COLS, 8), sign, "standing in it");
+  assert.equal(signInRange(groups, 58, 21, COLS, 8), sign, "five columns off its end");
+  assert.equal(signInRange(groups, 45, 17, COLS, 8), sign, "three rows above it");
+  assert.equal(signInRange(groups, 45, 15, COLS, 8), null, "five rows above it is too far to read");
+  assert.equal(signInRange(groups, 30, 12, COLS, 8), null, "out in the open, nothing is read");
+  assert.equal(signInRange(groups, 11, 9, COLS, 8), bank, "the sign you are inside wins");
+  assert.equal(signInRange([], 45, 21, COLS, 8), null, "a board with no signs");
 }
 console.log("text_runs ok");

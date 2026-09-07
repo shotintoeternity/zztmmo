@@ -3,7 +3,10 @@
 // the key byte; the two never mix, so a command can never be read as a step.
 //
 // Only the vanilla bindings are here. V is this client's own: it never reaches
-// the wire, it cycles the camera.
+// the wire, it cycles the camera. A and D are this client's own too: they are
+// strafes, which the text screen has no use for, so they ride two pseudo-bits
+// above the wire bits and are resolved against your facing (or dropped) before
+// anything is sent.
 
 export const InputMaskUp = 1 << 0;
 export const InputMaskDown = 1 << 1;
@@ -11,6 +14,16 @@ export const InputMaskLeft = 1 << 2;
 export const InputMaskRight = 1 << 3;
 export const InputMaskShift = 1 << 4;
 export const InputMaskShoot = 1 << 5;
+
+/**
+ * Client-only bits. The server's keymask is six bits wide (input.go), so these
+ * two live above it: facingMask turns them into a real direction and wireMask
+ * drops them. Neither may ever be sent.
+ */
+export const InputMaskStrafeLeft = 1 << 6;
+export const InputMaskStrafeRight = 1 << 7;
+const WIRE_BITS =
+  InputMaskUp | InputMaskDown | InputMaskLeft | InputMaskRight | InputMaskShift | InputMaskShoot;
 
 export const KeyEnter = 13;
 export const KeyEscape = 27;
@@ -35,6 +48,8 @@ const MASKS: Record<string, number> = {
   ShiftLeft: InputMaskShift,
   ShiftRight: InputMaskShift,
   Space: InputMaskShoot,
+  KeyA: InputMaskStrafeLeft,
+  KeyD: InputMaskStrafeRight,
 };
 
 /** Every case of ElementPlayerTick's key switch that a browser can reach. */
@@ -51,6 +66,11 @@ const COMMANDS: Record<string, number> = {
 
 export function isMovementKey(code: string): boolean {
   return code in MASKS;
+}
+
+/** wireMask keeps only the bits the server understands. */
+export function wireMask(mask: number): number {
+  return mask & WIRE_BITS;
 }
 
 /** commandKey returns the play-mode command byte for an event, or 0. */
@@ -91,8 +111,9 @@ const FACING_MASKS = [InputMaskUp, InputMaskRight, InputMaskDown, InputMaskLeft]
 
 /**
  * facingMask is the first-person remap: up walks the way you face, down walks
- * backwards, and left/right (turns, handled on the key edge) never travel.
- * Shift and shoot pass through, so Space+Up shoots straight ahead.
+ * backwards, A and D step sideways without turning, and left/right (turns,
+ * handled on the key edge) never travel. Shift and shoot pass through, so
+ * Space+Up shoots straight ahead and Space+A shoots to your left.
  */
 export function facingMask(mask: number, facing: Facing): number {
   let out = mask & (InputMaskShift | InputMaskShoot);
@@ -102,7 +123,13 @@ export function facingMask(mask: number, facing: Facing): number {
   if (mask & InputMaskDown) {
     out |= FACING_MASKS[(facing + 2) % 4];
   }
-  return out;
+  if (mask & InputMaskStrafeLeft) {
+    out |= FACING_MASKS[(facing + 3) % 4];
+  }
+  if (mask & InputMaskStrafeRight) {
+    out |= FACING_MASKS[(facing + 1) % 4];
+  }
+  return wireMask(out);
 }
 
 /** facingOfMask is the compass index a held direction points at, or null when none is held. */

@@ -31,9 +31,7 @@ export type BoardText = {
 export type SignGroup = {
   color: number;
   lines: string[];
-  /** Center of the group, 0-based screen coordinates. */
-  cx: number;
-  cy: number;
+  /** The 0-based cell indices every run of the sign occupies. */
   cells: number[];
 };
 
@@ -228,15 +226,51 @@ export function groupSigns(signs: readonly TextRun[], cols: number): SignGroup[]
         row = run.y;
       }
     }
-    const cells = list.flatMap((run) => run.cells);
-    let sx = 0, sy = 0;
-    for (const i of cells) { sx += i % cols; sy += Math.floor(i / cols); }
-    out.push({ color: list[0].color, lines, cx: sx / cells.length, cy: sy / cells.length, cells });
+    out.push({ color: list[0].color, lines, cells: list.flatMap((run) => run.cells) });
   }
   return out;
 }
 
-/** nearestSigns orders sign groups by distance from a 0-based screen cell. */
-export function nearestSigns(groups: readonly SignGroup[], x: number, y: number): SignGroup[] {
-  return [...groups].sort((a, b) => (Math.abs(a.cx - x) + Math.abs(a.cy - y) * 2) - (Math.abs(b.cx - x) + Math.abs(b.cy - y) * 2));
+/**
+ * signDistance is how far a cell is from the nearest square of a sign. Rows
+ * count double because a row is 1.75 cells deep and because ZZT boards are
+ * wider than they are tall: eight columns to the side of a sign is about as
+ * close as four rows above it. The distance is to the sign's nearest square
+ * rather than to its middle, so standing at the end of a long sign counts as
+ * standing at it.
+ */
+export function signDistance(group: SignGroup, x: number, y: number, cols: number): number {
+  let best = Infinity;
+  for (const i of group.cells) {
+    const d = Math.abs((i % cols) - x) + Math.abs(Math.floor(i / cols) - y) * 2;
+    if (d < best) {
+      best = d;
+    }
+  }
+  return best;
+}
+
+/**
+ * signInRange is the sign you are close enough to read: the nearest one within
+ * `range`, or null out in the open. The gate is the whole point of the
+ * readout — a board's every sign written at the bottom at once is noise, and
+ * one sign that appears as you walk up to it is a sign you read.
+ */
+export function signInRange(
+  groups: readonly SignGroup[],
+  x: number,
+  y: number,
+  cols: number,
+  range: number,
+): SignGroup | null {
+  let best: SignGroup | null = null;
+  let bestDistance = Infinity;
+  for (const group of groups) {
+    const d = signDistance(group, x, y, cols);
+    if (d <= range && d < bestDistance) {
+      best = group;
+      bestDistance = d;
+    }
+  }
+  return best;
 }

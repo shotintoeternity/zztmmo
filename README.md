@@ -19,7 +19,7 @@ faces you. A fake wall looks exactly like a wall, because it is drawn with the
 wall's glyph, which is the joke working. Other players stand on the board as
 their own cards, in the color they picked.
 
-![The overhead view, with the nearest signs written along the bottom](docs/overhead.png)
+![The overhead view: north up, a couple of dozen columns around you](docs/overhead.png)
 
 ## Running it
 
@@ -59,6 +59,14 @@ The keys are ZZT's. Arrows move, Shift+arrow shoots, and T, P, B, S, Q, H and
 `?` do what the sidebar says. Scrolls, help, prompts and the pause label draw as
 ZZT's own text windows over the 3D view.
 
+**A** and **D** strafe, in the first-person view only, where they are the one
+thing the arrows cannot say: a step sideways without turning. Everywhere else
+the arrows are already absolute board directions, so a strafe would mean
+nothing and the keys do nothing. They never reach the server as themselves --
+the client resolves them against your facing and sends an ordinary direction,
+which is all ZZT's six-bit keymask can carry. (**A** sits next to **S**, which
+is Save; a WASD reflex opens the save prompt, and Escape closes it.)
+
 **V** cycles the view, which is the one key this client keeps for itself:
 
 - **overhead** (the default) looks down at your smiley from high up, north
@@ -67,15 +75,32 @@ ZZT's own text windows over the 3D view.
 - **chase** is the same idea from closer behind, so the walls have faces.
 - **first** stands inside your square at eye height, facing the way you last
   pushed. Left and right turn; up walks the way you face, down walks backwards,
-  and Space+up shoots straight ahead.
+  A and D step sideways without turning, and Space+up shoots straight ahead.
 - **diorama** shows the whole board from the south, the way the text screen
   does, with depth.
 - **classic** is the regular ZZTMMO screen: the board drawn flat as text.
 
-In the 3D views the game's message line, the text ZZT writes over the bottom
-row of the board when you touch something, is written on the bottom row of the
-screen instead, where ZZT puts it. Signs are part of the board and stay in the
-world.
+### Reading, in a world you are standing in
+
+Two kinds of words live on a ZZT board, and in three dimensions they need
+reading two different ways.
+
+The **message line** -- what the game writes over the bottom row when you touch
+something -- is not part of the board, so it leaves the scene and is written on
+the bottom row of the screen, where ZZT puts it, rather than standing up as a
+row of cards.
+
+**Signs** are part of the board. They are text elements: walls you can read, and
+a board with its signs taken out is not the board, so they stay in the world.
+But a sign is a row of letters lying flat across the floor, and from inside the
+world, at eye height, a row of letters is edge-on and unreadable -- in first
+person a sign is a colored wall and nothing more. So the sign you are standing
+at reads itself out just above the message line, in its own colors, and only
+that one: walk up to it and it appears, walk away and it is gone. Every sign on
+the board written out at once would be noise; one sign that arrives as you
+reach it is a sign you read.
+
+![Standing at the Town of ZZT sign, which reads itself out along the bottom](docs/sign.png)
 
 ![First person, meeting a lion](docs/first.png)
 
@@ -92,9 +117,12 @@ world.
 - `src/scene.ts` rebuilds the board geometry when cells change and draws it
   through one pair of shaders that read the CP437 font atlas: a texel is
   foreground where the glyph has ink and background elsewhere.
-- `src/text_runs.ts` finds the board message (and the signs) in the cells so
-  the 3D views can write the message at the bottom of the screen. Pure and
-  tested.
+- `src/text_runs.ts` finds the board message and the signs in the cells,
+  groups a sign's runs into its lines, and answers which sign you are close
+  enough to read. Pure and tested.
+- `src/input.ts` is the key vocabulary. The strafes are two pseudo-bits above
+  the server's six, resolved against your facing or dropped, so they can never
+  be sent. Pure and tested.
 - `src/camera.ts` is the five views. `src/overlay.ts`, `src/sidebar.ts`,
   `src/textwindow.ts` and `src/modals.ts` are the 80x25 text layer on top.
 
