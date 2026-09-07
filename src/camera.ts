@@ -1,44 +1,63 @@
-// camera.ts — three ways of looking at the board.
+// camera.ts — two ways of looking at the board, and one continuous way of
+// moving between them.
 //
-//   overhead high above your ☻, north up: a couple of dozen columns and most
-//            of the rows around you at once. Drag to orbit, wheel to zoom.
-//   chase    closer, behind and above your ☻, north up, so the arrow keys still
-//            mean what they mean on the text screen.
-//   first    at eye height inside your square, facing the way you last pushed.
-//            Left and right turn; up walks the way you face.
-//   diorama  the whole board from the south, the way the text screen shows it,
-//            with depth.
+//   world    the board with depth. One camera on one zoom axis (zoom.ts): pull
+//            all the way out for the whole board from the south, the way the
+//            text screen shows it; push in to sit behind your ☻; push past the
+//            last orbit step and you are standing inside your own square at eye
+//            height, facing the way you last pushed. Drag to orbit, wheel to
+//            zoom, F to stand up or step back out.
 //   classic  the text screen itself: the regular ZZTMMO view, drawn flat.
+//
+// Overhead, chase and diorama used to be three of five modes on the V key.
+// They were never three things — one orbit camera at three distances, with the
+// wheel already moving between them — so they are gone as modes and kept as
+// presets the ?view= parameter can still name. What is left on V is the only
+// difference that was ever real: a world you look into, or a screen you read.
+//
+// The far end needs no special case: clampTarget's margins grow with distance
+// until they meet in the middle of the board, so a camera far enough out stops
+// following the player and frames the whole board on its own.
 //
 // World axes: x is the board column, z is the row (south is +z), y is up. A
 // yaw of 0 looks north.
 
 import * as THREE from "three";
 import { TILE_DEPTH } from "./scene";
+import { ORBIT_DEFAULT, ORBIT_MAX, toggleFirstPerson, zoomStep, type Zoom } from "./zoom";
 
-export type ViewMode = "overhead" | "chase" | "first" | "diorama" | "classic";
-export const VIEW_MODES: readonly ViewMode[] = ["overhead", "chase", "first", "diorama", "classic"];
+export type ViewMode = "world" | "classic";
+export const VIEW_MODES: readonly ViewMode[] = ["world", "classic"];
 
 /** Facing as a compass index: 0 north, 1 east, 2 south, 3 west. */
 export type Facing = 0 | 1 | 2 | 3;
 
-const CHASE = { pitch: 0.95, dist: 15, minDist: 3, maxDist: 34 };
-const OVERHEAD = { pitch: 1.12, dist: 27, minDist: 8, maxDist: 50 };
-const DIORAMA = { pitch: 0.95, dist: 60, minDist: 20, maxDist: 110 };
+/** The distances and angles the old mode names stood for, for ?view=. */
+export const VIEW_PRESETS: Record<string, { dist: number; pitch: number; firstPerson: boolean }> = {
+  overhead: { dist: ORBIT_DEFAULT, pitch: 1.12, firstPerson: false },
+  chase: { dist: 15, pitch: 0.95, firstPerson: false },
+  diorama: { dist: 60, pitch: 0.95, firstPerson: false },
+  first: { dist: 15, pitch: 0.95, firstPerson: true },
+};
+
 // Eye height against 1.75-tall walls: a little over half, the Wolfenstein
 // proportion, so a corridor reads as a corridor and a boulder as a boulder.
 const EYE_HEIGHT = 0.95;
-const FOV_DEFAULT = 58;
+const FOV_ORBIT = 58;
 const FOV_FIRST = 66;
+// How long standing up (or stepping back out) takes. The zoom itself is
+// continuous, so this is the only cut left, and it is worth spending a third
+// of a second not to make it.
+const BLEND_SECONDS = 0.35;
 const BOARD_W = 60;
 const BOARD_D = 25 * TILE_DEPTH;
-const BOARD_CENTER = new THREE.Vector3(BOARD_W / 2, 0, BOARD_D / 2);
 
 /**
  * clampTarget keeps a following camera from looking off the board: when the
  * player nears an edge the view stops scrolling rather than showing half a
- * screen of nothing, the way a scrolling map does. The margin is what the
- * view covers, roughly, from its distance.
+ * screen of nothing, the way a scrolling map does. The margin is what the view
+ * covers, roughly, from its distance — so far enough out, the two margins meet
+ * and the camera settles on the middle of the board.
  */
 function clampTarget(goal: THREE.Vector3, dist: number) {
   const mx = Math.min(dist * 0.5, BOARD_W / 2);
@@ -54,34 +73,61 @@ function lerpAngle(a: number, b: number, t: number): number {
   return a + d * t;
 }
 
-export class CameraRig {
-  readonly camera = new THREE.PerspectiveCamera(58, 1, 0.05, 300);
-  mode: ViewMode = "overhead";
-  facing: Facing = 0;
+function ease(t: number): number {
+  return t * t * (3 - 2 * t);
+}
 
+export class CameraRig {
+  readonly camera = new THREE.PerspectiveCamera(FOV_ORBIT, 1, 0.05, 300);
+  mode: ViewMode = "world";
+  facing: Facing = 0;
+  /** Where the camera is when it has left your body behind. */
+  ghost = false;
+  readonly ghostAt = new THREE.Vector3(30, 0, BOARD_D / 2);
+
+  private zoomState: Zoom = { dist: ORBIT_DEFAULT, firstPerson: false };
   private yaw = 0;
-  private pitch = CHASE.pitch;
-  private dist = CHASE.dist;
-  private overheadYaw = 0;
-  private overheadPitch = OVERHEAD.pitch;
-  private overheadDist = OVERHEAD.dist;
-  private dioramaYaw = 0;
-  private dioramaPitch = DIORAMA.pitch;
-  private dioramaDist = DIORAMA.dist;
+  private pitch = 1.12;
   private readonly target = new THREE.Vector3(30, 0, 12.5);
-  private readonly eye = new THREE.Vector3();
+  private readonly lookAt = new THREE.Vector3(30, 0, 12.5);
+  private readonly orbitEye = new THREE.Vector3();
+  private readonly orbitLook = new THREE.Vector3();
+  private readonly firstEye = new THREE.Vector3();
+  private readonly firstLook = new THREE.Vector3();
   private lookYaw = 0;
+  private blend = 0;
   private snapNext = true;
+
+  get firstPerson(): boolean {
+    return this.zoomState.firstPerson;
+  }
+
+  get distance(): number {
+    return this.zoomState.dist;
+  }
 
   setMode(mode: ViewMode) {
     this.mode = mode;
     this.snapNext = true;
   }
 
+  /** V: a world you look into, or a screen you read. */
   cycle(): ViewMode {
-    const next = VIEW_MODES[(VIEW_MODES.indexOf(this.mode) + 1) % VIEW_MODES.length];
-    this.setMode(next);
-    return next;
+    this.setMode(this.mode === "world" ? "classic" : "world");
+    return this.mode;
+  }
+
+  /** applyPreset places the camera where one of the old mode names stood. */
+  applyPreset(name: string): boolean {
+    const preset = VIEW_PRESETS[name];
+    if (!preset) {
+      return false;
+    }
+    this.zoomState = { dist: preset.dist, firstPerson: preset.firstPerson };
+    this.pitch = preset.pitch;
+    this.blend = preset.firstPerson ? 1 : 0;
+    this.snapNext = true;
+    return true;
   }
 
   /** snap skips the smoothing on the next update: a new board, not a walk. */
@@ -94,107 +140,94 @@ export class CameraRig {
   }
 
   orbit(dx: number, dy: number) {
-    if (this.mode === "first" || this.mode === "classic") {
-      return;
-    }
-    if (this.mode === "overhead") {
-      this.overheadYaw -= dx * 0.005;
-      this.overheadPitch = THREE.MathUtils.clamp(this.overheadPitch + dy * 0.005, 0.4, 1.5);
-      return;
-    }
-    if (this.mode === "diorama") {
-      this.dioramaYaw -= dx * 0.005;
-      this.dioramaPitch = THREE.MathUtils.clamp(this.dioramaPitch + dy * 0.005, 0.25, 1.5);
+    if (this.firstPerson || this.mode === "classic") {
       return;
     }
     this.yaw -= dx * 0.005;
-    this.pitch = THREE.MathUtils.clamp(this.pitch + dy * 0.005, 0.15, 1.5);
+    this.pitch = THREE.MathUtils.clamp(this.pitch + dy * 0.005, 0.25, 1.5);
   }
 
-  zoom(delta: number) {
-    if (this.mode === "overhead") {
-      this.overheadDist = THREE.MathUtils.clamp(this.overheadDist * (1 + delta * 0.001), OVERHEAD.minDist, OVERHEAD.maxDist);
-      return;
-    }
-    if (this.mode === "diorama") {
-      this.dioramaDist = THREE.MathUtils.clamp(this.dioramaDist * (1 + delta * 0.001), DIORAMA.minDist, DIORAMA.maxDist);
-      return;
-    }
-    if (this.mode === "chase") {
-      this.dist = THREE.MathUtils.clamp(this.dist * (1 + delta * 0.001), CHASE.minDist, CHASE.maxDist);
-    }
+  /** zoom returns true when it changed whether you are in first person. */
+  zoom(delta: number): boolean {
+    const before = this.zoomState.firstPerson;
+    this.zoomState = zoomStep(this.zoomState, delta);
+    return this.zoomState.firstPerson !== before;
   }
 
-  /** Fog distances that suit the view. */
+  /** standUp is the F key: into your own square, or back out to where you were. */
+  standUp() {
+    this.zoomState = toggleFirstPerson(this.zoomState);
+  }
+
+  /**
+   * Fog that suits the distance, with floors: close in, a fog that scaled all
+   * the way down would grey out the room you are standing in.
+   */
   fog(): { near: number; far: number } {
-    switch (this.mode) {
-      case "first":
-        return { near: 34, far: 95 };
-      case "chase":
-        return { near: 22, far: 60 };
-      case "overhead":
-        return { near: 50, far: 120 };
-      case "diorama":
-      case "classic":
-        return { near: 160, far: 320 };
+    if (this.mode === "classic") {
+      return { near: ORBIT_MAX * 2, far: ORBIT_MAX * 4 };
     }
+    if (this.firstPerson) {
+      return { near: 34, far: 95 };
+    }
+    const dist = this.zoomState.dist;
+    return { near: Math.max(20, dist * 2.2), far: Math.max(55, dist * 5) };
   }
 
-  /** update moves the camera toward where it should be, given the player's world position. */
+  /**
+   * update moves the camera toward where it should be. Both placements are
+   * computed every frame and blended, so standing up is a move rather than a
+   * cut, and neither steady state pays for the other's smoothing.
+   */
   update(dt: number, playerX: number, playerZ: number) {
     const k = this.snapNext ? 1 : 1 - Math.exp(-dt * 10);
     const turnK = this.snapNext ? 1 : 1 - Math.exp(-dt * 12);
+    const goalBlend = this.firstPerson ? 1 : 0;
+    if (this.snapNext) {
+      this.blend = goalBlend;
+    } else {
+      const step = dt / BLEND_SECONDS;
+      this.blend = goalBlend > this.blend
+        ? Math.min(goalBlend, this.blend + step)
+        : Math.max(goalBlend, this.blend - step);
+    }
     this.snapNext = false;
 
-    const facingYaw = (this.facing * Math.PI) / 2;
-    this.lookYaw = lerpAngle(this.lookYaw, facingYaw, turnK);
-    const fov = this.mode === "first" ? FOV_FIRST : FOV_DEFAULT;
-    if (this.camera.fov !== fov) {
+    this.lookYaw = lerpAngle(this.lookYaw, (this.facing * Math.PI) / 2, turnK);
+    const t = ease(this.blend);
+    const fov = FOV_ORBIT + (FOV_FIRST - FOV_ORBIT) * t;
+    if (Math.abs(this.camera.fov - fov) > 0.01) {
       this.camera.fov = fov;
       this.camera.updateProjectionMatrix();
     }
 
-    if (this.mode === "diorama" || this.mode === "classic") {
-      this.target.lerp(BOARD_CENTER, k);
-      this.place(this.dioramaYaw, this.dioramaPitch, this.dioramaDist, 0);
-      return;
+    // A ghost is already where it wants to be; only a body needs following.
+    const goal = this.ghost
+      ? this.ghostAt.clone()
+      : new THREE.Vector3(playerX, 0, playerZ);
+    if (!this.ghost) {
+      clampTarget(goal, this.zoomState.dist);
     }
+    this.target.lerp(goal, this.ghost ? 1 : k);
 
-    const goal = new THREE.Vector3(playerX, 0, playerZ);
-    if (this.mode === "overhead") {
-      clampTarget(goal, this.overheadDist);
-    } else if (this.mode === "chase") {
-      clampTarget(goal, this.dist);
-    }
-    this.target.lerp(goal, k);
-
-    if (this.mode === "first") {
-      this.eye.set(this.target.x, EYE_HEIGHT, this.target.z);
-      this.camera.position.copy(this.eye);
-      const look = new THREE.Vector3(
-        this.eye.x + Math.sin(this.lookYaw),
-        EYE_HEIGHT - 0.03,
-        this.eye.z - Math.cos(this.lookYaw),
-      );
-      this.camera.lookAt(look);
-      return;
-    }
-
-    if (this.mode === "overhead") {
-      this.place(this.overheadYaw, this.overheadPitch, this.overheadDist, 0);
-      return;
-    }
-    this.place(this.yaw, this.pitch, this.dist, 0.6);
-  }
-
-  private place(yaw: number, pitch: number, dist: number, lookHeight: number) {
-    this.eye.set(
-      this.target.x - Math.sin(yaw) * Math.cos(pitch) * dist,
-      Math.sin(pitch) * dist,
-      this.target.z + Math.cos(yaw) * Math.cos(pitch) * dist,
+    const dist = this.zoomState.dist;
+    this.orbitEye.set(
+      this.target.x - Math.sin(this.yaw) * Math.cos(this.pitch) * dist,
+      Math.sin(this.pitch) * dist,
+      this.target.z + Math.cos(this.yaw) * Math.cos(this.pitch) * dist,
     );
-    this.camera.position.copy(this.eye);
-    this.camera.lookAt(this.target.x, lookHeight, this.target.z);
+    this.orbitLook.set(this.target.x, 0.6, this.target.z);
+
+    this.firstEye.set(this.target.x, EYE_HEIGHT, this.target.z);
+    this.firstLook.set(
+      this.firstEye.x + Math.sin(this.lookYaw),
+      EYE_HEIGHT - 0.03,
+      this.firstEye.z - Math.cos(this.lookYaw),
+    );
+
+    this.camera.position.copy(this.orbitEye).lerp(this.firstEye, t);
+    this.lookAt.copy(this.orbitLook).lerp(this.firstLook, t);
+    this.camera.lookAt(this.lookAt);
   }
 
   resize(aspect: number) {

@@ -8,7 +8,7 @@
 // Query parameters: ?world=TOWN&name=You&color=%23ff8800&view=overhead&board=1
 
 import "./style.css";
-import { CameraRig, VIEW_MODES, type ViewMode } from "./camera";
+import { CameraRig } from "./camera";
 import { loadFont, type Font } from "./font";
 import { commandKey, facingMask, facingOfMask, isMovementKey, movementMask, wireMask } from "./input";
 import { modalKey, newTextModal, renderModal, type Modal } from "./modals";
@@ -103,8 +103,18 @@ let retryAttempt = 0;
 
 const overlay = new Overlay(overlayCanvas);
 const rig = new CameraRig();
-if (startView && (VIEW_MODES as readonly string[]).includes(startView)) {
-  rig.setMode(startView as ViewMode);
+// ?view= still names the old modes. They are camera positions now, not modes:
+// V toggles the world and the text screen, and the rest is the wheel.
+if (startView === "classic") {
+  rig.setMode("classic");
+} else if (startView) {
+  rig.applyPreset(startView);
+}
+
+// First-person controls belong to the 3D view. In the classic view the arrows
+// are the text screen's, whatever the camera was doing when you left it.
+function inFirstPerson(): boolean {
+  return rig.mode === "world" && rig.firstPerson;
 }
 
 let font: Font | null = null;
@@ -424,10 +434,10 @@ function setNotice(text: string) {
 }
 
 function writeViewLabel() {
-  overlay.writeBase(71, 17, 0x1e, rig.mode.padEnd(8, " "));
+  overlay.writeBase(71, 17, 0x1e, (rig.mode === "classic" ? "classic" : "3D").padEnd(8, " "));
   // Row 20 is blank in vanilla's sidebar, so the one binding that exists only
   // inside the first-person view is announced there, and only there.
-  if (rig.mode === "first") {
+  if (inFirstPerson()) {
     overlay.writeBase(63, 20, 0x30, " A D ");
     overlay.writeBase(68, 20, 0x1f, " Strafe");
   } else {
@@ -556,7 +566,7 @@ function currentMask(): number {
   // Outside first person a strafe has no meaning -- the arrows are already
   // absolute board directions -- so the pseudo-bits are dropped rather than
   // sent. facingMask does its own dropping.
-  return rig.mode === "first" ? facingMask(raw, rig.facing) : wireMask(raw);
+  return inFirstPerson() ? facingMask(raw, rig.facing) : wireMask(raw);
 }
 
 function stopHeldInput() {
@@ -591,6 +601,16 @@ function handleKeyDown(event: KeyboardEvent) {
     applyView();
     return;
   }
+  // F stands you up inside your own square, or steps back out to the distance
+  // you were watching from. The wheel does the same thing continuously; this is
+  // the way there without one.
+  if (event.code === "KeyF" && !event.ctrlKey && !event.metaKey && !event.altKey) {
+    event.preventDefault();
+    stopHeldInput();
+    rig.standUp();
+    applyView();
+    return;
+  }
   if (event.repeat && !isMovementKey(event.code)) {
     return;
   }
@@ -606,17 +626,17 @@ function handleKeyDown(event: KeyboardEvent) {
   }
   event.preventDefault();
   // First person: left and right are turns on the key edge and never travel.
-  if (rig.mode === "first" && (event.code === "ArrowLeft" || event.code === "Numpad4")) {
+  if (inFirstPerson() && (event.code === "ArrowLeft" || event.code === "Numpad4")) {
     if (!event.repeat) rig.turn(-1);
     return;
   }
-  if (rig.mode === "first" && (event.code === "ArrowRight" || event.code === "Numpad6")) {
+  if (inFirstPerson() && (event.code === "ArrowRight" || event.code === "Numpad6")) {
     if (!event.repeat) rig.turn(1);
     return;
   }
   pressed.add(event.code);
   const facing = facingOfMask(movementMask(pressed));
-  if (rig.mode !== "first" && facing !== null) {
+  if (!inFirstPerson() && facing !== null) {
     rig.facing = facing;
   }
   client.sendInput(currentMask());
@@ -657,7 +677,13 @@ glCanvas.addEventListener("pointerup", () => {
 });
 glCanvas.addEventListener("wheel", (event) => {
   event.preventDefault();
-  rig.zoom(event.deltaY);
+  // Pushing past the last orbit step stands you up, which changes what the
+  // arrows mean: a key held across that moment has to be let go of, or it
+  // would walk west one frame and turn the next.
+  if (rig.zoom(event.deltaY)) {
+    stopHeldInput();
+    applyView();
+  }
 }, { passive: false });
 
 window.addEventListener("keydown", handleKeyDown);
@@ -685,7 +711,7 @@ function frame(now: number) {
   const dt = Math.min(0.1, (now - lastFrame) / 1000);
   lastFrame = now;
   if (scene && font) {
-    const hide = rig.mode === "first" && myX > 0 ? { x: myX - 1, y: myY - 1 } : null;
+    const hide = inFirstPerson() && myX > 0 ? { x: myX - 1, y: myY - 1 } : null;
     const hideKey = hide ? `${hide.x},${hide.y}` : "";
     if (rig.mode === "classic") {
       if (sceneDirty) {

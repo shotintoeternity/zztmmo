@@ -15,6 +15,12 @@ assert.equal(movementMask(new Set(["Numpad4", "ShiftLeft"])), InputMaskLeft | In
 assert.equal(isMovementKey("KeyW"), false);
 assert.equal(isMovementKey("KeyV"), false);
 assert.equal(isMovementKey("KeyA"), true, "a strafe is a movement key");
+// F (stand up) and G (ghost) are the client's own, like V: neither is a step
+// nor a command, so neither can reach the server.
+for (const code of ["KeyF", "KeyG"]) {
+  assert.equal(isMovementKey(code), false, `${code} is not a step`);
+  assert.equal(commandKey({ code, key: code.slice(3).toLowerCase() }), 0, `${code} is not a command`);
+}
 assert.equal(commandKey({ code: "KeyV", key: "v" }), 0);
 assert.equal(commandKey({ code: "KeyT", key: "t" }), "T".charCodeAt(0));
 assert.equal(commandKey({ code: "Enter", key: "Enter" }), KeyEnter);

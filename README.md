@@ -51,7 +51,7 @@ Query parameters:
 | `name` | Your name on the board. |
 | `color` | Your card's background, as `%23RRGGBB`. |
 | `board` | The board to start on; the server's default otherwise. |
-| `view` | `overhead`, `chase`, `first`, `diorama` or `classic`. |
+| `view` | Where the camera starts: `overhead`, `chase`, `first`, `diorama` or `classic`. |
 
 ## Playing
 
@@ -67,18 +67,26 @@ the client resolves them against your facing and sends an ordinary direction,
 which is all ZZT's six-bit keymask can carry. (**A** sits next to **S**, which
 is Save; a WASD reflex opens the save prompt, and Escape closes it.)
 
-**V** cycles the view, which is the one key this client keeps for itself:
+**V** switches between the two things this client can be:
 
-- **overhead** (the default) looks down at your smiley from high up, north
-  up, with a couple of dozen columns and most of the rows around you in
-  sight. Drag to orbit, wheel to zoom.
-- **chase** is the same idea from closer behind, so the walls have faces.
-- **first** stands inside your square at eye height, facing the way you last
-  pushed. Left and right turn; up walks the way you face, down walks backwards,
-  A and D step sideways without turning, and Space+up shoots straight ahead.
-- **diorama** shows the whole board from the south, the way the text screen
-  does, with depth.
+- **3D** is the board with depth, on one camera. Drag to orbit, wheel to zoom.
+  All the way out is the whole board from the south, the way the text screen
+  shows it; further in is over your shoulder; push past the last step and you
+  are standing inside your own square at eye height, facing the way you last
+  pushed. **F** takes that last step without a wheel, and brings you back out
+  to the distance you were watching from.
 - **classic** is the regular ZZTMMO screen: the board drawn flat as text.
+
+Overhead, chase and diorama used to be three more modes on this key. They were
+never three things -- one camera at three distances, with the wheel already
+moving between them -- so they are distances now, and `?view=` still names
+them.
+
+First person is the one that earns being a state rather than an angle, because
+the controls change there: left and right turn instead of walking, up walks the
+way you face, down walks backwards, A and D step sideways, and Space+up shoots
+straight ahead. Zooming in and out across that line lets go of any key you are
+holding, so a key held across it cannot mean two things.
 
 ### Reading, in a world you are standing in
 
@@ -123,11 +131,13 @@ reach it is a sign you read.
 - `src/input.ts` is the key vocabulary. The strafes are two pseudo-bits above
   the server's six, resolved against your facing or dropped, so they can never
   be sent. Pure and tested.
-- `src/camera.ts` is the five views. `src/overlay.ts`, `src/sidebar.ts`,
+- `src/zoom.ts` is the single axis the 3D view moves along, and the hysteresis
+  that keeps the first-person boundary from flickering. Pure and tested.
+- `src/camera.ts` is the two views and the blend between orbit and eye height. `src/overlay.ts`, `src/sidebar.ts`,
   `src/textwindow.ts` and `src/modals.ts` are the 80x25 text layer on top.
 
 `npm test` runs the node suites for the classifier, the key vocabulary, the
-text windows and the board text. `npm run build` type-checks and bundles.
+text windows, the board text and the zoom axis. `npm run build` type-checks and bundles.
 
 ## Not here yet
 
