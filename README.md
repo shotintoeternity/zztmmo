@@ -51,7 +51,7 @@ Query parameters:
 | `name` | Your name on the board. |
 | `color` | Your card's background, as `%23RRGGBB`. |
 | `board` | The board to start on; the server's default otherwise. |
-| `view` | Where the camera starts: `overhead`, `chase`, `first`, `diorama` or `classic`. |
+| `view` | Where the camera starts: `overhead` (the default), `chase`, `first`, `diorama` or `classic`. |
 
 ## Playing
 
@@ -69,13 +69,17 @@ is Save; a WASD reflex opens the save prompt, and Escape closes it.)
 
 **V** switches between the two things this client can be:
 
-- **3D** is the board with depth, on one camera. Drag to orbit, wheel to zoom.
-  All the way out is the whole board from the south, the way the text screen
-  shows it; further in is over your shoulder; push past the last step and you
-  are standing inside your own square at eye height, facing the way you last
-  pushed. **F** takes that last step without a wheel, and brings you back out
-  to the distance you were watching from.
+- **3D** is the board with depth, on one camera, and it starts where choosing
+  it means you want to be: at eye level, standing inside your own square.
+  Drag to orbit, wheel to zoom. **F** backs you out to the distance you were
+  last watching from and takes you in again; from there, all the way out is the
+  whole board from the south, the way the text screen shows it, and part way is
+  over your own shoulder.
 - **classic** is the regular ZZTMMO screen: the board drawn flat as text.
+
+The client opens on the overhead shot, which is the one view V never returns
+to: it is the establishing shot, before you have chosen to be in the board or
+to read it. The wheel and F both go back to it.
 
 Overhead, chase and diorama used to be three more modes on this key. They were
 never three things -- one camera at three distances, with the wheel already

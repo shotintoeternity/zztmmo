@@ -115,9 +115,22 @@ export class CameraRig {
     this.snapNext = true;
   }
 
-  /** V: a world you look into, or a screen you read. */
+  /**
+   * V: a world you look into, or a screen you read.
+   *
+   * Arriving in the world puts you in it, at eye level -- choosing 3D over the
+   * text screen is choosing to stand in the board rather than look down at it,
+   * and an orbit camera is a third thing that is neither. The distance is kept,
+   * so F backs you out to wherever you were watching from. The overhead shot
+   * the client opens on is the exception: it is the establishing shot, before
+   * anyone has chosen anything.
+   */
   cycle(): ViewMode {
-    this.setMode(this.mode === "world" ? "classic" : "world");
+    const next: ViewMode = this.mode === "world" ? "classic" : "world";
+    if (next === "world") {
+      this.zoomState = { dist: this.zoomState.dist, firstPerson: true };
+    }
+    this.setMode(next);
     return this.mode;
   }
 
