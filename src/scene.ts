@@ -312,14 +312,19 @@ export class BoardScene {
             solid.quad([[x0, 0, z0], [x1, 0, z0], [x1, 0, z1], [x0, 0, z1]], shape.glyph, FOG_FG, FOG_BG, true, SHADE_TOP);
             break;
           case "floor":
-            solid.quad([[x0, 0, z0], [x1, 0, z0], [x1, 0, z1], [x0, 0, z1]], FLOOR_DOT, dim(bg, 0.8), dim(bg, 0.55), true, SHADE_TOP);
+            // A coloured floor is ground you are standing on, so it is lit
+            // like ground rather than dimmed towards the background.
+            solid.quad([[x0, 0, z0], [x1, 0, z0], [x1, 0, z1], [x0, 0, z1]], FLOOR_DOT, dim(bg, 1.15), dim(bg, 0.8), true, SHADE_TOP);
             break;
           case "water":
+            // Water is ground you can see across and not walk on, so it is
+            // drawn at full strength: dimming it put a dark band in front of
+            // you that read as nothing at all.
             solid.quad(
               [[x0, WATER_DEPTH, z0], [x1, WATER_DEPTH, z0], [x1, WATER_DEPTH, z1], [x0, WATER_DEPTH, z1]],
               shape.glyph,
-              dim(paletteRGB(0x09), 0.9),
-              dim(paletteRGB(0x01), 0.8),
+              paletteRGB(0x09),
+              paletteRGB(0x01),
               true,
               SHADE_TOP,
             );
