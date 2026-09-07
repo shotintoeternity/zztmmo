@@ -167,8 +167,15 @@ const SHADE_EAST = 0.74;
 const SHADE_WEST = 0.74;
 const SHADE_NORTH = 0.58;
 
-const FLOOR_BG: RGB = [0.03, 0.03, 0.04];
-const FLOOR_DOT_FG: RGB = [0.17, 0.17, 0.2];
+// An empty ZZT square is black, and on the text screen that is all it needs to
+// be: the grid is implied by the characters sitting in it. In three dimensions
+// a black floor is not a floor, it is a hole -- there is nothing to judge
+// distance, speed or scale against, and in first person you walk over an
+// absence. So the floor keeps ZZT's near-black but carries a lit dot at the
+// centre of every square, which is the board's own grid and the only thing in
+// the world that says how big a step is.
+const FLOOR_BG: RGB = [0.075, 0.075, 0.095];
+const FLOOR_DOT_FG: RGB = [0.42, 0.42, 0.5];
 // A dark room's unseen squares: ZZT fills them with a grey ▒, and so does the
 // floor here, dimly, so a dark board is a floor you cannot see across rather
 // than nothing at all.
