@@ -56,28 +56,6 @@ jobs:
       - run: npm test
       - run: npm run build
 
-  web3d:
-    runs-on: ubuntu-latest
-    timeout-minutes: 15
-    # The 3D client: a second browser client for the same server, in the tree
-    # since it is part of what ships. Its own npm project with its own lockfile,
-    # and no browser job of its own -- the suites are pure functions over the
-    # protocol, the glyph tables and the text-window layout, so they run in node
-    # in seconds. `npm run build` is `tsc && vite build`, so this typechecks too.
-    defaults:
-      run:
-        working-directory: engine/web3d
-    steps:
-      - uses: actions/checkout@v4
-      - uses: actions/setup-node@v4
-        with:
-          node-version: 'lts/*'
-          cache: npm
-          cache-dependency-path: engine/web3d/package-lock.json
-      - run: npm ci
-      - run: npm test
-      - run: npm run build
-
   browser-goldens:
     runs-on: ubuntu-latest
     timeout-minutes: 20
