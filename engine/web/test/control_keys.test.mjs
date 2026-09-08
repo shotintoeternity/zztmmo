@@ -37,6 +37,7 @@ import {
   serverState,
   shootShift,
   shootSpace,
+  step,
   textAt,
   tickUntilGrid,
   waitForGrid,
@@ -72,6 +73,16 @@ async function assertAt(x, y, what) {
 }
 
 /** The text of the line the text window currently has selected. */
+/** The sidebar's torch stock, read off the screen rather than assumed. */
+function torchesOnScreen(cells) {
+  for (let row = 0; row < 25; row += 1) {
+    const line = textAt(cells, 60, row, 20);
+    const found = /Torches:(\d+)/.exec(line);
+    if (found) return Number(found[1]);
+  }
+  throw new Error("the sidebar has no Torches: row");
+}
+
 async function windowCursorLine(page) {
   return textAt(await readGrid(page), 0, WINDOW_CURSOR_ROW).trim();
 }
@@ -350,6 +361,45 @@ try {
   await page.keyboard.press("Escape");
   await waitForGrid(page, (cells) => !hasText(cells, "CTRL-01"), "Escape to close the scroll");
 
+  // The same link once more, answered WITHOUT letting go of the arrow.
+  //
+  // This is the clause the owner's report was made of and no harness had: every
+  // check above lets go of the key before answering, and `walk` ends with a
+  // keyup. A player does not. They walk into the object, the window opens over a
+  // key that is still physically down, and the browser's own auto-repeat --
+  // which handleKeyDown deliberately passes through for movement keys -- puts
+  // the arrow back on the wire the moment the window closes.
+  //
+  // GameStepWithInputs used to answer a reply with OopSend alone and leave the
+  // label to the object's own next tick. This object is `cycle 3`, and the
+  // player ticks first: they walked back into it and sent TOUCH over the pending
+  // `:encore` before it could run, so the scroll reopened and no torch ever
+  // came. `:encore` is `#give torches 1` with no #zap, so a second answer must
+  // produce a second torch.
+  await walk(page, "ArrowRight", 1);
+  await tickUntilGrid(page, (cells) => hasText(cells, "CTRL-01"), "the lecture scroll for the held-arrow reply");
+  await page.keyboard.press("PageDown");
+  await page.keyboard.press("PageDown");
+  assert.match(await windowCursorLine(page), /Hand me a torch/,
+    "two PageDowns from line 1 must land on the hyperlink");
+  await page.keyboard.press("Enter");
+  // No keyup in between: this is the frame the auto-repeat would have sent, and
+  // it is deliberately queued behind the reply and ahead of the tick that
+  // drains it.
+  await page.keyboard.down("ArrowRight");
+  await step({ await: { dx: 1, dy: 0, key: 0xcd } });
+  await page.keyboard.up("ArrowRight");
+  await step({ await: { dx: 0, dy: 0 } });
+  await tickUntilGrid(page, (cells) => hasText(cells, "Torches:2"),
+    "the :encore reply to run even though the reader never stopped walking in");
+
+  // That step ALSO walked into the object again, which is vanilla's own
+  // behaviour and reopens the scroll a cycle later. Dismiss it, or it swallows
+  // the next section's keys.
+  await tickUntilGrid(page, (cells) => hasText(cells, "CTRL-01"), "the scroll the held arrow reopened");
+  await page.keyboard.press("Escape");
+  await waitForGrid(page, (cells) => !hasText(cells, "CTRL-01"), "the reopened scroll to close");
+
   // input.play-torch is NOT here: a torch only lights on a dark board
   // (elements.go:1499), so pressing T on Control Field would prove only that the
   // key routed. It is spent on Control Dark, in section 13.
@@ -466,8 +516,15 @@ try {
   const unlit = await readGrid(page);
   const hatched = (cells) => cells.filter((cell) => cell.ch === 0xb0).length;
   assert.ok(hatched(unlit) > 100, "an unlit dark board is mostly the 0xB0 hatch");
+  // What this proves is that T SPENDS one, so it reads the stock rather than
+  // naming it: the scroll section above answers the lecture's hyperlink more
+  // than once, and each answer is another `#give torches 1`. An exact number
+  // here would make a check about torches fail whenever a check about
+  // hyperlinks bought one more.
+  const before = torchesOnScreen(unlit);
+  assert.ok(before > 0, `there must be a torch to spend, sidebar said ${before}`);
   await command(page, "KeyT", KEY_T);
-  await tickUntilGrid(page, (cells) => hasText(cells, "Torches:0"), "T to spend the torch on a dark board");
+  await tickUntilGrid(page, (cells) => hasText(cells, `Torches:${before - 1}`), "T to spend one torch on a dark board");
   const lit = await readGrid(page);
   assert.ok(
     hatched(lit) < hatched(unlit),

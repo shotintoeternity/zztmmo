@@ -27,6 +27,7 @@ const WORLD = "ACCEPT";
 const BLOCKED_LINE = "you cannot silence me";
 const FENCE_LINE = "still here myself";
 const AFTER_LINE = "hello again";
+const PM_LINE = "just between us";
 
 const clients = [];
 
@@ -35,7 +36,7 @@ async function openClient(label, name) {
   const context = await browser.newContext({ viewport: { width: 1280, height: 720 } });
   await markProfileWarm(context);
   const page = await context.newPage();
-  const c = { label, name, browser, context, page, pageErrors: [], snapshots: 0, you: null, chat: [] };
+  const c = { label, name, browser, context, page, pageErrors: [], snapshots: 0, you: null, chat: [], pms: [] };
   clients.push(c);
   page.on("pageerror", (err) => c.pageErrors.push(String(err)));
   page.on("websocket", (ws) => {
@@ -48,6 +49,7 @@ async function openClient(label, name) {
       }
       if (msg.type === "snapshot") c.snapshots += 1;
       if (msg.type === "chat") c.chat.push(msg);
+      if (msg.type === "privateMessage") c.pms.push(msg);
       const body = msg.type === "boardChange" ? msg.snapshot : msg;
       if (body.you) c.you = body.you;
       if (Array.isArray(body.players)) {
@@ -262,6 +264,39 @@ try {
   await say(bo, AFTER_LINE);
   await waitFor(ada, () => ada.chat.some((m) => m.text === AFTER_LINE), "Bo's line after being unblocked");
   console.log("  - unblocking from the same row let Bo through again");
+
+  // -------------------------------------------------------------------------
+  // 5. The same list sends a private message (M25.1).
+  // -------------------------------------------------------------------------
+  // m25_1_test.go proves the routing at the socket -- that a PM reaches its
+  // recipient and nobody else. What it cannot prove is that a player can get to
+  // one: the only way in is the Players list, and until this ran, no journey
+  // walked that row. The beta punch list carried "private message from the
+  // Players list" as work still to do; it is not, and this is what says so.
+  await ada.page.keyboard.press("KeyL");
+  await screen(ada, blockWindowIsOpen, "the Players window, for a PM this time");
+  await pickListRow(ada.page, (line) => line.includes(`Bo #${bo.you.id}`), "Bo's row for a PM");
+  await screen(ada, (cells) => hasText(cells, "View profile"), "Bo's action list");
+  await pickListRow(ada.page, (line) => line.includes("Private message"), "the Private message row");
+  await screen(ada, (cells) => hasText(cells, "PM Bo"), "the PM prompt naming Bo");
+  await ada.page.keyboard.type(PM_LINE, { delay: 8 });
+  await ada.page.keyboard.press("Enter");
+
+  await waitFor(bo, () => bo.pms.some((m) => m.text === PM_LINE), "Ada's PM reaching Bo");
+  const received = bo.pms.find((m) => m.text === PM_LINE);
+  assert.equal(received.fromId, ada.you.id, `the PM must carry Ada's id, got ${JSON.stringify(received)}`);
+  // It is a PM, not a broadcast: it never appears as a chat line on either side.
+  assert.ok(
+    !bo.chat.some((m) => m.text === PM_LINE),
+    `a private message must not arrive as chat: ${JSON.stringify(bo.chat)}`,
+  );
+  const boPM = await chatWindowText(bo);
+  assert.ok(
+    boPM.includes(`[PM from Ada] ${PM_LINE}`),
+    `Bo's chat window must show the PM as a PM:\n${boPM}`,
+  );
+  await settle(ada);
+  console.log("  - Ada sent Bo a private message from the Players list, and Bo read it");
 
   for (const c of clients) {
     assert.deepEqual(c.pageErrors, [], `${c.label} must raise no page errors`);
