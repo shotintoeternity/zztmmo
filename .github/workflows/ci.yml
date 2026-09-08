@@ -79,6 +79,19 @@ jobs:
           cache-dependency-path: engine/web/package-lock.json
       - run: npm ci
         working-directory: engine/web
+      # The three engines are ~400MB and are re-downloaded on every run
+      # otherwise. The key is the lockfile's hash rather than the Playwright
+      # version parsed out of it: a lockfile change busts the browser cache even
+      # when Playwright itself did not move, which costs one slow run and needs
+      # no script that can go stale. A miss just downloads them as before, so a
+      # clean clone still certifies itself.
+      - name: Cache Playwright browsers
+        uses: actions/cache@v4
+        with:
+          path: ~/.cache/ms-playwright
+          key: playwright-${{ runner.os }}-${{ hashFiles('engine/web/package-lock.json') }}
+          restore-keys: |
+            playwright-${{ runner.os }}-
       # Firefox and WebKit are here for M16.18's device/browser matrix, which
       # certifies the client on all three desktop engines. The golden suites use
       # Chromium alone; installing the other two costs about a minute and is what
@@ -128,9 +141,23 @@ jobs:
           node-version: 'lts/*'
           cache: npm
           cache-dependency-path: engine/web/package-lock.json
+      # The three engines are ~400MB and are re-downloaded on every run
+      # otherwise. The key is the lockfile's hash rather than the Playwright
+      # version parsed out of it: a lockfile change busts the browser cache even
+      # when Playwright itself did not move, which costs one slow run and needs
+      # no script that can go stale. A miss just downloads them as before, so a
+      # clean clone still certifies itself.
+      - name: Cache Playwright browsers
+        uses: actions/cache@v4
+        with:
+          path: ~/.cache/ms-playwright
+          key: playwright-${{ runner.os }}-${{ hashFiles('engine/web/package-lock.json') }}
+          restore-keys: |
+            playwright-${{ runner.os }}-
       # The engines' OS dependencies only; the browsers themselves are installed
       # by the parity command, which is what makes a clean clone's certification
-      # run self-contained.
+      # run self-contained. With the cache above warm, that install finds them
+      # already on disk and downloads nothing.
       - run: npx playwright install-deps chromium firefox webkit
         working-directory: engine/web
       - run: make certify
