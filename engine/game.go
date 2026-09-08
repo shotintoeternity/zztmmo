@@ -1823,16 +1823,40 @@ func (e *Engine) GameStepWithInputs(inputs map[int16]PlayerInput) {
 				scrollX, scrollY = int16(st.X), int16(st.Y)
 			}
 		}
-		if reply.Label != "" {
-			if e.OopSend(reply.StatId, reply.Label, false) && scrollX >= 0 {
-				// A Scroll never runs its OOP on tick (ElementScrollTick only
-				// shimmers), so — unlike an object, which runs the jumped-to
-				// label on its own next tick — it would never execute the label.
-				// Run it now, mirroring vanilla's modal OopExecute that executes
-				// `:label` inline before the scroll is consumed.
+		if reply.Label != "" && e.OopSend(reply.StatId, reply.Label, false) {
+			// The label runs NOW, before this step's tick loop, for a scroll and
+			// an object alike. Vanilla reaches the same place by being modal:
+			// the window is opened from inside the sender's own OopExecute, and
+			// OOP.PAS:847-849 answers a hyperlink with `OopSend(statId, ...)`
+			// followed by `goto StartParsing` — the label is executed in that
+			// same call, with no tick, and therefore no player movement, in
+			// between.
+			//
+			// A Scroll has always been run here (M17.4), because
+			// ElementScrollTick only shimmers and would never execute the label
+			// at all. An OBJECT was left to run it on its own next tick, and
+			// that gap is a bug a player finds by walking: they are still
+			// holding the arrow that touched the vendor, the reply lands, and
+			// the tick loop moves them into the object before it has run — the
+			// touch sends TOUCH, DataPos is rewound to `:touch`, the scroll
+			// reopens and `:ba` never runs. What the owner sees is a hyperlink
+			// that does nothing, in any world with a vendor, in either view.
+			//
+			// An object's cycle makes the window wider than one step: TOWN's
+			// vendor answers every third tick, so there are three chances to
+			// walk back into it before the answer arrives.
+			if scrollX >= 0 {
+				// Track the scroll by position, not id: a stat removed in
+				// between renumbers ids.
 				if sid := e.GetStatIdAt(scrollX, scrollY); sid >= 1 {
 					st := &e.Board.Stats[sid]
 					e.OopExecute(sid, &st.DataPos, "Scroll")
+				}
+			} else if reply.StatId >= 1 {
+				st := &e.Board.Stats[reply.StatId]
+				if st.DataPos >= 0 {
+					// "Interaction" is the name ElementObjectTick executes under.
+					e.OopExecute(reply.StatId, &st.DataPos, "Interaction")
 				}
 			}
 		}

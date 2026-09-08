@@ -40,6 +40,7 @@ llmworld/previews/
 # engine/parity_manifest_test.go), so three tests fail on a clone that does not
 # have it. It ships; see the header at the top of the file.
 /ANALYSIS.md
+/TASKS-BETA.md
 /AWS.md
 /CLAUDE.md
 /IMPLEMENTATION.md
