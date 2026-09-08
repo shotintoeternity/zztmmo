@@ -125,9 +125,18 @@ export class View3D {
     return this.rig.facing;
   }
 
-  /** turn is a quarter-turn on the key edge: left and right never travel. */
+  /** turn is a quarter-turn of the compass. */
   turn(steps: number) {
     this.rig.turn(steps);
+  }
+
+  /**
+   * look is WASD: A and D swing the camera, W and S raise and lower it. It
+   * moves nothing but the view, which is why the arrows can go on meaning
+   * north, south, east and west while you use it.
+   */
+  look(dyaw: number, dpitch: number) {
+    this.rig.look(dyaw, dpitch);
   }
 
   start() {

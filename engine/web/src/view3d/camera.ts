@@ -58,6 +58,13 @@ const BOARD_D = 25 * TILE_DEPTH;
 // world rather than a number of cells a second, so crossing a row -- which is
 // 1.75 deep -- honestly takes longer than crossing a column.
 const GHOST_SPEED = 14;
+// One press of W, S, A or D. The pitch step is generous enough that four or
+// five presses reach the clamp, which is what "a few" means; the orbit steps
+// are smaller because that camera is further away and swings further for it.
+const LOOK_PITCH_STEP = 0.16;
+const LOOK_PITCH_MAX = 0.75;
+const ORBIT_YAW_STEP = 0.22;
+const ORBIT_PITCH_STEP = 0.12;
 
 /**
  * clampTarget keeps a following camera from looking off the board: when the
@@ -102,6 +109,15 @@ export class CameraRig {
   private readonly firstEye = new THREE.Vector3();
   private readonly firstLook = new THREE.Vector3();
   private lookYaw = 0;
+  /**
+   * How far above or below the horizon the eye-level camera is looking, in
+   * radians. The orbit camera has `pitch` for this; standing inside your own
+   * square there was nothing, so the view was pinned to the horizon and you
+   * could not look at a ceiling or at your own feet. Clamped well short of
+   * straight up or down, where a first-person camera stops reading as a head
+   * and starts reading as a mistake.
+   */
+  private lookPitch = 0;
   private blend = 0;
   private snapNext = true;
 
@@ -192,6 +208,39 @@ export class CameraRig {
     this.facing = ((((this.facing + steps) % 4) + 4) % 4) as Facing;
   }
 
+  /**
+   * look is the camera on the keyboard: A and D swing it, W and S raise and
+   * lower it. One press is one step, and a few of them get you from the floor
+   * to the ceiling, which is the whole ask -- this is a look control, not a
+   * flight simulator.
+   *
+   * It moves the camera and nothing else. Whatever it does, the arrows still
+   * walk north, south, east and west, because that is what they have meant in
+   * ZZT since 1991 and a view is not a reason to change it.
+   */
+  look(dyaw: number, dpitch: number) {
+    if (this.mode !== "world") {
+      return;
+    }
+    if (dyaw !== 0) {
+      // At eye level a turn is a quarter of the compass, so the world stays
+      // square to the board you are standing on. Pulled back, the orbit is
+      // free, so it swings by a smaller step.
+      if (this.firstPerson) {
+        this.turn(dyaw > 0 ? 1 : -1);
+      } else {
+        this.yaw -= dyaw * ORBIT_YAW_STEP;
+      }
+    }
+    if (dpitch !== 0) {
+      if (this.firstPerson) {
+        this.lookPitch = THREE.MathUtils.clamp(this.lookPitch + dpitch * LOOK_PITCH_STEP, -LOOK_PITCH_MAX, LOOK_PITCH_MAX);
+      } else {
+        this.pitch = THREE.MathUtils.clamp(this.pitch - dpitch * ORBIT_PITCH_STEP, 0.25, 1.5);
+      }
+    }
+  }
+
   orbit(dx: number, dy: number) {
     if (this.firstPerson || this.mode === "classic") {
       return;
@@ -276,9 +325,12 @@ export class CameraRig {
     this.orbitLook.set(this.target.x, 0.6, this.target.z);
 
     this.firstEye.set(this.target.x, EYE_HEIGHT, this.target.z);
+    // The -0.03 is the horizon: a head looks very slightly down, not dead
+    // level. lookPitch is added to it, so W and S walk the gaze up a ceiling
+    // and down to the floor from wherever that resting line is.
     this.firstLook.set(
       this.firstEye.x + Math.sin(this.lookYaw),
-      EYE_HEIGHT - 0.03,
+      EYE_HEIGHT - 0.03 + Math.tan(this.lookPitch),
       this.firstEye.z - Math.cos(this.lookYaw),
     );
 

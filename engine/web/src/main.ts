@@ -21,7 +21,9 @@
 // 60-column board with a 20-column sidebar, drawn with an 8x14 CP437 font.
 
 import "./style.css";
-import { drawSidebar as paintSidebar, drawWatchSidebar as paintWatchSidebar, updateSidebar as paintSidebarHud } from "./sidebar";
+import { drawSidebar as paintSidebar, drawWatchSidebar as paintWatchSidebar, updateSidebar as paintSidebarHud,
+  sidebarClearLine,
+} from "./sidebar";
 import {
   applyWorldOccupancy,
   renderModal,
@@ -674,7 +676,7 @@ type InputMessage = {
 // 8 rows, CP437 order, so glyph N sits at (N%32, N/32). Character codes go to
 // the sheet directly — there is no Unicode round trip.
 import pcEgaUrl from "./pc_ega.png";
-import { eyeLevelBits, facingMask, isEyeLevelKey } from "./view3d/input3d";
+import { isCameraKey, lookStepFor } from "./view3d/input3d";
 
 const GLYPH_COLS = 32;
 
@@ -867,14 +869,7 @@ function view3dOn(): boolean {
   return view3d !== null && view3d.rig.mode === "world" && mode === "playing";
 }
 
-/**
- * True when the viewer is standing inside their own square. This is the only
- * place WASD walks and the only place the arrows turn instead of travelling --
- * see view3d/input3d.ts for why that scoping is load-bearing rather than tidy.
- */
-function view3dEyeLevel(): boolean {
-  return view3dOn() && view3d !== null && view3d.firstPerson;
-}
+
 
 const view3dCanvas = query<HTMLCanvasElement>("[data-view3d]");
 
@@ -942,6 +937,11 @@ async function toggleView3D() {
     view3d.rig.setMode("classic");
     view3d.stop();
   }
+  // The rows say where 3 goes next, so they change when it is pressed. Written
+  // here rather than from drawScreen: they go through writeText into `cells`,
+  // and a write on every repaint would tell feedView3D the board had changed
+  // and rebuild the scene's geometry every frame.
+  drawView3DRows();
   drawScreen();
 }
 
@@ -4403,6 +4403,43 @@ function writeText(x: number, y: number, color: number, text: string) {
 
 function drawSidebar() {
   paintSidebar(writeText);
+  drawView3DRows();
+}
+
+/**
+ * The 3D view's own sidebar rows.
+ *
+ * Rows 13 and 24 are the two vanilla leaves blank (GAME.PAS:1441-1455 writes
+ * 14-19 and 21-23), and row 20 is already spent on Players. Row 13 carries the
+ * toggle, always, because a feature nobody can see does not exist -- this view
+ * shipped without a row and nobody could have found it. Row 24 carries the
+ * camera keys, and only while you are in the world, where they mean something.
+ *
+ * The label names where 3 GOES, not where you are: the row reads as an
+ * instruction, like every other row in this sidebar.
+ */
+function drawView3DRows() {
+  if (mode !== "playing") {
+    return;
+  }
+  const inWorld = view3dOn();
+  sidebarClearLine(writeText, 13);
+  writeText(62, 13, 0x30, " 3 ");
+  // "Standard view", not "classic" or "text": the name a player should see for
+  // the view they already know. The mode is still called `classic` in the code
+  // and in the ?view= parameter, where it names a camera rather than a product.
+  writeText(65, 13, 0x1f, (inWorld ? " Standard view" : " 3D view").padEnd(14, " "));
+  sidebarClearLine(writeText, 24);
+  if (inWorld) {
+    writeText(61, 24, 0x30, " WASD ");
+    writeText(67, 24, 0x1f, " Look");
+  }
+  // Row 21 is vanilla's " S  Save game", and in the world S looks down instead,
+  // so the row has to stop promising something the key no longer does. It is
+  // the one binding the 3D view takes away, and the sidebar is where a player
+  // finds out -- not by pressing S and watching the ceiling move.
+  writeText(62, 21, 0x70, " S ");
+  writeText(65, 21, 0x1f, (inWorld ? " Save: press 3" : " Save game").padEnd(14, " "));
 }
 
 function updateSidebar(hud: HudSnapshot) {
@@ -4719,10 +4756,11 @@ function handleKeyDown(event: KeyboardEvent) {
     return;
   }
 
-  // M35: the board with depth, or the text screen. V is the key the sidebar
-  // advertises and 3 is the mnemonic; both are free here, where C is chat and
-  // L is the block list, and neither reaches the engine's key switch.
-  if (event.code === "KeyV" || event.code === "Digit3" || event.code === "Numpad3") {
+  // M35: the board with depth, or the text screen. 3 is the shortcut and the
+  // one the sidebar advertises; V still works for the hands that learned it
+  // first. Both are free here, where C is chat and L is the players list, and
+  // neither reaches the engine's key switch.
+  if (event.code === "Digit3" || event.code === "Numpad3" || event.code === "KeyV") {
     event.preventDefault();
     view3d?.leaveGhost();
     void toggleView3D();
@@ -4759,6 +4797,19 @@ function handleKeyDown(event: KeyboardEvent) {
     return;
   }
 
+  // WASD swings and tilts the camera in the 3D view, and does nothing at all
+  // outside it. Taken before the command lookup, because S is ZZT's save key
+  // and in the world it has to look down instead; on the text screen this
+  // branch never runs and S saves exactly as it always has.
+  if (view3dOn() && view3d !== null && isCameraKey(event.code) && !event.ctrlKey && !event.metaKey && !event.altKey) {
+    const step = lookStepFor(event.code);
+    if (step) {
+      event.preventDefault();
+      view3d.look(step.dyaw, step.dpitch);
+      return;
+    }
+  }
+
   const bindings = effectiveKeyBindings(readEffectiveComfort());
   if (event.repeat && !isMovementKey(event.code, bindings)) {
     return;
@@ -4771,26 +4822,6 @@ function handleKeyDown(event: KeyboardEvent) {
     stopHeldInput();
     sendKey(command);
     return;
-  }
-
-  // At eye level the arrows turn rather than travel: a quarter-turn on the key
-  // edge, never repeated and never sent. Walking is on WASD, which is the whole
-  // point of the split -- one hand walks, the other looks.
-  if (view3dEyeLevel() && view3d !== null) {
-    if (bindings.left?.includes(event.code)) {
-      event.preventDefault();
-      if (!event.repeat) {
-        view3d.turn(-1);
-      }
-      return;
-    }
-    if (bindings.right?.includes(event.code)) {
-      event.preventDefault();
-      if (!event.repeat) {
-        view3d.turn(1);
-      }
-      return;
-    }
   }
 
   const handled = updatePressed(event, true);
@@ -5909,18 +5940,6 @@ function sendHighScoreName(name: string) {
 }
 
 function updatePressed(event: KeyboardEvent, down: boolean): boolean {
-  // WASD is a movement key at eye level and nowhere else. Asked before the
-  // bindings, because the binding table has no idea this view exists -- and
-  // asked as a question about the view rather than about the code, so a player
-  // who rebound something onto W still gets that binding on the text screen.
-  if (view3dEyeLevel() && isEyeLevelKey(event.code)) {
-    if (down) {
-      pressed.add(event.code);
-    } else {
-      pressed.delete(event.code);
-    }
-    return true;
-  }
   if (!isHandledKey(event.code, effectiveKeyBindings(readEffectiveComfort()))) {
     return false;
   }
@@ -5933,14 +5952,10 @@ function updatePressed(event: KeyboardEvent, down: boolean): boolean {
 }
 
 function currentMask(): number {
-  const raw = movementMask(pressed, effectiveKeyBindings(readEffectiveComfort()));
-  if (!view3dEyeLevel() || view3d === null) {
-    return raw;
-  }
-  // At eye level every direction is relative to the way you face, and the two
-  // held-key vocabularies are folded together before that resolution: the
-  // arrows' own bits and WASD's pseudo-bits mean the same four things.
-  return facingMask(raw | eyeLevelBits(pressed), view3d.facing);
+  // The 3D view changes nothing here. The arrows are board directions in every
+  // view -- north is north whichever way the camera happens to be pointing --
+  // and WASD moves the camera without ever reaching this mask.
+  return movementMask(pressed, effectiveKeyBindings(readEffectiveComfort()));
 }
 
 function sendInput(mask: number, key = 0) {

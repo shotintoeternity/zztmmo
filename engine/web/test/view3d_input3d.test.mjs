@@ -1,18 +1,20 @@
-// view3d_input3d.test.mjs — the eye-level key vocabulary.
+// view3d_input3d.test.mjs — the four camera keys.
 //
-// This is the boundary the certified row `input.play-wasd-removed` (M16.10)
-// polices, seen from the other side. That row says W/A/D reach the server as
-// nothing and S opens the save prompt, and control_keys.test.mjs proves it on
-// the text screen with a real browser. What it cannot see is the view that did
-// not exist when it was written: standing inside your own square, where WASD
-// walks and the arrows turn.
+// The arrows walk, in every view, north/south/east/west, which is what they
+// have meant in ZZT since 1991. WASD moves the camera and only the camera: A
+// and D swing it, W and S raise and lower it toward the ceiling and the floor.
 //
-// So the two suites divide the same decision. control_keys asserts the classic
-// side is untouched. This asserts the eye-level side is correct AND that it
-// cannot leak: the four pseudo-bits live above the six the server understands
-// (input.go), and facingMask is the only thing that turns them into a
-// direction. A mask that carried one onto the wire would be a client sending a
-// keymask the server has no bit for.
+// That makes this suite's job small and worth stating plainly. The certified
+// row `input.play-wasd-removed` (M16.10) says W/A/D must reach the server as
+// nothing at all, and control_keys.test.mjs proves that on the text screen with
+// a real browser. Here we prove the stronger thing the 3D view relies on: these
+// keys produce no direction and no key byte anywhere, because they are a look
+// control and a look control has nothing to say to a simulation.
+//
+// An earlier version of this file tested a facingMask that resolved WASD into
+// board directions. That scheme is gone -- it made the arrows turn you at eye
+// level, which took the game's oldest control away in the view where a player
+// is least sure where they are.
 
 import assert from "node:assert/strict";
 import { build } from "esbuild";
@@ -24,108 +26,59 @@ const out = await build({
   platform: "node",
   write: false,
 });
-const {
-  InputMaskStrafeLeft,
-  InputMaskStrafeRight,
-  InputMaskWalkForward,
-  InputMaskWalkBack,
-  eyeLevelBits,
-  facingMask,
-  isEyeLevelKey,
-} = await import(`data:text/javascript;base64,${Buffer.from(out.outputFiles[0].contents).toString("base64")}`);
-
-// The six the server understands (keys.ts / input.go), restated here so this
-// suite fails if either side renumbers them behind the other's back.
-const Up = 1 << 0;
-const Down = 1 << 1;
-const Left = 1 << 2;
-const Right = 1 << 3;
-const Shift = 1 << 4;
-const Shoot = 1 << 5;
-const WIRE = Up | Down | Left | Right | Shift | Shoot;
-const PSEUDO = InputMaskStrafeLeft | InputMaskStrafeRight | InputMaskWalkForward | InputMaskWalkBack;
-
-// The pseudo-bits must sit ABOVE the wire bits. If they ever overlapped, a
-// strafe would arrive at the server as a real direction without ever being
-// resolved against a facing.
-assert.equal(PSEUDO & WIRE, 0, "the client's own bits must not collide with the wire's");
+const { isCameraKey, lookStepFor } = await import(
+  `data:text/javascript;base64,${Buffer.from(out.outputFiles[0].contents).toString("base64")}`
+);
 
 // ---------------------------------------------------------------------------
-// Which keys the eye-level view claims
+// Which keys the camera claims
 // ---------------------------------------------------------------------------
 for (const code of ["KeyW", "KeyA", "KeyS", "KeyD"]) {
-  assert.equal(isEyeLevelKey(code), true, `${code} walks at eye level`);
-}
-for (const code of ["ArrowUp", "ArrowLeft", "KeyV", "KeyT", "KeyQ", "Space", "Digit3"]) {
-  assert.equal(isEyeLevelKey(code), false, `${code} is not a walking key`);
+  assert.equal(isCameraKey(code), true, `${code} moves the camera`);
+  assert.notEqual(lookStepFor(code), null, `${code} must name a step`);
 }
 
-assert.equal(eyeLevelBits(new Set(["KeyW"])), InputMaskWalkForward);
-assert.equal(eyeLevelBits(new Set(["KeyS"])), InputMaskWalkBack);
-assert.equal(eyeLevelBits(new Set(["KeyA"])), InputMaskStrafeLeft);
-assert.equal(eyeLevelBits(new Set(["KeyD"])), InputMaskStrafeRight);
-assert.equal(
-  eyeLevelBits(new Set(["KeyW", "KeyD", "ArrowUp", "KeyT"])),
-  InputMaskWalkForward | InputMaskStrafeRight,
-  "keys that are not the four contribute nothing",
-);
-assert.equal(eyeLevelBits(new Set()), 0);
-
-// ---------------------------------------------------------------------------
-// The remap: everything is relative to the way you face
-// ---------------------------------------------------------------------------
-const NORTH = 0;
-const EAST = 1;
-const SOUTH = 2;
-const WEST = 3;
-
-// W walks the way you are facing, whichever way that is.
-assert.equal(facingMask(InputMaskWalkForward, NORTH), Up);
-assert.equal(facingMask(InputMaskWalkForward, EAST), Right);
-assert.equal(facingMask(InputMaskWalkForward, SOUTH), Down);
-assert.equal(facingMask(InputMaskWalkForward, WEST), Left);
-
-// S walks backwards, which is the opposite of that and never a turn.
-assert.equal(facingMask(InputMaskWalkBack, NORTH), Down);
-assert.equal(facingMask(InputMaskWalkBack, EAST), Left);
-
-// The arrows' own up/down bits mean the same two things, so a player who never
-// learns WASD can still walk at eye level.
-assert.equal(facingMask(Up, EAST), Right, "the up arrow walks forward too");
-assert.equal(facingMask(Down, EAST), Left, "the down arrow walks back too");
-
-// A and D step sideways WITHOUT turning: facing east, A goes north.
-assert.equal(facingMask(InputMaskStrafeLeft, EAST), Up);
-assert.equal(facingMask(InputMaskStrafeRight, EAST), Down);
-assert.equal(facingMask(InputMaskStrafeLeft, NORTH), Left);
-assert.equal(facingMask(InputMaskStrafeRight, NORTH), Right);
-
-// Left and right are turns, handled on the key edge, and they never travel.
-assert.equal(facingMask(Left, NORTH), 0, "the left arrow turns, it does not walk");
-assert.equal(facingMask(Right, NORTH), 0, "the right arrow turns, it does not walk");
-assert.equal(facingMask(Left | Right, SOUTH), 0);
-
-// Shift and shoot pass straight through, so Shift+W fires the way you face.
-assert.equal(facingMask(InputMaskWalkForward | Shift, WEST), Left | Shift, "Shift+W fires straight ahead");
-assert.equal(facingMask(InputMaskStrafeLeft | Shoot, NORTH), Left | Shoot, "Space+A fires to your left");
-assert.equal(facingMask(Shift, SOUTH), Shift);
-
-// W and D together are the diagonal ZZT resolves for you: two bits, one frame.
-assert.equal(facingMask(InputMaskWalkForward | InputMaskStrafeRight, NORTH), Up | Right);
-
-// ---------------------------------------------------------------------------
-// The discipline: nothing the client invented may reach the wire
-// ---------------------------------------------------------------------------
-// Every combination of every bit, at every facing. The output must be wire bits
-// and nothing else -- this is the assertion that would catch a new pseudo-bit
-// added to the mask and forgotten in the mask-down at the end of facingMask.
-const ALL = WIRE | PSEUDO;
-for (let mask = 0; mask <= ALL; mask += 1) {
-  for (const facing of [NORTH, EAST, SOUTH, WEST]) {
-    const out = facingMask(mask, facing);
-    assert.equal(out & PSEUDO, 0, `facingMask(${mask}, ${facing}) leaked a client-only bit`);
-    assert.equal(out & ~WIRE, 0, `facingMask(${mask}, ${facing}) produced a bit the server has no name for`);
-  }
+// The arrows are not camera keys. This is the assertion that would fail if
+// somebody reached for the old scheme again and put walking back on WASD.
+for (const code of ["ArrowUp", "ArrowDown", "ArrowLeft", "ArrowRight", "Numpad8", "Numpad2", "Numpad4", "Numpad6"]) {
+  assert.equal(isCameraKey(code), false, `${code} walks the board; it must not move the camera`);
+  assert.equal(lookStepFor(code), null);
 }
+
+// Nor is anything else on the sidebar, or the keys the client added itself.
+for (const code of ["KeyT", "KeyP", "KeyB", "KeyQ", "KeyH", "KeyC", "KeyL", "KeyV", "Digit3", "Space", "Enter", "Escape"]) {
+  assert.equal(isCameraKey(code), false, `${code} is not a camera key`);
+}
+
+// ---------------------------------------------------------------------------
+// What each one does
+// ---------------------------------------------------------------------------
+assert.deepEqual(lookStepFor("KeyA"), { dyaw: -1, dpitch: 0 }, "A swings left");
+assert.deepEqual(lookStepFor("KeyD"), { dyaw: 1, dpitch: 0 }, "D swings right");
+assert.deepEqual(lookStepFor("KeyW"), { dyaw: 0, dpitch: 1 }, "W looks up toward the ceiling");
+assert.deepEqual(lookStepFor("KeyS"), { dyaw: 0, dpitch: -1 }, "S looks down toward the floor");
+
+// A step is a look and never a move: no code may ask for both at once, and
+// none may ask for a direction on the board.
+for (const code of ["KeyW", "KeyA", "KeyS", "KeyD"]) {
+  const step = lookStepFor(code);
+  assert.equal(
+    step.dyaw === 0 || step.dpitch === 0,
+    true,
+    `${code} must swing or tilt, not both`,
+  );
+  assert.equal(Math.abs(step.dyaw) <= 1 && Math.abs(step.dpitch) <= 1, true, "a press is one step");
+  assert.equal("mask" in step || "keymask" in step, false, `${code} must carry nothing that could be sent`);
+}
+
+// ---------------------------------------------------------------------------
+// The module's whole surface
+// ---------------------------------------------------------------------------
+// If a movement helper ever reappears here, this fails and the reviewer gets to
+// ask why the camera module is producing directions again.
+const surface = Object.keys(
+  await import(`data:text/javascript;base64,${Buffer.from(out.outputFiles[0].contents).toString("base64")}`),
+).sort();
+assert.deepEqual(surface, ["isCameraKey", "lookStepFor"], `unexpected exports: ${surface.join(", ")}`);
 
 console.log("view3d input3d ok");

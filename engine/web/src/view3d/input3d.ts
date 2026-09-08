@@ -1,85 +1,49 @@
-// input3d.ts — the eye-level key vocabulary, and nothing else.
+// input3d.ts — the four keys that move the camera, and nothing else.
 //
-// Standing in the board, the arrows cannot say everything a body can do: there
-// is a difference between turning to face a wall and stepping sideways along
-// it, and the text screen has never needed one. So at eye level the left hand
-// walks on WASD and the right hand turns on the arrows, and W/A/S/D are
-// resolved against the way you are facing before anything is sent.
+// The arrows walk. They walk north, south, east and west, in every view, which
+// is what they have meant in ZZT since 1991 and what every world was built
+// around: a board is a compass, not a corridor. An earlier version of this file
+// made them turn you at eye level and put walking on WASD, and that was wrong
+// in the way that matters -- it took the game's oldest control away from the
+// one view where a player is least sure where they are.
 //
-// This is scoped to eye level on purpose, and the reason is S.
+// So WASD is the camera instead. A and D swing it, W and S raise and lower it,
+// and none of the four ever reaches the server: they set no mask bit, they send
+// no key byte, they only decide where you are looking from. That is a stronger
+// version of what the certified row `input.play-wasd-removed` (M16.10) asks
+// for -- it wants W/A/D inert on the wire, and these are inert by construction
+// rather than by being filtered out on the way past.
 //
-// The certified row `input.play-wasd-removed` (M16.10) says W/A/D reach the
-// server as nothing at all, and that S opens the save prompt. That row is not
-// an accident: M3.5 invented WASD in this client and M4.2 removed it, because
-// S meant both "move down" and ZZT's save key while ElementPlayerTick reads
-// both out of one byte. Nothing here disturbs that. On the text screen, and in
-// the orbit camera, W/A/S/D are as inert as they were yesterday and S still
-// saves. They mean something only when you are standing inside your own square,
-// a place that did not exist when the row was written.
-//
-// The four bits below live above the six the server understands (input.go), so
-// facingMask is the only thing that can turn them into a direction, and a mask
-// that never went through it carries none of them onto the wire.
+// S is the one that costs something. It is ZZT's save key, and in the 3D view
+// it looks down instead, so saving is done from the text screen -- one press of
+// V away, and the sidebar says so while you are in the world.
 
-import { InputMaskDown, InputMaskLeft, InputMaskRight, InputMaskShift, InputMaskShoot, InputMaskUp } from "../keys";
-
-export const InputMaskStrafeLeft = 1 << 6;
-export const InputMaskStrafeRight = 1 << 7;
-export const InputMaskWalkForward = 1 << 8;
-export const InputMaskWalkBack = 1 << 9;
-
-const WIRE_BITS =
-  InputMaskUp | InputMaskDown | InputMaskLeft | InputMaskRight | InputMaskShift | InputMaskShoot;
-
-/** The keys the eye-level view claims, and the pseudo-bit each one sets. */
-const EYE_LEVEL_KEYS: Record<string, number> = {
-  KeyW: InputMaskWalkForward,
-  KeyS: InputMaskWalkBack,
-  KeyA: InputMaskStrafeLeft,
-  KeyD: InputMaskStrafeRight,
+/** One press: which way the camera swings, and which way it tilts. */
+export type LookStep = {
+  /** -1 swings left, +1 right. */
+  dyaw: number;
+  /** +1 raises the gaze toward the ceiling, -1 lowers it toward the floor. */
+  dpitch: number;
 };
 
-/** Facing as a compass index: 0 north, 1 east, 2 south, 3 west. */
-export type Facing = 0 | 1 | 2 | 3;
+const CAMERA_KEYS: Record<string, LookStep> = {
+  KeyW: { dyaw: 0, dpitch: 1 },
+  KeyS: { dyaw: 0, dpitch: -1 },
+  KeyA: { dyaw: -1, dpitch: 0 },
+  KeyD: { dyaw: 1, dpitch: 0 },
+};
 
-const FACING_MASKS = [InputMaskUp, InputMaskRight, InputMaskDown, InputMaskLeft];
-
-/** isEyeLevelKey reports whether this code walks a body at eye level. */
-export function isEyeLevelKey(code: string): boolean {
-  return code in EYE_LEVEL_KEYS;
-}
-
-/** eyeLevelBits folds the held WASD keys into their pseudo-bits. */
-export function eyeLevelBits(pressed: ReadonlySet<string>): number {
-  let bits = 0;
-  for (const code of pressed) {
-    bits |= EYE_LEVEL_KEYS[code] ?? 0;
-  }
-  return bits;
+/** isCameraKey reports whether this code moves the camera in the 3D view. */
+export function isCameraKey(code: string): boolean {
+  return code in CAMERA_KEYS;
 }
 
 /**
- * facingMask is the eye-level remap: W (or up) walks the way you face, S (or
- * down) walks backwards, A and D step sideways without turning, and left/right
- * -- turns, handled on the key edge -- never travel. Shift and shoot pass
- * through, so Shift+W fires straight ahead and Shift+A fires to your left.
- *
- * The result is masked back down to the wire bits, so no pseudo-bit can escape
- * even if a caller hands us one we did not expect.
+ * lookStepFor returns the step a key asks for, or null if it is not one of the
+ * four. Held keys repeat, so leaning on W walks the gaze up rather than making
+ * you tap it -- the step is sized so a few presses cover the whole range either
+ * way.
  */
-export function facingMask(mask: number, facing: Facing): number {
-  let out = mask & (InputMaskShift | InputMaskShoot);
-  if (mask & (InputMaskUp | InputMaskWalkForward)) {
-    out |= FACING_MASKS[facing];
-  }
-  if (mask & (InputMaskDown | InputMaskWalkBack)) {
-    out |= FACING_MASKS[(facing + 2) % 4];
-  }
-  if (mask & InputMaskStrafeLeft) {
-    out |= FACING_MASKS[(facing + 3) % 4];
-  }
-  if (mask & InputMaskStrafeRight) {
-    out |= FACING_MASKS[(facing + 1) % 4];
-  }
-  return out & WIRE_BITS;
+export function lookStepFor(code: string): LookStep | null {
+  return CAMERA_KEYS[code] ?? null;
 }
