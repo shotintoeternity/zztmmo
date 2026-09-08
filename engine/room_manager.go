@@ -543,8 +543,22 @@ func isSpawnUnoccupied(room *Room, x, y int16) bool {
 	return room.Engine.PlacementUnoccupied(x, y, -1)
 }
 
+// isRequestedSpawnUnoccupied is the looser test a *named* arrival square gets:
+// a passage's far end holds E_PASSAGE, not E_EMPTY, so a transfer that insisted
+// on an empty square could never land on the passage it was aimed at.
+//
+// Loose is not the same as no test. It used to accept any tile that was not
+// already showing another player, which let a board edge whose mirrored square
+// is wall write E_PLAYER into the middle of that wall -- a player boxed in on
+// all four sides with nothing to press (2026-09-08). PlayerCanStandOn is the
+// line: walkable, or the passage. Anything else falls through to
+// FindPlacement, which puts the arrival on the nearest square they can
+// actually walk off.
 func isRequestedSpawnUnoccupied(room *Room, x, y int16) bool {
 	if x < 1 || x > BOARD_WIDTH || y < 1 || y > BOARD_HEIGHT {
+		return false
+	}
+	if !PlayerCanStandOn(room.Engine.Board.Tiles[x][y].Element) {
 		return false
 	}
 	return room.Engine.Board.Tiles[x][y].Element != E_PLAYER
