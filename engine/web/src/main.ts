@@ -674,6 +674,7 @@ type InputMessage = {
 // 8 rows, CP437 order, so glyph N sits at (N%32, N/32). Character codes go to
 // the sheet directly — there is no Unicode round trip.
 import pcEgaUrl from "./pc_ega.png";
+import { eyeLevelBits, facingMask, isEyeLevelKey } from "./view3d/input3d";
 
 const GLYPH_COLS = 32;
 
@@ -843,6 +844,131 @@ let nickname = "browser";
 // playerTintCells paints from, and it is per-board: the server only ever sends
 // the players on the board this client is looking at.
 let roster: PlayerSnapshot[] = [];
+
+const EMPTY_CELL_SET: ReadonlySet<number> = new Set();
+
+// --- the 3D view (M35) ------------------------------------------------------
+//
+// A second painter for the board half of `cells`. It is loaded on demand: three
+// .js is most of half a megabyte and most players never ask for it, so the
+// module is behind an `await import()` and the everyday bundle does not carry
+// it. Until somebody presses V there is no scene, no rig and no frame loop.
+let view3d: import("./view3d").View3D | null = null;
+let view3dLoading = false;
+
+/** True when the world is what the board columns are showing. */
+function view3dOn(): boolean {
+  return view3d !== null && view3d.rig.mode === "world" && mode === "playing";
+}
+
+/**
+ * True when the viewer is standing inside their own square. This is the only
+ * place WASD walks and the only place the arrows turn instead of travelling --
+ * see view3d/input3d.ts for why that scoping is load-bearing rather than tidy.
+ */
+function view3dEyeLevel(): boolean {
+  return view3dOn() && view3d !== null && view3d.firstPerson;
+}
+
+const view3dCanvas = query<HTMLCanvasElement>("[data-view3d]");
+
+/**
+ * syncView3DCanvas puts the GL canvas exactly over the board columns of the
+ * text screen. The screen canvas is letterboxed inside the wrap, so its client
+ * rect -- not the wrap's -- is what the board is measured from, and the board
+ * is the first BOARD_COLS of COLS.
+ */
+function syncView3DCanvas() {
+  if (!view3d) {
+    return;
+  }
+  const screenRect = canvas.getBoundingClientRect();
+  const wrapRect = canvas.parentElement?.getBoundingClientRect();
+  if (!wrapRect || screenRect.width === 0) {
+    return;
+  }
+  const width = screenRect.width * (BOARD_COLS / COLS);
+  view3dCanvas.style.left = `${screenRect.left - wrapRect.left}px`;
+  view3dCanvas.style.top = `${screenRect.top - wrapRect.top}px`;
+  view3dCanvas.style.width = `${width}px`;
+  view3dCanvas.style.height = `${screenRect.height}px`;
+  view3d.resize(width, screenRect.height);
+}
+
+/**
+ * toggleView3D is V (and 3): the text screen, or the board with depth.
+ *
+ * The first press pays for the module and the font texture, so it is async and
+ * the view arrives a frame or two later; every press after that is immediate.
+ * Held keys are dropped on the way through, because a mask assembled under one
+ * view's rules must not be delivered under the other's.
+ */
+async function toggleView3D() {
+  if (mode !== "playing" || view3dLoading) {
+    return;
+  }
+  stopHeldInput();
+  if (!view3d) {
+    view3dLoading = true;
+    try {
+      const module = await import("./view3d");
+      view3d = await module.createView3D(view3dCanvas);
+      view3d.onTextChanged = () => drawScreen();
+      // The text screen is sized entirely by CSS (aspect-ratio: 640/350), so
+      // there is no resize handler in this client to hang off -- the 2D canvas
+      // has never needed one. A GL drawing buffer does, so the view brings its
+      // own observer, watching the canvas it must stay glued to.
+      new ResizeObserver(() => syncView3DCanvas()).observe(canvas);
+    } finally {
+      view3dLoading = false;
+    }
+  }
+  const next = view3d.rig.mode === "world" ? "classic" : "world";
+  if (next === "world") {
+    // Choosing 3D is choosing to stand in the board rather than look down at
+    // it, so V arrives at eye level rather than at an orbit camera.
+    view3d.rig.cycle();
+    view3d.snap();
+    feedView3D();
+    view3d.start();
+    syncView3DCanvas();
+  } else {
+    view3d.rig.setMode("classic");
+    view3d.stop();
+  }
+  drawScreen();
+}
+
+/**
+ * feedView3D hands the view the model it draws, and only when that model has
+ * actually moved.
+ *
+ * The guard is not an optimisation. The view calls back into drawScreen when it
+ * has lifted new words out of the board, and drawScreen feeds the view; feeding
+ * unconditionally would mark the scene dirty on every callback and rebuild the
+ * whole board's geometry every frame, forever. cellsRevision is what makes the
+ * pair terminate: it moves when a cell is written, and a repaint writes none.
+ */
+let cellsRevision = 0;
+let view3dFedRevision = -1;
+let view3dFedPos = "";
+
+function feedView3D() {
+  if (!view3d) {
+    return;
+  }
+  const pos = `${myX},${myY},${roster.length}`;
+  if (cellsRevision === view3dFedRevision && pos === view3dFedPos) {
+    return;
+  }
+  view3dFedRevision = cellsRevision;
+  view3dFedPos = pos;
+  view3d.update({
+    cells,
+    roster,
+    me: myX > 0 ? { x: myX, y: myY } : null,
+  });
+}
 // Screen-cell index -> the RGB behind a player's smiley there. Rebuilt whenever
 // the roster or the screen changes; consulted by drawScreen after the overlay.
 const playerTints = new Map<number, string>();
@@ -2855,6 +2981,7 @@ function applyDiff(message: DiffMessage) {
 }
 
 function replaceCells(nextCells: ScreenCell[]) {
+  cellsRevision += 1;
   for (const cell of cells) {
     cell.ch = 32;
     cell.color = 0x1f;
@@ -2883,6 +3010,7 @@ function setCell(cell: ScreenCell) {
   // would make every reader repeat the `?? 0`.
   cell.element = cell.element ?? 0;
   cells[cell.y * COLS + cell.x] = cell;
+  cellsRevision += 1;
 }
 
 // The on-screen control bar mirrors the screen behind it: gameplay controls
@@ -2905,6 +3033,14 @@ function drawScreen() {
     return;
   }
   const comfort = readEffectiveComfort();
+  // In 3D the board columns are a window: cleared to transparent so the scene
+  // behind this canvas shows through. Everything drawn OVER the board is still
+  // painted here, on top of the world -- a text window, a notice, and the board
+  // message the view deliberately lifted out of the scene so it can be read as
+  // text rather than stood up as a row of letter-cards.
+  const board3d = view3dOn();
+  const lifted = board3d && view3d ? view3d.liftedCells() : EMPTY_CELL_SET;
+  feedView3D();
   for (let i = 0; i < cells.length; i += 1) {
     const base = cells[i];
     const over = overlay.get(i);
@@ -2938,6 +3074,10 @@ function drawScreen() {
     const bg = (color >> 4) & 0x0f;
     const x = base.x * CELL_W;
     const y = base.y * CELL_H;
+    if (board3d && base.x < BOARD_COLS && !over && !lifted.has(i)) {
+      screenCtx.clearRect(x, y, CELL_W, CELL_H);
+      continue;
+    }
 
     // M19.1: a player's 24-bit background cannot be expressed as a bg nibble,
     // so it is consulted here, after the overlay has had its say, and only
@@ -4524,6 +4664,27 @@ function handleKeyDown(event: KeyboardEvent) {
     return;
   }
 
+  // M35: the board with depth, or the text screen. V is the key the sidebar
+  // advertises and 3 is the mnemonic; both are free here, where C is chat and
+  // L is the block list, and neither reaches the engine's key switch.
+  if (event.code === "KeyV" || event.code === "Digit3" || event.code === "Numpad3") {
+    event.preventDefault();
+    view3d?.leaveGhost();
+    void toggleView3D();
+    return;
+  }
+  if (view3dOn() && (event.code === "KeyF" || event.code === "KeyG")) {
+    event.preventDefault();
+    stopHeldInput();
+    if (event.code === "KeyF") {
+      view3d?.standUp();
+    } else {
+      view3d?.toggleGhost();
+    }
+    drawScreen();
+    return;
+  }
+
   if (event.code === "KeyC") {
     event.preventDefault();
     stopHeldInput();
@@ -4555,6 +4716,26 @@ function handleKeyDown(event: KeyboardEvent) {
     stopHeldInput();
     sendKey(command);
     return;
+  }
+
+  // At eye level the arrows turn rather than travel: a quarter-turn on the key
+  // edge, never repeated and never sent. Walking is on WASD, which is the whole
+  // point of the split -- one hand walks, the other looks.
+  if (view3dEyeLevel() && view3d !== null) {
+    if (bindings.left?.includes(event.code)) {
+      event.preventDefault();
+      if (!event.repeat) {
+        view3d.turn(-1);
+      }
+      return;
+    }
+    if (bindings.right?.includes(event.code)) {
+      event.preventDefault();
+      if (!event.repeat) {
+        view3d.turn(1);
+      }
+      return;
+    }
   }
 
   const handled = updatePressed(event, true);
@@ -5673,6 +5854,18 @@ function sendHighScoreName(name: string) {
 }
 
 function updatePressed(event: KeyboardEvent, down: boolean): boolean {
+  // WASD is a movement key at eye level and nowhere else. Asked before the
+  // bindings, because the binding table has no idea this view exists -- and
+  // asked as a question about the view rather than about the code, so a player
+  // who rebound something onto W still gets that binding on the text screen.
+  if (view3dEyeLevel() && isEyeLevelKey(event.code)) {
+    if (down) {
+      pressed.add(event.code);
+    } else {
+      pressed.delete(event.code);
+    }
+    return true;
+  }
   if (!isHandledKey(event.code, effectiveKeyBindings(readEffectiveComfort()))) {
     return false;
   }
@@ -5685,7 +5878,14 @@ function updatePressed(event: KeyboardEvent, down: boolean): boolean {
 }
 
 function currentMask(): number {
-  return movementMask(pressed, effectiveKeyBindings(readEffectiveComfort()));
+  const raw = movementMask(pressed, effectiveKeyBindings(readEffectiveComfort()));
+  if (!view3dEyeLevel() || view3d === null) {
+    return raw;
+  }
+  // At eye level every direction is relative to the way you face, and the two
+  // held-key vocabularies are folded together before that resolution: the
+  // arrows' own bits and WASD's pseudo-bits mean the same four things.
+  return facingMask(raw | eyeLevelBits(pressed), view3d.facing);
 }
 
 function sendInput(mask: number, key = 0) {

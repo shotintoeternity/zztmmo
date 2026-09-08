@@ -21,9 +21,8 @@ import { boardText, groupSigns, signInRange, type BoardText, type SignGroup } fr
 /** What the client hands over on every frame it wants drawn. */
 export type View3DState = {
   cells: readonly ViewCell[];
+  /** The scene reads each player's own colour off this; there is no tint map. */
   roster: readonly ViewPlayer[];
-  /** Cell index -> "#rrggbb", the 24-bit player colours drawScreen already resolves. */
-  tints: ReadonlyMap<number, string>;
   /** The viewer's own square, 1-based as the protocol sends it, or null. */
   me: { x: number; y: number } | null;
 };
@@ -36,7 +35,7 @@ export class View3D {
   readonly rig = new CameraRig();
   private readonly scene: BoardScene;
   private readonly canvas: HTMLCanvasElement;
-  private state: View3DState = { cells: [], roster: [], tints: new Map(), me: null };
+  private state: View3DState = { cells: [], roster: [], me: null };
   private text: BoardText = { signs: [], message: null };
   private textCells: ReadonlySet<number> = new Set();
   private signGroups: SignGroup[] = [];
@@ -88,6 +87,47 @@ export class View3D {
 
   applyPreset(name: string): boolean {
     return this.rig.applyPreset(name);
+  }
+
+  /** F: stand up inside your own square, or step back out to where you were. */
+  standUp() {
+    this.rig.standUp();
+    this.dirty = true;
+  }
+
+  /**
+   * G: leave your body. Your card stays on the board -- it is still there, and
+   * the board is still ticking -- while the camera drifts off through the
+   * walls. Nothing is sent while you are out there, so a ghost is a way of
+   * looking and never a way of reaching.
+   */
+  toggleGhost() {
+    this.rig.setGhost(!this.rig.ghost, this.bodyX(), this.bodyZ());
+    this.dirty = true;
+  }
+
+  /** leaveGhost brings the camera home: a board change and V both do it. */
+  leaveGhost() {
+    this.rig.setGhost(false, this.bodyX(), this.bodyZ());
+    this.dirty = true;
+  }
+
+  get ghost(): boolean {
+    return this.rig.ghost;
+  }
+
+  get firstPerson(): boolean {
+    return this.rig.firstPerson;
+  }
+
+  /** The compass index the viewer faces: 0 north, 1 east, 2 south, 3 west. */
+  get facing(): 0 | 1 | 2 | 3 {
+    return this.rig.facing;
+  }
+
+  /** turn is a quarter-turn on the key edge: left and right never travel. */
+  turn(steps: number) {
+    this.rig.turn(steps);
   }
 
   start() {
