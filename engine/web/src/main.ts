@@ -245,6 +245,19 @@ type ScreenCell = {
   y: number;
   ch: number;
   color: number;
+  /**
+   * The element the server says is SHOWING here (gamevars.go's E_* numbers), or
+   * 0 when the board is holding it back. The text screen never needs it -- a
+   * glyph is a glyph -- but the 3D view cannot tell a fake wall from a wall
+   * without it, because ElementDefs draws the fake with the normal wall's own
+   * character, and cannot tell water from a shaded wall either.
+   *
+   * The wire tag is `element,omitempty`, so a square going from fake back to
+   * empty arrives with no field at all. Every write below therefore defaults it
+   * to 0 rather than leaving whatever was there: an absent field means zero,
+   * never "unchanged".
+   */
+  element?: number;
 };
 
 type PlayerSnapshot = {
@@ -743,6 +756,7 @@ if (!app) {
 
 app.innerHTML = `
   <div class="canvas-wrap">
+    <canvas data-view3d hidden></canvas>
     <canvas data-screen width="${WIDTH}" height="${HEIGHT}" tabindex="0"></canvas>
   </div>
 `;
@@ -945,6 +959,7 @@ const cells: ScreenCell[] = Array.from({ length: COLS * ROWS }, (_, i) => ({
   y: Math.floor(i / COLS),
   ch: 32,
   color: 0x1f,
+  element: 0,
 }));
 
 // M9.1 board-change fade. While `boardTransition` is set, drawScreen renders the
@@ -2843,6 +2858,7 @@ function replaceCells(nextCells: ScreenCell[]) {
   for (const cell of cells) {
     cell.ch = 32;
     cell.color = 0x1f;
+    cell.element = 0;
   }
   for (const cell of nextCells) {
     setBoardCell(cell);
@@ -2862,6 +2878,10 @@ function setCell(cell: ScreenCell) {
   if (cell.x < 0 || cell.x >= COLS || cell.y < 0 || cell.y >= ROWS) {
     return;
   }
+  // Normalised here rather than at every reader: `element,omitempty` means an
+  // absent field is zero, and a cell object that carries `undefined` instead
+  // would make every reader repeat the `?? 0`.
+  cell.element = cell.element ?? 0;
   cells[cell.y * COLS + cell.x] = cell;
 }
 
