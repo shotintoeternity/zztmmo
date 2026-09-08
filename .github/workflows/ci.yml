@@ -4,6 +4,18 @@ on:
   push:
   pull_request:
 
+# One run per branch. A second push supersedes the first, and the first is
+# cancelled rather than left to finish: `parity` alone can take a quarter of an
+# hour and is capped at sixty minutes, so two pushes a minute apart used to
+# leave two of them racing for a runner over a commit nobody was waiting on any
+# more. That happened twice on 2026-09-08.
+#
+# Keyed by ref, so branches never cancel each other, and a pull request's run is
+# separate from the branch push that produced it.
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
 jobs:
   engine:
     runs-on: ubuntu-latest
