@@ -15,8 +15,13 @@
 #
 # `make browser` is the everyday half of that: the opt-in real-browser family and
 # nothing else around it. CLAUDE.md rule 3 sends client work here (M33.2).
+#
+# `make web3d` is the 3D client's own gate: typecheck, node suite, build. It is
+# separate from `browser` because engine/web3d is a separate npm project with a
+# separate lockfile, and because it needs no browser at all -- its suites are
+# pure functions over the protocol and the glyph tables.
 
-.PHONY: parity certify browser parity-report parity-canaries oracle-tools oracle-regen world
+.PHONY: parity certify browser web3d parity-report parity-canaries oracle-tools oracle-regen world
 
 # Deterministic ZWD authoring gate. Example:
 #   make world SOURCE=llmworld/generated/NULLSIGN.zwd OUT=engine/NULLSIGN.ZZT
@@ -60,6 +65,13 @@ browser:
 	cd engine/web && npm run build
 	cd engine/web && npm test
 	cd engine && ZZT_BROWSER=1 go test -timeout 30m -count=1 ./...
+
+# The 3D client. `npm run build` is `tsc && vite build`, so this typechecks as
+# well as bundles. The deploy passes --base=/3d/ on top (see AWS.md); the plain
+# build here is what proves the tree compiles.
+web3d:
+	cd engine/web3d && npm test
+	cd engine/web3d && npm run build
 
 # Re-render the report from the current manifest without running the gates.
 parity-report:
