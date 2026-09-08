@@ -664,7 +664,15 @@ function handleKeyDown(event: KeyboardEvent) {
     }
     return;
   }
-  if (event.code === "KeyV" && !event.ctrlKey && !event.metaKey && !event.altKey) {
+  // 3 is the mnemonic and V is the muscle memory, so both toggle. No digit has
+  // ever been bound in this client and ZZT's play mode has never used one, so
+  // taking 3 costs nothing -- unlike S, which had a job (see input.ts).
+  if (
+    (event.code === "KeyV" || event.code === "Digit3" || event.code === "Numpad3") &&
+    !event.ctrlKey &&
+    !event.metaKey &&
+    !event.altKey
+  ) {
     event.preventDefault();
     stopHeldInput();
     leaveGhost();

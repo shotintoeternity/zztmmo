@@ -74,7 +74,7 @@ eye level**, where it is walking backwards -- press **V** for the text screen
 and save from there. The sidebar says so while you are standing up, in the row
 that used to promise Save.
 
-**V** switches between the two things this client can be:
+**V** (or **3**) switches between the two things this client can be:
 
 - **3D** is the board with depth, on one camera, and it starts where choosing
   it means you want to be: at eye level, standing inside your own square.
