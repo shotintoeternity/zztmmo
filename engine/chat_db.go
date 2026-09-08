@@ -234,9 +234,25 @@ func (db *MemChatDatabase) Close() error {
 	return nil
 }
 
+// ErrChatDatabaseClosed is returned by a write that arrives after Close. It is
+// not a failure of the write so much as a report that the caller outlived the
+// database: see closed, below.
+var ErrChatDatabaseClosed = errors.New("chat database is closed")
+
 type FileChatDatabase struct {
-	mu           sync.Mutex
-	file         *os.File
+	mu   sync.Mutex
+	file *os.File
+	// closed is what stops a straggler from writing files back after Close.
+	// The append log needs no such guard -- writes to a closed *os.File fail by
+	// themselves -- but the player-state and account-preference files are
+	// written by path, through a temp file and a rename, so closing the handle
+	// does nothing to stop them. A connection goroutine that outlives its
+	// server (an httptest server does not wait for hijacked WebSocket conns)
+	// could therefore recreate both files in a directory that was already being
+	// torn down, which is how TestM214... and TestM211... failed intermittently
+	// with "TempDir RemoveAll cleanup: directory not empty" -- a test the suite
+	// then reported as a broken block feature rather than as a stale goroutine.
+	closed       bool
 	statePath    string
 	prefsPath    string
 	messages     []ChatRecord
@@ -371,6 +387,7 @@ func (db *FileChatDatabase) GetAccountPreferences(accountID string) (AccountPref
 func (db *FileChatDatabase) Close() error {
 	db.mu.Lock()
 	defer db.mu.Unlock()
+	db.closed = true
 	return db.file.Close()
 }
 
@@ -523,6 +540,9 @@ func sanitizeFollowedAccounts(accounts []string, self string) []string {
 }
 
 func (db *FileChatDatabase) writeAccountPreferencesLocked() error {
+	if db.closed {
+		return ErrChatDatabaseClosed
+	}
 	data, err := json.MarshalIndent(db.accountPrefs, "", "  ")
 	if err != nil {
 		return err
@@ -539,6 +559,9 @@ func (db *FileChatDatabase) writeAccountPreferencesLocked() error {
 }
 
 func (db *FileChatDatabase) writePlayerStatesLocked() error {
+	if db.closed {
+		return ErrChatDatabaseClosed
+	}
 	data, err := json.MarshalIndent(db.playerStates, "", "  ")
 	if err != nil {
 		return err
