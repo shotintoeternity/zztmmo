@@ -205,10 +205,16 @@ func TestM271WorldsShelvesArePerRecipientAndReferenceFlatWorlds(t *testing.T) {
 	if friends := flat["BETA"].FriendsHere; len(friends) != 1 || friends[0].Handle != "bob" {
 		t.Fatalf("friend presence = %+v, want Bo on BETA", friends)
 	}
-	for _, want := range []string{"favorites", "active", "played", "classics", "dreams"} {
+	for _, want := range []string{"favorites", "active", "classics", "dreams"} {
 		if !m271HasShelf(adaResp.Shelves, want) {
 			t.Fatalf("missing shelf %q in %+v", want, adaResp.Shelves)
 		}
+	}
+	// "Most played" was removed (owner, 2026-09-08): a picker is an archive, not
+	// a chart, and the shelf mostly repeated the row above it. The play COUNT is
+	// still annotated per world above; only the shelf is gone.
+	if m271HasShelf(adaResp.Shelves, "played") {
+		t.Fatalf("the played shelf is gone, but the API still offers it: %+v", adaResp.Shelves)
 	}
 	// The archive outranks the day's dreaming (owner 2026-08-11). Asserted as
 	// relative position rather than as an index, so adding a shelf between them

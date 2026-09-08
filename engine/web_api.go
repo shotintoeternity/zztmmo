@@ -1402,6 +1402,20 @@ func (a *WebAPI) worldDirectoryAndNames() (string, []string) {
 		dir = filepath.Dir(E.LoadedGameFileName)
 	}
 	worlds := ListWorlds(dir)
+	// The challenge's world is not a world you choose (owner, 2026-09-08). It is
+	// the board a challenge run is played on, reached from the challenge itself,
+	// and listing it in the picker put "ZZTMMO Gem Dash" in the archive between
+	// TOWN and Bad Apple as though somebody had published it. Filtered here, at
+	// the one place the picker's list is built, rather than in the client: a
+	// world the API offers is a world every client may join.
+	filtered := worlds[:0]
+	for _, world := range worlds {
+		if strings.EqualFold(world, ChallengeWorldName) {
+			continue
+		}
+		filtered = append(filtered, world)
+	}
+	worlds = filtered
 	if len(worlds) == 0 && a.RoomManager != nil {
 		worlds = []string{a.RoomManager.WorldName()}
 	}
@@ -1451,20 +1465,12 @@ func buildWorldShelves(entries []WorldListEntry, authenticated bool, favorites [
 	})
 	addShelf("active", "Friends here / Active now", active)
 
-	played := make([]string, 0)
-	for _, entry := range entries {
-		if entry.PlayCount > 0 {
-			played = append(played, entry.World)
-		}
-	}
-	sort.SliceStable(played, func(i, j int) bool {
-		a, b := byWorld[played[i]], byWorld[played[j]]
-		if a.PlayCount != b.PlayCount {
-			return a.PlayCount > b.PlayCount
-		}
-		return strings.ToUpper(a.Title) < strings.ToUpper(b.Title)
-	})
-	addShelf("played", "Most played", played)
+	// There is no "Most played" shelf (owner, 2026-09-08). A play count that
+	// ranks worlds turns a picker into a chart, and the shelf spent most of its
+	// life repeating whatever "Friends here / Active now" had already listed one
+	// row above -- the same world, twice, with the same line under it. The count
+	// itself still rides on each entry and still shows beside a world; what is
+	// gone is sorting the archive by it.
 
 	// Classics sit above Recent dreams (owner 2026-08-11): the archive is what
 	// the picker is for, and a day of dreaming used to push it under the fold.
