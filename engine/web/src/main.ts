@@ -847,6 +847,12 @@ let roster: PlayerSnapshot[] = [];
 
 const EMPTY_CELL_SET: ReadonlySet<number> = new Set();
 
+// A sign taller than this is a wall of text; the first lines are the ones that
+// name the place. White on blue, ZZT's own colour for a thing being told to you.
+const SIGN_READOUT_LINES = 3;
+const SIGN_READOUT_FG = 0x0f;
+const SIGN_READOUT_BG = 0x01;
+
 // --- the 3D view (M35) ------------------------------------------------------
 //
 // A second painter for the board half of `cells`. It is loaded on demand: three
@@ -3108,6 +3114,55 @@ function drawScreen() {
       CELL_W,
       CELL_H
     );
+  }
+
+  drawSignReadout(board3d);
+}
+
+/**
+ * A sign is a wall you can read, and it stays in the world: taking the signs
+ * out of a board leaves a board that is not the board. But a sign is a row of
+ * letters lying on the floor, and from eye height a row of letters is edge-on
+ * and unreadable, so the one you are standing at reads itself out along the
+ * bottom of the board -- and only that one, because a list of every sign in
+ * sight is a menu rather than a place.
+ *
+ * Drawn after the cell loop, straight onto the canvas: it belongs to no square,
+ * so it is not in `cells`, and it must not be in `overlay` either -- that map is
+ * the client's window layer, rebuilt by paintOverlay, and a sign written there
+ * would be a text window's business.
+ */
+function drawSignReadout(board3d: boolean) {
+  if (!board3d || view3d === null || !view3d.firstPerson) {
+    return;
+  }
+  const sign = view3d.signAtEye();
+  if (!sign) {
+    return;
+  }
+  const lines = sign.lines.slice(0, SIGN_READOUT_LINES);
+  const top = ROWS - lines.length;
+  for (let i = 0; i < lines.length; i += 1) {
+    const text = lines[i].slice(0, BOARD_COLS - 2);
+    const x0 = Math.max(0, Math.floor((BOARD_COLS - text.length) / 2));
+    for (let j = 0; j < text.length; j += 1) {
+      const ch = text.charCodeAt(j) & 0xff;
+      const px = (x0 + j) * CELL_W;
+      const py = (top + i) * CELL_H;
+      screenCtx.fillStyle = paletteColor(readEffectiveComfort().palette, SIGN_READOUT_BG);
+      screenCtx.fillRect(px, py, CELL_W, CELL_H);
+      screenCtx.drawImage(
+        fontCanvases[SIGN_READOUT_FG],
+        (ch % GLYPH_COLS) * CELL_W,
+        Math.floor(ch / GLYPH_COLS) * CELL_H,
+        CELL_W,
+        CELL_H,
+        px,
+        py,
+        CELL_W,
+        CELL_H
+      );
+    }
   }
 }
 
