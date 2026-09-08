@@ -105,11 +105,11 @@ let retryAttempt = 0;
 const overlay = new Overlay(overlayCanvas);
 const rig = new CameraRig();
 // ?view= still names the old modes. They are camera positions now, not modes:
-// V toggles the world and the text screen, and the rest is the wheel.
-if (startView === "classic") {
-  rig.setMode("classic");
-} else if (startView) {
-  rig.applyPreset(startView);
+// V toggles the world and the text screen, and the rest is the wheel. The
+// client opens on the text screen, so naming any of the camera positions has
+// to put you in the world as well as place you there.
+if (startView && startView !== "classic" && rig.applyPreset(startView)) {
+  rig.setMode("world");
 }
 
 // First-person controls belong to the 3D view. In the classic view the arrows

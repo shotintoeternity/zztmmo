@@ -51,7 +51,7 @@ Query parameters:
 | `name` | Your name on the board. |
 | `color` | Your card's background, as `%23RRGGBB`. |
 | `board` | The board to start on; the server's default otherwise. |
-| `view` | Where the camera starts: `overhead` (the default), `chase`, `first`, `diorama` or `classic`. |
+| `view` | Where the camera starts. The default is `classic`, the text screen; `overhead`, `chase`, `first` and `diorama` each start you in the 3D world at that camera. |
 
 ## Playing
 

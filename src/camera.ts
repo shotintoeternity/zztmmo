@@ -8,6 +8,9 @@
 //            height, facing the way you last pushed. Drag to orbit, wheel to
 //            zoom, F to stand up or step back out.
 //   classic  the text screen itself: the regular ZZTMMO view, drawn flat.
+//            This is what the client opens on. ZZTMMO is a text game and the
+//            board it draws is the real one; 3D is somewhere you choose to go,
+//            not somewhere you land before you have asked for anything.
 //
 // Overhead, chase and diorama used to be three of five modes on the V key.
 // They were never three things — one orbit camera at three distances, with the
@@ -83,7 +86,7 @@ function ease(t: number): number {
 
 export class CameraRig {
   readonly camera = new THREE.PerspectiveCamera(FOV_ORBIT, 1, 0.05, 300);
-  mode: ViewMode = "world";
+  mode: ViewMode = "classic";
   facing: Facing = 0;
   /** Where the camera is when it has left your body behind. */
   ghost = false;
@@ -120,10 +123,11 @@ export class CameraRig {
    *
    * Arriving in the world puts you in it, at eye level -- choosing 3D over the
    * text screen is choosing to stand in the board rather than look down at it,
-   * and an orbit camera is a third thing that is neither. The distance is kept,
-   * so F backs you out to wherever you were watching from. The overhead shot
-   * the client opens on is the exception: it is the establishing shot, before
-   * anyone has chosen anything.
+   * and an orbit camera is a third thing that is neither. That holds for the
+   * first V of the session as much as the tenth: there is no establishing shot,
+   * because the text screen was the establishing shot. The distance is kept, so
+   * F backs you out to wherever you were watching from -- ORBIT_DEFAULT, the
+   * overhead, until you have watched from somewhere else.
    */
   cycle(): ViewMode {
     const next: ViewMode = this.mode === "world" ? "classic" : "world";
