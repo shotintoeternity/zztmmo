@@ -27,6 +27,9 @@ import type { ViewCell as ScreenCell, ViewPlayer as PlayerSnapshot } from "./dim
  */
 export const TILE_DEPTH = CELL_H / CELL_W;
 export const SPRITE_HEIGHT = TILE_DEPTH;
+/** A space: the glyph that paints nothing but its background. */
+const CH_BLANK = 0x20;
+
 const FLOOR_DOT = 0xfa;
 const WATER_DEPTH = -0.08;
 
@@ -303,6 +306,9 @@ export class BoardScene {
         const z0 = y * TILE_DEPTH;
         const z1 = (y + 1) * TILE_DEPTH;
         const zm = z0 + 1; // one glyph's width along a side face
+        // The centred single glyph a symbol gets on a deep face.
+        const zc0 = z0 + (TILE_DEPTH - 1) / 2;
+        const zc1 = zc0 + 1;
 
         switch (shape.kind) {
           case "empty":
@@ -348,16 +354,31 @@ export class BoardScene {
             if (blockAt(x, y - 1) < shape.height) {
               solid.quad([[x1, h, z0], [x0, h, z0], [x0, 0, z0], [x1, 0, z0]], shape.glyph, fg, bg, true, SHADE_NORTH);
             }
-            // The east and west faces are a tile deep, 1.75 glyphs wide: a
-            // whole glyph and then three quarters of another, so the pattern
-            // keeps its true proportions instead of stretching to fit.
+            // The east and west faces are a tile deep, so they are 1.75 glyphs
+            // wide and something has to give. A pattern repeats: a whole glyph
+            // and then three quarters of another, which keeps its true
+            // proportions instead of stretching one to fit. A symbol does not
+            // -- a door repeated that way is one door and three quarters of a
+            // second, and the same wall then reads differently from its narrow
+            // face than from its deep one. So a symbol is drawn once, centred,
+            // on a face painted in its own background colour.
             if (blockAt(x + 1, y) < shape.height) {
-              solid.quad([[x1, h, z1], [x1, h, zm], [x1, 0, zm], [x1, 0, z1]], shape.glyph, fg, bg, true, SHADE_EAST);
-              solid.quad([[x1, h, zm], [x1, h, z0], [x1, 0, z0], [x1, 0, zm]], shape.glyph, fg, bg, true, SHADE_EAST, undefined, [0, TILE_DEPTH - 1]);
+              if (shape.tiles) {
+                solid.quad([[x1, h, z1], [x1, h, zm], [x1, 0, zm], [x1, 0, z1]], shape.glyph, fg, bg, true, SHADE_EAST);
+                solid.quad([[x1, h, zm], [x1, h, z0], [x1, 0, z0], [x1, 0, zm]], shape.glyph, fg, bg, true, SHADE_EAST, undefined, [0, TILE_DEPTH - 1]);
+              } else {
+                solid.quad([[x1, h, z1], [x1, h, z0], [x1, 0, z0], [x1, 0, z1]], CH_BLANK, fg, bg, true, SHADE_EAST);
+                solid.quad([[x1, h, zc1], [x1, h, zc0], [x1, 0, zc0], [x1, 0, zc1]], shape.glyph, fg, bg, false, SHADE_EAST);
+              }
             }
             if (blockAt(x - 1, y) < shape.height) {
-              solid.quad([[x0, h, z0], [x0, h, zm], [x0, 0, zm], [x0, 0, z0]], shape.glyph, fg, bg, true, SHADE_WEST);
-              solid.quad([[x0, h, zm], [x0, h, z1], [x0, 0, z1], [x0, 0, zm]], shape.glyph, fg, bg, true, SHADE_WEST, undefined, [0, TILE_DEPTH - 1]);
+              if (shape.tiles) {
+                solid.quad([[x0, h, z0], [x0, h, zm], [x0, 0, zm], [x0, 0, z0]], shape.glyph, fg, bg, true, SHADE_WEST);
+                solid.quad([[x0, h, zm], [x0, h, z1], [x0, 0, z1], [x0, 0, zm]], shape.glyph, fg, bg, true, SHADE_WEST, undefined, [0, TILE_DEPTH - 1]);
+              } else {
+                solid.quad([[x0, h, z0], [x0, h, z1], [x0, 0, z1], [x0, 0, z0]], CH_BLANK, fg, bg, true, SHADE_WEST);
+                solid.quad([[x0, h, zc0], [x0, h, zc1], [x0, 0, zc1], [x0, 0, zc0]], shape.glyph, fg, bg, false, SHADE_WEST);
+              }
             }
             if (shape.height < 1) {
               // A short block stands on a visible floor.

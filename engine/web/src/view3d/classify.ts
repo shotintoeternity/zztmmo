@@ -39,6 +39,22 @@ export type CellShape = {
   bg: number;
   /** Whether the background color is painted behind the glyph. */
   opaqueBg: boolean;
+  /**
+   * Whether this glyph is a PATTERN rather than a symbol.
+   *
+   * It decides what a block's deep faces do. A tile is 1 wide and 1.75 deep, so
+   * the east and west faces are 1.75 glyphs across, and scene.ts fills them
+   * with a whole glyph plus three quarters of another rather than stretching
+   * one out of shape. For the dithers that is exactly right: they are texture,
+   * and texture repeats.
+   *
+   * For a symbol it is wrong, and visibly so. A door drawn that way is one
+   * door and three quarters of a second door on the same square, and the same
+   * wall reads differently depending on whether you are looking at its narrow
+   * face or its deep one -- reported by the owner, 2026-09-08. A symbol is
+   * drawn once, centred, on a face of its own background colour.
+   */
+  tiles: boolean;
 };
 
 /**
@@ -75,10 +91,20 @@ const CH_DOOR = 0x0a;
 export const FOG_COLOR = 0x07;
 export const FOG_GLYPH = CH_SHADE;
 
+/**
+ * The glyphs that are texture. ZZT's four block characters are a graded dither
+ * from light to solid, and they are the only characters in the set whose whole
+ * meaning is "more of this, everywhere" -- so they are the only ones a face may
+ * repeat. Everything else, including the line-drawing pieces, is a symbol that
+ * means one thing once.
+ */
+const TILING_GLYPHS: ReadonlySet<number> = new Set([0xb0, 0xb1, 0xb2, 0xdb]);
+
 export function classify(ch: number, color: number, element = 0): CellShape {
   const fg = color & 0x0f;
   const bg = (color >> 4) & 0x0f;
-  const shape = (kind: CellKind, height: number, opaqueBg: boolean): CellShape => ({ kind, height, glyph: ch, fg, bg, opaqueBg });
+  const shape = (kind: CellKind, height: number, opaqueBg: boolean): CellShape =>
+    ({ kind, height, glyph: ch, fg, bg, opaqueBg, tiles: TILING_GLYPHS.has(ch) });
 
   // Asked before the glyph is read, because the glyph would lie. A fake keeps
   // the exact pattern it was drawn with -- it is simply lying down, which is
