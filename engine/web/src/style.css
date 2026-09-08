@@ -62,6 +62,26 @@ canvas[data-view3d] {
   width: 100%;
   height: 100%;
   pointer-events: none;
+  /* Under the text screen, which is what draws the sidebar, the text windows
+     and every notice ON TOP of the world. An absolutely positioned element
+     paints above a static sibling in the same stacking context, so without
+     these two the 3D canvas would cover the very windows it is supposed to sit
+     behind -- a scroll would open and be invisible. */
+  z-index: 0;
+}
+
+/* `canvas { display: block }` above is an author rule, and an author rule beats
+   the user agent's `[hidden] { display: none }` however specific that is. So
+   the hidden attribute does nothing to a canvas in this app unless it is said
+   again here -- which is why the 3D view stayed on screen after it was switched
+   off, painting over a board the text screen had already repainted. */
+canvas[data-view3d][hidden] {
+  display: none;
+}
+
+canvas[data-screen] {
+  position: relative;
+  z-index: 1;
 }
 
 canvas {
