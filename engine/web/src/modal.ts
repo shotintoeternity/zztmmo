@@ -438,6 +438,10 @@ export function renderModal(write: WriteText, m: Modal) {
 
 const WORLD_SEARCH_LIMIT = 50;
 const WORLD_TITLE_WIDTH = 38;
+// A title never shrinks below this to make room for its filename: past it the
+// row stops naming the world at all, and a truncated title beside a whole
+// filename is still a row you can recognise.
+const MIN_TITLE_ROOM = 14;
 const WORLD_DETAIL_WIDTH = 42;
 const WORLD_SEARCH_ROW = TEXT_WINDOW_Y + TEXT_WINDOW_HEIGHT - 2;
 
@@ -517,7 +521,25 @@ function worldSearchLines(m: WorldSearchModal): string[] {
       const playerText = worldSearchPlayerText(entry.players ?? 0, entry.editors ?? 0);
       const sourceText = entry.source === "museum" ? "  Museum" : "";
       const favoriteText = entry.favorite ? "* " : "  ";
-      lines.push(`!${String(index)};${fitText(favoriteText + (entry.title || entry.world), WORLD_TITLE_WIDTH)}`);
+      // The .ZZT file the world actually is, in brackets after its title.
+      //
+      // A title is what this picker shows; the FILE is what everyone who has
+      // ever traded these things calls it -- TOWN.ZZT, BURGERJ.ZZT -- so a row
+      // showing only "Town of ZZT" is missing the name people know it by. It is
+      // the world identity plus the extension, which is what the server opens
+      // (SanitizeSaveName(base) + ".ZZT", M18.13).
+      //
+      // The title is fitted to whatever the filename leaves rather than to the
+      // whole width. Appended to a full line the filename would sit past the
+      // truncation and show on short titles only -- the half of the archive
+      // that needed it least. It does not go on the by-line either: that line
+      // has 42 columns and already carries an author, a year, the Museum tag
+      // and a play count, and the filename would have been paid for by
+      // silently truncating the count.
+      const fileSuffix = entry.world ? ` (${entry.world}.ZZT)` : "";
+      const titleRoom = Math.max(MIN_TITLE_ROOM, WORLD_TITLE_WIDTH - favoriteText.length - fileSuffix.length);
+      const titleText = fitText(entry.title || entry.world, titleRoom);
+      lines.push(`!${String(index)};${fitText(favoriteText + titleText + fileSuffix, WORLD_TITLE_WIDTH)}`);
       const playedText = (entry.playCount ?? 0) > 0 ? `  ${entry.playCount} plays` : "";
       lines.push(fitText(`  by ${entry.author || "Unknown"}  ${entry.created || "????"}${sourceText}${playedText}`, WORLD_DETAIL_WIDTH));
       if (playerText) {
