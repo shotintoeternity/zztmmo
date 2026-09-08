@@ -4,17 +4,38 @@ import { build } from "esbuild";
 const out = await build({ entryPoints: ["src/input.ts"], bundle: true, format: "esm", platform: "node", write: false });
 const {
   InputMaskUp, InputMaskDown, InputMaskLeft, InputMaskRight, InputMaskShift, InputMaskShoot,
-  InputMaskStrafeLeft, InputMaskStrafeRight,
+  InputMaskStrafeLeft, InputMaskStrafeRight, InputMaskWalkForward, InputMaskWalkBack,
   commandKey, isMovementKey, movementMask, facingMask, facingOfMask, wireMask, ghostDrift, KeyEnter, KeyEscape,
 } = await import(`data:text/javascript;base64,${Buffer.from(out.outputFiles[0].contents).toString("base64")}`);
 
-// The vanilla vocabulary on the wire, and nothing more: no V, and no W or S
-// walking. A and D exist, but only as pseudo-bits the client resolves itself.
+// The vanilla vocabulary on the wire, and nothing more: no V, and -- away from
+// eye level -- no W or S walking either. A and D exist, but only as pseudo-bits
+// the client resolves itself.
 assert.equal(movementMask(new Set(["ArrowUp", "Space"])), InputMaskUp | InputMaskShoot);
 assert.equal(movementMask(new Set(["Numpad4", "ShiftLeft"])), InputMaskLeft | InputMaskShift);
 assert.equal(isMovementKey("KeyW"), false);
 assert.equal(isMovementKey("KeyV"), false);
 assert.equal(isMovementKey("KeyA"), true, "a strafe is a movement key");
+
+// WASD is the eye-level scheme, and S is the whole reason it has to be one.
+// On the text screen S is ZZT's Save and W is nothing; standing in the board
+// they walk, and Save is not reachable until you sit back down.
+assert.equal(commandKey({ code: "KeyS", key: "s" }), "S".charCodeAt(0), "the text screen saves");
+assert.equal(commandKey({ code: "KeyS", key: "s" }, true), 0, "at eye level S walks back, it does not save");
+assert.equal(isMovementKey("KeyS"), false, "S is Save on the text screen, not a step");
+assert.equal(isMovementKey("KeyS", true), true);
+assert.equal(isMovementKey("KeyW", true), true);
+assert.equal(movementMask(new Set(["KeyW", "KeyS"])), 0, "neither walks away from eye level");
+assert.equal(
+  movementMask(new Set(["KeyW", "KeyS"]), true),
+  InputMaskWalkForward | InputMaskWalkBack,
+);
+// The walk bits are the client's own and must never reach the server, exactly
+// as the strafes must not.
+assert.equal(wireMask(InputMaskWalkForward | InputMaskWalkBack), 0);
+// Save keeps working at eye level for every OTHER command key: only S moved.
+assert.equal(commandKey({ code: "KeyT", key: "t" }, true), "T".charCodeAt(0));
+assert.equal(commandKey({ code: "KeyQ", key: "q" }, true), "Q".charCodeAt(0));
 // F (stand up) and G (ghost) are the client's own, like V: neither is a step
 // nor a command, so neither can reach the server.
 for (const code of ["KeyF", "KeyG"]) {
@@ -37,6 +58,25 @@ assert.equal(facingMask(InputMaskDown, 1), InputMaskLeft);
 assert.equal(facingMask(InputMaskLeft | InputMaskRight, 0), 0);
 assert.equal(facingMask(InputMaskUp | InputMaskShoot, 3), InputMaskLeft | InputMaskShoot, "Space+Up shoots straight ahead");
 assert.equal(facingMask(InputMaskShift, 2), InputMaskShift);
+
+// W and S are the same two directions as up and down, resolved the same way.
+assert.equal(facingMask(InputMaskWalkForward, 0), InputMaskUp);
+assert.equal(facingMask(InputMaskWalkForward, 1), InputMaskRight);
+assert.equal(facingMask(InputMaskWalkBack, 1), InputMaskLeft);
+assert.equal(facingMask(InputMaskWalkBack, 0), InputMaskDown);
+assert.equal(
+  facingMask(InputMaskWalkForward | InputMaskShoot, 3),
+  InputMaskLeft | InputMaskShoot,
+  "Space+W shoots straight ahead",
+);
+assert.equal(
+  facingMask(InputMaskWalkForward | InputMaskStrafeRight, 0),
+  InputMaskUp | InputMaskRight,
+  "W and D together walk the diagonal ZZT resolves for you",
+);
+// A ghost at eye level flies on the same four keys.
+assert.equal(ghostDrift(InputMaskWalkForward, true).dz, 1);
+assert.equal(ghostDrift(InputMaskWalkBack, true).dz, -1);
 
 // Strafes: A and D step sideways from where you face, and never turn you.
 assert.equal(facingMask(InputMaskStrafeLeft, 0), InputMaskLeft);

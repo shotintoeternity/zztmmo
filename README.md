@@ -59,13 +59,20 @@ The keys are ZZT's. Arrows move, Shift+arrow shoots, and T, P, B, S, Q, H and
 `?` do what the sidebar says. Scrolls, help, prompts and the pause label draw as
 ZZT's own text windows over the 3D view.
 
-**A** and **D** strafe, in the first-person view only, where they are the one
-thing the arrows cannot say: a step sideways without turning. Everywhere else
-the arrows are already absolute board directions, so a strafe would mean
-nothing and the keys do nothing. They never reach the server as themselves --
-the client resolves them against your facing and sends an ordinary direction,
-which is all ZZT's six-bit keymask can carry. (**A** sits next to **S**, which
-is Save; a WASD reflex opens the save prompt, and Escape closes it.)
+**WASD walks, at eye level only.** Standing in the board, **W** and **S** go
+forward and back, **A** and **D** step sideways without turning, and the arrows
+are left to do the turning -- one hand walks, the other looks. Shift still
+shoots, so Shift+**W** fires straight ahead and Shift+**A** fires to your left.
+None of the four reach the server as themselves: the client resolves them
+against your facing and sends an ordinary direction, which is all ZZT's six-bit
+keymask can carry.
+
+Away from eye level none of that applies. The arrows there are already absolute
+board directions, so a strafe would mean nothing, and **S** is ZZT's Save, which
+it has been since 1991. A key cannot be both, so **S saves everywhere except at
+eye level**, where it is walking backwards -- press **V** for the text screen
+and save from there. The sidebar says so while you are standing up, in the row
+that used to promise Save.
 
 **V** switches between the two things this client can be:
 
@@ -77,9 +84,10 @@ is Save; a WASD reflex opens the save prompt, and Escape closes it.)
   over your own shoulder.
 - **classic** is the regular ZZTMMO screen: the board drawn flat as text.
 
-The client opens on the overhead shot, which is the one view V never returns
-to: it is the establishing shot, before you have chosen to be in the board or
-to read it. The wheel and F both go back to it.
+The client opens on **classic**, because ZZTMMO is a text game and the board it
+draws is the real one. 3D is somewhere you choose to go, and the first V takes
+you there standing up. F and the wheel are what put the camera back at a
+distance afterwards.
 
 Overhead, chase and diorama used to be three more modes on this key. They were
 never three things -- one camera at three distances, with the wheel already

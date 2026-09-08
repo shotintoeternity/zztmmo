@@ -452,8 +452,15 @@ function setNotice(text: string) {
   redrawTop();
 }
 
+// The sidebar's V row reads " V  View <label>", which is an instruction, so the
+// label has to name where V goes rather than where you already are. It named
+// where you were: standing in the world, the sidebar said "View 3D", which is
+// the one thing V will not do from there. F ("Eye level" / "Back out") and G
+// ("Ghost" / "Body") were already written the right way round; this was the odd
+// one out. Ghosthood is not in this label at all -- the G row two lines down
+// says it, in its colour as well as its word.
 function writeViewLabel() {
-  const label = rig.mode === "classic" ? "classic" : rig.ghost ? "3D ghost" : "3D";
+  const label = rig.mode === "classic" ? "3D" : "classic";
   overlay.writeBase(71, 17, 0x1e, label.padEnd(8, " "));
   // Row 13 is blank in vanilla. F is the way to eye level and back, and it has
   // to be said somewhere: V used to arrive at first person after a couple of
@@ -464,13 +471,23 @@ function writeViewLabel() {
   } else {
     sidebarClearLine(overlay.writeBase, 13);
   }
-  // Row 20 is blank in vanilla's sidebar, so the one binding that exists only
-  // inside the first-person view is announced there, and only there.
+  // Row 20 is blank in vanilla's sidebar, so the bindings that exist only inside
+  // the first-person view are announced there, and only there. Row 21 is not
+  // blank -- it is ZZT's " S  Save game" -- and it has to be rewritten, because
+  // at eye level S is walking backwards and a sidebar that still promised Save
+  // would be lying about the one key whose meaning moved.
   if (inFirstPerson()) {
-    overlay.writeBase(63, 20, 0x30, " A D ");
-    overlay.writeBase(68, 20, 0x1f, " Strafe");
+    sidebarClearLine(overlay.writeBase, 20);
+    overlay.writeBase(62, 20, 0x30, " W A S D ");
+    overlay.writeBase(71, 20, 0x1f, " Walk");
+    overlay.writeBase(62, 21, 0x70, " S ");
+    overlay.writeBase(65, 21, 0x1f, " Save: press V");
   } else {
     sidebarClearLine(overlay.writeBase, 20);
+    overlay.writeBase(62, 21, 0x70, " S ");
+    // Padded to the width of the sentence it replaces, for the reason
+    // sidebar.ts gives about " Body" over " Ghost".
+    overlay.writeBase(65, 21, 0x1f, " Save game".padEnd(14, " "));
   }
   // Row 24 is blank in vanilla too. In first person the sidebar is the only
   // thing that can tell you whether you are your body or not, so it says so
@@ -615,7 +632,7 @@ function currentMask(): number {
   if (modal || rig.ghost) {
     return 0;
   }
-  const raw = movementMask(pressed);
+  const raw = movementMask(pressed, inFirstPerson());
   // Outside first person a strafe has no meaning -- the arrows are already
   // absolute board directions -- so the pseudo-bits are dropped rather than
   // sent. facingMask does its own dropping.
@@ -679,17 +696,26 @@ function handleKeyDown(event: KeyboardEvent) {
     applyView();
     return;
   }
-  if (event.repeat && !isMovementKey(event.code)) {
+  if (event.repeat && !isMovementKey(event.code, inFirstPerson())) {
     return;
   }
-  const command = commandKey(event);
+  const command = commandKey(event, inFirstPerson());
   if (command !== 0) {
     event.preventDefault();
     stopHeldInput();
     client.sendKey(command);
     return;
   }
-  if (!isMovementKey(event.code)) {
+  if (!isMovementKey(event.code, inFirstPerson())) {
+    return;
+  }
+  // A held Ctrl, Cmd or Alt means the player is talking to the browser, not to
+  // the board -- commandKey already refuses those, and a step has the same
+  // reason to. It matters more now that S walks: Ctrl+S is a reflex, and
+  // answering it by backing into a lion while swallowing the browser's own
+  // dialog would be the worst of both. Shift is not in the list: Shift is how
+  // ZZT shoots.
+  if (event.ctrlKey || event.metaKey || event.altKey) {
     return;
   }
   event.preventDefault();
@@ -703,7 +729,7 @@ function handleKeyDown(event: KeyboardEvent) {
     return;
   }
   pressed.add(event.code);
-  const facing = facingOfMask(movementMask(pressed));
+  const facing = facingOfMask(movementMask(pressed, inFirstPerson()));
   if (!inFirstPerson() && facing !== null) {
     rig.facing = facing;
   }
@@ -794,7 +820,7 @@ function frame(now: number) {
       return;
     }
     if (rig.ghost) {
-      const drift = ghostDrift(movementMask(pressed), rig.firstPerson);
+      const drift = ghostDrift(movementMask(pressed, rig.firstPerson), rig.firstPerson);
       rig.driftGhost(drift.dx, drift.dz, dt);
     }
     const eye = eyeCell();
