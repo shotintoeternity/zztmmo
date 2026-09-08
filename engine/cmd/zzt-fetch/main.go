@@ -22,6 +22,7 @@ import (
 	"net/http"
 	"os"
 	"path/filepath"
+	"strconv"
 	"strings"
 	"time"
 )
@@ -30,6 +31,19 @@ const (
 	baseURL    = "https://museumofzzt.com/zgames"
 	userAgent  = "zztmmo-fetch/1.0 (github.com/shotintoeternity/zztmmo)"
 	fetchDelay = 300 * time.Millisecond
+
+	// Retry policy. This is somebody else's archive, run for the community out
+	// of goodwill, and the whole catalogue is a lot of requests to make of it in
+	// one sitting -- so a refusal is treated as "you are going too fast", not as
+	// a failure to report and move past.
+	//
+	// The backoff doubles from a second and gives up after six tries, which is
+	// about a minute of waiting on one file. A 429 or a 503 that names a
+	// Retry-After is obeyed instead: the server saying how long it wants beats
+	// anything guessed here.
+	maxAttempts    = 6
+	backoffInitial = 1 * time.Second
+	backoffMax     = 32 * time.Second
 )
 
 // ManifestEntry describes one Museum of ZZT world to fetch.
@@ -109,6 +123,81 @@ func main() {
 	}
 }
 
+// backoffSleep is the wait between retries. It is a variable so that the test
+// can watch what the policy asks for without paying it in wall-clock seconds.
+var backoffSleep = time.Sleep
+
+// getWithBackoff is one GET, retried on the answers that mean "later".
+//
+// Retried: a transport error (the connection died mid-archive), a 429, and any
+// 5xx. Not retried: a 404 or any other 4xx, which will say the same thing
+// however long we wait -- a zip that is not there is a manifest bug, and
+// hammering it would only be rude about it.
+//
+// A Retry-After header wins over the computed delay, in either of its forms:
+// seconds, or an HTTP date. The server is allowed to know better than we do.
+func getWithBackoff(client *http.Client, url string) (*http.Response, error) {
+	delay := backoffInitial
+	var lastErr error
+	for attempt := 1; attempt <= maxAttempts; attempt++ {
+		req, err := http.NewRequest("GET", url, nil)
+		if err != nil {
+			return nil, fmt.Errorf("building request: %w", err)
+		}
+		req.Header.Set("User-Agent", userAgent)
+
+		resp, err := client.Do(req)
+		if err == nil {
+			if resp.StatusCode == http.StatusOK {
+				return resp, nil
+			}
+			retryable := resp.StatusCode == http.StatusTooManyRequests || resp.StatusCode >= 500
+			if !retryable {
+				resp.Body.Close()
+				return nil, fmt.Errorf("GET %s: HTTP %d", url, resp.StatusCode)
+			}
+			wait := retryAfter(resp.Header.Get("Retry-After"), delay)
+			resp.Body.Close()
+			lastErr = fmt.Errorf("GET %s: HTTP %d", url, resp.StatusCode)
+			if attempt == maxAttempts {
+				break
+			}
+			fmt.Printf("  retrying in %s (attempt %d/%d): %v\n", wait, attempt, maxAttempts, lastErr)
+			backoffSleep(wait)
+		} else {
+			lastErr = fmt.Errorf("GET %s: %w", url, err)
+			if attempt == maxAttempts {
+				break
+			}
+			fmt.Printf("  retrying in %s (attempt %d/%d): %v\n", delay, attempt, maxAttempts, lastErr)
+			backoffSleep(delay)
+		}
+		if delay *= 2; delay > backoffMax {
+			delay = backoffMax
+		}
+	}
+	return nil, fmt.Errorf("%w (after %d attempts)", lastErr, maxAttempts)
+}
+
+// retryAfter reads the header in both of its forms, falling back to the
+// computed delay when it is absent or nonsense. A server asking for longer than
+// the cap is still obeyed -- it is their archive.
+func retryAfter(header string, fallback time.Duration) time.Duration {
+	if header == "" {
+		return fallback
+	}
+	if seconds, err := strconv.Atoi(strings.TrimSpace(header)); err == nil && seconds >= 0 {
+		return time.Duration(seconds) * time.Second
+	}
+	if when, err := http.ParseTime(header); err == nil {
+		if d := time.Until(when); d > 0 {
+			return d
+		}
+		return 0
+	}
+	return fallback
+}
+
 // fetchEntry downloads the zip for one manifest entry and extracts its .ZZT files.
 // Returns (written, skipped, error).
 func fetchEntry(client *http.Client, entry ManifestEntry, outDir string, dryRun, force bool) (written, skipped int, err error) {
@@ -135,15 +224,9 @@ func fetchEntry(client *http.Client, entry ManifestEntry, outDir string, dryRun,
 		return 0, 0, nil
 	}
 
-	req, err := http.NewRequest("GET", url, nil)
+	resp, err := getWithBackoff(client, url)
 	if err != nil {
-		return 0, 0, fmt.Errorf("building request: %w", err)
-	}
-	req.Header.Set("User-Agent", userAgent)
-
-	resp, err := client.Do(req)
-	if err != nil {
-		return 0, 0, fmt.Errorf("GET %s: %w", url, err)
+		return 0, 0, err
 	}
 	defer resp.Body.Close()
 	if resp.StatusCode != http.StatusOK {
