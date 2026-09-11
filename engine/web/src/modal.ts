@@ -1134,28 +1134,36 @@ function textKey(m: TextModal, event: KeyboardEvent): KeyResult {
       return "close";
     case "Enter": {
       const current = m.state.lines[m.state.linePos - 1] ?? "";
-      // Help/file-viewing windows resolve links themselves (M5.12): a "!-FILE"
-      // link opens that file, a bare "!label" jumps within this file, and Enter on
-      // ordinary text closes — matching vanilla TextWindowSelect(viewingFile).
-      if (m.onOpenFile) {
-        const file = fileLinkOf(current);
-        if (file) {
-          m.onOpenFile(file);
-          return "redraw";
-        }
-        const label = hyperlinkOf(current);
-        if (label) {
-          jumpToLabel(m, label);
-          return "redraw";
-        }
-        return "close";
+      // The three cases, in vanilla's own order (TXTWIND.PAS TextWindowSelect,
+      // txtwind.go:163):
+      //
+      //  1. A "!-FILE" link opens that file. This is resolved ABOVE the
+      //     hyperlinkAsSelect test in the Pascal, which means it applies to
+      //     every window and not only to one that is already viewing a file --
+      //     a scroll's cross-file link is a file link too. TOWN's "Caves of
+      //     ZZT" scroll ends with `!-register;Order form.`, and until this
+      //     branch stopped being gated on onOpenFile-only windows, that line
+      //     offered "Press ENTER to select this" and then closed the window.
+      //  2. A bare "!label" is either handed back as this window's selection
+      //     (a scroll: hyperlinkAsSelect) or jumped to inside it (a file).
+      //  3. Anything else closes.
+      const file = fileLinkOf(current);
+      if (file && m.onOpenFile) {
+        m.onOpenFile(file);
+        return "redraw";
       }
       const label = hyperlinkOf(current);
       if (label && m.selectable) {
         m.onSelect(label);
         return "close";
       }
-      if (m.requireSelection) {
+      if (label && m.onOpenFile) {
+        jumpToLabel(m, label);
+        return "redraw";
+      }
+      // A picker that must be answered ignores Enter on its blurb; a window
+      // viewing a file closes on it, as vanilla does.
+      if (m.requireSelection && !m.onOpenFile) {
         return "ignore";
       }
       return "close";

@@ -134,4 +134,55 @@ assert.equal(helpFileFor("langtut"), "LANGTUT.HLP");
   assert.equal(handleModalKey(m, key("Enter", "Enter")), "close");
 }
 
+// A SCROLL's own "!-FILE" link opens the file too.
+//
+// Vanilla resolves the `-` branch above its hyperlinkAsSelect test, so the same
+// line means the same thing in a scroll as in a help window. TOWN's "Caves of
+// ZZT" scroll ends with `!-register;Order form.`, and it used to offer "Press
+// ENTER to select this" and then close on ENTER: the one link in the default
+// world did nothing.
+//
+// Two changes make this work and this checks both. main.ts now gives a scroll
+// window an onOpenFile, which is what lets the link resolve at all; and modal.ts
+// takes the file branch ABOVE the selectable test, which is what stops a scroll
+// that has one from treating its BARE labels as in-window jumps instead of as
+// the object's reply. Without the second, giving a scroll the first would have
+// broken every vendor in the archive.
+{
+  const { deps, opened } = makeDeps();
+  const replies = [];
+  const scroll = {
+    kind: "text",
+    state: {
+      title: "Caves of ZZT",
+      lines: ["$Caves of ZZT", "", "Order the Caves of ZZT.", "!-register;Order form.", "!more;Tell me more"],
+      linePos: 4,
+      viewingFile: false,
+    },
+    baseTitle: "Caves of ZZT",
+    moved: false,
+    selectable: true,
+    onSelect: (label) => replies.push(label),
+    onOpenFile: (pointer) => {
+      // main.ts hands this to openHelp, which REPLACES the window rather than
+      // closing it -- the scroll's unanswered reply rides along and is sent
+      // when the reader finally closes whatever the link led to.
+      openHelp(helpFileFor(pointer), scroll.state.title, deps);
+    },
+  };
+
+  assert.equal(handleModalKey(scroll, key("Enter", "Enter")), "redraw",
+    "a scroll's !-FILE link must open the file, not close the window");
+  await tick();
+  const opened1 = opened.at(-1);
+  assert.equal(opened1.state.title, "Caves of ZZT",
+    "the window a link opens keeps its title; TextWindowOpenFile never sets one");
+  assert.deepEqual(replies, [], "a file link is not a label the object ever hears about");
+
+  // The bare label on the next line is still a reply, not a jump.
+  scroll.state.linePos = 5;
+  assert.equal(handleModalKey(scroll, key("Enter", "Enter")), "close");
+  assert.deepEqual(replies, ["more"], "a bare label in a selectable window is still the scroll's reply");
+}
+
 console.log("help.test.mjs: all assertions passed");

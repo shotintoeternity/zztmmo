@@ -38,7 +38,7 @@ import {
 } from "./modal";
 import { MobileTextInputBridge } from "./mobile_text_input";
 import { createTouchControls, type TouchControls } from "./touch_controls";
-import { openHelp } from "./help";
+import { helpFileFor, openHelp } from "./help";
 import { commandKey, isHandledKey, isMovementKey, movementMask, rawKey } from "./keys";
 import { drawTitleSidebar, titleCommand, NO_OCCUPANCY, TITLE_COLOR_SWATCH, type ServerOccupancy } from "./title";
 import { colorPickerPreview, newColorPickerModal } from "./color_picker";
@@ -4231,6 +4231,17 @@ function openWindow(title: string, lines: string[], viewingFile: boolean, replyS
     moved: false,
     selectable: replyStatId >= 0,
     onSelect: (label) => selectScrollReply(replyStatId, label),
+    // Vanilla opens a "!-FILE" link from any text window, a scroll's included
+    // (TXTWIND.PAS resolves the `-` branch above its hyperlinkAsSelect test).
+    // The help window REPLACES this one rather than closing it, which is what
+    // vanilla does and also what keeps the promise this window may have made:
+    // a scroll owes its object a reply, and openModal leaves openScrollStatId
+    // alone, so the dismissal is still sent when the reader finally closes
+    // whatever the link led to.
+    //
+    // The title rides along unchanged because TextWindowOpenFile never sets
+    // one — the window a link opens is still the window you opened.
+    onOpenFile: (pointer) => openHelp(helpFileFor(pointer), title, { fetchLines: fetchHelpLines, openModal }),
   });
 }
 
