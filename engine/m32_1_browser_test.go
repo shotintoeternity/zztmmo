@@ -60,6 +60,11 @@ func TestM321ChallengeBrowserJourney(t *testing.T) {
 	_ = l.Close()
 
 	const cookieSecret = "0123456789abcdef0123456789abcdef"
+	// ... and this process needs it too. The closing assertions call
+	// store.Leaderboard, which resolves the id through ChallengeByID against the
+	// catalogue of whoever is asking -- so without this the browser's run is on
+	// disk, the journey passes, and the leaderboard reads back empty here.
+	withChallengeCatalogue(t, gemDashFixture())
 	// The shipped catalogue is empty, and this is a SUBPROCESS -- the production
 	// binary, which the in-process fixture swap cannot reach. It gets the row
 	// the same way a deployment offering a challenge would: a file and the flag.
