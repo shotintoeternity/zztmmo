@@ -65,6 +65,9 @@ type m321Harness struct {
 // cookie seam for accounts.
 func m321Server(t *testing.T) *m321Harness {
 	t.Helper()
+	// The shipped catalogue is empty, so the harness brings the row these tests
+	// were written against (challenge_catalogue_fixture_test.go).
+	withChallengeCatalogue(t, gemDashFixture())
 	data := m321WorldBytes(t)
 	root := t.TempDir()
 	worldsDir := filepath.Join(root, "worlds")
@@ -179,6 +182,7 @@ func TestM321ChallengeWorldCompilesShipsIsCanonicalAndListed(t *testing.T) {
 }
 
 func TestM321CatalogueResolutionAndRefusals(t *testing.T) {
+	withChallengeCatalogue(t, gemDashFixture())
 	def, ok := ChallengeByID("gem-dash")
 	if !ok || def.World != ChallengeWorldName || def.Board != 1 || def.Goal.Kind != ChallengeGoalGems {
 		t.Fatalf("ChallengeByID(gem-dash) = %+v, %v", def, ok)
@@ -642,6 +646,7 @@ func TestM321RecordingHeaderNamesItsChallenge(t *testing.T) {
 }
 
 func TestM321LeaderboardSortingTiesStalenessAndRestart(t *testing.T) {
+	withChallengeCatalogue(t, gemDashFixture())
 	dir := t.TempDir()
 	path := filepath.Join(dir, "challenge_scores.json")
 	store, err := NewChallengeStore(path)

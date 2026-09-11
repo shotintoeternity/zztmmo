@@ -31,9 +31,22 @@ func main() {
 	replayDir := flag.String("replay", "", "directory for deterministic session recordings served by /replay/<id>; empty uses -record when set")
 	friendlyFire := flag.Bool("friendly-fire", true, "let player bullets damage other players in every world this server hosts; pass -friendly-fire=false for co-op")
 	shutdownGrace := flag.Duration("shutdown-grace", 60*time.Second, "on SIGINT/SIGTERM, warn connected players and wait this long before stopping so they can save; 0 stops immediately")
+	challenges := flag.String("challenges", "", "JSON file of challenge catalogue rows; empty offers no challenge, which is what ships")
 	flag.Parse()
 
 	log.Printf("zztmmo build commit=%s", zztgo.BuildCommitID())
+
+	// A bad catalogue is a startup failure, not a server that quietly offers
+	// nothing: "the challenge is gone" and "the file you pointed me at is
+	// wrong" must not look the same from outside.
+	if err := zztgo.LoadChallengeCatalogue(*challenges); err != nil {
+		log.Fatal(err)
+	}
+	if catalogue := zztgo.ChallengeCatalogue(); len(catalogue) == 0 {
+		log.Printf("zztmmo challenges: none offered")
+	} else {
+		log.Printf("zztmmo challenges: %d from %s", len(catalogue), *challenges)
+	}
 
 	zztgo.HelpDir = *helpDir
 

@@ -3542,7 +3542,13 @@ async function openChallengeLanding(id: string, options: { rememberPath?: boolea
     const response = await fetch(id ? "/api/challenge/" + encodeURIComponent(id) : "/api/challenge");
     if (!response.ok) {
       showWorldsOnClose = true;
-      openWindow("Daily Challenge", ["", `  No challenge named "${id.slice(0, 20)}".`, "", "  Choose a world instead.", ""], true);
+      // A bare /challenge with nothing scheduled is not a typo, and telling
+      // somebody there is no challenge named "" reads like a broken link
+      // rather than an empty calendar.
+      const missing = id
+        ? `  No challenge named "${id.slice(0, 20)}".`
+        : "  There is no challenge running.";
+      openWindow("Daily Challenge", ["", missing, "", "  Choose a world instead.", ""], true);
       return;
     }
     resp = (await response.json()) as ChallengeResponse;

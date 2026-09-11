@@ -60,8 +60,14 @@ func TestM321ChallengeBrowserJourney(t *testing.T) {
 	_ = l.Close()
 
 	const cookieSecret = "0123456789abcdef0123456789abcdef"
+	// The shipped catalogue is empty, and this is a SUBPROCESS -- the production
+	// binary, which the in-process fixture swap cannot reach. It gets the row
+	// the same way a deployment offering a challenge would: a file and the flag.
+	cataloguePath := writeChallengeCatalogueFile(t, rootDir, gemDashFixture())
+
 	cmd := exec.Command(binPath,
 		"-world", ChallengeWorldName,
+		"-challenges", cataloguePath,
 		"-addr", addr,
 		"-web", webDir,
 		"-saves", savesDir,

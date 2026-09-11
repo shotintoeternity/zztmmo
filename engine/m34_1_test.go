@@ -202,6 +202,7 @@ func TestM341EditionOrderingIsDeterministic(t *testing.T) {
 // Recording never writes; Flush does, atomically, and only when something
 // changed. A reload sees every count.
 func TestM341FlushIsTheOnlyWriterAndReloadsExactly(t *testing.T) {
+	withChallengeCatalogue(t, gemDashFixture())
 	path := filepath.Join(t.TempDir(), "gazette.json")
 	ledger, _ := m341Ledger(t, path)
 	for i := 0; i < 3; i++ {
@@ -274,6 +275,7 @@ func TestM341FutureEnvelopeVersionIsRefused(t *testing.T) {
 // ---------------------------------------------------------------------------
 
 func TestM341AdmissionRefusesUnknownKindsAndSubjects(t *testing.T) {
+	withChallengeCatalogue(t, gemDashFixture())
 	ledger, _ := m341Ledger(t, "")
 	refused := []GazetteHappening{
 		{Kind: "gossip", Subject: "TOWN"},

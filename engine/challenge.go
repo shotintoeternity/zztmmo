@@ -19,8 +19,11 @@ package zztgo
 //     (challenge_ghost.go) and drawn by the client.
 
 import (
+	"encoding/json"
 	"errors"
 	"fmt"
+	"os"
+	"regexp"
 	"strings"
 	"time"
 )
@@ -68,23 +71,78 @@ type ChallengeDefinition struct {
 	Version int           `json:"version"`
 }
 
-// challengeCatalogue is the committed catalogue. The first cut ships one entry,
-// which the spec allows; the shape is already date/id-addressable, so a calendar
-// of seasons is more rows here and no change anywhere else.
-var challengeCatalogue = []ChallengeDefinition{
-	{
-		ID:    "gem-dash",
-		Title: "Gem Dash",
-		Summary: []string{
-			"Collect all three gems.",
-			"Fewest ticks wins.",
-		},
-		World:   ChallengeWorldName,
-		Board:   1,
-		Goal:    ChallengeGoal{Kind: ChallengeGoalGems, Amount: 3},
-		Version: 1,
-	},
+// challengeCatalogue is what this server offers, and it SHIPS EMPTY.
+//
+// Gem Dash was the only row, and it came off the board in the run-up to beta
+// (owner decision, 2026-09-08): its world was already out of the picker and the
+// archive listing, and a daily challenge nobody had asked for was not what the
+// first players should meet. Emptying it was chosen over deleting the feature —
+// the machinery is a season of rows away from being useful again, and deleting
+// it would have taken the M32 leaderboard and the M34 Gazette's run citations
+// with it.
+//
+// Every path below already handles an empty catalogue: ChallengeForDate reports
+// "no challenge today", ChallengeByID finds nothing, and /api/challenge answers
+// honestly rather than inventing a row. Putting a challenge back is a JSON file
+// and -challenges, not a rebuild.
+var challengeCatalogue []ChallengeDefinition
+
+// LoadChallengeCatalogue replaces the catalogue with the rows in a JSON file (an
+// array of ChallengeDefinition). An empty path leaves the shipped catalogue
+// alone, which is the default and is empty.
+//
+// The rows are validated rather than trusted. An id travels in URLs and in
+// stored result keys, and a world name is opened off disk, so both are held to a
+// narrow shape here — where a bad row is a startup error naming itself — instead
+// of somewhere later where it would be a path.
+func LoadChallengeCatalogue(path string) error {
+	if strings.TrimSpace(path) == "" {
+		return nil
+	}
+	data, err := os.ReadFile(path)
+	if err != nil {
+		return fmt.Errorf("reading challenge catalogue: %w", err)
+	}
+	var loaded []ChallengeDefinition
+	if err := json.Unmarshal(data, &loaded); err != nil {
+		return fmt.Errorf("parsing challenge catalogue %s: %w", path, err)
+	}
+	seen := make(map[string]bool, len(loaded))
+	for i, def := range loaded {
+		if !challengeIDPattern.MatchString(def.ID) {
+			return fmt.Errorf("challenge catalogue %s row %d: id %q must be lower-case letters, digits and dashes", path, i, def.ID)
+		}
+		if seen[def.ID] {
+			return fmt.Errorf("challenge catalogue %s row %d: duplicate id %q", path, i, def.ID)
+		}
+		seen[def.ID] = true
+		if strings.TrimSpace(def.Title) == "" {
+			return fmt.Errorf("challenge catalogue %s row %d (%s): a challenge needs a title", path, i, def.ID)
+		}
+		// A world name is opened off disk, so it is held to exactly what a save
+		// prompt can produce -- which is what rejects "..", a separator and an
+		// absolute path by charset rather than by pattern.
+		if clean, err := SanitizeSaveName(def.World); err != nil || clean != def.World {
+			return fmt.Errorf("challenge catalogue %s row %d (%s): world %q is not a plain world name", path, i, def.ID, def.World)
+		}
+		switch def.Goal.Kind {
+		case ChallengeGoalGems, ChallengeGoalScore, ChallengeGoalBoard:
+		default:
+			return fmt.Errorf("challenge catalogue %s row %d (%s): unknown goal kind %q", path, i, def.ID, def.Goal.Kind)
+		}
+		if def.Version <= 0 {
+			return fmt.Errorf("challenge catalogue %s row %d (%s): version must be positive, got %d", path, i, def.ID, def.Version)
+		}
+	}
+	challengeCatalogue = loaded
+	return nil
 }
+
+// challengeIDPattern is what an id may be. It is deliberately narrower than
+// "not a path": ids are compared after lower-casing, appear in URLs and in the
+// keys of stored results, and anything that needs escaping to survive that trip
+// is a row that should have been named differently.
+var challengeIDPattern = regexp.MustCompile(`^[a-z0-9][a-z0-9-]*$`)
 
 var (
 	// ErrUnknownChallenge is what an id nobody catalogued gets. It is returned

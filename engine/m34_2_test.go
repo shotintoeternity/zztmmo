@@ -140,6 +140,7 @@ func TestM342ServerWrittenEditionCoversEveryDayShapeDeterministically(t *testing
 // count, or an 8-character SanitizeSaveName survivor. A display name is an
 // arbitrary player-supplied string and never leaves this process.
 func TestM342AuthorPromptCarriesTokensAndNeitherNameNorAccountKey(t *testing.T) {
+	withChallengeCatalogue(t, gemDashFixture())
 	author := &m342Author{replies: []string{m342GoodReply}}
 	editor, ledger, _ := m342Editor(t, "", author)
 	m341Record(t, ledger, GazetteKindDream, "TOWN", "google:ada")
