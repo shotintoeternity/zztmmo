@@ -1,0 +1,131 @@
+zwd 1
+world "VIEW3D"
+
+# M35.2's 3D feature world.
+#
+# CONTROL (M16.10) exists to be driven and GOLDEN (M16.9) to be looked at. This
+# one exists to be STOOD IN. Everything on it is something the 3D view has to
+# say that the text screen says differently, arranged along one walking row so a
+# tick-locked script can meet them in order from the player's start at 6,12:
+#
+#   y=11, x=10..14  a sign, "ZZT3D", one row north of the path. Text-BLUE, not
+#                   Text-White: vanilla draws E_TEXT_WHITE as 0x0F, white on
+#                   black (game.go:337), and the view's sign reader takes only
+#                   text with a background (isSignCell, text_runs.ts). A white
+#                   sign is never read out. That is a real gap and it is not
+#                   this fixture's subject, so the sign here is the colour every
+#                   sign in TOWN is. From eye height
+#                   a row of letters is edge-on, so the view reads it out along
+#                   the bottom -- but only the one you are standing at.
+#   y=13, x=14..15  forest, off the path: a short block, not a wall.
+#   y=12, x=18      a FAKE WALL, on the path. It draws with the normal wall's
+#                   own glyph (ElementDefs, on purpose), so the only thing that
+#                   can tell it from x=26 is ScreenCell.element -- and the player
+#                   walks straight through it.
+#   y=13..15, x=20..23  water. Ground you cannot walk on, which a glyph also
+#                   cannot say: without the element field it is a black hole.
+#   y=10..14, x=26  a normal wall, which is what the fake at x=18 imitates
+#                   pixel for pixel. The walk east stops here.
+#
+# Nothing on this board moves. There are no creatures and no objects, so a tick
+# changes nothing and every assertion is about the view rather than the world.
+
+board "View Title"
+  start player at 30,13
+  max-shots 10
+  dark false
+  reenter false
+  time-limit 0
+  exits north none south none west none east none
+
+  grid
+  ############################################################
+  #..........................................................#
+  #..........................................................#
+  #..........................................................#
+  #..........................................................#
+  #..........................................................#
+  #..........................................................#
+  #..........................................................#
+  #..........................................................#
+  #..........................................................#
+  #..........................................................#
+  #..........................................................#
+  #............................@.............................#
+  #..........................................................#
+  #..........................................................#
+  #..........................................................#
+  #..........................................................#
+  #..........................................................#
+  #..........................................................#
+  #..........................................................#
+  #..........................................................#
+  #..........................................................#
+  #..........................................................#
+  #..........................................................#
+  ############################################################
+  end
+
+  legend
+    # = Solid color 0x0E
+    . = Empty color 0x00
+    @ = Player color 0x1F under Empty color 0x00
+  end
+
+  stats
+  end
+end
+
+board "View Field"
+  start player at 6,12
+  max-shots 10
+  dark false
+  reenter false
+  time-limit 0
+  exits north none south none west none east none
+
+  grid
+  ############################################################
+  #..........................................................#
+  #..........................................................#
+  #..........................................................#
+  #..........................................................#
+  #..........................................................#
+  #..........................................................#
+  #..........................................................#
+  #..........................................................#
+  #........................W.................................#
+  #........ZZT3D...........W.................................#
+  #....@...........f.......W.................................#
+  #............FF....wwww..W.................................#
+  #..................wwww..W.................................#
+  #..................wwww....................................#
+  #..........................................................#
+  #..........................................................#
+  #..........................................................#
+  #..........................................................#
+  #..........................................................#
+  #..........................................................#
+  #..........................................................#
+  #..........................................................#
+  #..........................................................#
+  ############################################################
+  end
+
+  legend
+    # = Solid color 0x0E
+    . = Empty color 0x00
+    @ = Player color 0x1F under Empty color 0x00
+    Z = Text-Blue color 0x5A
+    T = Text-Blue color 0x54
+    3 = Text-Blue color 0x33
+    D = Text-Blue color 0x44
+    F = Forest color 0x20
+    f = Fake color 0x0E
+    w = Water color 0x9F
+    W = Normal color 0x0E
+  end
+
+  stats
+  end
+end

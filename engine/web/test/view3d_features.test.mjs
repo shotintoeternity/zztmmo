@@ -1,0 +1,434 @@
+// view3d_features.test.mjs — M35.2: the 3D view's vocabulary, end to end.
+//
+// Driven by engine/m35_2_test.go, which hosts fixtures/view3d.zwd on the
+// production server objects with the tick loop under this script's control.
+//
+// WHY THIS EXISTS, GIVEN M35.1. That suite proves the toggle: V clears the
+// board columns to transparent, the three.js chunk arrives, and the page comes
+// back pixel-identical. That is the smallest true thing and it is not the
+// feature. A player who presses 3 meets a vocabulary -- which keys walk, which
+// keys only move the camera, which keys must never reach the wire at all, what
+// the sidebar promises while they are standing in the board, and what the view
+// says that the text screen cannot say. None of that is covered by a toggle.
+//
+// Every assertion below is made on the decoded canvas, on a screenshot, or on
+// the server's own view of the player. None is made on a module's return value:
+// the client keeps the 3D view in module scope, and a test that could reach in
+// and read `view3d.rig` would be testing the object rather than the client.
+//
+// THE CLOCK. M35.1 runs on the real clock because the view draws on
+// requestAnimationFrame and a frozen clock never draws a first frame. This
+// suite needs the tick lock instead -- `pending` is the only place a stray
+// input frame can hide, and without a fake clock the 55ms sampler fills it with
+// repeats. Playwright's clock fakes rAF along with everything else, so the
+// frames are still there; they are taken by advancing the clock on purpose
+// (`frames()` below) rather than by waiting.
+
+import assert from "node:assert/strict";
+import { mkdirSync, writeFileSync } from "node:fs";
+import { join } from "node:path";
+
+import {
+  baseURL,
+  command,
+  hasText,
+  idle,
+  installDecoder,
+  installImageProbe,
+  launchGoldenBrowser,
+  markProfileWarm,
+  pauseClock,
+  pressExpectingNoInput,
+  readGrid,
+  runClock,
+  serverState,
+  step,
+  tickUntilGrid,
+  textAt,
+  waitForGrid,
+  walk,
+} from "./lib/canvas.mjs";
+
+assert.ok(baseURL, "BASE_URL must be set by the harness");
+
+const OUT_DIR = process.env.M352_OUT || join("test-results", "view3d-features");
+mkdirSync(OUT_DIR, { recursive: true });
+
+const COLS = 80;
+const ROWS = 25;
+const BOARD_COLS = 60;
+
+// The sidebar rows the 3D view writes (main.ts drawView3DRows). Read from the
+// screen, at the columns the client writes them to, so a row that moved is a
+// failure rather than a silently missed assertion.
+const ROW_VIEW = 13;
+const ROW_SAVE = 21;
+const ROW_LOOK = 24;
+
+// ZZT's save key, as the server receives it: a raw key byte, not a mask.
+const KEY_S = "S".charCodeAt(0);
+
+/** Advance the fake clock, which is what takes animation frames here. */
+async function frames(page, ms = 250) {
+  await runClock(page, ms);
+}
+
+/** The server's view of our player — position, not pixels. */
+async function me() {
+  const state = await serverState();
+  assert.equal(state.players.length, 1, `expected exactly one player, saw ${JSON.stringify(state.players)}`);
+  return state.players[0];
+}
+
+async function assertAt(x, y, what) {
+  const player = await me();
+  assert.deepEqual({ x: player.x, y: player.y }, { x, y }, `${what}: player should be at ${x},${y}`);
+}
+
+/** Alpha of one screen cell's centre, off the 2D canvas itself (M35.1's probe). */
+async function cellAlpha(page, cx, cy) {
+  return page.evaluate(
+    ({ cx, cy, COLS, ROWS }) => {
+      const canvas = document.querySelector("canvas[data-screen]");
+      const ctx = canvas.getContext("2d");
+      const cw = canvas.width / COLS;
+      const ch = canvas.height / ROWS;
+      return ctx.getImageData(Math.floor((cx + 0.5) * cw), Math.floor((cy + 0.5) * ch), 1, 1).data[3];
+    },
+    { cx, cy, COLS, ROWS },
+  );
+}
+
+/**
+ * A screenshot of the board region only — the window the world is drawn in.
+ *
+ * Clipped to the board columns rather than the page, because the sidebar is
+ * drawn by drawScreen either way and a full-page shot would call a sidebar
+ * repaint "the view changed". The clip is measured off the screen canvas, which
+ * is letterboxed inside its wrap.
+ */
+async function boardShot(page, name) {
+  const box = await page.locator("canvas[data-screen]").boundingBox();
+  const buffer = await page.screenshot({
+    clip: { x: box.x, y: box.y, width: (box.width * BOARD_COLS) / COLS, height: box.height },
+  });
+  if (name) writeFileSync(join(OUT_DIR, `${name}.png`), buffer);
+  return buffer;
+}
+
+const sameShot = (a, b) => Buffer.compare(a, b) === 0;
+
+/** The sidebar row text, from the sidebar columns only. */
+const sidebarRow = (cells, row) => textAt(cells, 60, row, COLS - 60).trimEnd();
+
+async function in3D(page) {
+  return page.locator("canvas[data-view3d]").evaluate((el) => el.hidden === false);
+}
+
+async function waitFor3D(page, want, describe) {
+  await page.waitForFunction(
+    (w) => (document.querySelector("canvas[data-view3d]")?.hidden === false) === w,
+    want,
+    { timeout: 15000 },
+  );
+  await frames(page);
+  assert.equal(await in3D(page), want, describe);
+}
+
+// Assertions about ghosting are collected rather than thrown, so that one run
+// reports every gap in it instead of stopping at the first. They are written as
+// the DESIGN promises, which is what a feature test is for -- see the block
+// above section 8.
+const ghostGaps = [];
+function ghostCheck(what, fn) {
+  try {
+    fn();
+  } catch (error) {
+    ghostGaps.push(`${what}: ${error.message}`);
+  }
+}
+
+const { browser, context, page, pageErrors, consoleErrors } = await launchGoldenBrowser();
+await markProfileWarm(context);
+let failed = false;
+
+try {
+  await installImageProbe(page);
+
+  const chunks = [];
+  page.on("response", (response) => {
+    const url = response.url();
+    if (url.endsWith(".js")) chunks.push(url.split("/").pop());
+    if (response.status() >= 400) consoleErrors.push(`HTTP ${response.status()} ${url}`);
+  });
+
+  const response = await page.goto(baseURL);
+  assert.equal(response?.status(), 200, "the client index must be served");
+  await page.waitForSelector("canvas[data-screen]", { timeout: 15000 });
+  await installDecoder(page);
+
+  await waitForGrid(page, (cells) => hasText(cells, "Type your name"), "the launch name prompt");
+  await page.keyboard.type("Standing");
+  await page.keyboard.press("Enter");
+  await waitForGrid(page, (cells) => hasText(cells, "Choose a World"), "the world picker");
+  await page.keyboard.type("VIEW3D");
+  await waitForGrid(page, (cells) => hasText(cells, "VIEW3D"), "the picker to match VIEW3D");
+  await page.keyboard.press("Enter");
+  await waitForGrid(page, (cells) => hasText(cells, "P  Play"), "the title screen for VIEW3D");
+  await pauseClock(page);
+  await page.keyboard.press("KeyP");
+  await waitForGrid(page, (cells) => hasText(cells, "Health:100"), "the joined board");
+  await assertAt(6, 12, "the fixture's start");
+
+  // =========================================================================
+  // 1. The client opens on the text screen, and says where 3 goes
+  // =========================================================================
+  //
+  // ZZTMMO is a text game and the board it draws is the real one, so 3D is
+  // somewhere a player chooses to go. The row is the whole discoverability of
+  // the feature: this view shipped once without one and nobody could find it.
+  assert.equal(await in3D(page), false, "the client must open on the text screen");
+  assert.equal(await cellAlpha(page, 10, 12), 255, "the board is painted on the text screen");
+
+  let cells = await readGrid(page);
+  assert.match(sidebarRow(cells, ROW_VIEW), /3\s+3D view/, "row 13 must offer the 3D view");
+  assert.match(sidebarRow(cells, ROW_SAVE), /S\s+Save game/, "row 21 must promise Save on the text screen");
+  assert.equal(sidebarRow(cells, ROW_LOOK), "", "row 24 must be blank outside the world");
+  const classicShot = await boardShot(page, "01-classic");
+
+  // =========================================================================
+  // 2. Both keys toggle, and the sidebar changes its promises with the view
+  // =========================================================================
+  //
+  // 3 is the shortcut the sidebar advertises; V still works for the hands that
+  // learned it first. A feature reachable by only one of the two keys the
+  // client documents is half-shipped.
+  const chunksBefore = chunks.length;
+  await page.keyboard.press("Digit3");
+  await waitFor3D(page, true, "3 must open the world");
+  assert.ok(chunks.length > chunksBefore, `3 must fetch the 3D chunk; saw ${chunks.join(", ")}`);
+  assert.equal(await cellAlpha(page, 10, 12), 0, "the board columns must be a hole in 3D");
+  assert.equal(await cellAlpha(page, BOARD_COLS + 8, 12), 255, "the sidebar is not part of the world");
+
+  cells = await readGrid(page);
+  assert.match(sidebarRow(cells, ROW_VIEW), /3\s+Standard view/, "row 13 must offer the way back");
+  assert.match(sidebarRow(cells, ROW_SAVE), /S\s+Save: press 3/, "row 21 must stop promising Save in the world");
+  assert.match(sidebarRow(cells, ROW_LOOK), /WASD\s+Look/, "row 24 must name the camera keys in the world");
+  const worldShot = await boardShot(page, "02-world");
+  assert.ok(!sameShot(classicShot, worldShot), "the board region must actually look different in 3D");
+
+  await page.keyboard.press("Digit3");
+  await waitFor3D(page, false, "3 again must put the text screen back");
+  await page.keyboard.press("KeyV");
+  await waitFor3D(page, true, "V must open the world too");
+  await assertAt(6, 12, "toggling the view");
+
+  // =========================================================================
+  // 3. The arrows walk, in the world, as board directions
+  // =========================================================================
+  //
+  // This is 1f91e4d's decision and the one most worth pinning: north is north
+  // whichever way the camera is pointing. The first cut had the arrows turning
+  // you at eye level, which took the game's oldest control away from the one
+  // view where a player is least sure where they are.
+  await walk(page, "ArrowRight", 3);
+  await assertAt(9, 12, "three arrow steps east in the 3D view");
+  await walk(page, "ArrowDown", 1);
+  await assertAt(9, 13, "an arrow step south in the 3D view");
+  await walk(page, "ArrowUp", 1);
+  await assertAt(9, 12, "an arrow step back north");
+
+  // =========================================================================
+  // 4. WASD moves the camera and NEVER reaches the wire
+  // =========================================================================
+  //
+  // The certified row input.play-wasd-removed (M16.10) wants W/A/D inert on the
+  // text screen. In the world they are not inert -- they are the camera -- and
+  // they must still put nothing on the wire. S joins them here, which is the
+  // binding this view takes away: it is ZZT's save key everywhere else.
+  const beforeLook = await boardShot(page);
+  for (const code of ["KeyW", "KeyS", "KeyA", "KeyD"]) {
+    const state = await pressExpectingNoInput(page, code);
+    assert.deepEqual(state.pending, [], `${code} must send no input frame in 3D, saw ${JSON.stringify(state.pending)}`);
+  }
+  await idle(1);
+  await assertAt(9, 12, "after WASD in the 3D view");
+  // S must not open the save prompt here, and the camera must have moved: four
+  // keys that send nothing AND do nothing would pass the assertion above.
+  cells = await readGrid(page);
+  assert.ok(!hasText(cells, "Save game:"), "S must look down in the world, not open the save prompt");
+  await frames(page);
+  assert.ok(!sameShot(beforeLook, await boardShot(page, "03-after-wasd")), "WASD must move the camera");
+
+  // =========================================================================
+  // 5. On the text screen, S is ZZT's save key again
+  // =========================================================================
+  //
+  // The other half of the same decision, and the reason row 21 changes: a key
+  // cannot be both, so S saves everywhere except in the world.
+  await page.keyboard.press("KeyV");
+  await waitFor3D(page, false, "back to the text screen");
+  await command(page, "KeyS", KEY_S);
+  await tickUntilGrid(page, (cells) => hasText(cells, "Save game:"), "S to open the save prompt on the text screen");
+  await page.keyboard.press("Escape");
+  await waitForGrid(page, (cells) => !hasText(cells, "Save game:"), "the save prompt to close");
+  await assertAt(9, 12, "after saving from the text screen");
+  await page.keyboard.press("KeyV");
+  await waitFor3D(page, true, "back into the world");
+
+  // =========================================================================
+  // 6. The sign reads itself out, at eye level, and only the one you are at
+  // =========================================================================
+  //
+  // A sign is a row of letters lying flat on the floor, and from eye height a
+  // row of letters is edge-on: in the world it is a coloured wall and nothing
+  // more. So the one you are standing at is written along the bottom of the
+  // board, in its own colours. The fixture's sign is at 10..14,11 and the path
+  // is the row below it.
+  const signRow = ROWS - 1;
+  await walk(page, "ArrowLeft", 2); // 9,12 -> 7,12, then east along the sign
+  await walk(page, "ArrowRight", 4);
+  await assertAt(11, 12, "standing at the sign");
+  await frames(page);
+  cells = await readGrid(page);
+  assert.ok(
+    textAt(cells, 0, signRow, BOARD_COLS).includes("ZZT3D"),
+    `the sign you are standing at must read itself out along the bottom; row ${signRow} is ` +
+      JSON.stringify(textAt(cells, 0, signRow, BOARD_COLS)),
+  );
+  await boardShot(page, "06-sign-readout");
+
+  // =========================================================================
+  // 7. F steps back out and in, and sends nothing
+  // =========================================================================
+  const beforeF = await boardShot(page);
+  let state = await pressExpectingNoInput(page, "KeyF");
+  assert.deepEqual(state.pending, [], `F must send no input frame, saw ${JSON.stringify(state.pending)}`);
+  await frames(page, 600); // the camera glides rather than cutting
+  assert.ok(!sameShot(beforeF, await boardShot(page, "04-after-F")), "F must move the camera out of the body");
+  await assertAt(11, 12, "after F");
+  await page.keyboard.press("KeyF");
+  await frames(page, 600);
+  await boardShot(page, "05-back-at-eye-level");
+
+  // =========================================================================
+  // 8. Ghosting — G leaves your body
+  // =========================================================================
+  //
+  // Written as view3d/index.ts:97-107 promises it, not as the client currently
+  // behaves, and COLLECTED rather than thrown so that one run reports the whole
+  // gap rather than the first half of it:
+  //
+  //   "Your card stays on the board ... while the camera drifts off through the
+  //    walls. Nothing is sent while you are out there, so a ghost is a way of
+  //    looking and never a way of reaching."
+  //
+  // The first clause holds. The rest does not: see the two collected gaps.
+  await assertAt(11, 12, "standing at the sign before ghosting");
+  const beforeG = await boardShot(page, "09-before-G");
+  state = await pressExpectingNoInput(page, "KeyG");
+  ghostCheck("G itself must send nothing", () =>
+    assert.deepEqual(state.pending, [], `G sent ${JSON.stringify(state.pending)}`),
+  );
+  await frames(page, 600);
+  assert.ok(!sameShot(beforeG, await boardShot(page, "10-ghosted")), "G must move the camera out of the body");
+  await assertAt(11, 12, "the body must stay put when the camera leaves");
+
+  // The eyes went with the camera, so the ghost is still reading the sign it
+  // drifted away from -- signAtEye reads from ghostAt while ghosted, which is
+  // the half of ghosting that works.
+  cells = await readGrid(page);
+  assert.ok(
+    textAt(cells, 0, signRow, BOARD_COLS).includes("ZZT3D"),
+    "a ghost reads the sign it is standing at, because reading is something eyes do",
+  );
+
+  // A ghost is a way of looking and never a way of reaching: the client sends
+  // nothing at all while you are out there, which is why any player may use it.
+  //
+  // The arrow is HELD rather than pressed, and the tick is awaited rather than
+  // taken. pressExpectingNoInput cannot see a movement key: the keyup's own
+  // zero frame overwrites the keydown's in the server's one-entry input slot,
+  // so a press-and-release reads as "nothing was sent" whether or not anything
+  // was. Awaiting the frame is the discriminator -- if the design holds, no
+  // frame ever arrives and the step times out.
+  await page.keyboard.down("ArrowLeft");
+  let arrowReachedTheWire = true;
+  try {
+    await step({ await: { dx: -1, dy: 0, key: 0xcb }, timeoutMs: 3000 });
+  } catch {
+    arrowReachedTheWire = false;
+  }
+  await page.keyboard.up("ArrowLeft");
+  await step({ await: { dx: 0, dy: 0 } });
+  ghostCheck("a ghost must put no input on the wire", () =>
+    assert.equal(arrowReachedTheWire, false, "an arrow held while ghosted reached the server as an input frame"),
+  );
+  const afterGhostArrow = await me();
+  ghostCheck("a ghost must not walk the body it left", () =>
+    assert.deepEqual(
+      { x: afterGhostArrow.x, y: afterGhostArrow.y },
+      { x: 11, y: 12 },
+      `the body walked to ${afterGhostArrow.x},${afterGhostArrow.y} while the camera was away`,
+    ),
+  );
+  // Whether the ghost CAMERA can be flown is not asserted from pixels: with the
+  // body walking under the same arrow, a changed board region proves only that
+  // something moved. It is settled in the source instead -- CameraRig.driftGhost
+  // (view3d/camera.ts) has no caller anywhere in the client.
+
+  // G brings you home, and so does V.
+  await page.keyboard.press("KeyG");
+  await frames(page, 800);
+  await boardShot(page, "11-home");
+  // Put the body back where the fake-wall route starts from.
+  await walk(page, "ArrowRight", 1);
+  await assertAt(11, 12, "home from the ghost");
+
+  // =========================================================================
+  // 9. A fake wall is floor, and the wall it imitates is not
+  // =========================================================================
+  //
+  // The one thing a glyph cannot say. ElementDefs gives the fake the normal
+  // wall's own character on purpose, so 18,12 and 26,12 arrive at the client as
+  // the same two bytes; only ScreenCell.element tells them apart. The player
+  // walks through one and stops at the other, which is the behaviour the view
+  // has to draw.
+  await walk(page, "ArrowRight", 7);
+  await assertAt(18, 12, "walking onto the fake wall at 18,12");
+  await boardShot(page, "12-standing-on-the-fake");
+  await walk(page, "ArrowRight", 7);
+  await assertAt(25, 12, "walking up to the normal wall at 26,12");
+  await walk(page, "ArrowRight", 2); // two more frames, into the wall
+  await assertAt(25, 12, "the normal wall must stop the walk");
+  await boardShot(page, "13-at-the-wall");
+
+  // ... and the other half of "walk up to it and it appears": eleven columns
+  // east of the sign, with a wall in between, it is gone. Every sign on the
+  // board written out at once would be noise.
+  await frames(page);
+  cells = await readGrid(page);
+  assert.ok(
+    !textAt(cells, 0, ROWS - 1, BOARD_COLS).includes("ZZT3D"),
+    `the sign must stop reading itself out once you have walked away; row ${ROWS - 1} is ` +
+      JSON.stringify(textAt(cells, 0, ROWS - 1, BOARD_COLS)),
+  );
+
+  console.log(`view3d_features.test.mjs: the 3D vocabulary, shots in ${OUT_DIR}`);
+  if (ghostGaps.length > 0) {
+    console.error(`\nghosting does not do what view3d/index.ts says it does (${ghostGaps.length}):`);
+    for (const gap of ghostGaps) console.error(`  - ${gap}`);
+    failed = true;
+  }
+} catch (error) {
+  failed = true;
+  console.error(error);
+} finally {
+  await browser.close();
+}
+
+if (pageErrors.length > 0 || consoleErrors.length > 0) {
+  console.error("page errors:", pageErrors, consoleErrors);
+  failed = true;
+}
+process.exit(failed ? 1 : 0);
