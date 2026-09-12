@@ -68,6 +68,30 @@ const ROW_LOOK = 24;
 // ZZT's save key, as the server receives it: a raw key byte, not a mask.
 const KEY_S = "S".charCodeAt(0);
 
+// What the server must see for each arrow while the body faces EAST. The
+// client rotates the mask; these are the ordinary board directions that come
+// out the other side, and they are what `walk` would have awaited for a
+// different key entirely -- which is the whole point.
+const EAST_FORWARD = { dx: 1, dy: 0, key: 0xcd }; // up    -> east
+const EAST_BACK = { dx: -1, dy: 0, key: 0xcb }; // down  -> west
+const EAST_STRAFE_LEFT = { dx: 0, dy: -1, key: 0xc8 }; // left  -> north
+const EAST_STRAFE_RIGHT = { dx: 0, dy: 1, key: 0xd0 }; // right -> south
+
+/**
+ * Hold one arrow for exactly one tick and await the ROTATED frame.
+ *
+ * `walk` derives what to await from the key it pressed, which is precisely the
+ * assumption this section is testing, so it cannot be used here: pressing up
+ * while facing east must arrive as east, and a helper that waited for north
+ * would hang whether the feature worked or not.
+ */
+async function walkFacing(page, code, expected) {
+  await page.keyboard.down(code);
+  await step({ await: expected, timeoutMs: 8000 });
+  await page.keyboard.up(code);
+  await step({ await: { dx: 0, dy: 0 } });
+}
+
 /** Advance the fake clock, which is what takes animation frames here. */
 async function frames(page, ms = 250) {
   await runClock(page, ms);
@@ -224,19 +248,55 @@ try {
   await assertAt(6, 12, "toggling the view");
 
   // =========================================================================
-  // 3. The arrows walk, in the world, as board directions
+  // 3. The arrows walk, and facing north they walk the text screen's way
   // =========================================================================
   //
-  // This is 1f91e4d's decision and the one most worth pinning: north is north
-  // whichever way the camera is pointing. The first cut had the arrows turning
-  // you at eye level, which took the game's oldest control away from the one
-  // view where a player is least sure where they are.
+  // The arrows ALWAYS move you -- that is 1f91e4d's decision and it stands. The
+  // frame they are read in is what follows the camera, and facing north is the
+  // identity, so at eye level looking north the vocabulary is exactly the text
+  // screen's. Section 3a turns and shows the frame move.
   await walk(page, "ArrowRight", 3);
   await assertAt(9, 12, "three arrow steps east in the 3D view");
   await walk(page, "ArrowDown", 1);
   await assertAt(9, 13, "an arrow step south in the 3D view");
   await walk(page, "ArrowUp", 1);
   await assertAt(9, 12, "an arrow step back north");
+
+  // =========================================================================
+  // 3a. Turn, and the arrows come with you
+  // =========================================================================
+  //
+  // Standing in the board you are a body, not a map reader. An arrow that walked
+  // you sideways across your own field of view is the one thing a first-person
+  // camera cannot promise, so up walks the way you look, down walks backwards,
+  // and left and right step sideways WITHOUT turning -- turning is D, which is
+  // a camera key and puts nothing on the wire.
+  //
+  // The client resolves all four against your facing and sends an ordinary
+  // board direction, because six bits is all the wire has. So the assertions
+  // are made on the server's own view of where the player went.
+  const turned = await pressExpectingNoInput(page, "KeyD");
+  assert.deepEqual(turned.pending, [], "turning must put nothing on the wire");
+  await frames(page, 400);
+
+  // Facing EAST now. Each arrow, and where the body actually ended up.
+  await walkFacing(page, "ArrowLeft", EAST_STRAFE_LEFT);
+  await assertAt(9, 11, "facing east, left steps north");
+  await walkFacing(page, "ArrowRight", EAST_STRAFE_RIGHT);
+  await assertAt(9, 12, "facing east, right steps south");
+  await walkFacing(page, "ArrowUp", EAST_FORWARD);
+  await assertAt(10, 12, "facing east, up walks east");
+  await walkFacing(page, "ArrowDown", EAST_BACK);
+  await assertAt(9, 12, "facing east, down walks west without turning round");
+
+  // Turn back north, where the frame is the identity again, so the rest of this
+  // script reads in the vocabulary the text screen uses.
+  await pressExpectingNoInput(page, "KeyA");
+  await frames(page, 400);
+  await walk(page, "ArrowRight", 1);
+  await assertAt(10, 12, "facing north again, right is east again");
+  await walk(page, "ArrowLeft", 1);
+  await assertAt(9, 12, "back where section 3 left off");
 
   // =========================================================================
   // 4. WASD moves the camera and NEVER reaches the wire

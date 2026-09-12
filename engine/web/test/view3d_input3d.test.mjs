@@ -1,20 +1,25 @@
-// view3d_input3d.test.mjs — the four camera keys.
+// view3d_input3d.test.mjs — the camera keys, and the frame the arrows are in.
 //
-// The arrows walk, in every view, north/south/east/west, which is what they
-// have meant in ZZT since 1991. WASD moves the camera and only the camera: A
-// and D swing it, W and S raise and lower it toward the ceiling and the floor.
+// Two things live in this module and they must not be confused for each other.
 //
-// That makes this suite's job small and worth stating plainly. The certified
-// row `input.play-wasd-removed` (M16.10) says W/A/D must reach the server as
-// nothing at all, and control_keys.test.mjs proves that on the text screen with
-// a real browser. Here we prove the stronger thing the 3D view relies on: these
-// keys produce no direction and no key byte anywhere, because they are a look
-// control and a look control has nothing to say to a simulation.
+// WASD is the camera and ONLY the camera: A and D swing it, W and S tilt it.
+// The certified row `input.play-wasd-removed` (M16.10) says W/A/D must reach
+// the server as nothing at all, and control_keys.test.mjs proves that on the
+// text screen with a real browser. Here we prove the stronger thing the 3D view
+// rests on -- these keys produce no direction and no key byte ANYWHERE, because
+// a look control has nothing to say to a simulation.
 //
-// An earlier version of this file tested a facingMask that resolved WASD into
-// board directions. That scheme is gone -- it made the arrows turn you at eye
-// level, which took the game's oldest control away in the view where a player
-// is least sure where they are.
+// facingMask is the other half: the arrows always walk, but at eye level they
+// walk in the frame of a body rather than the frame of a map. It is a pure
+// rotation of the four direction bits, and facing north is the identity, which
+// is the property that keeps the text screen and the world speaking the same
+// vocabulary.
+//
+// A NOTE ON THE NAME. An earlier scheme had a facingMask too, and it resolved
+// WASD -- it put walking on WASD and turning on the arrows, which took the
+// game's oldest control away and walked back into the S/Save collision that
+// M4.2 removed WASD for. This is not that. Walking stays on the arrows, turning
+// stays with the camera, and only the frame moves.
 
 import assert from "node:assert/strict";
 import { build } from "esbuild";
@@ -26,7 +31,7 @@ const out = await build({
   platform: "node",
   write: false,
 });
-const { isCameraKey, lookStepFor } = await import(
+const { facingMask, isCameraKey, lookStepFor } = await import(
   `data:text/javascript;base64,${Buffer.from(out.outputFiles[0].contents).toString("base64")}`
 );
 
@@ -79,6 +84,60 @@ for (const code of ["KeyW", "KeyA", "KeyS", "KeyD"]) {
 const surface = Object.keys(
   await import(`data:text/javascript;base64,${Buffer.from(out.outputFiles[0].contents).toString("base64")}`),
 ).sort();
-assert.deepEqual(surface, ["isCameraKey", "lookStepFor"], `unexpected exports: ${surface.join(", ")}`);
+assert.deepEqual(surface, ["facingMask", "isCameraKey", "lookStepFor"], `unexpected exports: ${surface.join(", ")}`);
+
+// ---------------------------------------------------------------------------
+// facingMask: the arrows, read in the frame of a body
+// ---------------------------------------------------------------------------
+const UP = 1 << 0, DOWN = 1 << 1, LEFT = 1 << 2, RIGHT = 1 << 3, SHIFT = 1 << 4, SHOOT = 1 << 5;
+const NORTH = 0, EAST = 1, SOUTH = 2, WEST = 3;
+
+// Facing north is the identity. This is the assertion that keeps the two
+// vocabularies one vocabulary: the eye-level controls ARE the text screen's
+// controls, seen from the direction the text screen is drawn from.
+for (const bit of [UP, DOWN, LEFT, RIGHT, SHIFT, SHOOT, UP | SHIFT]) {
+  assert.equal(facingMask(bit, NORTH), bit, "facing north must be the identity");
+}
+
+// Up walks the way you look; down walks backwards WITHOUT turning around.
+assert.equal(facingMask(UP, EAST), RIGHT, "facing east, forward is east");
+assert.equal(facingMask(UP, SOUTH), DOWN, "facing south, forward is south");
+assert.equal(facingMask(UP, WEST), LEFT, "facing west, forward is west");
+assert.equal(facingMask(DOWN, EAST), LEFT, "facing east, back is west");
+assert.equal(facingMask(DOWN, WEST), RIGHT, "facing west, back is east");
+
+// Left and right STEP SIDEWAYS. They do not turn: turning is a camera key, and
+// an arrow that did not move you would be the old mistake all over again.
+assert.equal(facingMask(LEFT, EAST), UP, "facing east, your left hand points north");
+assert.equal(facingMask(RIGHT, EAST), DOWN, "facing east, your right hand points south");
+assert.equal(facingMask(LEFT, WEST), DOWN, "facing west, your left hand points south");
+assert.equal(facingMask(RIGHT, WEST), UP, "facing west, your right hand points north");
+assert.equal(facingMask(LEFT, SOUTH), RIGHT, "facing south, your left hand points east");
+assert.equal(facingMask(RIGHT, SOUTH), LEFT, "facing south, your right hand points west");
+
+// Shift and shoot ride through untouched, so Shift+left fires where the step
+// would have gone.
+assert.equal(facingMask(LEFT | SHIFT, EAST), UP | SHIFT, "Shift+left fires to your left");
+assert.equal(facingMask(UP | SHOOT, SOUTH), DOWN | SHOOT, "the shot goes where you are pointing");
+assert.equal(facingMask(SHIFT | SHOOT, EAST), SHIFT | SHOOT, "no direction, nothing to rotate");
+assert.equal(facingMask(0, EAST), 0, "nothing held is nothing sent");
+
+// It is a rotation, so at every facing the four direction bits land on the four
+// direction bits, one each. A mapping that collapsed two of them would quietly
+// make a direction unreachable.
+for (const facing of [NORTH, EAST, SOUTH, WEST]) {
+  const landed = [UP, DOWN, LEFT, RIGHT].map((bit) => facingMask(bit, facing));
+  assert.deepEqual([...landed].sort((a, b) => a - b), [UP, DOWN, LEFT, RIGHT], `facing ${facing} must be a bijection`);
+}
+
+// Nothing above the six the server understands can ever come out, whatever
+// goes in. The pseudo-bits of the old scheme died with it, and this is the
+// guard that keeps one from being reintroduced by accident.
+const WIRE = UP | DOWN | LEFT | RIGHT | SHIFT | SHOOT;
+for (const facing of [NORTH, EAST, SOUTH, WEST]) {
+  for (let mask = 0; mask < 1024; mask += 1) {
+    assert.equal(facingMask(mask, facing) & ~WIRE, 0, `facing ${facing}, mask ${mask} escaped the wire bits`);
+  }
+}
 
 console.log("view3d input3d ok");

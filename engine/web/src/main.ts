@@ -676,7 +676,7 @@ type InputMessage = {
 // 8 rows, CP437 order, so glyph N sits at (N%32, N/32). Character codes go to
 // the sheet directly — there is no Unicode round trip.
 import pcEgaUrl from "./pc_ega.png";
-import { isCameraKey, lookStepFor } from "./view3d/input3d";
+import { facingMask, isCameraKey, lookStepFor } from "./view3d/input3d";
 
 const GLYPH_COLS = 32;
 
@@ -5969,10 +5969,27 @@ function updatePressed(event: KeyboardEvent, down: boolean): boolean {
 }
 
 function currentMask(): number {
-  // The 3D view changes nothing here. The arrows are board directions in every
-  // view -- north is north whichever way the camera happens to be pointing --
-  // and WASD moves the camera without ever reaching this mask.
-  return movementMask(pressed, effectiveKeyBindings(readEffectiveComfort()));
+  const mask = movementMask(pressed, effectiveKeyBindings(readEffectiveComfort()));
+  // The frame the arrows are read in follows the camera, because the camera is
+  // what the player is reasoning with.
+  //
+  // Pulled back you are reading a map: north is north whichever way the orbit
+  // happens to be pointing, and this is the text screen's own vocabulary.
+  //
+  // At eye level you are a body standing in the board, and an arrow that walked
+  // you sideways across your own field of view is the one thing a first-person
+  // camera cannot promise. So up walks the way you face, down walks backwards,
+  // and left and right step sideways -- resolved against your facing HERE, into
+  // an ordinary board direction, because six bits is all the wire has. WASD
+  // still never reaches this mask; turning is looking, and it lives there.
+  //
+  // Re-read on every sampler tick rather than latched on the key edge: turning
+  // while you hold a direction should change where you are walking, which is
+  // what a body does.
+  if (view3dOn() && view3d !== null && view3d.firstPerson) {
+    return facingMask(mask, view3d.facing);
+  }
+  return mask;
 }
 
 function sendInput(mask: number, key = 0) {
