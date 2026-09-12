@@ -39,7 +39,17 @@ import {
 import { MobileTextInputBridge } from "./mobile_text_input";
 import { createTouchControls, type TouchControls } from "./touch_controls";
 import { helpFileFor, openHelp } from "./help";
-import { commandKey, isHandledKey, isMovementKey, movementMask, rawKey } from "./keys";
+import {
+  commandKey,
+  InputMaskDown,
+  InputMaskLeft,
+  InputMaskRight,
+  InputMaskUp,
+  isHandledKey,
+  isMovementKey,
+  movementMask,
+  rawKey,
+} from "./keys";
 import { drawTitleSidebar, titleCommand, NO_OCCUPANCY, TITLE_COLOR_SWATCH, type ServerOccupancy } from "./title";
 import { colorPickerPreview, newColorPickerModal } from "./color_picker";
 import { soundNotesFromProtocol, ZztSound } from "./sound";
@@ -834,6 +844,24 @@ let challengeFinished = false;
 // reads it: a track carries board ids, and a ghost from another board must not
 // be drawn onto this one.
 let playBoardId = 0;
+
+/**
+ * Track the board this browser is standing on, and bring a ghost home when it
+ * changes.
+ *
+ * A ghost is a place on THIS board. Walking your body through a passage takes
+ * it somewhere else, and a camera left hovering over a board nobody is on is
+ * not a view of anything -- so a board change ends the ghost, exactly as V
+ * does. view3d/index.ts has always said "a board change and V both do it"; this
+ * is the half that was missing.
+ */
+function setPlayBoardId(next: number) {
+  if (next !== playBoardId && view3d !== null && view3d.ghost) {
+    view3d.leaveGhost();
+    drawView3DRows();
+  }
+  playBoardId = next;
+}
 // The on-screen control bar (M15.1, M16.18a), or null on anything without touch
 // points. Declared here rather than at its construction site because
 // syncTouchControls() below is reached from drawScreen(), which runs before that
@@ -2786,7 +2814,7 @@ function applySnapshot(message: SnapshotMessage) {
   // and nowhere else — it is what the ghost is indexed by, so it must count the
   // ticks of THIS attempt, and a reconnect inside the grace resumes the count
   // rather than restarting the race.
-  playBoardId = message.boardId;
+  setPlayBoardId(message.boardId);
   if (message.challenge) {
     challengeMode = true;
     challengeID = message.challenge;
@@ -2968,7 +2996,7 @@ function applyDiff(message: DiffMessage) {
     applyWatchDiff(message);
     return;
   }
-  playBoardId = message.boardId;
+  setPlayBoardId(message.boardId);
   if (challengeMode && !challengeFinished) {
     challengeElapsed += 1;
   }
@@ -4621,6 +4649,36 @@ function handleProtocolEvent(event: ProtocolEvent) {
   }
 }
 
+/**
+ * True while the camera has left the body and the board is still ticking.
+ *
+ * This is the predicate the whole honesty of ghosting rests on: a ghost is a
+ * way of looking and never a way of reaching, which is why any player may turn
+ * it on. Nothing is sent while it holds, so you cannot open a door, take a gem
+ * or step past a locked one -- none of you is there to do it.
+ */
+function ghosting(): boolean {
+  return view3d !== null && view3d.ghost && view3dOn();
+}
+
+/**
+ * Hand the held direction to the ghost instead of to the server.
+ *
+ * The keys keep the meaning the view already gave them: at eye level up is
+ * forward and left and right fly you sideways, exactly as they walk you when
+ * you are in your body, so ghosting changes where you are and not what the
+ * controls mean.
+ */
+function syncGhostDrift() {
+  if (!view3d) {
+    return;
+  }
+  const mask = movementMask(pressed, effectiveKeyBindings(readEffectiveComfort()));
+  const dz = (mask & InputMaskUp ? 1 : 0) - (mask & InputMaskDown ? 1 : 0);
+  const dx = (mask & InputMaskRight ? 1 : 0) - (mask & InputMaskLeft ? 1 : 0);
+  view3d.setDrift(dx, dz);
+}
+
 function stopHeldInput() {
   if (pressed.size === 0) {
     return;
@@ -4844,6 +4902,10 @@ function handleKeyDown(event: KeyboardEvent) {
   const handled = updatePressed(event, true);
   if (handled) {
     event.preventDefault();
+    if (ghosting()) {
+      syncGhostDrift();
+      return;
+    }
     sendInput(currentMask(), rawKey(event.code, bindings));
   }
 }
@@ -4855,6 +4917,10 @@ function handleKeyUp(event: KeyboardEvent) {
   const handled = updatePressed(event, false);
   if (handled) {
     event.preventDefault();
+    if (ghosting()) {
+      syncGhostDrift();
+      return;
+    }
     sendInput(currentMask());
   }
 }
@@ -5993,6 +6059,16 @@ function currentMask(): number {
 }
 
 function sendInput(mask: number, key = 0) {
+  // A ghost sends NOTHING. Said here as well as at the two key handlers because
+  // this is also where the 55ms sampler re-sends a held mask, and a ghost that
+  // was silent on the key edge but chatty on the sampler would be no ghost at
+  // all. G calls stopHeldInput on the way out, so the zero frame that releases
+  // whatever was held is sent BEFORE this starts refusing -- otherwise the last
+  // non-zero frame would sit in the server's one-entry input slot and be
+  // re-consumed on every tick, walking the body you just left.
+  if (ghosting()) {
+    return;
+  }
   // M22.1: said out loud rather than left to `playerId === 0` below, which is
   // true of a watcher only by accident. A watcher's input is dropped by the
   // server; this is the client agreeing not to send it in the first place.

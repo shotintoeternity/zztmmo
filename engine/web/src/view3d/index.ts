@@ -40,6 +40,8 @@ export class View3D {
   private textCells: ReadonlySet<number> = new Set();
   private signGroups: SignGroup[] = [];
   private dirty = true;
+  /** Where a ghost is being flown, in the frame it is looking through. */
+  private drift = { dx: 0, dz: 0 };
   private raf = 0;
   private last = 0;
   private lastHide = "";
@@ -103,13 +105,32 @@ export class View3D {
    */
   toggleGhost() {
     this.rig.setGhost(!this.rig.ghost, this.bodyX(), this.bodyZ());
+    // Crossing the boundary in EITHER direction forgets where you were flying.
+    // The client only refreshes the drift while you are out, so a direction left
+    // over from the last trip would fly the camera the instant you ghosted
+    // again, with nothing held and nobody asking.
+    this.drift = { dx: 0, dz: 0 };
     this.dirty = true;
   }
 
   /** leaveGhost brings the camera home: a board change and V both do it. */
   leaveGhost() {
     this.rig.setGhost(false, this.bodyX(), this.bodyZ());
+    this.drift = { dx: 0, dz: 0 };
     this.dirty = true;
+  }
+
+  /**
+   * setDrift is where a ghost is being flown: dx to its right, dz forward, each
+   * -1..1, in the frame it is looking through.
+   *
+   * It is an intent rather than a step, because a ghost moves in world units a
+   * second and the client has no frame clock -- the rig applies it against dt
+   * on every frame, so holding a key drifts smoothly instead of teleporting one
+   * board square per keystroke. A body walks the grid; a ghost is not on it.
+   */
+  setDrift(dx: number, dz: number) {
+    this.drift = { dx, dz };
   }
 
   get ghost(): boolean {
@@ -214,6 +235,11 @@ export class View3D {
       this.onTextChanged?.();
     }
 
+    // A ghost flies itself. The body it left is still on the board and still
+    // being ticked by the server; this moves nothing but the camera.
+    if (this.rig.ghost) {
+      this.rig.driftGhost(this.drift.dx, this.drift.dz, dt);
+    }
     this.rig.update(dt, this.bodyX(), this.bodyZ());
     const fog = this.rig.fog();
     this.scene.setFog(fog.near, fog.far);

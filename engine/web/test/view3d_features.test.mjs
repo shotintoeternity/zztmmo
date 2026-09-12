@@ -159,19 +159,6 @@ async function waitFor3D(page, want, describe) {
   assert.equal(await in3D(page), want, describe);
 }
 
-// Assertions about ghosting are collected rather than thrown, so that one run
-// reports every gap in it instead of stopping at the first. They are written as
-// the DESIGN promises, which is what a feature test is for -- see the block
-// above section 8.
-const ghostGaps = [];
-function ghostCheck(what, fn) {
-  try {
-    fn();
-  } catch (error) {
-    ghostGaps.push(`${what}: ${error.message}`);
-  }
-}
-
 const { browser, context, page, pageErrors, consoleErrors } = await launchGoldenBrowser();
 await markProfileWarm(context);
 let failed = false;
@@ -372,78 +359,63 @@ try {
   await boardShot(page, "05-back-at-eye-level");
 
   // =========================================================================
-  // 8. Ghosting — G leaves your body
+  // 8. Ghosting — G leaves your body, and nothing is sent while you are out
   // =========================================================================
   //
-  // Written as view3d/index.ts:97-107 promises it, not as the client currently
-  // behaves, and COLLECTED rather than thrown so that one run reports the whole
-  // gap rather than the first half of it:
+  // view3d/index.ts:97-107: "Your card stays on the board ... while the camera
+  // drifts off through the walls. Nothing is sent while you are out there, so a
+  // ghost is a way of looking and never a way of reaching."
   //
-  //   "Your card stays on the board ... while the camera drifts off through the
-  //    walls. Nothing is sent while you are out there, so a ghost is a way of
-  //    looking and never a way of reaching."
-  //
-  // The first clause holds. The rest does not: see the two collected gaps.
+  // All three clauses are asserted here, and the third is what makes the first
+  // two testable at all. While a ghost was still putting input on the wire, a
+  // changed board region proved only that SOMETHING moved -- the body was
+  // walking under the same arrow. With the wire silent, a view that changes
+  // while the body does not is the camera and can be nothing else.
   await assertAt(11, 12, "standing at the sign before ghosting");
   const beforeG = await boardShot(page, "09-before-G");
   state = await pressExpectingNoInput(page, "KeyG");
-  ghostCheck("G itself must send nothing", () =>
-    assert.deepEqual(state.pending, [], `G sent ${JSON.stringify(state.pending)}`),
-  );
+  assert.deepEqual(state.pending, [], `G itself must send nothing, saw ${JSON.stringify(state.pending)}`);
   await frames(page, 600);
-  assert.ok(!sameShot(beforeG, await boardShot(page, "10-ghosted")), "G must move the camera out of the body");
+  const ghostShot = await boardShot(page, "10-ghosted");
+  assert.ok(!sameShot(beforeG, ghostShot), "G must move the camera out of the body");
   await assertAt(11, 12, "the body must stay put when the camera leaves");
 
-  // The eyes went with the camera, so the ghost is still reading the sign it
-  // drifted away from -- signAtEye reads from ghostAt while ghosted, which is
-  // the half of ghosting that works.
+  // The eyes went with the camera, so the ghost still reads the sign it drifted
+  // away from -- signAtEye reads from ghostAt while ghosted.
   cells = await readGrid(page);
   assert.ok(
     textAt(cells, 0, signRow, BOARD_COLS).includes("ZZT3D"),
     "a ghost reads the sign it is standing at, because reading is something eyes do",
   );
 
-  // A ghost is a way of looking and never a way of reaching: the client sends
-  // nothing at all while you are out there, which is why any player may use it.
-  //
-  // The arrow is HELD rather than pressed, and the tick is awaited rather than
-  // taken. pressExpectingNoInput cannot see a movement key: the keyup's own
-  // zero frame overwrites the keydown's in the server's one-entry input slot,
-  // so a press-and-release reads as "nothing was sent" whether or not anything
-  // was. Awaiting the frame is the discriminator -- if the design holds, no
-  // frame ever arrives and the step times out.
+  // Nothing on the wire. The arrow is HELD and the frame is AWAITED, because
+  // pressExpectingNoInput cannot see a movement key: the keyup's own zero frame
+  // overwrites the keydown's in the server's one-entry input slot, so a press
+  // and release reads as "nothing was sent" whether or not anything was. If the
+  // promise holds, no frame ever arrives and this step times out.
   await page.keyboard.down("ArrowLeft");
   let arrowReachedTheWire = true;
   try {
     await step({ await: { dx: -1, dy: 0, key: 0xcb }, timeoutMs: 3000 });
+    arrowReachedTheWire = true;
   } catch {
     arrowReachedTheWire = false;
   }
-  await page.keyboard.up("ArrowLeft");
-  await step({ await: { dx: 0, dy: 0 } });
-  ghostCheck("a ghost must put no input on the wire", () =>
-    assert.equal(arrowReachedTheWire, false, "an arrow held while ghosted reached the server as an input frame"),
-  );
-  const afterGhostArrow = await me();
-  ghostCheck("a ghost must not walk the body it left", () =>
-    assert.deepEqual(
-      { x: afterGhostArrow.x, y: afterGhostArrow.y },
-      { x: 11, y: 12 },
-      `the body walked to ${afterGhostArrow.x},${afterGhostArrow.y} while the camera was away`,
-    ),
-  );
-  // Whether the ghost CAMERA can be flown is not asserted from pixels: with the
-  // body walking under the same arrow, a changed board region proves only that
-  // something moved. It is settled in the source instead -- CameraRig.driftGhost
-  // (view3d/camera.ts) has no caller anywhere in the client.
+  assert.equal(arrowReachedTheWire, false, "an arrow held while ghosted must reach the server as nothing at all");
 
-  // G brings you home, and so does V.
+  // ... and while it was held, the camera flew. The body is the control: it has
+  // not moved, so the board region can only have changed because the camera did.
+  await frames(page, 900);
+  const driftShot = await boardShot(page, "11-ghost-drifted");
+  await page.keyboard.up("ArrowLeft");
+  assert.ok(!sameShot(ghostShot, driftShot), "a held arrow must fly the ghost");
+  await assertAt(11, 12, "and the body it left must not have moved a square");
+
+  // G brings you home.
   await page.keyboard.press("KeyG");
-  await frames(page, 800);
-  await boardShot(page, "11-home");
-  // Put the body back where the fake-wall route starts from.
-  await walk(page, "ArrowRight", 1);
-  await assertAt(11, 12, "home from the ghost");
+  await frames(page, 900);
+  await boardShot(page, "12-home");
+  await assertAt(11, 12, "home from the ghost, still where the body was standing");
 
   // =========================================================================
   // 9. A fake wall is floor, and the wall it imitates is not
@@ -475,11 +447,6 @@ try {
   );
 
   console.log(`view3d_features.test.mjs: the 3D vocabulary, shots in ${OUT_DIR}`);
-  if (ghostGaps.length > 0) {
-    console.error(`\nghosting does not do what view3d/index.ts says it does (${ghostGaps.length}):`);
-    for (const gap of ghostGaps) console.error(`  - ${gap}`);
-    failed = true;
-  }
 } catch (error) {
   failed = true;
   console.error(error);
