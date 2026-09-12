@@ -68,6 +68,10 @@ const ROW_LOOK = 24;
 // ZZT's save key, as the server receives it: a raw key byte, not a mask.
 const KEY_S = "S".charCodeAt(0);
 
+// The heading row 24 reports, as CP437 draws it: the arrow that points that way
+// and the letter that names it.
+const HEADING = { N: "\u0018N", E: "\u001aE", S: "\u0019S", W: "\u001bW" };
+
 // What the server must see for each arrow while the body faces EAST. The
 // client rotates the mask; these are the ordinary board directions that come
 // out the other side, and they are what `walk` would have awaited for a
@@ -224,7 +228,14 @@ try {
   cells = await readGrid(page);
   assert.match(sidebarRow(cells, ROW_VIEW), /3\s+Standard view/, "row 13 must offer the way back");
   assert.match(sidebarRow(cells, ROW_SAVE), /S\s+Save: press 3/, "row 21 must stop promising Save in the world");
-  assert.match(sidebarRow(cells, ROW_LOOK), /WASD\s+Look/, "row 24 must name the camera keys in the world");
+  // Eye level: A and D TURN you, and the row says which way you are facing --
+  // without it, an arrow that walks you somewhere you are not looking is only
+  // confusing. V arrives at eye level facing north, which is the identity frame.
+  assert.match(sidebarRow(cells, ROW_LOOK), /WASD\s+Turn/, "row 24 must name the camera keys in the world");
+  assert.ok(
+    sidebarRow(cells, ROW_LOOK).includes(HEADING.N),
+    `row 24 must report the heading; it reads ${JSON.stringify(sidebarRow(cells, ROW_LOOK))}`,
+  );
   const worldShot = await boardShot(page, "02-world");
   assert.ok(!sameShot(classicShot, worldShot), "the board region must actually look different in 3D");
 
@@ -265,6 +276,11 @@ try {
   const turned = await pressExpectingNoInput(page, "KeyD");
   assert.deepEqual(turned.pending, [], "turning must put nothing on the wire");
   await frames(page, 400);
+  cells = await readGrid(page);
+  assert.ok(
+    sidebarRow(cells, ROW_LOOK).includes(HEADING.E),
+    `turning must move the heading the sidebar reports; it reads ${JSON.stringify(sidebarRow(cells, ROW_LOOK))}`,
+  );
 
   // Facing EAST now. Each arrow, and where the body actually ended up.
   await walkFacing(page, "ArrowLeft", EAST_STRAFE_LEFT);
@@ -280,6 +296,8 @@ try {
   // script reads in the vocabulary the text screen uses.
   await pressExpectingNoInput(page, "KeyA");
   await frames(page, 400);
+  cells = await readGrid(page);
+  assert.ok(sidebarRow(cells, ROW_LOOK).includes(HEADING.N), "turning back must report north again");
   await walk(page, "ArrowRight", 1);
   await assertAt(10, 12, "facing north again, right is east again");
   await walk(page, "ArrowLeft", 1);

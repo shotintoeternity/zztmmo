@@ -4463,6 +4463,15 @@ function drawSidebar() {
  * The label names where 3 GOES, not where you are: the row reads as an
  * instruction, like every other row in this sidebar.
  */
+// Which way you are facing, as the arrow that points there and the letter that
+// names it. CP437 0x18..0x1B are the four arrows in the font the board is drawn
+// with, so this costs no glyph the client did not already have.
+//
+// Four entries and no needle, because the eye-level camera is COMPASS LOCKED:
+// `facing` is a discrete 0..3 and A and D quarter-turn it. A rose would be
+// spending a dozen cells rendering one of four facts.
+const COMPASS_ROW = ["\u0018N", "\u001aE", "\u0019S", "\u001bW"];
+
 function drawView3DRows() {
   if (mode !== "playing") {
     return;
@@ -4476,8 +4485,17 @@ function drawView3DRows() {
   writeText(65, 13, 0x1f, (inWorld ? " Standard view" : " 3D view").padEnd(14, " "));
   sidebarClearLine(writeText, 24);
   if (inWorld) {
+    // At eye level A and D turn you and the arrows are read in the frame that
+    // turning moves, so the row has to say which way that is -- an arrow that
+    // walks you somewhere you are not looking is only confusing while nothing
+    // on screen says where you are looking. Pulled back there is no heading to
+    // report: the orbit swings freely and the arrows are board directions.
+    const eyeLevel = view3d !== null && view3d.firstPerson;
     writeText(61, 24, 0x30, " WASD ");
-    writeText(67, 24, 0x1f, " Look");
+    writeText(67, 24, 0x1f, eyeLevel ? " Turn" : " Look");
+    if (eyeLevel && view3d !== null) {
+      writeText(73, 24, 0x1e, COMPASS_ROW[view3d.facing]);
+    }
   }
   // Row 21 is vanilla's " S  Save game", and in the world S looks down instead,
   // so the row has to stop promising something the key no longer does. It is
@@ -4849,6 +4867,9 @@ function handleKeyDown(event: KeyboardEvent) {
     } else {
       view3d?.toggleGhost();
     }
+    // F crosses the eye-level boundary, which is what decides whether there is
+    // a heading to report at all.
+    drawView3DRows();
     drawScreen();
     return;
   }
@@ -4881,6 +4902,14 @@ function handleKeyDown(event: KeyboardEvent) {
     if (step) {
       event.preventDefault();
       view3d.look(step.dyaw, step.dpitch);
+      if (step.dyaw !== 0) {
+        // A turn moves the heading the row reports. Written on the key edge and
+        // not per frame: these go through writeText into `cells`, and a write on
+        // every repaint would tell feedView3D the board had changed and rebuild
+        // the scene's geometry forever.
+        drawView3DRows();
+        drawScreen();
+      }
       return;
     }
   }
