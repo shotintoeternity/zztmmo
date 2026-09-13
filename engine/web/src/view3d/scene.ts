@@ -30,6 +30,23 @@ export const SPRITE_HEIGHT = TILE_DEPTH;
 /** A space: the glyph that paints nothing but its background. */
 const CH_BLANK = 0x20;
 
+/**
+ * How far a glyph drawn ON a face is lifted off it, in world units.
+ *
+ * A symbol on a deep side face is two quads in the same plane: the face, blank,
+ * in its background colour, and the glyph centred on top of it. Same plane means
+ * the same depth, and a depth test cannot choose between them -- so the winner
+ * is decided by floating-point noise, per pixel, and it changes as the camera
+ * moves. On screen the symbol tears into a dither, drops out entirely, and comes
+ * back: the flicker reported on CITY's buildings, whose doors and signs are
+ * exactly this case.
+ *
+ * Four thousandths of a cell is far too little to see at any angle -- the glyph
+ * still reads as painted on -- and far more than the depth buffer needs to make
+ * up its mind at these distances (near 0.05, far 300).
+ */
+const FACE_LIFT = 0.004;
+
 const FLOOR_DOT = 0xfa;
 const WATER_DEPTH = -0.08;
 
@@ -396,7 +413,8 @@ export class BoardScene {
                 solid.quad([[x1, h, zm], [x1, h, z0], [x1, 0, z0], [x1, 0, zm]], shape.glyph, fg, bg, true, SHADE_EAST, undefined, [0, TILE_DEPTH - 1]);
               } else {
                 solid.quad([[x1, h, z1], [x1, h, z0], [x1, 0, z0], [x1, 0, z1]], CH_BLANK, fg, bg, true, SHADE_EAST);
-                solid.quad([[x1, h, zc1], [x1, h, zc0], [x1, 0, zc0], [x1, 0, zc1]], shape.glyph, fg, bg, false, SHADE_EAST);
+                const xe = x1 + FACE_LIFT;
+                solid.quad([[xe, h, zc1], [xe, h, zc0], [xe, 0, zc0], [xe, 0, zc1]], shape.glyph, fg, bg, false, SHADE_EAST);
               }
             }
             if (blockAt(x - 1, y) < shape.height) {
@@ -405,7 +423,8 @@ export class BoardScene {
                 solid.quad([[x0, h, zm], [x0, h, z1], [x0, 0, z1], [x0, 0, zm]], shape.glyph, fg, bg, true, SHADE_WEST, undefined, [0, TILE_DEPTH - 1]);
               } else {
                 solid.quad([[x0, h, z0], [x0, h, z1], [x0, 0, z1], [x0, 0, z0]], CH_BLANK, fg, bg, true, SHADE_WEST);
-                solid.quad([[x0, h, zc0], [x0, h, zc1], [x0, 0, zc1], [x0, 0, zc0]], shape.glyph, fg, bg, false, SHADE_WEST);
+                const xw = x0 - FACE_LIFT;
+                solid.quad([[xw, h, zc0], [xw, h, zc1], [xw, 0, zc1], [xw, 0, zc0]], shape.glyph, fg, bg, false, SHADE_WEST);
               }
             }
             if (shape.height < 1) {
