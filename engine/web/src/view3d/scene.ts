@@ -263,6 +263,15 @@ export class BoardScene {
   }
 
   /** build replaces the whole board geometry from the 80x25 cell grid's board columns. */
+  /**
+   * What the last upload's SOLID geometry was made of.
+   *
+   * The walls are a pure function of the classified shapes (plus their
+   * neighbours, via blockAt, which are shapes too). If that has not changed,
+   * the geometry cannot have changed, and re-uploading it is pure waste.
+   */
+  private lastSolidSig = "";
+
   build(cells: readonly ScreenCell[], options: SceneBuildOptions) {
     const shapes: CellShape[] = new Array(BOARD_COLS * ROWS);
     for (let y = 0; y < ROWS; y += 1) {
@@ -276,6 +285,25 @@ export class BoardScene {
         }
       }
     }
+    // A cell contributes to the walls, or it does not. `sprite` and `empty`
+    // emit the SAME floor quad -- FLOOR_DOT in FLOOR_DOT_FG on FLOOR_BG, once
+    // in the empty case and once in the sprite case -- so a creature or a
+    // player moving over open floor changes which cell holds a CARD and leaves
+    // the walls bit for bit identical. Folding the two together here is what
+    // lets a step skip the wall upload; anything else is compared in full, and
+    // a shape this does not understand simply compares unequal and rebuilds.
+    let sig = "";
+    for (let i = 0; i < shapes.length; i += 1) {
+      const shape = shapes[i];
+      if (shape.kind === "sprite" || shape.kind === "empty") {
+        sig += "e|";
+      } else {
+        sig += `${shape.kind},${shape.glyph},${shape.fg},${shape.bg},${isBlock(shape) ? shape.height : 0}|`;
+      }
+    }
+    const solidChanged = sig !== this.lastSolidSig;
+    this.lastSolidSig = sig;
+
     const tints = new Map<number, RGB>();
     for (const player of options.roster) {
       const rgb = hexRGB(player.color);
@@ -416,7 +444,7 @@ export class BoardScene {
       }
     }
 
-    this.replace(solid, cards);
+    this.replace(solid, cards, solidChanged);
   }
 
   // surroundings is the world beyond the board's edge: ZZT stops you at row 25
@@ -446,20 +474,31 @@ export class BoardScene {
     box(BOARD_COLS, BOARD_COLS + rimW, 0, D);
   }
 
-  private replace(solid: QuadBuffer, cards: QuadBuffer) {
-    if (this.staticMesh) {
-      this.scene.remove(this.staticMesh);
-      this.staticMesh.geometry.dispose();
+  /**
+   * Upload what changed, and only what changed.
+   *
+   * Disposing a geometry and building another is not bookkeeping -- it frees a
+   * GPU buffer, allocates typed arrays, and uploads them again, none of which
+   * shows up as JavaScript in a profile. A step changes ONE card; rebuilding
+   * every wall to express that cost a stalled frame per step, which in a dense
+   * world is what a player sees as the screen flickering.
+   */
+  private replace(solid: QuadBuffer, cards: QuadBuffer, solidChanged: boolean) {
+    if (solidChanged || !this.staticMesh) {
+      if (this.staticMesh) {
+        this.scene.remove(this.staticMesh);
+        this.staticMesh.geometry.dispose();
+      }
+      this.staticMesh = new THREE.Mesh(solid.toGeometry(false), this.staticMaterial);
+      this.staticMesh.frustumCulled = false;
+      this.scene.add(this.staticMesh);
     }
     if (this.billboardMesh) {
       this.scene.remove(this.billboardMesh);
       this.billboardMesh.geometry.dispose();
     }
-    this.staticMesh = new THREE.Mesh(solid.toGeometry(false), this.staticMaterial);
-    this.staticMesh.frustumCulled = false;
     this.billboardMesh = new THREE.Mesh(cards.toGeometry(true), this.billboardMaterial);
     this.billboardMesh.frustumCulled = false;
-    this.scene.add(this.staticMesh);
     this.scene.add(this.billboardMesh);
   }
 }
