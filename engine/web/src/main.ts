@@ -856,9 +856,22 @@ let playBoardId = 0;
  * is the half that was missing.
  */
 function setPlayBoardId(next: number) {
-  if (next !== playBoardId && view3d !== null && view3d.ghost) {
-    view3d.leaveGhost();
-    drawView3DRows();
+  if (next !== playBoardId && view3d !== null) {
+    // A NEW BOARD, NOT A WALK -- which is the sentence snap() was written for,
+    // and until now nothing said it. The rig smooths the camera toward your
+    // body (1 - exp(-dt*10)) so a step looks like a step; after a passage your
+    // body is somewhere else entirely, and smoothing toward it flies the camera
+    // across the whole board and through everything between the two squares.
+    // On a sparse board that reads as a swoop. On a board like TOWN it is a
+    // second of walls and fog going past the lens, which is what a player
+    // reports as the screen flickering.
+    view3d.snap();
+    // A ghost is a place on THIS board, so a board change ends it, exactly as V
+    // does -- view3d/index.ts has always said "a board change and V both do it".
+    if (view3d.ghost) {
+      view3d.leaveGhost();
+      drawView3DRows();
+    }
   }
   playBoardId = next;
 }
