@@ -29,6 +29,20 @@ export const TILE_DEPTH = CELL_H / CELL_W;
 export const SPRITE_HEIGHT = TILE_DEPTH;
 /** A space: the glyph that paints nothing but its background. */
 const CH_BLANK = 0x20;
+/** The solid block, for geometry that carries its own shape and needs no glyph. */
+const CH_FILL = 0xdb;
+
+// A line wall's bars, as half-thicknesses from the centre of its cell. The cell
+// is 1 wide and TILE_DEPTH deep, so the two differ: a bar that looked square
+// from the front would be a slab from the side.
+const LINE_HX = 0.16;
+const LINE_HZ = 0.16 * TILE_DEPTH;
+
+/** Which way a line runs, matching ElementLineDraw's bit order. */
+const LINE_N = 1;
+const LINE_S = 2;
+const LINE_W = 4;
+const LINE_E = 8;
 
 /**
  * How far a glyph drawn ON a face is lifted off it, in world units.
@@ -315,7 +329,7 @@ export class BoardScene {
       if (shape.kind === "sprite" || shape.kind === "empty") {
         sig += "e|";
       } else {
-        sig += `${shape.kind},${shape.glyph},${shape.fg},${shape.bg},${isBlock(shape) ? shape.height : 0}|`;
+        sig += `${shape.kind},${shape.glyph},${shape.fg},${shape.bg},${isBlock(shape) ? shape.height : 0},${shape.lines}|`;
       }
     }
     const solidChanged = sig !== this.lastSolidSig;
@@ -385,6 +399,33 @@ export class BoardScene {
               SHADE_TOP,
             );
             break;
+          case "line": {
+            // A fence, built the shape its glyph names. The glyph itself is not
+            // painted on anything: in 2D the character IS the shape, so in 3D
+            // the shape carries it and a solid beam in the line's own colour is
+            // what is left to draw.
+            const h = shape.height * TILE_DEPTH;
+            const cx = x0 + 0.5;
+            const cz = z0 + TILE_DEPTH / 2;
+            const beam = (bx0: number, bx1: number, bz0: number, bz1: number) => {
+              const c = fg;
+              solid.quad([[bx0, h, bz0], [bx1, h, bz0], [bx1, h, bz1], [bx0, h, bz1]], CH_FILL, c, c, true, SHADE_TOP);
+              solid.quad([[bx0, h, bz1], [bx1, h, bz1], [bx1, 0, bz1], [bx0, 0, bz1]], CH_FILL, c, c, true, SHADE_SOUTH);
+              solid.quad([[bx1, h, bz0], [bx0, h, bz0], [bx0, 0, bz0], [bx1, 0, bz0]], CH_FILL, c, c, true, SHADE_NORTH);
+              solid.quad([[bx1, h, bz1], [bx1, h, bz0], [bx1, 0, bz0], [bx1, 0, bz1]], CH_FILL, c, c, true, SHADE_EAST);
+              solid.quad([[bx0, h, bz0], [bx0, h, bz1], [bx0, 0, bz1], [bx0, 0, bz0]], CH_FILL, c, c, true, SHADE_WEST);
+            };
+            // The post is always there, so a lone line -- the table's 0xF9, with
+            // nothing to join -- is still something you can walk up to.
+            beam(cx - LINE_HX, cx + LINE_HX, cz - LINE_HZ, cz + LINE_HZ);
+            if (shape.lines & LINE_N) beam(cx - LINE_HX, cx + LINE_HX, z0, cz + LINE_HZ);
+            if (shape.lines & LINE_S) beam(cx - LINE_HX, cx + LINE_HX, cz - LINE_HZ, z1);
+            if (shape.lines & LINE_W) beam(x0, cx + LINE_HX, cz - LINE_HZ, cz + LINE_HZ);
+            if (shape.lines & LINE_E) beam(cx - LINE_HX, x1, cz - LINE_HZ, cz + LINE_HZ);
+            // The floor under a fence is visible: you can see between the bars.
+            solid.quad([[x0, 0, z0], [x1, 0, z0], [x1, 0, z1], [x0, 0, z1]], FLOOR_DOT, FLOOR_DOT_FG, FLOOR_BG, true, SHADE_TOP);
+            break;
+          }
           case "wall":
           case "low":
           case "forest":

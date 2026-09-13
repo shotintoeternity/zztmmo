@@ -2,7 +2,7 @@ import assert from "node:assert/strict";
 import { build } from "esbuild";
 
 const out = await build({ entryPoints: ["src/view3d/classify.ts"], bundle: true, format: "esm", platform: "node", write: false });
-const { classify, isBlock, LINE_GLYPHS, WALL_HEIGHT, LOW_HEIGHT, FOREST_HEIGHT, FOG_COLOR, FOG_GLYPH } = await import(
+const { classify, isBlock, LINE_GLYPHS, LINE_CHARS, lineShape, WALL_HEIGHT, LOW_HEIGHT, FOREST_HEIGHT, FOG_COLOR, FOG_GLYPH } = await import(
   `data:text/javascript;base64,${Buffer.from(out.outputFiles[0].contents).toString("base64")}`
 );
 
@@ -10,13 +10,49 @@ const { classify, isBlock, LINE_GLYPHS, WALL_HEIGHT, LOW_HEIGHT, FOREST_HEIGHT, 
 assert.equal(classify(0x20, 0x0f).kind, "empty");
 assert.equal(classify(0x20, 0x1f).kind, "floor", "a blank with a background is a colored tile");
 
-// Walls, by glyph: solid, normal, breakable, and the Line element's whole table.
-for (const ch of [0xdb, 0xb2, 0xb1, ...LINE_GLYPHS]) {
+// Walls, by glyph: solid, normal, breakable.
+for (const ch of [0xdb, 0xb2, 0xb1]) {
   const shape = classify(ch, 0x0e);
   assert.equal(shape.kind, "wall", `glyph ${ch} is a wall`);
   assert.equal(shape.height, WALL_HEIGHT);
   assert.ok(isBlock(shape));
 }
+
+// ---------------------------------------------------------------------------
+// Line walls: the glyph IS the shape
+// ---------------------------------------------------------------------------
+// ZZT's Line element picks its character from which neighbours are also lines
+// (ElementLineDraw), so the character carries the fence's shape. The 3D view
+// builds that shape as geometry, which means the classifier has to hand the
+// directions over rather than a picture of them.
+assert.equal(LINE_CHARS.length, 16, "one glyph per combination of four neighbours");
+assert.equal(new Set(LINE_CHARS).size, 16, "and no glyph used twice");
+// Transcribed from the engine (game.go LineChars). The set this replaced had
+// 0xCF, which the Line element can never draw, in place of 0xCA.
+assert.ok(LINE_CHARS.includes(0xca), "the north-west-east tee is a line");
+assert.ok(!LINE_CHARS.includes(0xcf), "0xCF is not in ZZT's line table");
+
+const N = 1, S = 2, W = 4, E = 8;
+for (const [ch, runs, what] of [
+  [0xf9, 0, "a lone post, joining nothing"],
+  [0xba, N | S, "the north-south bar"],
+  [0xcd, W | E, "the east-west bar"],
+  [0xce, N | S | W | E, "the four-way cross"],
+  [0xbc, N | W, "the north-west corner"],
+  [0xca, N | W | E, "the north-west-east tee"],
+]) {
+  assert.equal(lineShape(ch), runs, `0x${ch.toString(16)} runs ${what}`);
+  const shape = classify(ch, 0x0c);
+  assert.equal(shape.kind, "line", `0x${ch.toString(16)} is a line`);
+  assert.equal(shape.lines, runs, `0x${ch.toString(16)} carries its directions`);
+  assert.equal(shape.height, WALL_HEIGHT, "a fence is as tall as a wall");
+  // A fence has gaps, so it must NOT hide the faces of what stands beside it.
+  assert.ok(!isBlock(shape), `0x${ch.toString(16)} is tall but is not a block`);
+}
+assert.equal(lineShape(0x20), -1, "a blank is not a line");
+assert.equal(classify(0xdb, 0x0e).lines, -1, "and a solid wall carries no directions");
+// Every glyph in the table classifies, and none is missed.
+for (const ch of LINE_GLYPHS) assert.equal(classify(ch, 0x0c).kind, "line", `0x${ch.toString(16)}`);
 // A fake wall is drawn with the normal wall's glyph, so it stands as one.
 assert.equal(classify(0xb2, 0x0e).kind, "wall");
 

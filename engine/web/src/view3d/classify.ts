@@ -19,6 +19,7 @@ export type CellKind =
   | "empty" // black floor
   | "floor" // a flat tile in a color (a blank with a background)
   | "wall" // full-height block textured with its glyph
+  | "line" // a fence: beams running the ways its glyph says it connects
   | "low" // a short block: boulders, sliders, ricochets
   | "forest" // knee-high green
   | "water" // a recessed blue plane
@@ -33,6 +34,11 @@ export type CellShape = {
   height: number;
   /** The glyph textured onto the shape. */
   glyph: number;
+  /**
+   * For a line wall, which ways it runs: bit 0 north, 1 south, 2 west, 3 east.
+   * -1 for everything else. The glyph carries this in 2D; in 3D it is geometry.
+   */
+  lines: number;
   /** DOS foreground nibble. */
   fg: number;
   /** DOS background nibble. */
@@ -71,11 +77,30 @@ export const WALL_HEIGHT = 1;
 export const LOW_HEIGHT = 0.6;
 export const FOREST_HEIGHT = 0.45;
 
-/** The Line element's draw table (elements.go ElementLineDraw): every glyph a line wall can show. */
-export const LINE_GLYPHS: ReadonlySet<number> = new Set([
-  0xf9, 0xd0, 0xd2, 0xba, 0xb5, 0xbc, 0xbb, 0xb9, 0xc6, 0xc8, 0xc9, 0xcc, 0xcd, 0xcf, 0xcb, 0xce,
-]);
+/**
+ * The Line element's draw table, in the engine's own order (game.go LineChars,
+ * indexed by ElementLineDraw's v-1).
+ *
+ * The INDEX is the shape: bit 0 north, bit 1 south, bit 2 west, bit 3 east, set
+ * when that neighbour is another line or the board edge. So the glyph a line
+ * wall shows is not decoration, it IS which way the fence runs -- 0xBA is the
+ * north-south piece, 0xCD the east-west one, 0xCE the four-way cross.
+ *
+ * Transcribed against the engine rather than by eye. The set this replaced had
+ * 0xCF where the table has 0xCA, so a north-west-east tee was not recognised as
+ * a line at all and fell through to the symbol path, and 0xCF -- a glyph the
+ * Line element can never draw -- was treated as one.
+ */
+export const LINE_CHARS: readonly number[] = [
+  0xf9, 0xd0, 0xd2, 0xba, 0xb5, 0xbc, 0xbb, 0xb9, 0xc6, 0xc8, 0xc9, 0xcc, 0xcd, 0xca, 0xcb, 0xce,
+];
 
+/** Which way a line wall runs, as the direction bits above, or -1 if not a line. */
+export function lineShape(ch: number): number {
+  return LINE_CHARS.indexOf(ch);
+}
+
+export const LINE_GLYPHS: ReadonlySet<number> = new Set(LINE_CHARS);
 const CH_SOLID = 0xdb;
 const CH_NORMAL = 0xb2;
 const CH_BREAKABLE = 0xb1;
@@ -104,7 +129,7 @@ export function classify(ch: number, color: number, element = 0): CellShape {
   const fg = color & 0x0f;
   const bg = (color >> 4) & 0x0f;
   const shape = (kind: CellKind, height: number, opaqueBg: boolean): CellShape =>
-    ({ kind, height, glyph: ch, fg, bg, opaqueBg, tiles: TILING_GLYPHS.has(ch) });
+    ({ kind, height, glyph: ch, fg, bg, opaqueBg, tiles: TILING_GLYPHS.has(ch), lines: -1 });
 
   // Asked before the glyph is read, because the glyph would lie. A fake keeps
   // the exact pattern it was drawn with -- it is simply lying down, which is
@@ -132,7 +157,15 @@ export function classify(ch: number, color: number, element = 0): CellShape {
     // A revealed invisible wall, or shading used as a wall.
     return shape("wall", WALL_HEIGHT, bg !== 0);
   }
-  if (ch === CH_SOLID || ch === CH_NORMAL || ch === CH_BREAKABLE || LINE_GLYPHS.has(ch)) {
+  // A line wall is a fence, and its glyph says which way the fence runs. The
+  // text screen draws that shape flat; standing in the board it should be the
+  // same shape, so the directions travel as geometry and the glyph stops being
+  // the thing that carries them.
+  const runs = lineShape(ch);
+  if (runs >= 0) {
+    return { ...shape("line", WALL_HEIGHT, bg !== 0), lines: runs };
+  }
+  if (ch === CH_SOLID || ch === CH_NORMAL || ch === CH_BREAKABLE) {
     return shape("wall", WALL_HEIGHT, bg !== 0);
   }
   if (ch === CH_BOULDER || ch === CH_SLIDER_NS || ch === CH_SLIDER_EW || ch === CH_STAR_OR_RICOCHET) {
@@ -146,5 +179,7 @@ export function classify(ch: number, color: number, element = 0): CellShape {
 
 /** True for the kinds that stand as a block and hide the faces of a neighbor at or below their height. */
 export function isBlock(shape: CellShape): boolean {
-  return shape.height > 0;
+  // A line is tall but it is not a block: it is a fence with gaps, so a wall
+  // beside one must still draw the face it would otherwise hide behind it.
+  return shape.height > 0 && shape.kind !== "line";
 }
