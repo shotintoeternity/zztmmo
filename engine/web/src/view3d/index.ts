@@ -31,6 +31,16 @@ export type View3DState = {
 // counts: eight columns to the side of one, or four rows off it.
 const SIGN_RANGE = 8;
 
+/**
+ * How tall the world is drawn, in real pixels, whatever it is displayed at.
+ *
+ * Twice the text screen's 350, because a perspective view magnifies the squares
+ * nearest the camera and a glyph's worth of pixels per cell -- which is exactly
+ * right for a grid of glyphs -- is coarse once a wall is an arm's length away.
+ * Past this it is fill rate spent on a picture of 8x14 glyphs.
+ */
+const RENDER_HEIGHT = 700;
+
 export class View3D {
   readonly rig = new CameraRig();
   private readonly scene: BoardScene;
@@ -180,7 +190,23 @@ export class View3D {
   resize(boardWidth: number, height: number) {
     const w = Math.max(1, boardWidth);
     const h = Math.max(1, height);
-    this.scene.resize(w, h, Math.min(window.devicePixelRatio || 1, 2));
+    // The world renders at a FIXED resolution, as the text screen does.
+    //
+    // Everything else in this client draws into a 640x350 canvas and lets CSS
+    // scale it: a ZZT screen is 80x25 cells of 8x14 pixels and always has been,
+    // so it costs the same on any monitor. The 3D view was the one thing
+    // rendering at native device density -- devicePixelRatio capped at 2, which
+    // on a Retina display is a 2268x1653 drawing buffer, 3.75 MILLION fragments
+    // shaded per frame through a shader that samples the font atlas per texel.
+    // Measured on zztmmo.com walking CITY: 0 frames over 32ms at DPR 1, and 39
+    // of 291 at DPR 2 -- not spikes, a steady 30fps missing every second vsync,
+    // which is what a player sees as the picture juddering while they walk.
+    //
+    // So the drawing buffer is pinned to RENDER_HEIGHT and the aspect is kept
+    // from the CSS box. The `min` against devicePixelRatio is what keeps a
+    // small window honest: there is no sense supersampling past the display.
+    const ratio = Math.min(RENDER_HEIGHT / h, window.devicePixelRatio || 1, 2);
+    this.scene.resize(w, h, ratio);
     this.rig.resize(w / h);
   }
 
