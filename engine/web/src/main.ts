@@ -4492,14 +4492,23 @@ function drawSidebar() {
  * The label names where 3 GOES, not where you are: the row reads as an
  * instruction, like every other row in this sidebar.
  */
-// Which way you are facing, as the arrow that points there and the letter that
-// names it. CP437 0x18..0x1B are the four arrows in the font the board is drawn
-// with, so this costs no glyph the client did not already have.
+// WHERE NORTH IS, from where you are standing -- a needle, not a heading.
 //
-// Four entries and no needle, because the eye-level camera is COMPASS LOCKED:
-// `facing` is a discrete 0..3 and A and D quarter-turn it. A rose would be
-// spending a dozen cells rendering one of four facts.
-const COMPASS_ROW = ["\u0018N", "\u001aE", "\u0019S", "\u001bW"];
+// The arrow points at north rather than naming the way you face, because that
+// is the question a player in a board actually has. ZZT worlds are written in
+// compass directions: a scroll says the vault is north of here, the board above
+// is north, and every door a world author placed was placed in those terms. Told
+// only that you face east, you still have to work out which way north is; told
+// where north is, you already know which way you face.
+//
+// Indexed by facing, so north is ahead when you face north, to your left when
+// you face east, behind you facing south, to your right facing west. CP437
+// 0x18..0x1B are the four arrows in the font the board is already drawn with.
+//
+// Four entries and no rose, because the eye-level camera is COMPASS LOCKED:
+// `facing` is a discrete 0..3 and A and D quarter-turn it. A rose would be a
+// dozen cells spent rendering one of four facts.
+const NORTH_NEEDLE = ["\u0018N", "\u001bN", "\u0019N", "\u001aN"];
 
 function drawView3DRows() {
   if (mode !== "playing") {
@@ -4523,7 +4532,7 @@ function drawView3DRows() {
     writeText(61, 24, 0x30, " WASD ");
     writeText(67, 24, 0x1f, eyeLevel ? " Turn" : " Look");
     if (eyeLevel && view3d !== null) {
-      writeText(73, 24, 0x1e, COMPASS_ROW[view3d.facing]);
+      writeText(73, 24, 0x1e, NORTH_NEEDLE[view3d.facing]);
     }
   }
   // Row 21 is vanilla's " S  Save game", and in the world S looks down instead,
