@@ -3057,7 +3057,23 @@ function setCell(cell: ScreenCell) {
   // would make every reader repeat the `?? 0`.
   cell.element = cell.element ?? 0;
   cells[cell.y * COLS + cell.x] = cell;
-  cellsRevision += 1;
+  // ONLY THE BOARD INVALIDATES THE BOARD.
+  //
+  // cellsRevision exists to stop the 3D view rebuilding geometry it has already
+  // built (see feedView3D). It was bumped for every cell, sidebar included --
+  // and BoardScene.build only ever reads x < BOARD_COLS, so a sidebar write was
+  // telling the scene that a board it cannot see had changed. The scene answered
+  // by reclassifying all 1500 board cells and rebuilding both quad buffers from
+  // scratch, inside the animation frame.
+  //
+  // That is paid on every HUD repaint, and -- since the 3D view writes its own
+  // rows 13, 21 and 24 -- on every TURN. One stalled frame at the start of each
+  // movement, which in a dense world like CITY is what a player sees as the
+  // screen flickering. In a sparse one it is free, which is why the fixture
+  // suites never showed it.
+  if (cell.x < BOARD_COLS) {
+    cellsRevision += 1;
+  }
 }
 
 // The on-screen control bar mirrors the screen behind it: gameplay controls
