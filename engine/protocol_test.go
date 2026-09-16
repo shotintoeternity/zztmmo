@@ -88,7 +88,7 @@ func TestProtocolEvents(t *testing.T) {
 			t.Fatalf("events[%d].Type=%q, want %q", i, events[i].Type, wantType)
 		}
 	}
-	if events[0].Title != "obj" || !reflect.DeepEqual(events[0].Lines, []string{"line"}) {
+	if events[0].Title != "obj" || !reflect.DeepEqual(events[0].Lines, CP437Lines{"line"}) {
 		t.Fatalf("scroll event mismatch: %+v", events[0])
 	}
 	if events[7].ToBoard != 2 || events[7].EntryX != 3 || events[7].EntryY != 4 {

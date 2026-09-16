@@ -370,26 +370,26 @@ type EditorLeaseMessage struct {
 }
 
 type EditorTileInspect struct {
-	X                   int16  `json:"x"`
-	Y                   int16  `json:"y"`
-	ElementID           byte   `json:"elementId"`
-	Element             string `json:"element"`
-	Character           byte   `json:"character"`
-	Color               byte   `json:"color"`
-	HasStat             bool   `json:"hasStat"`
-	StatID              int16  `json:"statId,omitempty"`
-	P1                  byte   `json:"p1,omitempty"`
-	P2                  byte   `json:"p2,omitempty"`
-	P3                  byte   `json:"p3,omitempty"`
-	StepX               int16  `json:"stepX,omitempty"`
-	StepY               int16  `json:"stepY,omitempty"`
-	Cycle               int16  `json:"cycle,omitempty"`
-	Param1Name          string `json:"param1Name,omitempty"`
-	Param2Name          string `json:"param2Name,omitempty"`
-	ParamBulletTypeName string `json:"paramBulletTypeName,omitempty"`
-	ParamBoardName      string `json:"paramBoardName,omitempty"`
-	ParamDirName        string `json:"paramDirName,omitempty"`
-	ParamTextName       string `json:"paramTextName,omitempty"`
+	X                   int16       `json:"x"`
+	Y                   int16       `json:"y"`
+	ElementID           byte        `json:"elementId"`
+	Element             string      `json:"element"`
+	Character           byte        `json:"character"`
+	Color               byte        `json:"color"`
+	HasStat             bool        `json:"hasStat"`
+	StatID              int16       `json:"statId,omitempty"`
+	P1                  byte        `json:"p1,omitempty"`
+	P2                  byte        `json:"p2,omitempty"`
+	P3                  byte        `json:"p3,omitempty"`
+	StepX               int16       `json:"stepX,omitempty"`
+	StepY               int16       `json:"stepY,omitempty"`
+	Cycle               int16       `json:"cycle,omitempty"`
+	Param1Name          string      `json:"param1Name,omitempty"`
+	Param2Name          string      `json:"param2Name,omitempty"`
+	ParamBulletTypeName string      `json:"paramBulletTypeName,omitempty"`
+	ParamBoardName      CP437String `json:"paramBoardName,omitempty"`
+	ParamDirName        string      `json:"paramDirName,omitempty"`
+	ParamTextName       CP437String `json:"paramTextName,omitempty"`
 }
 
 // EditorElementItem is one placeable element in an F1/F2/F3 category menu
@@ -475,8 +475,8 @@ type EditorDiffMessage struct {
 // vanilla "None" choice; the editor's "Add new board" choice is a client-side
 // menu entry (M5.5), not a board option, and travels as an EditorBoardMessage.
 type EditorBoardOption struct {
-	ID   int16  `json:"id"`
-	Name string `json:"name"`
+	ID   int16       `json:"id"`
+	Name CP437String `json:"name"`
 }
 
 // EditorProperties is the data rendered by the editor's Board Information
@@ -484,8 +484,8 @@ type EditorBoardOption struct {
 // browser can use the same dialog for future collaborative-edit leases.
 type EditorProperties struct {
 	BoardID           int16               `json:"boardId"`
-	BoardName         string              `json:"boardName"`
-	WorldName         string              `json:"worldName"`
+	BoardName         CP437String         `json:"boardName"`
+	WorldName         CP437String         `json:"worldName"`
 	MaxShots          byte                `json:"maxShots"`
 	IsDark            bool                `json:"isDark"`
 	NeighborBoards    [4]byte             `json:"neighborBoards"`
@@ -561,7 +561,7 @@ type EditorProgramMessage struct {
 	Type     string         `json:"type"`
 	StatID   int16          `json:"statId"`
 	Prompt   string         `json:"prompt"`
-	Lines    []string       `json:"lines"`
+	Lines    CP437Lines     `json:"lines"`
 	Labels   []OopLabelInfo `json:"labels,omitempty"`
 	Warnings []OopWarning   `json:"warnings,omitempty"`
 }
@@ -570,9 +570,9 @@ type EditorProgramMessage struct {
 // Data/DataLen the way EditorEditStatText does — a carriage return after every
 // line — so the text round-trips through the vanilla serializer.
 type EditorProgramSaveMessage struct {
-	Type   string   `json:"type"`
-	StatID int16    `json:"statId"`
-	Lines  []string `json:"lines"`
+	Type   string     `json:"type"`
+	StatID int16      `json:"statId"`
+	Lines  CP437Lines `json:"lines"`
 }
 
 // EditorBoardMessage manages the boards of an editor session (M5.5). Op is:
@@ -680,10 +680,10 @@ type DebugCommandMessage struct {
 // StatID is the object that showed the scroll, and Label is the text between
 // '!' and ';' — i.e. the ZZT-OOP label to send it.
 type ScrollReplyMessage struct {
-	Type     string   `json:"type"`
-	PlayerID PlayerID `json:"playerId"`
-	StatID   int16    `json:"statId"`
-	Label    string   `json:"label"`
+	Type     string      `json:"type"`
+	PlayerID PlayerID    `json:"playerId"`
+	StatID   int16       `json:"statId"`
+	Label    CP437String `json:"label"`
 }
 
 // QuitReplyMessage is the client's answer to a quitPrompt event. Quit=false
@@ -884,10 +884,10 @@ type ProtocolEvent struct {
 	StatID int16  `json:"statId,omitempty"`
 	// PlayerStatID is the player a scroll belongs to (-1 = nobody). Explicitly
 	// not omitempty: stat 0 is a real player and -1 must survive the wire.
-	PlayerStatID int16    `json:"playerStatId"`
-	Title        string   `json:"title,omitempty"`
-	Lines        []string `json:"lines,omitempty"`
-	Filename     string   `json:"filename,omitempty"`
+	PlayerStatID int16       `json:"playerStatId"`
+	Title        CP437String `json:"title,omitempty"`
+	Lines        CP437Lines  `json:"lines,omitempty"`
+	Filename     string      `json:"filename,omitempty"`
 	// Error carries a refusal back to the client on a "saveResult" event. Empty
 	// means the save succeeded, so no extra bool rides on every other event.
 	Error    string   `json:"error,omitempty"`
@@ -928,13 +928,13 @@ func ProtocolEvents(events []Event) []ProtocolEvent {
 	for _, event := range events {
 		switch ev := event.(type) {
 		case ScrollEvent:
-			out = append(out, ProtocolEvent{Type: "scroll", StatID: ev.StatId, PlayerStatID: ev.PlayerStatId, Title: ev.Title, Lines: ev.Lines})
+			out = append(out, ProtocolEvent{Type: "scroll", StatID: ev.StatId, PlayerStatID: ev.PlayerStatId, Title: CP437String(ev.Title), Lines: ev.Lines})
 		case QuitPromptEvent:
 			out = append(out, ProtocolEvent{Type: "quitPrompt", StatID: ev.StatId})
 		case QuitEvent:
 			out = append(out, ProtocolEvent{Type: "quit", StatID: ev.StatId})
 		case HelpEvent:
-			out = append(out, ProtocolEvent{Type: "help", StatID: ev.StatId, Filename: ev.Filename, Title: ev.Title, Lines: HelpFileLines(ev.Filename)})
+			out = append(out, ProtocolEvent{Type: "help", StatID: ev.StatId, Filename: ev.Filename, Title: CP437String(ev.Title), Lines: HelpFileLines(ev.Filename)})
 		case DebugPromptEvent:
 			out = append(out, ProtocolEvent{Type: "debugPrompt", StatID: ev.StatId})
 		case SavePromptEvent:

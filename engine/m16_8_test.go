@@ -557,7 +557,7 @@ func runM168RoomPass(t *testing.T, scenarioFile, world string, ops []oracleOp, i
 			switch ev.Type {
 			case "scroll":
 				window = &oracleTextWindow{
-					Scroll:  ScrollEvent{StatId: ev.StatID, PlayerStatId: ev.PlayerStatID, Title: ev.Title, Lines: ev.Lines},
+					Scroll:  ScrollEvent{StatId: ev.StatID, PlayerStatId: ev.PlayerStatID, Title: string(ev.Title), Lines: ev.Lines},
 					LinePos: 1,
 				}
 			case "quitPrompt":

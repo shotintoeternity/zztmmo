@@ -2254,7 +2254,7 @@ func (s *WebSocketServer) quitOutcome(rm *RoomManager, quit QuitResult) EventMes
 			Type:    "highScoreEntry",
 			Score:   quit.Score,
 			ListPos: quit.ListPos,
-			Title:   "New high score for " + rm.WorldName(),
+			Title:   CP437String("New high score for " + rm.WorldName()),
 			Lines:   rm.HighScoreLines(quit.ListPos, quit.Score),
 		}
 	}
@@ -2291,7 +2291,7 @@ func (s *WebSocketServer) submitHighScoreNameInInstance(ctx context.Context, ins
 	}
 	message := EventMessage{Type: MessageTypeEvent, Event: ProtocolEvent{
 		Type:  "highScores",
-		Title: "High scores for " + inst.RoomManager.WorldName(),
+		Title: CP437String("High scores for " + inst.RoomManager.WorldName()),
 		Lines: inst.RoomManager.HighScoreLines(0, 0),
 	}}
 	accountID := client.accountID
@@ -3159,14 +3159,14 @@ func (s *WebSocketServer) submitDebugCommandInInstance(inst *WorldInstance, play
 	inst.RoomManager.SubmitDebugCommand(playerID, text)
 }
 
-func (s *WebSocketServer) submitScrollReplyInInstance(inst *WorldInstance, playerID PlayerID, objectStatID int16, label string) {
+func (s *WebSocketServer) submitScrollReplyInInstance(inst *WorldInstance, playerID PlayerID, objectStatID int16, label CP437String) {
 	inst.mu.Lock()
 	defer inst.mu.Unlock()
 
 	if _, ok := inst.Clients[playerID]; !ok {
 		return
 	}
-	inst.RoomManager.SubmitScrollReply(playerID, objectStatID, label)
+	inst.RoomManager.SubmitScrollReply(playerID, objectStatID, string(label))
 }
 
 func inputMessageToPlayerInput(input InputMessage) PlayerInput {

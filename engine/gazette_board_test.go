@@ -152,7 +152,7 @@ func gazetteStepUntilScroll(rm *RoomManager, playerID PlayerID) (string, bool) {
 		diffs := rm.StepDiffs(map[PlayerID]PlayerInput{playerID: {DeltaY: 1, Key: KEY_DOWN}})
 		for _, event := range diffs[playerID].Events {
 			if event.Type == "scroll" {
-				return event.Title, true
+				return string(event.Title), true
 			}
 		}
 	}

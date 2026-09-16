@@ -1602,12 +1602,12 @@ func editorProperties(e *Engine) EditorProperties {
 		if name == "" {
 			name = "Untitled"
 		}
-		options = append(options, EditorBoardOption{ID: boardID, Name: name})
+		options = append(options, EditorBoardOption{ID: boardID, Name: CP437String(name)})
 	}
 	return EditorProperties{
 		BoardID:           e.World.Info.CurrentBoard,
-		BoardName:         e.Board.Name,
-		WorldName:         e.World.Info.Name,
+		BoardName:         CP437String(e.Board.Name),
+		WorldName:         CP437String(e.World.Info.Name),
 		MaxShots:          e.Board.Info.MaxShots,
 		IsDark:            e.Board.Info.IsDark,
 		NeighborBoards:    e.Board.Info.NeighborBoards,
@@ -1665,9 +1665,9 @@ func editorTileInspect(e *Engine, x, y int16) EditorTileInspect {
 		inspect.Param1Name = def.Param1Name
 		inspect.Param2Name = def.Param2Name
 		inspect.ParamBulletTypeName = def.ParamBulletTypeName
-		inspect.ParamBoardName = def.ParamBoardName
+		inspect.ParamBoardName = CP437String(def.ParamBoardName)
 		inspect.ParamDirName = def.ParamDirName
-		inspect.ParamTextName = def.ParamTextName
+		inspect.ParamTextName = CP437String(def.ParamTextName)
 	}
 	return inspect
 }

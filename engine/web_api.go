@@ -1680,10 +1680,10 @@ func (a *WebAPI) handleHighScores(w http.ResponseWriter, r *http.Request) {
 	}
 
 	writeJSON(w, struct {
-		Title string   `json:"title"`
-		Lines []string `json:"lines"`
+		Title CP437String `json:"title"`
+		Lines CP437Lines  `json:"lines"`
 	}{
-		Title: "High scores for " + rm.WorldName(),
+		Title: CP437String("High scores for " + rm.WorldName()),
 		Lines: rm.HighScoreLines(0, 0),
 	})
 }
@@ -1703,9 +1703,9 @@ func (a *WebAPI) handleHelp(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	writeJSON(w, struct {
-		Title string   `json:"title"`
-		Lines []string `json:"lines"`
-	}{Title: r.URL.Query().Get("title"), Lines: lines})
+		Title CP437String `json:"title"`
+		Lines CP437Lines  `json:"lines"`
+	}{Title: CP437String(r.URL.Query().Get("title")), Lines: lines})
 }
 
 func validHelpFile(name string) bool {

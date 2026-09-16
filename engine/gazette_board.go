@@ -166,7 +166,7 @@ func (s *WebSocketServer) writeNoticeScroll(ctx context.Context, inst *WorldInst
 		Type:         "scroll",
 		StatID:       notice.ObjectStatID,
 		PlayerStatID: readerStatID,
-		Title:        title,
+		Title:        CP437String(title),
 		Lines:        lines,
 	}})
 }
