@@ -1,0 +1,564 @@
+zwd 1
+world "CHARSET"
+
+# Every CP437 glyph, 0x00..0xFF, as walkable text tiles for rendering tests.
+#
+# Board 0 is the title screen. Boards 1..4 each hold 64 glyphs: four rows of
+# sixteen, high-nibble label (yellow) at the left of each row and low-nibble
+# label above each column. Glyphs are Text-White, so the tile color byte IS
+# the character code. Rows and columns are spaced three apart so the player
+# can stand beside every glyph. The boards connect east-west through a gap in
+# the side walls at rows 19..21.
+#
+# ZWD legend keys are single bytes, so one board cannot hold all 256 glyphs
+# plus floor, wall and player -- hence four boards of 64.
+
+board "Charset Title"
+  start player at 30,20
+  max-shots 255
+  dark false
+  reenter false
+  time-limit 0
+  exits north none south none west none east none
+
+  grid
+  ############################################################
+  #..........................................................#
+  #..........................................................#
+  #..........................................................#
+  #..........................................................#
+  #..........................................................#
+  #..........................................................#
+  #..........................................................#
+  #..........................................................#
+  #..........................................................#
+  #..........................................................#
+  #..........................................................#
+  #..........................................................#
+  #..........................................................#
+  #..........................................................#
+  #..........................................................#
+  #..........................................................#
+  #..........................................................#
+  #..........................................................#
+  #............................@.............................#
+  #..........................................................#
+  #..........................................................#
+  #..........................................................#
+  #..........................................................#
+  ############################################################
+  end
+
+  legend
+    cp437:0x23 = Solid color 0x01
+    cp437:0x2E = Empty color 0x00
+    cp437:0x40 = Player color 0x1F under Empty color 0x00
+  end
+
+  stats
+  end
+end
+
+board "Glyphs 00-3F"
+  start player at 30,20
+  max-shots 255
+  dark false
+  reenter false
+  time-limit 0
+  exits north none south none west none east "Glyphs 40-7F"
+
+  grid
+  ############################################################
+  #..........................................................#
+  #......0..1..2..3..4..5..6..7..8..9..A..B..C..D..E..F......#
+  #..........................................................#
+  #..........................................................#
+  #.00...!.."..$..%..&..'..(..)..*..+..,..-../..:..;..<......#
+  #..........................................................#
+  #..........................................................#
+  #.10...=..>..?..G..H..I..J..K..L..M..N..O..P..Q..R..S......#
+  #..........................................................#
+  #..........................................................#
+  #.20...T..U..V..W..X..Y..Z..[..\..]..^.._..`..a..b..c......#
+  #..........................................................#
+  #..........................................................#
+  #.30...d..e..f..g..h..i..j..k..l..m..n..o..p..q..r..s......#
+  #..........................................................#
+  #..........................................................#
+  #..........................................................#
+  #...........................................................
+  #............................@..............................
+  #...........................................................
+  #..........................................................#
+  #..........................................................#
+  #..........................................................#
+  ############################################################
+  end
+
+  legend
+    cp437:0x23 = Solid color 0x01
+    cp437:0x2E = Empty color 0x00
+    cp437:0x40 = Player color 0x1F under Empty color 0x00
+    cp437:0x21 = Text-White color 0x00
+    cp437:0x22 = Text-White color 0x01
+    cp437:0x24 = Text-White color 0x02
+    cp437:0x25 = Text-White color 0x03
+    cp437:0x26 = Text-White color 0x04
+    cp437:0x27 = Text-White color 0x05
+    cp437:0x28 = Text-White color 0x06
+    cp437:0x29 = Text-White color 0x07
+    cp437:0x2A = Text-White color 0x08
+    cp437:0x2B = Text-White color 0x09
+    cp437:0x2C = Text-White color 0x0A
+    cp437:0x2D = Text-White color 0x0B
+    cp437:0x2F = Text-White color 0x0C
+    cp437:0x3A = Text-White color 0x0D
+    cp437:0x3B = Text-White color 0x0E
+    cp437:0x3C = Text-White color 0x0F
+    cp437:0x3D = Text-White color 0x10
+    cp437:0x3E = Text-White color 0x11
+    cp437:0x3F = Text-White color 0x12
+    cp437:0x47 = Text-White color 0x13
+    cp437:0x48 = Text-White color 0x14
+    cp437:0x49 = Text-White color 0x15
+    cp437:0x4A = Text-White color 0x16
+    cp437:0x4B = Text-White color 0x17
+    cp437:0x4C = Text-White color 0x18
+    cp437:0x4D = Text-White color 0x19
+    cp437:0x4E = Text-White color 0x1A
+    cp437:0x4F = Text-White color 0x1B
+    cp437:0x50 = Text-White color 0x1C
+    cp437:0x51 = Text-White color 0x1D
+    cp437:0x52 = Text-White color 0x1E
+    cp437:0x53 = Text-White color 0x1F
+    cp437:0x54 = Text-White color 0x20
+    cp437:0x55 = Text-White color 0x21
+    cp437:0x56 = Text-White color 0x22
+    cp437:0x57 = Text-White color 0x23
+    cp437:0x58 = Text-White color 0x24
+    cp437:0x59 = Text-White color 0x25
+    cp437:0x5A = Text-White color 0x26
+    cp437:0x5B = Text-White color 0x27
+    cp437:0x5C = Text-White color 0x28
+    cp437:0x5D = Text-White color 0x29
+    cp437:0x5E = Text-White color 0x2A
+    cp437:0x5F = Text-White color 0x2B
+    cp437:0x60 = Text-White color 0x2C
+    cp437:0x61 = Text-White color 0x2D
+    cp437:0x62 = Text-White color 0x2E
+    cp437:0x63 = Text-White color 0x2F
+    cp437:0x64 = Text-White color 0x30
+    cp437:0x65 = Text-White color 0x31
+    cp437:0x66 = Text-White color 0x32
+    cp437:0x67 = Text-White color 0x33
+    cp437:0x68 = Text-White color 0x34
+    cp437:0x69 = Text-White color 0x35
+    cp437:0x6A = Text-White color 0x36
+    cp437:0x6B = Text-White color 0x37
+    cp437:0x6C = Text-White color 0x38
+    cp437:0x6D = Text-White color 0x39
+    cp437:0x6E = Text-White color 0x3A
+    cp437:0x6F = Text-White color 0x3B
+    cp437:0x70 = Text-White color 0x3C
+    cp437:0x71 = Text-White color 0x3D
+    cp437:0x72 = Text-White color 0x3E
+    cp437:0x73 = Text-White color 0x3F
+    cp437:0x30 = Text-Yellow color 0x30
+    cp437:0x31 = Text-Yellow color 0x31
+    cp437:0x32 = Text-Yellow color 0x32
+    cp437:0x33 = Text-Yellow color 0x33
+    cp437:0x34 = Text-Yellow color 0x34
+    cp437:0x35 = Text-Yellow color 0x35
+    cp437:0x36 = Text-Yellow color 0x36
+    cp437:0x37 = Text-Yellow color 0x37
+    cp437:0x38 = Text-Yellow color 0x38
+    cp437:0x39 = Text-Yellow color 0x39
+    cp437:0x41 = Text-Yellow color 0x41
+    cp437:0x42 = Text-Yellow color 0x42
+    cp437:0x43 = Text-Yellow color 0x43
+    cp437:0x44 = Text-Yellow color 0x44
+    cp437:0x45 = Text-Yellow color 0x45
+    cp437:0x46 = Text-Yellow color 0x46
+  end
+
+  stats
+  end
+end
+
+board "Glyphs 40-7F"
+  start player at 30,20
+  max-shots 255
+  dark false
+  reenter false
+  time-limit 0
+  exits north none south none west "Glyphs 00-3F" east "Glyphs 80-BF"
+
+  grid
+  ############################################################
+  #..........................................................#
+  #......0..1..2..3..4..5..6..7..8..9..A..B..C..D..E..F......#
+  #..........................................................#
+  #..........................................................#
+  #.40...!.."..$..%..&..'..(..)..*..+..,..-../..:..;..<......#
+  #..........................................................#
+  #..........................................................#
+  #.50...=..>..?..G..H..I..J..K..L..M..N..O..P..Q..R..S......#
+  #..........................................................#
+  #..........................................................#
+  #.60...T..U..V..W..X..Y..Z..[..\..]..^.._..`..a..b..c......#
+  #..........................................................#
+  #..........................................................#
+  #.70...d..e..f..g..h..i..j..k..l..m..n..o..p..q..r..s......#
+  #..........................................................#
+  #..........................................................#
+  #..........................................................#
+  ............................................................
+  .............................@..............................
+  ............................................................
+  #..........................................................#
+  #..........................................................#
+  #..........................................................#
+  ############################################################
+  end
+
+  legend
+    cp437:0x23 = Solid color 0x01
+    cp437:0x2E = Empty color 0x00
+    cp437:0x40 = Player color 0x1F under Empty color 0x00
+    cp437:0x21 = Text-White color 0x40
+    cp437:0x22 = Text-White color 0x41
+    cp437:0x24 = Text-White color 0x42
+    cp437:0x25 = Text-White color 0x43
+    cp437:0x26 = Text-White color 0x44
+    cp437:0x27 = Text-White color 0x45
+    cp437:0x28 = Text-White color 0x46
+    cp437:0x29 = Text-White color 0x47
+    cp437:0x2A = Text-White color 0x48
+    cp437:0x2B = Text-White color 0x49
+    cp437:0x2C = Text-White color 0x4A
+    cp437:0x2D = Text-White color 0x4B
+    cp437:0x2F = Text-White color 0x4C
+    cp437:0x3A = Text-White color 0x4D
+    cp437:0x3B = Text-White color 0x4E
+    cp437:0x3C = Text-White color 0x4F
+    cp437:0x3D = Text-White color 0x50
+    cp437:0x3E = Text-White color 0x51
+    cp437:0x3F = Text-White color 0x52
+    cp437:0x47 = Text-White color 0x53
+    cp437:0x48 = Text-White color 0x54
+    cp437:0x49 = Text-White color 0x55
+    cp437:0x4A = Text-White color 0x56
+    cp437:0x4B = Text-White color 0x57
+    cp437:0x4C = Text-White color 0x58
+    cp437:0x4D = Text-White color 0x59
+    cp437:0x4E = Text-White color 0x5A
+    cp437:0x4F = Text-White color 0x5B
+    cp437:0x50 = Text-White color 0x5C
+    cp437:0x51 = Text-White color 0x5D
+    cp437:0x52 = Text-White color 0x5E
+    cp437:0x53 = Text-White color 0x5F
+    cp437:0x54 = Text-White color 0x60
+    cp437:0x55 = Text-White color 0x61
+    cp437:0x56 = Text-White color 0x62
+    cp437:0x57 = Text-White color 0x63
+    cp437:0x58 = Text-White color 0x64
+    cp437:0x59 = Text-White color 0x65
+    cp437:0x5A = Text-White color 0x66
+    cp437:0x5B = Text-White color 0x67
+    cp437:0x5C = Text-White color 0x68
+    cp437:0x5D = Text-White color 0x69
+    cp437:0x5E = Text-White color 0x6A
+    cp437:0x5F = Text-White color 0x6B
+    cp437:0x60 = Text-White color 0x6C
+    cp437:0x61 = Text-White color 0x6D
+    cp437:0x62 = Text-White color 0x6E
+    cp437:0x63 = Text-White color 0x6F
+    cp437:0x64 = Text-White color 0x70
+    cp437:0x65 = Text-White color 0x71
+    cp437:0x66 = Text-White color 0x72
+    cp437:0x67 = Text-White color 0x73
+    cp437:0x68 = Text-White color 0x74
+    cp437:0x69 = Text-White color 0x75
+    cp437:0x6A = Text-White color 0x76
+    cp437:0x6B = Text-White color 0x77
+    cp437:0x6C = Text-White color 0x78
+    cp437:0x6D = Text-White color 0x79
+    cp437:0x6E = Text-White color 0x7A
+    cp437:0x6F = Text-White color 0x7B
+    cp437:0x70 = Text-White color 0x7C
+    cp437:0x71 = Text-White color 0x7D
+    cp437:0x72 = Text-White color 0x7E
+    cp437:0x73 = Text-White color 0x7F
+    cp437:0x30 = Text-Yellow color 0x30
+    cp437:0x31 = Text-Yellow color 0x31
+    cp437:0x32 = Text-Yellow color 0x32
+    cp437:0x33 = Text-Yellow color 0x33
+    cp437:0x34 = Text-Yellow color 0x34
+    cp437:0x35 = Text-Yellow color 0x35
+    cp437:0x36 = Text-Yellow color 0x36
+    cp437:0x37 = Text-Yellow color 0x37
+    cp437:0x38 = Text-Yellow color 0x38
+    cp437:0x39 = Text-Yellow color 0x39
+    cp437:0x41 = Text-Yellow color 0x41
+    cp437:0x42 = Text-Yellow color 0x42
+    cp437:0x43 = Text-Yellow color 0x43
+    cp437:0x44 = Text-Yellow color 0x44
+    cp437:0x45 = Text-Yellow color 0x45
+    cp437:0x46 = Text-Yellow color 0x46
+  end
+
+  stats
+  end
+end
+
+board "Glyphs 80-BF"
+  start player at 30,20
+  max-shots 255
+  dark false
+  reenter false
+  time-limit 0
+  exits north none south none west "Glyphs 40-7F" east "Glyphs C0-FF"
+
+  grid
+  ############################################################
+  #..........................................................#
+  #......0..1..2..3..4..5..6..7..8..9..A..B..C..D..E..F......#
+  #..........................................................#
+  #..........................................................#
+  #.80...!.."..$..%..&..'..(..)..*..+..,..-../..:..;..<......#
+  #..........................................................#
+  #..........................................................#
+  #.90...=..>..?..G..H..I..J..K..L..M..N..O..P..Q..R..S......#
+  #..........................................................#
+  #..........................................................#
+  #.A0...T..U..V..W..X..Y..Z..[..\..]..^.._..`..a..b..c......#
+  #..........................................................#
+  #..........................................................#
+  #.B0...d..e..f..g..h..i..j..k..l..m..n..o..p..q..r..s......#
+  #..........................................................#
+  #..........................................................#
+  #..........................................................#
+  ............................................................
+  .............................@..............................
+  ............................................................
+  #..........................................................#
+  #..........................................................#
+  #..........................................................#
+  ############################################################
+  end
+
+  legend
+    cp437:0x23 = Solid color 0x01
+    cp437:0x2E = Empty color 0x00
+    cp437:0x40 = Player color 0x1F under Empty color 0x00
+    cp437:0x21 = Text-White color 0x80
+    cp437:0x22 = Text-White color 0x81
+    cp437:0x24 = Text-White color 0x82
+    cp437:0x25 = Text-White color 0x83
+    cp437:0x26 = Text-White color 0x84
+    cp437:0x27 = Text-White color 0x85
+    cp437:0x28 = Text-White color 0x86
+    cp437:0x29 = Text-White color 0x87
+    cp437:0x2A = Text-White color 0x88
+    cp437:0x2B = Text-White color 0x89
+    cp437:0x2C = Text-White color 0x8A
+    cp437:0x2D = Text-White color 0x8B
+    cp437:0x2F = Text-White color 0x8C
+    cp437:0x3A = Text-White color 0x8D
+    cp437:0x3B = Text-White color 0x8E
+    cp437:0x3C = Text-White color 0x8F
+    cp437:0x3D = Text-White color 0x90
+    cp437:0x3E = Text-White color 0x91
+    cp437:0x3F = Text-White color 0x92
+    cp437:0x47 = Text-White color 0x93
+    cp437:0x48 = Text-White color 0x94
+    cp437:0x49 = Text-White color 0x95
+    cp437:0x4A = Text-White color 0x96
+    cp437:0x4B = Text-White color 0x97
+    cp437:0x4C = Text-White color 0x98
+    cp437:0x4D = Text-White color 0x99
+    cp437:0x4E = Text-White color 0x9A
+    cp437:0x4F = Text-White color 0x9B
+    cp437:0x50 = Text-White color 0x9C
+    cp437:0x51 = Text-White color 0x9D
+    cp437:0x52 = Text-White color 0x9E
+    cp437:0x53 = Text-White color 0x9F
+    cp437:0x54 = Text-White color 0xA0
+    cp437:0x55 = Text-White color 0xA1
+    cp437:0x56 = Text-White color 0xA2
+    cp437:0x57 = Text-White color 0xA3
+    cp437:0x58 = Text-White color 0xA4
+    cp437:0x59 = Text-White color 0xA5
+    cp437:0x5A = Text-White color 0xA6
+    cp437:0x5B = Text-White color 0xA7
+    cp437:0x5C = Text-White color 0xA8
+    cp437:0x5D = Text-White color 0xA9
+    cp437:0x5E = Text-White color 0xAA
+    cp437:0x5F = Text-White color 0xAB
+    cp437:0x60 = Text-White color 0xAC
+    cp437:0x61 = Text-White color 0xAD
+    cp437:0x62 = Text-White color 0xAE
+    cp437:0x63 = Text-White color 0xAF
+    cp437:0x64 = Text-White color 0xB0
+    cp437:0x65 = Text-White color 0xB1
+    cp437:0x66 = Text-White color 0xB2
+    cp437:0x67 = Text-White color 0xB3
+    cp437:0x68 = Text-White color 0xB4
+    cp437:0x69 = Text-White color 0xB5
+    cp437:0x6A = Text-White color 0xB6
+    cp437:0x6B = Text-White color 0xB7
+    cp437:0x6C = Text-White color 0xB8
+    cp437:0x6D = Text-White color 0xB9
+    cp437:0x6E = Text-White color 0xBA
+    cp437:0x6F = Text-White color 0xBB
+    cp437:0x70 = Text-White color 0xBC
+    cp437:0x71 = Text-White color 0xBD
+    cp437:0x72 = Text-White color 0xBE
+    cp437:0x73 = Text-White color 0xBF
+    cp437:0x30 = Text-Yellow color 0x30
+    cp437:0x31 = Text-Yellow color 0x31
+    cp437:0x32 = Text-Yellow color 0x32
+    cp437:0x33 = Text-Yellow color 0x33
+    cp437:0x34 = Text-Yellow color 0x34
+    cp437:0x35 = Text-Yellow color 0x35
+    cp437:0x36 = Text-Yellow color 0x36
+    cp437:0x37 = Text-Yellow color 0x37
+    cp437:0x38 = Text-Yellow color 0x38
+    cp437:0x39 = Text-Yellow color 0x39
+    cp437:0x41 = Text-Yellow color 0x41
+    cp437:0x42 = Text-Yellow color 0x42
+    cp437:0x43 = Text-Yellow color 0x43
+    cp437:0x44 = Text-Yellow color 0x44
+    cp437:0x45 = Text-Yellow color 0x45
+    cp437:0x46 = Text-Yellow color 0x46
+  end
+
+  stats
+  end
+end
+
+board "Glyphs C0-FF"
+  start player at 30,20
+  max-shots 255
+  dark false
+  reenter false
+  time-limit 0
+  exits north none south none west "Glyphs 80-BF" east none
+
+  grid
+  ############################################################
+  #..........................................................#
+  #......0..1..2..3..4..5..6..7..8..9..A..B..C..D..E..F......#
+  #..........................................................#
+  #..........................................................#
+  #.C0...!.."..$..%..&..'..(..)..*..+..,..-../..:..;..<......#
+  #..........................................................#
+  #..........................................................#
+  #.D0...=..>..?..G..H..I..J..K..L..M..N..O..P..Q..R..S......#
+  #..........................................................#
+  #..........................................................#
+  #.E0...T..U..V..W..X..Y..Z..[..\..]..^.._..`..a..b..c......#
+  #..........................................................#
+  #..........................................................#
+  #.F0...d..e..f..g..h..i..j..k..l..m..n..o..p..q..r..s......#
+  #..........................................................#
+  #..........................................................#
+  #..........................................................#
+  ...........................................................#
+  .............................@.............................#
+  ...........................................................#
+  #..........................................................#
+  #..........................................................#
+  #..........................................................#
+  ############################################################
+  end
+
+  legend
+    cp437:0x23 = Solid color 0x01
+    cp437:0x2E = Empty color 0x00
+    cp437:0x40 = Player color 0x1F under Empty color 0x00
+    cp437:0x21 = Text-White color 0xC0
+    cp437:0x22 = Text-White color 0xC1
+    cp437:0x24 = Text-White color 0xC2
+    cp437:0x25 = Text-White color 0xC3
+    cp437:0x26 = Text-White color 0xC4
+    cp437:0x27 = Text-White color 0xC5
+    cp437:0x28 = Text-White color 0xC6
+    cp437:0x29 = Text-White color 0xC7
+    cp437:0x2A = Text-White color 0xC8
+    cp437:0x2B = Text-White color 0xC9
+    cp437:0x2C = Text-White color 0xCA
+    cp437:0x2D = Text-White color 0xCB
+    cp437:0x2F = Text-White color 0xCC
+    cp437:0x3A = Text-White color 0xCD
+    cp437:0x3B = Text-White color 0xCE
+    cp437:0x3C = Text-White color 0xCF
+    cp437:0x3D = Text-White color 0xD0
+    cp437:0x3E = Text-White color 0xD1
+    cp437:0x3F = Text-White color 0xD2
+    cp437:0x47 = Text-White color 0xD3
+    cp437:0x48 = Text-White color 0xD4
+    cp437:0x49 = Text-White color 0xD5
+    cp437:0x4A = Text-White color 0xD6
+    cp437:0x4B = Text-White color 0xD7
+    cp437:0x4C = Text-White color 0xD8
+    cp437:0x4D = Text-White color 0xD9
+    cp437:0x4E = Text-White color 0xDA
+    cp437:0x4F = Text-White color 0xDB
+    cp437:0x50 = Text-White color 0xDC
+    cp437:0x51 = Text-White color 0xDD
+    cp437:0x52 = Text-White color 0xDE
+    cp437:0x53 = Text-White color 0xDF
+    cp437:0x54 = Text-White color 0xE0
+    cp437:0x55 = Text-White color 0xE1
+    cp437:0x56 = Text-White color 0xE2
+    cp437:0x57 = Text-White color 0xE3
+    cp437:0x58 = Text-White color 0xE4
+    cp437:0x59 = Text-White color 0xE5
+    cp437:0x5A = Text-White color 0xE6
+    cp437:0x5B = Text-White color 0xE7
+    cp437:0x5C = Text-White color 0xE8
+    cp437:0x5D = Text-White color 0xE9
+    cp437:0x5E = Text-White color 0xEA
+    cp437:0x5F = Text-White color 0xEB
+    cp437:0x60 = Text-White color 0xEC
+    cp437:0x61 = Text-White color 0xED
+    cp437:0x62 = Text-White color 0xEE
+    cp437:0x63 = Text-White color 0xEF
+    cp437:0x64 = Text-White color 0xF0
+    cp437:0x65 = Text-White color 0xF1
+    cp437:0x66 = Text-White color 0xF2
+    cp437:0x67 = Text-White color 0xF3
+    cp437:0x68 = Text-White color 0xF4
+    cp437:0x69 = Text-White color 0xF5
+    cp437:0x6A = Text-White color 0xF6
+    cp437:0x6B = Text-White color 0xF7
+    cp437:0x6C = Text-White color 0xF8
+    cp437:0x6D = Text-White color 0xF9
+    cp437:0x6E = Text-White color 0xFA
+    cp437:0x6F = Text-White color 0xFB
+    cp437:0x70 = Text-White color 0xFC
+    cp437:0x71 = Text-White color 0xFD
+    cp437:0x72 = Text-White color 0xFE
+    cp437:0x73 = Text-White color 0xFF
+    cp437:0x30 = Text-Yellow color 0x30
+    cp437:0x31 = Text-Yellow color 0x31
+    cp437:0x32 = Text-Yellow color 0x32
+    cp437:0x33 = Text-Yellow color 0x33
+    cp437:0x34 = Text-Yellow color 0x34
+    cp437:0x35 = Text-Yellow color 0x35
+    cp437:0x36 = Text-Yellow color 0x36
+    cp437:0x37 = Text-Yellow color 0x37
+    cp437:0x38 = Text-Yellow color 0x38
+    cp437:0x39 = Text-Yellow color 0x39
+    cp437:0x41 = Text-Yellow color 0x41
+    cp437:0x42 = Text-Yellow color 0x42
+    cp437:0x43 = Text-Yellow color 0x43
+    cp437:0x44 = Text-Yellow color 0x44
+    cp437:0x45 = Text-Yellow color 0x45
+    cp437:0x46 = Text-Yellow color 0x46
+  end
+
+  stats
+  end
+end
