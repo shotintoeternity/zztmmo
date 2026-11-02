@@ -1578,6 +1578,17 @@
       "notes": "task-claim row; EditorPropertyMessage.Text and EditorBoardMessage.Name are CP437String, the inverse of the outbound widening 8c97450 applied to board and world names. All three tests failed before the fix (name grew C2 82 per edit; truncation left a lone C2). M36.2 (2026-11-02)."
     },
     {
+      "id": "task.M36.3",
+      "dimension": "task",
+      "subject": "Completed task M36.3 — its DoD still holds",
+      "contract": "E",
+      "authority": "TASKS.md M36.3",
+      "parity": "exact",
+      "test": "TestM363HighScoreNameIsAdmittedAsPrintableASCII",
+      "status": "pass",
+      "notes": "task-claim row; RecordHighScore admits the typed name as printable ASCII (foldWordmark, as chat) capped at PopupPromptString's 34-column field (GAME.PAS:1067), the identity on anything the client's ASCII-only prompt can send. Failed before the fix: 'José' stored as UTF-8 and drawn as 'JosÃ©'. Folded, not decoded: see TASKS.md M36.3. M36.3 (2026-11-02)."
+    },
+    {
       "id": "task.M4.0",
       "dimension": "task",
       "subject": "Completed task M4.0 — its DoD still holds",

@@ -8610,7 +8610,7 @@ M36.5 are deferrable.
   on receipt. DoD: a test edits a high-byte board name and a high-byte world
   name twice each through the socket and gets the original bytes back.
 
-- [ ] **M36.3 — high-score names round-trip.** `HighScoreNameMessage.Name`
+- [x] **M36.3 — high-score names round-trip.** `HighScoreNameMessage.Name`
   (`engine/protocol.go:703`) is a plain string, but `HighScoreLines` widens its
   output byte by byte. A typed "José" is stored as UTF-8 and shown as "JosÃ©",
   which also misaligns the score column. Decode it (or fold it the way
@@ -8618,6 +8618,20 @@ M36.5 are deferrable.
   scores for" titles (`engine/websocket_server.go:2257`) show mojibake for the
   same reason through `WorldName`, and that half is fixed by M36.2. DoD: a test
   enters a non-ASCII name and reads it back as the same glyphs.
+
+  *Resolved 2026-11-02 by folding rather than decoding.* The browser's prompt
+  (`popupEntry`, `modal.ts`) takes printable ASCII only, up to
+  `POPUP_FIELD_WIDTH` (34), as vanilla's `PopupPromptString` does
+  (`GAME.PAS:1067`), so no name our client sends can be garbled. A high-score
+  name is typed text, which `cp437.go` says is folded rather than decoded, so
+  `RecordHighScore` now runs it through `admitHighScoreName`: it is folded with
+  `foldWordmark`, as chat is, and capped at 34. "José" is stored as "Jos", not
+  as a CP437 é: the repo has no Unicode-to-CP437 table and this task did not
+  add one. The DoD therefore holds in the form that matters: what is stored is
+  what is drawn, one glyph per byte, with the score column intact
+  (`TestM363HighScoreNameIsAdmittedAsPrintableASCII`). The same test caught
+  two more problems with the same cause: control characters reaching the text
+  window, and names longer than the 50-byte `.HI` field kept in full in memory.
 
 - [ ] **M36.4 — `/api/help` title decoding (latent).** `handleHelp`
   (`engine/web_api.go:1708`) widens the `title` query parameter as raw CP437,

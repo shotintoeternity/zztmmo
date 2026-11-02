@@ -263,6 +263,24 @@ func (rm *RoomManager) rankScore(score int16) int16 {
 	return 0
 }
 
+// highScoreNameMax is PopupPromptString's field width: TextWindowWidth (50)
+// minus 16 (GAME.PAS:1067), the most a player can type into the
+// "Congratulations!" prompt, and POPUP_FIELD_WIDTH in the client.
+const highScoreNameMax = 50 - 16
+
+// admitHighScoreName holds every client to what the prompt itself allows:
+// printable ASCII up to highScoreNameMax. A name is text a person typed, so it
+// arrives as UTF-8 and is folded the way chat is (foldWordmark), never stored
+// as raw UTF-8 bytes that HighScoreLines would then draw one glyph per byte
+// (M36.3). It is the identity on anything our client can send.
+func admitHighScoreName(raw string) string {
+	name := foldWordmark(raw)
+	if len(name) > highScoreNameMax {
+		name = name[:highScoreNameMax] // all ASCII: a byte cut is a character cut
+	}
+	return name
+}
+
 // RecordHighScore writes the name a quitting player typed into the slot their
 // score earned, then persists the list. Returns false if that player has no
 // pending entry — a client cannot claim a slot it was never offered.
@@ -271,6 +289,7 @@ func (rm *RoomManager) RecordHighScore(playerID PlayerID, name string) bool {
 	if !ok || pending.ListPos < 1 || pending.ListPos > HIGH_SCORE_COUNT {
 		return false
 	}
+	name = admitHighScoreName(name)
 	rm.recorder.record(recOp{Op: "submit", Kind: "highscore", Player: playerID, Name: name})
 	delete(rm.pendingScores, playerID)
 
