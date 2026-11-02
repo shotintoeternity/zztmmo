@@ -2,12 +2,16 @@
 //
 // Two things live in this module and they must not be confused for each other.
 //
-// WASD is the camera and ONLY the camera: A and D swing it, W and S tilt it.
-// The certified row `input.play-wasd-removed` (M16.10) says W/A/D must reach
-// the server as nothing at all, and control_keys.test.mjs proves that on the
-// text screen with a real browser. Here we prove the stronger thing the 3D view
-// rests on -- these keys produce no direction and no key byte ANYWHERE, because
-// a look control has nothing to say to a simulation.
+// Pulled back, WASD is the camera: A and D swing it, W and S tilt it, and none
+// of them produces a direction or a key byte. The certified row
+// `input.play-wasd-removed` (M16.10) says W/A/D must reach the server as
+// nothing at all on the text screen, and control_keys.test.mjs proves that with
+// a real browser.
+//
+// At eye level W and S walk instead (owner decision 2026-11-02): they stand in
+// for the up and down arrows, so facingMask reads them in the body frame like
+// any arrow. eyeLevelWalkMask says which arrow each one is; A and D still only
+// turn.
 //
 // facingMask is the other half: the arrows always walk, but at eye level they
 // walk in the frame of a body rather than the frame of a map. It is a pure
@@ -31,7 +35,7 @@ const out = await build({
   platform: "node",
   write: false,
 });
-const { facingMask, isCameraKey, lookStepFor } = await import(
+const { eyeLevelWalkMask, facingMask, isCameraKey, lookStepFor } = await import(
   `data:text/javascript;base64,${Buffer.from(out.outputFiles[0].contents).toString("base64")}`
 );
 
@@ -60,8 +64,8 @@ for (const code of ["KeyT", "KeyP", "KeyB", "KeyQ", "KeyH", "KeyC", "KeyL", "Key
 // ---------------------------------------------------------------------------
 assert.deepEqual(lookStepFor("KeyA"), { dyaw: -1, dpitch: 0 }, "A swings left");
 assert.deepEqual(lookStepFor("KeyD"), { dyaw: 1, dpitch: 0 }, "D swings right");
-assert.deepEqual(lookStepFor("KeyW"), { dyaw: 0, dpitch: 1 }, "W looks up toward the ceiling");
-assert.deepEqual(lookStepFor("KeyS"), { dyaw: 0, dpitch: -1 }, "S looks down toward the floor");
+assert.deepEqual(lookStepFor("KeyW"), { dyaw: 0, dpitch: 1 }, "pulled back, W tilts the orbit up");
+assert.deepEqual(lookStepFor("KeyS"), { dyaw: 0, dpitch: -1 }, "pulled back, S tilts the orbit down");
 
 // A step is a look and never a move: no code may ask for both at once, and
 // none may ask for a direction on the board.
@@ -79,12 +83,12 @@ for (const code of ["KeyW", "KeyA", "KeyS", "KeyD"]) {
 // ---------------------------------------------------------------------------
 // The module's whole surface
 // ---------------------------------------------------------------------------
-// If a movement helper ever reappears here, this fails and the reviewer gets to
-// ask why the camera module is producing directions again.
+// eyeLevelWalkMask is the one movement helper here, and it only names which
+// arrow W and S stand for. Anything else new fails this and gets asked about.
 const surface = Object.keys(
   await import(`data:text/javascript;base64,${Buffer.from(out.outputFiles[0].contents).toString("base64")}`),
 ).sort();
-assert.deepEqual(surface, ["facingMask", "isCameraKey", "lookStepFor"], `unexpected exports: ${surface.join(", ")}`);
+assert.deepEqual(surface, ["eyeLevelWalkMask", "facingMask", "isCameraKey", "lookStepFor"], `unexpected exports: ${surface.join(", ")}`);
 
 // ---------------------------------------------------------------------------
 // facingMask: the arrows, read in the frame of a body
@@ -139,5 +143,19 @@ for (const facing of [NORTH, EAST, SOUTH, WEST]) {
     assert.equal(facingMask(mask, facing) & ~WIRE, 0, `facing ${facing}, mask ${mask} escaped the wire bits`);
   }
 }
+
+// ---------------------------------------------------------------------------
+// eyeLevelWalkMask: W and S are the up and down arrows at eye level
+// ---------------------------------------------------------------------------
+assert.equal(eyeLevelWalkMask("KeyW"), UP, "W is the up arrow");
+assert.equal(eyeLevelWalkMask("KeyS"), DOWN, "S is the down arrow");
+for (const code of ["KeyA", "KeyD", "ArrowUp", "ArrowDown", "KeyQ", "Space"]) {
+  assert.equal(eyeLevelWalkMask(code), 0, `${code} is not an eye-level walk key`);
+}
+// Read in the body frame like the arrows they stand for: W walks the way you
+// face, S walks backwards without turning round.
+assert.equal(facingMask(eyeLevelWalkMask("KeyW"), EAST), RIGHT, "facing east, W walks east");
+assert.equal(facingMask(eyeLevelWalkMask("KeyS"), EAST), LEFT, "facing east, S walks west");
+assert.equal(facingMask(eyeLevelWalkMask("KeyW"), SOUTH), DOWN, "facing south, W walks south");
 
 console.log("view3d input3d ok");

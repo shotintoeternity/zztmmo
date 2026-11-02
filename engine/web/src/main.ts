@@ -686,7 +686,7 @@ type InputMessage = {
 // 8 rows, CP437 order, so glyph N sits at (N%32, N/32). Character codes go to
 // the sheet directly — there is no Unicode round trip.
 import pcEgaUrl from "./pc_ega.png";
-import { facingMask, isCameraKey, lookStepFor } from "./view3d/input3d";
+import { eyeLevelWalkMask, facingMask, isCameraKey, lookStepFor } from "./view3d/input3d";
 
 const GLYPH_COLS = 32;
 
@@ -4529,7 +4529,9 @@ function drawView3DRows() {
     // on screen says where you are looking. Pulled back there is no heading to
     // report: the orbit swings freely and the arrows are board directions.
     const eyeLevel = view3d !== null && view3d.firstPerson;
-    writeText(61, 24, 0x30, " WASD ");
+    // At eye level W and S walk like the arrows, so only A and D are camera
+    // keys and the row names just those two.
+    writeText(61, 24, 0x30, eyeLevel ? "  AD  " : " WASD ");
     writeText(67, 24, 0x1f, eyeLevel ? " Turn" : " Look");
     if (eyeLevel && view3d !== null) {
       writeText(73, 24, 0x1e, NORTH_NEEDLE[view3d.facing]);
@@ -4729,7 +4731,7 @@ function syncGhostDrift() {
   if (!view3d) {
     return;
   }
-  const mask = movementMask(pressed, effectiveKeyBindings(readEffectiveComfort()));
+  const mask = heldMask();
   const dz = (mask & InputMaskUp ? 1 : 0) - (mask & InputMaskDown ? 1 : 0);
   const dx = (mask & InputMaskRight ? 1 : 0) - (mask & InputMaskLeft ? 1 : 0);
   view3d.setDrift(dx, dz);
@@ -4931,6 +4933,22 @@ function handleKeyDown(event: KeyboardEvent) {
     return;
   }
 
+  // At eye level W and S are the up and down arrows: held in `pressed` like an
+  // arrow, folded into the mask by heldMask, and read in the body frame by
+  // currentMask, so W walks the way you face and S walks backwards. Taken
+  // before the command lookup so S never reaches the engine as the save key.
+  if (view3dOn() && view3d !== null && view3d.firstPerson && eyeLevelWalkMask(event.code) !== 0
+    && !event.ctrlKey && !event.metaKey && !event.altKey) {
+    event.preventDefault();
+    pressed.add(event.code);
+    if (ghosting()) {
+      syncGhostDrift();
+      return;
+    }
+    sendInput(currentMask());
+    return;
+  }
+
   // WASD swings and tilts the camera in the 3D view, and does nothing at all
   // outside it. Taken before the command lookup, because S is ZZT's save key
   // and in the world it has to look down instead; on the text screen this
@@ -4981,7 +4999,10 @@ function handleKeyUp(event: KeyboardEvent) {
   if (modal || mode === "title" || mode === "editor" || mode === "watching") {
     return;
   }
-  const handled = updatePressed(event, false);
+  // An eye-level W or S is released here whatever the view is now: zooming out
+  // while holding one must not leave it stuck in `pressed`, walking you again
+  // the next time you come back to eye level.
+  const handled = eyeLevelWalkMask(event.code) !== 0 ? pressed.delete(event.code) : updatePressed(event, false);
   if (handled) {
     event.preventDefault();
     if (ghosting()) {
@@ -6101,8 +6122,21 @@ function updatePressed(event: KeyboardEvent, down: boolean): boolean {
   return true;
 }
 
+// heldMask is the arrows held, plus W and S standing in for up and down while
+// the camera is at eye level. Not rotated: currentMask does that for the wire,
+// and a ghost drifts in its own frame.
+function heldMask(): number {
+  let mask = movementMask(pressed, effectiveKeyBindings(readEffectiveComfort()));
+  if (view3dOn() && view3d !== null && view3d.firstPerson) {
+    for (const code of pressed) {
+      mask |= eyeLevelWalkMask(code);
+    }
+  }
+  return mask;
+}
+
 function currentMask(): number {
-  const mask = movementMask(pressed, effectiveKeyBindings(readEffectiveComfort()));
+  const mask = heldMask();
   // The frame the arrows are read in follows the camera, because the camera is
   // what the player is reasoning with.
   //
@@ -6113,8 +6147,9 @@ function currentMask(): number {
   // you sideways across your own field of view is the one thing a first-person
   // camera cannot promise. So up walks the way you face, down walks backwards,
   // and left and right step sideways -- resolved against your facing HERE, into
-  // an ordinary board direction, because six bits is all the wire has. WASD
-  // still never reaches this mask; turning is looking, and it lives there.
+  // an ordinary board direction, because six bits is all the wire has. W and S
+  // arrive here as up and down (heldMask); A and D never do -- turning is
+  // looking, and it lives with the camera.
   //
   // Re-read on every sampler tick rather than latched on the key edge: turning
   // while you hold a direction should change where you are walking, which is

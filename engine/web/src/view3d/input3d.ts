@@ -20,18 +20,21 @@
 //   which is all ZZT's six-bit keymask can carry (facingMask, below).
 //
 // Turning is looking, so it lives with the camera: A and D quarter-turn you at
-// eye level and swing the orbit when you are pulled back, and W and S tilt the
-// gaze. None of the four ever reaches the server -- they set no mask bit and
-// send no key byte. That is a stronger version of what the certified row
-// `input.play-wasd-removed` (M16.10) asks for: it wants W/A/D inert on the
-// wire, and these are inert by construction rather than by being filtered out
-// on the way past.
+// eye level and swing the orbit when you are pulled back. Pulled back, W and S
+// tilt the orbit. None of that ever reaches the server -- those presses set no
+// mask bit and send no key byte.
+//
+// At eye level W and S walk instead: W is the up arrow and S the down arrow,
+// read in the same body frame, so W walks the way you face and S walks
+// backwards (owner decision 2026-11-02 -- a few degrees of tilt bought nothing
+// at eye level, and W/S-to-walk is what every first-person hand expects).
+// They go out exactly as those arrows do, never as the letter, so S cannot reach
+// the server as ZZT's save key. `input.play-wasd-removed` (M16.10) is about the
+// text screen, where W/A/D are still inert and S still saves.
 //
 // S is the one that costs something. It is ZZT's save key, and in the 3D view
-// it looks down instead, so saving is done from the text screen -- one press of
-// V away, and the sidebar says so while you are in the world. Note that walking
-// stays on the arrows precisely so this stays the ONLY collision: the moment
-// walking moves to WASD, S has to mean "back" as well, and it cannot.
+// it looks down or walks back instead, so saving is done from the text screen
+// -- one press of V away, and the sidebar says so while you are in the world.
 
 import { InputMaskDown, InputMaskLeft, InputMaskRight, InputMaskShift, InputMaskShoot, InputMaskUp } from "../keys";
 
@@ -103,4 +106,20 @@ export function isCameraKey(code: string): boolean {
  */
 export function lookStepFor(code: string): LookStep | null {
   return CAMERA_KEYS[code] ?? null;
+}
+
+/**
+ * eyeLevelWalkMask is the arrow a key stands in for at eye level: W is up and
+ * S is down, before facingMask turns them into board directions. Anything else
+ * is 0. Only the caller knows whether the camera is at eye level; pulled back,
+ * W and S are lookStepFor's tilt instead.
+ */
+export function eyeLevelWalkMask(code: string): number {
+  if (code === "KeyW") {
+    return InputMaskUp;
+  }
+  if (code === "KeyS") {
+    return InputMaskDown;
+  }
+  return 0;
 }

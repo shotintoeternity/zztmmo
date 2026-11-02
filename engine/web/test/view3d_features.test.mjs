@@ -233,7 +233,8 @@ try {
   // Eye level: A and D TURN you, and the row says which way you are facing --
   // without it, an arrow that walks you somewhere you are not looking is only
   // confusing. V arrives at eye level facing north, which is the identity frame.
-  assert.match(sidebarRow(cells, ROW_LOOK), /WASD\s+Turn/, "row 24 must name the camera keys in the world");
+  // At eye level W and S walk like the arrows, so the row names only A and D.
+  assert.match(sidebarRow(cells, ROW_LOOK), /\bAD\s+Turn/, "row 24 must name the turn keys at eye level");
   assert.ok(
     sidebarRow(cells, ROW_LOOK).includes(NEEDLE.facingN),
     `row 24 must point at north; it reads ${JSON.stringify(sidebarRow(cells, ROW_LOOK))}`,
@@ -307,26 +308,34 @@ try {
   await assertAt(9, 12, "back where section 3 left off");
 
   // =========================================================================
-  // 4. WASD moves the camera and NEVER reaches the wire
+  // 4. At eye level W and S walk; A and D turn and NEVER reach the wire
   // =========================================================================
   //
   // The certified row input.play-wasd-removed (M16.10) wants W/A/D inert on the
-  // text screen. In the world they are not inert -- they are the camera -- and
-  // they must still put nothing on the wire. S joins them here, which is the
-  // binding this view takes away: it is ZZT's save key everywhere else.
-  const beforeLook = await boardShot(page);
-  for (const code of ["KeyW", "KeyS", "KeyA", "KeyD"]) {
-    const state = await pressExpectingNoInput(page, code);
-    assert.deepEqual(state.pending, [], `${code} must send no input frame in 3D, saw ${JSON.stringify(state.pending)}`);
-  }
-  await idle(1);
-  await assertAt(9, 12, "after WASD in the 3D view");
-  // S must not open the save prompt here, and the camera must have moved: four
-  // keys that send nothing AND do nothing would pass the assertion above.
+  // text screen. At eye level W and S are the up and down arrows (owner
+  // decision 2026-11-02): sent exactly as those arrows are, so S cannot
+  // reach the server as ZZT's save key (the key byte is the arrow's, never
+  // 's'). A and D stay camera keys and send
+  // nothing.
+  await walkFacing(page, "KeyW", { dx: 0, dy: -1, key: 0xc8 }); // as ArrowUp sends it
+  await assertAt(9, 11, "facing north, W walks north");
+  await walkFacing(page, "KeyS", { dx: 0, dy: 1, key: 0xd0 }); // as ArrowDown sends it
+  await assertAt(9, 12, "facing north, S walks back south");
   cells = await readGrid(page);
-  assert.ok(!hasText(cells, "Save game:"), "S must look down in the world, not open the save prompt");
-  await frames(page);
-  assert.ok(!sameShot(beforeLook, await boardShot(page, "03-after-wasd")), "WASD must move the camera");
+  assert.ok(!hasText(cells, "Save game:"), "S must walk in the world, not open the save prompt");
+
+  const beforeLook = await boardShot(page);
+  let turnState = await pressExpectingNoInput(page, "KeyA");
+  assert.deepEqual(turnState.pending, [], `KeyA must send no input frame in 3D, saw ${JSON.stringify(turnState.pending)}`);
+  await frames(page, 400);
+  // The camera must have moved: a key that sends nothing AND does nothing
+  // would pass the assertion above.
+  assert.ok(!sameShot(beforeLook, await boardShot(page, "03-after-turn")), "A must turn the camera");
+  turnState = await pressExpectingNoInput(page, "KeyD");
+  assert.deepEqual(turnState.pending, [], `KeyD must send no input frame in 3D, saw ${JSON.stringify(turnState.pending)}`);
+  await frames(page, 400);
+  await idle(1);
+  await assertAt(9, 12, "after A and D in the 3D view");
 
   // =========================================================================
   // 5. On the text screen, S is ZZT's save key again
@@ -375,6 +384,20 @@ try {
   await frames(page, 600); // the camera glides rather than cutting
   assert.ok(!sameShot(beforeF, await boardShot(page, "04-after-F")), "F must move the camera out of the body");
   await assertAt(11, 12, "after F");
+  // Pulled back there is no facing to walk along, so W and S go back to
+  // tilting the orbit and put nothing on the wire. Held and AWAITED, because a
+  // press and release of a movement key reads as "nothing sent" either way
+  // (see section 8): if W walked here, this frame would arrive.
+  await page.keyboard.down("KeyW");
+  let wReachedTheWire = true;
+  try {
+    await step({ await: { dx: 0, dy: -1, key: 0xc8 }, timeoutMs: 3000 });
+  } catch {
+    wReachedTheWire = false;
+  }
+  await page.keyboard.up("KeyW");
+  assert.equal(wReachedTheWire, false, "pulled back, W must tilt the camera and send nothing");
+  await assertAt(11, 12, "after W pulled back");
   await page.keyboard.press("KeyF");
   await frames(page, 600);
   await boardShot(page, "05-back-at-eye-level");
