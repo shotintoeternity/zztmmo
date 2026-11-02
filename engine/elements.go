@@ -1350,6 +1350,21 @@ func (e *Engine) GamePromptEndPlay(statId int16) {
 // table entries are 107 and 114 Hz).
 const walkClickFreqHz = 110
 
+// refreshPlayerStat re-resolves the ticking player's stat after a call that
+// can remove stats. Vanilla (ELEMENTS.PAS:1315) held its stat across the touch
+// proc safely because the player was stat 0 and nothing sits below it. Here a
+// touch that kills a lower stat (BoardAttack -> BoardDamageTile -> RemoveStat)
+// shifts this player down one index, and MoveStat on the old index moved a
+// stale copy: a statless E_PLAYER tile was left behind and the real player,
+// on E_EMPTY, never ticked again (M36.9). For stat 0 this returns its inputs.
+// If the player is not on the board any more, the old values are kept.
+func (e *Engine) refreshPlayerStat(pState *PlayerState, statId int16, stat *TStat) (int16, *TStat) {
+	if id := e.statIdOfPlayer(pState); id >= 0 && id != statId {
+		return id, &e.Board.Stats[id]
+	}
+	return statId, stat
+}
+
 func (e *Engine) ElementPlayerTick(statId int16) {
 	var (
 		i           int16
@@ -1488,6 +1503,7 @@ func (e *Engine) ElementPlayerTick(statId int16) {
 			InputDeltaY = 0
 		} else {
 			ElementDefs[e.Board.Tiles[targetX][targetY].Element].TouchProc(e, targetX, targetY, statId, &InputDeltaX, &InputDeltaY)
+			statId, stat = e.refreshPlayerStat(pState, statId, stat)
 		}
 		if InputDeltaX != 0 || InputDeltaY != 0 {
 			if pState.SoundEnabled && !SoundIsPlaying {
@@ -1506,6 +1522,9 @@ func (e *Engine) ElementPlayerTick(statId int16) {
 
 		}
 	}
+	// BoardShoot's point-blank branch damages the adjacent stat, which can
+	// remove one below this player; the tail below paints Tiles[stat.X][stat.Y].
+	statId, stat = e.refreshPlayerStat(pState, statId, stat)
 
 	switch UpCase(InputKeyPressed) {
 	case 'T':

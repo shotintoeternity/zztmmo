@@ -8693,7 +8693,7 @@ copy; the executor still writes the failing test in the repo first.
   to -1..1 at the boundary. DoD: tests for `dx:5` (blocked by the wall) and
   `dx:200`+shoot (no panic, room survives).
 
-- [ ] **M36.9 [ADVISOR] — a player's tick survives a lower stat's removal.**
+- [x] **M36.9 [ADVISOR] — a player's tick survives a lower stat's removal.**
   *(confirmed, critical: reproduced)* Vanilla's player was always stat 0, so
   nothing below it could shift. Here other players have higher indices.
   (a) `ElementPlayerTick` (`engine/elements.go:1490-1502`) keeps its `statId`

@@ -1611,6 +1611,17 @@
       "notes": "task-claim row; inputMessageToPlayerInput folds the wire's dx/dy to -1..1 (clampInputDelta), the range vanilla's keyboard produces. Failed before the fix: dx:5 walked a player through a wall, and dx:200+shift, dy:-300+shift and a paused dx:100 each panicked the room so stepRoom dropped it and every player on it. M36.8 (2026-11-02)."
     },
     {
+      "id": "task.M36.9",
+      "dimension": "task",
+      "subject": "Completed task M36.9 — its DoD still holds",
+      "contract": "E",
+      "authority": "TASKS.md M36.9",
+      "parity": "exact",
+      "test": "TestM369PlayerSurvivesALowerStatsRemoval,TestM369PausedPlayerSurvivesALowerStatsRemoval,TestM369PlayerAttackerAboveStatZeroTicksOnce",
+      "status": "pass",
+      "notes": "task-claim row; a player's tick re-resolves its stat by *PlayerState identity after a touch or shot that can remove a lower stat (refreshPlayerStat, and the paused branch), and BoardAttack steps CurrentStatTicked back only over a non-player attacker. Failed before the fix: an energized player at stat 2 killing a lion at stat 1 left a statless E_PLAYER tile and froze, a paused one skipped its fall-through tick, and a player at stat 1 killing a lion above it moved twice and drained two energizer ticks. Identical for stat 0; no replay hash moved. M36.9 (2026-11-02)."
+    },
+    {
       "id": "task.M4.0",
       "dimension": "task",
       "subject": "Completed task M4.0 — its DoD still holds",

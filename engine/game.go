@@ -1157,6 +1157,22 @@ func (e *Engine) reindexPlayersAfterStatRemoval(statId int16) {
 	e.Players = players
 }
 
+// statIdOfPlayer returns the stat index pState currently occupies, or -1.
+// RemoveStat shifts every higher stat down one index and
+// reindexPlayersAfterStatRemoval moves the same *PlayerState with it, so the
+// pointer is the player's identity across a removal while its index is not
+// (M36.9). Matches by pointer, never key presence: BoardAttack's PlayerFor
+// can leave entries for non-player attackers. Scans in index order, not map
+// order, so the result cannot depend on iteration.
+func (e *Engine) statIdOfPlayer(pState *PlayerState) int16 {
+	for i := int16(0); i <= e.Board.StatCount; i++ {
+		if e.Players[i] == pState {
+			return i
+		}
+	}
+	return -1
+}
+
 func (e *Engine) GetStatIdAt(x, y int16) (GetStatIdAt int16) {
 	var i int16
 	i = -1
@@ -1514,7 +1530,13 @@ func (e *Engine) BoardAttack(attackerStatId int16, x, y int16) {
 	} else {
 		e.DamageStat(attackerStatId)
 	}
-	if attackerStatId > 0 && attackerStatId <= e.CurrentStatTicked {
+	// GAME.PAS:1233 tests `attackerStatId > 0`, which in vanilla means "not
+	// the player": stat 0 was always the player, and every other attacker was
+	// just removed by DamageStat, so the cycle index steps back over it. Here
+	// other players sit above 0 and DamageStat never removes a player, so the
+	// vanilla test made a player at index > 0 tick twice in one cycle (M36.9).
+	// Gate on the player tile instead; for stat 0 this is identical.
+	if attackerStatId > 0 && !isPlayerAttacker && attackerStatId <= e.CurrentStatTicked {
 		e.CurrentStatTicked--
 	}
 	defenderStatId := e.GetStatIdAt(x, y)
@@ -1955,7 +1977,14 @@ func (e *Engine) GameStepWithInputs(inputs map[int16]PlayerInput) {
 					ElementDefs[e.Board.Tiles[targetX][targetY].Element].TouchProc(e, targetX, targetY, e.CurrentStatTicked, &deltaX, &deltaY)
 					// Touch procs may mutate the deltas and the board (even the
 					// current board id, via a paused passage touch); re-read
-					// everything, as vanilla does.
+					// everything, as vanilla does. That includes the stat
+					// itself: vanilla's `with Board.Stats[0]` could not shift,
+					// but a touch that removes a lower stat shifts this player
+					// down one index (M36.9), and the stale pointer then reads
+					// the vacated square and skips the fall-through tick below.
+					if id := e.statIdOfPlayer(pState); id >= 0 {
+						stat = &e.Board.Stats[id]
+					}
 					targetX = int16(stat.X) + deltaX
 					targetY = int16(stat.Y) + deltaY
 					if (deltaX != 0 || deltaY != 0) && ElementDefs[e.Board.Tiles[targetX][targetY].Element].Walkable {
