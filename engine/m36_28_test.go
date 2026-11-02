@@ -113,7 +113,7 @@ func TestM3628TheCommunityWorldsWithSuchTilesDrawEveryBoard(t *testing.T) {
 	for _, name := range m3628Worlds {
 		t.Run(name, func(t *testing.T) {
 			if _, err := os.Stat(name + ".ZZT"); err != nil {
-				t.Skipf("%s.ZZT is not in this checkout (community worlds are gitignored)", name)
+				t.Skipf("declared skip: %s.ZZT is not in this checkout (community worlds are gitignored)", name)
 			}
 			e := NewEngine()
 			e.Headless = true
