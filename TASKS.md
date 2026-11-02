@@ -8575,6 +8575,73 @@ can guess.
   `TASKS.md:7882` and `web/test/lib/canvas.mjs:588` still mention the deleted
   script as the record of what was true when they were written.
 
+## M36 — Pre-testing cleanup: code-review findings
+
+Filed 2026-11-02 from a `/code-review` of `origin/dev..dev` (`8c97450`, the CP437
+"Café, not Caf²" fix, and `5f759c4`, the CHARSET glyph sheet). These are the
+reviewer's findings and have not yet been reproduced, so each task starts by
+reproducing its finding in a failing test. If it does not reproduce, record that
+in NOTES.md and tick nothing. Findings from the whole-codebase review that
+follows will be filed here as further M36 tasks.
+
+Suggested order: M36.1, then M36.2 (it subsumes M36.3), then M36.6. M36.4 and
+M36.5 are deferrable.
+
+- [ ] **M36.1 — the CHARSET test proves what its comment claims.**
+  `engine/charset_fixture_test.go:61` says every glyph is reachable but only
+  checks that the tile below each glyph is `E_EMPTY`. Sealing a board in half or
+  closing a side-wall gap would still pass. Replace that check with a flood fill
+  from each board's player start that crosses the east and west board exits, and
+  assert that every glyph is orthogonally adjacent to a reached cell and that
+  boards 1..4 are all reached. Also at `:74`, the 50-tick "it must also play"
+  loop asserts nothing; assert that the player stat is present on board 1 after
+  `BoardChange(1)`, or delete the loop and its claim. DoD: deleting a gap row
+  from `fixtures/charset.zwd` reddens the test.
+
+- [ ] **M36.2 — inbound editor text is CP437, not UTF-8.** `8c97450` sends board
+  and world names out as widened CP437 runes (`EditorProperties.BoardName` and
+  `WorldName`), but `EditorPropertyMessage.Text` (`engine/editor_session.go:1069`)
+  and `EditorBoardMessage.Name` (`:1314`, `:1529`) are still read as plain Go
+  strings. A name containing a high byte (`"Caf\x82"`) therefore comes back
+  UTF-8 encoded and grows a byte on every edit, and `editorString(...,
+  SizeOfBoardName-1)` truncates by bytes, so it can cut a UTF-8 sequence in half.
+  This is the round-trip bug `8c97450` fixed for programs, left in place for
+  names. Fix it by making these fields `CP437String` or `cp437Decode`-ing them
+  on receipt. DoD: a test edits a high-byte board name and a high-byte world
+  name twice each through the socket and gets the original bytes back.
+
+- [ ] **M36.3 — high-score names round-trip.** `HighScoreNameMessage.Name`
+  (`engine/protocol.go:703`) is a plain string, but `HighScoreLines` widens its
+  output byte by byte. A typed "José" is stored as UTF-8 and shown as "JosÃ©",
+  which also misaligns the score column. Decode it (or fold it the way
+  `admitChatText` does) before storing. The "New high score for" and "High
+  scores for" titles (`engine/websocket_server.go:2257`) show mojibake for the
+  same reason through `WorldName`, and that half is fixed by M36.2. DoD: a test
+  enters a non-ASCII name and reads it back as the same glyphs.
+
+- [ ] **M36.4 — `/api/help` title decoding (latent).** `handleHelp`
+  (`engine/web_api.go:1708`) widens the `title` query parameter as raw CP437,
+  but it arrives as UTF-8 from `encodeURIComponent`, so a non-ASCII title is
+  double-encoded. It should be `CP437String(cp437Decode(title))`. The client
+  sends only ASCII filenames today, so this cannot happen yet.
+
+- [ ] **M36.5 — `cp437Encode` allocation (perf, low priority).**
+  `engine/cp437.go:43` builds a `[]rune` (4 bytes per input byte) and then
+  copies it into a string, and `CP437Lines.MarshalJSON` re-widens cached help
+  files on every send. Use a `strings.Builder` with `Grow(len(s)*2)`, or cache
+  the encoded help lines. Measure before and after; do not land it without a
+  benchmark that shows a difference.
+
+- [ ] **M36.6 — one encoding policy at the protocol boundary.** `8c97450`
+  switched hand-picked fields to `CP437String`. Other outbound fields that carry
+  world bytes (`ProfileResultMessage.Lines`, `EditorElementMenu.Title`, and the
+  `ModerateResult`/`FollowResult` names built from world names) and every inbound
+  text field are still plain strings, so the next field that forgets to opt in
+  brings the U+FFFD/² corruption back with nothing to flag it. Add a test that
+  walks the protocol message structs by reflection and fails on any `string`
+  field not on an explicit, commented allowlist of ASCII-only fields, then fix
+  what it finds.
+
 ## M14 — Rearchitecting for the service ZZTMMO is becoming
 
 Filed 2026-07-12 from a whole-repo review (NOTES.md): three structural debts
