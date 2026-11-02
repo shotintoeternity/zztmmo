@@ -1556,6 +1556,17 @@
       "notes": "task-claim row; this task hardens the M33.2 drift lint itself, so its own row is closed by the two checks it changed: both now record the allowlist keys they consulted and fail for any key the walk never reached, proved fail-closed with four bogus keys before they were removed. M34.5 (2026-08-19)."
     },
     {
+      "id": "task.M36.1",
+      "dimension": "task",
+      "subject": "Completed task M36.1 — its DoD still holds",
+      "contract": "E",
+      "authority": "TASKS.md M36.1",
+      "parity": "exact",
+      "test": "TestCharsetFixture",
+      "status": "pass",
+      "notes": "task-claim row; test-only task (the CHARSET glyph sheet's own test), proved by mutation: closing board 1's east gap reports boards 2-4 unreachable, walling in one glyph reports that glyph. M36.1 (2026-11-02)."
+    },
+    {
       "id": "task.M4.0",
       "dimension": "task",
       "subject": "Completed task M4.0 — its DoD still holds",

@@ -8587,7 +8587,7 @@ follows will be filed here as further M36 tasks.
 Suggested order: M36.1, then M36.2 (it subsumes M36.3), then M36.6. M36.4 and
 M36.5 are deferrable.
 
-- [ ] **M36.1 — the CHARSET test proves what its comment claims.**
+- [x] **M36.1 — the CHARSET test proves what its comment claims.**
   `engine/charset_fixture_test.go:61` says every glyph is reachable but only
   checks that the tile below each glyph is `E_EMPTY`. Sealing a board in half or
   closing a side-wall gap would still pass. Replace that check with a flood fill
