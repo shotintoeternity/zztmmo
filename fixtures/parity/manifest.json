@@ -1567,6 +1567,17 @@
       "notes": "task-claim row; test-only task (the CHARSET glyph sheet's own test), proved by mutation: closing board 1's east gap reports boards 2-4 unreachable, walling in one glyph reports that glyph. M36.1 (2026-11-02)."
     },
     {
+      "id": "task.M36.10",
+      "dimension": "task",
+      "subject": "Completed task M36.10 — its DoD still holds",
+      "contract": "E",
+      "authority": "TASKS.md M36.10",
+      "parity": "exact",
+      "test": "TestM3610InputFollowsThePlayerAcrossALowerRemoval,TestM3610StepDoesNotRewriteTheCallersInputs,TestM3610BulletScoreFollowsItsOwner,TestM3610BulletIsNotASelfShotForTheIndexsNewHolder,TestM3610MaxShotsStillCountsABulletAfterALowerRemoval,TestM3610BulletOfADepartedOwnerCreditsNobody",
+      "status": "pass",
+      "notes": "task-claim row; GameStepWithInputs re-keys the step's inputs by *PlayerState, and RemoveStat reindexes each player bullet's P1 owner (reindexShotOwnersAfterStatRemoval), orphaning it (SHOT_SOURCE_PLAYER_ORPHAN) when its owner leaves; an orphan credits nobody. Failed before the fix: with an enemy bullet at stat 1 dying first, player A's down input moved player B instead, A's bullet credited B's score, spared B as a self-shot under FriendlyFire, and stopped counting toward A's MaxShots. Identical for stat 0; no replay hash moved. M36.10 (2026-11-02)."
+    },
+    {
       "id": "task.M36.2",
       "dimension": "task",
       "subject": "Completed task M36.2 — its DoD still holds",

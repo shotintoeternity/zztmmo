@@ -8714,7 +8714,7 @@ copy; the executor still writes the failing test in the repo first.
   both repros as failing tests, then green; replay fixtures unchanged, or a
   `DEVIATION:` line if a hash must move.
 
-- [ ] **M36.10 — input and bullet ownership follow the player, not a stale
+- [x] **M36.10 — input and bullet ownership follow the player, not a stale
   stat index.** *(confirmed, high: reproduced)* The per-player inputs map is
   keyed by stat id before the step (`engine/room_manager.go:617-632`), but
   `GameStepWithInputs` reads `inputs[e.CurrentStatTicked]` with live ids

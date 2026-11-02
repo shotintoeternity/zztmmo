@@ -744,6 +744,12 @@ const (
 	// respectively; player statIds start at 0 so we offset by 2.
 	// Owner statId = stat.P1 - SHOT_SOURCE_PLAYER_BASE, valid when stat.P1 >= SHOT_SOURCE_PLAYER_BASE.
 	SHOT_SOURCE_PLAYER_BASE = 2
+	// SHOT_SOURCE_PLAYER_ORPHAN is the P1 of a player bullet whose owner has
+	// left the board (M36.10). It is still >= SHOT_SOURCE_PLAYER_BASE, so the
+	// bullet keeps behaving as a player's shot, but its owner id (253) is above
+	// any stat index (MAX_STAT is 150): it credits nobody, is nobody's
+	// self-shot, and counts against nobody's MaxShots.
+	SHOT_SOURCE_PLAYER_ORPHAN = 255
 
 	// Respawn timing and penalty constants (M2.4).
 	RESPAWN_TICKS         = 30  // ticks before a dead player reappears (~3.3s at 110ms/tick)

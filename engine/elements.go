@@ -307,7 +307,10 @@ TryMove:
 			}
 		}
 		// Credit score to the bullet's owner (player bullet: owner statId;
-		// enemy bullet: stat 0 as fallback, matching vanilla behavior).
+		// enemy bullet: stat 0 as fallback, matching vanilla behavior). A
+		// bullet whose owner left the board (SHOT_SOURCE_PLAYER_ORPHAN, M36.10)
+		// names an id above any stat and credits nobody: PlayerFor would
+		// otherwise conjure a PlayerState for it.
 		if ElementDefs[iElem].ScoreValue != 0 {
 			var ownerStatId int16
 			if int16(stat.P1) >= SHOT_SOURCE_PLAYER_BASE {
@@ -315,8 +318,10 @@ TryMove:
 			} else {
 				ownerStatId = 0 // ZZT-QUIRK: enemy kill score goes to player 0
 			}
-			e.PlayerFor(ownerStatId).Score += ElementDefs[iElem].ScoreValue
-			e.GameUpdateSidebar()
+			if ownerStatId <= e.Board.StatCount {
+				e.PlayerFor(ownerStatId).Score += ElementDefs[iElem].ScoreValue
+				e.GameUpdateSidebar()
+			}
 		}
 		e.BoardAttack(statId, ix, iy)
 		return

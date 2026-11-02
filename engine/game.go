@@ -1086,6 +1086,7 @@ StatDataInUse:
 		}
 	}
 	e.reindexScrollAudienceAfterStatRemoval(statId)
+	e.reindexShotOwnersAfterStatRemoval(statId)
 	for i = statId + 1; i <= e.Board.StatCount; i++ {
 		e.Board.Stats[i-1] = e.Board.Stats[i]
 	}
@@ -1140,6 +1141,35 @@ func (e *Engine) reindexScrollAudienceAfterStatRemoval(statId int16) {
 		e.ScrollAudience[i-1] = e.ScrollAudience[i]
 	}
 	e.ScrollAudience[e.Board.StatCount] = 0
+}
+
+// reindexShotOwnersAfterStatRemoval keeps each player bullet's owner (P1 =
+// owner statId + SHOT_SOURCE_PLAYER_BASE, set by ElementPlayerTick) pointing
+// at the same player when RemoveStat shifts ids, the way Follower/Leader are
+// fixed up above. A bullet whose owner is the stat being removed (a player
+// leaving the board) becomes SHOT_SOURCE_PLAYER_ORPHAN. Gated on the E_BULLET
+// tile because P1 means something else on every other element; stars are only
+// ever fired by enemies. Vanilla stored SHOT_SOURCE_PLAYER (0) for its one
+// player and had nothing to reindex; for owner stat 0, which nothing below
+// can shift, this never changes a value (M36.10). Must run before the Stats
+// shift, while StatCount still holds the old value.
+func (e *Engine) reindexShotOwnersAfterStatRemoval(statId int16) {
+	for i := int16(0); i <= e.Board.StatCount; i++ {
+		if i == statId {
+			continue
+		}
+		st := &e.Board.Stats[i]
+		if e.Board.Tiles[st.X][st.Y].Element != E_BULLET ||
+			int16(st.P1) < SHOT_SOURCE_PLAYER_BASE || st.P1 == SHOT_SOURCE_PLAYER_ORPHAN {
+			continue
+		}
+		owner := int16(st.P1) - SHOT_SOURCE_PLAYER_BASE
+		if owner == statId {
+			st.P1 = SHOT_SOURCE_PLAYER_ORPHAN
+		} else if owner > statId {
+			st.P1--
+		}
+	}
 }
 
 func (e *Engine) reindexPlayersAfterStatRemoval(statId int16) {
@@ -1952,6 +1982,32 @@ func (e *Engine) GameStepWithInputs(inputs map[int16]PlayerInput) {
 	// oracle measured. Only the per-board time limit reads this clock.
 	e.TimerTicks += uint32((e.TickTimeDuration + 5) / 6)
 
+	// The caller keys inputs by the stat ids it saw before this step, but a
+	// stat removed below a player mid-cycle shifts that player down one id,
+	// and the old id then belongs to the next player up: reading inputs with
+	// the live CurrentStatTicked handed every later player its predecessor's
+	// input, Key and Shift included (M36.10). Re-key by *PlayerState, which
+	// RemoveStat's reindexPlayersAfterStatRemoval carries with the player.
+	// Built by iterating inputs, so map order cannot leak into the result;
+	// PlayerFor (not a bare lookup) so an input for a player whose state does
+	// not exist yet still lands, as ElementPlayerTick would create it anyway.
+	// Vanilla's player was stat 0, which nothing below can shift.
+	playerInputs := make(map[*PlayerState]PlayerInput, len(inputs))
+	for statId, inp := range inputs {
+		if statId < 0 || statId > e.Board.StatCount {
+			continue
+		}
+		playerInputs[e.PlayerFor(statId)] = inp
+	}
+	inputFor := func(statId int16) (PlayerInput, bool) {
+		pState := e.Players[statId]
+		if pState == nil {
+			return PlayerInput{}, false
+		}
+		inp, ok := playerInputs[pState]
+		return inp, ok
+	}
+
 	for e.CurrentStatTicked <= e.Board.StatCount && !e.GamePlayExitRequested {
 		stat := &e.Board.Stats[e.CurrentStatTicked]
 		unpausedThisStep := false
@@ -1970,7 +2026,7 @@ func (e *Engine) GameStepWithInputs(inputs map[int16]PlayerInput) {
 			// is deliberately NOT re-randomized: that would perturb every other
 			// player's stat scheduling.
 			if pState := e.Players[e.CurrentStatTicked]; pState != nil && pState.Paused {
-				if inp, ok := inputs[e.CurrentStatTicked]; ok && (inp.DeltaX != 0 || inp.DeltaY != 0) {
+				if inp, ok := inputFor(e.CurrentStatTicked); ok && (inp.DeltaX != 0 || inp.DeltaY != 0) {
 					deltaX, deltaY := inp.DeltaX, inp.DeltaY
 					targetX := int16(stat.X) + deltaX
 					targetY := int16(stat.Y) + deltaY
@@ -2022,7 +2078,7 @@ func (e *Engine) GameStepWithInputs(inputs map[int16]PlayerInput) {
 			// Per-player input injection: load this player's input before tick,
 			// zero movement globals for non-player stats.
 			if e.Board.Tiles[stat.X][stat.Y].Element == E_PLAYER {
-				if inp, ok := inputs[e.CurrentStatTicked]; ok && !unpausedThisStep {
+				if inp, ok := inputFor(e.CurrentStatTicked); ok && !unpausedThisStep {
 					InputDeltaX = inp.DeltaX
 					InputDeltaY = inp.DeltaY
 					InputShiftPressed = inp.Shift
