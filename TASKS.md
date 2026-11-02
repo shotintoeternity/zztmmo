@@ -8764,7 +8764,7 @@ copy; the executor still writes the failing test in the repo first.
   adjacent memory instead; port the guard and mark it `// ZZT-QUIRK:` with what
   vanilla did. DoD: a test touches a 0x08 key.
 
-- [ ] **M36.28 — a world tile above the last element does not drop the room.**
+- [x] **M36.28 — a world tile above the last element does not drop the room.**
   *(found by M36.11, confirmed by scan)* Filed 2026-11-02 by owner decision.
   M36.11 made the editor's import and upload refuse an element byte above
   `MAX_ELEMENT` (`boardStructuralError`, `engine/game.go`), but ordinary world

@@ -1611,6 +1611,17 @@
       "notes": "task-claim row; EditorPropertyMessage.Text and EditorBoardMessage.Name are CP437String, the inverse of the outbound widening 8c97450 applied to board and world names. All three tests failed before the fix (name grew C2 82 per edit; truncation left a lone C2). M36.2 (2026-11-02)."
     },
     {
+      "id": "task.M36.28",
+      "dimension": "task",
+      "subject": "Completed task M36.28 — its DoD still holds",
+      "contract": "E",
+      "authority": "TASKS.md M36.28",
+      "parity": "exact",
+      "test": "TestM3628AnOutOfRangeTileDrawsAndTheRoomSurvives,TestM3628TheCommunityWorldsWithSuchTilesDrawEveryBoard",
+      "status": "pass",
+      "notes": "task-claim row; ElementDefs has an entry for every element byte ([256]) and InitElementDefs' blank defaults cover them all. Draw matches vanilla as observed under the oracle (NOTES.md 2026-11-02, M36.28): BoardDrawTile's text branch, char = tile colour, attr = byte(((e-47)+1)*16+$F), 0x8F for 246 and 0xFF for 61. Touch is a deviation from a vanilla fault (garbage TouchProc, invalid opcodes, freeze or hang): the tile stops the player and nothing changes. Failed before the fix: joining or drawing a board with element 246, 61 or 69 panicked (index out of range with length 54). The 7 community worlds carrying such tiles (gitignored; skipped when absent) open, draw every board and step. M36.28 (2026-11-02)."
+    },
+    {
       "id": "task.M36.3",
       "dimension": "task",
       "subject": "Completed task M36.3 — its DoD still holds",

@@ -474,14 +474,36 @@ type (
 )
 
 var (
-	E           = NewEngine()
-	ElementDefs [MAX_ELEMENT + 1]TElementDef
+	E = NewEngine()
+	// ElementDefs has an entry for every element byte, not just 0..MAX_ELEMENT.
+	//
+	// ZZT-QUIRK: vanilla declares array[0..MAX_ELEMENT] (GAMEVARS.PAS:186) and
+	// indexes it with a tile's raw element byte unchecked, so a world tile above
+	// 53 reads whatever memory follows the table. Community worlds carry such
+	// tiles: DOG! uses 61 and 69 as extra-colour text, and six others carry one
+	// stray 246 (M36.28). Here they panicked and dropped the room. Entries
+	// MAX_ELEMENT+1..255 keep InitElementDefs' blank defaults, which is the
+	// fork's choice, and what each default means against vanilla is:
+	//   - draw, observed: the real ZZT.EXE under the oracle (NOTES.md
+	//     2026-11-02, M36.28) read HasDrawProc as false and drew 246 and 61
+	//     through BoardDrawTile's text branch, char = the tile's colour, attr =
+	//     byte(((e-E_TEXT_MIN)+1)*16+$F) (0x8F and 0xFF), steady across frames,
+	//     and played on normally beside them. The blank default reaches the
+	//     same branch in TileToColorAndChar, so this matches.
+	//   - touch, a deviation: vanilla calls through a garbage TouchProc and
+	//     faults (invalid opcodes; 246 froze the game, 61 hung it). Here the
+	//     blank default is not walkable and touching it does nothing, so the
+	//     tile stops whoever walks into it.
+	//   - VisibleInDark, Destructible, Pushable, PlaceableOnTop, Cycle and the
+	//     rest are unverified: no known world puts one in a dark room or under
+	//     a stat.
+	ElementDefs [256]TElementDef
 )
 
 // elementDefsOnce builds ElementDefs exactly once per process (M16.17a).
 //
 // ElementDefs is one table shared by every live room and by every ZWD compile.
-// Vanilla's InitElementDefs BLANKS all 256 entries — Name "", Cycle -1,
+// Vanilla's InitElementDefs BLANKS entries 0..MAX_ELEMENT — Name "", Cycle -1,
 // TickProc ElementDefaultTick — before repopulating them, and this fork used to
 // run that from a throwaway engine on each compile: a second compile reading
 // the table mid-rewrite failed with a nonsense `unknown element name "Empty"`

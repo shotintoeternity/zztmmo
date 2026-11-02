@@ -1682,7 +1682,9 @@ func (e *Engine) InitElementDefs() {
 // the process has one.
 func initElementDefsTable() {
 	var i int16
-	for i = 0; i <= MAX_ELEMENT; i++ {
+	// Vanilla blanks 0..MAX_ELEMENT; the fork blanks every element byte, so a
+	// world tile above MAX_ELEMENT has a defined entry (see ElementDefs, M36.28).
+	for i = 0; i < int16(len(ElementDefs)); i++ {
 		def := &ElementDefs[i]
 		def.Character = ' '
 		def.Color = COLOR_CHOICE_ON_BLACK
