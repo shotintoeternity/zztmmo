@@ -8683,7 +8683,7 @@ copy; the executor still writes the failing test in the repo first.
   `defer` the unlock, and make `BoardOpen` reject a negative id. DoD: a test
   sends board -1 and then sees the server tick a hosted world.
 
-- [ ] **M36.8 — client movement input is clamped at the boundary.** *(confirmed,
+- [x] **M36.8 — client movement input is clamped at the boundary.** *(confirmed,
   high)* `inputMessageToPlayerInput` (`engine/websocket_server.go:3172-3180`)
   passes raw int16 `dx`/`dy` through when `keymask == 0`. `{dx:5}` moves a
   player five squares through walls (`elements.go:1439`). `{dx:200, shift:true}`

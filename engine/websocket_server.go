@@ -3190,10 +3190,24 @@ func (s *WebSocketServer) submitScrollReplyInInstance(inst *WorldInstance, playe
 	inst.RoomManager.SubmitScrollReply(playerID, objectStatID, string(label))
 }
 
+// clampInputDelta folds a wire delta to the -1..1 vanilla's keyboard can
+// produce (M36.8). Every engine reader of InputDeltaX/Y indexes the tile at
+// X+delta unchecked, so a raw {dx:200} panicked the room and {dx:5} walked
+// through walls.
+func clampInputDelta(d int16) int16 {
+	switch {
+	case d > 0:
+		return 1
+	case d < 0:
+		return -1
+	}
+	return 0
+}
+
 func inputMessageToPlayerInput(input InputMessage) PlayerInput {
 	playerInput := PlayerInput{
-		DeltaX: input.DeltaX,
-		DeltaY: input.DeltaY,
+		DeltaX: clampInputDelta(input.DeltaX),
+		DeltaY: clampInputDelta(input.DeltaY),
 		Shift:  input.Shift,
 		Key:    input.Key,
 	}

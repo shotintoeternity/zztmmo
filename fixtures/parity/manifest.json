@@ -1600,6 +1600,17 @@
       "notes": "task-claim row; serveReplaySpectator range-checks the requested board against the recorded world (resolveReplayWatchBoard) and takes replay.mu with a deferred unlock; BoardOpen sends a negative id to the current board as it already did one off the top (ZZT-QUIRK divergence). Failed before the fix: board -1 panicked at BoardData[-1] with replay.mu held and the next server Tick never returned. M36.7 (2026-11-02)."
     },
     {
+      "id": "task.M36.8",
+      "dimension": "task",
+      "subject": "Completed task M36.8 — its DoD still holds",
+      "contract": "E",
+      "authority": "TASKS.md M36.8",
+      "parity": "exact",
+      "test": "TestM368InputDeltaIsClampedAtTheBoundary,TestM368BigDeltaDoesNotWalkThroughAWall,TestM368BigDeltaDoesNotDropTheRoom",
+      "status": "pass",
+      "notes": "task-claim row; inputMessageToPlayerInput folds the wire's dx/dy to -1..1 (clampInputDelta), the range vanilla's keyboard produces. Failed before the fix: dx:5 walked a player through a wall, and dx:200+shift, dy:-300+shift and a paused dx:100 each panicked the room so stepRoom dropped it and every player on it. M36.8 (2026-11-02)."
+    },
+    {
       "id": "task.M4.0",
       "dimension": "task",
       "subject": "Completed task M4.0 — its DoD still holds",
