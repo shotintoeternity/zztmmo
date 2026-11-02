@@ -8755,7 +8755,7 @@ copy; the executor still writes the failing test in the repo first.
   DoD: one failing test per path, then each refused with the session still
   editable.
 
-- [ ] **M36.12 — a key of any colour is safe to touch.** *(confirmed, medium)*
+- [x] **M36.12 — a key of any colour is safe to touch.** *(confirmed, medium)*
   `ElementKeyTouch` (`engine/elements.go:1022`) computes `key = Color % 8` and
   indexes `Keys[key-1]` with no guard. A black or dark-grey key (foreground
   nibble 0 or 8) panics on touch and **drops the board**. It can come from a

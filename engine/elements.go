@@ -1025,6 +1025,21 @@ func scrollWindowEmittedFor(newEvents []Event, statId int16) bool {
 func (e *Engine) ElementKeyTouch(x, y int16, sourceStatId int16, deltaX, deltaY *int16) {
 	var key int16
 	key = int16(e.Board.Tiles[x][y].Color) % 8
+	// ZZT-QUIRK: a black or dark-grey key (foreground nibble 0 or 8) gives
+	// key 0. Vanilla's Keys is array[1..7] inside TWorldInfo, right after
+	// `Gems: integer` (GAMEVARS.PAS:108-111), and Turbo Pascal does not
+	// range-check by default, so Keys[0] read and wrote the high byte of Gems;
+	// ColorNames is array[1..7] (GAME.PAS:92), so ColorNames[0] printed
+	// whatever typed constant precedes it. Our Keys and ColorNames are
+	// zero-based and per player, so key-1 panicked and dropped the board
+	// (M36.12). Like ElementDoorTouch's guard, refuse without mutating
+	// anything: the "already have" branch, with the missing colour name
+	// dropped.
+	if key == 0 {
+		e.DisplayMessage(200, "You already have that key!")
+		e.SoundQueue(2, "0\x02 \x02")
+		return
+	}
 	pState := e.PlayerFor(sourceStatId)
 	if pState.Keys[key-1] {
 		e.DisplayMessage(200, "You already have a "+ColorNames[key-1]+" key!")
