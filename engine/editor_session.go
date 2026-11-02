@@ -739,60 +739,65 @@ func (s *EditorSession) EditAndFanOut(member *webSocketClient, edit EditorEditMe
 	var ticketed bool
 	memberID := s.MemberID(member)
 	// A ticket taken by an edit that then panics must still be retired, or
-	// every later edit by every member waits on it forever (M36.11). The
-	// panic itself carries on to the connection's own recovery.
-	defer func() {
-		if r := recover(); r != nil {
-			if ticketed {
-				s.inOrder(ticket, func() {})
+	// every later edit by every member waits on it forever (M36.11). Only the
+	// Apply is covered: once the ticket reaches inOrder below, inOrder retires
+	// it itself, and retiring a served ticket again would wait forever. The
+	// panic carries on to the connection's own recovery.
+	var err error
+	func() {
+		defer func() {
+			if r := recover(); r != nil {
+				if ticketed {
+					s.inOrder(ticket, nil)
+				}
+				panic(r)
 			}
-			panic(r)
-		}
+		}()
+		err = s.Apply(member, func(e *Engine) {
+			ticket, ticketed = s.issueFanTicketLocked(), true
+			if !s.canEditLocked(member) {
+				return
+			}
+			x, y := editorClamp(edit.X, edit.Y)
+			switch edit.Op {
+			case "place":
+				if editorPlaceTile(e, x, y, edit.Element, edit.Color, edit.Copied) {
+					e.BoardClose()
+				}
+			case "erase":
+				if e.BoardPrepareTileForPlacement(x, y) {
+					e.Board.Tiles[x][y].Element = E_EMPTY
+					e.Board.Tiles[x][y].Color = 0
+					editorDrawTileAndNeighbors(e, x, y)
+					e.BoardClose()
+				}
+			case "fill":
+				if editorFloodFill(e, x, y, e.Board.Tiles[x][y], edit.Element, edit.Color, edit.Copied) {
+					e.BoardClose()
+				}
+			case "element":
+				if editorPlaceElement(e, x, y, edit.Element, edit.Color) {
+					e.BoardClose()
+				}
+			case "text":
+				if editorPlaceText(e, x, y, edit.Char, edit.Color) {
+					e.BoardClose()
+				}
+			}
+			reply = EditorDiffMessage{
+				Type:     MessageTypeEditorDiff,
+				MemberID: memberID,
+				// Apply has focused the engine on this member's board, so the
+				// engine's current board is the board these cells belong to
+				// (M17.12). The server broadcasts the diff only to members viewing
+				// it; without that, an edit on board 2 repainted cells over the
+				// board 1 a collaborator was looking at.
+				BoardID: e.World.Info.CurrentBoard,
+				Cells:   e.DrainScreenDirty(),
+				Inspect: editorTileInspect(e, x, y),
+			}
+		})
 	}()
-	err := s.Apply(member, func(e *Engine) {
-		ticket, ticketed = s.issueFanTicketLocked(), true
-		if !s.canEditLocked(member) {
-			return
-		}
-		x, y := editorClamp(edit.X, edit.Y)
-		switch edit.Op {
-		case "place":
-			if editorPlaceTile(e, x, y, edit.Element, edit.Color, edit.Copied) {
-				e.BoardClose()
-			}
-		case "erase":
-			if e.BoardPrepareTileForPlacement(x, y) {
-				e.Board.Tiles[x][y].Element = E_EMPTY
-				e.Board.Tiles[x][y].Color = 0
-				editorDrawTileAndNeighbors(e, x, y)
-				e.BoardClose()
-			}
-		case "fill":
-			if editorFloodFill(e, x, y, e.Board.Tiles[x][y], edit.Element, edit.Color, edit.Copied) {
-				e.BoardClose()
-			}
-		case "element":
-			if editorPlaceElement(e, x, y, edit.Element, edit.Color) {
-				e.BoardClose()
-			}
-		case "text":
-			if editorPlaceText(e, x, y, edit.Char, edit.Color) {
-				e.BoardClose()
-			}
-		}
-		reply = EditorDiffMessage{
-			Type:     MessageTypeEditorDiff,
-			MemberID: memberID,
-			// Apply has focused the engine on this member's board, so the
-			// engine's current board is the board these cells belong to
-			// (M17.12). The server broadcasts the diff only to members viewing
-			// it; without that, an edit on board 2 repainted cells over the
-			// board 1 a collaborator was looking at.
-			BoardID: e.World.Info.CurrentBoard,
-			Cells:   e.DrainScreenDirty(),
-			Inspect: editorTileInspect(e, x, y),
-		}
-	})
 	if !ticketed {
 		// Apply refused before the edit ran (a non-member), so no ticket was
 		// issued and there is no place in the order to hold.
@@ -1517,7 +1522,7 @@ func (s *EditorSession) ImportBoard(member *webSocketClient, data []byte) (Edito
 }
 
 // validateEditorWorldBoards is validateWorldBoards plus boardStructuralError
-// on every board: the stricter gate for a world a client uploads into the
+// and a size check on every board: the stricter gate for a world a client uploads into the
 // editor (M36.11), which ordinary world loads do not apply.
 func validateEditorWorldBoards(world TWorld) error {
 	scratch := newSnapshotEngine()
@@ -1528,6 +1533,12 @@ func validateEditorWorldBoards(world TWorld) error {
 		}
 		if err := boardStructuralError(scratch); err != nil {
 			return fmt.Errorf("%w: board %d: %v", ErrWorldCorrupt, boardID, err)
+		}
+		// worldReadFrom takes any int16 board length, but BoardClose writes
+		// into the 20000-byte IoTmpBuf, so a bigger board would panic the
+		// first edit on it, and every save after (M36.11).
+		if size := boardSerializedSize(scratch); size > len(scratch.IoTmpBuf) {
+			return fmt.Errorf("%w: board %d is %d bytes; maximum is %d", ErrWorldCorrupt, boardID, size, len(scratch.IoTmpBuf))
 		}
 	}
 	return nil

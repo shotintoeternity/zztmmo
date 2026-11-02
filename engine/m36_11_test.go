@@ -136,6 +136,29 @@ func TestM3611EditRefusesAStatBackedCopy(t *testing.T) {
 	}
 }
 
+// A broadcast that panics has its ticket retired by inOrder itself. The guard
+// EditAndFanOut puts around the edit must not retire it a second time: a
+// served ticket never comes round again, so that would wait forever and the
+// panic would never surface.
+func TestM3611APanickingBroadcastRetiresItsTicketOnce(t *testing.T) {
+	session, owner := m3611Session(t)
+	done := make(chan interface{})
+	go func() {
+		defer func() { done <- recover() }()
+		session.EditAndFanOut(owner, EditorEditMessage{Op: "place", X: 30, Y: 12, Element: E_SOLID, Color: 0x0e},
+			func(EditorDiffMessage) { panic("broadcast failed") })
+	}()
+	select {
+	case r := <-done:
+		if r == nil {
+			t.Errorf("the broadcast's panic was swallowed")
+		}
+	case <-time.After(3 * time.Second):
+		t.Fatalf("EditAndFanOut is still running 3s after its broadcast panicked: the ticket was retired twice")
+	}
+	m3611StillEditable(t, session)
+}
+
 // ---------------------------------------------------------------------------
 // (b) program size
 // ---------------------------------------------------------------------------
@@ -245,32 +268,59 @@ func TestM3611SaveProgramCountsASharedProgramOnce(t *testing.T) {
 // (c) imported and uploaded boards
 // ---------------------------------------------------------------------------
 
-// m3611BadBoard returns a board's serialized bytes after poison runs on an
-// otherwise ordinary board.
-func m3611BadBoard(t *testing.T, poison func(e *Engine)) []byte {
+type m3611Poison struct {
+	name   string
+	poison func(e *Engine)
+	// patch, if set, rewrites the serialized board: for a board BoardClose
+	// itself could never have written.
+	patch func(board []byte) []byte
+}
+
+// m3611PoisonedWorld is a one-board world whose board has been poisoned.
+func m3611PoisonedWorld(t *testing.T, p m3611Poison) *Engine {
 	t.Helper()
 	e := newSnapshotEngine()
 	e.WorldCreate()
 	e.BoardCreate()
-	poison(e)
+	p.poison(e)
 	e.BoardClose()
-	return append([]byte(nil), e.World.BoardData[e.World.Info.CurrentBoard]...)
+	if p.patch != nil {
+		cur := e.World.Info.CurrentBoard
+		e.World.BoardData[cur] = p.patch(e.World.BoardData[cur])
+		e.World.BoardLen[cur] = int16(len(e.World.BoardData[cur]))
+	}
+	return e
 }
 
-var m3611Poisons = []struct {
-	name   string
-	poison func(e *Engine)
-}{
-	{"tile element 200", func(e *Engine) { e.Board.Tiles[30][12] = TTile{Element: 200, Color: 0x0f} }},
+// m3611OversizedProgram gives the board's last stat, which must have no
+// program, a 25000-byte one: more than BoardClose's 20000-byte buffer.
+func m3611OversizedProgram(board []byte) []byte {
+	const n = 25000
+	out := append([]byte(nil), board...)
+	StoreInt16(out[len(out)-SizeOfStat+23:len(out)-SizeOfStat+25], n)
+	return append(out, bytes.Repeat([]byte{'\''}, n)...)
+}
+
+var m3611Poisons = []m3611Poison{
+	{"tile element 200", func(e *Engine) { e.Board.Tiles[30][12] = TTile{Element: 200, Color: 0x0f} }, nil},
 	{"stat standing on element 200", func(e *Engine) {
 		e.AddStat(30, 12, E_OBJECT, 0x0f, 3, StatTemplateDefault)
 		e.Board.Stats[e.Board.StatCount].Under = TTile{Element: 200, Color: 0x0f}
-	}},
+	}, nil},
 	{"stat off the board", func(e *Engine) {
 		e.AddStat(30, 12, E_OBJECT, 0x0f, 3, StatTemplateDefault)
 		e.Board.Stats[e.Board.StatCount].X = 200
-	}},
+	}, nil},
 }
+
+// m3611UploadPoisons adds what only a whole-world upload can carry: ImportBoard
+// already refuses a .BRD longer than the buffer, but worldReadFrom takes any
+// int16 board length.
+var m3611UploadPoisons = append(append([]m3611Poison(nil), m3611Poisons...), m3611Poison{
+	"a 25 KB program", func(e *Engine) {
+		e.AddStat(30, 12, E_OBJECT, 0x0f, 3, StatTemplateDefault)
+	}, m3611OversizedProgram,
+})
 
 func TestM3611ImportBoardRefusesABoardThatCannotBeDrawn(t *testing.T) {
 	for _, p := range m3611Poisons {
@@ -279,7 +329,8 @@ func TestM3611ImportBoardRefusesABoardThatCannotBeDrawn(t *testing.T) {
 			if _, err := session.AcquireLease(owner, EditorLeaseMessage{Kind: "board", BoardID: 0}); err != nil {
 				t.Fatal(err)
 			}
-			board := m3611BadBoard(t, p.poison)
+			w := m3611PoisonedWorld(t, p)
+			board := w.World.BoardData[w.World.Info.CurrentBoard]
 			brd := make([]byte, 2, 2+len(board))
 			StoreInt16(brd[:2], int16(len(board)))
 			brd = append(brd, board...)
@@ -295,14 +346,10 @@ func TestM3611ImportBoardRefusesABoardThatCannotBeDrawn(t *testing.T) {
 }
 
 func TestM3611UploadWorldRefusesABoardThatCannotBeDrawn(t *testing.T) {
-	for _, p := range m3611Poisons {
+	for _, p := range m3611UploadPoisons {
 		t.Run(p.name, func(t *testing.T) {
 			session, owner := m3611Session(t)
-			e := newSnapshotEngine()
-			e.WorldCreate()
-			e.BoardCreate()
-			p.poison(e)
-			e.BoardClose()
+			e := m3611PoisonedWorld(t, p)
 			var buf bytes.Buffer
 			if err := e.worldWriteTo(&buf); err != nil {
 				t.Fatal(err)
