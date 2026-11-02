@@ -2763,23 +2763,49 @@ func (s *WebSocketServer) GetOrCreateReplayInstanceAt(id string, startTick int) 
 	return replay, nil
 }
 
-func (s *WebSocketServer) serveReplaySpectator(ctx context.Context, conn *websocket.Conn, client *webSocketClient, replay *ReplayInstance, join JoinMessage) {
-	boardID := s.DefaultBoard
-	if join.Board != 0 {
-		boardID = join.Board
+// resolveReplayWatchBoard is resolveWatchBoard for a recording: the board a
+// replay watcher asked for, range-checked against the recorded world, because
+// SpectatorSnapshot opens it directly and an id off the table would index it
+// out of bounds (M36.7).
+func (s *WebSocketServer) resolveReplayWatchBoard(replay *ReplayInstance, board int16) int16 {
+	fallback := s.DefaultBoard
+	if fallback == 0 {
+		fallback = 1
 	}
-	if boardID == 0 {
-		boardID = 1
+	if board == 0 {
+		board = fallback
 	}
-
 	replay.mu.Lock()
-	sub := &spectator{client: client, boardID: boardID}
-	replay.Spectators[client] = sub
-	snapshot, engine := replay.playback.RoomManager().SpectatorSnapshot(boardID)
-	sub.engine = engine
-	snapshot.Watchers = replay.watcherCountsLocked()[boardID]
-	sub.sentWatchers = snapshot.Watchers
+	count := replay.playback.RoomManager().FrozenWorld().BoardCount
 	replay.mu.Unlock()
+	if board < 0 || board > count {
+		board = fallback
+	}
+	if board < 0 || board > count {
+		board = 0
+	}
+	return board
+}
+
+// replaySpectatorSnapshot registers sub's view of its board and returns
+// the frame to send. The unlock is deferred: a panic here must not leave
+// replay.mu held, since every WebSocketServer.Tick takes it (M36.7).
+func (replay *ReplayInstance) replaySpectatorSnapshot(sub *spectator) SnapshotMessage {
+	replay.mu.Lock()
+	defer replay.mu.Unlock()
+	replay.Spectators[sub.client] = sub
+	snapshot, engine := replay.playback.RoomManager().SpectatorSnapshot(sub.boardID)
+	sub.engine = engine
+	snapshot.Watchers = replay.watcherCountsLocked()[sub.boardID]
+	sub.sentWatchers = snapshot.Watchers
+	return snapshot
+}
+
+func (s *WebSocketServer) serveReplaySpectator(ctx context.Context, conn *websocket.Conn, client *webSocketClient, replay *ReplayInstance, join JoinMessage) {
+	boardID := s.resolveReplayWatchBoard(replay, join.Board)
+
+	sub := &spectator{client: client, boardID: boardID}
+	snapshot := replay.replaySpectatorSnapshot(sub)
 
 	defer func() {
 		replay.mu.Lock()
@@ -2819,12 +2845,7 @@ func (s *WebSocketServer) serveReplaySpectator(ctx context.Context, conn *websoc
 				_ = client.write(ctx, ReplayErrorMessage{Type: MessageTypeReplayError, Text: "Replay restart failed: " + err.Error()})
 				return
 			}
-			replay.mu.Lock()
-			snapshot, engine := replay.playback.RoomManager().SpectatorSnapshot(boardID)
-			sub.engine = engine
-			snapshot.Watchers = replay.watcherCountsLocked()[boardID]
-			sub.sentWatchers = snapshot.Watchers
-			replay.mu.Unlock()
+			snapshot := replay.replaySpectatorSnapshot(sub)
 			if err := client.write(ctx, snapshot); err != nil {
 				return
 			}

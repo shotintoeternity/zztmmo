@@ -1589,6 +1589,17 @@
       "notes": "task-claim row; RecordHighScore admits the typed name as printable ASCII (foldWordmark, as chat) capped at PopupPromptString's 34-column field (GAME.PAS:1067), the identity on anything the client's ASCII-only prompt can send. Failed before the fix: 'José' stored as UTF-8 and drawn as 'JosÃ©'. Folded, not decoded: see TASKS.md M36.3. M36.3 (2026-11-02)."
     },
     {
+      "id": "task.M36.7",
+      "dimension": "task",
+      "subject": "Completed task M36.7 — its DoD still holds",
+      "contract": "E",
+      "authority": "TASKS.md M36.7",
+      "parity": "exact",
+      "test": "TestM367ReplaySpectatorOffTheBoardTableDoesNotStopTheServer",
+      "status": "pass",
+      "notes": "task-claim row; serveReplaySpectator range-checks the requested board against the recorded world (resolveReplayWatchBoard) and takes replay.mu with a deferred unlock; BoardOpen sends a negative id to the current board as it already did one off the top (ZZT-QUIRK divergence). Failed before the fix: board -1 panicked at BoardData[-1] with replay.mu held and the next server Tick never returned. M36.7 (2026-11-02)."
+    },
+    {
       "id": "task.M4.0",
       "dimension": "task",
       "subject": "Completed task M4.0 — its DoD still holds",

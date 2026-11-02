@@ -142,7 +142,11 @@ func (e *Engine) BoardOpen(boardId int16) {
 	)
 	// A new stat array means the old scroll-audience indices are meaningless.
 	e.ScrollAudience = [MAX_STAT + 2]int16{}
-	if boardId > e.World.BoardCount {
+	// ZZT-QUIRK: vanilla (GAME.PAS BoardOpen) clamps only an id off the top of
+	// the table; under Turbo Pascal's unchecked indexing a negative id read
+	// whatever preceded BoardData. Here it is an index panic, and network input
+	// can name one (M36.7), so a negative id takes the same fallback.
+	if boardId < 0 || boardId > e.World.BoardCount {
 		boardId = e.World.Info.CurrentBoard
 	}
 	for ix = 0; ix <= BOARD_WIDTH+1; ix++ {

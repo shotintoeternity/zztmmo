@@ -8671,7 +8671,7 @@ copy; the executor still writes the failing test in the repo first.
 
 ### Tier 1 — anyone can crash or freeze the server, or normal play breaks a player
 
-- [ ] **M36.7 — a replay spectator cannot deadlock every world.** *(confirmed,
+- [x] **M36.7 — a replay spectator cannot deadlock every world.** *(confirmed,
   high)* `serveReplaySpectator` (`engine/websocket_server.go:2768-2778`) keeps
   any non-zero `join.Board`, takes `replay.mu` with no `defer`, and calls
   `SpectatorSnapshot(-1)`. `BoardOpen` clamps only `boardId > BoardCount`
