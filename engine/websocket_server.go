@@ -2170,7 +2170,7 @@ func (s *WebSocketServer) serveEditorWorld(ctx context.Context, client *webSocke
 func (s *WebSocketServer) serveEditorBoard(ctx context.Context, client *webSocketClient, session *EditorSession, board EditorBoardMessage) error {
 	switch board.Op {
 	case "add":
-		reply, err := session.AddBoard(client, board.Name)
+		reply, err := session.AddBoard(client, string(board.Name))
 		if err != nil {
 			return nil
 		}

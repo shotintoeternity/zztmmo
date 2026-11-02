@@ -8598,7 +8598,7 @@ M36.5 are deferrable.
   `BoardChange(1)`, or delete the loop and its claim. DoD: deleting a gap row
   from `fixtures/charset.zwd` reddens the test.
 
-- [ ] **M36.2 — inbound editor text is CP437, not UTF-8.** `8c97450` sends board
+- [x] **M36.2 — inbound editor text is CP437, not UTF-8.** `8c97450` sends board
   and world names out as widened CP437 runes (`EditorProperties.BoardName` and
   `WorldName`), but `EditorPropertyMessage.Text` (`engine/editor_session.go:1069`)
   and `EditorBoardMessage.Name` (`:1314`, `:1529`) are still read as plain Go

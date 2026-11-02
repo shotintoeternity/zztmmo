@@ -1066,9 +1066,9 @@ func (s *EditorSession) SetProperty(member *webSocketClient, edit EditorProperty
 		}
 		switch edit.Field {
 		case "boardTitle":
-			e.Board.Name = editorString(edit.Text, SizeOfBoardName-1)
+			e.Board.Name = editorString(string(edit.Text), SizeOfBoardName-1)
 		case "worldName":
-			e.World.Info.Name = editorString(edit.Text, 20)
+			e.World.Info.Name = editorString(string(edit.Text), 20)
 		case "maxShots":
 			if edit.Value < 0 || edit.Value > 255 {
 				return

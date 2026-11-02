@@ -501,10 +501,12 @@ type EditorProperties struct {
 type EditorPropertyMessage struct {
 	Type  string `json:"type"`
 	Field string `json:"field"`
-	Text  string `json:"text,omitempty"`
-	Value int16  `json:"value,omitempty"`
-	Bool  bool   `json:"bool,omitempty"`
-	Exit  int16  `json:"exit,omitempty"`
+	// Text is CP437: a name arrives as the widened runes it was sent in
+	// (EditorProperties.BoardName/WorldName), never as UTF-8 (M36.2).
+	Text  CP437String `json:"text,omitempty"`
+	Value int16       `json:"value,omitempty"`
+	Bool  bool        `json:"bool,omitempty"`
+	Exit  int16       `json:"exit,omitempty"`
 }
 
 // EditorPropertiesMessage is returned after every property change. Screen is
@@ -588,11 +590,11 @@ type EditorProgramSaveMessage struct {
 // add/switch/import/clear/new reply with a full EditorSnapshotMessage because a
 // board change repaints the whole frame; export replies with EditorBoardDataMessage.
 type EditorBoardMessage struct {
-	Type    string `json:"type"`
-	Op      string `json:"op"`
-	Name    string `json:"name,omitempty"`
-	BoardID int16  `json:"boardId,omitempty"`
-	Data    string `json:"data,omitempty"`
+	Type    string      `json:"type"`
+	Op      string      `json:"op"`
+	Name    CP437String `json:"name,omitempty"` // CP437, like every board name on the wire (M36.2)
+	BoardID int16       `json:"boardId,omitempty"`
+	Data    string      `json:"data,omitempty"`
 }
 
 // EditorBoardDataMessage is the reply to an "export": the current board as

@@ -1567,6 +1567,17 @@
       "notes": "task-claim row; test-only task (the CHARSET glyph sheet's own test), proved by mutation: closing board 1's east gap reports boards 2-4 unreachable, walling in one glyph reports that glyph. M36.1 (2026-11-02)."
     },
     {
+      "id": "task.M36.2",
+      "dimension": "task",
+      "subject": "Completed task M36.2 — its DoD still holds",
+      "contract": "E",
+      "authority": "TASKS.md M36.2",
+      "parity": "exact",
+      "test": "TestM362PropertyNamesSurviveRepeatedEdits,TestM362LongNameTruncatesOnACharacterBoundary,TestM362AddBoardNameIsCP437",
+      "status": "pass",
+      "notes": "task-claim row; EditorPropertyMessage.Text and EditorBoardMessage.Name are CP437String, the inverse of the outbound widening 8c97450 applied to board and world names. All three tests failed before the fix (name grew C2 82 per edit; truncation left a lone C2). M36.2 (2026-11-02)."
+    },
+    {
       "id": "task.M4.0",
       "dimension": "task",
       "subject": "Completed task M4.0 — its DoD still holds",
