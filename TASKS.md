@@ -8581,11 +8581,24 @@ Filed 2026-11-02 from a `/code-review` of `origin/dev..dev` (`8c97450`, the CP43
 "Café, not Caf²" fix, and `5f759c4`, the CHARSET glyph sheet). These are the
 reviewer's findings and have not yet been reproduced, so each task starts by
 reproducing its finding in a failing test. If it does not reproduce, record that
-in NOTES.md and tick nothing. Findings from the whole-codebase review that
-follows will be filed here as further M36 tasks.
+in NOTES.md and tick nothing.
 
-Suggested order: M36.1, then M36.2 (it subsumes M36.3), then M36.6. M36.4 and
-M36.5 are deferrable.
+M36.7 onward come from the whole-codebase review of 2026-11-02 (five area
+reviewers, each followed by an adversarial verifier; 43 of 44 findings
+survived). They are **numbered in order of importance**, and each says
+whether the verifier *confirmed* it (traced or reproduced) or only found it
+*plausible*. A finding the reviewer reproduced did so in a throwaway engine
+copy; the executor still writes the failing test in the repo first.
+
+**Priority order for the open M36 tasks** (work top-down; M36.1-M36.3 are done):
+
+1. Anyone can crash or freeze the server, or normal play breaks a player:
+   M36.7, M36.8, M36.9, M36.10, M36.11, M36.12
+2. Security and data loss: M36.13, M36.14, M36.15, M36.16, M36.17, M36.18,
+   M36.19, M36.20, M36.21
+3. Multiplayer correctness and the browser client: M36.22, M36.23, M36.24,
+   M36.25
+4. Hardening, test health and tools: M36.26, M36.6, M36.27, M36.4, M36.5
 
 - [x] **M36.1 — the CHARSET test proves what its comment claims.**
   `engine/charset_fixture_test.go:61` says every glyph is reachable but only
@@ -8655,6 +8668,301 @@ M36.5 are deferrable.
   walks the protocol message structs by reflection and fails on any `string`
   field not on an explicit, commented allowlist of ASCII-only fields, then fix
   what it finds.
+
+### Tier 1 — anyone can crash or freeze the server, or normal play breaks a player
+
+- [ ] **M36.7 — a replay spectator cannot deadlock every world.** *(confirmed,
+  high)* `serveReplaySpectator` (`engine/websocket_server.go:2768-2778`) keeps
+  any non-zero `join.Board`, takes `replay.mu` with no `defer`, and calls
+  `SpectatorSnapshot(-1)`. `BoardOpen` clamps only `boardId > BoardCount`
+  (`game.go:145`), so `BoardData[-1]` panics. net/http recovers the goroutine
+  but `replay.mu` stays held, and the next `WebSocketServer.Tick` blocks in
+  `replay.Tick` (`:775`) forever, so **every hosted world stops ticking**.
+  Anonymous: `/ws?replay=<id>`, then `{"type":"join","spectate":true,"board":-1}`.
+  Fix: validate the board as `resolveWatchBoard` does for world spectators,
+  `defer` the unlock, and make `BoardOpen` reject a negative id. DoD: a test
+  sends board -1 and then sees the server tick a hosted world.
+
+- [ ] **M36.8 — client movement input is clamped at the boundary.** *(confirmed,
+  high)* `inputMessageToPlayerInput` (`engine/websocket_server.go:3172-3180`)
+  passes raw int16 `dx`/`dy` through when `keymask == 0`. `{dx:5}` moves a
+  player five squares through walls (`elements.go:1439`). `{dx:200, shift:true}`
+  with ammo indexes `Tiles[245]` in `BoardShoot` and panics, and `stepRoom`'s
+  recover calls `dropPanickedRoom`, **disconnecting everyone on the board**. A
+  paused player sending `{dx:100}` panics at `game.go:1950` the same way. Clamp
+  to -1..1 at the boundary. DoD: tests for `dx:5` (blocked by the wall) and
+  `dx:200`+shoot (no panic, room survives).
+
+- [ ] **M36.9 [ADVISOR] — a player's tick survives a lower stat's removal.**
+  *(confirmed, critical: reproduced)* Vanilla's player was always stat 0, so
+  nothing below it could shift. Here other players have higher indices.
+  (a) `ElementPlayerTick` (`engine/elements.go:1490-1502`) keeps its `statId`
+  and `stat` pointer after a touch proc's `BoardAttack -> BoardDamageTile ->
+  RemoveStat` removes a lower stat. `MoveStat(statId, ...)` then moves the wrong
+  stat: an `E_PLAYER` tile with no stat is left behind, and the real player
+  stands on `E_EMPTY`. Tick procs are dispatched by tile element, so **that
+  player never ticks again**: frozen, with a phantom glyph. Repro: lion as stat
+  1, player B as stat 2 next to it, energized, pressing into it. Walking into
+  any damaging creature, or crushing one with a boulder, triggers it. The
+  paused branch (`game.go:1950-1957`) holds the same stale pointer.
+  (b) `BoardAttack` (`game.go:1513`) decrements `CurrentStatTicked` whenever
+  `attackerStatId > 0`. That compensates for vanilla removing a non-player
+  attacker, but a player at index > 0 is not removed, so it ticks twice: two
+  squares in one cycle, and energizer and torch drain at double speed.
+  Port faithfully for stat 0 and mark any multiplayer divergence; consult the
+  Pascal (`ELEMENTS.PAS` `ElementPlayerTick`, `GAME.PAS` `BoardAttack`). DoD:
+  both repros as failing tests, then green; replay fixtures unchanged, or a
+  `DEVIATION:` line if a hash must move.
+
+- [ ] **M36.10 — input and bullet ownership follow the player, not a stale
+  stat index.** *(confirmed, high: reproduced)* The per-player inputs map is
+  keyed by stat id before the step (`engine/room_manager.go:617-632`), but
+  `GameStepWithInputs` reads `inputs[e.CurrentStatTicked]` with live ids
+  (`game.go:1947`, `:1992`). When a bullet or monster below a player is removed
+  mid-cycle, every later player gets the previous holder's input, including Key
+  and Shift, so **one player's shoot or quit acts on another**. Bullet ownership
+  has the same flaw: `P1 = byte(statId + SHOT_SOURCE_PLAYER_BASE)`
+  (`game.go:1530`) is never reindexed, so score goes to whoever later holds the
+  index, a bullet can treat its new "owner" as a self-shot (immune to fire with
+  FriendlyFire on), and MaxShots stops counting it. Reindex alongside
+  `reindexPlayersAfterStatRemoval`, or key both by player. DoD: the reviewer's
+  bullet repro (A down, B none; the bullet dies first) as a failing test, plus
+  one for score credit.
+
+- [ ] **M36.11 — no editor action can crash or wedge a session.** *(confirmed,
+  high)* Three ways in, one class:
+  (a) `editorPlaceTile`/`editorFloodFill` (`engine/editor_session.go:822`)
+  accept any element byte with `copied:true`. Element 54..255 panics in
+  `TileToColorAndChar`, and because `EditAndFanOut` takes its fan-out ticket
+  (`:742`) before the edit runs, that ticket is never retired: **every later
+  edit by every member blocks forever**. Any guest can do this on an unowned
+  world. A bad element byte also gets published. `copied:true` with
+  Object/Scroll places a stat-backed tile with no stat.
+  (b) `SaveProgram` (`:1283`) caps only `DataLen <= 0x7FFF`, but `BoardClose`
+  copies into the fixed 20000-byte `IoTmpBuf` (`game.go:126`). A 25 KB program,
+  or ten 3 KB programs on one board, panics. The oversized data stays in the
+  board, so every later `BoardClose`, publish and download panics and the
+  session's unsaved work cannot be saved. Use the ZWD compiler's
+  `estimateZWDSerializedBoardSize` check.
+  (c) `ImportBoard` (`:1476`) and `UploadWorld` (`:1571`) roll back only on
+  panics inside `safeBoardOpen`. A .BRD with an RLE element byte above 53 opens
+  cleanly and panics later in `TransitionDrawToBoard`, with the bad board
+  already committed, and `validateWorldBoards` (BoardOpen only) lets it reach a
+  hosted room.
+  Fix: reject element bytes > `E_TEXT_WHITE` and stat-backed copies at the
+  boundary, size-check before assigning, and validate imported boards by
+  drawing them (and by stepping them, as `UploadWorld` does) before committing.
+  DoD: one failing test per path, then each refused with the session still
+  editable.
+
+- [ ] **M36.12 — a key of any colour is safe to touch.** *(confirmed, medium)*
+  `ElementKeyTouch` (`engine/elements.go:1022`) computes `key = Color % 8` and
+  indexes `Keys[key-1]` with no guard. A black or dark-grey key (foreground
+  nibble 0 or 8) panics on touch and **drops the board**. It can come from a
+  world file or from `#put e key` onto an 0x08 square (`oop.go:387`).
+  `ElementDoorTouch` already has this guard. Vanilla's 1-based `Keys[0]` read
+  adjacent memory instead; port the guard and mark it `// ZZT-QUIRK:` with what
+  vanilla did. DoD: a test touches a 0x08 key.
+
+### Tier 2 — security and data loss
+
+- [ ] **M36.13 — a Museum play cannot overwrite a published world.**
+  *(confirmed, high)* An anonymous `POST /api/museum/play` (`engine/museum.go:263`)
+  writes `worldsDir/<NAME>.ZZT`, named after the .ZZT inside the zip, with no
+  ownership (`loadWorldAccess`), canonical (`WorldIsCanonical`) or occupancy
+  (`WorldIsOccupied`) check. `saveEditorWorld` (`websocket_server.go:2955-2963`)
+  and generation enforce all three. A player's published CAVES is replaced by
+  any Museum archive containing CAVES.ZZT, and their `.access.json` then claims
+  the foreign content. `HostGeneratedWorld` refuses an occupied world only after
+  the overwrite, and does not restore it. Enforce the same three checks before
+  writing, and write atomically (see M36.21). DoD: a test plays a Museum
+  archive whose world name collides with an owned world, and the file is
+  unchanged.
+
+- [ ] **M36.14 — generation retry is admitted, owned and non-destructive.**
+  *(confirmed, high)* `RetryBoard` (`engine/generation.go:547`) skips `admit()`,
+  so it bypasses the per-client rate limit and the **daily spend ceiling**, and
+  its HTTP entry `handleGenerationRetry` (`web_api.go:1068`) checks no account
+  or ownership. Job ids are sequential (`gen-N`) and a salvaged job is re-armed
+  as retryable each time, so anyone can spend model calls without limit. A
+  retry also re-persists the world: if the owner has since edited and published
+  it, `persistGeneratedWorld` overwrites their edits. Fix: admit retries, require
+  the job's owning account, and refuse to persist over a world modified since
+  the job wrote it. DoD: tests for an anonymous retry (refused), a retry past
+  the daily cap (refused), and a retry after an editor publish (refused, file
+  unchanged).
+
+- [ ] **M36.15 — restore is locked and stays in its own world.** *(confirmed,
+  high)* `handleRestore` (`engine/web_api.go:1173`) calls `rm.RestoreSnapshot`
+  without `inst.mu`, racing the tick and concurrent joins: concurrent map
+  access, and a joining player left pointing at a discarded room.
+  `RestoreAutosaves` (`websocket_server.go:2469`) takes that lock. It also
+  restores any save into any world: `{world:"LOBBY", name:<a CAVES save>}` loads
+  CAVES into LOBBY, and autosave then makes that LOBBY's state permanently.
+  The same unlocked access occurs in `handleHighScores`, `handleTitle`
+  (`FrozenWorld`) and `resolveJoinBoard`/`resolveWatchBoard`. `handleRestore` and
+  `handleLoadWorld` also decode without `MaxBytesReader`. DoD: a `-race` test of
+  restore concurrent with ticks and joins; a cross-world restore refused.
+
+- [ ] **M36.16 — a scroll reply must answer an open scroll.** *(confirmed,
+  high)* A scroll reply's `objectStatId` and label come straight from the client
+  (`engine/game.go:1826`, `submitScrollReplyInInstance`). Nothing checks that
+  this player has a scroll open from that stat, or that the label is one of its
+  hyperlinks, so a client can send any object to any label at any time. Record
+  the open scroll per player (stat and offered labels) and drop replies that do
+  not match. Mind the 9aef707 drain fix (TASKS-BETA.md "Scroll hyperlinks do
+  not work"). DoD: an unsolicited reply and a forged label are both ignored;
+  `TestScrollReplyRunsWhileTheReaderIsStillWalkingIn` still passes.
+
+- [ ] **M36.17 — saving is prompted, rate-limited and off the tick lock.**
+  *(confirmed, medium)* `saveFilename` (`engine/websocket_server.go:2351`) is
+  accepted at any time with no pending-prompt check and no limiter. Each message
+  serializes the world and writes it to disk **while holding `inst.mu`**, so a
+  guest looping `A0000001`, `A0000002`... stalls the world's tick, fills the
+  disk, and can overwrite another player's save by name, since saves share one
+  namespace. Require a pending `savePrompt`, rate-limit, and do only the world
+  copy under the lock, as `Autosave` does. DoD: an unprompted save is refused,
+  a burst is limited, and a test shows the tick is not blocked on the write.
+
+- [ ] **M36.18 — an evicted world comes back with its progress.** *(confirmed,
+  medium)* After idle eviction, `GetOrCreateInstance` reloads the **pristine**
+  world (`engine/websocket_server.go:2644`) and ignores `autosave/<NAME>.SAV`,
+  contradicting the NOTES.md M13.3 policy that an autosave beats the pristine
+  .ZZT. `Autosave` also skips instances with no clients, so the last window
+  before everyone leaves is never saved. Progress vanishes until a reboot
+  revives an older autosave over newer play. Autosave on last-leave and
+  eviction, and load the autosave when recreating. Also cover the plausible
+  join-vs-eviction race (`:1053`): an instance resolved before the join frame
+  can be evicted in between, leaving the player in an orphan that never ticks.
+  DoD: play, leave, evict, rejoin: the state is still there.
+
+- [ ] **M36.19 — session recordings are never truncated, and replays are
+  bounded.** *(confirmed, medium)* (a) Recordings are named
+  `<instance>-<boot stamp>.jsonl` and opened with `os.Create`
+  (`engine/websocket_server.go:2547-2552`), so any second instance of a world in
+  one process, after eviction, republish or `hostGeneratedWorld` (`:2886`, which
+  also leaks the old recorder's fd), **zeroes the earlier recording** under
+  live `/replay/` links and postcards. (b) Replay instances are keyed by
+  `id@start`, never removed, and ticked forever (`:2762`). `start` is unbounded
+  client input, so one anonymous client can create unlimited instances, each
+  holding an fd and a full playback, and any watcher can spam `op:"restart"`.
+  Use unique recording names (or append), close superseded recorders, evict
+  idle replay instances, and bound or snap `start`. DoD: tests for each.
+
+- [ ] **M36.20 — the post-login redirect stays on this site.** *(confirmed,
+  low; security)* The OAuth return-path check (`engine/auth.go:149`) rejects
+  `//` but not `/\`. `/api/auth/google/start?return=/%5Cevil.example` survives
+  and, after a real Google login, redirects to `//evil.example`, because
+  browsers treat `\` as `/`. Reject any return path containing `\`, or anything
+  that does not parse as a same-origin path. DoD: a test for `/\evil.example`
+  and its encoded forms.
+
+- [ ] **M36.21 — published worlds and high scores are written atomically.**
+  *(confirmed, low)* The editor publish (`engine/websocket_server.go:2996`),
+  Museum play (`museum.go:263`) and `.HI` writes (`room_manager.go:217`) use
+  in-place `os.WriteFile`. Snapshots and stores already use tmp+rename. A crash
+  or ENOSPC mid-write, which a 99%-full disk on 2026-11-02 showed is not
+  hypothetical, leaves a truncated, unloadable world with the old copy already
+  destroyed. Use the existing tmp+rename helper. DoD: a test that fails the
+  write midway and finds the old file intact.
+
+### Tier 3 — multiplayer correctness and the browser client
+
+- [ ] **M36.22 — simulation input is per engine, not process-global.**
+  *(confirmed, medium; determinism)* `GameStepWithInputs` routes per-player input
+  through package-level globals (`InputDeltaX/Y`, `InputShiftPressed`,
+  `InputKeyPressed`, `InputLast*`, `InputKeyBuffer`; `engine/game.go:1904`),
+  shared by every Engine. `simulateGeneratedBoards` (`generation.go:3422`) steps
+  a scratch engine on the HTTP goroutine while the tick loop steps live rooms,
+  so the two race: a live player's move is dropped or replaced, and replay and
+  challenge VERIFY can diverge. That breaks CLAUDE.md rule 2, and it is a Go
+  data race. Rule 6 applies: `InputDeltaX/Y` are reused as scratch var params,
+  so move them onto the Engine without a blind rename. DoD: a `-race` test
+  generating while a room ticks.
+
+- [ ] **M36.23 — a full board refuses a join instead of hijacking a stat.**
+  *(confirmed, medium: reproduced)* `SpawnPlayer` (`engine/gamevars.go:588`)
+  ignores `AddStat`'s silent no-op at `MAX_STAT` and returns an existing stat,
+  usually an object. The joiner controls that object, an `E_PLAYER` tile with
+  no stat appears at the spawn, and when they leave `RemovePlayer` deletes the
+  object from the world. Duplicators reach 150 stats readily. Check capacity
+  in `spawnPlayerInRoom`/`JoinPlayerWithID` and refuse, or send the joiner to
+  another board, with a message. DoD: join a 150-stat board; no object is
+  harmed.
+
+- [ ] **M36.24 — the client keeps one socket and one input sampler.**
+  *(confirmed, medium)* (a) `connect()` (`engine/web/src/main.ts:2283`) refuses
+  to replace only an OPEN socket. A held P (autorepeat) or a double-tap while
+  CONNECTING opens several sockets, each joining as a separate player with the
+  same nickname. Their handlers never check `ws === socket`, and
+  `leaveToTitle` closes only the latest, so a ghost player stays in the room.
+  (b) `disconnectSocket()` (`:3812`) never clears `inputTimer`, so each
+  challenge "again" or "watch" stacks another 55 ms sampler that sends N+1
+  input frames per tick. (c) *(plausible)* `showTitle` (`:1450`) does not
+  re-check `mode` after awaiting `/api/title`, so a P pressed during the fetch
+  gets title residue painted over play, plus a stray SSE stream and occupancy
+  poll. Run `make browser`. DoD: node or browser tests for the double-P, the
+  repeated challenge retry, and P during the title fetch.
+
+- [ ] **M36.25 — scrolls cannot pile up or replace a modal.** *(confirmed,
+  medium)* Board-wide scrolls (`playerStatId < 0`) are queued without a cap or
+  de-duplication (`engine/web/src/main.ts:4367`), and the server freezes nobody
+  for them, so a looping object floods the queue while the open modal blocks
+  movement. With no scroll open, `enqueueScroll` calls `openModal` directly,
+  **replacing an open chat and losing its draft**. Queued scrolls survive a
+  board change, and their reply then goes to that `statId` on the new board,
+  firing a label on an unrelated object. Cap or de-duplicate, never displace a
+  non-scroll modal, and clear the queue on board change. Run `make browser`.
+  DoD: tests for each.
+
+### Tier 4 — hardening, test health and tools
+
+- [ ] **M36.26 — tests assert what they are named for, and leave the tree
+  clean.** *(confirmed unless marked, low)* Do these before trusting the suites
+  for beta:
+  (a) `TestM1619ChatAndGenerationRateLimits` (`engine/m16_19_test.go:335`)
+  checks neither limit. Its neighbours claim atomic autosave, a
+  `CORRUPT.SAV` restore, and oversized-frame handling without asserting them, and
+  discard `conn.Write` errors.
+  (b) The SIGINT step (`:244`) only `t.Logf`s a non-zero exit. It is cited by
+  manifest rows `task.M3.4`, `route.api.health` and `route.api.metrics`.
+  (c) *(plausible)* `m16_11_test.go:32` and `m32_1_test.go:161` overwrite the
+  committed `fixtures/ACCEPT.ZZT` and `GEMDASH.ZZT` (and `engine/*.ZZT`) on every
+  run and never compare them. Gate the writes behind an env var and fail on a
+  stale binary, as `charset_fixture_test.go` does.
+  (d) `getM1619ServerBinary` (`:34`) leaves a server binary in `$TMPDIR` on
+  every run; remove it in `TestMain`.
+  (e) `StateHash` (`engine/state_hash.go:16`), the replay safety net, hashes only
+  `Players[0]`'s inventory, so a regression in player 2's ammo, keys or respawn
+  passes. It also mutates `World.Info` as a side effect. Extend it
+  **deliberately**: every fixture hash will move, so this needs a `DEVIATION:`
+  commit that changes nothing else.
+  DoD: each assertion, when deliberately broken, reddens its test.
+
+- [ ] **M36.27 — tools fail loudly, and the ZWD compiler rejects what it
+  would truncate.** *(confirmed unless marked, low)*
+  (a) *(plausible)* `zzt-parity -require-certified -browser=false` (or
+  `-race=false`) reports CERTIFIED and exits 0 (`cmd/zzt-parity/report.go:281`):
+  the declared browser skip is excused under `-require-certified`.
+  (b) `zzt-fetch` (`cmd/zzt-fetch/main.go:277`) leaves a truncated .ZZT after a
+  failed extraction, exits 0, and SKIPs it on every later run.
+  (c) `zzt-shot -board 99` (`cmd/zzt-shot/main.go:51`) renders a different board
+  and exits 0, and `-board -1` panics.
+  (d) `zzt-load` (`cmd/zzt-load/main.go:200`) discards a whole run's
+  measurements if the final metrics fetch fails, and races its sampler.
+  (e) ZWD: `wrapZWDTextWindowLines` (`zwd.go:1002`) collapses spaces in lines
+  already within the limit, which mangles ASCII art in dialogue (medium, and
+  silent). The board `message` field (`:293`) has no length check, and an
+  unresolved legend `to "BOARD"` compiles silently. Decompile drops conveyor
+  stats, ends OOP at an indented `end`, and binds duplicate board names to the
+  first (`zwd_decompile.go:539`).
+  Also: the postcard limiter is keyed on `RemoteAddr` (always 127.0.0.1 behind
+  Caddy), with an unbounded cache (`web_api.go:238`); account preferences use
+  unsynchronized read-modify-write (`websocket_server.go:3916`); and the
+  client's 3D loop is never stopped on leaving play (`main.ts:975`), nor is
+  storage access guarded where the getter itself throws (`main.ts:3996`).
+  Split this into separate commits by area. DoD: a failing test or tool run
+  for each before its fix.
 
 ## M14 — Rearchitecting for the service ZZTMMO is becoming
 
