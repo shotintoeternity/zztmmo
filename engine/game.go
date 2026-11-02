@@ -749,6 +749,60 @@ func validateWorldBoards(world TWorld) error {
 	return nil
 }
 
+// boardStructuralError reports what BoardOpen decodes without complaint but
+// panics later (M36.11). The editor applies it to boards a client hands in
+// (ImportBoard, UploadWorld); world loads do not, by owner decision
+// 2026-11-02 -- seven community worlds carry one such tile, and refusing the
+// whole world over it is the wrong trade. What it catches: an element byte
+// above MAX_ELEMENT on a tile, which
+// panics the first draw (TileToColorAndChar indexes ElementDefs), or under a
+// stat, which panics when that stat moves off it; and a stat whose X/Y lies
+// outside the tile array, which panics the first time anything reads its
+// square. Vanilla read ElementDefs and the tile array unchecked and drew
+// garbage or crashed. Only the playfield is checked: BoardOpen rewrites the
+// edges itself.
+func boardStructuralError(e *Engine) error {
+	for x := int16(1); x <= BOARD_WIDTH; x++ {
+		for y := int16(1); y <= BOARD_HEIGHT; y++ {
+			if int16(e.Board.Tiles[x][y].Element) > MAX_ELEMENT {
+				return fmt.Errorf("tile (%d,%d) has element %d", x, y, e.Board.Tiles[x][y].Element)
+			}
+		}
+	}
+	for i := int16(0); i <= e.Board.StatCount; i++ {
+		stat := &e.Board.Stats[i]
+		if int16(stat.X) > BOARD_WIDTH+1 || int16(stat.Y) > BOARD_HEIGHT+1 {
+			return fmt.Errorf("stat %d is at (%d,%d), off the board", i, stat.X, stat.Y)
+		}
+		if int16(stat.Under.Element) > MAX_ELEMENT {
+			return fmt.Errorf("stat %d stands on element %d", i, stat.Under.Element)
+		}
+	}
+	return nil
+}
+
+// boardSerializedSize is the exact length BoardClose writes for the open
+// board (M36.11). It is the ZWD compiler's estimate less the one thing that
+// estimate does not model: BoardClose stores a program once and writes every
+// later stat whose Data is identical (an earlier stat from index 1 up) as a
+// reference to it, so twenty objects sharing a program cost it once.
+func boardSerializedSize(e *Engine) int {
+	size := estimateZWDSerializedBoardSize(e)
+	for ix := int16(0); ix <= e.Board.StatCount; ix++ {
+		stat := &e.Board.Stats[ix]
+		if stat.DataLen <= 0 {
+			continue
+		}
+		for iy := int16(1); iy <= ix-1; iy++ {
+			if e.Board.Stats[iy].Data == stat.Data {
+				size -= int(stat.DataLen)
+				break
+			}
+		}
+	}
+	return size
+}
+
 func (e *Engine) WorldLoad(filename, extension string, titleOnly bool) (WorldLoad bool) {
 	var loadProgress int16
 	SidebarAnimateLoading := func() {

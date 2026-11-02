@@ -738,6 +738,17 @@ func (s *EditorSession) EditAndFanOut(member *webSocketClient, edit EditorEditMe
 	var ticket uint64
 	var ticketed bool
 	memberID := s.MemberID(member)
+	// A ticket taken by an edit that then panics must still be retired, or
+	// every later edit by every member waits on it forever (M36.11). The
+	// panic itself carries on to the connection's own recovery.
+	defer func() {
+		if r := recover(); r != nil {
+			if ticketed {
+				s.inOrder(ticket, func() {})
+			}
+			panic(r)
+		}
+	}()
 	err := s.Apply(member, func(e *Engine) {
 		ticket, ticketed = s.issueFanTicketLocked(), true
 		if !s.canEditLocked(member) {
@@ -820,13 +831,26 @@ func editorDrawTileAndNeighbors(e *Engine, x, y int16) {
 }
 
 func editorPlaceTile(e *Engine, x, y int16, element, color byte, copied bool) bool {
-	if (!copied && !editorPatternElement(element)) || !e.BoardPrepareTileForPlacement(x, y) {
+	if !editorBrushElement(element, copied) || !e.BoardPrepareTileForPlacement(x, y) {
 		return false
 	}
 	e.Board.Tiles[x][y].Element = element
 	e.Board.Tiles[x][y].Color = color
 	editorDrawTileAndNeighbors(e, x, y)
 	return true
+}
+
+// editorBrushElement is what the place and fill brushes may paint (M36.11). A
+// pattern element always; a copied tile only if it is a real element (a byte
+// above MAX_ELEMENT panics the first time it is drawn) and needs no stat. The
+// fork's copy carries a tile's element and colour, not vanilla's CopiedStat
+// (EDITOR.PAS), so a copied Object, Scroll, creature or player would be a tile
+// with no stat behind it. Cycle == -1 is editorPlaceElement's own "statless".
+func editorBrushElement(element byte, copied bool) bool {
+	if !copied {
+		return editorPatternElement(element)
+	}
+	return int16(element) <= MAX_ELEMENT && element != E_PLAYER && ElementDefs[element].Cycle == -1
 }
 
 func editorPatternElement(element byte) bool {
@@ -1000,7 +1024,7 @@ func editorElementMenus() []EditorElementMenu {
 // the protocol. The 256-cell queue and the Empty-tile color exception preserve
 // the Pascal editor's fill boundary rules.
 func editorFloodFill(e *Engine, x, y int16, from TTile, element, color byte, copied bool) bool {
-	if !copied && !editorPatternElement(element) {
+	if !editorBrushElement(element, copied) {
 		return false
 	}
 	var xPosition, yPosition [256]int16
@@ -1263,7 +1287,9 @@ func (s *EditorSession) SaveProgram(member *webSocketClient, statId int16, lines
 		stat := &e.Board.Stats[statId]
 		def := ElementDefs[e.Board.Tiles[stat.X][stat.Y].Element]
 		if def.ParamTextName != "" {
-			editorUnbindSharers(e, statId)
+			// Kept so a program the board cannot hold is refused with nothing
+			// changed, the sharers' unbinding included (M36.11).
+			saved := e.Board.Stats
 			if len(lines) > MAX_TEXT_WINDOW_LINES {
 				lines = lines[:MAX_TEXT_WINDOW_LINES]
 			}
@@ -1274,6 +1300,7 @@ func (s *EditorSession) SaveProgram(member *webSocketClient, statId int16, lines
 			// DataLen is an int16 in the vanilla stat record; refuse a program
 			// that cannot be represented rather than wrapping it.
 			if total <= 0x7FFF {
+				editorUnbindSharers(e, statId)
 				var buf []byte
 				for _, line := range lines {
 					buf = append(buf, line...)
@@ -1281,8 +1308,15 @@ func (s *EditorSession) SaveProgram(member *webSocketClient, statId int16, lines
 				}
 				stat.Data = string(buf)
 				stat.DataLen = int16(total)
-				e.BoardDrawTile(int16(stat.X), int16(stat.Y))
-				e.BoardClose()
+				// BoardClose serializes into the fixed 20000-byte IoTmpBuf, and
+				// a board that does not fit panics it there and on every later
+				// close, publish and download (M36.11).
+				if boardSerializedSize(e) > len(e.IoTmpBuf) {
+					e.Board.Stats = saved
+				} else {
+					e.BoardDrawTile(int16(stat.X), int16(stat.Y))
+					e.BoardClose()
+				}
 			}
 		}
 		reply = EditorStatSettingsMessage{
@@ -1463,7 +1497,10 @@ func (s *EditorSession) ImportBoard(member *webSocketClient, data []byte) (Edito
 		prevData, prevLen := e.World.BoardData[cur], e.World.BoardLen[cur]
 		e.World.BoardData[cur] = append([]byte(nil), data[2:]...)
 		e.World.BoardLen[cur] = length
-		if !safeBoardOpen(e, cur) {
+		// A board can open cleanly and still panic the first time it is drawn
+		// or ticked: boardStructuralError catches that before it is committed
+		// (M36.11).
+		if !safeBoardOpen(e, cur) || boardStructuralError(e) != nil {
 			e.World.BoardData[cur], e.World.BoardLen[cur] = prevData, prevLen
 			e.BoardOpen(cur)
 			e.TransitionDrawToBoard()
@@ -1477,6 +1514,23 @@ func (s *EditorSession) ImportBoard(member *webSocketClient, data []byte) (Edito
 		reply = editorSnapshot(e, BOARD_WIDTH/2, BOARD_HEIGHT/2)
 	})
 	return reply, err
+}
+
+// validateEditorWorldBoards is validateWorldBoards plus boardStructuralError
+// on every board: the stricter gate for a world a client uploads into the
+// editor (M36.11), which ordinary world loads do not apply.
+func validateEditorWorldBoards(world TWorld) error {
+	scratch := newSnapshotEngine()
+	scratch.World = world
+	for boardID := int16(0); boardID <= world.BoardCount; boardID++ {
+		if !safeBoardOpen(scratch, boardID) {
+			return fmt.Errorf("%w: board %d", ErrWorldCorrupt, boardID)
+		}
+		if err := boardStructuralError(scratch); err != nil {
+			return fmt.Errorf("%w: board %d: %v", ErrWorldCorrupt, boardID, err)
+		}
+	}
+	return nil
 }
 
 // safeBoardOpen runs BoardOpen under a recover. BoardOpen has no bounds checks —
@@ -1559,6 +1613,13 @@ func (s *EditorSession) UploadWorld(member *webSocketClient, data []byte) (Edito
 		scratch := newSnapshotEngine()
 		if rerr := scratch.worldReadFrom(bytes.NewReader(data), false, nil); rerr != nil {
 			gate = rerr.Error()
+			return
+		}
+		// The 200-tick simulation never draws a tile nobody touches, nor a
+		// stat's Under until it moves, so it can pass a board the editor's
+		// first draw panics on (M36.11).
+		if verr := validateEditorWorldBoards(scratch.World); verr != nil {
+			gate = verr.Error()
 			return
 		}
 		e.World = scratch.World

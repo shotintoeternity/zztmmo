@@ -8593,7 +8593,7 @@ copy; the executor still writes the failing test in the repo first.
 **Priority order for the open M36 tasks** (work top-down; M36.1-M36.3 are done):
 
 1. Anyone can crash or freeze the server, or normal play breaks a player:
-   M36.7, M36.8, M36.9, M36.10, M36.11, M36.12
+   M36.7, M36.8, M36.9, M36.10, M36.11, M36.12, M36.28
 2. Security and data loss: M36.13, M36.14, M36.15, M36.16, M36.17, M36.18,
    M36.19, M36.20, M36.21
 3. Multiplayer correctness and the browser client: M36.22, M36.23, M36.24,
@@ -8729,7 +8729,7 @@ copy; the executor still writes the failing test in the repo first.
   bullet repro (A down, B none; the bullet dies first) as a failing test, plus
   one for score credit.
 
-- [ ] **M36.11 — no editor action can crash or wedge a session.** *(confirmed,
+- [x] **M36.11 — no editor action can crash or wedge a session.** *(confirmed,
   high)* Three ways in, one class:
   (a) `editorPlaceTile`/`editorFloodFill` (`engine/editor_session.go:822`)
   accept any element byte with `copied:true`. Element 54..255 panics in
@@ -8763,6 +8763,23 @@ copy; the executor still writes the failing test in the repo first.
   `ElementDoorTouch` already has this guard. Vanilla's 1-based `Keys[0]` read
   adjacent memory instead; port the guard and mark it `// ZZT-QUIRK:` with what
   vanilla did. DoD: a test touches a 0x08 key.
+
+- [ ] **M36.28 — a world tile above the last element does not drop the room.**
+  *(found by M36.11, confirmed by scan)* Filed 2026-11-02 by owner decision.
+  M36.11 made the editor's import and upload refuse an element byte above
+  `MAX_ELEMENT` (`boardStructuralError`, `engine/game.go`), but ordinary world
+  loads (`validateWorldBoards`) still accept one, deliberately: 7 of the 164
+  community worlds in `engine/` carry exactly one such tile (`DOG!.ZZT` board 1
+  element 61; `ESPFILE2`, `ESPFILE4`, `FROST1`, `PR0N4U`, `ZFILES1` and
+  `ZFILES2` element 246, almost always at (56,22)), and refusing a whole world
+  over one tile was judged the wrong trade. `TileToColorAndChar` indexes
+  `ElementDefs` unchecked, so entering such a board panics and `stepRoom`
+  drops the room. Read what vanilla does with an out-of-range element
+  (`GAME.PAS` `BoardDrawTile`, `ELEMENTS.PAS` `ElementDefs` and its
+  neighbours in the data segment) before choosing how to draw and tick it;
+  port it as a `// ZZT-QUIRK:` rather than guessing. DoD: a test opens,
+  draws and steps a board with a 246 tile and the room survives; those 7
+  worlds load and every board draws.
 
 ### Tier 2 — security and data loss
 
