@@ -4,7 +4,7 @@ import "testing"
 
 // TestScriptedInput20Ticks is the M0.3 definition of done: drive 20 ticks of
 // input through InputUpdate with no terminal and no key poller, proving the
-// InputSource seam feeds the existing globals.
+// InputSource seam feeds the engine's input fields.
 func TestScriptedInput20Ticks(t *testing.T) {
 	ticks := make([]ScriptedTick, 20)
 	for i := range ticks {
@@ -21,24 +21,24 @@ func TestScriptedInput20Ticks(t *testing.T) {
 	for i := 0; i < 20; i++ {
 		InputUpdate()
 		w := ticks[i]
-		if InputDeltaX != w.DeltaX || InputDeltaY != w.DeltaY ||
-			InputShiftPressed != w.Shift || InputKeyPressed != w.Key {
+		if E.InputDeltaX != w.DeltaX || E.InputDeltaY != w.DeltaY ||
+			E.InputShiftPressed != w.Shift || E.InputKeyPressed != w.Key {
 			t.Fatalf("tick %d: got dx=%d dy=%d shift=%v key=%#x; want dx=%d dy=%d shift=%v key=%#x",
-				i, InputDeltaX, InputDeltaY, InputShiftPressed, InputKeyPressed,
+				i, E.InputDeltaX, E.InputDeltaY, E.InputShiftPressed, E.InputKeyPressed,
 				w.DeltaX, w.DeltaY, w.Shift, w.Key)
 		}
 	}
 
 	// LastDelta tracks the most recent non-zero movement (tick 19 moved right).
-	if InputLastDeltaX != 1 || InputLastDeltaY != 0 {
-		t.Errorf("InputLastDelta = (%d,%d), want (1,0)", InputLastDeltaX, InputLastDeltaY)
+	if E.InputLastDeltaX != 1 || E.InputLastDeltaY != 0 {
+		t.Errorf("InputLastDelta = (%d,%d), want (1,0)", E.InputLastDeltaX, E.InputLastDeltaY)
 	}
 
 	// Past the end of the script the source idles rather than blocking on a
 	// terminal that isn't there.
 	InputUpdate()
-	if InputDeltaX != 0 || InputDeltaY != 0 || InputShiftPressed || InputKeyPressed != 0 {
+	if E.InputDeltaX != 0 || E.InputDeltaY != 0 || E.InputShiftPressed || E.InputKeyPressed != 0 {
 		t.Errorf("exhausted script should idle; got dx=%d dy=%d shift=%v key=%#x",
-			InputDeltaX, InputDeltaY, InputShiftPressed, InputKeyPressed)
+			E.InputDeltaX, E.InputDeltaY, E.InputShiftPressed, E.InputKeyPressed)
 	}
 }

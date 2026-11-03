@@ -151,9 +151,8 @@ func (t *TitleSim) Tick() {
 	}
 
 	// ElementMonitorTick sets GamePlayExitRequested when it sees a menu key in
-	// the *package-global* InputKeyPressed (elements.go:1498). Nothing feeds
-	// that global here, but a latched true would stall the sim forever, so it
-	// is cleared every tick rather than trusted.
+	// the engine's InputKeyPressed. Nothing feeds that field here, but a
+	// latched true would stall the sim forever, so it is cleared every tick rather than trusted.
 	t.engine.GamePlayExitRequested = false
 	t.engine.GameStep(nil)
 	// Objects on board 0 may `#play`. Nobody is listening; without this the

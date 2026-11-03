@@ -948,7 +948,7 @@ func (e *Engine) ElementDuplicatorTick(statId int16) {
 	} else {
 		stat.P1 = 0
 		if e.Board.Tiles[int16(stat.X)-stat.StepX][int16(stat.Y)-stat.StepY].Element == E_PLAYER {
-			ElementDefs[e.Board.Tiles[int16(stat.X)+stat.StepX][int16(stat.Y)+stat.StepY].Element].TouchProc(e, int16(stat.X)+stat.StepX, int16(stat.Y)+stat.StepY, 0, &InputDeltaX, &InputDeltaY)
+			ElementDefs[e.Board.Tiles[int16(stat.X)+stat.StepX][int16(stat.Y)+stat.StepY].Element].TouchProc(e, int16(stat.X)+stat.StepX, int16(stat.Y)+stat.StepY, 0, &e.InputDeltaX, &e.InputDeltaY)
 		} else {
 			if e.Board.Tiles[int16(stat.X)-stat.StepX][int16(stat.Y)-stat.StepY].Element != E_EMPTY {
 				e.ElementPushablePush(int16(stat.X)-stat.StepX, int16(stat.Y)-stat.StepY, -stat.StepX, -stat.StepY)
@@ -1282,7 +1282,7 @@ func (e *Engine) ElementBoardEdgeTouch(x, y int16, sourceStatId int16, deltaX, d
 		boardId = e.World.Info.CurrentBoard
 		e.BoardChange(int16(e.Board.Info.NeighborBoards[neighborId]))
 		if e.Board.Tiles[entryX][entryY].Element != E_PLAYER {
-			ElementDefs[e.Board.Tiles[entryX][entryY].Element].TouchProc(e, entryX, entryY, sourceStatId, &InputDeltaX, &InputDeltaY)
+			ElementDefs[e.Board.Tiles[entryX][entryY].Element].TouchProc(e, entryX, entryY, sourceStatId, &e.InputDeltaX, &e.InputDeltaY)
 		}
 		if ElementDefs[e.Board.Tiles[entryX][entryY].Element].Walkable || e.Board.Tiles[entryX][entryY].Element == E_PLAYER {
 			if e.Board.Tiles[entryX][entryY].Element != E_PLAYER {
@@ -1361,7 +1361,7 @@ func (e *Engine) GamePromptEndPlay(statId int16) {
 	} else {
 		e.Events = append(e.Events, QuitPromptEvent{StatId: statId})
 	}
-	InputKeyPressed = '\x00'
+	e.InputKeyPressed = '\x00'
 }
 
 // walkClickFreqHz is vanilla's direct Sound(110) footstep poke
@@ -1464,15 +1464,15 @@ func (e *Engine) ElementPlayerTick(statId int16) {
 	if pState.Health <= 0 {
 		// Health is 0 but RespawnTicks hasn't been set yet (e.g. very first tick
 		// after DamageStat ran this same cycle). Zero input and wait.
-		InputDeltaX = 0
-		InputDeltaY = 0
-		InputShiftPressed = false
+		e.InputDeltaX = 0
+		e.InputDeltaY = 0
+		e.InputShiftPressed = false
 		return
 	}
-	if InputShiftPressed || InputKeyPressed == ' ' {
-		if InputShiftPressed && (InputDeltaX != 0 || InputDeltaY != 0) {
-			pState.DirX = InputDeltaX
-			pState.DirY = InputDeltaY
+	if e.InputShiftPressed || e.InputKeyPressed == ' ' {
+		if e.InputShiftPressed && (e.InputDeltaX != 0 || e.InputDeltaY != 0) {
+			pState.DirX = e.InputDeltaX
+			pState.DirY = e.InputDeltaY
 		}
 		if pState.DirX != 0 || pState.DirY != 0 {
 			if e.Board.Info.MaxShots == 0 {
@@ -1506,31 +1506,31 @@ func (e *Engine) ElementPlayerTick(statId int16) {
 						pState.Ammo--
 						e.GameUpdateSidebar()
 						e.SoundQueue(2, "@\x010\x01 \x01")
-						InputDeltaX = 0
-						InputDeltaY = 0
+						e.InputDeltaX = 0
+						e.InputDeltaY = 0
 					}
 				}
 			}
 
 		}
-	} else if InputDeltaX != 0 || InputDeltaY != 0 {
-		pState.DirX = InputDeltaX
-		pState.DirY = InputDeltaY
-		targetX := int16(stat.X) + InputDeltaX
-		targetY := int16(stat.Y) + InputDeltaY
+	} else if e.InputDeltaX != 0 || e.InputDeltaY != 0 {
+		pState.DirX = e.InputDeltaX
+		pState.DirY = e.InputDeltaY
+		targetX := int16(stat.X) + e.InputDeltaX
+		targetY := int16(stat.Y) + e.InputDeltaY
 		if targetX < 0 || targetX > BOARD_WIDTH+1 || targetY < 0 || targetY > BOARD_HEIGHT+1 {
-			InputDeltaX = 0
-			InputDeltaY = 0
+			e.InputDeltaX = 0
+			e.InputDeltaY = 0
 		} else {
-			ElementDefs[e.Board.Tiles[targetX][targetY].Element].TouchProc(e, targetX, targetY, statId, &InputDeltaX, &InputDeltaY)
+			ElementDefs[e.Board.Tiles[targetX][targetY].Element].TouchProc(e, targetX, targetY, statId, &e.InputDeltaX, &e.InputDeltaY)
 			statId, stat = e.refreshPlayerStat(pState, statId, stat)
 		}
-		if InputDeltaX != 0 || InputDeltaY != 0 {
+		if e.InputDeltaX != 0 || e.InputDeltaY != 0 {
 			if pState.SoundEnabled && !SoundIsPlaying {
 				e.Events = append(e.Events, WalkClickEvent{StatId: statId, FreqHz: walkClickFreqHz})
 			}
-			targetX = int16(stat.X) + InputDeltaX
-			targetY = int16(stat.Y) + InputDeltaY
+			targetX = int16(stat.X) + e.InputDeltaX
+			targetY = int16(stat.Y) + e.InputDeltaY
 			if targetX >= 0 && targetX <= BOARD_WIDTH+1 && targetY >= 0 && targetY <= BOARD_HEIGHT+1 && ElementDefs[e.Board.Tiles[targetX][targetY].Element].Walkable {
 				if pState.SoundEnabled && !SoundIsPlaying {
 					NoSound()
@@ -1546,7 +1546,7 @@ func (e *Engine) ElementPlayerTick(statId int16) {
 	// remove one below this player; the tail below paints Tiles[stat.X][stat.Y].
 	statId, stat = e.refreshPlayerStat(pState, statId, stat)
 
-	switch UpCase(InputKeyPressed) {
+	switch UpCase(e.InputKeyPressed) {
 	case 'T':
 		if pState.TorchTicks <= 0 {
 			if pState.Torches > 0 {
@@ -1574,7 +1574,7 @@ func (e *Engine) ElementPlayerTick(statId int16) {
 		// Never call GameWorldSave here: it prompts via InputReadWaitKey, which
 		// blocks forever headless (the M3.9 '?' bug). Emit and return.
 		e.Events = append(e.Events, SavePromptEvent{StatId: statId})
-		InputKeyPressed = '\x00'
+		e.InputKeyPressed = '\x00'
 	case 'P':
 		if pState.Health > 0 {
 			pState.Paused = true
@@ -1591,7 +1591,7 @@ func (e *Engine) ElementPlayerTick(statId int16) {
 		}
 		SoundClearQueue()
 		e.GameUpdateSidebar()
-		InputKeyPressed = ' '
+		e.InputKeyPressed = ' '
 	case 'H':
 		e.Events = append(e.Events, HelpEvent{
 			Filename: "GAME.HLP",
@@ -1600,7 +1600,7 @@ func (e *Engine) ElementPlayerTick(statId int16) {
 		})
 	case '?':
 		e.Events = append(e.Events, DebugPromptEvent{StatId: statId})
-		InputKeyPressed = '\x00'
+		e.InputKeyPressed = '\x00'
 	}
 	if pState.TorchTicks > 0 {
 		pState.TorchTicks--
@@ -1641,7 +1641,7 @@ func (e *Engine) ElementPlayerTick(statId int16) {
 }
 
 func (e *Engine) ElementMonitorTick(statId int16) {
-	switch UpCase(InputKeyPressed) {
+	switch UpCase(e.InputKeyPressed) {
 	case '\x1b', 'A', 'E', 'H', 'N', 'P', 'Q', 'R', 'S', 'W', '|':
 		e.GamePlayExitRequested = true
 	}

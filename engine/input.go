@@ -1,12 +1,15 @@
-// INPUT.PAS, machine-converted by pas2go. Upstream this read a DOS keyboard;
-// in ZZTMMO the server sets the same globals from keymasks sent by browser
-// clients, so the simulation below cannot tell the difference.
+// INPUT.PAS, machine-converted by pas2go. Upstream this read a DOS keyboard
+// into globals; in ZZTMMO the same state lives on each Engine (e.InputDeltaX
+// and friends, M36.22) and the server sets it from keymasks sent by browser
+// clients, so the simulation below cannot tell the difference. Process-global
+// input let two engines stepping on different goroutines (a live room and
+// generation's dry run) overwrite each other's moves.
 //
-// InputDeltaX and InputDeltaY are the trap in this file. They are the player's
-// movement for the tick, and they are ALSO reused as throwaway out-params for
-// TouchProc calls in elements.go, which take a delta pair they do not use.
-// Renaming or repurposing them breaks call sites that look unrelated. See
-// doc.go.
+// e.InputDeltaX and e.InputDeltaY are the trap in this file. They are the
+// player's movement for the tick, and they are ALSO reused as throwaway
+// out-params for TouchProc calls in elements.go, which take a delta pair they
+// do not use. Renaming or repurposing them breaks call sites that look
+// unrelated. See doc.go.
 
 package zztgo // unit: Input
 
@@ -36,11 +39,9 @@ const (
 	KEY_END       = '\xd5'
 )
 
+// The keyboard itself is still one per process: only the terminal build
+// reads it, through E.
 var (
-	InputDeltaX, InputDeltaY int16
-	InputShiftPressed        bool
-	InputKeyPressed          byte
-
 	KeysShiftHeld bool
 
 	keyChan chan byte
@@ -48,101 +49,87 @@ var (
 
 // implementation uses: Dos, Crt, Keys, Sounds
 
-var (
-	InputLastDeltaX, InputLastDeltaY int16
-	InputKeyBuffer                   string
-)
-
 func (e *Engine) InputUpdate() {
-	InputDeltaX = e.InputDeltaX
-	InputDeltaY = e.InputDeltaY
-	InputShiftPressed = e.InputShiftPressed
-	InputKeyPressed = e.InputKeyPressed
-	InputLastDeltaX = e.InputLastDeltaX
-	InputLastDeltaY = e.InputLastDeltaY
-	InputKeyBuffer = e.InputKeyBuffer
-
-	defer func() {
-		e.InputDeltaX = InputDeltaX
-		e.InputDeltaY = InputDeltaY
-		e.InputShiftPressed = InputShiftPressed
-		e.InputKeyPressed = InputKeyPressed
-		e.InputLastDeltaX = InputLastDeltaX
-		e.InputLastDeltaY = InputLastDeltaY
-		e.InputKeyBuffer = InputKeyBuffer
-	}()
-
-	InputDeltaX, InputDeltaY, InputShiftPressed, InputKeyPressed = e.ActiveInput.Poll()
-	if InputDeltaX != 0 || InputDeltaY != 0 {
-		InputLastDeltaX = InputDeltaX
-		InputLastDeltaY = InputDeltaY
+	if _, live := e.ActiveInput.(TcellInput); live {
+		// The live keyboard edits this engine's key buffer in place, which
+		// Poll's return values cannot carry. Every engine starts on
+		// TcellInput, room engines included, so routing it through E would
+		// only move the M36.22 race onto E's fields.
+		e.InputUpdateWithKey(0)
+	} else {
+		e.InputDeltaX, e.InputDeltaY, e.InputShiftPressed, e.InputKeyPressed = e.ActiveInput.Poll()
+	}
+	if e.InputDeltaX != 0 || e.InputDeltaY != 0 {
+		e.InputLastDeltaX = e.InputDeltaX
+		e.InputLastDeltaY = e.InputDeltaY
 	}
 }
 
-func InputUpdateWithKey(keyRead byte) {
-	InputDeltaX = 0
-	InputDeltaY = 0
-	InputShiftPressed = false
+func (e *Engine) InputUpdateWithKey(keyRead byte) {
+	e.InputDeltaX = 0
+	e.InputDeltaY = 0
+	e.InputShiftPressed = false
 
 	if keyRead == 0 {
 		checkForKeys := true
 		for checkForKeys {
 			select {
 			case key := <-keyChan:
-				InputKeyPressed = key
-				InputKeyBuffer += string([]byte{InputKeyPressed})
+				e.InputKeyPressed = key
+				e.InputKeyBuffer += string([]byte{e.InputKeyPressed})
 			default:
 				checkForKeys = false
 			}
 		}
 	} else {
-		InputKeyPressed = keyRead
-		InputKeyBuffer += string([]byte{InputKeyPressed})
+		e.InputKeyPressed = keyRead
+		e.InputKeyBuffer += string([]byte{e.InputKeyPressed})
 	}
 
-	if Length(InputKeyBuffer) != 0 {
-		InputKeyPressed = InputKeyBuffer[0]
-		if Length(InputKeyBuffer) == 1 {
-			InputKeyBuffer = ""
+	if Length(e.InputKeyBuffer) != 0 {
+		e.InputKeyPressed = e.InputKeyBuffer[0]
+		if Length(e.InputKeyBuffer) == 1 {
+			e.InputKeyBuffer = ""
 		} else {
-			InputKeyBuffer = Copy(InputKeyBuffer, Length(InputKeyBuffer)-1, 1)
+			e.InputKeyBuffer = Copy(e.InputKeyBuffer, Length(e.InputKeyBuffer)-1, 1)
 		}
-		switch InputKeyPressed {
+		switch e.InputKeyPressed {
 		case KEY_UP, '8':
-			InputDeltaX = 0
-			InputDeltaY = -1
+			e.InputDeltaX = 0
+			e.InputDeltaY = -1
 		case KEY_LEFT, '4':
-			InputDeltaX = -1
-			InputDeltaY = 0
+			e.InputDeltaX = -1
+			e.InputDeltaY = 0
 		case KEY_RIGHT, '6':
-			InputDeltaX = 1
-			InputDeltaY = 0
+			e.InputDeltaX = 1
+			e.InputDeltaY = 0
 		case KEY_DOWN, '2':
-			InputDeltaX = 0
-			InputDeltaY = 1
+			e.InputDeltaX = 0
+			e.InputDeltaY = 1
 		}
 	} else {
-		InputKeyPressed = '\x00'
+		e.InputKeyPressed = '\x00'
 	}
-	if InputDeltaX != 0 || InputDeltaY != 0 {
-		InputShiftPressed = KeysShiftHeld
+	if e.InputDeltaX != 0 || e.InputDeltaY != 0 {
+		e.InputShiftPressed = KeysShiftHeld
 	}
-	if InputDeltaX != 0 || InputDeltaY != 0 {
-		InputLastDeltaX = InputDeltaX
-		InputLastDeltaY = InputDeltaY
+	if e.InputDeltaX != 0 || e.InputDeltaY != 0 {
+		e.InputLastDeltaX = e.InputDeltaX
+		e.InputLastDeltaY = e.InputDeltaY
 	}
 }
 
 func InputReadWaitKey() {
 	key := <-keyChan
-	InputUpdateWithKey(key)
+	E.InputUpdateWithKey(key)
 }
 
 // InputSource is the M0.3 seam that lets InputUpdate take a tick's input from
 // something other than a live keyboard. Poll returns the same shape the input
-// globals hold — movement delta, shift, and the raw key — and InputUpdate
-// copies it into InputDeltaX/InputDeltaY/InputShiftPressed/InputKeyPressed,
-// which the simulation reads unchanged (do NOT rename those globals — rule 6).
+// state holds — movement delta, shift, and the raw key — and InputUpdate
+// copies it into e.InputDeltaX/e.InputDeltaY/e.InputShiftPressed/
+// e.InputKeyPressed, which the simulation reads unchanged (do NOT rename those
+// fields — rule 6).
 type InputSource interface {
 	Poll() (dx, dy int16, shift bool, key byte)
 }
@@ -158,14 +145,16 @@ func (e *Engine) SetInputSource(s InputSource) {
 
 // TcellInput is the live-keyboard source. It runs the original keyboard
 // processing (drain the poller channel, buffer keys, map arrows to deltas) and
-// reports the resulting globals, so InputUpdate behaves exactly as it did
-// before M0.3. With no poller running (headless) the channel drain hits the
-// select's default branch, so this is safe to call without a terminal too.
+// reports the result, so InputUpdate behaves exactly as it did before M0.3.
+// With no poller running (headless) the channel drain hits the select's
+// default branch, so this is safe to call without a terminal too.
+// Engine.InputUpdate does not call this Poll: it runs InputUpdateWithKey on its
+// own engine instead (M36.22). Poll is kept for the interface and reads E.
 type TcellInput struct{}
 
 func (TcellInput) Poll() (dx, dy int16, shift bool, key byte) {
-	InputUpdateWithKey(0)
-	return InputDeltaX, InputDeltaY, InputShiftPressed, InputKeyPressed
+	E.InputUpdateWithKey(0)
+	return E.InputDeltaX, E.InputDeltaY, E.InputShiftPressed, E.InputKeyPressed
 }
 
 // ScriptedTick is one tick of pre-recorded input.
@@ -244,15 +233,6 @@ var tcellToKey = map[tcell.Key]byte{
 	tcell.KeyRight:      KEY_RIGHT,
 	tcell.KeyTab:        KEY_TAB,
 	tcell.KeyUp:         KEY_UP,
-}
-
-func init() {
-	InputLastDeltaX = 0
-	InputLastDeltaY = 0
-	InputDeltaX = 0
-	InputDeltaY = 0
-	InputShiftPressed = false
-	InputKeyBuffer = ""
 }
 
 // --- Global Wrappers ---

@@ -388,16 +388,16 @@ func (e *Engine) SidebarPromptCharacter(editable bool, x, y int16, prompt string
 		}
 		if editable {
 			InputReadWaitKey()
-			if InputKeyPressed == KEY_TAB {
-				InputDeltaX = 9
+			if e.InputKeyPressed == KEY_TAB {
+				e.InputDeltaX = 9
 			}
-			newValue = int16(*value) + InputDeltaX
+			newValue = int16(*value) + e.InputDeltaX
 			if int16(*value) != newValue {
 				*value = byte((newValue + 0x100) % 0x100)
 				e.SidebarClearLine(y + 2)
 			}
 		}
-		if InputKeyPressed == KEY_ENTER || InputKeyPressed == KEY_ESCAPE || !editable || InputShiftPressed {
+		if e.InputKeyPressed == KEY_ENTER || e.InputKeyPressed == KEY_ESCAPE || !editable || e.InputShiftPressed {
 			break
 		}
 	}
@@ -426,18 +426,18 @@ func (e *Engine) SidebarPromptSlider(editable bool, x, y int16, prompt string, v
 		if editable {
 			e.VideoWriteText(x+int16(*value)+1, y+1, 0x9F, "\x1f")
 			InputReadWaitKey()
-			if InputKeyPressed >= '1' && InputKeyPressed <= '9' {
-				*value = Ord(InputKeyPressed) - 49
+			if e.InputKeyPressed >= '1' && e.InputKeyPressed <= '9' {
+				*value = Ord(e.InputKeyPressed) - 49
 				e.SidebarClearLine(y + 1)
 			} else {
-				newValue = int16(*value) + InputDeltaX
+				newValue = int16(*value) + e.InputDeltaX
 				if int16(*value) != newValue && newValue >= 0 && newValue <= 8 {
 					*value = byte(newValue)
 					e.SidebarClearLine(y + 1)
 				}
 			}
 		}
-		if InputKeyPressed == KEY_ENTER || InputKeyPressed == KEY_ESCAPE || !editable || InputShiftPressed {
+		if e.InputKeyPressed == KEY_ENTER || e.InputKeyPressed == KEY_ESCAPE || !editable || e.InputShiftPressed {
 			break
 		}
 	}
@@ -472,13 +472,13 @@ func (e *Engine) SidebarPromptChoice(editable bool, y int16, prompt, choiceStr s
 		if editable {
 			e.VideoWriteText(62+i, y+1, 0x9F, "\x1f")
 			InputReadWaitKey()
-			newResult = int16(*result) + InputDeltaX
+			newResult = int16(*result) + e.InputDeltaX
 			if int16(*result) != newResult && newResult >= 0 && newResult <= choiceCount-1 {
 				*result = byte(newResult)
 				e.SidebarClearLine(y + 1)
 			}
 		}
-		if InputKeyPressed == KEY_ENTER || InputKeyPressed == KEY_ESCAPE || !editable || InputShiftPressed {
+		if e.InputKeyPressed == KEY_ENTER || e.InputKeyPressed == KEY_ESCAPE || !editable || e.InputShiftPressed {
 			break
 		}
 	}
@@ -519,32 +519,32 @@ func (e *Engine) PromptString(x, y, arrowColor, color, width int16, mode byte, b
 		e.VideoWriteText(x+Length(*buffer), y-1, byte(arrowColor/0x10*16+0x0F), "\x1f")
 		e.VideoWriteText(x, y, byte(color), *buffer)
 		InputReadWaitKey()
-		if Length(*buffer) < width && InputKeyPressed >= ' ' && InputKeyPressed < '\x80' {
+		if Length(*buffer) < width && e.InputKeyPressed >= ' ' && e.InputKeyPressed < '\x80' {
 			if firstKeyPress {
 				*buffer = ""
 			}
 			switch mode {
 			case PROMPT_NUMERIC:
-				if InputKeyPressed >= '0' && InputKeyPressed <= '9' {
-					*buffer += string([]byte{InputKeyPressed})
+				if e.InputKeyPressed >= '0' && e.InputKeyPressed <= '9' {
+					*buffer += string([]byte{e.InputKeyPressed})
 				}
 			case PROMPT_ANY:
-				*buffer += string([]byte{InputKeyPressed})
+				*buffer += string([]byte{e.InputKeyPressed})
 			case PROMPT_ALPHANUM:
-				if UpCase(InputKeyPressed) >= 'A' && UpCase(InputKeyPressed) <= 'Z' || InputKeyPressed >= '0' && InputKeyPressed <= '9' || InputKeyPressed == '-' {
-					*buffer += string([]byte{UpCase(InputKeyPressed)})
+				if UpCase(e.InputKeyPressed) >= 'A' && UpCase(e.InputKeyPressed) <= 'Z' || e.InputKeyPressed >= '0' && e.InputKeyPressed <= '9' || e.InputKeyPressed == '-' {
+					*buffer += string([]byte{UpCase(e.InputKeyPressed)})
 				}
 			}
-		} else if InputKeyPressed == KEY_LEFT || InputKeyPressed == KEY_BACKSPACE {
+		} else if e.InputKeyPressed == KEY_LEFT || e.InputKeyPressed == KEY_BACKSPACE {
 			*buffer = Copy(*buffer, 1, Length(*buffer)-1)
 		}
 
 		firstKeyPress = false
-		if InputKeyPressed == KEY_ENTER || InputKeyPressed == KEY_ESCAPE {
+		if e.InputKeyPressed == KEY_ENTER || e.InputKeyPressed == KEY_ESCAPE {
 			break
 		}
 	}
-	if InputKeyPressed == KEY_ESCAPE {
+	if e.InputKeyPressed == KEY_ESCAPE {
 		*buffer = oldBuffer
 	}
 }
@@ -557,11 +557,11 @@ func (e *Engine) SidebarPromptYesNo(message string, defaultReturn bool) (Sidebar
 	e.VideoWriteText(63+Length(message), 5, 0x9E, "_")
 	for {
 		InputReadWaitKey()
-		if UpCase(InputKeyPressed) == KEY_ESCAPE || UpCase(InputKeyPressed) == 'N' || UpCase(InputKeyPressed) == 'Y' {
+		if UpCase(e.InputKeyPressed) == KEY_ESCAPE || UpCase(e.InputKeyPressed) == 'N' || UpCase(e.InputKeyPressed) == 'Y' {
 			break
 		}
 	}
-	if UpCase(InputKeyPressed) == 'Y' {
+	if UpCase(e.InputKeyPressed) == 'Y' {
 		defaultReturn = true
 	} else {
 		defaultReturn = false
@@ -924,7 +924,7 @@ func (e *Engine) GameWorldSave(prompt string, filename *string, extension string
 	var newFilename string
 	newFilename = *filename
 	e.SidebarPromptString(prompt, extension, &newFilename, PROMPT_ALPHANUM)
-	if InputKeyPressed != KEY_ESCAPE && Length(newFilename) != 0 {
+	if e.InputKeyPressed != KEY_ESCAPE && Length(newFilename) != 0 {
 		*filename = newFilename
 		if extension == ".ZZT" {
 			e.World.Info.Name = *filename
@@ -1887,8 +1887,8 @@ func (e *Engine) BoardTimeElapsed(counter *int16, duration int16) bool {
 
 // GameStepWithInputs runs one game cycle with per-player input injection.
 // Before ticking each E_PLAYER stat, the matching PlayerInput from inputs is
-// loaded into the global input variables; for non-player stats those globals
-// are zeroed so no player's movement leaks into another element's tick
+// loaded into the engine's input fields (e.InputDeltaX etc.); for non-player
+// stats those fields are zeroed so no player's movement leaks into another element's tick
 // (ANALYSIS.md §3d — the scratch-var trap: InputDeltaX/Y are also used as
 // dummy pointer params in TouchProc calls, so we must only zero them between
 // player ticks, never mid-tick).
@@ -2008,26 +2008,10 @@ func (e *Engine) GameStepWithInputs(inputs map[int16]PlayerInput) {
 		}
 	}
 
-	// Snapshot engine-level input fields into globals for the tick loop.
-	// Individual player inputs from the inputs map will override these for
-	// E_PLAYER stats mid-loop; the defer restores the final globals back.
-	InputDeltaX = e.InputDeltaX
-	InputDeltaY = e.InputDeltaY
-	InputShiftPressed = e.InputShiftPressed
-	InputKeyPressed = e.InputKeyPressed
-	InputLastDeltaX = e.InputLastDeltaX
-	InputLastDeltaY = e.InputLastDeltaY
-	InputKeyBuffer = e.InputKeyBuffer
-
-	defer func() {
-		e.InputDeltaX = InputDeltaX
-		e.InputDeltaY = InputDeltaY
-		e.InputShiftPressed = InputShiftPressed
-		e.InputKeyPressed = InputKeyPressed
-		e.InputLastDeltaX = InputLastDeltaX
-		e.InputLastDeltaY = InputLastDeltaY
-		e.InputKeyBuffer = InputKeyBuffer
-	}()
+	// The tick loop reads and writes e.Input* directly. Before M36.22 it
+	// copied them into package globals here and back in a defer, which two
+	// engines stepping on different goroutines raced on. Individual player
+	// inputs from the inputs map override them for E_PLAYER stats mid-loop.
 
 	// Advance the virtual PIT clock by the ticks one cycle consumes at the
 	// current speed: vanilla's cycle gate rebases its counter each cycle, so
@@ -2130,27 +2114,27 @@ func (e *Engine) GameStepWithInputs(inputs map[int16]PlayerInput) {
 				// the ORCLTIME oracle captures' message flash phase).
 			}
 			// Per-player input injection: load this player's input before tick,
-			// zero movement globals for non-player stats.
+			// zero movement input for non-player stats.
 			if e.Board.Tiles[stat.X][stat.Y].Element == E_PLAYER {
 				if inp, ok := inputFor(e.CurrentStatTicked); ok && !unpausedThisStep {
-					InputDeltaX = inp.DeltaX
-					InputDeltaY = inp.DeltaY
-					InputShiftPressed = inp.Shift
-					InputKeyPressed = inp.Key
+					e.InputDeltaX = inp.DeltaX
+					e.InputDeltaY = inp.DeltaY
+					e.InputShiftPressed = inp.Shift
+					e.InputKeyPressed = inp.Key
 				} else {
-					InputDeltaX = 0
-					InputDeltaY = 0
-					InputShiftPressed = false
-					InputKeyPressed = 0
+					e.InputDeltaX = 0
+					e.InputDeltaY = 0
+					e.InputShiftPressed = false
+					e.InputKeyPressed = 0
 				}
-				if InputDeltaX != 0 || InputDeltaY != 0 {
-					InputLastDeltaX = InputDeltaX
-					InputLastDeltaY = InputDeltaY
+				if e.InputDeltaX != 0 || e.InputDeltaY != 0 {
+					e.InputLastDeltaX = e.InputDeltaX
+					e.InputLastDeltaY = e.InputDeltaY
 				}
 			} else {
-				InputDeltaX = 0
-				InputDeltaY = 0
-				InputShiftPressed = false
+				e.InputDeltaX = 0
+				e.InputDeltaY = 0
+				e.InputShiftPressed = false
 				// InputKeyPressed is intentionally NOT zeroed here: non-player
 				// elements like E_MONITOR read it in their own tick procs.
 			}
@@ -2314,25 +2298,25 @@ func (e *Engine) GamePlayLoop(boardChanged bool) {
 			e.VideoWriteText(64, 5, 0x1F, "Pausing...")
 
 			e.InputUpdate()
-			if InputKeyPressed == KEY_ESCAPE {
+			if e.InputKeyPressed == KEY_ESCAPE {
 				e.GamePromptEndPlay(0)
 			}
-			if InputDeltaX != 0 || InputDeltaY != 0 {
-				ElementDefs[e.Board.Tiles[int16(e.Board.Stats[0].X)+InputDeltaX][int16(e.Board.Stats[0].Y)+InputDeltaY].Element].TouchProc(e, int16(e.Board.Stats[0].X)+InputDeltaX, int16(e.Board.Stats[0].Y)+InputDeltaY, 0, &InputDeltaX, &InputDeltaY)
+			if e.InputDeltaX != 0 || e.InputDeltaY != 0 {
+				ElementDefs[e.Board.Tiles[int16(e.Board.Stats[0].X)+e.InputDeltaX][int16(e.Board.Stats[0].Y)+e.InputDeltaY].Element].TouchProc(e, int16(e.Board.Stats[0].X)+e.InputDeltaX, int16(e.Board.Stats[0].Y)+e.InputDeltaY, 0, &e.InputDeltaX, &e.InputDeltaY)
 			}
-			if (InputDeltaX != 0 || InputDeltaY != 0) && ElementDefs[e.Board.Tiles[int16(e.Board.Stats[0].X)+InputDeltaX][int16(e.Board.Stats[0].Y)+InputDeltaY].Element].Walkable {
+			if (e.InputDeltaX != 0 || e.InputDeltaY != 0) && ElementDefs[e.Board.Tiles[int16(e.Board.Stats[0].X)+e.InputDeltaX][int16(e.Board.Stats[0].Y)+e.InputDeltaY].Element].Walkable {
 				// Move player
 				if e.Board.Tiles[e.Board.Stats[0].X][e.Board.Stats[0].Y].Element == E_PLAYER {
-					e.MoveStat(0, int16(e.Board.Stats[0].X)+InputDeltaX, int16(e.Board.Stats[0].Y)+InputDeltaY)
+					e.MoveStat(0, int16(e.Board.Stats[0].X)+e.InputDeltaX, int16(e.Board.Stats[0].Y)+e.InputDeltaY)
 				} else {
 					e.BoardDrawTile(int16(e.Board.Stats[0].X), int16(e.Board.Stats[0].Y))
-					e.Board.Stats[0].X += byte(InputDeltaX)
-					e.Board.Stats[0].Y += byte(InputDeltaY)
+					e.Board.Stats[0].X += byte(e.InputDeltaX)
+					e.Board.Stats[0].Y += byte(e.InputDeltaY)
 					e.Board.Tiles[e.Board.Stats[0].X][e.Board.Stats[0].Y].Element = E_PLAYER
 					e.Board.Tiles[e.Board.Stats[0].X][e.Board.Stats[0].Y].Color = ElementDefs[E_PLAYER].Color
 					e.BoardDrawTile(int16(e.Board.Stats[0].X), int16(e.Board.Stats[0].Y))
 					e.DrawPlayerSurroundings(int16(e.Board.Stats[0].X), int16(e.Board.Stats[0].Y), 0)
-					e.DrawPlayerSurroundings(int16(e.Board.Stats[0].X)-InputDeltaX, int16(e.Board.Stats[0].Y)-InputDeltaY, 0)
+					e.DrawPlayerSurroundings(int16(e.Board.Stats[0].X)-e.InputDeltaX, int16(e.Board.Stats[0].Y)-e.InputDeltaY, 0)
 				}
 
 				// Unpause
@@ -2394,7 +2378,7 @@ func (e *Engine) GamePlayLoop(boardChanged bool) {
 				}
 			case QuitPromptEvent:
 				e.GamePlayExitRequested = e.SidebarPromptYesNo("End this game? ", true)
-				if InputKeyPressed == '\x1b' {
+				if e.InputKeyPressed == '\x1b' {
 					e.GamePlayExitRequested = false
 				}
 			case HelpEvent:
@@ -2406,16 +2390,16 @@ func (e *Engine) GamePlayLoop(boardChanged bool) {
 				e.SidebarClearLine(5)
 				e.PromptString(63, 5, 0x1E, 0x0F, 11, PROMPT_ANY, &input)
 				e.GameApplyDebugCommand(ev.StatId, input)
-				InputKeyPressed = '\x00'
+				e.InputKeyPressed = '\x00'
 			case SavePromptEvent:
 				// The terminal keeps vanilla's modal save prompt: it is the one
 				// caller allowed to block, because it owns the keyboard.
 				newFilename := e.SavedGameFileName
 				e.SidebarPromptString("Save game:", ".SAV", &newFilename, PROMPT_ALPHANUM)
-				if InputKeyPressed != KEY_ESCAPE && Length(newFilename) != 0 {
+				if e.InputKeyPressed != KEY_ESCAPE && Length(newFilename) != 0 {
 					e.SubmitSaveFilename(ev.StatId, newFilename)
 				}
-				InputKeyPressed = '\x00'
+				e.InputKeyPressed = '\x00'
 			}
 		}
 	}
@@ -2481,7 +2465,7 @@ func (e *Engine) GameTitleLoop() {
 			e.PlayerFor(0).Paused = false
 			e.GamePlayLoop(boardChanged)
 			boardChanged = false
-			switch UpCase(InputKeyPressed) {
+			switch UpCase(e.InputKeyPressed) {
 			case 'W':
 				if e.GameWorldLoad(".ZZT") {
 					e.ReturnBoardId = e.World.Info.CurrentBoard
@@ -2508,7 +2492,7 @@ func (e *Engine) GameTitleLoop() {
 				}
 			case 'S':
 				e.SidebarPromptSlider(true, 66, 21, "Game speed:;FS", &e.TickSpeed)
-				InputKeyPressed = '\x00'
+				e.InputKeyPressed = '\x00'
 			case 'R':
 				if e.GameWorldLoad(".SAV") {
 					e.ReturnBoardId = e.World.Info.CurrentBoard

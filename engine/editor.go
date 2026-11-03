@@ -160,10 +160,10 @@ func EditorLoop() {
 	}
 
 	EditorAskSaveChanged := func() {
-		InputKeyPressed = '\x00'
+		E.InputKeyPressed = '\x00'
 		if wasModified {
 			if SidebarPromptYesNo("Save first? ", true) {
-				if InputKeyPressed != KEY_ESCAPE {
+				if E.InputKeyPressed != KEY_ESCAPE {
 					GameWorldSave("Save world", &E.LoadedGameFileName, ".ZZT")
 				}
 			}
@@ -244,10 +244,10 @@ func EditorLoop() {
 			state.Lines[8] = "  Time limit, 0=None: " + numStr + " sec."
 			state.Lines[9] = "          Quit!"
 			TextWindowSelect(&state, false, false)
-			if InputKeyPressed == KEY_ENTER && state.LinePos >= 1 && state.LinePos <= 8 {
+			if E.InputKeyPressed == KEY_ENTER && state.LinePos >= 1 && state.LinePos <= 8 {
 				wasModified = true
 			}
-			if InputKeyPressed == KEY_ENTER {
+			if E.InputKeyPressed == KEY_ENTER {
 				switch state.LinePos {
 				case 1:
 					PopupPromptString("New title for board:", &E.Board.Name)
@@ -315,7 +315,7 @@ func EditorLoop() {
 
 		TextWindowFree(&state)
 		TextWindowDrawClose(&state)
-		InputKeyPressed = '\x00'
+		E.InputKeyPressed = '\x00'
 	}
 
 	EditorEditStat := func(statId int16) {
@@ -329,7 +329,7 @@ func EditorLoop() {
 		)
 		EditorEditStatSettings := func(selected bool) {
 			stat := &E.Board.Stats[statId]
-			InputKeyPressed = '\x00'
+			E.InputKeyPressed = '\x00'
 			iy = 9
 			if Length(ElementDefs[element].Param1Name) != 0 {
 				if Length(ElementDefs[element].ParamTextName) == 0 {
@@ -347,12 +347,12 @@ func EditorLoop() {
 				}
 				iy += 4
 			}
-			if InputKeyPressed != KEY_ESCAPE && Length(ElementDefs[element].ParamTextName) != 0 {
+			if E.InputKeyPressed != KEY_ESCAPE && Length(ElementDefs[element].ParamTextName) != 0 {
 				if selected {
 					EditorEditStatText(statId, ElementDefs[element].ParamTextName)
 				}
 			}
-			if InputKeyPressed != KEY_ESCAPE && Length(ElementDefs[element].Param2Name) != 0 {
+			if E.InputKeyPressed != KEY_ESCAPE && Length(ElementDefs[element].Param2Name) != 0 {
 				promptByte = byte(int16(stat.P2) % 0x80)
 				SidebarPromptSlider(selected, 63, iy, ElementDefs[element].Param2Name, &promptByte)
 				if selected {
@@ -361,7 +361,7 @@ func EditorLoop() {
 				}
 				iy += 4
 			}
-			if InputKeyPressed != KEY_ESCAPE && Length(ElementDefs[element].ParamBulletTypeName) != 0 {
+			if E.InputKeyPressed != KEY_ESCAPE && Length(ElementDefs[element].ParamBulletTypeName) != 0 {
 				promptByte = byte(int16(stat.P2) / 0x80)
 				SidebarPromptChoice(selected, iy, ElementDefs[element].ParamBulletTypeName, "Bullets Stars", &promptByte)
 				if selected {
@@ -370,7 +370,7 @@ func EditorLoop() {
 				}
 				iy += 4
 			}
-			if InputKeyPressed != KEY_ESCAPE && Length(ElementDefs[element].ParamDirName) != 0 {
+			if E.InputKeyPressed != KEY_ESCAPE && Length(ElementDefs[element].ParamDirName) != 0 {
 				SidebarPromptDirection(selected, iy, ElementDefs[element].ParamDirName, &stat.StepX, &stat.StepY)
 				if selected {
 					E.World.EditorStatSettings[element].StepX = stat.StepX
@@ -378,7 +378,7 @@ func EditorLoop() {
 				}
 				iy += 4
 			}
-			if InputKeyPressed != KEY_ESCAPE && Length(ElementDefs[element].ParamBoardName) != 0 {
+			if E.InputKeyPressed != KEY_ESCAPE && Length(ElementDefs[element].ParamBoardName) != 0 {
 				if selected {
 					selectedBoard = byte(EditorSelectBoard(ElementDefs[element].ParamBoardName, int16(stat.P3), true))
 					if selectedBoard != 0 {
@@ -392,7 +392,7 @@ func EditorLoop() {
 						}
 						E.World.EditorStatSettings[element].P3 = stat.P3
 					} else {
-						InputKeyPressed = KEY_ESCAPE
+						E.InputKeyPressed = KEY_ESCAPE
 					}
 					iy += 4
 				} else {
@@ -415,7 +415,7 @@ func EditorLoop() {
 		VideoWriteText(64, 7, 0x1F, ElementDefs[element].Name)
 		EditorEditStatSettings(false)
 		EditorEditStatSettings(true)
-		if InputKeyPressed != KEY_ESCAPE {
+		if E.InputKeyPressed != KEY_ESCAPE {
 			copiedHasStat = true
 			copiedStat = E.Board.Stats[statId]
 			copiedTile = E.Board.Tiles[stat.X][stat.Y]
@@ -541,7 +541,7 @@ func EditorLoop() {
 			EditorPlaceTile(cursorX, cursorY)
 		}
 		InputUpdate()
-		if InputKeyPressed == '\x00' && InputDeltaX == 0 && InputDeltaY == 0 && !InputShiftPressed {
+		if E.InputKeyPressed == '\x00' && E.InputDeltaX == 0 && E.InputDeltaY == 0 && !E.InputShiftPressed {
 			time.Sleep(125 * time.Millisecond) // TODO
 			if SoundHasTimeElapsed(&E.TickTimeCounter, 15) {
 				cursorBlinker = (cursorBlinker + 1) % 3
@@ -556,26 +556,26 @@ func EditorLoop() {
 			BoardDrawTile(cursorX, cursorY)
 		}
 		if drawMode == TextEntry {
-			if InputKeyPressed >= ' ' && InputKeyPressed < '\x80' {
+			if E.InputKeyPressed >= ' ' && E.InputKeyPressed < '\x80' {
 				if EditorPrepareModifyTile(cursorX, cursorY) {
 					E.Board.Tiles[cursorX][cursorY].Element = byte(cursorColor - 9 + E_TEXT_MIN)
-					E.Board.Tiles[cursorX][cursorY].Color = Ord(InputKeyPressed)
+					E.Board.Tiles[cursorX][cursorY].Color = Ord(E.InputKeyPressed)
 					EditorDrawTileAndNeighborsAt(cursorX, cursorY)
-					InputDeltaX = 1
-					InputDeltaY = 0
+					E.InputDeltaX = 1
+					E.InputDeltaY = 0
 				}
-				InputKeyPressed = '\x00'
-			} else if InputKeyPressed == KEY_BACKSPACE && cursorX > 1 && EditorPrepareModifyTile(cursorX-1, cursorY) {
+				E.InputKeyPressed = '\x00'
+			} else if E.InputKeyPressed == KEY_BACKSPACE && cursorX > 1 && EditorPrepareModifyTile(cursorX-1, cursorY) {
 				cursorX--
-			} else if InputKeyPressed == KEY_ENTER || InputKeyPressed == KEY_ESCAPE {
+			} else if E.InputKeyPressed == KEY_ENTER || E.InputKeyPressed == KEY_ESCAPE {
 				drawMode = DrawingOff
-				InputKeyPressed = '\x00'
+				E.InputKeyPressed = '\x00'
 			}
 
 		}
 		tile := &E.Board.Tiles[cursorX][cursorY]
-		if InputShiftPressed || InputKeyPressed == ' ' {
-			if tile.Element == 0 || ElementDefs[tile.Element].PlaceableOnTop && copiedHasStat && cursorPattern > E.EditorPatternCount || InputDeltaX != 0 || InputDeltaY != 0 {
+		if E.InputShiftPressed || E.InputKeyPressed == ' ' {
+			if tile.Element == 0 || ElementDefs[tile.Element].PlaceableOnTop && copiedHasStat && cursorPattern > E.EditorPatternCount || E.InputDeltaX != 0 || E.InputDeltaY != 0 {
 				EditorPlaceTile(cursorX, cursorY)
 			} else {
 				canModify = EditorPrepareModifyTile(cursorX, cursorY)
@@ -584,15 +584,15 @@ func EditorLoop() {
 				}
 			}
 		}
-		if InputDeltaX != 0 || InputDeltaY != 0 {
-			cursorX += InputDeltaX
+		if E.InputDeltaX != 0 || E.InputDeltaY != 0 {
+			cursorX += E.InputDeltaX
 			if cursorX < 1 {
 				cursorX = 1
 			}
 			if cursorX > BOARD_WIDTH {
 				cursorX = BOARD_WIDTH
 			}
-			cursorY += InputDeltaY
+			cursorY += E.InputDeltaY
 			if cursorY < 1 {
 				cursorY = 1
 			}
@@ -601,7 +601,7 @@ func EditorLoop() {
 			}
 			VideoWriteText(cursorX-1, cursorY-1, 0x0F, "\xc5")
 		}
-		switch UpCase(InputKeyPressed) {
+		switch UpCase(E.InputKeyPressed) {
 		case '`':
 			EditorDrawRefresh()
 		case 'P':
@@ -621,7 +621,7 @@ func EditorLoop() {
 			}
 		case 'L':
 			EditorAskSaveChanged()
-			if InputKeyPressed != KEY_ESCAPE && GameWorldLoad(".ZZT") {
+			if E.InputKeyPressed != KEY_ESCAPE && GameWorldLoad(".ZZT") {
 				if E.World.Info.IsSave || WorldGetFlagPosition("SECRET") >= 0 {
 					if !E.DebugEnabled {
 						SidebarClearLine(3)
@@ -644,7 +644,7 @@ func EditorLoop() {
 			EditorDrawSidebar()
 		case 'S':
 			GameWorldSave("Save world:", &E.LoadedGameFileName, ".ZZT")
-			if InputKeyPressed != KEY_ESCAPE {
+			if E.InputKeyPressed != KEY_ESCAPE {
 				wasModified = false
 			}
 			EditorDrawSidebar()
@@ -659,9 +659,9 @@ func EditorLoop() {
 				EditorDrawSidebar()
 			}
 		case 'N':
-			if SidebarPromptYesNo("Make new world? ", false) && InputKeyPressed != KEY_ESCAPE {
+			if SidebarPromptYesNo("Make new world? ", false) && E.InputKeyPressed != KEY_ESCAPE {
 				EditorAskSaveChanged()
-				if InputKeyPressed != KEY_ESCAPE {
+				if E.InputKeyPressed != KEY_ESCAPE {
 					WorldUnload()
 					WorldCreate()
 					EditorDrawRefresh()
@@ -673,7 +673,7 @@ func EditorLoop() {
 			editorExitRequested = true
 		case 'B':
 			i = EditorSelectBoard("Switch boards", E.World.Info.CurrentBoard, false)
-			if InputKeyPressed != KEY_ESCAPE {
+			if E.InputKeyPressed != KEY_ESCAPE {
 				if i > E.World.BoardCount {
 					if SidebarPromptYesNo("Add new board? ", false) {
 						EditorAppendBoard()
@@ -697,7 +697,7 @@ func EditorLoop() {
 			for i = 3; i <= 20; i++ {
 				SidebarClearLine(i)
 			}
-			switch InputKeyPressed {
+			switch E.InputKeyPressed {
 			case KEY_F1:
 				selectedCategory = CATEGORY_ITEM
 			case KEY_F2:
@@ -733,7 +733,7 @@ func EditorLoop() {
 			}
 			InputReadWaitKey()
 			for iElem = 1; iElem <= MAX_ELEMENT; iElem++ {
-				if ElementDefs[iElem].EditorCategory == selectedCategory && ElementDefs[iElem].EditorShortcut == UpCase(InputKeyPressed) {
+				if ElementDefs[iElem].EditorCategory == selectedCategory && ElementDefs[iElem].EditorShortcut == UpCase(E.InputKeyPressed) {
 					if iElem == E_PLAYER {
 						if EditorPrepareModifyTile(cursorX, cursorY) {
 							MoveStat(0, cursorX, cursorY)
@@ -771,7 +771,7 @@ func EditorLoop() {
 									stat.P3 = E.World.EditorStatSettings[iElem].P3
 								}
 								EditorEditStat(E.Board.StatCount)
-								if InputKeyPressed == KEY_ESCAPE {
+								if E.InputKeyPressed == KEY_ESCAPE {
 									RemoveStat(E.Board.StatCount)
 								}
 							}
@@ -809,7 +809,7 @@ func EditorLoop() {
 		}
 		if editorExitRequested {
 			EditorAskSaveChanged()
-			if InputKeyPressed == KEY_ESCAPE {
+			if E.InputKeyPressed == KEY_ESCAPE {
 				editorExitRequested = false
 				EditorDrawSidebar()
 			}
@@ -818,7 +818,7 @@ func EditorLoop() {
 			break
 		}
 	}
-	InputKeyPressed = '\x00'
+	E.InputKeyPressed = '\x00'
 	InitElementsGame()
 }
 
@@ -886,7 +886,7 @@ func EditorSelectBoard(title string, currentBoard int16, titleScreenIsNone bool)
 	TextWindowSelect(&textWindow, false, false)
 	TextWindowDrawClose(&textWindow)
 	TextWindowFree(&textWindow)
-	if InputKeyPressed == KEY_ESCAPE {
+	if E.InputKeyPressed == KEY_ESCAPE {
 		EditorSelectBoard = 0
 	} else {
 		EditorSelectBoard = textWindow.LinePos - 1

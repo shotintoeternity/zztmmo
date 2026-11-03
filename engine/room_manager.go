@@ -754,7 +754,7 @@ func (rm *RoomManager) StepDiffsWithBoards(inputs map[PlayerID]PlayerInput) (map
 			continue
 		}
 		// A player reading a scroll is frozen. Omitting the entry is how that is
-		// said to the engine: GameStepWithInputs zeroes the movement globals for
+		// said to the engine: GameStepWithInputs zeroes the movement input for
 		// any player stat it finds no input for.
 		if player.scrollOpen {
 			continue

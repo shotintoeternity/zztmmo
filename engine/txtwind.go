@@ -178,9 +178,9 @@ func TextWindowSelect(state *TTextWindowState, hyperlinkAsSelect, viewingFile bo
 	for {
 		InputReadWaitKey()
 		newLinePos = state.LinePos
-		if InputDeltaY != 0 {
-			newLinePos += InputDeltaY
-		} else if InputShiftPressed || InputKeyPressed == KEY_ENTER {
+		if E.InputDeltaY != 0 {
+			newLinePos += E.InputDeltaY
+		} else if E.InputShiftPressed || E.InputKeyPressed == KEY_ENTER {
 			if Length(state.Lines[state.LinePos-1]) > 0 && state.Lines[state.LinePos-1][0] == '!' {
 				pointerStr = Copy(state.Lines[state.LinePos-1], 2, Length(state.Lines[state.LinePos-1])-1)
 				if Pos(';', pointerStr) > 0 {
@@ -196,8 +196,8 @@ func TextWindowSelect(state *TTextWindowState, hyperlinkAsSelect, viewingFile bo
 						viewingFile = true
 						newLinePos = state.LinePos
 						TextWindowDraw(state, false, viewingFile)
-						InputKeyPressed = '\x00'
-						InputShiftPressed = false
+						E.InputKeyPressed = '\x00'
+						E.InputShiftPressed = false
 					}
 				} else {
 					if hyperlinkAsSelect {
@@ -213,8 +213,8 @@ func TextWindowSelect(state *TTextWindowState, hyperlinkAsSelect, viewingFile bo
 									}
 								}
 								newLinePos = iLine
-								InputKeyPressed = '\x00'
-								InputShiftPressed = false
+								E.InputKeyPressed = '\x00'
+								E.InputShiftPressed = false
 								goto LabelMatched
 							LabelNotMatched:
 							}
@@ -223,9 +223,9 @@ func TextWindowSelect(state *TTextWindowState, hyperlinkAsSelect, viewingFile bo
 				}
 			}
 		} else {
-			if InputKeyPressed == KEY_PAGE_UP {
+			if E.InputKeyPressed == KEY_PAGE_UP {
 				newLinePos = state.LinePos - TextWindowHeight + 4
-			} else if InputKeyPressed == KEY_PAGE_DOWN {
+			} else if E.InputKeyPressed == KEY_PAGE_DOWN {
 				newLinePos = state.LinePos + TextWindowHeight - 4
 			}
 		}
@@ -248,12 +248,12 @@ func TextWindowSelect(state *TTextWindowState, hyperlinkAsSelect, viewingFile bo
 				}
 			}
 		}
-		if InputKeyPressed == KEY_ESCAPE || InputKeyPressed == KEY_ENTER || InputShiftPressed {
+		if E.InputKeyPressed == KEY_ESCAPE || E.InputKeyPressed == KEY_ENTER || E.InputShiftPressed {
 			break
 		}
 	}
-	if InputKeyPressed == KEY_ESCAPE {
-		InputKeyPressed = '\x00'
+	if E.InputKeyPressed == KEY_ESCAPE {
+		E.InputKeyPressed = '\x00'
 		TextWindowRejected = true
 	}
 }
@@ -303,7 +303,7 @@ func TextWindowEdit(state *TTextWindowState) {
 		}
 		InputReadWaitKey()
 		newLinePos = state.LinePos
-		switch InputKeyPressed {
+		switch E.InputKeyPressed {
 		case KEY_UP:
 			newLinePos = state.LinePos - 1
 		case KEY_DOWN:
@@ -352,13 +352,13 @@ func TextWindowEdit(state *TTextWindowState) {
 		case KEY_CTRL_Y:
 			DeleteCurrLine()
 		default:
-			if InputKeyPressed >= ' ' && charPos < TextWindowWidth-7 {
+			if E.InputKeyPressed >= ' ' && charPos < TextWindowWidth-7 {
 				if !insertMode {
-					state.Lines[state.LinePos-1] = Copy(state.Lines[state.LinePos-1], 1, charPos-1) + string([]byte{InputKeyPressed}) + Copy(state.Lines[state.LinePos-1], charPos+1, Length(state.Lines[state.LinePos-1])-charPos)
+					state.Lines[state.LinePos-1] = Copy(state.Lines[state.LinePos-1], 1, charPos-1) + string([]byte{E.InputKeyPressed}) + Copy(state.Lines[state.LinePos-1], charPos+1, Length(state.Lines[state.LinePos-1])-charPos)
 					charPos++
 				} else {
 					if Length(state.Lines[state.LinePos-1]) < TextWindowWidth-8 {
-						state.Lines[state.LinePos-1] = Copy(state.Lines[state.LinePos-1], 1, charPos-1) + string([]byte{InputKeyPressed}) + Copy(state.Lines[state.LinePos-1], charPos, Length(state.Lines[state.LinePos-1])-charPos+1)
+						state.Lines[state.LinePos-1] = Copy(state.Lines[state.LinePos-1], 1, charPos-1) + string([]byte{E.InputKeyPressed}) + Copy(state.Lines[state.LinePos-1], charPos, Length(state.Lines[state.LinePos-1])-charPos+1)
 						charPos++
 					}
 				}
@@ -376,7 +376,7 @@ func TextWindowEdit(state *TTextWindowState) {
 		} else {
 			TextWindowDrawLine(state, state.LinePos, true, false)
 		}
-		if InputKeyPressed == KEY_ESCAPE {
+		if E.InputKeyPressed == KEY_ESCAPE {
 			break
 		}
 	}

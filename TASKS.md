@@ -8885,7 +8885,7 @@ copy; the executor still writes the failing test in the repo first.
 
 ### Tier 3 — multiplayer correctness and the browser client
 
-- [ ] **M36.22 — simulation input is per engine, not process-global.**
+- [x] **M36.22 — simulation input is per engine, not process-global.**
   *(confirmed, medium; determinism)* `GameStepWithInputs` routes per-player input
   through package-level globals (`InputDeltaX/Y`, `InputShiftPressed`,
   `InputKeyPressed`, `InputLast*`, `InputKeyBuffer`; `engine/game.go:1904`),

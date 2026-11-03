@@ -692,13 +692,13 @@ func oracleAdapterReplay(t *testing.T, scenario, world string, ops []oracleOp, c
 	VideoInstall()
 	TextWindowInit(5, 3, 50, 18)
 
-	InputDeltaX = 0
-	InputDeltaY = 0
-	InputShiftPressed = false
-	InputKeyPressed = 0
-	InputLastDeltaX = 0
-	InputLastDeltaY = 0
-	InputKeyBuffer = ""
+	E.InputDeltaX = 0
+	E.InputDeltaY = 0
+	E.InputShiftPressed = false
+	E.InputKeyPressed = 0
+	E.InputLastDeltaX = 0
+	E.InputLastDeltaY = 0
+	E.InputKeyBuffer = ""
 	E.GamePlayExitRequested = false
 	E.TickSpeed = 4
 	E.TickTimeDuration = int16(E.TickSpeed) * 2
@@ -1205,14 +1205,14 @@ func TestMonitorTickExitKeys(t *testing.T) {
 	prevE := E
 	defer func() { E = prevE }()
 	E = NewEngine()
-	prevKey := InputKeyPressed
-	defer func() { InputKeyPressed = prevKey }()
+	prevKey := E.InputKeyPressed
+	defer func() { E.InputKeyPressed = prevKey }()
 
 	exitKeys := []byte{'\x1b', 'A', 'E', 'H', 'N', 'P', 'Q', 'R', 'S', 'W', '|',
 		'a', 'e', 'h', 'n', 'p', 'q', 'r', 's', 'w'}
 	for _, k := range exitKeys {
 		E.GamePlayExitRequested = false
-		InputKeyPressed = k
+		E.InputKeyPressed = k
 		E.ElementMonitorTick(0)
 		if !E.GamePlayExitRequested {
 			t.Errorf("monitor did not request exit for title key %q", k)
@@ -1220,7 +1220,7 @@ func TestMonitorTickExitKeys(t *testing.T) {
 	}
 	for _, k := range []byte{0, ' ', 'x', '1', KEY_UP} {
 		E.GamePlayExitRequested = false
-		InputKeyPressed = k
+		E.InputKeyPressed = k
 		E.ElementMonitorTick(0)
 		if E.GamePlayExitRequested {
 			t.Errorf("monitor requested exit for non-title key %q", k)

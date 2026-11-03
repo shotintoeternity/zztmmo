@@ -328,13 +328,13 @@ func runM168EnginePass(t *testing.T, scenarioFile, world string, ops []oracleOp)
 	VideoInstall()
 	TextWindowInit(5, 3, 50, 18)
 
-	InputDeltaX = 0
-	InputDeltaY = 0
-	InputShiftPressed = false
-	InputKeyPressed = 0
-	InputLastDeltaX = 0
-	InputLastDeltaY = 0
-	InputKeyBuffer = ""
+	E.InputDeltaX = 0
+	E.InputDeltaY = 0
+	E.InputShiftPressed = false
+	E.InputKeyPressed = 0
+	E.InputLastDeltaX = 0
+	E.InputLastDeltaY = 0
+	E.InputKeyBuffer = ""
 	E.GamePlayExitRequested = false
 	E.TickSpeed = 4
 	E.TickTimeDuration = int16(E.TickSpeed) * 2
