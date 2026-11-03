@@ -150,12 +150,17 @@ type roomPlayer struct {
 type openScroll struct {
 	statID int16
 	labels []string
+	// freezes marks the scroll that set scrollOpen: one the player touched, or
+	// a notice. A frozen player cannot touch another, so at most one is open.
+	freezes bool
 }
 
 // maxOpenScrolls bounds a player's unanswered scrolls. An honest client
 // answers every scroll it is shown; one that does not must not grow this
-// forever. The oldest is dropped first, and with it only that player's ability
-// to answer it.
+// forever. The oldest board-wide scroll is dropped first, and with it only that
+// player's ability to answer it. The freezing scroll is never dropped: an
+// object that talks to the board every tick would otherwise push it out, and
+// its dismissal, refused, would leave the reader frozen.
 const maxOpenScrolls = 16
 
 // scrollHyperlinks is the set of labels a scroll offers: the "!label;text"
@@ -181,11 +186,31 @@ func scrollHyperlinks(lines []string) []string {
 }
 
 // noteOpenScroll records that player has been shown a scroll from statID.
-func (p *roomPlayer) noteOpenScroll(statID int16, labels []string) {
+func (p *roomPlayer) noteOpenScroll(statID int16, labels []string, freezes bool) {
 	if len(p.openScrolls) >= maxOpenScrolls {
-		p.openScrolls = append(p.openScrolls[:0], p.openScrolls[1:]...)
+		for i, open := range p.openScrolls {
+			if !open.freezes {
+				p.openScrolls = append(p.openScrolls[:i], p.openScrolls[i+1:]...)
+				break
+			}
+		}
 	}
-	p.openScrolls = append(p.openScrolls, openScroll{statID: statID, labels: labels})
+	p.openScrolls = append(p.openScrolls, openScroll{statID: statID, labels: labels, freezes: freezes})
+}
+
+// labelsMatch compares two labels the way OopFindLabel does: byte by byte,
+// with UpCase folding only ASCII letters. strings.EqualFold would read CP437
+// high bytes as invalid UTF-8 and call any two of them equal.
+func labelsMatch(a, b string) bool {
+	if len(a) != len(b) {
+		return false
+	}
+	for i := 0; i < len(a); i++ {
+		if UpCase(a[i]) != UpCase(b[i]) {
+			return false
+		}
+	}
+	return true
 }
 
 // takeOpenScroll consumes the open scroll a reply answers, reporting false if
@@ -202,7 +227,7 @@ func (p *roomPlayer) takeOpenScroll(statID int16, label string) bool {
 			for _, l := range open.labels {
 				// OopSend matches labels case-insensitively, so a difference
 				// in case reaches the same label and is not a forgery.
-				if strings.EqualFold(l, label) {
+				if labelsMatch(l, label) {
 					offered = true
 					break
 				}
@@ -834,7 +859,7 @@ func (rm *RoomManager) StepDiffsWithBoards(inputs map[PlayerID]PlayerInput) (map
 							// The window the reader is owed is server-written and
 							// offers no hyperlinks (M34.2 guarantees no markup), so
 							// only its dismissal answers it (M36.16).
-							rm.players[playerID].noteOpenScroll(ev.StatId, nil)
+							rm.players[playerID].noteOpenScroll(ev.StatId, nil, true)
 							rm.pendingNotices = append(rm.pendingNotices, RoomNotice{
 								PlayerID:     playerID,
 								Kind:         kind,
@@ -842,7 +867,7 @@ func (rm *RoomManager) StepDiffsWithBoards(inputs map[PlayerID]PlayerInput) (map
 							})
 							continue
 						}
-						rm.players[playerID].noteOpenScroll(ev.StatId, scrollHyperlinks(ev.Lines))
+						rm.players[playerID].noteOpenScroll(ev.StatId, scrollHyperlinks(ev.Lines), true)
 					}
 				}
 				roomEvents[boardID] = append(roomEvents[boardID], event)
@@ -899,7 +924,7 @@ func (rm *RoomManager) StepDiffsWithBoards(inputs map[PlayerID]PlayerInput) (map
 			// sees it can answer it too.
 			for _, event := range roomEvents[boardID] {
 				if ev, ok := event.(ScrollEvent); ok && ev.PlayerStatId < 0 {
-					player.noteOpenScroll(ev.StatId, scrollHyperlinks(ev.Lines))
+					player.noteOpenScroll(ev.StatId, scrollHyperlinks(ev.Lines), false)
 				}
 			}
 			hud := hudSnapshot(room.Engine, player.statID)

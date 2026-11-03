@@ -28,6 +28,24 @@ var (
 	m36_16Start = [2]int16{5, 22}
 )
 
+// m36_16CrierOnce speaks to the board once; m36_16CrierLoop speaks every tick.
+const (
+	m36_16CrierOnce = `@Crier
+Hear ye, hear ye.
+!hear;I hear you
+#end
+:hear
+#end
+`
+	m36_16CrierLoop = `@Crier
+:top
+Hear ye, hear ye.
+!hear;I hear you
+/i
+#top
+`
+)
+
 func m36_16Grid(cells map[[2]int16]byte) string {
 	var b strings.Builder
 	for y := int16(1); y <= BOARD_HEIGHT; y++ {
@@ -49,9 +67,10 @@ func m36_16Grid(cells map[[2]int16]byte) string {
 // m36_16World has, on board 1: a Shop that shows a scroll on touch offering
 // only `!go`, but whose code also holds a `:secret` label worth far more; a
 // Scroll element whose `!take` reward is reachable only by its hyperlink; and,
-// when crier is set, a Crier that opens a scroll to the whole board from its
-// own code (no toucher), as an object announcing something does.
-func m36_16World(t *testing.T, crier bool) TWorld {
+// when crier is set, a Crier running that program, which opens a scroll to the
+// whole board from its own code (no toucher), as an object announcing
+// something does.
+func m36_16World(t *testing.T, crier string) TWorld {
 	t.Helper()
 	cells := map[[2]int16]byte{m36_16Shop: 'o', m36_16Scroll: '!', m36_16Start: '@'}
 	stats := fmt.Sprintf(`    stat at %d,%d element Object cycle 1 p1 cp437:0x02 step idle under Empty color 0x00
@@ -80,18 +99,12 @@ Take the prize?
 #end
     end
 `, m36_16Shop[0], m36_16Shop[1], m36_16Scroll[0], m36_16Scroll[1])
-	if crier {
+	if crier != "" {
 		cells[m36_16Crier] = 'c'
 		stats += fmt.Sprintf(`    stat at %d,%d element Object cycle 1 p1 cp437:0x02 step idle under Empty color 0x00
     oop
-@Crier
-Hear ye, hear ye.
-!hear;I hear you
-#end
-:hear
-#end
-    end
-`, m36_16Crier[0], m36_16Crier[1])
+%s    end
+`, m36_16Crier[0], m36_16Crier[1], crier)
 	}
 	source := fmt.Sprintf(`zwd 1
 world "SCROLLGATE"
@@ -187,7 +200,7 @@ func m36_16TouchShop(t *testing.T, rm *RoomManager, playerID PlayerID) ProtocolE
 // A reply to a scroll nobody showed this player is dropped: the shop never
 // sells, and the reply is not taken for a dismissal either.
 func TestM3616UnsolicitedScrollReplyIsIgnored(t *testing.T) {
-	rm := NewRoomManager(m36_16World(t, false))
+	rm := NewRoomManager(m36_16World(t, ""))
 	playerID := rm.JoinPlayer(m36_16Board, m36_16Reader[0], m36_16Reader[1])
 	rm.Snapshot(playerID)
 	shop := m36_16StatAt(t, rm, m36_16Shop)
@@ -206,7 +219,7 @@ func TestM3616UnsolicitedScrollReplyIsIgnored(t *testing.T) {
 // A label the open scroll did not offer is dropped, even one the object's code
 // really has. The offered label still works afterwards, exactly once.
 func TestM3616ForgedScrollLabelIsIgnored(t *testing.T) {
-	rm := NewRoomManager(m36_16World(t, false))
+	rm := NewRoomManager(m36_16World(t, ""))
 	playerID := rm.JoinPlayer(m36_16Board, m36_16Reader[0], m36_16Reader[1])
 	rm.Snapshot(playerID)
 	event := m36_16TouchShop(t, rm, playerID)
@@ -246,7 +259,7 @@ func TestM3616ForgedScrollLabelIsIgnored(t *testing.T) {
 // defers to the reply), so one nobody was owed must not be honoured: without
 // the gate any client could clear every scroll off a board, unread.
 func TestM3616ForgedDismissalLeavesTheScroll(t *testing.T) {
-	rm := NewRoomManager(m36_16World(t, false))
+	rm := NewRoomManager(m36_16World(t, ""))
 	playerID := rm.JoinPlayer(m36_16Board, m36_16Reader[0], m36_16Reader[1])
 	rm.Snapshot(playerID)
 	scroll := m36_16StatAt(t, rm, m36_16Scroll)
@@ -270,7 +283,7 @@ func TestM3616ForgedDismissalLeavesTheScroll(t *testing.T) {
 // scroll on every client on the board (isMyScroll), and each of them answers
 // it. The gate must owe each of them that answer — and only one each.
 func TestM3616BoardWideScrollIsAnsweredByEveryReader(t *testing.T) {
-	rm := NewRoomManager(m36_16World(t, true))
+	rm := NewRoomManager(m36_16World(t, m36_16CrierOnce))
 	first := rm.JoinPlayer(m36_16Board, m36_16Reader[0], m36_16Reader[1])
 	second := rm.JoinPlayer(m36_16Board, m36_16Reader[0], m36_16Reader[1]+3)
 	rm.Snapshot(first)
@@ -311,7 +324,7 @@ func TestM3616BoardWideScrollIsAnsweredByEveryReader(t *testing.T) {
 // A touched scroll is owed to the player who touched it, not to everyone who
 // can name the object's stat.
 func TestM3616TouchedScrollIsOwedOnlyToItsReader(t *testing.T) {
-	rm := NewRoomManager(m36_16World(t, false))
+	rm := NewRoomManager(m36_16World(t, ""))
 	reader := rm.JoinPlayer(m36_16Board, m36_16Reader[0], m36_16Reader[1])
 	bystander := rm.JoinPlayer(m36_16Board, m36_16Reader[0], m36_16Reader[1]+3)
 	rm.Snapshot(reader)
@@ -354,5 +367,51 @@ func TestM3616NoticeIsAnsweredByItsDismissal(t *testing.T) {
 	}
 	if rm.players[player].scrollOpen {
 		t.Error("the reader is still frozen after dismissing the notice")
+	}
+}
+
+// The bound on open scrolls must never drop the one that froze the reader. An
+// object that talks to the board every tick fills the list behind it; if the
+// touched scroll were evicted, its dismissal would be refused and the reader
+// would stay frozen until they left the board.
+func TestM3616ChattyBoardCannotStrandAFrozenReader(t *testing.T) {
+	rm := NewRoomManager(m36_16World(t, m36_16CrierLoop))
+	playerID := rm.JoinPlayer(m36_16Board, m36_16Reader[0], m36_16Reader[1])
+	rm.Snapshot(playerID)
+
+	var shop ProtocolEvent
+	found := false
+	for i := 0; i < 12 && !found; i++ {
+		diffs := rm.StepDiffs(map[PlayerID]PlayerInput{playerID: {DeltaX: 1}})
+		for _, ev := range diffs[playerID].Events {
+			if ev.Type == "scroll" && ev.Title == "Shop" {
+				shop, found = ev, true
+			}
+		}
+	}
+	if !found {
+		t.Fatal("the shop never opened its scroll")
+	}
+
+	announcements := 0
+	for i := 0; i < 3*maxOpenScrolls; i++ {
+		diffs := rm.StepDiffs(map[PlayerID]PlayerInput{})
+		for _, ev := range diffs[playerID].Events {
+			if ev.Type == "scroll" && ev.Title == "Crier" {
+				announcements++
+			}
+		}
+	}
+	if announcements <= maxOpenScrolls {
+		t.Fatalf("the crier spoke %d times; the test needs more than %d to overflow the list", announcements, maxOpenScrolls)
+	}
+	if n := len(rm.players[playerID].openScrolls); n > maxOpenScrolls {
+		t.Fatalf("%d open scrolls, want at most %d", n, maxOpenScrolls)
+	}
+	if !rm.SubmitScrollReply(playerID, shop.StatID, "") {
+		t.Fatal("the reader's dismissal was refused after the crier filled the list")
+	}
+	if rm.players[playerID].scrollOpen {
+		t.Fatal("the reader is still frozen after dismissing the shop")
 	}
 }
