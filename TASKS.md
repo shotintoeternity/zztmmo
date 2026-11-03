@@ -8874,7 +8874,7 @@ copy; the executor still writes the failing test in the repo first.
   that does not parse as a same-origin path. DoD: a test for `/\evil.example`
   and its encoded forms.
 
-- [ ] **M36.21 — published worlds and high scores are written atomically.**
+- [x] **M36.21 — published worlds and high scores are written atomically.**
   *(confirmed, low)* The editor publish (`engine/websocket_server.go:2996`),
   Museum play (`museum.go:263`) and `.HI` writes (`room_manager.go:217`) use
   in-place `os.WriteFile`. Snapshots and stores already use tmp+rename. A crash

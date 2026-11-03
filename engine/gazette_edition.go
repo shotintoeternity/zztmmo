@@ -45,7 +45,6 @@ import (
 	"fmt"
 	"hash/fnv"
 	"os"
-	"path/filepath"
 	"sort"
 	"strconv"
 	"strings"
@@ -395,33 +394,9 @@ func (e *GazetteEditor) save() {
 	if err != nil {
 		return
 	}
-	writeFileAtomic(path, data)
-}
-
-// writeFileAtomic is temp + rename, so a crash mid-write leaves the previous
-// edition intact rather than a truncated one.
-func writeFileAtomic(path string, data []byte) {
-	dir := filepath.Dir(path)
-	if err := os.MkdirAll(dir, 0o755); err != nil {
-		return
-	}
-	tmp, err := os.CreateTemp(dir, ".gazette-edition-*.tmp")
-	if err != nil {
-		return
-	}
-	tmpName := tmp.Name()
-	if _, err := tmp.Write(data); err != nil {
-		tmp.Close()
-		os.Remove(tmpName)
-		return
-	}
-	if err := tmp.Close(); err != nil {
-		os.Remove(tmpName)
-		return
-	}
-	if err := os.Rename(tmpName, path); err != nil {
-		os.Remove(tmpName)
-	}
+	// Best effort, as before M36.21 moved the helper out: 0600 is the mode
+	// CreateTemp always gave the edition.
+	_ = writeFileAtomic(path, data, 0o600)
 }
 
 // gazetteEditionRow is one happening as the author is shown it: no name, no

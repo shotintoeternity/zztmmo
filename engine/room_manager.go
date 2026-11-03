@@ -327,7 +327,8 @@ func (rm *RoomManager) saveHighScores() {
 	buf := make([]byte, SizeOfHighScoreList)
 	StoreHighScoreList(buf, rm.highScores[:])
 	// Best effort: a server that cannot persist scores must still keep playing.
-	_ = os.WriteFile(rm.HighScorePath, buf, 0o644)
+	// M36.21: temp + rename, so a failed write cannot truncate the old list.
+	_ = writeFileAtomic(rm.HighScorePath, buf, 0o644)
 }
 
 // HighScores returns a copy of the world's list.

@@ -3453,7 +3453,9 @@ func (s *WebSocketServer) saveEditorWorld(client *webSocketClient, session *Edit
 	if err := os.MkdirAll(dir, 0o755); err != nil {
 		return "", err
 	}
-	if err := os.WriteFile(path, data, 0o644); err != nil {
+	// M36.21: temp + rename, so a failed or interrupted write leaves the
+	// previously published world loadable instead of truncated.
+	if err := writeFileAtomic(path, data, 0o644); err != nil {
 		return "", err
 	}
 	if hasAccess {

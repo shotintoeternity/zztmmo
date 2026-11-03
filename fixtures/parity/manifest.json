@@ -1666,6 +1666,17 @@
       "notes": "task-claim row; a room that has had players since its last autosave is marked unsaved, is autosaved the tick after its last player leaves (quit or reconnect-grace expiry), private test-play copies excepted, and is not evictable until that write lands; GetOrCreateInstance starts a recreated instance from its autosave when the boot restored autosaves or this process wrote it (so -fresh still ignores an earlier boot's), keeping SourceWorld and the title pristine; hostGeneratedWorld removes the replaced world's autosave; a join or watch that finds its instance evicted after the upgrade re-resolves it. Failed before the fix: a rejoin after eviction got the pristine world, no autosave was written on last leave, and a join after eviction landed in the orphan. M36.18 (2026-11-03)."
     },
     {
+      "id": "task.M36.19",
+      "dimension": "task",
+      "subject": "Completed task M36.19 — its DoD still holds",
+      "contract": "E",
+      "authority": "TASKS.md M36.19",
+      "parity": "exact",
+      "status": "unverified",
+      "assignedTask": "M16.20",
+      "notes": "task-claim row; behavioral parity carried by the element/oop/protocol/input/service rows this task touched; reconciled at M16.20"
+    },
+    {
       "id": "task.M36.2",
       "dimension": "task",
       "subject": "Completed task M36.2 — its DoD still holds",
@@ -1675,6 +1686,28 @@
       "test": "TestM362PropertyNamesSurviveRepeatedEdits,TestM362LongNameTruncatesOnACharacterBoundary,TestM362AddBoardNameIsCP437",
       "status": "pass",
       "notes": "task-claim row; EditorPropertyMessage.Text and EditorBoardMessage.Name are CP437String, the inverse of the outbound widening 8c97450 applied to board and world names. All three tests failed before the fix (name grew C2 82 per edit; truncation left a lone C2). M36.2 (2026-11-02)."
+    },
+    {
+      "id": "task.M36.20",
+      "dimension": "task",
+      "subject": "Completed task M36.20 — its DoD still holds",
+      "contract": "E",
+      "authority": "TASKS.md M36.20",
+      "parity": "exact",
+      "status": "unverified",
+      "assignedTask": "M16.20",
+      "notes": "task-claim row; behavioral parity carried by the element/oop/protocol/input/service rows this task touched; reconciled at M16.20"
+    },
+    {
+      "id": "task.M36.21",
+      "dimension": "task",
+      "subject": "Completed task M36.21 — its DoD still holds",
+      "contract": "E",
+      "authority": "TASKS.md M36.21",
+      "parity": "exact",
+      "status": "unverified",
+      "assignedTask": "M16.20",
+      "notes": "task-claim row; behavioral parity carried by the element/oop/protocol/input/service rows this task touched; reconciled at M16.20"
     },
     {
       "id": "task.M36.28",
