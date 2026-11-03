@@ -40,6 +40,9 @@ var (
 	ErrNoSuchPlayer = errors.New("no such player")
 	// ErrWorldOccupied refuses a restore while players are still in rooms.
 	ErrWorldOccupied = errors.New("someone is still playing")
+	// ErrSaveFromAnotherWorld refuses a restore of one world's save into a
+	// different world (M36.15).
+	ErrSaveFromAnotherWorld = errors.New("that saved game is from another world")
 )
 
 // SanitizeSaveName is the whole defense for a filename that arrives from a
@@ -212,7 +215,28 @@ func writeSnapshotPlayerStateSidecar(snapshotPath, worldName, accountID string, 
 // one would be left on a board that no longer exists. The RoomManager is reused
 // rather than replaced so that nextPlayerID keeps climbing and no PlayerID is
 // ever handed out twice.
+//
+// It loads any save, whatever world it came from; a restore a client asks for
+// goes through RestoreOwnSnapshot instead. The caller holds the lock that
+// guards rm (inst.mu for a hosted world).
 func (rm *RoomManager) RestoreSnapshot(dir, name string) error {
+	return rm.restoreSnapshot(dir, name, false)
+}
+
+// RestoreOwnSnapshot is RestoreSnapshot that also refuses a save of a
+// different world (M36.15): restoring a CAVES save into LOBBY would make LOBBY
+// CAVES, and autosave would then keep it that way. The .SAV is a plain .ZZT and
+// carries no instance identity, so the save is matched by World.Info.Name.
+// That is vanilla's own tie between a save and its world: GameWorldSave sets
+// Info.Name only for a .ZZT (GAME.PAS:824), so a .SAV keeps the name of the
+// world it was taken in, and pressing P on a restored save reloads
+// Info.Name + '.ZZT' (GAME.PAS:1637). Two hosted worlds sharing an Info.Name are
+// not told apart; that is the name-as-identity problem M14.4 owns.
+func (rm *RoomManager) RestoreOwnSnapshot(dir, name string) error {
+	return rm.restoreSnapshot(dir, name, true)
+}
+
+func (rm *RoomManager) restoreSnapshot(dir, name string, ownWorldOnly bool) error {
 	path, err := snapshotPath(dir, name)
 	if err != nil {
 		return err
@@ -233,6 +257,9 @@ func (rm *RoomManager) RestoreSnapshot(dir, name string) error {
 	}
 	if err := validateWorldBoards(scratch.World); err != nil {
 		return err
+	}
+	if ownWorldOnly && scratch.World.Info.Name != rm.world.Info.Name {
+		return ErrSaveFromAnotherWorld
 	}
 
 	rm.world = scratch.World

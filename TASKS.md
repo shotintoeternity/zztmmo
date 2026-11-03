@@ -8809,7 +8809,7 @@ copy; the executor still writes the failing test in the repo first.
   the daily cap (refused), and a retry after an editor publish (refused, file
   unchanged).
 
-- [ ] **M36.15 — restore is locked and stays in its own world.** *(confirmed,
+- [x] **M36.15 — restore is locked and stays in its own world.** *(confirmed,
   high)* `handleRestore` (`engine/web_api.go:1173`) calls `rm.RestoreSnapshot`
   without `inst.mu`, racing the tick and concurrent joins: concurrent map
   access, and a joining player left pointing at a discarded room.

@@ -1211,14 +1211,6 @@ func (s *WebSocketServer) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 	}
 
 	if !resumed {
-		join.Board = s.resolveJoinBoard(inst, join.Board)
-		if challengeRun != nil {
-			// The start board is the catalogue's, not the client's: a challenge
-			// that could be entered on a board of the player's choosing is a
-			// challenge whose route is the player's choosing too.
-			join.Board = challengeRun.Def.Board
-		}
-
 		// Mint a process-unique id before taking inst.mu; the two locks are never
 		// held together (M14.1).
 		playerID = s.mintPlayerID()
@@ -1230,6 +1222,16 @@ func (s *WebSocketServer) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 		ok := func() bool {
 			inst.mu.Lock()
 			defer inst.mu.Unlock()
+			// M36.15: the board is resolved under the same lock as the join, since
+			// it reads the world a restore replaces; resolved outside it, a restore
+			// in between could leave the join naming a board of the old world.
+			join.Board = s.resolveJoinBoard(inst, join.Board)
+			if challengeRun != nil {
+				// The start board is the catalogue's, not the client's: a challenge
+				// that could be entered on a board of the player's choosing is a
+				// challenge whose route is the player's choosing too.
+				join.Board = challengeRun.Def.Board
+			}
 			inst.RoomManager.JoinPlayerWithID(playerID, join.Board, 0, 0)
 			if authenticated {
 				inst.RoomManager.SetPlayerIdentity(playerID, account.ID, account.DisplayName())
@@ -1516,6 +1518,8 @@ func (s *WebSocketServer) serveReplayHTTP(w http.ResponseWriter, r *http.Request
 // extracted verbatim from the player join (M22.1) so a watcher opens the board a
 // player pressing Play would have opened — the two answers drifting apart is
 // exactly how /watch/<world> would end up showing a room nobody is in.
+//
+// The caller holds inst.mu: it reads the world a restore replaces (M36.15).
 func (s *WebSocketServer) resolveJoinBoard(inst *WorldInstance, board int16) int16 {
 	if board != 0 {
 		return board
@@ -1562,9 +1566,10 @@ func (s *WebSocketServer) resolveWatchBoard(inst *WorldInstance, board int16) in
 // fan-out and out of autosave, by construction rather than by remembering to
 // exclude them at each of those places.
 func (s *WebSocketServer) serveSpectator(ctx context.Context, conn *websocket.Conn, client *webSocketClient, inst *WorldInstance, join JoinMessage) {
-	boardID := s.resolveWatchBoard(inst, join.Board)
-
 	inst.mu.Lock()
+	// M36.15: resolved under inst.mu, because it reads the world a restore
+	// replaces.
+	boardID := s.resolveWatchBoard(inst, join.Board)
 	sub := &spectator{client: client, boardID: boardID}
 	inst.Spectators[client] = sub
 	snapshot, engine := inst.RoomManager.SpectatorSnapshot(boardID)
@@ -2479,13 +2484,23 @@ func (s *WebSocketServer) RestoreAutosaves() {
 
 // safeRestoreSnapshot restores rm from dir/<NAME>.SAV, turning a panic on a
 // malformed file into an ordinary error so RestoreAutosaves can skip it.
-func safeRestoreSnapshot(rm *RoomManager, dir, name string) (err error) {
+func safeRestoreSnapshot(rm *RoomManager, dir, name string) error {
+	return safeRestore(func() error { return rm.RestoreSnapshot(dir, name) })
+}
+
+// safeRestoreOwnSnapshot is safeRestoreSnapshot for a restore a client asked
+// for: the save must be of rm's own world (M36.15).
+func safeRestoreOwnSnapshot(rm *RoomManager, dir, name string) error {
+	return safeRestore(func() error { return rm.RestoreOwnSnapshot(dir, name) })
+}
+
+func safeRestore(restore func() error) (err error) {
 	defer func() {
 		if r := recover(); r != nil {
 			err = fmt.Errorf("malformed snapshot: %v", r)
 		}
 	}()
-	return rm.RestoreSnapshot(dir, name)
+	return restore()
 }
 
 // EnableRecording turns on session recording for every current and future

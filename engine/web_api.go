@@ -1193,7 +1193,7 @@ func (a *WebAPI) handleRestore(w http.ResponseWriter, r *http.Request) {
 		World string `json:"world"`
 		Name  string `json:"name"`
 	}
-	if err := json.NewDecoder(r.Body).Decode(&body); err != nil {
+	if err := json.NewDecoder(http.MaxBytesReader(w, r.Body, 1<<12)).Decode(&body); err != nil {
 		http.Error(w, "bad request body", http.StatusBadRequest)
 		return
 	}
@@ -1208,26 +1208,37 @@ func (a *WebAPI) handleRestore(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	var rm *RoomManager
+	// M36.15: a hosted world's RoomManager is ticked and joined under inst.mu,
+	// so the restore, which replaces its world and rooms, runs under it too, as
+	// RestoreAutosaves does. The save is the client's choice, so it must be of
+	// this world, and a malformed one can panic inside the reader: the safe
+	// wrapper turns that into an error,
+	// and the deferred unlock means a panic can never leak inst.mu.
+	var restoredName string
 	if a.Server != nil {
-		inst, err := a.Server.GetOrCreateInstance(safeWorld)
-		if err != nil {
-			writeWorldLoadError(w, safeWorld, err)
+		inst, loadErr := a.Server.GetOrCreateInstance(safeWorld)
+		if loadErr != nil {
+			writeWorldLoadError(w, safeWorld, loadErr)
 			return
 		}
-		rm = inst.RoomManager
+		err = func() error {
+			inst.mu.Lock()
+			defer inst.mu.Unlock()
+			err := safeRestoreOwnSnapshot(inst.RoomManager, a.SavesDir, body.Name)
+			restoredName = inst.RoomManager.WorldName()
+			return err
+		}()
 	} else {
-		rm = a.RoomManager
+		err = safeRestoreOwnSnapshot(a.RoomManager, a.SavesDir, body.Name)
+		restoredName = a.RoomManager.WorldName()
 	}
-
-	err = rm.RestoreSnapshot(a.SavesDir, body.Name)
 
 	switch {
 	case err == nil:
 		writeJSON(w, struct {
 			World string `json:"world"`
-		}{World: rm.WorldName()})
-	case errors.Is(err, ErrWorldOccupied):
+		}{World: restoredName})
+	case errors.Is(err, ErrWorldOccupied), errors.Is(err, ErrSaveFromAnotherWorld):
 		http.Error(w, err.Error(), http.StatusConflict)
 	case errors.Is(err, ErrInvalidSaveName), errors.Is(err, ErrSavesDisabled):
 		http.Error(w, err.Error(), http.StatusBadRequest)
@@ -1285,7 +1296,7 @@ func (a *WebAPI) handleTitle(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	var rm *RoomManager
+	var displayName string
 	var pristineWorld TWorld
 	var title *TitleSim
 	if a.Server != nil {
@@ -1294,12 +1305,15 @@ func (a *WebAPI) handleTitle(w http.ResponseWriter, r *http.Request) {
 			writeWorldLoadError(w, safeWorld, err)
 			return
 		}
-		rm = inst.RoomManager
+		// M36.15: read under the lock a restore replaces the world under.
+		inst.mu.Lock()
 		pristineWorld = inst.RoomManager.FrozenWorld()
+		displayName = inst.RoomManager.WorldName()
+		inst.mu.Unlock()
 		title = inst.Title
 	} else {
-		rm = a.RoomManager
 		pristineWorld = a.World
+		displayName = a.RoomManager.WorldName()
 	}
 
 	// The live sim's frame, so the first paint and the stream that follows
@@ -1314,7 +1328,7 @@ func (a *WebAPI) handleTitle(w http.ResponseWriter, r *http.Request) {
 		Filename string       `json:"filename"`
 		Screen   []ScreenCell `json:"screen"`
 	}{
-		World:    rm.WorldName(),
+		World:    displayName,
 		Filename: safeWorld,
 		Screen:   screen,
 	})
@@ -1551,7 +1565,7 @@ func (a *WebAPI) handleLoadWorld(w http.ResponseWriter, r *http.Request) {
 	var body struct {
 		Name string `json:"name"`
 	}
-	if err := json.NewDecoder(r.Body).Decode(&body); err != nil {
+	if err := json.NewDecoder(http.MaxBytesReader(w, r.Body, 1<<12)).Decode(&body); err != nil {
 		http.Error(w, "bad request body", http.StatusBadRequest)
 		return
 	}
@@ -1569,10 +1583,12 @@ func (a *WebAPI) handleLoadWorld(w http.ResponseWriter, r *http.Request) {
 			http.Error(w, err.Error(), http.StatusInternalServerError)
 			return
 		}
-		rm = inst.RoomManager
+		inst.mu.Lock()
+		worldName := inst.RoomManager.WorldName()
+		inst.mu.Unlock()
 		writeJSON(w, struct {
 			World string `json:"world"`
-		}{World: rm.WorldName()})
+		}{World: worldName})
 		return
 	} else {
 		rm = a.RoomManager
@@ -1717,24 +1733,30 @@ func (a *WebAPI) handleHighScores(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	var rm *RoomManager
+	var title string
+	var lines CP437Lines
 	if a.Server != nil {
 		inst, err := a.Server.GetOrCreateInstance(safeWorld)
 		if err != nil {
 			writeWorldLoadError(w, safeWorld, err)
 			return
 		}
-		rm = inst.RoomManager
+		// M36.15: read under the lock a restore and a recorded score write under.
+		inst.mu.Lock()
+		title = inst.RoomManager.WorldName()
+		lines = inst.RoomManager.HighScoreLines(0, 0)
+		inst.mu.Unlock()
 	} else {
-		rm = a.RoomManager
+		title = a.RoomManager.WorldName()
+		lines = a.RoomManager.HighScoreLines(0, 0)
 	}
 
 	writeJSON(w, struct {
 		Title CP437String `json:"title"`
 		Lines CP437Lines  `json:"lines"`
 	}{
-		Title: CP437String("High scores for " + rm.WorldName()),
-		Lines: rm.HighScoreLines(0, 0),
+		Title: CP437String("High scores for " + title),
+		Lines: lines,
 	})
 }
 
