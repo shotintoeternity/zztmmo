@@ -16,7 +16,7 @@
 # `make browser` is the everyday half of that: the opt-in real-browser family and
 # nothing else around it. CLAUDE.md rule 3 sends client work here (M33.2).
 
-.PHONY: parity certify browser parity-report parity-canaries oracle-tools oracle-regen world
+.PHONY: parity certify browser browser-only parity-report parity-canaries oracle-tools oracle-regen world
 
 # Deterministic ZWD authoring gate. Example:
 #   make world SOURCE=llmworld/generated/NULLSIGN.zwd OUT=engine/NULLSIGN.ZZT
@@ -60,6 +60,24 @@ browser:
 	cd engine/web && npm run build
 	cd engine/web && npm test
 	cd engine && ZZT_BROWSER=1 go test -timeout 30m -count=1 ./...
+
+# The targeted half (owner decision 2026-11-02): for a SERVER change to
+# something a browser reads (a route, a status code, a protocol field) with no
+# change under engine/web/src. It builds the client and runs the node suite
+# exactly as `browser` does, then runs only the Go tests matching RUN with the
+# browser family requested. Pick RUN by the journeys that reach what you
+# changed: browser journeys are the tests that call m169RequireBrowserHarness,
+# so grep those files for the route or script, e.g.
+#   make browser-only RUN='TestM1617DreamJourney|TestM1617.*Browser'
+# Not a substitute for `make browser`: client work still runs the whole family,
+# because the failure rule 3 guards is a client change moving something an
+# OLDER journey walks, which no RUN chosen for the new feature would include.
+# The whole family also runs once before a push or deploy.
+browser-only:
+	@test -n "$(RUN)" || { echo "usage: make browser-only RUN='<go test -run regexp>'"; exit 2; }
+	cd engine/web && npm run build
+	cd engine/web && npm test
+	cd engine && ZZT_BROWSER=1 go test -timeout 30m -count=1 -run '$(RUN)' .
 
 # Re-render the report from the current manifest without running the gates.
 parity-report:
