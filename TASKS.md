@@ -8866,7 +8866,7 @@ copy; the executor still writes the failing test in the repo first.
   Use unique recording names (or append), close superseded recorders, evict
   idle replay instances, and bound or snap `start`. DoD: tests for each.
 
-- [ ] **M36.20 — the post-login redirect stays on this site.** *(confirmed,
+- [x] **M36.20 — the post-login redirect stays on this site.** *(confirmed,
   low; security)* The OAuth return-path check (`engine/auth.go:149`) rejects
   `//` but not `/\`. `/api/auth/google/start?return=/%5Cevil.example` survives
   and, after a real Google login, redirects to `//evil.example`, because

@@ -145,10 +145,7 @@ func (a *AuthService) HandleStart(w http.ResponseWriter, r *http.Request) {
 		http.Error(w, "could not start auth", http.StatusInternalServerError)
 		return
 	}
-	returnTo := r.URL.Query().Get("return")
-	if !strings.HasPrefix(returnTo, "/") || strings.HasPrefix(returnTo, "//") {
-		returnTo = "/"
-	}
+	returnTo := sameSiteReturnPath(r.URL.Query().Get("return"))
 	redirectURL := a.redirectURL(r)
 	stateValue, err := a.Signer.Encode(oauthState{
 		State:        state,
@@ -172,6 +169,27 @@ func (a *AuthService) HandleStart(w http.ResponseWriter, r *http.Request) {
 	q.Set("code_challenge", base64.RawURLEncoding.EncodeToString(challengeBytes[:]))
 	q.Set("code_challenge_method", "S256")
 	http.Redirect(w, r, a.AuthEndpoint+"?"+q.Encode(), http.StatusFound)
+}
+
+// sameSiteReturnPath keeps a post-login return path only when a browser will
+// resolve it on this site, and otherwise answers "/". A prefix check is not
+// enough: browsers read a backslash as "/" and drop tabs and newlines from a
+// URL, so `/\evil.example` and "/<tab>/evil.example" both land on
+// "//evil.example".
+func sameSiteReturnPath(returnTo string) string {
+	if !strings.HasPrefix(returnTo, "/") || strings.HasPrefix(returnTo, "//") {
+		return "/"
+	}
+	for _, c := range returnTo {
+		if c == '\\' || c < 0x20 || c == 0x7f {
+			return "/"
+		}
+	}
+	u, err := url.Parse(returnTo)
+	if err != nil || u.Scheme != "" || u.Host != "" || u.User != nil {
+		return "/"
+	}
+	return returnTo
 }
 
 func (a *AuthService) HandleCallback(w http.ResponseWriter, r *http.Request) {
