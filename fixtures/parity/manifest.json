@@ -1600,6 +1600,17 @@
       "notes": "task-claim row; ElementKeyTouch refuses a key whose foreground nibble is 0 or 8 (key 0) before indexing the zero-based Keys/ColorNames, mirroring ElementDoorTouch's guard: \"You already have that key!\", the refusal sound, nothing mutated. Vanilla's one-based Keys[0] aliased the high byte of Gems (ZZT-QUIRK comment). Failed before the fix: walking into a 0x08 key panicked with index out of range [-1], which drops the board. M36.12 (2026-11-02)."
     },
     {
+      "id": "task.M36.13",
+      "dimension": "task",
+      "subject": "Completed task M36.13 — its DoD still holds",
+      "contract": "E",
+      "authority": "TASKS.md M36.13",
+      "parity": "exact",
+      "test": "TestM3613MuseumPlayRefusesAnOwnedWorld,TestM3613MuseumPlayRefusesAnOccupiedWorld,TestM3613MuseumPlayRefusesAForeignClassic,TestM3613MuseumPlayStillHostsAnUnownedWorld",
+      "status": "pass",
+      "notes": "task-claim row; MuseumService.Play asks museumRefuseOverwrite before writing: generation's refuseIfNotOurs (as an anonymous caller) and refuseIfOccupied, and a canonical name only from the archive worlds.manifest.json records for it (TOWN, with no archive, from none; M18.11's TEEN-from-teen.zip boundary still hosts). The world is written to NAME.ZZT.tmp and renamed over NAME.ZZT only after HostGeneratedWorld succeeds, so a late occupancy refusal no longer destroys the file. /api/museum/play answers these refusals 409. Failed before the fix: an owned, an occupied, and a foreign-archive TOWN and TEEN were each overwritten. M36.13 (2026-11-02)."
+    },
+    {
       "id": "task.M36.2",
       "dimension": "task",
       "subject": "Completed task M36.2 — its DoD still holds",

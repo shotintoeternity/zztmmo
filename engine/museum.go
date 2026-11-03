@@ -254,22 +254,29 @@ func (m *MuseumService) Play(ctx context.Context, req MuseumPlayRequest) (Museum
 	if err := os.MkdirAll(dir, 0o755); err != nil {
 		return MuseumPlayResponse{}, err
 	}
+	// M36.13: the same three questions the editor's publish and generation ask,
+	// asked before the first byte is written. The request is anonymous, so it is
+	// "nobody" to the ownership guard: it may take an unowned name and never an
+	// owned one.
+	if err := museumRefuseOverwrite(m.Server, dir, name, req.Filename); err != nil {
+		return MuseumPlayResponse{}, err
+	}
 	hostedPath := filepath.Join(dir, name+".ZZT")
-	// Remember whether the .ZZT pre-existed (e.g. a replay of an already-hosted
-	// world): a host failure must remove only a file this request created,
-	// never one an earlier successful Play legitimately left hosted.
-	_, statErr := os.Stat(hostedPath)
-	existedBefore := statErr == nil
-	if err := os.WriteFile(hostedPath, selected.Data, 0o644); err != nil {
-		if !existedBefore {
-			_ = os.Remove(hostedPath)
-		}
+	// Write beside the target and rename over it only once the world is hosted:
+	// a failed write or a late occupancy refusal (somebody walked in after the
+	// check above) leaves the previous file exactly as it was, and a crash
+	// mid-write never truncates it.
+	tmpPath := hostedPath + ".tmp"
+	if err := os.WriteFile(tmpPath, selected.Data, 0o644); err != nil {
+		_ = os.Remove(tmpPath)
 		return MuseumPlayResponse{}, err
 	}
 	if err := m.Server.HostGeneratedWorld(name, world); err != nil {
-		if !existedBefore {
-			_ = os.Remove(hostedPath)
-		}
+		_ = os.Remove(tmpPath)
+		return MuseumPlayResponse{}, err
+	}
+	if err := os.Rename(tmpPath, hostedPath); err != nil {
+		_ = os.Remove(tmpPath)
 		return MuseumPlayResponse{}, err
 	}
 	commitCache()
@@ -441,6 +448,26 @@ func validateMuseumDownloadName(letter, filename string) error {
 		return fmt.Errorf("museum filename must be a .zip")
 	}
 	return nil
+}
+
+// museumRefuseOverwrite is the M36.13 guard on a Museum play's target name.
+// Occupancy and ownership are generation's own guards, asked with no account.
+// The canonical check is narrower than generation's: M18.11 deliberately lets
+// the Museum write a classic's name, because putting the classic's own bytes on
+// this server is what the Museum is for — but only the archive the manifest
+// says that classic comes from may do it. A classic with no archive (the
+// worlds that ship with the server, like TOWN) cannot be written by any.
+func museumRefuseOverwrite(server *WebSocketServer, dir, name, archive string) error {
+	if WorldIsCanonical(name) {
+		entry, _ := museumMetadataForWorld(name)
+		if entry.Zip == "" || !strings.EqualFold(entry.Zip, path.Base(archive)) {
+			return refuseIfCanonical(name)
+		}
+	}
+	if err := refuseIfNotOurs(dir, name, AuthenticatedAccount{}); err != nil {
+		return err
+	}
+	return refuseIfOccupied(server, name)
 }
 
 func museumHostedWorldName(zipName, zztName string, data []byte) string {

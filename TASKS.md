@@ -8783,7 +8783,7 @@ copy; the executor still writes the failing test in the repo first.
 
 ### Tier 2 — security and data loss
 
-- [ ] **M36.13 — a Museum play cannot overwrite a published world.**
+- [x] **M36.13 — a Museum play cannot overwrite a published world.**
   *(confirmed, high)* An anonymous `POST /api/museum/play` (`engine/museum.go:263`)
   writes `worldsDir/<NAME>.ZZT`, named after the .ZZT inside the zip, with no
   ownership (`loadWorldAccess`), canonical (`WorldIsCanonical`) or occupancy

@@ -827,7 +827,14 @@ func (a *WebAPI) handleMuseumPlay(w http.ResponseWriter, r *http.Request) {
 	}
 	result, err := a.museumService().Play(r.Context(), req)
 	if err != nil {
-		http.Error(w, err.Error(), http.StatusUnprocessableEntity)
+		status := http.StatusUnprocessableEntity
+		if errors.Is(err, ErrGeneratedWorldOccupied) || errors.Is(err, ErrGeneratedWorldNotYours) ||
+			errors.Is(err, ErrGeneratedWorldIsCanonical) {
+			// M36.13: the archive is fine; its world's name is taken by a world
+			// this request may not replace, and nothing was written.
+			status = http.StatusConflict
+		}
+		http.Error(w, err.Error(), status)
 		return
 	}
 	writeJSON(w, result)
