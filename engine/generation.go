@@ -20,6 +20,7 @@ package zztgo
 
 import (
 	"context"
+	"crypto/sha256"
 	"encoding/json"
 	"errors"
 	"fmt"
@@ -145,6 +146,11 @@ type generationResume struct {
 	// stubbed names the boards whose paint attempts were exhausted and which
 	// were salvaged with generatedStubBoard (M17.13), in generation order.
 	stubbed []string
+	// written fingerprints the .ZZT this dream last persisted (M36.14), so a
+	// retry can tell whether the file is still the one it wrote. Unset until
+	// the first persist: a dream that never landed has nothing to protect.
+	written    [sha256.Size]byte
+	hasWritten bool
 }
 
 // stub replaces a board that could not be painted with a traversable stub and
@@ -262,6 +268,34 @@ func claimGeneratedWorld(dir, name string, account AuthenticatedAccount) error {
 		OwnerAccountID: account.ID,
 		OwnerName:      account.DisplayName(),
 	})
+}
+
+// ErrGeneratedWorldModified refuses a retry whose world is no longer the one
+// the dream wrote (M36.14): the owner edited and published it, or it is gone. A
+// retry re-persists the whole world, so going ahead would write the dream back
+// over their edits. The API turns it into a 409.
+var ErrGeneratedWorldModified = errors.New("world was changed since this dream wrote it")
+
+// refuseIfModified compares the world on disk with the fingerprint of what
+// this dream last persisted. A dream that never persisted has no fingerprint
+// and is left to the other guards. Like refuseIfOccupied it is asked before the
+// spend and again before the write, and leaves the same few-millisecond window
+// between the last check and the write.
+func refuseIfModified(dir string, st *generationResume) error {
+	if dir == "" || st == nil || !st.hasWritten {
+		return nil
+	}
+	data, err := os.ReadFile(filepath.Join(dir, st.name+".ZZT"))
+	if err != nil {
+		if errors.Is(err, os.ErrNotExist) {
+			return fmt.Errorf("world %q is gone: %w", st.name, ErrGeneratedWorldModified)
+		}
+		return fmt.Errorf("read world %q: %w", st.name, err)
+	}
+	if sha256.Sum256(data) != st.written {
+		return fmt.Errorf("world %q: %w", st.name, ErrGeneratedWorldModified)
+	}
+	return nil
 }
 
 // ErrGenerationBudget is the spend ceiling (M18.4). The per-client rate limit
@@ -545,9 +579,35 @@ func (g *GenerationService) resolveGeneratedName(ctx context.Context, req Genera
 // same failure concurrently (the async job layer enforces this by flipping the
 // job back to running under its lock before spawning the retry).
 func (g *GenerationService) RetryBoard(ctx context.Context, boardErr *GenerationBoardError, progress func(GenerationProgress)) (GenerationResult, error) {
-	if boardErr == nil || boardErr.resume == nil {
-		return GenerationResult{}, fmt.Errorf("generation failure is not board-retryable")
+	if err := g.admitRetry(boardErr); err != nil {
+		return GenerationResult{}, err
 	}
+	return g.retryAdmitted(ctx, boardErr, progress)
+}
+
+// admitRetry is the half of RetryBoard that can refuse (M36.14). The HTTP route
+// calls it on the request goroutine, so a refused retry is answered as one and
+// the job is left exactly as retryable as it was.
+//
+// A world that is no longer the one this dream wrote is refused first, so a
+// superseded job spends nothing. Then the retry is counted against the daily
+// ceiling like a generation. It is not paced by the per-client cooldown (owner
+// decision 2026-11-02): a salvaged dream offers its repaint at once, the
+// cooldown's job is pacing new dreams, and the ceiling plus the route's
+// ownership check bound what retries can spend.
+func (g *GenerationService) admitRetry(boardErr *GenerationBoardError) error {
+	if boardErr == nil || boardErr.resume == nil {
+		return fmt.Errorf("generation failure is not board-retryable")
+	}
+	if err := refuseIfModified(g.outputDir, boardErr.resume); err != nil {
+		return err
+	}
+	return g.admitQuota("", false)
+}
+
+// retryAdmitted is the rest of RetryBoard, for a retry admitRetry has already
+// admitted. paintAndFinish asks refuseIfModified again before it writes.
+func (g *GenerationService) retryAdmitted(ctx context.Context, boardErr *GenerationBoardError, progress func(GenerationProgress)) (GenerationResult, error) {
 	if progress != nil {
 		ctx = context.WithValue(ctx, generationProgressContextKey{}, progress)
 	}
@@ -803,11 +863,17 @@ func (g *GenerationService) paintAndFinish(ctx context.Context, st *generationRe
 	if err := refuseIfCanonical(name); err != nil {
 		return GenerationResult{}, err
 	}
+	// M36.14: a retry re-enters here minutes after it was admitted, and the
+	// owner may have published over the dream in the meantime.
+	if err := refuseIfModified(g.outputDir, st); err != nil {
+		return GenerationResult{}, err
+	}
 
 	g.report(ctx, GenerationProgress{Stage: "persisting", Detail: "saving accepted world and sidecars"})
 	if err := persistGeneratedWorld(g.outputDir, name, st.premise, planText, full, data); err != nil {
 		return GenerationResult{}, err
 	}
+	st.written, st.hasWritten = sha256.Sum256(data), true
 	// M14.4: the plan's WorldName is the world's TITLE, not its identity. It is
 	// recorded here so the picker can show what the model actually called the
 	// world — which is the whole reason the stem no longer has to carry it, and
@@ -864,12 +930,27 @@ func (g *GenerationService) stubCrashingBoards(ctx context.Context, st *generati
 }
 
 func (g *GenerationService) admit(ctx context.Context, client string) error {
+	if err := g.admitQuota(client, true); err != nil {
+		return err
+	}
+	select {
+	case g.sem <- struct{}{}:
+		return nil
+	case <-ctx.Done():
+		return ctx.Err()
+	}
+}
+
+// admitQuota is admit without the concurrency slot. paced is false only for a
+// retry (M36.14), which is counted against the daily ceiling but neither
+// checks nor restarts the client's cooldown.
+func (g *GenerationService) admitQuota(client string, paced bool) error {
 	if client == "" {
 		client = "unknown"
 	}
 	now := time.Now()
 	g.mu.Lock()
-	if last := g.lastByClient[client]; g.rateLimit > 0 && now.Sub(last) < g.rateLimit {
+	if last := g.lastByClient[client]; paced && g.rateLimit > 0 && now.Sub(last) < g.rateLimit {
 		g.mu.Unlock()
 		return fmt.Errorf("generation rate limit: try again later")
 	}
@@ -890,14 +971,11 @@ func (g *GenerationService) admit(ctx context.Context, client string) error {
 		}
 		g.admittedDay = append(g.admittedDay, now)
 	}
-	g.lastByClient[client] = now
-	g.mu.Unlock()
-	select {
-	case g.sem <- struct{}{}:
-		return nil
-	case <-ctx.Done():
-		return ctx.Err()
+	if paced {
+		g.lastByClient[client] = now
 	}
+	g.mu.Unlock()
+	return nil
 }
 
 func (g *GenerationService) makePlan(ctx context.Context, premise string, ground bool) (string, Plan, error) {

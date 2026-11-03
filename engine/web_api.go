@@ -96,12 +96,15 @@ type generationJob struct {
 	generator *GenerationService
 	// account is who asked for this dream, captured on the request goroutine
 	// that started the job because the job outlives the request. The Gazette
-	// credits it (M34.1a), and it is deliberately the ORIGINAL requester rather
-	// than whoever POSTs a retry: nothing authorizes a retry against a job id,
-	// and the world itself is owned by, claimed for, and refused on behalf of
-	// this account (refuseIfNotOurs, claimGeneratedWorld) no matter who asks for
-	// the repaint. News about a world must name the person who owns it.
+	// credits it (M34.1a), and the world is owned by, claimed for, and refused
+	// on behalf of this account (refuseIfNotOurs, claimGeneratedWorld). Since
+	// M36.14 it is also the only account that may retry the job.
 	account AuthenticatedAccount
+	// client is the generationClientKey of the request that started the job.
+	// A guest has no account, so a guest's job is retried only from this key
+	// (M36.14, owner decision 2026-11-02). Unexported so the status route,
+	// which serialises the job, never publishes it.
+	client string
 	// recorded is set once this job's world has been filed in the Gazette. A
 	// salvaged job is "complete" and still retryable (M17.13), so it has already
 	// been news before its retry runs — and a retry may salvage again, so the
@@ -869,7 +872,7 @@ func (a *WebAPI) handleGenerate(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	if body.Retry != "" {
-		a.handleGenerationRetry(w, body.Retry)
+		a.handleGenerationRetry(w, r, body.Retry)
 		return
 	}
 	generator := a.Generator
@@ -897,7 +900,7 @@ func (a *WebAPI) handleGenerate(w http.ResponseWriter, r *http.Request) {
 		if a.generationJobs == nil {
 			a.generationJobs = make(map[string]*generationJob)
 		}
-		a.generationJobs[jobID] = &generationJob{Status: "running", account: req.Account}
+		a.generationJobs[jobID] = &generationJob{Status: "running", account: req.Account, client: client}
 		a.generationMu.Unlock()
 		go a.runGenerationJob(jobID, generator, req)
 		w.WriteHeader(http.StatusAccepted)
@@ -914,7 +917,7 @@ func (a *WebAPI) handleGenerate(w http.ResponseWriter, r *http.Request) {
 		case errors.Is(err, ErrGenerationUnavailable):
 			http.Error(w, err.Error(), http.StatusServiceUnavailable)
 		case errors.Is(err, ErrGeneratedWorldOccupied), errors.Is(err, ErrGeneratedWorldNotYours),
-			errors.Is(err, ErrGeneratedWorldIsCanonical):
+			errors.Is(err, ErrGeneratedWorldIsCanonical), errors.Is(err, ErrGeneratedWorldModified):
 			// M16.17b: a name conflict, not a failed generation. Nothing was
 			// written — and nothing will be until that world empties out, or
 			// never, if it is somebody else's or a classic (M18.11). Only a
@@ -1075,12 +1078,28 @@ func (a *WebAPI) finishGenerationJob(id string, generator *GenerationService, re
 // job is flipped back to running under the lock before the goroutine starts,
 // so a second concurrent retry of the same job is refused rather than racing
 // the shared resume state.
-func (a *WebAPI) handleGenerationRetry(w http.ResponseWriter, id string) {
+func (a *WebAPI) handleGenerationRetry(w http.ResponseWriter, r *http.Request, id string) {
+	client := generationClientKey(r)
+	account := a.requestAccount(r)
 	a.generationMu.Lock()
 	job := a.generationJobs[id]
 	if job == nil {
 		a.generationMu.Unlock()
 		http.Error(w, "no such generation job", http.StatusNotFound)
+		return
+	}
+	// M36.14: job ids are sequential, so the id is no secret. A signed-in
+	// dreamer's job is retried by that account only; a guest's by the client
+	// key that started it. Asked before any job state is touched.
+	if job.account.ID != "" {
+		if account.ID != job.account.ID {
+			a.generationMu.Unlock()
+			http.Error(w, "this dream belongs to another player", http.StatusForbidden)
+			return
+		}
+	} else if job.client == "" || client != job.client {
+		a.generationMu.Unlock()
+		http.Error(w, "this dream belongs to another player", http.StatusForbidden)
 		return
 	}
 	// A salvaged job is "complete" and still retryable (M17.13), so the gate is
@@ -1092,6 +1111,30 @@ func (a *WebAPI) handleGenerationRetry(w http.ResponseWriter, id string) {
 		return
 	}
 	resume, generator := job.resume, job.generator
+	a.generationMu.Unlock()
+	// M36.14: admission is answered here, on the request, so a refusal reaches
+	// the player as one (the client's polling reads a complete job as done) and
+	// the job is left exactly as retryable as it was. Not under generationMu:
+	// it reads the world file and takes the generator's own lock.
+	if err := generator.admitRetry(resume); err != nil {
+		switch {
+		case errors.Is(err, ErrGenerationBudget):
+			http.Error(w, err.Error(), http.StatusTooManyRequests)
+		case errors.Is(err, ErrGeneratedWorldModified):
+			http.Error(w, err.Error(), http.StatusConflict)
+		default:
+			http.Error(w, err.Error(), http.StatusUnprocessableEntity)
+		}
+		return
+	}
+	a.generationMu.Lock()
+	// Another retry of this job may have been admitted while the lock was
+	// released; only one of them gets to run it.
+	if job.resume != resume {
+		a.generationMu.Unlock()
+		http.Error(w, "generation job is not retryable", http.StatusConflict)
+		return
+	}
 	job.Status = "running"
 	job.Error = ""
 	job.Retryable = false
@@ -1099,7 +1142,7 @@ func (a *WebAPI) handleGenerationRetry(w http.ResponseWriter, id string) {
 	job.resume = nil
 	a.generationMu.Unlock()
 	go func() {
-		result, err := generator.RetryBoard(context.Background(), resume, a.jobProgress(id))
+		result, err := generator.retryAdmitted(context.Background(), resume, a.jobProgress(id))
 		a.finishGenerationJob(id, generator, result, err)
 		if err == nil {
 			// M34.1a: a retry that rescues a job which never landed a world is

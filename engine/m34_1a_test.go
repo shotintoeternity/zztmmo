@@ -30,11 +30,17 @@ import (
 	"time"
 )
 
-// m341aRetry POSTs a retry of one async job and insists it was accepted.
-func m341aRetry(t *testing.T, handler http.Handler, id string) {
+// m341aRetry POSTs a retry of one async job and insists it was accepted. A
+// signed-in dreamer's job is retried with their cookie (M36.14); nil is a
+// guest, retrying from httptest's default address.
+func m341aRetry(t *testing.T, handler http.Handler, id string, cookie *http.Cookie) {
 	t.Helper()
 	rec := httptest.NewRecorder()
-	handler.ServeHTTP(rec, httptest.NewRequest(http.MethodPost, "/api/generate", strings.NewReader(`{"retry":"`+id+`"}`)))
+	req := httptest.NewRequest(http.MethodPost, "/api/generate", strings.NewReader(`{"retry":"`+id+`"}`))
+	if cookie != nil {
+		req.AddCookie(cookie)
+	}
+	handler.ServeHTTP(rec, req)
 	if rec.Code != http.StatusAccepted {
 		t.Fatalf("retry %s = %d: %s", id, rec.Code, rec.Body.String())
 	}
@@ -55,9 +61,9 @@ func m341aJobRecorded(t *testing.T, api *WebAPI, id string) bool {
 }
 
 // A job that never landed a world is rescued by a retry, and that retry is the
-// moment the world became news. The retry POST here is anonymous — nothing
-// about it names Ada — and the row is Ada's anyway, because the job remembers
-// who asked for the dream and the file on disk is claimed for her either way.
+// moment the world became news. The row is Ada's because the job remembers who
+// asked for the dream, not because of who POSTs the retry — though since M36.14
+// only Ada may, so the retry carries her cookie.
 //
 // The retry salvages a second time before it finally succeeds, which is the
 // case that separates a real once-only flag from "complete means recorded": the
@@ -73,10 +79,13 @@ func TestM341ARetryThatRescuesAFailedJobIsNewsExactlyOnce(t *testing.T) {
 		generatedBoard("Start", false))
 	defer claude.Close()
 	service := newGenerationTestService(t, claude.URL, 2)
-	api, _, ledger := m341API(t)
+	api, server, ledger := m341API(t)
 	api.Generator = service
 	handler := api.Handler()
 	account := AuthenticatedAccount{ID: "google:ada", Email: "ada@example.test", Name: "Ada"}
+	auth := NewAuthService("m341a-client-id", "", "", []byte("m341a-route-cookie-secret"))
+	server.Auth = auth
+	adaCookie := signedAuthCookie(t, auth, account)
 
 	// The state M12.22 built the retry endpoint for: a job that failed with a
 	// board-scoped error and kept its resume state. Nothing was recorded,
@@ -103,7 +112,7 @@ func TestM341ARetryThatRescuesAFailedJobIsNewsExactlyOnce(t *testing.T) {
 	}
 
 	// First retry: the world lands, one board still stubbed. This is the dream.
-	m341aRetry(t, handler, "gen-1")
+	m341aRetry(t, handler, "gen-1", adaCookie)
 	job := waitForGenerationJob(t, handler, "gen-1", "complete")
 	if !job.Retryable {
 		t.Fatalf("the retry was expected to salvage again: %+v", job)
@@ -117,7 +126,7 @@ func TestM341ARetryThatRescuesAFailedJobIsNewsExactlyOnce(t *testing.T) {
 	}
 
 	// Second retry: the stub is repainted. The same world is not news twice.
-	m341aRetry(t, handler, "gen-1")
+	m341aRetry(t, handler, "gen-1", adaCookie)
 	job = waitForGenerationJobSettled(t, handler, "gen-1")
 	if len(job.StubbedBoards) != 0 {
 		t.Fatalf("the second retry left boards stubbed: %v", job.StubbedBoards)
@@ -166,7 +175,7 @@ func TestM341ARepaintOfASalvagedDreamIsNotNewsAgain(t *testing.T) {
 		t.Fatalf("dream rows = %d, want 1: %+v", got, edition.Items)
 	}
 
-	m341aRetry(t, handler, started.ID)
+	m341aRetry(t, handler, started.ID, nil)
 	waitForGenerationJobSettled(t, handler, started.ID)
 
 	edition = ledger.Edition("", func(key string) string { return key })

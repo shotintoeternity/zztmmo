@@ -1611,6 +1611,17 @@
       "notes": "task-claim row; MuseumService.Play asks museumRefuseOverwrite before writing: generation's refuseIfNotOurs (as an anonymous caller) and refuseIfOccupied, and a canonical name only from the archive worlds.manifest.json records for it (TOWN, with no archive, from none; M18.11's TEEN-from-teen.zip boundary still hosts). The world is written to NAME.ZZT.tmp and renamed over NAME.ZZT only after HostGeneratedWorld succeeds, so a late occupancy refusal no longer destroys the file. /api/museum/play answers these refusals 409. Failed before the fix: an owned, an occupied, and a foreign-archive TOWN and TEEN were each overwritten. M36.13 (2026-11-02)."
     },
     {
+      "id": "task.M36.14",
+      "dimension": "task",
+      "subject": "Completed task M36.14 — its DoD still holds",
+      "contract": "E",
+      "authority": "TASKS.md M36.14",
+      "parity": "exact",
+      "test": "TestM3614ARetryPastTheDailyCapIsRefused,TestM3614ARetryIsNotPacedByTheCooldown,TestM3614ARetryAfterAPublishIsRefused,TestM3614ARetryNeedsTheDreamsAccount,TestM3614AGuestRetryNeedsTheGuestsClient,TestM3614AQuotaRefusalKeepsTheJobRetryable,TestM3614ARetryAfterAPublishIsRefusedOnTheRoute",
+      "status": "pass",
+      "notes": "task-claim row; RetryBoard = admitRetry (refuseIfModified, then the daily ceiling via admitQuota, unpaced by owner decision 2026-11-02) + retryAdmitted. The route answers admission on the request (429 ceiling, 409 edited world) with the job untouched, and requires the job's account, or for a guest job the client key that started it (owner decision 2026-11-02), else 403. A sha256 of the .ZZT the dream last persisted is checked before admission and again before the write; a missing file counts as modified. Failed before the fix: a retry ignored the daily cap, an anonymous or stranger retry was accepted, and a retry wrote the dream back over a published world. M36.14 (2026-11-02)."
+    },
+    {
       "id": "task.M36.2",
       "dimension": "task",
       "subject": "Completed task M36.2 — its DoD still holds",

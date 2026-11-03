@@ -8796,7 +8796,7 @@ copy; the executor still writes the failing test in the repo first.
   archive whose world name collides with an owned world, and the file is
   unchanged.
 
-- [ ] **M36.14 — generation retry is admitted, owned and non-destructive.**
+- [x] **M36.14 — generation retry is admitted, owned and non-destructive.**
   *(confirmed, high)* `RetryBoard` (`engine/generation.go:547`) skips `admit()`,
   so it bypasses the per-client rate limit and the **daily spend ceiling**, and
   its HTTP entry `handleGenerationRetry` (`web_api.go:1068`) checks no account
