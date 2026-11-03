@@ -55,6 +55,11 @@ const ReconnectGraceTicks = 545
 // rule is deterministic and testable on the same clock as reconnect grace.
 const DefaultInstanceEvictIdleTicks = 2727 // about five minutes at 110ms/tick
 
+// maxEvictedRejoins bounds how often a join re-resolves an instance that was
+// evicted under it (M36.18). One retry is all a real race needs; the bound
+// only stops a pathological loop.
+const maxEvictedRejoins = 3
+
 type WebSocketServer struct {
 	RoomManager  *RoomManager
 	DefaultBoard int16
@@ -83,6 +88,13 @@ type WebSocketServer struct {
 	// never autosave unless they set the seam.
 	AutosaveEveryTicks int
 	autosaveTicks      int // countdown accumulator; touched only on the tick goroutine
+	// restoreAutosaves is set by RestoreAutosaves: this boot trusts the
+	// autosaves it found on disk, so an instance recreated after eviction loads
+	// its autosave too (M36.18). A -fresh boot never calls RestoreAutosaves, and
+	// then only the autosaves this process wrote itself (autosavedThisBoot) are
+	// loaded. Both are guarded by s.mu.
+	restoreAutosaves  bool
+	autosavedThisBoot map[string]bool
 	// GazetteFlushEveryTicks, when >0, writes the Gazette ledger every this many
 	// ticks from the tick loop (M34.1). It sits beside AutosaveEveryTicks on
 	// purpose: Record is memory-only, and this is the one place the ledger is
@@ -227,6 +239,19 @@ type WorldInstance struct {
 	spectatorDrops int
 	idleTicks      int
 	autosaving     bool
+	// unsaved says the room has had players in it since its last autosave
+	// (M36.18). It is what lets the play after the last cadence save survive
+	// everyone leaving: an empty room with unsaved set is autosaved the next
+	// tick, and an instance is never evicted while it is set. Only set while
+	// autosave is on.
+	unsaved bool
+	// autosaveFailed holds back the every-tick last-leave save after a write
+	// failed; the cadence retries.
+	autosaveFailed bool
+	// evicted is set, under mu, when the instance leaves s.Instances. A join or
+	// watch resolved before the eviction checks it under the same lock and
+	// re-resolves rather than landing in an instance nobody ticks (M36.18).
+	evicted bool
 	// Private marks an instance nobody chose to make public: today that is an
 	// editor test-play copy (M10.4). It exists because that copy is the one
 	// private instance kind NOT excluded by construction — randomTestPlayWorldName
@@ -551,6 +576,7 @@ func (s *WebSocketServer) Tick(ctx context.Context) {
 	}
 
 	s.maybeAutosave()
+	s.autosaveDeparted()
 	s.maybeFlushGazette()
 	s.evictIdleInstances()
 }
@@ -654,6 +680,7 @@ func (inst *WorldInstance) advanceIdleEvictionLocked(limit int) (*SessionRecorde
 	}
 	recorder := inst.RoomManager.recorder
 	inst.RoomManager.SetRecorder(nil)
+	inst.evicted = true
 	return recorder, true
 }
 
@@ -662,7 +689,11 @@ func (inst *WorldInstance) evictableIdleLocked() bool {
 		len(inst.Inputs) != 0 ||
 		len(inst.Detached) != 0 ||
 		len(inst.Spectators) != 0 ||
-		inst.autosaving {
+		inst.autosaving ||
+		inst.unsaved {
+		// unsaved: the last players' progress is not on disk yet. autosaveDeparted
+		// writes it the tick after they leave, before the idle clock can run out,
+		// so a world is only ever dropped once its autosave is current (M36.18).
 		return false
 	}
 	if inst.Title != nil && inst.Title.SubscriberCount() != 0 {
@@ -679,6 +710,14 @@ func (inst *WorldInstance) Tick(ctx context.Context, s *WebSocketServer) {
 	var stepDuration time.Duration
 	var transits []WorldTransit
 	inst.mu.Lock()
+	if s.autosaveEnabled() && inst.Challenge == nil && !inst.Private && len(inst.RoomManager.players) != 0 {
+		// Players (connected or inside the reconnect grace) are in the room, so
+		// this tick may change what an autosave would write (M36.18). A private
+		// test-play copy is left out: no .ZZT answers to its random name, so
+		// its autosave could never be loaded and would only litter the
+		// directory.
+		inst.unsaved = true
+	}
 	inputs := inst.Inputs
 	inst.Inputs = make(map[PlayerID]PlayerInput)
 	stepStart := time.Now()
@@ -1231,46 +1270,66 @@ func (s *WebSocketServer) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 		// callee panics (e.g. spawning onto a corrupt board). Without it a panic
 		// would leak inst.mu, and every later handleWorlds / GetOrCreateInstance
 		// that waits on that lock (while holding the global server lock) wedges.
-		ok := func() bool {
-			inst.mu.Lock()
-			defer inst.mu.Unlock()
-			// M36.15: the board is resolved under the same lock as the join, since
-			// it reads the world a restore replaces; resolved outside it, a restore
-			// in between could leave the join naming a board of the old world.
-			join.Board = s.resolveJoinBoard(inst, join.Board)
-			if challengeRun != nil {
-				// The start board is the catalogue's, not the client's: a challenge
-				// that could be entered on a board of the player's choosing is a
-				// challenge whose route is the player's choosing too.
-				join.Board = challengeRun.Def.Board
-			}
-			inst.RoomManager.JoinPlayerWithID(playerID, join.Board, 0, 0)
-			if authenticated {
-				inst.RoomManager.SetPlayerIdentity(playerID, account.ID, account.DisplayName())
-				if hasStoredState {
-					inst.RoomManager.ApplyPlayerState(playerID, storedState)
+		var ok, evicted bool
+		for attempt := 0; ; attempt++ {
+			ok, evicted = func() (bool, bool) {
+				inst.mu.Lock()
+				defer inst.mu.Unlock()
+				if inst.evicted {
+					// Evicted between the upgrade and this frame (M36.18). Joining
+					// it would leave the player in an instance nobody ticks.
+					return false, true
 				}
-			} else {
-				inst.RoomManager.SetPlayerName(playerID, join.Name)
+				// M36.15: the board is resolved under the same lock as the join, since
+				// it reads the world a restore replaces; resolved outside it, a restore
+				// in between could leave the join naming a board of the old world.
+				join.Board = s.resolveJoinBoard(inst, join.Board)
+				if challengeRun != nil {
+					// The start board is the catalogue's, not the client's: a challenge
+					// that could be entered on a board of the player's choosing is a
+					// challenge whose route is the player's choosing too.
+					join.Board = challengeRun.Def.Board
+				}
+				inst.RoomManager.JoinPlayerWithID(playerID, join.Board, 0, 0)
+				if authenticated {
+					inst.RoomManager.SetPlayerIdentity(playerID, account.ID, account.DisplayName())
+					if hasStoredState {
+						inst.RoomManager.ApplyPlayerState(playerID, storedState)
+					}
+				} else {
+					inst.RoomManager.SetPlayerName(playerID, join.Name)
+				}
+				// Set before the snapshot is built, so the joining client's own
+				// roster already carries it (M19.1).
+				inst.RoomManager.SetPlayerColor(playerID, joinColor)
+				if authenticated {
+					inst.RoomManager.SetPlayerProfileSummary(playerID, profileHandle, hasProfile)
+				}
+				client.playerID = playerID
+				inst.Clients[playerID] = client
+				token := inst.mintResumeTokenLocked(playerID)
+				var snapOK bool
+				snapshot, snapOK = inst.RoomManager.Snapshot(playerID)
+				if snapOK {
+					snapshot.World = inst.publicWorldName()
+					snapshot.ResumeToken = token
+					client.boardID = snapshot.BoardID
+				}
+				return snapOK, false
+			}()
+			if !evicted {
+				break
 			}
-			// Set before the snapshot is built, so the joining client's own
-			// roster already carries it (M19.1).
-			inst.RoomManager.SetPlayerColor(playerID, joinColor)
-			if authenticated {
-				inst.RoomManager.SetPlayerProfileSummary(playerID, profileHandle, hasProfile)
+			// A challenge run's instance is minted per attempt and cannot be
+			// re-resolved by name; an evicted one is simply gone.
+			if challengeRun != nil || attempt >= maxEvictedRejoins {
+				return
 			}
-			client.playerID = playerID
-			inst.Clients[playerID] = client
-			token := inst.mintResumeTokenLocked(playerID)
-			var snapOK bool
-			snapshot, snapOK = inst.RoomManager.Snapshot(playerID)
-			if snapOK {
-				snapshot.World = inst.publicWorldName()
-				snapshot.ResumeToken = token
-				client.boardID = snapshot.BoardID
+			var err error
+			if inst, err = s.GetOrCreateInstance(safeWorld); err != nil {
+				return
 			}
-			return snapOK
-		}()
+		}
 
 		if !ok {
 			s.removeClientFromInstance(inst, playerID)
@@ -1579,6 +1638,20 @@ func (s *WebSocketServer) resolveWatchBoard(inst *WorldInstance, board int16) in
 // exclude them at each of those places.
 func (s *WebSocketServer) serveSpectator(ctx context.Context, conn *websocket.Conn, client *webSocketClient, inst *WorldInstance, join JoinMessage) {
 	inst.mu.Lock()
+	for attempt := 0; inst.evicted; attempt++ {
+		// Evicted between the upgrade and this frame (M36.18): watch the live
+		// instance, not one nobody ticks.
+		inst.mu.Unlock()
+		if attempt >= maxEvictedRejoins {
+			return
+		}
+		var err error
+		if inst, err = s.GetOrCreateInstance(inst.Name); err != nil {
+			return
+		}
+		client.setWorldName(inst.Name)
+		inst.mu.Lock()
+	}
 	// M36.15: resolved under inst.mu, because it reads the world a restore
 	// replaces.
 	boardID := s.resolveWatchBoard(inst, join.Board)
@@ -2422,15 +2495,51 @@ func (s *WebSocketServer) autosaveDir() string {
 	return filepath.Join(s.SavesDir, "autosave")
 }
 
-// Autosave snapshots every occupied instance to autosaveDir()/<NAME>.SAV. It is
-// the M13.3 seam: the tick loop calls it on cadence, and tests call it directly.
+// Autosave snapshots every occupied instance, and every empty one whose play
+// is not yet saved, to autosaveDir()/<NAME>.SAV. It is the M13.3 seam: the tick
+// loop calls it on cadence, and tests call it directly.
 //
-// Concurrency: each world copy is taken under that instance's lock and the file
+// Concurrency (in autosaveWhere): each world copy is taken under that instance's lock and the file
 // is written after the lock is released, so a running room never blocks on disk
 // I/O (mirroring SaveSnapshot's "a save never disturbs the game it is a save
 // of"). The snapshot carries no saver, so the vanilla one-player inventory
 // fields are zero — the server ignores them on join (M4.3a decision 1).
 func (s *WebSocketServer) Autosave() {
+	// An occupied room, or an empty one whose last players' play is not saved
+	// yet (M36.18): the reconnect grace and the window before the last leave
+	// used to be skipped, because neither has clients.
+	s.autosaveWhere(func(inst *WorldInstance) bool {
+		return len(inst.Clients) != 0 || inst.unsaved
+	})
+}
+
+// autosaveEnabled reports whether this server autosaves at all: a cadence and
+// somewhere to write. The last-leave save follows the same switch, so
+// -autosave 0 still means no autosave of any kind.
+func (s *WebSocketServer) autosaveEnabled() bool {
+	return s.AutosaveEveryTicks > 0 && s.autosaveDir() != ""
+}
+
+// autosaveDeparted is the last-leave autosave (M36.18): every room whose
+// players have all gone (the reconnect grace included) and whose play since
+// its last autosave is not on disk is written now, on the tick goroutine,
+// rather than waiting up to a cadence. It runs before evictIdleInstances, and
+// an unsaved instance is not evictable, so the file is current before the
+// instance can leave s.Instances, and a rejoin that recreates it reads it. A
+// room whose save failed waits for the next cadence rather than retrying (and
+// logging) every tick.
+func (s *WebSocketServer) autosaveDeparted() {
+	if !s.autosaveEnabled() {
+		return
+	}
+	s.autosaveWhere(func(inst *WorldInstance) bool {
+		return inst.unsaved && !inst.autosaveFailed && len(inst.RoomManager.players) == 0
+	})
+}
+
+// autosaveWhere snapshots each instance for which pick (called under its lock)
+// says yes, then writes the files with no lock held.
+func (s *WebSocketServer) autosaveWhere(pick func(inst *WorldInstance) bool) {
 	dir := s.autosaveDir()
 	if dir == "" {
 		return
@@ -2462,8 +2571,9 @@ func (s *WebSocketServer) Autosave() {
 			continue
 		}
 		inst.mu.Lock()
-		if len(inst.Clients) == 0 {
-			// Empty rooms are already frozen into rm.world with nothing new to say.
+		if !pick(inst) {
+			// An empty, saved room is already frozen into rm.world with nothing
+			// new to say.
 			inst.mu.Unlock()
 			continue
 		}
@@ -2477,17 +2587,32 @@ func (s *WebSocketServer) Autosave() {
 			continue
 		}
 		inst.autosaving = true
+		inst.unsaved = false
 		world := inst.RoomManager.snapshotWorldNoSaver()
 		inst.mu.Unlock()
 		jobs = append(jobs, autosaveJob{inst: inst, name: name, world: world})
 	}
 
 	for _, job := range jobs {
-		if _, err := writeWorldSnapshot(dir, job.name, job.world); err != nil {
+		_, err := writeWorldSnapshot(dir, job.name, job.world)
+		if err != nil {
 			log.Printf("zztgo: autosave of %q failed: %v", job.name, err)
+		} else {
+			s.mu.Lock()
+			if s.autosavedThisBoot == nil {
+				s.autosavedThisBoot = make(map[string]bool)
+			}
+			s.autosavedThisBoot[job.name] = true
+			s.mu.Unlock()
 		}
 		job.inst.mu.Lock()
 		job.inst.autosaving = false
+		// A failed write leaves the progress unsaved, so the instance is still
+		// not evictable and the next cadence tries again.
+		job.inst.autosaveFailed = err != nil
+		if err != nil {
+			job.inst.unsaved = true
+		}
 		job.inst.mu.Unlock()
 	}
 }
@@ -2502,13 +2627,27 @@ func (s *WebSocketServer) RestoreAutosaves() {
 	if dir == "" {
 		return
 	}
+	// From here on this boot trusts the autosaves on disk, so GetOrCreateInstance
+	// loads one whenever it creates an instance: below, and again after an
+	// eviction (M36.18).
+	s.mu.Lock()
+	s.restoreAutosaves = true
+	s.mu.Unlock()
 	for _, name := range ListSnapshots(dir) {
+		s.mu.Lock()
+		existed := s.Instances[name] != nil
+		s.mu.Unlock()
 		// GetOrCreateInstance returns the already-registered default instance for
-		// its own name, and loads a pristine hostable world for any other. A name
-		// with no hostable world is not ours to restore — skip it.
+		// its own name, and creates any other from its autosave (falling back to
+		// the pristine world). A name with no hostable world is not ours to
+		// restore — skip it.
 		inst, err := s.GetOrCreateInstance(name)
 		if err != nil {
 			log.Printf("zztgo: autosave %q has no hostable world, skipping: %v", name, err)
+			continue
+		}
+		if !existed {
+			// Already restored (or logged as unrestorable) on creation.
 			continue
 		}
 		// The occupancy refusal in RestoreSnapshot is vacuous at boot — nobody has
@@ -2710,7 +2849,10 @@ func (s *WebSocketServer) GetOrCreateInstance(worldName string) (*WorldInstance,
 	rm.FriendlyFire = s.FriendlyFire
 	rm.HighScorePath = filepath.Join(dir, worldName+".HI")
 	rm.LoadHighScores()
+	s.restoreAutosaveOnCreateLocked(rm, worldName)
 
+	// SourceWorld and the title screen stay the pristine world, as they do for
+	// a world restored at boot.
 	inst = &WorldInstance{
 		Name:           worldName,
 		SourceWorld:    cloneWorld(world),
@@ -2726,6 +2868,31 @@ func (s *WebSocketServer) GetOrCreateInstance(worldName string) (*WorldInstance,
 	s.Instances[worldName] = inst
 	s.attachRecorderLocked(inst)
 	return inst, nil
+}
+
+// restoreAutosaveOnCreateLocked starts a newly created instance from its
+// autosave, if it has one this boot trusts (M36.18): every autosave when the
+// boot restored autosaves, and otherwise (a -fresh boot) only the ones this
+// process wrote. This is what brings an evicted world back with its progress;
+// without it a rejoin after eviction got the pristine .ZZT, and the next
+// reboot revived an older autosave over newer play. A bad file is logged and
+// the pristine world kept, as at boot. The read happens under s.mu, as
+// LoadPristineWorld's does. Caller holds s.mu; rm is not yet shared.
+func (s *WebSocketServer) restoreAutosaveOnCreateLocked(rm *RoomManager, worldName string) {
+	dir := s.autosaveDir()
+	if dir == "" || !(s.restoreAutosaves || s.autosavedThisBoot[worldName]) {
+		return
+	}
+	if path, err := snapshotPath(dir, worldName); err != nil {
+		return
+	} else if _, err := os.Stat(path); err != nil {
+		return
+	}
+	if err := safeRestoreSnapshot(rm, dir, worldName); err != nil {
+		log.Printf("zztgo: autosave %q could not be restored, using pristine world: %v", worldName, err)
+		return
+	}
+	log.Printf("zztgo: restored autosave %q", worldName)
 }
 
 func sanitizeReplayID(id string) (string, error) {
@@ -2944,6 +3111,7 @@ func (s *WebSocketServer) hostGeneratedWorld(name string, world TWorld, private 
 	if s.worldIsOccupiedLocked(safe) {
 		return fmt.Errorf("generated world %q is already occupied", safe)
 	}
+	s.supersedeInstanceLocked(safe)
 	rm := NewRoomManagerForWorld(world, safe)
 	rm.FriendlyFire = s.FriendlyFire
 	inst := &WorldInstance{
@@ -2962,6 +3130,34 @@ func (s *WebSocketServer) hostGeneratedWorld(name string, world TWorld, private 
 	s.Instances[safe] = inst
 	s.attachRecorderLocked(inst)
 	return nil
+}
+
+// supersedeInstanceLocked retires whatever was hosted as name before a new
+// world takes the name (M36.18). The old world's autosave is removed, because
+// it is a save of a world that no longer exists: left in place, it would be
+// loaded over the new one the next time the instance is created (after an
+// eviction, or at boot). A test-play name never has one, which is fine. The
+// old instance is marked evicted, so a join resolved to it before this
+// re-resolves to the new one. The remove runs under s.mu; it is one unlink,
+// like the read LoadPristineWorld already does under it. Caller holds s.mu.
+func (s *WebSocketServer) supersedeInstanceLocked(name string) {
+	if old := s.Instances[name]; old != nil {
+		old.mu.Lock()
+		old.evicted = true
+		old.mu.Unlock()
+	}
+	delete(s.autosavedThisBoot, name)
+	dir := s.autosaveDir()
+	if dir == "" {
+		return
+	}
+	path, err := snapshotPath(dir, name)
+	if err != nil {
+		return
+	}
+	if err := os.Remove(path); err != nil && !errors.Is(err, os.ErrNotExist) {
+		log.Printf("zztgo: stale autosave %q of a replaced world not removed: %v", name, err)
+	}
 }
 
 // WorldIsOccupied reports whether a hosted world of this name currently has
@@ -3649,6 +3845,10 @@ func (s *WebSocketServer) removeClientFromInstance(inst *WorldInstance, playerID
 	inst.RoomManager.LeavePlayer(playerID)
 	// They may have quit and closed the tab before typing a name.
 	inst.RoomManager.DiscardPendingScore(playerID)
+	if s.autosaveEnabled() && inst.Challenge == nil && !inst.Private {
+		// Whatever they did since the last tick is saved too (M36.18).
+		inst.unsaved = true
+	}
 	inst.mu.Unlock()
 }
 

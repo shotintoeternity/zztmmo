@@ -8841,7 +8841,7 @@ copy; the executor still writes the failing test in the repo first.
   copy under the lock, as `Autosave` does. DoD: an unprompted save is refused,
   a burst is limited, and a test shows the tick is not blocked on the write.
 
-- [ ] **M36.18 — an evicted world comes back with its progress.** *(confirmed,
+- [x] **M36.18 — an evicted world comes back with its progress.** *(confirmed,
   medium)* After idle eviction, `GetOrCreateInstance` reloads the **pristine**
   world (`engine/websocket_server.go:2644`) and ignores `autosave/<NAME>.SAV`,
   contradicting the NOTES.md M13.3 policy that an autosave beats the pristine

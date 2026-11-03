@@ -1655,6 +1655,17 @@
       "notes": "task-claim row; a saveFilename is accepted only if it answers a savePrompt this player was sent (roomPlayer.savePrompted, set in StepDiffs and consumed by the reply whatever its outcome), at most saveRateLimitMax per player per saveRateLimitWindow on the server clock, and the world is copied under inst.mu (PrepareSnapshot) and written after the lock is released (PreparedSnapshot.Write, serialized by saveWriteMu). Failed before the fix, each by mutation: an unprompted save and a second reply to one prompt wrote files, a fourth save in a minute was written, and a parked write held the room's tick. M36.17 (2026-11-03)."
     },
     {
+      "id": "task.M36.18",
+      "dimension": "task",
+      "subject": "Completed task M36.18 — its DoD still holds",
+      "contract": "E",
+      "authority": "TASKS.md M36.18",
+      "parity": "exact",
+      "test": "TestM3618EvictedWorldComesBackWithItsProgress,TestM3618LastLeaveIsAutosaved,TestM3618NoLastLeaveSaveWhenAutosaveIsOff,TestM3618FreshBootIgnoresAnEarlierBootsAutosave,TestM3618RepublishDropsTheStaleAutosave,TestM3618JoinAfterEvictionLandsInTheLiveInstance,TestM3618TabCloseLeaveIsAutosavedBeforeEviction,TestM3618TestPlayCopyIsNotAutosaved",
+      "status": "pass",
+      "notes": "task-claim row; a room that has had players since its last autosave is marked unsaved, is autosaved the tick after its last player leaves (quit or reconnect-grace expiry), private test-play copies excepted, and is not evictable until that write lands; GetOrCreateInstance starts a recreated instance from its autosave when the boot restored autosaves or this process wrote it (so -fresh still ignores an earlier boot's), keeping SourceWorld and the title pristine; hostGeneratedWorld removes the replaced world's autosave; a join or watch that finds its instance evicted after the upgrade re-resolves it. Failed before the fix: a rejoin after eviction got the pristine world, no autosave was written on last leave, and a join after eviction landed in the orphan. M36.18 (2026-11-03)."
+    },
+    {
       "id": "task.M36.2",
       "dimension": "task",
       "subject": "Completed task M36.2 — its DoD still holds",

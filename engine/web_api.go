@@ -1226,6 +1226,11 @@ func (a *WebAPI) handleRestore(w http.ResponseWriter, r *http.Request) {
 			defer inst.mu.Unlock()
 			err := safeRestoreOwnSnapshot(inst.RoomManager, a.SavesDir, body.Name)
 			restoredName = inst.RoomManager.WorldName()
+			if err == nil && a.Server.autosaveEnabled() && !inst.Private {
+				// The restored world is this world's state now, so it is
+				// autosaved before an eviction can drop it (M36.18).
+				inst.unsaved = true
+			}
 			return err
 		}()
 	} else {
