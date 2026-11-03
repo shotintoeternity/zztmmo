@@ -8831,7 +8831,7 @@ copy; the executor still writes the failing test in the repo first.
   not work"). DoD: an unsolicited reply and a forged label are both ignored;
   `TestScrollReplyRunsWhileTheReaderIsStillWalkingIn` still passes.
 
-- [ ] **M36.17 — saving is prompted, rate-limited and off the tick lock.**
+- [x] **M36.17 — saving is prompted, rate-limited and off the tick lock.**
   *(confirmed, medium)* `saveFilename` (`engine/websocket_server.go:2351`) is
   accepted at any time with no pending-prompt check and no limiter. Each message
   serializes the world and writes it to disk **while holding `inst.mu`**, so a

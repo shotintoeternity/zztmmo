@@ -152,6 +152,18 @@ type WebSocketServer struct {
 	// action, on the same policy as chat. It is what keeps the audit (which
 	// records denials, and should) from being a hostile client's write amplifier.
 	moderateLimiter chatRateLimiter
+	// saveLimiter bounds how many saves one player may write (M36.17). Its own
+	// lock, never held with inst.mu.
+	saveLimiter saveRateLimiter
+	// saveWriteMu serializes player save writes, which run off the room lock
+	// (M36.17). Two players may pick the same name, and writeWorldSnapshot's
+	// temp file is named after the save, so two concurrent writes of one name
+	// would share it. Never held with inst.mu.
+	saveWriteMu sync.Mutex
+	// saveWriteHook, when set, runs just before a player save is written, with
+	// no lock held. A test seam (M36.17): it parks a write to show the room
+	// ticks on while the file is being written.
+	saveWriteHook func()
 
 	mu sync.Mutex
 	// nextPlayerID mints process-unique PlayerIDs across every instance, so ids
@@ -2322,13 +2334,27 @@ func (s *WebSocketServer) submitHighScoreNameInInstance(ctx context.Context, ins
 // to the process working directory. It is the terminal's path. The server saves
 // the whole world through the RoomManager.
 //
-// The write happens under inst.mu, as RecordHighScore's does: a room may not
-// tick while its boards are being serialized.
+// M36.17: a reply is accepted only if it answers a savePrompt this player was
+// sent, and only saveRateLimitMax of them in a window. The world is copied under
+// inst.mu, as Autosave's is, and written after the lock is released, so a save
+// never stalls the room's tick on disk I/O.
 func (s *WebSocketServer) submitSaveFilenameInInstance(ctx context.Context, inst *WorldInstance, playerID PlayerID, name string) {
 	inst.mu.Lock()
 	client := inst.Clients[playerID]
 	if client == nil {
 		inst.mu.Unlock()
+		return
+	}
+	// The reply answers the prompt whatever happens next, so a refused or
+	// cancelled save needs another S. An empty name is a cancel and says nothing.
+	if !inst.RoomManager.TakeSavePrompt(playerID) {
+		inst.mu.Unlock()
+		if name != "" {
+			_ = client.write(ctx, EventMessage{Type: MessageTypeEvent, Event: ProtocolEvent{
+				Type:  "saveResult",
+				Error: "no save prompt is open",
+			}})
+		}
 		return
 	}
 	if name == "" {
@@ -2347,14 +2373,32 @@ func (s *WebSocketServer) submitSaveFilenameInInstance(ctx context.Context, inst
 		}})
 		return
 	}
+	if !s.saveLimiter.allow(playerID, s.clockNow()) {
+		inst.mu.Unlock()
+		_ = client.write(ctx, EventMessage{Type: MessageTypeEvent, Event: ProtocolEvent{
+			Type:  "saveResult",
+			Error: "saving too often; try again in a minute",
+		}})
+		return
+	}
 	accountID, _, _ := inst.RoomManager.PlayerIdentity(playerID)
 	state, hasState := inst.RoomManager.PlayerState(playerID)
 	var stateCopy PlayerState
 	if hasState {
 		stateCopy = *state
 	}
-	path, err := inst.RoomManager.SaveSnapshot(s.SavesDir, name, playerID)
+	job, err := inst.RoomManager.PrepareSnapshot(s.SavesDir, name, playerID)
 	inst.mu.Unlock()
+
+	var path string
+	if err == nil {
+		if hook := s.saveWriteHook; hook != nil {
+			hook()
+		}
+		s.saveWriteMu.Lock()
+		path, err = job.Write()
+		s.saveWriteMu.Unlock()
+	}
 	if err == nil && accountID != "" && hasState {
 		s.persistAccountPlayerState(accountID, inst.Name, stateCopy)
 	}

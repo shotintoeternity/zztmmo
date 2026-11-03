@@ -114,27 +114,62 @@ func ListSnapshots(dir string) []string {
 // SaveSnapshot writes the world to dir/<NAME>.SAV, with playerID's inventory in
 // the World.Info fields vanilla keeps it in. It does not disturb the live game:
 // every board is serialized out of a copy.
+//
+// It does the copy and the write in one call, so a caller holding the room lock
+// holds it across disk I/O. The server does not: it calls PrepareSnapshot under
+// the lock and Write after releasing it (M36.17).
 func (rm *RoomManager) SaveSnapshot(dir, name string, playerID PlayerID) (string, error) {
+	job, err := rm.PrepareSnapshot(dir, name, playerID)
+	if err != nil {
+		return "", err
+	}
+	return job.Write()
+}
+
+// PreparedSnapshot is a player save whose world has been copied out of the
+// rooms and that touches no live state: Write may run without the room lock.
+type PreparedSnapshot struct {
+	dir       string
+	name      string
+	world     TWorld
+	worldName string
+	accountID string
+	state     PlayerState
+}
+
+// PrepareSnapshot validates the save name and copies the world for playerID's
+// save. It reads the rooms, so the caller holds whatever lock guards them.
+func (rm *RoomManager) PrepareSnapshot(dir, name string, playerID PlayerID) (*PreparedSnapshot, error) {
 	// Resolve/validate the path before copying anything, so a disabled server or a
 	// bad name is refused ahead of "no such player" (preserves the old ordering).
 	if _, err := snapshotPath(dir, name); err != nil {
-		return "", err
+		return nil, err
 	}
 	world, ok := rm.snapshotWorld(playerID)
 	if !ok {
-		return "", ErrNoSuchPlayer
+		return nil, ErrNoSuchPlayer
 	}
 	// Log the save as a submit for session fidelity. It has no simulation effect
 	// (it only writes a file), so playback skips it — but a recording should still
 	// show that a player saved (M14.2).
 	rm.recorder.record(recOp{Op: "submit", Kind: "save", Player: playerID, Name: name})
-	path, err := writeWorldSnapshot(dir, name, world)
+	job := &PreparedSnapshot{dir: dir, name: name, world: world, worldName: rm.WorldName()}
+	if player := rm.players[playerID]; player != nil && player.accountID != "" {
+		job.accountID = player.accountID
+		job.state = *player.state
+	}
+	return job, nil
+}
+
+// Write writes a prepared save to disk, with its account sidecar when the saver
+// was signed in. It reads nothing but the copy PrepareSnapshot took.
+func (job *PreparedSnapshot) Write() (string, error) {
+	path, err := writeWorldSnapshot(job.dir, job.name, job.world)
 	if err != nil {
 		return "", err
 	}
-	player := rm.players[playerID]
-	if player != nil && player.accountID != "" {
-		if err := writeSnapshotPlayerStateSidecar(path, rm.WorldName(), player.accountID, *player.state); err != nil {
+	if job.accountID != "" {
+		if err := writeSnapshotPlayerStateSidecar(path, job.worldName, job.accountID, job.state); err != nil {
 			return path, err
 		}
 	}

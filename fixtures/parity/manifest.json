@@ -1644,6 +1644,17 @@
       "notes": "task-claim row; RoomManager.SubmitScrollReply drops a reply unless it answers a scroll this player was shown: openScrolls records the object's stat and its offered hyperlinks (read as hyperlinkOf and TextWindowSelect read them, !-FILE excluded) when a touched scroll or a notice opens, and for every player a board-wide scroll is delivered to. A match is consumed once; an empty label dismisses any open scroll from the stat; a board change clears the list. A dropped reply is not recorded and is not a dismissal, because a dismissal removes a Scroll element. Failed before the fix: an unsolicited or forged label ran the object's :secret, a bystander's reply bought from the reader's scroll, a forged dismissal deleted a Scroll from the board, and a reply could be replayed. M36.16 (2026-11-03)."
     },
     {
+      "id": "task.M36.17",
+      "dimension": "task",
+      "subject": "Completed task M36.17 — its DoD still holds",
+      "contract": "E",
+      "authority": "TASKS.md M36.17",
+      "parity": "exact",
+      "test": "TestM3617UnpromptedSaveIsRefused,TestM3617SaveBurstIsLimited,TestM3617SaveWriteDoesNotBlockTheTick,TestM43aSaveOverWebSocket,TestM43aSaveRejectedOverWebSocket,TestM43aSavesDisabledOverWebSocket",
+      "status": "pass",
+      "notes": "task-claim row; a saveFilename is accepted only if it answers a savePrompt this player was sent (roomPlayer.savePrompted, set in StepDiffs and consumed by the reply whatever its outcome), at most saveRateLimitMax per player per saveRateLimitWindow on the server clock, and the world is copied under inst.mu (PrepareSnapshot) and written after the lock is released (PreparedSnapshot.Write, serialized by saveWriteMu). Failed before the fix, each by mutation: an unprompted save and a second reply to one prompt wrote files, a fourth save in a minute was written, and a parked write held the room's tick. M36.17 (2026-11-03)."
+    },
+    {
       "id": "task.M36.2",
       "dimension": "task",
       "subject": "Completed task M36.2 — its DoD still holds",

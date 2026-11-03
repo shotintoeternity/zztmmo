@@ -481,6 +481,7 @@ func TestM43aSaveRejectedOverWebSocket(t *testing.T) {
 	conn, snapshot := dialSavePlayer(ctx, t, "ws"+strings.TrimPrefix(httpServer.URL, "http"))
 	defer conn.Close(websocket.StatusNormalClosure, "")
 
+	openSavePrompt(ctx, t, conn, server, snapshot)
 	msg := SaveFilenameMessage{Type: MessageTypeSaveFilename, PlayerID: snapshot.You.ID, Name: "../ESCAPE"}
 	if err := wsjson.Write(ctx, conn, msg); err != nil {
 		t.Fatalf("write saveFilename: %v", err)
@@ -510,6 +511,7 @@ func TestM43aSavesDisabledOverWebSocket(t *testing.T) {
 	conn, snapshot := dialSavePlayer(ctx, t, "ws"+strings.TrimPrefix(httpServer.URL, "http"))
 	defer conn.Close(websocket.StatusNormalClosure, "")
 
+	openSavePrompt(ctx, t, conn, server, snapshot)
 	msg := SaveFilenameMessage{Type: MessageTypeSaveFilename, PlayerID: snapshot.You.ID, Name: "ANY"}
 	if err := wsjson.Write(ctx, conn, msg); err != nil {
 		t.Fatalf("write saveFilename: %v", err)
@@ -620,5 +622,17 @@ func TestM43aSavedHeaderPaddingIsZeroed(t *testing.T) {
 		if saved[i] != 0 {
 			t.Fatalf("header byte %d = %#x, want 0: board memory leaked into the file", i, saved[i])
 		}
+	}
+}
+
+// openSavePrompt presses S and waits for the savePrompt, which a saveFilename
+// must answer (M36.17).
+func openSavePrompt(ctx context.Context, t *testing.T, conn *websocket.Conn, server *WebSocketServer, snapshot SnapshotMessage) {
+	t.Helper()
+	if err := wsjson.Write(ctx, conn, InputMessage{Type: MessageTypeInput, PlayerID: snapshot.You.ID, Seq: 1, Key: 'S'}); err != nil {
+		t.Fatalf("write S: %v", err)
+	}
+	if _, ok := readUntilProtocolEvent(ctx, t, conn, server, "savePrompt", 20); !ok {
+		t.Fatal("no savePrompt event after pressing S")
 	}
 }

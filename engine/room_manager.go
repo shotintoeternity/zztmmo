@@ -144,6 +144,13 @@ type roomPlayer struct {
 	// a list rather than a slot; it is bounded by maxOpenScrolls in case one
 	// never answers.
 	openScrolls []openScroll
+	// savePrompted is set when this player pressed S and was sent a savePrompt
+	// (M36.17). A saveFilename reply is accepted only while it is set, and
+	// consumes it, so a client cannot write save after save without pressing S
+	// for each. It is a flag, not a count: two presses before answering are one
+	// prompt, as the client shows one entry field. A prompt the player cancels
+	// (the client sends nothing) stays open until the next reply answers it.
+	savePrompted bool
 }
 
 // openScroll is one scroll a player owes a reply to.
@@ -843,6 +850,13 @@ func (rm *RoomManager) StepDiffsWithBoards(inputs map[PlayerID]PlayerInput) (map
 					})
 				}
 				roomEvents[boardID] = append(roomEvents[boardID], event)
+			case SavePromptEvent:
+				// Records the prompt AND forwards the event: the wire savePrompt
+				// is what opens the client's entry field (see DeathEvent above).
+				if playerID, found := rm.playerIDForStat(boardID, ev.StatId); found {
+					rm.players[playerID].savePrompted = true
+				}
+				roomEvents[boardID] = append(roomEvents[boardID], event)
 			case ScrollEvent:
 				// PlayerStatId < 0 is an object talking to the whole board, not a
 				// touch: nobody is reading it, so nobody freezes.
@@ -1451,6 +1465,18 @@ func (rm *RoomManager) SubmitDebugCommand(playerID PlayerID, text string) bool {
 		return false
 	}
 	room.Engine.SubmitDebugCommand(player.statID, text)
+	return true
+}
+
+// TakeSavePrompt consumes playerID's open save prompt, reporting false if they
+// have none (M36.17): a saveFilename reply that answers no savePrompt is
+// refused, as a scroll reply that answers no scroll is.
+func (rm *RoomManager) TakeSavePrompt(playerID PlayerID) bool {
+	player := rm.players[playerID]
+	if player == nil || !player.savePrompted {
+		return false
+	}
+	player.savePrompted = false
 	return true
 }
 
