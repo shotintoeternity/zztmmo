@@ -1633,6 +1633,17 @@
       "notes": "task-claim row; /api/restore runs under inst.mu through safeRestoreOwnSnapshot, which refuses a save whose World.Info.Name is not the target world's (409), the tie vanilla uses (GAME.PAS:824,1637). handleTitle, handleHighScores, handleLoadWorld and the join and watch board resolution read the world under inst.mu; restore and loadworld bodies are capped at 4 KiB. The race test proves itself only under -race. Failed before the fix: -race reported the restore, title, high-score and watch-board reads, a BETA save restored into ALPHA, and a 1 MiB body was decoded. M36.15 (2026-11-03)."
     },
     {
+      "id": "task.M36.16",
+      "dimension": "task",
+      "subject": "Completed task M36.16 — its DoD still holds",
+      "contract": "E",
+      "authority": "TASKS.md M36.16",
+      "parity": "exact",
+      "test": "TestM3616UnsolicitedScrollReplyIsIgnored,TestM3616ForgedScrollLabelIsIgnored,TestM3616ForgedDismissalLeavesTheScroll,TestM3616BoardWideScrollIsAnsweredByEveryReader,TestM3616TouchedScrollIsOwedOnlyToItsReader,TestM3616NoticeIsAnsweredByItsDismissal,TestScrollReplyRunsWhileTheReaderIsStillWalkingIn",
+      "status": "pass",
+      "notes": "task-claim row; RoomManager.SubmitScrollReply drops a reply unless it answers a scroll this player was shown: openScrolls records the object's stat and its offered hyperlinks (read as hyperlinkOf and TextWindowSelect read them, !-FILE excluded) when a touched scroll or a notice opens, and for every player a board-wide scroll is delivered to. A match is consumed once; an empty label dismisses any open scroll from the stat; a board change clears the list. A dropped reply is not recorded and is not a dismissal, because a dismissal removes a Scroll element. Failed before the fix: an unsolicited or forged label ran the object's :secret, a bystander's reply bought from the reader's scroll, a forged dismissal deleted a Scroll from the board, and a reply could be replayed. M36.16 (2026-11-03)."
+    },
+    {
       "id": "task.M36.2",
       "dimension": "task",
       "subject": "Completed task M36.2 — its DoD still holds",

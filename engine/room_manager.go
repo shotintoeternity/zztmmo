@@ -21,6 +21,7 @@ import (
 	"log"
 	"os"
 	"sort"
+	"strings"
 )
 
 // PlayerID is the RoomManager-level stable player identity. Engine stat ids can
@@ -134,6 +135,86 @@ type roomPlayer struct {
 	// a second scroll fires and overwrites the first before they can read it.
 	// Cleared by SubmitScrollReply, which the client sends on dismiss.
 	scrollOpen bool
+	// openScrolls is every scroll this player has been shown and not yet
+	// answered (M36.16): the object that showed it and the hyperlinks it
+	// offered. A scroll reply names a stat and a label, and both come from the
+	// client, so without this a client could send any object to any label at any
+	// time, or delete a Scroll element with a dismissal it was never owed. The
+	// client queues scrolls and answers each exactly once, in order, so this is
+	// a list rather than a slot; it is bounded by maxOpenScrolls in case one
+	// never answers.
+	openScrolls []openScroll
+}
+
+// openScroll is one scroll a player owes a reply to.
+type openScroll struct {
+	statID int16
+	labels []string
+}
+
+// maxOpenScrolls bounds a player's unanswered scrolls. An honest client
+// answers every scroll it is shown; one that does not must not grow this
+// forever. The oldest is dropped first, and with it only that player's ability
+// to answer it.
+const maxOpenScrolls = 16
+
+// scrollHyperlinks is the set of labels a scroll offers: the "!label;text"
+// lines, read exactly as the client's hyperlinkOf (web/src/modal.ts) and
+// TextWindowSelect (TXTWIND.PAS) read them. A "!-FILE" line is a link to a help
+// file the client opens itself; it is never sent back as a reply.
+func scrollHyperlinks(lines []string) []string {
+	var labels []string
+	for _, line := range lines {
+		if !strings.HasPrefix(line, "!") {
+			continue
+		}
+		pointer := line[1:]
+		if semi := strings.IndexByte(pointer, ';'); semi >= 0 {
+			pointer = pointer[:semi]
+		}
+		if pointer == "" || strings.HasPrefix(pointer, "-") {
+			continue
+		}
+		labels = append(labels, pointer)
+	}
+	return labels
+}
+
+// noteOpenScroll records that player has been shown a scroll from statID.
+func (p *roomPlayer) noteOpenScroll(statID int16, labels []string) {
+	if len(p.openScrolls) >= maxOpenScrolls {
+		p.openScrolls = append(p.openScrolls[:0], p.openScrolls[1:]...)
+	}
+	p.openScrolls = append(p.openScrolls, openScroll{statID: statID, labels: labels})
+}
+
+// takeOpenScroll consumes the open scroll a reply answers, reporting false if
+// the reply answers nothing this player was shown: no open scroll from that
+// stat, or a label that scroll did not offer. An empty label is a dismissal and
+// answers any open scroll from the stat.
+func (p *roomPlayer) takeOpenScroll(statID int16, label string) bool {
+	for i, open := range p.openScrolls {
+		if open.statID != statID {
+			continue
+		}
+		if label != "" {
+			offered := false
+			for _, l := range open.labels {
+				// OopSend matches labels case-insensitively, so a difference
+				// in case reaches the same label and is not a forgery.
+				if strings.EqualFold(l, label) {
+					offered = true
+					break
+				}
+			}
+			if !offered {
+				continue
+			}
+		}
+		p.openScrolls = append(p.openScrolls[:i], p.openScrolls[i+1:]...)
+		return true
+	}
+	return false
 }
 
 type roomTransfer struct {
@@ -750,6 +831,10 @@ func (rm *RoomManager) StepDiffsWithBoards(inputs map[PlayerID]PlayerInput) (map
 						// and then covered: the fallback it carries is for a lobby
 						// nobody is serving.
 						if kind, ok := rm.noticeKindFor(room, boardID, ev.StatId); ok {
+							// The window the reader is owed is server-written and
+							// offers no hyperlinks (M34.2 guarantees no markup), so
+							// only its dismissal answers it (M36.16).
+							rm.players[playerID].noteOpenScroll(ev.StatId, nil)
 							rm.pendingNotices = append(rm.pendingNotices, RoomNotice{
 								PlayerID:     playerID,
 								Kind:         kind,
@@ -757,6 +842,7 @@ func (rm *RoomManager) StepDiffsWithBoards(inputs map[PlayerID]PlayerInput) (map
 							})
 							continue
 						}
+						rm.players[playerID].noteOpenScroll(ev.StatId, scrollHyperlinks(ev.Lines))
 					}
 				}
 				roomEvents[boardID] = append(roomEvents[boardID], event)
@@ -805,6 +891,16 @@ func (rm *RoomManager) StepDiffsWithBoards(inputs map[PlayerID]PlayerInput) (map
 			player := rm.players[playerID]
 			if player.boardID != room.BoardID {
 				continue
+			}
+			// A scroll with no reader is an object talking to the whole board:
+			// every client on it shows the window and answers it (isMyScroll),
+			// so every player who receives it is owed a reply (M36.16).
+			// Recorded here, at delivery, so a player who arrived this step and
+			// sees it can answer it too.
+			for _, event := range roomEvents[boardID] {
+				if ev, ok := event.(ScrollEvent); ok && ev.PlayerStatId < 0 {
+					player.noteOpenScroll(ev.StatId, scrollHyperlinks(ev.Lines))
+				}
 			}
 			hud := hudSnapshot(room.Engine, player.statID)
 			diffs[playerID] = DiffMessage{
@@ -1191,8 +1287,10 @@ func (rm *RoomManager) transferPlayer(playerID PlayerID, transfer TransferEvent)
 		return
 	}
 	// A scroll cannot survive the board it was read on, and a gate that did
-	// would freeze the player on the far side forever.
+	// would freeze the player on the far side forever. Nor can it be answered
+	// there: a stat id names an object on the board it was read on.
 	player.scrollOpen = false
+	player.openScrolls = nil
 	srcRoom := rm.rooms[player.boardID]
 	if srcRoom == nil {
 		return
@@ -1340,6 +1438,13 @@ func (rm *RoomManager) SubmitDebugCommand(playerID PlayerID, text string) bool {
 func (rm *RoomManager) SubmitScrollReply(playerID PlayerID, objectStatID int16, label string) bool {
 	player := rm.players[playerID]
 	if player == nil {
+		return false
+	}
+	// M36.16: a reply must answer a scroll this player was shown, with a label
+	// that scroll offered. Anything else is dropped whole — not even treated as
+	// a dismissal, because a dismissal of a Scroll element removes it from the
+	// board (GameStepWithInputs' deferred RemoveStat).
+	if !player.takeOpenScroll(objectStatID, label) {
 		return false
 	}
 	rm.recorder.record(recOp{Op: "submit", Kind: "scroll", Player: playerID, StatID: objectStatID, Label: label})

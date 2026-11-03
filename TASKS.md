@@ -8821,7 +8821,7 @@ copy; the executor still writes the failing test in the repo first.
   `handleLoadWorld` also decode without `MaxBytesReader`. DoD: a `-race` test of
   restore concurrent with ticks and joins; a cross-world restore refused.
 
-- [ ] **M36.16 — a scroll reply must answer an open scroll.** *(confirmed,
+- [x] **M36.16 — a scroll reply must answer an open scroll.** *(confirmed,
   high)* A scroll reply's `objectStatId` and label come straight from the client
   (`engine/game.go:1826`, `submitScrollReplyInInstance`). Nothing checks that
   this player has a scroll open from that stat, or that the label is one of its
