@@ -55,6 +55,26 @@ const ReconnectGraceTicks = 545
 // rule is deterministic and testable on the same clock as reconnect grace.
 const DefaultInstanceEvictIdleTicks = 2727 // about five minutes at 110ms/tick
 
+// Replays are bounded the way hosted worlds are (M36.19). A replay instance
+// nobody watches is dropped after DefaultReplayEvictIdleTicks; at most
+// maxReplayInstances exist at once, because the id@start key is client input;
+// and a restart, which reopens and re-steps the whole recording, is honoured
+// at most once per replayRestartCooldownTicks of that replay.
+const (
+	DefaultReplayEvictIdleTicks = 273 // about thirty seconds at 110ms/tick
+	maxReplayInstances          = 16
+	replayRestartCooldownTicks  = 27 // about three seconds
+)
+
+var (
+	errReplayBusy           = errors.New("too many replays are being watched; try again shortly")
+	errReplayRestartTooSoon = errors.New("replay restarted too recently")
+	errReplayEvicted        = errors.New("replay was closed")
+)
+
+// maxRecordingNameAttempts bounds the search for an unused recording name.
+const maxRecordingNameAttempts = 1000
+
 // maxEvictedRejoins bounds how often a join re-resolves an instance that was
 // evicted under it (M36.18). One retry is all a real race needs; the bound
 // only stops a pathological loop.
@@ -118,6 +138,9 @@ type WebSocketServer struct {
 	// joinable, never shown in the picker, never counted as occupancy, and never
 	// autosaved.
 	ReplayDir string
+	// ReplayEvictIdleTicks, when >0, drops a replay instance after this many
+	// consecutive ticks with no watcher (M36.19).
+	ReplayEvictIdleTicks int
 	// ChallengeStore is the durable challenge leaderboard (M32.1). Nil means the
 	// service has no leaderboard: runs still play and still report their result
 	// to the player who made them, but nothing becomes public.
@@ -283,7 +306,18 @@ type ReplayInstance struct {
 	Paused     bool
 	done       bool
 	err        error
-	mu         sync.Mutex
+	// ticks counts this replay's server ticks, paused or not; it is the clock
+	// the restart cooldown is measured on. restarts counts honoured restarts,
+	// and lastRestart is the tick the latest one was taken at (M36.19).
+	ticks       int
+	restarts    int
+	lastRestart int
+	// idleTicks is how many consecutive ticks nobody has watched; evicted is
+	// set when the replay is dropped from the table, after which no watcher
+	// may register on it (M36.19).
+	idleTicks int
+	evicted   bool
+	mu        sync.Mutex
 }
 
 // spectator is one watching connection.
@@ -491,6 +525,7 @@ func NewWebSocketServer(world TWorld, defaultBoard int16) *WebSocketServer {
 		TickDuration:           ServerTickDuration,
 		OriginHosts:            []string{"localhost:*", "127.0.0.1:*"},
 		InstanceEvictIdleTicks: DefaultInstanceEvictIdleTicks,
+		ReplayEvictIdleTicks:   DefaultReplayEvictIdleTicks,
 		Instances:              make(map[string]*WorldInstance),
 		ReplayInstances:        make(map[string]*ReplayInstance),
 		EditorSessions:         make(map[*webSocketClient]*EditorSession),
@@ -571,6 +606,7 @@ func (s *WebSocketServer) Tick(ctx context.Context) {
 	for _, replay := range replays {
 		replay.Tick(ctx)
 	}
+	s.evictIdleReplays()
 	for _, title := range titles {
 		title.Tick()
 	}
@@ -824,6 +860,7 @@ func (inst *WorldInstance) Tick(ctx context.Context, s *WebSocketServer) {
 
 func (replay *ReplayInstance) Tick(ctx context.Context) {
 	replay.mu.Lock()
+	replay.ticks++
 	if replay.Paused || replay.done || replay.err != nil {
 		replay.mu.Unlock()
 		return
@@ -853,6 +890,53 @@ func (replay *ReplayInstance) Close() {
 	}
 }
 
+// evictIdleReplays drops replay instances nobody has watched for
+// ReplayEvictIdleTicks ticks and closes their files outside s.mu, as
+// evictIdleInstances does for worlds (M36.19).
+func (s *WebSocketServer) evictIdleReplays() {
+	if s.ReplayEvictIdleTicks <= 0 {
+		return
+	}
+	var evicted []*ReplayInstance
+	s.mu.Lock()
+	for key, replay := range s.ReplayInstances {
+		if replay.advanceIdleEviction(s.ReplayEvictIdleTicks) {
+			delete(s.ReplayInstances, key)
+			evicted = append(evicted, replay)
+		}
+	}
+	s.mu.Unlock()
+	for _, replay := range evicted {
+		replay.Close()
+	}
+}
+
+// advanceIdleEviction counts one tick toward eviction and, when the replay has
+// been unwatched long enough, marks it evicted and reports true.
+func (replay *ReplayInstance) advanceIdleEviction(limit int) bool {
+	replay.mu.Lock()
+	defer replay.mu.Unlock()
+	if len(replay.Spectators) != 0 {
+		replay.idleTicks = 0
+		return false
+	}
+	replay.idleTicks++
+	if replay.idleTicks < limit {
+		return false
+	}
+	replay.evicted = true
+	return true
+}
+
+// evict marks the replay closed to new watchers and closes its file. The
+// caller has already removed it from s.ReplayInstances.
+func (replay *ReplayInstance) evict() {
+	replay.mu.Lock()
+	replay.evicted = true
+	replay.mu.Unlock()
+	replay.Close()
+}
+
 func newReplayPlaybackFromPath(path string, startTick int) (*ReplayPlayback, *os.File, error) {
 	f, err := os.Open(path)
 	if err != nil {
@@ -877,12 +961,28 @@ func newReplayPlaybackFromPath(path string, startTick int) (*ReplayPlayback, *os
 }
 
 func (replay *ReplayInstance) Restart() error {
+	// The cooldown is taken before the reopen, so two restarts racing each
+	// other cannot both pass it (M36.19).
+	replay.mu.Lock()
+	if replay.restarts > 0 && replay.ticks-replay.lastRestart < replayRestartCooldownTicks {
+		replay.mu.Unlock()
+		return errReplayRestartTooSoon
+	}
+	replay.restarts++
+	replay.lastRestart = replay.ticks
+	replay.mu.Unlock()
+
 	playback, f, err := newReplayPlaybackFromPath(replay.path, replay.startTick)
 	if err != nil {
 		return err
 	}
 
 	replay.mu.Lock()
+	if replay.evicted {
+		replay.mu.Unlock()
+		_ = f.Close()
+		return errReplayEvicted
+	}
 	old := replay.file
 	replay.file = f
 	replay.playback = playback
@@ -1576,12 +1676,12 @@ func (s *WebSocketServer) serveReplayHTTP(w http.ResponseWriter, r *http.Request
 		return
 	}
 
-	replay, err := s.GetOrCreateReplayInstanceAt(id, startTick)
+	replay, sub, snapshot, err := s.watchReplay(id, startTick, client, join.Board)
 	if err != nil {
 		_ = client.write(ctx, ReplayErrorMessage{Type: MessageTypeReplayError, Text: "Replay unavailable: " + err.Error()})
 		return
 	}
-	s.serveReplaySpectator(ctx, conn, client, replay, join)
+	s.serveReplaySpectator(ctx, conn, client, replay, sub, snapshot)
 }
 
 // resolveJoinBoard is the board a join lands on when it names none: the world's
@@ -2742,12 +2842,7 @@ func (s *WebSocketServer) attachRecorderLocked(inst *WorldInstance) {
 	// Friendly fire is set on the manager rather than derived from the world
 	// name, so the recording has to carry it or playback silently diverges.
 	header.FriendlyFire = inst.RoomManager.FriendlyFire
-	recordID := inst.Name + "-" + s.recordStamp
-	if inst.RecordID != "" {
-		recordID = inst.RecordID
-	}
-	path := filepath.Join(s.RecordDir, recordID+".jsonl")
-	f, err := os.Create(path)
+	f, path, err := s.createRecordingFileLocked(inst)
 	if err != nil {
 		log.Printf("zztgo: session recording disabled for %q: %v", inst.Name, err)
 		return
@@ -2760,6 +2855,38 @@ func (s *WebSocketServer) attachRecorderLocked(inst *WorldInstance) {
 	}
 	inst.RoomManager.SetRecorder(rec)
 	log.Printf("zztgo: recording session for %q to %s", inst.Name, path)
+}
+
+// createRecordingFileLocked opens a new, empty recording file for inst. It
+// never opens a file that already exists (M36.19): the stem is
+// <instance>-<boot stamp>, and a world hosted again in the same process (after
+// an eviction, a republish or a generation over it) used to os.Create that same
+// name and zero the earlier recording under its live /replay/ links. The first
+// recording keeps the bare stem; later ones take -2, -3, and so on. A fixed
+// RecordID (a challenge run's, already unique by its sequence) gets exactly one
+// exclusive attempt. Caller holds s.mu.
+func (s *WebSocketServer) createRecordingFileLocked(inst *WorldInstance) (*os.File, string, error) {
+	open := func(stem string) (*os.File, string, error) {
+		path := filepath.Join(s.RecordDir, stem+".jsonl")
+		f, err := os.OpenFile(path, os.O_WRONLY|os.O_CREATE|os.O_EXCL, 0o644)
+		return f, path, err
+	}
+	if inst.RecordID != "" {
+		return open(inst.RecordID)
+	}
+	stem := inst.Name + "-" + s.recordStamp
+	for n := 1; n <= maxRecordingNameAttempts; n++ {
+		candidate := stem
+		if n > 1 {
+			candidate = fmt.Sprintf("%s-%d", stem, n)
+		}
+		f, path, err := open(candidate)
+		if errors.Is(err, os.ErrExist) {
+			continue
+		}
+		return f, path, err
+	}
+	return nil, "", fmt.Errorf("no unused recording name for %q", stem)
 }
 
 // CloseRecorders flushes and closes every instance's session recorder. It runs
@@ -2955,6 +3082,12 @@ func (s *WebSocketServer) GetOrCreateReplayInstanceAt(id string, startTick int) 
 		s.mu.Unlock()
 		return replay, nil
 	}
+	// The cap is checked before the recording is opened and stepped, so a
+	// flood of distinct starts costs nothing once the table is full (M36.19).
+	if len(s.ReplayInstances) >= maxReplayInstances {
+		s.mu.Unlock()
+		return nil, errReplayBusy
+	}
 	s.mu.Unlock()
 
 	path, err := replayPath(s.ReplayDir, safe)
@@ -2968,6 +3101,14 @@ func (s *WebSocketServer) GetOrCreateReplayInstanceAt(id string, startTick int) 
 	if _, err := LoadPristineWorld(s.worldsDir(), playback.WorldName()); err != nil {
 		_ = f.Close()
 		return nil, fmt.Errorf("recorded world %q is not hosted: %w", playback.WorldName(), err)
+	}
+	// start is client input with no upper bound. Every start past the end of
+	// the recording opens the same final frame, so it is snapped to the tick
+	// after the last one and keyed by that, which bounds the distinct keys a
+	// recording has by its length (M36.19).
+	if playback.LastTick() < startTick-1 {
+		startTick = playback.LastTick() + 1
+		key = replayInstanceKey(safe, startTick)
 	}
 
 	replay := &ReplayInstance{
@@ -2985,8 +3126,30 @@ func (s *WebSocketServer) GetOrCreateReplayInstanceAt(id string, startTick int) 
 		replay.Close()
 		return existing, nil
 	}
+	if len(s.ReplayInstances) >= maxReplayInstances {
+		replay.Close()
+		return nil, errReplayBusy
+	}
 	s.ReplayInstances[key] = replay
 	return replay, nil
+}
+
+// watchReplay resolves the replay a watcher asked for and registers it there.
+// A replay can be evicted between being resolved and the watcher registering;
+// that one is refused and the lookup repeated, so the watcher always lands on
+// a replay the server still ticks (M36.19, as M36.18 did for worlds).
+func (s *WebSocketServer) watchReplay(id string, startTick int, client *webSocketClient, board int16) (*ReplayInstance, *spectator, SnapshotMessage, error) {
+	for attempt := 0; attempt < 3; attempt++ {
+		replay, err := s.GetOrCreateReplayInstanceAt(id, startTick)
+		if err != nil {
+			return nil, nil, SnapshotMessage{}, err
+		}
+		sub := &spectator{client: client, boardID: s.resolveReplayWatchBoard(replay, board)}
+		if snapshot, ok := replay.replaySpectatorSnapshot(sub); ok {
+			return replay, sub, snapshot, nil
+		}
+	}
+	return nil, nil, SnapshotMessage{}, errReplayEvicted
 }
 
 // resolveReplayWatchBoard is resolveWatchBoard for a recording: the board a
@@ -3015,23 +3178,23 @@ func (s *WebSocketServer) resolveReplayWatchBoard(replay *ReplayInstance, board 
 
 // replaySpectatorSnapshot registers sub's view of its board and returns
 // the frame to send. The unlock is deferred: a panic here must not leave
-// replay.mu held, since every WebSocketServer.Tick takes it (M36.7).
-func (replay *ReplayInstance) replaySpectatorSnapshot(sub *spectator) SnapshotMessage {
+// replay.mu held, since every WebSocketServer.Tick takes it (M36.7). It
+// reports false, registering nothing, on a replay already evicted (M36.19).
+func (replay *ReplayInstance) replaySpectatorSnapshot(sub *spectator) (SnapshotMessage, bool) {
 	replay.mu.Lock()
 	defer replay.mu.Unlock()
+	if replay.evicted {
+		return SnapshotMessage{}, false
+	}
 	replay.Spectators[sub.client] = sub
 	snapshot, engine := replay.playback.RoomManager().SpectatorSnapshot(sub.boardID)
 	sub.engine = engine
 	snapshot.Watchers = replay.watcherCountsLocked()[sub.boardID]
 	sub.sentWatchers = snapshot.Watchers
-	return snapshot
+	return snapshot, true
 }
 
-func (s *WebSocketServer) serveReplaySpectator(ctx context.Context, conn *websocket.Conn, client *webSocketClient, replay *ReplayInstance, join JoinMessage) {
-	boardID := s.resolveReplayWatchBoard(replay, join.Board)
-
-	sub := &spectator{client: client, boardID: boardID}
-	snapshot := replay.replaySpectatorSnapshot(sub)
+func (s *WebSocketServer) serveReplaySpectator(ctx context.Context, conn *websocket.Conn, client *webSocketClient, replay *ReplayInstance, sub *spectator, snapshot SnapshotMessage) {
 
 	defer func() {
 		replay.mu.Lock()
@@ -3067,11 +3230,19 @@ func (s *WebSocketServer) serveReplaySpectator(ctx context.Context, conn *websoc
 			replay.Paused = !replay.Paused
 			replay.mu.Unlock()
 		case "restart":
-			if err := replay.Restart(); err != nil {
+			if err := replay.Restart(); errors.Is(err, errReplayRestartTooSoon) {
+				// A restart inside the cooldown is dropped, not fatal: the
+				// replay plays on (M36.19).
+				continue
+			} else if err != nil {
 				_ = client.write(ctx, ReplayErrorMessage{Type: MessageTypeReplayError, Text: "Replay restart failed: " + err.Error()})
 				return
 			}
-			snapshot := replay.replaySpectatorSnapshot(sub)
+			snapshot, ok := replay.replaySpectatorSnapshot(sub)
+			if !ok {
+				_ = client.write(ctx, ReplayErrorMessage{Type: MessageTypeReplayError, Text: "Replay unavailable: " + errReplayEvicted.Error()})
+				return
+			}
 			if err := client.write(ctx, snapshot); err != nil {
 				return
 			}
@@ -3103,6 +3274,10 @@ func (s *WebSocketServer) hostGeneratedWorld(name string, world TWorld, private 
 	if err != nil {
 		return err
 	}
+	// The superseded instance's recorder is closed after s.mu is released
+	// (deferred first, so it runs last): Close waits for its writer to drain.
+	var superseded *SessionRecorder
+	defer func() { superseded.Close() }()
 	s.mu.Lock()
 	defer s.mu.Unlock()
 	if s.Instances == nil {
@@ -3111,7 +3286,7 @@ func (s *WebSocketServer) hostGeneratedWorld(name string, world TWorld, private 
 	if s.worldIsOccupiedLocked(safe) {
 		return fmt.Errorf("generated world %q is already occupied", safe)
 	}
-	s.supersedeInstanceLocked(safe)
+	superseded = s.supersedeInstanceLocked(safe)
 	rm := NewRoomManagerForWorld(world, safe)
 	rm.FriendlyFire = s.FriendlyFire
 	inst := &WorldInstance{
@@ -3139,25 +3314,34 @@ func (s *WebSocketServer) hostGeneratedWorld(name string, world TWorld, private 
 // eviction, or at boot). A test-play name never has one, which is fine. The
 // old instance is marked evicted, so a join resolved to it before this
 // re-resolves to the new one. The remove runs under s.mu; it is one unlink,
-// like the read LoadPristineWorld already does under it. Caller holds s.mu.
-func (s *WebSocketServer) supersedeInstanceLocked(name string) {
+// like the read LoadPristineWorld already does under it. The old instance's
+// recorder is detached and returned for the caller to close once s.mu is
+// released; it used to be dropped open, leaking its fd (M36.19). Caller holds
+// s.mu.
+func (s *WebSocketServer) supersedeInstanceLocked(name string) *SessionRecorder {
+	var recorder *SessionRecorder
 	if old := s.Instances[name]; old != nil {
 		old.mu.Lock()
 		old.evicted = true
+		if old.RoomManager != nil {
+			recorder = old.RoomManager.recorder
+			old.RoomManager.SetRecorder(nil)
+		}
 		old.mu.Unlock()
 	}
 	delete(s.autosavedThisBoot, name)
 	dir := s.autosaveDir()
 	if dir == "" {
-		return
+		return recorder
 	}
 	path, err := snapshotPath(dir, name)
 	if err != nil {
-		return
+		return recorder
 	}
 	if err := os.Remove(path); err != nil && !errors.Is(err, os.ErrNotExist) {
 		log.Printf("zztgo: stale autosave %q of a replaced world not removed: %v", name, err)
 	}
+	return recorder
 }
 
 // WorldIsOccupied reports whether a hosted world of this name currently has

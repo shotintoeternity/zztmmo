@@ -8853,7 +8853,7 @@ copy; the executor still writes the failing test in the repo first.
   can be evicted in between, leaving the player in an orphan that never ticks.
   DoD: play, leave, evict, rejoin: the state is still there.
 
-- [ ] **M36.19 — session recordings are never truncated, and replays are
+- [x] **M36.19 — session recordings are never truncated, and replays are
   bounded.** *(confirmed, medium)* (a) Recordings are named
   `<instance>-<boot stamp>.jsonl` and opened with `os.Create`
   (`engine/websocket_server.go:2547-2552`), so any second instance of a world in
