@@ -1510,14 +1510,8 @@ func (s *WebSocketServer) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 				if s.chatBlocks.suppresses(playerID, rec.PlayerID, rec.AccountID) {
 					continue
 				}
-				msg := struct {
-					Type     string   `json:"type"`
-					From     string   `json:"from"`
-					PlayerID PlayerID `json:"playerId,omitempty"`
-					Text     string   `json:"text"`
-					History  bool     `json:"history"`
-				}{
-					Type:     "chat",
+				msg := ChatMessage{
+					Type:     MessageTypeChat,
 					From:     rec.From,
 					PlayerID: rec.PlayerID,
 					Text:     rec.Text,
@@ -1576,10 +1570,8 @@ func (s *WebSocketServer) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 				continue
 			}
 			s.submitSaveFilenameInInstance(ctx, activeInst, playerID, save.Name)
-		case "chat":
-			var chat struct {
-				Text string `json:"text"`
-			}
+		case MessageTypeChat:
+			var chat ChatMessage
 			if err := json.Unmarshal(raw, &chat); err != nil {
 				continue
 			}
@@ -1973,7 +1965,7 @@ func (s *WebSocketServer) serveEditor(ctx context.Context, conn *websocket.Conn,
 	defer client.stop()
 	if authenticated {
 		client.accountID = account.ID
-		client.name = account.DisplayName()
+		client.name = admitPlayerName(account.DisplayName())
 	}
 	session := s.editorSessionForWorld(safeWorld, inst.SourceWorld)
 	presence, memberToken, displaced, err := session.EnterResuming(client, client.name, enter.ResumeToken)
@@ -3626,7 +3618,7 @@ func (s *WebSocketServer) submitDebugCommandInInstance(inst *WorldInstance, play
 	if inst.Challenge != nil {
 		return
 	}
-	inst.RoomManager.SubmitDebugCommand(playerID, text)
+	inst.RoomManager.SubmitDebugCommand(playerID, admitDebugCommandText(text))
 }
 
 func (s *WebSocketServer) submitScrollReplyInInstance(inst *WorldInstance, playerID PlayerID, objectStatID int16, label CP437String) {
@@ -4143,13 +4135,8 @@ func (s *WebSocketServer) BroadcastGlobalChat(ctx context.Context, author ChatAu
 	}
 	s.mu.Unlock()
 
-	msg := struct {
-		Type     string   `json:"type"`
-		From     string   `json:"from"`
-		PlayerID PlayerID `json:"playerId,omitempty"`
-		Text     string   `json:"text"`
-	}{
-		Type:     "chat",
+	msg := ChatMessage{
+		Type:     MessageTypeChat,
 		From:     author.Name,
 		PlayerID: author.PlayerID,
 		Text:     text,
@@ -5012,11 +4999,7 @@ func (s *WebSocketServer) AnnounceShutdown(ctx context.Context, seconds int, tex
 		inst.mu.Unlock()
 	}
 
-	msg := struct {
-		Type    string `json:"type"`
-		Text    string `json:"text"`
-		Seconds int    `json:"seconds"`
-	}{Type: "announce", Text: text, Seconds: seconds}
+	msg := AnnounceMessage{Type: MessageTypeAnnounce, Text: text, Seconds: seconds}
 
 	for _, client := range clients {
 		_ = client.write(ctx, msg)

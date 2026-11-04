@@ -519,6 +519,7 @@ func (rm *RoomManager) JoinPlayerWithID(playerID PlayerID, boardID, spawnX, spaw
 }
 
 func (rm *RoomManager) SetPlayerName(playerID PlayerID, name string) {
+	name = admitPlayerName(name)
 	player := rm.players[playerID]
 	if player != nil {
 		player.name = name
@@ -555,6 +556,7 @@ func (rm *RoomManager) SetPlayerProfileSummary(playerID PlayerID, handle string,
 }
 
 func (rm *RoomManager) SetPlayerIdentity(playerID PlayerID, accountID, name string) {
+	name = admitPlayerName(name)
 	player := rm.players[playerID]
 	if player != nil {
 		player.accountID = accountID

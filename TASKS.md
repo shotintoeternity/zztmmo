@@ -8659,7 +8659,7 @@ copy; the executor still writes the failing test in the repo first.
   the encoded help lines. Measure before and after; do not land it without a
   benchmark that shows a difference.
 
-- [ ] **M36.6 — one encoding policy at the protocol boundary.** `8c97450`
+- [x] **M36.6 — one encoding policy at the protocol boundary.** `8c97450`
   switched hand-picked fields to `CP437String`. Other outbound fields that carry
   world bytes (`ProfileResultMessage.Lines`, `EditorElementMenu.Title`, and the
   `ModerateResult`/`FollowResult` names built from world names) and every inbound
@@ -8668,6 +8668,37 @@ copy; the executor still writes the failing test in the repo first.
   walks the protocol message structs by reflection and fails on any `string`
   field not on an explicit, commented allowlist of ASCII-only fields, then fix
   what it finds.
+
+  *Resolved 2026-11-03.* The systemic finding reproduces. Two of the named
+  examples do not hold as written:
+  - `EditorElementMenu.Title` is three ASCII literals.
+  - The `ModerateResult` and `FollowResult` names are player names, not world
+    names.
+
+  The real hole is player names. A guest's join name and an account's Google
+  display name were stored raw, and the canvas draws them one glyph per byte
+  (the editor's presence list, the moderation and profile popups), so "José"
+  rendered as "JosΘ". `admitPlayerName` (`player_name.go`) now folds every name
+  as chat and high-score names are folded: `foldWordmark`, capped at 34, and
+  "Player" if nothing printable survives. It runs at
+  `RoomManager.SetPlayerName`/`SetPlayerIdentity`, the editor's account name,
+  and the challenge run's name. **Visible consequence:** a Google "José" now
+  shows as "Jos", the M36.3 decision applied to a name the player did not type
+  here; reversing it needs a Unicode-to-CP437 table. `?` prompt text is folded
+  too (`admitDebugCommandText`), because `+flag` writes hashed world state.
+
+  `TestM366ProtocolStringFieldsAreClassified` parses `protocol.go` (go/ast
+  rather than reflection, so a new struct is seen without a root list to keep
+  in step) and fails on any plain string field missing from `m366StringFields`.
+  Each entry carries one of eleven stated reasons. The chat and shutdown-announce
+  frames were anonymous structs the scan could not see, so they are now
+  `ChatMessage` and `AnnounceMessage`, with `MessageTypeChat` and
+  `MessageTypeAnnounce`; the wire format is unchanged. No field needed to become
+  `CP437String`: every world-bytes field already was one, and
+  `SnapshotMessage.World` and `ProtocolEvent.Filename` turned out to be a
+  sanitized instance name and the literal `GAME.HLP`. Turning
+  `EditorBoardMessage.Name` back into a plain string, or dropping the name fold,
+  reddens the tests.
 
 ### Tier 1 — anyone can crash or freeze the server, or normal play breaks a player
 

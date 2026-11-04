@@ -68,6 +68,8 @@ const (
 	MessageTypeProfileRequest   = "profileRequest"
 	MessageTypeProfileResult    = "profileResult"
 	MessageTypePrivateMessage   = "privateMessage"
+	MessageTypeChat             = "chat"
+	MessageTypeAnnounce         = "announce"
 	MessageTypePrivateResult    = "privateMessageResult"
 	MessageTypeFollow           = "follow"
 	MessageTypeFollowResult     = "followResult"
@@ -185,6 +187,28 @@ type PrivateMessage struct {
 	ToID     PlayerID `json:"toId,omitempty"`
 	Text     string   `json:"text"`
 	Outgoing bool     `json:"outgoing,omitempty"`
+}
+
+// ChatMessage is one global chat line, both ways: the client sends Type and
+// Text, and the server broadcasts it with the author filled in (From is the
+// folded player name, PlayerID the live connection). History marks a line
+// replayed from the backlog on join. It was an anonymous struct at each send
+// site until M36.6 named it, so the encoding test could see its strings.
+type ChatMessage struct {
+	Type     string   `json:"type"`
+	From     string   `json:"from,omitempty"`
+	PlayerID PlayerID `json:"playerId,omitempty"`
+	Text     string   `json:"text"`
+	History  bool     `json:"history,omitempty"`
+}
+
+// AnnounceMessage is the server-wide shutdown warning (AnnounceShutdown):
+// server-authored text and the seconds left. Named in M36.6 for the same
+// reason as ChatMessage.
+type AnnounceMessage struct {
+	Type    string `json:"type"`
+	Text    string `json:"text"`
+	Seconds int    `json:"seconds"`
 }
 
 type PrivateResultMessage struct {
