@@ -1404,6 +1404,20 @@ function openTitleStream(filename: string) {
 // showTitle paints GameTitleLoop's screen: board 0 behind the monitor sidebar.
 // The board comes from /api/title rather than the snapshot stream because we
 // have no socket yet; the stream then animates it, as vanilla's does.
+// titleEpoch numbers showTitle calls, so one that resumes after a newer one
+// started knows it is stale.
+let titleEpoch = 0;
+
+// leftTitleDuring is showTitle's check after its await (M36.24). A P pressed
+// while /api/title was in flight has already started play, and painting the
+// title over it — or opening the title stream and the occupancy poll behind it —
+// would leave title residue on the board. startPlay does not change mode (the
+// first snapshot does), so the socket it opened is the tell; every other way
+// off the title screen changes mode at once.
+function leftTitleDuring(epoch: number): boolean {
+  return epoch !== titleEpoch || mode !== "title" || ws !== null;
+}
+
 async function showTitle() {
   mode = "title";
   modal = null;
@@ -1442,6 +1456,7 @@ async function showTitle() {
   lastMask = 0;
   clearScrolls();
   closeTitleStream();
+  const epoch = ++titleEpoch;
 
   let friendlyName = worldName;
   let streaming = false;
@@ -1449,6 +1464,9 @@ async function showTitle() {
     const url = worldName === "Untitled" ? "/api/title" : "/api/title?world=" + encodeURIComponent(worldName);
     const response = await fetch(url);
     const title = (await response.json()) as { world: string; filename?: string; screen: ScreenCell[] };
+    if (leftTitleDuring(epoch)) {
+      return;
+    }
     worldName = title.filename || title.world;
     friendlyName = title.world;
     titleFriendlyName = friendlyName;
@@ -1457,6 +1475,9 @@ async function showTitle() {
   } catch {
     // Offline: keep whatever board is on screen and still draw the menu, so
     // the player can retry with 'P'.
+  }
+  if (leftTitleDuring(epoch)) {
+    return;
   }
   drawTitleSidebar(
     writeText,
@@ -2281,7 +2302,11 @@ async function restoreSavedGame(name: string) {
 }
 
 function connect() {
-  if (ws && ws.readyState === WebSocket.OPEN) {
+  // M36.24: a socket still CONNECTING is as live as an OPEN one. Refusing only
+  // OPEN let a held P (autorepeat) or a double-tap open several sockets, each
+  // joining as its own player under the same nickname, and only the last was
+  // ever closed. Every path that means to replace the socket nulls ws first.
+  if (ws && (ws.readyState === WebSocket.CONNECTING || ws.readyState === WebSocket.OPEN)) {
     return;
   }
 
@@ -2290,6 +2315,12 @@ function connect() {
   ws = socket;
 
   socket.addEventListener("open", () => {
+    // A socket superseded while it was connecting must not join: it would be a
+    // second player in the room that nothing ever closes (M36.24).
+    if (ws !== socket) {
+      socket.close();
+      return;
+    }
     connected = true;
     reconnectAttempt = 0;
     // M22.1: a watcher's join is the same message marked as a spectate, and the
@@ -2312,10 +2343,17 @@ function connect() {
     const color = readStoredPlayerColor();
     socket.send(JSON.stringify(buildJoinMessage(MessageTypeJoin, nickname, token, color)));
     canvas.focus();
+    // One sampler, ever: a timer left over from a socket that was replaced
+    // without passing through disconnect() would otherwise send every held
+    // frame twice (M36.24).
+    stopInputSampler();
     inputTimer = window.setInterval(() => sendInput(currentMask()), 55);
   });
 
   socket.addEventListener("message", (event) => {
+    if (ws !== socket) {
+      return;
+    }
     const message = JSON.parse(String(event.data)) as ServerMessage;
     applyMessage(message);
   });
@@ -3810,7 +3848,15 @@ function leaveChallenge() {
   challengeFinished = false;
 }
 
+function stopInputSampler() {
+  window.clearInterval(inputTimer);
+  inputTimer = 0;
+}
+
 function disconnectSocket() {
+  // The sampler belongs to the socket: a challenge "again" or "watch" that left
+  // it running stacked another 55ms timer per retry (M36.24).
+  stopInputSampler();
   if (ws) {
     const socket = ws;
     ws = null;

@@ -67,6 +67,7 @@ async function openClient(label, path) {
     boardId: null,
     challenge: null,
     challengeRun: null,
+    inputs: [],
   };
 
   page.on("pageerror", (err) => c.pageErrors.push(String(err)));
@@ -78,6 +79,14 @@ async function openClient(label, path) {
   });
   page.on("websocket", (ws) => {
     c.sockets.push(ws.url());
+    const socketIndex = c.sockets.length - 1;
+    ws.on("framesent", (frame) => {
+      try {
+        if (JSON.parse(String(frame.payload)).type === "input") c.inputs.push({ socket: socketIndex, at: Date.now() });
+      } catch {
+        // not JSON: nothing counted
+      }
+    });
     ws.on("framereceived", (frame) => {
       let msg;
       try {
@@ -112,9 +121,10 @@ async function openClient(label, path) {
 // runEast holds the arrow key until the server says the run finished. The walk
 // is the whole course: three gems in a straight line east of the spawn.
 async function runEast(c, describe) {
+  const before = c.challengeResults.length;
   await c.page.keyboard.down("ArrowRight");
   try {
-    await waitFor(() => c.challengeResults.length > 0, describe, 40000);
+    await waitFor(() => c.challengeResults.length > before, describe, 40000);
   } finally {
     await c.page.keyboard.up("ArrowRight");
   }
@@ -226,6 +236,30 @@ try {
     20000,
   );
   console.log("  - the ghost is drawn as a local overlay cell during the second attempt");
+
+  // 8. "Run it again" from the result window starts a third attempt with ONE
+  //    input sampler (M36.24). Before the fix, disconnectSocket left the 55ms
+  //    timer running and the new socket started another beside it, so a held
+  //    key was sent twice per sample. The sampler only re-sends a held mask, so
+  //    the count is taken with a key held over a fixed window: ~20 frames for
+  //    one sampler, ~40 for two.
+  const second = await runEast(ada, "the second attempt to finish");
+  await waitForPage(ada, (cells) => hasText(cells, "Challenge Result") && hasText(cells, `${second.ticks} ticks`), "the second result window");
+  const socketsBeforeAgain = ada.sockets.length;
+  await ada.page.keyboard.press("Enter");
+  await waitFor(() => ada.sockets.length > socketsBeforeAgain, "the third attempt's socket");
+  await waitFor(() => ada.challengeRun && ada.challengeRun !== secondRun, "the third attempt's own run key");
+  const againSocket = ada.sockets.length - 1;
+  await ada.page.waitForTimeout(500);
+  const windowStart = Date.now();
+  await ada.page.keyboard.down("ArrowUp");
+  await ada.page.waitForTimeout(1100);
+  await ada.page.keyboard.up("ArrowUp");
+  const windowEnd = Date.now();
+  const sampled = ada.inputs.filter((f) => f.socket === againSocket && f.at >= windowStart && f.at <= windowEnd).length;
+  assert.ok(sampled >= 8, `a held key must be sampled on the retry's socket, got ${sampled} frames`);
+  assert.ok(sampled <= 30, `"Run it again" must not stack a second 55ms sampler: ${sampled} input frames in 1.1s`);
+  console.log(`  - "Run it again" samples once: ${sampled} input frames in 1.1s`);
 
   assert.deepEqual(ada.challengeErrors, [], "no challenge refusal reached the browser");
   for (const c of clients) {

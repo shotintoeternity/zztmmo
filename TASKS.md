@@ -8907,7 +8907,7 @@ copy; the executor still writes the failing test in the repo first.
   another board, with a message. DoD: join a 150-stat board; no object is
   harmed.
 
-- [ ] **M36.24 — the client keeps one socket and one input sampler.**
+- [x] **M36.24 — the client keeps one socket and one input sampler.**
   *(confirmed, medium)* (a) `connect()` (`engine/web/src/main.ts:2283`) refuses
   to replace only an OPEN socket. A held P (autorepeat) or a double-tap while
   CONNECTING opens several sockets, each joining as a separate player with the
@@ -8920,6 +8920,22 @@ copy; the executor still writes the failing test in the repo first.
   gets title residue painted over play, plus a stray SSE stream and occupancy
   poll. Run `make browser`. DoD: node or browser tests for the double-P, the
   repeated challenge retry, and P during the title fetch.
+
+  *Done 2026-11-03; all three reproduced before the fix.* (a) `connect()` now
+  refuses a CONNECTING socket as well as an OPEN one, and its `open` and
+  `message` handlers ignore a socket that is no longer `ws` (a superseded one
+  is closed on open rather than joining). (b) `disconnectSocket()` stops the
+  sampler, and the `open` handler clears any old one before starting its own.
+  (c) `showTitle` numbers its calls and, after its await, stops if a newer
+  call started, `mode` left "title", or a socket was opened. `startPlay` does
+  not change `mode` (the first snapshot does), so a mode check alone would
+  have caught nothing. Tests: `web/test/socket_journey.test.mjs`
+  (`TestM3624OneSocketBrowserJourney`) dispatches two P keydowns in one
+  evaluate (before the fix, two sockets), then holds `/api/title` open across
+  a quit and presses P (before the fix, the late title opened the title
+  stream). `challenge_journey.test.mjs` step 8 holds a key after "Run it
+  again" and counts input frames on the new socket (before the fix, 41 in
+  1.1 s; after, about 20).
 
 - [ ] **M36.25 — scrolls cannot pile up or replace a modal.** *(confirmed,
   medium)* Board-wide scrolls (`playerStatId < 0`) are queued without a cap or
