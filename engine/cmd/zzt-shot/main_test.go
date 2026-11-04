@@ -75,3 +75,18 @@ func TestTownTitleGolden(t *testing.T) {
 		t.Fatalf("TOWN title pixels = %s, want %s", got, want)
 	}
 }
+
+// M36.27c: a board the world does not have is an error, not a picture of some
+// other board, and int16 wraparound cannot smuggle one in.
+func TestShotRefusesABoardTheWorldDoesNotHave(t *testing.T) {
+	world := filepath.Join("..", "..", "..", "fixtures", "TOWN.ZZT")
+	for _, board := range []int{99, -1, 65536} {
+		out := filepath.Join(t.TempDir(), "shot.png")
+		if err := shot(world, out, board); err == nil {
+			t.Errorf("shot(board %d) succeeded; want an error naming the world's board range", board)
+		}
+		if _, err := os.Stat(out); !os.IsNotExist(err) {
+			t.Errorf("shot(board %d) wrote %s anyway", board, out)
+		}
+	}
+}

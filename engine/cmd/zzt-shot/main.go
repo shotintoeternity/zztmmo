@@ -28,13 +28,13 @@ func main() {
 		fmt.Fprintln(os.Stderr, "usage: zzt-shot -world WORLD.ZZT -out title.png [-board 0]")
 		os.Exit(2)
 	}
-	if err := shot(*worldPath, *outPath, int16(*board)); err != nil {
+	if err := shot(*worldPath, *outPath, *board); err != nil {
 		fmt.Fprintf(os.Stderr, "zzt-shot: %v\n", err)
 		os.Exit(1)
 	}
 }
 
-func shot(worldPath, outPath string, board int16) error {
+func shot(worldPath, outPath string, boardArg int) error {
 	if !strings.EqualFold(filepath.Ext(worldPath), ".zzt") {
 		return fmt.Errorf("world %q does not have a .ZZT extension", worldPath)
 	}
@@ -49,6 +49,14 @@ func shot(worldPath, outPath string, board int16) error {
 	if !e.WorldLoad(base, filepath.Ext(worldPath), false) {
 		return fmt.Errorf("load %s", worldPath)
 	}
+	// M36.27c: a board the world does not have is an error. BoardOpen clamps
+	// an id above BoardCount to the current board and refuses a negative one,
+	// so -board 99 used to write a picture of some other board and exit 0. The
+	// check is on the int flag, before any int16 conversion could wrap it.
+	if boardArg < 0 || boardArg > int(e.World.BoardCount) {
+		return fmt.Errorf("board %d is not in %s, which has boards 0..%d", boardArg, worldPath, e.World.BoardCount)
+	}
+	board := int16(boardArg)
 	e.BoardOpen(board)
 	if boardHasZeroRun(e, board) {
 		// Vanilla ZZT encodes an RLE count of zero as 256 cells. The runtime
