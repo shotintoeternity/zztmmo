@@ -27,8 +27,11 @@ import (
 	"time"
 )
 
+// baseURL is the Museum's zip root. A variable only so a test can point
+// fetchEntry at a local server.
+var baseURL = "https://museumofzzt.com/zgames"
+
 const (
-	baseURL    = "https://museumofzzt.com/zgames"
 	userAgent  = "zztmmo-fetch/1.0 (github.com/shotintoeternity/zztmmo)"
 	fetchDelay = 300 * time.Millisecond
 
@@ -249,6 +252,7 @@ func fetchEntry(client *http.Client, entry ManifestEntry, outDir string, dryRun,
 		wantSet[strings.ToUpper(f)] = true
 	}
 
+	var failed []string
 	for _, zf := range zr.File {
 		if !strings.EqualFold(filepath.Ext(zf.Name), ".zzt") {
 			continue
@@ -275,32 +279,58 @@ func fetchEntry(client *http.Client, entry ManifestEntry, outDir string, dryRun,
 		}
 
 		if extractErr := extractZipFile(zf, outPath); extractErr != nil {
-			fmt.Fprintf(os.Stderr, "  WARN [%s] extracting %s: %v\n", entry.ID, upper, extractErr)
+			fmt.Fprintf(os.Stderr, "  FAIL [%s] extracting %s: %v\n", entry.ID, upper, extractErr)
+			failed = append(failed, upper)
 			continue
 		}
 		fmt.Printf("  WROTE %s\n", upper)
 		written++
 	}
 
+	// A failed extraction is an error for the run (M36.27b): it used to be a
+	// warning, the command exited 0, and the truncated file it left was
+	// SKIPped as "already exists" on every run after.
+	if len(failed) > 0 {
+		return written, skipped, fmt.Errorf("could not extract %s", strings.Join(failed, ", "))
+	}
 	return written, skipped, nil
 }
 
-// extractZipFile writes one zip entry to outPath.
-func extractZipFile(zf *zip.File, outPath string) error {
+// extractZipFile writes one zip entry to outPath, all or nothing: the bytes go
+// to a temp file beside it, which is renamed into place only once the whole
+// entry has been read and its checksum verified (zip's reader reports a CRC
+// mismatch at EOF, after the bytes are written). A failure removes the temp
+// file, so no partial world is ever left under the final name.
+func extractZipFile(zf *zip.File, outPath string) (err error) {
 	rc, err := zf.Open()
 	if err != nil {
 		return err
 	}
 	defer rc.Close()
 
-	out, err := os.Create(outPath)
+	out, err := os.CreateTemp(filepath.Dir(outPath), filepath.Base(outPath)+".*.tmp")
 	if err != nil {
 		return err
 	}
-	defer out.Close()
-
-	_, err = io.Copy(out, rc)
-	return err
+	tmp := out.Name()
+	defer func() {
+		if err != nil {
+			os.Remove(tmp)
+		}
+	}()
+	// CreateTemp makes the file 0600; a world os.Create wrote was 0644.
+	if err = out.Chmod(0o644); err != nil {
+		out.Close()
+		return err
+	}
+	if _, err = io.Copy(out, rc); err != nil {
+		out.Close()
+		return err
+	}
+	if err = out.Close(); err != nil {
+		return err
+	}
+	return os.Rename(tmp, outPath)
 }
 
 func fatalf(format string, args ...interface{}) {
