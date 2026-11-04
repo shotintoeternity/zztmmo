@@ -41,13 +41,6 @@ type RoomManager struct {
 	// means vanilla/MMO intra-world passage behavior. Only first-party LOBBY and
 	// ARENA instances populate it; authored worlds cannot opt in through ZZT data.
 	TransitGates map[TransitGateKey]string
-	// NoticeTiles is the server-owned table of tiles whose scroll the SERVER
-	// writes (M34.3). It is keyed exactly as TransitGates is, is populated only
-	// for first-party identities, and is empty everywhere else — a world with no
-	// table shows every object's own window, which is what vanilla means by a
-	// scroll. The value is the notice kind, so a second board is a row here
-	// rather than a second mechanism.
-	NoticeTiles  map[TransitGateKey]string
 	FriendlyFire bool
 
 	// HighScorePath, when non-empty, is the file the world's high-score list is
@@ -67,17 +60,6 @@ type RoomManager struct {
 	pendingScores        map[PlayerID]QuitResult
 	pendingPlayerEvents  map[PlayerID][]Event
 	pendingWorldTransits []WorldTransit
-	// pendingNotables carries deeds the Gazette's ledger may want out of the
-	// step (M34.1), resolved to stable PlayerIDs here for the same reason
-	// transfers and quits are: the stat ids the engine used are about to be
-	// reindexed. It is drained by the server, which is the layer that knows an
-	// account, a world identity, and whether this instance is public at all.
-	pendingNotables []RoomNotable
-	// pendingNotices carries touches of a NoticeTiles tile out of the step, for
-	// the same reason pendingNotables does: the window the server owes this
-	// reader is composed from a store the tick goroutine has no business
-	// reading.
-	pendingNotices []RoomNotice
 
 	// recorder, when non-nil, logs the external stimuli this manager applies —
 	// joins, leaves, submits, and per-tick inputs — for deterministic replay
@@ -879,21 +861,6 @@ func (rm *RoomManager) StepDiffsWithBoards(inputs map[PlayerID]PlayerInput) (map
 				if playerID, found := rm.playerIDForStat(boardID, ev.StatId); found {
 					quitters = append(quitters, playerID)
 				}
-			case DeathEvent:
-				// Records the deed AND forwards the event, in that order. The
-				// forward is not optional and is not decoration: until M34.1 this
-				// case did not exist and the `default:` arm below carried a
-				// DeathEvent into roomEvents, which is how it becomes the wire
-				// "death" ProtocolEvent that the client and M23.1's death hint
-				// both read. A case that only recorded would delete a shipped
-				// behaviour silently — the M33.1 class of breakage.
-				if playerID, found := rm.playerIDForStat(boardID, ev.StatId); found {
-					rm.pendingNotables = append(rm.pendingNotables, RoomNotable{
-						PlayerID: playerID,
-						Kind:     GazetteKindDeath,
-					})
-				}
-				roomEvents[boardID] = append(roomEvents[boardID], event)
 			case SavePromptEvent:
 				// Records the prompt AND forwards the event: the wire savePrompt
 				// is what opens the client's entry field (see DeathEvent above).
@@ -907,24 +874,6 @@ func (rm *RoomManager) StepDiffsWithBoards(inputs map[PlayerID]PlayerInput) (map
 				if ev.PlayerStatId >= 0 {
 					if playerID, found := rm.playerIDForStat(boardID, ev.PlayerStatId); found {
 						rm.players[playerID].scrollOpen = true
-						// M34.3: a notice tile's window is written by the server, not
-						// by the world. The reader is frozen above exactly as any
-						// scroll freezes them and is unfrozen by the same reply, but
-						// the object's own text is suppressed here rather than shown
-						// and then covered: the fallback it carries is for a lobby
-						// nobody is serving.
-						if kind, ok := rm.noticeKindFor(room, boardID, ev.StatId); ok {
-							// The window the reader is owed is server-written and
-							// offers no hyperlinks (M34.2 guarantees no markup), so
-							// only its dismissal answers it (M36.16).
-							rm.players[playerID].noteOpenScroll(ev.StatId, nil, true)
-							rm.pendingNotices = append(rm.pendingNotices, RoomNotice{
-								PlayerID:     playerID,
-								Kind:         kind,
-								ObjectStatID: ev.StatId,
-							})
-							continue
-						}
 						rm.players[playerID].noteOpenScroll(ev.StatId, scrollHyperlinks(ev.Lines), true)
 					}
 				}
@@ -1016,57 +965,6 @@ func (rm *RoomManager) DrainWorldTransits() []WorldTransit {
 	transits := rm.pendingWorldTransits
 	rm.pendingWorldTransits = nil
 	return transits
-}
-
-// RoomNotice is one touch of a NoticeTiles tile (M34.3): a reader who is
-// already frozen, and the object whose window the server owes them.
-// ObjectStatID travels with it because it is what the pushed scroll must carry
-// for the client's ordinary dismissal to unfreeze the reader again.
-type RoomNotice struct {
-	PlayerID     PlayerID
-	Kind         string
-	ObjectStatID int16
-}
-
-func (rm *RoomManager) DrainNotices() []RoomNotice {
-	notices := rm.pendingNotices
-	rm.pendingNotices = nil
-	return notices
-}
-
-// noticeKindFor answers whether the object that just opened a window is
-// standing on a server-owned notice tile. It reads the object's CURRENT
-// position rather than a position recorded when the table was written, so an
-// object that walks off its tile stops being the notice — the tile is the
-// server's, not the object's.
-func (rm *RoomManager) noticeKindFor(room *Room, boardID int16, objectStatID int16) (string, bool) {
-	if len(rm.NoticeTiles) == 0 || room == nil || room.Engine == nil {
-		return "", false
-	}
-	if objectStatID < 0 || objectStatID > room.Engine.Board.StatCount {
-		return "", false
-	}
-	stat := room.Engine.Board.Stats[objectStatID]
-	kind := rm.NoticeTiles[TransitGateKey{BoardID: boardID, X: int16(stat.X), Y: int16(stat.Y)}]
-	if kind == "" {
-		return "", false
-	}
-	return kind, true
-}
-
-// RoomNotable is one deed this manager saw, named by the player it belongs to
-// rather than by the stat id it arrived as. The Kind is a Gazette kind (M34.1);
-// the room deliberately does not know the world identity or the account, which
-// are the server's to supply.
-type RoomNotable struct {
-	PlayerID PlayerID
-	Kind     string
-}
-
-func (rm *RoomManager) DrainNotables() []RoomNotable {
-	notables := rm.pendingNotables
-	rm.pendingNotables = nil
-	return notables
 }
 
 // stepRoom contains a simulation panic to the room that caused it.  Engines

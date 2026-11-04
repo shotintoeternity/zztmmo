@@ -124,7 +124,12 @@ func TestM3614ARetryAfterAPublishIsRefused(t *testing.T) {
 // m3614RetryAPI seeds one retryable job in a WebAPI with auth on.
 func m3614RetryAPI(t *testing.T, service *GenerationService, salvaged GenerationResult, owner AuthenticatedAccount, client string) (*WebAPI, *AuthService, http.Handler) {
 	t.Helper()
-	api, server, _ := m341API(t)
+	world := testEmptyWorld(t)
+	world.Info.Name = "M3614"
+	server := NewWebSocketServer(world, 1)
+	server.TickDuration = time.Hour
+	server.ChatDB = NewMemChatDatabase()
+	api := &WebAPI{RoomManager: server.RoomManager, Server: server}
 	auth := NewAuthService("m3614-client-id", "", "", []byte("m3614-route-cookie-secret"))
 	server.Auth = auth
 	api.Generator = service

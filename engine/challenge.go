@@ -78,8 +78,7 @@ type ChallengeDefinition struct {
 // archive listing, and a daily challenge nobody had asked for was not what the
 // first players should meet. Emptying it was chosen over deleting the feature —
 // the machinery is a season of rows away from being useful again, and deleting
-// it would have taken the M32 leaderboard and the M34 Gazette's run citations
-// with it.
+// it would have taken the M32 leaderboard with it.
 //
 // Every path below already handles an empty catalogue: ChallengeForDate reports
 // "no challenge today", ChallengeByID finds nothing, and /api/challenge answers

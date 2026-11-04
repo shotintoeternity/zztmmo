@@ -62,13 +62,7 @@ type WebAPI struct {
 	Museum *MuseumService
 	// Auth serves browser-facing Google OAuth endpoints. Nil keeps the server in
 	// guest-only mode.
-	Auth *AuthService
-	// GazetteEditor writes and caches the day's edition (M34.2). Nil is built
-	// on first use from the ledger and whatever author the environment offers,
-	// so cmd/ needs no wiring and a server without credentials still has a
-	// paper.
-	GazetteEditor  *GazetteEditor
-	gazetteMu      sync.Mutex
+	Auth           *AuthService
 	generationMu   sync.Mutex
 	generationJobs map[string]*generationJob
 	generationSeq  uint64
@@ -95,8 +89,8 @@ type generationJob struct {
 	resume    *GenerationBoardError
 	generator *GenerationService
 	// account is who asked for this dream, captured on the request goroutine
-	// that started the job because the job outlives the request. The Gazette
-	// credits it (M34.1a), and the world is owned by, claimed for, and refused
+	// that started the job because the job outlives the request. The world is
+	// owned by, claimed for, and refused
 	// on behalf of this account (refuseIfNotOurs, claimGeneratedWorld). Since
 	// M36.14 it is also the only account that may retry the job.
 	account AuthenticatedAccount
@@ -105,11 +99,6 @@ type generationJob struct {
 	// (M36.14, owner decision 2026-11-02). Unexported so the status route,
 	// which serialises the job, never publishes it.
 	client string
-	// recorded is set once this job's world has been filed in the Gazette. A
-	// salvaged job is "complete" and still retryable (M17.13), so it has already
-	// been news before its retry runs — and a retry may salvage again, so the
-	// flag is the direct evidence rather than an inference from Status.
-	recorded bool
 }
 
 // Handler mounts the title-screen endpoints under /api/.
@@ -121,8 +110,6 @@ func (a *WebAPI) Handler() http.Handler {
 	mux.HandleFunc("/api/title/stream", a.handleTitleStream)
 	mux.HandleFunc("/api/worlds", a.handleWorlds)
 	mux.HandleFunc("/api/watch/live", a.handleWatchLive)
-	mux.HandleFunc("/api/gazette", a.handleGazette)
-	mux.HandleFunc("/api/gazette/edition", a.handleGazetteEdition)
 	mux.HandleFunc("/api/highscores", a.handleHighScores)
 	mux.HandleFunc("/api/help", a.handleHelp)
 	mux.HandleFunc("/api/saves", a.handleSaves)
@@ -952,29 +939,9 @@ func (a *WebAPI) handleGenerate(w http.ResponseWriter, r *http.Request) {
 		}
 		return
 	}
-	a.recordDream(req.Account, result)
 	writeJSON(w, struct {
 		World string `json:"world"`
 	}{World: result.Name})
-}
-
-// recordDream files a finished dream in the Gazette's ledger (M34.1).
-//
-// It lives here rather than in finishGenerationJob because that function is the
-// one site in this path that has the RESULT but not the account that asked for
-// it: the job carries status and world, and GenerationRequest carries who. A
-// dream that produced no world — a failure, or a salvage that named nothing —
-// is not news, and the ledger's own admission would refuse it anyway.
-//
-// The synchronous path calls this directly, because a request that answers with
-// a world has no job to record against. Every asynchronous path goes through
-// recordJobDream, which is the same call with the job's once-only guard in
-// front of it (M34.1a).
-func (a *WebAPI) recordDream(account AuthenticatedAccount, result GenerationResult) {
-	if a == nil || a.Server == nil || result.Name == "" {
-		return
-	}
-	a.Server.recordGazette(GazetteKindDream, result.Name, account.ID)
 }
 
 // generationClientKey names the caller that the per-client generation rate
@@ -1022,34 +989,6 @@ func (a *WebAPI) runGenerationJob(id string, generator *GenerationService, req G
 	req.Progress = a.jobProgress(id)
 	result, err := generator.GenerateRequest(context.Background(), req)
 	a.finishGenerationJob(id, generator, result, err)
-	if err == nil {
-		a.recordJobDream(id, result)
-	}
-}
-
-// recordJobDream files an async job's world in the Gazette at most once, no
-// matter which of this job's paths finished it (M34.1a). Both callers —
-// runGenerationJob and the retry goroutine — call it unconditionally on
-// success; the once-only decision lives here rather than at either call site,
-// so a third path that finishes a job cannot be the one that forgets, or the
-// one that prints the same world twice.
-func (a *WebAPI) recordJobDream(id string, result GenerationResult) {
-	if a == nil || result.Name == "" {
-		// A generation that produced no world is not news, and it must not
-		// spend the job's one recording either: a later retry may still name a
-		// world.
-		return
-	}
-	a.generationMu.Lock()
-	job := a.generationJobs[id]
-	if job == nil || job.recorded {
-		a.generationMu.Unlock()
-		return
-	}
-	job.recorded = true
-	account := job.account
-	a.generationMu.Unlock()
-	a.recordDream(account, result)
 }
 
 func (a *WebAPI) jobProgress(id string) func(GenerationProgress) {
@@ -1167,15 +1106,6 @@ func (a *WebAPI) handleGenerationRetry(w http.ResponseWriter, r *http.Request, i
 	go func() {
 		result, err := generator.retryAdmitted(context.Background(), resume, a.jobProgress(id))
 		a.finishGenerationJob(id, generator, result, err)
-		if err == nil {
-			// M34.1a: a retry that rescues a job which never landed a world is
-			// the moment that world became news. A retry that repaints a
-			// salvaged job's stub rooms is not — that world was already news
-			// when it was salvaged — and recordJobDream is what tells the two
-			// apart, so this call is the same unconditional one runGenerationJob
-			// makes.
-			a.recordJobDream(id, result)
-		}
 	}()
 	w.WriteHeader(http.StatusAccepted)
 	writeJSON(w, struct {

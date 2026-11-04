@@ -1479,39 +1479,6 @@
       "notes": "task-claim row; behavioral parity carried by the element/oop/protocol/input/service rows this task touched; reconciled at M16.20 M34.4 reconciliation (2026-08-19): the named tests certify the gates carry an explicit -timeout, that a timeout panic is reported as a wall clock rather than a red suite, and that run.json records it."
     },
     {
-      "id": "task.M34.1",
-      "dimension": "task",
-      "subject": "Completed task M34.1 — its DoD still holds",
-      "contract": "E",
-      "authority": "TASKS.md M34.1",
-      "parity": "exact",
-      "test": "TestM341LedgerAggregatesByKindSubjectAndAccount,TestM341BoundsRefuseRowsAndRetentionEvictsDays,TestM341FlushIsTheOnlyWriterAndReloadsExactly,TestM341ConsentNamesOnlyProfilesThatAskedToBeNamed,TestM341LedgerFileCarriesNoName,TestM341GazetteRouteNamesByConsentAndLeaksNoAccountID,TestM341RecordingMovesNoStateHash",
-      "status": "pass",
-      "notes": "task-claim row; behavioral parity carried by the element/oop/protocol/input/service rows this task touched; reconciled at M16.20 M34.4 reconciliation (2026-08-19): the named tests certify this task's DoD; behavioural parity is additionally carried by the element/oop/protocol/input/service rows this task touched."
-    },
-    {
-      "id": "task.M34.1a",
-      "dimension": "task",
-      "subject": "Completed task M34.1a — its DoD still holds",
-      "contract": "E",
-      "authority": "TASKS.md M34.1a",
-      "parity": "exact",
-      "test": "TestM341ARetryThatRescuesAFailedJobIsNewsExactlyOnce,TestM341ARepaintOfASalvagedDreamIsNotNewsAgain,TestM341AShutdownFlushesTheLedger",
-      "status": "pass",
-      "notes": "task-claim row; behavioral parity carried by the element/oop/protocol/input/service rows this task touched; reconciled at M16.20 M34.4 reconciliation (2026-08-19): the named tests certify this task's DoD; behavioural parity is additionally carried by the element/oop/protocol/input/service rows this task touched."
-    },
-    {
-      "id": "task.M34.2",
-      "dimension": "task",
-      "subject": "Completed task M34.2 — its DoD still holds",
-      "contract": "E",
-      "authority": "TASKS.md M34.2",
-      "parity": "exact",
-      "test": "TestM342ServerWrittenEditionCoversEveryDayShapeDeterministically,TestM342AuthorPromptCarriesTokensAndNeitherNameNorAccountKey,TestM342StoredEditionCarriesNoName,TestM342NameIsSubstitutedAtReadTime,TestM342ARefusedEditionFallsBackAndDoesNotPoisonTheCache,TestM342SpendIsBoundedFourWays,TestM342EditionRouteServesAPaperAndLeaksNoAccountKey",
-      "status": "pass",
-      "notes": "task-claim row; behavioral parity carried by the element/oop/protocol/input/service rows this task touched; reconciled at M16.20 M34.4 reconciliation (2026-08-19): the named tests certify this task's DoD; behavioural parity is additionally carried by the element/oop/protocol/input/service rows this task touched."
-    },
-    {
       "id": "task.M34.3a",
       "dimension": "task",
       "subject": "Completed task M34.3a — its DoD still holds",
@@ -1639,7 +1606,7 @@
       "contract": "E",
       "authority": "TASKS.md M36.16",
       "parity": "exact",
-      "test": "TestM3616UnsolicitedScrollReplyIsIgnored,TestM3616ForgedScrollLabelIsIgnored,TestM3616ForgedDismissalLeavesTheScroll,TestM3616BoardWideScrollIsAnsweredByEveryReader,TestM3616TouchedScrollIsOwedOnlyToItsReader,TestM3616NoticeIsAnsweredByItsDismissal,TestScrollReplyRunsWhileTheReaderIsStillWalkingIn",
+      "test": "TestM3616UnsolicitedScrollReplyIsIgnored,TestM3616ForgedScrollLabelIsIgnored,TestM3616ForgedDismissalLeavesTheScroll,TestM3616BoardWideScrollIsAnsweredByEveryReader,TestM3616TouchedScrollIsOwedOnlyToItsReader,TestScrollReplyRunsWhileTheReaderIsStillWalkingIn",
       "status": "pass",
       "notes": "task-claim row; RoomManager.SubmitScrollReply drops a reply unless it answers a scroll this player was shown: openScrolls records the object's stat and its offered hyperlinks (read as hyperlinkOf and TextWindowSelect read them, !-FILE excluded) when a touched scroll or a notice opens, and for every player a board-wide scroll is delivered to. A match is consumed once; an empty label dismisses any open scroll from the stat; a board change clears the list. A dropped reply is not recorded and is not a dismissal, because a dismissal removes a Scroll element. Failed before the fix: an unsolicited or forged label ran the object's :secret, a bystander's reply bought from the reader's scroll, a forged dismissal deleted a Scroll from the board, and a reply could be replayed. M36.16 (2026-11-03)."
     },
@@ -1862,6 +1829,28 @@
       "test": "TestM369PlayerSurvivesALowerStatsRemoval,TestM369PausedPlayerSurvivesALowerStatsRemoval,TestM369PlayerAttackerAboveStatZeroTicksOnce",
       "status": "pass",
       "notes": "task-claim row; a player's tick re-resolves its stat by *PlayerState identity after a touch or shot that can remove a lower stat (refreshPlayerStat, and the paused branch), and BoardAttack steps CurrentStatTicked back only over a non-player attacker. Failed before the fix: an energized player at stat 2 killing a lion at stat 1 left a statless E_PLAYER tile and froze, a paused one skipped its fall-through tick, and a player at stat 1 killing a lion above it moved twice and drained two energizer ticks. Identical for stat 0; no replay hash moved. M36.9 (2026-11-02)."
+    },
+    {
+      "id": "task.M37.2",
+      "dimension": "task",
+      "subject": "Completed task M37.2 — its DoD still holds",
+      "contract": "E",
+      "authority": "TASKS.md M37.2",
+      "parity": "exact",
+      "status": "unverified",
+      "assignedTask": "M16.20",
+      "notes": "task-claim row; behavioral parity carried by the element/oop/protocol/input/service rows this task touched; reconciled at M16.20"
+    },
+    {
+      "id": "task.M37.4",
+      "dimension": "task",
+      "subject": "Completed task M37.4 — its DoD still holds",
+      "contract": "E",
+      "authority": "TASKS.md M37.4",
+      "parity": "exact",
+      "status": "unverified",
+      "assignedTask": "M16.20",
+      "notes": "task-claim row; behavioral parity carried by the element/oop/protocol/input/service rows this task touched; reconciled at M16.20"
     },
     {
       "id": "task.M4.0",
@@ -4909,30 +4898,6 @@
       "status": "pass",
       "assignedTask": "M32.1",
       "notes": "M32.1: /api/challenge/<id> resolves a catalogue row (404 for an unlisted id or a deeper path) and /api/challenge/ghost serves the local overlay track of a stored leaderboard row only, refusing an arbitrary recording and a stale definition."
-    },
-    {
-      "id": "route.api.gazette",
-      "dimension": "route",
-      "subject": "HTTP/WS route /api/gazette",
-      "contract": "E",
-      "authority": "web_api.go / websocket_server.go",
-      "parity": "exact",
-      "test": "TestM341GazetteRouteNamesByConsentAndLeaksNoAccountID,TestM341GazetteRouteRefusesBadInputAndSaysWhenItIsUnavailable",
-      "status": "pass",
-      "assignedTask": "M34.1",
-      "notes": "M34.1: the day's ledger as a public projection; GET only, the consent rule applied at read time, and no account key in any marshaled field."
-    },
-    {
-      "id": "route.api.gazette.edition",
-      "dimension": "route",
-      "subject": "HTTP/WS route /api/gazette/edition",
-      "contract": "E",
-      "authority": "web_api.go / websocket_server.go",
-      "parity": "exact",
-      "test": "TestM342EditionRouteServesAPaperAndLeaksNoAccountKey,TestM342ServerWrittenEditionCoversEveryDayShapeDeterministically",
-      "status": "pass",
-      "assignedTask": "M34.2",
-      "notes": "M34.2: the day written up. GET only; serves the cached edition (the author's if one was bought, the server's own otherwise) and kicks a bounded single-flight refresh, so a request never waits on a model. Names are substituted at read time from stored actor tokens; no account key and no token is marshaled."
     },
     {
       "id": "route.api.generate",

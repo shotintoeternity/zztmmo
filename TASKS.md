@@ -526,6 +526,8 @@ M12.23, M17.1–M17.7, M16.0–M16.8a — has fully landed.)
    The owner has decided M37.4 (retire the Gazette), M37.5 (keep accents) and
    M37.6 (write the spec), so those three are ready to take in order. M37.3
    still waits on M37.1.
+   **M37.4 landed 2026-11-04**: the Gazette is retired whole, and M34.1, M34.1a
+   and M34.2 read `[removed 2026-11-04]`.
 
 **Optional / deferred (bottom):**
 - M14.3 — package split — **closed as skipped 2026-08-03**, see NOTES.md
@@ -8005,7 +8007,7 @@ intended follow-ups and are deliberately **not** specced here — what an editio
 should say is a question M34.1's real ledger answers better than this preamble
 can guess.
 
-- [x] **M34.1 — the day's ledger: bounded, consent-filtered, and readable.**
+- [removed 2026-11-04] **M34.1 — the day's ledger: bounded, consent-filtered, and readable.**
   Add a durable `GazetteLedger`: the service's own record of what happened
   today, in the shape an edition can be written from. It is the whole task —
   there is no LLM here, no prose, and no board.
@@ -8089,7 +8091,11 @@ can guess.
   Full record in NOTES.md 2026-08-10. Filed **M34.1a** on its way out: the dream
   hook has one uncovered caller and the ledger is never flushed on shutdown.
 
-- [x] **M34.1a — the dream that was retried is never news, and the paper is not
+  *Removed 2026-11-04 by M37.4* (owner decision: retire the Gazette). The
+  ledger, its flush cadence and every deed hook are gone, so this DoD no longer
+  holds and the box reads `[removed]` rather than `[x]`.
+
+- [removed 2026-11-04] **M34.1a — the dream that was retried is never news, and the paper is not
   filed on the way out.** Two gaps found by reviewing M34.1 after it landed;
   neither is a defect in what it proved, and both are in the same two functions.
 
@@ -8143,7 +8149,9 @@ can guess.
   flush — each reddens exactly the test that claims it), `go test -race ./...`
   green, no client source touched. Full record in NOTES.md 2026-08-10.
 
-- [x] **M34.2 — the edition: the day's ledger written up, in a register the
+  *Removed 2026-11-04 by M37.4* along with the ledger it guarded.
+
+- [removed 2026-11-04] **M34.2 — the edition: the day's ledger written up, in a register the
   board can post.** M34.1 built the ledger and deliberately left this unspecced
   until there was something real to write from. There is now: a day is a list of
   `GazetteItem{Kind, Subject, Name, Count}`, deterministically ordered, bounded,
@@ -8267,6 +8275,11 @@ can guess.
   and for the same reason each time: it now has a real edition to be written
   from, and what a board should show is a question that edition answers better
   than a spec can guess.
+
+  *Removed 2026-11-04 by M37.4* (owner decision: retire the Gazette).
+  `/api/gazette`, `/api/gazette/edition` and the editor are gone. The
+  `callBlocksWithTokens` seam stays in `generation.go` with no caller that
+  passes a smaller ceiling.
 
 - [removed 2026-08-11] **M34.3 — the board: the paper posted where people loiter.** M34.1 built
   the ledger and M34.2 wrote the day up; both deliberately left this unspecced
@@ -9192,7 +9205,7 @@ console, or a product decision. Each says which.
   DoD: the decision is recorded, and then an export and a delete path exist
   with a test each.
 
-- [ ] **M37.4 — the Gazette has a reader in the game again.** *(owner decision:
+- [x] **M37.4 — the Gazette has a reader in the game again.** *(owner decision:
   where it lives)* `/api/gazette` and `/api/gazette/edition` still write and serve
   the day's paper (M34.1, M34.2), but since the first-party worlds were removed
   (2026-08-11) nothing in the game opens it. `postNotice` is unreachable in
@@ -9205,6 +9218,26 @@ console, or a product decision. Each says which.
   *Owner decision 2026-11-03: retire it.* Remove the Gazette, meaning
   `/api/gazette`, `/api/gazette/edition`, the dead `postNotice` path and its
   rows. Ready to take.
+
+  *Done 2026-11-04.* The whole Gazette is gone, not only its two routes. That
+  covers the ledger (`gazette.go`), the editor (`gazette_edition.go`), the routes
+  (`gazette_api.go`), the notice path (`gazette_board.go`, plus `NoticeTiles`,
+  `RoomNotice`, `DrainNotices` and the ScrollEvent branch in `room_manager.go`),
+  the deed plumbing (`RoomNotable`, `DrainNotables` and the DeathEvent notable),
+  every `recordGazette` caller (dreams, challenge rows, named high scores), the
+  flush cadence and its shutdown flush, and the `cmd/zzt-server` wiring. The
+  DeathEvent still reaches the wire through the step's default arm, so the
+  client's death event and M23.1's hint are unchanged. Kept: `TransitGates`
+  (engine capability, as decided 2026-08-11), `WorldInstance.Private` (autosave
+  still reads it), and `callBlocksWithTokens`. Tests went with the code:
+  `m34_1`, `m34_1a`, `m34_2`, `gazette_board_test.go`, and
+  `TestM3616NoticeIsAnsweredByItsDismissal`. `m36_14_test.go` builds its own
+  server now instead of borrowing `m341API`. M34.1, M34.1a and M34.2 read
+  `[removed 2026-11-04]`, and their three task rows and the two
+  `route.api.gazette*` rows are out of the manifest. Nothing under `engine/web`
+  ever called either route, so no browser journey reaches what changed. A
+  `gazette.json` left in a host's `saves/` is now an orphan file that nothing
+  reads.
 
 - [ ] **M37.5 — accented names keep their accents.** *(owner decision: reverses
   the M36.3/M36.6 trade)* Player names, chat and high-score names are folded to

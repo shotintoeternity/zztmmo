@@ -1103,8 +1103,8 @@ func (g *GenerationService) callBlocks(ctx context.Context, system []systemBlock
 
 // callBlocksWithTokens is callBlocks with the reply ceiling named by the
 // caller. Every generation path wants g.maxTokens, which is sized for painting
-// a board; the Gazette's edition (M34.2) is a headline and six short lines and
-// says so instead of billing a board's budget for a paragraph.
+// a board. The Gazette's edition (M34.2) was the one caller that asked for
+// less; it was retired in M37.4, and the seam was left in place.
 func (g *GenerationService) callBlocksWithTokens(ctx context.Context, system []systemBlock, user string, maxTokens int) (string, error) {
 	if maxTokens <= 0 {
 		maxTokens = g.maxTokens

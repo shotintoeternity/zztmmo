@@ -343,33 +343,6 @@ func TestM3616TouchedScrollIsOwedOnlyToItsReader(t *testing.T) {
 	}
 }
 
-// A Gazette notice (M34.3) is a scroll the server writes in place of the
-// stand's own, and the client dismisses it like any other. The gate must owe the
-// reader that dismissal, or the reader stays frozen; it offers no hyperlink, so
-// the stand's own labels are not owed.
-func TestM3616NoticeIsAnsweredByItsDismissal(t *testing.T) {
-	tile := gazetteStandTile
-	rm := NewRoomManager(gazetteStandWorld(t))
-	rm.NoticeTiles = map[TransitGateKey]string{tile: GazetteNoticeKind}
-	player := rm.JoinPlayer(tile.BoardID, tile.X, tile.Y-1)
-
-	gazetteStepUntilScroll(rm, player)
-	notices := rm.DrainNotices()
-	if len(notices) != 1 {
-		t.Fatalf("notices = %+v, want one", notices)
-	}
-	stand := notices[0].ObjectStatID
-	if rm.SubmitScrollReply(player, stand, "touch") {
-		t.Error("a label was accepted on a server-written notice, which offers none")
-	}
-	if !rm.SubmitScrollReply(player, stand, "") {
-		t.Fatal("the notice's dismissal was refused")
-	}
-	if rm.players[player].scrollOpen {
-		t.Error("the reader is still frozen after dismissing the notice")
-	}
-}
-
 // The bound on open scrolls must never drop the one that froze the reader. An
 // object that talks to the board every tick fills the list behind it; if the
 // touched scroll were evicted, its dismissal would be refused and the reader

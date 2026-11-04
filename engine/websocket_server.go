@@ -115,14 +115,6 @@ type WebSocketServer struct {
 	// loaded. Both are guarded by s.mu.
 	restoreAutosaves  bool
 	autosavedThisBoot map[string]bool
-	// GazetteFlushEveryTicks, when >0, writes the Gazette ledger every this many
-	// ticks from the tick loop (M34.1). It sits beside AutosaveEveryTicks on
-	// purpose: Record is memory-only, and this is the one place the ledger is
-	// allowed to cost a tick a disk write. Zero disables the cadence; Flush is
-	// still callable directly, which is what tests use. Nothing calls it on
-	// shutdown yet, so a restart costs up to one cadence of counts — filed as
-	// M34.1a rather than left as a comment that says otherwise.
-	GazetteFlushEveryTicks int
 	// InstanceEvictIdleTicks, when >0, evicts non-default instances after this
 	// many idle ticks. NewWebSocketServer sets the production default; tests may
 	// lower it to make the rule observable without sleeping.
@@ -212,21 +204,7 @@ type WebSocketServer struct {
 	ChatDB              ChatDatabase
 	Activity            *WorldActivityStore
 	Auth                *AuthService
-	// Gazette is the day's ledger (M34.1). Nil is a supported configuration —
-	// every record path is nil-safe — and the default is memory-only until
-	// cmd/zzt-server points it at the saves directory.
-	Gazette *GazetteLedger
-	// gazetteTicks counts toward GazetteFlushEveryTicks. Touched only on the
-	// tick goroutine, like autosaveTicks.
-	gazetteTicks int
-	// gazetteEditor is the ONE editor this process writes editions with
-	// (M34.3). It lives here rather than on WebAPI because the lobby's
-	// newsstand and the HTTP route must share a cache file and — more to the
-	// point — a spend budget: two editors would quietly buy two days' worth of
-	// author calls a day.
-	gazetteEditor   *GazetteEditor
-	gazetteEditorMu sync.Mutex
-	metrics         *serverMetrics
+	metrics             *serverMetrics
 }
 
 type WorldInstance struct {
@@ -278,9 +256,9 @@ type WorldInstance struct {
 	// Private marks an instance nobody chose to make public: today that is an
 	// editor test-play copy (M10.4). It exists because that copy is the one
 	// private instance kind NOT excluded by construction — randomTestPlayWorldName
-	// mints TP+6 hex, which sanitizes as cleanly as TOWN does, so without a mark
-	// a play-test death would be printed in the Gazette as news about a world
-	// nobody can visit (M34.1).
+	// mints TP+6 hex, which sanitizes as cleanly as TOWN does. The mark keeps
+	// the copy out of autosave. (It was added for the Gazette, M34.1, which
+	// M37.4 retired.)
 	Private bool
 	// Challenge is set only on a challenge run's instance (M32.1). Its presence
 	// is what makes this instance measured, always-recorded, and closed to the
@@ -538,9 +516,6 @@ func NewWebSocketServer(world TWorld, defaultBoard int16) *WebSocketServer {
 		Audit:    NewModerationAudit(""),
 		metrics:  newServerMetrics(time.Now()),
 	}
-	// Memory-only for the same reason (M34.1), and on the server's own clock
-	// seam so a test that moves Now moves the day the paper is filed under.
-	s.Gazette, _ = NewGazetteLedger("", s.clockNow)
 	s.DefaultInstance = inst
 	s.Instances[name] = inst
 	return s
@@ -555,12 +530,6 @@ func (s *WebSocketServer) Run(ctx context.Context) {
 		case <-ctx.Done():
 			s.CloseRecorders()
 			s.CloseReplays()
-			// M34.1a: the day's paper goes out with the recordings. Thirty
-			// seconds of counts is what a CRASH costs (the trade
-			// DefaultGazetteFlushSeconds documents); a planned restart should
-			// cost nothing, and this branch is exactly what cmd/zzt-server's
-			// signal goroutine fires when it cancels the tick context.
-			s.flushGazetteNow()
 			return
 		case <-ticker.C:
 			s.Tick(ctx)
@@ -613,7 +582,6 @@ func (s *WebSocketServer) Tick(ctx context.Context) {
 
 	s.maybeAutosave()
 	s.autosaveDeparted()
-	s.maybeFlushGazette()
 	s.evictIdleInstances()
 }
 
@@ -629,45 +597,6 @@ func (s *WebSocketServer) maybeAutosave() {
 	}
 	s.autosaveTicks = 0
 	s.Autosave()
-}
-
-// maybeFlushGazette writes the day's ledger on its own cadence. Recording a
-// death must never wait on a file (M16.14e), so every Record is memory-only and
-// this is where the writing happens — beside maybeAutosave, on the goroutine
-// this server already decided may pay for disk.
-func (s *WebSocketServer) maybeFlushGazette() {
-	if s.GazetteFlushEveryTicks <= 0 || s.Gazette == nil {
-		return
-	}
-	s.gazetteTicks++
-	if s.gazetteTicks < s.GazetteFlushEveryTicks {
-		return
-	}
-	s.gazetteTicks = 0
-	s.flushGazetteNow()
-}
-
-// flushGazetteNow writes the ledger regardless of where it is in its cadence.
-// The cadence says how often a RUNNING server pays for the file; whether there
-// is a file at all is the ledger's own path, which is why a shutdown flush does
-// not consult GazetteFlushEveryTicks. A memory-only ledger still writes nothing.
-func (s *WebSocketServer) flushGazetteNow() {
-	if s == nil || s.Gazette == nil {
-		return
-	}
-	if err := s.Gazette.Flush(); err != nil {
-		log.Printf("zztgo: gazette ledger not written: %v", err)
-	}
-}
-
-// recordGazette files one happening against the world identity it happened in.
-// Nil ledger, guest account and refused subject are all ordinary outcomes here:
-// the point of a single funnel is that no caller has to know which.
-func (s *WebSocketServer) recordGazette(kind, subject, accountID string) {
-	if s == nil || s.Gazette == nil {
-		return
-	}
-	_ = s.Gazette.Record(GazetteHappening{Kind: kind, Subject: subject, AccountKey: accountID})
 }
 
 func (s *WebSocketServer) evictIdleInstances() {
@@ -795,31 +724,6 @@ func (inst *WorldInstance) Tick(ctx context.Context, s *WebSocketServer) {
 	}
 	watched := inst.spectatorMessagesLocked(boardDiffs, watchers)
 	transits = append(transits, inst.RoomManager.DrainWorldTransits()...)
-	// M34.3: touches of a server-owned notice tile. Drained here because the
-	// manager must not accumulate them, answered after the unlock and off this
-	// goroutine because composing the day's paper reads the preferences store
-	// once per named account.
-	notices := inst.RoomManager.DrainNotices()
-	// M34.1: the deeds this step produced, resolved to accounts here while the
-	// clients map is in hand and filed after the unlock. A challenge run and an
-	// editor test-play copy are instances nobody chose to make public, so they
-	// are drained (the manager must not accumulate) and dropped.
-	var notables []GazetteHappening
-	if inst.Challenge == nil && !inst.Private {
-		for _, notable := range inst.RoomManager.DrainNotables() {
-			accountID := ""
-			if client := inst.Clients[notable.PlayerID]; client != nil {
-				accountID = client.accountID
-			}
-			notables = append(notables, GazetteHappening{
-				Kind:       notable.Kind,
-				Subject:    inst.Name,
-				AccountKey: accountID,
-			})
-		}
-	} else {
-		inst.RoomManager.DrainNotables()
-	}
 	// M32.1: a challenge run counts its own tick and is asked whether the goal
 	// is met, under the same lock the step just ran beneath — so the count can
 	// never drift from the simulation it measures. The completion itself is
@@ -839,12 +743,6 @@ func (inst *WorldInstance) Tick(ctx context.Context, s *WebSocketServer) {
 	}
 	for _, transit := range transits {
 		s.completeWorldTransit(ctx, inst, transit)
-	}
-	for _, notice := range notices {
-		go s.postNotice(ctx, inst, notice)
-	}
-	for _, notable := range notables {
-		s.recordGazette(notable.Kind, notable.Subject, notable.AccountKey)
 	}
 	if completion != nil {
 		result := s.finishChallengeRun(inst, completion)
@@ -2489,16 +2387,7 @@ func (s *WebSocketServer) submitHighScoreNameInInstance(ctx context.Context, ins
 		Title: CP437String("High scores for " + inst.RoomManager.WorldName()),
 		Lines: inst.RoomManager.HighScoreLines(0, 0),
 	}}
-	accountID := client.accountID
-	worldName := inst.Name
-	newsworthy := inst.Challenge == nil && !inst.Private
 	inst.mu.Unlock()
-
-	// M34.1: a score is news the moment the player puts a name on it. Filed
-	// after the unlock, like every other deed.
-	if newsworthy {
-		s.recordGazette(GazetteKindScore, worldName, accountID)
-	}
 
 	_ = client.write(ctx, message)
 }
@@ -3273,7 +3162,7 @@ func (s *WebSocketServer) HostGeneratedWorld(name string, world TWorld) error {
 
 // hostGeneratedWorld carries the private mark into the instance's construction
 // rather than stamping it afterwards, so there is no window in which a
-// test-play copy exists un-marked and could tick a death into the Gazette.
+// test-play copy exists un-marked.
 func (s *WebSocketServer) hostGeneratedWorld(name string, world TWorld, private bool) error {
 	safe, err := SanitizeSaveName(name)
 	if err != nil {
