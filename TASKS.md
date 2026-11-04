@@ -533,6 +533,11 @@ M12.23, M17.1–M17.7, M16.0–M16.8a — has fully landed.)
    **M37.6 landed 2026-11-04**: the TAS workbench is specced as **M38**. Its
    first box, M38.0, is four owner decisions, and no M38 task opens until they
    are answered.
+13. **M39 — the touch ☰ menu (filed 2026-11-04, owner request).** Save, Quit,
+   Help and the 3D controls for phones (M39.1), then the editor's commands
+   (M39.2). Ranked above M38, which waits on M38.0.
+   **M39.1 landed 2026-11-04**: ☰ in play mode opens Save, Help, Quit, the
+   3D toggle and, in 3D, Eye level / Step back and Ghost. M39.2 is next.
 
 **Optional / deferred (bottom):**
 - M14.3 — package split — **closed as skipped 2026-08-03**, see NOTES.md
@@ -9529,6 +9534,63 @@ challenge leaderboard, and a replay link on every row that anyone can watch.
   was assisted. The racing picker follows M38.0.4. DoD: a browser journey from
   the landing to an assisted replay, the co-op cutline green (CUTLINE.md), and
   the whole `make browser` family.
+
+## M39 — More of the game behind a tap: a ☰ menu for touch players
+
+Filed 2026-11-04 at the owner's request ("we need to figure out a way for the
+Safari client to allow more features with buttons"). On a phone the only keys
+are the touch bar's (`touch_controls.ts`), and the ⌨ button raises the soft
+keyboard only inside a text window, so every letter command without a button
+is out of reach. Play mode has no Save, Quit or Help, the 3D view cannot be
+switched on, stood up in or ghosted out of, and the editor has only the pad
+and Enter.
+
+**Owner decisions, 2026-11-04.**
+- **What gets buttons:** Save / Quit / Help, the 3D view controls, and the
+  editor's commands ("we can use a menu of buttons for the editor if we need
+  to"). Watch and replay controls (Next, Pause, Restart, Postcard) were offered
+  and not chosen.
+- **Where they go:** a ☰ More button opens a menu of the less-used commands,
+  rather than tappable sidebar text or more buttons on the bar. The bar
+  already wraps to three rows on a portrait iPhone (about 150px), so the bar
+  gains one button and the menu holds the rest.
+
+**Boundaries.**
+1. **The menu is not in the bar.** It is a separate panel above the bar, so
+   `--touch-bar-h` measures the bar alone and opening the menu never moves
+   the board.
+2. **A command is a command, not a letter.** In the 3D view S is "walk back"
+   (eye level) or "look down" (orbit), so a Save row that sent `KeyS` would
+   walk the player instead of saving. Save, Quit and Help therefore send the
+   command byte directly (`sendKey`), which is what `commandKey` resolves to
+   on the text screen. This also holds under a remapped binding (M31). Rows
+   for client-side keys (`3`, `F`, `G`) send the key exactly as before.
+3. **A row is only on screen where it means something** (the bar's rule).
+   The 3D rows other than the toggle show only while the 3D view is on, and
+   their labels say what a tap will do now ("Eye level" / "Step back").
+4. **The menu closes on any row tap and on any mode change**, so a menu left
+   open cannot outlive the screen it was opened on.
+
+- [x] **M39.1 — the play-mode ☰ menu.** A `more` button on the bar in play
+  mode toggles a panel with Save, Help, Quit, 3D view, Eye level / Step back,
+  and Ghost. `TouchControlHandlers` gains `command(action)` for the three
+  command rows. `setMode` takes the 3D state, so the rows follow it. DoD: the
+  node suite asserts the rows per mode and per 3D state, that each row
+  dispatches the right command or key, that the panel is not in the bar, and
+  that a row tap and a mode change both close it. The platform matrix's
+  play-mode control list gains `more`. `make browser` passes.
+
+- [ ] **M39.2 — the editor's ☰ menu.** The same panel in editor mode, holding
+  the editor's key commands (`EditorLoop`, `editor.go:604-806`): Space (plot),
+  Tab (draw mode), P (pattern), C (color), F1–F3 (element menus), F4 (text),
+  X (fill), Enter (stats), B (boards), I (info), L (load), S (save), Z
+  (clear), N (new), H (help), Q (quit). First read how the editor's client
+  path turns F-keys, Tab and Space into the server's key byte (`keys.ts`,
+  `main.ts`'s editor branch), because the editor's switch reads
+  `UpCase(InputKeyPressed)` and `KEY_F1`–`KEY_F4`. Decide whether the editor
+  needs a Shift-held "draw while moving" toggle. DoD as M39.1, plus a browser
+  journey that opens the editor on a touch profile and places a tile through
+  the menu.
 
 ## M14 — Rearchitecting for the service ZZTMMO is becoming
 

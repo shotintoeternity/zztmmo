@@ -30,7 +30,7 @@ const output = await build({
   write: false,
 });
 const source = Buffer.from(output.outputFiles[0].contents).toString("base64");
-const { createTouchControls, TOUCH_BUTTONS } = await import(`data:text/javascript;base64,${source}`);
+const { createTouchControls, TOUCH_BUTTONS, TOUCH_MENU_ROWS } = await import(`data:text/javascript;base64,${source}`);
 
 // ---------------------------------------------------------------------------
 // A DOM small enough to read
@@ -72,15 +72,23 @@ assert.equal(createTouchControls(host, { key() {}, toggleKeyboard() {} }, 0), nu
 assert.deepEqual(body.children, [], "a skipped bar must not be appended to the page");
 
 const keyCalls = [];
+const commandCalls = [];
 let kbToggles = 0;
 const controls = createTouchControls(host, {
   key: (down, code, key) => keyCalls.push({ down, code, key }),
   toggleKeyboard: () => { kbToggles += 1; },
+  command: (action) => commandCalls.push(action),
 }, 1);
 assert.notEqual(controls, null);
 
 const bar = controls.element;
-assert.equal(body.children.length, 1, "the bar is appended once");
+// M39.1: the bar and the ☰ menu's panel are two siblings. The panel must not be
+// inside the bar: the bar's measured height is the board's reservation, and an
+// open menu would otherwise push the board up.
+assert.equal(body.children.length, 2, "the bar and the menu are appended once each");
+assert.equal(body.children[0], bar);
+assert.equal(body.children[1], controls.menu);
+assert.ok(!bar.children.includes(controls.menu), "the menu is not inside the bar");
 const buttons = bar.children.flatMap((group) => group.children);
 const byLabel = (label) => {
   const found = buttons.find((b) => b.textContent === label);
@@ -88,9 +96,11 @@ const byLabel = (label) => {
   return found;
 };
 assert.equal(buttons.length, TOUCH_BUTTONS.length);
+const menuRows = controls.menu.children;
+assert.equal(menuRows.length, TOUCH_MENU_ROWS.length);
 // A control must never take focus from the hidden text input: that is what keeps
 // the soft keyboard up when a control is tapped (M15.1's seam).
-for (const button of buttons) {
+for (const button of [...buttons, ...menuRows]) {
   assert.equal(button.tabIndex, -1, `${button.textContent} is focusable`);
 }
 
@@ -102,6 +112,8 @@ for (const button of buttons) {
 // buttons by that rather than by a glyph, and the ids must therefore be unique
 // and complete.
 const ids = TOUCH_BUTTONS.map((spec) => spec.id);
+const rowIds = TOUCH_MENU_ROWS.map((spec) => spec.id);
+assert.equal(new Set([...ids, ...rowIds]).size, ids.length + rowIds.length, "a menu row reuses a bar control's data-touch id");
 assert.equal(new Set(ids).size, ids.length, `duplicate data-touch id in ${JSON.stringify(ids)}`);
 for (const button of buttons) {
   assert.ok(button.attributes["data-touch"], `${button.textContent} carries no data-touch id`);
@@ -237,7 +249,7 @@ const DPAD = ["▲", "◄", "►", "▼"];
 assert.deepEqual(visible(), [...DPAD, "⌨", "⏎", "Color", "World", "Play"], "the bar starts in title mode");
 
 controls.setMode("playing");
-assert.deepEqual(visible(), [...DPAD, "⌨", "⏎", "Chat", "Players", "Pause", "Torch", "Fire"]);
+assert.deepEqual(visible(), [...DPAD, "⌨", "⏎", "Chat", "Players", "Pause", "Torch", "Fire", "☰"]);
 
 // The whole point of the gate: behind an open window there is no Fire to tap,
 // so a space cannot land in the game instead of the text buffer — and no Torch
@@ -280,5 +292,94 @@ for (const mode of ["title", "playing", "editor", "modal", "prompt"]) {
     assert.equal(byLabel(label).hidden, false, `the ${label} pad key must exist in ${mode} mode`);
   }
 }
+
+// ---------------------------------------------------------------------------
+// M39.1 — the ☰ menu
+// ---------------------------------------------------------------------------
+
+const more = byLabel("☰");
+const menu = controls.menu;
+const row = (id) => {
+  const found = menuRows.find((b) => b.attributes["data-touch"] === id);
+  assert.ok(found, `no menu row ${id}`);
+  return found;
+};
+const visibleRows = () => menuRows.filter((b) => !b.hidden).map((b) => b.textContent);
+const openMenu = () => {
+  if (menu.hidden) more.dispatch("pointerdown");
+  assert.equal(menu.hidden, false, "☰ must open the menu");
+};
+
+controls.setMode("playing");
+assert.equal(menu.hidden, true, "the menu starts closed");
+
+// ☰ sends no key: it only opens and closes the panel.
+keyCalls.length = 0;
+assert.equal(more.dispatch("pointerdown").defaultPrevented, true);
+assert.equal(menu.hidden, false);
+assert.equal(more.attributes["data-open"], "true");
+more.dispatch("pointerdown");
+assert.equal(menu.hidden, true, "a second ☰ closes it");
+assert.equal(more.attributes["data-open"], "false");
+assert.deepEqual(keyCalls, [], "☰ must send no key");
+
+// On the text screen there is no 3D view to stand up in or ghost out of, so
+// those rows are not offered; the toggle is, and says where it goes.
+controls.setMode("playing", { view3d: false, firstPerson: false });
+assert.deepEqual(visibleRows(), ["Save", "Help", "Quit", "3D view"]);
+controls.setMode("playing", { view3d: true, firstPerson: false });
+assert.deepEqual(visibleRows(), ["Save", "Help", "Quit", "Text view", "Eye level", "Ghost"]);
+controls.setMode("playing", { view3d: true, firstPerson: true });
+assert.deepEqual(visibleRows(), ["Save", "Help", "Quit", "Text view", "Step back", "Ghost"]);
+
+// Save, Help and Quit are COMMANDS, never letters: in the 3D view the letter S
+// walks the player backwards (eye level) or tilts the camera (orbit), so a
+// Save that pressed KeyS would move instead of saving.
+for (const [id, action] of [["save", "save"], ["help", "help"], ["quit", "quit"]]) {
+  openMenu();
+  keyCalls.length = 0;
+  commandCalls.length = 0;
+  assert.equal(row(id).dispatch("pointerdown").defaultPrevented, true);
+  assert.deepEqual(commandCalls, [action], `${id} must send the ${action} command`);
+  assert.deepEqual(keyCalls, [], `${id} must not press a letter`);
+  assert.equal(menu.hidden, true, `${id} must close the menu`);
+}
+
+// The 3D rows are the keys main.ts already handles before any command lookup.
+for (const [id, code, key] of [["view3d", "Digit3", "3"], ["standup", "KeyF", "f"], ["ghost", "KeyG", "g"]]) {
+  openMenu();
+  keyCalls.length = 0;
+  commandCalls.length = 0;
+  row(id).dispatch("pointerdown");
+  assert.deepEqual(keyCalls, [{ down: true, code, key }, { down: false, code, key }], `${id} must tap ${code}`);
+  assert.deepEqual(commandCalls, []);
+  assert.equal(menu.hidden, true, `${id} must close the menu`);
+}
+
+// Any other control closes it: the player has moved on.
+openMenu();
+byLabel("Torch").dispatch("pointerdown");
+assert.equal(menu.hidden, true, "tapping a bar control closes the menu");
+openMenu();
+byLabel("▲").dispatch("pointerdown");
+byLabel("▲").dispatch("pointerup");
+assert.equal(menu.hidden, true, "the pad closes the menu");
+
+// A mode change closes it, so a menu opened in play cannot float over the
+// window Save or Quit opens — and nothing in it is offered outside play.
+openMenu();
+controls.setMode("prompt");
+assert.equal(menu.hidden, true, "a mode change closes the menu");
+assert.equal(more.hidden, true, "☰ is play mode's");
+for (const m of ["title", "modal", "prompt", "editor", "watching"]) {
+  controls.setMode(m, { view3d: true, firstPerson: true });
+  assert.deepEqual(visibleRows(), [], `no menu row is offered in ${m} mode`);
+}
+
+// Re-asserting the same mode (drawScreen does it every frame) must NOT close it.
+controls.setMode("playing");
+openMenu();
+controls.setMode("playing");
+assert.equal(menu.hidden, false, "a redraw in the same mode leaves the menu open");
 
 console.log("touch_controls.test.mjs: all assertions passed");

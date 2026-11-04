@@ -37,6 +37,12 @@
 // controls are in it: play mode's seven wrap to three rows on a 390px portrait
 // phone (a 150px bar, against 96px for the two the title screen needs) and stay
 // on one at 844px landscape.
+//
+// M39.1 — THE ☰ MENU IS WHERE THE REST OF THE KEYBOARD LIVES. The bar is already
+// three rows tall on a portrait phone, so the less-used commands (Save, Help,
+// Quit, and the 3D view's controls) sit in a panel the `more` button opens. The
+// panel is appended beside the bar, never inside it, so `--touch-bar-h` keeps
+// measuring the bar alone and opening the menu cannot move the board.
 
 export type TouchKeyHandler = (down: boolean, code: string, key: string) => void;
 
@@ -46,7 +52,19 @@ export type TouchControlHandlers = {
   key: TouchKeyHandler;
   // Raise the soft keyboard if it is down, dismiss it if it is up.
   toggleKeyboard: () => void;
+  // M39.1: send one of ZZT's command bytes as a command, not as a letter. In the
+  // 3D view S is walk-back or look-down, so a Save row that pressed KeyS would
+  // move the player; main.ts answers this with sendKey, the same byte
+  // commandKey resolves the letter to on the text screen.
+  command?: (action: TouchCommand) => void;
 };
+
+export type TouchCommand = "save" | "quit" | "help";
+
+/** What the 3D view is doing, which decides the 3D rows and their labels. */
+export type TouchView = { view3d: boolean; firstPerson: boolean };
+
+const TEXT_VIEW: TouchView = { view3d: false, firstPerson: false };
 
 // What the player is looking at. `modal` wins over the others: an open window
 // owns the keys whichever screen it is drawn over. `prompt` is the one modal told
@@ -82,7 +100,8 @@ type ButtonSpec =
       group: "dpad" | "action";
       modes: readonly TouchControlMode[];
     }
-  | { id: string; label: string; kind: "keyboard"; group: "action"; modes: readonly TouchControlMode[] };
+  | { id: string; label: string; kind: "keyboard"; group: "action"; modes: readonly TouchControlMode[] }
+  | { id: string; label: string; kind: "more"; group: "action"; modes: readonly TouchControlMode[] };
 
 // Data-driven so a test can assert the mapping without a real DOM.
 //
@@ -117,6 +136,9 @@ export const TOUCH_BUTTONS: ButtonSpec[] = [
   // hold: the shoot bit must still be set when the tick that consumes it runs,
   // and holding is also how Space repeats — one shot per tick while ammo lasts.
   { id: "fire", label: "Fire", kind: "key", code: "Space", key: " ", hold: true, group: "action", modes: PLAYING_ONLY },
+  // M39.1: the door to everything the bar has no room for. Last in play mode's
+  // row, after Fire, so the thumb that holds Fire is not the one that reaches it.
+  { id: "more", label: "☰", kind: "more", group: "action", modes: PLAYING_ONLY },
   // M21.5, the way back out. A window a phone can open and not close is worse
   // than one it cannot open: Enter closes a plain window but a picker with a
   // header ignores it (modal.ts requireSelection), and no window closes on the
@@ -134,11 +156,34 @@ export const TOUCH_BUTTONS: ButtonSpec[] = [
   { id: "leave", label: "Leave", kind: "key", code: "Escape", key: "Escape", hold: false, group: "action", modes: WATCHING_ONLY },
 ];
 
+// M39.1: the ☰ menu's rows. A row is a command byte (Save, Help, Quit — see
+// TouchControlHandlers.command) or a key main.ts handles itself before any
+// command lookup (3 toggles the 3D view, F stands up or steps back, G ghosts).
+// `needs3d` rows mean nothing on the text screen, so they are hidden there; the
+// toggle is always offered, and its label says which view a tap gives you.
+type MenuRowSpec = {
+  id: string;
+  label: (view: TouchView) => string;
+  modes: readonly TouchControlMode[];
+  needs3d: boolean;
+} & ({ kind: "command"; command: TouchCommand } | { kind: "key"; code: string; key: string });
+
+export const TOUCH_MENU_ROWS: MenuRowSpec[] = [
+  { id: "save", label: () => "Save", kind: "command", command: "save", modes: PLAYING_ONLY, needs3d: false },
+  { id: "help", label: () => "Help", kind: "command", command: "help", modes: PLAYING_ONLY, needs3d: false },
+  { id: "quit", label: () => "Quit", kind: "command", command: "quit", modes: PLAYING_ONLY, needs3d: false },
+  { id: "view3d", label: (v) => (v.view3d ? "Text view" : "3D view"), kind: "key", code: "Digit3", key: "3", modes: PLAYING_ONLY, needs3d: false },
+  { id: "standup", label: (v) => (v.firstPerson ? "Step back" : "Eye level"), kind: "key", code: "KeyF", key: "f", modes: PLAYING_ONLY, needs3d: true },
+  { id: "ghost", label: () => "Ghost", kind: "key", code: "KeyG", key: "g", modes: PLAYING_ONLY, needs3d: true },
+];
+
 export type TouchControls = {
   /** The bar itself, so callers can toggle visibility later. */
   element: HTMLElement;
+  /** The ☰ menu's panel (M39.1). A sibling of the bar, never inside it. */
+  menu: HTMLElement;
   /** Show exactly the controls that mean something on the current screen. */
-  setMode(mode: TouchControlMode): void;
+  setMode(mode: TouchControlMode, view?: TouchView): void;
 };
 
 /**
@@ -169,6 +214,22 @@ export function createTouchControls(
   const action = host.createElement("div");
   action.className = "touch-actions";
 
+  const menu = host.createElement("div");
+  menu.className = "touch-menu";
+  menu.setAttribute("aria-hidden", "true");
+  menu.hidden = true;
+  let menuOpen = false;
+  let currentMode: TouchControlMode = "title";
+  let currentView: TouchView = TEXT_VIEW;
+  const setMenuOpen = (open: boolean) => {
+    menuOpen = open;
+    menu.hidden = !open;
+    if (moreButton) {
+      moreButton.setAttribute("data-open", open ? "true" : "false");
+    }
+  };
+
+  let moreButton: HTMLElement | null = null;
   const built: { button: HTMLElement; spec: ButtonSpec }[] = [];
   for (const spec of TOUCH_BUTTONS) {
     const button = host.createElement("button") as HTMLButtonElement;
@@ -177,22 +238,69 @@ export function createTouchControls(
     button.className = "touch-btn touch-btn-" + spec.group + labelClass(spec);
     button.setAttribute("data-touch", spec.id);
     button.textContent = spec.label;
-    wireButton(button, spec, handlers);
+    if (spec.kind === "more") {
+      moreButton = button;
+      button.addEventListener("pointerdown", (event: Event) => {
+        event.preventDefault();
+        setMenuOpen(!menuOpen);
+      });
+    } else {
+      wireButton(button, spec, handlers, () => setMenuOpen(false));
+    }
     (spec.group === "dpad" ? dpad : action).appendChild(button);
     built.push({ button, spec });
+  }
+
+  const rows: { button: HTMLElement; spec: MenuRowSpec }[] = [];
+  for (const spec of TOUCH_MENU_ROWS) {
+    const button = host.createElement("button") as HTMLButtonElement;
+    button.type = "button";
+    button.tabIndex = -1;
+    button.className = "touch-btn touch-menu-row";
+    button.setAttribute("data-touch", spec.id);
+    button.textContent = spec.label(TEXT_VIEW);
+    // Close first: a row that opens a window (Save, Quit) changes the mode, and
+    // the menu must already be gone when the window draws.
+    button.addEventListener("pointerdown", (event: Event) => {
+      event.preventDefault();
+      setMenuOpen(false);
+      if (spec.kind === "command") {
+        handlers.command?.(spec.command);
+      } else {
+        handlers.key(true, spec.code, spec.key);
+        handlers.key(false, spec.code, spec.key);
+      }
+    });
+    menu.appendChild(button);
+    rows.push({ button, spec });
   }
 
   bar.appendChild(dpad);
   bar.appendChild(action);
   host.body.appendChild(bar);
+  host.body.appendChild(menu);
 
   const publishHeight = reserveBarHeight(host, bar);
 
   const controls: TouchControls = {
     element: bar,
-    setMode(mode: TouchControlMode) {
+    menu,
+    setMode(mode: TouchControlMode, view: TouchView = TEXT_VIEW) {
+      // A menu opened on one screen does not survive into the next one.
+      if (mode !== currentMode) {
+        setMenuOpen(false);
+      }
+      currentMode = mode;
+      currentView = view;
       for (const { button, spec } of built) {
         button.hidden = spec.modes.indexOf(mode) < 0;
+      }
+      for (const { button, spec } of rows) {
+        button.hidden = spec.modes.indexOf(mode) < 0 || (spec.needs3d && !currentView.view3d);
+        const label = spec.label(currentView);
+        if (button.textContent !== label) {
+          button.textContent = label;
+        }
       }
       // Hiding a control can unwrap the action row, so the reservation is
       // republished here as well as from the observer: a mode change must not
@@ -247,12 +355,19 @@ function labelClass(spec: ButtonSpec): string {
   return spec.id === "fire" ? " touch-btn-fire" : "";
 }
 
-function wireButton(button: HTMLElement, spec: ButtonSpec, handlers: TouchControlHandlers) {
+function wireButton(
+  button: HTMLElement,
+  spec: Exclude<ButtonSpec, { kind: "more" }>,
+  handlers: TouchControlHandlers,
+  closeMenu: () => void,
+) {
   // preventDefault on the press keeps focus on the hidden text input (so the soft
   // keyboard does not drop when a control is tapped) and suppresses the synthetic
   // mouse/click a touch would otherwise generate.
   const press = (event: Event) => {
     event.preventDefault();
+    // Any other control means the player has moved on from the menu.
+    closeMenu();
     if (spec.kind === "keyboard") {
       handlers.toggleKeyboard();
       return;

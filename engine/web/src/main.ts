@@ -41,6 +41,7 @@ import { MobileTextInputBridge } from "./mobile_text_input";
 import { createTouchControls, type TouchControls } from "./touch_controls";
 import { helpFileFor, openHelp } from "./help";
 import {
+  commandByteFor,
   commandKey,
   InputMaskDown,
   InputMaskLeft,
@@ -1362,6 +1363,16 @@ touchControls = createTouchControls(document, {
   },
   toggleKeyboard() {
     mobileTextInput.toggleKeyboard();
+  },
+  // M39.1: the ☰ menu's Save, Help and Quit. Sent as the command byte, exactly
+  // what handleKeyDown's commandKey branch sends for the letter on the text
+  // screen, so the 3D view's S-is-movement rule cannot turn Save into a step.
+  command(action) {
+    if (modal || mode !== "playing") {
+      return;
+    }
+    stopHeldInput();
+    sendKey(commandByteFor(action));
   },
 });
 syncTouchControls();
@@ -3152,7 +3163,13 @@ function setCell(cell: ScreenCell) {
 // A yes/no prompt is its own mode (M21.5): it is the one window that answers to
 // neither Enter nor the pad, so it is where the bar offers Yes and No instead.
 function syncTouchControls() {
-  touchControls?.setMode(modal ? (modal.kind === "yesno" ? "prompt" : "modal") : mode);
+  // The 3D state rides along so the ☰ menu (M39.1) offers the 3D rows only
+  // while the 3D view is on, labelled for what a tap does now.
+  const board3d = view3dOn() && view3d !== null;
+  touchControls?.setMode(modal ? (modal.kind === "yesno" ? "prompt" : "modal") : mode, {
+    view3d: board3d,
+    firstPerson: board3d && view3d!.firstPerson,
+  });
 }
 
 function drawScreen() {

@@ -488,7 +488,7 @@ async function certifyTouchGameplay(page) {
   // absent behind a modal is that Fire is a space.
   assert.deepEqual(
     await visibleControls(page),
-    ["up", "left", "right", "down", "keyboard", "enter", "chat", "players", "pause", "torch", "fire"],
+    ["up", "left", "right", "down", "keyboard", "enter", "chat", "players", "pause", "torch", "fire", "more"],
     "play mode must offer the pad, Enter, the keyboard toggle, Chat, Players, Pause, Torch and Fire — and nothing else",
   );
 
@@ -675,9 +675,25 @@ async function certifyTouchWindows(page) {
  * screen, which nothing after this act needs it not to be.
  */
 async function certifyTouchPrompt(page) {
-  const openPrompt = async (why) => {
-    await page.locator("canvas[data-screen]").focus();
-    await command(page, "KeyQ", "Q".charCodeAt(0));
+  const openPrompt = async (why, byMenu = false) => {
+    if (byMenu) {
+      // M39.1: the ☰ menu's Quit, tapped — the way a phone reaches 'Q' at all.
+      // The menu is a sibling of the bar, so its rows are found by their own
+      // data-touch ids rather than through `control()`.
+      await tapControl(page, "more");
+      const quit = page.locator(`.touch-menu button[data-touch="quit"]`);
+      await quit.waitFor({ state: "visible" });
+      await quit.tap();
+      await step({ await: { key: "Q".charCodeAt(0) } });
+      assert.equal(
+        await page.locator(".touch-menu").isHidden(),
+        true,
+        "tapping a menu row must close the menu",
+      );
+    } else {
+      await page.locator("canvas[data-screen]").focus();
+      await command(page, "KeyQ", "Q".charCodeAt(0));
+    }
     await tickUntilGrid(page, (cells) => hasText(cells, "End this game?"), why);
     const offered = await visibleControls(page);
     assert.deepEqual(
@@ -692,7 +708,7 @@ async function certifyTouchPrompt(page) {
   await waitForGrid(page, (cells) => !hasText(cells, "End this game?"), "the No control to decline the prompt");
   await waitForGrid(page, (cells) => hasText(cells, "Health:"), "the game to still be running after No");
 
-  await openPrompt("Q to raise the end-game prompt a second time");
+  await openPrompt("the ☰ menu's Quit to raise the end-game prompt a second time", true);
   await tapControl(page, "yes");
   // The reply crosses the wire and the room drops the player on a tick, so this
   // waits by TICKING rather than by wall clock — the matrix froze the clock at
@@ -700,7 +716,7 @@ async function certifyTouchPrompt(page) {
   await tickUntilGrid(page, (cells) => hasText(cells, "P  Play"), "the Yes control to end the game", 40);
   observed.touchplay = {
     ...(observed.touchplay || {}),
-    prompt: "the No control declined the end-game prompt and left the game running; the Yes control ended it and returned to the title screen",
+    prompt: "the No control declined the end-game prompt and left the game running; the ☰ menu's Quit raised it again and the Yes control ended it and returned to the title screen",
   };
   note("touch prompt: Yes and No answered a real SidebarPromptYesNo by tap");
 }

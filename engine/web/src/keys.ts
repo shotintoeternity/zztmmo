@@ -49,6 +49,13 @@ const COMMAND_ACTIONS: Record<KeyAction, number> = {
   help: "H".charCodeAt(0),
 };
 
+// commandByteFor is the byte a command action sends, whatever key it is bound
+// to. M39.1's touch menu sends Save/Quit/Help by action rather than by letter,
+// because in the 3D view the letter S is a movement key.
+export function commandByteFor(action: KeyAction): number {
+  return COMMAND_ACTIONS[action] ?? 0;
+}
+
 // The subset of KeyboardEvent this module reads. Keeps it driveable from a test.
 export type KeyLike = {
   code: string;

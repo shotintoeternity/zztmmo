@@ -168,3 +168,31 @@ canvas {
 .touch-controls [hidden] {
   display: none;
 }
+/* M39.1: the ☰ menu. A sibling of the bar, not a child, so --touch-bar-h still
+   measures the bar alone; it sits just above the bar at the right edge, where
+   the thumb that opened it already is. */
+.touch-menu {
+  position: fixed;
+  right: 10px;
+  bottom: calc(var(--touch-bar-h, 0px) + 6px);
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  padding: 6px;
+  z-index: 11;
+  background: rgba(0, 0, 30, 0.85);
+  border: 1px solid rgba(160, 160, 210, 0.55);
+  border-radius: 8px;
+}
+.touch-menu[hidden],
+.touch-menu [hidden] {
+  display: none;
+}
+.touch-menu-row {
+  min-width: 132px;
+  font-size: 15px;
+  text-align: left;
+}
+.touch-controls .touch-btn[data-open="true"] {
+  background: rgba(70, 70, 170, 0.8);
+}
