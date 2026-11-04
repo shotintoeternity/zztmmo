@@ -317,6 +317,26 @@ func certificationBlockers(m *manifest, gates []gateResult, devices *deviceMatri
 	if passNoTest > 0 {
 		blockers = append(blockers, fmt.Sprintf("%d `pass` row(s) name no covering test", passNoTest))
 	}
+	// A certification run is the full plan (M36.27a). -race=false drops the
+	// race gate and -browser=false lets the real-browser suites declare-skip,
+	// and both used to certify: a gate that was never planned could not fail,
+	// and a declared skip is excused. Every gate of plannedGates(true, true)
+	// must be present, and the go test gate must have required the browsers.
+	present := make(map[string]gateResult, len(gates))
+	for _, g := range gates {
+		present[g.Name] = g
+	}
+	for _, want := range plannedGates(true, true) {
+		got, ok := present[want.Name]
+		if !ok {
+			blockers = append(blockers, fmt.Sprintf("clean gate %q was not part of this run (certification needs -race and -browser on)", want.Name))
+			continue
+		}
+		if want.requireBrowser && !got.requireBrowser {
+			blockers = append(blockers, fmt.Sprintf("clean gate %q did not require the real-browser suites (-browser=false), so their skips prove nothing", want.Name))
+		}
+	}
+
 	for _, g := range gates {
 		if g.Skipped {
 			blockers = append(blockers, fmt.Sprintf("clean gate %q was skipped, not run", g.Name))

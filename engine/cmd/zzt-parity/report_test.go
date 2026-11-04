@@ -528,3 +528,30 @@ func TestRunRecordCarriesTheGoTestTimeout(t *testing.T) {
 		t.Fatalf("run record says goTestTimeout=%q, gates were run with %q", rec.GoTestTimeout, goTestTimeout)
 	}
 }
+
+// M36.27a: a run that leaves out the race gate or the real-browser
+// requirement is not a certification run, however green it is.
+func TestOmittedRaceOrBrowserGateBlocksCertification(t *testing.T) {
+	m := &manifest{Rows: []manifestRow{{ID: "a", Dimension: "element", Status: "pass", Test: "TestA"}}}
+	for _, c := range []struct {
+		name          string
+		race, browser bool
+		want          string
+	}{
+		{"-race=false", false, true, "go test -race"},
+		{"-browser=false", true, false, "real-browser"},
+	} {
+		gates := plannedGates(c.race, c.browser)
+		for i := range gates {
+			gates[i].Passed = true
+		}
+		r := buildReport(m, "m", gates, sampleDeviceMatrix(), nil)
+		if r.Certified {
+			t.Errorf("%s: a run without that gate certified", c.name)
+			continue
+		}
+		if !strings.Contains(strings.Join(r.Blockers, "\n"), c.want) {
+			t.Errorf("%s: blockers %v do not name %q", c.name, r.Blockers, c.want)
+		}
+	}
+}
