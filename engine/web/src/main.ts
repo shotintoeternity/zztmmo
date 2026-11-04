@@ -20,6 +20,7 @@
 // Layout constants at the top are ZZT's, not choices: an 80x25 text screen, a
 // 60-column board with a 20-column sidebar, drawn with an 8x14 CP437 font.
 
+import { safeStorage } from "./safe_storage";
 import "./style.css";
 import { drawSidebar as paintSidebar, drawWatchSidebar as paintWatchSidebar, updateSidebar as paintSidebarHud,
   sidebarClearLine,
@@ -811,6 +812,7 @@ const zztSound = new ZztSound();
 // M22.1 adds "watching": a room this browser renders and does not play.
 type Mode = "title" | "playing" | "editor" | "watching";
 let mode: Mode = "title";
+
 // `watching` is the INTENT and `mode` is the screen. They come apart on a
 // reconnect: a dropped socket puts the screen on a notice, and the intent is
 // what makes the retry send another spectate join instead of quietly walking
@@ -905,6 +907,25 @@ const SIGN_READOUT_BG = 0x01;
 // it. Until somebody presses V there is no scene, no rig and no frame loop.
 let view3d: import("./view3d").View3D | null = null;
 let view3dLoading = false;
+
+/**
+ * setMode is the one way the client changes what it is showing (M36.27). The 3D
+ * view's animation loop is started by V during play and was stopped only by V,
+ * so quitting to the title, opening the editor or watching left it running,
+ * its GL canvas still shown over the next screen. Leaving play now stops the
+ * loop, and returning to play restarts it if the player was in 3D: the rig keeps
+ * its mode, so the choice of view survives the trip.
+ */
+function setMode(next: Mode) {
+  if (view3d && view3d.rig.mode === "world") {
+    if (next !== "playing") {
+      view3d.stop();
+    } else if (mode !== "playing") {
+      view3d.start();
+    }
+  }
+  mode = next;
+}
 
 /** True when the world is what the board columns are showing. */
 function view3dOn(): boolean {
@@ -1420,7 +1441,7 @@ function leftTitleDuring(epoch: number): boolean {
 }
 
 async function showTitle() {
-  mode = "title";
+  setMode("title");
   modal = null;
   mobileTextInput.close();
   playerId = 0;
@@ -1560,7 +1581,7 @@ function leaveToTitle() {
   reconnectAttempt = 0;
   // An intentional exit ends the run: forget its resume token so pressing Play
   // again starts a fresh player rather than reclaiming a room we chose to leave.
-  clearResumeToken(window.sessionStorage, worldName);
+  clearResumeToken(safeStorage("sessionStorage"), worldName);
   chatMessages = [];
   currentHintMessage = "";
   if (ws) {
@@ -1619,7 +1640,7 @@ function startWatch(options: { channel?: boolean } = {}) {
   replayStartTick = 0;
   watcherCount = 0;
   reconnectAttempt = 0;
-  mode = "watching";
+  setMode("watching");
   drawWatchSidebar();
   drawScreen();
   connect();
@@ -1642,7 +1663,7 @@ function startReplay(id: string, options: { rememberPath?: boolean; startTick?: 
   replayTick = 0;
   replayStartTick = options.startTick ?? 0;
   reconnectAttempt = 0;
-  mode = "watching";
+  setMode("watching");
   if (options.rememberPath !== false) {
     rememberReplayInPath(id);
   }
@@ -1671,7 +1692,7 @@ async function startWatchLive() {
   replayStartTick = 0;
   watcherCount = 0;
   reconnectAttempt = 0;
-  mode = "watching";
+  setMode("watching");
   watchLiveLabel = "TV tuning";
   drawWatchSidebar();
   drawScreen();
@@ -1753,7 +1774,7 @@ function startEditor() {
   clearScrolls();
   zztSound.setEnabled(false);
   leavingToTitle = false;
-  mode = "editor";
+  setMode("editor");
   editorCursor = { x: 30, y: 12 };
   editorInspect = { x: 30, y: 12, elementId: 0, element: "", character: 32, color: 0x0f, hasStat: false };
   editorBrush = { element: 21, character: 0xdb, color: 0x0e, copied: false };
@@ -1814,7 +1835,7 @@ function closeEditor() {
   // Leaving on purpose ends the membership, so its token must not be presented
   // by the next entry: that would be a browser asking to resume something it
   // chose to leave (M16.14f, and leaveToTitle's clearResumeToken).
-  clearEditorToken(window.sessionStorage, worldName);
+  clearEditorToken(safeStorage("sessionStorage"), worldName);
   if (ws && ws.readyState === WebSocket.OPEN) {
     ws.send(JSON.stringify({ type: MessageTypeEditorExit }));
     ws.close();
@@ -2336,7 +2357,7 @@ function connect() {
     // No board: the server picks its configured default (zzt-server -board). A
     // stored resume token reclaims a dropped run instead of spawning a new
     // player (M13.2); an unknown/expired token is treated as a fresh join.
-    const token = loadResumeToken(window.sessionStorage, challengeMode && challengeRun ? challengeRun : worldName);
+    const token = loadResumeToken(safeStorage("sessionStorage"), challengeMode && challengeRun ? challengeRun : worldName);
     // The "#RRGGBB" background this browser's ☻ is drawn on in everyone else's
     // client (M19.1), re-read at every join including a reconnect: it is the
     // browser's current pick, not a property of the run being reclaimed. A
@@ -2386,7 +2407,7 @@ function connectEditor() {
     // A stored membership token re-enters the session this browser was already
     // in (M16.14f) rather than joining it a second time; an unknown or already
     // ended one is treated as a first entry.
-    const token = loadEditorToken(window.sessionStorage, worldName);
+    const token = loadEditorToken(safeStorage("sessionStorage"), worldName);
     socket.send(JSON.stringify(buildEditorEnterMessage(MessageTypeEditorEnter, worldName, token)));
     canvas.focus();
   });
@@ -2605,12 +2626,12 @@ function applyMessage(message: ServerMessage) {
 }
 
 function applyEditorSnapshot(message: EditorSnapshotMessage) {
-  mode = "editor";
+  setMode("editor");
   // The entry snapshot carries the token this browser comes back with if its
   // socket closes (M16.14f). Only the entry snapshot has one, so a later
   // broadcast frame cannot overwrite it.
   if (message.resumeToken) {
-    saveEditorToken(window.sessionStorage, worldName, message.resumeToken);
+    saveEditorToken(safeStorage("sessionStorage"), worldName, message.resumeToken);
   }
   // EditorSnapshot is broadcast to every session member carrying the *acting*
   // member's id, cursor and inspect (editor_session.go:313, broadcast at
@@ -2856,7 +2877,7 @@ function applySnapshot(message: SnapshotMessage) {
     applyWatchSnapshot(message);
     return;
   }
-  mode = "playing";
+  setMode("playing");
   setEditorBlinking(false);
   if (message.world && message.world !== worldName) {
     worldName = message.world;
@@ -2865,7 +2886,7 @@ function applySnapshot(message: SnapshotMessage) {
   // The join/resume snapshot carries our resume token; keep it so a later drop
   // can reclaim this run (M13.2).
   if (message.resumeToken) {
-    saveResumeToken(window.sessionStorage, challengeMode && challengeRun ? challengeRun : worldName, message.resumeToken);
+    saveResumeToken(safeStorage("sessionStorage"), challengeMode && challengeRun ? challengeRun : worldName, message.resumeToken);
   }
   // M32.1: a challenge frame names its run. The elapsed counter restarts here
   // and nowhere else — it is what the ghost is indexed by, so it must count the
@@ -2923,7 +2944,7 @@ function applySnapshot(message: SnapshotMessage) {
 // it is what the M19.1 tints are painted from, and a watcher sees the room's
 // people exactly as the people in it do.
 function applyWatchSnapshot(message: SnapshotMessage) {
-  mode = "watching";
+  setMode("watching");
   watching = true;
   if (replaying) {
     replayTick = message.tick ?? replayTick;
@@ -3386,7 +3407,7 @@ function seenHintsForThisBrowser() {
   if (authStatus.authenticated) {
     return accountPrefs?.hints ?? null;
   }
-  return loadGuestHints(window.sessionStorage);
+  return loadGuestHints(safeStorage("sessionStorage"));
 }
 
 function tryShowFirstTimeHint(hint: AccountHintKey) {
@@ -3419,7 +3440,7 @@ function tryShowFirstTimeHint(hint: AccountHintKey) {
       if (stored) accountPrefs = stored;
     });
   } else {
-    saveGuestHint(window.sessionStorage, hint);
+    saveGuestHint(safeStorage("sessionStorage"), hint);
   }
   currentHintMessage = FIRST_TIME_HINTS[hint];
   window.clearTimeout(currentHintTimer);
@@ -4041,11 +4062,11 @@ function openProfileEditor() {
 // "#RRGGBB" triple, from either source, is read as no pick at all rather than
 // sent on to other people's canvases.
 function readStoredPlayerColor(): string {
-  return effectivePlayerColor({ account: accountPrefs, local: loadPlayerColor(window.localStorage) });
+  return effectivePlayerColor({ account: accountPrefs, local: loadPlayerColor(safeStorage("localStorage")) });
 }
 
 function readEffectiveComfort(): ComfortPreferences {
-  return effectiveComfort({ account: accountPrefs, local: loadGuestComfort(window.localStorage) });
+  return effectiveComfort({ account: accountPrefs, local: loadGuestComfort(safeStorage("localStorage")) });
 }
 
 function writeEffectiveComfort(next: ComfortPreferences) {
@@ -4075,7 +4096,7 @@ function writeEffectiveComfort(next: ComfortPreferences) {
       }
     });
   } else {
-    saveGuestComfort(window.localStorage, comfort);
+    saveGuestComfort(safeStorage("localStorage"), comfort);
   }
   refreshFontPalette();
   setPaused(paused);
@@ -4122,9 +4143,9 @@ function openColorPicker() {
           }
         });
       } else if (color) {
-        savePlayerColor(window.localStorage, color);
+        savePlayerColor(safeStorage("localStorage"), color);
       } else {
-        clearPlayerColor(window.localStorage);
+        clearPlayerColor(safeStorage("localStorage"));
       }
       // The menu row's swatch is drawn from the stored value, so redraw it.
       if (mode === "title") {
@@ -6089,7 +6110,7 @@ function applyEditorTestPlay(message: EditorTestPlayMessage) {
   window.clearTimeout(retryTimer);
   // Test play exits the session on purpose; its membership token goes with it
   // (M16.14f), so returning to the editor afterwards enters fresh.
-  clearEditorToken(window.sessionStorage, worldName);
+  clearEditorToken(safeStorage("sessionStorage"), worldName);
   if (ws && ws.readyState === WebSocket.OPEN) {
     ws.send(JSON.stringify({ type: MessageTypeEditorExit }));
     ws.close();

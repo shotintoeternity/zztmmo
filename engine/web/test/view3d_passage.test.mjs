@@ -134,6 +134,23 @@ try {
   assert.notEqual(after.players[0].boardId, before.players[0].boardId, "the passage must have changed the board");
   assert.ok(frames.every((f) => f.colours >= 3), "the new board must be drawn, not a flat fill");
   console.log(`shots in ${OUT_DIR}`);
+
+  // M36.27: leaving play stops the 3D view. Its animation loop used to run on
+  // after the player quit to the title, with the GL canvas still shown over
+  // whatever screen came next.
+  await page.keyboard.press("KeyQ");
+  await step({ await: { dx: 0, dy: 0, key: 81 } });
+  await step({ n: 2 });
+  await runClock(page, 200);
+  await page.keyboard.press("KeyY");
+  for (let i = 0; i < 8 && !hasText(await readGrid(page), "P  Play"); i += 1) {
+    await step({ n: 2 });
+    await runClock(page, 300);
+    if (!hasText(await readGrid(page), "P  Play")) await page.keyboard.press("Escape");
+  }
+  await waitForGrid(page, (c) => hasText(c, "P  Play"), "the title screen after quitting");
+  const overlay = await page.evaluate(() => document.querySelector("canvas[data-view3d]")?.hidden);
+  assert.equal(overlay, true, "the 3D view must stop and hide when play ends, not keep drawing over the title");
 } catch (error) {
   failed = true;
   console.error(error);

@@ -9042,7 +9042,7 @@ copy; the executor still writes the failing test in the repo first.
   `fixtures/browser-goldens/tick-locked-run.json` were re-recorded (hash lines
   only). `TestM3626*` is red on the old function.
 
-- [ ] **M36.27 — tools fail loudly, and the ZWD compiler rejects what it
+- [x] **M36.27 — tools fail loudly, and the ZWD compiler rejects what it
   would truncate.** *(confirmed unless marked, low)*
   (a) *(plausible)* `zzt-parity -require-certified -browser=false` (or
   `-race=false`) reports CERTIFIED and exits 0 (`cmd/zzt-parity/report.go:281`):
@@ -9066,6 +9066,34 @@ copy; the executor still writes the failing test in the repo first.
   storage access guarded where the getter itself throws (`main.ts:3996`).
   Split this into separate commits by area. DoD: a failing test or tool run
   for each before its fix.
+
+  *Resolved 2026-11-03 in seven commits, one per area; each fix was preceded by
+  a red test.*
+  - (a) The plausible finding reproduces. Certification now requires every
+    gate of the full plan, and requires that the go test gate required the
+    browsers.
+  - (b) zzt-fetch extracts to a temp file and renames it into place. A failed
+    entry fails the run.
+  - (c) zzt-shot: `-board -1` no longer panicked (M36.7 hardened `BoardOpen`),
+    but it still "succeeded". Any board outside 0..BoardCount is now an error.
+  - (d) zzt-load: the measurements were lost in `main`'s `log.Fatal`, not in
+    `runLoad`. The sampler race reproduced as three DATA RACEs.
+  - (e) ZWD, compiler and decompiler. The spec's "OOP ends at an indented
+    `end`" cannot be fixed in the parser: generated worlds put `end` at any
+    indent (`fixtures/gen/CASTLEOF.zwd` has it deeper than `oop`). The parser
+    keeps its terminator, and the decompiler refuses a program line reading
+    `end` by name. The real silent loss there was indentation: decompiled OOP
+    lines were written at column 0 and lost four spaces on recompile.
+    `town_board1.zwd` moved (DEVIATION in that commit). Legend `to` is never
+    read by the compiler, so its check is validation only; generation paints
+    against plan-named placeholders, so a wrong name is retry feedback, as a
+    wrong `p3` already was.
+  - Postcards: the limiter now uses `generationClientKey`. Both maps are
+    bounded.
+  - Preferences: the RMW had four writers, not one. `UpdateAccountPreferences`
+    runs each change under the store's lock.
+  - Client: one `setMode` stops the 3D loop on leaving play and restarts it
+    on return, and `safeStorage` guards the getter.
 
 ## M14 — Rearchitecting for the service ZZTMMO is becoming
 
