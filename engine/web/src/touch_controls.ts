@@ -34,7 +34,7 @@
 // property, which style.css subtracts from the screen's box so the screen
 // letterboxes ABOVE the bar. Measured rather than declared as a constant,
 // because the action row wraps at narrow widths and `setMode` changes how many
-// controls are in it: play mode's seven wrap to three rows on a 390px portrait
+// controls are in it: play mode's eight (with M39.1's ☰) wrap to three rows on a 390px portrait
 // phone (a 150px bar, against 96px for the two the title screen needs) and stay
 // on one at 844px landscape.
 //
