@@ -1915,7 +1915,6 @@ func (s *WebSocketServer) loadAccountPreferences(accountID string) (AccountPrefe
 	return prefs, ok
 }
 
-
 func (s *WebSocketServer) accountProfileSummary(accountID string) (string, bool) {
 	prefs, ok := s.loadAccountPreferences(accountID)
 	if !ok {
