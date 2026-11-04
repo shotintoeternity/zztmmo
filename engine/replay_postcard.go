@@ -21,6 +21,10 @@ const (
 	postcardDelayCS      = int(ServerTickDuration / (10 * time.Millisecond))
 	postcardRateMax      = 5
 	postcardRateWindow   = 10 * time.Second
+	// postcardCacheMax caps the rendered GIFs kept in memory (M36.27). Each
+	// distinct (id, start, ticks, board) is its own entry, so without a cap
+	// the cache grew with every range anyone ever asked for.
+	postcardCacheMax = 64
 )
 
 type ReplayPostcardOptions struct {
@@ -46,6 +50,7 @@ type replayPostcardKey struct {
 type replayPostcardCache struct {
 	mu    sync.Mutex
 	items map[replayPostcardKey]ReplayPostcard
+	order []replayPostcardKey // insertion order, oldest first, for eviction
 }
 
 func (c *replayPostcardCache) get(key replayPostcardKey) (ReplayPostcard, bool) {
@@ -61,7 +66,14 @@ func (c *replayPostcardCache) put(key replayPostcardKey, postcard ReplayPostcard
 	if c.items == nil {
 		c.items = make(map[replayPostcardKey]ReplayPostcard)
 	}
+	if _, exists := c.items[key]; !exists {
+		c.order = append(c.order, key)
+	}
 	c.items[key] = postcard
+	for len(c.order) > postcardCacheMax {
+		delete(c.items, c.order[0])
+		c.order = c.order[1:]
+	}
 }
 
 type postcardRateLimiter struct {
@@ -72,6 +84,14 @@ type postcardRateLimiter struct {
 func (l *postcardRateLimiter) allow(client string, now time.Time) bool {
 	l.mu.Lock()
 	defer l.mu.Unlock()
+	// Forget every other client whose window has fully expired (M36.27): the
+	// map used to keep a slice for each client ever seen. It only ever holds
+	// clients active in the last window, so the sweep stays small.
+	for other, times := range l.accepted {
+		if other != client && (len(times) == 0 || now.Sub(times[len(times)-1]) >= postcardRateWindow) {
+			delete(l.accepted, other)
+		}
+	}
 	kept := l.accepted[client][:0]
 	for _, t := range l.accepted[client] {
 		if now.Sub(t) < postcardRateWindow {

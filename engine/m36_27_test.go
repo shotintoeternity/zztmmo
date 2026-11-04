@@ -1,8 +1,12 @@
 package zztgo
 
 import (
+	"fmt"
+	"net/http"
+	"net/http/httptest"
 	"strings"
 	"testing"
+	"time"
 )
 
 // M36.27e: a dialogue line that already fits is the author's exact bytes.
@@ -217,5 +221,56 @@ func TestM3627DecompileKeepsLinksToDuplicateBoardNames(t *testing.T) {
 	r.BoardOpen(1)
 	if got := r.Board.Info.NeighborBoards[3]; got != byte(last) {
 		t.Fatalf("board 1's east exit leads to board %d after the round trip, want %d", got, last)
+	}
+}
+
+// M36.27: postcards are paced per player, not per proxy. Behind Caddy every
+// request arrives from 127.0.0.1, so a key taken from RemoteAddr made the
+// per-client limit one global limit any single visitor could exhaust.
+func TestM3627PostcardLimitIsPerPlayerBehindTheProxy(t *testing.T) {
+	req := func(remote, forwarded string) *http.Request {
+		r := httptest.NewRequest(http.MethodGet, "/api/replay/postcard.gif", nil)
+		r.RemoteAddr = remote
+		if forwarded != "" {
+			r.Header.Set("X-Forwarded-For", forwarded)
+		}
+		return r
+	}
+	a := postcardClientKey(req("127.0.0.1:5000", "203.0.113.7"))
+	b := postcardClientKey(req("127.0.0.1:5001", "198.51.100.9"))
+	if a == b {
+		t.Fatalf("two players behind the proxy share the postcard key %q", a)
+	}
+	// A header from a client that reached the server directly is not trusted.
+	if got := postcardClientKey(req("203.0.113.7:9", "10.0.0.1")); got != "203.0.113.7" {
+		t.Fatalf("a direct client's forged X-Forwarded-For was honoured: key %q", got)
+	}
+}
+
+// M36.27: neither the postcard limiter nor the postcard cache grows without
+// bound. The limiter kept a slice for every client it ever saw; the cache kept
+// a GIF for every distinct (id, start, ticks, board) ever requested.
+func TestM3627PostcardStateIsBounded(t *testing.T) {
+	var l postcardRateLimiter
+	start := time.Unix(0, 0)
+	for i := 0; i < 5000; i++ {
+		l.allow(fmt.Sprintf("client-%d", i), start.Add(time.Duration(i)*time.Second))
+	}
+	l.mu.Lock()
+	held := len(l.accepted)
+	l.mu.Unlock()
+	if held > 2*int(postcardRateWindow/time.Second)+postcardRateMax {
+		t.Fatalf("the limiter holds %d clients after 5000 one-off visitors across 5000s; expired ones must go", held)
+	}
+
+	var c replayPostcardCache
+	for i := 0; i < 10*postcardCacheMax; i++ {
+		c.put(replayPostcardKey{ID: "r", Start: i}, ReplayPostcard{GIF: []byte{1}})
+	}
+	c.mu.Lock()
+	cached := len(c.items)
+	c.mu.Unlock()
+	if cached > postcardCacheMax {
+		t.Fatalf("the postcard cache holds %d entries, want at most %d", cached, postcardCacheMax)
 	}
 }

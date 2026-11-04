@@ -319,13 +319,14 @@ func queryInt(q url.Values, name string, fallback int) (int, error) {
 	return strconv.Atoi(raw)
 }
 
+// postcardClientKey names the caller the postcard limiter paces. It is the
+// generation limiter's key (M36.27): behind Caddy every request comes from
+// 127.0.0.1, so RemoteAddr alone made the per-client limit one global limit
+// any single visitor could hold; a loopback peer's last X-Forwarded-For hop
+// is the player, and a header from a direct client is ignored.
 func postcardClientKey(r *http.Request) string {
-	host, _, err := net.SplitHostPort(r.RemoteAddr)
-	if err == nil && host != "" {
-		return host
-	}
-	if r.RemoteAddr != "" {
-		return r.RemoteAddr
+	if key := generationClientKey(r); key != "" {
+		return key
 	}
 	return "unknown"
 }
