@@ -274,3 +274,63 @@ func TestM3627PostcardStateIsBounded(t *testing.T) {
 		t.Fatalf("the postcard cache holds %d entries, want at most %d", cached, postcardCacheMax)
 	}
 }
+
+// m3627RacingDB is a preferences store with a second writer, a concurrent
+// /api/preferences storing the account's Color, that lands at the caller's
+// first touch of the store. After a Get it lands between the read and the
+// write, so a read-modify-write caller writes back the document it read,
+// without that Color. An atomic update has no such gap: the writer lands
+// before it, and the update sees the Color.
+type m3627RacingDB struct {
+	*MemChatDatabase
+	account string
+	raced   bool
+}
+
+func (db *m3627RacingDB) GetAccountPreferences(accountID string) (AccountPreferences, bool, error) {
+	prefs, ok, err := db.MemChatDatabase.GetAccountPreferences(accountID)
+	if accountID == db.account && !db.raced {
+		db.raced = true
+		concurrent := prefs
+		concurrent.Color = "#ff00ff"
+		if err := db.MemChatDatabase.PutAccountPreferences(accountID, concurrent); err != nil {
+			return prefs, ok, err
+		}
+	}
+	return prefs, ok, err
+}
+
+func (db *m3627RacingDB) UpdateAccountPreferences(accountID string, change func(*AccountPreferences, bool) error) error {
+	if accountID == db.account && !db.raced {
+		db.raced = true
+		concurrent, _, _ := db.MemChatDatabase.GetAccountPreferences(accountID)
+		concurrent.Color = "#ff00ff"
+		if err := db.MemChatDatabase.PutAccountPreferences(accountID, concurrent); err != nil {
+			return err
+		}
+	}
+	return db.MemChatDatabase.UpdateAccountPreferences(accountID, change)
+}
+
+// M36.27: a preferences write changes its own field of the stored document and
+// nothing else. Persisting a block read the whole document, set
+// BlockedAccounts, and wrote the whole document back, so a colour chosen in
+// between was lost.
+func TestM3627PreferenceWritesDoNotLoseAConcurrentChange(t *testing.T) {
+	const account = "google:ada"
+	db := &m3627RacingDB{MemChatDatabase: NewMemChatDatabase(), account: account}
+	if err := db.MemChatDatabase.PutAccountPreferences(account, AccountPreferences{}); err != nil {
+		t.Fatal(err)
+	}
+	s := NewWebSocketServer(townWorld(t), 1)
+	s.ChatDB = db
+	s.persistBlockedAccounts(account, PlayerID(1))
+
+	prefs, _, err := db.MemChatDatabase.GetAccountPreferences(account)
+	if err != nil {
+		t.Fatal(err)
+	}
+	if prefs.Color != "#ff00ff" {
+		t.Fatalf("persisting a block wrote back a stale document: the concurrent Color is %q, want #ff00ff", prefs.Color)
+	}
+}

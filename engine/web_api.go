@@ -425,54 +425,76 @@ func (a *WebAPI) handlePreferences(w http.ResponseWriter, r *http.Request) {
 		// is not "#" plus six hex digits becomes "", which is the vanilla
 		// player rather than a rejection — the picker's "No color" row sends
 		// exactly that.
-		// Read-modify-write, NOT a fresh document (M21.1). The store now holds a
-		// second field — the accounts whose chat this player has blocked — and
-		// this endpoint knows nothing about it; writing `AccountPreferences{Color}`
-		// would delete every block a player holds the moment they picked a colour.
-		// M19.3 predicted this shape of loss for a field arriving later; the field
-		// arrived. Anything added to the document from now on is preserved here
-		// for free, because only the field this endpoint owns is assigned.
-		prefs, _ := a.storedPreferences(account.ID)
-		if body.Color != nil {
-			prefs.Color = SanitizePlayerColor(*body.Color)
-		}
-		if body.Hints != nil {
-			prefs.Hints.Players = prefs.Hints.Players || body.Hints.Players
-			prefs.Hints.Death = prefs.Hints.Death || body.Hints.Death
-			prefs.Hints.Chat = prefs.Hints.Chat || body.Hints.Chat
-		}
+		// Everything that can refuse the request, or that reads server state,
+		// is decided first; only plain assignments run inside the update below,
+		// which holds the store's lock (M36.27).
+		var profile AccountProfilePreferences
 		if body.Profile != nil {
-			profile, err := SanitizeAccountProfile(*body.Profile)
+			sanitized, err := SanitizeAccountProfile(*body.Profile)
 			if err != nil {
 				http.Error(w, "invalid profile", http.StatusBadRequest)
 				return
 			}
-			prefs.Profile = profile
+			profile = sanitized
 		}
-		if body.ShareLocationWithFollowers != nil {
-			prefs.ShareLocationWithFollowers = *body.ShareLocationWithFollowers
-		}
+		var favoriteWorlds []string
 		if body.FavoriteWorlds != nil {
-			prefs.FavoriteWorlds = a.validFavoriteWorlds(*body.FavoriteWorlds)
+			favoriteWorlds = a.validFavoriteWorlds(*body.FavoriteWorlds)
 		}
+		var favoriteWorld string
 		if body.FavoriteWorld != nil {
 			safe, err := SanitizeSaveName(*body.FavoriteWorld)
 			if err != nil || !a.joinableWorldSet()[safe] {
 				http.Error(w, "invalid favorite world", http.StatusBadRequest)
 				return
 			}
-			want := body.Favorite == nil || *body.Favorite
-			prefs.FavoriteWorlds = toggleFavoriteWorld(prefs.FavoriteWorlds, safe, want)
+			favoriteWorld = safe
 		}
+		var comfort ComfortPreferences
 		if body.Comfort != nil {
-			comfort, err := SanitizeComfortPreferences(*body.Comfort)
+			sanitized, err := SanitizeComfortPreferences(*body.Comfort)
 			if err != nil {
 				http.Error(w, "invalid comfort preferences", http.StatusBadRequest)
 				return
 			}
-			prefs.Comfort = comfort
+			comfort = sanitized
 		}
-		if err := a.Server.ChatDB.PutAccountPreferences(account.ID, prefs); err != nil {
+
+		// Only the fields this request names are assigned, on the document as
+		// stored at that moment (M21.1: the store holds fields this endpoint
+		// knows nothing about, such as blocks). And it is one step, not a read
+		// then a write (M36.27): a Get followed by a Put wrote back the whole
+		// document as it was read, losing a block or a follow stored in between.
+		var prefs AccountPreferences
+		err := a.Server.ChatDB.UpdateAccountPreferences(account.ID, func(stored *AccountPreferences, _ bool) error {
+			if body.Color != nil {
+				stored.Color = SanitizePlayerColor(*body.Color)
+			}
+			if body.Hints != nil {
+				stored.Hints.Players = stored.Hints.Players || body.Hints.Players
+				stored.Hints.Death = stored.Hints.Death || body.Hints.Death
+				stored.Hints.Chat = stored.Hints.Chat || body.Hints.Chat
+			}
+			if body.Profile != nil {
+				stored.Profile = profile
+			}
+			if body.ShareLocationWithFollowers != nil {
+				stored.ShareLocationWithFollowers = *body.ShareLocationWithFollowers
+			}
+			if body.FavoriteWorlds != nil {
+				stored.FavoriteWorlds = favoriteWorlds
+			}
+			if body.FavoriteWorld != nil {
+				want := body.Favorite == nil || *body.Favorite
+				stored.FavoriteWorlds = toggleFavoriteWorld(stored.FavoriteWorlds, favoriteWorld, want)
+			}
+			if body.Comfort != nil {
+				stored.Comfort = comfort
+			}
+			prefs = *stored
+			return nil
+		})
+		if err != nil {
 			if errors.Is(err, ErrProfileHandleTaken) {
 				http.Error(w, "handle already claimed", http.StatusConflict)
 				return

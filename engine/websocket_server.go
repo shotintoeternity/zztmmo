@@ -1879,14 +1879,28 @@ func (s *WebSocketServer) persistAccountPlayerState(accountID, worldName string,
 // Nothing here reaches the simulation — SetPlayerColor records no op, which is
 // the M19.1 invariant this task must not spend.
 func (s *WebSocketServer) resolveAccountPlayerColor(accountID, joinColor string) string {
-	prefs, ok := s.loadAccountPreferences(accountID)
-	if ok {
-		return prefs.Color
+	if s.ChatDB == nil || accountID == "" {
+		return joinColor
 	}
-	if joinColor != "" {
-		s.persistAccountPreferences(accountID, AccountPreferences{Color: joinColor})
+	// Decided and, for a first pick, written in one step (M36.27): a check
+	// for a document followed by a write of a fresh one would overwrite a
+	// document /api/preferences created in between.
+	resolved := joinColor
+	err := s.ChatDB.UpdateAccountPreferences(accountID, func(prefs *AccountPreferences, exists bool) error {
+		if exists {
+			resolved = prefs.Color
+			return errSkipPreferencesWrite
+		}
+		if joinColor == "" {
+			return errSkipPreferencesWrite
+		}
+		prefs.Color = joinColor
+		return nil
+	})
+	if err != nil {
+		log.Printf("zztgo: failed to resolve the color for account %q: %v", accountID, err)
 	}
-	return joinColor
+	return resolved
 }
 
 func (s *WebSocketServer) loadAccountPreferences(accountID string) (AccountPreferences, bool) {
@@ -1901,14 +1915,6 @@ func (s *WebSocketServer) loadAccountPreferences(accountID string) (AccountPrefe
 	return prefs, ok
 }
 
-func (s *WebSocketServer) persistAccountPreferences(accountID string, prefs AccountPreferences) {
-	if s.ChatDB == nil || accountID == "" {
-		return
-	}
-	if err := s.ChatDB.PutAccountPreferences(accountID, prefs); err != nil {
-		log.Printf("zztgo: failed to persist preferences for account %q: %v", accountID, err)
-	}
-}
 
 func (s *WebSocketServer) accountProfileSummary(accountID string) (string, bool) {
 	prefs, ok := s.loadAccountPreferences(accountID)
@@ -4369,18 +4375,16 @@ func (s *WebSocketServer) submitFollow(ctx context.Context, client *webSocketCli
 		return
 	}
 
-	prefs, _, err := s.ChatDB.GetAccountPreferences(client.accountID)
+	// One step (M36.27): see UpdateAccountPreferences.
+	err := s.ChatDB.UpdateAccountPreferences(client.accountID, func(prefs *AccountPreferences, _ bool) error {
+		if req.Follow {
+			prefs.FollowedAccounts = addAccountID(prefs.FollowedAccounts, target.account)
+		} else {
+			prefs.FollowedAccounts = removeAccountID(prefs.FollowedAccounts, target.account)
+		}
+		return nil
+	})
 	if err != nil {
-		log.Printf("zztgo: failed to read preferences for account %q while following: %v", client.accountID, err)
-		reply("Could not update follows.")
-		return
-	}
-	if req.Follow {
-		prefs.FollowedAccounts = addAccountID(prefs.FollowedAccounts, target.account)
-	} else {
-		prefs.FollowedAccounts = removeAccountID(prefs.FollowedAccounts, target.account)
-	}
-	if err := s.ChatDB.PutAccountPreferences(client.accountID, prefs); err != nil {
 		log.Printf("zztgo: failed to store follows for account %q: %v", client.accountID, err)
 		reply("Could not update follows.")
 		return
@@ -4960,14 +4964,15 @@ func (s *WebSocketServer) persistBlockedAccounts(accountID string, blocker Playe
 	if s.ChatDB == nil || accountID == "" {
 		return
 	}
-	prefs, _, err := s.ChatDB.GetAccountPreferences(accountID)
+	// One step, not a read then a write (M36.27): the whole document written
+	// back after a Get lost anything stored in between, such as a colour.
+	blocked := s.chatBlocks.blockedAccounts(blocker)
+	sort.Strings(blocked)
+	err := s.ChatDB.UpdateAccountPreferences(accountID, func(prefs *AccountPreferences, _ bool) error {
+		prefs.BlockedAccounts = blocked
+		return nil
+	})
 	if err != nil {
-		log.Printf("zztgo: failed to read preferences for account %q while blocking: %v", accountID, err)
-		return
-	}
-	prefs.BlockedAccounts = s.chatBlocks.blockedAccounts(blocker)
-	sort.Strings(prefs.BlockedAccounts)
-	if err := s.ChatDB.PutAccountPreferences(accountID, prefs); err != nil {
 		log.Printf("zztgo: failed to store blocks for account %q: %v", accountID, err)
 	}
 }

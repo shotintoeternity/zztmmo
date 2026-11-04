@@ -133,8 +133,19 @@ type ChatDatabase interface {
 	GetPlayerState(accountID, worldName string) (PlayerState, bool, error)
 	PutAccountPreferences(accountID string, prefs AccountPreferences) error
 	GetAccountPreferences(accountID string) (AccountPreferences, bool, error)
+	// UpdateAccountPreferences reads, changes and stores an account's document
+	// as one step under the store's lock (M36.27). change gets the current
+	// document (exists=false and a zero document when there is none) and edits
+	// it in place; returning an error, or errSkipPreferencesWrite, writes
+	// nothing. A Get followed by a Put lost whatever another writer stored in
+	// between, because the Put wrote back the whole stale document.
+	UpdateAccountPreferences(accountID string, change func(prefs *AccountPreferences, exists bool) error) error
 	Close() error
 }
+
+// errSkipPreferencesWrite lets an UpdateAccountPreferences change decide,
+// having seen the document, that there is nothing to write.
+var errSkipPreferencesWrite = errors.New("no preferences write needed")
 
 type MemChatDatabase struct {
 	mu           sync.Mutex
@@ -214,6 +225,26 @@ func (db *MemChatDatabase) PutAccountPreferences(accountID string, prefs Account
 		return err
 	}
 	return nil
+}
+
+func (db *MemChatDatabase) UpdateAccountPreferences(accountID string, change func(*AccountPreferences, bool) error) error {
+	key, err := accountPreferencesKey(accountID)
+	if err != nil {
+		return err
+	}
+	db.mu.Lock()
+	defer db.mu.Unlock()
+	if db.accountPrefs == nil {
+		db.accountPrefs = make(map[string]AccountPreferences)
+	}
+	prefs, exists := db.accountPrefs[key]
+	if err := change(&prefs, exists); err != nil {
+		if errors.Is(err, errSkipPreferencesWrite) {
+			return nil
+		}
+		return err
+	}
+	return putAccountPreferencesLocked(db.accountPrefs, &db.handleOwners, key, prefs)
 }
 
 func (db *MemChatDatabase) GetAccountPreferences(accountID string) (AccountPreferences, bool, error) {
@@ -366,6 +397,29 @@ func (db *FileChatDatabase) PutAccountPreferences(accountID string, prefs Accoun
 	defer db.mu.Unlock()
 	if db.accountPrefs == nil {
 		db.accountPrefs = make(map[string]AccountPreferences)
+	}
+	if err := putAccountPreferencesLocked(db.accountPrefs, &db.handleOwners, key, prefs); err != nil {
+		return err
+	}
+	return db.writeAccountPreferencesLocked()
+}
+
+func (db *FileChatDatabase) UpdateAccountPreferences(accountID string, change func(*AccountPreferences, bool) error) error {
+	key, err := accountPreferencesKey(accountID)
+	if err != nil {
+		return err
+	}
+	db.mu.Lock()
+	defer db.mu.Unlock()
+	if db.accountPrefs == nil {
+		db.accountPrefs = make(map[string]AccountPreferences)
+	}
+	prefs, exists := db.accountPrefs[key]
+	if err := change(&prefs, exists); err != nil {
+		if errors.Is(err, errSkipPreferencesWrite) {
+			return nil
+		}
+		return err
 	}
 	if err := putAccountPreferencesLocked(db.accountPrefs, &db.handleOwners, key, prefs); err != nil {
 		return err
