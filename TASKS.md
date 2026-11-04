@@ -518,6 +518,12 @@ M12.23, M17.1–M17.7, M16.0–M16.8a — has fully landed.)
    `go test -count=1 ./...` and the full `make browser` family green, the co-op
    cutline included.
 
+12. **M37 — after the M36 deploy (filed 2026-11-03).** The M36 batch is on
+   production at `5502194`, and every box above it is ticked. M37 numbers what
+   is left in the order to take it. **M37.1, production sign-in, is next.** It
+   needs the owner (Google console and production `.env`), and everything
+   account-shaped is inert for testers until it lands.
+
 **Optional / deferred (bottom):**
 - M14.3 — package split — **closed as skipped 2026-08-03**, see NOTES.md
 - M12.15d — mined style priors — **landed 2026-08-03**, see NOTES.md
@@ -9111,6 +9117,81 @@ copy; the executor still writes the failing test in the repo first.
   - Client: one `setMode` stops the 3D loop on leaving play and restarts it
     on return, and `safeStorage` guards the getter.
 
+## M37 — After the M36 deploy: what is left, and whose call it is
+
+Filed 2026-11-03, after the M36 batch was deployed to production at `5502194`.
+Every earlier box is ticked, so these are the open items, **numbered in the
+order to take them**. Most need the owner: production access, an outside
+console, or a product decision. Each says which.
+
+- [ ] **M37.1 — sign-in works on production.** *(owner-gated: Google console and
+  the production host)* Production has no Google variables in its environment
+  (checked over SSH on 2026-11-03), so `NewAuthServiceFromEnv` returns nil and
+  every player is a guest. Everything that hangs off an account is therefore
+  inert for testers: profiles and handles, follows and presence, account
+  preferences, durable blocks, signed-in high scores, challenge leaderboard
+  identity, and dream ownership. `ZZT_AUTH_COOKIE_SECRET` is already set, so
+  turning sign-in on will not sign anyone out on later deploys. Steps:
+  - Register `https://zztmmo.com/api/auth/google/callback` as an authorized
+    redirect URI on the OAuth client (owner, Google Cloud console).
+  - Add `ZZT_GOOGLE_CLIENT_ID` and `ZZT_GOOGLE_CLIENT_SECRET` to
+    `/opt/zztmmo/.env` (mode `600`), then restart.
+  - Decide whether to set `ZZT_MODERATOR_ACCOUNTS`.
+  The variables are documented in AWS.md's "Sign-in (Google) and Moderation
+  Config". DoD: a real browser signs in on `https://zztmmo.com/`,
+  `/api/auth/me` answers with the account, and a sign-in survives a restart.
+  If guest-only production is deliberate, record that decision here and in
+  NOTES.md and tick nothing.
+
+- [ ] **M37.2 — rehearse a restore from a production backup.** *(owner-gated:
+  touches production data)* Promoted from the Architecture follow-ups bullet
+  "The restore has never been rehearsed" (2026-08-04). `deploy/zztmmo-backup.sh`
+  writes daily archives and AWS.md documents the restore, but nobody has ever
+  run it. Use the dev host, which is stopped between uses and is a throwaway:
+  take a recent production archive, restore it by the documented steps, and
+  confirm the world list answers and a known save appears under R. Correct
+  AWS.md wherever the procedure turns out wrong. DoD: the drill is recorded in
+  NOTES.md with the archive date and anything the documentation got wrong.
+
+- [ ] **M37.3 — signed-in players can remove and export their data.** *(owner
+  decision first; matters once M37.1 is on)* Promoted from the Architecture
+  follow-ups bullet "A signed-in player cannot remove or export their data"
+  (2026-08-04). Three stores are keyed on `accountID` (`chat_db.go`): chat lines
+  carrying a display name, per-world player state, and account preferences.
+  None can be exported or deleted. The policy question comes first: a closed
+  tester group and open sign-ups are different answers, and a chat backlog is
+  shared, so decide whether deletion removes the lines or redacts the name.
+  DoD: the decision is recorded, and then an export and a delete path exist
+  with a test each.
+
+- [ ] **M37.4 — the Gazette has a reader in the game again.** *(owner decision:
+  where it lives)* `/api/gazette` and `/api/gazette/edition` still write and serve
+  the day's paper (M34.1, M34.2), but since the first-party worlds were removed
+  (2026-08-11) nothing in the game opens it. `postNotice` is unreachable in
+  production, because nothing populates `NoticeTiles`, and it lost its coverage
+  with `m34_3_test.go`. Options: a title-screen key that opens the edition, a
+  newsstand in a shipped world, or retiring the Gazette. DoD: per the decision.
+  A reader brings back a browser journey that opens the day's edition;
+  retirement removes the dead `postNotice` path and its rows.
+
+- [ ] **M37.5 — accented names keep their accents.** *(owner decision: reverses
+  the M36.3/M36.6 trade)* Player names, chat and high-score names are folded to
+  printable ASCII, so a Google display name "José" shows as "Jos". CP437 has
+  é (0x82) and most Western European letters, but the repository has no
+  Unicode-to-CP437 table, which is why M36.3 folded instead of encoding.
+  Adding one would map typed text to CP437 bytes, not drop them. It changes
+  `admitChatText`, `admitHighScoreName` and `admitPlayerName` together, and
+  recordings, which store names, would replay with the new bytes. DoD: a test
+  types "José" and reads back the CP437 é in the roster, chat and a high-score
+  line, and a character with no CP437 form still folds as today.
+
+- [ ] **M37.6 — spec the TAS workbench.** *(owner asks for the spec)* Ranked top of
+  the community-event line on 2026-08-11 as a ranking, explicitly not a start.
+  The two facts already recorded on its backlog bullet are the starting point:
+  `VerifyChallengeResult` is the re-simulation verifier it needs, and
+  `ReplaySession` accepts stimuli a player-submitted log must not carry. DoD: a
+  spec with numbered tasks filed under its own milestone. No code.
+
 ## M14 — Rearchitecting for the service ZZTMMO is becoming
 
 Filed 2026-07-12 from a whole-repo review (NOTES.md): three structural debts
@@ -10438,7 +10519,8 @@ implementation):**
   watched it. A title screenshot no longer carries the revision.
 
 **Owner-gated (measurements or a policy call, not executor work):**
-* **The restore has never been rehearsed.** Filed 2026-08-04. `AWS.md:517-544`
+* **The restore has never been rehearsed.** Filed 2026-08-04. **Promoted
+  2026-11-03 to M37.2.** `AWS.md:517-544`
   documents the restore procedure and `deploy/zztmmo-backup.sh` writes the
   archives, but nothing has ever executed a restore from one — the procedure is
   written, not proven. A backup that has not been restored is a belief, and the
@@ -10447,6 +10529,7 @@ implementation):**
   it per the documented steps, and confirm the world list answers and a player's
   save appears under R. Owner-gated because it touches production data.
 * **A signed-in player cannot remove or export their data.** Filed 2026-08-04.
+  **Promoted 2026-11-03 to M37.3.**
   Sign-in is real Google identity (`auth.go`), and three stores are keyed on the
   resulting `accountID` — chat lines carrying a display name (`AddMessage`),
   per-world player state, and account preferences (`chat_db.go`). There is no
