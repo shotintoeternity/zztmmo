@@ -686,6 +686,7 @@ type InputMessage = {
 // 8 rows, CP437 order, so glyph N sits at (N%32, N/32). Character codes go to
 // the sheet directly — there is no Unicode round trip.
 import pcEgaUrl from "./pc_ega.png";
+import { ScrollQueue, type PendingScroll } from "./scroll_queue";
 import { eyeLevelWalkMask, facingMask, isCameraKey, lookStepFor } from "./view3d/input3d";
 
 const GLYPH_COLS = 32;
@@ -2520,6 +2521,11 @@ function applyMessage(message: ServerMessage) {
       break;
     case MessageTypeBoardChange:
       stopHeldInput();
+      // Forget the old board's scrolls BEFORE closing the modal (M36.25):
+      // otherwise the close answers the open one and shows the next queued one
+      // on the new board, where its reply would reach whatever object has
+      // that stat id there.
+      clearScrolls();
       closeModal();
       startBoardTransition(message.snapshot);
       break;
@@ -4338,8 +4344,8 @@ function openWindow(title: string, lines: string[], viewingFile: boolean, replyS
     // (TXTWIND.PAS resolves the `-` branch above its hyperlinkAsSelect test).
     // The help window REPLACES this one rather than closing it, which is what
     // vanilla does and also what keeps the promise this window may have made:
-    // a scroll owes its object a reply, and openModal leaves openScrollStatId
-    // alone, so the dismissal is still sent when the reader finally closes
+    // a scroll owes its object a reply, and openModal leaves the open scroll
+    // (scrolls.openStatId) alone, so the dismissal is still sent when the reader finally closes
     // whatever the link led to.
     //
     // The title rides along unchanged because TextWindowOpenFile never sets
@@ -4398,46 +4404,57 @@ function openYesNo(message: string, onAnswer: (yes: boolean) => void) {
   openModal({ kind: "yesno", message, onAnswer });
 }
 
-// Scrolls arrive as events and must never overwrite one another: a second
-// scroll opening on top of the first is text the player never got to read.
-// They queue instead, and the server freezes the reader until each is answered.
-type PendingScroll = { title: string; lines: string[]; statId: number };
-let scrollQueue: PendingScroll[] = [];
-// The object stat of the scroll currently on screen, or -1. Its reply, sent on
-// dismiss, is what unfreezes this player server-side.
-let openScrollStatId = -1;
+// Scrolls arrive as events and must never overwrite one another, nor anything
+// else on screen: scroll_queue.ts decides whether one opens, waits, or is
+// dropped (M36.25). The scroll on screen is scrolls.openStatId; its reply, sent
+// on dismiss, is what unfreezes this player server-side.
+const scrolls = new ScrollQueue();
 // A selected hyperlink already sent its label. closeModal still owns queue
 // advancement, but must not follow a real choice with an empty dismiss reply.
 let scrollReplySent = false;
 
 function enqueueScroll(scroll: PendingScroll) {
-  if (scroll.lines.length === 0) {
+  // A modal that is not a scroll (chat and its draft, a prompt) is never
+  // replaced by one: the scroll waits until it closes.
+  if (scrolls.offer(scroll, modal !== null && scrolls.openStatId < 0) === "show") {
+    showScroll(scroll);
+  }
+}
+
+// showQueuedScrollSoon opens the next waiting scroll once nothing else is on
+// screen. It is deferred because callers close one modal and open another in
+// the same breath; a scroll popped between the two would be covered by the
+// second, still owed a reply that the wrong close would then send.
+function showQueuedScrollSoon() {
+  if (scrolls.length === 0) {
     return;
   }
-  if (openScrollStatId >= 0) {
-    scrollQueue.push(scroll);
-    return;
-  }
-  showScroll(scroll);
+  queueMicrotask(() => {
+    if (modal !== null || scrolls.openStatId >= 0 || mode !== "playing") {
+      return;
+    }
+    const next = scrolls.next();
+    if (next) {
+      showScroll(next);
+    }
+  });
 }
 
 function showScroll(scroll: PendingScroll) {
-  openScrollStatId = scroll.statId;
+  scrolls.opened(scroll);
   scrollReplySent = false;
   openWindow(scroll.title, scroll.lines, false, scroll.statId);
 }
 
 function clearScrolls() {
-  scrollQueue = [];
-  openScrollStatId = -1;
+  scrolls.clear();
   scrollReplySent = false;
 }
 
 function closeModal() {
   bindingCaptureAction = "";
-  const scrollStatId = openScrollStatId;
+  const scrollStatId = scrolls.closed()?.statId ?? -1;
   const replySent = scrollReplySent;
-  openScrollStatId = -1;
   scrollReplySent = false;
   modal = null;
   if (mobileTextInput.close()) {
@@ -4458,7 +4475,7 @@ function closeModal() {
     if (!replySent) {
       sendScrollReply(scrollStatId, "");
     }
-    const next = scrollQueue.shift();
+    const next = scrolls.next();
     if (next) {
       showScroll(next);
       return;
@@ -4483,6 +4500,8 @@ function closeModal() {
   // Repaint rather than clear: the pause layer may still be underneath.
   paintOverlay();
   drawScreen();
+  // A scroll that arrived while chat or a prompt was open has waited for it.
+  showQueuedScrollSoon();
 }
 
 // openHighScoreName is PopupPromptString("Congratulations!  Enter your name:").
@@ -4679,6 +4698,7 @@ function handleProtocolEvent(event: ProtocolEvent) {
           title: event.title ?? "Interaction",
           lines: event.lines ?? [],
           statId: event.statId ?? -1,
+          owned: (event.playerStatId ?? -1) >= 0,
         });
       }
       break;

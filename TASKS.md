@@ -8937,7 +8937,7 @@ copy; the executor still writes the failing test in the repo first.
   again" and counts input frames on the new socket (before the fix, 41 in
   1.1 s; after, about 20).
 
-- [ ] **M36.25 — scrolls cannot pile up or replace a modal.** *(confirmed,
+- [x] **M36.25 — scrolls cannot pile up or replace a modal.** *(confirmed,
   medium)* Board-wide scrolls (`playerStatId < 0`) are queued without a cap or
   de-duplication (`engine/web/src/main.ts:4367`), and the server freezes nobody
   for them, so a looping object floods the queue while the open modal blocks
@@ -8947,6 +8947,26 @@ copy; the executor still writes the failing test in the repo first.
   firing a label on an unrelated object. Cap or de-duplicate, never displace a
   non-scroll modal, and clear the queue on board change. Run `make browser`.
   DoD: tests for each.
+
+  *Done 2026-11-03.* The queue rules moved into `web/src/scroll_queue.ts`. A
+  board-wide scroll that repeats the one on screen or one already queued is
+  dropped, and at most `MAX_QUEUED_BOARD_SCROLLS` (8) board-wide scrolls wait.
+  A scroll the player touched is never dropped, because the server froze them
+  for it. A scroll that arrives while a non-scroll modal is open (chat, a
+  prompt) waits, and `closeModal` shows it afterwards, deferred by a microtask
+  so a close-then-open sequence in one handler finishes first. The
+  `boardChange` handler now clears the scrolls *before* `closeModal`. Half of
+  the board-change finding no longer reproduced: since M36.16 the server drops
+  a player's open scrolls at transfer, so a stale label cannot reach an object
+  on the new board. The client half did still reproduce: the close sent a
+  stale reply and showed the old board's next queued scroll on the new one.
+  Tests: `scroll_queue.test.mjs` (node: cap, de-duplication, no displacement,
+  board change; red on the old semantics) and `scroll_journey.test.mjs`
+  (`TestM3625ScrollBrowserJourney`, `fixtures/scrolls.zwd`). In the journey, an
+  object talks to the board while chat holds a draft. Before the fix the scroll
+  replaced the chat; now the draft survives and the scroll opens once chat
+  closes. Not covered here: a board change still closes an open chat (that is
+  `closeModal`, not the scroll queue).
 
 ### Tier 4 — hardening, test health and tools
 
