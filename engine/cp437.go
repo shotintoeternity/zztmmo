@@ -25,7 +25,10 @@
 // which is genuinely UTF-8 and gets folded to CP437 by admitChatText instead.
 package zztgo
 
-import "encoding/json"
+import (
+	"encoding/json"
+	"strings"
+)
 
 // cp437Encode widens each byte to the rune of the same value, so the result is
 // valid UTF-8 that json.Marshal will not rewrite.
@@ -40,11 +43,20 @@ func cp437Encode(s string) string {
 	if ascii {
 		return s
 	}
-	out := make([]rune, len(s))
+	// One allocation, sized up front: a byte below 0x80 is one UTF-8 byte and
+	// one at or above it is two, so 2*len(s) always fits (M36.5). The []rune
+	// this replaces cost four bytes per input byte and a second allocation for
+	// the string it was then copied into.
+	var out strings.Builder
+	out.Grow(2 * len(s))
 	for i := 0; i < len(s); i++ {
-		out[i] = rune(s[i])
+		if c := s[i]; c < 0x80 {
+			out.WriteByte(c)
+		} else {
+			out.WriteRune(rune(c))
+		}
 	}
-	return string(out)
+	return out.String()
 }
 
 // cp437Decode narrows each rune back to one byte. A rune above 0xFF cannot be

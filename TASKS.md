@@ -8657,12 +8657,23 @@ copy; the executor still writes the failing test in the repo first.
   `CP437String(cp437Decode(title))`. `TestM364HelpTitleRoundTripsCP437` was
   red before the fix.
 
-- [ ] **M36.5 — `cp437Encode` allocation (perf, low priority).**
+- [x] **M36.5 — `cp437Encode` allocation (perf, low priority).**
   `engine/cp437.go:43` builds a `[]rune` (4 bytes per input byte) and then
   copies it into a string, and `CP437Lines.MarshalJSON` re-widens cached help
   files on every send. Use a `strings.Builder` with `Grow(len(s)*2)`, or cache
   the encoded help lines. Measure before and after; do not land it without a
   benchmark that shows a difference.
+
+  *Resolved 2026-11-03.* `cp437Encode` now writes one pre-sized
+  `strings.Builder` (`Grow(2*len)`, the exact upper bound) instead of a
+  `[]rune` copied into a string. Benchmarks in `cp437_bench_test.go`, n=8,
+  Apple M4: on a 34-byte line with high bytes, 155 → 92 ns (-41%), 208 → 80 B
+  (-62%), and 2 → 1 allocations, all p=0.000. The help-file half, the
+  alternative of caching encoded help lines, was measured on LANGREF.HLP and
+  left alone: no shipped `.HLP` holds a byte above 0x7F, so every help line
+  already takes the ASCII fast path and its marshal did not move (p=0.505).
+  `TestM365EncodeMatchesRuneWidening` pins the output to the old encoder for
+  all 256 byte values.
 
 - [x] **M36.6 — one encoding policy at the protocol boundary.** `8c97450`
   switched hand-picked fields to `CP437String`. Other outbound fields that carry
