@@ -20,6 +20,7 @@ package zztgo
 // no transit out — each asserted rather than argued.
 
 import (
+	"bytes"
 	"context"
 	"encoding/json"
 	"errors"
@@ -158,11 +159,28 @@ func m321Finish(t *testing.T, h *m321Harness, inst *WorldInstance, playerID Play
 
 func TestM321ChallengeWorldCompilesShipsIsCanonicalAndListed(t *testing.T) {
 	data := m321WorldBytes(t)
-	if err := os.WriteFile(filepath.Join("..", "fixtures", ChallengeWorldName+".ZZT"), data, 0o644); err != nil {
-		t.Fatalf("write fixtures/%s.ZZT: %v", ChallengeWorldName, err)
+	// The committed fixtures/GEMDASH.ZZT must be what gemdash.zwd compiles to.
+	// It is rewritten only on request (M36.26c); every other run compares, so a
+	// stale binary fails instead of being silently replaced. Regenerate with:
+	//
+	//	ZZT_GEMDASH_WRITE=1 go test -run TestM321ChallengeWorldCompilesShipsIsCanonicalAndListed .
+	//
+	// which also refreshes the gitignored engine/GEMDASH.ZZT copy a local
+	// zzt-server (-worlds .) hosts.
+	binPath := filepath.Join("..", "fixtures", ChallengeWorldName+".ZZT")
+	if os.Getenv("ZZT_GEMDASH_WRITE") == "1" {
+		for _, path := range []string{binPath, ChallengeWorldName + ".ZZT"} {
+			if err := os.WriteFile(path, data, 0o644); err != nil {
+				t.Fatalf("write %s: %v", path, err)
+			}
+		}
 	}
-	if err := os.WriteFile(ChallengeWorldName+".ZZT", data, 0o644); err != nil {
-		t.Fatalf("write engine/%s.ZZT: %v", ChallengeWorldName, err)
+	committed, err := os.ReadFile(binPath)
+	if err != nil {
+		t.Fatalf("read %s: %v (regenerate with ZZT_GEMDASH_WRITE=1)", binPath, err)
+	}
+	if !bytes.Equal(committed, data) {
+		t.Fatalf("%s is stale against fixtures/gemdash.zwd; regenerate with ZZT_GEMDASH_WRITE=1", binPath)
 	}
 	if !WorldIsCanonical(ChallengeWorldName) {
 		t.Fatalf("WorldIsCanonical(%s) = false; the challenge course must be protected from dreams and publishes", ChallengeWorldName)

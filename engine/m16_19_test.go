@@ -25,8 +25,20 @@ import (
 var (
 	m1619BuildOnce sync.Once
 	m1619ServerBin string
+	m1619BuildDir  string
 	m1619BuildErr  error
 )
+
+// TestMain removes the zzt-server binary getM1619ServerBinary built, so a test
+// run leaves nothing behind in $TMPDIR (M36.26d). It is the package's only
+// TestMain: every suite that launches the shipped server shares one build.
+func TestMain(m *testing.M) {
+	code := m.Run()
+	if m1619BuildDir != "" {
+		_ = os.RemoveAll(m1619BuildDir)
+	}
+	os.Exit(code)
+}
 
 func getM1619ServerBinary(t *testing.T) string {
 	t.Helper()
@@ -36,6 +48,7 @@ func getM1619ServerBinary(t *testing.T) string {
 			m1619BuildErr = err
 			return
 		}
+		m1619BuildDir = tmpDir
 		binPath := filepath.Join(tmpDir, "zzt-server")
 		cmd := exec.Command("go", "build", "-o", binPath, "./cmd/zzt-server")
 		if out, err := cmd.CombinedOutput(); err != nil {
@@ -62,6 +75,13 @@ type serverSubprocess struct {
 }
 
 func startServerSubprocess(t *testing.T, extraFlags ...string) (*serverSubprocess, func()) {
+	t.Helper()
+	return startServerSubprocessWithEnv(t, nil, extraFlags...)
+}
+
+// startServerSubprocessWithEnv is startServerSubprocess with extra environment
+// variables (KEY=value) on top of the test process's own; a later entry wins.
+func startServerSubprocessWithEnv(t *testing.T, env []string, extraFlags ...string) (*serverSubprocess, func()) {
 	t.Helper()
 	binPath := getM1619ServerBinary(t)
 
@@ -103,6 +123,9 @@ func startServerSubprocess(t *testing.T, extraFlags ...string) (*serverSubproces
 
 	cmd := exec.Command(binPath, args...)
 	cmd.Dir = rootDir
+	if len(env) > 0 {
+		cmd.Env = append(os.Environ(), env...)
+	}
 	var logBuf bytes.Buffer
 	cmd.Stdout = &logBuf
 	cmd.Stderr = &logBuf
@@ -237,12 +260,12 @@ func TestM1619ServerSubprocessLifecycleAndStaticAssets(t *testing.T) {
 		done <- sp.cmd.Wait()
 	}()
 
+	// Graceful means the process ran its shutdown path and exited 0. A crash,
+	// a log.Fatal, or death by the signal itself all surface here as an error.
 	select {
 	case err := <-done:
 		if err != nil {
-			if exitErr, ok := err.(*exec.ExitError); ok {
-				t.Logf("subprocess exited after SIGINT with code %d", exitErr.ExitCode())
-			}
+			t.Fatalf("subprocess did not exit cleanly after SIGINT: %v\nLogs:\n%s", err, sp.logs.String())
 		}
 	case <-time.After(5 * time.Second):
 		t.Fatalf("subprocess did not exit within 5s after SIGINT")
@@ -250,7 +273,8 @@ func TestM1619ServerSubprocessLifecycleAndStaticAssets(t *testing.T) {
 }
 
 // TestM1619PathTraversalAndSecurityBoundary verifies path traversal refusal,
-// safe save name sanitization, and corrupt file rejection without escaping directory boundaries.
+// safe save name sanitization, and that restoring a corrupt save is refused
+// without disturbing the world it was aimed at.
 func TestM1619PathTraversalAndSecurityBoundary(t *testing.T) {
 	sp, cleanup := startServerSubprocess(t)
 	defer cleanup()
@@ -267,7 +291,7 @@ func TestM1619PathTraversalAndSecurityBoundary(t *testing.T) {
 	for _, u := range traversalURLs {
 		resp, err := http.Get(u)
 		if err != nil {
-			continue
+			t.Fatalf("GET %s: %v — the server must answer a traversal attempt, not drop it", u, err)
 		}
 		body, _ := io.ReadAll(resp.Body)
 		_ = resp.Body.Close()
@@ -284,161 +308,264 @@ func TestM1619PathTraversalAndSecurityBoundary(t *testing.T) {
 		}
 	}
 
-	// 3. Corrupt save restore attempt via API / WebSocket
+	// 3. Restoring a corrupt save is refused, and the world survives it.
 	corruptBytes := []byte("CORRUPT_INVALID_SAVE_HEADER_DATA_1234567890")
 	corruptPath := filepath.Join(sp.savesDir, "CORRUPT.SAV")
-	_ = os.WriteFile(corruptPath, corruptBytes, 0644)
+	if err := os.WriteFile(corruptPath, corruptBytes, 0644); err != nil {
+		t.Fatalf("write %s: %v", corruptPath, err)
+	}
+	resp, err := http.Post(sp.baseURL+"/api/restore", "application/json",
+		strings.NewReader(`{"world":"TOWN","name":"CORRUPT"}`))
+	if err != nil {
+		t.Fatalf("POST /api/restore: %v", err)
+	}
+	body, _ := io.ReadAll(resp.Body)
+	_ = resp.Body.Close()
+	if resp.StatusCode != http.StatusInternalServerError || !strings.Contains(string(body), "restore failed") {
+		t.Fatalf("POST /api/restore of a corrupt save = %d %q, want 500 \"restore failed\"", resp.StatusCode, body)
+	}
+	if got, err := os.ReadFile(corruptPath); err != nil || !bytes.Equal(got, corruptBytes) {
+		t.Fatalf("the refused restore touched %s: %q, %v", corruptPath, got, err)
+	}
+	// The world the restore was aimed at still takes a player.
+	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
+	defer cancel()
+	conn, _ := m1619Join(t, ctx, sp, "AfterCorrupt")
+	_ = conn.Close(websocket.StatusNormalClosure, "")
+}
 
-	// Verify server handles corrupt file without panic/crash
-	resp, err := http.Get(sp.baseURL + "/api/worlds")
-	if err != nil || resp.StatusCode != http.StatusOK {
-		t.Fatalf("server unhealthy after corrupt file creation: %v", err)
+// m1619Join dials the subprocess's TOWN and joins as name, failing the test on
+// any error, and returns the connection with its first frame.
+func m1619Join(t *testing.T, ctx context.Context, sp *serverSubprocess, name string) (*websocket.Conn, SnapshotMessage) {
+	t.Helper()
+	conn, _, err := websocket.Dial(ctx, sp.wsURL+"?world=TOWN", nil)
+	if err != nil {
+		t.Fatalf("%s: dial websocket: %v", name, err)
+	}
+	conn.SetReadLimit(ServerReadLimit)
+	if err := wsjson.Write(ctx, conn, JoinMessage{Type: MessageTypeJoin, Name: name}); err != nil {
+		t.Fatalf("%s: join write: %v", name, err)
+	}
+	var snap SnapshotMessage
+	if err := wsjson.Read(ctx, conn, &snap); err != nil {
+		t.Fatalf("%s: snapshot read: %v", name, err)
+	}
+	if snap.Type != MessageTypeSnapshot {
+		t.Fatalf("%s: first frame type %q, want %q", name, snap.Type, MessageTypeSnapshot)
+	}
+	return conn, snap
+}
+
+// m1619ReadUntilClosed reads conn until the server closes it and returns the
+// close status (-1 when the read failed without a close frame). It fails the
+// test if the connection is still open when ctx expires.
+func m1619ReadUntilClosed(t *testing.T, ctx context.Context, conn *websocket.Conn, what string) websocket.StatusCode {
+	t.Helper()
+	for {
+		if _, _, err := conn.Read(ctx); err != nil {
+			if ctx.Err() != nil {
+				t.Fatalf("%s: the server never closed the connection: %v", what, err)
+			}
+			return websocket.CloseStatus(err)
+		}
 	}
 }
 
-// TestM1619MalformedAndOversizedInputHandling verifies non-JSON, oversized,
-// and invalid UTF-8 frames over WebSocket do not panic or crash the server.
+// TestM1619MalformedAndOversizedInputHandling verifies that a non-JSON frame,
+// an invalid-UTF-8 frame, and a frame over ServerReadLimit each end only the
+// connection that sent it: the server closes that socket, and a bystander
+// already in the room keeps receiving frames and a new player can still join.
 func TestM1619MalformedAndOversizedInputHandling(t *testing.T) {
 	sp, cleanup := startServerSubprocess(t)
 	defer cleanup()
 
-	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
+	ctx, cancel := context.WithTimeout(context.Background(), 20*time.Second)
 	defer cancel()
 
-	conn, _, err := websocket.Dial(ctx, sp.wsURL+"?world=TOWN", nil)
-	if err != nil {
-		t.Fatalf("dial websocket: %v", err)
+	bystander, _ := m1619Join(t, ctx, sp, "Bystander")
+	defer bystander.Close(websocket.StatusNormalClosure, "")
+
+	cases := []struct {
+		name  string
+		frame []byte
+		want  websocket.StatusCode
+	}{
+		// wsjson.Read refuses a frame that does not decode and closes with
+		// 1007 itself, before the read loop's own deferred normal close.
+		{"non-JSON", []byte("NOT_JSON_DATA_BLAH_BLAH{{{"), websocket.StatusInvalidFramePayloadData},
+		{"invalid UTF-8", []byte{0xFF, 0xFE, 0xFD, 0xFC, 0x00, 0x01}, websocket.StatusInvalidFramePayloadData},
+		// One byte over the limit: the old 128 KB frame was well under
+		// ServerReadLimit and never exercised it.
+		{"oversized", bytes.Repeat([]byte("A"), ServerReadLimit+1), websocket.StatusMessageTooBig},
 	}
-	defer conn.Close(websocket.StatusNormalClosure, "")
-	conn.SetReadLimit(ServerReadLimit)
+	for _, c := range cases {
+		conn, _ := m1619Join(t, ctx, sp, "Sender")
+		if err := conn.Write(ctx, websocket.MessageText, c.frame); err != nil {
+			t.Fatalf("%s: write: %v", c.name, err)
+		}
+		caseCtx, caseCancel := context.WithTimeout(ctx, 5*time.Second)
+		got := m1619ReadUntilClosed(t, caseCtx, conn, c.name)
+		caseCancel()
+		if got != c.want {
+			t.Errorf("%s frame: server closed with status %v, want %v", c.name, got, c.want)
+		}
+		_ = conn.CloseNow()
+	}
 
-	// 1. Send malformed non-JSON frame
-	_ = conn.Write(ctx, websocket.MessageText, []byte("NOT_JSON_DATA_BLAH_BLAH{{{"))
-
-	// 2. Send oversized frame (e.g. 128 KB)
-	hugeData := bytes.Repeat([]byte("A"), 128*1024)
-	_ = conn.Write(ctx, websocket.MessageText, hugeData)
-
-	// 3. Send invalid UTF-8 / binary frame
-	_ = conn.Write(ctx, websocket.MessageText, []byte{0xFF, 0xFE, 0xFD, 0xFC, 0x00, 0x01})
-
-	time.Sleep(200 * time.Millisecond)
-
-	// Verify server remains healthy
+	// The bystander's connection outlived all three: it still gets frames.
+	readCtx, readCancel := context.WithTimeout(ctx, 5*time.Second)
+	defer readCancel()
+	if _, _, err := bystander.Read(readCtx); err != nil {
+		t.Fatalf("the bystander's connection did not survive the malformed frames: %v", err)
+	}
+	late, _ := m1619Join(t, ctx, sp, "Latecomer")
+	_ = late.Close(websocket.StatusNormalClosure, "")
 	resp, err := http.Get(sp.baseURL + "/api/worlds")
 	if err != nil || resp.StatusCode != http.StatusOK {
-		t.Fatalf("server process died or unhealthy after malformed WS input: %v", err)
+		t.Fatalf("server unhealthy after malformed WS input: %v", err)
 	}
+	_ = resp.Body.Close()
 }
 
-// TestM1619ChatAndGenerationRateLimits verifies rate limit enforcement for chat and generation.
+// TestM1619ChatAndGenerationRateLimits verifies, against the shipped binary,
+// that the sixth chat line inside the window is refused (and is never
+// broadcast), and that a second dream from the same client inside the
+// generation cooldown is refused with 429.
 func TestM1619ChatAndGenerationRateLimits(t *testing.T) {
-	sp, cleanup := startServerSubprocess(t)
-	defer cleanup()
-
-	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
-	defer cancel()
-
-	conn, _, err := websocket.Dial(ctx, sp.wsURL+"?world=TOWN", nil)
-	if err != nil {
-		t.Fatalf("dial websocket: %v", err)
-	}
-	defer conn.Close(websocket.StatusNormalClosure, "")
-	conn.SetReadLimit(ServerReadLimit)
-
-	// Join
-	if err := wsjson.Write(ctx, conn, JoinMessage{Type: MessageTypeJoin, Name: "Tester"}); err != nil {
-		t.Fatalf("join write: %v", err)
-	}
-	var snapshot SnapshotMessage
-	if err := wsjson.Read(ctx, conn, &snapshot); err != nil {
-		t.Fatalf("snapshot read: %v", err)
-	}
-
-	// Drain incoming diffs/events in background so socket doesn't block
-	go func() {
-		for {
-			var msg json.RawMessage
-			if err := wsjson.Read(ctx, conn, &msg); err != nil {
-				return
-			}
-		}
-	}()
-
-	// Send 5 chat messages (allowed limit)
-	for i := 1; i <= 5; i++ {
-		msg := map[string]interface{}{
-			"type": "chat",
-			"text": fmt.Sprintf("Message %d", i),
-		}
-		if err := wsjson.Write(ctx, conn, msg); err != nil {
-			t.Fatalf("write chat %d: %v", i, err)
-		}
-	}
-
-	// 6th message within 10s should be rate-limited cleanly without dropping server
-	msg6 := map[string]interface{}{
-		"type": "chat",
-		"text": "Message 6 Rate Limit Test",
-	}
-	_ = wsjson.Write(ctx, conn, msg6)
-
-	time.Sleep(200 * time.Millisecond)
-
-	// Verify server process is still healthy
-	resp, err := http.Get(sp.baseURL + "/api/worlds")
-	if err != nil || resp.StatusCode != http.StatusOK {
-		t.Fatalf("server unhealthy after rate limit test: %v", err)
-	}
-}
-
-// TestM1619SlowClientAndAutosaveUnderLoad verifies slow WS reader does not stall
-// the tick loop, and autosave writes atomically during load.
-func TestM1619SlowClientAndAutosaveUnderLoad(t *testing.T) {
-	sp, cleanup := startServerSubprocess(t, "-autosave", "1")
+	// Generation is configured against an API that refuses connections: the
+	// first dream fails in planning, after it was admitted and its client's
+	// cooldown stamped, so it costs nothing and needs no network.
+	sp, cleanup := startServerSubprocessWithEnv(t, []string{
+		"ANTHROPIC_API_URL=http://127.0.0.1:1/v1/messages",
+		"ANTHROPIC_API_KEY=test-key",
+		"ANTHROPIC_MODEL=test-model",
+		"ANTHROPIC_MAX_TOKENS=100",
+		"ZZT_GENERATION_ATTEMPTS=1",
+		"ZZT_GENERATION_RATE_SECONDS=3600",
+		"ZZT_GENERATION_DAILY_MAX=-1",
+	})
 	defer cleanup()
 
 	ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
 	defer cancel()
 
-	// 1. Slow client: dials WS but NEVER reads from socket
+	conn, snap := m1619Join(t, ctx, sp, "Tester")
+	defer conn.Close(websocket.StatusNormalClosure, "")
+
+	// Five lines in the window are admitted and the sixth is refused (M16.16a).
+	// The number is the contract, written out rather than read back from
+	// chatRateLimitMax, so loosening the constant reddens this test.
+	const admitted = 5
+	for i := 1; i <= admitted+1; i++ {
+		msg := map[string]interface{}{"type": "chat", "text": fmt.Sprintf("Message %d", i)}
+		if err := wsjson.Write(ctx, conn, msg); err != nil {
+			t.Fatalf("write chat %d: %v", i, err)
+		}
+	}
+	// A private message is admitted by the same limiter and, unlike global
+	// chat, reports its refusal. The read loop handles frames in order, so its
+	// answer arrives after anything the six chat lines produced.
+	const absentPlayer = PlayerID(9999)
+	if err := wsjson.Write(ctx, conn, PrivateMessage{Type: MessageTypePrivateMessage, PlayerID: absentPlayer, Text: "sentinel"}); err != nil {
+		t.Fatalf("write sentinel private message: %v", err)
+	}
+	var echoed []string
+	for {
+		var frame struct {
+			Type      string   `json:"type"`
+			From      string   `json:"from"`
+			PlayerID  PlayerID `json:"playerId"`
+			Text      string   `json:"text"`
+			History   bool     `json:"history"`
+			Delivered bool     `json:"delivered"`
+		}
+		if err := wsjson.Read(ctx, conn, &frame); err != nil {
+			t.Fatalf("reading until the sentinel's answer (echoed so far %q): %v", echoed, err)
+		}
+		if frame.Type == "chat" && !frame.History && frame.PlayerID == snap.You.ID {
+			echoed = append(echoed, frame.Text)
+		}
+		if frame.Type == MessageTypePrivateResult {
+			if frame.Delivered || frame.Text != "You are sending messages too quickly." {
+				t.Fatalf("sentinel private message answered %+v, want the rate-limit refusal", frame)
+			}
+			break
+		}
+	}
+	want := make([]string, 0, admitted)
+	for i := 1; i <= admitted; i++ {
+		want = append(want, fmt.Sprintf("Message %d", i))
+	}
+	if strings.Join(echoed, "|") != strings.Join(want, "|") {
+		t.Fatalf("broadcast chat = %q, want exactly %q (the sixth line is refused)", echoed, want)
+	}
+
+	// Generation: the first dream is admitted (and fails in planning); the
+	// second, from the same client inside the cooldown, is refused.
+	dream := func() (int, string) {
+		resp, err := http.Post(sp.baseURL+"/api/generate", "application/json",
+			strings.NewReader(`{"prompt":"a small test world"}`))
+		if err != nil {
+			t.Fatalf("POST /api/generate: %v", err)
+		}
+		body, _ := io.ReadAll(resp.Body)
+		_ = resp.Body.Close()
+		return resp.StatusCode, string(body)
+	}
+	if code, body := dream(); code != http.StatusUnprocessableEntity {
+		t.Fatalf("first dream = %d %q, want 422 (admitted, then failed against the dead API)", code, body)
+	}
+	if code, body := dream(); code != http.StatusTooManyRequests || !strings.Contains(body, "rate limit") {
+		t.Fatalf("second dream inside the cooldown = %d %q, want 429 rate limit", code, body)
+	}
+}
+
+// TestM1619SlowClientAndAutosaveUnderLoad verifies a slow WS reader does not
+// stall the tick loop for anyone else, and that the autosave written during
+// that load is a complete, loadable world file with no temp file left behind.
+func TestM1619SlowClientAndAutosaveUnderLoad(t *testing.T) {
+	sp, cleanup := startServerSubprocess(t, "-autosave", "1")
+	defer cleanup()
+
+	ctx, cancel := context.WithTimeout(context.Background(), 15*time.Second)
+	defer cancel()
+
+	// 1. Slow client: joins and then NEVER reads from its socket.
 	slowConn, _, err := websocket.Dial(ctx, sp.wsURL+"?world=TOWN", nil)
 	if err != nil {
 		t.Fatalf("dial slow websocket: %v", err)
 	}
 	defer slowConn.Close(websocket.StatusNormalClosure, "")
 	slowConn.SetReadLimit(ServerReadLimit)
-	_ = wsjson.Write(ctx, slowConn, JoinMessage{Type: MessageTypeJoin, Name: "SlowClient"})
-
-	// 2. Active client: dials and sends input masks across 20 ticks
-	activeConn, _, err := websocket.Dial(ctx, sp.wsURL+"?world=TOWN", nil)
-	if err != nil {
-		t.Fatalf("dial active websocket: %v", err)
+	if err := wsjson.Write(ctx, slowConn, JoinMessage{Type: MessageTypeJoin, Name: "SlowClient"}); err != nil {
+		t.Fatalf("join slow: %v", err)
 	}
+
+	// 2. Active client: sends input masks across 20 ticks and counts the diffs
+	// the server sends back while the slow client sits stalled.
+	activeConn, _ := m1619Join(t, ctx, sp, "ActiveClient")
 	defer activeConn.Close(websocket.StatusNormalClosure, "")
-	activeConn.SetReadLimit(ServerReadLimit)
 
-	if err := wsjson.Write(ctx, activeConn, JoinMessage{Type: MessageTypeJoin, Name: "ActiveClient"}); err != nil {
-		t.Fatalf("join active: %v", err)
-	}
-
-	var activeSnapshot SnapshotMessage
-	if err := wsjson.Read(ctx, activeConn, &activeSnapshot); err != nil {
-		t.Fatalf("read active snapshot: %v", err)
-	}
-
-	// Drain incoming diffs on active client
+	var diffMu sync.Mutex
+	diffs := 0
 	go func() {
 		for {
-			var msg json.RawMessage
-			if err := wsjson.Read(ctx, activeConn, &msg); err != nil {
+			var frame struct {
+				Type string `json:"type"`
+			}
+			if err := wsjson.Read(ctx, activeConn, &frame); err != nil {
 				return
+			}
+			if frame.Type == MessageTypeDiff {
+				diffMu.Lock()
+				diffs++
+				diffMu.Unlock()
 			}
 		}
 	}()
 
-	// Send inputs and receive diffs on active client while slow client sits stalled
-	for seq := uint64(1); seq <= 20; seq++ {
+	const inputs = 20
+	for seq := uint64(1); seq <= inputs; seq++ {
 		inputMsg := map[string]interface{}{
 			"type": "input",
 			"seq":  seq,
@@ -452,11 +579,64 @@ func TestM1619SlowClientAndAutosaveUnderLoad(t *testing.T) {
 		time.Sleep(110 * time.Millisecond)
 	}
 
-	// 3. Verify server completed autosave cycle without panic
-	time.Sleep(1 * time.Second)
+	// 3. Let at least one more autosave cadence (1s) pass, then stop the
+	// server so nothing is mid-write while the directory is inspected.
+	time.Sleep(1200 * time.Millisecond)
+	diffMu.Lock()
+	gotDiffs := diffs
+	diffMu.Unlock()
+	// The same loose floor the 30-client run uses: it catches a tick loop the
+	// slow reader stalled, not jitter.
+	if gotDiffs < inputs/5 {
+		t.Errorf("active client received %d diffs across %d ticks beside a stalled reader, want at least %d", gotDiffs, inputs, inputs/5)
+	}
 	resp, err := http.Get(sp.baseURL + "/api/worlds")
 	if err != nil || resp.StatusCode != http.StatusOK {
 		t.Fatalf("server unhealthy after slow client & autosave load test: %v", err)
+	}
+	_ = resp.Body.Close()
+	// SIGINT, not the cleanup's SIGKILL: a kill could land mid-write and leave
+	// the very temp file this test says never survives.
+	if err := sp.cmd.Process.Signal(syscall.SIGINT); err != nil {
+		t.Fatalf("signal SIGINT: %v", err)
+	}
+	exited := make(chan error, 1)
+	go func() { exited <- sp.cmd.Wait() }()
+	select {
+	case err := <-exited:
+		if err != nil {
+			t.Fatalf("server did not exit cleanly after SIGINT: %v", err)
+		}
+	case <-time.After(5 * time.Second):
+		t.Fatalf("server did not exit within 5s after SIGINT")
+	}
+
+	autosaveDir := filepath.Join(sp.savesDir, "autosave")
+	entries, err := os.ReadDir(autosaveDir)
+	if err != nil {
+		t.Fatalf("read %s: %v (no autosave was written during the run)", autosaveDir, err)
+	}
+	var names []string
+	for _, entry := range entries {
+		names = append(names, entry.Name())
+	}
+	if len(names) != 1 || names[0] != "TOWN.SAV" {
+		t.Fatalf("autosave directory holds %q, want exactly [TOWN.SAV] (no temp file left behind)", names)
+	}
+	f, err := os.Open(filepath.Join(autosaveDir, "TOWN.SAV"))
+	if err != nil {
+		t.Fatal(err)
+	}
+	defer f.Close()
+	scratch := newSnapshotEngine()
+	if err := scratch.worldReadFrom(f, false, nil); err != nil {
+		t.Fatalf("autosave TOWN.SAV does not load: %v", err)
+	}
+	if err := validateWorldBoards(scratch.World); err != nil {
+		t.Fatalf("autosave TOWN.SAV has a bad board: %v", err)
+	}
+	if town := townRoomManager(t).world; scratch.World.BoardCount != town.BoardCount {
+		t.Fatalf("autosave TOWN.SAV has %d boards, want TOWN's %d", scratch.World.BoardCount, town.BoardCount)
 	}
 }
 

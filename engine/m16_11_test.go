@@ -28,9 +28,30 @@ func TestM1611CompileAcceptanceWorld(t *testing.T) {
 		t.Fatalf("CompileZWD output is empty")
 	}
 
-	// Write compiled ACCEPT.ZZT into fixtures and engine directory
-	_ = os.WriteFile(filepath.Join("..", "fixtures", "ACCEPT.ZZT"), zztBytes, 0644)
-	_ = os.WriteFile("ACCEPT.ZZT", zztBytes, 0644)
+	// The committed fixtures/ACCEPT.ZZT must be what accept.zwd compiles to. It
+	// is rewritten only on request (M36.26c), as charset_fixture_test.go does;
+	// every other run compares, so a stale binary fails instead of being
+	// silently replaced. Regenerate after editing the source with:
+	//
+	//	ZZT_ACCEPT_WRITE=1 go test -run TestM1611CompileAcceptanceWorld .
+	//
+	// which also refreshes the gitignored engine/ACCEPT.ZZT copy a local
+	// zzt-server (-worlds .) hosts.
+	binPath := filepath.Join("..", "fixtures", "ACCEPT.ZZT")
+	if os.Getenv("ZZT_ACCEPT_WRITE") == "1" {
+		for _, path := range []string{binPath, "ACCEPT.ZZT"} {
+			if err := os.WriteFile(path, zztBytes, 0644); err != nil {
+				t.Fatalf("write %s: %v", path, err)
+			}
+		}
+	}
+	committed, err := os.ReadFile(binPath)
+	if err != nil {
+		t.Fatalf("read %s: %v (regenerate with ZZT_ACCEPT_WRITE=1)", binPath, err)
+	}
+	if !bytes.Equal(committed, zztBytes) {
+		t.Fatalf("%s is stale against fixtures/accept.zwd; regenerate with ZZT_ACCEPT_WRITE=1", binPath)
+	}
 
 	// Validate world loading and 200 GameSteps
 	world, err := CompileZWDWorld(string(zwdBytes))
