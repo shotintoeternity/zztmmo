@@ -8897,7 +8897,7 @@ copy; the executor still writes the failing test in the repo first.
   so move them onto the Engine without a blind rename. DoD: a `-race` test
   generating while a room ticks.
 
-- [ ] **M36.23 — a full board refuses a join instead of hijacking a stat.**
+- [x] **M36.23 — a full board refuses a join instead of hijacking a stat.**
   *(confirmed, medium: reproduced)* `SpawnPlayer` (`engine/gamevars.go:588`)
   ignores `AddStat`'s silent no-op at `MAX_STAT` and returns an existing stat,
   usually an object. The joiner controls that object, an `E_PLAYER` tile with

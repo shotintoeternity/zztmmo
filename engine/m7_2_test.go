@@ -58,7 +58,7 @@ func TestM72TorchLightArrivesWithFreshSpawn(t *testing.T) {
 	spawnX := int16(room.Engine.Board.Stats[0].X)
 	spawnY := int16(room.Engine.Board.Stats[0].Y)
 
-	statID := rm.spawnPlayerInRoom(room, spawnX, spawnY)
+	statID, _ := rm.spawnPlayerInRoom(room, spawnX, spawnY)
 
 	assertTorchCircleRenderedLit(t, room.Engine, statID)
 }

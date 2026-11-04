@@ -594,7 +594,15 @@ func (e *Engine) SetReenterPoint(statId int16, x, y int16) {
 	pState.ReenterY = byte(y)
 }
 
+// SpawnPlayer adds a player stat at the board's start square and returns its
+// id, or -1 if the board already holds MAX_STAT stats (M36.23). AddStat is a
+// silent no-op on a full board, so returning Board.StatCount regardless handed
+// the caller the board's last stat, usually an object, and the E_PLAYER tile
+// painted below then had no stat of its own.
 func (e *Engine) SpawnPlayer() int16 {
+	if e.Board.StatCount >= MAX_STAT {
+		return -1
+	}
 	spawnX := int16(e.Board.Info.StartPlayerX)
 	spawnY := int16(e.Board.Info.StartPlayerY)
 	// The stored StartPlayerX/Y is untrusted: it can be zero, or (from a corrupt

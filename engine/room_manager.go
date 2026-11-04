@@ -488,12 +488,22 @@ func (rm *RoomManager) JoinPlayer(boardID, spawnX, spawnY int16) PlayerID {
 // uses it to assign server-scoped ids. It advances the manager's own counter
 // past the supplied id so a later plain JoinPlayer on the same manager cannot
 // reissue it.
+//
+// It returns 0, and joins nobody, when the board has no room for another
+// player stat (M36.23). PlayerIDs start at 1, so 0 is never a real player. The
+// refused join is still recorded: it thawed the board, and playback must thaw
+// and refuse it the same way.
 func (rm *RoomManager) JoinPlayerWithID(playerID PlayerID, boardID, spawnX, spawnY int16) PlayerID {
 	if playerID > rm.nextPlayerID {
 		rm.nextPlayerID = playerID
 	}
 	room := rm.ensureRoom(boardID)
-	statID := rm.spawnPlayerInRoom(room, spawnX, spawnY)
+	statID, ok := rm.spawnPlayerInRoom(room, spawnX, spawnY)
+	if !ok {
+		rm.recorder.record(recOp{Op: "join", Player: playerID, Board: boardID, X: spawnX, Y: spawnY})
+		rm.freezeRoomIfEmpty(room.BoardID)
+		return 0
+	}
 	room.Engine.ResetPlayerState(statID)
 	drawPlayerArrivalSurroundings(room.Engine, statID)
 	player := &roomPlayer{
@@ -561,13 +571,41 @@ func (rm *RoomManager) PlayerIdentity(playerID PlayerID) (accountID, name string
 	return player.accountID, player.name, true
 }
 
-func (rm *RoomManager) spawnPlayerInRoom(room *Room, spawnX, spawnY int16) int16 {
+// roomHasPlayerCapacity reports whether spawnPlayerInRoom can place one more
+// player: the first arrival in an empty room claims the board's own player stat
+// and adds nothing, and anyone else needs a free stat slot (M36.23).
+func roomHasPlayerCapacity(room *Room) bool {
+	if len(room.players) == 0 {
+		if _, ok := claimablePlayerStat(room); ok {
+			return true
+		}
+	}
+	return room.Engine.Board.StatCount < MAX_STAT
+}
+
+// boardFullScroll is what a player is shown when a board refuses them. It
+// answers to no object, so the client's dismissal of it reaches nothing.
+func boardFullScroll() ScrollEvent {
+	return ScrollEvent{
+		Title:        "Board full",
+		Lines:        []string{"", "  That board is full.", "  Try again when someone leaves."},
+		StatId:       -1,
+		PlayerStatId: -1,
+	}
+}
+
+// spawnPlayerInRoom places a player on room's board and returns their stat,
+// or false, touching nothing, when the board has no room for them (M36.23).
+func (rm *RoomManager) spawnPlayerInRoom(room *Room, spawnX, spawnY int16) (int16, bool) {
+	if !roomHasPlayerCapacity(room) {
+		return -1, false
+	}
 	spawnX, spawnY = roomSpawn(room, spawnX, spawnY)
 	if len(room.players) == 0 {
 		if statID, ok := claimablePlayerStat(room); ok {
 			movePlayerStat(room.Engine, statID, spawnX, spawnY)
 			drawPlayerArrivalSurroundings(room.Engine, statID)
-			return statID
+			return statID, true
 		}
 	}
 
@@ -578,8 +616,11 @@ func (rm *RoomManager) spawnPlayerInRoom(room *Room, spawnX, spawnY int16) int16
 	statID := room.Engine.SpawnPlayer()
 	room.Engine.Board.Info.StartPlayerX = originalSpawnX
 	room.Engine.Board.Info.StartPlayerY = originalSpawnY
+	if statID < 0 {
+		return -1, false
+	}
 	drawPlayerArrivalSurroundings(room.Engine, statID)
-	return statID
+	return statID, true
 }
 
 func drawPlayerArrivalSurroundings(engine *Engine, statID int16) {
@@ -1326,16 +1367,25 @@ func (rm *RoomManager) transferPlayer(playerID PlayerID, transfer TransferEvent)
 	if player == nil {
 		return
 	}
-	// A scroll cannot survive the board it was read on, and a gate that did
-	// would freeze the player on the far side forever. Nor can it be answered
-	// there: a stat id names an object on the board it was read on.
-	player.scrollOpen = false
-	player.openScrolls = nil
 	srcRoom := rm.rooms[player.boardID]
 	if srcRoom == nil {
 		return
 	}
 	dstRoom := rm.ensureRoom(transfer.ToBoard)
+	// M36.23: a full board refuses the traveller before they leave this one, so
+	// they stay where they stood, scrolls and all. A transfer within one board
+	// frees the slot it fills, so only a different board can be full.
+	if dstRoom != srcRoom && !roomHasPlayerCapacity(dstRoom) {
+		rm.dropPendingTransfer(playerID, transfer)
+		rm.pendingPlayerEvents[playerID] = append(rm.pendingPlayerEvents[playerID], boardFullScroll())
+		rm.freezeRoomIfEmpty(dstRoom.BoardID)
+		return
+	}
+	// A scroll cannot survive the board it was read on, and a gate that did
+	// would freeze the player on the far side forever. Nor can it be answered
+	// there: a stat id names an object on the board it was read on.
+	player.scrollOpen = false
+	player.openScrolls = nil
 
 	stateCopy := *srcRoom.Engine.PlayerFor(player.statID)
 	removedStatID := player.statID
@@ -1343,7 +1393,7 @@ func (rm *RoomManager) transferPlayer(playerID PlayerID, transfer TransferEvent)
 	delete(srcRoom.players, playerID)
 	rm.reindexRoomPlayers(srcRoom.BoardID, removedStatID)
 
-	newStatID := rm.spawnPlayerInRoom(dstRoom, transfer.EntryX, transfer.EntryY)
+	newStatID, _ := rm.spawnPlayerInRoom(dstRoom, transfer.EntryX, transfer.EntryY)
 	*dstRoom.Engine.PlayerFor(newStatID) = stateCopy
 	drawPlayerArrivalSurroundings(dstRoom.Engine, newStatID)
 	dstRoom.players[playerID] = struct{}{}
@@ -1353,6 +1403,20 @@ func (rm *RoomManager) transferPlayer(playerID PlayerID, transfer TransferEvent)
 	player.state = dstRoom.Engine.PlayerFor(newStatID)
 
 	rm.freezeRoomIfEmpty(srcRoom.BoardID)
+}
+
+// dropPendingTransfer takes back the transfer event queued for a traveller
+// whose transfer was refused, so their client is not told they moved.
+func (rm *RoomManager) dropPendingTransfer(playerID PlayerID, transfer TransferEvent) {
+	events := rm.pendingPlayerEvents[playerID]
+	kept := events[:0]
+	for _, event := range events {
+		if ev, ok := event.(TransferEvent); ok && ev == transfer {
+			continue
+		}
+		kept = append(kept, event)
+	}
+	rm.pendingPlayerEvents[playerID] = kept
 }
 
 func (rm *RoomManager) reindexRoomPlayers(boardID, removedStatID int16) {

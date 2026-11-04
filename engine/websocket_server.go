@@ -1370,7 +1370,7 @@ func (s *WebSocketServer) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 		// callee panics (e.g. spawning onto a corrupt board). Without it a panic
 		// would leak inst.mu, and every later handleWorlds / GetOrCreateInstance
 		// that waits on that lock (while holding the global server lock) wedges.
-		var ok, evicted bool
+		var ok, evicted, boardFull bool
 		for attempt := 0; ; attempt++ {
 			ok, evicted = func() (bool, bool) {
 				inst.mu.Lock()
@@ -1390,7 +1390,12 @@ func (s *WebSocketServer) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 					// challenge whose route is the player's choosing too.
 					join.Board = challengeRun.Def.Board
 				}
-				inst.RoomManager.JoinPlayerWithID(playerID, join.Board, 0, 0)
+				if inst.RoomManager.JoinPlayerWithID(playerID, join.Board, 0, 0) == 0 {
+					// M36.23: the board has no room for another player stat.
+					// Nobody was spawned, so nothing below has a player to name.
+					boardFull = true
+					return false, false
+				}
 				if authenticated {
 					inst.RoomManager.SetPlayerIdentity(playerID, account.ID, account.DisplayName())
 					if hasStoredState {
@@ -1432,6 +1437,9 @@ func (s *WebSocketServer) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 		}
 
 		if !ok {
+			if boardFull {
+				_ = client.write(ctx, boardFullMessage())
+			}
 			s.removeClientFromInstance(inst, playerID)
 			if challengeRun != nil {
 				// A run whose player never spawned measures nothing; take its
@@ -3749,7 +3757,16 @@ func (s *WebSocketServer) completeWorldTransit(ctx context.Context, source *Worl
 
 	dest.mu.Lock()
 	board := s.resolveJoinBoard(dest, 0)
-	dest.RoomManager.JoinPlayerWithID(transit.PlayerID, board, 0, 0)
+	if dest.RoomManager.JoinPlayerWithID(transit.PlayerID, board, 0, 0) == 0 {
+		// M36.23: the far world's board is full, so nobody was spawned and no
+		// object was taken. The traveller has already left the source world and
+		// is left in neither, exactly as a failed snapshot below leaves them, but
+		// they are told why. (Checking before the leave would mean holding both
+		// instances' locks; see NOTES.md 2026-11-03.)
+		dest.mu.Unlock()
+		_ = client.write(ctx, boardFullMessage())
+		return
+	}
 	if accountID != "" {
 		dest.RoomManager.SetPlayerIdentity(transit.PlayerID, accountID, name)
 		if hasStoredState {
@@ -3790,6 +3807,12 @@ func (s *WebSocketServer) completeWorldTransit(ctx context.Context, source *Worl
 	if err := client.write(ctx, snapshot); err != nil {
 		s.handleReadLoopExit(dest, client, transit.PlayerID)
 	}
+}
+
+// boardFullMessage is the socket form of boardFullScroll, for a joiner who has
+// no player yet and so no diff to carry it (M36.23).
+func boardFullMessage() EventMessage {
+	return EventMessage{Type: MessageTypeEvent, Event: ProtocolEvents([]Event{boardFullScroll()})[0]}
 }
 
 func (s *WebSocketServer) refuseWorldTransit(ctx context.Context, source *WorldInstance, playerID PlayerID, destination string, err error) {
