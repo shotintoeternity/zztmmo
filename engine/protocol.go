@@ -129,15 +129,15 @@ type ModerateMessage struct {
 // refusing a guest kicks them and nothing more, and the operator is told that in
 // the same breath rather than discovering it when the guest walks back in.
 type ModerateResultMessage struct {
-	Type     string   `json:"type"`
-	Action   string   `json:"action"`
-	PlayerID PlayerID `json:"playerId"`
-	Name     string   `json:"name,omitempty"`
-	Applied  bool     `json:"applied"`
-	Durable  bool     `json:"durable"`
+	Type     string      `json:"type"`
+	Action   string      `json:"action"`
+	PlayerID PlayerID    `json:"playerId"`
+	Name     CP437String `json:"name,omitempty"`
+	Applied  bool        `json:"applied"`
+	Durable  bool        `json:"durable"`
 	// Text is the one line the client shows; the server writes it because the
 	// server is what knows which outcome happened.
-	Text string `json:"text"`
+	Text CP437String `json:"text"`
 }
 
 // ModerationNoticeMessage is what a moderated PLAYER is told. Ended marks the
@@ -167,39 +167,58 @@ type ProfileRequestMessage struct {
 }
 
 type ProfileResultMessage struct {
-	Type     string   `json:"type"`
-	PlayerID PlayerID `json:"playerId"`
-	Name     string   `json:"name,omitempty"`
-	Handle   string   `json:"handle,omitempty"`
-	Lines    []string `json:"lines"`
+	Type     string      `json:"type"`
+	PlayerID PlayerID    `json:"playerId"`
+	Name     CP437String `json:"name,omitempty"`
+	Handle   string      `json:"handle,omitempty"`
+	Lines    CP437Lines  `json:"lines"`
 }
 
 // PrivateMessage is an in-session, roster-addressed whisper (M25.1). The client
 // sends PlayerID+Text; the server fills the author fields on delivery. It is
 // deliberately session-only: a PlayerID names a live connection, not an account,
 // and durable/offline PMs wait for the handle-addressed design.
-type PrivateMessage struct {
+// PrivateSubmitMessage is what a client sends for MessageTypePrivateMessage:
+// the target and the text as typed, UTF-8 (M37.5). The server's delivery is a
+// PrivateMessage, whose names and text are CP437.
+type PrivateSubmitMessage struct {
 	Type     string   `json:"type"`
 	PlayerID PlayerID `json:"playerId,omitempty"`
-	From     string   `json:"from,omitempty"`
-	FromID   PlayerID `json:"fromId,omitempty"`
-	To       string   `json:"to,omitempty"`
-	ToID     PlayerID `json:"toId,omitempty"`
 	Text     string   `json:"text"`
-	Outgoing bool     `json:"outgoing,omitempty"`
 }
 
-// ChatMessage is one global chat line, both ways: the client sends Type and
-// Text, and the server broadcasts it with the author filled in (From is the
-// folded player name, PlayerID the live connection). History marks a line
-// replayed from the backlog on join. It was an anonymous struct at each send
-// site until M36.6 named it, so the encoding test could see its strings.
+type PrivateMessage struct {
+	Type     string      `json:"type"`
+	PlayerID PlayerID    `json:"playerId,omitempty"`
+	From     CP437String `json:"from,omitempty"`
+	FromID   PlayerID    `json:"fromId,omitempty"`
+	To       CP437String `json:"to,omitempty"`
+	ToID     PlayerID    `json:"toId,omitempty"`
+	Text     CP437String `json:"text"`
+	Outgoing bool        `json:"outgoing,omitempty"`
+}
+
+// ChatMessage is one global chat line as the server sends it: the author
+// filled in (From is the admitted player name, PlayerID the live connection).
+// History marks a line replayed from the backlog on join. It was an anonymous
+// struct at each send site until M36.6 named it, so the encoding test could see
+// its strings. From and Text are CP437 once admitted, so they travel as
+// CP437String (M37.5). The client's half is ChatSubmitMessage, because typed
+// text arrives as UTF-8 and must not be read as widened CP437.
+// ChatSubmitMessage is what a client sends for MessageTypeChat: the text as
+// typed, UTF-8, which admitChatText encodes (M37.5). The wire shape is
+// ChatMessage's; only the decoding differs.
+type ChatSubmitMessage struct {
+	Type string `json:"type"`
+	Text string `json:"text"`
+}
+
 type ChatMessage struct {
-	Type     string   `json:"type"`
-	From     string   `json:"from,omitempty"`
-	PlayerID PlayerID `json:"playerId,omitempty"`
-	Text     string   `json:"text"`
-	History  bool     `json:"history,omitempty"`
+	Type     string      `json:"type"`
+	From     CP437String `json:"from,omitempty"`
+	PlayerID PlayerID    `json:"playerId,omitempty"`
+	Text     CP437String `json:"text"`
+	History  bool        `json:"history,omitempty"`
 }
 
 // AnnounceMessage is the server-wide shutdown warning (AnnounceShutdown):
@@ -225,11 +244,11 @@ type FollowMessage struct {
 }
 
 type FollowResultMessage struct {
-	Type     string   `json:"type"`
-	PlayerID PlayerID `json:"playerId,omitempty"`
-	Name     string   `json:"name,omitempty"`
-	Followed bool     `json:"followed"`
-	Text     string   `json:"text"`
+	Type     string      `json:"type"`
+	PlayerID PlayerID    `json:"playerId,omitempty"`
+	Name     CP437String `json:"name,omitempty"`
+	Followed bool        `json:"followed"`
+	Text     CP437String `json:"text"`
 }
 
 // BlockMessage is the client's block/unblock request. The target is named by the
@@ -250,15 +269,15 @@ type BlockMessage struct {
 // guest cannot be made durable — there is no id to key it on — and a player who
 // thinks they are done with someone should not be surprised tomorrow.
 type BlockResultMessage struct {
-	Type     string   `json:"type"`
-	PlayerID PlayerID `json:"playerId"`
-	Name     string   `json:"name,omitempty"`
-	Blocked  bool     `json:"blocked"`
-	Durable  bool     `json:"durable"`
+	Type     string      `json:"type"`
+	PlayerID PlayerID    `json:"playerId"`
+	Name     CP437String `json:"name,omitempty"`
+	Blocked  bool        `json:"blocked"`
+	Durable  bool        `json:"durable"`
 	// Text is the one line the client shows. The server writes it because the
 	// server is what knows which of the four outcomes happened (blocked or
 	// lifted, durable or session-only, or a player who has already gone).
-	Text string `json:"text"`
+	Text CP437String `json:"text"`
 }
 
 // HelpDir is where HelpFileLines looks for .HLP files. The terminal client
@@ -361,9 +380,9 @@ type EditorInspectMessage struct {
 }
 
 type EditorPresence struct {
-	ID    string `json:"id"`
-	Name  string `json:"name"`
-	Color byte   `json:"color"`
+	ID    string      `json:"id"`
+	Name  CP437String `json:"name"`
+	Color byte        `json:"color"`
 	// BoardID is the board this member is editing (M17.12). Members of one
 	// session can be on different boards, so a cursor is only meaningful to
 	// viewers on the same board. Presentation-only: edit authorisation stays
@@ -383,14 +402,14 @@ type EditorPresenceMessage struct {
 // replies with Op "granted" or "refused". A refusal includes the holder's name
 // for the browser's "being edited by" dialog.
 type EditorLeaseMessage struct {
-	Type       string `json:"type"`
-	Op         string `json:"op"`
-	Kind       string `json:"kind"`
-	BoardID    int16  `json:"boardId,omitempty"`
-	StatID     int16  `json:"statId,omitempty"`
-	HolderID   string `json:"holderId,omitempty"`
-	HolderName string `json:"holderName,omitempty"`
-	Error      string `json:"error,omitempty"`
+	Type       string      `json:"type"`
+	Op         string      `json:"op"`
+	Kind       string      `json:"kind"`
+	BoardID    int16       `json:"boardId,omitempty"`
+	StatID     int16       `json:"statId,omitempty"`
+	HolderID   string      `json:"holderId,omitempty"`
+	HolderName CP437String `json:"holderName,omitempty"`
+	Error      string      `json:"error,omitempty"`
 }
 
 type EditorTileInspect struct {
@@ -859,10 +878,10 @@ type PlayerSnapshot struct {
 	// replayed session and a player who has not picked one all send. Neither is
 	// read by the simulation — a roster is drawn over the screen the server
 	// already sent, never into it.
-	Name       string `json:"name,omitempty"`
-	Color      string `json:"color,omitempty"`
-	Handle     string `json:"handle,omitempty"`
-	HasProfile bool   `json:"hasProfile,omitempty"`
+	Name       CP437String `json:"name,omitempty"`
+	Color      string      `json:"color,omitempty"`
+	Handle     string      `json:"handle,omitempty"`
+	HasProfile bool        `json:"hasProfile,omitempty"`
 }
 
 // SanitizePlayerColor accepts exactly "#" plus six hexadecimal digits and

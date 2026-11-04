@@ -7,9 +7,10 @@ package zztgo
 //
 //   - world bytes (scrolls, programs, board and world titles) are CP437 and
 //     travel as CP437String / CP437Lines, widened byte for rune;
-//   - text a person typed (chat, names, prompts) is folded to printable ASCII
-//     where it is admitted, so it is one glyph per byte by the time anything
-//     stores or sends it;
+//   - text a person typed (chat, names, prompts) arrives as UTF-8 and is
+//     encoded to CP437 where it is admitted (encodeTypedCP437, M37.5; the `?`
+//     prompt is still folded to ASCII), so it is one glyph per byte by the time
+//     anything stores it, and it is sent back as CP437String like world bytes;
 //   - protocol tokens (message types, enums, ids, base64, sanitized file
 //     stems, hex colours) are ASCII by construction.
 //
@@ -44,9 +45,7 @@ const (
 	m366Handle   = "NormalizeProfileHandle: [a-z0-9_] only"
 	m366Literal  = "server-authored ASCII message, at most interpolating other fields on this list"
 	m366Element  = "ElementDefs string, ASCII (TestM366ElementDefsAreASCII)"
-	m366Name     = "a player name, folded to printable ASCII at join (admitPlayerName)"
-	m366Typed    = "typed text, folded to printable ASCII where it is admitted"
-	m366Profile  = "profile text: sanitizeProfileLine admits printable ASCII only, plus a folded name"
+	m366Typed    = "inbound typed text, UTF-8 as the client sent it; admitted to CP437 where it arrives and never echoed as-is"
 )
 
 // m366StringFields is every plain string / []string field in protocol.go and
@@ -60,38 +59,23 @@ var m366StringFields = map[string]string{
 
 	"ModerateMessage.Action":                m366Token,
 	"ModerateResultMessage.Action":          m366Token,
-	"ModerateResultMessage.Name":            m366Name,
-	"ModerateResultMessage.Text":            m366Literal,
 	"ModerationNoticeMessage.Action":        m366Token,
 	"ModerationNoticeMessage.Text":          m366Literal,
 	"ReplayControlMessage.Op":               m366Token,
 	"ReplayErrorMessage.Text":               m366Literal,
-	"ProfileResultMessage.Name":             m366Name,
 	"ProfileResultMessage.Handle":           m366Handle,
-	"ProfileResultMessage.Lines":            m366Profile,
-	"PrivateMessage.From":                   m366Name,
-	"PrivateMessage.To":                     m366Name,
-	"PrivateMessage.Text":                   m366Typed + " (admitChatText)",
 	"PrivateResultMessage.Text":             m366Literal,
-	"FollowResultMessage.Name":              m366Name,
-	"FollowResultMessage.Text":              m366Literal,
-	"BlockResultMessage.Name":               m366Name,
-	"BlockResultMessage.Text":               m366Literal,
 	"AnnounceMessage.Text":                  m366Literal,
-	"ChatMessage.From":                      m366Name,
-	"ChatMessage.Text":                      m366Typed + " (admitChatText)",
-	"JoinMessage.Name":                      m366Name,
+	"JoinMessage.Name":                      m366Typed + " (admitPlayerName)",
 	"JoinMessage.World":                     m366SaveName,
 	"JoinMessage.Color":                     m366Color,
 	"JoinMessage.ResumeToken":               m366ID,
 	"EditorEnterMessage.World":              m366SaveName,
 	"EditorEnterMessage.ResumeToken":        m366ID,
 	"EditorPresence.ID":                     m366ID,
-	"EditorPresence.Name":                   m366Name,
 	"EditorLeaseMessage.Op":                 m366Token,
 	"EditorLeaseMessage.Kind":               m366Token,
 	"EditorLeaseMessage.HolderID":           m366ID,
-	"EditorLeaseMessage.HolderName":         m366Name,
 	"EditorLeaseMessage.Error":              m366Literal,
 	"EditorTileInspect.Element":             m366Element,
 	"EditorTileInspect.Param1Name":          m366Element,
@@ -126,12 +110,13 @@ var m366StringFields = map[string]string{
 	"EditorTestPlayMessage.Error":           m366Literal,
 	"DebugCommandMessage.Text":              m366Typed + " (admitDebugCommandText)",
 	"HighScoreNameMessage.Name":             m366Typed + " (admitHighScoreName)",
+	"ChatSubmitMessage.Text":                m366Typed + " (admitChatText)",
+	"PrivateSubmitMessage.Text":             m366Typed + " (admitChatText)",
 	"SaveFilenameMessage.Name":              m366SaveName,
 	"SnapshotMessage.World":                 m366SaveName,
 	"SnapshotMessage.ResumeToken":           m366ID,
 	"SnapshotMessage.Challenge":             m366ID,
 	"SnapshotMessage.ChallengeRun":          m366ID,
-	"PlayerSnapshot.Name":                   m366Name,
 	"PlayerSnapshot.Color":                  m366Color,
 	"PlayerSnapshot.Handle":                 m366Handle,
 	"ProtocolEvent.Filename":                m366Literal + " (only ever \"GAME.HLP\")",
@@ -279,10 +264,10 @@ func TestM366ElementDefsAreASCII(t *testing.T) {
 
 func TestM366PlayerNamesAreFoldedAtJoin(t *testing.T) {
 	cases := []struct{ raw, want string }{
-		{"José", "Jos"},
+		{"José", "Jos\x82"}, // M37.5: the CP437 é
 		{"Ada", "Ada"},
 		{"  Bo  ", "Bo"},
-		{"Zoë “Z” Smith", "Zo \"Z\" Smith"},
+		{"Zoë “Z” Smith", "Zo\x89 \"Z\" Smith"},
 		{"李明", m366NameFallback},
 		{"", ""},
 		{"line\nbreak\x00", "linebreak"},
@@ -325,12 +310,13 @@ func TestM366RosterCarriesFoldedNames(t *testing.T) {
 	}
 	names := map[PlayerID]string{}
 	for _, p := range snap.Players {
-		names[p.ID] = p.Name
+		names[p.ID] = string(p.Name)
 	}
-	if names[guest] != "Jos" || names[member] != "Zo" {
-		t.Fatalf("roster names = %q, want guest %q and member %q", names, "Jos", "Zo")
+	// M37.5: the accents are kept as their CP437 bytes (é 0x82, ë 0x89).
+	if names[guest] != "Jos\x82" || names[member] != "Zo\x89" {
+		t.Fatalf("roster names = %q, want guest %q and member %q", names, "Jos\x82", "Zo\x89")
 	}
-	if _, name, _ := rm.PlayerIdentity(member); name != "Zo" {
-		t.Fatalf("stored identity name = %q, want the folded %q", name, "Zo")
+	if _, name, _ := rm.PlayerIdentity(member); name != "Zo\x89" {
+		t.Fatalf("stored identity name = %q, want the admitted %q", name, "Zo\x89")
 	}
 }

@@ -142,12 +142,13 @@ func (m *moderationMutes) forget(id PlayerID) {
 // refusal read back a month later has to answer "who did this, and when", or it
 // is a mystery rather than a record.
 type RefusedAccount struct {
-	Account string    `json:"account"`
-	Name    string    `json:"name,omitempty"`
-	By      string    `json:"by,omitempty"`
-	ByName  string    `json:"byName,omitempty"`
-	World   string    `json:"world,omitempty"`
-	At      time.Time `json:"at"`
+	Account string `json:"account"`
+	// Name and ByName are admitted player names, CP437 (M37.5).
+	Name   CP437String `json:"name,omitempty"`
+	By     string      `json:"by,omitempty"`
+	ByName CP437String `json:"byName,omitempty"`
+	World  string      `json:"world,omitempty"`
+	At     time.Time   `json:"at"`
 }
 
 // RefusalStore is the durable half of moderation: the accounts that may not
@@ -322,18 +323,18 @@ func (s *RefusalStore) writeLocked() error {
 // one: "who tried to moderate and was told no" is the question an audit gets read
 // for after an incident.
 type ModerationAuditEntry struct {
-	At            time.Time `json:"at"`
-	Action        string    `json:"action"`
-	Result        string    `json:"result"`
-	Operator      string    `json:"operator,omitempty"`
-	OperatorID    PlayerID  `json:"operatorId,omitempty"`
-	OperatorName  string    `json:"operatorName,omitempty"`
-	Target        PlayerID  `json:"target,omitempty"`
-	TargetAccount string    `json:"targetAccount,omitempty"`
-	TargetName    string    `json:"targetName,omitempty"`
-	World         string    `json:"world,omitempty"`
-	Tick          int16     `json:"tick"`
-	Detail        string    `json:"detail,omitempty"`
+	At            time.Time   `json:"at"`
+	Action        string      `json:"action"`
+	Result        string      `json:"result"`
+	Operator      string      `json:"operator,omitempty"`
+	OperatorID    PlayerID    `json:"operatorId,omitempty"`
+	OperatorName  CP437String `json:"operatorName,omitempty"`
+	Target        PlayerID    `json:"target,omitempty"`
+	TargetAccount string      `json:"targetAccount,omitempty"`
+	TargetName    CP437String `json:"targetName,omitempty"`
+	World         string      `json:"world,omitempty"`
+	Tick          int16       `json:"tick"`
+	Detail        string      `json:"detail,omitempty"`
 }
 
 // The results an entry can carry.

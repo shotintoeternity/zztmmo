@@ -92,7 +92,7 @@ type recOp struct {
 	Board  int16        `json:"board,omitempty"`
 	X      int16        `json:"x,omitempty"`
 	Y      int16        `json:"y,omitempty"`
-	Name   string       `json:"name,omitempty"`
+	Name   CP437String  `json:"name,omitempty"`
 	StatID int16        `json:"statID,omitempty"`
 	Label  string       `json:"label,omitempty"`
 	Text   string       `json:"text,omitempty"`
@@ -333,7 +333,8 @@ func applyRecordedOp(rm *RoomManager, op recOp) {
 	case "join":
 		rm.JoinPlayerWithID(op.Player, op.Board, op.X, op.Y)
 	case "name":
-		rm.SetPlayerName(op.Player, op.Name)
+		// A recorded name was admitted when it was recorded (M37.5).
+		rm.setAdmittedPlayerName(op.Player, string(op.Name))
 	case "state":
 		// A malformed line (op without its payload) applies nothing rather than
 		// zeroing a live player's health.
@@ -351,7 +352,7 @@ func applyRecordedOp(rm *RoomManager, op recOp) {
 		case "debug":
 			rm.SubmitDebugCommand(op.Player, op.Text)
 		case "highscore":
-			rm.RecordHighScore(op.Player, op.Name)
+			rm.recordAdmittedHighScore(op.Player, string(op.Name))
 		case "save":
 			// no-op on playback (disk-only, no simulation effect)
 		}

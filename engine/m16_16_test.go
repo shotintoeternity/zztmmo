@@ -1063,7 +1063,7 @@ func TestM1616ChatIdentityIsTheAccountAndSurvivesRestart(t *testing.T) {
 	if err != nil {
 		t.Fatalf("GetRecentMessages: %v", err)
 	}
-	if len(recs) != 2 || recs[0].From != ada.Name || recs[1].From != "Guesty" {
+	if len(recs) != 2 || recs[0].From != CP437String(ada.Name) || recs[1].From != "Guesty" {
 		t.Fatalf("chat records = %+v, want one from %q and one from Guesty", recs, ada.Name)
 	}
 
@@ -1742,7 +1742,7 @@ func TestM1616BrowserAuthAndMuseumJourney(t *testing.T) {
 		t.Fatalf("chat records = %+v, want the one line the browser sent", recs)
 	}
 	ada, _ := m1614AccountByKey("ada")
-	if recs[0].From != ada.Name {
+	if recs[0].From != CP437String(ada.Name) {
 		t.Errorf("the persisted chat line is from %q, want the signed-in account's display name %q", recs[0].From, ada.Name)
 	}
 }

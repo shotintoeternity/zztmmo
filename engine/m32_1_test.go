@@ -677,7 +677,7 @@ func TestM321LeaderboardSortingTiesStalenessAndRestart(t *testing.T) {
 			ChallengeID: def.ID,
 			Version:     def.Version,
 			AccountKey:  account,
-			Name:        account,
+			Name:        CP437String(account),
 			Ticks:       ticks,
 			Score:       score,
 			RecordingID: "chal-" + account,
@@ -700,7 +700,7 @@ func TestM321LeaderboardSortingTiesStalenessAndRestart(t *testing.T) {
 		t.Fatalf("leaderboard = %+v, want %d rows", got, len(want))
 	}
 	for i, name := range want {
-		if got[i].Name != name || got[i].Rank != i+1 {
+		if got[i].Name != CP437String(name) || got[i].Rank != i+1 {
 			t.Fatalf("row %d = %+v, want %s at rank %d", i, got[i], name, i+1)
 		}
 	}

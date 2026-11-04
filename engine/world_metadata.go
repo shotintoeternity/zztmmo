@@ -56,8 +56,9 @@ type WorldShelf struct {
 }
 
 type FriendPresenceSummary struct {
-	Name   string `json:"name"`
-	Handle string `json:"handle,omitempty"`
+	// Name can be a player's admitted name, which is CP437 (M37.5).
+	Name   CP437String `json:"name"`
+	Handle string      `json:"handle,omitempty"`
 }
 
 const (

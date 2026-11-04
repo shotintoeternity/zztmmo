@@ -152,7 +152,7 @@ func (rm *RoomManager) PrepareSnapshot(dir, name string, playerID PlayerID) (*Pr
 	// Log the save as a submit for session fidelity. It has no simulation effect
 	// (it only writes a file), so playback skips it — but a recording should still
 	// show that a player saved (M14.2).
-	rm.recorder.record(recOp{Op: "submit", Kind: "save", Player: playerID, Name: name})
+	rm.recorder.record(recOp{Op: "submit", Kind: "save", Player: playerID, Name: CP437String(name)})
 	job := &PreparedSnapshot{dir: dir, name: name, world: world, worldName: rm.WorldName()}
 	if player := rm.players[playerID]; player != nil && player.accountID != "" {
 		job.accountID = player.accountID

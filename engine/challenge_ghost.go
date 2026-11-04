@@ -41,7 +41,7 @@ type ChallengeGhostTrack struct {
 	ChallengeID string                `json:"challengeId"`
 	Version     int                   `json:"version"`
 	RecordingID string                `json:"recordingId"`
-	Name        string                `json:"name,omitempty"`
+	Name        CP437String           `json:"name,omitempty"`
 	Ticks       int                   `json:"ticks"`
 	Truncated   bool                  `json:"truncated,omitempty"`
 	Points      []ChallengeGhostPoint `json:"points"`

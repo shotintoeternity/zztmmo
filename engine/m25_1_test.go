@@ -83,7 +83,7 @@ func m251ReadPrivateResult(t *testing.T, ctx context.Context, conn *websocket.Co
 
 func m251PM(t *testing.T, ctx context.Context, conn *websocket.Conn, target PlayerID, text string) {
 	t.Helper()
-	if err := wsjson.Write(ctx, conn, PrivateMessage{Type: MessageTypePrivateMessage, PlayerID: target, Text: text}); err != nil {
+	if err := wsjson.Write(ctx, conn, PrivateMessage{Type: MessageTypePrivateMessage, PlayerID: target, Text: CP437String(text)}); err != nil {
 		t.Fatalf("write privateMessage: %v", err)
 	}
 }

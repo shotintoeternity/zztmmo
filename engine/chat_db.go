@@ -32,9 +32,12 @@ type ChatAuthor struct {
 }
 
 type ChatRecord struct {
-	From      string    `json:"from"`
-	Text      string    `json:"text"`
-	Timestamp time.Time `json:"timestamp"`
+	// From and Text are admitted CP437 (M37.5). They are stored widened, as
+	// CP437String, because encoding/json would turn a raw 0x82 into U+FFFD; a
+	// history file written before M37.5 is ASCII and reads back unchanged.
+	From      CP437String `json:"from"`
+	Text      CP437String `json:"text"`
+	Timestamp time.Time   `json:"timestamp"`
 	// PlayerID is the author's connection id (M21.1), so a replayed history line
 	// can be suppressed for a recipient who blocked that player. It is
 	// process-scoped: the loader below deliberately CLEARS it on records read
@@ -164,8 +167,8 @@ func (db *MemChatDatabase) AddMessage(author ChatAuthor, text string) (ChatRecor
 	defer db.mu.Unlock()
 
 	rec := ChatRecord{
-		From:      author.Name,
-		Text:      text,
+		From:      CP437String(author.Name),
+		Text:      CP437String(text),
 		Timestamp: time.Now(),
 		PlayerID:  author.PlayerID,
 		AccountID: author.AccountID,
@@ -334,8 +337,8 @@ func (db *FileChatDatabase) AddMessage(author ChatAuthor, text string) (ChatReco
 	defer db.mu.Unlock()
 
 	rec := ChatRecord{
-		From:      author.Name,
-		Text:      text,
+		From:      CP437String(author.Name),
+		Text:      CP437String(text),
 		Timestamp: time.Now(),
 		PlayerID:  author.PlayerID,
 		AccountID: author.AccountID,

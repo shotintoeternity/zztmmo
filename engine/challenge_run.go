@@ -307,7 +307,7 @@ func (inst *WorldInstance) advanceChallengeLocked() *challengeCompletion {
 		ChallengeID: run.Def.ID,
 		Version:     run.Def.Version,
 		AccountKey:  run.AccountID,
-		Name:        run.Name,
+		Name:        CP437String(run.Name),
 		Ticks:       run.Ticks,
 		Score:       int(state.Score),
 		Gems:        int(state.Gems),

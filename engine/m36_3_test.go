@@ -17,15 +17,18 @@ import (
 // Our client cannot send that (its PopupPromptString entry takes printable
 // ASCII only, up to POPUP_FIELD_WIDTH = TextWindowWidth-16 = 34, as vanilla's
 // GAME.PAS:1067 does), so the server now holds every client to the same rule:
-// fold the way chat is folded (foldWordmark: curly quotes and dashes become
-// ASCII, anything else outside printable ASCII is dropped) and cap at 34.
+// admit the way chat is admitted and cap at 34. Since M37.5 that is
+// encodeTypedCP437: curly quotes and dashes become ASCII, a letter CP437 has
+// becomes its byte (é is 0x82), and anything else is dropped. The test name
+// predates M37.5 and is kept so the manifest row still finds it.
 func TestM363HighScoreNameIsAdmittedAsPrintableASCII(t *testing.T) {
 	cases := []struct {
 		typed, want string
 	}{
 		{"DAVE", "DAVE"},
 		{"Kevin & co. #1", "Kevin & co. #1"},
-		{"José", "Jos"},
+		{"José", "Jos\x82"}, // M37.5: the CP437 é, not a dropped letter
+		{"Zoë 李", "Zo\x89 "},
 		{"O’Neil", "O'Neil"},
 		{"A\nB\x00C\tD", "ABCD"},
 		{strings.Repeat("X", 60), strings.Repeat("X", 34)},
@@ -65,7 +68,7 @@ func TestM363HighScoreNameIsAdmittedAsPrintableASCII(t *testing.T) {
 			t.Fatal(err)
 		}
 		row := wire[2]
-		if !strings.HasSuffix(row, c.want) || utf8.RuneCountInString(row) != len("  100  ")+len(c.want) {
+		if !strings.HasSuffix(cp437Decode(row), c.want) || utf8.RuneCountInString(row) != len("  100  ")+len(c.want) {
 			t.Errorf("typed %q: wire row %q is not \"  100  \" + %q glyph for glyph", c.typed, row, c.want)
 		}
 	}

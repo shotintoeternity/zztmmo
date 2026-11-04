@@ -22,17 +22,17 @@ const (
 
 // admitChatText normalizes raw client text to at most chatMaxTextBytes
 // printable CP437 bytes, or refuses it (ok=false) if nothing printable
-// survives. It shares foldWordmark's byte space: printable ASCII (a subset of
-// CP437) passes through, common typographic punctuation folds to its ASCII
-// equivalent, and control or unmappable runes are dropped. Extended CP437
-// glyphs are deliberately NOT admitted: the client renders chat with
-// charCodeAt()&0xff against the CP437 atlas, so only runes whose codepoint
-// equals their CP437 byte — printable ASCII — display as the sender intended.
+// survives. It is encodeTypedCP437 (M37.5): printable ASCII passes through,
+// common typographic punctuation folds to its ASCII equivalent, a character
+// with a CP437 form (é, ñ, £...) becomes that byte, and control or unmappable
+// runes are dropped. The client renders chat with charCodeAt()&0xff against
+// the CP437 atlas, and the admitted text travels as CP437String, so byte 0x82
+// arrives as the rune U+0082 and is drawn as é.
 func admitChatText(raw string) (string, bool) {
-	text := strings.TrimSpace(foldWordmark(raw))
+	text := strings.TrimSpace(encodeTypedCP437(raw))
 	if len(text) > chatMaxTextBytes {
-		// All surviving bytes are single-byte ASCII, so a byte slice cannot
-		// split a rune. Re-trim in case truncation exposed trailing spaces.
+		// Every surviving byte is one CP437 glyph, so a byte slice cannot
+		// split a character. Re-trim in case truncation exposed trailing spaces.
 		text = strings.TrimSpace(text[:chatMaxTextBytes])
 	}
 	if text == "" {

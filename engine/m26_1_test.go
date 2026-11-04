@@ -62,21 +62,21 @@ func TestM261FollowUnfollowAndNoAccountIDLeak(t *testing.T) {
 	defer guestConn.Close(websocket.StatusNormalClosure, "")
 
 	m261Follow(t, ctx, guestConn, boSnap.You.ID, true)
-	if guestFollower := m261ReadFollowResult(t, ctx, guestConn); guestFollower.Followed || !strings.Contains(guestFollower.Text, "Sign in") {
+	if guestFollower := m261ReadFollowResult(t, ctx, guestConn); guestFollower.Followed || !strings.Contains(string(guestFollower.Text), "Sign in") {
 		t.Fatalf("guest follower result = %+v", guestFollower)
 	}
 	m261Follow(t, ctx, adaConn, PlayerID(4242), true)
-	if missing := m261ReadFollowResult(t, ctx, adaConn); missing.Followed || !strings.Contains(missing.Text, "already left") {
+	if missing := m261ReadFollowResult(t, ctx, adaConn); missing.Followed || !strings.Contains(string(missing.Text), "already left") {
 		t.Fatalf("missing target result = %+v", missing)
 	}
 	m261Follow(t, ctx, adaConn, adaSnap.You.ID, true)
-	if self := m261ReadFollowResult(t, ctx, adaConn); self.Followed || !strings.Contains(self.Text, "yourself") {
+	if self := m261ReadFollowResult(t, ctx, adaConn); self.Followed || !strings.Contains(string(self.Text), "yourself") {
 		t.Fatalf("self follow result = %+v", self)
 	}
 
 	m261Follow(t, ctx, adaConn, boSnap.You.ID, true)
 	result := m261ReadFollowResult(t, ctx, adaConn)
-	if !result.Followed || result.PlayerID != boSnap.You.ID || !strings.Contains(result.Text, "@bob") {
+	if !result.Followed || result.PlayerID != boSnap.You.ID || !strings.Contains(string(result.Text), "@bob") {
 		t.Fatalf("follow result = %+v", result)
 	}
 	raw, _ := json.Marshal(result)
@@ -89,11 +89,11 @@ func TestM261FollowUnfollowAndNoAccountIDLeak(t *testing.T) {
 	}
 
 	m261Follow(t, ctx, adaConn, guestSnap.You.ID, true)
-	if guestResult := m261ReadFollowResult(t, ctx, adaConn); guestResult.Followed || !strings.Contains(guestResult.Text, "Guests") {
+	if guestResult := m261ReadFollowResult(t, ctx, adaConn); guestResult.Followed || !strings.Contains(string(guestResult.Text), "Guests") {
 		t.Fatalf("guest follow result = %+v", guestResult)
 	}
 	m261Follow(t, ctx, adaConn, boSnap.You.ID, false)
-	if unfollow := m261ReadFollowResult(t, ctx, adaConn); unfollow.Followed || !strings.Contains(unfollow.Text, "Unfollowed") {
+	if unfollow := m261ReadFollowResult(t, ctx, adaConn); unfollow.Followed || !strings.Contains(string(unfollow.Text), "Unfollowed") {
 		t.Fatalf("unfollow result = %+v", unfollow)
 	}
 	prefs, _, _ = db.GetAccountPreferences(ada.ID)

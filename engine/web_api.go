@@ -693,7 +693,7 @@ func (a *WebAPI) handleModerationLift(w http.ResponseWriter, r *http.Request) {
 		At:            a.Server.clockNow(),
 		Action:        ModerationActionLift,
 		Operator:      operator.ID,
-		OperatorName:  operator.DisplayName(),
+		OperatorName:  CP437String(admitPlayerName(operator.DisplayName())),
 		TargetAccount: accountID,
 	}
 

@@ -41,11 +41,12 @@ type ChallengeResult struct {
 	ChallengeID string `json:"challengeId"`
 	Version     int    `json:"version"`
 	AccountKey  string `json:"accountKey"`
-	Name        string `json:"name"`
-	Ticks       int    `json:"ticks"`
-	Score       int    `json:"score"`
-	Gems        int    `json:"gems"`
-	RecordingID string `json:"recordingId,omitempty"`
+	// Name is the runner's admitted name, CP437 (M37.5).
+	Name        CP437String `json:"name"`
+	Ticks       int         `json:"ticks"`
+	Score       int         `json:"score"`
+	Gems        int         `json:"gems"`
+	RecordingID string      `json:"recordingId,omitempty"`
 	// Evidence is the run's final room-state hash at completion, hex encoded.
 	// It is what a verification pass compares a replay of RecordingID against:
 	// replaying the stimuli must reproduce this exact hash or the row is not
@@ -61,12 +62,12 @@ type ChallengeResult struct {
 // hand a browser; there is no account key, and `You` is computed per viewer
 // rather than stored.
 type ChallengeLeaderboardRow struct {
-	Rank        int    `json:"rank"`
-	Name        string `json:"name"`
-	Ticks       int    `json:"ticks"`
-	Score       int    `json:"score"`
-	RecordingID string `json:"recordingId,omitempty"`
-	You         bool   `json:"you,omitempty"`
+	Rank        int         `json:"rank"`
+	Name        CP437String `json:"name"`
+	Ticks       int         `json:"ticks"`
+	Score       int         `json:"score"`
+	RecordingID string      `json:"recordingId,omitempty"`
+	You         bool        `json:"you,omitempty"`
 }
 
 type challengeStoreFile struct {

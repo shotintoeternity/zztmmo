@@ -155,7 +155,7 @@ func TestM211BlockedLineIsDroppedAtFanOutForOneRecipient(t *testing.T) {
 	if result.Durable {
 		t.Fatalf("a guest target cannot be blocked durably, but the server said it was: %+v", result)
 	}
-	if !strings.Contains(result.Text, "session") {
+	if !strings.Contains(string(result.Text), "session") {
 		t.Fatalf("the UI must be told a guest block is session-only, got %q", result.Text)
 	}
 
@@ -312,7 +312,7 @@ func TestM211SignedInBlockSurvivesARestartAndAGuestBlockDoesNot(t *testing.T) {
 	if !bobResult.Durable {
 		t.Fatalf("blocking a signed-in player must be durable: %+v", bobResult)
 	}
-	if strings.Contains(bobResult.Text, "session") {
+	if strings.Contains(string(bobResult.Text), "session") {
 		t.Fatalf("a durable block must not be described as session-only: %q", bobResult.Text)
 	}
 	m211Block(t, ctx, ada, guestSnap.You.ID, true)
@@ -320,7 +320,7 @@ func TestM211SignedInBlockSurvivesARestartAndAGuestBlockDoesNot(t *testing.T) {
 	if guestResult.Durable {
 		t.Fatalf("a guest target has no durable id to key on: %+v", guestResult)
 	}
-	if !strings.Contains(guestResult.Text, "session") {
+	if !strings.Contains(string(guestResult.Text), "session") {
 		t.Fatalf("the player must be TOLD a guest block is session-only, got %q", guestResult.Text)
 	}
 

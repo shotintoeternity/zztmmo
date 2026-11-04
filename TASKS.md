@@ -528,6 +528,8 @@ M12.23, M17.1–M17.7, M16.0–M16.8a — has fully landed.)
    still waits on M37.1.
    **M37.4 landed 2026-11-04**: the Gazette is retired whole, and M34.1, M34.1a
    and M34.2 read `[removed 2026-11-04]`.
+   **M37.5 landed 2026-11-04**: typed text is encoded to CP437, so "José"
+   keeps its é in the roster, chat and high scores.
 
 **Optional / deferred (bottom):**
 - M14.3 — package split — **closed as skipped 2026-08-03**, see NOTES.md
@@ -9239,7 +9241,7 @@ console, or a product decision. Each says which.
   `gazette.json` left in a host's `saves/` is now an orphan file that nothing
   reads.
 
-- [ ] **M37.5 — accented names keep their accents.** *(owner decision: reverses
+- [x] **M37.5 — accented names keep their accents.** *(owner decision: reverses
   the M36.3/M36.6 trade)* Player names, chat and high-score names are folded to
   printable ASCII, so a Google display name "José" shows as "Jos". CP437 has
   é (0x82) and most Western European letters, but the repository has no
@@ -9254,6 +9256,57 @@ console, or a product decision. Each says which.
   encode instead of folding. Recordings that store names will replay with the
   new bytes. The commit says so with `DEVIATION:` if any fixture moves. Ready
   to take.
+
+  *Done 2026-11-04.* `encodeTypedCP437` (`cp437.go`) replaces `foldWordmark` in
+  `admitChatText`, `admitPlayerName` and `admitHighScoreName`. A character with
+  a CP437 form becomes its byte, so "José" is stored as `Jos\x82`. Dashes and
+  curly quotes still fold to ASCII, a no-break space becomes a space, and
+  anything else (日, emoji, controls) is dropped as before. The table,
+  `cp437_table.go`, was generated from Python's `cp437` codec, and
+  `TestM375TableMatchesTheCodec` pins all 128 rows against a second copy.
+  `foldWordmark` itself is unchanged (title wordmarks and the `?` prompt still
+  fold), and it now shares the punctuation list.
+
+  Admitted text is CP437, not UTF-8, so it must not go through `encoding/json`
+  as a plain string, which would turn 0x82 into U+FFFD. Every place it reaches
+  JSON now uses `CP437String`:
+  - the roster, chat, whispers, editor presence and lease, and the profile,
+    follow, block and moderation results (names and the server lines that
+    quote them);
+  - the friends-here summary;
+  - the chat history file;
+  - the recording's `name` op;
+  - challenge results, the leaderboard and ghosts;
+  - refusals and the moderation audit.
+
+  The client's own typed text is read through two new inbound structs,
+  `ChatSubmitMessage` and `PrivateSubmitMessage`, so UTF-8 is never decoded as
+  widened CP437. All of these are byte-identical for ASCII, so no file written
+  before this changes meaning and no client change is needed. The browser
+  already draws `charCodeAt & 0xff`.
+
+  **Admit once.** The encoder cannot be idempotent on every input. `╞é` is
+  C6 82, which is also valid UTF-8 for U+0182, so re-admitting it would drop
+  both glyphs. Two paths admitted twice: a world transit, and a replay applying
+  recorded `name` and `highscore` ops. Both now use the new
+  `setAdmittedPlayerName`, `setAdmittedPlayerIdentity` and
+  `recordAdmittedHighScore`. `TestM375RecordedNameReplaysAsTheSameBytes` uses
+  that exact name and goes red if replay re-admits. The HTTP lift path's
+  operator name was stored raw and is now admitted.
+
+  The DoD tests in `m37_5_test.go` cover the roster wire form, chat live and
+  after a restart, the high-score line, a drop and a fold. Four older tests
+  changed their expectation from "Jos" to `Jos\x82` (M36.3, two in M36.6, and
+  M16.16a's boundary case), and the M36.6 allowlist dropped the fields that
+  are now `CP437String`.
+
+  **Not done, on purpose.** The browser's prompts still refuse keys at or above
+  0x80 (`modal.ts`), so a player cannot type é yet. The accent arrives through
+  a Google display name, or from any client that sends UTF-8. Profile text
+  (`profile.go:95`) also stays ASCII-only, and `/api/auth/me` (`auth.go:128`)
+  still returns the raw display name as plain UTF-8. A recording made before M36.6 that
+  holds a raw UTF-8 name now replays it as widened bytes rather than folded,
+  which only changes what the replay viewer prints. No replay fixture moved.
 
 - [ ] **M37.6 — spec the TAS workbench.** *(owner asks for the spec)* Ranked top of
   the community-event line on 2026-08-11 as a ranking, explicitly not a start.

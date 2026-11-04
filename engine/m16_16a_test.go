@@ -44,7 +44,8 @@ func TestM1616aChatAdmissionBoundary(t *testing.T) {
 		{"control-only", "\x01\x02\x1f\x7f", "", false},
 		{"control-and-spaces-only", "\x01 \x02", "", false},
 		{"control-stripped-inside", "a\x00b\tc\nd", "abcd", true},
-		{"unmappable-dropped", "héllo", "hllo", true},
+		{"cp437-accent-kept", "héllo", "h\x82llo", true}, // M37.5: é is CP437 0x82
+		{"unmappable-dropped", "h日llo", "hllo", true},
 		{"emoji-only", "\U0001f642\U0001f642", "", false},
 		{"typographic-folds", "“hi”—ok", `"hi"-ok`, true},
 	}
@@ -185,7 +186,7 @@ func TestM1616aChatRefusalPersistsAndBroadcastsNothing(t *testing.T) {
 		t.Fatalf("final chat records=%d, want 6", len(recs))
 	}
 	for i, want := range append(wantTexts, "after") {
-		if recs[i].Text != want {
+		if recs[i].Text != CP437String(want) {
 			t.Fatalf("record %d=%q, want %q", i, recs[i].Text, want)
 		}
 	}

@@ -340,7 +340,7 @@ func m1614ReadSession(s *EditorSession) m1614SessionReport {
 		presence := s.memberInfo[member]
 		report.Members = append(report.Members, m1614MemberReport{
 			ID:        presence.ID,
-			Name:      presence.Name,
+			Name:      string(presence.Name),
 			AccountID: member.accountID,
 			Color:     presence.Color,
 			ReadOnly:  s.readOnly[member],
@@ -357,7 +357,7 @@ func m1614ReadSession(s *EditorSession) m1614SessionReport {
 			BoardID:    key.boardID,
 			StatID:     key.statID,
 			HolderID:   presence.ID,
-			HolderName: presence.Name,
+			HolderName: string(presence.Name),
 		})
 	}
 	sort.Slice(report.Leases, func(i, j int) bool {

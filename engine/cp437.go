@@ -21,14 +21,94 @@
 // Note what this deliberately is NOT. It does not translate CP437 to the
 // Unicode characters a human would read (0x82 to U+00E9 "é"): the client wants
 // an atlas index, not a character, and every deployed client would break. Nor
-// does it apply to text a person typed — chat, account names, world titles —
-// which is genuinely UTF-8 and gets folded to CP437 by admitChatText instead.
+// does it apply to text a person typed — chat, player names, high-score names —
+// which arrives as genuine UTF-8. That is encoded to CP437 where it is admitted
+// (encodeTypedCP437, M37.5), and from then on it is CP437 bytes like any other
+// ZZT text and travels as CP437String.
 package zztgo
 
 import (
 	"encoding/json"
 	"strings"
+	"unicode/utf8"
 )
+
+// cp437ByteForRune is cp437HighRunes inverted: the CP437 byte that draws a
+// Unicode character, for the characters at 0x80-0xFF that have one.
+var cp437ByteForRune = func() map[rune]byte {
+	m := make(map[rune]byte, len(cp437HighRunes))
+	for i, r := range cp437HighRunes {
+		m[r] = byte(0x80 + i)
+	}
+	return m
+}()
+
+// foldTypographic is the punctuation fold foldWordmark has always applied:
+// characters CP437 cannot draw that have an obvious ASCII stand-in.
+func foldTypographic(r rune) (string, bool) {
+	switch r {
+	case '—', '–', '―', '−':
+		return "-", true // em/en/horizontal-bar dash, minus sign
+	case '‘', '’', '‚':
+		return "'", true // curly single quotes
+	case '“', '”', '„':
+		return `"`, true // curly double quotes
+	case '…':
+		return "...", true // ellipsis
+	case '×':
+		return "x", true // multiplication sign
+	}
+	return "", false
+}
+
+// encodeTypedCP437 turns text a person typed into the CP437 bytes the client
+// draws one glyph per byte (M37.5). It replaces foldWordmark for chat, player
+// names and high-score names, which used to lose every accent ("José" became
+// "Jos"):
+//
+//   - printable ASCII is its own CP437 byte and passes through;
+//   - the typographic punctuation foldWordmark folds is folded the same way;
+//   - a character CP437 has (é, ü, ñ, £, ß, the box-drawing set...) becomes its
+//     CP437 byte, so "José" is stored as "Jos\x82";
+//   - a no-break space becomes a space, so it cannot make a blank-looking name;
+//   - anything else, including control characters, is dropped, as before.
+//
+// Admit text ONCE. The old fold was idempotent because its output was ASCII;
+// this one's output is CP437, which is not UTF-8. A lone high byte read back
+// as UTF-8 is an invalid one-byte sequence, and that is kept as CP437 already
+// (text decoded from JSON is always valid UTF-8, where a literal U+FFFD is
+// three bytes), so re-admitting Latin text such as "Jos\x82" changes nothing.
+// That pass-through is a safety net, not a contract: a CP437 pair that happens
+// to be valid UTF-8 is decoded as something else. ╞é is C6 82, which is also
+// U+0182, and re-admitting it drops both glyphs. So text that has been
+// admitted is set through setAdmittedPlayerName, setAdmittedPlayerIdentity or
+// recordAdmittedHighScore, never passed back in here
+// (TestM375RecordedNameReplaysAsTheSameBytes pins the replay path).
+func encodeTypedCP437(s string) string {
+	var b []byte
+	for i := 0; i < len(s); {
+		r, size := utf8.DecodeRuneInString(s[i:])
+		i += size
+		switch {
+		case r == utf8.RuneError && size == 1:
+			if c := s[i-1]; c >= 0x80 && c != 0xFF {
+				b = append(b, c) // already CP437 (0xFF is the no-break space)
+			}
+		case r >= 0x20 && r < 0x7F:
+			b = append(b, byte(r))
+		case r == 0xA0:
+			b = append(b, ' ')
+		default:
+			if folded, ok := foldTypographic(r); ok {
+				b = append(b, folded...)
+			} else if c, ok := cp437ByteForRune[r]; ok {
+				b = append(b, c)
+			}
+			// Unrepresentable rune: drop it rather than emit a mystery byte.
+		}
+	}
+	return string(b)
+}
 
 // cp437Encode widens each byte to the rune of the same value, so the result is
 // valid UTF-8 that json.Marshal will not rewrite.

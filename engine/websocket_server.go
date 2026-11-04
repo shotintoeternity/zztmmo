@@ -1469,7 +1469,7 @@ func (s *WebSocketServer) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 			}
 			s.submitSaveFilenameInInstance(ctx, activeInst, playerID, save.Name)
 		case MessageTypeChat:
-			var chat ChatMessage
+			var chat ChatSubmitMessage
 			if err := json.Unmarshal(raw, &chat); err != nil {
 				continue
 			}
@@ -1495,7 +1495,7 @@ func (s *WebSocketServer) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 			}
 			s.BroadcastGlobalChat(ctx, author, text)
 		case MessageTypePrivateMessage:
-			var pm PrivateMessage
+			var pm PrivateSubmitMessage
 			if err := json.Unmarshal(raw, &pm); err != nil {
 				continue
 			}
@@ -1889,7 +1889,7 @@ func (s *WebSocketServer) serveEditor(ctx context.Context, conn *websocket.Conn,
 		_ = displaced.conn.CloseNow()
 	}
 	session.SetMemberReadOnly(client, !s.editorCanEdit(safeWorld, client.accountID))
-	client.name = presence.Name
+	client.name = string(presence.Name)
 	s.mu.Lock()
 	if s.EditorSessions == nil {
 		s.EditorSessions = make(map[*webSocketClient]*EditorSession)
@@ -3654,12 +3654,13 @@ func (s *WebSocketServer) completeWorldTransit(ctx context.Context, source *Worl
 		return
 	}
 	if accountID != "" {
-		dest.RoomManager.SetPlayerIdentity(transit.PlayerID, accountID, name)
+		// The name was admitted in the source world; it is CP437 now (M37.5).
+		dest.RoomManager.setAdmittedPlayerIdentity(transit.PlayerID, accountID, name)
 		if hasStoredState {
 			dest.RoomManager.ApplyPlayerState(transit.PlayerID, storedState)
 		}
 	} else {
-		dest.RoomManager.SetPlayerName(transit.PlayerID, name)
+		dest.RoomManager.setAdmittedPlayerName(transit.PlayerID, name)
 	}
 	dest.RoomManager.SetPlayerColor(transit.PlayerID, color)
 	if accountID != "" {
@@ -4031,9 +4032,9 @@ func (s *WebSocketServer) BroadcastGlobalChat(ctx context.Context, author ChatAu
 
 	msg := ChatMessage{
 		Type:     MessageTypeChat,
-		From:     author.Name,
+		From:     CP437String(author.Name),
 		PlayerID: author.PlayerID,
-		Text:     text,
+		Text:     CP437String(text),
 	}
 
 	for _, client := range clients {
@@ -4070,7 +4071,7 @@ func (s *WebSocketServer) admitPlayerChatLikeText(ctx context.Context, client *w
 	return text, true
 }
 
-func (s *WebSocketServer) submitPrivateMessage(ctx context.Context, client *webSocketClient, sender PlayerID, req PrivateMessage) {
+func (s *WebSocketServer) submitPrivateMessage(ctx context.Context, client *webSocketClient, sender PlayerID, req PrivateSubmitMessage) {
 	if req.PlayerID == 0 || req.PlayerID == sender {
 		return
 	}
@@ -4115,11 +4116,11 @@ func (s *WebSocketServer) submitPrivateMessage(ctx context.Context, client *webS
 
 	incoming := PrivateMessage{
 		Type:   MessageTypePrivateMessage,
-		From:   senderName,
+		From:   CP437String(senderName),
 		FromID: sender,
-		To:     targetName,
+		To:     CP437String(targetName),
 		ToID:   req.PlayerID,
-		Text:   text,
+		Text:   CP437String(text),
 	}
 	outgoing := incoming
 	outgoing.Outgoing = true
@@ -4179,10 +4180,10 @@ func (s *WebSocketServer) submitChatBlock(ctx context.Context, client *webSocket
 	_ = client.write(ctx, BlockResultMessage{
 		Type:     MessageTypeBlockResult,
 		PlayerID: req.PlayerID,
-		Name:     targetName,
+		Name:     CP437String(targetName),
 		Blocked:  req.Blocked,
 		Durable:  durable,
-		Text:     text,
+		Text:     CP437String(text),
 	})
 }
 
@@ -4204,7 +4205,7 @@ func (s *WebSocketServer) submitProfileRequest(ctx context.Context, client *webS
 		_ = client.write(ctx, ProfileResultMessage{
 			Type:     MessageTypeProfileResult,
 			PlayerID: req.PlayerID,
-			Name:     target.name,
+			Name:     CP437String(target.name),
 			Lines:    lines,
 		})
 		return
@@ -4215,7 +4216,7 @@ func (s *WebSocketServer) submitProfileRequest(ctx context.Context, client *webS
 		_ = client.write(ctx, ProfileResultMessage{
 			Type:     MessageTypeProfileResult,
 			PlayerID: req.PlayerID,
-			Name:     target.name,
+			Name:     CP437String(target.name),
 			Lines:    []string{"", "  Profile unavailable.", ""},
 		})
 		return
@@ -4224,7 +4225,7 @@ func (s *WebSocketServer) submitProfileRequest(ctx context.Context, client *webS
 	_ = client.write(ctx, ProfileResultMessage{
 		Type:     MessageTypeProfileResult,
 		PlayerID: req.PlayerID,
-		Name:     target.name,
+		Name:     CP437String(target.name),
 		Handle:   prefs.Profile.Handle,
 		Lines:    lines,
 	})
@@ -4236,7 +4237,7 @@ func (s *WebSocketServer) submitFollow(ctx context.Context, client *webSocketCli
 		PlayerID: req.PlayerID,
 	}
 	reply := func(text string) {
-		result.Text = text
+		result.Text = CP437String(text)
 		_ = client.write(ctx, result)
 	}
 	if client.accountID == "" || s.ChatDB == nil {
@@ -4253,12 +4254,12 @@ func (s *WebSocketServer) submitFollow(ctx context.Context, client *webSocketCli
 		return
 	}
 	if target.account == "" {
-		result.Name = target.name
+		result.Name = CP437String(target.name)
 		reply("Guests cannot be followed.")
 		return
 	}
 	if target.account == client.accountID {
-		result.Name = target.name
+		result.Name = CP437String(target.name)
 		reply("You cannot follow yourself.")
 		return
 	}
@@ -4277,7 +4278,7 @@ func (s *WebSocketServer) submitFollow(ctx context.Context, client *webSocketCli
 		reply("Could not update follows.")
 		return
 	}
-	result.Name = target.name
+	result.Name = CP437String(target.name)
 	result.Followed = req.Follow
 	name := publicAccountName(target.name, target.account, s.loadAccountPreferences)
 	if req.Follow {
@@ -4503,7 +4504,7 @@ func (s *WebSocketServer) friendPresenceByWorld(accountID string) map[string][]F
 		if name == "" {
 			name = "Player"
 		}
-		out[loc.world] = append(out[loc.world], FriendPresenceSummary{Name: name, Handle: targetPrefs.Profile.Handle})
+		out[loc.world] = append(out[loc.world], FriendPresenceSummary{Name: CP437String(name), Handle: targetPrefs.Profile.Handle})
 	}
 	for world := range out {
 		sort.SliceStable(out[world], func(i, j int) bool {
@@ -4512,7 +4513,7 @@ func (s *WebSocketServer) friendPresenceByWorld(accountID string) map[string][]F
 			if a.Handle != "" || b.Handle != "" {
 				return a.Handle < b.Handle
 			}
-			return strings.ToUpper(a.Name) < strings.ToUpper(b.Name)
+			return strings.ToUpper(string(a.Name)) < strings.ToUpper(string(b.Name))
 		})
 	}
 	return out
@@ -4688,7 +4689,7 @@ func (s *WebSocketServer) submitModeration(ctx context.Context, client *webSocke
 			Action:   action,
 			PlayerID: req.PlayerID,
 			Applied:  false,
-			Text:     text,
+			Text:     CP437String(text),
 		})
 	}
 
@@ -4710,7 +4711,7 @@ func (s *WebSocketServer) submitModeration(ctx context.Context, client *webSocke
 	// is recorded against — and the name is here so a record read a month later
 	// names a person instead of an opaque id.
 	_, operatorName, _ := s.identifyPlayer(operator)
-	audit.OperatorName = operatorName
+	audit.OperatorName = CP437String(operatorName)
 
 	target, found := s.locatePlayer(req.PlayerID)
 	if !found {
@@ -4730,7 +4731,7 @@ func (s *WebSocketServer) submitModeration(ctx context.Context, client *webSocke
 		return
 	}
 	audit.TargetAccount = target.account
-	audit.TargetName = target.name
+	audit.TargetName = CP437String(target.name)
 	audit.World = target.world
 	audit.Tick = target.tick
 
@@ -4743,7 +4744,7 @@ func (s *WebSocketServer) submitModeration(ctx context.Context, client *webSocke
 		Type:     MessageTypeModerateResult,
 		Action:   action,
 		PlayerID: req.PlayerID,
-		Name:     target.name,
+		Name:     CP437String(target.name),
 		Applied:  true,
 	}
 
@@ -4755,22 +4756,22 @@ func (s *WebSocketServer) submitModeration(ctx context.Context, client *webSocke
 		result.Durable = s.mutes.set(req.PlayerID, target.account, true)
 		s.tellPlayer(ctx, target.client, ModerationActionMute,
 			"A moderator has muted you in chat.", false)
-		result.Text = "Muted " + name + "."
+		result.Text = CP437String("Muted " + name + ".")
 		if !result.Durable {
-			result.Text = "Muted " + name + " for this session."
+			result.Text = CP437String("Muted " + name + " for this session.")
 		}
 
 	case ModerationActionUnmute:
 		result.Durable = s.mutes.set(req.PlayerID, target.account, false)
 		s.tellPlayer(ctx, target.client, ModerationActionUnmute,
 			"A moderator has unmuted you.", false)
-		result.Text = "Unmuted " + name + "."
+		result.Text = CP437String("Unmuted " + name + ".")
 
 	case ModerationActionKick:
 		s.tellPlayer(ctx, target.client, ModerationActionKick,
 			"A moderator has removed you from the game.", true)
 		s.endConnection(target.client)
-		result.Text = "Kicked " + name + "."
+		result.Text = CP437String("Kicked " + name + ".")
 
 	case ModerationActionRefuse:
 		if target.account == "" {
@@ -4783,14 +4784,14 @@ func (s *WebSocketServer) submitModeration(ctx context.Context, client *webSocke
 			s.endConnection(target.client)
 			audit.Detail = "guest: kicked, not refused"
 			result.Durable = false
-			result.Text = "Kicked " + name + ": a guest cannot be refused."
+			result.Text = CP437String("Kicked " + name + ": a guest cannot be refused.")
 			break
 		}
 		err := s.Refusals.Refuse(RefusedAccount{
 			Account: target.account,
-			Name:    target.name,
+			Name:    CP437String(target.name),
 			By:      operatorAccount,
-			ByName:  operatorName,
+			ByName:  CP437String(operatorName),
 			World:   target.world,
 			At:      s.clockNow(),
 		})
@@ -4807,7 +4808,7 @@ func (s *WebSocketServer) submitModeration(ctx context.Context, client *webSocke
 				Type:     MessageTypeModerateResult,
 				Action:   action,
 				PlayerID: req.PlayerID,
-				Name:     target.name,
+				Name:     CP437String(target.name),
 				Applied:  false,
 				Text:     "Could not record the refusal.",
 			})
@@ -4817,7 +4818,7 @@ func (s *WebSocketServer) submitModeration(ctx context.Context, client *webSocke
 			"A moderator has refused this account.", true)
 		s.endConnection(target.client)
 		result.Durable = true
-		result.Text = "Refused " + name + ". They cannot rejoin."
+		result.Text = CP437String("Refused " + name + ". They cannot rejoin.")
 	}
 
 	audit.Result = ModerationResultApplied

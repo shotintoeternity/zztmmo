@@ -159,22 +159,14 @@ func evalNormalizeName(s string) string {
 func foldWordmark(s string) string {
 	var b []byte
 	for _, r := range s {
-		switch {
-		case r == '—' || r == '–' || r == '―' || r == '−':
-			b = append(b, '-') // em/en/horizontal-bar dash, minus sign
-		case r == '‘' || r == '’' || r == '‚':
-			b = append(b, '\'') // curly single quotes
-		case r == '“' || r == '”' || r == '„':
-			b = append(b, '"') // curly double quotes
-		case r == '…':
-			b = append(b, '.', '.', '.') // ellipsis
-		case r == '×':
-			b = append(b, 'x') // multiplication sign
-		case r >= 0x20 && r < 0x7F:
+		if folded, ok := foldTypographic(r); ok {
+			b = append(b, folded...)
+		} else if r >= 0x20 && r < 0x7F {
 			b = append(b, byte(r))
-		default:
-			// Unrepresentable rune: drop it rather than emit a mystery byte.
 		}
+		// Any other rune is unrepresentable here: drop it rather than emit a
+		// mystery byte. Typed text keeps its accents through encodeTypedCP437
+		// instead (M37.5); a title wordmark deliberately does not.
 	}
 	return string(b)
 }

@@ -199,7 +199,7 @@ func TestM212MuteRefusesTheirChatAndTellsThem(t *testing.T) {
 	if result.Durable {
 		t.Fatalf("a guest's mute cannot outlive their connection, but the server said it would: %+v", result)
 	}
-	if !strings.Contains(result.Text, "session") {
+	if !strings.Contains(string(result.Text), "session") {
 		t.Fatalf("the operator must be told a guest's mute is session-only, got %q", result.Text)
 	}
 
@@ -358,7 +358,7 @@ func TestM212RefusedAccountCannotRejoinAndARefusedGuestCan(t *testing.T) {
 	if guestResult.Durable {
 		t.Fatalf("a guest has no durable identity to refuse, but the server claimed one: %+v", guestResult)
 	}
-	if !strings.Contains(strings.ToLower(guestResult.Text), "guest") {
+	if !strings.Contains(strings.ToLower(string(guestResult.Text)), "guest") {
 		t.Fatalf("the operator must be told refusing a guest only kicks them, got %q", guestResult.Text)
 	}
 	if notice := m212ReadNotice(t, ctx, guest); !notice.Ended {

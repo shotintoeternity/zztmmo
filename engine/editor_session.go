@@ -169,7 +169,7 @@ func (s *EditorSession) EnterResuming(member *webSocketClient, name, token strin
 	}
 	presence := EditorPresence{
 		ID:      fmt.Sprintf("editor-%d", s.nextMember),
-		Name:    name,
+		Name:    CP437String(name),
 		Color:   editorPresenceColor(s.nextMember),
 		BoardID: boardID,
 		X:       BOARD_WIDTH / 2,
@@ -203,7 +203,7 @@ func (s *EditorSession) resumeMemberLocked(member *webSocketClient, name, token 
 	}
 	presence := s.memberInfo[previous]
 	if name != "" {
-		presence.Name = name
+		presence.Name = CP437String(name)
 	}
 	readOnly := s.readOnly[previous]
 	boardID := s.memberBoard[previous]

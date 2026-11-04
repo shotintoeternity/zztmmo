@@ -365,14 +365,16 @@ func (rm *RoomManager) rankScore(score int16) int16 {
 const highScoreNameMax = 50 - 16
 
 // admitHighScoreName holds every client to what the prompt itself allows:
-// printable ASCII up to highScoreNameMax. A name is text a person typed, so it
-// arrives as UTF-8 and is folded the way chat is (foldWordmark), never stored
-// as raw UTF-8 bytes that HighScoreLines would then draw one glyph per byte
-// (M36.3). It is the identity on anything our client can send.
+// printable CP437 up to highScoreNameMax. A name is text a person typed, so it
+// arrives as UTF-8 and is encoded the way chat is (encodeTypedCP437), never
+// stored as raw UTF-8 bytes that HighScoreLines would then draw one glyph per
+// byte (M36.3). Since M37.5 an accent with a CP437 form keeps it: "José" is
+// stored as "Jos\x82", which is the byte vanilla's .HI file holds. It is the
+// identity on anything our client can send.
 func admitHighScoreName(raw string) string {
-	name := foldWordmark(raw)
+	name := encodeTypedCP437(raw)
 	if len(name) > highScoreNameMax {
-		name = name[:highScoreNameMax] // all ASCII: a byte cut is a character cut
+		name = name[:highScoreNameMax] // one byte per glyph: a byte cut is a character cut
 	}
 	return name
 }
@@ -381,12 +383,18 @@ func admitHighScoreName(raw string) string {
 // score earned, then persists the list. Returns false if that player has no
 // pending entry — a client cannot claim a slot it was never offered.
 func (rm *RoomManager) RecordHighScore(playerID PlayerID, name string) bool {
+	return rm.recordAdmittedHighScore(playerID, admitHighScoreName(name))
+}
+
+// recordAdmittedHighScore is RecordHighScore for a name that was admitted
+// already: a replay's recorded name (M37.5). Admitting CP437 bytes a second
+// time would read them as UTF-8, which they are not.
+func (rm *RoomManager) recordAdmittedHighScore(playerID PlayerID, name string) bool {
 	pending, ok := rm.pendingScores[playerID]
 	if !ok || pending.ListPos < 1 || pending.ListPos > HIGH_SCORE_COUNT {
 		return false
 	}
-	name = admitHighScoreName(name)
-	rm.recorder.record(recOp{Op: "submit", Kind: "highscore", Player: playerID, Name: name})
+	rm.recorder.record(recOp{Op: "submit", Kind: "highscore", Player: playerID, Name: CP437String(name)})
 	delete(rm.pendingScores, playerID)
 
 	for i := int16(HIGH_SCORE_COUNT - 1); i >= pending.ListPos; i-- {
@@ -501,12 +509,18 @@ func (rm *RoomManager) JoinPlayerWithID(playerID PlayerID, boardID, spawnX, spaw
 }
 
 func (rm *RoomManager) SetPlayerName(playerID PlayerID, name string) {
-	name = admitPlayerName(name)
+	rm.setAdmittedPlayerName(playerID, admitPlayerName(name))
+}
+
+// setAdmittedPlayerName is SetPlayerName for a name that is CP437 already:
+// one read off another world's player (a transit) or out of a recording
+// (M37.5). Admission is not repeated on CP437 bytes, which are not UTF-8.
+func (rm *RoomManager) setAdmittedPlayerName(playerID PlayerID, name string) {
 	player := rm.players[playerID]
 	if player != nil {
 		player.name = name
 	}
-	rm.recorder.record(recOp{Op: "name", Player: playerID, Name: name})
+	rm.recorder.record(recOp{Op: "name", Player: playerID, Name: CP437String(name)})
 }
 
 // SetPlayerColor stores the presentation color a player joined with. The
@@ -538,13 +552,18 @@ func (rm *RoomManager) SetPlayerProfileSummary(playerID PlayerID, handle string,
 }
 
 func (rm *RoomManager) SetPlayerIdentity(playerID PlayerID, accountID, name string) {
-	name = admitPlayerName(name)
+	rm.setAdmittedPlayerIdentity(playerID, accountID, admitPlayerName(name))
+}
+
+// setAdmittedPlayerIdentity is SetPlayerIdentity for a name that is CP437
+// already (see setAdmittedPlayerName).
+func (rm *RoomManager) setAdmittedPlayerIdentity(playerID PlayerID, accountID, name string) {
 	player := rm.players[playerID]
 	if player != nil {
 		player.accountID = accountID
 		player.name = name
 	}
-	rm.recorder.record(recOp{Op: "name", Player: playerID, Name: name})
+	rm.recorder.record(recOp{Op: "name", Player: playerID, Name: CP437String(name)})
 }
 
 func (rm *RoomManager) PlayerIdentity(playerID PlayerID) (accountID, name string, ok bool) {
@@ -1080,7 +1099,7 @@ func (rm *RoomManager) Snapshot(playerID PlayerID) (SnapshotMessage, bool) {
 	// (M19.1). Without this a client would learn its own color only from its
 	// entry in `players` — true today, but it is the same fact and it should
 	// not disagree with itself.
-	snapshot.You.Name = player.name
+	snapshot.You.Name = CP437String(player.name)
 	snapshot.You.Color = player.color
 	// The dirty-cell list belongs to the ROOM, not to this connection, so it may
 	// only be discarded when nobody else could be owed it. A snapshot already
@@ -1252,7 +1271,7 @@ func (rm *RoomManager) playerSnapshotsForRoom(room *Room) []PlayerSnapshot {
 			// Presentation only, and deliberately attached HERE rather than
 			// inside playerSnapshot: the engine knows where a player is, the
 			// room manager knows who they are (M19.1).
-			snap.Name = p.name
+			snap.Name = CP437String(p.name)
 			snap.Color = p.color
 			snap.Handle = p.handle
 			snap.HasProfile = p.hasProfile
