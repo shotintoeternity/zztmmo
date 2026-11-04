@@ -22,6 +22,11 @@ type ZWDDecompileDiagnostic struct {
 // as unnamed raw elements becoming Empty tiles.
 func DecompileZWDAuthorable(world *TWorld) (string, []ZWDDecompileDiagnostic) {
 	diagnostics := inspectZWDDecompileLowerings(world)
+	for _, d := range diagnostics {
+		if d.Severity == "error" {
+			return "", diagnostics
+		}
+	}
 	src := decompileZWD(world)
 	if _, err := CompileZWD(src); err != nil {
 		diagnostics = append(diagnostics, ZWDDecompileDiagnostic{
@@ -61,6 +66,7 @@ func decompileZWD(world *TWorld) string {
 		e.BoardOpen(i)
 		boardNames[i] = e.Board.Name
 	}
+	boardNames, _ = zwdUniqueBoardNames(boardNames)
 
 	for i := int16(0); i <= world.BoardCount; i++ {
 		e.BoardOpen(i)
@@ -88,7 +94,7 @@ func decompileBoard(b *strings.Builder, e *Engine, boardID int16, boardNames []s
 		startY = board.Info.StartPlayerY
 	}
 
-	b.WriteString(fmt.Sprintf("board %s\n", quoteZWD(board.Name)))
+	b.WriteString(fmt.Sprintf("board %s\n", quoteZWD(boardNames[boardID])))
 	b.WriteString(fmt.Sprintf("  start player at %d,%d\n", startX, startY))
 	// Emit respawn at when Info.StartPlayerX/Y differs from the player's
 	// actual tile position (Stats[0]).  ZZT uses this as the re-enter point
@@ -483,8 +489,12 @@ func decompileBoard(b *strings.Builder, e *Engine, boardID int16, boardNames []s
 				// is canonical and compiler-legal.
 				oopData = stat.Data
 			}
+			// Each line is written at the block's indent, which the parser
+			// strips (M36.27e). Written at column 0, a line that began with
+			// four spaces lost them on the way back in.
 			oopLines := strings.Split(oopData, string([]byte{KEY_ENTER}))
 			for _, ol := range oopLines {
+				b.WriteString("    ")
 				b.WriteString(ol)
 				b.WriteByte('\n')
 			}
@@ -506,6 +516,35 @@ func inspectZWDDecompileLowerings(world *TWorld) []ZWDDecompileDiagnostic {
 	e.InitElementsGame()
 	e.World = *world
 	var diagnostics []ZWDDecompileDiagnostic
+	names := make([]string, world.BoardCount+1)
+	for boardID := int16(0); boardID <= world.BoardCount; boardID++ {
+		e.BoardOpen(boardID)
+		names[boardID] = e.Board.Name
+	}
+	// A program line that reads "end" would close its oop block early (the
+	// parser ends a block at any such line), leaving the rest of the program
+	// to be read as ZWD. Refuse it by name rather than emit source that only
+	// fails later with an opaque parse error, or not at all (M36.27e).
+	for boardID := int16(0); boardID <= world.BoardCount; boardID++ {
+		e.BoardOpen(boardID)
+		for statID := int16(1); statID <= e.Board.StatCount; statID++ {
+			stat := &e.Board.Stats[statID]
+			if stat.DataLen <= 0 || !decompileStatIsRepresentable(&e.Board, statID) {
+				continue
+			}
+			for n, line := range strings.Split(stat.Data, string([]byte{KEY_ENTER})) {
+				if strings.TrimSpace(line) == "end" {
+					diagnostics = append(diagnostics, ZWDDecompileDiagnostic{boardID, "error",
+						fmt.Sprintf("stat %d's program line %d reads %q, which would close its ZWD oop block", statID, n+1, line)})
+				}
+			}
+		}
+	}
+	unique, renamed := zwdUniqueBoardNames(names)
+	for _, boardID := range renamed {
+		diagnostics = append(diagnostics, ZWDDecompileDiagnostic{boardID, "warning",
+			fmt.Sprintf("board name %q repeats an earlier board's; emitted as %q so links to it stay distinct", names[boardID], unique[boardID])})
+	}
 	for boardID := int16(0); boardID <= world.BoardCount; boardID++ {
 		e.BoardOpen(boardID)
 		if x, y := e.Board.Info.StartPlayerX, e.Board.Info.StartPlayerY; (x != 0 || y != 0) && !validZWDCoord(x, y) {
@@ -536,7 +575,48 @@ func decompileStatIsRepresentable(board *TBoard, statID int16) bool {
 	if stat.X == 0 || stat.Y == 0 || int(stat.X) > BOARD_WIDTH || int(stat.Y) > BOARD_HEIGHT {
 		return false
 	}
-	return elementNeedsStat(board.Tiles[stat.X][stat.Y].Element)
+	// May, not needs (M36.27e): a conveyor turns only with a stat, and the
+	// compiler accepts one (elementMayHaveStat); asking "needs" dropped it.
+	return elementMayHaveStat(board.Tiles[stat.X][stat.Y].Element)
+}
+
+// zwdUniqueBoardNames makes every board name distinct, so each reference in
+// the emitted source resolves to the board it names (M36.27e). The compiler
+// binds a name to its first board, so a world with two boards called "Room"
+// came back with every link to the second pointing at the first. A repeat is
+// renamed "Name #<board id>", cut to fit the 50-byte limit, and its id is
+// returned so the caller can say so.
+func zwdUniqueBoardNames(names []string) ([]string, []int16) {
+	out := make([]string, len(names))
+	taken := make(map[string]bool, len(names))
+	for _, name := range names {
+		taken[name] = true
+	}
+	seen := make(map[string]bool, len(names))
+	var renamed []int16
+	for i, name := range names {
+		if !seen[name] {
+			seen[name] = true
+			out[i] = name
+			continue
+		}
+		fit := func(suffix string) string {
+			base := name
+			if len(base)+len(suffix) > 50 {
+				base = base[:50-len(suffix)]
+			}
+			return base + suffix
+		}
+		unique := fit(fmt.Sprintf(" #%d", i))
+		for n := 2; taken[unique]; n++ {
+			unique = fit(fmt.Sprintf(" #%d.%d", i, n))
+		}
+		taken[unique] = true
+		seen[unique] = true
+		out[i] = unique
+		renamed = append(renamed, int16(i))
+	}
+	return out, renamed
 }
 
 // remapDecompiledStatRef preserves references between emitted stats while

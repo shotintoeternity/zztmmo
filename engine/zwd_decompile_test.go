@@ -86,6 +86,8 @@ func TestLLMWorldExamplesCompile(t *testing.T) {
 
 	exitRe := regexp.MustCompile(`(?m)^\s*exits .*$`)
 	passageBoardRe := regexp.MustCompile(`\bp3\s+board\s+"(?:\\.|[^"])*"`)
+	// A legend `to "BOARD"` names another board too, and must resolve (M36.27e).
+	legendToRe := regexp.MustCompile(`\s+to\s+"(?:\\.|[^"])*"`)
 	count := 0
 	for _, entry := range entries {
 		if entry.IsDir() || filepath.Ext(entry.Name()) != ".zwd" {
@@ -99,6 +101,7 @@ func TestLLMWorldExamplesCompile(t *testing.T) {
 		}
 		section := exitRe.ReplaceAllString(string(src), "  exits north none south none west none east none")
 		section = passageBoardRe.ReplaceAllString(section, "p3 0")
+		section = legendToRe.ReplaceAllString(section, "")
 		doc := "zwd 1\nworld \"CORPUS\"\n\n" + section
 		if _, err := CompileZWD(doc); err != nil {
 			t.Errorf("%s does not compile: %v", entry.Name(), err)

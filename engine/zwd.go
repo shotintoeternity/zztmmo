@@ -3,6 +3,7 @@ package zztgo
 import (
 	"bytes"
 	"fmt"
+	"sort"
 	"strconv"
 	"strings"
 )
@@ -428,6 +429,10 @@ func (p *zwdParser) parseOOP(indent string) (string, error) {
 		line := p.pos + 1
 		raw := p.lines[p.pos]
 		p.pos++
+		// Any line reading "end" closes the block, whatever its indent:
+		// generated sources put it deeper or shallower than `oop` freely.
+		// So a program line that itself reads "end" cannot be written inside
+		// an oop block; the decompiler refuses such a program (M36.27e).
 		if strings.TrimSpace(raw) == "end" {
 			return strings.Join(lines, string([]byte{KEY_ENTER})), nil
 		}
@@ -723,6 +728,33 @@ func compileZWDBoard(e *Engine, boardID int16, src zwdBoard, boardIDs map[string
 	if len(src.name) > 50 {
 		return zerr(src.line, 1, "board name must be 50 bytes or fewer")
 	}
+	// M36.27e: StoreString would cut a longer message to fit the board info's
+	// Pascal string, silently; refuse it the way the name above is refused.
+	if len(src.message) > SizeOfBoardInfoMessage-1 {
+		return zerr(src.line, 1, fmt.Sprintf("board message must be %d bytes or fewer", SizeOfBoardInfoMessage-1))
+	}
+	// A legend `to "BOARD"` documents where a passage leads (the stat's p3
+	// board is what links it). Naming a board that does not exist is a typo
+	// the world would otherwise ship with, so it fails like an unknown exit.
+	// Keys in order, so the reported entry does not depend on map iteration.
+	keys := make([]int, 0, len(src.legend))
+	for key := range src.legend {
+		keys = append(keys, int(key))
+	}
+	sort.Ints(keys)
+	for _, key := range keys {
+		entry := src.legend[byte(key)]
+		if entry.toBoard == "" {
+			continue
+		}
+		if _, ok := boardIDs[entry.toBoard]; !ok {
+			line := entry.line
+			if line == 0 {
+				line = src.line
+			}
+			return zerr(line, 1, "legend references unknown board "+entry.toBoard)
+		}
+	}
 	if src.startX < 1 || src.startY < 1 {
 		return zerr(src.line, 1, "board requires start player at X,Y")
 	}
@@ -965,7 +997,8 @@ const (
 )
 
 // wrapZWDTextWindowLines reflows only OOP lines that the engine renders as
-// text. Commands, labels, movement instructions, and comments retain their
+// text, and only those over their limit: a line that already fits keeps its
+// exact bytes, spaces included, so ASCII art survives (M36.27e). Commands, labels, movement instructions, and comments retain their
 // exact bytes. A long choice keeps its selectable first line; its remaining
 // caption text becomes ordinary, non-selectable display lines.
 func wrapZWDTextWindowLines(data string) (string, error) {
@@ -986,19 +1019,33 @@ func wrapZWDTextWindowLines(data string) (string, error) {
 		case '#', ':', '\'', '/', '?':
 			out = append(out, line)
 		case '$':
+			if len(line)-1 <= zztTextWindowCenteredMax {
+				out = append(out, line)
+				continue
+			}
 			for _, part := range wrapZWDText(line[1:], zztTextWindowCenteredMax) {
 				out = append(out, "$"+part)
 			}
 		case '!':
 			if separator := strings.IndexByte(line, ';'); separator >= 0 {
+				if len(line)-separator-1 <= zztTextWindowChoiceMax {
+					out = append(out, line)
+					continue
+				}
 				prefix := line[:separator+1]
 				parts := wrapZWDText(line[separator+1:], zztTextWindowChoiceMax)
 				out = append(out, prefix+parts[0])
 				out = append(out, parts[1:]...)
+			} else if len(line) <= zztTextWindowLineWidth {
+				out = append(out, line)
 			} else {
 				out = append(out, wrapZWDText(line, zztTextWindowLineWidth)...)
 			}
 		default:
+			if len(line) <= zztTextWindowLineWidth {
+				out = append(out, line)
+				continue
+			}
 			out = append(out, wrapZWDText(line, zztTextWindowLineWidth)...)
 		}
 	}
