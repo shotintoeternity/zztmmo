@@ -1805,7 +1805,13 @@ func (a *WebAPI) handleHelp(w http.ResponseWriter, r *http.Request) {
 	writeJSON(w, struct {
 		Title CP437String `json:"title"`
 		Lines CP437Lines  `json:"lines"`
-	}{Title: CP437String(r.URL.Query().Get("title")), Lines: lines})
+	}{
+		// The title is the client's own CP437 text, widened byte for rune and
+		// percent-encoded as UTF-8; decode it before CP437String widens it
+		// again, or every byte above ASCII comes back as two (M36.4).
+		Title: CP437String(cp437Decode(r.URL.Query().Get("title"))),
+		Lines: lines,
+	})
 }
 
 func validHelpFile(name string) bool {

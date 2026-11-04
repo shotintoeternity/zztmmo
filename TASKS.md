@@ -8646,11 +8646,16 @@ copy; the executor still writes the failing test in the repo first.
   two more problems with the same cause: control characters reaching the text
   window, and names longer than the 50-byte `.HI` field kept in full in memory.
 
-- [ ] **M36.4 — `/api/help` title decoding (latent).** `handleHelp`
+- [x] **M36.4 — `/api/help` title decoding (latent).** `handleHelp`
   (`engine/web_api.go:1708`) widens the `title` query parameter as raw CP437,
   but it arrives as UTF-8 from `encodeURIComponent`, so a non-ASCII title is
   double-encoded. It should be `CP437String(cp437Decode(title))`. The client
   sends only ASCII filenames today, so this cannot happen yet.
+
+  *Resolved 2026-11-03.* Reproduced as specified: a title of "Caf" plus the
+  rune U+0082 came back as five runes. The title is now
+  `CP437String(cp437Decode(title))`. `TestM364HelpTitleRoundTripsCP437` was
+  red before the fix.
 
 - [ ] **M36.5 — `cp437Encode` allocation (perf, low priority).**
   `engine/cp437.go:43` builds a `[]rune` (4 bytes per input byte) and then
