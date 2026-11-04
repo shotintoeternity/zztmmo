@@ -6,49 +6,49 @@
       "label": "joined",
       "ticks": 0,
       "hashes": {
-        "1": "0404f0b9f9c25f7d"
+        "1": "03d8e19494c2e14c"
       }
     },
     {
       "label": "settled",
       "ticks": 2,
       "hashes": {
-        "1": "face90a92b5ad047"
+        "1": "e31ad0d1835bb526"
       }
     },
     {
       "label": "torch",
       "ticks": 6,
       "hashes": {
-        "1": "ba2436010c204c25"
+        "1": "102acf701531a223"
       }
     },
     {
       "label": "gem",
       "ticks": 10,
       "hashes": {
-        "1": "ecd25bceff8e95e1"
+        "1": "b65c966668f9c181"
       }
     },
     {
       "label": "energised",
       "ticks": 17,
       "hashes": {
-        "1": "c95003ff6990123d"
+        "1": "1d65db14b31a16ed"
       }
     },
     {
       "label": "transferred",
       "ticks": 31,
       "hashes": {
-        "2": "bd37bd3ce7b7e9c9"
+        "2": "2032f7bb119993dc"
       }
     },
     {
       "label": "torch-lit",
       "ticks": 43,
       "hashes": {
-        "2": "71c44d149dbefcd1"
+        "2": "06df6412693179f3"
       }
     }
   ]

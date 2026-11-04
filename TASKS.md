@@ -8970,7 +8970,7 @@ copy; the executor still writes the failing test in the repo first.
 
 ### Tier 4 — hardening, test health and tools
 
-- [ ] **M36.26 — tests assert what they are named for, and leave the tree
+- [x] **M36.26 — tests assert what they are named for, and leave the tree
   clean.** *(confirmed unless marked, low)* Do these before trusting the suites
   for beta:
   (a) `TestM1619ChatAndGenerationRateLimits` (`engine/m16_19_test.go:335`)
@@ -8991,6 +8991,25 @@ copy; the executor still writes the failing test in the repo first.
   **deliberately**: every fixture hash will move, so this needs a `DEVIATION:`
   commit that changes nothing else.
   DoD: each assertion, when deliberately broken, reddens its test.
+
+  *Resolved 2026-11-03 in two commits.* (a)-(d) are `f888941`. The malformed
+  test's three frames used to share one socket, and the first, non-JSON, closed
+  it, so the rest were written to a dead connection. Each frame now gets its own
+  joined socket and a pinned close status: 1007 (wsjson's own refusal) for the
+  undecodable frames and 1009 for `ServerReadLimit+1`. The old 128 KB frame was
+  under the 1 MB limit. The chat limit is pinned as the literal 5, not read
+  back from `chatRateLimitMax`, because a test that reads the constant passes
+  when the constant is loosened. Generation is driven against a refusing API
+  URL, so the admitted first dream fails in planning and the second is the 429.
+  (c)'s env vars are `ZZT_ACCEPT_WRITE` and `ZZT_GEMDASH_WRITE`. Every assertion
+  was broken once in the server or fixture and reddened. (e) is the DEVIATION
+  commit. `StateHash` now hashes each stat standing on an `E_PLAYER` tile, in
+  stat order. It does not walk `e.Players`' keys, because `PlayerFor` creates
+  entries on lookup. It hashes simulation fields only: SoundEnabled,
+  PlayerCharacter and the Message*NotShown flags are presentation. It no longer
+  writes `World.Info`. `fixtures/town.replay.json` and
+  `fixtures/browser-goldens/tick-locked-run.json` were re-recorded (hash lines
+  only). `TestM3626*` is red on the old function.
 
 - [ ] **M36.27 — tools fail loudly, and the ZWD compiler rejects what it
   would truncate.** *(confirmed unless marked, low)*
