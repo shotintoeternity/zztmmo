@@ -522,8 +522,10 @@ M12.23, M17.1–M17.7, M16.0–M16.8a — has fully landed.)
    production at `5502194`, and every box above it is ticked. M37 numbers what
    is left in the order to take it. M37.1, production sign-in, is **deferred**:
    the owner is undecided about the Google setup (2026-11-03). **M37.2, the
-   restore drill, is half done**: the data restores (2026-11-03), and the
-   host-side half waits on SSH to the dev host.
+   restore drill, is done** (2026-11-03): data and host halves both proven.
+   The owner has decided M37.4 (retire the Gazette), M37.5 (keep accents) and
+   M37.6 (write the spec), so those three are ready to take in order. M37.3
+   still waits on M37.1.
 
 **Optional / deferred (bottom):**
 - M14.3 — package split — **closed as skipped 2026-08-03**, see NOTES.md
@@ -9149,7 +9151,7 @@ console, or a product decision. Each says which.
   now, the code, the docs and the cookie secret are ready, and this box stays
   open until the owner chooses. M37.3 waits on it. Work moved on to M37.2.
 
-- [ ] **M37.2 — rehearse a restore from a production backup.** *(owner-gated:
+- [x] **M37.2 — rehearse a restore from a production backup.** *(owner-gated:
   touches production data)* Promoted from the Architecture follow-ups bullet
   "The restore has never been rehearsed" (2026-08-04). `deploy/zztmmo-backup.sh`
   writes daily archives and AWS.md documents the restore, but nobody has ever
@@ -9169,6 +9171,15 @@ console, or a product decision. Each says which.
   run**: SSH to dev needs the workstation IP in its security group, which this
   session could not add. Remaining: open SSH to dev, run the documented steps
   there with the same archives, and check R in a real browser.
+
+  *Host half done 2026-11-03; box ticked.* SSH to dev was opened by the AWS
+  CLI (owner decision) and revoked after. Production's build `5502194` went to
+  dev first. The documented steps ran as written: 35 autosaves restored, all
+  22 player worlds listed, and R in headless Chromium on `dev.zztmmo.com`
+  restored WARTORN.SAV and joined it. AWS.md now covers the two 409s a
+  verifier will hit: another world's save, and the ~60 s reconnect grace
+  after a tab-close. The record is in NOTES.md, and dev holds no production
+  data.
 
 - [ ] **M37.3 — signed-in players can remove and export their data.** *(owner
   decision first; matters once M37.1 is on)* Promoted from the Architecture
@@ -9191,6 +9202,10 @@ console, or a product decision. Each says which.
   A reader brings back a browser journey that opens the day's edition;
   retirement removes the dead `postNotice` path and its rows.
 
+  *Owner decision 2026-11-03: retire it.* Remove the Gazette, meaning
+  `/api/gazette`, `/api/gazette/edition`, the dead `postNotice` path and its
+  rows. Ready to take.
+
 - [ ] **M37.5 — accented names keep their accents.** *(owner decision: reverses
   the M36.3/M36.6 trade)* Player names, chat and high-score names are folded to
   printable ASCII, so a Google display name "José" shows as "Jos". CP437 has
@@ -9202,12 +9217,19 @@ console, or a product decision. Each says which.
   types "José" and reads back the CP437 é in the roster, chat and a high-score
   line, and a character with no CP437 form still folds as today.
 
+  *Owner decision 2026-11-03: keep accents.* Add the Unicode-to-CP437 table and
+  encode instead of folding. Recordings that store names will replay with the
+  new bytes. The commit says so with `DEVIATION:` if any fixture moves. Ready
+  to take.
+
 - [ ] **M37.6 — spec the TAS workbench.** *(owner asks for the spec)* Ranked top of
   the community-event line on 2026-08-11 as a ranking, explicitly not a start.
   The two facts already recorded on its backlog bullet are the starting point:
   `VerifyChallengeResult` is the re-simulation verifier it needs, and
   `ReplaySession` accepts stimuli a player-submitted log must not carry. DoD: a
   spec with numbered tasks filed under its own milestone. No code.
+
+  *Owner asked for the spec 2026-11-03.* Ready to take.
 
 ## M14 — Rearchitecting for the service ZZTMMO is becoming
 
