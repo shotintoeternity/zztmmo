@@ -530,6 +530,9 @@ M12.23, M17.1–M17.7, M16.0–M16.8a — has fully landed.)
    and M34.2 read `[removed 2026-11-04]`.
    **M37.5 landed 2026-11-04**: typed text is encoded to CP437, so "José"
    keeps its é in the roster, chat and high scores.
+   **M37.6 landed 2026-11-04**: the TAS workbench is specced as **M38**. Its
+   first box, M38.0, is four owner decisions, and no M38 task opens until they
+   are answered.
 
 **Optional / deferred (bottom):**
 - M14.3 — package split — **closed as skipped 2026-08-03**, see NOTES.md
@@ -9308,7 +9311,7 @@ console, or a product decision. Each says which.
   holds a raw UTF-8 name now replays it as widened bytes rather than folded,
   which only changes what the replay viewer prints. No replay fixture moved.
 
-- [ ] **M37.6 — spec the TAS workbench.** *(owner asks for the spec)* Ranked top of
+- [x] **M37.6 — spec the TAS workbench.** *(owner asks for the spec)* Ranked top of
   the community-event line on 2026-08-11 as a ranking, explicitly not a start.
   The two facts already recorded on its backlog bullet are the starting point:
   `VerifyChallengeResult` is the re-simulation verifier it needs, and
@@ -9316,6 +9319,216 @@ console, or a product decision. Each says which.
   spec with numbered tasks filed under its own milestone. No code.
 
   *Owner asked for the spec 2026-11-03.* Ready to take.
+
+  *Done 2026-11-04.* The spec is **M38**, filed directly below M37. It opens
+  with M38.0, four owner decisions: what a TAS runs against while the
+  catalogue is empty, whether assisted rows wait on M37.1's sign-in, the
+  judging budget, and racing. Then seven tasks, each with its own DoD: script
+  and admission, judge, division, submit route, server workbench session,
+  client screen, and the board in the open. The decision that shapes the rest
+  is in its preamble: a submission is an **input script**, not a recording. The
+  server supplies the world, the join and the recording file, so the
+  hostile-recording problem the backlog bullet found becomes a narrow schema.
+  No code.
+
+## M38 — The TAS workbench: a run built tick by tick, proved by re-simulation
+
+Filed 2026-11-04 by M37.6 at the owner's request. It is the spec only: nothing
+here is started, and **M38.0 is the owner's to answer before any task below
+opens.** It replaces the backlog bullet "The TAS workbench" as the plan of
+record. The bullet stays where it is as the history of the idea.
+
+**What it is.** A TAS (tool-assisted speedrun) is a run whose inputs were
+composed rather than played: a player steps a challenge one tick at a time,
+backs up, tries another input, and keeps the best line. ZZTMMO can prove such a
+run, not just store it. The engine is deterministic and a recording is an input
+log, so the server can replay the inputs itself and measure what they do. The
+product is a workbench in the browser, an "assisted" board beside each live
+challenge leaderboard, and a replay link on every row that anyone can watch.
+
+**The substrate, read from code on 2026-11-04** (citations as of `422b6b0`):
+- A recording is `recHeader` and then one `recTick` per tick
+  (`session_record.go:53`, `:106`). A tick is `{Tick, Ops, Inputs}`, the
+  stimuli and the input map that tick was stepped with. It holds no frames.
+- `ReplaySession` (`session_record.go:300`) and `ReplayPlayback`
+  (`replay_viewer.go`, the M22.3 viewer) feed those ticks back through the same
+  `RoomManager` entry points the live session used (`applyRecordedOp`).
+- `VerifyChallengeResult` (`challenge_run.go:415`) re-runs a stored recording
+  and compares the room-hash `Evidence` a leaderboard row carries
+  (`challengeEvidence`, `:324`). "Verified by re-simulation" already ships;
+  the TAS judge is a second caller of the same idea.
+- A live run is measured by `advanceChallengeLocked` (`challenge_run.go:285`).
+  It increments `run.Ticks` on every instance tick, then asks `challengeGoalMet`
+  (`challenge.go:219`) about the run's player. The goal check is a function;
+  the tick counting is not.
+- The replay viewer's `replayControl` has two ops, `pause` and `restart`
+  (`websocket_server.go:3122-3126`). It has no seek.
+- The live run refuses the `?` cheat prompt (`submitDebugCommandInInstance`,
+  `websocket_server.go:3508-3514`), because a cheated run would replay
+  faithfully and therefore verify. That is the precedent for everything in
+  M38.1.
+- The challenge catalogue ships empty (`challenge.go:87`). GEMDASH came off
+  2026-09-08, and a row is a `-challenges` JSON file, not a rebuild.
+- `ChallengeStore.Submit` refuses a row with no account
+  (`challenge_store.go:162`), and production is guest-only while M37.1 is
+  deferred.
+
+**Four boundaries, decided before code.** Every task below exists to hold one.
+
+1. **A submission is an input script, not a recording.** The backlog bullet
+   pictured a player uploading a recording and an admission filter stripping
+   what it must not carry. Followed to the end, that filter keeps one player's
+   inputs and their scroll replies and drops everything else. The header's
+   world bytes go: their FNV check proves the bytes match their own hash, not
+   that they are the canonical world. `state` goes, because it grants a whole
+   inventory. `join` goes, because it spawns anywhere. `debug`, `name`, `save`
+   and `highscore` go too. So the format is the narrow thing that survives:
+   per tick, one input and optional scroll replies. The server supplies
+   everything else: the canonical world (`ResolveChallengeWorld(def)`), the
+   join at the challenge start exactly as `StartChallengeRun` does it, the
+   player's name, and the recording file, which it writes itself after judging.
+   `/replay/<id>`, ghosts and `VerifyChallengeResult` then work unchanged on a
+   file the server authored. Parsing a narrow schema replaces filtering a
+   hostile file: decide what cannot enter, as M32.1 did with `SanitizeSaveName`.
+2. **The server measures, and never reads a claimed result.** A submission has
+   no `Ticks`, `Score`, `Gems` or `Evidence` field to trust. The judge
+   re-simulates and computes all four with the same completion rule the live
+   run uses, so the two boards measure the same thing.
+3. **Assisted is a division, not a second store.** An assisted row lives in
+   M32.1's `ChallengeStore` with a division mark, ranks only against assisted
+   rows, and never moves a live rank. A live row never becomes assisted, and an
+   assisted row never becomes live.
+4. **The workbench is the server's simulation, shown.** The client is a dumb
+   terminal (CLAUDE.md), so an edited script lives in a server-side session that
+   re-simulates it and streams frames, as the replay viewer does. Seek is
+   re-simulation from tick 0, bounded by the tick ceiling. `RoomManager` has no
+   clone, so faster seeking waits until a measurement says it is needed.
+
+- [ ] **M38.0 — owner decisions before M38.1 opens.** *(owner-gated)* Each
+  answer goes here and in NOTES.md:
+  1. **What does a TAS run against?** The catalogue is empty, so there is
+     nothing to submit to today. Choose one of three: put a challenge row back
+     (which world, which goal); let the workbench open any canonical world with
+     a goal defined just for TAS; or wait for the next challenge season.
+  2. **Who can submit?** An assisted row is keyed by account like a live one,
+     and production has no sign-in (M37.1 deferred). Either M38.3 waits on
+     M37.1, or guests get a judged, non-durable result and a replay link but no
+     row.
+  3. **Budget.** Pick the tick ceiling (a recommendation comes from M38.2's
+     measurement, about 10 minutes of play at the server tick rate), the
+     concurrent-judge limit (`ZZT_GENERATION_CONCURRENCY` is the precedent),
+     and a per-account submit rate.
+  4. **Racing.** May a live runner race an assisted ghost? Ghosts are
+     presentation, so this is only a picker question.
+
+- [ ] **M38.1 — the input script and its admission.** Define the submitted
+  shape as one Go type in its own file: a challenge id, its version, and
+  `[]tasTick`, where each tick holds one `PlayerInput` and optional scroll
+  replies `{statID, label}`. Admission is a pure function from bytes and a
+  `ChallengeDefinition` to an admitted script or a named refusal. It enforces:
+  - known fields only (`DisallowUnknownFields`), so an op type the schema does
+    not name cannot be smuggled in;
+  - the challenge id resolves and its version matches;
+  - ticks run contiguously from 0, under the tick ceiling, and within a byte
+    ceiling checked before the decode;
+  - `DeltaX` and `DeltaY` are in {-1, 0, 1}. That is a refusal, not
+    `clampInputDelta`'s silent clamp, because a script is composed and a bad
+    value is a bug worth naming;
+  - `Key` is on an explicit allowlist derived from the in-play key switch
+    (`ElementPlayerTick`, `elements.go:1549-1610`). Movement and shooting go
+    through `DeltaX/Y` and `Shift`. `T` (torch) and `P` (pause) are play.
+    `S`, `Q`/Escape, `H` and `?` are refused: save, quit, help and the cheat
+    prompt have no place in a measured run. Decide `B` (sound) by checking
+    whether it reaches `StateHash`, and record the answer;
+  - a scroll reply is shape-checked only. `SubmitScrollReply` already refuses a
+    label the open scroll did not offer (M36.16), so the simulation stays the
+    authority.
+  Also write the projection from a recording to a script. It keeps the run's
+  player's inputs and scroll replies, which is how a live run is imported into
+  the workbench and how M38.2's equivalence test gets its input. DoD: one test
+  per refusal class above, a fuzz test that admission never panics and never
+  admits a script it cannot re-encode identically, and a round trip from a
+  live challenge recording to a script and back. No route, store or UI.
+
+- [ ] **M38.2 — the judge: re-simulate and measure.** First, extract the
+  per-tick measurement out of `advanceChallengeLocked` (tick count, goal check,
+  `ChallengeResult` construction) into one function that both the live run and
+  the judge call, so the two cannot drift. Then `JudgeScript(def, script)`
+  builds a `RoomManager` from the canonical world, joins one player as
+  `StartChallengeRun` does, steps the script, and returns the
+  `ChallengeResult` or "goal not met". It writes the recording it produced
+  only if asked, through the same recorder a live run uses.
+  **The trap to check first:** live `run.Ticks++` fires on every instance tick,
+  including any before the player's join resolves. The judge's tick 0 must mean
+  the same thing, or a live 300 and an assisted 300 are different numbers.
+  **Load-bearing DoD:** record a live challenge run, project it to a script
+  (M38.1), judge it, and assert `Ticks`, `Score`, `Gems` and `Evidence` equal
+  the live row exactly. Also: judging is deterministic across repeated runs,
+  the judge stops at the ceiling and does not run on, and
+  `VerifyChallengeResult` accepts the recording the judge wrote. Measure and
+  record the cost of judging one full-ceiling script; that number sizes M38.0's
+  budget answers and M38.5's seek.
+
+- [ ] **M38.3 — the assisted division.** Add `Division` to `ChallengeResult`
+  (`omitempty`; empty means live) and key `Submit`, `Leaderboard` and
+  `ResultForRecording` on (challenge id, division). Store it in the same file,
+  so a row written before M38 reads back as live. One row per account per
+  division, ranked with the existing `sortChallengeResults`. `/api/challenge`
+  gains the assisted table beside the live one, and the ghost route takes a
+  division. DoD: an assisted submission never changes a live rank or a live
+  row, and the reverse; an old store file loads unchanged; a stale version is
+  refused in both divisions.
+
+- [ ] **M38.4 — submitting a script.** Add `POST /api/challenge/<id>/assisted`,
+  which takes an M38.1 script body. Its gates run in this order: auth (per
+  M38.0.2), byte ceiling, per-account rate, a concurrent-judge semaphore, then
+  admission, then the judge off the request goroutine. A pass writes the
+  server-authored recording and the M38.3 row, then answers with the rank and
+  the replay id. A failure answers with the admission or judge refusal, and a
+  goal not met is a 422 that names the tick it stopped at. DoD: route tests
+  for every refusal, the replay id serving `/replay/<id>` with the run, a
+  parity manifest route row, and a load test showing 10 concurrent full-ceiling
+  submissions are refused or queued within the budget rather than all judged at
+  once. Server-only, so `make browser-only` covers any journey that reads
+  `/api/challenge`.
+
+- [ ] **M38.5 — the workbench session (server).** Add a websocket mode that holds
+  one editable script for one challenge and streams frames to its one client,
+  built on `ReplayPlayback` but fed from memory instead of a file. Its ops are:
+  - `setInput(tick, input)`, `setScrollReply(tick, reply)` and
+    `truncate(tick)`, each validated by M38.1's rules as it is applied;
+  - `seek(tick)`, which re-simulates from 0, and `step`, `play` and `pause`;
+  - `import(recordingID)`, which loads one of the player's own live runs
+    through M38.1's projection;
+  - `export`, which returns the script, and `submit`, which hands it to M38.4's
+    path.
+  The current tick, the goal state and the running tick count go out with every
+  frame. Editing never writes anything server-side until `submit`. Give the
+  same seek to the replay viewer as `replayControl` op `seek`, because it is
+  the same mechanism. DoD: headless websocket tests covering edit, seek and
+  re-simulate (the frame at tick N equals a fresh replay to N), a seek past the
+  ceiling refused, a session evicted when idle, and the replay viewer's seek
+  test. Server-only.
+
+- [ ] **M38.6 — the workbench screen (client).** Under `engine/web/src`: a
+  workbench mode reached from the challenge screen. It has the CP437 board, a
+  timeline row with the current tick, the goal and the tick count, and keys:
+  - step forward and back a tick;
+  - set this tick's input with the ordinary play keys;
+  - truncate here, play and pause;
+  - import my run, export (a file download) and submit.
+  Every menu row is walked to by name (`pickListRow`), and the script declares
+  its visitor (`markProfileWarm`, `engine/m33_2_test.go`). DoD: a browser
+  journey that imports a live run, changes one tick's input, sees the board
+  change at that tick, submits, and sees the assisted row. `make browser` runs
+  in full, because this is client work (CLAUDE.md rule 3).
+
+- [ ] **M38.7 — the assisted board in the open.** The challenge landing shows
+  the assisted table under the live one, with "assisted" said in words. Every
+  assisted row links to its replay, and the replay viewer's title says the run
+  was assisted. The racing picker follows M38.0.4. DoD: a browser journey from
+  the landing to an assisted replay, the co-op cutline green (CUTLINE.md), and
+  the whole `make browser` family.
 
 ## M14 — Rearchitecting for the service ZZTMMO is becoming
 
