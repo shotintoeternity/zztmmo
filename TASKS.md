@@ -520,9 +520,10 @@ M12.23, M17.1–M17.7, M16.0–M16.8a — has fully landed.)
 
 12. **M37 — after the M36 deploy (filed 2026-11-03).** The M36 batch is on
    production at `5502194`, and every box above it is ticked. M37 numbers what
-   is left in the order to take it. **M37.1, production sign-in, is next.** It
-   needs the owner (Google console and production `.env`), and everything
-   account-shaped is inert for testers until it lands.
+   is left in the order to take it. M37.1, production sign-in, is **deferred**:
+   the owner is undecided about the Google setup (2026-11-03). **M37.2, the
+   restore drill, is half done**: the data restores (2026-11-03), and the
+   host-side half waits on SSH to the dev host.
 
 **Optional / deferred (bottom):**
 - M14.3 — package split — **closed as skipped 2026-08-03**, see NOTES.md
@@ -9143,6 +9144,11 @@ console, or a product decision. Each says which.
   If guest-only production is deliberate, record that decision here and in
   NOTES.md and tick nothing.
 
+  *Deferred 2026-11-03, undecided.* The owner is not sure they want the Google
+  setup. Nothing here is decided either way: guest-only production stands for
+  now, the code, the docs and the cookie secret are ready, and this box stays
+  open until the owner chooses. M37.3 waits on it. Work moved on to M37.2.
+
 - [ ] **M37.2 — rehearse a restore from a production backup.** *(owner-gated:
   touches production data)* Promoted from the Architecture follow-ups bullet
   "The restore has never been rehearsed" (2026-08-04). `deploy/zztmmo-backup.sh`
@@ -9152,6 +9158,17 @@ console, or a product decision. Each says which.
   confirm the world list answers and a known save appears under R. Correct
   AWS.md wherever the procedure turns out wrong. DoD: the drill is recorded in
   NOTES.md with the archive date and anything the documentation got wrong.
+
+  *Half done 2026-11-03; the box stays open.* The **data half is proven**: the
+  2026-11-04T03:17Z production pair, restored on the workstation into a
+  host-shaped directory running the deployed build, gave 34/39 autosaves, all
+  22 player worlds listed, and both named saves shown under R and restored.
+  AWS.md's Restore section gained the missing worlds-archive steps. The one
+  unreadable autosave, `CAVES.SAV`, is a stale July file that the server
+  already falls back from (NOTES.md has the evidence). The **host half is not
+  run**: SSH to dev needs the workstation IP in its security group, which this
+  session could not add. Remaining: open SSH to dev, run the documented steps
+  there with the same archives, and check R in a real browser.
 
 - [ ] **M37.3 — signed-in players can remove and export their data.** *(owner
   decision first; matters once M37.1 is on)* Promoted from the Architecture
