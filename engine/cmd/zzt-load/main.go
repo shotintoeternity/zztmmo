@@ -5,7 +5,7 @@ import (
 	"encoding/json"
 	"flag"
 	"fmt"
-	"log"
+	"io"
 	"net/http"
 	"net/url"
 	"os"
@@ -44,18 +44,34 @@ func main() {
 	flag.Parse()
 
 	result, err := runLoad(*base, *world, *clients, *ticks, *interval)
-	if err != nil {
-		log.Fatal(err)
+	os.Exit(emit(os.Stdout, result, err, *jsonOut))
+}
+
+// emit writes a run's result and returns the exit code (M36.27d). An error
+// from a run that measured something — the final metrics fetch failing, say —
+// still writes those measurements and then fails the command; only a run that
+// never got as far as driving the bots has nothing to write. main used to
+// log.Fatal any error, discarding a whole run's numbers over its last request.
+func emit(w io.Writer, result loadResult, runErr error, jsonOut bool) int {
+	if runErr != nil && result.ElapsedSeconds == 0 {
+		fmt.Fprintf(os.Stderr, "zzt-load: %v\n", runErr)
+		return 1
 	}
-	if *jsonOut {
-		enc := json.NewEncoder(os.Stdout)
+	if jsonOut {
+		enc := json.NewEncoder(w)
 		enc.SetIndent("", "  ")
 		if err := enc.Encode(result); err != nil {
-			log.Fatal(err)
+			fmt.Fprintf(os.Stderr, "zzt-load: %v\n", err)
+			return 1
 		}
-		return
+	} else {
+		printSummary(w, result)
 	}
-	printSummary(result)
+	if runErr != nil {
+		fmt.Fprintf(os.Stderr, "zzt-load: %v\n", runErr)
+		return 1
+	}
+	return 0
 }
 
 type loadResult struct {
@@ -73,7 +89,10 @@ type loadResult struct {
 	MetricsBefore    metricsSample   `json:"metricsBefore"`
 	MetricsDuring    []metricsSample `json:"metricsDuring,omitempty"`
 	MetricsAfter     metricsSample   `json:"metricsAfter"`
-	ElapsedSeconds   float64         `json:"elapsedSeconds"`
+	// MetricsAfterError says why MetricsAfter is empty, when the final fetch
+	// failed; the rest of the result was still measured.
+	MetricsAfterError string  `json:"metricsAfterError,omitempty"`
+	ElapsedSeconds    float64 `json:"elapsedSeconds"`
 }
 
 func runLoad(base, world string, clients, ticks int, interval time.Duration) (loadResult, error) {
@@ -86,7 +105,7 @@ func runLoad(base, world string, clients, ticks int, interval time.Duration) (lo
 	}
 	result := loadResult{URL: httpBase, World: world, Clients: clients, Ticks: ticks}
 
-	before, err := fetchMetrics(httpBase)
+	before, err := fetchMetrics(context.Background(), httpBase)
 	if err != nil {
 		return result, err
 	}
@@ -120,8 +139,15 @@ func runLoad(base, world string, clients, ticks int, interval time.Duration) (lo
 
 	metricsCtx, stopMetrics := context.WithCancel(context.Background())
 	var metricsMu sync.Mutex
+	// The sampler is joined, not just cancelled (M36.27d): a sample in flight
+	// when stopMetrics ran used to append to result.MetricsDuring after this
+	// function had read it. Its request carries metricsCtx, so stopping it
+	// also abandons a fetch that has not answered yet.
+	var samplerWG sync.WaitGroup
 	if interval > 0 {
+		samplerWG.Add(1)
 		go func() {
+			defer samplerWG.Done()
 			ticker := time.NewTicker(interval)
 			defer ticker.Stop()
 			for {
@@ -129,7 +155,7 @@ func runLoad(base, world string, clients, ticks int, interval time.Duration) (lo
 				case <-metricsCtx.Done():
 					return
 				case <-ticker.C:
-					sample, err := fetchMetrics(httpBase)
+					sample, err := fetchMetrics(metricsCtx, httpBase)
 					if err != nil {
 						continue
 					}
@@ -166,6 +192,7 @@ func runLoad(base, world string, clients, ticks int, interval time.Duration) (lo
 	time.Sleep(750 * time.Millisecond)
 	result.ElapsedSeconds = time.Since(started).Seconds()
 	stopMetrics()
+	samplerWG.Wait()
 
 	cancel()
 	for _, bot := range bots {
@@ -195,9 +222,10 @@ func runLoad(base, world string, clients, ticks int, interval time.Duration) (lo
 		result.MinDiffs = 0
 	}
 
-	after, err := fetchMetrics(httpBase)
+	after, err := fetchMetrics(context.Background(), httpBase)
 	if err != nil {
-		return result, err
+		result.MetricsAfterError = err.Error()
+		return result, fmt.Errorf("final /api/metrics fetch: %w", err)
 	}
 	result.MetricsAfter = after
 	return result, nil
@@ -259,8 +287,12 @@ func endpoints(base, world string) (string, string, error) {
 	return base, ws.String(), nil
 }
 
-func fetchMetrics(base string) (metricsSample, error) {
-	resp, err := http.Get(strings.TrimRight(base, "/") + "/api/metrics")
+func fetchMetrics(ctx context.Context, base string) (metricsSample, error) {
+	req, err := http.NewRequestWithContext(ctx, http.MethodGet, strings.TrimRight(base, "/")+"/api/metrics", nil)
+	if err != nil {
+		return metricsSample{}, err
+	}
+	resp, err := http.DefaultClient.Do(req)
 	if err != nil {
 		return metricsSample{}, err
 	}
@@ -308,35 +340,35 @@ func durationMS(d time.Duration) float64 {
 	return float64(d) / float64(time.Millisecond)
 }
 
-func printSummary(result loadResult) {
-	fmt.Printf("ZZTMMO load result: %d clients, %d ticks, world %s\n", result.Clients, result.Ticks, result.World)
-	fmt.Printf("Write fanout: p50 %.2fms, p95 %.2fms, max %.2fms\n",
+func printSummary(w io.Writer, result loadResult) {
+	fmt.Fprintf(w, "ZZTMMO load result: %d clients, %d ticks, world %s\n", result.Clients, result.Ticks, result.World)
+	fmt.Fprintf(w, "Write fanout: p50 %.2fms, p95 %.2fms, max %.2fms\n",
 		result.WriteFanoutP50MS, result.WriteFanoutP95MS, result.WriteFanoutMaxMS)
-	fmt.Printf("Diffs: %d total, slowest client %d, bytes %.1f KiB\n",
+	fmt.Fprintf(w, "Diffs: %d total, slowest client %d, bytes %.1f KiB\n",
 		result.TotalDiffs, result.MinDiffs, float64(result.TotalBytesRead)/1024)
 	before := result.MetricsBefore.Status
 	after := result.MetricsAfter.Status
-	fmt.Printf("Server totals before: players=%d rooms=%d activeRooms=%d instances=%d heap=%.1f MiB\n",
+	fmt.Fprintf(w, "Server totals before: players=%d rooms=%d activeRooms=%d instances=%d heap=%.1f MiB\n",
 		before.Totals.Players, before.Totals.Rooms, before.Totals.ActiveRooms, before.Totals.Instances,
 		float64(before.Memory.HeapAllocBytes)/(1024*1024))
-	fmt.Printf("Server totals after:  players=%d rooms=%d activeRooms=%d instances=%d heap=%.1f MiB\n",
+	fmt.Fprintf(w, "Server totals after:  players=%d rooms=%d activeRooms=%d instances=%d heap=%.1f MiB\n",
 		after.Totals.Players, after.Totals.Rooms, after.Totals.ActiveRooms, after.Totals.Instances,
 		float64(after.Memory.HeapAllocBytes)/(1024*1024))
-	fmt.Printf("Server tick after: count=%d avg=%.2fms p95=%.2fms max=%.2fms\n",
+	fmt.Fprintf(w, "Server tick after: count=%d avg=%.2fms p95=%.2fms max=%.2fms\n",
 		after.Tick.Count, after.Tick.AvgMS, after.Tick.P95MS, after.Tick.MaxMS)
 	for _, inst := range after.Instances {
 		if inst.Players == 0 && inst.Step.Count == 0 {
 			continue
 		}
-		fmt.Printf("Instance %s: players=%d rooms=%d activeRooms=%d step avg=%.2fms p95=%.2fms max=%.2fms tick avg=%.2fms p95=%.2fms max=%.2fms\n",
+		fmt.Fprintf(w, "Instance %s: players=%d rooms=%d activeRooms=%d step avg=%.2fms p95=%.2fms max=%.2fms tick avg=%.2fms p95=%.2fms max=%.2fms\n",
 			inst.Name, inst.Players, inst.Rooms, inst.ActiveRooms,
 			inst.Step.AvgMS, inst.Step.P95MS, inst.Step.MaxMS,
 			inst.Tick.AvgMS, inst.Tick.P95MS, inst.Tick.MaxMS)
 	}
 	if len(result.BotErrors) > 0 {
-		fmt.Println("Bot errors:")
+		fmt.Fprintln(w, "Bot errors:")
 		for _, err := range result.BotErrors {
-			fmt.Println("  " + err)
+			fmt.Fprintln(w, "  "+err)
 		}
 	}
 }
