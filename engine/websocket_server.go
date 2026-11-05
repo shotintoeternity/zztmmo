@@ -530,41 +530,41 @@ func safeStepDiffs(worldName string, rm *RoomManager, inputs map[PlayerID]Player
 	return rm.StepDiffsWithBoards(inputs)
 }
 
+// playerJoin is one connection's join as ServeHTTP builds it up. Its fields are
+// reassigned as the join resolves (a challenge swaps inst, an evicted instance
+// is re-resolved), so the phases share it by pointer.
+type playerJoin struct {
+	inst                  *WorldInstance
+	safeWorld             string
+	challengeID           string
+	challengeRunRequested string
+	challengeRun          *ChallengeRun
+
+	join          JoinMessage
+	joinColor     string
+	client        *webSocketClient
+	account       AuthenticatedAccount
+	authenticated bool
+
+	storedState    PlayerState
+	hasStoredState bool
+	profileHandle  string
+	hasProfile     bool
+
+	playerID PlayerID
+	snapshot SnapshotMessage
+	resumed  bool
+}
+
 func (s *WebSocketServer) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 	if replayID := r.URL.Query().Get("replay"); replayID != "" {
 		s.serveReplayHTTP(w, r, replayID)
 		return
 	}
 
-	// M32.1: a challenge join names a catalogue id (start a fresh attempt) or a
-	// run key (reclaim the attempt this browser is already in). Both resolve
-	// AFTER the socket is accepted and the account is known — the instance a run
-	// gets is minted per attempt and per player, so there is nothing to resolve
-	// until we know who is asking.
-	challengeID := strings.TrimSpace(r.URL.Query().Get("challenge"))
-	challengeRunRequested := strings.TrimSpace(r.URL.Query().Get("run"))
-
-	worldName := r.URL.Query().Get("world")
-	var inst *WorldInstance
-	var safeWorld string
-	switch {
-	case challengeID != "" || challengeRunRequested != "":
-		// Resolved below, once the join message and the account have been read.
-	case worldName == "":
-		inst = s.DefaultInstance
-		safeWorld = inst.Name
-	default:
-		var err error
-		safeWorld, err = SanitizeSaveName(worldName)
-		if err != nil {
-			http.Error(w, "invalid world name", http.StatusBadRequest)
-			return
-		}
-		inst, err = s.GetOrCreateInstance(safeWorld)
-		if err != nil {
-			http.Error(w, "failed to load world: "+err.Error(), http.StatusInternalServerError)
-			return
-		}
+	pj, ok := s.resolveJoinTarget(w, r)
+	if !ok {
+		return
 	}
 
 	conn, err := websocket.Accept(w, r, &websocket.AcceptOptions{OriginPatterns: s.OriginHosts})
@@ -586,26 +586,13 @@ func (s *WebSocketServer) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	if envelope.Type == MessageTypeEditorEnter {
-		var enter EditorEnterMessage
-		if err := json.Unmarshal(raw, &enter); err != nil {
-			return
-		}
-		account, authenticated := s.authAccount(r)
-		// A refused account is refused everywhere it can be recognised (M21.2),
-		// and the editor is a door into the same server: admitting them here
-		// would make "refuse" mean "refuse to play".
-		if notice, refused := s.refusedAtTheDoor(account, authenticated); refused {
-			_ = wsjson.Write(ctx, conn, notice)
-			return
-		}
-		s.serveEditor(ctx, conn, enter, account, authenticated)
+		s.serveEditorEntry(ctx, conn, r, raw)
 		return
 	}
 	if envelope.Type != MessageTypeJoin {
 		return
 	}
-	var join JoinMessage
-	if err := json.Unmarshal(raw, &join); err != nil {
+	if err := json.Unmarshal(raw, &pj.join); err != nil {
 		return
 	}
 
@@ -614,41 +601,22 @@ func (s *WebSocketServer) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 	// downstream stores and broadcasts whatever this returns, so anything that
 	// is not "#" plus six hex digits must become the empty string at this line
 	// and never later.
-	joinColor := SanitizePlayerColor(join.Color)
+	pj.joinColor = SanitizePlayerColor(pj.join.Color)
 
-	client := newWebSocketClient(conn, safeWorld)
-	defer client.stop()
-	account, authenticated := s.authAccount(r)
+	pj.client = newWebSocketClient(conn, pj.safeWorld)
+	defer pj.client.stop()
+	pj.account, pj.authenticated = s.authAccount(r)
 	// Before anything is joined, spawned or resumed (M21.2). A refusal that took
 	// effect after the join would put the player in the room for a tick and take
 	// the reconnect path out of it, which is a drop rather than a refusal — and
 	// the resume token below would let them reclaim it.
-	if notice, refused := s.refusedAtTheDoor(account, authenticated); refused {
-		_ = client.write(ctx, notice)
+	if notice, refused := s.refusedAtTheDoor(pj.account, pj.authenticated); refused {
+		_ = pj.client.write(ctx, notice)
 		return
 	}
 
-	// M32.1: the challenge run this connection is playing, or nil. Resolved
-	// here — after the refusal, like watching — because a challenge is a door
-	// into the same server, and a refused account must not walk through the one
-	// that happens to hand out leaderboard rows.
-	var challengeRun *ChallengeRun
-	if challengeID != "" || challengeRunRequested != "" {
-		if join.Spectate {
-			// A run is one player's measured attempt, and it is not addressable
-			// by anyone else: there is no watch route to it, and asking for one
-			// here would be the only way to reach another player's run.
-			_ = client.write(ctx, ChallengeErrorMessage{Type: MessageTypeChallengeError, ChallengeID: challengeID, Reason: "A challenge run cannot be watched."})
-			return
-		}
-		var err error
-		inst, challengeRun, err = s.resolveChallengeJoin(challengeID, challengeRunRequested, account, authenticated)
-		if err != nil {
-			_ = client.write(ctx, ChallengeErrorMessage{Type: MessageTypeChallengeError, ChallengeID: challengeID, Reason: challengeRefusalText(err)})
-			return
-		}
-		safeWorld = inst.Name
-		client.setWorldName(inst.Name)
+	if !s.resolveChallengeRun(ctx, pj) {
+		return
 	}
 
 	// M22.1: a watcher takes none of the paths below — no stored state, no color,
@@ -656,175 +624,282 @@ func (s *WebSocketServer) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 	// the refusal, because watching is a door into the same server and a refused
 	// account must not be able to walk through the one that happens to be
 	// read-only.
-	if join.Spectate {
-		s.serveSpectator(ctx, conn, client, inst, join)
+	if pj.join.Spectate {
+		s.serveSpectator(ctx, conn, pj.client, pj.inst, pj.join)
 		return
 	}
 
-	var storedState PlayerState
-	hasStoredState := false
-	if authenticated {
-		client.accountID = account.ID
-		join.Name = account.DisplayName()
-		storedState, hasStoredState = s.loadAccountPlayerState(account.ID, safeWorld)
+	if pj.authenticated {
+		pj.client.accountID = pj.account.ID
+		pj.join.Name = pj.account.DisplayName()
+		pj.storedState, pj.hasStoredState = s.loadAccountPlayerState(pj.account.ID, pj.safeWorld)
 		// The account, not this browser, is where a signed-in player's color
 		// lives (M19.3). Resolved here so both the fresh join and the resume
 		// below see one already-decided value.
-		joinColor = s.resolveAccountPlayerColor(account.ID, joinColor)
+		pj.joinColor = s.resolveAccountPlayerColor(pj.account.ID, pj.joinColor)
 	}
-	profileHandle, hasProfile := s.accountProfileSummary(account.ID)
+	pj.profileHandle, pj.hasProfile = s.accountProfileSummary(pj.account.ID)
 
-	// Resume first: a valid token reclaims the dropped run (same PlayerID/statID,
-	// inventory intact). An unknown or expired token falls through to a fresh join.
-	var playerID PlayerID
-	var snapshot SnapshotMessage
-	resumed := false
-	if join.ResumeToken != "" {
-		if pid, snap, ok := s.tryResume(inst, client, join.ResumeToken); ok {
-			playerID, snapshot, resumed = pid, snap, true
-			inst.mu.Lock()
-			if authenticated {
-				inst.RoomManager.SetPlayerIdentity(playerID, account.ID, account.DisplayName())
-			}
-			// A resumed run keeps its inventory but not its color: the
-			// reclaimed roomPlayer predates this connection, and the color is
-			// a property of the browser that is here now (M19.1). Re-applying
-			// it means a reconnect looks the same as it did before the drop.
-			// The snapshot tryResume already built is left alone — rebuilding
-			// it would drain the room's dirty cells a second time (see
-			// Snapshot) — so the color reaches this client on the first diff
-			// instead, one tick later, which is how the roster reaches it
-			// every other time it changes.
-			inst.RoomManager.SetPlayerColor(playerID, joinColor)
-			if authenticated {
-				inst.RoomManager.SetPlayerProfileSummary(playerID, profileHandle, hasProfile)
-			}
-			inst.mu.Unlock()
-		}
-	}
+	s.resumeJoin(pj)
 
 	// M32.1: a `?run=` join RECLAIMS an attempt and may never start a player in
 	// one. Without this, a token-less run key fresh-joins a second player into
 	// somebody's measured run — and run keys are sequential, so they can be
 	// guessed. The refusal is the same one an ended run gets, because from the
 	// outside those are the same fact: this browser is not in that run.
-	if challengeRunRequested != "" && !resumed {
+	if pj.challengeRunRequested != "" && !pj.resumed {
 		// Nothing to tidy: no id has been minted and no stat spawned — the
 		// refusal happens before the fresh-join path below, which is the point.
-		_ = client.write(ctx, ChallengeErrorMessage{
+		_ = pj.client.write(ctx, ChallengeErrorMessage{
 			Type:        MessageTypeChallengeError,
-			ChallengeID: challengeID,
+			ChallengeID: pj.challengeID,
 			Reason:      "That run has ended.",
 		})
 		return
 	}
 
-	if !resumed {
-		// Mint a process-unique id before taking inst.mu; the two locks are never
-		// held together (M14.1).
-		playerID = s.mintPlayerID()
-
-		// The join runs under inst.mu; a defer guarantees the unlock even if a
-		// callee panics (e.g. spawning onto a corrupt board). Without it a panic
-		// would leak inst.mu, and every later handleWorlds / GetOrCreateInstance
-		// that waits on that lock (while holding the global server lock) wedges.
-		var ok, evicted, boardFull bool
-		for attempt := 0; ; attempt++ {
-			ok, evicted = func() (bool, bool) {
-				inst.mu.Lock()
-				defer inst.mu.Unlock()
-				if inst.evicted {
-					// Evicted between the upgrade and this frame (M36.18). Joining
-					// it would leave the player in an instance nobody ticks.
-					return false, true
-				}
-				// M36.15: the board is resolved under the same lock as the join, since
-				// it reads the world a restore replaces; resolved outside it, a restore
-				// in between could leave the join naming a board of the old world.
-				join.Board = s.resolveJoinBoard(inst, join.Board)
-				if challengeRun != nil {
-					// The start board is the catalogue's, not the client's: a challenge
-					// that could be entered on a board of the player's choosing is a
-					// challenge whose route is the player's choosing too.
-					join.Board = challengeRun.Def.Board
-				}
-				if inst.RoomManager.JoinPlayerWithID(playerID, join.Board, 0, 0) == 0 {
-					// M36.23: the board has no room for another player stat.
-					// Nobody was spawned, so nothing below has a player to name.
-					boardFull = true
-					return false, false
-				}
-				if authenticated {
-					inst.RoomManager.SetPlayerIdentity(playerID, account.ID, account.DisplayName())
-					if hasStoredState {
-						inst.RoomManager.ApplyPlayerState(playerID, storedState)
-					}
-				} else {
-					inst.RoomManager.SetPlayerName(playerID, join.Name)
-				}
-				// Set before the snapshot is built, so the joining client's own
-				// roster already carries it (M19.1).
-				inst.RoomManager.SetPlayerColor(playerID, joinColor)
-				if authenticated {
-					inst.RoomManager.SetPlayerProfileSummary(playerID, profileHandle, hasProfile)
-				}
-				client.playerID = playerID
-				inst.Clients[playerID] = client
-				token := inst.mintResumeTokenLocked(playerID)
-				var snapOK bool
-				snapshot, snapOK = inst.RoomManager.Snapshot(playerID)
-				if snapOK {
-					snapshot.World = inst.publicWorldName()
-					snapshot.ResumeToken = token
-					client.boardID = snapshot.BoardID
-				}
-				return snapOK, false
-			}()
-			if !evicted {
-				break
-			}
-			// A challenge run's instance is minted per attempt and cannot be
-			// re-resolved by name; an evicted one is simply gone.
-			if challengeRun != nil || attempt >= maxEvictedRejoins {
-				return
-			}
-			var err error
-			if inst, err = s.GetOrCreateInstance(safeWorld); err != nil {
-				return
-			}
-		}
-
-		if !ok {
-			if boardFull {
-				_ = client.write(ctx, boardFullMessage())
-			}
-			s.removeClientFromInstance(inst, playerID)
-			if challengeRun != nil {
-				// A run whose player never spawned measures nothing; take its
-				// instance and its recording down rather than leaving an empty
-				// attempt on the server.
-				s.discardChallengeRun(challengeRun.Key)
-			}
-			return
-		}
+	if !pj.resumed && !s.freshJoin(ctx, pj) {
+		return
 	}
 
-	if challengeRun != nil {
+	if pj.challengeRun != nil {
 		// The run's one player. It is set on both the fresh join and the resume,
 		// because a reconnect inside the grace reclaims the SAME PlayerID and the
 		// completion check reads it every tick.
-		inst.mu.Lock()
-		challengeRun.PlayerID = playerID
-		inst.mu.Unlock()
-		snapshot.Challenge = challengeRun.Def.ID
-		snapshot.ChallengeRun = challengeRun.Key
+		pj.inst.mu.Lock()
+		pj.challengeRun.PlayerID = pj.playerID
+		pj.inst.mu.Unlock()
+		pj.snapshot.Challenge = pj.challengeRun.Def.ID
+		pj.snapshot.ChallengeRun = pj.challengeRun.Key
 	}
 
+	s.seedSocialState(pj)
+
+	if !s.sendFirstFrame(ctx, pj) {
+		return
+	}
+
+	s.readLoop(ctx, conn, pj.client, pj.playerID)
+	if activeInst := s.instanceForClient(pj.client); activeInst != nil {
+		s.handleReadLoopExit(activeInst, pj.client, pj.playerID)
+	}
+}
+
+// resolveJoinTarget reads which world the upgrade asks for, before the socket
+// is accepted, so a bad name is still an HTTP error.
+func (s *WebSocketServer) resolveJoinTarget(w http.ResponseWriter, r *http.Request) (*playerJoin, bool) {
+	pj := &playerJoin{}
+	// M32.1: a challenge join names a catalogue id (start a fresh attempt) or a
+	// run key (reclaim the attempt this browser is already in). Both resolve
+	// AFTER the socket is accepted and the account is known — the instance a run
+	// gets is minted per attempt and per player, so there is nothing to resolve
+	// until we know who is asking.
+	pj.challengeID = strings.TrimSpace(r.URL.Query().Get("challenge"))
+	pj.challengeRunRequested = strings.TrimSpace(r.URL.Query().Get("run"))
+
+	worldName := r.URL.Query().Get("world")
+	switch {
+	case pj.challengeID != "" || pj.challengeRunRequested != "":
+		// Resolved below, once the join message and the account have been read.
+	case worldName == "":
+		pj.inst = s.DefaultInstance
+		pj.safeWorld = pj.inst.Name
+	default:
+		var err error
+		pj.safeWorld, err = SanitizeSaveName(worldName)
+		if err != nil {
+			http.Error(w, "invalid world name", http.StatusBadRequest)
+			return nil, false
+		}
+		pj.inst, err = s.GetOrCreateInstance(pj.safeWorld)
+		if err != nil {
+			http.Error(w, "failed to load world: "+err.Error(), http.StatusInternalServerError)
+			return nil, false
+		}
+	}
+	return pj, true
+}
+
+// serveEditorEntry is the editor's door: the first frame was editorEnter.
+func (s *WebSocketServer) serveEditorEntry(ctx context.Context, conn *websocket.Conn, r *http.Request, raw json.RawMessage) {
+	var enter EditorEnterMessage
+	if err := json.Unmarshal(raw, &enter); err != nil {
+		return
+	}
+	account, authenticated := s.authAccount(r)
+	// A refused account is refused everywhere it can be recognised (M21.2),
+	// and the editor is a door into the same server: admitting them here
+	// would make "refuse" mean "refuse to play".
+	if notice, refused := s.refusedAtTheDoor(account, authenticated); refused {
+		_ = wsjson.Write(ctx, conn, notice)
+		return
+	}
+	s.serveEditor(ctx, conn, enter, account, authenticated)
+}
+
+// resolveChallengeRun points pj at the challenge run its query names, if any.
+// It reports false when the connection must end.
+func (s *WebSocketServer) resolveChallengeRun(ctx context.Context, pj *playerJoin) bool {
+	// M32.1: the challenge run this connection is playing, or nil. Resolved
+	// here — after the refusal, like watching — because a challenge is a door
+	// into the same server, and a refused account must not walk through the one
+	// that happens to hand out leaderboard rows.
+	if pj.challengeID == "" && pj.challengeRunRequested == "" {
+		return true
+	}
+	if pj.join.Spectate {
+		// A run is one player's measured attempt, and it is not addressable
+		// by anyone else: there is no watch route to it, and asking for one
+		// here would be the only way to reach another player's run.
+		_ = pj.client.write(ctx, ChallengeErrorMessage{Type: MessageTypeChallengeError, ChallengeID: pj.challengeID, Reason: "A challenge run cannot be watched."})
+		return false
+	}
+	var err error
+	pj.inst, pj.challengeRun, err = s.resolveChallengeJoin(pj.challengeID, pj.challengeRunRequested, pj.account, pj.authenticated)
+	if err != nil {
+		_ = pj.client.write(ctx, ChallengeErrorMessage{Type: MessageTypeChallengeError, ChallengeID: pj.challengeID, Reason: challengeRefusalText(err)})
+		return false
+	}
+	pj.safeWorld = pj.inst.Name
+	pj.client.setWorldName(pj.inst.Name)
+	return true
+}
+
+// resumeJoin reclaims the player pj's resume token names, if it names one.
+func (s *WebSocketServer) resumeJoin(pj *playerJoin) {
+	// Resume first: a valid token reclaims the dropped run (same PlayerID/statID,
+	// inventory intact). An unknown or expired token falls through to a fresh join.
+	if pj.join.ResumeToken == "" {
+		return
+	}
+	pid, snap, ok := s.tryResume(pj.inst, pj.client, pj.join.ResumeToken)
+	if !ok {
+		return
+	}
+	pj.playerID, pj.snapshot, pj.resumed = pid, snap, true
+	inst := pj.inst
+	inst.mu.Lock()
+	if pj.authenticated {
+		inst.RoomManager.SetPlayerIdentity(pj.playerID, pj.account.ID, pj.account.DisplayName())
+	}
+	// A resumed run keeps its inventory but not its color: the
+	// reclaimed roomPlayer predates this connection, and the color is
+	// a property of the browser that is here now (M19.1). Re-applying
+	// it means a reconnect looks the same as it did before the drop.
+	// The snapshot tryResume already built is left alone — rebuilding
+	// it would drain the room's dirty cells a second time (see
+	// Snapshot) — so the color reaches this client on the first diff
+	// instead, one tick later, which is how the roster reaches it
+	// every other time it changes.
+	inst.RoomManager.SetPlayerColor(pj.playerID, pj.joinColor)
+	if pj.authenticated {
+		inst.RoomManager.SetPlayerProfileSummary(pj.playerID, pj.profileHandle, pj.hasProfile)
+	}
+	inst.mu.Unlock()
+}
+
+// freshJoin spawns a new player for pj. It reports false when the connection
+// must end; pj.inst may have been re-resolved by then.
+func (s *WebSocketServer) freshJoin(ctx context.Context, pj *playerJoin) bool {
+	// Mint a process-unique id before taking inst.mu; the two locks are never
+	// held together (M14.1).
+	pj.playerID = s.mintPlayerID()
+
+	// The join runs under inst.mu; a defer guarantees the unlock even if a
+	// callee panics (e.g. spawning onto a corrupt board). Without it a panic
+	// would leak inst.mu, and every later handleWorlds / GetOrCreateInstance
+	// that waits on that lock (while holding the global server lock) wedges.
+	var ok, evicted, boardFull bool
+	for attempt := 0; ; attempt++ {
+		ok, evicted = func() (bool, bool) {
+			inst := pj.inst
+			inst.mu.Lock()
+			defer inst.mu.Unlock()
+			if inst.evicted {
+				// Evicted between the upgrade and this frame (M36.18). Joining
+				// it would leave the player in an instance nobody ticks.
+				return false, true
+			}
+			// M36.15: the board is resolved under the same lock as the join, since
+			// it reads the world a restore replaces; resolved outside it, a restore
+			// in between could leave the join naming a board of the old world.
+			pj.join.Board = s.resolveJoinBoard(inst, pj.join.Board)
+			if pj.challengeRun != nil {
+				// The start board is the catalogue's, not the client's: a challenge
+				// that could be entered on a board of the player's choosing is a
+				// challenge whose route is the player's choosing too.
+				pj.join.Board = pj.challengeRun.Def.Board
+			}
+			if inst.RoomManager.JoinPlayerWithID(pj.playerID, pj.join.Board, 0, 0) == 0 {
+				// M36.23: the board has no room for another player stat.
+				// Nobody was spawned, so nothing below has a player to name.
+				boardFull = true
+				return false, false
+			}
+			if pj.authenticated {
+				inst.RoomManager.SetPlayerIdentity(pj.playerID, pj.account.ID, pj.account.DisplayName())
+				if pj.hasStoredState {
+					inst.RoomManager.ApplyPlayerState(pj.playerID, pj.storedState)
+				}
+			} else {
+				inst.RoomManager.SetPlayerName(pj.playerID, pj.join.Name)
+			}
+			// Set before the snapshot is built, so the joining client's own
+			// roster already carries it (M19.1).
+			inst.RoomManager.SetPlayerColor(pj.playerID, pj.joinColor)
+			if pj.authenticated {
+				inst.RoomManager.SetPlayerProfileSummary(pj.playerID, pj.profileHandle, pj.hasProfile)
+			}
+			pj.client.playerID = pj.playerID
+			inst.Clients[pj.playerID] = pj.client
+			token := inst.mintResumeTokenLocked(pj.playerID)
+			var snapOK bool
+			pj.snapshot, snapOK = inst.RoomManager.Snapshot(pj.playerID)
+			if snapOK {
+				pj.snapshot.World = inst.publicWorldName()
+				pj.snapshot.ResumeToken = token
+				pj.client.boardID = pj.snapshot.BoardID
+			}
+			return snapOK, false
+		}()
+		if !evicted {
+			break
+		}
+		// A challenge run's instance is minted per attempt and cannot be
+		// re-resolved by name; an evicted one is simply gone.
+		if pj.challengeRun != nil || attempt >= maxEvictedRejoins {
+			return false
+		}
+		var err error
+		if pj.inst, err = s.GetOrCreateInstance(pj.safeWorld); err != nil {
+			return false
+		}
+	}
+
+	if !ok {
+		if boardFull {
+			_ = pj.client.write(ctx, boardFullMessage())
+		}
+		s.removeClientFromInstance(pj.inst, pj.playerID)
+		if pj.challengeRun != nil {
+			// A run whose player never spawned measures nothing; take its
+			// instance and its recording down rather than leaving an empty
+			// attempt on the server.
+			s.discardChallengeRun(pj.challengeRun.Key)
+		}
+		return false
+	}
+	return true
+}
+
+// seedSocialState puts a joining player's blocks live and marks the first
+// frame with what this player has blocked, follows, and may do.
+func (s *WebSocketServer) seedSocialState(pj *playerJoin) {
 	// M21.1: a signed-in player's stored blocks go live before the chat backlog
 	// below is replayed. The other order would make the first act of a durable
 	// block handing back the fifty lines it exists to suppress.
-	if authenticated {
-		s.seedAccountBlocks(playerID, account.ID)
+	if pj.authenticated {
+		s.seedAccountBlocks(pj.playerID, pj.account.ID)
 	}
 
 	// M21.4: and the very first frame says which of the people already in the
@@ -832,27 +907,32 @@ func (s *WebSocketServer) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 	// is what puts a returning player's stored blocks into their live set — the
 	// other order would compute the answer from an empty one and be right only
 	// for a player who has never blocked anybody.
-	snapshot.BlockedPlayers = s.blockedInRoster(playerID, inst, snapshot.Players)
-	snapshot.FollowedPlayers = s.followedInRoster(playerID, inst, snapshot.Players)
+	pj.snapshot.BlockedPlayers = s.blockedInRoster(pj.playerID, pj.inst, pj.snapshot.Players)
+	pj.snapshot.FollowedPlayers = s.followedInRoster(pj.playerID, pj.inst, pj.snapshot.Players)
 
 	// M21.2: and whether this connection may moderate, which is what makes the
 	// same window offer mute, kick and refuse. It is told once, at the join,
 	// because the allowlist is deployment configuration and cannot change under a
 	// running player.
-	snapshot.Operator = s.isOperator(client.accountID)
+	pj.snapshot.Operator = s.isOperator(pj.client.accountID)
+}
 
-	if err := client.write(ctx, snapshot); err != nil {
+// sendFirstFrame writes the join snapshot, counts the play, and replays the
+// chat backlog. It reports false when the connection must end.
+func (s *WebSocketServer) sendFirstFrame(ctx context.Context, pj *playerJoin) bool {
+	client := pj.client
+	if err := client.write(ctx, pj.snapshot); err != nil {
 		// The connection never got its first frame; detach (or tidy up if the
 		// player is already gone) exactly as a mid-game drop would.
-		s.handleReadLoopExit(inst, client, playerID)
-		return
+		s.handleReadLoopExit(pj.inst, client, pj.playerID)
+		return false
 	}
 	// M32.1: a challenge run is not a play of the source world. Counting it would
 	// put the popularity shelf — and the front page built on it — under the
 	// control of whoever cares to restart a challenge.
-	if !resumed && challengeRun == nil && s.Activity != nil {
-		if err := s.Activity.IncrementPlay(safeWorld); err != nil {
-			log.Printf("zztgo: failed to record play for %s: %v", safeWorld, err)
+	if !pj.resumed && pj.challengeRun == nil && s.Activity != nil {
+		if err := s.Activity.IncrementPlay(pj.safeWorld); err != nil {
+			log.Printf("zztgo: failed to record play for %s: %v", pj.safeWorld, err)
 		}
 	}
 
@@ -865,7 +945,7 @@ func (s *WebSocketServer) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 				// is only trustworthy in the process that wrote it — the loader
 				// clears the ones read from disk — so across a restart this is
 				// the AccountID's job alone.
-				if s.chatBlocks.suppresses(playerID, rec.PlayerID, rec.AccountID) {
+				if s.chatBlocks.suppresses(pj.playerID, rec.PlayerID, rec.AccountID) {
 					continue
 				}
 				msg := ChatMessage{
@@ -879,7 +959,12 @@ func (s *WebSocketServer) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 			}
 		}
 	}
+	return true
+}
 
+// readLoop reads a joined player's messages until the connection ends or the
+// player has no instance.
+func (s *WebSocketServer) readLoop(ctx context.Context, conn *websocket.Conn, client *webSocketClient, playerID PlayerID) {
 	for {
 		var raw json.RawMessage
 		if err := wsjson.Read(ctx, conn, &raw); err != nil {
@@ -896,104 +981,106 @@ func (s *WebSocketServer) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 		if err := json.Unmarshal(raw, &envelope); err != nil {
 			continue
 		}
-
-		switch envelope.Type {
-		case MessageTypeDebugCommand:
-			var cmd DebugCommandMessage
-			if err := json.Unmarshal(raw, &cmd); err != nil {
-				continue
-			}
-			s.submitDebugCommandInInstance(activeInst, playerID, cmd.Text)
-		case MessageTypeScrollReply:
-			var reply ScrollReplyMessage
-			if err := json.Unmarshal(raw, &reply); err != nil {
-				continue
-			}
-			s.submitScrollReplyInInstance(activeInst, playerID, reply.StatID, reply.Label)
-		case MessageTypeQuitReply:
-			var reply QuitReplyMessage
-			if err := json.Unmarshal(raw, &reply); err != nil {
-				continue
-			}
-			s.submitQuitReplyInInstance(activeInst, playerID, reply.Quit)
-		case MessageTypeHighScoreName:
-			var entry HighScoreNameMessage
-			if err := json.Unmarshal(raw, &entry); err != nil {
-				continue
-			}
-			s.submitHighScoreNameInInstance(ctx, activeInst, playerID, entry.Name)
-		case MessageTypeSaveFilename:
-			var save SaveFilenameMessage
-			if err := json.Unmarshal(raw, &save); err != nil {
-				continue
-			}
-			s.submitSaveFilenameInInstance(ctx, activeInst, playerID, save.Name)
-		case MessageTypeChat:
-			var chat ChatSubmitMessage
-			if err := json.Unmarshal(raw, &chat); err != nil {
-				continue
-			}
-			text, ok := s.admitPlayerChatLikeText(ctx, client, playerID, chat.Text, false)
-			if !ok {
-				continue
-			}
-			activeInst.mu.Lock()
-			name := "browser"
-			player := activeInst.RoomManager.players[playerID]
-			if player != nil && player.name != "" {
-				name = player.name
-			}
-			activeInst.mu.Unlock()
-			// M21.1: the line now travels with something addressable. The
-			// PlayerID is this connection's, not anything the client claimed,
-			// and the accountID stays server-side — it is what makes a
-			// signed-in recipient's block outlive the connection, and it is
-			// not another player's to see.
-			author := ChatAuthor{Name: name, PlayerID: playerID, AccountID: client.accountID}
-			if s.ChatDB != nil {
-				_, _ = s.ChatDB.AddMessage(author, text)
-			}
-			s.BroadcastGlobalChat(ctx, author, text)
-		case MessageTypePrivateMessage:
-			var pm PrivateSubmitMessage
-			if err := json.Unmarshal(raw, &pm); err != nil {
-				continue
-			}
-			s.submitPrivateMessage(ctx, client, playerID, pm)
-		case MessageTypeFollow:
-			var req FollowMessage
-			if err := json.Unmarshal(raw, &req); err != nil {
-				continue
-			}
-			s.submitFollow(ctx, client, playerID, req)
-		case MessageTypeBlock:
-			var req BlockMessage
-			if err := json.Unmarshal(raw, &req); err != nil {
-				continue
-			}
-			s.submitChatBlock(ctx, client, playerID, req)
-		case MessageTypeModerate:
-			var req ModerateMessage
-			if err := json.Unmarshal(raw, &req); err != nil {
-				continue
-			}
-			s.submitModeration(ctx, client, playerID, req)
-		case MessageTypeProfileRequest:
-			var req ProfileRequestMessage
-			if err := json.Unmarshal(raw, &req); err != nil {
-				continue
-			}
-			s.submitProfileRequest(ctx, client, req)
-		default:
-			var input InputMessage
-			if err := json.Unmarshal(raw, &input); err != nil {
-				continue
-			}
-			activeInst.setInput(playerID, inputMessageToPlayerInput(input))
-		}
+		s.handlePlayerMessage(ctx, client, activeInst, playerID, envelope.Type, raw)
 	}
-	if activeInst := s.instanceForClient(client); activeInst != nil {
-		s.handleReadLoopExit(activeInst, client, playerID)
+}
+
+// handlePlayerMessage applies one message from a joined player. A message that
+// does not decode is dropped.
+func (s *WebSocketServer) handlePlayerMessage(ctx context.Context, client *webSocketClient, activeInst *WorldInstance, playerID PlayerID, messageType string, raw json.RawMessage) {
+	switch messageType {
+	case MessageTypeDebugCommand:
+		var cmd DebugCommandMessage
+		if err := json.Unmarshal(raw, &cmd); err != nil {
+			return
+		}
+		s.submitDebugCommandInInstance(activeInst, playerID, cmd.Text)
+	case MessageTypeScrollReply:
+		var reply ScrollReplyMessage
+		if err := json.Unmarshal(raw, &reply); err != nil {
+			return
+		}
+		s.submitScrollReplyInInstance(activeInst, playerID, reply.StatID, reply.Label)
+	case MessageTypeQuitReply:
+		var reply QuitReplyMessage
+		if err := json.Unmarshal(raw, &reply); err != nil {
+			return
+		}
+		s.submitQuitReplyInInstance(activeInst, playerID, reply.Quit)
+	case MessageTypeHighScoreName:
+		var entry HighScoreNameMessage
+		if err := json.Unmarshal(raw, &entry); err != nil {
+			return
+		}
+		s.submitHighScoreNameInInstance(ctx, activeInst, playerID, entry.Name)
+	case MessageTypeSaveFilename:
+		var save SaveFilenameMessage
+		if err := json.Unmarshal(raw, &save); err != nil {
+			return
+		}
+		s.submitSaveFilenameInInstance(ctx, activeInst, playerID, save.Name)
+	case MessageTypeChat:
+		var chat ChatSubmitMessage
+		if err := json.Unmarshal(raw, &chat); err != nil {
+			return
+		}
+		text, ok := s.admitPlayerChatLikeText(ctx, client, playerID, chat.Text, false)
+		if !ok {
+			return
+		}
+		activeInst.mu.Lock()
+		name := "browser"
+		player := activeInst.RoomManager.players[playerID]
+		if player != nil && player.name != "" {
+			name = player.name
+		}
+		activeInst.mu.Unlock()
+		// M21.1: the line now travels with something addressable. The
+		// PlayerID is this connection's, not anything the client claimed,
+		// and the accountID stays server-side — it is what makes a
+		// signed-in recipient's block outlive the connection, and it is
+		// not another player's to see.
+		author := ChatAuthor{Name: name, PlayerID: playerID, AccountID: client.accountID}
+		if s.ChatDB != nil {
+			_, _ = s.ChatDB.AddMessage(author, text)
+		}
+		s.BroadcastGlobalChat(ctx, author, text)
+	case MessageTypePrivateMessage:
+		var pm PrivateSubmitMessage
+		if err := json.Unmarshal(raw, &pm); err != nil {
+			return
+		}
+		s.submitPrivateMessage(ctx, client, playerID, pm)
+	case MessageTypeFollow:
+		var req FollowMessage
+		if err := json.Unmarshal(raw, &req); err != nil {
+			return
+		}
+		s.submitFollow(ctx, client, playerID, req)
+	case MessageTypeBlock:
+		var req BlockMessage
+		if err := json.Unmarshal(raw, &req); err != nil {
+			return
+		}
+		s.submitChatBlock(ctx, client, playerID, req)
+	case MessageTypeModerate:
+		var req ModerateMessage
+		if err := json.Unmarshal(raw, &req); err != nil {
+			return
+		}
+		s.submitModeration(ctx, client, playerID, req)
+	case MessageTypeProfileRequest:
+		var req ProfileRequestMessage
+		if err := json.Unmarshal(raw, &req); err != nil {
+			return
+		}
+		s.submitProfileRequest(ctx, client, req)
+	default:
+		var input InputMessage
+		if err := json.Unmarshal(raw, &input); err != nil {
+			return
+		}
+		activeInst.setInput(playerID, inputMessageToPlayerInput(input))
 	}
 }
 
