@@ -188,3 +188,32 @@ func TestFileChatDatabaseSurvivesTruncatedLastLine(t *testing.T) {
 		t.Fatalf("records after reload = %+v, want alice then carol", recs)
 	}
 }
+
+// A prefs or player-state document that does not parse starts the store empty,
+// as before, but is moved aside first: otherwise the next save would replace it
+// and every account's data in it would be lost.
+func TestFileChatDatabaseSetsAsideCorruptStores(t *testing.T) {
+	path := filepath.Join(t.TempDir(), "chat.log")
+	for _, side := range []string{".accountprefs.json", ".playerstate.json"} {
+		if err := os.WriteFile(path+side, []byte(`{"acct": {"col`), 0o600); err != nil {
+			t.Fatal(err)
+		}
+	}
+	db, err := NewFileChatDatabase(path)
+	if err != nil {
+		t.Fatalf("NewFileChatDatabase: %v", err)
+	}
+	defer db.Close()
+	if err := db.PutAccountPreferences("acct", AccountPreferences{}); err != nil {
+		t.Fatalf("PutAccountPreferences: %v", err)
+	}
+	if err := db.PutPlayerState("acct", "TOWN", PlayerState{}); err != nil {
+		t.Fatalf("PutPlayerState: %v", err)
+	}
+	for _, side := range []string{".accountprefs.json", ".playerstate.json"} {
+		kept, err := os.ReadFile(path + side + ".corrupt")
+		if err != nil || string(kept) != `{"acct": {"col` {
+			t.Errorf("%s: corrupt original not kept aside (%q, %v)", side, kept, err)
+		}
+	}
+}

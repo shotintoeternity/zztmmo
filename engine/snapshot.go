@@ -13,6 +13,7 @@
 package zztgo
 
 import (
+	"bytes"
 	"encoding/json"
 	"errors"
 	"os"
@@ -193,22 +194,11 @@ func writeWorldSnapshot(dir, name string, world TWorld) (string, error) {
 	scratch := newSnapshotEngine()
 	scratch.World = world
 
-	tmp := path + ".tmp"
-	f, err := os.Create(tmp)
-	if err != nil {
+	var buf bytes.Buffer
+	if err := scratch.worldWriteTo(&buf); err != nil {
 		return "", err
 	}
-	if err := scratch.worldWriteTo(f); err != nil {
-		f.Close()
-		os.Remove(tmp)
-		return "", err
-	}
-	if err := f.Close(); err != nil {
-		os.Remove(tmp)
-		return "", err
-	}
-	if err := os.Rename(tmp, path); err != nil {
-		os.Remove(tmp)
+	if err := writeFileAtomic(path, buf.Bytes(), 0o644); err != nil {
 		return "", err
 	}
 	return path, nil
@@ -234,15 +224,7 @@ func writeSnapshotPlayerStateSidecar(snapshotPath, worldName, accountID string, 
 	if err != nil {
 		return err
 	}
-	tmp := path + ".tmp"
-	if err := os.WriteFile(tmp, data, 0o600); err != nil {
-		return err
-	}
-	if err := os.Rename(tmp, path); err != nil {
-		os.Remove(tmp)
-		return err
-	}
-	return nil
+	return writeFileAtomic(path, data, 0o600)
 }
 
 // RestoreSnapshot replaces the world with dir/<NAME>.SAV. It refuses while any
