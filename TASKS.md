@@ -9623,6 +9623,156 @@ and Enter.
   journey that opens the editor on a touch profile and places a tile through
   the menu.
 
+## M40 — Readable again: split the giant files, and comments that state what is true
+
+Filed 2026-11-05 from the whole-repo readability review (NOTES.md 2026-11-05).
+Hand-written Go is about 29.5k lines with 498 milestone tags in comments (one
+every ~59 lines), and three files are over 4k lines. Each task below is a
+refactor the owner asked for, so CLAUDE.md rule 4 (no drive-by refactors) is
+lifted **for the files a task names, and only for them**. Converted engine
+files (`elements.go`, `game.go`, `oop.go`, `sounds.go`, `txtwind.go`,
+`editor.go`, `gamevars.go`, `input.go`, `serialize.go`, `video.go`, `lib.go`,
+`zzt.go`) are never in scope.
+
+**Rules for every M40 task.**
+1. **No behaviour change.** No status code, wire field, log line a test reads,
+   or StateHash moves. Fixtures and the parity manifest are untouched. If a
+   task finds a real bug, it files it as its own task rather than fixing it
+   in the refactor.
+2. **Moves and edits are separate commits.** A move-only commit is reviewed
+   with `git diff --color-moved=dimmed-zebra` and must show nothing but moved
+   blocks. Edits come in a following commit.
+3. **Verify.** `cd engine && go vet ./... && go test ./...`. A task that touches
+   `engine/web/src` runs `make browser` (CLAUDE.md rule 3).
+4. **Comments follow `doc.go:50`:** "The claim a comment makes should stand on
+   its own." Keep the invariant, meaning what must stay true and why, in one or two
+   lines. Move the history ("used to", "found while", "before this") to the
+   commit message. A milestone ID stays only where a reader must go read
+   that spec to change the code safely. `ZZT-QUIRK:` comments are never
+   touched.
+
+- [ ] **M40.1 — split `websocket_server.go` by concern (moves only).**
+  The file is 4922 lines and 146 funcs, with a 43-field `WebSocketServer`.
+  It mixes client I/O, ticks, replay, the editor, autosave, recording, chat,
+  blocks, follows, moderation and friend presence. First read it end to end
+  and list the seams in the commit message. Then move whole functions,
+  unchanged, into `ws_moderation.go`, `ws_social.go` (chat, blocks, follows,
+  presence), `ws_replay.go`, `ws_autosave.go` and `ws_editor.go`, or whatever
+  the seams turn out to be. Same package, no renames, no signature changes.
+  DoD: `--color-moved` shows only moved code, `websocket_server.go` is under
+  2k lines, and the tests are green.
+
+- [ ] **M40.2 — `ServeHTTP` as named phases. [ADVISOR]** `ServeHTTP`
+  (`websocket_server.go:1073`) is 467 lines covering join, watch, challenge,
+  resume, refusal, block seeding, backlog and a 20-case message loop. Its
+  order is security-relevant: a refused account must not be admitted by any
+  branch (M21.2, M22.1, M32.1). Split it into `resolveJoin`, `admitOrRefuse`,
+  `joinOrResume`, `seedSocialState` and `readLoop`, or similar. State the
+  ordering rule once above the function, in place of the per-branch
+  restatements (`:1135` and `:1196` make the same "door into the same server"
+  argument). Consult the advisor with the phase boundaries before editing.
+  DoD: no function over 150 lines, the refusal-ordering tests (`grep -l
+  Refus engine/*_test.go`) are green unchanged, and `make browser-only` runs
+  the join, watch and challenge journeys.
+
+- [ ] **M40.3 — ZWD preprocessing out of `generation.go`.**
+  `preprocessZWDGridWithWarnings` (`generation.go:1914`) is 523 lines nested
+  10 tabs deep. It compiles `startPlayerRe` and `statRe` on every call
+  (`:1930`, `:1945`). Twelve `*ZWD*` repair passes live in `generation.go`
+  although `zwd_repair.go` exists for exactly that, and their signatures
+  disagree (`(src string, warnings []string) (string, []string)` versus
+  `(lines []string, warnings *[]string)`). Do it in this order:
+  1. **Characterisation first.** Add a test that runs every `.zwd` under
+     `fixtures/` (and the generation tests' inline inputs) through
+     preprocessing and checks the output text and warnings against goldens
+     captured before any change.
+  2. Move lines ~1905–2722 to `zwd_preprocess.go` (moves only).
+  3. Hoist the regexes to package vars, give every pass one signature, and
+     run them from a slice of named passes.
+  DoD: the goldens are byte-identical, no function is over 150 lines, and
+  `generation.go` is under 3.3k lines.
+
+- [ ] **M40.4 — one error-to-status table in `web_api.go`.** Three ladders
+  map the same `ErrGenerated*` sentinels to statuses (`:844` museum play,
+  `:925` generate, `:1083` retry), and each covers a different subset. `:925`
+  also matches on error text (`strings.Contains(err.Error(), "rate limit")`).
+  Replace them with one `generationErrorStatus(err) int` keyed by sentinel,
+  and turn the rate-limit condition into a sentinel at its source. Before
+  merging, list in the commit message every error whose status would
+  change. Because rule 1 forbids that, a case a ladder does not cover keeps its
+  current status through an explicit per-route override, and NOTES.md asks
+  the owner whether to unify it. DoD: a table test asserts every sentinel's
+  status per route, matching today's behaviour, and `make browser-only` runs
+  the Dream and Museum journeys.
+
+- [ ] **M40.5 — an editor controller out of `main.ts`.** `main.ts` is 6346
+  lines with 106 module-level `let`s, 21 of them `editor*`. It holds 65
+  editor functions, while `editor.ts` holds only the sidebar drawing.
+  `handleEditorKey` (`:5282`) is about 200 lines, and `if (editorReadOnly) {
+  showEditorReadOnly(); return; }` is pasted 9 times. Move the editor state
+  into one object in `editor_controller.ts`, with its handlers alongside.
+  Gate every mutating key in `handleEditorKey` with a single read-only check
+  (a `MUTATING_KEYS` set). The file header's own rule applies: new behaviour
+  goes in a module with a test. DoD: the node suite covers the read-only
+  gate for every mutating key, `main.ts` is under 5k lines, and `make
+  browser` is green with no journey edited except for imports.
+
+- [ ] **M40.6 — `main.ts` small duplication.** Covers the
+  `openWindow(X, ["", "  Not available: the server did not answer.", ""],
+  true)` window pasted 7 times, the fetch-world-entries-or-explain block
+  duplicated at about `:1264` and `:1900`, and the six PUT bodies in
+  `preferences.ts` (`saveAccountColor` … `saveAccountComfort`). Add an
+  `openUnavailable(title)` helper, one `loadWorldEntriesOrExplain()` and one
+  `putPreferences(fetchFn, patch)`. `fetchWorldEntries` not checking
+  `response.ok` is a bug and gets its own commit and node test. DoD: the node
+  suite covers `putPreferences` and the `response.ok` case, and `make browser`
+  is green.
+
+- [ ] **M40.7 — comments that state what is true (Go, server side).** Apply
+  rule 4 to `protocol.go` (32% comments, about 56 lines of prose on 9 fields
+  at `:774–830`), `room_manager.go` (for example the 15-line post-mortem at
+  `:1104` above a 3-line `if`), `editor_session.go` (`:514`),
+  `websocket_server.go` (`:327`), `moderation.go`, `world_title.go` and
+  `challenge.go`. Each wire field gets a 1–2 line contract: who sets it, on
+  which frame, and what absent means. Comments only, so the diff must
+  contain no code lines (`git diff -U0 | grep -v '^[-+]\s*//'` shows nothing
+  but headers). DoD: the 73 history-phrase comments (`grep -nE "used to|no
+  longer|found while|the old|NOTES.md"` in hand-written Go) are cut to the
+  ones a reader needs, and the milestone-tag count in these files at least
+  halves.
+
+- [ ] **M40.8 — the same, for `main.ts`.** Do this after M40.5 and M40.6 so it
+  cleans the file's final shape. It uses the same rule and the same
+  comments-only diff check, and `make browser` still runs (rule 3).
+
+- [ ] **M40.9 — small dead code and duplication.** One commit each:
+  - `world_metadata.go:89–105`: three wrappers that forward to
+    `worldListEntries` ("kept so existing callers and tests are untouched").
+    Keep one API and update the tests.
+  - `web/src/title_flow.ts`: `selectWorldForTitle` returns a constant whose
+    `startPlay` nobody reads, and `hasSeenWelcome`/`markWelcomeSeen` have no
+    callers in `src`. Inline the first, move the key to the test lib, and
+    delete the module.
+  - The EGA palette is defined three times (`view3d/palette.ts:3`,
+    `comfort.ts:36`, `color_picker.ts:69`), and two different functions are
+    both named `paletteColor`. Make `comfort.ts` import `EGA` and rename one
+    of the two.
+  - The "belt and braces" path guard duplicated at `snapshot.go:80` and
+    `websocket_server.go:3342`. Add one `joinSanitized(dir, name, ext)` and
+    drop the `MkdirAll` before `writeFileAtomic`.
+  - Test seams in production structs (`fanHook`/`SetFanOutHook`,
+    `saveWriteHook`, `atomicWriteData`, 9 sites). Group them under one
+    `testHooks` field per type.
+  DoD: each commit stands alone and is green. The web items run `make browser`.
+
+**Not filed (owner decision needed).** 502 of 809 test functions are named
+`TestM…`, and the scheme is ambiguous (`TestM365` could be M36.5 or M3.65). The
+parity manifest names 217 tests, so renaming means regenerating the
+certification manifest (`PARITY_SCAFFOLD=1`), and every `TASKS.md` and
+`NOTES.md` reference to a test name goes stale. Worth doing only as a
+deliberate one-shot with the owner's go-ahead. A lighter alternative is to
+name *new* tests by feature from now on.
+
 ## M14 — Rearchitecting for the service ZZTMMO is becoming
 
 Filed 2026-07-12 from a whole-repo review (NOTES.md): three structural debts
