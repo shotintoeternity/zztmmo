@@ -2406,13 +2406,19 @@ function connect() {
 }
 
 function connectEditor() {
-  if (ws && ws.readyState === WebSocket.OPEN) {
+  // The same guards connect() has had since M36.24: a CONNECTING socket is live,
+  // and a superseded one must neither enter the session nor apply messages.
+  if (ws && (ws.readyState === WebSocket.CONNECTING || ws.readyState === WebSocket.OPEN)) {
     return;
   }
   window.clearTimeout(retryTimer);
   const socket = new WebSocket(wsURL());
   ws = socket;
   socket.addEventListener("open", () => {
+    if (ws !== socket) {
+      socket.close();
+      return;
+    }
     connected = true;
     reconnectAttempt = 0;
     // A stored membership token re-enters the session this browser was already
@@ -2423,6 +2429,9 @@ function connectEditor() {
     canvas.focus();
   });
   socket.addEventListener("message", (event) => {
+    if (ws !== socket) {
+      return;
+    }
     applyMessage(JSON.parse(String(event.data)) as ServerMessage);
   });
   socket.addEventListener("close", () => {
