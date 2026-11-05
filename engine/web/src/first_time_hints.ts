@@ -2,7 +2,8 @@
 // meet a piece of the interface, and the record of which ones they have seen.
 //
 // A signed-in player carries that record on their account so it follows them
-// between browsers; a guest carries it in localStorage. Both go through the same
+// between browsers; a guest carries it in sessionStorage only, on purpose (M23.1:
+// a guest who returns is still new). Both go through the same
 // functions here, which is what keeps a hint from reappearing for a guest who
 // then signs in.
 

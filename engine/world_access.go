@@ -68,15 +68,7 @@ func writeWorldAccess(dir, worldName string, access WorldAccess) error {
 	if err != nil {
 		return err
 	}
-	tmp := worldAccessPath(dir, worldName) + ".tmp"
-	if err := os.WriteFile(tmp, data, 0o600); err != nil {
-		return err
-	}
-	if err := os.Rename(tmp, worldAccessPath(dir, worldName)); err != nil {
-		_ = os.Remove(tmp)
-		return err
-	}
-	return nil
+	return writeFileAtomic(worldAccessPath(dir, worldName), data, 0o600)
 }
 
 func worldAccessPath(dir, worldName string) string {

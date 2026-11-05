@@ -83,15 +83,7 @@ func writeWorldMeta(dir, worldName string, meta WorldMeta) error {
 		return err
 	}
 	path := worldMetaPath(dir, worldName)
-	tmp := path + ".tmp"
-	if err := os.WriteFile(tmp, data, 0o644); err != nil {
-		return err
-	}
-	if err := os.Rename(tmp, path); err != nil {
-		_ = os.Remove(tmp)
-		return err
-	}
-	return nil
+	return writeFileAtomic(path, data, 0o644)
 }
 
 // ---------------------------------------------------------------------------

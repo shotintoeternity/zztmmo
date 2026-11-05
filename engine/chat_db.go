@@ -5,6 +5,8 @@ import (
 	"bytes"
 	"encoding/json"
 	"errors"
+	"fmt"
+	"log"
 	"os"
 	"sort"
 	"strings"
@@ -469,14 +471,46 @@ func (db *FileChatDatabase) Close() error {
 }
 
 func (db *FileChatDatabase) loadPlayerStates() {
-	data, err := os.ReadFile(db.statePath)
-	if err != nil {
-		return
+	data, ok := readChatStoreDocument(db.statePath)
+	if ok && json.Unmarshal(data, &db.playerStates) != nil {
+		setAsideCorruptChatStoreDocument(db.statePath)
+		db.playerStates = nil
 	}
-	_ = json.Unmarshal(data, &db.playerStates)
 	if db.playerStates == nil {
 		db.playerStates = make(map[string]PlayerState)
 	}
+}
+
+// readChatStoreDocument reads a store's JSON document. A missing one is just an
+// empty store; any other read failure is logged, since the next save replaces
+// the file.
+func readChatStoreDocument(path string) ([]byte, bool) {
+	data, err := os.ReadFile(path)
+	if err != nil {
+		if !errors.Is(err, os.ErrNotExist) {
+			log.Printf("zztgo: reading %s: %v (starting empty)", path, err)
+		}
+		return nil, false
+	}
+	return data, true
+}
+
+// setAsideCorruptChatStoreDocument moves a document that does not parse out of
+// the way before the store starts empty. Otherwise the next save would replace
+// it, and every account's data in it would be gone for good.
+func setAsideCorruptChatStoreDocument(path string) {
+	aside := path + ".corrupt"
+	for n := 1; ; n++ {
+		if _, err := os.Stat(aside); errors.Is(err, os.ErrNotExist) {
+			break
+		}
+		aside = fmt.Sprintf("%s.corrupt.%d", path, n)
+	}
+	if err := os.Rename(path, aside); err != nil {
+		log.Printf("zztgo: %s does not parse and could not be set aside: %v", path, err)
+		return
+	}
+	log.Printf("zztgo: %s does not parse; moved to %s, starting empty", path, aside)
 }
 
 // loadAccountPreferences mirrors loadPlayerStates: a missing or unreadable
@@ -485,11 +519,11 @@ func (db *FileChatDatabase) loadPlayerStates() {
 // they have a different key (an account, not an account and a world) and a
 // different lifetime.
 func (db *FileChatDatabase) loadAccountPreferences() {
-	data, err := os.ReadFile(db.prefsPath)
-	if err != nil {
-		return
+	data, ok := readChatStoreDocument(db.prefsPath)
+	if ok && json.Unmarshal(data, &db.accountPrefs) != nil {
+		setAsideCorruptChatStoreDocument(db.prefsPath)
+		db.accountPrefs = nil
 	}
-	_ = json.Unmarshal(data, &db.accountPrefs)
 	if db.accountPrefs == nil {
 		db.accountPrefs = make(map[string]AccountPreferences)
 	}

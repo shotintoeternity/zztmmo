@@ -180,8 +180,10 @@ func (s *EditorSession) EnterResuming(member *webSocketClient, name, token strin
 	s.readOnly[member] = false
 	s.memberBoard[member] = boardID
 	fresh := editorMemberToken()
-	s.memberToken[member] = fresh
-	s.tokenMember[fresh] = member
+	if fresh != "" {
+		s.memberToken[member] = fresh
+		s.tokenMember[fresh] = member
+	}
 	return presence, fresh, nil, nil
 }
 
@@ -238,7 +240,9 @@ func (s *EditorSession) resumeMemberLocked(member *webSocketClient, name, token 
 func editorMemberToken() string {
 	var buf [16]byte
 	if _, err := rand.Read(buf[:]); err != nil {
+		// No token rather than a predictable one; resumeMemberLocked ignores "".
 		log.Printf("zztgo: editor member token entropy unavailable: %v", err)
+		return ""
 	}
 	return hex.EncodeToString(buf[:])
 }

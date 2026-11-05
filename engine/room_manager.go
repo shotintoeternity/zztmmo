@@ -397,10 +397,17 @@ func (rm *RoomManager) recordAdmittedHighScore(playerID PlayerID, name string) b
 	rm.recorder.record(recOp{Op: "submit", Kind: "highscore", Player: playerID, Name: CP437String(name)})
 	delete(rm.pendingScores, playerID)
 
-	for i := int16(HIGH_SCORE_COUNT - 1); i >= pending.ListPos; i-- {
+	// Rank again rather than trust pending.ListPos: that was the slot at quit
+	// time, and another player's entry may have landed since. A score those
+	// entries pushed off the list is not recorded.
+	listPos := rm.rankScore(pending.Score)
+	if listPos < 1 {
+		return false
+	}
+	for i := int16(HIGH_SCORE_COUNT - 1); i >= listPos; i-- {
 		rm.highScores[i] = rm.highScores[i-1]
 	}
-	rm.highScores[pending.ListPos-1] = THighScoreEntry{Name: name, Score: pending.Score}
+	rm.highScores[listPos-1] = THighScoreEntry{Name: name, Score: pending.Score}
 	rm.saveHighScores()
 	return true
 }

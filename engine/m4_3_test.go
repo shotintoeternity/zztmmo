@@ -636,3 +636,30 @@ func TestM43TitleScreenCells(t *testing.T) {
 		}
 	}
 }
+
+// Two players' entries can be pending at once. The slot each was offered at
+// quit time is stale once the other names theirs, so a submit ranks again: a
+// lower score named second still lands below the higher one.
+func TestHighScoreOverlappingPendingEntriesStayOrdered(t *testing.T) {
+	rm := NewRoomManager(testEmptyWorld(t))
+	quit := func(score int16) PlayerID {
+		playerID := rm.JoinPlayer(1, 0, 0)
+		state, _ := rm.PlayerState(playerID)
+		state.Score = score
+		rm.SubmitQuitReply(playerID, true)
+		rm.StepDiffs(nil)
+		if q := rm.DrainQuits(); len(q) != 1 || q[0].ListPos != 1 {
+			t.Fatalf("score %d: want slot 1 on an empty list, got %+v", score, q)
+		}
+		return playerID
+	}
+	a := quit(85)
+	b := quit(82)
+	if !rm.RecordHighScore(a, "A") || !rm.RecordHighScore(b, "B") {
+		t.Fatal("RecordHighScore refused")
+	}
+	scores := rm.HighScores()
+	if scores[0].Score != 85 || scores[1].Score != 82 {
+		t.Fatalf("list = %+v, want 85 then 82", scores[:2])
+	}
+}

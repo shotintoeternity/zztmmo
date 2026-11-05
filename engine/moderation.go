@@ -305,15 +305,7 @@ func (s *RefusalStore) writeLocked() error {
 	if err != nil {
 		return err
 	}
-	tmp := s.path + ".tmp"
-	if err := os.WriteFile(tmp, data, 0o600); err != nil {
-		return err
-	}
-	if err := os.Rename(tmp, s.path); err != nil {
-		os.Remove(tmp)
-		return err
-	}
-	return nil
+	return writeFileAtomic(s.path, data, 0o600)
 }
 
 // ModerationAuditEntry is one line of the record: who, whom, which action, which

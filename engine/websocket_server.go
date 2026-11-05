@@ -3771,10 +3771,12 @@ func (inst *WorldInstance) mintResumeTokenLocked(playerID PlayerID) string {
 	}
 	var buf [16]byte
 	if _, err := rand.Read(buf[:]); err != nil {
-		// crypto/rand should never fail on a supported platform. If it somehow
-		// does, a zero token is still a valid (if predictable) session key —
-		// resume is best-effort and never a security boundary.
+		// No token rather than a predictable one: a resume token is the only
+		// thing that hands a reconnecting socket its player, so a guessable one
+		// lets anyone take that player over. Without one the player just can't
+		// resume; tryResume treats the empty token as unknown.
 		log.Printf("zztgo: resume token entropy unavailable: %v", err)
+		return ""
 	}
 	token := hex.EncodeToString(buf[:])
 	inst.ResumeTokens[token] = playerID
