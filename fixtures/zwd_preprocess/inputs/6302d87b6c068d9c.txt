@@ -1,0 +1,37 @@
+zwd 1
+world "CHECK"
+
+board "Title Screen"
+  start player at 1,1
+  grid
+  |@b*59|
+  |b*60|
+  |b*60|
+  |b*60|
+  |b*60|
+  |b*60|
+  |b*60|
+  |b*60|
+  |b*60|
+  |b*60|
+  |b*60|
+  |b*60|
+  |b*60|
+  |b*60|
+  |b*60|
+  |b*60|
+  |b*60|
+  |b*60|
+  |b*60|
+  |b*60|
+  |b*60|
+  |b*60|
+  |b*60|
+  |b*60|
+  |b*60|
+  end
+  legend
+    @ = Player color 0x1F under Empty color 0x00
+    b = Fake color 0x66
+  end
+end

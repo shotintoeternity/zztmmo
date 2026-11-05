@@ -1,0 +1,15 @@
+zwd 1
+world "PROSE"
+
+board "Sign"
+  start player at 1,1
+  grid
+  @
+  ...
+  HI welcome!
+  end
+  legend
+    @ = Player color 0x1F
+    . = Empty color 0x00
+  end
+end

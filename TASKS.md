@@ -9697,7 +9697,7 @@ files (`elements.go`, `game.go`, `oop.go`, `sounds.go`, `txtwind.go`,
   browser-only` (coop cutline, M16.11, M22.2, M32.1, M21.1, M36.24, M22.3)
   green.
 
-- [ ] **M40.3 — ZWD preprocessing out of `generation.go`.**
+- [x] **M40.3 — ZWD preprocessing out of `generation.go`.**
   `preprocessZWDGridWithWarnings` (`generation.go:1914`) is 523 lines nested
   10 tabs deep. It compiles `startPlayerRe` and `statRe` on every call
   (`:1930`, `:1945`). Twelve `*ZWD*` repair passes live in `generation.go`
@@ -9713,6 +9713,42 @@ files (`elements.go`, `game.go`, `oop.go`, `sounds.go`, `txtwind.go`,
      run them from a slice of named passes.
   DoD: the goldens are byte-identical, no function is over 150 lines, and
   `generation.go` is under 3.3k lines.
+  **Done 2026-11-05.**
+  1. The characterisation test landed with M40.3a, because capturing it
+     exposed nondeterminism that had to be fixed first.
+  2. The move: 15 declarations went to `zwd_preprocess.go`, losslessly.
+     `generation.go` went from 4045 to 3152 lines.
+  3. `preprocessZWDGridWithWarnings` went from 523 lines to 50. Its shared
+     locals became one `*zwdGridState`, with `lines` kept as one backing
+     array, because finishing a grid writes into lines the walk has not
+     reached yet. The stages became methods: `scanLegendAndStats`,
+     `addGridRow`, `finishGrid`, `normalizeGridRows`, `placeStartPlayer`,
+     `alignStats`, `statRepresentative`, `synthesizeUnclaimedStats` and
+     `defineUndefinedGlyphs`. The regexes and the three function-local types
+     moved to package level.
+
+  The three pre-passes share `(lines, *warnings) []string`, through the
+  `autoCloseZWDLines` adapter, since `zwd_repair.go` still needs the
+  recursive string form. They run as three calls in order, not from a slice
+  of named passes: three fixed passes read more clearly as three lines.
+  The longest function is now 110 lines. The golden is identical, and
+  `go test ./...` is green.
+
+- [x] **M40.3a — the ZWD preprocessor repairs the same input the same way
+  (M40.3 gap task).** Found while capturing M40.3's goldens: two loops in
+  `preprocessZWDGridWithWarnings` ranged over `legendMap`, a Go map. One picks
+  the player and empty glyphs; the other picks the representative glyph for a
+  stat. When a legend gave one element two keys, the choice was random, so the
+  same model output was repaired differently on every run (12 of 291 corpus
+  sections differed between two runs). Both loops now walk
+  `sortedLegendKeys`. Every outcome this can produce is one the random
+  order already produced, so no fixture or StateHash moves.
+  DoD: `TestZWDPreprocessMatchesGolden` passes 30 times in a row.
+  **Done 2026-11-05.** The characterisation test M40.3 asked for lands here
+  as the proof. It covers 38 board sections captured from the generation and
+  repair tests (`fixtures/zwd_preprocess/inputs`), plus every `.zwd` under
+  `fixtures/` and `llmworld/examples` split the way the generator splits a
+  response: 291 cases, each an output hash plus its warnings.
 
 - [ ] **M40.4 — one error-to-status table in `web_api.go`.** Three ladders
   map the same `ErrGenerated*` sentinels to statuses (`:844` museum play,
