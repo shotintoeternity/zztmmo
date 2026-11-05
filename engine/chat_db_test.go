@@ -6,6 +6,7 @@ import (
 	"os"
 	"path/filepath"
 	"testing"
+	"time"
 )
 
 func TestMemChatDatabase(t *testing.T) {
@@ -147,5 +148,43 @@ func TestFileChatDatabaseWritesNothingAfterClose(t *testing.T) {
 			names = append(names, entry.Name())
 		}
 		t.Errorf("a closed database wrote %v back into a directory being torn down", names)
+	}
+}
+
+// A crash partway through an append leaves a half-written last line. Loading
+// must skip it and finish (a json.Decoder loop spun on it forever), and the next
+// append must start a fresh line rather than join the broken one.
+func TestFileChatDatabaseSurvivesTruncatedLastLine(t *testing.T) {
+	path := filepath.Join(t.TempDir(), "chat.log")
+	good := `{"from":"alice","text":"hello","timestamp":"2026-01-01T00:00:00Z"}` + "\n"
+	if err := os.WriteFile(path, []byte(good+`{"from":"bob","te`), 0o600); err != nil {
+		t.Fatal(err)
+	}
+
+	done := make(chan struct{})
+	var db *FileChatDatabase
+	var err error
+	go func() { db, err = NewFileChatDatabase(path); close(done) }()
+	select {
+	case <-done:
+	case <-time.After(5 * time.Second):
+		t.Fatal("NewFileChatDatabase did not return on a truncated log")
+	}
+	if err != nil {
+		t.Fatalf("NewFileChatDatabase: %v", err)
+	}
+	if _, err := db.AddMessage(ChatAuthor{Name: "carol"}, "after"); err != nil {
+		t.Fatalf("AddMessage: %v", err)
+	}
+	db.Close()
+
+	db, err = NewFileChatDatabase(path)
+	if err != nil {
+		t.Fatalf("reopen: %v", err)
+	}
+	defer db.Close()
+	recs, _ := db.GetRecentMessages(10)
+	if len(recs) != 2 || recs[0].From != "alice" || recs[1].From != "carol" {
+		t.Fatalf("records after reload = %+v, want alice then carol", recs)
 	}
 }

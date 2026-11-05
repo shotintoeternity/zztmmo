@@ -1,9 +1,10 @@
 package zztgo
 
 import (
+	"bufio"
+	"bytes"
 	"encoding/json"
 	"errors"
-	"io"
 	"os"
 	"sort"
 	"strings"
@@ -310,11 +311,19 @@ func NewFileChatDatabase(filepath string) (*FileChatDatabase, error) {
 		handleOwners: make(map[string]string),
 	}
 
-	dec := json.NewDecoder(file)
+	// One record per line. A line that does not parse (a write cut short by a
+	// crash) is skipped. A json.Decoder can't do this: after a syntax error it
+	// returns the same error forever, so a skip-and-continue loop never ends.
+	r := bufio.NewReader(file)
+	lastByte := byte('\n')
 	for {
+		line, readErr := r.ReadBytes('\n')
+		if len(line) > 0 {
+			lastByte = line[len(line)-1]
+		}
 		var rec ChatRecord
-		if err := dec.Decode(&rec); err != nil {
-			if err == io.EOF {
+		if len(bytes.TrimSpace(line)) == 0 || json.Unmarshal(line, &rec) != nil {
+			if readErr != nil {
 				break
 			}
 			continue
@@ -325,6 +334,17 @@ func NewFileChatDatabase(filepath string) (*FileChatDatabase, error) {
 		// suppression across a restart is the AccountID's job (M21.1).
 		rec.PlayerID = 0
 		db.messages = append(db.messages, rec)
+		if readErr != nil {
+			break
+		}
+	}
+	// End a cut-short last line, so the next append starts a line of its own
+	// instead of joining the broken one.
+	if lastByte != '\n' {
+		if _, err := file.Write([]byte{'\n'}); err != nil {
+			file.Close()
+			return nil, err
+		}
 	}
 	db.loadPlayerStates()
 	db.loadAccountPreferences()
@@ -604,15 +624,7 @@ func (db *FileChatDatabase) writeAccountPreferencesLocked() error {
 	if err != nil {
 		return err
 	}
-	tmp := db.prefsPath + ".tmp"
-	if err := os.WriteFile(tmp, data, 0o600); err != nil {
-		return err
-	}
-	if err := os.Rename(tmp, db.prefsPath); err != nil {
-		os.Remove(tmp)
-		return err
-	}
-	return nil
+	return writeFileAtomic(db.prefsPath, data, 0o600)
 }
 
 func (db *FileChatDatabase) writePlayerStatesLocked() error {
@@ -623,15 +635,7 @@ func (db *FileChatDatabase) writePlayerStatesLocked() error {
 	if err != nil {
 		return err
 	}
-	tmp := db.statePath + ".tmp"
-	if err := os.WriteFile(tmp, data, 0o600); err != nil {
-		return err
-	}
-	if err := os.Rename(tmp, db.statePath); err != nil {
-		os.Remove(tmp)
-		return err
-	}
-	return nil
+	return writeFileAtomic(db.statePath, data, 0o600)
 }
 
 func playerStateKey(accountID, worldName string) string {
