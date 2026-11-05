@@ -14,7 +14,7 @@ package zztgo
 //     `op` string the server spells differently from the client that sent it.
 //     m1613Commands below is the manifest of that vocabulary, and it is
 //     FAIL-CLOSED: the key codes are scanned out of web/src/main.ts and the
-//     operation names out of editor_session.go / websocket_server.go, so adding
+//     operation names out of editor_session.go / ws_editor.go, so adding
 //     an editor key or an editor op without covering it reddens this test.
 //
 //  2. THE OUTPUT. The browser downloads the .ZZT and .BRD the session produced,
@@ -430,7 +430,7 @@ var m1613Commands = []m1613Command{
 	// for completeness and is covered where it is implemented.
 	{"op.stat.cycle", "set a stat's cycle (server-side only; no editor key)", "go:TestEditorSessionStatSettingsPreserveVanillaStatSemantics"},
 
-	// --- board operations (websocket_server.go serveEditorBoard) ----------
+	// --- board operations (ws_editor.go serveEditorBoard) ----------
 	{"op.board.add", "append a new named board", "browser"},
 	{"op.board.switch", "switch to another board", "browser"},
 	{"op.board.export", "download the board as vanilla .BRD", "browser"},
@@ -438,7 +438,7 @@ var m1613Commands = []m1613Command{
 	{"op.board.clear", "clear the board", "browser"},
 	{"op.board.new", "reset the session to a new world", "browser"},
 
-	// --- world operations (websocket_server.go serveEditorWorld) ----------
+	// --- world operations (ws_editor.go serveEditorWorld) ----------
 	{"op.world.save", "publish the world so others can play it", "browser"},
 	{"op.world.download", "download the world as portable .ZZT", "browser"},
 	{"op.world.upload", "replace the world from a .ZZT file, through the M7.5 gate", "browser"},
@@ -568,7 +568,7 @@ func m1613DerivedCommands(t *testing.T) map[string]string {
 		}
 	}
 
-	server := m1613ReadSource(t, "websocket_server.go")
+	server := m1613ReadSource(t, "ws_editor.go")
 	for _, fn := range []struct{ header, prefix, sentinel string }{
 		{"func (s *WebSocketServer) serveEditorBoard(", "op.board", "session.AddBoard"},
 		{"func (s *WebSocketServer) serveEditorWorld(", "op.world", "session.UploadWorld"},

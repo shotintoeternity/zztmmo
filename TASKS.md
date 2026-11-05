@@ -9651,7 +9651,7 @@ files (`elements.go`, `game.go`, `oop.go`, `sounds.go`, `txtwind.go`,
    that spec to change the code safely. `ZZT-QUIRK:` comments are never
    touched.
 
-- [ ] **M40.1 — split `websocket_server.go` by concern (moves only).**
+- [x] **M40.1 — split `websocket_server.go` by concern (moves only).**
   The file is 4922 lines and 146 funcs, with a 43-field `WebSocketServer`.
   It mixes client I/O, ticks, replay, the editor, autosave, recording, chat,
   blocks, follows, moderation and friend presence. First read it end to end
@@ -9661,6 +9661,16 @@ files (`elements.go`, `game.go`, `oop.go`, `sounds.go`, `txtwind.go`,
   the seams turn out to be. Same package, no renames, no signature changes.
   DoD: `--color-moved` shows only moved code, `websocket_server.go` is under
   2k lines, and the tests are green.
+  **Done 2026-11-05.** 118 declarations moved byte for byte (with their
+  comments) into `ws_client.go`, `ws_spectator.go`, `ws_replay.go`,
+  `ws_editor.go`, `ws_autosave.go`, `ws_recording.go`, `ws_account.go`,
+  `ws_social.go`, `ws_moderation.go` and `ws_resume.go`.
+  `websocket_server.go` is 1714 lines: the types, the tick loop, `ServeHTTP`,
+  instance lifecycle and world transit. The sorted non-blank lines of the old
+  file equal those of the eleven new files exactly, and `git diff --histogram`
+  of `websocket_server.go` is deletions only. The one test edit is the M16.13
+  command scanner, which reads `serveEditorBoard`/`serveEditorWorld` by file
+  name and now reads `ws_editor.go`. `go vet ./...` and `go test ./...` green.
 
 - [ ] **M40.2 — `ServeHTTP` as named phases. [ADVISOR]** `ServeHTTP`
   (`websocket_server.go:1073`) is 467 lines covering join, watch, challenge,
