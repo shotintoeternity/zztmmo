@@ -50,7 +50,7 @@ package zztgo
 //   b. An invited collaborator stayed read-only until they re-entered the
 //      editor, because inviteEditorCollaborator cleared the server-side flag
 //      (EditorSession.SetAccountReadOnly) and sent the invitee nothing, while
-//      the client's own editorReadOnly — consulted by every editor key before it
+//      the client's own editor.readOnly — consulted by every editor key before it
 //      sends anything — is only ever set from a snapshot. The invite now sends
 //      them one, addressed to them and carrying the cursor they last reported.
 //   c. A stat lease was stranded when another member switched boards first: its
@@ -664,7 +664,7 @@ func TestM1614CollaborativeEditorInBrowsers(t *testing.T) {
 
 // TestM1614ReadOnlyMemberCannotMoveAByte is the other half of the DoD's
 // "unauthorized operations leave bytes unchanged". The browser proves the
-// CLIENT refuses: every editor key consults editorReadOnly before it sends
+// CLIENT refuses: every editor key consults editor.readOnly before it sends
 // anything, so a real browser never puts an unauthorized operation on the wire.
 // That is the wrong way round to certify a server, so this drives the session
 // directly — the hostile client the product must survive — and requires the
@@ -1139,7 +1139,7 @@ func TestM1614aBoardScopedChangesReachEveryMemberWatching(t *testing.T) {
 //
 // The pin it replaces recorded that inviteEditorCollaborator cleared the
 // invitee's server-side flag while they sat in the session and told them
-// nothing, so their own browser — whose editorReadOnly is set from a snapshot
+// nothing, so their own browser — whose editor.readOnly is set from a snapshot
 // and from nowhere else, and which every editor key consults before it sends —
 // kept refusing them with a "Read-only" window until they left and came back.
 func TestM1614aInvitedCollaboratorEditsWithoutReentering(t *testing.T) {
@@ -1219,14 +1219,14 @@ func TestM1614aInvitedCollaboratorEditsWithoutReentering(t *testing.T) {
 	// only for a snapshot addressed to us. Without that, a collaborator's edit
 	// would hand a read-only guest edit rights in their own UI.
 	client := m1613ReadSource(t, filepath.Join("web", "src", "main.ts"))
-	if got := strings.Count(client, "editorReadOnly = !!message.readOnly;"); got != 1 {
-		t.Fatalf("main.ts takes editorReadOnly from a message %d time(s), want exactly 1", got)
+	if got := strings.Count(client, "editor.readOnly = !!message.readOnly;"); got != 1 {
+		t.Fatalf("main.ts takes editor.readOnly from a message %d time(s), want exactly 1", got)
 	}
-	apply := m1613FuncBody(t, client, "function applyEditorSnapshot(", "editorReadOnly = !!message.readOnly;")
+	apply := m1613FuncBody(t, client, "function applyEditorSnapshot(", "editor.readOnly = !!message.readOnly;")
 	guard := strings.Index(apply, "if (forMe) {")
-	assign := strings.Index(apply, "editorReadOnly = !!message.readOnly;")
+	assign := strings.Index(apply, "editor.readOnly = !!message.readOnly;")
 	if guard < 0 || assign < guard {
-		t.Error("applyEditorSnapshot assigns editorReadOnly outside its forMe guard: a broadcast frame " +
+		t.Error("applyEditorSnapshot assigns editor.readOnly outside its forMe guard: a broadcast frame " +
 			"carries the acting member's flag, not the recipient's")
 	}
 }
