@@ -1,0 +1,6 @@
+board "Test"
+  grid
+  |b*62|
+  |b.*50|
+  end
+end

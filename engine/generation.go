@@ -1880,6 +1880,18 @@ func getUnusedLegendKey(legendMap map[byte]string) byte {
 	return '?'
 }
 
+// sortedLegendKeys is legendMap's keys in byte order. Ranging over the map
+// directly made a legend with two keys for one element repair differently from
+// run to run.
+func sortedLegendKeys(legendMap map[byte]string) []byte {
+	keys := make([]byte, 0, len(legendMap))
+	for ch := range legendMap {
+		keys = append(keys, ch)
+	}
+	sort.Slice(keys, func(i, j int) bool { return keys[i] < keys[j] })
+	return keys
+}
+
 func abs(x int) int {
 	if x < 0 {
 		return -x
@@ -1981,8 +1993,8 @@ func preprocessZWDGridWithWarnings(zwdText string) (string, []string) {
 		}
 	}
 
-	for ch, elemName := range legendMap {
-		upper := strings.ToUpper(elemName)
+	for _, ch := range sortedLegendKeys(legendMap) {
+		upper := strings.ToUpper(legendMap[ch])
 		if upper == "PLAYER" || upper == "ELEMENT 1" || upper == "ELEMENT 01" {
 			playerChar = ch
 			hasPlayerLegend = true
@@ -2166,8 +2178,8 @@ func preprocessZWDGridWithWarnings(zwdText string) (string, []string) {
 					} else {
 						var repChar byte
 						hasRep := false
-						for ch, name := range legendMap {
-							if strings.ToUpper(name) == key {
+						for _, ch := range sortedLegendKeys(legendMap) {
+							if strings.ToUpper(legendMap[ch]) == key {
 								repChar = ch
 								hasRep = true
 								break

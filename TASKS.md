@@ -9702,6 +9702,22 @@ files (`elements.go`, `game.go`, `oop.go`, `sounds.go`, `txtwind.go`,
   DoD: the goldens are byte-identical, no function is over 150 lines, and
   `generation.go` is under 3.3k lines.
 
+- [x] **M40.3a — the ZWD preprocessor repairs the same input the same way
+  (M40.3 gap task).** Found while capturing M40.3's goldens: two loops in
+  `preprocessZWDGridWithWarnings` ranged over `legendMap`, a Go map. One picks
+  the player and empty glyphs; the other picks the representative glyph for a
+  stat. When a legend gave one element two keys, the choice was random, so the
+  same model output was repaired differently on every run (12 of 291 corpus
+  sections differed between two runs). Both loops now walk
+  `sortedLegendKeys`. Every outcome this can produce is one the random
+  order already produced, so no fixture or StateHash moves.
+  DoD: `TestZWDPreprocessMatchesGolden` passes 30 times in a row.
+  **Done 2026-11-05.** The characterisation test M40.3 asked for lands here
+  as the proof. It covers 38 board sections captured from the generation and
+  repair tests (`fixtures/zwd_preprocess/inputs`), plus every `.zwd` under
+  `fixtures/` and `llmworld/examples` split the way the generator splits a
+  response: 291 cases, each an output hash plus its warnings.
+
 - [ ] **M40.4 — one error-to-status table in `web_api.go`.** Three ladders
   map the same `ErrGenerated*` sentinels to statuses (`:844` museum play,
   `:925` generate, `:1083` retry), and each covers a different subset. `:925`

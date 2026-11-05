@@ -1,0 +1,887 @@
+{
+  "input/033dd27acd6419e0.txt": {
+    "output": "033dd27acd6419e0efeef30e81c4657a5ef371303de7b1c277a06f45984b2ffe"
+  },
+  "input/1087dce73cbd4d54.txt": {
+    "output": "898165060819103e0295ea07939119113c105f3446a523859fd748aa6869e67d"
+  },
+  "input/1dcd8123324f1b48.txt": {
+    "output": "396db02db6eb53787fab5b3858374738c1766ebe0ded139ce045c1d166acf51e"
+  },
+  "input/1e46d3da0dbc5214.txt": {
+    "output": "1e46d3da0dbc52145296c4d8363187ffeb385ffbe525939f4bd6a7f7703b8213"
+  },
+  "input/208a194d583db82d.txt": {
+    "output": "e8070a6d27f693b049da890726b10c06e7fa9494df10d50c52b266b762864c9a",
+    "warnings": [
+      "auto-closed oop block before stat declaration"
+    ]
+  },
+  "input/295acdbe8e872df4.txt": {
+    "output": "dedb0cceabafbaf6d5350aea770afed6ff548f40010b2f5cd33dc7557abbf170"
+  },
+  "input/31d0596579a996f5.txt": {
+    "output": "b055ef9ee9348af82a21fb9273bea5253cc527286c98539e526214bc1ecf2d5c"
+  },
+  "input/37e622174b43b091.txt": {
+    "output": "afab7c581967905d619b1348bf90125f8ac9a28811e36b436bbbcb7da2def2d2"
+  },
+  "input/3999f5f5ff6df41d.txt": {
+    "output": "8bc6693dbedc3425f54dc2aee7aa929092263041cab645438f05fd054ddd03ce"
+  },
+  "input/39c1174b806a5a3f.txt": {
+    "output": "39c1174b806a5a3fc6962fdff1917b2758455857bdd0eded18c495036cbdecfd"
+  },
+  "input/3a08b062008efc3d.txt": {
+    "output": "77122a20c02534a11a56b86631cc61a954a51c8e3e2c4ba0fd6fbd2e318e0c13"
+  },
+  "input/48c20bfde61d455f.txt": {
+    "output": "575ab2f671da002895965f4a213a5ba376fe0ed6426ef8f2229248d9eea8cc4d"
+  },
+  "input/4be278cdb8e52c64.txt": {
+    "output": "4be278cdb8e52c64865ca9b72f8d9ddf67bf1a85ff3f0162397afc560b79b37c"
+  },
+  "input/5dc0a72a27f0d59a.txt": {
+    "output": "232d13a94259412093a048a0dd86d57d37fb3936b962eee4d7add840add2d4c6"
+  },
+  "input/61845689c6bc419b.txt": {
+    "output": "033dd27acd6419e0efeef30e81c4657a5ef371303de7b1c277a06f45984b2ffe"
+  },
+  "input/61de3bb2ff7d74b4.txt": {
+    "output": "252ab7aa0644d69051092c103f586a774bb77c4f2f31c92675f034d081fb1839"
+  },
+  "input/6302d87b6c068d9c.txt": {
+    "output": "f832ea02f327e55ed498508cd31cab3622a8ea06ad3060a9b07d383fb86de5d2"
+  },
+  "input/63de8d1d7296b0be.txt": {
+    "output": "63de8d1d7296b0befccca6febc91ddfbccc636db0d27fcff6925a00fdb011f4c"
+  },
+  "input/64f3cf729d188685.txt": {
+    "output": "99f291370e7aaa6df9b0754548564e29330c1c6b88334a2f7af44dd66a140d25",
+    "warnings": [
+      "dropped unknown stat field imaginary"
+    ]
+  },
+  "input/6e12e312fde937cc.txt": {
+    "output": "6e12e312fde937ccc5b8d3471e68558136ad551e7b30f7219cf1f961896c8748"
+  },
+  "input/6ee7ef42f293cd05.txt": {
+    "output": "a3848f830f6267e15cd7a027572dc45780367a72820fddd81a8498169295fe86"
+  },
+  "input/7a7dd5432069116b.txt": {
+    "output": "39c1174b806a5a3fc6962fdff1917b2758455857bdd0eded18c495036cbdecfd"
+  },
+  "input/8b7feb2100acfccd.txt": {
+    "output": "3d9323bb3281fd923853c9425a3a8e7ea481b3419545894cae7f760e5cad74f6"
+  },
+  "input/8dcf50aa97169bc6.txt": {
+    "output": "d229fa36b24be6b81dfc73c57f60974956f342edc1e38abb4a907855d83f6baa"
+  },
+  "input/9264315eaaf56124.txt": {
+    "output": "0c17b80a6bbccba53c96ca8d6fb628ab4f18a8890c59cc481be61ccb613aeada"
+  },
+  "input/9602267fdb155412.txt": {
+    "output": "c3592478a4ea15d41e5947b15b7ccffe1a89b29e60c8d10d428add9a7e9b1683"
+  },
+  "input/a2d65597d0cd2269.txt": {
+    "output": "1e46d3da0dbc52145296c4d8363187ffeb385ffbe525939f4bd6a7f7703b8213"
+  },
+  "input/a5f625af2a883c19.txt": {
+    "output": "3494c9ebe6fdb67d394483718488380a56cb8953df80c3c7b90814b32dc6039a"
+  },
+  "input/abd775e0056ddc5b.txt": {
+    "output": "1621dbfc63ba2126b4590fc89f9737b074ab24ef2cc7a95e1270eb47536c43f4",
+    "warnings": [
+      "dropped duplicate legend key \".\""
+    ]
+  },
+  "input/acea9479bd265e9a.txt": {
+    "output": "500678ad18450d48acfa7e5e5f2a95de6ef35747f8291ab267d06dcf271a8f46"
+  },
+  "input/b055ef9ee9348af8.txt": {
+    "output": "b055ef9ee9348af82a21fb9273bea5253cc527286c98539e526214bc1ecf2d5c"
+  },
+  "input/b307dc4597fe2d3d.txt": {
+    "output": "70c55b46931a58c6f7db572ddb6d2ca504a48393ce2e423549ac3da6cd94fffc"
+  },
+  "input/bf7b0d2ab3274a37.txt": {
+    "output": "6e12e312fde937ccc5b8d3471e68558136ad551e7b30f7219cf1f961896c8748"
+  },
+  "input/d03397687b190b2b.txt": {
+    "output": "17d7394ddeae2a084da469621f5e7e0d399fa955c5f55ad3b632972ff0ddde05",
+    "warnings": [
+      "auto-closed board section"
+    ]
+  },
+  "input/d5c824216f836da7.txt": {
+    "output": "f6932880ef98882c6857a68bbbb24858da24d610cad2d1678a9c0acf61abaf5e"
+  },
+  "input/dd21218b044f8da0.txt": {
+    "output": "63de8d1d7296b0befccca6febc91ddfbccc636db0d27fcff6925a00fdb011f4c"
+  },
+  "input/fe063b3aec131e75.txt": {
+    "output": "fe063b3aec131e7507274af645a7bb282cc7655d1bab19ee353f9d6cffb9e3c0"
+  },
+  "input/ff0d22359005bb74.txt": {
+    "output": "fe063b3aec131e7507274af645a7bb282cc7655d1bab19ee353f9d6cffb9e3c0"
+  },
+  "zwd/../fixtures/accept.zwd#Acceptance Main": {
+    "output": "c214387b9e96a9f0de1a808133dcbdcd1b9015c7e14d65320b1983a51bd15547"
+  },
+  "zwd/../fixtures/accept.zwd#Acceptance Target": {
+    "output": "267196b774e4640a0125706424e1a26b0634d25215d0362786e2623bb06ad5d3"
+  },
+  "zwd/../fixtures/accept.zwd#Acceptance Title": {
+    "output": "a64132dadd619b999714818383b3dc8d9e849e9af87ecc1571ecb754a7e0478c"
+  },
+  "zwd/../fixtures/charset.zwd#Charset Title": {
+    "output": "a9ec623584c01d28591099e7a6b8bdf1a6bac85dfdd50620ff1df0c9f9641fcd"
+  },
+  "zwd/../fixtures/charset.zwd#Glyphs 00-3F": {
+    "output": "484b912a0b7cc836dc6ae977e52f5477dbf129e841f932fd194a22acd2219b2c"
+  },
+  "zwd/../fixtures/charset.zwd#Glyphs 40-7F": {
+    "output": "18625dd92c91e19950f239230d6ef94367840e4c12f91d23f667d17e696fc04d"
+  },
+  "zwd/../fixtures/charset.zwd#Glyphs 80-BF": {
+    "output": "d0f1572a9e3fccff3398a6c5ceece75880a66681eca03b3486ce59bc65adbada"
+  },
+  "zwd/../fixtures/charset.zwd#Glyphs C0-FF": {
+    "output": "bb235571f063b62b39a74853c7623439846a73fd55e9e6eb5844932d77b539c7"
+  },
+  "zwd/../fixtures/control.zwd#Control Dark": {
+    "output": "29b06374e42d1bebbfb0fa5f764ba53a3085aa912e86bc9be59eb60fa22ab2e8"
+  },
+  "zwd/../fixtures/control.zwd#Control Field": {
+    "output": "ac0b1da6515878b21975537ed0a48782819cd023509070df521789b4d2adf36e"
+  },
+  "zwd/../fixtures/control.zwd#Control Title": {
+    "output": "66ff0d1ba72c21d7c70fdd3a2c6e97c3c92fd8c29ff67ace9687ad6c54695a2e"
+  },
+  "zwd/../fixtures/editor.zwd#Edit Annex": {
+    "output": "c9acf18ce5a2d701398c5e541160cc22d4b58980d3a89f452803f8c5b07303bd"
+  },
+  "zwd/../fixtures/editor.zwd#Edit Draft": {
+    "output": "3dbb1fa2d7b69880782821fbcddcf0e34b17e5835ed59fd59858dcf33c7a28a7"
+  },
+  "zwd/../fixtures/gemdash.zwd#Gem Dash": {
+    "output": "ad0d5fce6ac6380c393f2b0d293a906ae01fd6462207be3081b048b355a45ac7"
+  },
+  "zwd/../fixtures/gemdash.zwd#Gem Dash Title": {
+    "output": "5bee9e24723e779521383fd6fa637f79635c2749c32aacb9b573b61a826212f6"
+  },
+  "zwd/../fixtures/gen/APOLLO11.zwd#Apollo Eleven": {
+    "output": "b222610c0ffafb0abd4a54c0a72379a873f25a4c264a0c769d9aed3ab748ff1a"
+  },
+  "zwd/../fixtures/gen/APOLLO11.zwd#Command Module": {
+    "output": "1dfc5cee03ce35ccec3d653babc5d2ad725b41d109faf4f121a3597f9c611a40"
+  },
+  "zwd/../fixtures/gen/APOLLO11.zwd#Earth Orbit": {
+    "output": "0ba246b444ffaa8ba689521044de17ebb8e9292cc2cf487b746c58242f5b3876"
+  },
+  "zwd/../fixtures/gen/APOLLO11.zwd#Launch Pad 39A": {
+    "output": "ac8b36ecf6050e9cfe482c86baacf9a4a0189d7fc80bf19119870746036f3e5f"
+  },
+  "zwd/../fixtures/gen/APOLLO11.zwd#Lunar Liftoff": {
+    "output": "2b49645219434cc125caedc9f7de0042ea1563dfe0e50ff62bde293021d92872"
+  },
+  "zwd/../fixtures/gen/APOLLO11.zwd#Lunar Orbit": {
+    "output": "3f03bf9eabe6f9e256279137bfea02b8a8e3949c53eb4598f2f1845d4977dfc0"
+  },
+  "zwd/../fixtures/gen/APOLLO11.zwd#Pacific Splashdown": {
+    "output": "0cfd10f46c3e885ce4145bc720e89cf7ce0ab4170ef55c42f1c92ff24eccc430"
+  },
+  "zwd/../fixtures/gen/APOLLO11.zwd#Powered Ascent": {
+    "output": "707d2835b3fd4c829d6cf8ebb61f8cf027cfb85c8be5a1493abbde9726846218"
+  },
+  "zwd/../fixtures/gen/APOLLO11.zwd#Powered Descent": {
+    "output": "a5c3b67681e0ad2f424c18c652ccd1c0c51d0fb9600471a9f1bfe0025a935fc9"
+  },
+  "zwd/../fixtures/gen/APOLLO11.zwd#Reentry Corridor": {
+    "output": "a5ef6c8834eae7f9511c60675670886375c7d607a41535f1035b0fa188d6739a"
+  },
+  "zwd/../fixtures/gen/APOLLO11.zwd#Tranquility Base": {
+    "output": "fd411666484a79fe41a8207c9b06282eb1139a36b11cb3028947a4985b66fa70"
+  },
+  "zwd/../fixtures/gen/APOLLO11.zwd#Transearth Coast": {
+    "output": "09c7f1086c1d852fb54919b629f43ef73089e709c9d65b7d7cb2026ce0ca4897"
+  },
+  "zwd/../fixtures/gen/APOLLO11.zwd#Translunar Coast": {
+    "output": "fd36887df39a1c0c84ac0051ca60e57132d373558c59c1ce81769e69174eddc0"
+  },
+  "zwd/../fixtures/gen/CASTLEOF.zwd#Broken Battlements": {
+    "output": "84722c127d2aa9cd62703604aa6e04e4fa586d97f1051a9ac967a48a0f52a238"
+  },
+  "zwd/../fixtures/gen/CASTLEOF.zwd#Castle of the Crimson Count": {
+    "output": "ebaa8a280438da2f90fbdb7883c07f5935f570b6b05b4296967390ac5fa91c39"
+  },
+  "zwd/../fixtures/gen/CASTLEOF.zwd#Dark Dungeon": {
+    "output": "862313c5a953b475b1081c091a7108a9abf0b387cd0fac635e045df58586729b"
+  },
+  "zwd/../fixtures/gen/CASTLEOF.zwd#Dusty Library": {
+    "output": "98845c428a05c88feac3149b65f73ad0e8c4443c62048c84d1f5a5b78fcbdf30"
+  },
+  "zwd/../fixtures/gen/CASTLEOF.zwd#Family Crypt": {
+    "output": "bd1eed88273c86fb812546dd9028e75aadcd59048e09107b49930d4f595da0b3"
+  },
+  "zwd/../fixtures/gen/CASTLEOF.zwd#Grand Hall": {
+    "output": "80d66026751f132429b290266158a744c5a5dcb160ceec203a399a45eb8bae38"
+  },
+  "zwd/../fixtures/gen/CASTLEOF.zwd#Ruined Chapel": {
+    "output": "1c014c6f8fc0d70fef51ffcec68d6e9af0dd7b5abd6fe04d4acabfaacc4289e4"
+  },
+  "zwd/../fixtures/gen/CASTLEOF.zwd#Spiral Descent": {
+    "output": "ce8245e8e0cf9f8178ac9ff893f26bb0ce69ce81c3862e35dc2d3e98ecc126ea"
+  },
+  "zwd/../fixtures/gen/CASTLEOF.zwd#The Count's Throne": {
+    "output": "70b30464e21a62c73454d4749703c8e823f436a6853d37e580a7ae6905c9b15b"
+  },
+  "zwd/../fixtures/gen/CASTLEOF.zwd#The Great Gate": {
+    "output": "af9887de5711c5d983d283344a461c509a80f8588c38dc02cab42148b31aaa9c"
+  },
+  "zwd/../fixtures/gen/CASTLERA.zwd#Armory": {
+    "output": "7fe7cb875c93680a02f16bbf0801a46b724effa7c2c428671aebad3c602d42ef"
+  },
+  "zwd/../fixtures/gen/CASTLERA.zwd#Broken Gate": {
+    "output": "601f64d37e297b2f8d38fbfa2e12745691871dcd205a4a27676f48a62412a823"
+  },
+  "zwd/../fixtures/gen/CASTLERA.zwd#Castle Ravenmoor": {
+    "output": "12819ed7fe8c00a0a0c46b61d6f2a3e11489fc0163eeecf42b2c12116b0ee9a8"
+  },
+  "zwd/../fixtures/gen/CASTLERA.zwd#Dawn Breaks": {
+    "output": "64c8525332ac605030e4ce3fe52d8946c0da7299dfb94c602fcd800f4e38f61b"
+  },
+  "zwd/../fixtures/gen/CASTLERA.zwd#Deep Dungeon": {
+    "output": "85a22f1af6331688349391fbffba82bfbfbe80017fdc02c5da8f5b742b21a736"
+  },
+  "zwd/../fixtures/gen/CASTLERA.zwd#Dusty Library": {
+    "output": "a5435580b57181fe71553e8ea61684c7840c62ed6bed48d235e3a2a075101c13"
+  },
+  "zwd/../fixtures/gen/CASTLERA.zwd#Grand Staircase": {
+    "output": "472bdabdd09880cbdedbd9acf8894cf7763252972f5a457164e5e697227096b2"
+  },
+  "zwd/../fixtures/gen/CASTLERA.zwd#Great Hall": {
+    "output": "217d805a1135e79fad283eebd71253d0345453550c60ecc9bf3cd9c850cf5a10"
+  },
+  "zwd/../fixtures/gen/CASTLERA.zwd#Ruined Chapel": {
+    "output": "9e8895c1466f1f4e9a42be020fb94b146c1a56ef74360fa5486384d8f69b7a08"
+  },
+  "zwd/../fixtures/gen/CASTLERA.zwd#Sunken Crypt": {
+    "output": "d70ca2e861587a9a37e064487080de1540af9e554acd4db7cc69d84d1ec01236"
+  },
+  "zwd/../fixtures/gen/CASTLERA.zwd#Vampire's Throne": {
+    "output": "42e89a05b29f76f1050368944984fe4f23df0b860cc73b4b8922c5247b69f50c"
+  },
+  "zwd/../fixtures/gen/CRIMSONC.zwd#Broken Battlements": {
+    "output": "84722c127d2aa9cd62703604aa6e04e4fa586d97f1051a9ac967a48a0f52a238"
+  },
+  "zwd/../fixtures/gen/CRIMSONC.zwd#Castle of the Crimson Count": {
+    "output": "a30e9ce2f49a7d89cec74f140534147fccd7c8fdccd0c9535c95e3509abee867"
+  },
+  "zwd/../fixtures/gen/CRIMSONC.zwd#Dark Dungeon": {
+    "output": "862313c5a953b475b1081c091a7108a9abf0b387cd0fac635e045df58586729b"
+  },
+  "zwd/../fixtures/gen/CRIMSONC.zwd#Dusty Library": {
+    "output": "98845c428a05c88feac3149b65f73ad0e8c4443c62048c84d1f5a5b78fcbdf30"
+  },
+  "zwd/../fixtures/gen/CRIMSONC.zwd#Family Crypt": {
+    "output": "bd1eed88273c86fb812546dd9028e75aadcd59048e09107b49930d4f595da0b3"
+  },
+  "zwd/../fixtures/gen/CRIMSONC.zwd#Grand Hall": {
+    "output": "80d66026751f132429b290266158a744c5a5dcb160ceec203a399a45eb8bae38"
+  },
+  "zwd/../fixtures/gen/CRIMSONC.zwd#Ruined Chapel": {
+    "output": "1c014c6f8fc0d70fef51ffcec68d6e9af0dd7b5abd6fe04d4acabfaacc4289e4"
+  },
+  "zwd/../fixtures/gen/CRIMSONC.zwd#Spiral Descent": {
+    "output": "ce8245e8e0cf9f8178ac9ff893f26bb0ce69ce81c3862e35dc2d3e98ecc126ea"
+  },
+  "zwd/../fixtures/gen/CRIMSONC.zwd#The Count's Throne": {
+    "output": "70b30464e21a62c73454d4749703c8e823f436a6853d37e580a7ae6905c9b15b"
+  },
+  "zwd/../fixtures/gen/CRIMSONC.zwd#The Great Gate": {
+    "output": "af9887de5711c5d983d283344a461c509a80f8588c38dc02cab42148b31aaa9c"
+  },
+  "zwd/../fixtures/gen/THESLOWF.zwd#The Bedside": {
+    "output": "9d7a81f0df957a4a0744ee69a199d40caf88148dc6d39a8fdbf563903e4dd9ef"
+  },
+  "zwd/../fixtures/gen/THESLOWF.zwd#The Empty Room": {
+    "output": "51ede78d3dee6efa9537d23a24d88a512669823cef86eddff318a99dfc202d8b"
+  },
+  "zwd/../fixtures/gen/THESLOWF.zwd#The Fading Gardens": {
+    "output": "271962a30d5bc84a87ca2afa877149bdb1525c8e7140277bcca96af81f3aa5f2"
+  },
+  "zwd/../fixtures/gen/THESLOWF.zwd#The Floating Booth": {
+    "output": "ed6b01a82b065b4d79a37ec3306dd56e6e81147d70a4dc47db430d927dd6acbe"
+  },
+  "zwd/../fixtures/gen/THESLOWF.zwd#The Lake of Fog": {
+    "output": "ea1a1440f5c618f83adeb8d68ad84790c157a566a2b908351db006ed35df8502"
+  },
+  "zwd/../fixtures/gen/THESLOWF.zwd#The Long Hallway": {
+    "output": "25363c1aa2b5747a5029bcc4a2f6d3c778707bbf75c3e7da55995fa6972b7980"
+  },
+  "zwd/../fixtures/gen/THESLOWF.zwd#The Slow Forgetting": {
+    "output": "ae375537d4ab44e4446facbadd327c4b0804e2c604eaa7e2ede1f493518b4d07"
+  },
+  "zwd/../fixtures/gen/THESLOWF.zwd#The Wall of Faces": {
+    "output": "999c0fd656a909ec17bf74e9bf2de678613a1b35918c889a19e7cd22a0af13aa"
+  },
+  "zwd/../fixtures/golden.zwd#Golden Dark": {
+    "output": "20da75554f479128cad18f5f10e709b7d97601290b53e6d76d4c94018aa18f61"
+  },
+  "zwd/../fixtures/golden.zwd#Golden Showcase": {
+    "output": "1a2e56fdbcabc02eb90cd198f3226bbfe6c32de18b27aea047cad21d7b2c669e"
+  },
+  "zwd/../fixtures/golden.zwd#Golden Title": {
+    "output": "7f12197cd0c398fc673cb83d27b501abb46facbee8bf8007910aeff06324634a"
+  },
+  "zwd/../fixtures/oracle/ORCLBEAST.zwd#Beast Hub": {
+    "output": "502fc73cfa1977b23ea7e405318c1dcde534f7808c2024345e7c06c40b758389"
+  },
+  "zwd/../fixtures/oracle/ORCLBEAST.zwd#Claw Bay": {
+    "output": "ec5f0863550d9f121f64036e3ed2b6007ea56a726a9754e7c55869a0a4dbdead"
+  },
+  "zwd/../fixtures/oracle/ORCLBLNK.zwd#Blink Bay": {
+    "output": "a31f5ef3bede221c4b2eb1d359e6c224717c566d724aa8a68f2275c64d53dbdb"
+  },
+  "zwd/../fixtures/oracle/ORCLBLNK.zwd#Blink Hub": {
+    "output": "177c186b52a63ef6e315512bd0db665f30e6156661f4d501e8ae057e655cabaa"
+  },
+  "zwd/../fixtures/oracle/ORCLCOND.zwd#Cond Clock": {
+    "output": "86792956d02a9e7fe50abb1c26797121d0dea9271a99c787fbf3412d8a8d7a07"
+  },
+  "zwd/../fixtures/oracle/ORCLCOND.zwd#Cond Hall": {
+    "output": "5540cf0138abb5cc48bd2326f04be1e0927dfe14a1bce8e42b6275b63e739816"
+  },
+  "zwd/../fixtures/oracle/ORCLCOND.zwd#Cond Hub": {
+    "output": "1c0cd12e1a1c2a385ce9eb2f14403922c32c5b6fa74f0498390f7489328e469c"
+  },
+  "zwd/../fixtures/oracle/ORCLDARK.zwd#Dark Room": {
+    "output": "b7e28d821859364066356ce1e8402688beac9c16617fa9cc24f4bd34240f5336"
+  },
+  "zwd/../fixtures/oracle/ORCLDEV.zwd#Device Room": {
+    "output": "7da2c222a82fae58bdf107f059b1efc9f9a3ad4977ca3e64ffc0df11407b1350"
+  },
+  "zwd/../fixtures/oracle/ORCLFIRE.zwd#Blank Bay": {
+    "output": "046a89b7d358df2e77cb6368786f2c9535497f2b8d88c523782a905dda1ac1a6"
+  },
+  "zwd/../fixtures/oracle/ORCLFIRE.zwd#Fire Bay": {
+    "output": "fc01e4b482d77807e0135e875b7b9be723c39ec6b52ac378ccd722bc0ec3d55a"
+  },
+  "zwd/../fixtures/oracle/ORCLFIRE.zwd#Fire Hub": {
+    "output": "b4ba3af8985f01eda1f2e7588611d45ecdb6953d567171c2e291d09da66e04d4"
+  },
+  "zwd/../fixtures/oracle/ORCLFIRE.zwd#Star Bay": {
+    "output": "3a179350410fec23e2efffcce0cc5e148f98ff02a4a5e19930953fb0bc1eb6e2"
+  },
+  "zwd/../fixtures/oracle/ORCLHUNT.zwd#Hunt Bay": {
+    "output": "e0df9293cb6c0c33269d14a8a56349e5cf56f421dcb011c68a94e4ef4b0a64c2"
+  },
+  "zwd/../fixtures/oracle/ORCLHUNT.zwd#Hunt Hub": {
+    "output": "0be1cb1e0f181c7af94649c369133c2aaa4a3c439c6ba9ca61ff727a17d6ff46"
+  },
+  "zwd/../fixtures/oracle/ORCLITEM.zwd#Item Room": {
+    "output": "c24839155d8cb26f038518af127860d49c7686b0757bd3b7d196a881df01382b"
+  },
+  "zwd/../fixtures/oracle/ORCLMECH.zwd#Bomb Bay": {
+    "output": "70138b3421c502f2da54b6f47bf4254a5fcb981cc7a357150d9d56afbc5f57d3"
+  },
+  "zwd/../fixtures/oracle/ORCLMECH.zwd#Mech Bay": {
+    "output": "faaa785f331d6220fdfdae2cefd02db3011b26f2647d3cd19088bd0a032e32f7"
+  },
+  "zwd/../fixtures/oracle/ORCLMECH.zwd#Mech Hub": {
+    "output": "422e632418905ef18126f6a8376145bba606fff6785e1b09480bd0376d4519c4"
+  },
+  "zwd/../fixtures/oracle/ORCLMORF.zwd#Morf Hall": {
+    "output": "881ec2774c7366b12587ff5d1000964aaf030c9a372902a5bac26103ae4538a0"
+  },
+  "zwd/../fixtures/oracle/ORCLMORF.zwd#Morf Hub": {
+    "output": "1b0a1adc4210bde53bc8e21d7e8f019fc74dfb986444f0dcca3cc798e3f0de99"
+  },
+  "zwd/../fixtures/oracle/ORCLMOVE.zwd#Move Room": {
+    "output": "f5d6193e862fd69b6bed29d8845aa39002e40a62e07302e37e5705b2817c810c"
+  },
+  "zwd/../fixtures/oracle/ORCLNRG.zwd#Energizer Room": {
+    "output": "892083977598838cdc3fe8510f6d3f752d81448aa7a723b22b48ae5690c95925"
+  },
+  "zwd/../fixtures/oracle/ORCLOOZE.zwd#Ooze Bay": {
+    "output": "5fa15c67bc8e3bc34a8ef22b7a05ffeede6f9996961ee3350fe79dc05100ea2b"
+  },
+  "zwd/../fixtures/oracle/ORCLOOZE.zwd#Ooze Hub": {
+    "output": "13f07ff3bd140f58360299239e08a55bcd4eed1d482aac4737e5d3370279bc2f"
+  },
+  "zwd/../fixtures/oracle/ORCLPASS.zwd#Pass East": {
+    "output": "65a8bea24d2638b0471f2e140ff4b5901aa70a7e539302873a92ecad68ac43b9"
+  },
+  "zwd/../fixtures/oracle/ORCLPASS.zwd#Pass Hub": {
+    "output": "67974ba5d25ea6e89e5544e7fafd9b220275e30f9ec2aa308158fac577496a45"
+  },
+  "zwd/../fixtures/oracle/ORCLPASS.zwd#Pass Target": {
+    "output": "facdd1ac7f5c3c5fb52ea350b29bdf69d35b5c51e7a7ac7b0859cbb7aec2e0c7"
+  },
+  "zwd/../fixtures/oracle/ORCLPEDE.zwd#Pede Bay": {
+    "output": "7e32082211103d5eff50b0ed8912c3ce036d440c19165d0e913aa4456790ed0c"
+  },
+  "zwd/../fixtures/oracle/ORCLPEDE.zwd#Pede Hub": {
+    "output": "92301a36e1049e2a74c9009cc8043a1cbd539bd52a4d59071b14e322965cc6b8"
+  },
+  "zwd/../fixtures/oracle/ORCLPUSH.zwd#Push Room": {
+    "output": "6d4ceb3ab38252b0470c7448bd287242a98fb0136de51ff89a50609f9057b126"
+  },
+  "zwd/../fixtures/oracle/ORCLRIDE.zwd#Ride Bay": {
+    "output": "109990d88b64499ad90a343df491a7b56c54f69fcdf910c80b74e9f6a32c20e1"
+  },
+  "zwd/../fixtures/oracle/ORCLRIDE.zwd#Ride Hub": {
+    "output": "0e49fdd6d94d13a062ec19e4bd36415bbdf5b905fb72ac32295ce58cdb1b0293"
+  },
+  "zwd/../fixtures/oracle/ORCLROOM.zwd#Oracle Room A": {
+    "output": "5a705032d24433c73c1c33ef899d9edaaca1588b973bbf6b0986f2696b6d668b"
+  },
+  "zwd/../fixtures/oracle/ORCLROOM.zwd#Oracle Room B": {
+    "output": "a0b478d3d55bf5b698096c2a6f58e8f30f72ce3b3b9fc4326d90491a9cf721c7"
+  },
+  "zwd/../fixtures/oracle/ORCLSHOT.zwd#Shot Room": {
+    "output": "063e0af9db82c07af5bdd2ebc6ab63cc3ccae7733ec830ffa75342f6dab07d30"
+  },
+  "zwd/../fixtures/oracle/ORCLTALK.zwd#Talk Hall": {
+    "output": "c489848e2f854787eebb4e1ea5fe5b00ebb9f274b8fd334c7439a80b073d965a"
+  },
+  "zwd/../fixtures/oracle/ORCLTALK.zwd#Talk Hub": {
+    "output": "51bb2f7ace86d7e96adfb717bbcc2e113faccd91150ebb5952d8fbc60f8460ed"
+  },
+  "zwd/../fixtures/oracle/ORCLTALK.zwd#Talk Study": {
+    "output": "686baee5b30ef7352e11129e75ed9b5f1a235e7fcbc247ea17777fab8e05e6ea"
+  },
+  "zwd/../fixtures/oracle/ORCLTIME.zwd#Time Room": {
+    "output": "78d1e69b81d5b9b05e814fcd9794759eb332e5cf256ba309d9ac10ee4c2bc93b"
+  },
+  "zwd/../fixtures/oracle/ORCLWALK.zwd#Walk Hall": {
+    "output": "e81c4717df302cdfe614cdcb30ccec7634525590b6906fa4f63abb5dae3bc944"
+  },
+  "zwd/../fixtures/oracle/ORCLWALK.zwd#Walk Hub": {
+    "output": "311477f834c226399504918b8a553641c154d302dfdc5bce324695715fff0358"
+  },
+  "zwd/../fixtures/persist.zwd#Persist Annex": {
+    "output": "50a999023551c32450f46476d372148a3cc209a2e26a690cd5eb2b4b4cbbe12a"
+  },
+  "zwd/../fixtures/persist.zwd#Persist Hall": {
+    "output": "96b419b473202357e36ead55ba60f3402a5a4a00117e80f1a684dfed3352d9ef"
+  },
+  "zwd/../fixtures/persist.zwd#Persist Title": {
+    "output": "04e354a2c3f28657f8a616730250997b5607f9eecb88d5447e297725e3963549"
+  },
+  "zwd/../fixtures/scrolls.zwd#Scroll Room": {
+    "output": "95307bc90edfc3f4f672c4ec0d5f8e3c98b7466cafe6d5f8b9819d929a0bd549"
+  },
+  "zwd/../fixtures/town_board1.zwd#Room One": {
+    "output": "0b1cea4a10c135a777e623b5f02cb9b13d5d69807af1471b48a77c76c4f9c98f"
+  },
+  "zwd/../fixtures/view3d.zwd#View Field": {
+    "output": "556d79a302973b0256d996d3f548147c7090d4c83d81eabdb6829101884f1a25"
+  },
+  "zwd/../fixtures/view3d.zwd#View Room": {
+    "output": "17964c9f54874c30c2e73f5dd672c0be3e0cce6d7a6739b964169b3fb99e2b66"
+  },
+  "zwd/../fixtures/view3d.zwd#View Title": {
+    "output": "7fd9ffbfa2e88c82f67dae9f52a473893b6e579a1dc6084c21107c7baf3be4b1"
+  },
+  "zwd/../llmworld/examples/----_board1.zwd#----": {
+    "output": "6fd87ac9ed497428b4d7a87cd7dc39814902496f2e0130b21860269ff07bc673"
+  },
+  "zwd/../llmworld/examples/----_board2.zwd#---": {
+    "output": "80ba84875aa404046adfedfc4000ef3e1eb9ce334ee34b36b3d14fecdaa241bc"
+  },
+  "zwd/../llmworld/examples/---_board1.zwd#---": {
+    "output": "03ed9ad561f0e8dd9f81fc2b87680b9ce5fa3e90735c705c5717dbbdff962a06"
+  },
+  "zwd/../llmworld/examples/--_board1.zwd#--": {
+    "output": "489cfb9bfa88f3736c48a8b12bf246cf59df391e4482a23e87149d6d4b7270fd"
+  },
+  "zwd/../llmworld/examples/-_board1.zwd#-": {
+    "output": "ea41140350229902bb708f940e1923eb1f8c4869d7cd2df83cf44c79279c1d9c"
+  },
+  "zwd/../llmworld/examples/1ENCY3C_board7.zwd#*NEW STK--Objects": {
+    "output": "94e915c1c063f6d8e90158953dc8cbf85e110334638f8bbf59844a5d75228bb5"
+  },
+  "zwd/../llmworld/examples/2ENCY3C_board13.zwd#Board w/passage": {
+    "output": "9fd6246f28b294efe21475900d0efd1b7f2fd5ee44935a3f0d18a5281d4c944a"
+  },
+  "zwd/../llmworld/examples/AAG2_board4.zwd#$STK Objects": {
+    "output": "82ab7ce5fb98737878018a32102c99bb1a831f3168dff1c4b475ede4697ba121"
+  },
+  "zwd/../llmworld/examples/ADVLINK2_board12.zwd#Darkworld 1": {
+    "output": "db5fdb8ac13839b6ea1cf4a3b698a3ea0bc415372d6bcb5424b8b2f502bc2bf9"
+  },
+  "zwd/../llmworld/examples/ADVLINK2_board59.zwd#Plug": {
+    "output": "f3547a8de03fb5983b1a49c126d8bcc2dca5e1dc1183ea037e3392c04e4318e7"
+  },
+  "zwd/../llmworld/examples/ALLIEBRD_board1.zwd#Bank 2 of ZZT": {
+    "output": "6848f26b10db24ec839a68ffec18c9f6789f67958f85408e9dde906cf40b24f9"
+  },
+  "zwd/../llmworld/examples/ANDYSPEC_board19.zwd#To Auto Shop": {
+    "output": "d686d04c26e009d6a4b6e5c34eaa89efc7ab536c4ecc115ccfd50cacbe69bafc"
+  },
+  "zwd/../llmworld/examples/ANDYSPEC_board25.zwd#Bob Evans": {
+    "output": "4e31bc65ee9c9d6ca6529530299a9b69f79e79085f3ded95aeb564c83110c9e8"
+  },
+  "zwd/../llmworld/examples/ATOMIC_board35.zwd#Inside the Capsule": {
+    "output": "8afc17538d4e16140c2d2df1b8841ab249215f232d2242f9d849b10bf1b993ad"
+  },
+  "zwd/../llmworld/examples/AUSTNET_board2.zwd#*NEW STK--Objects": {
+    "output": "94e915c1c063f6d8e90158953dc8cbf85e110334638f8bbf59844a5d75228bb5"
+  },
+  "zwd/../llmworld/examples/BADAPPLE_board27.zwd#F572": {
+    "output": "e014b3f69d7afbc26b6997219f1255a774a83aefdb194847af76cba956b96e48"
+  },
+  "zwd/../llmworld/examples/BADAPPLE_board48.zwd#F986": {
+    "output": "e4dd5817bfaf4717fee0e3def0f47ecfc54073a80dac402142119a4f85d80d97"
+  },
+  "zwd/../llmworld/examples/BAKERY_board2.zwd#Fountain Square": {
+    "output": "472aa92329c70bd4e8561b8381a849b446d4628e1e1e48bf8b26767cac85e706"
+  },
+  "zwd/../llmworld/examples/BAKERY_board5.zwd#Inside the Bakery": {
+    "output": "5708ad7601d449b802cc1a7433edecb7e232ec1349884c316c7d573b965bb0c9"
+  },
+  "zwd/../llmworld/examples/CAT_TRAP_board1.zwd#First board": {
+    "output": "b12b1887850a9441014303e245543c440966268b8ee2ba7b18b6c216835adb90"
+  },
+  "zwd/../llmworld/examples/CAVES_board23.zwd#Devil's Quarters": {
+    "output": "8995d7676844b099162207b9ca0b0b7e5216451231cefe8b01453105a5dba00b"
+  },
+  "zwd/../llmworld/examples/CAVES_board39.zwd#Almost There": {
+    "output": "6a2707cae2f7d0ecd3c9c1a7c1004ccf372f70ee2adf2852b6421e2d2f79baf1"
+  },
+  "zwd/../llmworld/examples/CITY_board17.zwd#BSing": {
+    "output": "8448f2f4e6df18cb725be33eb6f578a8f90f934f0a20ca92049e63a0a587d93a"
+  },
+  "zwd/../llmworld/examples/CITY_board20.zwd#Bad part of town": {
+    "output": "501bd7f950e307e9e85fa5cc04c43cde7eadc479de02abec9c6d9d50ff93f691"
+  },
+  "zwd/../llmworld/examples/CLOCKTOM_board3.zwd#Hall of Pendulums": {
+    "output": "3af68a47b65abfe65ceb4b5edf4d7b6800b6b0fbff4b75dbf5f99a495bbe0431"
+  },
+  "zwd/../llmworld/examples/CLOCKTOM_board4.zwd#Steam Vent Works": {
+    "output": "76c2034feace1e4caf1e1956f4ba85a290b363aaea51ffa2065764cfa141f60b"
+  },
+  "zwd/../llmworld/examples/COLOR_board21.zwd#Ending - 3": {
+    "output": "c0a1ddb8d0c9f4de8b995042c7c63d6923b6eec07f6ce393a2965117d6f81b96"
+  },
+  "zwd/../llmworld/examples/COTS24HR_board15.zwd#Groceries": {
+    "output": "c8da39feb966f6c9b939fe75c03f02de4b9553032c37b8caa336480eb3e86b4e"
+  },
+  "zwd/../llmworld/examples/COTS2_board5.zwd#*NEW STK--Objects": {
+    "output": "94e915c1c063f6d8e90158953dc8cbf85e110334638f8bbf59844a5d75228bb5"
+  },
+  "zwd/../llmworld/examples/CUTLASS_board12.zwd#Cave": {
+    "output": "49186275f2ead035881bd5becd92e7ab1ef3d6e0b0d7e515cff6040503e813ed"
+  },
+  "zwd/../llmworld/examples/CUTLASS_board27.zwd#$SCRAPPED - Netting": {
+    "output": "cf1fe3aaf31585fd4139e51d77735db440950cd20095fcc273c732e651f5bc49"
+  },
+  "zwd/../llmworld/examples/CWARS10B_board7.zwd#*NEW STK--Objects": {
+    "output": "94e915c1c063f6d8e90158953dc8cbf85e110334638f8bbf59844a5d75228bb5"
+  },
+  "zwd/../llmworld/examples/CWARS10_board5.zwd#*NEW STK--Objects": {
+    "output": "94e915c1c063f6d8e90158953dc8cbf85e110334638f8bbf59844a5d75228bb5"
+  },
+  "zwd/../llmworld/examples/CWARS13_board1.zwd#*NEW STK--Objects": {
+    "output": "1268b09181b960c85e531fce2b6b61024a70ed2b6cafbdba85bc0f08a35deb20"
+  },
+  "zwd/../llmworld/examples/DAMAGED5_board20.zwd#Mr. Postman!": {
+    "output": "fe964db1cacc73eb5305b886cac24e4ec4621bca1da594caa09cc326ad8e2227"
+  },
+  "zwd/../llmworld/examples/DARKCIT1_board15.zwd#Garden: Paths Branched": {
+    "output": "4b3b5a03032d8cd1dea89b16de87daf237422f4b4fad1a0fdb52e4d523136c0a"
+  },
+  "zwd/../llmworld/examples/DARKCIT1_board17.zwd#Garden: Paths Bend 2": {
+    "output": "c5fe760844d79bd30c58153b18aab7926182c141323e103cdfa005d1b1e9ab8a"
+  },
+  "zwd/../llmworld/examples/DARKCIT2_board17.zwd#Magic Lab: Crystal Ball Room": {
+    "output": "1295b79a793bd5a546a2eba6307c18a2b008706a8213f90318f50390ae57c8d9"
+  },
+  "zwd/../llmworld/examples/DARKCIT3_board14.zwd#Lava Cave: Flame Chasm": {
+    "output": "bf40aa0bf1ca32340cb948e499716c2d63e0836fa6b0febb6bc827422d1cdafd"
+  },
+  "zwd/../llmworld/examples/DARKCIT3_board4.zwd#Town: East": {
+    "output": "1db08797a6df78cef8cbf90ff9b9b0bec802f2db34ae89adab6b49b54b8d54e5"
+  },
+  "zwd/../llmworld/examples/DARKCIT4_board4.zwd#Town: East": {
+    "output": "bfa000dd78ddf63e8e6f8e27c8a5223ac8004f75197c2e63021126b6de8dcf2b"
+  },
+  "zwd/../llmworld/examples/DARKCIT4_board5.zwd#Inner Core: Central Lobby": {
+    "output": "6b6d46e5e62e2c582f721ebb056f78a909dfb96cdfc14225abd578480f623018"
+  },
+  "zwd/../llmworld/examples/DOG!_board1.zwd#DOG!": {
+    "output": "3287a9d155fd6e2adbb9ffa1fbb255cd51310211d12b2e810619a8b418920fc8"
+  },
+  "zwd/../llmworld/examples/DUNGEONS_board2.zwd#The Zapper": {
+    "output": "d05f16ffd236b228f77d51d63c977780699e309192640fdcba2023dfd5e13d1d"
+  },
+  "zwd/../llmworld/examples/DUNGEONS_board20.zwd#Way Below": {
+    "output": "7f66123c54a78f0676da7ea61e9fa97b52b68ed627963b985a5bcffc51369b9c"
+  },
+  "zwd/../llmworld/examples/DWEIRD_board15.zwd#Part 1.46842167748979!": {
+    "output": "20e39c0b9a556a0930fed8e7d1558c0f5b9317e29b201f5ff916e46abe4d7239"
+  },
+  "zwd/../llmworld/examples/DWEIRD_board23.zwd#Meet the staff!": {
+    "output": "53459bb7cb4dcbc13022697ebfc36a8c547ba64fd873bbfc5cd9c7cd6a1bdf7c"
+  },
+  "zwd/../llmworld/examples/DYINGSTA_board5.zwd#Maintenance Ducts": {
+    "output": "feb44ac3a4b628a47faf30444cfcee32c5673f449e99b96b384f9b83cdddc800"
+  },
+  "zwd/../llmworld/examples/ESPFILE3_board3.zwd#Bowling II": {
+    "output": "8ef8daf5e7edf6c988bf87790fce3ff5e3b8d652dacf378d312e7bb47d9853f0"
+  },
+  "zwd/../llmworld/examples/FAUXAMIS_board2.zwd#Plaza": {
+    "output": "be2d6da9b6caafd2fa8020ab7891f20ab6af628c7b4f95d50719523f833bb078"
+  },
+  "zwd/../llmworld/examples/FAUXBETA_board2.zwd#Plaza": {
+    "output": "be2d6da9b6caafd2fa8020ab7891f20ab6af628c7b4f95d50719523f833bb078"
+  },
+  "zwd/../llmworld/examples/FAUXBETA_board5.zwd#West Coast": {
+    "output": "05bb8145d9e9eef854daad7dd33bde8077e482cb7fa221ad10471b6e739d4c0d"
+  },
+  "zwd/../llmworld/examples/FAUXUNUS_board16.zwd#It Takes A Village (Shape Puzzle v1)": {
+    "output": "86e7701ba8c7d89818a55a53318f766359f5aac9149b8ce80295f6f933d9dd09"
+  },
+  "zwd/../llmworld/examples/FAUXUNUS_board17.zwd#Can't Stop The Hop v1": {
+    "output": "03d33b1e5ccb0db6b2385731a8f147be02689430e8adccee2ade73bc92f1d980"
+  },
+  "zwd/../llmworld/examples/FLIMTOWN_board36.zwd#later, later": {
+    "output": "5968218a2defc7e69d9147d7ac7158c203533c53e2348217e1c3ac9955af9c1a"
+  },
+  "zwd/../llmworld/examples/FREE_board1.zwd#First Board": {
+    "output": "146b5bf39f2d52ed30927b8084a6737ab21f76e4553d7ddc77f2d1e46bd13cdd"
+  },
+  "zwd/../llmworld/examples/GEN6042D_board3.zwd#Hall of Pendulums": {
+    "output": "3af68a47b65abfe65ceb4b5edf4d7b6800b6b0fbff4b75dbf5f99a495bbe0431"
+  },
+  "zwd/../llmworld/examples/GEN6042D_board4.zwd#Steam Vent Works": {
+    "output": "76c2034feace1e4caf1e1956f4ba85a290b363aaea51ffa2065764cfa141f60b"
+  },
+  "zwd/../llmworld/examples/GEND284A_board5.zwd#Maintenance Ducts": {
+    "output": "5377d3f57f254592b77909fad4b5a8951a5b4abaf4af3b4931e725f0508f52ad"
+  },
+  "zwd/../llmworld/examples/GEND2A26_board4.zwd#Spiral Stairwell": {
+    "output": "6f524f74d3811d41e595fffaed55a738608636eafec9b4d289a3556ccfc8b232"
+  },
+  "zwd/../llmworld/examples/KEEPLITE_board4.zwd#Spiral Stairwell": {
+    "output": "fb8b4efae43b58cbdacc0e591510688c07fbd421aa93b432f630bae10c83c5c1"
+  },
+  "zwd/../llmworld/examples/KING-ZZT_board1.zwd#$--{ Background Story }--": {
+    "output": "220e65e517d501b3d35f02dbcf3711ba3c90c031a4053f0fd2ebc1557f681a73"
+  },
+  "zwd/../llmworld/examples/KING-ZZT_board61.zwd#[Ogre Village #1]": {
+    "output": "082d4fbc3a68712f782236f1d8ae149c377c9e184279318b8c0d5ad8af02e3fd"
+  },
+  "zwd/../llmworld/examples/KUDZU_board8.zwd#ground right": {
+    "output": "87c4c5fb8b88d984510cd34c4b8dddf1b190cd9ebd1e4bd5a4f5e716838c2600"
+  },
+  "zwd/../llmworld/examples/LLAMA1_board24.zwd#!QuitSnooping; The End": {
+    "output": "03ef04630d0dad450108c19bdb089d0cc466895b0ed3c13742eb84914c7f4770"
+  },
+  "zwd/../llmworld/examples/LLAMA1_board25.zwd#:QuitSnooping": {
+    "output": "b2ad74d135d438760952eedb6583189e17226ab8ef6a534ac95cf6dac802ebe2"
+  },
+  "zwd/../llmworld/examples/MERC_board16.zwd#Magma Lake 3.3 (N of 3.2)": {
+    "output": "aee57bf1020be10abc3f5a6e9bc558a98b9291871e357b00715396f48b9b3713"
+  },
+  "zwd/../llmworld/examples/MERC_board18.zwd#Magma Lake 3.5": {
+    "output": "fb22a340f65f1213ec1dcf80eb9733fe7618c5c673f77e0b3c302180a59ef2c5"
+  },
+  "zwd/../llmworld/examples/MONSTER_board1.zwd#CITY OF DEATH": {
+    "output": "26345901c883df7a75c6e3e9abdd7128a3b01c1422b72481a60433252e62838a"
+  },
+  "zwd/../llmworld/examples/MONSTER_board5.zwd#HELL'S HIDEOUT": {
+    "output": "db363d24133ebdc1b2dc330c238122a6d2dae14a3a34d1a40a651b9efc2fc8d2"
+  },
+  "zwd/../llmworld/examples/MOON_board43.zwd#Poles Apart Level 1": {
+    "output": "59994a14e484e5e98b9218ea977d6855a8c824e8761654518e29204843f1d791"
+  },
+  "zwd/../llmworld/examples/MOON_board44.zwd#Poles Apart Level 2": {
+    "output": "ca057595acc7b123fa72a68632457f98159601bf0b1948848d5ec2bc55db0024"
+  },
+  "zwd/../llmworld/examples/NEWWORLD_board1.zwd#d": {
+    "output": "8976a17ff61ba7a0485744d4d4bd52ac2f98475ff5d5463b4f033009426551d8"
+  },
+  "zwd/../llmworld/examples/OBELISK_board59.zwd#Outro6 (Town top)": {
+    "output": "e04eeb1f6cfd31ebbe351db5226678b89cb6ee0d06e5a78eab8147b7022ac85f"
+  },
+  "zwd/../llmworld/examples/OBELISK_board61.zwd#Outro8 (Four board pics)": {
+    "output": "0f0704401cc3a603aa599ed3c98265989de88bfd329f7fb39d4b45852803fb9e"
+  },
+  "zwd/../llmworld/examples/OBSERV_board1.zwd#The Cellar": {
+    "output": "0530d2823984a9ca3c760e6db8b5d9394e16c5a54ddd52e71d797b1c70147f9f"
+  },
+  "zwd/../llmworld/examples/ONAMOON_board19.zwd#Moonbase SE (Training Facility)": {
+    "output": "bf19ca72f691453815f925add10361c99e075090c04113df481579c6678b85f2"
+  },
+  "zwd/../llmworld/examples/OWN_board37.zwd#z": {
+    "output": "c82f48bb005d734d008d3ba02ef25a15ea9c73854b75ee964c3be93e0d4f79ee"
+  },
+  "zwd/../llmworld/examples/OWN_board7.zwd#Forest 1 Owned": {
+    "output": "2626a11786f07139e30400e20cf4f63e0bb7be9842f55a142a63087f033a73b3"
+  },
+  "zwd/../llmworld/examples/PIZZAMAN_board11.zwd#removed board": {
+    "output": "6aafc48c0078aead992227adb495f1c1f60aac9380383a77d119a10542dfd45f"
+  },
+  "zwd/../llmworld/examples/PR0N4U_board6.zwd#4) cliches board = ^v^": {
+    "output": "df914919e36cc4b30a13e3c98fbf5c50ccfdbbbf903eeaa26785dd460fd018c6"
+  },
+  "zwd/../llmworld/examples/RAEKUUL_board1.zwd#But is it neat?": {
+    "output": "eee5a1a8cdb3aef5a6d5c7748d3580610d59335b2092328b2fffdd25aab605fc"
+  },
+  "zwd/../llmworld/examples/RHYG3-1_board29.zwd#$Passages": {
+    "output": "a867e21e97376b64b43400f0783b47c071ed0030561d46c5cf6a62ad2c14fafc"
+  },
+  "zwd/../llmworld/examples/RHYG3-2_board6.zwd#$Passages": {
+    "output": "79227d58bc3b03fbb242e96dca8dc8064eb1d9eebd05e2bbeae3980d3eb0047a"
+  },
+  "zwd/../llmworld/examples/RHYG3-3_board4.zwd#*NEW STK--Objects": {
+    "output": "94e915c1c063f6d8e90158953dc8cbf85e110334638f8bbf59844a5d75228bb5"
+  },
+  "zwd/../llmworld/examples/RHYGAR2X_board15.zwd#Non-Locked File!": {
+    "output": "a27d6e388861fa19d57f3f2730016f4437444e1b055ce8301347e5a9cdc46138"
+  },
+  "zwd/../llmworld/examples/RHYGAR2_board11.zwd#Non-Locked File!": {
+    "output": "7c212dfed42553f29171e5f6fa13b003a53adef5ba06a9b0ca6c8793bf92d14f"
+  },
+  "zwd/../llmworld/examples/RUINS_board11.zwd#Underground Storage": {
+    "output": "5089a3de58a50f87159436fff9d74e0cf6a570600e821f4ff8347cf1bdd97099"
+  },
+  "zwd/../llmworld/examples/RUINS_board5.zwd#Greenhouse": {
+    "output": "2c84f65a129b3cfc68789f938af779e5cf927cd5ef758c48f6350597216de1a1"
+  },
+  "zwd/../llmworld/examples/SELECTOR_board1.zwd#Game": {
+    "output": "34964e87951fc5f7e733f9e4dfe91d91ed3cae5adbe5ad6a42a850ec1b1f0965"
+  },
+  "zwd/../llmworld/examples/SEWERS_board17.zwd#*NEW STK--Objects, Blinking": {
+    "output": "393302687118b0275b5e5ed9bbed25e7ad52896c33246937a0adca32a7ffbf49"
+  },
+  "zwd/../llmworld/examples/SEWERS_board29.zwd#*NEW STK--Centip. Heads, Blinking": {
+    "output": "2ae200e130256f7c48647f3f50aea8fd483a77269d44cdc88e33de853d8a268b"
+  },
+  "zwd/../llmworld/examples/SHOOBY_board2.zwd#END": {
+    "output": "effb1cd3c6be8447a2296b1b1b4f3ca526d189fbf310c08f3aa06668856faaa4"
+  },
+  "zwd/../llmworld/examples/SIGNAL_board26.zwd#Space Center outside": {
+    "output": "bffd726c68485f63f7a6d2918d587446a46e99e6e79e5884123982d908bc2087"
+  },
+  "zwd/../llmworld/examples/SIM_board20.zwd#I LIEK SDMALL CHILLUNZ!!!!!!!!!!!!": {
+    "output": "b4d703233a3234ada329f4fd4144f7419bfc1369e7b3fba0f8cc42c7d219c0ae"
+  },
+  "zwd/../llmworld/examples/SMLLSPCS_board80.zwd#Elevator 4 (Rabbit Boots)": {
+    "output": "45d73437d4f0739ab087dddcf3e07090445696dae9862569a92eb10b9315affd"
+  },
+  "zwd/../llmworld/examples/SMLLSPCS_board82.zwd#Elevator 6 (Rabbit Boots and Zephyr)": {
+    "output": "c33f23d7d2be48bdbfeb0f8a6c0e2f1ee26baec2bdd963e9b2481e66592b17bb"
+  },
+  "zwd/../llmworld/examples/SMSPOLD_board80.zwd#Elevator 4 (Rabbit Boots)": {
+    "output": "45d73437d4f0739ab087dddcf3e07090445696dae9862569a92eb10b9315affd"
+  },
+  "zwd/../llmworld/examples/SMSPOLD_board82.zwd#Elevator 6 (Rabbit Boots and Zephyr)": {
+    "output": "c33f23d7d2be48bdbfeb0f8a6c0e2f1ee26baec2bdd963e9b2481e66592b17bb"
+  },
+  "zwd/../llmworld/examples/SPACEFTR_board6.zwd#$Bar": {
+    "output": "0a80063291b523c7e503a57284f06e107a17b0fed5761c98a3293195c8bd4805"
+  },
+  "zwd/../llmworld/examples/STARGEN_board2.zwd#Winding Stair": {
+    "output": "b7ab5a4b57033d1359175e0f3ef9eb3240be93ae191f16de7061637e7a192084"
+  },
+  "zwd/../llmworld/examples/STARGEN_board4.zwd#Dusty Cellar": {
+    "output": "6456ab7ba1b0642f8fff83b2bbe928bbc0cabfc80c769dac6209cbee878621e5"
+  },
+  "zwd/../llmworld/examples/STREK2_board24.zwd#Joe": {
+    "output": "7694d648597a22882e305e51d6d877adee14ed70c1c2cbf38db01774b5127a13"
+  },
+  "zwd/../llmworld/examples/TEEN_board24.zwd#$school": {
+    "output": "7357aeee6ff1c127b2616d8a8cbada65cd9e2a96009010e8d69a8e07e6a0414f"
+  },
+  "zwd/../llmworld/examples/TIMEPORT_board63.zwd#Final Room!!!!!": {
+    "output": "dc0b47bb511e5d780d52578f04318778cf9d32db13538168ae560c41aeabfc2b"
+  },
+  "zwd/../llmworld/examples/TIMEPORT_board65.zwd#Beginning": {
+    "output": "074122fc43fe43bc76e7ab29e5e91163eafd3b7030e9d7318c7375c4875573ad"
+  },
+  "zwd/../llmworld/examples/TOWN_board19.zwd#The Mixer": {
+    "output": "0fe3ac52bed2b7ab5a3a9ef73b5604f4ae66ccdc816f811e47d2a9b3cbd3f9a1"
+  },
+  "zwd/../llmworld/examples/TOWN_board7.zwd#Forest 1": {
+    "output": "2b14f19d97f69baa3cdd9c9df8068e268f69cb23103901eeb3ddf188ba780dc4"
+  },
+  "zwd/../llmworld/examples/TWEIRD_board10.zwd#ggggggggggggggggaMe": {
+    "output": "062659e2172a96c3ea86c6181bdc8c8c14d1f3f048a24274894eb69344610219"
+  },
+  "zwd/../llmworld/examples/TWEIRD_board35.zwd#Streets": {
+    "output": "7a7c8a7f74c5017a3b6e22c995e23558a374d02f788e418b7f506b0fe6f3ae2c"
+  },
+  "zwd/../llmworld/examples/WARANIA_board4.zwd#Warania Temple": {
+    "output": "ef7dd4bffab13f3cbc89ebb0fb26c270d6a47a5db6d84617d30855a4852a4455"
+  },
+  "zwd/../llmworld/examples/WARANIA_board6.zwd#Secret passage": {
+    "output": "ec6a9329f7635be5ab0fb8c9d43b02fdb3ba24ee11176a32349d75e280940762"
+  },
+  "zwd/../llmworld/examples/WEIRD03_board1.zwd#$TADA!": {
+    "output": "eb6b94b355fecd58a0594e26b484acde84bcea33c30f9410961c75b5f10e7c6b"
+  },
+  "zwd/../llmworld/examples/WEIRD03_board6.zwd#$The Next Room": {
+    "output": "09c10b42f5411004c0dc3036be4925370ad995efeb1ff4fda7e96ced3d1149eb"
+  },
+  "zwd/../llmworld/examples/XZR2_board43.zwd#Baiguria Forest - Treetops East": {
+    "output": "e19afbd2eedc7407493166ce6805186dadf3fb2d22db5919f317caa444aea8e1"
+  },
+  "zwd/../llmworld/examples/XZR2_board44.zwd#Baiguria Forest - Treetops West": {
+    "output": "25d8921b3549522751fbb3f52b2a8f4e5793ab313bedb277b32d284278daeb9b"
+  },
+  "zwd/../llmworld/examples/XZR3_board24.zwd#Mount Koya - Northwest": {
+    "output": "d9c22f0839a227d739e161abd9158c69eb8733fb82b77cfc69ad9c21f576b3bb"
+  },
+  "zwd/../llmworld/examples/XZR3_board7.zwd#Chernobyl - Center South": {
+    "output": "68987ee4363029a7732aa643316926ae7fd916aef6e2bfe03e64d87ed0eca1c1"
+  },
+  "zwd/../llmworld/examples/XZR_board3.zwd#XZR II: A FUCKSHIT MASTERPIECE": {
+    "output": "69bee47cb2a53a2f475d0c4c0277bf6bade05c3ae3bffed19b935739fe4c6114"
+  },
+  "zwd/../llmworld/examples/XZR_board4.zwd#Assassi Village - Center": {
+    "output": "58210e0bb02e2644238558f3ca2ec68bfba3c0d5d2f65f93532a9f44cf2861e8"
+  },
+  "zwd/../llmworld/examples/YAAAY_board31.zwd#Wee": {
+    "output": "0ebead0c64cc588a71af0bc4eef18eaa0ef66eabc48416854d4f8c0f2b74da69"
+  },
+  "zwd/../llmworld/examples/ZZKEY_board1.zwd#JUNK'S BOARD SUBMISSION: ZZKey Machine": {
+    "output": "de880ac0a95e952461a2c5f378d1e49bc5bc2a678e5f8633e8b96e36ed31ce96"
+  },
+  "zwd/../llmworld/examples/ZZTHIN_board16.zwd#Fog roll town": {
+    "output": "14498cc258b006965ccc10d6d5cbf9691cdf3688d46e2e4bfbadedfb9b40e7c5"
+  },
+  "zwd/../llmworld/examples/ZZTHIN_board17.zwd#Fog Roll Town More": {
+    "output": "07cc939e38cfefb24372cbbc58d00c68c86a875d66276f94566832aeaf2f6d41"
+  },
+  "zwd/../llmworld/examples/gh2se0_ap_edge_se_board0.zwd#AP Edge: SE": {
+    "output": "134e79e31290572fc450c4b11a26144e68e049b6f6e11bad64e03eaa18e11f86"
+  },
+  "zwd/../llmworld/examples/gh2se0_mcqueen_heights_ne_board0.zwd#McQueen Heights: NE": {
+    "output": "f0dbd703c6f0a96f1988c0dbaf2e0dc6b630611bb3a3d17bc4a18a19bac31618"
+  },
+  "zwd/../llmworld/examples/nyan_board0.zwd#NYAN TITLE": {
+    "output": "78d7824867a0cd52871504f71b0dda2be4d966dbaff8c068502b95dad6ad9194"
+  },
+  "zwd/../llmworld/examples/rhygar2_arogans_range_1_board0.zwd#Arogans Range 1": {
+    "output": "7a3fb0b52c696e312df38b647bbe727c4f4d1f0f894924162714b81cf1215b72"
+  },
+  "zwd/../llmworld/examples/scorchede_board0.zwd#$scorched earth zzt               ": {
+    "output": "e9f285dff46c0a01fe87ec67bfbdabd63fcb0a8781896a34f103f0dd1677de57"
+  },
+  "zwd/../llmworld/examples/sudoku_board0.zwd#$. = { ENJOY! SUDOKU } = .": {
+    "output": "abd4c8e528c5f136ea87d7ce83e968c1dff1f00eba210b56ccf57e7dcfea2461"
+  },
+  "zwd/../llmworld/examples/variety_board0.zwd#Title screen": {
+    "output": "fc2c118c03bc07cd268c434904c60f9d9b8b7295273018a83bef21d02688c422"
+  },
+  "zwd/../llmworld/examples/winter_board0.zwd#:: title": {
+    "output": "69ff43325972c264013a2007c044ad9741f30ed7999921f0ca251ed9683f5d9d"
+  },
+  "zwd/../llmworld/examples/zztv7_board0.zwd#$zztv vii": {
+    "output": "8fb6db2075f55e55c26b7cdb8e2aa300876295b23cd770c4f877383094f7c485"
+  }
+}

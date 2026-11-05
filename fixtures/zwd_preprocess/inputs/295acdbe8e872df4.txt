@@ -1,0 +1,63 @@
+board "Title Screen"
+  start player at 30,23
+  max-shots 255
+  dark false
+  reenter false
+  time-limit 0
+  exits north none south none west none east none
+
+  grid
+  |123456789012345678901234567890123456789012345678901234567890|
+  |bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb|
+  |b..........................................................b|
+  |b..........................................................b|
+  |b....ww...ww..ww..ww...ww..w..w....ww..w..w..ww..w..w..w....b|
+  |b....w....w.w.w.w.w.w..w....ww.w....w.w.w..w.w....w.w..w....b|
+  |b....ww...ww..ww..ww...w....w.ww....ww..ww.w.ww...ww..w.....b|
+  |b....w....w.w.w.w.w.w..w....w..w....w.w.w..w.w....w.w.......b|
+  |b....ww...w.w.w.w.w.w...ww..w..w....ww..w..w..ww..w..w..w...b|
+  |b..........................................................b|
+  |b........========================================..........b|
+  |b........=oooooooooooooooooooooooooooooooooooooo=..........b|
+  |b........=o..............................o.....o=..........b|
+  |b........=o..cc..cc..cc.....cc..cc..cc...o.....o=..........b|
+  |b........=o..............................o.....o=..........b|
+  |b........=oooooooooooooooooooooooooooooooo+oooooo=..........b|
+  |b........========================================..........b|
+  |b..........................................................b|
+  |b..........................................................b|
+  |b..........................................................b|
+  |b..........................................................b|
+  |b..........................................................b|
+  |b..........................................................b|
+  |b.............................@............................b|
+  |b..........................................................b|
+  |bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb|
+  |123456789012345678901234567890123456789012345678901234567890|
+  end
+
+  legend
+    b = Normal color 0x6E
+    . = Empty color 0x00
+    w = Text-Yellow color 0x20
+    o = Fake color 0x6E
+    = = Solid color 0x6C
+    c = Fake color 0x0E
+    + = Door color 0x4E
+    @ = Player color 0x1F under Empty color 0x00
+  end
+
+  stats
+    stat at 30,11 element Object cycle 3 p1 cp437:0x02 step idle under Fake color 0x6E
+    oop
+    @baker
+    #end
+    :touch
+    #play tcefgec
+    "Welcome, hungry traveler!"
+    "The bakery is locked... the key sank in the fountain."
+    "Find it, and warm bread awaits."
+    #end
+    end
+  end
+end
