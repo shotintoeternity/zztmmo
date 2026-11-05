@@ -65,6 +65,7 @@ import {
   type GenerationProgress,
 } from "./dream";
 import { drawEditorSidebar, editorMessageIsForBoard, type EditorInspect, type SidebarActionMenu, type SidebarPresenceList, type SidebarStatPrompt } from "./editor";
+import { editorKeyMutates } from "./editor_controller";
 import { editorReplyMatchesCursor, editorCursorOverlay, editorPresenceLegend, EDITOR_BLINK_PHASES } from "./editor_cursor";
 import { optimisticEditorEraseCell, optimisticEditorTextCell } from "./editor_input";
 import {
@@ -5302,6 +5303,11 @@ function handleEditorKey(event: KeyboardEvent) {
     redrawEditor();
     return;
   }
+  if (editorReadOnly && editorKeyMutates(event.code)) {
+    event.preventDefault();
+    showEditorReadOnly();
+    return;
+  }
   let nextX = editorCursor.x;
   let nextY = editorCursor.y;
   switch (event.code) {
@@ -5358,27 +5364,15 @@ function handleEditorKey(event: KeyboardEvent) {
       break;
     case "Space":
       event.preventDefault();
-      if (editorReadOnly) {
-        showEditorReadOnly();
-        return;
-      }
       sendEditorEdit("place");
       return;
     case "Delete":
     case "Backspace":
       event.preventDefault();
-      if (editorReadOnly) {
-        showEditorReadOnly();
-        return;
-      }
       sendEditorEdit("erase");
       return;
     case "KeyX":
       event.preventDefault();
-      if (editorReadOnly) {
-        showEditorReadOnly();
-        return;
-      }
       sendEditorEdit("fill");
       return;
     case "F1":
