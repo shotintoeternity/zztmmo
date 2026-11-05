@@ -556,6 +556,16 @@ type playerJoin struct {
 	resumed  bool
 }
 
+// ServeHTTP admits one connection and then serves it. The order of the phases
+// is the contract:
+//
+//   - The refusal (M21.2) is checked before every door that admits anyone: the
+//     editor, a challenge run, watching, and play. Challenge resolution and the
+//     watch branch come after it, so a refused account cannot use either.
+//   - A resume is tried before a fresh join, and a ?run= join that did not
+//     resume ends there: it may reclaim a run but never start one.
+//   - Stored blocks go live before the first frame's roster flags are computed
+//     and before the chat backlog is replayed.
 func (s *WebSocketServer) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 	if replayID := r.URL.Query().Get("replay"); replayID != "" {
 		s.serveReplayHTTP(w, r, replayID)
@@ -620,10 +630,7 @@ func (s *WebSocketServer) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 	}
 
 	// M22.1: a watcher takes none of the paths below — no stored state, no color,
-	// no resume, no stat, no read of anything they typed. It branches here, after
-	// the refusal, because watching is a door into the same server and a refused
-	// account must not be able to walk through the one that happens to be
-	// read-only.
+	// no resume, no stat, no read of anything they typed.
 	if pj.join.Spectate {
 		s.serveSpectator(ctx, conn, pj.client, pj.inst, pj.join)
 		return
@@ -700,7 +707,8 @@ func (s *WebSocketServer) resolveJoinTarget(w http.ResponseWriter, r *http.Reque
 	worldName := r.URL.Query().Get("world")
 	switch {
 	case pj.challengeID != "" || pj.challengeRunRequested != "":
-		// Resolved below, once the join message and the account have been read.
+		// Resolved by resolveChallengeRun, once the join message and the account
+		// have been read.
 	case worldName == "":
 		pj.inst = s.DefaultInstance
 		pj.safeWorld = pj.inst.Name
@@ -727,9 +735,6 @@ func (s *WebSocketServer) serveEditorEntry(ctx context.Context, conn *websocket.
 		return
 	}
 	account, authenticated := s.authAccount(r)
-	// A refused account is refused everywhere it can be recognised (M21.2),
-	// and the editor is a door into the same server: admitting them here
-	// would make "refuse" mean "refuse to play".
 	if notice, refused := s.refusedAtTheDoor(account, authenticated); refused {
 		_ = wsjson.Write(ctx, conn, notice)
 		return
@@ -737,13 +742,9 @@ func (s *WebSocketServer) serveEditorEntry(ctx context.Context, conn *websocket.
 	s.serveEditor(ctx, conn, enter, account, authenticated)
 }
 
-// resolveChallengeRun points pj at the challenge run its query names, if any.
-// It reports false when the connection must end.
+// resolveChallengeRun points pj at the challenge run its query names, if any
+// (M32.1). It reports false when the connection must end.
 func (s *WebSocketServer) resolveChallengeRun(ctx context.Context, pj *playerJoin) bool {
-	// M32.1: the challenge run this connection is playing, or nil. Resolved
-	// here — after the refusal, like watching — because a challenge is a door
-	// into the same server, and a refused account must not walk through the one
-	// that happens to hand out leaderboard rows.
 	if pj.challengeID == "" && pj.challengeRunRequested == "" {
 		return true
 	}
@@ -895,8 +896,8 @@ func (s *WebSocketServer) freshJoin(ctx context.Context, pj *playerJoin) bool {
 // seedSocialState puts a joining player's blocks live and marks the first
 // frame with what this player has blocked, follows, and may do.
 func (s *WebSocketServer) seedSocialState(pj *playerJoin) {
-	// M21.1: a signed-in player's stored blocks go live before the chat backlog
-	// below is replayed. The other order would make the first act of a durable
+	// M21.1: a signed-in player's stored blocks go live before sendFirstFrame
+	// replays the chat backlog. The other order would make the first act of a durable
 	// block handing back the fifty lines it exists to suppress.
 	if pj.authenticated {
 		s.seedAccountBlocks(pj.playerID, pj.account.ID)

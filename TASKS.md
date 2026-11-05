@@ -9672,7 +9672,7 @@ files (`elements.go`, `game.go`, `oop.go`, `sounds.go`, `txtwind.go`,
   command scanner, which reads `serveEditorBoard`/`serveEditorWorld` by file
   name and now reads `ws_editor.go`. `go vet ./...` and `go test ./...` green.
 
-- [ ] **M40.2 — `ServeHTTP` as named phases. [ADVISOR]** `ServeHTTP`
+- [x] **M40.2 — `ServeHTTP` as named phases. [ADVISOR]** `ServeHTTP`
   (`websocket_server.go:1073`) is 467 lines covering join, watch, challenge,
   resume, refusal, block seeding, backlog and a 20-case message loop. Its
   order is security-relevant: a refused account must not be admitted by any
@@ -9684,6 +9684,18 @@ files (`elements.go`, `game.go`, `oop.go`, `sounds.go`, `txtwind.go`,
   DoD: no function over 150 lines, the refusal-ordering tests (`grep -l
   Refus engine/*_test.go`) are green unchanged, and `make browser-only` runs
   the join, watch and challenge journeys.
+  **Done 2026-11-05.** Two commits. First, extraction with every comment
+  carried verbatim. `ServeHTTP` (467 lines) became a 131-line ordered list:
+  `resolveJoinTarget`, `serveEditorEntry`, the refusal,
+  `resolveChallengeRun`, the watch branch, the account read, `resumeJoin`,
+  the `?run=` guard, `freshJoin`, the challenge binding, `seedSocialState`,
+  `sendFirstFrame`, then `readLoop` and `handlePlayerMessage`. The state
+  phases reassign lives in one `*playerJoin`. Second, a comments-only commit
+  stating the ordering rule once above `ServeHTTP`, in place of the three
+  "door into the same server" restatements, and fixing the two relative
+  pointers the extraction broke. No test edited. `go test ./...` and `make
+  browser-only` (coop cutline, M16.11, M22.2, M32.1, M21.1, M36.24, M22.3)
+  green.
 
 - [ ] **M40.3 — ZWD preprocessing out of `generation.go`.**
   `preprocessZWDGridWithWarnings` (`generation.go:1914`) is 523 lines nested
