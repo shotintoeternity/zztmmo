@@ -840,17 +840,46 @@ func (a *WebAPI) handleMuseumPlay(w http.ResponseWriter, r *http.Request) {
 	}
 	result, err := a.museumService().Play(r.Context(), req)
 	if err != nil {
-		status := http.StatusUnprocessableEntity
-		if errors.Is(err, ErrGeneratedWorldOccupied) || errors.Is(err, ErrGeneratedWorldNotYours) ||
-			errors.Is(err, ErrGeneratedWorldIsCanonical) {
-			// M36.13: the archive is fine; its world's name is taken by a world
-			// this request may not replace, and nothing was written.
-			status = http.StatusConflict
-		}
-		http.Error(w, err.Error(), status)
+		http.Error(w, err.Error(), generationErrorStatus(err))
 		return
 	}
 	writeJSON(w, result)
+}
+
+// generationErrorStatus is the HTTP status for an error from generating a
+// world, retrying one, or hosting a Museum archive. Each route can return only
+// some of these errors; the status of each is the same on all of them.
+func generationErrorStatus(err error) int {
+	switch {
+	case errors.Is(err, ErrGenerationRateLimited), errors.Is(err, ErrGenerationBudget):
+		return http.StatusTooManyRequests
+	case errors.Is(err, ErrGenerationUnavailable):
+		return http.StatusServiceUnavailable
+	case errors.Is(err, ErrGeneratedWorldOccupied), errors.Is(err, ErrGeneratedWorldNotYours),
+		errors.Is(err, ErrGeneratedWorldIsCanonical), errors.Is(err, ErrGeneratedWorldModified):
+		// M16.17b: a name conflict, not a failed generation. Nothing was
+		// written — and nothing will be until that world empties out, or
+		// never, if it is somebody else's or a classic (M18.11). Only a
+		// name the player typed reaches here: a name the plan chose was
+		// resolved to a minted one instead (M16.17d). For a Museum play
+		// (M36.13) the archive is fine; its world's name is taken by a
+		// world this request may not replace.
+		return http.StatusConflict
+	default:
+		return http.StatusUnprocessableEntity
+	}
+}
+
+// generateErrorStatus is generationErrorStatus for /api/generate, plus the one
+// case only that route has: the model API's own rate limit, which arrives only
+// as the text of its reply ("Claude API returned 429 …: …rate limit…").
+// Matching the text keeps today's status; NOTES.md 2026-11-05 asks whether to
+// key it on the API's 429 instead.
+func generateErrorStatus(err error) int {
+	if strings.Contains(err.Error(), "rate limit") {
+		return http.StatusTooManyRequests
+	}
+	return generationErrorStatus(err)
 }
 
 // handleGenerate starts the M12.4 plan-then-paint pipeline. The browser only
@@ -921,22 +950,12 @@ func (a *WebAPI) handleGenerate(w http.ResponseWriter, r *http.Request) {
 	}
 	result, err := generator.GenerateRequest(r.Context(), req)
 	if err != nil {
-		switch {
-		case strings.Contains(err.Error(), "rate limit"), errors.Is(err, ErrGenerationBudget):
-			http.Error(w, err.Error(), http.StatusTooManyRequests)
-		case errors.Is(err, ErrGenerationUnavailable):
-			http.Error(w, err.Error(), http.StatusServiceUnavailable)
-		case errors.Is(err, ErrGeneratedWorldOccupied), errors.Is(err, ErrGeneratedWorldNotYours),
-			errors.Is(err, ErrGeneratedWorldIsCanonical), errors.Is(err, ErrGeneratedWorldModified):
-			// M16.17b: a name conflict, not a failed generation. Nothing was
-			// written — and nothing will be until that world empties out, or
-			// never, if it is somebody else's or a classic (M18.11). Only a
-			// name the player typed reaches here: a name the plan chose was
-			// resolved to a minted one instead (M16.17d).
-			http.Error(w, err.Error(), http.StatusConflict)
-		default:
-			http.Error(w, "generation failed: "+err.Error(), http.StatusUnprocessableEntity)
+		status := generateErrorStatus(err)
+		message := err.Error()
+		if status == http.StatusUnprocessableEntity {
+			message = "generation failed: " + message
 		}
+		http.Error(w, message, status)
 		return
 	}
 	writeJSON(w, struct {
@@ -1079,14 +1098,7 @@ func (a *WebAPI) handleGenerationRetry(w http.ResponseWriter, r *http.Request, i
 	// the job is left exactly as retryable as it was. Not under generationMu:
 	// it reads the world file and takes the generator's own lock.
 	if err := generator.admitRetry(resume); err != nil {
-		switch {
-		case errors.Is(err, ErrGenerationBudget):
-			http.Error(w, err.Error(), http.StatusTooManyRequests)
-		case errors.Is(err, ErrGeneratedWorldModified):
-			http.Error(w, err.Error(), http.StatusConflict)
-		default:
-			http.Error(w, err.Error(), http.StatusUnprocessableEntity)
-		}
+		http.Error(w, err.Error(), generationErrorStatus(err))
 		return
 	}
 	a.generationMu.Lock()

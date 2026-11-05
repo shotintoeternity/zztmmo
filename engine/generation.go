@@ -302,6 +302,10 @@ func refuseIfModified(dir string, st *generationResume) error {
 // paces one player; nothing bounded what a room full of them could bill to the
 // API key in a day. It is deliberately in-process and coarse: a restart clears
 // the window, which is the honest trade for a guard with no state to persist.
+// ErrGenerationRateLimited is the per-client pace: this client generated too
+// recently.
+var ErrGenerationRateLimited = errors.New("generation rate limit: try again later")
+
 var ErrGenerationBudget = errors.New("generation daily limit reached: the server has generated all the worlds it will today")
 
 // GenerationDailyMaxDefault is the ceiling a server with no
@@ -959,7 +963,7 @@ func (g *GenerationService) admitQuota(client string, paced bool) error {
 	g.mu.Lock()
 	if last := g.lastByClient[client]; paced && g.rateLimit > 0 && now.Sub(last) < g.rateLimit {
 		g.mu.Unlock()
-		return fmt.Errorf("generation rate limit: try again later")
+		return ErrGenerationRateLimited
 	}
 	// The spend ceiling is checked after the per-client pace and before the
 	// client's clock is stamped, so a refused request neither costs money nor

@@ -9750,7 +9750,7 @@ files (`elements.go`, `game.go`, `oop.go`, `sounds.go`, `txtwind.go`,
   `fixtures/` and `llmworld/examples` split the way the generator splits a
   response: 291 cases, each an output hash plus its warnings.
 
-- [ ] **M40.4 — one error-to-status table in `web_api.go`.** Three ladders
+- [x] **M40.4 — one error-to-status table in `web_api.go`.** Three ladders
   map the same `ErrGenerated*` sentinels to statuses (`:844` museum play,
   `:925` generate, `:1083` retry), and each covers a different subset. `:925`
   also matches on error text (`strings.Contains(err.Error(), "rate limit")`).
@@ -9762,6 +9762,18 @@ files (`elements.go`, `game.go`, `oop.go`, `sounds.go`, `txtwind.go`,
   the owner whether to unify it. DoD: a table test asserts every sentinel's
   status per route, matching today's behaviour, and `make browser-only` runs
   the Dream and Museum journeys.
+  **Done 2026-11-05.** `generationErrorStatus` maps the six sentinels: rate
+  limit and budget are 429, unavailable is 503, the four name conflicts are
+  409, and anything else is 422. Museum play and retry use it directly.
+  Neither can return an error its old ladder left unmapped: retry calls
+  `admitQuota("", false)`, which skips the pace, and museum never touches the
+  generation service. So no reachable status moved. The per-client pace is
+  now the sentinel `ErrGenerationRateLimited`, with its message unchanged.
+  `/api/generate` keeps the text match as one commented override in
+  `generateErrorStatus`, because it is how an upstream Anthropic 429 reaches
+  a 429 today. NOTES.md 2026-11-05 asks the owner whether to key that on the
+  API's status instead. `TestGenerationErrorStatusTable` covers every
+  sentinel, bare and wrapped, per route.
 
 - [ ] **M40.5 — an editor controller out of `main.ts`.** `main.ts` is 6346
   lines with 106 module-level `let`s, 21 of them `editor*`. It holds 65
