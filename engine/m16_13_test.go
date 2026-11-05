@@ -1006,11 +1006,14 @@ func TestM1613aSwitchBoardsReachesTheTitleBoard(t *testing.T) {
 // edges (editor.go:260) and at a passage's room (editor.go:377,393).
 func TestM1613aExitAndPassagePickersStillSayNone(t *testing.T) {
 	main := m1613ReadSource(t, filepath.Join("web", "src", "main.ts"))
+	controller := m1613ReadSource(t, filepath.Join("web", "src", "editor_controller.ts"))
+	// editorBoardName is the readout (editor_controller.ts, M40.5).
+	if want := `export function editorBoardName(id: number): string {
+  if (id === 0) return "None";`; !strings.Contains(controller, want) {
+		t.Errorf("web/src/editor_controller.ts no longer contains:\n%s\nthe title board must read \"None\" in the board readout", want)
+	}
 	for _, want := range []string{
-		// editorBoardName is the readout; both pickers build their entries with
-		// titleScreenIsNone true.
-		`function editorBoardName(id: number): string {
-  if (id === 0) return "None";`,
+		// Both pickers build their entries with titleScreenIsNone true.
 		"function openEditorExitPicker(exit: number) {\n  const entries = editorBoardEntries(true);",
 		"function openEditorStatBoardPicker(title: string) {\n  const entries = editorBoardEntries(true);",
 		// ...and the switcher does not.
@@ -1022,7 +1025,7 @@ func TestM1613aExitAndPassagePickersStillSayNone(t *testing.T) {
 				"by its own name in \"Switch boards\"", want)
 		}
 	}
-	if strings.Contains(main, ".filter((board) => board.id !== 0)") {
+	if strings.Contains(main+controller, ".filter((board) => board.id !== 0)") {
 		t.Error("the board list filters board 0 out again; that is M16.13a's second finding")
 	}
 }
@@ -1033,7 +1036,7 @@ func TestM1613aExitAndPassagePickersStillSayNone(t *testing.T) {
 // `leaveEditor` (web/src/main.ts) is a faithful transcription of
 // EditorAskSaveChanged (editor.go:155-165): if the world was modified, offer
 // "Save first?" on the way out. But nothing in the client ever set
-// `editorModified` to true — the flag was declared false, reset to false when the
+// `editor.modified` to true — the flag was declared false, reset to false when the
 // editor opened and when a save succeeded, and never raised — so the branch was
 // unreachable and an author who edited a world and pressed Q or Escape lost the
 // work with no question asked.
@@ -1056,9 +1059,9 @@ func TestM1613aLeavingTheEditorOffersToSave(t *testing.T) {
 	// One raise site per vanilla raise site, each inside the handler for that
 	// class of reply, and each gated so a refusal cannot reach it.
 	for _, want := range []struct{ handler, raise string }{
-		{"function applyEditorDiff(message: EditorDiffMessage) {", "if (message.cells.length > 0) editorModified = true;"},
-		{"function applyEditorProperties(message: EditorPropertiesMessage) {", "editorModified = true;"},
-		{"function applyEditorStatSettings(message: EditorStatSettingsMessage) {", "if (message.cells.length > 0) editorModified = true;"},
+		{"function applyEditorDiff(message: EditorDiffMessage) {", "if (message.cells.length > 0) editor.modified = true;"},
+		{"function applyEditorProperties(message: EditorPropertiesMessage) {", "editor.modified = true;"},
+		{"function applyEditorStatSettings(message: EditorStatSettingsMessage) {", "if (message.cells.length > 0) editor.modified = true;"},
 	} {
 		body, ok := m1613FunctionBody(main, want.handler)
 		if !ok {
@@ -1066,7 +1069,7 @@ func TestM1613aLeavingTheEditorOffersToSave(t *testing.T) {
 			continue
 		}
 		if !strings.Contains(body, want.raise) {
-			t.Errorf("%s does not raise editorModified (want %q): vanilla raises wasModified on this "+
+			t.Errorf("%s does not raise editor.modified (want %q): vanilla raises wasModified on this "+
 				"class of change (editor.go:169/242/401)", want.handler, want.raise)
 		}
 	}
@@ -1083,15 +1086,15 @@ func TestM1613aLeavingTheEditorOffersToSave(t *testing.T) {
 			t.Errorf("web/src/main.ts no longer declares %q", sender)
 			continue
 		}
-		if strings.Contains(body, "editorModified = true") {
-			t.Errorf("%s raises editorModified before the session has accepted the change; a refused "+
+		if strings.Contains(body, "editor.modified = true") {
+			t.Errorf("%s raises editor.modified before the session has accepted the change; a refused "+
 				"edit would then dirty a world it never changed", sender)
 		}
 	}
 	// Still cleared where vanilla clears it: on entering the editor, and on a
 	// successful save.
-	if strings.Count(main, "editorModified = false") < 2 {
-		t.Fatal("editorModified is no longer reset where this test expects; re-read startEditor " +
+	if strings.Count(main, "editor.modified = false") < 2 {
+		t.Fatal("editor.modified is no longer reset where this test expects; re-read startEditor " +
 			"and applyEditorSaveResult")
 	}
 }

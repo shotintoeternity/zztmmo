@@ -65,6 +65,24 @@ import {
   type GenerationProgress,
 } from "./dream";
 import { drawEditorSidebar, editorMessageIsForBoard, type EditorInspect, type SidebarActionMenu, type SidebarPresenceList, type SidebarStatPrompt } from "./editor";
+import {
+  editor,
+  editorBool,
+  editorBoardEntries,
+  editorBoardName,
+  editorKeyMutates,
+  editorLeaseMatches,
+  editorStatCategoryName,
+  type EditorElementMenu,
+  type EditorElementItem,
+  type EditorLeaseMessage,
+  type EditorPresence,
+  type EditorProperties,
+  type EditorSidebarMenu,
+  type EditorSidebarMenuItem,
+  type EditorStatPrompt,
+  type EditorStatPromptItem,
+} from "./editor_controller";
 import { editorReplyMatchesCursor, editorCursorOverlay, editorPresenceLegend, EDITOR_BLINK_PHASES } from "./editor_cursor";
 import { optimisticEditorEraseCell, optimisticEditorTextCell } from "./editor_input";
 import {
@@ -494,64 +512,6 @@ type AuthStatus = {
   email?: string;
 };
 
-// EditorElementItem / EditorElementMenu are the F1/F2/F3 category tables the
-// server derives from ElementDefs (M5.8). They ride the entry snapshot once.
-type EditorElementItem = {
-  elementId: number;
-  name: string;
-  shortcut: string;
-  character: number;
-  color: number;
-  categoryName?: string;
-};
-
-type EditorElementMenu = {
-  category: number;
-  key: string;
-  title: string;
-  items: EditorElementItem[];
-};
-
-type EditorSidebarMenuItem = {
-  label: string;
-  value?: string;
-  shortcut?: string;
-  onPick: () => void;
-};
-
-type EditorSidebarMenu = {
-  title: string;
-  items: EditorSidebarMenuItem[];
-  selected: number;
-  hint?: string;
-  releaseLeaseOnClose?: boolean;
-};
-
-type EditorStatPromptItem =
-  | { kind: "slider"; field: "p1" | "p2"; label: string; value: number; startChar?: string; endChar?: string }
-  | { kind: "character"; field: "p1"; label: string; value: number }
-  | { kind: "choice"; field: "bulletType" | "direction"; label: string; choices: string[]; selected: number; values: number[] }
-  | { kind: "board"; label: string; value: number }
-  | { kind: "program"; statId: number };
-
-type EditorStatPrompt = {
-  categoryName: string;
-  elementName: string;
-  items: EditorStatPromptItem[];
-  active: number;
-};
-
-type EditorPresence = {
-  id: string;
-  name: string;
-  color: number;
-  // M17.12: which board this member is editing; cursors are only drawn for
-  // members on the board the viewer is looking at.
-  boardId?: number;
-  x: number;
-  y: number;
-};
-
 type EditorSnapshotMessage = {
 	type: typeof MessageTypeEditorSnapshot;
 	memberId?: string;
@@ -576,19 +536,6 @@ type EditorPresenceMessage = {
   members: EditorPresence[];
 };
 
-type EditorLeaseKind = "board" | "stat";
-
-type EditorLeaseMessage = {
-  type: typeof MessageTypeEditorLease;
-  op: "request" | "release" | "granted" | "refused";
-  kind: EditorLeaseKind;
-  boardId?: number;
-  statId?: number;
-  holderId?: string;
-  holderName?: string;
-  error?: string;
-};
-
 type EditorDiffMessage = {
   type: typeof MessageTypeEditorDiff;
   memberId?: string;
@@ -597,23 +544,6 @@ type EditorDiffMessage = {
   boardId?: number;
   cells: ScreenCell[];
   inspect: EditorInspect;
-};
-
-type EditorBoardOption = {
-  id: number;
-  name: string;
-};
-
-type EditorProperties = {
-  boardId: number;
-  boardName: string;
-  worldName: string;
-  maxShots: number;
-  isDark: boolean;
-  neighborBoards: number[];
-  reenterWhenZapped: boolean;
-  timeLimitSec: number;
-  boards: EditorBoardOption[];
 };
 
 // screen is absent for the members of the session looking at another board
@@ -1072,11 +1002,6 @@ const mobileTextInput = new MobileTextInputBridge(document);
 let paused = false;
 let pauseBlink = false;
 let pauseTimer = 0;
-// EditorLoop's idle cursor blink (editor.go:534-551). editorBlink is the 3-phase
-// cursorBlinker; the timer advances it every EDITOR_BLINK_MS so the cross cursor
-// fades to reveal the tile/object underneath, matching the DOS editor cadence.
-let editorBlink = 0;
-let editorBlinkTimer = 0;
 // The high-score chain is three modals deep: the list with "-- You! --", the
 // name popup, then the finished list. Each opens as the previous one closes.
 let pendingHighScore = false;
@@ -1088,67 +1013,6 @@ let showWorldsOnClose = false;
 let highScoreTimer = 0;
 let myX = 0;
 let myY = 0;
-let editorCursor = { x: 30, y: 12 };
-let editorInspect: EditorInspect = {
-  x: editorCursor.x,
-  y: editorCursor.y,
-  elementId: 0,
-  element: "",
-  character: 32,
-  color: 0x0f,
-  hasStat: false,
-};
-let editorProperties: EditorProperties = {
-  boardId: 0,
-  boardName: "",
-  worldName: "",
-  maxShots: 0,
-  isDark: false,
-  neighborBoards: [0, 0, 0, 0],
-  reenterWhenZapped: false,
-  timeLimitSec: 0,
-  boards: [{ id: 0, name: "None" }],
-};
-let editorBrush = { element: 21, character: 0xdb, color: 0x0e, copied: false };
-let editorDrawing = false;
-let editorPointerDrawing = false;
-// F4 text-entry mode (M5.8): while on, printable keys paint text tiles and the
-// cursor advances, exactly as EditorLoop's TextEntry draw mode does.
-let editorTextMode = false;
-// Tracks whether the session world has unedited changes since the last save, so
-// leaving the editor can offer EditorAskSaveChanged's "Save first?" prompt.
-let editorModified = false;
-// Set when a save was requested as part of leaving; the saveResult handler then
-// completes the exit (or, on error, keeps the editor open).
-let editorExitAfterSave = false;
-let editorMemberId = "";
-let editorPresence: EditorPresence[] = [];
-let editorReadOnly = false;
-let pendingEditorLease: { lease: EditorLeaseMessage; onGranted: () => void } | null = null;
-let activeEditorLease: EditorLeaseMessage | null = null;
-let retainEditorLeaseOnClose = false;
-// What the browser puts back around a reconnect's fresh snapshot (M16.14f), or
-// null when no reconnect is in flight. The session owns the world; these are
-// the things it does not own — the board this browser was looking at and where
-// its cursor was — captured when the socket closed. The brush, text mode and
-// draw mode need no capture: they are client-only and nothing resets them.
-let editorRestore: { boardId: number; x: number; y: number } | null = null;
-// The F1/F2/F3 element category tables, delivered once on the entry snapshot.
-let editorMenus: EditorElementMenu[] = [];
-// The category currently open on the sidebar (F1/F2/F3), or null. While set, the
-// next keystroke selects an element by its shortcut instead of driving the board
-// (EDITOR.PAS:808-842).
-let editorCategoryMenu: EditorElementMenu | null = null;
-// M17.10: the W collaborator legend. It overlays the same sidebar rows as the
-// category picker but is not modal — the cursor keeps moving and editing while
-// it is up, so you can watch a coloured cursor and read its name at once.
-let editorPresencePanel = false;
-let editorSidebarMenu: EditorSidebarMenu | null = null;
-let editorStatPrompt: EditorStatPrompt | null = null;
-// Set when a menu selection placed a stat-backed element, so the diff reply
-// carrying the new stat can open its editor — EditorLoop calls EditorEditStat
-// right after AddStat (EDITOR.PAS:766-772).
-let editorStatEditAfterPlace = false;
 const overlay = new Map<number, { ch: number; color: number }>();
 const cells: ScreenCell[] = Array.from({ length: COLS * ROWS }, (_, i) => ({
   x: i % COLS,
@@ -1376,7 +1240,7 @@ touchControls = createTouchControls(document, {
   },
 });
 syncTouchControls();
-window.addEventListener("mouseup", () => { editorPointerDrawing = false; });
+window.addEventListener("mouseup", () => { editor.pointerDrawing = false; });
 canvas.addEventListener("keydown", handleKeyDown);
 canvas.addEventListener("keyup", handleKeyUp);
 // Web Audio starts suspended until a user gesture resumes it. handleKeyDown /
@@ -1479,9 +1343,9 @@ async function showTitle() {
   replayStartTick = 0;
   stopWatchLive();
   watcherCount = 0;
-  editorCursor = { x: 30, y: 12 };
-  editorSidebarMenu = null;
-  editorStatPrompt = null;
+  editor.cursor = { x: 30, y: 12 };
+  editor.sidebarMenu = null;
+  editor.statPrompt = null;
   zztSound.setEnabled(false);
   setPaused(false);
   setEditorBlinking(false);
@@ -1786,25 +1650,25 @@ function startEditor() {
   zztSound.setEnabled(false);
   leavingToTitle = false;
   setMode("editor");
-  editorCursor = { x: 30, y: 12 };
-  editorInspect = { x: 30, y: 12, elementId: 0, element: "", character: 32, color: 0x0f, hasStat: false };
-  editorBrush = { element: 21, character: 0xdb, color: 0x0e, copied: false };
-  editorDrawing = false;
-  editorTextMode = false;
-  editorModified = false;
-  editorExitAfterSave = false;
-  editorMemberId = "";
-  editorPresence = [];
-  editorReadOnly = false;
-  pendingEditorLease = null;
-  activeEditorLease = null;
-  retainEditorLeaseOnClose = false;
-  editorRestore = null;
+  editor.cursor = { x: 30, y: 12 };
+  editor.inspect = { x: 30, y: 12, elementId: 0, element: "", character: 32, color: 0x0f, hasStat: false };
+  editor.brush = { element: 21, character: 0xdb, color: 0x0e, copied: false };
+  editor.drawing = false;
+  editor.textMode = false;
+  editor.modified = false;
+  editor.exitAfterSave = false;
+  editor.memberId = "";
+  editor.presence = [];
+  editor.readOnly = false;
+  editor.pendingLease = null;
+  editor.activeLease = null;
+  editor.retainLeaseOnClose = false;
+  editor.restore = null;
   reconnectAttempt = 0;
-  editorCategoryMenu = null;
-  editorPresencePanel = false;
-  editorSidebarMenu = null;
-  editorStatPrompt = null;
+  editor.categoryMenu = null;
+  editor.presencePanel = false;
+  editor.sidebarMenu = null;
+  editor.statPrompt = null;
   renderEditorSidebar();
   setEditorBlinking(true);
   paintOverlay();
@@ -1816,7 +1680,7 @@ function startEditor() {
 // edited world offers "Save first?" before exiting. Answering yes runs the world
 // save flow and defers the exit until the save succeeds; no exits immediately.
 function leaveEditor() {
-  if (editorModified) {
+  if (editor.modified) {
     openYesNo("Save first? ", (yes) => {
       if (!yes) {
         closeEditor();
@@ -1826,10 +1690,10 @@ function leaveEditor() {
         // An escaped/blank name cancels the exit, keeping the editor open, as
         // vanilla does when the save prompt is escaped.
         if (name) {
-          editorExitAfterSave = true;
+          editor.exitAfterSave = true;
           sendEditorWorld({ op: "save", name });
         }
-      }, editorProperties.worldName);
+      }, editor.properties.worldName);
     });
     return;
   }
@@ -1840,8 +1704,8 @@ function closeEditor() {
   leavingToTitle = true;
   connected = false;
   setEditorBlinking(false);
-  editorExitAfterSave = false;
-  editorRestore = null;
+  editor.exitAfterSave = false;
+  editor.restore = null;
   window.clearTimeout(retryTimer);
   // Leaving on purpose ends the membership, so its token must not be presented
   // by the next entry: that would be a browser asking to resume something it
@@ -2466,22 +2330,22 @@ function reconnectEditor() {
   }
   connected = false;
   ws = null;
-  pendingEditorLease = null;
-  activeEditorLease = null;
-  retainEditorLeaseOnClose = false;
+  editor.pendingLease = null;
+  editor.activeLease = null;
+  editor.retainLeaseOnClose = false;
   if (modal) {
     closeModal();
   }
-  editorCategoryMenu = null;
-  editorSidebarMenu = null;
-  editorStatPrompt = null;
-  editorDrawing = false;
+  editor.categoryMenu = null;
+  editor.sidebarMenu = null;
+  editor.statPrompt = null;
+  editor.drawing = false;
   // The reconnect may be handed a different membership (a fresh entry when the
   // server noticed the drop first), so the identity is dropped and re-claimed
   // from the entry snapshot — applyEditorSnapshot only adopts one it is not
   // already holding.
-  editorMemberId = "";
-  editorRestore = { boardId: editorProperties.boardId, x: editorCursor.x, y: editorCursor.y };
+  editor.memberId = "";
+  editor.restore = { boardId: editor.properties.boardId, x: editor.cursor.x, y: editor.cursor.y };
   // Nothing may repaint over the notice while we are away, and the editor's
   // idle cursor blink is the one thing that would.
   setEditorBlinking(false);
@@ -2661,27 +2525,27 @@ function applyEditorSnapshot(message: EditorSnapshotMessage) {
   // painted over their coloured one — the "both cursors went white" report.
   // Claim an id only when we do not already have one (the entry snapshot), and
   // take cursor-shaped state only from snapshots that are actually ours.
-  const forMe = !editorMemberId || !message.memberId || message.memberId === editorMemberId;
-  if (message.memberId && !editorMemberId) editorMemberId = message.memberId;
+  const forMe = !editor.memberId || !message.memberId || message.memberId === editor.memberId;
+  if (message.memberId && !editor.memberId) editor.memberId = message.memberId;
   // Read-only is per member, and a snapshot is now broadcast to everyone
   // watching the board a change was made on (M16.14a): only one addressed to us
   // may say what we are allowed to do. An invite arrives as exactly that, which
   // is how a new collaborator's browser stops refusing their own edits.
   if (forMe) {
-    editorReadOnly = !!message.readOnly;
-    editorInspect = message.inspect;
-    editorCursor = { x: message.inspect.x, y: message.inspect.y };
+    editor.readOnly = !!message.readOnly;
+    editor.inspect = message.inspect;
+    editor.cursor = { x: message.inspect.x, y: message.inspect.y };
   }
-  if (message.presence) editorPresence = message.presence;
+  if (message.presence) editor.presence = message.presence;
   adoptEditorProperties(message.properties, forMe);
   // Menus arrive only on the entry snapshot; board add/switch reuse this
   // message without them, so keep the tables already held.
-  if (message.menus) editorMenus = message.menus;
+  if (message.menus) editor.menus = message.menus;
   // A broadcast frame belongs to one board, exactly like a diff (M17.12): the
   // server addresses it to the members viewing that board, and this is the
   // client re-checking, so a snapshot in flight across a board switch cannot
   // land late on the wrong board.
-  if (forMe || editorMessageIsForBoard(message.properties.boardId, editorProperties.boardId)) {
+  if (forMe || editorMessageIsForBoard(message.properties.boardId, editor.properties.boardId)) {
     replaceCells(message.screen);
   }
   if (forMe) {
@@ -2699,7 +2563,7 @@ function applyEditorSnapshot(message: EditorSnapshotMessage) {
 // opens on the SESSION's current board — whichever board somebody acted on last
 // — with its cursor in the middle, so both are asked for again.
 function restoreEditorAfterReconnect(message: EditorSnapshotMessage) {
-  const restore = editorRestore;
+  const restore = editor.restore;
   if (!restore) {
     return;
   }
@@ -2708,67 +2572,63 @@ function restoreEditorAfterReconnect(message: EditorSnapshotMessage) {
     // again for it with the board half already recorded as done. A switch the
     // session refuses (the board was deleted while we were away) therefore
     // leaves the browser on the board it was given rather than asking forever.
-    editorRestore = { ...restore, boardId: message.properties.boardId };
+    editor.restore = { ...restore, boardId: message.properties.boardId };
     sendEditorBoard({ op: "switch", boardId: restore.boardId });
     return;
   }
-  editorRestore = null;
-  editorCursor = { x: restore.x, y: restore.y };
+  editor.restore = null;
+  editor.cursor = { x: restore.x, y: restore.y };
   // The session's presence — the cursor other collaborators see — is moved by
   // an inspect, and its reply refreshes the sidebar readout for this cell.
   sendEditorInspect();
 }
 
 function applyEditorInspect(message: EditorInspectMessage) {
-  if (!editorReplyMatchesCursor(editorCursor, message.inspect)) {
+  if (!editorReplyMatchesCursor(editor.cursor, message.inspect)) {
     return;
   }
-  editorInspect = message.inspect;
+  editor.inspect = message.inspect;
   renderEditorSidebar();
   paintOverlay();
   drawScreen();
 }
 
 function applyEditorPresence(message: EditorPresenceMessage) {
-  editorPresence = message.members;
+  editor.presence = message.members;
   // Only when the legend is up: presence arrives on every collaborator
   // keystroke, and the rest of the sidebar has nothing to learn from it.
-  if (editorPresencePanel) renderEditorSidebar();
+  if (editor.presencePanel) renderEditorSidebar();
   paintOverlay();
   drawScreen();
 }
 
-function editorLeaseMatches(a: EditorLeaseMessage | null, b: EditorLeaseMessage): boolean {
-  return !!a && a.kind === b.kind && (a.boardId ?? 0) === (b.boardId ?? 0) && (a.statId ?? -1) === (b.statId ?? -1);
-}
-
 function requestEditorLease(lease: Omit<EditorLeaseMessage, "type" | "op">, onGranted: () => void) {
   if (!connected || !ws || ws.readyState !== WebSocket.OPEN) return;
-  if (editorReadOnly) {
+  if (editor.readOnly) {
     showEditorReadOnly();
     return;
   }
   const request: EditorLeaseMessage = { type: MessageTypeEditorLease, op: "request", ...lease };
-  if (editorLeaseMatches(activeEditorLease, request)) {
+  if (editorLeaseMatches(editor.activeLease, request)) {
     onGranted();
     return;
   }
   releaseActiveEditorLease();
-  pendingEditorLease = { lease: request, onGranted };
+  editor.pendingLease = { lease: request, onGranted };
   ws.send(JSON.stringify(request));
 }
 
 function releaseActiveEditorLease() {
-  const lease = activeEditorLease;
-  activeEditorLease = null;
-  retainEditorLeaseOnClose = false;
+  const lease = editor.activeLease;
+  editor.activeLease = null;
+  editor.retainLeaseOnClose = false;
   if (!lease || !connected || !ws || ws.readyState !== WebSocket.OPEN) return;
   ws.send(JSON.stringify({ ...lease, type: MessageTypeEditorLease, op: "release" }));
 }
 
 function applyEditorLease(message: EditorLeaseMessage) {
   if (message.op === "refused") {
-    pendingEditorLease = null;
+    editor.pendingLease = null;
     if (message.error === "read-only") {
       showEditorReadOnly();
       return;
@@ -2777,12 +2637,12 @@ function applyEditorLease(message: EditorLeaseMessage) {
     openSelectList("Already editing", ["Ok"], () => {}, [`${name} is editing this ${message.kind}.`]);
     return;
   }
-  if (message.op !== "granted" || !pendingEditorLease || !editorLeaseMatches(message, pendingEditorLease.lease)) {
+  if (message.op !== "granted" || !editor.pendingLease || !editorLeaseMatches(message, editor.pendingLease.lease)) {
     return;
   }
-  const onGranted = pendingEditorLease.onGranted;
-  pendingEditorLease = null;
-  activeEditorLease = message;
+  const onGranted = editor.pendingLease.onGranted;
+  editor.pendingLease = null;
+  editor.activeLease = message;
   onGranted();
 }
 
@@ -2794,27 +2654,27 @@ function applyEditorDiff(message: EditorDiffMessage) {
   // A diff belongs to one board (M17.12). The server sends it only to members
   // viewing that board, but a diff can still be in flight while we switch, and
   // its cells would then paint the previous board's tiles onto this one.
-  if (!editorMessageIsForBoard(message.boardId, editorProperties.boardId)) return;
+  if (!editorMessageIsForBoard(message.boardId, editor.properties.boardId)) return;
   // EditorPrepareModifyTile's `wasModified := true` (editor.go:169), moved to
   // the reply (M16.13a). A refused edit — a read-only member, an unheld lease, a
   // placement the session declined — sends no diff or an empty one, and so
   // cannot dirty a world it never changed. A collaborator's edit counts too: the
   // world this browser would save has changed either way.
-  if (message.cells.length > 0) editorModified = true;
+  if (message.cells.length > 0) editor.modified = true;
   for (const cell of message.cells) setBoardCell(cell);
-  if (!message.memberId || message.memberId === editorMemberId) {
-    const inspectIsCurrent = editorReplyMatchesCursor(editorCursor, message.inspect);
+  if (!message.memberId || message.memberId === editor.memberId) {
+    const inspectIsCurrent = editorReplyMatchesCursor(editor.cursor, message.inspect);
     if (inspectIsCurrent) {
-      editorInspect = message.inspect;
+      editor.inspect = message.inspect;
       renderEditorSidebar();
     }
     // A category-menu placement of a stat-backed element opens its editor now
     // that the diff carries the new stat, mirroring EditorEditStat after AddStat.
-    if (editorStatEditAfterPlace) {
-      editorStatEditAfterPlace = false;
+    if (editor.statEditAfterPlace) {
+      editor.statEditAfterPlace = false;
       if (message.inspect.hasStat && message.inspect.statId !== undefined) {
         const inspect = message.inspect;
-        requestEditorLease({ kind: "stat", boardId: editorProperties.boardId, statId: inspect.statId }, () => openEditorStatSettings(inspect));
+        requestEditorLease({ kind: "stat", boardId: editor.properties.boardId, statId: inspect.statId }, () => openEditorStatSettings(inspect));
       }
     }
   }
@@ -2828,7 +2688,7 @@ function applyEditorProperties(message: EditorPropertiesMessage) {
   // field returns before the reply is built (editor_session.go SetProperty).
   // A collaborator's accepted change counts too, now that it reaches us
   // (M16.14a): the world this browser would save has changed either way.
-  editorModified = true;
+  editor.modified = true;
   adoptEditorProperties(message.properties, false);
   // The frame rides only the copy sent to the members viewing that board.
   if (message.screen && message.screen.length > 0) replaceCells(message.screen);
@@ -2842,18 +2702,18 @@ function applyEditorProperties(message: EditorPropertiesMessage) {
 // board's id — is ours to take when the payload is about the board we are
 // looking at, or when it is a snapshot addressed to us, which is what a board
 // switch is. From a collaborator editing another board it is not: it would
-// retitle our board, and it would move editorProperties.boardId, which is this
+// retitle our board, and it would move editor.properties.boardId, which is this
 // client's own record of where it is (M17.12).
 //
 // The world half is shared by everyone regardless of where they are standing:
 // the switcher's board list, which grows when anybody adds a board and is
 // renamed when anybody retitles one, and the world name.
 function adoptEditorProperties(properties: EditorProperties, forMe: boolean) {
-  if (forMe || properties.boardId === editorProperties.boardId) {
-    editorProperties = properties;
+  if (forMe || properties.boardId === editor.properties.boardId) {
+    editor.properties = properties;
     return;
   }
-  editorProperties = { ...editorProperties, boards: properties.boards, worldName: properties.worldName };
+  editor.properties = { ...editor.properties, boards: properties.boards, worldName: properties.worldName };
 }
 
 function applyEditorStatSettings(message: EditorStatSettingsMessage) {
@@ -2862,10 +2722,10 @@ function applyEditorStatSettings(message: EditorStatSettingsMessage) {
   // redraws the stat's tile, so cells are the proof one landed: a refused stat
   // edit never reaches a reply, and a program the session declined to store
   // redraws nothing.
-  if (message.cells.length > 0) editorModified = true;
+  if (message.cells.length > 0) editor.modified = true;
   for (const cell of message.cells) setBoardCell(cell);
-  editorInspect = message.inspect;
-  editorCursor = { x: message.inspect.x, y: message.inspect.y };
+  editor.inspect = message.inspect;
+  editor.cursor = { x: message.inspect.x, y: message.inspect.y };
   renderEditorSidebar();
   paintOverlay();
   drawScreen();
@@ -2876,7 +2736,7 @@ function applyEditorStatSettings(message: EditorStatSettingsMessage) {
 // cancel), which sends the edited lines back as editorProgramSave.
 function applyEditorProgramText(message: EditorProgramTextMessage) {
   const statId = message.statId;
-  retainEditorLeaseOnClose = false;
+  editor.retainLeaseOnClose = false;
   openModal({
     kind: "programEditor",
     title: message.prompt || "Edit Program",
@@ -4254,15 +4114,15 @@ function paintOverlay() {
     // The cross cursor and collaborator markers blink off on phase 0 so the
     // board tile (and any object beneath) shows through — see editor_cursor.ts.
     const cells = editorCursorOverlay({
-      blink: editorBlink,
-      cursor: editorCursor,
-      presence: editorPresence,
-      selfId: editorMemberId,
+      blink: editor.blink,
+      cursor: editor.cursor,
+      presence: editor.presence,
+      selfId: editor.memberId,
       boardCols: BOARD_COLS,
       rows: ROWS,
-      // Our own board: editorProperties only tracks snapshots that are ours,
+      // Our own board: editor.properties only tracks snapshots that are ours,
       // so this is the board we are actually viewing (M17.12).
-      boardId: editorProperties.boardId,
+      boardId: editor.properties.boardId,
     });
     for (const cell of cells) {
       writeOverlay(cell.x, cell.y, cell.color, cell.text);
@@ -4318,19 +4178,19 @@ function setPaused(next: boolean) {
 // it without stacking timers.
 function setEditorBlinking(on: boolean) {
   if (on) {
-    if (editorBlinkTimer) return;
-    editorBlink = EDITOR_BLINK_PHASES - 1; // start on a cursor-shown phase
+    if (editor.blinkTimer) return;
+    editor.blink = EDITOR_BLINK_PHASES - 1; // start on a cursor-shown phase
     if (reducedBlinkOn(readEffectiveComfort())) return;
-    editorBlinkTimer = window.setInterval(() => {
-      editorBlink = (editorBlink + 1) % EDITOR_BLINK_PHASES;
+    editor.blinkTimer = window.setInterval(() => {
+      editor.blink = (editor.blink + 1) % EDITOR_BLINK_PHASES;
       paintOverlay();
       drawScreen();
     }, EDITOR_BLINK_MS);
     return;
   }
-  window.clearInterval(editorBlinkTimer);
-  editorBlinkTimer = 0;
-  editorBlink = EDITOR_BLINK_PHASES - 1;
+  window.clearInterval(editor.blinkTimer);
+  editor.blinkTimer = 0;
+  editor.blink = EDITOR_BLINK_PHASES - 1;
 }
 
 function openModal(next: Modal) {
@@ -4507,9 +4367,9 @@ function closeModal() {
   if (mobileTextInput.close()) {
     canvas.focus();
   }
-  if (activeEditorLease) {
-    if (retainEditorLeaseOnClose) {
-      retainEditorLeaseOnClose = false;
+  if (editor.activeLease) {
+    if (editor.retainLeaseOnClose) {
+      editor.retainLeaseOnClose = false;
     } else {
       releaseActiveEditorLease();
     }
@@ -5134,12 +4994,12 @@ function handlePointerDown(event: MouseEvent) {
     const cell = eventCell(event);
     if (!cell || cell.x >= BOARD_COLS) return;
     event.preventDefault();
-    if (editorReadOnly) {
+    if (editor.readOnly) {
       showEditorReadOnly();
       return;
     }
-    editorCursor = { x: cell.x + 1, y: cell.y + 1 };
-    editorPointerDrawing = true;
+    editor.cursor = { x: cell.x + 1, y: cell.y + 1 };
+    editor.pointerDrawing = true;
     sendEditorEdit("place");
     return;
   }
@@ -5158,15 +5018,15 @@ function handlePointerDown(event: MouseEvent) {
 }
 
 function handlePointerMove(event: MouseEvent) {
-  if (!editorPointerDrawing || mode !== "editor" || modal || editorReadOnly || event.buttons === 0) {
-    editorPointerDrawing = false;
+  if (!editor.pointerDrawing || mode !== "editor" || modal || editor.readOnly || event.buttons === 0) {
+    editor.pointerDrawing = false;
     return;
   }
   const cell = eventCell(event);
   if (!cell || cell.x >= BOARD_COLS) return;
   const next = { x: cell.x + 1, y: cell.y + 1 };
-  if (next.x === editorCursor.x && next.y === editorCursor.y) return;
-  editorCursor = next;
+  if (next.x === editor.cursor.x && next.y === editor.cursor.y) return;
+  editor.cursor = next;
   sendEditorEdit("place");
 }
 
@@ -5174,24 +5034,24 @@ function handlePointerMove(event: MouseEvent) {
 // runs through it so an open F1/F2/F3 category picker survives async collaborator
 // diffs/inspects that would otherwise repaint the plain command block over it.
 function renderEditorSidebar() {
-  const actionMenu: SidebarActionMenu | null = editorSidebarMenu ? {
-    title: editorSidebarMenu.title,
-    items: editorSidebarMenu.items.map((item) => ({
+  const actionMenu: SidebarActionMenu | null = editor.sidebarMenu ? {
+    title: editor.sidebarMenu.title,
+    items: editor.sidebarMenu.items.map((item) => ({
       label: item.label,
       value: item.value,
       shortcut: item.shortcut,
     })),
-    selected: editorSidebarMenu.selected,
-    hint: editorSidebarMenu.hint,
+    selected: editor.sidebarMenu.selected,
+    hint: editor.sidebarMenu.hint,
   } : null;
-  const statPrompt: SidebarStatPrompt | null = editorStatPrompt ? {
-    categoryName: editorStatPrompt.categoryName,
-    elementName: editorStatPrompt.elementName,
-    items: editorStatPrompt.items
+  const statPrompt: SidebarStatPrompt | null = editor.statPrompt ? {
+    categoryName: editor.statPrompt.categoryName,
+    elementName: editor.statPrompt.elementName,
+    items: editor.statPrompt.items
       .filter((item) => item.kind !== "program")
       .map((item, visibleIndex) => {
-        const promptIndex = visiblePromptIndex(editorStatPrompt!, visibleIndex);
-        const active = promptIndex === editorStatPrompt!.active;
+        const promptIndex = visiblePromptIndex(editor.statPrompt!, visibleIndex);
+        const active = promptIndex === editor.statPrompt!.active;
         switch (item.kind) {
           case "slider":
             return { kind: "slider", label: item.label, value: item.value, active, startChar: item.startChar, endChar: item.endChar };
@@ -5206,14 +5066,14 @@ function renderEditorSidebar() {
   } : null;
   // The legend is rebuilt on every sidebar draw so it tracks members joining,
   // leaving, and switching boards while it is open (M17.10).
-  const presenceList: SidebarPresenceList | null = editorPresencePanel
+  const presenceList: SidebarPresenceList | null = editor.presencePanel
     ? editorPresenceLegend({
-        presence: editorPresence,
-        selfId: editorMemberId,
-        boardId: editorProperties.boardId,
+        presence: editor.presence,
+        selfId: editor.memberId,
+        boardId: editor.properties.boardId,
       })
     : null;
-  drawEditorSidebar(writeText, editorInspect, editorBrush, editorDrawing, editorTextMode, editorCategoryMenu, actionMenu, statPrompt, presenceList);
+  drawEditorSidebar(writeText, editor.inspect, editor.brush, editor.drawing, editor.textMode, editor.categoryMenu, actionMenu, statPrompt, presenceList);
 }
 
 // redrawEditor repaints the editor sidebar and board from local state, the
@@ -5230,10 +5090,10 @@ function redrawEditor() {
 // true when it consumed the key. Anything else (arrows, F-keys) returns false so
 // the normal handler still runs while text entry stays on.
 function handleEditorTextKey(event: KeyboardEvent): boolean {
-  if (editorReadOnly) {
+  if (editor.readOnly) {
     if (event.code === "Enter" || event.code === "Escape") {
       event.preventDefault();
-      editorTextMode = false;
+      editor.textMode = false;
       redrawEditor();
       return true;
     }
@@ -5245,16 +5105,16 @@ function handleEditorTextKey(event: KeyboardEvent): boolean {
   }
   if (event.code === "Enter" || event.code === "Escape") {
     event.preventDefault();
-    editorTextMode = false;
+    editor.textMode = false;
     redrawEditor();
     return true;
   }
   if (event.code === "Backspace" || event.code === "Delete") {
     event.preventDefault();
-    if (editorCursor.x > 1) {
-      const erased = optimisticEditorEraseCell(editorCursor);
-      editorCursor = { x: editorCursor.x - 1, y: editorCursor.y };
-      editorInspect = { ...editorInspect, x: editorCursor.x, y: editorCursor.y };
+    if (editor.cursor.x > 1) {
+      const erased = optimisticEditorEraseCell(editor.cursor);
+      editor.cursor = { x: editor.cursor.x - 1, y: editor.cursor.y };
+      editor.inspect = { ...editor.inspect, x: editor.cursor.x, y: editor.cursor.y };
       sendEditorEdit("erase");
       if (erased) setBoardCell(erased);
       redrawEditor();
@@ -5265,12 +5125,12 @@ function handleEditorTextKey(event: KeyboardEvent): boolean {
     const code = event.key.charCodeAt(0);
     if (code >= 0x20 && code < 0x80) {
       event.preventDefault();
-      const typed = optimisticEditorTextCell(editorCursor, code, editorBrush.color);
+      const typed = optimisticEditorTextCell(editor.cursor, code, editor.brush.color);
       sendEditorEdit("text", code);
       if (typed) setBoardCell(typed);
-      if (editorCursor.x < BOARD_COLS) {
-        editorCursor = { x: editorCursor.x + 1, y: editorCursor.y };
-        editorInspect = { ...editorInspect, x: editorCursor.x, y: editorCursor.y };
+      if (editor.cursor.x < BOARD_COLS) {
+        editor.cursor = { x: editor.cursor.x + 1, y: editor.cursor.y };
+        editor.inspect = { ...editor.inspect, x: editor.cursor.x, y: editor.cursor.y };
       }
       redrawEditor();
       return true;
@@ -5280,30 +5140,35 @@ function handleEditorTextKey(event: KeyboardEvent): boolean {
 }
 
 function handleEditorKey(event: KeyboardEvent) {
-  if (editorStatPrompt) {
+  if (editor.statPrompt) {
     handleEditorStatPromptKey(event);
     return;
   }
-  if (editorSidebarMenu) {
+  if (editor.sidebarMenu) {
     handleEditorSidebarMenuKey(event);
     return;
   }
-  if (editorCategoryMenu) {
+  if (editor.categoryMenu) {
     handleEditorCategoryKey(event);
     return;
   }
-  if (editorTextMode && handleEditorTextKey(event)) return;
+  if (editor.textMode && handleEditorTextKey(event)) return;
   // Escape closes the collaborator legend before it means "leave the editor" —
   // the panel covers the command block, so dismissing it is what Escape reads as
   // while it is up.
-  if (editorPresencePanel && event.code === "Escape") {
+  if (editor.presencePanel && event.code === "Escape") {
     event.preventDefault();
-    editorPresencePanel = false;
+    editor.presencePanel = false;
     redrawEditor();
     return;
   }
-  let nextX = editorCursor.x;
-  let nextY = editorCursor.y;
+  if (editor.readOnly && editorKeyMutates(event.code)) {
+    event.preventDefault();
+    showEditorReadOnly();
+    return;
+  }
+  let nextX = editor.cursor.x;
+  let nextY = editor.cursor.y;
   switch (event.code) {
     case "Escape":
     case "KeyQ":
@@ -5312,12 +5177,12 @@ function handleEditorKey(event: KeyboardEvent) {
       return;
     case "F4":
       event.preventDefault();
-      editorTextMode = !editorTextMode;
+      editor.textMode = !editor.textMode;
       redrawEditor();
       return;
     case "KeyZ":
       event.preventDefault();
-      requestEditorLease({ kind: "board", boardId: editorProperties.boardId }, () => {
+      requestEditorLease({ kind: "board", boardId: editor.properties.boardId }, () => {
         openYesNo("Clear board? ", (yes) => {
           if (yes) sendEditorBoard({ op: "clear" });
         });
@@ -5325,7 +5190,7 @@ function handleEditorKey(event: KeyboardEvent) {
       return;
     case "KeyN":
       event.preventDefault();
-      requestEditorLease({ kind: "board", boardId: editorProperties.boardId }, () => {
+      requestEditorLease({ kind: "board", boardId: editor.properties.boardId }, () => {
         openYesNo("Make new world? ", (yes) => {
           if (yes) sendEditorBoard({ op: "new" });
         });
@@ -5337,7 +5202,7 @@ function handleEditorKey(event: KeyboardEvent) {
       return;
     case "KeyW":
       event.preventDefault();
-      editorPresencePanel = !editorPresencePanel;
+      editor.presencePanel = !editor.presencePanel;
       redrawEditor();
       return;
     case "ArrowUp":
@@ -5358,27 +5223,15 @@ function handleEditorKey(event: KeyboardEvent) {
       break;
     case "Space":
       event.preventDefault();
-      if (editorReadOnly) {
-        showEditorReadOnly();
-        return;
-      }
       sendEditorEdit("place");
       return;
     case "Delete":
     case "Backspace":
       event.preventDefault();
-      if (editorReadOnly) {
-        showEditorReadOnly();
-        return;
-      }
       sendEditorEdit("erase");
       return;
     case "KeyX":
       event.preventDefault();
-      if (editorReadOnly) {
-        showEditorReadOnly();
-        return;
-      }
       sendEditorEdit("fill");
       return;
     case "F1":
@@ -5395,7 +5248,7 @@ function handleEditorKey(event: KeyboardEvent) {
       return;
     case "KeyI":
       event.preventDefault();
-      requestEditorLease({ kind: "board", boardId: editorProperties.boardId }, openEditorBoardInfo);
+      requestEditorLease({ kind: "board", boardId: editor.properties.boardId }, openEditorBoardInfo);
       return;
     case "KeyB":
       event.preventDefault();
@@ -5411,14 +5264,14 @@ function handleEditorKey(event: KeyboardEvent) {
       return;
     case "Enter":
       event.preventDefault();
-      if (editorInspect.hasStat) {
-        requestEditorLease({ kind: "stat", boardId: editorProperties.boardId, statId: editorInspect.statId }, () => openEditorStatSettings(editorInspect));
+      if (editor.inspect.hasStat) {
+        requestEditorLease({ kind: "stat", boardId: editor.properties.boardId, statId: editor.inspect.statId }, () => openEditorStatSettings(editor.inspect));
         return;
       }
-      editorBrush = {
-        element: editorInspect.elementId,
-        character: editorInspect.character,
-        color: editorInspect.color,
+      editor.brush = {
+        element: editor.inspect.elementId,
+        character: editor.inspect.character,
+        color: editor.inspect.color,
         copied: true,
       };
       renderEditorSidebar();
@@ -5428,10 +5281,10 @@ function handleEditorKey(event: KeyboardEvent) {
     case "KeyP": {
       event.preventDefault();
       const patterns = [21, 22, 23, 0, 31];
-      const index = editorBrush.copied ? patterns.length - 1 : patterns.indexOf(editorBrush.element);
+      const index = editor.brush.copied ? patterns.length - 1 : patterns.indexOf(editor.brush.element);
       const next = patterns[(index + 1) % patterns.length];
       const chars = [0xdb, 0xb2, 0xb1, 0x20, 0xce];
-      editorBrush = { element: next, character: chars[patterns.indexOf(next)], color: editorBrush.color, copied: false };
+      editor.brush = { element: next, character: chars[patterns.indexOf(next)], color: editor.brush.color, copied: false };
       renderEditorSidebar();
       paintOverlay();
       drawScreen();
@@ -5439,9 +5292,9 @@ function handleEditorKey(event: KeyboardEvent) {
     }
     case "KeyC":
       event.preventDefault();
-      editorBrush = {
-        ...editorBrush,
-        color: (editorBrush.color & 0x0f) === 15 ? 9 : (editorBrush.color & 0x0f) + 1,
+      editor.brush = {
+        ...editor.brush,
+        color: (editor.brush.color & 0x0f) === 15 ? 9 : (editor.brush.color & 0x0f) + 1,
       };
       renderEditorSidebar();
       paintOverlay();
@@ -5449,7 +5302,7 @@ function handleEditorKey(event: KeyboardEvent) {
       return;
     case "Tab":
       event.preventDefault();
-      editorDrawing = !editorDrawing;
+      editor.drawing = !editor.drawing;
       renderEditorSidebar();
       paintOverlay();
       drawScreen();
@@ -5462,25 +5315,25 @@ function handleEditorKey(event: KeyboardEvent) {
   // current cursor before moving (EDITOR.PAS:397-411), so a Shift-drag lays a
   // line of the selected pattern. Placing happens at the old cursor position.
   if (event.shiftKey) {
-    if (editorReadOnly) {
+    if (editor.readOnly) {
       showEditorReadOnly();
       return;
     }
     sendEditorEdit("place");
   }
-  editorCursor = {
+  editor.cursor = {
     x: Math.max(1, Math.min(BOARD_COLS, nextX)),
     y: Math.max(1, Math.min(ROWS, nextY)),
   };
   // Keep the local cursor responsive; the authoritative tile readout follows
-  // in the editorInspect reply.
-  editorInspect = { ...editorInspect, x: editorCursor.x, y: editorCursor.y };
+  // in the editor.inspect reply.
+  editor.inspect = { ...editor.inspect, x: editor.cursor.x, y: editor.cursor.y };
   renderEditorSidebar();
   paintOverlay();
   drawScreen();
   sendEditorInspect();
-  if (editorDrawing) {
-    if (editorReadOnly) {
+  if (editor.drawing) {
+    if (editor.readOnly) {
       showEditorReadOnly();
       return;
     }
@@ -5488,39 +5341,16 @@ function handleEditorKey(event: KeyboardEvent) {
   }
 }
 
-function editorBool(value: boolean): string {
-  return value ? "Yes" : "No";
-}
-
-// editorBoardName is EditorGetBoardName with titleScreenIsNone TRUE (editor.go:
-// 854): the board-edge rows and a passage's "Room:" readout call the title board
-// "None". The wire list carries board 0 under its real name so the board
-// SWITCHER — vanilla's one titleScreenIsNone-false caller — can still offer it.
-function editorBoardName(id: number): string {
-  if (id === 0) return "None";
-  return editorProperties.boards.find((board) => board.id === id)?.name ?? "None";
-}
-
-// editorBoardEntries is EditorSelectBoard's list body (editor.go:875-877): every
-// board 0..BoardCount, named by EditorGetBoardName under the caller's own
-// titleScreenIsNone. The "id: " prefix is this client's, so a picked entry can
-// be resolved back to a board number.
-function editorBoardEntries(titleScreenIsNone: boolean): string[] {
-  return editorProperties.boards.map(
-    (board) => `${board.id}: ${titleScreenIsNone && board.id === 0 ? "None" : board.name}`,
-  );
-}
-
 function openEditorSidebarMenu(menu: Omit<EditorSidebarMenu, "selected"> & { selected?: number }) {
-  editorCategoryMenu = null;
-  editorPresencePanel = false;
-  editorSidebarMenu = { ...menu, selected: menu.selected ?? 0 };
+  editor.categoryMenu = null;
+  editor.presencePanel = false;
+  editor.sidebarMenu = { ...menu, selected: menu.selected ?? 0 };
   redrawEditor();
 }
 
 function closeEditorSidebarMenu(releaseLease = true) {
-  const releaseLeaseOnClose = releaseLease && !!editorSidebarMenu?.releaseLeaseOnClose;
-  editorSidebarMenu = null;
+  const releaseLeaseOnClose = releaseLease && !!editor.sidebarMenu?.releaseLeaseOnClose;
+  editor.sidebarMenu = null;
   redrawEditor();
   if (releaseLeaseOnClose) {
     releaseActiveEditorLease();
@@ -5529,14 +5359,14 @@ function closeEditorSidebarMenu(releaseLease = true) {
 
 function pickEditorSidebarItem(menu: EditorSidebarMenu, item: EditorSidebarMenuItem) {
   item.onPick();
-  if (editorSidebarMenu === menu) {
+  if (editor.sidebarMenu === menu) {
     closeEditorSidebarMenu();
   }
 }
 
 function handleEditorSidebarMenuKey(event: KeyboardEvent) {
   event.preventDefault();
-  const menu = editorSidebarMenu;
+  const menu = editor.sidebarMenu;
   if (!menu) return;
   switch (event.code) {
     case "Escape":
@@ -5578,11 +5408,11 @@ function handleEditorSidebarMenuKey(event: KeyboardEvent) {
 // (EDITOR.PAS:808-816). Unlike a modal, it leaves the board visible and arms
 // handleEditorCategoryKey to read the next keystroke as an element shortcut.
 function openEditorCategoryMenu(key: string) {
-  const menu = editorMenus.find((candidate) => candidate.key.toLowerCase() === key.toLowerCase());
+  const menu = editor.menus.find((candidate) => candidate.key.toLowerCase() === key.toLowerCase());
   if (!menu || menu.items.length === 0) return;
-  editorCategoryMenu = menu;
+  editor.categoryMenu = menu;
   // Both overlay sidebar rows 3-20; the picker is the one waiting on a key.
-  editorPresencePanel = false;
+  editor.presencePanel = false;
   redrawEditor();
 }
 
@@ -5592,8 +5422,8 @@ function openEditorCategoryMenu(key: string) {
 // no-match loop simply falls through to EditorDrawSidebar).
 function handleEditorCategoryKey(event: KeyboardEvent) {
   event.preventDefault();
-  const menu = editorCategoryMenu;
-  editorCategoryMenu = null;
+  const menu = editor.categoryMenu;
+  editor.categoryMenu = null;
   if (!menu || event.code === "Escape") {
     redrawEditor();
     return;
@@ -5613,18 +5443,18 @@ function handleEditorCategoryKey(event: KeyboardEvent) {
 // coordinate and stat parameters are authored the way vanilla's EditorEditStat
 // does after AddStat.
 function selectEditorMenuItem(item: EditorElementItem) {
-  editorBrush = {
+  editor.brush = {
     element: item.elementId,
     character: item.character,
     color: item.color,
     copied: false,
   };
   redrawEditor();
-  if (editorReadOnly) {
+  if (editor.readOnly) {
     showEditorReadOnly();
     return;
   }
-  editorStatEditAfterPlace = true;
+  editor.statEditAfterPlace = true;
   sendEditorEdit("element");
 }
 
@@ -5632,7 +5462,7 @@ function selectEditorMenuItem(item: EditorElementItem) {
 // layer. Every selection turns into one authoritative editorProperty operation;
 // the session, not this browser, validates ranges and persists BoardClose.
 function openEditorBoardInfo() {
-  const p = editorProperties;
+  const p = editor.properties;
   const choices = [
     { action: "boardTitle", label: `Title: ${p.boardName || "Untitled"}` },
     { action: "maxShots", label: `Can fire: ${p.maxShots} shots.` },
@@ -5715,17 +5545,6 @@ function splitSliderPrompt(prompt: string): { label: string; startChar?: string;
   return { label: prompt };
 }
 
-function editorStatCategoryName(inspect: EditorInspect): string {
-  for (const menu of editorMenus) {
-    let categoryName = "";
-    for (const item of menu.items) {
-      if (item.categoryName) categoryName = item.categoryName;
-      if (item.elementId === inspect.elementId) return categoryName;
-    }
-  }
-  return "";
-}
-
 function visiblePromptIndex(prompt: EditorStatPrompt, visibleIndex: number): number {
   let seen = -1;
   for (let i = 0; i < prompt.items.length; i += 1) {
@@ -5737,7 +5556,7 @@ function visiblePromptIndex(prompt: EditorStatPrompt, visibleIndex: number): num
 }
 
 function closeEditorStatPrompt(releaseLease = true) {
-  editorStatPrompt = null;
+  editor.statPrompt = null;
   redrawEditor();
   if (releaseLease) releaseActiveEditorLease();
 }
@@ -5755,7 +5574,7 @@ function sendEditorStatPromptValue(item: EditorStatPromptItem) {
 }
 
 function startActiveEditorStatPrompt() {
-  const prompt = editorStatPrompt;
+  const prompt = editor.statPrompt;
   if (!prompt) return;
   while (prompt.active < prompt.items.length) {
     const item = prompt.items[prompt.active];
@@ -5776,7 +5595,7 @@ function startActiveEditorStatPrompt() {
 }
 
 function advanceEditorStatPrompt() {
-  const prompt = editorStatPrompt;
+  const prompt = editor.statPrompt;
   if (!prompt) return;
   const item = prompt.items[prompt.active];
   if (item) sendEditorStatPromptValue(item);
@@ -5818,7 +5637,7 @@ function updateEditorStatPromptValue(item: EditorStatPromptItem, next: number) {
 
 function handleEditorStatPromptKey(event: KeyboardEvent) {
   event.preventDefault();
-  const prompt = editorStatPrompt;
+  const prompt = editor.statPrompt;
   if (!prompt) return;
   const item = prompt.items[prompt.active];
   if (!item) {
@@ -5899,9 +5718,9 @@ function openEditorStatSettings(inspect: EditorInspect) {
   if (inspect.paramBoardName) {
     items.push({ kind: "board", label: inspect.paramBoardName, value: inspect.p3 ?? 0 });
   }
-  editorCategoryMenu = null;
-  editorSidebarMenu = null;
-  editorStatPrompt = {
+  editor.categoryMenu = null;
+  editor.sidebarMenu = null;
+  editor.statPrompt = {
     categoryName: editorStatCategoryName(inspect),
     elementName: inspect.element,
     items,
@@ -5919,16 +5738,16 @@ function openEditorStatBoardPicker(title: string) {
 }
 
 function sendEditorStat(field: string, value: number) {
-  if (!connected || !ws || ws.readyState !== WebSocket.OPEN || !editorInspect.hasStat || editorInspect.statId === undefined) return;
-  ws.send(JSON.stringify({ type: MessageTypeEditorStat, statId: editorInspect.statId, field, value }));
+  if (!connected || !ws || ws.readyState !== WebSocket.OPEN || !editor.inspect.hasStat || editor.inspect.statId === undefined) return;
+  ws.send(JSON.stringify({ type: MessageTypeEditorStat, statId: editor.inspect.statId, field, value }));
 }
 
 // sendEditorProgram asks the server for a stat's program; the reply opens the
 // editor. Save travels back through sendEditorProgramSave.
 function sendEditorProgram(statId: number) {
   if (!connected || !ws || ws.readyState !== WebSocket.OPEN) return;
-  requestEditorLease({ kind: "stat", boardId: editorProperties.boardId, statId }, () => {
-    retainEditorLeaseOnClose = true;
+  requestEditorLease({ kind: "stat", boardId: editor.properties.boardId, statId }, () => {
+    editor.retainLeaseOnClose = true;
     ws?.send(JSON.stringify({ type: MessageTypeEditorProgram, statId }));
   });
 }
@@ -5945,7 +5764,7 @@ function sendEditorProperty(field: string, values: { text?: string; value?: numb
 
 function sendEditorBoard(values: { op: string; name?: string; boardId?: number; data?: string }) {
   if (!connected || !ws || ws.readyState !== WebSocket.OPEN) return;
-  if (editorReadOnly && ["add", "import", "clear", "new"].includes(values.op)) {
+  if (editor.readOnly && ["add", "import", "clear", "new"].includes(values.op)) {
     showEditorReadOnly();
     return;
   }
@@ -5985,8 +5804,8 @@ function openEditorTransfer() {
         shortcut: "I",
         onPick: () => {
           closeEditorSidebarMenu(false);
-          requestEditorLease({ kind: "board", boardId: editorProperties.boardId }, () => {
-            retainEditorLeaseOnClose = true;
+          requestEditorLease({ kind: "board", boardId: editor.properties.boardId }, () => {
+            editor.retainLeaseOnClose = true;
             importEditorBoardFile();
           });
         },
@@ -6033,7 +5852,7 @@ function importEditorBoardFile() {
 
 function sendEditorWorld(values: { op: string; name?: string; data?: string; accountId?: string }) {
   if (!connected || !ws || ws.readyState !== WebSocket.OPEN) return;
-  if (editorReadOnly && values.op !== "download") {
+  if (editor.readOnly && values.op !== "download") {
     showEditorReadOnly();
     return;
   }
@@ -6049,14 +5868,14 @@ function sendEditorTestPlay() {
 // it, download it as a portable .ZZT, or upload a .ZZT to edit.
 function openEditorWorldMenu() {
   const entries = ["Test play together", "Save and publish", "Download .ZZT", "Upload .ZZT"];
-  if (!editorReadOnly) entries.push("Invite collaborator");
+  if (!editor.readOnly) entries.push("Invite collaborator");
   openSelectList("World:", entries, (entry) => {
     if (entry === "Test play together") {
       sendEditorTestPlay();
     } else if (entry === "Save and publish") {
       openEntry("Save world as:", "", 8, "any", (text) => {
         if (text) sendEditorWorld({ op: "save", name: text });
-      }, editorProperties.worldName);
+      }, editor.properties.worldName);
     } else if (entry === "Download .ZZT") {
       sendEditorWorld({ op: "download" });
     } else if (entry === "Upload .ZZT") {
@@ -6109,13 +5928,13 @@ function applyEditorWorldData(message: EditorWorldDataMessage) {
 function applyEditorSaveResult(message: EditorSaveResultMessage) {
   if (message.error) {
     // A failed save-on-exit keeps the editor open so the work is not lost.
-    editorExitAfterSave = false;
+    editor.exitAfterSave = false;
     openSelectList("Cannot save", ["Ok"], () => {}, [message.error]);
     return;
   }
-  editorModified = false;
-  if (editorExitAfterSave) {
-    editorExitAfterSave = false;
+  editor.modified = false;
+  if (editor.exitAfterSave) {
+    editor.exitAfterSave = false;
     closeEditor();
     return;
   }
@@ -6132,7 +5951,7 @@ function applyEditorTestPlay(message: EditorTestPlayMessage) {
   }
   connected = false;
   leavingToTitle = true;
-  editorRestore = null;
+  editor.restore = null;
   window.clearTimeout(retryTimer);
   // Test play exits the session on purpose; its membership token goes with it
   // (M16.14f), so returning to the editor afterwards enters fresh.
@@ -6316,16 +6135,16 @@ function sendInput(mask: number, key = 0) {
   ws.send(JSON.stringify(input));
 }
 
-// editorInspect is a read request, not an input or a persisted cursor. The
-// browser owns editorCursor; the session only returns the tile's current data.
+// editor.inspect is a read request, not an input or a persisted cursor. The
+// browser owns editor.cursor; the session only returns the tile's current data.
 function sendEditorInspect() {
   if (!connected || !ws || ws.readyState !== WebSocket.OPEN || mode !== "editor") {
     return;
   }
   ws.send(JSON.stringify({
     type: MessageTypeEditorInspect,
-    x: editorCursor.x,
-    y: editorCursor.y,
+    x: editor.cursor.x,
+    y: editor.cursor.y,
   }));
 }
 
@@ -6336,11 +6155,11 @@ function sendEditorEdit(op: "place" | "erase" | "fill" | "element" | "text", cha
   ws.send(JSON.stringify({
     type: MessageTypeEditorEdit,
     op,
-    x: editorCursor.x,
-    y: editorCursor.y,
-    element: editorBrush.element,
-    color: editorBrush.color,
-    copied: editorBrush.copied,
+    x: editor.cursor.x,
+    y: editor.cursor.y,
+    element: editor.brush.element,
+    color: editor.brush.color,
+    copied: editor.brush.copied,
     char,
   }));
 }
