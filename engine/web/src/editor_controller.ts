@@ -196,3 +196,41 @@ const MUTATING_KEYS: ReadonlySet<string> = new Set(["Space", "Delete", "Backspac
 export function editorKeyMutates(code: string): boolean {
   return MUTATING_KEYS.has(code);
 }
+
+export function editorLeaseMatches(a: EditorLeaseMessage | null, b: EditorLeaseMessage): boolean {
+  return !!a && a.kind === b.kind && (a.boardId ?? 0) === (b.boardId ?? 0) && (a.statId ?? -1) === (b.statId ?? -1);
+}
+
+export function editorBool(value: boolean): string {
+  return value ? "Yes" : "No";
+}
+
+// editorBoardName is EditorGetBoardName with titleScreenIsNone TRUE (editor.go:
+// 854): the board-edge rows and a passage's "Room:" readout call the title board
+// "None". The wire list carries board 0 under its real name so the board
+// SWITCHER — vanilla's one titleScreenIsNone-false caller — can still offer it.
+export function editorBoardName(id: number): string {
+  if (id === 0) return "None";
+  return editor.properties.boards.find((board) => board.id === id)?.name ?? "None";
+}
+
+// editorBoardEntries is EditorSelectBoard's list body (editor.go:875-877): every
+// board 0..BoardCount, named by EditorGetBoardName under the caller's own
+// titleScreenIsNone. The "id: " prefix is this client's, so a picked entry can
+// be resolved back to a board number.
+export function editorBoardEntries(titleScreenIsNone: boolean): string[] {
+  return editor.properties.boards.map(
+    (board) => `${board.id}: ${titleScreenIsNone && board.id === 0 ? "None" : board.name}`,
+  );
+}
+
+export function editorStatCategoryName(inspect: EditorInspect): string {
+  for (const menu of editor.menus) {
+    let categoryName = "";
+    for (const item of menu.items) {
+      if (item.categoryName) categoryName = item.categoryName;
+      if (item.elementId === inspect.elementId) return categoryName;
+    }
+  }
+  return "";
+}

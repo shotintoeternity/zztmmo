@@ -9763,7 +9763,7 @@ files (`elements.go`, `game.go`, `oop.go`, `sounds.go`, `txtwind.go`,
   status per route, matching today's behaviour, and `make browser-only` runs
   the Dream and Museum journeys.
 
-- [ ] **M40.5 — an editor controller out of `main.ts`.** `main.ts` is 6346
+- [x] **M40.5 — an editor controller out of `main.ts`.** `main.ts` is 6346
   lines with 106 module-level `let`s, 21 of them `editor*`. It holds 65
   editor functions, while `editor.ts` holds only the sidebar drawing.
   `handleEditorKey` (`:5282`) is about 200 lines, and `if (editorReadOnly) {
@@ -9774,6 +9774,30 @@ files (`elements.go`, `game.go`, `oop.go`, `sounds.go`, `txtwind.go`,
   goes in a module with a test. DoD: the node suite covers the read-only
   gate for every mutating key, `main.ts` is under 5k lines, and `make
   browser` is green with no journey edited except for imports.
+  **DoD narrowed by the owner, 2026-11-05.** The original DoD (main.ts under
+  5k lines) needs a host interface of about 19 injected members, because
+  every editor function that changes the screen reaches `drawScreen`,
+  `paintOverlay`, `ws` or one of the window openers. Putting `host.` on 870
+  lines is the indirection smell M40 removes. The owner chose: the read-only
+  gate, the state object, and moving only the code that needs nothing from
+  main.ts. No host object.
+  **Done 2026-11-05.** Three commits:
+  1. `editorKeyMutates` and `MUTATING_KEYS` (Space, Delete, Backspace, X),
+     node-tested, replace the three per-case read-only checks in
+     `handleEditorKey`. The Shift+arrow and draw-mode checks stay, because
+     they gate a move. Z and N still have no client check, since they go
+     through a board lease the server refuses.
+  2. The 24 editor variables are now one `editor` object, with the eleven
+     types it needs, in `editor_controller.ts`. 249 uses were renamed. The
+     M16.13 and M16.14 scanners now match the new spelling and check the
+     same properties.
+  3. The helpers that need nothing from main.ts moved. Counted properly,
+     with calls between editor functions included, these are only five
+     functions (25 lines), not the 21 the first count claimed. The move is
+     lossless, and M16.13a's "None" pin reads the new file.
+  `main.ts` went from 6346 to 6165 lines. `npm test`, the source scanners and
+  `go test ./...` are green, and `make browser` runs in the main tree after
+  the merge.
 
 - [ ] **M40.6 — `main.ts` small duplication.** Covers the
   `openWindow(X, ["", "  Not available: the server did not answer.", ""],

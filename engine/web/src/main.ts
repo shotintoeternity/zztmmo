@@ -67,7 +67,12 @@ import {
 import { drawEditorSidebar, editorMessageIsForBoard, type EditorInspect, type SidebarActionMenu, type SidebarPresenceList, type SidebarStatPrompt } from "./editor";
 import {
   editor,
+  editorBool,
+  editorBoardEntries,
+  editorBoardName,
   editorKeyMutates,
+  editorLeaseMatches,
+  editorStatCategoryName,
   type EditorElementMenu,
   type EditorElementItem,
   type EditorLeaseMessage,
@@ -2595,10 +2600,6 @@ function applyEditorPresence(message: EditorPresenceMessage) {
   if (editor.presencePanel) renderEditorSidebar();
   paintOverlay();
   drawScreen();
-}
-
-function editorLeaseMatches(a: EditorLeaseMessage | null, b: EditorLeaseMessage): boolean {
-  return !!a && a.kind === b.kind && (a.boardId ?? 0) === (b.boardId ?? 0) && (a.statId ?? -1) === (b.statId ?? -1);
 }
 
 function requestEditorLease(lease: Omit<EditorLeaseMessage, "type" | "op">, onGranted: () => void) {
@@ -5340,29 +5341,6 @@ function handleEditorKey(event: KeyboardEvent) {
   }
 }
 
-function editorBool(value: boolean): string {
-  return value ? "Yes" : "No";
-}
-
-// editorBoardName is EditorGetBoardName with titleScreenIsNone TRUE (editor.go:
-// 854): the board-edge rows and a passage's "Room:" readout call the title board
-// "None". The wire list carries board 0 under its real name so the board
-// SWITCHER — vanilla's one titleScreenIsNone-false caller — can still offer it.
-function editorBoardName(id: number): string {
-  if (id === 0) return "None";
-  return editor.properties.boards.find((board) => board.id === id)?.name ?? "None";
-}
-
-// editorBoardEntries is EditorSelectBoard's list body (editor.go:875-877): every
-// board 0..BoardCount, named by EditorGetBoardName under the caller's own
-// titleScreenIsNone. The "id: " prefix is this client's, so a picked entry can
-// be resolved back to a board number.
-function editorBoardEntries(titleScreenIsNone: boolean): string[] {
-  return editor.properties.boards.map(
-    (board) => `${board.id}: ${titleScreenIsNone && board.id === 0 ? "None" : board.name}`,
-  );
-}
-
 function openEditorSidebarMenu(menu: Omit<EditorSidebarMenu, "selected"> & { selected?: number }) {
   editor.categoryMenu = null;
   editor.presencePanel = false;
@@ -5565,17 +5543,6 @@ function splitSliderPrompt(prompt: string): { label: string; startChar?: string;
     };
   }
   return { label: prompt };
-}
-
-function editorStatCategoryName(inspect: EditorInspect): string {
-  for (const menu of editor.menus) {
-    let categoryName = "";
-    for (const item of menu.items) {
-      if (item.categoryName) categoryName = item.categoryName;
-      if (item.elementId === inspect.elementId) return categoryName;
-    }
-  }
-  return "";
 }
 
 function visiblePromptIndex(prompt: EditorStatPrompt, visibleIndex: number): number {

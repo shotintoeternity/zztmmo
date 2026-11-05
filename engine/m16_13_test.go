@@ -1006,11 +1006,14 @@ func TestM1613aSwitchBoardsReachesTheTitleBoard(t *testing.T) {
 // edges (editor.go:260) and at a passage's room (editor.go:377,393).
 func TestM1613aExitAndPassagePickersStillSayNone(t *testing.T) {
 	main := m1613ReadSource(t, filepath.Join("web", "src", "main.ts"))
+	controller := m1613ReadSource(t, filepath.Join("web", "src", "editor_controller.ts"))
+	// editorBoardName is the readout (editor_controller.ts, M40.5).
+	if want := `export function editorBoardName(id: number): string {
+  if (id === 0) return "None";`; !strings.Contains(controller, want) {
+		t.Errorf("web/src/editor_controller.ts no longer contains:\n%s\nthe title board must read \"None\" in the board readout", want)
+	}
 	for _, want := range []string{
-		// editorBoardName is the readout; both pickers build their entries with
-		// titleScreenIsNone true.
-		`function editorBoardName(id: number): string {
-  if (id === 0) return "None";`,
+		// Both pickers build their entries with titleScreenIsNone true.
 		"function openEditorExitPicker(exit: number) {\n  const entries = editorBoardEntries(true);",
 		"function openEditorStatBoardPicker(title: string) {\n  const entries = editorBoardEntries(true);",
 		// ...and the switcher does not.
@@ -1022,7 +1025,7 @@ func TestM1613aExitAndPassagePickersStillSayNone(t *testing.T) {
 				"by its own name in \"Switch boards\"", want)
 		}
 	}
-	if strings.Contains(main, ".filter((board) => board.id !== 0)") {
+	if strings.Contains(main+controller, ".filter((board) => board.id !== 0)") {
 		t.Error("the board list filters board 0 out again; that is M16.13a's second finding")
 	}
 }
