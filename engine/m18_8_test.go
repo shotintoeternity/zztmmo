@@ -19,7 +19,11 @@ import (
 	"testing"
 )
 
-func TestM188OopPreludeStopsAtLabelOrEnd(t *testing.T) {
+// M18.8a: the prelude is what ZZT reaches from the top, and a label is not a
+// place to wait — OopExecute skips label lines and runs on (OOP.PAS:559-563).
+// The M18.8 version of this test stopped at the first label, which is how
+// `@name` / `:touch` / text (every object in TIMSWEEN) passed the audit.
+func TestM188OopPreludeFollowsExecution(t *testing.T) {
 	cases := []struct {
 		name string
 		data string
@@ -41,9 +45,54 @@ func TestM188OopPreludeStopsAtLabelOrEnd(t *testing.T) {
 			want: nil,
 		},
 		{
-			name: "setup before the label is still a prelude, judged later",
+			// Nothing stops the run before :touch, so it falls through the label
+			// and "Halt." shows on the first tick. M18.8 wanted only the first two.
+			name: "setup falls through the label into its body",
 			data: "@patrol\r#cycle 2\r#walk n\r:touch\rHalt.\r#end",
-			want: []string{"#cycle 2", "#walk n"},
+			want: []string{"#cycle 2", "#walk n", "Halt."},
+		},
+		{
+			name: "a label on the first line is not a place to wait (TIMSWEEN)",
+			data: "@Tim\r:touch\rTim Sweeney stares out the window.\r!plan;Pay for it?\r#end\r:plan\rGems.\r#end",
+			want: []string{"Tim Sweeney stares out the window.", "!plan;Pay for it?"},
+		},
+		{
+			// Under the author's own :loop nothing is judged, and #loop (a send)
+			// ends the walk before it can fall into :touch.
+			name: "a looping patroller never falls past its own #loop",
+			data: "@guard\r:loop\r/n\r/s\r#loop\r:touch\rHalt!\r#end",
+			want: nil,
+		},
+		{
+			name: "#restart ends the straight line",
+			data: "@a\r:top\r/i\r#restart\r:touch\rNo.\r#end",
+			want: nil,
+		},
+		{
+			name: "#become replaces the object",
+			data: "@a\r#become fake\r:touch\rNo.\r#end",
+			want: nil,
+		},
+		{
+			// An author's label in between does not hide the fall into :touch.
+			name: "a custom label, then the run falls into :touch",
+			data: "@a\r:start\r#cycle 1\r:touch\rToo early.\r#end",
+			want: []string{"Too early."},
+		},
+		{
+			name: "#die replaces the object",
+			data: "@a\r:top\r#die\r:touch\rNo.\r#end",
+			want: nil,
+		},
+		{
+			name: "#if is conditional, so the walk carries on",
+			data: "@a\r#if blocked n wait\r:touch\rTalks.\r#end\r:wait\r#end",
+			want: []string{"#if blocked n wait", "Talks."},
+		},
+		{
+			name: "a comment and a zapped label are read past",
+			data: "@a\r'note\r:touch\rHi.\r#end",
+			want: []string{"Hi."},
 		},
 		{
 			name: "no @name line",

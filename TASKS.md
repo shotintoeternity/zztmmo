@@ -4930,6 +4930,37 @@ lists. Every task: `cd engine && go build ./... && go test ./...` green,
   also deliberately kept out of `crashed`, so they can never stub a board or
   fail a world. See NOTES.md 2026-07-30.
 
+- [x] **M18.8a — the audit read a label as a place to wait, and a dreamed
+  object still talks on entry.** Owner-reported 2026-11-04 against TIMSWEEN
+  ("Tim Sweeney Buys AWS", dreamed 2026-11-04): every scroll opens the moment
+  the player enters a board. All 34 of its objects are written
+  `@name` / `:touch` / text, with no `#end` above the label, and so is the
+  local BAKERY dream (14 of 14). M18.8's `oopPrelude` stopped at the first
+  label, as if an object waited there, so it read this shape as an empty
+  prelude and passed it. ZZT does not wait at a label: `OopExecute` skips label
+  lines and runs on (`OOP.PAS:559-563`), so the object falls through into its
+  `:touch` body on its first tick. Two halves:
+  - **The audit follows the program as ZZT runs it.** From the top (after an
+    optional `@name`), label and comment lines are skipped, and the walk stops
+    where execution leaves the straight line: `#end` (`OOP.PAS:692`),
+    `#become` and `#die` (`:733`, `:787`, which replace the object),
+    `#restart` (`:699`), `#send`, and any unknown `#word`, which is a send
+    (`:800-808`). A `:loop` / `/n` / `#loop` patroller therefore still passes.
+    The M18.8 narrowness measurement is re-run against the community corpus
+    with the new walk, and the result is recorded.
+  - **A deterministic park, before the audit.** When an object's first line
+    after `@name` is a label the engine itself sends (`touch`, `shot`,
+    `bombed`, `thud`, `energize`: the `OopSend` call sites in `elements.go`
+    and `game.go`) and the walk reaches player-visible work, the generated
+    zwd gains `#end` after `@name`. A custom first label is left to the audit
+    and the model. Applied to the assembled zwd, so the shipped `.zwd` and
+    `.ZZT` agree.
+  DoD: the parser test's wrong case is corrected with the Pascal cited, the
+  TIMSWEEN shape and a fall-through patroller are pinned, BAKERY.zwd is parked
+  14/14 by the new step, the committed-corpus gate stays quiet, and the corpus
+  measurement is in NOTES.md. Repairing TIMSWEEN on production is an owner
+  decision and not part of this box.
+
 - [x] **M18.9 — World picker: a curated first screen, and dreamed worlds kept
   apart from the classics.** Found during M18.5's production deploy: the picker
   went from 65 entries to 134 when production caught up to `dev`, because

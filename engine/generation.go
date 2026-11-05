@@ -743,6 +743,13 @@ func (g *GenerationService) paintAndFinish(ctx context.Context, st *generationRe
 	for repairRound := 0; repairRound < g.maxAttempts; repairRound++ {
 		g.report(ctx, GenerationProgress{Stage: "validating", Detail: "compiling and validating the assembled world"})
 		full = assembleGeneratedZWD(name, plan, st.sections)
+		// M18.8a: park the objects that would fall through into their own
+		// :touch before the audit sees them, so a repair round is not spent on
+		// a missing #end.
+		if parkedFull, parked := parkFallThroughObjects(full); parked > 0 {
+			full = parkedFull
+			g.report(ctx, GenerationProgress{Stage: "validating", Detail: fmt.Sprintf("added #end above :touch for %d object(s) that would have spoken on entry", parked)})
+		}
 		data, err = CompileZWD(full)
 		if err != nil {
 			return GenerationResult{}, fmt.Errorf("assembled world did not compile: %w", translateZWDError(err, plan, st.sections))
@@ -796,7 +803,7 @@ func (g *GenerationService) paintAndFinish(ctx context.Context, st *generationRe
 			// either: replace each unrepaired crashing board with the M17.13 stub,
 			// which this pipeline generates itself and which is known to be safe.
 			if stubbed := g.stubCrashingBoards(ctx, st, byName, crashed); len(stubbed) > 0 {
-				full = assembleGeneratedZWD(name, plan, st.sections)
+				full, _ = parkFallThroughObjects(assembleGeneratedZWD(name, plan, st.sections))
 				if data, err = CompileZWD(full); err != nil {
 					return GenerationResult{}, fmt.Errorf("assembled world did not compile: %w", translateZWDError(err, plan, st.sections))
 				}
@@ -3301,10 +3308,32 @@ var oopPreludeOffenders = map[string]string{
 	"ENDGAME": "#endgame",
 }
 
-// oopPrelude returns the program lines an object runs at board load: those
-// after an optional @name and before either the first label or the #end that
-// parks it. It returns nil for a program with no label, which is the one-shot
+// oopPrelude returns the program lines an object runs at board load that the
+// audit judges: the ones before its first label, and the body of any label the
+// engine sends (touch, shot, bombed, thud, energize) that the straight-line run
+// falls into. It returns nil for a program with no label, which is the one-shot
 // case the check does not apply to.
+//
+// M18.8a: M18.8 stopped at the first label as if an object waited there, so
+// `@name` / `:touch` / text read as an empty prelude while the text in fact ran
+// on the object's first tick. OopExecute skips label lines and runs on
+// (OOP.PAS:559-563), so a label ends nothing. What does end the straight line:
+//   - #end parks the object (OOP.PAS:692);
+//   - #become and #die replace it (OOP.PAS:733, :787);
+//   - #restart jumps back to the top (OOP.PAS:699);
+//   - #send, and any #word that is not a command, which OopExecute treats as a
+//     send (OOP.PAS:800-808), jump to a label, so a `:loop` / `/n` / `#loop`
+//     patroller never falls past its own #loop into the label below.
+//
+// #if is conditional, so the walk carries on past it.
+//
+// Lines under an author's own label are walked but not judged until the run
+// reaches an engine-sent one. Measured against the 1920 labeled community
+// programs (llmworld/examples), judging every line the walk reaches flags 40,
+// most of them deliberate load-time loops (`:b` / `#take ammo 1 x` / `#give`)
+// and flag-gated menus (`:l` / `#if not h l` / text). Judging only the
+// engine-sent bodies keeps the measured set narrow while catching the shape
+// that matters: an object falling through into its own :touch text.
 //
 // It must be given a PRISTINE program. #zap rewrites ":label" to "'label" in
 // stat.Data in place, so a program read after the board has ticked no longer
@@ -3326,17 +3355,45 @@ func oopPrelude(data string) []string {
 		start = 1
 	}
 	var prelude []string
+	judging := true // before the first label, every line is judged
 	for _, line := range lines[start:] {
 		trimmed := strings.TrimSpace(line)
-		// Whichever comes first ends the prelude: the label the object waits
-		// at, or the #end that parks it before reaching one. Everything past
-		// either is reachable only by message.
-		if strings.HasPrefix(trimmed, ":") || strings.EqualFold(oopCommandWord(trimmed), "END") {
-			break
+		if strings.HasPrefix(trimmed, ":") {
+			judging = oopEngineLabels[strings.ToUpper(strings.TrimSpace(trimmed[1:]))]
+			continue
 		}
-		prelude = append(prelude, trimmed)
+		if strings.HasPrefix(trimmed, "'") {
+			continue // a comment, or a label #zap has already spent
+		}
+		if word := strings.ToUpper(oopCommandWord(trimmed)); word != "" {
+			if oopRunEnders[word] || !oopCommandWords[word] {
+				break
+			}
+		}
+		if judging {
+			prelude = append(prelude, trimmed)
+		}
 	}
 	return prelude
+}
+
+// oopEngineLabels are the labels the engine itself sends an object, from the
+// OopSend call sites in elements.go and game.go. An object whose run falls into
+// one of these is doing at load what it was written to do on that event.
+var oopEngineLabels = map[string]bool{"TOUCH": true, "SHOT": true, "BOMBED": true, "THUD": true, "ENERGIZE": true}
+
+// oopRunEnders are the commands after which execution does not reach the next
+// line (see oopPrelude).
+var oopRunEnders = map[string]bool{"END": true, "BECOME": true, "DIE": true, "RESTART": true, "SEND": true}
+
+// oopCommandWords is OopExecute's command vocabulary (OOP.PAS, the
+// `OopWord = '...'` chain). A #word outside it is a send.
+var oopCommandWords = map[string]bool{
+	"GO": true, "TRY": true, "WALK": true, "SET": true, "CLEAR": true, "IF": true,
+	"SHOOT": true, "THROWSTAR": true, "GIVE": true, "TAKE": true, "END": true,
+	"ENDGAME": true, "IDLE": true, "RESTART": true, "ZAP": true, "RESTORE": true,
+	"LOCK": true, "UNLOCK": true, "SEND": true, "BECOME": true, "PUT": true,
+	"CHANGE": true, "PLAY": true, "CYCLE": true, "CHAR": true, "DIE": true, "BIND": true,
 }
 
 // oopCommandWord returns the bare command word of a "#word ..." line, or "".
@@ -3427,6 +3484,65 @@ func auditObjectPreludes(data []byte) ([]generatedBoardFailure, error) {
 		})
 	}
 	return failures, nil
+}
+
+// parkFallThroughObjects is M18.8a's deterministic half: it adds the #end a
+// dreamed object left out, so the audit (and a model repair round) is not spent
+// on the commonest form of the defect. It applies to one shape only: an oop
+// block whose first line after an optional @name is a label the engine sends
+// (oopEngineLabels), and whose run then reaches player-visible work. Such an
+// object was written to wait for that event; ZZT reads past the label
+// (OOP.PAS:559-563) and runs it on the object's first tick instead. A #end on
+// the line above the label parks it exactly as STYLE.md's idiom does. A custom
+// first label, or anything else, is left to the audit and the model: there the
+// author's intent is not readable from the shape.
+//
+// It works on zwd text, so the shipped .zwd and the compiled .ZZT agree, and it
+// returns how many objects it parked.
+func parkFallThroughObjects(src string) (string, int) {
+	lines := strings.Split(src, "\n")
+	out := make([]string, 0, len(lines)+8)
+	parked := 0
+	for i := 0; i < len(lines); i++ {
+		out = append(out, lines[i])
+		if strings.TrimSpace(lines[i]) != "oop" {
+			continue
+		}
+		// The block runs to the first line reading "end" (zwd.go parseOOP).
+		end := i + 1
+		for end < len(lines) && strings.TrimSpace(lines[end]) != "end" {
+			end++
+		}
+		body := lines[i+1 : end]
+		program := make([]string, len(body))
+		for j, line := range body {
+			program[j] = strings.TrimSpace(line)
+		}
+		first := 0
+		if len(program) > 0 && strings.HasPrefix(program[0], "@") {
+			first = 1
+		}
+		park := false
+		if first < len(program) && strings.HasPrefix(program[first], ":") &&
+			oopEngineLabels[strings.ToUpper(strings.TrimSpace(program[first][1:]))] {
+			for _, line := range oopPrelude(strings.Join(program, "\r")) {
+				if oopPreludeOffence(line) != "" {
+					park = true
+					break
+				}
+			}
+		}
+		for j, line := range body {
+			if park && j == first {
+				indent := line[:len(line)-len(strings.TrimLeft(line, " \t"))]
+				out = append(out, indent+"#end")
+				parked++
+			}
+			out = append(out, line)
+		}
+		i = end - 1
+	}
+	return strings.Join(out, "\n"), parked
 }
 
 // oopObjectLabel names an object for a repair message: its @name when it has
