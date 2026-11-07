@@ -10,32 +10,21 @@ import (
 	"sync"
 )
 
-// M14.4 — a world's identity is not its name.
+// A world's identity is not its title.
 //
-// The 8-character DOS stem was doing two jobs: it was the primary key (the file
-// path, the ?world= parameter, the .access.json key, the Instances map key, the
-// .SAV and .HI stems, the recording filename, the backup manifest entry) and it
-// was also the name a player reads. Every collision defect in the M16.17 family
-// came out of that conflation — M16.17b (a dream overwrote a world), M16.17d (a
-// player refused over a name they never chose), M18.11 (the classics needed a
-// carve-out) — and each was closed with its own patch on the same seam.
+//   - The IDENTITY is the 8-character DOS stem: the file path, the ?world=
+//     parameter, the .access.json key, the Instances map key, the .SAV and .HI
+//     stems, the recording filename and the backup manifest entry. A stem for
+//     content nobody named is minted against the hosting directory, never
+//     derived from a title and hoped to be free.
+//   - The TITLE is metadata in a NAME.meta.json sidecar, free to collide with
+//     any other title, read by the picker and by nothing that resolves a path.
 //
-// This file separates the two halves, on the shape the owner chose 2026-08-02:
-//
-//   - The IDENTITY stays the 8-character stem. Nothing on disk moves, so every
-//     existing world, save, high-score file, recording, backup archive and
-//     ?world= URL keeps resolving exactly as it did. What changes is how a stem
-//     is CHOSEN for content nobody named: it is minted against the hosting
-//     directory rather than derived from a title and hoped to be free.
-//   - The TITLE becomes metadata in a NAME.meta.json sidecar, free to collide
-//     with any other title, read by the picker (M18.9 already carries a Title
-//     field) and by nothing that resolves a path.
-//
-// The two are deliberately not stored together with ownership: M16.17b decided
-// that a world with no .access.json belongs to nobody and stays open, which is
-// what keeps the ~100 shipped classics and every pre-M16.17b dream writable by
-// their authors. Putting a title in that file would give an untitled-but-owned
-// world an access record and flip it, so titles live in their own sidecar.
+// Titles are deliberately not stored with ownership. A world with no
+// .access.json belongs to nobody and stays open, which keeps the ~100 shipped
+// classics and dreams made before access records writable by their authors.
+// A title in that file would give an untitled-but-owned world an access
+// record and flip it, so titles live in their own sidecar.
 
 // WorldMeta is the display half of a world: what a player reads in the picker.
 // It never reaches a path — SanitizeSaveName has nothing to say about it and
@@ -152,7 +141,7 @@ func worldNameIsFreeLocked(dir, name string, server *WebSocketServer) bool {
 	if worldNameReservations.held[worldNameReservationKey(dir, name)] {
 		return false
 	}
-	// M18.11: never mint onto a classic, downloaded or not.
+	// Never mint onto a classic, downloaded or not.
 	if WorldIsCanonical(name) {
 		return false
 	}

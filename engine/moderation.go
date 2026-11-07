@@ -1,8 +1,8 @@
 package zztgo
 
-// Operator actions (M21.2): mute, kick and refuse — the half of moderation that
-// acts on a person on behalf of everybody, where M21.1's block acts on a person
-// on behalf of one recipient.
+// Operator actions: mute, kick and refuse — the half of moderation that acts
+// on a person on behalf of everybody, where a block acts on a person on
+// behalf of one recipient.
 //
 // Four decisions shape this file, and each of them was a decision rather than an
 // implementation detail:
@@ -11,8 +11,7 @@ package zztgo
 //     ZZT_MODERATOR_ACCOUNTS is an allowlist of account ids read from the
 //     environment (the auth.go pattern), so operator status cannot be granted,
 //     escalated or stolen from inside the game, and an unset or empty variable
-//     means there are no operators at all — never "everybody" (owner decision
-//     2026-08-05).
+//     means there are no operators at all — never "everybody".
 //  2. **Refusal binds to an accountID and to nothing else, and it is honest
 //     about it.** A guest has no durable identity, so a refused guest returns by
 //     reloading the page. The alternatives are IP-based (we hold no IPs today,
@@ -20,10 +19,10 @@ package zztgo
 //     decision, not a moderation one). The limit is stated in the operator's own
 //     UI and asserted by a test rather than discovered later.
 //  3. **A refusal outlives the process; a mute does not.** Refusals are written
-//     to their own JSON document (owner decision 2026-08-05) because the beta
-//     host restarts routinely and a sanction that a reboot lifts is not a
-//     sanction. A mute is the lighter, correctable sanction and is deliberately
-//     process-scoped — see moderationMutes.
+//     to their own JSON document because the host restarts routinely and a
+//     sanction that a reboot lifts is not a sanction. A mute is the lighter,
+//     correctable sanction and is deliberately process-scoped — see
+//     moderationMutes.
 //  4. **Every action is audited.** An unlogged moderation power is one nobody can
 //     review afterwards, so the audit is written before the operator is told the
 //     action succeeded, and refusals of an action (a non-operator asking) are
@@ -46,7 +45,7 @@ import (
 // The things an operator can ask for, in increasing severity. Mute has an
 // inverse because it is the correctable sanction; kick needs none, since the
 // kicked player returns by reconnecting; refuse is lifted from the operator
-// console (M21.6) rather than from inside the game, for the reason RefusalStore
+// console rather than from inside the game, for the reason RefusalStore
 // gives — nothing in a room can name the account a refusal is addressed to.
 const (
 	ModerationActionMute   = "mute"
@@ -143,7 +142,7 @@ func (m *moderationMutes) forget(id PlayerID) {
 // is a mystery rather than a record.
 type RefusedAccount struct {
 	Account string `json:"account"`
-	// Name and ByName are admitted player names, CP437 (M37.5).
+	// Name and ByName are admitted player names, CP437.
 	Name   CP437String `json:"name,omitempty"`
 	By     string      `json:"by,omitempty"`
 	ByName CP437String `json:"byName,omitempty"`
@@ -161,12 +160,12 @@ type RefusedAccount struct {
 // started without a saves directory gets.
 //
 // There is deliberately no lift-from-inside-the-game: a refusal is addressed by
-// accountID, an account id never reaches another player's browser (M21.1), and a
+// accountID, an account id never reaches another player's browser, and a
 // refused account is by definition not connected to be picked from a roster. So
 // the one screen that can lift a refusal is the one screen that must show account
-// ids, and it cannot be a game window. M21.6 makes it an operator-only HTTP route
-// instead (web_api.go), built on List and Lift below; hand-editing this document
-// and restarting still works and is still the fallback when the process is down.
+// ids, and it cannot be a game window: it is an operator-only HTTP route
+// (web_api.go), built on List and Lift below. Hand-editing this document and
+// restarting is the fallback when the process is down.
 type RefusalStore struct {
 	mu       sync.Mutex
 	path     string
@@ -236,7 +235,7 @@ func (s *RefusalStore) Refuse(rec RefusedAccount) error {
 }
 
 // List returns every standing refusal, so an operator can see what is being held
-// against whom without reading the document off the host (M21.6).
+// against whom without reading the document off the host.
 //
 // Account is filled from the map key rather than trusted from the record. The
 // document is hand-editable by design — Refuses tests membership, not the field —
@@ -338,7 +337,7 @@ const (
 )
 
 // ModerationAuditTail is how many entries are kept in memory. The FILE is the
-// record; this is a tail so a test and the operator console (M21.6) can read the
+// record; this is a tail so a test and the operator console can read the
 // last actions without parsing the document, and it is bounded so a client
 // hammering the wire cannot grow the server without limit. The console reports it
 // alongside the entries, so an operator can tell "these are all the actions" from

@@ -1,10 +1,9 @@
 package zztgo
 
-// Challenge catalogue (M32.1): the server-owned definition of what a daily
-// challenge IS.
+// Challenge catalogue: the server-owned definition of what a daily challenge
+// IS.
 //
-// Three boundaries were decided in the task spec before any of this was written,
-// and every rule here exists to hold one of them:
+// Every rule here exists to hold one of three boundaries:
 //
 //  1. Only server-created runs count. A challenge is named by an id that
 //     resolves in THIS table — never by a world file, a metadata sidecar, OOP
@@ -29,8 +28,8 @@ import (
 )
 
 // ChallengeWorldName is the first-party course the shipped catalogue points at.
-// It is a canonical world (worlds.manifest.json), so M18.11's guard keeps a
-// dream or a publish from replacing the thing runs are measured against.
+// It is a canonical world (worlds.manifest.json), so the canonical-world guard
+// keeps a dream or a publish from replacing the thing runs are measured against.
 const ChallengeWorldName = "GEMDASH"
 
 // ChallengeGoalKind is how a run is judged complete. Completion is evaluated by
@@ -73,12 +72,8 @@ type ChallengeDefinition struct {
 
 // challengeCatalogue is what this server offers, and it SHIPS EMPTY.
 //
-// Gem Dash was the only row, and it came off the board in the run-up to beta
-// (owner decision, 2026-09-08): its world was already out of the picker and the
-// archive listing, and a daily challenge nobody had asked for was not what the
-// first players should meet. Emptying it was chosen over deleting the feature —
-// the machinery is a season of rows away from being useful again, and deleting
-// it would have taken the M32 leaderboard with it.
+// Emptying it rather than deleting the feature is an owner decision
+// (2026-09-08): the machinery and the leaderboard stay, ready for rows.
 //
 // Every path below already handles an empty catalogue: ChallengeForDate reports
 // "no challenge today", ChallengeByID finds nothing, and /api/challenge answers
@@ -158,7 +153,7 @@ var (
 	ErrChallengeRecordingDisabled = errors.New("zztgo: challenge recording is not configured")
 	// ErrChallengeBusy is the concurrency cap. Every start mints an instance and
 	// a recording file, so an uncapped start is a disk-and-memory amplifier for
-	// anyone who can open a socket (M16.19's boundary posture).
+	// anyone who can open a socket.
 	ErrChallengeBusy = errors.New("zztgo: too many challenge runs in progress")
 )
 
