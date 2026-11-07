@@ -1030,7 +1030,7 @@ const WORLD_SEARCH_TITLE = "Choose a World";
 // The launch sequence: name, then world, then play. Nothing joins a room until
 // a world is chosen, so the animated title board keeps running underneath.
 //
-// M20.1: the name prompt still comes first on a deep link. /play/<world> changes
+// The name prompt still comes first on a deep link. /play/<world> changes
 // which world the visitor lands on, not who the server thinks they are, and the
 // OAuth return round-trips this same path — so a visitor who signs in from a
 // deep-linked title screen comes back through here and lands there again.
@@ -1058,8 +1058,8 @@ function promptNicknameOnLaunch() {
 // the world their URL names, the first-visit welcome world, or the picker.
 //
 // It resolves the name through /api/worlds rather than trusting the URL, so the
-// deep link inherits M18.13's identity — the name the join path would open —
-// and a name that is not joinable is refused here, before any socket exists.
+// deep link opens the same world the join path would, and a name that is not
+// joinable is refused here, before any socket exists.
 type LaunchDestination = "play" | "watch";
 
 async function openLaunchDestination() {
@@ -1074,7 +1074,7 @@ async function openLaunchDestination() {
     return;
   }
 
-  // M32.1: /challenge is today's and /challenge/<id> is a named one. The route
+  // /challenge is today's and /challenge/<id> is a named one. The route
   // is checked BEFORE the world deep links, so a challenge id can never be read
   // as a world name — and an empty id is a real answer here (the server picks
   // today's from its own clock), so it is not treated as a dead link.
@@ -1125,8 +1125,8 @@ async function openDefaultLaunchDestination() {
   showWorldEntries(entries);
 }
 
-// watchRequestedByQuery keeps M22.1's temporary door working long enough for old
-// links to arrive, but M22.2's canonical address is /watch/<world>.
+// watchRequestedByQuery honours ?spectate=1 links; the canonical address is
+// /watch/<world>.
 function watchRequestedByQuery(): boolean {
   return new URLSearchParams(window.location.search).get("spectate") === "1";
 }
@@ -1188,7 +1188,7 @@ canvas.addEventListener(
     // up: swallow the tap's default so the focusable (tabindex=0) canvas cannot
     // steal focus and dismiss the keyboard, then (re)focus the hidden input inside
     // this gesture — the one moment iOS will actually raise it. Outside a text
-    // modal the tap is left alone (future touch controls, M16.18a).
+    // modal the tap is left alone.
     if (mobileTextInput.isActive()) {
       event.preventDefault();
     }
@@ -1211,7 +1211,7 @@ touchControls = createTouchControls(document, {
   toggleKeyboard() {
     mobileTextInput.toggleKeyboard();
   },
-  // M39.1: the ☰ menu's Save, Help and Quit. Sent as the command byte, exactly
+  // The ☰ menu's Save, Help and Quit. Sent as the command byte, exactly
   // what handleKeyDown's commandKey branch sends for the letter on the text
   // screen, so the 3D view's S-is-movement rule cannot turn Save into a step.
   command(action) {
@@ -1227,11 +1227,10 @@ window.addEventListener("mouseup", () => { editor.pointerDrawing = false; });
 canvas.addEventListener("keydown", handleKeyDown);
 canvas.addEventListener("keyup", handleKeyUp);
 // Web Audio starts suspended until a user gesture resumes it. handleKeyDown /
-// handlePointerDown call resume() only for gestures on the canvas, so any gesture
-// that lands on the hidden mobile-input overlay (M15.1) or during the muted title
-// screen never unlocked audio — the launch name popup opens on load, so on touch
-// devices that is every early gesture. Unlock from a document-level, capture-phase
-// listener that fires no matter what has focus and regardless of the enabled gate.
+// handlePointerDown resume it only for gestures on the canvas, and the launch
+// name popup puts every early touch gesture on the hidden mobile-input overlay
+// instead. So audio unlocks from a document-level, capture-phase listener that
+// fires no matter what has focus and regardless of the enabled gate.
 for (const type of ["pointerdown", "keydown", "touchstart"] as const) {
   document.addEventListener(type, () => zztSound.unlock(), { capture: true, passive: true });
 }
@@ -1276,8 +1275,8 @@ function openTitleStream(filename: string) {
     }
     drawScreen();
   };
-  // An old server has no /api/title/stream: the board simply stays static, and
-  // EventSource retries on its own. Nothing to do.
+  // Without the stream the board simply stays static, and EventSource retries
+  // on its own. Nothing to do.
   source.onerror = () => {};
 }
 
@@ -1288,7 +1287,7 @@ function openTitleStream(filename: string) {
 // started knows it is stale.
 let titleEpoch = 0;
 
-// leftTitleDuring is showTitle's check after its await (M36.24). A P pressed
+// leftTitleDuring is showTitle's check after its await. A P pressed
 // while /api/title was in flight has already started play, and painting the
 // title over it — or opening the title stream and the occupancy poll behind it —
 // would leave title residue on the board. startPlay does not change mode (the
@@ -1304,20 +1303,20 @@ async function showTitle() {
   mobileTextInput.close();
   playerId = 0;
   myStatId = -1;
-  // The room's roster does not survive leaving it (M19.1) — a stale one would
+  // The room's roster does not survive leaving it — a stale one would
   // tint squares of a board nobody in it is standing on.
   roster = [];
-  // Nor does the block mirror (M21.1). The server is the authority and this is
-  // only ever a mirror of it, so leaving the title screen claims no knowledge
-  // rather than a stale one; the next join's snapshot re-states which of the
-  // people in the room are blocked (M21.4), which is what stops "no knowledge"
-  // from reading on screen as "nobody is blocked".
+  // Nor does the block mirror. The server is the authority and this is only
+  // ever a mirror of it, so leaving the title screen claims no knowledge rather
+  // than a stale one; the next join's snapshot re-states which of the people in
+  // the room are blocked, which is what stops "no knowledge" from reading on
+  // screen as "nobody is blocked".
   blockedPlayerIds = new Set<number>();
   followedPlayerIds = new Set<number>();
-  // Nor does operator status (M21.2). It comes back on the next join's snapshot,
+  // Nor does operator status. It comes back on the next join's snapshot,
   // from the allowlist, which is the only thing that decides it.
   isOperator = false;
-  // Nor does watching (M22.1): the title screen is not a room, and leaving one
+  // Nor does watching: the title screen is not a room, and leaving one
   // must not leave the reconnect holding an intent to re-enter it.
   watching = false;
   replaying = false;
@@ -1374,7 +1373,7 @@ async function showTitle() {
     openTitleStream(worldName);
   }
   void refreshAuthStatus();
-  // M17.11: how busy the server is, refreshed for as long as we sit here.
+  // How busy the server is, refreshed for as long as we sit here.
   void refreshOccupancy();
   startOccupancyPolling();
 }
@@ -1389,7 +1388,7 @@ async function refreshAuthStatus() {
   }
   // Sign-in state and preferences are read together because the second only
   // means anything given the first: signing out must put this browser back on
-  // its own localStorage pick in the same breath (M19.3).
+  // its own localStorage pick in the same breath.
   accountPrefs = authStatus.authenticated ? await fetchAccountPreferences(fetch) : null;
   accountPrefsLoaded = true;
   refreshFontPalette();
@@ -1450,9 +1449,9 @@ function leaveToTitle() {
 }
 
 // startPlay's `challenge` option is the one caller that keeps the challenge
-// state: startChallengeRun. Every other route into play LEAVES a challenge
-// (M32.1) — without that, the socket for the next world would still carry the
-// finished run's key instead of `world=`.
+// state: startChallengeRun. Every other route into play LEAVES a challenge, or
+// the socket for the next world would carry the finished run's key instead of
+// `world=`.
 function startPlay(options: { challenge?: boolean } = {}) {
   if (!options.challenge) {
     leaveChallenge();
@@ -1475,7 +1474,7 @@ function startPlay(options: { challenge?: boolean } = {}) {
   connect();
 }
 
-// startWatch is startPlay's read-only twin (M22.1): the same socket to the same
+// startWatch is startPlay's read-only twin: the same socket to the same
 // world, joined as a spectator.
 //
 // Sound stays off. A watcher receives no events at all — the server shuts that
@@ -1692,7 +1691,7 @@ function closeEditor() {
   window.clearTimeout(retryTimer);
   // Leaving on purpose ends the membership, so its token must not be presented
   // by the next entry: that would be a browser asking to resume something it
-  // chose to leave (M16.14f, and leaveToTitle's clearResumeToken).
+  // chose to leave (as leaveToTitle's clearResumeToken).
   clearEditorToken(safeStorage("sessionStorage"), worldName);
   if (ws && ws.readyState === WebSocket.OPEN) {
     ws.send(JSON.stringify({ type: MessageTypeEditorExit }));
@@ -1719,7 +1718,7 @@ async function fetchLines(url: string, fallbackTitle: string) {
   }
 }
 
-// showHelp opens a .HLP file as a navigable help window (M5.12): "!-FILE" links
+// showHelp opens a .HLP file as a navigable help window: "!-FILE" links
 // (e.g. EDITOR.HLP's Creatures/Terrains/ZZT-OOP) load that file with a back path,
 // and bare "!label" links jump within the file. fetchHelpLines throws on a 404 so
 // the help module can show a "not available" window instead of a dead link.
@@ -1774,7 +1773,7 @@ async function loadWorldEntriesOrExplain(): Promise<WorldSearchEntry[] | null> {
 function showWorldEntries(worlds: WorldSearchEntry[]) {
   serverOccupancy = worldOccupancyTotal(worlds);
   // The picker's own local entries, kept so a later refresh can update the
-  // counts the museum-search closure will fall back to (M17.11).
+  // counts the museum-search closure will fall back to.
   worldPickerEntries = worlds;
 
   openModal({
@@ -1790,7 +1789,7 @@ function showWorldEntries(worlds: WorldSearchEntry[]) {
   });
 }
 
-// M17.11: occupancy is live, not a join-time snapshot. /api/worlds is the path
+// Occupancy is live, not a join-time snapshot. /api/worlds is the path
 // the picker already reads, so one poll feeds both the picker's per-world
 // playing/editing split and the title screen's server-wide total. It runs only
 // on the title screen — in play or the editor the sidebar belongs to the game.
@@ -1966,10 +1965,9 @@ function openDreamPrompt() {
 
 function showGenerationProgress(progress: GenerationProgress[]) {
   const lines = generationLines(progress);
-  // Poll updates arrive every 500ms. Re-opening the window each time reset
-  // linePos to 1, snapping the scroll back to the top so later lines could not
-  // be read. If the progress window is already open, update its lines in place
-  // and auto-follow the newest line instead.
+  // Poll updates arrive every 500ms. If the progress window is already open,
+  // update its lines in place and auto-follow the newest line: re-opening it
+  // would reset linePos to 1 and snap the scroll back to the top.
   if (modal && modal.kind === "text" && modal.baseTitle === "Dreaming a world" && lines.length > 0) {
     modal.state.lines = lines;
     modal.state.linePos = lines.length;
@@ -1997,9 +1995,9 @@ async function startDreamGeneration(prompt: string, ground = false) {
   }
 }
 
-// M16.17c — the salvaged dream's repaint offer.
+// The salvaged dream's repaint offer.
 //
-// A dream that lost a room is complete AND retryable (M17.13): the world is
+// A dream that lost a room is complete AND retryable: the world is
 // hosted and playable, the lost rooms are stub boards, and the server is still
 // holding the resume state that repaints them. The world comes first — the
 // offer arrives with it, not instead of it, which is what separates this from
@@ -2007,8 +2005,8 @@ async function startDreamGeneration(prompt: string, ground = false) {
 //
 // It is offered at the world's title screen rather than from inside the world,
 // and that ordering is load-bearing: a repaint rewrites the world's file, and
-// the server refuses to overwrite a world anybody is playing (M16.17b's
-// refuseIfOccupied, which RetryBoard re-enters). A player who took the offer
+// the server refuses to overwrite a world anybody is playing (refuseIfOccupied,
+// which RetryBoard re-enters). A player who took the offer
 // while standing in the stub room would be the one occupant blocking it.
 const REPAINT_CHOICE = "Repaint the lost rooms now";
 const KEEP_CHOICE = "Play the world as it is";
@@ -2041,7 +2039,7 @@ function offerDreamRepaint(dream: DreamResult) {
 }
 
 // When the server kept resumable state (a board exhausted its attempts but
-// the plan and earlier boards survive — M12.22), offer to re-request just the
+// the plan and earlier boards survive), offer to re-request just the
 // failed board before giving up on the whole world.
 function handleDreamFailure(error: unknown) {
   if (error instanceof DreamFailure && error.retryable) {
@@ -2088,7 +2086,7 @@ async function enterWorld(name: string, destination: LaunchDestination = "play")
   const selection = selectWorldForTitle(name);
   worldName = selection.worldName;
   await showTitle();
-  // M20.1: every route into a world funnels through here — picker, Museum row,
+  // Every route into a world funnels through here — picker, Museum row,
   // dream, restore — so this one line is what makes the address bar the link
   // that works. It runs AFTER showTitle because showTitle adopts the filename
   // /api/title answers with, and the path must name what we actually landed on.
@@ -2102,7 +2100,7 @@ async function enterWorld(name: string, destination: LaunchDestination = "play")
 
 // showSavedGames is GameWorldLoad(".SAV"): the selectable "Saved Games" window.
 // Picking one restores it server-side, which is refused while anybody is still
-// in a room — a restore rewrites every board. See NOTES.md M4.3a.
+// in a room — a restore rewrites every board.
 async function showSavedGames() {
   let saves: string[] = [];
   try {
@@ -2146,10 +2144,9 @@ async function restoreSavedGame(name: string) {
 }
 
 function connect() {
-  // M36.24: a socket still CONNECTING is as live as an OPEN one. Refusing only
-  // OPEN let a held P (autorepeat) or a double-tap open several sockets, each
-  // joining as its own player under the same nickname, and only the last was
-  // ever closed. Every path that means to replace the socket nulls ws first.
+  // A socket still CONNECTING is as live as an OPEN one, so a held P
+  // (autorepeat) or a double-tap opens one socket, not one player per press.
+  // Every path that means to replace the socket nulls ws first.
   if (ws && (ws.readyState === WebSocket.CONNECTING || ws.readyState === WebSocket.OPEN)) {
     return;
   }
@@ -2160,14 +2157,14 @@ function connect() {
 
   socket.addEventListener("open", () => {
     // A socket superseded while it was connecting must not join: it would be a
-    // second player in the room that nothing ever closes (M36.24).
+    // second player in the room that nothing ever closes.
     if (ws !== socket) {
       socket.close();
       return;
     }
     connected = true;
     reconnectAttempt = 0;
-    // M22.1: a watcher's join is the same message marked as a spectate, and the
+    // A watcher's join is the same message marked as a spectate, and the
     // input sampler below is never started for one. Two gates rather than one,
     // deliberately: the server drops what a watcher sends, so a sampler left
     // running would be invisible here and cost a message every 55ms forever.
@@ -2178,10 +2175,10 @@ function connect() {
     }
     // No board: the server picks its configured default (zzt-server -board). A
     // stored resume token reclaims a dropped run instead of spawning a new
-    // player (M13.2); an unknown/expired token is treated as a fresh join.
+    // player; an unknown/expired token is treated as a fresh join.
     const token = loadResumeToken(safeStorage("sessionStorage"), challengeMode && challengeRun ? challengeRun : worldName);
     // The "#RRGGBB" background this browser's ☻ is drawn on in everyone else's
-    // client (M19.1), re-read at every join including a reconnect: it is the
+    // client, re-read at every join including a reconnect: it is the
     // browser's current pick, not a property of the run being reclaimed. A
     // player who has never picked one joins as the vanilla white-on-blue smiley.
     const color = readStoredPlayerColor();
@@ -2189,7 +2186,7 @@ function connect() {
     canvas.focus();
     // One sampler, ever: a timer left over from a socket that was replaced
     // without passing through disconnect() would otherwise send every held
-    // frame twice (M36.24).
+    // frame twice.
     stopInputSampler();
     inputTimer = window.setInterval(() => sendInput(currentMask()), 55);
   });
@@ -2217,7 +2214,7 @@ function connect() {
 }
 
 function connectEditor() {
-  // The same guards connect() has had since M36.24: a CONNECTING socket is live,
+  // The same guards as connect(): a CONNECTING socket is live,
   // and a superseded one must neither enter the session nor apply messages.
   if (ws && (ws.readyState === WebSocket.CONNECTING || ws.readyState === WebSocket.OPEN)) {
     return;
@@ -2233,7 +2230,7 @@ function connectEditor() {
     connected = true;
     reconnectAttempt = 0;
     // A stored membership token re-enters the session this browser was already
-    // in (M16.14f) rather than joining it a second time; an unknown or already
+    // in rather than joining it a second time; an unknown or already
     // ended one is treated as a first entry.
     const token = loadEditorToken(safeStorage("sessionStorage"), worldName);
     socket.send(JSON.stringify(buildEditorEnterMessage(MessageTypeEditorEnter, worldName, token)));
@@ -2259,12 +2256,10 @@ function connectEditor() {
   });
 }
 
-// reconnectEditor is the editor's half of what the game socket has had since
-// M13.2. Before M16.14f a close of any kind — a blip, a server restart, a lid —
-// dropped the author onto the title screen of the world they were editing, and
-// threw away everything they had not saved; the session they were in was still
-// on the server the whole time, so the recovery is a re-enter with the same
-// capped backoff.
+// reconnectEditor is the editor's half of the game socket's reconnect. A close
+// of any kind — a blip, a server restart, a lid — leaves the session on the
+// server, so the recovery is a re-enter with the same capped backoff, and the
+// author keeps everything they had not saved.
 //
 // It restores only what the browser owns. The world, the board contents and the
 // membership come back in the entry snapshot, and anything the SERVER owns is
@@ -2314,7 +2309,7 @@ function disconnect(reason: string) {
   setPaused(false);
   ws = null;
   drawConnectionNotice(reason);
-  // Capped backoff (M13.2): a Wi-Fi blip reconnects quickly and presents the
+  // Capped backoff: a Wi-Fi blip reconnects quickly and presents the
   // stored resume token; a prolonged outage backs off toward the cap.
   const delay = reconnectDelay(reconnectAttempt);
   reconnectAttempt += 1;
@@ -2373,7 +2368,7 @@ function applyMessage(message: ServerMessage) {
       break;
     case MessageTypeBoardChange:
       stopHeldInput();
-      // Forget the old board's scrolls BEFORE closing the modal (M36.25):
+      // Forget the previous board's scrolls BEFORE closing the modal:
       // otherwise the close answers the open one and shows the next queued one
       // on the new board, where its reply would reach whatever object has
       // that stat id there.
@@ -2459,23 +2454,20 @@ function applyMessage(message: ServerMessage) {
 function applyEditorSnapshot(message: EditorSnapshotMessage) {
   setMode("editor");
   // The entry snapshot carries the token this browser comes back with if its
-  // socket closes (M16.14f). Only the entry snapshot has one, so a later
+  // socket closes. Only the entry snapshot has one, so a later
   // broadcast frame cannot overwrite it.
   if (message.resumeToken) {
     saveEditorToken(safeStorage("sessionStorage"), worldName, message.resumeToken);
   }
   // EditorSnapshot is broadcast to every session member carrying the *acting*
-  // member's id, cursor and inspect (editor_session.go:313, broadcast at
-  // websocket_server.go:611). Only the board/screen half of it is shared state.
-  // Adopting the rest unconditionally meant another player's edit overwrote our
-  // identity and dragged our cursor onto their cell, where the local white cross
-  // painted over their coloured one — the "both cursors went white" report.
-  // Claim an id only when we do not already have one (the entry snapshot), and
-  // take cursor-shaped state only from snapshots that are actually ours.
+  // member's id, cursor and inspect. Only the board/screen half of it is shared
+  // state: claim an id only when we do not already have one (the entry
+  // snapshot), and take cursor-shaped state only from snapshots that are ours,
+  // or another member's edit would take over our identity and cursor.
   const forMe = !editor.memberId || !message.memberId || message.memberId === editor.memberId;
   if (message.memberId && !editor.memberId) editor.memberId = message.memberId;
-  // Read-only is per member, and a snapshot is now broadcast to everyone
-  // watching the board a change was made on (M16.14a): only one addressed to us
+  // Read-only is per member, and a snapshot is broadcast to everyone
+  // watching the board a change was made on: only one addressed to us
   // may say what we are allowed to do. An invite arrives as exactly that, which
   // is how a new collaborator's browser stops refusing their own edits.
   if (forMe) {
@@ -2488,7 +2480,7 @@ function applyEditorSnapshot(message: EditorSnapshotMessage) {
   // Menus arrive only on the entry snapshot; board add/switch reuse this
   // message without them, so keep the tables already held.
   if (message.menus) editor.menus = message.menus;
-  // A broadcast frame belongs to one board, exactly like a diff (M17.12): the
+  // A broadcast frame belongs to one board, exactly like a diff: the
   // server addresses it to the members viewing that board, and this is the
   // client re-checking, so a snapshot in flight across a board switch cannot
   // land late on the wrong board.
@@ -2505,7 +2497,7 @@ function applyEditorSnapshot(message: EditorSnapshotMessage) {
 }
 
 // restoreEditorAfterReconnect puts the browser's own state back around a
-// reconnect's snapshot (M16.14f). A resumed membership is already on the right
+// reconnect's snapshot. A resumed membership is already on the right
 // board and inspecting the right cell, and this changes nothing; a fresh entry
 // opens on the SESSION's current board — whichever board somebody acted on last
 // — with its cursor in the middle, so both are asked for again.
@@ -2598,12 +2590,12 @@ function showEditorReadOnly() {
 }
 
 function applyEditorDiff(message: EditorDiffMessage) {
-  // A diff belongs to one board (M17.12). The server sends it only to members
+  // A diff belongs to one board. The server sends it only to members
   // viewing that board, but a diff can still be in flight while we switch, and
   // its cells would then paint the previous board's tiles onto this one.
   if (!editorMessageIsForBoard(message.boardId, editor.properties.boardId)) return;
-  // EditorPrepareModifyTile's `wasModified := true` (editor.go:169), moved to
-  // the reply (M16.13a). A refused edit — a read-only member, an unheld lease, a
+  // EditorPrepareModifyTile's `wasModified := true` (editor.go:169), set on
+  // the reply. A refused edit — a read-only member, an unheld lease, a
   // placement the session declined — sends no diff or an empty one, and so
   // cannot dirty a world it never changed. A collaborator's edit counts too: the
   // world this browser would save has changed either way.
@@ -2633,8 +2625,8 @@ function applyEditorProperties(message: EditorPropertiesMessage) {
   // The board-info half of vanilla's flag (editor.go:242): this message is only
   // ever sent for an ACCEPTED Board Information / world-name change — a refused
   // field returns before the reply is built (editor_session.go SetProperty).
-  // A collaborator's accepted change counts too, now that it reaches us
-  // (M16.14a): the world this browser would save has changed either way.
+  // A collaborator's accepted change counts too: the world this browser would
+  // save has changed either way.
   editor.modified = true;
   adoptEditorProperties(message.properties, false);
   // The frame rides only the copy sent to the members viewing that board.
@@ -2645,12 +2637,12 @@ function applyEditorProperties(message: EditorPropertiesMessage) {
 }
 
 // adoptEditorProperties takes only what a properties payload is entitled to
-// change (M16.14a). The board half — its name, darkness, exits, and the open
+// change. The board half — its name, darkness, exits, and the open
 // board's id — is ours to take when the payload is about the board we are
 // looking at, or when it is a snapshot addressed to us, which is what a board
 // switch is. From a collaborator editing another board it is not: it would
 // retitle our board, and it would move editor.properties.boardId, which is this
-// client's own record of where it is (M17.12).
+// client's own record of where it is.
 //
 // The world half is shared by everyone regardless of where they are standing:
 // the switcher's board list, which grows when anybody adds a board and is
@@ -2678,7 +2670,7 @@ function applyEditorStatSettings(message: EditorStatSettingsMessage) {
   drawScreen();
 }
 
-// applyEditorProgramText opens the M5.4 code editor once the server returns the
+// applyEditorProgramText opens the code editor once the server returns the
 // requested object/scroll program. Saving is Escape (EditorEditStatText has no
 // cancel), which sends the edited lines back as editorProgramSave.
 function applyEditorProgramText(message: EditorProgramTextMessage) {
@@ -2698,7 +2690,7 @@ function applyEditorProgramText(message: EditorProgramTextMessage) {
 }
 
 function applySnapshot(message: SnapshotMessage) {
-  // M22.1: a frame the server marked as a watcher's is a different screen, not
+  // A frame the server marked as a watcher's is a different screen, not
   // a player's screen with the parts we happen to have missing.
   if (message.spectator) {
     applyWatchSnapshot(message);
@@ -2710,12 +2702,12 @@ function applySnapshot(message: SnapshotMessage) {
     worldName = message.world;
     rememberWorldInPath("play");
   }
-  // The join/resume snapshot carries our resume token; keep it so a later drop
-  // can reclaim this run (M13.2).
+  // An arrival snapshot carries our resume token; keep it so a later drop
+  // can reclaim this run.
   if (message.resumeToken) {
     saveResumeToken(safeStorage("sessionStorage"), challengeMode && challengeRun ? challengeRun : worldName, message.resumeToken);
   }
-  // M32.1: a challenge frame names its run. The elapsed counter restarts here
+  // A challenge frame names its run. The elapsed counter restarts here
   // and nowhere else — it is what the ghost is indexed by, so it must count the
   // ticks of THIS attempt, and a reconnect inside the grace resumes the count
   // rather than restarting the race.
@@ -2735,18 +2727,17 @@ function applySnapshot(message: SnapshotMessage) {
   myY = message.you.y;
   // The roster arrives with the snapshot too, and it is the only one a client
   // gets before the first diff — without this a newcomer sees the room in
-  // vanilla blue for a tick (M19.1).
+  // vanilla blue for a tick.
   trackMyStatId(message.players);
-  // And with it, which of that roster this player had already blocked (M21.4).
+  // And with it, which of that roster this player had already blocked.
   // Merged, never assigned: the server's list only covers the players in this
   // snapshot, so it can add knowledge and must not be able to withdraw any.
   blockedPlayerIds = mergeServerBlocks(blockedPlayerIds, message.blockedPlayers);
   followedPlayerIds = mergeServerBlocks(followedPlayerIds, message.followedPlayers);
-  // Whether this account may moderate (M21.2). The server sets it on the
-  // join/resume frame only, like the resume token, so a frame that omits the
-  // field leaves the answer standing rather than revoking it — a board change
-  // must not quietly take an operator's actions away, and an older server that
-  // never mentions it leaves the window with exactly its M21.1 shape.
+  // Whether this account may moderate. The server sets it on the arrival
+  // snapshots only, like the resume token, so a frame that omits the field
+  // leaves the answer standing rather than revoking it — a board change must
+  // not quietly take an operator's actions away.
   if (message.operator !== undefined) {
     isOperator = message.operator;
   }
@@ -2758,7 +2749,7 @@ function applySnapshot(message: SnapshotMessage) {
   drawScreen();
 }
 
-// applyWatchSnapshot renders a whole board this browser is not in (M22.1).
+// applyWatchSnapshot renders a whole board this browser is not in.
 //
 // The server sends one of these at the join and again whenever the room is
 // created or replaced under us — the first player arriving on a board builds it
@@ -2768,7 +2759,7 @@ function applySnapshot(message: SnapshotMessage) {
 // Everything a player's snapshot claims is deliberately dropped: no resume token
 // (a watcher has no run to reclaim), no playerId or statId (no stat), no HUD (no
 // inventory), no events (nothing a watcher could answer). The roster IS kept:
-// it is what the M19.1 tints are painted from, and a watcher sees the room's
+// it is what the player tints are painted from, and a watcher sees the room's
 // people exactly as the people in it do.
 function applyWatchSnapshot(message: SnapshotMessage) {
   setMode("watching");
@@ -2799,8 +2790,8 @@ function applyWatchDiff(message: DiffMessage) {
       setBoardCell(cell);
     }
   }
-  // An absent count means nobody, not "unchanged": this field rides every frame
-  // (M22.1), and the one message that carries nothing else is the one that
+  // An absent count means nobody, not "unchanged": this field rides every
+  // frame, and the one message that carries nothing else is the one that
   // exists to say the count moved on a board where nothing is running.
   watcherCount = message.watchers ?? 0;
   drawWatchSidebar();
@@ -2808,7 +2799,7 @@ function applyWatchDiff(message: DiffMessage) {
   drawScreen();
 }
 
-// startBoardTransition plays the M9.1 fill-then-reveal fade over a board change.
+// startBoardTransition plays the fill-then-reveal fade over a board change.
 // The outgoing board is captured first; the incoming snapshot is then applied
 // authoritatively (so mid-fade diffs land on `cells` and are never lost), and
 // the animation only changes what drawScreen paints, never the model.
@@ -2825,7 +2816,7 @@ function startBoardTransition(snapshot: SnapshotMessage) {
   boardTransition = createTransition(order);
   transitionOld = old;
   // Apply the new board before the timer starts. applySnapshot's own drawScreen
-  // now renders through boardTransition at step 0 (all "old"), so the incoming
+  // renders through boardTransition at step 0 (all "old"), so the incoming
   // board never flashes before the fade begins.
   applySnapshot(snapshot);
   startTransitionTimer();
@@ -2880,7 +2871,7 @@ function trackMyStatId(players: PlayerSnapshot[] | undefined) {
   if (!players) {
     return;
   }
-  // M19.1: the same pass keeps the whole roster, not just our own row — every
+  // The same pass keeps the whole roster, not just our own row — every
   // other player's square is what the color tint is painted on.
   roster = players;
   if (mode === "playing") {
