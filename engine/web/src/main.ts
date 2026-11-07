@@ -4764,7 +4764,7 @@ function handleKeyDown(event: KeyboardEvent) {
     return;
   }
 
-  // M22.1: a watcher answers to one key. Everything else returns here rather
+  // A watcher answers to one key. Everything else returns here rather
   // than falling through, so no command byte, no movement mask and no letter
   // window can be reached from a screen whose whole claim is that it changes
   // nothing — the server would drop them, and a control that is silently
@@ -4789,7 +4789,7 @@ function handleKeyDown(event: KeyboardEvent) {
     return;
   }
 
-  // M35: the board with depth, or the text screen. 3 is the shortcut and the
+  // The board with depth, or the text screen. 3 is the shortcut and the
   // one the sidebar advertises; V still works for the hands that learned it
   // first. Both are free here, where C is chat and L is the players list, and
   // neither reaches the engine's key switch.
@@ -4821,7 +4821,7 @@ function handleKeyDown(event: KeyboardEvent) {
     return;
   }
 
-  // M21.1: 'L' lists the people you could stop hearing. Handled here, like 'C',
+  // 'L' lists the people you could stop hearing. Handled here, like 'C',
   // so it never reaches the engine's key switch — and 'L' specifically because
   // it is the one letter this decision could take: W/A/D are inert by an
   // explicit decision the M16.10 vocabulary asserts (input.play-wasd-removed),
@@ -4992,7 +4992,7 @@ function renderEditorSidebar() {
       }),
   } : null;
   // The legend is rebuilt on every sidebar draw so it tracks members joining,
-  // leaving, and switching boards while it is open (M17.10).
+  // leaving, and switching boards while it is open.
   const presenceList: SidebarPresenceList | null = editor.presencePanel
     ? editorPresenceLegend({
         presence: editor.presence,
@@ -5385,7 +5385,7 @@ function selectEditorMenuItem(item: EditorElementItem) {
   sendEditorEdit("element");
 }
 
-// Board Information is EditorEditBoardInfo on top of the M4.1 text-window
+// Board Information is EditorEditBoardInfo on top of the text-window
 // layer. Every selection turns into one authoritative editorProperty operation;
 // the session, not this browser, validates ranges and persists BoardClose.
 function openEditorBoardInfo() {
@@ -5703,9 +5703,8 @@ function sendEditorBoard(values: { op: string; name?: string; boardId?: number; 
 // snapshot, so applyEditorSnapshot repaints the new board.
 function openEditorBoardList() {
   // titleScreenIsNone is FALSE here (editor.go:668-669), so board 0 is listed
-  // under its own name and switches like any other. It used to be filtered out,
-  // which left an author who moved off a world's first board with no way back
-  // (M16.13a).
+  // under its own name and switches like any other: it is an author's way back
+  // to a world's first board.
   const entries = editorBoardEntries(false);
   entries.push("Add new board");
   openSelectList("Switch boards", entries, (entry) => {
@@ -5880,8 +5879,8 @@ function applyEditorTestPlay(message: EditorTestPlayMessage) {
   leavingToTitle = true;
   editor.restore = null;
   window.clearTimeout(retryTimer);
-  // Test play exits the session on purpose; its membership token goes with it
-  // (M16.14f), so returning to the editor afterwards enters fresh.
+  // Test play exits the session on purpose; its membership token goes with it,
+  // so returning to the editor afterwards enters fresh.
   clearEditorToken(safeStorage("sessionStorage"), worldName);
   if (ws && ws.readyState === WebSocket.OPEN) {
     ws.send(JSON.stringify({ type: MessageTypeEditorExit }));
@@ -6030,7 +6029,7 @@ function sendInput(mask: number, key = 0) {
   if (ghosting()) {
     return;
   }
-  // M22.1: said out loud rather than left to `playerId === 0` below, which is
+  // Said out loud rather than left to `playerId === 0` below, which is
   // true of a watcher only by accident. A watcher's input is dropped by the
   // server; this is the client agreeing not to send it in the first place.
   if (watching) {
