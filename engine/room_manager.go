@@ -37,7 +37,7 @@ type RoomManager struct {
 	// deliberately separate from the world file's display name: first-party
 	// policy, including friendly fire, is deployment-owned rather than authored.
 	WorldIdentity string
-	// TransitGates is the server-owned cross-world gate table (M29.1). Empty
+	// TransitGates is the server-owned cross-world gate table. Empty
 	// means vanilla/MMO intra-world passage behavior. Only first-party LOBBY and
 	// ARENA instances populate it; authored worlds cannot opt in through ZZT data.
 	TransitGates map[TransitGateKey]string
@@ -62,9 +62,9 @@ type RoomManager struct {
 	pendingWorldTransits []WorldTransit
 
 	// recorder, when non-nil, logs the external stimuli this manager applies —
-	// joins, leaves, submits, and per-tick inputs — for deterministic replay
-	// (M14.2). Every hook is nil-guarded, so recording off is byte-for-byte the
-	// prior behavior. recSuppressLeave silences the leave hook during a quit,
+	// joins, leaves, submits, and per-tick inputs — for deterministic replay.
+	// Every hook is nil-guarded, so recording off changes nothing.
+	// recSuppressLeave silences the leave hook during a quit,
 	// whose removal is a consequence StepDiffs regenerates rather than an
 	// external stimulus. Both are touched only under the same serialization that
 	// guards the manager (inst.mu on the server; single goroutine in tests).
@@ -100,12 +100,12 @@ type roomPlayer struct {
 	state     *PlayerState
 	name      string
 	accountID string
-	// color is the "#RRGGBB" background other browsers draw this player's ☻ on
-	// (M19.1). It rides the roster and nothing else: no element proc reads it,
+	// color is the "#RRGGBB" background other browsers draw this player's ☻ on.
+	// It rides the roster and nothing else: no element proc reads it,
 	// no tile carries it, and SetPlayerColor deliberately records no op — see
 	// there for why that is the correct asymmetry with SetPlayerName.
 	color string
-	// handle/hasProfile are the public profile summary (M24.1). They are
+	// handle/hasProfile are the public profile summary. They are
 	// presentation-only like color: the full profile stays in ChatDatabase and is
 	// requested on demand by PlayerID, never stored in the simulation.
 	handle     string
@@ -118,7 +118,7 @@ type roomPlayer struct {
 	// Cleared by SubmitScrollReply, which the client sends on dismiss.
 	scrollOpen bool
 	// openScrolls is every scroll this player has been shown and not yet
-	// answered (M36.16): the object that showed it and the hyperlinks it
+	// answered: the object that showed it and the hyperlinks it
 	// offered. A scroll reply names a stat and a label, and both come from the
 	// client, so without this a client could send any object to any label at any
 	// time, or delete a Scroll element with a dismissal it was never owed. The
@@ -126,8 +126,8 @@ type roomPlayer struct {
 	// a list rather than a slot; it is bounded by maxOpenScrolls in case one
 	// never answers.
 	openScrolls []openScroll
-	// savePrompted is set when this player pressed S and was sent a savePrompt
-	// (M36.17). A saveFilename reply is accepted only while it is set, and
+	// savePrompted is set when this player pressed S and was sent a savePrompt.
+	// A saveFilename reply is accepted only while it is set, and
 	// consumes it, so a client cannot write save after save without pressing S
 	// for each. It is a flag, not a count: two presses before answering are one
 	// prompt, as the client shows one entry field. A prompt the player cancels
@@ -264,12 +264,10 @@ func NewRoomManagerForWorld(world TWorld, identity string) *RoomManager {
 		rooms:         make(map[int16]*Room),
 		players:       make(map[PlayerID]*roomPlayer),
 		WorldIdentity: safe,
-		// On by default, like NewEngine and NewWebSocketServer (owner
-		// 2026-08-19), so no construction path starts a world in co-op by
-		// accident. The two callers that must not inherit it — replay playback
-		// and ReplaySession — assign the recording header's value straight
-		// after, because a replay has to honour the policy its run was recorded
-		// under rather than today's default.
+		// On by default, like NewEngine and NewWebSocketServer, so no
+		// construction path starts a world in co-op by accident. Replay playback
+		// and ReplaySession assign the recording header's value straight after:
+		// a replay honours the policy its run was recorded under.
 		FriendlyFire:        true,
 		pendingScores:       make(map[PlayerID]QuitResult),
 		pendingPlayerEvents: make(map[PlayerID][]Event),
@@ -309,7 +307,7 @@ func (rm *RoomManager) saveHighScores() {
 	buf := make([]byte, SizeOfHighScoreList)
 	StoreHighScoreList(buf, rm.highScores[:])
 	// Best effort: a server that cannot persist scores must still keep playing.
-	// M36.21: temp + rename, so a failed write cannot truncate the old list.
+	// Temp + rename, so a failed write cannot truncate the existing list.
 	_ = writeFileAtomic(rm.HighScorePath, buf, 0o644)
 }
 
@@ -368,9 +366,9 @@ const highScoreNameMax = 50 - 16
 // printable CP437 up to highScoreNameMax. A name is text a person typed, so it
 // arrives as UTF-8 and is encoded the way chat is (encodeTypedCP437), never
 // stored as raw UTF-8 bytes that HighScoreLines would then draw one glyph per
-// byte (M36.3). Since M37.5 an accent with a CP437 form keeps it: "José" is
-// stored as "Jos\x82", which is the byte vanilla's .HI file holds. It is the
-// identity on anything our client can send.
+// byte. An accent with a CP437 form keeps it: "José" is stored as "Jos\x82",
+// which is the byte vanilla's .HI file holds. It is the identity on anything
+// our client can send.
 func admitHighScoreName(raw string) string {
 	name := encodeTypedCP437(raw)
 	if len(name) > highScoreNameMax {
@@ -387,7 +385,7 @@ func (rm *RoomManager) RecordHighScore(playerID PlayerID, name string) bool {
 }
 
 // recordAdmittedHighScore is RecordHighScore for a name that was admitted
-// already: a replay's recorded name (M37.5). Admitting CP437 bytes a second
+// already: a replay's recorded name. Admitting CP437 bytes a second
 // time would read them as UTF-8, which they are not.
 func (rm *RoomManager) recordAdmittedHighScore(playerID PlayerID, name string) bool {
 	pending, ok := rm.pendingScores[playerID]
@@ -475,7 +473,7 @@ func (rm *RoomManager) quitPlayer(playerID PlayerID) {
 // JoinPlayer mints a RoomManager-scoped PlayerID and joins it. Direct callers
 // (mostly tests) get sequential ids from this manager's own counter. The server
 // mints process-unique ids and joins through JoinPlayerWithID instead, so ids do
-// not collide across instances (M14.1).
+// not collide across instances.
 func (rm *RoomManager) JoinPlayer(boardID, spawnX, spawnY int16) PlayerID {
 	rm.nextPlayerID++
 	return rm.JoinPlayerWithID(rm.nextPlayerID, boardID, spawnX, spawnY)
@@ -487,7 +485,7 @@ func (rm *RoomManager) JoinPlayer(boardID, spawnX, spawnY int16) PlayerID {
 // reissue it.
 //
 // It returns 0, and joins nobody, when the board has no room for another
-// player stat (M36.23). PlayerIDs start at 1, so 0 is never a real player. The
+// player stat. PlayerIDs start at 1, so 0 is never a real player. The
 // refused join is still recorded: it thawed the board, and playback must thaw
 // and refuse it the same way.
 func (rm *RoomManager) JoinPlayerWithID(playerID PlayerID, boardID, spawnX, spawnY int16) PlayerID {
@@ -520,8 +518,8 @@ func (rm *RoomManager) SetPlayerName(playerID PlayerID, name string) {
 }
 
 // setAdmittedPlayerName is SetPlayerName for a name that is CP437 already:
-// one read off another world's player (a transit) or out of a recording
-// (M37.5). Admission is not repeated on CP437 bytes, which are not UTF-8.
+// one read off another world's player (a transit) or out of a recording.
+// Admission is not repeated on CP437 bytes, which are not UTF-8.
 func (rm *RoomManager) setAdmittedPlayerName(playerID PlayerID, name string) {
 	player := rm.players[playerID]
 	if player != nil {
@@ -534,15 +532,12 @@ func (rm *RoomManager) setAdmittedPlayerName(playerID PlayerID, name string) {
 // caller must have validated it (SanitizePlayerColor); an empty string is a
 // legitimate value meaning "vanilla white-on-blue".
 //
-// Nothing is recorded here, and that is the point of the whole milestone. A
-// name IS recorded (SetPlayerName above) because it reaches the simulation —
-// it is what a high-score entry is written under — so a replay that dropped it
-// would diverge. A color reaches only the canvas of the browsers watching, so
-// recording it would make two sessions that differ in nothing the simulation
-// can observe produce two different recordings. This is the M16.15a decision
-// run in the other direction, and m19_1_test.go proves it rather than asserting
-// it: a session played with colors set replays byte-identically to one played
-// without, and recordVersion does not move.
+// Nothing is recorded here, deliberately. A name IS recorded (SetPlayerName)
+// because it reaches the simulation as the high-score entry's name. A color
+// reaches only the browsers' canvases, so recording it would make two
+// sessions the simulation cannot tell apart produce different recordings.
+// m19_1_test.go proves a session with colors set replays byte-identically
+// to one without.
 func (rm *RoomManager) SetPlayerColor(playerID PlayerID, color string) {
 	player := rm.players[playerID]
 	if player != nil {
@@ -583,7 +578,7 @@ func (rm *RoomManager) PlayerIdentity(playerID PlayerID) (accountID, name string
 
 // roomHasPlayerCapacity reports whether spawnPlayerInRoom can place one more
 // player: the first arrival in an empty room claims the board's own player stat
-// and adds nothing, and anyone else needs a free stat slot (M36.23).
+// and adds nothing, and anyone else needs a free stat slot.
 func roomHasPlayerCapacity(room *Room) bool {
 	if len(room.players) == 0 {
 		if _, ok := claimablePlayerStat(room); ok {
@@ -605,7 +600,7 @@ func boardFullScroll() ScrollEvent {
 }
 
 // spawnPlayerInRoom places a player on room's board and returns their stat,
-// or false, touching nothing, when the board has no room for them (M36.23).
+// or false, touching nothing, when the board has no room for them.
 func (rm *RoomManager) spawnPlayerInRoom(room *Room, spawnX, spawnY int16) (int16, bool) {
 	if !roomHasPlayerCapacity(room) {
 		return -1, false
@@ -718,7 +713,7 @@ func absInt16(v int16) int16 {
 }
 
 // isSpawnOpen and isSpawnUnoccupied are the room-scoped spelling of the shared
-// placement policy in placement.go, which re-enter and respawn use too (M4.3b).
+// placement policy in placement.go, which re-enter and respawn use too.
 func isSpawnOpen(room *Room, x, y int16) bool {
 	return room.Engine.PlacementOpen(x, y, -1)
 }
@@ -731,13 +726,11 @@ func isSpawnUnoccupied(room *Room, x, y int16) bool {
 // a passage's far end holds E_PASSAGE, not E_EMPTY, so a transfer that insisted
 // on an empty square could never land on the passage it was aimed at.
 //
-// Loose is not the same as no test. It used to accept any tile that was not
-// already showing another player, which let a board edge whose mirrored square
-// is wall write E_PLAYER into the middle of that wall -- a player boxed in on
-// all four sides with nothing to press (2026-09-08). PlayerCanStandOn is the
-// line: walkable, or the passage. Anything else falls through to
-// FindPlacement, which puts the arrival on the nearest square they can
-// actually walk off.
+// Loose is not the same as no test: a board edge whose mirrored square is
+// wall must not write E_PLAYER into that wall and box the player in.
+// PlayerCanStandOn is the line: walkable, or the passage. Anything else
+// falls through to FindPlacement, which puts the arrival on the nearest
+// square they can actually walk off.
 func isRequestedSpawnUnoccupied(room *Room, x, y int16) bool {
 	if x < 1 || x > BOARD_WIDTH || y < 1 || y > BOARD_HEIGHT {
 		return false
@@ -782,7 +775,7 @@ func (rm *RoomManager) StepDiffs(inputs map[PlayerID]PlayerInput) map[PlayerID]D
 }
 
 // StepDiffsWithBoards is StepDiffs plus the same tick's frame addressed to a
-// BOARD rather than to a player (M22.1) — what a read-only watcher of that room
+// BOARD rather than to a player — what a read-only watcher of that room
 // is sent.
 //
 // The two share one step and one dirty-cell drain, deliberately: a watcher that
@@ -795,7 +788,7 @@ func (rm *RoomManager) StepDiffsWithBoards(inputs map[PlayerID]PlayerInput) (map
 	// Record this tick before stepping: the buffered ops are exactly the
 	// external stimuli that arrived since the last step, and inputs is what the
 	// step consumes. Quit/transfer removals happen below and are deliberately
-	// not recorded — playback regenerates them (M14.2).
+	// not recorded — playback regenerates them.
 	rm.recorder.flush(inputs)
 
 	engineInputs := make(map[int16]map[int16]PlayerInput)
@@ -858,14 +851,9 @@ func (rm *RoomManager) StepDiffsWithBoards(inputs map[PlayerID]PlayerInput) (map
 						sound := SoundEvent{Notes: ev.SoundNotes, Priority: ev.SoundPriority, StatId: ev.StatId}
 						rm.pendingPlayerEvents[playerID] = append(rm.pendingPlayerEvents[playerID], sound)
 					}
-					// M16.8a gap 2: unlike every sibling case, this used to stop here —
-					// the traveler's own TransferEvent was never queued, so the wire
-					// "transfer" ProtocolEvent (protocol.go's ProtocolEvents already
-					// converts it, and main.ts already has a case for it) was dead
-					// code. Queued here, it rides in the same BoardChangeMessage.Events
-					// the arriving snapshot already carries (DrainPlayerEvents is read
-					// into that message, never a separate one) — traveler-only, like
-					// the sound above.
+					// The traveler's own TransferEvent, traveler-only like the sound
+					// above. It rides in the BoardChangeMessage.Events the arriving
+					// snapshot carries (DrainPlayerEvents is read into that message).
 					rm.pendingPlayerEvents[playerID] = append(rm.pendingPlayerEvents[playerID], ev)
 					transfers = append(transfers, roomTransfer{playerID: playerID, event: ev})
 				}
@@ -952,7 +940,7 @@ func (rm *RoomManager) StepDiffsWithBoards(inputs map[PlayerID]PlayerInput) (map
 			}
 			// A scroll with no reader is an object talking to the whole board:
 			// every client on it shows the window and answers it (isMyScroll),
-			// so every player who receives it is owed a reply (M36.16).
+			// so every player who receives it is owed a reply.
 			// Recorded here, at delivery, so a player who arrived this step and
 			// sees it can answer it too.
 			for _, event := range roomEvents[boardID] {
@@ -1030,7 +1018,7 @@ func (rm *RoomManager) PlayerState(playerID PlayerID) (*PlayerState, bool) {
 // ApplyPlayerState overwrites a player's state wholesale. The server calls it on
 // the authenticated fresh-join path to hand a returning account the inventory
 // from its sidecar — a stimulus the room cannot derive, so it is recorded like a
-// join (M16.15a). Only a state that was actually applied is logged: a refused
+// join. Only a state that was actually applied is logged: a refused
 // call changes nothing here, and replaying it would change nothing there.
 func (rm *RoomManager) ApplyPlayerState(playerID PlayerID, state PlayerState) bool {
 	player := rm.players[playerID]
@@ -1062,7 +1050,7 @@ func (rm *RoomManager) ActiveRoomCount() int {
 
 // RoomStateHashes returns the per-room StateHash keyed by board id, in a stable
 // order. It is the determinism checkpoint used to prove a replay reproduces a
-// recorded session tick-for-tick (M14.2).
+// recorded session tick-for-tick.
 func (rm *RoomManager) RoomStateHashes() map[int16]uint64 {
 	hashes := make(map[int16]uint64, len(rm.rooms))
 	for _, boardID := range rm.roomIDs() {
@@ -1102,27 +1090,14 @@ func (rm *RoomManager) Snapshot(playerID PlayerID) (SnapshotMessage, bool) {
 	players = append(players, rm.playerSnapshotsForRoom(room)...)
 	snapshot := NewSnapshotMessage(room.Engine, room.BoardID, playerID, player.statID, players)
 	// `you` is built from the engine, which has no idea who this player is, so
-	// the presentation fields are attached the same way the roster's are
-	// (M19.1). Without this a client would learn its own color only from its
-	// entry in `players` — true today, but it is the same fact and it should
-	// not disagree with itself.
+	// the presentation fields are attached here, as the roster's are, and the
+	// two never disagree.
 	snapshot.You.Name = CP437String(player.name)
 	snapshot.You.Color = player.color
-	// The dirty-cell list belongs to the ROOM, not to this connection, so it may
-	// only be discarded when nobody else could be owed it. A snapshot already
-	// carries the whole screen, which is why draining it here is free for the
-	// recipient — but the cells drawn between ticks (a newcomer's own square,
-	// an arriving traveler's) are the only notice the players already in the
-	// room ever get that someone appeared, and draining threw them away: the
-	// newcomer stayed invisible to everyone until something else happened to
-	// repaint that square.
-	//
-	// Found while landing M16.12a. The old engine-global player glyph hid it:
-	// an energized player flipped the shared byte, so every OTHER player's tick
-	// took ElementPlayerTick's "force it back" branch and redrew their own
-	// square, incidentally restoring the cell this drop had lost. Making the
-	// blink per-player removed that accidental repaint and left the ghost on
-	// screen (NOTES.md M16.12a).
+	// The dirty-cell list belongs to the ROOM, so it may only be drained when
+	// nobody else could be owed it: the cells drawn between ticks (a
+	// newcomer's square, an arriving traveler's) are the only notice the
+	// players already here get that someone appeared.
 	if len(room.players) == 1 {
 		if _, alone := room.players[playerID]; alone {
 			room.Engine.DrainScreenDirty()
@@ -1133,7 +1108,7 @@ func (rm *RoomManager) Snapshot(playerID PlayerID) (SnapshotMessage, bool) {
 }
 
 // SpectatorSnapshot is the whole-screen frame a read-only watcher of boardID
-// gets (M22.1), plus the room engine it was rendered from — nil when that board
+// gets, plus the room engine it was rendered from — nil when that board
 // has nobody in it. The server compares that engine against the one it rendered
 // last, which is how a watcher is re-sent a full frame when a board it is
 // watching comes back to life under a new engine.
@@ -1231,7 +1206,7 @@ func (rm *RoomManager) ensureRoom(boardID int16) *Room {
 // fine at boot but silently partial once anybody is playing.
 //
 // The walk runs in sorted board order (roomIDs), so it touches no map in an
-// order that could affect game state — CLAUDE.md rule 2.
+// order that could affect game state.
 func (rm *RoomManager) SetFriendlyFire(on bool) {
 	rm.FriendlyFire = on
 	for _, boardID := range rm.roomIDs() {
@@ -1277,7 +1252,7 @@ func (rm *RoomManager) playerSnapshotsForRoom(room *Room) []PlayerSnapshot {
 			snap := playerSnapshot(room.Engine, id, p.statID)
 			// Presentation only, and deliberately attached HERE rather than
 			// inside playerSnapshot: the engine knows where a player is, the
-			// room manager knows who they are (M19.1).
+			// room manager knows who they are.
 			snap.Name = CP437String(p.name)
 			snap.Color = p.color
 			snap.Handle = p.handle
@@ -1298,7 +1273,7 @@ func (rm *RoomManager) transferPlayer(playerID PlayerID, transfer TransferEvent)
 		return
 	}
 	dstRoom := rm.ensureRoom(transfer.ToBoard)
-	// M36.23: a full board refuses the traveller before they leave this one, so
+	// A full board refuses the traveller before they leave this one, so
 	// they stay where they stood, scrolls and all. A transfer within one board
 	// frees the slot it fills, so only a different board can be full.
 	if dstRoom != srcRoom && !roomHasPlayerCapacity(dstRoom) {
@@ -1393,10 +1368,9 @@ func (rm *RoomManager) freezeRoomIfEmpty(boardID int16) {
 // copyWorldScope copies the world-scope subset of TWorldInfo — state shared by
 // every room of a world rather than per-player or per-engine — from src to dst.
 // It is the single list the two seams (refresh/publish) iterate: adding the next
-// world-scope field is one line here. The M14.0 audit (NOTES.md 2026-07-12)
-// found Flags is the only per-tick-mutable world-scope field; Name is
-// world-scope but immutable during play and read straight off rm.world, so it is
-// deliberately out of this seam.
+// world-scope field is one line here. Flags is the only world-scope field
+// play mutates; Name is world-scope but immutable during play and read
+// straight off rm.world, so it is deliberately out of this seam.
 func copyWorldScope(dst, src *TWorldInfo) {
 	dst.Flags = src.Flags
 }
@@ -1421,8 +1395,7 @@ func (rm *RoomManager) refreshRoomWorldScope(room *Room) {
 
 // publishRoomWorldScope copies a just-stepped room's world-scope state back to
 // the shared world and fans it to every live room, so #set/#clear is not
-// stranded on the board that executed it. Generalizes the M14.0-retired
-// syncWorldFlagsFromRoom to the full copyWorldScope list.
+// stranded on the board that executed it.
 func (rm *RoomManager) publishRoomWorldScope(source *Room) {
 	if source == nil || worldScopeEqual(&source.Engine.World.Info, &rm.world.Info) {
 		return
@@ -1460,7 +1433,7 @@ func (rm *RoomManager) SubmitDebugCommand(playerID PlayerID, text string) bool {
 }
 
 // TakeSavePrompt consumes playerID's open save prompt, reporting false if they
-// have none (M36.17): a saveFilename reply that answers no savePrompt is
+// have none: a saveFilename reply that answers no savePrompt is
 // refused, as a scroll reply that answers no scroll is.
 func (rm *RoomManager) TakeSavePrompt(playerID PlayerID) bool {
 	player := rm.players[playerID]
@@ -1482,7 +1455,7 @@ func (rm *RoomManager) SubmitScrollReply(playerID PlayerID, objectStatID int16, 
 	if player == nil {
 		return false
 	}
-	// M36.16: a reply must answer a scroll this player was shown, with a label
+	// A reply must answer a scroll this player was shown, with a label
 	// that scroll offered. Anything else is dropped whole — not even treated as
 	// a dismissal, because a dismissal of a Scroll element removes it from the
 	// board (GameStepWithInputs' deferred RemoveStat).
