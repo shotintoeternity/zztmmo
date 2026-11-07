@@ -52,16 +52,15 @@ const (
 	MessageTypeEditorWorldData    = "editorWorldData"
 	MessageTypeEditorSaveResult   = "editorSaveResult"
 	MessageTypeEditorTestPlay     = "editorTestPlay"
-	// MessageTypeBlock is a player asking not to hear another player's chat
-	// (M21.1), and MessageTypeBlockResult is what they are told back. Only the
-	// blocker ever receives the result: the blocked player is never told.
+	// MessageTypeBlock is a player asking not to hear another player's chat,
+	// and MessageTypeBlockResult is what they are told back. Only the blocker
+	// ever receives the result: the blocked player is never told.
 	MessageTypeBlock       = "block"
 	MessageTypeBlockResult = "blockResult"
-	// MessageTypeModerate is an operator acting on a person (M21.2), and
+	// MessageTypeModerate is an operator acting on a person, and
 	// MessageTypeModerateResult is what the operator is told back. The TARGET of
-	// a mute is told too — through MessageTypeModerationNotice, because a mute is
-	// a sanction rather than a preference, and a player who has silently stopped
-	// being heard learns nothing from it.
+	// a mute is told too, through MessageTypeModerationNotice: a mute is a
+	// sanction, not a preference, so it is never silent.
 	MessageTypeModerate         = "moderate"
 	MessageTypeModerateResult   = "moderateResult"
 	MessageTypeModerationNotice = "moderationNotice"
@@ -75,10 +74,9 @@ const (
 	MessageTypeFollowResult     = "followResult"
 	MessageTypeReplayControl    = "replayControl"
 	MessageTypeReplayError      = "replayError"
-	// MessageTypeChallengeResult is the server's verdict on a challenge run
-	// (M32.1): it is sent when the SERVER observed the goal met, never asked for
-	// by a client, and it says whether the result became a durable leaderboard
-	// row or stayed the player's own local business.
+	// MessageTypeChallengeResult is the server's verdict on a challenge run. It
+	// is sent when the SERVER observed the goal met, never on a client's
+	// request, and says whether the result became a durable leaderboard row.
 	MessageTypeChallengeResult = "challengeResult"
 	// MessageTypeChallengeError is an honest refusal on the challenge path — an
 	// unknown id, an unavailable world, a run that no longer exists, or a server
@@ -174,12 +172,8 @@ type ProfileResultMessage struct {
 	Lines    CP437Lines  `json:"lines"`
 }
 
-// PrivateMessage is an in-session, roster-addressed whisper (M25.1). The client
-// sends PlayerID+Text; the server fills the author fields on delivery. It is
-// deliberately session-only: a PlayerID names a live connection, not an account,
-// and durable/offline PMs wait for the handle-addressed design.
 // PrivateSubmitMessage is what a client sends for MessageTypePrivateMessage:
-// the target and the text as typed, UTF-8 (M37.5). The server's delivery is a
+// the target and the text as typed, UTF-8. The server's delivery is a
 // PrivateMessage, whose names and text are CP437.
 type PrivateSubmitMessage struct {
 	Type     string   `json:"type"`
@@ -187,6 +181,9 @@ type PrivateSubmitMessage struct {
 	Text     string   `json:"text"`
 }
 
+// PrivateMessage is an in-session, roster-addressed whisper as the server
+// delivers it, with the author fields filled in. It is session-only: a
+// PlayerID names a live connection, not an account.
 type PrivateMessage struct {
 	Type     string      `json:"type"`
 	PlayerID PlayerID    `json:"playerId,omitempty"`
@@ -198,21 +195,18 @@ type PrivateMessage struct {
 	Outgoing bool        `json:"outgoing,omitempty"`
 }
 
-// ChatMessage is one global chat line as the server sends it: the author
-// filled in (From is the admitted player name, PlayerID the live connection).
-// History marks a line replayed from the backlog on join. It was an anonymous
-// struct at each send site until M36.6 named it, so the encoding test could see
-// its strings. From and Text are CP437 once admitted, so they travel as
-// CP437String (M37.5). The client's half is ChatSubmitMessage, because typed
-// text arrives as UTF-8 and must not be read as widened CP437.
 // ChatSubmitMessage is what a client sends for MessageTypeChat: the text as
-// typed, UTF-8, which admitChatText encodes (M37.5). The wire shape is
-// ChatMessage's; only the decoding differs.
+// typed, UTF-8, which admitChatText encodes. The wire shape is ChatMessage's;
+// only the decoding differs.
 type ChatSubmitMessage struct {
 	Type string `json:"type"`
 	Text string `json:"text"`
 }
 
+// ChatMessage is one global chat line as the server sends it: From is the
+// admitted player name and PlayerID the live connection. From and Text are
+// CP437 once admitted. History marks a line replayed from the backlog on join.
+// It is a named type so the encoding test (m36_6_test.go) can see its strings.
 type ChatMessage struct {
 	Type     string      `json:"type"`
 	From     CP437String `json:"from,omitempty"`
@@ -222,8 +216,8 @@ type ChatMessage struct {
 }
 
 // AnnounceMessage is the server-wide shutdown warning (AnnounceShutdown):
-// server-authored text and the seconds left. Named in M36.6 for the same
-// reason as ChatMessage.
+// server-authored text and the seconds left. Named for the same reason as
+// ChatMessage.
 type AnnounceMessage struct {
 	Type    string `json:"type"`
 	Text    string `json:"text"`
@@ -252,8 +246,8 @@ type FollowResultMessage struct {
 }
 
 // BlockMessage is the client's block/unblock request. The target is named by the
-// PlayerID that rides every chat line and every roster row (M21.1) — a display
-// name would not do, since names are neither unique nor claimed.
+// PlayerID that rides every chat line and every roster row — a display name
+// would not do, since names are neither unique nor claimed.
 //
 // Blocked is explicit rather than a toggle: a toggle computed on the client
 // would invert the wrong way whenever the two disagreed, and the recipient of a
@@ -327,29 +321,23 @@ type JoinMessage struct {
 	Name  string `json:"name"`
 	World string `json:"world,omitempty"`
 	Board int16  `json:"board,omitempty"`
-	// Color is the "#RRGGBB" background this player's ☻ is drawn on in every
-	// other player's browser (M19). It is presentation only: it never reaches
-	// Board.Tiles, StateHash or a recording, which is the whole reason a 24-bit
-	// color is allowed to exist in a fork whose determinism is sacred. It
-	// arrives from the browser, so it is untrusted on the same footing as Name
-	// and is validated (SanitizePlayerColor) before it is stored.
+	// Color is the "#RRGGBB" background this player's ☻ is drawn on in other
+	// browsers. Presentation only: it never reaches Board.Tiles, StateHash or a
+	// recording. Untrusted like Name; SanitizePlayerColor validates it before
+	// it is stored. Absent means vanilla white-on-blue.
 	Color string `json:"color,omitempty"`
 	// ResumeToken, when it names a detached (or live) player in the joined
-	// instance, reclaims that run instead of spawning a new player (M13.2). An
-	// unknown or expired token falls through to a normal fresh join.
+	// instance, reclaims that run instead of spawning a new player. An unknown
+	// or expired token falls through to a normal fresh join.
 	ResumeToken string `json:"resumeToken,omitempty"`
-	// Spectate asks to WATCH the world rather than play it (M22.1). It is a join
-	// mode rather than a message of its own, because everything a watcher is
-	// given — the board frame, the roster drawn over it — is what a player is
-	// given, minus a stat.
+	// Spectate asks to WATCH the world rather than play it. A watcher gets
+	// what a player gets, minus a stat, so it is a join mode, not a message.
 	//
-	// A spectating connection never reaches RoomManager: no player is minted, no
-	// stat is spawned, no input is read from it, and it is absent from
-	// inst.Clients, which is what keeps it out of the roster, the occupancy the
-	// picker shows, the chat fan-out and the resume-token table alike. Board is
-	// the only other field it reads, and a Board of 0 defaults the same way a
-	// player's join does; Name, Color and ResumeToken are ignored, because a
-	// watcher has nobody on the board to name or color and no run to reclaim.
+	// A spectating connection never reaches RoomManager: no player, no stat,
+	// no input, and no entry in inst.Clients, which keeps it out of the roster,
+	// the picker's occupancy, the chat fan-out and the resume-token table.
+	// Board is the only other field it reads (0 defaults as for a player);
+	// Name, Color and ResumeToken are ignored.
 	Spectate bool `json:"spectate,omitempty"`
 }
 
@@ -359,13 +347,11 @@ type JoinMessage struct {
 type EditorEnterMessage struct {
 	Type  string `json:"type"`
 	World string `json:"world"`
-	// ResumeToken is the editor's counterpart to JoinMessage.ResumeToken
-	// (M16.14f). A browser whose editor socket closed re-enters with the token
-	// its entry snapshot carried; if the session still holds the member that
-	// token names, this connection takes that membership over — same id, color,
-	// board, cursor and leases — and the stale socket is closed, so a drop the
-	// server has not noticed yet cannot leave the session holding two members
-	// for one person. An unknown or already-exited token enters fresh.
+	// ResumeToken is the editor's counterpart to JoinMessage.ResumeToken: the
+	// token the entry snapshot carried. If the session still holds that member,
+	// this connection takes the membership over (same id, color, board, cursor
+	// and leases) and the stale socket is closed, so one person never holds two
+	// members. An unknown or already-exited token enters fresh.
 	ResumeToken string `json:"resumeToken,omitempty"`
 }
 
@@ -383,9 +369,8 @@ type EditorPresence struct {
 	ID    string      `json:"id"`
 	Name  CP437String `json:"name"`
 	Color byte        `json:"color"`
-	// BoardID is the board this member is editing (M17.12). Members of one
-	// session can be on different boards, so a cursor is only meaningful to
-	// viewers on the same board. Presentation-only: edit authorisation stays
+	// BoardID is the board this member is editing. A cursor is only meaningful
+	// to viewers on the same board. Presentation only: edit authorisation stays
 	// with the lease system, never with cursor visibility.
 	BoardID int16 `json:"boardId"`
 	X       int16 `json:"x"`
@@ -435,8 +420,8 @@ type EditorTileInspect struct {
 	ParamTextName       CP437String `json:"paramTextName,omitempty"`
 }
 
-// EditorElementItem is one placeable element in an F1/F2/F3 category menu
-// (M5.8), derived from ElementDefs exactly as EditorLoop's category listing is
+// EditorElementItem is one placeable element in an F1/F2/F3 category menu,
+// derived from ElementDefs exactly as EditorLoop's category listing is
 // (EDITOR.PAS:702-726): its EditorShortcut key, its display glyph, and the
 // section header (CategoryName) that precedes it, if any.
 type EditorElementItem struct {
@@ -461,7 +446,7 @@ type EditorElementMenu struct {
 // EditorSnapshotMessage intentionally uses ScreenCell, the same full-frame
 // board representation as SnapshotMessage. It has no player/HUD because an
 // editor session is not a room and never simulates. Menus is populated only on
-// the entry snapshot (M5.8): the F1/F2/F3 category tables the client renders.
+// the entry snapshot: the F1/F2/F3 category tables the client renders.
 type EditorSnapshotMessage struct {
 	Type       string              `json:"type"`
 	MemberID   string              `json:"memberId,omitempty"`
@@ -472,19 +457,19 @@ type EditorSnapshotMessage struct {
 	Properties EditorProperties    `json:"properties"`
 	Menus      []EditorElementMenu `json:"menus,omitempty"`
 	Presence   []EditorPresence    `json:"presence,omitempty"`
-	// ResumeToken is set only on the entry snapshot (M16.14f), like the join
-	// snapshot's. The browser stores it and presents it when its editor socket
-	// closes under it; see EditorEnterMessage.ResumeToken.
+	// ResumeToken is set only on the entry snapshot, like the join snapshot's.
+	// The browser presents it when its editor socket closes under it; see
+	// EditorEnterMessage.ResumeToken.
 	ResumeToken string `json:"resumeToken,omitempty"`
 }
 
 // EditorEditMessage is one browser editor operation. Selection and cursor
 // state remain client-local; the session validates and applies this operation
 // through its serialized Apply boundary. Op is "place"/"erase"/"fill" for the
-// pattern brush, or "element" (M5.8): place the F1/F2/F3 menu element in
-// Element, resolving its colour against the client's cursor colour in Color the
-// way EditorLoop does (EDITOR.PAS:736-772) and adding a stat when it needs one.
-// Op "text" is F4 text entry (M5.8): Char is the typed printable byte and Color
+// pattern brush, or "element": place the F1/F2/F3 menu element in Element,
+// resolving its colour against the client's cursor colour in Color the way
+// EditorLoop does (EDITOR.PAS:736-772) and adding a stat when it needs one.
+// Op "text" is F4 text entry: Char is the typed printable byte and Color
 // is the cursor foreground colour, which together pick the text tile the way
 // EditorLoop's text branch does (EDITOR.PAS:459-467).
 type EditorEditMessage struct {
@@ -504,11 +489,9 @@ type EditorEditMessage struct {
 type EditorDiffMessage struct {
 	Type     string `json:"type"`
 	MemberID string `json:"memberId,omitempty"`
-	// BoardID is the board the edit landed on (M17.12). Session members can be
-	// editing different boards, so a diff is only meaningful to viewers on the
-	// same one — the server addresses it to them, and the client re-checks it
-	// before painting cells, because a diff for another board would overwrite
-	// the board the viewer is actually looking at.
+	// BoardID is the board the edit landed on. The server sends the diff only
+	// to members viewing that board, and the client re-checks it before
+	// painting, since another board's cells would overwrite the one on screen.
 	BoardID int16             `json:"boardId"`
 	Cells   []ScreenCell      `json:"cells"`
 	Inspect EditorTileInspect `json:"inspect"`
@@ -516,7 +499,7 @@ type EditorDiffMessage struct {
 
 // EditorBoardOption is one legal target for a board edge. Board zero is the
 // vanilla "None" choice; the editor's "Add new board" choice is a client-side
-// menu entry (M5.5), not a board option, and travels as an EditorBoardMessage.
+// menu entry, not a board option, and travels as an EditorBoardMessage.
 type EditorBoardOption struct {
 	ID   int16       `json:"id"`
 	Name CP437String `json:"name"`
@@ -545,7 +528,7 @@ type EditorPropertyMessage struct {
 	Type  string `json:"type"`
 	Field string `json:"field"`
 	// Text is CP437: a name arrives as the widened runes it was sent in
-	// (EditorProperties.BoardName/WorldName), never as UTF-8 (M36.2).
+	// (EditorProperties.BoardName/WorldName), never as UTF-8.
 	Text  CP437String `json:"text,omitempty"`
 	Value int16       `json:"value,omitempty"`
 	Bool  bool        `json:"bool,omitempty"`
@@ -556,10 +539,9 @@ type EditorPropertyMessage struct {
 // a complete board frame because toggling darkness changes more than a local
 // tile; it also makes each property edit a self-contained browser repaint.
 //
-// It is omitted for the members of the session who are looking at a DIFFERENT
-// board (M16.14a (a)): the change still reaches them, because the board list
-// and the world name in Properties are world-scoped, but the frame is not
-// theirs to paint.
+// Screen is omitted for members looking at a DIFFERENT board: the message
+// still reaches them, because the board list and world name are
+// world-scoped, but the frame is not theirs to paint.
 type EditorPropertiesMessage struct {
 	Type       string           `json:"type"`
 	Properties EditorProperties `json:"properties"`
@@ -569,7 +551,7 @@ type EditorPropertiesMessage struct {
 // EditorStatMessage changes one stat setting. The server validates the stat
 // still exists at StatID and that Field is meaningful for its element. Value
 // is p1, the low seven bits of p2, bulletType, p3, direction (0..3), or cycle.
-// Object program data is intentionally outside this message: M5.4 owns it.
+// Object program data is outside this message: see EditorProgramSaveMessage.
 type EditorStatMessage struct {
 	Type   string `json:"type"`
 	StatID int16  `json:"statId"`
@@ -579,8 +561,8 @@ type EditorStatMessage struct {
 
 // EditorStatSettingsMessage is the authoritative result of a stat change.
 // Cells covers character changes to objects, whose P1 affects rendering. It is
-// also the reply to editorProgramSave (M5.4), whose text edit never changes the
-// tile but keeps the browser's inspection panel authoritative.
+// also the reply to editorProgramSave, whose text edit never changes the tile
+// but keeps the browser's inspection panel authoritative.
 type EditorStatSettingsMessage struct {
 	Type    string            `json:"type"`
 	Inspect EditorTileInspect `json:"inspect"`
@@ -588,7 +570,7 @@ type EditorStatSettingsMessage struct {
 }
 
 // EditorProgramRequestMessage asks for a stat's ZZT-OOP program so the browser's
-// M5.4 code editor can open it. Only text-backed elements (objects and scrolls,
+// code editor can open it. Only text-backed elements (objects and scrolls,
 // whose ElementDefs entry has a ParamTextName) carry a program.
 type EditorProgramRequestMessage struct {
 	Type   string `json:"type"`
@@ -599,7 +581,7 @@ type EditorProgramRequestMessage struct {
 // into lines exactly as CopyStatDataToTextWindow does (on carriage returns).
 // Prompt is the element's ParamTextName ("Edit Program" / "Edit text of scroll")
 // so the editor window titles itself the way vanilla does.
-// Labels and Warnings are the M5.7 authoring aids: the object's :labels (for
+// Labels and Warnings are authoring aids: the object's :labels (for
 // navigation) and advisory diagnostics from OopAnalyze. They are informational
 // only — a program with warnings still saves.
 type EditorProgramMessage struct {
@@ -620,7 +602,7 @@ type EditorProgramSaveMessage struct {
 	Lines  CP437Lines `json:"lines"`
 }
 
-// EditorBoardMessage manages the boards of an editor session (M5.5). Op is:
+// EditorBoardMessage manages the boards of an editor session. Op is:
 //
 //	"add"    — EditorAppendBoard: append a new board named Name, make it current
 //	"switch" — BoardChange to BoardID (0..BoardCount), keeping session edits
@@ -651,8 +633,8 @@ type EditorBoardDataMessage struct {
 	Data string `json:"data"`
 }
 
-// EditorWorldMessage saves, downloads, or uploads the whole editor session world
-// (M5.6). Op is:
+// EditorWorldMessage saves, downloads, or uploads the whole editor session
+// world. Op is:
 //
 //	"save"     — serialize the session world and write it to the hosted worlds
 //	             directory as Name.ZZT (SanitizeSaveName), then host it so the
@@ -662,10 +644,10 @@ type EditorBoardDataMessage struct {
 //	"download" — reply EditorWorldDataMessage with the session world's vanilla
 //	             .ZZT bytes, so a creator owns a portable file.
 //	"upload"   — replace the session world with Data (base64 .ZZT bytes from a
-//	             client file) after the M7.5 gate (headless load + 200 steps, no
-//	             panic). Replies a full EditorSnapshotMessage, or an
+//	             client file) after the upload gate (headless load + 200 steps,
+//	             no panic). Replies a full EditorSnapshotMessage, or an
 //	             EditorSaveResultMessage carrying the gate error on refusal.
-//	"invite"   — owner-only M10.3 collaborator invite by AccountID.
+//	"invite"   — owner-only collaborator invite by AccountID.
 type EditorWorldMessage struct {
 	Type      string `json:"type"`
 	Op        string `json:"op"`
@@ -692,7 +674,7 @@ type EditorSaveResultMessage struct {
 	Error string `json:"error,omitempty"`
 }
 
-// EditorTestPlayMessage starts or announces an M10.4 private play-test room.
+// EditorTestPlayMessage starts or announces a private play-test room.
 // The request is just Type; the reply carries a private hosted World name, or
 // Error if the session copy could not be created.
 type EditorTestPlayMessage struct {
@@ -768,62 +750,37 @@ type SnapshotMessage struct {
 	HUD     HUDSnapshot      `json:"hud"`
 	Screen  []ScreenCell     `json:"screen"`
 	Events  []ProtocolEvent  `json:"events,omitempty"`
-	// ResumeToken is set only on the join/resume snapshot (M13.2). The client
-	// stores it keyed by world name and presents it to reclaim a dropped run.
+	// ResumeToken is set only on the join/resume snapshot. The client stores
+	// it keyed by world name and presents it to reclaim a dropped run.
 	ResumeToken string `json:"resumeToken,omitempty"`
-	// BlockedPlayers names which of the players in THIS snapshot's roster the
-	// recipient has already blocked (M21.4). A signed-in player's blocks are
-	// durable and enforced from the moment they join, but until this field the
-	// client learned of one only by making it, so a block made last week showed
-	// as unmarked in the Players window.
-	//
-	// It carries PlayerIDs and nothing else, deliberately: the durable half of a
-	// block is keyed on the target's accountID, and listing accounts back would
-	// hand the recipient ids they have no other way to see. So the answer is
-	// computed per visible player — "is this person, whom you can already see,
-	// blocked for you" — rather than by shipping the stored list.
-	//
-	// Set only on the join/resume snapshot, like ResumeToken. The client merges
-	// it into its mirror and never clears from it, because a roster-scoped list
-	// can add knowledge and can never withdraw it.
+	// BlockedPlayers lists which players in THIS snapshot's roster the
+	// recipient has blocked. Set only on the join/resume snapshot. It carries
+	// PlayerIDs, never the stored accountIDs, so it reveals nothing the
+	// recipient cannot already see. The client merges it and never clears from
+	// it: a roster-scoped list can add knowledge but never withdraw it.
 	BlockedPlayers []PlayerID `json:"blockedPlayers,omitempty"`
-	// FollowedPlayers mirrors BlockedPlayers for M26.1: among the players this
-	// browser can already see, which signed-in accounts it follows. It is scoped
-	// to live PlayerIDs so the durable account ids stay server-only.
+	// FollowedPlayers is BlockedPlayers for follows: which visible players the
+	// recipient follows, as live PlayerIDs so account ids stay server-only.
 	FollowedPlayers []PlayerID `json:"followedPlayers,omitempty"`
-	// Operator says this connection's account is on the moderator allowlist
-	// (M21.2), which is what makes the Players window offer mute, kick and
-	// refuse. It is presentation only: the server checks the allowlist again on
-	// every action, so a client that sets this on itself gains nothing.
-	//
-	// Set on the join/resume snapshot, like ResumeToken and BlockedPlayers. The
-	// allowlist is deployment configuration and cannot change under a running
-	// player, so a frame that omits it is silence rather than a revocation.
+	// Operator says this account is on the moderator allowlist, so the Players
+	// window offers mute, kick and refuse. Presentation only: the server
+	// re-checks the allowlist on every action. Set on the join/resume snapshot;
+	// a frame that omits it is silence, not a revocation.
 	Operator bool `json:"operator,omitempty"`
-	// Spectator marks a frame addressed to a WATCHER rather than a player
-	// (M22.1). It is what puts the client into its read-only mode, and it is said
-	// out loud rather than inferred from an empty `you`: a client that guessed
-	// would guess wrong exactly once — on a frame that arrived malformed — and
-	// the wrong guess is a browser sampling input into a room it is not in.
-	//
-	// A spectator frame carries no `you`, no HUD and no events; see
-	// RoomManager.SpectatorSnapshot for why the event channel stays shut.
+	// Spectator marks a frame addressed to a WATCHER, which puts the client in
+	// read-only mode. It is explicit rather than inferred from an empty `you`,
+	// so a malformed frame never makes a browser send input into a room it is
+	// not in. A spectator frame carries no `you`, HUD or events; see
+	// RoomManager.SpectatorSnapshot.
 	Spectator bool `json:"spectator,omitempty"`
 	// Watchers is how many people are watching THIS board, counting the
-	// recipient (M22.1). It rides the snapshot and every diff the way M19.1's
-	// roster does — presentation drawn over the screen the server already sent,
-	// never into it — so it reaches players and watchers alike and never reaches
-	// Board.Tiles, StateHash or a recording.
-	//
-	// Unlike Operator above, an absent value here means zero rather than
-	// silence: this field is on every frame, so the only way a client sees none
-	// is that nobody is watching.
+	// recipient. Set on every snapshot and diff, to players and watchers alike,
+	// so absent means zero. Presentation only: never in Board.Tiles, StateHash
+	// or a recording.
 	Watchers int `json:"watchers,omitempty"`
-	// Challenge and ChallengeRun mark a frame belonging to a challenge run
-	// (M32.1). ChallengeRun is the run's instance key, which is what a
-	// reconnect presents to reclaim THIS run instead of starting a fresh one —
-	// the key is not a world name, so `?world=` cannot reach it and the client
-	// has no way to derive it.
+	// Challenge and ChallengeRun are set on the join/resume snapshot of a
+	// challenge run. ChallengeRun is the instance key a reconnect presents
+	// to reclaim THIS run; it is not a world name, so `?world=` cannot reach it.
 	Challenge    string `json:"challenge,omitempty"`
 	ChallengeRun string `json:"challengeRun,omitempty"`
 }
@@ -837,9 +794,8 @@ type DiffMessage struct {
 	Players []PlayerSnapshot `json:"players,omitempty"`
 	HUD     *HUDSnapshot     `json:"hud,omitempty"`
 	Events  []ProtocolEvent  `json:"events,omitempty"`
-	// Watchers is SnapshotMessage.Watchers on the per-tick frame: how many people
-	// are watching this board (M22.1). Both a player's diff and a watcher's carry
-	// it, which is what makes "3 watching" true on every screen in the room.
+	// Watchers is SnapshotMessage.Watchers on the per-tick frame. Both a
+	// player's diff and a watcher's carry it.
 	Watchers int `json:"watchers,omitempty"`
 }
 
@@ -872,12 +828,10 @@ type PlayerSnapshot struct {
 	X      int16    `json:"x"`
 	Y      int16    `json:"y"`
 	Health int16    `json:"health"`
-	// Name and Color are presentation fields (M19.1) that ride the roster on
-	// every snapshot and every diff. Both are `omitempty` deliberately: an
-	// absent Color means "vanilla white-on-blue", which is what an old client, a
-	// replayed session and a player who has not picked one all send. Neither is
-	// read by the simulation — a roster is drawn over the screen the server
-	// already sent, never into it.
+	// Name and Color are presentation fields on every snapshot and diff,
+	// never read by the simulation. An absent Color means vanilla
+	// white-on-blue, which is what an old client, a replayed session and a
+	// player who has not picked one all send.
 	Name       CP437String `json:"name,omitempty"`
 	Color      string      `json:"color,omitempty"`
 	Handle     string      `json:"handle,omitempty"`
