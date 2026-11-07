@@ -9884,9 +9884,23 @@ done and pushed (`dev` at `94227a1`), each after a green full `make browser`.
   does not name. NOTES.md 2026-11-07 lists them and asks whether to extend
   the rule to them. `go test ./...` is green.
 
-- [ ] **M40.8 — the same, for `main.ts`.** Do this after M40.5 and M40.6 so it
+- [x] **M40.8 — the same, for `main.ts`.** Do this after M40.5 and M40.6 so it
   cleans the file's final shape. It uses the same rule and the same
   comments-only diff check, and `make browser` still runs (rule 3).
+  **Done 2026-11-07.** Four comments-only commits, one per region of the
+  file. The check is the TS form of M40.7's, so JSDoc lines count as
+  comment lines: `git diff -U0 63f17c7 -- engine/web/src/main.ts | grep -E
+  '^[-+]' | grep -vE '^(---|\+\+\+)' | grep -vE
+  '^[-+][[:space:]]*(//|/\*|\*)'` prints nothing. Milestone tags on comment
+  lines went from 118 to 2. The two kept are the M1.3 deviation on the
+  modal comment and the M16.10 vocabulary pointer on the 'L' binding.
+  History phrases went from 7 to 3, all present-tense claims. The history
+  went into the commit messages. Comments now say "arrival snapshots" where
+  the server does, so they match protocol.go. A stale
+  `websocket_server.go:611` anchor is gone, a wrong-declaration JSDoc now
+  sits on `drawView3DRows`, and the trailing-comment code lines are
+  untouched. `go test -run 'M1613|M1614'` and `tsc` passed after each
+  commit, and `caffeinate -dim make browser` is green.
 
 - [ ] **M40.9 — small dead code and duplication.** One commit each:
   - `world_metadata.go:89–105`: three wrappers that forward to
