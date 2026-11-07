@@ -43,7 +43,7 @@ const ServerReadLimit = 1 << 20
 
 // ReconnectGraceTicks is how long a detached player's stat lingers on the board
 // before removal, counted in ticks (not wall-clock) so tests can step it
-// deterministically. 545 ticks ≈ 60s at the 110ms server tick (M13.2).
+// deterministically. 545 ticks ≈ 60s at the 110ms server tick.
 const ReconnectGraceTicks = 545
 
 // DefaultInstanceEvictIdleTicks is how long a non-default hosted world may sit
@@ -53,7 +53,7 @@ const ReconnectGraceTicks = 545
 const DefaultInstanceEvictIdleTicks = 2727 // about five minutes at 110ms/tick
 
 // maxEvictedRejoins bounds how often a join re-resolves an instance that was
-// evicted under it (M36.18). One retry is all a real race needs; the bound
+// evicted under it. One retry is all a real race needs; the bound
 // only stops a pathological loop.
 const maxEvictedRejoins = 3
 
@@ -67,8 +67,8 @@ type WebSocketServer struct {
 	// must never write to disk.
 	SavesDir string
 	// WorldsDir is where the editor writes published .ZZT worlds and where the
-	// world picker lists them (M5.6). Empty falls back to the loaded world's
-	// directory, then the working directory — the picker's historical behavior.
+	// world picker lists them. Empty falls back to the loaded world's
+	// directory, then the working directory.
 	WorldsDir string
 	// FriendlyFire is the deployment's projectile policy for every instance this
 	// server hosts. It is server-owned rather than authored — the same split
@@ -79,7 +79,7 @@ type WebSocketServer struct {
 	// hosted world has shipped with.
 	FriendlyFire bool
 	// AutosaveEveryTicks, when >0, snapshots every occupied instance every this
-	// many ticks from the tick loop (M13.3). Zero disables. cmd/zzt-server sets it
+	// many ticks from the tick loop. Zero disables. cmd/zzt-server sets it
 	// from -autosave seconds via seconds*1000/tickMillis, so it shares the tick
 	// clock rather than a second timer. NewWebSocketServer leaves it 0, so tests
 	// never autosave unless they set the seam.
@@ -87,7 +87,7 @@ type WebSocketServer struct {
 	autosaveTicks      int // countdown accumulator; touched only on the tick goroutine
 	// restoreAutosaves is set by RestoreAutosaves: this boot trusts the
 	// autosaves it found on disk, so an instance recreated after eviction loads
-	// its autosave too (M36.18). A -fresh boot never calls RestoreAutosaves, and
+	// its autosave too. A -fresh boot never calls RestoreAutosaves, and
 	// then only the autosaves this process wrote itself (autosavedThisBoot) are
 	// loaded. Both are guarded by s.mu.
 	restoreAutosaves  bool
@@ -98,48 +98,48 @@ type WebSocketServer struct {
 	InstanceEvictIdleTicks int
 
 	// RecordDir, when non-empty, is where per-instance session recordings are
-	// written (M14.2). Set it through EnableRecording, which also stamps
+	// written. Set it through EnableRecording, which also stamps
 	// recordStamp once so a restart does not clobber a prior run's files.
 	RecordDir   string
 	recordStamp string
 	// ReplayDir is where /replay/<id> loads deterministic session recordings
-	// from (M22.3). Replays are intentionally NOT WorldInstances: they are never
+	// from. Replays are intentionally NOT WorldInstances: they are never
 	// joinable, never shown in the picker, never counted as occupancy, and never
 	// autosaved.
 	ReplayDir string
 	// ReplayEvictIdleTicks, when >0, drops a replay instance after this many
-	// consecutive ticks with no watcher (M36.19).
+	// consecutive ticks with no watcher.
 	ReplayEvictIdleTicks int
-	// ChallengeStore is the durable challenge leaderboard (M32.1). Nil means the
+	// ChallengeStore is the durable challenge leaderboard. Nil means the
 	// service has no leaderboard: runs still play and still report their result
 	// to the player who made them, but nothing becomes public.
 	ChallengeStore *ChallengeStore
 	// challengeSeq mints the per-run suffix that makes each attempt's instance
 	// key and recording id unique. Guarded by mu.
 	challengeSeq int64
-	// ghostCache holds extracted ghost tracks by recording id (M32.1). Its own
+	// ghostCache holds extracted ghost tracks by recording id. Its own
 	// lock: a ghost is presentation state read off finished recordings, so it is
 	// never touched from a tick.
 	ghostCache challengeGhostCache
-	// Postcards are generated GIFs over bounded replay ranges (M22.4). They are
+	// Postcards are generated GIFs over bounded replay ranges. They are
 	// service-layer presentation state: cached by recording id + range, and
 	// rate-limited by HTTP client, never by the simulation.
 	postcardCache   replayPostcardCache
 	postcardLimiter postcardRateLimiter
 
-	// Now is the injected non-simulation clock (M16.16a); nil means time.Now.
+	// Now is the injected non-simulation clock; nil means time.Now.
 	// It feeds only service-layer state like the chat rate limiter — never the
 	// simulation or the replay hash.
 	Now func() time.Time
 	// chatLimiter holds each connected player's rolling chat-admission window;
 	// it has its own lock and is not guarded by mu.
 	chatLimiter chatRateLimiter
-	// chatBlocks holds who each connected player has asked not to hear (M21.1).
+	// chatBlocks holds who each connected player has asked not to hear.
 	// Its own lock too, and never held with mu or inst.mu: it is consulted once
 	// per recipient inside the chat fan-out.
 	chatBlocks chatBlocks
 	// Moderators is the account allowlist that decides who may mute, kick and
-	// refuse (M21.2). Nil or empty means there are no operators — every operator
+	// refuse. Nil or empty means there are no operators — every operator
 	// action fails closed, which is what an unset ZZT_MODERATOR_ACCOUNTS must
 	// mean. Set at startup and read-only afterwards: operator status is
 	// deployment configuration and cannot be granted from inside the game.
@@ -156,22 +156,22 @@ type WebSocketServer struct {
 	// action, on the same policy as chat. It is what keeps the audit (which
 	// records denials, and should) from being a hostile client's write amplifier.
 	moderateLimiter chatRateLimiter
-	// saveLimiter bounds how many saves one player may write (M36.17). Its own
+	// saveLimiter bounds how many saves one player may write. Its own
 	// lock, never held with inst.mu.
 	saveLimiter saveRateLimiter
-	// saveWriteMu serializes player save writes, which run off the room lock
-	// (M36.17). Two players may pick the same name, and writeWorldSnapshot's
+	// saveWriteMu serializes player save writes, which run off the room lock.
+	// Two players may pick the same name, and writeWorldSnapshot's
 	// temp file is named after the save, so two concurrent writes of one name
 	// would share it. Never held with inst.mu.
 	saveWriteMu sync.Mutex
 	// saveWriteHook, when set, runs just before a player save is written, with
-	// no lock held. A test seam (M36.17): it parks a write to show the room
+	// no lock held. A test seam: it parks a write to show the room
 	// ticks on while the file is being written.
 	saveWriteHook func()
 
 	mu sync.Mutex
 	// nextPlayerID mints process-unique PlayerIDs across every instance, so ids
-	// never collide between hosted worlds (M14.1). Guarded by mu.
+	// never collide between hosted worlds. Guarded by mu.
 	nextPlayerID        PlayerID
 	Instances           map[string]*WorldInstance
 	ReplayInstances     map[string]*ReplayInstance
@@ -195,8 +195,8 @@ type WorldInstance struct {
 	// Title animates board 0 for browsers sitting on the title screen. It owns
 	// its own Engine and shares no state with RoomManager — see TitleSim.
 	Title *TitleSim
-	// Detached, ResumeTokens, and TokensByPlayer implement reconnect grace
-	// (M13.2). A dropped socket detaches its player (leaves Clients/Inputs but
+	// Detached, ResumeTokens, and TokensByPlayer implement reconnect grace.
+	// A dropped socket detaches its player (leaves Clients/Inputs but
 	// keeps the stat) and Detached counts down ReconnectGraceTicks to removal on
 	// the tick goroutine. ResumeTokens maps a minted token to its player, and
 	// TokensByPlayer is the reverse index used to delete a player's token on
@@ -204,7 +204,7 @@ type WorldInstance struct {
 	Detached       map[PlayerID]int
 	ResumeTokens   map[string]PlayerID
 	TokensByPlayer map[PlayerID]string
-	// Spectators are the read-only watchers of this world (M22.1), keyed by their
+	// Spectators are the read-only watchers of this world, keyed by their
 	// own connection because they have no PlayerID to be keyed by — which is the
 	// point: they are not in Clients, so nothing that walks the players of a world
 	// (the roster, occupancy, chat, autosave, the resume tokens) can see them.
@@ -217,8 +217,8 @@ type WorldInstance struct {
 	spectatorDrops int
 	idleTicks      int
 	autosaving     bool
-	// unsaved says the room has had players in it since its last autosave
-	// (M36.18). It is what lets the play after the last cadence save survive
+	// unsaved says the room has had players in it since its last autosave.
+	// It is what lets the play after the last cadence save survive
 	// everyone leaving: an empty room with unsaved set is autosaved the next
 	// tick, and an instance is never evicted while it is set. Only set while
 	// autosave is on.
@@ -228,24 +228,22 @@ type WorldInstance struct {
 	autosaveFailed bool
 	// evicted is set, under mu, when the instance leaves s.Instances. A join or
 	// watch resolved before the eviction checks it under the same lock and
-	// re-resolves rather than landing in an instance nobody ticks (M36.18).
+	// re-resolves rather than landing in an instance nobody ticks.
 	evicted bool
 	// Private marks an instance nobody chose to make public: today that is an
-	// editor test-play copy (M10.4). It exists because that copy is the one
-	// private instance kind NOT excluded by construction — randomTestPlayWorldName
-	// mints TP+6 hex, which sanitizes as cleanly as TOWN does. The mark keeps
-	// the copy out of autosave. (It was added for the Gazette, M34.1, which
-	// M37.4 retired.)
+	// editor test-play copy. That copy is the one private instance kind NOT
+	// excluded by construction — randomTestPlayWorldName mints TP+6 hex, which
+	// sanitizes as cleanly as TOWN does. The mark keeps the copy out of autosave.
 	Private bool
-	// Challenge is set only on a challenge run's instance (M32.1). Its presence
+	// Challenge is set only on a challenge run's instance. Its presence
 	// is what makes this instance measured, always-recorded, and closed to the
 	// things that would let a run be gamed or leak into the source world.
 	Challenge *ChallengeRun
-	// RecordWorld and RecordID split what attachRecorderLocked used to take from
-	// Name alone: the recording's HEADER world (which /replay resolves against
-	// the hosting directory) and the recording's file stem (which must pass
+	// RecordWorld and RecordID override what attachRecorderLocked takes from
+	// Name: the recording's HEADER world (which /replay resolves against the
+	// hosting directory) and the recording's file stem (which must pass
 	// sanitizeReplayID). An ordinary instance leaves both empty and is recorded
-	// exactly as before.
+	// under Name.
 	RecordWorld string
 	RecordID    string
 	mu          sync.Mutex
@@ -285,7 +283,7 @@ func NewWebSocketServer(world TWorld, defaultBoard int16) *WebSocketServer {
 		ChatDB:                 NewMemChatDatabase(),
 		Activity:               &WorldActivityStore{counts: make(map[string]int)},
 		// Memory-only until cmd/zzt-server points them at the saves directory, so
-		// a test never writes an audit line or a refusal to disk (M21.2).
+		// a test never writes an audit line or a refusal to disk.
 		Refusals: NewRefusalStore(""),
 		Audit:    NewModerationAudit(""),
 		metrics:  newServerMetrics(time.Now()),
@@ -317,17 +315,13 @@ func (s *WebSocketServer) Tick(ctx context.Context) {
 		s.metrics.recordServerTick(time.Since(start))
 	}()
 	// Advance reconnect-grace countdowns before stepping, so an expired player is
-	// removed on this same tick goroutine (M13.2).
+	// removed on this same tick goroutine.
 	s.expireDetached()
 
 	// Every hosted world — including the default instance — ticks through the
-	// same WorldInstance.Tick path under its own inst.mu. The default used to be
-	// stepped by a separate "legacy" block under s.mu, which meant its RoomManager
-	// was guarded by two different mutexes depending on the code path (s.mu when
-	// stepping, inst.mu on join/leave/detach); that split was M13.4's race
-	// (DrainPlayerEvents from Tick under s.mu vs handleReadLoopExit under inst.mu).
-	// With one lock per instance, the tick and every join/leave/detach on the same
-	// RoomManager are mutually exclusive.
+	// same WorldInstance.Tick path under its own inst.mu, so the tick and every
+	// join/leave/detach on one RoomManager are mutually exclusive. A RoomManager
+	// must never be guarded by s.mu on one path and inst.mu on another.
 	s.mu.Lock()
 	var instances []*WorldInstance
 	var replays []*ReplayInstance
@@ -418,7 +412,7 @@ func (inst *WorldInstance) evictableIdleLocked() bool {
 		inst.unsaved {
 		// unsaved: the last players' progress is not on disk yet. autosaveDeparted
 		// writes it the tick after they leave, before the idle clock can run out,
-		// so a world is only ever dropped once its autosave is current (M36.18).
+		// so a world is only ever dropped once its autosave is current.
 		return false
 	}
 	if inst.Title != nil && inst.Title.SubscriberCount() != 0 {
@@ -437,7 +431,7 @@ func (inst *WorldInstance) Tick(ctx context.Context, s *WebSocketServer) {
 	inst.mu.Lock()
 	if s.autosaveEnabled() && inst.Challenge == nil && !inst.Private && len(inst.RoomManager.players) != 0 {
 		// Players (connected or inside the reconnect grace) are in the room, so
-		// this tick may change what an autosave would write (M36.18). A private
+		// this tick may change what an autosave would write. A private
 		// test-play copy is left out: no .ZZT answers to its random name, so
 		// its autosave could never be loaded and would only litter the
 		// directory.
@@ -472,7 +466,7 @@ func (inst *WorldInstance) Tick(ctx context.Context, s *WebSocketServer) {
 		}
 		client.boardID = diff.BoardID
 		diff.Events = append(diff.Events, ProtocolEvents(inst.RoomManager.DrainPlayerEvents(playerID))...)
-		// M22.1: how many people are watching the room this player is standing in.
+		// How many people are watching the room this player is standing in.
 		diff.Watchers = watchers[diff.BoardID]
 		messages[playerID] = diff
 	}
@@ -484,7 +478,7 @@ func (inst *WorldInstance) Tick(ctx context.Context, s *WebSocketServer) {
 	}
 	watched := inst.spectatorMessagesLocked(boardDiffs, watchers)
 	transits = append(transits, inst.RoomManager.DrainWorldTransits()...)
-	// M32.1: a challenge run counts its own tick and is asked whether the goal
+	// A challenge run counts its own tick and is asked whether the goal
 	// is met, under the same lock the step just ran beneath — so the count can
 	// never drift from the simulation it measures. The completion itself is
 	// carried out of the lock: closing the recording and writing a leaderboard
@@ -607,7 +601,7 @@ func (s *WebSocketServer) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 	}
 
 	// The color is validated once, here, where the untrusted join is read —
-	// beside the name it sits next to on the wire (M19.1). Everything
+	// beside the name it sits next to on the wire. Everything
 	// downstream stores and broadcasts whatever this returns, so anything that
 	// is not "#" plus six hex digits must become the empty string at this line
 	// and never later.
@@ -629,7 +623,7 @@ func (s *WebSocketServer) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	// M22.1: a watcher takes none of the paths below — no stored state, no color,
+	// A watcher takes none of the paths below — no stored state, no color,
 	// no resume, no stat, no read of anything they typed.
 	if pj.join.Spectate {
 		s.serveSpectator(ctx, conn, pj.client, pj.inst, pj.join)
@@ -641,7 +635,7 @@ func (s *WebSocketServer) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 		pj.join.Name = pj.account.DisplayName()
 		pj.storedState, pj.hasStoredState = s.loadAccountPlayerState(pj.account.ID, pj.safeWorld)
 		// The account, not this browser, is where a signed-in player's color
-		// lives (M19.3). Resolved here so both the fresh join and the resume
+		// lives. Resolved here so both the fresh join and the resume
 		// below see one already-decided value.
 		pj.joinColor = s.resolveAccountPlayerColor(pj.account.ID, pj.joinColor)
 	}
@@ -649,11 +643,10 @@ func (s *WebSocketServer) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 
 	s.resumeJoin(pj)
 
-	// M32.1: a `?run=` join RECLAIMS an attempt and may never start a player in
-	// one. Without this, a token-less run key fresh-joins a second player into
-	// somebody's measured run — and run keys are sequential, so they can be
-	// guessed. The refusal is the same one an ended run gets, because from the
-	// outside those are the same fact: this browser is not in that run.
+	// A `?run=` join RECLAIMS an attempt and may never start a player in one:
+	// run keys are sequential, so a token-less key must not fresh-join a second
+	// player into somebody's measured run. The refusal is the one an ended run
+	// gets, because from outside those are the same fact.
 	if pj.challengeRunRequested != "" && !pj.resumed {
 		// Nothing to tidy: no id has been minted and no stat spawned — the
 		// refusal happens before the fresh-join path below, which is the point.
@@ -696,7 +689,7 @@ func (s *WebSocketServer) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 // is accepted, so a bad name is still an HTTP error.
 func (s *WebSocketServer) resolveJoinTarget(w http.ResponseWriter, r *http.Request) (*playerJoin, bool) {
 	pj := &playerJoin{}
-	// M32.1: a challenge join names a catalogue id (start a fresh attempt) or a
+	// A challenge join names a catalogue id (start a fresh attempt) or a
 	// run key (reclaim the attempt this browser is already in). Both resolve
 	// AFTER the socket is accepted and the account is known — the instance a run
 	// gets is minted per attempt and per player, so there is nothing to resolve
@@ -742,8 +735,8 @@ func (s *WebSocketServer) serveEditorEntry(ctx context.Context, conn *websocket.
 	s.serveEditor(ctx, conn, enter, account, authenticated)
 }
 
-// resolveChallengeRun points pj at the challenge run its query names, if any
-// (M32.1). It reports false when the connection must end.
+// resolveChallengeRun points pj at the challenge run its query names, if
+// any. It reports false when the connection must end.
 func (s *WebSocketServer) resolveChallengeRun(ctx context.Context, pj *playerJoin) bool {
 	if pj.challengeID == "" && pj.challengeRunRequested == "" {
 		return true
@@ -785,7 +778,7 @@ func (s *WebSocketServer) resumeJoin(pj *playerJoin) {
 	}
 	// A resumed run keeps its inventory but not its color: the
 	// reclaimed roomPlayer predates this connection, and the color is
-	// a property of the browser that is here now (M19.1). Re-applying
+	// a property of the browser that is here now. Re-applying
 	// it means a reconnect looks the same as it did before the drop.
 	// The snapshot tryResume already built is left alone — rebuilding
 	// it would drain the room's dirty cells a second time (see
@@ -803,7 +796,7 @@ func (s *WebSocketServer) resumeJoin(pj *playerJoin) {
 // must end; pj.inst may have been re-resolved by then.
 func (s *WebSocketServer) freshJoin(ctx context.Context, pj *playerJoin) bool {
 	// Mint a process-unique id before taking inst.mu; the two locks are never
-	// held together (M14.1).
+	// held together.
 	pj.playerID = s.mintPlayerID()
 
 	// The join runs under inst.mu; a defer guarantees the unlock even if a
@@ -817,13 +810,13 @@ func (s *WebSocketServer) freshJoin(ctx context.Context, pj *playerJoin) bool {
 			inst.mu.Lock()
 			defer inst.mu.Unlock()
 			if inst.evicted {
-				// Evicted between the upgrade and this frame (M36.18). Joining
+				// Evicted between the upgrade and this frame. Joining
 				// it would leave the player in an instance nobody ticks.
 				return false, true
 			}
-			// M36.15: the board is resolved under the same lock as the join, since
-			// it reads the world a restore replaces; resolved outside it, a restore
-			// in between could leave the join naming a board of the old world.
+			// The board is resolved under the same lock as the join, since it
+			// reads the world a restore replaces; resolved outside it, a restore
+			// in between could leave the join naming a board of a replaced world.
 			pj.join.Board = s.resolveJoinBoard(inst, pj.join.Board)
 			if pj.challengeRun != nil {
 				// The start board is the catalogue's, not the client's: a challenge
@@ -832,7 +825,7 @@ func (s *WebSocketServer) freshJoin(ctx context.Context, pj *playerJoin) bool {
 				pj.join.Board = pj.challengeRun.Def.Board
 			}
 			if inst.RoomManager.JoinPlayerWithID(pj.playerID, pj.join.Board, 0, 0) == 0 {
-				// M36.23: the board has no room for another player stat.
+				// The board has no room for another player stat.
 				// Nobody was spawned, so nothing below has a player to name.
 				boardFull = true
 				return false, false
@@ -846,7 +839,7 @@ func (s *WebSocketServer) freshJoin(ctx context.Context, pj *playerJoin) bool {
 				inst.RoomManager.SetPlayerName(pj.playerID, pj.join.Name)
 			}
 			// Set before the snapshot is built, so the joining client's own
-			// roster already carries it (M19.1).
+			// roster already carries it.
 			inst.RoomManager.SetPlayerColor(pj.playerID, pj.joinColor)
 			if pj.authenticated {
 				inst.RoomManager.SetPlayerProfileSummary(pj.playerID, pj.profileHandle, pj.hasProfile)
@@ -896,25 +889,22 @@ func (s *WebSocketServer) freshJoin(ctx context.Context, pj *playerJoin) bool {
 // seedSocialState puts a joining player's blocks live and marks the first
 // frame with what this player has blocked, follows, and may do.
 func (s *WebSocketServer) seedSocialState(pj *playerJoin) {
-	// M21.1: a signed-in player's stored blocks go live before sendFirstFrame
-	// replays the chat backlog. The other order would make the first act of a durable
-	// block handing back the fifty lines it exists to suppress.
+	// A signed-in player's stored blocks go live before sendFirstFrame replays
+	// the chat backlog, or a durable block's first act would be handing back
+	// the lines it exists to suppress.
 	if pj.authenticated {
 		s.seedAccountBlocks(pj.playerID, pj.account.ID)
 	}
 
-	// M21.4: and the very first frame says which of the people already in the
-	// room this player has blocked. It has to run AFTER the seeding above, which
-	// is what puts a returning player's stored blocks into their live set — the
-	// other order would compute the answer from an empty one and be right only
-	// for a player who has never blocked anybody.
+	// The first frame says which of the people already in the room this
+	// player has blocked. It must run AFTER the seeding above, which puts a
+	// returning player's stored blocks into their live set.
 	pj.snapshot.BlockedPlayers = s.blockedInRoster(pj.playerID, pj.inst, pj.snapshot.Players)
 	pj.snapshot.FollowedPlayers = s.followedInRoster(pj.playerID, pj.inst, pj.snapshot.Players)
 
-	// M21.2: and whether this connection may moderate, which is what makes the
-	// same window offer mute, kick and refuse. It is told once, at the join,
-	// because the allowlist is deployment configuration and cannot change under a
-	// running player.
+	// And whether this connection may moderate. Told once, at the join: the
+	// allowlist is deployment configuration and cannot change under a running
+	// player.
 	pj.snapshot.Operator = s.isOperator(pj.client.accountID)
 }
 
@@ -928,7 +918,7 @@ func (s *WebSocketServer) sendFirstFrame(ctx context.Context, pj *playerJoin) bo
 		s.handleReadLoopExit(pj.inst, client, pj.playerID)
 		return false
 	}
-	// M32.1: a challenge run is not a play of the source world. Counting it would
+	// A challenge run is not a play of the source world. Counting it would
 	// put the popularity shelf — and the front page built on it — under the
 	// control of whoever cares to restart a challenge.
 	if !pj.resumed && pj.challengeRun == nil && s.Activity != nil {
@@ -942,7 +932,7 @@ func (s *WebSocketServer) sendFirstFrame(ctx context.Context, pj *playerJoin) bo
 		if dbErr == nil {
 			for _, rec := range recs {
 				// A block applies to the backlog too, or reconnecting would hand
-				// the blocked lines straight back (M21.1). The record's PlayerID
+				// the blocked lines straight back. The record's PlayerID
 				// is only trustworthy in the process that wrote it — the loader
 				// clears the ones read from disk — so across a restart this is
 				// the AccountID's job alone.
@@ -1036,7 +1026,7 @@ func (s *WebSocketServer) handlePlayerMessage(ctx context.Context, client *webSo
 			name = player.name
 		}
 		activeInst.mu.Unlock()
-		// M21.1: the line now travels with something addressable. The
+		// The line travels with something addressable. The
 		// PlayerID is this connection's, not anything the client claimed,
 		// and the accountID stays server-side — it is what makes a
 		// signed-in recipient's block outlive the connection, and it is
@@ -1087,11 +1077,10 @@ func (s *WebSocketServer) handlePlayerMessage(ctx context.Context, client *webSo
 
 // resolveJoinBoard is the board a join lands on when it names none: the world's
 // own current board, then the server's configured default, then board 1. It is
-// extracted verbatim from the player join (M22.1) so a watcher opens the board a
-// player pressing Play would have opened — the two answers drifting apart is
-// exactly how /watch/<world> would end up showing a room nobody is in.
+// shared by the player join and the watcher so a watcher opens the board a
+// player pressing Play would have opened, not a room nobody is in.
 //
-// The caller holds inst.mu: it reads the world a restore replaces (M36.15).
+// The caller holds inst.mu: it reads the world a restore replaces.
 func (s *WebSocketServer) resolveJoinBoard(inst *WorldInstance, board int16) int16 {
 	if board != 0 {
 		return board
@@ -1133,7 +1122,7 @@ func (s *WebSocketServer) submitQuitReplyInInstance(inst *WorldInstance, playerI
 	if _, ok := inst.Clients[playerID]; !ok {
 		return
 	}
-	// M32.1: quitting a challenge run is allowed and IS the abandon: vanilla's
+	// Quitting a challenge run is allowed and IS the abandon: vanilla's
 	// Q takes the player out of the game, the run's player leaves the room with
 	// it, and a run with nobody in it can never complete (advanceChallengeLocked
 	// finds no player state). So an abandoned attempt simply produces no result
@@ -1170,7 +1159,7 @@ func (s *WebSocketServer) submitHighScoreNameInInstance(ctx context.Context, ins
 // to the process working directory. It is the terminal's path. The server saves
 // the whole world through the RoomManager.
 //
-// M36.17: a reply is accepted only if it answers a savePrompt this player was
+// A reply is accepted only if it answers a savePrompt this player was
 // sent, and only saveRateLimitMax of them in a window. The world is copied under
 // inst.mu, as Autosave's is, and written after the lock is released, so a save
 // never stalls the room's tick on disk I/O.
@@ -1197,7 +1186,7 @@ func (s *WebSocketServer) submitSaveFilenameInInstance(ctx context.Context, inst
 		inst.mu.Unlock()
 		return
 	}
-	// M32.1: a challenge run cannot be saved. A save is a mid-run checkpoint the
+	// A challenge run cannot be saved. A save is a mid-run checkpoint the
 	// player could restore from, which is the same hole as the cheat prompt by a
 	// different door — and the run's world is not one a .SAV could be restored
 	// into anyway. Refused out loud so the player is not left waiting on a reply.
@@ -1324,11 +1313,8 @@ func (s *WebSocketServer) GetOrCreateInstance(worldName string) (*WorldInstance,
 	return inst, nil
 }
 
-// HostGeneratedWorld installs an already-compiled, persisted world directly
-// into the instance table. Generation uses this instead of reloading its file:
-// the hosted bytes are exactly the ones that passed the compiler and M7.5 gate.
-// clockNow is the non-simulation clock (M16.16a): the injected Now seam when a
-// test set one, the wall clock otherwise. Simulation code must never call it.
+// clockNow is the non-simulation clock: the injected Now seam when a test
+// set one, the wall clock otherwise. Simulation code must never call it.
 func (s *WebSocketServer) clockNow() time.Time {
 	if s.Now != nil {
 		return s.Now()
@@ -1336,6 +1322,10 @@ func (s *WebSocketServer) clockNow() time.Time {
 	return time.Now()
 }
 
+// HostGeneratedWorld installs an already-compiled, persisted world directly
+// into the instance table. Generation uses this instead of reloading its file:
+// the hosted bytes are exactly the ones that passed the compiler and the
+// upload gate.
 func (s *WebSocketServer) HostGeneratedWorld(name string, world TWorld) error {
 	return s.hostGeneratedWorld(name, world, false)
 }
@@ -1382,7 +1372,7 @@ func (s *WebSocketServer) hostGeneratedWorld(name string, world TWorld, private 
 }
 
 // supersedeInstanceLocked retires whatever was hosted as name before a new
-// world takes the name (M36.18). The old world's autosave is removed, because
+// world takes the name. The old world's autosave is removed, because
 // it is a save of a world that no longer exists: left in place, it would be
 // loaded over the new one the next time the instance is created (after an
 // eviction, or at boot). A test-play name never has one, which is fine. The
@@ -1390,8 +1380,7 @@ func (s *WebSocketServer) hostGeneratedWorld(name string, world TWorld, private 
 // re-resolves to the new one. The remove runs under s.mu; it is one unlink,
 // like the read LoadPristineWorld already does under it. The old instance's
 // recorder is detached and returned for the caller to close once s.mu is
-// released; it used to be dropped open, leaking its fd (M36.19). Caller holds
-// s.mu.
+// released, so its fd is not leaked. Caller holds s.mu.
 func (s *WebSocketServer) supersedeInstanceLocked(name string) *SessionRecorder {
 	var recorder *SessionRecorder
 	if old := s.Instances[name]; old != nil {
@@ -1421,7 +1410,7 @@ func (s *WebSocketServer) supersedeInstanceLocked(name string) *SessionRecorder 
 // WorldIsOccupied reports whether a hosted world of this name currently has
 // players in it. It is the question every overwrite path has to ask before it
 // writes: the editor's publish asks it inline, and generation asks it through
-// this method before the first byte of a dream reaches the disk (M16.17b).
+// this method before the first byte of a dream reaches the disk.
 func (s *WebSocketServer) WorldIsOccupied(name string) bool {
 	s.mu.Lock()
 	defer s.mu.Unlock()
@@ -1497,7 +1486,7 @@ func (s *WebSocketServer) submitDebugCommandInInstance(inst *WorldInstance, play
 	if _, ok := inst.Clients[playerID]; !ok {
 		return
 	}
-	// M32.1: vanilla's `?` cheat prompt is refused inside a challenge run. It is
+	// Vanilla's `?` cheat prompt is refused inside a challenge run. It is
 	// a server-created stimulus that replays faithfully, so a cheated run would
 	// not merely score — it would VERIFY, and replay verification would confirm
 	// a time nobody played. The one place to stop that is before it is applied.
@@ -1518,9 +1507,9 @@ func (s *WebSocketServer) submitScrollReplyInInstance(inst *WorldInstance, playe
 }
 
 // clampInputDelta folds a wire delta to the -1..1 vanilla's keyboard can
-// produce (M36.8). Every engine reader of InputDeltaX/Y indexes the tile at
-// X+delta unchecked, so a raw {dx:200} panicked the room and {dx:5} walked
-// through walls.
+// produce. Every engine reader of InputDeltaX/Y indexes the tile at
+// X+delta unchecked, so a raw {dx:200} would panic the room and {dx:5}
+// would walk through walls.
 func clampInputDelta(d int16) int16 {
 	switch {
 	case d > 0:
@@ -1572,7 +1561,7 @@ func (inst *WorldInstance) setInput(playerID PlayerID, input PlayerInput) {
 }
 
 func (s *WebSocketServer) completeWorldTransit(ctx context.Context, source *WorldInstance, transit WorldTransit) {
-	// M32.1: a challenge run does not lead anywhere. Walking a transit gate out
+	// A challenge run does not lead anywhere. Walking a transit gate out
 	// of a measured attempt would carry the run's inventory into a live world
 	// and leave the attempt running with nobody in it, so the gate is refused
 	// and the player stays in the run they started.
@@ -1636,17 +1625,17 @@ func (s *WebSocketServer) completeWorldTransit(ctx context.Context, source *Worl
 	dest.mu.Lock()
 	board := s.resolveJoinBoard(dest, 0)
 	if dest.RoomManager.JoinPlayerWithID(transit.PlayerID, board, 0, 0) == 0 {
-		// M36.23: the far world's board is full, so nobody was spawned and no
-		// object was taken. The traveller has already left the source world and
-		// is left in neither, exactly as a failed snapshot below leaves them, but
-		// they are told why. (Checking before the leave would mean holding both
-		// instances' locks; see NOTES.md 2026-11-03.)
+		// The far world's board is full, so nobody was spawned and no object
+		// was taken. The traveller has already left the source world and is
+		// left in neither, exactly as a failed snapshot below leaves them, but
+		// they are told why. Checking before the leave would mean holding both
+		// instances' locks (NOTES.md 2026-11-03).
 		dest.mu.Unlock()
 		_ = client.write(ctx, boardFullMessage())
 		return
 	}
 	if accountID != "" {
-		// The name was admitted in the source world; it is CP437 now (M37.5).
+		// The name was admitted in the source world, so it is CP437 already.
 		dest.RoomManager.setAdmittedPlayerIdentity(transit.PlayerID, accountID, name)
 		if hasStoredState {
 			dest.RoomManager.ApplyPlayerState(transit.PlayerID, storedState)
@@ -1689,7 +1678,7 @@ func (s *WebSocketServer) completeWorldTransit(ctx context.Context, source *Worl
 }
 
 // boardFullMessage is the socket form of boardFullScroll, for a joiner who has
-// no player yet and so no diff to carry it (M36.23).
+// no player yet and so no diff to carry it.
 func boardFullMessage() EventMessage {
 	return EventMessage{Type: MessageTypeEvent, Event: ProtocolEvents([]Event{boardFullScroll()})[0]}
 }
