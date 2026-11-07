@@ -9634,6 +9634,26 @@ files (`elements.go`, `game.go`, `oop.go`, `sounds.go`, `txtwind.go`,
 `editor.go`, `gamevars.go`, `input.go`, `serialize.go`, `video.go`, `lib.go`,
 `zzt.go`) are never in scope.
 
+**Status 2026-11-07 (handoff).** M40.1–M40.6 and the gap task M40.3a are
+done and pushed (`dev` at `94227a1`), each after a green full `make browser`.
+**Next: M40.7.** Three things the earlier tasks learned:
+- **Go tests pin client and server text.** `m16_13_test.go` and
+  `m16_14_test.go` match statements in `web/src/main.ts`, and M16.13 also
+  reads `ws_editor.go` by file name. A comments-only task such as M40.7/M40.8
+  can still redden them if it rewords a pinned line, so run `go test -run
+  'M1613|M1614'` after every edit. When one of them is right to change,
+  update the string and keep testing the same property (see M40.5's commit
+  for the pattern).
+- **Ticking a box adds a parity-manifest row.** After the tick, run
+  `PARITY_SCAFFOLD=1 go test -run TestParityManifestScaffold .`. When two
+  branches both tick boxes, resolve the manifest conflict by taking either
+  side and rerunning the scaffold.
+- **A sleeping Mac fails the browser family.** A Mac on battery goes into
+  Maintenance Sleep, which stalls headless browsers, and different journeys
+  then time out on every run. Run `caffeinate -dim make browser` with the
+  lid open. `pmset -g log | grep "Entering Sleep"` shows whether a run
+  slept.
+
 **Rules for every M40 task.**
 1. **No behaviour change.** No status code, wire field, log line a test reads,
    or StateHash moves. Fixtures and the parity manifest are untouched. If a
@@ -9881,6 +9901,61 @@ certification manifest (`PARITY_SCAFFOLD=1`), and every `TASKS.md` and
 `NOTES.md` reference to a test name goes stale. Worth doing only as a
 deliberate one-shot with the owner's go-ahead. A lighter alternative is to
 name *new* tests by feature from now on.
+
+## M41 — A faster browser family
+
+Filed 2026-11-07 at the owner's request ("can we reduce the time for it?").
+`make browser` runs about 10 minutes even when nothing goes wrong. Almost all
+of that is the engine package under `ZZT_BROWSER=1`, and its browser journeys
+run one after another: none of the 18 harness tests calls `t.Parallel()`.
+
+**Measured 2026-11-07** (`go test -json`, M40.6's green run, the Mac awake):
+the engine package took 540s over 843 top-level tests. The 18 tests that
+drive browsers took 445s of that; the other 825 took about 100s. The
+slowest:
+
+| Test | Seconds |
+|---|---|
+| `TestM1618PlatformMatrix` (Chromium, Firefox, WebKit) | 79.7 |
+| `TestCoopCutlineThreePlayerAcceptanceJourney` | 66.3 |
+| `TestM1613BrowserEditorAndPortableOutput` | 53.5 |
+| `TestM1614CollaborativeEditorInBrowsers` | 50.7 |
+| `TestM1611BrowserEndToEndPlayerJourneys` | 32.4 |
+| `TestM353BrowserView3DWorldRunthrough` | 20.8 |
+| `TestM1610BrowserControlVocabulary` | 18.9 |
+| `TestM1610aStaleCanvasCannotPassTheShotAssertion` | 18.6 |
+| `TestM169BrowserCanvasGoldens` | 16.2 |
+| `TestM352BrowserView3DFeatures` | 14.7 |
+| the other eight | 5–12 each |
+
+The four slowest are 250s, which is 46% of the package. The client build and
+node suite add under a minute outside the package.
+
+- [ ] **M41.1 — run the browser journeys in parallel, capped. [ADVISOR]**
+  The harness already listens on `127.0.0.1:0` and each test has its own
+  temp directory. First prove the journeys are independent: grep the 18
+  tests and `web/test/lib` for fixed ports, shared paths under `engine/web`
+  (`test-results/`, `dist/`), process-wide env (`t.Setenv` is incompatible
+  with `t.Parallel`), and package-level state. Fix or exempt any test that
+  shares something. Then mark the independent ones `t.Parallel()` and run
+  the family with `-parallel` set by a `BROWSER_PARALLEL` variable in the
+  Makefile, defaulting to 3. `make certify` stays serial
+  (`BROWSER_PARALLEL=1`), so certification never depends on the faster
+  path.
+  Load is the risk. A stalled browser is what M16.14's guest flake looked
+  like, so the cap matters more than the speed. Expected result: with 3–4
+  in parallel the package is bounded by about 445/3 ≈ 150s plus the 80s
+  platform matrix, roughly 4 minutes instead of 9.
+  DoD: `make browser` green five runs in a row at the default cap, with the
+  Mac awake (`caffeinate`). The commit records the measured wall time
+  before and after. `make certify` is unchanged and green.
+
+- [ ] **M41.2 — shorten the slowest journey, if M41.1 leaves it the bound.**
+  If after M41.1 the run is bounded by `TestM1618PlatformMatrix` (three
+  engines, one after another), run its engines as parallel subtests under
+  the same cap. Do not drop an engine: the matrix exists to cover all three.
+  DoD: the matrix's wall time halves, and all three engines are still
+  asserted.
 
 ## M14 — Rearchitecting for the service ZZTMMO is becoming
 
