@@ -2073,6 +2073,17 @@
       "notes": "task-claim row; behavioral parity carried by the element/oop/protocol/input/service rows this task touched; reconciled at M16.20"
     },
     {
+      "id": "task.M40.7",
+      "dimension": "task",
+      "subject": "Completed task M40.7 — its DoD still holds",
+      "contract": "E",
+      "authority": "TASKS.md M40.7",
+      "parity": "exact",
+      "status": "unverified",
+      "assignedTask": "M16.20",
+      "notes": "task-claim row; behavioral parity carried by the element/oop/protocol/input/service rows this task touched; reconciled at M16.20"
+    },
+    {
       "id": "task.M5.0",
       "dimension": "task",
       "subject": "Completed task M5.0 — its DoD still holds",

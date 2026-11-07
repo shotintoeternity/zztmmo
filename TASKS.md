@@ -9857,7 +9857,7 @@ done and pushed (`dev` at `94227a1`), each after a green full `make browser`.
   `npm test` is green, and `make browser` runs in the main tree after the
   merge.
 
-- [ ] **M40.7 — comments that state what is true (Go, server side).** Apply
+- [x] **M40.7 — comments that state what is true (Go, server side).** Apply
   rule 4 to `protocol.go` (32% comments, about 56 lines of prose on 9 fields
   at `:774–830`), `room_manager.go` (for example the 15-line post-mortem at
   `:1104` above a 3-line `if`), `editor_session.go` (`:514`),
@@ -9869,6 +9869,20 @@ done and pushed (`dev` at `94227a1`), each after a green full `make browser`.
   longer|found while|the old|NOTES.md"` in hand-written Go) are cut to the
   ones a reader needs, and the milestone-tag count in these files at least
   halves.
+  **Done 2026-11-07.** Five comments-only commits, one per file (the last
+  covers the three small files). `git diff -U0 f394970 -- '*.go' | grep -vE
+  '^[-+][[:space:]]*//'` shows nothing but headers. Milestone tags in the
+  seven files, counted as `M<n>.<n>[a-z]` on `//` lines, went from 205 to
+  2. The two kept are the M21.2 refusal-ordering references in
+  `ServeHTTP`. History phrases in the seven files went from 21 to 10, each
+  kept as a present-tense claim ("a run that no longer exists") or a
+  NOTES.md pointer whose claim stands alone. The history went into the
+  commit messages. Every SnapshotMessage wire field now says who sets it,
+  on which frame, and what absent means. Three doc comments that sat on
+  the wrong declaration (PrivateMessage, ChatMessage, HostGeneratedWorld)
+  now sit on their own. The other 43 history phrases are in files the task
+  does not name. NOTES.md 2026-11-07 lists them and asks whether to extend
+  the rule to them. `go test ./...` is green.
 
 - [ ] **M40.8 — the same, for `main.ts`.** Do this after M40.5 and M40.6 so it
   cleans the file's final shape. It uses the same rule and the same
