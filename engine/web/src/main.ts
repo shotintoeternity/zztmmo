@@ -83,7 +83,7 @@ import {
   type EditorStatPrompt,
   type EditorStatPromptItem,
 } from "./editor_controller";
-import { normalizeWorldEntries, normalizeWorldShelves } from "./world_list";
+import { fetchWorldList } from "./world_list";
 import { editorReplyMatchesCursor, editorCursorOverlay, editorPresenceLegend, EDITOR_BLINK_PHASES } from "./editor_cursor";
 import { optimisticEditorEraseCell, optimisticEditorTextCell } from "./editor_input";
 import {
@@ -1753,10 +1753,9 @@ function openUnavailable(title: string, verb = "available") {
 }
 
 async function fetchWorldEntries(): Promise<WorldSearchEntry[]> {
-  const response = await fetch("/api/worlds");
-  const data = (await response.json()) as { worlds?: (WorldSearchEntry | string)[]; shelves?: WorldShelf[] };
-  worldPickerShelves = normalizeWorldShelves(data.shelves ?? []);
-  return normalizeWorldEntries(data.worlds ?? []);
+  const { entries, shelves } = await fetchWorldList(fetch);
+  worldPickerShelves = shelves;
+  return entries;
 }
 
 async function showWorlds() {

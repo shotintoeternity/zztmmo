@@ -9811,7 +9811,7 @@ files (`elements.go`, `game.go`, `oop.go`, `sounds.go`, `txtwind.go`,
   `go test ./...` are green, and `make browser` runs in the main tree after
   the merge.
 
-- [ ] **M40.6 — `main.ts` small duplication.** Covers the
+- [x] **M40.6 — `main.ts` small duplication.** Covers the
   `openWindow(X, ["", "  Not available: the server did not answer.", ""],
   true)` window pasted 7 times, the fetch-world-entries-or-explain block
   duplicated at about `:1264` and `:1900`, and the six PUT bodies in
@@ -9821,6 +9821,21 @@ files (`elements.go`, `game.go`, `oop.go`, `sounds.go`, `txtwind.go`,
   `response.ok` is a bug and gets its own commit and node test. DoD: the node
   suite covers `putPreferences` and the `response.ok` case, and `make browser`
   is green.
+  **Done 2026-11-07.** Four commits:
+  1. `putPreferences(fetchFn, patch)` makes each of the six saves one line.
+     The request bytes are unchanged, the existing per-save tests pass as
+     they were, and a direct test covers the shared body.
+  2. `openUnavailable(title, verb)` replaces the six pasted "Not available:
+     the server did not answer." windows (the review counted seven), and
+     `loadWorldEntriesOrExplain` replaces the two fetch-or-explain blocks.
+     The window text is unchanged.
+  3. The world-list normalizers move, unchanged, to `world_list.ts`.
+  4. The bug fix. `fetchWorldList` throws on a non-OK reply. Before this, a
+     refusal with a JSON body (a 503 carrying `{"error": …}`) showed "There
+     are no ZZT worlds." instead of "Not available". `world_list.test.mjs`
+     fails without the check.
+  `npm test` is green, and `make browser` runs in the main tree after the
+  merge.
 
 - [ ] **M40.7 — comments that state what is true (Go, server side).** Apply
   rule 4 to `protocol.go` (32% comments, about 56 lines of prose on 9 fields
