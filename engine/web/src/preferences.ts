@@ -88,105 +88,51 @@ export async function fetchAccountPreferences(fetchFn: FetchLike): Promise<Accou
   }
 }
 
+// putPreferences sends a partial preferences document and returns the whole
+// document the server stored, or null when the request is refused or fails.
+export async function putPreferences(fetchFn: FetchLike, patch: object): Promise<AccountPreferences | null> {
+  try {
+    const response = await fetchFn(PREFERENCES_URL, {
+      method: "PUT",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify(patch),
+    });
+    if (!response.ok) {
+      return null;
+    }
+    return readPreferences(await response.json());
+  } catch {
+    return null;
+  }
+}
+
 // The picker's write path for a signed-in player. It sends the color even when
 // it is empty — that is how "No color" is said out loud — and returns the
 // document the server stored, so the caller holds what the server holds rather
 // than what it hoped for.
 export async function saveAccountColor(fetchFn: FetchLike, color: string): Promise<AccountPreferences | null> {
   const wanted = isPlayerColor(color) ? color : "";
-  try {
-    const response = await fetchFn(PREFERENCES_URL, {
-      method: "PUT",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ color: wanted }),
-    });
-    if (!response.ok) {
-      return null;
-    }
-    return readPreferences(await response.json());
-  } catch {
-    return null;
-  }
+  return putPreferences(fetchFn, { color: wanted });
 }
 
 export async function saveAccountHint(fetchFn: FetchLike, hint: AccountHintKey): Promise<AccountPreferences | null> {
-  try {
-    const response = await fetchFn(PREFERENCES_URL, {
-      method: "PUT",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ hints: { [hint]: true } }),
-    });
-    if (!response.ok) {
-      return null;
-    }
-    return readPreferences(await response.json());
-  } catch {
-    return null;
-  }
+  return putPreferences(fetchFn, { hints: { [hint]: true } });
 }
 
 export async function saveAccountProfile(fetchFn: FetchLike, profile: AccountProfilePreferences): Promise<AccountPreferences | null> {
-  try {
-    const response = await fetchFn(PREFERENCES_URL, {
-      method: "PUT",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ profile }),
-    });
-    if (!response.ok) {
-      return null;
-    }
-    return readPreferences(await response.json());
-  } catch {
-    return null;
-  }
+  return putPreferences(fetchFn, { profile });
 }
 
 export async function saveShareLocationWithFollowers(fetchFn: FetchLike, shareLocationWithFollowers: boolean): Promise<AccountPreferences | null> {
-  try {
-    const response = await fetchFn(PREFERENCES_URL, {
-      method: "PUT",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ shareLocationWithFollowers }),
-    });
-    if (!response.ok) {
-      return null;
-    }
-    return readPreferences(await response.json());
-  } catch {
-    return null;
-  }
+  return putPreferences(fetchFn, { shareLocationWithFollowers });
 }
 
 export async function saveFavoriteWorld(fetchFn: FetchLike, world: string, favorite: boolean): Promise<AccountPreferences | null> {
-  try {
-    const response = await fetchFn(PREFERENCES_URL, {
-      method: "PUT",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ favoriteWorld: world, favorite }),
-    });
-    if (!response.ok) {
-      return null;
-    }
-    return readPreferences(await response.json());
-  } catch {
-    return null;
-  }
+  return putPreferences(fetchFn, { favoriteWorld: world, favorite });
 }
 
 export async function saveAccountComfort(fetchFn: FetchLike, comfort: ComfortPreferences): Promise<AccountPreferences | null> {
-  try {
-    const response = await fetchFn(PREFERENCES_URL, {
-      method: "PUT",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ comfort: normalizeComfortPreferences(comfort) }),
-    });
-    if (!response.ok) {
-      return null;
-    }
-    return readPreferences(await response.json());
-  } catch {
-    return null;
-  }
+  return putPreferences(fetchFn, { comfort: normalizeComfortPreferences(comfort) });
 }
 
 // effectivePlayerColor is the whole of "a signed-in player's stored color wins

@@ -15,7 +15,7 @@ const output = await build({
   write: false,
 });
 const source = Buffer.from(output.outputFiles[0].contents).toString("base64");
-const { effectivePlayerColor, effectiveComfort, fetchAccountPreferences, saveAccountColor, saveAccountHint, saveAccountProfile, saveShareLocationWithFollowers, saveFavoriteWorld, saveAccountComfort } = await import(
+const { effectivePlayerColor, effectiveComfort, fetchAccountPreferences, saveAccountColor, saveAccountHint, saveAccountProfile, saveShareLocationWithFollowers, saveFavoriteWorld, saveAccountComfort, putPreferences } = await import(
   `data:text/javascript;base64,${source}`
 );
 
@@ -252,6 +252,22 @@ function jsonResponse(body, { ok = true, status = 200 } = {}) {
   assert.deepEqual(effectiveComfort({ account: null, local }), local);
   assert.deepEqual(effectiveComfort({ account: { authenticated: true, stored: true, comfort: defaultComfort }, local }), defaultComfort);
   assert.deepEqual(effectiveComfort({ account: { authenticated: true, stored: false, comfort: defaultComfort }, local }), local);
+}
+
+
+{
+  // M40.6: every save is putPreferences with its own patch. One PUT of exactly
+  // the patch to the preferences route; the stored document back, or null.
+  const { fetchFn, calls } = stubFetch(() => jsonResponse({ authenticated: true, stored: true, color: "#112233" }));
+  const saved = await putPreferences(fetchFn, { color: "#112233" });
+  assert.equal(calls.length, 1);
+  assert.equal(calls[0].url, "/api/preferences");
+  assert.equal(calls[0].init.method, "PUT");
+  assert.equal(calls[0].init.headers["Content-Type"], "application/json");
+  assert.deepEqual(JSON.parse(calls[0].init.body), { color: "#112233" });
+  assert.deepEqual(saved, defaultPrefs({ color: "#112233" }));
+  assert.equal(await putPreferences(stubFetch(() => jsonResponse({}, { ok: false, status: 500 })).fetchFn, {}), null);
+  assert.equal(await putPreferences(stubFetch(() => { throw new Error("offline"); }).fetchFn, {}), null);
 }
 
 console.log("preferences.test.mjs: ok");
