@@ -9,7 +9,7 @@
 //
 // It is the largest file in the client, and the reason is the seam it sits on:
 // this is where the DOM, the WebSocket and the render loop meet, and all three
-// are awkward to test. So the parts that CAN be tested were moved out into the
+// are awkward to test. So the parts that CAN be tested live in the
 // modules imported below — modal.ts, sidebar.ts, keys.ts, title.ts, sound.ts,
 // museum.ts, resume.ts and the rest — each of which is pure enough to exercise
 // under node, and each of which has a matching suite in ../test. What is left
@@ -232,13 +232,13 @@ const MessageTypeEditorSaveResult = "editorSaveResult";
 const MessageTypeEditorTestPlay = "editorTestPlay";
 const MessageTypeChat = "chat";
 const MessageTypeAnnounce = "announce";
-// M21.1: "stop showing me this player" — sent by the roster window, answered
+// "Stop showing me this player": sent by the roster window, answered
 // only to the sender. The suppression itself happens on the server, at the chat
 // fan-out; nothing here filters a line, because a client-side filter is
 // bypassable and would still deliver the text to this machine.
 const MessageTypeBlock = "block";
 const MessageTypeBlockResult = "blockResult";
-// M21.2: an operator acting on a person for everybody — mute, kick, refuse.
+// An operator acting on a person for everybody — mute, kick, refuse.
 // Where a block is answered only to the sender and never mentioned to its
 // target, a sanction is announced to the person it lands on: that is what
 // moderationNotice carries, and a notice that ends the session is what stops the
@@ -299,7 +299,7 @@ type PlayerSnapshot = {
   x: number;
   y: number;
   health: number;
-  /** Both M19.1, both `omitempty` on the wire: absent means the vanilla player. */
+  /** Both `omitempty` on the wire: absent means the vanilla player. */
   name?: string;
   color?: string;
   handle?: string;
@@ -358,34 +358,34 @@ type SnapshotMessage = {
   events?: ProtocolEvent[];
   resumeToken?: string;
   /**
-   * Which of `players` this client has already blocked (M21.4), on the
-   * join/resume snapshot only. Absent from an older server and from a
-   * board-change snapshot, which is why it is merged rather than assigned.
+   * Which of `players` this client has already blocked, set on the arrival
+   * snapshots (join, resume, world transit) only. Absent from a board-change
+   * snapshot, which is why it is merged rather than assigned.
    */
   blockedPlayers?: number[];
   followedPlayers?: number[];
   /**
-   * Whether this connection's account is on the server's moderator allowlist
-   * (M21.2). It only decides what the Players window OFFERS: the server checks
+   * Whether this connection's account is on the server's moderator allowlist.
+   * It only decides what the Players window OFFERS: the server checks
    * the allowlist again on every action, so setting it here buys nothing.
    */
   operator?: boolean;
   /**
-   * The challenge this frame belongs to and the run's server-minted key
-   * (M32.1). The key is not a world name and cannot be derived by the client,
+   * The challenge this frame belongs to and the run's server-minted key.
+   * The key is not a world name and cannot be derived by the client,
    * so it is stored and presented on a reconnect to reclaim THIS attempt.
    */
   challenge?: string;
   challengeRun?: string;
   /**
-   * This frame is addressed to a WATCHER, not a player (M22.1). It carries no
+   * This frame is addressed to a WATCHER, not a player. It carries no
    * `you`, no HUD and no events; it is what puts this client into read-only
    * mode. Said by the server rather than inferred here, because the one time a
    * guess would be wrong is a malformed frame — and the wrong guess is a
    * browser sampling input into a room it is not in.
    */
   spectator?: boolean;
-  /** How many people are watching this board, counting us (M22.1). */
+  /** How many people are watching this board, counting us. Absent means zero. */
   watchers?: number;
 };
 
@@ -399,7 +399,7 @@ type DiffMessage = {
   hud?: HudSnapshot;
   events?: ProtocolEvent[];
   /**
-   * How many people are watching this board (M22.1). It rides every frame, so
+   * How many people are watching this board. It rides every frame, so
    * an absent value means nobody rather than "unchanged".
    */
   watchers?: number;
@@ -421,8 +421,8 @@ type ChatMessage = {
   type: typeof MessageTypeChat;
   from: string;
   /**
-   * The sender's PlayerID (M21.1), absent from an older server's lines and from
-   * anything the server says on its own behalf. It is what makes a chat line
+   * The sender's PlayerID, absent from anything the server says on its own
+   * behalf. It is what makes a chat line
    * addressable — `from` is a display name, and display names are neither unique
    * nor claimed.
    */
@@ -523,7 +523,7 @@ type EditorSnapshotMessage = {
 	properties: EditorProperties;
 	menus?: EditorElementMenu[];
 	presence?: EditorPresence[];
-	// The membership token, on the entry snapshot only (M16.14f).
+	// The membership token, on the entry snapshot only.
 	resumeToken?: string;
 };
 
@@ -540,15 +540,15 @@ type EditorPresenceMessage = {
 type EditorDiffMessage = {
   type: typeof MessageTypeEditorDiff;
   memberId?: string;
-  // The board these cells belong to (M17.12). Members edit different boards of
+  // The board these cells belong to. Members edit different boards of
   // one world, so a diff for another board must not paint over ours.
   boardId?: number;
   cells: ScreenCell[];
   inspect: EditorInspect;
 };
 
-// screen is absent for the members of the session looking at another board
-// (M16.14a): the properties still reach them for their board list and the world
+// screen is absent for the members of the session looking at another board:
+// the properties still reach them for their board list and the world
 // name, but the frame belongs to the board the change was made on.
 type EditorPropertiesMessage = {
   type: typeof MessageTypeEditorProperties;
@@ -562,7 +562,7 @@ type EditorStatSettingsMessage = {
   cells: ScreenCell[];
 };
 
-// OopLabel / OopWarning are the M5.7 authoring aids the server computes with the
+// OopLabel / OopWarning are the authoring aids the server computes with the
 // real ZZT-OOP tokenizer: the object's :labels and advisory diagnostics.
 type OopLabel = { name: string; line: number };
 type OopWarning = { line: number; message: string };
@@ -714,8 +714,8 @@ if (!ctx) {
   throw new Error("canvas context unavailable");
 }
 const screenCtx = ctx;
-// Glyphs blit 1:1, so this changes nothing today — but it is the guard that
-// keeps a future scale change from silently reintroducing atlas bleed.
+// Glyphs blit 1:1, so this has no effect at CELL_W x CELL_H; it keeps any other
+// scale from bleeding neighbouring glyphs of the atlas into a cell.
 screenCtx.imageSmoothingEnabled = false;
 
 let ws: WebSocket | null = null;
@@ -725,23 +725,21 @@ let seq = 0;
 let lastMask = 0;
 let inputTimer = 0;
 let retryTimer = 0;
-// reconnectAttempt drives the capped backoff (M13.2). It resets to zero the
+// reconnectAttempt drives the capped backoff. It resets to zero the
 // moment a connection is established, so a brief blip retries fast and only a
 // prolonged outage backs off.
 let reconnectAttempt = 0;
 let connected = false;
 const pressed = new Set<string>();
 const zztSound = new ZztSound();
-// Expose the synth for live diagnosis (M17.7): the M17.3 fix told the operator to
-// confirm the AudioContext reads "running" in the console, but the object was
-// module-scoped and unreachable. `zztSound.diagnostics()` now works in DevTools.
+// The synth, exposed for live diagnosis: `zztSound.diagnostics()` in DevTools
+// says whether the AudioContext is running.
 (window as unknown as { zztSound: ZztSound }).zztSound = zztSound;
 
-// M4.3: the client is a two-state machine, as ZZT is. "title" is GameTitleLoop
-// — no socket, no player, the monitor sidebar over a static board 0. "playing"
-// is GamePlayLoop: joined to a room, streaming diffs. 'P' enters, quitting
-// leaves.
-// M22.1 adds "watching": a room this browser renders and does not play.
+// The client's modes. "title" is GameTitleLoop — no socket, no player, the
+// monitor sidebar over a static board 0. "playing" is GamePlayLoop: joined to a
+// room, streaming diffs; 'P' enters, quitting leaves. "editor" is an
+// EditorSession, and "watching" is a room this browser renders and does not play.
 type Mode = "title" | "playing" | "editor" | "watching";
 let mode: Mode = "title";
 
@@ -762,7 +760,7 @@ let watchLiveTimer = 0;
 let watchLiveSwitching = false;
 let watchLiveLabel = "";
 let watchLiveEmbed = false;
-// M32.1 challenge state. `challengeID` is the catalogue id this browser is
+// Challenge state. `challengeID` is the catalogue id this browser is
 // playing or looking at, and `challengeRun` is the server-minted run key a
 // reconnect presents — the key is not a world name, so it cannot be derived and
 // must be remembered. `challengeGhost` is a LOCAL overlay track and
@@ -787,22 +785,16 @@ let playBoardId = 0;
  * A ghost is a place on THIS board. Walking your body through a passage takes
  * it somewhere else, and a camera left hovering over a board nobody is on is
  * not a view of anything -- so a board change ends the ghost, exactly as V
- * does. view3d/index.ts has always said "a board change and V both do it"; this
- * is the half that was missing.
+ * does (view3d/index.ts: "a board change and V both do it").
  */
 function setPlayBoardId(next: number) {
   if (next !== playBoardId && view3d !== null) {
-    // A NEW BOARD, NOT A WALK -- which is the sentence snap() was written for,
-    // and until now nothing said it. The rig smooths the camera toward your
-    // body (1 - exp(-dt*10)) so a step looks like a step; after a passage your
-    // body is somewhere else entirely, and smoothing toward it flies the camera
-    // across the whole board and through everything between the two squares.
-    // On a sparse board that reads as a swoop. On a board like TOWN it is a
-    // second of walls and fog going past the lens, which is what a player
-    // reports as the screen flickering.
+    // A new board, not a walk: snap() rather than the rig's smoothing toward
+    // your body (1 - exp(-dt*10)), which after a passage would fly the camera
+    // across the board and through every wall between the two squares.
     view3d.snap();
     // A ghost is a place on THIS board, so a board change ends it, exactly as V
-    // does -- view3d/index.ts has always said "a board change and V both do it".
+    // does.
     if (view3d.ghost) {
       view3d.leaveGhost();
       drawView3DRows();
@@ -810,7 +802,7 @@ function setPlayBoardId(next: number) {
   }
   playBoardId = next;
 }
-// The on-screen control bar (M15.1, M16.18a), or null on anything without touch
+// The on-screen control bar, or null on anything without touch
 // points. Declared here rather than at its construction site because
 // syncTouchControls() below is reached from drawScreen(), which runs before that
 // site — a `const` there would be in its temporal dead zone for the first frame.
@@ -831,7 +823,7 @@ const SIGN_READOUT_LINES = 3;
 const SIGN_READOUT_FG = 0x0f;
 const SIGN_READOUT_BG = 0x01;
 
-// --- the 3D view (M35) ------------------------------------------------------
+// --- the 3D view ------------------------------------------------------------
 //
 // A second painter for the board half of `cells`. It is loaded on demand: three
 // .js is most of half a megabyte and most players never ask for it, so the
@@ -841,12 +833,10 @@ let view3d: import("./view3d").View3D | null = null;
 let view3dLoading = false;
 
 /**
- * setMode is the one way the client changes what it is showing (M36.27). The 3D
- * view's animation loop is started by V during play and was stopped only by V,
- * so quitting to the title, opening the editor or watching left it running,
- * its GL canvas still shown over the next screen. Leaving play now stops the
- * loop, and returning to play restarts it if the player was in 3D: the rig keeps
- * its mode, so the choice of view survives the trip.
+ * setMode is the one way the client changes what it is showing. Leaving play
+ * stops the 3D view's animation loop, so its GL canvas is never left over the
+ * next screen; returning to play restarts it if the player was in 3D. The rig
+ * keeps its mode, so the choice of view survives the trip.
  */
 function setMode(next: Mode) {
   if (view3d && view3d.rig.mode === "world") {
@@ -910,9 +900,8 @@ async function toggleView3D() {
       const module = await import("./view3d");
       view3d = await module.createView3D(view3dCanvas);
       view3d.onTextChanged = () => drawScreen();
-      // The text screen is sized entirely by CSS (aspect-ratio: 640/350), so
-      // there is no resize handler in this client to hang off -- the 2D canvas
-      // has never needed one. A GL drawing buffer does, so the view brings its
+      // The text screen is sized entirely by CSS (aspect-ratio: 640/350) and
+      // needs no resize handler. A GL drawing buffer does, so the view brings its
       // own observer, watching the canvas it must stay glued to.
       new ResizeObserver(() => syncView3DCanvas()).observe(canvas);
     } finally {
@@ -974,7 +963,7 @@ function feedView3D() {
 // the roster or the screen changes; consulted by drawScreen after the overlay.
 const playerTints = new Map<number, string>();
 let authStatus: AuthStatus = { enabled: false, authenticated: false };
-// The signed-in player's account-wide preferences (M19.3), or null for a guest,
+// The signed-in player's account-wide preferences, or null for a guest,
 // a signed-in player who has never chosen anything, and a read that failed.
 // null is what sends readStoredPlayerColor back to localStorage.
 let accountPrefs: AccountPreferences | null = null;
@@ -982,7 +971,7 @@ let accountPrefsLoaded = false;
 // leavingToTitle suppresses the reconnect that a dropped socket normally
 // triggers: a socket we closed on purpose must not come back.
 let leavingToTitle = false;
-// M17.11 occupancy: how many people are playing or editing, server-wide for the
+// Occupancy: how many people are playing or editing, server-wide for the
 // title screen and per-world for the picker. Server-observed presentation state
 // — it never enters the simulation. See refreshOccupancy.
 let serverOccupancy: ServerOccupancy = NO_OCCUPANCY;
@@ -990,14 +979,14 @@ let worldPickerEntries: WorldSearchEntry[] = [];
 let worldPickerShelves: WorldShelf[] = [];
 let occupancyTimer = 0;
 
-// While a modal is up, gameplay keys are swallowed (M4.1: handleModalKey is the
-// only consumer). The simulation does NOT pause behind it (M1.3 deviation), so
+// While a modal is up, gameplay keys are swallowed (handleModalKey is the only
+// consumer). The simulation does NOT pause behind it (M1.3 deviation), so
 // the board keeps updating underneath and the modal is painted as an overlay
 // rather than by saving/restoring cells.
 let modal: Modal | null = null;
 let bindingCaptureAction: KeyAction | "" = "";
 const mobileTextInput = new MobileTextInputBridge(document);
-// Per-player pause (M3.11): the server tells us via PauseEvent whether OUR stat
+// Per-player pause: the server tells us via PauseEvent whether OUR stat
 // is paused. The room keeps running for everyone else, so this is presentation
 // only — we draw what vanilla's GamePlayLoop pause branch drew.
 let paused = false;
@@ -1007,7 +996,7 @@ let pauseTimer = 0;
 // name popup, then the finished list. Each opens as the previous one closes.
 let pendingHighScore = false;
 let returnToTitleOnClose = false;
-// M20.1: set while the "Deep link" refusal window is up, so closing it drops the
+// Set while the "Deep link" refusal window is up, so closing it drops the
 // visitor into the world picker instead of leaving them at a title screen they
 // did not ask for. Same shape as returnToTitleOnClose above.
 let showWorldsOnClose = false;
@@ -1023,7 +1012,7 @@ const cells: ScreenCell[] = Array.from({ length: COLS * ROWS }, (_, i) => ({
   element: 0,
 }));
 
-// M9.1 board-change fade. While `boardTransition` is set, drawScreen renders the
+// The board-change fade. While `boardTransition` is set, drawScreen renders the
 // viewport through it: the outgoing board (`transitionOld`) dissolves into purple
 // blocks, then the incoming board (the live `cells`) is revealed in the same
 // order. The incoming board is applied to `cells` up front, so diffs arriving
