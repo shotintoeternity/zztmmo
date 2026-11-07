@@ -41,7 +41,7 @@ type EditorSession struct {
 	readOnly   map[*webSocketClient]bool
 	nextMember int
 	leases     map[editorLeaseKey]*webSocketClient
-	// memberBoard is each member's own current board (M17.12). The session has
+	// memberBoard is each member's own current board. The session has
 	// one shared engine, so `engine.World.Info.CurrentBoard` is whichever board
 	// was last operated on — it is engine bookkeeping, not any member's view.
 	// Apply switches the engine onto the acting member's board before running
@@ -49,7 +49,7 @@ type EditorSession struct {
 	// the implicit current board unchanged.
 	memberBoard map[*webSocketClient]int16
 
-	// memberToken/tokenMember are the editor's reconnect index (M16.14f). Each
+	// memberToken/tokenMember are the editor's reconnect index. Each
 	// member is handed a random token with its entry snapshot; a browser whose
 	// socket closed presents it again, and EnterResuming hands that membership
 	// — id, colour, board, cursor and leases — to the new connection instead of
@@ -58,20 +58,18 @@ type EditorSession struct {
 	tokenMember map[string]*webSocketClient
 
 	// fanTicket is the next fan-out ticket, handed out under mu at the instant
-	// an edit is applied (M16.14b). Guarded by mu, not by fanMu: it has to be
+	// an edit is applied. Guarded by mu, not by fanMu: it has to be
 	// issued inside the same critical section that applied the edit, or two
 	// connections could apply in one order and take tickets in the other.
 	fanTicket uint64
 
-	// The fan-out ordering gate (M16.14b). Two connections are two goroutines,
-	// so before this the order the session applied two edits and the order their
-	// diffs reached a third member's socket were independent: two members
-	// writing one cell could leave that third screen holding the tile the
-	// session threw away, permanently. inOrder serializes the fan-outs into
-	// ticket order without holding mu across the writes, so a fan-out can block
-	// no edit, lease, inspect or newcomer's entry snapshot. What it orders is
-	// the handover to each member's own writer (M16.14e), so a member whose
-	// browser has stalled no longer delays the broadcasts behind it either.
+	// The fan-out ordering gate. Diffs must reach every member in the order
+	// the session applied the edits, or two members writing one cell can
+	// leave a third screen holding the tile the session threw away. inOrder
+	// serializes the fan-outs into ticket order without holding mu across the
+	// writes, so a fan-out blocks no edit, lease, inspect or entry snapshot.
+	// What it orders is the handover to each member's own writer, so a
+	// stalled browser delays nobody else's broadcasts.
 	fanMu      sync.Mutex
 	fanCond    *sync.Cond
 	fanServing uint64
@@ -93,7 +91,7 @@ func NewEditorSession(worldName string, world TWorld) *EditorSession {
 	e.MultiRoom = true
 	e.SetInputSource(&ScriptedInput{})
 	// EditorLoop's first act is InitElementsEditor (editor.go:513), and this is
-	// the editor (M16.13a): a dark board is edited LIT, and an invisible wall
+	// the editor: a dark board is edited LIT, and an invisible wall
 	// draws 0xB0 so it can be seen and moved. InstallEditorElements rather than
 	// InitElementsEditor — rebuilding the shared ElementDefs table here would
 	// reach into every room ticking beside this session.
@@ -134,7 +132,7 @@ func (s *EditorSession) EnterNamed(member *webSocketClient, name string) (Editor
 	return presence, err
 }
 
-// EnterResuming is Enter with the editor's reconnect path (M16.14f). token is
+// EnterResuming is Enter with the editor's reconnect path. token is
 // what the browser was handed with its last entry snapshot, or "" for a first
 // entry. It returns the member's presence, the token this connection must be
 // given, and the connection it displaced, if any — the caller closes that one,
@@ -148,8 +146,7 @@ func (s *EditorSession) EnterNamed(member *webSocketClient, name string) (Editor
 //
 // When the token names nobody — the ordinary case, because the server usually
 // notices the drop before the browser has finished backing off — this is a
-// plain fresh entry: a new id, a new colour, and no leases, exactly as an
-// abrupt disconnect leaves things today.
+// plain fresh entry: a new id, a new colour, and no leases.
 func (s *EditorSession) EnterResuming(member *webSocketClient, name, token string) (EditorPresence, string, *webSocketClient, error) {
 	s.mu.Lock()
 	defer s.mu.Unlock()
@@ -294,7 +291,7 @@ func (s *EditorSession) SetMemberReadOnly(member *webSocketClient, readOnly bool
 
 // SetAccountReadOnly changes the edit rights of every member signed in as
 // accountID, and returns the members it changed so the caller can tell those
-// browsers (M16.14a (b)). A client's own read-only flag is set from a snapshot
+// browsers. A client's own read-only flag is set from a snapshot
 // and from nowhere else, and every editor key consults it before it sends
 // anything: a flag cleared here and never announced leaves an invited
 // collaborator refused by their own browser until they re-enter the editor.
@@ -335,10 +332,10 @@ func (s *EditorSession) SetWorldName(name string) {
 // WorldTitle is the 20-character name the world-property dialog sets
 // (SetProperty → World.Info.Name), read before a publish overwrites it with the
 // save stem. Vanilla conflates the two — GameWorldSave writes the filename into
-// Info.Name and the .HI path is built from it (game.go:910) — so M14.4 does not
-// change what goes into the .ZZT bytes. It captures the authored title on its
-// way past and records it in the world's meta sidecar, where the picker can
-// read it and no path resolver ever will.
+// Info.Name and the .HI path is built from it (game.go:910) — so the .ZZT
+// bytes keep that behaviour. The authored title is captured on its way past
+// and recorded in the world's meta sidecar, where the picker can read it and
+// no path resolver ever will.
 func (s *EditorSession) WorldTitle() string {
 	s.mu.Lock()
 	defer s.mu.Unlock()
@@ -376,7 +373,7 @@ func (s *EditorSession) Presence() []EditorPresence {
 	return out
 }
 
-// MemberCount reports how many people are editing this world (M17.11). Members
+// MemberCount reports how many people are editing this world. Members
 // is mutex-guarded, so callers outside the session must come through here rather
 // than reading the map directly.
 func (s *EditorSession) MemberCount() int {
@@ -395,7 +392,7 @@ func (s *EditorSession) MemberClients() []*webSocketClient {
 	return out
 }
 
-// MemberClientsOnBoard reports the members currently editing boardID (M17.12).
+// MemberClientsOnBoard reports the members currently editing boardID.
 // Board-shaped broadcasts — an edit diff is the only one today — go through
 // here instead of MemberClients, because sending one board's dirty cells to a
 // member viewing another board paints their screen with tiles that are not
@@ -414,7 +411,7 @@ func (s *EditorSession) MemberClientsOnBoard(boardID int16) []*webSocketClient {
 
 // MemberCursor reports the cell a member's browser last told the session it was
 // inspecting (UpdatePresence). A snapshot the server sends unprompted — the
-// invite in M16.14a (b) — carries it, so telling a member something does not
+// invite's — carries it, so telling a member something does not
 // drag their cursor back to the middle of the board.
 func (s *EditorSession) MemberCursor(member *webSocketClient) (int16, int16) {
 	s.mu.Lock()
@@ -427,7 +424,7 @@ func (s *EditorSession) MemberCursor(member *webSocketClient) (int16, int16) {
 }
 
 // MemberBoard reports the board a member is editing, and whether they are a
-// member at all (M17.12).
+// member at all.
 func (s *EditorSession) MemberBoard(member *webSocketClient) (int16, bool) {
 	s.mu.Lock()
 	defer s.mu.Unlock()
@@ -438,21 +435,17 @@ func (s *EditorSession) MemberBoard(member *webSocketClient) (int16, bool) {
 	return boardID, ok
 }
 
-// editorPresenceColor picks a collaborator's cursor colour. M17.9: these are
+// editorPresenceColor picks a collaborator's cursor colour. These are
 // foreground-only attributes (high nibble 0 = black background) so a remote
 // cursor renders exactly like the local one — the cross glyph over the board
-// tile — differing only in hue. The previous palette used background-filled
-// attributes (0x1e = blue background), which painted the whole cell as a solid
-// block and hid the tile underneath.
+// tile — differing only in hue. A background-filled attribute would paint the
+// whole cell as a block and hide the tile underneath.
 //
 // Entries must be visibly distinct from the local cursor's white (0x0F), which
-// rules out more than 0x0F itself. In the client's EGA palette (main.ts) bright
-// cyan 0x0B is #55ffff — white with the red channel dropped — and on a thin 8x14
-// cross glyph it reads as white. That shipped as the *second* colour, so with two
-// editors the first player saw the second's cursor as white while the second
-// correctly saw yellow: the asymmetric "both cursors white on one screen" report.
-// Bright cyan is therefore excluded too, and the order runs most-distinct first
-// so small sessions get the least confusable colours.
+// rules out more than 0x0F itself: bright cyan 0x0B is #55ffff in the client's
+// EGA palette, and on a thin 8x14 cross glyph it reads as white, so it is
+// excluded too. The order runs most-distinct first so small sessions get the
+// least confusable colours.
 //
 // Guarded by TestEditorPresenceColorsAreDistinctFromTheLocalCursor.
 func editorPresenceColor(n int) byte {
@@ -513,15 +506,9 @@ func (s *EditorSession) ReleaseLease(member *webSocketClient, request EditorLeas
 // leaseKeyLocked names the thing a lease request is about. Both kinds resolve
 // against the board that was ASKED FOR, falling back to the asker's own board —
 // never against the shared engine's current board, which is whichever board the
-// member who acted last was on (Apply → focusMemberBoardLocked, M17.12).
-//
-// M16.14a (c): the stat key used to be resolved and validated against the
-// engine, so a collaborator switching boards moved the key out from under a
-// lease that was already held. The holder's release then resolved to no key and
-// was dropped, stranding a lease held by somebody who had closed the dialog and
-// walked away; a fresh request replied with nothing at all, and the client,
-// which reacts only to "granted" and "refused", silently did nothing. The board
-// lease never had that dependency, and this is the stat lease matching it.
+// member who acted last was on (Apply → focusMemberBoardLocked). Resolving
+// against the engine would let a collaborator's board switch move a held
+// lease's key, so its release would match nothing and strand the lease.
 //
 // The stat index is bounded by the stat table's own limit rather than by the
 // board's StatCount, because the stats of a board that is not open are not in
@@ -595,7 +582,7 @@ func (s *EditorSession) Apply(member *webSocketClient, fn func(*Engine)) error {
 }
 
 // issueFanTicketLocked takes the next fan-out ticket. Callers must hold s.mu,
-// and must hold it across the mutation the ticket orders (M16.14b).
+// and must hold it across the mutation the ticket orders.
 func (s *EditorSession) issueFanTicketLocked() uint64 {
 	ticket := s.fanTicket
 	s.fanTicket++
@@ -603,11 +590,11 @@ func (s *EditorSession) issueFanTicketLocked() uint64 {
 }
 
 // inOrder runs fn once every earlier ticket's fan-out has finished, so messages
-// reach the members in the order the session applied the changes behind them
-// (M16.14b). fn runs with no session lock held: putting the fan-out under s.mu
+// reach the members in the order the session applied the changes behind
+// them. fn runs with no session lock held: putting the fan-out under s.mu
 // would let whatever the writes are waiting on freeze every other member's
-// editing. Since M16.14e those writes only hand each message to that member's
-// own writer, so the gate waits on no browser at all.
+// editing. The writes only hand each message to that member's own writer,
+// so the gate waits on no browser at all.
 //
 // The ticket is always retired, including when fn panics, or one abandoned
 // fan-out would stall every later one for the life of the session.
@@ -656,7 +643,7 @@ func (s *EditorSession) SetFanOutHook(hook func(ticket uint64)) {
 }
 
 // focusMemberBoardLocked points the shared engine at the acting member's own
-// board before their operation runs (M17.12). Members edit different boards of
+// board before their operation runs. Members edit different boards of
 // one world, but the session holds a single engine whose converted-from-Pascal
 // paths all read the implicit current board (Edit/Apply, leaseKeyLocked,
 // hasCurrentBoardLeaseLocked, editorSnapshot, and the sidebar's pattern/copied
@@ -677,9 +664,8 @@ func (s *EditorSession) focusMemberBoardLocked(member *webSocketClient) {
 	}
 	boardID, ok := s.memberBoard[member]
 	if !ok {
-		// A member with no recorded board adopts whatever is open; this is the
-		// pre-M17.12 behaviour and covers members who joined before their first
-		// board switch.
+		// A member with no recorded board adopts whatever is open, which
+		// covers members who joined before their first board switch.
 		s.memberBoard[member] = e.World.Info.CurrentBoard
 		return
 	}
@@ -727,13 +713,13 @@ func editorSnapshot(e *Engine, x, y int16) EditorSnapshotMessage {
 // overwritten. The browser never writes board state directly.
 //
 // It takes and immediately retires a fan-out ticket, so a caller with nothing
-// to broadcast still holds its place in the order (M16.14b).
+// to broadcast still holds its place in the order.
 func (s *EditorSession) Edit(member *webSocketClient, edit EditorEditMessage) (EditorDiffMessage, error) {
 	return s.EditAndFanOut(member, edit, nil)
 }
 
 // EditAndFanOut applies the edit and then runs broadcast in the order the
-// session applied it, relative to every other member's edit (M16.14b). The
+// session applied it, relative to every other member's edit. The
 // broadcast runs outside the session lock. Callers must fan an edit diff out
 // through this rather than after a bare Edit: the ticket is issued in the same
 // critical section that wrote the tile, which is the whole ordering guarantee.
@@ -743,7 +729,7 @@ func (s *EditorSession) EditAndFanOut(member *webSocketClient, edit EditorEditMe
 	var ticketed bool
 	memberID := s.MemberID(member)
 	// A ticket taken by an edit that then panics must still be retired, or
-	// every later edit by every member waits on it forever (M36.11). Only the
+	// every later edit by every member waits on it forever. Only the
 	// Apply is covered: once the ticket reaches inOrder below, inOrder retires
 	// it itself, and retiring a served ticket again would wait forever. The
 	// panic carries on to the connection's own recovery.
@@ -792,10 +778,8 @@ func (s *EditorSession) EditAndFanOut(member *webSocketClient, edit EditorEditMe
 				Type:     MessageTypeEditorDiff,
 				MemberID: memberID,
 				// Apply has focused the engine on this member's board, so the
-				// engine's current board is the board these cells belong to
-				// (M17.12). The server broadcasts the diff only to members viewing
-				// it; without that, an edit on board 2 repainted cells over the
-				// board 1 a collaborator was looking at.
+				// engine's current board is the board these cells belong to.
+				// The server broadcasts the diff only to members viewing it.
 				BoardID: e.World.Info.CurrentBoard,
 				Cells:   e.DrainScreenDirty(),
 				Inspect: editorTileInspect(e, x, y),
@@ -849,7 +833,7 @@ func editorPlaceTile(e *Engine, x, y int16, element, color byte, copied bool) bo
 	return true
 }
 
-// editorBrushElement is what the place and fill brushes may paint (M36.11). A
+// editorBrushElement is what the place and fill brushes may paint. A
 // pattern element always; a copied tile only if it is a real element (a byte
 // above MAX_ELEMENT panics the first time it is drawn) and needs no stat. The
 // fork's copy carries a tile's element and colour, not vanilla's CopiedStat
@@ -866,7 +850,7 @@ func editorPatternElement(element byte) bool {
 	return element == E_SOLID || element == E_NORMAL || element == E_BREAKABLE || element == E_EMPTY || element == E_LINE
 }
 
-// editorPlaceElement places an F1/F2/F3 category-menu element (M5.8), porting
+// editorPlaceElement places an F1/F2/F3 category-menu element, porting
 // the placement half of EditorLoop's element switch (EDITOR.PAS:731-772). Unlike
 // editorPlaceTile (pattern brush only), this accepts any category element and
 // adds a stat when the element needs one, seeding its parameters from
@@ -926,7 +910,7 @@ func editorPlaceElement(e *Engine, x, y int16, element, cursorColor byte) bool {
 	return true
 }
 
-// editorPlaceText places one F4 text-entry character (M5.8), porting the text
+// editorPlaceText places one F4 text-entry character, porting the text
 // branch of EditorLoop (EDITOR.PAS:459-467, editor.go:552-560): the tile's
 // element is the text-colour variant chosen by the cursor foreground colour and
 // its Color byte carries the typed character. cursorColor is the editor's fg
@@ -970,7 +954,7 @@ func editorResolveElementColor(element, cursorColor byte) int16 {
 
 // editorElementCharacter is Engine.ElementCharacter for the menu builder, which
 // has no engine to ask: an F1/F2/F3 list is only ever shown to somebody editing,
-// and the editor element table is installed for all of them (M16.13a).
+// and the editor element table is installed for all of them.
 func editorElementCharacter(element int16) byte {
 	if element == E_INVISIBLE {
 		return EditorInvisibleChar
@@ -1012,9 +996,9 @@ func editorElementMenus() []EditorElementMenu {
 				ElementID: byte(el),
 				Name:      def.Name,
 				// This list only ever describes the editor, where the editor
-				// element table is installed, so the glyph is that table's
-				// (M16.13a) — an "Invisible" row that showed a blank would be
-				// the one row you could not see.
+				// element table is installed, so the glyph is that table's —
+				// an "Invisible" row that showed a blank would be the one row
+				// you could not see.
 				Character:    editorElementCharacter(el),
 				Color:        color,
 				CategoryName: def.CategoryName,
@@ -1217,7 +1201,7 @@ func (s *EditorSession) SetStat(member *webSocketClient, edit EditorStatMessage)
 	return reply, err
 }
 
-// ProgramText returns an object/scroll's ZZT-OOP program as lines for the M5.4
+// ProgramText returns an object/scroll's ZZT-OOP program as lines for the
 // browser code editor. Only text-backed elements (ParamTextName set) have one;
 // anything else returns an empty message, which the client ignores.
 func (s *EditorSession) ProgramText(member *webSocketClient, statId int16) (EditorProgramMessage, error) {
@@ -1297,7 +1281,7 @@ func (s *EditorSession) SaveProgram(member *webSocketClient, statId int16, lines
 		def := ElementDefs[e.Board.Tiles[stat.X][stat.Y].Element]
 		if def.ParamTextName != "" {
 			// Kept so a program the board cannot hold is refused with nothing
-			// changed, the sharers' unbinding included (M36.11).
+			// changed, the sharers' unbinding included.
 			saved := e.Board.Stats
 			if len(lines) > MAX_TEXT_WINDOW_LINES {
 				lines = lines[:MAX_TEXT_WINDOW_LINES]
@@ -1319,7 +1303,7 @@ func (s *EditorSession) SaveProgram(member *webSocketClient, statId int16, lines
 				stat.DataLen = int16(total)
 				// BoardClose serializes into the fixed 20000-byte IoTmpBuf, and
 				// a board that does not fit panics it there and on every later
-				// close, publish and download (M36.11).
+				// close, publish and download.
 				if boardSerializedSize(e) > len(e.IoTmpBuf) {
 					e.Board.Stats = saved
 				} else {
@@ -1373,7 +1357,7 @@ func (s *EditorSession) SwitchBoard(member *webSocketClient, boardId int16) (Edi
 			e.BoardChange(boardId)
 			e.TransitionDrawToBoard()
 		}
-		// M17.12: the switch belongs to this member, not the session. Record it
+		// The switch belongs to this member, not the session. Record it
 		// so their later operations refocus here, and so other members stay on
 		// their own boards instead of being dragged along.
 		if boardId >= 0 && boardId <= e.World.BoardCount {
@@ -1442,7 +1426,7 @@ func (s *EditorSession) NewWorld(member *webSocketClient) (EditorSnapshotMessage
 		e.BoardOpen(e.World.Info.CurrentBoard)
 		e.GenerateTransitionTable()
 		e.TransitionDrawToBoard()
-		// M16.14a (a): a new world is world-scoped — the board every other
+		// A new world is world-scoped — the board every other
 		// member was looking at no longer exists. Put them all on the only board
 		// there is, so the repaint the server broadcasts is a repaint of the
 		// board each of them is on.
@@ -1507,8 +1491,7 @@ func (s *EditorSession) ImportBoard(member *webSocketClient, data []byte) (Edito
 		e.World.BoardData[cur] = append([]byte(nil), data[2:]...)
 		e.World.BoardLen[cur] = length
 		// A board can open cleanly and still panic the first time it is drawn
-		// or ticked: boardStructuralError catches that before it is committed
-		// (M36.11).
+		// or ticked: boardStructuralError catches that before it is committed.
 		if !safeBoardOpen(e, cur) || boardStructuralError(e) != nil {
 			e.World.BoardData[cur], e.World.BoardLen[cur] = prevData, prevLen
 			e.BoardOpen(cur)
@@ -1527,7 +1510,7 @@ func (s *EditorSession) ImportBoard(member *webSocketClient, data []byte) (Edito
 
 // validateEditorWorldBoards is validateWorldBoards plus boardStructuralError
 // and a size check on every board: the stricter gate for a world a client uploads into the
-// editor (M36.11), which ordinary world loads do not apply.
+// editor, which ordinary world loads do not apply.
 func validateEditorWorldBoards(world TWorld) error {
 	scratch := newSnapshotEngine()
 	scratch.World = world
@@ -1540,7 +1523,7 @@ func validateEditorWorldBoards(world TWorld) error {
 		}
 		// worldReadFrom takes any int16 board length, but BoardClose writes
 		// into the 20000-byte IoTmpBuf, so a bigger board would panic the
-		// first edit on it, and every save after (M36.11).
+		// first edit on it, and every save after.
 		if size := boardSerializedSize(scratch); size > len(scratch.IoTmpBuf) {
 			return fmt.Errorf("%w: board %d is %d bytes; maximum is %d", ErrWorldCorrupt, boardID, size, len(scratch.IoTmpBuf))
 		}
@@ -1608,7 +1591,7 @@ func (s *EditorSession) WorldBytes(member *webSocketClient, name string) ([]byte
 }
 
 // UploadWorld replaces the entire session world with data, vanilla .ZZT bytes
-// from a client file, after the M7.5 gate: the bytes must load and survive 200
+// from a client file, after the upload gate: the bytes must load and survive 200
 // headless GameSteps without a panic. It mirrors ImportBoard for a whole world.
 // A world that fails the gate leaves the session untouched, and the returned gate
 // string tells the client why. The returned snapshot is always a complete frame
@@ -1632,7 +1615,7 @@ func (s *EditorSession) UploadWorld(member *webSocketClient, data []byte) (Edito
 		}
 		// The 200-tick simulation never draws a tile nobody touches, nor a
 		// stat's Under until it moves, so it can pass a board the editor's
-		// first draw panics on (M36.11).
+		// first draw panics on.
 		if verr := validateEditorWorldBoards(scratch.World); verr != nil {
 			gate = verr.Error()
 			return
@@ -1654,9 +1637,9 @@ func (s *EditorSession) UploadWorld(member *webSocketClient, data []byte) (Edito
 // titleScreenIsNone argument dropped: the wire list carries every board under
 // its OWN name, and the client substitutes "None" for board 0 at the two call
 // sites where vanilla passes true (a board's four edges, and a passage's target
-// room). Calling it "None" here instead was M16.13a's second finding — it left
-// the "Switch boards" list, vanilla's one titleScreenIsNone-FALSE caller, with
-// no way to name the world's first board, and so no way back to it.
+// room). It must not say "None" here: the "Switch boards" list, vanilla's one
+// titleScreenIsNone-FALSE caller, would have no way to name the world's first
+// board, and so no way back to it.
 //
 // The open board is read from e.Board, not BoardData: an edit that has not been
 // closed back into BoardData yet is still the board the author is looking at.
