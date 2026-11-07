@@ -1125,15 +1125,8 @@ async function openLaunchDestination() {
 }
 
 async function openDefaultLaunchDestination() {
-  let entries: WorldSearchEntry[];
-  try {
-    entries = await fetchWorldEntries();
-  } catch {
-    openWindow("ZZT Worlds", ["", "  Not available: the server did not answer.", ""], true);
-    return;
-  }
-  if (entries.length === 0) {
-    openWindow("ZZT Worlds", ["", "  There are no ZZT worlds.", ""], true);
+  const entries = await loadWorldEntriesOrExplain();
+  if (!entries) {
     return;
   }
   if (!accountPrefsLoaded) {
@@ -1732,7 +1725,7 @@ async function fetchLines(url: string, fallbackTitle: string) {
     const data = (await response.json()) as { title?: string; lines?: string[] };
     openWindow(data.title || fallbackTitle, data.lines ?? [], true);
   } catch {
-    openWindow(fallbackTitle, ["", "  Not available: the server did not answer.", ""], true);
+    openUnavailable(fallbackTitle);
   }
 }
 
@@ -1753,6 +1746,11 @@ function showHelp(file: string, title: string) {
   openHelp(file, title, { fetchLines: fetchHelpLines, openModal });
 }
 
+// openUnavailable is the window for a request the server did not answer.
+function openUnavailable(title: string, verb = "available") {
+  openWindow(title, ["", `  Not ${verb}: the server did not answer.`, ""], true);
+}
+
 async function fetchWorldEntries(): Promise<WorldSearchEntry[]> {
   const response = await fetch("/api/worlds");
   const data = (await response.json()) as { worlds?: (WorldSearchEntry | string)[]; shelves?: WorldShelf[] };
@@ -1761,20 +1759,27 @@ async function fetchWorldEntries(): Promise<WorldSearchEntry[]> {
 }
 
 async function showWorlds() {
-  let worlds: WorldSearchEntry[] = [];
+  const worlds = await loadWorldEntriesOrExplain();
+  if (worlds) {
+    showWorldEntries(worlds);
+  }
+}
+
+// loadWorldEntriesOrExplain fetches the world list, or says in a window why
+// there is none to show and returns null.
+async function loadWorldEntriesOrExplain(): Promise<WorldSearchEntry[] | null> {
+  let worlds: WorldSearchEntry[];
   try {
     worlds = await fetchWorldEntries();
   } catch {
-    openWindow("ZZT Worlds", ["", "  Not available: the server did not answer.", ""], true);
-    return;
+    openUnavailable("ZZT Worlds");
+    return null;
   }
-
   if (worlds.length === 0) {
     openWindow("ZZT Worlds", ["", "  There are no ZZT worlds.", ""], true);
-    return;
+    return null;
   }
-
-  showWorldEntries(worlds);
+  return worlds;
 }
 
 function showWorldEntries(worlds: WorldSearchEntry[]) {
@@ -2163,7 +2168,7 @@ async function showSavedGames() {
     const data = (await response.json()) as { saves?: string[] };
     saves = data.saves ?? [];
   } catch {
-    openWindow("Saved Games", ["", "  Not available: the server did not answer.", ""], true);
+    openUnavailable("Saved Games");
     return;
   }
 
@@ -2189,7 +2194,7 @@ async function restoreSavedGame(name: string) {
       return;
     }
   } catch {
-    openWindow("Restore game", ["", "  Not restored: the server did not answer.", ""], true);
+    openUnavailable("Restore game", "restored");
     return;
   }
 
@@ -3562,7 +3567,7 @@ async function openChallengeLanding(id: string, options: { rememberPath?: boolea
     resp = (await response.json()) as ChallengeResponse;
   } catch {
     showWorldsOnClose = true;
-    openWindow("Daily Challenge", ["", "  Not available: the server did not answer.", ""], true);
+    openUnavailable("Daily Challenge");
     return;
   }
   challengeLanding = resp;
