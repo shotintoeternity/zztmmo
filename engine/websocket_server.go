@@ -242,8 +242,8 @@ type WorldInstance struct {
 	// RecordWorld and RecordID override what attachRecorderLocked takes from
 	// Name: the recording's HEADER world (which /replay resolves against the
 	// hosting directory) and the recording's file stem (which must pass
-	// sanitizeReplayID). An ordinary instance leaves both empty and is recorded
-	// under Name.
+	// sanitizeReplayID). An ordinary instance leaves both empty: the header
+	// names Name, and the file stem is Name plus the boot's record stamp.
 	RecordWorld string
 	RecordID    string
 	mu          sync.Mutex

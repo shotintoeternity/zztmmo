@@ -750,11 +750,12 @@ type SnapshotMessage struct {
 	HUD     HUDSnapshot      `json:"hud"`
 	Screen  []ScreenCell     `json:"screen"`
 	Events  []ProtocolEvent  `json:"events,omitempty"`
-	// ResumeToken is set only on the join/resume snapshot. The client stores
-	// it keyed by world name and presents it to reclaim a dropped run.
+	// ResumeToken is set on the arrival snapshots: a join, a resume, and the
+	// snapshot a world transit lands with. The client stores it keyed by world
+	// name and presents it to reclaim a dropped run.
 	ResumeToken string `json:"resumeToken,omitempty"`
 	// BlockedPlayers lists which players in THIS snapshot's roster the
-	// recipient has blocked. Set only on the join/resume snapshot. It carries
+	// recipient has blocked. Set on the arrival snapshots. It carries
 	// PlayerIDs, never the stored accountIDs, so it reveals nothing the
 	// recipient cannot already see. The client merges it and never clears from
 	// it: a roster-scoped list can add knowledge but never withdraw it.
@@ -764,7 +765,7 @@ type SnapshotMessage struct {
 	FollowedPlayers []PlayerID `json:"followedPlayers,omitempty"`
 	// Operator says this account is on the moderator allowlist, so the Players
 	// window offers mute, kick and refuse. Presentation only: the server
-	// re-checks the allowlist on every action. Set on the join/resume snapshot;
+	// re-checks the allowlist on every action. Set on the arrival snapshots;
 	// a frame that omits it is silence, not a revocation.
 	Operator bool `json:"operator,omitempty"`
 	// Spectator marks a frame addressed to a WATCHER, which puts the client in
