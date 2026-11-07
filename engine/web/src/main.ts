@@ -2940,20 +2940,10 @@ function setCell(cell: ScreenCell) {
   // would make every reader repeat the `?? 0`.
   cell.element = cell.element ?? 0;
   cells[cell.y * COLS + cell.x] = cell;
-  // ONLY THE BOARD INVALIDATES THE BOARD.
-  //
-  // cellsRevision exists to stop the 3D view rebuilding geometry it has already
-  // built (see feedView3D). It was bumped for every cell, sidebar included --
-  // and BoardScene.build only ever reads x < BOARD_COLS, so a sidebar write was
-  // telling the scene that a board it cannot see had changed. The scene answered
-  // by reclassifying all 1500 board cells and rebuilding both quad buffers from
-  // scratch, inside the animation frame.
-  //
-  // That is paid on every HUD repaint, and -- since the 3D view writes its own
-  // rows 13, 21 and 24 -- on every TURN. One stalled frame at the start of each
-  // movement, which in a dense world like CITY is what a player sees as the
-  // screen flickering. In a sparse one it is free, which is why the fixture
-  // suites never showed it.
+  // ONLY THE BOARD INVALIDATES THE BOARD. cellsRevision tells the 3D view to
+  // rebuild its geometry (see feedView3D), and BoardScene.build reads only
+  // x < BOARD_COLS, so a sidebar write -- every HUD repaint, and every turn in
+  // 3D -- must not bump it, or each one costs a full scene rebuild.
   if (cell.x < BOARD_COLS) {
     cellsRevision += 1;
   }
@@ -2967,10 +2957,10 @@ function setCell(cell: ScreenCell) {
 // passes through, so hanging the sync here is what keeps the bar from falling
 // out of step with a screen it does not own. A no-op when there is no bar.
 //
-// A yes/no prompt is its own mode (M21.5): it is the one window that answers to
+// A yes/no prompt is its own mode: it is the one window that answers to
 // neither Enter nor the pad, so it is where the bar offers Yes and No instead.
 function syncTouchControls() {
-  // The 3D state rides along so the ☰ menu (M39.1) offers the 3D rows only
+  // The 3D state rides along so the ☰ menu offers the 3D rows only
   // while the 3D view is on, labelled for what a tap does now.
   const board3d = view3dOn() && view3d !== null;
   touchControls?.setMode(modal ? (modal.kind === "yesno" ? "prompt" : "modal") : mode, {
@@ -3031,7 +3021,7 @@ function drawScreen() {
       continue;
     }
 
-    // M19.1: a player's 24-bit background cannot be expressed as a bg nibble,
+    // A player's 24-bit background cannot be expressed as a bg nibble,
     // so it is consulted here, after the overlay has had its say, and only
     // where the cell being painted is STILL the vanilla player — so a modal, a
     // scroll or a fade drawn over that square suppresses the tint for free.
@@ -3123,12 +3113,12 @@ function writeOverlay(x: number, y: number, color: number, text: string) {
 }
 
 let chatMessages: { from: string; playerId?: number; text: string; private?: boolean; outgoing?: boolean; to?: string }[] = [];
-// M21.1: the ids this player has asked not to hear, as the server has confirmed
+// The ids this player has asked not to hear, as the server has confirmed
 // them. It is a mirror of the server's own set, never the authority: the roster
 // window reads it to decide whether a row offers "block" or "unblock".
 let blockedPlayerIds = new Set<number>();
 let followedPlayerIds = new Set<number>();
-// Whether the server told this connection it may moderate (M21.2). It decides
+// Whether the server told this connection it may moderate. It decides
 // only what the Players window offers; the allowlist behind it is checked again
 // on the server for every action, so this is a display flag and nothing more.
 let isOperator = false;
@@ -3291,7 +3281,7 @@ function openChatWindow() {
   });
 }
 
-// openBlockWindow is 'L' in play mode (M21.1): who is here, who has spoken, and
+// openBlockWindow is 'L' in play mode: who is here, who has spoken, and
 // which of them this player has stopped hearing.
 //
 // The candidates are the union of the board roster and the recent chat senders,
@@ -3476,7 +3466,7 @@ function handleReplayErrorMessage(message: ReplayErrorMessage) {
 }
 
 // ---------------------------------------------------------------------------
-// M32.1 — the daily challenge
+// The daily challenge
 // ---------------------------------------------------------------------------
 
 // openChallengeLanding is /challenge and /challenge/<id>: the landing, inside
@@ -3548,8 +3538,7 @@ function openSelectListIfActions(title: string, lines: string[], onPick: (choice
     kind: "text",
     // The cursor opens ON the first action, not on the prose above it: the text
     // window draws a viewport around linePos, so a cursor left at the top would
-    // scroll the actions off the bottom of the frame — which is exactly what the
-    // first run of the browser journey found.
+    // scroll the actions off the bottom of the frame.
     state: { title, lines, linePos: firstAction + 1, viewingFile: false },
     baseTitle: title,
     moved: false,
@@ -3706,7 +3695,7 @@ function stopInputSampler() {
 
 function disconnectSocket() {
   // The sampler belongs to the socket: a challenge "again" or "watch" that left
-  // it running stacked another 55ms timer per retry (M36.24).
+  // it running would stack another 55ms timer per retry.
   stopInputSampler();
   if (ws) {
     const socket = ws;
@@ -3880,7 +3869,7 @@ function openProfileEditor() {
 
 // readStoredPlayerColor is this browser's answer to "what color is my ☻": the
 // account's, for a signed-in player who has chosen one, and this browser's own
-// localStorage pick otherwise (M19.1, then M19.3). Everything that needs the
+// localStorage pick otherwise. Everything that needs the
 // color reads it through here — the join, the title swatch, and the picker's
 // starting row — so the three cannot drift apart. A stored value that is not a
 // "#RRGGBB" triple, from either source, is read as no pick at all rather than
@@ -3929,12 +3918,12 @@ function writeEffectiveComfort(next: ComfortPreferences) {
   drawScreen();
 }
 
-// openColorPicker is the title menu's ' C ' (M19.2). The pick is stored and
+// openColorPicker is the title menu's ' C '. The pick is stored and
 // nothing else happens: the color is read again at every join (see connect()),
 // so it reaches the room the next time P is pressed, and a pick made after a
 // drop reaches the reconnect — without a rejoin being anyone's problem.
 //
-// Where it is stored is M19.3's half. A signed-in player's pick goes to their
+// Where it is stored: a signed-in player's pick goes to their
 // account, so it is waiting for them in the next world and the next browser; a
 // guest keeps localStorage, having no durable identity to key on. The two are
 // deliberately not written together: a signed-in player who signs out falls
@@ -3986,13 +3975,13 @@ function openColorPicker() {
   );
 }
 
-// repaintPlayerTints rebuilds the M19.1 color layer from the live roster and
+// repaintPlayerTints rebuilds the player color layer from the live roster and
 // the cells the server drew. It is rebuilt with the overlay because the two
 // have the same lifetime — one message changes both — and it is empty outside a
 // room, where there is no roster and the board is a title screen.
 function repaintPlayerTints() {
   playerTints.clear();
-  // M19.2: the title menu's ' C ' row and the picker's preview are the same
+  // The title menu's ' C ' row and the picker's preview are the same
   // paint as the board — a ☻ the server would have drawn (char 2 in 0x1F) with
   // a 24-bit background over it. Going through the one override rather than a
   // second drawing path is what stops a preview from promising a color the
@@ -4034,7 +4023,7 @@ function paintOverlay() {
     } else if (currentChatMessage) {
       writeOverlay(0, 24, 0x1e, currentChatMessage.slice(0, 60).padEnd(60, " "));
     }
-    // M32.1: the ghost. It is one overlay cell drawn over this browser's canvas
+    // The challenge ghost. It is one overlay cell drawn over this browser's canvas
     // at the position the recorded run held after the same number of ticks —
     // local, read-only, and invisible to everyone else in the room, because it
     // is painted here rather than sent anywhere.
@@ -4059,7 +4048,7 @@ function paintOverlay() {
       boardCols: BOARD_COLS,
       rows: ROWS,
       // Our own board: editor.properties only tracks snapshots that are ours,
-      // so this is the board we are actually viewing (M17.12).
+      // so this is the board we are actually viewing.
       boardId: editor.properties.boardId,
     });
     for (const cell of cells) {
@@ -4251,7 +4240,7 @@ function openYesNo(message: string, onAnswer: (yes: boolean) => void) {
 
 // Scrolls arrive as events and must never overwrite one another, nor anything
 // else on screen: scroll_queue.ts decides whether one opens, waits, or is
-// dropped (M36.25). The scroll on screen is scrolls.openStatId; its reply, sent
+// dropped. The scroll on screen is scrolls.openStatId; its reply, sent
 // on dismiss, is what unfreezes this player server-side.
 const scrolls = new ScrollQueue();
 // A selected hyperlink already sent its label. closeModal still owns queue
@@ -4390,18 +4379,6 @@ function drawSidebar() {
   drawView3DRows();
 }
 
-/**
- * The 3D view's own sidebar rows.
- *
- * Rows 13 and 24 are the two vanilla leaves blank (GAME.PAS:1441-1455 writes
- * 14-19 and 21-23), and row 20 is already spent on Players. Row 13 carries the
- * toggle, always, because a feature nobody can see does not exist -- this view
- * shipped without a row and nobody could have found it. Row 24 carries the
- * camera keys, and only while you are in the world, where they mean something.
- *
- * The label names where 3 GOES, not where you are: the row reads as an
- * instruction, like every other row in this sidebar.
- */
 // WHERE NORTH IS, from where you are standing -- a needle, not a heading.
 //
 // The arrow points at north rather than naming the way you face, because that
@@ -4420,6 +4397,18 @@ function drawSidebar() {
 // dozen cells spent rendering one of four facts.
 const NORTH_NEEDLE = ["\u0018N", "\u001bN", "\u0019N", "\u001aN"];
 
+/**
+ * The 3D view's own sidebar rows.
+ *
+ * Rows 13 and 24 are the two vanilla leaves blank (GAME.PAS:1441-1455 writes
+ * 14-19 and 21-23), and row 20 is already spent on Players. Row 13 carries the
+ * toggle, always, because a feature nobody can see does not exist. Row 24
+ * carries the camera keys, and only while you are in the world, where they
+ * mean something.
+ *
+ * The label names where 3 GOES, not where you are: the row reads as an
+ * instruction, like every other row in this sidebar.
+ */
 function drawView3DRows() {
   if (mode !== "playing") {
     return;
@@ -4428,8 +4417,8 @@ function drawView3DRows() {
   sidebarClearLine(writeText, 13);
   writeText(62, 13, 0x30, " 3 ");
   // "Standard view", not "classic" or "text": the name a player should see for
-  // the view they already know. The mode is still called `classic` in the code
-  // and in the ?view= parameter, where it names a camera rather than a product.
+  // the view they already know. The mode is called `classic` in the code and in
+  // the ?view= parameter, where it names a camera rather than a product.
   writeText(65, 13, 0x1f, (inWorld ? " Standard view" : " 3D view").padEnd(14, " "));
   sidebarClearLine(writeText, 24);
   if (inWorld) {
@@ -4448,7 +4437,7 @@ function drawView3DRows() {
     }
   }
   // Row 21 is vanilla's " S  Save game", and in the world S looks down instead,
-  // so the row has to stop promising something the key no longer does. It is
+  // so the row must not promise a save the key does not make. It is
   // the one binding the 3D view takes away, and the sidebar is where a player
   // finds out -- not by pressing S and watching the ceiling move.
   writeText(62, 21, 0x70, " S ");
@@ -4464,7 +4453,7 @@ function drawWatchSidebar() {
   paintWatchSidebar(writeText, watcherCount, replaying, watchLiveLabel);
 }
 
-// M17.7: the first time an in-game sound arrives that the browser cannot voice,
+// The first time an in-game sound arrives that the browser cannot voice,
 // say why in the console instead of failing silently. "not running" means the
 // AudioContext never unlocked (autoplay policy / no gesture reached unlock);
 // "disabled" means hud.soundEnabled muted the synth (the 'B' toggle).
@@ -4579,7 +4568,7 @@ function handleProtocolEvent(event: ProtocolEvent) {
     case "quitPrompt":
       // GamePromptEndPlay's SidebarPromptYesNo("End this game? ")
       // (ELEMENTS.PAS:1308) — not the title screen's "Quit ZZT? ". The event
-      // now names the player who asked, so it opens on their screen only.
+      // names the player who asked, so it opens on their screen only.
       if (isMine(event)) {
         openYesNo("End this game? ", (yes) => sendQuitReply(yes));
       }
