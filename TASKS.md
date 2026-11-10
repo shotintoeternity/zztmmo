@@ -9634,9 +9634,10 @@ files (`elements.go`, `game.go`, `oop.go`, `sounds.go`, `txtwind.go`,
 `editor.go`, `gamevars.go`, `input.go`, `serialize.go`, `video.go`, `lib.go`,
 `zzt.go`) are never in scope.
 
-**Status 2026-11-07 (handoff).** M40.1–M40.6 and the gap task M40.3a are
-done and pushed (`dev` at `94227a1`), each after a green full `make browser`.
-**Next: M40.7.** Three things the earlier tasks learned:
+**Status 2026-11-09 (handoff).** M40.1–M40.8 and the gap task M40.3a are
+done and pushed (through `ecdcfc1`). Each task that touched `web/src` ran a
+green full `make browser`; M40.7 (Go comments only) ran `go test ./...`.
+**Next: M40.9.** Three things the earlier tasks learned:
 - **Go tests pin client and server text.** `m16_13_test.go` and
   `m16_14_test.go` match statements in `web/src/main.ts`, and M16.13 also
   reads `ws_editor.go` by file name. A comments-only task such as M40.7/M40.8
