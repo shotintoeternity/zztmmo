@@ -191,8 +191,8 @@ const titleMark = () => ({ sockets: sockets.length, snapshots: seen.snapshots, t
  * This is the whole of the "open selected worlds to their title screen before
  * play" contract, and it is three claims, not one: no socket, no snapshot, and
  * the board now on screen came from /api/title for the world just chosen.
- * main.ts enterWorld stops after showTitle because selectWorldForTitle returns
- * `startPlay: false` (title_flow.ts) — pressing P is the only thing that joins.
+ * main.ts enterWorld stops after showTitle (or starts watching, for a /watch/
+ * link) — pressing P is the only thing that joins.
  */
 function expectTitleScreenPause(worldFilter, mark) {
   const joined = sockets.slice(mark.sockets);

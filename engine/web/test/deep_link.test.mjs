@@ -2,7 +2,7 @@ import assert from "node:assert/strict";
 import { build } from "esbuild";
 
 // M20.1 — the /play/<world> deep link's pure rules, under Node (the
-// title_flow.ts / preferences.ts pattern). What the browser does with these
+// preferences.ts pattern). What the browser does with these
 // answers — the title-screen pause, the refusal window, the address bar — is
 // proved against a real Chromium in web/test/deep_link_journey.test.mjs.
 //

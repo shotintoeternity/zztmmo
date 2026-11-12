@@ -567,9 +567,10 @@ export function launchOpensPicker(page) {
 }
 
 /**
- * The key the client writes when it has shown someone the welcome world
- * (title_flow.ts FIRST_VISIT_WELCOME_KEY). Duplicated here rather than imported
- * because these suites run against the BUILT client, not the sources.
+ * The first-visit key: a browser that has it set is a returning guest. The
+ * client no longer reads or writes it; markProfileWarm keeps writing it so
+ * every suite still declares which visitor it is (M33.2), and a future
+ * first-visit flow has its storage already named.
  */
 export const FIRST_VISIT_WELCOME_KEY = "zzt-first-visit-welcome";
 

@@ -148,7 +148,6 @@ import {
   TRANSITION_FILL_COLOR,
   type TransitionState,
 } from "./transition";
-import { selectWorldForTitle } from "./title_flow";
 import { blockCandidates, blockRowLabel, blockWindowHeader, mergeServerBlocks } from "./blocks";
 import { moderationChoices, moderationHeader } from "./moderation";
 import {
@@ -2083,8 +2082,7 @@ async function resumeDreamGeneration(jobId: string) {
 // ?world= parameter wsURL sends — which is what makes worlds independent.
 async function enterWorld(name: string, destination: LaunchDestination = "play") {
   leaveChallenge();
-  const selection = selectWorldForTitle(name);
-  worldName = selection.worldName;
+  worldName = name;
   await showTitle();
   // Every route into a world funnels through here — picker, Museum row,
   // dream, restore — so this one line is what makes the address bar the link
@@ -2093,8 +2091,6 @@ async function enterWorld(name: string, destination: LaunchDestination = "play")
   rememberWorldInPath(destination);
   if (destination === "watch") {
     startWatch();
-  } else if (selection.startPlay) {
-    startPlay();
   }
 }
 

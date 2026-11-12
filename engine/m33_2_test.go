@@ -102,10 +102,9 @@ func TestM332BrowserHarnessesNameTheirWorld(t *testing.T) {
 // TestM332BrowserScriptsDeclareTheirVisit — check B.
 //
 // M23.3 gave a fresh guest's root visit WELCOME's title screen instead of the
-// picker (title_flow.ts shouldOpenWelcomeFirstVisit). Every browser script opens
-// a brand-new context, so every script is a first visit unless it says
-// otherwise, and the ones that walk the launch flow were left typing a world
-// name at a title screen. Whether that fires today depends on whether the
+// picker. Every browser script opens a brand-new context, so every script is a
+// first visit unless it says otherwise, and the ones that walk the launch flow
+// were left typing a world name at a title screen. Whether that fires today depends on whether the
 // script's harness happens to host WELCOME — a decision made in a different
 // file. A script that goes through the launch flow must say which visitor it is
 // rather than inherit the answer.
