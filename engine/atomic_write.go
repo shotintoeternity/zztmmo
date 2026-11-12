@@ -5,9 +5,19 @@ import (
 	"path/filepath"
 )
 
-// atomicWriteData writes the payload into the temp file. It is a variable only
-// so a test can fail a write midway (M36.21); production never replaces it.
-var atomicWriteData = func(f *os.File, data []byte) error {
+// atomicWriteTestHooks are writeFileAtomic's test seams. Each is nil in
+// production.
+var atomicWriteTestHooks struct {
+	// writeData replaces the write of the payload into the temp file, so a
+	// test can fail a write midway (M36.21).
+	writeData func(f *os.File, data []byte) error
+}
+
+// atomicWriteData writes the payload into the temp file.
+func atomicWriteData(f *os.File, data []byte) error {
+	if hook := atomicWriteTestHooks.writeData; hook != nil {
+		return hook(f, data)
+	}
 	_, err := f.Write(data)
 	return err
 }

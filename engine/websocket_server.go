@@ -164,10 +164,8 @@ type WebSocketServer struct {
 	// temp file is named after the save, so two concurrent writes of one name
 	// would share it. Never held with inst.mu.
 	saveWriteMu sync.Mutex
-	// saveWriteHook, when set, runs just before a player save is written, with
-	// no lock held. A test seam: it parks a write to show the room
-	// ticks on while the file is being written.
-	saveWriteHook func()
+	// testHooks are seams production never sets.
+	testHooks serverTestHooks
 
 	mu sync.Mutex
 	// nextPlayerID mints process-unique PlayerIDs across every instance, so ids
@@ -182,6 +180,14 @@ type WebSocketServer struct {
 	Activity            *WorldActivityStore
 	Auth                *AuthService
 	metrics             *serverMetrics
+}
+
+// serverTestHooks are the WebSocketServer's test seams. Each is nil in
+// production.
+type serverTestHooks struct {
+	// saveWrite runs just before a player save is written, with no lock held,
+	// so a test can park a write and show the room ticks on meanwhile.
+	saveWrite func()
 }
 
 type WorldInstance struct {
@@ -1217,7 +1223,7 @@ func (s *WebSocketServer) submitSaveFilenameInInstance(ctx context.Context, inst
 
 	var path string
 	if err == nil {
-		if hook := s.saveWriteHook; hook != nil {
+		if hook := s.testHooks.saveWrite; hook != nil {
 			hook()
 		}
 		s.saveWriteMu.Lock()

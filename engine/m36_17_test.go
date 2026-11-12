@@ -146,7 +146,7 @@ func TestM3617SaveWriteDoesNotBlockTheTick(t *testing.T) {
 	p := newM3617Saver(t)
 	entered := make(chan struct{})
 	release := make(chan struct{})
-	p.server.saveWriteHook = func() {
+	p.server.testHooks.saveWrite = func() {
 		close(entered)
 		<-release
 	}

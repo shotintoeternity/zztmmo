@@ -73,10 +73,17 @@ type EditorSession struct {
 	fanMu      sync.Mutex
 	fanCond    *sync.Cond
 	fanServing uint64
-	// fanHook, when set, runs as each fan-out enters the gate, before it waits
-	// for its turn. Test-only seam: it lets a test hold the earlier broadcaster
-	// so the wrong delivery order is forced rather than waited for.
-	fanHook func(ticket uint64)
+	// testHooks are seams production never sets.
+	testHooks editorSessionTestHooks
+}
+
+// editorSessionTestHooks are the EditorSession's test seams. Each is nil in
+// production.
+type editorSessionTestHooks struct {
+	// fanOut runs as each fan-out enters the gate, before it waits for its
+	// turn, so a test can hold the earlier broadcaster and force the wrong
+	// delivery order rather than wait for it. Guarded by fanMu.
+	fanOut func(ticket uint64)
 }
 
 type editorLeaseKey struct {
@@ -600,7 +607,7 @@ func (s *EditorSession) issueFanTicketLocked() uint64 {
 // fan-out would stall every later one for the life of the session.
 func (s *EditorSession) inOrder(ticket uint64, fn func()) {
 	s.fanMu.Lock()
-	hook := s.fanHook
+	hook := s.testHooks.fanOut
 	cond := s.fanCondLocked()
 	s.fanMu.Unlock()
 	if hook != nil {
@@ -638,7 +645,7 @@ func (s *EditorSession) fanCondLocked() *sync.Cond {
 // ordering gate. Tests only; production never sets it.
 func (s *EditorSession) SetFanOutHook(hook func(ticket uint64)) {
 	s.fanMu.Lock()
-	s.fanHook = hook
+	s.testHooks.fanOut = hook
 	s.fanMu.Unlock()
 }
 

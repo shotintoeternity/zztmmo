@@ -20,14 +20,14 @@ var errM3621DiskFull = errors.New("m36.21: no space left on device")
 // then fail, for the rest of the test.
 func m3621FailWritesMidway(t *testing.T) {
 	t.Helper()
-	saved := atomicWriteData
-	atomicWriteData = func(f *os.File, data []byte) error {
+	saved := atomicWriteTestHooks.writeData
+	atomicWriteTestHooks.writeData = func(f *os.File, data []byte) error {
 		if _, err := f.Write(data[:len(data)/2]); err != nil {
 			return err
 		}
 		return errM3621DiskFull
 	}
-	t.Cleanup(func() { atomicWriteData = saved })
+	t.Cleanup(func() { atomicWriteTestHooks.writeData = saved })
 }
 
 // m3621AssertNoTempLeft checks a failed write cleaned up after itself: a stray
