@@ -10,7 +10,6 @@ import (
 	"fmt"
 	"log"
 	"os"
-	"path/filepath"
 	"strings"
 
 	"nhooyr.io/websocket"
@@ -572,13 +571,8 @@ func (s *WebSocketServer) saveEditorWorld(client *webSocketClient, session *Edit
 		return "", fmt.Errorf("could not serialize the editor world")
 	}
 
-	path := filepath.Join(dir, safe+".ZZT")
-	// Belt and braces: SanitizeSaveName cannot emit a separator, so this can only
-	// fire if that charset is ever loosened.
-	if filepath.Dir(path) != filepath.Clean(dir) {
-		return "", ErrInvalidSaveName
-	}
-	if err := os.MkdirAll(dir, 0o755); err != nil {
+	path, err := joinSanitized(dir, safe, ".ZZT")
+	if err != nil {
 		return "", err
 	}
 	// M36.21: temp + rename, so a failed or interrupted write leaves the

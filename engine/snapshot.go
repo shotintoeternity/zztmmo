@@ -77,9 +77,15 @@ func snapshotPath(dir, name string) (string, error) {
 	if err != nil {
 		return "", err
 	}
-	path := filepath.Join(dir, safe+".SAV")
-	// Belt and braces. SanitizeSaveName cannot emit a separator, so this can
-	// only fire if that charset is ever loosened.
+	return joinSanitized(dir, safe, ".SAV")
+}
+
+// joinSanitized returns dir/<safe><ext>, where safe is a name its sanitizer has
+// already accepted. It refuses any result that is not directly inside dir. No
+// sanitizer in use today can emit a separator, so this fires only if one is
+// loosened.
+func joinSanitized(dir, safe, ext string) (string, error) {
+	path := filepath.Join(dir, safe+ext)
 	if filepath.Dir(path) != filepath.Clean(dir) {
 		return "", ErrInvalidSaveName
 	}
@@ -187,9 +193,6 @@ func writeWorldSnapshot(dir, name string, world TWorld) (string, error) {
 	if err != nil {
 		return "", err
 	}
-	if err := os.MkdirAll(dir, 0o755); err != nil {
-		return "", err
-	}
 
 	scratch := newSnapshotEngine()
 	scratch.World = world
@@ -294,9 +297,9 @@ func (rm *RoomManager) LoadWorld(dir, name string) error {
 	if err != nil {
 		return err
 	}
-	path := filepath.Join(dir, safe+".ZZT")
-	if filepath.Dir(path) != filepath.Clean(dir) {
-		return ErrInvalidSaveName
+	path, err := joinSanitized(dir, safe, ".ZZT")
+	if err != nil {
+		return err
 	}
 
 	f, err := os.Open(path)

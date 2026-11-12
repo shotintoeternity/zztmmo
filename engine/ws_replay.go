@@ -354,11 +354,7 @@ func replayPath(dir, id string) (string, error) {
 	if err != nil {
 		return "", err
 	}
-	path := filepath.Join(dir, safe+".jsonl")
-	if filepath.Dir(path) != filepath.Clean(dir) {
-		return "", ErrInvalidSaveName
-	}
-	return path, nil
+	return joinSanitized(dir, safe, ".jsonl")
 }
 
 func (s *WebSocketServer) GetOrCreateReplayInstance(id string) (*ReplayInstance, error) {
