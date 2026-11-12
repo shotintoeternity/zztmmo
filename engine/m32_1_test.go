@@ -193,7 +193,7 @@ func TestM321ChallengeWorldCompilesShipsIsCanonicalAndListed(t *testing.T) {
 	if err := os.WriteFile(filepath.Join(dir, ChallengeWorldName+".ZZT"), data, 0o644); err != nil {
 		t.Fatalf("write temp world: %v", err)
 	}
-	entries := WorldListEntriesInDir(dir, ListWorlds(dir), nil)
+	entries := WorldListEntries(dir, ListWorlds(dir), nil, nil)
 	if len(entries) != 1 || entries[0].World != ChallengeWorldName || entries[0].Title != "ZZTMMO Gem Dash" {
 		t.Fatalf("entries = %+v, want the one canonical %s row", entries, ChallengeWorldName)
 	}

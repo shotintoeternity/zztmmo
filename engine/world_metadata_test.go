@@ -9,7 +9,7 @@ import (
 )
 
 func TestWorldListEntriesUsesMuseumMetadata(t *testing.T) {
-	entries := WorldListEntries([]string{"TEEN", "TOWN"}, map[string]int{"TEEN": 2})
+	entries := WorldListEntries("", []string{"TEEN", "TOWN"}, map[string]int{"TEEN": 2}, nil)
 	if len(entries) != 2 {
 		t.Fatalf("len(entries)=%d, want 2", len(entries))
 	}
@@ -28,13 +28,6 @@ func TestWorldListEntriesUsesMuseumMetadata(t *testing.T) {
 	}
 	if teen.Players != 2 {
 		t.Fatalf("TEEN players=%d, want 2", teen.Players)
-	}
-}
-
-func TestWorldListEntriesOmitsWorldsWithoutMuseumMetadata(t *testing.T) {
-	entries := WorldListEntries([]string{"EDITED"}, nil)
-	if len(entries) != 0 {
-		t.Fatalf("entries=%+v, want no entry without Museum metadata", entries)
 	}
 }
 
@@ -68,7 +61,7 @@ func TestListWorldsExcludesJunkAndUnjoinable(t *testing.T) {
 func TestWorldListEntriesInDirIncludesLocalWorldsWithoutMetadata(t *testing.T) {
 	dir := t.TempDir()
 
-	byWorld := entriesByWorld(WorldListEntriesInDir(dir, []string{"OBSCURE", "BURGERJ", "TOWN"}, nil))
+	byWorld := entriesByWorld(WorldListEntries(dir, []string{"OBSCURE", "BURGERJ", "TOWN"}, nil, nil))
 
 	if e := byWorld["OBSCURE"]; e.ID != "obscure" || e.Title != "OBSCURE" || e.Author != "Local" {
 		t.Fatalf("OBSCURE=%+v, want local fallback metadata", e)
@@ -82,7 +75,7 @@ func TestWorldListEntriesInDirIncludesLocalWorldsWithoutMetadata(t *testing.T) {
 }
 
 func TestWorldListEntriesResolvesAddedManifestWorlds(t *testing.T) {
-	byWorld := entriesByWorld(WorldListEntries([]string{"RHYG3-1", "CAVES", "ESPFILE3", "ZFILES3"}, nil))
+	byWorld := entriesByWorld(WorldListEntries("", []string{"RHYG3-1", "CAVES", "ESPFILE3", "ZFILES3"}, nil, nil))
 	cases := []struct{ world, title, author, created string }{
 		{"RHYG3-1", "Rhygar 3", "Bongo", "1998"},
 		{"CAVES", "Caves of ZZT", "Tim Sweeney", "1991"},
@@ -107,7 +100,7 @@ func TestWorldListEntriesReportEditors(t *testing.T) {
 			t.Fatal(err)
 		}
 	}
-	entries := WorldListEntriesInDirWithEditors(dir,
+	entries := WorldListEntries(dir,
 		[]string{"TOWN", "OBSCURE"},
 		map[string]int{"TOWN": 3},
 		map[string]int{"TOWN": 2, "OBSCURE": 1},
@@ -135,7 +128,7 @@ func TestWorldListEntriesReportEditors(t *testing.T) {
 	}
 
 	// omitempty: an unoccupied world carries neither count in the JSON.
-	quiet := WorldListEntriesInDirWithEditors(dir, []string{"TOWN"}, nil, nil)
+	quiet := WorldListEntries(dir, []string{"TOWN"}, nil, nil)
 	blob, err := json.Marshal(quiet)
 	if err != nil {
 		t.Fatal(err)

@@ -93,7 +93,7 @@ func TestListWorldsListsEachWorldOnce(t *testing.T) {
 // The picker's own collapse, stated the way the owner saw the defect: two
 // entries, same title, same author, same ID, both opening TOWN.ZZT.
 func TestWorldListEntriesCollapsesCaseVariantsOntoOneCard(t *testing.T) {
-	entries := WorldListEntriesInDir(t.TempDir(), []string{"TOWN", "town"}, map[string]int{"TOWN": 2})
+	entries := WorldListEntries(t.TempDir(), []string{"TOWN", "town"}, map[string]int{"TOWN": 2}, nil)
 	if len(entries) != 1 {
 		t.Fatalf("entries=%+v, want one card for TOWN", entries)
 	}
@@ -129,7 +129,7 @@ func TestWorldListEntriesCollapseKeepsDreamedKindAndSidecarTitle(t *testing.T) {
 
 	// The lower-case spelling arrives first, so a first-wins collapse would
 	// keep it and lose both sidecars.
-	entries := WorldListEntriesInDir(dir, []string{"gen12345", "GEN12345"}, nil)
+	entries := WorldListEntries(dir, []string{"gen12345", "GEN12345"}, nil, nil)
 	if len(entries) != 1 {
 		t.Fatalf("entries=%+v, want one card", entries)
 	}
@@ -150,7 +150,7 @@ func TestWorldListEntriesCollapseKeepsDreamedKindAndSidecarTitle(t *testing.T) {
 // so those worlds share a curated title while remaining separately joinable
 // files. Dropping them would hide real worlds.
 func TestWorldListEntriesKeepsMuseumAliasFanOutSeparatelyListed(t *testing.T) {
-	entries := WorldListEntries([]string{"RHYG3-1", "RHYG3-2", "RHYG3-3"}, nil)
+	entries := WorldListEntries("", []string{"RHYG3-1", "RHYG3-2", "RHYG3-3"}, nil, nil)
 	if len(entries) != 3 {
 		t.Fatalf("entries=%+v, want one entry per file", entries)
 	}

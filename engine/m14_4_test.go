@@ -179,7 +179,7 @@ func TestM144TitleAndIdentityAreSeparatelyAddressable(t *testing.T) {
 		}
 	}
 
-	entries := WorldListEntriesInDir(dir, ListWorlds(dir), nil)
+	entries := WorldListEntries(dir, ListWorlds(dir), nil, nil)
 	if len(entries) != 2 {
 		t.Fatalf("picker listed %d world(s), want 2: %+v", len(entries), entries)
 	}
@@ -213,7 +213,7 @@ func TestM144AClassicKeepsTheMuseumsTitle(t *testing.T) {
 	if err := writeWorldMeta(dir, "TOWN", WorldMeta{Title: "Not Town At All", Author: "Intruder"}); err != nil {
 		t.Fatal(err)
 	}
-	entries := WorldListEntriesInDir(dir, []string{"TOWN"}, nil)
+	entries := WorldListEntries(dir, []string{"TOWN"}, nil, nil)
 	if len(entries) != 1 {
 		t.Fatalf("want one entry, got %+v", entries)
 	}
@@ -234,7 +234,7 @@ func TestM144AnExistingWorldResolvesUnderItsOldName(t *testing.T) {
 	if err := os.WriteFile(filepath.Join(dir, "OLDWORLD.ZZT"), []byte("x"), 0o644); err != nil {
 		t.Fatal(err)
 	}
-	entries := WorldListEntriesInDir(dir, ListWorlds(dir), nil)
+	entries := WorldListEntries(dir, ListWorlds(dir), nil, nil)
 	if len(entries) != 1 || entries[0].World != "OLDWORLD" {
 		t.Fatalf("a pre-M14.4 world stopped resolving: %+v", entries)
 	}
@@ -317,7 +317,7 @@ func TestM144ADreamNamingAClassicNeedsNoRefusalToExplain(t *testing.T) {
 	if meta.Author != "Ada" {
 		t.Errorf("the dream's author = %q, want the dreamer", meta.Author)
 	}
-	entries := WorldListEntriesInDir(outDir, []string{result.Name}, nil)
+	entries := WorldListEntries(outDir, []string{result.Name}, nil, nil)
 	if len(entries) != 1 || entries[0].Title != "TOWN" {
 		t.Fatalf("the picker does not show the dreamed world's title: %+v", entries)
 	}
@@ -330,7 +330,7 @@ func TestM144ADreamNamingAClassicNeedsNoRefusalToExplain(t *testing.T) {
 	if err := os.WriteFile(filepath.Join(outDir, "TOWN.ZZT"), before, 0o644); err != nil {
 		t.Fatal(err)
 	}
-	both := WorldListEntriesInDir(outDir, []string{"TOWN", result.Name}, nil)
+	both := WorldListEntries(outDir, []string{"TOWN", result.Name}, nil, nil)
 	if len(both) != 2 {
 		t.Fatalf("want both worlds listed, got %+v", both)
 	}
@@ -439,7 +439,7 @@ func TestM144AnEditorPublishKeepsTheAuthoredTitle(t *testing.T) {
 	if meta.Author != "Ada Lovelace" {
 		t.Errorf("published author = %q, want Ada Lovelace", meta.Author)
 	}
-	entries := WorldListEntriesInDir(dir, []string{"SALTCELL"}, nil)
+	entries := WorldListEntries(dir, []string{"SALTCELL"}, nil, nil)
 	if len(entries) != 1 || entries[0].Title != "The Salt Cellar" || entries[0].World != "SALTCELL" {
 		t.Fatalf("the picker does not show title and identity separately: %+v", entries)
 	}

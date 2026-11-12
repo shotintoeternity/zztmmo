@@ -541,7 +541,7 @@ func (a *WebAPI) validFavoriteWorlds(worlds []string) []string {
 
 func (a *WebAPI) joinableWorldSet() map[string]bool {
 	dir, worlds := a.worldDirectoryAndNames()
-	entries := WorldListEntriesInDirWithEditors(dir, worlds, nil, nil)
+	entries := WorldListEntries(dir, worlds, nil, nil)
 	out := make(map[string]bool, len(entries))
 	for _, entry := range entries {
 		out[entry.World] = true
@@ -1394,7 +1394,7 @@ func (a *WebAPI) handleWorlds(w http.ResponseWriter, r *http.Request) {
 		editorCounts = a.Server.EditorCounts()
 	}
 
-	entries := WorldListEntriesInDirWithEditors(dir, worlds, counts, editorCounts)
+	entries := WorldListEntries(dir, worlds, counts, editorCounts)
 	playCounts := map[string]int(nil)
 	if a.Server != nil && a.Server.Activity != nil {
 		playCounts = a.Server.Activity.Counts()

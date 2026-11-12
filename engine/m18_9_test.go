@@ -29,7 +29,7 @@ func TestM189WorldKindClassification(t *testing.T) {
 	write("DREAMED", ".ZZT") // generated here...
 	write("DREAMED", ".zwd") // ...as its ZWD source proves
 
-	entries := WorldListEntriesInDir(dir, []string{"TOWN", "MERC", "DREAMED"}, nil)
+	entries := WorldListEntries(dir, []string{"TOWN", "MERC", "DREAMED"}, nil, nil)
 	kinds := map[string]string{}
 	authors := map[string]string{}
 	for _, entry := range entries {
@@ -61,7 +61,7 @@ func TestM189DreamedNeedsTheSiblingNotTheName(t *testing.T) {
 			t.Fatal(err)
 		}
 	}
-	entries := WorldListEntriesInDir(dir, []string{"GEN6042D", "GENESIS"}, nil)
+	entries := WorldListEntries(dir, []string{"GEN6042D", "GENESIS"}, nil, nil)
 	for _, entry := range entries {
 		if entry.Kind == WorldKindDreamed {
 			t.Errorf("%s classified as dreamed with no .zwd beside it", entry.World)
@@ -72,7 +72,7 @@ func TestM189DreamedNeedsTheSiblingNotTheName(t *testing.T) {
 	if err := os.WriteFile(filepath.Join(dir, "GEN6042D.zwd"), []byte("zwd 1\n"), 0644); err != nil {
 		t.Fatal(err)
 	}
-	entries = WorldListEntriesInDir(dir, []string{"GEN6042D", "GENESIS"}, nil)
+	entries = WorldListEntries(dir, []string{"GEN6042D", "GENESIS"}, nil, nil)
 	for _, entry := range entries {
 		want := WorldKindLocal
 		if entry.World == "GEN6042D" {
@@ -84,12 +84,11 @@ func TestM189DreamedNeedsTheSiblingNotTheName(t *testing.T) {
 	}
 }
 
-// TestM189ClassificationSurvivesAnAbsentDirectory guards the callers that pass
-// no directory (WorldListEntries, used where the caller only has names): they
-// must still classify, just without the dreamed distinction, rather than
-// panicking or calling everything dreamed.
+// TestM189ClassificationSurvivesAnAbsentDirectory guards a call with no
+// directory: it must still classify, just without the dreamed distinction,
+// rather than panicking or calling everything dreamed.
 func TestM189ClassificationSurvivesAnAbsentDirectory(t *testing.T) {
-	entries := WorldListEntriesInDir("", []string{"TOWN", "MERC"}, nil)
+	entries := WorldListEntries("", []string{"TOWN", "MERC"}, nil, nil)
 	if len(entries) != 2 {
 		t.Fatalf("got %d entries, want 2", len(entries))
 	}

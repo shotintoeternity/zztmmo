@@ -86,24 +86,6 @@ var (
 	worldMetadataBy   map[string]museumWorldEntry
 )
 
-func WorldListEntries(worlds []string, playerCounts map[string]int) []WorldListEntry {
-	return worldListEntries("", worlds, playerCounts, nil, false)
-}
-
-// WorldListEntriesInDir includes every joinable local world. Museum metadata
-// enriches catalogued files, while generated and editor-published files use a
-// safe local fallback so the picker never hides a world it can load.
-func WorldListEntriesInDir(dir string, worlds []string, playerCounts map[string]int) []WorldListEntry {
-	return worldListEntries(dir, worlds, playerCounts, nil, true)
-}
-
-// WorldListEntriesInDirWithEditors is WorldListEntriesInDir plus editor
-// occupancy (M17.11). The older signatures are kept so existing callers and
-// tests are untouched.
-func WorldListEntriesInDirWithEditors(dir string, worlds []string, playerCounts, editorCounts map[string]int) []WorldListEntry {
-	return worldListEntries(dir, worlds, playerCounts, editorCounts, true)
-}
-
 // worldIsDreamed reports whether dir holds the ZWD source persistGeneratedWorld
 // writes beside every world it generates (generation.go). It is the same
 // discriminator M18.8 uses to find generated content: a filename pattern would
@@ -152,14 +134,15 @@ func collapseWorldNames(worlds []string) []string {
 	return out
 }
 
-func worldListEntries(dir string, worlds []string, playerCounts map[string]int, editorCounts map[string]int, includeLocal bool) []WorldListEntry {
+// WorldListEntries includes every joinable world in dir, with player and editor
+// occupancy. Museum metadata enriches catalogued files, while generated and
+// editor-published files use a safe local fallback so the picker never hides a
+// world it can load.
+func WorldListEntries(dir string, worlds []string, playerCounts, editorCounts map[string]int) []WorldListEntry {
 	worlds = collapseWorldNames(worlds)
 	out := make([]WorldListEntry, 0, len(worlds))
 	for _, world := range worlds {
 		meta, ok := museumMetadataForWorld(world)
-		if !ok && !includeLocal {
-			continue
-		}
 		entry := WorldListEntry{
 			World:   world,
 			Title:   world,
