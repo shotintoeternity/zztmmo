@@ -130,6 +130,9 @@ type m169Harness struct {
 	// auth is set by the M16.14 option below; nil keeps the server anonymous,
 	// which is what M16.9/M16.10/M16.13 want.
 	auth *AuthService
+	// idp is this harness's fake identity provider, served on the control
+	// listener (collabControlRoutes).
+	idp *m1614IdP
 
 	stepMu sync.Mutex
 	ticks  int
@@ -194,6 +197,7 @@ func m169NewHarnessFor(t *testing.T, worldName string, world TWorld, options ...
 	h := &m169Harness{
 		t: t, worldName: worldName, server: server, ctx: ctx, cancel: cancel,
 		rootDir: rootDir, savesDir: savesDir, worldsDir: worldsDir,
+		idp: &m1614IdP{challenges: map[string]string{}},
 	}
 	// Bind both ports before anything is served, so an option that needs the
 	// harness's own URLs (M16.14 hands the AuthService absolute IdP endpoints)
@@ -277,6 +281,8 @@ func m169WriteWorldFile(t *testing.T, world TWorld, path string) {
 	}
 }
 
+var m169ClientBuildMu sync.Mutex
+
 func m169ClientDir() string { return filepath.Join("web", "dist") }
 
 // The two environment variables that decide whether the real-browser suites
@@ -345,6 +351,11 @@ func m169BrowserAbsent(t *testing.T, reason string) {
 // (M18.0a's failure).
 func m169RequireClientBuild(t *testing.T) {
 	t.Helper()
+	// Parallel browser tests must not run two builds into one web/dist; the
+	// stat is repeated under the lock so the second caller sees the first
+	// caller's build.
+	m169ClientBuildMu.Lock()
+	defer m169ClientBuildMu.Unlock()
 	if _, err := os.Stat(filepath.Join(m169ClientDir(), "index.html")); err == nil {
 		return
 	}

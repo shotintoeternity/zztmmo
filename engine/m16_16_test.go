@@ -1648,13 +1648,6 @@ const (
 // served by the control listener) and a Museum of ZZT served by this test.
 func m1616NewBrowserHarness(t *testing.T) (*m169Harness, *m1616MuseumFake) {
 	t.Helper()
-
-	m1614Provider.mu.Lock()
-	m1614Provider.next = ""
-	m1614Provider.challenges = map[string]string{}
-	m1614Provider.logins = nil
-	m1614Provider.mu.Unlock()
-
 	auth := NewAuthService(m1614ClientID, m1614ClientSecret, "", []byte("m16-16-cookie-secret"))
 	auth.Verifier = m1614Verifier{}
 

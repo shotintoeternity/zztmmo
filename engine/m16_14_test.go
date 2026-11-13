@@ -148,15 +148,15 @@ const (
 )
 
 // m1614IdP is the state the identity provider needs: who the next authorize call
-// should sign in, and the PKCE challenge each issued code was bound to.
+// should sign in, and the PKCE challenge each issued code was bound to. Each
+// harness has its own (m169Harness.idp), so two harnesses signing in at once
+// never read each other's next account or codes.
 type m1614IdP struct {
 	mu         sync.Mutex
 	next       string
 	challenges map[string]string
 	logins     []string
 }
-
-var m1614Provider = &m1614IdP{challenges: map[string]string{}}
 
 // collabControlRoutes adds M16.14's endpoints to the harness control listener.
 // The /idp routes are the fake Google; the /control routes read the editor
@@ -169,9 +169,9 @@ func (h *m169Harness) collabControlRoutes(mux *http.ServeMux) {
 			http.Error(w, "unknown account "+key, http.StatusBadRequest)
 			return
 		}
-		m1614Provider.mu.Lock()
-		m1614Provider.next = key
-		m1614Provider.mu.Unlock()
+		h.idp.mu.Lock()
+		h.idp.next = key
+		h.idp.mu.Unlock()
 		writeJSON(w, map[string]string{"account": key})
 	})
 
@@ -194,13 +194,13 @@ func (h *m169Harness) collabControlRoutes(mux *http.ServeMux) {
 			http.Error(w, "missing redirect_uri or state", http.StatusBadRequest)
 			return
 		}
-		m1614Provider.mu.Lock()
-		account, ok := m1614AccountByKey(m1614Provider.next)
+		h.idp.mu.Lock()
+		account, ok := m1614AccountByKey(h.idp.next)
 		if ok {
-			m1614Provider.challenges[account.Code] = query.Get("code_challenge")
-			m1614Provider.logins = append(m1614Provider.logins, account.Key)
+			h.idp.challenges[account.Code] = query.Get("code_challenge")
+			h.idp.logins = append(h.idp.logins, account.Key)
 		}
-		m1614Provider.mu.Unlock()
+		h.idp.mu.Unlock()
 		if !ok {
 			http.Error(w, "no account armed: POST /control/auth/next?account=... first", http.StatusConflict)
 			return
@@ -221,9 +221,9 @@ func (h *m169Harness) collabControlRoutes(mux *http.ServeMux) {
 			return
 		}
 		code := r.Form.Get("code")
-		m1614Provider.mu.Lock()
-		challenge, known := m1614Provider.challenges[code]
-		m1614Provider.mu.Unlock()
+		h.idp.mu.Lock()
+		challenge, known := h.idp.challenges[code]
+		h.idp.mu.Unlock()
 		if !known {
 			writeJSON(w, map[string]string{"error": "invalid_grant"})
 			return
@@ -445,12 +445,6 @@ func (h *m169Harness) instanceReport() []m1614InstanceReport {
 
 func m1614NewHarness(t *testing.T) *m169Harness {
 	t.Helper()
-	m1614Provider.mu.Lock()
-	m1614Provider.next = ""
-	m1614Provider.challenges = map[string]string{}
-	m1614Provider.logins = nil
-	m1614Provider.mu.Unlock()
-
 	auth := NewAuthService(m1614ClientID, m1614ClientSecret, "", []byte("m16-14-cookie-secret"))
 	auth.Verifier = m1614Verifier{}
 	// The world is hosted under its own name so that the instance the browsers
@@ -636,9 +630,9 @@ func TestM1614CollaborativeEditorInBrowsers(t *testing.T) {
 	})
 
 	t.Run("both accounts really signed in through the identity provider", func(t *testing.T) {
-		m1614Provider.mu.Lock()
-		logins := append([]string(nil), m1614Provider.logins...)
-		m1614Provider.mu.Unlock()
+		h.idp.mu.Lock()
+		logins := append([]string(nil), h.idp.logins...)
+		h.idp.mu.Unlock()
 		seen := map[string]bool{}
 		for _, key := range logins {
 			seen[key] = true
