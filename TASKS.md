@@ -9903,7 +9903,7 @@ green full `make browser`; M40.7 (Go comments only) ran `go test ./...`.
   untouched. `go test -run 'M1613|M1614'` and `tsc` passed after each
   commit, and `caffeinate -dim make browser` is green.
 
-- [ ] **M40.9 — small dead code and duplication.** One commit each:
+- [x] **M40.9 — small dead code and duplication.** One commit each:
   - `world_metadata.go:89–105`: three wrappers that forward to
     `worldListEntries` ("kept so existing callers and tests are untouched").
     Keep one API and update the tests.
@@ -9922,6 +9922,15 @@ green full `make browser`; M40.7 (Go comments only) ran `go test ./...`.
     `saveWriteHook`, `atomicWriteData`, 9 sites). Group them under one
     `testHooks` field per type.
   DoD: each commit stands alone and is green. The web items run `make browser`.
+  **Done 2026-11-13** in five commits (e86d254, bed4863, dbe60f9, ad26dbd,
+  367f60c). One `WorldListEntries(dir, worlds, players,
+  editors)`; the museum-only branch only a test reached went with its test.
+  `joinSanitized` also covers `LoadWorld` and `replayPath` (the spec's
+  `websocket_server.go:3342` had moved to `ws_editor.go`). Test seams sit
+  under `testHooks` / `atomicWriteTestHooks`. Both web commits ran a green
+  `make browser`. Learned: the browser family calls the live Museum of ZZT
+  (picker search), so a sleeping Mac or a Museum outage turns it red with
+  502 console errors.
 
 **Not filed (owner decision needed).** 502 of 809 test functions are named
 `TestM…`, and the scheme is ambiguous (`TestM365` could be M36.5 or M3.65). The
