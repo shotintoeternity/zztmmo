@@ -20,6 +20,7 @@ import (
 )
 
 func TestM222WatchLinkJourney(t *testing.T) {
+	m169Parallel(t)
 	m169RequireBrowserHarness(t)
 
 	zwdBytes, err := os.ReadFile(filepath.Join("..", "fixtures", "accept.zwd"))

@@ -17,6 +17,7 @@ import (
 )
 
 func TestM223ReplayViewerJourney(t *testing.T) {
+	m169Parallel(t)
 	m169RequireBrowserHarness(t)
 
 	const replayID = "TOWN-20260807-120000"

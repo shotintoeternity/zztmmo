@@ -26,6 +26,7 @@ import (
 )
 
 func TestM191TwoBrowsersShowTwoDifferentPlayerColors(t *testing.T) {
+	m169Parallel(t)
 	m169RequireBrowserHarness(t)
 
 	zwdBytes, err := os.ReadFile(filepath.Join("..", "fixtures", "accept.zwd"))

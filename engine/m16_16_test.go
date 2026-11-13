@@ -1696,6 +1696,7 @@ func m1616NewBrowserHarness(t *testing.T) (*m169Harness, *m1616MuseumFake) {
 // really was written into the hosting directory, the instance really has that
 // one client, and the persisted chat record really is attributed to the account.
 func TestM1616BrowserAuthAndMuseumJourney(t *testing.T) {
+	m169Parallel(t)
 	h, fake := m1616NewBrowserHarness(t)
 	out := h.runBrowserScript("museum_journey.test.mjs")
 	t.Logf("M16.16 browser journey:\n%s", out)

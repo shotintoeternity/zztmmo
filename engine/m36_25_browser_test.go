@@ -17,6 +17,7 @@ import (
 // seconds: a scroll that arrives while chat is open waits for it instead of
 // replacing it and losing the draft (M36.25).
 func TestM3625ScrollBrowserJourney(t *testing.T) {
+	m169Parallel(t)
 	m169RequireBrowserHarness(t)
 
 	zwdBytes, err := os.ReadFile(filepath.Join("..", "fixtures", "scrolls.zwd"))

@@ -1520,6 +1520,7 @@ func m1613OutDir(t *testing.T) string {
 // checks the .BRD really is the board's own record, and checks that test play
 // left the editing world byte for byte where it was.
 func TestM1613BrowserEditorAndPortableOutput(t *testing.T) {
+	m169Parallel(t)
 	h := m1613NewHarness(t)
 	outDir := m1613OutDir(t)
 	out := h.runBrowserScript("editor_solo.test.mjs", "M1613_OUT="+outDir)

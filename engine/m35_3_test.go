@@ -50,6 +50,7 @@ var m353Worlds = []struct {
 }
 
 func TestM353BrowserView3DWorldRunthrough(t *testing.T) {
+	m169Parallel(t)
 	for _, w := range m353Worlds {
 		name := w.name
 		t.Run(name, func(t *testing.T) {

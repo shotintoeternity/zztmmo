@@ -13,6 +13,7 @@ import (
 )
 
 func TestM311ComfortPreferencesBrowserJourney(t *testing.T) {
+	m169Parallel(t)
 	m169RequireBrowserHarness(t)
 
 	zwdBytes, err := os.ReadFile(filepath.Join("..", "fixtures", "accept.zwd"))

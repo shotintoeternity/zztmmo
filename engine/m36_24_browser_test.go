@@ -16,6 +16,7 @@ import (
 // double P and a P during the title fetch each leave one socket and one player
 // (M36.24). The stacked-sampler half rides on the challenge journey.
 func TestM3624OneSocketBrowserJourney(t *testing.T) {
+	m169Parallel(t)
 	m169RequireBrowserHarness(t)
 
 	zwdBytes, err := os.ReadFile(filepath.Join("..", "fixtures", "accept.zwd"))

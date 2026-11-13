@@ -10,6 +10,7 @@ import "testing"
 // screen has drawn that fade since M9.1 and it is fine there. This asks what it
 // looks like from eye level.
 func TestM354BrowserView3DPassage(t *testing.T) {
+	m169Parallel(t)
 	h := m352NewHarness(t)
 	out := h.runBrowserScript("view3d_passage.test.mjs")
 	t.Logf("3D board change:\n%s", out)

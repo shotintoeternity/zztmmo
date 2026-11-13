@@ -35,6 +35,12 @@ parity:
 certify:
 	cd engine && go run ./cmd/zzt-parity -require-certified -out ../fixtures/parity
 
+# How many browser journeys run at once (task M41.1). Each is a real browser
+# and a server, so the cap guards against load stalls more than it buys speed.
+# The test side only calls t.Parallel when BROWSER_PARALLEL is set, so `make
+# certify`, which never sets it, runs the family serially.
+BROWSER_PARALLEL ?= 3
+
 # The opt-in real-browser family, run on purpose (task M33.2). This is what
 # CLAUDE.md rule 3 means by "run the browser suites": it builds the client the
 # suites load — a stale web/dist is the M18.0a failure, and the suites cannot
@@ -59,7 +65,7 @@ certify:
 browser:
 	cd engine/web && npm run build
 	cd engine/web && npm test
-	cd engine && ZZT_BROWSER=1 go test -timeout 30m -count=1 ./...
+	cd engine && ZZT_BROWSER=1 BROWSER_PARALLEL=$(BROWSER_PARALLEL) go test -timeout 30m -count=1 -parallel $(BROWSER_PARALLEL) ./...
 
 # The targeted half (owner decision 2026-11-02): for a SERVER change to
 # something a browser reads (a route, a status code, a protocol field) with no
@@ -77,7 +83,7 @@ browser-only:
 	@test -n "$(RUN)" || { echo "usage: make browser-only RUN='<go test -run regexp>'"; exit 2; }
 	cd engine/web && npm run build
 	cd engine/web && npm test
-	cd engine && ZZT_BROWSER=1 go test -timeout 30m -count=1 -run '$(RUN)' .
+	cd engine && ZZT_BROWSER=1 BROWSER_PARALLEL=$(BROWSER_PARALLEL) go test -timeout 30m -count=1 -parallel $(BROWSER_PARALLEL) -run '$(RUN)' .
 
 # Re-render the report from the current manifest without running the gates.
 parity-report:

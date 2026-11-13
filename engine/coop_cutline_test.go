@@ -29,6 +29,7 @@ import (
 )
 
 func TestCoopCutlineThreePlayerAcceptanceJourney(t *testing.T) {
+	m169Parallel(t)
 	// Like M16.11 this suite stands up its own server, so it asks for the
 	// browser gate itself: opt-in for everyday runs, mandatory for certification.
 	m169RequireBrowserHarness(t)

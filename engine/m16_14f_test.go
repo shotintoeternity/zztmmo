@@ -440,6 +440,7 @@ type m1614fReport struct {
 // could not have had before, on the board its author was on, with its cursor
 // where they left it — without a keystroke.
 func TestM1614fBrowserEditorReconnectsAfterItsSocketIsClosed(t *testing.T) {
+	m169Parallel(t)
 	h := m1613NewHarness(t)
 	outDir := m1614fOutDir(t)
 	out := h.runBrowserScript("editor_reconnect.test.mjs", "M1614F_OUT="+outDir)

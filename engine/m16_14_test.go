@@ -530,6 +530,7 @@ type m1614Report struct {
 // holds every checkpoint the run recorded to the serialized world, read by the
 // independent vanilla-format reader rather than by this fork's loader.
 func TestM1614CollaborativeEditorInBrowsers(t *testing.T) {
+	m169Parallel(t)
 	h := m1614NewHarness(t)
 	outDir := m1614OutDir(t)
 	out := h.runBrowserScript("editor_collab.test.mjs", "M1614_OUT="+outDir)
@@ -1351,6 +1352,7 @@ func m1614TileAt(board m1613VanillaBoard, x, y int) ([2]int, bool) {
 // It needs Chromium but no server and no client build, so it stands on its own
 // rather than on m169NewHarnessFor.
 func TestM1614dPauseClockCannotLoseItsRace(t *testing.T) {
+	m169Parallel(t)
 	m169RequireBrowserHarness(t)
 
 	cmd := exec.Command("node", filepath.Join("test", "pause_clock.test.mjs"))

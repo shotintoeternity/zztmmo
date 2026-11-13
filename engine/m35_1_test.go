@@ -17,6 +17,7 @@ import "testing"
 // each of them alone is satisfiable by a client that draws nothing. See
 // web/test/view3d.test.mjs.
 func TestM351BrowserView3DTogglesInTheRegularClient(t *testing.T) {
+	m169Parallel(t)
 	h := m1610NewHarness(t)
 	out := h.runBrowserScript("view3d.test.mjs")
 	t.Logf("3D view in the regular client:\n%s", out)

@@ -2376,6 +2376,7 @@ func TestM1617dDerivedNameFallsBackWhereATypedNameIsRefused(t *testing.T) {
 // the model's second answer for that board is a good one — the retry the
 // browser drives has to be able to succeed.
 func TestM1617BrowserDreamJourney(t *testing.T) {
+	m169Parallel(t)
 	if testing.Short() {
 		t.Skip("skipping the M16.17 browser journey in short mode")
 	}

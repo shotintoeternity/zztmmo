@@ -306,6 +306,7 @@ func m1618Contains(list []string, want string) bool {
 // Each subtest is a real browser of that engine at that screen, driving the
 // production server objects through the same tick-locked harness M16.9 built.
 func TestM1618PlatformMatrix(t *testing.T) {
+	m169Parallel(t)
 	matrix := m1618LoadMatrix(t)
 	for _, profile := range matrix.Profiles {
 		profile := profile
@@ -546,6 +547,7 @@ func TestM1618ProductCopyMakesNoTouchGameplayClaim(t *testing.T) {
 //
 // It needs Firefox and Chromium but no server and no client build.
 func TestM1618cPauseClockAccountsForItsOwnPageError(t *testing.T) {
+	m169Parallel(t)
 	m169RequireBrowserHarness(t)
 
 	cmd := exec.Command("node", filepath.Join("test", "pause_clock_errors.test.mjs"))

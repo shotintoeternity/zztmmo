@@ -108,6 +108,7 @@ func TestM1610aStaleCanvasCannotPassTheShotAssertion(t *testing.T) {
 // the right notes, that priority arbitration dropped what vanilla drops, that
 // -1 appends, and that the 'B' toggle silences the synth.
 func TestM1610BrowserAudioParity(t *testing.T) {
+	m169Parallel(t)
 	h := m1610NewHarness(t)
 	out := h.runBrowserScript("audio_parity.test.mjs")
 	t.Logf("browser audio parity:\n%s", out)
@@ -118,6 +119,7 @@ func TestM1610BrowserAudioParity(t *testing.T) {
 // composition commit and delete through the real hidden text control, and a
 // dropped WebSocket resuming in place.
 func TestM1610BrowserFocusAndProtocol(t *testing.T) {
+	m169Parallel(t)
 	h := m1610NewHarness(t)
 	out := h.runBrowserScript("focus_input.test.mjs")
 	t.Logf("browser focus/protocol parity:\n%s", out)

@@ -330,6 +330,26 @@ func m169RequireBrowserHarness(t *testing.T) {
 	}
 }
 
+// browserParallelEnv names the cap `make browser` runs the family under (task
+// M41.1). Set, it is also what go test's -parallel is given.
+const browserParallelEnv = "BROWSER_PARALLEL"
+
+// m169Parallel marks a browser test parallel, but only when the family was asked
+// to run that way: with BROWSER_PARALLEL unset (`make certify`, a hand-run go
+// test) every browser test stays serial, so certification never depends on the
+// parallel path. Call it first in the Test function.
+//
+// TestM1610BrowserControlVocabulary and TestM1610aStaleCanvasCannotPassTheShotAssertion
+// do not call it: both run control_keys.test.mjs, which writes fixed
+// test-results/control-keys-* and snapshot-vs-diff-* paths. Unmarked tests
+// finish before any parallel test starts, so they never overlap.
+func m169Parallel(t *testing.T) {
+	t.Helper()
+	if os.Getenv(browserParallelEnv) != "" {
+		t.Parallel()
+	}
+}
+
 // m169BrowserAbsent decides what an absent browser harness means. Ordinarily it
 // is an environment fact and the suite skips: a checkout that never asked for a
 // browser should not go red. Under the certification run (task M16.20) it is a
@@ -624,6 +644,7 @@ func m169GoldenDir(t *testing.T) string {
 // canvas and compared cell by cell. It also proves the harness itself: a
 // deliberately corrupted single cell must produce a named diff and three PNGs.
 func TestM169BrowserCanvasGoldens(t *testing.T) {
+	m169Parallel(t)
 	h := m169NewHarness(t)
 	out := h.runBrowserScript("visual_golden.test.mjs")
 	t.Logf("browser golden suite:\n%s", out)
@@ -638,6 +659,7 @@ func TestM169BrowserCanvasGoldens(t *testing.T) {
 // after the step, change what the client puts on the wire for a held arrow, or
 // drop a frame, and the hashes move.
 func TestM169TickLockedAcceptanceRun(t *testing.T) {
+	m169Parallel(t)
 	h := m169NewHarness(t)
 	out := h.runBrowserScript("tick_locked.test.mjs")
 	t.Logf("tick-locked run:\n%s", out)

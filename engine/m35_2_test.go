@@ -74,6 +74,7 @@ func m352NewHarness(t *testing.T) *m169Harness {
 // sidebar rows that advertise all of it, and the sign that reads itself out at
 // eye level.
 func TestM352BrowserView3DFeatures(t *testing.T) {
+	m169Parallel(t)
 	h := m352NewHarness(t)
 	out := h.runBrowserScript("view3d_features.test.mjs")
 	t.Logf("3D feature vocabulary:\n%s", out)

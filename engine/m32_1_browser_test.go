@@ -22,6 +22,7 @@ import (
 )
 
 func TestM321ChallengeBrowserJourney(t *testing.T) {
+	m169Parallel(t)
 	m169RequireBrowserHarness(t)
 	m169RequireClientBuild(t)
 	binPath := getM1619ServerBinary(t)
