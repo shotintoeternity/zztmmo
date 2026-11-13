@@ -5,7 +5,8 @@ export const EGA: readonly string[] = [
   "#555555", "#5555ff", "#55ff55", "#55ffff", "#ff5555", "#ff55ff", "#ffff55", "#ffffff",
 ];
 
-export function paletteColor(index: number): string {
+/** egaColor is the vanilla EGA color for an attribute nibble. */
+export function egaColor(index: number): string {
   return EGA[index & 0x0f];
 }
 

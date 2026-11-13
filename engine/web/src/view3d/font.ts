@@ -4,7 +4,7 @@
 // per EGA color) and the 3D atlas texture draw from.
 
 import pcEgaUrl from "../pc_ega.png";
-import { paletteColor } from "./palette";
+import { egaColor } from "./palette";
 
 export const GLYPH_COLS = 32;
 export const GLYPH_ROWS = 8;
@@ -57,7 +57,7 @@ export function loadFont(): Promise<Font> {
           tctx.imageSmoothingEnabled = false;
           tctx.drawImage(sheet, 0, 0);
           tctx.globalCompositeOperation = "source-in";
-          tctx.fillStyle = paletteColor(i);
+          tctx.fillStyle = egaColor(i);
           tctx.fillRect(0, 0, canvas.width, canvas.height);
         }
         tinted.push(canvas);

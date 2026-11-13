@@ -8,6 +8,8 @@
 // before anything reaches the wire, so the server never learns that a player
 // moved with a one-handed preset.
 
+import { EGA } from "./view3d/palette";
+
 export type ComfortPalette = "vanilla" | "high-contrast" | "colorblind-assist";
 export type ComfortKeyPreset = "vanilla" | "one-handed" | "custom";
 export type KeyAction =
@@ -31,11 +33,8 @@ export const DEFAULT_COMFORT: ComfortPreferences = {
 
 export const COMFORT_STORAGE_KEY = "zztmmo.comfort";
 
-const PALETTES: Record<ComfortPalette, string[]> = {
-  vanilla: [
-    "#000000", "#0000aa", "#00aa00", "#00aaaa", "#aa0000", "#aa00aa", "#aa5500", "#aaaaaa",
-    "#555555", "#5555ff", "#55ff55", "#55ffff", "#ff5555", "#ff55ff", "#ffff55", "#ffffff",
-  ],
+const PALETTES: Record<ComfortPalette, readonly string[]> = {
+  vanilla: EGA,
   "high-contrast": [
     "#000000", "#0037ff", "#00c853", "#00e5ff", "#ff1744", "#d500f9", "#ff9100", "#e0e0e0",
     "#757575", "#7c4dff", "#69f0ae", "#84ffff", "#ff8a80", "#ea80fc", "#ffff00", "#ffffff",
