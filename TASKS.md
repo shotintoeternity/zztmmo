@@ -9969,7 +9969,7 @@ slowest:
 The four slowest are 250s, which is 46% of the package. The client build and
 node suite add under a minute outside the package.
 
-- [ ] **M41.1 — run the browser journeys in parallel, capped. [ADVISOR]**
+- [x] **M41.1 — run the browser journeys in parallel, capped. [ADVISOR]**
   The harness already listens on `127.0.0.1:0` and each test has its own
   temp directory. First prove the journeys are independent: grep the 18
   tests and `web/test/lib` for fixed ports, shared paths under `engine/web`
@@ -9987,6 +9987,22 @@ node suite add under a minute outside the package.
   DoD: `make browser` green five runs in a row at the default cap, with the
   Mac awake (`caffeinate`). The commit records the measured wall time
   before and after. `make certify` is unchanged and green.
+  **Done 2026-11-13** (7025d59, 50a6a2e). There are 30 top-level browser
+  tests, not 18. 28 call `m169Parallel(t)`. The two M16.10 control-keys
+  tests stay serial because both run `control_keys.test.mjs`, which writes
+  fixed `test-results` paths. Two shared things were fixed first: one
+  package-level fake IdP that every harness served, now one per harness,
+  and an unlocked client build. Certify differs from the spec: tests go
+  parallel only when `BROWSER_PARALLEL` is set at all, and `make certify`
+  never sets it, so `cmd/zzt-parity` is untouched.
+  Measured, Mac awake: `make browser` went from about 560s to
+  303/322/310/302/333s in five green runs in a row; the engine package went
+  from 552–557s to 297–327s. `make certify` (686s): all eight gates green,
+  including the serial browser run. Verdict NOT CERTIFIED, but only for 28
+  task rows still `unverified` (M18.8a–M40.9, 27 of them older than this
+  task). That is reconciliation debt, not an M41.1 change; see NOTES.md
+  2026-11-13. Accepted risk: about a dozen binary-launching harnesses take
+  a port by listen-and-close.
 
 - [ ] **M41.2 — shorten the slowest journey, if M41.1 leaves it the bound.**
   If after M41.1 the run is bounded by `TestM1618PlatformMatrix` (three
