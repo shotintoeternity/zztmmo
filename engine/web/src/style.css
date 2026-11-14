@@ -193,6 +193,25 @@ canvas {
   font-size: 15px;
   text-align: left;
 }
+/* M39.2: the editor's menu has sixteen rows and a phone in portrait has room
+   for about eight above the bar, so the panel flows into two columns and
+   scrolls rather than running off the top. The open F1-F3 picker's elements
+   come first, spanning both columns. */
+.touch-menu {
+  max-height: calc(100vh - var(--touch-bar-h, 0px) - 24px);
+  overflow-y: auto;
+}
+.touch-menu.touch-menu-wide:not([hidden]) {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+}
+.touch-menu-picker {
+  order: -1;
+  grid-column: 1 / -1;
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 6px;
+}
 .touch-controls .touch-btn[data-open="true"] {
   background: rgba(70, 70, 170, 0.8);
 }

@@ -9611,7 +9611,7 @@ and Enter.
   that a row tap and a mode change both close it. The platform matrix's
   play-mode control list gains `more`. `make browser` passes.
 
-- [ ] **M39.2 — the editor's ☰ menu.** The same panel in editor mode, holding
+- [x] **M39.2 — the editor's ☰ menu.** The same panel in editor mode, holding
   the editor's key commands (`EditorLoop`, `editor.go:604-806`): Space (plot),
   Tab (draw mode), P (pattern), C (color), F1–F3 (element menus), F4 (text),
   X (fill), Enter (stats), B (boards), I (info), L (load), S (save), Z
@@ -9622,6 +9622,27 @@ and Enter.
   needs a Shift-held "draw while moving" toggle. DoD as M39.1, plus a browser
   journey that opens the editor on a touch profile and places a tile through
   the menu.
+  Done note (2026-11-13): ☰ is on the editor's bar, and the menu lays out in
+  two columns: Plot, Draw on/off, Pattern, Color, Fill, Item, Creature,
+  Terrain, Switch boards, Board info, World, Clear board, New world, Help,
+  Quit. The browser's editor runs on the client (`handleEditorKey` switches on
+  `event.code`), so every row taps the key as the 3D rows do; none is a
+  command byte. Three keys get no row: Enter is on the bar, L has no case (the
+  browser folded Load into S's World menu at M5.6), and F4 text entry would be
+  a dead end, since the soft keyboard only mounts for an editable window.
+  Shift-held draw needs no toggle, because Tab's draw mode already places on
+  every step. The editor's sidebar pickers are not windows, so `setMode` now
+  carries the editor's state (`TouchEditorView`). While the F1–F3 picker is
+  open, the menu opens by itself and lists its elements by name, since a phone
+  has no letter to answer it with. While any other sidebar picker, the stat
+  prompt or text entry is up, only Back (Escape) is offered, so a letter row
+  can never pick a row it did not mean. The node suite asserts the rows, their
+  keys, the picker and Back gating, and closing. The new
+  `TestM392EditorTouchMenuJourney` (`editor_touch_menu.test.mjs`, EDIT, a
+  landscape touch profile) plots through ☰ → Plot, places Ammo through ☰ →
+  Item → Ammo, closes a picker with Back, toggles draw mode, and quits through
+  ☰ → Quit → No. Found, not fixed: the title screen has no Editor control, so
+  a phone cannot open the editor at all yet (the journey presses E).
 
 ## M40 — Readable again: split the giant files, and comments that state what is true
 

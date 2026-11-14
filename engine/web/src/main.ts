@@ -2959,9 +2959,16 @@ function syncTouchControls() {
   // The 3D state rides along so the ☰ menu offers the 3D rows only
   // while the 3D view is on, labelled for what a tap does now.
   const board3d = view3dOn() && view3d !== null;
+  // M39.2: the editor's state rides along too. Its sidebar pickers are not
+  // windows, so the menu needs to know when one is reading keys of its own.
   touchControls?.setMode(modal ? (modal.kind === "yesno" ? "prompt" : "modal") : mode, {
     view3d: board3d,
     firstPerson: board3d && view3d!.firstPerson,
+    editor: {
+      drawing: editor.drawing,
+      picker: editor.categoryMenu ? editor.categoryMenu.items : null,
+      busy: editor.textMode || editor.sidebarMenu !== null || editor.statPrompt !== null,
+    },
   });
 }
 

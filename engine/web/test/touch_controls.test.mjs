@@ -50,6 +50,8 @@ class FakeElement {
 
   setAttribute(name, value) { this.attributes[name] = value; }
   appendChild(child) { this.children.push(child); return child; }
+  removeChild(child) { this.children = this.children.filter((c) => c !== child); return child; }
+  get lastChild() { return this.children[this.children.length - 1] ?? null; }
   addEventListener(type, listener) { this.listeners.set(type, listener); }
   dispatch(type, detail = {}) {
     if (typeof detail.preventDefault !== "function") {
@@ -96,8 +98,12 @@ const byLabel = (label) => {
   return found;
 };
 assert.equal(buttons.length, TOUCH_BUTTONS.length);
-const menuRows = controls.menu.children;
-assert.equal(menuRows.length, TOUCH_MENU_ROWS.length);
+// The fixed rows, then (M39.2) the container the open F1-F3 picker fills.
+assert.equal(controls.menu.children.length, TOUCH_MENU_ROWS.length + 1);
+const menuRows = controls.menu.children.slice(0, TOUCH_MENU_ROWS.length);
+const pickerList = controls.menu.children[TOUCH_MENU_ROWS.length];
+assert.equal(pickerList.className, "touch-menu-picker");
+assert.equal(pickerList.hidden, true, "no picker is open at load");
 // A control must never take focus from the hidden text input: that is what keeps
 // the soft keyboard up when a control is tapped (M15.1's seam).
 for (const button of [...buttons, ...menuRows]) {
@@ -265,10 +271,10 @@ assert.deepEqual(visible(), [...DPAD, "⌨", "⏎", "Esc"]);
 controls.setMode("prompt");
 assert.deepEqual(visible(), [...DPAD, "⌨", "⏎", "Esc", "Yes", "No"]);
 
-// The editor has its own key vocabulary; the pad and Enter navigate it, and the
-// play/title commands mean nothing there.
+// The editor has its own key vocabulary; the pad and Enter navigate it, the
+// play/title commands mean nothing there, and (M39.2) ☰ holds the rest.
 controls.setMode("editor");
-assert.deepEqual(visible(), [...DPAD, "⌨", "⏎"]);
+assert.deepEqual(visible(), [...DPAD, "⌨", "⏎", "☰"]);
 
 // M22.1: a watcher's bar. It is the one mode with no direction pad and no
 // Enter: the client's input sampler is off and the server drops anything a
@@ -370,8 +376,8 @@ assert.equal(menu.hidden, true, "the pad closes the menu");
 openMenu();
 controls.setMode("prompt");
 assert.equal(menu.hidden, true, "a mode change closes the menu");
-assert.equal(more.hidden, true, "☰ is play mode's");
-for (const m of ["title", "modal", "prompt", "editor", "watching"]) {
+assert.equal(more.hidden, true, "☰ is play mode's and the editor's, not a prompt's");
+for (const m of ["title", "modal", "prompt", "watching"]) {
   controls.setMode(m, { view3d: true, firstPerson: true });
   assert.deepEqual(visibleRows(), [], `no menu row is offered in ${m} mode`);
 }
@@ -381,5 +387,103 @@ controls.setMode("playing");
 openMenu();
 controls.setMode("playing");
 assert.equal(menu.hidden, false, "a redraw in the same mode leaves the menu open");
+
+// ---------------------------------------------------------------------------
+// M39.2 — the editor's ☰ menu
+// ---------------------------------------------------------------------------
+
+const editorView = (editor) => ({ view3d: false, firstPerson: false, editor: { drawing: false, picker: null, busy: false, ...editor } });
+const EDITOR_ROWS = [
+  "Plot", "Draw on", "Pattern", "Color", "Fill", "Item", "Creature", "Terrain",
+  "Switch boards", "Board info", "World", "Clear board", "New world", "Help", "Quit",
+];
+
+controls.setMode("title");
+controls.setMode("editor", editorView({}));
+assert.equal(more.hidden, false, "☰ is on the editor's bar");
+assert.equal(menu.hidden, true, "a mode change into the editor leaves the menu closed");
+assert.equal(menu.className, "touch-menu touch-menu-wide", "the editor's rows lay out in two columns");
+assert.deepEqual(visibleRows(), EDITOR_ROWS, "the editor's commands, none of play mode's");
+// Draw mode says what a tap does now, like the 3D toggle.
+controls.setMode("editor", editorView({ drawing: true }));
+assert.deepEqual(visibleRows(), EDITOR_ROWS.map((label) => (label === "Draw on" ? "Draw off" : label)));
+
+// The editor runs on the client (handleEditorKey switches on event.code), so
+// every row taps the same key a keyboard would. None is a command byte.
+for (const [id, code, key] of [
+  ["edit-plot", "Space", " "], ["edit-draw", "Tab", "Tab"], ["edit-pattern", "KeyP", "p"],
+  ["edit-color", "KeyC", "c"], ["edit-fill", "KeyX", "x"], ["edit-item", "F1", "F1"],
+  ["edit-creature", "F2", "F2"], ["edit-terrain", "F3", "F3"], ["edit-boards", "KeyB", "b"],
+  ["edit-info", "KeyI", "i"], ["edit-world", "KeyS", "s"], ["edit-clear", "KeyZ", "z"],
+  ["edit-new", "KeyN", "n"], ["edit-help", "KeyH", "h"], ["edit-quit", "KeyQ", "q"],
+]) {
+  controls.setMode("editor", editorView({}));
+  openMenu();
+  keyCalls.length = 0;
+  commandCalls.length = 0;
+  assert.equal(row(id).dispatch("pointerdown").defaultPrevented, true);
+  assert.deepEqual(keyCalls, [{ down: true, code, key }, { down: false, code, key }], `${id} must tap ${code}`);
+  assert.deepEqual(commandCalls, [], `${id} must not send a command byte`);
+  assert.equal(menu.hidden, true, `${id} must close the menu`);
+}
+
+// F4 text entry and L have no row: a phone cannot type outside a window, and
+// the browser folded Load into the World menu. Enter is on the bar already.
+for (const code of ["F4", "KeyL", "Enter"]) {
+  assert.ok(!TOUCH_MENU_ROWS.some((spec) => spec.kind === "key" && spec.modes.includes("editor") && spec.code === code), `${code} must not be an editor row`);
+}
+
+// A sidebar picker other than F1-F3, the stat prompt, or text entry reads
+// letters as its own: a Pattern tap would jump a board list to a row starting
+// with P. So only Back is offered, and it is Escape.
+controls.setMode("editor", editorView({ busy: true }));
+assert.deepEqual(visibleRows(), ["Back"]);
+openMenu();
+keyCalls.length = 0;
+row("edit-back").dispatch("pointerdown");
+assert.deepEqual(keyCalls, [{ down: true, code: "Escape", key: "Escape" }, { down: false, code: "Escape", key: "Escape" }]);
+controls.setMode("editor", editorView({}));
+assert.equal(visibleRows().includes("Back"), false, "Back is only offered while something is up");
+
+// The F1-F3 picker answers to a letter, which a phone has no way to type. While
+// it is open the menu opens by itself and lists its elements by name.
+const picker = [{ shortcut: "Z", name: "Player" }, { shortcut: "A", name: "Ammo" }];
+controls.setMode("editor", editorView({}));
+assert.equal(menu.hidden, true);
+controls.setMode("editor", editorView({ picker }));
+assert.equal(menu.hidden, false, "the picker opens the menu");
+assert.equal(pickerList.hidden, false);
+assert.deepEqual(pickerList.children.map((b) => b.textContent), ["Player", "Ammo"]);
+assert.deepEqual(visibleRows(), ["Back"], "the editor's commands step aside for the picker");
+for (const b of pickerList.children) {
+  assert.equal(b.tabIndex, -1, `${b.textContent} is focusable`);
+}
+// A redraw with the same picker rebuilds nothing.
+const first = pickerList.children[0];
+controls.setMode("editor", editorView({ picker }));
+assert.equal(pickerList.children[0], first, "the same picker keeps its rows");
+// A row taps the element's shortcut, the key handleEditorCategoryKey reads.
+keyCalls.length = 0;
+assert.equal(pickerList.children[1].attributes["data-touch"], "pick-a");
+pickerList.children[1].dispatch("pointerdown");
+assert.deepEqual(keyCalls, [{ down: true, code: "KeyA", key: "a" }, { down: false, code: "KeyA", key: "a" }]);
+assert.equal(menu.hidden, true, "a pick closes the menu");
+// main.ts then clears the picker, which empties the list.
+controls.setMode("editor", editorView({}));
+assert.equal(pickerList.hidden, true);
+assert.deepEqual(pickerList.children, []);
+assert.deepEqual(visibleRows(), EDITOR_ROWS);
+// However the picker went (Escape from a keyboard, say), the menu it opened goes with it.
+controls.setMode("editor", editorView({ picker }));
+assert.equal(menu.hidden, false);
+controls.setMode("editor", editorView({}));
+assert.equal(menu.hidden, true, "the menu the picker opened closes with it");
+// And the picker never shows outside the editor.
+controls.setMode("editor", editorView({ picker }));
+controls.setMode("playing", editorView({ picker }));
+assert.equal(pickerList.hidden, true);
+assert.equal(menu.hidden, true);
+assert.equal(menu.className, "touch-menu");
+assert.deepEqual(visibleRows(), ["Save", "Help", "Quit", "3D view"], "play mode's rows come back");
 
 console.log("touch_controls.test.mjs: all assertions passed");

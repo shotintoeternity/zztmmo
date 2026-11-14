@@ -43,6 +43,25 @@
 // Quit, and the 3D view's controls) sit in a panel the `more` button opens. The
 // panel is appended beside the bar, never inside it, so `--touch-bar-h` keeps
 // measuring the bar alone and opening the menu cannot move the board.
+//
+// M39.2 — THE EDITOR'S ☰ MENU holds the editor's key commands, because the
+// editor's bar is only the pad, ⌨ and Enter. The editor is driven on the client
+// (main.ts handleEditorKey switches on event.code), so every editor row taps
+// the key exactly as the 3D rows do; there is no command byte to send. Three of
+// EditorLoop's keys get no row. Enter is already on the bar. L has no case: the
+// browser folded Load into S's World menu (M5.6, the sidebar says so). F4 text
+// entry would be a dead end, since the soft keyboard mounts only for an
+// editable window (MobileTextInputBridge), so a phone could switch it on and
+// type nothing. Shift-held "draw while moving" needs no toggle either: Tab's
+// draw mode already places on every step.
+//
+// The editor's sidebar pickers are not windows, so the mode stays "editor"
+// while one is up, and its keys mean something else there. A letter row tapped
+// while the F1-F3 picker waits would pick an element; one tapped in a board
+// list would jump to a row. So `TouchEditorView` carries what the editor is
+// doing. While the F1-F3 picker is open the menu opens by itself and lists that
+// picker's elements by name (a phone has no letters to answer it with). While
+// any other sidebar picker or text entry is up, only Back (Escape) is offered.
 
 export type TouchKeyHandler = (down: boolean, code: string, key: string) => void;
 
@@ -61,10 +80,21 @@ export type TouchControlHandlers = {
 
 export type TouchCommand = "save" | "quit" | "help";
 
+/** One element of the editor's open F1-F3 picker, answered by its shortcut. */
+export type TouchPickerItem = { shortcut: string; name: string };
+
+/**
+ * M39.2: what the editor is doing, which decides its rows. `picker` is the open
+ * F1-F3 category menu; `busy` is any other sidebar picker, the stat prompt, or
+ * text entry, which read letters as their own.
+ */
+export type TouchEditorView = { drawing: boolean; picker: readonly TouchPickerItem[] | null; busy: boolean };
+
 /** What the 3D view is doing, which decides the 3D rows and their labels. */
-export type TouchView = { view3d: boolean; firstPerson: boolean };
+export type TouchView = { view3d: boolean; firstPerson: boolean; editor?: TouchEditorView };
 
 const TEXT_VIEW: TouchView = { view3d: false, firstPerson: false };
+const IDLE_EDITOR: TouchEditorView = { drawing: false, picker: null, busy: false };
 
 // What the player is looking at. `modal` wins over the others: an open window
 // owns the keys whichever screen it is drawn over. `prompt` is the one modal told
@@ -79,6 +109,9 @@ export type TouchControlMode = "title" | "playing" | "editor" | "modal" | "promp
 
 const EVERY_MODE: readonly TouchControlMode[] = ["title", "playing", "editor", "modal", "prompt"];
 const PLAYING_ONLY: readonly TouchControlMode[] = ["playing"];
+const EDITOR_ONLY: readonly TouchControlMode[] = ["editor"];
+// M39.2: the ☰ button is play mode's and the editor's.
+const PLAYING_OR_EDITOR: readonly TouchControlMode[] = ["playing", "editor"];
 const TITLE_ONLY: readonly TouchControlMode[] = ["title"];
 // Every window, of either shape. Escape closes a text window and answers "no" to
 // a prompt (modal.ts), so the one control means the same thing in both.
@@ -138,7 +171,8 @@ export const TOUCH_BUTTONS: ButtonSpec[] = [
   { id: "fire", label: "Fire", kind: "key", code: "Space", key: " ", hold: true, group: "action", modes: PLAYING_ONLY },
   // M39.1: the door to everything the bar has no room for. Last in play mode's
   // row, after Fire, so the thumb that holds Fire is not the one that reaches it.
-  { id: "more", label: "☰", kind: "more", group: "action", modes: PLAYING_ONLY },
+  // M39.2 adds the editor, whose bar is otherwise only the pad, ⌨ and Enter.
+  { id: "more", label: "☰", kind: "more", group: "action", modes: PLAYING_OR_EDITOR },
   // M21.5, the way back out. A window a phone can open and not close is worse
   // than one it cannot open: Enter closes a plain window but a picker with a
   // header ignores it (modal.ts requireSelection), and no window closes on the
@@ -161,12 +195,31 @@ export const TOUCH_BUTTONS: ButtonSpec[] = [
 // command lookup (3 toggles the 3D view, F stands up or steps back, G ghosts).
 // `needs3d` rows mean nothing on the text screen, so they are hidden there; the
 // toggle is always offered, and its label says which view a tap gives you.
+//
+// M39.2: `editor` says when an editor row is offered. "idle" rows are the
+// editor's commands, shown only while no sidebar picker or text entry is up;
+// "back" is Escape, shown only while one is.
 type MenuRowSpec = {
   id: string;
   label: (view: TouchView) => string;
   modes: readonly TouchControlMode[];
   needs3d: boolean;
+  editor?: "idle" | "back";
 } & ({ kind: "command"; command: TouchCommand } | { kind: "key"; code: string; key: string });
+
+// An editor row: a tapped key, in the order the editor's sidebar lists them.
+function editorRow(id: string, label: string | ((view: TouchView) => string), code: string, key: string): MenuRowSpec {
+  return {
+    id,
+    label: typeof label === "string" ? () => label : label,
+    kind: "key",
+    code,
+    key,
+    modes: EDITOR_ONLY,
+    needs3d: false,
+    editor: "idle",
+  };
+}
 
 export const TOUCH_MENU_ROWS: MenuRowSpec[] = [
   { id: "save", label: () => "Save", kind: "command", command: "save", modes: PLAYING_ONLY, needs3d: false },
@@ -175,6 +228,24 @@ export const TOUCH_MENU_ROWS: MenuRowSpec[] = [
   { id: "view3d", label: (v) => (v.view3d ? "Text view" : "3D view"), kind: "key", code: "Digit3", key: "3", modes: PLAYING_ONLY, needs3d: false },
   { id: "standup", label: (v) => (v.firstPerson ? "Step back" : "Eye level"), kind: "key", code: "KeyF", key: "f", modes: PLAYING_ONLY, needs3d: true },
   { id: "ghost", label: () => "Ghost", kind: "key", code: "KeyG", key: "g", modes: PLAYING_ONLY, needs3d: true },
+  // M39.2, the editor (main.ts handleEditorKey). The ids are prefixed because
+  // "color", "help" and "quit" already name other controls.
+  editorRow("edit-plot", "Plot", "Space", " "),
+  editorRow("edit-draw", (v) => (v.editor?.drawing ? "Draw off" : "Draw on"), "Tab", "Tab"),
+  editorRow("edit-pattern", "Pattern", "KeyP", "p"),
+  editorRow("edit-color", "Color", "KeyC", "c"),
+  editorRow("edit-fill", "Fill", "KeyX", "x"),
+  editorRow("edit-item", "Item", "F1", "F1"),
+  editorRow("edit-creature", "Creature", "F2", "F2"),
+  editorRow("edit-terrain", "Terrain", "F3", "F3"),
+  editorRow("edit-boards", "Switch boards", "KeyB", "b"),
+  editorRow("edit-info", "Board info", "KeyI", "i"),
+  editorRow("edit-world", "World", "KeyS", "s"),
+  editorRow("edit-clear", "Clear board", "KeyZ", "z"),
+  editorRow("edit-new", "New world", "KeyN", "n"),
+  editorRow("edit-help", "Help", "KeyH", "h"),
+  editorRow("edit-quit", "Quit", "KeyQ", "q"),
+  { ...editorRow("edit-back", "Back", "Escape", "Escape"), editor: "back" },
 ];
 
 export type TouchControls = {
@@ -275,6 +346,44 @@ export function createTouchControls(
     rows.push({ button, spec });
   }
 
+  // M39.2: the open F1-F3 picker's elements, rebuilt whenever the picker
+  // changes. A row taps the element's shortcut letter, which is what
+  // handleEditorCategoryKey reads.
+  const pickerList = host.createElement("div");
+  pickerList.className = "touch-menu-picker";
+  pickerList.hidden = true;
+  // Last in the DOM so the fixed rows keep their indices; style.css draws it
+  // first, where the player's eye already is when the picker opens the menu.
+  menu.appendChild(pickerList);
+  let shownPicker: readonly TouchPickerItem[] | null = null;
+  const showPicker = (picker: readonly TouchPickerItem[] | null) => {
+    if (picker === shownPicker) {
+      return;
+    }
+    shownPicker = picker;
+    while (pickerList.lastChild) {
+      pickerList.removeChild(pickerList.lastChild);
+    }
+    pickerList.hidden = picker === null;
+    for (const item of picker ?? []) {
+      const button = host.createElement("button") as HTMLButtonElement;
+      button.type = "button";
+      button.tabIndex = -1;
+      button.className = "touch-btn touch-menu-row";
+      button.setAttribute("data-touch", "pick-" + item.shortcut.toLowerCase());
+      button.textContent = item.name;
+      button.addEventListener("pointerdown", (event: Event) => {
+        event.preventDefault();
+        setMenuOpen(false);
+        const letter = item.shortcut.toLowerCase();
+        const code = /^[a-z]$/.test(letter) ? "Key" + letter.toUpperCase() : "";
+        handlers.key(true, code, letter);
+        handlers.key(false, code, letter);
+      });
+      pickerList.appendChild(button);
+    }
+  };
+
   bar.appendChild(dpad);
   bar.appendChild(action);
   host.body.appendChild(bar);
@@ -292,11 +401,30 @@ export function createTouchControls(
       }
       currentMode = mode;
       currentView = view;
+      const editorView = mode === "editor" ? view.editor ?? IDLE_EDITOR : IDLE_EDITOR;
+      const picker = mode === "editor" ? editorView.picker : null;
+      // The F1-F3 picker opens the menu as it appears and closes it as it goes,
+      // whichever way it went (a row, a key, Escape).
+      const pickerOpened = picker !== null && shownPicker === null;
+      const pickerClosed = picker === null && shownPicker !== null;
+      showPicker(picker);
+      if (pickerOpened) {
+        setMenuOpen(true);
+      } else if (pickerClosed) {
+        setMenuOpen(false);
+      }
+      const editorBusy = picker !== null || editorView.busy;
+      // Sixteen editor rows do not fit one column above a portrait phone's bar.
+      const menuClass = mode === "editor" ? "touch-menu touch-menu-wide" : "touch-menu";
+      if (menu.className !== menuClass) {
+        menu.className = menuClass;
+      }
       for (const { button, spec } of built) {
         button.hidden = spec.modes.indexOf(mode) < 0;
       }
       for (const { button, spec } of rows) {
-        button.hidden = spec.modes.indexOf(mode) < 0 || (spec.needs3d && !currentView.view3d);
+        const offTheEditorState = spec.editor === "idle" ? editorBusy : spec.editor === "back" ? !editorBusy : false;
+        button.hidden = spec.modes.indexOf(mode) < 0 || (spec.needs3d && !currentView.view3d) || offTheEditorState;
         const label = spec.label(currentView);
         if (button.textContent !== label) {
           button.textContent = label;
