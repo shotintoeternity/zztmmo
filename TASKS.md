@@ -10054,6 +10054,33 @@ node suite add under a minute outside the package.
   output paths for `control_keys.test.mjs` so both M16.10 tests can go
   parallel (~25s).
 
+- [x] **M41.3 — the browser family reaches no live Museum.** Filed 2026-11-14
+  at the owner's request. Every journey that types into the world picker
+  makes the shipped server search museumofzzt.com (`museum.go`'s
+  `defaultMuseumAPIBase`), because no harness can point it anywhere else. When
+  the site is down, or the Mac's network drops in Maintenance Sleep, those
+  journeys fail with `HTTP 502 /api/museum/search` on code that did not
+  change (M40.9's palette commit took four full runs for this reason). Only
+  M16.16 needs Museum results, and it serves its own fake. Steps:
+  `NewMuseumService` takes its two base URLs from `ZZT_MUSEUM_API_BASE` and
+  `ZZT_MUSEUM_FILES_BASE` when set, the live site otherwise. The package's
+  `TestMain` starts one local fake Museum that answers every search with no
+  results, refuses anything else, and sets both variables, so every launched
+  server and in-process harness inherits it. Tests that set `APIBaseURL`
+  themselves are unchanged. DoD: a unit test pins the variables and the
+  defaults; a test asserts `TestMain`'s fake is what `NewMuseumService`
+  resolves to; `make browser` passes with the network off (or with the live
+  host unreachable), and no journey's output mentions museumofzzt.com.
+  Done note (2026-11-14): as specified. `TestM413MuseumBaseURLsComeFromTheEnvironment`
+  pins the variables, blank-as-unset and the live defaults;
+  `TestM413TestsSearchALocalMuseum` asserts both bases are loopback under
+  `go test` and that a search there returns nothing. `make browser` ran with
+  `HTTP(S)_PROXY` pointed at a dead port, so nothing could reach the live
+  site: every suite passed except the platform matrix's firefox-desktop,
+  whose Firefox obeyed the proxy for 127.0.0.1 itself (`NO_PROXY` was blank);
+  rerun with `NO_PROXY=127.0.0.1,localhost` and the live host still blocked,
+  the matrix passed. The log mentions museumofzzt.com nowhere.
+
 ## M14 — Rearchitecting for the service ZZTMMO is becoming
 
 Filed 2026-07-12 from a whole-repo review (NOTES.md): three structural debts

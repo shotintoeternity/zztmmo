@@ -27,7 +27,22 @@ const (
 	museumUserAgent        = "zztmmo-museum/1.0 (github.com/shotintoeternity/zztmmo)"
 	museumRequestDelay     = 300 * time.Millisecond
 	museumMaxZipBytes      = 64 << 20
+
+	// M41.3: where the Museum lives, when it is not museumofzzt.com. The test
+	// package's TestMain points every server it launches at a local fake, so a
+	// browser run needs no network; production leaves both unset.
+	museumAPIBaseEnv   = "ZZT_MUSEUM_API_BASE"
+	museumFilesBaseEnv = "ZZT_MUSEUM_FILES_BASE"
 )
+
+// museumBase is the environment's value for key, or def when it is unset or
+// blank.
+func museumBase(key, def string) string {
+	if v := strings.TrimSpace(os.Getenv(key)); v != "" {
+		return v
+	}
+	return def
+}
 
 type MuseumService struct {
 	Server       *WebSocketServer
@@ -105,8 +120,8 @@ func NewMuseumService(server *WebSocketServer) *MuseumService {
 	return &MuseumService{
 		Server:       server,
 		Client:       &http.Client{Timeout: 60 * time.Second},
-		APIBaseURL:   defaultMuseumAPIBase,
-		FilesBaseURL: defaultMuseumFilesBase,
+		APIBaseURL:   museumBase(museumAPIBaseEnv, defaultMuseumAPIBase),
+		FilesBaseURL: museumBase(museumFilesBaseEnv, defaultMuseumFilesBase),
 		CacheDir:     cacheDir,
 	}
 }

@@ -8,6 +8,7 @@ import (
 	"io"
 	"net"
 	"net/http"
+	"net/http/httptest"
 	"os"
 	"os/exec"
 	"path/filepath"
@@ -32,12 +33,33 @@ var (
 // TestMain removes the zzt-server binary getM1619ServerBinary built, so a test
 // run leaves nothing behind in $TMPDIR (M36.26d). It is the package's only
 // TestMain: every suite that launches the shipped server shares one build.
+//
+// M41.3: it also stands up one local fake Museum and points the package's
+// environment at it before any test runs, so every server a test launches
+// (which inherits the environment) and every in-process NewMuseumService
+// searches it instead of museumofzzt.com. A browser run then needs no network.
 func TestMain(m *testing.M) {
+	museum := httptest.NewServer(http.HandlerFunc(m413FakeMuseum))
+	_ = os.Setenv(museumAPIBaseEnv, museum.URL+"/api/v1")
+	_ = os.Setenv(museumFilesBaseEnv, museum.URL+"/zgames")
 	code := m.Run()
+	museum.Close()
 	if m1619BuildDir != "" {
 		_ = os.RemoveAll(m1619BuildDir)
 	}
 	os.Exit(code)
+}
+
+// m413FakeMuseum answers a search with no results, the Museum's shape for a
+// query that matches nothing, and refuses everything else. Only M16.16 needs
+// Museum results, and it serves its own fake.
+func m413FakeMuseum(w http.ResponseWriter, r *http.Request) {
+	if r.Method == http.MethodGet && r.URL.Path == "/api/v1/search/files" {
+		w.Header().Set("Content-Type", "application/json")
+		_, _ = w.Write([]byte(`{"status":"SUCCESS","count":0,"data":{"results":[]}}`))
+		return
+	}
+	http.Error(w, "M41.3 fake Museum: no such endpoint", http.StatusNotFound)
 }
 
 func getM1619ServerBinary(t *testing.T) string {
