@@ -10081,6 +10081,50 @@ node suite add under a minute outside the package.
   rerun with `NO_PROXY=127.0.0.1,localhost` and the live host still blocked,
   the matrix passed. The log mentions museumofzzt.com nowhere.
 
+## M42 — Where a player arrives
+
+Filed 2026-11-14 from the owner's report: "we have a real problem with where
+the player character ends up on a board. it should always be in the player's
+pre-designed board location. if not, it needs to be the next square that's
+free and movable for the character if there are multiple players on the
+board."
+
+- [x] **M42.1 — a join arrives at the board's designed start.** Measured
+  first, on CONTROL's Control Field (designed start 6,12). The first joiner
+  arrived at 6,12. After they walked to 16,12, the second joiner arrived at
+  15,11, beside them. `roomSpawn` searched outward from the board's player
+  stat, and once anyone was on the board that stat was the first player,
+  wherever they stood. Separately, a board that every player has left keeps
+  no player tile (`RemovePlayer`), and the reopened room fell back to
+  `Board.Info.StartPlayerX/Y`. Vanilla writes that only in `BoardEnter`
+  (GAME.PAS:1309), so on a .ZZT it is wherever the author's player last
+  entered the board, not necessarily the player tile.
+  Steps: the designed start is the board's player tile as the loaded world
+  first opens it, else its stored start square, else its centre. Keep it on
+  the `RoomManager`, per board, for as long as the world is loaded (cleared
+  by `RestoreSnapshot` and `LoadWorld`). A join (no entry square) aims there:
+  the first arrival in an empty room claims the player tile as before, and
+  anyone else gets the designed start if a player can stand on it and no stat
+  holds it, else the nearest free square they can walk off (`FindPlacement`,
+  which searches outward in rings and prefers squares with a way out).
+  Transfers are unchanged: a passage or board edge still names its entry
+  square, as in vanilla.
+  **This changes behaviour on purpose.** A recording made before it that
+  joins a second player after the first has moved replays that joiner onto a
+  different square. Recordings carry no outcome hash to fail, so nothing
+  errors, and no replay fixture moved.
+  DoD: tests pin the second joiner on the designed start with the first
+  player away from it; a crowded start places each joiner on a free, walk-off
+  square next to it and never on another player; the start survives the
+  board emptying; a stale stored start does not take over once the player
+  tile is gone. The co-op cutline and the multiplayer browser journeys pass.
+  Done note (2026-11-14): as specified. The four tests are in
+  `m42_1_test.go`. On the old code two of them failed, placing the joiner at
+  15,11 (beside the first player) and 19,4 (beside the reopened board's first
+  player). `go test ./...` passes, with no fixture moved. `make
+  browser-only` ran the co-op cutline, M16.11's player journeys, the
+  platform matrix and M19.2.
+
 ## M14 — Rearchitecting for the service ZZTMMO is becoming
 
 Filed 2026-07-12 from a whole-repo review (NOTES.md): three structural debts

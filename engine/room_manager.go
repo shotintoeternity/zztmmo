@@ -33,6 +33,9 @@ type RoomManager struct {
 	rooms        map[int16]*Room
 	players      map[PlayerID]*roomPlayer
 	nextPlayerID PlayerID
+	// boardStarts is each board's designed start square, read the first time
+	// the loaded world opens it (boardStart, M42.1).
+	boardStarts map[int16][2]int16
 	// WorldIdentity is the server-resolved DOS stem for this instance. It is
 	// deliberately separate from the world file's display name: first-party
 	// policy, including friendly fire, is deployment-owned rather than authored.
@@ -91,6 +94,10 @@ type Room struct {
 	BoardID int16
 	Engine  *Engine
 	players map[PlayerID]struct{}
+	// startX/startY is the square the board was designed to start a player on
+	// (RoomManager.boardStart). Every join aims here, so a second player arrives
+	// at the board's start rather than beside wherever the first one has walked.
+	startX, startY int16
 }
 
 type roomPlayer struct {
@@ -668,6 +675,14 @@ func movePlayerStat(engine *Engine, statID, x, y int16) {
 	engine.SetReenterPoint(statID, x, y)
 }
 
+// roomSpawn picks the square a player arrives on. A transfer names one (the
+// passage's far end, the mirrored edge square) and gets it if a player can stand
+// there. A join names none and aims at the board's designed start (Room.startX/Y):
+// the first arrival in an empty room takes the board's own player tile, and
+// anyone after that gets the start square if it is free, else the nearest free
+// square they can walk off (FindPlacement). The search starts from the designed
+// start, never from another player, so where the room's players have wandered
+// does not decide where the next one appears.
 func roomSpawn(room *Room, spawnX, spawnY int16) (int16, int16) {
 	requested := spawnX != 0 && spawnY != 0
 	if !requested && len(room.players) == 0 {
@@ -676,20 +691,8 @@ func roomSpawn(room *Room, spawnX, spawnY int16) (int16, int16) {
 			return int16(stat.X), int16(stat.Y)
 		}
 	}
-	if spawnX == 0 || spawnY == 0 {
-		if statID, ok := claimablePlayerStat(room); ok {
-			stat := room.Engine.Board.Stats[statID]
-			spawnX = int16(stat.X)
-			spawnY = int16(stat.Y)
-		}
-	}
-	if spawnX == 0 || spawnY == 0 {
-		spawnX = int16(room.Engine.Board.Info.StartPlayerX)
-		spawnY = int16(room.Engine.Board.Info.StartPlayerY)
-	}
-	if spawnX == 0 || spawnY == 0 {
-		spawnX = BOARD_WIDTH / 2
-		spawnY = BOARD_HEIGHT / 2
+	if !requested {
+		spawnX, spawnY = room.startX, room.startY
 	}
 	if requested {
 		if isSpawnOpen(room, spawnX, spawnY) || isRequestedSpawnUnoccupied(room, spawnX, spawnY) {
@@ -1196,8 +1199,45 @@ func (rm *RoomManager) ensureRoom(boardID int16) *Room {
 		Engine:  engine,
 		players: make(map[PlayerID]struct{}),
 	}
+	room.startX, room.startY = rm.boardStart(room)
 	rm.rooms[boardID] = room
 	return room
+}
+
+// boardStart is where a board starts a player who joins it, read the first
+// time this world opens the board and kept for as long as the world is loaded.
+// It has to outlive the room: the player tile is the designed start, but it
+// belongs to the first arrival from then on and moves with them, and once the
+// last player leaves (RemovePlayer) the frozen board has no player tile at all.
+// The fallback, Board.Info.StartPlayerX/Y, is not the same square in general:
+// vanilla writes it only in BoardEnter (GAME.PAS:1309), so a .ZZT carries
+// wherever its author's player last entered the board. Read by key only, so
+// the map's order never reaches game state.
+func (rm *RoomManager) boardStart(room *Room) (int16, int16) {
+	if start, ok := rm.boardStarts[room.BoardID]; ok {
+		return start[0], start[1]
+	}
+	if rm.boardStarts == nil {
+		rm.boardStarts = make(map[int16][2]int16)
+	}
+	x, y := designedStart(room)
+	rm.boardStarts[room.BoardID] = [2]int16{x, y}
+	return x, y
+}
+
+// designedStart is a freshly opened board's start: the player tile it was built
+// with, when it has one, else its stored start square, else its centre.
+func designedStart(room *Room) (int16, int16) {
+	if statID, ok := claimablePlayerStat(room); ok {
+		stat := room.Engine.Board.Stats[statID]
+		return int16(stat.X), int16(stat.Y)
+	}
+	x := int16(room.Engine.Board.Info.StartPlayerX)
+	y := int16(room.Engine.Board.Info.StartPlayerY)
+	if x < 1 || x > BOARD_WIDTH || y < 1 || y > BOARD_HEIGHT {
+		return BOARD_WIDTH / 2, BOARD_HEIGHT / 2
+	}
+	return x, y
 }
 
 // SetFriendlyFire sets the world's projectile policy and pushes it into every

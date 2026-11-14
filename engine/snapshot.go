@@ -284,6 +284,7 @@ func (rm *RoomManager) restoreSnapshot(dir, name string, ownWorldOnly bool) erro
 
 	rm.world = scratch.World
 	rm.rooms = make(map[int16]*Room)
+	rm.boardStarts = nil // a new world's boards have their own starts
 	return nil
 }
 
@@ -318,6 +319,7 @@ func (rm *RoomManager) LoadWorld(dir, name string) error {
 
 	rm.world = scratch.World
 	rm.rooms = make(map[int16]*Room)
+	rm.boardStarts = nil // a new world's boards have their own starts
 	rm.HighScorePath = filepath.Join(dir, safe+".HI")
 	rm.LoadHighScores()
 
