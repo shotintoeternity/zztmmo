@@ -10004,12 +10004,22 @@ node suite add under a minute outside the package.
   2026-11-13. Accepted risk: about a dozen binary-launching harnesses take
   a port by listen-and-close.
 
-- [ ] **M41.2 — shorten the slowest journey, if M41.1 leaves it the bound.**
+- [x] **M41.2 — shorten the slowest journey, if M41.1 leaves it the bound.**
+  **SKIPPED 2026-11-13** (owner decision): the precondition does not hold.
   If after M41.1 the run is bounded by `TestM1618PlatformMatrix` (three
   engines, one after another), run its engines as parallel subtests under
   the same cap. Do not drop an engine: the matrix exists to cover all three.
   DoD: the matrix's wall time halves, and all three engines are still
   asserted.
+  Done note: measured with `go test -json` after M41.1 (engine package
+  284s: 84s serial, 199s parallel at cap 3). `TestM1618PlatformMatrix` runs
+  0→98s of the 199s parallel phase; the tail is M16.13 and M16.14 (~86s each,
+  starting ~110s in). Parallel work totals ~617s, and 617/3 ≈ 206s against
+  199s measured: all three slots stay busy to the end, so splitting the
+  matrix only moves work between slots. Levers left on the table, not filed:
+  cap 4 (~50s, more load; M16.14's guest flake was a load stall) and per-test
+  output paths for `control_keys.test.mjs` so both M16.10 tests can go
+  parallel (~25s).
 
 ## M14 — Rearchitecting for the service ZZTMMO is becoming
 
