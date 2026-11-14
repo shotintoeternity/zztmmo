@@ -9644,6 +9644,18 @@ and Enter.
   ☰ → Quit → No. Found, not fixed: the title screen has no Editor control, so
   a phone cannot open the editor at all yet (the journey presses E).
 
+- [x] **M39.3 — an Editor button on the title bar.** Filed 2026-11-14 at the
+  owner's request, from M39.2's found-not-fixed line: the title menu's
+  ' E ' Board editor (title.ts, always shown) is a letter key, and the title
+  bar offers only Color, World and Play, so a phone could not open the editor
+  and M39.2's menu was unreachable on a real phone. Add an `editor` control,
+  TITLE_ONLY like World and Play, that taps KeyE. DoD: the node suite asserts
+  the title bar offers it and that it taps KeyE, and is absent everywhere else;
+  M39.2's journey opens the editor by tapping it instead of pressing E.
+  `make browser` passes.
+  Done note (2026-11-14): as specified. The control sits after Play in the
+  title row.
+
 ## M40 — Readable again: split the giant files, and comments that state what is true
 
 Filed 2026-11-05 from the whole-repo readability review (NOTES.md 2026-11-05).

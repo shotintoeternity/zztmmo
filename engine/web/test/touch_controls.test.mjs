@@ -235,6 +235,7 @@ const KEYBOARD_CODES = new Set([
   "ArrowUp", "ArrowDown", "ArrowLeft", "ArrowRight", // keys.ts MOVEMENT_CODES
   "Space", "Enter",                                  // keys.ts isHandledKey
   "KeyT", "KeyP", "KeyW", "KeyC",                    // keys.ts COMMAND_CODES / title menu
+  "KeyE",                                            // title.ts ' E ' Board editor (M39.3)
   "KeyL",                                            // main.ts play-mode branch (M21.1)
   "Escape", "KeyY", "KeyN",                          // modal.ts textWindowKey / yesNoKey
 ]);
@@ -252,7 +253,7 @@ const DPAD = ["▲", "◄", "►", "▼"];
 
 // The client opens on the title screen, so the bar starts there rather than
 // showing every control for one frame.
-assert.deepEqual(visible(), [...DPAD, "⌨", "⏎", "Color", "World", "Play"], "the bar starts in title mode");
+assert.deepEqual(visible(), [...DPAD, "⌨", "⏎", "Color", "World", "Play", "Editor"], "the bar starts in title mode");
 
 controls.setMode("playing");
 assert.deepEqual(visible(), [...DPAD, "⌨", "⏎", "Chat", "Players", "Pause", "Torch", "Fire", "☰"]);
@@ -285,7 +286,7 @@ controls.setMode("watching");
 assert.deepEqual(visible(), ["Leave"]);
 
 controls.setMode("title");
-assert.deepEqual(visible(), [...DPAD, "⌨", "⏎", "Color", "World", "Play"], "modes are reversible");
+assert.deepEqual(visible(), [...DPAD, "⌨", "⏎", "Color", "World", "Play", "Editor"], "modes are reversible");
 
 // The direction pad is laid out as a cross by :nth-child (style.css), so it must
 // be present in every mode that HAS one — hiding a single arrow would silently
@@ -485,5 +486,16 @@ assert.equal(pickerList.hidden, true);
 assert.equal(menu.hidden, true);
 assert.equal(menu.className, "touch-menu");
 assert.deepEqual(visibleRows(), ["Save", "Help", "Quit", "3D view"], "play mode's rows come back");
+
+// M39.3: the title bar's Editor taps E, the title menu's Board editor key, and
+// is on no other screen's bar.
+controls.setMode("title");
+keyCalls.length = 0;
+byLabel("Editor").dispatch("pointerdown");
+assert.deepEqual(keyCalls, [{ down: true, code: "KeyE", key: "e" }, { down: false, code: "KeyE", key: "e" }], "Editor must tap KeyE");
+for (const m of ["playing", "editor", "modal", "prompt", "watching"]) {
+  controls.setMode(m);
+  assert.equal(byLabel("Editor").hidden, true, `Editor must not be on the ${m} bar`);
+}
 
 console.log("touch_controls.test.mjs: all assertions passed");

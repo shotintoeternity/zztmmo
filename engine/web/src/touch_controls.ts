@@ -1,7 +1,7 @@
 // On-screen touch controls for phones. ZZT is a keyboard game and the client has
 // no physical keyboard on a phone, so this bar gives the essential keys as tap
 // targets: a direction pad (menu navigation AND in-game movement), Enter, an
-// explicit soft-keyboard toggle, the title-menu World / Play / Color commands,
+// explicit soft-keyboard toggle, the title-menu World / Play / Color / Editor commands,
 // and — the
 // M16.18a half — the gameplay controls a phone had no way to reach at all: Fire,
 // Torch and Pause. Each button drives the SAME key handlers a physical key would
@@ -155,6 +155,10 @@ export const TOUCH_BUTTONS: ButtonSpec[] = [
   { id: "color", label: "Color", kind: "key", code: "KeyC", key: "c", hold: false, group: "action", modes: TITLE_ONLY },
   { id: "world", label: "World", kind: "key", code: "KeyW", key: "w", hold: false, group: "action", modes: TITLE_ONLY },
   { id: "play", label: "Play", kind: "key", code: "KeyP", key: "p", hold: false, group: "action", modes: TITLE_ONLY },
+  // M39.3: the title menu's ' E ' Board editor. Without it a phone could not
+  // reach the editor, and so not M39.2's menu either. TITLE_ONLY because E
+  // means nothing on the other screens' bars.
+  { id: "editor", label: "Editor", kind: "key", code: "KeyE", key: "e", hold: false, group: "action", modes: TITLE_ONLY },
   // M21.5: the two windows a phone had no way to open. Both are letter keys
   // main.ts handles in its play-mode branch and nowhere else — 'C' is the color
   // picker on the title screen, which is why Chat is PLAYING_ONLY like Pause

@@ -9,9 +9,8 @@
 // that the F1 picker (a sidebar picker answered by a letter a phone cannot
 // type) is answered by its element's name in the menu.
 //
-// The editor is opened with the E key. The title screen has no Editor control
-// on the bar, so a phone cannot get there yet. That gap is not this task's;
-// everything after it is touch.
+// The editor is opened by tapping the title bar's Editor (M39.3), so after the
+// launch name everything is touch.
 
 import assert from "node:assert/strict";
 import fs from "node:fs";
@@ -73,8 +72,9 @@ try {
   await page.keyboard.press("Enter");
   await waitForGrid(page, (cells) => hasText(cells, "E  Board editor"), "the title screen for EDIT");
 
-  await page.locator("canvas[data-screen]").focus();
-  await page.keyboard.press("KeyE");
+  // M39.3: the title bar's Editor, so from the name onward this is all touch.
+  assert.equal(await bar("editor").isVisible(), true, "the title bar offers Editor");
+  await bar("editor").tap();
   let cells = await waitForGrid(page, (c) => isEditorChrome(c) && cursorPos(c) !== null, "the editor and its cursor readout");
   const start = cursorPos(cells);
   assert.deepEqual(start, { x: 30, y: 12 }, "the editor cursor starts at 30,12 on EDIT's draft board");
