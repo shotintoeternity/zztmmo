@@ -1511,9 +1511,13 @@ func TestM1615GraceExpiryEndsTheRunButNotTheAccount(t *testing.T) {
 	// The drop: not a quit. The account sidecar is written immediately, before
 	// any grace has elapsed.
 	conn.Close(websocket.StatusAbnormalClosure, "wifi blip")
-	waitFor(t, "the detach", func() bool {
+	// The detach is published before the sidecar is written (ws_resume.go
+	// releases the instance lock, then persists), so wait for both: a read
+	// straight after the detach can beat the write under a loaded run.
+	waitFor(t, "the detach and the account sidecar", func() bool {
 		_, detached := detachedCount(server, playerID)
-		return detached
+		_, stored, _ := server.ChatDB.GetPlayerState(m1615Account, inst.Name)
+		return detached && stored
 	})
 	stored, ok, err := server.ChatDB.GetPlayerState(m1615Account, inst.Name)
 	if err != nil || !ok {
@@ -1709,9 +1713,13 @@ func TestM1615aReturningAccountReplaysThroughTheServer(t *testing.T) {
 
 	// The drop writes the sidecar. Everything after this is the returning half.
 	conn.Close(websocket.StatusAbnormalClosure, "wifi blip")
-	waitFor(t, "the detach", func() bool {
+	// The detach is published before the sidecar is written (ws_resume.go
+	// releases the instance lock, then persists), so wait for both: a read
+	// straight after the detach can beat the write under a loaded run.
+	waitFor(t, "the detach and the account sidecar", func() bool {
 		_, detached := detachedCount(server, firstID)
-		return detached
+		_, stored, _ := server.ChatDB.GetPlayerState(m1615Account, inst.Name)
+		return detached && stored
 	})
 	stored, ok, err := server.ChatDB.GetPlayerState(m1615Account, inst.Name)
 	if err != nil || !ok {

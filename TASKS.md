@@ -10081,6 +10081,18 @@ node suite add under a minute outside the package.
   rerun with `NO_PROXY=127.0.0.1,localhost` and the live host still blocked,
   the matrix passed. The log mentions museumofzzt.com nowhere.
 
+- [x] **M41.4 — M16.15's sidecar reads wait for the write.** Filed
+  2026-11-22 when the full family before M42.1's push failed
+  `TestM1615aReturningAccountReplaysThroughTheServer` with "GetPlayerState
+  after the drop = (…, false, <nil>)". It passed 25 times alone, with and
+  without `-race`. The drop publishes the detach and releases the instance
+  lock before it writes the account sidecar (`ws_resume.go:151-154`), and two
+  M16.15 tests waited for the detach and then read the sidecar at once, so
+  under the full run's load the read could beat the write. Both now wait for
+  the detach and the stored state together. Test-only; the server's order is
+  unchanged (the sidecar write does disk I/O and stays outside the lock).
+  DoD: the two M16.15 tests pass ten runs in a row, and the full family passes.
+
 ## M42 — Where a player arrives
 
 Filed 2026-11-14 from the owner's report: "we have a real problem with where
