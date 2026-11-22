@@ -94,7 +94,7 @@ function clamp(line: string): string {
  */
 export function challengeLandingLines(
   resp: ChallengeResponse,
-  options: { signedIn: boolean; hasGhost: boolean } = { signedIn: false, hasGhost: false },
+  options: { signedIn: boolean; hasGhost: boolean; signInAvailable?: boolean } = { signedIn: false, hasGhost: false },
 ): string[] {
   const challenge = resp.challenge;
   const lines: string[] = ["", clamp(`  ${challenge.title}`)];
@@ -118,8 +118,12 @@ export function challengeLandingLines(
     lines.push("!ghost;Race the ghost");
   }
   lines.push("");
+  // M37.7: sign-in is optional, so a server can run without it. There a guest
+  // is told plainly that a guest run is not posted, rather than to sign in
+  // through a G row the title screen does not show.
   if (!options.signedIn) {
-    lines.push(clamp("  Sign in to post a time."), "");
+    const signInAvailable = options.signInAvailable ?? true;
+    lines.push(clamp(signInAvailable ? "  Sign in to post a time." : "  Guest runs are not posted."), "");
   }
   return lines;
 }

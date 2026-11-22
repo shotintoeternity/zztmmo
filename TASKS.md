@@ -9205,6 +9205,13 @@ console, or a product decision. Each says which.
   now, the code, the docs and the cookie secret are ready, and this box stays
   open until the owner chooses. M37.3 waits on it. Work moved on to M37.2.
 
+  *Decided 2026-11-22: optional, and off for now.* The owner: "I want to make
+  Google auth optional but allow it as a feature." Guests are first-class;
+  sign-in is an extra that adds the account features when a host sets the
+  Google variables. Production stays guest-only until the owner chooses to
+  turn it on, so this box stays open as the "turn it on" step and is not
+  ticked. M37.7 makes a server without sign-in stop telling guests to sign in.
+
 - [x] **M37.2 — rehearse a restore from a production backup.** *(owner-gated:
   touches production data)* Promoted from the Architecture follow-ups bullet
   "The restore has never been rehearsed" (2026-08-04). `deploy/zztmmo-backup.sh`
@@ -9366,6 +9373,25 @@ console, or a product decision. Each says which.
   server supplies the world, the join and the recording file, so the
   hostile-recording problem the backlog bullet found becomes a narrow schema.
   No code.
+
+- [x] **M37.7 — no sign-in prompt where sign-in does not exist.** Filed
+  2026-11-22 from M37.1's decision (sign-in optional, off on production).
+  With no Google variables the server answers `/api/auth/me` with
+  `enabled: false` and the title screen shows no G row, but five places still
+  told a guest to sign in: the challenge landing and a guest's run result
+  ("Sign in to post a time."), a guest's follow ("Sign in to follow
+  players."), the world picker's Tab favorite ("Sign in to keep favorite
+  worlds."), and the profile editor ("Sign in to keep a profile."). Steps: on
+  a server without sign-in, a guest's run says "Guest runs are not posted.",
+  a follow says "Following needs an account.", and the client offers neither
+  the picker's favorite key nor the Players window's Follow row. With sign-in
+  on, nothing changes: guests are still pointed at it. The profile editor is
+  reachable only from a signed-in Account menu, so its guard stays as it is.
+  DoD: Go tests pin both server texts with and without sign-in, end to end
+  for the run result and the follow; the node suite pins the landing line.
+  `make browser` passes.
+  Done note (2026-11-22): as specified (`m37_7_test.go`,
+  `challenge.test.mjs`).
 
 ## M38 — The TAS workbench: a run built tick by tick, proved by re-simulation
 

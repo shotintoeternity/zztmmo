@@ -379,8 +379,9 @@ func (s *WebSocketServer) finishChallengeRun(inst *WorldInstance, completion *ch
 	if run.AccountID == "" {
 		// A guest played a real run and gets a real result — it is just not a
 		// public row. Said out loud, because a silently missing row reads as a
-		// bug rather than as the sign-in boundary it is.
-		msg.Reason = "Sign in to post a time."
+		// bug rather than as the sign-in boundary it is. On a server without
+		// sign-in (M37.7) there is no boundary to cross, so it is not offered.
+		msg.Reason = guestRunReason(s.Auth != nil)
 		return msg
 	}
 	if s.ChallengeStore == nil {

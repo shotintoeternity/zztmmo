@@ -138,3 +138,21 @@ func (s *WebSocketServer) refreshAccountProfile(accountID string, profile Accoun
 		inst.mu.Unlock()
 	}
 }
+
+// guestRunReason and guestFollowReply are what a guest is told when an account
+// feature turns them away. Sign-in is optional (M37.7): a server without it
+// says the feature is for accounts, rather than pointing at a sign-in it does
+// not offer.
+func guestRunReason(signInAvailable bool) string {
+	if signInAvailable {
+		return "Sign in to post a time."
+	}
+	return "Guest runs are not posted."
+}
+
+func guestFollowReply(signInAvailable bool) string {
+	if signInAvailable {
+		return "Sign in to follow players."
+	}
+	return "Following needs an account."
+}

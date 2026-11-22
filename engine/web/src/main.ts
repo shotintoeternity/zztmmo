@@ -1784,7 +1784,9 @@ function showWorldEntries(worlds: WorldSearchEntry[]) {
     shelves: worldPickerShelves,
     onSelect: (entry) => void selectWorldEntry(entry),
     onQuery: (query) => scheduleMuseumSearch(query, worlds),
-    onFavorite: (entry, favorite) => toggleWorldFavorite(entry, favorite),
+    // M37.7: favorites live on an account, so a server without sign-in does not
+    // offer the key at all (Tab is then ignored, as on an empty list).
+    onFavorite: authStatus.enabled || authStatus.authenticated ? (entry, favorite) => toggleWorldFavorite(entry, favorite) : undefined,
   });
 }
 
@@ -3319,7 +3321,9 @@ function openBlockWindow() {
       const choices = [
         { label: "View profile", action: "profile", confirm: "" },
         { label: "Private message", action: "pm", confirm: "" },
-        ...(candidate.here ? [{ label: followVerb, action: candidate.followed ? "unfollow" : "follow", confirm: `${followVerb} ${candidate.name}? ` }] : []),
+        // M37.7: following lives on an account, so it is not offered on a
+        // server without sign-in.
+        ...(candidate.here && (authStatus.enabled || authStatus.authenticated) ? [{ label: followVerb, action: candidate.followed ? "unfollow" : "follow", confirm: `${followVerb} ${candidate.name}? ` }] : []),
         ...(isOperator ? [] : [{ label: blockVerb, action: candidate.blocked ? "unblock" : "block", confirm: `${blockVerb} ${candidate.name}? ` }]),
         ...moderationChoices(candidate, isOperator),
       ];
@@ -3515,6 +3519,7 @@ function showChallengeLanding() {
   const lines = challengeLandingLines(resp, {
     signedIn: authStatus.authenticated,
     hasGhost: ghostTrackMatches(challengeGhost, resp.challenge),
+    signInAvailable: authStatus.enabled,
   });
   openSelectListIfActions("Daily Challenge", lines, (choice) => {
     if (choice === "start") {

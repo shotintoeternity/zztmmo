@@ -242,7 +242,7 @@ func (s *WebSocketServer) submitFollow(ctx context.Context, client *webSocketCli
 		_ = client.write(ctx, result)
 	}
 	if client.accountID == "" || s.ChatDB == nil {
-		reply("Sign in to follow players.")
+		reply(guestFollowReply(s.Auth != nil))
 		return
 	}
 	if req.PlayerID == 0 || req.PlayerID == follower {

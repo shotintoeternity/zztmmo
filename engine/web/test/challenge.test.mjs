@@ -72,6 +72,16 @@ assert.ok(!guestLanding.some((line) => line.startsWith("!board;")), "an empty le
 assert.ok(!guestLanding.some((line) => line.startsWith("!ghost;")), "a ghost nobody loaded is not offered");
 assert.ok(guestLanding.every((line) => line.length <= 44), "landing lines must fit the CP437 window");
 
+// M37.7: sign-in is optional. On a server without it a guest is told their run
+// is not posted, and is not sent looking for a sign-in that does not exist.
+const noSignInLanding = challenge.challengeLandingLines(
+  { challenge: summary, leaderboard: [], canSubmit: false },
+  { signedIn: false, hasGhost: false, signInAvailable: false },
+);
+assert.ok(noSignInLanding.some((line) => line === "!start;Start a run"), "a guest can still start a run without sign-in");
+assert.ok(noSignInLanding.some((line) => line.includes("Guest runs are not posted")));
+assert.ok(!noSignInLanding.some((line) => line.includes("Sign in")), "no sign-in prompt where sign-in does not exist");
+
 const rows = [
   { rank: 1, name: "ada", ticks: 30, score: 30, recordingId: "chal-gem-dash-1", you: true },
   { rank: 2, name: "bo", ticks: 44, score: 30, recordingId: "chal-gem-dash-2" },
