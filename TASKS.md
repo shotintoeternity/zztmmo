@@ -9271,7 +9271,7 @@ console, or a product decision. Each says which.
   downloads it. Tests: `m37_3_test.go` (every store, and nothing of anyone
   else's); the M37.8 journey downloads and reads the file.
 
-- [ ] **M37.3a — a signed-in player can delete their account.** Filed
+- [x] **M37.3a — a signed-in player can delete their account.** Filed
   2026-11-26 from M37.3's decision. Steps: the Account menu's "Delete my
   account" asks for the username and `POST /api/account/delete` checks it
   server-side. In order: end the account's live play and editor connections
@@ -9287,6 +9287,18 @@ console, or a product decision. Each says which.
   response clears the session cookie. DoD: a test per store, one end to end
   on file stores that deletes and reopens, and a browser step from the
   Account menu back to the guest box. `make browser` passes.
+  Done note (2026-11-26): as specified (`account_delete.go`,
+  `m37_3a_test.go`, the M37.8 journey's last step). The confirmation accepts
+  any capitalisation and a leading `@`; an account with no username (only
+  where usernames are not required) confirms with "delete". Renaming a
+  player in a recording does not change what it replays to: the end-to-end
+  test re-verifies the anonymized challenge run against its row's evidence.
+  A recording still being written when the account is deleted is skipped,
+  since rewriting it under its recorder would lose the rest of that session.
+  Saved high-score tables (`.HI`) keep the name typed at vanilla's prompt, as
+  M37.10 left them. A signed cookie still held by another browser arrives as
+  a new account with no username and is asked to choose one; a refusal still
+  matches the Google id, so a ban holds.
 - [x] **M37.4 — the Gazette has a reader in the game again.** *(owner decision:
   where it lives)* `/api/gazette` and `/api/gazette/edition` still write and serve
   the day's paper (M34.1, M34.2), but since the first-party worlds were removed

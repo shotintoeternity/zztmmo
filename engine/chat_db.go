@@ -290,6 +290,7 @@ type FileChatDatabase struct {
 	// with "TempDir RemoveAll cleanup: directory not empty" -- a test the suite
 	// then reported as a broken block feature rather than as a stale goroutine.
 	closed       bool
+	chatPath     string
 	statePath    string
 	prefsPath    string
 	messages     []ChatRecord
@@ -306,6 +307,7 @@ func NewFileChatDatabase(filepath string) (*FileChatDatabase, error) {
 
 	db := &FileChatDatabase{
 		file:         file,
+		chatPath:     filepath,
 		statePath:    filepath + ".playerstate.json",
 		prefsPath:    filepath + ".accountprefs.json",
 		playerStates: make(map[string]PlayerState),

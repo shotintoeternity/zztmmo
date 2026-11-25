@@ -3906,12 +3906,16 @@ function openAccountMenu() {
   }
   const sharing = accountPrefs?.shareLocationWithFollowers === true;
   const favorite = accountPrefs?.favoriteWorlds.includes(worldName) === true;
-  const entries = [favorite ? "Unfavorite this world" : "Favorite this world", "Edit profile", "Comfort settings", sharing ? "Hide my location" : "Share my location", "Export my data", "Sign out"];
+  const entries = [favorite ? "Unfavorite this world" : "Favorite this world", "Edit profile", "Comfort settings", sharing ? "Hide my location" : "Share my location", "Export my data", "Delete my account", "Sign out"];
   openSelectList("Account", entries, (entry) => {
     // M37.3: the server answers with an attachment, so the browser saves the
     // file and this page stays where it is.
     if (entry === "Export my data") {
       window.location.href = "/api/account/export";
+      return;
+    }
+    if (entry === "Delete my account") {
+      openDeleteAccount();
       return;
     }
     if (entry === "Sign out") {
@@ -4003,6 +4007,29 @@ function openComfortMenu() {
       openComfortMenu();
     }
   }, authStatus.authenticated ? [] : ["  Guest settings stay in this browser."]);
+}
+
+// M37.3a: deleting the account, confirmed by typing its username, which the
+// server checks. Done, the page starts again as a guest's first screen.
+function openDeleteAccount() {
+  openPopupEntry("Type your username to delete your account:", (typed) => {
+    if (typed === null) return;
+    void fetch("/api/account/delete", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ confirm: typed.trim() }),
+    })
+      .then((response) => {
+        if (response.ok) {
+          window.location.href = "/";
+          return;
+        }
+        openWindow("Account", ["", response.status === 400 ? "  That is not your username." : "  The account could not be deleted.", "  Nothing was deleted.", ""], true);
+      })
+      .catch(() => {
+        openWindow("Account", ["", "  The account could not be deleted.", "  Nothing was deleted.", ""], true);
+      });
+  }, POPUP_Y_CENTERED);
 }
 
 function openProfileEditor() {

@@ -170,6 +170,36 @@ try {
     console.log("  · the phone bar's Google button signed in, and a taken username was refused");
   }
 
+  // M37.3a: Ada deletes her account. A wrong username deletes nothing; hers
+  // puts the page back at a guest's first screen, and "ada" is free again.
+  {
+    const { page } = browsers[0];
+    await load(page);
+    await waitForGrid(page, (c) => hasText(c, "E  Board editor") && sidebarName(c) === "ada", "Ada's title screen before deleting");
+    const deleteFromMenu = async (typed) => {
+      await page.keyboard.press("KeyG");
+      await waitForGrid(page, (c) => hasText(c, "Delete my account"), "the Account menu");
+      await pickListRow(page, (line) => line.includes("Delete my account"), "the account menu");
+      await waitForGrid(page, (c) => hasText(c, "Type your username to delete your account:"), "the delete confirmation");
+      await page.keyboard.type(typed);
+      await page.keyboard.press("Enter");
+    };
+    await deleteFromMenu("bob");
+    await waitForGrid(page, (c) => hasText(c, "That is not your username.") && hasText(c, "Nothing was deleted."), "the refused confirmation");
+    await page.keyboard.press("Escape");
+    await page.evaluate(() => { window.__m373aBeforeDelete = true; });
+    await deleteFromMenu("ada");
+    await page.waitForFunction(() => !window.__m373aBeforeDelete, null, { timeout: 20000 });
+    await page.waitForSelector("canvas[data-screen]", { timeout: 20000 });
+    await installDecoder(page);
+    await waitForGrid(page, (c) => hasText(c, "Type your name") && hasText(c, KEY_HINT), "a guest's name box after deleting");
+    await page.keyboard.type("ada");
+    await page.keyboard.press("Enter");
+    const cells = await waitForGrid(page, (c) => hasText(c, "E  Board editor") && !hasText(c, "Type your name"), "a guest named ada on the title screen");
+    assert.equal(sidebarName(cells), "Google sign-in", "the page is a guest's again");
+    console.log("  · Ada deleted her account from the Account menu, and her username was free again");
+  }
+
   for (const b of browsers) {
     if (b.pageErrors.length) failures.push(`page errors: ${b.pageErrors.join("; ")}`);
   }

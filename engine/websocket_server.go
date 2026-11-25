@@ -200,7 +200,10 @@ type WorldInstance struct {
 	SourceWorld TWorld
 	RoomManager *RoomManager
 	Clients     map[PlayerID]*webSocketClient
-	Inputs      map[PlayerID]PlayerInput
+	// recordingPath is the file this instance's recorder is appending to, so
+	// M37.3a's anonymizing pass can leave a live recording alone.
+	recordingPath string
+	Inputs        map[PlayerID]PlayerInput
 	// Title animates board 0 for browsers sitting on the title screen. It owns
 	// its own Engine and shares no state with RoomManager — see TitleSim.
 	Title *TitleSim

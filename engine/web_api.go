@@ -131,6 +131,7 @@ func (a *WebAPI) Handler() http.Handler {
 	mux.HandleFunc("/api/auth/me", a.handleAuthMe)
 	mux.HandleFunc("/api/names/reserved", a.handleNameReserved)
 	mux.HandleFunc("/api/account/export", a.handleAccountExport)
+	mux.HandleFunc("/api/account/delete", a.handleAccountDelete)
 	mux.HandleFunc("/api/auth/logout", a.handleAuthLogout)
 	mux.HandleFunc("/api/auth/google/start", a.handleAuthStart)
 	mux.HandleFunc("/api/auth/google/callback", a.handleAuthCallback)
@@ -833,6 +834,51 @@ func (a *WebAPI) handleAccountExport(w http.ResponseWriter, r *http.Request) {
 	w.Header().Set("Content-Disposition", `attachment; filename="`+exportFileName(export.Username)+`"`)
 	w.Header().Set("Cache-Control", "no-store")
 	writeJSON(w, export)
+}
+
+// handleAccountDelete is M37.3a: the signed-in account asking is deleted. The
+// body must repeat the account's username ({"confirm":"<username>"}), checked
+// here rather than trusted to the page; an account with no username (only
+// possible where usernames are not required) confirms with "delete". The
+// response clears the session cookie.
+func (a *WebAPI) handleAccountDelete(w http.ResponseWriter, r *http.Request) {
+	if r.Method != http.MethodPost {
+		http.Error(w, "use POST", http.StatusMethodNotAllowed)
+		return
+	}
+	account, ok := a.authenticatedAccount(r)
+	if !ok || a.Server == nil {
+		http.Error(w, "sign in to delete your account", http.StatusUnauthorized)
+		return
+	}
+	var body struct {
+		Confirm string `json:"confirm"`
+	}
+	if err := json.NewDecoder(http.MaxBytesReader(w, r.Body, 4096)).Decode(&body); err != nil {
+		http.Error(w, "send {\"confirm\": your username}", http.StatusBadRequest)
+		return
+	}
+	want := a.Server.accountUsername(account.ID)
+	if want == "" {
+		want = "delete"
+	}
+	if strings.ToLower(strings.TrimPrefix(strings.TrimSpace(body.Confirm), "@")) != want {
+		http.Error(w, "that is not this account's username", http.StatusBadRequest)
+		return
+	}
+	var records *AccountStore
+	if a.Auth != nil {
+		records = a.Auth.Accounts
+	}
+	if _, err := a.Server.DeleteAccount(account, records); err != nil {
+		log.Printf("zztgo: deleting account %s failed: %v", account.ID, err)
+		http.Error(w, "the account could not be deleted", http.StatusInternalServerError)
+		return
+	}
+	a.Auth.clearCookie(w, r, authSessionCookie)
+	writeJSON(w, struct {
+		Deleted bool `json:"deleted"`
+	}{Deleted: true})
 }
 
 // handleNameReserved lets the launch box tell a guest, before any socket,

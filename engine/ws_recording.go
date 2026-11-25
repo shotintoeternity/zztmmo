@@ -80,6 +80,7 @@ func (s *WebSocketServer) attachRecorderLocked(inst *WorldInstance) {
 		return
 	}
 	inst.RoomManager.SetRecorder(rec)
+	inst.recordingPath = path
 	log.Printf("zztgo: recording session for %q to %s", inst.Name, path)
 }
 
