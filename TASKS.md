@@ -9628,7 +9628,7 @@ challenge leaderboard, and a replay link on every row that anyone can watch.
   4. **Racing: yes, labelled.** An assisted ghost appears in the picker
      marked "assisted".
 
-- [ ] **M38.1 — the input script and its admission.** Define the submitted
+- [x] **M38.1 — the input script and its admission.** Define the submitted
   shape as one Go type in its own file: a challenge id, its version, and
   `[]tasTick`, where each tick holds one `PlayerInput` and optional scroll
   replies `{statID, label}`. Admission is a pure function from bytes and a
@@ -9656,6 +9656,17 @@ challenge leaderboard, and a replay link on every row that anyone can watch.
   per refusal class above, a fuzz test that admission never panics and never
   admits a script it cannot re-encode identically, and a round trip from a
   live challenge recording to a script and back. No route, store or UI.
+  Done note (2026-11-26): `tas_script.go`, `m38_1_test.go`. The tick ceiling
+  is `TASTickCeiling` (ten minutes at `ServerTickDuration`, 5454 ticks) and
+  the byte ceiling 1 MiB. **B is allowed**: it flips
+  `PlayerState.SoundEnabled`, which `hashPlayers` leaves out of `StateHash`
+  as presentation, so it cannot change what a run measures. Enter is allowed
+  (the live client sends it in play and the key switch ignores it), as are
+  the arrow and space bytes the client sends with a move or a shot. The fuzz
+  test found that `"replies":[]` did not re-encode identically; admission now
+  admits an empty reply list as none, and that input is kept as a regression
+  seed under `testdata/fuzz`. Field names match case-insensitively, as
+  `encoding/json` does; only the schema's fields enter either way.
 
 - [ ] **M38.2 — the judge: re-simulate and measure.** First, extract the
   per-tick measurement out of `advanceChallengeLocked` (tick count, goal check,

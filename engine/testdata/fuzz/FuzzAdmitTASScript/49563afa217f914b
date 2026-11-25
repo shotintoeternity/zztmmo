@@ -1,0 +1,2 @@
+go test fuzz v1
+[]byte("{\"ChAllenge\":\"gem-dash\",\"version\":1,\"tiCks\":[{\"tICk\":0,\"dX\":0,\"keY\":200},{\"tiCk\":1,\"replies\":[]}]}")
