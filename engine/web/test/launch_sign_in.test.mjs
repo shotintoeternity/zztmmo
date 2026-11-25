@@ -115,11 +115,17 @@ try {
     browsers.push(guest);
     const { page } = guest;
     await waitForGrid(page, (c) => hasText(c, KEY_HINT), "the guest's name box with the hint");
+    // M37.11: Ada's username is hers, in any capitalisation.
+    await page.keyboard.type("Ada");
+    await page.keyboard.press("Enter");
+    await waitForGrid(page, (c) => hasText(c, "Type your name") && hasText(c, "That name belongs to a signed-in player. Try another."),
+      "the guest told ada is taken");
+    await clearField(page, "Ada");
     await page.keyboard.type("Gus");
     await page.keyboard.press("Enter");
     const cells = await waitForGrid(page, (c) => hasText(c, "E  Board editor"), "the guest's title screen");
     assert.equal(textAt(cells, 65, 24, 15).trim(), "Google sign-in", "a guest stays a guest");
-    console.log("  · a guest typed a name and played on");
+    console.log("  · a guest was refused Ada's username, then typed a name and played on");
   }
 
   // A phone has no Tab: the bar's Google button takes the same offer.

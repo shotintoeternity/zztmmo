@@ -631,6 +631,10 @@ func (s *WebSocketServer) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 		_ = pj.client.write(ctx, notice)
 		return
 	}
+	if notice, refused := s.guestNameReserved(pj.join, pj.authenticated); refused {
+		_ = pj.client.write(ctx, notice)
+		return
+	}
 
 	if !s.resolveChallengeRun(ctx, pj) {
 		return

@@ -10,7 +10,10 @@ package zztgo
 // shown to nobody else. With it off, the library keeps its pre-M37.10 naming,
 // which is what the older suites that build servers by hand still certify.
 
-import "errors"
+import (
+	"errors"
+	"strings"
+)
 
 const usernameNeededText = "Choose a username before you play."
 
@@ -51,6 +54,69 @@ func (s *WebSocketServer) needsUsername(account AuthenticatedAccount, authentica
 		Type:   MessageTypeModerationNotice,
 		Action: "username",
 		Text:   usernameNeededText,
+		Ended:  true,
+	}, true
+}
+
+// M37.11: a guest cannot take a claimed username. Only where usernames are
+// required (RequireUsername), since that is where they mean who someone is.
+
+const reservedNameText = "That name belongs to a signed-in player."
+
+// handleOwnerLookup is the ChatDatabase's handle index, read-only.
+type handleOwnerLookup interface {
+	HandleOwner(handle string) string
+}
+
+// HandleOwner is the account holding handle, or "".
+func (db *MemChatDatabase) HandleOwner(handle string) string {
+	db.mu.Lock()
+	defer db.mu.Unlock()
+	if db.handleOwners != nil {
+		return db.handleOwners[handle]
+	}
+	for account, prefs := range db.accountPrefs {
+		if prefs.Profile.Handle == handle {
+			return account
+		}
+	}
+	return ""
+}
+
+// HandleOwner is the account holding handle, or "".
+func (db *FileChatDatabase) HandleOwner(handle string) string {
+	db.mu.Lock()
+	defer db.mu.Unlock()
+	return db.handleOwners[handle]
+}
+
+// nameReserved says whether a guest's typed name is someone's username, in
+// any capitalisation and with or without a leading @.
+func (s *WebSocketServer) nameReserved(name string) bool {
+	if s == nil || !s.RequireUsername || s.ChatDB == nil {
+		return false
+	}
+	lookup, ok := s.ChatDB.(handleOwnerLookup)
+	if !ok {
+		return false
+	}
+	key := strings.ToLower(strings.TrimPrefix(strings.TrimSpace(name), "@"))
+	if key == "" {
+		return false
+	}
+	return lookup.HandleOwner(key) != ""
+}
+
+// guestNameReserved is the door's third question: a guest whose name is a
+// claimed username is turned away before anything is joined.
+func (s *WebSocketServer) guestNameReserved(join JoinMessage, authenticated bool) (ModerationNoticeMessage, bool) {
+	if authenticated || join.Spectate || !s.nameReserved(join.Name) {
+		return ModerationNoticeMessage{}, false
+	}
+	return ModerationNoticeMessage{
+		Type:   MessageTypeModerationNotice,
+		Action: "reserved-name",
+		Text:   reservedNameText,
 		Ended:  true,
 	}, true
 }

@@ -1057,7 +1057,8 @@ function promptNicknameOnLaunch() {
   void Promise.race([authStatusReady, new Promise((resolve) => window.setTimeout(resolve, 1500))]).then(() => openLaunchBox());
 }
 
-function openLaunchBox() {
+// problem is the line a second try shows: M37.11's "that name is taken".
+function openLaunchBox(buffer = "", problem = "") {
   if (authStatus.authenticated && authStatus.requireUsername && authStatus.username) {
     nickname = authStatus.username;
     void openLaunchDestination();
@@ -1066,10 +1067,23 @@ function openLaunchBox() {
   const prompt: Modal = {
     kind: "popupEntry",
     question: LAUNCH_NAME_PROMPT,
-    buffer: "",
+    buffer,
+    hint: problem || undefined,
     onSubmit: (name) => {
-      nickname = name && name.trim() ? name.trim() : "player" + Math.floor(Math.random() * 1000);
-      void openLaunchDestination();
+      const typed = name ? name.trim() : "";
+      if (!typed) {
+        nickname = "player" + Math.floor(Math.random() * 1000);
+        void openLaunchDestination();
+        return;
+      }
+      void guestNameReserved(typed).then((reserved) => {
+        if (reserved) {
+          openLaunchBox(typed, RESERVED_NAME_TEXT);
+          return;
+        }
+        nickname = typed;
+        void openLaunchDestination();
+      });
     },
     y: POPUP_Y_CENTERED,
   };
@@ -1080,6 +1094,26 @@ function openLaunchBox() {
   // button) takes it. If /api/auth/me was slow the box opened without it, and
   // learns about sign-in when the answer comes.
   void authStatusReady.then(() => offerLaunchSignIn(prompt));
+}
+
+// M37.11: a guest may not take a signed-in player's username. The server
+// refuses such a join anyway; asking first lets the box say so and stay open.
+const RESERVED_NAME_TEXT = "That name belongs to a signed-in player. Try another.";
+
+async function guestNameReserved(name: string): Promise<boolean> {
+  if (!authStatus.requireUsername || authStatus.authenticated) {
+    return false;
+  }
+  try {
+    const response = await fetch("/api/names/reserved?name=" + encodeURIComponent(name));
+    if (!response.ok) {
+      return false;
+    }
+    const body = (await response.json()) as { reserved?: boolean };
+    return body.reserved === true;
+  } catch {
+    return false;
+  }
 }
 
 function offerLaunchSignIn(prompt: Modal) {
@@ -1103,7 +1137,8 @@ function offerLaunchSignIn(prompt: Modal) {
   if (authStatus.authenticated || !authStatus.enabled) {
     return;
   }
-  prompt.hint = touchControls ? "Optional: tap Google below to sign in." : "Optional: press Tab to sign in with Google.";
+  // A second try's problem line keeps the row; Tab still signs in.
+  prompt.hint = prompt.hint || (touchControls ? "Optional: tap Google below to sign in." : "Optional: press Tab to sign in with Google.");
   prompt.onSignIn = startGoogleSignIn;
   refreshOpenModal();
 }

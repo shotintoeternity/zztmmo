@@ -9462,12 +9462,20 @@ console, or a product decision. Each says which.
   on, claim a username first. `make browser` passes.
   Done note (2026-11-26): as specified (`username.go`, `m37_10_test.go`).
 
-- [ ] **M37.11 — guests cannot take a claimed username.** Filed 2026-11-25 at
-  the owner's request. The owner chose: reserved. Steps: a guest whose typed
-  name matches a claimed username, in any capitalisation, is told "That name
-  belongs to a signed-in player." and asked for another, in the launch box;
-  the server enforces the same at join, so a hand-built client cannot get
-  round it. Depends on M37.10.
+- [x] **M37.11 — guests cannot take a claimed username.** Filed 2026-11-25 at
+  the owner's request. The owner chose: reserved. Steps: where usernames are
+  required (`RequireUsername`), a guest whose typed name is a claimed
+  username, in any capitalisation or with a leading `@`, is told "That name
+  belongs to a signed-in player. Try another." and the launch box stays open
+  with what they typed. The box asks `GET /api/names/reserved?name=`, which
+  answers only yes or no, never whose. The join refuses the same name before
+  anything spawns, so a hand-built client cannot get round it. A watcher's
+  name is not read, and the account that holds the username is not a guest.
+  DoD: `m37_11_test.go` pins the refusal (four spellings), the names that
+  pass, the signed-in holder, a watcher, the endpoint, a server without
+  usernames, and the file store's index across a restart; the M37.8 journey's
+  guest is refused Ada's username and then plays on. `make browser` passes.
+  Done note (2026-11-26): as specified (`username.go`, `m37_11_test.go`).
 
 ## M38 — The TAS workbench: a run built tick by tick, proved by re-simulation
 

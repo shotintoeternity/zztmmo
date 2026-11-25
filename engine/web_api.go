@@ -129,6 +129,7 @@ func (a *WebAPI) Handler() http.Handler {
 	mux.HandleFunc("/api/moderation/refusals/lift", a.handleModerationLift)
 	mux.HandleFunc("/api/moderation/audit", a.handleModerationAudit)
 	mux.HandleFunc("/api/auth/me", a.handleAuthMe)
+	mux.HandleFunc("/api/names/reserved", a.handleNameReserved)
 	mux.HandleFunc("/api/auth/logout", a.handleAuthLogout)
 	mux.HandleFunc("/api/auth/google/start", a.handleAuthStart)
 	mux.HandleFunc("/api/auth/google/callback", a.handleAuthCallback)
@@ -809,6 +810,19 @@ func (a *WebAPI) handleAuthMe(w http.ResponseWriter, r *http.Request) {
 		Username:        username,
 		RequireUsername: requireUsername,
 	})
+}
+
+// handleNameReserved lets the launch box tell a guest, before any socket,
+// that the name they typed is a signed-in player's username (M37.11). It says
+// only yes or no: never whose.
+func (a *WebAPI) handleNameReserved(w http.ResponseWriter, r *http.Request) {
+	if r.Method != http.MethodGet {
+		http.Error(w, "use GET", http.StatusMethodNotAllowed)
+		return
+	}
+	writeJSON(w, struct {
+		Reserved bool `json:"reserved"`
+	}{Reserved: a.Server.nameReserved(r.URL.Query().Get("name"))})
 }
 
 func (a *WebAPI) handleAuthStart(w http.ResponseWriter, r *http.Request) {
