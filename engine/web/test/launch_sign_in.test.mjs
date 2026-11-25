@@ -11,6 +11,7 @@
 // comes back signed in, and that a guest who just types a name is untouched.
 
 import assert from "node:assert/strict";
+import fs from "node:fs";
 import {
   baseURL,
   controlURL,
@@ -19,6 +20,7 @@ import {
   installImageProbe,
   launchGoldenBrowser,
   markProfileWarm,
+  pickListRow,
   readGrid,
   textAt,
   waitForGrid,
@@ -107,6 +109,20 @@ try {
     cells = await waitForGrid(page, (c) => hasText(c, "E  Board editor") && sidebarName(c) === "ada" && !hasText(c, "Type your name"),
       "the title screen on a later visit, with no box");
     console.log("  · a later visit went straight to the title screen as ada");
+
+    // M37.3: Account, then Export my data, downloads what the server keeps.
+    await page.keyboard.press("KeyG");
+    await waitForGrid(page, (c) => hasText(c, "Export my data"), "the signed-in Account menu");
+    const download = page.waitForEvent("download", { timeout: 20000 });
+    await pickListRow(page, (line) => line.includes("Export my data"), "the account menu");
+    const file = await download;
+    assert.equal(file.suggestedFilename(), "zztmmo-ada-data.json", "the download is named for the username");
+    const exported = JSON.parse(fs.readFileSync(await file.path(), "utf8"));
+    assert.equal(exported.username, "ada");
+    assert.equal(exported.email, "ada@example.test");
+    assert.equal(exported.googleName, "Ada Lovelace");
+    assert.ok(page.url().endsWith(`/play/${WORLD}`), "the page stays where it was");
+    console.log("  · Export my data downloaded the account's data");
   }
 
   // A guest just types a name: the offer changes nothing about that path.

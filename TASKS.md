@@ -9242,7 +9242,7 @@ console, or a product decision. Each says which.
   after a tab-close. The record is in NOTES.md, and dev holds no production
   data.
 
-- [ ] **M37.3 — signed-in players can remove and export their data.** *(owner
+- [x] **M37.3 — signed-in players can remove and export their data.** *(owner
   decision first; matters once M37.1 is on)* Promoted from the Architecture
   follow-ups bullet "A signed-in player cannot remove or export their data"
   (2026-08-04). Three stores are keyed on `accountID` (`chat_db.go`): chat lines
@@ -9253,6 +9253,40 @@ console, or a product decision. Each says which.
   DoD: the decision is recorded, and then an export and a delete path exist
   with a test each.
 
+  *Decided 2026-11-26.* The owner chose: deletion is self-serve, from the
+  Account menu, confirmed by typing the username; a deleted account's chat
+  lines stay, shown as "(deleted player)" with nothing linking them to the
+  account; the worlds it owns, its challenge times and its replays stay,
+  unowned and shown as "(deleted player)". Set as defaults, not asked: the
+  export is one JSON download, and moderation records (a refusal and the
+  audit) survive deletion, so deleting an account cannot lift a ban. Since
+  M37.9 the stores also include the sign-in record (`accounts.json`), world
+  access sidecars, dream authorship, challenge rows and recordings.
+  Split: this task is the decision and the export; M37.3a is deletion.
+  Done note (2026-11-26): `GET /api/account/export` (`account_data.go`)
+  returns the sign-in record, username, profile and settings, the accounts
+  followed and blocked (by username, never by account id), progress by
+  world, chat lines posted, challenge runs, and worlds owned or shared, as an
+  attachment named for the username. The Account menu's "Export my data"
+  downloads it. Tests: `m37_3_test.go` (every store, and nothing of anyone
+  else's); the M37.8 journey downloads and reads the file.
+
+- [ ] **M37.3a — a signed-in player can delete their account.** Filed
+  2026-11-26 from M37.3's decision. Steps: the Account menu's "Delete my
+  account" asks for the username and `POST /api/account/delete` checks it
+  server-side. In order: end the account's live play and editor connections
+  (their disconnect path would write progress back); delete its preferences,
+  which frees the username, and strip its id from every other account's
+  follows and blocks; delete its progress in every world and its save
+  sidecars; redact its chat lines to "(deleted player)" in memory and on disk
+  (reopening the append handle after the rewrite); give its challenge rows
+  one tombstone key and the name "(deleted player)", and rewrite that name in
+  the recordings they cite, checking a rewritten recording still verifies;
+  clear it as owner and collaborator in world access sidecars and as a
+  dream's author; delete its sign-in record; leave moderation alone. The
+  response clears the session cookie. DoD: a test per store, one end to end
+  on file stores that deletes and reopens, and a browser step from the
+  Account menu back to the guest box. `make browser` passes.
 - [x] **M37.4 — the Gazette has a reader in the game again.** *(owner decision:
   where it lives)* `/api/gazette` and `/api/gazette/edition` still write and serve
   the day's paper (M34.1, M34.2), but since the first-party worlds were removed

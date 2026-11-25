@@ -338,7 +338,17 @@ try {
     "the sign-in must ask to come back to the deep-linked path it started from",
   );
   await page.keyboard.type("Linker", { delay: 8 });
+  // The deep-linked title is already on screen behind the box, so the screen
+  // alone cannot say the launch finished. Since M37.11 Enter first asks the
+  // server whether the name is reserved; the world's own /api/title?world=
+  // request is what says the launch reached it, and Q before that would be
+  // overtaken by the late arrival.
+  const beforeReturn = titleRequests.length;
   await page.keyboard.press("Enter");
+  await waitFor(
+    () => titleRequests.slice(beforeReturn).some((url) => url.includes("/api/title?world=")),
+    "the launch to reach the deep-linked world after the name",
+  );
   await waitForBoard(
     page,
     (c) => titledWorld(c) === TITLE_OF[STARTUP],

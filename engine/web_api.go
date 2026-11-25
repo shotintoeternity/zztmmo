@@ -130,6 +130,7 @@ func (a *WebAPI) Handler() http.Handler {
 	mux.HandleFunc("/api/moderation/audit", a.handleModerationAudit)
 	mux.HandleFunc("/api/auth/me", a.handleAuthMe)
 	mux.HandleFunc("/api/names/reserved", a.handleNameReserved)
+	mux.HandleFunc("/api/account/export", a.handleAccountExport)
 	mux.HandleFunc("/api/auth/logout", a.handleAuthLogout)
 	mux.HandleFunc("/api/auth/google/start", a.handleAuthStart)
 	mux.HandleFunc("/api/auth/google/callback", a.handleAuthCallback)
@@ -810,6 +811,28 @@ func (a *WebAPI) handleAuthMe(w http.ResponseWriter, r *http.Request) {
 		Username:        username,
 		RequireUsername: requireUsername,
 	})
+}
+
+// handleAccountExport is M37.3's download: everything the server keeps about
+// the signed-in account asking, as one JSON file.
+func (a *WebAPI) handleAccountExport(w http.ResponseWriter, r *http.Request) {
+	if r.Method != http.MethodGet {
+		http.Error(w, "use GET", http.StatusMethodNotAllowed)
+		return
+	}
+	account, ok := a.authenticatedAccount(r)
+	if !ok || a.Server == nil {
+		http.Error(w, "sign in to export your data", http.StatusUnauthorized)
+		return
+	}
+	var records *AccountStore
+	if a.Auth != nil {
+		records = a.Auth.Accounts
+	}
+	export := a.Server.exportAccount(account, records)
+	w.Header().Set("Content-Disposition", `attachment; filename="`+exportFileName(export.Username)+`"`)
+	w.Header().Set("Cache-Control", "no-store")
+	writeJSON(w, export)
 }
 
 // handleNameReserved lets the launch box tell a guest, before any socket,

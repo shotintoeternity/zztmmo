@@ -3906,8 +3906,14 @@ function openAccountMenu() {
   }
   const sharing = accountPrefs?.shareLocationWithFollowers === true;
   const favorite = accountPrefs?.favoriteWorlds.includes(worldName) === true;
-  const entries = [favorite ? "Unfavorite this world" : "Favorite this world", "Edit profile", "Comfort settings", sharing ? "Hide my location" : "Share my location", "Sign out"];
+  const entries = [favorite ? "Unfavorite this world" : "Favorite this world", "Edit profile", "Comfort settings", sharing ? "Hide my location" : "Share my location", "Export my data", "Sign out"];
   openSelectList("Account", entries, (entry) => {
+    // M37.3: the server answers with an attachment, so the browser saves the
+    // file and this page stays where it is.
+    if (entry === "Export my data") {
+      window.location.href = "/api/account/export";
+      return;
+    }
     if (entry === "Sign out") {
       void fetch("/api/auth/logout", { method: "POST" }).then(() => refreshAuthStatus());
       return;
