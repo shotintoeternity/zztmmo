@@ -71,6 +71,11 @@ type recHeader struct {
 	// recordVersion bump. A recording written before this field replays with the
 	// policy off, which is what an absent flag has always meant everywhere else.
 	FriendlyFire bool `json:"friendlyFire,omitempty"`
+	// Division is the challenge board a recording's run was measured for
+	// (M38.7): empty for a live run, "assisted" for one the TAS judge wrote.
+	// Recorded on the same terms as the fields above: it says what the run was,
+	// not how its stimuli replay, so recordVersion does not move.
+	Division string `json:"division,omitempty"`
 }
 
 // recOp is one external stimulus applied before a tick's step: a join, a name,

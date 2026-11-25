@@ -73,6 +73,15 @@ func (p *ReplayPlayback) WorldName() string {
 	return p.header.World
 }
 
+// Division is the challenge board the recorded run was measured for: empty
+// for a live run, "assisted" for a judged script (M38.7).
+func (p *ReplayPlayback) Division() string {
+	if p == nil {
+		return ""
+	}
+	return p.header.Division
+}
+
 func (p *ReplayPlayback) RoomManager() *RoomManager {
 	if p == nil {
 		return nil

@@ -5978,6 +5978,24 @@ The background says which player; the glyph says that it is a player.
   Verified: `go build ./...`, `go vet ./...`, `go test ./...` green; both journeys
   green under `ZZT_BROWSER=1`; the full twelve-suite browser family green (393s).
 
+- [ ] **M16.11f — journey 1's passage walk still guesses the row M16.11b
+  stopped guessing.** Filed 2026-11-26 by M38.7's rule-3 full `make browser`
+  run. `TestM1611BrowserEndToEndPlayerJourneys` failed once under the whole
+  family's load: `the player never reached the passage board change; stopped
+  at the player board=1 pos=(34,21) hp=91`. The passage is `(34,12)`: the bear
+  loop's steps left the player nine rows below it, the eastward walk stopped
+  at the passage column, and the `ArrowDown` fallback in
+  `web/test/e2e_journey.test.mjs` (after "bear damage taken") then walked
+  further away. It is M16.11b's bug, third site: M16.11b fixed
+  `coop_journey.test.mjs`'s copy with `walkOnto` and deleted its fallback;
+  journey 1 kept the fallback, which only works from above row 12. Not M38.7's
+  doing: journey 1 plays ACCEPT and reaches no challenge, replay or
+  workbench code, it passed in both of the same day's earlier family runs, and
+  three runs of it alone on the M38.7 tree were green. DoD: the bear loop and
+  the passage walk end on named tiles (`walkOnto`), the fallback is deleted,
+  the failure is reproduced first by forcing a long hold on the bear loop's
+  step as M16.11b did, and the journey is green alone and in a whole-family
+  run. Unranked; not beta-gating.
 - [x] **M16.8b — the manually-ticked websocket tests sleep 5ms and hope the input
   landed.** Filed 2026-08-04 from M16.11c's rule-3 full-family run, which came
   back red on a test that change does not touch:
@@ -9865,12 +9883,27 @@ challenge leaderboard, and a replay link on every row that anyone can watch.
   stored assisted row and the untouched live row. Touch players have no
   workbench keys yet (no ☰ rows), left for whoever needs it.
 
-- [ ] **M38.7 — the assisted board in the open.** The challenge landing shows
+- [x] **M38.7 — the assisted board in the open.** The challenge landing shows
   the assisted table under the live one, with "assisted" said in words. Every
   assisted row links to its replay, and the replay viewer's title says the run
   was assisted. The racing picker follows M38.0.4. DoD: a browser journey from
   the landing to an assisted replay, the co-op cutline green (CUTLINE.md), and
   the whole `make browser` family.
+  Done note (2026-11-26): the "Challenge Times" window shows the assisted
+  board under the live one, headed "Assisted runs (built tick by tick,
+  judged by the server)", and the landing offers it when either board has a
+  time. An assisted row opens an "Assisted Run" window (its ticks marked
+  ", assisted") with Watch the replay, "Race this assisted ghost" (M38.0.4:
+  yes, labelled; the ghost loads with `?division=assisted`, its status line
+  ends "TAS" and its window says "An assisted run"), and the postcard.
+  **How the replay knows**: the judge now writes `division: "assisted"` in
+  its recording's header (omitempty, no `recordVersion` bump, like the
+  challenge fields), and a replay's arrival snapshot carries it as
+  `replayDivision`, so a `/replay/<id>` link opened cold says "Assisted run"
+  on its sidebar too, guest runs with no row included
+  (`TestM387AnAssistedReplaySaysSo`). The journey rides on M38.6's run:
+  after its submission, the landing's times list the assisted row and its
+  replay says "Assisted run". **M38 is closed.**
 
 ## M39 — More of the game behind a tap: a ☰ menu for touch players
 

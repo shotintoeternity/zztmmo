@@ -51,6 +51,9 @@ func JudgeTASScript(def ChallengeDefinition, worldName string, world TWorld, scr
 		header.ChallengeID = def.ID
 		header.ChallengeVersion = def.Version
 		header.FriendlyFire = rm.FriendlyFire
+		// The judge measures for the assisted board, and says so where every
+		// reader of the recording, the replay viewer included, can see it.
+		header.Division = ChallengeDivisionAssisted
 		recorder, err = NewSessionRecorder(record, header)
 		if err != nil {
 			return TASJudgment{}, fmt.Errorf("tas: start the recording: %w", err)

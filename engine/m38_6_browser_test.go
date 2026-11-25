@@ -4,7 +4,9 @@ package zztgo
 // opens the TAS workbench from the challenge screen, imports that run, changes
 // one tick's input, sees the board change at that tick, submits, and sees the
 // assisted row — through the production server binary, set up as M32.1's
-// journey is (a minted cookie, the catalogue as a -challenges file).
+// journey is (a minted cookie, the catalogue as a -challenges file). M38.7's
+// clause rides on the same run: from the landing, the assisted table, its
+// row, and that row's replay saying "Assisted run".
 
 import (
 	"bytes"

@@ -115,4 +115,10 @@ assert.ok(channel.all().includes("TV 1/2 TOWN"), "a live channel watcher was not
 assert.ok(channel.all().includes("Next"), "a live channel watcher needs a manual next control");
 assert.ok(channel.row(19).includes(" N "), "the Next action must name its key");
 
+// M38.7: a replay of an assisted run says so; a played run's says nothing.
+const assistedReplay = recorder();
+drawWatchSidebar(assistedReplay, 1, true, "", "Assisted run");
+assert.ok(assistedReplay.row(4).includes("Assisted run"), "an assisted replay must say it is one");
+assert.ok(!replay.all().includes("Assisted"), "a played run's replay claims nothing");
+
 console.log("watch.test.mjs: all assertions passed");

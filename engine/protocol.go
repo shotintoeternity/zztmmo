@@ -864,6 +864,10 @@ type SnapshotMessage struct {
 	// to reclaim THIS run; it is not a world name, so `?world=` cannot reach it.
 	Challenge    string `json:"challenge,omitempty"`
 	ChallengeRun string `json:"challengeRun,omitempty"`
+	// ReplayDivision is set on a replay's arrival snapshots when the recorded
+	// run was measured for a division other than live: "assisted" for a judged
+	// TAS script (M38.7), so the viewer can say so.
+	ReplayDivision string `json:"replayDivision,omitempty"`
 }
 
 type DiffMessage struct {

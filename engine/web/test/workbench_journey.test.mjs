@@ -207,6 +207,30 @@ try {
   await waitForPage(ada, (cells) => hasText(cells, "Assisted Run") && hasText(cells, "Assisted rank 1") && hasText(cells, `Judged: ${met.ticks} ticks`), "the assisted row");
   console.log(`  - submitted: assisted rank ${submitted.result.rank} in ${submitted.result.ticks} ticks`);
 
+  // 8. M38.7: the assisted board in the open. From the landing, the assisted
+  //    table under the live one, its row, and that row's replay, which says
+  //    it is assisted.
+  await ada.page.goto(`${baseURL}/challenge`, { waitUntil: "domcontentloaded" });
+  await ada.page.waitForSelector("canvas[data-screen]", { timeout: 20000 });
+  await installDecoder(ada.page);
+  await waitForPage(ada, (cells) => hasText(cells, "Daily Challenge") && hasText(cells, "Leaderboard"), "the landing after the submission");
+  await pickListRow(ada.page, "Leaderboard", "the landing's leaderboard");
+  await waitForPage(ada, (cells) => hasText(cells, "Challenge Times"), "the times");
+  const assistedTicks = String(submitted.result.ticks);
+  const picked = await pickListRow(
+    ada.page,
+    (line) => line.trim().split(/\s+/)[2] === assistedTicks && line.includes("ada"),
+    "the assisted row",
+  );
+  await waitForPage(ada, (cells) => hasText(cells, "Assisted Run") && hasText(cells, `${assistedTicks} ticks, assisted`) && hasText(cells, "Race this assisted ghost"), "the assisted row's actions");
+  console.log(`  - the landing's times list the assisted row: ${picked.trim()}`);
+  const socketsBeforeReplay = ada.sockets.length;
+  await pickListRow(ada.page, "Watch the replay", "the assisted row's replay");
+  await waitFor(() => ada.sockets.slice(socketsBeforeReplay).some((url) => url.includes(`replay=${submitted.result.recordingId}`)), "the assisted replay's socket");
+  await waitFor(() => ada.page.url().includes(`/replay/${submitted.result.recordingId}`), "the assisted replay's address");
+  await waitForPage(ada, (cells) => hasText(cells, "Assisted run") && hasText(cells, "Watching"), "the replay saying it is assisted");
+  console.log(`  - the assisted row opens its replay, which says "Assisted run"`);
+
   assert.deepEqual(ada.benchErrors, [], "no workbench op was refused");
   for (const c of clients) {
     assert.equal(c.pageErrors.length, 0, `${c.label} page errors: ${c.pageErrors.join("\n")}`);

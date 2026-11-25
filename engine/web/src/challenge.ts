@@ -37,6 +37,8 @@ export type ChallengeLeaderboardRow = {
 export type ChallengeResponse = {
   challenge: ChallengeSummary;
   leaderboard?: ChallengeLeaderboardRow[];
+  /** The assisted board (M38.3): judged TAS scripts, ranked only against each other. */
+  assisted?: ChallengeLeaderboardRow[];
   canSubmit: boolean;
   catalogue?: ChallengeSummary[];
 };
@@ -70,7 +72,12 @@ export type ChallengeGhostTrack = {
   ticks: number;
   truncated?: boolean;
   points: ChallengeGhostPoint[];
+  /** Set by the client from the board the ghost was picked from (M38.7). */
+  division?: string;
 };
+
+/** The assisted division's wire name (M38.3). */
+export const ASSISTED_DIVISION = "assisted";
 
 /** The CP437 window width the landing and leaderboard clamp to. */
 const WINDOW_WIDTH = 44;
@@ -111,7 +118,7 @@ export function challengeLandingLines(
     return lines;
   }
   lines.push("!start;Start a run");
-  if ((resp.leaderboard ?? []).length > 0) {
+  if ((resp.leaderboard ?? []).length > 0 || (resp.assisted ?? []).length > 0) {
     lines.push("!board;Leaderboard");
   }
   if (options.hasGhost) {
@@ -135,11 +142,22 @@ export function challengeLandingLines(
  * server sent them — the ranking is the server's, and a client that re-sorted
  * would be inventing a second answer to the same question.
  */
-export function challengeLeaderboardLines(rows: ChallengeLeaderboardRow[]): string[] {
-  if (rows.length === 0) {
-    return ["", "  No times yet. Be the first.", ""];
+export function challengeLeaderboardLines(rows: ChallengeLeaderboardRow[], assisted?: ChallengeLeaderboardRow[]): string[] {
+  const lines = rows.length === 0 ? ["", "  No times yet. Be the first.", ""] : ["", ...leaderboardRowLines(rows)];
+  // M38.7: the assisted board sits under the live one, said in words, so a
+  // composed run is never read as a played one.
+  if (assisted !== undefined) {
+    lines.push("", "  Assisted runs (built tick by tick,", "  judged by the server):", "");
+    lines.push(...(assisted.length === 0 ? ["  No assisted times yet."] : leaderboardRowLines(assisted)));
   }
-  const lines = ["", "  #  Player            Ticks  Score", ""];
+  if (rows.length > 0 || (assisted ?? []).length > 0) {
+    lines.push("", "  * your run. Enter opens a run.");
+  }
+  return lines;
+}
+
+function leaderboardRowLines(rows: ChallengeLeaderboardRow[]): string[] {
+  const lines = ["  #  Player            Ticks  Score", ""];
   for (const row of rows) {
     const rank = String(row.rank).padStart(2, " ");
     const name = (row.name || "player").slice(0, 16).padEnd(16, " ");
@@ -150,18 +168,17 @@ export function challengeLeaderboardLines(rows: ChallengeLeaderboardRow[]): stri
     // postcard, and the ghost.
     lines.push(row.recordingId ? `!${row.recordingId};${label}` : `  ${label}`);
   }
-  lines.push("", "  * your run. Enter opens a run.");
   return lines;
 }
 
 /** challengeRowActionLines is the menu one leaderboard row offers. */
-export function challengeRowActionLines(row: ChallengeLeaderboardRow): string[] {
+export function challengeRowActionLines(row: ChallengeLeaderboardRow, assisted = false): string[] {
   return [
     "",
-    clamp(`  ${row.name || "player"} - ${row.ticks} ticks`),
+    clamp(`  ${row.name || "player"} - ${row.ticks} ticks${assisted ? ", assisted" : ""}`),
     "",
     "!watch;Watch the replay",
-    "!ghost;Race this ghost",
+    assisted ? "!ghost;Race this assisted ghost" : "!ghost;Race this ghost",
     "!postcard;Share a postcard GIF",
     "",
   ];
@@ -238,5 +255,8 @@ export function ghostStatusLine(track: ChallengeGhostTrack | null): string {
   if (!track) {
     return "";
   }
-  return `Ghost: ${(track.name || "record").slice(0, 9)} ${track.ticks}t`.slice(0, 20);
+  // An assisted ghost is marked (M38.0.4): racing one is allowed, and the
+  // player is told what it is.
+  const mark = track.division === ASSISTED_DIVISION ? " TAS" : "";
+  return `Ghost: ${(track.name || "record").slice(0, 9)} ${track.ticks}t${mark}`.slice(0, 20);
 }

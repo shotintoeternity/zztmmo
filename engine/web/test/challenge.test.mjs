@@ -126,6 +126,31 @@ assert.deepEqual(
   ["!watch;Watch the replay", "!ghost;Race this ghost", "!postcard;Share a postcard GIF"],
 );
 
+// --- the assisted board (M38.7) -------------------------------------------
+
+const assistedRows = [{ rank: 1, name: "bo", ticks: 25, score: 30, recordingId: "chal-gem-dash-assisted-3" }];
+const both = challenge.challengeLeaderboardLines(rows, assistedRows);
+const assistedAt = both.findIndex((line) => line.includes("Assisted runs"));
+const liveAt = both.findIndex((line) => line.startsWith("!chal-gem-dash-1;"));
+assert.ok(assistedAt > liveAt && liveAt >= 0, "the assisted table sits under the live one, said in words");
+assert.ok(both.some((line) => line.startsWith("!chal-gem-dash-assisted-3;")), "every assisted row opens its run");
+assert.deepEqual(challenge.challengeLeaderboardLines(rows), table, "without an assisted board the live table is unchanged");
+const onlyAssisted = challenge.challengeLeaderboardLines([], assistedRows);
+assert.ok(onlyAssisted.some((line) => line.includes("No times yet")) && onlyAssisted.some((line) => line.startsWith("!chal-gem-dash-assisted-3;")));
+assert.ok(challenge.challengeLeaderboardLines(rows, []).some((line) => line.includes("No assisted times yet")));
+assert.ok(both.every((line) => (line.startsWith("!") ? line.slice(line.indexOf(";") + 1) : line).length <= 44), "the tables fit the CP437 window");
+assert.ok(
+  challenge.challengeLandingLines({ challenge: summary, leaderboard: [], assisted: assistedRows, canSubmit: true }, { signedIn: true, hasGhost: false })
+    .includes("!board;Leaderboard"),
+  "an assisted time alone still offers the leaderboard",
+);
+const assistedActions = challenge.challengeRowActionLines(assistedRows[0], true);
+assert.ok(assistedActions.some((line) => line.includes("25 ticks, assisted")));
+assert.ok(assistedActions.includes("!watch;Watch the replay"), "an assisted row links to its replay");
+assert.ok(assistedActions.includes("!ghost;Race this assisted ghost"), "racing an assisted ghost is offered, labelled (M38.0.4)");
+assert.ok(challenge.ghostStatusLine({ name: "bo", ticks: 25, points: [], division: "assisted" }).endsWith("TAS"));
+assert.ok(!challenge.ghostStatusLine({ name: "ada", ticks: 30, points: [] }).includes("TAS"));
+
 // --- results --------------------------------------------------------------
 
 const durable = challenge.challengeResultLines({

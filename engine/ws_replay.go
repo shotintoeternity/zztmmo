@@ -532,6 +532,7 @@ func (replay *ReplayInstance) replaySpectatorSnapshot(sub *spectator) (SnapshotM
 	replay.Spectators[sub.client] = sub
 	snapshot, engine := replay.playback.RoomManager().SpectatorSnapshot(sub.boardID)
 	sub.engine = engine
+	snapshot.ReplayDivision = replay.playback.Division()
 	snapshot.Watchers = replay.watcherCountsLocked()[sub.boardID]
 	sub.sentWatchers = snapshot.Watchers
 	return snapshot, true

@@ -124,6 +124,7 @@ var m366StringFields = map[string]string{
 	"SnapshotMessage.ResumeToken":           m366ID,
 	"SnapshotMessage.Challenge":             m366ID,
 	"SnapshotMessage.ChallengeRun":          m366ID,
+	"SnapshotMessage.ReplayDivision":        m366Token,
 	"PlayerSnapshot.Color":                  m366Color,
 	"PlayerSnapshot.Handle":                 m366Handle,
 	"ProtocolEvent.Filename":                m366Literal + " (only ever \"GAME.HLP\")",

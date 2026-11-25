@@ -176,6 +176,7 @@ import {
   ghostStatusLine,
   ghostTrackMatches,
   postcardURLForRun,
+  ASSISTED_DIVISION,
   type ChallengeErrorMessage,
   type ChallengeGhostTrack,
   type ChallengeLeaderboardRow,
@@ -398,6 +399,8 @@ type SnapshotMessage = {
    */
   challenge?: string;
   challengeRun?: string;
+  /** M38.7: on a replay's arrival snapshots, "assisted" for a judged TAS run. */
+  replayDivision?: string;
   /**
    * This frame is addressed to a WATCHER, not a player. It carries no
    * `you`, no HUD and no events; it is what puts this client into read-only
@@ -783,6 +786,9 @@ let watcherCount = 0;
 let replayID = "";
 let replayTick = 0;
 let replayStartTick = 0;
+// The division the replay's run was measured for, from its arrival snapshot:
+// "assisted" for a judged TAS script, which the sidebar then says (M38.7).
+let replayDivision = "";
 let watchLive = false;
 let watchLiveEntries: WatchLiveLineupEntry[] = [];
 let watchLiveIndex = -1;
@@ -1706,6 +1712,7 @@ function startReplay(id: string, options: { rememberPath?: boolean; startTick?: 
   replayID = id;
   replayTick = 0;
   replayStartTick = options.startTick ?? 0;
+  replayDivision = "";
   reconnectAttempt = 0;
   setMode("watching");
   if (options.rememberPath !== false) {
@@ -2975,6 +2982,10 @@ function applyWatchSnapshot(message: SnapshotMessage) {
   watching = true;
   if (replaying) {
     replayTick = message.tick ?? replayTick;
+    // Only the arrival snapshots say it, so a later one is no withdrawal.
+    if (message.replayDivision !== undefined) {
+      replayDivision = message.replayDivision;
+    }
   }
   setEditorBlinking(false);
   playerId = 0;
@@ -3772,17 +3783,26 @@ function openSelectListIfActions(title: string, lines: string[], onPick: (choice
 
 function showChallengeLeaderboard() {
   const rows = challengeLanding?.leaderboard ?? [];
-  const lines = challengeLeaderboardLines(rows);
+  const assisted = challengeLanding?.assisted ?? [];
+  const lines = challengeLeaderboardLines(rows, assisted);
   openSelectListIfActions("Challenge Times", lines, (recordingId) => {
+    // Recording ids are server-minted and unique, so a pick is found on
+    // exactly one of the two boards.
     const row = rows.find((entry) => entry.recordingId === recordingId);
     if (row) {
       showChallengeRow(row);
+      return;
+    }
+    const assistedRow = assisted.find((entry) => entry.recordingId === recordingId);
+    if (assistedRow) {
+      showChallengeRow(assistedRow, ASSISTED_DIVISION);
     }
   });
 }
 
-function showChallengeRow(row: ChallengeLeaderboardRow) {
-  openSelectListIfActions("Run", challengeRowActionLines(row), (choice) => {
+function showChallengeRow(row: ChallengeLeaderboardRow, division = "") {
+  const assisted = division === ASSISTED_DIVISION;
+  openSelectListIfActions(assisted ? "Assisted Run" : "Run", challengeRowActionLines(row, assisted), (choice) => {
     if (!row.recordingId) {
       return;
     }
@@ -3797,7 +3817,7 @@ function showChallengeRow(row: ChallengeLeaderboardRow) {
     } else if (choice === "postcard") {
       window.open(postcardURLForRun(row.recordingId), "_blank", "noopener");
     } else if (choice === "ghost") {
-      void loadChallengeGhost(row.recordingId);
+      void loadChallengeGhost(row.recordingId, division);
     }
   });
 }
@@ -3806,10 +3826,11 @@ function showChallengeRow(row: ChallengeLeaderboardRow) {
 // told to the server, and a track the server refuses (a run from an older
 // definition, or one no row cites) leaves the browser with no ghost rather than
 // with a stale one.
-async function loadChallengeGhost(recordingId: string) {
+async function loadChallengeGhost(recordingId: string, division = "") {
   try {
     const response = await fetch(
-      "/api/challenge/ghost?challenge=" + encodeURIComponent(challengeID) + "&recording=" + encodeURIComponent(recordingId),
+      "/api/challenge/ghost?challenge=" + encodeURIComponent(challengeID) + "&recording=" + encodeURIComponent(recordingId)
+        + (division ? "&division=" + encodeURIComponent(division) : ""),
     );
     if (!response.ok) {
       challengeGhost = null;
@@ -3817,6 +3838,7 @@ async function loadChallengeGhost(recordingId: string) {
       return;
     }
     const track = (await response.json()) as ChallengeGhostTrack;
+    track.division = division;
     challengeGhost = ghostTrackMatches(track, challengeLanding?.challenge ?? null) ? track : null;
   } catch {
     challengeGhost = null;
@@ -3827,7 +3849,15 @@ async function loadChallengeGhost(recordingId: string) {
   }
   openSelectListIfActions(
     "Ghost",
-    ["", "  " + ghostStatusLine(challengeGhost), "", "!start;Race it now", "!board;Back to the times", ""],
+    [
+      "",
+      "  " + ghostStatusLine(challengeGhost),
+      ...(challengeGhost.division === ASSISTED_DIVISION ? ["  An assisted run: built tick by tick."] : []),
+      "",
+      "!start;Race it now",
+      "!board;Back to the times",
+      "",
+    ],
     (choice) => {
       if (choice === "start") {
         startChallengeRun();
@@ -4909,7 +4939,7 @@ function drawWatchSidebar() {
     paintWorkbenchSidebar(writeText, workbenchStatus, workbenchNotice);
     return;
   }
-  paintWatchSidebar(writeText, watcherCount, replaying, watchLiveLabel);
+  paintWatchSidebar(writeText, watcherCount, replaying, watchLiveLabel, replayDivision === ASSISTED_DIVISION ? "Assisted run" : "");
 }
 
 // The first time an in-game sound arrives that the browser cannot voice,
