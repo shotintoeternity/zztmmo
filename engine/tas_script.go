@@ -214,8 +214,10 @@ func EncodeTASScript(script TASScript) ([]byte, error) {
 }
 
 // ProjectRecordingToTAS keeps a challenge recording's one player's inputs and
-// scroll replies, tick for tick from the recording's tick 0: it is how a live
-// run is imported into the workbench, and what M38.2's equivalence test
+// scroll replies, tick for tick from the tick the player joined on, which is
+// the script's tick 0 (M38.2): a recording can open with empty ticks before the
+// join, which simulate nothing and which a live run no longer counts. It is how
+// a live run is imported into the workbench, and what M38.2's equivalence test
 // judges. Everything else in the recording (the world, the join, names,
 // state) is the server's to supply again. The result is not admitted here:
 // a live run that pressed a refused key projects faithfully and is refused
@@ -232,18 +234,20 @@ func ProjectRecordingToTAS(r io.Reader) (TASScript, error) {
 	script := TASScript{Challenge: header.ChallengeID, Version: header.ChallengeVersion}
 	var player PlayerID
 	havePlayer := false
+	next := 0
 	for {
 		var tick recTick
 		if err := dec.Decode(&tick); err != nil {
 			if errors.Is(err, io.EOF) {
 				break
 			}
-			return TASScript{}, fmt.Errorf("read tick %d: %w", len(script.Ticks), err)
+			return TASScript{}, fmt.Errorf("read tick %d: %w", next, err)
 		}
-		if tick.Tick != len(script.Ticks) {
-			return TASScript{}, fmt.Errorf("the recording skips from tick %d to %d", len(script.Ticks)-1, tick.Tick)
+		if tick.Tick != next {
+			return TASScript{}, fmt.Errorf("the recording skips from tick %d to %d", next-1, tick.Tick)
 		}
-		out := TASTick{Tick: tick.Tick}
+		next++
+		out := TASTick{Tick: len(script.Ticks)}
 		for _, op := range tick.Ops {
 			switch {
 			case op.Op == "join":
@@ -255,10 +259,11 @@ func ProjectRecordingToTAS(r io.Reader) (TASScript, error) {
 				out.Replies = append(out.Replies, TASReply{StatID: op.StatID, Label: op.Label})
 			}
 		}
-		if havePlayer {
-			if in, ok := tick.Inputs[player]; ok {
-				out.DeltaX, out.DeltaY, out.Shift, out.Key = in.DeltaX, in.DeltaY, in.Shift, in.Key
-			}
+		if !havePlayer {
+			continue
+		}
+		if in, ok := tick.Inputs[player]; ok {
+			out.DeltaX, out.DeltaY, out.Shift, out.Key = in.DeltaX, in.DeltaY, in.Shift, in.Key
 		}
 		script.Ticks = append(script.Ticks, out)
 	}

@@ -130,7 +130,7 @@ func (s *WebSocketServer) StartChallengeRun(def ChallengeDefinition, accountID, 
 		Name:        name,
 	}
 
-	rm := NewRoomManagerForWorld(world, worldName)
+	rm := newChallengeRoomManager(world, worldName)
 	// Deliberately NO HighScorePath: a challenge run must not write the source
 	// world's .HI, which is exactly the source-world mutation the spec forbids.
 	inst := &WorldInstance{
@@ -164,6 +164,12 @@ func (s *WebSocketServer) StartChallengeRun(def ChallengeDefinition, accountID, 
 		return nil, nil, ErrChallengeRecordingDisabled
 	}
 	return inst, run, nil
+}
+
+// newChallengeRoomManager is the room manager a challenge attempt simulates
+// in, live or judged (M38.2): the canonical world, and nothing else set.
+func newChallengeRoomManager(world TWorld, worldName string) *RoomManager {
+	return NewRoomManagerForWorld(world, worldName)
 }
 
 // discardChallengeRun removes a run's instance. It is used when a run could not
@@ -284,37 +290,54 @@ func (s *WebSocketServer) ChallengeRunInstance(key string) (*WorldInstance, bool
 //     reconnect grace) completes never: there is nobody to have finished it.
 func (inst *WorldInstance) advanceChallengeLocked() *challengeCompletion {
 	run := inst.Challenge
-	if run == nil {
+	// M38.2: a run's first tick is the one its player joined on. Ticks before
+	// the join (the tick goroutine can reach a new instance before its join
+	// lands) used to count, so a live time carried an accident of scheduling,
+	// and could not mean the same thing as a judged script's. No room exists
+	// before the join, so nothing those ticks did is lost.
+	if run == nil || run.PlayerID == 0 {
 		return nil
 	}
 	run.Ticks++
-	if run.Finished || run.PlayerID == 0 {
+	if run.Finished {
 		return nil
 	}
-	state, ok := inst.RoomManager.PlayerState(run.PlayerID)
-	if !ok || state == nil {
+	result, met := measureChallengeTick(run.Def, run.Ticks, run.PlayerID, inst.RoomManager)
+	if !met {
 		return nil
 	}
-	boardID, _, located := inst.RoomManager.PlayerLocation(run.PlayerID)
-	if !located {
-		return nil
-	}
-	if !challengeGoalMet(run.Def.Goal, *state, boardID) {
-		return nil
-	}
+	result.AccountKey = run.AccountID
+	result.Name = CP437String(run.Name)
+	result.RecordingID = run.RecordingID
 	run.Finished = true
-	run.Result = ChallengeResult{
-		ChallengeID: run.Def.ID,
-		Version:     run.Def.Version,
-		AccountKey:  run.AccountID,
-		Name:        CP437String(run.Name),
-		Ticks:       run.Ticks,
+	run.Result = result
+	return &challengeCompletion{run: run, result: run.Result}
+}
+
+// measureChallengeTick is the one completion rule, shared by a live run and the
+// TAS judge (M38.2) so the two boards cannot measure different things: after
+// the tick-th tick, is the goal met, and what does the run measure? The result
+// carries no account, name or recording; the caller adds its own.
+func measureChallengeTick(def ChallengeDefinition, ticks int, playerID PlayerID, rm *RoomManager) (ChallengeResult, bool) {
+	state, ok := rm.PlayerState(playerID)
+	if !ok || state == nil {
+		return ChallengeResult{}, false
+	}
+	boardID, _, located := rm.PlayerLocation(playerID)
+	if !located {
+		return ChallengeResult{}, false
+	}
+	if !challengeGoalMet(def.Goal, *state, boardID) {
+		return ChallengeResult{}, false
+	}
+	return ChallengeResult{
+		ChallengeID: def.ID,
+		Version:     def.Version,
+		Ticks:       ticks,
 		Score:       int(state.Score),
 		Gems:        int(state.Gems),
-		RecordingID: run.RecordingID,
-		Evidence:    challengeEvidence(inst.RoomManager),
-	}
-	return &challengeCompletion{run: run, result: run.Result}
+		Evidence:    challengeEvidence(rm),
+	}, true
 }
 
 // challengeEvidence is the run's final state fingerprint: every live room's

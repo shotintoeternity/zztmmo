@@ -9668,7 +9668,7 @@ challenge leaderboard, and a replay link on every row that anyone can watch.
   seed under `testdata/fuzz`. Field names match case-insensitively, as
   `encoding/json` does; only the schema's fields enter either way.
 
-- [ ] **M38.2 — the judge: re-simulate and measure.** First, extract the
+- [x] **M38.2 — the judge: re-simulate and measure.** First, extract the
   per-tick measurement out of `advanceChallengeLocked` (tick count, goal check,
   `ChallengeResult` construction) into one function that both the live run and
   the judge call, so the two cannot drift. Then `JudgeScript(def, script)`
@@ -9686,6 +9686,23 @@ challenge leaderboard, and a replay link on every row that anyone can watch.
   `VerifyChallengeResult` accepts the recording the judge wrote. Measure and
   record the cost of judging one full-ceiling script; that number sizes M38.0's
   budget answers and M38.5's seek.
+  Done note (2026-11-26): `tas_judge.go`, `m38_2_test.go`. The completion rule
+  is `measureChallengeTick`, which `advanceChallengeLocked` and the judge both
+  call, and both build their room manager with `newChallengeRoomManager`.
+  **The trap was real**: a live run counted every instance tick, including any
+  the tick goroutine ran before the join landed. A live run now counts from
+  its join (no room exists before it, so nothing is lost), and
+  `ProjectRecordingToTAS` drops a recording's empty pre-join ticks, so tick 0
+  is the join tick everywhere. DEVIATION from M32.1's count, made while the
+  shipped catalogue is empty, so no stored row changes meaning. The judge
+  records through the live `SessionRecorder` in a new lossless mode (a live
+  session drops a line rather than stall its tick; the judge's recording is
+  evidence, so it waits). Equivalence holds exactly (ticks, score, gems,
+  evidence); judging is deterministic to the byte; the judge's recording
+  verifies and projects back to the judged script. **Measured**: one idle
+  full-ceiling script (5454 ticks) judges in about 80 ms on Gem Dash, so two
+  concurrent judges is generous for that course; a busier world costs more
+  and M38.4's load test should measure on the course it ships.
 
 - [ ] **M38.3 — the assisted division.** Add `Division` to `ChallengeResult`
   (`omitempty`; empty means live) and key `Submit`, `Leaderboard` and

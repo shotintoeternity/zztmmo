@@ -122,6 +122,12 @@ type SessionRecorder struct {
 	tick int
 
 	dropped int64 // atomic; incremented when a full channel drops a line
+
+	// lossless makes flush wait for the writer instead of dropping a line. A
+	// live session must never stall its tick on disk, so it drops; the TAS
+	// judge (M38.2) steps thousands of ticks in a burst and its recording is
+	// the evidence, so it waits.
+	lossless bool
 }
 
 // NewSessionRecorder writes the header line synchronously (so a failure surfaces
@@ -194,6 +200,10 @@ func (r *SessionRecorder) flush(inputs map[PlayerID]PlayerInput) {
 	r.tick++
 	r.mu.Unlock()
 
+	if r.lossless {
+		r.ch <- rec
+		return
+	}
 	select {
 	case r.ch <- rec:
 	default:
