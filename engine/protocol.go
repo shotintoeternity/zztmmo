@@ -168,18 +168,22 @@ type ReplayControlMessage struct {
 }
 
 // WorkbenchOpMessage is one workbench op (M38.5). Which fields mean something
-// depends on Op: setInput reads Tick and the input fields, setScrollReply
+// depends on Op: setInput reads Tick and either Keymask or the input fields, setScrollReply
 // reads Tick, Stat and Label (an empty label clears that stat's reply),
 // truncate and seek read Tick, import reads Recording, and step, play, pause,
 // export and submit read nothing.
 type WorkbenchOpMessage struct {
-	Type      string      `json:"type"`
-	Op        string      `json:"op"`
-	Tick      int         `json:"tick,omitempty"`
-	DeltaX    int16       `json:"dx,omitempty"`
-	DeltaY    int16       `json:"dy,omitempty"`
-	Shift     bool        `json:"shift,omitempty"`
-	Key       byte        `json:"key,omitempty"`
+	Type   string `json:"type"`
+	Op     string `json:"op"`
+	Tick   int    `json:"tick,omitempty"`
+	DeltaX int16  `json:"dx,omitempty"`
+	DeltaY int16  `json:"dy,omitempty"`
+	Shift  bool   `json:"shift,omitempty"`
+	Key    byte   `json:"key,omitempty"`
+	// Keymask, when set, is setInput's input as live play sends it, decoded
+	// the same way (inputMessageToPlayerInput), so a workbench tick set with
+	// the play keys is the tick live play would have stepped (M38.6).
+	Keymask   uint16      `json:"keymask,omitempty"`
 	Stat      int16       `json:"stat,omitempty"`
 	Label     CP437String `json:"label,omitempty"`
 	Recording string      `json:"recording,omitempty"`

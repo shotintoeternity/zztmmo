@@ -9831,7 +9831,7 @@ challenge leaderboard, and a replay link on every row that anyone can watch.
   an unpaused replay can answer with the frame one tick past N, so the
   viewer should pause before it seeks.
 
-- [ ] **M38.6 — the workbench screen (client).** Under `engine/web/src`: a
+- [x] **M38.6 — the workbench screen (client).** Under `engine/web/src`: a
   workbench mode reached from the challenge screen. It has the CP437 board, a
   timeline row with the current tick, the goal and the tick count, and keys:
   - step forward and back a tick;
@@ -9843,6 +9843,27 @@ challenge leaderboard, and a replay link on every row that anyone can watch.
   journey that imports a live run, changes one tick's input, sees the board
   change at that tick, submits, and sees the assisted row. `make browser` runs
   in full, because this is client work (CLAUDE.md rule 3).
+  Done note (2026-11-26): `web/src/workbench.ts` (pure, with
+  `test/workbench.test.mjs` in the `npm test` chain), wired in `main.ts`;
+  journey `web/test/workbench_journey.test.mjs` driven by
+  `m38_6_browser_test.go`. The challenge landing's last action is "TAS
+  workbench", placed last so no row above it moves. The screen is a
+  watcher's (the frames are spectator frames), with the sidebar as the
+  timeline: tick of length, a bar, the goal, and the measured count. Keys: a
+  play key sets this tick's input and steps over it (append at the end);
+  `.` steps, `,` goes back a tick, `W` waits, and Escape opens the menu
+  (Play/Pause, Truncate here, Import my run, Export the script, Submit,
+  Leave). A play key travels as live play sends it, so `WorkbenchOpMessage`
+  gained `keymask`, decoded by `inputMessageToPlayerInput`
+  (`TestM386KeymaskInputIsLivePlaysInput`). Import offers the signed-in
+  player's own landing row, re-fetched on the way in. **A workbench socket
+  never reconnects**: its script lives only in the session, so a close says
+  so on the sidebar and Escape leaves. The journey plays a live run, imports
+  it, exports it as a real download, turns one tick that moved east into a
+  wait and checks the player's column at that tick, extends the run with
+  ArrowRight until the server says met, and submits; the Go side checks the
+  stored assisted row and the untouched live row. Touch players have no
+  workbench keys yet (no ☰ rows), left for whoever needs it.
 
 - [ ] **M38.7 — the assisted board in the open.** The challenge landing shows
   the assisted table under the live one, with "assisted" said in words. Every

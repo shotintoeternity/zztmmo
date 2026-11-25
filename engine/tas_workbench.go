@@ -318,6 +318,10 @@ func (wb *WorkbenchSession) setInputLocked(ctx context.Context, op WorkbenchOpMe
 		return
 	}
 	tick := TASTick{Tick: op.Tick, DeltaX: op.DeltaX, DeltaY: op.DeltaY, Shift: op.Shift, Key: op.Key}
+	if op.Keymask != 0 {
+		in := inputMessageToPlayerInput(InputMessage{Keymask: op.Keymask})
+		tick.DeltaX, tick.DeltaY, tick.Shift, tick.Key = in.DeltaX, in.DeltaY, in.Shift, in.Key
+	}
 	if op.Tick < n {
 		tick.Replies = wb.script.Ticks[op.Tick].Replies
 	}

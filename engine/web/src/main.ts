@@ -46,6 +46,7 @@ import {
   InputMaskDown,
   InputMaskLeft,
   InputMaskRight,
+  InputMaskShift,
   InputMaskUp,
   isHandledKey,
   isMovementKey,
@@ -181,6 +182,25 @@ import {
   type ChallengeResponse,
   type ChallengeResultMessage,
 } from "./challenge";
+import {
+  MessageTypeWorkbenchError,
+  MessageTypeWorkbenchScript,
+  MessageTypeWorkbenchStatus,
+  MessageTypeWorkbenchSubmit,
+  paintWorkbenchSidebar,
+  workbenchExportFileName,
+  workbenchInputOps,
+  workbenchKeyFor,
+  workbenchKeyOps,
+  workbenchMenuLines,
+  workbenchMenuOps,
+  workbenchSubmitLines,
+  type WorkbenchErrorMessage,
+  type WorkbenchOp,
+  type WorkbenchScriptMessage,
+  type WorkbenchStatusMessage,
+  type WorkbenchSubmitMessage,
+} from "./workbench";
 import { WATCH_LIVE_CYCLE_MS, nextWatchLiveIndex, watchLiveEmbedMode, watchLiveEntryLabel, watchLiveEntryTarget, type WatchLiveLineupEntry } from "./watch_live";
 
 const COLS = 80;
@@ -609,7 +629,7 @@ type EditorTestPlayMessage = {
   error?: string;
 };
 
-type ServerMessage = SnapshotMessage | DiffMessage | EventMessage | BoardChangeMessage | ChatMessage | PrivateMessage | PrivateResultMessage | AnnounceMessage | BlockResultMessage | FollowResultMessage | ModerateResultMessage | ModerationNoticeMessage | ProfileResultMessage | ReplayErrorMessage | EditorSnapshotMessage | EditorInspectMessage | EditorPresenceMessage | EditorLeaseMessage | EditorDiffMessage | EditorPropertiesMessage | EditorStatSettingsMessage | EditorProgramTextMessage | EditorBoardDataMessage | EditorWorldDataMessage | EditorSaveResultMessage | EditorTestPlayMessage | ChallengeResultMessage | ChallengeErrorMessage;
+type ServerMessage = SnapshotMessage | DiffMessage | EventMessage | BoardChangeMessage | ChatMessage | PrivateMessage | PrivateResultMessage | AnnounceMessage | BlockResultMessage | FollowResultMessage | ModerateResultMessage | ModerationNoticeMessage | ProfileResultMessage | ReplayErrorMessage | EditorSnapshotMessage | EditorInspectMessage | EditorPresenceMessage | EditorLeaseMessage | EditorDiffMessage | EditorPropertiesMessage | EditorStatSettingsMessage | EditorProgramTextMessage | EditorBoardDataMessage | EditorWorldDataMessage | EditorSaveResultMessage | EditorTestPlayMessage | ChallengeResultMessage | ChallengeErrorMessage | WorkbenchStatusMessage | WorkbenchScriptMessage | WorkbenchSubmitMessage | WorkbenchErrorMessage;
 
 type InputMessage = {
   type: typeof MessageTypeInput;
@@ -753,6 +773,12 @@ let mode: Mode = "title";
 // into the room as a player.
 let watching = false;
 let replaying = false;
+// `workbench` is the TAS workbench intent (M38.6): a watcher's screen over a
+// session the server simulates, steered by ops rather than by input. Reset
+// wherever `replaying` is, so the next socket never opens as ?workbench=.
+let workbench = false;
+let workbenchStatus: WorkbenchStatusMessage | null = null;
+let workbenchNotice = "";
 let watcherCount = 0;
 let replayID = "";
 let replayTick = 0;
@@ -1470,6 +1496,7 @@ async function showTitle() {
   // must not leave the reconnect holding an intent to re-enter it.
   watching = false;
   replaying = false;
+  workbench = false;
   replayID = "";
   replayTick = 0;
   replayStartTick = 0;
@@ -1621,6 +1648,7 @@ function startPlay(options: { challenge?: boolean } = {}) {
   leavingToTitle = false;
   watching = false;
   replaying = false;
+  workbench = false;
   replayID = "";
   replayTick = 0;
   replayStartTick = 0;
@@ -1650,6 +1678,7 @@ function startWatch(options: { channel?: boolean } = {}) {
   }
   watching = true;
   replaying = false;
+  workbench = false;
   replayTick = 0;
   replayStartTick = 0;
   watcherCount = 0;
@@ -1672,6 +1701,7 @@ function startReplay(id: string, options: { rememberPath?: boolean; startTick?: 
   }
   watching = true;
   replaying = true;
+  workbench = false;
   watcherCount = 0;
   replayID = id;
   replayTick = 0;
@@ -1701,6 +1731,7 @@ async function startWatchLive() {
   }
   watching = true;
   replaying = false;
+  workbench = false;
   replayID = "";
   replayTick = 0;
   replayStartTick = 0;
@@ -2459,6 +2490,14 @@ function disconnect(reason: string) {
   if (leavingToTitle) {
     return;
   }
+  // A workbench's script lives only in its session, and the session ends with
+  // the socket (an idle one is closed by the server). Reconnecting would open
+  // a blank workbench and look like the script survived, so the close is
+  // final: say so, and leave the way back to the player.
+  if (workbench) {
+    endWorkbench("The workbench closed. Export a script to keep it.");
+    return;
+  }
   connected = false;
   window.clearInterval(inputTimer);
   // Otherwise the blink timer keeps repainting the board over the notice below.
@@ -2484,7 +2523,9 @@ function drawConnectionNotice(reason: string) {
 function wsURL(): string {
   const url = new URL("/ws", window.location.href);
   url.protocol = url.protocol === "https:" ? "wss:" : "ws:";
-  if (replaying) {
+  if (workbench) {
+    url.searchParams.set("workbench", challengeID);
+  } else if (replaying) {
     url.searchParams.set("replay", replayID);
     if (replayStartTick > 0) {
       url.searchParams.set("start", String(replayStartTick));
@@ -2567,6 +2608,18 @@ function applyMessage(message: ServerMessage) {
       break;
     case MessageTypeChallengeError:
       handleChallengeError(message);
+      break;
+    case MessageTypeWorkbenchStatus:
+      handleWorkbenchStatus(message);
+      break;
+    case MessageTypeWorkbenchScript:
+      downloadWorkbenchScript(message);
+      break;
+    case MessageTypeWorkbenchSubmit:
+      handleWorkbenchSubmit(message);
+      break;
+    case MessageTypeWorkbenchError:
+      handleWorkbenchError(message);
       break;
     case MessageTypeEditorSnapshot:
       applyEditorSnapshot(message);
@@ -3687,6 +3740,8 @@ function showChallengeLanding() {
       showChallengeLeaderboard();
     } else if (choice === "ghost") {
       startChallengeRun();
+    } else if (choice === "bench") {
+      void openWorkbench();
     }
   });
 }
@@ -3799,6 +3854,206 @@ function startChallengeRun() {
   worldName = challengeLanding.challenge.world;
   disconnectSocket();
   startPlay({ challenge: true });
+}
+
+// ---------------------------------------------------------------------------
+// The TAS workbench (M38.6)
+//
+// A watcher's screen over a session the server simulates. The landing is
+// fetched again on the way in, because "Import my run" offers the signed-in
+// player's own row, and that row may be newer than the landing this browser
+// first opened.
+async function openWorkbench() {
+  const id = challengeLanding?.challenge.id || challengeID;
+  if (!id) {
+    return;
+  }
+  try {
+    const response = await fetch("/api/challenge/" + encodeURIComponent(id));
+    if (response.ok) {
+      challengeLanding = (await response.json()) as ChallengeResponse;
+    }
+  } catch {
+    // The workbench still opens; it just cannot offer an import.
+  }
+  startWorkbench(id);
+}
+
+function startWorkbench(id: string) {
+  closeModal();
+  disconnectSocket();
+  closeTitleStream();
+  stopOccupancyPolling();
+  clearScrolls();
+  zztSound.setEnabled(false);
+  leavingToTitle = false;
+  stopWatchLive();
+  // The challenge is kept, not left: its id is the socket's, and its landing
+  // is where the import's recording comes from.
+  challengeMode = false;
+  challengeRun = "";
+  challengeID = id;
+  watching = true;
+  replaying = false;
+  workbench = true;
+  workbenchStatus = null;
+  workbenchNotice = "";
+  watcherCount = 0;
+  reconnectAttempt = 0;
+  // The mode is set before the socket opens: applyMessage drops anything but a
+  // snapshot on the title screen, and a refusal can arrive before any frame.
+  setMode("watching");
+  drawWatchSidebar();
+  drawScreen();
+  connect();
+}
+
+/** workbenchImportRecording is the player's own live run, if the landing has one. */
+function workbenchImportRecording(): string {
+  if (!authStatus.authenticated) {
+    return "";
+  }
+  return (challengeLanding?.leaderboard ?? []).find((row) => row.you && row.recordingId)?.recordingId ?? "";
+}
+
+function sendWorkbenchOps(ops: WorkbenchOp[]) {
+  if (!ws || ws.readyState !== WebSocket.OPEN) {
+    return;
+  }
+  for (const op of ops) {
+    ws.send(JSON.stringify(op));
+  }
+}
+
+function handleWorkbenchKey(event: KeyboardEvent) {
+  // A closed workbench has nothing to steer: Escape and Q are the way out.
+  if (!ws) {
+    if (event.code === "Escape" || event.code === "KeyQ") {
+      event.preventDefault();
+      leaveToTitle();
+    }
+    return;
+  }
+  if (event.ctrlKey || event.metaKey || event.altKey) {
+    return;
+  }
+  const own = workbenchKeyFor(event.code);
+  if (own === "menu") {
+    event.preventDefault();
+    openWorkbenchMenu();
+    return;
+  }
+  // One op per press: a held key does not autorepeat ticks into the script.
+  if (event.repeat) {
+    event.preventDefault();
+    return;
+  }
+  if (own) {
+    event.preventDefault();
+    workbenchNotice = "";
+    sendWorkbenchOps(workbenchKeyOps(workbenchStatus, own));
+    return;
+  }
+  // The play keys, as live play sends them: a keymask for movement and
+  // shooting, a command byte for the rest. The server decodes both exactly as
+  // it would a live tick, and refuses a key a measured run may not use.
+  // Shift on its own is not a tick: it is held with an arrow to shoot.
+  if (event.code.startsWith("Shift")) {
+    return;
+  }
+  const bindings = effectiveKeyBindings(readEffectiveComfort());
+  let keymask = movementMask(new Set([event.code]), bindings);
+  if (keymask !== 0 && event.shiftKey) {
+    keymask |= InputMaskShift;
+  }
+  const key = keymask === 0 ? commandKey(event, bindings) : 0;
+  if (keymask === 0 && key === 0) {
+    return;
+  }
+  event.preventDefault();
+  workbenchNotice = "";
+  sendWorkbenchOps(workbenchInputOps(workbenchStatus, { keymask, key }));
+}
+
+function openWorkbenchMenu() {
+  const importRecording = workbenchImportRecording();
+  const lines = workbenchMenuLines(workbenchStatus, { canImport: importRecording !== "" });
+  openSelectListIfActions("TAS Workbench", lines, (choice) => {
+    closeModal();
+    if (choice === "leave") {
+      leaveToTitle();
+      return;
+    }
+    sendWorkbenchOps(workbenchMenuOps(workbenchStatus, choice, importRecording));
+  });
+}
+
+function handleWorkbenchStatus(message: WorkbenchStatusMessage) {
+  if (!workbench) {
+    return;
+  }
+  workbenchStatus = message;
+  drawWatchSidebar();
+  drawScreen();
+}
+
+function handleWorkbenchError(message: WorkbenchErrorMessage) {
+  if (!workbench) {
+    return;
+  }
+  // An op's refusal leaves the session as it was; it is said on the sidebar.
+  // One with no op ended the session (idle, busy, unavailable).
+  if (message.op) {
+    workbenchNotice = message.reason;
+    drawWatchSidebar();
+    drawScreen();
+    return;
+  }
+  endWorkbench(message.reason);
+}
+
+// endWorkbench is the one way a workbench ends that the player did not choose:
+// the notice stays on screen, nothing reconnects, and Escape or Q leaves.
+function endWorkbench(reason: string) {
+  connected = false;
+  stopInputSampler();
+  window.clearTimeout(retryTimer);
+  workbenchNotice = reason;
+  if (ws) {
+    const socket = ws;
+    ws = null;
+    socket.close();
+  }
+  drawWatchSidebar();
+  drawConnectionNotice("Esc to leave");
+}
+
+function downloadWorkbenchScript(message: WorkbenchScriptMessage) {
+  if (!workbench) {
+    return;
+  }
+  const blob = new Blob([JSON.stringify(message.script)], { type: "application/json" });
+  const url = URL.createObjectURL(blob);
+  const link = document.createElement("a");
+  link.href = url;
+  link.download = workbenchExportFileName(message.script);
+  document.body.appendChild(link);
+  link.click();
+  link.remove();
+  window.setTimeout(() => URL.revokeObjectURL(url), 0);
+}
+
+function handleWorkbenchSubmit(message: WorkbenchSubmitMessage) {
+  if (!workbench) {
+    return;
+  }
+  const recordingId = message.result.recordingId ?? "";
+  openSelectListIfActions("Assisted Run", workbenchSubmitLines(message), (choice) => {
+    closeModal();
+    if (choice === "replay" && recordingId) {
+      startReplay(recordingId);
+    }
+  });
 }
 
 function handleChallengeResult(message: ChallengeResultMessage) {
@@ -4650,6 +4905,10 @@ function updateSidebar(hud: HudSnapshot) {
 }
 
 function drawWatchSidebar() {
+  if (workbench) {
+    paintWorkbenchSidebar(writeText, workbenchStatus, workbenchNotice);
+    return;
+  }
   paintWatchSidebar(writeText, watcherCount, replaying, watchLiveLabel);
 }
 
@@ -4961,6 +5220,13 @@ function handleKeyDown(event: KeyboardEvent) {
 
   if (mode === "editor") {
     handleEditorKey(event);
+    return;
+  }
+
+  // The workbench answers to its own keys and the play keys, which it turns
+  // into ops; nothing it does is input to a room.
+  if (mode === "watching" && workbench) {
+    handleWorkbenchKey(event);
     return;
   }
 

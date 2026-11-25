@@ -117,6 +117,8 @@ export function challengeLandingLines(
   if (options.hasGhost) {
     lines.push("!ghost;Race the ghost");
   }
+  // M38.6: last, so the rows above keep their places.
+  lines.push("!bench;TAS workbench");
   lines.push("");
   // M37.7: sign-in is optional, so a server can run without it. There a guest
   // is told plainly that a guest run is not posted, rather than to sign in

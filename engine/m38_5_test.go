@@ -575,3 +575,33 @@ func TestM385ReplayViewerSeeksTheSameWay(t *testing.T) {
 		t.Fatalf("a seek inside the cooldown moved the replay to %d", last)
 	}
 }
+
+// M38.6: a tick set with the play keys is the input live play would have
+// stepped for the same keymask, and it admits and exports as itself.
+func TestM386KeymaskInputIsLivePlaysInput(t *testing.T) {
+	h, _, _ := m382LiveRun(t)
+	b := m385Open(t, h, nil)
+	masks := []uint16{InputMaskRight, InputMaskUp | InputMaskShift, InputMaskShoot}
+	for i, mask := range masks {
+		b.op(WorkbenchOpMessage{Op: "setInput", Tick: i, Keymask: mask})
+	}
+	b.op(WorkbenchOpMessage{Op: "setInput", Tick: len(masks), Key: 'T'})
+	wb := b.session()
+	wb.mu.Lock()
+	script := wb.exportLocked()
+	wb.mu.Unlock()
+	for i, mask := range masks {
+		want := inputMessageToPlayerInput(InputMessage{Keymask: mask})
+		if got := script.Ticks[i].Input(); got != want {
+			t.Fatalf("keymask %#x set %+v, live play steps %+v", mask, got, want)
+		}
+	}
+	data, err := EncodeTASScript(script)
+	if err != nil {
+		t.Fatal(err)
+	}
+	again, err := AdmitTASScript(data, gemDashFixture())
+	if err != nil || !reflect.DeepEqual(again, script) {
+		t.Fatalf("the play-key script does not admit as itself: %v %+v", err, again)
+	}
+}
