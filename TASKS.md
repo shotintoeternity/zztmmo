@@ -9414,6 +9414,44 @@ console, or a product decision. Each says which.
   `touch_controls.test.mjs`, `launch_sign_in.test.mjs` driven by
   `m37_8_browser_test.go`).
 
+- [x] **M37.9 — the server keeps a record of who signs in.** Filed 2026-11-25
+  at the owner's request ("Can we keep info about players who sign in via
+  Google?"). Before this the Google identity lived only in the signed session
+  cookie, so the server had no list of who had ever signed in. The owner chose
+  what is kept: the Google id, the email, the name on the Google account, and
+  the first and last sign-in. Steps: an `AccountStore` at
+  `<saves>/accounts.json` (mode `600`), written by the OAuth callback only
+  after Google's token verifies, so a refused sign-in leaves no record. Every
+  sign-in moves the last date and refreshes the email and name. A disk error
+  is logged and does not refuse the sign-in. A corrupt file is set aside and
+  the server starts. The record is operator-only: nothing new is served to a
+  browser. M37.3 (export and removal) must cover this file.
+  DoD: Go tests pin the store (first and later sign-ins, reload, mode, a
+  corrupt file, no store) and the callback end to end on M16.16's fake Google,
+  refused and completed.
+  Done note (2026-11-25): as specified (`account_store.go`, `m37_9_test.go`).
+
+- [ ] **M37.10 — a signed-in player picks a unique username, and is shown by
+  it.** Filed 2026-11-25 at the owner's request ("They also need a unique
+  username"). Today a signed-in player is shown in game by the name on their
+  Google account, often a real full name, whatever they typed. The owner
+  chose: the username is required, picked right after the first sign-in.
+  Steps: back from Google with no username, the launch name box asks
+  "Choose a username" and does not go on until the server accepts one that
+  nobody else holds (the M24.1 profile handle: 3–16 of `a–z 0–9 _`, already
+  unique per account). Later visits fill it in. The username replaces the
+  Google name everywhere another player sees a name: in a world, chat, the
+  editor's presence, high scores, challenge rows, and dream ownership. The
+  Google name is no longer shown to anyone else. Existing journeys that expect
+  "Ada Lovelace" in game change to expect the username.
+
+- [ ] **M37.11 — guests cannot take a claimed username.** Filed 2026-11-25 at
+  the owner's request. The owner chose: reserved. Steps: a guest whose typed
+  name matches a claimed username, in any capitalisation, is told "That name
+  belongs to a signed-in player." and asked for another, in the launch box;
+  the server enforces the same at join, so a hand-built client cannot get
+  round it. Depends on M37.10.
+
 ## M38 — The TAS workbench: a run built tick by tick, proved by re-simulation
 
 Filed 2026-11-04 by M37.6 at the owner's request. It is the spec only: nothing

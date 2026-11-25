@@ -124,7 +124,13 @@ func main() {
 		log.Printf("google auth disabled: %v", err)
 	} else if auth != nil {
 		server.Auth = auth
-		log.Printf("google auth enabled")
+		// M37.9: who has signed in, kept beside the other durable state.
+		if *savesDir != "" {
+			auth.Accounts = zztgo.NewAccountStore(zztgo.AccountStorePath(*savesDir))
+			log.Printf("google auth enabled; %d account record(s) under %s", auth.Accounts.Len(), *savesDir)
+		} else {
+			log.Printf("google auth enabled; no saves directory, so sign-ins are not recorded")
+		}
 	}
 
 	// Autosave + restore-on-boot (M13.3). Drive the cadence off the tick clock, so

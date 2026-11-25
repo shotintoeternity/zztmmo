@@ -14,6 +14,7 @@ import (
 	"errors"
 	"fmt"
 	"io"
+	"log"
 	"math/big"
 	"net/http"
 	"net/url"
@@ -71,6 +72,9 @@ type AuthService struct {
 	Verifier   IDTokenVerifier
 	Signer     *CookieSigner
 	Now        func() time.Time
+	// Accounts keeps a record of every completed sign-in (M37.9). Nil keeps
+	// none, which is what a server without -saves gets.
+	Accounts *AccountStore
 }
 
 func NewAuthServiceFromEnv() (*AuthService, error) {
@@ -229,6 +233,12 @@ func (a *AuthService) HandleCallback(w http.ResponseWriter, r *http.Request) {
 	if err != nil {
 		http.Error(w, "id token verification failed", http.StatusUnauthorized)
 		return
+	}
+	// M37.9: recorded only once Google has vouched for the account, so a
+	// refused or forged sign-in leaves no record. A disk error is logged rather
+	// than refusing the player: the sign-in itself is good.
+	if _, err := a.Accounts.RecordSignIn(account, a.now()); err != nil {
+		log.Printf("zztgo: could not record the sign-in of %s: %v", account.ID, err)
 	}
 	a.SetSessionCookie(w, r, account)
 	a.clearCookie(w, r, authStateCookie)
