@@ -10388,6 +10388,27 @@ board."
   browser-only` ran the co-op cutline, M16.11's player journeys, the
   platform matrix and M19.2.
 
+- [x] **M42.2 — the start, then north, east, south, west.** Filed 2026-11-26
+  at the owner's request: "Players should ALWAYS start at the default place
+  they're supposed to start on the board unless another object or character
+  is there. If they are, the player should spawn north, east, south, or west
+  by one square unless they're blocked there. If they are, they should spawn
+  in a free square of any one of these." M42.1 aimed at the right square, but
+  when it was taken `FindPlacement` searched square rings whose row scan
+  tried the north-west diagonal before north. Steps: `FindPlacement` first
+  walks outward from the square one orthogonal step at a time, north, east,
+  south, west, and takes the first free square a player can walk off; the
+  walk passes through squares a player could stand on or that a stat holds (a
+  crowd, an object), never through a wall. The ring passes stay as the
+  fallback for a start the walk cannot leave. The one policy serves join,
+  re-enter and respawn (M4.3b). DoD: `m42_2_test.go` pins each step of the
+  order, no diagonal before a side, the ring beyond a full crowd, no crossing
+  a wall, and real joins on CONTROL. Done note (2026-11-26): as specified.
+  `TestM43bTwoPlayersReenterSameSquare` pinned the old diagonal and now pins
+  north; `TestM43bReenterOntoMonsterKeepsMonster`'s last step allows the
+  lion, now beside the player, to attack as lions do. No replay fixture
+  changed.
+
 ## M14 — Rearchitecting for the service ZZTMMO is becoming
 
 Filed 2026-07-12 from a whole-repo review (NOTES.md): three structural debts

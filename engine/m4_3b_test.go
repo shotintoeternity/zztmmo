@@ -59,11 +59,13 @@ func TestM43bTwoPlayersReenterSameSquare(t *testing.T) {
 		t.Errorf("p1 at (%d,%d), want the shared entry square (%d,%d): the first "+
 			"arrival keeps it", e.Board.Stats[p1].X, e.Board.Stats[p1].Y, reX, reY)
 	}
-	// The ring search scans dy then dx from -radius, so the first open square at
-	// radius 1 is the up-left diagonal. Asserted exactly, to pin the policy.
-	if int16(e.Board.Stats[p2].X) != reX-1 || int16(e.Board.Stats[p2].Y) != reY-1 {
-		t.Errorf("p2 pushed to (%d,%d), want (%d,%d): the nearest open square",
-			e.Board.Stats[p2].X, e.Board.Stats[p2].Y, reX-1, reY-1)
+	// M42.2 (owner rule): the search tries north, east, south, west before
+	// anything further, so the second arrival goes one square north. The ring
+	// search this replaced took the up-left diagonal. Asserted exactly, to pin
+	// the policy.
+	if int16(e.Board.Stats[p2].X) != reX || int16(e.Board.Stats[p2].Y) != reY-1 {
+		t.Errorf("p2 pushed to (%d,%d), want (%d,%d): one square north",
+			e.Board.Stats[p2].X, e.Board.Stats[p2].Y, reX, reY-1)
 	}
 
 	assertNoStatOverlap(t, e)
@@ -163,9 +165,18 @@ func TestM43bReenterOntoMonsterKeepsMonster(t *testing.T) {
 	assertStatTile(t, e, p1, E_PLAYER, "p1")
 	assertStatTile(t, e, lion, E_LION, "lion")
 
-	// And the lion still ticks as a lion, rather than as a player.
+	// And the lion still ticks as a lion, rather than as a player. Since M42.2
+	// the player re-enters one square north, beside the lion, so the lion's
+	// tick may be a lion's attack: it hits the player and is used up, as a
+	// lion is (BoardAttack). Either the lion is still a lion, or it attacked.
+	before := e.PlayerFor(p1).Health
+	statsBefore := e.Board.StatCount
 	step(e, map[int16]PlayerInput{})
-	assertStatTile(t, e, lion, E_LION, "lion")
+	if e.Board.StatCount == statsBefore {
+		assertStatTile(t, e, lion, E_LION, "lion")
+	} else if e.PlayerFor(p1).Health >= before {
+		t.Errorf("the lion's stat went without attacking the player (health %d, was %d)", e.PlayerFor(p1).Health, before)
+	}
 	assertNoStatOverlap(t, e)
 }
 

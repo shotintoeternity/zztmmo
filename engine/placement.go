@@ -128,11 +128,71 @@ func (e *Engine) PlacementOpen(x, y int16, exceptStatId int16) bool {
 // a search whose whole job is to find somewhere to stand could answer with
 // somewhere you cannot leave. The second pass keeps the old answer for a board
 // that has nothing better — a bad square still beats overlapping another stat.
+//
+// M42.2 (owner rule, 2026-11-26): the search is first a walk outward from
+// (x, y) one orthogonal step at a time, in the order north, east, south,
+// west: the start itself, then the four squares beside it, then the squares
+// beside those, nearest first. The square rings came second because their row
+// scan tried the north-west diagonal before north, so a second player could
+// arrive diagonally. The walk only crosses squares a player could stand on or
+// that something stands on (a crowd of players, an object), never a wall, so
+// it never answers with a square on the far side of one. The ring passes stay
+// as the fallback for a start the walk cannot leave.
 func (e *Engine) FindPlacement(x, y int16, exceptStatId int16) (int16, int16, bool) {
+	if px, py, ok := e.findPlacementOutward(x, y, exceptStatId); ok {
+		return px, py, true
+	}
 	if px, py, ok := e.findPlacement(x, y, exceptStatId, true); ok {
 		return px, py, true
 	}
 	return e.findPlacement(x, y, exceptStatId, false)
+}
+
+// placementSearchDX/DY is M42.2's order: north, east, south, west.
+var (
+	placementSearchDX = [4]int16{0, 1, 0, -1}
+	placementSearchDY = [4]int16{-1, 0, 1, 0}
+)
+
+// findPlacementOutward is the orthogonal walk FindPlacement tries first. It
+// is a breadth-first search over a fixed-size array in a fixed direction
+// order, touching no map, so it is deterministic (CLAUDE.md rule 2).
+func (e *Engine) findPlacementOutward(x, y int16, exceptStatId int16) (int16, int16, bool) {
+	if x < 1 || x > BOARD_WIDTH || y < 1 || y > BOARD_HEIGHT {
+		return x, y, false
+	}
+	// A square counts only if the player could walk off it again, as in the
+	// ring search's first pass: an empty pocket walled in on four sides is not
+	// somewhere to arrive.
+	takeable := func(cx, cy int16) bool {
+		return e.PlacementOpen(cx, cy, exceptStatId) && e.PlacementReachable(cx, cy)
+	}
+	if takeable(x, y) {
+		return x, y, true
+	}
+	var seen [BOARD_WIDTH + 2][BOARD_HEIGHT + 2]bool
+	queue := make([][2]int16, 0, 64)
+	queue = append(queue, [2]int16{x, y})
+	seen[x][y] = true
+	for head := 0; head < len(queue); head++ {
+		cx, cy := queue[head][0], queue[head][1]
+		for dir := 0; dir < 4; dir++ {
+			nx, ny := cx+placementSearchDX[dir], cy+placementSearchDY[dir]
+			if nx < 1 || nx > BOARD_WIDTH || ny < 1 || ny > BOARD_HEIGHT || seen[nx][ny] {
+				continue
+			}
+			seen[nx][ny] = true
+			if takeable(nx, ny) {
+				return nx, ny, true
+			}
+			// Walk on through a square a player could stand on, or one held by
+			// a stat (another player, an object); stop at anything else.
+			if _, held := e.StatAt(nx, ny, exceptStatId); held || PlayerCanStandOn(e.Board.Tiles[nx][ny].Element) {
+				queue = append(queue, [2]int16{nx, ny})
+			}
+		}
+	}
+	return x, y, false
 }
 
 // findPlacement is FindPlacement's one pass. reachableOnly says whether a
