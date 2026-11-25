@@ -238,6 +238,7 @@ const KEYBOARD_CODES = new Set([
   "KeyE",                                            // title.ts ' E ' Board editor (M39.3)
   "KeyL",                                            // main.ts play-mode branch (M21.1)
   "Escape", "KeyY", "KeyN",                          // modal.ts textWindowKey / yesNoKey
+  "Tab",                                             // modal.ts entryKey launch sign-in (M37.8)
 ]);
 for (const spec of TOUCH_BUTTONS) {
   if (spec.kind !== "key") continue;
@@ -496,6 +497,20 @@ assert.deepEqual(keyCalls, [{ down: true, code: "KeyE", key: "e" }, { down: fals
 for (const m of ["playing", "editor", "modal", "prompt", "watching"]) {
   controls.setMode(m);
   assert.equal(byLabel("Editor").hidden, true, `Editor must not be on the ${m} bar`);
+}
+
+// M37.8: the launch name box's Google button taps Tab, and only while that box
+// offers sign-in (main.ts sets view.signIn).
+controls.setMode("modal");
+assert.equal(byLabel("Google").hidden, true, "no Google button on a window without sign-in");
+controls.setMode("modal", { view3d: false, firstPerson: false, signIn: true });
+assert.equal(byLabel("Google").hidden, false);
+keyCalls.length = 0;
+byLabel("Google").dispatch("pointerdown");
+assert.deepEqual(keyCalls, [{ down: true, code: "Tab", key: "Tab" }, { down: false, code: "Tab", key: "Tab" }], "Google must tap Tab");
+for (const m of ["title", "playing", "editor", "prompt", "watching"]) {
+  controls.setMode(m, { view3d: false, firstPerson: false, signIn: true });
+  assert.equal(byLabel("Google").hidden, true, `Google must not be on the ${m} bar`);
 }
 
 console.log("touch_controls.test.mjs: all assertions passed");

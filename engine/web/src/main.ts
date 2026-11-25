@@ -962,6 +962,9 @@ function feedView3D() {
 // the roster or the screen changes; consulted by drawScreen after the overlay.
 const playerTints = new Map<number, string>();
 let authStatus: AuthStatus = { enabled: false, authenticated: false };
+// M37.8: the latest /api/auth/me read, so the launch prompt can wait for it
+// without starting a second one.
+let authStatusReady: Promise<void> = Promise.resolve();
 // The signed-in player's account-wide preferences, or null for a guest,
 // a signed-in player who has never chosen anything, and a read that failed.
 // null is what sends readStoredPlayerColor back to localStorage.
@@ -1043,14 +1046,45 @@ function promptNicknameOnLaunch() {
     return;
   }
   hasPromptedNameOnLaunch = true;
-  openPopupEntry(
-    LAUNCH_NAME_PROMPT,
-    (name) => {
+  const prompt: Modal = {
+    kind: "popupEntry",
+    question: LAUNCH_NAME_PROMPT,
+    buffer: "",
+    onSubmit: (name) => {
       nickname = name && name.trim() ? name.trim() : "player" + Math.floor(Math.random() * 1000);
       void openLaunchDestination();
     },
-    POPUP_Y_CENTERED,
-  );
+    y: POPUP_Y_CENTERED,
+  };
+  openModal(prompt);
+  // M37.8: sign-in is offered in the same box, never in front of it. Typing a
+  // name and pressing Enter is the whole path for a guest; a server with sign-in
+  // adds one quiet line under the field, and Tab (or the phone bar's Google
+  // button) takes it. The box opens at once and learns about sign-in when
+  // /api/auth/me answers, so a slow answer never holds up the world.
+  void authStatusReady.then(() => offerLaunchSignIn(prompt));
+}
+
+function offerLaunchSignIn(prompt: Modal) {
+  if (modal !== prompt || prompt.kind !== "popupEntry") {
+    return;
+  }
+  // A signed-in visitor (back from Google) and a server without sign-in both
+  // get today's box unchanged.
+  if (authStatus.authenticated || !authStatus.enabled) {
+    return;
+  }
+  prompt.signInHint = touchControls ? "Optional: tap Google below to sign in." : "Optional: press Tab to sign in with Google.";
+  prompt.onSignIn = startGoogleSignIn;
+  mobileTextInput.sync(modal, routeMobileModalInput);
+  paintOverlay();
+  drawScreen();
+}
+
+// startGoogleSignIn leaves for Google and comes back to this same address, so a
+// deep link or a challenge survives the round trip.
+function startGoogleSignIn() {
+  window.location.href = "/api/auth/google/start?return=" + encodeURIComponent(window.location.pathname + window.location.search);
 }
 
 // openLaunchDestination is where a page load lands once the visitor has a name:
@@ -1378,6 +1412,12 @@ async function showTitle() {
 }
 
 async function refreshAuthStatus() {
+  const done = refreshAuthStatusNow();
+  authStatusReady = done;
+  return done;
+}
+
+async function refreshAuthStatusNow() {
   accountPrefsLoaded = false;
   try {
     const response = await fetch("/api/auth/me");
@@ -2971,6 +3011,7 @@ function syncTouchControls() {
       picker: editor.categoryMenu ? editor.categoryMenu.items : null,
       busy: editor.textMode || editor.sidebarMenu !== null || editor.statPrompt !== null,
     },
+    signIn: modal?.kind === "popupEntry" && modal.onSignIn !== undefined,
   });
 }
 
@@ -3740,7 +3781,7 @@ function openAccountMenu() {
       if (entry === "Comfort settings") {
         openComfortMenu();
       } else if (authStatus.enabled) {
-        window.location.href = "/api/auth/google/start?return=" + encodeURIComponent(window.location.pathname + window.location.search);
+        startGoogleSignIn();
       }
     }, ["  Guest settings stay in this browser."]);
     return;

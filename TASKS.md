@@ -9393,6 +9393,27 @@ console, or a product decision. Each says which.
   Done note (2026-11-22): as specified (`m37_7_test.go`,
   `challenge.test.mjs`).
 
+- [x] **M37.8 — the name box offers sign-in, quietly.** Filed 2026-11-25 at
+  the owner's request: "I want it to be optional where a user can login when
+  it first starts if they want … but they can also just type their name into
+  the field", and sign-in must not overshadow the world. The owner ruled out
+  G as the key: the box is a text field, so G is a letter there. Steps: on a
+  server with sign-in, a guest's launch name box grows one quiet row under
+  the field ("Optional: press Tab to sign in with Google."), and Tab leaves
+  for Google and returns to the same address. A phone, which has no Tab, gets
+  a Google button on the bar while that box offers it ("Optional: tap Google
+  below to sign in."). Typing a name and pressing Enter is unchanged, a name
+  may start with G, and the box opens at once and adds the line when
+  `/api/auth/me` answers. Without sign-in, or once signed in, the box is
+  today's. The title menu's G row and the Account menu are unchanged.
+  DoD: the node suites pin the box (hint row, Tab, G stays a letter, no hint
+  without the offer) and the Google button's gating; a browser journey on
+  M16.14's fake Google signs in by Tab and by the phone button and shows a
+  guest typing a name untouched. `make browser` passes.
+  Done note (2026-11-25): as specified (`modal.test.mjs`,
+  `touch_controls.test.mjs`, `launch_sign_in.test.mjs` driven by
+  `m37_8_browser_test.go`).
+
 ## M38 — The TAS workbench: a run built tick by tick, proved by re-simulation
 
 Filed 2026-11-04 by M37.6 at the owner's request. It is the spec only: nothing

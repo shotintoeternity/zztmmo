@@ -552,3 +552,58 @@ console.log("modal.test.mjs: M17.11 live occupancy passed");
 }
 
 console.log("modal.test.mjs: M18.9 curated world picker passed");
+
+// M37.8: the launch name box's optional sign-in. Tab takes it, because Tab never
+// types a letter: G, the title menu's sign-in key, has to stay a letter here.
+{
+  const launch = (extra = {}) => ({
+    kind: "popupEntry",
+    question: "Welcome to ZZTMMO! Type your name and press Enter.",
+    buffer: "",
+    y: 9,
+    submitted: undefined,
+    onSubmit(text) {
+      this.submitted = text;
+    },
+    ...extra,
+  });
+  const drawn = (m) => {
+    const writes = [];
+    renderModal((x, y, color, text) => writes.push({ x, y, color, text }), m);
+    return writes;
+  };
+
+  let signIns = 0;
+  const offered = launch({ signInHint: "Optional: press Tab to sign in with Google.", onSignIn: () => (signIns += 1) });
+  assert.equal(handleModalKey(offered, key("KeyG", "G")), "redraw", "G is a letter in the name box");
+  assert.equal(handleModalKey(offered, key("KeyR", "r")), "redraw");
+  assert.equal(offered.buffer, "Gr", "a name may start with G");
+  assert.equal(signIns, 0);
+  const writes = drawn(offered);
+  const hint = writes.find((w) => w.text === "Optional: press Tab to sign in with Google.");
+  assert.ok(hint, "the hint is drawn");
+  const field = writes.find((w) => w.text.startsWith("Gr"));
+  assert.ok(field && hint.y === field.y + 1, "the hint sits on the row under the field");
+  assert.ok(hint.color !== 0x4f, "the hint is quieter than the question");
+  assert.equal(handleModalKey(offered, key("Tab", "Tab")), "close", "Tab takes the sign-in");
+  assert.equal(signIns, 1);
+  assert.equal(offered.submitted, undefined, "Tab does not submit the name");
+
+  // Typing a name and pressing Enter is unchanged with the offer up.
+  const guest = launch({ signInHint: "Optional: press Tab to sign in with Google.", onSignIn: () => (signIns += 1) });
+  for (const ch of "Kevin") handleModalKey(guest, key("Key" + ch.toUpperCase(), ch));
+  assert.equal(handleModalKey(guest, key("Enter", "Enter")), "close");
+  assert.equal(guest.submitted, "Kevin");
+  assert.equal(signIns, 1);
+
+  // Without sign-in the box is today's: no hint row, and Tab does nothing.
+  const plain = launch();
+  assert.equal(handleModalKey(plain, key("Tab", "Tab")), "ignore");
+  assert.equal(plain.buffer, "");
+  const plainRows = new Set(drawn(plain).map((w) => w.y));
+  const offeredRows = new Set(drawn(launch({ signInHint: "x", onSignIn() {} })).map((w) => w.y));
+  assert.equal(offeredRows.size, plainRows.size + 1, "the offer adds exactly one row");
+  assert.ok(!drawn(plain).some((w) => /Google/.test(w.text)), "no sign-in text without sign-in");
+}
+
+console.log("modal.test.mjs: M37.8 launch sign-in offer passed");

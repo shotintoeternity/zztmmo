@@ -121,6 +121,12 @@ export type PopupEntryModal = {
   /** Top row of the box. Defaults to vanilla's POPUP_Y; the launch name prompt
    *  centers itself instead, having no board it must avoid covering. */
   y?: number;
+  /** M37.8: the launch prompt's optional sign-in. Set only where sign-in exists
+   *  and the visitor is a guest: the box grows one row for `signInHint` under
+   *  the field, and Tab (a key that never types a letter, so a name can start
+   *  with any of them) calls `onSignIn` instead of the name being submitted. */
+  signInHint?: string;
+  onSignIn?: () => void;
 };
 
 /** A compact text-window prompt for free-form input. Text wraps only on screen;
@@ -805,7 +811,7 @@ function renderEntry(write: WriteText, m: EntryModal) {
 // popupBoxRows is PopupPromptString's six-row frame at an arbitrary interior
 // width. textwindow.ts's strTop/strText/... fix their own strings at POPUP_INNER
 // (45); the launch dialog needs a wider box, so it builds its own here.
-function popupBoxRows(inner: number): string[] {
+function popupBoxRows(inner: number, extraRows = 0): string[] {
   const innerEmpty = " ".repeat(inner);
   const innerLine = "\xcd".repeat(inner);
   return [
@@ -814,9 +820,14 @@ function popupBoxRows(inner: number): string[] {
     ` \xc6${innerLine}\xb5 `,
     ` \xb3${innerEmpty}\xb3 `,
     ` \xb3${innerEmpty}\xb3 `,
+    ...Array.from({ length: extraRows }, () => ` \xb3${innerEmpty}\xb3 `),
     `\xc6\xcf${innerLine}\xcf\xb5`,
   ];
 }
+
+// M37.8: the sign-in hint is quieter than the question it sits under (light gray
+// on the box's red, under the white question), so the name field stays the thing the box is asking for.
+const POPUP_HINT_COLOR = 0x47;
 
 // renderPopupEntry is PopupPromptString: the box, then the same field inside it.
 // The vanilla high-score prompt (no m.y) is left-anchored at POPUP_X with the
@@ -834,9 +845,10 @@ function renderPopupEntry(write: WriteText, m: PopupEntryModal) {
     return;
   }
   const top = m.y;
-  const inner = Math.max(POPUP_INNER, m.question.length + 2);
+  const hint = m.onSignIn && m.signInHint ? m.signInHint : "";
+  const inner = Math.max(POPUP_INNER, m.question.length + 2, hint.length + 2);
   const left = Math.floor((SCREEN_WIDTH - (inner + 4)) / 2);
-  const rows = popupBoxRows(inner);
+  const rows = popupBoxRows(inner, hint ? 1 : 0);
   for (let i = 0; i < rows.length; i += 1) {
     write(left, top + i, POPUP_COLOR, rows[i]);
   }
@@ -845,6 +857,9 @@ function renderPopupEntry(write: WriteText, m: PopupEntryModal) {
   write(centered, top + 1, POPUP_COLOR, m.question);
   const fieldX = left + 2 + Math.floor((inner - POPUP_FIELD_WIDTH) / 2);
   promptField(write, fieldX, top + (POPUP_FIELD_Y - POPUP_Y), POPUP_COLOR, POPUP_FIELD_COLOR, POPUP_FIELD_WIDTH, m.buffer);
+  if (hint) {
+    write(left + 2 + Math.floor((inner - hint.length) / 2), top + (POPUP_FIELD_Y - POPUP_Y) + 1, POPUP_HINT_COLOR, hint);
+  }
 }
 
 /**
@@ -1207,6 +1222,10 @@ function entryKey(
   }
   if (event.code === "Escape") {
     m.onSubmit(null);
+    return "close";
+  }
+  if (event.code === "Tab" && m.kind === "popupEntry" && m.onSignIn) {
+    m.onSignIn();
     return "close";
   }
   if (event.code === "Backspace" || event.code === "ArrowLeft") {

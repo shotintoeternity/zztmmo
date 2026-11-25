@@ -91,7 +91,7 @@ export type TouchPickerItem = { shortcut: string; name: string };
 export type TouchEditorView = { drawing: boolean; picker: readonly TouchPickerItem[] | null; busy: boolean };
 
 /** What the 3D view is doing, which decides the 3D rows and their labels. */
-export type TouchView = { view3d: boolean; firstPerson: boolean; editor?: TouchEditorView };
+export type TouchView = { view3d: boolean; firstPerson: boolean; editor?: TouchEditorView; signIn?: boolean };
 
 const TEXT_VIEW: TouchView = { view3d: false, firstPerson: false };
 const IDLE_EDITOR: TouchEditorView = { drawing: false, picker: null, busy: false };
@@ -132,6 +132,8 @@ type ButtonSpec =
       hold: boolean;
       group: "dpad" | "action";
       modes: readonly TouchControlMode[];
+      // M37.8: shown only while the open window offers sign-in (TouchView.signIn).
+      needsSignIn?: boolean;
     }
   | { id: string; label: string; kind: "keyboard"; group: "action"; modes: readonly TouchControlMode[] }
   | { id: string; label: string; kind: "more"; group: "action"; modes: readonly TouchControlMode[] };
@@ -181,6 +183,10 @@ export const TOUCH_BUTTONS: ButtonSpec[] = [
   // than one it cannot open: Enter closes a plain window but a picker with a
   // header ignores it (modal.ts requireSelection), and no window closes on the
   // pad. Escape closes every one of them, and at a prompt it is the "no" answer.
+  // M37.8: the launch name box's optional Google sign-in, which a keyboard
+  // reaches with Tab. A phone's soft keyboard has no Tab, so it gets a button,
+  // shown only while that box is up on a server with sign-in.
+  { id: "google", label: "Google", kind: "key", code: "Tab", key: "Tab", hold: false, group: "action", modes: ["modal"], needsSignIn: true },
   { id: "esc", label: "Esc", kind: "key", code: "Escape", key: "Escape", hold: false, group: "action", modes: ANY_WINDOW },
   // A yes/no prompt takes Y, N or Escape and nothing else (yesNoKey mirrors
   // SidebarPromptYesNo) — so without these two a phone reaches the block
@@ -424,7 +430,8 @@ export function createTouchControls(
         menu.className = menuClass;
       }
       for (const { button, spec } of built) {
-        button.hidden = spec.modes.indexOf(mode) < 0;
+        const signInOff = spec.kind === "key" && spec.needsSignIn === true && view.signIn !== true;
+        button.hidden = spec.modes.indexOf(mode) < 0 || signInOff;
       }
       for (const { button, spec } of rows) {
         const offTheEditorState = spec.editor === "idle" ? editorBusy : spec.editor === "back" ? !editorBusy : false;
