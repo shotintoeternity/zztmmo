@@ -520,7 +520,17 @@ try {
   // ACT 3 — one world, not three copies (claim 1)
   // ==========================================================================
   // Ada walks the row of pickups. Everything she takes is taken from the world.
+  //
+  // M42.2: a crowded start now fills north, east, south, west, so Bo arrives
+  // one square north of the start and Cy one square east of it, on Ada's row
+  // and in her path. Whoever stands on the row ahead of her steps one square
+  // south first; Bo's and Cy's own walks below line them up on the row again.
   await alignToRow(ada, ROW);
+  for (const c of [bo, cy]) {
+    if (c.you.y === ROW && c.you.x > ada.you.x && c.you.x < TORCH_X) {
+      await walkOnto(c, c.you.x, ROW + 1, `${c.label} stepping out of Ada's path`);
+    }
+  }
   await walkUntil(ada, "ArrowRight", atLeastX(ada, TORCH_X), "the torch");
   await waitFor(ada, () => ada.hud.torches === 1, "Ada to collect the torch");
   await walkUntil(ada, "ArrowRight", atLeastX(ada, GEM_X), "the gem");
