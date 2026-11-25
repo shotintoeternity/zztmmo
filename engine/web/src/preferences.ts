@@ -123,6 +123,34 @@ export async function saveAccountProfile(fetchFn: FetchLike, profile: AccountPro
   return putPreferences(fetchFn, { profile });
 }
 
+// M37.10: the launch box's username claim. Unlike saveAccountProfile it says
+// why a claim failed, because the box answers a taken name (409) and a
+// malformed one (400) differently. status 0 is a network failure.
+export type UsernameClaim = { prefs: AccountPreferences | null; status: number };
+
+export async function claimUsername(fetchFn: FetchLike, profile: AccountProfilePreferences): Promise<UsernameClaim> {
+  try {
+    const response = await fetchFn(PREFERENCES_URL, {
+      method: "PUT",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ profile }),
+    });
+    if (!response.ok) {
+      return { prefs: null, status: response.status };
+    }
+    return { prefs: readPreferences(await response.json()), status: response.status };
+  } catch {
+    return { prefs: null, status: 0 };
+  }
+}
+
+// usernameClaimProblem is the line the launch box shows after a refused claim.
+export function usernameClaimProblem(status: number): string {
+  if (status === 409) return "That username is taken. Try another.";
+  if (status === 400) return "Use 3 to 16 letters, digits or _.";
+  return "That did not save. Try again.";
+}
+
 export async function saveShareLocationWithFollowers(fetchFn: FetchLike, shareLocationWithFollowers: boolean): Promise<AccountPreferences | null> {
   return putPreferences(fetchFn, { shareLocationWithFollowers });
 }

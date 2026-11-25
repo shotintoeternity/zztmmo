@@ -15,7 +15,7 @@ const output = await build({
   write: false,
 });
 const source = Buffer.from(output.outputFiles[0].contents).toString("base64");
-const { effectivePlayerColor, effectiveComfort, fetchAccountPreferences, saveAccountColor, saveAccountHint, saveAccountProfile, saveShareLocationWithFollowers, saveFavoriteWorld, saveAccountComfort, putPreferences } = await import(
+const { effectivePlayerColor, effectiveComfort, fetchAccountPreferences, saveAccountColor, saveAccountHint, saveAccountProfile, saveShareLocationWithFollowers, saveFavoriteWorld, saveAccountComfort, putPreferences, claimUsername, usernameClaimProblem } = await import(
   `data:text/javascript;base64,${source}`
 );
 
@@ -268,6 +268,21 @@ function jsonResponse(body, { ok = true, status = 200 } = {}) {
   assert.deepEqual(saved, defaultPrefs({ color: "#112233" }));
   assert.equal(await putPreferences(stubFetch(() => jsonResponse({}, { ok: false, status: 500 })).fetchFn, {}), null);
   assert.equal(await putPreferences(stubFetch(() => { throw new Error("offline"); }).fetchFn, {}), null);
+}
+
+// M37.10: a username claim says why it failed, so the box can say so too.
+{
+  const profile = { handle: "ada_l", displayName: "", about: [] };
+  const ok = await claimUsername(stubFetch((_url, init) => jsonResponse({ authenticated: true, stored: true, profile: JSON.parse(init.body).profile })).fetchFn, profile);
+  assert.equal(ok.status, 200);
+  assert.equal(ok.prefs.profile.handle, "ada_l");
+  const taken = await claimUsername(stubFetch(() => jsonResponse({}, { ok: false, status: 409 })).fetchFn, profile);
+  assert.deepEqual(taken, { prefs: null, status: 409 });
+  const offline = await claimUsername(stubFetch(() => { throw new Error("offline"); }).fetchFn, profile);
+  assert.deepEqual(offline, { prefs: null, status: 0 });
+  assert.match(usernameClaimProblem(409), /taken/);
+  assert.match(usernameClaimProblem(400), /3 to 16/);
+  assert.match(usernameClaimProblem(0), /did not save/);
 }
 
 console.log("preferences.test.mjs: ok");

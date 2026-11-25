@@ -574,7 +574,7 @@ console.log("modal.test.mjs: M18.9 curated world picker passed");
   };
 
   let signIns = 0;
-  const offered = launch({ signInHint: "Optional: press Tab to sign in with Google.", onSignIn: () => (signIns += 1) });
+  const offered = launch({ hint: "Optional: press Tab to sign in with Google.", onSignIn: () => (signIns += 1) });
   assert.equal(handleModalKey(offered, key("KeyG", "G")), "redraw", "G is a letter in the name box");
   assert.equal(handleModalKey(offered, key("KeyR", "r")), "redraw");
   assert.equal(offered.buffer, "Gr", "a name may start with G");
@@ -590,7 +590,7 @@ console.log("modal.test.mjs: M18.9 curated world picker passed");
   assert.equal(offered.submitted, undefined, "Tab does not submit the name");
 
   // Typing a name and pressing Enter is unchanged with the offer up.
-  const guest = launch({ signInHint: "Optional: press Tab to sign in with Google.", onSignIn: () => (signIns += 1) });
+  const guest = launch({ hint: "Optional: press Tab to sign in with Google.", onSignIn: () => (signIns += 1) });
   for (const ch of "Kevin") handleModalKey(guest, key("Key" + ch.toUpperCase(), ch));
   assert.equal(handleModalKey(guest, key("Enter", "Enter")), "close");
   assert.equal(guest.submitted, "Kevin");
@@ -601,9 +601,19 @@ console.log("modal.test.mjs: M18.9 curated world picker passed");
   assert.equal(handleModalKey(plain, key("Tab", "Tab")), "ignore");
   assert.equal(plain.buffer, "");
   const plainRows = new Set(drawn(plain).map((w) => w.y));
-  const offeredRows = new Set(drawn(launch({ signInHint: "x", onSignIn() {} })).map((w) => w.y));
+  const offeredRows = new Set(drawn(launch({ hint: "x", onSignIn() {} })).map((w) => w.y));
   assert.equal(offeredRows.size, plainRows.size + 1, "the offer adds exactly one row");
   assert.ok(!drawn(plain).some((w) => /Google/.test(w.text)), "no sign-in text without sign-in");
+}
+
+// M37.10: the username box uses the same hint row without the sign-in offer,
+// so Tab there does nothing and the rule is still shown.
+{
+  const box = { kind: "popupEntry", question: "Choose a username and press Enter.", buffer: "", y: 9, hint: "3 to 16 letters, digits or _. Everyone sees it.", onSubmit() {} };
+  const writes = [];
+  renderModal((x, y, color, text) => writes.push({ x, y, color, text }), box);
+  assert.ok(writes.some((w) => w.text === box.hint), "the username rule is drawn");
+  assert.equal(handleModalKey(box, key("Tab", "Tab")), "ignore", "Tab offers nothing in the username box");
 }
 
 console.log("modal.test.mjs: M37.8 launch sign-in offer passed");

@@ -9431,19 +9431,36 @@ console, or a product decision. Each says which.
   refused and completed.
   Done note (2026-11-25): as specified (`account_store.go`, `m37_9_test.go`).
 
-- [ ] **M37.10 — a signed-in player picks a unique username, and is shown by
+- [x] **M37.10 — a signed-in player picks a unique username, and is shown by
   it.** Filed 2026-11-25 at the owner's request ("They also need a unique
-  username"). Today a signed-in player is shown in game by the name on their
-  Google account, often a real full name, whatever they typed. The owner
-  chose: the username is required, picked right after the first sign-in.
-  Steps: back from Google with no username, the launch name box asks
-  "Choose a username" and does not go on until the server accepts one that
-  nobody else holds (the M24.1 profile handle: 3–16 of `a–z 0–9 _`, already
-  unique per account). Later visits fill it in. The username replaces the
-  Google name everywhere another player sees a name: in a world, chat, the
-  editor's presence, high scores, challenge rows, and dream ownership. The
-  Google name is no longer shown to anyone else. Existing journeys that expect
-  "Ada Lovelace" in game change to expect the username.
+  username"). Before this a signed-in player was shown in game by the name on
+  their Google account, often a real full name, whatever they typed. The
+  owner chose: the username is required, picked right after the first
+  sign-in. Steps: the username is the M24.1 profile handle (3–16 of
+  `a–z 0–9 _`, already unique per account). `WebSocketServer.RequireUsername`,
+  which zzt-server sets whenever sign-in is on, turns a signed-in account
+  without one away from play, challenges and the editor before anything is
+  joined ("Choose a username before you play."), and shows every signed-in
+  player by the username: in a world, chat, editor presence, challenge rows,
+  and a dream's owner and author. The Google name is shown to nobody else
+  (an account with no username yet is "Player"). With the switch off, the
+  library keeps its old naming, which the suites that build servers by hand
+  still use. `/api/auth/me` adds `username` and `requireUsername`. Back from
+  Google with no username, the launch box asks "Choose a username and press
+  Enter."; a malformed one gets the rule, a taken one "That username is
+  taken. Try another.", and Escape signs out and returns the guest box. A
+  signed-in visitor who has one never sees the box. A username can be
+  changed (the Account menu's profile editor) but not removed. High scores
+  are out of scope: their name is still whatever the player types at
+  vanilla's "Congratulations!" prompt.
+  DoD: `m37_10_test.go` pins the refusal (play and editor), the naming, the
+  claim (taken, malformed, change, no removal) and `/api/auth/me`; the node
+  suites pin the hint row and the claim helper; the M37.8 journey (now on a
+  server that requires a username) claims one by keyboard and by phone,
+  refuses a malformed and a taken one, and skips the box on a later visit.
+  The M16.15 and M32.1 journeys, which run the real zzt-server with sign-in
+  on, claim a username first. `make browser` passes.
+  Done note (2026-11-26): as specified (`username.go`, `m37_10_test.go`).
 
 - [ ] **M37.11 — guests cannot take a claimed username.** Filed 2026-11-25 at
   the owner's request. The owner chose: reserved. Steps: a guest whose typed

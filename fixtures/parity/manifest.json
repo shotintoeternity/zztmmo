@@ -1842,6 +1842,17 @@
       "notes": "task-claim row; a player's tick re-resolves its stat by *PlayerState identity after a touch or shot that can remove a lower stat (refreshPlayerStat, and the paused branch), and BoardAttack steps CurrentStatTicked back only over a non-player attacker. Failed before the fix: an energized player at stat 2 killing a lion at stat 1 left a statless E_PLAYER tile and froze, a paused one skipped its fall-through tick, and a player at stat 1 killing a lion above it moved twice and drained two energizer ticks. Identical for stat 0; no replay hash moved. M36.9 (2026-11-02)."
     },
     {
+      "id": "task.M37.10",
+      "dimension": "task",
+      "subject": "Completed task M37.10 — its DoD still holds",
+      "contract": "E",
+      "authority": "TASKS.md M37.10",
+      "parity": "exact",
+      "status": "unverified",
+      "assignedTask": "M16.20",
+      "notes": "task-claim row; behavioral parity carried by the element/oop/protocol/input/service rows this task touched; reconciled at M16.20"
+    },
+    {
       "id": "task.M37.2",
       "dimension": "task",
       "subject": "Completed task M37.2 — its DoD still holds",

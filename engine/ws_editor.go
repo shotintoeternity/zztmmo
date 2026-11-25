@@ -36,7 +36,7 @@ func (s *WebSocketServer) serveEditor(ctx context.Context, conn *websocket.Conn,
 	defer client.stop()
 	if authenticated {
 		client.accountID = account.ID
-		client.name = admitPlayerName(account.DisplayName())
+		client.name = admitPlayerName(s.accountPublicName(account))
 	}
 	session := s.editorSessionForWorld(safeWorld, inst.SourceWorld)
 	presence, memberToken, displaced, err := session.EnterResuming(client, client.name, enter.ResumeToken)

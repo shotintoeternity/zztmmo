@@ -121,11 +121,12 @@ export type PopupEntryModal = {
   /** Top row of the box. Defaults to vanilla's POPUP_Y; the launch name prompt
    *  centers itself instead, having no board it must avoid covering. */
   y?: number;
+  /** M37.8: one quiet line under the field. The box grows a row for it. It
+   *  says sign-in is on offer (M37.8), or what a username must be (M37.10). */
+  hint?: string;
   /** M37.8: the launch prompt's optional sign-in. Set only where sign-in exists
-   *  and the visitor is a guest: the box grows one row for `signInHint` under
-   *  the field, and Tab (a key that never types a letter, so a name can start
-   *  with any of them) calls `onSignIn` instead of the name being submitted. */
-  signInHint?: string;
+   *  and the visitor is a guest: Tab (a key that never types a letter, so a
+   *  name can start with any of them) calls it instead of submitting. */
   onSignIn?: () => void;
 };
 
@@ -825,7 +826,7 @@ function popupBoxRows(inner: number, extraRows = 0): string[] {
   ];
 }
 
-// M37.8: the sign-in hint is quieter than the question it sits under (light gray
+// M37.8: the hint is quieter than the question it sits under (light gray
 // on the box's red, under the white question), so the name field stays the thing the box is asking for.
 const POPUP_HINT_COLOR = 0x47;
 
@@ -845,7 +846,7 @@ function renderPopupEntry(write: WriteText, m: PopupEntryModal) {
     return;
   }
   const top = m.y;
-  const hint = m.onSignIn && m.signInHint ? m.signInHint : "";
+  const hint = m.hint ?? "";
   const inner = Math.max(POPUP_INNER, m.question.length + 2, hint.length + 2);
   const left = Math.floor((SCREEN_WIDTH - (inner + 4)) / 2);
   const rows = popupBoxRows(inner, hint ? 1 : 0);

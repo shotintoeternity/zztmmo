@@ -330,7 +330,12 @@ func (s *m1615Server) authCookie() *http.Cookie {
 	if err != nil {
 		s.t.Fatalf("sign auth cookie: %v", err)
 	}
-	return &http.Cookie{Name: authSessionCookie, Value: value}
+	cookie := &http.Cookie{Name: authSessionCookie, Value: value}
+	// M37.10: zzt-server requires a username with sign-in on, so the account
+	// claims one the way the launch box does before it plays. It is stored with
+	// the rest of the account's preferences, so it survives the restarts here.
+	claimTestUsername(s.t, s.baseURL, cookie, "ada_persist")
+	return cookie
 }
 
 // ---------------------------------------------------------------------------

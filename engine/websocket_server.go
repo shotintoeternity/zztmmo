@@ -179,7 +179,10 @@ type WebSocketServer struct {
 	ChatDB              ChatDatabase
 	Activity            *WorldActivityStore
 	Auth                *AuthService
-	metrics             *serverMetrics
+	// RequireUsername (M37.10): a signed-in account must claim a username
+	// before it plays, and is shown by it. zzt-server sets it with sign-in.
+	RequireUsername bool
+	metrics         *serverMetrics
 }
 
 // serverTestHooks are the WebSocketServer's test seams. Each is nil in
@@ -624,6 +627,10 @@ func (s *WebSocketServer) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 		_ = pj.client.write(ctx, notice)
 		return
 	}
+	if notice, refused := s.needsUsername(pj.account, pj.authenticated); refused {
+		_ = pj.client.write(ctx, notice)
+		return
+	}
 
 	if !s.resolveChallengeRun(ctx, pj) {
 		return
@@ -638,7 +645,7 @@ func (s *WebSocketServer) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 
 	if pj.authenticated {
 		pj.client.accountID = pj.account.ID
-		pj.join.Name = pj.account.DisplayName()
+		pj.join.Name = s.accountPublicName(pj.account)
 		pj.storedState, pj.hasStoredState = s.loadAccountPlayerState(pj.account.ID, pj.safeWorld)
 		// The account, not this browser, is where a signed-in player's color
 		// lives. Resolved here so both the fresh join and the resume
@@ -738,6 +745,10 @@ func (s *WebSocketServer) serveEditorEntry(ctx context.Context, conn *websocket.
 		_ = wsjson.Write(ctx, conn, notice)
 		return
 	}
+	if notice, refused := s.needsUsername(account, authenticated); refused {
+		_ = wsjson.Write(ctx, conn, notice)
+		return
+	}
 	s.serveEditor(ctx, conn, enter, account, authenticated)
 }
 
@@ -780,7 +791,7 @@ func (s *WebSocketServer) resumeJoin(pj *playerJoin) {
 	inst := pj.inst
 	inst.mu.Lock()
 	if pj.authenticated {
-		inst.RoomManager.SetPlayerIdentity(pj.playerID, pj.account.ID, pj.account.DisplayName())
+		inst.RoomManager.SetPlayerIdentity(pj.playerID, pj.account.ID, s.accountPublicName(pj.account))
 	}
 	// A resumed run keeps its inventory but not its color: the
 	// reclaimed roomPlayer predates this connection, and the color is
@@ -837,7 +848,7 @@ func (s *WebSocketServer) freshJoin(ctx context.Context, pj *playerJoin) bool {
 				return false, false
 			}
 			if pj.authenticated {
-				inst.RoomManager.SetPlayerIdentity(pj.playerID, pj.account.ID, pj.account.DisplayName())
+				inst.RoomManager.SetPlayerIdentity(pj.playerID, pj.account.ID, s.accountPublicName(pj.account))
 				if pj.hasStoredState {
 					inst.RoomManager.ApplyPlayerState(pj.playerID, pj.storedState)
 				}

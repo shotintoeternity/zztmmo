@@ -215,7 +215,7 @@ func (s *WebSocketServer) resolveChallengeJoin(challengeID, runKey string, accou
 	name := "player"
 	if authenticated {
 		accountID = account.ID
-		name = admitPlayerName(account.DisplayName())
+		name = admitPlayerName(s.accountPublicName(account))
 	}
 	if runKey != "" {
 		inst, ok := s.ChallengeRunInstance(runKey)

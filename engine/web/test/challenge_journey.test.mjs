@@ -112,9 +112,13 @@ async function openClient(label, path) {
   assert.equal(response?.status(), 200, `${label}: ${path} must serve the client`);
   await page.waitForSelector("canvas[data-screen]", { timeout: 20000 });
   await installDecoder(page);
-  await waitForPage(c, (cells) => hasText(cells, "Type your name"), "the launch name prompt");
-  await page.keyboard.type(label, { delay: 8 });
-  await page.keyboard.press("Enter");
+  // M37.10: a signed-in browser whose account has a username (the Go driver
+  // claimed "ada") is not asked for a name at all.
+  if (!authCookie) {
+    await waitForPage(c, (cells) => hasText(cells, "Type your name"), "the launch name prompt");
+    await page.keyboard.type(label, { delay: 8 });
+    await page.keyboard.press("Enter");
+  }
   return c;
 }
 
@@ -172,7 +176,7 @@ try {
   await waitForPage(ada, (cells) => hasText(cells, "Leaderboard"), "the leaderboard action");
   await ada.page.keyboard.press("ArrowDown");
   await ada.page.keyboard.press("Enter");
-  await waitForPage(ada, (cells) => hasText(cells, "Challenge Times") && hasText(cells, "Ada"), "the leaderboard window");
+  await waitForPage(ada, (cells) => hasText(cells, "Challenge Times") && hasText(cells, "ada"), "the leaderboard window");
   console.log("  - the leaderboard carries the run this browser just made");
 
   await ada.page.keyboard.press("Enter");
@@ -195,9 +199,6 @@ try {
   await ada.page.goto(`${baseURL}/challenge`, { waitUntil: "domcontentloaded" });
   await ada.page.waitForSelector("canvas[data-screen]", { timeout: 20000 });
   await installDecoder(ada.page);
-  await waitForPage(ada, (cells) => hasText(cells, "Type your name"), "the name prompt on the way back");
-  await ada.page.keyboard.type("Ada", { delay: 8 });
-  await ada.page.keyboard.press("Enter");
   await waitForPage(ada, (cells) => hasText(cells, "Daily Challenge") && hasText(cells, "Leaderboard"), "the landing again");
   await ada.page.keyboard.press("ArrowDown");
   await ada.page.keyboard.press("Enter");

@@ -443,7 +443,7 @@ func (h *m169Harness) instanceReport() []m1614InstanceReport {
 // The harness
 // ---------------------------------------------------------------------------
 
-func m1614NewHarness(t *testing.T) *m169Harness {
+func m1614NewHarness(t *testing.T, extra ...m169HarnessOption) *m169Harness {
 	t.Helper()
 	auth := NewAuthService(m1614ClientID, m1614ClientSecret, "", []byte("m16-14-cookie-secret"))
 	auth.Verifier = m1614Verifier{}
@@ -454,7 +454,7 @@ func m1614NewHarness(t *testing.T) *m169Harness {
 	// writes, which m169WriteWorldFile leaves open on the harness's start board.
 	world := m1613EditorWorld(t)
 	world.Info.Name = m1614World
-	return m169NewHarnessFor(t, m1614World, world,
+	return m169NewHarnessFor(t, m1614World, world, append([]m169HarnessOption{
 		func(h *m169Harness, server *WebSocketServer, api *WebAPI) {
 			server.Auth = auth
 			api.Auth = auth
@@ -466,7 +466,7 @@ func m1614NewHarness(t *testing.T) *m169Harness {
 			// (M16.14c: filling them in after the harness was built raced).
 			auth.AuthEndpoint = h.controlURL + "/idp/authorize"
 			auth.TokenEndpoint = h.controlURL + "/idp/token"
-		})
+		}}, extra...)...)
 }
 
 func m1614OutDir(t *testing.T) string {

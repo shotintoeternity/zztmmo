@@ -122,6 +122,9 @@ func TestM321ChallengeBrowserJourney(t *testing.T) {
 
 	auth := NewAuthService("test-client", "test-secret", "", []byte(cookieSecret))
 	cookie := signedAuthCookie(t, auth, AuthenticatedAccount{ID: "google:ada", Email: "ada@example.test", Name: "Ada"})
+	// M37.10: zzt-server requires a username with sign-in on, so Ada claims
+	// one the way the launch box does before she plays.
+	claimTestUsername(t, baseURL, cookie, "ada")
 
 	nodeCmd := exec.Command("node", filepath.Join("test", "challenge_journey.test.mjs"))
 	nodeCmd.Dir = "web"

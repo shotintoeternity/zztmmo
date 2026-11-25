@@ -124,6 +124,8 @@ func main() {
 		log.Printf("google auth disabled: %v", err)
 	} else if auth != nil {
 		server.Auth = auth
+		// M37.10: a signed-in player picks a unique username and is shown by it.
+		server.RequireUsername = true
 		// M37.9: who has signed in, kept beside the other durable state.
 		if *savesDir != "" {
 			auth.Accounts = zztgo.NewAccountStore(zztgo.AccountStorePath(*savesDir))

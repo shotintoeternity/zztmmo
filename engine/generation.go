@@ -257,7 +257,7 @@ func refuseIfCanonical(name string) error {
 // person who types its name. A world that already has an access file keeps it
 // (the check above has already established the dreamer may write here), and a
 // guest's dream stays unowned — exactly saveEditorWorld's rule.
-func claimGeneratedWorld(dir, name string, account AuthenticatedAccount) error {
+func claimGeneratedWorld(dir, name string, account AuthenticatedAccount, ownerName string) error {
 	if dir == "" || account.ID == "" {
 		return nil
 	}
@@ -266,7 +266,7 @@ func claimGeneratedWorld(dir, name string, account AuthenticatedAccount) error {
 	}
 	return writeWorldAccess(dir, name, WorldAccess{
 		OwnerAccountID: account.ID,
-		OwnerName:      account.DisplayName(),
+		OwnerName:      ownerName,
 	})
 }
 
@@ -891,13 +891,13 @@ func (g *GenerationService) paintAndFinish(ctx context.Context, st *generationRe
 	// the reason minting a different stem costs the player nothing to read.
 	if err := writeWorldMeta(g.outputDir, name, WorldMeta{
 		Title:  plan.WorldName,
-		Author: st.account.DisplayName(),
+		Author: st.server.accountPublicName(st.account),
 	}); err != nil {
 		return GenerationResult{}, err
 	}
 	// The dreamer owns what they dreamed, the way the editor's publisher owns
 	// what they published — so the next person to type this name is refused.
-	if err := claimGeneratedWorld(g.outputDir, name, st.account); err != nil {
+	if err := claimGeneratedWorld(g.outputDir, name, st.account, st.server.accountPublicName(st.account)); err != nil {
 		return GenerationResult{}, err
 	}
 	if st.server != nil {

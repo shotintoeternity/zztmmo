@@ -463,6 +463,11 @@ func (a *WebAPI) handlePreferences(w http.ResponseWriter, r *http.Request) {
 				stored.Hints.Chat = stored.Hints.Chat || body.Hints.Chat
 			}
 			if body.Profile != nil {
+				// M37.10: where a username is required, it can be changed but
+				// not removed.
+				if a.Server.RequireUsername && stored.Profile.Handle != "" && profile.Handle == "" {
+					return ErrUsernameRequired
+				}
 				stored.Profile = profile
 			}
 			if body.ShareLocationWithFollowers != nil {
@@ -484,6 +489,10 @@ func (a *WebAPI) handlePreferences(w http.ResponseWriter, r *http.Request) {
 		if err != nil {
 			if errors.Is(err, ErrProfileHandleTaken) {
 				http.Error(w, "handle already claimed", http.StatusConflict)
+				return
+			}
+			if errors.Is(err, ErrUsernameRequired) {
+				http.Error(w, "a username can be changed but not removed", http.StatusBadRequest)
 				return
 			}
 			if errors.Is(err, ErrInvalidProfileHandle) || errors.Is(err, ErrInvalidProfileText) {
@@ -693,7 +702,7 @@ func (a *WebAPI) handleModerationLift(w http.ResponseWriter, r *http.Request) {
 		At:            a.Server.clockNow(),
 		Action:        ModerationActionLift,
 		Operator:      operator.ID,
-		OperatorName:  CP437String(admitPlayerName(operator.DisplayName())),
+		OperatorName:  CP437String(admitPlayerName(a.Server.accountPublicName(operator))),
 		TargetAccount: accountID,
 	}
 
@@ -774,7 +783,32 @@ func (a *WebAPI) handleAuthMe(w http.ResponseWriter, r *http.Request) {
 		}{})
 		return
 	}
-	a.Auth.HandleMe(w, r)
+	account, ok := a.Auth.AccountFromRequest(r)
+	// M37.10: the username, and whether this server requires one, ride along
+	// so the launch box knows to ask for it. The Google name stays in `name`:
+	// it is the account holder's own, and only ever shown back to them.
+	requireUsername := a.Server != nil && a.Server.RequireUsername
+	username := ""
+	if ok && a.Server != nil {
+		username = a.Server.accountUsername(account.ID)
+	}
+	writeJSON(w, struct {
+		Enabled         bool   `json:"enabled"`
+		Authenticated   bool   `json:"authenticated"`
+		ID              string `json:"id,omitempty"`
+		Name            string `json:"name,omitempty"`
+		Email           string `json:"email,omitempty"`
+		Username        string `json:"username,omitempty"`
+		RequireUsername bool   `json:"requireUsername,omitempty"`
+	}{
+		Enabled:         a.Auth.Enabled(),
+		Authenticated:   ok,
+		ID:              account.ID,
+		Name:            account.DisplayName(),
+		Email:           account.Email,
+		Username:        username,
+		RequireUsername: requireUsername,
+	})
 }
 
 func (a *WebAPI) handleAuthStart(w http.ResponseWriter, r *http.Request) {

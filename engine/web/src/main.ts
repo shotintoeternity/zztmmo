@@ -117,6 +117,8 @@ import {
   saveAccountColor,
   saveFavoriteWorld,
   saveAccountProfile,
+  claimUsername,
+  usernameClaimProblem,
   saveAccountComfort,
   saveShareLocationWithFollowers,
   type AccountHintKey,
@@ -510,6 +512,9 @@ type AuthStatus = {
   id?: string;
   name?: string;
   email?: string;
+  // M37.10: the claimed username, and whether this server requires one.
+  username?: string;
+  requireUsername?: boolean;
 };
 
 type EditorSnapshotMessage = {
@@ -1046,6 +1051,18 @@ function promptNicknameOnLaunch() {
     return;
   }
   hasPromptedNameOnLaunch = true;
+  // M37.10: a signed-in player who already has a username is never shown the
+  // box, not even for a frame. /api/auth/me is a local read, so it is waited
+  // for, but only briefly: a slow answer still gets the box at once.
+  void Promise.race([authStatusReady, new Promise((resolve) => window.setTimeout(resolve, 1500))]).then(() => openLaunchBox());
+}
+
+function openLaunchBox() {
+  if (authStatus.authenticated && authStatus.requireUsername && authStatus.username) {
+    nickname = authStatus.username;
+    void openLaunchDestination();
+    return;
+  }
   const prompt: Modal = {
     kind: "popupEntry",
     question: LAUNCH_NAME_PROMPT,
@@ -1060,8 +1077,8 @@ function promptNicknameOnLaunch() {
   // M37.8: sign-in is offered in the same box, never in front of it. Typing a
   // name and pressing Enter is the whole path for a guest; a server with sign-in
   // adds one quiet line under the field, and Tab (or the phone bar's Google
-  // button) takes it. The box opens at once and learns about sign-in when
-  // /api/auth/me answers, so a slow answer never holds up the world.
+  // button) takes it. If /api/auth/me was slow the box opened without it, and
+  // learns about sign-in when the answer comes.
   void authStatusReady.then(() => offerLaunchSignIn(prompt));
 }
 
@@ -1069,13 +1086,78 @@ function offerLaunchSignIn(prompt: Modal) {
   if (modal !== prompt || prompt.kind !== "popupEntry") {
     return;
   }
-  // A signed-in visitor (back from Google) and a server without sign-in both
-  // get today's box unchanged.
+  if (authStatus.authenticated && authStatus.requireUsername) {
+    // M37.10: a signed-in player is known by their username. With one, the
+    // box has nothing to ask; without one, it asks for one.
+    if (authStatus.username) {
+      closeModal();
+      nickname = authStatus.username;
+      void openLaunchDestination();
+      return;
+    }
+    askForUsername(prompt, USERNAME_RULE);
+    return;
+  }
+  // A signed-in visitor on a server that does not require a username, and a
+  // server without sign-in, both get today's box unchanged.
   if (authStatus.authenticated || !authStatus.enabled) {
     return;
   }
-  prompt.signInHint = touchControls ? "Optional: tap Google below to sign in." : "Optional: press Tab to sign in with Google.";
+  prompt.hint = touchControls ? "Optional: tap Google below to sign in." : "Optional: press Tab to sign in with Google.";
   prompt.onSignIn = startGoogleSignIn;
+  refreshOpenModal();
+}
+
+const USERNAME_PROMPT = "Choose a username and press Enter.";
+const USERNAME_RULE = "3 to 16 letters, digits or _. Everyone sees it.";
+
+// askForUsername turns the launch box into the username box (M37.10). Enter
+// claims the name; the server says whether it is free. Escape signs out and
+// puts the guest box back, so nobody is stuck here.
+function askForUsername(prompt: Modal, hint: string) {
+  if (prompt.kind !== "popupEntry") {
+    return;
+  }
+  prompt.question = USERNAME_PROMPT;
+  prompt.hint = hint;
+  prompt.onSignIn = undefined;
+  prompt.onSubmit = (text) => {
+    if (text === null) {
+      void fetch("/api/auth/logout", { method: "POST" }).then(async () => {
+        await refreshAuthStatus();
+        hasPromptedNameOnLaunch = false;
+        promptNicknameOnLaunch();
+      });
+      return;
+    }
+    void submitUsername(text.trim());
+  };
+  if (modal !== prompt) {
+    openModal(prompt);
+  } else {
+    refreshOpenModal();
+  }
+}
+
+async function submitUsername(username: string) {
+  const current = accountPrefs?.profile ?? EMPTY_ACCOUNT_PROFILE;
+  const claim = await claimUsername(fetch, { ...current, handle: username });
+  if (!claim.prefs) {
+    askForUsername(launchBox(username), usernameClaimProblem(claim.status));
+    return;
+  }
+  accountPrefs = claim.prefs;
+  await refreshAuthStatus();
+  nickname = authStatus.username || claim.prefs.profile.handle;
+  void openLaunchDestination();
+}
+
+// launchBox is a fresh launch box holding what was typed, for a second try.
+function launchBox(buffer: string): Modal {
+  return { kind: "popupEntry", question: USERNAME_PROMPT, buffer, onSubmit: () => {}, y: POPUP_Y_CENTERED };
+}
+
+function refreshOpenModal() {
   mobileTextInput.sync(modal, routeMobileModalInput);
   paintOverlay();
   drawScreen();
@@ -1452,7 +1534,8 @@ function authDisplayName(): string {
   if (!authStatus.authenticated) {
     return "";
   }
-  return authStatus.name || authStatus.email || "";
+  // M37.10: the username first, as everyone else sees this player.
+  return authStatus.username || authStatus.name || authStatus.email || "";
 }
 
 function redrawTitleSidebar() {

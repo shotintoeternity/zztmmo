@@ -27,6 +27,14 @@ import {
 const WORLD = "COLLAB";
 const KEY_HINT = "Optional: press Tab to sign in with Google.";
 const TAP_HINT = "Optional: tap Google below to sign in.";
+// M37.10: the server here requires a username, as zzt-server does with sign-in.
+const USERNAME_BOX = "Choose a username";
+const USERNAME_RULE = "3 to 16 letters, digits or _. Everyone sees it.";
+const sidebarName = (c) => textAt(c, 65, 24, 15).trim();
+
+async function clearField(page, typed) {
+  for (let i = 0; i < typed.length; i += 1) await page.keyboard.press("Backspace");
+}
 
 async function armAccount(account) {
   const response = await fetch(`${controlURL}/control/auth/next?account=${encodeURIComponent(account)}`, { signal: AbortSignal.timeout(20000) });
@@ -77,17 +85,28 @@ try {
 
     await armAccount("ada");
     await signInFromTheBox(page, () => page.keyboard.press("Tab"));
-    // Back from Google: the same box, the same question, and no offer to sign in again.
-    let cells = await waitForGrid(page, (c) => hasText(c, "Type your name"), "the name box after signing in");
-    await new Promise((resolve) => setTimeout(resolve, 500));
-    cells = await readGrid(page);
+    // M37.10: back from Google, the same box asks for a username, and no
+    // longer offers sign-in.
+    let cells = await waitForGrid(page, (c) => hasText(c, USERNAME_BOX) && hasText(c, USERNAME_RULE), "the username box after signing in");
     assert.ok(!hasText(cells, KEY_HINT), "a signed-in visitor is not offered sign-in");
-    await page.keyboard.type("Ada");
+    // The name on the Google account is not a username: a space is refused.
+    await page.keyboard.type("Ada Lovelace");
     await page.keyboard.press("Enter");
-    cells = await waitForGrid(page, (c) => hasText(c, "E  Board editor") && textAt(c, 65, 24, 15).trim() === "Ada Lovelace",
-      "the title sidebar to name the account");
+    await waitForGrid(page, (c) => hasText(c, USERNAME_BOX) && hasText(c, "Use 3 to 16 letters, digits or _."), "the rule after a malformed username");
+    await clearField(page, "Ada Lovelace");
+    await page.keyboard.type("ada");
+    await page.keyboard.press("Enter");
+    cells = await waitForGrid(page, (c) => hasText(c, "E  Board editor") && sidebarName(c) === "ada",
+      "the title sidebar to name the username");
     assert.equal(textAt(cells, 62, 24, 3), " G ", "the title keeps its sign-in row");
-    console.log("  · Tab in the name box signed in through the identity provider");
+    assert.ok(!hasText(cells, "Lovelace"), "the Google name is not on the title screen");
+    console.log("  · Tab in the name box signed in through the identity provider and claimed a username");
+
+    // A later visit already has a username: the box asks nothing.
+    await load(page);
+    cells = await waitForGrid(page, (c) => hasText(c, "E  Board editor") && sidebarName(c) === "ada" && !hasText(c, "Type your name"),
+      "the title screen on a later visit, with no box");
+    console.log("  · a later visit went straight to the title screen as ada");
   }
 
   // A guest just types a name: the offer changes nothing about that path.
@@ -113,16 +132,20 @@ try {
     assert.equal(await google.isVisible(), true, "the bar offers Google while the box does");
     await armAccount("bob");
     await signInFromTheBox(page, () => google.tap());
-    await waitForGrid(page, (c) => hasText(c, "Type your name"), "the phone's name box after signing in");
-    await new Promise((resolve) => setTimeout(resolve, 500));
+    await waitForGrid(page, (c) => hasText(c, USERNAME_BOX), "the phone's username box after signing in");
     assert.ok(!hasText(await readGrid(page), TAP_HINT), "a signed-in phone is not offered sign-in");
     assert.equal(await google.isVisible(), false, "the Google button goes with the offer");
-    await page.keyboard.type("Bob");
+    // Ada has "ada", in any capitalisation.
+    await page.keyboard.type("ADA");
     await page.keyboard.press("Enter");
-    await waitForGrid(page, (c) => hasText(c, "E  Board editor") && textAt(c, 65, 24, 15).trim() === "Bob Bones",
-      "the phone's title sidebar to name the account");
+    await waitForGrid(page, (c) => hasText(c, USERNAME_BOX) && hasText(c, "That username is taken. Try another."), "the phone told ada is taken");
+    await clearField(page, "ADA");
+    await page.keyboard.type("bob");
+    await page.keyboard.press("Enter");
+    await waitForGrid(page, (c) => hasText(c, "E  Board editor") && sidebarName(c) === "bob",
+      "the phone's title sidebar to name the username");
     assert.equal(await google.isVisible(), false, "no Google button on the title bar");
-    console.log("  · the phone bar's Google button signed in");
+    console.log("  · the phone bar's Google button signed in, and a taken username was refused");
   }
 
   for (const b of browsers) {
