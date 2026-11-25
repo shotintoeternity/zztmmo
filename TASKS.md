@@ -9596,7 +9596,7 @@ challenge leaderboard, and a replay link on every row that anyone can watch.
    re-simulation from tick 0, bounded by the tick ceiling. `RoomManager` has no
    clone, so faster seeking waits until a measurement says it is needed.
 
-- [ ] **M38.0 — owner decisions before M38.1 opens.** *(owner-gated)* Each
+- [x] **M38.0 — owner decisions before M38.1 opens.** *(owner-gated)* Each
   answer goes here and in NOTES.md:
   1. **What does a TAS run against?** The catalogue is empty, so there is
      nothing to submit to today. Choose one of three: put a challenge row back
@@ -9612,6 +9612,21 @@ challenge leaderboard, and a replay link on every row that anyone can watch.
      and a per-account submit rate.
   4. **Racing.** May a live runner race an assisted ghost? Ghosts are
      presentation, so this is only a picker question.
+
+  *Decided 2026-11-26.* The owner answered:
+  1. **One challenge comes back.** A TAS run is measured against a restored
+     challenge row. Development uses the Gem Dash fixture
+     (`gemDashFixture()`); putting a row back on production is a
+     `-challenges` JSON file at deploy time (NOTES.md 2026-09-08), not code.
+  2. **Guests get a result, no row.** Anyone may submit and gets a judged
+     result and a replay link; only a signed-in account gets a durable
+     assisted row. M38 does not wait on M37.1.
+  3. **Budget: the spec's recommendations, set as defaults** and open to the
+     owner's change: the tick ceiling is about ten minutes of play at the
+     server tick rate until M38.2's measurement sizes it, at most 2 judges at
+     once, and a per-account (per-connection for a guest) submit rate.
+  4. **Racing: yes, labelled.** An assisted ghost appears in the picker
+     marked "assisted".
 
 - [ ] **M38.1 — the input script and its admission.** Define the submitted
   shape as one Go type in its own file: a challenge id, its version, and
