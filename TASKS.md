@@ -9181,7 +9181,7 @@ Every earlier box is ticked, so these are the open items, **numbered in the
 order to take them**. Most need the owner: production access, an outside
 console, or a product decision. Each says which.
 
-- [ ] **M37.1 — sign-in works on production.** *(owner-gated: Google console and
+- [x] **M37.1 — sign-in works on production.** *(owner-gated: Google console and
   the production host)* Production has no Google variables in its environment
   (checked over SSH on 2026-11-03), so `NewAuthServiceFromEnv` returns nil and
   every player is a guest. Everything that hangs off an account is therefore
@@ -9211,6 +9211,21 @@ console, or a product decision. Each says which.
   Google variables. Production stays guest-only until the owner chooses to
   turn it on, so this box stays open as the "turn it on" step and is not
   ticked. M37.7 makes a server without sign-in stop telling guests to sign in.
+
+  *Turned on 2026-11-26* at the owner's request. The owner created the OAuth
+  client in a personal Google Cloud project (ZZTMMO, External audience,
+  authorized domain `zztmmo.com`, redirect
+  `https://zztmmo.com/api/auth/google/callback`); there is no API for that
+  part. The two values went from a local `0600` file into `/opt/zztmmo/.env`
+  without passing through the chat (pre-change copy in
+  `.prefix-20261126/env.before-signin`). `zzt-server` logged "google auth
+  enabled", `/api/auth/me` answers `enabled: true, requireUsername: true`, the
+  owner signed in in a real browser and claimed a username (one record in
+  `accounts.json`, mode `600`), and the sign-in survived a restart. DoD met.
+  **The Google app is in Testing**: only the test users listed on its Audience
+  page (up to 100) can sign in. Publishing it for everyone needs a home page
+  and a privacy policy link on the Branding page; zztmmo.com has no privacy
+  page yet. `ZZT_MODERATOR_ACCOUNTS` is still unset.
 
 - [x] **M37.2 — rehearse a restore from a production backup.** *(owner-gated:
   touches production data)* Promoted from the Architecture follow-ups bullet
