@@ -2007,6 +2007,17 @@
       "notes": "task-claim row; behavioral parity carried by the element/oop/protocol/input/service rows this task touched; reconciled at M16.20"
     },
     {
+      "id": "task.M38.4",
+      "dimension": "task",
+      "subject": "Completed task M38.4 — its DoD still holds",
+      "contract": "E",
+      "authority": "TASKS.md M38.4",
+      "parity": "exact",
+      "status": "unverified",
+      "assignedTask": "M16.20",
+      "notes": "task-claim row; behavioral parity carried by the element/oop/protocol/input/service rows this task touched; reconciled at M16.20"
+    },
+    {
       "id": "task.M39.1",
       "dimension": "task",
       "subject": "Completed task M39.1 — its DoD still holds",
@@ -5269,7 +5280,7 @@
       "test": "TestM321APIRoutesAndPrecedence,TestM321GhostIsALocalTrackOfAStoredRunOnly",
       "status": "pass",
       "assignedTask": "M32.1",
-      "notes": "M32.1: /api/challenge/<id> resolves a catalogue row (404 for an unlisted id or a deeper path) and /api/challenge/ghost serves the local overlay track of a stored leaderboard row only, refusing an arbitrary recording and a stale definition."
+      "notes": "M32.1: /api/challenge/<id> resolves a catalogue row (404 for an unlisted id or a deeper path) and /api/challenge/ghost serves the local overlay track of a stored leaderboard row only, refusing an arbitrary recording and a stale definition. M38.3/M38.4: the landing carries an `assisted` table beside `leaderboard`, the ghost route takes `?division=`, and POST /api/challenge/<id>/assisted judges a TAS script (auth, byte ceiling, rate, a two-judge semaphore, admission, then the judge) and answers with the rank and replay id, a named refusal, or a 422 naming the tick the goal was not met by."
     },
     {
       "id": "route.api.generate",

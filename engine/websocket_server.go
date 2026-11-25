@@ -179,6 +179,10 @@ type WebSocketServer struct {
 	ChatDB              ChatDatabase
 	Activity            *WorldActivityStore
 	Auth                *AuthService
+	// tasSubmit is M38.4's submission gate: the per-submitter rate and the
+	// concurrent-judge semaphore. Made on first use.
+	tasGateOnce sync.Once
+	tasSubmit   *tasSubmitGate
 	// RequireUsername (M37.10): a signed-in account must claim a username
 	// before it plays, and is shown by it. zzt-server sets it with sign-in.
 	RequireUsername bool

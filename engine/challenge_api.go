@@ -53,6 +53,11 @@ func (a *WebAPI) challengeNow() time.Time {
 }
 
 func (a *WebAPI) handleChallenge(w http.ResponseWriter, r *http.Request) {
+	// M38.4: the one route here that is not a GET.
+	if id, ok := isAssistedPath(strings.Trim(strings.TrimPrefix(r.URL.Path, "/api/challenge"), "/")); ok {
+		a.handleAssistedSubmit(w, r, id)
+		return
+	}
 	if r.Method != http.MethodGet {
 		http.Error(w, "use GET", http.StatusMethodNotAllowed)
 		return

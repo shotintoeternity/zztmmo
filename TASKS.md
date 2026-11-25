@@ -9725,7 +9725,7 @@ challenge leaderboard, and a replay link on every row that anyone can watch.
   recording on disk): its ghost draws from the assisted board and is not
   found on the live one.
 
-- [ ] **M38.4 — submitting a script.** Add `POST /api/challenge/<id>/assisted`,
+- [x] **M38.4 — submitting a script.** Add `POST /api/challenge/<id>/assisted`,
   which takes an M38.1 script body. Its gates run in this order: auth (per
   M38.0.2), byte ceiling, per-account rate, a concurrent-judge semaphore, then
   admission, then the judge off the request goroutine. A pass writes the
@@ -9737,6 +9737,16 @@ challenge leaderboard, and a replay link on every row that anyone can watch.
   submissions are refused or queued within the budget rather than all judged at
   once. Server-only, so `make browser-only` covers any journey that reads
   `/api/challenge`.
+  Done note (2026-11-26): `challenge_assisted.go`, `m38_4_test.go`. Per
+  M38.0.2, a guest's pass is a judged result and a replay link with no row.
+  The rate is six a minute per account, or per client address for a guest
+  (the same proxy-aware key the generation limit uses). A full judge
+  semaphore answers 503 "try again" rather than queueing. Bodies over the
+  byte ceiling are a 413. The recording is opened exclusively under a fresh
+  id in the challenge namespace (`chal-<id>-assisted-<n>-<stamp>`) and
+  removed again if the run is refused or the goal not met. The load test: ten
+  concurrent full-ceiling submissions, two judged and eight told the judges
+  were busy, never more than two at once.
 
 - [ ] **M38.5 — the workbench session (server).** Add a websocket mode that holds
   one editable script for one challenge and streams frames to its one client,
