@@ -9538,6 +9538,22 @@ console, or a product decision. Each says which.
   guest is refused Ada's username and then plays on. `make browser` passes.
   Done note (2026-11-26): as specified (`username.go`, `m37_11_test.go`).
 
+- [x] **M37.12 — a privacy policy page.** Filed 2026-11-26 at the owner's
+  request: Google will not publish the sign-in app (M37.1 is in Testing)
+  without a home page and a privacy policy link. Steps: a static page at
+  `https://zztmmo.com/privacy.html` (`engine/web/public/privacy.html`, copied
+  into `web/dist` by Vite and served by `SPAFileServer`) that says, from the
+  code: what a guest leaves (typed name, chat, saves; settings in the
+  browser), what a signed-in account keeps (the M37.9 record, username,
+  profile, settings, follows and blocks, progress, chat, challenge runs,
+  owned worlds), what is shared (replays, a dream's premise sent to
+  Anthropic, IP addresses for rate limits and logs), cookies, the
+  processors (AWS, Google, Anthropic), export and deletion as M37.3/M37.3a
+  built them, that moderation records survive, and that daily backups keep
+  deleted data for up to 14 days. DoD: the page is served on production;
+  the owner adds it and the home page on Google's Branding page.
+  Done note (2026-11-26): as specified.
+
 ## M38 — The TAS workbench: a run built tick by tick, proved by re-simulation
 
 Filed 2026-11-04 by M37.6 at the owner's request. It is the spec only: nothing
