@@ -9225,7 +9225,9 @@ console, or a product decision. Each says which.
   **The Google app is in Testing**: only the test users listed on its Audience
   page (up to 100) can sign in. Publishing it for everyone needs a home page
   and a privacy policy link on the Branding page; zztmmo.com has no privacy
-  page yet. `ZZT_MODERATOR_ACCOUNTS` is still unset.
+  page yet (M37.12 added it the same day; the owner still has to enter it
+  and publish). `ZZT_MODERATOR_ACCOUNTS` was set to the owner's account the
+  same day, and the restart that loaded it logged one operator account.
 
 - [x] **M37.2 — rehearse a restore from a production backup.** *(owner-gated:
   touches production data)* Promoted from the Architecture follow-ups bullet
@@ -10407,7 +10409,12 @@ board."
   `TestM43bTwoPlayersReenterSameSquare` pinned the old diagonal and now pins
   north; `TestM43bReenterOntoMonsterKeepsMonster`'s last step allows the
   lion, now beside the player, to attack as lions do. No replay fixture
-  changed.
+  changed. The follow-up commit (`7549bee`) moves the co-op cutline's third
+  player, now one square east of the start and in the first player's path,
+  a square south before her walk, and regenerates eight canvas goldens whose
+  only change is the second player's face moving from the start's north-west
+  diagonal to directly north (checked cell by cell). Deployed 2026-11-26;
+  two guests joining TOWN on production landed at 30,12 and 30,11.
 
 ## M14 — Rearchitecting for the service ZZTMMO is becoming
 
