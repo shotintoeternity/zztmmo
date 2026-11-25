@@ -110,6 +110,11 @@ type WebSocketServer struct {
 	// ReplayEvictIdleTicks, when >0, drops a replay instance after this many
 	// consecutive ticks with no watcher.
 	ReplayEvictIdleTicks int
+	// WorkbenchSessions are the open TAS workbenches (M38.5), one per
+	// connection, guarded by mu. WorkbenchEvictIdleTicks, when >0, closes one
+	// whose client has sent no op for that many ticks while not playing.
+	WorkbenchSessions       map[*WorkbenchSession]struct{}
+	WorkbenchEvictIdleTicks int
 	// ChallengeStore is the durable challenge leaderboard. Nil means the
 	// service has no leaderboard: runs still play and still report their result
 	// to the player who made them, but nothing becomes public.
@@ -285,19 +290,20 @@ func NewWebSocketServer(world TWorld, defaultBoard int16) *WebSocketServer {
 		Spectators:     make(map[*webSocketClient]*spectator),
 	}
 	s := &WebSocketServer{
-		RoomManager:            rm,
-		FriendlyFire:           true,
-		DefaultBoard:           defaultBoard,
-		TickDuration:           ServerTickDuration,
-		OriginHosts:            []string{"localhost:*", "127.0.0.1:*"},
-		InstanceEvictIdleTicks: DefaultInstanceEvictIdleTicks,
-		ReplayEvictIdleTicks:   DefaultReplayEvictIdleTicks,
-		Instances:              make(map[string]*WorldInstance),
-		ReplayInstances:        make(map[string]*ReplayInstance),
-		EditorSessions:         make(map[*webSocketClient]*EditorSession),
-		EditorWorldSessions:    make(map[string]*EditorSession),
-		ChatDB:                 NewMemChatDatabase(),
-		Activity:               &WorldActivityStore{counts: make(map[string]int)},
+		RoomManager:             rm,
+		FriendlyFire:            true,
+		DefaultBoard:            defaultBoard,
+		TickDuration:            ServerTickDuration,
+		OriginHosts:             []string{"localhost:*", "127.0.0.1:*"},
+		InstanceEvictIdleTicks:  DefaultInstanceEvictIdleTicks,
+		ReplayEvictIdleTicks:    DefaultReplayEvictIdleTicks,
+		WorkbenchEvictIdleTicks: DefaultWorkbenchEvictIdleTicks,
+		Instances:               make(map[string]*WorldInstance),
+		ReplayInstances:         make(map[string]*ReplayInstance),
+		EditorSessions:          make(map[*webSocketClient]*EditorSession),
+		EditorWorldSessions:     make(map[string]*EditorSession),
+		ChatDB:                  NewMemChatDatabase(),
+		Activity:                &WorldActivityStore{counts: make(map[string]int)},
 		// Memory-only until cmd/zzt-server points them at the saves directory, so
 		// a test never writes an audit line or a refusal to disk.
 		Refusals: NewRefusalStore(""),
@@ -360,6 +366,7 @@ func (s *WebSocketServer) Tick(ctx context.Context) {
 		replay.Tick(ctx)
 	}
 	s.evictIdleReplays()
+	s.tickWorkbenches(ctx)
 	for _, title := range titles {
 		title.Tick()
 	}
@@ -579,6 +586,10 @@ type playerJoin struct {
 func (s *WebSocketServer) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 	if replayID := r.URL.Query().Get("replay"); replayID != "" {
 		s.serveReplayHTTP(w, r, replayID)
+		return
+	}
+	if challengeID := r.URL.Query().Get("workbench"); challengeID != "" {
+		s.serveWorkbenchHTTP(w, r, challengeID)
 		return
 	}
 

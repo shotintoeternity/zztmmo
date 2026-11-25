@@ -74,6 +74,16 @@ const (
 	MessageTypeFollowResult     = "followResult"
 	MessageTypeReplayControl    = "replayControl"
 	MessageTypeReplayError      = "replayError"
+	// The TAS workbench (M38.5). MessageTypeWorkbench is the client's op; the
+	// server answers with frames (snapshots and diffs, as a watcher gets), a
+	// MessageTypeWorkbenchStatus after every frame and op, the script on
+	// export, the judged answer on submit, and a named refusal for an op it
+	// would not apply.
+	MessageTypeWorkbench       = "workbench"
+	MessageTypeWorkbenchStatus = "workbenchStatus"
+	MessageTypeWorkbenchScript = "workbenchScript"
+	MessageTypeWorkbenchSubmit = "workbenchSubmitResult"
+	MessageTypeWorkbenchError  = "workbenchError"
 	// MessageTypeChallengeResult is the server's verdict on a challenge run. It
 	// is sent when the SERVER observed the goal met, never on a client's
 	// request, and says whether the result became a durable leaderboard row.
@@ -152,6 +162,72 @@ type ModerationNoticeMessage struct {
 type ReplayControlMessage struct {
 	Type string `json:"type"`
 	Op   string `json:"op"`
+	// Tick is op "seek"'s target: how many of the recording's ticks to have
+	// stepped, counted from its first (M38.5).
+	Tick int `json:"tick,omitempty"`
+}
+
+// WorkbenchOpMessage is one workbench op (M38.5). Which fields mean something
+// depends on Op: setInput reads Tick and the input fields, setScrollReply
+// reads Tick, Stat and Label (an empty label clears that stat's reply),
+// truncate and seek read Tick, import reads Recording, and step, play, pause,
+// export and submit read nothing.
+type WorkbenchOpMessage struct {
+	Type      string      `json:"type"`
+	Op        string      `json:"op"`
+	Tick      int         `json:"tick,omitempty"`
+	DeltaX    int16       `json:"dx,omitempty"`
+	DeltaY    int16       `json:"dy,omitempty"`
+	Shift     bool        `json:"shift,omitempty"`
+	Key       byte        `json:"key,omitempty"`
+	Stat      int16       `json:"stat,omitempty"`
+	Label     CP437String `json:"label,omitempty"`
+	Recording string      `json:"recording,omitempty"`
+}
+
+// WorkbenchStatusMessage is where the workbench stands. Tick is how many of the
+// script's ticks have been stepped; Length is how many it holds. Met is the
+// live run's completion rule (measureChallengeTick) applied to every stepped
+// tick, and Ticks is the run's measured count: the completing tick once Met,
+// the ticks stepped so far until then. A status is whole: each one replaces
+// the last, and Playing and Met are always sent.
+type WorkbenchStatusMessage struct {
+	Type      string `json:"type"`
+	Challenge string `json:"challenge"`
+	Version   int    `json:"version"`
+	Goal      string `json:"goal"`
+	Tick      int    `json:"tick"`
+	Length    int    `json:"length"`
+	Ceiling   int    `json:"ceiling"`
+	Playing   bool   `json:"playing"`
+	Met       bool   `json:"met"`
+	Ticks     int    `json:"ticks"`
+	Score     int    `json:"score,omitempty"`
+	Gems      int    `json:"gems,omitempty"`
+}
+
+// WorkbenchScriptMessage is the export: the script as it stands, in M38.1's
+// canonical shape, which is what submit and the assisted route both take.
+type WorkbenchScriptMessage struct {
+	Type   string    `json:"type"`
+	Script TASScript `json:"script"`
+}
+
+// WorkbenchSubmitMessage is submit's answer: the assisted route's status code
+// and response, unchanged (M38.4).
+type WorkbenchSubmitMessage struct {
+	Type   string                 `json:"type"`
+	Status int                    `json:"status"`
+	Result AssistedSubmitResponse `json:"result"`
+}
+
+// WorkbenchErrorMessage refuses one op, by a stable class (M38.1's refusal
+// classes where one fits). The session carries on.
+type WorkbenchErrorMessage struct {
+	Type    string `json:"type"`
+	Op      string `json:"op,omitempty"`
+	Refusal string `json:"refusal"`
+	Reason  string `json:"reason"`
 }
 
 type ReplayErrorMessage struct {

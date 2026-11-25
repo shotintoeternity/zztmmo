@@ -2040,6 +2040,17 @@
       "notes": "task-claim row; behavioral parity carried by the element/oop/protocol/input/service rows this task touched; reconciled at M16.20"
     },
     {
+      "id": "task.M38.5",
+      "dimension": "task",
+      "subject": "Completed task M38.5 — its DoD still holds",
+      "contract": "E",
+      "authority": "TASKS.md M38.5",
+      "parity": "exact",
+      "status": "unverified",
+      "assignedTask": "M16.20",
+      "notes": "task-claim row; behavioral parity carried by the element/oop/protocol/input/service rows this task touched; reconciled at M16.20"
+    },
+    {
       "id": "task.M39.1",
       "dimension": "task",
       "subject": "Completed task M39.1 — its DoD still holds",
@@ -5224,6 +5235,56 @@
       "notes": "M16.8: RoomManager.Snapshot's full-board dump is checked against the diff-only reconstruction at every checkpoint (full-snapshot-fallback-vs-diff-only convergence) and, over the wire, against the direct Engine's authoritative screen. M21.4 (2026-08-05): the join/resume snapshot gained `blockedPlayers`, which names which of the same message's `players` the recipient has already blocked — set only on the first frame of a connection, like `resumeToken`, and omitted entirely when the answer is empty. It carries PlayerIDs only: the durable half of a block is keyed on the target's accountID, so the answer is computed per visible player rather than shipped from the stored list, which would hand the recipient account ids they have no other way to see. The client merges it and never assigns from it, since a roster-scoped list can add knowledge and must not be able to withdraw any."
     },
     {
+      "id": "proto.msg.workbench",
+      "dimension": "protocol",
+      "subject": "protocol message type \"workbench\"",
+      "contract": "P",
+      "authority": "protocol.go; tasks M3.2–M3.4",
+      "parity": "exact",
+      "status": "unverified",
+      "assignedTask": "M16.8"
+    },
+    {
+      "id": "proto.msg.workbenchError",
+      "dimension": "protocol",
+      "subject": "protocol message type \"workbenchError\"",
+      "contract": "P",
+      "authority": "protocol.go; tasks M3.2–M3.4",
+      "parity": "exact",
+      "status": "unverified",
+      "assignedTask": "M16.8"
+    },
+    {
+      "id": "proto.msg.workbenchScript",
+      "dimension": "protocol",
+      "subject": "protocol message type \"workbenchScript\"",
+      "contract": "P",
+      "authority": "protocol.go; tasks M3.2–M3.4",
+      "parity": "exact",
+      "status": "unverified",
+      "assignedTask": "M16.8"
+    },
+    {
+      "id": "proto.msg.workbenchStatus",
+      "dimension": "protocol",
+      "subject": "protocol message type \"workbenchStatus\"",
+      "contract": "P",
+      "authority": "protocol.go; tasks M3.2–M3.4",
+      "parity": "exact",
+      "status": "unverified",
+      "assignedTask": "M16.8"
+    },
+    {
+      "id": "proto.msg.workbenchSubmitResult",
+      "dimension": "protocol",
+      "subject": "protocol message type \"workbenchSubmitResult\"",
+      "contract": "P",
+      "authority": "protocol.go; tasks M3.2–M3.4",
+      "parity": "exact",
+      "status": "unverified",
+      "assignedTask": "M16.8"
+    },
+    {
       "id": "route.api.account.delete",
       "dimension": "route",
       "subject": "HTTP/WS route /api/account/delete",
@@ -5545,10 +5606,10 @@
       "contract": "E",
       "authority": "web_api.go / websocket_server.go",
       "parity": "exact",
-      "test": "TestWebSocketServerJoinInputDiff,TestWebSocketReconstructsAuthoritativeScreen,TestM42CommandKeyOverWebSocket",
+      "test": "TestWebSocketServerJoinInputDiff,TestWebSocketReconstructsAuthoritativeScreen,TestM42CommandKeyOverWebSocket,TestM385EditSeekAndStepMatchAFreshReplay,TestM385ReplayViewerSeeksTheSameWay",
       "status": "pass",
       "assignedTask": "M16.8",
-      "notes": "Dozens of pre-existing tests already dial a real WebSocket against this route; M16.8 adds one more (TestWebSocketReconstructsAuthoritativeScreen) that also reconstructs and verifies full state from it."
+      "notes": "Dozens of pre-existing tests already dial a real WebSocket against this route; M16.8 adds one more (TestWebSocketReconstructsAuthoritativeScreen) that also reconstructs and verifies full state from it. M38.5: `?workbench=<challenge id>` opens a TAS workbench session (edit, seek, step, play, import, export, submit) whose frame at tick N equals a fresh replay of the judge's recording to N, and the replay viewer's replayControl gains op `seek`."
     },
     {
       "id": "mode.deep-link",

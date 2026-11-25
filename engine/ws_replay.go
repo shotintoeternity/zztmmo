@@ -158,7 +158,44 @@ func newReplayPlaybackFromPath(path string, startTick int) (*ReplayPlayback, *os
 	return playback, f, nil
 }
 
+// Restart is a seek to the tick the replay was opened at, and plays on.
 func (replay *ReplayInstance) Restart() error {
+	return replay.seekTo(replay.startTick, true)
+}
+
+// Seek re-simulates the replay from its first tick until tick ticks have been
+// stepped, keeping its pause state, and returns a fresh frame for every
+// watcher: the replay is shared, so everyone watching it moves together, as a
+// pause or a restart already moves them. It is the workbench's seek (M38.5)
+// on a recording instead of a script: reopen, step from 0. A tick past the
+// recording's end lands on its final frame, as an opening start does. It
+// shares the restart cooldown, because it costs what a restart costs.
+func (replay *ReplayInstance) Seek(tick int) ([]spectatorDelivery, error) {
+	if tick < 0 {
+		return nil, fmt.Errorf("replay seek tick must be >= 0")
+	}
+	if err := replay.seekTo(tick, false); err != nil {
+		return nil, err
+	}
+	replay.mu.Lock()
+	defer replay.mu.Unlock()
+	if replay.evicted {
+		return nil, errReplayEvicted
+	}
+	watchers := replay.watcherCountsLocked()
+	rm := replay.playback.RoomManager()
+	deliveries := make([]spectatorDelivery, 0, len(replay.Spectators))
+	for _, sub := range replay.Spectators {
+		snapshot, engine := rm.SpectatorSnapshot(sub.boardID)
+		sub.engine = engine
+		snapshot.Watchers = watchers[sub.boardID]
+		sub.sentWatchers = snapshot.Watchers
+		deliveries = append(deliveries, spectatorDelivery{client: sub.client, message: snapshot})
+	}
+	return deliveries, nil
+}
+
+func (replay *ReplayInstance) seekTo(tick int, resume bool) error {
 	// The cooldown is taken before the reopen, so two restarts racing each
 	// other cannot both pass it (M36.19).
 	replay.mu.Lock()
@@ -170,7 +207,7 @@ func (replay *ReplayInstance) Restart() error {
 	replay.lastRestart = replay.ticks
 	replay.mu.Unlock()
 
-	playback, f, err := newReplayPlaybackFromPath(replay.path, replay.startTick)
+	playback, f, err := newReplayPlaybackFromPath(replay.path, tick)
 	if err != nil {
 		return err
 	}
@@ -184,7 +221,9 @@ func (replay *ReplayInstance) Restart() error {
 	old := replay.file
 	replay.file = f
 	replay.playback = playback
-	replay.Paused = false
+	if resume {
+		replay.Paused = false
+	}
 	replay.done = false
 	replay.err = nil
 	for _, sub := range replay.Spectators {
@@ -549,6 +588,17 @@ func (s *WebSocketServer) serveReplaySpectator(ctx context.Context, conn *websoc
 			}
 			if err := client.write(ctx, snapshot); err != nil {
 				return
+			}
+		case "seek":
+			deliveries, err := replay.Seek(control.Tick)
+			if errors.Is(err, errReplayRestartTooSoon) {
+				continue
+			} else if err != nil {
+				_ = client.write(ctx, ReplayErrorMessage{Type: MessageTypeReplayError, Text: "Replay seek failed: " + err.Error()})
+				return
+			}
+			for _, delivery := range deliveries {
+				_ = delivery.client.write(ctx, delivery.message)
 			}
 		}
 	}

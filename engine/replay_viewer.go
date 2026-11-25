@@ -12,8 +12,11 @@ import (
 // code and the deterministic replay path is still just recorded stimuli in,
 // RoomManager out.
 type ReplayPlayback struct {
-	header      recHeader
-	scanner     bufioScanner
+	header recHeader
+	// next yields the recording's ticks in order. It reads a file for the
+	// replay viewer and an in-memory TAS script for the workbench (M38.5); the
+	// stepping below is the same for both.
+	next        recTickSource
 	rm          *RoomManager
 	done        bool
 	last        int
@@ -24,6 +27,23 @@ type bufioScanner interface {
 	Scan() bool
 	Bytes() []byte
 	Err() error
+}
+
+// recTickSource yields the next recorded tick. ok is false at the end, with
+// err set if the end was a failure rather than the last tick.
+type recTickSource func() (tick recTick, ok bool, err error)
+
+func scannerTickSource(scanner bufioScanner) recTickSource {
+	return func() (recTick, bool, error) {
+		if !scanner.Scan() {
+			return recTick{}, false, scanner.Err()
+		}
+		var rec recTick
+		if err := json.Unmarshal(scanner.Bytes(), &rec); err != nil {
+			return recTick{}, false, fmt.Errorf("bad tick line: %w", err)
+		}
+		return rec, true, nil
+	}
 }
 
 func NewReplayPlayback(r io.Reader) (*ReplayPlayback, error) {
@@ -39,7 +59,7 @@ func NewReplayPlayback(r io.Reader) (*ReplayPlayback, error) {
 	rm.FriendlyFire = header.FriendlyFire
 	return &ReplayPlayback{
 		header:      header,
-		scanner:     scanner,
+		next:        scannerTickSource(scanner),
 		rm:          rm,
 		last:        -1,
 		seenPlayers: make(map[PlayerID]struct{}),
@@ -94,19 +114,10 @@ func (p *ReplayPlayback) Step() (int, map[int16]DiffMessage, bool, error) {
 	if p.done {
 		return p.last, nil, true, nil
 	}
-	if !p.scanner.Scan() {
-		if err := p.scanner.Err(); err != nil {
-			p.done = true
-			return p.last, nil, true, err
-		}
+	rec, ok, err := p.next()
+	if !ok {
 		p.done = true
-		return p.last, nil, true, nil
-	}
-
-	var rec recTick
-	if err := json.Unmarshal(p.scanner.Bytes(), &rec); err != nil {
-		p.done = true
-		return p.last, nil, true, fmt.Errorf("bad tick line: %w", err)
+		return p.last, nil, true, err
 	}
 	for _, op := range rec.Ops {
 		if op.Op == "join" {

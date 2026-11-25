@@ -104,15 +104,7 @@ func (a *WebAPI) handleAssistedSubmit(w http.ResponseWriter, r *http.Request, ch
 		return
 	}
 	s := a.Server
-
-	// 1. Who.
-	account, signedIn := s.authAccount(r)
-	key := "guest:" + generationClientKey(r)
-	name := "Guest"
-	if signedIn {
-		key = "account:" + account.ID
-		name = s.accountPublicName(account)
-	}
+	who := s.assistedSubmitterFor(r)
 
 	// 2. The byte ceiling, before the body is read whole.
 	body, err := io.ReadAll(io.LimitReader(r.Body, TASByteCeiling+1))
@@ -120,24 +112,69 @@ func (a *WebAPI) handleAssistedSubmit(w http.ResponseWriter, r *http.Request, ch
 		http.Error(w, "could not read the script", http.StatusBadRequest)
 		return
 	}
-	if len(body) > TASByteCeiling {
-		writeAssistedRefusal(w, http.StatusRequestEntityTooLarge, TASRefuseTooLarge, fmt.Sprintf("the script is over the %d-byte ceiling", TASByteCeiling))
+	out := s.submitAssisted(r.Context(), def, who, body)
+	if out.plain != "" {
+		http.Error(w, out.plain, out.status)
 		return
+	}
+	if out.status != http.StatusOK {
+		w.Header().Set("Content-Type", "application/json")
+		w.WriteHeader(out.status)
+	}
+	writeJSON(w, out.resp)
+}
+
+// assistedSubmitter is who is submitting (gate 1), as the rate keys them and
+// as the judged recording names them. The route and the workbench (M38.5)
+// derive it the same way, from the request that opened them.
+type assistedSubmitter struct {
+	key      string
+	name     string
+	account  AuthenticatedAccount
+	signedIn bool
+}
+
+func (s *WebSocketServer) assistedSubmitterFor(r *http.Request) assistedSubmitter {
+	account, signedIn := s.authAccount(r)
+	who := assistedSubmitter{key: "guest:" + generationClientKey(r), name: "Guest", account: account, signedIn: signedIn}
+	if signedIn {
+		who.key = "account:" + account.ID
+		who.name = s.accountPublicName(account)
+	}
+	return who
+}
+
+// assistedOutcome is a submission's answer: an HTTP status and either a JSON
+// response or, where the route has always answered in plain text, that text.
+type assistedOutcome struct {
+	status int
+	resp   AssistedSubmitResponse
+	plain  string
+}
+
+func assistedRefusal(status int, class, detail string) assistedOutcome {
+	return assistedOutcome{status: status, resp: AssistedSubmitResponse{Refusal: class, Reason: detail}}
+}
+
+// submitAssisted runs gates 2 to 5 and writes the result: M38.4's path, which
+// the route and the workbench's submit (M38.5) both take.
+func (s *WebSocketServer) submitAssisted(ctx context.Context, def ChallengeDefinition, who assistedSubmitter, body []byte) assistedOutcome {
+	// 2. The byte ceiling.
+	if len(body) > TASByteCeiling {
+		return assistedRefusal(http.StatusRequestEntityTooLarge, TASRefuseTooLarge, fmt.Sprintf("the script is over the %d-byte ceiling", TASByteCeiling))
 	}
 
 	// 3. The rate.
 	gate := s.tasGate()
-	if !gate.allow(key, s.clockNow()) {
-		writeAssistedRefusal(w, http.StatusTooManyRequests, "rate", fmt.Sprintf("at most %d submissions a minute", tasSubmitsPerWindow))
-		return
+	if !gate.allow(who.key, s.clockNow()) {
+		return assistedRefusal(http.StatusTooManyRequests, "rate", fmt.Sprintf("at most %d submissions a minute", tasSubmitsPerWindow))
 	}
 
 	// 4. A judge slot, or try again.
 	select {
 	case gate.slots <- struct{}{}:
 	default:
-		writeAssistedRefusal(w, http.StatusServiceUnavailable, "busy", "the judges are busy; try again in a moment")
-		return
+		return assistedRefusal(http.StatusServiceUnavailable, "busy", "the judges are busy; try again in a moment")
 	}
 	defer func() { <-gate.slots }()
 
@@ -146,21 +183,17 @@ func (a *WebAPI) handleAssistedSubmit(w http.ResponseWriter, r *http.Request, ch
 	if err != nil {
 		var refusal *TASRefusal
 		if errors.As(err, &refusal) {
-			writeAssistedRefusal(w, http.StatusBadRequest, refusal.Class, refusal.Detail)
-			return
+			return assistedRefusal(http.StatusBadRequest, refusal.Class, refusal.Detail)
 		}
-		http.Error(w, err.Error(), http.StatusBadRequest)
-		return
+		return assistedOutcome{status: http.StatusBadRequest, plain: err.Error()}
 	}
 	worldName, world, err := s.ResolveChallengeWorld(def)
 	if err != nil {
-		http.Error(w, "the challenge's world is unavailable", http.StatusServiceUnavailable)
-		return
+		return assistedOutcome{status: http.StatusServiceUnavailable, plain: "the challenge's world is unavailable"}
 	}
 	recordingID, path, file, err := s.createAssistedRecording(def)
 	if err != nil {
-		http.Error(w, "there is nowhere to record the run", http.StatusServiceUnavailable)
-		return
+		return assistedOutcome{status: http.StatusServiceUnavailable, plain: "there is nowhere to record the run"}
 	}
 
 	type outcome struct {
@@ -172,10 +205,10 @@ func (a *WebAPI) handleAssistedSubmit(w http.ResponseWriter, r *http.Request, ch
 		if gate.onJudge != nil {
 			gate.onJudge()
 		}
-		j, err := JudgeTASScript(def, worldName, world, script, name, file)
+		j, err := JudgeTASScript(def, worldName, world, script, who.name, file)
 		done <- outcome{j, err}
 	}()
-	ctx, cancel := context.WithTimeout(r.Context(), tasJudgeTimeout)
+	ctx, cancel := context.WithTimeout(ctx, tasJudgeTimeout)
 	defer cancel()
 	var result outcome
 	select {
@@ -185,43 +218,38 @@ func (a *WebAPI) handleAssistedSubmit(w http.ResponseWriter, r *http.Request, ch
 		// waits for the request, and the request waits for the judge.
 		result = <-done
 		_ = os.Remove(path)
-		http.Error(w, "the judge ran out of time", http.StatusServiceUnavailable)
-		return
+		return assistedOutcome{status: http.StatusServiceUnavailable, plain: "the judge ran out of time"}
 	}
 	_ = file.Close()
 	if result.err != nil {
 		_ = os.Remove(path)
-		http.Error(w, "the run could not be judged", http.StatusInternalServerError)
-		return
+		return assistedOutcome{status: http.StatusInternalServerError, plain: "the run could not be judged"}
 	}
 	if !result.judgment.Met {
 		_ = os.Remove(path)
-		w.Header().Set("Content-Type", "application/json")
-		w.WriteHeader(http.StatusUnprocessableEntity)
-		writeJSON(w, AssistedSubmitResponse{
+		return assistedOutcome{status: http.StatusUnprocessableEntity, resp: AssistedSubmitResponse{
 			StoppedAt: result.judgment.StoppedAt,
 			Refusal:   "goal-not-met",
 			Reason:    fmt.Sprintf("the goal was not met by tick %d, where the script ends", result.judgment.StoppedAt),
-		})
-		return
+		}}
 	}
 
 	row := result.judgment.Result
-	row.Name = CP437String(admitPlayerName(name))
+	row.Name = CP437String(admitPlayerName(who.name))
 	row.RecordingID = recordingID
 	row.Division = ChallengeDivisionAssisted
 	resp := AssistedSubmitResponse{
 		Met: true, Ticks: row.Ticks, Score: row.Score, Gems: row.Gems,
 		RecordingID: recordingID, Replay: "/replay/" + recordingID,
 	}
-	if signedIn {
-		row.AccountKey = account.ID
+	if who.signedIn {
+		row.AccountKey = who.account.ID
 		rank, err := s.ChallengeStore.Submit(row)
 		if err == nil {
 			resp.Durable, resp.Rank = true, rank
 		}
 	}
-	writeJSON(w, resp)
+	return assistedOutcome{status: http.StatusOK, resp: resp}
 }
 
 // createAssistedRecording opens the file the judge will write, under a fresh
@@ -246,12 +274,6 @@ func (s *WebSocketServer) createAssistedRecording(def ChallengeDefinition) (stri
 		return "", "", nil, err
 	}
 	return id, path, file, nil
-}
-
-func writeAssistedRefusal(w http.ResponseWriter, status int, class, detail string) {
-	w.Header().Set("Content-Type", "application/json")
-	w.WriteHeader(status)
-	writeJSON(w, AssistedSubmitResponse{Refusal: class, Reason: detail})
 }
 
 // isAssistedPath reports whether an /api/challenge sub-path is <id>/assisted.

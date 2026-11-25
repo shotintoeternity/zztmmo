@@ -9781,7 +9781,7 @@ challenge leaderboard, and a replay link on every row that anyone can watch.
   concurrent full-ceiling submissions, two judged and eight told the judges
   were busy, never more than two at once.
 
-- [ ] **M38.5 — the workbench session (server).** Add a websocket mode that holds
+- [x] **M38.5 — the workbench session (server).** Add a websocket mode that holds
   one editable script for one challenge and streams frames to its one client,
   built on `ReplayPlayback` but fed from memory instead of a file. Its ops are:
   - `setInput(tick, input)`, `setScrollReply(tick, reply)` and
@@ -9798,6 +9798,38 @@ challenge leaderboard, and a replay link on every row that anyone can watch.
   re-simulate (the frame at tick N equals a fresh replay to N), a seek past the
   ceiling refused, a session evicted when idle, and the replay viewer's seek
   test. Server-only.
+  Done note (2026-11-26): `tas_workbench.go`, `m38_5_test.go`. The mode is
+  `/ws?workbench=<challenge id>`, opened with a join like the replay viewer.
+  `ReplayPlayback` now reads its ticks from a source: a file for the viewer,
+  the script for the workbench, which hands out the recTicks the judge's own
+  recording carries (the join at the challenge start and the name on tick 0,
+  then the scroll replies). The equivalence oracle is literal: the workbench
+  at tick N, after import, seek, step and an edit behind the cursor, has the
+  frame and room hashes of the judge's recording replayed fresh to N, and at
+  the end its status is the judged and live ticks, score and gems. Ops are
+  answered by a `workbenchStatus` after every frame; a refused op gets a
+  `workbenchError` with M38.1's class where one fits (`tick-out-of-range`,
+  `end-of-script`, `unknown-op`, `sign-in-to-import` and `not-your-run`
+  otherwise). `setInput` at the script's length appends and `step` at the end
+  is refused; `seek` past the ceiling is refused and past the end lands on
+  the end. **Own run** means the one thing the server can check: a signed-in
+  account whose live row cites the recording, so a guest is asked to sign
+  in. Submit encodes the script and takes M38.4's path through one extracted
+  function (`submitAssisted`), so the rate, the two judges and admission
+  apply unchanged; nothing is written before it. A session is evicted, its
+  socket closed, after 2727 ticks (about five minutes) with no op while not
+  playing. **Seek cost**: at most 8 sessions, one op at a time each, and each
+  seek at most a full-ceiling re-simulation (about 80 ms on Gem Dash,
+  M38.2); seeks do not take a judge slot, so editing never waits behind a
+  submission. The server tick takes a session with TryLock and skips one
+  busy re-simulating. The replay viewer's `replayControl` op `seek` (`tick`)
+  is Restart's mechanism with the pause kept (Restart is now a seek to the
+  start), shares its cooldown, and gives every watcher a fresh frame.
+  For M38.6: a status is whole (replace it, do not merge; `playing` and
+  `met` are always sent); an evicted session is sent an `idle` error just
+  before its socket is closed, which may not reach the client; and a seek on
+  an unpaused replay can answer with the frame one tick past N, so the
+  viewer should pause before it seeks.
 
 - [ ] **M38.6 — the workbench screen (client).** Under `engine/web/src`: a
   workbench mode reached from the challenge screen. It has the CP437 board, a
