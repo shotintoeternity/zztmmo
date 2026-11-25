@@ -9704,7 +9704,7 @@ challenge leaderboard, and a replay link on every row that anyone can watch.
   concurrent judges is generous for that course; a busier world costs more
   and M38.4's load test should measure on the course it ships.
 
-- [ ] **M38.3 — the assisted division.** Add `Division` to `ChallengeResult`
+- [x] **M38.3 — the assisted division.** Add `Division` to `ChallengeResult`
   (`omitempty`; empty means live) and key `Submit`, `Leaderboard` and
   `ResultForRecording` on (challenge id, division). Store it in the same file,
   so a row written before M38 reads back as live. One row per account per
@@ -9713,6 +9713,17 @@ challenge leaderboard, and a replay link on every row that anyone can watch.
   division. DoD: an assisted submission never changes a live rank or a live
   row, and the reverse; an old store file loads unchanged; a stale version is
   refused in both divisions.
+  Done note (2026-11-26): `challenge_store.go`, `m38_3_test.go`. In memory a
+  board is keyed by (challenge, division); the file keeps M32.1's shape,
+  rows grouped by challenge id, each carrying `division`. The live-meaning
+  calls (`Leaderboard`, `ResultForRecording`, `ChallengeGhost`) are
+  unchanged, with `LeaderboardIn`, `ResultForRecordingIn` and
+  `ChallengeGhostIn` beside them; the ghost route takes `?division=`, and an
+  unknown division is a 400 on the route and dropped on load. The landing's
+  `assisted` table is served beside `leaderboard`; nothing shows it until
+  M38.7. Tested with a real assisted row (a live run's script, judged, its
+  recording on disk): its ghost draws from the assisted board and is not
+  found on the live one.
 
 - [ ] **M38.4 — submitting a script.** Add `POST /api/challenge/<id>/assisted`,
   which takes an M38.1 script body. Its gates run in this order: auth (per

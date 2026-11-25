@@ -84,6 +84,12 @@ func (c *challengeGhostCache) put(id string, track ChallengeGhostTrack) {
 // be turned into a track. Otherwise the endpoint would be a way to read the
 // positions out of any recording on the server, challenge or not.
 func (s *WebSocketServer) ChallengeGhost(challengeID, recordingID string) (ChallengeGhostTrack, error) {
+	return s.ChallengeGhostIn(challengeID, ChallengeDivisionLive, recordingID)
+}
+
+// ChallengeGhostIn is ChallengeGhost for a row in one division (M38.3): an
+// assisted run's ghost is raced from the assisted board, labelled (M38.0.4).
+func (s *WebSocketServer) ChallengeGhostIn(challengeID, division, recordingID string) (ChallengeGhostTrack, error) {
 	def, ok := ChallengeByID(challengeID)
 	if !ok {
 		return ChallengeGhostTrack{}, ErrUnknownChallenge
@@ -91,7 +97,7 @@ func (s *WebSocketServer) ChallengeGhost(challengeID, recordingID string) (Chall
 	if s.ChallengeStore == nil {
 		return ChallengeGhostTrack{}, ErrUnknownChallenge
 	}
-	result, ok := s.ChallengeStore.ResultForRecording(def.ID, recordingID)
+	result, ok := s.ChallengeStore.ResultForRecordingIn(def.ID, division, recordingID)
 	if !ok {
 		return ChallengeGhostTrack{}, ErrUnknownChallenge
 	}

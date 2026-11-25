@@ -36,8 +36,11 @@ type ChallengeSummary struct {
 type ChallengeResponse struct {
 	Challenge   ChallengeSummary          `json:"challenge"`
 	Leaderboard []ChallengeLeaderboardRow `json:"leaderboard"`
-	CanSubmit   bool                      `json:"canSubmit"`
-	Catalogue   []ChallengeSummary        `json:"catalogue,omitempty"`
+	// Assisted is the M38.3 assisted board: judged TAS scripts, ranked only
+	// against each other.
+	Assisted  []ChallengeLeaderboardRow `json:"assisted"`
+	CanSubmit bool                      `json:"canSubmit"`
+	Catalogue []ChallengeSummary        `json:"catalogue,omitempty"`
 }
 
 // challengeNow is the injected non-simulation clock (M16.16a). It picks WHICH
@@ -95,6 +98,7 @@ func (a *WebAPI) writeChallengeLanding(w http.ResponseWriter, r *http.Request, i
 	}
 	if a.Server != nil {
 		resp.Leaderboard = a.Server.ChallengeStore.Leaderboard(def.ID, account.ID)
+		resp.Assisted = a.Server.ChallengeStore.LeaderboardIn(def.ID, ChallengeDivisionAssisted, account.ID)
 	}
 	for _, entry := range ChallengeCatalogue() {
 		resp.Catalogue = append(resp.Catalogue, a.challengeSummary(entry, now, hasToday && todays.ID == entry.ID))
@@ -147,7 +151,12 @@ func (a *WebAPI) handleChallengeGhost(w http.ResponseWriter, r *http.Request) {
 		http.Error(w, "invalid recording id", http.StatusBadRequest)
 		return
 	}
-	track, err := a.Server.ChallengeGhost(challengeID, recordingID)
+	division := strings.TrimSpace(q.Get("division"))
+	if !validChallengeDivision(division) {
+		http.Error(w, "unknown division", http.StatusBadRequest)
+		return
+	}
+	track, err := a.Server.ChallengeGhostIn(challengeID, division, recordingID)
 	if err != nil {
 		status := http.StatusNotFound
 		if err == ErrChallengeResultStale {

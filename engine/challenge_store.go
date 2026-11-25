@@ -33,7 +33,34 @@ var (
 	// ErrChallengeResultStale is a result recorded against an older definition
 	// of the challenge than the one this server is running.
 	ErrChallengeResultStale = errors.New("zztgo: challenge result is stale")
+	// ErrChallengeDivision is a result for a division this store does not keep.
+	ErrChallengeDivision = errors.New("zztgo: unknown challenge division")
 )
+
+// M38.3: a challenge has two boards. Live runs are played; assisted runs are
+// TAS scripts the judge re-simulated (M38.2). They share this store and its
+// file, and a row's Division says which board it is on: empty is live, so
+// every row written before M38 reads back as live. Each division ranks only
+// against itself, so an assisted run never moves a live rank, and a row never
+// changes division.
+const (
+	ChallengeDivisionLive     = ""
+	ChallengeDivisionAssisted = "assisted"
+)
+
+func validChallengeDivision(division string) bool {
+	return division == ChallengeDivisionLive || division == ChallengeDivisionAssisted
+}
+
+// challengeBoardKey is the in-memory key of one challenge's board in one
+// division. The file keeps M32.1's shape (rows grouped by challenge id, each
+// carrying its division); only memory is split.
+func challengeBoardKey(challengeID, division string) string {
+	if division == ChallengeDivisionLive {
+		return challengeID
+	}
+	return challengeID + "\x00" + division
+}
 
 // ChallengeResult is one stored run. AccountKey never leaves this process: the
 // public projection is ChallengeLeaderboardRow, which has no field for it.
@@ -47,6 +74,9 @@ type ChallengeResult struct {
 	Score       int         `json:"score"`
 	Gems        int         `json:"gems"`
 	RecordingID string      `json:"recordingId,omitempty"`
+	// Division is the board the row is on: "" is live, "assisted" is a judged
+	// TAS script (M38.3).
+	Division string `json:"division,omitempty"`
 	// Evidence is the run's final room-state hash at completion, hex encoded.
 	// It is what a verification pass compares a replay of RecordingID against:
 	// replaying the stimuli must reproduce this exact hash or the row is not
@@ -114,24 +144,24 @@ func NewChallengeStore(path string) (*ChallengeStore, error) {
 			// they cannot be shown, replayed against a definition, or compared.
 			continue
 		}
-		kept := make([]ChallengeResult, 0, len(rows))
+		boards := make(map[string][]ChallengeResult)
 		for _, row := range rows {
-			if row.Version != def.Version || row.AccountKey == "" || row.Ticks <= 0 {
+			if row.Version != def.Version || row.AccountKey == "" || row.Ticks <= 0 || !validChallengeDivision(row.Division) {
 				continue
 			}
 			if row.Seq > store.seq {
 				store.seq = row.Seq
 			}
-			kept = append(kept, row)
+			key := challengeBoardKey(def.ID, row.Division)
+			boards[key] = append(boards[key], row)
 		}
-		if len(kept) == 0 {
-			continue
+		for key, kept := range boards {
+			sortChallengeResults(kept)
+			if len(kept) > challengeLeaderboardMax {
+				kept = kept[:challengeLeaderboardMax]
+			}
+			store.results[key] = kept
 		}
-		sortChallengeResults(kept)
-		if len(kept) > challengeLeaderboardMax {
-			kept = kept[:challengeLeaderboardMax]
-		}
-		store.results[def.ID] = kept
 	}
 	return store, nil
 }
@@ -169,7 +199,11 @@ func (s *ChallengeStore) Submit(result ChallengeResult) (int, error) {
 	if result.Version != def.Version {
 		return 0, ErrChallengeResultStale
 	}
+	if !validChallengeDivision(result.Division) {
+		return 0, ErrChallengeDivision
+	}
 	result.ChallengeID = def.ID
+	key := challengeBoardKey(def.ID, result.Division)
 
 	s.mu.Lock()
 	defer s.mu.Unlock()
@@ -179,7 +213,7 @@ func (s *ChallengeStore) Submit(result ChallengeResult) (int, error) {
 	s.seq++
 	result.Seq = s.seq
 
-	rows := s.results[def.ID]
+	rows := s.results[key]
 	replaced := false
 	for i, row := range rows {
 		if row.AccountKey != result.AccountKey {
@@ -200,7 +234,7 @@ func (s *ChallengeStore) Submit(result ChallengeResult) (int, error) {
 	if len(rows) > challengeLeaderboardMax {
 		rows = rows[:challengeLeaderboardMax]
 	}
-	s.results[def.ID] = rows
+	s.results[key] = rows
 
 	rank := 0
 	for i, row := range rows {
@@ -222,10 +256,15 @@ func challengeResultBetter(candidate, existing ChallengeResult) bool {
 	return candidate.Score > existing.Score
 }
 
-// Leaderboard is the public table for one challenge. viewerAccount marks the
-// viewer's own row and is never echoed back.
+// Leaderboard is the public live table for one challenge. viewerAccount marks
+// the viewer's own row and is never echoed back.
 func (s *ChallengeStore) Leaderboard(challengeID, viewerAccount string) []ChallengeLeaderboardRow {
-	if s == nil {
+	return s.LeaderboardIn(challengeID, ChallengeDivisionLive, viewerAccount)
+}
+
+// LeaderboardIn is the public table for one challenge's division.
+func (s *ChallengeStore) LeaderboardIn(challengeID, division, viewerAccount string) []ChallengeLeaderboardRow {
+	if s == nil || !validChallengeDivision(division) {
 		return nil
 	}
 	def, ok := ChallengeByID(challengeID)
@@ -234,7 +273,7 @@ func (s *ChallengeStore) Leaderboard(challengeID, viewerAccount string) []Challe
 	}
 	s.mu.Lock()
 	defer s.mu.Unlock()
-	rows := s.results[def.ID]
+	rows := s.results[challengeBoardKey(def.ID, division)]
 	out := make([]ChallengeLeaderboardRow, 0, len(rows))
 	for i, row := range rows {
 		out = append(out, ChallengeLeaderboardRow{
@@ -253,7 +292,12 @@ func (s *ChallengeStore) Leaderboard(challengeID, viewerAccount string) []Challe
 // a ghost request proves the recording it was handed is a leaderboard run of the
 // challenge it claims, rather than any recording on the server.
 func (s *ChallengeStore) ResultForRecording(challengeID, recordingID string) (ChallengeResult, bool) {
-	if s == nil || recordingID == "" {
+	return s.ResultForRecordingIn(challengeID, ChallengeDivisionLive, recordingID)
+}
+
+// ResultForRecordingIn is ResultForRecording in one division.
+func (s *ChallengeStore) ResultForRecordingIn(challengeID, division, recordingID string) (ChallengeResult, bool) {
+	if s == nil || recordingID == "" || !validChallengeDivision(division) {
 		return ChallengeResult{}, false
 	}
 	def, ok := ChallengeByID(challengeID)
@@ -262,7 +306,7 @@ func (s *ChallengeStore) ResultForRecording(challengeID, recordingID string) (Ch
 	}
 	s.mu.Lock()
 	defer s.mu.Unlock()
-	for _, row := range s.results[def.ID] {
+	for _, row := range s.results[challengeBoardKey(def.ID, division)] {
 		if row.RecordingID == recordingID {
 			return row, true
 		}
@@ -274,7 +318,20 @@ func (s *ChallengeStore) writeLocked() error {
 	if s.path == "" {
 		return nil
 	}
-	file := challengeStoreFile{Version: challengeStoreVersion, Seq: s.seq, Results: s.results}
+	// The file groups rows by challenge id, as M32.1 wrote it; each row says
+	// its own division. Live rows come first, in board order.
+	byChallenge := make(map[string][]ChallengeResult)
+	keys := make([]string, 0, len(s.results))
+	for key := range s.results {
+		keys = append(keys, key)
+	}
+	sort.Strings(keys)
+	for _, key := range keys {
+		for _, row := range s.results[key] {
+			byChallenge[row.ChallengeID] = append(byChallenge[row.ChallengeID], row)
+		}
+	}
+	file := challengeStoreFile{Version: challengeStoreVersion, Seq: s.seq, Results: byChallenge}
 	data, err := json.MarshalIndent(file, "", "  ")
 	if err != nil {
 		return err

@@ -172,6 +172,7 @@ type AccountExportRun struct {
 	Score       int         `json:"score"`
 	Gems        int         `json:"gems"`
 	RecordingID string      `json:"recordingId,omitempty"`
+	Division    string      `json:"division,omitempty"`
 }
 
 type AccountExportWorld struct {
@@ -219,7 +220,7 @@ func (s *WebSocketServer) exportAccount(account AuthenticatedAccount, records *A
 	}
 	for _, run := range s.ChallengeStore.ResultsFor(account.ID) {
 		out.Challenges = append(out.Challenges, AccountExportRun{
-			ChallengeID: run.ChallengeID, Name: run.Name, Ticks: run.Ticks, Score: run.Score, Gems: run.Gems, RecordingID: run.RecordingID,
+			ChallengeID: run.ChallengeID, Name: run.Name, Ticks: run.Ticks, Score: run.Score, Gems: run.Gems, RecordingID: run.RecordingID, Division: run.Division,
 		})
 	}
 	out.Worlds = accountWorldRoles(s.WorldsDir, account.ID)
