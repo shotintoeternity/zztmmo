@@ -10589,6 +10589,32 @@ board."
   title, and no further join is sent. No browser journey drives a refused
   join yet. `make browser` passes. Deployed 2026-11-26 at `65f9e0a`.
 
+- [ ] **M42.6 — a board's one-time `#give` reaches only the first player who
+  arrives.** *(owner decision needed)* Owner-reported 2026-11-26 after the
+  M42.3–M42.5 deploy: "I died right when entering the new board", COTS24HR,
+  through the Actual Game passage. Route: "START: Menu" (7) → "Chapter 1"
+  (10, a title card; arrive on its player tile 3,1) → the passage at 31,1 →
+  "Apartment" (12). There, one object runs `#give gems 20` / `#give torches
+  120` once, and a "timesucker" object loops `#take torches 1 gameover`, with
+  `:gameover` running `#endgame`: the world's torches are its clock. Reproduced
+  locally: on a fresh world the arriving player gets 120 torches on tick 3
+  and lives; on a world restored after somebody else already played Apartment,
+  the give object's program has already finished, the arriving player has 0
+  torches, and `#endgame` kills them on tick 4. Not caused by M42.3–M42.5
+  (placement and transfers are unchanged; vanilla also lands the player on
+  3,1, because the passages' colours differ, GAME.PAS:1321); M42.3 only made
+  the route reachable on production, where joins had spawned in a corner.
+  Cause: board scripts are shared and persist (in the autosave too), while
+  inventory is per player (`#give`/`#take` act on the nearest player,
+  `NearestPlayer`, oop.go:512). A one-shot "starting kit" script, common in
+  classic worlds, works only for the first arrival; the timesucker also
+  drains whichever player is nearest. Options for the owner: (a) private
+  per-party copies of a world (the backlog's "party instances"), which keeps
+  vanilla semantics for each group; (b) reset a board's scripts when a player
+  arrives on an empty board, which breaks persistent co-op progress on that
+  board; (c) leave it as a known incompatibility of shared worlds. Unranked
+  until the owner chooses.
+
 ## M14 — Rearchitecting for the service ZZTMMO is becoming
 
 Filed 2026-07-12 from a whole-repo review (NOTES.md): three structural debts
