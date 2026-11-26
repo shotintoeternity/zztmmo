@@ -10633,7 +10633,8 @@ board."
   player per board, and a touch gift left alone; three of them fail without
   the hook. The COTS24HR route on a restored world now hands the arrival 120
   torches on its first tick on Apartment. `go test ./...` passes, no replay
-  fixture moved.
+  fixture moved. Deployed 2026-11-26 at `02ab5f5`: a guest join of
+  Apartment on production got the kit on its first tick.
 
 - [x] **M42.7 — the join snapshot is compressed on the wire.** Owner-reported
   2026-11-26: "it takes forever to load the world after I press P, like maybe
@@ -10664,6 +10665,7 @@ board."
   client is answered with compression and still gets a full snapshot (fails
   with compression off), and that a Safari client offering it is answered
   without. `go test ./...` and `make browser` pass, WebKit profiles included.
+  Deployed 2026-11-26 at `02ab5f5` with M42.8.
 
 - [x] **M42.8 — the play socket is open before P.** Owner decision
   2026-11-26, the follow-up M42.7 offered: of the ~1.65 s between P and the
@@ -10690,7 +10692,9 @@ board."
   waits for a title the server named. And journey 1's quit step waited for
   "a socket closed", which a dropped prewarm satisfied early: the e2e and
   co-op journeys now count closes only of sockets that joined. `make browser`
-  passes.
+  passes. Deployed 2026-11-26 at `02ab5f5`: P to first snapshot, measured
+  from the owner's network against production, went from ~1,640 ms to
+  ~290 ms (one round trip).
 
 ## M14 — Rearchitecting for the service ZZTMMO is becoming
 
