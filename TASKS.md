@@ -5978,7 +5978,7 @@ The background says which player; the glyph says that it is a player.
   Verified: `go build ./...`, `go vet ./...`, `go test ./...` green; both journeys
   green under `ZZT_BROWSER=1`; the full twelve-suite browser family green (393s).
 
-- [ ] **M16.11f — journey 1's passage walk still guesses the row M16.11b
+- [x] **M16.11f — journey 1's passage walk still guesses the row M16.11b
   stopped guessing.** Filed 2026-11-26 by M38.7's rule-3 full `make browser`
   run. `TestM1611BrowserEndToEndPlayerJourneys` failed once under the whole
   family's load: `the player never reached the passage board change; stopped
@@ -5996,6 +5996,17 @@ The background says which player; the glyph says that it is a player.
   the failure is reproduced first by forcing a long hold on the bear loop's
   step as M16.11b did, and the journey is green alone and in a whole-family
   run. Unranked; not beta-gating.
+  **Done 2026-11-25.** Watched failing first: a forced 330ms hold on the bear
+  loop's `ArrowDown` step reproduced it on the first run, `the player is stuck
+  walking ArrowDown toward the passage board change at the player board=1
+  pos=(34,24)` — below the passage and pinned against the south wall. Every leg
+  from the vendor to the passage is now a `walkOnto` with an `until` on the
+  hit: up into the empty row-11 lane and east to (30,11), then (30,12) and back
+  until the bear lands its hit, then onto the passage at (34,12) ending on the
+  board change. The single `step()`s, the `y < 12` assert and the `ArrowDown`
+  fallback are deleted. Green with the 330ms hold forced on every one of those
+  legs, green 3/3 alone in the shipped form, and green in a whole `make
+  browser` run. Test-only; `lib/walk.mjs` unchanged.
 - [x] **M16.8b — the manually-ticked websocket tests sleep 5ms and hope the input
   landed.** Filed 2026-08-04 from M16.11c's rule-3 full-family run, which came
   back red on a test that change does not touch:

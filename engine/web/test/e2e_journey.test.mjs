@@ -358,19 +358,22 @@ try {
   // capture health BEFORE leaving the vendor square, and only go looking for
   // the bear if the walk east did not already cost health.
   const healthBeforeBear = seen.you.health;
-  // Exactly one row up, and it matters: the loop below touches the bear on row
-  // 12 by stepping down from row 11, so a step that covered two rows would
-  // oscillate between 10 and 11 and never reach it. A closed loop is what makes
-  // that one row rather than the old fixed 110ms, which under load could span
-  // two tick boundaries.
-  await step(player, "ArrowUp");
-  assert.ok(seen.you.y < 12, `stepping up must leave row 12, at y=${seen.you.y}`);
-  await walkUntil(player, "ArrowRight", atLeastX(30), "the bear's column");
-  for (let i = 0; i < 14 && seen.you.health === healthBeforeBear; i++) {
-    // Step onto the bear's row to touch it, then back off and try again.
-    await step(player, "ArrowDown");
-    if (seen.you.health !== healthBeforeBear) break;
-    await step(player, "ArrowUp");
+  const hurt = () => seen.you.health !== healthBeforeBear;
+  // Every leg from here to the passage ends on a named tile (walkOnto, note 5),
+  // not on a one-way inequality. The old loop stepped down and up by single
+  // step()s and assumed each covered one row; when the down-steps covered more
+  // than the up-steps the player drifted south, and the passage walk's ArrowDown
+  // fallback — which only works from ABOVE row 12 — walked them further away
+  // (M16.11f; M16.11b fixed the cutline's copy of the same walk). Row 11 is empty
+  // for the board's whole width (fixtures/accept.zwd), so it is the lane: up off
+  // the vendor's row, then east to the square above the bear.
+  await walkOnto(player, 30, 11, "the square above the bear", { until: hurt });
+  for (let i = 0; i < 14 && !hurt(); i++) {
+    // Onto the bear's square to touch it, then back off and try again. The bear
+    // chases, so it may be anywhere near; `until` stops either leg on the hit.
+    await walkOnto(player, 30, 12, "the bear's square", { until: hurt });
+    if (hurt()) break;
+    await walkOnto(player, 30, 11, "the square above the bear", { until: hurt });
   }
   assert.ok(
     seen.you.health < healthBeforeBear,
@@ -379,18 +382,14 @@ try {
   console.log(`  - bear damage taken: health ${healthBeforeBear} -> ${seen.you.health}`);
 
   // Passage at (34,12): a board transfer. M16.8a made "transfer" reachable.
-  // The bear loop may have left the player on row 12, in which case walking
-  // east crosses the passage directly; otherwise drop onto it at x=34.
+  // Wherever the bear loop left the player, walk onto the passage itself; the
+  // walk ends on the board change, since the far side's coordinates are not
+  // this board's.
   const boardBefore = seen.boardId;
-  await walkUntil(
-    player,
-    "ArrowRight",
-    () => seen.boardId !== boardBefore || (seen.you?.x ?? 0) >= 34,
-    "the passage column",
-  );
-  if (seen.boardId === boardBefore) {
-    await walkUntil(player, "ArrowDown", () => seen.boardId !== boardBefore, "the passage board change", { maxSteps: 8 });
-  }
+  await walkOnto(player, 34, 12, "the passage", {
+    maxSteps: 30,
+    until: () => seen.boardId !== boardBefore,
+  });
   await waitFor(() => seen.boardChanges > 0, "a boardChange message");
   assert.ok(has("transfer"), `the traveller must receive a "transfer" event (M16.8a); saw ${JSON.stringify(eventTypes())}`);
   assert.equal(seen.hud.ammo, ammoBefore + 5, "ammo survives the board change");
