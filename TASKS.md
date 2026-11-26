@@ -10571,6 +10571,24 @@ board."
   start, the start reused once its player walks off, and the distinct message.
   `go test ./...` passes. Not yet deployed.
 
+- [x] **M42.5 — a refused join says why and stops asking.** Found 2026-11-25
+  checking M42.4 in a real browser: with five players on TOWN's start, a
+  sixth browser never showed "Start crowded". The server answers a refused
+  join (crowded start, or M36.23's full board) with one ownerless scroll and
+  closes the socket; the client read the close as a dropped connection, showed
+  "Connection error", and reconnected, asking again about twice a second (19
+  refusals in 10 seconds). Steps: `web/src/join_refusal.ts` recognises an
+  ownerless scroll that arrives before a socket's first snapshot as the
+  refusal; `connect()` holds it, and on the close returns to the world's title
+  screen (where P asks again) with the reason in a window, instead of
+  reconnecting. Also tightens M42.4's side squares to the start's own test
+  (any square a player can stand on with no stat, not only empty floor); the
+  TOWN counts did not change. Done note (2026-11-25): node test
+  `join_refusal.test.mjs`; checked by hand in Chromium against a local
+  zzt-server with five sockets on TOWN's start: the window shows over the
+  title, and no further join is sent. No browser journey drives a refused
+  join yet. `make browser` passes. Not yet deployed.
+
 ## M14 — Rearchitecting for the service ZZTMMO is becoming
 
 Filed 2026-07-12 from a whole-repo review (NOTES.md): three structural debts

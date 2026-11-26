@@ -743,7 +743,7 @@ func roomSpawn(room *Room, spawnX, spawnY int16) (int16, int16, bool) {
 		if startHeld(room, x, y) {
 			for dir := 0; dir < 4; dir++ {
 				nx, ny := x+placementSearchDX[dir], y+placementSearchDY[dir]
-				if isSpawnOpen(room, nx, ny) {
+				if isSpawnUnoccupied(room, nx, ny) {
 					return nx, ny, true
 				}
 			}
@@ -780,17 +780,15 @@ func isSpawnUnoccupied(room *Room, x, y int16) bool {
 	return room.Engine.PlacementUnoccupied(x, y, -1)
 }
 
-// startHeld reports whether a join's start square is taken by somebody or
-// something rather than being terrain: a stat stands on it (a player, an
-// object), or it is a square a player could stand on (M42.4).
+// startHeld reports whether a join's start square, which a player cannot be
+// placed on, is taken by somebody or something (a stat: a player, an object)
+// rather than being terrain (M42.4).
 func startHeld(room *Room, x, y int16) bool {
 	if x < 1 || x > BOARD_WIDTH || y < 1 || y > BOARD_HEIGHT {
 		return false
 	}
-	if _, held := room.Engine.StatAt(x, y, -1); held {
-		return true
-	}
-	return PlayerCanStandOn(room.Engine.Board.Tiles[x][y].Element)
+	_, held := room.Engine.StatAt(x, y, -1)
+	return held
 }
 
 // isRequestedSpawnUnoccupied is the looser test a *named* arrival square gets:

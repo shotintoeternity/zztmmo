@@ -647,6 +647,7 @@ type InputMessage = {
 // the sheet directly — there is no Unicode round trip.
 import pcEgaUrl from "./pc_ega.png";
 import { ScrollQueue, type PendingScroll } from "./scroll_queue";
+import { joinRefusalFrom, type JoinRefusal } from "./join_refusal";
 import { eyeLevelWalkMask, facingMask, isCameraKey, lookStepFor } from "./view3d/input3d";
 
 const GLYPH_COLS = 32;
@@ -2348,6 +2349,10 @@ function connect() {
   window.clearTimeout(retryTimer);
   const socket = new WebSocket(wsURL());
   ws = socket;
+  // Whether this socket has had its first snapshot, and the refusal it was
+  // answered with instead (joinRefusalFrom).
+  let joined = false;
+  let refusal: JoinRefusal | null = null;
 
   socket.addEventListener("open", () => {
     // A socket superseded while it was connecting must not join: it would be a
@@ -2390,11 +2395,23 @@ function connect() {
       return;
     }
     const message = JSON.parse(String(event.data)) as ServerMessage;
+    const refused = joinRefusalFrom(message, joined);
+    if (refused) {
+      refusal = refused;
+      return;
+    }
+    if (message.type === MessageTypeSnapshot) {
+      joined = true;
+    }
     applyMessage(message);
   });
 
   socket.addEventListener("close", () => {
     if (ws !== socket || watchLiveSwitching) {
+      return;
+    }
+    if (refusal) {
+      refuseJoin(refusal);
       return;
     }
     disconnect("Disconnected");
@@ -2403,8 +2420,20 @@ function connect() {
     if (ws !== socket || watchLiveSwitching) {
       return;
     }
+    if (refusal) {
+      refuseJoin(refusal);
+      return;
+    }
     disconnect("Connection error");
   });
+}
+
+// refuseJoin ends a join the server refused: back to the world's title screen,
+// where P asks again, with the server's reason on top of it. Not a reconnect:
+// nothing was dropped, and asking again at once would only be refused again.
+function refuseJoin(refused: JoinRefusal) {
+  leaveToTitle();
+  openWindow(refused.title, refused.lines, false);
 }
 
 function connectEditor() {
