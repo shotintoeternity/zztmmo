@@ -10537,7 +10537,7 @@ board."
   the next at 6,11. A further test pins that a save carries no player tile,
   which is what this fix relies on. `go test ./...` passes. `make browser-only`
   ran the co-op cutline (which saves and restores), the M16.11 journeys and the
-  M16.15 persistence journeys. Not yet deployed.
+  M16.15 persistence journeys. Deployed 2026-11-26 at `65f9e0a`; a guest join of COTS24HR on production landed at 30,14.
 
 - [x] **M42.4 — the start, one step aside, or an error.** Owner rule
   2026-11-25: "Players should automatically spawn on each board in the same
@@ -10569,7 +10569,7 @@ board."
   Done note (2026-11-25): `m42_4_test.go` pins start, N, E, S, W and the sixth
   refused with the board unchanged, a blocked side skipped, an object on the
   start, the start reused once its player walks off, and the distinct message.
-  `go test ./...` passes. Not yet deployed.
+  `go test ./...` passes. Deployed 2026-11-26 at `65f9e0a`.
 
 - [x] **M42.5 — a refused join says why and stops asking.** Found 2026-11-25
   checking M42.4 in a real browser: with five players on TOWN's start, a
@@ -10587,7 +10587,7 @@ board."
   `join_refusal.test.mjs`; checked by hand in Chromium against a local
   zzt-server with five sockets on TOWN's start: the window shows over the
   title, and no further join is sent. No browser journey drives a refused
-  join yet. `make browser` passes. Not yet deployed.
+  join yet. `make browser` passes. Deployed 2026-11-26 at `65f9e0a`.
 
 ## M14 — Rearchitecting for the service ZZTMMO is becoming
 
