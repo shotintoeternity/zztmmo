@@ -10665,6 +10665,33 @@ board."
   with compression off), and that a Safari client offering it is answered
   without. `go test ./...` and `make browser` pass, WebKit profiles included.
 
+- [x] **M42.8 — the play socket is open before P.** Owner decision
+  2026-11-26, the follow-up M42.7 offered: of the ~1.65 s between P and the
+  first snapshot from the owner's network, 828 ms was opening the socket (TCP,
+  TLS and the upgrade, three round trips to us-east-1). Steps: the title
+  screen opens the play socket for its world (`prewarmPlaySocket`, at the end
+  of `showTitle`) and sends nothing on it; `connect()` adopts it if it is for
+  the address it would open and still connecting or open, and otherwise
+  closes it and opens a fresh one as before; the editor drops it. Not for a
+  watch, replay, workbench or challenge. The server already waits for a
+  socket's first message without a deadline, and a socket that has sent
+  nothing is not a player, a stat or part of any count. **This changes a
+  contract five browser journeys pinned, the co-op cutline among them**
+  ("selecting a world opens no socket"): approved by the owner. Its meaning
+  is kept by counting a socket once it sends its first frame (a join, a
+  watch, an editor entry) rather than when it opens, so "nothing joined at
+  the title screen" is still asserted everywhere it was. Journey 1 now also
+  asserts that the first join rides a socket opened before P was pressed.
+  Done note (2026-11-26): the first full run found three things. A sixth
+  suite, `socket_journey.test.mjs` (M36.24's one-socket journey), pinned "the
+  title screen opens no socket" too, and takes the same counting. The 3D
+  runthrough's title prewarmed `world=Untitled`, the placeholder before a
+  world is chosen, and the 500 it got logged a console error: prewarming now
+  waits for a title the server named. And journey 1's quit step waited for
+  "a socket closed", which a dropped prewarm satisfied early: the e2e and
+  co-op journeys now count closes only of sockets that joined. `make browser`
+  passes.
+
 ## M14 — Rearchitecting for the service ZZTMMO is becoming
 
 Filed 2026-07-12 from a whole-repo review (NOTES.md): three structural debts

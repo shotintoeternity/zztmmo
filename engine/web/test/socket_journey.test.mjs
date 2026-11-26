@@ -37,7 +37,16 @@ const requests = [];
 page.on("pageerror", (err) => pageErrors.push(String(err)));
 page.on("request", (request) => requests.push({ at: Date.now(), path: new URL(request.url()).pathname }));
 page.on("websocket", (ws) => {
-  sockets.push(ws.url());
+  // Counted once it sends its first frame: the client opens its play socket
+  // while the title screen shows (M42.8), and a socket that has sent nothing
+  // is not a player. A double P that opened two sockets still sends two joins.
+  let counted = false;
+  ws.on("framesent", () => {
+    if (!counted) {
+      counted = true;
+      sockets.push(ws.url());
+    }
+  });
   ws.on("framesent", (frame) => {
     try {
       const msg = JSON.parse(String(frame.payload));
@@ -112,7 +121,7 @@ try {
     await page.keyboard.press("Enter");
   }
   await waitForCells((cells) => hasText(cells, "P  Play"), "ACCEPT title menu");
-  assert.equal(sockets.length, 0, "the title screen opens no socket");
+  assert.equal(sockets.length, 0, "the title screen joins on no socket");
 
   // 1. Double P: the second keydown arrives while the first socket is CONNECTING.
   await page.evaluate(() => {

@@ -78,8 +78,16 @@ async function openClient(label, path) {
     if (response.status() >= 500) c.httpErrors.push({ url: response.url().replace(baseURL, ""), status: response.status() });
   });
   page.on("websocket", (ws) => {
-    c.sockets.push(ws.url());
-    const socketIndex = c.sockets.length - 1;
+    // Counted once it sends its first frame: the client opens its play socket
+    // while the title screen shows (M42.8), and a socket that has sent nothing
+    // has joined nothing.
+    let socketIndex = -1;
+    ws.on("framesent", () => {
+      if (socketIndex < 0) {
+        c.sockets.push(ws.url());
+        socketIndex = c.sockets.length - 1;
+      }
+    });
     ws.on("framesent", (frame) => {
       try {
         if (JSON.parse(String(frame.payload)).type === "input") c.inputs.push({ socket: socketIndex, at: Date.now() });

@@ -139,10 +139,21 @@ async function openClient(label, name) {
   // still open over the title?" has no DOM answer. It has an HTTP one: see
   // ensureCleanTitle.
   page.on("websocket", (ws) => {
-    c.sockets.push(ws.url());
+    // Counted once it sends its first frame (a join): the client opens its
+    // play socket while the title screen shows (M42.8), and a socket that has
+    // sent nothing has joined nothing.
+    let counted = false;
+    ws.on("framesent", () => {
+      if (!counted) {
+        counted = true;
+        c.sockets.push(ws.url());
+      }
+    });
     c.transcript.push({ dir: "open", url: ws.url() });
     ws.on("close", () => {
-      c.closes++;
+      // Only a socket that joined counts: a prewarmed one the client dropped
+      // unused (M42.8) closing is not the player leaving.
+      if (counted) c.closes++;
       c.transcript.push({ dir: "close" });
     });
     ws.on("framesent", (f) => c.transcript.push({ dir: "send", payload: String(f.payload).slice(0, 300) }));
@@ -349,7 +360,7 @@ async function startPlay(c, world) {
   );
 }
 
-/** Leave the world the way a player does, ending back at the title with no socket. */
+/** Leave the world the way a player does, ending back at the title having joined nothing. */
 async function quitToTitle(c) {
   const closesBefore = c.closes;
   c.events.length = 0; // a prompt raised by whoever quit before must not read as this one

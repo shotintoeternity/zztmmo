@@ -1555,6 +1555,11 @@ async function showTitle() {
   canvas.focus();
   if (streaming) {
     openTitleStream(worldName);
+    // Only for a world the server just named: "Untitled" is the placeholder
+    // before one is chosen, and a socket for it is refused with a 500.
+    if (worldName !== "Untitled") {
+      prewarmPlaySocket();
+    }
   }
   void refreshAuthStatus();
   // How busy the server is, refreshed for as long as we sit here.
@@ -2347,14 +2352,15 @@ function connect() {
   }
 
   window.clearTimeout(retryTimer);
-  const socket = new WebSocket(wsURL());
+  const url = wsURL();
+  const socket = takePrewarmedSocket(url) ?? new WebSocket(url);
   ws = socket;
   // Whether this socket has had its first snapshot, and the refusal it was
   // answered with instead (joinRefusalFrom).
   let joined = false;
   let refusal: JoinRefusal | null = null;
 
-  socket.addEventListener("open", () => {
+  const onOpen = () => {
     // A socket superseded while it was connecting must not join: it would be a
     // second player in the room that nothing ever closes.
     if (ws !== socket) {
@@ -2388,7 +2394,14 @@ function connect() {
     // frame twice.
     stopInputSampler();
     inputTimer = window.setInterval(() => sendInput(currentMask()), 55);
-  });
+  };
+  // A prewarmed socket may already be open, and then its open event fired
+  // before anyone here was listening for it.
+  if (socket.readyState === WebSocket.OPEN) {
+    onOpen();
+  } else {
+    socket.addEventListener("open", onOpen);
+  }
 
   socket.addEventListener("message", (event) => {
     if (ws !== socket) {
@@ -2436,7 +2449,56 @@ function refuseJoin(refused: JoinRefusal) {
   openWindow(refused.title, refused.lines, false);
 }
 
+// The play socket is opened while the title screen shows (M42.8), so pressing
+// P costs one network round trip, the join, rather than four: TCP, TLS and the
+// upgrade took about 0.8 s for a player far from the server. The server waits
+// for a socket's first message without a deadline, and a socket that has sent
+// nothing is nobody: no player, no stat, nothing in a room's count. connect()
+// adopts it only if it is for the address connect() would open itself and is
+// still connecting or open; otherwise it is closed and a fresh one opened, as
+// before.
+let prewarmedSocket: WebSocket | null = null;
+let prewarmedURL = "";
+
+function prewarmPlaySocket() {
+  if (mode !== "title" || watching || replaying || workbench || challengeMode) {
+    return;
+  }
+  const url = wsURL();
+  if (prewarmedSocket && prewarmedURL === url && prewarmedSocket.readyState <= WebSocket.OPEN) {
+    return;
+  }
+  dropPrewarmedSocket();
+  try {
+    prewarmedSocket = new WebSocket(url);
+    prewarmedURL = url;
+  } catch {
+    prewarmedSocket = null;
+    prewarmedURL = "";
+  }
+}
+
+function dropPrewarmedSocket() {
+  if (prewarmedSocket) {
+    prewarmedSocket.close();
+    prewarmedSocket = null;
+    prewarmedURL = "";
+  }
+}
+
+function takePrewarmedSocket(url: string): WebSocket | null {
+  const socket = prewarmedSocket;
+  if (socket && prewarmedURL === url && socket.readyState <= WebSocket.OPEN) {
+    prewarmedSocket = null;
+    prewarmedURL = "";
+    return socket;
+  }
+  dropPrewarmedSocket();
+  return null;
+}
+
 function connectEditor() {
+  dropPrewarmedSocket();
   // The same guards as connect(): a CONNECTING socket is live,
   // and a superseded one must neither enter the session nor apply messages.
   if (ws && (ws.readyState === WebSocket.CONNECTING || ws.readyState === WebSocket.OPEN)) {

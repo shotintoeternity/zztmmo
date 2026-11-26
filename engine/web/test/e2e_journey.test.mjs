@@ -58,6 +58,9 @@ const page = await context.newPage();
 const pageErrors = [];
 const consoleErrors = [];
 const sockets = [];
+// When each socket that joined was opened (M42.8): the first join must ride a
+// socket opened on the title screen, before P.
+const firstJoins = [];
 // Every /api/title request the page makes, in order. The title screen has no
 // socket by design, so this is the only wire evidence of WHOSE board 0 is on
 // screen after a world is picked.
@@ -93,10 +96,23 @@ page.on("request", (request) => {
   if (url.includes("/api/title")) titleRequests.push(url);
 });
 page.on("websocket", (ws) => {
-  sockets.push(ws.url());
+  // Counted once it sends its first frame (a join): the client opens its play
+  // socket while the title screen shows (M42.8), and a socket that has sent
+  // nothing has joined nothing.
+  let counted = false;
+  const openedAt = Date.now();
+  ws.on("framesent", () => {
+    if (!counted) {
+      counted = true;
+      sockets.push(ws.url());
+      firstJoins.push({ url: ws.url(), openedAt });
+    }
+  });
   transcript.push({ dir: "open", url: ws.url() });
   ws.on("close", () => {
-    seen.closes++;
+    // Only a socket that joined counts: a prewarmed one the client dropped
+    // unused (M42.8) closing is not the player leaving.
+    if (counted) seen.closes++;
     transcript.push({ dir: "close" });
   });
   ws.on("framesent", (f) => transcript.push({ dir: "send", payload: String(f.payload).slice(0, 400) }));
@@ -189,7 +205,7 @@ const titleMark = () => ({ sockets: sockets.length, snapshots: seen.snapshots, t
  * Selecting a world opens that world's title screen and joins NOTHING.
  *
  * This is the whole of the "open selected worlds to their title screen before
- * play" contract, and it is three claims, not one: no socket, no snapshot, and
+ * play" contract, and it is three claims, not one: no join, no snapshot, and
  * the board now on screen came from /api/title for the world just chosen.
  * main.ts enterWorld stops after showTitle (or starts watching, for a /watch/
  * link) — pressing P is the only thing that joins.
@@ -273,10 +289,16 @@ try {
   // the same pause: this is the first selection of the run, and nothing has
   // been joined yet at all.
   expectTitleScreenPause("ACCEPT", acceptMark);
-  console.log("  - selected ACCEPT: its title screen, no socket, no snapshot");
+  console.log("  - selected ACCEPT: its title screen, no join, no snapshot");
+  const pressedPAt = Date.now();
   await page.keyboard.press("KeyP");
 
   await waitFor(() => seen.snapshots > 0, "the join snapshot");
+  const acceptJoin = firstJoins.find((j) => j.url.includes("world=ACCEPT"));
+  assert.ok(
+    acceptJoin && acceptJoin.openedAt < pressedPAt,
+    `P must join on the socket the title screen already opened (M42.8); joins: ${JSON.stringify(firstJoins)}, P at ${pressedPAt}`,
+  );
   assert.ok(
     sockets.some((u) => u.includes("world=ACCEPT")),
     `client must open a socket for ACCEPT, opened: ${JSON.stringify(sockets)}`,
@@ -469,7 +491,7 @@ try {
   console.log(`  - quit to title: high score ${scoreQualified ? "recorded" : "skipped (score 0)"}, socket closed`);
 
   // --- restore --------------------------------------------------------------
-  // The title has no socket by design, so the restore is proven by rejoining
+  // The title has joined nothing by design, so the restore is proven by rejoining
   // the restored world rather than by reading the title screen.
   resetRunState();
   await page.keyboard.press("KeyR");

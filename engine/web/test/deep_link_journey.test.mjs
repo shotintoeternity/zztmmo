@@ -117,7 +117,16 @@ page.on("console", (msg) => {
 const sockets = [];
 let snapshots = 0;
 page.on("websocket", (ws) => {
-  sockets.push(ws.url());
+  // Counted once it sends its first frame (a join): the client opens its play
+  // socket while the title screen shows (M42.8), and a socket that has sent
+  // nothing has joined nothing.
+  let counted = false;
+  ws.on("framesent", () => {
+    if (!counted) {
+      counted = true;
+      sockets.push(ws.url());
+    }
+  });
   ws.on("framereceived", (frame) => {
     try {
       if (JSON.parse(frame.payload).type === "snapshot") snapshots += 1;
@@ -196,7 +205,7 @@ try {
   assert.equal(
     sockets.length,
     beforeLink.sockets,
-    `a deep link must open no socket; opened ${JSON.stringify(sockets.slice(beforeLink.sockets))}`,
+    `a deep link must join on no socket; joined on ${JSON.stringify(sockets.slice(beforeLink.sockets))}`,
   );
   assert.equal(snapshots, beforeLink.snapshots, "a deep link must not start play, but a snapshot arrived");
   const linkTitles = titleRequests.slice(beforeLink.titles);
@@ -208,7 +217,7 @@ try {
     () => new URL(page.url()).pathname === `/play/${TARGET}`,
     "the deep link to stay in the address bar",
   );
-  console.log(`  - /play/${TARGET}: its title screen, no socket, no snapshot, no picker`);
+  console.log(`  - /play/${TARGET}: its title screen, no join, no snapshot, no picker`);
 
   // P still starts play, exactly as from the picker — and joins that world only.
   await page.keyboard.press("KeyP");
