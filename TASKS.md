@@ -10513,6 +10513,32 @@ board."
   diagonal to directly north (checked cell by cell). Deployed 2026-11-26;
   two guests joining TOWN on production landed at 30,12 and 30,11.
 
+- [x] **M42.3 — a join arrives where the editor shows the player, after a
+  restore too.** Owner-reported 2026-11-25 with screenshots: on production,
+  COTS24HR's "START: Menu" (board 7) shows the player at 30,14 in the editor,
+  but joins landed at 1,25 and 1,24, the bottom-left corner. Cause: the world
+  was started from its autosave (an autosave beats the pristine .ZZT, M13.3).
+  Every save drops the player tiles (`snapshotRoomBoard`, as `RemovePlayer`
+  does when a board empties), so the restored board has none, and M42.1's
+  `designedStart` fell back to `Board.Info.StartPlayerX/Y`, which a .ZZT
+  carries as wherever the author's player last entered the board: 1,25 here.
+  The pristine world and the editor's test-play copy were both checked and
+  place correctly (30,14 then 30,13); only the restored world was wrong.
+  Steps: the `RoomManager` keeps the authored world (`designWorld`, a clone of
+  the one it was built with, replaced by `LoadWorld` and left alone by a
+  restore), and a board's start is its player tile there first. That is the
+  world the editor shows (`inst.SourceWorld`), and it also repairs autosaves
+  already on disk. A recording that restores and then joins replays that
+  joiner onto the authored start; recordings carry no outcome hash, and no
+  fixture moved.
+  Done note (2026-11-25): `m42_3_test.go` builds CONTROL with board 1's stored
+  start moved to the corner, as COTS24HR's is. On the old code the join after
+  an empty-board autosave and restore landed at 2,24; it now lands at 6,12 and
+  the next at 6,11. A further test pins that a save carries no player tile,
+  which is what this fix relies on. `go test ./...` passes. `make browser-only`
+  ran the co-op cutline (which saves and restores), the M16.11 journeys and the
+  M16.15 persistence journeys. Not yet deployed.
+
 ## M14 — Rearchitecting for the service ZZTMMO is becoming
 
 Filed 2026-07-12 from a whole-repo review (NOTES.md): three structural debts

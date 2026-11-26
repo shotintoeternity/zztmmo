@@ -284,7 +284,9 @@ func (rm *RoomManager) restoreSnapshot(dir, name string, ownWorldOnly bool) erro
 
 	rm.world = scratch.World
 	rm.rooms = make(map[int16]*Room)
-	rm.boardStarts = nil // a new world's boards have their own starts
+	// The starts are re-read for the restored rooms, but from designWorld,
+	// which a restore leaves alone: a save is the same world, played (M42.3).
+	rm.boardStarts = nil
 	return nil
 }
 
@@ -318,6 +320,7 @@ func (rm *RoomManager) LoadWorld(dir, name string) error {
 	}
 
 	rm.world = scratch.World
+	rm.designWorld = cloneWorld(scratch.World)
 	rm.rooms = make(map[int16]*Room)
 	rm.boardStarts = nil // a new world's boards have their own starts
 	rm.HighScorePath = filepath.Join(dir, safe+".HI")

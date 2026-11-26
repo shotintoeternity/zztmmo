@@ -36,6 +36,12 @@ type RoomManager struct {
 	// boardStarts is each board's designed start square, read the first time
 	// the loaded world opens it (boardStart, M42.1).
 	boardStarts map[int16][2]int16
+	// designWorld is the world as it was authored: the one this manager was
+	// built with, or the last LoadWorld. A restore replaces world but not this,
+	// because a save cannot say where the author put the player: every save
+	// drops the player tiles (snapshotRoomBoard), as RemovePlayer does when a
+	// board empties (M42.3).
+	designWorld TWorld
 	// WorldIdentity is the server-resolved DOS stem for this instance. It is
 	// deliberately separate from the world file's display name: first-party
 	// policy, including friendly fire, is deployment-owned rather than authored.
@@ -268,6 +274,7 @@ func NewRoomManagerForWorld(world TWorld, identity string) *RoomManager {
 	}
 	rm := &RoomManager{
 		world:         world,
+		designWorld:   cloneWorld(world),
 		rooms:         make(map[int16]*Room),
 		players:       make(map[PlayerID]*roomPlayer),
 		WorldIdentity: safe,
@@ -1220,14 +1227,24 @@ func (rm *RoomManager) boardStart(room *Room) (int16, int16) {
 	if rm.boardStarts == nil {
 		rm.boardStarts = make(map[int16][2]int16)
 	}
-	x, y := designedStart(room)
+	x, y := rm.designedStart(room)
 	rm.boardStarts[room.BoardID] = [2]int16{x, y}
 	return x, y
 }
 
-// designedStart is a freshly opened board's start: the player tile it was built
-// with, when it has one, else its stored start square, else its centre.
-func designedStart(room *Room) (int16, int16) {
+// designedStart is a board's start: the player tile the authored world gives
+// it (designWorld, which is what the editor shows), else the player tile the
+// room opened with, else its stored start square, else its centre.
+//
+// The authored world comes first because the loaded one may be a save. An
+// autosave written after the last player left a board has no player tile on
+// it, and the stored start square a .ZZT carries is wherever its author's
+// player last entered the board: on COTS24HR's "START: Menu" that is 1,25, the
+// bottom-left corner, while the player tile is at 30,14 (M42.3).
+func (rm *RoomManager) designedStart(room *Room) (int16, int16) {
+	if x, y, ok := authoredPlayerTile(rm.designWorld, room.BoardID); ok {
+		return x, y
+	}
 	if statID, ok := claimablePlayerStat(room); ok {
 		stat := room.Engine.Board.Stats[statID]
 		return int16(stat.X), int16(stat.Y)
@@ -1238,6 +1255,24 @@ func designedStart(room *Room) (int16, int16) {
 		return BOARD_WIDTH / 2, BOARD_HEIGHT / 2
 	}
 	return x, y
+}
+
+// authoredPlayerTile is the player tile on boardID of world, read from a
+// scratch engine so nothing live is opened or closed. ok is false when the
+// world has no such board or the board has no player tile.
+func authoredPlayerTile(world TWorld, boardID int16) (int16, int16, bool) {
+	if boardID < 0 || boardID > world.BoardCount || world.BoardData[boardID] == nil {
+		return 0, 0, false
+	}
+	scratch := newSnapshotEngine()
+	scratch.World = world
+	scratch.BoardOpen(boardID)
+	statID, ok := claimablePlayerStat(&Room{Engine: scratch})
+	if !ok {
+		return 0, 0, false
+	}
+	stat := scratch.Board.Stats[statID]
+	return int16(stat.X), int16(stat.Y), true
 }
 
 // SetFriendlyFire sets the world's projectile policy and pushes it into every
