@@ -10589,8 +10589,8 @@ board."
   title, and no further join is sent. No browser journey drives a refused
   join yet. `make browser` passes. Deployed 2026-11-26 at `65f9e0a`.
 
-- [ ] **M42.6 — a board's one-time `#give` reaches only the first player who
-  arrives.** *(owner decision needed)* Owner-reported 2026-11-26 after the
+- [x] **M42.6 — a board's one-time `#give` reaches only the first player who
+  arrives.** Owner-reported 2026-11-26 after the
   M42.3–M42.5 deploy: "I died right when entering the new board", COTS24HR,
   through the Actual Game passage. Route: "START: Menu" (7) → "Chapter 1"
   (10, a title card; arrive on its player tile 3,1) → the passage at 31,1 →
@@ -10612,8 +10612,28 @@ board."
   per-party copies of a world (the backlog's "party instances"), which keeps
   vanilla semantics for each group; (b) reset a board's scripts when a player
   arrives on an empty board, which breaks persistent co-op progress on that
-  board; (c) leave it as a known incompatibility of shared worlds. Unranked
-  until the owner chooses.
+  board; (c) leave it as a known incompatibility of shared worlds.
+  **Owner decision 2026-11-26: engineer around it, keep worlds shared.** A
+  board's *starting kit* is made per player. A kit is the run of plain
+  `#give <counter> <n>` lines an object's program opens with (after an
+  optional `@name`, blank lines and `'` comments; any other line ends it), so
+  it runs untouched when the board first ticks. At the top of each tick, for
+  each player who arrived on a board since the last (join, passage, board
+  edge), the board's kit objects are checked: one that has already run past
+  its gives (`DataPos` beyond them, or ended) hands its gives to the arrival;
+  one still to run will give to the arrival itself. Either way the player is
+  marked, so a kit is had once per player per board (`board_kits.go`). The
+  check runs at the tick rather than at the arrival because a returning
+  account's stored inventory is applied straight after its join. Gifts behind
+  `:touch`, a label or an `#if` are not kits and are unchanged. The record is
+  per session: a player who leaves the world and rejoins can be handed a kit
+  again. Scanned the 120 hosted worlds: 28 have a kit board, 44 boards in all.
+  Done note (2026-11-26): `m42_6_test.go` pins the kit parse, a second player
+  arriving after the kit ran, an arrival after an autosave restore, once per
+  player per board, and a touch gift left alone; three of them fail without
+  the hook. The COTS24HR route on a restored world now hands the arrival 120
+  torches on its first tick on Apartment. `go test ./...` passes, no replay
+  fixture moved.
 
 ## M14 — Rearchitecting for the service ZZTMMO is becoming
 

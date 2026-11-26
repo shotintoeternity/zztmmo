@@ -107,12 +107,17 @@ type Room struct {
 }
 
 type roomPlayer struct {
-	id        PlayerID
-	boardID   int16
-	statID    int16
-	state     *PlayerState
-	name      string
-	accountID string
+	id      PlayerID
+	boardID int16
+	statID  int16
+	state   *PlayerState
+	// kitPending says this player arrived on boardID since the last tick and
+	// its starting kit has not been settled; kitsReceived is the boards whose
+	// kit this player has had (board_kits.go, M42.6). Read by key only.
+	kitPending   bool
+	kitsReceived map[int16]bool
+	name         string
+	accountID    string
 	// color is the "#RRGGBB" background other browsers draw this player's ☻ on.
 	// It rides the roster and nothing else: no element proc reads it,
 	// no tile carries it, and SetPlayerColor deliberately records no op — see
@@ -536,10 +541,11 @@ func (rm *RoomManager) JoinPlayerChecked(playerID PlayerID, boardID, spawnX, spa
 	room.Engine.ResetPlayerState(statID)
 	drawPlayerArrivalSurroundings(room.Engine, statID)
 	player := &roomPlayer{
-		id:      playerID,
-		boardID: room.BoardID,
-		statID:  statID,
-		state:   room.Engine.PlayerFor(statID),
+		id:         playerID,
+		boardID:    room.BoardID,
+		statID:     statID,
+		state:      room.Engine.PlayerFor(statID),
+		kitPending: true,
 	}
 	rm.players[playerID] = player
 	room.players[playerID] = struct{}{}
@@ -859,6 +865,7 @@ func (rm *RoomManager) StepDiffsWithBoards(inputs map[PlayerID]PlayerInput) (map
 	// step consumes. Quit/transfer removals happen below and are deliberately
 	// not recorded — playback regenerates them.
 	rm.recorder.flush(inputs)
+	rm.settleArrivalKits()
 
 	engineInputs := make(map[int16]map[int16]PlayerInput)
 	for playerID, input := range inputs {
@@ -1436,6 +1443,7 @@ func (rm *RoomManager) transferPlayer(playerID PlayerID, transfer TransferEvent)
 	player.boardID = dstRoom.BoardID
 	player.statID = newStatID
 	player.state = dstRoom.Engine.PlayerFor(newStatID)
+	player.kitPending = true
 
 	rm.freezeRoomIfEmpty(srcRoom.BoardID)
 }
