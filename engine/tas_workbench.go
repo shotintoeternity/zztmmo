@@ -525,7 +525,7 @@ func (s *WebSocketServer) serveWorkbenchHTTP(w http.ResponseWriter, r *http.Requ
 		http.Error(w, "no such challenge", http.StatusNotFound)
 		return
 	}
-	conn, err := websocket.Accept(w, r, &websocket.AcceptOptions{OriginPatterns: s.OriginHosts})
+	conn, err := websocket.Accept(w, r, s.acceptOptions(r))
 	if err != nil {
 		return
 	}

@@ -323,7 +323,7 @@ func (s *WebSocketServer) serveReplayHTTP(w http.ResponseWriter, r *http.Request
 		return
 	}
 
-	conn, err := websocket.Accept(w, r, &websocket.AcceptOptions{OriginPatterns: s.OriginHosts})
+	conn, err := websocket.Accept(w, r, s.acceptOptions(r))
 	if err != nil {
 		return
 	}

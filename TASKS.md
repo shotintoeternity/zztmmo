@@ -10635,6 +10635,36 @@ board."
   torches on its first tick on Apartment. `go test ./...` passes, no replay
   fixture moved.
 
+- [x] **M42.7 — the join snapshot is compressed on the wire.** Owner-reported
+  2026-11-26: "it takes forever to load the world after I press P, like maybe
+  3 seconds". Measured from the owner's network against production (TOWN),
+  inside the page: P → socket created 5 ms; socket open 828 ms (TCP, TLS and
+  the upgrade, three round trips of about 275 ms to us-east-1); join →
+  first message 811 ms, a 64,929-byte snapshot that needs several round trips
+  to arrive. Nothing on the client or the server's join path is slow; it is
+  the network. The browser sockets accepted no compression (the library's
+  default), and the snapshot deflates to 4,762 bytes, which fits in one
+  round trip. Steps: every browser socket (play, replay, workbench) is
+  accepted with `CompressionContextTakeover` (`acceptOptions`) when the
+  User-Agent is Chromium (`Chrome/`) or Gecko (`Firefox/`); anything else,
+  which includes Safari and every iOS browser, is sent frames as before.
+  First tried `CompressionNoContextTakeover` for its smaller memory, and
+  `make browser`'s WebKit profiles failed the handshake with "Protocol error";
+  context takeover failed the same way, and the library itself documents
+  Safari's permessage-deflate as broken (nhooyr issue 218), hence the gate.
+  Context takeover keeps a compressor per connection: 30 players measured
+  about 28 MB with both ends in one process. Every board change sends a full
+  snapshot too, so passages get faster as well. Not done here, and offered to the owner: open
+  the play socket while the title screen shows, so P costs one round trip
+  instead of four (about 0.8 s more). That changes a contract five browser
+  journeys pin, the co-op cutline among them ("the title screen opens no
+  socket"), so it is its own decision.
+  Done note (2026-11-26): `m42_7_test.go` pins the User-Agent gate (Chrome,
+  Firefox yes; Safari, iOS Chrome, iOS Firefox, empty no), that a Chrome
+  client is answered with compression and still gets a full snapshot (fails
+  with compression off), and that a Safari client offering it is answered
+  without. `go test ./...` and `make browser` pass, WebKit profiles included.
+
 ## M14 — Rearchitecting for the service ZZTMMO is becoming
 
 Filed 2026-07-12 from a whole-repo review (NOTES.md): three structural debts

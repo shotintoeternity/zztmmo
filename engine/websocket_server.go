@@ -598,7 +598,7 @@ func (s *WebSocketServer) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	conn, err := websocket.Accept(w, r, &websocket.AcceptOptions{OriginPatterns: s.OriginHosts})
+	conn, err := websocket.Accept(w, r, s.acceptOptions(r))
 	if err != nil {
 		return
 	}
@@ -1715,6 +1715,38 @@ func (s *WebSocketServer) completeWorldTransit(ctx context.Context, source *Worl
 	if err := client.write(ctx, snapshot); err != nil {
 		s.handleReadLoopExit(dest, client, transit.PlayerID)
 	}
+}
+
+// acceptOptions is how every browser socket is accepted. Frames are
+// compressed (permessage-deflate) for a browser known to handle it: the join
+// snapshot is about 65 KB of JSON and deflates to about 5 KB, which is the
+// difference between one network round trip and several for a player far
+// from the server, and most of what a player waited for after pressing P
+// (M42.7). Every board change sends a full snapshot too.
+//
+// Only for Chromium and Gecko browsers, by User-Agent. Safari's
+// permessage-deflate does not work with this library (its compress.go says so,
+// and WebKit fails the handshake with "Protocol error" in M16.18's platform
+// matrix), and every browser on iOS is WebKit whatever its name, so anything
+// not positively Chromium or Gecko is sent frames as they were. Context
+// takeover keeps a compressor per connection (about half a megabyte each,
+// measured: 30 players cost about 28 MB with both ends in one process); the
+// other mode is no help, because it answers with a client_no_context_takeover
+// that WebKit also refuses.
+func (s *WebSocketServer) acceptOptions(r *http.Request) *websocket.AcceptOptions {
+	opts := &websocket.AcceptOptions{OriginPatterns: s.OriginHosts}
+	if compressingBrowser(r.UserAgent()) {
+		opts.CompressionMode = websocket.CompressionContextTakeover
+	}
+	return opts
+}
+
+// compressingBrowser reports whether a User-Agent names a browser engine whose
+// permessage-deflate works with this server: Chromium ("Chrome/", which Edge,
+// Opera, Samsung Internet and Android WebViews carry) or Gecko ("Firefox/",
+// which Firefox on iOS, being WebKit, does not).
+func compressingBrowser(userAgent string) bool {
+	return strings.Contains(userAgent, "Chrome/") || strings.Contains(userAgent, "Firefox/")
 }
 
 // boardFullMessage is the socket form of boardFullScroll, for a joiner who has
