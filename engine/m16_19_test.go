@@ -706,7 +706,12 @@ func TestM1619ThirtyNetworkClientLoadAndMetrics(t *testing.T) {
 		conn.SetReadLimit(ServerReadLimit)
 
 		botName := fmt.Sprintf("LoadBot%d", i+1)
-		if err := wsjson.Write(ctx, conn, JoinMessage{Type: MessageTypeJoin, Name: botName}); err != nil {
+		// Five bots to a board, across six TOWN boards: a board admits at most
+		// five arrivals at once, on its start and the four squares beside it,
+		// and these bots never walk off (M42.4). These six have all four sides
+		// free; several other TOWN boards admit only two to four.
+		board := [6]int16{1, 2, 4, 5, 8, 12}[i/5]
+		if err := wsjson.Write(ctx, conn, JoinMessage{Type: MessageTypeJoin, Name: botName, Board: board}); err != nil {
 			t.Fatalf("bot %d join failed: %v", i, err)
 		}
 		var snap SnapshotMessage

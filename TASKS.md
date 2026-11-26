@@ -10539,6 +10539,38 @@ board."
   ran the co-op cutline (which saves and restores), the M16.11 journeys and the
   M16.15 persistence journeys. Not yet deployed.
 
+- [x] **M42.4 — the start, one step aside, or an error.** Owner rule
+  2026-11-25: "Players should automatically spawn on each board in the same
+  place they're located in the editor unless there's another player or object
+  there. In that case, they should be moved one square north, east, west, or
+  south. If that's not possible, they should receive an error message." Asked
+  whether a sixth arrival should be refused or placed further out, the owner
+  chose refusal, knowing a board then admits at most five arrivals at once.
+  Steps: a join takes the designed start (M42.3) if nobody and nothing stands
+  on it, else the first free empty square one step north, east, south, west
+  (M42.2's recorded order, kept rather than the message's N/E/W/S), else it
+  is refused with `JoinStartCrowded` and the player reads a "Start crowded"
+  scroll, distinct from "Board full". `JoinPlayerChecked` carries the reason;
+  both server join paths (a join and a cross-world transit) use it. Joins
+  only: a passage or board edge still names its entry square and falls back
+  to `FindPlacement`, and respawn and re-enter are unchanged. One exception,
+  not in the owner's words: a start that is terrain (a stored start square
+  pointing into a wall on a board with no player tile) is a broken start, not
+  a crowded one, so the search goes on outward instead of locking the board.
+  **This changes behaviour on purpose.** Measured on TOWN's first twenty
+  boards: eight admit five at once, nine admit four, two admit three and one
+  admits two, because walls and objects sit beside their starts. A recording
+  that joined more players than that replays the extra joins as refusals;
+  recordings carry no outcome hash, and no replay fixture moved. Tests that
+  join many idle players to one board for another purpose now step each
+  aside (`m424StepAside`: M16.16's identity joins, the twenty-bot soak), and
+  M16.19's thirty-client load run spreads its bots five to a board over six
+  TOWN boards whose four sides are free.
+  Done note (2026-11-25): `m42_4_test.go` pins start, N, E, S, W and the sixth
+  refused with the board unchanged, a blocked side skipped, an object on the
+  start, the start reused once its player walks off, and the distinct message.
+  `go test ./...` passes. Not yet deployed.
+
 ## M14 — Rearchitecting for the service ZZTMMO is becoming
 
 Filed 2026-07-12 from a whole-repo review (NOTES.md): three structural debts

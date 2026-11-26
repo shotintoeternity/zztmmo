@@ -493,25 +493,45 @@ func (rm *RoomManager) JoinPlayer(boardID, spawnX, spawnY int16) PlayerID {
 	return rm.JoinPlayerWithID(rm.nextPlayerID, boardID, spawnX, spawnY)
 }
 
+// JoinRefusal says why a join placed nobody.
+type JoinRefusal int
+
+const (
+	JoinAdmitted JoinRefusal = iota
+	// JoinBoardFull: the board has no free stat slot for another player.
+	JoinBoardFull
+	// JoinStartCrowded: the board's start and the four squares beside it are
+	// all taken (M42.4).
+	JoinStartCrowded
+)
+
 // JoinPlayerWithID joins a player under a caller-supplied PlayerID. The server
 // uses it to assign server-scoped ids. It advances the manager's own counter
 // past the supplied id so a later plain JoinPlayer on the same manager cannot
 // reissue it.
 //
-// It returns 0, and joins nobody, when the board has no room for another
-// player stat. PlayerIDs start at 1, so 0 is never a real player. The
-// refused join is still recorded: it thawed the board, and playback must thaw
-// and refuse it the same way.
+// It returns 0, and joins nobody, when the board refuses them
+// (JoinPlayerChecked says why). PlayerIDs start at 1, so 0 is never a real
+// player.
 func (rm *RoomManager) JoinPlayerWithID(playerID PlayerID, boardID, spawnX, spawnY int16) PlayerID {
+	id, _ := rm.JoinPlayerChecked(playerID, boardID, spawnX, spawnY)
+	return id
+}
+
+// JoinPlayerChecked is JoinPlayerWithID that also says why a refused join was
+// refused, so the server can tell the player. The refused join is still
+// recorded: it thawed the board, and playback must thaw and refuse it the
+// same way.
+func (rm *RoomManager) JoinPlayerChecked(playerID PlayerID, boardID, spawnX, spawnY int16) (PlayerID, JoinRefusal) {
 	if playerID > rm.nextPlayerID {
 		rm.nextPlayerID = playerID
 	}
 	room := rm.ensureRoom(boardID)
-	statID, ok := rm.spawnPlayerInRoom(room, spawnX, spawnY)
-	if !ok {
+	statID, refusal := rm.spawnPlayerInRoom(room, spawnX, spawnY)
+	if refusal != JoinAdmitted {
 		rm.recorder.record(recOp{Op: "join", Player: playerID, Board: boardID, X: spawnX, Y: spawnY})
 		rm.freezeRoomIfEmpty(room.BoardID)
-		return 0
+		return 0, refusal
 	}
 	room.Engine.ResetPlayerState(statID)
 	drawPlayerArrivalSurroundings(room.Engine, statID)
@@ -524,7 +544,7 @@ func (rm *RoomManager) JoinPlayerWithID(playerID PlayerID, boardID, spawnX, spaw
 	rm.players[playerID] = player
 	room.players[playerID] = struct{}{}
 	rm.recorder.record(recOp{Op: "join", Player: playerID, Board: boardID, X: spawnX, Y: spawnY})
-	return playerID
+	return playerID, JoinAdmitted
 }
 
 func (rm *RoomManager) SetPlayerName(playerID PlayerID, name string) {
@@ -602,6 +622,17 @@ func roomHasPlayerCapacity(room *Room) bool {
 	return room.Engine.Board.StatCount < MAX_STAT
 }
 
+// startCrowdedScroll is what a joiner is shown when the board's start and the
+// four squares beside it are all taken (M42.4). It answers to no object.
+func startCrowdedScroll() ScrollEvent {
+	return ScrollEvent{
+		Title:        "Start crowded",
+		Lines:        []string{"", "  Players are standing on and", "  around this board's start.", "  Try again in a moment."},
+		StatId:       -1,
+		PlayerStatId: -1,
+	}
+}
+
 // boardFullScroll is what a player is shown when a board refuses them. It
 // answers to no object, so the client's dismissal of it reaches nothing.
 func boardFullScroll() ScrollEvent {
@@ -614,17 +645,20 @@ func boardFullScroll() ScrollEvent {
 }
 
 // spawnPlayerInRoom places a player on room's board and returns their stat,
-// or false, touching nothing, when the board has no room for them.
-func (rm *RoomManager) spawnPlayerInRoom(room *Room, spawnX, spawnY int16) (int16, bool) {
+// or a refusal, touching nothing, when the board has no room for them.
+func (rm *RoomManager) spawnPlayerInRoom(room *Room, spawnX, spawnY int16) (int16, JoinRefusal) {
 	if !roomHasPlayerCapacity(room) {
-		return -1, false
+		return -1, JoinBoardFull
 	}
-	spawnX, spawnY = roomSpawn(room, spawnX, spawnY)
+	spawnX, spawnY, ok := roomSpawn(room, spawnX, spawnY)
+	if !ok {
+		return -1, JoinStartCrowded
+	}
 	if len(room.players) == 0 {
 		if statID, ok := claimablePlayerStat(room); ok {
 			movePlayerStat(room.Engine, statID, spawnX, spawnY)
 			drawPlayerArrivalSurroundings(room.Engine, statID)
-			return statID, true
+			return statID, JoinAdmitted
 		}
 	}
 
@@ -636,10 +670,10 @@ func (rm *RoomManager) spawnPlayerInRoom(room *Room, spawnX, spawnY int16) (int1
 	room.Engine.Board.Info.StartPlayerX = originalSpawnX
 	room.Engine.Board.Info.StartPlayerY = originalSpawnY
 	if statID < 0 {
-		return -1, false
+		return -1, JoinBoardFull
 	}
 	drawPlayerArrivalSurroundings(room.Engine, statID)
-	return statID, true
+	return statID, JoinAdmitted
 }
 
 func drawPlayerArrivalSurroundings(engine *Engine, statID int16) {
@@ -684,35 +718,49 @@ func movePlayerStat(engine *Engine, statID, x, y int16) {
 
 // roomSpawn picks the square a player arrives on. A transfer names one (the
 // passage's far end, the mirrored edge square) and gets it if a player can stand
-// there. A join names none and aims at the board's designed start (Room.startX/Y):
-// the first arrival in an empty room takes the board's own player tile, and
-// anyone after that gets the start square if it is free, else the nearest free
-// square they can walk off (FindPlacement). The search starts from the designed
-// start, never from another player, so where the room's players have wandered
-// does not decide where the next one appears.
-func roomSpawn(room *Room, spawnX, spawnY int16) (int16, int16) {
+// there, else the nearest free square they can walk off (FindPlacement). A join
+// names none and aims at the board's designed start (Room.startX/Y): the first
+// arrival in an empty room takes the board's own player tile; anyone after that
+// gets the start if nobody and nothing stands on it, else the first free square
+// one step north, east, south or west of it. With all five taken the join is
+// refused (ok false) rather than placed further out: the owner's rule (M42.4).
+// The search starts from the designed start, never from another player, so
+// where the room's players have wandered does not decide where the next one
+// appears.
+func roomSpawn(room *Room, spawnX, spawnY int16) (int16, int16, bool) {
 	requested := spawnX != 0 && spawnY != 0
-	if !requested && len(room.players) == 0 {
-		if statID, ok := claimablePlayerStat(room); ok {
-			stat := room.Engine.Board.Stats[statID]
-			return int16(stat.X), int16(stat.Y)
-		}
-	}
 	if !requested {
-		spawnX, spawnY = room.startX, room.startY
-	}
-	if requested {
-		if isSpawnOpen(room, spawnX, spawnY) || isRequestedSpawnUnoccupied(room, spawnX, spawnY) {
-			return spawnX, spawnY
+		if len(room.players) == 0 {
+			if statID, ok := claimablePlayerStat(room); ok {
+				stat := room.Engine.Board.Stats[statID]
+				return int16(stat.X), int16(stat.Y), true
+			}
 		}
-	} else if isSpawnUnoccupied(room, spawnX, spawnY) {
-		return spawnX, spawnY
+		x, y := room.startX, room.startY
+		if isSpawnUnoccupied(room, x, y) {
+			return x, y, true
+		}
+		if startHeld(room, x, y) {
+			for dir := 0; dir < 4; dir++ {
+				nx, ny := x+placementSearchDX[dir], y+placementSearchDY[dir]
+				if isSpawnOpen(room, nx, ny) {
+					return nx, ny, true
+				}
+			}
+			return x, y, false
+		}
+		// The start is terrain nobody stands on: a broken start (a stored start
+		// square pointing into a wall, on a board with no player tile), not a
+		// crowded one. Refusing would lock the board for good, so the search
+		// goes on outward as it did before M42.4.
+		spawnX, spawnY = x, y
+	} else if isSpawnOpen(room, spawnX, spawnY) || isRequestedSpawnUnoccupied(room, spawnX, spawnY) {
+		return spawnX, spawnY, true
 	}
-
 	if x, y, ok := room.Engine.FindPlacement(spawnX, spawnY, -1); ok {
-		return x, y
+		return x, y, true
 	}
-	return spawnX, spawnY
+	return spawnX, spawnY, true
 }
 
 func absInt16(v int16) int16 {
@@ -730,6 +778,19 @@ func isSpawnOpen(room *Room, x, y int16) bool {
 
 func isSpawnUnoccupied(room *Room, x, y int16) bool {
 	return room.Engine.PlacementUnoccupied(x, y, -1)
+}
+
+// startHeld reports whether a join's start square is taken by somebody or
+// something rather than being terrain: a stat stands on it (a player, an
+// object), or it is a square a player could stand on (M42.4).
+func startHeld(room *Room, x, y int16) bool {
+	if x < 1 || x > BOARD_WIDTH || y < 1 || y > BOARD_HEIGHT {
+		return false
+	}
+	if _, held := room.Engine.StatAt(x, y, -1); held {
+		return true
+	}
+	return PlayerCanStandOn(room.Engine.Board.Tiles[x][y].Element)
 }
 
 // isRequestedSpawnUnoccupied is the looser test a *named* arrival square gets:

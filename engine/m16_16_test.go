@@ -497,6 +497,9 @@ func (s *m1616Service) joinIdentity(ctx context.Context, name string, cookie *ht
 	s.t.Helper()
 	conn, snapshot := dialJoinWithCookie(s.t, ctx, s.wsURL(), JoinMessage{Type: MessageTypeJoin, Name: name, Board: 1}, cookie)
 	inst := s.server.DefaultInstance
+	// Every subtest joins this one board and its player lingers for the
+	// reconnect grace, so step each aside to keep the start free (M42.4).
+	m424StepAside(s.t, inst, snapshot.You.ID)
 	inst.mu.Lock()
 	accountID, playerName, _ = inst.RoomManager.PlayerIdentity(snapshot.You.ID)
 	inst.mu.Unlock()

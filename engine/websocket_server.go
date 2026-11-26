@@ -842,7 +842,8 @@ func (s *WebSocketServer) freshJoin(ctx context.Context, pj *playerJoin) bool {
 	// callee panics (e.g. spawning onto a corrupt board). Without it a panic
 	// would leak inst.mu, and every later handleWorlds / GetOrCreateInstance
 	// that waits on that lock (while holding the global server lock) wedges.
-	var ok, evicted, boardFull bool
+	var ok, evicted bool
+	var refusal JoinRefusal
 	for attempt := 0; ; attempt++ {
 		ok, evicted = func() (bool, bool) {
 			inst := pj.inst
@@ -863,10 +864,10 @@ func (s *WebSocketServer) freshJoin(ctx context.Context, pj *playerJoin) bool {
 				// challenge whose route is the player's choosing too.
 				pj.join.Board = pj.challengeRun.Def.Board
 			}
-			if inst.RoomManager.JoinPlayerWithID(pj.playerID, pj.join.Board, 0, 0) == 0 {
-				// The board has no room for another player stat.
-				// Nobody was spawned, so nothing below has a player to name.
-				boardFull = true
+			if _, refusal = inst.RoomManager.JoinPlayerChecked(pj.playerID, pj.join.Board, 0, 0); refusal != JoinAdmitted {
+				// The board has no room for another player, or its start is
+				// crowded. Nobody was spawned, so nothing below has a player
+				// to name.
 				return false, false
 			}
 			if pj.authenticated {
@@ -910,8 +911,8 @@ func (s *WebSocketServer) freshJoin(ctx context.Context, pj *playerJoin) bool {
 	}
 
 	if !ok {
-		if boardFull {
-			_ = pj.client.write(ctx, boardFullMessage())
+		if refusal != JoinAdmitted {
+			_ = pj.client.write(ctx, joinRefusedMessage(refusal))
 		}
 		s.removeClientFromInstance(pj.inst, pj.playerID)
 		if pj.challengeRun != nil {
@@ -1663,14 +1664,14 @@ func (s *WebSocketServer) completeWorldTransit(ctx context.Context, source *Worl
 
 	dest.mu.Lock()
 	board := s.resolveJoinBoard(dest, 0)
-	if dest.RoomManager.JoinPlayerWithID(transit.PlayerID, board, 0, 0) == 0 {
-		// The far world's board is full, so nobody was spawned and no object
+	if _, refusal := dest.RoomManager.JoinPlayerChecked(transit.PlayerID, board, 0, 0); refusal != JoinAdmitted {
+		// The far world's board is full or its start crowded, so nobody was spawned and no object
 		// was taken. The traveller has already left the source world and is
 		// left in neither, exactly as a failed snapshot below leaves them, but
 		// they are told why. Checking before the leave would mean holding both
 		// instances' locks (NOTES.md 2026-11-03).
 		dest.mu.Unlock()
-		_ = client.write(ctx, boardFullMessage())
+		_ = client.write(ctx, joinRefusedMessage(refusal))
 		return
 	}
 	if accountID != "" {
@@ -1720,6 +1721,15 @@ func (s *WebSocketServer) completeWorldTransit(ctx context.Context, source *Worl
 // no player yet and so no diff to carry it.
 func boardFullMessage() EventMessage {
 	return EventMessage{Type: MessageTypeEvent, Event: ProtocolEvents([]Event{boardFullScroll()})[0]}
+}
+
+// joinRefusedMessage is the socket form of whichever scroll says why a join
+// was refused.
+func joinRefusedMessage(refusal JoinRefusal) EventMessage {
+	if refusal == JoinStartCrowded {
+		return EventMessage{Type: MessageTypeEvent, Event: ProtocolEvents([]Event{startCrowdedScroll()})[0]}
+	}
+	return boardFullMessage()
 }
 
 func (s *WebSocketServer) refuseWorldTransit(ctx context.Context, source *WorldInstance, playerID PlayerID, destination string, err error) {

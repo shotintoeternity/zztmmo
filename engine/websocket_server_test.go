@@ -794,6 +794,9 @@ func TestWebSocketServerTwentyBotSoak(t *testing.T) {
 	var wg sync.WaitGroup
 	for i := 0; i < botCount; i++ {
 		conn, snapshot := joinTestClient(t, ctx, httpServer.URL, "bot")
+		// Twenty bots on one board: each steps off the start so the next is
+		// not refused as crowded (M42.4).
+		m424StepAside(t, server.DefaultInstance, snapshot.You.ID)
 		bot := &soakBot{conn: conn, id: snapshot.You.ID}
 		bot.board.Store(int64(snapshot.BoardID))
 		bot.tick.Store(int64(snapshot.Tick))
